@@ -137,7 +137,7 @@ export const dictionaries = {
       title: "Pripravení dostať svoj obsah na dosah ruky?",
       subtitle: "Ukážeme vám Contineo na vašich vlastných zdrojoch.",
       button: "Kontaktujte nás",
-      email: "ahoj@contineo.app",
+      email: "office@contineo.app",
     },
     footer: {
       tagline: "Opýtajte sa svojho obsahu.",
@@ -290,7 +290,7 @@ export const dictionaries = {
       title: "Ready to get your content at your fingertips?",
       subtitle: "We'll show you Contineo on your own sources.",
       button: "Get in touch",
-      email: "hello@contineo.app",
+      email: "office@contineo.app",
     },
     footer: {
       tagline: "Ask your content.",
