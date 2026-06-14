@@ -149,6 +149,17 @@ export const dictionaries = {
         poweredBy: "Poháňa Contineo",
       },
     },
+    security: {
+      eyebrow: "Bezpečnosť dát",
+      title: "Vaše dáta ostávajú u vás",
+      subtitle: "Contineo je postavené tak, že obsah vašej firmy zostáva bezpečne vo vašej databáze a úložisku. AI je len pomocník — nie miesto, kam vaše dáta odchádzajú.",
+      points: [
+        { icon: "lock", title: "Dáta vo vašej databáze", text: "Obsah žije vo vašej MongoDB a úložisku, oddelene pre každého tenanta. Nie je verejný a neindexuje ho verejný internet." },
+        { icon: "shield", title: "Žiadna verejná AI", text: "Nepoužívame verejnú spotrebiteľskú AI. Verejné modely sa na vašich dátach netrénujú." },
+        { icon: "search", title: "AI je len pomocník", text: "Jazykový model odpovedá výhradne z nájdených pasáží vášho obsahu (RAG) a pripája citáciu zdroja." },
+        { icon: "layers", title: "Vy si volíte režim", text: "Enterprise API so zero-retention a EU rezidenciou, alebo plne self-hosted, kde dáta nikdy neopustia vašu infraštruktúru." },
+      ],
+    },
     audience: {
       eyebrow: "Pre koho",
       title: "Pre organizácie s množstvom obsahu",
@@ -256,6 +267,8 @@ export const dictionaries = {
         "Citácia verzie v každej odpovedi a archivácia starých verzií noriem.",
         "Monitoring kvality: skóre, podiel eskalácií a hodnotenia ako spätná väzba.",
         "Multi-tenant oddelenie obsahu a prístupov každej organizácie.",
+        "Súkromie dát: obsah ostáva vo vašej databáze a úložisku; AI odpovedá výhradne z vášho obsahu (RAG), verejná spotrebiteľská AI sa nepoužíva.",
+        "Voľba režimu AI: enterprise API so zero-retention a EU rezidenciou, alebo plne self-hosted — dáta neopustia vašu infraštruktúru.",
       ],
     },
     cta: {
@@ -427,6 +440,17 @@ export const dictionaries = {
         poweredBy: "Powered by Contineo",
       },
     },
+    security: {
+      eyebrow: "Data security",
+      title: "Your data stays with you",
+      subtitle: "Contineo is built so your company's content stays safely in your database and storage. AI is only a helper — not a place your data goes.",
+      points: [
+        { icon: "lock", title: "Data in your database", text: "Content lives in your MongoDB and storage, isolated per tenant. It isn't public and isn't indexed by the public internet." },
+        { icon: "shield", title: "No public AI", text: "We never use public consumer AI. Public models are not trained on your data." },
+        { icon: "search", title: "AI is only a helper", text: "The language model answers strictly from retrieved passages of your content (RAG) and attaches a source citation." },
+        { icon: "layers", title: "You choose the mode", text: "Enterprise API with zero-retention and EU residency, or fully self-hosted where data never leaves your infrastructure." },
+      ],
+    },
     audience: {
       eyebrow: "Who it's for",
       title: "For organisations with lots of content",
@@ -534,6 +558,8 @@ export const dictionaries = {
         "A version citation in every answer and archiving of old rule versions.",
         "Quality monitoring: score, escalation rate and ratings as feedback.",
         "Multi-tenant isolation of each organisation's content and access.",
+        "Data privacy: content stays in your database and storage; the AI answers strictly from your content (RAG), no public consumer AI is used.",
+        "AI mode of choice: enterprise API with zero-retention and EU residency, or fully self-hosted — data never leaves your infrastructure.",
       ],
     },
     cta: {
