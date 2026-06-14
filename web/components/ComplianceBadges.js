@@ -3,6 +3,7 @@ import Icon from "./Icon";
 export default function ComplianceBadges({ dict, lang }) {
   const c = dict.legal.compliance;
   const badges = [
+    { icon: "file", label: c.license, href: "https://github.com/ltksolutions/contineo/blob/main/LICENSE", external: true },
     { icon: "scale", label: c.eupl, href: "https://eupl.eu/", external: true },
     { icon: "refresh", label: c.reuse, href: "https://reuse.software/", external: true },
     { icon: "shield", label: c.gdpr, href: `/${lang}/ochrana-udajov`, external: false },

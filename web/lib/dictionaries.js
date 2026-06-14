@@ -281,6 +281,7 @@ export const dictionaries = {
     legal: {
       compliance: {
         heading: "Súlad a otvorenosť",
+        license: "LGPL-2.1",
         eupl: "EUPL-1.2 compatible",
         reuse: "REUSE compliant",
         gdpr: "GDPR ready",
@@ -607,6 +608,7 @@ export const dictionaries = {
     legal: {
       compliance: {
         heading: "Compliance & openness",
+        license: "LGPL-2.1",
         eupl: "EUPL-1.2 compatible",
         reuse: "REUSE compliant",
         gdpr: "GDPR ready",
