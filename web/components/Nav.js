@@ -1,4 +1,7 @@
+"use client";
+
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 function Logo() {
   return (
@@ -26,6 +29,8 @@ function Logo() {
 
 export default function Nav({ dict, lang }) {
   const other = lang === "sk" ? "en" : "sk";
+  const pathname = usePathname() || `/${lang}`;
+  const otherHref = pathname.replace(new RegExp(`^/${lang}(?=/|$)`), `/${other}`);
   return (
     <header
       style={{
@@ -46,22 +51,22 @@ export default function Nav({ dict, lang }) {
         </Link>
 
         <nav style={{ display: "flex", alignItems: "center", gap: 26 }} className="nav-links">
-          <a href="#features" className="muted nav-link">{dict.nav.features}</a>
-          <a href="#how" className="muted nav-link">{dict.nav.how}</a>
-          <a href="#demo" className="muted nav-link">{dict.nav.demo}</a>
-          <a href="#audience" className="muted nav-link">{dict.nav.audience}</a>
-          <a href="#roadmap" className="muted nav-link">{dict.nav.roadmap}</a>
+          <a href={`/${lang}#features`} className="muted nav-link">{dict.nav.features}</a>
+          <a href={`/${lang}#how`} className="muted nav-link">{dict.nav.how}</a>
+          <a href={`/${lang}#demo`} className="muted nav-link">{dict.nav.demo}</a>
+          <a href={`/${lang}#roadmap`} className="muted nav-link">{dict.nav.roadmap}</a>
+          <Link href={`/${lang}/technologia`} className="muted nav-link">{dict.tech.navLabel}</Link>
         </nav>
 
         <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
           <Link
-            href={`/${other}`}
+            href={otherHref}
             className="muted"
             style={{ fontSize: 14, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.04em" }}
           >
             {other}
           </Link>
-          <a href="#cta" className="btn btn--primary" style={{ padding: "9px 16px", fontSize: 14 }}>
+          <a href={`/${lang}#cta`} className="btn btn--primary" style={{ padding: "9px 16px", fontSize: 14 }}>
             {dict.nav.cta}
           </a>
         </div>

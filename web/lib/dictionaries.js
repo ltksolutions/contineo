@@ -133,6 +133,35 @@ export const dictionaries = {
       ],
       tag: "Plánované v ďalších verziách",
     },
+    tech: {
+      navLabel: "Technológia",
+      eyebrow: "Technické riešenie",
+      title: "Postavené na overených technológiách",
+      subtitle:
+        "Contineo spája sémantické vyhľadávanie (RAG) nad vaším obsahom s jazykovým modelom, ktorý odpovedá výhradne z overených zdrojov — s citáciou a verziou.",
+      download: "Stiahnuť technický návrh (PDF)",
+      back: "Späť na hlavnú stránku",
+      architectureTitle: "Architektúra a dátový tok",
+      architectureCaption:
+        "Zdroje obsahu → spracovanie a embeddingy → MongoDB Atlas (Vector Search) → RAG + LLM → rozhrania. Vrátane učiaceho cyklu a eskalácie na ticket.",
+      pillarsTitle: "Kľúčové piliere",
+      pillars: [
+        { icon: "search", title: "RAG + Vector Search", text: "Sémantické vyhľadávanie cez MongoDB Atlas Vector Search s filtrom na zdroj, tému a platnú verziu. Odpoveď generuje LLM len z nájdených pasáží." },
+        { icon: "quote", title: "Citácie a verzie", text: "Každá odpoveď uvádza zdroj a verziu. Import novej verzie nestratí starú — cituje sa vždy platné znenie." },
+        { icon: "shield", title: "Multi-tenant a bezpečnosť", text: "Obsah a prístupy každej organizácie sú oddelené. Role a audit pri každej zmene znalostí." },
+        { icon: "layers", title: "Viac zdrojov naraz", text: "Weby (RSS), PDF normy, FAQ, interné predpisy a projekty — zjednotené do jedného indexu." },
+        { icon: "ticket", title: "Helpdesk a e-mail", text: "Sledovanie e-mailových schránok, ticketing a predpripravené odpovede s eskaláciou z vyhľadávania." },
+        { icon: "brain", title: "Učiaci cyklus", text: "Schválené odpovede správcov sa vracajú do znalostí ako nové páry — systém sa zlepšuje." },
+      ],
+      stackTitle: "Technologický stack",
+      stack: [
+        "MongoDB Atlas + Vector Search",
+        "Node.js worker + fronta úloh",
+        "Next.js (App Router)",
+        "Multilingválne embeddingy + LLM",
+        "Integrácie: e-mail (IMAP), ISSF, Sportnet / IS športu",
+      ],
+    },
     cta: {
       title: "Pripravení dostať svoj obsah na dosah ruky?",
       subtitle: "Ukážeme vám Contineo na vašich vlastných zdrojoch.",
@@ -285,6 +314,35 @@ export const dictionaries = {
         { title: "Zero maintenance", text: "A source update is reflected on the website automatically." },
       ],
       tag: "Planned for future versions",
+    },
+    tech: {
+      navLabel: "Technology",
+      eyebrow: "Technical solution",
+      title: "Built on proven technology",
+      subtitle:
+        "Contineo combines semantic search (RAG) over your content with a language model that answers only from verified sources — with a citation and version.",
+      download: "Download the technical design (PDF)",
+      back: "Back to home",
+      architectureTitle: "Architecture and data flow",
+      architectureCaption:
+        "Content sources → processing and embeddings → MongoDB Atlas (Vector Search) → RAG + LLM → interfaces. Including the learning loop and ticket escalation.",
+      pillarsTitle: "Key pillars",
+      pillars: [
+        { icon: "search", title: "RAG + Vector Search", text: "Semantic search via MongoDB Atlas Vector Search, filtered by source, topic and the valid version. The LLM answers only from the retrieved passages." },
+        { icon: "quote", title: "Citations and versions", text: "Every answer states the source and version. A new import never loses the old one — always citing the valid wording." },
+        { icon: "shield", title: "Multi-tenant and security", text: "Each organisation's content and access are isolated. Roles and an audit trail on every knowledge change." },
+        { icon: "layers", title: "Many sources at once", text: "Websites (RSS), PDF regulations, FAQs, internal guidelines and projects — unified into one index." },
+        { icon: "ticket", title: "Helpdesk and e-mail", text: "Mailbox monitoring, ticketing and prepared replies with escalation from search." },
+        { icon: "brain", title: "Learning loop", text: "Approved admin answers flow back into the knowledge base as new pairs — the system keeps improving." },
+      ],
+      stackTitle: "Technology stack",
+      stack: [
+        "MongoDB Atlas + Vector Search",
+        "Node.js worker + job queue",
+        "Next.js (App Router)",
+        "Multilingual embeddings + LLM",
+        "Integrations: e-mail (IMAP), ISSF, Sportnet / IS športu",
+      ],
     },
     cta: {
       title: "Ready to get your content at your fingertips?",
