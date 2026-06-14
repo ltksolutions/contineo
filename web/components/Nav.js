@@ -33,6 +33,7 @@ export default function Nav({ dict, lang }) {
           <a href={`/${lang}#features`} className="muted nav-link">{dict.nav.features}</a>
           <a href={`/${lang}#how`} className="muted nav-link">{dict.nav.how}</a>
           <a href={`/${lang}#demo`} className="muted nav-link">{dict.nav.demo}</a>
+          <a href={`/${lang}#modes`} className="muted nav-link">{dict.nav.modes}</a>
           <a href={`/${lang}#roadmap`} className="muted nav-link">{dict.nav.roadmap}</a>
           <Link href={`/${lang}/technologia`} className="muted nav-link">{dict.tech.navLabel}</Link>
         </nav>
