@@ -1,0 +1,76 @@
+import Link from "next/link";
+
+export default function Footer({ dict, lang }) {
+  const f = dict.footer;
+  const year = new Date().getFullYear();
+  return (
+    <footer style={{ borderTop: "1px solid var(--line)", background: "var(--surface)" }}>
+      <div
+        className="container"
+        style={{
+          padding: "48px 24px 36px",
+          display: "flex",
+          flexWrap: "wrap",
+          gap: 32,
+          justifyContent: "space-between",
+        }}
+      >
+        <div style={{ maxWidth: 320 }}>
+          <span style={{ display: "inline-flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
+            <span
+              style={{
+                width: 28,
+                height: 28,
+                borderRadius: 8,
+                background: "var(--teal-600)",
+                color: "#fff",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontWeight: 700,
+              }}
+            >
+              C
+            </span>
+            <span style={{ fontWeight: 700, fontSize: 17 }}>Contineo</span>
+          </span>
+          <p className="muted" style={{ fontSize: 14 }}>{f.tagline}</p>
+        </div>
+
+        <div style={{ display: "flex", gap: 56, flexWrap: "wrap" }}>
+          <div>
+            <p style={{ fontSize: 13, fontWeight: 700, marginBottom: 12 }}>{f.product}</p>
+            <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "grid", gap: 8 }}>
+              <li><a href="#features" className="muted footlink">{f.links.features}</a></li>
+              <li><a href="#how" className="muted footlink">{f.links.how}</a></li>
+              <li><a href="#demo" className="muted footlink">{f.links.demo}</a></li>
+            </ul>
+          </div>
+          <div>
+            <p style={{ fontSize: 13, fontWeight: 700, marginBottom: 12 }}>{f.company}</p>
+            <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "grid", gap: 8 }}>
+              <li><a href="#cta" className="muted footlink">{f.links.contact}</a></li>
+              <li><a href={`mailto:${dict.cta.email}`} className="muted footlink">{dict.cta.email}</a></li>
+              <li>
+                <Link href={`/${lang === "sk" ? "en" : "sk"}`} className="muted footlink">
+                  {lang === "sk" ? "English" : "Slovensky"}
+                </Link>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div className="container" style={{ padding: "16px 24px", borderTop: "1px solid var(--line)" }}>
+        <p className="muted" style={{ fontSize: 13 }}>
+          © {year} Contineo · contineo.app · {f.rights}
+        </p>
+      </div>
+
+      <style>{`
+        .footlink { font-size: 14px; transition: color .15s ease; }
+        .footlink:hover { color: var(--ink); }
+      `}</style>
+    </footer>
+  );
+}
