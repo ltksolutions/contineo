@@ -2,9 +2,9 @@ import "./globals.css";
 
 export const metadata = {
   metadataBase: new URL("https://contineo.app"),
-  title: "Contineo — inteligentný helpdesk",
+  title: "Contineo — inteligentné vyhľadávanie a helpdesk",
   description:
-    "Contineo odpovedá na otázky z overených noriem a dokumentov. Inteligentné vyhľadávanie, ktoré sa učí.",
+    "Inteligentné vyhľadávanie nad obsahom vašej firmy. Opýtajte sa — odpoveď príde z vášho vlastného obsahu, s citáciou.",
 };
 
 export default function RootLayout({ children }) {

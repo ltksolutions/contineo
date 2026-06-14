@@ -4,8 +4,10 @@ import Nav from "@/components/Nav";
 import Hero from "@/components/Hero";
 import Features from "@/components/Features";
 import HowItWorks from "@/components/HowItWorks";
+import Manifesto from "@/components/Manifesto";
 import BotDemo from "@/components/BotDemo";
 import Audience from "@/components/Audience";
+import Roadmap from "@/components/Roadmap";
 import CTA from "@/components/CTA";
 import Footer from "@/components/Footer";
 
@@ -21,8 +23,10 @@ export default function Home({ params }) {
         <Hero dict={dict} />
         <Features dict={dict} />
         <HowItWorks dict={dict} />
+        <Manifesto dict={dict} />
         <BotDemo dict={dict} kb={sampleKB[lang]} />
         <Audience dict={dict} />
+        <Roadmap dict={dict} />
         <CTA dict={dict} />
       </main>
       <Footer dict={dict} lang={lang} />

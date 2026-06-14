@@ -7,8 +7,10 @@ export function generateStaticParams() {
 export async function generateMetadata({ params }) {
   const dict = getDictionary(params.lang);
   return {
-    title: "Contineo — " + (params.lang === "en" ? "intelligent helpdesk" : "inteligentný helpdesk"),
-    description: dict.hero.subtitle,
+    title:
+      "Contineo — " +
+      (params.lang === "en" ? "intelligent search & helpdesk" : "inteligentné vyhľadávanie a helpdesk"),
+    description: dict.metaDescription,
     alternates: {
       languages: { sk: "/sk", en: "/en" },
     },

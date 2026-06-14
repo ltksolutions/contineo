@@ -3,41 +3,54 @@ export const locales = ["sk", "en"];
 export const dictionaries = {
   sk: {
     locale: "sk",
+    metaDescription:
+      "Inteligentné vyhľadávanie nad obsahom vašej firmy. Opýtajte sa — odpoveď príde z vášho vlastného obsahu, s citáciou.",
     nav: {
       features: "Funkcie",
       how: "Ako to funguje",
       demo: "Demo",
       audience: "Pre koho",
+      roadmap: "Pripravujeme",
       cta: "Vyskúšať",
     },
     hero: {
-      badge: "Inteligentné vyhľadávanie pre normy a podporu",
-      title: "Odpovede z vašich noriem. Okamžite a overené.",
+      badge: "Inteligentné vyhľadávanie a helpdesk nad vaším obsahom",
+      title: "Opýtajte sa. Nehľadajte.",
+      claim: "Odpovede z vášho sveta, nie z internetu.",
       subtitle:
-        "Contineo je inteligentný helpdesk, ktorý odpovedá na otázky z vašich dokumentov, smerníc a noriem — s presnou citáciou zdroja. A keď nevie, plynule vytvorí ticket.",
+        "Contineo nájde odpoveď vo vašom vlastnom obsahu — weby, projekty, normy aj interné predpisy. Žiadne listovanie v zložkách, žiadne dohady z internetu. Len overená odpoveď odtiaľ, kde naozaj žije.",
       ctaPrimary: "Vyskúšať vyhľadávanie",
       ctaSecondary: "Ako to funguje",
       note: "Vložiteľné do webu aj aplikácií jedným riadkom.",
     },
+    manifesto: {
+      eyebrow: "Prečo Contineo",
+      text: "Roky sme sa učili hľadať — vypisovať kľúčové slová, otvárať desať záložiek, prehľadávať zložky. Contineo to obracia: jednoducho sa opýtate a dostanete odpoveď. A nie hocijakú — odpoveď z obsahu vašej firmy, s citáciou zdroja. Nie z internetu. Z vášho sveta.",
+    },
     logos: "Postavené na MongoDB Atlas · Next.js · Node.js",
     features: {
       eyebrow: "Funkcie",
-      title: "Viac než vyhľadávanie. Rozumie obsahu.",
+      title: "Jedno miesto pre všetok firemný obsah",
       items: [
         {
           icon: "search",
           title: "Inteligentné vyhľadávanie",
-          text: "Sémantické hľadanie naprieč normami a FAQ. Používateľ píše prirodzene, Contineo nájde podstatu.",
+          text: "Sémantické hľadanie naprieč všetkými zdrojmi naraz. Používateľ píše prirodzene, Contineo nájde podstatu.",
+        },
+        {
+          icon: "layers",
+          title: "Všetky zdroje pohromade",
+          text: "Weby, projekty, normy, interné predpisy a FAQ na jednom mieste. Žiadne prepínanie medzi systémami.",
         },
         {
           icon: "quote",
           title: "Odpovede s citáciou",
-          text: "Každá odpoveď uvádza zdroj, paragraf a verziu dokumentu. Žiadne dohady — len overený obsah.",
+          text: "Každá odpoveď uvádza zdroj a verziu dokumentu. Žiadne dohady — len overený obsah.",
         },
         {
           icon: "ticket",
-          title: "Plynulá eskalácia",
-          text: "Keď Contineo nepozná odpoveď, ponúkne odoslanie otázky ako ticket správcovi.",
+          title: "Helpdesk a ticketing",
+          text: "Keď vyhľadávanie nestačí, používateľ jedným klikom pošle otázku ako ticket alebo e-mail správcovi.",
         },
         {
           icon: "brain",
@@ -45,14 +58,9 @@ export const dictionaries = {
           text: "Schválené odpovede správcov sa stávajú novou znalosťou. Systém je každým dňom presnejší.",
         },
         {
-          icon: "layers",
-          title: "Verzie noriem",
-          text: "Import novej verzie nestratí starú. Contineo cituje vždy platné znenie.",
-        },
-        {
-          icon: "code",
-          title: "Vložiteľné kdekoľvek",
-          text: "Widget pridáte do stránky či aplikácie jedným kódom. Vyzerá ako vyhľadávanie, myslí ako asistent.",
+          icon: "shield",
+          title: "Oddelené pre každú firmu",
+          text: "Multi-tenant architektúra — obsah a prístupy každej organizácie sú bezpečne oddelené.",
         },
       ],
     },
@@ -62,8 +70,8 @@ export const dictionaries = {
       steps: [
         {
           n: "01",
-          title: "Naplníte znalosti",
-          text: "Importujete PDF, FAQ alebo sledujete web. Obsah sa rozdelí a označí podľa sekcie a platnosti.",
+          title: "Pripojíte zdroje",
+          text: "Weby, projekty, PDF normy, interné predpisy či FAQ. Obsah sa rozdelí a označí podľa témy a platnosti.",
         },
         {
           n: "02",
@@ -72,12 +80,12 @@ export const dictionaries = {
         },
         {
           n: "03",
-          title: "Contineo odpovie s citáciou",
-          text: "Nájde relevantné pasáže a vygeneruje odpoveď len z overených zdrojov — s odkazom na normu a verziu.",
+          title: "Contineo nájde a odpovie",
+          text: "Prehľadá všetky zdroje a vygeneruje odpoveď len z overeného obsahu — s odkazom na zdroj a verziu.",
         },
         {
           n: "04",
-          title: "Učí sa a eskaluje",
+          title: "Podpora a učenie",
           text: "Pri neúspechu vznikne ticket; odpoveď správcu sa vráti späť ako nová znalosť.",
         },
       ],
@@ -87,9 +95,9 @@ export const dictionaries = {
       title: "Skúste, ako to vyzerá pre používateľa",
       subtitle:
         "Toto je ukážka inteligentného vyhľadávania s vzorovými dátami. Skúste „prestup termín“, „ISSF heslo“ alebo „dva zápasy za deň“.",
-      placeholder: "Opýtaj sa na pravidlá, prestupy, ISSF…",
+      placeholder: "Opýtaj sa na čokoľvek z vášho obsahu…",
       brand: "inteligentné vyhľadávanie",
-      poweredBy: "Poháňa Contineo · odpovede z overených noriem",
+      poweredBy: "Poháňa Contineo · odpovede z overeného obsahu",
       question: "Otázka",
       helpful: "Pomohla odpoveď?",
       yes: "Áno",
@@ -106,21 +114,33 @@ export const dictionaries = {
     },
     audience: {
       eyebrow: "Pre koho",
-      title: "Pre organizácie, ktoré žijú v normách",
+      title: "Pre organizácie s množstvom obsahu",
       items: [
-        { title: "Zväzy a federácie", text: "Súťažné a prestupové poriadky, rozpisy súťaží pre desiatky oblastí na jednom mieste." },
-        { title: "Kluby a členovia", text: "Rýchle odpovede na bežné otázky bez čakania na e-mail správcu." },
-        { title: "IT a podpora", text: "Návody k aplikáciám ako ISSF — menej opakovaných ticketov, viac vyriešeného samoobslužne." },
+        { title: "Firmy a inštitúcie", text: "Weby, projekty, smernice a predpisy roztrúsené po systémoch — zjednotené do jedného vyhľadávania." },
+        { title: "Tímy a zamestnanci", text: "Rýchle odpovede na bežné otázky bez hľadania v zložkách a bez čakania na kolegu." },
+        { title: "Podpora a IT", text: "Návody a FAQ k aplikáciám — menej opakovaných ticketov, viac vyriešeného samoobslužne." },
       ],
     },
+    roadmap: {
+      eyebrow: "Pripravujeme",
+      title: "Z obsahu automaticky web",
+      subtitle:
+        "V ďalších verziách Contineo z vašich zdrojov vytvorí prehľadný web — automatický prehľad informácií, projektov a noriem, vždy aktuálny.",
+      items: [
+        { title: "Automatický prehľad", text: "Z pripojených zdrojov vznikne štruktúrovaný portál bez ručného písania." },
+        { title: "Projekty a informácie", text: "Prehľad projektov, dokumentov a noviniek na jednom mieste, vždy aktuálny." },
+        { title: "Bez údržby", text: "Aktualizácia zdroja sa premietne do webu automaticky." },
+      ],
+      tag: "Plánované v ďalších verziách",
+    },
     cta: {
-      title: "Pripravení na inteligentnú podporu?",
-      subtitle: "Ukážeme vám Contineo na vašich vlastných dokumentoch.",
+      title: "Pripravení dostať svoj obsah na dosah ruky?",
+      subtitle: "Ukážeme vám Contineo na vašich vlastných zdrojoch.",
       button: "Kontaktujte nás",
       email: "ahoj@contineo.app",
     },
     footer: {
-      tagline: "Inteligentný helpdesk, ktorý odpovedá z overených noriem.",
+      tagline: "Opýtajte sa svojho obsahu.",
       product: "Produkt",
       company: "Spoločnosť",
       links: {
@@ -136,41 +156,54 @@ export const dictionaries = {
 
   en: {
     locale: "en",
+    metaDescription:
+      "Intelligent search over your company's content. Just ask — the answer comes from your own content, with a citation.",
     nav: {
       features: "Features",
       how: "How it works",
       demo: "Demo",
       audience: "Who it's for",
+      roadmap: "What's next",
       cta: "Try it",
     },
     hero: {
-      badge: "Intelligent search for rules and support",
-      title: "Answers from your own rules. Instant and verified.",
+      badge: "Intelligent search and helpdesk over your content",
+      title: "Ask. Don't search.",
+      claim: "Answers from your world, not the internet.",
       subtitle:
-        "Contineo is an intelligent helpdesk that answers questions from your documents, guidelines and regulations — with an exact source citation. And when it doesn't know, it seamlessly creates a ticket.",
+        "Contineo finds the answer in your own content — websites, projects, regulations and internal guidelines. No digging through folders, no guessing from the internet. Just a verified answer from where it actually lives.",
       ctaPrimary: "Try the search",
       ctaSecondary: "How it works",
       note: "Embeddable into any website or app in one line.",
     },
+    manifesto: {
+      eyebrow: "Why Contineo",
+      text: "For years we learned to search — typing keywords, opening ten tabs, digging through folders. Contineo flips it: you simply ask and get the answer. And not just any answer — one from your company's content, with a source citation. Not from the internet. From your world.",
+    },
     logos: "Built on MongoDB Atlas · Next.js · Node.js",
     features: {
       eyebrow: "Features",
-      title: "More than search. It understands content.",
+      title: "One place for all your company content",
       items: [
         {
           icon: "search",
           title: "Intelligent search",
-          text: "Semantic search across regulations and FAQs. Users write naturally, Contineo finds the substance.",
+          text: "Semantic search across all sources at once. Users write naturally, Contineo finds the substance.",
+        },
+        {
+          icon: "layers",
+          title: "All sources together",
+          text: "Websites, projects, regulations, internal guidelines and FAQs in one place. No switching between systems.",
         },
         {
           icon: "quote",
           title: "Answers with citations",
-          text: "Every answer states the source, article and document version. No guessing — only verified content.",
+          text: "Every answer states the source and document version. No guessing — only verified content.",
         },
         {
           icon: "ticket",
-          title: "Seamless escalation",
-          text: "When Contineo doesn't know the answer, it offers to send the question to an admin as a ticket.",
+          title: "Helpdesk & ticketing",
+          text: "When search isn't enough, users send the question as a ticket or e-mail to an admin in one click.",
         },
         {
           icon: "brain",
@@ -178,14 +211,9 @@ export const dictionaries = {
           text: "Approved admin answers become new knowledge. The system gets more accurate every day.",
         },
         {
-          icon: "layers",
-          title: "Document versioning",
-          text: "Importing a new version never loses the old one. Contineo always cites the valid wording.",
-        },
-        {
-          icon: "code",
-          title: "Embeddable anywhere",
-          text: "Add the widget to a page or app with one snippet. Looks like search, thinks like an assistant.",
+          icon: "shield",
+          title: "Isolated per company",
+          text: "Multi-tenant architecture — each organisation's content and access are securely separated.",
         },
       ],
     },
@@ -195,8 +223,8 @@ export const dictionaries = {
       steps: [
         {
           n: "01",
-          title: "You fill the knowledge",
-          text: "Import PDFs, FAQs or watch a website. Content is chunked and tagged by section and validity.",
+          title: "You connect sources",
+          text: "Websites, projects, PDF regulations, internal guidelines or FAQs. Content is chunked and tagged by topic and validity.",
         },
         {
           n: "02",
@@ -205,12 +233,12 @@ export const dictionaries = {
         },
         {
           n: "03",
-          title: "Contineo answers with a citation",
-          text: "It retrieves the relevant passages and generates an answer only from verified sources — linking the rule and version.",
+          title: "Contineo finds and answers",
+          text: "It searches all sources and generates an answer only from verified content — linking the source and version.",
         },
         {
           n: "04",
-          title: "It learns and escalates",
+          title: "Support and learning",
           text: "On failure a ticket is created; the admin's answer flows back as new knowledge.",
         },
       ],
@@ -220,9 +248,9 @@ export const dictionaries = {
       title: "See how it looks for a user",
       subtitle:
         "This is a demo of intelligent search with sample data. Try “transfer deadline”, “ISSF password” or “two matches in a day”.",
-      placeholder: "Ask about rules, transfers, ISSF…",
+      placeholder: "Ask anything from your content…",
       brand: "intelligent search",
-      poweredBy: "Powered by Contineo · answers from verified rules",
+      poweredBy: "Powered by Contineo · answers from verified content",
       question: "Question",
       helpful: "Was this helpful?",
       yes: "Yes",
@@ -239,21 +267,33 @@ export const dictionaries = {
     },
     audience: {
       eyebrow: "Who it's for",
-      title: "For organisations that live in regulations",
+      title: "For organisations with lots of content",
       items: [
-        { title: "Associations & federations", text: "Competition and transfer rules, fixtures for dozens of regions in one place." },
-        { title: "Clubs & members", text: "Fast answers to common questions without waiting for an admin's e-mail." },
-        { title: "IT & support", text: "Guides for apps like ISSF — fewer repeated tickets, more solved self-service." },
+        { title: "Companies & institutions", text: "Websites, projects, policies and rules scattered across systems — unified into one search." },
+        { title: "Teams & employees", text: "Fast answers to common questions without digging through folders or waiting for a colleague." },
+        { title: "Support & IT", text: "Guides and FAQs for apps — fewer repeated tickets, more solved self-service." },
       ],
     },
+    roadmap: {
+      eyebrow: "What's next",
+      title: "From content to an automatic website",
+      subtitle:
+        "In upcoming versions Contineo will build a clear website from your sources — an automatic overview of information, projects and rules, always up to date.",
+      items: [
+        { title: "Automatic overview", text: "A structured portal generated from your connected sources, with no manual writing." },
+        { title: "Projects & information", text: "An overview of projects, documents and updates in one place, always current." },
+        { title: "Zero maintenance", text: "A source update is reflected on the website automatically." },
+      ],
+      tag: "Planned for future versions",
+    },
     cta: {
-      title: "Ready for intelligent support?",
-      subtitle: "We'll show you Contineo on your own documents.",
+      title: "Ready to get your content at your fingertips?",
+      subtitle: "We'll show you Contineo on your own sources.",
       button: "Get in touch",
       email: "hello@contineo.app",
     },
     footer: {
-      tagline: "An intelligent helpdesk that answers from verified rules.",
+      tagline: "Ask your content.",
       product: "Product",
       company: "Company",
       links: {

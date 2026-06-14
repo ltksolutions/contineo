@@ -50,6 +50,7 @@ export default function Nav({ dict, lang }) {
           <a href="#how" className="muted nav-link">{dict.nav.how}</a>
           <a href="#demo" className="muted nav-link">{dict.nav.demo}</a>
           <a href="#audience" className="muted nav-link">{dict.nav.audience}</a>
+          <a href="#roadmap" className="muted nav-link">{dict.nav.roadmap}</a>
         </nav>
 
         <div style={{ display: "flex", alignItems: "center", gap: 14 }}>

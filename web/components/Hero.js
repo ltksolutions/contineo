@@ -31,7 +31,22 @@ export default function Hero({ dict }) {
           {h.title}
         </h1>
 
-        <p className="lead maxw-720 mx-auto" style={{ marginTop: 22 }}>
+        {h.claim && (
+          <p
+            className="mx-auto"
+            style={{
+              marginTop: 16,
+              fontSize: "clamp(18px, 2.2vw, 22px)",
+              fontWeight: 600,
+              color: "var(--teal-600)",
+              maxWidth: 720,
+            }}
+          >
+            {h.claim}
+          </p>
+        )}
+
+        <p className="lead maxw-720 mx-auto" style={{ marginTop: 18 }}>
           {h.subtitle}
         </p>
 
