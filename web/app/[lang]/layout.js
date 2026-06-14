@@ -6,13 +6,25 @@ export function generateStaticParams() {
 
 export async function generateMetadata({ params }) {
   const dict = getDictionary(params.lang);
+  const title =
+    "Contineo — " +
+    (params.lang === "en" ? "intelligent search & helpdesk" : "inteligentné vyhľadávanie a helpdesk");
   return {
-    title:
-      "Contineo — " +
-      (params.lang === "en" ? "intelligent search & helpdesk" : "inteligentné vyhľadávanie a helpdesk"),
+    title,
     description: dict.metaDescription,
     alternates: {
-      languages: { sk: "/sk", en: "/en" },
+      canonical: `/${params.lang}`,
+      languages: { sk: "/sk", en: "/en", "x-default": "/sk" },
+    },
+    openGraph: {
+      title,
+      description: dict.metaDescription,
+      url: `/${params.lang}`,
+      locale: params.lang === "en" ? "en_US" : "sk_SK",
+    },
+    twitter: {
+      title,
+      description: dict.metaDescription,
     },
   };
 }
