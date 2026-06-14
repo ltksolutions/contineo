@@ -190,7 +190,7 @@ export const dictionaries = {
       back: "Späť na hlavnú stránku",
       architectureTitle: "Architektúra a dátový tok",
       architectureCaption:
-        "Zdroje obsahu → spracovanie a embeddingy → MongoDB Atlas (Vector Search) → RAG + LLM → rozhrania. Vrátane učiaceho cyklu a eskalácie na ticket.",
+        "Zdroje obsahu → spracovanie a embeddingy → MongoDB Atlas (Vector Search) → RAG → rozhrania. AI vrstva (LLM) je len pomocník — dostane len relevantné pasáže, dáta zostávajú vo vašej databáze a úložisku (self-hosted alebo enterprise API so zero-retention). Vrátane učiaceho cyklu a eskalácie na ticket.",
       pillarsTitle: "Kľúčové piliere",
       pillars: [
         { icon: "search", title: "RAG + Vector Search", text: "Sémantické vyhľadávanie cez MongoDB Atlas Vector Search s filtrom na zdroj, tému a platnú verziu. Odpoveď generuje LLM len z nájdených pasáží." },
@@ -481,7 +481,7 @@ export const dictionaries = {
       back: "Back to home",
       architectureTitle: "Architecture and data flow",
       architectureCaption:
-        "Content sources → processing and embeddings → MongoDB Atlas (Vector Search) → RAG + LLM → interfaces. Including the learning loop and ticket escalation.",
+        "Content sources → processing and embeddings → MongoDB Atlas (Vector Search) → RAG → interfaces. The AI layer (LLM) is only a helper — it receives only the relevant passages, your data stays in your database and storage (self-hosted or enterprise API with zero-retention). Including the learning loop and ticket escalation.",
       pillarsTitle: "Key pillars",
       pillars: [
         { icon: "search", title: "RAG + Vector Search", text: "Semantic search via MongoDB Atlas Vector Search, filtered by source, topic and the valid version. The LLM answers only from the retrieved passages." },
