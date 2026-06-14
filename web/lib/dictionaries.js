@@ -12,6 +12,7 @@ export const dictionaries = {
       audience: "Pre koho",
       roadmap: "Pripravujeme",
       modes: "Režimy",
+      security: "Bezpečnosť",
       cta: "Vyskúšať",
     },
     hero: {
@@ -303,6 +304,7 @@ export const dictionaries = {
       audience: "Who it's for",
       roadmap: "What's next",
       modes: "Modes",
+      security: "Security",
       cta: "Try it",
     },
     hero: {

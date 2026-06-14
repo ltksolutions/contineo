@@ -71,7 +71,7 @@ export default function OverlayDemo({ site, kb }) {
       <div style={{ padding: "30px 22px" }}>
         <h3 style={{ fontSize: 22, marginBottom: 8 }}>{site.headline}</h3>
         <p className="muted" style={{ marginBottom: 22, maxWidth: 460 }}>{site.sub}</p>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(120px, 1fr))", gap: 12 }}>
           {site.cards.map((c, i) => (
             <div key={i} style={{ background: "var(--surface-2)", border: "1px solid var(--line)", borderRadius: "var(--radius)", padding: "18px 16px" }}>
               <div style={{ fontWeight: 600, fontSize: 14, marginBottom: 6 }}>{c}</div>

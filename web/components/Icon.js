@@ -25,6 +25,7 @@ const PATHS = {
     "M5 15c-1.5 1.5-2 5-2 5s3.5-.5 5-2M9 13l-3-3 4-7 8-2-2 8-7 4-3-3zM14 9h.01",
   lock: "M6 11h12a1 1 0 011 1v8a1 1 0 01-1 1H6a1 1 0 01-1-1v-8a1 1 0 011-1zM8 11V7a4 4 0 018 0v4",
   x: "M6 6l12 12M18 6L6 18",
+  menu: "M4 7h16M4 12h16M4 17h16",
 };
 
 export default function Icon({ name, size = 22, stroke = 1.8, style }) {
