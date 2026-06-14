@@ -30,5 +30,11 @@ export async function generateMetadata({ params }) {
 }
 
 export default function LangLayout({ children, params }) {
-  return <div lang={params.lang}>{children}</div>;
+  const skip = params.lang === "en" ? "Skip to content" : "Preskočiť na obsah";
+  return (
+    <div lang={params.lang}>
+      <a href="#main" className="skip-link">{skip}</a>
+      {children}
+    </div>
+  );
 }

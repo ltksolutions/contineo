@@ -110,7 +110,7 @@ function SectionHead({ title, intro }) {
 export default function Tech({ dict, lang }) {
   const t = dict.tech;
   return (
-    <main>
+    <main id="main">
       <section
         style={{
           background: "linear-gradient(180deg, var(--surface-2) 0%, var(--bg) 100%)",

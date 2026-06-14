@@ -1,0 +1,23 @@
+version = 1
+
+SPDX-PackageName = "contineo"
+SPDX-PackageSupplier = "Contineo <office@contineo.app>"
+SPDX-PackageDownloadLocation = "https://github.com/ltksolutions/contineo"
+
+[[annotations]]
+path = "**"
+precedence = "aggregate"
+SPDX-FileCopyrightText = "2026 Contineo"
+SPDX-License-Identifier = "LGPL-2.1-only"
+
+[[annotations]]
+path = ["web/public/**", "docs/**", "**.png", "**.ico", "**.svg", "**.jpg", "**.webp"]
+precedence = "aggregate"
+SPDX-FileCopyrightText = "2026 Contineo"
+SPDX-License-Identifier = "LGPL-2.1-only"
+
+[[annotations]]
+path = ["web/package-lock.json", "web/package.json"]
+precedence = "aggregate"
+SPDX-FileCopyrightText = "2026 Contineo"
+SPDX-License-Identifier = "LGPL-2.1-only"

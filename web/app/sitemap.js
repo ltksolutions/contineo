@@ -3,7 +3,7 @@ import { locales } from "@/lib/dictionaries";
 export default function sitemap() {
   const base = "https://contineo.app";
   const now = new Date();
-  const paths = ["", "/technologia"];
+  const paths = ["", "/technologia", "/ochrana-udajov", "/pristupnost"];
   const urls = [];
 
   for (const lang of locales) {

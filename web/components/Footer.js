@@ -1,5 +1,6 @@
 import Link from "next/link";
 import Logo from "./Logo";
+import ComplianceBadges from "./ComplianceBadges";
 
 export default function Footer({ dict, lang }) {
   const f = dict.footer;
@@ -27,16 +28,19 @@ export default function Footer({ dict, lang }) {
           <div>
             <p style={{ fontSize: 13, fontWeight: 700, marginBottom: 12 }}>{f.product}</p>
             <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "grid", gap: 8 }}>
-              <li><a href="#features" className="muted footlink">{f.links.features}</a></li>
-              <li><a href="#how" className="muted footlink">{f.links.how}</a></li>
-              <li><a href="#demo" className="muted footlink">{f.links.demo}</a></li>
+              <li><a href={`/${lang}#features`} className="muted footlink">{f.links.features}</a></li>
+              <li><a href={`/${lang}#how`} className="muted footlink">{f.links.how}</a></li>
+              <li><a href={`/${lang}#demo`} className="muted footlink">{f.links.demo}</a></li>
+              <li><Link href={`/${lang}/technologia`} className="muted footlink">{dict.tech.navLabel}</Link></li>
             </ul>
           </div>
           <div>
             <p style={{ fontSize: 13, fontWeight: 700, marginBottom: 12 }}>{f.company}</p>
             <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "grid", gap: 8 }}>
-              <li><a href="#cta" className="muted footlink">{f.links.contact}</a></li>
+              <li><a href={`/${lang}#cta`} className="muted footlink">{f.links.contact}</a></li>
               <li><a href={`mailto:${dict.cta.email}`} className="muted footlink">{dict.cta.email}</a></li>
+              <li><Link href={`/${lang}/ochrana-udajov`} className="muted footlink">{dict.legal.privacy.title}</Link></li>
+              <li><Link href={`/${lang}/pristupnost`} className="muted footlink">{dict.legal.accessibility.title}</Link></li>
               <li>
                 <Link href={`/${lang === "sk" ? "en" : "sk"}`} className="muted footlink">
                   {lang === "sk" ? "English" : "Slovensky"}
@@ -45,6 +49,10 @@ export default function Footer({ dict, lang }) {
             </ul>
           </div>
         </div>
+      </div>
+
+      <div className="container" style={{ padding: "18px 24px 8px" }}>
+        <ComplianceBadges dict={dict} lang={lang} />
       </div>
 
       <div className="container" style={{ padding: "16px 24px", borderTop: "1px solid var(--line)" }}>

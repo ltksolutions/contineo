@@ -23,7 +23,7 @@ export default function Home({ params }) {
     <>
       <JsonLd dict={dict} lang={lang} />
       <Nav dict={dict} lang={lang} />
-      <main>
+      <main id="main">
         <Hero dict={dict} />
         <Features dict={dict} />
         <HowItWorks dict={dict} />

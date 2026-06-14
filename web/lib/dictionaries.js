@@ -278,6 +278,40 @@ export const dictionaries = {
       button: "Kontaktujte nás",
       email: "office@contineo.app",
     },
+    legal: {
+      compliance: {
+        heading: "Súlad a otvorenosť",
+        eupl: "EUPL-1.2 compatible",
+        reuse: "REUSE compliant",
+        gdpr: "GDPR ready",
+        wcag: "WCAG 2.1 AA",
+      },
+      privacy: {
+        title: "Ochrana údajov",
+        intro: "Toto je vzorová šablóna. Pred zverejnením ju prispôsobte vašej organizácii a nechajte skontrolovať právnikom.",
+        sections: [
+          { h: "Prevádzkovateľ", p: "Doplňte názov spoločnosti, sídlo a kontaktný e-mail (napr. office@contineo.app)." },
+          { h: "Aké údaje spracúvame", p: "Tento web nepoužíva analytické ani reklamné cookies. Ukladá iba voľbu svetlej/tmavej témy v prehliadači (localStorage), čo nie je osobný údaj." },
+          { h: "Obsah zákazníka", p: "V produkte Contineo zostáva obsah vašej firmy vo vašej databáze a úložisku. AI vrstva dostane len relevantné pasáže; verejná AI sa nepoužíva a verejné modely sa na vašich dátach netrénujú." },
+          { h: "Právny základ a rezidencia", p: "Spracúvanie umožňuje EU rezidenciu a zero-retention u poskytovateľa AI, alebo plne self-hosted nasadenie." },
+          { h: "Vaše práva", p: "Podľa GDPR máte právo na prístup, opravu, vymazanie, prenosnosť a právo namietať. Žiadosti smerujte na kontaktný e-mail." },
+          { h: "Kontakt", p: "office@contineo.app" },
+        ],
+      },
+      accessibility: {
+        title: "Prístupnosť",
+        intro: "Contineo je navrhnuté tak, aby spĺňalo WCAG 2.1 úroveň AA.",
+        points: [
+          "Sémantická štruktúra (nadpisy, orientačné prvky, jeden hlavný obsah na stránku).",
+          "Viditeľný fokus pre ovládanie klávesnicou a odkaz „Preskočiť na obsah“.",
+          "Dostatočný farebný kontrast v svetlej aj tmavej téme.",
+          "Textové alternatívy pre obrázky a zrozumiteľné menovky pre ovládacie prvky.",
+          "Rešpektovanie nastavenia „obmedziť pohyb“ (prefers-reduced-motion).",
+        ],
+        contactH: "Spätná väzba",
+        contact: "Ak narazíte na bariéru v prístupnosti, napíšte nám na office@contineo.app a opravíme to.",
+      },
+    },
     footer: {
       tagline: "Opýtajte sa svojho obsahu.",
       product: "Produkt",
@@ -569,6 +603,40 @@ export const dictionaries = {
       subtitle: "We'll show you Contineo on your own sources.",
       button: "Get in touch",
       email: "office@contineo.app",
+    },
+    legal: {
+      compliance: {
+        heading: "Compliance & openness",
+        eupl: "EUPL-1.2 compatible",
+        reuse: "REUSE compliant",
+        gdpr: "GDPR ready",
+        wcag: "WCAG 2.1 AA",
+      },
+      privacy: {
+        title: "Privacy",
+        intro: "This is a template. Adapt it to your organisation and have it reviewed by a lawyer before publishing.",
+        sections: [
+          { h: "Controller", p: "Add your company name, registered seat and a contact e-mail (e.g. office@contineo.app)." },
+          { h: "What we process", p: "This website uses no analytics or advertising cookies. It only stores your light/dark theme choice in the browser (localStorage), which is not personal data." },
+          { h: "Customer content", p: "In the Contineo product your company's content stays in your database and storage. The AI layer receives only relevant passages; no public AI is used and public models are not trained on your data." },
+          { h: "Legal basis and residency", p: "Processing supports EU residency and zero-retention with the AI provider, or a fully self-hosted deployment." },
+          { h: "Your rights", p: "Under GDPR you have the right to access, rectify, erase, port your data and to object. Send requests to the contact e-mail." },
+          { h: "Contact", p: "office@contineo.app" },
+        ],
+      },
+      accessibility: {
+        title: "Accessibility",
+        intro: "Contineo is designed to meet WCAG 2.1 level AA.",
+        points: [
+          "Semantic structure (headings, landmarks, one main content per page).",
+          "Visible focus for keyboard control and a “Skip to content” link.",
+          "Sufficient colour contrast in both light and dark themes.",
+          "Text alternatives for images and clear labels for controls.",
+          "Respects the “reduce motion” setting (prefers-reduced-motion).",
+        ],
+        contactH: "Feedback",
+        contact: "If you hit an accessibility barrier, e-mail us at office@contineo.app and we'll fix it.",
+      },
     },
     footer: {
       tagline: "Ask your content.",

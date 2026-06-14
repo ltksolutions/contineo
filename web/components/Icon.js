@@ -26,6 +26,8 @@ const PATHS = {
   lock: "M6 11h12a1 1 0 011 1v8a1 1 0 01-1 1H6a1 1 0 01-1-1v-8a1 1 0 011-1zM8 11V7a4 4 0 018 0v4",
   x: "M6 6l12 12M18 6L6 18",
   menu: "M4 7h16M4 12h16M4 17h16",
+  eye: "M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7zM12 9a3 3 0 100 6 3 3 0 000-6z",
+  scale: "M12 4v16M7 20h10M5 7h14M5 7l-2.5 6a3 3 0 006 0L5 7zM19 7l-2.5 6a3 3 0 006 0L19 7zM12 4a2 2 0 100-.01",
 };
 
 export default function Icon({ name, size = 22, stroke = 1.8, style }) {
