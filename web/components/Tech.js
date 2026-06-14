@@ -113,7 +113,7 @@ export default function Tech({ dict, lang }) {
     <main>
       <section
         style={{
-          background: "linear-gradient(180deg, var(--surface) 0%, #ffffff 100%)",
+          background: "linear-gradient(180deg, var(--surface-2) 0%, var(--bg) 100%)",
           borderBottom: "1px solid var(--line)",
         }}
       >
@@ -132,7 +132,7 @@ export default function Tech({ dict, lang }) {
           <div className="center maxw-720 mx-auto" style={{ marginBottom: 36 }}>
             <h2>{t.architectureTitle}</h2>
           </div>
-          <div style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: "var(--radius-lg)", padding: "clamp(16px, 3vw, 32px)" }}>
+          <div style={{ background: "#ffffff", border: "1px solid var(--line)", borderRadius: "var(--radius-lg)", padding: "clamp(16px, 3vw, 32px)" }}>
             <img src="/contineo_diagram.png" alt={t.architectureTitle} style={{ width: "100%", height: "auto", display: "block", borderRadius: "var(--radius)" }} />
           </div>
           <p className="muted center" style={{ marginTop: 16, fontSize: 14 }}>{t.architectureCaption}</p>

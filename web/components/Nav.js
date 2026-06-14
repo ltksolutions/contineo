@@ -2,30 +2,8 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-
-function Logo() {
-  return (
-    <span style={{ display: "inline-flex", alignItems: "center", gap: 10 }}>
-      <span
-        style={{
-          width: 30,
-          height: 30,
-          borderRadius: 9,
-          background: "var(--teal-600)",
-          color: "#fff",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          fontWeight: 700,
-          fontSize: 16,
-        }}
-      >
-        C
-      </span>
-      <span style={{ fontWeight: 700, fontSize: 18, letterSpacing: "-0.02em" }}>Contineo</span>
-    </span>
-  );
-}
+import Logo from "./Logo";
+import ThemeToggle from "./ThemeToggle";
 
 export default function Nav({ dict, lang }) {
   const other = lang === "sk" ? "en" : "sk";
@@ -37,8 +15,9 @@ export default function Nav({ dict, lang }) {
         position: "sticky",
         top: 0,
         zIndex: 50,
-        background: "rgba(255,255,255,0.85)",
-        backdropFilter: "saturate(180%) blur(10px)",
+        background: "var(--glass-bg)",
+        backdropFilter: "saturate(180%) blur(16px)",
+        WebkitBackdropFilter: "saturate(180%) blur(16px)",
         borderBottom: "1px solid var(--line)",
       }}
     >
@@ -58,7 +37,8 @@ export default function Nav({ dict, lang }) {
           <Link href={`/${lang}/technologia`} className="muted nav-link">{dict.tech.navLabel}</Link>
         </nav>
 
-        <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          <ThemeToggle />
           <Link
             href={otherHref}
             className="muted"
@@ -75,7 +55,7 @@ export default function Nav({ dict, lang }) {
       <style>{`
         .nav-link { font-size: 15px; transition: color .15s ease; }
         .nav-link:hover { color: var(--ink); }
-        @media (max-width: 820px) { .nav-links { display: none !important; } }
+        @media (max-width: 860px) { .nav-links { display: none !important; } }
       `}</style>
     </header>
   );

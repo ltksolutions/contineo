@@ -5,7 +5,7 @@ export default function Hero({ dict }) {
   return (
     <section
       style={{
-        background: "linear-gradient(180deg, var(--surface) 0%, #ffffff 100%)",
+        background: "linear-gradient(180deg, var(--surface-2) 0%, var(--bg) 100%)",
         borderBottom: "1px solid var(--line)",
       }}
     >

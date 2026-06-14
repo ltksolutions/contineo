@@ -88,8 +88,8 @@ export default function BotDemo({ dict, kb }) {
                 width: 24,
                 height: 24,
                 borderRadius: 7,
-                background: "var(--teal-600)",
-                color: "#fff",
+                background: "var(--accent)",
+                color: "var(--on-accent)",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
@@ -106,7 +106,7 @@ export default function BotDemo({ dict, kb }) {
               display: "flex",
               alignItems: "center",
               gap: 10,
-              background: "#fff",
+              background: "var(--surface)",
               border: "1px solid var(--line)",
               borderRadius: "var(--radius-lg)",
               padding: "10px 14px",
@@ -274,9 +274,9 @@ function AnswerCard({ d, it, feedback, onRate, showTicket, ticketDone, onTicket,
       )}
 
       <style>{`
-        .iconbtn { border: 1px solid var(--line); background: #fff; border-radius: var(--radius); width: 34px; height: 30px; cursor: pointer; color: var(--muted); display: inline-flex; align-items: center; justify-content: center; transition: background .15s ease; }
+        .iconbtn { border: 1px solid var(--line); background: var(--surface); border-radius: var(--radius); width: 34px; height: 30px; cursor: pointer; color: var(--muted); display: inline-flex; align-items: center; justify-content: center; transition: background .15s ease; }
         .iconbtn:hover { background: var(--surface); }
-        .chip { font-size: 13px; border: 1px solid var(--line); background: #fff; border-radius: var(--radius); padding: 6px 11px; cursor: pointer; color: var(--muted); transition: background .15s ease, color .15s ease; }
+        .chip { font-size: 13px; border: 1px solid var(--line); background: var(--surface); border-radius: var(--radius); padding: 6px 11px; cursor: pointer; color: var(--muted); transition: background .15s ease, color .15s ease; }
         .chip:hover { background: var(--surface); color: var(--ink); }
       `}</style>
     </div>

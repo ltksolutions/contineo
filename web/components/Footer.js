@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Logo from "./Logo";
 
 export default function Footer({ dict, lang }) {
   const f = dict.footer;
@@ -16,24 +17,9 @@ export default function Footer({ dict, lang }) {
         }}
       >
         <div style={{ maxWidth: 320 }}>
-          <span style={{ display: "inline-flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
-            <span
-              style={{
-                width: 28,
-                height: 28,
-                borderRadius: 8,
-                background: "var(--teal-600)",
-                color: "#fff",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                fontWeight: 700,
-              }}
-            >
-              C
-            </span>
-            <span style={{ fontWeight: 700, fontSize: 17 }}>Contineo</span>
-          </span>
+          <div style={{ marginBottom: 12 }}>
+            <Logo size={28} />
+          </div>
           <p className="muted" style={{ fontSize: 14 }}>{f.tagline}</p>
         </div>
 
