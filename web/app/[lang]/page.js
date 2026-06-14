@@ -12,6 +12,7 @@ import Audience from "@/components/Audience";
 import Roadmap from "@/components/Roadmap";
 import CTA from "@/components/CTA";
 import Footer from "@/components/Footer";
+import JsonLd from "@/components/JsonLd";
 
 export default function Home({ params }) {
   const { lang } = params;
@@ -20,6 +21,7 @@ export default function Home({ params }) {
 
   return (
     <>
+      <JsonLd dict={dict} lang={lang} />
       <Nav dict={dict} lang={lang} />
       <main>
         <Hero dict={dict} />
