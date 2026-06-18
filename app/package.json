@@ -1,0 +1,27 @@
+{
+  "name": "contineo-app",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Contineo — inteligentný RAG helpdesk a CMS platforma",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "type-check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "next": "14.2.35",
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
+    "mongodb": "^6.7.0",
+    "next-auth": "^4.24.7",
+    "@anthropic-ai/sdk": "^0.27.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/react": "^18.0.0",
+    "@types/react-dom": "^18.0.0",
+    "typescript": "^5.0.0"
+  }
+}
