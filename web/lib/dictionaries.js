@@ -4,7 +4,7 @@ export const dictionaries = {
   sk: {
     locale: "sk",
     metaDescription:
-      "Inteligentné vyhľadávanie nad obsahom vašej firmy. Opýtajte sa — odpoveď príde z vášho vlastného obsahu, s citáciou.",
+      "RAG helpdesk s hybrid vyhľadávaním nad vaším obsahom. Voyage AI + MongoDB Atlas ($rankFusion), Ollama (lokálne AI), EU hosting, GDPR. Odpoveď s citáciou zdroja.",
     nav: {
       features: "Funkcie",
       how: "Ako to funguje",
@@ -29,7 +29,7 @@ export const dictionaries = {
       eyebrow: "Prečo Contineo",
       text: "Roky sme sa učili hľadať — vypisovať kľúčové slová, otvárať desať záložiek, prehľadávať zložky. Contineo to obracia: jednoducho sa opýtate a dostanete odpoveď. A nie hocijakú — odpoveď z obsahu vašej firmy, s citáciou zdroja. Nie z internetu. Z vášho sveta.",
     },
-    logos: "Postavené na MongoDB Atlas · Next.js · Node.js",
+    logos: "Postavené na MongoDB Atlas + Voyage AI · Ollama (lokálne AI) · Next.js · EU hosting · GDPR",
     features: {
       eyebrow: "Funkcie",
       title: "Jedno miesto pre všetok firemný obsah",
@@ -194,7 +194,7 @@ export const dictionaries = {
         "Zdroje obsahu → spracovanie a embeddingy → MongoDB Atlas (Vector Search) → RAG → rozhrania. AI vrstva (LLM) je len pomocník — dostane len relevantné pasáže, dáta zostávajú vo vašej databáze a úložisku (self-hosted alebo enterprise API so zero-retention). Vrátane učiaceho cyklu a eskalácie na ticket.",
       pillarsTitle: "Kľúčové piliere",
       pillars: [
-        { icon: "search", title: "RAG + Vector Search", text: "Sémantické vyhľadávanie cez MongoDB Atlas Vector Search s filtrom na zdroj, tému a platnú verziu. Odpoveď generuje LLM len z nájdených pasáží." },
+        { icon: "search", title: "RAG + Hybrid Search", text: "Hybrid vyhľadávanie cez MongoDB Atlas ($rankFusion: vektor 60% + fulltext 40%) s Voyage AI rerankerom. Odpoveď generuje Ollama (lokálne) alebo Claude API (fallback) výhradne z nájdených pasáží." },
         { icon: "quote", title: "Citácie a verzie", text: "Každá odpoveď uvádza zdroj a verziu. Import novej verzie nestratí starú — cituje sa vždy platné znenie." },
         { icon: "shield", title: "Multi-tenant a bezpečnosť", text: "Obsah a prístupy každej organizácie sú oddelené. Role a audit pri každej zmene znalostí." },
         { icon: "layers", title: "Viac zdrojov naraz", text: "Weby (RSS), PDF normy, FAQ, interné predpisy, projekty aj MCP konektory (Drive, SharePoint, Confluence…) — zjednotené do jedného indexu." },
@@ -203,15 +203,17 @@ export const dictionaries = {
       ],
       stackTitle: "Technologický stack",
       stack: [
-        "MongoDB Atlas + Vector Search",
-        "Node.js worker + fronta úloh",
-        "Next.js (App Router)",
-        "Multilingválne embeddingy + LLM",
-        "Integrácie: e-mail (IMAP), ISSF, Sportnet / IS športu",
+        "MongoDB Atlas EU + $rankFusion (hybrid search)",
+        "Voyage AI voyage-4 · Automated Embedding",
+        "Voyage AI voyage-rerank-2 · $rerank",
+        "Ollama llama3.2 (lokálny LLM, primárny)",
+        "Claude API claude-sonnet-4-6 (fallback)",
+        "Next.js 14 (App Router) · Node.js worker",
+        "Integrácie: e-mail (IMAP), ISSF, MCP konektory",
       ],
       flowsTitle: "Kľúčové dátové toky",
       flows: [
-        { title: "Odpovedanie (RAG)", text: "Otázka sa embeduje a vyhľadá cez $vectorSearch s pre-filtrom na sekciu, Zväz a aktívnu verziu; výsledky sa re-rankujú a LLM odpovie výhradne z nich, s citáciami." },
+        { title: "Odpovedanie (RAG + Hybrid)", text: "Dotaz sa klasifikuje (fulltext / vector / hybrid). Pre hybrid: $rankFusion zlúči $vectorSearch (Voyage AI auto-embed) + $search (Lucene), $rerank (Voyage) zoradí výsledky. Ollama llama3.2 odpovie streamingom; ak nie je dostupný, nastúpi Claude API." },
         { title: "Eskalácia na ticket", text: "Neúspech = nízke skóre podobnosti alebo negatívne hodnotenie. Po 3 neúspechoch na tú istú tému bot ponúkne vytvorenie ticketu aj s celým kontextom konverzácie." },
         { title: "Učiaci cyklus", text: "Schválené odpovede z ContineoLearning aj z upravených e-mailových odpovedí sa uložia ako qa_pair a embedujú späť do znalostí. Nový pár nikdy potichu neprepíše normu." },
       ],
@@ -219,8 +221,8 @@ export const dictionaries = {
       collectionsIntro: "Návrh oddeľuje znalosti (jadro RAG) od konverzácií a ticketov. Verzovanie noriem zaručuje, že import novej verzie nestratí staršiu.",
       collDocLabel: "document_chunks — jadro RAG",
       collTicketLabel: "tickets",
-      vectorTitle: "Vyhľadávací dotaz ($vectorSearch)",
-      vectorIntro: "Otázka z prostredia Zväzu „SsFZ“, sekcia súťažný poriadok, len platná verzia. Filter zámerne pustí aj celoštátne normy (SFZ).",
+      vectorTitle: “Hybrid vyhľadávací dotaz ($rankFusion + $rerank)”,
+      vectorIntro: “Otázka z prostredia Zväzu „SsFZ”, sekcia súťažný poriadok, len platná verzia. $rankFusion kombinuje vektorové (Voyage AI auto-embed) a fulltextové vyhľadávanie; $rerank zoradí výsledky podľa relevancie.”,
       taggingTitle: "Značkovanie obsahu",
       taggingIntro: "Každý úryvok odpovedá na tri otázky — o čom je (sekcia), pre koho platí (Zväz/rozsah) a z ktorej verzie. Hodnoty sa vyberajú z číselníka, nie ako voľný text.",
       taggingSectionsTitle: "Číselník sekcií",
@@ -331,7 +333,7 @@ export const dictionaries = {
   en: {
     locale: "en",
     metaDescription:
-      "Intelligent search over your company's content. Just ask — the answer comes from your own content, with a citation.",
+      "Contineo is an intelligent RAG helpdesk over your own content. Hybrid search (MongoDB Atlas $rankFusion + Voyage AI), local AI (Ollama), answers with citations. EU hosting, GDPR.",
     nav: {
       features: "Features",
       how: "How it works",
@@ -356,7 +358,7 @@ export const dictionaries = {
       eyebrow: "Why Contineo",
       text: "For years we learned to search — typing keywords, opening ten tabs, digging through folders. Contineo flips it: you simply ask and get the answer. And not just any answer — one from your company's content, with a source citation. Not from the internet. From your world.",
     },
-    logos: "Built on MongoDB Atlas · Next.js · Node.js",
+    logos: "Built on MongoDB Atlas + Voyage AI · Ollama (local AI) · Next.js · EU hosting · GDPR",
     features: {
       eyebrow: "Features",
       title: "One place for all your company content",
@@ -521,7 +523,7 @@ export const dictionaries = {
         "Content sources → processing and embeddings → MongoDB Atlas (Vector Search) → RAG → interfaces. The AI layer (LLM) is only a helper — it receives only the relevant passages, your data stays in your database and storage (self-hosted or enterprise API with zero-retention). Including the learning loop and ticket escalation.",
       pillarsTitle: "Key pillars",
       pillars: [
-        { icon: "search", title: "RAG + Vector Search", text: "Semantic search via MongoDB Atlas Vector Search, filtered by source, topic and the valid version. The LLM answers only from the retrieved passages." },
+        { icon: "search", title: "RAG + Hybrid Search", text: "Hybrid search via MongoDB Atlas $rankFusion (vector 60 % + fulltext 40 %, Voyage AI auto-embed), $rerank reranking. Ollama llama3.2 answers only from the retrieved passages; Claude API as fallback." },
         { icon: "quote", title: "Citations and versions", text: "Every answer states the source and version. A new import never loses the old one — always citing the valid wording." },
         { icon: "shield", title: "Multi-tenant and security", text: "Each organisation's content and access are isolated. Roles and an audit trail on every knowledge change." },
         { icon: "layers", title: "Many sources at once", text: "Websites (RSS), PDF regulations, FAQs, internal guidelines, projects and MCP connectors (Drive, SharePoint, Confluence…) — unified into one index." },
@@ -530,15 +532,17 @@ export const dictionaries = {
       ],
       stackTitle: "Technology stack",
       stack: [
-        "MongoDB Atlas + Vector Search",
-        "Node.js worker + job queue",
-        "Next.js (App Router)",
-        "Multilingual embeddings + LLM",
-        "Integrations: e-mail (IMAP), ISSF, Sportnet / IS športu",
+        "MongoDB Atlas EU + $rankFusion (hybrid search)",
+        "Voyage AI voyage-4 · Automated Embedding",
+        "Voyage AI voyage-rerank-2 · $rerank",
+        "Ollama llama3.2 (local LLM, primary)",
+        "Claude API claude-sonnet-4-6 (fallback)",
+        "Next.js 14 (App Router) · Node.js worker",
+        "Integrations: e-mail (IMAP), ISSF, MCP connectors",
       ],
       flowsTitle: "Key data flows",
       flows: [
-        { title: "Answering (RAG)", text: "The question is embedded and searched via $vectorSearch with a pre-filter on section, association and active version; results are re-ranked and the LLM answers only from them, with citations." },
+        { title: "Answering (RAG)", text: "Query classified (fulltext / vector / hybrid) → $rankFusion (Voyage AI auto-embed, vector 60 % + fulltext 40 %) → $rerank → Ollama llama3.2 (Claude as fallback) answers only from retrieved passages, with citations." },
         { title: "Ticket escalation", text: "A failure = low similarity score or a negative rating. After 3 failures on the same topic the bot offers to create a ticket, including the full conversation context." },
         { title: "Learning loop", text: "Approved answers from ContineoLearning and edited e-mail replies are stored as a qa_pair and embedded back into the knowledge base. A new pair never silently overrides a rule." },
       ],
@@ -546,8 +550,8 @@ export const dictionaries = {
       collectionsIntro: "The design separates knowledge (the RAG core) from conversations and tickets. Versioning ensures importing a new version never loses the older one.",
       collDocLabel: "document_chunks — the RAG core",
       collTicketLabel: "tickets",
-      vectorTitle: "Search query ($vectorSearch)",
-      vectorIntro: "A question from association “SsFZ”, section competition rules, valid version only. The filter deliberately also allows nationwide rules (SFZ).",
+      vectorTitle: “Hybrid search query ($rankFusion + $rerank)”,
+      vectorIntro: “A question from association “SsFZ”, section competition rules, valid version only. $rankFusion combines vector (Voyage AI auto-embed) and fulltext search; $rerank orders results by relevance.”,
       taggingTitle: "Content tagging",
       taggingIntro: "Every chunk answers three questions — what it is about (section), whom it applies to (association/scope) and which version. Values are picked from a controlled list, not free text.",
       taggingSectionsTitle: "Section list",

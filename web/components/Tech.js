@@ -17,8 +17,8 @@ const DOC_CHUNKS = `{
   text: "Hráč nesmie nastúpiť v dvoch stretnutiach...",
 
   // vector + state
-  embedding: [0.0123, -0.044, ...],   // 3072 dims
-  embeddingModel: "text-embedding-3-large",
+  embedding: [0.0123, -0.044, ...],   // 1024 dims (Voyage AI voyage-4)
+  embeddingModel: "voyage-4",         // Automated Embedding in Atlas
   isActive: true,               // false = archived version
   effectiveFrom, effectiveTo
 }`;
@@ -38,22 +38,34 @@ const TICKETS = `{
 }`;
 
 const VECTOR_QUERY = `db.document_chunks.aggregate([
-  { $vectorSearch: {
-      index: "chunks_vector",
-      path: "embedding",
-      queryVector: queryEmbedding,
-      numCandidates: 200,
-      limit: 8,
-      filter: {
-        sectionKey:      { $eq: "sutazny_poriadok" },
-        associationCode: { $in: ["SsFZ", "SFZ"] },
-        isActive:        { $eq: true },
-        language:        { $eq: "sk" }
-      }
+  { $rankFusion: {
+      input: {
+        pipelines: {
+          vector: [{ $vectorSearch: {
+            index: "rag_vector_index",   // voyage-4 auto-embed
+            path: "embedding",
+            queryVector: queryEmbedding, // 1024 dims
+            numCandidates: 200, limit: 20,
+            filter: { sectionKey: { $eq: "sutazny_poriadok" },
+                      associationCode: { $in: ["SsFZ","SFZ"] },
+                      isActive: { $eq: true } }
+          }}],
+          fulltext: [{ $search: {
+            index: "rag_text_index",
+            text: { query: queryText, path: "text" }
+          }}]
+        }
+      },
+      combination: { weights: { vector: 0.6, fulltext: 0.4 } }
+  }},
+  { $limit: 10 },
+  { $rerank: {
+      index: "rag_rerank_index",         // voyage-rerank-2
+      query: queryText, limit: 8
   }},
   { $project: {
       text: 1, heading: 1, articleRef: 1,
-      score: { $meta: "vectorSearchScore" }   // -> escalation signal
+      score: { $meta: "rankFusionScore" }  // -> escalation signal
   }}
 ])`;
 

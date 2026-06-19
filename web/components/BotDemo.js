@@ -3,6 +3,22 @@
 import { useState, useRef } from "react";
 import Icon from "./Icon";
 
+// Simulácia klasifikátora dotazov (odráža logiku queryClassifier.ts)
+function classifyMode(text) {
+  if (!text) return null;
+  const words = text.trim().split(/\s+/).length;
+  if (/§\s*\d+|\b(STN|EN|ISO)\s*[\d\-]+|\b\d{4}\b|\b(ods\.|čl\.)/i.test(text)) return "fulltext";
+  if (words <= 3) return "fulltext";
+  if (words >= 8) return "vector";
+  return "hybrid";
+}
+
+const MODE_LABELS = {
+  fulltext: { color: "var(--teal-500)" },
+  vector:   { color: "#6366f1" },
+  hybrid:   { color: "#f59e0b" },
+};
+
 export default function BotDemo({ dict, kb }) {
   const d = dict.demo;
   const [query, setQuery] = useState("");
@@ -11,6 +27,7 @@ export default function BotDemo({ dict, kb }) {
   const [feedback, setFeedback] = useState("");
   const [showTicket, setShowTicket] = useState(false);
   const [ticketDone, setTicketDone] = useState("");
+  const [searchMode, setSearchMode] = useState(null);
   const fails = useRef({});
 
   function answer(text) {
@@ -27,6 +44,7 @@ export default function BotDemo({ dict, kb }) {
     setFeedback("");
     setShowTicket(false);
     setTicketDone("");
+    setSearchMode(classifyMode(text));
     if (best && score > 0) {
       setResult(best);
       setNotFound(false);
@@ -189,7 +207,25 @@ export default function BotDemo({ dict, kb }) {
             <span className="muted" style={{ fontSize: 12, display: "inline-flex", alignItems: "center", gap: 6 }}>
               <Icon name="sparkles" size={13} /> {d.poweredBy}
             </span>
-            <span className="muted" style={{ fontSize: 12 }}>SsFZ</span>
+            <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+              {searchMode && (
+                <span
+                  style={{
+                    fontSize: 11,
+                    fontWeight: 700,
+                    letterSpacing: "0.04em",
+                    color: MODE_LABELS[searchMode].color,
+                    background: "var(--surface)",
+                    border: `1px solid ${MODE_LABELS[searchMode].color}`,
+                    borderRadius: 999,
+                    padding: "2px 8px",
+                  }}
+                >
+                  {searchMode}
+                </span>
+              )}
+              <span className="muted" style={{ fontSize: 12 }}>SsFZ</span>
+            </span>
           </div>
         </div>
       </div>
