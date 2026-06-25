@@ -87,7 +87,7 @@ export const dictionaries = {
         },
         {
           n: "04",
-          title: "Podpora a učenie",
+          title: "Podpora a kurácia",
           text: "Pri neúspechu vznikne ticket; odpoveď správcu sa vráti späť ako nová znalosť.",
         },
       ],
@@ -416,7 +416,7 @@ export const dictionaries = {
         },
         {
           n: "04",
-          title: "Support and learning",
+          title: "Support and curation",
           text: "On failure a ticket is created; the admin's answer flows back as new knowledge.",
         },
       ],
