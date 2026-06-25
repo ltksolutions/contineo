@@ -160,7 +160,7 @@ Prompt
 MongoDB 8.x podporuje `$rankFusion` s Reciprocal Rank Fusion (RRF) — zlúčenie výsledkov oboch engines v jednom aggregation pipeline:
 
 ```javascript
-db.rag_chunks.aggregate([
+db.document_chunks.aggregate([
   {
     $rankFusion: {
       input: {
@@ -174,7 +174,7 @@ db.rag_chunks.aggregate([
                 query: "Ako sa registruje hráč?",
                 numCandidates: 100,
                 limit: 20,
-                filter: { access_level: "public" }
+                filter: { accessLevel: "public" }
               }
             }
           ],
@@ -279,8 +279,8 @@ KROK 4 – REVIEW (človek v slučke)
         ▼
 KROK 5 – ULOŽENIE + CHUNKING + AUTO-EMBED
   Originál PDF  → Vercel Blob
-  Markdown (celý) → rag_documents (CMS)
-  Markdown chunky → rag_chunks (auto-embed Voyage v MongoDB)
+  Markdown (celý) → documents (CMS)
+  Markdown chunky → document_chunks (auto-embed Voyage v MongoDB)
 ```
 
 ### 4.2 AI konverzný engine (primárny + fallback)
@@ -297,7 +297,7 @@ KROK 5 – ULOŽENIE + CHUNKING + AUTO-EMBED
 | Využitie | Detail |
 |---|---|
 | **CMS publikovanie** | Celý Markdown sa zobrazí ako článok na internom portáli. Používateľ má možnosť zobraziť aj originál PDF (náhľad/download z Blob). |
-| **RAG vyhľadávanie** | Markdown sa rozseká na chunky uložené v `rag_chunks` s automatickým embeddingom (Voyage). Citácie v odpovedi odkážu späť na CMS článok. |
+| **RAG vyhľadávanie** | Markdown sa rozseká na chunky uložené v `document_chunks` s automatickým embeddingom (Voyage). Citácie v odpovedi odkážu späť na CMS článok. |
 
 ---
 
@@ -365,7 +365,7 @@ KROK 5 – ULOŽENIE + CHUNKING + AUTO-EMBED
 - [ ] Extrakcia obrázkov → Vercel Blob + AI alt text popis
 - [ ] AI návrh metadát: názov, kategória, tagy, zhrnutie, access_level
 - [ ] Review UI: Markdown editor + live náhľad + formulár metadát
-- [ ] Uloženie: originál → Blob, Markdown → `rag_documents`, chunky → `rag_chunks`
+- [ ] Uloženie: originál → Blob, Markdown → `documents`, chunky → `document_chunks`
 - [ ] CMS zobrazenie článku + možnosť náhľadu originálneho PDF
 - [ ] **Migrácia na Model B:** premenovať kolekcie (`rag_chunks`→`document_chunks`, `rag_chat_history`→`conversations`, `rag_documents`→`documents`) + preindexovať Atlas — viď `docs/DATA_MODEL_konzistencia.md`
 - [ ] **Doménové značkovanie pri importe z číselníka:** `sectionKey`, `associationCode`, `scope`, `articleRef` + verzovanie `isActive`/`effectiveFrom/To`
@@ -410,48 +410,59 @@ KROK 5 – ULOŽENIE + CHUNKING + AUTO-EMBED
 > Cieľové názvy: `rag_chunks` → `document_chunks`, `rag_chat_history` → `conversations`, `rag_documents` → `documents`, + nové `qa_pairs`, `tickets` a doménové polia (`sectionKey`, `associationCode`, `scope`, `articleRef`, verzovanie `isActive`/`effectiveFrom/To`).
 > Úplné mapovanie a fázová migrácia: **`docs/DATA_MODEL_konzistencia.md`**.
 
-### 7.1 Kolekcia: `rag_documents` (CMS – celý dokument)
+### 7.1 Kolekcia: `documents` (CMS – celý dokument)
 
 ```javascript
 {
-  _id:           ObjectId,
-  title:         "Registračný poriadok SFZ 2026",
-  slug:          "registracny-poriadok-sfz-2026",   // CMS URL
-  category:      "normy",
-  access_level:  "public" | "internal",
-  tags:          ["registrácia", "hráči"],
-  summary:       "AI-generované zhrnutie...",
-  markdown:      "# Registračný poriadok\n\n...",    // celý obsah pre CMS
-  original_file: {
-    blob_url:    "https://...blob.../original.pdf",  // náhľad / download
-    filename:    "poriadok.pdf",
-    size_bytes:  248000,
-    mime:        "application/pdf"
+  _id:          ObjectId,
+  title:        "Registračný poriadok SFZ 2026",
+  slug:         "registracny-poriadok-sfz-2026",   // CMS URL
+  category:     "normy",
+  accessLevel:  "public" | "internal",
+  tags:         ["registrácia", "hráči"],
+  summary:      "AI-generované zhrnutie...",
+  markdown:     "# Registračný poriadok\n\n...",    // celý obsah pre CMS
+  originalFile: {
+    blobUrl:    "https://...blob.../original.pdf",  // náhľad / download
+    filename:   "poriadok.pdf",
+    sizeBytes:  248000,
+    mime:       "application/pdf"
   },
-  images:        [{ url: "...", alt: "AI popis" }],
-  source_type:   "pdf" | "web" | "scan",
-  source_url:    "https://futbalsfz.sk/...",         // ak web
-  status:        "draft" | "published",
-  content_hash:  "sha256...",
-  created_by:    ObjectId,
-  created_at:    ISODate,
-  published_at:  ISODate
+  images:       [{ url: "...", alt: "AI popis" }],
+  sourceType:   "pdf" | "web" | "scan",
+  sourceUrl:    "https://futbalsfz.sk/...",         // ak web
+  status:       "draft" | "published",
+  contentHash:  "sha256...",
+  createdBy:    ObjectId,
+  createdAt:    ISODate,
+  publishedAt:  ISODate
 }
 ```
 
-### 7.2 Kolekcia: `rag_chunks` (RAG vyhľadávanie)
+### 7.2 Kolekcia: `document_chunks` (RAG vyhľadávanie)
 
 ```javascript
 {
-  _id:           ObjectId,
-  document_id:   ObjectId,               // → rag_documents (citácie, mazanie)
-  text:          "Hráč sa registruje cez ISSF systém...",
-  embedding:     [0.021, -0.34, ...],    // generuje MongoDB AUTOMATICKY (Voyage)
-  access_level:  "public" | "internal",  // zdedené z dokumentu, filter pri hľadaní
-  language:      "sk",
-  chunk_index:   3,
-  tags:          ["normy", "registrácia", "hráči"],
-  created_at:    ISODate
+  _id:             ObjectId,
+  documentId:      ObjectId,               // → documents (citácie, mazanie)
+  versionId:       ObjectId,
+  text:            "Hráč sa registruje cez ISSF systém...",
+  embedding:       [0.021, -0.34, ...],    // generuje MongoDB AUTOMATICKY (Voyage)
+  embeddingModel:  "voyage-4",
+  // tagging / domain filtering
+  sectionKey:      "prestupovy_poriadok",
+  associationCode: "SsFZ",                 // "SFZ" = platí pre všetkých
+  scope:           "association",          // global | association | region
+  accessLevel:     "public" | "internal",  // viditeľnosť / RBAC
+  language:        "sk",
+  articleRef:      "§ 12 ods. 3",
+  heading:         "Štart hráča",
+  chunkIndex:      3,
+  tags:            ["normy", "registrácia", "hráči"],
+  isActive:        true,                    // false = archivovaná verzia
+  effectiveFrom:   ISODate,
+  effectiveTo:     ISODate,
+  createdAt:       ISODate
 }
 ```
 
@@ -465,43 +476,47 @@ KROK 5 – ULOŽENIE + CHUNKING + AUTO-EMBED
       "path": "text",
       "model": "voyage-4"
     },
-    { "type": "filter", "path": "access_level" },
+    { "type": "filter", "path": "accessLevel" },
+    { "type": "filter", "path": "associationCode" },
+    { "type": "filter", "path": "scope" },
+    { "type": "filter", "path": "sectionKey" },
+    { "type": "filter", "path": "isActive" },
     { "type": "filter", "path": "language" },
-    { "type": "filter", "path": "source_type" }
+    { "type": "filter", "path": "sourceType" }
   ]
 }
 ```
 
-### 7.4 Kolekcia: `rag_chat_history`
+### 7.4 Kolekcia: `conversations`
 
 ```javascript
 {
-  _id:         ObjectId,
-  session_id:  "uuid-v4",
-  user_id:     null | ObjectId,    // null = anonymný používateľ
-  question:    "Ako sa registruje hráč?",
-  answer:      "...",
-  sources:     ["https://...", "https://..."],
-  model_used:  "llama3:8b",
-  latency_ms:  1240,
-  feedback:    null | "positive" | "negative",
-  created_at:  ISODate
+  _id:        ObjectId,
+  sessionId:  "uuid-v4",
+  userId:     null | ObjectId,    // null = anonymný používateľ
+  question:   "Ako sa registruje hráč?",
+  answer:     "...",
+  sources:    ["https://...", "https://..."],
+  modelUsed:  "llama3.2",
+  latencyMs:  1240,
+  feedback:   null | "positive" | "negative",
+  createdAt:  ISODate
 }
 ```
 
-### 7.5 Kolekcia: `rag_crawl_log`
+### 7.5 Kolekcia: `crawl_log`
 
 ```javascript
 {
-  _id:            ObjectId,
-  job_id:         "uuid-v4",
-  source_url:     "https://futbalsfz.sk",
-  started_at:     ISODate,
-  finished_at:    ISODate,
-  pages_crawled:  142,
-  pages_updated:  8,
-  errors:         ["url1 – 404", "url2 – timeout"],
-  status:         "success" | "partial" | "failed"
+  _id:           ObjectId,
+  jobId:         "uuid-v4",
+  sourceUrl:     "https://futbalsfz.sk",
+  startedAt:     ISODate,
+  finishedAt:    ISODate,
+  pagesCrawled:  142,
+  pagesUpdated:  8,
+  errors:        ["url1 – 404", "url2 – timeout"],
+  status:        "success" | "partial" | "failed"
 }
 ```
 
@@ -556,7 +571,7 @@ npm install crawlee playwright next-auth @anthropic-ai/sdk
 
 ```javascript
 // Text dotazu sa zvektorizuje AUTOMATICKY priamo v MongoDB
-db.rag_chunks.aggregate([
+db.document_chunks.aggregate([
   {
     $vectorSearch: {
       index: "rag_vector_index",
@@ -564,7 +579,7 @@ db.rag_chunks.aggregate([
       query: "Ako sa registruje hráč?",  // TEXT, nie vektor
       numCandidates: 100,
       limit: 10,
-      filter: { access_level: "public" }
+      filter: { accessLevel: "public" }
     }
   }
 ])

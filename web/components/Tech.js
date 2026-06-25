@@ -8,7 +8,7 @@ const DOC_CHUNKS = `{
   // tagging (used for filtering at search time)
   sectionKey: "sutazny_poriadok",
   associationCode: "SsFZ",      // "SFZ" = applies to everyone
-  scope: "zvaz",                // global | zvaz | oblast
+  scope: "association",         // global | association | region
   language: "sk",
 
   // content
@@ -76,7 +76,7 @@ const TAG_EXAMPLES = `// nationwide rule (applies to all associations)
 
 // fixtures of a specific association
 { sourceType: "pdf", sectionKey: "rozpis_sutazi",
-  associationCode: "SsFZ", scope: "zvaz",
+  associationCode: "SsFZ", scope: "association",
   articleRef: "čl. 8", isActive: true }
 
 // IT FAQ for the ISSF app (FAQ, not a rule)

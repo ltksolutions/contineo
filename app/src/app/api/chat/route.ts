@@ -66,7 +66,7 @@ export async function POST(req: NextRequest) {
   const searchQuery = processed.rewritten
 
   // 5. Vyhľadávanie podľa módu
-  const collection = await getCollection("rag_chunks")
+  const collection = await getCollection("document_chunks")
   const searchOpts = { query: searchQuery, accessLevel, limit: 20, rerankLimit: 5 }
 
   let chunks = await (

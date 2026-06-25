@@ -237,8 +237,8 @@ export const dictionaries = {
       scopeTitle: "Rozsah platnosti",
       scopes: [
         "scope: global + SFZ → platí pre všetkých (celoštátne)",
-        "scope: zvaz + kód Zväzu → platí len pre daný Zväz",
-        "scope: oblast → platí pre nižšiu úroveň / oblasť",
+        "scope: association + kód Zväzu → platí len pre daný Zväz",
+        "scope: region → platí pre nižšiu úroveň / oblasť",
       ],
       taggingExampleLabel: "Príklady označkovaných úryvkov",
       rulesTitle: "Pravidlá pre konzistentné značkovanie",
@@ -566,8 +566,8 @@ export const dictionaries = {
       scopeTitle: "Scope of validity",
       scopes: [
         "scope: global + SFZ → applies to everyone (nationwide)",
-        "scope: zvaz + association code → applies to that association only",
-        "scope: oblast → applies to a lower level / region",
+        "scope: association + association code → applies to that association only",
+        "scope: region → applies to a lower level / region",
       ],
       taggingExampleLabel: "Examples of tagged chunks",
       rulesTitle: "Rules for consistent tagging",

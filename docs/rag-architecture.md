@@ -3,7 +3,7 @@
 > Živý technický dokument. Aktualizuj po každom sprint review.  
 > Zdrojový plán: `docs/Contineo_RAG_Projektovy_plan.md`  
 > Implementácia: `app/src/`  
-> **Dátový model: kanonický je Model B** — pozri `docs/DATA_MODEL_konzistencia.md`. Schémy nižšie (`rag_chunks`, `access_level`) popisujú **stav implementovaný vo Fáze 3 (Model A)**; migrujú sa na Model B po fázach.
+> **Dátový model: kanonický je Model B** (kód `app/src/` aj schémy zladené vo Fáze 4) — pozri `docs/DATA_MODEL_konzistencia.md`. Doménové polia (`sectionKey`, `scope`…) sú v schéme; ich napĺňanie pri importe rieši Fáza 4/5.
 
 ---
 
@@ -72,27 +72,35 @@ POST /api/chat { query: "Ako sa registruje hráč?" }
 ## MongoDB Atlas indexy (nutné vytvoriť v Atlas UI)
 
 ### 1. Vector Search index — `rag_vector_index`
-Kolekcia: `rag_chunks`
+Kolekcia: `document_chunks`
 ```json
 {
   "fields": [
-    { "type": "text", "path": "text", "model": "voyage-4" },
-    { "type": "filter", "path": "access_level" },
+    { "type": "text",   "path": "text", "model": "voyage-4" },
+    { "type": "filter", "path": "accessLevel" },
+    { "type": "filter", "path": "associationCode" },
+    { "type": "filter", "path": "scope" },
+    { "type": "filter", "path": "sectionKey" },
+    { "type": "filter", "path": "isActive" },
     { "type": "filter", "path": "language" }
   ]
 }
 ```
 
 ### 2. Atlas Search index — `rag_text_index`
-Kolekcia: `rag_chunks`
+Kolekcia: `document_chunks`
 ```json
 {
   "mappings": {
     "dynamic": false,
     "fields": {
-      "text":         { "type": "string", "analyzer": "lucene.standard" },
-      "access_level": { "type": "token" },
-      "tags":         { "type": "string" }
+      "text":            { "type": "string", "analyzer": "lucene.standard" },
+      "accessLevel":     { "type": "token" },
+      "associationCode": { "type": "token" },
+      "scope":           { "type": "token" },
+      "sectionKey":      { "type": "token" },
+      "isActive":        { "type": "boolean" },
+      "tags":            { "type": "string" }
     }
   }
 }
@@ -101,7 +109,7 @@ Kolekcia: `rag_chunks`
 > **Tip pre SK:** Vyskúšaj `lucene.slovak` analyzer — správne stemuje tvary „hráča/hráčom/hráči".
 
 ### 3. Rerank index — `rag_rerank_index`
-Kolekcia: `rag_chunks`
+Kolekcia: `document_chunks`
 ```json
 {
   "fields": [
@@ -144,46 +152,56 @@ Dotaz
 
 ## Kolekcie MongoDB (schéma)
 
-> **Pozn. ku kanonickým názvom:** nižšie sú názvy **implementované dnes (Model A)**. Kanonický cieľ je **Model B**:
-> `rag_chunks` → `document_chunks`, `rag_chat_history` → `conversations`, `rag_documents` → `documents`, + nové `qa_pairs`, `tickets`
-> a doménové polia (`sectionKey`, `associationCode`, `scope`, `articleRef`, verzovanie). Mapovanie a migrácia: `docs/DATA_MODEL_konzistencia.md`.
+> **Kanonické názvy = Model B** (zladené vo Fáze 4). Polia v camelCase. Doménové polia
+> (`sectionKey`, `associationCode`, `scope`, `articleRef`, verzovanie) sú súčasťou schémy; ich
+> napĺňanie pri importe rieši Fáza 4/5. Plné mapovanie a migrácia: `docs/DATA_MODEL_konzistencia.md`.
+> Nové kolekcie `qa_pairs` (kurácia) a `tickets` (helpdesk) — Fáza 4b.
 
-### `rag_chunks` — RAG vyhľadávanie
+### `document_chunks` — RAG vyhľadávanie
 ```js
 {
-  _id, document_id, text,
-  embedding: [],          // generuje Atlas automaticky (Voyage)
-  access_level: "public" | "internal",
+  _id, documentId, versionId, text,
+  embedding: [],                 // Atlas auto-embed (Voyage), 1024 dims
+  embeddingModel: "voyage-4",
+  // tagging / domain filtering
+  sectionKey: "sutazny_poriadok",
+  associationCode: "SsFZ",       // "SFZ" = applies to everyone
+  scope: "association",          // global | association | region
+  accessLevel: "public",         // public | internal — visibility / RBAC
   language: "sk",
-  chunk_index: 3,
+  articleRef: "§ 12 ods. 3",
+  heading: "Štart hráča",
+  chunkIndex: 3,
   tags: ["normy", "registrácia"],
-  created_at: ISODate
+  isActive: true,                // false = archived version
+  effectiveFrom, effectiveTo,
+  createdAt: ISODate
 }
 ```
 
-### `rag_documents` — CMS (celý dokument)
+### `documents` — CMS (celý dokument)
 ```js
 {
   _id, title, slug, category,
-  access_level: "public" | "internal",
+  accessLevel: "public" | "internal",
   tags: [], summary: "", markdown: "",
-  original_file: { blob_url, filename, size_bytes, mime },
-  source_type: "pdf" | "web" | "scan",
-  source_url: "",
+  originalFile: { blobUrl, filename, sizeBytes, mime },
+  sourceType: "pdf" | "web" | "scan",
+  sourceUrl: "",
   status: "draft" | "published",
-  content_hash: "sha256...",
-  created_by, created_at, published_at
+  contentHash: "sha256...",
+  createdBy, createdAt, publishedAt
 }
 ```
 
-### `rag_chat_history` — logy konverzácií
+### `conversations` — logy konverzácií
 ```js
 {
-  _id, session_id, user_id,
+  _id, sessionId, userId,
   question, answer, sources[],
-  model_used, latency_ms,
+  modelUsed, latencyMs,
   feedback: null | "positive" | "negative",
-  created_at
+  createdAt
 }
 ```
 

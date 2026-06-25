@@ -57,12 +57,18 @@ ANTHROPIC_API_KEY=sk-ant-...
 
 ## MongoDB Atlas indexy
 
+> Kolekcia: `document_chunks` (Model B). Polia v camelCase.
+
 ### Vector Search index (rag_vector_index)
 ```json
 {
   "fields": [
-    { "type": "text", "path": "text", "model": "voyage-4" },
-    { "type": "filter", "path": "access_level" },
+    { "type": "text",   "path": "text", "model": "voyage-4" },
+    { "type": "filter", "path": "accessLevel" },
+    { "type": "filter", "path": "associationCode" },
+    { "type": "filter", "path": "scope" },
+    { "type": "filter", "path": "sectionKey" },
+    { "type": "filter", "path": "isActive" },
     { "type": "filter", "path": "language" }
   ]
 }
@@ -74,9 +80,13 @@ ANTHROPIC_API_KEY=sk-ant-...
   "mappings": {
     "dynamic": false,
     "fields": {
-      "text":         { "type": "string", "analyzer": "lucene.standard" },
-      "access_level": { "type": "token" },
-      "tags":         { "type": "string" }
+      "text":            { "type": "string", "analyzer": "lucene.standard" },
+      "accessLevel":     { "type": "token" },
+      "associationCode": { "type": "token" },
+      "scope":           { "type": "token" },
+      "sectionKey":      { "type": "token" },
+      "isActive":        { "type": "boolean" },
+      "tags":            { "type": "string" }
     }
   }
 }

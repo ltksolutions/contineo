@@ -29,7 +29,7 @@ Doména Contineo = SFZ a podriadené zväzy, normy s paragrafmi, helpdesk. Ploch
 | `tags` (voľný text) | `sectionKey` (z číselníka) | + `tags` voliteľne ostávajú |
 | `chunk_index` | `chunk_index` | bez zmeny |
 | — | `associationCode` (SFZ/SsFZ) | **nové** — pre koho platí |
-| — | `scope` (global/zvaz/oblast) | **nové** — úroveň platnosti |
+| — | `scope` (global/association/region) | **nové** — úroveň platnosti (celoštátne / Zväz / oblasť) |
 | — | `articleRef` (§ 12 ods. 3) | **nové** — pre citáciu |
 | — | `heading` | **nové** |
 | — | `isActive` + `effectiveFrom/To` | **nové** — verzovanie noriem |

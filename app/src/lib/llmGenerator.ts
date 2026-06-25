@@ -26,8 +26,9 @@ ${role === "internal" ? "Máš prístup aj k interným normám a dokumentom." : 
 function buildUserPrompt(query: string, chunks: ChunkResult[]): string {
   const context = chunks
     .map((c, i) => {
-      const source = c.document?.title ?? c.document_id
-      return `[${i + 1}] Zdroj: ${source}\n${c.text}`
+      const source = c.document?.title ?? c.documentId
+      const ref = c.articleRef ? ` (${c.articleRef})` : ""
+      return `[${i + 1}] Zdroj: ${source}${ref}\n${c.text}`
     })
     .join("\n\n---\n\n")
 
@@ -118,10 +119,12 @@ async function* streamClaude(
 
 export function buildSources(chunks: ChunkResult[]) {
   return chunks.map((c, i) => ({
-    index: i + 1,
-    title: c.document?.title ?? "Neznámy zdroj",
-    slug:  c.document?.slug,
-    url:   c.document?.source_url,
+    index:      i + 1,
+    title:      c.document?.title ?? "Neznámy zdroj",
+    slug:       c.document?.slug,
+    url:        c.document?.sourceUrl,
+    articleRef: c.articleRef ?? undefined,
+    heading:    c.heading,
   }))
 }
 
