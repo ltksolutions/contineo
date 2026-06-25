@@ -28,22 +28,22 @@ Doména Contineo = SFZ a podriadené zväzy, normy s paragrafmi, helpdesk. Ploch
 | `access_level` (public/internal) | **ostáva** `access_level` | viditeľnosť/RBAC — **ortogonálne** k scope |
 | `tags` (voľný text) | `sectionKey` (z číselníka) | + `tags` voliteľne ostávajú |
 | `chunk_index` | `chunk_index` | bez zmeny |
-| — | `associationCode` (SFZ/SsFZ) | **nové** — pre koho platí |
-| — | `scope` (global/association/region) | **nové** — úroveň platnosti (celoštátne / Zväz / oblasť) |
+| — | `companyCode` (SFZ/SsFZ) | **nové** — pre koho platí |
+| — | `scope` (global/company/region) | **nové** — úroveň platnosti (celoštátne / Zväz / oblasť) |
 | — | `articleRef` (§ 12 ods. 3) | **nové** — pre citáciu |
 | — | `heading` | **nové** |
 | — | `isActive` + `effectiveFrom/To` | **nové** — verzovanie noriem |
 
-> **Dôležité:** `access_level` a `scope`/`associationCode` **nie sú to isté** a nevylučujú sa.
+> **Dôležité:** `access_level` a `scope`/`companyCode` **nie sú to isté** a nevylučujú sa.
 > `access_level` = KTO to smie vidieť (public vs internal, RBAC).
-> `scope`+`associationCode` = NA KOHO sa norma vzťahuje (celoštátne / konkrétny Zväz / oblasť).
+> `scope`+`companyCode` = NA KOHO sa norma vzťahuje (celoštátne / konkrétny Zväz / oblasť).
 > V Modeli B existujú **obe** vrstvy súčasne.
 
 ## Fázová migrácia (mapované na existujúci plán fáz)
 
 1. **Premenovanie kolekcií** (`rag_chunks`→`document_chunks`, `rag_chat_history`→`conversations`, `rag_documents`→`documents`).
    Malá, mechanická zmena kódu + preindexovanie Atlas. *Samostatný krok, nízke riziko.*
-2. **Doménové polia + verzovanie** (`sectionKey`, `associationCode`, `scope`, `articleRef`, `isActive`, `effectiveFrom/To`).
+2. **Doménové polia + verzovanie** (`sectionKey`, `companyCode`, `scope`, `articleRef`, `isActive`, `effectiveFrom/To`).
    Naviazať na **Fázu 4 (Import & CMS)** a **Fázu 5 (Prístupové úrovne)** — značkovanie z číselníka pri importe.
 3. **Kuračný cyklus** (`qa_pairs`) — schválené odpovede späť do znalostí. Nová mini-fáza po Fáze 4.
 4. **Helpdesk** (`tickets`, prepojenie na `conversations`, SLA, životný cyklus). Samostatná feature-fáza.

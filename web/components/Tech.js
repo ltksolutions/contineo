@@ -7,8 +7,8 @@ const DOC_CHUNKS = `{
 
   // tagging (used for filtering at search time)
   sectionKey: "sutazny_poriadok",
-  associationCode: "SsFZ",      // "SFZ" = applies to everyone
-  scope: "association",         // global | association | region
+  companyCode: "SsFZ",      // "SFZ" = applies to everyone
+  scope: "company",         // global | company | region
   language: "sk",
 
   // content
@@ -29,7 +29,7 @@ const TICKETS = `{
   status: "open",               // lifecycle below
   priority: "normal",
   sectionKey: "prestupovy_poriadok",
-  associationCode: "SsFZ",
+  companyCode: "SsFZ",
   requester: { email, name, userRef },
   subject, conversationId,      // full context if from bot
   assignedTo, slaDueAt,
@@ -47,7 +47,7 @@ const VECTOR_QUERY = `db.document_chunks.aggregate([
             queryVector: queryEmbedding, // 1024 dims
             numCandidates: 200, limit: 20,
             filter: { sectionKey: { $eq: "sutazny_poriadok" },
-                      associationCode: { $in: ["SsFZ","SFZ"] },
+                      companyCode: { $in: ["SsFZ","SFZ"] },
                       isActive: { $eq: true } }
           }}],
           fulltext: [{ $search: {
@@ -71,17 +71,17 @@ const VECTOR_QUERY = `db.document_chunks.aggregate([
 
 const TAG_EXAMPLES = `// nationwide rule (applies to all associations)
 { sourceType: "pdf", sectionKey: "sutazny_poriadok",
-  associationCode: "SFZ", scope: "global",
+  companyCode: "SFZ", scope: "global",
   articleRef: "§ 12 ods. 3", isActive: true }
 
 // fixtures of a specific association
 { sourceType: "pdf", sectionKey: "rozpis_sutazi",
-  associationCode: "SsFZ", scope: "association",
+  companyCode: "SsFZ", scope: "company",
   articleRef: "čl. 8", isActive: true }
 
 // IT FAQ for the ISSF app (FAQ, not a rule)
 { sourceType: "faq", sectionKey: "it_aplikacie",
-  associationCode: "SFZ", scope: "global",
+  companyCode: "SFZ", scope: "global",
   articleRef: null, isActive: true }`;
 
 function Code({ children, label }) {

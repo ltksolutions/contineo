@@ -1,0 +1,11 @@
+{
+  "codelist": "sectionKey",
+  "closed": false,
+  "hierarchical": true,
+  "description": "Sekcia obsahu — hlavný routing filter pre RAG. Hierarchia: skupina (parent=null) → sekcia (parent=kľúč skupiny). Kľúče snake_case, ASCII, bez diakritiky, nemenné.",
+  "items": [
+    { "key": "normy", "label": "Normy a poriadky", "parent": null, "sortOrder": 10 },
+    { "key": "sutazny_poriadok", "label": "Súťažný poriadok", "parent": "normy", "synonyms": ["SP"], "sortOrder": 11 },
+    { "key": "prestupovy_poriadok", "label": "Prestupový poriadok", "parent": "normy", "synonyms": ["PP"], "sortOrder": 12 }
+  ]
+}

@@ -4,6 +4,7 @@
 > Zdrojový plán: `docs/Contineo_RAG_Projektovy_plan.md`  
 > Implementácia: `app/src/`  
 > **Dátový model: kanonický je Model B** (kód `app/src/` aj schémy zladené vo Fáze 4) — pozri `docs/DATA_MODEL_konzistencia.md`. Doménové polia (`sectionKey`, `scope`…) sú v schéme; ich napĺňanie pri importe rieši Fáza 4/5.
+> **Číselníky a ingescia:** centrálne číselníky a tagovanie → `docs/CISELNIKY_governance.md`; multi-zdrojová ingescia (MCP, web, API) + reconciliation pri zmene číselníka → `docs/INGESTION_zdroje_reconciliation.md`.
 
 ---
 
@@ -78,7 +79,7 @@ Kolekcia: `document_chunks`
   "fields": [
     { "type": "text",   "path": "text", "model": "voyage-4" },
     { "type": "filter", "path": "accessLevel" },
-    { "type": "filter", "path": "associationCode" },
+    { "type": "filter", "path": "companyCode" },
     { "type": "filter", "path": "scope" },
     { "type": "filter", "path": "sectionKey" },
     { "type": "filter", "path": "isActive" },
@@ -96,7 +97,7 @@ Kolekcia: `document_chunks`
     "fields": {
       "text":            { "type": "string", "analyzer": "lucene.standard" },
       "accessLevel":     { "type": "token" },
-      "associationCode": { "type": "token" },
+      "companyCode": { "type": "token" },
       "scope":           { "type": "token" },
       "sectionKey":      { "type": "token" },
       "isActive":        { "type": "boolean" },
@@ -153,7 +154,7 @@ Dotaz
 ## Kolekcie MongoDB (schéma)
 
 > **Kanonické názvy = Model B** (zladené vo Fáze 4). Polia v camelCase. Doménové polia
-> (`sectionKey`, `associationCode`, `scope`, `articleRef`, verzovanie) sú súčasťou schémy; ich
+> (`sectionKey`, `companyCode`, `scope`, `articleRef`, verzovanie) sú súčasťou schémy; ich
 > napĺňanie pri importe rieši Fáza 4/5. Plné mapovanie a migrácia: `docs/DATA_MODEL_konzistencia.md`.
 > Nové kolekcie `qa_pairs` (kurácia) a `tickets` (helpdesk) — Fáza 4b.
 
@@ -165,8 +166,8 @@ Dotaz
   embeddingModel: "voyage-4",
   // tagging / domain filtering
   sectionKey: "sutazny_poriadok",
-  associationCode: "SsFZ",       // "SFZ" = applies to everyone
-  scope: "association",          // global | association | region
+  companyCode: "SsFZ",       // "SFZ" = applies to everyone
+  scope: "company",          // global | company | region
   accessLevel: "public",         // public | internal — visibility / RBAC
   language: "sk",
   articleRef: "§ 12 ods. 3",

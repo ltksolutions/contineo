@@ -1,0 +1,10 @@
+{
+  "codelist": "companyCode",
+  "closed": false,
+  "hierarchical": false,
+  "description": "Pre koho obsah platí — firma/organizácia. Rozšíriteľné cez governance. Kód = nadradená hodnota platí pre všetkých podriadených.",
+  "items": [
+    { "key": "SFZ", "label": "Slovenský futbalový zväz", "parent": null, "synonyms": ["SFZ"], "sortOrder": 10, "note": "nadradený — platí pre všetkých" },
+    { "key": "SsFZ", "label": "Stredoslovenský futbalový zväz", "parent": null, "synonyms": ["SsFZ"], "sortOrder": 20 }
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "codelist": "scope",
+  "closed": true,
+  "hierarchical": false,
+  "description": "Úroveň platnosti obsahu. Uzavretý enum — meniť len cez seed v repe (PR).",
+  "items": [
+    { "key": "global", "label": "Celoštátne / pre všetkých", "parent": null, "sortOrder": 10 },
+    { "key": "company", "label": "Konkrétna firma/organizácia (companyCode)", "parent": null, "sortOrder": 20 },
+    { "key": "region", "label": "Oblasť / región", "parent": null, "sortOrder": 30 }
+  ]
+}

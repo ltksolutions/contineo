@@ -1,0 +1,10 @@
+{
+  "codelist": "accessLevel",
+  "closed": true,
+  "hierarchical": false,
+  "description": "Viditeľnosť / RBAC — KTO smie obsah vidieť. Ortogonálne k scope/companyCode. Uzavretý enum.",
+  "items": [
+    { "key": "public", "label": "Verejný (bez prihlásenia)", "parent": null, "sortOrder": 10 },
+    { "key": "internal", "label": "Interný (len prihlásení)", "parent": null, "sortOrder": 20 }
+  ]
+}

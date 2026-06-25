@@ -1,0 +1,13 @@
+{
+  "codelist": "category",
+  "closed": false,
+  "hierarchical": false,
+  "description": "Kategória dokumentu (úroveň documents). Rozšíriteľné cez governance.",
+  "items": [
+    { "key": "norma", "label": "Norma", "parent": null, "sortOrder": 10 },
+    { "key": "smernica", "label": "Smernica", "parent": null, "sortOrder": 20 },
+    { "key": "zakon", "label": "Zákon", "parent": null, "sortOrder": 30, "isActive": false },
+    { "key": "manual", "label": "Manuál", "parent": null, "sortOrder": 40, "isActive": false },
+    { "key": "metodicky_pokyn", "label": "Metodický pokyn", "parent": null, "sortOrder": 50, "isActive": false }
+  ]
+}

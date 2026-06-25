@@ -46,7 +46,7 @@
   <g font-size="13" fill="#202124">
     <text x="370" y="256">• Chunking — úryvok po §/čl.</text>
     <text x="370" y="292">• Značkovanie z číselníka:</text>
-    <text x="386" y="316" font-size="12" fill="#5f6368">sekcia · scope · associationCode</text>
+    <text x="386" y="316" font-size="12" fill="#5f6368">sekcia · scope · companyCode</text>
     <text x="386" y="336" font-size="12" fill="#5f6368">verzia (effectiveFrom/To)</text>
     <text x="370" y="372">• Verzovanie — staré chunky</text>
     <text x="386" y="392" font-size="12" fill="#5f6368">isActive:false, nemazať</text>

@@ -237,13 +237,13 @@ export const dictionaries = {
       scopeTitle: "Rozsah platnosti",
       scopes: [
         "scope: global + SFZ → platí pre všetkých (celoštátne)",
-        "scope: association + kód Zväzu → platí len pre daný Zväz",
+        "scope: company + kód Zväzu → platí len pre daný Zväz",
         "scope: region → platí pre nižšiu úroveň / oblasť",
       ],
       taggingExampleLabel: "Príklady označkovaných úryvkov",
       rulesTitle: "Pravidlá pre konzistentné značkovanie",
       rules: [
-        "sectionKey a associationCode vždy z číselníka, nikdy voľný text.",
+        "sectionKey a companyCode vždy z číselníka, nikdy voľný text.",
         "Celoštátne normy: SFZ + scope global — nekopírovať pre každý Zväz.",
         "articleRef vypĺňať pri normách — používa sa v citácii odpovede.",
         "Pri novej verzii staré chunky nemazať — isActive: false + effectiveTo.",
@@ -553,7 +553,7 @@ export const dictionaries = {
       vectorTitle: "Hybrid search query ($rankFusion + $rerank)",
       vectorIntro: "A question from association “SsFZ”, section competition rules, valid version only. $rankFusion combines vector (Voyage AI auto-embed) and fulltext search; $rerank orders results by relevance.",
       taggingTitle: "Content tagging",
-      taggingIntro: "Every chunk answers three questions — what it is about (section), whom it applies to (association/scope) and which version. Values are picked from a controlled list, not free text.",
+      taggingIntro: "Every chunk answers three questions — what it is about (section), whom it applies to (company/scope) and which version. Values are picked from a controlled list, not free text.",
       taggingSectionsTitle: "Section list",
       sections: [
         { key: "vseobecne", label: "General information" },
@@ -566,14 +566,14 @@ export const dictionaries = {
       scopeTitle: "Scope of validity",
       scopes: [
         "scope: global + SFZ → applies to everyone (nationwide)",
-        "scope: association + association code → applies to that association only",
+        "scope: company + company code → applies to that company only",
         "scope: region → applies to a lower level / region",
       ],
       taggingExampleLabel: "Examples of tagged chunks",
       rulesTitle: "Rules for consistent tagging",
       rules: [
-        "sectionKey and associationCode always from the list, never free text.",
-        "Nationwide rules: SFZ + scope global — don't copy per association.",
+        "sectionKey and companyCode always from the list, never free text.",
+        "Nationwide rules: SFZ + scope global — don't copy per company.",
         "Fill articleRef for rules — it's used in the citation.",
         "On a new version don't delete old chunks — set isActive: false + effectiveTo.",
       ],

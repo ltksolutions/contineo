@@ -1,0 +1,11 @@
+{
+  "codelist": "language",
+  "closed": false,
+  "hierarchical": false,
+  "description": "Jazyk obsahu — ISO 639-1. Rozšíriteľné keď pribudne obsah v ďalšom jazyku.",
+  "items": [
+    { "key": "sk", "label": "Slovenčina", "parent": null, "sortOrder": 10 },
+    { "key": "cs", "label": "Čeština", "parent": null, "sortOrder": 20, "isActive": false },
+    { "key": "en", "label": "Angličtina", "parent": null, "sortOrder": 30, "isActive": false }
+  ]
+}

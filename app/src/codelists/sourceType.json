@@ -1,0 +1,14 @@
+{
+  "codelist": "sourceType",
+  "closed": true,
+  "hierarchical": false,
+  "description": "Typ zdroja dokumentu. Uzavretý enum — meniť len cez seed v repe (PR). Rozšírené 2026-06-26 o md/mcp/api pre multi-zdrojovú ingesciu (viď docs/INGESTION_zdroje_reconciliation.md).",
+  "items": [
+    { "key": "pdf", "label": "PDF dokument", "parent": null, "sortOrder": 10 },
+    { "key": "md", "label": "Markdown súbor", "parent": null, "sortOrder": 20 },
+    { "key": "web", "label": "Webová stránka (URL)", "parent": null, "sortOrder": 30 },
+    { "key": "scan", "label": "Sken (OCR)", "parent": null, "sortOrder": 40 },
+    { "key": "mcp", "label": "MCP konektor", "parent": null, "sortOrder": 50, "isActive": false },
+    { "key": "api", "label": "API / databáza", "parent": null, "sortOrder": 60, "isActive": false }
+  ]
+}
