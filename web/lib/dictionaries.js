@@ -191,15 +191,15 @@ export const dictionaries = {
       back: "Späť na hlavnú stránku",
       architectureTitle: "Architektúra a dátový tok",
       architectureCaption:
-        "Zdroje obsahu → spracovanie a embeddingy → MongoDB Atlas (Vector Search) → RAG → rozhrania. AI vrstva (LLM) je len pomocník — dostane len relevantné pasáže, dáta zostávajú vo vašej databáze a úložisku (self-hosted alebo enterprise API so zero-retention). Vrátane učiaceho cyklu a eskalácie na ticket.",
+        "Vstupné kanály → spracovanie (chunking + značkovanie) → MongoDB Atlas (jadro: embedding, hybrid search aj rerank) → rozhrania. AI vrstva (LLM) je len pomocník — dostane len relevantné pasáže, dáta zostávajú vo vašej databáze a úložisku (self-hosted alebo enterprise API so zero-retention). Súčasťou sú dva spätné cykly: kurácia (kontrola kvality) a eskalácia na ticket.",
       pillarsTitle: "Kľúčové piliere",
       pillars: [
         { icon: "search", title: "RAG + Hybrid Search", text: "Hybrid vyhľadávanie cez MongoDB Atlas ($rankFusion: vektor 60% + fulltext 40%) s Voyage AI rerankerom. Odpoveď generuje Ollama (lokálne) alebo Claude API (fallback) výhradne z nájdených pasáží." },
         { icon: "quote", title: "Citácie a verzie", text: "Každá odpoveď uvádza zdroj a verziu. Import novej verzie nestratí starú — cituje sa vždy platné znenie." },
         { icon: "shield", title: "Multi-tenant a bezpečnosť", text: "Obsah a prístupy každej organizácie sú oddelené. Role a audit pri každej zmene znalostí." },
-        { icon: "layers", title: "Viac zdrojov naraz", text: "Weby (RSS), PDF normy, FAQ, interné predpisy, projekty aj MCP konektory (Drive, SharePoint, Confluence…) — zjednotené do jedného indexu." },
+        { icon: "layers", title: "Vstupné kanály (obsah aj integrácie)", text: "Jedna vrstva, ktorou tečie obsah: PDF normy, FAQ, weby (RSS), interné predpisy, MCP konektory (Drive, SharePoint, Confluence…) aj e-mail (IMAP) — zjednotené do jedného indexu. ISSF/Sportnet je tu zdroj identity, nie obsahu." },
         { icon: "ticket", title: "Helpdesk a e-mail", text: "Sledovanie e-mailových schránok, ticketing a predpripravené odpovede s eskaláciou z vyhľadávania." },
-        { icon: "brain", title: "Učiaci cyklus", text: "Schválené odpovede správcov sa vracajú do znalostí ako nové páry — systém sa zlepšuje." },
+        { icon: "brain", title: "Kontrola kvality a kurácia", text: "Nejde o strojové učenie modelu, ale o ľudskú kuráciu: správca ohodnotí a schváli odpoveď, tá sa uloží ako nový pár (qa_pair) a embeduje späť. Nový pár nikdy potichu neprepíše normu." },
       ],
       stackTitle: "Technologický stack",
       stack: [
@@ -215,7 +215,7 @@ export const dictionaries = {
       flows: [
         { title: "Odpovedanie (RAG + Hybrid)", text: "Dotaz sa klasifikuje (fulltext / vector / hybrid). Pre hybrid: $rankFusion zlúči $vectorSearch (Voyage AI auto-embed) + $search (Lucene), $rerank (Voyage) zoradí výsledky. Ollama llama3.2 odpovie streamingom; ak nie je dostupný, nastúpi Claude API." },
         { title: "Eskalácia na ticket", text: "Neúspech = nízke skóre podobnosti alebo negatívne hodnotenie. Po 3 neúspechoch na tú istú tému bot ponúkne vytvorenie ticketu aj s celým kontextom konverzácie." },
-        { title: "Učiaci cyklus", text: "Schválené odpovede z ContineoLearning aj z upravených e-mailových odpovedí sa uložia ako qa_pair a embedujú späť do znalostí. Nový pár nikdy potichu neprepíše normu." },
+        { title: "Kontrola kvality a kurácia", text: "Nie strojové učenie, ale ľudská kurácia: schválené odpovede z ContineoLearning aj z upravených e-mailových odpovedí sa uložia ako qa_pair a embedujú späť do znalostí. Nový pár nikdy potichu neprepíše normu." },
       ],
       collectionsTitle: "Hlavné kolekcie",
       collectionsIntro: "Návrh oddeľuje znalosti (jadro RAG) od konverzácií a ticketov. Verzovanie noriem zaručuje, že import novej verzie nestratí staršiu.",
@@ -520,15 +520,15 @@ export const dictionaries = {
       back: "Back to home",
       architectureTitle: "Architecture and data flow",
       architectureCaption:
-        "Content sources → processing and embeddings → MongoDB Atlas (Vector Search) → RAG → interfaces. The AI layer (LLM) is only a helper — it receives only the relevant passages, your data stays in your database and storage (self-hosted or enterprise API with zero-retention). Including the learning loop and ticket escalation.",
+        "Input channels → processing (chunking + tagging) → MongoDB Atlas (the core: embedding, hybrid search and rerank) → interfaces. The AI layer (LLM) is only a helper — it receives only the relevant passages, your data stays in your database and storage (self-hosted or enterprise API with zero-retention). Including two feedback loops: curation (quality control) and ticket escalation.",
       pillarsTitle: "Key pillars",
       pillars: [
         { icon: "search", title: "RAG + Hybrid Search", text: "Hybrid search via MongoDB Atlas $rankFusion (vector 60 % + fulltext 40 %, Voyage AI auto-embed), $rerank reranking. Ollama llama3.2 answers only from the retrieved passages; Claude API as fallback." },
         { icon: "quote", title: "Citations and versions", text: "Every answer states the source and version. A new import never loses the old one — always citing the valid wording." },
         { icon: "shield", title: "Multi-tenant and security", text: "Each organisation's content and access are isolated. Roles and an audit trail on every knowledge change." },
-        { icon: "layers", title: "Many sources at once", text: "Websites (RSS), PDF regulations, FAQs, internal guidelines, projects and MCP connectors (Drive, SharePoint, Confluence…) — unified into one index." },
+        { icon: "layers", title: "Input channels (content & integrations)", text: "One layer through which content flows: PDF regulations, FAQs, websites (RSS), internal guidelines, MCP connectors (Drive, SharePoint, Confluence…) and e-mail (IMAP) — unified into one index. ISSF/Sportnet here is a source of identity, not content." },
         { icon: "ticket", title: "Helpdesk and e-mail", text: "Mailbox monitoring, ticketing and prepared replies with escalation from search." },
-        { icon: "brain", title: "Learning loop", text: "Approved admin answers flow back into the knowledge base as new pairs — the system keeps improving." },
+        { icon: "brain", title: "Quality control & curation", text: "Not machine learning of the model, but human curation: an admin rates and approves an answer, it is stored as a new pair (qa_pair) and embedded back. A new pair never silently overrides a rule." },
       ],
       stackTitle: "Technology stack",
       stack: [
@@ -544,7 +544,7 @@ export const dictionaries = {
       flows: [
         { title: "Answering (RAG)", text: "Query classified (fulltext / vector / hybrid) → $rankFusion (Voyage AI auto-embed, vector 60 % + fulltext 40 %) → $rerank → Ollama llama3.2 (Claude as fallback) answers only from retrieved passages, with citations." },
         { title: "Ticket escalation", text: "A failure = low similarity score or a negative rating. After 3 failures on the same topic the bot offers to create a ticket, including the full conversation context." },
-        { title: "Learning loop", text: "Approved answers from ContineoLearning and edited e-mail replies are stored as a qa_pair and embedded back into the knowledge base. A new pair never silently overrides a rule." },
+        { title: "Quality control & curation", text: "Not machine learning but human curation: approved answers from ContineoLearning and edited e-mail replies are stored as a qa_pair and embedded back into the knowledge base. A new pair never silently overrides a rule." },
       ],
       collectionsTitle: "Main collections",
       collectionsIntro: "The design separates knowledge (the RAG core) from conversations and tickets. Versioning ensures importing a new version never loses the older one.",

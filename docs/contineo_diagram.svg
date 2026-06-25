@@ -1,0 +1,117 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 820" font-family="-apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif">
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L7,3 L0,6 Z" fill="#5f6368"/>
+    </marker>
+    <marker id="arrowTeal" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L7,3 L0,6 Z" fill="#00897B"/>
+    </marker>
+    <marker id="arrowRed" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L7,3 L0,6 Z" fill="#D93025"/>
+    </marker>
+    <marker id="arrowGray" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L7,3 L0,6 Z" fill="#9aa0a6"/>
+    </marker>
+  </defs>
+
+  <!-- Title -->
+  <text x="40" y="48" font-size="26" font-weight="700" fill="#202124">Contineo — architektúra a dátový tok</text>
+  <text x="40" y="74" font-size="14" fill="#5f6368">Vstupné kanály → spracovanie → MongoDB Atlas (jadro) → rozhrania. AI dostáva len relevantné pasáže; dáta zostávajú vo vašej databáze.</text>
+
+  <!-- Identity ribbon (ISSF) -->
+  <rect x="350" y="96" width="580" height="34" rx="17" fill="#F1F3F4" stroke="#dadce0"/>
+  <text x="640" y="118" font-size="13" fill="#3c4043" text-anchor="middle">ISSF / Sportnet — identita (kto sa pýta, z ktorého Zväzu) · read-only</text>
+  <path d="M640,130 L640,150" stroke="#9aa0a6" stroke-width="1.6" stroke-dasharray="4 3" marker-end="url(#arrowGray)"/>
+
+  <!-- ============ MAIN FLOW ROW ============ -->
+  <!-- Card 1: Vstupné kanály -->
+  <rect x="40" y="170" width="270" height="300" rx="14" fill="#E8F0FE" stroke="#1A73E8" stroke-width="1.5"/>
+  <text x="60" y="200" font-size="16" font-weight="700" fill="#174EA6">VSTUPNÉ KANÁLY</text>
+  <text x="60" y="220" font-size="11.5" fill="#5f6368">obsah aj integrácie = jedna vrstva</text>
+  <g font-size="13" fill="#202124">
+    <text x="60" y="252">• PDF normy a smernice</text>
+    <text x="60" y="280">• RSS / web (Všeobecné info)</text>
+    <text x="60" y="308">• FAQ</text>
+    <text x="60" y="336">• E-mail (IMAP)  ⇅</text>
+    <text x="60" y="364">• MCP konektory</text>
+    <text x="76" y="386" font-size="11.5" fill="#5f6368">Drive · SharePoint · Confluence</text>
+    <text x="76" y="404" font-size="11.5" fill="#5f6368">Notion · Slack …</text>
+  </g>
+  <text x="60" y="440" font-size="11.5" fill="#1A73E8">⇅ e-mail je aj výstupný kanál</text>
+
+  <!-- Card 2: Worker -->
+  <rect x="350" y="170" width="270" height="300" rx="14" fill="#FEF3E0" stroke="#E8920C" stroke-width="1.5"/>
+  <text x="370" y="200" font-size="16" font-weight="700" fill="#B05A00">WORKER</text>
+  <text x="370" y="220" font-size="11.5" fill="#5f6368">spracovanie (mimo DB)</text>
+  <g font-size="13" fill="#202124">
+    <text x="370" y="256">• Chunking — úryvok po §/čl.</text>
+    <text x="370" y="292">• Značkovanie z číselníka:</text>
+    <text x="386" y="316" font-size="12" fill="#5f6368">sekcia · scope · associationCode</text>
+    <text x="386" y="336" font-size="12" fill="#5f6368">verzia (effectiveFrom/To)</text>
+    <text x="370" y="372">• Verzovanie — staré chunky</text>
+    <text x="386" y="392" font-size="12" fill="#5f6368">isActive:false, nemazať</text>
+  </g>
+
+  <!-- Card 3: MongoDB Atlas core -->
+  <rect x="660" y="170" width="270" height="300" rx="14" fill="#E6F4EA" stroke="#137333" stroke-width="2"/>
+  <text x="680" y="200" font-size="16" font-weight="700" fill="#0B6E2E">MongoDB ATLAS — JADRO</text>
+  <text x="680" y="220" font-size="11.5" fill="#5f6368">embedding už je súčasť dotazu</text>
+  <g font-size="13" fill="#202124">
+    <text x="680" y="252">• Voyage auto-embed (voyage-4)</text>
+    <text x="680" y="284">• $rankFusion — hybrid</text>
+    <text x="696" y="304" font-size="12" fill="#5f6368">vektor 60 % + fulltext 40 %</text>
+    <text x="680" y="336">• $rerank (voyage-rerank-2)</text>
+  </g>
+  <line x1="680" y1="356" x2="910" y2="356" stroke="#A8D5B5" stroke-width="1"/>
+  <text x="680" y="380" font-size="12" fill="#0B6E2E" font-weight="600">Kolekcie:</text>
+  <text x="680" y="402" font-size="12" fill="#3c4043">document_chunks · qa_pairs</text>
+  <text x="680" y="422" font-size="12" fill="#3c4043">tickets · conversations</text>
+  <text x="680" y="450" font-size="11.5" fill="#5f6368">MongoDB Atlas EU · GDPR</text>
+
+  <!-- Card 4: Rozhrania -->
+  <rect x="970" y="170" width="270" height="300" rx="14" fill="#EEE9FB" stroke="#6B46C1" stroke-width="1.5"/>
+  <text x="990" y="200" font-size="16" font-weight="700" fill="#54309E">ROZHRANIA</text>
+  <text x="990" y="220" font-size="11.5" fill="#5f6368">odpoveď vždy s citáciou + verziou</text>
+  <g font-size="13" fill="#202124">
+    <text x="990" y="252">• Chat</text>
+    <text x="1006" y="272" font-size="12" fill="#5f6368">Ollama llama3.2 → Claude</text>
+    <text x="1006" y="290" font-size="12" fill="#5f6368">(fallback), streaming</text>
+    <text x="990" y="322">• E-mail odpovede  ⇅</text>
+    <text x="990" y="354">• Tickety</text>
+    <text x="1006" y="374" font-size="12" fill="#5f6368">helpdesk, SLA, životný cyklus</text>
+  </g>
+
+  <!-- Flow arrows -->
+  <path d="M310,320 L348,320" stroke="#5f6368" stroke-width="2" marker-end="url(#arrow)"/>
+  <path d="M620,320 L658,320" stroke="#5f6368" stroke-width="2" marker-end="url(#arrow)"/>
+  <path d="M930,320 L968,320" stroke="#5f6368" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- ============ FEEDBACK CYCLES ============ -->
+  <text x="40" y="540" font-size="15" font-weight="700" fill="#202124">Dva spätné cykly</text>
+
+  <!-- Curved arrows from Rozhrania back to Atlas (kept in the band y=470-548) -->
+  <!-- Kuracia loop -->
+  <path d="M1090,470 C1040,535 940,535 862,476"
+        fill="none" stroke="#00897B" stroke-width="2.2" marker-end="url(#arrowTeal)"/>
+  <text x="996" y="528" font-size="12" font-weight="700" fill="#00897B" text-anchor="middle">① qa_pair</text>
+  <!-- Eskalacia loop -->
+  <path d="M1165,470 C1185,545 980,548 902,476"
+        fill="none" stroke="#D93025" stroke-width="2.2" stroke-dasharray="6 4" marker-end="url(#arrowRed)"/>
+  <text x="1070" y="544" font-size="12" font-weight="700" fill="#D93025" text-anchor="middle">② ticket</text>
+
+  <!-- Kuracia card -->
+  <rect x="40" y="560" width="560" height="86" rx="12" fill="#E0F2F1" stroke="#00897B" stroke-width="1.5"/>
+  <text x="60" y="588" font-size="15" font-weight="700" fill="#00695C">① KURÁCIA — kontrola kvality</text>
+  <text x="60" y="612" font-size="12.5" fill="#3c4043">Správca ohodnotí a schváli odpoveď → uloží sa ako qa_pair → embeduje späť.</text>
+  <text x="60" y="632" font-size="12" fill="#5f6368">Nie je to strojové „učenie", ale ľudská kurácia obsahu.</text>
+
+  <!-- Eskalacia card -->
+  <rect x="620" y="560" width="560" height="86" rx="12" fill="#FCE8E6" stroke="#D93025" stroke-width="1.5"/>
+  <text x="640" y="588" font-size="15" font-weight="700" fill="#B31412">② ESKALÁCIA — na ticket</text>
+  <text x="640" y="612" font-size="12.5" fill="#3c4043">Nízke skóre podobnosti alebo 3× neúspech na tú istú tému →</text>
+  <text x="640" y="632" font-size="12.5" fill="#3c4043">bot ponúkne vytvorenie ticketu s celým kontextom konverzácie.</text>
+
+  <!-- Footer -->
+  <text x="40" y="690" font-size="11.5" fill="#9aa0a6">Stack: MongoDB Atlas EU · Voyage AI voyage-4 + voyage-rerank-2 · Ollama llama3.2 (primárny) · Claude API (fallback) · Next.js 14 + Node.js worker</text>
+  <text x="40" y="710" font-size="11.5" fill="#9aa0a6">Zjednodušenie oproti v1: „zdroje obsahu" + „integrácie" → jedna vrstva kanálov · „embeddingy" splynuli do Atlasu · „učenie" → kurácia.</text>
+</svg>
