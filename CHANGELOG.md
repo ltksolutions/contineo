@@ -13,5 +13,6 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 - `architectureCaption`: embedding, hybrid search a rerank sú popísané ako súčasť jadra MongoDB Atlas (Voyage Automated Embedding), nie ako samostatná vrstva.
 - Zmeny aplikované v SK aj EN slovníku (`web/lib/dictionaries.js`).
 
-### Notes / na rozhodnutie
-- **Nejednotné názvoslovie dátového modelu** medzi implementáciou a verejnou stránkou — pozri `docs/DATA_MODEL_konzistencia.md`. Treba zvoliť kanonické názvy kolekcií a polí.
+### Decided
+- **Kanonický dátový model = Model B** (z verejnej stránky `/technologia`): `document_chunks` · `qa_pairs` · `tickets` · `conversations` + doménové polia (`sectionKey`, `associationCode`, `scope`, `articleRef`) a verzovanie (`isActive`, `effectiveFrom/To`). Implementácia (Model A: `rag_chunks`/`access_level`) k nemu dorastie po fázach — `access_level` (viditeľnosť) a `scope`/`associationCode` (platnosť pre Zväz) bežia súbežne, sú ortogonálne.
+- Zladené docs: `docs/DATA_MODEL_konzistencia.md` (rozhodnutie + mapovanie A→B + fázová migrácia), `docs/rag-architecture.md` a `docs/Contineo_RAG_Projektovy_plan.md` (poznámky o cieľovom modeli; migrácia zaradená do Fázy 4/4b/5). Živý kód `app/src/` a MongoDB sa NEmenia — len dokumentácia a plán.

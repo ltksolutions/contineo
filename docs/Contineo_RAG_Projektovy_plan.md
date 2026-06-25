@@ -367,15 +367,23 @@ KROK 5 – ULOŽENIE + CHUNKING + AUTO-EMBED
 - [ ] Review UI: Markdown editor + live náhľad + formulár metadát
 - [ ] Uloženie: originál → Blob, Markdown → `rag_documents`, chunky → `rag_chunks`
 - [ ] CMS zobrazenie článku + možnosť náhľadu originálneho PDF
+- [ ] **Migrácia na Model B:** premenovať kolekcie (`rag_chunks`→`document_chunks`, `rag_chat_history`→`conversations`, `rag_documents`→`documents`) + preindexovať Atlas — viď `docs/DATA_MODEL_konzistencia.md`
+- [ ] **Doménové značkovanie pri importe z číselníka:** `sectionKey`, `associationCode`, `scope`, `articleRef` + verzovanie `isActive`/`effectiveFrom/To`
 
 ### Fáza 5 – Prístupové úrovne `[1 týždeň]`
 
 - [ ] Integrácia NextAuth.js (prihlasovanie pre interných používateľov)
 - [ ] Tagging dokumentov pri importe: `PUBLIC` / `INTERNAL`
 - [ ] `$vectorSearch` filter `access_level` podľa úrovne prístupu používateľa
+- [ ] **Doménový filter `scope` + `associationCode`** (na koho norma platí) — beží súbežne s `access_level` (kto smie vidieť); sú ortogonálne
 - [ ] Verejný chatbot (bez prihlásenia) – len PUBLIC dokumenty
 - [ ] Interný chatbot (po prihlásení) – PUBLIC + INTERNAL dokumenty
 - [ ] Role-based access control (RBAC) pre správcu obsahu a CMS
+
+### Fáza 4b – Kuračný cyklus + Helpdesk `[plán]`
+
+- [ ] `qa_pairs`: schválené odpovede správcu späť do znalostí (kontrola kvality a kurácia)
+- [ ] `tickets`: eskalácia z bota/e-mailu, prepojenie na `conversations`, SLA, životný cyklus
 
 ### Fáza 6 – Scheduler & monitoring `[1 týždeň]`
 
@@ -397,6 +405,10 @@ KROK 5 – ULOŽENIE + CHUNKING + AUTO-EMBED
 ---
 
 ## 8. MongoDB schémata
+
+> **Kanonický dátový model = Model B** (rozhodnuté 2026-06-25). Schémy nižšie sú **stav Fázy 3 (Model A)**.
+> Cieľové názvy: `rag_chunks` → `document_chunks`, `rag_chat_history` → `conversations`, `rag_documents` → `documents`, + nové `qa_pairs`, `tickets` a doménové polia (`sectionKey`, `associationCode`, `scope`, `articleRef`, verzovanie `isActive`/`effectiveFrom/To`).
+> Úplné mapovanie a fázová migrácia: **`docs/DATA_MODEL_konzistencia.md`**.
 
 ### 7.1 Kolekcia: `rag_documents` (CMS – celý dokument)
 

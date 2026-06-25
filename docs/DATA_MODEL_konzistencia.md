@@ -1,38 +1,56 @@
-# Konzistencia dátového modelu — na rozhodnutie
+# Dátový model — rozhodnutie a migračný plán (A → B)
 
-Pri audite (jún 2026) som našiel **dva odlišné dátové modely** v jednom repozitári. Treba zvoliť kanonickú verziu, nech web aj implementácia hovoria to isté.
+> **Rozhodnutie (2026-06-25): kanonický je Model B** (model z verejnej stránky `/technologia`).
+> Implementácia (Model A) k nemu dorastie po fázach. Tento dokument je jediný zdroj pravdy pre názvy kolekcií a polí.
 
-## Stav: dve „pravdy"
+## Východisko: prečo Model B
 
-### A) Implementácia + interné docs
-Súbory: `app/src/lib/mongoSearch.ts`, `app/src/app/api/chat/`, `docs/rag-architecture.md`, `docs/Contineo_RAG_Projektovy_plan.md`
+Doména Contineo = SFZ a podriadené zväzy, normy s paragrafmi, helpdesk. Plochý prístup `access_level: public|internal` (Model A) na to nestačí — potrebujeme doménovú štruktúru (Zväz/oblasť), verzovanie noriem, citácie § a helpdesk. To presne pokrýva Model B.
 
-```
-Kolekcie:  rag_chunks · rag_documents · rag_chat_history
-Polia:     access_level (public|internal) · language · tags · chunk_index
-```
+## Dva modely (stav pred zladením)
 
-### B) Verejná stránka /technologia (+ nový diagram)
-Súbory: `web/components/Tech.js`, `web/lib/dictionaries.js`, `contineo_diagram.*`
+| | Model A — implementované (Fáza 3) | Model B — kanonický cieľ |
+|---|---|---|
+| Chunky | `rag_chunks` | **`document_chunks`** |
+| Dokumenty (CMS) | `rag_documents` | **`documents`** |
+| Konverzácie | `rag_chat_history` | **`conversations`** |
+| Kurácia | — | **`qa_pairs`** (nová) |
+| Helpdesk | — | **`tickets`** (nová) |
+| Crawl log | `rag_crawl_log` | `crawl_log` (interná, nemení sa prioritne) |
 
-```
-Kolekcie:  document_chunks · qa_pairs · tickets · conversations
-Polia:     sectionKey · associationCode · scope (global|zvaz|oblast) · articleRef · isActive · effectiveFrom/To
-```
+## Mapovanie polí na chunku (`rag_chunks` → `document_chunks`)
 
-## V čom je rozdiel
-- **Iné názvy kolekcií** pre to isté („chunky" = `rag_chunks` vs `document_chunks`).
-- **Iný model prístupu/rozsahu**: implementácia rieši `access_level` (public/internal), web rieši `scope` + `associationCode` (SFZ/Zväz/oblasť) — to je doménový model pre futbalové zväzy.
-- **Web má navyše** `qa_pairs`, `tickets`, `conversations`, verzovanie (`isActive`, `effectiveFrom/To`) a citácie (`articleRef`) — implementácia ich (zatiaľ) nemá.
+| Model A | Model B | Poznámka |
+|---|---|---|
+| `text` | `text` | bez zmeny |
+| `embedding` | `embedding` | + `embeddingModel: "voyage-4"` |
+| `document_id` | `documentId` | + `versionId` |
+| `access_level` (public/internal) | **ostáva** `access_level` | viditeľnosť/RBAC — **ortogonálne** k scope |
+| `tags` (voľný text) | `sectionKey` (z číselníka) | + `tags` voliteľne ostávajú |
+| `chunk_index` | `chunk_index` | bez zmeny |
+| — | `associationCode` (SFZ/SsFZ) | **nové** — pre koho platí |
+| — | `scope` (global/zvaz/oblast) | **nové** — úroveň platnosti |
+| — | `articleRef` (§ 12 ods. 3) | **nové** — pre citáciu |
+| — | `heading` | **nové** |
+| — | `isActive` + `effectiveFrom/To` | **nové** — verzovanie noriem |
 
-## Možnosti
-1. **Web je cieľový stav (odporúčané)** — implementácia sa postupne prispôsobí modelu B (zväzové `scope`/`associationCode`, verzovanie, `qa_pairs`, `tickets`). Web netreba meniť; doplniť do `rag-architecture.md` poznámku „cieľová schéma = model B, migrácia vo Fáze 4/5".
-2. **Implementácia je realita** — web/technologia sa prepíše na model A (`rag_chunks`, `access_level`). Stráca sa zväzová špecifickosť v marketingu.
-3. **Zladiť názvy, ponechať dve úrovne** — premenovať `rag_chunks` → `document_chunks` (a pod.) hneď, ostatné polia migrovať neskôr.
+> **Dôležité:** `access_level` a `scope`/`associationCode` **nie sú to isté** a nevylučujú sa.
+> `access_level` = KTO to smie vidieť (public vs internal, RBAC).
+> `scope`+`associationCode` = NA KOHO sa norma vzťahuje (celoštátne / konkrétny Zväz / oblasť).
+> V Modeli B existujú **obe** vrstvy súčasne.
 
-## Otvorené otázky pre rozhodnutie
-- Kanonický názov kolekcie chunkov: `document_chunks` vs `rag_chunks`?
-- Prístupový model: `access_level` (public/internal) **a/alebo** `scope`+`associationCode`?
-- Kedy reálne vzniknú `qa_pairs`, `tickets`, `conversations` v implementácii (ktorá fáza)?
+## Fázová migrácia (mapované na existujúci plán fáz)
 
-> Toto je návrh na diskusiu, nič som zatiaľ neprepísal. Po rozhodnutí viem zladiť kód aj docs jedným commitom.
+1. **Premenovanie kolekcií** (`rag_chunks`→`document_chunks`, `rag_chat_history`→`conversations`, `rag_documents`→`documents`).
+   Malá, mechanická zmena kódu + preindexovanie Atlas. *Samostatný krok, nízke riziko.*
+2. **Doménové polia + verzovanie** (`sectionKey`, `associationCode`, `scope`, `articleRef`, `isActive`, `effectiveFrom/To`).
+   Naviazať na **Fázu 4 (Import & CMS)** a **Fázu 5 (Prístupové úrovne)** — značkovanie z číselníka pri importe.
+3. **Kuračný cyklus** (`qa_pairs`) — schválené odpovede späť do znalostí. Nová mini-fáza po Fáze 4.
+4. **Helpdesk** (`tickets`, prepojenie na `conversations`, SLA, životný cyklus). Samostatná feature-fáza.
+
+## Čo sa NEmení teraz
+Živý RAG kód (`app/src/`) a MongoDB Atlas ostávajú na Modeli A a bežia ďalej. Tento dokument je zámer; samotný refaktor + migrácia DB príde po fázach. Verejný web (Model B) sa nemení.
+
+## Otvorené (na potvrdenie pri implementácii)
+- `rag_documents` → `documents`, alebo ponechať prefix `rag_`? (návrh: bez prefixu, jednotne s `document_chunks`).
+- Ponechať `tags` popri `sectionKey`, alebo úplne nahradiť? (návrh: ponechať voliteľne pre voľné štítky).

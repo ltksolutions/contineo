@@ -2,7 +2,8 @@
 
 > Živý technický dokument. Aktualizuj po každom sprint review.  
 > Zdrojový plán: `docs/Contineo_RAG_Projektovy_plan.md`  
-> Implementácia: `app/src/`
+> Implementácia: `app/src/`  
+> **Dátový model: kanonický je Model B** — pozri `docs/DATA_MODEL_konzistencia.md`. Schémy nižšie (`rag_chunks`, `access_level`) popisujú **stav implementovaný vo Fáze 3 (Model A)**; migrujú sa na Model B po fázach.
 
 ---
 
@@ -142,6 +143,10 @@ Dotaz
 ---
 
 ## Kolekcie MongoDB (schéma)
+
+> **Pozn. ku kanonickým názvom:** nižšie sú názvy **implementované dnes (Model A)**. Kanonický cieľ je **Model B**:
+> `rag_chunks` → `document_chunks`, `rag_chat_history` → `conversations`, `rag_documents` → `documents`, + nové `qa_pairs`, `tickets`
+> a doménové polia (`sectionKey`, `associationCode`, `scope`, `articleRef`, verzovanie). Mapovanie a migrácia: `docs/DATA_MODEL_konzistencia.md`.
 
 ### `rag_chunks` — RAG vyhľadávanie
 ```js
