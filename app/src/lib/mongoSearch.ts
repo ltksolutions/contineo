@@ -17,7 +17,7 @@ export interface SearchOptions {
   rerankLimit?: number
   // Optional domain filtering (Model B) — activated together with identity (ISSF).
   // When omitted, search behaves exactly as before.
-  associationCodes?: string[]   // e.g. ["SsFZ", "SFZ"]
+  companyCodes?: string[]   // e.g. ["SsFZ", "SFZ"]
   sectionKey?: string
   onlyActive?: boolean          // only the valid version (isActive: true)
 }
@@ -29,8 +29,8 @@ export interface ChunkResult {
   versionId?: string
   // tagging / domain filtering
   sectionKey?: string
-  associationCode?: string
-  scope?: "global" | "association" | "region"
+  companyCode?: string
+  scope?: "global" | "company" | "region"
   accessLevel?: string          // public | internal — visibility / RBAC
   language?: string
   // content
@@ -71,7 +71,7 @@ const LOOKUP_DOCUMENT: Document[] = [
   {
     $project: {
       text: 1, documentId: 1, versionId: 1,
-      sectionKey: 1, associationCode: 1, scope: 1, accessLevel: 1, language: 1,
+      sectionKey: 1, companyCode: 1, scope: 1, accessLevel: 1, language: 1,
       articleRef: 1, heading: 1, chunkIndex: 1, tags: 1,
       embeddingModel: 1, isActive: 1, effectiveFrom: 1, effectiveTo: 1,
       document: 1,
@@ -86,7 +86,7 @@ const LOOKUP_DOCUMENT: Document[] = [
 function vectorFilter(opts: SearchOptions): Document {
   const filter: Document = {}
   if (opts.accessLevel === "public") filter.accessLevel = "public"
-  if (opts.associationCodes?.length) filter.associationCode = { $in: opts.associationCodes }
+  if (opts.companyCodes?.length) filter.companyCode = { $in: opts.companyCodes }
   if (opts.sectionKey) filter.sectionKey = opts.sectionKey
   if (opts.onlyActive) filter.isActive = true
   return filter
@@ -96,7 +96,7 @@ function vectorFilter(opts: SearchOptions): Document {
 function searchFilterClauses(opts: SearchOptions): Document[] {
   const clauses: Document[] = []
   if (opts.accessLevel === "public") clauses.push({ equals: { path: "accessLevel", value: "public" } })
-  if (opts.associationCodes?.length) clauses.push({ in: { path: "associationCode", value: opts.associationCodes } })
+  if (opts.companyCodes?.length) clauses.push({ in: { path: "companyCode", value: opts.companyCodes } })
   if (opts.sectionKey) clauses.push({ equals: { path: "sectionKey", value: opts.sectionKey } })
   if (opts.onlyActive) clauses.push({ equals: { path: "isActive", value: true } })
   return clauses

@@ -65,7 +65,7 @@ ANTHROPIC_API_KEY=sk-ant-...
   "fields": [
     { "type": "text",   "path": "text", "model": "voyage-4" },
     { "type": "filter", "path": "accessLevel" },
-    { "type": "filter", "path": "associationCode" },
+    { "type": "filter", "path": "companyCode" },
     { "type": "filter", "path": "scope" },
     { "type": "filter", "path": "sectionKey" },
     { "type": "filter", "path": "isActive" },
@@ -82,7 +82,7 @@ ANTHROPIC_API_KEY=sk-ant-...
     "fields": {
       "text":            { "type": "string", "analyzer": "lucene.standard" },
       "accessLevel":     { "type": "token" },
-      "associationCode": { "type": "token" },
+      "companyCode": { "type": "token" },
       "scope":           { "type": "token" },
       "sectionKey":      { "type": "token" },
       "isActive":        { "type": "boolean" },

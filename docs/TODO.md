@@ -7,21 +7,15 @@
 - Návrh centrálnych číselníkov + governance → `docs/CISELNIKY_governance.md`
 - Vzory číselníkov (seed) → `app/src/codelists/*.json` (+ README, `_schema.json`, validované)
 - Návrh multi-zdrojovej ingescie + reconciliation → `docs/INGESTION_zdroje_reconciliation.md`
-- Premenovanie `associationCode → companyCode` (`scope: association → company`) v **dokumentoch** a na **marketingovom webe** (`/technologia`: `Tech.js`, `dictionaries.js` SK+EN, oba `contineo_diagram.svg` + pregenerované `.png`)
+- Premenovanie `associationCode → companyCode` (`scope: association → company`) v **dokumentoch**, na **marketingovom webe** (`/technologia`: `Tech.js`, `dictionaries.js` SK+EN, oba `contineo_diagram.svg` + pregenerované `.png`) aj v **zdroji RAG** (`app/src/lib/mongoSearch.ts`, `app/src/app/api/chat/README.md`)
 - CHANGELOG aktualizovaný
+
+> **Pozn.:** systém ešte nie je nasadený (žiadna Atlas DB, indexy ani dáta) — preto žiadna „migrácia", preindexovanie ani preznačkovanie historických chunkov nie je potrebné. Premenovanie je kompletné naprieč repom.
 
 ## 🔜 Zajtra pokračujeme
 
 ### A. Git (na Macu používateľa)
-- [ ] Commitnúť + pushnúť dnešné zmeny (docs, `app/src/codelists/`, web `/technologia`, diagramy, CHANGELOG)
-- [ ] Skontrolovať deploy `/technologia` na contineo.app — overiť, že diagram zobrazuje `companyCode`
-
-### B. Dokončiť premenovanie v živom kóde (migrácia, Fáza 4)
-- [ ] `app/src/lib/mongoSearch.ts` — `associationCode`/`associationCodes` → `companyCode`, `scope` hodnota
-- [ ] `app/src/app/api/chat/README.md` — názvy polí
-- [ ] Atlas: `rag_vector_index` (filter path) + `rag_text_index` (token path) `associationCode` → `companyCode` + **preindexovať**
-- [ ] Schéma `document_chunks` — premenovať pole
-- [ ] **Preznačkovať historické chunky** (rozhodnuté) — dávková úloha s logom a rollbackom
+- [ ] Commitnúť + pushnúť dnešné zmeny (`app/src/`, docs, web, CHANGELOG, TODO)
 
 ### C. Implementácia číselníkov (Fáza 4)
 - [ ] Kolekcia `codelists` v MongoDB + unikátny index `{ codelist, key }`
