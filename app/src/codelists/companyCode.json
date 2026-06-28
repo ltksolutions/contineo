@@ -1,10 +1,11 @@
 {
   "codelist": "companyCode",
   "closed": false,
-  "hierarchical": false,
-  "description": "Pre koho obsah platí — firma/organizácia. Rozšíriteľné cez governance. Kód = nadradená hodnota platí pre všetkých podriadených.",
+  "hierarchical": true,
+  "description": "CompanyID = zväz/organizácia (vlastník obsahu, tenant). Viacúrovňová hierarchia SFZ → regionálny → oblastný cez 'parent'. Plný zoznam (4 regionálne, ~40-48 oblastných) sa synchronizuje zo sportnet.online. Verejný obsah nie je izolovaný; izolácia platí pre interný obsah per CompanyID (viď docs/PRISTUPOVE_PRAVA.md).",
   "items": [
-    { "key": "SFZ", "label": "Slovenský futbalový zväz", "parent": null, "synonyms": ["SFZ"], "sortOrder": 10, "note": "nadradený — platí pre všetkých" },
-    { "key": "SsFZ", "label": "Stredoslovenský futbalový zväz", "parent": null, "synonyms": ["SsFZ"], "sortOrder": 20 }
+    { "key": "SFZ", "label": "Slovenský futbalový zväz", "parent": null, "synonyms": ["SFZ"], "sortOrder": 10, "note": "vrchol hierarchie — normy SFZ (public) platia pre všetkých" },
+    { "key": "SsFZ", "label": "Stredoslovenský futbalový zväz", "parent": "SFZ", "synonyms": ["SsFZ"], "sortOrder": 20, "note": "regionálny zväz (príklad)" },
+    { "key": "ObFZ_ZA", "label": "Oblastný futbalový zväz Žilina", "parent": "SsFZ", "sortOrder": 30, "isActive": false, "note": "oblastný zväz (príklad kostry — plný zoznam zo sportnet.online)" }
   ]
 }

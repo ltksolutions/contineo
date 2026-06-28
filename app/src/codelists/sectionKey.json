@@ -2,10 +2,22 @@
   "codelist": "sectionKey",
   "closed": false,
   "hierarchical": true,
-  "description": "Sekcia obsahu — hlavný routing filter pre RAG. Hierarchia: skupina (parent=null) → sekcia (parent=kľúč skupiny). Kľúče snake_case, ASCII, bez diakritiky, nemenné.",
+  "description": "Sekcia obsahu — hlavný routing filter. Hierarchia: skupina (parent=null) → sekcia. Top-level skupiny zodpovedajú štruktúre Predpisov SFZ (futbalsfz.sk/legislativa-predpisy-sfz). Kľúče snake_case, ASCII, nemenné. Listy pod skupinami sa dopĺňajú z reálneho korpusu (Fáza 4).",
   "items": [
-    { "key": "normy", "label": "Normy a poriadky", "parent": null, "sortOrder": 10 },
-    { "key": "sutazny_poriadok", "label": "Súťažný poriadok", "parent": "normy", "synonyms": ["SP"], "sortOrder": 11 },
-    { "key": "prestupovy_poriadok", "label": "Prestupový poriadok", "parent": "normy", "synonyms": ["PP"], "sortOrder": 12 }
+    { "key": "stanovy", "label": "Stanovy", "parent": null, "sortOrder": 10 },
+
+    { "key": "poriadky", "label": "Poriadky", "parent": null, "sortOrder": 20 },
+    { "key": "sutazny_poriadok", "label": "Súťažný poriadok", "parent": "poriadky", "synonyms": ["SP"], "sortOrder": 21 },
+    { "key": "registracny_prestupovy_poriadok", "label": "Registračný a prestupový poriadok", "parent": "poriadky", "synonyms": ["RaPP"], "sortOrder": 22 },
+    { "key": "disciplinarny_poriadok", "label": "Disciplinárny poriadok", "parent": "poriadky", "synonyms": ["DP"], "sortOrder": 23 },
+
+    { "key": "statuty_kodexy", "label": "Štatúty a kódexy", "parent": null, "sortOrder": 30 },
+
+    { "key": "smernice", "label": "Smernice", "parent": null, "sortOrder": 40 },
+
+    { "key": "rozpisy_manualy", "label": "Rozpisy a manuály", "parent": null, "sortOrder": 50 },
+    { "key": "rozpis_sutazi", "label": "Rozpis súťaží", "parent": "rozpisy_manualy", "sortOrder": 51, "note": "jeden na zväz/ročník; riadiaci zväz určuje companyCode" },
+
+    { "key": "tlaciva_formulare", "label": "Tlačivá, vzory a formuláre", "parent": null, "sortOrder": 60 }
   ]
 }

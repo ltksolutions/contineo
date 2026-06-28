@@ -4,7 +4,7 @@
 > Zdrojový plán: `docs/Contineo_RAG_Projektovy_plan.md`  
 > Implementácia: `app/src/`  
 > **Dátový model: kanonický je Model B** (kód `app/src/` aj schémy zladené vo Fáze 4) — pozri `docs/DATA_MODEL_konzistencia.md`. Doménové polia (`sectionKey`, `scope`…) sú v schéme; ich napĺňanie pri importe rieši Fáza 4/5.
-> **Číselníky a ingescia:** centrálne číselníky a tagovanie → `docs/CISELNIKY_governance.md`; multi-zdrojová ingescia (MCP, web, API) + reconciliation pri zmene číselníka → `docs/INGESTION_zdroje_reconciliation.md`.
+> **Číselníky a ingescia:** centrálne číselníky a tagovanie → `docs/CISELNIKY_governance.md`; multi-zdrojová ingescia (MCP, web, API) + reconciliation pri zmene číselníka → `docs/INGESTION_zdroje_reconciliation.md`; prístupové práva (RBAC/ABAC + tenant izolácia, enforcement vo filtri) → `docs/PRISTUPOVE_PRAVA.md`.
 
 ---
 

@@ -3,7 +3,7 @@
 > **Stav:** návrh na schválenie (aktualizované 2026-06-26). Žiadne zmeny v živom kóde; vzory číselníkov publikované v `app/src/codelists/`.
 > **Cieľ:** každý obsah pridaný do RAG je už na vstupe správne „popísaný" — povinné parametre sa priraďujú **výhradne z centrálnych číselníkov**, nie voľným textom.
 > **Naviazanie:** Fáza 4 (Import & CMS) a Fáza 5 (Prístupové úrovne) v `docs/Contineo_RAG_Projektovy_plan.md`.
-> **Súvisiace:** `docs/DATA_MODEL_konzistencia.md` (Model B), `docs/rag-architecture.md` (indexy, tok dotazu), `docs/INGESTION_zdroje_reconciliation.md` (multi-zdrojová ingescia + reconciliation pri zmene číselníka).
+> **Súvisiace:** `docs/DATA_MODEL_konzistencia.md` (Model B), `docs/rag-architecture.md` (indexy, tok dotazu), `docs/INGESTION_zdroje_reconciliation.md` (multi-zdrojová ingescia + reconciliation pri zmene číselníka), `docs/PRISTUPOVE_PRAVA.md` (RBAC/ABAC + tenant izolácia).
 >
 > **Zmena 2026-06-26:** pole `associationCode` premenované na **`companyCode`** (význam ostáva: *pre koho obsah platí*); `scope` hodnota `association` → **`company`**; `sectionKey` je **hierarchický** (parent → sekcia); historické chunky sa pri migrácii **preznačkujú**.
 
