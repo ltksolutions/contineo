@@ -237,6 +237,6 @@ securityFilter(session) → {
 5. **Verejný widget rozsah** — **dá sa zúžiť** na konkrétny zväz podľa toho, kde je widget vložený (embed konfigurácia nesie `companyCode` kontext) → verejné výsledky sa obmedzia na daný zväz + globálne normy SFZ.
 6. **`sectionKey` podľa legislatívy SFZ** — uzamknuté top-level skupiny (`futbalsfz.sk/legislativa-predpisy-sfz/`): **Stanovy · Poriadky · Štatúty a kódexy · Smernice · Rozpisy a manuály · Tlačivá/formuláre**; pod „Poriadky" → súťažný / registračný a prestupový / disciplinárny… Premietnuté vo vzore `app/src/codelists/sectionKey.json` (listy sa dopĺňajú z korpusu).
 
-**Otvorené:**
+7. **CRM mapovanie** — Company a People dáta zo služby **CRM** (`api.sportnet.online/v1`, + MCP). Princíp uzavretý: **používatelia sa zakladajú automaticky** z CRM (osoba, CompanyID, profily, väzba súťaž→riadiaci zväz), a **všetko ostatné sa na používateľoch nastavuje cez mapovaciu tabuľku (`sportnet_role_map`) alebo ručne** (content-skupiny, `cms_uploaders`, výnimky). Presné názvy polí CRM sa doplnia pri implementácii, keď bude CRM connector dostupný — *netreba blokovať návrh*.
 
-7. **CRM mapovanie** — Company a People dáta: `https://api.sportnet.online/v1/docs/` (služba **CRM**, + MCP). Treba zmapovať presné polia (CompanyID, hierarchia zväzov, profily osôb, **väzba súťaž→riadiaci zväz**) na `companyCode`, `person_memberships`, `sportnet_role_map`. *Čaká na sprístupnenie CRM connectora pre túto session.*
+**Otvorené:** žiadne koncepčné — zostáva už len implementácia (Fáza 4/5) a doplnenie konkrétnych CRM polí.

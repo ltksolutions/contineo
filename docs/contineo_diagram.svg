@@ -18,9 +18,9 @@
   <text x="40" y="48" font-size="26" font-weight="700" fill="#202124">Contineo — architektúra a dátový tok</text>
   <text x="40" y="74" font-size="14" fill="#5f6368">Vstupné kanály → spracovanie → MongoDB Atlas (jadro) → rozhrania. AI dostáva len relevantné pasáže; dáta zostávajú vo vašej databáze.</text>
 
-  <!-- Identity ribbon (ISSF) -->
+  <!-- Identity ribbon (Sportnet.online) -->
   <rect x="350" y="96" width="580" height="34" rx="17" fill="#F1F3F4" stroke="#dadce0"/>
-  <text x="640" y="118" font-size="13" fill="#3c4043" text-anchor="middle">ISSF / Sportnet — identita (kto sa pýta, z ktorého Zväzu) · read-only</text>
+  <text x="640" y="118" font-size="13" fill="#3c4043" text-anchor="middle">Sportnet.online — identita a CRM (osoby, zväzy, roly) · auto-zakladanie používateľov</text>
   <path d="M640,130 L640,150" stroke="#9aa0a6" stroke-width="1.6" stroke-dasharray="4 3" marker-end="url(#arrowGray)"/>
 
   <!-- ============ MAIN FLOW ROW ============ -->
