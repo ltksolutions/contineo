@@ -23,9 +23,9 @@
 - [ ] Commitnúť + pushnúť dnešné zmeny (`app/src/`, docs, web, CHANGELOG, TODO)
 
 ### B. Rozhodnutia pred implementáciou → `docs/OPEN_DECISIONS.md`
-- [ ] **Sprint 1 (základy):** D1 chunking stratégia · D5 precedencia/konflikt noriem · D2 query→filtre · D6 verzovanie a platnosť
-- [ ] Sprint 2: D3 odpovedacia politika · D9 eval set · D10 GDPR baseline
-- [ ] Sprint 3 (po CRM): D7 sync · D8 onboarding · D11 helpdesk/qa_pairs · D12 email politika
+- [x] **Všetkých 15 rozhodnutí (D1–D15) uzavretých** (2026-06-26)
+- [ ] Formálne potvrdiť D5 (precedencia noriem) s legislatívcom SFZ
+- [ ] Doladiť D10 (znenie DPA + retenčné lehoty) pred produkciou
 
 ### C. Implementácia číselníkov (Fáza 4)
 - [ ] Kolekcia `codelists` v MongoDB + unikátny index `{ codelist, key }`
