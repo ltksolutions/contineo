@@ -17,8 +17,15 @@
 
 ## 🔜 Zajtra pokračujeme
 
+> **Backlog rozhodnutí:** `docs/OPEN_DECISIONS.md` (15 rozhodnutí D1–D15 s prioritou a odporúčaním). **Sprint 1 = D1 chunking · D5 precedencia noriem · D2 query→filtre · D6 verzovanie.**
+
 ### A. Git (na Macu používateľa)
 - [ ] Commitnúť + pushnúť dnešné zmeny (`app/src/`, docs, web, CHANGELOG, TODO)
+
+### B. Rozhodnutia pred implementáciou → `docs/OPEN_DECISIONS.md`
+- [ ] **Sprint 1 (základy):** D1 chunking stratégia · D5 precedencia/konflikt noriem · D2 query→filtre · D6 verzovanie a platnosť
+- [ ] Sprint 2: D3 odpovedacia politika · D9 eval set · D10 GDPR baseline
+- [ ] Sprint 3 (po CRM): D7 sync · D8 onboarding · D11 helpdesk/qa_pairs · D12 email politika
 
 ### C. Implementácia číselníkov (Fáza 4)
 - [ ] Kolekcia `codelists` v MongoDB + unikátny index `{ codelist, key }`
