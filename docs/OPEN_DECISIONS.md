@@ -59,7 +59,7 @@
 **Otázka:** keď „Rozpis súťaží" zväzu upresňuje pravidlo zo „Súťažného poriadku SFZ", ktoré platí pre danú súťaž?
 **Prečo:** priamo ovplyvňuje správnosť odpovede; futbal má vrstvené predpisy.
 **Odporúčanie:** „lex specialis v medziach": pre konkrétnu súťaž platí rozpis riadiaceho zväzu tam, kde upresňuje, ale nesmie ísť nad rámec SFZ poriadku; v odpovedi uviesť **oba** zdroje (SFZ poriadok + rozpis zväzu) a ktorý je špecifickejší. Potvrdiť s legislatívcom.
-**✅ Rozhodnuté (2026-06-26):** lex specialis v medziach SFZ poriadku; odpoveď uvádza oba zdroje a označí špecifickejší. *Ešte formálne potvrdiť s legislatívcom SFZ.*
+**✅ Rozhodnuté (2026-06-26):** lex specialis v medziach SFZ poriadku; odpoveď uvádza oba zdroje a označí špecifickejší. Pravidlá R1–R4 spísané v **`docs/PRECEDENCIA_NORIEM.md`**. *Ešte formálne potvrdiť konkrétne § s legislatívcom SFZ.*
 
 ### D6 — Verzovanie a platnosť (ročníky) 🔴
 **Otázka:** ako koexistujú verzie (starý/nový rozpis, novelizácia poriadku), čo je „platná" verzia pri dotaze, hranice súťažného ročníka.
@@ -92,7 +92,7 @@
 ### D10 — GDPR / audit / retencia 🔴 *(prierezové)*
 **Otázka:** čo logovať v konverzáciách (PII), ako dlho držať, právo na výmaz, DPA so Sportnetom, audit prístupov.
 **Odporúčanie:** minimalizovať PII v logoch; definovať retenčné lehoty; audit „kto/čo/kedy videl"; zmluvný rámec so Sportnetom na dáta osôb. Brand stojí na súkromí — toto musí byť explicitné.
-**✅ Rozhodnuté (2026-06-26):** minimalizovať PII v logoch, definované retenčné lehoty, audit prístupov, DPA so Sportnetom. *Konkrétne lehoty a znenie DPA doladiť pred produkčným spustením.*
+**✅ Rozhodnuté (2026-06-26):** zväz = prevádzkovateľ, Contineo = sprostredkovateľ; minimalizácia PII, navrhnuté retenčné lehoty, audit, sub-procesori + DPA. Rámec v **`docs/GDPR_DATA_PROTECTION.md`**. *Lehoty, DPA a DPIA potvrdí právnik/DPO pred produkciou.*
 
 ### D11 — Helpdesk + qa_pairs governance 🟡
 **Otázka:** SLA, kto rieši tickety per zväz, či `qa_pairs` dostávajú `accessLevel`/`companyCode`, či ich reconciliation preznačkuje pri zmene normy.
@@ -123,7 +123,7 @@
 
 ## Navrhnuté poradie (sprinty)
 
-> **Stav 2026-06-26: všetkých 15 rozhodnutí (D1–D15) je uzavretých ✅.** Zostávajú len dve formálne potvrdenia mimo nášho rozhodnutia: precedencia noriem s legislatívcom SFZ (D5) a znenie DPA/retencie pred produkciou (D10). Ďalej už ide o implementáciu podľa fáz.
+> **Stav 2026-06-26: všetkých 15 rozhodnutí (D1–D15) je uzavretých ✅.** D5 a D10 sú rozpracované do samostatných dokumentov (`PRECEDENCIA_NORIEM.md`, `GDPR_DATA_PROTECTION.md`); zostáva len **externé potvrdenie** — konkrétne § (legislatívec SFZ) a právne posúdenie lehôt/DPA/DPIA (právnik/DPO). Ďalej už ide o implementáciu podľa fáz.
 
 **Sprint 1 — základy (teraz):** D1 chunking · D5 precedencia noriem · D2 query→filtre · D6 verzovanie. *Bez týchto nemá zmysel ladiť zvyšok.*
 

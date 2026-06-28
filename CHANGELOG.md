@@ -17,6 +17,10 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 ### Added (2026-06-26 — backlog rozhodnutí)
 - **`docs/OPEN_DECISIONS.md`** — 15 rozhodnutí (D1–D15) v 4 okruhoch (vyhľadávanie, doménová logika, identita, prevádzka/compliance) s prioritou, fázou a odporúčaním; navrhnuté poradie sprintov.
 
+### Added (2026-06-26 — D5 a D10 rozpracované)
+- **`docs/PRECEDENCIA_NORIEM.md`** (D5) — normatívna hierarchia SFZ (Stanovy>Poriadky>Smernice/Štatúty>Rozpis) + hierarchia zväzov; pravidlá R1–R4 (lex superior/specialis/posterior + hierarchia zväzov); aplikácia v RAG; zoznam na potvrdenie legislatívcom.
+- **`docs/GDPR_DATA_PROTECTION.md`** (D10) — role (zväz=prevádzkovateľ, Contineo=sprostredkovateľ), kategórie dát, minimalizácia, návrh retenčných lehôt s odôvodnením, sub-procesori + EU rezidencia, práva dotknutých, audit, právne TODO (DPA/DPIA). *Nie právne poradenstvo — na posúdenie DPO/právnikom.*
+
 ### Decided (2026-06-26 — všetkých 15 rozhodnutí uzavretých)
 - **Vyhľadávanie:** D1 chunking štruktúrne po hraniciach normy + breadcrumb (~300–800 tok.); D2 query→filtre LLM extrakcia + kontext používateľa; D3 citačná politika bez halucinácií; D4 ranking default 60/40, ladiť podľa eval setu.
 - **Doménová logika:** D5 precedencia lex specialis v medziach SFZ (uviesť oba zdroje; potvrdiť s legislatívcom); D6 verzovanie `effectiveFrom/To`+`isActive`, default platná dnes.

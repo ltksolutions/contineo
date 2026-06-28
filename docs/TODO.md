@@ -24,8 +24,9 @@
 
 ### B. Rozhodnutia pred implementáciou → `docs/OPEN_DECISIONS.md`
 - [x] **Všetkých 15 rozhodnutí (D1–D15) uzavretých** (2026-06-26)
-- [ ] Formálne potvrdiť D5 (precedencia noriem) s legislatívcom SFZ
-- [ ] Doladiť D10 (znenie DPA + retenčné lehoty) pred produkciou
+- [x] D5 rozpracované → `docs/PRECEDENCIA_NORIEM.md`; D10 → `docs/GDPR_DATA_PROTECTION.md`
+- [ ] **Externé potvrdenie D5:** konkrétne § o záväznosti rozpisu + rozsah delegácie (legislatívec SFZ)
+- [ ] **Externé potvrdenie D10:** retenčné lehoty, DPA (zväz + Sportnet + sub-procesori), DPIA (právnik/DPO)
 
 ### C. Implementácia číselníkov (Fáza 4)
 - [ ] Kolekcia `codelists` v MongoDB + unikátny index `{ codelist, key }`

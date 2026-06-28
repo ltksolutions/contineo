@@ -3,7 +3,7 @@
 > **Stav:** návrh na schválenie (aktualizované 2026-06-26). Žiadne zmeny v živom kóde (systém nie je nasadený).
 > **Cieľ:** nie každý má prístup k všetkému — riadiť, čo používateľ smie vidieť vo vyhľadávaní aj v odpovediach bota.
 > **Naviazanie:** Fáza 5 (Prístupové úrovne) v `docs/Contineo_RAG_Projektovy_plan.md`.
-> **Súvisiace:** `docs/CISELNIKY_governance.md`, `docs/INGESTION_zdroje_reconciliation.md`, `docs/rag-architecture.md`.
+> **Súvisiace:** `docs/CISELNIKY_governance.md`, `docs/INGESTION_zdroje_reconciliation.md`, `docs/rag-architecture.md`, `docs/PRECEDENCIA_NORIEM.md` (D5), `docs/GDPR_DATA_PROTECTION.md` (D10).
 > **Rozhodnutia (2026-06-26):** verejný prístup = **hybrid podľa nasadenia**; interná hierarchia = **zdieľanie konfigurovateľné per dokument**; skupiny = **auto-sync členstva zo sportnet.online + ručné content-skupiny**.
 
 ---
