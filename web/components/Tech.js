@@ -278,6 +278,43 @@ export default function Tech({ dict, lang }) {
         </div>
       </section>
 
+      {t.identity && (
+        <section className="section" style={{ background: "var(--surface)" }}>
+          <div className="container">
+            <SectionHead title={t.identity.title} intro={t.identity.intro} />
+
+            <h3 style={{ fontSize: 17, marginBottom: 12 }}>{t.identity.providersTitle}</h3>
+            <div style={{ overflowX: "auto", marginBottom: 28 }}>
+              <table style={{ width: "100%", borderCollapse: "collapse", background: "var(--bg)", border: "1px solid var(--line)", borderRadius: "var(--radius)" }}>
+                <tbody>
+                  {t.identity.providers.map((p, i) => (
+                    <tr key={i} style={{ borderTop: i ? "1px solid var(--line)" : "none" }}>
+                      <td style={{ padding: "10px 14px", fontWeight: 600, fontSize: 14, whiteSpace: "nowrap", verticalAlign: "top" }}>{p.name}</td>
+                      <td style={{ padding: "10px 14px", fontSize: 14 }} className="muted">{p.role}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            <h3 style={{ fontSize: 17, marginBottom: 12 }}>{t.identity.principlesTitle}</h3>
+            <ul className="muted" style={{ margin: "0 0 28px", paddingLeft: 20, lineHeight: 1.8, fontSize: 15, maxWidth: 720 }}>
+              {t.identity.principles.map((p, i) => <li key={i}>{p}</li>)}
+            </ul>
+
+            <h3 style={{ fontSize: 17, marginBottom: 12 }}>{t.identity.modesTitle}</h3>
+            <div className="grid grid--2">
+              {t.identity.modes.map((m, i) => (
+                <div className="card" key={i} style={{ background: "var(--bg)" }}>
+                  <h3 style={{ fontSize: 16, marginBottom: 6 }}>{m.name}</h3>
+                  <p className="muted" style={{ fontSize: 14.5 }}>{m.text}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
       {t.caseStudy && (
         <section className="section">
           <div className="container">

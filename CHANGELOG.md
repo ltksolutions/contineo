@@ -4,6 +4,10 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Added (2026-06-29 — blok Identita a prístup)
+- **Nová sekcia „Identita a prístup"** na homepage (`web/components/Identity.js`, zaradená pred Bezpečnosť v `web/app/[lang]/page.js`, odkaz v `Nav.js`): SSO/jednotné prihlásenie (Entra ID, Google Workspace, OAuth/OIDC, vlastná DB), automatické zakladanie účtov z CRM/zdroja identity, multi-tenant prístup, bezpečnosť na úrovni dotazu (default-deny) + rad odznakov poskytovateľov identity. SK+EN (`dict.identity`).
+- **Hlbší blok „Identita a riadenie prístupu" na `/technologia`** (`dict.tech.identity` SK+EN + render v `Tech.js`): tabuľka poskytovateľov (NextAuth → kanonická session), princípy (server-side, default-deny, filter pred LLM, auto-provisioning), dva režimy nasadenia. Vychádza z `docs/PRISTUPOVE_PRAVA.md`; sportnet.online uvedený len ako príklad.
+
 ### Changed (2026-06-29 — univerzálny pozicioning webu, Tier 4)
 - **Web prepísaný na doménovo neutrálny jazyk** (`web/lib/dictionaries.js` SK+EN, `web/components/Tech.js`, `BotDemo.js`, `OverlayDemo.js`). Generická firma ako doména ukážok: číselník sekcií (`smernice`, `hr`, `ekonomicke`, `it_aplikacie`, `gdpr`), `companyCode` príklady `ACME`/`ACME-BA`, multi-tenant ako „centrála → regionálne → lokálne jednotky", FAQ demo na home office / dovolenku / reset hesla.
 - **Futbal/SFZ presunutý do označeného Case study bloku** na `/technologia` (`tech.caseStudy` SK+EN + render v `Tech.js`) + úvodná poznámka `tech.exampleNote`, že príklady sú ilustračné a produkt je univerzálny.

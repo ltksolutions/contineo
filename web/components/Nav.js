@@ -18,6 +18,7 @@ export default function Nav({ dict, lang }) {
     { href: `/${lang}#how`, label: dict.nav.how },
     { href: `/${lang}#demo`, label: dict.nav.demo },
     { href: `/${lang}#modes`, label: dict.nav.modes },
+    { href: `/${lang}#identity`, label: dict.nav.identity },
     { href: `/${lang}#security`, label: dict.nav.security },
     { href: `/${lang}#roadmap`, label: dict.nav.roadmap },
   ];
