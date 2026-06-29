@@ -38,6 +38,16 @@
 - [ ] LLM klasifikátor proti číselníku (návrh hodnôt + confidence)
 - [ ] Review UI — dropdowny z `codelists`, predvyplnené návrhom LLM, kurátor potvrdí
 
+### D2. CMS — knižnica, web obsah, kanály (Fáza 4 / nová CMS-Web / 6) → `docs/CMS_KONCEPCIA.md`
+- [ ] **Media manager:** knižnica nad `documents` (zoznam, filtre, detail, history) + `processingStatus` (uploaded→converting→chunking→embedding→indexed/failed) oddelený od `status`
+- [ ] Rozšíriť `documents` o `contentType` (`document`|`web`) a `webPublish` (slug, seo, navParent, publishAt) — **D-CMS-1**
+- [ ] **Web obsah (nová fáza CMS-Web):** KB články, FAQ, kategórie, navigácia, statické stránky; publikačný workflow + SSG/ISR generovanie; i18n SK/EN (AI preklad → review, **D-CMS-5**)
+- [ ] Editor: Markdown + náhľad, neskôr WYSIWYG vrstva — **D-CMS-2**
+- [ ] qa_pairs → publikovaný FAQ (zatváranie slučky); norma na webe len ako kanonický odkaz — **D-CMS-4**
+- [ ] **Kanály:** kolekcie `channels` + `channel_runs`, admin CRUD, test `discover`, review fronta, monitoring behov; bez auto-publish (**D-CMS-6**)
+- [ ] Helpdesk: štart **web widget** (`tickets`), e-mailový kanál ako druhý krok — **D-CMS-3**
+- [ ] Preniesť D-CMS-1..6 do `OPEN_DECISIONS.md` (D16+) pri revízii backlogu
+
 ### E. Source-adaptéry + provenance (Fáza 4/6)
 - [ ] Rozhranie `SourceAdapter` + refaktor existujúceho file (PDF/MD) adaptéra
 - [ ] Provenance polia v `documents` (`source.{type,connector,externalId,url,fetchedAt,contentHash,adapterVersion}`)

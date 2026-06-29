@@ -132,7 +132,7 @@ export default function OverlayDemo({ site, kb }) {
             {result === "none" && (
               <div style={{ marginTop: 14, paddingTop: 14, borderTop: "1px solid var(--line)" }}>
                 <p style={{ fontSize: 15, marginBottom: 4 }}>—</p>
-                <p className="muted" style={{ fontSize: 14 }}>Skúste „prestup termín“, „ISSF heslo“ alebo „dva zápasy za deň“.</p>
+                <p className="muted" style={{ fontSize: 14 }}>Skúste „home office“, „dovolenka termín“ alebo „reset hesla“.</p>
               </div>
             )}
 

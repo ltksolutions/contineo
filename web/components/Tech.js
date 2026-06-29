@@ -6,15 +6,15 @@ const DOC_CHUNKS = `{
   sourceType: "pdf",            // pdf | faq | rss | qa | email
 
   // tagging (used for filtering at search time)
-  sectionKey: "sutazny_poriadok",
-  companyCode: "SsFZ",      // "SFZ" = applies to everyone
+  sectionKey: "smernice",
+  companyCode: "ACME-BA",       // "ACME" = applies company-wide
   scope: "company",         // global | company | region
   language: "sk",
 
   // content
-  articleRef: "§ 12 ods. 3",
-  heading: "Štart hráča",
-  text: "Hráč nesmie nastúpiť v dvoch stretnutiach...",
+  articleRef: "čl. 4 ods. 2",
+  heading: "Práca z domu (home office)",
+  text: "Zamestnanec má nárok na home office...",
 
   // vector + state
   embedding: [0.0123, -0.044, ...],   // 1024 dims (Voyage AI voyage-4)
@@ -28,8 +28,8 @@ const TICKETS = `{
   source: "bot",                // bot | email
   status: "open",               // lifecycle below
   priority: "normal",
-  sectionKey: "prestupovy_poriadok",
-  companyCode: "SsFZ",
+  sectionKey: "hr",
+  companyCode: "ACME-BA",
   requester: { email, name, userRef },
   subject, conversationId,      // full context if from bot
   assignedTo, slaDueAt,
@@ -46,8 +46,8 @@ const VECTOR_QUERY = `db.document_chunks.aggregate([
             path: "embedding",
             queryVector: queryEmbedding, // 1024 dims
             numCandidates: 200, limit: 20,
-            filter: { sectionKey: { $eq: "sutazny_poriadok" },
-                      companyCode: { $in: ["SsFZ","SFZ"] },
+            filter: { sectionKey: { $eq: "smernice" },
+                      companyCode: { $in: ["ACME-BA","ACME"] },
                       isActive: { $eq: true } }
           }}],
           fulltext: [{ $search: {
@@ -69,19 +69,19 @@ const VECTOR_QUERY = `db.document_chunks.aggregate([
   }}
 ])`;
 
-const TAG_EXAMPLES = `// nationwide rule (applies to all associations)
-{ sourceType: "pdf", sectionKey: "sutazny_poriadok",
-  companyCode: "SFZ", scope: "global",
-  articleRef: "§ 12 ods. 3", isActive: true }
+const TAG_EXAMPLES = `// company-wide policy (applies to all units)
+{ sourceType: "pdf", sectionKey: "smernice",
+  companyCode: "ACME", scope: "global",
+  articleRef: "čl. 4 ods. 2", isActive: true }
 
-// fixtures of a specific association
-{ sourceType: "pdf", sectionKey: "rozpis_sutazi",
-  companyCode: "SsFZ", scope: "company",
+// document specific to one unit
+{ sourceType: "pdf", sectionKey: "hr",
+  companyCode: "ACME-BA", scope: "company",
   articleRef: "čl. 8", isActive: true }
 
-// IT FAQ for the ISSF app (FAQ, not a rule)
+// IT FAQ for an internal app (FAQ, not a policy)
 { sourceType: "faq", sectionKey: "it_aplikacie",
-  companyCode: "SFZ", scope: "global",
+  companyCode: "ACME", scope: "global",
   articleRef: null, isActive: true }`;
 
 function Code({ children, label }) {
@@ -133,6 +133,9 @@ export default function Tech({ dict, lang }) {
           <span className="eyebrow">{t.eyebrow}</span>
           <h1 className="maxw-720 mx-auto">{t.title}</h1>
           <p className="lead maxw-720 mx-auto" style={{ marginTop: 20 }}>{t.subtitle}</p>
+          {t.exampleNote && (
+            <p className="muted maxw-720 mx-auto" style={{ marginTop: 16, fontSize: 14 }}>{t.exampleNote}</p>
+          )}
           <div style={{ marginTop: 28 }}>
             <Link className="btn btn--ghost" href={`/${lang}`}>{t.back}</Link>
           </div>
@@ -274,6 +277,21 @@ export default function Tech({ dict, lang }) {
           </ul>
         </div>
       </section>
+
+      {t.caseStudy && (
+        <section className="section">
+          <div className="container">
+            <div style={{ maxWidth: 720, margin: "0 auto", background: "var(--teal-50)", border: "1px solid var(--teal-100)", borderRadius: "var(--radius-lg)", padding: "clamp(20px, 3vw, 32px)" }}>
+              <span className="eyebrow" style={{ color: "var(--teal-700)" }}>{t.caseStudy.eyebrow}</span>
+              <h2 style={{ marginTop: 8 }}>{t.caseStudy.title}</h2>
+              <p className="muted" style={{ marginTop: 12 }}>{t.caseStudy.intro}</p>
+              <ul className="muted" style={{ margin: "16px 0 0", paddingLeft: 20, lineHeight: 1.8, fontSize: 15 }}>
+                {t.caseStudy.points.map((p, i) => <li key={i}>{p}</li>)}
+              </ul>
+            </div>
+          </div>
+        </section>
+      )}
 
       <section className="section" style={{ background: "var(--surface)" }}>
         <div className="container">

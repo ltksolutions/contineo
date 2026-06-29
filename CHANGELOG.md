@@ -4,6 +4,24 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Changed (2026-06-29 — univerzálny pozicioning webu, Tier 4)
+- **Web prepísaný na doménovo neutrálny jazyk** (`web/lib/dictionaries.js` SK+EN, `web/components/Tech.js`, `BotDemo.js`, `OverlayDemo.js`). Generická firma ako doména ukážok: číselník sekcií (`smernice`, `hr`, `ekonomicke`, `it_aplikacie`, `gdpr`), `companyCode` príklady `ACME`/`ACME-BA`, multi-tenant ako „centrála → regionálne → lokálne jednotky", FAQ demo na home office / dovolenku / reset hesla.
+- **Futbal/SFZ presunutý do označeného Case study bloku** na `/technologia` (`tech.caseStudy` SK+EN + render v `Tech.js`) + úvodná poznámka `tech.exampleNote`, že príklady sú ilustračné a produkt je univerzálny.
+- **sportnet.online** uvádzaný len ako *príklad* zdroja identity vo všeobecných formuláciách; detaily v Case study.
+- Plán zmien: `docs/WEB_UNIVERZALNY_POZICIONING_PLAN.md`.
+
+### Added (2026-06-29 — koncepcia CMS)
+- **Návrhový dokument** `docs/CMS_KONCEPCIA.md` — CMS s tromi zodpovednosťami: (1) media manager pre RAG, (2) content engine pre verejný web (knowledge base / helpdesk), (3) správa vstupných kanálov. Rozlíšenie typov obsahu (`document` vs `web`) v jednej kolekcii `documents`; oddelenie `processingStatus` (workre) od `status` (publikácia); kanály ako spravované inštancie adaptérov (`channels`, `channel_runs`); roly v CMS; user flows; naviazanie na fázy.
+- **Doménová univerzálnosť zdôraznená** — Contineo je univerzálna aplikácia; futbal/SFZ je len ukážka nasadenia do veľkej organizácie (zapracované do `CMS_KONCEPCIA.md`).
+
+### Decided (2026-06-29 — rozhodnutia CMS D-CMS-1..6)
+- **D-CMS-1:** web obsah žije v `documents` cez `contentType` (`document`|`web`), web-polia v `webPublish` — žiadna samostatná kolekcia.
+- **D-CMS-2:** editor = Markdown + náhľad, s WYSIWYG vrstvou nad Markdownom (Markdown ostáva kanonické úložisko).
+- **D-CMS-3:** helpdesk štartuje cez **web widget vložený do stránky**; e-mailový kanál je druhý krok na tej istej `tickets`/`channels` štruktúre. (E-mail je dnes hlavný kanál otázok, cieľom je presun na widget.)
+- **D-CMS-4:** verejná KB = len kurátorské články + kanonický odkaz na normu (žiadne auto-generovanie z noriem).
+- **D-CMS-5:** EN preklady = AI-návrh → kurátor potvrdí.
+- **D-CMS-6:** žiadny auto-publish z kanála; predvyplnenie áno, finálny publish potvrdzuje človek.
+
 ### Added (2026-06-26 — centrálne číselníky + multi-zdrojová ingescia)
 - **Centrálne číselníky (vzory/seed)** v `app/src/codelists/` — `sectionKey` (hierarchický), `companyCode`, `scope`, `accessLevel`, `language`, `category`, `sourceType`, `tags` + `README.md` a validačná `_schema.json`. Princíp: „closed vocabulary" pre povinné parametre — čo nie je v číselníku, sa do `document_chunks` nedostane.
 - **Návrhový dokument** `docs/CISELNIKY_governance.md` — katalóg parametrov, úložisko (hybrid: kolekcia `codelists` + verzovaný seed), governance, validačná brána pri ingescii.

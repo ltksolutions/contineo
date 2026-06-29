@@ -224,7 +224,7 @@ export default function BotDemo({ dict, kb }) {
                   {searchMode}
                 </span>
               )}
-              <span className="muted" style={{ fontSize: 12 }}>SsFZ</span>
+              <span className="muted" style={{ fontSize: 12 }}>ACME-BA</span>
             </span>
           </div>
         </div>
