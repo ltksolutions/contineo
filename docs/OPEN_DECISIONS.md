@@ -17,7 +17,7 @@
 | D6 | Verzovanie a platnosť (ročníky) | Doménová logika | 🔴 | 4 | ✅ |
 | D7 | Sportnet webhook + sync | Identita | 🟡 | 5 | ✅ |
 | D8 | Onboarding tenanta | Identita | 🟡 | 5 | ✅ |
-| D9 | Eval & kvalita pred go-live | Compliance | 🔴 | 7 (pripraviť skoro) | ✅ |
+| D9 | Eval & kvalita pred go-live | Compliance | 🔴 | 7 (pripraviť skoro) | ✅ → `D9_EVAL_zlata_sada.md` |
 | D10 | GDPR / audit / retencia | Compliance | 🔴 | prierezové | ✅ |
 | D11 | Helpdesk + qa_pairs governance | Prevádzka | 🟡 | 4b | ✅ |
 | D12 | Email politika (auto-reply) | Prevádzka | 🟡 | 4b/6 | ✅ |
@@ -88,6 +88,7 @@
 **Otázka:** sada zlatých otázok, metriky (presnosť, citovateľnosť, miera „neviem"), akceptačné prahy.
 **Odporúčanie:** zostaviť 50–100 reálnych otázok s overenými odpoveďmi a zdrojmi; merať pred každým väčším releasom; go-live až po dosiahnutí prahu. V normatívnej doméne je zlá odpoveď drahá.
 **✅ Rozhodnuté (2026-06-26):** zlatá sada 50–100 otázok + akceptačný prah ako brána pred go-live; merať pred každým releasom. *Začať zbierať otázky už počas Fázy 4.*
+**Kostra hotová (2026-07-25):** 74 návrhov otázok, hárok pre legislatívca, konvertor a merací skript s prahmi → `docs/D9_EVAL_zlata_sada.md`, materiály v `eval/`. Chýbajú overené odpovede a § — to je otvorený bod E1.
 
 ### D10 — GDPR / audit / retencia 🔴 *(prierezové)*
 **Otázka:** čo logovať v konverzáciách (PII), ako dlho držať, právo na výmaz, DPA so Sportnetom, audit prístupov.
