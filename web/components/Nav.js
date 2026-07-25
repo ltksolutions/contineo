@@ -14,12 +14,13 @@ export default function Nav({ dict, lang }) {
   const [open, setOpen] = useState(false);
 
   const links = [
-    { href: `/${lang}#features`, label: dict.nav.features },
-    { href: `/${lang}#how`, label: dict.nav.how },
     { href: `/${lang}#demo`, label: dict.nav.demo },
     { href: `/${lang}#modes`, label: dict.nav.modes },
+    { href: `/${lang}#features`, label: dict.nav.features },
+    { href: `/${lang}#how`, label: dict.nav.how },
     { href: `/${lang}#identity`, label: dict.nav.identity },
     { href: `/${lang}#security`, label: dict.nav.security },
+    { href: `/${lang}#runtime`, label: dict.nav.runtime },
     { href: `/${lang}#roadmap`, label: dict.nav.roadmap },
   ];
 
@@ -106,7 +107,7 @@ export default function Nav({ dict, lang }) {
         .nav-link:hover { color: var(--ink); }
         .nav-burger { display: none; }
         .nav-mobile { display: none; }
-        @media (max-width: 1040px) {
+        @media (max-width: 1220px) {
           .nav-links { display: none !important; }
           .nav-desktop { display: none !important; }
           .nav-burger { display: inline-flex !important; }

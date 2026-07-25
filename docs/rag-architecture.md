@@ -10,6 +10,9 @@
 
 ## Stack rozhodnutia (zafixované pre Fázu 3)
 
+> ⚠️ **Prekonané rozhodnutím ADR-001** (2026-07-25). Stack už nie je jedna fixná kombinácia — embedding, rerank a generovanie sú tri **vymeniteľné adaptéry** vyberané profilom tenanta (cloud alebo on-prem). Tabuľka nižšie popisuje **predvolený cloudový profil**. Viď `docs/ADR-001-provider-adaptery.md`.
+
+
 | Vrstva | Rozhodnutie | Dôvod |
 |---|---|---|
 | **Databáza + vektory** | MongoDB Atlas EU | Jedna DB pre dáta, vektory aj fulltext, GDPR |

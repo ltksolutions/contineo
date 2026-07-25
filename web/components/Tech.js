@@ -16,12 +16,45 @@ const DOC_CHUNKS = `{
   heading: "Práca z domu (home office)",
   text: "Zamestnanec má nárok na home office...",
 
-  // vector + state
-  embedding: [0.0123, -0.044, ...],   // 1024 dims (Voyage AI voyage-4)
-  embeddingModel: "voyage-4",         // Automated Embedding in Atlas
+  // vector + identita vektorového priestoru
+  embedding: [0.0123, -0.044, ...],   // 1024 dims
+  embeddingModel: "voyage-4",         // POVINNÉ — ktorý model vektor vyrobil
+  embeddingDim: 1024,                 // kontrola pri zápise aj čítaní
+  embeddingProvider: "atlas-auto",    // atlas-auto | infinity | tei
+  embeddedAt: ISODate(),              // pre plánovanie re-embedu
+
   isActive: true,               // false = archived version
   effectiveFrom, effectiveTo
 }`;
+
+const TENANT_PROFILE = `{
+  companyCode: "ACME",          // kľúč, zhodný s chunkami
+  tier: "T1",                   // T1 shared | T2 enclave | T3 air-gap
+  dataResidency: "eu",          // eu | on-prem | air-gap
+
+  providers: {
+    embedding: {
+      kind: "atlas-auto",       // atlas-auto | infinity | tei
+      model: "voyage-4", dim: 1024,
+      index: "rag_vector_index"
+    },
+    rerank: {
+      kind: "atlas-stage",      // atlas-stage | infinity | tei | none
+      model: "voyage-rerank-2.5", topK: 8
+    },
+    generation: {
+      kind: "anthropic",        // anthropic | openai
+      model: "claude-sonnet-5",
+      citations: true, promptCaching: true
+    }
+  }
+}
+
+// Ten istý tenant v uzavretom režime — mení sa len profil:
+//   embedding:  { kind: "infinity", model: "voyage-4-nano", dim: 1024 }
+//   rerank:     { kind: "infinity", model: "BAAI/bge-reranker-v2-m3" }
+//   generation: { kind: "openai", url: "http://vllm:8000/v1",
+//                 model: "Qwen3-8B", citations: false }`;
 
 const TICKETS = `{
   ticketNumber: "CNT-2026-000412",
@@ -42,9 +75,9 @@ const VECTOR_QUERY = `db.document_chunks.aggregate([
       input: {
         pipelines: {
           vector: [{ $vectorSearch: {
-            index: "rag_vector_index",   // voyage-4 auto-embed
+            index: "rag_vector_index",   // index viazaný na embeddingModel
             path: "embedding",
-            queryVector: queryEmbedding, // 1024 dims
+            queryVector: queryEmbedding, // z adaptéra podľa profilu
             numCandidates: 200, limit: 20,
             filter: { sectionKey: { $eq: "smernice" },
                       companyCode: { $in: ["ACME-BA","ACME"] },
@@ -58,16 +91,22 @@ const VECTOR_QUERY = `db.document_chunks.aggregate([
       },
       combination: { weights: { vector: 0.6, fulltext: 0.4 } }
   }},
-  { $limit: 10 },
-  { $rerank: {
-      index: "rag_rerank_index",         // voyage-rerank-2
-      query: queryText, limit: 8
-  }},
+  { $limit: 20 },
   { $project: {
       text: 1, heading: 1, articleRef: 1,
-      score: { $meta: "rankFusionScore" }  // -> escalation signal
+      score: { $meta: "rankFusionScore" }  // -> signál pre eskaláciu
   }}
-])`;
+])
+
+// Tento dotaz je identický v cloude aj on-prem.
+// Rerank je samostatný krok MIMO neho, podľa profilu tenanta:
+//   cloud   -> { $rerank: { index: "rag_rerank_index",
+//                           query: queryText, limit: 8 } }
+//              sa pripojí ako ďalší stage (MongoDB Atlas 8.3+)
+//   on-prem -> POST /rerank na Infinity/TEI nad výsledkom vyššie
+//
+// Počet kandidátov na vstupe rerankera drž rovnaký (20),
+// aby boli oba režimy porovnateľné na eval sade D9.`;
 
 const TAG_EXAMPLES = `// company-wide policy (applies to all units)
 { sourceType: "pdf", sectionKey: "smernice",
@@ -206,6 +245,44 @@ export default function Tech({ dict, lang }) {
           <Code>{VECTOR_QUERY}</Code>
         </div>
       </section>
+
+      {t.adaptersTitle && (
+        <section className="section" style={{ background: "var(--surface)" }}>
+          <div className="container">
+            <SectionHead title={t.adaptersTitle} intro={t.adaptersIntro} />
+
+            <div className="grid grid--2" style={{ alignItems: "start" }}>
+              <Code label={t.collProfileLabel}>{TENANT_PROFILE}</Code>
+
+              <div>
+                <h3 style={{ fontSize: 17, marginBottom: 12 }}>{t.parityTitle}</h3>
+                <p className="muted" style={{ fontSize: 14.5, marginBottom: 14 }}>{t.parityIntro}</p>
+                <div style={{ overflowX: "auto" }}>
+                  <table style={{ width: "100%", borderCollapse: "collapse", background: "var(--bg)", border: "1px solid var(--line)", borderRadius: "var(--radius)" }}>
+                    <thead>
+                      <tr>
+                        <th style={{ padding: "9px 12px", textAlign: "left", fontSize: 12.5, fontWeight: 700 }}>{t.parityHead.cap}</th>
+                        <th style={{ padding: "9px 12px", textAlign: "left", fontSize: 12.5, fontWeight: 700, color: "var(--teal-700)" }}>{t.parityHead.cloud}</th>
+                        <th style={{ padding: "9px 12px", textAlign: "left", fontSize: 12.5, fontWeight: 700, color: "var(--teal-700)" }}>{t.parityHead.onprem}</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {t.parity.map((r, i) => (
+                        <tr key={i} style={{ borderTop: "1px solid var(--line)" }}>
+                          <td style={{ padding: "9px 12px", fontSize: 13.5, verticalAlign: "top" }}>{r.cap}</td>
+                          <td className="muted" style={{ padding: "9px 12px", fontSize: 13.5, verticalAlign: "top" }}>{r.cloud}</td>
+                          <td className="muted" style={{ padding: "9px 12px", fontSize: 13.5, verticalAlign: "top" }}>{r.onprem}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                <p className="muted" style={{ fontSize: 13.5, marginTop: 14, fontStyle: "italic" }}>{t.adrNote}</p>
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
 
       <section className="section" style={{ background: "var(--surface)" }}>
         <div className="container">
