@@ -13,7 +13,18 @@ export default function Nav({ dict, lang }) {
   const otherHref = pathname.replace(new RegExp(`^/${lang}(?=/|$)`), `/${other}`);
   const [open, setOpen] = useState(false);
 
+  // Hlavne menu: 6 poloziek. Sekcie #how, #identity a #roadmap zostavaju
+  // na stranke, len nie su v hornej liste (kontajner ma 1120px).
   const links = [
+    { href: `/${lang}#demo`, label: dict.nav.demo },
+    { href: `/${lang}#modes`, label: dict.nav.modes },
+    { href: `/${lang}#features`, label: dict.nav.features },
+    { href: `/${lang}#security`, label: dict.nav.security },
+    { href: `/${lang}#runtime`, label: dict.nav.runtime },
+  ];
+
+  // Do mobilneho menu sa zmesti vsetko.
+  const mobileLinks = [
     { href: `/${lang}#demo`, label: dict.nav.demo },
     { href: `/${lang}#modes`, label: dict.nav.modes },
     { href: `/${lang}#features`, label: dict.nav.features },
@@ -38,13 +49,13 @@ export default function Nav({ dict, lang }) {
     >
       <div
         className="container"
-        style={{ display: "flex", alignItems: "center", justifyContent: "space-between", height: 66 }}
+        style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 20, height: 66 }}
       >
         <Link href={`/${lang}`} aria-label="Contineo" onClick={() => setOpen(false)}>
           <Logo />
         </Link>
 
-        <nav className="nav-links" style={{ display: "flex", alignItems: "center", gap: 22 }}>
+        <nav className="nav-links" style={{ display: "flex", alignItems: "center", gap: 2, flexShrink: 0 }}>
           {links.map((l) => (
             <a key={l.href} href={l.href} className="muted nav-link">{l.label}</a>
           ))}
@@ -82,7 +93,7 @@ export default function Nav({ dict, lang }) {
       {open && (
         <div className="nav-mobile" style={{ borderTop: "1px solid var(--line)", background: "var(--glass-bg)", backdropFilter: "blur(16px)", WebkitBackdropFilter: "blur(16px)" }}>
           <div className="container" style={{ padding: "14px 24px 20px", display: "grid", gap: 4 }}>
-            {links.map((l) => (
+            {mobileLinks.map((l) => (
               <a key={l.href} href={l.href} onClick={() => setOpen(false)} style={{ padding: "11px 0", fontSize: 16, borderBottom: "1px solid var(--line)" }}>
                 {l.label}
               </a>
@@ -103,11 +114,17 @@ export default function Nav({ dict, lang }) {
       )}
 
       <style>{`
-        .nav-link { font-size: 15px; transition: color .15s ease; white-space: nowrap; }
-        .nav-link:hover { color: var(--ink); }
+        .nav-link {
+          font-size: 15px;
+          white-space: nowrap;
+          padding: 8px 11px;
+          border-radius: 8px;
+          transition: color .15s ease, background-color .15s ease;
+        }
+        .nav-link:hover { color: var(--ink); background: var(--surface-2); }
         .nav-burger { display: none; }
         .nav-mobile { display: none; }
-        @media (max-width: 1220px) {
+        @media (max-width: 1000px) {
           .nav-links { display: none !important; }
           .nav-desktop { display: none !important; }
           .nav-burger { display: inline-flex !important; }
