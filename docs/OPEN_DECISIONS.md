@@ -24,6 +24,8 @@
 | D13 | Scheduler / freshness | Prevádzka | 🟡 | 6 | ✅ |
 | D14 | Widget / embedding | Prevádzka | 🟢 | 5/6 | ✅ |
 | D15 | Modely / fallback / náklady | Prevádzka | 🟢 | 7 | ✅ → ADR-001 (O1 zmerané 26.7.) |
+| D16 | Kotva citácie na stranu originálu | Vyhľadávanie | 🟡 | 7 | ⬜ |
+| D17 | Tabuľky pri extrakcii z PDF | Ingescia | 🟡 | 7 | 🔄 čiastočne |
 
 ---
 
@@ -133,3 +135,62 @@
 **Sprint 3 — identita a helpdesk (po CRM connectore):** D7 sync · D8 onboarding · D11 helpdesk/qa_pairs · D12 email politika.
 
 **Priebežne / neskôr:** D4 ranking · D13 scheduler · D14 widget · D15 modely/náklady.
+
+---
+
+## Okruh 6 — Extrakcia z PDF (otvorené 2026-07-26)
+
+Obe vznikli pri stavbe chunkera nad reálnymi predpismi SFZ. Prevod **PDF → Markdown → chunky**
+je správny (text treba tak či tak, Markdown je verzovateľný a oddeľuje zlyhanie extrakcie od
+zlyhania chunkovania — viď `INGESTION_zdroje_reconciliation.md`), ale niečo sa pritom stráca.
+
+### D16 — Kotva citácie na stranu originálu 🟡
+
+**Otázka:** má citácia obsahovať aj číslo strany v pôvodnom PDF, teda `čl. 8 ods. 15–23, s. 12`
+namiesto len `čl. 8 ods. 15–23`?
+
+**Prečo:** chunker odstraňuje čísla strán (`41/85`) ako opakujúci sa šum — inak by kazili embedding
+aj fulltext. Pri právnom dokumente je však „strana 42" legitímny spôsob, ako niekoho nasmerovať
+do originálu, najmä keď ho číta vytlačený alebo v prehliadači PDF.
+
+**Odporúčanie:** zachytiť číslo strany **pred** čistením a uložiť ho na chunk ako `sourcePage`
+(prípadne rozsah `sourcePageFrom/To`, keď chunk preteká cez stranu). Je to lacné a nemení
+chunkovanie — len sa pridá pole. Do citácie sa zapojí až vtedy, ak sa ukáže, že to používatelia
+chcú.
+
+**Kedy rozhodnúť:** po prvom kole D9, podľa toho, či hodnotitelia budú citácie dohľadávať v PDF.
+Import je idempotentný (verzia = hash obsahu), takže doplnenie znamená len opakovaný beh.
+
+### D17 — Tabuľky pri extrakcii z PDF 🟡
+
+**Otázka:** stačí `markitdown`, alebo treba extrakciu s vedomím rozloženia (`pdfplumber`, `PyMuPDF`)?
+
+**Prečo:** hlavičky tabuliek prichádzajú rozpadnuté na samostatné riadky —
+`do 1. do 2. do 3.…` a `ligy ligy ligy…` — ktoré oddelene nič neznamenajú. Dátové riadky sú
+neporušené a samopopisné (`z 1. ligy 6.000 € 4.500 €…`), takže dnes to funguje. **Riziko je
+v delení:** keby sa väčšia tabuľka rozdelila medzi dva chunky, druhá polovica by boli čísla
+bez hlavičiek a otázka typu *„koľko je odstupné z 5. ligy do 3. ligy?"* by na nej zlyhala.
+
+Overené na tabuľkách odstupného v RaPP (čl. 37b): momentálne sa zmestia do jedného chunku
+aj s hlavičkou — ale je to zhoda okolností, nie vlastnosť návrhu.
+
+**Možnosti:**
+
+1. **Nechať tak** — sledovať cez D9, či otázky na tabuľky zlyhávajú.
+2. **Chunker nikdy nerozdelí tabuľku** — lacná poistka, drží tabuľku pohromade aj za cenu
+   väčšieho chunku.
+3. **Extrakcia s rozložením** (`pdfplumber` / `PyMuPDF`) — zachová skutočnú štruktúru tabuliek
+   aj čísla strán (rieši aj D16). Podstatne viac práce.
+4. **Vision model na tabuľky** — najlepší výsledok, ale drahý, nedeterministický a pre
+   air-gap by si vyžadoval lokálny VLM.
+
+**✅ Rozhodnuté (2026-07-26) — možnosť 2 zavedená.** Chunker tabuľku **nikdy nedelí**, ani keď
+presiahne cieľový limit. Tabuľku otvára popis (`Tabuľka č. N`) alebo markdownový riadok (`|`),
+zatvára ju až štruktúrny prvok (článok, časť, príloha, nový odsek). Chunk s tabuľkou nesie
+príznak `obsahujeTabulku`. Implementácia: `app/scripts/lib/chunker.mjs`, pokryté testami.
+
+**Zostáva otvorené:** či siahnuť po extrakcii s rozložením (možnosť 3). Rozhodnúť **až keď D9
+ukáže, že tabuľkové otázky zlyhávajú** — bez dôkazu by to bola predčasná optimalizácia.
+
+**Súvisiace:** `app/scripts/lib/chunker.mjs`, `docs/INGESTION_zdroje_reconciliation.md`
+

@@ -25,6 +25,15 @@ export interface EmbeddingConfig {
   dim: number
   /** názov vektorového indexu — je viazaný na model, nie na tenanta */
   index?: string
+  /**
+   * Cesta, na ktorú ukazuje $vectorSearch. Líši sa podľa režimu:
+   *   atlas-auto      → TEXTOVÉ pole (napr. "text"); vektory si Atlas drží
+   *                     sám v oddelenej internej kolekcii
+   *   infinity / tei  → pole s vektorom (napr. "embedding"), ktoré zapisuje
+   *                     aplikácia pri ingescii
+   * Zámena týchto dvoch je tichá chyba — dotaz nespadne, len nič nenájde.
+   */
+  vectorPath?: string
   url?: string
   apiKeyEnv?: string
 }

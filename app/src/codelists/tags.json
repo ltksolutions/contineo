@@ -4,7 +4,27 @@
   "hierarchical": false,
   "description": "Riadený slovník tematických štítkov (fulltext, nie tvrdý filter). Voliteľné pri chunku, ale ak vyplnené, musia byť z tohto slovníka. Rastie cez governance.",
   "items": [
-    { "key": "registracia", "label": "Registrácia", "parent": null, "sortOrder": 10 },
-    { "key": "start_hraca", "label": "Štart hráča", "parent": null, "sortOrder": 20 }
+    {
+      "key": "poriadok",
+      "label": "Poriadok",
+      "description": "Predpis typu poriadok — na rýchle filtrovanie v CMS."
+    },
+    {
+      "key": "registracia",
+      "label": "Registrácia",
+      "parent": null,
+      "sortOrder": 10
+    },
+    {
+      "key": "stanovy",
+      "label": "Stanovy",
+      "description": "Najvyšší vnútorný predpis."
+    },
+    {
+      "key": "start_hraca",
+      "label": "Štart hráča",
+      "parent": null,
+      "sortOrder": 20
+    }
   ]
 }

@@ -13,6 +13,12 @@ import { Collection, Document } from "mongodb"
 export interface SearchOptions {
   query: string
   /**
+   * Cesta pre $vectorSearch. Pri Automated Embedding je to TEXTOVÉ pole
+   * ("text"), pri vlastných vektoroch pole s vektorom ("embedding").
+   * Predvolene "text" — zodpovedá cloudovému režimu.
+   */
+  vectorPath?: string
+  /**
    * Pridať $rerank stage do agregačnej pipeline (ADR-001).
    * true  = cloud, Atlas rieši reranking sám (kind: "atlas-stage")
    * false = on-prem, rerank spraví aplikačná vrstva cez adaptér
@@ -161,7 +167,7 @@ export async function vectorSearch(
     {
       $vectorSearch: {
         index: "rag_vector_index",
-        path: "embedding",
+        path: opts.vectorPath ?? "text",
         query,                        // text → MongoDB auto-embed (Voyage AI)
         numCandidates: limit * 10,
         limit,
@@ -206,7 +212,7 @@ export async function hybridSearch(
               {
                 $vectorSearch: {
                   index: "rag_vector_index",
-                  path: "embedding",
+                  path: opts.vectorPath ?? "text",
                   query,
                   numCandidates: limit * 10,
                   limit: limit * 2,

@@ -1,0 +1,213 @@
+/**
+ * import.mjs — naimportuje dokument(y) do MongoDB.
+ *
+ *     node --env-file=.env.local scripts/import.mjs data/vzorky/revizny_poriadok.md
+ *     node --env-file=.env.local scripts/import.mjs data/vzorky/*.md
+ *     node --env-file=.env.local scripts/import.mjs data/vzorky/*.md --nasucho
+ *
+ * Čo robí:
+ *   1. načíta .md + .meta.json (metadáta NIKDY z názvu súboru)
+ *   2. zvaliduje tagy proti číselníkom — čo tam nie je, neprejde
+ *   3. rozseká na chunky (D1: štruktúrne po článkoch, breadcrumb v texte)
+ *   4. zapíše `documents` + `document_chunks`
+ *
+ * Verzovanie (D6): pri opakovanom importe sa staré chunky NEMAŽÚ, len
+ * dostanú `isActive: false`. Do RAG dotazu vstupujú len aktívne.
+ *
+ * Vektory pri cloudovom režime NEZAPISUJEME — Automated Embedding si ich
+ * Atlas vyrobí sám z poľa `text` a drží ich v oddelenej internej kolekcii.
+ * Zapisujeme len metadáta o modeli, aby fungoval embeddingGuard.
+ */
+import { readFileSync } from "node:fs"
+import { createHash } from "node:crypto"
+import { MongoClient } from "mongodb"
+import { chunkuj, odhadTokenov } from "./lib/chunker.mjs"
+import { nacitajMeta, nacitajCiselnik } from "./lib/meta.mjs"
+
+const URI = process.env.MONGODB_URI
+const DB = process.env.MONGODB_DB ?? "contineo"
+const EMBEDDING_MODEL = process.env.EMBEDDING_MODEL ?? "voyage-4"
+const EMBEDDING_DIM = Number(process.env.EMBEDDING_DIM ?? 1024)
+const EMBEDDING_KIND = process.env.EMBEDDING_KIND ?? "atlas-auto"
+
+const OK = "\x1b[32m✔\x1b[0m", CHYBA = "\x1b[31m✘\x1b[0m", INFO = "\x1b[33m·\x1b[0m"
+
+const args = process.argv.slice(2)
+const nasucho = args.includes("--nasucho")
+const subory = args.filter(a => !a.startsWith("--"))
+
+if (!subory.length) {
+  console.error("Použitie: node --env-file=.env.local scripts/import.mjs <subor.md…> [--nasucho]")
+  process.exit(1)
+}
+if (!URI && !nasucho) {
+  console.error(`${CHYBA} Chýba MONGODB_URI (alebo použi --nasucho).`)
+  process.exit(1)
+}
+
+const hash = (s) => createHash("sha256").update(s).digest("hex").slice(0, 16)
+
+/** Stabilný identifikátor dokumentu — nezávislý od názvu súboru. */
+const idDokumentu = (meta) => `${meta.companyCode}:${meta.sectionKey}`.toLowerCase()
+
+function pripravDokument(subor) {
+  const meta = nacitajMeta(subor)
+
+  // Tagy sa validujú zvlášť — je to pole, nie skalár.
+  const cTags = nacitajCiselnik("tags")
+  const tags = Array.isArray(meta.tags) ? meta.tags : []
+  const zleTagy = cTags ? tags.filter(t => !cTags.kluce.has(t)) : []
+  if (zleTagy.length) {
+    throw new Error(`${subor}: tagy mimo číselníka: ${zleTagy.join(", ")}`)
+  }
+
+  const text = readFileSync(subor, "utf8")
+  const { chunky, statistiky } = chunkuj(text, { nazovDokumentu: meta.title })
+  if (!chunky.length) throw new Error(`${subor}: nevznikol ani jeden chunk`)
+
+  const documentId = idDokumentu(meta)
+  const versionId = hash(text)   // obsahový hash — rovnaký obsah = rovnaká verzia
+
+  return { subor, meta, tags, chunky, statistiky, documentId, versionId }
+}
+
+async function zapis(db, d) {
+  const kolDoc = db.collection("documents")
+  const kolChunk = db.collection("document_chunks")
+  const teraz = new Date()
+
+  // Rovnaký obsah už naimportovaný? Nerobíme nič — import je idempotentný.
+  const existuje = await kolDoc.findOne({ documentId: d.documentId, versionId: d.versionId })
+  if (existuje) return { preskocene: true, deaktivovane: 0, vlozene: 0 }
+
+  // Nová verzia — staré chunky archivujeme, NEMAŽEME (D6).
+  const deakt = await kolChunk.updateMany(
+    { documentId: d.documentId, isActive: true },
+    { $set: { isActive: false, effectiveTo: teraz } }
+  )
+
+  await kolDoc.updateOne(
+    { documentId: d.documentId },
+    {
+      $set: {
+        documentId: d.documentId, versionId: d.versionId,
+        title: d.meta.title, slug: d.documentId.replace(/[:]/g, "-"),
+        sectionKey: d.meta.sectionKey, companyCode: d.meta.companyCode,
+        scope: d.meta.scope, accessLevel: d.meta.accessLevel,
+        language: d.meta.language, category: d.meta.category,
+        sourceType: d.meta.sourceType, sourceUrl: d.meta.sourceUrl ?? null,
+        tags: d.tags,
+        effectiveFrom: d.meta.effectiveFrom ?? null,
+        effectiveTo: d.meta.effectiveTo ?? null,
+        status: "published", processingStatus: "indexed",
+        updatedAt: teraz,
+      },
+      $setOnInsert: { createdAt: teraz },
+    },
+    { upsert: true }
+  )
+
+  const dokumenty = d.chunky.map(ch => ({
+    documentId: d.documentId, versionId: d.versionId,
+    chunkIndex: ch.chunkIndex,
+    text: ch.text,                    // <- Atlas z tohto poľa robí vektor
+    heading: ch.heading,
+    articleRef: ch.articleRef ?? null,
+    // tagovanie / filtre
+    sectionKey: d.meta.sectionKey, companyCode: d.meta.companyCode,
+    scope: d.meta.scope, accessLevel: d.meta.accessLevel,
+    language: d.meta.language, tags: d.tags,
+    // identita vektorového priestoru (ADR-001) — vektor tu NIE JE,
+    // pri atlas-auto ho drží Atlas sám.
+    embeddingModel: EMBEDDING_MODEL,
+    embeddingDim: EMBEDDING_DIM,
+    embeddingProvider: EMBEDDING_KIND,
+    embeddedAt: teraz,
+    // stav
+    isActive: true,
+    effectiveFrom: d.meta.effectiveFrom ?? null,
+    effectiveTo: null,
+    createdAt: teraz,
+  }))
+
+  await kolChunk.insertMany(dokumenty, { ordered: false })
+  return { preskocene: false, deaktivovane: deakt.modifiedCount, vlozene: dokumenty.length }
+}
+
+// ── beh ──────────────────────────────────────────────────────────────────────
+const pripravene = []
+let chyb = 0
+const preskocene = []
+const davka = subory.length > 1
+
+for (const s of subory) {
+  try {
+    const d = pripravDokument(s)
+    pripravene.push(d)
+    const t = d.chunky.map(c => odhadTokenov(c.text))
+    console.log(`${OK} ${d.meta.title}`)
+    console.log(`    ${d.chunky.length} chunkov · ${Math.min(...t)}–${Math.max(...t)} tokenov · ` +
+                `${d.statistiky.priloh} príloh · verzia ${d.versionId}`)
+  } catch (e) {
+    // V dávke je súbor bez metadát skoro vždy cudzí (README a pod.) —
+    // preskočíme ho. Pri jednom výslovne zadanom súbore je to chyba.
+    const chybaMeta = e.message.startsWith("Chýba súbor s metadátami")
+    if (davka && chybaMeta) {
+      preskocene.push(s)
+      console.log(`${INFO} ${s} — bez .meta.json, preskakujem`)
+    } else {
+      chyb++
+      console.error(`${CHYBA} ${e.message}`)
+    }
+  }
+}
+
+if (chyb) {
+  console.error(`\n${CHYBA} ${chyb} dokument(ov) neprešlo — nič sa nezapísalo.`)
+  process.exit(1)
+}
+
+const spolu = pripravene.reduce((n, d) => n + d.chunky.length, 0)
+console.log(`\nSpolu: ${pripravene.length} dokumentov, ${spolu} chunkov`)
+
+if (preskocene.length) {
+  // Vypisujeme menovite — pri väčšej dávke sa jednotlivé riadky odrolujú
+  // a zabudnuté .meta.json pri skutočnom dokumente by tak prešlo bez povšimnutia.
+  console.log(`\n${INFO} Preskočené (${preskocene.length}) — bez .meta.json:`)
+  for (const s of preskocene) console.log(`    ${s}`)
+  console.log(`    Ak niektorý z nich MÁ byť v korpuse, vytvor mu metadáta:`)
+  console.log(`    node scripts/chunk_preview.mjs <subor.md> --vytvor-meta`)
+}
+
+if (nasucho) {
+  console.log(`${INFO} --nasucho: do databázy sa nezapisovalo.`)
+  process.exit(0)
+}
+
+const client = new MongoClient(URI, { serverSelectionTimeoutMS: 15000 })
+try {
+  await client.connect()
+  const db = client.db(DB)
+  console.log()
+  let vlozeneSpolu = 0
+  for (const d of pripravene) {
+    const r = await zapis(db, d)
+    if (r.preskocene) {
+      console.log(`${INFO} ${d.meta.title} — rovnaká verzia už je v DB, preskakujem`)
+    } else {
+      vlozeneSpolu += r.vlozene
+      const arch = r.deaktivovane ? `, ${r.deaktivovane} starých archivovaných` : ""
+      console.log(`${OK} ${d.meta.title} — ${r.vlozene} chunkov${arch}`)
+    }
+  }
+  console.log(`\n${OK} Zapísaných ${vlozeneSpolu} chunkov.`)
+  if (vlozeneSpolu) {
+    console.log(`${INFO} Automated Embedding generuje vektory asynchrónne —`)
+    console.log(`    kým nedobehne, vyhľadávanie ich ešte nenájde.`)
+  }
+} catch (e) {
+  console.error(`\n${CHYBA} ${e.message}`)
+  process.exitCode = 1
+} finally {
+  await client.close()
+}

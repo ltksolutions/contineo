@@ -4,20 +4,109 @@
   "hierarchical": true,
   "description": "Sekcia obsahu — hlavný routing filter. Hierarchia: skupina (parent=null) → sekcia. Top-level skupiny zodpovedajú štruktúre Predpisov SFZ (futbalsfz.sk/legislativa-predpisy-sfz). Kľúče snake_case, ASCII, nemenné. Listy pod skupinami sa dopĺňajú z reálneho korpusu (Fáza 4).",
   "items": [
-    { "key": "stanovy", "label": "Stanovy", "parent": null, "sortOrder": 10 },
-
-    { "key": "poriadky", "label": "Poriadky", "parent": null, "sortOrder": 20 },
-    { "key": "sutazny_poriadok", "label": "Súťažný poriadok", "parent": "poriadky", "synonyms": ["SP"], "sortOrder": 21 },
-    { "key": "registracny_prestupovy_poriadok", "label": "Registračný a prestupový poriadok", "parent": "poriadky", "synonyms": ["RaPP"], "sortOrder": 22 },
-    { "key": "disciplinarny_poriadok", "label": "Disciplinárny poriadok", "parent": "poriadky", "synonyms": ["DP"], "sortOrder": 23 },
-
-    { "key": "statuty_kodexy", "label": "Štatúty a kódexy", "parent": null, "sortOrder": 30 },
-
-    { "key": "smernice", "label": "Smernice", "parent": null, "sortOrder": 40 },
-
-    { "key": "rozpisy_manualy", "label": "Rozpisy a manuály", "parent": null, "sortOrder": 50 },
-    { "key": "rozpis_sutazi", "label": "Rozpis súťaží", "parent": "rozpisy_manualy", "sortOrder": 51, "note": "jeden na zväz/ročník; riadiaci zväz určuje companyCode" },
-
-    { "key": "tlaciva_formulare", "label": "Tlačivá, vzory a formuláre", "parent": null, "sortOrder": 60 }
+    {
+      "key": "stanovy",
+      "label": "Stanovy",
+      "parent": null,
+      "sortOrder": 10
+    },
+    {
+      "key": "poriadky",
+      "label": "Poriadky",
+      "parent": null,
+      "sortOrder": 20
+    },
+    {
+      "key": "sutazny_poriadok",
+      "label": "Súťažný poriadok",
+      "parent": "poriadky",
+      "synonyms": [
+        "SP"
+      ],
+      "sortOrder": 21
+    },
+    {
+      "key": "registracny_prestupovy_poriadok",
+      "label": "Registračný a prestupový poriadok",
+      "parent": "poriadky",
+      "synonyms": [
+        "RaPP"
+      ],
+      "sortOrder": 22
+    },
+    {
+      "key": "disciplinarny_poriadok",
+      "label": "Disciplinárny poriadok",
+      "parent": "poriadky",
+      "synonyms": [
+        "DP"
+      ],
+      "sortOrder": 23
+    },
+    {
+      "key": "organizacny_navstevny_poriadok",
+      "label": "Organizačný a návštevný poriadok",
+      "parent": "poriadky",
+      "sortOrder": 24
+    },
+    {
+      "key": "poriadok_komory_sporov",
+      "label": "Poriadok komory pre riešenie sporov",
+      "parent": "poriadky",
+      "sortOrder": 25,
+      "synonyms": [
+        "komora",
+        "riešenie sporov"
+      ]
+    },
+    {
+      "key": "revizny_poriadok",
+      "label": "Revízny poriadok",
+      "parent": "poriadky",
+      "sortOrder": 26
+    },
+    {
+      "key": "rokovaci_poriadok_konferencie",
+      "label": "Rokovací poriadok Konferencie SFZ",
+      "parent": "poriadky",
+      "sortOrder": 27
+    },
+    {
+      "key": "volebny_poriadok",
+      "label": "Volebný poriadok SFZ",
+      "parent": "poriadky",
+      "sortOrder": 28
+    },
+    {
+      "key": "statuty_kodexy",
+      "label": "Štatúty a kódexy",
+      "parent": null,
+      "sortOrder": 30
+    },
+    {
+      "key": "smernice",
+      "label": "Smernice",
+      "parent": null,
+      "sortOrder": 40
+    },
+    {
+      "key": "rozpisy_manualy",
+      "label": "Rozpisy a manuály",
+      "parent": null,
+      "sortOrder": 50
+    },
+    {
+      "key": "rozpis_sutazi",
+      "label": "Rozpis súťaží",
+      "parent": "rozpisy_manualy",
+      "sortOrder": 51,
+      "note": "jeden na zväz/ročník; riadiaci zväz určuje companyCode"
+    },
+    {
+      "key": "tlaciva_formulare",
+      "label": "Tlačivá, vzory a formuláre",
+      "parent": null,
+      "sortOrder": 60
+    }
   ]
 }

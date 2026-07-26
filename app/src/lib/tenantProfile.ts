@@ -31,6 +31,8 @@ export function defaultProfile(companyCode = "SFZ"): TenantProfile {
         model: process.env.EMBEDDING_MODEL ?? "voyage-4",
         dim: Number(process.env.EMBEDDING_DIM ?? 1024),
         index: process.env.VECTOR_INDEX ?? "rag_vector_index",
+        // atlas-auto indexuje textové pole, nie vektor — viď docs/ATLAS_SETUP.md
+        vectorPath: process.env.VECTOR_PATH ?? "text",
       },
       rerank: {
         kind: (process.env.RERANK_KIND as "atlas-stage" | "none") ?? "atlas-stage",
@@ -78,6 +80,20 @@ export function validateProfile(p: TenantProfile): void {
   }
   if (!e.dim || e.dim < 1) {
     throw new ProviderConfigError(`${p.companyCode}: embedding.dim musí byť kladné číslo`)
+  }
+  // Najčastejšia tichá chyba: pri Automated Embedding ukazuje path na vektor
+  // namiesto na text. Dotaz nespadne, len nikdy nič nenájde.
+  if (e.kind === "atlas-auto" && e.vectorPath === "embedding") {
+    throw new ProviderConfigError(
+      `${p.companyCode}: pri atlas-auto musí vectorPath ukazovať na textové pole ` +
+      `(napr. "text"), nie na "embedding" — Atlas si vektory drží sám`
+    )
+  }
+  if ((e.kind === "tei" || e.kind === "infinity") && e.vectorPath === "text") {
+    throw new ProviderConfigError(
+      `${p.companyCode}: pri ${e.kind} musí vectorPath ukazovať na pole s vektorom ` +
+      `(napr. "embedding"), nie na "text"`
+    )
   }
   if (p.dataResidency === "air-gap" && e.kind === "atlas-auto") {
     throw new ProviderConfigError(

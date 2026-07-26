@@ -39,12 +39,31 @@ t("air-gap s atlas-auto spadne", !!e && e.includes("air-gap"), String(e))
 
 e = hodi(() => validateProfile(profil({
   dataResidency: "air-gap",
-  providers: { embedding: { kind: "infinity" }, generation: { kind: "anthropic" } },
+  providers: {
+    embedding: { kind: "infinity", url: "http://inf:7997", vectorPath: "embedding" },
+    generation: { kind: "anthropic" },
+  },
 })))
 t("air-gap s Claude spadne", !!e && e.includes("air-gap"), String(e))
 
 e = hodi(() => validateProfile(profil({ providers: { embedding: { dim: 0 } } })))
 t("nulova dimenzia spadne", !!e && e.includes("dim"), String(e))
+
+// vectorPath — najcastejsia ticha chyba pri Automated Embedding
+e = hodi(() => validateProfile(profil({ providers: { embedding: { vectorPath: "embedding" } } })))
+t("atlas-auto s vectorPath 'embedding' spadne", !!e && e.includes("vectorPath"), String(e))
+
+e = hodi(() => validateProfile(profil({
+  dataResidency: "on-prem",
+  providers: {
+    embedding: { kind: "tei", url: "http://tei:8080", vectorPath: "text" },
+    generation: { kind: "openai", url: "http://vllm:8000/v1", citations: false },
+  },
+})))
+t("tei s vectorPath 'text' spadne", !!e && e.includes("vectorPath"), String(e))
+
+t("predvoleny profil ma vectorPath 'text'", defaultProfile("X").providers.embedding.vectorPath === "text",
+  String(defaultProfile("X").providers.embedding.vectorPath))
 
 // ── factory ──────────────────────────────────────────────────────────────
 process.env.ANTHROPIC_API_KEY = "test-key"

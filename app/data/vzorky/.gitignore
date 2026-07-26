@@ -1,0 +1,4 @@
+# PDF originály do repozitára nepatria — binárne, veľké, needitovateľné.
+# Do gitu ide až prevedený Markdown, ktorý je vstupom pre chunker.
+*.pdf
+*.docx

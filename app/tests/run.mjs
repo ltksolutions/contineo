@@ -16,6 +16,8 @@ import { fileURLToPath } from "node:url";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const SUITY = ["streams.test.ts", "profile.test.ts", "guard.test.ts", "httpAdapters.test.ts", "utility.test.ts"];
+// .mjs suity sa nebundlujú — spúšťajú sa priamo.
+const SUITY_MJS = ["chunker.test.mjs"];
 const tmp = mkdtempSync(join(tmpdir(), "contineo-tests-"));
 
 let zlyhalo = 0;
@@ -34,10 +36,16 @@ try {
     });
     if (r.status !== 0) zlyhalo++;
   }
+  for (const suita of SUITY_MJS) {
+    console.log(`\n── ${suita} ${"─".repeat(Math.max(0, 46 - suita.length))}`);
+    const r = spawnSync(process.execPath, [join(HERE, suita)], { stdio: "inherit", env: process.env });
+    if (r.status !== 0) zlyhalo++;
+  }
 } finally {
   rmSync(tmp, { recursive: true, force: true });
 }
 
 console.log("\n" + "=".repeat(56));
-console.log(zlyhalo ? `ZLYHALO ${zlyhalo} z ${SUITY.length} súborov` : `Všetky suity prešli (${SUITY.length})`);
+const spolu = SUITY.length + SUITY_MJS.length;
+console.log(zlyhalo ? `ZLYHALO ${zlyhalo} z ${spolu} súborov` : `Všetky suity prešli (${spolu})`);
 process.exit(zlyhalo ? 1 : 0);
