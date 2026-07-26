@@ -63,9 +63,11 @@ export const POPIS_REZIDENCIE: Record<DataResidency, string> = {
 // nie o dojem. Čokoľvek neoverené patrí do "neznama", nie do "eu".
 
 const LOKALITA_EMBEDDING: Record<EmbeddingConfig["kind"], Lokalita> = {
-  // MongoDB lokalitu inferencie pre Automated Embedding neuvádza.
-  // Kým ju nepotvrdia, konzervatívne neznáma. (O5 v ADR-002)
-  "atlas-auto": "neznama",
+  // O5 UZAVRETÉ 2026-07-26. Zoznam subprocesorov MongoDB uvádza:
+  //   "Google LLC — Model hosting services for the optional embedding and
+  //    reranking model services included in the Cloud Services — United States"
+  // https://www.mongodb.com/products/platform/trust/subprocessors
+  "atlas-auto": "mimo-eu",
   "tei":        "vlastna",
   "infinity":   "vlastna",
 }
@@ -80,8 +82,11 @@ const LOKALITA_RERANK: Record<RerankConfig["kind"], Lokalita> = {
 }
 
 const LOKALITA_GENERATION: Record<GenerationConfig["kind"], Lokalita> = {
-  // Anthropic API. Regionálne spracovanie neoverené. (O6 v ADR-002)
-  "anthropic": "neznama",
+  // O6 UZAVRETÉ 2026-07-26. Priame Anthropic API spracúva v americkej
+  // infraštruktúre. Cesta do EÚ vedie cez AWS Bedrock (eu-central-1,
+  // eu-west-1, eu-west-3, eu-north-1) alebo Google Vertex AI v EU regiónoch
+  // — na to ale treba samostatný adaptér, ktorý zatiaľ nemáme.
+  "anthropic": "mimo-eu",
   // OpenAI-kompatibilné rozhranie používame na vlastné vLLM/SGLang/Ollama.
   // Ak by tenant nasmeroval url na cudzí cloud, toto tvrdenie prestane
   // platiť — preto to kontroluje aj `lokalitaGenerovania()` nižšie.

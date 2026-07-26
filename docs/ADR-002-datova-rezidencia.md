@@ -1,6 +1,6 @@
 # ADR-002 — Dátová rezidencia ako vlastnosť tenanta
 
-> **Stav:** ✅ prijaté · **Dátum:** 2026-07-26
+> **Stav:** ✅ prijaté · **Dátum:** 2026-07-26 · **Revízia:** 2026-07-26 (**O5 a O6 uzavreté** z verejných dokumentov, sekcia 8)
 > **Nadväzuje na:** `docs/ADR-001-provider-adaptery.md` (tri adaptéry)
 > **Súvisiace:** `docs/ATLAS_SETUP.md`, `docs/PRISTUPOVE_PRAVA.md`, `docs/D9_EVAL_zlata_sada.md`
 > **Implementácia:** `app/src/lib/residency.ts`, validácia v `app/src/lib/tenantProfile.ts`, 25 testov
@@ -85,11 +85,11 @@ Je to nepohodlné zámerne. Keby bola predvoľba opačná, otázky by sme si nik
 
 | Adaptér | `kind` | Lokalita | Dôkaz |
 |---|---|---|---|
-| Embedding | `atlas-auto` | **neznáma** | MongoDB lokalitu inferencie neuvádza → **O5** |
+| Embedding | `atlas-auto` | **mimo EÚ (USA)** | zoznam subprocesorov MongoDB: *Google LLC — model hosting pre embedding a reranking — United States* |
 | Embedding | `tei`, `infinity` | vlastná | beží u nás |
-| Rerank | `atlas-stage` | **mimo EÚ** | text v Atlas Project Settings: GCP, US region |
+| Rerank | `atlas-stage` | **mimo EÚ (USA)** | Atlas Project Settings: GCP, US region; potvrdené aj zoznamom subprocesorov |
 | Rerank | `tei`, `infinity`, `none` | vlastná | beží u nás |
-| Generovanie | `anthropic` | **neznáma** | regionálne spracovanie neoverené → **O6** |
+| Generovanie | `anthropic` | **mimo EÚ (USA)** | priame Anthropic API spracúva v americkej infraštruktúre |
 | Generovanie | `openai` | podľa `url` | interná adresa = vlastná; verejná doména = neznáma |
 
 Pri `openai` sa lokalita odvodzuje z hostiteľa v URL. Interná adresa (`localhost`, privátne rozsahy, meno služby bez domény) sa berie ako vlastná infraštruktúra; čokoľvek verejné je neznáme. Bez toho by stačilo nasmerovať `url` na cudzí cloud a kontrola by mlčala.
@@ -136,25 +136,45 @@ Architektúra troch adaptérov sa nemení — potvrdzuje sa. Mení sa len odhad,
 
 ## 7. Čo chýba
 
-**Úroveň 2 sa dnes nedá poskladať bez vlastného hardvéru.** Jediné adaptéry s lokalitou `vlastna` sú TEI, Infinity a vLLM — a tie potrebujú stroj s GPU, ktorý zatiaľ nemáme.
+Po uzavretí O5 a O6 je obraz jasnejší — a čiastočne lepší, než sme čakali.
 
-Existuje ale tretia možnosť, ktorú sme doteraz nezvažovali: **európski poskytovatelia embeddingu a rerankingu**, volaní cez rovnaké HTTP rozhranie, aké už máme napísané. Ak niektorý z nich doloží spracovanie v EÚ, dostal by lokalitu `eu` a úroveň 2 by bola dosiahnuteľná bez čakania na hardvér. Viď **O7**.
+**Generovanie má riešenie.** Claude cez AWS Bedrock vo Frankfurte alebo Vertex AI v EU beží v EÚ. Chýba len adaptér (**O10**), nie hardvér.
+
+**Embedding a rerank riešenie zatiaľ nemajú.** Atlas ich počíta v USA, takže v `eu-full` sa nedajú použiť. Zostávajú dve cesty:
+
+1. **vlastná služba** (TEI / Infinity) — potrebuje stroj s GPU
+2. **európsky poskytovateľ** volaný cez rovnaké HTTP rozhranie, aké už máme napísané a otestované (**O7**)
+
+Druhá cesta je lacnejšia a rýchlejšia. Ak niektorý európsky poskytovateľ doloží spracovanie v EÚ, dostane lokalitu `eu` a `eu-full` bude dosiahnuteľné bez čakania na hardvér.
 
 ---
 
 ## 8. Otvorené otázky
 
+### Uzavreté 2026-07-26 — z verejných dokumentov
+
+**O5 — kde beží inferencia pre Atlas Automated Embedding?** ✅ **USA.**
+
+[Zoznam subprocesorov MongoDB](https://www.mongodb.com/products/platform/trust/subprocessors), sekcia *AI Features & Products*, uvádza doslovne:
+
+> **Google LLC** — *Model hosting services for the optional embedding and reranking model services included in the Cloud Services* — **United States**
+
+Automated Embedding aj `$rerank` teda spracúvajú v USA. Nie je to teda „neznáma", ale doložene mimo EÚ. Týka sa to **každého dotazu**, nielen importu — text otázky sa musí zaembedovať.
+
+**O6 — vie Anthropic doložiť spracovanie v EÚ?** ✅ **Áno, ale nie cez priame API.**
+
+Priame Anthropic API spracúva v americkej infraštruktúre. Cesta do EÚ existuje cez **AWS Bedrock** (`eu-central-1` Frankfurt, `eu-west-1` Írsko, `eu-west-3` Paríž, `eu-north-1` Štokholm) alebo **Google Vertex AI** v EU regiónoch.
+
+To je pre nás dôležitejšie, než sa zdá: **generovanie sa dá dostať do `eu-full` bez vlastného GPU.** Chýba k tomu adaptér, ktorý ADR-001 odložilo ako okrajový (*„pre Bedrock/Vertex pridaj samostatný adaptér"*). Ukazuje sa, že okrajový nie je — viď **O10**.
+
+### Otvorené
+
 | # | Otázka | Prečo na nej záleží |
 |---|---|---|
-| **O5** | Kde beží inferencia pre Atlas Automated Embedding? | Rozhoduje, či `atlas-auto` môže byť `eu` alebo ostane `neznama`. Týka sa každého dotazu, nielen importu. |
-| **O6** | Vie Anthropic doložiť spracovanie v EÚ, prípadne zero-retention? | Bez toho nie je Claude použiteľný na úrovni 2 ani pri verejnom korpuse. |
-| **O7** | Ktorý európsky poskytovateľ vie embedding a rerank so spracovaním v EÚ? | Odomklo by úroveň 2 bez vlastného hardvéru. |
-| **O8** | Platí `mimo-eu` aj pre `$rankFusion` a `$vectorSearch`? | Predpokladáme, že nie — tie počíta `mongot` v clusteri. Treba potvrdiť, lebo na tom stojí tvrdenie o prenositeľnosti jadra. |
+| **O7** | Ktorý európsky poskytovateľ vie embedding a rerank so spracovaním v EÚ? | Jediné, čo ešte chýba k `eu-full` bez vlastného hardvéru. Generovanie už riešenie má (O6). |
+| **O8** | Platí `mimo-eu` aj pre `$rankFusion` a `$vectorSearch`? | Predpokladáme, že nie — počíta ich `mongot` v clusteri. Zoznam subprocesorov spomína len *model hosting*, čo tomu zodpovedá, ale nie je to výslovné potvrdenie. |
 | **O9** | Ako sa rezidencia prejaví v UI a v zmluvnej dokumentácii? | Zákazník musí vidieť, kam jeho text ide, bez čítania kódu. |
-
-Kým O5 a O6 nie sú zodpovedané, `atlas-auto` a `anthropic` ostávajú `neznama`. To je bezpečná predvoľba, nie tvrdenie o týchto službách.
-
----
+| **O10** | Postaviť adaptér pre Bedrock a Vertex AI? | Odomkne Claude v režime `eu-full`. Po uzavretí O6 je to najlacnejšia cesta k EU generovaniu. |
 
 ## 9. Čo sa zmenilo v kóde
 

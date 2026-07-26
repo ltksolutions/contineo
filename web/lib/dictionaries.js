@@ -195,8 +195,94 @@ export const dictionaries = {
         { icon: "lock", title: "Dáta vo vašej databáze", text: "Obsah žije vo vašej MongoDB a úložisku, oddelene pre každého tenanta. Nie je verejný a neindexuje ho verejný internet." },
         { icon: "shield", title: "Žiadna verejná AI", text: "Nepoužívame verejnú spotrebiteľskú AI. Verejné modely sa na vašich dátach netrénujú." },
         { icon: "search", title: "AI je len pomocník", text: "Jazykový model odpovedá výhradne z nájdených pasáží vášho obsahu (RAG) a pripája citáciu zdroja." },
-        { icon: "layers", title: "Vy si volíte režim", text: "Cloud s EU rezidenciou a zero-retention zmluvou, alebo plne on-prem, kde dáta nikdy neopustia vašu infraštruktúru. Rovnaká aplikácia, iná konfigurácia." },
+        { icon: "layers", title: "Vy si volíte režim", text: "Cloud s databázou v EÚ, alebo plne on-prem, kde dáta nikdy neopustia vašu infraštruktúru. Rovnaká aplikácia, iná konfigurácia — podrobný rozpis dátových tokov nájdete v sekcii Dátová rezidencia." },
       ],
+    },
+    residency: {
+      navLabel: "Bezpečnosť",
+      eyebrow: "Dátová rezidencia",
+      title: "Kam sa dostane váš text",
+      subtitle:
+        "Nie kde ležia dáta, ale kde sa spracúvajú. Ten rozdiel rozhoduje o tom, či prejdete tendrom — a väčšina dodávateľov ho zamlčí.",
+      levels: [
+        {
+          icon: "globe",
+          title: "1 · Dáta v pokoji v EÚ",
+          text: "Databáza, indexy a zálohy sú v EÚ. Volanie AI modelov von je prípustné pri spracovateľskej zmluve a štandardných zmluvných doložkách.",
+          who: "bežné komerčné nasadenie",
+        },
+        {
+          icon: "shield",
+          title: "2 · Nič neopustí EÚ",
+          text: "Aj modely bežia v EÚ — vrátane otázok, ktoré píšu vaši ľudia. Nie je to požiadavka GDPR, ale býva v súťažných podmienkach.",
+          who: "verejná správa, väčšie firmy",
+        },
+        {
+          icon: "lock",
+          title: "3 · Nič neopustí perimeter",
+          text: "Celý systém beží na vašej infraštruktúre. Bez konektivity von, ak je to potrebné.",
+          who: "utajované skutočnosti, uzavreté siete",
+        },
+      ],
+      levelsNote:
+        "Úroveň 1 je právne v poriadku — GDPR prenos mimo EÚ nezakazuje, len ho podmieňuje. Ale ak je v zadaní napísané „údaje nesmú opustiť EÚ“, je to organizačná požiadavka, ktorú zmluvou nevyriešite. Kto vie ponúknuť len úroveň 1, býva vyradený formálne, nie vecne.",
+
+      modesTitle: "Režimy, ktoré vieme nasadiť",
+      modesIntro:
+        "Režim je vlastnosť vašej organizácie, nie našej verzie. Rovnaká aplikácia, iná konfigurácia — a nepovolenú kombináciu systém odmietne spustiť.",
+      modesHead: {
+        mode: "Režim",
+        meaning: "Čo znamená",
+        embedding: "Embedding",
+        rerank: "Rerank",
+        generation: "Generovanie",
+      },
+      modes: [
+        { key: "eu-data", meaning: "Dáta v EÚ, spracovanie môže byť mimo",
+          embedding: "MongoDB Atlas", rerank: "MongoDB Atlas", generation: "Claude API" },
+        { key: "eu-full", meaning: "Žiadny text neopustí EÚ",
+          embedding: "vlastná služba", rerank: "vlastná služba", generation: "vlastný model" },
+        { key: "on-prem", meaning: "Všetko na vašej infraštruktúre",
+          embedding: "vlastná služba", rerank: "vlastná služba", generation: "vlastný model" },
+        { key: "air-gap", meaning: "Uzavretá sieť bez konektivity von",
+          embedding: "vlastná služba", rerank: "vlastná služba", generation: "vlastný model" },
+      ],
+
+      whereTitle: "Kde spracovanie prebieha — vrátane toho, čo overujeme",
+      whereIntro:
+        "Toto je stav k dnešnému dňu. Riadky označené „overuje sa“ znamenajú, že dodávateľ lokalitu neuvádza a nemáme ju potvrdenú. V prísnych režimoch sa taký komponent nepoužije — nevedomosť neberieme ako súhlas.",
+      whereHead: {
+        component: "Komponent",
+        provider: "Poskytovateľ",
+        location: "Lokalita spracovania",
+        evidence: "Podklad",
+      },
+      where: [
+        { component: "Databáza, indexy, zálohy", provider: "MongoDB Atlas",
+          location: "EÚ (Frankfurt)", stav: "ok",
+          evidence: "voľba regiónu pri založení clustera" },
+        { component: "Hybridné vyhľadávanie", provider: "mongot v clusteri",
+          location: "EÚ (Frankfurt)", stav: "ok",
+          evidence: "počíta sa priamo v clusteri" },
+        { component: "Reranking", provider: "$rerank (Voyage)",
+          location: "mimo EÚ (USA)", stav: "mimo",
+          evidence: "uvedené v nastavení projektu Atlas" },
+        { component: "Embedding", provider: "Atlas Automated Embedding",
+          location: "overuje sa", stav: "overuje",
+          evidence: "dodávateľ lokalitu inferencie neuvádza" },
+        { component: "Generovanie odpovede", provider: "Anthropic Claude",
+          location: "overuje sa", stav: "overuje",
+          evidence: "regionálne spracovanie neoverené" },
+        { component: "Embedding, rerank, generovanie", provider: "vlastné služby (on-prem)",
+          location: "vaša infraštruktúra", stav: "ok",
+          evidence: "beží u vás" },
+      ],
+
+      honestyTitle: "Prečo tu píšeme aj to, čo nevieme.",
+      honestyText:
+        "Pretože sa na to pri obstarávaní niekto spýta. Tvrdenie, ktoré nevieme doložiť, je horšie než priznaná otvorená otázka — a tabuľka, ktorá nemá ani jeden otáznik, býva skôr neúplná než dokonalá. Otvorené body uzatvárame a stav tu aktualizujeme.",
+      legalNote:
+        "Táto stránka je technický popis dátových tokov, nie právne posúdenie. Pri konkrétnom nasadení odporúčame posúdenie odborníkom na ochranu osobných údajov.",
     },
     audience: {
       eyebrow: "Pre koho",
@@ -632,6 +718,92 @@ export const dictionaries = {
         { icon: "search", title: "AI is only a helper", text: "The language model answers strictly from retrieved passages of your content (RAG) and attaches a source citation." },
         { icon: "layers", title: "You choose the mode", text: "Cloud with EU residency and a zero-retention agreement, or fully on-prem where data never leaves your infrastructure. Same application, different configuration." },
       ],
+    },
+    residency: {
+      navLabel: "Security",
+      eyebrow: "Data residency",
+      title: "Where your text actually goes",
+      subtitle:
+        "Not where the data rests, but where it gets processed. That distinction decides whether you pass procurement — and most vendors leave it out.",
+      levels: [
+        {
+          icon: "globe",
+          title: "1 · Data at rest in the EU",
+          text: "Database, indexes and backups sit in the EU. Calling AI models abroad is permissible under a processing agreement and standard contractual clauses.",
+          who: "ordinary commercial deployment",
+        },
+        {
+          icon: "shield",
+          title: "2 · Nothing leaves the EU",
+          text: "The models run in the EU too — including the questions your people type. Not a GDPR requirement, but it does appear in tender conditions.",
+          who: "public sector, larger companies",
+        },
+        {
+          icon: "lock",
+          title: "3 · Nothing leaves the perimeter",
+          text: "The whole system runs on your infrastructure. Without outbound connectivity, if required.",
+          who: "classified material, closed networks",
+        },
+      ],
+      levelsNote:
+        "Level 1 is legally sound — GDPR does not forbid transfers outside the EU, it conditions them. But when a tender says “data must not leave the EU”, that is an organisational requirement no contract can satisfy. A vendor who can only offer level 1 gets excluded on form, not on merit.",
+
+      modesTitle: "Modes we can deploy",
+      modesIntro:
+        "The mode is a property of your organisation, not of our edition. Same application, different configuration — and a disallowed combination simply refuses to start.",
+      modesHead: {
+        mode: "Mode",
+        meaning: "What it means",
+        embedding: "Embedding",
+        rerank: "Rerank",
+        generation: "Generation",
+      },
+      modes: [
+        { key: "eu-data", meaning: "Data in the EU, processing may be outside",
+          embedding: "MongoDB Atlas", rerank: "MongoDB Atlas", generation: "Claude API" },
+        { key: "eu-full", meaning: "No text leaves the EU",
+          embedding: "own service", rerank: "own service", generation: "own model" },
+        { key: "on-prem", meaning: "Everything on your infrastructure",
+          embedding: "own service", rerank: "own service", generation: "own model" },
+        { key: "air-gap", meaning: "Closed network, no outbound connectivity",
+          embedding: "own service", rerank: "own service", generation: "own model" },
+      ],
+
+      whereTitle: "Where processing happens — including what we are still verifying",
+      whereIntro:
+        "This is today's state. Rows marked “verifying” mean the vendor does not state the location and we have not confirmed it. Such a component is not used in the strict modes — we do not treat not knowing as consent.",
+      whereHead: {
+        component: "Component",
+        provider: "Provider",
+        location: "Processing location",
+        evidence: "Basis",
+      },
+      where: [
+        { component: "Database, indexes, backups", provider: "MongoDB Atlas",
+          location: "EU (Frankfurt)", stav: "ok",
+          evidence: "region chosen when creating the cluster" },
+        { component: "Hybrid search", provider: "mongot in cluster",
+          location: "EU (Frankfurt)", stav: "ok",
+          evidence: "computed inside the cluster" },
+        { component: "Reranking", provider: "$rerank (Voyage)",
+          location: "outside the EU (US)", stav: "mimo",
+          evidence: "stated in Atlas project settings" },
+        { component: "Embedding", provider: "Atlas Automated Embedding",
+          location: "verifying", stav: "overuje",
+          evidence: "vendor does not state inference location" },
+        { component: "Answer generation", provider: "Anthropic Claude",
+          location: "verifying", stav: "overuje",
+          evidence: "regional processing not verified" },
+        { component: "Embedding, rerank, generation", provider: "own services (on-prem)",
+          location: "your infrastructure", stav: "ok",
+          evidence: "runs at your site" },
+      ],
+
+      honestyTitle: "Why we list what we do not know.",
+      honestyText:
+        "Because someone in procurement will ask. A claim we cannot evidence is worse than an admitted open question — and a table without a single question mark tends to be incomplete rather than perfect. We close these items and update this page.",
+      legalNote:
+        "This page is a technical description of data flows, not a legal assessment. For a specific deployment we recommend review by a data protection specialist.",
     },
     audience: {
       eyebrow: "Who it's for",

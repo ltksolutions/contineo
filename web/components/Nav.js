@@ -13,14 +13,19 @@ export default function Nav({ dict, lang }) {
   const otherHref = pathname.replace(new RegExp(`^/${lang}(?=/|$)`), `/${other}`);
   const [open, setOpen] = useState(false);
 
-  // Hlavne menu: 6 poloziek. Sekcie #how, #identity a #roadmap zostavaju
-  // na stranke, len nie su v hornej liste (kontajner ma 1120px).
+  // Kotvy na domovskej stranke.
   const links = [
     { href: `/${lang}#demo`, label: dict.nav.demo },
     { href: `/${lang}#modes`, label: dict.nav.modes },
     { href: `/${lang}#features`, label: dict.nav.features },
-    { href: `/${lang}#security`, label: dict.nav.security },
-    { href: `/${lang}#runtime`, label: dict.nav.runtime },
+  ];
+
+  // Samostatne stranky. Bezpecnost a prevadzka sa oddelili od domovskej,
+  // lebo sa na ne odkazuje v ponukach a maju vlastnu hlbku (ADR-002).
+  const strany = [
+    { href: `/${lang}/bezpecnost`, label: dict.residency.navLabel },
+    { href: `/${lang}/prevadzka`, label: dict.nav.runtime },
+    { href: `/${lang}/technologia`, label: dict.tech.navLabel },
   ];
 
   // Do mobilneho menu sa zmesti vsetko.
@@ -29,9 +34,6 @@ export default function Nav({ dict, lang }) {
     { href: `/${lang}#modes`, label: dict.nav.modes },
     { href: `/${lang}#features`, label: dict.nav.features },
     { href: `/${lang}#how`, label: dict.nav.how },
-    { href: `/${lang}#identity`, label: dict.nav.identity },
-    { href: `/${lang}#security`, label: dict.nav.security },
-    { href: `/${lang}#runtime`, label: dict.nav.runtime },
     { href: `/${lang}#roadmap`, label: dict.nav.roadmap },
   ];
 
@@ -59,7 +61,9 @@ export default function Nav({ dict, lang }) {
           {links.map((l) => (
             <a key={l.href} href={l.href} className="muted nav-link">{l.label}</a>
           ))}
-          <Link href={`/${lang}/technologia`} className="muted nav-link">{dict.tech.navLabel}</Link>
+          {strany.map((l) => (
+            <Link key={l.href} href={l.href} className="muted nav-link">{l.label}</Link>
+          ))}
         </nav>
 
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
@@ -98,9 +102,11 @@ export default function Nav({ dict, lang }) {
                 {l.label}
               </a>
             ))}
-            <Link href={`/${lang}/technologia`} onClick={() => setOpen(false)} style={{ padding: "11px 0", fontSize: 16, borderBottom: "1px solid var(--line)" }}>
-              {dict.tech.navLabel}
-            </Link>
+            {strany.map((l) => (
+              <Link key={l.href} href={l.href} onClick={() => setOpen(false)} style={{ padding: "11px 0", fontSize: 16, borderBottom: "1px solid var(--line)" }}>
+                {l.label}
+              </Link>
+            ))}
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 14, gap: 12 }}>
               <Link href={otherHref} onClick={() => setOpen(false)} className="muted" style={{ fontSize: 14, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.04em" }}>
                 {lang === "sk" ? "English" : "Slovensky"}

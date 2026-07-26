@@ -75,6 +75,54 @@ try {
   console.log("─".repeat(88))
   console.log(`\n${riadky.length} dokumentov · ${zlych} nerozobraných\n`)
 
+
+  // ── Duplicity ──────────────────────────────────────────────────────────────
+  // Smoke test ukázal ten istý chunk dvakrát vo výsledkoch. Príčina býva
+  // v kolekcii `documents`: ak sú tam pre jeden documentId dva záznamy,
+  // $lookup + $unwind zdvojí každý chunk. Overujeme obe strany.
+
+  console.log("\nKontrola duplicít")
+  console.log("─".repeat(88))
+
+  const dokDupl = await db.collection("documents").aggregate([
+    { $group: { _id: "$documentId", n: { $sum: 1 }, verzie: { $addToSet: "$versionId" } } },
+    { $match: { n: { $gt: 1 } } },
+  ]).toArray()
+
+  if (dokDupl.length) {
+    console.log(`${ZLE} kolekcia documents má viacnásobné záznamy — TOTO zdvojuje výsledky:`)
+    for (const d of dokDupl) {
+      console.log(`   ${d._id}: ${d.n} záznamov, verzie: ${d.verzie.join(", ")}`)
+    }
+  } else {
+    console.log(`${OK} documents — každý documentId práve raz`)
+  }
+
+  const chunkDupl = await col.aggregate([
+    { $match: { isActive: true } },
+    { $group: { _id: { d: "$documentId", i: "$chunkIndex" }, n: { $sum: 1 } } },
+    { $match: { n: { $gt: 1 } } },
+    { $count: "spolu" },
+  ]).toArray()
+
+  const n = chunkDupl[0]?.spolu ?? 0
+  console.log(n
+    ? `${ZLE} ${n} aktívnych chunkov má rovnaký documentId + chunkIndex`
+    : `${OK} document_chunks — žiadne zdvojené aktívne chunky`)
+
+  const podlaVerzie = await col.aggregate([
+    { $match: { isActive: true } },
+    { $group: { _id: "$documentId", verzie: { $addToSet: "$versionId" } } },
+    { $match: { $expr: { $gt: [{ $size: "$verzie" }, 1] } } },
+  ]).toArray()
+
+  if (podlaVerzie.length) {
+    console.log(`${ZLE} niektoré dokumenty majú aktívne chunky z VIACERÝCH verzií:`)
+    for (const d of podlaVerzie) console.log(`   ${d._id}: ${d.verzie.join(", ")}`)
+  } else {
+    console.log(`${OK} každý dokument má aktívne chunky len z jednej verzie`)
+  }
+
   if (ukazky) {
     console.log("Ukážky nadpisov podľa dokumentu:\n")
     for (const r of riadky) {

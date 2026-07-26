@@ -7,9 +7,6 @@ import HowItWorks from "@/components/HowItWorks";
 import Manifesto from "@/components/Manifesto";
 import BotDemo from "@/components/BotDemo";
 import Modes from "@/components/Modes";
-import Identity from "@/components/Identity";
-import Security from "@/components/Security";
-import Runtime from "@/components/Runtime";
 import Audience from "@/components/Audience";
 import Roadmap from "@/components/Roadmap";
 import CTA from "@/components/CTA";
@@ -32,9 +29,6 @@ export default function Home({ params }) {
         <Features dict={dict} />
         <HowItWorks dict={dict} />
         <Manifesto dict={dict} />
-        <Identity dict={dict} />
-        <Security dict={dict} />
-        <Runtime dict={dict} />
         <Audience dict={dict} />
         <Roadmap dict={dict} />
         <CTA dict={dict} />

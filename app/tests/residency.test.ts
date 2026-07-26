@@ -49,10 +49,11 @@ t("eu-full odmietne cloudovú trojicu", euFull.length === 3,
   JSON.stringify(euFull.map(v => v.adapter)))
 t("eu-full pomenuje $rerank ako spracovanie mimo EÚ",
   euFull.some(v => v.adapter === "rerank" && v.lokalita === "mimo-eu"))
-t("eu-full odmietne atlas-auto pre neovrenú lokalitu",
-  euFull.some(v => v.adapter === "embedding" && v.lokalita === "neznama"))
-t("eu-full odmietne Claude pre neovrenú lokalitu",
-  euFull.some(v => v.adapter === "generation" && v.lokalita === "neznama"))
+// O5 a O6 uzavreté 2026-07-26 — obe sú doložene mimo EÚ, nie neznáme.
+t("eu-full odmietne atlas-auto (Google LLC, US — zoznam subprocesorov)",
+  euFull.some(v => v.adapter === "embedding" && v.lokalita === "mimo-eu"))
+t("eu-full odmietne priame Anthropic API (US infraštruktúra)",
+  euFull.some(v => v.adapter === "generation" && v.lokalita === "mimo-eu"))
 t("eu-full prepustí vlastnú trojicu",
   skontrolujRezidenciu(vlastne({ dataResidency: "eu-full" })).length === 0,
   JSON.stringify(skontrolujRezidenciu(vlastne({ dataResidency: "eu-full" })).map(v => v.sprava)))
