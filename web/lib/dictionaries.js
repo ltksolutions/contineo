@@ -323,6 +323,7 @@ export const dictionaries = {
         { title: "Podpora a helpdesk", text: "Návody a FAQ k aplikáciám — menej opakovaných ticketov, viac vyriešeného samoobslužne." },
         { title: "Noví aj skúsení zamestnanci", text: "Odpoveď s odkazom na konkrétny článok. Nový sa zaučí rýchlejšie, skúsený nemusí odpovedať na to isté po piaty raz." },
       ],
+      more: "Pozrieť konkrétne situácie a otázky",
     },
     versions: {
       eyebrow: "Verzie a platné znenie",
@@ -369,6 +370,94 @@ export const dictionaries = {
         "Upozornenie na rozpor: interná smernica hovorí niečo iné než platný zákon alebo vykonávací predpis.",
         "Prehľad, ktoré vlastné predpisy sa novelou dotkli a treba ich prejsť.",
       ],
+    },
+    usecases: {
+      navLabel: "Pre koho",
+      eyebrow: "Pre koho",
+      title: "Rozhoduje množstvo predpisov, nie počet zamestnancov",
+      subtitle:
+        "Desaťčlenná firma so stavebnou legislatívou má rovnaký problém ako ministerstvo — len menší rozpočet a nikoho, kto by zmeny sledoval na plný úväzok.",
+      note:
+        "Nižšie sú štyri typické situácie a otázky, ktoré v nich ľudia reálne kladú. Ak sa v niektorej spoznávate, Contineo vám vieme ukázať priamo na vašich dokumentoch.",
+
+      benefitLabel: "Čo sa zmení",
+      questionsLabel: "Takto sa ľudia pýtajú",
+
+      segments: [
+        {
+          icon: "layers",
+          title: "Malé a stredné firmy",
+          situation:
+            "Máte smernice, návody k produktom a legislatívu, ktorú musíte dodržiavať — ale nemáte právnika ani nikoho, kto by sledoval každú novelu. Dokumenty ležia na disku, v e-mailoch a v hlavách dvoch ľudí. Keď jeden z nich odíde na dovolenku, práca sa zastaví.",
+          questions: [
+            "Aké školenie BOZP musí absolvovať nový zamestnanec pred nástupom?",
+            "Do kedy musíme archivovať faktúry a v akej forme?",
+            "Platí naša smernica o cestovných náhradách ešte podľa aktuálneho zákona?",
+          ],
+          answerNote: "Odpoveď cituje konkrétnu smernicu alebo paragraf a jej platnú verziu.",
+          benefits: [
+            "Odpoveď za sekundy namiesto hľadania v zložkách alebo čakania na kolegu.",
+            "Vedomosť prestane byť viazaná na jedného človeka.",
+            "Vidíte, ktoré vaše smernice sa odvolávajú na predpis, ktorý sa medzitým zmenil.",
+          ],
+        },
+        {
+          icon: "quote",
+          title: "Školy a vzdelávacie inštitúcie",
+          situation:
+            "Školský zákon, vyhlášky ministerstva, smernice zriaďovateľa, vnútorný poriadok a rozhodnutia rady školy. Každý z týchto textov sa mení iným tempom a v inom čase. Nový učiteľ alebo administratívny pracovník sa v tom orientuje mesiace — a väčšinou tak, že sa pýta kolegov.",
+          questions: [
+            "Koľko dní dovolenky má pedagogický zamestnanec?",
+            "Aký je postup pri komisionálnej skúške?",
+            "Kto schvaľuje individuálny vzdelávací plán a v akej lehote?",
+          ],
+          answerNote: "Rozlíši, čo hovorí zákon a čo váš vnútorný poriadok — a ktorý má prednosť.",
+          benefits: [
+            "Zaučenie nového človeka sa skráti z mesiacov na hodiny.",
+            "Sekretariát prestane byť úzkym hrdlom pre bežné otázky.",
+            "Odpoveď vždy vychádza z platného znenia, nie zo staršieho súboru na disku.",
+          ],
+        },
+        {
+          icon: "scale",
+          title: "Zväzy, komory a združenia",
+          situation:
+            "Máte vlastné predpisy postavené na zákone, ktorý sa mení. Členovia sa pýtajú stále to isté a odpoveď musí sedieť — lebo podľa nej sa rozhoduje o prestupoch, sankciách alebo členstve. Zle citovaný článok je reklamácia, nie preklep.",
+          questions: [
+            "Aká je lehota na podanie námietky proti výsledku?",
+            "Koľko je odstupné za hráča od 20 rokov z tretej ligy?",
+            "Kto schvaľuje prestup maloletého do iného klubu?",
+          ],
+          answerNote:
+            "Toto sú skutočné otázky z nášho nasadenia nad normami SFZ — odpoveď uvádza článok aj odsek.",
+          benefits: [
+            "Členovia dostanú odpoveď sami, bez telefonátu na sekretariát.",
+            "Každá odpoveď je doložená článkom, takže sa dá overiť aj spochybniť.",
+            "Historické znenie zostáva dostupné pre spory o staršie obdobia.",
+          ],
+        },
+        {
+          icon: "shield",
+          title: "Verejná správa",
+          situation:
+            "Zákony, vykonávacie predpisy, interné akty riadenia a metodické usmernenia. K tomu požiadavka, aby údaje neopustili EÚ alebo aby celý systém bežal vo vašej sieti. Bežné cloudové nástroje tu neprejdú ani do užšieho výberu.",
+          questions: [
+            "Ktorý predpis upravuje lehotu na vybavenie tohto podania?",
+            "Zmenilo sa niečo v metodike po poslednej novele?",
+            "Čo hovorí interný akt riadenia oproti zákonu?",
+          ],
+          answerNote: "Dostupné aj v režime, kde žiadny text neopustí vašu infraštruktúru.",
+          benefits: [
+            "Nasadenie on-prem alebo v uzavretej sieti bez pripojenia na internet.",
+            "Doložiteľné, kde sa každá časť spracovania vykonáva — pre audit aj pre obstarávanie.",
+            "Prístupové práva podľa existujúceho prihlásenia, bez zakladania nových účtov.",
+          ],
+        },
+      ],
+
+      commonTitle: "Spoločné všetkým štyrom",
+      commonText:
+        "Odpoveď vždy vychádza z vášho obsahu a uvádza, odkiaľ pochádza — predpis, článok aj verziu. Keď odpoveď v podkladoch nie je, systém to povie namiesto toho, aby si ju vymyslel. To je rozdiel medzi nástrojom, ktorý sa dá použiť pri rozhodovaní, a nástrojom, ktorý sa dá použiť len na inšpiráciu.",
     },
     roadmap: {
       eyebrow: "Pripravujeme",
@@ -921,6 +1010,7 @@ export const dictionaries = {
         { title: "Support and helpdesk", text: "Guides and FAQs for your applications — fewer repeat tickets, more resolved self-service." },
         { title: "New and experienced staff alike", text: "An answer with a link to the specific article. Newcomers ramp up faster; veterans stop answering the same thing for the fifth time." },
       ],
+      more: "See concrete situations and questions",
     },
     versions: {
       eyebrow: "Versions and what is in force",
@@ -967,6 +1057,94 @@ export const dictionaries = {
         "Conflict alerts: an internal directive says something different from the law or implementing decree in force.",
         "An overview of which of your own rules an amendment touched and need reviewing.",
       ],
+    },
+    usecases: {
+      navLabel: "Who it's for",
+      eyebrow: "Who it's for",
+      title: "What matters is the volume of regulation, not the headcount",
+      subtitle:
+        "A ten-person firm under construction law has the same problem as a ministry — with a smaller budget and nobody tracking the changes full time.",
+      note:
+        "Below are four typical situations and the questions people actually ask in them. If you recognise yourself in one, we can show you Contineo on your own documents.",
+
+      benefitLabel: "What changes",
+      questionsLabel: "This is how people ask",
+
+      segments: [
+        {
+          icon: "layers",
+          title: "Small and mid-sized firms",
+          situation:
+            "You have directives, product documentation and legislation to comply with — but no in-house counsel and nobody tracking every amendment. Documents sit on a drive, in email and in two people's heads. When one of them goes on holiday, work stops.",
+          questions: [
+            "What safety training must a new hire complete before starting?",
+            "How long do we have to keep invoices, and in what form?",
+            "Does our travel expense policy still match the current law?",
+          ],
+          answerNote: "The answer cites the specific directive or section and the version in force.",
+          benefits: [
+            "An answer in seconds instead of digging through folders or waiting for a colleague.",
+            "Knowledge stops being tied to one person.",
+            "You can see which of your directives cite a rule that has since changed.",
+          ],
+        },
+        {
+          icon: "quote",
+          title: "Schools and education",
+          situation:
+            "Education law, ministry decrees, the founder's directives, internal rules and school board decisions. Each of those changes at its own pace and at its own time. A new teacher or administrator takes months to get oriented — mostly by asking colleagues.",
+          questions: [
+            "How many days of leave does a teaching staff member get?",
+            "What is the procedure for a board examination?",
+            "Who approves an individual education plan, and within what deadline?",
+          ],
+          answerNote: "It distinguishes what the law says from your internal rules — and which prevails.",
+          benefits: [
+            "Onboarding shortens from months to hours.",
+            "The front office stops being a bottleneck for routine questions.",
+            "Answers always come from the text in force, not an older file on a drive.",
+          ],
+        },
+        {
+          icon: "scale",
+          title: "Associations and chambers",
+          situation:
+            "Your own rules sit on top of a statute that keeps changing. Members ask the same things over and over and the answer has to be right — decisions on transfers, sanctions or membership rest on it. A misquoted article is a complaint, not a typo.",
+          questions: [
+            "What is the deadline for filing an objection to a result?",
+            "What is the transfer fee for a player aged 20+ from the third division?",
+            "Who approves a minor's transfer to another club?",
+          ],
+          answerNote:
+            "These are real questions from our deployment over the Slovak FA's regulations — answers cite article and paragraph.",
+          benefits: [
+            "Members get answers themselves, without phoning the secretariat.",
+            "Every answer is backed by an article, so it can be verified — or challenged.",
+            "Historical wording stays available for disputes about earlier periods.",
+          ],
+        },
+        {
+          icon: "shield",
+          title: "Public administration",
+          situation:
+            "Acts, implementing decrees, internal management acts and methodological guidance. Plus a requirement that data must not leave the EU, or that the whole system runs inside your network. Ordinary cloud tools do not make the shortlist here.",
+          questions: [
+            "Which regulation sets the deadline for handling this submission?",
+            "Did anything change in the methodology after the latest amendment?",
+            "What does the internal management act say compared to the statute?",
+          ],
+          answerNote: "Also available in a mode where no text leaves your infrastructure.",
+          benefits: [
+            "On-premise deployment or a closed network with no internet connection.",
+            "Documented processing location for every component — for audit and for procurement.",
+            "Access rights follow your existing sign-in, with no new accounts to create.",
+          ],
+        },
+      ],
+
+      commonTitle: "Common to all four",
+      commonText:
+        "Answers always come from your content and state where they came from — the regulation, the article and the version. When the answer is not in the material, the system says so instead of inventing one. That is the difference between a tool you can use to decide something and a tool you can only use for inspiration.",
     },
     roadmap: {
       eyebrow: "What's next",

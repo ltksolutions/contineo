@@ -31,7 +31,7 @@ export default function Home({ params }) {
         <Versions dict={dict} />
         <Features dict={dict} />
         <HowItWorks dict={dict} />
-        <Audience dict={dict} />
+        <Audience dict={dict} lang={lang} />
         <Roadmap dict={dict} />
         <CTA dict={dict} />
       </main>

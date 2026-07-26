@@ -31,6 +31,7 @@ export default function Footer({ dict, lang }) {
               <li><a href={`/${lang}#features`} className="muted footlink">{f.links.features}</a></li>
               <li><a href={`/${lang}#how`} className="muted footlink">{f.links.how}</a></li>
               <li><a href={`/${lang}#demo`} className="muted footlink">{f.links.demo}</a></li>
+              <li><Link href={`/${lang}/pre-koho`} className="muted footlink">{dict.usecases.navLabel}</Link></li>
               <li><Link href={`/${lang}/bezpecnost`} className="muted footlink">{dict.residency.navLabel}</Link></li>
               <li><Link href={`/${lang}/prevadzka`} className="muted footlink">{dict.nav.runtime}</Link></li>
               <li><Link href={`/${lang}/technologia`} className="muted footlink">{dict.tech.navLabel}</Link></li>

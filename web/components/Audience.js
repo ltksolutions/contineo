@@ -1,4 +1,6 @@
-export default function Audience({ dict }) {
+import Link from "next/link";
+
+export default function Audience({ dict, lang }) {
   const a = dict.audience;
   return (
     <section id="audience" className="section">
@@ -23,6 +25,16 @@ export default function Audience({ dict }) {
             </div>
           ))}
         </div>
+
+        {/* Odkaz na podrobnu stranku — tu je len prehlad, tam su
+            ukazkove otazky a konkretny prinos pre kazdy segment. */}
+        {lang && (
+          <div className="center" style={{ marginTop: 38 }}>
+            <Link href={`/${lang}/pre-koho`} className="btn btn--ghost">
+              {a.more}
+            </Link>
+          </div>
+        )}
       </div>
     </section>
   );

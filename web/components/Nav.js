@@ -26,6 +26,7 @@ export default function Nav({ dict, lang }) {
   // lebo sa na ne odkazuje v ponukach a maju vlastnu hlbku (ADR-002).
   const strany = [
     { href: `/${lang}`, label: dict.nav.overview },
+    { href: `/${lang}/pre-koho`, label: dict.usecases.navLabel },
     { href: `/${lang}/bezpecnost`, label: dict.residency.navLabel },
     { href: `/${lang}/prevadzka`, label: dict.nav.runtime },
     { href: `/${lang}/technologia`, label: dict.tech.navLabel },
