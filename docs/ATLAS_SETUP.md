@@ -133,7 +133,7 @@ Aplikácia potom použije poradie z `$rankFusion` bez rerankingu. Funguje to, le
 V `app/.env.local`:
 
 ```bash
-MONGODB_URI="mongodb+srv://janletko_db_user:SKUTOCNE_HESLO@contineo.hz6mr62.mongodb.net/?retryWrites=true&w=majority&appName=Contineo"
+MONGODB_URI="mongodb+srv://POUZIVATEL:HESLO@CLUSTER.mongodb.net/?retryWrites=true&w=majority&appName=Contineo"
 MONGODB_DB="contineo"
 
 ANTHROPIC_API_KEY="sk-ant-..."
@@ -148,6 +148,8 @@ GENERATION_MODEL="claude-sonnet-5"
 ```
 
 `.env.local` je v `.gitignore` — kľúče do repozitára nepatria.
+
+> ⚠️ **Ani do dokumentácie.** Vyššie sú zámerne zástupné hodnoty (`POUZIVATEL`, `HESLO`, `CLUSTER`). Skenery tajomstiev (GitHub, GitGuardian) hlásia už samotný tvar `user:password@host` — aj keď je heslo len placeholder. Skutočné meno používateľa a hostname clustera navyše útočníkovi prezradia polovicu údajov.
 
 > Ak heslo obsahuje `@`, `:`, `/` alebo `#`, musíš ho v URL zakódovať (`@` → `%40`). Inak sa connection string rozpadne a chyba vyzerá ako zlé prihlasovacie údaje.
 
