@@ -319,6 +319,7 @@ export const dictionaries = {
         { title: "Malé a stredné firmy", text: "Interné smernice, návody k produktom a legislatíva, ktorú musíte dodržiavať. Bez vlastného právnika a bez človeka, ktorý by sledoval každú novelu." },
         { title: "Školy a inštitúcie", text: "Školský zákon, vyhlášky, vnútorné poriadky a smernice zriaďovateľa. Nový učiteľ alebo administratívny pracovník sa zorientuje za hodinu, nie za mesiace." },
         { title: "Zväzy a komory", text: "Vlastné predpisy nadväzujúce na zákon, ktorý sa mení. Členovia sa pýtajú stále to isté — a odpoveď musí sedieť s platným znením." },
+        { title: "Banky a veľké spoločnosti", text: "Skupinové politiky, lokálne smernice a regulácia nad tým. Jedna odpoveď naprieč pobočkami, doložená pre audit." },
         { title: "Verejná správa", text: "Zákony, vykonávacie predpisy a interné akty riadenia. On-prem alebo v uzavretej sieti, ak to vyžadujú pravidlá." },
         { title: "Podpora a helpdesk", text: "Návody a FAQ k aplikáciám — menej opakovaných ticketov, viac vyriešeného samoobslužne." },
         { title: "Noví aj skúsení zamestnanci", text: "Odpoveď s odkazom na konkrétny článok. Nový sa zaučí rýchlejšie, skúsený nemusí odpovedať na to isté po piaty raz." },
@@ -434,6 +435,26 @@ export const dictionaries = {
             "Členovia dostanú odpoveď sami, bez telefonátu na sekretariát.",
             "Každá odpoveď je doložená článkom, takže sa dá overiť aj spochybniť.",
             "Historické znenie zostáva dostupné pre spory o staršie obdobia.",
+          ],
+        },
+        {
+          icon: "globe",
+          title: "Banky, nadnárodné a veľké spoločnosti",
+          situation:
+            "Skupinové politiky sú po anglicky, lokálne smernice v jazyku krajiny a nad tým regulácia, ktorá sa mení každý rok. Zamestnanec v Bratislave nevie, či platí group policy alebo lokálny dodatok — a keď sa spýta, dostane od dvoch kolegov dve odpovede. Navyše hľadá po slovensky v dokumente, ktorý po slovensky nie je. Interný audit sa pýta to isté, len s väčšími dôsledkami.",
+          questions: [
+            "Ktorá verzia skupinovej politiky platí pre slovenskú pobočku?",
+            "Aký je limit na schválenie výdavku bez druhého podpisu?",
+            "Líši sa naša interná smernica od požiadavky regulátora?",
+          ],
+          answerNote:
+            "Odpoveď rozlíši skupinovú politiku od lokálnej a povie, ktorá má v danom prípade prednosť.",
+          benefits: [
+            "Rovnaká odpoveď naprieč pobočkami — nie podľa toho, koho sa človek spýtal.",
+            "Otázka po slovensky, zdroj po anglicky. Model významu aj jazykový model sú viacjazyčné a každý dokument nesie svoj jazyk ako údaj, takže sa dá filtrovať aj miešať.",
+            "Každá odpoveď je doložená dokumentom, článkom a verziou, takže obstojí pri internom audite.",
+            "Zaškolenie stoviek ľudí na novú politiku bez toho, aby ju všetci museli prečítať celú.",
+            "Nasadenie v EÚ alebo priamo vo vašej infraštruktúre, ak to vyžaduje bezpečnostná politika.",
           ],
         },
         {
@@ -1006,6 +1027,7 @@ export const dictionaries = {
         { title: "Small and mid-sized firms", text: "Internal directives, product documentation and the legislation you have to comply with. Without in-house counsel and without anyone watching every amendment." },
         { title: "Schools and institutions", text: "Education law, decrees, internal rules and the founder's directives. A new teacher or administrator gets oriented in an hour, not in months." },
         { title: "Associations and chambers", text: "Your own rules built on top of a statute that keeps changing. Members keep asking the same questions — and the answer has to match the text in force." },
+        { title: "Banks and large enterprises", text: "Group policies, local directives and regulation on top. One answer across branches, evidenced for audit." },
         { title: "Public administration", text: "Acts, implementing decrees and internal management acts. On-premise or in a closed network where the rules require it." },
         { title: "Support and helpdesk", text: "Guides and FAQs for your applications — fewer repeat tickets, more resolved self-service." },
         { title: "New and experienced staff alike", text: "An answer with a link to the specific article. Newcomers ramp up faster; veterans stop answering the same thing for the fifth time." },
@@ -1121,6 +1143,26 @@ export const dictionaries = {
             "Members get answers themselves, without phoning the secretariat.",
             "Every answer is backed by an article, so it can be verified — or challenged.",
             "Historical wording stays available for disputes about earlier periods.",
+          ],
+        },
+        {
+          icon: "globe",
+          title: "Banks, multinationals and large enterprises",
+          situation:
+            "Group policies are in English, local directives in the national language, and regulation on top changes every year. Someone in the local office cannot tell whether the group policy or the local addendum applies — and asking two colleagues yields two answers. They are also searching in one language inside a document written in another. Internal audit asks the same question, only with bigger consequences.",
+          questions: [
+            "Which version of the group policy applies to the Slovak branch?",
+            "What is the spending limit that needs no second signature?",
+            "Does our internal directive differ from what the regulator requires?",
+          ],
+          answerNote:
+            "The answer separates group policy from local rules and says which one prevails in the given case.",
+          benefits: [
+            "The same answer across branches — not one that depends on who you asked.",
+            "Ask in one language, get an answer from a source in another. Both the meaning model and the language model are multilingual, and every document carries its language as a field, so you can filter or mix.",
+            "Every answer is backed by a document, an article and a version, so it holds up in internal audit.",
+            "Roll a new policy out to hundreds of people without all of them having to read it end to end.",
+            "Deployment in the EU or inside your own infrastructure where security policy demands it.",
           ],
         },
         {
