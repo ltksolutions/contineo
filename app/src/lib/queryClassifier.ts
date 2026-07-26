@@ -1,9 +1,12 @@
 /**
  * queryClassifier.ts
- * Rozhoduje ktorý search engine použiť pre daný prompt.
- * Primárne: rýchla heuristika bez LLM (bez nákladov, < 1ms).
- * Voliteľne: lokálny LLM pre presnejšiu klasifikáciu.
+ * Rozhoduje, ktorý search engine použiť pre daný prompt.
+ *
+ * Primárne: rýchla heuristika bez LLM (bez nákladov, < 1 ms).
+ * Voliteľne: model cez utility adaptér (ADR-001) — presnejší, ale pomalší.
  */
+
+import { GenerationProvider } from "./providers/types"
 
 export type SearchMode = "fulltext" | "vector" | "hybrid"
 
@@ -49,42 +52,43 @@ Pravidlá:
 Dotaz: "{query}"
 Odpoveď:`
 
-export async function classifyByLLM(query: string): Promise<SearchMode> {
+export async function classifyByLLM(
+  query: string,
+  provider?: GenerationProvider
+): Promise<SearchMode> {
+  // Bez adaptéra nemá zmysel volať model — spadneme na heuristiku.
+  if (!provider) return classifyByHeuristic(query)
+
   try {
-    const response = await fetch(`${process.env.OLLAMA_URL}/api/generate`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        model: "llama3.2",          // rýchly lokálny model, stačí 1 token
-        prompt: LLM_CLASSIFY_PROMPT.replace("{query}", query),
-        stream: false,
-        options: { temperature: 0, num_predict: 5 },
-      }),
-      signal: AbortSignal.timeout(2000), // max 2s, inak fallback na heuristiku
-    })
-
-    if (!response.ok) throw new Error("Ollama unavailable")
-
-    const data = await response.json()
-    const raw = (data.response as string).trim().toLowerCase()
+    const raw = (await provider.complete(
+      LLM_CLASSIFY_PROMPT.replace("{query}", query),
+      { maxTokens: 5, temperature: 0, timeoutMs: 2000 }
+    )).toLowerCase()
 
     if (raw.includes("fulltext")) return "fulltext"
     if (raw.includes("vector"))   return "vector"
     if (raw.includes("hybrid"))   return "hybrid"
 
-    return classifyByHeuristic(query) // fallback ak LLM odpovie nezmysel
+    return classifyByHeuristic(query)   // model odpovedal nezmysel
   } catch {
-    // LLM nedostupný → heuristika
-    return classifyByHeuristic(query)
+    return classifyByHeuristic(query)   // model nedostupný alebo timeout
   }
 }
 
 // ── Hlavný export ────────────────────────────────────────────────────────────
 
+/**
+ * Predvolene beží IBA heuristika — pod 1 ms a zadarmo.
+ *
+ * LLM klasifikátor pridá 200–500 ms ku každému dotazu za trojcestné
+ * rozhodnutie, takže sa zapína vedome. Či sa vôbec oplatí, má odpovedať
+ * eval sada D9 (otvorená otázka O3 v ADR-001).
+ */
 export async function classifyQuery(
   query: string,
-  useLLM = false
+  useLLM = false,
+  provider?: GenerationProvider
 ): Promise<SearchMode> {
-  if (useLLM) return classifyByLLM(query)
+  if (useLLM) return classifyByLLM(query, provider)
   return classifyByHeuristic(query)
 }

@@ -62,6 +62,12 @@ export interface TenantProfile {
     embedding: EmbeddingConfig
     rerank: RerankConfig
     generation: GenerationConfig
+    /**
+     * Lacnejší model pre pomocné volania (klasifikácia, prepis dotazu).
+     * Keď chýba, použije sa `generation` — funkčné, ale drahšie.
+     * Viď otvorenú otázku O2 v ADR-001.
+     */
+    utility?: GenerationConfig
   }
   limits?: {
     maxQueriesPerDay?: number
@@ -119,12 +125,25 @@ export interface GenerationRequest {
   maxTokens?: number
 }
 
+export interface CompleteOptions {
+  maxTokens?: number
+  temperature?: number
+  /** Tvrdý strop na odpoveď. Po uplynutí sa volanie zruší. */
+  timeoutMs?: number
+}
+
 export interface GenerationProvider {
   readonly kind: GenerationConfig["kind"]
   readonly model: string
   /** true = adaptér vracia overiteľné citácie (nie len text s [1], [2]) */
   readonly supportsCitations: boolean
   stream(req: GenerationRequest): AsyncGenerator<GenerationEvent>
+  /**
+   * Jednorazové nestreamované doplnenie — pre pomocné úlohy ako klasifikácia
+   * dotazu alebo jeho prepis. Zámerne oddelené od stream(): tie volania nemajú
+   * kontext ani citácie a bežia na lacnejšom modeli (viď `utility` v profile).
+   */
+  complete(prompt: string, opts?: CompleteOptions): Promise<string>
 }
 
 // ── Trojica adaptérov pre jeden request ──────────────────────────────────────
@@ -133,6 +152,8 @@ export interface Providers {
   embedding: EmbeddingProvider
   rerank: RerankProvider
   generation: GenerationProvider
+  /** Pomocný model na klasifikáciu a prepis dotazu. */
+  utility: GenerationProvider
   profile: TenantProfile
 }
 

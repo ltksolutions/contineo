@@ -94,10 +94,18 @@ function makeGeneration(cfg: GenerationConfig): GenerationProvider {
 // ── Export ───────────────────────────────────────────────────────────────────
 
 export function getProviders(profile: TenantProfile): Providers {
+  const generation = makeGeneration(profile.providers.generation)
+  // Bez vlastnej utility konfigurácie použijeme hlavný model — funkčné,
+  // len drahšie. Nastaviť lacnejší (napr. Haiku) sa oplatí, viď O2.
+  const utility = profile.providers.utility
+    ? makeGeneration(profile.providers.utility)
+    : generation
+
   return {
     embedding:  makeEmbedding(profile.providers.embedding),
     rerank:     makeRerank(profile.providers.rerank),
-    generation: makeGeneration(profile.providers.generation),
+    generation,
+    utility,
     profile,
   }
 }

@@ -15,7 +15,7 @@
 import { ChunkResult } from "../../mongoSearch"
 import {
   GenerationConfig, GenerationProvider, GenerationRequest, GenerationEvent,
-  ProviderConfigError,
+  CompleteOptions, ProviderConfigError,
 } from "../types"
 
 /** Kontext ako číslovaný text — model má citovať [1], [2]… */
@@ -76,6 +76,35 @@ export class OpenAICompatGenerationProvider implements GenerationProvider {
     }
 
     yield* parseOpenAIStream(res.body)
+  }
+
+  /** Nestreamované doplnenie pre pomocné úlohy (klasifikácia, prepis dotazu). */
+  async complete(prompt: string, opts: CompleteOptions = {}): Promise<string> {
+    const headers: Record<string, string> = { "Content-Type": "application/json" }
+    if (this.apiKey) headers["Authorization"] = `Bearer ${this.apiKey}`
+
+    const res = await fetch(`${this.url}/chat/completions`, {
+      method: "POST",
+      headers,
+      body: JSON.stringify({
+        model: this.model,
+        max_tokens: opts.maxTokens ?? 256,
+        temperature: opts.temperature ?? 0,
+        stream: false,
+        messages: [{ role: "user", content: prompt }],
+      }),
+      signal: opts.timeoutMs ? AbortSignal.timeout(opts.timeoutMs) : undefined,
+    })
+
+    if (!res.ok) {
+      const detail = await res.text().catch(() => "")
+      throw new Error(`OpenAI-compat complete ${res.status}: ${detail.slice(0, 200)}`)
+    }
+
+    const data: any = await res.json()
+    const text = data?.choices?.[0]?.message?.content
+    if (typeof text !== "string") throw new Error("OpenAI-compat: odpoveď bez textu")
+    return text.trim()
   }
 }
 

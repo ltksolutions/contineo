@@ -17,7 +17,7 @@
 import { ChunkResult } from "../../mongoSearch"
 import {
   GenerationConfig, GenerationProvider, GenerationRequest, GenerationEvent,
-  ProviderConfigError,
+  CompleteOptions, ProviderConfigError,
 } from "../types"
 
 const API_URL = "https://api.anthropic.com/v1/messages"
@@ -92,6 +92,35 @@ export class AnthropicGenerationProvider implements GenerationProvider {
     }
 
     yield* parseAnthropicStream(res.body, req.chunks)
+  }
+
+  /** Nestreamované doplnenie pre pomocné úlohy (klasifikácia, prepis dotazu). */
+  async complete(prompt: string, opts: CompleteOptions = {}): Promise<string> {
+    const res = await fetch(API_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-api-key": this.apiKey,
+        "anthropic-version": API_VERSION,
+      },
+      body: JSON.stringify({
+        model: this.model,
+        max_tokens: opts.maxTokens ?? 256,
+        temperature: opts.temperature ?? 0,
+        messages: [{ role: "user", content: prompt }],
+      }),
+      signal: opts.timeoutMs ? AbortSignal.timeout(opts.timeoutMs) : undefined,
+    })
+
+    if (!res.ok) {
+      const detail = await res.text().catch(() => "")
+      throw new Error(`Anthropic complete ${res.status}: ${detail.slice(0, 200)}`)
+    }
+
+    const data: any = await res.json()
+    const text = data?.content?.[0]?.text
+    if (typeof text !== "string") throw new Error("Anthropic: odpoveď bez textu")
+    return text.trim()
   }
 }
 

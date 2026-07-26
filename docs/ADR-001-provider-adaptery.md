@@ -2,7 +2,7 @@
 
 > **Stav:** ✅ prijaté · **Dátum:** 2026-07-25 · **Revízia:** 2026-07-26 (overenie voyage-4-nano, sekcia 3) · **Nahrádza:** stack rozhodnutia v `docs/rag-architecture.md` (sekcia „Stack rozhodnutia")
 > **Súvisiace:** `docs/OPEN_DECISIONS.md` (D15 — modely/fallback/náklady), `docs/DATA_MODEL_konzistencia.md`, `docs/PRISTUPOVE_PRAVA.md`
-> **Implementácia:** `app/src/lib/providers/` — kroky 1–4 hotové (2026-07-26). Zostáva krok 5 (preprocessing a klasifikátor).
+> **Implementácia:** `app/src/lib/providers/` — ✅ **kroky 1–5 hotové** (2026-07-26), 109 testov, `tsc --noEmit` čistý. Integračne neoverené (TEI, Infinity a vLLM čakajú na stroj s GPU).
 
 ---
 
@@ -202,8 +202,8 @@ Rovnaký `$rankFusion`, rovnaká aplikácia, iný profil.
 | `app/src/lib/llmGenerator.ts` | ✅ **hotové** (prepis) — `streamOllama` a `streamClaude` sa presúvajú do adaptérov; ostáva len zostavenie promptu, SSE obálka a `buildSources()`. Verejná signatúra `generateAnswer(opts)` **zostáva nezmenená** | veľký |
 | `app/src/lib/mongoSearch.ts` | ✅ **hotové** — `useStageRerank` v `SearchOptions`; `$rerank` stage sa pridáva podmienene podľa `rerank.kind`; pri `infinity` sa vracia neprerankovaný výsledok a rerank rieši volajúci | stredný |
 | `app/src/app/api/chat/route.ts` | ✅ **hotové** — načíta tenant profil, odovzdá ho do search aj generovania; pri `rerank.kind === "infinity"` vloží rerank krok medzi search a generovanie | stredný |
-| `app/src/lib/queryPreprocessor.ts` | **úprava** — Ollama/Claude fetch nahradiť `GenerationProvider` (preprocessing má vlastný, lacnejší profil) | stredný |
-| `app/src/lib/queryClassifier.ts` | **úprava** — to isté; zvážiť úplné zrušenie LLM vetvy (heuristika stačí, LLM pridá 200–500 ms) | malý |
+| `app/src/lib/queryPreprocessor.ts` | ✅ **hotové** — zadrôtované fetch volania nahradené `utility` adaptérom; pridané `parsePreprocessed()` odolné voči markdown obalu | stredný |
+| `app/src/lib/queryClassifier.ts` | ✅ **hotové** — LLM vetva ide cez `utility` adaptér, heuristika zostáva predvolená (viď O3) | malý |
 | `app/src/lib/mongodb.ts` | **úprava** — `getCollection("tenant_profiles")` | triviálny |
 
 ### Poradie implementácie
@@ -212,10 +212,10 @@ Rovnaký `$rankFusion`, rovnaká aplikácia, iný profil.
 2. ✅ `generation/*` + prepis `llmGenerator.ts` — najväčší prínos, izolovaná zmena
 3. ✅ Polia na chunku + `embeddingGuard.ts` + `scripts/reembed.mjs`
 4. ✅ `embedding/http.ts` + `rerank/http.ts` + podmienený `$rerank` v `mongoSearch.ts` a `route.ts`
-5. ⬜ Preprocessing a klasifikátor
+5. ✅ Preprocessing a klasifikátor cez `utility` adaptér
 
-**Stav 2026-07-26:** kroky 1–4 hotové, pokryté 82 testami (`npm test`) a `tsc --noEmit`.
-Integračne neoverené — TEI aj Infinity čakajú na stroj s GPU.
+**Stav 2026-07-26:** všetkých päť krokov hotových, pokryté **109 testami** (`npm test`)
+a `tsc --noEmit`. Integračne neoverené — TEI, Infinity aj vLLM čakajú na stroj s GPU.
 
 ---
 
@@ -263,8 +263,8 @@ Integračne neoverené — TEI aj Infinity čakajú na stroj s GPU.
 
 - **O1** — Sedia dimenzie v zdieľanom priestore? `voyage-4-nano` dáva natívne 2048 dim, náš index má 1024. Treba zmerať, či MRL-truncation na 1024 zachová porovnateľnosť s `voyage-4` z Atlasu (kosínusová podobnosť na vzorke rovnakých textov, embedovaných oboma cestami). Alternatíva: zjednotiť oba režimy na 2048. *Vyžaduje stroj s GPU, priorita 🔴*
   - ~~Zvládne Infinity `voyage-4-nano`?~~ — nahradené: TEI má explicitnú podporu (štítok `text-embeddings-inference`), takže otázka „ktorý server" je vyriešená.
-- **O2** — Preprocessing lokálne alebo cez Claude Haiku? Pri ~0,001 € za prepis sa lokálny model nemusí oplatiť prevádzkovať. *Rozhodnúť po meraní latencie*
-- **O3** — Zrušiť LLM vetvu klasifikátora úplne? Heuristika beží pod 1 ms zadarmo. *Zmerať prínos na D9*
+- **O2** — Preprocessing lokálne alebo cez Claude Haiku? Pri ~0,001 € za prepis sa lokálny model nemusí oplatiť prevádzkovať. *Rozhodnúť po meraní latencie.* Technicky je to už len konfigurácia: `providers.utility` v profile tenanta; keď chýba, použije sa hlavný model.
+- **O3** — Zrušiť LLM vetvu klasifikátora úplne? Heuristika beží pod 1 ms zadarmo, LLM pridá 200–500 ms na každý dotaz. *Zmerať prínos na D9.* Zatiaľ je heuristika **predvolená** a LLM vetva sa zapína vedome cez `useLLMClassifier`.
 - **O4** — Ako verzovať prompty per model, aby sa dali porovnávať na D9? *Návrh: `prompts/{model}/system.md`, verzia v profile*
 
 ---

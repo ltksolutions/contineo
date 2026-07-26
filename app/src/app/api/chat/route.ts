@@ -58,23 +58,25 @@ export async function POST(req: NextRequest) {
   const userRole: "public" | "internal" = token ? "internal" : "public"
   const accessLevel: SearchOptions["accessLevel"] = userRole
 
-  // 3. Klasifikácia dotazu
-  const searchMode = await classifyQuery(query, useLLMClassifier)
+  // 3. Profil tenanta — určuje všetky tri adaptéry aj pomocný model.
+  //    Zatiaľ predvolený; per-tenant sa načíta až s identitou.
+  const profile = defaultProfile()
+  const providers = getProviders(profile)
 
-  // 4. [Voliteľne] LLM preprocessing
+  // 4. Klasifikácia dotazu (predvolene heuristika, bez volania modelu)
+  const searchMode = await classifyQuery(query, useLLMClassifier, providers.utility)
+
+  // 5. [Voliteľne] preprocessing na lacnejšom utility modeli
   const shouldPreprocess = usePreprocessing && searchMode !== "fulltext"
   const processed = shouldPreprocess
-    ? await preprocessQuery(query)
+    ? await preprocessQuery(query, providers.utility)
     : { rewritten: query, subQueries: [], keywords: [] }
 
   const searchQuery = processed.rewritten
 
-  // 5. Vyhľadávanie podľa módu
-  //    Profil tenanta rozhoduje, či rerank rieši databáza (Atlas $rerank stage)
-  //    alebo aplikačná vrstva cez adaptér (on-prem). Preto sa načíta ešte
-  //    pred dotazom. Zatiaľ predvolený; per-tenant až s identitou.
-  const profile = defaultProfile()
-  const providers = getProviders(profile)
+  // 6. Vyhľadávanie podľa módu.
+  //    Profil rozhoduje, či rerank rieši databáza (Atlas $rerank stage)
+  //    alebo aplikačná vrstva cez adaptér (on-prem).
   const collection = await getCollection("document_chunks")
   // Anotacia je nutna: bez nej TypeScript rozsiri accessLevel na `string`
   // (widening literal type v menitelnej vlastnosti objektu) a typ prestane sedet.
@@ -89,7 +91,7 @@ export async function POST(req: NextRequest) {
                                 hybridSearch  (collection, searchOpts)
   )
 
-  // 5b. Ak máme sub-queries, pridáme ďalšie výsledky (max 3 sub-queries)
+  // 6b. Ak máme sub-queries, pridáme ďalšie výsledky (max 3 sub-queries)
   if (processed.subQueries.length > 0) {
     const subResults = await Promise.all(
       processed.subQueries.slice(0, 3).map(sq =>
@@ -110,7 +112,7 @@ export async function POST(req: NextRequest) {
     chunks = chunks.slice(0, 8)
   }
 
-  // 5c. Rerank v aplikačnej vrstve (on-prem). V cloude je to no-op —
+  // 6c. Rerank v aplikačnej vrstve (on-prem). V cloude je to no-op —
   //     $rerank už zoradil výsledky v pipeline.
   if (!providers.rerank.isPipelineStage && chunks.length > 0) {
     const topK = profile.providers.rerank.topK ?? 8
@@ -124,7 +126,7 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  // 5d. Strážca vektorového priestoru (ADR-001, sekcia 4).
+  // 6d. Strážca vektorového priestoru (ADR-001, sekcia 4).
   //     Vektory z rôznych modelov sa nedajú miešať — pri nezhode by retrieval
   //     tíško vracal nezmysly. Radšej tvrdé zlyhanie než zlá odpoveď.
   try {
@@ -153,7 +155,7 @@ export async function POST(req: NextRequest) {
     return sseResponse(emptyStream)
   }
 
-  // 6. Generovanie odpovede (streaming SSE)
+  // 7. Generovanie odpovede (streaming SSE)
   const stream = generateAnswer({ query, chunks, userRole, profile })
 
   return sseResponse(stream, {

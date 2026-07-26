@@ -1,9 +1,13 @@
 /**
  * queryPreprocessor.ts
- * Voliteľný LLM preprocessing vstupného promptu pred vyhľadávaním.
+ * Voliteľný preprocessing vstupného promptu pred vyhľadávaním.
  * Spúšťa sa iba pre hybrid/vector mód a dlhé/zložité dotazy.
- * Primárny: Ollama (lokálny). Fallback: Claude API.
+ *
+ * Model sa volí utility adaptérom z profilu tenanta (ADR-001) —
+ * zámerne lacnejším než ten, ktorý tvorí odpoveď.
  */
+
+import { GenerationProvider } from "./providers/types"
 
 export interface PreprocessedQuery {
   rewritten: string        // vyčistený/prepísaný dotaz
@@ -27,77 +31,69 @@ Pravidlá:
 - subQueries: max 3, iba ak je dotaz zložený z viacerých otázok, inak prázdne pole
 - keywords: 3-6 najdôležitejších pojmov pre fulltext vyhľadávanie`
 
-// ── Ollama preprocessing (lokálny, preferovaný) ──────────────────────────────
+// ── Parsovanie odpovede modelu ───────────────────────────────────────────────
 
-async function preprocessByOllama(query: string): Promise<PreprocessedQuery> {
-  const response = await fetch(`${process.env.OLLAMA_URL}/api/generate`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      model: "llama3.2",
-      prompt: PREPROCESS_PROMPT.replace("{query}", query),
-      stream: false,
-      options: { temperature: 0.1, num_predict: 200 },
-    }),
-    signal: AbortSignal.timeout(5000),
-  })
+/**
+ * Modely radi zabalia JSON do markdown bloku, aj keď sa im to zakáže.
+ * Preto sa pred parsovaním odstráni obal a vyberie sa prvý objekt.
+ */
+export function parsePreprocessed(raw: string, fallbackQuery: string): PreprocessedQuery {
+  let t = raw.trim()
 
-  if (!response.ok) throw new Error("Ollama nedostupný")
+  // ```json ... ``` alebo ``` ... ```
+  const fence = t.match(/^```(?:json)?\s*([\s\S]*?)\s*```$/i)
+  if (fence) t = fence[1].trim()
 
-  const data = await response.json()
-  const raw = (data.response as string).trim()
-  return JSON.parse(raw) as PreprocessedQuery
-}
+  // Text okolo objektu — vezmeme od prvej { po poslednú }
+  const first = t.indexOf("{")
+  const last = t.lastIndexOf("}")
+  if (first >= 0 && last > first) t = t.slice(first, last + 1)
 
-// ── Claude API preprocessing (fallback) ─────────────────────────────────────
+  const parsed = JSON.parse(t)
 
-async function preprocessByClaude(query: string): Promise<PreprocessedQuery> {
-  const response = await fetch("https://api.anthropic.com/v1/messages", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "x-api-key": process.env.ANTHROPIC_API_KEY!,
-      "anthropic-version": "2023-06-01",
-    },
-    body: JSON.stringify({
-      model: "claude-haiku-4-5-20251001",   // najrýchlejší/najlacnejší model
-      max_tokens: 256,
-      messages: [
-        {
-          role: "user",
-          content: PREPROCESS_PROMPT.replace("{query}", query),
-        }
-      ],
-    }),
-  })
+  const rewritten = typeof parsed.rewritten === "string" && parsed.rewritten.trim()
+    ? parsed.rewritten.trim()
+    : fallbackQuery
 
-  if (!response.ok) throw new Error("Claude API nedostupný")
+  const asStrings = (v: unknown): string[] =>
+    Array.isArray(v) ? v.filter((x): x is string => typeof x === "string" && !!x.trim()) : []
 
-  const data = await response.json()
-  const raw = data.content[0].text.trim()
-  return JSON.parse(raw) as PreprocessedQuery
+  return {
+    rewritten,
+    subQueries: asStrings(parsed.subQueries).slice(0, 3),
+    keywords: asStrings(parsed.keywords).slice(0, 6),
+  }
 }
 
 // ── Hlavný export ────────────────────────────────────────────────────────────
 
 const SHORT_QUERY_WORDS = 4  // krátke dotazy nepredspracovávame
 
+/** Bezpečný výsledok, keď sa preprocessing nepodarí — pôvodný dotaz bez zmeny. */
+const passthrough = (query: string): PreprocessedQuery =>
+  ({ rewritten: query, subQueries: [], keywords: [] })
+
+/**
+ * Prepis dotazu pred vyhľadávaním. Beží na utility adaptéri (ADR-001),
+ * teda na lacnejšom modeli než samotná odpoveď.
+ *
+ * Zlyhanie nikdy nezhodí dotaz — vráti sa pôvodné znenie. Horší prepis
+ * je prijateľný, žiadna odpoveď nie je.
+ */
 export async function preprocessQuery(
-  query: string
+  query: string,
+  provider?: GenerationProvider
 ): Promise<PreprocessedQuery> {
-  // Krátke dotazy nepotrebujú preprocessing
-  if (query.trim().split(/\s+/).length <= SHORT_QUERY_WORDS) {
-    return { rewritten: query, subQueries: [], keywords: [] }
-  }
+  if (query.trim().split(/\s+/).length <= SHORT_QUERY_WORDS) return passthrough(query)
+  if (!provider) return passthrough(query)
 
   try {
-    return await preprocessByOllama(query)
+    const raw = await provider.complete(
+      PREPROCESS_PROMPT.replace("{query}", query),
+      { maxTokens: 256, temperature: 0.1, timeoutMs: 5000 }
+    )
+    return parsePreprocessed(raw, query)
   } catch {
-    try {
-      return await preprocessByClaude(query)
-    } catch {
-      // Ak oboje zlyhá, vrátime pôvodný dotaz
-      return { rewritten: query, subQueries: [], keywords: [] }
-    }
+    return passthrough(query)
   }
 }
