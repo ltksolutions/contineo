@@ -12,6 +12,13 @@ import { Collection, Document } from "mongodb"
 
 export interface SearchOptions {
   query: string
+  /**
+   * Pridať $rerank stage do agregačnej pipeline (ADR-001).
+   * true  = cloud, Atlas rieši reranking sám (kind: "atlas-stage")
+   * false = on-prem, rerank spraví aplikačná vrstva cez adaptér
+   * Predvolene true — zachováva doterajšie správanie.
+   */
+  useStageRerank?: boolean
   accessLevel: "public" | "internal" | "all"
   limit?: number
   rerankLimit?: number
@@ -161,15 +168,18 @@ export async function vectorSearch(
         ...(Object.keys(filter).length > 0 && { filter }),
       }
     },
-    // Voyage reranker for better relevance
-    {
-      $rerank: {
-        index: "rag_rerank_index",
-        query,
-        path: "text",
-        limit: rerankLimit,
-      }
-    },
+    // Voyage reranker for better relevance.
+    // Pri on-prem režime stage vynechávame; rerank rieši aplikačná vrstva.
+    ...(opts.useStageRerank !== false
+      ? [{
+          $rerank: {
+            index: "rag_rerank_index",
+            query,
+            path: "text",
+            limit: rerankLimit,
+          }
+        }]
+      : []),
     ...LOOKUP_DOCUMENT,
   ]
 
@@ -233,15 +243,18 @@ export async function hybridSearch(
         }
       }
     },
-    // Voyage reranker — reorders the fused results
-    {
-      $rerank: {
-        index: "rag_rerank_index",
-        query,
-        path: "text",
-        limit: rerankLimit,
-      }
-    },
+    // Voyage reranker — reorders the fused results.
+    // Pri on-prem režime stage vynechávame; rerank rieši aplikačná vrstva.
+    ...(opts.useStageRerank !== false
+      ? [{
+          $rerank: {
+            index: "rag_rerank_index",
+            query,
+            path: "text",
+            limit: rerankLimit,
+          }
+        }]
+      : []),
     ...LOOKUP_DOCUMENT,
   ]
 

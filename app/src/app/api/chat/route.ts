@@ -25,6 +25,7 @@ import { fulltextSearch, vectorSearch, hybridSearch } from "@/lib/mongoSearch"
 import type { SearchOptions } from "@/lib/mongoSearch"
 import { generateAnswer }     from "@/lib/llmGenerator"
 import { defaultProfile }     from "@/lib/tenantProfile"
+import { getProviders }       from "@/lib/providers/factory"
 import { assertEmbeddingSpace, EmbeddingSpaceMismatchError } from "@/lib/embeddingGuard"
 
 // ── Typy ────────────────────────────────────────────────────────────────────
@@ -69,10 +70,18 @@ export async function POST(req: NextRequest) {
   const searchQuery = processed.rewritten
 
   // 5. Vyhľadávanie podľa módu
+  //    Profil tenanta rozhoduje, či rerank rieši databáza (Atlas $rerank stage)
+  //    alebo aplikačná vrstva cez adaptér (on-prem). Preto sa načíta ešte
+  //    pred dotazom. Zatiaľ predvolený; per-tenant až s identitou.
+  const profile = defaultProfile()
+  const providers = getProviders(profile)
   const collection = await getCollection("document_chunks")
   // Anotacia je nutna: bez nej TypeScript rozsiri accessLevel na `string`
   // (widening literal type v menitelnej vlastnosti objektu) a typ prestane sedet.
-  const searchOpts: SearchOptions = { query: searchQuery, accessLevel, limit: 20, rerankLimit: 5 }
+  const searchOpts: SearchOptions = {
+    query: searchQuery, accessLevel, limit: 20, rerankLimit: 5,
+    useStageRerank: providers.rerank.isPipelineStage,
+  }
 
   let chunks = await (
     searchMode === "fulltext" ? fulltextSearch(collection, searchOpts) :
@@ -101,11 +110,23 @@ export async function POST(req: NextRequest) {
     chunks = chunks.slice(0, 8)
   }
 
-  // 5c. Strážca vektorového priestoru (ADR-001, sekcia 4).
+  // 5c. Rerank v aplikačnej vrstve (on-prem). V cloude je to no-op —
+  //     $rerank už zoradil výsledky v pipeline.
+  if (!providers.rerank.isPipelineStage && chunks.length > 0) {
+    const topK = profile.providers.rerank.topK ?? 8
+    try {
+      chunks = await providers.rerank.rerank(searchQuery, chunks, topK)
+    } catch (err) {
+      // Výpadok rerankera nesmie zhodiť odpoveď — vraciame poradie
+      // z $rankFusion, len horšie zoradené. Zapíšeme do hlavičky.
+      console.error("Rerank zlyhal, pokračujem s poradím z $rankFusion:", err)
+      chunks = chunks.slice(0, topK)
+    }
+  }
+
+  // 5d. Strážca vektorového priestoru (ADR-001, sekcia 4).
   //     Vektory z rôznych modelov sa nedajú miešať — pri nezhode by retrieval
   //     tíško vracal nezmysly. Radšej tvrdé zlyhanie než zlá odpoveď.
-  //     Profil je zatiaľ predvolený; per-tenant sa načíta až s identitou.
-  const profile = defaultProfile()
   try {
     assertEmbeddingSpace(chunks, profile.providers.embedding.model)
   } catch (err) {

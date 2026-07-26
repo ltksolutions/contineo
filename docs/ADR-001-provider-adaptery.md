@@ -2,7 +2,7 @@
 
 > **Stav:** ✅ prijaté · **Dátum:** 2026-07-25 · **Revízia:** 2026-07-26 (overenie voyage-4-nano, sekcia 3) · **Nahrádza:** stack rozhodnutia v `docs/rag-architecture.md` (sekcia „Stack rozhodnutia")
 > **Súvisiace:** `docs/OPEN_DECISIONS.md` (D15 — modely/fallback/náklady), `docs/DATA_MODEL_konzistencia.md`, `docs/PRISTUPOVE_PRAVA.md`
-> **Implementácia:** `app/src/lib/` — *tento ADR popisuje cieľový stav, kód zatiaľ nie je upravený*
+> **Implementácia:** `app/src/lib/providers/` — kroky 1–4 hotové (2026-07-26). Zostáva krok 5 (preprocessing a klasifikátor).
 
 ---
 
@@ -190,31 +190,32 @@ Rovnaký `$rankFusion`, rovnaká aplikácia, iný profil.
 
 | Súbor | Zmena | Rozsah |
 |---|---|---|
-| `app/src/lib/providers/types.ts` | **nový** — rozhrania `EmbeddingProvider`, `RerankProvider`, `GenerationProvider` | nový |
-| `app/src/lib/providers/embedding/atlasAuto.ts` | **nový** — no-op, embedding je súčasť `$vectorSearch` | nový |
-| `app/src/lib/providers/embedding/infinity.ts` | **nový** — HTTP klient na `/embeddings` | nový |
-| `app/src/lib/providers/rerank/atlasStage.ts` | **nový** — prispeje `$rerank` stage do pipeline | nový |
-| `app/src/lib/providers/rerank/infinity.ts` | **nový** — HTTP klient na `/rerank`, volá sa po retrievale | nový |
-| `app/src/lib/providers/generation/anthropic.ts` | **nový** — natívne SDK, Citations + `cache_control` | nový |
-| `app/src/lib/providers/generation/openai.ts` | **nový** — OpenAI-compat streaming (vLLM/SGLang/Ollama) | nový |
-| `app/src/lib/providers/factory.ts` | **nový** — `getProviders(tenantProfile)` → trojica adaptérov | nový |
-| `app/src/lib/tenantProfile.ts` | **nový** — načítanie + cache profilu podľa `companyCode` | nový |
-| `app/src/lib/llmGenerator.ts` | **prepis** — `streamOllama` a `streamClaude` sa presúvajú do adaptérov; ostáva len zostavenie promptu, SSE obálka a `buildSources()`. Verejná signatúra `generateAnswer(opts)` **zostáva nezmenená** | veľký |
-| `app/src/lib/mongoSearch.ts` | **úprava** — `$rerank` stage sa pridáva podmienene podľa `rerank.kind`; pri `infinity` sa vracia neprerankovaný výsledok a rerank rieši volajúci | stredný |
-| `app/src/app/api/chat/route.ts` | **úprava** — načíta tenant profil, odovzdá ho do search aj generovania; pri `rerank.kind === "infinity"` vloží rerank krok medzi search a generovanie | stredný |
+| `app/src/lib/providers/types.ts` | ✅ **hotové** — rozhrania `EmbeddingProvider`, `RerankProvider`, `GenerationProvider` | nový |
+| `app/src/lib/providers/factory.ts` (AtlasInlineEmbedding) | ✅ **hotové** — no-op, embedding je súčasť `$vectorSearch` | nový |
+| `app/src/lib/providers/embedding/http.ts` | ✅ **hotové** — TEI `/embed` aj Infinity `/embeddings`, vrátane MRL truncation | nový |
+| `app/src/lib/providers/factory.ts` (AtlasStageRerank) | ✅ **hotové** — prispeje `$rerank` stage do pipeline | nový |
+| `app/src/lib/providers/rerank/http.ts` | ✅ **hotové** — TEI aj Infinity `/rerank`, volá sa po retrievale | nový |
+| `app/src/lib/providers/generation/anthropic.ts` | ✅ **hotové** — natívne SDK, Citations + `cache_control` | nový |
+| `app/src/lib/providers/generation/openai.ts` | ✅ **hotové** — OpenAI-compat streaming (vLLM/SGLang/Ollama) | nový |
+| `app/src/lib/providers/factory.ts` | ✅ **hotové** — `getProviders(tenantProfile)` → trojica adaptérov | nový |
+| `app/src/lib/tenantProfile.ts` | ✅ **hotové** — načítanie + cache profilu podľa `companyCode` | nový |
+| `app/src/lib/llmGenerator.ts` | ✅ **hotové** (prepis) — `streamOllama` a `streamClaude` sa presúvajú do adaptérov; ostáva len zostavenie promptu, SSE obálka a `buildSources()`. Verejná signatúra `generateAnswer(opts)` **zostáva nezmenená** | veľký |
+| `app/src/lib/mongoSearch.ts` | ✅ **hotové** — `useStageRerank` v `SearchOptions`; `$rerank` stage sa pridáva podmienene podľa `rerank.kind`; pri `infinity` sa vracia neprerankovaný výsledok a rerank rieši volajúci | stredný |
+| `app/src/app/api/chat/route.ts` | ✅ **hotové** — načíta tenant profil, odovzdá ho do search aj generovania; pri `rerank.kind === "infinity"` vloží rerank krok medzi search a generovanie | stredný |
 | `app/src/lib/queryPreprocessor.ts` | **úprava** — Ollama/Claude fetch nahradiť `GenerationProvider` (preprocessing má vlastný, lacnejší profil) | stredný |
 | `app/src/lib/queryClassifier.ts` | **úprava** — to isté; zvážiť úplné zrušenie LLM vetvy (heuristika stačí, LLM pridá 200–500 ms) | malý |
 | `app/src/lib/mongodb.ts` | **úprava** — `getCollection("tenant_profiles")` | triviálny |
 
 ### Poradie implementácie
 
-1. `types.ts` + `factory.ts` + `tenantProfile.ts` — kostra bez zmeny správania
-2. `generation/*` + prepis `llmGenerator.ts` — najväčší prínos, izolovaná zmena
-3. Polia na chunku + backfill existujúcich (`embeddingModel: "voyage-4"`)
-4. `embedding/*` + `rerank/*` + úprava `mongoSearch.ts` a `route.ts`
-5. Preprocessing a klasifikátor
+1. ✅ `types.ts` + `factory.ts` + `tenantProfile.ts` — kostra bez zmeny správania
+2. ✅ `generation/*` + prepis `llmGenerator.ts` — najväčší prínos, izolovaná zmena
+3. ✅ Polia na chunku + `embeddingGuard.ts` + `scripts/reembed.mjs`
+4. ✅ `embedding/http.ts` + `rerank/http.ts` + podmienený `$rerank` v `mongoSearch.ts` a `route.ts`
+5. ⬜ Preprocessing a klasifikátor
 
-Kroky 1–2 sa dajú nasadiť samostatne bez dotyku retrievalu.
+**Stav 2026-07-26:** kroky 1–4 hotové, pokryté 82 testami (`npm test`) a `tsc --noEmit`.
+Integračne neoverené — TEI aj Infinity čakajú na stroj s GPU.
 
 ---
 

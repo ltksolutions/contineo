@@ -15,6 +15,8 @@ import {
 } from "./types"
 import { AnthropicGenerationProvider } from "./generation/anthropic"
 import { OpenAICompatGenerationProvider } from "./generation/openai"
+import { HttpEmbeddingProvider } from "./embedding/http"
+import { HttpRerankProvider } from "./rerank/http"
 
 // ── Embedding ────────────────────────────────────────────────────────────────
 
@@ -38,11 +40,7 @@ function makeEmbedding(cfg: EmbeddingConfig): EmbeddingProvider {
       return new AtlasInlineEmbedding(cfg)
     case "infinity":
     case "tei":
-      // Krok 4 z ADR-001. Zámerne padáme, aby sa profil nedal nastaviť
-      // na niečo, čo tíško nefunguje.
-      throw new ProviderConfigError(
-        `Embedding adaptér "${cfg.kind}" zatiaľ nie je implementovaný (ADR-001, krok 4)`
-      )
+      return new HttpEmbeddingProvider(cfg)
     default:
       throw new ProviderConfigError(`Neznámy embedding.kind: ${(cfg as EmbeddingConfig).kind}`)
   }
@@ -76,9 +74,7 @@ function makeRerank(cfg: RerankConfig): RerankProvider {
     case "none":        return new NoRerank()
     case "infinity":
     case "tei":
-      throw new ProviderConfigError(
-        `Rerank adaptér "${cfg.kind}" zatiaľ nie je implementovaný (ADR-001, krok 4)`
-      )
+      return new HttpRerankProvider(cfg)
     default:
       throw new ProviderConfigError(`Neznámy rerank.kind: ${(cfg as RerankConfig).kind}`)
   }

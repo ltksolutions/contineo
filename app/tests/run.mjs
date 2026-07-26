@@ -15,7 +15,7 @@ import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
-const SUITY = ["streams.test.ts", "profile.test.ts", "guard.test.ts"];
+const SUITY = ["streams.test.ts", "profile.test.ts", "guard.test.ts", "httpAdapters.test.ts"];
 const tmp = mkdtempSync(join(tmpdir(), "contineo-tests-"));
 
 let zlyhalo = 0;

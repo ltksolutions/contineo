@@ -62,13 +62,26 @@ t("factory: openai adapter", pr2.generation.kind === "openai")
 t("factory: openai NEpodporuje overitelne citacie", pr2.generation.supportsCitations === false)
 t("factory: openai model", pr2.generation.model === "Qwen3-8B")
 
+// HTTP adaptéry (ADR-001, krok 4) — bez url musia spadnúť, s url sa postavia
 e = hodi(() => getProviders(profil({ providers: { embedding: { kind: "infinity" } } })))
-t("factory: neimplementovany embedding spadne zrozumitelne",
-  !!e && e.includes("krok 4"), String(e))
+t("factory: embedding infinity bez url spadne", !!e && e.includes("url"), String(e))
 
 e = hodi(() => getProviders(profil({ providers: { rerank: { kind: "tei" } } })))
-t("factory: neimplementovany rerank spadne zrozumitelne",
-  !!e && e.includes("krok 4"), String(e))
+t("factory: rerank tei bez url spadne", !!e && e.includes("url"), String(e))
+
+const prOnprem = getProviders(profil({
+  providers: {
+    embedding: { kind: "tei", url: "http://tei:8080", model: "voyage-4-nano", dim: 1024 },
+    rerank:    { kind: "infinity", url: "http://inf:7997", model: "BAAI/bge-reranker-v2-m3" },
+    generation: { kind: "openai", url: "http://vllm:8000/v1", model: "Qwen3-8B", citations: false },
+  },
+}))
+t("factory: on-prem trojica sa postavi", prOnprem.embedding.kind === "tei"
+  && prOnprem.rerank.kind === "infinity" && prOnprem.generation.kind === "openai")
+t("factory: HTTP embedding nie je inline", prOnprem.embedding.isInline === false)
+t("factory: HTTP rerank nie je pipeline stage", prOnprem.rerank.isPipelineStage === false)
+t("factory: on-prem rerank sa robi v aplikacii, nie v DB",
+  prOnprem.rerank.isPipelineStage === false && getProviders(profil()).rerank.isPipelineStage === true)
 
 delete process.env.ANTHROPIC_API_KEY
 e = hodi(() => getProviders(profil()))
