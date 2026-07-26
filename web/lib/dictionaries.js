@@ -696,7 +696,7 @@ export const dictionaries = {
     },
     footer: {
       tagline: "Opýtajte sa svojho obsahu.",
-      overview: "Čo je Contineo",
+      product: "Produkt",
       company: "Spoločnosť",
       links: {
         features: "Funkcie",
@@ -706,6 +706,9 @@ export const dictionaries = {
         privacy: "Ochrana údajov",
       },
       rights: "Všetky práva vyhradené.",
+      ownerLabel: "Projekt vlastní a vyvíja",
+      ownerName: "LTK Solutions",
+      ownerUrl: "https://ltk.solutions",
     },
   },
 
@@ -1404,7 +1407,7 @@ export const dictionaries = {
     },
     footer: {
       tagline: "Ask your content.",
-      overview: "What Contineo is",
+      product: "Product",
       company: "Company",
       links: {
         features: "Features",
@@ -1414,6 +1417,9 @@ export const dictionaries = {
         privacy: "Privacy",
       },
       rights: "All rights reserved.",
+      ownerLabel: "Owned and developed by",
+      ownerName: "LTK Solutions",
+      ownerUrl: "https://ltk.solutions",
     },
   },
 };

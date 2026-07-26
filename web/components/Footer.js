@@ -28,6 +28,7 @@ export default function Footer({ dict, lang }) {
           <div>
             <p style={{ fontSize: 13, fontWeight: 700, marginBottom: 12 }}>{f.product}</p>
             <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "grid", gap: 8 }}>
+              <li><Link href={`/${lang}`} className="muted footlink">{dict.nav.overview}</Link></li>
               <li><a href={`/${lang}#features`} className="muted footlink">{f.links.features}</a></li>
               <li><a href={`/${lang}#how`} className="muted footlink">{f.links.how}</a></li>
               <li><a href={`/${lang}#demo`} className="muted footlink">{f.links.demo}</a></li>
@@ -58,10 +59,31 @@ export default function Footer({ dict, lang }) {
         <ComplianceBadges dict={dict} lang={lang} />
       </div>
 
-      <div className="container" style={{ padding: "16px 24px", borderTop: "1px solid var(--line)" }}>
-        <p className="muted" style={{ fontSize: 13 }}>
+      <div
+        className="container"
+        style={{
+          padding: "16px 24px", borderTop: "1px solid var(--line)",
+          display: "flex", flexWrap: "wrap", gap: "6px 18px",
+          alignItems: "center", justifyContent: "space-between",
+        }}
+      >
+        <p className="muted" style={{ fontSize: 13, margin: 0 }}>
           © {year} Contineo · contineo.app · {f.rights}
         </p>
+        {f.ownerName && (
+          <p className="muted" style={{ fontSize: 13, margin: 0 }}>
+            {f.ownerLabel}{" "}
+            <a
+              href={f.ownerUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="footlink"
+              style={{ fontWeight: 600, color: "var(--ink)" }}
+            >
+              {f.ownerName}
+            </a>
+          </p>
+        )}
       </div>
 
       <style>{`
