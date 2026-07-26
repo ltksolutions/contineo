@@ -54,3 +54,37 @@ Doména Contineo = SFZ a podriadené zväzy, normy s paragrafmi, helpdesk. Ploch
 ## Otvorené (na potvrdenie pri implementácii)
 - `rag_documents` → `documents`, alebo ponechať prefix `rag_`? (návrh: bez prefixu, jednotne s `document_chunks`).
 - Ponechať `tags` popri `sectionKey`, alebo úplne nahradiť? (návrh: ponechať voliteľne pre voľné štítky).
+
+---
+
+## Identita vektorového priestoru (ADR-001)
+
+`document_chunks` nesie metadáta o tom, ktorý model vektor vyrobil. Bez nich
+tichý upgrade modelu neviditeľne rozbije retrieval — nič nespadne, len sa
+zhoršia odpovede.
+
+```js
+{
+  embedding: [ ... ],
+  embeddingModel:    "voyage-4",     // POVINNÉ na nových chunkoch
+  embeddingDim:      1024,           // kontrola pri zápise aj čítaní
+  embeddingProvider: "atlas-auto",   // atlas-auto | tei | infinity
+  embeddedAt:        ISODate(),      // pre plánovanie re-embedu
+}
+```
+
+**Pravidlá**
+
+1. Vektory nie sú prenositeľné medzi modelmi. `voyage-4` a `BGE-M3` majú obe
+   1024 dimenzií, ale sémanticky sú to nekompatibilné priestory.
+2. **Výnimka — rodina voyage-4.** Modely `voyage-4`, `voyage-4-large`,
+   `voyage-4-lite` a `voyage-4-nano` zdieľajú vektorový priestor (potvrdené
+   výrobcom) a sú navzájom zameniteľné bez re-embedu.
+3. Jeden vektorový index na model, nie na tenanta. Izoláciu rieši filter
+   `companyCode` (viď `PRISTUPOVE_PRAVA.md`).
+4. Zmena modelu mimo zdieľanú rodinu = **úplný prepočet** korpusu tenanta.
+   Index sa prepína až po dokončení.
+5. Dotaz a korpus musia byť z rovnakého priestoru. Kontroluje to
+   `app/src/lib/embeddingGuard.ts` — pri nezhode tvrdé zlyhanie, nie tichý fallback.
+
+**Nástroje:** `app/scripts/reembed.mjs --stav | --backfill | --reembed`

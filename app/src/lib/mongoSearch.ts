@@ -38,8 +38,12 @@ export interface ChunkResult {
   heading?: string
   chunkIndex?: number
   tags?: string[]
-  // vector + state
-  embeddingModel?: string
+  // vector — identita vektorového priestoru (ADR-001, sekcia 4)
+  embeddingModel?: string       // ktorý model vektor vyrobil — POVINNÉ na nových chunkoch
+  embeddingDim?: number         // kontrola pri zápise aj čítaní
+  embeddingProvider?: string    // atlas-auto | tei | infinity
+  embeddedAt?: string | Date    // pre plánovanie re-embedu
+  // state
   isActive?: boolean
   effectiveFrom?: string
   effectiveTo?: string

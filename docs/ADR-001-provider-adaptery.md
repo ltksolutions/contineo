@@ -1,6 +1,6 @@
 # ADR-001 — Tri provider adaptéry vyberané konfiguráciou tenanta
 
-> **Stav:** ✅ prijaté · **Dátum:** 2026-07-25 · **Nahrádza:** stack rozhodnutia v `docs/rag-architecture.md` (sekcia „Stack rozhodnutia")
+> **Stav:** ✅ prijaté · **Dátum:** 2026-07-25 · **Revízia:** 2026-07-26 (overenie voyage-4-nano, sekcia 3) · **Nahrádza:** stack rozhodnutia v `docs/rag-architecture.md` (sekcia „Stack rozhodnutia")
 > **Súvisiace:** `docs/OPEN_DECISIONS.md` (D15 — modely/fallback/náklady), `docs/DATA_MODEL_konzistencia.md`, `docs/PRISTUPOVE_PRAVA.md`
 > **Implementácia:** `app/src/lib/` — *tento ADR popisuje cieľový stav, kód zatiaľ nie je upravený*
 
@@ -41,7 +41,8 @@ Zavádzame **tri nezávislé provider adaptéry**, vyberané **konfiguráciou te
 ```
 EmbeddingProvider  → embed(texts[])            → vectors[]
    ├── atlas-auto   Automated Embedding (voyage-4) — embedding je súčasť dotazu
-   └── infinity     Infinity / TEI (voyage-4-nano, BGE-M3) — HTTP, OpenAI-compat
+   ├── tei          TEI (voyage-4-nano) — HTTP, model má explicitnú podporu
+   └── infinity     Infinity (BGE-M3) — HTTP, OpenAI-compat
 
 RerankProvider     → rerank(query, candidates) → scored[]
    ├── atlas-stage  $rerank v agregačnej pipeline (voyage-rerank-2.5)
@@ -70,7 +71,9 @@ Preto: **OpenAI-compat pri lokálnych modeloch** (Ollama, vLLM, SGLang ho hovori
 - OpenAI-kompatibilný endpoint — rovnaký vzor konfiguračnej výmeny ako vLLM
 - priepustnosť na GPU porovnateľná s TEI
 
-**TEI** ako záloha, ak zdieľaný pool narazí na strop priepustnosti (Rust, Flash Attention, vyladenejší na jeden model pri vysokej záťaži).
+**TEI** tam, kde ho model výslovne podporuje — konkrétne pri `voyage-4-nano`, ktorý má na karte modelu štítok `text-embeddings-inference`, kým podpora v Infinity potvrdená nie je. TEI je aj vyladenejší na jeden model pri vysokej záťaži (Rust, Flash Attention), takže je zálohou aj vtedy, ak zdieľaný pool narazí na strop priepustnosti.
+
+**Praktické rozdelenie:** `voyage-4-nano` → TEI · `BGE-M3` a `BGE-reranker-v2-m3` → Infinity (obslúži embedding aj rerank z jedného procesu).
 
 **vLLM** pre generovanie. Ollama len pre lokálny vývoj — pod záťažou serializuje požiadavky.
 
@@ -126,8 +129,9 @@ Nová kolekcia `tenant_profiles`. Jeden dokument na tenanta, načítaný pri št
   companyCode: "MINV",
   tier: "T3",
   providers: {
-    embedding:  { kind: "infinity", url: "http://infinity:7997",
+    embedding:  { kind: "tei", url: "http://tei:8080",
                   model: "voyage-4-nano", dim: 1024, index: "rag_vector_nano" },
+                  // dim 1024 = MRL-truncation z natívnych 2048 (viď O1)
     rerank:     { kind: "infinity", url: "http://infinity:7997",
                   model: "BAAI/bge-reranker-v2-m3", topK: 8 },
     generation: { kind: "openai",   url: "http://vllm:8000/v1",
@@ -139,9 +143,17 @@ Nová kolekcia `tenant_profiles`. Jeden dokument na tenanta, načítaný pri št
 
 Rovnaký `$rankFusion`, rovnaká aplikácia, iný profil.
 
-### Poznámka k `voyage-4-nano`
+### Poznámka k `voyage-4-nano` (overené 2026-07-26)
 
-`voyage-4-nano` je **open-weights**. Ak beží rovnaký model v Atlase aj lokálne cez Infinity, cloud a on-prem **zdieľajú vektorový priestor** a migrácia medzi režimami prestáva vyžadovať re-embed. Je to najlacnejšia cesta k symetrii oboch režimov — **overiť v PoC**, či ho Infinity uchopí.
+`voyage-4-nano` je **open-weights, Apache 2.0**, 340M parametrov, postavený na architektúre Qwen3. Overenie na karte modelu prinieslo tri veci:
+
+**1. Zdieľaný vektorový priestor je potvrdený výrobcom.** Voyage uvádza, že embeddingy z modelov `voyage-4-large`, `voyage-4`, `voyage-4-lite` a `voyage-4-nano` sú **priamo porovnateľné a zameniteľné**, a že prechod medzi nimi nevyžaduje pre-indexáciu. Cloud teda môže embedovať cez `voyage-4` v Atlase a on-prem lokálne cez `voyage-4-nano` — bez re-embedu. To je kotva prenositeľnosti oboch režimov.
+
+**2. Pre tento model odporúčame TEI, nie Infinity.** Karta modelu má explicitný štítok `text-embeddings-inference`; podpora v Infinity nikde potvrdená nie je. Model navyše vyžaduje `trust_remote_code`, ktorý nie každý server prepúšťa. Dokumentovaný je aj beh na vLLM (`runner="pooling"`, architektúra `VoyageQwen3BidirectionalEmbedModel`).
+
+**3. Je to výhradne embedding model.** Nevie generovať text. Na HuggingFace má zavádzajúci štítok `text-generation` a automaticky vygenerovaný úryvok s `AutoModelForCausalLM` — oboje sú artefakty po základnej architektúre Qwen3. Primárny štítok je `Feature Extraction` a všetky ukážky používajú `encode_query()` / `encode_document()`. **Do generation adaptéra nepatrí.**
+
+**Čo zostáva overiť:** `voyage-4-nano` dáva predvolene **2048 dimenzií**, náš Atlas index má **1024**. Model podporuje MRL-truncation na 2048/1024/512/256, čo je presne na tento účel navrhnuté — ale zhodu 1024-rozmerného nano s 1024-rozmerným `voyage-4` z Atlasu treba **zmerať**, nie predpokladať. Viď O1.
 
 ---
 
@@ -242,13 +254,14 @@ Kroky 1–2 sa dajú nasadiť samostatne bez dotyku retrievalu.
 | `$rerank` sa nikdy nedostane do Community | Trvalá divergencia režimov | Rerank cez Infinity je referenčný; Atlas `$rerank` je optimalizácia, nie základ |
 | Citations len v Claude | Cloud režim kvalitnejší v kľúčovej metrike | Zmerať rozdiel na D9; ak je veľký, je to argument pre cloud aj pri T1 |
 | Prompt vyladený na Claude podáva horšie na Qwen3 | Falošná predstava zameniteľnosti | Prompt je súčasť profilu, nie globálny; D9 sa púšťa pri každom modeli zvlášť |
-| Infinity nezvládne `voyage-4-nano` | Stráca sa symetria vektorových priestorov | Overiť v PoC ako prvé; záloha = BGE-M3 + akceptovaný re-embed pri migrácii |
+| MRL-truncation 2048→1024 nezachová zhodu s `voyage-4` z Atlasu | Stráca sa symetria vektorových priestorov medzi cloudom a on-prem | Zmerať kosínusovú podobnosť na vzorke; záloha = zjednotiť na 2048 dim, alebo BGE-M3 + akceptovaný re-embed pri migrácii |
 
 ---
 
 ## 8. Otvorené otázky
 
-- **O1** — Zvládne Infinity `voyage-4-nano`? Blokuje symetriu vektorových priestorov. *Overiť v PoC, priorita 🔴*
+- **O1** — Sedia dimenzie v zdieľanom priestore? `voyage-4-nano` dáva natívne 2048 dim, náš index má 1024. Treba zmerať, či MRL-truncation na 1024 zachová porovnateľnosť s `voyage-4` z Atlasu (kosínusová podobnosť na vzorke rovnakých textov, embedovaných oboma cestami). Alternatíva: zjednotiť oba režimy na 2048. *Vyžaduje stroj s GPU, priorita 🔴*
+  - ~~Zvládne Infinity `voyage-4-nano`?~~ — nahradené: TEI má explicitnú podporu (štítok `text-embeddings-inference`), takže otázka „ktorý server" je vyriešená.
 - **O2** — Preprocessing lokálne alebo cez Claude Haiku? Pri ~0,001 € za prepis sa lokálny model nemusí oplatiť prevádzkovať. *Rozhodnúť po meraní latencie*
 - **O3** — Zrušiť LLM vetvu klasifikátora úplne? Heuristika beží pod 1 ms zadarmo. *Zmerať prínos na D9*
 - **O4** — Ako verzovať prompty per model, aby sa dali porovnávať na D9? *Návrh: `prompts/{model}/system.md`, verzia v profile*

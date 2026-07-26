@@ -22,7 +22,10 @@ import { classifyQuery }      from "@/lib/queryClassifier"
 import { preprocessQuery }    from "@/lib/queryPreprocessor"
 import { getCollection }      from "@/lib/mongodb"
 import { fulltextSearch, vectorSearch, hybridSearch } from "@/lib/mongoSearch"
+import type { SearchOptions } from "@/lib/mongoSearch"
 import { generateAnswer }     from "@/lib/llmGenerator"
+import { defaultProfile }     from "@/lib/tenantProfile"
+import { assertEmbeddingSpace, EmbeddingSpaceMismatchError } from "@/lib/embeddingGuard"
 
 // ── Typy ────────────────────────────────────────────────────────────────────
 
@@ -51,8 +54,8 @@ export async function POST(req: NextRequest) {
 
   // 2. Autentifikácia – zistenie roly používateľa
   const token     = await getToken({ req, secret: process.env.NEXTAUTH_SECRET })
-  const userRole  = token ? "internal" : "public"
-  const accessLevel = userRole === "internal" ? "internal" : "public"
+  const userRole: "public" | "internal" = token ? "internal" : "public"
+  const accessLevel: SearchOptions["accessLevel"] = userRole
 
   // 3. Klasifikácia dotazu
   const searchMode = await classifyQuery(query, useLLMClassifier)
@@ -67,7 +70,9 @@ export async function POST(req: NextRequest) {
 
   // 5. Vyhľadávanie podľa módu
   const collection = await getCollection("document_chunks")
-  const searchOpts = { query: searchQuery, accessLevel, limit: 20, rerankLimit: 5 }
+  // Anotacia je nutna: bez nej TypeScript rozsiri accessLevel na `string`
+  // (widening literal type v menitelnej vlastnosti objektu) a typ prestane sedet.
+  const searchOpts: SearchOptions = { query: searchQuery, accessLevel, limit: 20, rerankLimit: 5 }
 
   let chunks = await (
     searchMode === "fulltext" ? fulltextSearch(collection, searchOpts) :
@@ -96,6 +101,20 @@ export async function POST(req: NextRequest) {
     chunks = chunks.slice(0, 8)
   }
 
+  // 5c. Strážca vektorového priestoru (ADR-001, sekcia 4).
+  //     Vektory z rôznych modelov sa nedajú miešať — pri nezhode by retrieval
+  //     tíško vracal nezmysly. Radšej tvrdé zlyhanie než zlá odpoveď.
+  //     Profil je zatiaľ predvolený; per-tenant sa načíta až s identitou.
+  const profile = defaultProfile()
+  try {
+    assertEmbeddingSpace(chunks, profile.providers.embedding.model)
+  } catch (err) {
+    if (err instanceof EmbeddingSpaceMismatchError) {
+      return new Response(err.message, { status: 500 })
+    }
+    throw err
+  }
+
   if (chunks.length === 0) {
     // Žiadne výsledky – informujeme používateľa
     const emptyStream = new ReadableStream({
@@ -114,7 +133,7 @@ export async function POST(req: NextRequest) {
   }
 
   // 6. Generovanie odpovede (streaming SSE)
-  const stream = generateAnswer({ query, chunks, userRole })
+  const stream = generateAnswer({ query, chunks, userRole, profile })
 
   return sseResponse(stream, {
     // Debug hlavičky (v produkcii odstrán)

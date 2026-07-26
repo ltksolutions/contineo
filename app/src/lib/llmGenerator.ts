@@ -1,130 +1,58 @@
 /**
  * llmGenerator.ts
  * Generovanie finálnej odpovede z chunkov kontextu.
- * Primárny: Ollama (lokálny). Fallback: Claude API (streaming).
- * Výstup: ReadableStream pre SSE v Next.js Route Handler.
+ *
+ * Voľba modelu je vecou PROFILU TENANTA, nie tohto súboru (ADR-001).
+ * Tu zostáva len to, čo je spoločné pre všetky adaptéry:
+ *   - zostavenie systémového promptu
+ *   - SSE obálka pre Next.js Route Handler
+ *   - buildSources() pre citácie v odpovedi
+ *
+ * Konkrétne volanie modelu rieši GenerationProvider:
+ *   providers/generation/anthropic.ts  → natívne SDK, Citations + cache_control
+ *   providers/generation/openai.ts     → vLLM / SGLang / Ollama
  */
 
 import { ChunkResult } from "./mongoSearch"
+import { getTenantProfile, defaultProfile } from "./tenantProfile"
+import { getProviders } from "./providers/factory"
+import { GeneratedCitation, TenantProfile } from "./providers/types"
 
 export interface GenerateOptions {
   query: string
   chunks: ChunkResult[]
   userRole: "public" | "internal"
+  /** Voliteľné — keď chýba, použije sa predvolený profil. */
+  companyCode?: string
+  /** Voliteľné — keď je odovzdaný, nenačítava sa znova z DB. */
+  profile?: TenantProfile
 }
 
 // ── Zostavenie systémového promptu ──────────────────────────────────────────
 
-function buildSystemPrompt(role: string): string {
+function buildSystemPrompt(role: string, supportsCitations: boolean): string {
   return `Si inteligentný asistent portálu Contineo pre slovenský futbal.
 Odpovedáš VÝLUČNE na základe poskytnutého kontextu.
 Ak odpoveď nie je v kontexte, povedz to úprimne.
 Jazyk: slovenčina. Tón: profesionálny, stručný.
-${role === "internal" ? "Máš prístup aj k interným normám a dokumentom." : ""}`
-}
-
-function buildUserPrompt(query: string, chunks: ChunkResult[]): string {
-  const context = chunks
-    .map((c, i) => {
-      const source = c.document?.title ?? c.documentId
-      const ref = c.articleRef ? ` (${c.articleRef})` : ""
-      return `[${i + 1}] Zdroj: ${source}${ref}\n${c.text}`
-    })
-    .join("\n\n---\n\n")
-
-  return `Kontext:\n${context}\n\nOtázka: ${query}\n\nOdpoveď (uveď čísla zdrojov [1], [2]... pri citáciách):`
-}
-
-// ── Ollama streaming ─────────────────────────────────────────────────────────
-
-async function* streamOllama(
-  system: string,
-  userPrompt: string
-): AsyncGenerator<string> {
-  const response = await fetch(`${process.env.OLLAMA_URL}/api/chat`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      model: process.env.OLLAMA_MODEL ?? "llama3.2",
-      stream: true,
-      messages: [
-        { role: "system", content: system },
-        { role: "user",   content: userPrompt },
-      ],
-      options: { temperature: 0.3 },
-    }),
-  })
-
-  if (!response.ok || !response.body) throw new Error("Ollama nedostupný")
-
-  const reader = response.body.getReader()
-  const decoder = new TextDecoder()
-
-  while (true) {
-    const { done, value } = await reader.read()
-    if (done) break
-    const lines = decoder.decode(value).split("\n").filter(Boolean)
-    for (const line of lines) {
-      try {
-        const json = JSON.parse(line)
-        if (json.message?.content) yield json.message.content
-      } catch { /* nekompletný chunk, pokračuj */ }
-    }
-  }
-}
-
-// ── Claude API streaming ─────────────────────────────────────────────────────
-
-async function* streamClaude(
-  system: string,
-  userPrompt: string
-): AsyncGenerator<string> {
-  const response = await fetch("https://api.anthropic.com/v1/messages", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "x-api-key": process.env.ANTHROPIC_API_KEY!,
-      "anthropic-version": "2023-06-01",
-    },
-    body: JSON.stringify({
-      model: "claude-sonnet-4-6",
-      max_tokens: 1024,
-      stream: true,
-      system,
-      messages: [{ role: "user", content: userPrompt }],
-    }),
-  })
-
-  if (!response.ok || !response.body) throw new Error("Claude API nedostupný")
-
-  const reader = response.body.getReader()
-  const decoder = new TextDecoder()
-
-  while (true) {
-    const { done, value } = await reader.read()
-    if (done) break
-    const lines = decoder.decode(value).split("\n").filter(l => l.startsWith("data:"))
-    for (const line of lines) {
-      try {
-        const json = JSON.parse(line.slice(5))
-        if (json.type === "content_block_delta") {
-          yield json.delta.text ?? ""
-        }
-      } catch { /* skip */ }
-    }
-  }
+${role === "internal" ? "Máš prístup aj k interným normám a dokumentom." : ""}
+${supportsCitations
+  ? "Zdroje sú pripojené ako dokumenty — cituj z nich priamo."
+  : "Pri tvrdeniach uveď čísla zdrojov [1], [2]... podľa poradia v kontexte."}`
 }
 
 // ── Zostavenie citácií ───────────────────────────────────────────────────────
 
 export function buildSources(chunks: ChunkResult[]) {
   return chunks.map((c, i) => ({
-    index:      i + 1,
-    title:      c.document?.title ?? "Neznámy zdroj",
-    slug:       c.document?.slug,
-    url:        c.document?.sourceUrl,
-    articleRef: c.articleRef ?? undefined,
-    heading:    c.heading,
+    index:       i + 1,
+    title:       c.document?.title ?? "Neznámy zdroj",
+    slug:        c.document?.slug,
+    url:         c.document?.sourceUrl,
+    articleRef:  c.articleRef ?? undefined,
+    heading:     c.heading,
+    // Prenesené na klienta, aby sa dal overiť únik interného obsahu (eval D9).
+    accessLevel: c.accessLevel,
   }))
 }
 
@@ -132,42 +60,50 @@ export function buildSources(chunks: ChunkResult[]) {
 
 export function generateAnswer(opts: GenerateOptions): ReadableStream {
   const { query, chunks, userRole } = opts
-  const system     = buildSystemPrompt(userRole)
-  const userPrompt = buildUserPrompt(query, chunks)
 
   return new ReadableStream({
     async start(controller) {
       const encode = (data: object) =>
-        controller.enqueue(
-          new TextEncoder().encode(`data: ${JSON.stringify(data)}\n\n`)
-        )
+        controller.enqueue(new TextEncoder().encode(`data: ${JSON.stringify(data)}\n\n`))
 
       try {
-        // Pokus Ollama (lokálny, preferovaný)
-        let usedOllama = true
-        const gen = (async function* () {
-          try {
-            yield* streamOllama(system, userPrompt)
-          } catch {
-            usedOllama = false
-            yield* streamClaude(system, userPrompt)
-          }
-        })()
+        const profile =
+          opts.profile ??
+          (opts.companyCode
+            ? await getTenantProfile(opts.companyCode)
+            : defaultProfile())
 
-        for await (const token of gen) {
-          encode({ type: "token", token })
+        const { generation } = getProviders(profile)
+        const system = buildSystemPrompt(userRole, generation.supportsCitations)
+
+        // Overiteľné citácie zbierame zvlášť — pri OpenAI adaptéri
+        // zostane pole prázdne a klient sa oprie o `sources`.
+        const citations: GeneratedCitation[] = []
+
+        for await (const ev of generation.stream({
+          system,
+          query,
+          chunks,
+          maxTokens: profile.providers.generation.maxTokens,
+        })) {
+          if (ev.type === "text") {
+            encode({ type: "token", token: ev.text })
+          } else {
+            citations.push(ev.citation)
+            encode({ type: "citation", citation: ev.citation })
+          }
         }
 
-        // Na záver odošleme zdroje
         encode({
           type: "done",
           sources: buildSources(chunks),
-          model: usedOllama
-            ? (process.env.OLLAMA_MODEL ?? "llama3.2")
-            : "claude-sonnet-4-6",
+          citations,
+          model: generation.model,
+          provider: generation.kind,
+          verifiedCitations: generation.supportsCitations,
         })
       } catch (err) {
-        encode({ type: "error", message: String(err) })
+        encode({ type: "error", message: err instanceof Error ? err.message : String(err) })
       } finally {
         controller.close()
       }

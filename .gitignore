@@ -21,3 +21,6 @@ npm-debug.log*
 
 # private (neverejné – nekomituje sa)
 /private/
+
+# TypeScript inkrementalny build cache
+*.tsbuildinfo
