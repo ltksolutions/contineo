@@ -10,6 +10,7 @@
 
 import { getCollection } from "./mongodb"
 import { TenantProfile, ProviderConfigError } from "./providers/types"
+import { skontrolujRezidenciu } from "./residency"
 
 const TTL_MS = 5 * 60 * 1000   // 5 minút
 
@@ -24,7 +25,9 @@ export function defaultProfile(companyCode = "SFZ"): TenantProfile {
   return {
     companyCode,
     tier: "T1",
-    dataResidency: "eu",
+    // Predvolene najvoľnejší režim. Konkrétny tenant si ho sprísni
+    // v tenant_profiles; sprísnenie je vedomé rozhodnutie, nie predvoľba.
+    dataResidency: (process.env.DATA_RESIDENCY as TenantProfile["dataResidency"]) ?? "eu-data",
     providers: {
       embedding: {
         kind: "atlas-auto",
@@ -95,14 +98,14 @@ export function validateProfile(p: TenantProfile): void {
       `(napr. "embedding"), nie na "text"`
     )
   }
-  if (p.dataResidency === "air-gap" && e.kind === "atlas-auto") {
+  // Rezidencia. Nahrádza pôvodné dve podmienky na air-gap — tie pokrývali
+  // len dva prípady z mnohých a mlčky prepúšťali napríklad $rerank, ktorý
+  // počíta v USA. Pravidlá sú v jednej tabuľke, viď ADR-002.
+  const porusenia = skontrolujRezidenciu(p)
+  if (porusenia.length) {
     throw new ProviderConfigError(
-      `${p.companyCode}: air-gap nemôže používať atlas-auto — Automated Embedding volá Voyage API`
-    )
-  }
-  if (p.dataResidency === "air-gap" && g.kind === "anthropic") {
-    throw new ProviderConfigError(
-      `${p.companyCode}: air-gap nemôže používať Claude API`
+      `${p.companyCode}: profil je v rozpore s dátovou rezidenciou.\n` +
+      porusenia.map(v => `  · ${v.sprava}`).join("\n")
     )
   }
 }

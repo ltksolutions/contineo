@@ -16,7 +16,15 @@ import { ChunkResult } from "../mongoSearch"
 // ── Profil tenanta ───────────────────────────────────────────────────────────
 
 export type Tier = "T1" | "T2" | "T3"
-export type DataResidency = "eu" | "on-prem" | "air-gap"
+/**
+ * Úroveň ochrany tenanta. Určuje, ktoré kombinácie adaptérov sú prípustné —
+ * viď `src/lib/residency.ts` a `docs/ADR-002-datova-rezidencia.md`.
+ *
+ * Pôvodná hodnota "eu" bola nejednoznačná: nerozlišovala medzi „dáta ležia
+ * v EÚ" a „nič neopustí EÚ". Práve ten rozdiel rozhoduje o tom, či sa smie
+ * použiť $rerank a Automated Embedding.
+ */
+export type DataResidency = "global" | "eu-data" | "eu-full" | "on-prem" | "air-gap"
 
 export interface EmbeddingConfig {
   /** atlas-auto = embedding je súčasť $vectorSearch, aplikácia ho nerieši */
