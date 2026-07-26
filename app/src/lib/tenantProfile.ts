@@ -36,7 +36,7 @@ export function defaultProfile(companyCode = "SFZ"): TenantProfile {
       },
       rerank: {
         kind: (process.env.RERANK_KIND as "atlas-stage" | "none") ?? "atlas-stage",
-        model: process.env.RERANK_MODEL ?? "voyage-rerank-2.5",
+        model: process.env.RERANK_MODEL ?? "rerank-2",
         index: process.env.RERANK_INDEX ?? "rag_rerank_index",
         topK: Number(process.env.RERANK_TOPK ?? 8),
       },

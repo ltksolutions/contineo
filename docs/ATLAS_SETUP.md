@@ -116,15 +116,63 @@ Typ **Search** (nie Vector Search):
 
 ---
 
-## 4. Rerank index — `rag_rerank_index` (voliteľné)
+## 4. Rerank — `$rerank` (overené proti serveru 2026-07-26)
 
-`$rerank` vyžaduje **MongoDB 8.3+** a nie je dostupný v Community edícii. Ak ho cluster nepodporuje, nastav v profile tenanta:
+`$rerank` vyžaduje **MongoDB 8.3+** a nie je dostupný v Community edícii.
+
+### Zapnúť projektové nastavenie
+
+**Samotná verzia clustera nestačí.** Stage treba povoliť pre projekt:
+
+**Project Settings → zapnúť `$rerank`**
+
+Bez toho vráti server 403 s hláškou:
+
+```
+$rerank is not enabled for <projekt>. Enable the $rerank Project Setting to run this pipeline.
+```
+
+### Samostatný rerank index netreba
+
+Napriek pôvodnému predpokladu **`rag_rerank_index` sa nezakladá** — `index` je v spec-e nepovinné pole.
+
+### Tvar spec-u
+
+Dokumentácia k tomuto stage je neúplná, takže tvar je **overený empiricky** skriptom `app/scripts/rerank_probe.mjs`, ktorý dopĺňa polia podľa toho, čo server pýta:
 
 ```js
-rerank: { kind: "none" }
+{
+  $rerank: {
+    query: { text: "..." },   // objekt, NIE holý reťazec
+    path: "text",
+    model: "rerank-2",        // povinné
+    numDocsToRerank: 20,      // povinné
+  }
+}
+```
+
+Názvy modelov nájdeš v **AI Model APIs → Rate Limits**. Dostupné sú `rerank-2`, `rerank-2.5`, `rerank-2-lite`, `rerank-2.5-lite` — **nie** `voyage-rerank-*`.
+
+### Ak rerank nechceš
+
+```bash
+RERANK_KIND="none"
 ```
 
 Aplikácia potom použije poradie z `$rankFusion` bez rerankingu. Funguje to, len o niečo horšie.
+
+### Metadáta so skóre
+
+Súvisiaca pasca: názov metadáta so skóre sa líši podľa toho, čo pipeline vyprodukovalo.
+
+| Posledný stage | `$meta` |
+|---|---|
+| `$search` | `searchScore` |
+| `$vectorSearch` | `vectorSearchScore` |
+| `$rankFusion` | `score` |
+| `$rerank` | `score` |
+
+Zlý názov nevráti nulu — **server odmietne celú agregáciu**. Preto je v `mongoSearch.ts` `lookupDocument()` funkcia s parametrom, nie konštanta.
 
 ---
 
@@ -142,8 +190,8 @@ ANTHROPIC_API_KEY="sk-ant-..."
 EMBEDDING_MODEL="voyage-4"
 EMBEDDING_DIM="1024"
 VECTOR_INDEX="rag_vector_index"
-RERANK_KIND="atlas-stage"     # alebo "none", ak cluster nemá 8.3+
-RERANK_INDEX="rag_rerank_index"
+RERANK_KIND="atlas-stage"     # alebo "none", ak $rerank nie je povolený
+RERANK_MODEL="rerank-2"       # viď AI Model APIs -> Rate Limits
 GENERATION_MODEL="claude-sonnet-5"
 ```
 

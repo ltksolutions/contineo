@@ -117,6 +117,7 @@ try {
     const opts = {
       query: dotaz, accessLevel: rola, limit: 20, rerankLimit: 5,
       useStageRerank: providers.rerank.isPipelineStage,
+      rerankModel: profile.providers.rerank.model,
       vectorPath: profile.providers.embedding.vectorPath,
     }
 
@@ -128,7 +129,8 @@ try {
              :                      await lib.hybridSearch(col, opts)
     } catch (e) {
       zlyhalo++
-      console.log(`  ${CHYBA} vyhľadávanie zlyhalo (${mod}): ${e.message.slice(0, 200)}`)
+      console.log(`  ${CHYBA} vyhľadávanie zlyhalo (${mod}):`)
+      console.log(`     ${e.message.replace(/\s+/g, " ")}`)
       if (/rerank/i.test(e.message)) {
         console.log(`     → skús RERANK_KIND="none" v .env.local`)
       }

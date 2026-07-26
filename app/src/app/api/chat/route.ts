@@ -83,6 +83,7 @@ export async function POST(req: NextRequest) {
   const searchOpts: SearchOptions = {
     query: searchQuery, accessLevel, limit: 20, rerankLimit: 5,
     useStageRerank: providers.rerank.isPipelineStage,
+  rerankModel: profile.providers.rerank.model,
     vectorPath: profile.providers.embedding.vectorPath,
   }
 

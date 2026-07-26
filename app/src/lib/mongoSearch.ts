@@ -25,6 +25,11 @@ export interface SearchOptions {
    * Predvolene true — zachováva doterajšie správanie.
    */
   useStageRerank?: boolean
+  /**
+   * Model pre $rerank. Stage ho vyžaduje ako povinné pole — bez neho
+   * server odmietne spec. Berie sa z profilu tenanta.
+   */
+  rerankModel?: string
   accessLevel: "public" | "internal" | "all"
   limit?: number
   rerankLimit?: number
@@ -72,7 +77,20 @@ export interface ChunkResult {
 
 // ── Shared $lookup + $project appended to every pipeline ─────────────────────
 
-const LOOKUP_DOCUMENT: Document[] = [
+/**
+ * Názov metadáta so skóre sa líši podľa toho, čo pipeline vyprodukovalo:
+ *
+ *   $search        → "searchScore"
+ *   $vectorSearch  → "vectorSearchScore"
+ *   $rankFusion    → "score"
+ *   $rerank        → "score"   (prebije predchádzajúce)
+ *
+ * Zlý názov nevráti nulu — server agregáciu odmietne. Preto to nie je
+ * konštanta, ale parameter.
+ */
+type SkoreMeta = "searchScore" | "vectorSearchScore" | "score"
+
+function lookupDocument(skoreMeta: SkoreMeta): Document[] { return [
   {
     $lookup: {
       from: "documents",
@@ -84,7 +102,9 @@ const LOOKUP_DOCUMENT: Document[] = [
       ]
     }
   },
-  { $unwind: { path: "$document", preserveNullAndEmpty: true } },
+  // Pozor na názov: `preserveNullAndEmptyArrays`, nie `...AndEmpty`.
+  // Server neznámu voľbu neignoruje — celú agregáciu odmietne.
+  { $unwind: { path: "$document", preserveNullAndEmptyArrays: true } },
   {
     $project: {
       text: 1, documentId: 1, versionId: 1,
@@ -92,10 +112,10 @@ const LOOKUP_DOCUMENT: Document[] = [
       articleRef: 1, heading: 1, chunkIndex: 1, tags: 1,
       embeddingModel: 1, isActive: 1, effectiveFrom: 1, effectiveTo: 1,
       document: 1,
-      score: { $meta: "searchScore" }
+      score: { $meta: skoreMeta }
     }
   }
-]
+] }
 
 // ── Filters ──────────────────────────────────────────────────────────────────
 
@@ -148,10 +168,42 @@ export async function fulltextSearch(
       }
     },
     { $limit: limit },
-    ...LOOKUP_DOCUMENT,
+    // fulltext nemá rerank stage — skóre pochádza priamo z $search
+    ...lookupDocument("searchScore"),
   ]
 
   return collection.aggregate<ChunkResult>(pipeline).toArray()
+}
+
+
+/**
+ * Zostaví $rerank stage (Atlas 8.3+), alebo prázdne pole pri on-prem režime.
+ *
+ * Tvar spec-u je overený proti serveru (`app/scripts/rerank_probe.mjs`),
+ * nie prevzatý z dokumentácie — tá je pre tento stage neúplná. Konkrétne:
+ *
+ *   query              MUSÍ byť { text: "..." }, nie holý reťazec
+ *   model              povinné
+ *   path               povinné
+ *   numDocsToRerank    povinné — koľko kandidátov sa prehodnotí
+ *   index              NEPOVINNÉ — samostatný rerank index netreba zakladať
+ *
+ * Orezanie na finálny počet robí až samostatný $limit. Stage síce možno
+ * pozná vlastný `limit`, ale spoliehať sa naň netreba — $limit je istota.
+ */
+function rerankStages(opts: SearchOptions, kandidatov: number, vysledkov: number): Document[] {
+  if (opts.useStageRerank === false) return []
+  return [
+    {
+      $rerank: {
+        query: { text: opts.query },
+        path: "text",
+        model: opts.rerankModel ?? "rerank-2",
+        numDocsToRerank: kandidatov,
+      }
+    },
+    { $limit: vysledkov },
+  ]
 }
 
 // ── 2. Vector search ($vectorSearch) ─────────────────────────────────────────
@@ -174,19 +226,10 @@ export async function vectorSearch(
         ...(Object.keys(filter).length > 0 && { filter }),
       }
     },
-    // Voyage reranker for better relevance.
-    // Pri on-prem režime stage vynechávame; rerank rieši aplikačná vrstva.
-    ...(opts.useStageRerank !== false
-      ? [{
-          $rerank: {
-            index: "rag_rerank_index",
-            query,
-            path: "text",
-            limit: rerankLimit,
-          }
-        }]
-      : []),
-    ...LOOKUP_DOCUMENT,
+    // Voyage reranker. Pri on-prem režime stage vynechávame — rerank
+    // rieši aplikačná vrstva cez adaptér (ADR-001).
+    ...rerankStages(opts, limit, rerankLimit),
+    ...lookupDocument(opts.useStageRerank !== false ? "score" : "vectorSearchScore"),
   ]
 
   return collection.aggregate<ChunkResult>(pipeline).toArray()
@@ -249,19 +292,10 @@ export async function hybridSearch(
         }
       }
     },
-    // Voyage reranker — reorders the fused results.
-    // Pri on-prem režime stage vynechávame; rerank rieši aplikačná vrstva.
-    ...(opts.useStageRerank !== false
-      ? [{
-          $rerank: {
-            index: "rag_rerank_index",
-            query,
-            path: "text",
-            limit: rerankLimit,
-          }
-        }]
-      : []),
-    ...LOOKUP_DOCUMENT,
+    // Voyage reranker. Pri on-prem režime stage vynechávame — rerank
+    // rieši aplikačná vrstva cez adaptér (ADR-001).
+    ...rerankStages(opts, limit, rerankLimit),
+    ...lookupDocument("score"),
   ]
 
   return collection.aggregate<ChunkResult>(pipeline).toArray()

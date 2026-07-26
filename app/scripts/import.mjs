@@ -66,7 +66,22 @@ function pripravDokument(subor) {
   if (!chunky.length) throw new Error(`${subor}: nevznikol ani jeden chunk`)
 
   const documentId = idDokumentu(meta)
-  const versionId = hash(text)   // obsahový hash — rovnaký obsah = rovnaká verzia
+  /**
+   * Verzia sa počíta z VÝSLEDNÝCH CHUNKOV, nie zo zdrojového textu.
+   *
+   * Pôvodne to bol hash zdroja — a to bola chyba: keď sme opravili chunker
+   * tak, aby rozpoznal dvojriadkový nadpis článku, obsah súborov sa nezmenil,
+   * takže import všetko preskočil a v databáze ostalo staré zlé členenie.
+   * Zmena chunkovacieho algoritmu je pritom rovnako podstatná zmena ako
+   * zmena textu normy.
+   *
+   * Do hashu ide text, articleRef aj heading — teda všetko, čo sa dostane
+   * do vektora alebo do citácie.
+   */
+  const otlacok = chunky
+    .map(ch => `${ch.chunkIndex}\u0000${ch.articleRef ?? ""}\u0000${ch.heading ?? ""}\u0000${ch.text}`)
+    .join("\u0001")
+  const versionId = hash(otlacok)
 
   return { subor, meta, tags, chunky, statistiky, documentId, versionId }
 }

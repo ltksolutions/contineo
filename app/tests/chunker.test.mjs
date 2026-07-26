@@ -141,6 +141,63 @@ t("prázdny vstup nespadne", chunkuj("", {}).chunky.length === 0)
 t("text bez štruktúry dá aspoň jeden chunk",
   chunkuj("Len obyčajný text bez článkov.", { nazovDokumentu: "X" }).chunky.length === 1)
 
+// ── dvojriadkový nadpis článku ────────────────────────────────────────────
+// Osem z deviatich noriem SFZ píše "Článok N" a názov až na ďalšom riadku.
+// Kým to chunker nevedel, celý dokument spadol do "Úvodné ustanovenia".
+const dvoj = chunkuj([
+  "Disciplinárny poriadok SFZ",
+  "Úvodné ustanovenia (Článok 1 - 5)",
+  "",
+  "Článok 1",
+  "Základné ustanovenia",
+  "",
+  "(1) Slovenský futbalový zväz je národný športový zväz.",
+  "(2) Druhý odsek prvého článku.",
+  "",
+  "Článok 2",
+  "Pôsobnosť poriadku",
+  "",
+  "(1) Tento poriadok sa vzťahuje na členov SFZ.",
+].join("\n"), { nazovDokumentu: "Disciplinárny poriadok SFZ" })
+
+t("dvojriadkový: rozpozná 2 články",
+  dvoj.chunky.filter(c => /^čl\. \d/.test(c.articleRef ?? "")).length >= 2,
+  JSON.stringify(dvoj.chunky.map(c => c.articleRef)))
+t("dvojriadkový: názov z ďalšieho riadku sa použije ako nadpis",
+  dvoj.chunky.some(c => c.heading === "Základné ustanovenia"),
+  JSON.stringify(dvoj.chunky.map(c => c.heading)))
+t("dvojriadkový: druhý článok má svoj názov",
+  dvoj.chunky.some(c => c.heading === "Pôsobnosť poriadku"))
+t("dvojriadkový: názov sa NEZOPAKUJE v tele chunku ako odsek",
+  !dvoj.chunky.some(c => /^\(?\d*\)?\s*Základné ustanovenia\s*$/m.test(c.text.split("\n").slice(-1)[0] ?? "")))
+t("dvojriadkový: nič neostalo v preambule okrem úvodu",
+  dvoj.chunky.filter(c => c.heading === "Úvodné ustanovenia").length <= 1,
+  JSON.stringify(dvoj.chunky.map(c => c.heading)))
+
+// Text, ktorý VYZERÁ ako názov, ale je to veta -> nadpisom sa nestane
+const veta = chunkuj([
+  "Predpis",
+  "Článok 3",
+  "(1) Odsek začína hneď, žiadny názov tu nie je.",
+].join("\n"), { nazovDokumentu: "Predpis" })
+t("dvojriadkový: odsek sa nezneužije ako názov článku",
+  veta.chunky.some(c => c.heading === "Článok 3"),
+  JSON.stringify(veta.chunky.map(c => c.heading)))
+
+// Oba tvary v jednom dokumente
+const mix = chunkuj([
+  "Predpis",
+  "Článok 1 - S pomlčkou",
+  "(1) Text prvého.",
+  "Článok 2",
+  "Bez pomlčky",
+  "(1) Text druhého.",
+].join("\n"), { nazovDokumentu: "Predpis" })
+t("dvojriadkový: oba tvary naraz fungujú",
+  mix.chunky.some(c => c.heading === "S pomlčkou") &&
+  mix.chunky.some(c => c.heading === "Bez pomlčky"),
+  JSON.stringify(mix.chunky.map(c => c.heading)))
+
 const zle = R.filter(([ok]) => !ok)
 console.log("\n" + "=".repeat(60))
 console.log(zle.length ? `ZLYHALO ${zle.length}/${R.length}` : `${R.length}/${R.length} testov prešlo`)

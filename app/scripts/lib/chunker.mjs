@@ -21,6 +21,16 @@
 const CAST = /^(PRVÁ|DRUHÁ|TRETIA|ŠTVRTÁ|PIATA|ŠIESTA|SIEDMA|ÔSMA|DEVIATA|DESIATA|JEDENÁSTA|DVANÁSTA)\s+ČASŤ\s*[-–—]?\s*(.*)$/
 // Pozor na pomlčky: dokumenty miešajú "-" (U+002D) a "–" (U+2013).
 const CLANOK = /^Článok\s+(\d+[a-z]?)\s*[-–—]\s*(.+)$/
+// Druhý zápis, ktorý sa v normách SFZ vyskytuje častejšie: číslo článku
+// stojí samo na riadku a názov je až na nasledujúcom.
+//
+//     Článok 1
+//     Základné ustanovenia
+//
+// Bez tohto vzoru sa celý dokument zlial do jedného bloku „Úvodné
+// ustanovenia“ a vyhľadávanie nemalo čoho chytiť. Osem z deviatich
+// vzorových dokumentov používa práve tento tvar.
+const CLANOK_SAM = /^Článok\s+(\d+[a-z]?)\s*$/
 // Prílohy stoja MIMO číslovania článkov — vzory zmlúv, tabuľky poplatkov.
 // Bez tohto vzoru by spadli pod posledný článok a citácia by klamala.
 const PRILOHA = /^PR[ÍI]LOHA\s+č\.\s*(\d+[a-z]?)\s*[-–—]?\s*(.*)$/i
@@ -87,7 +97,7 @@ export function ocisti(text, { nazovDokumentu } = {}) {
     // na ďalšom riadku. Vypadnú, kým nenarazíme na štruktúrny prvok.
     if (POZNAMKA.test(r)) { vPoznamke = true; odstranene.poznamka++; continue }
     if (vPoznamke) {
-      if (CLANOK.test(r) || CAST.test(r) || ODSEK.test(r)) {
+      if (CLANOK.test(r) || CLANOK_SAM.test(r) || CAST.test(r) || ODSEK.test(r)) {
         vPoznamke = false
       } else {
         odstranene.poznamka++
@@ -130,12 +140,38 @@ export function parsujStrukturu(riadky) {
     }
   }
 
-  for (const r of riadky) {
+  /**
+   * Nájde názov, ktorý stojí na samostatnom riadku pod nadpisom.
+   * Vráti { nadpis, dalsiIndex } alebo null, ak tam žiadny názov nie je.
+   *
+   * Prísne podmienky sú zámerné — radšej žiadny názov než nesprávny:
+   * riadok nesmie byť iný štruktúrny prvok, nesmie byť dlhý ako veta
+   * a nesmie končiť bodkou (to už je text, nie nadpis).
+   */
+  const nazovPodNadpisom = (i) => {
+    for (let j = i + 1; j < riadky.length && j <= i + 2; j++) {
+      const d = riadky[j]
+      if (!d) continue
+      if (CLANOK.test(d) || CLANOK_SAM.test(d) || CAST.test(d) ||
+          PRILOHA.test(d) || ODSEK.test(d) || TABULKA_START.test(d)) return null
+      if (d.length > 120 || /[.:;]$/.test(d)) return null
+      return { nadpis: d.trim(), dalsiIndex: j }
+    }
+    return null
+  }
+
+  for (let i = 0; i < riadky.length; i++) {
+    const r = riadky[i]
     const mPriloha = PRILOHA.exec(r)
     if (mPriloha) {
       vTabulke = false
       vPrilohach = true
-      zacniClanok(mPriloha[1], (mPriloha[2] || "Príloha").trim(), "priloha")
+      let nazovP = (mPriloha[2] || "").trim()
+      if (!nazovP) {
+        const n = nazovPodNadpisom(i)
+        if (n) { nazovP = n.nadpis; i = n.dalsiIndex }
+      }
+      zacniClanok(mPriloha[1], nazovP || "Príloha", "priloha")
       continue
     }
 
@@ -144,6 +180,16 @@ export function parsujStrukturu(riadky) {
 
     const mClanok = CLANOK.exec(r)
     if (mClanok && !vPrilohach) { vTabulke = false; zacniClanok(mClanok[1], mClanok[2].trim()); continue }
+
+    // „Článok N“ samostatne — názov hľadáme na nasledujúcom riadku.
+    const mClanokSam = CLANOK_SAM.exec(r)
+    if (mClanokSam && !vPrilohach) {
+      vTabulke = false
+      const n = nazovPodNadpisom(i)
+      zacniClanok(mClanokSam[1], n ? n.nadpis : `Článok ${mClanokSam[1]}`)
+      if (n) i = n.dalsiIndex
+      continue
+    }
 
     const mOdsek = ODSEK.exec(r)
     if (mOdsek) {
