@@ -12,6 +12,8 @@ export const dictionaries = {
       audience: "Pre koho",
       roadmap: "Pripravujeme",
       modes: "Nasadenie",
+      overview: "Prehľad",
+      versions: "Verzie",
       runtime: "Prevádzka",
       identity: "Identita",
       security: "Bezpečnosť",
@@ -310,11 +312,62 @@ export const dictionaries = {
     },
     audience: {
       eyebrow: "Pre koho",
-      title: "Pre organizácie s množstvom obsahu",
+      title: "Nie je to nástroj len pre veľké organizácie",
+      subtitle:
+        "Rozhoduje množstvo predpisov, nie počet zamestnancov. Desaťčlenná firma so stavebnou legislatívou má rovnaký problém ako ministerstvo — len menší rozpočet a nikoho, kto by to sledoval na plný úväzok.",
       items: [
-        { title: "Firmy a inštitúcie", text: "Weby, projekty, smernice a predpisy roztrúsené po systémoch — zjednotené do jedného vyhľadávania." },
-        { title: "Tímy a zamestnanci", text: "Rýchle odpovede na bežné otázky bez hľadania v zložkách a bez čakania na kolegu." },
-        { title: "Podpora a IT", text: "Návody a FAQ k aplikáciám — menej opakovaných ticketov, viac vyriešeného samoobslužne." },
+        { title: "Malé a stredné firmy", text: "Interné smernice, návody k produktom a legislatíva, ktorú musíte dodržiavať. Bez vlastného právnika a bez človeka, ktorý by sledoval každú novelu." },
+        { title: "Školy a inštitúcie", text: "Školský zákon, vyhlášky, vnútorné poriadky a smernice zriaďovateľa. Nový učiteľ alebo administratívny pracovník sa zorientuje za hodinu, nie za mesiace." },
+        { title: "Zväzy a komory", text: "Vlastné predpisy nadväzujúce na zákon, ktorý sa mení. Členovia sa pýtajú stále to isté — a odpoveď musí sedieť s platným znením." },
+        { title: "Verejná správa", text: "Zákony, vykonávacie predpisy a interné akty riadenia. On-prem alebo v uzavretej sieti, ak to vyžadujú pravidlá." },
+        { title: "Podpora a helpdesk", text: "Návody a FAQ k aplikáciám — menej opakovaných ticketov, viac vyriešeného samoobslužne." },
+        { title: "Noví aj skúsení zamestnanci", text: "Odpoveď s odkazom na konkrétny článok. Nový sa zaučí rýchlejšie, skúsený nemusí odpovedať na to isté po piaty raz." },
+      ],
+    },
+    versions: {
+      eyebrow: "Verzie a platné znenie",
+      title: "Problém nie je nájsť predpis. Problém je vedieť, ktorý platí.",
+      subtitle:
+        "Zákon sa novelizuje, vyhláška sa mení, interná smernica zaostane o dva roky. V zložke leží päť súborov s podobným názvom a nikto si netrúfa povedať, ktorý je ten správny.",
+
+      exampleTitle: "Konkrétne:",
+      exampleText:
+        "zákon o športe je účinný od roku 2016 a odvtedy prešiel desiatkami zmien. Kto sa v športovej organizácii pýta „ako je to dnes“, dostane odpoveď podľa toho, koho sa spýtal a ktorú verziu si stiahol. To isté platí pre stavebný zákon, školský zákon aj zákonník práce.",
+
+      problems: [
+        {
+          icon: "layers",
+          title: "Päť verzií, jedna platná",
+          text: "Novely, úplné znenia, pracovné verzie a prílohy sa hromadia. Bez evidencie verzií je hľadanie lotéria — a odpoveď z neplatného znenia vyzerá rovnako dôveryhodne ako správna.",
+        },
+        {
+          icon: "scale",
+          title: "Interné normy zaostávajú za zákonom",
+          text: "Smernica sa píše raz a potom sa na ňu zabudne. Zákon sa medzitým zmení a v organizácii platia dva rozporné texty — jeden zo zákona, druhý z vlastného predpisu.",
+        },
+        {
+          icon: "help",
+          title: "Nový človek nemá šancu",
+          text: "Zorientovať sa v desiatkach predpisov trvá mesiace. Otázky preto smerujú na jedného-dvoch skúsených kolegov, ktorí odpovedajú stále to isté — a keď odídu, vedomosť odíde s nimi.",
+        },
+      ],
+
+      nowTitle: "Čo Contineo rieši dnes",
+      nowIntro: "Funguje a je nasadené.",
+      now: [
+        "Každý dokument má verzie. Staršie sa archivujú, ale nezmažú — vyhľadávanie ich predvolene preskočí.",
+        "Odpoveď vždy vychádza z platného znenia a uvádza konkrétny predpis aj článok, z ktorého čerpá.",
+        "Pravidlá prednosti: vyššia norma pred nižšou, osobitná pred všeobecnou, novšia pred staršou.",
+        "Historické znenie sa dá vyžiadať zvlášť — na otázku „ako to bolo v roku 2019“.",
+      ],
+
+      nextTitle: "Na čom pracujeme",
+      nextTag: "Pripravujeme",
+      nextIntro: "Zatiaľ nie je súčasťou nasadenia.",
+      next: [
+        "Automatické sledovanie externých zdrojov — zbierka zákonov a vestníky sa aktualizujú samy.",
+        "Upozornenie na rozpor: interná smernica hovorí niečo iné než platný zákon alebo vykonávací predpis.",
+        "Prehľad, ktoré vlastné predpisy sa novelou dotkli a treba ich prejsť.",
       ],
     },
     roadmap: {
@@ -533,7 +586,7 @@ export const dictionaries = {
     },
     footer: {
       tagline: "Opýtajte sa svojho obsahu.",
-      product: "Produkt",
+      overview: "Prehľad",
       company: "Spoločnosť",
       links: {
         features: "Funkcie",
@@ -557,6 +610,8 @@ export const dictionaries = {
       audience: "Who it's for",
       roadmap: "What's next",
       modes: "Deployment",
+      overview: "Overview",
+      versions: "Versions",
       runtime: "Runtime",
       identity: "Identity",
       security: "Security",
@@ -855,11 +910,62 @@ export const dictionaries = {
     },
     audience: {
       eyebrow: "Who it's for",
-      title: "For organisations with lots of content",
+      title: "Not a tool only for large organisations",
+      subtitle:
+        "What matters is the volume of regulation, not the headcount. A ten-person firm under construction law has the same problem as a ministry — with a smaller budget and nobody tracking it full time.",
       items: [
-        { title: "Companies & institutions", text: "Websites, projects, policies and rules scattered across systems — unified into one search." },
-        { title: "Teams & employees", text: "Fast answers to common questions without digging through folders or waiting for a colleague." },
-        { title: "Support & IT", text: "Guides and FAQs for apps — fewer repeated tickets, more solved self-service." },
+        { title: "Small and mid-sized firms", text: "Internal directives, product documentation and the legislation you have to comply with. Without in-house counsel and without anyone watching every amendment." },
+        { title: "Schools and institutions", text: "Education law, decrees, internal rules and the founder's directives. A new teacher or administrator gets oriented in an hour, not in months." },
+        { title: "Associations and chambers", text: "Your own rules built on top of a statute that keeps changing. Members keep asking the same questions — and the answer has to match the text in force." },
+        { title: "Public administration", text: "Acts, implementing decrees and internal management acts. On-premise or in a closed network where the rules require it." },
+        { title: "Support and helpdesk", text: "Guides and FAQs for your applications — fewer repeat tickets, more resolved self-service." },
+        { title: "New and experienced staff alike", text: "An answer with a link to the specific article. Newcomers ramp up faster; veterans stop answering the same thing for the fifth time." },
+      ],
+    },
+    versions: {
+      eyebrow: "Versions and what is in force",
+      title: "The problem is not finding the regulation. It is knowing which one applies.",
+      subtitle:
+        "Acts get amended, decrees change, an internal directive falls two years behind. Five files with near-identical names sit in a folder and nobody dares say which one is right.",
+
+      exampleTitle: "Concretely:",
+      exampleText:
+        "Slovakia's Sports Act has been in force since 2016 and has gone through dozens of amendments since. Ask “how does it work today” inside a sports organisation and the answer depends on who you asked and which copy they downloaded. The same holds for construction law, education law and the labour code.",
+
+      problems: [
+        {
+          icon: "layers",
+          title: "Five versions, one in force",
+          text: "Amendments, consolidated texts, drafts and annexes pile up. Without version tracking, searching is a lottery — and an answer from a repealed text looks just as trustworthy as the correct one.",
+        },
+        {
+          icon: "scale",
+          title: "Internal rules fall behind the law",
+          text: "A directive gets written once and then forgotten. The statute changes in the meantime and the organisation ends up with two contradictory texts — one in law, one in its own rulebook.",
+        },
+        {
+          icon: "help",
+          title: "A newcomer has no chance",
+          text: "Getting on top of dozens of regulations takes months. So questions go to the one or two experienced colleagues who keep answering the same things — and when they leave, the knowledge leaves with them.",
+        },
+      ],
+
+      nowTitle: "What Contineo solves today",
+      nowIntro: "Working and deployed.",
+      now: [
+        "Every document is versioned. Older versions are archived, not deleted — and search skips them by default.",
+        "Answers always come from the text in force and name the exact regulation and article behind them.",
+        "Precedence rules: higher law over lower, specific over general, newer over older.",
+        "Historical wording can be requested explicitly — for “how did this work back in 2019”.",
+      ],
+
+      nextTitle: "What we are working on",
+      nextTag: "In progress",
+      nextIntro: "Not part of the deployment yet.",
+      next: [
+        "Automatic tracking of external sources — the statute book and official bulletins update themselves.",
+        "Conflict alerts: an internal directive says something different from the law or implementing decree in force.",
+        "An overview of which of your own rules an amendment touched and need reviewing.",
       ],
     },
     roadmap: {
@@ -1078,7 +1184,7 @@ export const dictionaries = {
     },
     footer: {
       tagline: "Ask your content.",
-      product: "Product",
+      overview: "Overview",
       company: "Company",
       links: {
         features: "Features",

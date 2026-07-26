@@ -3,6 +3,7 @@ import { locales, getDictionary, sampleKB } from "@/lib/dictionaries";
 import Nav from "@/components/Nav";
 import Modes from "@/components/Modes";
 import Runtime from "@/components/Runtime";
+import Roadmap from "@/components/Roadmap";
 import CTA from "@/components/CTA";
 import Footer from "@/components/Footer";
 
@@ -29,6 +30,7 @@ export default function PrevadzkaPage({ params }) {
       <main>
         <Runtime dict={dict} />
         <Modes dict={dict} kb={sampleKB[lang]} />
+        <Roadmap dict={dict} />
         <CTA dict={dict} />
       </main>
       <Footer dict={dict} lang={lang} />

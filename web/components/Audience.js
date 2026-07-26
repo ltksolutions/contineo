@@ -6,9 +6,10 @@ export default function Audience({ dict }) {
         <div className="center maxw-720 mx-auto" style={{ marginBottom: 50 }}>
           <span className="eyebrow">{a.eyebrow}</span>
           <h2>{a.title}</h2>
+          {a.subtitle && <p className="lead" style={{ marginTop: 16 }}>{a.subtitle}</p>}
         </div>
 
-        <div className="grid grid--3">
+        <div className="grid grid--3" style={{ rowGap: 34 }}>
           {a.items.map((it, i) => (
             <div
               key={i}

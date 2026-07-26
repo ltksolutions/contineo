@@ -13,16 +13,19 @@ export default function Nav({ dict, lang }) {
   const otherHref = pathname.replace(new RegExp(`^/${lang}(?=/|$)`), `/${other}`);
   const [open, setOpen] = useState(false);
 
-  // Kotvy na domovskej stranke.
-  const links = [
-    { href: `/${lang}#demo`, label: dict.nav.demo },
-    { href: `/${lang}#modes`, label: dict.nav.modes },
-    { href: `/${lang}#features`, label: dict.nav.features },
-  ];
+  /**
+   * V hornej liste su LEN samostatne stranky.
+   *
+   * Kotvy na domovskej stranke tam boli aj s rozbalovacou polozkou
+   * „Produkt", ale to bol klamlivy medzikrok: rozbalovacie menu naznacuje
+   * presun inam, pritom len posunie o kus nizsie. Kto je na domovskej,
+   * scrolluje; kto je inde, klikne na „Prehlad" alebo na logo.
+   */
 
   // Samostatne stranky. Bezpecnost a prevadzka sa oddelili od domovskej,
   // lebo sa na ne odkazuje v ponukach a maju vlastnu hlbku (ADR-002).
   const strany = [
+    { href: `/${lang}`, label: dict.nav.overview },
     { href: `/${lang}/bezpecnost`, label: dict.residency.navLabel },
     { href: `/${lang}/prevadzka`, label: dict.nav.runtime },
     { href: `/${lang}/technologia`, label: dict.tech.navLabel },
@@ -32,7 +35,9 @@ export default function Nav({ dict, lang }) {
   const mobileLinks = [
     { href: `/${lang}#demo`, label: dict.nav.demo },
     { href: `/${lang}#modes`, label: dict.nav.modes },
+    { href: `/${lang}#verzie`, label: dict.nav.versions },
     { href: `/${lang}#features`, label: dict.nav.features },
+    { href: `/${lang}#audience`, label: dict.nav.audience },
     { href: `/${lang}#how`, label: dict.nav.how },
     { href: `/${lang}#roadmap`, label: dict.nav.roadmap },
   ];
@@ -58,9 +63,6 @@ export default function Nav({ dict, lang }) {
         </Link>
 
         <nav className="nav-links" style={{ display: "flex", alignItems: "center", gap: 2, flexShrink: 0 }}>
-          {links.map((l) => (
-            <a key={l.href} href={l.href} className="muted nav-link">{l.label}</a>
-          ))}
           {strany.map((l) => (
             <Link key={l.href} href={l.href} className="muted nav-link">{l.label}</Link>
           ))}

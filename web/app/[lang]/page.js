@@ -7,6 +7,7 @@ import HowItWorks from "@/components/HowItWorks";
 import Manifesto from "@/components/Manifesto";
 import BotDemo from "@/components/BotDemo";
 import Modes from "@/components/Modes";
+import Versions from "@/components/Versions";
 import Audience from "@/components/Audience";
 import Roadmap from "@/components/Roadmap";
 import CTA from "@/components/CTA";
@@ -24,11 +25,12 @@ export default function Home({ params }) {
       <Nav dict={dict} lang={lang} />
       <main id="main">
         <Hero dict={dict} />
+        <Manifesto dict={dict} />
         <BotDemo dict={dict} kb={sampleKB[lang]} />
         <Modes dict={dict} kb={sampleKB[lang]} />
+        <Versions dict={dict} />
         <Features dict={dict} />
         <HowItWorks dict={dict} />
-        <Manifesto dict={dict} />
         <Audience dict={dict} />
         <Roadmap dict={dict} />
         <CTA dict={dict} />
