@@ -64,7 +64,11 @@ export class AnthropicGenerationProvider implements GenerationProvider {
     const body = {
       model: this.model,
       max_tokens: req.maxTokens ?? this.cfg.maxTokens ?? 1024,
-      temperature: this.cfg.temperature ?? 0.3,
+      // `temperature` posielame LEN ak ju profil výslovne nastaví.
+      // Novšie modely (claude-sonnet-5 a ďalšie) ju odmietajú s chybou
+      // 400 „temperature is deprecated for this model" — a keďže sme ju
+      // predtým dopĺňali predvolenou hodnotou, padalo každé volanie.
+      ...(this.cfg.temperature !== undefined && { temperature: this.cfg.temperature }),
       stream: true,
       system,
       messages: [{
@@ -106,7 +110,7 @@ export class AnthropicGenerationProvider implements GenerationProvider {
       body: JSON.stringify({
         model: this.model,
         max_tokens: opts.maxTokens ?? 256,
-        temperature: opts.temperature ?? 0,
+        ...(opts.temperature !== undefined && { temperature: opts.temperature }),
         messages: [{ role: "user", content: prompt }],
       }),
       signal: opts.timeoutMs ? AbortSignal.timeout(opts.timeoutMs) : undefined,

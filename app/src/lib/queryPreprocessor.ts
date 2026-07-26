@@ -90,7 +90,7 @@ export async function preprocessQuery(
   try {
     const raw = await provider.complete(
       PREPROCESS_PROMPT.replace("{query}", query),
-      { maxTokens: 256, temperature: 0.1, timeoutMs: 5000 }
+      { maxTokens: 256, timeoutMs: 5000 }
     )
     return parsePreprocessed(raw, query)
   } catch {

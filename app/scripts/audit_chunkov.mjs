@@ -81,6 +81,31 @@ try {
   // v kolekcii `documents`: ak sú tam pre jeden documentId dva záznamy,
   // $lookup + $unwind zdvojí každý chunk. Overujeme obe strany.
 
+  // Rozpis podľa typu — filter na preambuly stojí a padá na tomto poli.
+  const podlaTypu = await col.aggregate([
+    { $match: { isActive: true } },
+    { $group: { _id: "$chunkType", n: { $sum: 1 } } },
+    { $sort: { n: -1 } },
+  ]).toArray()
+  console.log("Typy chunkov: " + podlaTypu.map(x => `${x._id ?? "(chýba)"}=${x.n}`).join(" · "))
+
+  // Chunky bez článku, ktoré NIE SÚ označené ako preambula — tie prechádzajú
+  // filtrom a tlačia sa do výsledkov.
+  const podozrive = await col.find({
+    isActive: true,
+    $or: [{ articleRef: null }, { articleRef: "" }],
+    chunkType: { $ne: "preambula" },
+  }).project({ documentId: 1, heading: 1, chunkType: 1, chunkIndex: 1 }).limit(15).toArray()
+
+  if (podozrive.length) {
+    console.log(`\n${VARUJ} ${podozrive.length} chunkov bez článku, ktoré NIE SÚ preambuly:`)
+    for (const c of podozrive) {
+      console.log(`   ${c.documentId} #${c.chunkIndex} · typ=${c.chunkType ?? "(chýba)"} · "${(c.heading ?? "").slice(0, 50)}"`)
+    }
+  } else {
+    console.log(`${OK} každý chunk bez článku je označený ako preambula`)
+  }
+
   console.log("\nKontrola duplicít")
   console.log("─".repeat(88))
 

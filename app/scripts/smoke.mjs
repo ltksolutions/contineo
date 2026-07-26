@@ -152,11 +152,15 @@ try {
       console.log(`  ${CHYBA} ${e.message.slice(0, 160)}`)
     }
 
+    // chunkIndex a typ vypisujeme zámerne: dlhá jednotka sa delí na viac
+    // chunkov s ROVNAKÝM articleRef aj heading. Bez indexu to vyzerá ako
+    // duplicita a stálo nás to hodinu hľadania neexistujúcej chyby.
     for (const c of chunky.slice(0, 3)) {
       const zdroj = c.document?.title ?? c.documentId
       const skore = c.score != null ? ` · skóre ${Number(c.score).toFixed(4)}` : ""
-      console.log(`    • ${c.articleRef ?? "—"}  ${zdroj}${skore}`)
-      console.log(`      ${(c.heading ?? "").slice(0, 70)}`)
+      const typ = c.chunkType && c.chunkType !== "clanok" ? ` [${c.chunkType}]` : ""
+      console.log(`    • #${String(c.chunkIndex).padStart(3)} ${c.articleRef ?? "—"}${typ}  ${zdroj}${skore}`)
+      console.log(`          ${(c.heading ?? "").slice(0, 66)}`)
     }
 
     if (chceOdpoved) {

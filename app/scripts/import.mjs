@@ -75,15 +75,52 @@ function pripravDokument(subor) {
    * Zmena chunkovacieho algoritmu je pritom rovnako podstatná zmena ako
    * zmena textu normy.
    *
-   * Do hashu ide text, articleRef aj heading — teda všetko, čo sa dostane
-   * do vektora alebo do citácie.
+   * Hashuje sa PRESNE TO, čo sa zapíše do databázy (viď `chunkDoDb`),
+   * takže každé nové pole sa do verzie premietne samo.
    */
-  const otlacok = chunky
-    .map(ch => `${ch.chunkIndex}\u0000${ch.articleRef ?? ""}\u0000${ch.heading ?? ""}\u0000${ch.text}`)
-    .join("\u0001")
+  const predbezne = { meta, tags }
+  const otlacok = JSON.stringify(chunky.map(ch => chunkDoDb(ch, predbezne)))
   const versionId = hash(otlacok)
 
   return { subor, meta, tags, chunky, statistiky, documentId, versionId }
+}
+
+/**
+ * Prevedie chunk na dokument tak, ako sa uloží do `document_chunks` —
+ * bez polí, ktoré sa menia pri každom behu (časy, versionId).
+ *
+ * Otlačok pre `versionId` sa počíta PRÁVE Z TOHTO. Dvakrát nás totiž
+ * doplatilo, že sa hashovalo niečo iné, než sa ukladá:
+ *
+ *   1× hash zo zdrojového textu → oprava chunkera sa neprejavila
+ *   1× hash z vybraných polí   → pridanie chunkType sa neprejavilo
+ *
+ * Takto sa každé nové pole premietne do verzie samo a nedá sa naň zabudnúť.
+ */
+function chunkDoDb(ch, d) {
+  return {
+    chunkIndex: ch.chunkIndex,
+    text: ch.text,                    // <- Atlas z tohto poľa robí vektor
+    heading: ch.heading,
+    articleRef: ch.articleRef ?? null,
+    /**
+     * "clanok" | "priloha" | "preambula"
+     *
+     * Preambula je titulná strana, zoznam novelizácií a osnova. Necháme ju
+     * v databáze — obsahuje dátumy schválenia, ktoré sú potrebné pri
+     * posudzovaní platného znenia (R3) — ale vyhľadávanie ju preskakuje.
+     * Sémanticky sa totiž podobá na hocijakú otázku o danej doméne a
+     * vytláčala z výsledkov skutočné články.
+     */
+    chunkType: ch.typ ?? "clanok",
+    // tagovanie / filtre
+    sectionKey: d.meta.sectionKey, companyCode: d.meta.companyCode,
+    scope: d.meta.scope, accessLevel: d.meta.accessLevel,
+    language: d.meta.language, tags: d.tags,
+    embeddingModel: EMBEDDING_MODEL,
+    embeddingDim: EMBEDDING_DIM,
+    embeddingProvider: EMBEDDING_KIND,
+  }
 }
 
 async function zapis(db, d) {
@@ -123,20 +160,9 @@ async function zapis(db, d) {
   )
 
   const dokumenty = d.chunky.map(ch => ({
+    ...chunkDoDb(ch, d),
+    // Premenlivé polia — zámerne MIMO chunkDoDb, aby nekazili otlačok.
     documentId: d.documentId, versionId: d.versionId,
-    chunkIndex: ch.chunkIndex,
-    text: ch.text,                    // <- Atlas z tohto poľa robí vektor
-    heading: ch.heading,
-    articleRef: ch.articleRef ?? null,
-    // tagovanie / filtre
-    sectionKey: d.meta.sectionKey, companyCode: d.meta.companyCode,
-    scope: d.meta.scope, accessLevel: d.meta.accessLevel,
-    language: d.meta.language, tags: d.tags,
-    // identita vektorového priestoru (ADR-001) — vektor tu NIE JE,
-    // pri atlas-auto ho drží Atlas sám.
-    embeddingModel: EMBEDDING_MODEL,
-    embeddingDim: EMBEDDING_DIM,
-    embeddingProvider: EMBEDDING_KIND,
     embeddedAt: teraz,
     // stav
     isActive: true,

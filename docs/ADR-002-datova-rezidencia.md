@@ -75,9 +75,9 @@ Pribudnutie nového adaptéra znamená doplniť jeden riadok do tabuľky, nie h�
 
 ### Kľúčové pravidlo: neznáme sa správa ako zakázané
 
-Adaptér, o ktorom **nevieme**, kde počíta, sa v prísnom režime nepovolí. Nevedomosť nie je súhlas. Prakticky to znamená, že `atlas-auto` a `anthropic` sú dnes v `eu-full` zakázané — nie preto, že by sme vedeli, že sú mimo EÚ, ale preto, že to nemáme potvrdené (O5, O6 nižšie).
+Adaptér, o ktorom **nevieme**, kde počíta, sa v prísnom režime nepovolí. Nevedomosť nie je súhlas.
 
-Je to nepohodlné zámerne. Keby bola predvoľba opačná, otázky by sme si nikdy nepoložili.
+Je to nepohodlné zámerne — a hneď sa to vyplatilo. `atlas-auto` a `anthropic` sme pôvodne označili ako neznáme (O5, O6). Práve to nás donútilo lokalitu dohľadať, a ukázalo sa, že **obe sú mimo EÚ**. Pri opačnej predvoľbe by sme sa nespýtali a mali by sme v profile tichý únik.
 
 ---
 

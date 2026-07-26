@@ -250,7 +250,7 @@ export const dictionaries = {
 
       whereTitle: "Kde spracovanie prebieha — vrátane toho, čo overujeme",
       whereIntro:
-        "Toto je stav k dnešnému dňu. Riadky označené „overuje sa“ znamenajú, že dodávateľ lokalitu neuvádza a nemáme ju potvrdenú. V prísnych režimoch sa taký komponent nepoužije — nevedomosť neberieme ako súhlas.",
+        "Každý riadok je doložený verejným dokumentom dodávateľa, nie odhadom. Komponenty spracúvajúce mimo EÚ sa v režimoch eu-full, on-prem a air-gap nepoužijú — profil s takou kombináciou sa odmietne spustiť.",
       whereHead: {
         component: "Komponent",
         provider: "Poskytovateľ",
@@ -268,19 +268,22 @@ export const dictionaries = {
           location: "mimo EÚ (USA)", stav: "mimo",
           evidence: "uvedené v nastavení projektu Atlas" },
         { component: "Embedding", provider: "Atlas Automated Embedding",
-          location: "overuje sa", stav: "overuje",
-          evidence: "dodávateľ lokalitu inferencie neuvádza" },
-        { component: "Generovanie odpovede", provider: "Anthropic Claude",
-          location: "overuje sa", stav: "overuje",
-          evidence: "regionálne spracovanie neoverené" },
+          location: "mimo EÚ (USA)", stav: "mimo",
+          evidence: "zoznam subprocesorov MongoDB: Google LLC, United States" },
+        { component: "Generovanie odpovede", provider: "Anthropic Claude (priame API)",
+          location: "mimo EÚ (USA)", stav: "mimo",
+          evidence: "spracovanie v americkej infraštruktúre" },
+        { component: "Generovanie odpovede", provider: "Claude cez AWS Bedrock / Vertex AI",
+          location: "EÚ (Frankfurt, Írsko, Paríž)", stav: "ok",
+          evidence: "voľba regiónu pri nasadení — pripravujeme adaptér" },
         { component: "Embedding, rerank, generovanie", provider: "vlastné služby (on-prem)",
           location: "vaša infraštruktúra", stav: "ok",
           evidence: "beží u vás" },
       ],
 
-      honestyTitle: "Prečo tu píšeme aj to, čo nevieme.",
+      honestyTitle: "Prečo to vypisujeme takto podrobne.",
       honestyText:
-        "Pretože sa na to pri obstarávaní niekto spýta. Tvrdenie, ktoré nevieme doložiť, je horšie než priznaná otvorená otázka — a tabuľka, ktorá nemá ani jeden otáznik, býva skôr neúplná než dokonalá. Otvorené body uzatvárame a stav tu aktualizujeme.",
+        "Pretože sa na to pri obstarávaní niekto spýta. Väčšina dodávateľov uvedie „dáta v EÚ“ a mlčí o tom, kde beží model — pritom práve tam ide text otázky aj nájdených pasáží. Každý riadok vyššie vieme doložiť dokumentom dodávateľa a ak sa stav zmení, zmeníme aj túto tabuľku.",
       legalNote:
         "Táto stránka je technický popis dátových tokov, nie právne posúdenie. Pri konkrétnom nasadení odporúčame posúdenie odborníkom na ochranu osobných údajov.",
     },
@@ -771,7 +774,7 @@ export const dictionaries = {
 
       whereTitle: "Where processing happens — including what we are still verifying",
       whereIntro:
-        "This is today's state. Rows marked “verifying” mean the vendor does not state the location and we have not confirmed it. Such a component is not used in the strict modes — we do not treat not knowing as consent.",
+        "Every row is backed by the vendor's own public documentation, not by an estimate. Components processing outside the EU are not used in the eu-full, on-prem and air-gap modes — a profile with such a combination refuses to start.",
       whereHead: {
         component: "Component",
         provider: "Provider",
@@ -789,19 +792,22 @@ export const dictionaries = {
           location: "outside the EU (US)", stav: "mimo",
           evidence: "stated in Atlas project settings" },
         { component: "Embedding", provider: "Atlas Automated Embedding",
-          location: "verifying", stav: "overuje",
-          evidence: "vendor does not state inference location" },
-        { component: "Answer generation", provider: "Anthropic Claude",
-          location: "verifying", stav: "overuje",
-          evidence: "regional processing not verified" },
+          location: "outside the EU (US)", stav: "mimo",
+          evidence: "MongoDB subprocessor list: Google LLC, United States" },
+        { component: "Answer generation", provider: "Anthropic Claude (direct API)",
+          location: "outside the EU (US)", stav: "mimo",
+          evidence: "processed in US infrastructure" },
+        { component: "Answer generation", provider: "Claude via AWS Bedrock / Vertex AI",
+          location: "EU (Frankfurt, Ireland, Paris)", stav: "ok",
+          evidence: "region chosen at deployment — adapter in progress" },
         { component: "Embedding, rerank, generation", provider: "own services (on-prem)",
           location: "your infrastructure", stav: "ok",
           evidence: "runs at your site" },
       ],
 
-      honestyTitle: "Why we list what we do not know.",
+      honestyTitle: "Why we spell this out in such detail.",
       honestyText:
-        "Because someone in procurement will ask. A claim we cannot evidence is worse than an admitted open question — and a table without a single question mark tends to be incomplete rather than perfect. We close these items and update this page.",
+        "Because someone in procurement will ask. Most vendors state “data in the EU” and stay silent about where the model runs — yet that is exactly where the question and the retrieved passages go. Every row above is backed by the vendor's own documentation, and if the situation changes, so does this table.",
       legalNote:
         "This page is a technical description of data flows, not a legal assessment. For a specific deployment we recommend review by a data protection specialist.",
     },

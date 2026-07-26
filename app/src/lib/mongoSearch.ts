@@ -30,6 +30,12 @@ export interface SearchOptions {
    * server odmietne spec. Berie sa z profilu tenanta.
    */
   rerankModel?: string
+  /**
+   * Zahrnúť aj preambuly (titulné strany, zoznamy novelizácií, osnovy).
+   * Predvolene NIE — vytláčali z top-5 skutočné články, lebo sú všeobecné
+   * a podobajú sa na každý dotaz. Viď audit_chunkov.mjs.
+   */
+  includePreamble?: boolean
   accessLevel: "public" | "internal" | "all"
   limit?: number
   rerankLimit?: number
@@ -95,7 +101,11 @@ function lookupDocument(skoreMeta: SkoreMeta): Document[] { return [
     $lookup: {
       from: "documents",
       localField: "documentId",
-      foreignField: "_id",
+      // Pozor: `documentId`, NIE `_id`. V kolekcii `documents` je _id
+      // automatické ObjectId, kým documentId je čitateľný kľúč typu
+      // "sfz:stanovy". Pri porovnaní s _id sa nikdy nič nenašlo a názvy
+      // dokumentov ostávali prázdne — bez chyby, len ticho.
+      foreignField: "documentId",
       as: "document",
       pipeline: [
         { $project: { title: 1, slug: 1, sourceUrl: 1, category: 1 } }
@@ -109,7 +119,7 @@ function lookupDocument(skoreMeta: SkoreMeta): Document[] { return [
     $project: {
       text: 1, documentId: 1, versionId: 1,
       sectionKey: 1, companyCode: 1, scope: 1, accessLevel: 1, language: 1,
-      articleRef: 1, heading: 1, chunkIndex: 1, tags: 1,
+      articleRef: 1, heading: 1, chunkIndex: 1, tags: 1, chunkType: 1,
       embeddingModel: 1, isActive: 1, effectiveFrom: 1, effectiveTo: 1,
       document: 1,
       score: { $meta: skoreMeta }
@@ -167,6 +177,7 @@ export async function fulltextSearch(
         }
       }
     },
+    ...bezPreambul(opts),
     { $limit: limit },
     // fulltext nemá rerank stage — skóre pochádza priamo z $search
     ...lookupDocument("searchScore"),
@@ -191,6 +202,14 @@ export async function fulltextSearch(
  * Orezanie na finálny počet robí až samostatný $limit. Stage síce možno
  * pozná vlastný `limit`, ale spoliehať sa naň netreba — $limit je istota.
  */
+/** Odfiltruje preambuly. Ide medzi vyhľadávanie a rerank, takže nepotrebuje
+ *  filter v indexe — index sa nemusí prebudovať. */
+function bezPreambul(opts: SearchOptions): Document[] {
+  return opts.includePreamble
+    ? []
+    : [{ $match: { chunkType: { $ne: "preambula" } } }]
+}
+
 function rerankStages(opts: SearchOptions, kandidatov: number, vysledkov: number): Document[] {
   if (opts.useStageRerank === false) return []
   return [
@@ -228,6 +247,7 @@ export async function vectorSearch(
     },
     // Voyage reranker. Pri on-prem režime stage vynechávame — rerank
     // rieši aplikačná vrstva cez adaptér (ADR-001).
+    ...bezPreambul(opts),
     ...rerankStages(opts, limit, rerankLimit),
     ...lookupDocument(opts.useStageRerank !== false ? "score" : "vectorSearchScore"),
   ]
@@ -294,6 +314,7 @@ export async function hybridSearch(
     },
     // Voyage reranker. Pri on-prem režime stage vynechávame — rerank
     // rieši aplikačná vrstva cez adaptér (ADR-001).
+    ...bezPreambul(opts),
     ...rerankStages(opts, limit, rerankLimit),
     ...lookupDocument("score"),
   ]

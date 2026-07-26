@@ -62,7 +62,7 @@ export async function classifyByLLM(
   try {
     const raw = (await provider.complete(
       LLM_CLASSIFY_PROMPT.replace("{query}", query),
-      { maxTokens: 5, temperature: 0, timeoutMs: 2000 }
+      { maxTokens: 5, timeoutMs: 2000 }
     )).toLowerCase()
 
     if (raw.includes("fulltext")) return "fulltext"

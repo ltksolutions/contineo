@@ -198,6 +198,19 @@ t("dvojriadkový: oba tvary naraz fungujú",
   mix.chunky.some(c => c.heading === "Bez pomlčky"),
   JSON.stringify(mix.chunky.map(c => c.heading)))
 
+// ── typ chunku ────────────────────────────────────────────────────────────
+// Preambula (titulka, zoznam novelizácií, osnova) sa musí dať odlíšiť —
+// vyhľadávanie ju preskakuje, lebo vytláčala z top-5 skutočné články.
+t("typ: preambula je označená",
+  dvoj.chunky.some(c => c.typ === "preambula"),
+  JSON.stringify(dvoj.chunky.map(c => [c.heading, c.typ])))
+t("typ: článok je označený ako clanok",
+  dvoj.chunky.filter(c => /^čl\./.test(c.articleRef ?? "")).every(c => c.typ === "clanok"),
+  JSON.stringify(dvoj.chunky.map(c => [c.articleRef, c.typ])))
+t("typ: príloha je označená ako priloha",
+  chunky.filter(c => /^príloha/.test(c.articleRef ?? "")).every(c => c.typ === "priloha"),
+  JSON.stringify(chunky.map(c => [c.articleRef, c.typ])))
+
 const zle = R.filter(([ok]) => !ok)
 console.log("\n" + "=".repeat(60))
 console.log(zle.length ? `ZLYHALO ${zle.length}/${R.length}` : `${R.length}/${R.length} testov prešlo`)
