@@ -1,0 +1,33 @@
+{
+  "dim": 1024,
+  "k": 10,
+  "nativna_dimenzia": 2048,
+  "pocet_dotazov": 15,
+  "pocet_dokumentov": 40,
+  "surova_podobnost": 0.9238735227609285,
+  "vysledky": [
+    {
+      "nazov": "referencia: nano @ 2048 vs nano @ 1024  (samotné MRL skrátenie)",
+      "prekryv_topk": 0.9133333333333334,
+      "spearman": 0.9683302063789868,
+      "zhoda_prveho": 0.9333333333333333
+    },
+    {
+      "nazov": "OSTRÝ TEST: dotaz z voyage-4 vs z voyage-4-nano @ 1024",
+      "prekryv_topk": 0.8666666666666667,
+      "spearman": 0.9510444027517198,
+      "zhoda_prveho": 1.0
+    }
+  ],
+  "prahy": {
+    "zhoda_prveho": 0.9,
+    "spearman": 0.9,
+    "prekryv_topk": 0.8
+  },
+  "rozhodujuce": [
+    "zhoda_prveho",
+    "spearman"
+  ],
+  "male_data": true,
+  "go": true
+}

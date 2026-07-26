@@ -1,6 +1,6 @@
 # ADR-001 — Tri provider adaptéry vyberané konfiguráciou tenanta
 
-> **Stav:** ✅ prijaté · **Dátum:** 2026-07-25 · **Revízia:** 2026-07-26 (overenie voyage-4-nano, sekcia 3) · **Nahrádza:** stack rozhodnutia v `docs/rag-architecture.md` (sekcia „Stack rozhodnutia")
+> **Stav:** ✅ prijaté · **Dátum:** 2026-07-25 · **Revízia:** 2026-07-26 (overenie voyage-4-nano + **O1 zmerané a uzavreté**, sekcia 3) · **Nahrádza:** stack rozhodnutia v `docs/rag-architecture.md` (sekcia „Stack rozhodnutia")
 > **Súvisiace:** `docs/OPEN_DECISIONS.md` (D15 — modely/fallback/náklady), `docs/DATA_MODEL_konzistencia.md`, `docs/PRISTUPOVE_PRAVA.md`
 > **Implementácia:** `app/src/lib/providers/` — ✅ **kroky 1–5 hotové** (2026-07-26), 109 testov, `tsc --noEmit` čistý. Integračne neoverené (TEI, Infinity a vLLM čakajú na stroj s GPU).
 
@@ -153,7 +153,24 @@ Rovnaký `$rankFusion`, rovnaká aplikácia, iný profil.
 
 **3. Je to výhradne embedding model.** Nevie generovať text. Na HuggingFace má zavádzajúci štítok `text-generation` a automaticky vygenerovaný úryvok s `AutoModelForCausalLM` — oboje sú artefakty po základnej architektúre Qwen3. Primárny štítok je `Feature Extraction` a všetky ukážky používajú `encode_query()` / `encode_document()`. **Do generation adaptéra nepatrí.**
 
-**Čo zostáva overiť:** `voyage-4-nano` dáva predvolene **2048 dimenzií**, náš Atlas index má **1024**. Model podporuje MRL-truncation na 2048/1024/512/256, čo je presne na tento účel navrhnuté — ale zhodu 1024-rozmerného nano s 1024-rozmerným `voyage-4` z Atlasu treba **zmerať**, nie predpokladať. Viď O1.
+**4. Zmerané (2026-07-26) — zdieľaný priestor potvrdený aj v praxi.** Meranie `eval/o1/` na 40 dokumentoch a 15 dotazoch v slovenčine, metódou krížového retrievalu (index z `voyage-4`, dotaz raz z `voyage-4`, raz z `voyage-4-nano`):
+
+| Metrika | @ 1024 dim | @ 2048 dim |
+|---|---|---|
+| **zhoda 1. výsledku** | **100 %** | **100 %** |
+| Spearman poradia | 95,1 % | 94,4 % |
+| prekryv top-5 | 89,3 % | 89,3 % |
+| surová kosínusová podobnosť | 0,9239 | 0,9228 |
+
+**Rozhodujúce zistenie: výsledok je pri 1024 aj 2048 identický.** Keby stratu spôsobovalo MRL skrátenie, pri natívnych 2048 by zmizla. Nezmizla — tých ~10 % preusporiadania na okraji top-5 je vnútorný rozdiel medzi dvomi modelmi tej istej rodiny, ktorý s dimenziou nesúvisí. Voyage sľubuje „porovnateľné a zameniteľné", nie identické, a to plní.
+
+**Dôsledky:**
+
+- **Zostávame na 1024 dimenziách.** Prechod na 2048 by nezlepšil nič a zdvojnásobil by úložisko vektorov aj čas vyhľadávania.
+- **Migrácia cloud ↔ on-prem nevyžaduje re-embed korpusu.**
+- Prekryv top-5 na úrovni 89 % nie je defekt: pipeline ťahá 20 kandidátov, tie prejdú rerankerom a do kontextu ide osem. Dokument, ktorý sa posunie z piatej na šiestu pozíciu, do odpovede aj tak dorazí.
+
+**Obmedzenie merania:** vzorka mala 15 dotazov, takže jediný dotaz posunie metriku o ~6,7 bodu. Rozdiely v jednotkách bodov sú šum. Signál je ale jednoznačný v tom, na čom záleží — **prvý výsledok sedel v 100 % prípadov**. Pri naplnení reálneho korpusu odporúčam meranie zopakovať cez `--vzorka`.
 
 ---
 
@@ -255,16 +272,16 @@ a `tsc --noEmit`. Integračne neoverené — TEI, Infinity aj vLLM čakajú na s
 | `$rerank` sa nikdy nedostane do Community | Trvalá divergencia režimov | Rerank cez Infinity je referenčný; Atlas `$rerank` je optimalizácia, nie základ |
 | Citations len v Claude | Cloud režim kvalitnejší v kľúčovej metrike | Zmerať rozdiel na D9; ak je veľký, je to argument pre cloud aj pri T1 |
 | Prompt vyladený na Claude podáva horšie na Qwen3 | Falošná predstava zameniteľnosti | Prompt je súčasť profilu, nie globálny; D9 sa púšťa pri každom modeli zvlášť |
-| MRL-truncation 2048→1024 nezachová zhodu s `voyage-4` z Atlasu | Stráca sa symetria vektorových priestorov medzi cloudom a on-prem | Zmerať kosínusovú podobnosť na vzorke; záloha = zjednotiť na 2048 dim, alebo BGE-M3 + akceptovaný re-embed pri migrácii |
+| ~~MRL-truncation 2048→1024 nezachová zhodu~~ | — | **Vyriešené 2026-07-26:** zmerané, zhoda 1. výsledku 100 % pri 1024 aj 2048. Riziko odpadá. |
 
 ---
 
 ## 8. Otvorené otázky
 
-- **O1** — Sedia dimenzie v zdieľanom priestore? `voyage-4-nano` dáva natívne 2048 dim, náš index má 1024. Treba zmerať, či MRL-truncation na 1024 zachová porovnateľnosť s `voyage-4` z Atlasu (kosínusová podobnosť na vzorke rovnakých textov, embedovaných oboma cestami). Alternatíva: zjednotiť oba režimy na 2048. *Vyžaduje stroj s GPU, priorita 🔴*
+- **O1** — ✅ **UZAVRETÉ 2026-07-26.** Zdieľaný vektorový priestor funguje aj v praxi; zostávame na **1024 dimenziách** a migrácia cloud ↔ on-prem **nevyžaduje re-embed**. Detail merania v sekcii 3, výstup v `eval/o1/vysledok_o1.json`. Meranie zopakovať na reálnom korpuse (`--vzorka`), keď bude naplnený.
   - ~~Zvládne Infinity `voyage-4-nano`?~~ — nahradené: TEI má explicitnú podporu (štítok `text-embeddings-inference`), takže otázka „ktorý server" je vyriešená.
-- **O2** — Preprocessing lokálne alebo cez Claude Haiku? Pri ~0,001 € za prepis sa lokálny model nemusí oplatiť prevádzkovať. *Rozhodnúť po meraní latencie.* Technicky je to už len konfigurácia: `providers.utility` v profile tenanta; keď chýba, použije sa hlavný model.
-- **O3** — Zrušiť LLM vetvu klasifikátora úplne? Heuristika beží pod 1 ms zadarmo, LLM pridá 200–500 ms na každý dotaz. *Zmerať prínos na D9.* Zatiaľ je heuristika **predvolená** a LLM vetva sa zapína vedome cez `useLLMClassifier`.
+- **O2** — Preprocessing lokálne alebo cez Claude Haiku? *Toto nie je meranie, ale rozhodnutie.* Cena je spočítaná (~0,001 € za prepis), v air-gape na výber nie je. Odporúčanie: **Haiku pre cloud, lokálny model pre T3.** Technicky je to už len konfigurácia — `providers.utility` v profile tenanta; keď chýba, použije sa hlavný model.
+- **O3** — Zrušiť LLM vetvu klasifikátora úplne? Heuristika beží pod 1 ms zadarmo, LLM pridá 200–500 ms na každý dotaz. **GPU ani zlaté odpovede netreba** — stačí korpus a index. Otázku treba položiť ostrejšie: nie *„je LLM presnejší?"*, ale *„záleží vôbec na tom, ktorý režim sa zvolí?"* Prežeň reálne dotazy cez fulltext, vector aj hybrid a porovnaj prekryv top-5. Ak sa výsledky prekrývajú nad 90 %, klasifikátor je zbytočný bez ohľadu na presnosť. Zatiaľ je heuristika **predvolená**, LLM vetva sa zapína vedome cez `useLLMClassifier`.
 - **O4** — Ako verzovať prompty per model, aby sa dali porovnávať na D9? *Návrh: `prompts/{model}/system.md`, verzia v profile*
 
 ---

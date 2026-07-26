@@ -23,7 +23,7 @@
 | D12 | Email politika (auto-reply) | Prevádzka | 🟡 | 4b/6 | ✅ |
 | D13 | Scheduler / freshness | Prevádzka | 🟡 | 6 | ✅ |
 | D14 | Widget / embedding | Prevádzka | 🟢 | 5/6 | ✅ |
-| D15 | Modely / fallback / náklady | Prevádzka | 🟢 | 7 | ✅ → ADR-001 |
+| D15 | Modely / fallback / náklady | Prevádzka | 🟢 | 7 | ✅ → ADR-001 (O1 zmerané 26.7.) |
 
 ---
 

@@ -1,0 +1,9 @@
+# Závislosti pre meranie O1.
+#
+# transformers musí byť z vetvy 4.x — vlastný kód modelu voyage-4-nano
+# (modeling_qwen3_bidirectional.py) nenastavuje `config_class`, čo
+# transformers 5.x vyžaduje a padne na AttributeError.
+transformers>=4.44,<5
+sentence-transformers>=3.0,<6
+torch>=2.0
+certifi

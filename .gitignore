@@ -24,3 +24,9 @@ npm-debug.log*
 
 # TypeScript inkrementalny build cache
 *.tsbuildinfo
+
+# Python virtualenv a cache
+.venv/
+venv/
+__pycache__/
+*.pyc
