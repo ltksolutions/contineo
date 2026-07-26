@@ -12,7 +12,7 @@ export const dictionaries = {
       audience: "Pre koho",
       roadmap: "Pripravujeme",
       modes: "Nasadenie",
-      overview: "Prehľad",
+      overview: "Čo je Contineo",
       versions: "Verzie",
       runtime: "Prevádzka",
       identity: "Identita",
@@ -675,7 +675,7 @@ export const dictionaries = {
     },
     footer: {
       tagline: "Opýtajte sa svojho obsahu.",
-      overview: "Prehľad",
+      overview: "Čo je Contineo",
       company: "Spoločnosť",
       links: {
         features: "Funkcie",
@@ -699,7 +699,7 @@ export const dictionaries = {
       audience: "Who it's for",
       roadmap: "What's next",
       modes: "Deployment",
-      overview: "Overview",
+      overview: "What Contineo is",
       versions: "Versions",
       runtime: "Runtime",
       identity: "Identity",
@@ -1362,7 +1362,7 @@ export const dictionaries = {
     },
     footer: {
       tagline: "Ask your content.",
-      overview: "Overview",
+      overview: "What Contineo is",
       company: "Company",
       links: {
         features: "Features",
