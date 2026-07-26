@@ -43,7 +43,18 @@ export interface SearchOptions {
   // When omitted, search behaves exactly as before.
   companyCodes?: string[]   // e.g. ["SsFZ", "SFZ"]
   sectionKey?: string
-  onlyActive?: boolean          // only the valid version (isActive: true)
+  /**
+   * Zahrnúť aj archivované verzie (isActive: false).
+   *
+   * PREDVOLENE NIE. Pôvodne tu bola opačná voľba `onlyActive`, ktorú ale
+   * nikto nenastavoval — takže vyhľadávanie vracalo aj zrušené znenia
+   * noriem. V normatívnej doméne je to najhorší možný tichý defekt:
+   * odpoveď vyzerá správne, ale cituje predpis, ktorý už neplatí.
+   *
+   * Archivované verzie majú zmysel len pri otázke „ako to bolo v roku X“
+   * (pravidlo R3), a tam sa to musí vyžiadať výslovne.
+   */
+  includeArchived?: boolean
 }
 
 export interface ChunkResult {
@@ -135,7 +146,7 @@ function vectorFilter(opts: SearchOptions): Document {
   if (opts.accessLevel === "public") filter.accessLevel = "public"
   if (opts.companyCodes?.length) filter.companyCode = { $in: opts.companyCodes }
   if (opts.sectionKey) filter.sectionKey = opts.sectionKey
-  if (opts.onlyActive) filter.isActive = true
+  if (!opts.includeArchived) filter.isActive = true
   return filter
 }
 
@@ -145,7 +156,7 @@ function searchFilterClauses(opts: SearchOptions): Document[] {
   if (opts.accessLevel === "public") clauses.push({ equals: { path: "accessLevel", value: "public" } })
   if (opts.companyCodes?.length) clauses.push({ in: { path: "companyCode", value: opts.companyCodes } })
   if (opts.sectionKey) clauses.push({ equals: { path: "sectionKey", value: opts.sectionKey } })
-  if (opts.onlyActive) clauses.push({ equals: { path: "isActive", value: true } })
+  if (!opts.includeArchived) clauses.push({ equals: { path: "isActive", value: true } })
   return clauses
 }
 

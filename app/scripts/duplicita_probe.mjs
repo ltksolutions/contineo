@@ -1,6 +1,15 @@
 /**
  * duplicita_probe.mjs — nájde stage, ktorý zdvojuje výsledky.
  *
+ * ⚠️ POUČENIE Z PRVÉHO BEHU: tento skript má pipeline napísanú NAZNOVO,
+ * a to je jeho slabina. Prvý raz vyšiel čisto, hoci aplikácia duplicity
+ * vracala — lebo som doňho dala `filter: { isActive: true }`, ktorý
+ * v produkčnom kóde chýbal. Testoval teda niečo iné, než čo beží.
+ *
+ * Na overenie skutočného správania slúži `smoke.mjs`, ktorý bundluje
+ * kód zo `src/lib`. Táto sonda je len na hľadanie vinníka MEDZI stage-mi,
+ * keď už vieme, že problém existuje.
+ *
  *     node --env-file=.env.local scripts/duplicita_probe.mjs
  *     node --env-file=.env.local scripts/duplicita_probe.mjs --dotaz "..."
  *

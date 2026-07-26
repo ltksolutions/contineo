@@ -52,6 +52,19 @@ const ODSEK = /^\((\d+)\)\s*(.*)$/
 // Odlišuje sa tým od odseku "(4)" aj od písmena "a)".
 const POZNAMKA = /^\d+[a-z]?\)\s+\S/
 const CISLO_STRANY = /^\d+\s*\/\s*\d+$/
+/**
+ * Číslovanie strán rozpadnuté z PDF na viac riadkov:
+ *
+ *     Strana 1
+ *     (prázdny)
+ *      z 16
+ *
+ * Bez tohto vzoru sa „Strana 1“ dostala na miesto názvu článku — v korpuse
+ * SFZ tak vznikol chunk „Článok 3 · Strana 1“. Citácia potom vyzerá
+ * nedôveryhodne, hoci text je správny.
+ */
+const STRANA = /^(Strana|Page)\s+\d+$/i
+const STRANA_Z = /^z\s+\d+$/i
 
 // Cieľová veľkosť chunku. D1 hovorí 300–800 tokenov; v slovenčine vychádza
 // zhruba 3,5 znaku na token, takže počítame v znakoch a je to len odhad.
@@ -90,7 +103,9 @@ export function ocisti(text, { nazovDokumentu } = {}) {
     const r = raw.trim()
 
     if (!r) { odstranene.prazdne++; vPoznamke = false; continue }
-    if (CISLO_STRANY.test(r)) { odstranene.cisloStrany++; vPoznamke = false; continue }
+    if (CISLO_STRANY.test(r) || STRANA.test(r) || STRANA_Z.test(r)) {
+      odstranene.cisloStrany++; vPoznamke = false; continue
+    }
     if (opakujuce.has(r)) { odstranene.hlavicka++; vPoznamke = false; continue }
 
     // Poznámky pod čiarou — začínajú číslom bez zátvorky a často pokračujú

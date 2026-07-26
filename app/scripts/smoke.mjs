@@ -152,6 +152,25 @@ try {
       console.log(`  ${CHYBA} ${e.message.slice(0, 160)}`)
     }
 
+    // Archivované verzie sa NESMÚ dostať do výsledkov — odpoveď by citovala
+    // zrušené znenie normy. Toto sa raz stalo, tak to kontrolujeme vždy.
+    const archiv = chunky.filter(c => c.isActive === false)
+    if (archiv.length) {
+      zlyhalo++
+      console.log(`  ${CHYBA} ${archiv.length} výsledkov je z ARCHIVOVANEJ verzie (isActive:false)`)
+    }
+    const preambuly = chunky.filter(c => c.chunkType === "preambula")
+    if (preambuly.length) {
+      zlyhalo++
+      console.log(`  ${CHYBA} ${preambuly.length} výsledkov je preambula — filter nefunguje`)
+    }
+    // Koľko rôznych jednotiek a dokumentov je v top-5? Nízke číslo znamená,
+    // že jeden dlhý článok obsadil väčšinu miest a zvyšok korpusu sa
+    // nedostal k slovu.
+    const jednotiek = new Set(chunky.map(c => `${c.documentId}|${c.articleRef}`)).size
+    const dokumentov = new Set(chunky.map(c => c.documentId)).size
+    console.log(`  rozmanitosť: ${jednotiek} jednotiek · ${dokumentov} dokumentov z ${chunky.length} výsledkov`)
+
     // chunkIndex a typ vypisujeme zámerne: dlhá jednotka sa delí na viac
     // chunkov s ROVNAKÝM articleRef aj heading. Bez indexu to vyzerá ako
     // duplicita a stálo nás to hodinu hľadania neexistujúcej chyby.

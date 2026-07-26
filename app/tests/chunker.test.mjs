@@ -211,6 +211,30 @@ t("typ: príloha je označená ako priloha",
   chunky.filter(c => /^príloha/.test(c.articleRef ?? "")).every(c => c.typ === "priloha"),
   JSON.stringify(chunky.map(c => [c.articleRef, c.typ])))
 
+// „Strana N“ / „z 16“ — číslovanie rozpadnuté z PDF na viac riadkov.
+// Bez odstránenia sa dostalo na miesto názvu článku.
+const strany = chunkuj([
+  "Rokovací poriadok",
+  "Článok 3",
+  "",
+  "Strana 1",
+  "",
+  " z 16",
+  "",
+  "Zloženie komisií",
+  "",
+  "(1) Konferencia volí komisie.",
+].join("\n"), { nazovDokumentu: "Rokovací poriadok" })
+
+t("strana: „Strana 1“ sa NEstane názvom článku",
+  !strany.chunky.some(c => /^Strana \d/.test(c.heading ?? "")),
+  JSON.stringify(strany.chunky.map(c => c.heading)))
+t("strana: skutočný názov sa nájde za číslovaním",
+  strany.chunky.some(c => c.heading === "Zloženie komisií"),
+  JSON.stringify(strany.chunky.map(c => c.heading)))
+t("strana: číslovanie nie je v texte chunku",
+  !strany.chunky.some(c => /Strana \d|^\s*z \d+\s*$/m.test(c.text)))
+
 const zle = R.filter(([ok]) => !ok)
 console.log("\n" + "=".repeat(60))
 console.log(zle.length ? `ZLYHALO ${zle.length}/${R.length}` : `${R.length}/${R.length} testov prešlo`)
