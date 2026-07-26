@@ -20,7 +20,7 @@ export default function JsonLd({ dict, lang }) {
         "@id": `${base}/#website`,
         url: base,
         name: "Contineo",
-        inLanguage: lang === "en" ? "en" : "sk",
+        inLanguage: lang,
         publisher: { "@id": `${base}/#organization` },
       },
       {

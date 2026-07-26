@@ -3,14 +3,21 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { locales } from "@/lib/dictionaries";
 import Logo from "./Logo";
 import ThemeToggle from "./ThemeToggle";
 import Icon from "./Icon";
 
 export default function Nav({ dict, lang }) {
-  const other = lang === "sk" ? "en" : "sk";
   const pathname = usePathname() || `/${lang}`;
-  const otherHref = pathname.replace(new RegExp(`^/${lang}(?=/|$)`), `/${other}`);
+
+  // Prepinac jazykov. Bol binarny (sk <-> en); s cestinou uz treba zoznam.
+  // Cesta sa zachova — kto je na /sk/pre-koho, skoci na /cs/pre-koho.
+  const jazyky = locales.map((l) => ({
+    kod: l,
+    href: pathname.replace(new RegExp(`^/${lang}(?=/|$)`), `/${l}`),
+    aktivny: l === lang,
+  }));
   const [open, setOpen] = useState(false);
 
   /**
@@ -71,13 +78,18 @@ export default function Nav({ dict, lang }) {
 
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <ThemeToggle />
-          <Link
-            href={otherHref}
-            className="muted nav-desktop"
-            style={{ fontSize: 14, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.04em" }}
-          >
-            {other}
-          </Link>
+          <div className="nav-desktop" style={{ display: "flex", alignItems: "center", gap: 2 }}>
+            {jazyky.map((j) => (
+              <Link
+                key={j.kod}
+                href={j.href}
+                aria-current={j.aktivny ? "true" : undefined}
+                className={j.aktivny ? "lang-item lang-item--on" : "muted lang-item"}
+              >
+                {j.kod}
+              </Link>
+            ))}
+          </div>
           <a href={`/${lang}#cta`} className="btn btn--primary nav-desktop" style={{ padding: "9px 16px", fontSize: 14 }}>
             {dict.nav.cta}
           </a>
@@ -111,9 +123,19 @@ export default function Nav({ dict, lang }) {
               </Link>
             ))}
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 14, gap: 12 }}>
-              <Link href={otherHref} onClick={() => setOpen(false)} className="muted" style={{ fontSize: 14, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.04em" }}>
-                {lang === "sk" ? "English" : "Slovensky"}
-              </Link>
+              <div style={{ display: "flex", gap: 4 }}>
+                {jazyky.map((j) => (
+                  <Link
+                    key={j.kod}
+                    href={j.href}
+                    onClick={() => setOpen(false)}
+                    aria-current={j.aktivny ? "true" : undefined}
+                    className={j.aktivny ? "lang-item lang-item--on" : "muted lang-item"}
+                  >
+                    {j.kod}
+                  </Link>
+                ))}
+              </div>
               <a href={`/${lang}#cta`} onClick={() => setOpen(false)} className="btn btn--primary" style={{ flex: 1, justifyContent: "center", maxWidth: 200 }}>
                 {dict.nav.cta}
               </a>
@@ -131,6 +153,17 @@ export default function Nav({ dict, lang }) {
           transition: color .15s ease, background-color .15s ease;
         }
         .nav-link:hover { color: var(--ink); background: var(--surface-2); }
+        .lang-item {
+          font-size: 13px;
+          font-weight: 700;
+          text-transform: uppercase;
+          letter-spacing: 0.04em;
+          padding: 5px 8px;
+          border-radius: 7px;
+          transition: color .15s ease, background-color .15s ease;
+        }
+        .lang-item:hover { color: var(--ink); background: var(--surface-2); }
+        .lang-item--on { color: var(--ink); background: var(--surface-2); }
         .nav-burger { display: none; }
         .nav-mobile { display: none; }
         @media (max-width: 1000px) {

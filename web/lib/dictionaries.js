@@ -1,4 +1,5 @@
-export const locales = ["sk", "en"];
+// Poradie určuje aj poradie v prepínači jazykov.
+export const locales = ["sk", "cs", "en"];
 
 export const dictionaries = {
   sk: {
@@ -707,6 +708,717 @@ export const dictionaries = {
       },
       rights: "Všetky práva vyhradené.",
       ownerLabel: "Projekt vlastní a vyvíja",
+      ownerName: "LTK Solutions",
+      ownerUrl: "https://ltk.solutions",
+    },
+  },
+
+  cs: {
+    locale: "cs",
+    metaDescription:
+      "RAG helpdesk s hybridním vyhledáváním nad vaším obsahem. MongoDB $rankFusion, vyměnitelné AI adaptéry — cloud (Voyage, Claude) nebo plně on-prem (Infinity, vLLM). EU hosting, GDPR. Odpověď s citací zdroje.",
+    nav: {
+      features: "Funkce",
+      how: "Jak to funguje",
+      demo: "Demo",
+      audience: "Pro koho",
+      roadmap: "Připravujeme",
+      modes: "Nasazení",
+      overview: "Co je Contineo",
+      versions: "Verze",
+      runtime: "Provoz",
+      identity: "Identita",
+      security: "Bezpečnost",
+      cta: "Vyzkoušet",
+    },
+    hero: {
+      badge: "Inteligentní vyhledávání a helpdesk nad vaším obsahem",
+      title: "Zeptejte se. Nehledejte.",
+      claim: "Odpovědi z vašeho světa, ne z internetu.",
+      subtitle:
+        "Contineo najde odpověď ve vašem vlastním obsahu — weby, projekty, normy i interní předpisy. Žádné listování ve složkách, žádné dohady z internetu. Jen ověřená odpověď odtud, kde skutečně žije.",
+      ctaPrimary: "Vyzkoušet vyhledávání",
+      ctaSecondary: "Jak to funguje",
+      note: "Vložitelné do webu i aplikací jedním řádkem.",
+    },
+    manifesto: {
+      eyebrow: "Proč Contineo",
+      text: "Roky jsme se učili hledat — vypisovat klíčová slova, otevírat deset záložek, prohledávat složky. Contineo to obrací: prostě se zeptáte a dostanete odpověď. A ne ledajakou — odpověď z obsahu vaší firmy, s citací zdroje. Ne z internetu. Z vašeho světa.",
+    },
+    logos: "Postaveno na MongoDB $rankFusion · Voyage AI nebo Infinity/TEI · Claude nebo vLLM · Next.js · EU hosting · GDPR",
+    features: {
+      eyebrow: "Funkce",
+      title: "Jedno místo pro všechen firemní obsah",
+      items: [
+        {
+          icon: "search",
+          title: "Inteligentní vyhledávání",
+          text: "Sémantické hledání napříč všemi zdroji najednou. Uživatel píše přirozeně, Contineo najde podstatu.",
+        },
+        {
+          icon: "layers",
+          title: "Všechny zdroje pohromadě",
+          text: "Weby, projekty, normy, interní předpisy a FAQ na jednom místě. Žádné přepínání mezi systémy.",
+        },
+        {
+          icon: "quote",
+          title: "Odpovědi s citací",
+          text: "Každá odpověď uvádí zdroj a verzi dokumentu. Žádné dohady — jen ověřený obsah.",
+        },
+        {
+          icon: "ticket",
+          title: "Helpdesk a ticketing",
+          text: "Když vyhledávání nestačí, uživatel jedním klikem pošle otázku jako ticket nebo e-mail správci.",
+        },
+        {
+          icon: "brain",
+          title: "Učí se z odpovědí",
+          text: "Schválené odpovědi správců se stávají novou znalostí. Systém je každým dnem přesnější.",
+        },
+        {
+          icon: "shield",
+          title: "Odděleno pro každou firmu",
+          text: "Multi-tenant architektura — obsah a přístupy každé organizace jsou bezpečně odděleny.",
+        },
+      ],
+    },
+    how: {
+      eyebrow: "Jak to funguje",
+      title: "Od otázky k ověřené odpovědi",
+      steps: [
+        {
+          n: "01",
+          title: "Připojíte zdroje",
+          text: "Weby, projekty, PDF normy, interní předpisy či FAQ. Obsah se rozdělí a označí podle tématu a platnosti.",
+        },
+        {
+          n: "02",
+          title: "Uživatel se ptá",
+          text: "Položí otázku přirozeným jazykem přímo ve vašem webu nebo aplikaci.",
+        },
+        {
+          n: "03",
+          title: "Contineo najde a odpoví",
+          text: "Prohledá všechny zdroje a vygeneruje odpověď jen z ověřeného obsahu — s odkazem na zdroj a verzi.",
+        },
+        {
+          n: "04",
+          title: "Podpora a kurace",
+          text: "Při neúspěchu vznikne ticket; odpověď správce se vrátí zpět jako nová znalost.",
+        },
+      ],
+    },
+    demo: {
+      eyebrow: "Živé demo",
+      title: "Zkuste, jak to vypadá pro uživatele",
+      subtitle:
+        "Toto je ukázka inteligentního vyhledávání se vzorovými daty. Zkuste „home office“, „dovolená termín“ nebo „reset hesla“.",
+      placeholder: "Zeptejte se na cokoli z vašeho obsahu…",
+      brand: "inteligentní vyhledávání",
+      poweredBy: "Pohání Contineo · odpovědi z ověřeného obsahu",
+      question: "Otázka",
+      helpful: "Pomohla odpověď?",
+      yes: "Ano",
+      no: "Ne",
+      thanks: "Děkujeme za zpětnou vazbu.",
+      sorry: "Mrzí nás to — zkusíme to upřesnit.",
+      related: "Související otázky",
+      noAnswerTitle: "Na tuto otázku zatím nemám ověřenou odpověď.",
+      noAnswerText: "Zkuste ji přeformulovat nebo otázku pošlete správci.",
+      escalateTitle: "Nenašli jste odpověď? Odešlete otázku správci jako ticket.",
+      sendTicket: "Odeslat jako ticket",
+      ticketDone: "Ticket vytvořen. Odpovíme na e-mail.",
+      appliesAll: "platí pro celou firmu (ACME)",
+    },
+    modes: {
+      eyebrow: "Způsoby nasazení",
+      title: "Dva způsoby, jak Contineo nasadit",
+      subtitle: "Použijte Contineo jako uzamčený firemní portál, nebo jako vložené inteligentní vyhledávání přímo ve vaší stránce.",
+      intranet: {
+        tag: "Intranet",
+        title: "Samostatný portál na subdoméně",
+        text: "Vyhledávání a portál s firemním obsahem na vaší subdoméně (např. hledej.vasefirma.cz). Uzamykatelné jen pro přihlášené interní uživatele.",
+        points: [
+          "Přihlášení přes Microsoft Entra, Google Workspace či jiné SSO vázané na doménu",
+          "Přístup jen pro interní uživatele organizace",
+          "Portál s přehledem firemního obsahu na jednom místě",
+        ],
+      },
+      embed: {
+        tag: "Vložené vyhledávání",
+        title: "Ikona vyhledávání přímo ve vaší stránce",
+        text: "Do existující stránky přidáte ikonu Contineo. Po kliknutí se rozbalí jako vrchní vrstva (overlay) a nahradí běžné vyhledávání na stránce.",
+        points: [
+          "Jeden řádek kódu, žádné zásahy do obsahu stránky",
+          "Overlay v designu Contineo, sedne do světlé i tmavé stránky",
+          "Ideální jako náhrada vyhledávání na veřejném webu",
+        ],
+        demoHint: "Vyzkoušejte: klikněte na ikonu vyhledávání v ukázkové stránce.",
+      },
+      site: {
+        name: "Vaše stránka",
+        nav: ["Domů", "Novinky", "Dokumenty", "Kontakt"],
+        headline: "Ukázková stránka",
+        sub: "Toto je jen demonstrační pozadí. Vpravo nahoře je ikona vyhledávání Contineo.",
+        cards: ["Aktuality", "Dokumenty", "Projekty"],
+        placeholder: "Zeptejte se na cokoli z obsahu stránky…",
+        close: "Zavřít",
+        poweredBy: "Pohání Contineo",
+      },
+    },
+    runtime: {
+      eyebrow: "Provozní režimy",
+      title: "Stejná aplikace v cloudu i za zamčenými dveřmi",
+      subtitle:
+        "Jádro vyhledávání je v obou režimech identické — hybridní dotaz $rankFusion běží stejně v MongoDB Atlas i v self-hosted Community edici. Liší se jen tři vyměnitelné adaptéry, které se vybírají konfigurací tenanta, ne zásahem do kódu.",
+      cloud: {
+        tag: "Cloud",
+        title: "Řízený provoz v EU",
+        text: "MongoDB Atlas v evropském regionu, embedding i rerank přímo v databázi, generování přes Claude API. Žádný nákup hardwaru, nasazení v řádu dnů.",
+        points: [
+          "Automated Embedding — vektory vznikají přímo v databázi",
+          "Ověřitelné citace přes Citations API",
+          "Bez vstupní investice do hardwaru, platí se za dotaz",
+        ],
+      },
+      onprem: {
+        tag: "On-prem",
+        title: "Uzavřené řešení na vašem železe",
+        text: "MongoDB Community 8.2 na vlastním stroji, embedding a rerank přes Infinity nebo TEI, generování přes vLLM. Obsah ani dotazy neopustí váš perimetr.",
+        points: [
+          "Vhodné pro citlivé kategorie údajů i utajované skutečnosti",
+          "Volba modelu — Qwen3, EuroLLM, Gemma a další",
+          "Funguje i zcela bez připojení k internetu",
+        ],
+      },
+      adaptersTitle: "Tři vyměnitelné adaptéry",
+      cloudLabel: "Cloud",
+      onpremLabel: "On-prem",
+      adapters: [
+        {
+          name: "Embedding",
+          co: "Rozumí významu, ne jen slovům",
+          popis:
+            "Převede každý odstavec na číselný otisk významu. Díky tomu najde správnou pasáž, i když jste použili jiná slova než předpis — na otázku „kolik se platí za přestup“ vrátí článek o odstupném.",
+          cloud: "Atlas Automated Embedding (voyage-4)",
+          onprem: "Infinity / TEI (voyage-4-nano, BGE-M3)",
+        },
+        {
+          name: "Rerank",
+          co: "Druhé čtení, které upraví pořadí",
+          popis:
+            "První hledání je rychlé, ale hrubé — projde tisíce odstavců a vybere desítky kandidátů. Rerank je přečte pozorně spolu s otázkou a přeuspořádá tak, aby úplně nahoře skončilo to nejpřesnější.",
+          cloud: "$rerank přímo v databázi (rerank-2)",
+          onprem: "Infinity / TEI (BGE-reranker-v2-m3)",
+        },
+        {
+          name: "Generování",
+          co: "Složí odpověď a doloží, odkud je",
+          popis:
+            "Z nalezených pasáží napíše odpověď běžnou řečí a ke každému tvrzení připojí předpis a článek, ze kterého čerpá. Když odpověď v podkladech není, řekne to — místo toho, aby si ji vymyslel.",
+          cloud: "Claude API (Citations, prompt caching)",
+          onprem: "vLLM (Qwen3, EuroLLM, Gemma)",
+        },
+      ],
+      note: "Volba je na úrovni tenanta — jedna instalace obslouží cloudové i on-prem zákazníky současně.",
+    },
+    security: {
+      eyebrow: "Bezpečnost dat",
+      title: "Vaše data zůstávají u vás",
+      subtitle: "Contineo je postaveno tak, že obsah vaší firmy zůstává bezpečně ve vaší databázi a úložišti. AI je jen pomocník — ne místo, kam vaše data odcházejí.",
+      points: [
+        { icon: "lock", title: "Data ve vaší databázi", text: "Obsah žije ve vaší MongoDB a úložišti, odděleně pro každého tenanta. Není veřejný a neindexuje ho veřejný internet." },
+        { icon: "shield", title: "Žádná veřejná AI", text: "Nepoužíváme veřejnou spotřebitelskou AI. Veřejné modely se na vašich datech netrénují." },
+        { icon: "search", title: "AI je jen pomocník", text: "Jazykový model odpovídá výhradně z nalezených pasáží vašeho obsahu (RAG) a připojuje citaci zdroje." },
+        { icon: "layers", title: "Vy si volíte režim", text: "Cloud s databází v EU, nebo plně on-prem, kde data nikdy neopustí vaši infrastrukturu. Stejná aplikace, jiná konfigurace — podrobný rozpis datových toků najdete v sekci Datová rezidence." },
+      ],
+    },
+    residency: {
+      navLabel: "Bezpečnost",
+      eyebrow: "Datová rezidence",
+      title: "Kam se dostane váš text",
+      subtitle:
+        "Ne kde leží data, ale kde se zpracovávají. Ten rozdíl rozhoduje o tom, zda projdete tendrem — a většina dodavatelů ho zamlčí.",
+      levels: [
+        {
+          icon: "globe",
+          title: "1 · Data v klidu v EU",
+          text: "Databáze, indexy a zálohy jsou v EU. Volání AI modelů ven je přípustné při zpracovatelské smlouvě a standardních smluvních doložkách.",
+          who: "běžné komerční nasazení",
+        },
+        {
+          icon: "shield",
+          title: "2 · Nic neopustí EU",
+          text: "I modely běží v EU — včetně otázek, které píší vaši lidé. Není to požadavek GDPR, ale bývá v zadávacích podmínkách.",
+          who: "veřejná správa, větší firmy",
+        },
+        {
+          icon: "lock",
+          title: "3 · Nic neopustí perimetr",
+          text: "Celý systém běží na vaší infrastruktuře. Bez konektivity ven, pokud je to potřeba.",
+          who: "utajované skutečnosti, uzavřené sítě",
+        },
+      ],
+      levelsNote:
+        "Úroveň 1 je právně v pořádku — GDPR přenos mimo EU nezakazuje, jen ho podmiňuje. Ale pokud je v zadání napsáno „údaje nesmí opustit EU“, je to organizační požadavek, který smlouvou nevyřešíte. Kdo umí nabídnout jen úroveň 1, bývá vyřazen formálně, ne věcně.",
+
+      modesTitle: "Režimy, které umíme nasadit",
+      modesIntro:
+        "Režim je vlastnost vaší organizace, ne naší verze. Stejná aplikace, jiná konfigurace — a nepovolenou kombinaci systém odmítne spustit.",
+      modesHead: {
+        mode: "Režim",
+        meaning: "Co znamená",
+        embedding: "Embedding",
+        rerank: "Rerank",
+        generation: "Generování",
+      },
+      modes: [
+        { key: "eu-data", meaning: "Data v EU, zpracování může být mimo",
+          embedding: "MongoDB Atlas", rerank: "MongoDB Atlas", generation: "Claude API" },
+        { key: "eu-full", meaning: "Žádný text neopustí EU",
+          embedding: "vlastní služba", rerank: "vlastní služba", generation: "vlastní model" },
+        { key: "on-prem", meaning: "Vše na vaší infrastruktuře",
+          embedding: "vlastní služba", rerank: "vlastní služba", generation: "vlastní model" },
+        { key: "air-gap", meaning: "Uzavřená síť bez konektivity ven",
+          embedding: "vlastní služba", rerank: "vlastní služba", generation: "vlastní model" },
+      ],
+
+      whereTitle: "Kde zpracování probíhá — včetně toho, co ověřujeme",
+      whereIntro:
+        "Každý řádek je doložen veřejným dokumentem dodavatele, ne odhadem. Komponenty zpracovávající mimo EU se v režimech eu-full, on-prem a air-gap nepoužijí — profil s takovou kombinací se odmítne spustit.",
+      whereHead: {
+        component: "Komponenta",
+        provider: "Poskytovatel",
+        location: "Lokalita zpracování",
+        evidence: "Podklad",
+      },
+      where: [
+        { component: "Databáze, indexy, zálohy", provider: "MongoDB Atlas",
+          location: "EU (Frankfurt)", stav: "ok",
+          evidence: "volba regionu při založení clusteru" },
+        { component: "Hybridní vyhledávání", provider: "mongot v clusteru",
+          location: "EU (Frankfurt)", stav: "ok",
+          evidence: "počítá se přímo v clusteru" },
+        { component: "Reranking", provider: "$rerank (Voyage)",
+          location: "mimo EU (USA)", stav: "mimo",
+          evidence: "uvedeno v nastavení projektu Atlas" },
+        { component: "Embedding", provider: "Atlas Automated Embedding",
+          location: "mimo EU (USA)", stav: "mimo",
+          evidence: "seznam subprocesorů MongoDB: Google LLC, United States" },
+        { component: "Generování odpovědi", provider: "Anthropic Claude (přímé API)",
+          location: "mimo EU (USA)", stav: "mimo",
+          evidence: "zpracování v americké infrastruktuře" },
+        { component: "Generování odpovědi", provider: "Claude přes AWS Bedrock / Vertex AI",
+          location: "EU (Frankfurt, Irsko, Paříž)", stav: "ok",
+          evidence: "volba regionu při nasazení" },
+        { component: "Embedding, rerank, generování", provider: "vlastní služby (on-prem)",
+          location: "vaše infrastruktura", stav: "ok",
+          evidence: "běží u vás" },
+      ],
+
+      honestyTitle: "Proč to vypisujeme takto podrobně.",
+      honestyText:
+        "Protože se na to při zadávacím řízení někdo zeptá. Většina dodavatelů uvede „data v EU“ a mlčí o tom, kde běží model — přitom právě tam jde text otázky i nalezených pasáží. Každý řádek výše umíme doložit dokumentem dodavatele a pokud se stav změní, změníme i tuto tabulku.",
+      legalNote:
+        "Tato stránka je technický popis datových toků, ne právní posouzení. U konkrétního nasazení doporučujeme posouzení odborníkem na ochranu osobních údajů.",
+    },
+    audience: {
+      eyebrow: "Pro koho",
+      title: "Není to nástroj jen pro velké organizace",
+      subtitle:
+        "Rozhoduje množství předpisů, ne počet zaměstnanců. Desetičlenná firma se stavební legislativou má stejný problém jako ministerstvo — jen menší rozpočet a nikoho, kdo by to sledoval na plný úvazek.",
+      items: [
+        { title: "Malé a střední firmy", text: "Interní směrnice, návody k produktům a legislativa, kterou musíte dodržovat. Bez vlastního právníka a bez člověka, který by sledoval každou novelu." },
+        { title: "Školy a instituce", text: "Školský zákon, vyhlášky, vnitřní řády a směrnice zřizovatele. Nový učitel nebo administrativní pracovník se zorientuje za hodinu, ne za měsíce." },
+        { title: "Svazy a komory", text: "Vlastní předpisy navazující na zákon, který se mění. Členové se ptají stále na totéž — a odpověď musí sedět s platným zněním." },
+        { title: "Banky a velké společnosti", text: "Skupinové politiky, lokální směrnice a regulace nad tím. Jedna odpověď napříč pobočkami, doložená pro audit." },
+        { title: "Veřejná správa", text: "Zákony, prováděcí předpisy a interní akty řízení. On-prem nebo v uzavřené síti, pokud to vyžadují pravidla." },
+        { title: "Podpora a helpdesk", text: "Návody a FAQ k aplikacím — méně opakovaných ticketů, více vyřešeného samoobslužně." },
+        { title: "Noví i zkušení zaměstnanci", text: "Odpověď s odkazem na konkrétní článek. Nový se zaučí rychleji, zkušený nemusí odpovídat na totéž popáté." },
+      ],
+      more: "Podívat se na konkrétní situace a otázky",
+    },
+    versions: {
+      eyebrow: "Verze a platné znění",
+      title: "Problém není najít předpis. Problém je vědět, který platí.",
+      subtitle:
+        "Zákon se novelizuje, vyhláška se mění, interní směrnice zaostane o dva roky. Ve složce leží pět souborů s podobným názvem a nikdo si netroufá říct, který je ten správný.",
+
+      exampleTitle: "Konkrétně:",
+      exampleText:
+        "zákoník práce prošel od roku 2006 desítkami novel — jen velká novela v roce 2023 změnila desítky paragrafů. Kdo se ve firmě ptá „jak to je dnes“, dostane odpověď podle toho, koho se zeptal a kterou verzi si stáhl. Totéž platí pro stavební zákon i školský zákon.",
+
+      problems: [
+        {
+          icon: "layers",
+          title: "Pět verzí, jedna platná",
+          text: "Novely, úplná znění, pracovní verze a přílohy se hromadí. Bez evidence verzí je hledání loterie — a odpověď z neplatného znění vypadá stejně důvěryhodně jako správná.",
+        },
+        {
+          icon: "scale",
+          title: "Interní normy zaostávají za zákonem",
+          text: "Směrnice se napíše jednou a pak se na ni zapomene. Zákon se mezitím změní a v organizaci platí dva rozporné texty — jeden ze zákona, druhý z vlastního předpisu.",
+        },
+        {
+          icon: "help",
+          title: "Nový člověk nemá šanci",
+          text: "Zorientovat se v desítkách předpisů trvá měsíce. Otázky proto míří na jednoho dva zkušené kolegy, kteří odpovídají stále totéž — a když odejdou, znalost odejde s nimi.",
+        },
+      ],
+
+      nowTitle: "Co Contineo řeší dnes",
+      nowIntro: "Funguje a je nasazeno.",
+      now: [
+        "Každý dokument má verze. Starší se archivují, ale nemažou — vyhledávání je ve výchozím stavu přeskočí.",
+        "Odpověď vždy vychází z platného znění a uvádí konkrétní předpis i článek, ze kterého čerpá.",
+        "Pravidla přednosti: vyšší norma před nižší, zvláštní před obecnou, novější před starší.",
+        "Historické znění lze vyžádat zvlášť — na otázku „jak to bylo v roce 2019“.",
+      ],
+
+      nextTitle: "Na čem pracujeme",
+      nextTag: "Připravujeme",
+      nextIntro: "Zatím není součástí nasazení.",
+      next: [
+        "Automatické sledování externích zdrojů — Sbírka zákonů a věstníky se aktualizují samy.",
+        "Upozornění na rozpor: interní směrnice říká něco jiného než platný zákon nebo prováděcí předpis.",
+        "Přehled, kterých vlastních předpisů se novela dotkla a je třeba je projít.",
+      ],
+    },
+    usecases: {
+      navLabel: "Pro koho",
+      eyebrow: "Pro koho",
+      title: "Rozhoduje množství předpisů, ne počet zaměstnanců",
+      subtitle:
+        "Desetičlenná firma se stavební legislativou má stejný problém jako ministerstvo — jen menší rozpočet a nikoho, kdo by změny sledoval na plný úvazek.",
+      note:
+        "Níže je pět typických situací a otázky, které v nich lidé skutečně kladou. Pokud se v některé poznáváte, Contineo vám umíme ukázat přímo na vašich dokumentech.",
+
+      benefitLabel: "Co se změní",
+      questionsLabel: "Takto se lidé ptají",
+
+      segments: [
+        {
+          icon: "layers",
+          title: "Malé a střední firmy",
+          situation:
+            "Máte směrnice, návody k produktům a legislativu, kterou musíte dodržovat — ale nemáte právníka ani nikoho, kdo by sledoval každou novelu. Dokumenty leží na disku, v e-mailech a v hlavách dvou lidí. Když jeden z nich odjede na dovolenou, práce se zastaví.",
+          questions: [
+            "Jaké školení BOZP musí absolvovat nový zaměstnanec před nástupem?",
+            "Jak dlouho musíme archivovat faktury a v jaké formě?",
+            "Platí naše směrnice o cestovních náhradách ještě podle aktuálního zákona?",
+          ],
+          answerNote: "Odpověď cituje konkrétní směrnici nebo paragraf a její platnou verzi.",
+          benefits: [
+            "Odpověď během sekund místo hledání ve složkách nebo čekání na kolegu.",
+            "Znalost přestane být vázaná na jednoho člověka.",
+            "Vidíte, které vaše směrnice se odvolávají na předpis, jenž se mezitím změnil.",
+          ],
+        },
+        {
+          icon: "quote",
+          title: "Školy a vzdělávací instituce",
+          situation:
+            "Školský zákon, vyhlášky ministerstva, směrnice zřizovatele, vnitřní řád a rozhodnutí školské rady. Každý z těchto textů se mění jiným tempem a v jiné době. Nový učitel nebo administrativní pracovník se v tom orientuje měsíce — a většinou tak, že se ptá kolegů.",
+          questions: [
+            "Kolik dní dovolené má pedagogický pracovník?",
+            "Jaký je postup u komisionální zkoušky?",
+            "Kdo schvaluje individuální vzdělávací plán a v jaké lhůtě?",
+          ],
+          answerNote: "Rozliší, co říká zákon a co váš vnitřní řád — a který má přednost.",
+          benefits: [
+            "Zaučení nového člověka se zkrátí z měsíců na hodiny.",
+            "Sekretariát přestane být úzkým hrdlem pro běžné dotazy.",
+            "Odpověď vždy vychází z platného znění, ne ze staršího souboru na disku.",
+          ],
+        },
+        {
+          icon: "scale",
+          title: "Svazy, komory a spolky",
+          situation:
+            "Máte vlastní předpisy postavené na zákoně, který se mění. Členové se ptají stále na totéž a odpověď musí sedět — protože podle ní se rozhoduje o přestupech, sankcích nebo členství. Špatně citovaný článek je reklamace, ne překlep.",
+          questions: [
+            "Jaká je lhůta pro podání námitky proti výsledku?",
+            "Kolik je odstupné za hráče od 20 let ze třetí ligy?",
+            "Kdo schvaluje přestup nezletilého do jiného klubu?",
+          ],
+          answerNote:
+            "Toto jsou skutečné otázky z našeho nasazení nad předpisy Slovenského fotbalového svazu — odpověď uvádí článek i odstavec.",
+          benefits: [
+            "Členové dostanou odpověď sami, bez telefonátu na sekretariát.",
+            "Každá odpověď je doložena článkem, takže se dá ověřit i zpochybnit.",
+            "Historické znění zůstává dostupné pro spory o starší období.",
+          ],
+        },
+        {
+          icon: "globe",
+          title: "Banky, nadnárodní a velké společnosti",
+          situation:
+            "Skupinové politiky jsou anglicky, lokální směrnice v jazyce země a nad tím regulace, která se mění každý rok. Zaměstnanec v Praze neví, jestli platí group policy nebo lokální dodatek — a když se zeptá, dostane od dvou kolegů dvě odpovědi. Navíc hledá česky v dokumentu, který česky není. Interní audit se ptá na totéž, jen s většími důsledky.",
+          questions: [
+            "Která verze skupinové politiky platí pro českou pobočku?",
+            "Jaký je limit pro schválení výdaje bez druhého podpisu?",
+            "Liší se naše interní směrnice od požadavku regulátora?",
+          ],
+          answerNote:
+            "Odpověď rozliší skupinovou politiku od lokální a řekne, která má v daném případě přednost.",
+          benefits: [
+            "Stejná odpověď napříč pobočkami — ne podle toho, koho se člověk zeptal.",
+            "Otázka česky, zdroj anglicky. Model významu i jazykový model jsou vícejazyčné a každý dokument nese svůj jazyk jako údaj, takže se dá filtrovat i míchat.",
+            "Každá odpověď je doložena dokumentem, článkem a verzí, takže obstojí při interním auditu.",
+            "Zaškolení stovek lidí na novou politiku, aniž by ji všichni museli přečíst celou.",
+            "Nasazení v EU nebo přímo ve vaší infrastruktuře, pokud to vyžaduje bezpečnostní politika.",
+          ],
+        },
+        {
+          icon: "shield",
+          title: "Veřejná správa",
+          situation:
+            "Zákony, prováděcí předpisy, interní akty řízení a metodické pokyny. K tomu požadavek, aby údaje neopustily EU nebo aby celý systém běžel ve vaší síti. Běžné cloudové nástroje tu neprojdou ani do užšího výběru.",
+          questions: [
+            "Který předpis upravuje lhůtu pro vyřízení tohoto podání?",
+            "Změnilo se něco v metodice po poslední novele?",
+            "Co říká interní akt řízení oproti zákonu?",
+          ],
+          answerNote: "Dostupné i v režimu, kde žádný text neopustí vaši infrastrukturu.",
+          benefits: [
+            "Nasazení on-prem nebo v uzavřené síti bez připojení k internetu.",
+            "Doložitelné, kde se každá část zpracování provádí — pro audit i pro zadávací řízení.",
+            "Přístupová práva podle existujícího přihlášení, bez zakládání nových účtů.",
+          ],
+        },
+      ],
+
+      commonTitle: "Společné všem pěti",
+      commonText:
+        "Odpověď vždy vychází z vašeho obsahu a uvádí, odkud pochází — předpis, článek i verzi. Když odpověď v podkladech není, systém to řekne místo toho, aby si ji vymyslel. To je rozdíl mezi nástrojem, který se dá použít při rozhodování, a nástrojem, který se dá použít jen pro inspiraci.",
+    },
+    roadmap: {
+      eyebrow: "Připravujeme",
+      title: "Z obsahu automaticky web",
+      subtitle:
+        "V dalších verzích Contineo z vašich zdrojů vytvoří přehledný web — automatický přehled informací, projektů a norem, vždy aktuální.",
+      items: [
+        { title: "Automatický přehled", text: "Z připojených zdrojů vznikne strukturovaný portál bez ručního psaní." },
+        { title: "Projekty a informace", text: "Přehled projektů, dokumentů a novinek na jednom místě, vždy aktuální." },
+        { title: "Bez údržby", text: "Aktualizace zdroje se promítne do webu automaticky." },
+      ],
+      tag: "Plánováno v dalších verzích",
+    },
+    identity: {
+      eyebrow: "Identita a přístup",
+      title: "Správa uživatelů a přihlášení",
+      subtitle: "Uživatelé se přihlašují přes vaše existující SSO a vidí přesně to, na co mají právo — bez ručního zakládání účtů.",
+      providers: ["Microsoft Entra ID", "Google Workspace", "OAuth / OIDC", "sportnet.online (příklad)", "Vlastní databáze"],
+      providersLabel: "Podporovaní poskytovatelé identity",
+      points: [
+        { icon: "lock", title: "SSO a jednotné přihlášení", text: "Přihlášení přes OAuth/OIDC — Microsoft Entra ID, Google Workspace, vlastní účty či další poskytovatel identity. Jedna kanonická session napříč celým systémem." },
+        { icon: "refresh", title: "Automatické zakládání účtů", text: "Uživatelé, role a skupiny vznikají automaticky z připojeného CRM / zdroje identity. Žádná ruční správa účtů — onboarding i offboarding se děje sám." },
+        { icon: "layers", title: "Multi-tenant přístup", text: "Hierarchie organizací (centrála → regionální → lokální jednotky). Veřejný obsah vidí všichni; interní jen příslušníci dané jednotky, se sdílením konfigurovatelným per dokument." },
+        { icon: "shield", title: "Bezpečnost na úrovni dotazu", text: "Přístupové právo je povinný filtr odvozený ze session na straně serveru (default-deny). Aplikuje se před jazykovým modelem — nedá se obejít promptem. Audit při každé změně." },
+      ],
+    },
+    tech: {
+      navLabel: "Technologie",
+      eyebrow: "Technické řešení",
+      title: "Postaveno na ověřených technologiích",
+      subtitle:
+        "Contineo spojuje sémantické vyhledávání (RAG) nad vaším obsahem s jazykovým modelem, který odpovídá výhradně z ověřených zdrojů — s citací a verzí.",
+      exampleNote:
+        "Příklady na této stránce (sekce, značky, dotazy) vycházejí z generické firmy. Contineo je doménově univerzální — „předpis“ je jen jeden druh dokumentu a „jednotka“ jen jeden druh organizace. Konkrétní nasazení do velké organizace najdete v případové studii níže.",
+      back: "Zpět na hlavní stránku",
+      architectureTitle: "Architektura a datový tok",
+      architectureCaption:
+        "Vstupní kanály → zpracování (chunking + značkování) → MongoDB (jádro: hybridní vyhledávání) → AI adaptéry (embedding, rerank, generování) → rozhraní. Jádro je v cloudu i on-prem identické — $rankFusion běží stejně v Atlasu i v self-hosted Community 8.2. Liší se jen tři adaptéry, které se vybírají konfigurací tenanta. AI dostane vždy jen relevantní pasáže; data zůstávají ve vaší databázi. Součástí jsou dva zpětné cykly: kurace (kontrola kvality) a eskalace na ticket.",
+      pillarsTitle: "Klíčové pilíře",
+      pillars: [
+        { icon: "search", title: "RAG + Hybrid Search", text: "Hybridní vyhledávání $rankFusion (vektor 60 % + fulltext 40 %) je jádro systému a běží identicky v MongoDB Atlas i v self-hosted Community 8.2. Odpověď vzniká výhradně z nalezených pasáží." },
+        { icon: "layers", title: "Vyměnitelné AI adaptéry", text: "Embedding, rerank a generování jsou tři nezávislé adaptéry vybírané konfigurací tenanta, ne kódem. Cloud: Voyage a Claude. On-prem: Infinity nebo TEI a vLLM s modelem podle vašeho výběru (Qwen3, EuroLLM, Gemma)." },
+        { icon: "quote", title: "Citace a verze", text: "Každá odpověď uvádí zdroj a verzi. Import nové verze neztratí starou — cituje se vždy platné znění." },
+        { icon: "shield", title: "Multi-tenant a bezpečnost", text: "Hierarchie organizací (centrála → regionální → lokální jednotky) jako samostatní tenanti. Veřejný obsah vidí všichni; interní obsah jen příslušníci dané jednotky. Audit při každé změně znalostí." },
+        { icon: "layers", title: "Vstupní kanály (obsah i integrace)", text: "Jedna vrstva, kterou teče obsah: PDF dokumenty a předpisy, FAQ, weby (RSS), interní směrnice, MCP konektory (Drive, SharePoint, Confluence…) i e-mail (IMAP) — sjednoceno do jednoho indexu. Připojený zdroj identity zde poskytuje identitu, ne obsah." },
+        { icon: "ticket", title: "Helpdesk a e-mail", text: "Sledování e-mailových schránek, ticketing a předpřipravené odpovědi s eskalací z vyhledávání." },
+        { icon: "brain", title: "Kontrola kvality a kurace", text: "Nejde o strojové učení modelu, ale o lidskou kuraci: správce ohodnotí a schválí odpověď, ta se uloží jako nový pár (qa_pair) a naembeduje zpět. Nový pár nikdy potichu nepřepíše schválený předpis." },
+      ],
+      stackTitle: "Technologický stack",
+      stack: [
+        "MongoDB — jádro: $rankFusion (Atlas EU nebo Community 8.2)",
+        "Cloud · Voyage AI voyage-4 — Automated Embedding",
+        "Cloud · Voyage AI rerank-2.5 — $rerank v databázi",
+        "Cloud · Claude API — Citations, prompt caching",
+        "On-prem · Infinity / TEI — embedding + rerank",
+        "On-prem · vLLM — Qwen3, EuroLLM, Gemma",
+        "Next.js 14 (App Router) · Node.js worker",
+        "Integrace: e-mail (IMAP), zdroj identity/CRM, MCP konektory",
+      ],
+      flowsTitle: "Klíčové datové toky",
+      flows: [
+        { title: "Odpovídání (RAG + Hybrid)", text: "Dotaz se klasifikuje (fulltext / vector / hybrid). $rankFusion sloučí $vectorSearch a $search — identicky v obou režimech. Rerank a generování pak obslouží adaptér podle profilu tenanta: v cloudu $rerank v databázi a Claude API, on-prem Infinity a vLLM. Odpověď jde streamingem s citací zdroje." },
+        { title: "Eskalace na ticket", text: "Neúspěch = nízké skóre podobnosti nebo negativní hodnocení. Po 3 neúspěších na totéž téma bot nabídne vytvoření ticketu i s celým kontextem konverzace." },
+        { title: "Kontrola kvality a kurace", text: "Ne strojové učení, ale lidská kurace: schválené odpovědi z ContineoLearning i z upravených e-mailových odpovědí se uloží jako qa_pair a naembedují zpět do znalostí. Nový pár nikdy potichu nepřepíše schválený předpis." },
+      ],
+      collectionsTitle: "Hlavní kolekce",
+      collectionsIntro: "Návrh odděluje znalosti (jádro RAG) od konverzací a ticketů. Verzování norem zaručuje, že import nové verze neztratí starší.",
+      collDocLabel: "document_chunks — jádro RAG",
+      collTicketLabel: "tickets",
+      vectorTitle: "Hybridní vyhledávací dotaz ($rankFusion)",
+      vectorIntro: "Otázka z prostředí jednotky „ACME-PR”, sekce interní směrnice, jen platná verze. $rankFusion kombinuje vektorové a fulltextové vyhledávání — tento dotaz je identický v cloudu i on-prem. Rerank je samostatný krok mimo tento dotaz: v cloudu jako $rerank stage, on-prem přes Infinity nad výsledkem.",
+      adaptersTitle: "Vyměnitelné adaptéry a profil tenanta",
+      adaptersIntro:
+        "Embedding, rerank i generování jsou tři nezávislé adaptéry. Který se použije, určuje záznam v kolekci tenant_profiles — ne kód. Jedna instalace tak obslouží cloudového i on-prem zákazníka současně, se stejným jádrem vyhledávání.",
+      collProfileLabel: "tenant_profiles — volba adaptérů",
+      parityTitle: "Co se mezi režimy liší",
+      parityIntro: "Jádro je identické, ale úplná funkční parita neexistuje. Toto jsou rozdíly, se kterými je třeba počítat při výběru režimu.",
+      parityHead: { cap: "Schopnost", cloud: "Cloud", onprem: "On-prem" },
+      parity: [
+        { cap: "$rankFusion hybridní vyhledávání", cloud: "ano", onprem: "ano — identické" },
+        { cap: "Automatický embedding v databázi", cloud: "ano", onprem: "volá Voyage API — pro air-gap nepoužitelné" },
+        { cap: "$rerank přímo v pipeline", cloud: "ano", onprem: "ne — rerank v aplikační vrstvě" },
+        { cap: "Ověřitelné citace (Citations API)", cloud: "ano", onprem: "ne — citace se žádají promptem" },
+        { cap: "Prompt caching", cloud: "ano", onprem: "prefix caching ve vLLM, jiná sémantika" },
+        { cap: "Data neopustí perimetr", cloud: "ne", onprem: "ano" },
+      ],
+      adrNote: "Vektory nejsou přenositelné mezi modely — změna embedding modelu znamená úplný re-embed korpusu. Rozhodnutí a jeho důsledky jsou zdokumentovány v ADR-001.",
+      taggingTitle: "Značkování obsahu",
+      taggingIntro: "Každý úryvek odpovídá na tři otázky — o čem je (sekce), pro koho platí (organizace/rozsah) a z které verze. Hodnoty se vybírají z číselníku, ne jako volný text.",
+      taggingSectionsTitle: "Číselník sekcí",
+      sections: [
+        { key: "vseobecne", label: "Obecné informace" },
+        { key: "smernice", label: "Interní směrnice" },
+        { key: "hr", label: "HR a personalistika" },
+        { key: "ekonomicke", label: "Ekonomika a finance" },
+        { key: "it_aplikacie", label: "IT a aplikace" },
+        { key: "gdpr", label: "GDPR a právní" },
+      ],
+      scopeTitle: "Rozsah platnosti",
+      scopes: [
+        "scope: global + centrála (např. ACME) → platí pro celou firmu",
+        "scope: company + kód jednotky → platí jen pro danou jednotku",
+        "scope: region → platí pro regionální úroveň",
+      ],
+      taggingExampleLabel: "Příklady označkovaných úryvků",
+      rulesTitle: "Pravidla pro konzistentní značkování",
+      rules: [
+        "sectionKey a companyCode vždy z číselníku, nikdy volný text.",
+        "Celofiremní předpisy: centrála + scope global — nekopírovat pro každou jednotku.",
+        "articleRef vyplňovat u předpisů — používá se v citaci odpovědi.",
+        "Při nové verzi staré chunky nemazat — isActive: false + effectiveTo.",
+      ],
+      ticketTitle: "Životní cyklus ticketu",
+      ticketIntro: "Ticket vznikne z bota nebo z e-mailu a prochází stavy:",
+      ticketStages: [
+        { s: "new", t: "přišel, probíhá auto-triage (sekce, jednotka, návrh odpovědi)" },
+        { s: "open", t: "přidělen správci, pracuje se na něm" },
+        { s: "waiting", t: "čeká se na doplnění od žadatele (SLA pozastavena)" },
+        { s: "resolved", t: "odeslána odpověď; úprava při odeslání = nový qa_pair" },
+        { s: "closed", t: "uzavřen; reopen vrátí do open" },
+      ],
+      integrationsTitle: "Integrace",
+      integrations: [
+        { title: "E-mail (IMAP)", text: "Dvě sledované schránky (tickety + standardní dotazy); worker je směruje do ticketu nebo do učicího toku." },
+        { title: "Zdroj identity a CRM", text: "Přihlášení přes OAuth a CRM jako zdroj pravdy o osobách a organizačních jednotkách: uživatelé se zakládají automaticky, role a skupiny podle příslušnosti k jednotce/týmu (přes mapovací tabulku nebo ručně). Contineo má vlastní databázi, nezapisuje zpět. Ve sportovním nasazení je tímto zdrojem sportnet.online (viz případová studie)." },
+        { title: "RSS / web", text: "Pro obecné informace worker periodicky stahuje RSS; nové položky → documents → chunky." },
+        { title: "MCP konektory", text: "Připojitelné zdroje přes MCP — Google Drive, SharePoint, Confluence, Notion, Slack a další. Obsah se indexuje stejně jako ostatní zdroje." },
+      ],
+      securityTitle: "Bezpečnost a provoz",
+      security: [
+        "Přístup podle příslušnosti k organizaci/jednotce a skupin (automaticky z připojeného zdroje identity); kdo smí nahrávat obsah, se povoluje ručně. Audit při každé změně znalostí.",
+        "Přihlášení přes SSO: Microsoft Entra ID, Google Workspace; veřejný obsah i bez přihlášení.",
+        "Citace verze v každé odpovědi a archivace starých verzí předpisů.",
+        "Monitoring kvality: skóre, podíl eskalací a hodnocení jako zpětná vazba.",
+        "Multi-tenant hierarchie (centrála → regionální → lokální jednotky): veřejný obsah vidí všichni, interní obsah je oddělen per organizace.",
+        "Soukromí dat: obsah zůstává ve vaší databázi a úložišti; AI odpovídá výhradně z vašeho obsahu (RAG), veřejná spotřebitelská AI se nepoužívá.",
+        "Volba provozního režimu na úrovni tenanta: cloud (databáze v EU) nebo plně on-prem — obsah ani dotazy neopustí vaši infrastrukturu. Jedna instalace obslouží oba typy zákazníků současně.",
+      ],
+      caseStudy: {
+        eyebrow: "Případová studie",
+        title: "Nasazení ve velké organizaci — sportovní svaz (SFZ)",
+        intro: "Contineo je doménově univerzální. Takto vypadá jedno reálné nasazení do velké organizace — Slovenského fotbalového svazu a jeho podřízených svazů.",
+        points: [
+          "Tenant hierarchie: SFZ → regionální → oblastní svazy jako samostatné organizace.",
+          "Obsah: soutěžní a přestupní řády, rozpisy soutěží, směrnice, IT FAQ (aplikace ISSF).",
+          "Identita: přihlášení a CRM přes sportnet.online (OAuth) — uživatelé a role podle příslušnosti ke svazu/klubu.",
+          "Příklad otázky: „Může hráč nastoupit ve dvou utkáních za jeden den?“ → odpověď s citací § a verze.",
+        ],
+      },
+      identity: {
+        title: "Identita a řízení přístupu",
+        intro: "Přihlášení přes existující SSO; přístupové právo je povinný filtr odvozený ze session a aplikovaný na obě větve hybridního vyhledávání ($vectorSearch i $search).",
+        providersTitle: "Poskytovatelé identity (NextAuth) → jedna kanonická session",
+        providers: [
+          { name: "OAuth / OIDC", role: "primární login; ve sportovním nasazení např. sportnet.online + zdroj členství a rolí" },
+          { name: "Microsoft Entra ID", role: "SSO pro firemní účty zaměstnanců" },
+          { name: "Google Workspace", role: "SSO (alternativa)" },
+          { name: "CRM / API zdroje identity", role: "zdroj pravdy o osobách a organizačních jednotkách; mapování na companyCode, role a skupiny" },
+          { name: "Vlastní databáze", role: "účty mimo SSO (credentials)" },
+        ],
+        principlesTitle: "Principy bezpečnosti",
+        principles: [
+          "Server-side only — filtr se skládá ze session, nikdy z parametrů klienta.",
+          "Default-deny — co není výslovně povoleno, se nevrátí; bez identity jen veřejný obsah.",
+          "Filtr před LLM — model vidí jen povolené chunky; nedá se obejít promptem (platí i pro citace).",
+          "Auto-provisioning — uživatelé, role a skupiny se zakládají a synchronizují z CRM (login + webhook).",
+        ],
+        modesTitle: "Dva režimy nasazení",
+        modes: [
+          { name: "Veřejný widget", text: "anonymní; vidí jen veřejný obsah napříč celou hierarchií." },
+          { name: "Interní portál (SSO)", text: "přihlášený; vidí veřejný + interní obsah jednotek, ke kterým má vztah." },
+        ],
+      },
+    },
+    cta: {
+      title: "Připraveni dostat svůj obsah na dosah ruky?",
+      subtitle: "Ukážeme vám Contineo na vašich vlastních zdrojích.",
+      button: "Kontaktujte nás",
+      email: "office@contineo.app",
+    },
+    legal: {
+      compliance: {
+        heading: "Soulad a otevřenost",
+        license: "LGPL-2.1",
+        eupl: "EUPL-1.2 compatible",
+        reuse: "REUSE compliant",
+        gdpr: "GDPR ready",
+        wcag: "WCAG 2.1 AA",
+      },
+      privacy: {
+        title: "Ochrana údajů",
+        intro: "Toto je vzorová šablona. Před zveřejněním ji přizpůsobte vaší organizaci a nechte zkontrolovat právníkem.",
+        sections: [
+          { h: "Správce", p: "Doplňte název společnosti, sídlo a kontaktní e-mail (např. office@contineo.app)." },
+          { h: "Jaké údaje zpracováváme", p: "Tento web nepoužívá analytické ani reklamní cookies. Ukládá pouze volbu světlého/tmavého motivu v prohlížeči (localStorage), což není osobní údaj." },
+          { h: "Obsah zákazníka", p: "V produktu Contineo zůstává obsah vaší firmy ve vaší databázi a úložišti. AI vrstva dostane jen relevantní pasáže; veřejná AI se nepoužívá a veřejné modely se na vašich datech netrénují." },
+          { h: "Právní základ a rezidence", p: "Zpracování umožňuje databázi v EU, nasazení modelů v EU, nebo plně self-hosted variantu. Podrobný rozpis najdete v sekci Datová rezidence." },
+          { h: "Vaše práva", p: "Podle GDPR máte právo na přístup, opravu, výmaz, přenositelnost a právo vznést námitku. Žádosti směřujte na kontaktní e-mail." },
+          { h: "Kontakt", p: "office@contineo.app" },
+        ],
+      },
+      accessibility: {
+        title: "Přístupnost",
+        intro: "Contineo je navrženo tak, aby splňovalo WCAG 2.1 úroveň AA.",
+        points: [
+          "Sémantická struktura (nadpisy, orientační prvky, jeden hlavní obsah na stránku).",
+          "Viditelný fokus pro ovládání klávesnicí a odkaz „Přeskočit na obsah“.",
+          "Dostatečný barevný kontrast ve světlém i tmavém motivu.",
+          "Textové alternativy pro obrázky a srozumitelné popisky pro ovládací prvky.",
+          "Respektování nastavení „omezit pohyb“ (prefers-reduced-motion).",
+        ],
+        contactH: "Zpětná vazba",
+        contact: "Pokud narazíte na bariéru v přístupnosti, napište nám na office@contineo.app a opravíme to.",
+      },
+    },
+    footer: {
+      tagline: "Zeptejte se svého obsahu.",
+      product: "Produkt",
+      company: "Společnost",
+      links: {
+        features: "Funkce",
+        how: "Jak to funguje",
+        demo: "Demo",
+        contact: "Kontakt",
+        privacy: "Ochrana údajů",
+      },
+      rights: "Všechna práva vyhrazena.",
+      ownerLabel: "Projekt vlastní a vyvíjí",
       ownerName: "LTK Solutions",
       ownerUrl: "https://ltk.solutions",
     },
@@ -1456,6 +2168,35 @@ export const sampleKB = {
       art: null,
       ver: "FAQ",
       rel: ["Nedostal som e-mail na obnovenie", "Ako si nastavím VPN?"],
+    },
+  ],
+  cs: [
+    {
+      k: ["home", "office", "domu", "doma", "práce", "prace", "dálku", "dalku"],
+      q: "Kolik dní home office mám nárok měsíčně?",
+      a: "Zaměstnanec má nárok na práci z domova podle interní směrnice — standardně až 10 dní měsíčně po dohodě s nadřízeným. Výjimky určuje vedoucí útvaru.",
+      src: "Směrnice o práci z domova",
+      art: "čl. 4 odst. 2",
+      ver: "verze 2026",
+      rel: ["Jak požádám o home office?", "Platí home office i během zkušební doby?"],
+    },
+    {
+      k: ["dovolená", "dovolenou", "dovolena", "termín", "termin", "žádost", "zadost", "volno"],
+      q: "Do kdy je třeba podat žádost o dovolenou?",
+      a: "Žádost o dovolenou se podává nejpozději 14 dní předem přes interní systém. Při kratším termínu ji schvaluje přímý nadřízený individuálně.",
+      src: "Pracovní řád",
+      art: "čl. 9",
+      ver: "verze 2026",
+      rel: ["Kolik dní dovolené mi zbývá?", "Jak převedu dovolenou do dalšího roku?"],
+    },
+    {
+      k: ["heslo", "přihlás", "prihlas", "účet", "ucet", "reset", "vpn"],
+      q: "Jak si obnovím firemní heslo?",
+      a: "Heslo si obnovíte přes tlačítko „Zapomenuté heslo“ na přihlašovací obrazovce firemního účtu. Odkaz na obnovení přijde na váš pracovní e-mail.",
+      src: "IT podpora",
+      art: null,
+      ver: "FAQ",
+      rel: ["Nedostal jsem e-mail na obnovení", "Jak si nastavím VPN?"],
     },
   ],
   en: [

@@ -1,7 +1,8 @@
 import Link from "next/link";
 
 export default function LegalArticle({ dict, lang, kind }) {
-  const back = lang === "en" ? "Back to home" : "Späť na hlavnú stránku";
+  const SPAT = { sk: "Späť na hlavnú stránku", cs: "Zpět na hlavní stránku", en: "Back to home" };
+  const back = SPAT[lang] ?? SPAT.sk;
 
   return (
     <main id="main" className="section">

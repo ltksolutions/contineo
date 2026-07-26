@@ -2,6 +2,9 @@ import Link from "next/link";
 import Logo from "./Logo";
 import ComplianceBadges from "./ComplianceBadges";
 
+/** Jazyk vzdy vypisany vo vlastnom jazyku — tak ho citatel pozna. */
+const NAZVY_JAZYKOV = { sk: "Slovensky", cs: "Česky", en: "English" };
+
 export default function Footer({ dict, lang }) {
   const f = dict.footer;
   const year = new Date().getFullYear();
@@ -45,11 +48,15 @@ export default function Footer({ dict, lang }) {
               <li><a href={`mailto:${dict.cta.email}`} className="muted footlink">{dict.cta.email}</a></li>
               <li><Link href={`/${lang}/ochrana-udajov`} className="muted footlink">{dict.legal.privacy.title}</Link></li>
               <li><Link href={`/${lang}/pristupnost`} className="muted footlink">{dict.legal.accessibility.title}</Link></li>
-              <li>
-                <Link href={`/${lang === "sk" ? "en" : "sk"}`} className="muted footlink">
-                  {lang === "sk" ? "English" : "Slovensky"}
-                </Link>
-              </li>
+              {/* Vsetky jazyky okrem aktualneho — s cestinou uz binarny
+                  prepinac nestaci. */}
+              {Object.entries(NAZVY_JAZYKOV)
+                .filter(([kod]) => kod !== lang)
+                .map(([kod, nazov]) => (
+                  <li key={kod}>
+                    <Link href={`/${kod}`} className="muted footlink">{nazov}</Link>
+                  </li>
+                ))}
             </ul>
           </div>
         </div>
