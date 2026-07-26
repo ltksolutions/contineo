@@ -3,7 +3,7 @@
 > **Stav:** ✅ prijaté · **Dátum:** 2026-07-26 · **Revízia:** 2026-07-26 (**O5 a O6 uzavreté** z verejných dokumentov, sekcia 8)
 > **Nadväzuje na:** `docs/ADR-001-provider-adaptery.md` (tri adaptéry)
 > **Súvisiace:** `docs/ATLAS_SETUP.md`, `docs/PRISTUPOVE_PRAVA.md`, `docs/D9_EVAL_zlata_sada.md`
-> **Implementácia:** `app/src/lib/residency.ts`, validácia v `app/src/lib/tenantProfile.ts`, 25 testov
+> **Implementácia:** `app/src/lib/residency.ts`, validácia v `app/src/lib/tenantProfile.ts`, Bedrock adaptér v `app/src/lib/providers/generation/bedrock.ts` — 54 testov
 
 > ⚠️ Tento dokument nie je právne posúdenie. Je to technický podklad, aby sa dali položiť správne otázky. Pri zákazníkovi z verejnej správy si závery daj potvrdiť odborníkom na ochranu osobných údajov.
 
@@ -138,7 +138,7 @@ Architektúra troch adaptérov sa nemení — potvrdzuje sa. Mení sa len odhad,
 
 Po uzavretí O5 a O6 je obraz jasnejší — a čiastočne lepší, než sme čakali.
 
-**Generovanie má riešenie.** Claude cez AWS Bedrock vo Frankfurte alebo Vertex AI v EU beží v EÚ. Chýba len adaptér (**O10**), nie hardvér.
+**Generovanie je vyriešené.** Claude cez AWS Bedrock vo Frankfurte beží v EÚ a adaptér je hotový (O10). Zostáva ho overiť proti skutočnému Bedrocku (**O11**).
 
 **Embedding a rerank riešenie zatiaľ nemajú.** Atlas ich počíta v USA, takže v `eu-full` sa nedajú použiť. Zostávajú dve cesty:
 
@@ -161,6 +161,14 @@ Druhá cesta je lacnejšia a rýchlejšia. Ak niektorý európsky poskytovateľ 
 
 Automated Embedding aj `$rerank` teda spracúvajú v USA. Nie je to teda „neznáma", ale doložene mimo EÚ. Týka sa to **každého dotazu**, nielen importu — text otázky sa musí zaembedovať.
 
+**O10 — adaptér pre Bedrock?** ✅ **Postavený** (`app/src/lib/providers/generation/bedrock.ts`).
+
+Profil s `kind: "bedrock"` a EU regiónom dostane lokalitu `eu`, takže **prejde režimom `eu-full`**. Región mimo EÚ dostane `mimo-eu` — cesta cez AWS sama o sebe nič nerieši.
+
+Telo požiadavky zdieľa s priamym adaptérom (`messagesBody`), takže Citations aj prompt caching by mali fungovať rovnako. Líši sa autentifikácia (SigV4) a prenos streamu (binárne rámce namiesto SSE).
+
+> ⚠️ **Integračne neoverené.** Bez AWS účtu adaptér nikdy nebežal proti skutočnému Bedrocku. SigV4 je overený proti oficiálnym testovacím vektorom AWS a parser rámcov proti syntetickým dátam (29 testov), ale to nenahrádza skutočné volanie. Otvorené zostáva najmä **O11**.
+
 **O6 — vie Anthropic doložiť spracovanie v EÚ?** ✅ **Áno, ale nie cez priame API.**
 
 Priame Anthropic API spracúva v americkej infraštruktúre. Cesta do EÚ existuje cez **AWS Bedrock** (`eu-central-1` Frankfurt, `eu-west-1` Írsko, `eu-west-3` Paríž, `eu-north-1` Štokholm) alebo **Google Vertex AI** v EU regiónoch.
@@ -174,7 +182,8 @@ To je pre nás dôležitejšie, než sa zdá: **generovanie sa dá dostať do `e
 | **O7** | Ktorý európsky poskytovateľ vie embedding a rerank so spracovaním v EÚ? | Jediné, čo ešte chýba k `eu-full` bez vlastného hardvéru. Generovanie už riešenie má (O6). |
 | **O8** | Platí `mimo-eu` aj pre `$rankFusion` a `$vectorSearch`? | Predpokladáme, že nie — počíta ich `mongot` v clusteri. Zoznam subprocesorov spomína len *model hosting*, čo tomu zodpovedá, ale nie je to výslovné potvrdenie. |
 | **O9** | Ako sa rezidencia prejaví v UI a v zmluvnej dokumentácii? | Zákazník musí vidieť, kam jeho text ide, bez čítania kódu. |
-| **O10** | Postaviť adaptér pre Bedrock a Vertex AI? | Odomkne Claude v režime `eu-full`. Po uzavretí O6 je to najlacnejšia cesta k EU generovaniu. |
+| **O11** | Fungujú Citations cez Bedrock rovnako ako cez priame API? | Ak nie, `eu-full` generovanie stráca hlavnú výhodu Claude a metrika D9 „presnosť citácie ≥ 85 %" sa naň nedá vzťahovať. Overiť pri prvom AWS účte. |
+
 
 ## 9. Čo sa zmenilo v kóde
 

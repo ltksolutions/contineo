@@ -181,9 +181,30 @@ export const dictionaries = {
       cloudLabel: "Cloud",
       onpremLabel: "On-prem",
       adapters: [
-        { name: "Embedding", cloud: "Atlas Automated Embedding (voyage-4)", onprem: "Infinity / TEI (voyage-4-nano, BGE-M3)" },
-        { name: "Rerank", cloud: "$rerank priamo v databáze (voyage-rerank-2.5)", onprem: "Infinity / TEI (BGE-reranker-v2-m3)" },
-        { name: "Generovanie", cloud: "Claude API (Citations, prompt caching)", onprem: "vLLM (Qwen3, EuroLLM, Gemma)" },
+        {
+          name: "Embedding",
+          co: "Rozumie významu, nielen slovám",
+          popis:
+            "Prevedie každý odsek na číselný odtlačok významu. Vďaka tomu nájde správnu pasáž, aj keď ste použili iné slová než predpis — na otázku „koľko sa platí za prestup“ vráti článok o odstupnom.",
+          cloud: "Atlas Automated Embedding (voyage-4)",
+          onprem: "Infinity / TEI (voyage-4-nano, BGE-M3)",
+        },
+        {
+          name: "Rerank",
+          co: "Druhé čítanie, ktoré upraví poradie",
+          popis:
+            "Prvé hľadanie je rýchle, ale hrubé — prejde tisíce odsekov a vyberie desiatky kandidátov. Rerank ich prečíta pozorne spolu s otázkou a preusporiada tak, aby úplne hore skončilo to najpresnejšie.",
+          cloud: "$rerank priamo v databáze (rerank-2)",
+          onprem: "Infinity / TEI (BGE-reranker-v2-m3)",
+        },
+        {
+          name: "Generovanie",
+          co: "Zloží odpoveď a doloží, odkiaľ je",
+          popis:
+            "Z nájdených pasáží napíše odpoveď v bežnej reči a ku každému tvrdeniu pripojí predpis a článok, z ktorého čerpá. Keď odpoveď v podkladoch nie je, povie to — namiesto toho, aby si ju vymyslel.",
+          cloud: "Claude API (Citations, prompt caching)",
+          onprem: "vLLM (Qwen3, EuroLLM, Gemma)",
+        },
       ],
       note: "Voľba je na úrovni tenanta — jedna inštalácia obslúži cloudových aj on-prem zákazníkov súčasne.",
     },
@@ -275,7 +296,7 @@ export const dictionaries = {
           evidence: "spracovanie v americkej infraštruktúre" },
         { component: "Generovanie odpovede", provider: "Claude cez AWS Bedrock / Vertex AI",
           location: "EÚ (Frankfurt, Írsko, Paríž)", stav: "ok",
-          evidence: "voľba regiónu pri nasadení — pripravujeme adaptér" },
+          evidence: "voľba regiónu pri nasadení" },
         { component: "Embedding, rerank, generovanie", provider: "vlastné služby (on-prem)",
           location: "vaša infraštruktúra", stav: "ok",
           evidence: "beží u vás" },
@@ -705,9 +726,30 @@ export const dictionaries = {
       cloudLabel: "Cloud",
       onpremLabel: "On-prem",
       adapters: [
-        { name: "Embedding", cloud: "Atlas Automated Embedding (voyage-4)", onprem: "Infinity / TEI (voyage-4-nano, BGE-M3)" },
-        { name: "Rerank", cloud: "$rerank inside the database (voyage-rerank-2.5)", onprem: "Infinity / TEI (BGE-reranker-v2-m3)" },
-        { name: "Generation", cloud: "Claude API (Citations, prompt caching)", onprem: "vLLM (Qwen3, EuroLLM, Gemma)" },
+        {
+          name: "Embedding",
+          co: "Understands meaning, not just words",
+          popis:
+            "Turns every paragraph into a numeric fingerprint of its meaning. That is how it finds the right passage even when you phrased things differently from the regulation — ask about “what you pay for a transfer” and it returns the article on transfer fees.",
+          cloud: "Atlas Automated Embedding (voyage-4)",
+          onprem: "Infinity / TEI (voyage-4-nano, BGE-M3)",
+        },
+        {
+          name: "Rerank",
+          co: "A second reading that fixes the order",
+          popis:
+            "The first pass is fast but rough — it sweeps thousands of paragraphs and picks dozens of candidates. Rerank reads those carefully alongside the question and reorders them so the most precise one ends up at the very top.",
+          cloud: "$rerank inside the database (rerank-2)",
+          onprem: "Infinity / TEI (BGE-reranker-v2-m3)",
+        },
+        {
+          name: "Generation",
+          co: "Writes the answer and shows its sources",
+          popis:
+            "Composes a plain-language answer from the retrieved passages and attaches the regulation and article behind every claim. When the answer is not in the material, it says so — instead of inventing one.",
+          cloud: "Claude API (Citations, prompt caching)",
+          onprem: "vLLM (Qwen3, EuroLLM, Gemma)",
+        },
       ],
       note: "The choice is per tenant — a single installation serves cloud and on-prem customers at the same time.",
     },
@@ -799,7 +841,7 @@ export const dictionaries = {
           evidence: "processed in US infrastructure" },
         { component: "Answer generation", provider: "Claude via AWS Bedrock / Vertex AI",
           location: "EU (Frankfurt, Ireland, Paris)", stav: "ok",
-          evidence: "region chosen at deployment — adapter in progress" },
+          evidence: "region chosen at deployment" },
         { component: "Embedding, rerank, generation", provider: "own services (on-prem)",
           location: "your infrastructure", stav: "ok",
           evidence: "runs at your site" },

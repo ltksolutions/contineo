@@ -160,26 +160,67 @@ export async function* parseAnthropicStream(
 
       let ev: any
       try { ev = JSON.parse(payload) } catch { continue }
-
-      if (ev.type !== "content_block_delta") continue
-      const d = ev.delta
-      if (!d) continue
-
-      if (d.type === "text_delta" && d.text) {
-        yield { type: "text", text: d.text }
-      } else if (d.type === "citations_delta" && d.citation) {
-        const idx = d.citation.document_index ?? -1
-        const src = idx >= 0 ? chunks[idx] : undefined
-        yield {
-          type: "citation",
-          citation: {
-            chunkIndex: idx,
-            citedText: d.citation.cited_text ?? "",
-            documentTitle: d.citation.document_title ?? src?.document?.title,
-            articleRef: src?.articleRef ?? null,
-          },
-        }
-      }
+      yield* anthropicEvent(ev, chunks)
     }
   }
 }
+
+/**
+ * Prevedie JEDEN event Anthropic Messages API na naše udalosti.
+ *
+ * Vytiahnuté zvlášť, lebo Bedrock posiela **presne tie isté eventy**, len
+ * zabalené v binárnom AWS event streame namiesto SSE. Prenos sa líši,
+ * sémantika nie — a bolo by chybou mať dve kópie tejto logiky.
+ */
+export function* anthropicEvent(
+  ev: any,
+  chunks: ChunkResult[]
+): Generator<GenerationEvent> {
+  if (ev?.type !== "content_block_delta") return
+  const d = ev.delta
+  if (!d) return
+
+  if (d.type === "text_delta" && d.text) {
+    yield { type: "text", text: d.text }
+  } else if (d.type === "citations_delta" && d.citation) {
+    const idx = d.citation.document_index ?? -1
+    const src = idx >= 0 ? chunks[idx] : undefined
+    yield {
+      type: "citation",
+      citation: {
+        chunkIndex: idx,
+        citedText: d.citation.cited_text ?? "",
+        documentTitle: d.citation.document_title ?? src?.document?.title,
+        articleRef: src?.articleRef ?? null,
+      },
+    }
+  }
+}
+
+/** Telo requestu pre Messages API. Zdieľané s Bedrock adaptérom. */
+export function messagesBody(
+  cfg: GenerationConfig,
+  req: GenerationRequest,
+  citations: boolean,
+  model: string,
+): Record<string, unknown> {
+  const system = cfg.promptCaching !== false
+    ? [{ type: "text", text: req.system, cache_control: { type: "ephemeral" } }]
+    : req.system
+
+  return {
+    model,
+    max_tokens: req.maxTokens ?? cfg.maxTokens ?? 1024,
+    ...(cfg.temperature !== undefined && { temperature: cfg.temperature }),
+    system,
+    messages: [{
+      role: "user",
+      content: [
+        ...req.chunks.map((c) => documentBlock(c, citations)),
+        { type: "text", text: `Otázka: ${req.query}` },
+      ],
+    }],
+  }
+}
+
+export { documentBlock }

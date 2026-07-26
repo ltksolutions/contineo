@@ -14,6 +14,7 @@ import {
   GenerationProvider, GenerationConfig,
 } from "./types"
 import { AnthropicGenerationProvider } from "./generation/anthropic"
+import { BedrockGenerationProvider } from "./generation/bedrock"
 import { OpenAICompatGenerationProvider } from "./generation/openai"
 import { HttpEmbeddingProvider } from "./embedding/http"
 import { HttpRerankProvider } from "./rerank/http"
@@ -85,6 +86,7 @@ function makeRerank(cfg: RerankConfig): RerankProvider {
 function makeGeneration(cfg: GenerationConfig): GenerationProvider {
   switch (cfg.kind) {
     case "anthropic": return new AnthropicGenerationProvider(cfg)
+    case "bedrock":   return new BedrockGenerationProvider(cfg)
     case "openai":    return new OpenAICompatGenerationProvider(cfg)
     default:
       throw new ProviderConfigError(`Neznámy generation.kind: ${(cfg as GenerationConfig).kind}`)

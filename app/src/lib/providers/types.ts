@@ -57,12 +57,23 @@ export interface RerankConfig {
 }
 
 export interface GenerationConfig {
-  kind: "anthropic" | "openai"
+  /**
+   * anthropic — priame Messages API (spracovanie v USA)
+   * bedrock   — Claude cez AWS Bedrock; s EU regiónom je to jediná cesta
+   *             ku generovaniu v EÚ bez vlastného GPU (ADR-002, O10)
+   * openai    — OpenAI-kompatibilné rozhranie (vLLM, SGLang, Ollama)
+   */
+  kind: "anthropic" | "bedrock" | "openai"
   model: string
-  /** len pri kind: "anthropic" — overiteľné citácie cez Citations API */
+  /** len pri kind "anthropic" a "bedrock" — overiteľné citácie */
   citations?: boolean
-  /** len pri kind: "anthropic" — cache_control na systémovom prompte */
+  /** len pri kind "anthropic" a "bedrock" — cache_control na systémovom prompte */
   promptCaching?: boolean
+  /** povinné pri kind: "bedrock" — určuje aj lokalitu spracovania */
+  region?: string
+  /** názvy env premenných s AWS údajmi (len bedrock) */
+  accessKeyEnv?: string
+  secretKeyEnv?: string
   maxTokens?: number
   temperature?: number
   /** základná URL pri kind: "openai" (vLLM, SGLang, Ollama) */

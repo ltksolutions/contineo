@@ -49,6 +49,7 @@ export function defaultProfile(companyCode = "SFZ"): TenantProfile {
         citations: process.env.GENERATION_CITATIONS !== "false",
         promptCaching: process.env.GENERATION_PROMPT_CACHING !== "false",
         maxTokens: Number(process.env.GENERATION_MAX_TOKENS ?? 1024),
+        region: process.env.GENERATION_REGION,
         url: process.env.GENERATION_URL,
         apiKeyEnv: process.env.GENERATION_API_KEY_ENV,
       },
@@ -76,9 +77,14 @@ export function validateProfile(p: TenantProfile): void {
       `${p.companyCode}: generation.kind="anthropic" nepoužíva url — pre Bedrock/Vertex pridaj samostatný adaptér`
     )
   }
-  if (g.citations && g.kind !== "anthropic") {
+  if (g.citations && g.kind !== "anthropic" && g.kind !== "bedrock") {
     throw new ProviderConfigError(
-      `${p.companyCode}: citations sú podporované len pri kind="anthropic"`
+      `${p.companyCode}: citations sú podporované len pri kind="anthropic" alebo "bedrock"`
+    )
+  }
+  if (g.kind === "bedrock" && !g.region) {
+    throw new ProviderConfigError(
+      `${p.companyCode}: bedrock vyžaduje región — bez neho nevieme, kde sa text spracúva`
     )
   }
   if (!e.dim || e.dim < 1) {

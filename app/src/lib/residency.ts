@@ -13,6 +13,7 @@
  * kde počíta, sa v prísnom režime NEPOVOLÍ — nevedomosť nie je súhlas.
  */
 
+import { jeEuRegion } from "./providers/generation/bedrock"
 import type {
   TenantProfile, EmbeddingConfig, RerankConfig, GenerationConfig,
 } from "./providers/types"
@@ -87,6 +88,8 @@ const LOKALITA_GENERATION: Record<GenerationConfig["kind"], Lokalita> = {
   // eu-west-1, eu-west-3, eu-north-1) alebo Google Vertex AI v EU regiónoch
   // — na to ale treba samostatný adaptér, ktorý zatiaľ nemáme.
   "anthropic": "mimo-eu",
+  // Bedrock — lokalita závisí od regiónu, rieši `lokalitaGenerovania()`.
+  "bedrock": "neznama",
   // OpenAI-kompatibilné rozhranie používame na vlastné vLLM/SGLang/Ollama.
   // Ak by tenant nasmeroval url na cudzí cloud, toto tvrdenie prestane
   // platiť — preto to kontroluje aj `lokalitaGenerovania()` nižšie.
@@ -102,6 +105,10 @@ const VLASTNE_HOSTY = /^(localhost|127\.|10\.|192\.168\.|172\.(1[6-9]|2\d|3[01])
  * nepotvrdí.
  */
 function lokalitaGenerovania(g: GenerationConfig): Lokalita {
+  // Bedrock v EU regióne spracúva v EÚ — to je celý dôvod jeho existencie.
+  // Región mimo EÚ ale robí presne to isté, čo priame Anthropic API,
+  // takže sa nesmie prepustiť len preto, že „ideme cez AWS".
+  if (g.kind === "bedrock") return jeEuRegion(g.region) ? "eu" : "mimo-eu"
   if (g.kind !== "openai") return LOKALITA_GENERATION[g.kind]
   if (!g.url) return "neznama"
   try {

@@ -69,7 +69,7 @@ export default function Runtime({ dict }) {
 
         <h3 className="center" style={{ fontSize: 18, marginBottom: 18 }}>{r.adaptersTitle}</h3>
 
-        <div style={{ overflowX: "auto", maxWidth: 900, margin: "0 auto" }}>
+        <div style={{ overflowX: "auto", maxWidth: 1000, margin: "0 auto" }}>
           <table
             style={{
               width: "100%",
@@ -93,11 +93,23 @@ export default function Runtime({ dict }) {
             <tbody>
               {r.adapters.map((a, i) => (
                 <tr key={i} style={{ borderTop: "1px solid var(--line)" }}>
-                  <td style={{ padding: "11px 14px", fontSize: 14, fontWeight: 600, whiteSpace: "nowrap", verticalAlign: "top" }}>
-                    {a.name}
+                  {/* Pod technickým názvom vysvetlenie v bežnej reči —
+                      „Embedding“ a „Rerank“ nikomu mimo odboru nič nepovedia. */}
+                  <td style={{ padding: "13px 14px", fontSize: 14, verticalAlign: "top", minWidth: 210 }}>
+                    <div style={{ fontWeight: 600, marginBottom: a.co ? 3 : 0 }}>{a.name}</div>
+                    {a.co && (
+                      <div style={{ fontSize: 13, color: "var(--teal-700)", fontWeight: 600, lineHeight: 1.35 }}>
+                        {a.co}
+                      </div>
+                    )}
+                    {a.popis && (
+                      <p className="muted" style={{ fontSize: 13, margin: "7px 0 0", lineHeight: 1.55, fontWeight: 400 }}>
+                        {a.popis}
+                      </p>
+                    )}
                   </td>
-                  <td className="muted" style={{ padding: "11px 14px", fontSize: 14, verticalAlign: "top" }}>{a.cloud}</td>
-                  <td className="muted" style={{ padding: "11px 14px", fontSize: 14, verticalAlign: "top" }}>{a.onprem}</td>
+                  <td className="muted" style={{ padding: "13px 14px", fontSize: 14, verticalAlign: "top" }}>{a.cloud}</td>
+                  <td className="muted" style={{ padding: "13px 14px", fontSize: 14, verticalAlign: "top" }}>{a.onprem}</td>
                 </tr>
               ))}
             </tbody>
