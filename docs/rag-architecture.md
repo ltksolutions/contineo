@@ -117,7 +117,7 @@ Kolekcia: `document_chunks`
 ```json
 {
   "fields": [
-    { "type": "rerank", "path": "text", "model": "voyage-rerank-2" }
+    { "type": "rerank", "path": "text", "model": "rerank-2" }
   ]
 }
 ```

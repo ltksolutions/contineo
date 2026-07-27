@@ -15,7 +15,7 @@
 
 import { jeEuRegion } from "./providers/generation/bedrock"
 import type {
-  TenantProfile, EmbeddingConfig, RerankConfig, GenerationConfig,
+  TenantProfile, EmbeddingConfig, RerankConfig, GenerationConfig, Tier,
 } from "./providers/types"
 
 /**
@@ -100,6 +100,24 @@ const LOKALITA_GENERATION: Record<GenerationConfig["kind"], Lokalita> = {
 const VLASTNE_HOSTY = /^(localhost|127\.|10\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.|\[?::1\]?)/
 
 /**
+ * Mieri url na stroj, ktorý prevádzkujeme my alebo zákazník?
+ *
+ * Rozhoduje o oboch osiach naraz — o geografii aj o zdieľanosti — preto
+ * je to jedna funkcia. Keby to boli dve, raz sa rozídu.
+ */
+function jeVlastnaAdresa(url?: string): boolean | "neznama" {
+  if (!url) return "neznama"
+  try {
+    const host = new URL(url).hostname
+    // Bezdoménové meno je meno služby v Dockeri či Kubernetes.
+    if (VLASTNE_HOSTY.test(host) || !host.includes(".")) return true
+    return "neznama"
+  } catch {
+    return "neznama"
+  }
+}
+
+/**
  * Pri `openai` závisí lokalita od toho, kam url mieri. Interná adresa je
  * vlastná infraštruktúra; čokoľvek verejné je neznáme, kým to niekto
  * nepotvrdí.
@@ -110,14 +128,149 @@ function lokalitaGenerovania(g: GenerationConfig): Lokalita {
   // takže sa nesmie prepustiť len preto, že „ideme cez AWS".
   if (g.kind === "bedrock") return jeEuRegion(g.region) ? "eu" : "mimo-eu"
   if (g.kind !== "openai") return LOKALITA_GENERATION[g.kind]
-  if (!g.url) return "neznama"
-  try {
-    const host = new URL(g.url).hostname
-    // Bezdoménové meno je meno služby v Dockeri či Kubernetes.
-    return VLASTNE_HOSTY.test(host) || !host.includes(".") ? "vlastna" : "neznama"
-  } catch {
-    return "neznama"
+  return jeVlastnaAdresa(g.url) === true ? "vlastna" : "neznama"
+}
+
+// ── Druhá os: izolácia infraštruktúry (tier) ─────────────────────────────────
+//
+// Rezidencia hovorí, KDE text prebieha. To ale nie je celý príbeh: zákazník,
+// ktorý si platí vyhradené prostredie, sa nepýta len na krajinu, ale aj na to,
+// či jeho dotazy prechádzajú tým istým procesom ako dotazy niekoho iného.
+//
+// Osi sú naozaj nezávislé. Zdieľaná služba v EÚ je legitímna (T1 + eu-full),
+// rovnako ako vyhradená inštancia kdekoľvek (T2 + global). Preto sa
+// nevyhodnocujú spoločne, ale každá zvlášť.
+
+/**
+ * S kým adaptér zdieľa výpočet.
+ *
+ *   dedikovana — inštancia beží len pre tohto tenanta
+ *   zdielana   — cudzia multi-tenant služba; náš text ide cez tie isté procesy
+ *                ako text ostatných zákazníkov dodávateľa
+ *   neznama    — nevieme; rovnako ako pri lokalite sa berie ako to horšie
+ */
+export type Izolacia = "dedikovana" | "zdielana" | "neznama"
+
+const IZOLACIA_EMBEDDING: Record<EmbeddingConfig["kind"], Izolacia> = {
+  // Automated Embedding je služba MongoDB, nie náš proces.
+  "atlas-auto": "zdielana",
+  "tei":        "dedikovana",
+  "infinity":   "dedikovana",
+}
+
+const IZOLACIA_RERANK: Record<RerankConfig["kind"], Izolacia> = {
+  // $rerank počíta na inferenčnej platforme MongoDB, spoločnej pre všetkých.
+  "atlas-stage": "zdielana",
+  "tei":         "dedikovana",
+  "infinity":    "dedikovana",
+  // Žiadny rerank neznamená žiadny ďalší príjemca textu.
+  "none":        "dedikovana",
+}
+
+const IZOLACIA_GENERATION: Record<GenerationConfig["kind"], Izolacia> = {
+  "anthropic": "zdielana",
+  // Bedrock je vyhradený účet, ale model beží na infraštruktúre AWS
+  // spoločnej pre zákazníkov. Vyhradený účet nie je vyhradený hardvér.
+  "bedrock":   "zdielana",
+  // Vlastné vLLM/SGLang/Ollama — rieši `izolaciaGenerovania()`.
+  "openai":    "dedikovana",
+}
+
+/** Ktoré úrovne zdieľania daný tier pripúšťa. */
+const POVOLENA_IZOLACIA: Record<Tier, Izolacia[]> = {
+  "T1": ["dedikovana", "zdielana", "neznama"],
+  "T2": ["dedikovana"],
+  "T3": ["dedikovana"],
+}
+
+export const POPIS_TIERU: Record<Tier, string> = {
+  "T1": "zdieľaná infraštruktúra",
+  "T2": "vyhradené prostredie pre jedného tenanta",
+  "T3": "vyhradené a odpojené od siete",
+}
+
+/**
+ * T3 je z pohľadu izolácie to isté, čo air-gap z pohľadu geografie.
+ * Kým to nie je vynútené, dá sa nastaviť T3 s konektivitou von — čo je
+ * presne ten typ profilu, ktorý vyzerá prísne a nie je.
+ */
+const TIER_VYZADUJE_REZIDENCIU: Partial<Record<Tier, DataResidency>> = {
+  "T3": "air-gap",
+}
+
+function izolaciaGenerovania(g: GenerationConfig): Izolacia {
+  if (g.kind !== "openai") return IZOLACIA_GENERATION[g.kind]
+  return jeVlastnaAdresa(g.url) === true ? "dedikovana" : "neznama"
+}
+
+export interface PorusenieIzolacie {
+  adapter: "embedding" | "rerank" | "generation" | "utility" | "profil"
+  kind: string
+  izolacia: Izolacia
+  sprava: string
+}
+
+/**
+ * Vráti zoznam porušení izolácie. Rovnako ako pri rezidencii nevyhadzuje
+ * výnimku — volajúci rozhodne, či ide o tvrdú chybu alebo o hlásenie.
+ */
+export function skontrolujIzolaciu(p: TenantProfile): PorusenieIzolacie[] {
+  const tier = (p.tier ?? "T1") as Tier
+  const povolene = POVOLENA_IZOLACIA[tier]
+  if (!povolene) {
+    return [{
+      adapter: "profil", kind: "-", izolacia: "neznama",
+      sprava: `neznáma hodnota tier: "${p.tier}"`,
+    }]
   }
+
+  const porusenia: PorusenieIzolacie[] = []
+
+  // Konzistencia oboch osí — T3 bez air-gapu je len vyhradené prostredie.
+  const vyzadovana = TIER_VYZADUJE_REZIDENCIU[tier]
+  if (vyzadovana && p.dataResidency !== vyzadovana) {
+    porusenia.push({
+      adapter: "profil", kind: tier, izolacia: "neznama",
+      sprava: `tier="${tier}" (${POPIS_TIERU[tier]}) vyžaduje dataResidency="${vyzadovana}", ` +
+              `nie "${p.dataResidency}" — inak by odpojenie bolo len na papieri`,
+    })
+  }
+
+  const kandidati: Array<[PorusenieIzolacie["adapter"], string, Izolacia]> = [
+    ["embedding",  p.providers.embedding.kind,  IZOLACIA_EMBEDDING[p.providers.embedding.kind]],
+    ["rerank",     p.providers.rerank.kind,     IZOLACIA_RERANK[p.providers.rerank.kind]],
+    ["generation", p.providers.generation.kind, izolaciaGenerovania(p.providers.generation)],
+  ]
+  if (p.providers.utility) {
+    kandidati.push(["utility", p.providers.utility.kind, izolaciaGenerovania(p.providers.utility)])
+  }
+
+  for (const [adapter, kind, izolacia] of kandidati) {
+    if (izolacia === undefined) continue
+    if (povolene.includes(izolacia)) continue
+
+    const preco = izolacia === "neznama"
+      ? `nevieme, či inštancia beží len pre tohto tenanta`
+      : `ide o cudziu službu spoločnú pre viacerých zákazníkov`
+
+    porusenia.push({
+      adapter, kind, izolacia,
+      sprava: `${adapter}.kind="${kind}" (${izolacia}) je v rozpore s tierom ` +
+              `"${tier}" (${POPIS_TIERU[tier]}): ${preco}`,
+    })
+  }
+  return porusenia
+}
+
+/** Izolácia všetkých adaptérov — na výpis do admin prehľadu a do auditu. */
+export function prehladIzolacie(p: TenantProfile): Record<string, Izolacia> {
+  const v: Record<string, Izolacia> = {
+    embedding:  IZOLACIA_EMBEDDING[p.providers.embedding.kind],
+    rerank:     IZOLACIA_RERANK[p.providers.rerank.kind],
+    generation: izolaciaGenerovania(p.providers.generation),
+  }
+  if (p.providers.utility) v.utility = izolaciaGenerovania(p.providers.utility)
+  return v
 }
 
 export interface PorusenieRezidencie {

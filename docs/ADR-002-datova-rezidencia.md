@@ -193,3 +193,72 @@ To je pre nás dôležitejšie, než sa zdá: **generovanie sa dá dostať do `e
 | `src/lib/providers/types.ts` | `DataResidency` rozšírený na päť hodnôt |
 | `src/lib/tenantProfile.ts` | dve podmienky na air-gap nahradené všeobecnou kontrolou |
 | `tests/residency.test.ts` | **nový** — 25 testov vrátane odvodenia lokality z URL |
+
+---
+
+## 10. Dodatok (2026-07-27) — druhá os: izolácia infraštruktúry
+
+### Čo sa našlo
+
+Pole `tier` (`T1` | `T2` | `T3`) existovalo od ADR-001, ale malo v celej aplikácii **tri výskyty**: definíciu typu, predvolenú hodnotu v profile a jeden testovací fixture. **Nikto ho nečítal.** Ani `residency.ts`, ani `validateProfile()`, ani ADR-002 — v pôvodnom texte tohto dokumentu sa slovo „tier" nevyskytovalo ani raz.
+
+Typ nemal ani komentár, takže z kódu sa nedalo zistiť, čo mal znamenať. Jediné vysvetlenie bolo v komentári ukážky na marketingovom webe: `// T1 shared | T2 enclave | T3 air-gap`.
+
+Príčina je pochopiteľná: ADR-002 zaviedlo presnejší mechanizmus pre otázku „kam text tečie" a starší, hrubší pojem prekrylo. Nikto ho nezrušil, ale ani nepremostil — ostal visieť ako deklarácia bez účinku.
+
+### Prečo ho nezrušiť
+
+Lebo `tier` a `dataResidency` **neodpovedajú na tú istú otázku**:
+
+| Os | Otázka | Hodnoty |
+|---|---|---|
+| `dataResidency` | **Kde** text prebieha spracovaním? | `global` … `air-gap` |
+| `tier` | **S kým** zdieľame výpočet? | `T1` … `T3` |
+
+Sú nezávislé. Zdieľaná služba v EÚ je legitímna kombinácia (`T1` + `eu-full`) rovnako ako vyhradená inštancia kdekoľvek (`T2` + `global`). Zákazník, ktorý si platí vyhradené prostredie, sa nepýta len na krajinu — pýta sa, či jeho dotazy prechádzajú tým istým procesom ako dotazy niekoho iného. Na to `dataResidency` odpoveď nedá.
+
+### Rozhodnutie
+
+**`tier` sa oživuje ako samostatná os izolácie infraštruktúry** a vyhodnocuje sa rovnakým tabuľkovým mechanizmom ako rezidencia.
+
+Každý adaptér dostal druhú vlastnosť — **izoláciu**:
+
+| Hodnota | Význam |
+|---|---|
+| `dedikovana` | inštancia beží len pre tohto tenanta |
+| `zdielana` | cudzia multi-tenant služba; náš text ide cez tie isté procesy ako text iných zákazníkov dodávateľa |
+| `neznama` | nevieme — rovnako ako pri lokalite sa berie ako to horšie |
+
+| Adaptér | Izolácia | Prečo |
+|---|---|---|
+| `atlas-auto` | zdieľaná | Automated Embedding je služba MongoDB, nie náš proces |
+| `atlas-stage` | zdieľaná | `$rerank` počíta na inferenčnej platforme MongoDB spoločnej pre všetkých |
+| `anthropic` | zdieľaná | verejné API |
+| `bedrock` | zdieľaná | **vyhradený účet nie je vyhradený hardvér** — model beží na infraštruktúre AWS spoločnej pre zákazníkov |
+| `tei`, `infinity` | dedikovaná | vlastná inštancia |
+| `openai` | podľa URL | interná adresa → dedikovaná; čokoľvek verejné → neznáma |
+
+Pravidlo:
+
+```
+T1 → dedikovana | zdielana | neznama     (bez obmedzenia)
+T2 → dedikovana
+T3 → dedikovana  +  dataResidency musí byť "air-gap"
+```
+
+### Prekryv s air-gapom
+
+`air-gap` bol v oboch osiach naraz — a to je presne stopa po tom, ako sa rozišli. Riešime to **pravidlom konzistencie, nie zlúčením**: `T3` vyžaduje `dataResidency: "air-gap"`, inak profil neprejde validáciou. Bez toho by sa dal nastaviť `T3` s konektivitou von — profil, ktorý vyzerá prísne a nie je.
+
+### Dôsledok pre predaj
+
+Toto je vec, ktorú sa štátny aj bankový zákazník spýta skôr než na krajinu: *„beží to len pre nás?"* Doteraz sme na ňu nemali odpoveď v produkte, len v prezentácii. Zároveň to zostruje obraz z kapitoly 7 — na `T2` neprejde ani Bedrock, takže **vyhradené prostredie potrebuje vlastný GPU rovnako ako `eu-full`**. Obe cesty vedú k tomu istému chýbajúcemu dielu (O7).
+
+### Čo sa zmenilo v kóde
+
+| Súbor | Zmena |
+|---|---|
+| `src/lib/residency.ts` | `Izolacia`, tabuľky izolácie, `skontrolujIzolaciu()`, `prehladIzolacie()`; spoločná pomôcka `jeVlastnaAdresa()` pre obe osi |
+| `src/lib/providers/types.ts` | `Tier` konečne zdokumentovaný |
+| `src/lib/tenantProfile.ts` | `validateProfile()` kontroluje aj izoláciu |
+| `tests/residency.test.ts` | 22 nových testov (21 → 43) vrátane nezávislosti oboch osí |

@@ -15,7 +15,19 @@ import { ChunkResult } from "../mongoSearch"
 
 // ── Profil tenanta ───────────────────────────────────────────────────────────
 
+/**
+ * Úroveň izolácie infraštruktúry. Odpovedá na otázku „s kým zdieľame
+ * výpočet", nie „v akej krajine beží" — to je `DataResidency` nižšie.
+ * Obe osi sú nezávislé a vyhodnocujú sa zvlášť v `src/lib/residency.ts`.
+ *
+ *   T1 — zdieľaná infraštruktúra; oddelenie tenantov je logické (companyCode)
+ *   T2 — vyhradené prostredie: embedding, rerank aj generovanie bežia na
+ *        inštanciách, ktoré neobsluhujú nikoho iného
+ *   T3 — ako T2 a navyše bez konektivity von; vyžaduje dataResidency="air-gap",
+ *        inak by bolo odpojenie len deklarované
+ */
 export type Tier = "T1" | "T2" | "T3"
+
 /**
  * Úroveň ochrany tenanta. Určuje, ktoré kombinácie adaptérov sú prípustné —
  * viď `src/lib/residency.ts` a `docs/ADR-002-datova-rezidencia.md`.

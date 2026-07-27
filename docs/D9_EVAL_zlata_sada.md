@@ -145,6 +145,7 @@ Testy vyhodnocovacej logiky: `python3 test_scoring.py`.
 ## 6. Otvorené body
 
 - **E1** — Doplniť overené odpovede a § (legislatívec SFZ). *Blokuje všetko ostatné.*
+  **Odložené (2026-07-27):** hárok sa legislatívcovi **neposiela, kým si systém nebude môcť vyskúšať v aplikácii**. Dôvod: 74 otázok v Exceli je bez kontextu abstraktná domáca úloha a odpovede by boli formálne. Keď najprv uvidí, ako systém odpovedá a cituje, vie posúdiť, čo je dobrá odpoveď — a hárok vyplní vecne. Predpoklad E1 je teda **funkčné testovacie rozhranie** (viď TODO, okruh „Testovacie UI"). Tým sa E1 posúva za UI, ale nemení sa jeho postavenie brány pred go-live.
 - **E2** — Overiť rozloženie typov vyhľadávania oproti reálnym dotazom používateľov; `fulltext` je zatiaľ len 10 otázok.
 - **E3** — Doplniť `goldChunkIds` po naplnení korpusu, aby sa hit@5 meral na úrovni chunku, nie len dokumentu.
 - **E4** — Rozhodnúť, či sa sada rozšíri nad 74 otázok (D9 pripúšťa až 100) po prvom regresnom behu.

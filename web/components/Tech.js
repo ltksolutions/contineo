@@ -40,7 +40,7 @@ const TENANT_PROFILE = `{
     },
     rerank: {
       kind: "atlas-stage",      // atlas-stage | infinity | tei | none
-      model: "voyage-rerank-2.5", topK: 8
+      model: "rerank-2", topK: 8
     },
     generation: {
       kind: "anthropic",        // anthropic | openai

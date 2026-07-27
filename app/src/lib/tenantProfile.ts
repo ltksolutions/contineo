@@ -10,7 +10,7 @@
 
 import { getCollection } from "./mongodb"
 import { TenantProfile, ProviderConfigError } from "./providers/types"
-import { skontrolujRezidenciu } from "./residency"
+import { skontrolujRezidenciu, skontrolujIzolaciu } from "./residency"
 
 const TTL_MS = 5 * 60 * 1000   // 5 minút
 
@@ -112,6 +112,17 @@ export function validateProfile(p: TenantProfile): void {
     throw new ProviderConfigError(
       `${p.companyCode}: profil je v rozpore s dátovou rezidenciou.\n` +
       porusenia.map(v => `  · ${v.sprava}`).join("\n")
+    )
+  }
+
+  // Izolácia infraštruktúry (tier). Druhá, nezávislá os — profil môže byť
+  // geograficky v poriadku a napriek tomu posielať text cez službu zdieľanú
+  // s inými zákazníkmi, čo si tenant na T2 nekúpil.
+  const izolacia = skontrolujIzolaciu(p)
+  if (izolacia.length) {
+    throw new ProviderConfigError(
+      `${p.companyCode}: profil je v rozpore s úrovňou izolácie.\n` +
+      izolacia.map(v => `  · ${v.sprava}`).join("\n")
     )
   }
 }

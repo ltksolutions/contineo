@@ -78,7 +78,7 @@
   <text x="939" y="283" font-size="10.5" fill="#137333">on-prem · Infinity / TEI</text>
 
   <text x="939" y="315" font-size="11.5" font-weight="700" fill="#006064">RERANK</text>
-  <text x="939" y="333" font-size="10.5" fill="#1A73E8">cloud · $rerank (voyage-rerank-2.5)</text>
+  <text x="939" y="333" font-size="10.5" fill="#1A73E8">cloud · $rerank (rerank-2)</text>
   <text x="939" y="349" font-size="10.5" fill="#137333">on-prem · Infinity (BGE-v2-m3)</text>
 
   <text x="939" y="381" font-size="11.5" font-weight="700" fill="#006064">GENEROVANIE</text>

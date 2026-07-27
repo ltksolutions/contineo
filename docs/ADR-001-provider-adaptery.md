@@ -47,7 +47,7 @@ EmbeddingProvider  → embed(texts[])            → vectors[]
    └── infinity     Infinity (BGE-M3) — HTTP, OpenAI-compat
 
 RerankProvider     → rerank(query, candidates) → scored[]
-   ├── atlas-stage  $rerank v agregačnej pipeline (voyage-rerank-2.5)
+   ├── atlas-stage  $rerank v agregačnej pipeline (rerank-2)
    └── infinity     Infinity / TEI (BAAI/bge-reranker-v2-m3) — po retrievale
 
 GenerationProvider → stream(messages, tools?)  → tokens
@@ -101,7 +101,7 @@ Nová kolekcia `tenant_profiles`. Jeden dokument na tenanta, načítaný pri št
     },
     rerank: {
       kind: "atlas-stage",         // atlas-stage | infinity | tei | none
-      model: "voyage-rerank-2.5",
+      model: "rerank-2",
       index: "rag_rerank_index",
       topK: 8
     },

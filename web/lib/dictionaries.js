@@ -272,6 +272,28 @@ export const dictionaries = {
           embedding: "vlastná služba", rerank: "vlastná služba", generation: "vlastný model" },
       ],
 
+      tiersTitle: "Druhá otázka: beží to len pre nás?",
+      tiersIntro:
+        "Režim vyššie hovorí, v ktorej krajine sa text spracúva. Nehovorí ale, či ho spracúva stroj vyhradený vám, alebo služba, ktorá v tej istej chvíli obsluhuje aj iných zákazníkov. Sú to dve nezávislé otázky a systém kontroluje obe.",
+      tiersHead: {
+        tier: "Úroveň",
+        meaning: "Čo znamená",
+        who: "Kedy to má zmysel",
+      },
+      tiers: [
+        { key: "T1", name: "Zdieľaná",
+          meaning: "Spoločná infraštruktúra. Vaše dokumenty sú oddelené prístupovými pravidlami, ale model, ktorý ich spracúva, obsluhuje aj iných.",
+          who: "bežné komerčné nasadenie, malé a stredné firmy" },
+        { key: "T2", name: "Vyhradená",
+          meaning: "Embedding, rerank aj generovanie bežia na inštanciách, ktoré neobsluhujú nikoho iného. Váš text neprejde cez spoločný proces.",
+          who: "banky, veľké spoločnosti, citlivé interné smernice" },
+        { key: "T3", name: "Odpojená",
+          meaning: "Ako vyhradená a navyše bez konektivity von. Vyžaduje režim air-gap — inak by odpojenie bolo len na papieri.",
+          who: "utajované skutočnosti, uzavreté siete" },
+      ],
+      tiersNote:
+        "Úrovne sa s režimami kombinujú, nie sú to stupne jednej škály: zdieľaná služba môže bežať celá v EÚ (T1 + eu-full) a vyhradená inštancia môže stáť kdekoľvek (T2 + global). A jedna vec, ktorú väčšina dodávateľov nepovie nahlas: vyhradený účet u poskytovateľa cloudu nie je vyhradený hardvér. Preto na úrovni T2 neprejde ani Claude cez AWS Bedrock, hoci beží vo Frankfurte — model tam obsluhuje aj ostatných.",
+
       whereTitle: "Kde spracovanie prebieha — vrátane toho, čo overujeme",
       whereIntro:
         "Každý riadok je doložený verejným dokumentom dodávateľa, nie odhadom. Komponenty spracúvajúce mimo EÚ sa v režimoch eu-full, on-prem a air-gap nepoužijú — profil s takou kombináciou sa odmietne spustiť.",
@@ -983,6 +1005,28 @@ export const dictionaries = {
           embedding: "vlastní služba", rerank: "vlastní služba", generation: "vlastní model" },
       ],
 
+      tiersTitle: "Druhá otázka: běží to jen pro nás?",
+      tiersIntro:
+        "Režim výše říká, ve které zemi se text zpracovává. Neříká ale, jestli ho zpracovává stroj vyhrazený vám, nebo služba, která ve stejnou chvíli obsluhuje i jiné zákazníky. Jsou to dvě nezávislé otázky a systém kontroluje obě.",
+      tiersHead: {
+        tier: "Úroveň",
+        meaning: "Co znamená",
+        who: "Kdy to dává smysl",
+      },
+      tiers: [
+        { key: "T1", name: "Sdílená",
+          meaning: "Společná infrastruktura. Vaše dokumenty jsou oddělené přístupovými pravidly, ale model, který je zpracovává, obsluhuje i jiné.",
+          who: "běžné komerční nasazení, malé a střední firmy" },
+        { key: "T2", name: "Vyhrazená",
+          meaning: "Embedding, rerank i generování běží na instancích, které neobsluhují nikoho jiného. Váš text neprojde společným procesem.",
+          who: "banky, velké společnosti, citlivé interní směrnice" },
+        { key: "T3", name: "Odpojená",
+          meaning: "Jako vyhrazená a navíc bez konektivity ven. Vyžaduje režim air-gap — jinak by odpojení bylo jen na papíře.",
+          who: "utajované skutečnosti, uzavřené sítě" },
+      ],
+      tiersNote:
+        "Úrovně se s režimy kombinují, nejsou to stupně jedné škály: sdílená služba může běžet celá v EU (T1 + eu-full) a vyhrazená instance může stát kdekoli (T2 + global). A jedna věc, kterou většina dodavatelů nahlas neřekne: vyhrazený účet u poskytovatele cloudu není vyhrazený hardware. Proto na úrovni T2 neprojde ani Claude přes AWS Bedrock, přestože běží ve Frankfurtu — model tam obsluhuje i ostatní.",
+
       whereTitle: "Kde zpracování probíhá — včetně toho, co ověřujeme",
       whereIntro:
         "Každý řádek je doložen veřejným dokumentem dodavatele, ne odhadem. Komponenty zpracovávající mimo EU se v režimech eu-full, on-prem a air-gap nepoužijí — profil s takovou kombinací se odmítne spustit.",
@@ -1693,6 +1737,28 @@ export const dictionaries = {
         { key: "air-gap", meaning: "Closed network, no outbound connectivity",
           embedding: "own service", rerank: "own service", generation: "own model" },
       ],
+
+      tiersTitle: "The second question: does it run for us alone?",
+      tiersIntro:
+        "The mode above says which country processes your text. It does not say whether that processing happens on a machine reserved for you, or on a service that is serving other customers at the same moment. These are two independent questions and the system checks both.",
+      tiersHead: {
+        tier: "Level",
+        meaning: "What it means",
+        who: "When it makes sense",
+      },
+      tiers: [
+        { key: "T1", name: "Shared",
+          meaning: "Shared infrastructure. Your documents are separated by access rules, but the model processing them also serves others.",
+          who: "standard commercial deployment, small and mid-sized companies" },
+        { key: "T2", name: "Dedicated",
+          meaning: "Embedding, reranking and generation run on instances that serve no one else. Your text never passes through a shared process.",
+          who: "banks, large enterprises, sensitive internal policies" },
+        { key: "T3", name: "Disconnected",
+          meaning: "Dedicated, plus no outbound connectivity. Requires air-gap mode — otherwise the disconnection exists only on paper.",
+          who: "classified material, closed networks" },
+      ],
+      tiersNote:
+        "Levels combine with modes; they are not steps on a single scale. A shared service can run entirely inside the EU (T1 + eu-full), and a dedicated instance can sit anywhere (T2 + global). And one thing most vendors will not say out loud: a dedicated cloud account is not dedicated hardware. That is why Claude via AWS Bedrock does not pass at level T2 even though it runs in Frankfurt — the model there serves everyone else too.",
 
       whereTitle: "Where processing happens — including what we are still verifying",
       whereIntro:

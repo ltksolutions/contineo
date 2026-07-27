@@ -96,7 +96,7 @@ ANTHROPIC_API_KEY=sk-ant-...
 ```json
 {
   "fields": [
-    { "type": "rerank", "path": "text", "model": "voyage-rerank-2" }
+    { "type": "rerank", "path": "text", "model": "rerank-2" }
   ]
 }
 ```

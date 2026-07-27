@@ -104,6 +104,42 @@ export default function Residency({ dict }) {
           </table>
         </div>
 
+        {/* Úrovne izolácie — druhá os, kolmá na režimy vyššie.
+            Režim hovorí KDE, úroveň hovorí S KÝM. Viď ADR-002, dodatok 10. */}
+        <h3 style={{ fontSize: 17, marginBottom: 12 }}>{r.tiersTitle}</h3>
+        <p className="muted" style={{ fontSize: 14.5, marginBottom: 14 }}>{r.tiersIntro}</p>
+        <div style={{ overflowX: "auto", marginBottom: 14 }}>
+          <table style={tabulka}>
+            <thead>
+              <tr>
+                <th style={bunkaHlavicka}>{r.tiersHead.tier}</th>
+                <th style={bunkaHlavicka}>{r.tiersHead.meaning}</th>
+                <th style={bunkaHlavicka}>{r.tiersHead.who}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {r.tiers.map((u, i) => (
+                <tr key={i} style={{ borderTop: "1px solid var(--line)" }}>
+                  <td style={{ ...bunka, whiteSpace: "nowrap" }}>
+                    <span style={{
+                      fontFamily: "var(--font-mono, monospace)", fontSize: 13,
+                      color: "var(--teal-700)", fontWeight: 700, marginRight: 8,
+                    }}>
+                      {u.key}
+                    </span>
+                    <span style={{ fontWeight: 600 }}>{u.name}</span>
+                  </td>
+                  <td style={bunka}>{u.meaning}</td>
+                  <td className="muted" style={bunka}>{u.who}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <p className="muted" style={{ fontSize: 13.5, marginBottom: 40, lineHeight: 1.7 }}>
+          {r.tiersNote}
+        </p>
+
         {/* Kde spracovanie naozaj prebieha — vrátane neznámych */}
         <h3 style={{ fontSize: 17, marginBottom: 12 }}>{r.whereTitle}</h3>
         <p className="muted" style={{ fontSize: 14.5, marginBottom: 14 }}>{r.whereIntro}</p>
