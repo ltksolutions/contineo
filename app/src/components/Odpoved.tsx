@@ -11,6 +11,7 @@
 
 import type { Citacia, Vysledok } from "@/lib/sseKlient"
 import { naBloky, ocistiCitaciu, zlucCitacie } from "@/lib/formatText"
+import { formatUsd, formatEur, naEur } from "@/lib/cennik"
 import type { Usek } from "@/lib/formatText"
 
 /** Stav odpovede počas streamovania — kým nepríde `done`, máme len text. */
@@ -225,6 +226,38 @@ export default function Odpoved({ stav }: { stav: StavOdpovede }) {
             <Riadok popis="prvý token" hodnota={`${(hotovo.ttftMs / 1000).toFixed(1)} s`} />
           )}
           <Riadok popis="celkom" hodnota={`${(hotovo.celkovoMs / 1000).toFixed(1)} s`} />
+
+          {/* Tokeny a cena. Cache sa uvádza zvlášť, lebo čítanie z nej stojí
+              desatinu ceny vstupu — bez toho rozlíšenia by číslo klamalo. */}
+          {hotovo.tokeny && (
+            <Riadok
+              popis="tokeny"
+              hodnota={
+                `${hotovo.tokeny.vstup.toLocaleString("sk")} → ` +
+                `${hotovo.tokeny.vystup.toLocaleString("sk")}` +
+                (hotovo.tokeny.cacheCitanie
+                  ? ` · z cache ${hotovo.tokeny.cacheCitanie.toLocaleString("sk")}` : "") +
+                (hotovo.tokeny.cacheZapis
+                  ? ` · do cache ${hotovo.tokeny.cacheZapis.toLocaleString("sk")}` : "")
+              }
+            />
+          )}
+          {hotovo.naklad && !hotovo.naklad.neznamyModel && (
+            <span
+              className="stitok"
+              style={{ background: "var(--surface-2)", color: "var(--muted)" }}
+              title={`Orientačne. Nezahŕňa pomocný model ani vyhľadávanie. Cenník ${hotovo.naklad.verziaCennika}.`}
+            >
+              ≈ {formatUsd(hotovo.naklad.usd)} · {formatEur(naEur(hotovo.naklad.usd))}
+            </span>
+          )}
+          {/* Cenník, ktorý prestal platiť, radšej priznáme, než by sme ticho
+              počítali starou sadzbou. */}
+          {hotovo.naklad?.cennikExpirovany && (
+            <span className="stitok" style={{ background: "var(--warn-bg)", color: "var(--warn-fg)" }}>
+              cenník je zastaraný
+            </span>
+          )}
           {/* Rozpad na fázy. Nezaujíma hodnotiteľa, ale bez neho sa nedá
               povedať, prečo je prvý token pomalý. */}
           {hotovo.casy && Object.entries(hotovo.casy).filter(([, ms]) => ms >= 50).map(([f, ms]) => (

@@ -70,6 +70,8 @@ export async function POST(req: NextRequest) {
         ttftMs: telo.ttftMs ?? null,
         celkovoMs: telo.celkovoMs ?? 0,
         casy: telo.casy,
+        tokeny: telo.tokeny,
+        naklad: telo.naklad,
       },
       await ktoHodnoti(req)
     )

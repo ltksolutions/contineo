@@ -64,6 +64,7 @@ export default function Hladanie({
           model: v.model, provider: v.provider,
           overeneCitacie: v.overeneCitacie,
           ttftMs: v.ttftMs, celkovoMs: v.celkovoMs, casy: v.casy,
+          tokeny: v.tokeny, naklad: v.naklad,
         }),
       })
       if (!r.ok) return

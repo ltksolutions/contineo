@@ -18,6 +18,7 @@
 import { ObjectId } from "mongodb"
 import { getCollection } from "./mongodb"
 import type { Zdroj, Citacia } from "./sseKlient"
+import type { Tokeny, Naklad } from "./cennik"
 
 /** Ľudský úsudok. `null` = zatiaľ neposúdené, čo je iný stav než 0. */
 export type Posudok = 0 | 1 | null
@@ -40,6 +41,15 @@ export interface Hodnotenie {
   ttftMs: number | null
   celkovoMs: number
   casy?: Record<string, number>
+
+  /**
+   * Spotreba a cena. Ukladá sa oboje zámerne: cena je historický fakt,
+   * ktorý sa po zmene cenníka nedopočíta, tokeny sú nemenné a dovolia
+   * prepočet podľa nových sadzieb. `naklad.verziaCennika` hovorí, ktoré
+   * sumy sa smú sčítavať.
+   */
+  tokeny?: Tokeny
+  naklad?: Naklad
 
   // To, čo vie povedať len človek (D9, kapitola 3).
   spravna: Posudok
@@ -69,6 +79,8 @@ export interface NovyZaznam {
   ttftMs: number | null
   celkovoMs: number
   casy?: Record<string, number>
+  tokeny?: Tokeny
+  naklad?: Naklad
 }
 
 /** Polia, ktoré smie hodnotiteľ meniť. Nič iné sa cez API prepísať nedá. */

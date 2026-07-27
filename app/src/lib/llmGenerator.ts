@@ -16,6 +16,8 @@
 import { ChunkResult } from "./mongoSearch"
 import { getTenantProfile, defaultProfile } from "./tenantProfile"
 import { getProviders } from "./providers/factory"
+import { cena, PRAZDNE_TOKENY } from "./cennik"
+import type { Tokeny } from "./cennik"
 import { GeneratedCitation, TenantProfile } from "./providers/types"
 
 export interface GenerateOptions {
@@ -86,6 +88,7 @@ export function generateAnswer(opts: GenerateOptions): ReadableStream {
         // zostane pole prázdne a klient sa oprie o `sources`.
         const citations: GeneratedCitation[] = []
         let dovodUkoncenia = ""
+        const tokeny: Tokeny = { ...PRAZDNE_TOKENY }
 
         for await (const ev of generation.stream({
           system,
@@ -97,6 +100,10 @@ export function generateAnswer(opts: GenerateOptions): ReadableStream {
             encode({ type: "token", token: ev.text })
           } else if (ev.type === "koniec") {
             dovodUkoncenia = ev.dovod
+          } else if (ev.type === "tokeny") {
+            // Zlučujeme, nie prepisujeme: vstup príde v prvej udalosti,
+            // výstup až v poslednej. Prepis by jedno z toho zahodil.
+            Object.assign(tokeny, ev.tokeny)
           } else {
             citations.push(ev.citation)
             encode({ type: "citation", citation: ev.citation })
@@ -114,6 +121,12 @@ export function generateAnswer(opts: GenerateOptions): ReadableStream {
           // "max_tokens" znamená useknutú odpoveď — klient to musí povedať
           // nahlas, inak si čitateľ odnesie neúplný záver ako úplný.
           dovodUkoncenia,
+          tokeny,
+          // Cena sa počíta TU a ukladá spolu s tokenmi. Je to historický
+          // údaj: čo to stálo v deň, keď sa otázka položila. Spätne sa
+          // nedopočíta, lebo cenníky sa menia — preto ide do záznamu aj
+          // označenie použitého cenníka.
+          naklad: cena(generation.model, tokeny),
         })
       } catch (err) {
         encode({ type: "error", message: err instanceof Error ? err.message : String(err) })

@@ -176,10 +176,31 @@ export function* anthropicEvent(
   ev: any,
   chunks: ChunkResult[]
 ): Generator<GenerationEvent> {
-  // `message_delta` nesie stop_reason. Doteraz sa zahadzoval spolu so
-  // všetkým, čo nie je text — a useknutá odpoveď tak vyzerala ako hotová.
-  if (ev?.type === "message_delta" && ev.delta?.stop_reason) {
-    yield { type: "koniec", dovod: String(ev.delta.stop_reason) }
+  // Spotreba vstupu a cache príde hneď na začiatku, ešte pred textom.
+  if (ev?.type === "message_start" && ev.message?.usage) {
+    const u = ev.message.usage
+    yield {
+      type: "tokeny",
+      tokeny: {
+        vstup: u.input_tokens ?? 0,
+        cacheZapis: u.cache_creation_input_tokens ?? 0,
+        cacheCitanie: u.cache_read_input_tokens ?? 0,
+        vystup: u.output_tokens ?? 0,
+      },
+    }
+    return
+  }
+
+  // `message_delta` nesie stop_reason a konečný počet výstupných tokenov.
+  // Doteraz sa zahadzoval spolu so všetkým, čo nie je text — a useknutá
+  // odpoveď tak vyzerala ako hotová.
+  if (ev?.type === "message_delta") {
+    if (ev.usage?.output_tokens != null) {
+      yield { type: "tokeny", tokeny: { vystup: ev.usage.output_tokens } }
+    }
+    if (ev.delta?.stop_reason) {
+      yield { type: "koniec", dovod: String(ev.delta.stop_reason) }
+    }
     return
   }
 

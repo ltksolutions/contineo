@@ -13,6 +13,8 @@
  * dal otestovať nad umelým streamom — viď `tests/sseKlient.test.ts`.
  */
 
+import type { Tokeny, Naklad } from "./cennik"
+
 export interface Zdroj {
   index: number
   title: string
@@ -41,6 +43,8 @@ export interface Dokoncenie {
   casy?: Record<string, number>
   /** Prečo model prestal písať; "max_tokens" = useknuté. */
   dovodUkoncenia?: string
+  tokeny?: Tokeny
+  naklad?: Naklad
 }
 
 export type UdalostSSE =
@@ -142,6 +146,10 @@ export interface Vysledok extends Priebeh {
    * useknutá — používateľ to musí vidieť, nie sa domýšľať.
    */
   dovodUkoncenia?: string
+  /** Spotreba tokenov podľa modelu — vstup, výstup a cache zvlášť. */
+  tokeny?: Tokeny
+  /** Odhad ceny v deň položenia otázky, aj s označením cenníka. */
+  naklad?: Naklad
   chyba?: string
 }
 
@@ -201,6 +209,8 @@ export async function polozOtazku(
         overeneCitacie: u.verifiedCitations ?? false,
         casy: u.casy,
         dovodUkoncenia: u.dovodUkoncenia,
+        tokeny: u.tokeny,
+        naklad: u.naklad,
       })
     }
   }

@@ -169,6 +169,12 @@ export type GenerationEvent =
    * práve to zhrnutie, ktoré si odnesie.
    */
   | { type: "koniec"; dovod: string }
+  /**
+   * Spotreba tokenov. Chodí v dvoch krokoch: vstup a cache v `message_start`
+   * (teda ešte pred prvým slovom odpovede), výstup až v `message_delta` na
+   * konci. Preto sa zbiera priebežne a nie naraz.
+   */
+  | { type: "tokeny"; tokeny: Partial<import("../cennik").Tokeny> }
 
 export interface GenerationRequest {
   system: string
