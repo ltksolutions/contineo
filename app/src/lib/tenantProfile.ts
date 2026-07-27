@@ -48,10 +48,29 @@ export function defaultProfile(companyCode = "SFZ"): TenantProfile {
         model: process.env.GENERATION_MODEL ?? "claude-sonnet-5",
         citations: process.env.GENERATION_CITATIONS !== "false",
         promptCaching: process.env.GENERATION_PROMPT_CACHING !== "false",
-        maxTokens: Number(process.env.GENERATION_MAX_TOKENS ?? 1024),
+        // 1024 sa pri normatívnych odpovediach vyčerpalo uprostred vety —
+        // odpoveď sa useknutá dostala až k hodnotiteľovi. Právne znenia sú
+        // dlhé a model ich cituje, takže limit musí byť štedrejší.
+        maxTokens: Number(process.env.GENERATION_MAX_TOKENS ?? 3072),
         region: process.env.GENERATION_REGION,
         url: process.env.GENERATION_URL,
         apiKeyEnv: process.env.GENERATION_API_KEY_ENV,
+      },
+      /**
+       * Pomocný model pre klasifikáciu a prepis dotazu.
+       *
+       * Bez neho factory siahne po hlavnom modeli — a keďže preprocessing
+       * beží PRED vyhľadávaním a čaká sa naň celý, platilo sa zaň priamo
+       * v čase po prvý token. Pri prvom meraní to bola väčšina z 9,6 s.
+       */
+      utility: {
+        kind: (process.env.UTILITY_KIND as "anthropic" | "openai") ?? "anthropic",
+        model: process.env.UTILITY_MODEL ?? "claude-haiku-4-5-20251001",
+        citations: false,
+        promptCaching: false,
+        maxTokens: Number(process.env.UTILITY_MAX_TOKENS ?? 512),
+        url: process.env.UTILITY_URL,
+        apiKeyEnv: process.env.UTILITY_API_KEY_ENV,
       },
     },
     limits: { maxContextChunks: Number(process.env.MAX_CONTEXT_CHUNKS ?? 8) },

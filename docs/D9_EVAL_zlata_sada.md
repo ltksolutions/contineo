@@ -150,3 +150,20 @@ Testy vyhodnocovacej logiky: `python3 test_scoring.py`.
 - **E3** — Doplniť `goldChunkIds` po naplnení korpusu, aby sa hit@5 meral na úrovni chunku, nie len dokumentu.
 - **E4** — Rozhodnúť, či sa sada rozšíri nad 74 otázok (D9 pripúšťa až 100) po prvom regresnom behu.
 - **E5** — Zvážiť druhého nezávislého hodnotiteľa pre správnosť a halucinácie; jeden človek je pri 0/1 hodnotení jediný bod zlyhania.
+- **E6** — **Rozhodnúť o preprocessingu dotazu.** Prvé meranie v testovacom rozhraní (2026-07-27) dalo rozpad času pred generovaním:
+
+  | Fáza | Trvanie (3 behy, rovnaký dotaz) |
+  |---|---|
+  | Klasifikácia (heuristika) | 0–1 ms |
+  | **Preprocessing (LLM)** | **1 141 / 1 556 / 1 835 ms** |
+  | Vyhľadávanie a rerank | 670 / 603 / 591 ms |
+
+  Bez preprocessingu je čas pred generovaním **~620 ms**, s ním **1,8–2,4 s** — teda celý rozpočet metriky *latencia p95 (TTFT) < 2 s* padne ešte pred tým, než sa začne generovať. A to už po presunutí na Haiku: predtým bežal preprocessing na hlavnom modeli, lebo `utility` nebol v predvolenom profile vôbec nastavený.
+
+  Poznámka k pomenovaniu: pri `atlas-stage` je `$rerank` stupňom agregačnej pipeline, takže sa počíta vo fáze vyhľadávania. Samostatná fáza „rerank" ukazuje nulu len v cloude a neznamená, že je zadarmo.
+
+  **Ale preprocessing nie je celý problém.** Meranie z rozhrania: prvý token 5,0 s, z toho preprocessing 1,3 s a vyhľadávanie 0,6 s — **zvyšné ~3,1 s je samotné generovanie po prvý token**. Aj keby sa preprocessing zrušil úplne, TTFT zostane okolo 3,7 s.
+
+  Z toho plynie ďalšia otvorená otázka: **je prah 2 s vôbec dosiahnuteľný?** Bol prevzatý z technického konceptu, nie odmeraný. Pri Claude cez verejné API a kontexte ôsmich chunkov sa doň nezmestíme ani pri nulovom predspracovaní. Treba buď prah prehodnotiť oproti realite (a povedať to nahlas skôr, než sa dostane do zmluvy), alebo zmeniť architektúru — menší kontext, iný model, streamovanie skôr. Rozhodnúť až podľa merania na celej sade, nie podľa jedného dotazu.
+
+  Otázka teda znie, či prepis dotazu zlepší retrieval natoľko, aby to vyvážilo. **To sa nedá rozhodnúť inak než sadou.** Preto sa predvoľba dá prepnúť premennou `PREPROCESSING_DEFAULT=false` a obe konfigurácie treba zmerať tou istou sadou — rovnako, ako sa porovnávajú adaptéry podľa ADR-001. Do rozhodnutia zostáva zapnutý; meniť správanie kvôli dojmu by bola tá istá chyba v opačnom smere.

@@ -148,14 +148,19 @@ button:disabled { cursor: not-allowed; opacity: 0.55; }
 .tlacidlo--tiche:hover:not(:disabled) { background: var(--surface-2); }
 
 /*
- * Odpoveď modelu. `pre-wrap` je podstatné — model vracia odsadenie
- * a zoznamy ako obyčajný text a bez toho by sa zliali do jedného odseku.
+ * Odpoveď modelu.
+ *
+ * Členenie rieši `formatText.ts`, ktorý text rozloží na skutočné odseky
+ * a zoznamy. Preto tu NIE JE `white-space: pre-wrap` — s ním by sa
+ * zalomenia počítali dvakrát a medzi odsekmi by vznikli diery.
  */
 .odpoved {
-  white-space: pre-wrap;
   font-size: 15.5px;
   line-height: 1.75;
 }
+
+.odpoved > *:last-child { margin-bottom: 0; }
+.odpoved li { margin-bottom: 4px; }
 
 /* Kurzor počas streamovania — bez neho nie je poznať, či sa ešte generuje. */
 .kurzor::after {

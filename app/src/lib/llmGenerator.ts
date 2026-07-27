@@ -26,6 +26,12 @@ export interface GenerateOptions {
   companyCode?: string
   /** Voliteľné — keď je odovzdaný, nenačítava sa znova z DB. */
   profile?: TenantProfile
+  /**
+   * Trvanie fáz pred generovaním (ms). Posiela sa klientovi v `done`,
+   * aby sa dalo povedať, ktorá časť reťaze zožrala čas — D9 meria
+   * p95 po prvý token a bez rozpadu je to len jedno číslo bez príčiny.
+   */
+  casy?: Record<string, number>
 }
 
 // ── Zostavenie systémového promptu ──────────────────────────────────────────
@@ -101,6 +107,7 @@ export function generateAnswer(opts: GenerateOptions): ReadableStream {
           model: generation.model,
           provider: generation.kind,
           verifiedCitations: generation.supportsCitations,
+          casy: opts.casy,
         })
       } catch (err) {
         encode({ type: "error", message: err instanceof Error ? err.message : String(err) })

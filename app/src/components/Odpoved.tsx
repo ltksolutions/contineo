@@ -10,6 +10,8 @@
  */
 
 import type { Citacia, Vysledok } from "@/lib/sseKlient"
+import { naBloky, ocistiCitaciu } from "@/lib/formatText"
+import type { Usek } from "@/lib/formatText"
 
 /** Stav odpovede počas streamovania — kým nepríde `done`, máme len text. */
 export interface StavOdpovede {
@@ -18,6 +20,48 @@ export interface StavOdpovede {
   citacie: Citacia[]
   hotovo: Vysledok | null
   bezi: boolean
+}
+
+/**
+ * Vykreslenie textu modelu.
+ *
+ * Nikde tu nie je `dangerouslySetInnerHTML` — text prechádza cez
+ * `naBloky()` a stáva sa obyčajnými React uzlami. Výstup modelu nad cudzími
+ * dokumentmi sa nesmie dostať do DOM ako HTML.
+ */
+function Useky({ useky }: { useky: Usek[] }) {
+  return (
+    <>
+      {useky.map((u, i) =>
+        u.druh === "tucne"
+          ? <strong key={i}>{u.text}</strong>
+          : <span key={i}>{u.text}</span>
+      )}
+    </>
+  )
+}
+
+function TextOdpovede({ text }: { text: string }) {
+  const bloky = naBloky(text)
+  return (
+    <>
+      {bloky.map((b, i) =>
+        b.druh === "odsek" ? (
+          <p key={i} style={{ margin: "0 0 12px" }}>
+            <Useky useky={b.useky} />
+          </p>
+        ) : b.cislovany ? (
+          <ol key={i} style={{ margin: "0 0 12px", paddingLeft: 22 }}>
+            {b.polozky.map((p, j) => <li key={j}><Useky useky={p} /></li>)}
+          </ol>
+        ) : (
+          <ul key={i} style={{ margin: "0 0 12px", paddingLeft: 22 }}>
+            {b.polozky.map((p, j) => <li key={j}><Useky useky={p} /></li>)}
+          </ul>
+        )
+      )}
+    </>
+  )
 }
 
 function Riadok({ popis, hodnota }: { popis: string; hodnota: string }) {
@@ -45,7 +89,7 @@ export default function Odpoved({ stav }: { stav: StavOdpovede }) {
           </div>
         ) : (
           <div className={bezi ? "odpoved kurzor" : "odpoved"}>
-            {text || (bezi ? "" : "—")}
+            {text ? <TextOdpovede text={text} /> : (bezi ? null : "—")}
           </div>
         )}
       </div>
@@ -69,7 +113,7 @@ export default function Odpoved({ stav }: { stav: StavOdpovede }) {
                   padding: "11px 14px",
                 }}
               >
-                <div style={{ fontSize: 14.5, lineHeight: 1.6 }}>„{c.citedText}"</div>
+                <div style={{ fontSize: 14.5, lineHeight: 1.6 }}>„{ocistiCitaciu(c.citedText)}“</div>
                 <div className="tichy" style={{ fontSize: 12.5, marginTop: 6 }}>
                   {[c.documentTitle, c.articleRef].filter(Boolean).join(" · ") || "zdroj neuvedený"}
                 </div>
@@ -136,6 +180,11 @@ export default function Odpoved({ stav }: { stav: StavOdpovede }) {
             <Riadok popis="prvý token" hodnota={`${(hotovo.ttftMs / 1000).toFixed(1)} s`} />
           )}
           <Riadok popis="celkom" hodnota={`${(hotovo.celkovoMs / 1000).toFixed(1)} s`} />
+          {/* Rozpad na fázy. Nezaujíma hodnotiteľa, ale bez neho sa nedá
+              povedať, prečo je prvý token pomalý. */}
+          {hotovo.casy && Object.entries(hotovo.casy).filter(([, ms]) => ms >= 50).map(([f, ms]) => (
+            <Riadok key={f} popis={f} hodnota={`${(ms / 1000).toFixed(1)} s`} />
+          ))}
           <span
             className="stitok"
             style={

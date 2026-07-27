@@ -37,6 +37,8 @@ export interface Dokoncenie {
   model: string
   provider: string
   verifiedCitations: boolean
+  /** Trvanie jednotlivých fáz pred generovaním (ms). */
+  casy?: Record<string, number>
 }
 
 export type UdalostSSE =
@@ -131,6 +133,8 @@ export interface Vysledok extends Priebeh {
    */
   ttftMs: number | null
   celkovoMs: number
+  /** Rozpad času pred generovaním na fázy — bez neho je TTFT bez príčiny. */
+  casy?: Record<string, number>
   chyba?: string
 }
 
@@ -188,6 +192,7 @@ export async function polozOtazku(
         model: u.model ?? "",
         provider: u.provider ?? "",
         overeneCitacie: u.verifiedCitations ?? false,
+        casy: u.casy,
       })
     }
   }
