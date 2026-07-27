@@ -192,3 +192,37 @@ export function ocistiCitaciu(text: string): string {
 
   return t.replace(/\s+$/, "")
 }
+
+/**
+ * Zlúči citácie, ktoré ukazujú na to isté miesto.
+ *
+ * Model cituje ten istý úryvok pri každom tvrdení, ktoré sa oň opiera —
+ * pri dlhej odpovedi ich tak vznikne devätnásť, z toho polovica doslovne
+ * rovnakých. Pre hodnotiteľa je to šum: musí ich prechádzať očami a hľadať,
+ * ktoré sú naozaj rôzne.
+ *
+ * Zlučujeme podľa očisteného textu, nie podľa `chunkIndex` — ten istý chunk
+ * môže byť odcitovaný v rôznych rozsahoch a to sú rôzne citácie.
+ */
+export function zlucCitacie<T extends { citedText: string }>(citacie: T[]): T[] {
+  const kluc = (t: string) => ocistiCitaciu(t).replace(/\s+/g, " ").toLowerCase()
+
+  const zostavajuce: { k: string; c: T }[] = []
+  for (const c of citacie) {
+    const k = kluc(c.citedText)
+    if (!k) continue
+
+    // Model tú istú pasáž niekedy odcituje kratšie a inde dlhšie — vtedy je
+    // to jedno miesto, nie dve. Ponechá sa dlhšie znenie, lebo obsahuje aj
+    // to kratšie; opačne by hodnotiteľ prišiel o časť kontextu.
+    const prekryv = zostavajuce.findIndex(z => z.k.startsWith(k) || k.startsWith(z.k))
+    if (prekryv === -1) {
+      zostavajuce.push({ k, c })
+    } else if (k.length > zostavajuce[prekryv].k.length) {
+      // Dlhšie znenie nahradí kratšie, ale na PÔVODNOM mieste — poradie
+      // citácií má zodpovedať poradiu tvrdení v odpovedi.
+      zostavajuce[prekryv] = { k, c }
+    }
+  }
+  return zostavajuce.map(z => z.c)
+}

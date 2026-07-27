@@ -85,6 +85,7 @@ export function generateAnswer(opts: GenerateOptions): ReadableStream {
         // Overiteľné citácie zbierame zvlášť — pri OpenAI adaptéri
         // zostane pole prázdne a klient sa oprie o `sources`.
         const citations: GeneratedCitation[] = []
+        let dovodUkoncenia = ""
 
         for await (const ev of generation.stream({
           system,
@@ -94,6 +95,8 @@ export function generateAnswer(opts: GenerateOptions): ReadableStream {
         })) {
           if (ev.type === "text") {
             encode({ type: "token", token: ev.text })
+          } else if (ev.type === "koniec") {
+            dovodUkoncenia = ev.dovod
           } else {
             citations.push(ev.citation)
             encode({ type: "citation", citation: ev.citation })
@@ -108,6 +111,9 @@ export function generateAnswer(opts: GenerateOptions): ReadableStream {
           provider: generation.kind,
           verifiedCitations: generation.supportsCitations,
           casy: opts.casy,
+          // "max_tokens" znamená useknutú odpoveď — klient to musí povedať
+          // nahlas, inak si čitateľ odnesie neúplný záver ako úplný.
+          dovodUkoncenia,
         })
       } catch (err) {
         encode({ type: "error", message: err instanceof Error ? err.message : String(err) })

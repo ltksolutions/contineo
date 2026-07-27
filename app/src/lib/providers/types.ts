@@ -157,6 +157,18 @@ export interface GeneratedCitation {
 export type GenerationEvent =
   | { type: "text"; text: string }
   | { type: "citation"; citation: GeneratedCitation }
+  /**
+   * Prečo model prestal písať.
+   *
+   *   end_turn    — dopovedal
+   *   max_tokens  — DOŠIEL LIMIT, odpoveď je useknutá uprostred vety
+   *
+   * Bez tejto udalosti sa useknutá odpoveď nedá odlíšiť od dokončenej.
+   * Používateľ vidí text, ktorý sa proste zastavil, a nemá ako vedieť,
+   * že mu chýba záver — čo je v normatívnej doméne nebezpečné: záver býva
+   * práve to zhrnutie, ktoré si odnesie.
+   */
+  | { type: "koniec"; dovod: string }
 
 export interface GenerationRequest {
   system: string

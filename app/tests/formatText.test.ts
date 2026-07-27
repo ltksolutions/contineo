@@ -5,7 +5,7 @@
  * dokumentmi. Preto sú tu aj testy na to, čo sa stane pri poškodenom
  * formátovaní: useknutá odpoveď nesmie zmiznúť.
  */
-import { rozdelInline, naBloky, ocistiCitaciu } from "../src/lib/formatText"
+import { rozdelInline, naBloky, ocistiCitaciu, zlucCitacie } from "../src/lib/formatText"
 
 const R: [boolean, string][] = []
 const t = (n: string, ok: boolean, extra = "") => R.push([ok, n + (ok ? "" : "  → " + extra)])
@@ -183,6 +183,82 @@ t("breadcrumb sa pri zobrazení skryje",
 
 t("citácia bez breadcrumbu s medzerou v texte zostane celá",
   ocistiCitaciu("Podľa čl. 3 › nasleduje výnimka (2) ktorá platí").length > 0)
+
+// ── zlučovanie citácií ───────────────────────────────────────────────────────
+//
+// Model cituje ten istý úryvok pri každom tvrdení, ktoré sa oň opiera.
+// V odpovedi o prestupe maloletého hráča ich bolo 19, z toho polovica
+// doslovne rovnakých — pre hodnotiteľa je to šum.
+
+const c = (t: string) => ({ citedText: t })
+
+t("dve zhodné citácie sa zlúčia",
+  zlucCitacie([c("(2) Transfer maloletého hráča."), c("(2) Transfer maloletého hráča.")]).length === 1)
+
+t("rôzne citácie zostanú obe",
+  zlucCitacie([c("(2) Transfer hráča."), c("(3) Iné znenie.")]).length === 2)
+
+t("líšia sa len medzerami — zlúčia sa",
+  zlucCitacie([c("(2) Transfer  hráča."), c("(2) Transfer hráča.\n")]).length === 1)
+
+t("poradie prvého výskytu sa zachová",
+  (() => {
+    const v = zlucCitacie([c("prvá"), c("druhá"), c("prvá"), c("tretia")])
+    return v.length === 3 && v[0].citedText === "prvá" && v[1].citedText === "druhá"
+  })())
+
+t("prázdna citácia sa zahodí",
+  zlucCitacie([c("   "), c("(1) Text.")]).length === 1)
+
+// Rovnaký chunk odcitovaný v inom rozsahu sú DVE citácie, nie jedna —
+// preto sa zlučuje podľa textu, nie podľa chunkIndex.
+t("ten istý chunk v inom rozsahu sa nezlúči",
+  zlucCitacie([
+    { chunkIndex: 4, citedText: "(2) Prvá veta." },
+    { chunkIndex: 4, citedText: "(3) Druhá veta." },
+  ]).length === 2)
+
+t("breadcrumb nerozdelí inak zhodné citácie",
+  zlucCitacie([
+    c("Poriadok › ČASŤ › Článok 20 (2) Transfer maloletého hráča."),
+    c("(2) Transfer maloletého hráča."),
+  ]).length === 1)
+
+t("prázdny vstup dá prázdny výstup", zlucCitacie([]).length === 0)
+
+// Skutočný prípad z odpovede o prestupe: model odcitoval to isté miesto
+// raz po vetu, raz s pokračovaním. Sú to dve citácie toho istého, nie dve
+// rôzne — a hodnotiteľ ich číta dvakrát zbytočne.
+const prekryv = zlucCitacie([
+  c("(2) Transfer maloletého hráča je možné vykonať so súhlasom zástupcu."),
+  c("(2) Transfer maloletého hráča je možné vykonať so súhlasom zástupcu. Transfer podľa predchádzajúcej vety je možné vykonať aj mimo územia kraja."),
+])
+t("kratšia citácia sa zlúči do dlhšej", prekryv.length === 1, JSON.stringify(prekryv))
+t("zostane to dlhšie znenie",
+  prekryv[0].citedText.includes("mimo územia kraja"), prekryv[0].citedText.slice(0, 70))
+
+t("dlhšia pred kratšou dá ten istý výsledok",
+  (() => {
+    const v = zlucCitacie([
+      c("(2) Transfer hráča. Pokračovanie vety navyše."),
+      c("(2) Transfer hráča."),
+    ])
+    return v.length === 1 && v[0].citedText.includes("Pokračovanie")
+  })())
+
+t("prekryv nezmení poradie ostatných",
+  (() => {
+    const v = zlucCitacie([c("(1) Prvá."), c("(2) Druhá."), c("(1) Prvá. Dlhšia."), c("(3) Tretia.")])
+    return v.length === 3 && v[0].citedText.includes("Dlhšia") && v[1].citedText === "(2) Druhá."
+  })())
+
+// Pozor na opačný extrém: dve rôzne ustanovenia sa NESMÚ zlúčiť len preto,
+// že sa zhodujú v prvých slovách.
+t("rôzne odseky s podobným začiatkom zostanú oddelené",
+  zlucCitacie([
+    c("(2) Transfer maloletého hráča je možné so súhlasom zástupcu."),
+    c("(3) Transfer maloletého hráča, ktorý nedovŕšil 15 rokov, je zakázaný."),
+  ]).length === 2)
 
 for (const [ok, n] of R) console.log(`${ok ? "OK  " : "ZLE "}  ${n}`)
 const zle = R.filter(([ok]) => !ok)

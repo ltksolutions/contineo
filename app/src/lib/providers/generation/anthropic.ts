@@ -176,6 +176,13 @@ export function* anthropicEvent(
   ev: any,
   chunks: ChunkResult[]
 ): Generator<GenerationEvent> {
+  // `message_delta` nesie stop_reason. Doteraz sa zahadzoval spolu so
+  // všetkým, čo nie je text — a useknutá odpoveď tak vyzerala ako hotová.
+  if (ev?.type === "message_delta" && ev.delta?.stop_reason) {
+    yield { type: "koniec", dovod: String(ev.delta.stop_reason) }
+    return
+  }
+
   if (ev?.type !== "content_block_delta") return
   const d = ev.delta
   if (!d) return

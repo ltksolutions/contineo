@@ -39,6 +39,8 @@ export interface Dokoncenie {
   verifiedCitations: boolean
   /** Trvanie jednotlivých fáz pred generovaním (ms). */
   casy?: Record<string, number>
+  /** Prečo model prestal písať; "max_tokens" = useknuté. */
+  dovodUkoncenia?: string
 }
 
 export type UdalostSSE =
@@ -135,6 +137,11 @@ export interface Vysledok extends Priebeh {
   celkovoMs: number
   /** Rozpad času pred generovaním na fázy — bez neho je TTFT bez príčiny. */
   casy?: Record<string, number>
+  /**
+   * Prečo model prestal písať. `"max_tokens"` znamená, že odpoveď je
+   * useknutá — používateľ to musí vidieť, nie sa domýšľať.
+   */
+  dovodUkoncenia?: string
   chyba?: string
 }
 
@@ -193,6 +200,7 @@ export async function polozOtazku(
         provider: u.provider ?? "",
         overeneCitacie: u.verifiedCitations ?? false,
         casy: u.casy,
+        dovodUkoncenia: u.dovodUkoncenia,
       })
     }
   }

@@ -48,10 +48,12 @@ export function defaultProfile(companyCode = "SFZ"): TenantProfile {
         model: process.env.GENERATION_MODEL ?? "claude-sonnet-5",
         citations: process.env.GENERATION_CITATIONS !== "false",
         promptCaching: process.env.GENERATION_PROMPT_CACHING !== "false",
-        // 1024 sa pri normatívnych odpovediach vyčerpalo uprostred vety —
-        // odpoveď sa useknutá dostala až k hodnotiteľovi. Právne znenia sú
-        // dlhé a model ich cituje, takže limit musí byť štedrejší.
-        maxTokens: Number(process.env.GENERATION_MAX_TOKENS ?? 3072),
+        // Limit sme dvíhali dvakrát: 1024 nestačilo, 3072 tiež nie — odpoveď
+        // na prestup maloletého hráča sa zastavila na slove „**Zhrn". Právne
+        // znenia sú dlhé, model ich cituje doslovne a k tomu zhŕňa.
+        // Dôležitejšie než samotné číslo je ale to, že useknutie sa už
+        // NEZAMLČÍ: adaptér hlási stop_reason a rozhranie ho ukáže.
+        maxTokens: Number(process.env.GENERATION_MAX_TOKENS ?? 8192),
         region: process.env.GENERATION_REGION,
         url: process.env.GENERATION_URL,
         apiKeyEnv: process.env.GENERATION_API_KEY_ENV,

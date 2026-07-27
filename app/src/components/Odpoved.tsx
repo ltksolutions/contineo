@@ -10,7 +10,7 @@
  */
 
 import type { Citacia, Vysledok } from "@/lib/sseKlient"
-import { naBloky, ocistiCitaciu } from "@/lib/formatText"
+import { naBloky, ocistiCitaciu, zlucCitacie } from "@/lib/formatText"
 import type { Usek } from "@/lib/formatText"
 
 /** Stav odpovede počas streamovania — kým nepríde `done`, máme len text. */
@@ -91,6 +91,11 @@ export default function Odpoved({ stav }: { stav: StavOdpovede }) {
   if (!text && !bezi && !hotovo) return null
 
   const chyba = hotovo?.chyba
+  const useknute = hotovo?.dovodUkoncenia === "max_tokens"
+
+  // Model cituje ten istý úryvok pri každom tvrdení, ktoré sa oň opiera.
+  // Pri dlhej odpovedi ich vznikne aj devätnásť, z toho polovica rovnakých.
+  const jedinecne = zlucCitacie(citacie)
 
   return (
     <div style={{ display: "grid", gap: 16 }}>
@@ -105,17 +110,44 @@ export default function Odpoved({ stav }: { stav: StavOdpovede }) {
             {text ? <TextOdpovede text={text} /> : (bezi ? null : "—")}
           </div>
         )}
+
+        {/* Useknutá odpoveď sa NESMIE tváriť ako hotová. Záver býva práve to
+            zhrnutie, ktoré si čitateľ odnesie — a keď chýba, nemá ako vedieť,
+            že mu chýba. */}
+        {useknute && (
+          <div
+            style={{
+              display: "flex", gap: 9, alignItems: "flex-start",
+              marginTop: 14, padding: "10px 13px",
+              background: "var(--warn-bg)", color: "var(--warn-fg)",
+              border: "1px solid var(--line)", borderRadius: 9,
+              fontSize: 13.5, lineHeight: 1.55,
+            }}
+          >
+            <span aria-hidden="true" style={{ fontWeight: 700 }}>▲</span>
+            <span>
+              <strong>Odpoveď je neúplná.</strong>{" "}
+              Model dosiahol limit dĺžky a zastavil sa uprostred — chýba jej záver.
+              Skúste sa opýtať na užšiu časť problému.
+            </span>
+          </div>
+        )}
       </div>
 
       {/* Citácie — doslovné úryvky, o ktoré sa odpoveď opiera. */}
-      {citacie.length > 0 && (
+      {jedinecne.length > 0 && (
         <div>
           <h3 style={{ fontSize: 13, textTransform: "uppercase", letterSpacing: "0.05em",
                        color: "var(--muted)", marginBottom: 10 }}>
-            Doslovné citácie ({citacie.length})
+            Doslovné citácie ({jedinecne.length})
+            {jedinecne.length < citacie.length && (
+              <span style={{ fontWeight: 400, textTransform: "none", letterSpacing: 0 }}>
+                {" "}— {citacie.length} uvedených, zhodné zlúčené
+              </span>
+            )}
           </h3>
           <div style={{ display: "grid", gap: 8 }}>
-            {citacie.map((c, i) => (
+            {jedinecne.map((c, i) => (
               <div
                 key={i}
                 style={{
