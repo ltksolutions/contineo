@@ -235,6 +235,38 @@ t("strana: skutočný názov sa nájde za číslovaním",
 t("strana: číslovanie nie je v texte chunku",
   !strany.chunky.some(c => /Strana \d|^\s*z \d+\s*$/m.test(c.text)))
 
+// Neviditeľné znaky z PDF (zero-width space, BOM). Riadok s nimi nie je
+// prázdny podľa `!r`, takže sa raz stal „názvom" článku 3 Rokovacieho
+// poriadku a v citácii svietil prázdny nadpis.
+const neviditelne = chunkuj([
+  "Rokovací poriadok",
+  "Článok 3",
+  "",
+  "\u200B",
+  "",
+  "Predsedajúci konferencie",
+  "",
+  "(1) Rokovanie konferencie vedie predsedajúci.",
+].join("\n"), { nazovDokumentu: "Rokovací poriadok" })
+
+t("neviditeľné: zero-width space sa NEstane nadpisom",
+  !neviditelne.chunky.some(c => /^[\s\u200B]*$/.test(c.heading ?? "x")),
+  JSON.stringify(neviditelne.chunky.map(c => c.heading)))
+t("neviditeľné: nájde sa skutočný názov za nimi",
+  neviditelne.chunky.some(c => c.heading === "Predsedajúci konferencie"),
+  JSON.stringify(neviditelne.chunky.map(c => c.heading)))
+
+const bom = chunkuj([
+  "Predpis", "Článok 1", "", "\uFEFF", "Základné ustanovenia", "(1) Text.",
+].join("\n"), { nazovDokumentu: "Predpis" })
+t("neviditeľné: BOM sa preskočí rovnako",
+  bom.chunky.some(c => c.heading === "Základné ustanovenia"),
+  JSON.stringify(bom.chunky.map(c => c.heading)))
+
+t("neviditeľné: nezlomiteľná medzera sama osebe nie je nadpis",
+  chunkuj(["Predpis", "Článok 2", "", "\u00A0", "Pôsobnosť", "(1) Text."].join("\n"),
+    { nazovDokumentu: "Predpis" }).chunky.some(c => c.heading === "Pôsobnosť"))
+
 const zle = R.filter(([ok]) => !ok)
 console.log("\n" + "=".repeat(60))
 console.log(zle.length ? `ZLYHALO ${zle.length}/${R.length}` : `${R.length}/${R.length} testov prešlo`)

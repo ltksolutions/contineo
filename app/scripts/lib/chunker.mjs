@@ -83,6 +83,24 @@ export const odhadTokenov = (s) => Math.round(s.length / ZNAKY_NA_TOKEN)
  * Vracia { riadky, odstranene } — počty sa vypisujú v náhľade, aby bolo vidieť,
  * či čistenie nezožralo aj obsah.
  */
+/**
+ * Odstráni neviditeľné znaky a orežе riadok.
+ *
+ * PDF ich do textu zanáša celkom bežne — najmä U+200B (zero-width space)
+ * a U+FEFF (BOM). Riadok, ktorý obsahuje len takýto znak, vyzerá prázdny,
+ * ale `!r` ho neodhalí. V Rokovacom poriadku sa vďaka tomu takýto riadok
+ * stal „názvom" článku 3 a v citácii svietil prázdny nadpis.
+ *
+ * Nezlomiteľnú medzeru (U+00A0) meníme na obyčajnú — vnútri vety je
+ * v poriadku, ale sama osebe riadok tiež nenapĺňa.
+ */
+function normalizuj(riadok) {
+  return riadok
+    .replace(/[\u200B-\u200D\uFEFF\u2060]/g, "")   // zero-width a spol.
+    .replace(/\u00A0/g, " ")                        // nezlomiteľná medzera
+    .trim()
+}
+
 export function ocisti(text, { nazovDokumentu } = {}) {
   const vsetky = text.split(/\r?\n/)
   const odstranene = { hlavicka: 0, cisloStrany: 0, poznamka: 0, prazdne: 0 }
@@ -90,7 +108,7 @@ export function ocisti(text, { nazovDokumentu } = {}) {
   // Riadky, ktoré sa opakujú viac než 5×, sú takmer isto hlavička alebo päta.
   const pocty = new Map()
   for (const r of vsetky) {
-    const k = r.trim()
+    const k = normalizuj(r)
     if (k.length > 10) pocty.set(k, (pocty.get(k) ?? 0) + 1)
   }
   const opakujuce = new Set([...pocty].filter(([, n]) => n > 5).map(([k]) => k))
@@ -100,7 +118,7 @@ export function ocisti(text, { nazovDokumentu } = {}) {
   let vPoznamke = false
 
   for (const raw of vsetky) {
-    const r = raw.trim()
+    const r = normalizuj(raw)
 
     if (!r) { odstranene.prazdne++; vPoznamke = false; continue }
     if (CISLO_STRANY.test(r) || STRANA.test(r) || STRANA_Z.test(r)) {
@@ -170,7 +188,10 @@ export function parsujStrukturu(riadky) {
       if (CLANOK.test(d) || CLANOK_SAM.test(d) || CAST.test(d) ||
           PRILOHA.test(d) || ODSEK.test(d) || TABULKA_START.test(d)) return null
       if (d.length > 120 || /[.:;]$/.test(d)) return null
-      return { nadpis: d.trim(), dalsiIndex: j }
+      // Poistka: prázdny alebo neviditeľný text nie je názov článku.
+      const cisty = normalizuj(d)
+      if (!cisty) continue
+      return { nadpis: cisty, dalsiIndex: j }
     }
     return null
   }
