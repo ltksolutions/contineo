@@ -7,11 +7,21 @@
 
 import { MongoClient, Db, Collection, Document } from "mongodb"
 
-const MONGODB_URI = process.env.MONGODB_URI!
-const MONGODB_DB  = process.env.MONGODB_DB ?? "contineo"
+const MONGODB_DB = process.env.MONGODB_DB ?? "contineo"
 
-if (!MONGODB_URI) {
-  throw new Error("Chýba env premenná MONGODB_URI")
+/**
+ * Pripojenie sa zostavuje až pri PRVOM POUŽITÍ, nie pri importe modulu.
+ *
+ * Pôvodne sa `MONGODB_URI` čítalo a overovalo hneď na úrovni modulu. Lokálne
+ * to fungovalo, lebo `.env.local` je vždy po ruke — ale `next build` prechádza
+ * route handlery, aby zistil ich vlastnosti, čím sa modul naimportuje. Na
+ * Verceli tak build padol na `MongoParseError` skôr, než sa vôbec dostal
+ * k nasadeniu. Build nemá dôvod potrebovať databázu.
+ */
+function uri(): string {
+  const v = process.env.MONGODB_URI
+  if (!v) throw new Error("Chýba env premenná MONGODB_URI")
+  return v
 }
 
 // ── Globálny cache pre dev hot-reload ────────────────────────────────────────
@@ -21,26 +31,27 @@ declare global {
   var _mongoClientPromise: Promise<MongoClient> | undefined
 }
 
-let clientPromise: Promise<MongoClient>
+let clientPromise: Promise<MongoClient> | undefined
 
-if (process.env.NODE_ENV === "development") {
-  // V dev móde zdieľame connection cez global object (hot-reload bezpečné)
-  if (!global._mongoClientPromise) {
-    const client = new MongoClient(MONGODB_URI)
-    global._mongoClientPromise = client.connect()
+function spojenie(): Promise<MongoClient> {
+  if (process.env.NODE_ENV === "development") {
+    // V dev móde zdieľame spojenie cez global — hot-reload ho inak otvára
+    // znova a znova, až cluster odmietne ďalšie.
+    if (!global._mongoClientPromise) {
+      global._mongoClientPromise = new MongoClient(uri()).connect()
+    }
+    return global._mongoClientPromise
   }
-  clientPromise = global._mongoClientPromise
-} else {
-  // V produkcii vytvoríme nové spojenie pri každom cold-start
-  const client = new MongoClient(MONGODB_URI)
-  clientPromise = client.connect()
+  // V produkcii jedno spojenie na cold-start, držané v module.
+  if (!clientPromise) clientPromise = new MongoClient(uri()).connect()
+  return clientPromise
 }
 
 // ── Exporty ──────────────────────────────────────────────────────────────────
 
 /** Vráti pripojeného MongoClient */
 export async function getClient(): Promise<MongoClient> {
-  return clientPromise
+  return spojenie()
 }
 
 /** Vráti Db inštanciu */
@@ -57,4 +68,4 @@ export async function getCollection<T extends Document = Document>(
   return db.collection<T>(name)
 }
 
-export default clientPromise
+export default spojenie
