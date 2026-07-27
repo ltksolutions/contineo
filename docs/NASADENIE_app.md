@@ -12,9 +12,10 @@
 | Vercel projekt | ✅ `contineo-app`, root directory `app` |
 | Nasadenie | ✅ https://contineo-app.vercel.app |
 | Ochrana prihlásením | ✅ overené — `/` presmeruje, `/api/chat` vráti 401 |
-| Vlastná doména `app.contineo.app` | ⏳ čaká na DNS záznam |
-| Prístup do Atlasu z Vercelu | ⏳ čaká na Network Access |
-| Odosielanie e-mailov | ⏳ čaká na `ECOMAIL_API_KEY` |
+| Vlastná doména `app.contineo.app` | ✅ beží |
+| Prístup do Atlasu z Vercelu | ✅ overené — adaptér číta z databázy |
+| Zoznam pozvaných | ✅ overené — cudzia adresa dostane `AccessDenied` |
+| Odosielanie e-mailov | ❌ Ecomail vracia `401 Wrong api key` |
 
 ---
 
@@ -59,17 +60,24 @@ Zaznamenané v otvorenom bode k bezpečnosti.
 
 ## 3. Odosielanie e-mailov
 
-Ecomail vyžaduje **platený účet a overenú odosielaciu doménu**. Po overení
-`contineo.app` doplniť kľúč:
+Ecomail vyžaduje **platený účet a overenú odosielaciu doménu**.
 
 ```bash
 cd ~/Documents/GitHub/contineo/app
-printf '%s' 'SEM_KLUC_Z_ECOMAILU' | vercel env add ECOMAIL_API_KEY production --yes --force
-vercel deploy --prod --yes
+bash scripts/nastav_ecomail.sh 'kluc-z-ecomailu'
 ```
 
-Kým kľúč chýba, odoslanie zlyhá s hláškou a **nikto sa neprihlási** — vrátane
-teba.
+Skript kľúč **najprv vyskúša priamo proti Ecomailu** a až potom uloží
+a nasadí. Opačné poradie by znamenalo nasadiť a čakať, kým sa niekto pokúsi
+prihlásiť — presne to sa stalo pri prvom pokuse.
+
+| Odpoveď | Znamená |
+|---|---|
+| `200` | v poriadku, e-mail odišiel |
+| `401 Wrong api key` | zlý kľúč, alebo sa doň dostali úvodzovky či nový riadok |
+| `403` | neoverená odosielacia doména alebo neplatený účet |
+
+Kým kľúč nefunguje, **neprihlási sa nikto** — vrátane teba.
 
 ## 4. Kto má prístup
 
