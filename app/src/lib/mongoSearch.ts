@@ -166,7 +166,13 @@ export async function fulltextSearch(
   collection: Collection,
   opts: SearchOptions
 ): Promise<ChunkResult[]> {
-  const { query, limit = 10 } = opts
+  // POZOR na dve rôzne čísla: `limit` je koľko kandidátov sa vytiahne,
+  // `rerankLimit` koľko ich ide do kontextu modelu. Fulltext sa tu dlho
+  // orezával na `limit`, takže vracal 20 chunkov, kým hybrid a vector po
+  // reranku 5. Štvornásobok kontextu podľa toho, čo usúdil klasifikátor —
+  // a keďže to nikde nebolo vidieť, ticho by to skreslilo metriku hit@5
+  // aj porovnanie ceny a latencie medzi módmi.
+  const { query, limit = 10, rerankLimit = 5 } = opts
   const clauses = searchFilterClauses(opts)
 
   const pipeline: Document[] = [
@@ -189,8 +195,12 @@ export async function fulltextSearch(
       }
     },
     ...bezPreambul(opts),
-    { $limit: limit },
-    // fulltext nemá rerank stage — skóre pochádza priamo z $search
+    // Rerank tu zámerne NIE JE: fulltext slúži na presné výrazy, §
+    // a kódy noriem, kde je poradie podľa BM25 to, čo chceme. Počet
+    // výsledkov sa ale musí zhodovať s ostatnými módmi, inak sa výsledky
+    // nedajú porovnať. Či to fulltextu stačí, ukáže zlatá sada — má naň
+    // desať otázok.
+    { $limit: Math.min(limit, rerankLimit) },
     ...lookupDocument("searchScore"),
   ]
 

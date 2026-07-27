@@ -9,11 +9,14 @@
  */
 
 import { useEffect, useState } from "react"
+import Link from "next/link"
+import { usePathname } from "next/navigation"
 
 type Tema = "light" | "dark"
 
 export default function Hlavicka() {
   const [tema, setTema] = useState<Tema>("light")
+  const cesta = usePathname()
 
   // Prvé nastavenie podľa systému. Voľbu si držíme v localStorage, aby sa
   // pri každom prekliku nevracala späť.
@@ -70,6 +73,29 @@ export default function Hlavicka() {
             Testovacie rozhranie
           </span>
         </div>
+
+        <nav style={{ display: "flex", gap: 4, marginLeft: "auto", marginRight: 6 }}>
+          {[
+            { kam: "/", popis: "Voľné otázky" },
+            { kam: "/sada", popis: "Zlatá sada" },
+          ].map(o => {
+            const aktivna = o.kam === "/" ? cesta === "/" : cesta.startsWith(o.kam)
+            return (
+              <Link
+                key={o.kam}
+                href={o.kam}
+                style={{
+                  textDecoration: "none", fontSize: 14, borderRadius: 8,
+                  padding: "6px 12px", fontWeight: aktivna ? 700 : 500,
+                  background: aktivna ? "var(--surface-2)" : "transparent",
+                  color: aktivna ? "var(--ink)" : "var(--muted)",
+                }}
+              >
+                {o.popis}
+              </Link>
+            )
+          })}
+        </nav>
 
         <button
           onClick={prepni}

@@ -108,6 +108,40 @@ export default function Hladanie({
     }
   }
 
+  // V režime sady je otázka zobrazená nad komponentom a upravuje sa tam.
+  // Textové pole aj príklady by tu boli duplicita, ktorá zvádza pýtať sa
+  // na niečo iné, než čo sa má posúdiť.
+  const vSade = Boolean(otazkaId)
+
+  if (vSade) {
+    return (
+      <div style={{ display: "grid", gap: 22 }}>
+        <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+          <button
+            type="button"
+            className="tlacidlo"
+            onClick={() => odosli(prednastavena ?? "")}
+            disabled={stav.bezi}
+          >
+            {stav.bezi ? "Hľadám…" : stav.hotovo ? "Spýtať sa znova" : "Položiť túto otázku"}
+          </button>
+          {stav.bezi && (
+            <button
+              type="button"
+              className="tlacidlo tlacidlo--tiche"
+              onClick={() => { prerus.current?.abort(); setStav(s => ({ ...s, bezi: false })) }}
+            >
+              Zastaviť
+            </button>
+          )}
+        </div>
+
+        <Odpoved stav={stav} />
+        <Hodnotenie zaznamId={zaznamId} otazkaId={otazkaId} onHotovo={onPosudene} />
+      </div>
+    )
+  }
+
   return (
     <div style={{ display: "grid", gap: 22 }}>
       <form
