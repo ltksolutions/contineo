@@ -187,7 +187,14 @@ export default function Tech({ dict, lang }) {
             <h2>{t.architectureTitle}</h2>
           </div>
           <div style={{ background: "#ffffff", border: "1px solid var(--line)", borderRadius: "var(--radius-lg)", padding: "clamp(16px, 3vw, 32px)" }}>
-            <img src="/contineo_diagram.png" alt={t.architectureTitle} style={{ width: "100%", height: "auto", display: "block", borderRadius: "var(--radius)" }} />
+            {/* Diagram je SVG, nie PNG — kvoli tomu sa da prelozit textovo
+                a je ostry na kazdom displeji. Subor podla jazyka; slovencina
+                je bez pripony. */}
+            <img
+              src={lang && lang !== "sk" ? `/contineo_diagram.${lang}.svg` : "/contineo_diagram.svg"}
+              alt={t.architectureTitle}
+              style={{ width: "100%", height: "auto", display: "block", borderRadius: "var(--radius)" }}
+            />
           </div>
           <p className="muted center" style={{ marginTop: 16, fontSize: 14 }}>{t.architectureCaption}</p>
         </div>

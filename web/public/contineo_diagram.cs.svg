@@ -17,61 +17,61 @@
     </marker>
   </defs>
 
-  <text x="40" y="48" font-size="26" font-weight="700" fill="#202124">Contineo — architektúra a dátový tok</text>
-  <text x="40" y="74" font-size="14" fill="#5f6368">Vstupné kanály → spracovanie → MongoDB (jadro) → AI adaptéry → rozhrania. Adaptéry sa vyberajú konfiguráciou tenanta, nie kódom.</text>
+  <text x="40" y="48" font-size="26" font-weight="700" fill="#202124">Contineo — architektura a datový tok</text>
+  <text x="40" y="74" font-size="14" fill="#5f6368">Vstupní kanály → zpracování → MongoDB (jádro) → AI adaptéry → rozhraní. Adaptéry se vybírají konfigurací tenanta, ne kódem.</text>
 
   <rect x="470" y="96" width="580" height="34" rx="17" fill="#F1F3F4" stroke="#dadce0"/>
-  <text x="760" y="118" font-size="13" fill="#3c4043" text-anchor="middle">Zdroj identity a CRM (osoby, jednotky, roly) · auto-zakladanie používateľov</text>
+  <text x="760" y="118" font-size="13" fill="#3c4043" text-anchor="middle">Zdroj identity a CRM (osoby, jednotky, role) · auto-zakládání uživatelů</text>
   <path d="M760,130 L760,150" stroke="#9aa0a6" stroke-width="1.6" stroke-dasharray="4 3" marker-end="url(#arrowGray)"/>
 
   <rect x="40" y="170" width="264" height="330" rx="14" fill="#E8F0FE" stroke="#1A73E8" stroke-width="1.5"/>
-  <text x="60" y="200" font-size="15" font-weight="700" fill="#174EA6">VSTUPNÉ KANÁLY</text>
-  <text x="60" y="219" font-size="11" fill="#5f6368">obsah aj integrácie = jedna vrstva</text>
+  <text x="60" y="200" font-size="15" font-weight="700" fill="#174EA6">VSTUPNÍ KANÁLY</text>
+  <text x="60" y="219" font-size="11" fill="#5f6368">obsah i integrace = jedna vrstva</text>
   <g font-size="12.5" fill="#202124">
-    <text x="60" y="250">• PDF normy a smernice</text>
-    <text x="60" y="276">• RSS / web (Všeobecné info)</text>
+    <text x="60" y="250">• PDF normy a směrnice</text>
+    <text x="60" y="276">• RSS / web (Obecné info)</text>
     <text x="60" y="302">• FAQ</text>
     <text x="60" y="328">• E-mail (IMAP)  ⇅</text>
     <text x="60" y="354">• MCP konektory</text>
     <text x="74" y="374" font-size="11" fill="#5f6368">Drive · SharePoint · Confluence</text>
     <text x="74" y="391" font-size="11" fill="#5f6368">Notion · Slack …</text>
   </g>
-  <text x="60" y="430" font-size="11" fill="#1A73E8">⇅ e-mail je aj výstupný kanál</text>
+  <text x="60" y="430" font-size="11" fill="#1A73E8">⇅ e-mail je i výstupní kanál</text>
 
   <rect x="333" y="170" width="264" height="330" rx="14" fill="#FEF3E0" stroke="#E8920C" stroke-width="1.5"/>
   <text x="353" y="200" font-size="15" font-weight="700" fill="#B05A00">WORKER</text>
-  <text x="353" y="219" font-size="11" fill="#5f6368">spracovanie (mimo DB)</text>
+  <text x="353" y="219" font-size="11" fill="#5f6368">zpracování (mimo DB)</text>
   <g font-size="12.5" fill="#202124">
-    <text x="353" y="250">• Chunking — úryvok po §/čl.</text>
-    <text x="353" y="284">• Značkovanie z číselníka:</text>
-    <text x="367" y="303" font-size="11" fill="#5f6368">sekcia · scope · companyCode</text>
-    <text x="367" y="320" font-size="11" fill="#5f6368">verzia (effectiveFrom/To)</text>
-    <text x="353" y="352">• Embedding pri ingescii</text>
-    <text x="367" y="371" font-size="11" fill="#5f6368">cez adaptér podľa profilu</text>
-    <text x="353" y="403">• Verzovanie — staré chunky</text>
-    <text x="367" y="422" font-size="11" fill="#5f6368">isActive:false, nemazať</text>
+    <text x="353" y="250">• Chunking — úryvek po §/čl.</text>
+    <text x="353" y="284">• Značkování z číselníku:</text>
+    <text x="367" y="303" font-size="11" fill="#5f6368">sekce · scope · companyCode</text>
+    <text x="367" y="320" font-size="11" fill="#5f6368">verze (effectiveFrom/To)</text>
+    <text x="353" y="352">• Embedding při ingesci</text>
+    <text x="367" y="371" font-size="11" fill="#5f6368">přes adaptér podle profilu</text>
+    <text x="353" y="403">• Verzování — staré chunky</text>
+    <text x="367" y="422" font-size="11" fill="#5f6368">isActive:false, nemazat</text>
   </g>
 
   <rect x="626" y="170" width="264" height="330" rx="14" fill="#E6F4EA" stroke="#137333" stroke-width="2"/>
-  <text x="646" y="200" font-size="15" font-weight="700" fill="#0B6E2E">MongoDB — JADRO</text>
-  <text x="646" y="219" font-size="11" fill="#5f6368">rovnaké dotazy cloud aj on-prem</text>
+  <text x="646" y="200" font-size="15" font-weight="700" fill="#0B6E2E">MongoDB — JÁDRO</text>
+  <text x="646" y="219" font-size="11" fill="#5f6368">stejné dotazy cloud i on-prem</text>
   <g font-size="12.5" fill="#202124">
     <text x="646" y="250">• $vectorSearch + $search</text>
     <text x="646" y="282">• $rankFusion — hybrid</text>
     <text x="660" y="301" font-size="11" fill="#5f6368">vektor 60 % + fulltext 40 %</text>
-    <text x="646" y="331">• Filter companyCode</text>
-    <text x="660" y="350" font-size="11" fill="#5f6368">default-deny, pred LLM</text>
+    <text x="646" y="331">• Filtr companyCode</text>
+    <text x="660" y="350" font-size="11" fill="#5f6368">default-deny, před LLM</text>
   </g>
   <line x1="646" y1="368" x2="870" y2="368" stroke="#A8D5B5" stroke-width="1"/>
-  <text x="646" y="390" font-size="11.5" fill="#0B6E2E" font-weight="600">Kolekcie:</text>
+  <text x="646" y="390" font-size="11.5" fill="#0B6E2E" font-weight="600">Kolekce:</text>
   <text x="646" y="409" font-size="11.5" fill="#3c4043">document_chunks · qa_pairs</text>
   <text x="646" y="427" font-size="11.5" fill="#3c4043">tickets · conversations</text>
   <text x="646" y="445" font-size="11.5" fill="#3c4043">tenant_profiles</text>
-  <text x="646" y="472" font-size="10.5" fill="#5f6368">Atlas EU · alebo Community 8.2 on-prem</text>
+  <text x="646" y="472" font-size="10.5" fill="#5f6368">Atlas EU · nebo Community 8.2 on-prem</text>
 
   <rect x="919" y="170" width="264" height="330" rx="14" fill="#E0F7FA" stroke="#00838F" stroke-width="2"/>
   <text x="939" y="200" font-size="15" font-weight="700" fill="#006064">AI VRSTVA — ADAPTÉRY</text>
-  <text x="939" y="219" font-size="11" fill="#5f6368">výber tenant profilom, nie kódom</text>
+  <text x="939" y="219" font-size="11" fill="#5f6368">výběr tenant profilem, ne kódem</text>
 
   <text x="939" y="249" font-size="11.5" font-weight="700" fill="#006064">EMBEDDING</text>
   <text x="939" y="267" font-size="10.5" fill="#1A73E8">cloud · Atlas auto-embed (voyage-4)</text>
@@ -81,27 +81,27 @@
   <text x="939" y="333" font-size="10.5" fill="#1A73E8">cloud · $rerank (rerank-2)</text>
   <text x="939" y="349" font-size="10.5" fill="#137333">on-prem · Infinity (BGE-v2-m3)</text>
 
-  <text x="939" y="381" font-size="11.5" font-weight="700" fill="#006064">GENEROVANIE</text>
+  <text x="939" y="381" font-size="11.5" font-weight="700" fill="#006064">GENEROVÁNÍ</text>
   <text x="939" y="399" font-size="10.5" fill="#1A73E8">cloud · Claude (Citations API)</text>
   <text x="939" y="415" font-size="10.5" fill="#137333">on-prem · vLLM (Qwen3 / EuroLLM)</text>
 
   <line x1="939" y1="434" x2="1163" y2="434" stroke="#80DEEA" stroke-width="1"/>
-  <text x="939" y="454" font-size="10.5" fill="#5f6368">Rerank beží nad výsledkom</text>
+  <text x="939" y="454" font-size="10.5" fill="#5f6368">Rerank běží nad výsledkem</text>
   <text x="939" y="470" font-size="10.5" fill="#5f6368">$rankFusion — v pipeline (cloud)</text>
-  <text x="939" y="486" font-size="10.5" fill="#5f6368">alebo v aplikácii (on-prem).</text>
+  <text x="939" y="486" font-size="10.5" fill="#5f6368">nebo v aplikaci (on-prem).</text>
 
   <rect x="1212" y="170" width="264" height="330" rx="14" fill="#EEE9FB" stroke="#6B46C1" stroke-width="1.5"/>
-  <text x="1232" y="200" font-size="15" font-weight="700" fill="#54309E">ROZHRANIA</text>
-  <text x="1232" y="219" font-size="11" fill="#5f6368">odpoveď vždy s citáciou + verziou</text>
+  <text x="1232" y="200" font-size="15" font-weight="700" fill="#54309E">ROZHRANÍ</text>
+  <text x="1232" y="219" font-size="11" fill="#5f6368">odpověď vždy s citací + verzí</text>
   <g font-size="12.5" fill="#202124">
     <text x="1232" y="252">• Chat</text>
-    <text x="1246" y="271" font-size="11" fill="#5f6368">streaming, história konverzácie</text>
-    <text x="1232" y="303">• E-mail odpovede  ⇅</text>
-    <text x="1246" y="322" font-size="11" fill="#5f6368">IMAP vstup aj výstup</text>
+    <text x="1246" y="271" font-size="11" fill="#5f6368">streaming, historie konverzace</text>
+    <text x="1232" y="303">• E-mail odpovědi  ⇅</text>
+    <text x="1246" y="322" font-size="11" fill="#5f6368">IMAP vstup i výstup</text>
     <text x="1232" y="354">• Tickety</text>
-    <text x="1246" y="373" font-size="11" fill="#5f6368">helpdesk, SLA, životný cyklus</text>
+    <text x="1246" y="373" font-size="11" fill="#5f6368">helpdesk, SLA, životní cyklus</text>
     <text x="1232" y="405">• Vložený widget</text>
-    <text x="1246" y="424" font-size="11" fill="#5f6368">overlay v cudzej stránke</text>
+    <text x="1246" y="424" font-size="11" fill="#5f6368">overlay v cizí stránce</text>
   </g>
 
   <path d="M304,335 L331,335" stroke="#5f6368" stroke-width="2" marker-end="url(#arrow)"/>
@@ -119,19 +119,19 @@
   <circle cx="352" cy="574" r="4.5" fill="#D93025"/>
   <text x="366" y="579" font-size="12.5" fill="#B31412"><tspan font-weight="700">② ticket</tspan> — eskalácia s kontextom konverzácie</text>
 
-  <text x="40" y="602" font-size="15" font-weight="700" fill="#202124">Dva spätné cykly</text>
+  <text x="40" y="602" font-size="15" font-weight="700" fill="#202124">Dva zpětné cykly</text>
 
   <rect x="40" y="618" width="700" height="88" rx="12" fill="#E0F2F1" stroke="#00897B" stroke-width="1.5"/>
-  <text x="60" y="646" font-size="15" font-weight="700" fill="#00695C">① KURÁCIA — kontrola kvality</text>
-  <text x="60" y="670" font-size="12.5" fill="#3c4043">Správca ohodnotí a schváli odpoveď → uloží sa ako qa_pair → embeduje späť.</text>
-  <text x="60" y="690" font-size="12" fill="#5f6368">Nie je to strojové „učenie“, ale ľudská kurácia obsahu.</text>
+  <text x="60" y="646" font-size="15" font-weight="700" fill="#00695C">① KURACE — kontrola kvality</text>
+  <text x="60" y="670" font-size="12.5" fill="#3c4043">Správce ohodnotí a schválí odpověď → uloží se jako qa_pair → naembeduje zpět.</text>
+  <text x="60" y="690" font-size="12" fill="#5f6368">Není to strojové „učení“, ale lidská kurace obsahu.</text>
 
   <rect x="776" y="618" width="700" height="88" rx="12" fill="#FCE8E6" stroke="#D93025" stroke-width="1.5"/>
-  <text x="796" y="646" font-size="15" font-weight="700" fill="#B31412">② ESKALÁCIA — na ticket</text>
-  <text x="796" y="670" font-size="12.5" fill="#3c4043">Nízke skóre podobnosti alebo 3× neúspech na tú istú tému →</text>
-  <text x="796" y="690" font-size="12.5" fill="#3c4043">bot ponúkne vytvorenie ticketu s celým kontextom konverzácie.</text>
+  <text x="796" y="646" font-size="15" font-weight="700" fill="#B31412">② ESKALACE — na ticket</text>
+  <text x="796" y="670" font-size="12.5" fill="#3c4043">Nízké skóre podobnosti nebo 3× neúspěch na totéž téma →</text>
+  <text x="796" y="690" font-size="12.5" fill="#3c4043">bot nabídne vytvoření ticketu s celým kontextem konverzace.</text>
 
   <text x="40" y="742" font-size="11.5" fill="#9aa0a6">Cloud: MongoDB Atlas EU · Voyage voyage-4 + rerank-2 · Claude API (Citations)  │  On-prem: MongoDB Community 8.2 · Infinity / TEI · vLLM (Qwen3 / EuroLLM)</text>
-  <text x="40" y="762" font-size="11.5" fill="#9aa0a6">Jadro je v oboch režimoch identické — $rankFusion beží aj self-hosted. Líšia sa len tri adaptéry: embedding, rerank, generovanie (ADR-001).</text>
-  <text x="40" y="782" font-size="11.5" fill="#9aa0a6">Rozdiely: $rerank je zatiaľ Atlas-only · Citations API len pri Claude · auto-embed volá Voyage API, preto pre air-gap nepoužiteľné.</text>
+  <text x="40" y="762" font-size="11.5" fill="#9aa0a6">Jádro je v obou režimech identické — $rankFusion běží i self-hosted. Liší se jen tři adaptéry: embedding, rerank, generování (ADR-001).</text>
+  <text x="40" y="782" font-size="11.5" fill="#9aa0a6">Rozdíly: $rerank je zatím Atlas-only · Citations API jen u Claude · auto-embed volá Voyage API, proto pro air-gap nepoužitelné.</text>
 </svg>

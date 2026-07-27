@@ -17,61 +17,61 @@
     </marker>
   </defs>
 
-  <text x="40" y="48" font-size="26" font-weight="700" fill="#202124">Contineo — architektúra a dátový tok</text>
-  <text x="40" y="74" font-size="14" fill="#5f6368">Vstupné kanály → spracovanie → MongoDB (jadro) → AI adaptéry → rozhrania. Adaptéry sa vyberajú konfiguráciou tenanta, nie kódom.</text>
+  <text x="40" y="48" font-size="26" font-weight="700" fill="#202124">Contineo — architecture and data flow</text>
+  <text x="40" y="74" font-size="14" fill="#5f6368">Input channels → processing → MongoDB (core) → AI adapters → interfaces. Adapters are selected by tenant configuration, not by code.</text>
 
   <rect x="470" y="96" width="580" height="34" rx="17" fill="#F1F3F4" stroke="#dadce0"/>
-  <text x="760" y="118" font-size="13" fill="#3c4043" text-anchor="middle">Zdroj identity a CRM (osoby, jednotky, roly) · auto-zakladanie používateľov</text>
+  <text x="760" y="118" font-size="13" fill="#3c4043" text-anchor="middle">Identity source and CRM (people, units, roles) · automatic user provisioning</text>
   <path d="M760,130 L760,150" stroke="#9aa0a6" stroke-width="1.6" stroke-dasharray="4 3" marker-end="url(#arrowGray)"/>
 
   <rect x="40" y="170" width="264" height="330" rx="14" fill="#E8F0FE" stroke="#1A73E8" stroke-width="1.5"/>
-  <text x="60" y="200" font-size="15" font-weight="700" fill="#174EA6">VSTUPNÉ KANÁLY</text>
-  <text x="60" y="219" font-size="11" fill="#5f6368">obsah aj integrácie = jedna vrstva</text>
+  <text x="60" y="200" font-size="15" font-weight="700" fill="#174EA6">INPUT CHANNELS</text>
+  <text x="60" y="219" font-size="11" fill="#5f6368">content and integrations = one layer</text>
   <g font-size="12.5" fill="#202124">
-    <text x="60" y="250">• PDF normy a smernice</text>
-    <text x="60" y="276">• RSS / web (Všeobecné info)</text>
+    <text x="60" y="250">• PDF regulations and directives</text>
+    <text x="60" y="276">• RSS / web (general info)</text>
     <text x="60" y="302">• FAQ</text>
     <text x="60" y="328">• E-mail (IMAP)  ⇅</text>
-    <text x="60" y="354">• MCP konektory</text>
+    <text x="60" y="354">• MCP connectors</text>
     <text x="74" y="374" font-size="11" fill="#5f6368">Drive · SharePoint · Confluence</text>
     <text x="74" y="391" font-size="11" fill="#5f6368">Notion · Slack …</text>
   </g>
-  <text x="60" y="430" font-size="11" fill="#1A73E8">⇅ e-mail je aj výstupný kanál</text>
+  <text x="60" y="430" font-size="11" fill="#1A73E8">⇅ e-mail is an output channel too</text>
 
   <rect x="333" y="170" width="264" height="330" rx="14" fill="#FEF3E0" stroke="#E8920C" stroke-width="1.5"/>
   <text x="353" y="200" font-size="15" font-weight="700" fill="#B05A00">WORKER</text>
-  <text x="353" y="219" font-size="11" fill="#5f6368">spracovanie (mimo DB)</text>
+  <text x="353" y="219" font-size="11" fill="#5f6368">processing (outside the DB)</text>
   <g font-size="12.5" fill="#202124">
-    <text x="353" y="250">• Chunking — úryvok po §/čl.</text>
-    <text x="353" y="284">• Značkovanie z číselníka:</text>
-    <text x="367" y="303" font-size="11" fill="#5f6368">sekcia · scope · companyCode</text>
-    <text x="367" y="320" font-size="11" fill="#5f6368">verzia (effectiveFrom/To)</text>
-    <text x="353" y="352">• Embedding pri ingescii</text>
-    <text x="367" y="371" font-size="11" fill="#5f6368">cez adaptér podľa profilu</text>
-    <text x="353" y="403">• Verzovanie — staré chunky</text>
-    <text x="367" y="422" font-size="11" fill="#5f6368">isActive:false, nemazať</text>
+    <text x="353" y="250">• Chunking — one excerpt per §/article</text>
+    <text x="353" y="284">• Tagging from a controlled list:</text>
+    <text x="367" y="303" font-size="11" fill="#5f6368">section · scope · companyCode</text>
+    <text x="367" y="320" font-size="11" fill="#5f6368">version (effectiveFrom/To)</text>
+    <text x="353" y="352">• Embedding at ingest</text>
+    <text x="367" y="371" font-size="11" fill="#5f6368">via the adapter from the profile</text>
+    <text x="353" y="403">• Versioning — old chunks</text>
+    <text x="367" y="422" font-size="11" fill="#5f6368">isActive:false, never deleted</text>
   </g>
 
   <rect x="626" y="170" width="264" height="330" rx="14" fill="#E6F4EA" stroke="#137333" stroke-width="2"/>
-  <text x="646" y="200" font-size="15" font-weight="700" fill="#0B6E2E">MongoDB — JADRO</text>
-  <text x="646" y="219" font-size="11" fill="#5f6368">rovnaké dotazy cloud aj on-prem</text>
+  <text x="646" y="200" font-size="15" font-weight="700" fill="#0B6E2E">MongoDB — CORE</text>
+  <text x="646" y="219" font-size="11" fill="#5f6368">same queries in cloud and on-prem</text>
   <g font-size="12.5" fill="#202124">
     <text x="646" y="250">• $vectorSearch + $search</text>
     <text x="646" y="282">• $rankFusion — hybrid</text>
-    <text x="660" y="301" font-size="11" fill="#5f6368">vektor 60 % + fulltext 40 %</text>
-    <text x="646" y="331">• Filter companyCode</text>
-    <text x="660" y="350" font-size="11" fill="#5f6368">default-deny, pred LLM</text>
+    <text x="660" y="301" font-size="11" fill="#5f6368">vector 60 % + fulltext 40 %</text>
+    <text x="646" y="331">• companyCode filter</text>
+    <text x="660" y="350" font-size="11" fill="#5f6368">default-deny, before the LLM</text>
   </g>
   <line x1="646" y1="368" x2="870" y2="368" stroke="#A8D5B5" stroke-width="1"/>
-  <text x="646" y="390" font-size="11.5" fill="#0B6E2E" font-weight="600">Kolekcie:</text>
+  <text x="646" y="390" font-size="11.5" fill="#0B6E2E" font-weight="600">Collections:</text>
   <text x="646" y="409" font-size="11.5" fill="#3c4043">document_chunks · qa_pairs</text>
   <text x="646" y="427" font-size="11.5" fill="#3c4043">tickets · conversations</text>
   <text x="646" y="445" font-size="11.5" fill="#3c4043">tenant_profiles</text>
-  <text x="646" y="472" font-size="10.5" fill="#5f6368">Atlas EU · alebo Community 8.2 on-prem</text>
+  <text x="646" y="472" font-size="10.5" fill="#5f6368">Atlas EU · or Community 8.2 on-prem</text>
 
   <rect x="919" y="170" width="264" height="330" rx="14" fill="#E0F7FA" stroke="#00838F" stroke-width="2"/>
-  <text x="939" y="200" font-size="15" font-weight="700" fill="#006064">AI VRSTVA — ADAPTÉRY</text>
-  <text x="939" y="219" font-size="11" fill="#5f6368">výber tenant profilom, nie kódom</text>
+  <text x="939" y="200" font-size="15" font-weight="700" fill="#006064">AI LAYER — ADAPTERS</text>
+  <text x="939" y="219" font-size="11" fill="#5f6368">chosen by tenant profile, not by code</text>
 
   <text x="939" y="249" font-size="11.5" font-weight="700" fill="#006064">EMBEDDING</text>
   <text x="939" y="267" font-size="10.5" fill="#1A73E8">cloud · Atlas auto-embed (voyage-4)</text>
@@ -81,27 +81,27 @@
   <text x="939" y="333" font-size="10.5" fill="#1A73E8">cloud · $rerank (rerank-2)</text>
   <text x="939" y="349" font-size="10.5" fill="#137333">on-prem · Infinity (BGE-v2-m3)</text>
 
-  <text x="939" y="381" font-size="11.5" font-weight="700" fill="#006064">GENEROVANIE</text>
+  <text x="939" y="381" font-size="11.5" font-weight="700" fill="#006064">GENERATION</text>
   <text x="939" y="399" font-size="10.5" fill="#1A73E8">cloud · Claude (Citations API)</text>
   <text x="939" y="415" font-size="10.5" fill="#137333">on-prem · vLLM (Qwen3 / EuroLLM)</text>
 
   <line x1="939" y1="434" x2="1163" y2="434" stroke="#80DEEA" stroke-width="1"/>
-  <text x="939" y="454" font-size="10.5" fill="#5f6368">Rerank beží nad výsledkom</text>
-  <text x="939" y="470" font-size="10.5" fill="#5f6368">$rankFusion — v pipeline (cloud)</text>
-  <text x="939" y="486" font-size="10.5" fill="#5f6368">alebo v aplikácii (on-prem).</text>
+  <text x="939" y="454" font-size="10.5" fill="#5f6368">Rerank runs on the result of</text>
+  <text x="939" y="470" font-size="10.5" fill="#5f6368">$rankFusion — in the pipeline (cloud)</text>
+  <text x="939" y="486" font-size="10.5" fill="#5f6368">or in the application (on-prem).</text>
 
   <rect x="1212" y="170" width="264" height="330" rx="14" fill="#EEE9FB" stroke="#6B46C1" stroke-width="1.5"/>
-  <text x="1232" y="200" font-size="15" font-weight="700" fill="#54309E">ROZHRANIA</text>
-  <text x="1232" y="219" font-size="11" fill="#5f6368">odpoveď vždy s citáciou + verziou</text>
+  <text x="1232" y="200" font-size="15" font-weight="700" fill="#54309E">INTERFACES</text>
+  <text x="1232" y="219" font-size="11" fill="#5f6368">every answer with a citation + version</text>
   <g font-size="12.5" fill="#202124">
     <text x="1232" y="252">• Chat</text>
-    <text x="1246" y="271" font-size="11" fill="#5f6368">streaming, história konverzácie</text>
-    <text x="1232" y="303">• E-mail odpovede  ⇅</text>
-    <text x="1246" y="322" font-size="11" fill="#5f6368">IMAP vstup aj výstup</text>
-    <text x="1232" y="354">• Tickety</text>
-    <text x="1246" y="373" font-size="11" fill="#5f6368">helpdesk, SLA, životný cyklus</text>
-    <text x="1232" y="405">• Vložený widget</text>
-    <text x="1246" y="424" font-size="11" fill="#5f6368">overlay v cudzej stránke</text>
+    <text x="1246" y="271" font-size="11" fill="#5f6368">streaming, conversation history</text>
+    <text x="1232" y="303">• E-mail replies  ⇅</text>
+    <text x="1246" y="322" font-size="11" fill="#5f6368">IMAP inbound and outbound</text>
+    <text x="1232" y="354">• Tickets</text>
+    <text x="1246" y="373" font-size="11" fill="#5f6368">helpdesk, SLA, life cycle</text>
+    <text x="1232" y="405">• Embedded widget</text>
+    <text x="1246" y="424" font-size="11" fill="#5f6368">overlay inside a third-party page</text>
   </g>
 
   <path d="M304,335 L331,335" stroke="#5f6368" stroke-width="2" marker-end="url(#arrow)"/>
@@ -119,19 +119,19 @@
   <circle cx="352" cy="574" r="4.5" fill="#D93025"/>
   <text x="366" y="579" font-size="12.5" fill="#B31412"><tspan font-weight="700">② ticket</tspan> — eskalácia s kontextom konverzácie</text>
 
-  <text x="40" y="602" font-size="15" font-weight="700" fill="#202124">Dva spätné cykly</text>
+  <text x="40" y="602" font-size="15" font-weight="700" fill="#202124">Two feedback loops</text>
 
   <rect x="40" y="618" width="700" height="88" rx="12" fill="#E0F2F1" stroke="#00897B" stroke-width="1.5"/>
-  <text x="60" y="646" font-size="15" font-weight="700" fill="#00695C">① KURÁCIA — kontrola kvality</text>
-  <text x="60" y="670" font-size="12.5" fill="#3c4043">Správca ohodnotí a schváli odpoveď → uloží sa ako qa_pair → embeduje späť.</text>
-  <text x="60" y="690" font-size="12" fill="#5f6368">Nie je to strojové „učenie“, ale ľudská kurácia obsahu.</text>
+  <text x="60" y="646" font-size="15" font-weight="700" fill="#00695C">① CURATION — quality control</text>
+  <text x="60" y="670" font-size="12.5" fill="#3c4043">An admin rates and approves an answer → it is stored as a qa_pair → embedded back.</text>
+  <text x="60" y="690" font-size="12" fill="#5f6368">This is not machine „learning“, but human curation of content.</text>
 
   <rect x="776" y="618" width="700" height="88" rx="12" fill="#FCE8E6" stroke="#D93025" stroke-width="1.5"/>
-  <text x="796" y="646" font-size="15" font-weight="700" fill="#B31412">② ESKALÁCIA — na ticket</text>
-  <text x="796" y="670" font-size="12.5" fill="#3c4043">Nízke skóre podobnosti alebo 3× neúspech na tú istú tému →</text>
-  <text x="796" y="690" font-size="12.5" fill="#3c4043">bot ponúkne vytvorenie ticketu s celým kontextom konverzácie.</text>
+  <text x="796" y="646" font-size="15" font-weight="700" fill="#B31412">② ESCALATION — to a ticket</text>
+  <text x="796" y="670" font-size="12.5" fill="#3c4043">Low similarity score or 3 failures on the same topic →</text>
+  <text x="796" y="690" font-size="12.5" fill="#3c4043">the bot offers to create a ticket with the whole conversation context.</text>
 
   <text x="40" y="742" font-size="11.5" fill="#9aa0a6">Cloud: MongoDB Atlas EU · Voyage voyage-4 + rerank-2 · Claude API (Citations)  │  On-prem: MongoDB Community 8.2 · Infinity / TEI · vLLM (Qwen3 / EuroLLM)</text>
-  <text x="40" y="762" font-size="11.5" fill="#9aa0a6">Jadro je v oboch režimoch identické — $rankFusion beží aj self-hosted. Líšia sa len tri adaptéry: embedding, rerank, generovanie (ADR-001).</text>
-  <text x="40" y="782" font-size="11.5" fill="#9aa0a6">Rozdiely: $rerank je zatiaľ Atlas-only · Citations API len pri Claude · auto-embed volá Voyage API, preto pre air-gap nepoužiteľné.</text>
+  <text x="40" y="762" font-size="11.5" fill="#9aa0a6">The core is identical in both modes — $rankFusion runs self-hosted too. Only three adapters differ: embedding, rerank, generation (ADR-001).</text>
+  <text x="40" y="782" font-size="11.5" fill="#9aa0a6">Differences: $rerank is Atlas-only for now · Citations API only with Claude · auto-embed calls the Voyage API, so it is unusable in air-gap.</text>
 </svg>
