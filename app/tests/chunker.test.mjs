@@ -235,6 +235,34 @@ t("strana: skutočný názov sa nájde za číslovaním",
 t("strana: číslovanie nie je v texte chunku",
   !strany.chunky.some(c => /Strana \d|^\s*z \d+\s*$/m.test(c.text)))
 
+// Ten istý údaj, ale celý na jednom riadku — tvar, ktorý PDF používa
+// častejšie. Vzor ho spočiatku prehliadal, lebo vyžadoval, aby riadok
+// končil číslom. Prejavilo sa to až v citácii: model odcitoval úryvok
+// aj s číslovaním strany.
+const stranaJeden = chunkuj([
+  "Disciplinárny poriadok",
+  "Článok 37",
+  "",
+  "Strana 17 z 49",
+  "",
+  "Napomenutia",
+  "",
+  "(6) V majstrovskej súťaži sa ukladá sankcia bez prerokovania.",
+].join("\n"), { nazovDokumentu: "Disciplinárny poriadok" })
+
+t("strana: „Strana 17 z 49“ na jednom riadku sa odstráni",
+  !stranaJeden.chunky.some(c => /Strana \d+ z \d+/.test(c.text)),
+  JSON.stringify(stranaJeden.chunky.map(c => c.text.slice(0, 60))))
+t("strana: jednoriadkové číslovanie sa NEstane názvom",
+  !stranaJeden.chunky.some(c => /^Strana/.test(c.heading ?? "")),
+  JSON.stringify(stranaJeden.chunky.map(c => c.heading)))
+t("strana: skutočný názov sa nájde aj za jednoriadkovým číslovaním",
+  stranaJeden.chunky.some(c => c.heading === "Napomenutia"),
+  JSON.stringify(stranaJeden.chunky.map(c => c.heading)))
+t("strana: anglické „Page 3 of 12“ sa odstráni tiež",
+  !chunkuj(["Poriadok", "Článok 1", "", "Page 3 of 12", "", "Názov", "", "(1) Text."].join("\n"),
+    { nazovDokumentu: "Poriadok" }).chunky.some(c => /Page \d/.test(c.text)))
+
 // Neviditeľné znaky z PDF (zero-width space, BOM). Riadok s nimi nie je
 // prázdny podľa `!r`, takže sa raz stal „názvom" článku 3 Rokovacieho
 // poriadku a v citácii svietil prázdny nadpis.

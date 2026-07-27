@@ -14,6 +14,8 @@ import { polozOtazku } from "@/lib/sseKlient"
 import type { Vysledok } from "@/lib/sseKlient"
 import Odpoved from "./Odpoved"
 import type { StavOdpovede } from "./Odpoved"
+import Hodnotenie from "./Hodnotenie"
+import type { Posudok } from "@/lib/hodnotenia"
 
 const PRAZDNY: StavOdpovede = {
   otazka: "", text: "", citacie: [], hotovo: null, bezi: false,
@@ -28,14 +30,50 @@ const PRIKLADY = [
 ]
 
 export default function Hladanie({
-  onOdpoved,
+  otazkaId,
+  prednastavena,
+  onPosudene,
 }: {
-  /** Zavolá sa po dokončení — nadväzuje na to hodnotiaci panel. */
-  onOdpoved?: (otazka: string, v: Vysledok) => void
-}) {
-  const [otazka, setOtazka] = useState("")
+  /** Označenie otázky zo zlatej sady — v režime sady. */
+  otazkaId?: string
+  /** Predvyplnené znenie otázky (režim sady). */
+  prednastavena?: string
+  /** Zavolá sa po posúdení správnosti; režim sady na to nadväzuje. */
+  onPosudene?: (spravna: Posudok) => void
+} = {}) {
+  const [otazka, setOtazka] = useState(prednastavena ?? "")
   const [stav, setStav] = useState<StavOdpovede>(PRAZDNY)
+  const [zaznamId, setZaznamId] = useState<string | null>(null)
   const prerus = useRef<AbortController | null>(null)
+
+  /**
+   * Uloží odpoveď hneď, ako dobehne — ešte pred hodnotením.
+   *
+   * Automatické metriky D9 (hit@5, latencia, únik interného obsahu) sa dajú
+   * spočítať aj z neposúdených odpovedí. Keby sa záznam zakladal až pri
+   * kliknutí na hodnotenie, prišli by sme o dáta z každej preskočenej otázky.
+   */
+  async function zapis(q: string, v: Vysledok) {
+    try {
+      const r = await fetch("/api/hodnotenie", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          otazkaId, otazka: q, odpoved: v.text,
+          zdroje: v.zdroje, citacie: v.citacie,
+          model: v.model, provider: v.provider,
+          overeneCitacie: v.overeneCitacie,
+          ttftMs: v.ttftMs, celkovoMs: v.celkovoMs, casy: v.casy,
+        }),
+      })
+      if (!r.ok) return
+      const { id } = await r.json()
+      setZaznamId(id)
+    } catch {
+      // Nezapísané hodnotenie nesmie zhodiť zobrazenie odpovede —
+      // hodnotiteľ ju stále vidí, len ju nevie posúdiť.
+    }
+  }
 
   async function odosli(text: string) {
     const q = text.trim()
@@ -46,6 +84,7 @@ export default function Hladanie({
     prerus.current = ctrl
 
     setStav({ otazka: q, text: "", citacie: [], hotovo: null, bezi: true })
+    setZaznamId(null)
 
     try {
       const v = await polozOtazku(
@@ -54,7 +93,7 @@ export default function Hladanie({
         { signal: ctrl.signal }
       )
       setStav({ otazka: q, text: v.text, citacie: v.citacie, hotovo: v, bezi: false })
-      if (!v.chyba) onOdpoved?.(q, v)
+      if (!v.chyba && v.text) void zapis(q, v)
     } catch (e) {
       // Prerušenie používateľom nie je chyba — len sme prestali čakať.
       if ((e as Error)?.name === "AbortError") return
@@ -139,6 +178,8 @@ export default function Hladanie({
       )}
 
       <Odpoved stav={stav} />
+
+      <Hodnotenie zaznamId={zaznamId} otazkaId={otazkaId} onHotovo={onPosudene} />
     </div>
   )
 }

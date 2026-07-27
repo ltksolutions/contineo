@@ -46,7 +46,20 @@ function TextOdpovede({ text }: { text: string }) {
   return (
     <>
       {bloky.map((b, i) =>
-        b.druh === "odsek" ? (
+        b.druh === "nadpis" ? (
+          <div
+            key={i}
+            style={{
+              // Úrovne sa líšia len jemne — odpoveď má mať jeden hlas,
+              // nie hierarchiu ako dokumentácia.
+              fontSize: b.uroven <= 2 ? 16.5 : 15.5,
+              fontWeight: 700,
+              margin: i === 0 ? "0 0 8px" : "18px 0 8px",
+            }}
+          >
+            <Useky useky={b.useky} />
+          </div>
+        ) : b.druh === "odsek" ? (
           <p key={i} style={{ margin: "0 0 12px" }}>
             <Useky useky={b.useky} />
           </p>

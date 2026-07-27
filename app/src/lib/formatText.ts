@@ -19,6 +19,7 @@ export type Usek =
 
 export type Blok =
   | { druh: "odsek"; useky: Usek[] }
+  | { druh: "nadpis"; useky: Usek[]; uroven: number }
   | { druh: "zoznam"; polozky: Usek[][]; cislovany: boolean }
 
 const ODRAZKA = /^\s*[-*•]\s+(.*)$/
@@ -31,6 +32,13 @@ const CISLO = /^\s*(\d+)[.)]\s+(.*)$/
  * kde ho čitateľ najviac potrebuje.
  */
 const MEDZITITULOK = /^\*\*(?!\s)(.+?)\*\*[:：]?$/
+
+/**
+ * Markdown nadpis. Model ich používa striedavo s tučnými medzititulkami —
+ * v tej istej odpovedi vedľa seba. Bez tohto vzoru sa v texte objavilo
+ * doslovné „## Hráči“, čo vyzerá ako chyba systému.
+ */
+const NADPIS = /^(#{1,4})\s+(.+?)\s*#*$/
 
 /**
  * Rozdelí riadok na bežné a tučné úseky.
@@ -102,11 +110,30 @@ export function naBloky(text: string): Blok[] {
       continue
     }
 
+    const nadpis = NADPIS.exec(orezany)
+    if (nadpis) {
+      zavriOdsek()
+      zavriZoznam()
+      bloky.push({
+        druh: "nadpis",
+        uroven: nadpis[1].length,
+        useky: rozdelInline(nadpis[2]),
+      })
+      continue
+    }
+
     const medzititulok = MEDZITITULOK.exec(orezany)
     if (medzititulok) {
       zavriOdsek()
       zavriZoznam()
-      bloky.push({ druh: "odsek", useky: [{ druh: "tucne", text: medzititulok[1] }] })
+      // Tučný riadok je významovo to isté, čo `###` — zjednotíme, aby sa
+      // v jednej odpovedi nestriedali dva rôzne vzhľady toho istého.
+      // Koncová dvojbodka patrí k vete pod nadpisom, nie k nadpisu; model
+      // ju píše dnu aj von z hviezdičiek, takže sa orezáva tu.
+      bloky.push({
+        druh: "nadpis", uroven: 3,
+        useky: [{ druh: "text", text: medzititulok[1].replace(/[:：]\s*$/, "") }],
+      })
       continue
     }
 

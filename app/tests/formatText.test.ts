@@ -90,10 +90,79 @@ const skutocna = naBloky(
 )
 t("skutočná odpoveď dá päť blokov", skutocna.length === 5,
   JSON.stringify(skutocna.map(b => b.druh)))
-t("medzititulok je celý tučný",
-  skutocna[1].druh === "odsek" &&
-  skutocna[1].useky.length === 1 &&
-  skutocna[1].useky[0].druh === "tucne")
+t("medzititulok sa stane nadpisom",
+  skutocna[1].druh === "nadpis" && text(skutocna[1].useky) === "Lehota podľa čl. 78 (zápis o stretnutí)",
+  skutocna[1].druh === "nadpis" ? text(skutocna[1].useky) : skutocna[1].druh)
+
+// ── markdown nadpisy ─────────────────────────────────────────────────────────
+//
+// Model ich používa striedavo s tučnými medzititulkami, niekedy oboje
+// v jednej odpovedi. Doslovné „## Hráči“ v texte vyzerá ako chyba systému.
+
+const sNadpisom = naBloky("## Hráči\n\nPo 5. napomenutí sa ukladá sankcia.")
+t("## sa rozpozná ako nadpis",
+  sNadpisom[0].druh === "nadpis", JSON.stringify(sNadpisom.map(b => b.druh)))
+t("mriežky nezostanú v texte",
+  sNadpisom[0].druh === "nadpis" && text(sNadpisom[0].useky) === "Hráči",
+  sNadpisom[0].druh === "nadpis" ? text(sNadpisom[0].useky) : "")
+t("úroveň nadpisu sa zachová",
+  sNadpisom[0].druh === "nadpis" && sNadpisom[0].uroven === 2)
+
+t("nadpis nepotrebuje prázdny riadok pod sebou",
+  (() => {
+    const b = naBloky("## Hráči\nText hneď pod nadpisom.")
+    return b.length === 2 && b[0].druh === "nadpis" && b[1].druh === "odsek"
+  })())
+
+t("# aj ### fungujú",
+  naBloky("# Prvá\n\n### Tretia").every(b => b.druh === "nadpis"))
+
+t("uzavretý nadpis ## Text ## sa očistí",
+  (() => {
+    const b = naBloky("## Hráči ##")
+    return b[0].druh === "nadpis" && text(b[0].useky) === "Hráči"
+  })())
+
+t("mriežka bez medzery nie je nadpis",
+  naBloky("#hashtag nie je nadpis")[0].druh === "odsek")
+
+t("zvýraznenie v nadpise funguje",
+  (() => {
+    const b = naBloky("## Podľa **čl. 37**")
+    return b[0].druh === "nadpis" && b[0].useky.some(u => u.druh === "tucne")
+  })())
+
+// Tučný riadok a ### znamenajú to isté — v jednej odpovedi sa nesmú
+// zobraziť dvomi rôznymi spôsobmi.
+t("tučný medzititulok je tiež nadpis",
+  naBloky("**Náležitosti (čl. 86):**")[0].druh === "nadpis")
+
+// Dvojbodka patrí k vete pod nadpisom, nie k nadpisu. Model ju píše raz
+// vnútri hviezdičiek, raz za nimi — výsledok musí byť rovnaký.
+t("koncová dvojbodka sa z nadpisu oreže (vnútri hviezdičiek)",
+  (() => {
+    const b = naBloky("**Náležitosti:**")
+    return b[0].druh === "nadpis" && text(b[0].useky) === "Náležitosti"
+  })())
+t("koncová dvojbodka sa z nadpisu oreže (za hviezdičkami)",
+  (() => {
+    const b = naBloky("**Náležitosti**:")
+    return b[0].druh === "nadpis" && text(b[0].useky) === "Náležitosti"
+  })())
+
+// Skutočná odpoveď z rozhrania: model zmiešal oba tvary.
+const zmiesane = naBloky(
+  "Podľa Disciplinárneho poriadku (čl. 37) sa tresty uplatňujú rozdielne.\n\n" +
+  "## Hráči\n\n" +
+  "Po 5. napomenutí pozastavenie výkonu športu.\n\n" +
+  "**Členovia realizačného tímu:**\n" +
+  "Po 3. napomenutí pozastavenie funkcie."
+)
+t("zmiešané tvary dajú päť blokov", zmiesane.length === 5,
+  JSON.stringify(zmiesane.map(b => b.druh)))
+t("oba tvary skončia ako nadpis",
+  zmiesane.filter(b => b.druh === "nadpis").length === 2,
+  JSON.stringify(zmiesane.map(b => b.druh)))
 
 // ── čistenie citácií ─────────────────────────────────────────────────────────
 

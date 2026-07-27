@@ -53,18 +53,22 @@ const ODSEK = /^\((\d+)\)\s*(.*)$/
 const POZNAMKA = /^\d+[a-z]?\)\s+\S/
 const CISLO_STRANY = /^\d+\s*\/\s*\d+$/
 /**
- * Číslovanie strán rozpadnuté z PDF na viac riadkov:
+ * Číslovanie strán. PDF ho vypľuje v dvoch tvaroch a treba pokryť oba:
  *
- *     Strana 1
- *     (prázdny)
- *      z 16
+ *   celé na jednom riadku          rozpadnuté na viac riadkov
+ *   ─────────────────────          ──────────────────────────
+ *     Strana 2 z 49                  Strana 1
+ *                                    (prázdny)
+ *                                     z 16
  *
- * Bez tohto vzoru sa „Strana 1“ dostala na miesto názvu článku — v korpuse
- * SFZ tak vznikol chunk „Článok 3 · Strana 1“. Citácia potom vyzerá
- * nedôveryhodne, hoci text je správny.
+ * Prvý tvar tu spočiatku chýbal — vzor vyžadoval, aby riadok končil číslom,
+ * takže „Strana 2 z 49" prešlo do textu chunku. Prejavilo sa to až v UI:
+ * model úryvok odcitoval aj s číslovaním a citácia začínala slovami
+ * „Strana 17 z 49 (6) V majstrovskej súťaži…". Text bol pritom správny —
+ * čo je presne ten druh chyby, ktorý poškodí dôveru viac než zjavný pád.
  */
-const STRANA = /^(Strana|Page)\s+\d+$/i
-const STRANA_Z = /^z\s+\d+$/i
+const STRANA = /^(Strana|Page)\s+\d+(\s+(z|of)\s+\d+)?$/i
+const STRANA_Z = /^(z|of)\s+\d+$/i
 
 // Cieľová veľkosť chunku. D1 hovorí 300–800 tokenov; v slovenčine vychádza
 // zhruba 3,5 znaku na token, takže počítame v znakoch a je to len odhad.
