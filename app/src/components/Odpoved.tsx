@@ -1,0 +1,153 @@
+"use client"
+
+/**
+ * Zobrazenie odpovede: text, citácie, zdroje a technická pätička.
+ *
+ * Návrhové rozhodnutie: citácie sú NAD zoznamom zdrojov a sú výraznejšie.
+ * Zdroj hovorí len „toto sme prehľadali", citácia hovorí „o toto sa opiera
+ * táto veta" — a práve to hodnotiteľ potrebuje, aby vedel posúdiť, či si
+ * model niečo nedomyslel.
+ */
+
+import type { Citacia, Vysledok } from "@/lib/sseKlient"
+
+/** Stav odpovede počas streamovania — kým nepríde `done`, máme len text. */
+export interface StavOdpovede {
+  otazka: string
+  text: string
+  citacie: Citacia[]
+  hotovo: Vysledok | null
+  bezi: boolean
+}
+
+function Riadok({ popis, hodnota }: { popis: string; hodnota: string }) {
+  return (
+    <span style={{ display: "inline-flex", gap: 6 }}>
+      <span className="tichy">{popis}</span>
+      <span style={{ fontWeight: 600 }}>{hodnota}</span>
+    </span>
+  )
+}
+
+export default function Odpoved({ stav }: { stav: StavOdpovede }) {
+  const { text, citacie, hotovo, bezi } = stav
+  if (!text && !bezi && !hotovo) return null
+
+  const chyba = hotovo?.chyba
+
+  return (
+    <div style={{ display: "grid", gap: 16 }}>
+      <div className="karta">
+        {chyba ? (
+          <div style={{ color: "var(--bad-fg)", fontSize: 15 }}>
+            <strong>Odpoveď sa nepodarilo získať.</strong>
+            <div style={{ marginTop: 6, fontSize: 14 }}>{chyba}</div>
+          </div>
+        ) : (
+          <div className={bezi ? "odpoved kurzor" : "odpoved"}>
+            {text || (bezi ? "" : "—")}
+          </div>
+        )}
+      </div>
+
+      {/* Citácie — doslovné úryvky, o ktoré sa odpoveď opiera. */}
+      {citacie.length > 0 && (
+        <div>
+          <h3 style={{ fontSize: 13, textTransform: "uppercase", letterSpacing: "0.05em",
+                       color: "var(--muted)", marginBottom: 10 }}>
+            Doslovné citácie ({citacie.length})
+          </h3>
+          <div style={{ display: "grid", gap: 8 }}>
+            {citacie.map((c, i) => (
+              <div
+                key={i}
+                style={{
+                  background: "var(--surface)",
+                  border: "1px solid var(--line)",
+                  borderLeft: "3px solid var(--teal-700)",
+                  borderRadius: 10,
+                  padding: "11px 14px",
+                }}
+              >
+                <div style={{ fontSize: 14.5, lineHeight: 1.6 }}>„{c.citedText}"</div>
+                <div className="tichy" style={{ fontSize: 12.5, marginTop: 6 }}>
+                  {[c.documentTitle, c.articleRef].filter(Boolean).join(" · ") || "zdroj neuvedený"}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Zdroje — čo sa dostalo do kontextu, aj keď z toho model necitoval. */}
+      {hotovo && hotovo.zdroje.length > 0 && (
+        <details>
+          <summary style={{ cursor: "pointer", fontSize: 13, textTransform: "uppercase",
+                            letterSpacing: "0.05em", color: "var(--muted)", fontWeight: 700 }}>
+            Prehľadané zdroje ({hotovo.zdroje.length})
+          </summary>
+          <div style={{ display: "grid", gap: 6, marginTop: 10 }}>
+            {hotovo.zdroje.map(z => (
+              <div
+                key={z.index}
+                style={{
+                  display: "flex", gap: 10, alignItems: "baseline",
+                  fontSize: 14, padding: "7px 12px",
+                  background: "var(--surface)", border: "1px solid var(--line)",
+                  borderRadius: 8,
+                }}
+              >
+                <span className="tichy" style={{ fontVariantNumeric: "tabular-nums" }}>
+                  {z.index}.
+                </span>
+                <span style={{ flex: 1 }}>
+                  {z.title}
+                  {z.articleRef && <span className="tichy"> · {z.articleRef}</span>}
+                  {z.heading && <span className="tichy"> — {z.heading}</span>}
+                </span>
+                {/* Interný obsah vo verejnej odpovedi je tvrdá brána D9,
+                    preto to musí byť vidieť na prvý pohľad. */}
+                {z.accessLevel === "internal" && (
+                  <span
+                    className="stitok"
+                    style={{ background: "var(--warn-bg)", color: "var(--warn-fg)", fontSize: 11 }}
+                  >
+                    interné
+                  </span>
+                )}
+              </div>
+            ))}
+          </div>
+        </details>
+      )}
+
+      {/* Technická pätička — bez nej sa nedá porovnávať medzi konfiguráciami. */}
+      {hotovo && !chyba && (
+        <div
+          className="tichy"
+          style={{
+            display: "flex", flexWrap: "wrap", gap: 16,
+            fontSize: 12.5, paddingTop: 4,
+          }}
+        >
+          {hotovo.model && <Riadok popis="model" hodnota={hotovo.model} />}
+          {hotovo.provider && <Riadok popis="adaptér" hodnota={hotovo.provider} />}
+          {hotovo.ttftMs !== null && (
+            <Riadok popis="prvý token" hodnota={`${(hotovo.ttftMs / 1000).toFixed(1)} s`} />
+          )}
+          <Riadok popis="celkom" hodnota={`${(hotovo.celkovoMs / 1000).toFixed(1)} s`} />
+          <span
+            className="stitok"
+            style={
+              hotovo.overeneCitacie
+                ? { background: "var(--ok-bg)", color: "var(--ok-fg)" }
+                : { background: "var(--warn-bg)", color: "var(--warn-fg)" }
+            }
+          >
+            {hotovo.overeneCitacie ? "citácie overené modelom" : "citácie neoverené"}
+          </span>
+        </div>
+      )}
+    </div>
+  )
+}

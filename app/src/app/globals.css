@@ -1,0 +1,172 @@
+/*
+ * Štýly testovacieho rozhrania.
+ *
+ * Premenné sú zámerne prevzaté z marketingového webu (`web/app/globals.css`),
+ * aby hodnotiteľ neprechádzal medzi dvomi rôznymi svetmi. Nie je to import —
+ * projekty sa buildujú samostatne — ale hodnoty sa musia držať v zhode.
+ */
+
+:root {
+  color-scheme: light;
+  --bg: #f5f6f8;
+  --surface: #ffffff;
+  --surface-2: #eceef1;
+  --ink: #161b22;
+  --muted: #5c6675;
+  --line: rgba(20, 28, 42, 0.12);
+
+  --accent: #232a35;
+  --accent-strong: #11151c;
+  --on-accent: #ffffff;
+
+  --teal-50: #eceef1;
+  --teal-100: #e0e3e8;
+  --teal-500: #3a4250;
+  --teal-600: #232a35;
+  --teal-700: #11151c;
+
+  /* Farby hodnotenia. Zelená a červená sú tu jediné sýte farby v celej
+     palete — zámerne, lebo hodnotenie je jediné, čo od človeka chceme. */
+  --ok-bg: #ecfdf5;
+  --ok-fg: #047857;
+  --bad-bg: #fef2f2;
+  --bad-fg: #b91c1c;
+  --warn-bg: #fffbeb;
+  --warn-fg: #b45309;
+
+  --radius: 12px;
+  --radius-lg: 18px;
+  --maxw: 940px;
+  --shadow: 0 1px 2px rgba(20, 28, 42, 0.05), 0 10px 30px rgba(20, 28, 42, 0.07);
+}
+
+html[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #0d1016;
+  --surface: #161b22;
+  --surface-2: #1d232c;
+  --ink: #eef1f5;
+  --muted: #9aa4b2;
+  --line: rgba(255, 255, 255, 0.12);
+
+  --accent: #eef1f5;
+  --accent-strong: #ffffff;
+  --on-accent: #11151c;
+
+  --teal-50: rgba(255, 255, 255, 0.08);
+  --teal-100: rgba(255, 255, 255, 0.16);
+  --teal-500: #c7ced8;
+  --teal-600: #eef1f5;
+  --teal-700: #f2f4f7;
+
+  --ok-bg: rgba(4, 120, 87, 0.16);
+  --ok-fg: #6ee7b7;
+  --bad-bg: rgba(185, 28, 28, 0.16);
+  --bad-fg: #fca5a5;
+  --warn-bg: rgba(180, 83, 9, 0.16);
+  --warn-fg: #fcd34d;
+
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 10px 30px rgba(0, 0, 0, 0.45);
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
+    "Helvetica Neue", Arial, sans-serif;
+  font-size: 16px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+a { color: inherit; }
+
+button {
+  font: inherit;
+  cursor: pointer;
+}
+
+button:disabled { cursor: not-allowed; opacity: 0.55; }
+
+/* ── stavebné kamene ──────────────────────────────────────────────────────── */
+
+.obal {
+  max-width: var(--maxw);
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+.karta {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 18px 20px;
+}
+
+.tichy {
+  color: var(--muted);
+}
+
+.stitok {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 3px 10px;
+  font-size: 12.5px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.tlacidlo {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--accent);
+  color: var(--on-accent);
+  border: 1px solid var(--accent);
+  border-radius: 10px;
+  padding: 10px 18px;
+  font-size: 15px;
+  font-weight: 600;
+  transition: background 0.15s ease;
+}
+
+.tlacidlo:hover:not(:disabled) { background: var(--accent-strong); }
+
+.tlacidlo--tiche {
+  background: transparent;
+  color: var(--ink);
+  border-color: var(--line);
+}
+
+.tlacidlo--tiche:hover:not(:disabled) { background: var(--surface-2); }
+
+/*
+ * Odpoveď modelu. `pre-wrap` je podstatné — model vracia odsadenie
+ * a zoznamy ako obyčajný text a bez toho by sa zliali do jedného odseku.
+ */
+.odpoved {
+  white-space: pre-wrap;
+  font-size: 15.5px;
+  line-height: 1.75;
+}
+
+/* Kurzor počas streamovania — bez neho nie je poznať, či sa ešte generuje. */
+.kurzor::after {
+  content: "▍";
+  margin-left: 1px;
+  opacity: 0.5;
+  animation: blik 1.05s steps(2, start) infinite;
+}
+
+@keyframes blik { to { visibility: hidden; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .kurzor::after { animation: none; }
+}
