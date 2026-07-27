@@ -9,6 +9,7 @@
 import type { Metadata } from "next"
 import "./globals.css"
 import Hlavicka from "@/components/Hlavicka"
+import Sedenie from "@/components/Sedenie"
 
 export const metadata: Metadata = {
   title: "Contineo — testovacie rozhranie",
@@ -20,8 +21,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="sk">
       <body>
-        <Hlavicka />
-        <main>{children}</main>
+        <Sedenie>
+          <Hlavicka />
+          <main>{children}</main>
+        </Sedenie>
       </body>
     </html>
   )

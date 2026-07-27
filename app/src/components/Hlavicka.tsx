@@ -11,12 +11,14 @@
 import { useEffect, useState } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
+import { useSession, signOut } from "next-auth/react"
 
 type Tema = "light" | "dark"
 
 export default function Hlavicka() {
   const [tema, setTema] = useState<Tema>("light")
   const cesta = usePathname()
+  const { data: sedenie } = useSession()
 
   // Prvé nastavenie podľa systému. Voľbu si držíme v localStorage, aby sa
   // pri každom prekliku nevracala späť.
@@ -96,6 +98,18 @@ export default function Hlavicka() {
             )
           })}
         </nav>
+
+        {sedenie?.user?.email && (
+          <button
+            type="button"
+            onClick={() => signOut({ callbackUrl: "/prihlasenie" })}
+            className="tlacidlo tlacidlo--tiche"
+            style={{ padding: "6px 12px", fontSize: 13.5 }}
+            title={sedenie.user.email}
+          >
+            Odhlásiť
+          </button>
+        )}
 
         <button
           onClick={prepni}
