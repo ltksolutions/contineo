@@ -179,7 +179,7 @@ To je pre nás dôležitejšie, než sa zdá: **generovanie sa dá dostať do `e
 
 | # | Otázka | Prečo na nej záleží |
 |---|---|---|
-| **O7** | Ktorý európsky poskytovateľ vie embedding a rerank so spracovaním v EÚ? | Jediné, čo ešte chýba k `eu-full` bez vlastného hardvéru. Generovanie už riešenie má (O6). **Priorita — viď dodatok 13.** Bedrock to formálne rieši (dodatok 12), ale nerieši izoláciu, takže cieľom je vlastná služba. |
+| **O7** | ~~Ktorý európsky poskytovateľ vie embedding a rerank so spracovaním v EÚ?~~ **Preformulované (dodatok 14):** overiť vlastnú službu TEI + Infinity na stroji s GPU a zmerať jej kvalitu. | **Priorita.** Otázka bola zle položená — miešala vlastnú službu (rieši aj T2 a on-prem) s európskym SaaS (rieši len geografiu). Cieľom je vlastná služba; kód je hotový, chýba hardvér a meranie. Rozpis v dodatku 14. |
 | **O8** | Platí `mimo-eu` aj pre `$rankFusion` a `$vectorSearch`? | Predpokladáme, že nie — počíta ich `mongot` v clusteri. Zoznam subprocesorov spomína len *model hosting*, čo tomu zodpovedá, ale nie je to výslovné potvrdenie. |
 | **O9** | Ako sa rezidencia prejaví v UI a v zmluvnej dokumentácii? | Zákazník musí vidieť, kam jeho text ide, bez čítania kódu. |
 | **O11** | Fungujú Citations cez Bedrock rovnako ako cez priame API? | Ak nie, `eu-full` generovanie stráca hlavnú výhodu Claude a metrika D9 „presnosť citácie ≥ 85 %" sa naň nedá vzťahovať. Overiť pri prvom AWS účte — je to práca na hodinu a **Bedrock je jediná cesta ku Claude Citations mimo USA** (dodatok 13). |
@@ -420,3 +420,99 @@ Náklad na adaptér je už utopený: je napísaný a jednotkovo overený (SigV4
 proti oficiálnym testovacím vektorom AWS, parser binárneho streamu vrátane
 rozdelených rámcov). Otázka teda neznie „robiť Bedrock?", ale „investovať doň
 ďalej?" — a odpoveď je nie, kým nepríde zákazník, ktorý ho výslovne chce.
+
+
+---
+
+## 14. Rozpis O7 (2026-07-27) — čo presne znamená „vlastný embedding a rerank"
+
+Dodatok 13 dal O7 prioritu. Formulácia otvoreného bodu je ale zavádzajúca:
+*„Ktorý európsky poskytovateľ vie embedding a rerank so spracovaním v EÚ?"*
+**To sú v skutočnosti dve rôzne cesty s rôznymi dôsledkami** a doteraz boli
+zlúčené do jednej otázky. Tu sa rozdeľujú.
+
+### Dve cesty, nie jedna
+
+| | **A — vlastná služba** | **B — európsky SaaS** |
+|---|---|---|
+| Kde beží | náš alebo zákazníkov stroj | poskytovateľ |
+| Rieši `eu-full` | áno | áno |
+| Rieši `on-prem`, `air-gap` | **áno** | nie |
+| Rieši **T2** (vyhradené) | **áno** | **nie** — je to zdieľané |
+| Prevádzka | musíme ju robiť | nemusíme |
+| Pre koho | štát, banky, veľké firmy | menšie firmy s GDPR požiadavkou |
+
+**Pre cieľový segment je odpoveďou cesta A.** Cesta B je pohodlnejšia, ale
+nerieši izoláciu — a to je presne dôvod, prečo sme v dodatku 13 odmietli
+Bedrock. Bolo by nedôsledné odmietnuť Bedrock kvôli T1 a potom prijať iný
+zdieľaný SaaS.
+
+Cesta B môže mať zmysel neskôr ako ponuka pre menší segment. Nie je to
+priorita.
+
+---
+
+### Čo cesta A obnáša — a čo už je hotové
+
+**Kód je napísaný.** Adaptéry `tei` a `infinity` sú súčasťou ADR-001, kroky
+1–5, 109 testov, `tsc --noEmit` čistý. **O7 nie je vývojová úloha, ale
+obstaranie, overenie a meranie.**
+
+| Vrstva | Riešenie | Stav |
+|---|---|---|
+| Embedding | `voyage-4-nano` cez **TEI** | adaptér hotový, integračne neoverený |
+| Rerank | `BAAI/bge-reranker-v2-m3` cez **Infinity** | adaptér hotový, integračne neoverený |
+| Profil tenanta | `kind: "tei"` / `kind: "infinity"` | hotové, validované |
+| Stroj s GPU | — | **chýba** |
+
+### Kľúčová výhoda oproti Bedrocku: netreba preindexovať
+
+`voyage-4-nano` je **open-weights (Apache 2.0), 340M parametrov**, postavený
+na architektúre Qwen3. Voyage výslovne uvádza, že embeddingy z `voyage-4`,
+`voyage-4-lite` a `voyage-4-nano` sú **priamo porovnateľné a zameniteľné**
+a prechod medzi nimi **nevyžaduje pre-indexáciu** (overené 2026-07-26,
+O1 uzavreté).
+
+Cloud teda môže embedovať cez `voyage-4` v Atlase a on-prem lokálne cez
+`voyage-4-nano` — **bez re-embedu, v tom istom vektorovom priestore**. Pri
+Bedrocku (Titan alebo Cohere) by sa celý korpus prepočítať musel.
+
+Rozmer: natívne 2048, používame **1024 cez MRL-truncation**, aby sedel
+s dnešným indexom.
+
+### Hardvér
+
+Oba modely sú malé — 340M a 568M parametrov. To nie je generatívny model
+s desiatkami miliárd; **jedna menšia karta stačí** a nepotrebujeme cluster.
+Presné požiadavky treba overiť meraním, nie odhadom z tabuliek.
+
+Pozn.: pre `voyage-4-nano` odporúčame **TEI, nie Infinity** — karta modelu
+má explicitný štítok `text-embeddings-inference`, podpora v Infinity potvrdená
+nie je a model vyžaduje `trust_remote_code`, ktorý nie každý server prepúšťa.
+
+### Postup
+
+1. **Zohnať alebo prenajať stroj s GPU** — najprv u nás, na overenie. Nie
+   u zákazníka; tam sa nasadzuje až overené.
+2. **Spustiť TEI a Infinity** ako dva kontajnery.
+3. **Overiť adaptéry naostro.** Toto je jediné, čo dnes chýba z pohľadu kódu.
+4. **Zmerať zlatou sadou** a porovnať s dnešnou cloudovou konfiguráciou:
+   hit@5, presnosť citácie, latencia.
+5. **Podľa čísel rozhodnúť**, či je on-prem vetva použiteľná bez výhrad, alebo
+   či treba iný model.
+
+Krok 4 je podstatný a nedá sa preskočiť: `voyage-4-nano` má síce zdieľaný
+priestor s `voyage-4`, ale je to menší model — **zdieľaný priestor neznamená
+zhodná kvalita**. To je tá istá úvaha ako pri generovaní: portabilita volania
+nie je portabilita kvality.
+
+### Čo O7 nerieši
+
+**Generovanie.** Vlastný embedding a rerank dostanú do EÚ vyhľadávaciu časť,
+ale odpoveď stále tvorí Claude v USA. Pre úplný `eu-full` treba buď Claude cez
+Bedrock (T1, dodatok 13), alebo vlastný model (strata Citations API). To
+rozhodnutie je odložené za zlatú sadu.
+
+Inými slovami: **O7 a voľba generatívneho modelu sú nezávislé.** Dá sa mať
+vlastný embedding + Claude cez API, aj vlastné všetko. Práve preto je
+architektúra troch adaptérov postavená tak, ako je.
