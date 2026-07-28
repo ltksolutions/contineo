@@ -179,10 +179,10 @@ To je pre nás dôležitejšie, než sa zdá: **generovanie sa dá dostať do `e
 
 | # | Otázka | Prečo na nej záleží |
 |---|---|---|
-| **O7** | Ktorý európsky poskytovateľ vie embedding a rerank so spracovaním v EÚ? | Jediné, čo ešte chýba k `eu-full` bez vlastného hardvéru. Generovanie už riešenie má (O6). |
+| **O7** | Ktorý európsky poskytovateľ vie embedding a rerank so spracovaním v EÚ? | Jediné, čo ešte chýba k `eu-full` bez vlastného hardvéru. Generovanie už riešenie má (O6). **Priorita — viď dodatok 13.** Bedrock to formálne rieši (dodatok 12), ale nerieši izoláciu, takže cieľom je vlastná služba. |
 | **O8** | Platí `mimo-eu` aj pre `$rankFusion` a `$vectorSearch`? | Predpokladáme, že nie — počíta ich `mongot` v clusteri. Zoznam subprocesorov spomína len *model hosting*, čo tomu zodpovedá, ale nie je to výslovné potvrdenie. |
 | **O9** | Ako sa rezidencia prejaví v UI a v zmluvnej dokumentácii? | Zákazník musí vidieť, kam jeho text ide, bez čítania kódu. |
-| **O11** | Fungujú Citations cez Bedrock rovnako ako cez priame API? | Ak nie, `eu-full` generovanie stráca hlavnú výhodu Claude a metrika D9 „presnosť citácie ≥ 85 %" sa naň nedá vzťahovať. Overiť pri prvom AWS účte. |
+| **O11** | Fungujú Citations cez Bedrock rovnako ako cez priame API? | Ak nie, `eu-full` generovanie stráca hlavnú výhodu Claude a metrika D9 „presnosť citácie ≥ 85 %" sa naň nedá vzťahovať. Overiť pri prvom AWS účte — je to práca na hodinu a **Bedrock je jediná cesta ku Claude Citations mimo USA** (dodatok 13). |
 
 
 ## 9. Čo sa zmenilo v kóde
@@ -315,6 +315,10 @@ v `eu-central-1` ukazuje, že to tak nemusí byť:
 **Celá reťaz sa teda dá dostať do EÚ bez vlastného hardvéru.** Otvorený bod
 **O7** má tým možnú odpoveď — nie potvrdenú, len možnú.
 
+> **Pozor pri čítaní:** táto kapitola popisuje, čo je *technicky možné*.
+> Rozhodnutie, či touto cestou ísť, je v **dodatku 13** — a znie, že nie:
+> Bedrock nerieši izoláciu, teda to, kvôli čomu rezidenciu riešime.
+
 ### Čo to znamená v praxi
 
 Nie je to zmena konfigurácie, ale zmena architektúry retrievalu:
@@ -348,3 +352,71 @@ Nie je to zmena konfigurácie, ale zmena architektúry retrievalu:
 model vo Frankfurte obsluhuje aj ostatných zákazníkov AWS. Z pohľadu kapitoly
 10 zostáva Bedrock **T1** a na `T2` neprejde. Kto chce vyhradené prostredie,
 potrebuje vlastné inštancie tak či tak.
+
+
+---
+
+## 13. Rozhodnutie (2026-07-27) — Bedrock je poistka, nie cieľová architektúra
+
+Dodatok 12 ukázal, že cez Bedrock vo Frankfurte sa dá postaviť celá reťaz
+v EÚ. **Napriek tomu doň ďalej neinvestujeme.** Dôvody sú tri a prvý z nich
+je najsilnejší.
+
+### 1. Nerieši izoláciu, teda to, kvôli čomu rezidenciu vôbec riešime
+
+Cieľový segment — štátna správa, banky, väčšie firmy — sa nepýta len „kde to
+beží", ale **„beží to len pre nás"**. Bedrock je z pohľadu kapitoly 10
+**T1**: vyhradený účet u poskytovateľa cloudu nie je vyhradený hardvér, model
+vo Frankfurte obsluhuje aj ostatných zákazníkov AWS.
+
+Pre tých zákazníkov, kvôli ktorým celú rezidenciu riešime, teda Bedrock
+**nestačí ani vtedy, keď je geograficky v poriadku**. To je podstatný rozdiel
+oproti tomu, ako sa na Bedrock pozeralo v dodatku 12.
+
+### 2. Je to slepá vetva vzhľadom na to, čo musíme postaviť tak či tak
+
+Pre `on-prem` a `air-gap` potrebujeme vlastný embedding a rerank (TEI /
+Infinity) bez ohľadu na Bedrock. Bedrock by bola **tretia konfigurácia**,
+ktorú treba udržiavať, merať zlatou sadou a vysvetľovať zákazníkom.
+
+Vlastný embedding pritom rieši `eu-full` **aj** `on-prem` **aj** `air-gap`
+**aj** T2 — jednou investíciou. To je lepší pomer.
+
+### 3. Cena prechodu je vysoká a zisk neistý
+
+Prechod znamená preindexovať celý korpus, presunúť embedding do aplikácie,
+pridať sieťové volanie do reťaze (latencia je už dnes nad prahom) a **prijať
+neznámu zmenu kvality vyhľadávania** — `voyage-4` je pre slovenčinu iný model
+než Titan alebo Cohere.
+
+---
+
+## Prečo Bedrock napriek tomu nezahadzujeme
+
+**Citations API.** Celá dôveryhodnosť systému stojí na tom, že model vracia
+doslovné citácie viazané na konkrétny dokument a nevymýšľa si ich. To je
+funkcia Anthropic API, nie vlastnosť RAG všeobecne.
+
+Pri prechode na vlastný model (Qwen3, EuroLLM) sa z „model vybral tento
+úryvok z čl. 78" stane „model tvrdí, že to je v čl. 78". V normatívnej doméne
+je to rozdiel medzi nástrojom na rozhodovanie a nástrojom na inšpiráciu.
+
+**Bedrock je dnes jediná cesta, ako mať Claude Citations mimo USA.**
+
+O koľko sa kvalita citácií bez Citations API zhorší, **nevieme** — a je to
+jedna z otázok, na ktoré má odpovedať zlatá sada (D9, kapitola 5). Kým to
+číslo nemáme, odpísať Bedrock by bolo rozhodnutie naslepo.
+
+### Čo z toho plynie prakticky
+
+| | |
+|---|---|
+| **Adaptér `bedrock.ts`** | ponechať, neinvestovať doň ďalej |
+| **O11** (Citations cez Bedrock) | zostáva otvorený; overiť, keď bude AWS účet — je to práca na hodinu |
+| **O7** (európsky embedding a rerank) | **priorita**; vlastná služba, nie Bedrock |
+| **Voľba modelu na generovanie** | **odložiť za zlatú sadu** — rozhodne číslo o citáciách, nie dojem |
+
+Náklad na adaptér je už utopený: je napísaný a jednotkovo overený (SigV4
+proti oficiálnym testovacím vektorom AWS, parser binárneho streamu vrátane
+rozdelených rámcov). Otázka teda neznie „robiť Bedrock?", ale „investovať doň
+ďalej?" — a odpoveď je nie, kým nepríde zákazník, ktorý ho výslovne chce.
