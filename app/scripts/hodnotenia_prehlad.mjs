@@ -123,6 +123,51 @@ try {
     console.log()
   }
 
+  // ── zhoda medzi hodnotiteľmi (D9, otvorený bod E5) ──────────────────────
+  //
+  // Otázky na precedenciu a pasce majú posúdiť dvaja nezávisle. Nezhoda nie
+  // je chyba merania — je to nález: ukazuje, kde je doména neurčitá, a teda
+  // kde systém nemá odpovedať autoritatívne.
+  const otazkyKol = db.collection("eval_questions")
+  const naDvoch = new Set(
+    (await otazkyKol
+      .find({ $or: [{ precedenceRule: { $ne: null } }, { trapType: { $ne: null } }] },
+            { projection: { id: 1 } })
+      .toArray()).map(o => o.id)
+  )
+
+  // Posudok každého človeka zvlášť; pri opakovaní platí posledný.
+  const podlaLudi = new Map()
+  for (const z of zaznamy) {
+    if (!z.otazkaId || z.spravna === null || z.spravna === undefined) continue
+    if (!podlaLudi.has(z.otazkaId)) podlaLudi.set(z.otazkaId, new Map())
+    podlaLudi.get(z.otazkaId).set(z.hodnotitel ?? "anonym", z.spravna)
+  }
+
+  const dvojite = [...podlaLudi].filter(([, ludia]) => ludia.size >= 2)
+  const sporne = dvojite.filter(([, ludia]) => new Set(ludia.values()).size > 1)
+
+  console.log("── zhoda hodnotiteľov ─────────────────────────────────")
+  console.log(`otázok pre dvoch:       ${naDvoch.size}`)
+  console.log(`z toho posúdili dvaja:  ${dvojite.length}`)
+  if (dvojite.length) {
+    const podiel = pct(dvojite.length - sporne.length, dvojite.length)
+    console.log(`${sporne.length === 0 ? OK : VARUJ} zhoda:                 ${podiel} %`)
+    if (sporne.length) {
+      console.log(`\n${VARUJ} Rozišli sa na ${sporne.length} otázkach:`)
+      for (const [id, ludia] of sporne) {
+        const kto = [...ludia].map(([k, v]) => `${k}=${v === 1 ? "správna" : "nesprávna"}`).join(", ")
+        console.log(`   ${id}  ${kto}`)
+      }
+      console.log("\n   Nezhoda nie je chyba — sú to otázky, kde je výklad sporný.")
+      console.log("   Zvážiť, či nepatria medzi pasce typu ambiguous_conflict:")
+      console.log("   tam systém nemá rozhodnúť, ale ponúknuť eskaláciu.")
+    }
+  } else {
+    console.log(`${VARUJ} zatiaľ žiadnu otázku neposúdili dvaja`)
+  }
+  console.log()
+
   if (podlaOtazky.size < 74) {
     console.log(`${VARUJ} Zo zlatej sady zostáva ${74 - podlaOtazky.size} otázok.`)
   }

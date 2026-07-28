@@ -11,7 +11,9 @@
  */
 
 import Link from "next/link"
-import { nacitajSadu, suhrn, znenie } from "@/lib/sada"
+import { getServerSession } from "next-auth"
+import { authOptions } from "@/lib/auth"
+import { nacitajSadu, suhrn, znenie, pocetPosudkov, POPIS_OBLASTI } from "@/lib/sada"
 
 export const dynamic = "force-dynamic"
 
@@ -45,8 +47,11 @@ function Ukazovatel({ hotovo, spolu }: { hotovo: number; spolu: number }) {
 }
 
 export default async function Sada() {
-  const otazky = await nacitajSadu()
-  const s = suhrn(otazky)
+  const sedenie = await getServerSession(authOptions)
+  const ja = sedenie?.user?.email ?? ""
+
+  const [otazky, pocty] = await Promise.all([nacitajSadu(ja), pocetPosudkov()])
+  const s = suhrn(otazky, pocty)
 
   return (
     <div className="obal" style={{ padding: "32px 20px 80px", maxWidth: 1040 }}>
@@ -72,6 +77,17 @@ export default async function Sada() {
           {s.vyradene > 0 && (
             <span><strong>{s.vyradene}</strong> <span className="tichy">vyradených</span></span>
           )}
+        </div>
+
+        {/* Prekryv — otázky, ktoré majú posúdiť dvaja nezávisle. */}
+        <div
+          className="tichy"
+          style={{ fontSize: 13, marginTop: 14, paddingTop: 14, borderTop: "1px solid var(--line)", lineHeight: 1.6 }}
+        >
+          <strong style={{ color: "var(--ink)" }}>{s.prekryvHotove} z {s.vPrekryve}</strong>{" "}
+          otázok na precedenciu a pasce má posudok od dvoch ľudí. Pri nich sa cudzí
+          posudok ukáže až potom, ako ich posúdite sami — inak by miera zhody merala
+          len to, či ste prvému uverili.
         </div>
       </div>
 
@@ -123,6 +139,17 @@ export default async function Sada() {
                   {o.trapType && <Stitok text={`pasca · ${o.trapType}`} farba="warn" />}
                   {o.precedenceRule && <Stitok text={o.precedenceRule} />}
                   {o.upraveneZnenie && <Stitok text="upravená" />}
+                  <Stitok text={POPIS_OBLASTI[o.oblast]} />
+                  {o.prekryv && (
+                    <Stitok
+                      text={
+                        (pocty[o.id] ?? 0) >= 2 ? "posúdili dvaja"
+                        : (pocty[o.id] ?? 0) === 1 ? "čaká na druhého"
+                        : "pre dvoch"
+                      }
+                      farba={(pocty[o.id] ?? 0) >= 2 ? "ok" : undefined}
+                    />
+                  )}
                   {o.stav?.halucinacia === 1 && <Stitok text="halucinácia" farba="bad" />}
                 </span>
               </span>
@@ -136,10 +163,17 @@ export default async function Sada() {
                       text={o.stav?.spravna === 1 ? "správna" : "nesprávna"}
                       farba={o.stav?.spravna === 1 ? "ok" : "bad"}
                     />
-                    <span className="tichy" style={{ display: "block", fontSize: 11, marginTop: 5 }}>
-                      {o.stav?.hodnotitel}
-                    </span>
+                    {/* Nezhoda sa musí vidieť — je to nález, nie chyba. */}
+                    {o.cudzie.some(c => c.spravna !== o.stav?.spravna) && (
+                      <span style={{ display: "block", marginTop: 5 }}>
+                        <Stitok text="nezhoda" farba="warn" />
+                      </span>
+                    )}
                   </>
+                ) : (pocty[o.id] ?? 0) > 0 ? (
+                  <span className="tichy" style={{ fontSize: 12.5 }}>
+                    {o.prekryv ? "čaká na vás" : "posúdená"}
+                  </span>
                 ) : (
                   <span className="tichy" style={{ fontSize: 12.5 }}>neposúdená</span>
                 )}

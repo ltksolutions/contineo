@@ -151,6 +151,31 @@ Testy vyhodnocovacej logiky: `python3 test_scoring.py`.
 - **E3** — Doplniť `goldChunkIds` po naplnení korpusu, aby sa hit@5 meral na úrovni chunku, nie len dokumentu.
 - **E4** — Rozhodnúť, či sa sada rozšíri nad 74 otázok (D9 pripúšťa až 100) po prvom regresnom behu.
 - **E5** — Zvážiť druhého nezávislého hodnotiteľa pre správnosť a halucinácie; jeden človek je pri 0/1 hodnotení jediný bod zlyhania.
+  **Rozhodnuté (2026-07-27): dvaja hodnotitelia s prekryvom na 32 otázkach.**
+
+  Jeden hodnotiteľ znamená, že nemeriame správnosť, ale **zhodu s výkladom jedného človeka**. Sada je pritom brána pred go-live — keby stála na jednom názore na sporné ustanovenie, systém by bol navždy hodnotený proti nemu.
+
+  Celú sadu dvakrát ale netreba. Dvojito sa posudzuje **32 otázok s `precedenceRule` alebo `trapType`** — tam je výklad najťažší a experti sa najskôr rozídu. Zvyšných 42 posudzuje jeden.
+
+  **Rozdelenie podľa odbornosti.** Sada nie je celá právna:
+
+  | Oblasť | Otázok | Komu sedí |
+  |---|---|---|
+  | Rozpisy a manuály | 19 | prevádzka |
+  | Súťažný poriadok | 17 | právo |
+  | Smernice | 11 | právo |
+  | Prestupový poriadok | 10 | právo |
+  | Disciplinárny poriadok | 8 | právo |
+  | IT a aplikácie | 4 | prevádzka |
+  | Neurčené | 5 | ktokoľvek |
+
+  Dvadsaťtri otázok (rozpisy, manuály, IT) patrí skôr matrikárovi než právnikovi: právnik povie, ako sa to má robiť podľa predpisu, matrikár, ako sa to robí. Pri rozpisoch je práve ten rozdiel podstatný. Rozhranie oblasť zobrazuje ako štítok — je to navedenie, nie zákaz.
+
+  **Nezávislosť drží rozhranie, nie dohoda.** Pri prekryvových otázkach sa cudzí posudok nezobrazí, kým sa hodnotiteľ nevyjadrí sám. Vidí len, že otázku už niekto posudzoval, nie jeho záver. Bez tohto by sme merali, či prvému uveril, nie či sa zhodnú.
+
+  **Nezhoda je nález, nie chyba merania.** Otázka, na ktorej sa dvaja experti rozídu, je otázka, kde je doména neurčitá — a teda kde systém nemá odpovedať autoritatívne, ale ponúknuť eskaláciu. Sada má na to typ pasce `ambiguous_conflict`, zatiaľ len podľa nášho odhadu; nezhoda ho overí v dátach. Zoznam sporných otázok vypíše `scripts/hodnotenia_prehlad.mjs`.
+
+  Zhoda sa počíta ako holý podiel, nie Cohenovo kappa: pri dvoch hodnotiteľoch a niekoľkých desiatkach otázok by kappa dávala presnosť, ktorú tie čísla neunesú — a zoznam sporných otázok je aj tak užitočnejší než jedno číslo.
 - **E6** — **Rozhodnúť o preprocessingu dotazu.** Prvé meranie v testovacom rozhraní (2026-07-27) dalo rozpad času pred generovaním:
 
   | Fáza | Trvanie (3 behy, rovnaký dotaz) |

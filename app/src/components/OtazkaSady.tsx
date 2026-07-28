@@ -30,7 +30,7 @@ const POPIS_SPRAVANIA: Record<string, string> = {
 export default function OtazkaSady({
   id, znenie, povodne, upravene, vyradena, dovodVyradenia,
   trapType, expectedBehaviour, precedenceRule, searchMode,
-  dalsia,
+  prekryv, cudzie, dalsia,
 }: {
   id: string
   znenie: string
@@ -42,6 +42,10 @@ export default function OtazkaSady({
   expectedBehaviour: string
   precedenceRule: string | null
   searchMode: string
+  /** Má otázku posúdiť viac ľudí nezávisle? */
+  prekryv: boolean
+  /** Posudky ostatných. Pri prekryve prázdne, kým neposúdim sám. */
+  cudzie: { hodnotitel: string; spravna: 0 | 1 | null }[]
   dalsia: string | null
 }) {
   const [text, setText] = useState(znenie)
@@ -80,6 +84,36 @@ export default function OtazkaSady({
           {stav === "ukladam" ? "ukladám…" : stav === "ulozene" ? "uložené" : stav === "chyba" ? "neuložilo sa" : ""}
         </span>
       </div>
+
+      {/* Otázka pre dvoch — hodnotiteľ má vedieť, prečo cudzí posudok nevidí. */}
+      {prekryv && cudzie.length === 0 && (
+        <div className="karta" style={{ fontSize: 14, lineHeight: 1.6 }}>
+          <strong>Túto otázku posudzujú dvaja nezávisle.</strong>{" "}
+          <span className="tichy">
+            Ak ju už niekto posúdil, jeho záver uvidíte až po tom, ako sa vyjadríte
+            sami. Nejde o tajnostkárstvo — keby ste ho videli vopred, merali by sme,
+            či ste mu uverili, nie či sa zhodnete.
+          </span>
+        </div>
+      )}
+
+      {/* Po vlastnom posudku sa cudzie odkryjú. Nezhoda je nález, nie chyba. */}
+      {cudzie.length > 0 && (
+        <div
+          className="karta"
+          style={{
+            fontSize: 14, lineHeight: 1.6,
+            borderColor: cudzie.some(c => c.spravna !== null) ? "var(--line)" : "var(--line)",
+          }}
+        >
+          <div style={{ fontWeight: 600, marginBottom: 8 }}>Ako to posúdili ostatní</div>
+          {cudzie.map((c, i) => (
+            <div key={i} className="tichy" style={{ fontSize: 13.5 }}>
+              {c.hodnotitel} — {c.spravna === 1 ? "správna" : c.spravna === 0 ? "nesprávna" : "neposúdené"}
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* Čo sa od systému očakáva. Pri pasci je to kľúčové — inak hodnotiteľ
           posúdi správne odmietnutie ako zlyhanie. */}

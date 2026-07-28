@@ -7,21 +7,24 @@
  */
 
 import { notFound } from "next/navigation"
+import { getServerSession } from "next-auth"
+import { authOptions } from "@/lib/auth"
 import { nacitajSadu, znenie } from "@/lib/sada"
 import OtazkaSady from "@/components/OtazkaSady"
 
 export const dynamic = "force-dynamic"
 
 export default async function DetailOtazky({ params }: { params: { id: string } }) {
-  const vsetky = await nacitajSadu()
+  const sedenie = await getServerSession(authOptions)
+  const vsetky = await nacitajSadu(sedenie?.user?.email ?? "")
   const otazka = vsetky.find(o => o.id === params.id)
   if (!otazka) notFound()
 
   const poradie = vsetky.findIndex(o => o.id === params.id)
   const zvysne = vsetky.slice(poradie + 1)
 
-  // Najprv hľadáme neposúdenú za aktuálnou; keď žiadna nie je, vraciame sa
-  // na začiatok. Tak sa dá sada dokončiť aj pri preskakovaní.
+  // Najprv hľadáme otázku, ktorú TENTO človek ešte neposúdil — nie ktorú
+  // neposúdil nikto. Pri prekryve je druhý posudok rovnako potrebný ako prvý.
   const dalsia =
     zvysne.find(o => !o.vyradena && o.stav === null)?.id ??
     vsetky.find(o => !o.vyradena && o.stav === null && o.id !== params.id)?.id ??
@@ -40,6 +43,8 @@ export default async function DetailOtazky({ params }: { params: { id: string } 
         expectedBehaviour={otazka.expectedBehaviour}
         precedenceRule={otazka.precedenceRule}
         searchMode={otazka.searchMode}
+        prekryv={otazka.prekryv}
+        cudzie={otazka.cudzie.map(c => ({ hodnotitel: c.hodnotitel, spravna: c.spravna }))}
         dalsia={dalsia}
       />
     </div>
