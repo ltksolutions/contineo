@@ -10,20 +10,21 @@
 
 ## Prehľad
 
-| # | Krok | Kto to robí | Model | Kde | Čas |
-|---|---|---|---|---|---|
-| 0 | Prihlásenie | `middleware.ts` | — | Vercel | — |
-| 1 | Validácia vstupu | `route.ts` | — | Vercel | < 1 ms |
-| 2 | Profil tenanta | `tenantProfile.ts` | — | Vercel | < 1 ms |
-| 3 | Klasifikácia | `queryClassifier.ts` | **žiadny** | Vercel | ~1 ms |
-| 4 | Prepis dotazu | `queryPreprocessor.ts` | **Haiku 4.5** | USA | ~1,5 s |
-| 5 | Vyhľadanie | `mongoSearch.ts` → Atlas | **voyage-4** | Frankfurt + USA | ~0,6 s |
-| 6 | Preradenie | `$rerank` v pipeline | **rerank-2** | USA | (v kroku 5) |
-| 7 | Strážca vektorov | `embeddingGuard.ts` | — | Vercel | < 1 ms |
-| 8 | Generovanie | `anthropic.ts` | **Sonnet 5** | USA | ~3 s po prvý token |
-| 9 | Prenos k prehliadaču | SSE → `sseKlient.ts` | — | — | priebežne |
-| 10 | Zobrazenie | `formatText.ts` | — | prehliadač | < 1 ms |
-| 11 | Uloženie | `hodnotenia.ts` | — | Frankfurt | ~50 ms |
+| # | Krok | Kto to robí | Model | Kde | Čas | **Na Bedrocku (eu-central-1)** |
+|---|---|---|---|---|---|---|
+| 0 | Prihlásenie | `middleware.ts` | — | Vercel | — | bez zmeny |
+| 1 | Validácia vstupu | `route.ts` | — | Vercel | < 1 ms | bez zmeny |
+| 2 | Profil tenanta | `tenantProfile.ts` | — | Vercel | < 1 ms | iný profil, rovnaký kód |
+| 3 | Klasifikácia | `queryClassifier.ts` | **žiadny** | Vercel | ~1 ms | bez zmeny |
+| 4 | Prepis dotazu | `queryPreprocessor.ts` | **Haiku 4.5** | USA | ~1,5 s | Haiku cez Bedrock → **Frankfurt** |
+| — | *Embedding otázky* | *(dnes nie je)* | — | — | — | **NOVÝ KROK** — Titan v2 alebo Cohere, Frankfurt, ~0,2 s |
+| 5 | Vyhľadanie | `mongoSearch.ts` → Atlas | **voyage-4** | Frankfurt + USA | ~0,6 s | `$vectorSearch` dostane **hotový vektor** → celé vo Frankfurte |
+| 6 | Preradenie | `$rerank` v pipeline | **rerank-2** | USA | (v kroku 5) | **Cohere Rerank 3.5** cez Bedrock, v aplikačnej vrstve → Frankfurt |
+| 7 | Strážca vektorov | `embeddingGuard.ts` | — | Vercel | < 1 ms | bez zmeny (a bude potrebný viac než dnes) |
+| 8 | Generovanie | `anthropic.ts` | **Sonnet 5** | USA | ~3 s po prvý token | `bedrock.ts` → Claude Sonnet, **Frankfurt** |
+| 9 | Prenos k prehliadaču | SSE → `sseKlient.ts` | — | — | priebežne | bez zmeny |
+| 10 | Zobrazenie | `formatText.ts` | — | prehliadač | < 1 ms | bez zmeny |
+| 11 | Uloženie | `hodnotenia.ts` | — | Frankfurt | ~50 ms | bez zmeny |
 
 **Tri rôzne modely v jednej odpovedi.** Nie je to prepych: Haiku je desaťkrát
 lacnejší než Sonnet a na prepis dotazu stačí; embedding a rerank sú
@@ -226,10 +227,85 @@ Pri dnešnej konfigurácii (`eu-data`) **text otázky opustí EÚ trikrát**:
 
 Dáta v pokoji — dokumenty, indexy, zálohy, hodnotenia — sú vo **Frankfurte**.
 
-To je pre režim `eu-data` v poriadku a právne kryté. Pre `eu-full` alebo
-`on-prem` sa **všetky štyri kroky musia presunúť**: generovanie cez Bedrock
-vo Frankfurte (adaptér hotový), embedding a rerank na vlastnú službu
-s GPU — a to je otvorený bod **O7**.
+To je pre režim `eu-data` v poriadku a právne kryté. Pre `eu-full` sa musia
+presunúť **všetky štyri kroky**.
+
+---
+
+## Čo by znamenal prechod na AWS Bedrock
+
+**Dobrá správa: celá reťaz sa dá dostať do Frankfurtu bez vlastného GPU.**
+V `eu-central-1` sú dostupné všetky tri potrebné druhy modelov:
+
+| Úloha | Model na Bedrocku | Kde |
+|---|---|---|
+| Generovanie | Claude Sonnet | eu-central-1 |
+| Embedding | Amazon Titan Text Embeddings v2 alebo Cohere Embed | eu-central-1 |
+| Preradenie | Cohere Rerank 3.5 | eu-central-1 |
+
+To mení odhad z ADR-002, kapitoly 7: **`eu-full` nemusí čakať na vlastný
+hardvér.** Otvorený bod O7 („nájsť európsky embedding a rerank") má tým
+možnú odpoveď — treba ju len overiť meraním.
+
+### Ale nie je to prehodenie prepínača
+
+**1. Embedding si musíme robiť sami.**
+Dnes je otázka prevedená na vektor priamo v Atlase (`atlas-auto`). Pri
+Bedrocku to Atlas nevie — musíme zavolať Titan alebo Cohere, dostať vektor
+a poslať ho do `$vectorSearch`. To je **nový krok v reťazi** a ďalšie
+sieťové volanie (~0,2 s).
+
+Zmení sa aj `vectorPath`: dnes ukazuje na **textové** pole (Atlas si vektory
+drží sám), potom bude ukazovať na pole `embedding`, ktoré plníme my. Profil
+to už rozlišuje a `validateProfile()` nesprávnu kombináciu odmietne — je to
+totiž tichá chyba, pri ktorej vyhľadávanie nespadne, len nikdy nič nenájde.
+
+**2. Celý korpus sa musí preindexovať.**
+Vektory z rôznych modelov sa nedajú porovnávať. Prechod z `voyage-4` na Titan
+alebo Cohere znamená prepočítať všetkých 581 chunkov a prebudovať index.
+Presne pred týmto stráži `embeddingGuard` — pri nezhode radšej chyba než
+ticho zlé výsledky.
+
+**3. Preradenie sa presunie z databázy do aplikácie.**
+Dnes je `$rerank` stupňom agregácie, teda jedno volanie do Atlasu. Potom
+pôjde: vyhľadaj v Atlase → pošli kandidátov na Bedrock → zoraď → vezmi
+prvých päť. Ďalšie sieťové volanie, ale aplikačný rerank adaptér už
+v architektúre je (ADR-001).
+
+**4. Kvalita sa zmení a nevieme ako.**
+`voyage-4` je pre slovenčinu iný model než Titan alebo Cohere Embed. To isté
+platí pre rerank. **Portabilita volania nie je portabilita kvality** — presne
+na toto slúži zlatá sada: zmerať obe konfigurácie tou istou sadou a porovnať
+hit@5 a presnosť citácií.
+
+**5. Citations cez Bedrock sú netestované.**
+Adaptér `bedrock.ts` je hotový a jednotkovo overený (podpis SigV4 proti
+oficiálnym testovacím vektorom AWS, parser binárneho streamu), ale **nikdy
+nebežal proti skutočnému Bedrocku** — nemáme AWS účet. Otvorený bod **O11**.
+
+**6. Cena.**
+Regionálne endpointy majú oproti globálnym **10 % prirážku**. K tomu treba
+prirátať embedding, ktorý dnes platíme cez Atlas.
+
+### Čo zostane v USA aj tak
+
+Nič z hlavnej reťaze. Ale pozor na dve veci mimo nej:
+
+- **Vercel** — aplikácia beží na jeho infraštruktúre. Pre `eu-full` treba
+  overiť región funkcie, alebo appku presunúť inam.
+- **Ecomail** je český, teda EÚ — ten je v poriadku.
+
+### Zhrnutie
+
+| | Dnes (`eu-data`) | Bedrock (`eu-full`) |
+|---|---|---|
+| Text opustí EÚ | 4× | **0×** (pri vyriešenom hostingu) |
+| Vlastný GPU | netreba | **netreba** |
+| Preindexovanie korpusu | — | **áno, celý** |
+| Volaní v reťazi | 3 | 5 |
+| Kvalita vyhľadávania | známa | **neznáma, treba zmerať** |
+| Overené naostro | áno | **nie (O11)** |
 
 Aplikácia beží na zdieľanej infraštruktúre Vercelu, takže z pohľadu izolácie
-je to **T1**, nech je databáza kdekoľvek.
+je to **T1** v oboch prípadoch — Bedrock na tom nič nemení. Vyhradený účet
+u poskytovateľa cloudu nie je vyhradený hardvér.

@@ -296,3 +296,55 @@ prestane byť** a treba jedno z:
 
 Rovnaká úvaha platí pre tier: aplikácia na zdieľanej infraštruktúre Vercelu
 je z pohľadu kapitoly 10 **T1**, nech je databáza kdekoľvek.
+
+
+---
+
+## 12. Dodatok (2026-07-27) — Bedrock môže vyriešiť aj O7
+
+Kapitola 7 tvrdila, že **embedding a rerank riešenie nemajú** a v `eu-full` sa
+nedajú použiť, kým nebude vlastná služba s GPU. Overenie ponuky AWS Bedrock
+v `eu-central-1` ukazuje, že to tak nemusí byť:
+
+| Úloha | Model na Bedrocku vo Frankfurte |
+|---|---|
+| Generovanie | Claude Sonnet |
+| Embedding | Amazon Titan Text Embeddings v2, Cohere Embed |
+| Preradenie | Cohere Rerank 3.5 |
+
+**Celá reťaz sa teda dá dostať do EÚ bez vlastného hardvéru.** Otvorený bod
+**O7** má tým možnú odpoveď — nie potvrdenú, len možnú.
+
+### Čo to znamená v praxi
+
+Nie je to zmena konfigurácie, ale zmena architektúry retrievalu:
+
+1. **Embedding otázky sa presunie do našej aplikácie.** Dnes ho robí Atlas
+   sám (`atlas-auto`), pri Bedrocku musíme vektor vypočítať a poslať do
+   `$vectorSearch`. Pribudne krok a jedno sieťové volanie.
+2. **`vectorPath` sa zmení** z textového poľa na pole s vektorom. Zámena
+   týchto dvoch je tichá chyba — dotaz nespadne, len nikdy nič nenájde.
+   `validateProfile()` ju už zachytáva.
+3. **Celý korpus sa musí preindexovať.** Iný model = iný vektorový priestor.
+4. **Rerank sa presunie z agregácie do aplikačnej vrstvy.** Adaptér na to
+   existuje (ADR-001), len sa dnes používa len pre on-prem.
+5. **Kvalita sa zmení a nevieme ako.** `voyage-4` je pre slovenčinu iný model
+   než Titan či Cohere. Toto je presne prípad, na ktorý slúži zlatá sada:
+   zmerať obe konfigurácie a porovnať hit@5 a presnosť citácií.
+
+### Čo zostáva otvorené
+
+- **O11** — Citations cez Bedrock nikdy nebežali proti skutočnému AWS.
+  Adaptér je jednotkovo overený (SigV4 proti oficiálnym vektorom AWS, parser
+  binárneho streamu vrátane rozdelených rámcov), ale integračne nie.
+- **Hosting aplikácie.** Vercel je v hlavnej reťazi posledný komponent mimo
+  našej kontroly. Pre `eu-full` treba overiť región funkcie alebo appku
+  presunúť.
+- **Cena.** Regionálne endpointy majú 10 % prirážku oproti globálnym.
+
+### Čo Bedrock nerieši
+
+**Izoláciu.** Vyhradený účet u poskytovateľa cloudu nie je vyhradený hardvér —
+model vo Frankfurte obsluhuje aj ostatných zákazníkov AWS. Z pohľadu kapitoly
+10 zostáva Bedrock **T1** a na `T2` neprejde. Kto chce vyhradené prostredie,
+potrebuje vlastné inštancie tak či tak.
