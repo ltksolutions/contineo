@@ -15,7 +15,8 @@
 | Vlastná doména `app.contineo.app` | ✅ beží |
 | Prístup do Atlasu z Vercelu | ✅ overené — adaptér číta z databázy |
 | Zoznam pozvaných | ✅ overené — cudzia adresa dostane `AccessDenied` |
-| Odosielanie e-mailov | ❌ Ecomail vracia `401 Wrong api key` |
+| Odosielanie e-mailov | ✅ overené — odkaz dorazil |
+| Prihlásenie celkovo | ✅ povolená adresa dostane odkaz, cudzia `AccessDenied` |
 
 ---
 
@@ -49,7 +50,7 @@ vercel deploy --prod --yes
 
 Vercel nemá pevné IP adresy, takže cluster musí prijať spojenie odkiaľkoľvek:
 
-**Atlas → Network Access → Add IP Address → `0.0.0.0/0`**
+**Atlas → Network Access → Add IP Address → `0.0.0.0/0`** ✅ nastavené 2026-07-27
 
 Je to **vedomý ústupok**, nie odporúčaný stav. Chráni len meno a heslo
 databázového používateľa. Prijateľné pre testovacie prostredie s verejnými

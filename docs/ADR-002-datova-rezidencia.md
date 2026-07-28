@@ -262,3 +262,37 @@ Toto je vec, ktorú sa štátny aj bankový zákazník spýta skôr než na kraj
 | `src/lib/providers/types.ts` | `Tier` konečne zdokumentovaný |
 | `src/lib/tenantProfile.ts` | `validateProfile()` kontroluje aj izoláciu |
 | `tests/residency.test.ts` | 22 nových testov (21 → 43) vrátane nezávislosti oboch osí |
+
+
+---
+
+## 11. Dodatok (2026-07-27) — testovacie prostredie na Verceli
+
+Testovacie rozhranie pre hodnotiteľov beží na **Verceli** (`app.contineo.app`).
+To pridáva do reťaze dvoch nových účastníkov, ktorých ADR-002 dovtedy neriešilo:
+
+| Komponent | Poskytovateľ | Lokalita | Čo ním prechádza |
+|---|---|---|---|
+| Beh aplikácie | Vercel | podľa regiónu funkcie | otázky, odpovede, obsah noriem |
+| Prihlasovacie e-maily | Ecomail (CZ) | EÚ | e-mailová adresa hodnotiteľa a jednorazový odkaz |
+
+Ecomail je česká služba, takže z pohľadu rezidencie ide o spracovanie v EÚ.
+**Neprechádza ním obsah noriem ani otázky** — len adresa a odkaz.
+
+### Otvorený ústupok: Atlas Network Access `0.0.0.0/0`
+
+Vercel na bezplatnom pláne nemá pevné IP adresy, takže cluster musí prijímať
+spojenie odkiaľkoľvek. Prístup tak chráni **len meno a heslo databázového
+používateľa**.
+
+Pre dnešný stav je to prijateľné: korpus obsahuje verejné normy SFZ a ide
+o testovacie prostredie. **Pred pridaním interných smerníc to prijateľné
+prestane byť** a treba jedno z:
+
+1. **Vercel Secure Compute** — vyhradené IP adresy, ktoré sa dajú v Atlase
+   povoliť. Platený doplnok.
+2. **Iné umiestnenie aplikácie** — vlastný server s pevnou IP, čo je aj tak
+   cesta pre režimy `on-prem` a `air-gap`.
+
+Rovnaká úvaha platí pre tier: aplikácia na zdieľanej infraštruktúre Vercelu
+je z pohľadu kapitoly 10 **T1**, nech je databáza kdekoľvek.
