@@ -176,6 +176,21 @@ Testy vyhodnocovacej logiky: `python3 test_scoring.py`.
   **Nezhoda je nález, nie chyba merania.** Otázka, na ktorej sa dvaja experti rozídu, je otázka, kde je doména neurčitá — a teda kde systém nemá odpovedať autoritatívne, ale ponúknuť eskaláciu. Sada má na to typ pasce `ambiguous_conflict`, zatiaľ len podľa nášho odhadu; nezhoda ho overí v dátach. Zoznam sporných otázok vypíše `scripts/hodnotenia_prehlad.mjs`.
 
   Zhoda sa počíta ako holý podiel, nie Cohenovo kappa: pri dvoch hodnotiteľoch a niekoľkých desiatkach otázok by kappa dávala presnosť, ktorú tie čísla neunesú — a zoznam sporných otázok je aj tak užitočnejší než jedno číslo.
+
+  **Konkrétne rozdelenie (2026-07-27):**
+
+  | Hodnotiteľ | Oblasť | Otázok | Z toho pre dvoch |
+  |---|---|---|---|
+  | Miroslav Richtárik | rozpisy, Súťažný poriadok | 36 | 19 |
+  | Lukáš Piťek | smernice, Disciplinárny poriadok | 19 | 6 |
+  | Marek Vavro | Prestupový poriadok | 10 | 1 |
+  | Ján Letko | IT a aplikácie, pasce mimo domény | 9 | 1 |
+
+  **Dvojica na precedenciu je Miroslav + Lukáš.** Osemnásť z Miroslavových devätnástich prekryvových otázok je typu „rozpis určuje niečo inak než poriadok — čo platí?". To nie sú otázky pre dvoch ľudí od rozpisov: jeden musí vedieť, čo rozpis hovorí, druhý, či to smie hovoriť.
+
+  Pozn.: sekcia `rozpisy_manualy` neobsahuje ani jednu otázku o manuáloch — všetkých 19 je o rozpisoch súťaže. Názov sekcie je zavádzajúci; pri ďalšej revízii sady ho premenovať.
+
+  Text pozvánky pre hodnotiteľov: `eval/POZVANKA_hodnotitelia.md`.
 - **E6** — **Rozhodnúť o preprocessingu dotazu.** Prvé meranie v testovacom rozhraní (2026-07-27) dalo rozpad času pred generovaním:
 
   | Fáza | Trvanie (3 behy, rovnaký dotaz) |
