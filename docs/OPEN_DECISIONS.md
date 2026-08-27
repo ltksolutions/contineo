@@ -139,6 +139,16 @@
 
 ## Navrhnuté poradie (sprinty)
 
+> **Stav 2026-08-27: z D1–D34 sú otvorené už len tri.** ⬜ **D16** (kotva citácie na stranu
+> originálu — rozhodnúť po prvom kole D9), 🔄 **D17** (tabuľky z PDF — možnosť 2 zavedená, extrakcia
+> s rozložením otvorená), ⬜ **D30** (čo je „podstatná zmena" vyžadujúca opätovné potvrdenie — čaká
+> na HR a legislatívca). **D18–D23** sú rezervované pre prenos D-CMS-1..6 z `CMS_KONCEPCIA.md`.
+> Otvorené body ADR (séria `O…`) sú vedené v samotných ADR: **O7** (vlastný embedding a rerank —
+> odložené za Fázu 8), **O8, O9, O11** (ADR-002), **O13–O16** (ADR-003, čakajú na HR/DPO/právnika).
+>
+> *Pôvodné zhrnutie z 2026-06-26 ponechané nižšie — sprinty 1–3 sú odvtedy prekonané fázovým plánom
+> v `Contineo_RAG_Projektovy_plan.md`, kde je aj Fáza 8 (onboarding), ktorá dnes beží ako prvá.*
+
 > **Stav 2026-06-26: všetkých 15 rozhodnutí (D1–D15) je uzavretých ✅.** D5 a D10 sú rozpracované do samostatných dokumentov (`PRECEDENCIA_NORIEM.md`, `GDPR_DATA_PROTECTION.md`); zostáva len **externé potvrdenie** — konkrétne § (legislatívec SFZ) a právne posúdenie lehôt/DPA/DPIA (právnik/DPO). Ďalej už ide o implementáciu podľa fáz.
 
 **Sprint 1 — základy (teraz):** D1 chunking · D5 precedencia noriem · D2 query→filtre · D6 verzovanie. *Bez týchto nemá zmysel ladiť zvyšok.*

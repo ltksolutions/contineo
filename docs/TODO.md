@@ -15,14 +15,14 @@
 
 > **Pozn.:** systém ešte nie je nasadený (žiadna Atlas DB, indexy ani dáta) — preto žiadna „migrácia", preindexovanie ani preznačkovanie historických chunkov nie je potrebné. Premenovanie je kompletné naprieč repom.
 
-## 🔜 Zajtra pokračujeme
+## 🔜 Pracovný zoznam (sekcie A–J)
 
 > **Priorita od 2026-08-27: sekcia I (Fáza 8 — onboarding).** Má termín a beží pred sekciami C–H. Zvyšok tohto zoznamu platí, len čaká.
 >
 > **Backlog rozhodnutí:** `docs/OPEN_DECISIONS.md` (15 rozhodnutí D1–D15 s prioritou a odporúčaním). **Sprint 1 = D1 chunking · D5 precedencia noriem · D2 query→filtre · D6 verzovanie.**
 
 ### A. Git (na Macu používateľa)
-- [ ] Commitnúť + pushnúť dnešné zmeny (`app/src/`, docs, web, CHANGELOG, TODO)
+- [x] Commitnúť + pushnúť ✅ **2026-08-27 je repozitár čistý a zosynchronizovaný s `origin/main`** — žiadne neverzované ani nezapísané zmeny. (Pozn.: `docs/O7_plan_overenia.md` z 28. 7. sa dovtedy povaľoval necommitnutý; doplnený.)
 
 ### B. Rozhodnutia pred implementáciou → `docs/OPEN_DECISIONS.md`
 - [x] **Všetkých 15 rozhodnutí (D1–D15) uzavretých** (2026-06-26)
