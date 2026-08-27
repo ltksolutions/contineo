@@ -58,7 +58,46 @@ export class HttpEmbeddingProvider implements EmbeddingProvider {
     this.apiKey = cfg.apiKeyEnv ? process.env[cfg.apiKeyEnv] : undefined
   }
 
-  async embed(texts: string[]): Promise<number[][]> {
+  /**
+   * POISTKA (2026-08-27, O7 nález B) — on-prem embedding je zatiaľ uzavretý.
+   *
+   * `voyage-4-nano` a príbuzné modely používajú **rozdielne prompty pre dotaz
+   * a pre dokument**:
+   *
+   *     dotaz:    "Represent the query for retrieving supporting documents: "
+   *     dokument: "Represent the document for retrieval: "
+   *
+   * V sentence-transformers ich pridáva `encode_query()` / `encode_document()`.
+   * Pri surovom volaní cez HTTP ich nepridá nikto — a toto rozhranie ani nevie,
+   * čo práve embeduje. Bez promptov sa vektory posunú do inej časti priestoru:
+   * **nespadne to, len bude horšie hľadať**, a meranie O1 (zdieľaný vektorový
+   * priestor) na tento adaptér potom neplatí.
+   *
+   * Preto radšej tvrdé zlyhanie než tiché zhoršenie — rovnaký princíp ako
+   * `embeddingGuard.ts`. Poistka padne, keď sa doplní rozlíšenie dotaz/dokument
+   * a prompty do konfigurácie adaptéra (fáza 0 v `docs/O7_plan_overenia.md`).
+   *
+   * Dnes to nič nebrzdí: živá reťaz beží cez `atlas-auto`, kde prompty rieši
+   * Voyage cez `input_type`, a `embed()` sa v projekte nikde nevolá.
+   */
+  async embed(_texts: string[]): Promise<number[][]> {
+    throw new ProviderConfigError(
+      `embedding.kind="${this.kind}" je zatiaľ uzavretý: chýba rozlíšenie dotaz/dokument ` +
+      `a prompty modelu "${this.model}". Bez nich by vyhľadávanie ticho zhoršilo kvalitu ` +
+      `(O7 nález B). Najprv fáza 0 z docs/O7_plan_overenia.md, potom on-prem profil.`
+    )
+  }
+
+  /**
+   * Drôtový tvar volania — bez poistky. Verejná cesta je `embed()`.
+   *
+   * Ponechané oddelene, aby testy tvaru požiadavky a parsovania odpovede
+   * ostali v platnosti aj počas uzavretia. Po fáze 0 sa `embed()` stane
+   * tenkou vrstvou nad týmto: doplní prompt podľa typu vstupu a zavolá sem.
+   *
+   * @internal
+   */
+  async embedRaw(texts: string[]): Promise<number[][]> {
     if (texts.length === 0) return []
 
     const headers: Record<string, string> = { "Content-Type": "application/json" }

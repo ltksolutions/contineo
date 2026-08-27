@@ -50,7 +50,7 @@ async function main() {
   // ── embedding cez TEI ────────────────────────────────────────────────
   let volania = mockFetch(() => ({ json: [[3, 4, 0, 0], [0, 5, 0, 0]] }))
   let emb = new HttpEmbeddingProvider({ kind: "tei", url: "http://tei:8080/", model: "voyage-4-nano", dim: 2 })
-  let out = await emb.embed(["a", "b"])
+  let out = await emb.embedRaw(["a", "b"])
   t("TEI: sprava na /embed", volania[0].url === "http://tei:8080/embed", volania[0].url)
   t("TEI: posiela inputs", JSON.stringify(volania[0].body.inputs) === '["a","b"]', JSON.stringify(volania[0].body))
   t("TEI: vrati 2 vektory", out.length === 2)
@@ -60,22 +60,28 @@ async function main() {
   // ── embedding cez Infinity ───────────────────────────────────────────
   volania = mockFetch(() => ({ json: { data: [{ embedding: [1, 0, 0], index: 0 }] } }))
   emb = new HttpEmbeddingProvider({ kind: "infinity", url: "http://inf:7997", model: "BAAI/bge-m3", dim: 3 })
-  out = await emb.embed(["x"])
+  out = await emb.embedRaw(["x"])
   t("Infinity: sprava na /embeddings", volania[0].url === "http://inf:7997/embeddings", volania[0].url)
   t("Infinity: posiela model a input", volania[0].body.model === "BAAI/bge-m3" && Array.isArray(volania[0].body.input))
   t("Infinity: vrati vektor", JSON.stringify(out) === "[[1,0,0]]", JSON.stringify(out))
 
   // ── chybové stavy ────────────────────────────────────────────────────
   mockFetch(() => ({ status: 500, text: "model nie je nacitany" }))
-  let e = await hodi(async () => emb.embed(["x"]))
+  let e = await hodi(async () => emb.embedRaw(["x"]))
   t("chyba servera sa prenesie s detailom",
     !!e && e.message.includes("500") && e.message.includes("model nie je nacitany"), String(e?.message))
 
   mockFetch(() => ({ json: { data: [{ embedding: [1], index: 0 }] } }))
-  e = await hodi(async () => emb.embed(["x", "y"]))
+  e = await hodi(async () => emb.embedRaw(["x", "y"]))
   t("nesedi pocet vektorov -> chyba", !!e && e.message.includes("1 vektorov na 2"), String(e?.message))
 
-  t("prazdny vstup nevola siet", (await emb.embed([])).length === 0)
+  t("prazdny vstup nevola siet", (await emb.embedRaw([])).length === 0)
+
+  // ── poistka: on-prem embedding je uzavretý, kým nie sú prompty (O7 nález B) ──
+  emb = new HttpEmbeddingProvider({ kind: "infinity", url: "http://inf:7997", model: "voyage-4-nano", dim: 3 } as any)
+  e = await hodi(async () => emb.embed(["x"]))
+  t("poistka: embed() odmietne bezat bez promptov", e !== null && /uzavret/.test(e!.message), String(e?.message))
+  t("poistka: sprava odkaze na fazu 0", e !== null && /O7_plan_overenia/.test(e!.message), String(e?.message))
 
   // ── rerank: TEI ──────────────────────────────────────────────────────
   const kandidati = [chunk("1", "prvy"), chunk("2", "druhy"), chunk("3", "treti")]

@@ -1,8 +1,53 @@
 # O7 — plán overenia vlastného embeddingu a reranku
 
-> **Stav:** ⬜ návrh, čaká na schválenie · **Dátum:** 2026-07-28
+> **Stav:** 🔄 **fáza 0 čiastočne · fázy 1–5 odložené** (rozhodnuté 2026-08-27, viď „Stav k 2026-08-27" nižšie) · **Dátum:** 2026-07-28
 > **Súvisí:** `docs/ADR-001-provider-adaptery.md` (O1, O7), `docs/ADR-002-datova-rezidencia.md` (dodatok 14), `eval/o1/`
 > **Cieľ:** overiť, že on-prem vetva **funguje** — nie ako rýchlo.
+
+---
+
+## 0. Stav k 2026-08-27
+
+Dokument vznikol 28. 7. v inej relácii a **do repozitára sa dostal až 27. 8.** Medzitým sa
+zmenilo, čo je pred ním v poradí — preto tento úvod.
+
+### Čo sa už spravilo
+
+**Nález A prešiel do ADR-001** (dodatok 10). Bolo to naliehavé, lebo ADR-001 tvrdilo opak:
+otázka „ktorý server pre `voyage-4-nano`" bola 26. 7. **zatvorená s odvolaním sa na podporu
+v TEI**, a T3 príklad profilu sa tým stal nepostaviteľným. Otázka je znovu otvorená ako **O7-a**,
+T3 príklad prepísaný na `kind: "infinity"`.
+
+**Nález B dostal poistku, nie opravu.** `HttpEmbeddingProvider.embed()` tvrdo zlyhá s odkazom na
+fázu 0; drôtový tvar volania zostal v `embedRaw()`, takže testy tvaru požiadavky a parsovania
+odpovede platia ďalej (13 suít prechádza). Pasca je tým zneškodnená — kto prepne tenanta na
+on-prem, dostane jasnú chybu namiesto ticho horšieho hľadania. **Fáza 0 tým nie je hotová**,
+len prestala byť tichá.
+
+Overené pritom bolo aj to, že nejde o živú chybu: reťaz beží cez `atlas-auto`, kde prompty rieši
+Voyage cez `input_type`, a `embed()` sa v projekte nikde nevolá.
+
+### Čo sa odkladá a prečo
+
+**Fázy 1–5 idú za Fázu 8 (onboarding).** Nie je to zmena názoru na O7 — zmenilo sa, čo je pred ním:
+
+1. **Fáza 8 nevolá žiadny model.** Onboarding a potvrdzovanie noriem spĺňa `eu-full` bez toho, aby
+   O7 bolo zodpovedané (ADR-003 kap. 5.5). Najbližšie nasadenie na ňom nestojí.
+2. **D34** zaraďuje on-prem na vetvu veľkých organizácií, ktorá výslovne **nie je** primárny
+   produkt — primárny je SaaS na `contineo.app`.
+3. **O12** rozhodlo „zostávame na Verceli", čím sa odložil celý smer odchodu zo zdieľanej
+   infraštruktúry. O7 (vlastná služba na GPU) je súčasť práve toho smeru — `T2` aj `eu-full`
+   ho potrebujú rovnako (ADR-002 dodatok 10).
+
+**Kedy sa vráti:** keď o on-prem alebo vyhradené prostredie požiada konkrétny zákazník alebo
+tender — alebo keď sa Fáza 8 dostane do prevádzky a uvoľní sa kapacita. Fázy 1–5 vyžadujú
+Docker Desktop, Ollamu a `pip install infinity-emb` na tvojom stroji, plus 1–2 dni sústredenej
+práce; to sa nedá robiť popri termíne.
+
+**Čo zostáva z fázy 0 dokončiť:** rozlíšenie dotaz/dokument v `EmbeddingProvider`, prompty do
+konfigurácie adaptéra (nie natvrdo — sú vlastnosťou modelu), jednotkový test „rovnaký text ako
+dotaz a ako dokument dá rôzne vektory" a odovzdanie správneho typu z `mongoSearch.ts`
+a `import.mjs`. Odhad pol dňa. Bez toho sa fáza 1 nesmie spustiť — a poistka to teraz aj vynúti.
 
 ---
 
@@ -261,6 +306,9 @@ ktoré si nevymýšľa, lebo úryvky dostáva ako `document` bloky. Na tom stoj�
 ---
 
 ## 9. Čo treba schváliť
+
+> **Rozhodnuté 2026-08-27:** fázy 1–5 sa **odkladajú za Fázu 8** (dôvody v kapitole 0).
+> Nižšie zostáva pôvodný text pre chvíľu, keď sa k tomu vrátime.
 
 Nič sa neinštaluje, kým nepovieš. Fáza 0 je zmena kódu bez inštalácie —
 tá sa dá spraviť hneď. Fázy 1–3 vyžadujú na tvojom stroji **Docker Desktop,

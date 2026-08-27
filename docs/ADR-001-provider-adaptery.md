@@ -1,6 +1,6 @@
 # ADR-001 — Tri provider adaptéry vyberané konfiguráciou tenanta
 
-> **Stav:** ✅ prijaté · **Dátum:** 2026-07-25 · **Revízia:** 2026-07-26 (overenie voyage-4-nano + **O1 zmerané a uzavreté**, sekcia 3) · **Nahrádza:** stack rozhodnutia v `docs/rag-architecture.md` (sekcia „Stack rozhodnutia")
+> **Stav:** ✅ prijaté · **Dátum:** 2026-07-25 · **Revízia:** 2026-07-26 (overenie voyage-4-nano + **O1 zmerané a uzavreté**, sekcia 3) · **Revízia:** 2026-08-27 (**TEI × `voyage-4-nano` neplatí** — dodatok 10) · **Nahrádza:** stack rozhodnutia v `docs/rag-architecture.md` (sekcia „Stack rozhodnutia")
 > **Nadväzuje:** `docs/ADR-002-datova-rezidencia.md` — rezidencia tenanta rozhoduje, ktoré adaptéry sú preň prípustné.
 > Aplikačný rerank tam prestáva byť ústupkom pre air-gap a stáva sa požiadavkou každého tenanta, ktorý nesmie posielať text mimo EÚ.
 > **Súvisiace:** `docs/OPEN_DECISIONS.md` (D15 — modely/fallback/náklady), `docs/DATA_MODEL_konzistencia.md`, `docs/PRISTUPOVE_PRAVA.md`
@@ -43,7 +43,7 @@ Zavádzame **tri nezávislé provider adaptéry**, vyberané **konfiguráciou te
 ```
 EmbeddingProvider  → embed(texts[])            → vectors[]
    ├── atlas-auto   Automated Embedding (voyage-4) — embedding je súčasť dotazu
-   ├── tei          TEI (voyage-4-nano) — HTTP, model má explicitnú podporu
+   ├── tei          TEI — HTTP  ⚠️ voyage-4-nano NEPODPOROVANÝ (dodatok 10)
    └── infinity     Infinity (BGE-M3) — HTTP, OpenAI-compat
 
 RerankProvider     → rerank(query, candidates) → scored[]
@@ -76,6 +76,11 @@ Preto: **OpenAI-compat pri lokálnych modeloch** (Ollama, vLLM, SGLang ho hovori
 **TEI** tam, kde ho model výslovne podporuje — konkrétne pri `voyage-4-nano`, ktorý má na karte modelu štítok `text-embeddings-inference`, kým podpora v Infinity potvrdená nie je. TEI je aj vyladenejší na jeden model pri vysokej záťaži (Rust, Flash Attention), takže je zálohou aj vtedy, ak zdieľaný pool narazí na strop priepustnosti.
 
 **Praktické rozdelenie:** `voyage-4-nano` → TEI · `BGE-M3` a `BGE-reranker-v2-m3` → Infinity (obslúži embedding aj rerank z jedného procesu).
+
+> ⚠️ **Neplatí od 2026-08-27 (dodatok 10).** Štítok `text-embeddings-inference` na karte modelu je
+> v rozpore s issue #816 v samotnom repozitári TEI: **`voyage-4-nano` TEI nepodporuje.** Praktické
+> rozdelenie sa tým obracia — `voyage-4-nano` → **vLLM alebo Infinity** (`kind: "infinity"`, OpenAI
+> tvar), TEI zostáva v ponuke pre modely, ktoré podporuje.
 
 **vLLM** pre generovanie. Ollama len pre lokálny vývoj — pod záťažou serializuje požiadavky.
 
@@ -131,7 +136,9 @@ Nová kolekcia `tenant_profiles`. Jeden dokument na tenanta, načítaný pri št
   companyCode: "MINV",
   tier: "T3",
   providers: {
-    embedding:  { kind: "tei", url: "http://tei:8080",
+    // ⚠️ 2026-08-27: pôvodne { kind: "tei", url: "http://tei:8080" } —
+    //    TEI voyage-4-nano nepodporuje (dodatok 10). Prepísané na infinity/vLLM.
+    embedding:  { kind: "infinity", url: "http://vllm:8000/v1",
                   model: "voyage-4-nano", dim: 1024, index: "rag_vector_nano" },
                   // dim 1024 = MRL-truncation z natívnych 2048 (viď O1)
     rerank:     { kind: "infinity", url: "http://infinity:7997",
@@ -281,7 +288,7 @@ a `tsc --noEmit`. Integračne neoverené — TEI, Infinity aj vLLM čakajú na s
 ## 8. Otvorené otázky
 
 - **O1** — ✅ **UZAVRETÉ 2026-07-26.** Zdieľaný vektorový priestor funguje aj v praxi; zostávame na **1024 dimenziách** a migrácia cloud ↔ on-prem **nevyžaduje re-embed**. Detail merania v sekcii 3, výstup v `eval/o1/vysledok_o1.json`. Meranie zopakovať na reálnom korpuse (`--vzorka`), keď bude naplnený.
-  - ~~Zvládne Infinity `voyage-4-nano`?~~ — nahradené: TEI má explicitnú podporu (štítok `text-embeddings-inference`), takže otázka „ktorý server" je vyriešená.
+  - **Zvládne Infinity `voyage-4-nano`? — ZNOVU OTVORENÉ 2026-08-27.** Táto otázka bola 26. 7. zatvorená s odôvodnením, že TEI má explicitnú podporu. **To odôvodnenie neplatí** (dodatok 10). Vedená ďalej ako **O7-a** v `docs/O7_plan_overenia.md`; uzavrie ju až prvý krok fázy 1 tam.
 - **O2** — Preprocessing lokálne alebo cez Claude Haiku? *Toto nie je meranie, ale rozhodnutie.* Cena je spočítaná (~0,001 € za prepis), v air-gape na výber nie je. Odporúčanie: **Haiku pre cloud, lokálny model pre T3.** Technicky je to už len konfigurácia — `providers.utility` v profile tenanta; keď chýba, použije sa hlavný model.
 - **O3** — Zrušiť LLM vetvu klasifikátora úplne? Heuristika beží pod 1 ms zadarmo, LLM pridá 200–500 ms na každý dotaz. **GPU ani zlaté odpovede netreba** — stačí korpus a index. Otázku treba položiť ostrejšie: nie *„je LLM presnejší?"*, ale *„záleží vôbec na tom, ktorý režim sa zvolí?"* Prežeň reálne dotazy cez fulltext, vector aj hybrid a porovnaj prekryv top-5. Ak sa výsledky prekrývajú nad 90 %, klasifikátor je zbytočný bez ohľadu na presnosť. Zatiaľ je heuristika **predvolená**, LLM vetva sa zapína vedome cez `useLLMClassifier`.
 - **O4** — Ako verzovať prompty per model, aby sa dali porovnávať na D9? *Návrh: `prompts/{model}/system.md`, verzia v profile*
@@ -297,3 +304,56 @@ a `tsc --noEmit`. Integračne neoverené — TEI, Infinity aj vLLM čakajú na s
 | `docs/DATA_MODEL_konzistencia.md` | Nové polia na `document_chunks` + nová kolekcia `tenant_profiles` |
 | `docs/GDPR_DATA_PROTECTION.md` | `dataResidency` v profile určuje, kam odchádza obsah promptu — doplniť do záznamu o spracovateľských činnostiach |
 | `web/` | Diagram + stránka Technológia aktualizované súčasne s týmto ADR |
+
+---
+
+## 10. Dodatok (2026-08-27) — TEI `voyage-4-nano` nepodporuje
+
+### Čo sa našlo
+
+`docs/O7_plan_overenia.md` (vzniklo 28. 7., do repozitára doplnené až 27. 8.) overovalo, ako
+postaviť on-prem vetvu naostro. Prvý nález zrušil predpoklad, na ktorom stálo rozhodnutie
+z 26. júla:
+
+> **Text Embeddings Inference `voyage-4-nano` nepodporuje.** Žiadosť je otvorená ako
+> [issue #816](https://github.com/huggingface/text-embeddings-inference/issues/816) zo 6. 2. 2026 —
+> bez priradeného človeka, bez PR, v míľniku v1.10.0.
+
+Karta modelu síce nesie štítok `text-embeddings-inference`, ale ten je v rozpore s issue
+v samotnom repozitári TEI. Predpokladáme, že podpora nie je.
+
+### Prečo to bolo nebezpečné
+
+Nešlo o nepresnosť v texte. Otázka *„zvládne Infinity `voyage-4-nano`?"* bola 26. júla
+**zatvorená práve s odvolaním sa na TEI** — a T3 príklad v sekcii 3 sa tým stal profilom,
+ktorý sa nedá postaviť. Kto by podľa neho staval, narazí až pri spustení.
+
+Poučenie je konkrétne: **štítok na karte modelu nie je záväzok podpory.** Pri ďalších modeloch
+overovať v repozitári servera, nie na karte modelu.
+
+### Čo z toho platí teraz
+
+| | Pred | Po |
+|---|---|---|
+| `voyage-4-nano` embedding server | TEI | **vLLM** (zdokumentované na karte modelu) alebo **Infinity** — obe cez `kind: "infinity"` (OpenAI tvar) |
+| T3 príklad profilu | `kind: "tei"` | prepísaný na `kind: "infinity"` |
+| Otázka „ktorý server" | uzavretá | **znovu otvorená** ako O7-a |
+| `kind: "tei"` v kóde | zostáva | zostáva — pre modely, ktoré TEI podporuje |
+
+### Druhý nález — poistka v kóde
+
+To isté overenie odhalilo, že `voyage-4-nano` používa **rozdielne prompty pre dotaz a pre
+dokument**, a naše rozhranie `embed(texts: string[])` o nich nevie. Bez nich sa vektory posunú
+do inej časti priestoru — **nespadne to, len bude horšie hľadať** — a meranie O1 na tento adaptér
+prestane platiť.
+
+Nie je to dnes živá chyba: reťaz beží cez `atlas-auto`, kde prompty rieši Voyage cez `input_type`,
+a `embed()` sa v projekte nikde nevolá. Je to **nastražená pasca** pre prvého, kto prepne tenanta
+na on-prem.
+
+**Zavedená poistka (2026-08-27):** `HttpEmbeddingProvider.embed()` **tvrdo zlyhá** s odkazom na
+fázu 0 v `docs/O7_plan_overenia.md`. Drôtový tvar volania zostal v `embedRaw()`, takže testy tvaru
+požiadavky a parsovania odpovede platia ďalej. Poistka padne, keď sa doplní rozlíšenie
+dotaz/dokument a prompty do konfigurácie adaptéra.
+
+Rovnaký princíp ako `embeddingGuard.ts`: radšej tvrdé zlyhanie než tiché zhoršenie.

@@ -4,6 +4,14 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Fixed (2026-08-27 — ADR-001 stálo na neplatnom predpoklade)
+- **ADR-001 dodatok 10:** `voyage-4-nano` **TEI nepodporuje** (otvorená issue #816 zo 6. 2. 2026, bez PR) — štítok `text-embeddings-inference` na karte modelu je v rozpore s issue v repozitári TEI. Otázka „ktorý server pre nano" bola 26. 7. **zatvorená práve s odvolaním sa na TEI**; je **znovu otvorená** ako O7-a. Príklad T3 profilu prepísaný z `kind: "tei"` na `kind: "infinity"` (vLLM/Infinity, OpenAI tvar) — v pôvodnom znení sa nedal postaviť. Poučenie: štítok na karte modelu nie je záväzok podpory.
+- **Poistka proti tichému zhoršeniu hľadania** (`app/src/lib/providers/embedding/http.ts`): `HttpEmbeddingProvider.embed()` tvrdo zlyhá, kým nie je doplnené rozlíšenie dotaz/dokument a prompty modelu (O7 nález B). `voyage-4-nano` používa iné prompty pre dotaz a pre dokument; bez nich sa vektory posunú a meranie O1 na adaptér neplatí — **nespadne to, len horšie hľadá**. Nešlo o živú chybu (reťaz beží cez `atlas-auto`, `embed()` sa nikde nevolá), ale o pascu pre prvého, kto prepne tenanta na on-prem. Drôtový tvar volania zostal v `embedRaw()`, takže testy tvaru požiadavky a parsovania odpovede platia ďalej; 13 suít prechádza, `type-check` čistý.
+
+### Decided (2026-08-27 — O7 sa odkladá za Fázu 8)
+- **Fázy 1–5 z `docs/O7_plan_overenia.md` odložené.** Nie je to zmena názoru na O7 — zmenilo sa poradie: Fáza 8 (onboarding) **nevolá žiadny model**, takže spĺňa `eu-full` bez O7; **D34** zaraďuje on-prem na vetvu veľkých organizácií, ktorá nie je primárny produkt; **O12** rozhodlo zostať na Verceli, čím sa odložil celý smer odchodu zo zdieľanej infraštruktúry. Vrátiť sa, keď o on-prem požiada zákazník alebo tender.
+- **Fáza 0 (prompty) zostáva ako práca na ~pol dňa** — poistka ju vynúti pred spustením fázy 1.
+
 ### Added (2026-08-27 — dopísané zo staršej práce)
 - **`docs/O7_plan_overenia.md`** — plán overenia vlastného embeddingu a reranku (O7) z 2026-07-28, stav „návrh, čaká na schválenie". Vznikol v inej relácii a **nebol commitnutý**; obsahuje nálezy A–D (TEI neobslúži `voyage-4-nano`, chýbajúce prompty ako tichá chyba, O1 meraný na malých dátach, nano na MacBooku už bežalo), rozpočet pamäte na 16 GB, fázy 0–5, riziká R1–R5 a otvorené body O7-a…d.
 
