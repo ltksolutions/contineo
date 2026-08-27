@@ -4,6 +4,15 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Added (2026-08-27 — skripty onboardingu)
+- **`app/scripts/import_persons.mjs`** — import osôb z CSV. **Náhľad je predvolené správanie, zápis sa musí vypýtať** (`--zapis`): nahratie stovky ľudí naslepo je operácia, po ktorej sa hľadá, ako to vrátiť späť, a `persons` rollback nemá. Pri chybnom riadku nezapíše nič — zápis po častiach by nechal databázu v polovičnom stave. Hlavičky sa normalizujú (bez diakritiky, bez ohľadu na veľkosť), takže `Meno`, `meno` aj `MENO` sú to isté; prijíma slovenské aj anglické názvy stĺpcov.
+- **`app/scripts/acknowledgement_report.mjs`** — výkaz potvrdení pre HR do CSV: kto potvrdil, kedy, ktorú verziu a v akom jazyku — a kto nie. Rozsah je **jeden `companyCode`, nie strom** (D32, D33). Výkaz ide na štandardný výstup, hlásenia na chybový, takže sa dá presmerovať do súboru.
+- **`app/scripts/lib/csv.mjs`** — čítanie a písanie CSV bez knižnice: BOM z Excelu, bodkočiarka ako oddeľovač v slovenskom locale, úvodzovky okolo polí s oddeľovačom. 17 testov (`tests/csv.test.ts`) — keď sa hlavička netrafí, import ticho preskočí stĺpec a stovka ľudí príde o útvar alebo o jazyk.
+- **`app/scripts/lib/ts-hook.mjs`** — dovolí skriptom importovať moduly zo `src/` priamo. Node 26 vie TypeScript spustiť (odstráni typy), ale nevie dohľadať bezpríponové relatívne importy; háčik ten rozdiel premostí. **Bez neho by skripty potrebovali vlastnú kópiu pravidla, ktorá verzia dokumentu platí** — a dve implementácie právneho pravidla sa raz rozídu bez toho, aby si to niekto všimol, lebo obe „fungujú".
+- `src/lib/mongodb.ts`: typy z `mongodb` sa importujú cez `import type`. Node nevie, ktoré z pomenovaných importov sú typy, takže `Document` medzi hodnotami by skripty zhodil.
+- Stav testov: **17 súborov, 454 testov**.
+
+
 ### Changed (2026-08-27 — identifikátory po anglicky)
 - **Kód Fázy 8 premenovaný na anglické identifikátory.** Moduly `osoby.ts` → `persons.ts`, `dokumenty.ts` → `documents.ts`, `potvrdenia.ts` → `acknowledgements.ts`, `jazyky.ts` → `i18n.ts`; typy, funkcie, parametre aj lokálne premenné podľa toho. **Komentáre a popisy testov zostávajú po slovensky** — menia sa mená, nie reč vysvetlení.
 - **Hodnoty vracané z API sú teraz strojové a anglické** (`"no-effective-version"`, `"already-acknowledged"`, `"invalid-email"`…). Sú to kľúče pre volajúceho, nie text pre človeka; ten sa priradí až v rozhraní podľa jazyka.

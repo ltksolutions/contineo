@@ -98,14 +98,15 @@
 **I1. Ultra-MVP `[1 týždeň]`** — cieľ: skutoční ľudia potvrdia skutočné smernice
 
 - [x] Kolekcia `persons` + indexy ✅ 2026-08-27 — `app/src/lib/persons.ts`, indexy v `app/scripts/onboarding_init.mjs` (pridaný aj `{email}` — prihlásenie hľadá bez znalosti tenanta)
-- [ ] Import z CSV: idempotentný, s **povinným náhľadom** pred zápisom — *logika hotová (`upsertPersons`, `previewImport`, `validateRow`), chýba CLI skript*
+- [x] Import z CSV ✅ 2026-08-27 — `app/scripts/import_persons.mjs`. **Náhľad je predvolené správanie, zápis sa musí vypýtať** (`--zapis`). Prijíma slovenské aj anglické hlavičky, zvláda BOM a bodkočiarku z Excelu. Pri chybnom riadku nezapíše nič — zápis po častiach by nechal databázu v polovičnom stave.
 - [x] Prihlásenie proti `persons` ✅ 2026-08-27 — `auth.ts` skladá obe cesty; brzda ide prvá (nepotrebuje DB), chyba DB **neotvára** prístup — **D26**
 - [x] `documents.versions[]` v cieľovom tvare ✅ 2026-08-27 — **D25**. `app/src/lib/documents.ts` (`effectiveVersion()` s pravidlami D6 + R3) a `scripts/import.mjs` (`recordVersion()` — nová položka, nikdy prepis; dopĺňa aj dokumentom naimportovaným pred zavedením `versions[]`)
   - [ ] **Známy rozpor s D25, pravidlo 2:** import publikuje priamo (`status: "published"`), hoci kanál nemá sám zneplatniť platnú verziu — platnosť má určiť kurátor. Zapisujeme stav taký, aký je, a nepredstierame schválenie. **Zosúladiť pri review UI (Fáza 4)**; dovtedy je to vedomý ústupok, nie prehliadnutie.
 - [ ] Zobrazenie dokumentu človeku (cez existujúci `securityFilter()`, žiadna druhá cesta k obsahu)
 - [ ] Kolekcia `acknowledgements` + unikátny partial index — **D24**
 - [ ] Potvrdzovacia obrazovka; **verziu berie server**, nie požiadavka klienta
-- [ ] Skript `vykaz_potvrdeni.mjs` → CSV pre HR (bez neho je ultra-MVP nepoužiteľné)
+- [x] Výkaz pre HR ✅ 2026-08-27 — `app/scripts/acknowledgement_report.mjs`. CSV: kto potvrdil, kedy, ktorú verziu, v akom jazyku — a kto nie. Rozsah je **jeden `companyCode`, nie strom** (D32, D33).
+- [x] **Skripty importujú priamo moduly zo `src/`** ✅ 2026-08-27 — `scripts/lib/ts-hook.mjs`. Node 26 vie TypeScript spustiť, len nevie dohľadať bezpríponové importy; háčik to premostí. Bez neho by skripty potrebovali vlastnú kópiu pravidla, ktorá verzia dokumentu platí — a dve implementácie právneho pravidla sa raz rozídu.
 
 **I1b. Viacjazyčné prostredie (D35)** — SK · CS · EN
 

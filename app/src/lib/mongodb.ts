@@ -5,7 +5,12 @@
  * Exportuje: getClient(), getDb(), getCollection()
  */
 
-import { MongoClient, Db, Collection, Document } from "mongodb"
+// Typy zvlášť od hodnôt: Node vie TypeScript spustiť tak, že typy odstráni,
+// ale nevie, ktoré z pomenovaných importov typy sú. Keby `Document` zostal
+// medzi hodnotami, skripty spúšťané cez `scripts/lib/ts-hook.mjs` by spadli
+// na „module 'mongodb' does not provide an export named 'Document'".
+import { MongoClient } from "mongodb"
+import type { Db, Collection, Document } from "mongodb"
 
 const MONGODB_DB = process.env.MONGODB_DB ?? "contineo"
 
