@@ -54,6 +54,7 @@ SK = dict(
     db1="• $vectorSearch + $search", db2="• $rankFusion — hybrid",
     db2a="vektor 60 % + fulltext 40 %", db3="• Filter companyCode",
     db3a="default-deny, pred LLM",
+    db3b="hierarchia nedáva prístup",
     coll_label="Kolekcie:",
     coll1="documents (+ versions) · document_chunks",
     coll2="channels · channel_runs · navigation",
@@ -62,7 +63,6 @@ SK = dict(
     coll5="persons · acknowledgements · onboarding_tracks",
     hier1="companyCode.parent — hierarchia tenantov",
     hier2="centrála → dcéry → prevádzky",
-    db_note="Atlas EU · alebo Community 8.2 on-prem",
 
     ai_h="AI VRSTVA — ADAPTÉRY", ai_sub="výber tenant profilom, nie kódom",
     ai_emb="EMBEDDING", ai_emb1="cloud · Atlas auto-embed (voyage-4)", ai_emb2="on-prem · Infinity / TEI",
@@ -114,10 +114,10 @@ CS = dict(SK,
 
     db_h="MongoDB — JÁDRO", db_sub="stejné dotazy cloud i on-prem",
     db3="• Filtr companyCode", db3a="default-deny, před LLM",
+    db3b="hierarchie nedává přístup",
     coll_label="Kolekce:",
     hier1="companyCode.parent — hierarchie tenantů",
     hier2="centrála → dceřiné firmy → provozy",
-    db_note="Atlas EU · nebo Community 8.2 on-prem",
 
     ai_sub="výběr tenant profilem, ne kódem",
     ai_gen="GENEROVÁNÍ",
@@ -167,10 +167,10 @@ EN = dict(SK,
     db_h="MongoDB — CORE", db_sub="same queries in cloud and on-prem",
     db2a="vector 60 % + fulltext 40 %", db3="• companyCode filter",
     db3a="default-deny, before the LLM",
+    db3b="hierarchy grants no access",
     coll_label="Collections:",
     hier1="companyCode.parent — tenant hierarchy",
     hier2="headquarters → subsidiaries → sites",
-    db_note="Atlas EU · or Community 8.2 on-prem",
 
     ai_h="AI LAYER — ADAPTERS", ai_sub="chosen by tenant profile, not by code",
     ai_gen="GENERATION",
@@ -280,18 +280,18 @@ def build(t):
     <text x="{c2+34}" y="{y(301)}" font-size="11" fill="#5f6368">{esc(t["db2a"])}</text>
     <text x="{c2+20}" y="{y(331)}">{esc(t["db3"])}</text>
     <text x="{c2+34}" y="{y(350)}" font-size="11" fill="#5f6368">{esc(t["db3a"])}</text>
+    <text x="{c2+34}" y="431" font-size="10.5" fill="#B31412">{esc(t["db3b"])}</text>
   </g>
-  <line x1="{c2+20}" y1="434" x2="{c2+244}" y2="434" stroke="#A8D5B5" stroke-width="1"/>
-  <text x="{c2+20}" y="450" font-size="11.5" fill="#0B6E2E" font-weight="600">{esc(t["coll_label"])}</text>
-  <text x="{c2+20}" y="468" font-size="11" fill="#3c4043">{esc(t["coll1"])}</text>
-  <text x="{c2+20}" y="485" font-size="11" fill="#3c4043">{esc(t["coll2"])}</text>
-  <text x="{c2+20}" y="502" font-size="11" fill="#3c4043">{esc(t["coll3"])}</text>
-  <text x="{c2+20}" y="519" font-size="11" fill="#3c4043">{esc(t["coll4"])}</text>
-  <text x="{c2+20}" y="536" font-size="10.5" fill="#3c4043">{esc(t["coll5"])}</text>
-  <line x1="{c2+20}" y1="550" x2="{c2+244}" y2="550" stroke="#A8D5B5" stroke-width="1"/>
-  <text x="{c2+20}" y="568" font-size="10.5" fill="#0B6E2E">{esc(t["hier1"])}</text>
-  <text x="{c2+20}" y="583" font-size="10.5" fill="#5f6368">{esc(t["hier2"])}</text>
-  <text x="{c2+20}" y="600" font-size="10.5" fill="#5f6368">{esc(t["db_note"])}</text>
+  <line x1="{c2+20}" y1="444" x2="{c2+244}" y2="444" stroke="#A8D5B5" stroke-width="1"/>
+  <text x="{c2+20}" y="460" font-size="11.5" fill="#0B6E2E" font-weight="600">{esc(t["coll_label"])}</text>
+  <text x="{c2+20}" y="478" font-size="11" fill="#3c4043">{esc(t["coll1"])}</text>
+  <text x="{c2+20}" y="495" font-size="11" fill="#3c4043">{esc(t["coll2"])}</text>
+  <text x="{c2+20}" y="512" font-size="11" fill="#3c4043">{esc(t["coll3"])}</text>
+  <text x="{c2+20}" y="529" font-size="11" fill="#3c4043">{esc(t["coll4"])}</text>
+  <text x="{c2+20}" y="546" font-size="10.5" fill="#3c4043">{esc(t["coll5"])}</text>
+  <line x1="{c2+20}" y1="559" x2="{c2+244}" y2="559" stroke="#A8D5B5" stroke-width="1"/>
+  <text x="{c2+20}" y="575" font-size="10.5" fill="#0B6E2E">{esc(t["hier1"])}</text>
+  <text x="{c2+20}" y="590" font-size="10.5" fill="#5f6368">{esc(t["hier2"])}</text>
 
   <!-- AI VRSTVA -->
   <rect x="{c3}" y="{B}" width="{BOX_W}" height="{BOX_H}" rx="14" fill="#E0F7FA" stroke="#00838F" stroke-width="2"/>

@@ -359,13 +359,18 @@ sportnet.online (rovnaké pravidlo ako v CMS).
 
 | Rola | Môže |
 |---|---|
-| **HR / personalista** | pozývať, vidieť stav všetkých osôb, posielať pripomienky, exportovať |
-| **Vedenie** | vidieť súhrnný stav; **nevidí** obsah potvrdení mimo svojho útvaru |
+| **HR / personalista** | pozývať, vidieť stav osôb **svojho `companyCode`**, posielať pripomienky, exportovať |
+| **Vedenie** | vidieť súhrnný stav svojho `companyCode`; **nevidí** potvrdenia inej jednotky |
 | **Kurátor** | zakladať verzie dokumentov, skladať trasy, nastavovať `requiresReacknowledgement` |
 | **Osoba** | vidieť **svoje** potvrdenia a stiahnuť si ich |
 
 > **Zoznam „kto nepotvrdil" je citlivejší než samotné smernice.** Je to podklad
 > k personálnemu opatreniu. Prístup k nemu je užší než prístup k obsahu.
+>
+> **Hierarchia neudeľuje prístup (D32, D33).** HR vidí len svoj `companyCode` — nie potomkov,
+> nie nadradenú jednotku, nie sesterské. Ak má centrála vidieť potvrdenia dcéry, potrebuje
+> explicitné oprávnenie, ktoré sa zaznamená. `person_memberships` je pole, ale záznam
+> o potvrdení patrí **jednej** jednotke: tej, ktorej trasa ho vyvolala.
 
 Posledný riadok tabuľky nie je zdvorilosť: človek musí vedieť zobraziť a stiahnuť, čo
 o ňom systém eviduje, aj bez žiadosti na HR.

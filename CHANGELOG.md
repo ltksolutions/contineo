@@ -4,14 +4,18 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Added (2026-08-27 — dopísané zo staršej práce)
+- **`docs/O7_plan_overenia.md`** — plán overenia vlastného embeddingu a reranku (O7) z 2026-07-28, stav „návrh, čaká na schválenie". Vznikol v inej relácii a **nebol commitnutý**; obsahuje nálezy A–D (TEI neobslúži `voyage-4-nano`, chýbajúce prompty ako tichá chyba, O1 meraný na malých dátach, nano na MacBooku už bežalo), rozpočet pamäte na 16 GB, fázy 0–5, riziká R1–R5 a otvorené body O7-a…d.
+
 ### Changed (2026-08-27 — diagram architektúry: CMS, kurátor, hierarchia, portál)
-- **Diagram prekreslený** (`web/public/contineo_diagram{,.cs,.en}.svg`, `docs/contineo_diagram.svg`, pregenerované `.png`): pribudol **CMS ako vrstva** obopínajúca vstupné kanály a worker, **kurátorská brána** („kanál smie len predvyplniť, publikuje človek" — D-CMS-6, D25), doplnené **kolekcie** v jadre (`documents (+ versions)`, `channels`, `channel_runs`, `navigation`, `categories`, `persons`, `acknowledgements`, `onboarding_tracks`), **hierarchia tenantov** (`companyCode.parent` — centrála → dcéry → prevádzky) a **Portál (KB + onboarding)** medzi rozhraniami.
+- **Diagram prekreslený** (`web/public/contineo_diagram{,.cs,.en}.svg`, `docs/contineo_diagram.svg`, pregenerované `.png`): pribudol **CMS ako vrstva** obopínajúca vstupné kanály a worker, **kurátorská brána** („kanál smie len predvyplniť, publikuje človek" — D-CMS-6, D25), doplnené **kolekcie** v jadre (`documents (+ versions)`, `channels`, `channel_runs`, `navigation`, `categories`, `persons`, `acknowledgements`, `onboarding_tracks`), **hierarchia tenantov** (`companyCode.parent` — centrála → dcéry → prevádzky, s výslovnou poznámkou „hierarchia nedáva prístup") a **Portál (KB + onboarding)** medzi rozhraniami. Z jadra odstránená poznámka o Atlas EU / Community 8.2 — doslovne sa opakovala v päte.
 - **Diagram sa už generuje** z jedného zdroja — `web/scripts/gen_diagram.py` (rozloženie + slovník SK/CS/EN). Predtým existovali štyri ručne udržiavané kópie a už sa rozišli: `docs/` verzia niesla `rerank-2.5`, webová `rerank-2`. Zjednotené na `rerank-2` (súlad s `rag-architecture.md` a `AKO_TO_BEZI.md`).
 - **Opravené neexistujúce preklady** legendy spätných cyklov — položky `① qa_pair` a `② ticket` boli vo všetkých troch jazykových variantoch po slovensky.
 
 ### Decided (2026-08-27 — hierarchia tenantov a model dodávky)
-- **D32:** default-deny platí aj v hierarchii — **dedenie obsahu je vždy explicitné** (`scope: global` alebo `sharedWithCompanyCodes[]`). Dcéra nevidí interný obsah matky preto, že je dcéra. Dôvod: chyba smerom „vidí viac" je tichá, chyba smerom „vidí menej" je hlučná.
-- **D33:** HR vidí **svoju vetvu** — vlastný `companyCode` a všetkých potomkov, nie nahor ani do bokov.
+- **D32:** **každý `companyCode` vidí len svoje záznamy a svoj obsah** — cudzie len vtedy, keď je menovite zdieľané cez `sharedWithCompanyCodes[]` (alebo je `accessLevel: public`). **`companyCode.parent` neudeľuje prístup** — hierarchia slúži na relevanciu a precedenciu noriem, nie na oprávnenie. Dôvod: chyba smerom „vidí viac" je tichá, chyba smerom „vidí menej" je hlučná.
+  - *Opravené v ten istý deň:* prvé znenie tvrdilo, že `scope: global` sprístupní obsah celej skupine. To zamieňalo dve osi, pred ktorými `DATA_MODEL_konzistencia.md` výslovne varuje — `scope` hovorí, **na koho sa norma vzťahuje**; `accessLevel` + `companyCode`, **kto ju smie vidieť**. Poznámka o ortogonalite doplnená priamo do `DATA_MODEL_konzistencia.md`.
+- **D33:** HR vidí potvrdenia **len svojho `companyCode`** — nie potomkov, nie nadradenú jednotku, nie sesterské. Ak má centrála vidieť potvrdenia dcéry, potrebuje explicitné oprávnenie, ktoré sa zaznamená.
 - **D34:** primárne **SaaS na `contineo.app`** pre malé a stredné firmy; veľké organizácie dostanú **vlastné nasadenie tej istej platformy**, nie fork zdrojáku (fork = nedoručiteľné opravy a N nekompatibilných verzií).
 
 ### Added (2026-06-29 — blok Identita a prístup)

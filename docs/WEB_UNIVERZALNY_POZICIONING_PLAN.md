@@ -88,5 +88,6 @@ o odovzdaní kódu. Veta *„Jadro je v oboch režimoch identické — líšia s
 presne tá myšlienka a je už aj v diagrame.
 
 Hierarchia tenantov (centrála → dcéry → prevádzky) je súčasťou návrhu od začiatku a od 2026-08-27
-je aj v diagrame (`companyCode.parent`). Dedenie obsahu je pritom **vždy explicitné** — dcéra
-nevidí interný obsah matky preto, že je dcéra (D32).
+je aj v diagrame (`companyCode.parent`). **Hierarchia je štruktúra, nie oprávnenie:** každý
+`companyCode` vidí len svoje záznamy a svoj obsah; cudzie len vtedy, keď je menovite zdieľané
+(D32). Dcéra nevidí interný obsah matky preto, že je dcéra.

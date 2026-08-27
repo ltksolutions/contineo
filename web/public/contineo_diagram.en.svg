@@ -72,18 +72,18 @@
     <text x="660" y="367" font-size="11" fill="#5f6368">vector 60 % + fulltext 40 %</text>
     <text x="646" y="397">• companyCode filter</text>
     <text x="660" y="416" font-size="11" fill="#5f6368">default-deny, before the LLM</text>
+    <text x="660" y="431" font-size="10.5" fill="#B31412">hierarchy grants no access</text>
   </g>
-  <line x1="646" y1="434" x2="870" y2="434" stroke="#A8D5B5" stroke-width="1"/>
-  <text x="646" y="450" font-size="11.5" fill="#0B6E2E" font-weight="600">Collections:</text>
-  <text x="646" y="468" font-size="11" fill="#3c4043">documents (+ versions) · document_chunks</text>
-  <text x="646" y="485" font-size="11" fill="#3c4043">channels · channel_runs · navigation</text>
-  <text x="646" y="502" font-size="11" fill="#3c4043">categories · qa_pairs · tickets</text>
-  <text x="646" y="519" font-size="11" fill="#3c4043">conversations · tenant_profiles</text>
-  <text x="646" y="536" font-size="10.5" fill="#3c4043">persons · acknowledgements · onboarding_tracks</text>
-  <line x1="646" y1="550" x2="870" y2="550" stroke="#A8D5B5" stroke-width="1"/>
-  <text x="646" y="568" font-size="10.5" fill="#0B6E2E">companyCode.parent — tenant hierarchy</text>
-  <text x="646" y="583" font-size="10.5" fill="#5f6368">headquarters → subsidiaries → sites</text>
-  <text x="646" y="600" font-size="10.5" fill="#5f6368">Atlas EU · or Community 8.2 on-prem</text>
+  <line x1="646" y1="444" x2="870" y2="444" stroke="#A8D5B5" stroke-width="1"/>
+  <text x="646" y="460" font-size="11.5" fill="#0B6E2E" font-weight="600">Collections:</text>
+  <text x="646" y="478" font-size="11" fill="#3c4043">documents (+ versions) · document_chunks</text>
+  <text x="646" y="495" font-size="11" fill="#3c4043">channels · channel_runs · navigation</text>
+  <text x="646" y="512" font-size="11" fill="#3c4043">categories · qa_pairs · tickets</text>
+  <text x="646" y="529" font-size="11" fill="#3c4043">conversations · tenant_profiles</text>
+  <text x="646" y="546" font-size="10.5" fill="#3c4043">persons · acknowledgements · onboarding_tracks</text>
+  <line x1="646" y1="559" x2="870" y2="559" stroke="#A8D5B5" stroke-width="1"/>
+  <text x="646" y="575" font-size="10.5" fill="#0B6E2E">companyCode.parent — tenant hierarchy</text>
+  <text x="646" y="590" font-size="10.5" fill="#5f6368">headquarters → subsidiaries → sites</text>
 
   <!-- AI VRSTVA -->
   <rect x="919" y="236" width="264" height="372" rx="14" fill="#E0F7FA" stroke="#00838F" stroke-width="2"/>

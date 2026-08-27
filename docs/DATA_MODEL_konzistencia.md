@@ -41,6 +41,13 @@ Doména Contineo = SFZ a podriadené zväzy, normy s paragrafmi, helpdesk. Ploch
 > `access_level` = KTO to smie vidieť (public vs internal, RBAC).
 > `scope`+`companyCode` = NA KOHO sa norma vzťahuje (celoštátne / konkrétny Zväz / oblasť).
 > V Modeli B existujú **obe** vrstvy súčasne.
+>
+> **Doplnené 2026-08-27 (D32):** `scope: global` teda **neudeľuje prístup** — hovorí len, že norma
+> sa vzťahuje na všetkých. Viditeľnosť má tri zdroje a žiadny ďalší: zhoda `companyCode`,
+> menovité `sharedWithCompanyCodes[]`, alebo `accessLevel: public`. **`companyCode.parent`
+> neudeľuje nič** — hierarchia je štruktúra pre relevanciu a precedenciu (`PRECEDENCIA_NORIEM.md`
+> R4), nie kľúč k obsahu. Zámena týchto dvoch osí je presne tá tichá chyba, pred ktorou
+> odsek vyššie varuje.
 
 ## Fázová migrácia (mapované na existujúci plán fáz)
 
