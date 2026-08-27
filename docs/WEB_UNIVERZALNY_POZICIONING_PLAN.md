@@ -74,3 +74,19 @@ Plné zovšeobecnenie `/technologia` do neutrálnej domény (centrála/pobočky,
 ## Otvorené pre teba
 1. Schvaľuješ rozsah **Tier 1–3**, alebo chceš aj **Tier 4** (plné zovšeobecnenie)?
 2. Pri identite: spomínať sportnet.online ako *príklad* (odporúčam), alebo ho z všeobecných formulácií vypustiť úplne?
+
+---
+
+## Model dodávky (doplnené 2026-08-27 — D34)
+
+- **Primárne `contineo.app` ako SaaS** pre malé a stredné firmy — multi-tenant, jedno nasadenie.
+- **Veľké organizácie dostanú vlastné nasadenie tej istej platformy**, nie fork zdrojáku: rovnaké
+  repo, vlastná infraštruktúra a databáza, správanie určené profilom tenanta (ADR-001, ADR-002).
+
+Dôsledok pre texty na webe: pri „on-prem" a „vyhradenom prostredí" hovoríme o **nasadení**, nie
+o odovzdaní kódu. Veta *„Jadro je v oboch režimoch identické — líšia sa len tri adaptéry"* je
+presne tá myšlienka a je už aj v diagrame.
+
+Hierarchia tenantov (centrála → dcéry → prevádzky) je súčasťou návrhu od začiatku a od 2026-08-27
+je aj v diagrame (`companyCode.parent`). Dedenie obsahu je pritom **vždy explicitné** — dcéra
+nevidí interný obsah matky preto, že je dcéra (D32).

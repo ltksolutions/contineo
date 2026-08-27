@@ -36,6 +36,9 @@
 | D29 | Rozlíšenie tenanta podľa hostiteľa | Nasadenie | 🟡 | 8 | ✅ |
 | D30 | Čo je „podstatná zmena" (opätovné potvrdenie) | Onboarding | 🔴 | 8 | ⬜ HR/legislatívec |
 | D31 | Produkčný Atlas tier a zálohy (M0 → M10+) | Prevádzka | 🔴 | 8 | ✅ |
+| D32 | Dedenie interného obsahu v hierarchii tenantov | Identita | 🔴 | 5/8 | ✅ |
+| D33 | Rozsah HR dashboardu naprieč hierarchiou | Onboarding | 🟡 | 8 | ✅ |
+| D34 | Model dodávky: SaaS vs. vlastné nasadenie | Produkt | 🟡 | prierezové | ✅ |
 
 ---
 
@@ -365,6 +368,80 @@ teda M10+. Na M0 tá možnosť technicky neexistuje — čo bolo aj dôvodom, pr
 do úvahy cesty založené na privátnom endpointe.
 
 **Súvisiace:** O12, D10 (retencia), `ATLAS_SETUP.md`, `NASADENIE_app.md`.
+
+### D32 — Dedenie interného obsahu v hierarchii tenantov 🔴
+
+**Otázka:** vidí dcérska spoločnosť automaticky interný obsah materskej, keď je jej potomkom
+v `companyCode.parent`?
+
+**Prečo:** hierarchia je v návrhu od začiatku (`PRISTUPOVE_PRAVA.md` kap. 8: SFZ → regionálny →
+oblastný, teda aj centrála → dcéry → prevádzky), ale **smer dedenia nikde rozhodnutý nie je**.
+Pri SFZ sa to schovalo za `scope: global` — celoštátne poriadky platia pre všetkých. Pri holdingu
+je to tá istá otázka a odpoveď mení default-deny na default-inherit v jednej vetve.
+
+**✅ Rozhodnuté (2026-08-27): default-deny platí aj v hierarchii. Dedenie je vždy explicitné.**
+
+| Mechanizmus | Význam |
+|---|---|
+| `scope: global` | obsah platí pre celú skupinu — týmto centrála publikuje smerom nadol |
+| `scope: company` | len pre daný `companyCode` |
+| `sharedWithCompanyCodes[]` | cielené zdieľanie mimo vlastnej vetvy (sesterská firma) |
+
+Dcéra teda nevidí interný obsah matky **preto, že je dcéra**. Vidí ho vtedy, keď ho matka takto
+označí. Príbuznosť v strome je kontext pre relevanciu, nie oprávnenie.
+
+**Prečo takto:** default-inherit by znamenal, že personálna smernica centrály sa objaví brigádnikovi
+v dcérskej prevádzke. Taká chyba je **tichá** — nikto sa nedozvie, že videl niečo, čo nemal. Opačná
+chyba (obsah sa nezobrazí tomu, kto naň má nárok) je **hlučná** — do hodiny sa niekto ozve. Pri
+prístupových právach vyberáme tú chybu, ktorá je hlučná.
+
+**Súvisiace:** D8, `PRISTUPOVE_PRAVA.md` kap. 8, `PRECEDENCIA_NORIEM.md` R4 (tá istá os hierarchie
+pre precedenciu noriem).
+
+### D33 — Rozsah HR dashboardu naprieč hierarchiou 🟡
+
+**Otázka:** vidí HR dcérskej spoločnosti potvrdenia zamestnancov centrály? A naopak?
+
+**Prečo:** rola HR je v `ONBOARDING_KONCEPCIA.md` kap. 6 definovaná bez ohľadu na hierarchiu. Pri
+jednej firme je to jedno; pri skupine nie — a zoznam „kto nepotvrdil" je podklad k personálnemu
+opatreniu, teda citlivejší než samotné smernice.
+
+**✅ Rozhodnuté (2026-08-27): HR vidí svoju vetvu — vlastný `companyCode` a všetkých potomkov.
+Nie nahor, nie do bokov.**
+
+- HR centrály vidí celú skupinu.
+- HR dcéry vidí svoju dcéru a jej prevádzky, nie centrálu ani sesterské firmy.
+- Osoba s členstvom vo viacerých jednotkách (`person_memberships` je pole) sa objaví v dashboarde
+  každej vetvy, do ktorej patrí. Nie je to duplicita, ale fakt o organizácii — a obom HR ide
+  o to isté potvrdenie, nie o dve rôzne.
+
+**Súvisiace:** D24, D32, `ONBOARDING_KONCEPCIA.md` kap. 6.
+
+### D34 — Model dodávky pre malé a veľké organizácie 🟡
+
+**Otázka:** dostane veľká firma fork platformy, alebo vlastné nasadenie tej istej platformy?
+
+**✅ Rozhodnuté (2026-08-27):**
+
+- **Primárne: `contineo.app` ako SaaS** — multi-tenant, malé a stredné firmy. To je hlavný produkt.
+- **Veľké organizácie: vlastné nasadenie tej istej platformy** — rovnaké repo, vlastná
+  infraštruktúra a databáza, správanie určené profilom tenanta (ADR-001 adaptéry, ADR-002
+  `dataResidency` a `tier`). **Nie fork zdrojáku.**
+
+**Prečo nie fork:** forknutá kópia sa začne rozchádzať. Bezpečnostnú opravu jej nevieš doručiť —
+zákazník si ju musí zaniesť sám, alebo ju nemá. Po pár zákazníkoch máš N nekompatibilných Continei
+a údržba rastie lineárne s počtom predajov. To nie je obchodný model, ale záväzok.
+
+**Prečo vlastné nasadenie stačí:** zákazník dostane presne to, o čo mu ide — nič nezdieľa, všetko
+je jeho — a opravy dostáva ďalej, kým ty máš stále jeden produkt. Celá architektúra je na to
+postavená; veta v diagrame *„Jadro je v oboch režimoch identické — líšia sa len tri adaptéry"*
+je presne toto.
+
+**Ak by niekedy fork zdrojáku predsa prišiel** (štát, banka, podmienka v tendri), je to
+**licenčné rozhodnutie**, nie technické — repo už má `LICENSE`, `LICENSES/` a `REUSE.toml`.
+Vtedy treba dopredu pomenovať, či a ako podporujeme rozsypané verzie.
+
+**Súvisiace:** ADR-001, ADR-002 (dodatok 10 — `tier`), `WEB_UNIVERZALNY_POZICIONING_PLAN.md`.
 
 ### Otvorené body vedené v ADR-003
 

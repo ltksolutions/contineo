@@ -4,6 +4,16 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Changed (2026-08-27 — diagram architektúry: CMS, kurátor, hierarchia, portál)
+- **Diagram prekreslený** (`web/public/contineo_diagram{,.cs,.en}.svg`, `docs/contineo_diagram.svg`, pregenerované `.png`): pribudol **CMS ako vrstva** obopínajúca vstupné kanály a worker, **kurátorská brána** („kanál smie len predvyplniť, publikuje človek" — D-CMS-6, D25), doplnené **kolekcie** v jadre (`documents (+ versions)`, `channels`, `channel_runs`, `navigation`, `categories`, `persons`, `acknowledgements`, `onboarding_tracks`), **hierarchia tenantov** (`companyCode.parent` — centrála → dcéry → prevádzky) a **Portál (KB + onboarding)** medzi rozhraniami.
+- **Diagram sa už generuje** z jedného zdroja — `web/scripts/gen_diagram.py` (rozloženie + slovník SK/CS/EN). Predtým existovali štyri ručne udržiavané kópie a už sa rozišli: `docs/` verzia niesla `rerank-2.5`, webová `rerank-2`. Zjednotené na `rerank-2` (súlad s `rag-architecture.md` a `AKO_TO_BEZI.md`).
+- **Opravené neexistujúce preklady** legendy spätných cyklov — položky `① qa_pair` a `② ticket` boli vo všetkých troch jazykových variantoch po slovensky.
+
+### Decided (2026-08-27 — hierarchia tenantov a model dodávky)
+- **D32:** default-deny platí aj v hierarchii — **dedenie obsahu je vždy explicitné** (`scope: global` alebo `sharedWithCompanyCodes[]`). Dcéra nevidí interný obsah matky preto, že je dcéra. Dôvod: chyba smerom „vidí viac" je tichá, chyba smerom „vidí menej" je hlučná.
+- **D33:** HR vidí **svoju vetvu** — vlastný `companyCode` a všetkých potomkov, nie nahor ani do bokov.
+- **D34:** primárne **SaaS na `contineo.app`** pre malé a stredné firmy; veľké organizácie dostanú **vlastné nasadenie tej istej platformy**, nie fork zdrojáku (fork = nedoručiteľné opravy a N nekompatibilných verzií).
+
 ### Added (2026-06-29 — blok Identita a prístup)
 - **Nová sekcia „Identita a prístup"** na homepage (`web/components/Identity.js`, zaradená pred Bezpečnosť v `web/app/[lang]/page.js`, odkaz v `Nav.js`): SSO/jednotné prihlásenie (Entra ID, Google Workspace, OAuth/OIDC, vlastná DB), automatické zakladanie účtov z CRM/zdroja identity, multi-tenant prístup, bezpečnosť na úrovni dotazu (default-deny) + rad odznakov poskytovateľov identity. SK+EN (`dict.identity`).
 - **Hlbší blok „Identita a riadenie prístupu" na `/technologia`** (`dict.tech.identity` SK+EN + render v `Tech.js`): tabuľka poskytovateľov (NextAuth → kanonická session), princípy (server-side, default-deny, filter pred LLM, auto-provisioning), dva režimy nasadenia. Vychádza z `docs/PRISTUPOVE_PRAVA.md`; sportnet.online uvedený len ako príklad.
