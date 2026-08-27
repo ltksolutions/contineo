@@ -141,6 +141,10 @@ Jadro celého návrhu. **Append-only**: nikdy sa neprepisuje ani nemaže.
   documentTitle: "Smernica o ochrane osobných údajov",
   versionLabel:  "1.2",
   effectiveFrom: ISODate,
+  documentLanguage: "sk",                 // jazyk, v ktorom je smernica napísaná
+
+  // JAZYK PROSTREDIA — v čom človek formulku videl (D35)
+  language: "cs",
 
   // ČÍM — doslovné znenie, nie odkaz naň
   statementText: "Potvrdzujem, že som sa oboznámil s dokumentom …",
@@ -169,6 +173,11 @@ premenoval a trasa už neexistuje. Auditný záznam, ktorý na vysvetlenie potre
 staré záznamy by spätne tvrdili niečo, s čím nikto nesúhlasil. `statementHash` je tam
 na rýchle porovnanie, nie ako náhrada textu.
 
+**Prečo `language` aj `documentLanguage`?** Prostredie je viacjazyčné, obsah nie
+(D35). Formulka sa skladá v jazyku človeka, smernica si nesie svoj vlastný —
+a záznam musí uniesť, že český rozhodca potvrdzoval slovenský predpis. Jedno pole
+by na to nestačilo a pri audite by sa odpoveď musela hádať.
+
 **Prečo `type` a `supersedes` namiesto mazania?** Odvolanie alebo oprava je **nový**
 záznam, ktorý ukazuje na starý. Pôvodný zostáva. Auditný záznam, ktorý sa dá upraviť,
 nie je auditný záznam.
@@ -188,6 +197,7 @@ Nahrádza premennú `POVOLENE_EMAILY` ako hlavnú cestu (ADR-003 kap. 5.3). Je t
   personType: "employee" | "external" | "referee" | "official",
   startDate: ISODate,
   status: "invited" | "active" | "inactive",
+  language: "sk" | "cs" | "en",           // jazyk PROSTREDIA, nie obsahu (D35)
 
   tracks: ["nastup-2026"],                // priradené trasy
   roles:  ["hr"],                         // prázdne u bežnej osoby

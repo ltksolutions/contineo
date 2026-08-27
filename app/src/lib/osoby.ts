@@ -24,6 +24,8 @@
 
 import { ObjectId } from "mongodb"
 import { getCollection } from "./mongodb"
+import { normalizujJazyk } from "./jazyky"
+import type { JazykUI } from "./jazyky"
 
 export const KOLEKCIA_OSOBY = "persons"
 
@@ -51,6 +53,14 @@ export interface Osoba {
   personType: TypOsoby
   startDate?: Date
   status: StavOsoby
+
+  /**
+   * Jazyk **prostredia** — v čom sa s človekom rozprávame (rozhranie, e-maily,
+   * znenie formulky). Nemá nič spoločné s jazykom smerníc, ktoré číta:
+   * český rozhodca môže v českom rozhraní potvrdzovať slovenský predpis
+   * a záznam si to zapamätá (`jazyky.ts`).
+   */
+  language: JazykUI
 
   /** Kľúče trás onboardingu, ktoré sa tejto osoby týkajú. */
   tracks: string[]
@@ -81,6 +91,8 @@ export interface NovaOsoba {
   startDate?: Date
   tracks?: string[]
   roles?: string[]
+  /** Voliteľné v CSV; neznáme alebo chýbajúce padá na slovenčinu. */
+  language?: string
 }
 
 /** Adresa v tvare, v ktorom sa porovnáva a ukladá. */
@@ -225,7 +237,7 @@ export async function zalozOsoby(
     const { email, companyCode } = overeny
 
     const kluc = { companyCode, email }
-    const zmeny = {
+    const zmeny: Record<string, unknown> = {
       fullName: r.fullName.trim(),
       department: r.department?.trim() || undefined,
       personType: r.personType ?? "employee",
@@ -234,6 +246,12 @@ export async function zalozOsoby(
       roles: r.roles ?? [],
     }
 
+    // Jazyk sa prepíše LEN keď v riadku naozaj je. Bez tejto podmienky by
+    // opakovaný import bez stĺpca jazyka ticho prepol každého späť na
+    // slovenčinu — rovnaká pasca ako pri `status`, len horšie viditeľná,
+    // lebo sa prejaví až v e-maile, ktorý už niekomu odišiel.
+    if (r.language !== undefined) zmeny.language = normalizujJazyk(r.language)
+
     try {
       const vysledok = await col.updateOne(kluc, {
         $set: zmeny,
@@ -241,6 +259,7 @@ export async function zalozOsoby(
           ...kluc,
           id: crypto.randomUUID(),
           status: "invited" as StavOsoby,
+          ...(r.language === undefined ? { language: normalizujJazyk(undefined) } : {}),
           invitedAt: teraz,
           externalRef: { sportnetId: null, entraObjectId: null },
           createdBy: kto,
@@ -292,4 +311,21 @@ export async function nahladImportu(zoznam: NovaOsoba[]): Promise<{
   }
 
   return { nove, existujuce, chyby }
+}
+
+/**
+ * Jazyk prostredia pre danú adresu.
+ *
+ * Používa sa aj v ceste odosielania e-mailu, teda pred prihlásením — preto
+ * nikdy nehádže výnimku. Keď osobu nepoznáme (napr. správca, ktorý prešiel
+ * núdzovou brzdou) alebo je databáza nedostupná, platí slovenčina. Zlý jazyk
+ * e-mailu je nepríjemnosť; neodoslaný e-mail je zavreté dvere.
+ */
+export async function jazykOsoby(email: string): Promise<JazykUI> {
+  try {
+    const osoba = await najdiOsobu(email)
+    return normalizujJazyk(osoba?.language)
+  } catch {
+    return normalizujJazyk(undefined)
+  }
 }

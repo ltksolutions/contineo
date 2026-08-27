@@ -107,6 +107,14 @@
 - [ ] Potvrdzovacia obrazovka; **verziu berie server**, nie požiadavka klienta
 - [ ] Skript `vykaz_potvrdeni.mjs` → CSV pre HR (bez neho je ultra-MVP nepoužiteľné)
 
+**I1b. Viacjazyčné prostredie (D35)** — SK · CS · EN
+
+- [x] `app/src/lib/jazyky.ts` ✅ 2026-08-27 — zoznam jazykov prostredia (oddelený od číselníka `language`, ktorý tagguje obsah), formulka a e-mail per jazyk, deterministický dátum
+- [x] `persons.language` + prihlasovací e-mail v jazyku osoby ✅ 2026-08-27
+- [x] `acknowledgements.language` + `documentLanguage` ✅ 2026-08-27 — záznam unesie, že Čech potvrdzoval slovenský text
+- [ ] Preklad **rozhrania** portálu (SK hotové, CS/EN po termíne — SFZ prvá vlna je len SK)
+- [ ] **Otázka pre HR/právnika:** má formulka pomenovať jazyk dokumentu, keď sa líši od jazyka prostredia?
+
 **I2. Rozsah B `[2–3,5 týždňa]`**
 
 - [ ] Kolekcia `onboarding_tracks`; progres sa **odvodzuje**, neukladá — **D27**

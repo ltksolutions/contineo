@@ -9,6 +9,9 @@
  * s hlavičkou `key`. Vyžaduje platený účet a overenú odosielaciu doménu.
  */
 
+import { slovnik } from "./jazyky"
+import type { JazykUI } from "./jazyky"
+
 const API = "https://api2.ecomailapp.cz/transactional/send-message"
 
 export interface Sprava {
@@ -77,40 +80,50 @@ export async function posli(s: Sprava): Promise<void> {
   }
 }
 
-/** Text prihlasovacieho e-mailu. Vytiahnuté zvlášť, aby sa dal otestovať. */
-export function prihlasovaciEmail(odkaz: string, hostitel: string): Omit<Sprava, "komu"> {
+/**
+ * Text prihlasovacieho e-mailu. Vytiahnuté zvlášť, aby sa dal otestovať.
+ *
+ * Jazyk je jazyk **prostredia** osoby (`persons.language`) — je to prvá vec,
+ * ktorú človek uvidí, ešte pred prihlásením. Keď osobu nepoznáme, platí
+ * slovenčina; zlý jazyk je nepríjemnosť, neodoslaný e-mail sú zavreté dvere.
+ */
+export function prihlasovaciEmail(
+  odkaz: string,
+  hostitel: string,
+  jazyk: JazykUI = "sk"
+): Omit<Sprava, "komu"> {
+  const s = slovnik(jazyk).email
+
   const text = [
-    "Prihlásenie do testovacieho rozhrania Contineo",
+    s.nadpis,
     "",
-    "Kliknite na odkaz a budete prihlásení:",
+    s.uvod,
     odkaz,
     "",
-    "Odkaz platí 24 hodín a dá sa použiť raz.",
-    "Ak ste o prihlásenie nežiadali, tento e-mail ignorujte.",
+    s.platnost,
   ].join("\n")
 
   const html = `<!doctype html>
-<html lang="sk"><body style="margin:0;padding:24px;background:#f5f6f8;font-family:ui-sans-serif,system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;color:#161b22">
+<html lang="${jazyk}"><body style="margin:0;padding:24px;background:#f5f6f8;font-family:ui-sans-serif,system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;color:#161b22">
   <div style="max-width:520px;margin:0 auto;background:#fff;border:1px solid rgba(20,28,42,.12);border-radius:12px;padding:28px">
     <div style="font-size:18px;font-weight:700;letter-spacing:-.02em;margin-bottom:6px">Contineo</div>
-    <div style="font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:#5c6675;margin-bottom:22px">Testovacie rozhranie</div>
+    <div style="font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:#5c6675;margin-bottom:22px">${s.podtitul}</div>
     <p style="font-size:15.5px;line-height:1.65;margin:0 0 22px">
-      Kliknutím sa prihlásite do rozhrania na overovanie odpovedí nad normami.
+      ${s.uvod}
     </p>
     <a href="${odkaz}" style="display:inline-block;background:#232a35;color:#fff;text-decoration:none;border-radius:10px;padding:12px 22px;font-size:15px;font-weight:600">
-      Prihlásiť sa
+      ${s.tlacidlo}
     </a>
     <p style="font-size:13px;line-height:1.6;color:#5c6675;margin:22px 0 0">
-      Odkaz platí 24 hodín a dá sa použiť raz. Ak ste o prihlásenie nežiadali,
-      tento e-mail ignorujte — bez kliknutia sa nič nestane.
+      ${s.platnost}
     </p>
     <p style="font-size:12px;color:#5c6675;margin:18px 0 0;word-break:break-all">
-      Ak odkaz nefunguje, skopírujte do prehliadača:<br>${odkaz}
+      ${s.nefunguje}<br>${odkaz}
     </p>
     <hr style="border:none;border-top:1px solid rgba(20,28,42,.12);margin:22px 0 14px">
     <div style="font-size:12px;color:#5c6675">${hostitel} · LTK Solutions</div>
   </div>
 </body></html>`
 
-  return { predmet: "Prihlásenie do Contineo", text, html }
+  return { predmet: s.predmet, text, html }
 }

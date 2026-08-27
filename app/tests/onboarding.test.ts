@@ -7,7 +7,8 @@
  */
 import { platnaVerzia } from "../src/lib/dokumenty"
 import type { Dokument, Verzia } from "../src/lib/dokumenty"
-import { zneniePotvrdenia, slovenskyDatum, odtlacokZnenia } from "../src/lib/potvrdenia"
+import { zneniePotvrdenia, odtlacokZnenia } from "../src/lib/potvrdenia"
+import { datum, normalizujJazyk, JAZYKY_UI } from "../src/lib/jazyky"
 
 const R: [boolean, string][] = []
 const t = (n: string, ok: boolean, extra = "") => R.push([ok, n + (ok ? "" : "  → " + extra)])
@@ -83,18 +84,51 @@ t("v deň začiatku platnosti už verzia platí",
 t("v deň konca platnosti už verzia neplatí",
   !platnaVerzia(dok([v({ effectiveTo: DNES })]), DNES).ok)
 
-// ── znenie formulky (D28) ────────────────────────────────────────────────────
+// ── jazyk prostredia ─────────────────────────────────────────────────────────
 
 t("dátum je deterministický, nezávislý od locale servera",
-  slovenskyDatum(den(2026, 9, 1)) === "1. 9. 2026", slovenskyDatum(den(2026, 9, 1)))
+  datum(den(2026, 9, 1), "sk") === "1. 9. 2026", datum(den(2026, 9, 1), "sk"))
+t("čeština má rovnaký tvar dátumu ako slovenčina",
+  datum(den(2026, 9, 1), "cs") === "1. 9. 2026")
+// V právnom texte nesmie byť pochybnosť, či 9/1 je september alebo január.
+t("angličtina používa slovný mesiac, aby nebola nejednoznačnosť",
+  datum(den(2026, 9, 1), "en") === "1 September 2026", datum(den(2026, 9, 1), "en"))
 
-const znenie = zneniePotvrdenia("Smernica o ochrane osobných údajov", "1.2", den(2026, 9, 1))
+t("neznámy jazyk padá na slovenčinu, nie na angličtinu", normalizujJazyk("de") === "sk")
+t("zvláda tvar sk-SK z prehliadača", normalizujJazyk("sk-SK") === "sk")
+t("zvláda tvar cs_CZ z tabuľky", normalizujJazyk("cs_CZ") === "cs")
+t("prázdny vstup padá na predvolený jazyk", normalizujJazyk(undefined) === "sk")
+
+// ── znenie formulky (D28) ────────────────────────────────────────────────────
+
+const NAZOV = "Smernica o ochrane osobných údajov"
+const znenie = zneniePotvrdenia(NAZOV, "1.2", den(2026, 9, 1), "sk")
 
 t("formulka hovorí o oboznámení, NIE o súhlase", /oboznámil/.test(znenie) && !/súhlas/i.test(znenie), znenie)
 t("formulka obsahuje záväzok dodržiavať", /zaväzujem sa ho dodržiavať/.test(znenie))
-t("formulka obsahuje názov dokumentu", znenie.includes("Smernica o ochrane osobných údajov"))
+t("formulka obsahuje názov dokumentu", znenie.includes(NAZOV))
 t("formulka obsahuje označenie verzie", /verzia 1\.2/.test(znenie))
 t("formulka obsahuje dátum platnosti", znenie.includes("1. 9. 2026"))
+
+const cs = zneniePotvrdenia(NAZOV, "1.2", den(2026, 9, 1), "cs")
+const en = zneniePotvrdenia(NAZOV, "1.2", den(2026, 9, 1), "en")
+
+t("česká formulka je po česky", /Potvrzuji/.test(cs) && /zavazuji se/.test(cs), cs)
+t("česká formulka tiež hovorí o zoznámení, nie o souhlasu",
+  /seznámil/.test(cs) && !/souhlas/i.test(cs), cs)
+t("anglická formulka je po anglicky", /I confirm that I have read/.test(en), en)
+t("anglická formulka nehovorí o súhlase (agree)", !/\bagree\b/i.test(en), en)
+
+// Nech je jazyk akýkoľvek, tri veci tam musia byť vždy — bez nich sa o rok
+// nedá povedať, čo človek potvrdil.
+for (const j of JAZYKY_UI) {
+  const z = zneniePotvrdenia(NAZOV, "1.2", den(2026, 9, 1), j)
+  t(`[${j}] formulka nesie názov, verziu aj dátum`,
+    z.includes(NAZOV) && z.includes("1.2") && /2026/.test(z), z)
+}
+
+t("neznámy jazyk nespadne, vráti slovenskú formulku",
+  zneniePotvrdenia(NAZOV, "1.2", den(2026, 9, 1), "de" as never) === znenie)
 
 // ── odtlačok znenia ──────────────────────────────────────────────────────────
 

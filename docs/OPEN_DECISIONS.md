@@ -39,6 +39,7 @@
 | D32 | Viditeľnosť obsahu v hierarchii tenantov | Identita | 🔴 | 5/8 | ✅ |
 | D33 | Rozsah HR dashboardu naprieč hierarchiou | Onboarding | 🟡 | 8 | ✅ |
 | D34 | Model dodávky: SaaS vs. vlastné nasadenie | Produkt | 🟡 | prierezové | ✅ |
+| D35 | Viacjazyčnosť: prostredie áno, obsah nie | Produkt | 🔴 | 8 | ✅ |
 
 ---
 
@@ -469,6 +470,46 @@ je presne toto.
 Vtedy treba dopredu pomenovať, či a ako podporujeme rozsypané verzie.
 
 **Súvisiace:** ADR-001, ADR-002 (dodatok 10 — `tier`), `WEB_UNIVERZALNY_POZICIONING_PLAN.md`.
+
+### D35 — Viacjazyčnosť: prostredie áno, obsah nie 🔴
+
+**Otázka:** čo presne znamená „multijazyčná verzia" (SK · CS · EN)?
+
+**✅ Rozhodnuté (2026-08-27): viacjazyčné je len prostredie, nie obsah.**
+
+| Vrstva | Viacjazyčná? | Riadi |
+|---|---|---|
+| **Prostredie** — rozhranie, e-maily, znenie potvrdzovacej formulky | **áno**, SK · CS · EN | `persons.language`, zoznam v `app/src/lib/jazyky.ts` |
+| **Obsah** — samotné smernice a normy | **nie**, neprekladáme | `documents.language` z číselníka `language` |
+
+**Dokument má určený základný jazyk, v ktorom je napísaný.** Dokument v inom
+jazyku je **samostatný dokument** (vlastné `documentId`), nie preklad. Neriešime
+teda, ktoré jazykové znenie je záväzné — každý dokument je sám sebou.
+
+**Dôsledok pre záznam o potvrdení (D24):** formulka sa skladá v jazyku **človeka**,
+kým dokument si nesie svoj vlastný. Záznam preto ukladá **oboje** — `language`
+(v čom človek formulku videl a potvrdil) aj `documentLanguage` (v čom je smernica).
+Bez toho sa pri audite nedá odpovedať na otázku, či český rozhodca potvrdzoval
+slovenský text — a to je otázka, ktorá príde.
+
+**Jazyk v `app/` sa berie z profilu osoby, bez prefixu v URL.** Na rozdiel od
+marketingového webu, ktorý má `[lang]` routing. Dôvod je bezpečnostný: interný
+portál je celý za prihlásením a `middleware.ts` je definovaný ako „všetko okrem",
+aby bola nová stránka chránená automaticky. Pridať do matchera jazykový segment
+znamená hrabať sa v jedinom mieste, ktoré stojí medzi internými smernicami
+a internetom. Za pohodlie zdieľateľného odkazu to nestojí.
+
+**Pre SFZ je prvá vlna len po slovensky.** Schéma a kód s jazykom rátajú od
+začiatku; prekladá sa až rozhranie, keď bude.
+
+> **Zostáva rozhodnúť (HR + právnik):** má formulka pomenovať jazyk dokumentu,
+> keď sa líši od jazyka prostredia? Napr. *„…s dokumentom „X" (v slovenčine),
+> verzia…"*. Dnes to formulka nerobí — človek v českom rozhraní potvrdzuje
+> slovenský text a v zázname je to dohľadateľné, ale v samotnom znení nie.
+> Nie je to technická otázka; systém uloží akékoľvek znenie.
+
+**Súvisiace:** D24, D28, `app/src/lib/jazyky.ts`, `docs/CMS_KONCEPCIA.md` B.4
+(i18n web obsahu — tam ide o kurátorské články, nie o normy).
 
 ### Otvorené body vedené v ADR-003
 

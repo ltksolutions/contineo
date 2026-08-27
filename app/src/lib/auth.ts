@@ -24,7 +24,7 @@ import type { NextAuthOptions } from "next-auth"
 import type { EmailConfig } from "next-auth/providers/email"
 import { mongoAdapter } from "./authAdapter"
 import { posli, prihlasovaciEmail } from "./ecomail"
-import { osobaSmiePrihlasenie, oznacPrihlasenie } from "./osoby"
+import { osobaSmiePrihlasenie, oznacPrihlasenie, jazykOsoby } from "./osoby"
 
 /**
  * Rozloží zoznam povolených adries.
@@ -83,7 +83,11 @@ function emailProvider(): EmailConfig {
     options: {},
     async sendVerificationRequest({ identifier, url }) {
       const hostitel = new URL(url).host
-      await posli({ komu: identifier, ...prihlasovaciEmail(url, hostitel) })
+      // Jazyk prostredia z `persons`. Nikdy nehádže — pri neznámej osobe
+      // alebo nedostupnej databáze padá na slovenčinu, aby sa e-mail odoslal
+      // vždy. Zlý jazyk je nepríjemnosť, neodoslaný odkaz sú zavreté dvere.
+      const jazyk = await jazykOsoby(identifier)
+      await posli({ komu: identifier, ...prihlasovaciEmail(url, hostitel, jazyk) })
     },
   }
 }

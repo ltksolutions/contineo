@@ -22,12 +22,20 @@
  * Znenie formulky je rozhodnutie D28 — oboznámenie a záväzok, nie súhlas.
  * Pri vnútornom predpise je súhlas právne zvláštny: smernica zaväzuje bez
  * ohľadu na to, či s ňou niekto súhlasí.
+ *
+ * **Jazyk.** Prostredie je viacjazyčné, obsah nie (`jazyky.ts`). Znenie formulky
+ * sa preto skladá v jazyku **človeka**, kým dokument si nesie svoj vlastný.
+ * Záznam ukladá oboje — `language` (v čom potvrdzoval) aj `documentLanguage`
+ * (v čom je smernica). Bez toho sa pri audite nedá odpovedať na otázku, či
+ * český rozhodca potvrdzoval slovenský text; a to je otázka, ktorá príde.
  */
 
 import { ObjectId } from "mongodb"
 import { getCollection } from "./mongodb"
 import { nacitajDokument, platnaVerzia } from "./dokumenty"
 import type { Verzia } from "./dokumenty"
+import { datum, slovnik, normalizujJazyk } from "./jazyky"
+import type { JazykUI } from "./jazyky"
 
 export const KOLEKCIA_POTVRDENIA = "acknowledgements"
 
@@ -50,10 +58,14 @@ export interface Potvrdenie {
   documentTitle: string
   versionLabel: string
   effectiveFrom: Date
+  /** Jazyk, v ktorom je napísaná samotná smernica. */
+  documentLanguage: string | null
 
   // ČÍM — doslovné znenie, nie odkaz naň
   statementText: string
   statementHash: string
+  /** Jazyk prostredia, v ktorom človek formulku videl a potvrdil. */
+  language: JazykUI
 
   // KEDY a ODKIAĽ
   acknowledgedAt: Date
@@ -70,27 +82,19 @@ export interface Potvrdenie {
 }
 
 /**
- * Dátum v tvare, ktorý ide do formulky: „1. 9. 2026".
+ * Znenie potvrdzovacej formulky (D28) v jazyku prostredia.
  *
- * Zámerne bez `toLocaleDateString` — to závisí od locale servera a znenie
- * potvrdenia sa nesmie líšiť podľa toho, kde beží proces. Uložený text je
- * dôkaz; musí byť deterministický.
+ * Ukladá sa doslovne, takže neskoršia úprava formulácie **nemení staré
+ * záznamy** — a rovnako platí, že zmena jazyka rozhrania nemení, čo človek
+ * kedysi potvrdil. Preto je text v zázname, nie odkaz naň.
  */
-export function slovenskyDatum(d: Date): string {
-  return `${d.getUTCDate()}. ${d.getUTCMonth() + 1}. ${d.getUTCFullYear()}`
-}
-
-/**
- * Znenie potvrdzovacej formulky (D28).
- *
- * Musí obsahovať **názov, verziu aj dátum platnosti** — bez nich sa o rok nedá
- * povedať, čo presne človek potvrdil. Ukladá sa doslovne, takže neskoršia
- * úprava formulácie nemení staré záznamy.
- */
-export function zneniePotvrdenia(nazov: string, label: string, platnaOd: Date): string {
-  return `Potvrdzujem, že som sa oboznámil s dokumentom „${nazov}", verzia ${label}, ` +
-    `platná od ${slovenskyDatum(platnaOd)}, porozumel som jeho obsahu ` +
-    `a zaväzujem sa ho dodržiavať.`
+export function zneniePotvrdenia(
+  nazov: string,
+  label: string,
+  platnaOd: Date,
+  jazyk: JazykUI = "sk"
+): string {
+  return slovnik(jazyk).potvrdenie(nazov, label, datum(platnaOd, jazyk))
 }
 
 /** SHA-256 znenia — na rýchle porovnanie, nie ako náhrada textu. */
@@ -105,6 +109,8 @@ export interface Potvrdzujuci {
   email: string
   fullName: string
   companyCode: string
+  /** Jazyk prostredia z `persons.language`. Neznámy padá na slovenčinu. */
+  language?: string
 }
 
 export type VysledokPotvrdenia =
@@ -134,7 +140,8 @@ export async function potvrd(
 
   const v = platna.verzia
   const platnaOd = v.effectiveFrom as Date
-  const znenie = zneniePotvrdenia(dok.title, v.label, platnaOd)
+  const jazyk = normalizujJazyk(kto.language)
+  const znenie = zneniePotvrdenia(dok.title, v.label, platnaOd, jazyk)
   const teraz = new Date()
 
   const zaznam: Potvrdenie = {
@@ -148,8 +155,10 @@ export async function potvrd(
     documentTitle: dok.title,
     versionLabel: v.label,
     effectiveFrom: platnaOd,
+    documentLanguage: dok.language ?? null,
     statementText: znenie,
     statementHash: await odtlacokZnenia(znenie),
+    language: jazyk,
     acknowledgedAt: teraz,
     ip: kontext.ip ?? null,
     userAgent: kontext.userAgent ?? null,

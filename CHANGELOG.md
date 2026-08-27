@@ -4,6 +4,16 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Added (2026-08-27 — viacjazyčné prostredie, D35)
+- **`app/src/lib/jazyky.ts`** — jazyk prostredia (SK · CS · EN): zoznam podporovaných jazykov, znenie potvrdzovacej formulky a texty prihlasovacieho e-mailu per jazyk, deterministické formátovanie dátumu.
+- **Rozhodnutie D35:** viacjazyčné je **len prostredie, nie obsah**. Dokument má základný jazyk, v ktorom je napísaný (`documents.language`); dokument v inom jazyku je **samostatný dokument, nie preklad**. Zoznam jazykov prostredia je preto oddelený od číselníka `language`, ktorý tagguje obsah.
+- **`persons.language`** — jazyk prostredia osoby; prihlasovací e-mail sa posiela v ňom. Pri neznámej osobe alebo nedostupnej databáze platí slovenčina: zlý jazyk je nepríjemnosť, neodoslaný odkaz sú zavreté dvere. Opakovaný import bez stĺpca jazyka jazyk **neprepíše** — rovnaká pasca ako pri `status`.
+- **`acknowledgements.language` + `documentLanguage`** — záznam ukladá aj to, v akom jazyku človek formulku videl, aj to, v akom jazyku je smernica. Bez toho sa pri audite nedá odpovedať, či český rozhodca potvrdzoval slovenský text.
+- **Jazyk v `app/` sa berie z profilu osoby, bez prefixu v URL** (na rozdiel od marketingového webu). Dôvod je bezpečnostný — `middleware.ts` je definovaný ako „všetko okrem" a pridávať doň jazykový segment znamená hrabať sa v jedinom mieste, ktoré stojí medzi internými smernicami a internetom.
+- Anglická formulka používa slovný mesiac (`1 September 2026`), aby v právnom texte nevznikla nejednoznačnosť medzi britským a americkým poradím čísel.
+- Testy: 14 nových (formulka v troch jazykoch, formáty dátumu, normalizácia `sk-SK`/`cs_CZ`, fallback pri neznámom jazyku). 15 suít prechádza, `type-check` čistý.
+
+
 ### Fixed (2026-08-27 — ADR-001 stálo na neplatnom predpoklade)
 - **ADR-001 dodatok 10:** `voyage-4-nano` **TEI nepodporuje** (otvorená issue #816 zo 6. 2. 2026, bez PR) — štítok `text-embeddings-inference` na karte modelu je v rozpore s issue v repozitári TEI. Otázka „ktorý server pre nano" bola 26. 7. **zatvorená práve s odvolaním sa na TEI**; je **znovu otvorená** ako O7-a. Príklad T3 profilu prepísaný z `kind: "tei"` na `kind: "infinity"` (vLLM/Infinity, OpenAI tvar) — v pôvodnom znení sa nedal postaviť. Poučenie: štítok na karte modelu nie je záväzok podpory.
 - **Poistka proti tichému zhoršeniu hľadania** (`app/src/lib/providers/embedding/http.ts`): `HttpEmbeddingProvider.embed()` tvrdo zlyhá, kým nie je doplnené rozlíšenie dotaz/dokument a prompty modelu (O7 nález B). `voyage-4-nano` používa iné prompty pre dotaz a pre dokument; bez nich sa vektory posunú a meranie O1 na adaptér neplatí — **nespadne to, len horšie hľadá**. Nešlo o živú chybu (reťaz beží cez `atlas-auto`, `embed()` sa nikde nevolá), ale o pascu pre prvého, kto prepne tenanta na on-prem. Drôtový tvar volania zostal v `embedRaw()`, takže testy tvaru požiadavky a parsovania odpovede platia ďalej; 13 suít prechádza, `type-check` čistý.

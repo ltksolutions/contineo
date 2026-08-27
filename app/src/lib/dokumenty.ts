@@ -53,6 +53,12 @@ export interface Dokument {
   title: string
   companyCode?: string
   accessLevel?: "public" | "internal"
+  /**
+   * Základný jazyk, v ktorom je dokument napísaný (číselník `language`).
+   * **Nie je to jazyk prostredia** — nič neprekladáme; dokument v inom jazyku
+   * je samostatný dokument, nie preklad. Viď `jazyky.ts`.
+   */
+  language?: string
   versions?: Verzia[]
   /** Ponechané kvôli dokumentom naimportovaným pred zavedením `versions[]`. */
   versionId?: string
