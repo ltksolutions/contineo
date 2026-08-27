@@ -7,8 +7,7 @@
  */
 import { rozdelInline, naBloky, ocistiCitaciu, zlucCitacie } from "../src/lib/formatText"
 
-const R: [boolean, string][] = []
-const t = (n: string, ok: boolean, extra = "") => R.push([ok, n + (ok ? "" : "  → " + extra)])
+import { t } from "./pomocnik"
 
 const text = (b: ReturnType<typeof rozdelInline>) => b.map(u => u.text).join("")
 
@@ -260,8 +259,3 @@ t("rôzne odseky s podobným začiatkom zostanú oddelené",
     c("(3) Transfer maloletého hráča, ktorý nedovŕšil 15 rokov, je zakázaný."),
   ]).length === 2)
 
-for (const [ok, n] of R) console.log(`${ok ? "OK  " : "ZLE "}  ${n}`)
-const zle = R.filter(([ok]) => !ok)
-console.log("\n" + "=".repeat(56))
-console.log(zle.length ? `ZLYHALO ${zle.length}/${R.length}` : `${R.length}/${R.length} testov preslo`)
-process.exit(zle.length ? 1 : 0)

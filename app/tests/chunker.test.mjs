@@ -1,11 +1,16 @@
 /**
  * chunker.test.mjs — testy chunkovania noriem. Bez siete a bez databázy.
- *     node tests/chunker.test.mjs
+ *     npx vitest run tests/chunker.test.mjs
  */
 import { chunkuj, ocisti, parsujStrukturu, odhadTokenov } from "../scripts/lib/chunker.mjs"
 
-const R = []
-const t = (n, ok, extra = "") => { R.push([ok, n]); console.log(`${ok ? "OK   " : "CHYBA"} ${n}` + (ok ? "" : `  → ${extra}`)) }
+import { it, expect } from "vitest"
+
+// Rovnaký most ako `tests/pomocnik.ts`, len tu inline — táto suita je `.mjs`
+// a nemá zmysel kvôli dvom riadkom ťahať TypeScriptový modul.
+const t = (n, ok, extra = "") => {
+  it(n, () => { expect(ok ? "OK" : (extra || "podmienka nebola splnená")).toBe("OK") })
+}
 
 const NORMA = `Nejaký poriadok SFZ
 schválený na zasadnutí výkonného výboru
@@ -294,8 +299,3 @@ t("neviditeľné: BOM sa preskočí rovnako",
 t("neviditeľné: nezlomiteľná medzera sama osebe nie je nadpis",
   chunkuj(["Predpis", "Článok 2", "", "\u00A0", "Pôsobnosť", "(1) Text."].join("\n"),
     { nazovDokumentu: "Predpis" }).chunky.some(c => c.heading === "Pôsobnosť"))
-
-const zle = R.filter(([ok]) => !ok)
-console.log("\n" + "=".repeat(60))
-console.log(zle.length ? `ZLYHALO ${zle.length}/${R.length}` : `${R.length}/${R.length} testov prešlo`)
-process.exit(zle.length ? 1 : 0)

@@ -4,6 +4,14 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Changed (2026-08-27 — testy prešli na Vitest)
+- **`npm test` beží cez Vitest** (`vitest run`), pribudlo `test:watch` a `test:coverage`. Vlastný beh testov (`tests/run.mjs` + bundlovanie esbuildom) sa už nepoužíva.
+- **Dôvod nebol „Vitest je štandard", ale konkrétny strop:** funkcie volajúce `getCollection()` sa nedali otestovať vôbec — a boli medzi nimi tie najdôležitejšie: `osobaSmiePrihlasenie()` (brána medzi internými smernicami a internetom), `potvrd()` (zápis právneho záznamu) a `zalozOsoby()` (hromadný import). Obísť sa to dalo len pridaním testovacieho švu do verejného rozhrania každého modulu; `vi.mock()` to rieši bez toho.
+- **Suity sa neprepisovali.** Pôvodný tvar `t("popis", podmienka)` zostal a len registruje test do Vitestu cez `tests/pomocnik.ts` — 2 200 riadkov ručne prepísaných tvrdení je 2 200 príležitostí na preklep, a v testoch sa preklep neprejaví zlyhaním, ale falošným pokojom. **Nové testy sa píšu idiomaticky** (`expect(skutočné).toBe(očakávané)`), aby bolo pri zlyhaní vidieť rozdiel hodnôt.
+- **Nová suita `tests/onboardingDb.test.ts`** — 17 testov nad falošnou databázou: že `potvrd()` si verziu určí na serveri a nedá sa podvrhnúť staršia; že duplicitný zápis skončí ako `uz-potvrdene` a nie ako chyba servera; že iná chyba sa za „už potvrdené" nezamaskuje; že znenie je v jazyku človeka a `documentLanguage` v jazyku smernice; a hlavne, že **chyba databázy v `osobaSmiePrihlasenie()` neotvorí prístup**.
+- Stav: **16 súborov, 442 testov, 0,7 s** (predtým 15 súborov bundlovaných po jednom).
+
+
 ### Added (2026-08-27 — viacjazyčné prostredie, D35)
 - **`app/src/lib/jazyky.ts`** — jazyk prostredia (SK · CS · EN): zoznam podporovaných jazykov, znenie potvrdzovacej formulky a texty prihlasovacieho e-mailu per jazyk, deterministické formátovanie dátumu.
 - **Rozhodnutie D35:** viacjazyčné je **len prostredie, nie obsah**. Dokument má základný jazyk, v ktorom je napísaný (`documents.language`); dokument v inom jazyku je **samostatný dokument, nie preklad**. Zoznam jazykov prostredia je preto oddelený od číselníka `language`, ktorý tagguje obsah.

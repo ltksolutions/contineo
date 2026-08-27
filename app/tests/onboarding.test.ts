@@ -10,8 +10,7 @@ import type { Dokument, Verzia } from "../src/lib/dokumenty"
 import { zneniePotvrdenia, odtlacokZnenia } from "../src/lib/potvrdenia"
 import { datum, normalizujJazyk, JAZYKY_UI } from "../src/lib/jazyky"
 
-const R: [boolean, string][] = []
-const t = (n: string, ok: boolean, extra = "") => R.push([ok, n + (ok ? "" : "  → " + extra)])
+import { t } from "./pomocnik"
 
 const den = (r: number, m: number, d: number) => new Date(Date.UTC(r, m - 1, d))
 const v = (p: Partial<Verzia>): Verzia => ({
@@ -141,11 +140,6 @@ const hlavne = async () => {
   t("rovnaké znenie dá rovnaký odtlačok", a === b)
   t("zmena o jednu medzeru odtlačok zmení", a !== c)
 
-  for (const [ok, n] of R) console.log(`${ok ? "OK  " : "ZLE "}  ${n}`)
-  const zle = R.filter(([ok]) => !ok)
-  console.log("\n" + "=".repeat(56))
-  console.log(zle.length ? `ZLYHALO ${zle.length}/${R.length}` : `${R.length}/${R.length} testov preslo`)
-  process.exit(zle.length ? 1 : 0)
 }
 
-hlavne()
+await hlavne()

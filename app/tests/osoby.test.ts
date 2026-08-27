@@ -11,8 +11,7 @@
 import { normalizujEmail, overRiadok } from "../src/lib/osoby"
 import type { NovaOsoba } from "../src/lib/osoby"
 
-const R: [boolean, string][] = []
-const t = (n: string, ok: boolean, extra = "") => R.push([ok, n + (ok ? "" : "  → " + extra)])
+import { t } from "./pomocnik"
 
 // ── normalizácia adresy ──────────────────────────────────────────────────────
 
@@ -67,8 +66,3 @@ t("chýbajúce polia nespadnú na výnimke", (() => {
   return !v.ok
 })())
 
-for (const [ok, n] of R) console.log(`${ok ? "OK  " : "ZLE "}  ${n}`)
-const zle = R.filter(([ok]) => !ok)
-console.log("\n" + "=".repeat(56))
-console.log(zle.length ? `ZLYHALO ${zle.length}/${R.length}` : `${R.length}/${R.length} testov preslo`)
-process.exit(zle.length ? 1 : 0)

@@ -20,8 +20,7 @@ const chunks: any[] = [
     document: { title: "Rozpis súťaže", slug: "rs", category: "rozpis" } },
 ]
 
-const R: [boolean, string][] = []
-const t = (n: string, ok: boolean, extra = "") => R.push([ok, n + (ok ? "" : "  " + extra)])
+import { t } from "./pomocnik"
 
 async function collect(gen: AsyncGenerator<any>) {
   const out: any[] = []
@@ -93,10 +92,5 @@ async function main() {
   ])))
   t("openai: JSON delený medzi paketmi sa nestratí", ev.map(e => e.text).join("") === "deleny")
 
-  const zle = R.filter(([ok]) => !ok)
-  for (const [ok, n] of R) console.log(`${ok ? "OK   " : "CHYBA"} ${n}`)
-  console.log("\n" + "=".repeat(56))
-  console.log(zle.length ? `ZLYHALO ${zle.length}/${R.length}` : `${R.length}/${R.length} testov preslo`)
-  process.exit(zle.length ? 1 : 0)
 }
-main()
+await main()

@@ -8,8 +8,7 @@
 import { povoleneEmaily, jePovoleny } from "../src/lib/auth"
 import { prihlasovaciEmail } from "../src/lib/ecomail"
 
-const R: [boolean, string][] = []
-const t = (n: string, ok: boolean, extra = "") => R.push([ok, n + (ok ? "" : "  → " + extra)])
+import { t } from "./pomocnik"
 
 // ── rozobratie zoznamu ───────────────────────────────────────────────────────
 
@@ -74,8 +73,3 @@ t("e-mail hovorí, ako dlho odkaz platí", /24 hod/.test(e.text))
 t("e-mail hovorí, čo robiť pri nevyžiadanej správe", /ignorujte/i.test(e.text))
 t("uvádza, odkiaľ prišiel", e.html.includes("app.contineo.app"))
 
-for (const [ok, n] of R) console.log(`${ok ? "OK  " : "ZLE "}  ${n}`)
-const zle = R.filter(([ok]) => !ok)
-console.log("\n" + "=".repeat(56))
-console.log(zle.length ? `ZLYHALO ${zle.length}/${R.length}` : `${R.length}/${R.length} testov preslo`)
-process.exit(zle.length ? 1 : 0)

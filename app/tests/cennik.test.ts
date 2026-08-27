@@ -13,8 +13,7 @@ import {
   CENNIK, PRAZDNE_TOKENY,
 } from "../src/lib/cennik"
 
-const R: [boolean, string][] = []
-const t = (n: string, ok: boolean, extra = "") => R.push([ok, n + (ok ? "" : "  → " + extra)])
+import { t } from "./pomocnik"
 
 /** Porovnanie s toleranciou — počíta sa v plávajúcej čiarke. */
 const skoro = (a: number, b: number, tol = 1e-9) => Math.abs(a - b) < tol
@@ -125,8 +124,3 @@ t("súčet tokenov sedí",
   JSON.stringify(suma))
 t("prázdny súčet nespadne", spocitaj([]).vstup === 0)
 
-for (const [ok, n] of R) console.log(`${ok ? "OK  " : "ZLE "}  ${n}`)
-const zle = R.filter(([ok]) => !ok)
-console.log("\n" + "=".repeat(56))
-console.log(zle.length ? `ZLYHALO ${zle.length}/${R.length}` : `${R.length}/${R.length} testov preslo`)
-process.exit(zle.length ? 1 : 0)

@@ -4,8 +4,7 @@ import { classifyQuery, classifyByHeuristic } from "../src/lib/queryClassifier"
 import { preprocessQuery, parsePreprocessed } from "../src/lib/queryPreprocessor"
 import { GenerationProvider } from "../src/lib/providers/types"
 
-const R: [boolean, string][] = []
-const t = (n: string, ok: boolean, extra = "") => R.push([ok, n + (ok ? "" : "  → " + extra)])
+import { t } from "./pomocnik"
 
 function mockFetch(handler: (url: string, body: any) => { status?: number; json?: any; text?: string }) {
   const volania: { url: string; body: any }[] = []
@@ -106,10 +105,5 @@ async function main() {
   p = await preprocessQuery(dlha, fake('{"rewritten":"vycisteny dotaz","subQueries":[],"keywords":[]}'))
   t("uspesny prepis sa pouzije", p.rewritten === "vycisteny dotaz")
 
-  const zle = R.filter(([ok]) => !ok)
-  for (const [ok, n] of R) console.log(`${ok ? "OK   " : "CHYBA"} ${n}`)
-  console.log("\n" + "=".repeat(56))
-  console.log(zle.length ? `ZLYHALO ${zle.length}/${R.length}` : `${R.length}/${R.length} testov preslo`)
-  process.exit(zle.length ? 1 : 0)
 }
-main()
+await main()

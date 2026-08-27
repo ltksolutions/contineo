@@ -1,8 +1,7 @@
 import { HttpEmbeddingProvider, truncateMRL, parseTeiEmbed, parseOpenAIEmbed } from "../src/lib/providers/embedding/http"
 import { HttpRerankProvider, parseTeiRerank, parseInfinityRerank, applyScores } from "../src/lib/providers/rerank/http"
 
-const R: [boolean, string][] = []
-const t = (n: string, ok: boolean, extra = "") => R.push([ok, n + (ok ? "" : "  → " + extra)])
+import { t } from "./pomocnik"
 const blizko = (a: number, b: number, eps = 1e-9) => Math.abs(a - b) < eps
 
 async function hodi(fn: () => Promise<unknown>): Promise<Error | null> {
@@ -110,10 +109,5 @@ async function main() {
   t("NaN skore sa ignoruje",
     applyScores(kandidati, [{ index: 1, score: NaN }, { index: 2, score: 0.3 }], 5).map(c => c._id).join(",") === "3")
 
-  const zle = R.filter(([ok]) => !ok)
-  for (const [ok, n] of R) console.log(`${ok ? "OK   " : "CHYBA"} ${n}`)
-  console.log("\n" + "=".repeat(56))
-  console.log(zle.length ? `ZLYHALO ${zle.length}/${R.length}` : `${R.length}/${R.length} testov preslo`)
-  process.exit(zle.length ? 1 : 0)
 }
-main()
+await main()

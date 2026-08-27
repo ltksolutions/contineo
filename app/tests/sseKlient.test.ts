@@ -9,8 +9,7 @@
 import { rozdelUdalosti, citajUdalosti } from "../src/lib/sseKlient"
 import type { UdalostSSE } from "../src/lib/sseKlient"
 
-const R: [boolean, string][] = []
-const t = (n: string, ok: boolean, extra = "") => R.push([ok, n + (ok ? "" : "  → " + extra)])
+import { t } from "./pomocnik"
 
 const ramec = (o: unknown) => `data: ${JSON.stringify(o)}\n\n`
 const token = (s: string) => ramec({ type: "token", token: s })
@@ -120,10 +119,4 @@ t("neukončený posledný blok sa nestratí", bezKonca.length === 1, JSON.string
 
 }
 
-bezi().then(() => {
-  for (const [ok, n] of R) console.log(`${ok ? "OK  " : "ZLE "}  ${n}`)
-  const zle = R.filter(([ok]) => !ok)
-  console.log("\n" + "=".repeat(56))
-  console.log(zle.length ? `ZLYHALO ${zle.length}/${R.length}` : `${R.length}/${R.length} testov preslo`)
-  process.exit(zle.length ? 1 : 0)
-})
+await bezi()

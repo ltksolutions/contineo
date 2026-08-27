@@ -14,8 +14,7 @@ import { rozdelRamce, spoj, rozbalEvent, citajEventy } from "../src/lib/provider
 import { jeEuRegion } from "../src/lib/providers/generation/bedrock"
 import { anthropicEvent } from "../src/lib/providers/generation/anthropic"
 
-const R: [boolean, string][] = []
-const t = (n: string, ok: boolean, extra = "") => R.push([ok, n + (ok ? "" : "  → " + extra)])
+import { t } from "./pomocnik"
 
 async function bezi() {
 
@@ -172,10 +171,4 @@ for (const [r, cakame] of [
 
 // Testy sú v async funkcii, lebo podpisovanie je asynchrónne (Web Crypto)
 // a suita sa bundluje do CommonJS, kde top-level await nie je.
-bezi().then(() => {
-  for (const [ok, n] of R) console.log(`${ok ? "OK  " : "ZLE "}  ${n}`)
-  const zle = R.filter(([ok]) => !ok)
-  console.log("\n" + "=".repeat(56))
-  console.log(zle.length ? `ZLYHALO ${zle.length}/${R.length}` : `${R.length}/${R.length} testov preslo`)
-  process.exit(zle.length ? 1 : 0)
-})
+await bezi()

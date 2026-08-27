@@ -9,8 +9,7 @@
 import { vPrekryve, zhoda } from "../src/lib/sada"
 import type { OtazkaSady, StavOtazky } from "../src/lib/sada"
 
-const R: [boolean, string][] = []
-const t = (n: string, ok: boolean, extra = "") => R.push([ok, n + (ok ? "" : "  → " + extra)])
+import { t } from "./pomocnik"
 
 const otazka = (u: Partial<OtazkaSady> = {}): OtazkaSady => ({
   id: "D9-001", povodneZnenie: "Otázka?", upraveneZnenie: null,
@@ -76,8 +75,3 @@ t("sporné sú zoradené",
 
 t("prázdny vstup nespadne", z([]).porovnatelnych === 0)
 
-for (const [ok, n] of R) console.log(`${ok ? "OK  " : "ZLE "}  ${n}`)
-const zle = R.filter(([ok]) => !ok)
-console.log("\n" + "=".repeat(56))
-console.log(zle.length ? `ZLYHALO ${zle.length}/${R.length}` : `${R.length}/${R.length} testov preslo`)
-process.exit(zle.length ? 1 : 0)

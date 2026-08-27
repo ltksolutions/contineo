@@ -11,8 +11,7 @@ import {
 import { validateProfile } from "../src/lib/tenantProfile"
 import type { TenantProfile } from "../src/lib/providers/types"
 
-const R: [boolean, string][] = []
-const t = (n: string, ok: boolean, extra = "") => R.push([ok, n + (ok ? "" : "  → " + extra)])
+import { t } from "./pomocnik"
 
 const profil = (uprav: Partial<TenantProfile> = {}): TenantProfile => ({
   companyCode: "TEST",
@@ -222,8 +221,3 @@ t("validateProfile prepustí T3 s air-gapom a vlastnou trojicou", (() => {
   catch { return false }
 })())
 
-for (const [ok, n] of R) console.log(`${ok ? "OK  " : "ZLE "}  ${n}`)
-const zle = R.filter(([ok]) => !ok)
-console.log("\n" + "=".repeat(56))
-console.log(zle.length ? `ZLYHALO ${zle.length}/${R.length}` : `${R.length}/${R.length} testov preslo`)
-process.exit(zle.length ? 1 : 0)

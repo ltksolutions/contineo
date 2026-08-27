@@ -2,8 +2,7 @@ import { validateProfile, defaultProfile } from "../src/lib/tenantProfile"
 import { getProviders } from "../src/lib/providers/factory"
 import { TenantProfile, ProviderConfigError } from "../src/lib/providers/types"
 
-const R: [boolean, string][] = []
-const t = (n: string, ok: boolean, extra = "") => R.push([ok, n + (ok ? "" : "  → " + extra)])
+import { t } from "./pomocnik"
 
 function hodi(fn: () => unknown): string | null {
   try { fn(); return null } catch (e) { return e instanceof Error ? e.message : String(e) }
@@ -106,8 +105,3 @@ delete process.env.ANTHROPIC_API_KEY
 e = hodi(() => getProviders(profil()))
 t("factory: chybajuci API kluc spadne", !!e && e.includes("ANTHROPIC_API_KEY"), String(e))
 
-const zle = R.filter(([ok]) => !ok)
-for (const [ok, n] of R) console.log(`${ok ? "OK   " : "CHYBA"} ${n}`)
-console.log("\n" + "=".repeat(56))
-console.log(zle.length ? `ZLYHALO ${zle.length}/${R.length}` : `${R.length}/${R.length} testov preslo`)
-process.exit(zle.length ? 1 : 0)
