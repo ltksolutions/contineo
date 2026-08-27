@@ -135,6 +135,10 @@
 - [ ] **D31 — Atlas M0 → M10+ pred prvým ostrým potvrdením.** M0 nemá zálohy; auditný záznam bez zálohy nie je auditný záznam (`ATLAS_SETUP.md` kap. 1).
   - [ ] Pri prechode zapnúť **auto-scaling úložiska aj tieru**, strop aspoň M30 (vyžaduje Automated Embedding)
   - [ ] Overiť, že vektorový a fulltextový index prešli a `smoke.mjs` beží
+- [ ] **Bezpečnostné aktualizácie závislostí** (nájdené 2026-08-27 pri inštalácii Vitestu, **nesúvisí s ním** — sú to *produkčné* závislosti):
+  - `next` 14.2.35 spadá do rozsahu vysoko závažného upozornenia (9.3.4-canary.0 – 16.3.0-preview.10)
+  - `postcss` ≤ 8.5.22 — XSS cez neescapovaný `</style>` ([GHSA-qx2v-qp2m-jg93](https://github.com/advisories/GHSA-qx2v-qp2m-jg93)), ťahá sa cez Next
+  - `npm audit fix --force` by zdvihol Next o hlavnú verziu — **nerobiť pod termínom**; naplánovať ako samostatný krok s prebehnutím testov a buildu. Aplikácia, ktorá má držať osobné údaje, na tomto pri audite dostane otázku.
 - [ ] Doplniť `acknowledgements` a `persons` do zálohovacej a retenčnej politiky
 
 ---
