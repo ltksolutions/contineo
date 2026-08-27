@@ -79,6 +79,11 @@ uploaded                                    draft
 - Nová verzia dokumentu = nový `versionId`; staré chunky `isActive:false`, nové sa znova otagujú per-dokument (viď `INGESTION` kap. 4 re-sync).
 - **Právna platnosť** cez `effectiveFrom/effectiveTo` + `isActive` (D6) — oddelené od „technicky najnovšia verzia". Default v dotaze = platná dnes.
 - História verzií viditeľná v detaile; možnosť porovnať a vrátiť sa.
+- **(2026-08-27, D25)** Verzovanie je **povinnosť pre všetok obsah zo všetkých kanálov**, nie voľba.
+  Zmena `contentHash` pri re-syncu zakladá **novú položku** vo `documents.versions[]` — nikdy neprepisuje
+  existujúcu. **Kanál nikdy nezneplatní platnú verziu sám:** nová prichádza ako `isActive: false`
+  a `effectiveFrom` jej určí kurátor (rovnaký princíp ako D-CMS-6). Schéma `versions[]`:
+  `ONBOARDING_KONCEPCIA.md` kap. 3.1 — zavádza ju Fáza 8.
 
 ### A.4 Tagovanie a kurátorský review
 
@@ -273,8 +278,11 @@ Nadväzuje na `PRISTUPOVE_PRAVA.md` — **práva v CMS sa neodvodzujú z rolí s
 - **D-CMS-5 — EN preklady:** **AI-návrh → kurátor potvrdí** (rovnaký princíp ako tagovanie).
 - **D-CMS-6 — Priame publikovanie z dôveryhodného kanála:** **nie** — kanál smie hodnoty len *predvyplniť ako návrh*, finálny publish vždy potvrdzuje človek (drží kvalitu).
 
-> Po uzavretí týchto rozhodnutí ich preniesť aj do `OPEN_DECISIONS.md` (ako D16+) pri najbližšej revízii backlogu.
+> Po uzavretí týchto rozhodnutí ich preniesť aj do `OPEN_DECISIONS.md` pri najbližšej revízii backlogu.
+> **Spresnenie (2026-08-27):** čísla D16 a D17 medzitým obsadili rozhodnutia o extrakcii z PDF. Pre D-CMS-1..6 sú **rezervované D18–D23**; onboarding (Fáza 8) pokračuje od D24.
 
 ---
 
-*Dokument je zámer a podklad na diskusiu. Po odsúhlasení doplniť do `TODO.md`, `CHANGELOG.md` a roadmapy (`web/components/Roadmap.js`) a prípadne založiť D16+ v `OPEN_DECISIONS.md`.*
+*Dokument je zámer a podklad na diskusiu. Po odsúhlasení doplniť do `TODO.md`, `CHANGELOG.md` a roadmapy (`web/components/Roadmap.js`) a založiť D18–D23 v `OPEN_DECISIONS.md`.*
+
+> **Poznámka (2026-08-27):** obsahové stránky onboardingu (uvítanie, organizačná štruktúra, úlohy prvého týždňa, kontakty) sú závislé práve na časti B tohto dokumentu — bez web-obsahovej vrstvy ich HR nevie editovať bez programátora. Viď `ONBOARDING_KONCEPCIA.md` kap. 7.3 (rozsah C).

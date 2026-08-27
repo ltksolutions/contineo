@@ -1,6 +1,6 @@
 # TODO — Contineo
 
-> Pracovný zoznam krokov. Aktualizované 2026-06-26.
+> Pracovný zoznam krokov. Aktualizované 2026-08-27.
 
 ## ✅ Hotové (2026-06-26)
 
@@ -17,6 +17,8 @@
 
 ## 🔜 Zajtra pokračujeme
 
+> **Priorita od 2026-08-27: sekcia I (Fáza 8 — onboarding).** Má termín a beží pred sekciami C–H. Zvyšok tohto zoznamu platí, len čaká.
+>
 > **Backlog rozhodnutí:** `docs/OPEN_DECISIONS.md` (15 rozhodnutí D1–D15 s prioritou a odporúčaním). **Sprint 1 = D1 chunking · D5 precedencia noriem · D2 query→filtre · D6 verzovanie.**
 
 ### A. Git (na Macu používateľa)
@@ -76,3 +78,49 @@
 - [ ] Dva režimy nasadenia: verejný anonymný widget (len `public`) vs. interný portál zväzu (SSO, public+internal)
 - [ ] Doplniť `accessGroups`, `sharedWithCompanyCodes` do Atlas indexov
 - [ ] **Potvrdiť otvorené otázky** v `PRISTUPOVE_PRAVA.md` (roly nad skupinami, sportnet.online claims, re-sync, relevancia rozpisov, rozsah widgetu, legislatíva→sectionKey)
+
+---
+
+### I. Onboarding a potvrdzovanie noriem — **Fáza 8** 🔴 → `docs/ONBOARDING_KONCEPCIA.md`
+
+> Zaradenie: `docs/ADR-003-onboarding-a-potvrdzovanie.md`. Prvé nasadenie: SFZ,
+> `internal.futbalsfz.sk`, vyše 100 osôb vrátane ľudí bez licencie M365.
+> Beží **pred** dokončením fáz 4 a 5 a berie si z nich minimálny výrez v cieľovom tvare.
+
+**I0. Rozhodnutia, ktoré nečakajú na kód**
+
+- [x] **D28 — znenie potvrdzovacej formulky** ✅ 2026-08-27: „Potvrdzujem, že som sa oboznámil s dokumentom „{názov}", verzia {label}, platná od {dátum}, porozumel som jeho obsahu a zaväzujem sa ho dodržiavať." Ukladá sa doslovne; prípadnú úpravu právnikom znesie bez migrácie.
+- [ ] **D30 / O13 — čo je „podstatná zmena"** vyžadujúca opätovné potvrdenie (HR + legislatívec)
+- [ ] **O14 — meriame čas nad dokumentom / doskrolovanie?** Rozhodnúť **pred** implementáciou, nie po nej.
+- [ ] **O15, O16 — právny základ a retencia** `acknowledgements` (DPO, právnik) — rozširuje D10
+- [ ] Zoznam dokumentov prvej vlny + kto je ich kurátor
+
+**I1. Ultra-MVP `[1 týždeň]`** — cieľ: skutoční ľudia potvrdia skutočné smernice
+
+- [ ] Kolekcia `persons` + indexy (`{companyCode,email}` unique, `{companyCode,tracks,status}`)
+- [ ] Import z CSV: idempotentný, s **povinným náhľadom** pred zápisom
+- [ ] Prihlásenie proti `persons`; `POVOLENE_EMAILY` ponechať ako núdzovú brzdu — **D26**
+- [ ] `documents.versions[]` v cieľovom tvare — **D25** (verzovanie je povinnosť celého systému, nie potreba onboardingu: zmena `contentHash` z ľubovoľného kanála = nová verzia, nikdy prepis; platnosť určuje kurátor, nie automat)
+- [ ] Zobrazenie dokumentu človeku (cez existujúci `securityFilter()`, žiadna druhá cesta k obsahu)
+- [ ] Kolekcia `acknowledgements` + unikátny partial index — **D24**
+- [ ] Potvrdzovacia obrazovka; **verziu berie server**, nie požiadavka klienta
+- [ ] Skript `vykaz_potvrdeni.mjs` → CSV pre HR (bez neho je ultra-MVP nepoužiteľné)
+
+**I2. Rozsah B `[2–3,5 týždňa]`**
+
+- [ ] Kolekcia `onboarding_tracks`; progres sa **odvodzuje**, neukladá — **D27**
+- [ ] Guided reading: poradie krokov, návrat na rozpracované
+- [ ] HR dashboard: podľa dokumentu / osoby / trasy + export
+- [ ] Hromadné pozvánky a pripomienky z UI
+- [ ] Opätovné potvrdenie pri novej verzii — **D30**
+- [ ] `tenantProfile.ts` podľa hostiteľa; neznámy hostiteľ = zakázaný — **D29**
+- [ ] Vzhľad pre `internal.futbalsfz.sk` + DNS `CNAME internal → cname.vercel-dns.com` (Websupport)
+- [ ] Osoba vidí a stiahne si **svoje** potvrdenia
+
+**I3. Brána pred ostrou prevádzkou**
+
+- [ ] **O12 — `0.0.0.0/0` v Atlase.** **Blokujúce** — onboarding prináša interné smernice aj osobné údaje naraz (`NASADENIE_app.md` kap. 2). Analýza: **ADR-003 kap. 6.1**.
+  - [ ] Odsúhlasiť **100 $/mesiac** za Vercel Static IPs (plán Pro) — rozpočtové rozhodnutie, nie technické
+  - [ ] Zapnúť Static IPs pre projekt `contineo-app` (Settings → Networking) a zúžiť Atlas Network Access na tie dve IP
+  - [ ] Súbežne (lacné, dáva zmysel aj za pevnou IP): samostatný produkčný Atlas projekt + cluster, DB používateľ s minimálnymi právami, audit log a upozornenia na neúspešné prihlásenia
+- [ ] Doplniť `acknowledgements` a `persons` do zálohovacej a retenčnej politiky

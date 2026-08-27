@@ -4,6 +4,7 @@
 > **Stav:** založené 2026-06-26. Koncepčné návrhy (číselníky, ingescia, reconciliation, prístup, web) sú hotové — toto je ďalšia vrstva rozhodnutí.
 > **Súvisiace:** `docs/CISELNIKY_governance.md`, `docs/INGESTION_zdroje_reconciliation.md`, `docs/PRISTUPOVE_PRAVA.md`, `docs/rag-architecture.md`, `docs/TODO.md`.
 > **Legenda priority:** 🔴 vysoká (blokujúce / ovplyvňuje správnosť) · 🟡 stredná · 🟢 nízka. **Stav:** ⬜ otvorené · 🔄 rozpracované · ✅ rozhodnuté.
+> **Číslovanie (2026-08-27):** `CMS_KONCEPCIA.md` avizuje prenos rozhodnutí D-CMS-1..6 „ako D16+", ale D16 a D17 medzitým obsadili rozhodnutia o extrakcii z PDF. **D18–D23 sú preto rezervované pre D-CMS-1..6** (prenos pri najbližšej revízii backlogu) a nové rozhodnutia pokračujú od **D24**. Otvorené body ADR (séria `O…`) sú vedené v samotných ADR — tu sa na ne len odkazuje.
 
 ## Prehľad
 
@@ -26,6 +27,14 @@
 | D15 | Modely / fallback / náklady | Prevádzka | 🟢 | 7 | ✅ → ADR-001 (O1 zmerané 26.7.) |
 | D16 | Kotva citácie na stranu originálu | Vyhľadávanie | 🟡 | 7 | ⬜ |
 | D17 | Tabuľky pri extrakcii z PDF | Ingescia | 🟡 | 7 | 🔄 čiastočne |
+| D18–D23 | *rezervované pre D-CMS-1..6* | CMS | — | 4 / CMS-Web | 🔒 rezervované |
+| D24 | `acknowledgements` ako auditný záznam | Onboarding | 🔴 | 8 | ✅ |
+| D25 | Potvrdenie viazané na `versionId` (`documents.versions[]`) | Onboarding | 🔴 | 8 | ✅ |
+| D26 | Zoznam pozvaných z premennej do `persons` | Identita | 🔴 | 8 | ✅ |
+| D27 | Nosič guided readingu (`onboarding_tracks`) | Onboarding | 🟡 | 8 | ✅ |
+| D28 | Znenie potvrdzovacej formulky | Onboarding | 🔴 | 8 | ✅ |
+| D29 | Rozlíšenie tenanta podľa hostiteľa | Nasadenie | 🟡 | 8 | ✅ |
+| D30 | Čo je „podstatná zmena" (opätovné potvrdenie) | Onboarding | 🔴 | 8 | ⬜ HR/legislatívec |
 
 ---
 
@@ -194,3 +203,155 @@ ukáže, že tabuľkové otázky zlyhávajú** — bez dôkazu by to bola predč
 
 **Súvisiace:** `app/scripts/lib/chunker.mjs`, `docs/INGESTION_zdroje_reconciliation.md`
 
+---
+
+## Okruh 7 — Onboarding a potvrdzovanie noriem (otvorené 2026-08-27)
+
+> Vznikli pri zadaní SFZ: vyše sto ľudí má potvrdiť oboznámenie s novými smernicami,
+> vrátane externistov bez licencie M365. Zaradenie rozhoduje
+> **`docs/ADR-003-onboarding-a-potvrdzovanie.md`**, koncepcia je v
+> **`docs/ONBOARDING_KONCEPCIA.md`**. Ide o **Fázu 8**, ktorá beží pred dokončením
+> fáz 4 a 5 a berie si z nich minimálny výrez v cieľovom tvare.
+
+### D24 — `acknowledgements` ako auditný záznam 🔴
+
+**Otázka:** je potvrdenie príznak na dokumente, alebo samostatný záznam?
+
+**Prečo:** rozdiel sa prejaví až pri spore — a vtedy sa už nedá napraviť.
+
+**✅ Rozhodnuté (2026-08-27):** samostatná **append-only** kolekcia `acknowledgements`.
+Nesie odtlačok údajov v čase potvrdenia (`email`, `fullName`, `documentTitle`,
+`versionLabel`, `effectiveFrom`) a **doslovné znenie** formulky, nie odkaz naň. Nikdy sa
+neprepisuje ani nemaže — odvolanie či oprava je nový záznam so `supersedes`. Unikátny
+index nad `{ companyCode, personId, versionId }` (partial na `type: "acknowledgement"`)
+odmietne dvojité potvrdenie na úrovni databázy.
+
+**Súvisiace:** `ONBOARDING_KONCEPCIA.md` kap. 3.2, ADR-003 kap. 5.1.
+
+### D25 — Potvrdenie viazané na verziu, nie na dokument 🔴
+
+**Otázka:** na čo presne ukazuje záznam o potvrdení?
+
+**Prečo:** otázka pri audite neznie „potvrdil to?", ale „potvrdil **to znenie**, ktoré
+platilo v čase, keď podľa neho mal konať?". `documents` pritom dnes **nemá** `versions[]` —
+schéma je plochá a verzovanie je zatiaľ len zámer v `CMS_KONCEPCIA.md` (A.3).
+
+**✅ Rozhodnuté (2026-08-27):** záznam nesie `versionId`. **Onboarding zavádza
+`documents.versions[]` skôr než CMS**, a to rovno v cieľovom tvare, ktorý CMS potrebuje
+(`versionId`, `label`, `effectiveFrom/To`, `isActive`, `contentHash`, `changeNote`,
+`requiresReacknowledgement`). Je to najmenší výrez z Fázy 4, bez ktorého je potvrdenie
+právne bezcenné.
+
+**Spresnenie (2026-08-27, potvrdené zadávateľom):** verzovanie **nie je potreba onboardingu**,
+je to **povinnosť celého systému**. Dokumenty majú jedno spoločné úložisko (`documents`) bez
+ohľadu na to, ktorým vstupným kanálom prišli (upload, MCP, web link, API — `CMS_KONCEPCIA.md`
+časť C), a zneplatňovanie starých znení je vlastnosť **dokumentu**, nie kanála. Onboarding
+túto povinnosť len **zviditeľnil a implementuje ju prvý**.
+
+Z toho plynú dve pravidlá, ktoré platia pre všetky kanály:
+
+1. **Zmena obsahu = nová verzia, nikdy prepis.** Keď kanál pri re-syncu zistí iný `contentHash`
+   (`INGESTION_zdroje_reconciliation.md` kap. 4), založí **novú položku** vo `versions[]`.
+   Predchádzajúca zostáva a dostane `effectiveTo`. Prepísaním by sa spätne zmenilo, čo bolo
+   kedy platné — a tým aj to, čo ľudia potvrdili.
+2. **Kanál nikdy nezneplatní platnú verziu sám.** Nová verzia z kanála prichádza ako
+   `isActive: false` a čaká na kurátora, ktorý určí `effectiveFrom` a prípadné `effectiveTo`
+   predchádzajúcej. Automat nevie posúdiť právnu platnosť — vie len, že sa zmenil súbor.
+   Je to ten istý princíp ako **D-CMS-6** (kanál smie predvyplniť, publikuje človek).
+
+**Súvisiace:** D6, D-CMS-6, `INGESTION_zdroje_reconciliation.md` kap. 4, `PRECEDENCIA_NORIEM.md`.
+
+**Súvisiace:** D6 (verzovanie a platnosť), `PRECEDENCIA_NORIEM.md`, ADR-003 kap. 5.2.
+
+### D26 — Zoznam pozvaných z premennej do databázy 🔴
+
+**Otázka:** kto sa smie prihlásiť — `POVOLENE_EMAILY`, alebo kolekcia?
+
+**Prečo:** `src/lib/auth.ts` dnes drží zoznam v premennej a v komentári to aj zdôvodňuje
+(*„pri piatich až desiatich ľuďoch je zmena premennej jednoduchšia"*). Pri stovke ľudí
+to prestáva platiť: zoznam sa nedá udržiavať, každá zmena znamená nasadenie a k adrese
+treba priviazať meno, útvar, typ osoby a trasu — čo do reťazca oddeleného čiarkami nepatrí.
+
+**✅ Rozhodnuté (2026-08-27):** kolekcia **`persons`** ako doménová vrstva nad existujúcou
+technickou `auth_users`. `POVOLENE_EMAILY` **zostáva ako núdzová brzda pre správcov**,
+nie ako hlavná cesta. `persons` vzniká v tvare, ktorý potrebuje Fáza 5 (vrátane prázdneho
+`externalRef` pre Sportnet a Entra ID).
+
+**Súvisiace:** D8 (onboarding tenanta), `PRISTUPOVE_PRAVA.md` kap. 4, ADR-003 kap. 5.3.
+
+### D27 — Nosič guided readingu 🟡
+
+**Otázka:** kde žije „prejdi týchto N dokumentov v tomto poradí" a kde stav dokončenia?
+
+**Prečo:** hrozí paralelná štruktúra vedľa `navigation`/`categories`, alebo druhá kópia
+pravdy o tom, čo má kto hotové.
+
+**✅ Rozhodnuté (2026-08-27):** kolekcia **`onboarding_tracks`** s poľom `steps[]`
+(typ kroku, `documentId`, `requiresAcknowledgement`). **Stav dokončenia sa neukladá** —
+odvodzuje sa z prieniku krokov trasy a existujúcich `acknowledgements`. Samostatná
+`onboarding_progress` by bola druhá kópia pravdy, ktorá by sa rozišla práve pri novej
+verzii dokumentu, teda vtedy, keď na správnosti najviac záleží. Krok typu `page` je
+v modeli od začiatku, ale použije sa až v rozsahu C.
+
+**Súvisiace:** `CMS_KONCEPCIA.md` (navigation, categories), `ONBOARDING_KONCEPCIA.md` kap. 3.4–3.5.
+
+### D28 — Znenie potvrdzovacej formulky 🔴
+
+**Otázka:** „prečítal som a **súhlasím**", alebo „**oboznámil som sa** a zaväzujem sa dodržiavať"?
+
+**Prečo:** pri vnútornom predpise je súhlas právne zvláštny — smernica zaväzuje bez ohľadu
+na to, či s ňou niekto súhlasí, a formulácia cez súhlas otvára otázku, čo platí pri
+nesúhlase. Nie je to technické rozhodnutie.
+
+**Odporúčanie:** *„Potvrdzujem, že som sa oboznámil s dokumentom „{názov}", verzia {label},
+platná od {dátum}, porozumel som jeho obsahu a zaväzujem sa ho dodržiavať."* Bez ohľadu na
+zvolené znenie musí formulka obsahovať **názov, verziu aj dátum platnosti** — inak sa o rok
+nedá povedať, čo bolo potvrdené.
+
+**✅ Rozhodnuté (2026-08-27):** ide sa cestou **oboznámenia a záväzku**, nie súhlasu.
+Kanonické znenie:
+
+> *Potvrdzujem, že som sa oboznámil s dokumentom „{názov}", verzia {label}, platná od
+> {dátum}, porozumel som jeho obsahu a zaväzujem sa ho dodržiavať.*
+
+Znenie sa ukladá **doslovne** do `acknowledgements.statementText` (D24), takže neskoršia úprava
+formulácie nemení staré záznamy. Formálne posúdenie právnikom SFZ sa tým nevylučuje — ak
+navrhne úpravu, zmení sa znenie pre **nové** potvrdenia a staré zostávajú platné v pôvodnom
+tvare. Presne na to je `statementText` doslovný.
+
+### D29 — Rozlíšenie tenanta podľa hostiteľa 🟡
+
+**Otázka:** `internal.futbalsfz.sk` — samostatné nasadenie, alebo doména nad jedným?
+
+**✅ Rozhodnuté (2026-08-27):** **doména nad jedným nasadením.** `tenantProfile.ts` prestane
+vracať `defaultProfile()` a začne profil vyberať podľa hostiteľa (`companyCode`, vzhľad,
+rozsah obsahu). Platí pravidlo z ADR-002: **neznámy hostiteľ sa správa ako zakázaný**, nie
+ako predvolený tenant. Nemení to nič z ADR-001 ani ADR-002 — mení sa len zdroj profilu.
+
+**Súvisiace:** ADR-002 (profily, izolácia), `PRISTUPOVE_PRAVA.md` kap. 8, ADR-003 kap. 3.2 a 5.4.
+
+### D30 — Čo je „podstatná zmena" 🔴 *(otvorené — HR + legislatívec)*
+
+**Otázka:** ktorá novelizácia smernice vyžaduje, aby ľudia potvrdzovali znova?
+
+**Prečo:** bez odpovede buď zaťažíme sto ľudí potvrdzovaním opravených preklepov, alebo
+prehliadneme zmenu povinnosti. Oprava preklepu a nová povinnosť vyzerajú v diffe podobne —
+**systém to rozhodnúť nevie a nemá.**
+
+**Odporúčanie:** pole `requiresReacknowledgement` na verzii vypĺňa **človek** (kurátor po
+konzultácii s legislatívcom), nikdy sa neodvodzuje automaticky. Potrebné je len dohodnúť
+kritérium, podľa ktorého sa rozhoduje.
+
+**Stav:** ⬜ čaká na HR a legislatívca SFZ. Vedené aj ako **O13** v ADR-003.
+
+### Otvorené body vedené v ADR-003
+
+Nie sú to rozhodnutia backlogu, ale otvorené otázky konkrétneho ADR. Uvedené tu kvôli
+prehľadu:
+
+| # | Otázka | Poznámka |
+|---|---|---|
+| **O12** | `0.0.0.0/0` v Atlase pred ostrou prevádzkou | **Blokujúce.** `NASADENIE_app.md` kap. 2 to predvídal („pred pridaním interných smerníc"); onboarding tú podmienku spúšťa. Štyri cesty a odporúčanie v **ADR-003 kap. 6.1**: **Vercel Static IPs** (100 $/mes. na projekt, plán Pro) na spustenie, presun aplikácie z Vercelu ako dlhodobý smer (súvisí s ADR-002, dodatky 10 a 11). |
+| **O14** | Meriame čas nad dokumentom alebo doskrolovanie na koniec? | Zvyšuje dôkaznú hodnotu, ale je to sledovanie správania zamestnanca. Rozhodnúť **pred** implementáciou. |
+| **O15** | Právny základ spracúvania `acknowledgements` | Návrh: oprávnený záujem / plnenie zmluvy, **nie súhlas** (odvolateľný dôkaz o oboznámení je protirečenie). Rozširuje D10. |
+| **O16** | Retencia auditného záznamu po skončení pracovného pomeru | Iná lehota než pri konverzáciách (D10). |

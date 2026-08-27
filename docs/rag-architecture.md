@@ -160,6 +160,9 @@ Dotaz
 > (`sectionKey`, `companyCode`, `scope`, `articleRef`, verzovanie) sú súčasťou schémy; ich
 > napĺňanie pri importe rieši Fáza 4/5. Plné mapovanie a migrácia: `docs/DATA_MODEL_konzistencia.md`.
 > Nové kolekcie `qa_pairs` (kurácia) a `tickets` (helpdesk) — Fáza 4b.
+> Nové kolekcie `persons`, `acknowledgements`, `onboarding_tracks` a rozšírenie `documents.versions[]` — Fáza 8,
+> viď `docs/ONBOARDING_KONCEPCIA.md` a `docs/ADR-003-onboarding-a-potvrdzovanie.md`. Onboarding **nevolá žiadny model** —
+> reťaz z `docs/AKO_TO_BEZI.md` pri ňom nebeží.
 
 ### `document_chunks` — RAG vyhľadávanie
 ```js
@@ -222,5 +225,6 @@ Dotaz
 | **Fáza 5** | Prístupové úrovne (NextAuth, RBAC) | 🔲 plánovaná |
 | **Fáza 6** | Scheduler & monitoring | 🔲 plánovaná |
 | **Fáza 7** | Produkcia & optimalizácia | 🔲 priebežná |
+| **Fáza 8** | Onboarding a potvrdzovanie noriem | 🔲 **beží teraz** (pred 4 a 5) |
 
 Podrobný popis fáz: `docs/Contineo_RAG_Projektovy_plan.md`

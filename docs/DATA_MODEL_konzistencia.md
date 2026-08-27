@@ -17,6 +17,9 @@ Doména Contineo = SFZ a podriadené zväzy, normy s paragrafmi, helpdesk. Ploch
 | Kurácia | — | **`qa_pairs`** (nová) |
 | Helpdesk | — | **`tickets`** (nová) |
 | Crawl log | `rag_crawl_log` | `crawl_log` (interná, nemení sa prioritne) |
+| Osoby v organizácii | — | **`persons`** (nová, Fáza 8) |
+| Potvrdenia oboznámenia | — | **`acknowledgements`** (nová, Fáza 8) |
+| Trasy onboardingu | — | **`onboarding_tracks`** (nová, Fáza 8) |
 
 ## Mapovanie polí na chunku (`rag_chunks` → `document_chunks`)
 
@@ -54,6 +57,53 @@ Doména Contineo = SFZ a podriadené zväzy, normy s paragrafmi, helpdesk. Ploch
 ## Otvorené (na potvrdenie pri implementácii)
 - `rag_documents` → `documents`, alebo ponechať prefix `rag_`? (návrh: bez prefixu, jednotne s `document_chunks`).
 - Ponechať `tags` popri `sectionKey`, alebo úplne nahradiť? (návrh: ponechať voliteľne pre voľné štítky).
+
+---
+
+## Kolekcie onboardingu (Fáza 8)
+
+> Rozhodnutie: `docs/ADR-003-onboarding-a-potvrdzovanie.md` · Detailné schémy a indexy:
+> `docs/ONBOARDING_KONCEPCIA.md` kap. 3. Tu je len to, čo patrí do jediného zdroja pravdy
+> pre názvy kolekcií a polí.
+
+| Kolekcia | Účel | Poznámka ku konzistencii |
+|---|---|---|
+| `persons` | kto do organizácie patrí (meno, útvar, typ osoby, trasy, roly) | **doménová** vrstva nad technickou `auth_users`, ktorú zakladá `src/lib/authAdapter.ts`. `auth_users` zostáva bez zmeny. Väzba cez `persons.id` = `auth_users.id`. |
+| `acknowledgements` | auditný záznam „prečítal som a zaväzujem sa" | **append-only**. Nesie odtlačky (`email`, `fullName`, `documentTitle`, `versionLabel`) a doslovné znenie formulky, aby bol čitateľný bez `$lookup` do kolekcií, ktoré sa medzitým zmenili. |
+| `onboarding_tracks` | poradie krokov onboardingu | stav dokončenia sa **neukladá** — odvodzuje sa z `acknowledgements` (D27). Žiadna `onboarding_progress`. |
+
+### Rozšírenie `documents` o `versions[]`
+
+`documents` je dnes plochý (`status: draft|published`, `contentHash`) a **verzovanie
+v ňom chýba** — `versionId` existuje len na `document_chunks`, teda v RAG vrstve.
+`CMS_KONCEPCIA.md` (A.3) ho plánuje, ale zatiaľ len ako zámer.
+
+**Fáza 8 ho zavádza skôr než CMS** (D25), pretože bez neho sa potvrdenie nedá naviazať na
+konkrétne znenie a je právne bezcenné. **Nie je to však potreba onboardingu** — verzovanie je
+povinnosť celého systému: `documents` je spoločné úložisko pre obsah zo všetkých vstupných
+kanálov a zneplatňovanie starých znení je vlastnosť dokumentu, nie kanála. Vzniká preto
+v **cieľovom** tvare, aký potrebuje CMS:
+
+```js
+versions: [{
+  versionId, label, effectiveFrom, effectiveTo, isActive,
+  contentHash, originalFile, markdown, changeNote,
+  requiresReacknowledgement,        // vypĺňa človek, nikdy sa neodvodzuje
+  publishedAt, publishedBy
+}]
+```
+
+**Vzťah k `document_chunks.versionId`:** je to tá istá hodnota. Chunk patrí verzii dokumentu;
+potvrdenie sa viaže na tú istú verziu. Bez toho by sa nedalo povedať, či text, ktorý človek
+čítal, je ten, z ktorého bot odpovedá.
+
+**Vzťah k `isActive` a `effectiveFrom/To` (D6):** nemení sa. Právna platnosť zostáva oddelená
+od „technicky najnovšia verzia" — viď `PRECEDENCIA_NORIEM.md`.
+
+**Vzťah k vstupným kanálom (D25):** zmena obsahu zistená pri re-syncu (`contentHash`) zakladá
+**novú položku** vo `versions[]`, nikdy neprepisuje existujúcu; predchádzajúca dostane
+`effectiveTo`. Nová verzia z kanála prichádza ako `isActive: false` a platnosť jej určí
+kurátor — automat vie len to, že sa zmenil súbor. Rovnaký princíp ako D-CMS-6.
 
 ---
 

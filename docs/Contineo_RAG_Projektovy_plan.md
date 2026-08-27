@@ -402,6 +402,49 @@ KROK 5 – ULOŽENIE + CHUNKING + AUTO-EMBED
 - [ ] Priebežné testovanie nových lokálnych modelov (Ollama)
 - [ ] Optimalizácia chunking stratégie podľa výsledkov vyhľadávania
 
+### Fáza 8 – Onboarding a potvrdzovanie noriem `[3–4,5 týždňa]`
+
+> **Zaradenie:** `docs/ADR-003-onboarding-a-potvrdzovanie.md` · **Koncepcia:** `docs/ONBOARDING_KONCEPCIA.md`
+> **Prvé nasadenie:** SFZ, doména `internal.futbalsfz.sk`, vyše 100 osôb vrátane ľudí bez licencie M365.
+
+**Poradie fáz tu neplatí.** Fáza 8 beží **teraz**, teda pred dokončením Fázy 4 (Import & CMS)
+a Fázy 5 (Prístupové úrovne). Dôvod je vecný: SFZ potrebuje doložené oboznámenie s novými
+smernicami v horizonte týždňa. Fáza si z fáz 4 a 5 berie dopredu len tri veci
+(`documents.versions[]`, `persons`, zobrazenie dokumentu človeku) a berie si ich **v cieľovom
+tvare**, nie v zjednodušenom — aby nevznikla práca, ktorú bude treba spraviť druhýkrát.
+
+Onboarding **nevolá žiadny model**. Reťaz z `docs/AKO_TO_BEZI.md` pri ňom nebeží, takže je to
+prvá časť Continea, ktorá spĺňa `eu-full` bez toho, aby sa čokoľvek muselo doriešiť (ADR-003 kap. 5.5).
+
+**8a — Ultra-MVP `[1 týždeň]`** — cieľ: skutoční ľudia potvrdia skutočné smernice.
+
+- [ ] Kolekcia `persons` + idempotentný import z CSV (skript, s náhľadom pred zápisom)
+- [ ] Prihlásenie proti `persons` namiesto `POVOLENE_EMAILY` (premenná zostáva ako núdzová brzda) — **D26**
+- [ ] `documents.versions[]` v cieľovom tvare + zobrazenie dokumentu človeku — **D25**
+- [ ] Kolekcia `acknowledgements` (append-only) + unikátny partial index — **D24**
+- [ ] Potvrdzovacia obrazovka; verzia sa berie **zo servera**, nie z požiadavky klienta
+- [ ] Výkaz pre HR skriptom do CSV (dashboard až v 8b)
+
+**8b — Rozsah B `[2–3,5 týždňa]`** — riadená trasa a HR nástroje.
+
+- [ ] Kolekcia `onboarding_tracks`; progres sa **odvodzuje**, neukladá — **D27**
+- [ ] Guided reading: poradie krokov, návrat na rozpracované
+- [ ] HR dashboard: podľa dokumentu / osoby / trasy + export
+- [ ] Hromadné pozvánky a pripomienky z UI (automatické pripomienky sa zapínajú vedome)
+- [ ] Opätovné potvrdenie pri novej verzii (`requiresReacknowledgement`) — **D30**
+- [ ] Profil tenanta podľa hostiteľa; neznámy hostiteľ = zakázaný — **D29**
+- [ ] Vlastný vzhľad pre `internal.futbalsfz.sk`
+- [ ] Rola HR nad `acknowledgements`; osoba vidí a stiahne si **svoje** potvrdenia
+
+**Brána pred ostrou prevádzkou:** vyriešiť `0.0.0.0/0` v Atlase (**O12**) — Vercel Secure
+Compute alebo iné umiestnenie aplikácie. `docs/NASADENIE_app.md` kap. 2 túto podmienku
+predvídal („pred pridaním interných smerníc"); onboarding ju spúšťa, lebo prináša interné
+smernice **aj** osobné údaje naraz.
+
+**Mimo rozsahu:** obsahové stránky onboardingu (uvítanie, org. štruktúra, kontakty) — patria
+do fázy CMS-Web; Entra ID a Sportnet OAuth — Fáza 5; elektronický podpis a prepojenie na
+ClubUp — ADR-003 kap. 8.
+
 ---
 
 ## 8. MongoDB schémata
@@ -409,6 +452,7 @@ KROK 5 – ULOŽENIE + CHUNKING + AUTO-EMBED
 > **Kanonický dátový model = Model B** (rozhodnuté 2026-06-25). Schémy nižšie sú **stav Fázy 3 (Model A)**.
 > Cieľové názvy: `rag_chunks` → `document_chunks`, `rag_chat_history` → `conversations`, `rag_documents` → `documents`, + nové `qa_pairs`, `tickets` a doménové polia (`sectionKey`, `companyCode`, `scope`, `articleRef`, verzovanie `isActive`/`effectiveFrom/To`).
 > Úplné mapovanie a fázová migrácia: **`docs/DATA_MODEL_konzistencia.md`**.
+> Kolekcie onboardingu (`acknowledgements`, `persons`, `onboarding_tracks`) a rozšírenie `documents.versions[]`: **`docs/ONBOARDING_KONCEPCIA.md`** kap. 3.
 
 ### 7.1 Kolekcia: `documents` (CMS – celý dokument)
 
