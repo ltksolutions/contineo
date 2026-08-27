@@ -100,7 +100,8 @@
 - [x] Kolekcia `persons` + indexy ✅ 2026-08-27 — `app/src/lib/osoby.ts`, indexy v `app/scripts/onboarding_init.mjs` (pridaný aj `{email}` — prihlásenie hľadá bez znalosti tenanta)
 - [ ] Import z CSV: idempotentný, s **povinným náhľadom** pred zápisom — *logika hotová (`zalozOsoby`, `nahladImportu`, `overRiadok`), chýba CLI skript*
 - [x] Prihlásenie proti `persons` ✅ 2026-08-27 — `auth.ts` skladá obe cesty; brzda ide prvá (nepotrebuje DB), chyba DB **neotvára** prístup — **D26**
-- [ ] `documents.versions[]` v cieľovom tvare — **D25** (verzovanie je povinnosť celého systému, nie potreba onboardingu: zmena `contentHash` z ľubovoľného kanála = nová verzia, nikdy prepis; platnosť určuje kurátor, nie automat)
+- [x] `documents.versions[]` v cieľovom tvare ✅ 2026-08-27 — **D25**. `app/src/lib/dokumenty.ts` (`platnaVerzia()` s pravidlami D6 + R3) a `scripts/import.mjs` (`dopisVerziu()` — nová položka, nikdy prepis; dopĺňa aj dokumentom naimportovaným pred zavedením `versions[]`)
+  - [ ] **Známy rozpor s D25, pravidlo 2:** import publikuje priamo (`status: "published"`), hoci kanál nemá sám zneplatniť platnú verziu — platnosť má určiť kurátor. Zapisujeme stav taký, aký je, a nepredstierame schválenie. **Zosúladiť pri review UI (Fáza 4)**; dovtedy je to vedomý ústupok, nie prehliadnutie.
 - [ ] Zobrazenie dokumentu človeku (cez existujúci `securityFilter()`, žiadna druhá cesta k obsahu)
 - [ ] Kolekcia `acknowledgements` + unikátny partial index — **D24**
 - [ ] Potvrdzovacia obrazovka; **verziu berie server**, nie požiadavka klienta

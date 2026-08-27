@@ -123,14 +123,78 @@ function chunkDoDb(ch, d) {
   }
 }
 
+/**
+ * Doplní záznam do `documents.versions[]` (D25).
+ *
+ * **Zmena obsahu = nová položka, nikdy prepis.** Predchádzajúcej otvorenej
+ * verzii sa doplní `effectiveTo` — ale len vtedy, keď nová verzia platnosť
+ * vôbec má; inak by dokument ostal bez platného znenia kvôli niečomu, čo ešte
+ * nikto neschválil.
+ *
+ * Idempotentné podľa `versionId`: opakovaný beh históriu nezdvojí.
+ *
+ * > **Známy rozpor s D25, pravidlo 2.** Rozhodnutie hovorí, že kanál nikdy
+ * > nezneplatní platnú verziu sám — nová má prísť `isActive:false` a platnosť
+ * > jej má určiť kurátor. Tento import ale publikuje priamo (`status:
+ * > "published"`), lebo kurátorské rozhranie zatiaľ neexistuje (Fáza 4).
+ * > Zapisujeme preto stav taký, aký naozaj je, a nepredstierame schválenie.
+ * > Zosúladiť pri review UI — vedené v `docs/TODO.md` sekcii I.
+ */
+async function dopisVerziu(kolDoc, d, teraz) {
+  const ma = await kolDoc.findOne({
+    documentId: d.documentId, "versions.versionId": d.versionId,
+  })
+  if (ma) return
+
+  const platnaOd = d.meta.effectiveFrom ?? null
+
+  if (platnaOd) {
+    await kolDoc.updateOne(
+      { documentId: d.documentId },
+      { $set: { "versions.$[stara].effectiveTo": platnaOd, "versions.$[stara].isActive": false } },
+      { arrayFilters: [{ "stara.effectiveTo": null, "stara.versionId": { $ne: d.versionId } }] }
+    )
+  }
+
+  await kolDoc.updateOne(
+    { documentId: d.documentId },
+    {
+      $push: {
+        versions: {
+          versionId: d.versionId,
+          // Ľudské označenie zatiaľ nemáme — meta ho nenesie. Otlačok obsahu
+          // je aspoň jednoznačný; kurátor ho premenuje, keď bude čím.
+          label: d.meta.version ?? d.versionId,
+          effectiveFrom: platnaOd,
+          effectiveTo: d.meta.effectiveTo ?? null,
+          isActive: true,
+          contentHash: d.versionId,
+          // `requiresReacknowledgement` sa zámerne NEnastavuje: vypĺňa ho
+          // človek (D30) a `false` by bolo tiché rozhodnutie, že zmena nie je
+          // podstatná. Chýbajúce pole znamená „nikto zatiaľ nerozhodol".
+          publishedAt: teraz,
+          publishedBy: "import.mjs",
+        },
+      },
+    },
+    { upsert: false }
+  )
+}
+
 async function zapis(db, d) {
   const kolDoc = db.collection("documents")
   const kolChunk = db.collection("document_chunks")
   const teraz = new Date()
 
-  // Rovnaký obsah už naimportovaný? Nerobíme nič — import je idempotentný.
+  // Rovnaký obsah už naimportovaný? Chunky sa nedotýkame — import je idempotentný.
   const existuje = await kolDoc.findOne({ documentId: d.documentId, versionId: d.versionId })
-  if (existuje) return { preskocene: true, deaktivovane: 0, vlozene: 0 }
+  if (existuje) {
+    // Dokumentu, ktorý vznikol pred zavedením `versions[]` (D25), sa záznam
+    // o verzii doplní aj tak. Bez neho sa nedá potvrdiť oboznámenie, lebo
+    // potvrdenie sa viaže na verziu, nie na dokument.
+    await dopisVerziu(kolDoc, d, teraz)
+    return { preskocene: true, deaktivovane: 0, vlozene: 0 }
+  }
 
   // Nová verzia — staré chunky archivujeme, NEMAŽEME (D6).
   const deakt = await kolChunk.updateMany(
@@ -158,6 +222,8 @@ async function zapis(db, d) {
     },
     { upsert: true }
   )
+
+  await dopisVerziu(kolDoc, d, teraz)
 
   const dokumenty = d.chunky.map(ch => ({
     ...chunkDoDb(ch, d),

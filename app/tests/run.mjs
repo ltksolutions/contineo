@@ -15,7 +15,7 @@ import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
-const SUITY = ["streams.test.ts", "profile.test.ts", "guard.test.ts", "httpAdapters.test.ts", "utility.test.ts", "residency.test.ts", "bedrock.test.ts", "sseKlient.test.ts", "formatText.test.ts", "cennik.test.ts", "auth.test.ts", "sada.test.ts", "osoby.test.ts"];
+const SUITY = ["streams.test.ts", "profile.test.ts", "guard.test.ts", "httpAdapters.test.ts", "utility.test.ts", "residency.test.ts", "bedrock.test.ts", "sseKlient.test.ts", "formatText.test.ts", "cennik.test.ts", "auth.test.ts", "sada.test.ts", "osoby.test.ts", "onboarding.test.ts"];
 // .mjs suity sa nebundlujú — spúšťajú sa priamo.
 const SUITY_MJS = ["chunker.test.mjs"];
 const tmp = mkdtempSync(join(tmpdir(), "contineo-tests-"));
