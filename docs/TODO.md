@@ -97,9 +97,9 @@
 
 **I1. Ultra-MVP `[1 týždeň]`** — cieľ: skutoční ľudia potvrdia skutočné smernice
 
-- [ ] Kolekcia `persons` + indexy (`{companyCode,email}` unique, `{companyCode,tracks,status}`)
-- [ ] Import z CSV: idempotentný, s **povinným náhľadom** pred zápisom
-- [ ] Prihlásenie proti `persons`; `POVOLENE_EMAILY` ponechať ako núdzovú brzdu — **D26**
+- [x] Kolekcia `persons` + indexy ✅ 2026-08-27 — `app/src/lib/osoby.ts`, indexy v `app/scripts/onboarding_init.mjs` (pridaný aj `{email}` — prihlásenie hľadá bez znalosti tenanta)
+- [ ] Import z CSV: idempotentný, s **povinným náhľadom** pred zápisom — *logika hotová (`zalozOsoby`, `nahladImportu`, `overRiadok`), chýba CLI skript*
+- [x] Prihlásenie proti `persons` ✅ 2026-08-27 — `auth.ts` skladá obe cesty; brzda ide prvá (nepotrebuje DB), chyba DB **neotvára** prístup — **D26**
 - [ ] `documents.versions[]` v cieľovom tvare — **D25** (verzovanie je povinnosť celého systému, nie potreba onboardingu: zmena `contentHash` z ľubovoľného kanála = nová verzia, nikdy prepis; platnosť určuje kurátor, nie automat)
 - [ ] Zobrazenie dokumentu človeku (cez existujúci `securityFilter()`, žiadna druhá cesta k obsahu)
 - [ ] Kolekcia `acknowledgements` + unikátny partial index — **D24**
