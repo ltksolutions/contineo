@@ -259,11 +259,20 @@ znamená úplný prístup k osobným údajom odkiaľkoľvek. A pri audite alebo 
 | **3** | **Presun aplikácie na vlastný stroj v EÚ** (VPS alebo AWS `eu-central-1`) | rádovo jednotky až desiatky € mesačne | Pevná IP, plná kontrola nad umiestnením, posun k **T2** a k `eu-full` podľa ADR-002 | Prevádzku si robíme sami: záplaty, TLS, monitoring, zálohy. **Nezáplatovaný vlastný server je horší príbeh než `0.0.0.0/0` so silným heslom.** |
 | **4** | **Nechať a spevniť** (dočasne) | 0 € | Samostatný Atlas projekt a cluster pre produkciu, používateľ s minimálnymi právami len na jednu databázu, dlhé náhodné heslo, zapnutý audit log a upozornenia na neúspešné prihlásenia | Sieťovú vrstvu nevráti. Je to zmiernenie, nie riešenie. |
 
+K cestám 1–3 boli preverené aj konkrétne alternatívy k Vercelu (2026-08-27):
+
+| Alternatíva | Stav | Verdikt |
+|---|---|---|
+| **Render** — dedikované IP | plán Pro a vyššie, mesačný príplatok za sadu (sada = tri IPv4); **dostupnosť v EÚ regiónoch dokumentácia nepotvrdzuje** | pohyb do strany — podobný príplatok ako Vercel **plus** migrácia |
+| **Railway** — statické odchodzie IP | plán Pro; regióny v dokumentácii neuvedené | to isté |
+| **Vlastný stroj v EÚ** — Hetzner (DE), Websupport (SK), Scaleway/OVH (FR) | pevná IP je súčasť stroja; Next.js `output: 'standalone'` v Dockeri, Coolify/Dokploy vráti deploy z gitu a TLS | vecne najsilnejšie — jediná cesta, ktorá aj **posúva `T2` a `eu-full`** (ADR-002 dodatky 10 a 11), nielen platí za odklad. Cena je vlastná prevádzka. |
+| **Vercel + SOCKS5 proxy na lacnom VPS** | Mongo driver pre Node SOCKS5 podporuje (zdokumentované) | zamietnuté — stroj, ktorý prevádzkujeme sami, v **kritickej ceste každého dotazu do databázy** |
+
 > Cesta cez **Atlas Data API** by tu kedysi bola, ale tá služba bola vyradená — nepočítame s ňou.
 
-#### Odporúčanie
+#### Rozhodnutie (2026-08-27)
 
-**Cesta 1 na spustenie, cesta 3 ako smer.**
+**Cesta 1 — Vercel Static IPs. Cesta 3 zostáva smerom, ale nie teraz.**
 
 Static IPs sú primeraná odpoveď: 100 $/mesiac (~1 200 $/rok) je pri zákazke tejto veľkosti
 malá položka a odstránia problém **bez týždňa inžinierskej práce** v čase, keď je týždeň
@@ -275,10 +284,37 @@ je prekážkou pre `eu-full` aj pre izoláciu T2. Presun aplikácie je rozhodnut
 o odblokovaní jedného spustenia — a robiť ho pod termínom by bola chyba. Static IPs
 medzitým nič nezahadzujú: keď sa aplikácia raz presunie, zrušia sa.
 
+**Za rozhodnutie sa platí a treba to vedieť:** 1 200 $ ročne je cena za odklad sťahovania, ktoré
+je v ADR-002 už napísané ako nevyhnutné. Vedomé rozhodnutie znie, že prevádzka vlastného stroja
+by dnes stála viac než tá suma — nezáplatovaný vlastný server je horší bezpečnostný príbeh než
+`0.0.0.0/0` so silným heslom. Prehodnotiť pri najbližšom kroku k `eu-full` alebo `T2`, alebo keď
+sa uvoľní kapacita na prevádzku.
+
+Sťahovať by sa aj tak muselo len `app/` — marketingový `web/` môže na Verceli zostať trvale.
+
 Cesta 4 platí **súbežne s ktoroukoľvek z nich** — samostatný produkčný cluster a používateľ
 s minimálnymi právami sú lacné a majú zmysel aj za pevnou IP.
 
-### 6.2 `acknowledgements` sú osobné údaje
+### 6.2 Cluster M0 nemá zálohy — a to je väčší problém než allowlist
+
+Nález z 2026-08-27. `ATLAS_SETUP.md` kap. 1 to hovorí rovno:
+
+> *„M0 má obmedzenia. Žiadne zálohy, obmedzená priepustnosť. Na PoC v poriadku, na produkciu nie."*
+
+Kým išlo o deväť verejných noriem, bolo to jedno — korpus sa dá znovu naimportovať z originálov.
+Pri `acknowledgements` to jedno nie je: **auditný záznam bez zálohy nie je auditný záznam.**
+Keby sa cluster stratil, neexistuje spôsob, ako doložiť, že sto ľudí niečo potvrdilo. A na rozdiel
+od otvoreného allowlistu, ktorý niekto musí zneužiť, strata dát nepotrebuje útočníka.
+
+**✅ Rozhodnuté (2026-08-27):** prechod na **M10+ pred prvým ostrým potvrdením** (D31). Ultra-MVP
+sa smie dovyvinúť na M0, ale skutočný človek nepotvrdí nič, kým nie sú zálohy. Pri prechode treba
+zapnúť **auto-scaling úložiska aj tieru** so stropom aspoň M30 — Automated Embedding to vyžaduje
+(`ATLAS_SETUP.md` kap. 1).
+
+Vedľajší dôsledok: privátny endpoint (PrivateLink) Atlas ponúka len na dedikovaných clusteroch,
+teda M10+. Na M0 cesta 2 ani 3 z predchádzajúcej kapitoly technicky neexistovali.
+
+### 6.3 `acknowledgements` sú osobné údaje
 
 Kolekcia obsahuje meno, e-mail, čas a IP adresu. IP je v nej preto, že bez nej má
 potvrdenie výrazne slabšiu dôkaznú hodnotu — ale je to osobný údaj a nesmie sa tam
@@ -294,7 +330,7 @@ sprostredkovateľ. Nové oproti D10 sú dve veci, ktoré tam nie sú vyriešené
 
 Obe patria právnikovi/DPO. Otvorené body **O15** a **O16**.
 
-### 6.3 Prístup k obsahu onboardingu
+### 6.4 Prístup k obsahu onboardingu
 
 Smernice sú `accessLevel: internal` a idú cez ten istý `securityFilter()` ako všetko
 ostatné. Onboarding nezavádza **žiadnu** vlastnú cestu k obsahu — keby ju zaviedol,
@@ -344,7 +380,7 @@ niekde neskôr ukáže rozdiel, je to chyba návrhu, nie plánovaná dočasnosť
 
 | # | Otázka | Prečo na nej záleží |
 |---|---|---|
-| **O12** | `0.0.0.0/0` v Atlase pred ostrou prevádzkou | **Blokujúce.** Analýza a štyri cesty v kap. 6.1. **Odporúčanie: Vercel Static IPs (100 $/mes., plán Pro)** na spustenie, presun aplikácie ako smer. Potvrdiť rozpočet a zapnúť pred prvým ostrým potvrdením. |
+| ~~**O12**~~ | ~~`0.0.0.0/0` v Atlase~~ | ✅ **Uzavreté 2026-08-27:** Vercel Static IPs (100 $/mes., plán Pro), zapnúť pred prvým ostrým potvrdením. Analýza v kap. 6.1; presun z Vercelu zostáva dlhodobým smerom. |
 | **O13** | Čo je „podstatná zmena" smernice, ktorá vyžaduje opätovné potvrdenie? | Bez odpovede buď zaťažíme ľudí potvrdzovaním preklepov, alebo prehliadneme zmenu povinnosti. Patrí HR + legislatívcovi, nie nám. |
 | **O14** | Má sa merať čas strávený nad dokumentom, prípadne doskrolovanie na koniec? | Zvyšuje dôkaznú hodnotu, ale je to sledovanie správania zamestnanca. Rozhodnúť **pred** implementáciou, nie po nej. |
 | **O15** | Aký je právny základ spracúvania `acknowledgements`? | Návrh: oprávnený záujem/plnenie zmluvy, nie súhlas. Potvrdí DPO. |
@@ -360,4 +396,5 @@ niekde neskôr ukáže rozdiel, je to chyba návrhu, nie plánovaná dočasnosť
 | `Contineo_RAG_Projektovy_plan.md` | nová Fáza 8 |
 | `DATA_MODEL_konzistencia.md` | kolekcie `acknowledgements`, `persons`, `onboarding_tracks` |
 | `TODO.md` | sekcia I — onboarding |
+| `ATLAS_SETUP.md` | poznámka o M10+ ako podmienke ostrej prevádzky (D31) |
 | `ONBOARDING_KONCEPCIA.md` | **nový** — koncepcia, dátový model, toky, fázovanie |

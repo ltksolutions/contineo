@@ -120,7 +120,10 @@
 **I3. Brána pred ostrou prevádzkou**
 
 - [ ] **O12 — `0.0.0.0/0` v Atlase.** **Blokujúce** — onboarding prináša interné smernice aj osobné údaje naraz (`NASADENIE_app.md` kap. 2). Analýza: **ADR-003 kap. 6.1**.
-  - [ ] Odsúhlasiť **100 $/mesiac** za Vercel Static IPs (plán Pro) — rozpočtové rozhodnutie, nie technické
+  - [x] **Rozhodnuté 2026-08-27: Vercel Static IPs** (100 $/mes., plán Pro). Preverené aj Render, Railway, vlastný stroj v EÚ, SOCKS5 proxy — ADR-003 kap. 6.1. Presun z Vercelu zostáva dlhodobým smerom.
   - [ ] Zapnúť Static IPs pre projekt `contineo-app` (Settings → Networking) a zúžiť Atlas Network Access na tie dve IP
   - [ ] Súbežne (lacné, dáva zmysel aj za pevnou IP): samostatný produkčný Atlas projekt + cluster, DB používateľ s minimálnymi právami, audit log a upozornenia na neúspešné prihlásenia
+- [ ] **D31 — Atlas M0 → M10+ pred prvým ostrým potvrdením.** M0 nemá zálohy; auditný záznam bez zálohy nie je auditný záznam (`ATLAS_SETUP.md` kap. 1).
+  - [ ] Pri prechode zapnúť **auto-scaling úložiska aj tieru**, strop aspoň M30 (vyžaduje Automated Embedding)
+  - [ ] Overiť, že vektorový a fulltextový index prešli a `smoke.mjs` beží
 - [ ] Doplniť `acknowledgements` a `persons` do zálohovacej a retenčnej politiky

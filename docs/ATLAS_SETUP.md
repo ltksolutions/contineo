@@ -21,6 +21,13 @@ V [cloud.mongodb.com](https://cloud.mongodb.com) založ projekt a cluster:
 
 **M0 stačí na PoC.** Má 512 MB, čo pri niekoľkých normách bohato vystačí. Na produkciu bude treba M10+, ale to až keď bude čo prevádzkovať.
 
+> **Doplnené 2026-08-27 (D31):** „keď bude čo prevádzkovať" nastalo. Fáza 8 (onboarding) zavádza
+> kolekciu `acknowledgements` — auditný záznam o tom, kto potvrdil oboznámenie s ktorým znením
+> smernice. **Auditný záznam bez zálohy nie je auditný záznam**, a M0 zálohy nemá. Prechod na
+> **M10+ je preto podmienka pred prvým ostrým potvrdením** (nie pred vývojom). Zároveň tým vzniká
+> možnosť privátneho endpointu, ktorá je len na dedikovaných clusteroch. Viď
+> `docs/ADR-003-onboarding-a-potvrdzovanie.md` kap. 6.2.
+
 > ⚠️ **Ak pôjdeš rovno na M10+**, musíš zapnúť **auto-scaling úložiska aj tieru** — Automated Embedding to vyžaduje na prvotné vybudovanie indexu. Pri M10/M20 nastav strop aspoň na M30.
 
 Ďalej:

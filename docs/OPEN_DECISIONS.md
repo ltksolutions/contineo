@@ -35,6 +35,7 @@
 | D28 | Znenie potvrdzovacej formulky | Onboarding | 🔴 | 8 | ✅ |
 | D29 | Rozlíšenie tenanta podľa hostiteľa | Nasadenie | 🟡 | 8 | ✅ |
 | D30 | Čo je „podstatná zmena" (opätovné potvrdenie) | Onboarding | 🔴 | 8 | ⬜ HR/legislatívec |
+| D31 | Produkčný Atlas tier a zálohy (M0 → M10+) | Prevádzka | 🔴 | 8 | ✅ |
 
 ---
 
@@ -344,6 +345,27 @@ kritérium, podľa ktorého sa rozhoduje.
 
 **Stav:** ⬜ čaká na HR a legislatívca SFZ. Vedené aj ako **O13** v ADR-003.
 
+### D31 — Produkčný Atlas tier a zálohy 🔴
+
+**Otázka:** stačí na produkciu cluster M0 (Free)?
+
+**Prečo:** `ATLAS_SETUP.md` kap. 1 hovorí, že M0 **nemá zálohy**. Kým išlo o deväť verejných noriem,
+bolo to jedno — korpus sa dá znovu naimportovať z originálov. Pri `acknowledgements` to jedno nie je:
+**auditný záznam bez zálohy nie je auditný záznam.** Keby sa cluster stratil, neexistuje spôsob, ako
+doložiť, že sto ľudí niečo potvrdilo. A na rozdiel od otvoreného allowlistu (O12), ktorý niekto musí
+zneužiť, strata dát nepotrebuje útočníka.
+
+**✅ Rozhodnuté (2026-08-27):** prechod na **M10+ pred prvým ostrým potvrdením**. Ultra-MVP sa smie
+dovyvinúť na M0, ale skutočný človek nepotvrdí nič, kým nie sú zálohy. Pri prechode zapnúť
+**auto-scaling úložiska aj tieru** so stropom aspoň M30 — Automated Embedding to vyžaduje na prvotné
+vybudovanie indexu (`ATLAS_SETUP.md` kap. 1).
+
+**Vedľajší dôsledok:** privátny endpoint (PrivateLink) je v Atlase len na dedikovaných clusteroch,
+teda M10+. Na M0 tá možnosť technicky neexistuje — čo bolo aj dôvodom, prečo pri O12 neprichádzali
+do úvahy cesty založené na privátnom endpointe.
+
+**Súvisiace:** O12, D10 (retencia), `ATLAS_SETUP.md`, `NASADENIE_app.md`.
+
 ### Otvorené body vedené v ADR-003
 
 Nie sú to rozhodnutia backlogu, ale otvorené otázky konkrétneho ADR. Uvedené tu kvôli
@@ -351,7 +373,7 @@ prehľadu:
 
 | # | Otázka | Poznámka |
 |---|---|---|
-| **O12** | `0.0.0.0/0` v Atlase pred ostrou prevádzkou | **Blokujúce.** `NASADENIE_app.md` kap. 2 to predvídal („pred pridaním interných smerníc"); onboarding tú podmienku spúšťa. Štyri cesty a odporúčanie v **ADR-003 kap. 6.1**: **Vercel Static IPs** (100 $/mes. na projekt, plán Pro) na spustenie, presun aplikácie z Vercelu ako dlhodobý smer (súvisí s ADR-002, dodatky 10 a 11). |
+| ~~**O12**~~ | ~~`0.0.0.0/0` v Atlase~~ | ✅ **Uzavreté 2026-08-27: Vercel Static IPs** (100 $/mes. na projekt, plán Pro), zapnúť pred prvým ostrým potvrdením. Preverené aj Render, Railway, vlastný stroj v EÚ a SOCKS5 proxy — analýza a dôvody v **ADR-003 kap. 6.1**. Presun aplikácie z Vercelu zostáva dlhodobým smerom (ADR-002, dodatky 10 a 11). |
 | **O14** | Meriame čas nad dokumentom alebo doskrolovanie na koniec? | Zvyšuje dôkaznú hodnotu, ale je to sledovanie správania zamestnanca. Rozhodnúť **pred** implementáciou. |
 | **O15** | Právny základ spracúvania `acknowledgements` | Návrh: oprávnený záujem / plnenie zmluvy, **nie súhlas** (odvolateľný dôkaz o oboznámení je protirečenie). Rozširuje D10. |
 | **O16** | Retencia auditného záznamu po skončení pracovného pomeru | Iná lehota než pri konverzáciách (D10). |

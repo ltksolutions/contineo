@@ -387,6 +387,10 @@ Cieľ: **skutoční ľudia potvrdia skutočné smernice.** Nič viac.
 | výkaz pre HR **skriptom do CSV** | dashboard |
 | jedna trasa, pevné poradie | správa trás v UI |
 
+> **Dve brány pred prvým ostrým potvrdením** (nie pred vývojom): Atlas **M10+** so zálohami (D31)
+> a **Static IPs** so zúženým allowlistom (O12). Ultra-MVP sa smie dovyvinúť na dnešnej zostave;
+> skutočný človek nepotvrdí nič, kým obe nestoja.
+
 **Ako sa drží riziko termínu:** poradie prác je dané tak, aby v ktoromkoľvek momente
 bolo funkčné to podstatnejšie. Keď sa nestihne výkaz, HR ho dostane z databázy ručne.
 Keď sa nestihne trasa, ľudia dostanú zoznam štyroch dokumentov. Nestihnúť sa nesmie
@@ -437,13 +441,14 @@ Metriky nesmú byť podkladom na hodnotenie jednotlivca — sú to čísla o pro
 | **D27** | Guided reading nesie `onboarding_tracks`; **progres sa odvodzuje**, neukladá sa |
 | **D28** | Formulka znie **„oboznámil som sa … a zaväzujem sa dodržiavať"**, nie „súhlasím"; ukladá sa doslovne |
 | **D29** | Tenant a vzhľad sa určujú z hostiteľa; neznámy hostiteľ = zakázaný |
+| **D31** | Atlas **M10+ pred prvým ostrým potvrdením** — M0 nemá zálohy a auditný záznam bez zálohy nie je auditný záznam |
+| **O12** | `0.0.0.0/0` rieši **Vercel Static IPs** (100 $/mes., plán Pro); presun z Vercelu zostáva dlhodobým smerom |
 
 ## 10. Otvorené rozhodnutia
 
 | # | Otázka | Kto rozhodne |
 |---|---|---|
 | **D30** | Čo je „podstatná zmena" vyžadujúca opätovné potvrdenie (= O13) | HR + legislatívec |
-| **O12** | `0.0.0.0/0` v Atlase — **blokujúce**. Odporúčanie: Vercel Static IPs (100 $/mes.), viď ADR-003 kap. 6.1 | my + rozpočet |
 | **O14** | Meriame čas nad dokumentom / doskrolovanie? | vedenie + DPO |
 | **O15** | Právny základ spracúvania `acknowledgements` | DPO |
 | **O16** | Retencia auditného záznamu po skončení pracovného pomeru | právnik |
