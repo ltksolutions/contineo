@@ -122,6 +122,8 @@ const DOCUMENT = {
   documentId: "smernica-gdpr",
   title: "Smernica o ochrane osobných údajov",
   language: "sk",
+  companyCode: "SFZ",
+  accessLevel: "internal" as const,
   versions: [
     { versionId: "v1", label: "1.0", effectiveFrom: new Date(Date.UTC(2020, 0, 1)),
       effectiveTo: new Date(Date.UTC(2026, 0, 1)), isActive: true },
@@ -171,6 +173,19 @@ describe("potvrd — zápis právneho záznamu", () => {
       supersedes: null,
     })
     expect(z.statementHash).toMatch(/^[0-9a-f]{64}$/)
+  })
+
+  it("dokument cudzej organizácie sa nedá potvrdiť uhádnutím identifikátora", async () => {
+    // Dokument existuje, ale patrí inému tenantovi a nie je zdieľaný (D32).
+    // Musí sa tváriť ako neexistujúci — rozlíšenie by prezradilo, aké
+    // smernice iná organizácia má.
+    collection("documents").findOne.mockResolvedValue({
+      ...DOCUMENT, companyCode: "ZsFZ", accessLevel: "internal",
+    })
+    const v = await acknowledge(ACTOR, "smernica-gdpr")
+
+    expect(v).toEqual({ ok: false, reason: "document-not-found" })
+    expect(collection("acknowledgements").insertOne).not.toHaveBeenCalled()
   })
 
   it("neexistujúci dokument nezapíše nič", async () => {

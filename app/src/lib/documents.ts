@@ -60,6 +60,8 @@ export interface DocumentRecord {
    */
   language?: string
   versions?: Version[]
+  /** Menovité zdieľanie mimo vlastnej vetvy (D32). */
+  sharedWithCompanyCodes?: string[]
   /** Ponechané kvôli dokumentom naimportovaným pred zavedením `versions[]`. */
   versionId?: string
   effectiveFrom?: Date | null
@@ -157,4 +159,47 @@ export async function addVersion(documentId: string, v: Version): Promise<void> 
   }
 
   await col.updateOne({ documentId }, { $push: { versions: v } })
+}
+
+// ── Viditeľnosť (D32) ────────────────────────────────────────────────────────
+
+/**
+ * Smie táto osoba vidieť tento dokument?
+ *
+ * Viditeľnosť má **tri zdroje a žiadny ďalší** (D32):
+ *
+ *   1. `accessLevel: "public"` — zverejnené pre všetkých,
+ *   2. zhoda `companyCode` — vlastný obsah tenanta,
+ *   3. `sharedWithCompanyCodes[]` obsahuje kód osoby — niekto ho **menovite** zdieľal.
+ *
+ * **`companyCode.parent` neudeľuje nič.** Hierarchia je kontext pre relevanciu
+ * a pre precedenciu noriem, nie kľúč k obsahu. Dcéra nevidí interný obsah
+ * matky preto, že je dcéra.
+ *
+ * Čistá funkcia — pravidlo, ktoré rozhoduje o prístupe, sa musí dať otestovať
+ * bez databázy a prečítať bez behu.
+ */
+export function canSeeDocument(
+  person: { companyCode: string },
+  doc: Pick<DocumentRecord, "accessLevel" | "companyCode" | "sharedWithCompanyCodes">
+): boolean {
+  if (doc.accessLevel === "public") return true
+  if (!person?.companyCode) return false
+  if (doc.companyCode === person.companyCode) return true
+  return (doc.sharedWithCompanyCodes ?? []).includes(person.companyCode)
+}
+
+/**
+ * Načíta dokument **pre konkrétnu osobu**. `null`, keď naň nevidí.
+ *
+ * Zámerne sa nerozlišuje „neexistuje" od „nesmieš" — inak by sa dalo
+ * skúšaním identifikátorov zistiť, aké smernice iná organizácia má.
+ */
+export async function loadDocumentFor(
+  person: { companyCode: string },
+  documentId: string
+): Promise<DocumentRecord | null> {
+  const doc = await loadDocument(documentId)
+  if (!doc) return null
+  return canSeeDocument(person, doc) ? doc : null
 }

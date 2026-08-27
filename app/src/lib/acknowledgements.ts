@@ -32,7 +32,7 @@
 
 import { ObjectId } from "mongodb"
 import { getCollection } from "./mongodb"
-import { loadDocument, effectiveVersion } from "./documents"
+import { loadDocumentFor, effectiveVersion } from "./documents"
 import type { Version } from "./documents"
 import { formatDate, dictionary, normalizeLanguage } from "./i18n"
 import type { UiLanguage } from "./i18n"
@@ -108,6 +108,7 @@ export interface Acknowledger {
   personId: string
   email: string
   fullName: string
+  /** Rozhoduje aj o tom, na ktoré dokumenty osoba vidí (D32). */
   companyCode: string
   /** Jazyk prostredia z `persons.language`. Neznámy padá na slovenčinu. */
   language?: string
@@ -132,7 +133,11 @@ export async function acknowledge(
   documentId: string,
   context: { ip?: string | null; userAgent?: string | null; trackId?: string | null } = {}
 ): Promise<AcknowledgeResult> {
-  const doc = await loadDocument(documentId)
+  // Načítanie **pre osobu**, nie len podľa identifikátora: bez toho by sa dal
+  // potvrdiť dokument cudzej organizácie tým, že sa uhádne jeho `documentId`
+  // (D32). Neviditeľný dokument sa tvári ako neexistujúci — rozlíšenie by
+  // prezradilo, aké smernice iný tenant má.
+  const doc = await loadDocumentFor(actor, documentId)
   if (!doc) return { ok: false, reason: "document-not-found" }
 
   const effective = effectiveVersion(doc)
@@ -201,4 +206,25 @@ export async function hasAcknowledged(personId: string, versionId: string): Prom
 export async function personAcknowledgements(personId: string): Promise<Acknowledgement[]> {
   const col = await getCollection<Acknowledgement>(ACKNOWLEDGEMENTS_COLLECTION)
   return col.find({ personId }).sort({ acknowledgedAt: -1 }).toArray()
+}
+
+/**
+ * Ktoré z týchto verzií má osoba potvrdené?
+ *
+ * Jedným dotazom, nie po jednej — trasa má aj desať krokov a stav sa odvodzuje
+ * pri každom otvorení zoznamu (D27: progres sa neukladá).
+ */
+export async function acknowledgedVersionIds(
+  personId: string,
+  versionIds: string[]
+): Promise<Set<string>> {
+  if (versionIds.length === 0) return new Set()
+  const col = await getCollection<Acknowledgement>(ACKNOWLEDGEMENTS_COLLECTION)
+  const found = await col
+    .find(
+      { personId, type: "acknowledgement", versionId: { $in: versionIds } },
+      { projection: { versionId: 1 } }
+    )
+    .toArray()
+  return new Set(found.map(a => a.versionId))
 }
