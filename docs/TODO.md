@@ -102,7 +102,7 @@
 - [x] Prihlásenie proti `persons` ✅ 2026-08-27 — `auth.ts` skladá obe cesty; brzda ide prvá (nepotrebuje DB), chyba DB **neotvára** prístup — **D26**
 - [x] `documents.versions[]` v cieľovom tvare ✅ 2026-08-27 — **D25**. `app/src/lib/documents.ts` (`effectiveVersion()` s pravidlami D6 + R3) a `scripts/import.mjs` (`recordVersion()` — nová položka, nikdy prepis; dopĺňa aj dokumentom naimportovaným pred zavedením `versions[]`)
   - [ ] **Známy rozpor s D25, pravidlo 2:** import publikuje priamo (`status: "published"`), hoci kanál nemá sám zneplatniť platnú verziu — platnosť má určiť kurátor. Zapisujeme stav taký, aký je, a nepredstierame schválenie. **Zosúladiť pri review UI (Fáza 4)**; dovtedy je to vedomý ústupok, nie prehliadnutie.
-- [ ] Zobrazenie dokumentu človeku (cez existujúci `securityFilter()`, žiadna druhá cesta k obsahu)
+- [x] Zobrazenie dokumentu človeku ✅ 2026-08-27 — `loadDocumentFor(osoba, id)` uplatňuje D32; uhádnutím `documentId` sa nedá otvoriť obsah cudzej organizácie a neviditeľný dokument sa tvári ako neexistujúci
 - [ ] Kolekcia `acknowledgements` + unikátny partial index — **D24**
 - [ ] Potvrdzovacia obrazovka; **verziu berie server**, nie požiadavka klienta
 - [x] Výkaz pre HR ✅ 2026-08-27 — `app/scripts/acknowledgement_report.mjs`. CSV: kto potvrdil, kedy, ktorú verziu, v akom jazyku — a kto nie. Rozsah je **jeden `companyCode`, nie strom** (D32, D33).
