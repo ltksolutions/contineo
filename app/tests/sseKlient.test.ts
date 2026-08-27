@@ -9,7 +9,7 @@
 import { rozdelUdalosti, citajUdalosti } from "../src/lib/sseKlient"
 import type { UdalostSSE } from "../src/lib/sseKlient"
 
-import { t } from "./pomocnik"
+import { t } from "./helper"
 
 const ramec = (o: unknown) => `data: ${JSON.stringify(o)}\n\n`
 const token = (s: string) => ramec({ type: "token", token: s })

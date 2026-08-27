@@ -4,16 +4,23 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Changed (2026-08-27 — identifikátory po anglicky)
+- **Kód Fázy 8 premenovaný na anglické identifikátory.** Moduly `osoby.ts` → `persons.ts`, `dokumenty.ts` → `documents.ts`, `potvrdenia.ts` → `acknowledgements.ts`, `jazyky.ts` → `i18n.ts`; typy, funkcie, parametre aj lokálne premenné podľa toho. **Komentáre a popisy testov zostávajú po slovensky** — menia sa mená, nie reč vysvetlení.
+- **Hodnoty vracané z API sú teraz strojové a anglické** (`"no-effective-version"`, `"already-acknowledged"`, `"invalid-email"`…). Sú to kľúče pre volajúceho, nie text pre človeka; ten sa priradí až v rozhraní podľa jazyka.
+- Konvencia zapísaná do `docs/rag-architecture.md`. Staršie moduly (`hodnotenia.ts`, `cennik.ts`, `sada.ts`, `povoleneEmaily()`/`jePovoleny()`) sa neprepisujú naraz — premenujú sa, keď sa ich niekto aj tak dotkne.
+- **Testy zamerané na funkcionalitu:** vypustené kontroly znenia českého a anglického prekladu formulky. Preklady prostredia sú samostatná vec a testovať ich reťazec po reťazci znamená udržiavať slovník dvakrát. Zostáva to, čo je funkcia — výber jazyka, fallback a invariant, že formulka v každom jazyku nesie názov, verziu aj dátum. (438 testov v 16 súboroch.)
+
+
 ### Changed (2026-08-27 — testy prešli na Vitest)
 - **`npm test` beží cez Vitest** (`vitest run`), pribudlo `test:watch` a `test:coverage`. Vlastný beh testov (`tests/run.mjs` + bundlovanie esbuildom) sa už nepoužíva.
-- **Dôvod nebol „Vitest je štandard", ale konkrétny strop:** funkcie volajúce `getCollection()` sa nedali otestovať vôbec — a boli medzi nimi tie najdôležitejšie: `osobaSmiePrihlasenie()` (brána medzi internými smernicami a internetom), `potvrd()` (zápis právneho záznamu) a `zalozOsoby()` (hromadný import). Obísť sa to dalo len pridaním testovacieho švu do verejného rozhrania každého modulu; `vi.mock()` to rieši bez toho.
-- **Suity sa neprepisovali.** Pôvodný tvar `t("popis", podmienka)` zostal a len registruje test do Vitestu cez `tests/pomocnik.ts` — 2 200 riadkov ručne prepísaných tvrdení je 2 200 príležitostí na preklep, a v testoch sa preklep neprejaví zlyhaním, ale falošným pokojom. **Nové testy sa píšu idiomaticky** (`expect(skutočné).toBe(očakávané)`), aby bolo pri zlyhaní vidieť rozdiel hodnôt.
-- **Nová suita `tests/onboardingDb.test.ts`** — 17 testov nad falošnou databázou: že `potvrd()` si verziu určí na serveri a nedá sa podvrhnúť staršia; že duplicitný zápis skončí ako `uz-potvrdene` a nie ako chyba servera; že iná chyba sa za „už potvrdené" nezamaskuje; že znenie je v jazyku človeka a `documentLanguage` v jazyku smernice; a hlavne, že **chyba databázy v `osobaSmiePrihlasenie()` neotvorí prístup**.
+- **Dôvod nebol „Vitest je štandard", ale konkrétny strop:** funkcie volajúce `getCollection()` sa nedali otestovať vôbec — a boli medzi nimi tie najdôležitejšie: `personMaySignIn()` (brána medzi internými smernicami a internetom), `acknowledge()` (zápis právneho záznamu) a `zalozOsoby()` (hromadný import). Obísť sa to dalo len pridaním testovacieho švu do verejného rozhrania každého modulu; `vi.mock()` to rieši bez toho.
+- **Suity sa neprepisovali.** Pôvodný tvar `t("popis", podmienka)` zostal a len registruje test do Vitestu cez `tests/helper.ts` — 2 200 riadkov ručne prepísaných tvrdení je 2 200 príležitostí na preklep, a v testoch sa preklep neprejaví zlyhaním, ale falošným pokojom. **Nové testy sa píšu idiomaticky** (`expect(skutočné).toBe(očakávané)`), aby bolo pri zlyhaní vidieť rozdiel hodnôt.
+- **Nová suita `tests/onboardingDb.test.ts`** — 17 testov nad falošnou databázou: že `acknowledge()` si verziu určí na serveri a nedá sa podvrhnúť staršia; že duplicitný zápis skončí ako `uz-potvrdene` a nie ako chyba servera; že iná chyba sa za „už potvrdené" nezamaskuje; že znenie je v jazyku človeka a `documentLanguage` v jazyku smernice; a hlavne, že **chyba databázy v `personMaySignIn()` neotvorí prístup**.
 - Stav: **16 súborov, 442 testov, 0,7 s** (predtým 15 súborov bundlovaných po jednom).
 
 
 ### Added (2026-08-27 — viacjazyčné prostredie, D35)
-- **`app/src/lib/jazyky.ts`** — jazyk prostredia (SK · CS · EN): zoznam podporovaných jazykov, znenie potvrdzovacej formulky a texty prihlasovacieho e-mailu per jazyk, deterministické formátovanie dátumu.
+- **`app/src/lib/i18n.ts`** — jazyk prostredia (SK · CS · EN): zoznam podporovaných jazykov, znenie potvrdzovacej formulky a texty prihlasovacieho e-mailu per jazyk, deterministické formátovanie dátumu.
 - **Rozhodnutie D35:** viacjazyčné je **len prostredie, nie obsah**. Dokument má základný jazyk, v ktorom je napísaný (`documents.language`); dokument v inom jazyku je **samostatný dokument, nie preklad**. Zoznam jazykov prostredia je preto oddelený od číselníka `language`, ktorý tagguje obsah.
 - **`persons.language`** — jazyk prostredia osoby; prihlasovací e-mail sa posiela v ňom. Pri neznámej osobe alebo nedostupnej databáze platí slovenčina: zlý jazyk je nepríjemnosť, neodoslaný odkaz sú zavreté dvere. Opakovaný import bez stĺpca jazyka jazyk **neprepíše** — rovnaká pasca ako pri `status`.
 - **`acknowledgements.language` + `documentLanguage`** — záznam ukladá aj to, v akom jazyku človek formulku videl, aj to, v akom jazyku je smernica. Bez toho sa pri audite nedá odpovedať, či český rozhodca potvrdzoval slovenský text.

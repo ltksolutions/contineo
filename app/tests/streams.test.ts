@@ -20,7 +20,7 @@ const chunks: any[] = [
     document: { title: "Rozpis súťaže", slug: "rs", category: "rozpis" } },
 ]
 
-import { t } from "./pomocnik"
+import { t } from "./helper"
 
 async function collect(gen: AsyncGenerator<any>) {
   const out: any[] = []

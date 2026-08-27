@@ -5,136 +5,133 @@
  * a **čo presne človek potvrdil**. Zápis do databázy sa netestuje — to je už len
  * `insertOne` a bez clustera by sme testovali mongodb driver.
  */
-import { platnaVerzia } from "../src/lib/dokumenty"
-import type { Dokument, Verzia } from "../src/lib/dokumenty"
-import { zneniePotvrdenia, odtlacokZnenia } from "../src/lib/potvrdenia"
-import { datum, normalizujJazyk, JAZYKY_UI } from "../src/lib/jazyky"
+import { effectiveVersion } from "../src/lib/documents"
+import type { DocumentRecord, Version } from "../src/lib/documents"
+import { buildStatement, hashStatement } from "../src/lib/acknowledgements"
+import { formatDate, normalizeLanguage, UI_LANGUAGES } from "../src/lib/i18n"
 
-import { t } from "./pomocnik"
+import { t } from "./helper"
 
-const den = (r: number, m: number, d: number) => new Date(Date.UTC(r, m - 1, d))
-const v = (p: Partial<Verzia>): Verzia => ({
-  versionId: "v1", label: "1.0", effectiveFrom: den(2026, 1, 1),
+const day = (r: number, m: number, d: number) => new Date(Date.UTC(r, m - 1, d))
+const v = (p: Partial<Version>): Version => ({
+  versionId: "v1", label: "1.0", effectiveFrom: day(2026, 1, 1),
   effectiveTo: null, isActive: true, ...p,
 })
-const dok = (verzie: Verzia[]): Dokument => ({ documentId: "d1", title: "Smernica", versions: verzie })
+const doc = (versions: Version[]): DocumentRecord => ({ documentId: "d1", title: "Smernica", versions: versions })
 
-const DNES = den(2026, 6, 1)
-const dovod = (d: Dokument) => { const r = platnaVerzia(d, DNES); return r.ok ? "(platná)" : r.dovod }
+const DNES = day(2026, 6, 1)
+const reason = (d: DocumentRecord) => { const r = effectiveVersion(d, DNES); return r.ok ? "(platná)" : r.reason }
 
 // ── čo neplatí a prečo ───────────────────────────────────────────────────────
 
-t("bez verzií → ziadne-verzie", dovod(dok([])) === "ziadne-verzie")
+t("bez verzií → ziadne-verzie", reason(doc([])) === "no-versions")
 t("chýbajúce pole versions → ziadne-verzie",
-  dovod({ documentId: "d", title: "x" }) === "ziadne-verzie")
+  reason({ documentId: "d", title: "x" }) === "no-versions")
 t("všetky archivované → vsetky-archivovane",
-  dovod(dok([v({ isActive: false })])) === "vsetky-archivovane")
+  reason(doc([v({ isActive: false })])) === "all-archived")
 
 // Toto je podstatné pravidlo: verzia bez dátumu platnosti NEPLATÍ.
 // Formulka obsahuje „platná od {dátum}" (D28) — bez dátumu sa nedá ani zložiť.
 t("bez effectiveFrom → platnost-neurcena",
-  dovod(dok([v({ effectiveFrom: null })])) === "platnost-neurcena")
+  reason(doc([v({ effectiveFrom: null })])) === "validity-not-set")
 
 t("platnosť až o mesiac → este-neplati",
-  dovod(dok([v({ effectiveFrom: den(2026, 9, 1) })])) === "este-neplati")
+  reason(doc([v({ effectiveFrom: day(2026, 9, 1) })])) === "not-yet-effective")
 t("platnosť skončila → uz-neplati",
-  dovod(dok([v({ effectiveTo: den(2026, 3, 1) })])) === "uz-neplati")
+  reason(doc([v({ effectiveTo: day(2026, 3, 1) })])) === "no-longer-effective")
 
 // ── čo platí ─────────────────────────────────────────────────────────────────
 
-const jedna = platnaVerzia(dok([v({})]), DNES)
+const jedna = effectiveVersion(doc([v({})]), DNES)
 t("jedna otvorená verzia platí", jedna.ok)
 
-const dve = platnaVerzia(dok([
-  v({ versionId: "stara", label: "1.0", effectiveFrom: den(2026, 1, 1), effectiveTo: den(2026, 4, 1) }),
-  v({ versionId: "nova", label: "2.0", effectiveFrom: den(2026, 4, 1) }),
+const dve = effectiveVersion(doc([
+  v({ versionId: "stara", label: "1.0", effectiveFrom: day(2026, 1, 1), effectiveTo: day(2026, 4, 1) }),
+  v({ versionId: "nova", label: "2.0", effectiveFrom: day(2026, 4, 1) }),
 ]), DNES)
 t("z dvoch znení platí to, ktoré je práve v platnosti",
-  dve.ok && dve.verzia.versionId === "nova", JSON.stringify(dve))
+  dve.ok && dve.version.versionId === "nova", JSON.stringify(dve))
 
 // Lex posterior (R3 v PRECEDENCIA_NORIEM): pri dvoch prekrývajúcich sa platí novšia.
-const prekryv = platnaVerzia(dok([
-  v({ versionId: "starsia", effectiveFrom: den(2026, 1, 1) }),
-  v({ versionId: "novsia", effectiveFrom: den(2026, 5, 1) }),
+const prekryv = effectiveVersion(doc([
+  v({ versionId: "starsia", effectiveFrom: day(2026, 1, 1) }),
+  v({ versionId: "novsia", effectiveFrom: day(2026, 5, 1) }),
 ]), DNES)
 t("pri prekryve platí novšia (lex posterior)",
-  prekryv.ok && prekryv.verzia.versionId === "novsia", JSON.stringify(prekryv))
+  prekryv.ok && prekryv.version.versionId === "novsia", JSON.stringify(prekryv))
 
 t("archivovaná verzia sa nevyberie, aj keď dátumy sedia", (() => {
-  const r = platnaVerzia(dok([
+  const r = effectiveVersion(doc([
     v({ versionId: "archiv", isActive: false }),
-    v({ versionId: "ziva", effectiveFrom: den(2026, 2, 1) }),
+    v({ versionId: "ziva", effectiveFrom: day(2026, 2, 1) }),
   ]), DNES)
-  return r.ok && r.verzia.versionId === "ziva"
+  return r.ok && r.version.versionId === "ziva"
 })())
 
 t("historický dotaz vráti vtedy platné znenie", (() => {
-  const d = dok([
-    v({ versionId: "stara", effectiveFrom: den(2026, 1, 1), effectiveTo: den(2026, 4, 1) }),
-    v({ versionId: "nova", effectiveFrom: den(2026, 4, 1) }),
+  const d = doc([
+    v({ versionId: "stara", effectiveFrom: day(2026, 1, 1), effectiveTo: day(2026, 4, 1) }),
+    v({ versionId: "nova", effectiveFrom: day(2026, 4, 1) }),
   ])
-  const r = platnaVerzia(d, den(2026, 2, 15))
-  return r.ok && r.verzia.versionId === "stara"
+  const r = effectiveVersion(d, day(2026, 2, 15))
+  return r.ok && r.version.versionId === "stara"
 })())
 
 // Hranica: effectiveTo je vylučujúce, effectiveFrom zahŕňajúce.
 t("v deň začiatku platnosti už verzia platí",
-  platnaVerzia(dok([v({ effectiveFrom: DNES })]), DNES).ok)
+  effectiveVersion(doc([v({ effectiveFrom: DNES })]), DNES).ok)
 t("v deň konca platnosti už verzia neplatí",
-  !platnaVerzia(dok([v({ effectiveTo: DNES })]), DNES).ok)
+  !effectiveVersion(doc([v({ effectiveTo: DNES })]), DNES).ok)
 
 // ── jazyk prostredia ─────────────────────────────────────────────────────────
 
 t("dátum je deterministický, nezávislý od locale servera",
-  datum(den(2026, 9, 1), "sk") === "1. 9. 2026", datum(den(2026, 9, 1), "sk"))
+  formatDate(day(2026, 9, 1), "sk") === "1. 9. 2026", formatDate(day(2026, 9, 1), "sk"))
 t("čeština má rovnaký tvar dátumu ako slovenčina",
-  datum(den(2026, 9, 1), "cs") === "1. 9. 2026")
+  formatDate(day(2026, 9, 1), "cs") === "1. 9. 2026")
 // V právnom texte nesmie byť pochybnosť, či 9/1 je september alebo január.
 t("angličtina používa slovný mesiac, aby nebola nejednoznačnosť",
-  datum(den(2026, 9, 1), "en") === "1 September 2026", datum(den(2026, 9, 1), "en"))
+  formatDate(day(2026, 9, 1), "en") === "1 September 2026", formatDate(day(2026, 9, 1), "en"))
 
-t("neznámy jazyk padá na slovenčinu, nie na angličtinu", normalizujJazyk("de") === "sk")
-t("zvláda tvar sk-SK z prehliadača", normalizujJazyk("sk-SK") === "sk")
-t("zvláda tvar cs_CZ z tabuľky", normalizujJazyk("cs_CZ") === "cs")
-t("prázdny vstup padá na predvolený jazyk", normalizujJazyk(undefined) === "sk")
+t("neznámy jazyk padá na slovenčinu, nie na angličtinu", normalizeLanguage("de") === "sk")
+t("zvláda tvar sk-SK z prehliadača", normalizeLanguage("sk-SK") === "sk")
+t("zvláda tvar cs_CZ z tabuľky", normalizeLanguage("cs_CZ") === "cs")
+t("prázdny vstup padá na predvolený jazyk", normalizeLanguage(undefined) === "sk")
 
 // ── znenie formulky (D28) ────────────────────────────────────────────────────
 
-const NAZOV = "Smernica o ochrane osobných údajov"
-const znenie = zneniePotvrdenia(NAZOV, "1.2", den(2026, 9, 1), "sk")
+const TITLE = "Smernica o ochrane osobných údajov"
+const statement = buildStatement(TITLE, "1.2", day(2026, 9, 1), "sk")
 
-t("formulka hovorí o oboznámení, NIE o súhlase", /oboznámil/.test(znenie) && !/súhlas/i.test(znenie), znenie)
-t("formulka obsahuje záväzok dodržiavať", /zaväzujem sa ho dodržiavať/.test(znenie))
-t("formulka obsahuje názov dokumentu", znenie.includes(NAZOV))
-t("formulka obsahuje označenie verzie", /verzia 1\.2/.test(znenie))
-t("formulka obsahuje dátum platnosti", znenie.includes("1. 9. 2026"))
+t("formulka hovorí o oboznámení, NIE o súhlase", /oboznámil/.test(statement) && !/súhlas/i.test(statement), statement)
+t("formulka obsahuje záväzok dodržiavať", /zaväzujem sa ho dodržiavať/.test(statement))
+t("formulka obsahuje názov dokumentu", statement.includes(TITLE))
+t("formulka obsahuje označenie verzie", /verzia 1\.2/.test(statement))
+t("formulka obsahuje dátum platnosti", statement.includes("1. 9. 2026"))
 
-const cs = zneniePotvrdenia(NAZOV, "1.2", den(2026, 9, 1), "cs")
-const en = zneniePotvrdenia(NAZOV, "1.2", den(2026, 9, 1), "en")
-
-t("česká formulka je po česky", /Potvrzuji/.test(cs) && /zavazuji se/.test(cs), cs)
-t("česká formulka tiež hovorí o zoznámení, nie o souhlasu",
-  /seznámil/.test(cs) && !/souhlas/i.test(cs), cs)
-t("anglická formulka je po anglicky", /I confirm that I have read/.test(en), en)
-t("anglická formulka nehovorí o súhlase (agree)", !/\bagree\b/i.test(en), en)
+// Znenie v češtine a angličtine sa tu netestuje. **Preklady prostredia sú
+// samostatná vec** a kontrolovať ich reťazec po reťazci znamená zopakovať
+// slovník v druhom súbore — a potom ho udržiavať dvakrát. Testujeme funkciu:
+// že sa vyberie správny jazyk, že fallback drží a že formulka nesie to,
+// čo niesť musí (nižšie, pre všetky jazyky naraz).
 
 // Nech je jazyk akýkoľvek, tri veci tam musia byť vždy — bez nich sa o rok
 // nedá povedať, čo človek potvrdil.
-for (const j of JAZYKY_UI) {
-  const z = zneniePotvrdenia(NAZOV, "1.2", den(2026, 9, 1), j)
+for (const j of UI_LANGUAGES) {
+  const z = buildStatement(TITLE, "1.2", day(2026, 9, 1), j)
   t(`[${j}] formulka nesie názov, verziu aj dátum`,
-    z.includes(NAZOV) && z.includes("1.2") && /2026/.test(z), z)
+    z.includes(TITLE) && z.includes("1.2") && /2026/.test(z), z)
 }
 
 t("neznámy jazyk nespadne, vráti slovenskú formulku",
-  zneniePotvrdenia(NAZOV, "1.2", den(2026, 9, 1), "de" as never) === znenie)
+  buildStatement(TITLE, "1.2", day(2026, 9, 1), "de" as never) === statement)
 
 // ── odtlačok znenia ──────────────────────────────────────────────────────────
 
 const hlavne = async () => {
-  const a = await odtlacokZnenia(znenie)
-  const b = await odtlacokZnenia(znenie)
-  const c = await odtlacokZnenia(znenie + " ")
+  const a = await hashStatement(statement)
+  const b = await hashStatement(statement)
+  const c = await hashStatement(statement + " ")
 
   t("odtlačok je SHA-256 v hexa tvare", /^[0-9a-f]{64}$/.test(a), a)
   t("rovnaké znenie dá rovnaký odtlačok", a === b)

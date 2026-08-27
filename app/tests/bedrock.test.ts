@@ -14,7 +14,7 @@ import { rozdelRamce, spoj, rozbalEvent, citajEventy } from "../src/lib/provider
 import { jeEuRegion } from "../src/lib/providers/generation/bedrock"
 import { anthropicEvent } from "../src/lib/providers/generation/anthropic"
 
-import { t } from "./pomocnik"
+import { t } from "./helper"
 
 async function bezi() {
 

@@ -11,7 +11,7 @@
  * správu prístupov. Pri stovke ľudí to prestalo platiť (D26), takže od
  * Fázy 8 sú zdroje povolenia dva:
  *
- *   1. kolekcia `persons` — hlavná cesta, viď `osoby.ts`,
+ *   1. kolekcia `persons` — hlavná cesta, viď `persons.ts`,
  *   2. `POVOLENE_EMAILY` — **núdzová brzda pre správcov**, ktorá nepotrebuje
  *      databázu. Zostáva zámerne: keď sa pokazí import alebo sa niekto vyklikne
  *      z vlastnej kolekcie, musí existovať cesta späť dnu.
@@ -23,8 +23,8 @@
 import type { NextAuthOptions } from "next-auth"
 import type { EmailConfig } from "next-auth/providers/email"
 import { mongoAdapter } from "./authAdapter"
-import { posli, prihlasovaciEmail } from "./ecomail"
-import { osobaSmiePrihlasenie, oznacPrihlasenie, jazykOsoby } from "./osoby"
+import { send, signInEmail } from "./ecomail"
+import { personMaySignIn, recordSignIn, personLanguage } from "./persons"
 
 /**
  * Rozloží zoznam povolených adries.
@@ -34,8 +34,8 @@ import { osobaSmiePrihlasenie, oznacPrihlasenie, jazykOsoby } from "./osoby"
  * lebo e-mailová schránka nie je citlivá na veľkosť a používateľ napíše
  * adresu tak, ako je zvyknutý.
  */
-export function povoleneEmaily(zoznam = process.env.POVOLENE_EMAILY ?? ""): string[] {
-  return zoznam
+export function povoleneEmaily(rows = process.env.POVOLENE_EMAILY ?? ""): string[] {
+  return rows
     .split(/[,;\n]/)
     .map(e => e.trim().toLowerCase())
     .filter(e => e.includes("@"))
@@ -48,11 +48,11 @@ export function povoleneEmaily(zoznam = process.env.POVOLENE_EMAILY ?? ""): stri
  * ale opak by bol horší: zabudnutá premenná pri nasadení by otvorila
  * rozhranie s internými smernicami komukoľvek na internete.
  */
-export function jePovoleny(email: string, zoznam = povoleneEmaily()): boolean {
-  if (!zoznam.length) return false
+export function jePovoleny(email: string, rows = povoleneEmaily()): boolean {
+  if (!rows.length) return false
   const e = email.trim().toLowerCase()
 
-  return zoznam.some(p => {
+  return rows.some(p => {
     // Zápis „@futbalsfz.sk" povolí celú doménu — hodí sa, keď má prístup
     // dostať celé oddelenie.
     if (p.startsWith("@")) return e.endsWith(p)
@@ -82,12 +82,12 @@ function emailProvider(): EmailConfig {
     server: { host: "unused", port: 25, auth: { user: "", pass: "" } },
     options: {},
     async sendVerificationRequest({ identifier, url }) {
-      const hostitel = new URL(url).host
+      const host = new URL(url).host
       // Jazyk prostredia z `persons`. Nikdy nehádže — pri neznámej osobe
       // alebo nedostupnej databáze padá na slovenčinu, aby sa e-mail odoslal
       // vždy. Zlý jazyk je nepríjemnosť, neodoslaný odkaz sú zavreté dvere.
-      const jazyk = await jazykOsoby(identifier)
-      await posli({ komu: identifier, ...prihlasovaciEmail(url, hostitel, jazyk) })
+      const language = await personLanguage(identifier)
+      await send({ to: identifier, ...signInEmail(url, host, language) })
     },
   }
 }
@@ -114,11 +114,11 @@ export const authOptions: NextAuthOptions = {
       // aj vtedy, keď je cluster nedostupný.
       if (jePovoleny(user.email)) return true
 
-      const smie = await osobaSmiePrihlasenie(user.email)
+      const allowed = await personMaySignIn(user.email)
       // Evidencia až po povolení a mimo rozhodovania: keby zápis zlyhal,
       // nesmie to zhodiť prihlásenie človeka, ktorý naň má nárok.
-      if (smie) void oznacPrihlasenie(user.email)
-      return smie
+      if (allowed) void recordSignIn(user.email)
+      return allowed
     },
     async jwt({ token, user }) {
       if (user?.email) token.email = user.email

@@ -9,25 +9,25 @@
  * s hlavičkou `key`. Vyžaduje platený účet a overenú odosielaciu doménu.
  */
 
-import { slovnik } from "./jazyky"
-import type { JazykUI } from "./jazyky"
+import { dictionary } from "./i18n"
+import type { UiLanguage } from "./i18n"
 
 const API = "https://api2.ecomailapp.cz/transactional/send-message"
 
-export interface Sprava {
-  komu: string
-  predmet: string
+export interface Message {
+  to: string
+  subject: string
   text: string
   html: string
 }
 
-export class EcomailChyba extends Error {}
+export class EcomailError extends Error {}
 
-export function konfiguracia() {
+export function config() {
   return {
-    kluc: process.env.ECOMAIL_API_KEY,
-    odosielatel: process.env.EMAIL_ODOSIELATEL,
-    menoOdosielatela: process.env.EMAIL_MENO_ODOSIELATELA ?? "Contineo",
+    key: process.env.ECOMAIL_API_KEY,
+    sender: process.env.EMAIL_ODOSIELATEL,
+    senderName: process.env.EMAIL_MENO_ODOSIELATELA ?? "Contineo",
   }
 }
 
@@ -37,27 +37,27 @@ export function konfiguracia() {
  * Vyhadzuje výnimku, keď sa nepodarí. Tiché zlyhanie by znamenalo, že
  * hodnotiteľ čaká na odkaz, ktorý nikdy nepríde, a nikto sa to nedozvie.
  */
-export async function posli(s: Sprava): Promise<void> {
-  const { kluc, odosielatel, menoOdosielatela } = konfiguracia()
+export async function send(s: Message): Promise<void> {
+  const { key, sender, senderName } = config()
 
-  if (!kluc || !odosielatel) {
-    throw new EcomailChyba(
+  if (!key || !sender) {
+    throw new EcomailError(
       "Chýba ECOMAIL_API_KEY alebo EMAIL_ODOSIELATEL — e-mail sa neodoslal."
     )
   }
 
-  const odpoved = await fetch(API, {
+  const response = await fetch(API, {
     method: "POST",
-    headers: { "Content-Type": "application/json", key: kluc },
+    headers: { "Content-Type": "application/json", key: key },
     body: JSON.stringify({
       message: {
-        subject: s.predmet,
-        from_name: menoOdosielatela,
-        from_email: odosielatel,
-        reply_to: odosielatel,
+        subject: s.subject,
+        from_name: senderName,
+        from_email: sender,
+        reply_to: sender,
         text: s.text,
         html: s.html,
-        to: [{ email: s.komu }],
+        to: [{ email: s.to }],
         // Sledovanie otvorení a preklikov pri prihlasovacom odkaze
         // vypíname zámerne. Preklikový proxy odkaz by navyše mohol odkaz
         // „spotrebovať" skôr než človek — antivírusy a náhľady v poštových
@@ -67,16 +67,16 @@ export async function posli(s: Sprava): Promise<void> {
     }),
   })
 
-  if (!odpoved.ok) {
-    const detail = await odpoved.text().catch(() => "")
-    throw new EcomailChyba(`Ecomail ${odpoved.status}: ${detail.slice(0, 300)}`)
+  if (!response.ok) {
+    const detail = await response.text().catch(() => "")
+    throw new EcomailError(`Ecomail ${response.status}: ${detail.slice(0, 300)}`)
   }
 
   // Ecomail vracia 200 aj vtedy, keď adresáta odmietol — treba pozrieť telo.
-  const vysledok = await odpoved.json().catch(() => null)
-  const odmietnutych = vysledok?.results?.total_rejected_recipients
-  if (typeof odmietnutych === "number" && odmietnutych > 0) {
-    throw new EcomailChyba(`Ecomail odmietol adresáta: ${s.komu}`)
+  const result = await response.json().catch(() => null)
+  const rejected = result?.results?.total_rejected_recipients
+  if (typeof rejected === "number" && rejected > 0) {
+    throw new EcomailError(`Ecomail odmietol adresáta: ${s.to}`)
   }
 }
 
@@ -87,43 +87,43 @@ export async function posli(s: Sprava): Promise<void> {
  * ktorú človek uvidí, ešte pred prihlásením. Keď osobu nepoznáme, platí
  * slovenčina; zlý jazyk je nepríjemnosť, neodoslaný e-mail sú zavreté dvere.
  */
-export function prihlasovaciEmail(
-  odkaz: string,
-  hostitel: string,
-  jazyk: JazykUI = "sk"
-): Omit<Sprava, "komu"> {
-  const s = slovnik(jazyk).email
+export function signInEmail(
+  link: string,
+  host: string,
+  language: UiLanguage = "sk"
+): Omit<Message, "to"> {
+  const s = dictionary(language).email
 
   const text = [
-    s.nadpis,
+    s.heading,
     "",
-    s.uvod,
-    odkaz,
+    s.intro,
+    link,
     "",
-    s.platnost,
+    s.validity,
   ].join("\n")
 
   const html = `<!doctype html>
-<html lang="${jazyk}"><body style="margin:0;padding:24px;background:#f5f6f8;font-family:ui-sans-serif,system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;color:#161b22">
+<html lang="${language}"><body style="margin:0;padding:24px;background:#f5f6f8;font-family:ui-sans-serif,system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;color:#161b22">
   <div style="max-width:520px;margin:0 auto;background:#fff;border:1px solid rgba(20,28,42,.12);border-radius:12px;padding:28px">
     <div style="font-size:18px;font-weight:700;letter-spacing:-.02em;margin-bottom:6px">Contineo</div>
-    <div style="font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:#5c6675;margin-bottom:22px">${s.podtitul}</div>
+    <div style="font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:#5c6675;margin-bottom:22px">${s.subtitle}</div>
     <p style="font-size:15.5px;line-height:1.65;margin:0 0 22px">
-      ${s.uvod}
+      ${s.intro}
     </p>
-    <a href="${odkaz}" style="display:inline-block;background:#232a35;color:#fff;text-decoration:none;border-radius:10px;padding:12px 22px;font-size:15px;font-weight:600">
-      ${s.tlacidlo}
+    <a href="${link}" style="display:inline-block;background:#232a35;color:#fff;text-decoration:none;border-radius:10px;padding:12px 22px;font-size:15px;font-weight:600">
+      ${s.button}
     </a>
     <p style="font-size:13px;line-height:1.6;color:#5c6675;margin:22px 0 0">
-      ${s.platnost}
+      ${s.validity}
     </p>
     <p style="font-size:12px;color:#5c6675;margin:18px 0 0;word-break:break-all">
-      ${s.nefunguje}<br>${odkaz}
+      ${s.fallbackNote}<br>${link}
     </p>
     <hr style="border:none;border-top:1px solid rgba(20,28,42,.12);margin:22px 0 14px">
-    <div style="font-size:12px;color:#5c6675">${hostitel} · LTK Solutions</div>
+    <div style="font-size:12px;color:#5c6675">${host} · LTK Solutions</div>
   </div>
 </body></html>`
 
-  return { predmet: s.predmet, text, html }
+  return { subject: s.subject, text, html }
 }

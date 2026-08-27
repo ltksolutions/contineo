@@ -479,7 +479,7 @@ Vtedy treba dopredu pomenovať, či a ako podporujeme rozsypané verzie.
 
 | Vrstva | Viacjazyčná? | Riadi |
 |---|---|---|
-| **Prostredie** — rozhranie, e-maily, znenie potvrdzovacej formulky | **áno**, SK · CS · EN | `persons.language`, zoznam v `app/src/lib/jazyky.ts` |
+| **Prostredie** — rozhranie, e-maily, znenie potvrdzovacej formulky | **áno**, SK · CS · EN | `persons.language`, zoznam v `app/src/lib/i18n.ts` |
 | **Obsah** — samotné smernice a normy | **nie**, neprekladáme | `documents.language` z číselníka `language` |
 
 **Dokument má určený základný jazyk, v ktorom je napísaný.** Dokument v inom
@@ -508,7 +508,7 @@ začiatku; prekladá sa až rozhranie, keď bude.
 > slovenský text a v zázname je to dohľadateľné, ale v samotnom znení nie.
 > Nie je to technická otázka; systém uloží akékoľvek znenie.
 
-**Súvisiace:** D24, D28, `app/src/lib/jazyky.ts`, `docs/CMS_KONCEPCIA.md` B.4
+**Súvisiace:** D24, D28, `app/src/lib/i18n.ts`, `docs/CMS_KONCEPCIA.md` B.4
 (i18n web obsahu — tam ide o kurátorské články, nie o normy).
 
 ### Otvorené body vedené v ADR-003

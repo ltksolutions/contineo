@@ -7,7 +7,7 @@
  */
 import { rozdelInline, naBloky, ocistiCitaciu, zlucCitacie } from "../src/lib/formatText"
 
-import { t } from "./pomocnik"
+import { t } from "./helper"
 
 const text = (b: ReturnType<typeof rozdelInline>) => b.map(u => u.text).join("")
 

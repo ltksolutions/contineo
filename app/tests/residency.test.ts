@@ -11,7 +11,7 @@ import {
 import { validateProfile } from "../src/lib/tenantProfile"
 import type { TenantProfile } from "../src/lib/providers/types"
 
-import { t } from "./pomocnik"
+import { t } from "./helper"
 
 const profil = (uprav: Partial<TenantProfile> = {}): TenantProfile => ({
   companyCode: "TEST",

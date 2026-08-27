@@ -8,61 +8,61 @@
  * Adresa je tu tá istá vec ako v `auth.test.ts`: rozhoduje o tom, kto sa
  * dostane k interným smerniciam. Preto sa overuje aj to, čo vyzerá triviálne.
  */
-import { normalizujEmail, overRiadok } from "../src/lib/osoby"
-import type { NovaOsoba } from "../src/lib/osoby"
+import { normalizeEmail, validateRow } from "../src/lib/persons"
+import type { NewPerson } from "../src/lib/persons"
 
-import { t } from "./pomocnik"
+import { t } from "./helper"
 
 // ── normalizácia adresy ──────────────────────────────────────────────────────
 
 t("veľké písmená sa zjednotia",
-  normalizujEmail("Jan.Letko@FutbalSFZ.sk") === "jan.letko@futbalsfz.sk")
+  normalizeEmail("Jan.Letko@FutbalSFZ.sk") === "jan.letko@futbalsfz.sk")
 t("medzery sa orežú",
-  normalizujEmail("  a@sfz.sk  ") === "a@sfz.sk")
-t("prázdny vstup nespadne", normalizujEmail("") === "")
+  normalizeEmail("  a@sfz.sk  ") === "a@sfz.sk")
+t("prázdny vstup nespadne", normalizeEmail("") === "")
 
 // ── riadok importu: čo prejde ────────────────────────────────────────────────
 
-const dobry: NovaOsoba = { email: "Novak@futbalsfz.sk", fullName: "Ján Novák", companyCode: "SFZ" }
-const o = overRiadok(dobry)
+const valid: NewPerson = { email: "Novak@futbalsfz.sk", fullName: "Ján Novák", companyCode: "SFZ" }
+const o = validateRow(valid)
 
 t("platný riadok prejde", o.ok)
 t("adresa sa uloží normalizovaná", o.ok && o.email === "novak@futbalsfz.sk", JSON.stringify(o))
 t("companyCode sa oreže", (() => {
-  const r = overRiadok({ ...dobry, companyCode: "  SFZ  " })
+  const r = validateRow({ ...valid, companyCode: "  SFZ  " })
   return r.ok && r.companyCode === "SFZ"
 })())
 
 // ── riadok importu: čo neprejde ──────────────────────────────────────────────
 
-const zlyDovod = (r: NovaOsoba): string => {
-  const v = overRiadok(r)
-  return v.ok ? "(prešlo)" : v.dovod
+const reasonFor = (r: NewPerson): string => {
+  const v = validateRow(r)
+  return v.ok ? "(prešlo)" : v.reason
 }
 
-t("bez zavináča neprejde", zlyDovod({ ...dobry, email: "novak" }) === "neplatná adresa",
-  zlyDovod({ ...dobry, email: "novak" }))
-t("prázdna adresa neprejde", zlyDovod({ ...dobry, email: "" }) === "neplatná adresa")
-t("chýbajúci companyCode neprejde", zlyDovod({ ...dobry, companyCode: "" }) === "chýba companyCode")
+t("bez zavináča neprejde", reasonFor({ ...valid, email: "novak" }) === "invalid-email",
+  reasonFor({ ...valid, email: "novak" }))
+t("prázdna adresa neprejde", reasonFor({ ...valid, email: "" }) === "invalid-email")
+t("chýbajúci companyCode neprejde", reasonFor({ ...valid, companyCode: "" }) === "missing-companyCode")
 t("companyCode zo samých medzier neprejde",
-  zlyDovod({ ...dobry, companyCode: "   " }) === "chýba companyCode")
-t("chýbajúce meno neprejde", zlyDovod({ ...dobry, fullName: "" }) === "chýba meno")
-t("meno zo samých medzier neprejde", zlyDovod({ ...dobry, fullName: "  " }) === "chýba meno")
+  reasonFor({ ...valid, companyCode: "   " }) === "missing-companyCode")
+t("chýbajúce meno neprejde", reasonFor({ ...valid, fullName: "" }) === "missing-name")
+t("meno zo samých medzier neprejde", reasonFor({ ...valid, fullName: "  " }) === "missing-name")
 
 // Import stovky ľudí naslepo je operácia, po ktorej sa hľadá, ako to vrátiť
 // späť. Preto musí zlyhať nahlas na každom pochybnom riadku, nie ho preskočiť.
 t("chybný riadok nesie dôvod, nielen príznak", (() => {
-  const v = overRiadok({ ...dobry, email: "x" })
-  return !v.ok && v.dovod.length > 0
+  const v = validateRow({ ...valid, email: "x" })
+  return !v.ok && v.reason.length > 0
 })())
 t("chybný riadok nesie pôvodnú adresu na dohľadanie", (() => {
-  const v = overRiadok({ email: "nezmysel", fullName: "A", companyCode: "SFZ" })
+  const v = validateRow({ email: "nezmysel", fullName: "A", companyCode: "SFZ" })
   return !v.ok && v.email === "nezmysel"
 })())
 
 // Vstup z CSV je cudzí — nesmie zhodiť import tým, že chýba pole.
 t("chýbajúce polia nespadnú na výnimke", (() => {
-  const v = overRiadok({} as NovaOsoba)
+  const v = validateRow({} as NewPerson)
   return !v.ok
 })())
 

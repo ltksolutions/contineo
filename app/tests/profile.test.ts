@@ -2,7 +2,7 @@ import { validateProfile, defaultProfile } from "../src/lib/tenantProfile"
 import { getProviders } from "../src/lib/providers/factory"
 import { TenantProfile, ProviderConfigError } from "../src/lib/providers/types"
 
-import { t } from "./pomocnik"
+import { t } from "./helper"
 
 function hodi(fn: () => unknown): string | null {
   try { fn(); return null } catch (e) { return e instanceof Error ? e.message : String(e) }

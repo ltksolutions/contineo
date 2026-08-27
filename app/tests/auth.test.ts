@@ -6,9 +6,9 @@
  * preto sú testy podrobnejšie, než by sa pri troch funkciách čakalo.
  */
 import { povoleneEmaily, jePovoleny } from "../src/lib/auth"
-import { prihlasovaciEmail } from "../src/lib/ecomail"
+import { signInEmail } from "../src/lib/ecomail"
 
-import { t } from "./pomocnik"
+import { t } from "./helper"
 
 // ── rozobratie zoznamu ───────────────────────────────────────────────────────
 
@@ -62,9 +62,9 @@ t("prefix adresy neprejde",
 // ── obsah e-mailu ────────────────────────────────────────────────────────────
 
 const ODKAZ = "https://app.contineo.app/api/auth/callback/email?token=abc&email=x%40y.sk"
-const e = prihlasovaciEmail(ODKAZ, "app.contineo.app")
+const e = signInEmail(ODKAZ, "app.contineo.app")
 
-t("e-mail má predmet", e.predmet.length > 0)
+t("e-mail má predmet", e.subject.length > 0)
 t("odkaz je v textovej verzii", e.text.includes(ODKAZ))
 t("odkaz je v HTML verzii", e.html.includes(ODKAZ))
 t("HTML má aj čitateľnú podobu odkazu na skopírovanie",

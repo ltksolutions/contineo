@@ -6,7 +6,7 @@ import { chunkuj, ocisti, parsujStrukturu, odhadTokenov } from "../scripts/lib/c
 
 import { it, expect } from "vitest"
 
-// Rovnaký most ako `tests/pomocnik.ts`, len tu inline — táto suita je `.mjs`
+// Rovnaký most ako `tests/helper.ts`, len tu inline — táto suita je `.mjs`
 // a nemá zmysel kvôli dvom riadkom ťahať TypeScriptový modul.
 const t = (n, ok, extra = "") => {
   it(n, () => { expect(ok ? "OK" : (extra || "podmienka nebola splnená")).toBe("OK") })

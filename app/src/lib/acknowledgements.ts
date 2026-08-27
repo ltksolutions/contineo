@@ -1,5 +1,5 @@
 /**
- * potvrdenia.ts — auditný záznam „oboznámil som sa" (kolekcia `acknowledgements`, D24).
+ * acknowledgements.ts — auditný záznam „oboznámil som sa" (kolekcia `acknowledgements`, D24).
  *
  * Jadro Fázy 8. Tri veci, ktoré sa tu nesmú pokaziť:
  *
@@ -23,7 +23,7 @@
  * Pri vnútornom predpise je súhlas právne zvláštny: smernica zaväzuje bez
  * ohľadu na to, či s ňou niekto súhlasí.
  *
- * **Jazyk.** Prostredie je viacjazyčné, obsah nie (`jazyky.ts`). Znenie formulky
+ * **Jazyk.** Prostredie je viacjazyčné, obsah nie (`i18n.ts`). Znenie formulky
  * sa preto skladá v jazyku **človeka**, kým dokument si nesie svoj vlastný.
  * Záznam ukladá oboje — `language` (v čom potvrdzoval) aj `documentLanguage`
  * (v čom je smernica). Bez toho sa pri audite nedá odpovedať na otázku, či
@@ -32,19 +32,19 @@
 
 import { ObjectId } from "mongodb"
 import { getCollection } from "./mongodb"
-import { nacitajDokument, platnaVerzia } from "./dokumenty"
-import type { Verzia } from "./dokumenty"
-import { datum, slovnik, normalizujJazyk } from "./jazyky"
-import type { JazykUI } from "./jazyky"
+import { loadDocument, effectiveVersion } from "./documents"
+import type { Version } from "./documents"
+import { formatDate, dictionary, normalizeLanguage } from "./i18n"
+import type { UiLanguage } from "./i18n"
 
-export const KOLEKCIA_POTVRDENIA = "acknowledgements"
+export const ACKNOWLEDGEMENTS_COLLECTION = "acknowledgements"
 
 /** Odvolanie a oprava sú nové záznamy, nie úprava starého. */
-export type TypZaznamu = "acknowledgement" | "revocation" | "correction"
+export type RecordType = "acknowledgement" | "revocation" | "correction"
 
-export interface Potvrdenie {
+export interface Acknowledgement {
   _id?: ObjectId
-  type: TypZaznamu
+  type: RecordType
   companyCode: string
 
   // KTO — s odtlačkom údajov v čase potvrdenia
@@ -65,7 +65,7 @@ export interface Potvrdenie {
   statementText: string
   statementHash: string
   /** Jazyk prostredia, v ktorom človek formulku videl a potvrdil. */
-  language: JazykUI
+  language: UiLanguage
 
   // KEDY a ODKIAĽ
   acknowledgedAt: Date
@@ -88,23 +88,23 @@ export interface Potvrdenie {
  * záznamy** — a rovnako platí, že zmena jazyka rozhrania nemení, čo človek
  * kedysi potvrdil. Preto je text v zázname, nie odkaz naň.
  */
-export function zneniePotvrdenia(
-  nazov: string,
+export function buildStatement(
+  title: string,
   label: string,
-  platnaOd: Date,
-  jazyk: JazykUI = "sk"
+  effectiveFrom: Date,
+  language: UiLanguage = "sk"
 ): string {
-  return slovnik(jazyk).potvrdenie(nazov, label, datum(platnaOd, jazyk))
+  return dictionary(language).statement(title, label, formatDate(effectiveFrom, language))
 }
 
 /** SHA-256 znenia — na rýchle porovnanie, nie ako náhrada textu. */
-export async function odtlacokZnenia(text: string): Promise<string> {
-  const bajty = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(text))
-  return [...new Uint8Array(bajty)].map(b => b.toString(16).padStart(2, "0")).join("")
+export async function hashStatement(text: string): Promise<string> {
+  const bytes = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(text))
+  return [...new Uint8Array(bytes)].map(b => b.toString(16).padStart(2, "0")).join("")
 }
 
 /** Kto potvrdzuje — údaje sa do záznamu skopírujú, nie prepoja. */
-export interface Potvrdzujuci {
+export interface Acknowledger {
   personId: string
   email: string
   fullName: string
@@ -113,9 +113,9 @@ export interface Potvrdzujuci {
   language?: string
 }
 
-export type VysledokPotvrdenia =
-  | { ok: true; id: string; znenie: string; verzia: Verzia }
-  | { ok: false; dovod: "dokument-neexistuje" | "bez-platnej-verzie" | "uz-potvrdene" | "zapis-zlyhal"; detail?: string }
+export type AcknowledgeResult =
+  | { ok: true; id: string; statement: string; version: Version }
+  | { ok: false; reason: "document-not-found" | "no-effective-version" | "already-acknowledged" | "write-failed"; detail?: string }
 
 /**
  * Zapíše potvrdenie. **Verziu si server načíta sám** — z požiadavky sa berie
@@ -127,69 +127,69 @@ export type VysledokPotvrdenia =
  *   3. zapíš záznam,
  *   4. až potom povedz klientovi „hotovo".
  */
-export async function potvrd(
-  kto: Potvrdzujuci,
+export async function acknowledge(
+  actor: Acknowledger,
   documentId: string,
-  kontext: { ip?: string | null; userAgent?: string | null; trackId?: string | null } = {}
-): Promise<VysledokPotvrdenia> {
-  const dok = await nacitajDokument(documentId)
-  if (!dok) return { ok: false, dovod: "dokument-neexistuje" }
+  context: { ip?: string | null; userAgent?: string | null; trackId?: string | null } = {}
+): Promise<AcknowledgeResult> {
+  const doc = await loadDocument(documentId)
+  if (!doc) return { ok: false, reason: "document-not-found" }
 
-  const platna = platnaVerzia(dok)
-  if (!platna.ok) return { ok: false, dovod: "bez-platnej-verzie", detail: platna.dovod }
+  const effective = effectiveVersion(doc)
+  if (!effective.ok) return { ok: false, reason: "no-effective-version", detail: effective.reason }
 
-  const v = platna.verzia
-  const platnaOd = v.effectiveFrom as Date
-  const jazyk = normalizujJazyk(kto.language)
-  const znenie = zneniePotvrdenia(dok.title, v.label, platnaOd, jazyk)
-  const teraz = new Date()
+  const v = effective.version
+  const effectiveFrom = v.effectiveFrom as Date
+  const language = normalizeLanguage(actor.language)
+  const statement = buildStatement(doc.title, v.label, effectiveFrom, language)
+  const now = new Date()
 
-  const zaznam: Potvrdenie = {
+  const record: Acknowledgement = {
     type: "acknowledgement",
-    companyCode: kto.companyCode,
-    personId: kto.personId,
-    email: kto.email,
-    fullName: kto.fullName,
-    documentId: dok.documentId,
+    companyCode: actor.companyCode,
+    personId: actor.personId,
+    email: actor.email,
+    fullName: actor.fullName,
+    documentId: doc.documentId,
     versionId: v.versionId,
-    documentTitle: dok.title,
+    documentTitle: doc.title,
     versionLabel: v.label,
-    effectiveFrom: platnaOd,
-    documentLanguage: dok.language ?? null,
-    statementText: znenie,
-    statementHash: await odtlacokZnenia(znenie),
-    language: jazyk,
-    acknowledgedAt: teraz,
-    ip: kontext.ip ?? null,
-    userAgent: kontext.userAgent ?? null,
-    trackId: kontext.trackId ?? null,
+    effectiveFrom: effectiveFrom,
+    documentLanguage: doc.language ?? null,
+    statementText: statement,
+    statementHash: await hashStatement(statement),
+    language: language,
+    acknowledgedAt: now,
+    ip: context.ip ?? null,
+    userAgent: context.userAgent ?? null,
+    trackId: context.trackId ?? null,
     origin: "portal",
     supersedes: null,
-    createdAt: teraz,
+    createdAt: now,
   }
 
   try {
-    const col = await getCollection<Potvrdenie>(KOLEKCIA_POTVRDENIA)
-    const r = await col.insertOne(zaznam)
-    return { ok: true, id: String(r.insertedId), znenie, verzia: v }
+    const col = await getCollection<Acknowledgement>(ACKNOWLEDGEMENTS_COLLECTION)
+    const r = await col.insertOne(record)
+    return { ok: true, id: String(r.insertedId), statement, version: v }
   } catch (e) {
     // Unikátny index odmietne druhé potvrdenie tej istej verzie. Nie je to
     // chyba používateľa — už to má za sebou a treba mu to povedať, nie
     // zobraziť chybu servera.
-    if ((e as { code?: number }).code === 11000) return { ok: false, dovod: "uz-potvrdene" }
-    console.error("[potvrdenia] zápis zlyhal:", e)
-    return { ok: false, dovod: "zapis-zlyhal", detail: String((e as Error).message ?? e) }
+    if ((e as { code?: number }).code === 11000) return { ok: false, reason: "already-acknowledged" }
+    console.error("[acknowledgements] zápis zlyhal:", e)
+    return { ok: false, reason: "write-failed", detail: String((e as Error).message ?? e) }
   }
 }
 
 /** Má táto osoba potvrdenú túto verziu? */
-export async function maPotvrdene(personId: string, versionId: string): Promise<boolean> {
-  const col = await getCollection<Potvrdenie>(KOLEKCIA_POTVRDENIA)
-  const pocet = await col.countDocuments(
+export async function hasAcknowledged(personId: string, versionId: string): Promise<boolean> {
+  const col = await getCollection<Acknowledgement>(ACKNOWLEDGEMENTS_COLLECTION)
+  const count = await col.countDocuments(
     { personId, versionId, type: "acknowledgement" },
     { limit: 1 }
   )
-  return pocet > 0
+  return count > 0
 }
 
 /**
@@ -198,7 +198,7 @@ export async function maPotvrdene(personId: string, versionId: string): Promise<
  * Osoba musí vedieť zobraziť a stiahnuť, čo o nej systém eviduje, aj bez
  * žiadosti na HR (`docs/ONBOARDING_KONCEPCIA.md` kap. 6).
  */
-export async function potvrdeniaOsoby(personId: string): Promise<Potvrdenie[]> {
-  const col = await getCollection<Potvrdenie>(KOLEKCIA_POTVRDENIA)
+export async function personAcknowledgements(personId: string): Promise<Acknowledgement[]> {
+  const col = await getCollection<Acknowledgement>(ACKNOWLEDGEMENTS_COLLECTION)
   return col.find({ personId }).sort({ acknowledgedAt: -1 }).toArray()
 }

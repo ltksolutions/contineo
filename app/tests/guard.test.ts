@@ -3,7 +3,7 @@ import {
   EmbeddingSpaceMismatchError,
 } from "../src/lib/embeddingGuard"
 
-import { t } from "./pomocnik"
+import { t } from "./helper"
 
 const chunk = (id: string, model?: string): any => ({
   _id: id, text: "x", documentId: "d", embeddingModel: model,

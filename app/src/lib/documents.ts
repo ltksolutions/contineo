@@ -1,5 +1,5 @@
 /**
- * dokumenty.ts — verzie dokumentu a to, ktorá z nich platí (D25, D6).
+ * documents.ts — verzie dokumentu a to, ktorá z nich platí (D25, D6).
  *
  * `documents` dnes verziu **prepisuje**: import nastaví `versionId` navrch
  * a predchádzajúce znenie sa z dokumentu stratí (chunky sa archivujú, dokument
@@ -17,9 +17,9 @@
 
 import { getCollection } from "./mongodb"
 
-export const KOLEKCIA_DOKUMENTY = "documents"
+export const DOCUMENTS_COLLECTION = "documents"
 
-export interface Verzia {
+export interface Version {
   /** Nemenné. Zhodné s `document_chunks.versionId` — chunk patrí verzii. */
   versionId: string
   /** Ľudské označenie: „1.2", „novela 2026". */
@@ -48,7 +48,7 @@ export interface Verzia {
 }
 
 /** Len tá časť `documents`, ktorú potrebuje onboarding. */
-export interface Dokument {
+export interface DocumentRecord {
   documentId: string
   title: string
   companyCode?: string
@@ -56,10 +56,10 @@ export interface Dokument {
   /**
    * Základný jazyk, v ktorom je dokument napísaný (číselník `language`).
    * **Nie je to jazyk prostredia** — nič neprekladáme; dokument v inom jazyku
-   * je samostatný dokument, nie preklad. Viď `jazyky.ts`.
+   * je samostatný dokument, nie preklad. Viď `i18n.ts`.
    */
   language?: string
-  versions?: Verzia[]
+  versions?: Version[]
   /** Ponechané kvôli dokumentom naimportovaným pred zavedením `versions[]`. */
   versionId?: string
   effectiveFrom?: Date | null
@@ -67,16 +67,16 @@ export interface Dokument {
 }
 
 /** Prečo dokument nemá platné znenie — aby sa dalo povedať niečo konkrétne. */
-export type DovodBezVerzie =
-  | "ziadne-verzie"
-  | "platnost-neurcena"
-  | "vsetky-archivovane"
-  | "este-neplati"
-  | "uz-neplati"
+export type NoVersionReason =
+  | "no-versions"
+  | "validity-not-set"
+  | "all-archived"
+  | "not-yet-effective"
+  | "no-longer-effective"
 
-export type VysledokPlatnosti =
-  | { ok: true; verzia: Verzia }
-  | { ok: false; dovod: DovodBezVerzie }
+export type EffectiveVersionResult =
+  | { ok: true; version: Version }
+  | { ok: false; reason: NoVersionReason }
 
 /**
  * Ktorá verzia platí k dátumu (predvolene dnes).
@@ -95,37 +95,37 @@ export type VysledokPlatnosti =
  * Čistá funkcia bez databázy — je to jediné miesto s netriviálnymi pravidlami
  * a jediné, ktoré sa dá otestovať bez clustera.
  */
-export function platnaVerzia(dok: Dokument, kDatumu: Date = new Date()): VysledokPlatnosti {
-  const verzie = dok.versions ?? []
-  if (verzie.length === 0) return { ok: false, dovod: "ziadne-verzie" }
+export function effectiveVersion(doc: DocumentRecord, asOf: Date = new Date()): EffectiveVersionResult {
+  const versions = doc.versions ?? []
+  if (versions.length === 0) return { ok: false, reason: "no-versions" }
 
-  const aktivne = verzie.filter(v => v.isActive)
-  if (aktivne.length === 0) return { ok: false, dovod: "vsetky-archivovane" }
+  const active = versions.filter(v => v.isActive)
+  if (active.length === 0) return { ok: false, reason: "all-archived" }
 
-  const sPlatnostou = aktivne.filter(v => v.effectiveFrom instanceof Date)
-  if (sPlatnostou.length === 0) return { ok: false, dovod: "platnost-neurcena" }
+  const withValidity = active.filter(v => v.effectiveFrom instanceof Date)
+  if (withValidity.length === 0) return { ok: false, reason: "validity-not-set" }
 
-  const vyhovujuce = sPlatnostou.filter(v =>
-    (v.effectiveFrom as Date).getTime() <= kDatumu.getTime() &&
-    (v.effectiveTo == null || v.effectiveTo.getTime() > kDatumu.getTime())
+  const matching = withValidity.filter(v =>
+    (v.effectiveFrom as Date).getTime() <= asOf.getTime() &&
+    (v.effectiveTo == null || v.effectiveTo.getTime() > asOf.getTime())
   )
 
-  if (vyhovujuce.length === 0) {
+  if (matching.length === 0) {
     // Rozlíšenie „ešte" vs „už" je pre človeka na druhej strane podstatné:
     // prvé znamená počkaj, druhé znamená hľadaj novšie znenie.
-    const najskorsi = Math.min(...sPlatnostou.map(v => (v.effectiveFrom as Date).getTime()))
-    return { ok: false, dovod: najskorsi > kDatumu.getTime() ? "este-neplati" : "uz-neplati" }
+    const earliest = Math.min(...withValidity.map(v => (v.effectiveFrom as Date).getTime()))
+    return { ok: false, reason: earliest > asOf.getTime() ? "not-yet-effective" : "no-longer-effective" }
   }
 
-  const najnovsia = vyhovujuce.reduce((a, b) =>
+  const latest = matching.reduce((a, b) =>
     (a.effectiveFrom as Date).getTime() >= (b.effectiveFrom as Date).getTime() ? a : b
   )
-  return { ok: true, verzia: najnovsia }
+  return { ok: true, version: latest }
 }
 
 /** Načíta dokument. `null`, keď taký nie je. */
-export async function nacitajDokument(documentId: string): Promise<Dokument | null> {
-  const col = await getCollection<Dokument>(KOLEKCIA_DOKUMENTY)
+export async function loadDocument(documentId: string): Promise<DocumentRecord | null> {
+  const col = await getCollection<DocumentRecord>(DOCUMENTS_COLLECTION)
   return col.findOne({ documentId })
 }
 
@@ -137,11 +137,11 @@ export async function nacitajDokument(documentId: string): Promise<Dokument | nu
  * keď nová verzia platnosť má — inak by sa dokument ocitol bez platného
  * znenia kvôli niečomu, čo ešte nikto neschválil.
  */
-export async function pridajVerziu(documentId: string, v: Verzia): Promise<void> {
-  const col = await getCollection<Dokument>(KOLEKCIA_DOKUMENTY)
+export async function addVersion(documentId: string, v: Version): Promise<void> {
+  const col = await getCollection<DocumentRecord>(DOCUMENTS_COLLECTION)
 
-  const uz = await col.findOne({ documentId, "versions.versionId": v.versionId })
-  if (uz) return
+  const exists = await col.findOne({ documentId, "versions.versionId": v.versionId })
+  if (exists) return
 
   if (v.effectiveFrom instanceof Date) {
     await col.updateOne(

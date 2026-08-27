@@ -1,5 +1,5 @@
 /**
- * osoby.ts — kto do organizácie patrí (kolekcia `persons`, Fáza 8).
+ * persons.ts — kto do organizácie patrí (kolekcia `persons`, Fáza 8).
  *
  * Doteraz rozhodovala o prístupe premenná `POVOLENE_EMAILY` a v `auth.ts` to
  * bolo aj zdôvodnené: pri piatich až desiatich hodnotiteľoch je zmena premennej
@@ -24,22 +24,22 @@
 
 import { ObjectId } from "mongodb"
 import { getCollection } from "./mongodb"
-import { normalizujJazyk } from "./jazyky"
-import type { JazykUI } from "./jazyky"
+import { normalizeLanguage } from "./i18n"
+import type { UiLanguage } from "./i18n"
 
-export const KOLEKCIA_OSOBY = "persons"
+export const PERSONS_COLLECTION = "persons"
 
 /**
  * Typ osoby. Pripravené pole, **nie filtrovacie kritérium pre prístup** —
  * prístup rieši `accessLevel` + `companyCode` ako všade inde. Druhá cesta
  * k obsahu by raz zaostala za tou prvou.
  */
-export type TypOsoby = "employee" | "external" | "referee" | "official"
+export type PersonType = "employee" | "external" | "referee" | "official"
 
 /** `invited` = pozvaná, ešte sa neprihlásila. `inactive` = už sem nepatrí. */
-export type StavOsoby = "invited" | "active" | "inactive"
+export type PersonStatus = "invited" | "active" | "inactive"
 
-export interface Osoba {
+export interface Person {
   _id?: ObjectId
 
   /** UUID, zhodné s `auth_users.id`. Väzba na technickú vrstvu prihlásenia. */
@@ -50,17 +50,17 @@ export interface Osoba {
   email: string
   fullName: string
   department?: string
-  personType: TypOsoby
+  personType: PersonType
   startDate?: Date
-  status: StavOsoby
+  status: PersonStatus
 
   /**
    * Jazyk **prostredia** — v čom sa s človekom rozprávame (rozhranie, e-maily,
    * znenie formulky). Nemá nič spoločné s jazykom smerníc, ktoré číta:
    * český rozhodca môže v českom rozhraní potvrdzovať slovenský predpis
-   * a záznam si to zapamätá (`jazyky.ts`).
+   * a záznam si to zapamätá (`i18n.ts`).
    */
-  language: JazykUI
+  language: UiLanguage
 
   /** Kľúče trás onboardingu, ktoré sa tejto osoby týkajú. */
   tracks: string[]
@@ -82,12 +82,12 @@ export interface Osoba {
 }
 
 /** Údaje pre založenie alebo aktualizáciu osoby — napr. z CSV importu. */
-export interface NovaOsoba {
+export interface NewPerson {
   email: string
   fullName: string
   companyCode: string
   department?: string
-  personType?: TypOsoby
+  personType?: PersonType
   startDate?: Date
   tracks?: string[]
   roles?: string[]
@@ -96,16 +96,16 @@ export interface NovaOsoba {
 }
 
 /** Adresa v tvare, v ktorom sa porovnáva a ukladá. */
-export function normalizujEmail(email: string): string {
+export function normalizeEmail(email: string): string {
   return email.trim().toLowerCase()
 }
 
 /** Nájde osobu podľa adresy. `null`, keď taká v organizácii nie je. */
-export async function najdiOsobu(email: string): Promise<Osoba | null> {
-  const adresa = normalizujEmail(email)
-  if (!adresa.includes("@")) return null
-  const col = await getCollection<Osoba>(KOLEKCIA_OSOBY)
-  return col.findOne({ email: adresa })
+export async function findPerson(email: string): Promise<Person | null> {
+  const address = normalizeEmail(email)
+  if (!address.includes("@")) return null
+  const col = await getCollection<Person>(PERSONS_COLLECTION)
+  return col.findOne({ email: address })
 }
 
 /**
@@ -123,23 +123,23 @@ export async function najdiOsobu(email: string): Promise<Osoba | null> {
  * Núdzová brzda v `auth.ts` zostáva funkčná aj pri výpadku, takže sa správca
  * dnu dostane vždy.
  */
-export async function osobaSmiePrihlasenie(email: string): Promise<boolean> {
-  const adresa = normalizujEmail(email)
-  if (!adresa.includes("@")) return false
+export async function personMaySignIn(email: string): Promise<boolean> {
+  const address = normalizeEmail(email)
+  if (!address.includes("@")) return false
   try {
     // Hľadáme existenciu, nie konkrétny záznam: tá istá adresa môže patriť
     // do viacerých jednotiek (`person_memberships` je pole, D32) a na
     // prihlásenie stačí, aby ju aspoň jedna z nich nemala vyradenú.
-    const col = await getCollection<Osoba>(KOLEKCIA_OSOBY)
-    const pocet = await col.countDocuments(
-      { email: adresa, status: { $ne: "inactive" } },
+    const col = await getCollection<Person>(PERSONS_COLLECTION)
+    const count = await col.countDocuments(
+      { email: address, status: { $ne: "inactive" } },
       { limit: 1 }
     )
-    return pocet > 0
+    return count > 0
   } catch (e) {
     // Nahlas, nie ticho — inak by sa výpadok tváril ako „nemáš prístup"
     // a nikto by nehľadal príčinu.
-    console.error("[osoby] persons sa nedá prečítať, platí len POVOLENE_EMAILY:", e)
+    console.error("[persons] persons sa nedá prečítať, platí len POVOLENE_EMAILY:", e)
     return false
   }
 }
@@ -151,62 +151,62 @@ export async function osobaSmiePrihlasenie(email: string): Promise<boolean> {
  * správcu, ktorý prešiel núdzovou brzdou. Zlyhanie tu nesmie zhodiť
  * prihlásenie samotné: je to evidencia, nie brána.
  */
-export async function oznacPrihlasenie(email: string): Promise<void> {
-  const adresa = normalizujEmail(email)
-  const teraz = new Date()
+export async function recordSignIn(email: string): Promise<void> {
+  const address = normalizeEmail(email)
+  const now = new Date()
   try {
-    const col = await getCollection<Osoba>(KOLEKCIA_OSOBY)
+    const col = await getCollection<Person>(PERSONS_COLLECTION)
 
     // Bez `upsert` — prihlásenie nesmie založiť osobu. Kto sa dostal dnu
     // núdzovou brzdou, do `persons` nepatrí, kým ho tam niekto nepozve.
-    await col.updateOne({ email: adresa }, { $set: { lastLoginAt: teraz } })
+    await col.updateOne({ email: address }, { $set: { lastLoginAt: now } })
 
     // Prvé prihlásenie sa zapíše len raz — podmienka je v dotaze, nie v kóde,
     // takže dva súbežné requesty nezapíšu dva rôzne časy.
     await col.updateOne(
-      { email: adresa, firstLoginAt: { $exists: false } },
-      { $set: { firstLoginAt: teraz } }
+      { email: address, firstLoginAt: { $exists: false } },
+      { $set: { firstLoginAt: now } }
     )
 
     // `invited` → `active` len z pozvaného stavu. Vyradenú osobu (`inactive`)
     // by prihlásenie nesmelo oživiť ani vtedy, keby sa cez bránu dostala inak.
     await col.updateOne(
-      { email: adresa, status: "invited" },
-      { $set: { status: "active" as StavOsoby } }
+      { email: address, status: "invited" },
+      { $set: { status: "active" as PersonStatus } }
     )
   } catch (e) {
-    console.error("[osoby] zápis prihlásenia zlyhal:", e)
+    console.error("[persons] zápis prihlásenia zlyhal:", e)
   }
 }
 
 // ── Import osôb ──────────────────────────────────────────────────────────────
 
 /** Výsledok overenia jedného riadku importu. */
-export type OverenyRiadok =
+export type ValidatedRow =
   | { ok: true; email: string; companyCode: string }
-  | { ok: false; email: string; dovod: string }
+  | { ok: false; email: string; reason: string }
 
 /**
  * Overí jeden riadok importu **bez databázy**.
  *
  * Vyčlenené zámerne: sú to jediné pravidlá v celom module, ktoré sa dajú
  * pomýliť, a zároveň jediné, ktoré sa dajú otestovať bez clustera. Zvyšok
- * `zalozOsoby()` je už len zápis.
+ * `upsertPersons()` je už len zápis.
  */
-export function overRiadok(r: NovaOsoba): OverenyRiadok {
-  const email = normalizujEmail(r?.email ?? "")
-  if (!email.includes("@")) return { ok: false, email: r?.email ?? "", dovod: "neplatná adresa" }
-  if (!r.companyCode?.trim()) return { ok: false, email, dovod: "chýba companyCode" }
-  if (!r.fullName?.trim()) return { ok: false, email, dovod: "chýba meno" }
+export function validateRow(r: NewPerson): ValidatedRow {
+  const email = normalizeEmail(r?.email ?? "")
+  if (!email.includes("@")) return { ok: false, email: r?.email ?? "", reason: "invalid-email" }
+  if (!r.companyCode?.trim()) return { ok: false, email, reason: "missing-companyCode" }
+  if (!r.fullName?.trim()) return { ok: false, email, reason: "missing-name" }
   return { ok: true, email, companyCode: r.companyCode.trim() }
 }
 
 /** Výsledok importu — čo pribudlo, čo sa zmenilo, čo sa preskočilo. */
-export interface VysledokImportu {
-  nove: number
-  aktualizovane: number
-  bezZmeny: number
-  chyby: { email: string; dovod: string }[]
+export interface ImportResult {
+  created: number
+  updated: number
+  unchanged: number
+  errors: { email: string; reason: string }[]
 }
 
 /**
@@ -221,23 +221,23 @@ export interface VysledokImportu {
  * `active`, aj keď v CSV je znova ako nový riadok. Prepísať by znamenalo
  * stratiť informáciu, že tam ten človek už bol.
  */
-export async function zalozOsoby(
-  zoznam: NovaOsoba[],
-  kto: string
-): Promise<VysledokImportu> {
-  const v: VysledokImportu = { nove: 0, aktualizovane: 0, bezZmeny: 0, chyby: [] }
-  if (zoznam.length === 0) return v
+export async function upsertPersons(
+  rows: NewPerson[],
+  actor: string
+): Promise<ImportResult> {
+  const v: ImportResult = { created: 0, updated: 0, unchanged: 0, errors: [] }
+  if (rows.length === 0) return v
 
-  const col = await getCollection<Osoba>(KOLEKCIA_OSOBY)
-  const teraz = new Date()
+  const col = await getCollection<Person>(PERSONS_COLLECTION)
+  const now = new Date()
 
-  for (const r of zoznam) {
-    const overeny = overRiadok(r)
-    if (!overeny.ok) { v.chyby.push({ email: overeny.email, dovod: overeny.dovod }); continue }
-    const { email, companyCode } = overeny
+  for (const r of rows) {
+    const checked = validateRow(r)
+    if (!checked.ok) { v.errors.push({ email: checked.email, reason: checked.reason }); continue }
+    const { email, companyCode } = checked
 
-    const kluc = { companyCode, email }
-    const zmeny: Record<string, unknown> = {
+    const key = { companyCode, email }
+    const changes: Record<string, unknown> = {
       fullName: r.fullName.trim(),
       department: r.department?.trim() || undefined,
       personType: r.personType ?? "employee",
@@ -250,28 +250,28 @@ export async function zalozOsoby(
     // opakovaný import bez stĺpca jazyka ticho prepol každého späť na
     // slovenčinu — rovnaká pasca ako pri `status`, len horšie viditeľná,
     // lebo sa prejaví až v e-maile, ktorý už niekomu odišiel.
-    if (r.language !== undefined) zmeny.language = normalizujJazyk(r.language)
+    if (r.language !== undefined) changes.language = normalizeLanguage(r.language)
 
     try {
-      const vysledok = await col.updateOne(kluc, {
-        $set: zmeny,
+      const result = await col.updateOne(key, {
+        $set: changes,
         $setOnInsert: {
-          ...kluc,
+          ...key,
           id: crypto.randomUUID(),
-          status: "invited" as StavOsoby,
-          ...(r.language === undefined ? { language: normalizujJazyk(undefined) } : {}),
-          invitedAt: teraz,
+          status: "invited" as PersonStatus,
+          ...(r.language === undefined ? { language: normalizeLanguage(undefined) } : {}),
+          invitedAt: now,
           externalRef: { sportnetId: null, entraObjectId: null },
-          createdBy: kto,
-          createdAt: teraz,
+          createdBy: actor,
+          createdAt: now,
         },
       }, { upsert: true })
 
-      if (vysledok.upsertedCount) v.nove++
-      else if (vysledok.modifiedCount) v.aktualizovane++
-      else v.bezZmeny++
+      if (result.upsertedCount) v.created++
+      else if (result.modifiedCount) v.updated++
+      else v.unchanged++
     } catch (e) {
-      v.chyby.push({ email, dovod: String((e as Error).message ?? e) })
+      v.errors.push({ email, reason: String((e as Error).message ?? e) })
     }
   }
 
@@ -285,32 +285,32 @@ export async function zalozOsoby(
  * operácia, po ktorej sa hľadá, ako to vrátiť späť — a `persons` nemá
  * rollback. Preto import bez náhľadu neexistuje.
  */
-export async function nahladImportu(zoznam: NovaOsoba[]): Promise<{
-  nove: string[]
-  existujuce: string[]
-  chyby: { email: string; dovod: string }[]
+export async function previewImport(rows: NewPerson[]): Promise<{
+  created: string[]
+  existing: string[]
+  errors: { email: string; reason: string }[]
 }> {
-  const nove: string[] = []
-  const existujuce: string[] = []
-  const chyby: { email: string; dovod: string }[] = []
+  const created: string[] = []
+  const existing: string[] = []
+  const errors: { email: string; reason: string }[] = []
 
-  const col = await getCollection<Osoba>(KOLEKCIA_OSOBY)
-  const videne = new Set<string>()
+  const col = await getCollection<Person>(PERSONS_COLLECTION)
+  const seen = new Set<string>()
 
-  for (const r of zoznam) {
-    const overeny = overRiadok(r)
-    if (!overeny.ok) { chyby.push({ email: overeny.email, dovod: overeny.dovod }); continue }
-    const { email, companyCode } = overeny
+  for (const r of rows) {
+    const checked = validateRow(r)
+    if (!checked.ok) { errors.push({ email: checked.email, reason: checked.reason }); continue }
+    const { email, companyCode } = checked
 
-    const kluc = `${companyCode}|${email}`
-    if (videne.has(kluc)) { chyby.push({ email, dovod: "duplicita v samotnom súbore" }); continue }
-    videne.add(kluc)
+    const key = `${companyCode}|${email}`
+    if (seen.has(key)) { errors.push({ email, reason: "duplicate-in-file" }); continue }
+    seen.add(key)
 
-    const uz = await col.findOne({ companyCode, email })
-    ;(uz ? existujuce : nove).push(email)
+    const exists = await col.findOne({ companyCode, email })
+    ;(exists ? existing : created).push(email)
   }
 
-  return { nove, existujuce, chyby }
+  return { created, existing, errors }
 }
 
 /**
@@ -321,11 +321,11 @@ export async function nahladImportu(zoznam: NovaOsoba[]): Promise<{
  * núdzovou brzdou) alebo je databáza nedostupná, platí slovenčina. Zlý jazyk
  * e-mailu je nepríjemnosť; neodoslaný e-mail je zavreté dvere.
  */
-export async function jazykOsoby(email: string): Promise<JazykUI> {
+export async function personLanguage(email: string): Promise<UiLanguage> {
   try {
-    const osoba = await najdiOsobu(email)
-    return normalizujJazyk(osoba?.language)
+    const person = await findPerson(email)
+    return normalizeLanguage(person?.language)
   } catch {
-    return normalizujJazyk(undefined)
+    return normalizeLanguage(undefined)
   }
 }

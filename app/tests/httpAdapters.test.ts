@@ -1,7 +1,7 @@
 import { HttpEmbeddingProvider, truncateMRL, parseTeiEmbed, parseOpenAIEmbed } from "../src/lib/providers/embedding/http"
 import { HttpRerankProvider, parseTeiRerank, parseInfinityRerank, applyScores } from "../src/lib/providers/rerank/http"
 
-import { t } from "./pomocnik"
+import { t } from "./helper"
 const blizko = (a: number, b: number, eps = 1e-9) => Math.abs(a - b) < eps
 
 async function hodi(fn: () => Promise<unknown>): Promise<Error | null> {

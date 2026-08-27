@@ -26,6 +26,24 @@
 
 ---
 
+## Konvencie v kóde (2026-08-27)
+
+**Identifikátory po anglicky, komentáre po slovensky.** Názvy modulov, typov,
+funkcií, parametrov aj lokálnych premenných sú anglické; vysvetlenia — a je ich
+v tomto projekte veľa, lebo zachytávajú *prečo* — zostávajú slovenské. Rovnako
+popisy testov: majú sa dať prečítať ako veta, nie ako zoznam matcherov.
+
+Staršie moduly (`hodnotenia.ts`, `cennik.ts`, `sada.ts`) majú ešte slovenské
+mená z čias, keď konvencia nebola vyslovená. Neprepisujú sa naraz — premenujú sa
+vtedy, keď sa ich aj tak niekto dotkne. Rovnako `povoleneEmaily()`/`jePovoleny()`
+v `auth.ts`.
+
+**Hodnoty, ktoré vracia API, sú anglické a strojové** — `"no-effective-version"`,
+`"already-acknowledged"`, `"invalid-email"`. Sú to kľúče pre volajúceho, nie text
+pre človeka; ten sa k nim priradí až v rozhraní, podľa jazyka (`i18n.ts`).
+
+---
+
 ## Implementované súbory (Fáza 3)
 
 ```

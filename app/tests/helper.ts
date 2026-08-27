@@ -1,5 +1,5 @@
 /**
- * pomocnik.ts — most medzi pôvodným tvarom testov a Vitestom.
+ * helper.ts — most medzi pôvodným tvarom testov a Vitestom.
  *
  * Suity v tomto projekte sú písané ako `t("popis", podmienka)`. Je to čitateľné
  * a popisy sú po slovensky, takže sa výpis dá prečítať bez znalosti anglických

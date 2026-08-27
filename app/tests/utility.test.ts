@@ -4,7 +4,7 @@ import { classifyQuery, classifyByHeuristic } from "../src/lib/queryClassifier"
 import { preprocessQuery, parsePreprocessed } from "../src/lib/queryPreprocessor"
 import { GenerationProvider } from "../src/lib/providers/types"
 
-import { t } from "./pomocnik"
+import { t } from "./helper"
 
 function mockFetch(handler: (url: string, body: any) => { status?: number; json?: any; text?: string }) {
   const volania: { url: string; body: any }[] = []

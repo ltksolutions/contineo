@@ -13,7 +13,7 @@ import {
   CENNIK, PRAZDNE_TOKENY,
 } from "../src/lib/cennik"
 
-import { t } from "./pomocnik"
+import { t } from "./helper"
 
 /** Porovnanie s toleranciou — počíta sa v plávajúcej čiarke. */
 const skoro = (a: number, b: number, tol = 1e-9) => Math.abs(a - b) < tol

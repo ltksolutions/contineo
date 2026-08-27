@@ -9,7 +9,7 @@
 import { vPrekryve, zhoda } from "../src/lib/sada"
 import type { OtazkaSady, StavOtazky } from "../src/lib/sada"
 
-import { t } from "./pomocnik"
+import { t } from "./helper"
 
 const otazka = (u: Partial<OtazkaSady> = {}): OtazkaSady => ({
   id: "D9-001", povodneZnenie: "Otázka?", upraveneZnenie: null,

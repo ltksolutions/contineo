@@ -97,10 +97,10 @@
 
 **I1. Ultra-MVP `[1 týždeň]`** — cieľ: skutoční ľudia potvrdia skutočné smernice
 
-- [x] Kolekcia `persons` + indexy ✅ 2026-08-27 — `app/src/lib/osoby.ts`, indexy v `app/scripts/onboarding_init.mjs` (pridaný aj `{email}` — prihlásenie hľadá bez znalosti tenanta)
-- [ ] Import z CSV: idempotentný, s **povinným náhľadom** pred zápisom — *logika hotová (`zalozOsoby`, `nahladImportu`, `overRiadok`), chýba CLI skript*
+- [x] Kolekcia `persons` + indexy ✅ 2026-08-27 — `app/src/lib/persons.ts`, indexy v `app/scripts/onboarding_init.mjs` (pridaný aj `{email}` — prihlásenie hľadá bez znalosti tenanta)
+- [ ] Import z CSV: idempotentný, s **povinným náhľadom** pred zápisom — *logika hotová (`upsertPersons`, `previewImport`, `validateRow`), chýba CLI skript*
 - [x] Prihlásenie proti `persons` ✅ 2026-08-27 — `auth.ts` skladá obe cesty; brzda ide prvá (nepotrebuje DB), chyba DB **neotvára** prístup — **D26**
-- [x] `documents.versions[]` v cieľovom tvare ✅ 2026-08-27 — **D25**. `app/src/lib/dokumenty.ts` (`platnaVerzia()` s pravidlami D6 + R3) a `scripts/import.mjs` (`dopisVerziu()` — nová položka, nikdy prepis; dopĺňa aj dokumentom naimportovaným pred zavedením `versions[]`)
+- [x] `documents.versions[]` v cieľovom tvare ✅ 2026-08-27 — **D25**. `app/src/lib/documents.ts` (`effectiveVersion()` s pravidlami D6 + R3) a `scripts/import.mjs` (`recordVersion()` — nová položka, nikdy prepis; dopĺňa aj dokumentom naimportovaným pred zavedením `versions[]`)
   - [ ] **Známy rozpor s D25, pravidlo 2:** import publikuje priamo (`status: "published"`), hoci kanál nemá sám zneplatniť platnú verziu — platnosť má určiť kurátor. Zapisujeme stav taký, aký je, a nepredstierame schválenie. **Zosúladiť pri review UI (Fáza 4)**; dovtedy je to vedomý ústupok, nie prehliadnutie.
 - [ ] Zobrazenie dokumentu človeku (cez existujúci `securityFilter()`, žiadna druhá cesta k obsahu)
 - [ ] Kolekcia `acknowledgements` + unikátny partial index — **D24**
@@ -109,7 +109,7 @@
 
 **I1b. Viacjazyčné prostredie (D35)** — SK · CS · EN
 
-- [x] `app/src/lib/jazyky.ts` ✅ 2026-08-27 — zoznam jazykov prostredia (oddelený od číselníka `language`, ktorý tagguje obsah), formulka a e-mail per jazyk, deterministický dátum
+- [x] `app/src/lib/i18n.ts` ✅ 2026-08-27 — zoznam jazykov prostredia (oddelený od číselníka `language`, ktorý tagguje obsah), formulka a e-mail per jazyk, deterministický dátum
 - [x] `persons.language` + prihlasovací e-mail v jazyku osoby ✅ 2026-08-27
 - [x] `acknowledgements.language` + `documentLanguage` ✅ 2026-08-27 — záznam unesie, že Čech potvrdzoval slovenský text
 - [ ] Preklad **rozhrania** portálu (SK hotové, CS/EN po termíne — SFZ prvá vlna je len SK)
@@ -159,7 +159,7 @@
 ### K. Testy — prechod na Vitest ✅ (2026-08-27)
 
 - [x] `vitest` + `vitest.config.mts`; `npm test` = `vitest run`, pribudlo `test:watch` a `test:coverage`
-- [x] Všetkých 15 pôvodných suít prevedených cez most `tests/pomocnik.ts` — pôvodný tvar `t("popis", podmienka)` zostal, mení sa len to, kam sa výsledok hlási
+- [x] Všetkých 15 pôvodných suít prevedených cez most `tests/helper.ts` — pôvodný tvar `t("popis", podmienka)` zostal, mení sa len to, kam sa výsledok hlási
 - [x] `tests/onboardingDb.test.ts` — 17 testov nad falošnou databázou (`vi.mock`), vrátane toho, že **chyba DB neotvára prístup**
 - [ ] **Zmazať `app/tests/run.mjs`?** Už sa nepoužíva, ale nechávam ho — mazanie súborov je na tvoje slovo.
 - [ ] Postupne prepísať staré suity na idiomatické `expect()` — nie naraz, ale vždy, keď sa nejakej suity aj tak dotýkame
