@@ -35,6 +35,12 @@ export interface Version {
   isActive: boolean
   contentHash?: string
   changeNote?: string
+  /**
+   * Text tohto znenia. Má prednosť pred `DocumentRecord.markdown`, ktorý nesie
+   * len najnovšie znenie — človek musí čítať tú verziu, ktorú potvrdzuje,
+   * nie tú najnovšiu.
+   */
+  markdown?: string
 
   /**
    * Vypĺňa **človek**, nikdy sa neodvodzuje z diffu (D30). Oprava preklepu
@@ -62,6 +68,8 @@ export interface DocumentRecord {
   versions?: Version[]
   /** Menovité zdieľanie mimo vlastnej vetvy (D32). */
   sharedWithCompanyCodes?: string[]
+  /** Text dokumentu pre zobrazenie človeku. Na verzii má prednosť. */
+  markdown?: string
   /** Ponechané kvôli dokumentom naimportovaným pred zavedením `versions[]`. */
   versionId?: string
   effectiveFrom?: Date | null

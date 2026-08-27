@@ -75,6 +75,27 @@ interface Dictionary {
    */
   statement(title: string, version: string, effectiveFrom: string): string
 
+  /** Texty potvrdzovacích obrazoviek. */
+  onboarding: {
+    listHeading: string
+    listIntro: string
+    nothingToDo: string
+    progress: (done: number, total: number) => string
+    open: string
+    done: string
+    todo: string
+    blocked: string
+    blockedReason: Record<string, string>
+    version: (label: string, from: string) => string
+    confirmHeading: string
+    confirmButton: string
+    confirmPending: string
+    confirmed: string
+    confirmedAt: (when: string) => string
+    back: string
+    error: Record<string, string>
+  }
+
   email: {
     subject: string
     heading: string
@@ -88,6 +109,38 @@ interface Dictionary {
 
 export const DICTIONARY: Record<UiLanguage, Dictionary> = {
   sk: {
+  onboarding: {
+    listHeading: "Dokumenty na potvrdenie",
+    listIntro: "Prečítajte si každý dokument a potvrďte, že ste sa s ním oboznámili. Potvrdenie sa viaže na konkrétne znenie — pri novej verzii vás systém požiada znova.",
+    nothingToDo: "Momentálne nemáte nič na potvrdenie.",
+    progress: (done, total) => `Hotové ${done} z ${total}`,
+    open: "Otvoriť",
+    done: "potvrdené",
+    todo: "čaká na vás",
+    blocked: "zatiaľ nedostupné",
+    blockedReason: {
+      "no-versions": "dokument zatiaľ nemá znenie",
+      "validity-not-set": "znenie ešte nemá určenú platnosť",
+      "all-archived": "všetky znenia sú archivované",
+      "not-yet-effective": "platnosť sa ešte nezačala",
+      "no-longer-effective": "platnosť už skončila",
+      "document-unavailable": "dokument nie je dostupný",
+    },
+    version: (label, from) => `verzia ${label}, platná od ${from}`,
+    confirmHeading: "Potvrdenie oboznámenia",
+    confirmButton: "Potvrdzujem",
+    confirmPending: "Ukladá sa…",
+    confirmed: "Potvrdené. Ďakujeme.",
+    confirmedAt: (when) => `Potvrdili ste ${when}.`,
+    back: "Späť na zoznam",
+    error: {
+      "document-not-found": "Dokument sa nenašiel.",
+      "no-effective-version": "Dokument nemá platné znenie, preto sa nedá potvrdiť.",
+      "already-acknowledged": "Toto znenie už máte potvrdené.",
+      "write-failed": "Potvrdenie sa nepodarilo uložiť. Skúste to prosím znova.",
+      "not-signed-in": "Vaše prihlásenie vypršalo. Prihláste sa znova.",
+    },
+  },
     statement: (title, version, effectiveFrom) =>
       `Potvrdzujem, že som sa oboznámil s dokumentom „${title}", verzia ${version}, ` +
       `platná od ${effectiveFrom}, porozumel som jeho obsahu a zaväzujem sa ho dodržiavať.`,
@@ -103,6 +156,38 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
   },
 
   cs: {
+  onboarding: {
+    listHeading: "Dokumenty k potvrzení",
+    listIntro: "Přečtěte si každý dokument a potvrďte, že jste se s ním seznámili. Potvrzení se váže na konkrétní znění — u nové verze vás systém požádá znovu.",
+    nothingToDo: "Momentálně nemáte nic k potvrzení.",
+    progress: (done, total) => `Hotovo ${done} z ${total}`,
+    open: "Otevřít",
+    done: "potvrzeno",
+    todo: "čeká na vás",
+    blocked: "zatím nedostupné",
+    blockedReason: {
+      "no-versions": "dokument zatím nemá znění",
+      "validity-not-set": "znění ještě nemá určenou platnost",
+      "all-archived": "všechna znění jsou archivována",
+      "not-yet-effective": "platnost ještě nezačala",
+      "no-longer-effective": "platnost už skončila",
+      "document-unavailable": "dokument není dostupný",
+    },
+    version: (label, from) => `verze ${label}, platná od ${from}`,
+    confirmHeading: "Potvrzení seznámení",
+    confirmButton: "Potvrzuji",
+    confirmPending: "Ukládá se…",
+    confirmed: "Potvrzeno. Děkujeme.",
+    confirmedAt: (when) => `Potvrdili jste ${when}.`,
+    back: "Zpět na seznam",
+    error: {
+      "document-not-found": "Dokument se nenašel.",
+      "no-effective-version": "Dokument nemá platné znění, proto jej nelze potvrdit.",
+      "already-acknowledged": "Toto znění už máte potvrzené.",
+      "write-failed": "Potvrzení se nepodařilo uložit. Zkuste to prosím znovu.",
+      "not-signed-in": "Vaše přihlášení vypršelo. Přihlaste se znovu.",
+    },
+  },
     statement: (title, version, effectiveFrom) =>
       `Potvrzuji, že jsem se seznámil s dokumentem „${title}", verze ${version}, ` +
       `platná od ${effectiveFrom}, porozuměl jsem jeho obsahu a zavazuji se jej dodržovat.`,
@@ -118,6 +203,38 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
   },
 
   en: {
+  onboarding: {
+    listHeading: "Documents to acknowledge",
+    listIntro: "Read each document and confirm that you have familiarised yourself with it. An acknowledgement is tied to a specific version — when a new one is issued, you will be asked again.",
+    nothingToDo: "You have nothing to acknowledge at the moment.",
+    progress: (done, total) => `${done} of ${total} done`,
+    open: "Open",
+    done: "acknowledged",
+    todo: "waiting for you",
+    blocked: "not available yet",
+    blockedReason: {
+      "no-versions": "the document has no version yet",
+      "validity-not-set": "the version has no effective date yet",
+      "all-archived": "all versions are archived",
+      "not-yet-effective": "it is not effective yet",
+      "no-longer-effective": "it is no longer effective",
+      "document-unavailable": "the document is not available",
+    },
+    version: (label, from) => `version ${label}, effective from ${from}`,
+    confirmHeading: "Acknowledgement",
+    confirmButton: "I confirm",
+    confirmPending: "Saving…",
+    confirmed: "Acknowledged. Thank you.",
+    confirmedAt: (when) => `You acknowledged this on ${when}.`,
+    back: "Back to the list",
+    error: {
+      "document-not-found": "The document was not found.",
+      "no-effective-version": "The document has no effective version, so it cannot be acknowledged.",
+      "already-acknowledged": "You have already acknowledged this version.",
+      "write-failed": "The acknowledgement could not be saved. Please try again.",
+      "not-signed-in": "Your session has expired. Please sign in again.",
+    },
+  },
     statement: (title, version, effectiveFrom) =>
       `I confirm that I have read the document "${title}", version ${version}, ` +
       `effective from ${effectiveFrom}, that I understand its contents ` +

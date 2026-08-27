@@ -82,7 +82,7 @@ function pripravDokument(subor) {
   const otlacok = JSON.stringify(chunky.map(ch => chunkDoDb(ch, predbezne)))
   const versionId = hash(otlacok)
 
-  return { subor, meta, tags, chunky, statistiky, documentId, versionId }
+  return { subor, meta, tags, chunky, statistiky, documentId, versionId, markdown: text }
 }
 
 /**
@@ -169,6 +169,9 @@ async function dopisVerziu(kolDoc, d, teraz) {
           effectiveTo: d.meta.effectiveTo ?? null,
           isActive: true,
           contentHash: d.versionId,
+          // Text znenia patrí k verzii, nie len na dokument: človek musí
+          // čítať tú verziu, ktorú potvrdzuje, nie tú najnovšiu.
+          markdown: d.markdown,
           // `requiresReacknowledgement` sa zámerne NEnastavuje: vypĺňa ho
           // človek (D30) a `false` by bolo tiché rozhodnutie, že zmena nie je
           // podstatná. Chýbajúce pole znamená „nikto zatiaľ nerozhodol".

@@ -80,6 +80,10 @@ export default function Hlavicka() {
           {[
             { kam: "/", popis: "Voľné otázky" },
             { kam: "/sada", popis: "Zlatá sada" },
+            // Odkaz vidí každý prihlásený; samotná stránka si už poradí —
+            // kto nemá čo potvrdzovať, uvidí, že nemá nič. Podmieňovať odkaz
+            // by znamenalo ťahať stav trás do hlavičky, teda do každej stránky.
+            { kam: "/dokumenty", popis: "Na potvrdenie" },
           ].map(o => {
             const aktivna = o.kam === "/" ? cesta === "/" : cesta.startsWith(o.kam)
             return (
