@@ -60,6 +60,15 @@ const PLAN = [
     ],
   },
   {
+    kolekcia: "tenants",
+    indexy: [
+      { kluc: { companyCode: 1 }, opts: { unique: true, name: "tenant_unique" },
+        preco: "jeden zaznam na tenanta" },
+      { kluc: { hostnames: 1 }, opts: { unique: true, name: "hostname_unique" },
+        preco: "domena patri najviac jednemu tenantovi \u2014 databaza to drzi aj vtedy, ked to skript prehliadne" },
+    ],
+  },
+  {
     kolekcia: "onboarding_tracks",
     indexy: [
       { kluc: { companyCode: 1, key: 1 }, opts: { unique: true, name: "tenant_kluc_unique" },

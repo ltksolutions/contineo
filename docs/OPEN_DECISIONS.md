@@ -345,6 +345,24 @@ ako predvolený tenant. Nemení to nič z ADR-001 ani ADR-002 — mení sa len z
 
 **Súvisiace:** ADR-002 (profily, izolácia), `PRISTUPOVE_PRAVA.md` kap. 8, ADR-003 kap. 3.2 a 5.4.
 
+**Implementované 2026-08-28** — `app/src/lib/tenants.ts` + kolekcia `tenants` (hostiteľ → `companyCode`,
+vzhľad, jazyky), `onboardingContext()` v `session.ts`, uplatnené na `/dokumenty`, `/dokumenty/[documentId]`
+a `POST /api/acknowledgements`. Neznámy hostiteľ dostane **404**, nie vysvetľujúcu hlášku: kto si nasmeruje
+vlastnú doménu na naše nasadenie, sa nemá dozvedieť ani to, že tu niečo beží.
+
+Profil poskytovateľov (`tenantProfile.ts`, ADR-001) zostal **samostatný**. Odpovedá na inú otázku — „ktorý
+model a kde počíta" vs. „ktorá organizácia" — a keby boli v jednom zázname, neznámy hostiteľ by si so sebou
+priniesol aj nastavenie poskytovateľov.
+
+**Vedomé obmedzenie:** kontrola beží v serverových komponentoch a route handleroch, **nie v middleware**.
+Middleware beží na hrane, kde Mongo klient nie je, a presunúť ho do Node runtime kvôli jednému dotazu by
+znamenalo databázu v ceste každej požiadavky vrátane prihlasovacej stránky. Dôsledok: staršie plochy
+(`/`, `/sada`, `/api/chat`) sú chránené prihlásením, ale nie tenantom. Doplniť pri Fáze 5.
+
+**Druhé vedomé obmedzenie:** `app.contineo.app` je dnes tiež namapovaná na tenanta `SFZ`. Je to pravdivý
+opis stavu — iný tenant neexistuje — nie cieľový tvar. Keď pribudne druhý zákazník, `app.contineo.app`
+prestane byť SFZ.
+
 ### D30 — Čo je „podstatná zmena" 🔴 *(otvorené — HR + legislatívec)*
 
 **Otázka:** ktorá novelizácia smernice vyžaduje, aby ľudia potvrdzovali znova?

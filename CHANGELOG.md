@@ -4,6 +4,17 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Added (2026-08-28 — tenant podľa hostiteľa, D29)
+
+- **`app/src/lib/tenants.ts` + kolekcia `tenants`.** Hostiteľ určuje `companyCode`, vzhľad a jazyky. **Neznámy hostiteľ je zakázaný, nie predvolený** (ADR-002, ADR-003 kap. 5.4): predvolený tenant by znamenal, že ktokoľvek, kto si nasmeruje vlastnú doménu na naše nasadenie, dostane rozhranie niekoho iného — a bude to vyzerať legitímne, lebo certifikát aj obsah sedia. Odpoveď je `404`, nie vysvetľujúca hláška.
+- **Prečo samostatný modul a nie rozšírenie `tenantProfile.ts`:** ten odpovedá na otázku „ktorý model a kde počíta" (ADR-001), tento na otázku „ktorá organizácia". Rôzna životnosť, rôzny vlastník; v jednom zázname by si neznámy hostiteľ priniesol aj nastavenie poskytovateľov.
+- **`onboardingContext()` v `session.ts`** vracia stav požiadavky ako **jednu hodnotu** (`unknown-host` / `not-signed-in` / `not-in-tenant` / `ready`), nie ako tri nezávislé kontroly. Keby si každá stránka skladala „tenant + osoba + patria k sebe" sama, jedna z nich raz niektorú časť vynechá — a chýbajúca kontrola nevyzerá ako chyba, vyzerá ako fungujúca stránka.
+- **Kontrola je aj v `POST /api/acknowledgements`,** nielen na stránke. Zápis potvrdenia je jediné miesto, kde vzniká auditný záznam, a volanie API stránku obchádza — záznam nesmie vzniknúť pod hlavičkou organizácie, ku ktorej potvrdzujúci nepatrí.
+- **`app/scripts/tenant_set.mjs`** zakladá a upravuje tenanta; doménu už priradenú inému tenantovi **odmietne, nie prepíše**. Tiché prevzatie domény sa zistí až vtedy, keď ľudia z jednej organizácie uvidia hlavičku druhej. Rovnaké pravidlo drží aj unikátny index `hostname_unique` — databáza to ustráži aj vtedy, keď to skript prehliadne.
+- Stav testov: **19 súborov, 489 testov** (z toho 25 nových na `tenants`).
+- **Vedomé obmedzenie:** kontrola beží v serverových komponentoch a route handleroch, **nie v middleware** — to beží na hrane, kde Mongo klient nie je. Staršie plochy (`/`, `/sada`, `/api/chat`) sú tak chránené prihlásením, ale nie tenantom.
+- **`internal.futbalsfz.sk` ešte nebeží:** poddoména je `CNAME` na `sportnet.online`. Doména je vo Verceli pridaná, DNS sa **nemenilo** — prepnutie by odstavilo to, čo tam beží dnes (`NASADENIE_app.md` kap. 0b).
+
 ### Fixed (2026-08-28 — nasadenie z Gitu)
 
 - **Projekt `contineo-app` napojený na GitHub.** Push do `main` odteraz spúšťa produkčné nasadenie sám; root directory nastavené na `app`, produkčná vetva `main`. **Dovtedy napojený nebol a nikto si to nevšimol** — posledné nasadenie bolo staré 31 dní, hoci v repozitári medzitým pribudlo desať commitov. Kód bol hotový, testy prechádzali, živá aplikácia o ňom nevedela; `/dokumenty` na `app.contineo.app` neexistovalo, lebo build ho nepoznal. Ticho zlyhávajúce nasadenie je horšie ako hlučné, preto je stav napojenia zapísaný v `docs/NASADENIE_app.md`, nie len v nastaveniach Vercelu.

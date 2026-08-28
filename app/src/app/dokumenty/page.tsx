@@ -7,37 +7,43 @@
  */
 
 import Link from "next/link"
-import { redirect } from "next/navigation"
-import { getServerSession } from "next-auth"
-import { authOptions } from "@/lib/auth"
-import { currentPerson } from "@/lib/session"
+import { notFound, redirect } from "next/navigation"
+import { onboardingContext } from "@/lib/session"
 import { trackProgress } from "@/lib/tracks"
 import { dictionary, formatDate } from "@/lib/i18n"
 
 export const dynamic = "force-dynamic"
 
 export default async function Dokumenty() {
-  const session = await getServerSession(authOptions)
-  if (!session?.user?.email) redirect("/prihlasenie")
+  const ctx = await onboardingContext()
 
-  const person = await currentPerson()
-  if (!person) {
-    // Prihlásený, ale v `persons` nie je — typicky správca, ktorý prešiel
-    // núdzovou brzdou `POVOLENE_EMAILY`. Poslať ho späť na prihlásenie by
-    // vyzeralo ako pokazená stránka: je predsa prihlásený.
+  // Neznámy hostiteľ sa správa ako zakázaný (D29) — a to `notFound()`, nie
+  // vysvetľujúcou hláškou. Kto si nasmeruje vlastnú doménu na naše nasadenie,
+  // sa nemá dozvedieť ani to, že tu nejaká aplikácia beží.
+  if (ctx.state === "unknown-host") notFound()
+  if (ctx.state === "not-signed-in") redirect("/prihlasenie")
+
+  if (ctx.state === "not-in-tenant") {
+    // Prihlásený, ale medzi osobami tohto tenanta nie je — typicky správca,
+    // ktorý prešiel núdzovou brzdou `POVOLENE_EMAILY`, alebo človek inej
+    // organizácie na cudzej doméne. Poslať ho späť na prihlásenie by vyzeralo
+    // ako pokazená stránka: je predsa prihlásený.
     return (
       <div className="obal" style={{ padding: "36px 20px 80px", maxWidth: 760 }}>
         <h1 style={{ fontSize: 27, letterSpacing: "-0.02em", margin: "0 0 8px" }}>
           Dokumenty na potvrdenie
         </h1>
         <p className="karta" style={{ padding: 20 }}>
-          Ste prihlásený ako <strong>{session.user.email}</strong>, ale nie ste vedený
-          medzi osobami organizácie — takže vám systém nemá čo priradiť. Ak tu máte
-          niečo potvrdzovať, požiadajte HR o zaradenie.
+          Ste prihlásený ako <strong>{ctx.email}</strong>, ale nie ste vedený medzi
+          osobami organizácie <strong>{ctx.tenant.branding.displayName}</strong> —
+          takže vám systém nemá čo priradiť. Ak tu máte niečo potvrdzovať,
+          požiadajte HR o zaradenie.
         </p>
       </div>
     )
   }
+
+  const person = ctx.person
 
   const t = dictionary(person.language).onboarding
   const tracks = await trackProgress(person)
@@ -51,6 +57,10 @@ export default async function Dokumenty() {
         {t.listHeading}
       </h1>
       <p className="tichy" style={{ fontSize: 15.5, margin: "0 0 8px" }}>{t.listIntro}</p>
+      {/* Čie normy to sú. Pri potvrdzovaní so záväzkom to nie je ozdoba. */}
+      <p className="tichy" style={{ fontSize: 13.5, margin: "0 0 8px" }}>
+        {ctx.tenant.branding.displayName}
+      </p>
 
       {total > 0 && (
         <p className="tichy" style={{ fontSize: 14, margin: "0 0 24px" }}>

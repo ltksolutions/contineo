@@ -11,7 +11,7 @@
  */
 
 import { NextResponse } from "next/server"
-import { currentPerson } from "@/lib/session"
+import { onboardingContext } from "@/lib/session"
 import { acknowledge } from "@/lib/acknowledgements"
 
 export const dynamic = "force-dynamic"
@@ -27,10 +27,20 @@ function clientIp(request: Request): string | null {
 }
 
 export async function POST(request: Request) {
-  const person = await currentPerson()
-  if (!person) {
+  // Tenant sa overuje aj tu, nielen na stránke. Zápis potvrdenia je jediné
+  // miesto, kde vzniká auditný záznam, a ten nesmie vzniknúť pod hlavičkou
+  // organizácie, ku ktorej potvrdzujúci nepatrí — volanie API stránku obchádza.
+  const ctx = await onboardingContext()
+  if (ctx.state === "unknown-host") {
+    return NextResponse.json({ ok: false, reason: "unknown-host" }, { status: 404 })
+  }
+  if (ctx.state === "not-signed-in") {
     return NextResponse.json({ ok: false, reason: "not-signed-in" }, { status: 401 })
   }
+  if (ctx.state === "not-in-tenant") {
+    return NextResponse.json({ ok: false, reason: "not-in-tenant" }, { status: 403 })
+  }
+  const person = ctx.person
 
   let documentId: unknown
   try {

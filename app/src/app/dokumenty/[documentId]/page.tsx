@@ -12,7 +12,7 @@
 
 import Link from "next/link"
 import { notFound, redirect } from "next/navigation"
-import { currentPerson } from "@/lib/session"
+import { onboardingContext } from "@/lib/session"
 import { loadDocumentFor, effectiveVersion } from "@/lib/documents"
 import { buildStatement, hasAcknowledged } from "@/lib/acknowledgements"
 import { dictionary, formatDate } from "@/lib/i18n"
@@ -22,8 +22,13 @@ export const dynamic = "force-dynamic"
 
 // `params` je od Next 15 prísľub.
 export default async function Dokument({ params }: { params: Promise<{ documentId: string }> }) {
-  const person = await currentPerson()
-  if (!person) redirect("/prihlasenie")
+  const ctx = await onboardingContext()
+  if (ctx.state === "unknown-host") notFound()
+  if (ctx.state === "not-signed-in") redirect("/prihlasenie")
+  // Osoba mimo tohto tenanta sa nemá dozvedieť ani to, či dokument existuje —
+  // rovnaká odpoveď ako pri neviditeľnom dokumente (D32).
+  if (ctx.state === "not-in-tenant") notFound()
+  const person = ctx.person
 
   const t = dictionary(person.language).onboarding
   const documentId = decodeURIComponent((await params).documentId)

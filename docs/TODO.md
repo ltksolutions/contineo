@@ -91,7 +91,10 @@
 
 - [x] **D28 — znenie potvrdzovacej formulky** ✅ 2026-08-27: „Potvrdzujem, že som sa oboznámil s dokumentom „{názov}", verzia {label}, platná od {dátum}, porozumel som jeho obsahu a zaväzujem sa ho dodržiavať." Ukladá sa doslovne; prípadnú úpravu právnikom znesie bez migrácie.
 - [ ] **D30 / O13 — čo je „podstatná zmena"** vyžadujúca opätovné potvrdenie (HR + legislatívec)
-- [ ] **O14 — meriame čas nad dokumentom / doskrolovanie?** Rozhodnúť **pred** implementáciou, nie po nej.
+- [x] **O14 — meriame čas nad dokumentom** ✅ 2026-08-28 rozhodnuté: **áno, čas sa meria.** Ultra-MVP ho nemeral, takže ide o rozšírenie, nie o zmenu. Rozhodnutie so sebou nesie tri veci, ktoré treba vybaviť **pred** zapnutím merania, nie po ňom:
+  - [ ] Právny základ a retencia pre údaj o správaní (O15, O16) — čas nad dokumentom je osobný údaj o tom, ako sa človek správal, nie súčasť vyhlásenia
+  - [ ] Odpoveď na otázku, **čo sa stane s človekom, ktorý normu prečíta za 40 sekúnd**, lebo ju už pozná. Ak nič, meranie je záznam bez následku; ak niečo, je to nové pravidlo a patrí do smernice, nie do kódu
+  - [ ] Implementácia: `acknowledgements.readingSeconds` (čas od otvorenia po potvrdenie, meraný na klientovi, teda **orientačný** — kto chce, nechá kartu otvorenú)
 - [ ] **O15, O16 — právny základ a retencia** `acknowledgements` (DPO, právnik) — rozširuje D10
 - [ ] Zoznam dokumentov prvej vlny + kto je ich kurátor
 
@@ -123,8 +126,10 @@
 - [ ] HR dashboard: podľa dokumentu / osoby / trasy + export
 - [ ] Hromadné pozvánky a pripomienky z UI
 - [ ] Opätovné potvrdenie pri novej verzii — **D30**
-- [ ] `tenantProfile.ts` podľa hostiteľa; neznámy hostiteľ = zakázaný — **D29**
-- [ ] Vzhľad pre `internal.futbalsfz.sk` + DNS `CNAME internal → cname.vercel-dns.com` (Websupport)
+- [x] Tenant podľa hostiteľa; neznámy hostiteľ = zakázaný ✅ 2026-08-28 — **D29**. `app/src/lib/tenants.ts` (kolekcia `tenants`, cache kladných aj záporných výsledkov), `onboardingContext()` v `session.ts` skladá „tenant + osoba + patria k sebe" na jednom mieste — keby si to každá stránka robila sama, jedna z nich raz niektorú časť vynechá a vyzerá to ako fungujúca stránka. `scripts/tenant_set.mjs` + unikátny index `hostname_unique` (doména patrí najviac jednému tenantovi — databáza to drží aj vtedy, keď to skript prehliadne). 25 testov.
+  - [ ] **Kontrola nie je v middleware**, ale v serverových komponentoch a route handleroch. Staršie plochy (`/`, `/sada`, `/api/chat`) sú chránené prihlásením, nie tenantom. Doplniť pri Fáze 5.
+- [ ] **DNS pre `internal.futbalsfz.sk` — 🔴 poddoména je OBSADENÁ.** Zistené 2026-08-28: `internal.futbalsfz.sk` je `CNAME` na `sportnet.online` (109.74.154.242). Doména je vo Verceli k projektu **pridaná**, ale hlási `misconfigured` a portál na nej nebeží. **Prepnutie záznamu odstaví to, čo tam beží dnes** — potrebuje rozhodnutie, nie tichý zásah. Vercel odporúča `CNAME internal → 75b9ff58792d32ba.vercel-dns-016.com` (alternatíva `cname.vercel-dns.com`), zmena na Websupporte.
+- [ ] Vzhľad pre `internal.futbalsfz.sk` — `tenants.branding` (logo, farba, kontakt) je pripravené, hodnoty chýbajú
 - [ ] Osoba vidí a stiahne si **svoje** potvrdenia
 
 **I3. Brána pred ostrou prevádzkou**

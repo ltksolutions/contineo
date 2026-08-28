@@ -61,6 +61,39 @@ takže návrat späť je `vercel rollback <url>`.
 
 ---
 
+## 0b. `internal.futbalsfz.sk` — poddoména je obsadená (2026-08-28)
+
+Doména je vo Verceli k projektu `contineo-app` **pridaná**, ale nefunguje, lebo
+DNS záznam vedie inam:
+
+```
+internal.futbalsfz.sk.  CNAME  sportnet.online.
+                        A      109.74.154.242
+```
+
+Vercel to hlási ako `misconfigured`. **Prepnutie záznamu odstaví to, čo na tej
+adrese beží dnes** — preto sa nemenilo. Keď padne rozhodnutie, na Websupporte:
+
+| Typ | Názov | Hodnota |
+|---|---|---|
+| `CNAME` | `internal` | `75b9ff58792d32ba.vercel-dns-016.com` |
+
+(Vercel dnes odporúča tento projektový cieľ; `cname.vercel-dns.com` uvádza ako
+druhú možnosť. Fungujú obe.)
+
+Nezabudnúť: **doména musí byť aj v kolekcii `tenants`**, inak na nej portál nič
+neukáže ani po správnom DNS — neznámy hostiteľ je zakázaný (D29). Už tam je:
+
+```bash
+cd ~/Documents/GitHub/contineo/app
+node scripts/tenant_set.mjs --stav
+```
+
+Sú to zámerne dve nezávislé miesta. Preklep v jednom z nich nikoho nepustí dnu,
+namiesto toho, aby ho pustil k cudziemu obsahu.
+
+---
+
 ## 1. DNS pre `app.contineo.app`
 
 Doménu `contineo.app` **nespravuje Vercel, ale Websupport** (nameservery
