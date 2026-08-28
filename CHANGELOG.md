@@ -4,6 +4,16 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Added (2026-08-28 — pätička a menu len pre prihlásených)
+
+- **Neprihlásený človek videl celé menu portálu.** Stránky za ním sú chránené middlewarom, takže obsah neunikol — ale zoznam sekcií mu o vnútri systému hovorí viac, než potrebuje vedieť, a na prihlasovacej stránke ho to mätie. Menu aj tlačidlo „Odhlásiť" sa odteraz ukazujú len prihlásenému.
+- **Prihlásenie sa berie zo servera (`currentEmail()` v layoute), nie z `useSession()`.** Okrem správnosti to rieši blikanie: `useSession()` začína stavom „neviem" a odpoveď dorazí až po ďalšej požiadavke, takže menu by na okamih bliklo aj tam, kde byť nemá.
+- **Pätička hovorí, že systém beží na Contineu** — odkaz na `contineo.app`, odkaz na repozitár a číslo verzie. Portál nesie značku organizácie, nie dodávateľa, a to je správne: nad záväzným potvrdením smernice nemá stáť cudzia značka. Povedať sa to ale niekde musí, inak človek s problémom nevie ani to, ako sa aplikácia volá.
+- **Číslo verzie nie je ozdoba.** Pri hlásení „nefunguje mi to" je prvá otázka „čo presne ti beží". Zobrazuje sa `verzia 0.1.0 · <7 znakov commitu>`; obe hodnoty vpisuje `next.config.mjs` pri builde, lebo `package.json` sa na Verceli za behu prečítať nedá a `npm_package_version` tam nikdy nie je vyplnené. Jediná pravda o čísle zostáva `app/package.json`.
+- **Odkazy von majú `rel="noreferrer"`** — bez neho by sa cieľová stránka dozvedela internú doménu zväzu, z ktorej sa na ňu kliklo.
+- **Značky Continea a GitHubu sú v jednom module** (`ZnakContineo.tsx`). Kresba v SVG je presne to, čo sa pri kopírovaní rozíde: jedna kópia sa opraví, druhá zostane stará a nikto si to nevšimne.
+- Overené na 375 px v oboch stavoch (prihlásený aj nie), bez vodorovného posúvania.
+
 ### Verified (2026-08-28 18:17 — prihlásenie cez `persons` naostro)
 
 - **Najdlhšie otvorený červený bod Fázy 8 je zavretý.** Log: `[auth] pouzitie-odkazu: jan.letko@futbalsfz.sk — persons povolil`. Núdzová brzda sa nezúčastnila, takže cesta, ktorou pôjde vyše sto ľudí vrátane externistov bez M365, je odskúšaná v produkcii — nie odvodená z kódu.
