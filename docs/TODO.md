@@ -103,8 +103,8 @@
 - [x] `documents.versions[]` v cieľovom tvare ✅ 2026-08-27 — **D25**. `app/src/lib/documents.ts` (`effectiveVersion()` s pravidlami D6 + R3) a `scripts/import.mjs` (`recordVersion()` — nová položka, nikdy prepis; dopĺňa aj dokumentom naimportovaným pred zavedením `versions[]`)
   - [ ] **Známy rozpor s D25, pravidlo 2:** import publikuje priamo (`status: "published"`), hoci kanál nemá sám zneplatniť platnú verziu — platnosť má určiť kurátor. Zapisujeme stav taký, aký je, a nepredstierame schválenie. **Zosúladiť pri review UI (Fáza 4)**; dovtedy je to vedomý ústupok, nie prehliadnutie.
 - [x] Zobrazenie dokumentu človeku ✅ 2026-08-27 — `loadDocumentFor(osoba, id)` uplatňuje D32; uhádnutím `documentId` sa nedá otvoriť obsah cudzej organizácie a neviditeľný dokument sa tvári ako neexistujúci
-- [ ] Kolekcia `acknowledgements` + unikátny partial index — **D24**
-- [ ] Potvrdzovacia obrazovka; **verziu berie server**, nie požiadavka klienta
+- [x] Kolekcia `acknowledgements` + unikátny partial index ✅ 2026-08-27 — **D24**. `app/src/lib/acknowledgements.ts`, index `potvrdenie_unique` v `scripts/onboarding_init.mjs` s `partialFilterExpression: { type: "acknowledgement" }`. Duplicitné potvrdenie nie je chyba aplikácie, ale konflikt 11000 z databázy — jediné miesto, kde sa to dá ustrážiť aj pri dvoch súbežných kliknutiach.
+- [x] Potvrdzovacia obrazovka ✅ 2026-08-27 — `src/app/dokumenty/`, `src/components/AcknowledgeButton.tsx`, `src/app/api/acknowledgements/`. **Verziu určuje server** (`effectiveVersion()` nad `loadDocumentFor()`), klient ju neposiela — inak by si potvrdzujúci mohol vybrať, ktorú verziu „čítal".
 - [x] Výkaz pre HR ✅ 2026-08-27 — `app/scripts/acknowledgement_report.mjs`. CSV: kto potvrdil, kedy, ktorú verziu, v akom jazyku — a kto nie. Rozsah je **jeden `companyCode`, nie strom** (D32, D33).
 - [x] **Skripty importujú priamo moduly zo `src/`** ✅ 2026-08-27 — `scripts/lib/ts-hook.mjs`. Node 26 vie TypeScript spustiť, len nevie dohľadať bezpríponové importy; háčik to premostí. Bez neho by skripty potrebovali vlastnú kópiu pravidla, ktorá verzia dokumentu platí — a dve implementácie právneho pravidla sa raz rozídu.
 
@@ -128,6 +128,8 @@
 - [ ] Osoba vidí a stiahne si **svoje** potvrdenia
 
 **I3. Brána pred ostrou prevádzkou**
+
+- [x] **Automatické nasadzovanie z GitHubu** ✅ 2026-08-28 — projekt `contineo-app` napojený na `ltksolutions/contineo`, root directory `app`, produkčná vetva `main`. Dovtedy napojený nebol: posledné nasadenie bolo staré 31 dní napriek desiatim commitom, takže `/dokumenty` na `app.contineo.app` neexistovalo. Postup a dôvod v `NASADENIE_app.md` kap. 0.
 
 - [ ] **O12 — `0.0.0.0/0` v Atlase.** **Blokujúce** — onboarding prináša interné smernice aj osobné údaje naraz (`NASADENIE_app.md` kap. 2). Analýza: **ADR-003 kap. 6.1**.
   - [x] **Rozhodnuté 2026-08-27: Vercel Static IPs** (100 $/mes., plán Pro). Preverené aj Render, Railway, vlastný stroj v EÚ, SOCKS5 proxy — ADR-003 kap. 6.1. Presun z Vercelu zostáva dlhodobým smerom.
