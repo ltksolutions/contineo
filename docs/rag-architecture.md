@@ -26,6 +26,29 @@
 
 ---
 
+## Mobile first je povinnosť
+
+**Každé rozhranie sa navrhuje najprv pre telefón a až potom pre širší displej.**
+Nie je to preferencia, je to pravidlo projektu (2026-08-28).
+
+Dôvod je v tom, ako sa k portálu ľudia dostanú: prihlasovací odkaz im príde
+e-mailom a e-mail si väčšina otvorí v telefóne. Prvé stretnutie s Contineom
+teda prebehne na displeji širokom 360 px — a rozhranie postavené na počítači
+tam pretečie tak, že si to na vývojárskom monitore nikto nevšimne.
+
+Čo to znamená v praxi:
+
+- Východiskové štýly platia pre úzky displej; `@media (min-width: …)` **pridáva**
+  to, čo si širší displej môže dovoliť. Nikdy opačne.
+- Rozmery, ktoré nesmú pretiecť (výšky líšt, počty stĺpcov, pevné šírky), sa
+  zapisujú do `globals.css` s dotazom na šírku, nie ako inline `style` — inline
+  štýl nevie médiové dotazy a mlčky sa použije všade.
+- Vodorovné posúvanie stránky je chyba. Široký obsah (tabuľky, diagramy) má
+  vlastný `overflow-x: auto`, nie telo stránky.
+- Klikacie prvky majú na dotyk aspoň ~40 px; ikona bez textu potrebuje
+  `aria-label` aj `title`.
+- **Overuje sa to na skutočnej šírke,** nie odhadom z kódu.
+
 ## Konvencie v kóde (2026-08-27)
 
 **Identifikátory po anglicky, komentáre po slovensky.** Názvy modulov, typov,

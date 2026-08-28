@@ -14,28 +14,92 @@ import { usePathname } from "next/navigation"
 import { useSession, signOut } from "next-auth/react"
 import type { TenantBrandingView } from "./TenantHeader"
 
+/**
+ * Voľba témy má **tri** stavy, nie dva.
+ *
+ * „Podľa systému" nie je to isté ako „svetlá": znamená, že sa rozhranie riadi
+ * nastavením zariadenia a prepne sa samo, keď si ho človek večer prepne na
+ * tmavé. Bez tohto stavu sa raz zvolená téma zasekne a používateľ si musí
+ * pamätať, že si ju kedysi nastavil — a diviť sa, prečo mu jediná stránka
+ * v prehliadači nesvieti tak ako ostatné.
+ */
+type Volba = "system" | "light" | "dark"
 type Tema = "light" | "dark"
 
+/** Poradie pri klikaní. Systém je prvý, lebo je to predvolený stav. */
+const DALSIA: Record<Volba, Volba> = { system: "light", light: "dark", dark: "system" }
+
+const POPIS: Record<Volba, string> = {
+  system: "podľa systému",
+  light: "svetlá",
+  dark: "tmavá",
+}
+
+/**
+ * Ikona stavu. Tri rôzne tvary, nie jeden meniaci sa — človek má poznať
+ * súčasný stav pohľadom, nie odvodením z toho, čo sa stane po kliknutí.
+ */
+function IkonaTemy({ volba }: { volba: Volba }) {
+  const spolocne = {
+    width: 17, height: 17, viewBox: "0 0 18 18",
+    fill: "none", stroke: "currentColor", strokeWidth: 1.6,
+    strokeLinecap: "round" as const, strokeLinejoin: "round" as const,
+    "aria-hidden": true,
+  }
+  if (volba === "dark") {
+    return (
+      <svg {...spolocne}>
+        <path d="M15 11.2A6.6 6.6 0 0 1 6.8 3a6.6 6.6 0 1 0 8.2 8.2z" />
+      </svg>
+    )
+  }
+  if (volba === "light") {
+    return (
+      <svg {...spolocne}>
+        <circle cx="9" cy="9" r="3.4" />
+        <path d="M9 1.4v1.8M9 14.8v1.8M1.4 9h1.8M14.8 9h1.8M3.6 3.6l1.3 1.3M13.1 13.1l1.3 1.3M14.4 3.6l-1.3 1.3M4.9 13.1l-1.3 1.3" />
+      </svg>
+    )
+  }
+  // Podľa systému — kruh do polovice vyplnený.
+  return (
+    <svg {...spolocne}>
+      <circle cx="9" cy="9" r="6.6" />
+      <path d="M9 2.4a6.6 6.6 0 0 0 0 13.2z" fill="currentColor" stroke="none" />
+    </svg>
+  )
+}
+
 export default function Hlavicka({ branding }: { branding?: TenantBrandingView }) {
-  const [tema, setTema] = useState<Tema>("light")
+  const [volba, setVolba] = useState<Volba>("system")
   const cesta = usePathname()
   const { data: sedenie } = useSession()
 
-  // Prvé nastavenie podľa systému. Voľbu si držíme v localStorage, aby sa
-  // pri každom prekliku nevracala späť.
+  // Uložená voľba sa načíta raz po pripojení. Neznámu hodnotu (staršie
+  // uloženie, ručná úprava) ticho prehliadneme — pri téme nemá zmysel padať.
   useEffect(() => {
-    const ulozena = window.localStorage.getItem("contineo-tema") as Tema | null
-    const systemova: Tema =
-      window.matchMedia?.("(prefers-color-scheme: dark)").matches ? "dark" : "light"
-    const zvolena = ulozena ?? systemova
-    setTema(zvolena)
-    document.documentElement.dataset.theme = zvolena
+    const ulozena = window.localStorage.getItem("contineo-tema")
+    if (ulozena === "light" || ulozena === "dark" || ulozena === "system") setVolba(ulozena)
   }, [])
 
+  // Uplatnenie voľby a — pri „podľa systému" — sledovanie zmien systému.
+  // Poslucháč je tu preto, že stránka býva otvorená dlho: keď si človek
+  // večer prepne zariadenie na tmavý režim, má sa prepnúť aj rozhranie.
+  useEffect(() => {
+    const media = window.matchMedia?.("(prefers-color-scheme: dark)")
+    const uplatni = () => {
+      const tema: Tema = volba === "system" ? (media?.matches ? "dark" : "light") : volba
+      document.documentElement.dataset.theme = tema
+    }
+    uplatni()
+    if (volba !== "system" || !media) return
+    media.addEventListener("change", uplatni)
+    return () => media.removeEventListener("change", uplatni)
+  }, [volba])
+
   function prepni() {
-    const nova: Tema = tema === "dark" ? "light" : "dark"
-    setTema(nova)
-    document.documentElement.dataset.theme = nova
+    const nova = DALSIA[volba]
+    setVolba(nova)
     window.localStorage.setItem("contineo-tema", nova)
   }
 
@@ -49,23 +113,23 @@ export default function Hlavicka({ branding }: { branding?: TenantBrandingView }
         zIndex: 10,
       }}
     >
-      <div
-        className="obal"
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          gap: 16,
-          height: 60,
-        }}
-      >
+      <div className="obal hlavicka-riadok">
         {/*
           Hlavička patrí organizácii, nie dodávateľovi. Človek, ktorý tu
           potvrdzuje smernicu svojho zväzu, nemá nad ňou vidieť cudziu značku
           — a už vôbec nie odznak „testovacie rozhranie" nad dokumentom,
           ktorého potvrdenie je záväzné.
         */}
-        <div style={{ display: "flex", alignItems: "center", gap: 11 }}>
+        {/* Značka vedie domov. Je to najstaršia konvencia webu a človek ju
+            skúsi aj bez toho, aby mu ju niekto ukázal. */}
+        <Link
+          href="/"
+          aria-label="Domov"
+          style={{
+            display: "flex", alignItems: "center", gap: 11,
+            textDecoration: "none", color: "inherit",
+          }}
+        >
           {branding ? (
             <>
               {branding.logoUrl && (
@@ -95,9 +159,9 @@ export default function Hlavicka({ branding }: { branding?: TenantBrandingView }
               </span>
             </>
           )}
-        </div>
+        </Link>
 
-        <nav style={{ display: "flex", gap: 4, marginLeft: "auto", marginRight: 6 }}>
+        <nav className="hlavicka-nav">
           {[
             { kam: "/", popis: "Voľné otázky" },
             { kam: "/sada", popis: "Zlatá sada" },
@@ -139,10 +203,13 @@ export default function Hlavicka({ branding }: { branding?: TenantBrandingView }
         <button
           onClick={prepni}
           className="tlacidlo tlacidlo--tiche"
-          style={{ padding: "6px 12px", fontSize: 13.5 }}
-          aria-label={tema === "dark" ? "Prepnúť na svetlú tému" : "Prepnúť na tmavú tému"}
+          style={{ padding: "7px 9px", display: "inline-flex", alignItems: "center" }}
+          // Ikona sama o sebe nepovie, čo znamená. Názov aj `aria-label`
+          // preto hovoria súčasný stav **aj** to, čo sa stane po kliknutí.
+          aria-label={`Téma ${POPIS[volba]}. Prepnúť na: ${POPIS[DALSIA[volba]]}`}
+          title={`Téma ${POPIS[volba]}`}
         >
-          {tema === "dark" ? "Svetlá" : "Tmavá"}
+          <IkonaTemy volba={volba} />
         </button>
       </div>
     </header>

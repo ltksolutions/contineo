@@ -100,6 +100,42 @@ button:disabled { cursor: not-allowed; opacity: 0.55; }
   padding: 0 20px;
 }
 
+/*
+ * Hlavička.
+ *
+ * **Mobile first je v tomto projekte povinnosť.** Nesie to konkrétny dôsledok
+ * práve tu: hlavička má štyri skupiny prvkov vedľa seba a na 360 px by
+ * pretiekla mimo obrazovku. Na počítači sa to nikdy neukáže — a onboarding
+ * budú ľudia otvárať z telefónu, lebo im odkaz príde do mobilnej schránky.
+ *
+ * Preto sa na úzkom displeji zalamuje a výška je premenlivá; pevných 60 px
+ * platí až od 640 px vyššie.
+ */
+.hlavicka-riadok {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding-block: 10px;
+}
+
+.hlavicka-nav {
+  display: flex;
+  gap: 2px;
+  margin-left: auto;
+  flex-wrap: wrap;
+}
+
+@media (min-width: 640px) {
+  .hlavicka-riadok {
+    flex-wrap: nowrap;
+    height: 60px;
+    padding-block: 0;
+    gap: 16px;
+  }
+  .hlavicka-nav { gap: 4px; margin-right: 6px; }
+}
+
 .karta {
   background: var(--surface);
   border: 1px solid var(--line);
