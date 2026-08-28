@@ -36,6 +36,16 @@ export async function currentPerson(): Promise<Person | null> {
   }
 }
 
+/**
+ * Adresa z relácie, alebo `null`. Bez dotazu do `persons` — na otázku
+ * „je vôbec niekto prihlásený" netreba osobu, a prihlasovacia stránka to
+ * potrebuje vedieť pri každom zobrazení.
+ */
+export async function currentEmail(): Promise<string | null> {
+  const session = await getServerSession(authOptions)
+  return session?.user?.email ?? null
+}
+
 /** Hostiteľ, na ktorý prišla táto požiadavka. */
 export async function requestHostname(): Promise<string> {
   const h = await headers()

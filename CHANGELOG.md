@@ -4,14 +4,16 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
-### Fixed (2026-08-28 — evidencia prihlásenia sa nezapisovala)
+### Fixed (2026-08-28 — po prihlásení človek skončil späť na formulári)
 
-- **`void recordSignIn(...)` bez `await` sa na Verceli nestihol vykonať.** Serverless funkcia končí hneď po vrátení hodnoty a rozrobený zápis do Atlasu sa zahodí. Prejav: človek sa prihlási, relácia funguje, ale `lastLoginAt` zostane prázdne a stav `invited` — a nezasvieti pri tom nič. Odhalilo sa to náhodou pri overovaní Fázy 9a: jediná osoba v `persons` mala platnú reláciu a nulovú evidenciu. Pôvodný dôvod pre `void` (zlyhanie zápisu nesmie zhodiť prihlásenie) drží aj s `await`, lebo `recordSignIn` si chyby prehĺta sám. Regresný test v `tests/signIn.test.ts`.
-- **Dôsledok, keby to zostalo:** na `lastLoginAt` má podľa D39 stáť príznak „nové" v rozsahu B. Ticho stratený zápis by sa prejavil až tam — ako nefunkčná funkcia na úplne inom mieste, než kde je príčina.
+- **Odkaz z e-mailu vrátil prihláseného človeka na prihlasovaciu stránku.** `signIn("email", …)` sa volalo bez `callbackUrl`, takže si ho NextAuth vzal z aktuálnej adresy — a tou bola práve prihlasovacia stránka. Relácia vznikla správne (v hlavičke bolo „Odhlásiť"), ale obsah stránky ostal formulár, takže to vyzeralo, akoby prihlásenie nefungovalo.
+- **Prihlásený človek sa z `/prihlasenie` presmeruje na úvodnú stranu.** Rieši to stránka sama, nie len `callbackUrl` v odkaze: rovnaká slepá ulica vznikne aj zo záložky alebo z histórie prehliadača. Kontrola je až za overením hostiteľa — neznáma doména nedostane ani presmerovanie (D29).
 
-### Changed (2026-08-28 — I1c opravené smerom k pravde)
+### Changed (2026-08-28 — `recordSignIn` sa čaká)
 
-- **Predchádzajúci zápis tvrdil, že overená bola len núdzová brzda. Nebola to pravda.** `POVOLENE_EMAILY` je v produkcii **prázdna**, takže brzda nepúšťa nikoho a prihlásenie muselo prejsť cez `persons`. Cesta, ktorou pôjde stovka ľudí, je tým overená; plánovaný náhradný test druhou osobou stratil dôvod a nerobil sa.
+- **`void recordSignIn(...)` nahradené `await`.** Fire-and-forget zápis v serverless funkcii je nespoľahlivý: funkcia končí hneď po vrátení hodnoty a rozrobený dotaz do Atlasu sa môže zahodiť. Pôvodný dôvod pre `void` (zlyhanie zápisu nesmie zhodiť prihlásenie) drží aj s `await`, lebo `recordSignIn` si chyby prehĺta sám. Regresný test v `tests/signIn.test.ts` je overený obojsmerne.
+- **Poctivá poznámka k dôkazu:** prázdne `lastLoginAt` v produkcii **nie je** dôkazom tejto chyby, ako som najprv napísal. Vysvetľuje ho núdzová brzda, ktorá vracia `true` skôr, než sa `recordSignIn` vôbec zavolá. Oprava je správna sama osebe, ale odôvodnenie bolo nesprávne.
+- **I1c zostáva červené.** Medzitým som ho označil za overené na základe `vercel env pull`, ktorý vrátil prázdne `POVOLENE_EMAILY`. Runtime log hovorí opak — `— cez núdzovú brzdu` — a rozhoduje beh, nie výpis premennej. Cesta cez `persons` je stále neodskúšaná.
 
 ### Added (2026-08-28 — Fáza 9a: widget „Nevybavené žiadosti")
 

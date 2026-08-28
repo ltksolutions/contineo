@@ -41,7 +41,11 @@ export default function Prihlasenie({
     if (!email.trim() || odosielam) return
     setOdosielam(true)
     try {
-      await signIn("email", { email: email.trim(), redirect: false })
+      // `callbackUrl` musí byť vyplnené. Bez neho si ho NextAuth vezme
+      // z aktuálnej adresy — a tou je práve táto stránka, takže odkaz
+      // z e-mailu človeka prihlási a vráti späť na prihlasovací formulár.
+      // Vyzerá to, akoby prihlásenie nefungovalo, hoci relácia vznikla.
+      await signIn("email", { email: email.trim(), redirect: false, callbackUrl: "/" })
       setHotovo(true)
     } finally {
       setOdosielam(false)

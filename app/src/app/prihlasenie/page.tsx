@@ -7,9 +7,9 @@
  * má k systému prístup.
  */
 
-import { notFound } from "next/navigation"
+import { notFound, redirect } from "next/navigation"
 import Prihlasenie from "@/components/Prihlasenie"
-import { currentTenant } from "@/lib/session"
+import { currentTenant, currentEmail } from "@/lib/session"
 import { brandingView } from "@/lib/tenants"
 import { tenantStyle } from "@/components/TenantHeader"
 import type { Tenant } from "@/lib/tenants"
@@ -39,6 +39,13 @@ export default async function StrankaPrihlasenia({
     databazaZlyhala = true
   }
   if (!tenant && !databazaZlyhala) notFound()
+
+  // Kto je prihlásený, nemá na tejto stránke čo robiť: formulár mu ponúka to,
+  // čo už má, a nič ho odtiaľ nepustí ďalej. Nastane to vždy, keď odkaz
+  // vznikol na tejto stránke, ale aj zo záložky alebo z histórie — preto to
+  // rieši stránka sama, nie len `callbackUrl` v odkaze. Až po kontrole
+  // hostiteľa: neznáma doména nemá dostať ani presmerovanie (D29).
+  if (await currentEmail()) redirect("/")
 
   const branding = tenant ? brandingView(tenant) : undefined
 
