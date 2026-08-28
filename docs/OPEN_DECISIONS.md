@@ -40,6 +40,11 @@
 | D33 | Rozsah HR dashboardu naprieč hierarchiou | Onboarding | 🟡 | 8 | ✅ |
 | D34 | Model dodávky: SaaS vs. vlastné nasadenie | Produkt | 🟡 | prierezové | ✅ |
 | D35 | Viacjazyčnosť: prostredie áno, obsah nie | Produkt | 🔴 | 8 | ✅ |
+| D36 | Widget ukazuje „čo čaká na mňa", nie prehľad organizácie | Onboarding | 🟡 | 9 | ✅ |
+| D37 | Úloha sa odvodzuje, pridelenie sa zaznamenáva | Onboarding | 🔴 | 9 | 🟡 návrh |
+| D38 | `persons.groups` ako tretia dimenzia | Identita | 🟡 | 9 | 🟡 návrh |
+| D39 | „Nové" sa počíta voči `lastLoginAt` | Onboarding | 🟢 | 9 | 🟡 návrh |
+| D40 | Jednorazové systémové hlásenia v rozsahu A | Onboarding | 🔴 | 9 | ⬜ **čaká na rozhodnutie** |
 
 ---
 
@@ -529,7 +534,88 @@ začiatku; prekladá sa až rozhranie, keď bude.
 **Súvisiace:** D24, D28, `app/src/lib/i18n.ts`, `docs/CMS_KONCEPCIA.md` B.4
 (i18n web obsahu — tam ide o kurátorské články, nie o normy).
 
-### Otvorené body vedené v ADR-003
+---
+
+## Okruh 6 — Udalosti a upozornenia (Fáza 9)
+
+> **Koncepcia:** `docs/UDALOSTI_A_UPOZORNENIA_KONCEPCIA.md` — tam je celé
+> odôvodnenie, dátový model aj fázovanie. Tu je len rozhodovacia časť.
+
+Zadanie (2026-08-28): na úvodnej strane widget „Nevybavené žiadosti" a interný
+systém upozornení. Pri rozbore vyšlo najavo, že to nie je len zobrazovacia
+úloha — dnes je **rozposlanie úlohy tiché**: keď pribudne nová verzia normy,
+`trackProgress()` ju začne rátať ako nepotvrdenú všetkým, koho sa trasa týka,
+bez toho, aby to niekto rozhodol a bez stopy, kedy sa to stalo.
+
+### D36 — Widget ukazuje „čo čaká na mňa" 🟡
+
+**✅ Rozhodnuté (2026-08-28): osobná schránka, nie prehľad organizácie.**
+
+Bežný člen zväzu nemá vidieť, kto zo sto ľudí ešte nepotvrdil — to je iná
+obrazovka s inými právami (rozsah B, rola `hr`). Zdroje položiek sú rôzne
+(nepotvrdené normy, kurácia, helpdesk), tvar je jeden — `PendingItem` —
+a widget sa pýta registra zdrojov, nie jednotlivých modulov.
+
+**Súvisiace:** D32 (viditeľnosť per `companyCode`), D33 (rozsah HR dashboardu).
+
+### D37 — Úloha sa odvodzuje, pridelenie sa zaznamenáva 🔴 *(návrh)*
+
+**Otázka:** ak progres nikdy neukladáme (D27), kde sa vezme informácia, že sa
+norma má potvrdiť **znova**?
+
+**Návrh:** dve pravdy s rôznym pôvodom.
+
+| Vec | Odkiaľ | Prečo |
+|---|---|---|
+| Čo mám urobiť | odvodí sa (trasa × platná verzia − potvrdenia) | druhá kópia sa rozíde práve pri novej verzii (D27) |
+| Že sa to má urobiť znova | **záznam** `assignments` | ľudské rozhodnutie, nie výpočet — systém nevie odlíšiť opravu preklepu od novej povinnosti (D30) |
+| Kedy a komu bolo pridelené | **záznam** | bez neho sa po roku nedá povedať, či človek úlohu dostal |
+
+Rovnaký vzor ako `acknowledgements`: záznam, nie príznak. **Rozsah B tým
+uzatvára D30** — „podstatná zmena" prestane byť definíciou a stane sa dôvodom,
+ktorý pri prideľovaní vyplní človek (`reason`).
+
+**Súvisiace:** D24, D25, D27, D30/O13.
+
+### D38 — `persons.groups` ako tretia dimenzia 🟡 *(návrh)*
+
+Dnes existuje `persons.tracks` (čo mám prejsť) a `persons.department` (kam
+patrím v štruktúre). Ani jedno nie je skupina na prideľovanie: trasa je obsah,
+útvar je štruktúra. Zlúčiť skupiny s trasami by znamenalo, že jednorazovú
+úlohu nemožno prideliť bez toho, aby vznikla umelá trasa.
+
+**Súvisiace:** D26, `PRISTUPOVE_PRAVA.md` (ortogonalita atribútov).
+
+### D39 — „Nové" sa počíta voči `lastLoginAt` 🟢 *(návrh)*
+
+**Zvolené v zadaní: upozornenia sa odvodzujú, vlastná kolekcia sa nerobí.**
+Úloha je „nová", keď je jej pridelenie novšie než `persons.lastLoginAt`.
+
+Cena, aby bola vidno dopredu: **nedá sa označiť ako prečítané** (príznak zmizne
+pri ďalšom prihlásení, nie kliknutím) a kto sa prihlási dvakrát rýchlo za sebou,
+o príznak príde. Za to sa nezakladá kolekcia s osobnými údajmi o správaní, ktorú
+by bolo treba odôvodniť a mazať (O15, O16).
+
+### D40 — Jednorazové systémové hlásenia ⬜ *(čaká na rozhodnutie)*
+
+**Otázka:** zadanie žiada aj „interné hlásenia systému". Časť z nich sa
+odvodiť **nedá** — „Import zlyhal 3. 9. o 4:00" je udalosť, ktorá nezanechala
+stav, z ktorého by sa dalo dopočítať.
+
+| Možnosť | Čo znamená | Cena |
+|---|---|---|
+| **(a)** | rozsah A ich nemá vôbec, widget ukazuje len úlohy | čisté, ale „systém notifikácií" to ešte nie je |
+| **(b)** | pribudne malá kolekcia `notifications` so stavom prečítané a retenciou | úplné, ale zatiaľ do nej nemá čo písať |
+
+**Odporúčanie: (a) v rozsahu A**, a (b) až keď bude existovať prvý skutočný
+odosielateľ takých správ (kurácia alebo helpdesk). Bez rozhodnutia by vznikla
+kolekcia bez odosielateľa — a s ňou aj povinnosť odôvodniť ju v O15/O16.
+
+**Súvisiace:** D25 (kurácia), Fáza 4b (helpdesk), O15, O16.
+
+---
+
+## Otvorené body vedené v ADR-003
 
 Nie sú to rozhodnutia backlogu, ale otvorené otázky konkrétneho ADR. Uvedené tu kvôli
 prehľadu:

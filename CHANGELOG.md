@@ -4,6 +4,13 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Planned (2026-08-28 — Fáza 9: udalosti a upozornenia)
+
+- **`docs/UDALOSTI_A_UPOZORNENIA_KONCEPCIA.md` — návrh čaká na schválenie, kód sa nezačal.** Zadanie: widget „Nevybavené žiadosti" na úvodnej strane a interný systém upozornení.
+- **Pri rozbore vyšlo najavo, že to nie je len zobrazovacia úloha.** Rozposlanie úlohy je dnes tiché: nová verzia normy sa začne rátať ako nepotvrdená všetkým, koho sa trasa týka, bez rozhodnutia a bez stopy. Widget by tomu dal viditeľné miesto na úvodnej strane — teda by problém zväčšil, nie vyriešil.
+- **Nové rozhodnutia D36–D40.** Kľúčové je **D37**: úloha sa naďalej odvodzuje (D27 platí), ale **pridelenie sa zaznamenáva** — rovnaký vzor ako `acknowledgements`. Rozsah B tým uzatvára aj **D30** („podstatná zmena" prestane byť definíciou a stane sa dôvodom, ktorý vyplní človek).
+- **⬜ D40 blokuje začiatok:** jednorazové systémové hlásenia („Import zlyhal 3. 9. o 4:00") sa odvodiť nedajú. Buď v rozsahu A nie sú vôbec (odporúčané), alebo pribudne kolekcia `notifications` — do ktorej zatiaľ nemá čo písať.
+
 ### Fixed (2026-08-28 — prihlásenie na vlastnej doméne)
 
 - **Odkaz v e-maile viedol na `app.contineo.app` aj tomu, kto začal na `intranet.futbalsfz.sk`.** `NEXTAUTH_URL` je jedna hodnota na celé nasadenie. `rewriteLinkHost()` prepíše hostiteľa na doménu požiadavky — ale **len ak je to známy tenant**; inak by sa podvrhnutou hlavičkou `Host` dala do cudzej schránky poslať adresa útočníka s platným tokenom. Cudzia adresa v `callbackUrl` sa necháva tak: „opraviť" ju na našu doménu by ju zamaskovalo. Nový `redirect` callback dovolí návrat len na známu doménu, takže nevzniká otvorené presmerovanie.

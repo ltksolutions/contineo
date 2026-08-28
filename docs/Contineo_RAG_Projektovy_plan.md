@@ -447,6 +447,30 @@ ClubUp — ADR-003 kap. 8.
 
 ---
 
+### Fáza 9 – Udalosti a upozornenia `[1,5–2 týždne]`
+
+> **Koncepcia:** `docs/UDALOSTI_A_UPOZORNENIA_KONCEPCIA.md` · **Rozhodnutia:** D36–D40
+> **Stav: návrh na schválenie — implementácia sa nezačína, kým nie je rozhodnuté D40.**
+
+Nadväzuje na Fázu 8 a otvára sa smerom k Fáze 4b (helpdesk). Vzniká z pozorovania,
+že Fáza 8 dala ľuďom úlohy, ale nedala im miesto, kde ich uvidia — a že
+**rozposlanie úlohy je dnes tiché**: nová verzia normy sa začne rátať ako
+nepotvrdená všetkým, koho sa trasa týka, bez rozhodnutia a bez stopy.
+
+Pravidlo Fázy 8 „stav sa neukladá, ale odvodzuje" (D27) zostáva. Pridáva sa
+k nemu druhé: **rozhodnutie, že sa niečo má urobiť znova, je záznam** (D37) —
+rovnako ako `acknowledgements` je záznam a nie príznak.
+
+**9a — Rozsah A `[3–5 dní]`** — widget má čo ukazovať: register zdrojov,
+`PendingItem`, zdroj „nepotvrdené normy" nad `trackProgress()`, príznak „nové"
+voči `lastLoginAt`. Mobile first.
+
+**9b — Rozsah B `[1–1,5 týždňa]`** — prideľovanie prestane byť tiché: kolekcia
+`assignments`, `persons.groups`, obrazovka „prideliť verziu skupine" s povinným
+dôvodom, prehľad pre rolu `hr`. **Uzatvára D30.**
+
+**9c — Rozsah C** — ďalšie zdroje (kurácia, helpdesk) až keď existujú.
+
 ## 8. MongoDB schémata
 
 > **Kanonický dátový model = Model B** (rozhodnuté 2026-06-25). Schémy nižšie sú **stav Fázy 3 (Model A)**.

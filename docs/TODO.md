@@ -180,3 +180,39 @@
 - [x] `tests/onboardingDb.test.ts` — 17 testov nad falošnou databázou (`vi.mock`), vrátane toho, že **chyba DB neotvára prístup**
 - [x] **`app/tests/run.mjs` zmazaný** ✅ 2026-08-28 — pôvodný beh testov nahradil Vitest a s odstránením `esbuildu` prestal byť spustiteľný.
 - [ ] Postupne prepísať staré suity na idiomatické `expect()` — nie naraz, ale vždy, keď sa nejakej suity aj tak dotýkame
+
+### L. Udalosti a upozornenia — **Fáza 9** 🟡 → `docs/UDALOSTI_A_UPOZORNENIA_KONCEPCIA.md`
+
+> **Stav: návrh čaká na schválenie. Kód sa nezačína, kým nie je rozhodnuté D40.**
+> Zadanie 2026-08-28: widget „Nevybavené žiadosti" na úvodnej strane + interný
+> systém upozornení.
+
+**Rozhodnutia pred implementáciou**
+
+- [x] **D36** — widget je osobná schránka („čo čaká na mňa"), nie prehľad organizácie
+- [ ] **D37** — úloha sa odvodzuje, pridelenie sa zaznamenáva ako udalosť `assignments`
+- [ ] **D38** — `persons.groups` ako tretia dimenzia vedľa `tracks` a `department`
+- [ ] **D39** — „nové" sa počíta voči `lastLoginAt`, bez stavu prečítané
+- [ ] **D40** 🔴 — robia sa v rozsahu A jednorazové systémové hlásenia? *(bez tohto sa nezačína)*
+
+**Rozsah A `[3–5 dní]` — widget má čo ukazovať**
+
+- [ ] register zdrojov + tvar `PendingItem` (`source`, `id`, `title`, `href`, `since`)
+- [ ] zdroj „nepotvrdené normy" nad existujúcim `trackProgress()` — bez druhej kópie stavu (D27)
+- [ ] widget na úvodnej strane, **mobile first** (povinnosť projektu)
+- [ ] príznak „nové" voči `lastLoginAt`
+- [ ] testy: prázdny stav, položka z viacerých trás sa nezdvojí, cudzí tenant nič nevidí (D32)
+
+**Rozsah B `[1–1,5 týždňa]` — prideľovanie prestane byť tiché**
+
+- [ ] kolekcia `assignments` + index `{companyCode, "subject.versionId"}`
+- [ ] `persons.groups: string[]`
+- [ ] obrazovka pre HR/kurátora: „prideliť verziu skupine", s povinným `reason`
+- [ ] opätovné potvrdenie pri novej verzii sa naviaže na pridelenie → **uzatvára D30**
+- [ ] prehľad pre rolu `hr`: čo je nevybavené v organizácii (D33)
+
+**Rozsah C — až keď existujú ďalšie zdroje**
+
+- [ ] kurácia (dokumenty čakajúce na kurátora, otvorený rozpor s D25)
+- [ ] helpdesk (Fáza 4b)
+- [ ] prípadné jednorazové hlásenia podľa D40
