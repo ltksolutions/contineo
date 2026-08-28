@@ -7,7 +7,12 @@
  * má k systému prístup.
  */
 
+import { notFound } from "next/navigation"
 import Prihlasenie from "@/components/Prihlasenie"
+import { currentTenant } from "@/lib/session"
+import { brandingView } from "@/lib/tenants"
+import { tenantStyle } from "@/components/TenantHeader"
+import type { Tenant } from "@/lib/tenants"
 
 export const dynamic = "force-dynamic"
 
@@ -19,11 +24,30 @@ export default async function StrankaPrihlasenia({
   searchParams: Promise<{ odoslane?: string; error?: string }>
 }) {
   const parametre = await searchParams
+
+  // Neznámy hostiteľ nedostane ani prihlasovaciu stránku (D29) — ale výpadok
+  // databázy sa od neznámej domény musí odlíšiť. Keby sme oboje riešili
+  // rovnako, pri výpadku by portál tvrdil stovke ľudí, že ich organizácia
+  // neexistuje. Prihlásiť sa pri nedostupnej databáze aj tak nedá, takže
+  // strácame len vzhľad, nie kontrolu.
+  let tenant: Tenant | null = null
+  let databazaZlyhala = false
+  try {
+    tenant = await currentTenant()
+  } catch (e) {
+    console.error("[prihlasenie] tenanta sa nepodarilo načítať:", e)
+    databazaZlyhala = true
+  }
+  if (!tenant && !databazaZlyhala) notFound()
+
+  const branding = tenant ? brandingView(tenant) : undefined
+
   return (
-    <div className="obal" style={{ padding: "64px 20px", maxWidth: 460 }}>
+    <div className="obal" style={{ padding: "64px 20px", maxWidth: 460, ...tenantStyle(branding) }}>
       <Prihlasenie
         odoslane={parametre.odoslane === "1"}
         chyba={parametre.error}
+        branding={branding}
       />
     </div>
   )

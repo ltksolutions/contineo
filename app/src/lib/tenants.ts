@@ -175,6 +175,25 @@ export function normalizeTenant(doc: Tenant): Tenant {
 }
 
 /**
+ * Vzhľad tenanta ako obyčajné reťazce.
+ *
+ * `Tenant` nesie `ObjectId` a `Date`; ani jedno sa neprenesie cez hranicu do
+ * klientskeho komponentu. Preto sa vzhľad odovzdáva takto zúžený — chyba je
+ * tak vylúčená typom, nie objavená až za behu.
+ */
+export function brandingView(tenant: Tenant): {
+  displayName: string
+  logoUrl?: string
+  accentColor?: string
+} {
+  return {
+    displayName: tenant.branding.displayName,
+    logoUrl: tenant.branding.logoUrl,
+    accentColor: tenant.branding.accentColor,
+  }
+}
+
+/**
  * Patrí osoba k tomuto tenantovi?
  *
  * Prihlásenie samo osebe nestačí: rovnaká relácia by inak fungovala na

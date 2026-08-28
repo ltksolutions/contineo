@@ -9,6 +9,8 @@
 import Link from "next/link"
 import { notFound, redirect } from "next/navigation"
 import { onboardingContext } from "@/lib/session"
+import { brandingView } from "@/lib/tenants"
+import TenantHeader, { tenantStyle } from "@/components/TenantHeader"
 import { trackProgress } from "@/lib/tracks"
 import { dictionary, formatDate } from "@/lib/i18n"
 
@@ -44,6 +46,7 @@ export default async function Dokumenty() {
   }
 
   const person = ctx.person
+  const branding = brandingView(ctx.tenant)
 
   const t = dictionary(person.language).onboarding
   const tracks = await trackProgress(person)
@@ -52,15 +55,12 @@ export default async function Dokumenty() {
   const total = tracks.reduce((a, tr) => a + tr.totalCount, 0)
 
   return (
-    <div className="obal" style={{ padding: "36px 20px 80px", maxWidth: 760 }}>
+    <div className="obal" style={{ padding: "36px 20px 80px", maxWidth: 760, ...tenantStyle(branding) }}>
+      <TenantHeader branding={branding} />
       <h1 style={{ fontSize: 27, letterSpacing: "-0.02em", margin: "0 0 8px" }}>
         {t.listHeading}
       </h1>
       <p className="tichy" style={{ fontSize: 15.5, margin: "0 0 8px" }}>{t.listIntro}</p>
-      {/* Čie normy to sú. Pri potvrdzovaní so záväzkom to nie je ozdoba. */}
-      <p className="tichy" style={{ fontSize: 13.5, margin: "0 0 8px" }}>
-        {ctx.tenant.branding.displayName}
-      </p>
 
       {total > 0 && (
         <p className="tichy" style={{ fontSize: 14, margin: "0 0 24px" }}>

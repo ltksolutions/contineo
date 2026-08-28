@@ -13,6 +13,8 @@
 import Link from "next/link"
 import { notFound, redirect } from "next/navigation"
 import { onboardingContext } from "@/lib/session"
+import { brandingView } from "@/lib/tenants"
+import TenantHeader, { tenantStyle } from "@/components/TenantHeader"
 import { loadDocumentFor, effectiveVersion } from "@/lib/documents"
 import { buildStatement, hasAcknowledged } from "@/lib/acknowledgements"
 import { dictionary, formatDate } from "@/lib/i18n"
@@ -29,6 +31,7 @@ export default async function Dokument({ params }: { params: Promise<{ documentI
   // rovnaká odpoveď ako pri neviditeľnom dokumente (D32).
   if (ctx.state === "not-in-tenant") notFound()
   const person = ctx.person
+  const branding = brandingView(ctx.tenant)
 
   const t = dictionary(person.language).onboarding
   const documentId = decodeURIComponent((await params).documentId)
@@ -38,7 +41,8 @@ export default async function Dokument({ params }: { params: Promise<{ documentI
   const version = effectiveVersion(doc)
 
   return (
-    <div className="obal" style={{ padding: "36px 20px 80px", maxWidth: 760 }}>
+    <div className="obal" style={{ padding: "36px 20px 80px", maxWidth: 760, ...tenantStyle(branding) }}>
+      <TenantHeader branding={branding} />
       <p style={{ margin: "0 0 16px" }}>
         <Link className="tichy" href="/dokumenty" style={{ fontSize: 14 }}>← {t.back}</Link>
       </p>

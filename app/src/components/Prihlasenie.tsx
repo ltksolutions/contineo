@@ -2,6 +2,8 @@
 
 import { useState } from "react"
 import { signIn } from "next-auth/react"
+import TenantHeader from "./TenantHeader"
+import type { TenantBrandingView } from "./TenantHeader"
 
 /**
  * Formulár prihlásenia e-mailom.
@@ -24,9 +26,11 @@ const CHYBY: Record<string, string> = {
 export default function Prihlasenie({
   odoslane,
   chyba,
+  branding,
 }: {
   odoslane: boolean
   chyba?: string
+  branding?: TenantBrandingView
 }) {
   const [email, setEmail] = useState("")
   const [odosielam, setOdosielam] = useState(false)
@@ -66,20 +70,27 @@ export default function Prihlasenie({
 
   return (
     <div>
-      <div style={{ display: "flex", alignItems: "center", gap: 11, marginBottom: 26 }}>
-        <svg width="30" height="30" viewBox="0 0 48 48" fill="none" aria-hidden="true">
-          <circle cx="18" cy="18" r="13" stroke="currentColor" strokeWidth="4" />
-          <circle cx="13" cy="18" r="2.3" fill="currentColor" />
-          <circle cx="23" cy="18" r="2.3" fill="currentColor" />
-          <path d="M28 27 L41 41 L29 38 Z" fill="currentColor" />
-        </svg>
-        <span style={{ fontWeight: 700, fontSize: 20, letterSpacing: "-0.02em" }}>
-          Contineo
-        </span>
-      </div>
+      {/* Hlavička organizácie, nie dodávateľa. Kto sa prihlasuje, aby potvrdil
+          smernicu, potrebuje vidieť čí je portál — a značka softvéru mu to
+          nepovie. Bez tenanta ostáva pôvodná značka. */}
+      {branding ? (
+        <TenantHeader branding={branding} size={40} />
+      ) : (
+        <div style={{ display: "flex", alignItems: "center", gap: 11, marginBottom: 26 }}>
+          <svg width="30" height="30" viewBox="0 0 48 48" fill="none" aria-hidden="true">
+            <circle cx="18" cy="18" r="13" stroke="currentColor" strokeWidth="4" />
+            <circle cx="13" cy="18" r="2.3" fill="currentColor" />
+            <circle cx="23" cy="18" r="2.3" fill="currentColor" />
+            <path d="M28 27 L41 41 L29 38 Z" fill="currentColor" />
+          </svg>
+          <span style={{ fontWeight: 700, fontSize: 20, letterSpacing: "-0.02em" }}>
+            Contineo
+          </span>
+        </div>
+      )}
 
       <h1 style={{ fontSize: 21, margin: "0 0 8px", letterSpacing: "-0.02em" }}>
-        Prihlásenie do testovacieho rozhrania
+        Prihlásenie
       </h1>
       <p className="tichy" style={{ fontSize: 14.5, lineHeight: 1.65, margin: "0 0 22px" }}>
         Zadajte e-mail, na ktorý ste dostali pozvánku. Pošleme vám odkaz —
