@@ -195,13 +195,14 @@
 - [x] **D39** — „nové" sa počíta voči `lastLoginAt`, bez stavu prečítané
 - [x] **D40** ✅ 2026-08-28 — **(a)**: rozsah A jednorazové hlásenia nemá, widget ukazuje len úlohy
 
-**Rozsah A `[3–5 dní]` — widget má čo ukazovať**
+**Rozsah A ✅ hotové 2026-08-28 — widget má čo ukazovať**
 
-- [ ] register zdrojov + tvar `PendingItem` (`source`, `id`, `title`, `href`, `since`)
-- [ ] zdroj „nepotvrdené normy" nad existujúcim `trackProgress()` — bez druhej kópie stavu (D27)
-- [ ] widget na úvodnej strane, **mobile first** (povinnosť projektu)
-- [ ] príznak „nové" voči `lastLoginAt`
-- [ ] testy: prázdny stav, položka z viacerých trás sa nezdvojí, cudzí tenant nič nevidí (D32)
+- [x] register zdrojov + tvar `PendingItem` (`source`, `id`, `title`, `href`, `detail`, `sortAt`) — `app/src/lib/pending.ts`
+- [x] zdroj „nepotvrdené normy" nad existujúcim `trackProgress()` — bez druhej kópie stavu (D27)
+- [x] widget na úvodnej strane nad hľadaním, **mobile first** — `app/src/components/NevybaveneZiadosti.tsx`
+- [x] zablokovaný krok sa nedá medzi úlohy, ale spočíta sa a povie sa o ňom vetou
+- [x] testy (13): zdvojenie z dvoch trás, zablokované, poradie, výpadok zdroja, prázdny stav
+- [ ] **odložené do rozsahu B:** „odkedy to čaká" a príznak „nové". Poctivo to vie povedať až `assignments.assignedAt` (D37); `effectiveFrom` je právna platnosť a `publishedAt` je nepovinné, takže by widget ukazoval číslo, ktoré znamená niečo iné, než čo je pri ňom napísané. Zoradenie zatiaľ podľa `effectiveFrom` zostupne — a vie sa o ňom, že je dočasné.
 
 **Rozsah B `[1–1,5 týždňa]` — prideľovanie prestane byť tiché**
 

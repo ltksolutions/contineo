@@ -461,9 +461,10 @@ Pravidlo Fázy 8 „stav sa neukladá, ale odvodzuje" (D27) zostáva. Pridáva s
 k nemu druhé: **rozhodnutie, že sa niečo má urobiť znova, je záznam** (D37) —
 rovnako ako `acknowledgements` je záznam a nie príznak.
 
-**9a — Rozsah A `[3–5 dní]`** — widget má čo ukazovať: register zdrojov,
-`PendingItem`, zdroj „nepotvrdené normy" nad `trackProgress()`, príznak „nové"
-voči `lastLoginAt`. Mobile first.
+**9a — Rozsah A** ✅ **hotové 2026-08-28** — register zdrojov, `PendingItem`,
+zdroj „nepotvrdené normy" nad `trackProgress()`, widget nad hľadaním na úvodnej
+strane, mobile first. „Odkedy to čaká" a príznak „nové" sa presunuli do 9b:
+poctivý čas dodá až `assignments.assignedAt`.
 
 **9b — Rozsah B `[1–1,5 týždňa]`** — prideľovanie prestane byť tiché: kolekcia
 `assignments`, `persons.groups`, obrazovka „prideliť verziu skupine" s povinným

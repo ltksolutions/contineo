@@ -4,6 +4,19 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Added (2026-08-28 — Fáza 9a: widget „Nevybavené žiadosti")
+
+- **`app/src/lib/pending.ts` — register zdrojov.** Widget nevie nič o normách ani tiketoch; pýta sa zdrojov a skladá z nich jeden zoznam v jednom tvare (`PendingItem`). Keby sa pýtal každého modulu zvlášť, každý ďalší zdroj by znamenal ďalšiu vetvu v komponente, ktorý má len vypísať zoznam. V rozsahu A je zdroj jediný: **nepotvrdené normy nad existujúcim `trackProgress()`** — nie druhý výpočet toho istého, ktorý by sa raz rozišiel práve pri novej verzii (D27).
+- **Widget je na úvodnej strane nad hľadaním.** Odkaz na prihlásenie príde e-mailom a prvá obrazovka po kliknutí je táto — hore patrí to, čo od človeka chceme, nie ukážka toho, čo systém vie. Hľadanie zostáva pod tým. Komu nepatrí ani jedna trasa, widget sa nezobrazí vôbec: prázdna karta by mu len zabrala prvú obrazovku.
+- **Zablokovaný krok sa medzi úlohy nedostane.** Úloha, s ktorou človek nemôže pohnúť (dokument bez platného znenia), nie je úloha a v zozname by len visela. Zamlčať sa ale nesmie, inak widget tvrdí „nič nečaká" — preto o nich povie jednou vetou s odkazom na `/dokumenty`, kde je aj dôvod.
+- **Tá istá norma v dvoch trasách sa ukáže raz.** Identitou položky je dvojica zdroj + `id`, nie krok trasy.
+- **Výpadok jedného zdroja zoznam nezhodí.** Zdroje sa pýtajú súbežne a chyba ide do logu; prázdny widget kvôli výpadku helpdesku by človeku povedal „nič nečaká", čo je horšie než neúplný zoznam.
+- **13 nových testov** (spolu 516). Testuje sa to, čo môže ukázať nepravdu: zdvojenie, zablokované, poradie, výpadok zdroja, prázdny stav.
+
+### Changed (2026-08-28)
+
+- **„Odkedy to čaká" a príznak „nové" sa odložili do rozsahu B.** Pri implementácii vyšlo najavo, že `lastLoginAt` treba porovnávať s tým, *kedy úloha pribudla* — a to v rozsahu A neexistuje. `effectiveFrom` je právna platnosť (norma z roku 2019 by nebola „nová" ani pri prvom stretnutí), `publishedAt` je nepovinné. Widget preto neukazuje ani jedno; oboje dodá `assignments.assignedAt` (D37). Zoradenie je zatiaľ podľa `effectiveFrom` zostupne a je označené ako dočasné priamo v kóde.
+
 ### Planned (2026-08-28 — Fáza 9: udalosti a upozornenia)
 
 - **`docs/UDALOSTI_A_UPOZORNENIA_KONCEPCIA.md` — návrh čaká na schválenie, kód sa nezačal.** Zadanie: widget „Nevybavené žiadosti" na úvodnej strane a interný systém upozornení.

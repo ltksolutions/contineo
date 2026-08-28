@@ -124,6 +124,19 @@ Cena tejto voľby, aby bola vidno dopredu:
 Za to sa nezakladá žiadna nová kolekcia s osobnými údajmi o správaní, ktorú by
 bolo treba odôvodniť a mazať (O15, O16).
 
+> **Pri implementácii rozsahu A sa ukázalo, že to nestačí (2026-08-28).**
+> `lastLoginAt` povie, *kedy sa človek naposledy prihlásil*, ale porovnávať to
+> treba s tým, *kedy mu úloha pribudla* — a to v rozsahu A neexistuje.
+> Náhrady sú obe zlé: `effectiveFrom` je právna platnosť, takže norma platná
+> od roku 2019 by nebola „nová" ani pri prvom stretnutí; `publishedAt` je
+> nepovinné a importované dokumenty ho nemusia mať.
+>
+> Preto rozsah A **„odkedy to čaká" ani príznak „nové" neukazuje vôbec.**
+> Radšej nesľúbiť nič, než ukázať číslo, ktoré znamená niečo iné, než čo je
+> pri ňom napísané. Oboje pribudne v rozsahu B, keď ich dodá `assignedAt` —
+> jediné pole, ktoré na to má správny význam. Rozhodnutie D39 tým zostáva
+> v platnosti: vlastná kolekcia upozornení sa nezakladá.
+
 ---
 
 ## 6. Rozpor, ktorý treba pomenovať
@@ -159,11 +172,11 @@ ktoré tam nebudú. Widget sa preto volá tak, ako znelo zadanie —
 
 ## 7. Fázovanie
 
-**Rozsah A `[3–5 dní]`** — widget má čo ukazovať
+**Rozsah A** ✅ **hotové 2026-08-28** — widget má čo ukazovať
 - register zdrojov + `PendingItem`
 - zdroj „nepotvrdené normy" nad existujúcim `trackProgress()`
-- widget na úvodnej strane, mobile first
-- „nové" voči `lastLoginAt`
+- widget na úvodnej strane nad hľadaním, mobile first
+- **„odkedy" a „nové" sa presunuli do rozsahu B** — viď poznámku nižšie
 
 **Rozsah B `[1–1,5 týždňa]`** — prideľovanie prestane byť tiché
 - kolekcia `assignments` + `persons.groups`

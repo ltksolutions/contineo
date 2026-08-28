@@ -96,6 +96,23 @@ interface Dictionary {
     error: Record<string, string>
   }
 
+  /**
+   * Widget „Nevybavené žiadosti" na úvodnej strane (D36).
+   *
+   * Množné čísla sú napísané rukou pre každý jazyk zvlášť. Slovenčina
+   * a čeština majú tri tvary (1 / 2–4 / 5+); `Intl.PluralRules` by tvar
+   * vybralo, ale text by aj tak musel byť napísaný trikrát — pribudla by
+   * závislosť bez úspory.
+   */
+  pending: {
+    heading: string
+    empty: string
+    open: string
+    count: (n: number) => string
+    showAll: (n: number) => string
+    blockedNote: (n: number) => string
+  }
+
   email: {
     /**
      * Predmet a nadpis nesú **názov organizácie**, nie názov softvéru.
@@ -146,6 +163,19 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       "not-signed-in": "Vaše prihlásenie vypršalo. Prihláste sa znova.",
     },
   },
+    pending: {
+      heading: "Nevybavené žiadosti",
+      empty: "Nič na vás nečaká.",
+      open: "Otvoriť",
+      count: n => (n === 1 ? "1 položka" : n >= 2 && n <= 4 ? `${n} položky` : `${n} položiek`),
+      showAll: n => `Zobraziť všetky (${n})`,
+      blockedNote: n =>
+        n === 1
+          ? "Jeden dokument zatiaľ nie je dostupný."
+          : n >= 2 && n <= 4
+            ? `${n} dokumenty zatiaľ nie sú dostupné.`
+            : `${n} dokumentov zatiaľ nie je dostupných.`,
+    },
     statement: (title, version, effectiveFrom) =>
       `Potvrdzujem, že som sa oboznámil s dokumentom „${title}", verzia ${version}, ` +
       `platná od ${effectiveFrom}, porozumel som jeho obsahu a zaväzujem sa ho dodržiavať.`,
@@ -193,6 +223,19 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       "not-signed-in": "Vaše přihlášení vypršelo. Přihlaste se znovu.",
     },
   },
+    pending: {
+      heading: "Nevyřízené žádosti",
+      empty: "Nic na vás nečeká.",
+      open: "Otevřít",
+      count: n => (n === 1 ? "1 položka" : n >= 2 && n <= 4 ? `${n} položky` : `${n} položek`),
+      showAll: n => `Zobrazit všechny (${n})`,
+      blockedNote: n =>
+        n === 1
+          ? "Jeden dokument zatím není dostupný."
+          : n >= 2 && n <= 4
+            ? `${n} dokumenty zatím nejsou dostupné.`
+            : `${n} dokumentů zatím není dostupných.`,
+    },
     statement: (title, version, effectiveFrom) =>
       `Potvrzuji, že jsem se seznámil s dokumentem „${title}", verze ${version}, ` +
       `platná od ${effectiveFrom}, porozuměl jsem jeho obsahu a zavazuji se jej dodržovat.`,
@@ -240,6 +283,17 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       "not-signed-in": "Your session has expired. Please sign in again.",
     },
   },
+    pending: {
+      heading: "Pending items",
+      empty: "Nothing is waiting for you.",
+      open: "Open",
+      count: n => (n === 1 ? "1 item" : `${n} items`),
+      showAll: n => `Show all (${n})`,
+      blockedNote: n =>
+        n === 1
+          ? "One document is not available yet."
+          : `${n} documents are not available yet.`,
+    },
     statement: (title, version, effectiveFrom) =>
       `I confirm that I have read the document "${title}", version ${version}, ` +
       `effective from ${effectiveFrom}, that I understand its contents ` +

@@ -184,6 +184,82 @@ button:disabled { cursor: not-allowed; opacity: 0.55; }
 .tlacidlo--tiche:hover:not(:disabled) { background: var(--surface-2); }
 
 /*
+ * Widget „Nevybavené žiadosti".
+ *
+ * **Mobile first.** Na úzkom displeji je položka stĺpec: názov, pod ním
+ * tlačidlo na celú šírku, ktoré sa dá trafiť palcom. Vedľa seba sa postavia
+ * až od 560 px — na 360 px by sa názov normy stlačil na dve slová a zvyšok
+ * by zmizol do troch bodiek.
+ */
+.widget-ziadosti { padding: 16px 18px; }
+
+.widget-ziadosti-hlavicka {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.ziadosti-zoznam {
+  list-style: none;
+  margin: 12px 0 0;
+  padding: 0;
+}
+
+.ziadost {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
+  padding: 12px 0;
+  border-top: 1px solid var(--line);
+}
+
+.ziadosti-zoznam > .ziadost:first-child { border-top: 0; padding-top: 2px; }
+
+.ziadost-nazov {
+  font-weight: 600;
+  font-size: 15.5px;
+  text-decoration: none;
+  /* Názvy noriem obsahujú dlhé čísla bez medzier („č. 12/2026-SFZ-PK");
+     bez tohto by riadok pretiekol mimo karty. */
+  overflow-wrap: anywhere;
+}
+
+.ziadost-nazov:hover { text-decoration: underline; }
+
+.ziadost-detail { margin: 2px 0 0; font-size: 13px; }
+
+/* Dotykový cieľ má mať aspoň ~40 px na výšku — to dáva padding. */
+.ziadost-akcia {
+  justify-content: center;
+  padding: 9px 16px;
+  font-size: 14.5px;
+  text-decoration: none;
+}
+
+.widget-ziadosti-pata {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+  align-items: baseline;
+  margin: 14px 0 0;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+  font-size: 14px;
+}
+
+@media (min-width: 560px) {
+  .ziadost {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+  }
+  .ziadost-akcia { flex: 0 0 auto; }
+}
+
+/*
  * Odpoveď modelu.
  *
  * Členenie rieši `formatText.ts`, ktorý text rozloží na skutočné odseky
