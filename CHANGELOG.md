@@ -4,6 +4,13 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Added (2026-08-28 — `npm run domeny`)
+
+- **Stav domén tenantov jedným príkazom.** Pre každú doménu: či je vo Verceli, či zákazník už nastavil DNS, či mu v zóne nekolidujú staré záznamy, a ak čaká, presný `CNAME`. Odpovedá na otázku „prečo mu tá doména ešte nejde" bez klikania v dashboarde.
+- **`--poslat` odošle pokyny zákazníkovi** na `branding.supportEmail` (`--komu` ju prebije) cez Ecomail. Hromadné rozposielanie zámerne nie je — `--poslat` vyžaduje `--company`.
+- **Stav ani pokyny sa neukladajú.** Oboje sa číta naživo z Vercelu a odvodí z hostname; uložená kópia by klamala presne vtedy, keď na tom najviac záleží — zákazník si prestaví DNS a náš záznam by ďalej tvrdil „nastavené". Rovnaké pravidlo ako D27.
+- **Zaznamenáva sa len akt:** `domainSetup { requestedAt, requestedTo, hostnames }` — komu a kedy sme pokyny poslali a čo sme pýtali. To sa odvodiť nedá; rovnaké rozlíšenie ako medzi úlohou a jej pridelením (D37).
+
 ### Added (2026-08-28 — vlastná doména zákazníka je tiež jeden príkaz)
 
 - **`tenant_set.mjs` pridá vlastnú doménu do Vercelu sám** (`POST /v10/projects/{id}/domains`) a vypíše `CNAME`, ktorý má nastaviť zákazník. Dovtedy to bol jediný ručný úkon na zákazníka; teraz z našej strany nezostáva žiadny. Zvyšok je v zóne zákazníka a certifikát vydá Vercel automaticky.

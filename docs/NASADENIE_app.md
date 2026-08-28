@@ -157,9 +157,36 @@ a `*.localhost` (k Vercelu nedorazia), `*.vercel.app` (prideľuje ich Vercel).
 
 ```bash
 # overenie
-vercel domains inspect klub.sk        # sekcia „Projects"
+npm run domeny                        # stav domén všetkých tenantov
 npm run stav                          # sekcia TENANTS
 ```
+
+### `npm run domeny` — čo ešte čaká na zákazníka
+
+Odpovedá na otázku *„prečo mu tá doména ešte nejde"* jedným príkazom. Pre
+každú doménu ukáže, či je vo Verceli, či zákazník už nastavil DNS, či mu
+v zóne nekoliduje starý záznam — a ak čaká, vypíše presný `CNAME`.
+
+```bash
+npm run domeny                                   # prehľad
+npm run domeny -- --company KLUB                 # jeden tenant
+npm run domeny -- --company KLUB --poslat        # odošle pokyny na supportEmail
+npm run domeny -- --company KLUB --poslat --komu it@klub.sk
+```
+
+**Stav ani pokyny sa neukladajú.** Oboje sa číta naživo z Vercelu a odvodí
+z hostname; uložená kópia by klamala presne vtedy, keď na tom najviac záleží
+— zákazník si o mesiac prestaví DNS a náš záznam by ďalej tvrdil „nastavené".
+Rovnaké pravidlo ako D27.
+
+**Zaznamenáva sa len akt:** `domainSetup { requestedAt, requestedTo,
+hostnames }` — komu a kedy sme pokyny poslali a čo presne sme pýtali. To sa
+odvodiť nedá a bez toho sa po čase nezistí, či zákazník pokyny vôbec dostal.
+Rovnaké rozlíšenie ako medzi úlohou a jej pridelením (D37).
+
+Adresa príjemcu je `branding.supportEmail` (`tenant_set.mjs --support`),
+`--komu` ju prebije. **Hromadné rozposielanie zámerne nie je** — `--poslat`
+vyžaduje `--company`.
 
 **Pozn. k CLI:** tvar `vercel domains add <doména> <projekt>` neexistuje —
 CLI 54.1.0 berie jediný argument a doménu priradí projektu, na ktorý je
