@@ -4,6 +4,12 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Docs (2026-08-28 — wildcard, a oprava nesprávneho príkazu)
+
+- **Zapísaný postup pre `*.contineo.app`.** Cieľ: pri novom zákazníkovi nesiahať do Vercelu vôbec. Wildcard sa nastaví raz (doména v projekte + `CNAME *` a overovací `TXT` na Websupporte) a odvtedy stačí jediný príkaz `tenant_set.mjs`.
+- **Opravený príkaz, ktorý som predtým zapísal nesprávne.** `vercel domains add <doména> <projekt>` **neexistuje** — CLI 54.1.0 berie `domains add` jediný argument a doménu pridá účtu, nie projektu. Priradenie k projektu sa cez CLI spraviť nedá, je to úkon v dashboarde. Overené pokusom, nie predpokladom.
+- **Poznámka k bezpečnosti wildcardu:** doteraz museli sedieť dve nezávislé miesta (doména vo Verceli aj zápis v `tenants`). S wildcardom sa k aplikácii dostane každá `*.contineo.app` adresa a rozhoduje jediné miesto — `tenants`; ostatné dostane `404` (D29). Pre vlastné domény zákazníkov zostávajú miesta dve.
+
 ### Changed (2026-08-28 — adresy `*.vercel.app` zavreté dvakrát)
 
 - **`*.vercel.app` sa zrušiť nedá** — Vercel ich prideľuje projektu aj každému jednotlivému nasadeniu. Dajú sa len zavrieť.

@@ -126,14 +126,17 @@ sebou a každá odpovedá na inú otázku:
 | Vercel → Domains | *ktorému projektu tá adresa patrí?* | Vercel nevie, kam požiadavku dať, a **nevystaví certifikát** — padne už HTTPS, ešte pred prvým bajtom aplikácie |
 | `tenants` | *ktorej organizácii tá adresa patrí?* | aplikácia beží, ale odpovie `404` (D29) |
 
-Postup pre novú organizáciu, napr. `intranet.klub.sk`:
+Postup pre novú organizáciu na **jej vlastnej doméne**, napr. `intranet.klub.sk`:
 
 ```bash
 # 1. DNS u správcu domény klubu
 #    CNAME intranet → cname.vercel-dns.com
 
-# 2. Vercel
-vercel domains add intranet.klub.sk contineo-app
+# 2. Vercel: priradiť doménu projektu contineo-app
+#    Dashboard → contineo-app → Settings → Domains → Add.
+#    POZOR: `vercel domains add <doména> <projekt>` NEEXISTUJE. V CLI 54.1.0
+#    berie `domains add` jediný argument a doménu pridá **účtu**, nie
+#    projektu; priradenie k projektu cez CLI spraviť nejde.
 
 # 3. tenants
 node scripts/tenant_set.mjs --company KLUB \
@@ -145,10 +148,49 @@ vercel domains inspect klub.sk        # sekcia „Projects"
 npm run stav                          # sekcia TENANTS
 ```
 
+Krok 2 je jediný ručný a robí sa **raz na zákazníka**. Ak sa mu chceme vyhnúť
+úplne, existuje wildcard — viď nižšie.
+
 **Jediná výnimka sú `localhost` a `sfz.localhost`.** Tie k Vercelu nikdy
 nedôjdu — bežia na vývojárskom stroji — takže existujú len v `tenants`.
 Rovnako `*.vercel.app` adresy: tie Vercel prideľuje sám a do Domains sa
 nepridávajú.
+
+### Wildcard `*.contineo.app` — nula práce na zákazníka
+
+Cieľ: pri novom zákazníkovi **nesiahať do Vercelu vôbec**. Rieši to jeden
+wildcard, ktorý sa nastaví **raz** a odvtedy pokrýva každú budúcu subdoménu.
+
+**Jednorazovo (dva úkony, obidva mimo repozitára):**
+
+1. **Vercel** → projekt `contineo-app` → Settings → Domains → Add
+   `*.contineo.app`. Cez CLI to nejde (viď poznámka vyššie).
+2. **DNS `contineo.app` na Websupporte** → `CNAME * → cname.vercel-dns.com`.
+   Wildcard certifikát si Vercel vypýta overiť ešte `TXT` záznamom
+   (`_acme-challenge` alebo `_vercel`) — presné znenie ukáže po pridaní
+   domény. Domény s cudzími nameservermi to potrebujú vždy.
+
+**Odvtedy pri každom novom zákazníkovi:**
+
+```bash
+node scripts/tenant_set.mjs --company KLUB \
+  --host klub.contineo.app --name "Názov klubu"
+```
+
+To je všetko. Žiadny Vercel, žiadne DNS, žiadne čakanie na certifikát.
+
+**Konkrétne subdomény majú prednosť pred wildcardom,** takže
+`app.contineo.app` (projekt `contineo-app`) aj `www.contineo.app` a apex
+`contineo.app` (projekt `contineo`) zostávajú tam, kde sú. Overiť po
+nastavení, nie predpokladať.
+
+**Wildcard robí z `tenants` jedinú bránu.** Doteraz museli sedieť dve
+nezávislé miesta — doména vo Verceli aj zápis v `tenants`. S wildcardom sa
+k aplikácii dostane **každá** `*.contineo.app` adresa a jediné, čo rozhoduje,
+je zápis v `tenants`; všetko ostatné dostane `404` (D29). Nie je to
+zhoršenie — je to presne to, na čo je D29 postavená — ale je dobré vedieť, že
+poistka „preklep vo Verceli nikoho nepustí dnu" tu už neplatí. Pre **vlastné
+domény zákazníkov** platí naďalej, tam sú miesta stále dve.
 
 ### Dodávateľské domény nepatria zákazníkovi (2026-08-28)
 
