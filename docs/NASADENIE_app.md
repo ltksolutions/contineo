@@ -20,6 +20,26 @@
 
 ---
 
+## 0. Nasadenie je RUČNÉ, nie z Gitu (zistené 2026-08-28)
+
+Projekt **nie je napojený na automatické nasadzovanie z GitHubu**. Push do `main`
+nespustí nič — 2026-08-28 bolo posledné nasadenie staré 31 dní, hoci v repozitári
+medzitým pribudlo desať commitov. Kým sa to nezmení, po každej zmene treba:
+
+```bash
+cd ~/Documents/GitHub/contineo/app
+vercel deploy --prod --yes
+```
+
+Build trvá rádovo pol minúty. Predchádzajúce nasadenia zostávajú dostupné, takže
+návrat späť je `vercel rollback <url>`.
+
+> **Stojí za zváženie napojiť Git**, inak sa bude opakovať to isté: kód je
+> v repozitári hotový, ale živá aplikácia o ňom nevie a nikto si to nevšimne,
+> lebo commity aj testy prechádzajú.
+
+---
+
 ## 1. DNS pre `app.contineo.app`
 
 Doménu `contineo.app` **nespravuje Vercel, ale Websupport** (nameservery
