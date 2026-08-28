@@ -21,6 +21,13 @@ import { getToken } from "next-auth/jwt"
 const VEREJNE = [
   "/prihlasenie",
   "/api/auth",      // samotné prihlasovanie
+  // Logá tenantov. Prihlasovacia stránka nesie logo organizácie a načítava ho
+  // ako obrázok — teda ďalšou požiadavkou, ktorá v tej chvíli ešte nie je
+  // prihlásená. Bez tejto výnimky by sa presmerovala na `/prihlasenie` a
+  // z hlavičky by zostal holý text. Sú to verejné značkové súbory, nie obsah
+  // noriem; jediné, čo prezradia, je že tá organizácia tu má portál — a to
+  // prezradí už samotná doména.
+  "/tenants/",
 ]
 
 export async function middleware(req: NextRequest) {
