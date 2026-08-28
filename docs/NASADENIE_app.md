@@ -133,10 +133,11 @@ Postup pre novú organizáciu na **jej vlastnej doméne**, napr. `intranet.klub.
 #    CNAME intranet → cname.vercel-dns.com
 
 # 2. Vercel: priradiť doménu projektu contineo-app
-#    Dashboard → contineo-app → Settings → Domains → Add.
-#    POZOR: `vercel domains add <doména> <projekt>` NEEXISTUJE. V CLI 54.1.0
-#    berie `domains add` jediný argument a doménu pridá **účtu**, nie
-#    projektu; priradenie k projektu cez CLI spraviť nejde.
+#    Spustiť **v adresári projektu** (tam, kde je .vercel/project.json):
+vercel domains add intranet.klub.sk
+#    POZOR: tvar `vercel domains add <doména> <projekt>` NEEXISTUJE — CLI
+#    54.1.0 berie jediný argument. Doménu priradí projektu, na ktorý je
+#    adresár nalinkovaný; mimo neho ju pridá len účtu.
 
 # 3. tenants
 node scripts/tenant_set.mjs --company KLUB \
@@ -161,14 +162,37 @@ nepridávajú.
 Cieľ: pri novom zákazníkovi **nesiahať do Vercelu vôbec**. Rieši to jeden
 wildcard, ktorý sa nastaví **raz** a odvtedy pokrýva každú budúcu subdoménu.
 
-**Jednorazovo (dva úkony, obidva mimo repozitára):**
+**Jednorazovo, dva úkony:**
 
-1. **Vercel** → projekt `contineo-app` → Settings → Domains → Add
-   `*.contineo.app`. Cez CLI to nejde (viď poznámka vyššie).
-2. **DNS `contineo.app` na Websupporte** → `CNAME * → cname.vercel-dns.com`.
-   Wildcard certifikát si Vercel vypýta overiť ešte `TXT` záznamom
-   (`_acme-challenge` alebo `_vercel`) — presné znenie ukáže po pridaní
-   domény. Domény s cudzími nameservermi to potrebujú vždy.
+1. **Vercel — ✅ hotové 2026-08-28.**
+
+   ```bash
+   cd app && vercel domains add '*.contineo.app'
+   ```
+
+   Doména je priradená projektu `contineo-app` a `verified: true`. Overenie
+   `TXT` záznamom **nebolo potrebné**: apex `contineo.app` už v účte je
+   a overený je, takže Vercel wildcard prijal rovno. Pozor, `vercel domains
+   inspect contineo.app` wildcard v sekcii „Projects" **neukáže** — vidno ho
+   až cez API (`/v9/projects/contineo-app/domains/*.contineo.app`).
+
+2. **DNS `contineo.app` na Websupporte — zostáva.** Dnes je tam zástupný
+   `A` záznam, ktorý smeruje na Websupport a wildcard by prebil:
+
+   | | Teraz | Má byť |
+   |---|---|---|
+   | `*` | `A → 37.9.175.197` | `CNAME → 75b9ff58792d32ba.vercel-dns-016.com.` |
+
+   Existujúci `A` treba **odstrániť**, inak nový záznam nezaberie. Apexu
+   (`contineo.app → 216.150.1.1`) ani `www` sa nedotýkať — konkrétne
+   záznamy majú prednosť pred wildcardom a obe smerujú na marketingový
+   projekt.
+
+   Kontrola po zmene:
+
+   ```bash
+   dig +short nahodne123.contineo.app CNAME   # má vrátiť …vercel-dns-016.com.
+   ```
 
 **Odvtedy pri každom novom zákazníkovi:**
 

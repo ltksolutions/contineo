@@ -4,6 +4,12 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Changed (2026-08-28 — wildcard `*.contineo.app` priradený projektu)
+
+- **Vo Verceli je hotovo.** `*.contineo.app` je priradený projektu `contineo-app` a `verified: true`; overovací `TXT` nebol potrebný, lebo apex `contineo.app` je v účte a overený. Odteraz nová subdoména nepotrebuje vo Verceli nič.
+- **Spresnenie k CLI:** tvar `vercel domains add <doména> <projekt>` naozaj neexistuje, ale jednoargumentový `vercel domains add '*.contineo.app'` spustený **v adresári projektu** doménu projektu priradí. Predchádzajúci zápis tvrdil, že cez CLI to nejde vôbec — nebola to pravda. `vercel domains inspect` pritom wildcard v sekcii „Projects" neukáže, vidno ho až cez API.
+- **Zostáva jediný krok, a je mimo Vercelu:** na Websupporte má `contineo.app` zástupný `A * → 37.9.175.197`, ktorý wildcard prebíja. Treba ho nahradiť `CNAME * → 75b9ff58792d32ba.vercel-dns-016.com.` Apex a `www` sa nemenia.
+
 ### Docs (2026-08-28 — wildcard, a oprava nesprávneho príkazu)
 
 - **Zapísaný postup pre `*.contineo.app`.** Cieľ: pri novom zákazníkovi nesiahať do Vercelu vôbec. Wildcard sa nastaví raz (doména v projekte + `CNAME *` a overovací `TXT` na Websupporte) a odvtedy stačí jediný príkaz `tenant_set.mjs`.
