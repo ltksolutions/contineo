@@ -115,6 +115,41 @@ Varovanie o chýbajúcom `A` zázname pre samotné `futbalsfz.sk` sa nás netýk
 apex domény smeruje inde a Vercel to hlási pri každej doméne, ktorú nemá
 celú pod sebou.
 
+### Pri každom novom tenantovi treba všetky tri (nie jedno z troch)
+
+Zápis do `tenants` **nenahrádza** doménu vo Verceli. Sú to tri vrstvy nad
+sebou a každá odpovedá na inú otázku:
+
+| Vrstva | Otázka | Čo sa stane, keď chýba |
+|---|---|---|
+| DNS | *kam sa má prevádzka poslať?* | doména sa k Vercelu vôbec nedostane |
+| Vercel → Domains | *ktorému projektu tá adresa patrí?* | Vercel nevie, kam požiadavku dať, a **nevystaví certifikát** — padne už HTTPS, ešte pred prvým bajtom aplikácie |
+| `tenants` | *ktorej organizácii tá adresa patrí?* | aplikácia beží, ale odpovie `404` (D29) |
+
+Postup pre novú organizáciu, napr. `intranet.klub.sk`:
+
+```bash
+# 1. DNS u správcu domény klubu
+#    CNAME intranet → cname.vercel-dns.com
+
+# 2. Vercel
+vercel domains add intranet.klub.sk contineo-app
+
+# 3. tenants
+node scripts/tenant_set.mjs --company KLUB \
+  --host intranet.klub.sk --name "Názov klubu" \
+  --language sk --languages sk
+
+# overenie
+vercel domains inspect klub.sk        # sekcia „Projects"
+npm run stav                          # sekcia TENANTS
+```
+
+**Jediná výnimka sú `localhost` a `sfz.localhost`.** Tie k Vercelu nikdy
+nedôjdu — bežia na vývojárskom stroji — takže existujú len v `tenants`.
+Rovnako `*.vercel.app` adresy: tie Vercel prideľuje sám a do Domains sa
+nepridávajú.
+
 ### Dodávateľské domény nepatria zákazníkovi (2026-08-28)
 
 Do 28. 8. mal tenant `SFZ` medzi doménami aj `app.contineo.app`,
