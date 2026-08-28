@@ -12,10 +12,11 @@ import { useEffect, useState } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { useSession, signOut } from "next-auth/react"
+import type { TenantBrandingView } from "./TenantHeader"
 
 type Tema = "light" | "dark"
 
-export default function Hlavicka() {
+export default function Hlavicka({ branding }: { branding?: TenantBrandingView }) {
   const [tema, setTema] = useState<Tema>("light")
   const cesta = usePathname()
   const { data: sedenie } = useSession()
@@ -58,22 +59,42 @@ export default function Hlavicka() {
           height: 60,
         }}
       >
+        {/*
+          Hlavička patrí organizácii, nie dodávateľovi. Človek, ktorý tu
+          potvrdzuje smernicu svojho zväzu, nemá nad ňou vidieť cudziu značku
+          — a už vôbec nie odznak „testovacie rozhranie" nad dokumentom,
+          ktorého potvrdenie je záväzné.
+        */}
         <div style={{ display: "flex", alignItems: "center", gap: 11 }}>
-          <svg width="26" height="26" viewBox="0 0 48 48" fill="none" aria-hidden="true">
-            <circle cx="18" cy="18" r="13" stroke="currentColor" strokeWidth="4" />
-            <circle cx="13" cy="18" r="2.3" fill="currentColor" />
-            <circle cx="23" cy="18" r="2.3" fill="currentColor" />
-            <path d="M28 27 L41 41 L29 38 Z" fill="currentColor" />
-          </svg>
-          <span style={{ fontWeight: 700, fontSize: 17, letterSpacing: "-0.02em" }}>
-            Contineo
-          </span>
-          <span
-            className="stitok tichy"
-            style={{ fontWeight: 600, letterSpacing: "0.04em", textTransform: "uppercase", fontSize: 11 }}
-          >
-            Testovacie rozhranie
-          </span>
+          {branding ? (
+            <>
+              {branding.logoUrl && (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={branding.logoUrl} alt="" width={26} height={26} style={{ display: "block" }} />
+              )}
+              <span style={{ fontWeight: 700, fontSize: 17, letterSpacing: "-0.02em" }}>
+                {branding.displayName}
+              </span>
+            </>
+          ) : (
+            <>
+              <svg width="26" height="26" viewBox="0 0 48 48" fill="none" aria-hidden="true">
+                <circle cx="18" cy="18" r="13" stroke="currentColor" strokeWidth="4" />
+                <circle cx="13" cy="18" r="2.3" fill="currentColor" />
+                <circle cx="23" cy="18" r="2.3" fill="currentColor" />
+                <path d="M28 27 L41 41 L29 38 Z" fill="currentColor" />
+              </svg>
+              <span style={{ fontWeight: 700, fontSize: 17, letterSpacing: "-0.02em" }}>
+                Contineo
+              </span>
+              <span
+                className="stitok tichy"
+                style={{ fontWeight: 600, letterSpacing: "0.04em", textTransform: "uppercase", fontSize: 11 }}
+              >
+                Testovacie rozhranie
+              </span>
+            </>
+          )}
         </div>
 
         <nav style={{ display: "flex", gap: 4, marginLeft: "auto", marginRight: 6 }}>

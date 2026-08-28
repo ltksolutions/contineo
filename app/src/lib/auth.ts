@@ -20,11 +20,13 @@
  * nad premennou a testujú sa samostatne.
  */
 
+import { headers } from "next/headers"
 import type { NextAuthOptions } from "next-auth"
 import type { EmailConfig } from "next-auth/providers/email"
 import { mongoAdapter } from "./authAdapter"
 import { send, signInEmail } from "./ecomail"
 import { personMaySignIn, recordSignIn, personLanguage } from "./persons"
+import { resolveTenant, normalizeHostname } from "./tenants"
 
 /**
  * Rozloží zoznam povolených adries.
@@ -61,6 +63,80 @@ export function jePovoleny(email: string, rows = povoleneEmaily()): boolean {
 }
 
 /**
+ * Prepíše hostiteľa v odkaze aj v jeho parametri `callbackUrl`.
+ *
+ * `NEXTAUTH_URL` je jedna hodnota na celé nasadenie, ale domén máme viac
+ * (D29). Bez tohto prepisu by človek, ktorý sa prihlasuje na
+ * `intranet.futbalsfz.sk`, dostal do schránky odkaz na `app.contineo.app` —
+ * prihlásil by sa na inej adrese, než na akej začal, a prihlasovacia sušienka
+ * by mu ostala na doméne, na ktorú sa už nevráti.
+ */
+export function rewriteLinkHost(url: string, hostWithPort: string): string {
+  let u: URL
+  try {
+    u = new URL(url)
+  } catch {
+    return url
+  }
+  const original = u.host
+  if (!hostWithPort || hostWithPort === original) return url
+  u.host = hostWithPort
+
+  const cb = u.searchParams.get("callbackUrl")
+  if (cb) {
+    try {
+      const c = new URL(cb)
+      // Mení sa len vtedy, keď `callbackUrl` ukazoval na pôvodnú doménu.
+      // Cudziu adresu by prepis „opravil" na našu a tým zamaskoval.
+      if (c.host === original) {
+        c.host = hostWithPort
+        u.searchParams.set("callbackUrl", c.toString())
+      }
+    } catch {
+      // Relatívny `callbackUrl` sa vyhodnotí až voči cieľovej doméne.
+    }
+  }
+  return u.toString()
+}
+
+/**
+ * Hostiteľ tejto požiadavky aj s portom, alebo prázdny reťazec.
+ *
+ * Port sa **neodrezáva** — v lokálnom vývoji je `localhost:3000` a odkaz bez
+ * portu by neviedol nikam. Na porovnanie s kolekciou `tenants` sa port
+ * odreže až v `normalizeHostname()`.
+ */
+async function requestHost(): Promise<string> {
+  try {
+    const h = await headers()
+    const raw = (h.get("x-forwarded-host") ?? h.get("host") ?? "").split(",")[0].trim()
+    return raw.toLowerCase()
+  } catch {
+    // Mimo kontextu požiadavky. Nie je to chyba, len sa nemáme čoho chytiť.
+    return ""
+  }
+}
+
+/**
+ * Odkaz nasmerovaný na doménu, na ktorej sa človek prihlasuje.
+ *
+ * Prepíše sa len na **známeho tenanta**. Keby stačil ľubovoľný hostiteľ
+ * z hlavičky, dala by sa podvrhnutou hlavičkou `Host` poslať do cudzej
+ * schránky adresa útočníka s platným tokenom.
+ */
+async function linkForRequestHost(url: string): Promise<string> {
+  const host = await requestHost()
+  if (!host) return url
+  try {
+    if (!(await resolveTenant(normalizeHostname(host)))) return url
+  } catch {
+    // Databáza nedostupná — radšej pôvodný odkaz než žiadny e-mail.
+    return url
+  }
+  return rewriteLinkHost(url, host)
+}
+
+/**
  * Poskytovateľ prihlásenia e-mailom, zostavený ručne.
  *
  * `next-auth/providers/email` sa nedá použiť: na prvom riadku importuje
@@ -82,12 +158,35 @@ function emailProvider(): EmailConfig {
     server: { host: "unused", port: 25, auth: { user: "", pass: "" } },
     options: {},
     async sendVerificationRequest({ identifier, url }) {
-      const host = new URL(url).host
+      const link = await linkForRequestHost(url)
+      const host = new URL(link).host
+
       // Jazyk prostredia z `persons`. Nikdy nehádže — pri neznámej osobe
       // alebo nedostupnej databáze padá na slovenčinu, aby sa e-mail odoslal
       // vždy. Zlý jazyk je nepríjemnosť, neodoslaný odkaz sú zavreté dvere.
       const language = await personLanguage(identifier)
-      await send({ to: identifier, ...signInEmail(url, host, language) })
+
+      // Vzhľad organizácie. Zlyhanie tu nesmie zabrániť odoslaniu — bez
+      // vzhľadu je e-mail škaredší, bez e-mailu sa človek neprihlási.
+      let branding
+      try {
+        const tenant = await resolveTenant(normalizeHostname(host))
+        if (tenant) {
+          branding = {
+            displayName: tenant.branding.displayName,
+            // V e-maile musí byť adresa loga absolútna — relatívna cesta
+            // nemá v schránke k čomu byť relatívna.
+            logoUrl: tenant.branding.logoUrl?.startsWith("/")
+              ? `${new URL(link).origin}${tenant.branding.logoUrl}`
+              : tenant.branding.logoUrl,
+            accentColor: tenant.branding.accentColor,
+          }
+        }
+      } catch (e) {
+        console.error("[auth] vzhľad tenanta pre e-mail sa nepodarilo načítať:", e)
+      }
+
+      await send({ to: identifier, ...signInEmail(link, host, language, branding) })
     },
   }
 }
@@ -119,6 +218,37 @@ export const authOptions: NextAuthOptions = {
       // nesmie to zhodiť prihlásenie človeka, ktorý naň má nárok.
       if (allowed) void recordSignIn(user.email)
       return allowed
+    },
+    /**
+     * Kam sa smie po prihlásení odísť.
+     *
+     * Predvolené správanie NextAuthu porovnáva cieľ s `NEXTAUTH_URL`, čo je
+     * jedna doména na celé nasadenie. Pri viacerých doménach (D29) by to
+     * znamenalo, že človek, ktorý sa prihlásil na `intranet.futbalsfz.sk`,
+     * skončí na `app.contineo.app` — a tam nie je prihlásený, lebo sušienka
+     * ostala na prvej doméne.
+     *
+     * Cudzia doména sa **nepovolí**: preverí sa proti kolekcii `tenants`,
+     * takže z toho nevznikne otvorené presmerovanie.
+     */
+    async redirect({ url, baseUrl }) {
+      const host = await requestHost()
+      // Protokol z proxy; lokálne (`localhost:3000`) je to http a natvrdo
+      // zapísané https by odkaz zaviedlo tam, kde nič nepočúva.
+      const proto = host.startsWith("localhost") || host.startsWith("127.0.0.1")
+        ? "http"
+        : "https"
+      const origin = host ? `${proto}://${host}` : baseUrl
+
+      if (url.startsWith("/")) return `${origin}${url}`
+      try {
+        const target = new URL(url)
+        if (target.origin === origin || target.origin === baseUrl) return url
+        if (await resolveTenant(normalizeHostname(target.host))) return url
+      } catch {
+        // Nepoužiteľná adresa — späť na domovskú.
+      }
+      return origin
     },
     async jwt({ token, user }) {
       if (user?.email) token.email = user.email

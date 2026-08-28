@@ -97,8 +97,13 @@ interface Dictionary {
   }
 
   email: {
-    subject: string
-    heading: string
+    /**
+     * Predmet a nadpis nesú **názov organizácie**, nie názov softvéru.
+     * Človek zo zväzu dostane do schránky správu od zväzu; „Prihlásenie do
+     * Contineo" mu nepovie nič a vyzerá to ako reklama od cudzieho dodávateľa.
+     */
+    subject: (organisation: string) => string
+    heading: (organisation: string) => string
     intro: string
     button: string
     validity: string
@@ -145,8 +150,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       `Potvrdzujem, že som sa oboznámil s dokumentom „${title}", verzia ${version}, ` +
       `platná od ${effectiveFrom}, porozumel som jeho obsahu a zaväzujem sa ho dodržiavať.`,
     email: {
-      subject: "Prihlásenie do Contineo",
-      heading: "Prihlásenie do Contineo",
+      subject: org => `Prihlásenie — ${org}`,
+      heading: org => `Prihlásenie — ${org}`,
       intro: "Kliknutím sa prihlásite.",
       button: "Prihlásiť sa",
       validity: "Odkaz platí 24 hodín a dá sa použiť raz. Ak ste o prihlásenie nežiadali, tento e-mail ignorujte — bez kliknutia sa nič nestane.",
@@ -192,8 +197,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       `Potvrzuji, že jsem se seznámil s dokumentem „${title}", verze ${version}, ` +
       `platná od ${effectiveFrom}, porozuměl jsem jeho obsahu a zavazuji se jej dodržovat.`,
     email: {
-      subject: "Přihlášení do Contineo",
-      heading: "Přihlášení do Contineo",
+      subject: org => `Přihlášení — ${org}`,
+      heading: org => `Přihlášení — ${org}`,
       intro: "Kliknutím se přihlásíte.",
       button: "Přihlásit se",
       validity: "Odkaz platí 24 hodin a lze jej použít jednou. Pokud jste o přihlášení nežádali, tento e-mail ignorujte — bez kliknutí se nic nestane.",
@@ -240,8 +245,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       `effective from ${effectiveFrom}, that I understand its contents ` +
       `and undertake to comply with it.`,
     email: {
-      subject: "Sign in to Contineo",
-      heading: "Sign in to Contineo",
+      subject: org => `Sign in — ${org}`,
+      heading: org => `Sign in — ${org}`,
       intro: "Click to sign in.",
       button: "Sign in",
       validity: "The link is valid for 24 hours and can be used once. If you did not request it, ignore this e-mail — nothing happens without clicking.",

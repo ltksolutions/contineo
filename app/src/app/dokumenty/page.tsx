@@ -10,7 +10,7 @@ import Link from "next/link"
 import { notFound, redirect } from "next/navigation"
 import { onboardingContext } from "@/lib/session"
 import { brandingView } from "@/lib/tenants"
-import TenantHeader, { tenantStyle } from "@/components/TenantHeader"
+import { tenantStyle } from "@/components/TenantHeader"
 import { trackProgress } from "@/lib/tracks"
 import { dictionary, formatDate } from "@/lib/i18n"
 
@@ -56,7 +56,6 @@ export default async function Dokumenty() {
 
   return (
     <div className="obal" style={{ padding: "36px 20px 80px", maxWidth: 760, ...tenantStyle(branding) }}>
-      <TenantHeader branding={branding} />
       <h1 style={{ fontSize: 27, letterSpacing: "-0.02em", margin: "0 0 8px" }}>
         {t.listHeading}
       </h1>
