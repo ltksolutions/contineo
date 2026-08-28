@@ -43,8 +43,8 @@
 | D36 | Widget ukazuje „čo čaká na mňa", nie prehľad organizácie | Onboarding | 🟡 | 9 | ✅ |
 | D37 | Úloha sa odvodzuje, pridelenie sa zaznamenáva | Onboarding | 🔴 | 9 | 🟡 návrh |
 | D38 | `persons.groups` ako tretia dimenzia | Identita | 🟡 | 9 | 🟡 návrh |
-| D39 | „Nové" sa počíta voči `lastLoginAt` | Onboarding | 🟢 | 9 | 🟡 návrh |
-| D40 | Jednorazové systémové hlásenia v rozsahu A | Onboarding | 🔴 | 9 | ⬜ **čaká na rozhodnutie** |
+| D39 | „Nové" sa počíta voči `lastLoginAt` | Onboarding | 🟢 | 9 | ✅ |
+| D40 | Jednorazové systémové hlásenia v rozsahu A | Onboarding | 🔴 | 9 | ✅ |
 
 ---
 
@@ -586,9 +586,9 @@ patrím v štruktúre). Ani jedno nie je skupina na prideľovanie: trasa je obsa
 
 **Súvisiace:** D26, `PRISTUPOVE_PRAVA.md` (ortogonalita atribútov).
 
-### D39 — „Nové" sa počíta voči `lastLoginAt` 🟢 *(návrh)*
+### D39 — „Nové" sa počíta voči `lastLoginAt` 🟢
 
-**Zvolené v zadaní: upozornenia sa odvodzujú, vlastná kolekcia sa nerobí.**
+**✅ Rozhodnuté (2026-08-28): upozornenia sa odvodzujú, vlastná kolekcia sa nerobí.**
 Úloha je „nová", keď je jej pridelenie novšie než `persons.lastLoginAt`.
 
 Cena, aby bola vidno dopredu: **nedá sa označiť ako prečítané** (príznak zmizne
@@ -596,7 +596,7 @@ pri ďalšom prihlásení, nie kliknutím) a kto sa prihlási dvakrát rýchlo z
 o príznak príde. Za to sa nezakladá kolekcia s osobnými údajmi o správaní, ktorú
 by bolo treba odôvodniť a mazať (O15, O16).
 
-### D40 — Jednorazové systémové hlásenia ⬜ *(čaká na rozhodnutie)*
+### D40 — Jednorazové systémové hlásenia 🔴
 
 **Otázka:** zadanie žiada aj „interné hlásenia systému". Časť z nich sa
 odvodiť **nedá** — „Import zlyhal 3. 9. o 4:00" je udalosť, ktorá nezanechala
@@ -607,9 +607,16 @@ stav, z ktorého by sa dalo dopočítať.
 | **(a)** | rozsah A ich nemá vôbec, widget ukazuje len úlohy | čisté, ale „systém notifikácií" to ešte nie je |
 | **(b)** | pribudne malá kolekcia `notifications` so stavom prečítané a retenciou | úplné, ale zatiaľ do nej nemá čo písať |
 
-**Odporúčanie: (a) v rozsahu A**, a (b) až keď bude existovať prvý skutočný
-odosielateľ takých správ (kurácia alebo helpdesk). Bez rozhodnutia by vznikla
-kolekcia bez odosielateľa — a s ňou aj povinnosť odôvodniť ju v O15/O16.
+**✅ Rozhodnuté (2026-08-28): (a).** Rozsah A jednorazové hlásenia nemá,
+widget ukazuje výhradne úlohy. Kolekcia `notifications` vznikne až vtedy, keď
+bude existovať prvý skutočný odosielateľ takých správ (kurácia alebo helpdesk)
+— inak by vznikla kolekcia bez odosielateľa a s ňou aj povinnosť odôvodniť ju
+v O15/O16.
+
+**Dôsledok pre pomenovanie v rozhraní:** to, čo v rozsahu A vzniká, je zoznam
+úloh, nie „systém notifikácií". Widget sa preto volá **„Nevybavené žiadosti"**
+podľa zadania a nie „Upozornenia" — inak by človek čakal aj hlásenia, ktoré
+tam nebudú.
 
 **Súvisiace:** D25 (kurácia), Fáza 4b (helpdesk), O15, O16.
 

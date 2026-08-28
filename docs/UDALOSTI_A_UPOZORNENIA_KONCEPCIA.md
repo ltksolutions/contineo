@@ -1,6 +1,6 @@
 # Udalosti a upozornenia — koncepcia
 
-> **Stav: návrh na schválenie.** Zadanie: na úvodnej strane widget „Nevybavené
+> **Stav: rozsah A schválený 2026-08-28 (D40 = a).** Zadanie: na úvodnej strane widget „Nevybavené
 > žiadosti" a interný systém upozornení, aby človek videl, čo je nové a čo
 > nevybavené. Rozšírené o poznámku zo zadania: pri novej verzii normy vznikne
 > **udalosť**, ktorá rozpošle úlohu prideleným skupinám a osobám.
@@ -144,9 +144,16 @@ Jednorazové hlásenie nemá stav, z ktorého by sa dalo dopočítať. Buď:
 - **(b)** pribudne malá kolekcia `notifications` len na tieto správy, so
   stavom prečítané a retenciou.
 
-Návrh je **(a) v rozsahu A** a (b) až vtedy, keď bude existovať prvý skutočný
-odosielateľ takých správ (kurácia alebo helpdesk). Rozhodnutie je na tebe —
-bez neho by som vyrobil kolekciu, do ktorej zatiaľ nemá čo písať.
+**✅ Rozhodnuté 2026-08-28: (a).** Rozsah A jednorazové hlásenia nemá; widget
+ukazuje výhradne úlohy. Kolekcia `notifications` vznikne až vtedy, keď bude
+existovať prvý skutočný odosielateľ takých správ (kurácia alebo helpdesk) —
+inak by vznikla kolekcia bez odosielateľa a s ňou aj povinnosť odôvodniť ju
+v O15/O16.
+
+**Dôsledok pre názov:** v rozsahu A to je zoznam úloh, nie „systém
+notifikácií". Ak to tak nazveme v rozhraní, človek bude čakať aj hlásenia,
+ktoré tam nebudú. Widget sa preto volá tak, ako znelo zadanie —
+**„Nevybavené žiadosti"** — a nie „Upozornenia".
 
 ---
 
@@ -178,8 +185,8 @@ bez neho by som vyrobil kolekciu, do ktorej zatiaľ nemá čo písať.
 | **D36** | Widget ukazuje „čo čaká na mňa", nie prehľad organizácie | ✅ rozhodnuté 2026-08-28 |
 | **D37** | Úloha sa odvodzuje, pridelenie sa zaznamenáva ako udalosť | 🟡 návrh |
 | **D38** | `persons.groups` ako tretia dimenzia vedľa trás a útvarov | 🟡 návrh |
-| **D39** | „Nové" sa počíta voči `lastLoginAt`, bez stavu prečítané | 🟡 návrh |
-| **D40** | Jednorazové systémové hlásenia sa v rozsahu A nerobia | 🔴 čaká na rozhodnutie (bod 6) |
+| **D39** | „Nové" sa počíta voči `lastLoginAt`, bez stavu prečítané | ✅ rozhodnuté 2026-08-28 |
+| **D40** | Jednorazové systémové hlásenia sa v rozsahu A nerobia | ✅ rozhodnuté 2026-08-28 — možnosť (a) |
 
 **Súvisiace:** D27 (progres sa odvodzuje), D30/O13 (čo je podstatná zmena —
 rozsah B ho uzatvára), D32 (viditeľnosť per `companyCode`), D25 (kurácia),

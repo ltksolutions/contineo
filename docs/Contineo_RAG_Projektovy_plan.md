@@ -450,7 +450,7 @@ ClubUp — ADR-003 kap. 8.
 ### Fáza 9 – Udalosti a upozornenia `[1,5–2 týždne]`
 
 > **Koncepcia:** `docs/UDALOSTI_A_UPOZORNENIA_KONCEPCIA.md` · **Rozhodnutia:** D36–D40
-> **Stav: návrh na schválenie — implementácia sa nezačína, kým nie je rozhodnuté D40.**
+> **Stav: rozsah A (9a) schválený 2026-08-28 — D40 rozhodnuté možnosťou (a).**
 
 Nadväzuje na Fázu 8 a otvára sa smerom k Fáze 4b (helpdesk). Vzniká z pozorovania,
 že Fáza 8 dala ľuďom úlohy, ale nedala im miesto, kde ich uvidia — a že

@@ -9,7 +9,8 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 - **`docs/UDALOSTI_A_UPOZORNENIA_KONCEPCIA.md` — návrh čaká na schválenie, kód sa nezačal.** Zadanie: widget „Nevybavené žiadosti" na úvodnej strane a interný systém upozornení.
 - **Pri rozbore vyšlo najavo, že to nie je len zobrazovacia úloha.** Rozposlanie úlohy je dnes tiché: nová verzia normy sa začne rátať ako nepotvrdená všetkým, koho sa trasa týka, bez rozhodnutia a bez stopy. Widget by tomu dal viditeľné miesto na úvodnej strane — teda by problém zväčšil, nie vyriešil.
 - **Nové rozhodnutia D36–D40.** Kľúčové je **D37**: úloha sa naďalej odvodzuje (D27 platí), ale **pridelenie sa zaznamenáva** — rovnaký vzor ako `acknowledgements`. Rozsah B tým uzatvára aj **D30** („podstatná zmena" prestane byť definíciou a stane sa dôvodom, ktorý vyplní človek).
-- **⬜ D40 blokuje začiatok:** jednorazové systémové hlásenia („Import zlyhal 3. 9. o 4:00") sa odvodiť nedajú. Buď v rozsahu A nie sú vôbec (odporúčané), alebo pribudne kolekcia `notifications` — do ktorej zatiaľ nemá čo písať.
+- **✅ D40 rozhodnuté (2026-08-28): možnosť (a).** Jednorazové systémové hlásenia („Import zlyhal 3. 9. o 4:00") sa odvodiť nedajú, a tak v rozsahu A nebudú vôbec — widget ukazuje výhradne úlohy. Kolekcia `notifications` vznikne až s prvým skutočným odosielateľom (kurácia alebo helpdesk). Dôsledok pre rozhranie: widget sa volá „Nevybavené žiadosti", nie „Upozornenia" — inak by človek čakal aj hlásenia, ktoré tam nebudú.
+- **Rozsah A je tým odblokovaný** a nepotrebuje žiadne nové pole: `since` aj príznak „nové" sa dajú zložiť z toho, čo `documents.versions[]` a `persons.lastLoginAt` už nesú.
 
 ### Fixed (2026-08-28 — prihlásenie na vlastnej doméne)
 

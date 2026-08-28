@@ -183,7 +183,7 @@
 
 ### L. Udalosti a upozornenia — **Fáza 9** 🟡 → `docs/UDALOSTI_A_UPOZORNENIA_KONCEPCIA.md`
 
-> **Stav: návrh čaká na schválenie. Kód sa nezačína, kým nie je rozhodnuté D40.**
+> **Stav: rozsah A schválený 2026-08-28 (D40 = a) — implementácia sa môže začať.**
 > Zadanie 2026-08-28: widget „Nevybavené žiadosti" na úvodnej strane + interný
 > systém upozornení.
 
@@ -192,8 +192,8 @@
 - [x] **D36** — widget je osobná schránka („čo čaká na mňa"), nie prehľad organizácie
 - [ ] **D37** — úloha sa odvodzuje, pridelenie sa zaznamenáva ako udalosť `assignments`
 - [ ] **D38** — `persons.groups` ako tretia dimenzia vedľa `tracks` a `department`
-- [ ] **D39** — „nové" sa počíta voči `lastLoginAt`, bez stavu prečítané
-- [ ] **D40** 🔴 — robia sa v rozsahu A jednorazové systémové hlásenia? *(bez tohto sa nezačína)*
+- [x] **D39** — „nové" sa počíta voči `lastLoginAt`, bez stavu prečítané
+- [x] **D40** ✅ 2026-08-28 — **(a)**: rozsah A jednorazové hlásenia nemá, widget ukazuje len úlohy
 
 **Rozsah A `[3–5 dní]` — widget má čo ukazovať**
 
