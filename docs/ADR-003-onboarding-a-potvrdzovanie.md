@@ -96,7 +96,7 @@ prepojí sa s ClubUpom. Contineo si o výsledku uloží nanajvýš odkaz.
 
 ### 3.2 Nasadenie: doména, nie projekt
 
-Portál pobeží na **`internal.futbalsfz.sk`** ako vlastná doména nad **jedným** nasadením
+Portál pobeží na **`intranet.futbalsfz.sk`** ako vlastná doména nad **jedným** nasadením
 Continea, nie ako samostatná inštancia. Vyplýva to z multi-tenant architektúry, ktorá
 už existuje — tenant je dátová vlastnosť (`companyCode`), nie samostatný beh aplikácie.
 
@@ -104,7 +104,7 @@ Praktický dôsledok: aplikácia musí vedieť **z hostiteľa určiť tenanta a 
 to nevie (kap. 5.4).
 
 **Meno domény niečo hovorí.** Pôvodne sa uvažovalo o `vitaj.futbalsfz.sk`; zvolené je
-**`internal.futbalsfz.sk`** (rozhodnuté 2026-08-27). Nie je to kozmetika — mení to
+**`intranet.futbalsfz.sk`** (rozhodnuté 2026-08-27). Nie je to kozmetika — mení to
 pozíciu portálu. „Vitaj" by sľubovalo uvítaciu bránu pre nováčikov, „internal" hovorí
 **interný portál zväzu**, v ktorom je onboarding jednou z častí, nie celkom. Zodpovedá to
 druhému režimu nasadenia z `PRISTUPOVE_PRAVA.md` (interný portál so SSO, `public` +
@@ -113,7 +113,7 @@ doméne, bez toho, aby meno prestalo sedieť.
 
 > **Pozor na dvojznačnosť slova.** `internal` v doméne a `accessLevel: internal` sú dve
 > rôzne veci. Doména hovorí, **kde** portál beží; `accessLevel` hovorí, **kto** smie vidieť
-> konkrétny obsah. Na `internal.futbalsfz.sk` môže byť aj `public` obsah a v dokumentácii
+> konkrétny obsah. Na `intranet.futbalsfz.sk` môže byť aj `public` obsah a v dokumentácii
 > ani v kóde sa tie dva významy nesmú zliať.
 
 ---
@@ -197,7 +197,7 @@ technickou vrstvou prihlásenia (kto sa vie prihlásiť).
 ### 5.4 Tenanta treba vedieť určiť z domény
 
 `src/lib/tenantProfile.ts` dnes vracia `defaultProfile()` — jeden tenant, jedno
-nastavenie. `internal.futbalsfz.sk` a `app.contineo.app` musia viesť na to isté nasadenie,
+nastavenie. `intranet.futbalsfz.sk` a `app.contineo.app` musia viesť na to isté nasadenie,
 ale na iný `companyCode`, iný vzhľad a iný rozsah obsahu.
 
 Rozšírenie je malé (mapa hostiteľ → profil) a nemení nič z ADR-001 ani ADR-002 — profil

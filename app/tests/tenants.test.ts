@@ -30,7 +30,7 @@ import type { Person } from "../src/lib/persons"
 function tenant(over: Partial<Tenant> = {}): Tenant {
   return {
     companyCode: "SFZ",
-    hostnames: ["internal.futbalsfz.sk"],
+    hostnames: ["intranet.futbalsfz.sk"],
     branding: { displayName: "Slovenský futbalový zväz" },
     defaultLanguage: "sk",
     languages: ["sk", "cs", "en"],
@@ -69,7 +69,7 @@ describe("normalizeHostname", () => {
   })
 
   it("koncová bodka sa odreže — absolútny tvar mena je to isté meno", () => {
-    expect(normalizeHostname("internal.futbalsfz.sk.")).toBe("internal.futbalsfz.sk")
+    expect(normalizeHostname("intranet.futbalsfz.sk.")).toBe("intranet.futbalsfz.sk")
   })
 
   it("z reťaze proxy platí prvá hodnota", () => {
@@ -98,19 +98,19 @@ describe("normalizeHostname", () => {
 describe("resolveTenant", () => {
   it("nájde tenanta podľa hostiteľa a hľadá len aktívnych", async () => {
     findOne.mockResolvedValue(tenant())
-    const t = await resolveTenant("internal.futbalsfz.sk")
+    const t = await resolveTenant("intranet.futbalsfz.sk")
     expect(t?.companyCode).toBe("SFZ")
     expect(findOne).toHaveBeenCalledWith({
-      hostnames: "internal.futbalsfz.sk",
+      hostnames: "intranet.futbalsfz.sk",
       status: "active",
     })
   })
 
   it("hostiteľ sa pred hľadaním normalizuje", async () => {
     findOne.mockResolvedValue(tenant())
-    await resolveTenant("Internal.FutbalSFZ.sk:443")
+    await resolveTenant("Intranet.FutbalSFZ.sk:443")
     expect(findOne).toHaveBeenCalledWith({
-      hostnames: "internal.futbalsfz.sk",
+      hostnames: "intranet.futbalsfz.sk",
       status: "active",
     })
   })
@@ -127,8 +127,8 @@ describe("resolveTenant", () => {
 
   it("výsledok sa drží v cache — druhé volanie nejde do databázy", async () => {
     findOne.mockResolvedValue(tenant())
-    await resolveTenant("internal.futbalsfz.sk")
-    await resolveTenant("internal.futbalsfz.sk")
+    await resolveTenant("intranet.futbalsfz.sk")
+    await resolveTenant("intranet.futbalsfz.sk")
     expect(findOne).toHaveBeenCalledTimes(1)
   })
 
@@ -141,15 +141,15 @@ describe("resolveTenant", () => {
 
   it("invalidateTenants zahodí cache", async () => {
     findOne.mockResolvedValue(tenant())
-    await resolveTenant("internal.futbalsfz.sk")
-    invalidateTenants("internal.futbalsfz.sk")
-    await resolveTenant("internal.futbalsfz.sk")
+    await resolveTenant("intranet.futbalsfz.sk")
+    invalidateTenants("intranet.futbalsfz.sk")
+    await resolveTenant("intranet.futbalsfz.sk")
     expect(findOne).toHaveBeenCalledTimes(2)
   })
 
   it("výpadok databázy neotvára prístup — chyba sa vyhodí", async () => {
     findOne.mockRejectedValue(new Error("spojenie"))
-    await expect(resolveTenant("internal.futbalsfz.sk")).rejects.toThrow("spojenie")
+    await expect(resolveTenant("intranet.futbalsfz.sk")).rejects.toThrow("spojenie")
   })
 })
 
@@ -161,7 +161,7 @@ describe("requireTenant", () => {
 
   it("známy hostiteľ vráti tenanta", async () => {
     findOne.mockResolvedValue(tenant())
-    expect((await requireTenant("internal.futbalsfz.sk")).companyCode).toBe("SFZ")
+    expect((await requireTenant("intranet.futbalsfz.sk")).companyCode).toBe("SFZ")
   })
 })
 

@@ -405,7 +405,7 @@ KROK 5 – ULOŽENIE + CHUNKING + AUTO-EMBED
 ### Fáza 8 – Onboarding a potvrdzovanie noriem `[3–4,5 týždňa]`
 
 > **Zaradenie:** `docs/ADR-003-onboarding-a-potvrdzovanie.md` · **Koncepcia:** `docs/ONBOARDING_KONCEPCIA.md`
-> **Prvé nasadenie:** SFZ, doména `internal.futbalsfz.sk`, vyše 100 osôb vrátane ľudí bez licencie M365.
+> **Prvé nasadenie:** SFZ, doména `intranet.futbalsfz.sk`, vyše 100 osôb vrátane ľudí bez licencie M365.
 
 **Poradie fáz tu neplatí.** Fáza 8 beží **teraz**, teda pred dokončením Fázy 4 (Import & CMS)
 a Fázy 5 (Prístupové úrovne). Dôvod je vecný: SFZ potrebuje doložené oboznámenie s novými
@@ -433,7 +433,7 @@ prvá časť Continea, ktorá spĺňa `eu-full` bez toho, aby sa čokoľvek muse
 - [ ] Hromadné pozvánky a pripomienky z UI (automatické pripomienky sa zapínajú vedome)
 - [ ] Opätovné potvrdenie pri novej verzii (`requiresReacknowledgement`) — **D30**
 - [ ] Profil tenanta podľa hostiteľa; neznámy hostiteľ = zakázaný — **D29**
-- [ ] Vlastný vzhľad pre `internal.futbalsfz.sk`
+- [ ] Vlastný vzhľad pre `intranet.futbalsfz.sk`
 - [ ] Rola HR nad `acknowledgements`; osoba vidí a stiahne si **svoje** potvrdenia
 
 **Brána pred ostrou prevádzkou:** vyriešiť `0.0.0.0/0` v Atlase (**O12**) — Vercel Secure

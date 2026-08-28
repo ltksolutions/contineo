@@ -3,7 +3,7 @@
  *
  *     node scripts/tenant_set.mjs --stav
  *     node scripts/tenant_set.mjs --company SFZ \
- *       --host internal.futbalsfz.sk --host app.contineo.app \
+ *       --host intranet.futbalsfz.sk --host app.contineo.app \
  *       --name "Slovenský futbalový zväz" --short SFZ \
  *       --language sk --languages sk,cs,en
  *

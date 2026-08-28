@@ -3,7 +3,7 @@
 > **Stav:** návrh na schválenie (2026-08-27). Žiadne zmeny v živom kóde.
 > **Rozhodnutie o zaradení:** `docs/ADR-003-onboarding-a-potvrdzovanie.md` — onboarding je schopnosť Continea, nie nový projekt a nie rozšírenie ClubUpu.
 > **Cieľ:** jednotný vstup do organizácie — človek sa prihlási, prejde pripravenou trasou a **doloží, že sa oboznámil so záväznými dokumentmi**. HR vidí, kto to má za sebou a kto nie.
-> **Prvé nasadenie:** SFZ, doména `internal.futbalsfz.sk`, vyše 100 osôb vrátane ľudí bez licencie M365.
+> **Prvé nasadenie:** SFZ, doména `intranet.futbalsfz.sk`, vyše 100 osôb vrátane ľudí bez licencie M365.
 > **Nadväzuje na:** `DATA_MODEL_konzistencia.md` (Model B), `PRISTUPOVE_PRAVA.md` (ABAC, multitenant), `CMS_KONCEPCIA.md` (obsah, verzie, role), `PRECEDENCIA_NORIEM.md` (platnosť znenia), `GDPR_DATA_PROTECTION.md` (osobné údaje).
 > **Zámerne nerieši:** UI dizajn, obsahové stránky onboardingu (uvítanie, org. štruktúra — rozsah C), elektronický podpis, prepojenie na ClubUp.
 >
@@ -418,7 +418,7 @@ lebo HR by nemalo ako zistiť výsledok.
 
 Nad ultra-MVP pribúda: guided reading s progresom a návratom na rozpracované, HR
 dashboard v UI, hromadné pozvánky a pripomienky z UI, správa trás, opätovné potvrdenie
-pri novej verzii, vlastný vzhľad na `internal.futbalsfz.sk`.
+pri novej verzii, vlastný vzhľad na `intranet.futbalsfz.sk`.
 
 Odhad **3–4,5 týždňa** vrátane ultra-MVP.
 

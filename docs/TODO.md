@@ -84,7 +84,7 @@
 ### I. Onboarding a potvrdzovanie noriem — **Fáza 8** 🔴 → `docs/ONBOARDING_KONCEPCIA.md`
 
 > Zaradenie: `docs/ADR-003-onboarding-a-potvrdzovanie.md`. Prvé nasadenie: SFZ,
-> `internal.futbalsfz.sk`, vyše 100 osôb vrátane ľudí bez licencie M365.
+> `intranet.futbalsfz.sk`, vyše 100 osôb vrátane ľudí bez licencie M365.
 > Beží **pred** dokončením fáz 4 a 5 a berie si z nich minimálny výrez v cieľovom tvare.
 
 **I0. Rozhodnutia, ktoré nečakajú na kód**
@@ -128,8 +128,8 @@
 - [ ] Opätovné potvrdenie pri novej verzii — **D30**
 - [x] Tenant podľa hostiteľa; neznámy hostiteľ = zakázaný ✅ 2026-08-28 — **D29**. `app/src/lib/tenants.ts` (kolekcia `tenants`, cache kladných aj záporných výsledkov), `onboardingContext()` v `session.ts` skladá „tenant + osoba + patria k sebe" na jednom mieste — keby si to každá stránka robila sama, jedna z nich raz niektorú časť vynechá a vyzerá to ako fungujúca stránka. `scripts/tenant_set.mjs` + unikátny index `hostname_unique` (doména patrí najviac jednému tenantovi — databáza to drží aj vtedy, keď to skript prehliadne). 25 testov.
   - [ ] **Kontrola nie je v middleware**, ale v serverových komponentoch a route handleroch. Staršie plochy (`/`, `/sada`, `/api/chat`) sú chránené prihlásením, nie tenantom. Doplniť pri Fáze 5.
-- [ ] **DNS pre `internal.futbalsfz.sk` — 🔴 poddoména je OBSADENÁ.** Zistené 2026-08-28: `internal.futbalsfz.sk` je `CNAME` na `sportnet.online` (109.74.154.242). Doména je vo Verceli k projektu **pridaná**, ale hlási `misconfigured` a portál na nej nebeží. **Prepnutie záznamu odstaví to, čo tam beží dnes** — potrebuje rozhodnutie, nie tichý zásah. Vercel odporúča `CNAME internal → 75b9ff58792d32ba.vercel-dns-016.com` (alternatíva `cname.vercel-dns.com`), zmena na Websupporte.
-- [ ] Vzhľad pre `internal.futbalsfz.sk` — `tenants.branding` (logo, farba, kontakt) je pripravené, hodnoty chýbajú
+- [x] **DNS pre `intranet.futbalsfz.sk`** ✅ 2026-08-28 — `CNAME intranet → 75b9ff58792d32ba.vercel-dns-016.com` (Websupport), doména vo Verceli overená, v kolekcii `tenants` priradená tenantovi `SFZ`. **Nie `internal.futbalsfz.sk`** — tá je obsadená (`CNAME` na `sportnet.online`) a prepnutie by odstavilo to, čo tam beží.
+- [ ] Vzhľad pre `intranet.futbalsfz.sk` — `tenants.branding` (logo, farba, kontakt) je pripravené, hodnoty chýbajú
 - [ ] Osoba vidí a stiahne si **svoje** potvrdenia
 
 **I3. Brána pred ostrou prevádzkou**

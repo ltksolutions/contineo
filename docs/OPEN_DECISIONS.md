@@ -336,7 +336,7 @@ tvare. Presne na to je `statementText` doslovný.
 
 ### D29 — Rozlíšenie tenanta podľa hostiteľa 🟡
 
-**Otázka:** `internal.futbalsfz.sk` — samostatné nasadenie, alebo doména nad jedným?
+**Otázka:** `intranet.futbalsfz.sk` — samostatné nasadenie, alebo doména nad jedným?
 
 **✅ Rozhodnuté (2026-08-27):** **doména nad jedným nasadením.** `tenantProfile.ts` prestane
 vracať `defaultProfile()` a začne profil vyberať podľa hostiteľa (`companyCode`, vzhľad,

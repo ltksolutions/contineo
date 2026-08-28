@@ -13,7 +13,7 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 - **`app/scripts/tenant_set.mjs`** zakladá a upravuje tenanta; doménu už priradenú inému tenantovi **odmietne, nie prepíše**. Tiché prevzatie domény sa zistí až vtedy, keď ľudia z jednej organizácie uvidia hlavičku druhej. Rovnaké pravidlo drží aj unikátny index `hostname_unique` — databáza to ustráži aj vtedy, keď to skript prehliadne.
 - Stav testov: **19 súborov, 489 testov** (z toho 25 nových na `tenants`).
 - **Vedomé obmedzenie:** kontrola beží v serverových komponentoch a route handleroch, **nie v middleware** — to beží na hrane, kde Mongo klient nie je. Staršie plochy (`/`, `/sada`, `/api/chat`) sú tak chránené prihlásením, ale nie tenantom.
-- **`internal.futbalsfz.sk` ešte nebeží:** poddoména je `CNAME` na `sportnet.online`. Doména je vo Verceli pridaná, DNS sa **nemenilo** — prepnutie by odstavilo to, čo tam beží dnes (`NASADENIE_app.md` kap. 0b).
+- **Portál SFZ má adresu `intranet.futbalsfz.sk`** — `CNAME` na Websupporte, doména vo Verceli overená, v `tenants` priradená tenantovi `SFZ`. Pôvodne plánovaná `internal.futbalsfz.sk` **je obsadená** (`CNAME` na `sportnet.online`) a prepnutie by odstavilo bežiacu službu; v starších zápisoch je preto `internal` neplatný stav (`NASADENIE_app.md` kap. 0b).
 
 ### Fixed (2026-08-28 — nasadenie z Gitu)
 

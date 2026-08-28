@@ -1,7 +1,7 @@
 /**
  * tenants.ts — kto je za touto adresou (D29).
  *
- * `internal.futbalsfz.sk` a `app.contineo.app` vedú na to isté nasadenie,
+ * `intranet.futbalsfz.sk` a `app.contineo.app` vedú na to isté nasadenie,
  * ale na iného tenanta: iný `companyCode`, iný vzhľad, iný rozsah obsahu.
  * Rozlíšenie musí prísť z hostiteľa, lebo v tej chvíli ešte nie je koho sa
  * spýtať — človek nie je prihlásený a prihlasovacia stránka už musí vedieť,
