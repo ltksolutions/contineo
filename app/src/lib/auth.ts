@@ -244,9 +244,19 @@ export const authOptions: NextAuthOptions = {
 
       const allowed = await personMaySignIn(user.email)
       console.log(`[auth] ${faza}: ${user.email} — persons ${allowed ? "povolil" : "ODMIETOL"}`)
-      // Evidencia až po povolení a mimo rozhodovania: keby zápis zlyhal,
-      // nesmie to zhodiť prihlásenie človeka, ktorý naň má nárok.
-      if (allowed) void recordSignIn(user.email)
+      // Evidencia až po povolení. `recordSignIn` si chyby prehĺta sám, takže
+      // `await` nemôže zhodiť prihlásenie človeka, ktorý naň má nárok —
+      // pôvodný dôvod pre `void` tým odpadá.
+      //
+      // **Bez `await` sa zápis nestihne.** Funkcia na Verceli končí hneď po
+      // vrátení hodnoty a rozrobený dotaz do Atlasu sa zahodí. Nezasvieti
+      // pri tom nič: človek sa prihlási, relácia funguje, len `lastLoginAt`
+      // zostane prázdne a stav `invited`. Zistilo sa to 2026-08-28 náhodou —
+      // jediná osoba v `persons` mala platnú reláciu a pritom nulovú
+      // evidenciu. Na `lastLoginAt` má stáť príznak „nové" (D39), takže
+      // ticho stratený zápis by sa neskôr prejavil ako nefunkčná funkcia
+      // niekde úplne inde.
+      if (allowed) await recordSignIn(user.email)
       return allowed
     },
     /**

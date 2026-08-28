@@ -4,6 +4,15 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Fixed (2026-08-28 — evidencia prihlásenia sa nezapisovala)
+
+- **`void recordSignIn(...)` bez `await` sa na Verceli nestihol vykonať.** Serverless funkcia končí hneď po vrátení hodnoty a rozrobený zápis do Atlasu sa zahodí. Prejav: človek sa prihlási, relácia funguje, ale `lastLoginAt` zostane prázdne a stav `invited` — a nezasvieti pri tom nič. Odhalilo sa to náhodou pri overovaní Fázy 9a: jediná osoba v `persons` mala platnú reláciu a nulovú evidenciu. Pôvodný dôvod pre `void` (zlyhanie zápisu nesmie zhodiť prihlásenie) drží aj s `await`, lebo `recordSignIn` si chyby prehĺta sám. Regresný test v `tests/signIn.test.ts`.
+- **Dôsledok, keby to zostalo:** na `lastLoginAt` má podľa D39 stáť príznak „nové" v rozsahu B. Ticho stratený zápis by sa prejavil až tam — ako nefunkčná funkcia na úplne inom mieste, než kde je príčina.
+
+### Changed (2026-08-28 — I1c opravené smerom k pravde)
+
+- **Predchádzajúci zápis tvrdil, že overená bola len núdzová brzda. Nebola to pravda.** `POVOLENE_EMAILY` je v produkcii **prázdna**, takže brzda nepúšťa nikoho a prihlásenie muselo prejsť cez `persons`. Cesta, ktorou pôjde stovka ľudí, je tým overená; plánovaný náhradný test druhou osobou stratil dôvod a nerobil sa.
+
 ### Added (2026-08-28 — Fáza 9a: widget „Nevybavené žiadosti")
 
 - **`app/src/lib/pending.ts` — register zdrojov.** Widget nevie nič o normách ani tiketoch; pýta sa zdrojov a skladá z nich jeden zoznam v jednom tvare (`PendingItem`). Keby sa pýtal každého modulu zvlášť, každý ďalší zdroj by znamenal ďalšiu vetvu v komponente, ktorý má len vypísať zoznam. V rozsahu A je zdroj jediný: **nepotvrdené normy nad existujúcim `trackProgress()`** — nie druhý výpočet toho istého, ktorý by sa raz rozišiel práve pri novej verzii (D27).
