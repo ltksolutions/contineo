@@ -4,6 +4,19 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Changed (2026-08-28 — wildcard: DNS hotové, certifikát čaká na výzvu)
+
+- **DNS je prestavené.** `*.contineo.app` už vedie na Vercel (`dig +short nahodne123.contineo.app CNAME` → `…vercel-dns-016.com.`).
+- **Opravený môj predchádzajúci zápis.** Napísal som, že `TXT` overenie nebolo potrebné. Platilo to pre **overenie vlastníctva** domény, nie pre **certifikát**: wildcard sa vydáva cez DNS-01 výzvu a `_acme-challenge TXT` potrebuje vždy. Bežné domény certifikát dostanú automaticky, wildcard nie.
+- **Postup dopísaný do `NASADENIE_app.md`** (`certs issue --challenge-only` → zapísať TXT → `certs issue`), aj s tým, ako sa chýbajúci certifikát prejaví: `curl` vráti `kod=000`, prehliadač hlási neplatný certifikát a v logoch Vercelu nie je nič — spojenie skončí skôr, než sa k aplikácii dostane.
+- **Založený skúšobný tenant `TEST`** (`test.contineo.app`) na overenie celého reťazca hneď, ako certifikát bude.
+
+### Docs (2026-08-28 — prečo nepreberáme vzor z inventaria)
+
+- **Zapísaný rozbor otázky „na doméne zákazníka len prihlásenie a potom presmerovanie".** `inventario.estate` to tak má, ale kvôli zdieľanej cookie `COOKIE_DOMAIN=.inventario.estate` — pod cudzou doménou by prihlásená appka nefungovala. Contineo žiadnu `cookies` konfiguráciu nemá, relácia je host-only, a preto na `intranet.futbalsfz.sk` beží celá aplikácia.
+- **Neušetrilo by to ani jeden zápis vo Verceli:** `majetok.futbalsfz.sk` je na projekte `inventario-app` registrovaná. Bez toho sa nevystaví certifikát a spojenie padne pri TLS, teda skôr než sa middleware spustí.
+- Zapísané aj to, kedy by ten model zmysel mal: iba pri jednej relácii naprieč všetkými tenantmi, čo by pri onboardingu bolo skôr riziko (D32).
+
 ### Changed (2026-08-28 — wildcard `*.contineo.app` priradený projektu)
 
 - **Vo Verceli je hotovo.** `*.contineo.app` je priradený projektu `contineo-app` a `verified: true`; overovací `TXT` nebol potrebný, lebo apex `contineo.app` je v účte a overený. Odteraz nová subdoména nepotrebuje vo Verceli nič.

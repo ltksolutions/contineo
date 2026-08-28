@@ -170,11 +170,14 @@ wildcard, ktorý sa nastaví **raz** a odvtedy pokrýva každú budúcu subdomé
    cd app && vercel domains add '*.contineo.app'
    ```
 
-   Doména je priradená projektu `contineo-app` a `verified: true`. Overenie
-   `TXT` záznamom **nebolo potrebné**: apex `contineo.app` už v účte je
-   a overený je, takže Vercel wildcard prijal rovno. Pozor, `vercel domains
-   inspect contineo.app` wildcard v sekcii „Projects" **neukáže** — vidno ho
-   až cez API (`/v9/projects/contineo-app/domains/*.contineo.app`).
+   Doména je priradená projektu `contineo-app` a `verified: true` — apex
+   `contineo.app` už v účte je a overený, takže **overenie vlastníctva**
+   `TXT` záznamom potrebné nebolo. Pozor, `vercel domains inspect
+   contineo.app` wildcard v sekcii „Projects" **neukáže**; vidno ho až cez
+   API (`/v9/projects/contineo-app/domains/*.contineo.app`).
+
+   **Overenie vlastníctva ≠ certifikát.** To druhé `TXT` potrebuje vždy —
+   viď krok 3.
 
 2. **DNS `contineo.app` na Websupporte — zostáva.** Dnes je tam zástupný
    `A` záznam, ktorý smeruje na Websupport a wildcard by prebil:
@@ -193,6 +196,30 @@ wildcard, ktorý sa nastaví **raz** a odvtedy pokrýva každú budúcu subdomé
    ```bash
    dig +short nahodne123.contineo.app CNAME   # má vrátiť …vercel-dns-016.com.
    ```
+
+   ✅ hotové 2026-08-28.
+
+3. **Wildcard certifikát.** Bežné domény dostanú certifikát automaticky,
+   **wildcard nie**: vydáva sa cez DNS-01 výzvu, ktorú musí do zóny zapísať
+   správca domény. Pri cudzích nameserveroch to inak nejde.
+
+   ```bash
+   # a) vypýtať výzvu
+   vercel certs issue '*.contineo.app' --challenge-only
+   #    → vypíše `_acme-challenge  TXT  <hodnota>`
+
+   # b) zapísať ten TXT na Websupporte, počkať na rozšírenie
+   dig +short _acme-challenge.contineo.app TXT
+
+   # c) dokončiť
+   vercel certs issue '*.contineo.app'
+   vercel certs ls | grep contineo      # má pribudnúť *.contineo.app
+   ```
+
+   Kým certifikát nie je vydaný, `https://čokoľvek.contineo.app` padne pri
+   TLS — `curl` vráti `kod=000`, prehliadač hlási neplatný certifikát. Nie je
+   to chyba aplikácie a v logoch Vercelu po tom niet ani stopy: spojenie
+   skončí skôr, než sa dostane k nej.
 
 **Odvtedy pri každom novom zákazníkovi:**
 
@@ -215,6 +242,54 @@ je zápis v `tenants`; všetko ostatné dostane `404` (D29). Nie je to
 zhoršenie — je to presne to, na čo je D29 postavená — ale je dobré vedieť, že
 poistka „preklep vo Verceli nikoho nepustí dnu" tu už neplatí. Pre **vlastné
 domény zákazníkov** platí naďalej, tam sú miesta stále dve.
+
+### Prečo nerobíme „len prihlásenie na doméne zákazníka" (2026-08-28)
+
+Otázka, ktorá príde znova: *v `inventario.estate` je na doméne zákazníka len
+prihlasovacia obrazovka a po prihlásení presmerovanie do kanonickej appky —
+nemá to Contineo prebrať?* **Nie.** Rozbor, aby sa nemusel robiť druhýkrát.
+
+**Čo inventario robí.** Appka beží kanonicky na `app.inventario.estate`.
+Doména zákazníka (`majetok.futbalsfz.sk`) vykreslí cez rewrite len
+`/tenant-login`; akákoľvek iná cesta sa presmeruje na kanonickú doménu.
+
+**Prečo to tak má.** Nie kvôli doménam, ale kvôli cookie:
+
+```
+apps/api/src/modules/auth/cookie-helpers.ts
+  Set COOKIE_DOMAIN=.inventario.estate in Vercel production env vars.
+```
+
+Zdieľaná cookie na `.inventario.estate` sa na cudziu doménu neposiela, takže
+prihlásená appka by tam nefungovala. Ich vlastný komentár v `middleware.ts` to
+píše doslova. Login-only je **obchádzka tohto obmedzenia**, nie výhoda.
+
+**Contineo to obmedzenie nemá.** V `app/src/lib/auth.ts` nie je žiadna
+`cookies` konfigurácia, takže NextAuth drží reláciu host-only — na doméne,
+kde sa človek prihlásil. Preto na `intranet.futbalsfz.sk` beží **celá**
+aplikácia vrátane potvrdzovania, a preto sa relácia z intranetu neprenáša na
+`app.contineo.app` (overené 2026-08-28).
+
+**A hlavne: neušetrí to ani jeden zápis vo Verceli.**
+
+```
+vercel domains inspect futbalsfz.sk
+  inventario-app    majetok.futbalsfz.sk      ← doména tam JE
+```
+
+Bez záznamu vo Verceli sa nevystaví certifikát a `https://` padne pri TLS —
+teda skôr, než sa akýkoľvek middleware spustí. Login-only stránka potrebuje
+presne ten istý zápis ako celá aplikácia.
+
+**Poznámka na okraj:** v `apps/web/src/middleware.ts` je vedený otvorený bug,
+že sa ten middleware na produkcii nikdy nespustil (0 invocations). Nie je to
+overený vzor.
+
+**Kedy by to zmysel malo.** Iba keby sme chceli **jednu reláciu naprieč
+všetkými tenantmi** (človek prihlásený na `a.contineo.app` je prihlásený aj
+na `b.contineo.app`). To by vyžadovalo zdieľanú cookie na `.contineo.app` —
+a s ňou celý tento model. Pri onboardingu, kde človek patrí jednej
+organizácii, je to skôr riziko než pohodlie (D32).
 
 ### Dodávateľské domény nepatria zákazníkovi (2026-08-28)
 
