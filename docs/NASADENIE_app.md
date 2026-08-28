@@ -103,7 +103,7 @@ otvorila rozhranie s internými smernicami komukoľvek.
 `POVOLENE_EMAILY` · `EMAIL_ODOSIELATEL` · `EMAIL_MENO_ODOSIELATELA` ·
 `GENERATION_KIND` · `GENERATION_MODEL` · `DATA_RESIDENCY`
 
-Chýba: `ECOMAIL_API_KEY`.
+**Overené 2026-08-28:** nastavené sú všetky vrátane `ECOMAIL_API_KEY`. (Skorší text tvrdil, že chýba — už neplatí.)
 
 ---
 

@@ -8,6 +8,8 @@
 
 import Link from "next/link"
 import { redirect } from "next/navigation"
+import { getServerSession } from "next-auth"
+import { authOptions } from "@/lib/auth"
 import { currentPerson } from "@/lib/session"
 import { trackProgress } from "@/lib/tracks"
 import { dictionary, formatDate } from "@/lib/i18n"
@@ -15,8 +17,27 @@ import { dictionary, formatDate } from "@/lib/i18n"
 export const dynamic = "force-dynamic"
 
 export default async function Dokumenty() {
+  const session = await getServerSession(authOptions)
+  if (!session?.user?.email) redirect("/prihlasenie")
+
   const person = await currentPerson()
-  if (!person) redirect("/prihlasenie")
+  if (!person) {
+    // Prihlásený, ale v `persons` nie je — typicky správca, ktorý prešiel
+    // núdzovou brzdou `POVOLENE_EMAILY`. Poslať ho späť na prihlásenie by
+    // vyzeralo ako pokazená stránka: je predsa prihlásený.
+    return (
+      <div className="obal" style={{ padding: "36px 20px 80px", maxWidth: 760 }}>
+        <h1 style={{ fontSize: 27, letterSpacing: "-0.02em", margin: "0 0 8px" }}>
+          Dokumenty na potvrdenie
+        </h1>
+        <p className="karta" style={{ padding: 20 }}>
+          Ste prihlásený ako <strong>{session.user.email}</strong>, ale nie ste vedený
+          medzi osobami organizácie — takže vám systém nemá čo priradiť. Ak tu máte
+          niečo potvrdzovať, požiadajte HR o zaradenie.
+        </p>
+      </div>
+    )
+  }
 
   const t = dictionary(person.language).onboarding
   const tracks = await trackProgress(person)

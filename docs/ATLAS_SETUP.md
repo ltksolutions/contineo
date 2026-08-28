@@ -21,6 +21,8 @@ V [cloud.mongodb.com](https://cloud.mongodb.com) založ projekt a cluster:
 
 **M0 stačí na PoC.** Má 512 MB, čo pri niekoľkých normách bohato vystačí. Na produkciu bude treba M10+, ale to až keď bude čo prevádzkovať.
 
+> **✅ Vybavené 2026-08-28: cluster beží na M10 (AWS Frankfurt) s Cloud Backup.**
+>
 > **Doplnené 2026-08-27 (D31):** „keď bude čo prevádzkovať" nastalo. Fáza 8 (onboarding) zavádza
 > kolekciu `acknowledgements` — auditný záznam o tom, kto potvrdil oboznámenie s ktorým znením
 > smernice. **Auditný záznam bez zálohy nie je auditný záznam**, a M0 zálohy nemá. Prechod na
@@ -237,7 +239,7 @@ Skript overí pripojenie, existenciu kolekcií, oba indexy a ich stav. Kým nevy
 
 | Položka | Cena |
 |---|---|
-| Cluster M0 | zadarmo |
+| Cluster M10 (AWS Frankfurt) | ~0,09 $/hod · Cloud Backup zapnutý |
 | `voyage-4` embedding | 0,06 $ za 1M tokenov |
 | Prvý import (100 tis. chunkov ≈ 80M tokenov) | ≈ 5 $ |
 
