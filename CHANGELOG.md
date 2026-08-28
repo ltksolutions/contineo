@@ -4,6 +4,12 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Verified (2026-08-28 18:17 — prihlásenie cez `persons` naostro)
+
+- **Najdlhšie otvorený červený bod Fázy 8 je zavretý.** Log: `[auth] pouzitie-odkazu: jan.letko@futbalsfz.sk — persons povolil`. Núdzová brzda sa nezúčastnila, takže cesta, ktorou pôjde vyše sto ľudí vrátane externistov bez M365, je odskúšaná v produkcii — nie odvodená z kódu.
+- **Evidencia prihlásenia sa zapisuje.** `stav=active`, `lastLoginAt=2026-08-28T18:17:54.682Z` — v tej istej sekunde ako callback. `await recordSignIn(...)` sa tým overil naostro; dovtedy sa nezapisovalo nikdy, lebo brzda vracala `true` skôr, než sa k zápisu vôbec došlo. `invited → active` prebehlo tiež.
+- **Odkaz z e-mailu vedie na úvodnú stranu** (callback `302` → `GET /`), kde sa na živých dátach zobrazil widget „Nevybavené žiadosti".
+
 ### Changed (2026-08-28 — núdzová brzda má vlastnú adresu)
 
 - **`POVOLENE_EMAILY` prestavená z `jan.letko@futbalsfz.sk` na `intranet@futbalsfz.sk`.** Brzda sa vyhodnocuje prvá, takže adresa, ktorá je v nej, sa nikdy neprihlási cez `persons`. Kým tam bola bežná pracovná adresa správcu, cesta, ktorou pôjde stovka ľudí, zostávala neodskúšaná a vyzeralo to, že prihlásenie funguje. Brzda odteraz obsahuje osobitnú správcovskú adresu, ktorá sa na bežnú prácu nepoužíva; `jan.letko@futbalsfz.sk` sa testuje ako bežný používateľ.
