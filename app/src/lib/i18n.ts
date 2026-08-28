@@ -111,6 +111,12 @@ interface Dictionary {
     count: (n: number) => string
     showAll: (n: number) => string
     blockedNote: (n: number) => string
+    /**
+     * Druhý riadok položky. Samotné „1.0" pod názvom normy nepovie nič —
+     * vyzerá to ako číslo bez významu. Dátum platnosti sa sem nedáva:
+     * v úzkom stĺpci by riadok zalomil a `/dokumenty` ho aj tak ukazuje.
+     */
+    version: (label: string) => string
   }
 
   email: {
@@ -165,6 +171,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
   },
     pending: {
       heading: "Nevybavené žiadosti",
+      version: label => `verzia ${label}`,
       empty: "Nič na vás nečaká.",
       open: "Otvoriť",
       count: n => (n === 1 ? "1 položka" : n >= 2 && n <= 4 ? `${n} položky` : `${n} položiek`),
@@ -225,6 +232,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
   },
     pending: {
       heading: "Nevyřízené žádosti",
+      version: label => `verze ${label}`,
       empty: "Nic na vás nečeká.",
       open: "Otevřít",
       count: n => (n === 1 ? "1 položka" : n >= 2 && n <= 4 ? `${n} položky` : `${n} položek`),
@@ -285,6 +293,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
   },
     pending: {
       heading: "Pending items",
+      version: label => `version ${label}`,
       empty: "Nothing is waiting for you.",
       open: "Open",
       count: n => (n === 1 ? "1 item" : `${n} items`),

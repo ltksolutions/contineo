@@ -19,6 +19,7 @@
  */
 
 import { trackProgress } from "./tracks"
+import { dictionary } from "./i18n"
 import type { Person } from "./persons"
 
 export type PendingSourceKey = "acknowledgement" | "curation" | "helpdesk"
@@ -68,6 +69,9 @@ export const acknowledgementSource: PendingSource = {
   key: "acknowledgement",
   async collect(person) {
     const tracks = await trackProgress(person)
+    // Text druhého riadka skladá **zdroj**, nie widget: len zdroj vie, čo
+    // jeho `detail` znamená. Helpdesk tam raz bude mať číslo tiketu, nie verziu.
+    const t = dictionary(person.language).pending
     const items: PendingItem[] = []
     let blockedCount = 0
 
@@ -82,7 +86,7 @@ export const acknowledgementSource: PendingSource = {
           id: step.documentId,
           title: step.title,
           href: `/dokumenty/${encodeURIComponent(step.documentId)}`,
-          detail: step.versionLabel ?? undefined,
+          detail: step.versionLabel ? t.version(step.versionLabel) : undefined,
           sortAt: step.effectiveFrom,
         })
       }

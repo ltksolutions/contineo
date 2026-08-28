@@ -14,7 +14,8 @@
     "test:coverage": "vitest run --coverage",
     "persons:import": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --disable-warning=DEP0205 --import ./scripts/lib/ts-hook.mjs scripts/import_persons.mjs",
     "ack:report": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --disable-warning=DEP0205 --import ./scripts/lib/ts-hook.mjs scripts/acknowledgement_report.mjs",
-    "seed:test": "node scripts/seed_test_onboarding.mjs"
+    "seed:test": "node scripts/seed_test_onboarding.mjs",
+    "stav": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --disable-warning=DEP0205 --import ./scripts/lib/ts-hook.mjs scripts/stav.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.27.0",

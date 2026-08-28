@@ -117,6 +117,22 @@ describe("zdroj nepotvrdenych noriem", () => {
     expect(r.items[0].href).toBe("/dokumenty/smernica%201%2F2026")
   })
 
+  it("druhý riadok nesie aj slovo verzia, nie len číslo", async () => {
+    trackProgress.mockResolvedValue([track([step({ versionLabel: "1.0" })])])
+
+    const r = await acknowledgementSource.collect(person())
+
+    expect(r.items[0].detail).toBe("verzia 1.0")
+  })
+
+  it("v angličtine je ten istý riadok po anglicky", async () => {
+    trackProgress.mockResolvedValue([track([step({ versionLabel: "1.0" })])])
+
+    const r = await acknowledgementSource.collect(person({ language: "en" }))
+
+    expect(r.items[0].detail).toBe("version 1.0")
+  })
+
   it("prázdna trasa dá prázdny zoznam, nie chybu", async () => {
     trackProgress.mockResolvedValue([])
 
