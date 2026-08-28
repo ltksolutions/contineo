@@ -4,6 +4,15 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Fixed (2026-08-28 — stránka 404 prezrádzala to, čo má zamlčať)
+
+- **Neznámy hostiteľ dostával `404` s celým obalom.** Hlavička so značkou organizácie a nová pätička s názvom aplikácie, verziou a odkazom na repozitár mu povedali všetko naraz — na stránke, ktorá to má podľa D29 práve zamlčať. Bez tenanta sa odteraz nevykreslí ani hlavička, ani pätička; zostane holý text.
+- **Aj názov v záložke prehliadača je informácia.** `metadata` sa zmenila na `generateMetadata`: neznámy hostiteľ dostane „Stránka sa nenašla", nie „Contineo — testovacie rozhranie".
+- **Výpadok databázy sa od cudzej domény odlišuje.** `null` z `currentTenant()` znamená doménu, ktorá nepatrí nikomu; výpadok vyhodí výnimku a vtedy obal aj názov zostávajú — nejde o cudziu doménu, ale o našu vlastnú, ktorá sa práve nedá overiť.
+- **Slovenská stránka 404.** Dovtedy tam bol Nextov predvolený anglický text „This page could not be found.", ktorý v slovenskom rozhraní vyzerá skôr ako porucha servera než ako preklep v adrese.
+- **`npm run stav` vypisuje aj tenantov** — doména → `companyCode`. Pri „prečo mi tá doména nejde" je to prvá vec, ktorú treba vidieť.
+- **`NASADENIE_app.md`: doména tenanta žije na troch miestach** (DNS, projekt vo Verceli, kolekcia `tenants`) a prečo to nesmie byť „Redirect" — presmerovanie mení hlavičku `Host`, z ktorej sa určuje tenant.
+
 ### Added (2026-08-28 — pätička a menu len pre prihlásených)
 
 - **Neprihlásený človek videl celé menu portálu.** Stránky za ním sú chránené middlewarom, takže obsah neunikol — ale zoznam sekcií mu o vnútri systému hovorí viac, než potrebuje vedieť, a na prihlasovacej stránke ho to mätie. Menu aj tlačidlo „Odhlásiť" sa odteraz ukazujú len prihlásenému.

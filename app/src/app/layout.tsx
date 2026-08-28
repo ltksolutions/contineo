@@ -15,10 +15,29 @@ import { currentTenant, currentEmail } from "@/lib/session"
 import { brandingView } from "@/lib/tenants"
 import { tenantStyle } from "@/components/TenantHeader"
 
-export const metadata: Metadata = {
-  title: "Contineo — testovacie rozhranie",
-  description: "Overovanie kvality odpovedí nad normami a smernicami.",
-  robots: { index: false, follow: false },
+/**
+ * Názov v záložke prehliadača je tiež informácia.
+ *
+ * Neznámy hostiteľ (D29) dostane `404` — ale keby v záložke svietilo
+ * „Contineo", zamlčanie by nemalo zmysel: dozvedel by sa presne to, čo mu
+ * odpoveď zamlčiava. Preto je to `generateMetadata`, nie konštanta.
+ *
+ * Pri výpadku databázy zostáva pôvodný názov: vtedy nejde o cudziu doménu,
+ * ale o našu vlastnú, ktorá sa práve nedá overiť.
+ */
+export async function generateMetadata(): Promise<Metadata> {
+  try {
+    if (!(await currentTenant())) {
+      return { title: "Stránka sa nenašla", robots: { index: false, follow: false } }
+    }
+  } catch {
+    // ticho — vysvetlenie je nižšie v `RootLayout`, kde sa to aj zaloguje
+  }
+  return {
+    title: "Contineo — testovacie rozhranie",
+    description: "Overovanie kvality odpovedí nad normami a smernicami.",
+    robots: { index: false, follow: false },
+  }
 }
 
 /**
@@ -32,11 +51,32 @@ export const metadata: Metadata = {
  */
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   let branding
+  let neznamyHostitel = false
   try {
     const tenant = await currentTenant()
     if (tenant) branding = brandingView(tenant)
+    // `null` znamená doménu, ktorá nepatrí nikomu — nie výpadok. Výpadok
+    // vyhodí výnimku a rieši sa nižšie.
+    else neznamyHostitel = true
   } catch (e) {
     console.error("[layout] vzhľad tenanta sa nepodarilo načítať:", e)
+  }
+
+  /*
+   * Neznámy hostiteľ nedostane ani obal.
+   *
+   * D29 hovorí, že kto si nasmeruje vlastnú doménu na naše nasadenie, sa
+   * nemá dozvedieť ani to, že tu nejaká aplikácia beží. Hlavička so značkou
+   * organizácie a pätička s názvom, verziou a odkazom na repozitár by mu
+   * povedali všetko naraz — a to na stránke `404`, ktorá to má práve
+   * zamlčať. Zostane holý text.
+   */
+  if (neznamyHostitel) {
+    return (
+      <html lang="sk">
+        <body>{children}</body>
+      </html>
+    )
   }
 
   // Rovnaká opatrnosť ako pri vzhľade: keď sa relácia nedá prečítať, stránka

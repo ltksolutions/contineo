@@ -88,6 +88,33 @@ node scripts/tenant_set.mjs --stav
 Sú to zámerne dve nezávislé miesta. Preklep v jednom z nich nikoho nepustí dnu,
 namiesto toho, aby ho pustil k cudziemu obsahu.
 
+### Doména tenanta žije na troch miestach
+
+Otázka, ktorá príde pri každom ďalšom tenantovi: *stačí CNAME?* Nestačí —
+a „Redirect" vo Verceli je niečo iné, než to znie.
+
+| Kde | Čo tam patrí | Čo bez toho nefunguje |
+|---|---|---|
+| **DNS** (pri SFZ Websupport) | `CNAME intranet → cname.vercel-dns.com` | prevádzka sa k Vercelu vôbec nedostane |
+| **Vercel → projekt `contineo-app` → Domains** | `intranet.futbalsfz.sk` | Vercel požiadavku dostane, ale nevie, ktorému projektu patrí — a nevystaví certifikát, takže padne aj HTTPS |
+| **Kolekcia `tenants`** | doména v `hostnames` | portál odpovie `404` (D29) |
+
+**Nie „Redirect".** Presmerovanie vo Verceli znamená `301` z jednej domény na
+druhú (typicky `www` → apex). Tu by bolo nielen zbytočné, ale **škodlivé**:
+tenant sa určuje z hlavičky `Host` a po presmerovaní na `app.contineo.app` by
+sa človek zo zväzu ocitol pod cudzou hlavičkou. `intranet.futbalsfz.sk` preto
+obsluhuje aplikáciu priamo.
+
+Overenie, že prvé dve miesta sedia:
+
+```bash
+vercel domains inspect futbalsfz.sk    # sekcia „Projects"
+```
+
+Varovanie o chýbajúcom `A` zázname pre samotné `futbalsfz.sk` sa nás netýka —
+apex domény smeruje inde a Vercel to hlási pri každej doméne, ktorú nemá
+celú pod sebou.
+
 ---
 
 ## 1. DNS pre `app.contineo.app`

@@ -9,6 +9,7 @@
  * zostáva, nie je to jednorazová pomôcka.
  *
  * **Nič nezapisuje.** Odpovedá na tri otázky:
+ *   · ktoré domény vedú na ktorého tenanta? (D29 — neznámy hostiteľ je zakázaný)
  *   · sú v `persons` skutoční ľudia, majú trasy a prihlásil sa už niekto?
  *   · existujú trasy a majú kroky?
  *   · majú dokumenty platné znenie? (Verzia bez `effectiveFrom` neplatí, D6 —
@@ -27,15 +28,22 @@ if (!process.env.MONGODB_URI) {
   process.exit(1)
 }
 
+const ten = await getCollection("tenants")
 const p = await getCollection("persons")
 const t = await getCollection("onboarding_tracks")
 const d = await getCollection("documents")
+
+const tenanti = await ten.find({}).toArray()
+console.log(`TENANTS: ${tenanti.length}`)
+for (const x of tenanti) {
+  console.log(`  ${x.companyCode} | stav=${x.status} | ${(x.hostnames ?? []).join(", ")}`)
+}
 
 const osoby = await p
   .find({}, { projection: { email: 1, companyCode: 1, tracks: 1, roles: 1, status: 1, lastLoginAt: 1 } })
   .toArray()
 
-console.log(`PERSONS: ${osoby.length}`)
+console.log(`\nPERSONS: ${osoby.length}`)
 for (const o of osoby) {
   console.log(
     `  ${o.email} | ${o.companyCode} | stav=${o.status}` +
