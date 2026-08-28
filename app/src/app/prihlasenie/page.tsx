@@ -11,16 +11,19 @@ import Prihlasenie from "@/components/Prihlasenie"
 
 export const dynamic = "force-dynamic"
 
-export default function StrankaPrihlasenia({
+// Od Next 15 sú `params` aj `searchParams` prísľuby — stránka sa smie začať
+// vykresľovať skôr, než sú známe. Preto `await`, nie priamy prístup.
+export default async function StrankaPrihlasenia({
   searchParams,
 }: {
-  searchParams: { odoslane?: string; error?: string }
+  searchParams: Promise<{ odoslane?: string; error?: string }>
 }) {
+  const parametre = await searchParams
   return (
     <div className="obal" style={{ padding: "64px 20px", maxWidth: 460 }}>
       <Prihlasenie
-        odoslane={searchParams.odoslane === "1"}
-        chyba={searchParams.error}
+        odoslane={parametre.odoslane === "1"}
+        chyba={parametre.error}
       />
     </div>
   )

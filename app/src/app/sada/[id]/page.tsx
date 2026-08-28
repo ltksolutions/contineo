@@ -14,20 +14,22 @@ import OtazkaSady from "@/components/OtazkaSady"
 
 export const dynamic = "force-dynamic"
 
-export default async function DetailOtazky({ params }: { params: { id: string } }) {
+// `params` je od Next 15 prísľub.
+export default async function DetailOtazky({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params
   const sedenie = await getServerSession(authOptions)
   const vsetky = await nacitajSadu(sedenie?.user?.email ?? "")
-  const otazka = vsetky.find(o => o.id === params.id)
+  const otazka = vsetky.find(o => o.id === id)
   if (!otazka) notFound()
 
-  const poradie = vsetky.findIndex(o => o.id === params.id)
+  const poradie = vsetky.findIndex(o => o.id === id)
   const zvysne = vsetky.slice(poradie + 1)
 
   // Najprv hľadáme otázku, ktorú TENTO človek ešte neposúdil — nie ktorú
   // neposúdil nikto. Pri prekryve je druhý posudok rovnako potrebný ako prvý.
   const dalsia =
     zvysne.find(o => !o.vyradena && o.stav === null)?.id ??
-    vsetky.find(o => !o.vyradena && o.stav === null && o.id !== params.id)?.id ??
+    vsetky.find(o => !o.vyradena && o.stav === null && o.id !== id)?.id ??
     null
 
   return (

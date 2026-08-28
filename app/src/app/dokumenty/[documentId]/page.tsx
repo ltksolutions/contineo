@@ -20,12 +20,13 @@ import AcknowledgeButton from "@/components/AcknowledgeButton"
 
 export const dynamic = "force-dynamic"
 
-export default async function Dokument({ params }: { params: { documentId: string } }) {
+// `params` je od Next 15 prísľub.
+export default async function Dokument({ params }: { params: Promise<{ documentId: string }> }) {
   const person = await currentPerson()
   if (!person) redirect("/prihlasenie")
 
   const t = dictionary(person.language).onboarding
-  const documentId = decodeURIComponent(params.documentId)
+  const documentId = decodeURIComponent((await params).documentId)
   const doc = await loadDocumentFor(person, documentId)
   if (!doc) notFound()
 
