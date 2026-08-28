@@ -221,6 +221,28 @@ wildcard, ktorý sa nastaví **raz** a odvtedy pokrýva každú budúcu subdomé
    to chyba aplikácie a v logoch Vercelu po tom niet ani stopy: spojenie
    skončí skôr, než sa dostane k nej.
 
+   ✅ hotové 2026-08-28, `cert_PdcCSg43yjBCGiGOmxOODZpL`, platnosť 90 dní,
+   obnova automatická.
+
+**Overené naživo (2026-08-28)** na skúšobnom tenantovi `TEST`:
+
+```bash
+node scripts/tenant_set.mjs --company TEST --host test.contineo.app \
+  --name 'Skúšobná organizácia'
+```
+
+| Adresa | Výsledok |
+|---|---|
+| `test.contineo.app` | `200`, prihlasovacia stránka so značkou „Skúšobná organizácia" |
+| `nahodne123.contineo.app` | `404` — subdoména nie je v `tenants` (D29) |
+
+Od tejto chvíle je nový zákazník **jeden príkaz** a nič viac: žiadny Vercel,
+žiadne DNS, žiadne čakanie na certifikát.
+
+Tenant `TEST` je zámerne ponechaný ako terč na overenie po zmenách. Nemá ani
+jednu osobu, takže sa doň nedá prihlásiť. Vypnúť sa dá kedykoľvek:
+`node scripts/tenant_set.mjs --company TEST --disable true`.
+
 **Odvtedy pri každom novom zákazníkovi:**
 
 ```bash

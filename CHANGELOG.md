@@ -4,6 +4,17 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Added (2026-08-28 — `*.contineo.app` beží, nový zákazník je jeden príkaz)
+
+- **Wildcard certifikát vydaný** (`cert_PdcCSg43yjBCGiGOmxOODZpL`, 90 dní, automatická obnova) po zapísaní `_acme-challenge TXT` do zóny `contineo.app`. Tým je celý reťazec kompletný: doména v projekte → `CNAME *` → certifikát.
+- **Overené naživo na skúšobnom tenantovi `TEST`:** `test.contineo.app` vráti `200` a prihlasovaciu stránku so značkou „Skúšobná organizácia"; `nahodne123.contineo.app` vráti `404`, lebo v `tenants` nie je (D29).
+- **Nový zákazník je odteraz jeden príkaz** — `tenant_set.mjs --company X --host x.contineo.app --name "…"`. Žiadny zásah do Vercelu, žiadne DNS, žiadne čakanie na certifikát. Vlastná doména zákazníka (ako `intranet.futbalsfz.sk`) zostáva možnosťou za cenu jedného zápisu vo Verceli.
+- Tenant `TEST` je ponechaný ako terč na overovanie po zmenách; nemá ani jednu osobu, takže sa doň nedá prihlásiť.
+
+### Fixed — otvorené (2026-08-28)
+
+- **Neznámy hostiteľ dostane najprv `307` na `/prihlasenie` a až potom `404`.** Middleware beží pred kontrolou tenanta. Obsah neuniká a koniec je správne `404`, ale cudzia doména sa takto dozvie, že existuje cesta `/prihlasenie` — v rozpore s tým, čo D29 hovorí. Vedené v `TODO.md` (I1c); vyžaduje overenie tenanta priamo v middlewari, ktorý na edge do Atlasu nevidí.
+
 ### Changed (2026-08-28 — wildcard: DNS hotové, certifikát čaká na výzvu)
 
 - **DNS je prestavené.** `*.contineo.app` už vedie na Vercel (`dig +short nahodne123.contineo.app CNAME` → `…vercel-dns-016.com.`).
