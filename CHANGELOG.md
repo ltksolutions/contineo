@@ -4,6 +4,13 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Fixed (2026-08-28 — prihlásenie na vlastnej doméne)
+
+- **Odkaz v e-maile viedol na `app.contineo.app` aj tomu, kto začal na `intranet.futbalsfz.sk`.** `NEXTAUTH_URL` je jedna hodnota na celé nasadenie. `rewriteLinkHost()` prepíše hostiteľa na doménu požiadavky — ale **len ak je to známy tenant**; inak by sa podvrhnutou hlavičkou `Host` dala do cudzej schránky poslať adresa útočníka s platným tokenom. Cudzia adresa v `callbackUrl` sa necháva tak: „opraviť" ju na našu doménu by ju zamaskovalo. Nový `redirect` callback dovolí návrat len na známu doménu, takže nevzniká otvorené presmerovanie.
+- **E-mail aj hlavička nesú názov, logo a farbu organizácie.** Predmet je „Prihlásenie — {organizácia}" (sk/cs/en), nie „Prihlásenie do Contineo". Odznak „testovacie rozhranie" sa nad záväzným potvrdením už neukazuje.
+- **Prihlásenie hovorí, prečo nevyšlo** — NextAuth `logger` + záznam v `signIn` callbacku rozlíši žiadosť o odkaz od jeho použitia a núdzovú brzdu od `persons`. Prvá vec, ktorú to ukázalo: overené prihlásenie prešlo **cez núdzovú brzdu**, takže cesta cez `persons` je v produkcii stále neodskúšaná (`TODO.md` I1c).
+- **Loga tenantov musela dostať výnimku z brány prihlásenia.** Prihlasovacia stránka načítava logo samostatnou požiadavkou, ktorá ešte nie je prihlásená; bez výnimky ju middleware presmeroval a z hlavičky zostal holý text.
+
 ### Added (2026-08-28 — tenant podľa hostiteľa, D29)
 
 - **`app/src/lib/tenants.ts` + kolekcia `tenants`.** Hostiteľ určuje `companyCode`, vzhľad a jazyky. **Neznámy hostiteľ je zakázaný, nie predvolený** (ADR-002, ADR-003 kap. 5.4): predvolený tenant by znamenal, že ktokoľvek, kto si nasmeruje vlastnú doménu na naše nasadenie, dostane rozhranie niekoho iného — a bude to vyzerať legitímne, lebo certifikát aj obsah sedia. Odpoveď je `404`, nie vysvetľujúca hláška.

@@ -111,6 +111,13 @@
 - [x] Výkaz pre HR ✅ 2026-08-27 — `app/scripts/acknowledgement_report.mjs`. CSV: kto potvrdil, kedy, ktorú verziu, v akom jazyku — a kto nie. Rozsah je **jeden `companyCode`, nie strom** (D32, D33).
 - [x] **Skripty importujú priamo moduly zo `src/`** ✅ 2026-08-27 — `scripts/lib/ts-hook.mjs`. Node 26 vie TypeScript spustiť, len nevie dohľadať bezpríponové importy; háčik to premostí. Bez neho by skripty potrebovali vlastnú kópiu pravidla, ktorá verzia dokumentu platí — a dve implementácie právneho pravidla sa raz rozídu.
 
+**I1c. Prihlásenie naostro — čo je overené a čo nie**
+
+- [x] **Prihlásenie na `intranet.futbalsfz.sk` funguje** ✅ 2026-08-28 — odkaz z e-mailu vedie na správnu doménu, relácia sa založí, `/dokumenty` sa otvorí.
+- [ ] 🔴 **Overená bola len núdzová brzda, nie `persons`.** Log hovorí `[auth] pouzitie-odkazu: … — cez núdzovú brzdu`: adresa je v `POVOLENE_EMAILY`, ktorá sa vyhodnocuje **prvá**, takže kontrola cez `persons` sa vôbec nespustila. Cesta, ktorou pôjde stovka ľudí zo zväzu, je tým pádom **v produkcii neodskúšaná**. Otestovať adresou, ktorá v brzde nie je.
+- [ ] **Odkaz sa raz zavolal dvakrát sekundu po sebe** (2026-08-28 17:07), čím sa jednorazový token spotreboval a používateľ videl „odkaz už neplatí". Pri opakovanom pokuse sa to **nezopakovalo**, takže príčina nie je potvrdená a nič sa zatiaľ nemenilo. **Pred hromadným rozposlaním preveriť**, či poštové brány adresátov (najmä Microsoft 365 Safe Links) odkazy nepredberajú — tie to robia systematicky. Ak áno, riešenie je krátke okno na opätovné použitie tokenu (rozhodnuté 2026-08-28, čaká na potvrdenie príčiny).
+- [ ] **Chybová stránka prihlásenia končí na `app.contineo.app`,** aj keď človek začal na intranete. Presmerovanie po úspechu je opravené (`redirect` callback), ale chybovú adresu si NextAuth stavia sám z `NEXTAUTH_URL` a cez callback neprejde. Kozmetické, nie blokujúce.
+
 **I1b. Viacjazyčné prostredie (D35)** — SK · CS · EN
 
 - [x] `app/src/lib/i18n.ts` ✅ 2026-08-27 — zoznam jazykov prostredia (oddelený od číselníka `language`, ktorý tagguje obsah), formulka a e-mail per jazyk, deterministický dátum
