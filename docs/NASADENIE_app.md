@@ -115,6 +115,45 @@ Varovanie o chýbajúcom `A` zázname pre samotné `futbalsfz.sk` sa nás netýk
 apex domény smeruje inde a Vercel to hlási pri každej doméne, ktorú nemá
 celú pod sebou.
 
+### Dodávateľské domény nepatria zákazníkovi (2026-08-28)
+
+Do 28. 8. mal tenant `SFZ` medzi doménami aj `app.contineo.app`,
+`contineo-app.vercel.app` a `localhost`. Pri jedinom tenantovi to bolo
+neviditeľné a na testovanie praktické — ale znamenalo to, že na
+**dodávateľskej doméne visela značka zákazníka**. Kto by otvoril
+`app.contineo.app`, videl by logo SFZ.
+
+Pravidlo: **doména dodávateľa má vlastného tenanta.**
+
+| Tenant | Domény | Načo |
+|---|---|---|
+| `SFZ` | `intranet.futbalsfz.sk`, `sfz.localhost` | portál zväzu |
+| `LTK` | `app.contineo.app`, `contineo-app.vercel.app`, `contineo-app-ltksolutions-projects.vercel.app`, `localhost` | ukážka a vývoj, značka „Contineo" |
+
+```bash
+# Poradie je dôležité: skript odmietne doménu, ktorá ešte patrí inému
+# tenantovi. Najprv ju treba uvoľniť, až potom priradiť.
+node scripts/tenant_set.mjs --company SFZ \
+  --host intranet.futbalsfz.sk --host sfz.localhost
+
+node scripts/tenant_set.mjs --company LTK \
+  --host app.contineo.app --host contineo-app.vercel.app \
+  --host contineo-app-ltksolutions-projects.vercel.app --host localhost \
+  --name Contineo --short Contineo --language sk --languages sk,cs,en
+```
+
+**Pre vývoj to má priamy dôsledok.** `npm run dev` beží na `localhost`, teda
+pod tenantom `LTK` so značkou Contineo. Kto potrebuje vidieť rozhranie tak,
+ako ho uvidí zväz, otvorí **`http://sfz.localhost:3000`** — prehliadače
+smerujú celé `*.localhost` na `127.0.0.1`, takže netreba nič nastavovať.
+
+**Zmena sa neprejaví okamžite.** `tenants.ts` si výsledok drží 5 minút
+(`HIT_TTL_MS`), takže warm lambda môže ešte chvíľu vracať starého tenanta.
+Nie je to chyba, len sa treba chvíľu počkať.
+
+V `LTK` zámerne nie je ani jedna osoba: kto sa tam prihlási, uvidí, že do
+tejto organizácie nepatrí (D32). Je to ukážková doména, nie druhý portál.
+
 ---
 
 ## 1. DNS pre `app.contineo.app`

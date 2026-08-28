@@ -4,6 +4,14 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Changed (2026-08-28 — dodávateľské domény majú vlastného tenanta)
+
+- **Na `app.contineo.app` visela značka SFZ.** Tenant `SFZ` mal medzi doménami aj `app.contineo.app`, `contineo-app.vercel.app` a `localhost`. Pri jedinom tenantovi to bolo neviditeľné, ale bola to nesprávna vlastnícka väzba: dodávateľská doména niesla logo zákazníka.
+- **Vznikol tenant `LTK`** (značka „Contineo") pre `app.contineo.app`, `contineo-app.vercel.app`, `contineo-app-ltksolutions-projects.vercel.app` a `localhost`. `SFZ` si ponechal `intranet.futbalsfz.sk` a nový `sfz.localhost`.
+- **Vedľajší efekt, ktorý stojí za zmienku: D29 je tým prvýkrát overená s dvomi tenantmi.** Doteraz existoval len jeden, takže „hostiteľ určuje organizáciu" bolo tvrdenie o kóde, nie pozorovanie. Overené naživo: `intranet.futbalsfz.sk` → SFZ s logom zväzu, `app.contineo.app` → Contineo.
+- **Pre vývoj:** `npm run dev` beží na `localhost`, teda pod `LTK`. Rozhranie zväzu sa pozerá na `http://sfz.localhost:3000` — prehliadače smerujú celé `*.localhost` na `127.0.0.1`.
+- V `LTK` zámerne nie je ani jedna osoba: kto sa tam prihlási, uvidí, že do tejto organizácie nepatrí (D32). Je to ukážková doména, nie druhý portál.
+
 ### Fixed (2026-08-28 — stránka 404 prezrádzala to, čo má zamlčať)
 
 - **Neznámy hostiteľ dostával `404` s celým obalom.** Hlavička so značkou organizácie a nová pätička s názvom aplikácie, verziou a odkazom na repozitár mu povedali všetko naraz — na stránke, ktorá to má podľa D29 práve zamlčať. Bez tenanta sa odteraz nevykreslí ani hlavička, ani pätička; zostane holý text.
