@@ -11,7 +11,8 @@
 import { useEffect, useState } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { useSession, signOut } from "next-auth/react"
+import { signOut } from "next-auth/react"
+import { ZnakContineo } from "./ZnakContineo"
 import type { TenantBrandingView } from "./TenantHeader"
 
 /**
@@ -70,10 +71,25 @@ function IkonaTemy({ volba }: { volba: Volba }) {
   )
 }
 
-export default function Hlavicka({ branding }: { branding?: TenantBrandingView }) {
+/**
+ * `email` prichádza zo servera, nie z `useSession()`.
+ *
+ * Dva dôvody. Prvý: neprihlásený človek nemá vidieť menu portálu — stránky
+ * sú síce chránené, ale zoznam sekcií mu hovorí o vnútri systému viac, než
+ * potrebuje vedieť, a na prihlasovacej stránke ho to zbytočne mätie. Druhý:
+ * `useSession()` začína stavom „neviem" a odpoveď dorazí až po ďalšej
+ * požiadavke, takže menu by na okamih **bliklo** aj tam, kde byť nemá.
+ * Server to vie hneď pri prvom vykreslení.
+ */
+export default function Hlavicka({
+  branding,
+  email,
+}: {
+  branding?: TenantBrandingView
+  email?: string
+}) {
   const [volba, setVolba] = useState<Volba>("system")
   const cesta = usePathname()
-  const { data: sedenie } = useSession()
 
   // Uložená voľba sa načíta raz po pripojení. Neznámu hodnotu (staršie
   // uloženie, ručná úprava) ticho prehliadneme — pri téme nemá zmysel padať.
@@ -142,12 +158,7 @@ export default function Hlavicka({ branding }: { branding?: TenantBrandingView }
             </>
           ) : (
             <>
-              <svg width="26" height="26" viewBox="0 0 48 48" fill="none" aria-hidden="true">
-                <circle cx="18" cy="18" r="13" stroke="currentColor" strokeWidth="4" />
-                <circle cx="13" cy="18" r="2.3" fill="currentColor" />
-                <circle cx="23" cy="18" r="2.3" fill="currentColor" />
-                <path d="M28 27 L41 41 L29 38 Z" fill="currentColor" />
-              </svg>
+              <ZnakContineo />
               <span style={{ fontWeight: 700, fontSize: 17, letterSpacing: "-0.02em" }}>
                 Contineo
               </span>
@@ -161,6 +172,9 @@ export default function Hlavicka({ branding }: { branding?: TenantBrandingView }
           )}
         </Link>
 
+        {/* Menu je pre prihlásených. Neprihlásený vidí značku a prepínač
+            témy — nič, čím by aj tak nemohol pohnúť. */}
+        {email && (
         <nav className="hlavicka-nav">
           {[
             { kam: "/", popis: "Voľné otázky" },
@@ -187,14 +201,15 @@ export default function Hlavicka({ branding }: { branding?: TenantBrandingView }
             )
           })}
         </nav>
+        )}
 
-        {sedenie?.user?.email && (
+        {email && (
           <button
             type="button"
             onClick={() => signOut({ callbackUrl: "/prihlasenie" })}
             className="tlacidlo tlacidlo--tiche"
             style={{ padding: "6px 12px", fontSize: 13.5 }}
-            title={sedenie.user.email}
+            title={email}
           >
             Odhlásiť
           </button>

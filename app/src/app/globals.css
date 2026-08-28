@@ -184,6 +184,62 @@ button:disabled { cursor: not-allowed; opacity: 0.55; }
 .tlacidlo--tiche:hover:not(:disabled) { background: var(--surface-2); }
 
 /*
+ * Pätička.
+ *
+ * Mobile first: na úzkom displeji je to stĺpec, od 560 px riadok. Verzia je
+ * vždy posledná — je to údaj pre poruchu, nie pre bežné čítanie.
+ */
+.paticka {
+  border-top: 1px solid var(--line);
+  margin-top: 48px;
+  padding-block: 18px 26px;
+  font-size: 13.5px;
+}
+
+.paticka-obsah {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.paticka-blok {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  flex-wrap: wrap;
+  margin: 0;
+}
+
+.paticka-odkaz {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--ink);
+  text-decoration: none;
+  font-weight: 600;
+  /* Dotykový cieľ: samotný text má na telefóne málo výšky. */
+  padding-block: 4px;
+}
+
+.paticka-odkaz:hover { text-decoration: underline; }
+
+.paticka-verzia {
+  margin: 0;
+  font-size: 12.5px;
+  /* Číslice v jednej šírke — inak sa revízia pri každom nasadení posúva. */
+  font-variant-numeric: tabular-nums;
+}
+
+@media (min-width: 560px) {
+  .paticka-obsah {
+    flex-direction: row;
+    align-items: center;
+    gap: 20px;
+  }
+  .paticka-verzia { margin-left: auto; }
+}
+
+/*
  * Widget „Nevybavené žiadosti".
  *
  * **Mobile first.** Na úzkom displeji je položka stĺpec: názov, pod ním

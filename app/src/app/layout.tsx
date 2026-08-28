@@ -9,8 +9,9 @@
 import type { Metadata } from "next"
 import "./globals.css"
 import Hlavicka from "@/components/Hlavicka"
+import Paticka from "@/components/Paticka"
 import Sedenie from "@/components/Sedenie"
-import { currentTenant } from "@/lib/session"
+import { currentTenant, currentEmail } from "@/lib/session"
 import { brandingView } from "@/lib/tenants"
 import { tenantStyle } from "@/components/TenantHeader"
 
@@ -38,12 +39,24 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     console.error("[layout] vzhľad tenanta sa nepodarilo načítať:", e)
   }
 
+  // Rovnaká opatrnosť ako pri vzhľade: keď sa relácia nedá prečítať, stránka
+  // sa má vykresliť ako pre neprihláseného, nie spadnúť.
+  let email: string | undefined
+  try {
+    email = (await currentEmail()) ?? undefined
+  } catch (e) {
+    console.error("[layout] reláciu sa nepodarilo prečítať:", e)
+  }
+
   return (
     <html lang="sk">
-      <body style={tenantStyle(branding)}>
+      {/* Stĺpec s `min-height`, aby pätička na krátkej stránke sedela dole
+          a nie hneď pod obsahom uprostred prázdnej obrazovky. */}
+      <body style={{ ...tenantStyle(branding), minHeight: "100dvh", display: "flex", flexDirection: "column" }}>
         <Sedenie>
-          <Hlavicka branding={branding} />
-          <main>{children}</main>
+          <Hlavicka branding={branding} email={email} />
+          <main style={{ flex: 1 }}>{children}</main>
+          <Paticka />
         </Sedenie>
       </body>
     </html>
