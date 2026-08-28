@@ -129,28 +129,42 @@ sebou a každá odpovedá na inú otázku:
 Postup pre novú organizáciu na **jej vlastnej doméne**, napr. `intranet.klub.sk`:
 
 ```bash
-# 1. DNS u správcu domény klubu
-#    CNAME intranet → cname.vercel-dns.com
-
-# 2. Vercel: priradiť doménu projektu contineo-app
-#    Spustiť **v adresári projektu** (tam, kde je .vercel/project.json):
-vercel domains add intranet.klub.sk
-#    POZOR: tvar `vercel domains add <doména> <projekt>` NEEXISTUJE — CLI
-#    54.1.0 berie jediný argument. Doménu priradí projektu, na ktorý je
-#    adresár nalinkovaný; mimo neho ju pridá len účtu.
-
-# 3. tenants
 node scripts/tenant_set.mjs --company KLUB \
   --host intranet.klub.sk --name "Názov klubu" \
   --language sk --languages sk
+```
 
+**Skript doménu do Vercelu pridá sám** (od 2026-08-28) a vypíše, aký `CNAME`
+má nastaviť zákazník. Zvyšok už nie je naša práca:
+
+| Krok | Kto |
+|---|---|
+| zápis do `tenants` | skript |
+| priradenie domény projektu vo Verceli | skript (Vercel API) |
+| `CNAME intranet → cname.vercel-dns.com` | **zákazník** — je to jeho zóna |
+| certifikát | Vercel automaticky, keď DNS začne sedieť |
+
+Prihlásenie berie skript z lokálneho `vercel login`; mimo vývojárskeho stroja
+sa dá dať `VERCEL_TOKEN`. `--no-vercel` krok vypne.
+
+**Zlyhanie Vercelu tenanta nezhodí.** Zápis do `tenants` ide prvý a je zdroj
+pravdy; keď sa doména pridať nepodarí, skript to povie a doplní sa ručne
+v dashboarde. Opačné poradie by znamenalo, že výpadok cudzieho API bráni
+založiť organizáciu.
+
+Čo skript preskočí a prečo: `*.contineo.app` (pokrýva wildcard), `localhost`
+a `*.localhost` (k Vercelu nedorazia), `*.vercel.app` (prideľuje ich Vercel).
+
+```bash
 # overenie
 vercel domains inspect klub.sk        # sekcia „Projects"
 npm run stav                          # sekcia TENANTS
 ```
 
-Krok 2 je jediný ručný a robí sa **raz na zákazníka**. Ak sa mu chceme vyhnúť
-úplne, existuje wildcard — viď nižšie.
+**Pozn. k CLI:** tvar `vercel domains add <doména> <projekt>` neexistuje —
+CLI 54.1.0 berie jediný argument a doménu priradí projektu, na ktorý je
+adresár nalinkovaný. Preto skript volá rovno REST API
+(`POST /v10/projects/{id}/domains`).
 
 **Jediná výnimka sú `localhost` a `sfz.localhost`.** Tie k Vercelu nikdy
 nedôjdu — bežia na vývojárskom stroji — takže existujú len v `tenants`.

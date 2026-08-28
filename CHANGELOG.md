@@ -4,6 +4,14 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Added (2026-08-28 — vlastná doména zákazníka je tiež jeden príkaz)
+
+- **`tenant_set.mjs` pridá vlastnú doménu do Vercelu sám** (`POST /v10/projects/{id}/domains`) a vypíše `CNAME`, ktorý má nastaviť zákazník. Dovtedy to bol jediný ručný úkon na zákazníka; teraz z našej strany nezostáva žiadny. Zvyšok je v zóne zákazníka a certifikát vydá Vercel automaticky.
+- **Prihlásenie sa berie z lokálneho `vercel login`**, `VERCEL_TOKEN` má prednosť (beh mimo vývojárskeho stroja). Token nie je nikde v repozitári. `--no-vercel` krok vypne.
+- **Poradie je zámerné: najprv `tenants`, potom Vercel.** Zápis tenanta je zdroj pravdy a zlyhanie cudzieho API nesmie brániť založiť organizáciu — skript to povie a doména sa doplní ručne.
+- **Preskakuje, čo netreba,** a povie prečo: `*.contineo.app` (pokrýva wildcard), `localhost` a `*.localhost` (k Vercelu nedorazia), `*.vercel.app` (prideľuje ich Vercel).
+- Overené na existujúcich tenantoch: `intranet.futbalsfz.sk` → „už v projekte je", `sfz.localhost` a `test.contineo.app` → preskočené s dôvodom.
+
 ### Added (2026-08-28 — `*.contineo.app` beží, nový zákazník je jeden príkaz)
 
 - **Wildcard certifikát vydaný** (`cert_PdcCSg43yjBCGiGOmxOODZpL`, 90 dní, automatická obnova) po zapísaní `_acme-challenge TXT` do zóny `contineo.app`. Tým je celý reťazec kompletný: doména v projekte → `CNAME *` → certifikát.

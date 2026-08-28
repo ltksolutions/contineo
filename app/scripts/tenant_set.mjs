@@ -16,8 +16,17 @@
  * Doména sa nedá priradiť dvom tenantom naraz. Skript to odmietne, nie
  * prepíše — tiché prevzatie domény je presne ten druh chyby, ktorý sa zistí
  * až vtedy, keď ľudia z jednej organizácie uvidia hlavičku druhej.
+ *
+ * **Vlastnú doménu zákazníka pridá aj do Vercelu** (`--no-vercel` to vypne).
+ * Bez toho by portál na nej nebežal: Vercel by nevedel, ktorému projektu
+ * patrí, a hlavne by nevystavil certifikát, takže `https://` by padlo ešte
+ * pred prvým bajtom aplikácie. Subdomény `*.contineo.app` pokrýva wildcard
+ * a `localhost` k Vercelu nikdy nedorazí — tie sa preskakujú.
  */
 
+import fs from "node:fs"
+import os from "node:os"
+import path from "node:path"
 import { MongoClient } from "mongodb"
 
 const URI = process.env.MONGODB_URI
@@ -40,6 +49,7 @@ function parseArgs(argv) {
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i]
     if (a === "--stav") { out.status = true; continue }
+    if (a === "--no-vercel") { out.noVercel = true; continue }
     if (!a.startsWith("--")) continue
     const value = argv[i + 1]
     if (value === undefined || value.startsWith("--")) {
@@ -58,6 +68,7 @@ function parseArgs(argv) {
       case "--language": out.language = value; break
       case "--languages": out.languages = value.split(",").map(s => s.trim()); break
       case "--disable": out.disable = value === "true" || value === "1"; break
+      case "--vercel-project": out.vercelProject = value; break
       default:
         console.error(`${CHYBA} Neznámy prepínač ${a}`)
         process.exit(1)
@@ -83,6 +94,129 @@ function normalizeHostname(raw) {
   }
   if (h.endsWith(".")) h = h.slice(0, -1)
   return h
+}
+
+// ── Vercel ───────────────────────────────────────────────────────────────────
+
+const VERCEL_API = "https://api.vercel.com"
+
+/**
+ * Ktoré domény vo Verceli riešiť netreba.
+ *
+ * `*.contineo.app` pokrýva wildcard (jeden zápis pre všetky budúce subdomény),
+ * `localhost` a `*.localhost` bežia na vývojárskom stroji a k Vercelu sa
+ * nedostanú, `*.vercel.app` si Vercel prideľuje sám.
+ */
+function preskocit(host) {
+  if (host === "localhost" || host.endsWith(".localhost") || host === "127.0.0.1") {
+    return "beží lokálne, k Vercelu nedorazí"
+  }
+  if (host.endsWith(".vercel.app")) return "Vercel ju prideľuje sám"
+  if (host !== "contineo.app" && host.endsWith(".contineo.app")) return "pokrýva wildcard *.contineo.app"
+  return null
+}
+
+/**
+ * Prihlásenie sa berie z lokálneho `vercel login`, nie z premennej v repozitári.
+ * `VERCEL_TOKEN` má prednosť — kvôli behu mimo vývojárskeho stroja.
+ */
+function vercelToken() {
+  if (process.env.VERCEL_TOKEN) return process.env.VERCEL_TOKEN
+  const kandidati = [
+    path.join(os.homedir(), "Library", "Application Support", "com.vercel.cli", "auth.json"),
+    path.join(os.homedir(), ".local", "share", "com.vercel.cli", "auth.json"),
+    path.join(os.homedir(), ".vercel", "auth.json"),
+  ]
+  for (const p of kandidati) {
+    try {
+      const t = JSON.parse(fs.readFileSync(p, "utf8")).token
+      if (t) return t
+    } catch { /* ďalší kandidát */ }
+  }
+  return null
+}
+
+/** `.vercel/project.json` býva v koreni repozitára, skript beží v `app/`. */
+function vercelProjekt(prepis) {
+  if (prepis) return { projectId: prepis, orgId: process.env.VERCEL_ORG_ID }
+  if (process.env.VERCEL_PROJECT_ID && process.env.VERCEL_ORG_ID) {
+    return { projectId: process.env.VERCEL_PROJECT_ID, orgId: process.env.VERCEL_ORG_ID }
+  }
+  let dir = process.cwd()
+  for (let i = 0; i < 5; i++) {
+    try {
+      const j = JSON.parse(fs.readFileSync(path.join(dir, ".vercel", "project.json"), "utf8"))
+      if (j.projectId) return { projectId: j.projectId, orgId: j.orgId }
+    } catch { /* o úroveň vyššie */ }
+    const hore = path.dirname(dir)
+    if (hore === dir) break
+    dir = hore
+  }
+  return null
+}
+
+async function pridajDoVercelu(token, { projectId, orgId }, host) {
+  const url = `${VERCEL_API}/v10/projects/${encodeURIComponent(projectId)}/domains` +
+    (orgId ? `?teamId=${encodeURIComponent(orgId)}` : "")
+  const r = await fetch(url, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+    body: JSON.stringify({ name: host }),
+  })
+  const telo = await r.json().catch(() => ({}))
+  if (r.ok) return { stav: "pridana" }
+  // Tá istá doména na tom istom projekte nie je chyba, len už je hotová.
+  if (telo?.error?.code === "domain_already_in_use" && telo?.error?.domain?.projectId === projectId) {
+    return { stav: "uz-je" }
+  }
+  return { stav: "chyba", sprava: telo?.error?.message ?? `HTTP ${r.status}` }
+}
+
+/**
+ * Zlyhanie tu **nesmie** zhodiť zápis tenanta. Ten je zdroj pravdy a už je
+ * uložený; doménu vo Verceli dorobí človek ručne. Opačné poradie by
+ * znamenalo, že výpadok cudzieho API bráni založiť organizáciu.
+ */
+async function zabezpecDomeny(hostnames, args) {
+  if (!hostnames.length) return
+  const naRiesenie = hostnames.filter(h => !preskocit(h))
+  for (const h of hostnames) {
+    const preco = preskocit(h)
+    if (preco) console.log(`${INFO} ${h} — vo Verceli netreba (${preco})`)
+  }
+  if (!naRiesenie.length) return
+
+  if (args.noVercel) {
+    console.log(`${INFO} --no-vercel: ${naRiesenie.join(", ")} pridaj do Vercelu ručne`)
+    return
+  }
+
+  const token = vercelToken()
+  const projekt = vercelProjekt(args.vercelProject)
+  if (!token || !projekt) {
+    console.error(`${CHYBA} Vercel preskočený: ${!token ? "nenašlo sa prihlásenie (spusti `vercel login` alebo nastav VERCEL_TOKEN)" : "nenašiel sa .vercel/project.json"}`)
+    console.error(`     Tenant je uložený. Domény ${naRiesenie.join(", ")} pridaj do projektu ručne.`)
+    return
+  }
+
+  for (const h of naRiesenie) {
+    let v
+    try {
+      v = await pridajDoVercelu(token, projekt, h)
+    } catch (e) {
+      v = { stav: "chyba", sprava: e.message }
+    }
+    if (v.stav === "pridana") {
+      console.log(`${OK} ${h} pridaná do projektu vo Verceli`)
+      console.log(`   Zákazník nech nastaví: CNAME ${h.split(".")[0]} → cname.vercel-dns.com`)
+      console.log(`   Certifikát sa vydá sám, keď DNS začne sedieť.`)
+    } else if (v.stav === "uz-je") {
+      console.log(`${OK} ${h} už v projekte je`)
+    } else {
+      console.error(`${CHYBA} ${h} sa do Vercelu pridať nepodarilo: ${v.sprava}`)
+      console.error(`     Tenant je uložený; doménu pridaj ručne v dashboarde.`)
+    }
+  }
 }
 
 const args = parseArgs(process.argv.slice(2))
@@ -172,6 +306,9 @@ try {
   console.log(`   domény: ${(after.hostnames ?? []).join(", ") || "(žiadne — portál sa nikde neukáže)"}`)
   console.log(`   jazyky: ${(after.languages ?? []).join(", ")} (predvolený ${after.defaultLanguage})`)
   console.log(`   stav:   ${after.status}`)
+
+  // Až po uloženom tenantovi — viď zdôvodnenie pri `zabezpecDomeny`.
+  await zabezpecDomeny(after.hostnames ?? [], args)
 } catch (e) {
   console.error(`${CHYBA} ${e.message}`)
   process.exit(1)
