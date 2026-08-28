@@ -200,20 +200,50 @@ export const authOptions: NextAuthOptions = {
     error: "/prihlasenie",
   },
   providers: [emailProvider()],
+
+  /**
+   * Prihlásenie hovorí nahlas, prečo nevyšlo.
+   *
+   * NextAuth predvolene zapíše kód chyby len do vlastného výpisu a používateľ
+   * uvidí vetu „odkaz už neplatí" bez toho, aby sa dalo zistiť, či token
+   * chýbal, vypršal, alebo ho odmietla brána prístupu. Pri prihlasovaní
+   * stovky ľudí je rozdiel medzi tými tromi príčinami celý rozdiel medzi
+   * opravou za desať minút a hádaním celé popoludnie.
+   */
+  logger: {
+    error(code, metadata) {
+      console.error("[next-auth] chyba:", code, metadata)
+    },
+    warn(code) {
+      console.warn("[next-auth] varovanie:", code)
+    },
+  },
+
   callbacks: {
     /**
      * Posledná brána. Beží pri žiadosti o odkaz aj pri jeho použití, takže
      * ani odkaz získaný z cudzej schránky neprepustí niekoho, kto medzitým
      * zo zoznamu vypadol.
      */
-    async signIn({ user }) {
-      if (!user.email) return false
+    async signIn({ user, email }) {
+      // `email.verificationRequest` odlíši žiadosť o odkaz od jeho použitia.
+      // Bez toho sa v logu nedá rozoznať, či človek o odkaz len požiadal,
+      // alebo naň už klikol a neprešiel.
+      const faza = email?.verificationRequest ? "ziadost" : "pouzitie-odkazu"
+      if (!user.email) {
+        console.error(`[auth] ${faza}: prihlásenie bez adresy`)
+        return false
+      }
 
       // Núdzová brzda ide prvá — nepotrebuje databázu, takže správcu pustí
       // aj vtedy, keď je cluster nedostupný.
-      if (jePovoleny(user.email)) return true
+      if (jePovoleny(user.email)) {
+        console.log(`[auth] ${faza}: ${user.email} — cez núdzovú brzdu`)
+        return true
+      }
 
       const allowed = await personMaySignIn(user.email)
+      console.log(`[auth] ${faza}: ${user.email} — persons ${allowed ? "povolil" : "ODMIETOL"}`)
       // Evidencia až po povolení a mimo rozhodovania: keby zápis zlyhal,
       // nesmie to zhodiť prihlásenie človeka, ktorý naň má nárok.
       if (allowed) void recordSignIn(user.email)
