@@ -4,6 +4,12 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Changed (2026-08-28 — adresy `*.vercel.app` zavreté dvakrát)
+
+- **`*.vercel.app` sa zrušiť nedá** — Vercel ich prideľuje projektu aj každému jednotlivému nasadeniu. Dajú sa len zavrieť.
+- **Prvá vrstva už bola nastavená:** `ssoProtection = all_except_custom_domains`, takže všetko okrem vlastných domén žiada prihlásenie do Vercelu.
+- **Druhá vrstva pribudla:** `*.vercel.app` adresy sú odobrané z tenanta `LTK`. Aj keby ochranu niekto vypol, portál na nich odpovie `404` (D29) namiesto toho, aby ukázal obsah. Vypnutie ochrany je jedno kliknutie v cudzom rozhraní; zápis v `tenants` je náš a nezmení sa omylom.
+
 ### Changed (2026-08-28 — dodávateľské domény majú vlastného tenanta)
 
 - **Na `app.contineo.app` visela značka SFZ.** Tenant `SFZ` mal medzi doménami aj `app.contineo.app`, `contineo-app.vercel.app` a `localhost`. Pri jedinom tenantovi to bolo neviditeľné, ale bola to nesprávna vlastnícka väzba: dodávateľská doména niesla logo zákazníka.

@@ -163,7 +163,7 @@ Pravidlo: **doména dodávateľa má vlastného tenanta.**
 | Tenant | Domény | Načo |
 |---|---|---|
 | `SFZ` | `intranet.futbalsfz.sk`, `sfz.localhost` | portál zväzu |
-| `LTK` | `app.contineo.app`, `contineo-app.vercel.app`, `contineo-app-ltksolutions-projects.vercel.app`, `localhost` | ukážka a vývoj, značka „Contineo" |
+| `LTK` | `app.contineo.app`, `localhost` | ukážka a vývoj, značka „Contineo" |
 
 ```bash
 # Poradie je dôležité: skript odmietne doménu, ktorá ešte patrí inému
@@ -172,8 +172,7 @@ node scripts/tenant_set.mjs --company SFZ \
   --host intranet.futbalsfz.sk --host sfz.localhost
 
 node scripts/tenant_set.mjs --company LTK \
-  --host app.contineo.app --host contineo-app.vercel.app \
-  --host contineo-app-ltksolutions-projects.vercel.app --host localhost \
+  --host app.contineo.app --host localhost \
   --name Contineo --short Contineo --language sk --languages sk,cs,en
 ```
 
@@ -188,6 +187,29 @@ Nie je to chyba, len sa treba chvíľu počkať.
 
 V `LTK` zámerne nie je ani jedna osoba: kto sa tam prihlási, uvidí, že do
 tejto organizácie nepatrí (D32). Je to ukážková doména, nie druhý portál.
+
+### Adresy `*.vercel.app` (2026-08-28)
+
+**Zbaviť sa ich nedá** — Vercel prideľuje `contineo-app.vercel.app` aj jednu
+adresu každému jednotlivému nasadeniu a nie je to voliteľné. Dajú sa však
+zavrieť, a to sú dve nezávislé vrstvy:
+
+1. **Vercel: ochrana nasadení.** Projekt má
+   `ssoProtection = all_except_custom_domains`, takže **všetko okrem vlastných
+   domén** žiada prihlásenie do Vercelu. `intranet.futbalsfz.sk`
+   a `app.contineo.app` sú verejné, `*.vercel.app` nie. Overené: adresa
+   `contineo-app-git-main-….vercel.app` presmeruje na prihlásenie do Vercelu.
+
+   ```bash
+   vercel project protection            # výpis nastavenia
+   ```
+
+2. **`tenants`: nie sú tam.** Ani jedna `*.vercel.app` adresa nie je priradená
+   tenantovi, takže aj keby ochranu niekto vypol, portál na nich odpovie
+   `404` (D29) — neukáže obsah.
+
+Druhá vrstva je tam zámerne. Vypnutie ochrany je jedno kliknutie v cudzom
+rozhraní; zápis v `tenants` je náš a nezmení sa omylom.
 
 ---
 
