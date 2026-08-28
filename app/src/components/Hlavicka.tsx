@@ -84,9 +84,12 @@ function IkonaTemy({ volba }: { volba: Volba }) {
 export default function Hlavicka({
   branding,
   email,
+  spravca,
 }: {
   branding?: TenantBrandingView
   email?: string
+  /** Vidí správu tenantov (D41 + D42 už overené na serveri). */
+  spravca?: boolean
 }) {
   const [volba, setVolba] = useState<Volba>("system")
   const cesta = usePathname()
@@ -183,6 +186,9 @@ export default function Hlavicka({
             // kto nemá čo potvrdzovať, uvidí, že nemá nič. Podmieňovať odkaz
             // by znamenalo ťahať stav trás do hlavičky, teda do každej stránky.
             { kam: "/dokumenty", popis: "Na potvrdenie" },
+            // Odkaz sa neukazuje podľa domnienky klienta — `spravca` prichádza
+            // zo servera, kde už prešli obe podmienky D41 aj D42.
+            ...(spravca ? [{ kam: "/admin", popis: "Správa tenantov" }] : []),
           ].map(o => {
             const aktivna = o.kam === "/" ? cesta === "/" : cesta.startsWith(o.kam)
             return (

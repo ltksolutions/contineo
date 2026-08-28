@@ -45,6 +45,8 @@
 | D38 | `persons.groups` ako tretia dimenzia | Identita | 🟡 | 9 | 🟡 návrh |
 | D39 | „Nové" sa počíta voči `lastLoginAt` | Onboarding | 🟢 | 9 | ✅ |
 | D40 | Jednorazové systémové hlásenia v rozsahu A | Onboarding | 🔴 | 9 | ✅ |
+| D41 | `platform-admin` vidí naprieč tenantmi (výnimka z D32) | Identita | 🔴 | 5b | ✅ |
+| D42 | Správa tenantov beží len na doméne dodávateľa | Identita | 🔴 | 5b | ✅ |
 
 ---
 
@@ -619,6 +621,52 @@ podľa zadania a nie „Upozornenia" — inak by človek čakal aj hlásenia, kt
 tam nebudú.
 
 **Súvisiace:** D25 (kurácia), Fáza 4b (helpdesk), O15, O16.
+
+---
+
+---
+
+## Okruh 7 — Správa tenantov (Fáza 5b)
+
+> **Koncepcia:** `docs/SPRAVA_TENANTOV.md`. Tu je len rozhodovacia časť.
+
+### D41 — `platform-admin` vidí naprieč tenantmi 🔴
+
+**Otázka:** D32 hovorí, že viditeľnosť je per `companyCode` a hierarchia
+neudeľuje nič. Správca platformy ale musí vidieť všetkých.
+
+**✅ Rozhodnuté (2026-08-28): rola `platform-admin` v `persons`, nie premenná.**
+
+Záznam pod tenantom `LTK` s `roles: ["platform-admin"]`. Ide overenou cestou
+prihlásenia cez `persons` (I1c) vrátane evidencie a odhlásenia; odobratie práv
+je zmena jedného záznamu, nie premennej a nasadenia.
+
+**Je to výslovná výnimka z D32, nie jej ohnutie.** Rola neruší `companyCode`
+ostatných — otvára samostatnú obrazovku, ktorá číta **prehľadové údaje**.
+Neotvára obsah: na dokumenty a potvrdenia cudzej organizácie správca platformy
+nevidí a vidieť nemá. Toto oddelenie musí prežiť aj pri dvadsiatich
+zákazníkoch. Keby raz bolo treba nahliadnuť do obsahu (podpora), je to
+samostatné rozhodnutie so záznamom o každom nahliadnutí, nie vlastnosť roly.
+
+Zvažovaná bola premenná so zoznamom správcov (ako `POVOLENE_EMAILY`).
+**Zamietnuté:** presne taká premenná dnes skrývala, že sa cesta cez `persons`
+nikdy netestovala (I1c).
+
+**Súvisiace:** D32, D26, I1c.
+
+### D42 — Správa beží len na doméne dodávateľa 🔴
+
+**✅ Rozhodnuté (2026-08-28):** `/admin` odpovie len vtedy, keď hostiteľ patrí
+tenantovi `LTK` (`app.contineo.app`). Na doméne zákazníka **neexistuje** —
+`notFound()`, nie „nemáte prístup".
+
+Dôvod je ten istý ako pri značke: na doméne zväzu nemá byť nič, čo patrí
+dodávateľovi. A druhý, praktickejší: keby obrazovka odpovedala všade, stačila
+by jediná chyba v kontrole roly na to, aby ju uvidel niekto zo zákazníka.
+Takto musia zlyhať **dve nezávislé podmienky naraz** — a preto sa kontroluje
+oboje, rola aj hostiteľ.
+
+**Súvisiace:** D29, D41.
 
 ---
 

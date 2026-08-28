@@ -12,6 +12,7 @@ import Hlavicka from "@/components/Hlavicka"
 import Paticka from "@/components/Paticka"
 import Sedenie from "@/components/Sedenie"
 import { currentTenant, currentEmail } from "@/lib/session"
+import { platformContext } from "@/lib/admin"
 import { brandingView } from "@/lib/tenants"
 import { tenantStyle } from "@/components/TenantHeader"
 
@@ -88,13 +89,25 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     console.error("[layout] reláciu sa nepodarilo prečítať:", e)
   }
 
+  // Odkaz na správu tenantov sa ukáže len tomu, kto ňou naozaj prejde —
+  // rozhoduje o tom tá istá funkcia ako o samotnej stránke, nie druhá kópia
+  // pravidla. Zlyhanie sa berie ako „neukazovať".
+  let spravca = false
+  if (email) {
+    try {
+      spravca = (await platformContext()).state === "ready"
+    } catch (e) {
+      console.error("[layout] rolu správcu sa nepodarilo overiť:", e)
+    }
+  }
+
   return (
     <html lang="sk">
       {/* Stĺpec s `min-height`, aby pätička na krátkej stránke sedela dole
           a nie hneď pod obsahom uprostred prázdnej obrazovky. */}
       <body style={{ ...tenantStyle(branding), minHeight: "100dvh", display: "flex", flexDirection: "column" }}>
         <Sedenie>
-          <Hlavicka branding={branding} email={email} />
+          <Hlavicka branding={branding} email={email} spravca={spravca} />
           <main style={{ flex: 1 }}>{children}</main>
           <Paticka />
         </Sedenie>

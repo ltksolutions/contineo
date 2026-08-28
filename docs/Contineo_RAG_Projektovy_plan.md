@@ -447,6 +447,27 @@ ClubUp — ADR-003 kap. 8.
 
 ---
 
+### Fáza 5b – Správa tenantov `[5–8 dní]`
+
+> **Koncepcia:** `docs/SPRAVA_TENANTOV.md` · **Rozhodnutia:** D41, D42
+
+Predbieha zvyšok Fázy 5 rovnako, ako Fáza 8 predbehla Fázu 4. Dôvod je vecný:
+`npm run stav` a `npm run domeny` odpovedia na všetko, ale len tomu, kto sedí
+pri repozitári s `.env.local`. Pri druhom zákazníkovi to prestane stačiť.
+
+Rola `platform-admin` je **výslovná výnimka z D32** a vidí prehľadové údaje,
+nie obsah — na dokumenty a potvrdenia cudzej organizácie nevidí. Obrazovka beží
+len na doméne dodávateľa (D42), takže na jej odhalenie by museli zlyhať dve
+nezávislé podmienky naraz.
+
+**5b/A — vidieť.** Zoznam tenantov a detail: domény a ich živý stav z Vercelu,
+osoby a koľko sa prihlásilo, trasy, dokumenty s platným znením, potvrdenia.
+
+**5b/B — meniť, čo je bezpečné.** Značka, jazyky, zapnutie a vypnutie.
+Kontrola kolízie domén sa presunie zo skriptu do `lib/`, aby existovala raz.
+
+**5b/C — zakladať.** Nový tenant vrátane domén a odoslania pokynov zákazníkovi.
+
 ### Fáza 9 – Udalosti a upozornenia `[1,5–2 týždne]`
 
 > **Koncepcia:** `docs/UDALOSTI_A_UPOZORNENIA_KONCEPCIA.md` · **Rozhodnutia:** D36–D40

@@ -186,6 +186,37 @@
 - [x] **`app/tests/run.mjs` zmazaný** ✅ 2026-08-28 — pôvodný beh testov nahradil Vitest a s odstránením `esbuildu` prestal byť spustiteľný.
 - [ ] Postupne prepísať staré suity na idiomatické `expect()` — nie naraz, ale vždy, keď sa nejakej suity aj tak dotýkame
 
+### M. Správa tenantov — **Fáza 5b** 🟡 → `docs/SPRAVA_TENANTOV.md`
+
+> Zadanie 2026-08-28: obrazovka so správou tenantov. Správcovský účet
+> `office@ltk.solutions`. Cieľ je plná správa vrátane zakladania; ide sa po
+> častiach, aby bolo čo ukázať priebežne.
+
+**Rozhodnutia**
+
+- [x] **D41** — rola `platform-admin` v `persons`, výslovná výnimka z D32; vidí prehľad, nie obsah
+- [x] **D42** — `/admin` beží len na doméne dodávateľa; kontroluje sa rola **aj** hostiteľ
+
+**Rozsah A — vidieť `[1–2 dni]`**
+
+- [ ] `requirePlatformAdmin()` — rola a hostiteľ, nie jedno z toho
+- [ ] `/admin` — zoznam tenantov: domény a ich živý stav, osoby a koľko sa prihlásilo, trasy, dokumenty s platným znením, potvrdenia
+- [ ] `/admin/tenanti/[kod]` — detail vrátane menovitého zoznamu dokumentov bez platného znenia (najčastejšia tichá príčina prázdneho zoznamu)
+- [ ] mobile first; testy na to, čo môže ukázať nepravdu
+
+**Rozsah B — meniť, čo je bezpečné `[2–3 dni]`**
+
+- [ ] názov, logo, farba, jazyky, zapnutie/vypnutie
+- [ ] **kontrola kolízie domén sa presunie zo `tenant_set.mjs` do `lib/tenants.ts`** — aby existovala raz; druhá kópia pravidla o vlastníctve domén je presne to, čo nesmie vzniknúť
+- [ ] zápis, kto a kedy zmenu spravil
+- [ ] vypnutie tenanta si vyžiada napísanie kódu organizácie — ľudia sa okamžite prestanú prihlásiť
+
+**Rozsah C — zakladať `[2–3 dni]`**
+
+- [ ] nový tenant z obrazovky vrátane domén
+- [ ] Vercel API zo servera (`VERCEL_TOKEN` medzi premennými nasadenia)
+- [ ] odoslanie pokynov zákazníkovi tlačidlom (dnes `npm run domeny -- --poslat`)
+
 ### L. Udalosti a upozornenia — **Fáza 9** 🟡 → `docs/UDALOSTI_A_UPOZORNENIA_KONCEPCIA.md`
 
 > **Stav: rozsah A schválený 2026-08-28 (D40 = a) — implementácia sa môže začať.**
