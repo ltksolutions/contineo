@@ -115,6 +115,8 @@
 
 - [x] **Prihlásenie na `intranet.futbalsfz.sk` funguje** ✅ 2026-08-28 — odkaz z e-mailu vedie na správnu doménu, relácia sa založí, `/dokumenty` sa otvorí.
 - [ ] 🔴 **Overená je stále len núdzová brzda, nie `persons`.** Log z 18:03 hovorí `[auth] pouzitie-odkazu: jan.letko@futbalsfz.sk — cez núdzovú brzdu`. Brzda sa vyhodnocuje **prvá**, takže kontrola cez `persons` sa vôbec nespustila a cesta, ktorou pôjde stovka ľudí, je **v produkcii neodskúšaná**.
+  - ✅ **Pripravené 2026-08-28:** `POVOLENE_EMAILY` je prestavená na `intranet@futbalsfz.sk` — samostatnú správcovskú adresu, ktorá sa nepoužíva na bežnú prácu. `jan.letko@futbalsfz.sk` tým vypadol z brzdy a stáva sa **bežným používateľom cez `persons`**. Nasadenie prebehlo (`vercel redeploy`).
+  - **Zostáva:** prihlásiť sa ako `jan.letko@futbalsfz.sk` a v logu overiť `— persons povolil` namiesto `— cez núdzovú brzdu`. Potom `npm run stav`: stav sa má prepnúť `invited → active` a má pribudnúť `lastLoginAt`.
   - **Pozor na `vercel env pull`:** vrátil `POVOLENE_EMAILY=""`, hoci `vercel env ls` premennú pre Production ukazuje. Hodnota z pullu je **nespoľahlivá** — rozhoduje beh, nie výpis. Overovať runtime logom, nie premennou.
   - Ako to otestovať: pridať do `persons` druhú osobu s adresou, ktorá v brzde nie je, a prihlásiť sa ňou. Brzda pritom zostane, takže sa nedá zamknúť von.
 - [ ] **`lastLoginAt` a `status` sa stále nezapisujú** — ale nie preto, že by zápis zlyhal: brzda vracia `true` skôr, než sa `recordSignIn` vôbec zavolá. Zapíše sa až pri prvom prihlásení cez `persons`. Skontrolovať vtedy cez `npm run stav`, že sa stav prepol `invited → active`.

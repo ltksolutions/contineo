@@ -164,6 +164,29 @@ vercel deploy --prod --yes
 **Prázdny zoznam nepustí nikoho** — zámerne. Zabudnutá premenná by inak
 otvorila rozhranie s internými smernicami komukoľvek.
 
+### Do brzdy nepatrí bežná pracovná adresa (2026-08-28)
+
+Brzda sa vyhodnocuje **prvá**, takže adresa, ktorá je v nej, sa nikdy
+neprihlási cez `persons` — a cesta, ktorou pôjdu ostatní, zostane
+neodskúšaná. Presne to sa stalo: `jan.letko@futbalsfz.sk` bol v brzde
+a týždne to vyzeralo, že prihlásenie „funguje".
+
+Brzda preto obsahuje **osobitnú správcovskú adresu**, ktorá sa nepoužíva
+na bežnú prácu — dnes `intranet@futbalsfz.sk`. Správca sa cez ňu dostane
+dnu aj pri nedostupnom Atlase; všetky ostatné adresy, jeho vlastnú
+pracovnú nevynímajúc, púšťa `persons`.
+
+**Overuje sa to runtime logom, nie premennou.** `vercel env pull` vracia
+pre túto premennú prázdnu hodnotu, aj keď nastavená je (2026-08-28), takže
+podľa neho sa riadiť nedá. Rozhodujúce je, čo napíše beh:
+
+```
+[auth] pouzitie-odkazu: adresa — cez núdzovú brzdu   ← brzda
+[auth] pouzitie-odkazu: adresa — persons povolil     ← cesta pre ľudí
+```
+
+**Zmena premennej sa prejaví až po novom nasadení** (`vercel redeploy`).
+
 ---
 
 ## Nastavené premenné

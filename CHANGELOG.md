@@ -4,6 +4,11 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Changed (2026-08-28 — núdzová brzda má vlastnú adresu)
+
+- **`POVOLENE_EMAILY` prestavená z `jan.letko@futbalsfz.sk` na `intranet@futbalsfz.sk`.** Brzda sa vyhodnocuje prvá, takže adresa, ktorá je v nej, sa nikdy neprihlási cez `persons`. Kým tam bola bežná pracovná adresa správcu, cesta, ktorou pôjde stovka ľudí, zostávala neodskúšaná a vyzeralo to, že prihlásenie funguje. Brzda odteraz obsahuje osobitnú správcovskú adresu, ktorá sa na bežnú prácu nepoužíva; `jan.letko@futbalsfz.sk` sa testuje ako bežný používateľ.
+- **Zapísané do `NASADENIE_app.md` ako pravidlo,** nie ako jednorazová zmena — aj s tým, že sa to overuje runtime logom a nie `vercel env pull`, ktorý pre túto premennú vracia prázdnu hodnotu, aj keď nastavená je.
+
 ### Fixed (2026-08-28 — po prihlásení človek skončil späť na formulári)
 
 - **Odkaz z e-mailu vrátil prihláseného človeka na prihlasovaciu stránku.** `signIn("email", …)` sa volalo bez `callbackUrl`, takže si ho NextAuth vzal z aktuálnej adresy — a tou bola práve prihlasovacia stránka. Relácia vznikla správne (v hlavičke bolo „Odhlásiť"), ale obsah stránky ostal formulár, takže to vyzeralo, akoby prihlásenie nefungovalo.
