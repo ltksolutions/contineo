@@ -20,23 +20,44 @@
 
 ---
 
-## 0. Nasadenie je RUČNÉ, nie z Gitu (zistené 2026-08-28)
+## 0. Nasadenie beží automaticky z Gitu (od 2026-08-28)
 
-Projekt **nie je napojený na automatické nasadzovanie z GitHubu**. Push do `main`
-nespustí nič — 2026-08-28 bolo posledné nasadenie staré 31 dní, hoci v repozitári
-medzitým pribudlo desať commitov. Kým sa to nezmení, po každej zmene treba:
+Push do vetvy `main` na GitHube spustí produkčné nasadenie sám. Nič sa ručne
+nespúšťa.
+
+| Vec | Hodnota |
+|---|---|
+| Repozitár | `ltksolutions/contineo` |
+| Produkčná vetva | `main` |
+| Root directory | `app` |
+| Projekt | `contineo-app` (tím `ltksolutions-projects`) |
+
+Z toho istého repozitára sa nasadzuje aj marketingový web — projekt `contineo`
+s root directory `web`. Jeden push teda spustí **dve** nezávislé nasadenia,
+každé zo svojho podadresára. Ani jedno z nich nemá nastavený *Ignored Build
+Step*, takže sa prestavia obe aj vtedy, keď sa zmenili len dokumenty v `docs/`.
+Je to zbytočná práca navyše, nie chyba; ak by build minúty začali prekážať, dá
+sa v nastaveniach projektu doplniť `git diff --quiet HEAD^ HEAD -- .`, čo build
+preskočí, keď sa v root directory nič nezmenilo.
+
+### Prečo to takto stojí v dokumentácii
+
+Do 2026-08-28 projekt `contineo-app` napojený nebol a nikto si to nevšimol:
+posledné nasadenie bolo staré 31 dní, hoci v repozitári medzitým pribudlo
+desať commitov. Kód bol hotový, testy prechádzali, živá aplikácia o ňom
+nevedela. Preto je stav napojenia vedený tu, a nie len v nastaveniach Vercelu.
+
+### Ručné nasadenie, keď treba
+
+Stále funguje a hodí sa na overenie zmeny bez commitu:
 
 ```bash
 cd ~/Documents/GitHub/contineo/app
 vercel deploy --prod --yes
 ```
 
-Build trvá rádovo pol minúty. Predchádzajúce nasadenia zostávajú dostupné, takže
-návrat späť je `vercel rollback <url>`.
-
-> **Stojí za zváženie napojiť Git**, inak sa bude opakovať to isté: kód je
-> v repozitári hotový, ale živá aplikácia o ňom nevie a nikto si to nevšimne,
-> lebo commity aj testy prechádzajú.
+Build trvá rádovo pol minúty. Predchádzajúce nasadenia zostávajú dostupné,
+takže návrat späť je `vercel rollback <url>`.
 
 ---
 

@@ -4,6 +4,11 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Fixed (2026-08-28 — nasadenie z Gitu)
+
+- **Projekt `contineo-app` napojený na GitHub.** Push do `main` odteraz spúšťa produkčné nasadenie sám; root directory nastavené na `app`, produkčná vetva `main`. **Dovtedy napojený nebol a nikto si to nevšimol** — posledné nasadenie bolo staré 31 dní, hoci v repozitári medzitým pribudlo desať commitov. Kód bol hotový, testy prechádzali, živá aplikácia o ňom nevedela; `/dokumenty` na `app.contineo.app` neexistovalo, lebo build ho nepoznal. Ticho zlyhávajúce nasadenie je horšie ako hlučné, preto je stav napojenia zapísaný v `docs/NASADENIE_app.md`, nie len v nastaveniach Vercelu.
+- Z toho istého repozitára sa teraz nasadzujú **dva** projekty — `contineo` (root `web`, marketingový web) a `contineo-app` (root `app`). Jeden push prestavia obe, aj keď sa menili len `docs/`. Ak by build minúty prekážali, *Ignored Build Step* `git diff --quiet HEAD^ HEAD -- .` to vyrieši.
+
 ### Added (2026-08-27 — skripty onboardingu)
 - **`app/scripts/import_persons.mjs`** — import osôb z CSV. **Náhľad je predvolené správanie, zápis sa musí vypýtať** (`--zapis`): nahratie stovky ľudí naslepo je operácia, po ktorej sa hľadá, ako to vrátiť späť, a `persons` rollback nemá. Pri chybnom riadku nezapíše nič — zápis po častiach by nechal databázu v polovičnom stave. Hlavičky sa normalizujú (bez diakritiky, bez ohľadu na veľkosť), takže `Meno`, `meno` aj `MENO` sú to isté; prijíma slovenské aj anglické názvy stĺpcov.
 - **`app/scripts/acknowledgement_report.mjs`** — výkaz potvrdení pre HR do CSV: kto potvrdil, kedy, ktorú verziu a v akom jazyku — a kto nie. Rozsah je **jeden `companyCode`, nie strom** (D32, D33). Výkaz ide na štandardný výstup, hlásenia na chybový, takže sa dá presmerovať do súboru.
