@@ -267,6 +267,20 @@
 - [x] „všetkým v organizácii" prebije zvyšok výberu, inak by to isté znenie viselo v prehľade niekoľkokrát
 - [x] `audienceFromSelection()` je v `lib/`, nie v serverovej akcii — je to pravidlo a pravidlá sa dajú otestovať (16 nových testov, spolu 595)
 
+**Prihlásenie pracovným kontom a správa osôb ✅ hotové 2026-08-29**
+
+> Koncepcia a rozhodnutia D43–D46: `docs/PRIHLASENIE_A_SPRAVA_OSOB.md`
+
+- [x] Microsoft (Entra ID) a Google vedľa odkazu v e-maile, nie namiesto neho
+- [x] **aplikácia patrí zákazníkovi** (D43) — sám odvolá prístup, sám vidí, kto sa prihlasoval
+- [x] tajomstvá šifrované AES-256-GCM, von sa nevracajú nikdy
+- [x] poskytovatelia sa skladajú **podľa hostiteľa** (D44), nie pri štarte
+- [x] **konto overuje adresu, vstup povoľuje `persons`** (D45) — `tid` z povoleného Entra tenanta, `email_verified` u Googlu
+- [x] rola `people-admin` a obrazovky `/osoby` (D46), import CSV s náhľadom
+- [x] čítanie CSV a mapovanie hlavičiek presunuté do `lib/` — skript aj obrazovka volajú to isté
+- [ ] **zostáva: `OAUTH_SECRET_ENCRYPTION_KEY` medzi premennými nasadenia** (`openssl rand -hex 32`). Bez neho sa tajomstvo nedá uložiť; obrazovka to povie a všetko ostatné funguje.
+- [ ] zostáva: údaje Entra aplikácie SFZ, keď ich pošle ich IT
+
 **Zostáva (mimo rozsahu B)**
 
 - [ ] pripomienky podľa času („nepotvrdené po 14 dňoch") — potrebujú naplánovanú úlohu, tú zatiaľ nemáme

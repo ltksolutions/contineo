@@ -14,6 +14,7 @@ import Sedenie from "@/components/Sedenie"
 import { currentTenant, currentEmail } from "@/lib/session"
 import { platformContext } from "@/lib/admin"
 import { hrContext } from "@/lib/hr"
+import { peopleContext } from "@/lib/people"
 import { brandingView } from "@/lib/tenants"
 import { tenantStyle } from "@/components/TenantHeader"
 
@@ -110,6 +111,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   // pravidla. Zlyhanie sa berie ako „neukazovať".
   let spravca = false
   let personalista = false
+  let spravcaOsob = false
   if (email) {
     try {
       spravca = (await platformContext()).state === "ready"
@@ -121,6 +123,11 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     } catch (e) {
       console.error("[layout] rolu HR sa nepodarilo overiť:", e)
     }
+    try {
+      spravcaOsob = (await peopleContext()).state === "ready"
+    } catch (e) {
+      console.error("[layout] rolu správy osôb sa nepodarilo overiť:", e)
+    }
   }
 
   return (
@@ -129,7 +136,13 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           a nie hneď pod obsahom uprostred prázdnej obrazovky. */}
       <body style={{ ...tenantStyle(branding), minHeight: "100dvh", display: "flex", flexDirection: "column" }}>
         <Sedenie>
-          <Hlavicka branding={branding} email={email} spravca={spravca} personalista={personalista} />
+          <Hlavicka
+            branding={branding}
+            email={email}
+            spravca={spravca}
+            personalista={personalista}
+            spravcaOsob={spravcaOsob}
+          />
           <main style={{ flex: 1 }}>{children}</main>
           <Paticka />
         </Sedenie>

@@ -86,6 +86,7 @@ export default function Hlavicka({
   email,
   spravca,
   personalista,
+  spravcaOsob,
 }: {
   branding?: TenantBrandingView
   email?: string
@@ -93,6 +94,8 @@ export default function Hlavicka({
   spravca?: boolean
   /** Má rolu `hr` vo vlastnej organizácii (D33 už overené na serveri). */
   personalista?: boolean
+  /** Má rolu `people-admin` vo vlastnej organizácii (D46). */
+  spravcaOsob?: boolean
 }) {
   const [volba, setVolba] = useState<Volba>("system")
   const cesta = usePathname()
@@ -197,6 +200,7 @@ export default function Hlavicka({
             // Odkaz sa neukazuje podľa domnienky klienta — `spravca` prichádza
             // zo servera, kde už prešli obe podmienky D41 aj D42.
             ...(personalista ? [{ kam: "/hr", popis: "Pridelené normy" }] : []),
+            ...(spravcaOsob ? [{ kam: "/osoby", popis: "Osoby" }] : []),
             ...(spravca ? [{ kam: "/admin", popis: "Správa tenantov" }] : []),
           ].map(o => {
             const aktivna = o.kam === "/" ? cesta === "/" : cesta.startsWith(o.kam)

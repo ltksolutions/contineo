@@ -5,7 +5,7 @@ SPDX-License-Identifier: EUPL-1.2
 
 # Prihlásenie cez Microsoft a Google, správa osôb
 
-> **Stav:** 🟡 rozpracované · **Zadanie:** 2026-08-29
+> **Stav:** ✅ obe etapy postavené 2026-08-29 · **Zadanie:** 2026-08-29
 > **Súvisiace:** D26 (`persons` namiesto premennej), D29 (hostiteľ určuje
 > tenanta), D32 (viditeľnosť per `companyCode`), D41/D42 (správa platformy),
 > I1c (overená cesta prihlásenia).
@@ -180,16 +180,21 @@ platformy sem prístup nemá.
 
 ## 7. Fázovanie
 
-**Etapa 1 — prihlásenie** `[2–3 dni]`
-- šifrovanie tajomstiev (`lib/tajomstva.ts`)
-- `tenants.oauth` + polia v `/admin/tenanti/[kod]`
-- poskytovatelia podľa hostiteľa, brána, tlačidlá na prihlasovacej obrazovke
-- testy na bránu: cudzí Entra tenant, neoverená adresa, osoba mimo `persons`
+**Etapa 1 — prihlásenie** ✅ hotové 2026-08-29
+- [x] šifrovanie tajomstiev (`lib/tajomstva.ts`)
+- [x] `tenants.oauth` + polia v `/admin/tenanti/[kod]` vrátane vypísanej adresy návratu
+- [x] poskytovatelia podľa hostiteľa, brána, tlačidlá na prihlasovacej obrazovke
+- [x] testy na bránu: cudzí Entra tenant, neoverená adresa, chýbajúce `tid`, cudzia doména Workspace
 
-**Etapa 2 — správa osôb** `[2–3 dni]`
-- rola `people-admin`, `peopleContext()`
-- `/osoby`, `/osoby/[id]`, pozvanie, vyradenie
-- import CSV z obrazovky s náhľadom
+**Etapa 2 — správa osôb** ✅ hotové 2026-08-29
+- [x] rola `people-admin`, `peopleContext()`
+- [x] `/osoby` (zoznam + hľadanie), `/osoby/[id]` (detail a úprava), pozvanie, vyradenie
+- [x] import CSV z obrazovky s náhľadom — tou istou knižnicou ako skript
+
+**Zostáva**
+- [ ] **`OAUTH_SECRET_ENCRYPTION_KEY` v premenných nasadenia.** Bez neho sa tajomstvo nedá uložiť a obrazovka to povie. Vygeneruje sa: `openssl rand -hex 32`
+- [ ] zadať údaje Entra aplikácie SFZ, keď ich pošle ich IT
+- [ ] samoobslužná obrazovka pre zákazníka (dnes údaje zadávame my)
 
 ---
 

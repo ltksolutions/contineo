@@ -14,56 +14,11 @@
  */
 
 import { readFileSync } from "node:fs"
-import { parseCsv } from "./lib/csv.mjs"
+import { parseCsv } from "../src/lib/csv.ts"
+import { riadokNaOsobu, DOVODY } from "../src/lib/personsImport.ts"
 import { previewImport, upsertPersons } from "../src/lib/persons.ts"
 
 const OK = "\x1b[32m✔\x1b[0m", ERR = "\x1b[31m✘\x1b[0m", INFO = "\x1b[33m·\x1b[0m"
-
-/** Hlavičky sa normalizujú (malé písmená, bez diakritiky), takže stačí tvar. */
-const ALIASY = {
-  email: ["email", "mail", "emailovaadresa", "adresa"],
-  fullName: ["meno", "menoapriezvisko", "celemeno", "fullname", "name", "priezviskoameno"],
-  companyCode: ["organizacia", "zvaz", "companycode", "firma", "jednotka", "kodorganizacie"],
-  department: ["utvar", "oddelenie", "department", "usek"],
-  personType: ["typ", "typosoby", "persontype"],
-  startDate: ["nastup", "datumnastupu", "startdate"],
-  tracks: ["trasa", "trasy", "tracks"],
-  groups: ["skupina", "skupiny", "groups"],
-  language: ["jazyk", "language", "lang"],
-}
-
-/** Strojové kľúče z `validateRow()` → veta pre človeka. */
-const DOVODY = {
-  "invalid-email": "neplatná e-mailová adresa",
-  "missing-companyCode": "chýba organizácia (companyCode)",
-  "missing-name": "chýba meno",
-  "duplicate-in-file": "duplicita priamo v súbore",
-}
-
-function hodnota(row, pole) {
-  for (const kluc of ALIASY[pole]) if (row[kluc]) return row[kluc]
-  return ""
-}
-
-function naOsobu(row) {
-  const datum = hodnota(row, "startDate")
-  const trasy = hodnota(row, "tracks")
-  const skupiny = hodnota(row, "groups")
-  return {
-    email: hodnota(row, "email"),
-    fullName: hodnota(row, "fullName"),
-    companyCode: hodnota(row, "companyCode"),
-    department: hodnota(row, "department") || undefined,
-    personType: hodnota(row, "personType") || undefined,
-    startDate: datum ? new Date(datum) : undefined,
-    tracks: trasy ? trasy.split(/[,;|]/).map(t => t.trim()).filter(Boolean) : undefined,
-    groups: skupiny ? skupiny.split(/[,;|]/).map(s => s.trim()).filter(Boolean) : undefined,
-    // Nevyplnený jazyk necháme `undefined` — `upsertPersons()` ho potom
-    // existujúcej osobe neprepíše (inak by opakovaný import prepol každého
-    // späť na slovenčinu).
-    language: hodnota(row, "language") || undefined,
-  }
-}
 
 // ── beh ──────────────────────────────────────────────────────────────────────
 

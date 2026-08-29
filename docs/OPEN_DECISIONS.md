@@ -548,6 +548,34 @@ začiatku; prekladá sa až rozhranie, keď bude.
 
 ---
 
+## Okruh 7 — Prihlásenie kontom a správa osôb
+
+> **Koncepcia:** `docs/PRIHLASENIE_A_SPRAVA_OSOB.md` — tam je celé odôvodnenie,
+> dátový model aj fázovanie. Tu je len rozhodovacia časť.
+
+| # | Otázka | Stav |
+|---|---|---|
+| **D43** | Vlastná Entra/Google aplikácia zákazníka, nie jedna naša | ✅ 2026-08-29 |
+| **D44** | Poskytovatelia sa skladajú podľa hostiteľa, nie pri štarte | ✅ 2026-08-29 |
+| **D45** | Konto overuje adresu, vstup povoľuje `persons` | ✅ 2026-08-29 |
+| **D46** | Správa osôb má vlastnú rolu `people-admin`, oddelenú od `hr` | ✅ 2026-08-29 |
+
+**D43** rozhoduje druhý a tretí riadok porovnania: zväz, ktorý dá do systému
+vlastné predpisy, má vedieť **sám odvolať prístup** a **sám vidieť, kto sa
+prihlasoval** — a nemá sa o to prosiť dodávateľa. Cena (šifrovanie tajomstiev
+a obrazovka na ich zadanie) je jednorazová, tá výhoda trvá.
+
+**D45** je to, na čom celé prihlásenie kontom stojí: konto hovorí „toto je
+naozaj tá adresa", nie „ten človek sem patrí". Bez tohto rozlíšenia by prvá
+zle nastavená Entra aplikácia otvorila interné smernice komukoľvek s pracovným
+kontom na svete.
+
+**D46** oddeľuje prístup od obsahu. `hr` prideľuje normy a vidí, kto ich
+nepotvrdil; `people-admin` zakladá a vyraďuje ľudí. Spojiť ich znamená, že IT
+správca zároveň uvidí, kto si neprečítal disciplinárny poriadok.
+
+---
+
 ## Okruh 6 — Udalosti a upozornenia (Fáza 9)
 
 > **Koncepcia:** `docs/UDALOSTI_A_UPOZORNENIA_KONCEPCIA.md` — tam je celé

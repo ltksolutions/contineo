@@ -4,6 +4,21 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Added (2026-08-29 — správa osôb, etapa 2)
+
+- **Rola `people-admin` a obrazovky `/osoby` (D46).** Zoznam s hľadaním, detail, úprava, pozvanie, vyradenie a import z CSV.
+- **Vlastná rola, nie `hr`.** Sú to dve rôzne oprávnenia: `hr` prideľuje normy a vidí, kto ich nepotvrdil — to je o obsahu; `people-admin` zakladá a vyraďuje ľudí — to je o prístupe. V mnohých organizáciách to robia dvaja rôzni ľudia (personalista a IT), a spojiť ich do jednej roly znamená, že IT správca zároveň uvidí, kto si neprečítal disciplinárny poriadok. Správca platformy sem prístup nemá (D41 mu dáva počty, nie mená).
+- **Osoba sa nemaže.** Vyradenie je `status: "inactive"`; potvrdenia sú záznamy a musia prežiť odchod človeka (O16). Vyžiada si napísanie adresy — je to jediná zmena, ktorá človeka okamžite odstrihne. Vrátenie dáva `invited`, nie `active`: „aktívna" znamená *už sa prihlásila* a to sa vrátením nestalo.
+- **Adresa sa nedá zmeniť.** Je to kľúč, na ktorý sú naviazané potvrdenia aj prihlasovacie kontá; prepísať ho pod existujúcimi záznamami by znamenalo, že sa audit odkazuje na niekoho, kto tam už nie je. Preklep sa rieši vyradením a pozvaním nanovo — je to nepohodlnejšie a je to správne.
+- **Import z CSV s náhľadom pred zápisom** — to isté, čo robí `npm run persons:import`, a **tou istou knižnicou**. Čítanie CSV aj mapovanie hlavičiek sa presunuli zo `scripts/lib/csv.mjs` do `src/lib/csv.ts` a `src/lib/personsImport.ts`; dva importéry toho istého súboru sú spoľahlivý spôsob, ako jedného dňa naimportovať dva rôzne výsledky. Chybné riadky sa vypíšu **menovite** — „5 chybných" sa nedá opraviť.
+- Import zapíše všetkých do organizácie toho, kto ho robí, aj keď je v súbore niečo iné: personalista zväzu nesmie importom založiť človeka do cudzej organizácie (D32).
+- Vyradení zostávajú v zozname, len označení. Skryť ich by znamenalo, že personalista nevie, prečo sa nedá pozvať adresa, ktorú tam „nikto nemá".
+- 25 nových testov (spolu 648).
+
+### Changed (2026-08-29 — správa osôb)
+
+- **Obrazovka importu je jediná v správe s klientskym stavom** a je to vedomá výnimka: medzi „vyber súbor" a „zapíš" musí byť náhľad, a ten znamená podržať obsah súboru. Nechať človeka vybrať ten istý súbor druhýkrát je horšie — najmä preto, že medzi prvým a druhým výberom by sa dal podstrčiť iný. Bez JavaScriptu zostáva skript.
+
 ### Added (2026-08-29 — prihlásenie pracovným kontom, etapa 1)
 
 > Koncepcia a rozhodnutia D43–D46: `docs/PRIHLASENIE_A_SPRAVA_OSOB.md`
