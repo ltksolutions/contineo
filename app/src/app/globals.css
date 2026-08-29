@@ -234,6 +234,66 @@ button:disabled { cursor: not-allowed; opacity: 0.55; }
 }
 
 /*
+ * Oznam po uložení.
+ *
+ * Pevne na obrazovke, nie v toku stránky: pri dlhom formulári je človek pri
+ * tlačidle dole a odsek hore neuvidí. Zmizne sám po siedmich sekundách —
+ * dosť na prečítanie, málo na to, aby prekážal. `visibility` až na konci
+ * animácie, aby sa nedal kliknúť neviditeľný krížik.
+ */
+.oznam {
+  position: fixed;
+  top: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  max-width: min(560px, calc(100vw - 28px));
+  padding: 11px 12px 11px 14px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--ok-fg);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  font-size: 14.5px;
+  line-height: 1.45;
+  animation: oznam-zmizni 7s forwards;
+}
+
+.oznam--chyba { border-left-color: var(--bad-fg); }
+
+.oznam-znak { display: inline-flex; flex: none; color: var(--ok-fg); }
+.oznam--chyba .oznam-znak { color: var(--bad-fg); }
+
+.oznam-text { min-width: 0; }
+
+.oznam-zavriet {
+  flex: none;
+  margin-left: 4px;
+  padding: 2px 8px;
+  border-radius: 8px;
+  color: var(--muted);
+  text-decoration: none;
+  font-size: 18px;
+  line-height: 1;
+}
+
+.oznam-zavriet:hover { background: var(--surface-2); color: var(--ink); }
+
+@keyframes oznam-zmizni {
+  0%, 4% { opacity: 0; transform: translateX(-50%) translateY(-8px); }
+  8%, 88% { opacity: 1; transform: translateX(-50%) translateY(0); }
+  100% { opacity: 0; visibility: hidden; }
+}
+
+/* Kto si vypol animácie, má oznam vidieť stále — nie preblesknutý. */
+@media (prefers-reduced-motion: reduce) {
+  .oznam { animation: none; }
+}
+
+/*
  * Osobné menu.
  *
  * Odhlásenie aj téma patria k človeku, nie k obsahu. V lište zaberali miesto

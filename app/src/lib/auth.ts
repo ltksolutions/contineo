@@ -76,6 +76,13 @@ export function jePovoleny(email: string, rows = povoleneEmaily()): boolean {
  * `intranet.futbalsfz.sk`, dostal do schránky odkaz na `app.contineo.app` —
  * prihlásil by sa na inej adrese, než na akej začal, a prihlasovacia sušienka
  * by mu ostala na doméne, na ktorú sa už nevráti.
+ *
+ * **Od 2026-08-29 je `NEXTAUTH_URL` v produkcii zámerne nenastavená** a
+ * NextAuth si origin odvodzuje z hlavičky požiadavky, takže odkaz býva správny
+ * už bez tohto prepisu. Funkcia zostáva: platí lokálne, kde premenná nastavená
+ * je, a je to lacná poistka proti tomu, aby premenná niekedy „opravou"
+ * pribudla späť (viď `docs/NASADENIE_app.md`). Prepis je pritom bezpečný —
+ * mení sa len na hostiteľa, ktorý je v `tenants`.
  */
 export function rewriteLinkHost(url: string, hostWithPort: string): string {
   let u: URL

@@ -433,14 +433,38 @@ cd ~/Documents/GitHub/contineo/app
 vercel alias set contineo-app.vercel.app app.contineo.app --scope ltksolutions-projects
 ```
 
-Certifikát si Vercel vystaví sám. Kým to nie je hotové, aplikácia beží na
-`contineo-app.vercel.app` a funguje rovnako — `NEXTAUTH_URL` je ale nastavené
-na `https://app.contineo.app`, takže **prihlasovacie odkazy budú mieriť tam**.
-Ak treba testovať skôr, prepnúť premennú:
+Certifikát si Vercel vystaví sám.
+
+### `NEXTAUTH_URL` v produkcii **nesmie existovať**
+
+Je to jediná premenná, ktorej neprítomnosť je zámer, a preto sa o nej píše tu
+nahlas: kto ju uvidí chýbať, prvé, čo urobí, bude, že ju „opraví" doplnením.
+
+`NEXTAUTH_URL` je **jedna adresa na celé nasadenie**, ale domén máme viac
+(D29). NextAuth z nej stavia `redirect_uri` pre prihlásenie kontom — takže
+človek, ktorý začal na `intranet.futbalsfz.sk`, poslal Microsoftu adresu
+návratu `https://app.contineo.app/...` a Entra to odmietla:
+
+```
+AADSTS50011: The redirect URI '…' does not match the redirect URIs
+configured for the application
+```
+
+Keď premenná chýba, NextAuth si origin odvodí z hlavičky `x-forwarded-host`
+(robí to, keď je nastavené `VERCEL`, čo na Verceli platí vždy). Adresa návratu,
+sušienka aj presmerovanie tým sedia na tú doménu, na ktorej človek začal — pre
+každého zákazníka zvlášť, bez toho, aby sa čokoľvek nastavovalo.
+
+**Lokálne ju naopak nastaviť treba** (`NEXTAUTH_URL=http://localhost:3000`
+v `app/.env.local`). Bez nej by si NextAuth mimo Vercelu poskladal
+`https://localhost:3000` — vývojový server počúva na `http` a odkazy by
+neviedli nikam.
+
+Overenie, že v produkcii nie je:
 
 ```bash
-printf '%s' 'https://contineo-app.vercel.app' | vercel env add NEXTAUTH_URL production --yes --force
-vercel deploy --prod --yes
+cd ~/Documents/GitHub/contineo/app
+vercel env ls production | grep -i nextauth_url    # nesmie nič vypísať
 ```
 
 ## 2. Prístup do MongoDB Atlas
