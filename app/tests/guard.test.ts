@@ -31,7 +31,7 @@ t("zhodny korpus prejde",
 t("korpus z inej rodiny voyage-4 prejde (zdielany priestor)",
   hodi(() => assertEmbeddingSpace([chunk("1", "voyage-4-nano")], "voyage-4")) === null)
 
-let e = hodi(() => assertEmbeddingSpace([chunk("1", "voyage-4"), chunk("2", "BAAI/bge-m3")], "voyage-4"))
+const e = hodi(() => assertEmbeddingSpace([chunk("1", "voyage-4"), chunk("2", "BAAI/bge-m3")], "voyage-4"))
 t("zmiesany korpus spadne", e instanceof EmbeddingSpaceMismatchError, String(e))
 t("chyba menuje najdeny model", !!e && e.message.includes("BAAI/bge-m3"), String(e?.message))
 t("chyba menuje ocakavany model", !!e && e.message.includes("voyage-4"), String(e?.message))

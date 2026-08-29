@@ -40,7 +40,7 @@ for (const x of tenanti) {
 }
 
 const osoby = await p
-  .find({}, { projection: { email: 1, companyCode: 1, tracks: 1, roles: 1, status: 1, lastLoginAt: 1 } })
+  .find({}, { projection: { email: 1, companyCode: 1, tracks: 1, groups: 1, roles: 1, status: 1, lastLoginAt: 1 } })
   .toArray()
 
 console.log(`\nPERSONS: ${osoby.length}`)
@@ -48,6 +48,7 @@ for (const o of osoby) {
   console.log(
     `  ${o.email} | ${o.companyCode} | stav=${o.status}` +
     ` | trasy=[${(o.tracks ?? []).join(",")}]` +
+    ` | skupiny=[${(o.groups ?? []).join(",")}]` +
     ` | role=[${(o.roles ?? []).join(",")}]` +
     ` | posl. prihlásenie=${o.lastLoginAt ? new Date(o.lastLoginAt).toISOString() : "—"}`
   )

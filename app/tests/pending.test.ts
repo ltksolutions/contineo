@@ -10,8 +10,22 @@ import { describe, it, expect, vi, beforeEach } from "vitest"
 
 // `vi.mock` sa vyzdvihne nad všetko ostatné, takže bežná premenná by v jeho
 // tovarni ešte neexistovala. `vi.hoisted` vyrobí atrapu spolu s ním.
-const { trackProgress } = vi.hoisted(() => ({ trackProgress: vi.fn() }))
+const { trackProgress, assignmentsForPerson, loadDocumentFor, acknowledgedVersionIds } =
+  vi.hoisted(() => ({
+    trackProgress: vi.fn(),
+    assignmentsForPerson: vi.fn(),
+    loadDocumentFor: vi.fn(),
+    acknowledgedVersionIds: vi.fn(),
+  }))
 vi.mock("../src/lib/tracks", () => ({ trackProgress }))
+vi.mock("../src/lib/assignments", () => ({ assignmentsForPerson }))
+vi.mock("../src/lib/acknowledgements", () => ({ acknowledgedVersionIds }))
+// `effectiveVersion` sa nemockuje — je to čistá funkcia a práve na nej stojí
+// pravidlo, že pridelené znenie sa musí dať aj potvrdiť.
+vi.mock("../src/lib/documents", async orig => ({
+  ...(await orig<typeof import("../src/lib/documents")>()),
+  loadDocumentFor,
+}))
 
 import {
   acknowledgementSource,
@@ -71,12 +85,41 @@ function item(over: Partial<PendingItem> = {}): PendingItem {
     title: "Smernica",
     href: "/dokumenty/smernica-1",
     sortAt: new Date("2026-01-01"),
+    assignedAt: null,
+    isNew: false,
+    ...over,
+  }
+}
+
+/** Pridelenie v tvare, v akom ho `pending.ts` dostane. */
+function pridelenie(over: Record<string, unknown> = {}) {
+  return {
+    companyCode: "SFZ",
+    subject: {
+      documentId: "smernica-1",
+      versionId: "v1",
+      documentTitle: "Smernica",
+      versionLabel: "1.0",
+      effectiveFrom: new Date("2026-01-01"),
+    },
+    audience: { kind: "group", value: "rozhodcovia" },
+    reason: "novela",
+    assignedBy: "hr@sfz.sk",
+    assignedAt: new Date("2026-06-01"),
+    revokedAt: null,
     ...over,
   }
 }
 
 beforeEach(() => {
   trackProgress.mockReset()
+  assignmentsForPerson.mockReset()
+  loadDocumentFor.mockReset()
+  acknowledgedVersionIds.mockReset()
+  // Predvolene: žiadne pridelenia, nič nepotvrdené. Testy rozsahu A tak
+  // zostávajú o tom, o čom boli.
+  assignmentsForPerson.mockResolvedValue([])
+  acknowledgedVersionIds.mockResolvedValue(new Set())
 })
 
 describe("zdroj nepotvrdenych noriem", () => {
@@ -244,6 +287,137 @@ describe("prehľad pre osobu", () => {
 
     const o = await pendingForPerson(person())
 
-    expect(o).toEqual({ items: [], total: 0, blockedCount: 0 })
+    expect(o).toEqual({ items: [], total: 0, blockedCount: 0, newCount: 0 })
+  })
+})
+
+describe("pridelenie (rozsah B)", () => {
+  it("úloha z trasy dostane čas z pridelenia, nie z platnosti normy", async () => {
+    // `effectiveFrom` je právna platnosť. Norma platná od roku 2019 nečaká
+    // od roku 2019 — čaká odvtedy, čo ju niekto niekomu uložil (D37).
+    trackProgress.mockResolvedValue([
+      track([step({ documentId: "a", versionId: "v1", effectiveFrom: new Date("2019-01-01") })]),
+    ])
+    assignmentsForPerson.mockResolvedValue([pridelenie({ subject: {
+      documentId: "a", versionId: "v1", documentTitle: "A", versionLabel: "1.0",
+      effectiveFrom: new Date("2019-01-01"),
+    } })])
+
+    const r = await acknowledgementSource.collect(person())
+
+    expect(r.items[0].assignedAt).toEqual(new Date("2026-06-01"))
+    expect(r.items[0].sortAt).toEqual(new Date("2026-06-01"))
+  })
+
+  it("bez pridelenia zostane čas neznámy, nenahradí sa platnosťou", async () => {
+    trackProgress.mockResolvedValue([track([step({ documentId: "a" })])])
+
+    const r = await acknowledgementSource.collect(person())
+
+    expect(r.items[0].assignedAt).toBeNull()
+  })
+
+  it("norma pridelená mimo trasy sa v zozname objaví", async () => {
+    trackProgress.mockResolvedValue([])
+    assignmentsForPerson.mockResolvedValue([pridelenie()])
+    loadDocumentFor.mockResolvedValue({
+      documentId: "smernica-1",
+      title: "Smernica",
+      versions: [{ versionId: "v1", label: "1.0", effectiveFrom: new Date("2026-01-01"), effectiveTo: null, isActive: true }],
+    })
+
+    const r = await acknowledgementSource.collect(person({ tracks: [] }))
+
+    expect(r.items.map(i => i.id)).toEqual(["smernica-1"])
+    expect(r.items[0].assignedAt).toEqual(new Date("2026-06-01"))
+  })
+
+  it("pridelenie normy, ktorá je aj krokom trasy, úlohu nezdvojí", async () => {
+    trackProgress.mockResolvedValue([track([step({ documentId: "smernica-1", versionId: "v1" })])])
+    assignmentsForPerson.mockResolvedValue([pridelenie()])
+
+    const r = await acknowledgementSource.collect(person())
+
+    expect(r.items).toHaveLength(1)
+  })
+
+  it("už potvrdené pridelenie sa medzi úlohy nedostane", async () => {
+    trackProgress.mockResolvedValue([])
+    assignmentsForPerson.mockResolvedValue([pridelenie()])
+    acknowledgedVersionIds.mockResolvedValue(new Set(["v1"]))
+
+    const r = await acknowledgementSource.collect(person({ tracks: [] }))
+
+    expect(r.items).toHaveLength(0)
+  })
+
+  it("pridelené znenie, ktoré už neplatí, je zablokované, nie úloha", async () => {
+    // Inak by úloha z widgetu nikdy nezmizla: `/dokumenty/…` ukáže novšie
+    // znenie a potvrdenie by sa viazalo na inú verziu.
+    trackProgress.mockResolvedValue([])
+    assignmentsForPerson.mockResolvedValue([pridelenie()])
+    loadDocumentFor.mockResolvedValue({
+      documentId: "smernica-1",
+      title: "Smernica",
+      versions: [{ versionId: "v2", label: "2.0", effectiveFrom: new Date("2026-05-01"), effectiveTo: null, isActive: true }],
+    })
+
+    const r = await acknowledgementSource.collect(person({ tracks: [] }))
+
+    expect(r.items).toHaveLength(0)
+    expect(r.blockedCount).toBe(1)
+  })
+
+  it("nové je to, čo pribudlo po predchádzajúcom prihlásení", async () => {
+    trackProgress.mockResolvedValue([track([step({ documentId: "smernica-1", versionId: "v1" })])])
+    assignmentsForPerson.mockResolvedValue([pridelenie({ assignedAt: new Date("2026-06-01") })])
+
+    const r = await acknowledgementSource.collect(
+      person({ previousLoginAt: new Date("2026-05-01") }),
+    )
+
+    expect(r.items[0].isNew).toBe(true)
+  })
+
+  it("staršie pridelenie ako predchádzajúce prihlásenie nové nie je", async () => {
+    trackProgress.mockResolvedValue([track([step({ documentId: "smernica-1", versionId: "v1" })])])
+    assignmentsForPerson.mockResolvedValue([pridelenie({ assignedAt: new Date("2026-04-01") })])
+
+    const r = await acknowledgementSource.collect(
+      person({ previousLoginAt: new Date("2026-05-01") }),
+    )
+
+    expect(r.items[0].isNew).toBe(false)
+  })
+
+  it("pri prvom prihlásení nie je nové nič", async () => {
+    // Zvýrazniť pri prvom vstupe celý zoznam nie je informácia, je to šum.
+    trackProgress.mockResolvedValue([track([step({ documentId: "smernica-1", versionId: "v1" })])])
+    assignmentsForPerson.mockResolvedValue([pridelenie()])
+
+    const r = await acknowledgementSource.collect(person({ previousLoginAt: undefined }))
+
+    expect(r.items[0].isNew).toBe(false)
+  })
+
+  it("z dvoch pridelení tej istej verzie platí skoršie", async () => {
+    trackProgress.mockResolvedValue([track([step({ documentId: "smernica-1", versionId: "v1" })])])
+    assignmentsForPerson.mockResolvedValue([
+      pridelenie({ assignedAt: new Date("2026-06-01") }),
+      pridelenie({ assignedAt: new Date("2026-03-01"), audience: { kind: "track", value: "zaklad" } }),
+    ])
+
+    const r = await acknowledgementSource.collect(person())
+
+    expect(r.items[0].assignedAt).toEqual(new Date("2026-03-01"))
+  })
+
+  it("prehľad povie, koľko je nových", async () => {
+    trackProgress.mockResolvedValue([track([step({ documentId: "smernica-1", versionId: "v1" })])])
+    assignmentsForPerson.mockResolvedValue([pridelenie()])
+
+    const o = await pendingForPerson(person({ previousLoginAt: new Date("2026-05-01") }))
+
+    expect(o.newCount).toBe(1)
   })
 })

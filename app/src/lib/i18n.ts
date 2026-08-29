@@ -117,6 +117,13 @@ interface Dictionary {
      * v úzkom stĺpci by riadok zalomil a `/dokumenty` ho aj tak ukazuje.
      */
     version: (label: string) => string
+    /**
+     * „Čaká od …". Ukáže sa **len** pri úlohe, ktorá má pridelenie (D37) —
+     * inak by dátum znamenal niečo iné, než čo je pri ňom napísané.
+     */
+    waitingSince: (date: string) => string
+    /** Pribudlo od predchádzajúceho prihlásenia (D39). */
+    isNew: string
   }
 
   email: {
@@ -172,6 +179,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     pending: {
       heading: "Nevybavené žiadosti",
       version: label => `verzia ${label}`,
+      waitingSince: d => `čaká od ${d}`,
+      isNew: "nové",
       empty: "Nič na vás nečaká.",
       open: "Otvoriť",
       count: n => (n === 1 ? "1 položka" : n >= 2 && n <= 4 ? `${n} položky` : `${n} položiek`),
@@ -233,6 +242,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     pending: {
       heading: "Nevyřízené žádosti",
       version: label => `verze ${label}`,
+      waitingSince: d => `čeká od ${d}`,
+      isNew: "nové",
       empty: "Nic na vás nečeká.",
       open: "Otevřít",
       count: n => (n === 1 ? "1 položka" : n >= 2 && n <= 4 ? `${n} položky` : `${n} položek`),
@@ -294,6 +305,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     pending: {
       heading: "Pending items",
       version: label => `version ${label}`,
+      waitingSince: d => `waiting since ${d}`,
+      isNew: "new",
       empty: "Nothing is waiting for you.",
       open: "Open",
       count: n => (n === 1 ? "1 item" : `${n} items`),

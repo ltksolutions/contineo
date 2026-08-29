@@ -206,7 +206,7 @@ export default function OtazkaSady({
                       regresné merania, nie len história. */}
                   {upravene && (
                     <div className="tichy" style={{ fontSize: 12.5, marginTop: 8 }}>
-                      pôvodne: „{povodne}"
+                      pôvodne: &bdquo;{povodne}&ldquo;
                     </div>
                   )}
                 </div>

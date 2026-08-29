@@ -80,6 +80,9 @@ export default function Hodnotenie({
   // Nová odpoveď = čisté hodnotenie. Bez toho by sa posudok z predchádzajúcej
   // otázky opticky preniesol na ďalšiu a hodnotiteľ by ho potvrdil omylom.
   useEffect(() => {
+    // Vynulovanie pri zmene záznamu je práve to zosúladenie, na ktoré efekt je:
+    // rozpísaný text jednej otázky sa nesmie opticky preniesť na ďalšiu.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setPolia(PRAZDNE)
     setStav("cakam")
     setDetail(false)
@@ -193,7 +196,7 @@ export default function Hodnotenie({
 
             <label style={{ display: "grid", gap: 6 }}>
               <span className="tichy" style={{ fontSize: 13 }}>
-                Ktoré predpisy a § to upravujú? Napríklad „SP čl. 78, DP čl. 37".
+                Ktoré predpisy a § to upravujú? Napríklad &bdquo;SP čl. 78, DP čl. 37&ldquo;.
               </span>
               <input
                 value={polia.spravneZdroje}

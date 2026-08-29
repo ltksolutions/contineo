@@ -85,11 +85,14 @@ export default function Hlavicka({
   branding,
   email,
   spravca,
+  personalista,
 }: {
   branding?: TenantBrandingView
   email?: string
   /** Vidí správu tenantov (D41 + D42 už overené na serveri). */
   spravca?: boolean
+  /** Má rolu `hr` vo vlastnej organizácii (D33 už overené na serveri). */
+  personalista?: boolean
 }) {
   const [volba, setVolba] = useState<Volba>("system")
   const cesta = usePathname()
@@ -98,6 +101,11 @@ export default function Hlavicka({
   // uloženie, ručná úprava) ticho prehliadneme — pri téme nemá zmysel padať.
   useEffect(() => {
     const ulozena = window.localStorage.getItem("contineo-tema")
+    // `setState` v efekte tu nie je nedopatrenie: `localStorage` na serveri
+    // neexistuje, takže sa prvé vykreslenie **musí** spraviť bez neho a voľba
+    // sa doplní až po pripojení. Čítať ho pri vykresľovaní by znamenalo, že
+    // sa server a prehliadač rozídu a React hydratáciu zahodí.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (ulozena === "light" || ulozena === "dark" || ulozena === "system") setVolba(ulozena)
   }, [])
 
@@ -188,6 +196,7 @@ export default function Hlavicka({
             { kam: "/dokumenty", popis: "Na potvrdenie" },
             // Odkaz sa neukazuje podľa domnienky klienta — `spravca` prichádza
             // zo servera, kde už prešli obe podmienky D41 aj D42.
+            ...(personalista ? [{ kam: "/hr", popis: "Pridelené normy" }] : []),
             ...(spravca ? [{ kam: "/admin", popis: "Správa tenantov" }] : []),
           ].map(o => {
             const aktivna = o.kam === "/" ? cesta === "/" : cesta.startsWith(o.kam)

@@ -13,6 +13,7 @@ import Paticka from "@/components/Paticka"
 import Sedenie from "@/components/Sedenie"
 import { currentTenant, currentEmail } from "@/lib/session"
 import { platformContext } from "@/lib/admin"
+import { hrContext } from "@/lib/hr"
 import { brandingView } from "@/lib/tenants"
 import { tenantStyle } from "@/components/TenantHeader"
 
@@ -26,6 +27,21 @@ import { tenantStyle } from "@/components/TenantHeader"
  * Pri výpadku databázy zostáva pôvodný názov: vtedy nejde o cudziu doménu,
  * ale o našu vlastnú, ktorá sa práve nedá overiť.
  */
+/**
+ * Celá aplikácia je dynamická a je to zámer, nie prehliadnutie.
+ *
+ * Obal číta hostiteľa (`headers()`), lebo **hostiteľ určuje tenanta** (D29) —
+ * bez neho nevie, čí je to portál, akú má značku a či vôbec existuje. Nič
+ * z toho sa nedá vopred vygenerovať, keď je zákazníkov n a pribúdajú.
+ *
+ * Bez tohto riadka sa Next pokúsi predgenerovať `/_not-found`, zakopne
+ * o `headers()` a do logu nasadenia napíše dve `DYNAMIC_SERVER_USAGE` chyby.
+ * Zachytené sú (`try/catch` nižšie), takže nasadenie prejde — ale chyba,
+ * ktorá sa má prehliadať, je presne to, čo spôsobí, že sa raz prehliadne aj
+ * tá skutočná.
+ */
+export const dynamic = "force-dynamic"
+
 export async function generateMetadata(): Promise<Metadata> {
   try {
     if (!(await currentTenant())) {
@@ -93,11 +109,17 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   // rozhoduje o tom tá istá funkcia ako o samotnej stránke, nie druhá kópia
   // pravidla. Zlyhanie sa berie ako „neukazovať".
   let spravca = false
+  let personalista = false
   if (email) {
     try {
       spravca = (await platformContext()).state === "ready"
     } catch (e) {
       console.error("[layout] rolu správcu sa nepodarilo overiť:", e)
+    }
+    try {
+      personalista = (await hrContext()).state === "ready"
+    } catch (e) {
+      console.error("[layout] rolu HR sa nepodarilo overiť:", e)
     }
   }
 
@@ -107,7 +129,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           a nie hneď pod obsahom uprostred prázdnej obrazovky. */}
       <body style={{ ...tenantStyle(branding), minHeight: "100dvh", display: "flex", flexDirection: "column" }}>
         <Sedenie>
-          <Hlavicka branding={branding} email={email} spravca={spravca} />
+          <Hlavicka branding={branding} email={email} spravca={spravca} personalista={personalista} />
           <main style={{ flex: 1 }}>{children}</main>
           <Paticka />
         </Sedenie>

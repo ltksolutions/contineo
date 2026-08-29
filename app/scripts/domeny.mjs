@@ -16,9 +16,6 @@
  * dostal — rovnaké rozlíšenie ako medzi úlohou a jej pridelením (D37).
  */
 
-import fs from "node:fs"
-import os from "node:os"
-import path from "node:path"
 import { MongoClient } from "mongodb"
 import { send } from "../src/lib/ecomail.ts"
 // Pravidlá o doménach majú jednu definíciu — v `lib/`. Skript ich volá,

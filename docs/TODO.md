@@ -241,15 +241,25 @@
 - [x] widget na úvodnej strane nad hľadaním, **mobile first** — `app/src/components/NevybaveneZiadosti.tsx`
 - [x] zablokovaný krok sa nedá medzi úlohy, ale spočíta sa a povie sa o ňom vetou
 - [x] testy (13): zdvojenie z dvoch trás, zablokované, poradie, výpadok zdroja, prázdny stav
-- [ ] **odložené do rozsahu B:** „odkedy to čaká" a príznak „nové". Poctivo to vie povedať až `assignments.assignedAt` (D37); `effectiveFrom` je právna platnosť a `publishedAt` je nepovinné, takže by widget ukazoval číslo, ktoré znamená niečo iné, než čo je pri ňom napísané. Zoradenie zatiaľ podľa `effectiveFrom` zostupne — a vie sa o ňom, že je dočasné.
+- [x] **dokončené v rozsahu B:** „odkedy to čaká" a príznak „nové" — oboje z `assignments.assignedAt`
 
-**Rozsah B `[1–1,5 týždňa]` — prideľovanie prestane byť tiché**
+**Rozsah B ✅ hotové 2026-08-29 — prideľovanie prestalo byť tiché**
 
-- [ ] kolekcia `assignments` + index `{companyCode, "subject.versionId"}`
-- [ ] `persons.groups: string[]`
-- [ ] obrazovka pre HR/kurátora: „prideliť verziu skupine", s povinným `reason`
-- [ ] opätovné potvrdenie pri novej verzii sa naviaže na pridelenie → **uzatvára D30**
-- [ ] prehľad pre rolu `hr`: čo je nevybavené v organizácii (D33)
+- [x] kolekcia `assignments` + tri indexy (`podla_znenia`, `podla_publika`, `podla_casu`)
+- [x] `persons.groups: string[]` (D38) — zoznam skupín sa **odvodzuje z ľudí**, číselník sa nezakladá
+- [x] `matchesAudience()` je **jediné** miesto s pravidlom príslušnosti; aj počítanie „koľkých sa to týka" ide cezeň, hoci by sa dalo napísať ako dotaz — dotaz by bol druhá kópia
+- [x] `/hr` a `/hr/pridelit` — prehľad a formulár s povinným dôvodom, serverové formuláre, mobile first
+- [x] `/hr/[id]` — **menovitý** zoznam, kto ešte nepotvrdil. Číslo „chýba 17" sa dá pozerať mesiace; mená sú to, na základe čoho niekto zdvihne telefón
+- [x] rola `hr` + `hrContext()` — rola **a** príslušnosť k organizácii; `platform-admin` sem nemá prístup (D41 mu dáva počty, nie mená)
+- [x] `persons.previousLoginAt` — bez neho by „nové" znamenalo „pribudlo počas tejto relácie", teda spravidla nič
+- [x] pridelené znenie, ktoré už neplatí, sa nedá potvrdiť → počíta sa medzi zablokované, nie medzi úlohy
+- [x] **uzatvára D30 a O13** — definícia „podstatnej zmeny" sa ruší, nahradil ju povinný `reason`
+- [x] 32 nových testov (spolu 579)
+
+**Zostáva k rozsahu B**
+
+- [ ] e-mail „pridelili sme ti…" — dnes sa človek o pridelení dozvie až pri prihlásení
+- [ ] hromadné pridelenie viacerých noriem naraz (dnes jedna po druhej)
 
 **Rozsah C — až keď existujú ďalšie zdroje**
 

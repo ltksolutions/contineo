@@ -11,7 +11,7 @@
 
 import Link from "next/link"
 import type { PendingOverview } from "@/lib/pending"
-import { dictionary } from "@/lib/i18n"
+import { dictionary, formatDate } from "@/lib/i18n"
 import type { UiLanguage } from "@/lib/i18n"
 
 /**
@@ -57,8 +57,20 @@ export default function NevybaveneZiadosti({
                 <Link href={item.href} className="ziadost-nazov">
                   {item.title}
                 </Link>
-                {item.detail && (
-                  <p className="tichy ziadost-detail">{item.detail}</p>
+                {/* Príznak zmizne pri ďalšom prihlásení, nie kliknutím (D39).
+                    Je to cena za to, že sa nezakladá kolekcia so záznamami
+                    o tom, čo si kto kedy prečítal. */}
+                {item.isNew && <span className="stitok stitok--nove">{t.isNew}</span>}
+                {/* Dva údaje, jeden riadok. „Čaká od" sa ukáže len tam, kde
+                    pridelenie naozaj existuje (D37) — inak by to bol dátum
+                    o niečom inom, než čo je pri ňom napísané. */}
+                {(item.detail || item.assignedAt) && (
+                  <p className="tichy ziadost-detail">
+                    {[
+                      item.detail,
+                      item.assignedAt ? t.waitingSince(formatDate(item.assignedAt, language)) : null,
+                    ].filter(Boolean).join(" · ")}
+                  </p>
                 )}
               </div>
               <Link

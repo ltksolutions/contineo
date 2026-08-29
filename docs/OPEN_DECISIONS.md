@@ -34,7 +34,7 @@
 | D27 | Nosič guided readingu (`onboarding_tracks`) | Onboarding | 🟡 | 8 | ✅ |
 | D28 | Znenie potvrdzovacej formulky | Onboarding | 🔴 | 8 | ✅ |
 | D29 | Rozlíšenie tenanta podľa hostiteľa | Nasadenie | 🟡 | 8 | ✅ |
-| D30 | Čo je „podstatná zmena" (opätovné potvrdenie) | Onboarding | 🔴 | 8 | ⬜ HR/legislatívec |
+| D30 | Čo je „podstatná zmena" (opätovné potvrdenie) | Onboarding | 🟢 | 9 | ✅ zrušené — nahradil `reason` pri pridelení |
 | D31 | Produkčný Atlas tier a zálohy (M0 → M10+) | Prevádzka | 🔴 | 8 | ✅ |
 | D32 | Viditeľnosť obsahu v hierarchii tenantov | Identita | 🔴 | 5/8 | ✅ |
 | D33 | Rozsah HR dashboardu naprieč hierarchiou | Onboarding | 🟡 | 8 | ✅ |
@@ -147,10 +147,10 @@
 
 ## Navrhnuté poradie (sprinty)
 
-> **Stav 2026-08-27: z D1–D34 sú otvorené už len tri.** ⬜ **D16** (kotva citácie na stranu
+> **Stav 2026-08-29: z D1–D34 sú otvorené už len dve.** ⬜ **D16** (kotva citácie na stranu
 > originálu — rozhodnúť po prvom kole D9), 🔄 **D17** (tabuľky z PDF — možnosť 2 zavedená, extrakcia
-> s rozložením otvorená), ⬜ **D30** (čo je „podstatná zmena" vyžadujúca opätovné potvrdenie — čaká
-> na HR a legislatívca). **D18–D23** sú rezervované pre prenos D-CMS-1..6 z `CMS_KONCEPCIA.md`.
+> s rozložením otvorená). **D30** sa 2026-08-29 zrušila: definícia „podstatnej zmeny" neexistuje
+> a nahradil ju povinný dôvod pri pridelení (D37). **D18–D23** sú rezervované pre prenos D-CMS-1..6 z `CMS_KONCEPCIA.md`.
 > Otvorené body ADR (séria `O…`) sú vedené v samotných ADR: **O7** (vlastný embedding a rerank —
 > odložené za Fázu 8), **O8, O9, O11** (ADR-002), **O13–O16** (ADR-003, čakajú na HR/DPO/právnika).
 >
@@ -370,7 +370,7 @@ znamenalo databázu v ceste každej požiadavky vrátane prihlasovacej stránky.
 opis stavu — iný tenant neexistuje — nie cieľový tvar. Keď pribudne druhý zákazník, `app.contineo.app`
 prestane byť SFZ.
 
-### D30 — Čo je „podstatná zmena" 🔴 *(otvorené — HR + legislatívec)*
+### D30 — Čo je „podstatná zmena" 🟢
 
 **Otázka:** ktorá novelizácia smernice vyžaduje, aby ľudia potvrdzovali znova?
 
@@ -378,11 +378,21 @@ prestane byť SFZ.
 prehliadneme zmenu povinnosti. Oprava preklepu a nová povinnosť vyzerajú v diffe podobne —
 **systém to rozhodnúť nevie a nemá.**
 
-**Odporúčanie:** pole `requiresReacknowledgement` na verzii vypĺňa **človek** (kurátor po
-konzultácii s legislatívcom), nikdy sa neodvodzuje automaticky. Potrebné je len dohodnúť
-kritérium, podľa ktorého sa rozhoduje.
+**✅ Rozhodnuté (2026-08-29): otázka sa nezodpovedá, ruší sa.**
 
-**Stav:** ⬜ čaká na HR a legislatívca SFZ. Vedené aj ako **O13** v ADR-003.
+Hľadala sa definícia „podstatnej zmeny" — kritérium, ktoré by niekto raz napísal a systém
+by ho potom uplatňoval. Také kritérium neexistuje a existovať nemôže: rovnaká zmena je
+v jednej norme preklep a v druhej nová povinnosť. Každá jeho verzia by bola buď taká
+široká, že nerozhoduje o ničom, alebo taká úzka, že rozhodne zle.
+
+Namiesto definície je **udalosť**: pridelenie (`assignments`, D37) s **povinným
+`reason`**. Kto chce, aby sto ľudí niečo potvrdilo znova, to musí prideliť a napísať
+prečo. Nie je to slabšia odpoveď — je to jediná, ktorá o rok niečo znamená: „lebo
+kritérium C sa naplnilo" sa nedá overiť, „novela čl. 12 mení lehotu na odvolanie"
+áno.
+
+Pole `requiresReacknowledgement` na verzii zostáva v modeli pre CMS, ale onboarding
+o ňom nerozhoduje. **Vedené ako O13 v ADR-003 — tam sa uzatvára rovnako.**
 
 ### D31 — Produkčný Atlas tier a zálohy 🔴
 
@@ -560,7 +570,12 @@ a widget sa pýta registra zdrojov, nie jednotlivých modulov.
 
 **Súvisiace:** D32 (viditeľnosť per `companyCode`), D33 (rozsah HR dashboardu).
 
-### D37 — Úloha sa odvodzuje, pridelenie sa zaznamenáva 🔴 *(návrh)*
+### D37 — Úloha sa odvodzuje, pridelenie sa zaznamenáva 🟢
+
+**✅ Rozhodnuté a postavené (2026-08-29):** `lib/assignments.ts`, kolekcia `assignments`.
+Záznam sa nemení a nemaže — odvolanie je `revokedAt`, nie `deleteOne`, inak by
+z histórie zmizlo, že niekto niekomu niečo uložil. Widget odvtedy vie povedať
+„čaká od" a „nové" (D39), lebo má odkiaľ.
 
 **Otázka:** ak progres nikdy neukladáme (D27), kde sa vezme informácia, že sa
 norma má potvrdiť **znova**?
@@ -579,7 +594,12 @@ ktorý pri prideľovaní vyplní človek (`reason`).
 
 **Súvisiace:** D24, D25, D27, D30/O13.
 
-### D38 — `persons.groups` ako tretia dimenzia 🟡 *(návrh)*
+### D38 — `persons.groups` ako tretia dimenzia 🟢
+
+**✅ Rozhodnuté a postavené (2026-08-29):** `persons.groups: string[]`, vždy malými
+písmenami. Zoznam skupín sa **neudržiava v číselníku, odvodzuje sa z ľudí** — číselník
+by bol druhá pravda a prideliť niečo prázdnej skupine je tichý spôsob, ako neprideliť
+nikomu.
 
 Dnes existuje `persons.tracks` (čo mám prejsť) a `persons.department` (kam
 patrím v štruktúre). Ani jedno nie je skupina na prideľovanie: trasa je obsah,

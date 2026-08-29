@@ -64,12 +64,37 @@ export interface Person {
 
   /** Kľúče trás onboardingu, ktoré sa tejto osoby týkajú. */
   tracks: string[]
-  /** Prázdne u bežnej osoby. Zatiaľ len `"hr"`. */
+
+  /**
+   * Skupiny na prideľovanie — **tretia dimenzia** vedľa trás a útvarov (D38).
+   *
+   * Trasa je obsah („čím mám prejsť"), útvar je štruktúra („kam patrím“),
+   * skupina je adresát („komu sa to posiela"). Zlúčiť skupiny s trasami by
+   * znamenalo, že jednorazovú úlohu nemožno prideliť bez toho, aby vznikla
+   * umelá trasa; zlúčiť ich s útvarmi by znamenalo, že sa nedá osloviť
+   * skupina naprieč útvarmi — a práve tá býva adresátom noriem
+   * (rozhodcovia, delegáti, štatutári).
+   *
+   * Vždy malými písmenami — porovnáva sa s publikom pridelenia.
+   */
+  groups: string[]
+
+  /** Prázdne u bežnej osoby. `"hr"` alebo `"platform-admin"`. */
   roles: string[]
 
   invitedAt?: Date
   firstLoginAt?: Date
   lastLoginAt?: Date
+
+  /**
+   * Predchádzajúce prihlásenie — voči nemu sa počíta príznak „nové" (D39).
+   *
+   * `lastLoginAt` na to nestačí: pri prihlásení sa prepíše na *teraz*, takže
+   * by „nové" bolo len to, čo pribudlo počas už otvorenej relácie — teda
+   * spravidla nič. Otázka pritom znie „čo pribudlo, odkedy som tu bol
+   * naposledy", a na tú odpovedá až predošlá hodnota.
+   */
+  previousLoginAt?: Date
 
   /** Pripravené na Fázu 5 (Sportnet OAuth, Entra ID). Dnes prázdne. */
   externalRef?: {
@@ -90,6 +115,7 @@ export interface NewPerson {
   personType?: PersonType
   startDate?: Date
   tracks?: string[]
+  groups?: string[]
   roles?: string[]
   /** Voliteľné v CSV; neznáme alebo chýbajúce padá na slovenčinu. */
   language?: string
@@ -99,6 +125,17 @@ export interface NewPerson {
 export function normalizeEmail(email: string): string {
   return email.trim().toLowerCase()
 }
+/**
+ * Kľúče (skupiny, trasy) v tvare, v ktorom sa porovnávajú aj ukladajú.
+ *
+ * Bez normalizácie by „Rozhodcovia" a „rozhodcovia" boli dve skupiny a jedna
+ * z nich by nedostala nič — a nikto by nevedel prečo, lebo v zozname by
+ * vyzerali rovnako.
+ */
+export function normalizeKeys(hodnoty: string[] | undefined): string[] {
+  return [...new Set((hodnoty ?? []).map(h => h?.trim().toLowerCase()).filter(Boolean))]
+}
+
 
 /** Nájde osobu podľa adresy. `null`, keď taká v organizácii nie je. */
 export async function findPerson(email: string): Promise<Person | null> {
@@ -159,7 +196,15 @@ export async function recordSignIn(email: string): Promise<void> {
 
     // Bez `upsert` — prihlásenie nesmie založiť osobu. Kto sa dostal dnu
     // núdzovou brzdou, do `persons` nepatrí, kým ho tam niekto nepozve.
-    await col.updateOne({ email: address }, { $set: { lastLoginAt: now } })
+    //
+    // Posun `lastLoginAt` → `previousLoginAt` a zápis nového času sú jedna
+    // operácia (aktualizácia rúrou). Dva samostatné zápisy by pri súbežných
+    // prihláseniach z dvoch zariadení skončili tak, že si oba prečítajú tú
+    // istú starú hodnotu a jedno prihlásenie z histórie zmizne.
+    await col.updateOne(
+      { email: address },
+      [{ $set: { previousLoginAt: "$lastLoginAt", lastLoginAt: now } }],
+    )
 
     // Prvé prihlásenie sa zapíše len raz — podmienka je v dotaze, nie v kóde,
     // takže dva súbežné requesty nezapíšu dva rôzne časy.
@@ -243,6 +288,7 @@ export async function upsertPersons(
       personType: r.personType ?? "employee",
       startDate: r.startDate,
       tracks: r.tracks ?? [],
+      groups: normalizeKeys(r.groups),
       roles: r.roles ?? [],
     }
 

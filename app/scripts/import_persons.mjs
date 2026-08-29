@@ -28,6 +28,7 @@ const ALIASY = {
   personType: ["typ", "typosoby", "persontype"],
   startDate: ["nastup", "datumnastupu", "startdate"],
   tracks: ["trasa", "trasy", "tracks"],
+  groups: ["skupina", "skupiny", "groups"],
   language: ["jazyk", "language", "lang"],
 }
 
@@ -47,6 +48,7 @@ function hodnota(row, pole) {
 function naOsobu(row) {
   const datum = hodnota(row, "startDate")
   const trasy = hodnota(row, "tracks")
+  const skupiny = hodnota(row, "groups")
   return {
     email: hodnota(row, "email"),
     fullName: hodnota(row, "fullName"),
@@ -55,6 +57,7 @@ function naOsobu(row) {
     personType: hodnota(row, "personType") || undefined,
     startDate: datum ? new Date(datum) : undefined,
     tracks: trasy ? trasy.split(/[,;|]/).map(t => t.trim()).filter(Boolean) : undefined,
+    groups: skupiny ? skupiny.split(/[,;|]/).map(s => s.trim()).filter(Boolean) : undefined,
     // Nevyplnený jazyk necháme `undefined` — `upsertPersons()` ho potom
     // existujúcej osobe neprepíše (inak by opakovaný import prepol každého
     // späť na slovenčinu).

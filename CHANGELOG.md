@@ -4,6 +4,27 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Added (2026-08-29 — Fáza 9 rozsah B: prideľovanie prestalo byť tiché)
+
+- **Kolekcia `assignments` (D37).** Doteraz bolo rozposlanie úlohy tiché: pribudla nová verzia normy a `trackProgress()` ju začal rátať ako nepotvrdenú každému, koho sa trasa týkala — bez rozhodnutia a bez stopy. Model má odteraz dve pravdy s rôznym pôvodom: *čo mám urobiť* sa naďalej odvodzuje (D27), *že sa to má urobiť* je záznam. Záznam sa nemení a nemaže — odvolanie je `revokedAt`, nie `deleteOne`.
+- **`persons.groups` ako tretia dimenzia (D38).** Trasa je obsah, útvar je štruktúra, skupina je adresát. Zlúčiť skupiny s trasami by znamenalo, že jednorazová úloha si vyžiada umelú trasu; zlúčiť ich s útvarmi by znamenalo, že sa nedá osloviť skupina naprieč útvarmi — a práve tá býva adresátom noriem (rozhodcovia, delegáti, štatutári). **Číselník skupín sa nezakladá**, zoznam sa odvodzuje z ľudí: číselník by bol druhá pravda a prideliť niečo prázdnej skupine je tichý spôsob, ako neprideliť nikomu.
+- **Obrazovky `/hr`.** Prehľad pridelení s počtami, formulár na pridelenie a **menovitý** zoznam, kto ešte nepotvrdil. Číslo „chýba 17" sa dá pozerať mesiace; mená sú to, na základe čoho niekto zdvihne telefón.
+- **Rola `hr` a brána `hrContext()`.** Rola **a** príslušnosť k organizácii, obe naraz — rovnaký vzor ako `platformContext()`, o poschodie nižšie. **Správca platformy sem prístup nemá:** D41 mu dáva počty naprieč tenantmi, nie menovitý zoznam ľudí, ktorí si niečo neprečítali. To je obsah, nie prehľad.
+- **Widget vie „čaká od" a „nové".** Oboje z `assignments.assignedAt` (D39). Kde pridelenie nie je, widget o čase **mlčí** — náhradný čas by bol horší než žiadny.
+- **`persons.previousLoginAt`.** Bez neho by „nové" znamenalo „pribudlo počas tejto relácie", teda spravidla nič. Posun starej hodnoty a zápis novej sú jedna operácia (aktualizácia rúrou), inak by pri prihlásení z dvoch zariadení jedno z histórie zmizlo.
+- **Pridelené znenie, ktoré už neplatí, sa nedá potvrdiť**, tak sa počíta medzi zablokované, nie medzi úlohy. Inak by úloha z widgetu nikdy nezmizla: `/dokumenty/…` ukáže novšie znenie a potvrdenie by sa viazalo na inú verziu.
+- 32 nových testov (spolu 579).
+
+### Changed (2026-08-29)
+
+- **D30 a O13 sa rušia, nezodpovedajú sa.** Hľadala sa definícia „podstatnej zmeny" — kritérium, podľa ktorého by systém rozhodoval, kedy treba potvrdiť znova. Také kritérium neexistuje: rovnaká zmena je v jednej norme preklep a v druhej nová povinnosť. Nahradila ho **udalosť s povinným dôvodom**. „Novela čl. 12 mení lehotu na odvolanie" sa o rok dá overiť; „naplnilo sa kritérium C" nie.
+
+### Fixed (2026-08-29 — nasadenie)
+
+- **Dve `DYNAMIC_SERVER_USAGE` chyby v logu nasadenia.** Next sa pokúšal predgenerovať `/_not-found` a zakopol o `headers()` v obale. Zachytené to bolo, nasadenie prešlo — ale chyba, ktorá sa má prehliadať, je presne to, čo spôsobí, že sa raz prehliadne aj skutočná. Obal je odteraz `force-dynamic`, čo len hovorí nahlas, čo aj tak platí: **hostiteľ určuje tenanta** (D29), takže sa vopred nedá vygenerovať nič.
+- **`npm run lint` nefungoval.** `next lint` v Next 16 už neexistuje a slovo „lint" si vyloží ako názov priečinka (`no such directory: …/app/lint`). Volá sa priamo `eslint` s plochou konfiguráciou. Pri tom vyšli najavo aj tri skutočné drobnosti: neescapované úvodzovky v troch komponentoch a zvyšné importy v `domeny.mjs` po presune hľadania tokenu do `vercel-auth.mjs`.
+- `@typescript-eslint/no-explicit-any` je v `src/lib/providers/**` znížené na výstrahu — `any` je tam **dlh, nie zámer** (parsovanie JSON-u cudzích API, správne by bolo `unknown` a zúženie) a prepisovať každú generujúcu cestu bez možnosti overiť to inak než v produkcii nie je zmena, ktorá patrí sem.
+
 ### Added (2026-08-29 — ostré normy dostali platné znenie)
 
 - **`npm run verzie`** — deväť noriem SFZ prišlo RAG importom a `versions[]` nemalo vôbec: `versionId` navrchu, text v `document_chunks`. Pre vyhľadávanie to stačilo, pre potvrdzovanie nie — `effectiveVersion()` číta výhradne `versions[]` (D6, D25), takže všetkých deväť bolo v onboardingu „bez platného znenia".

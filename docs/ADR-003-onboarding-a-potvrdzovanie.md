@@ -381,7 +381,7 @@ niekde neskôr ukáže rozdiel, je to chyba návrhu, nie plánovaná dočasnosť
 | # | Otázka | Prečo na nej záleží |
 |---|---|---|
 | ~~**O12**~~ | ~~`0.0.0.0/0` v Atlase~~ | ✅ **Uzavreté 2026-08-27:** Vercel Static IPs (100 $/mes., plán Pro), zapnúť pred prvým ostrým potvrdením. Analýza v kap. 6.1; presun z Vercelu zostáva dlhodobým smerom. |
-| **O13** | Čo je „podstatná zmena" smernice, ktorá vyžaduje opätovné potvrdenie? | Bez odpovede buď zaťažíme ľudí potvrdzovaním preklepov, alebo prehliadneme zmenu povinnosti. Patrí HR + legislatívcovi, nie nám. |
+| **O13** ✅ | ~~Čo je „podstatná zmena" smernice, ktorá vyžaduje opätovné potvrdenie?~~ **Uzavreté 2026-08-29: otázka sa ruší.** Definícia neexistuje — rovnaká zmena je v jednej norme preklep a v druhej nová povinnosť. Nahradila ju **udalosť s povinným dôvodom**: pridelenie (`assignments`, D37). Kto chce, aby ľudia potvrdzovali znova, to musí prideliť a napísať prečo. „Novela čl. 12 mení lehotu na odvolanie" sa o rok dá overiť; „naplnilo sa kritérium C" nie. |
 | **O14** | Má sa merať čas strávený nad dokumentom, prípadne doskrolovanie na koniec? | Zvyšuje dôkaznú hodnotu, ale je to sledovanie správania zamestnanca. Rozhodnúť **pred** implementáciou, nie po nej. |
 | **O15** | Aký je právny základ spracúvania `acknowledgements`? | Návrh: oprávnený záujem/plnenie zmluvy, nie súhlas. Potvrdí DPO. |
 | **O16** | Ako dlho sa auditný záznam uchováva po skončení pracovného pomeru? | Iná lehota než pri konverzáciách (D10). Potvrdí právnik. |

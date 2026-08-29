@@ -75,6 +75,18 @@ const PLAN = [
         preco: "kľúč trasy je jedinečný v rámci tenanta" },
     ],
   },
+  {
+    kolekcia: "assignments",
+    indexy: [
+      { kluc: { companyCode: 1, "subject.versionId": 1 }, opts: { name: "podla_znenia" },
+        preco: "prehľad „kto má potvrdiť toto znenie“" },
+      { kluc: { companyCode: 1, revokedAt: 1, "audience.kind": 1, "audience.value": 1 },
+        opts: { name: "podla_publika" },
+        preco: "widget sa pri každom otvorení úvodnej strany pýta, čo je pridelené mne" },
+      { kluc: { companyCode: 1, assignedAt: -1 }, opts: { name: "podla_casu" },
+        preco: "HR prehľad, najnovšie hore" },
+    ],
+  },
 ]
 
 const client = new MongoClient(URI, { serverSelectionTimeoutMS: 15000 })
