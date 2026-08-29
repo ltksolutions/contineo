@@ -287,7 +287,7 @@
 - [x] **útvary ako strom** (D49) — osoba v práve jednom, pridelenie platí aj pre podstrom, skupiny zostávajú samostatnou dimenziou. Prevod z textu: `npm run utvary`
 - [x] **prevod útvarov SFZ spustený 2026-08-29** — nemal čo previesť: v databáze je zatiaľ jedna osoba a žiadna nemá útvar zapísaný textom. Zmysel dostane po importe ľudí z CSV
 - [x] **reorganizácia** (D50) — úloha z útvaru platí odo dňa príchodu, bývalí členovia zostanú v prehľade označení a bez e-mailu, potvrdenie nesie odtlačok útvaru
-- [ ] **nové indexy treba vytvoriť v Atlase** — `npm run onboarding:init` (alebo ako sa spúšťa `onboarding_init.mjs`); pribudla kolekcia `departments` a dva indexy nad `persons`
+- [x] **indexy vytvorené v Atlase 2026-08-29** — `node scripts/onboarding_init.mjs` (stav bez zápisu: `--stav`). Pribudla kolekcia `departments` s dvomi indexmi a dva indexy nad `persons`
 
 **Zostáva (mimo rozsahu B)**
 
