@@ -4,6 +4,21 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Added (2026-08-29 — prihlásenie pracovným kontom, etapa 1)
+
+> Koncepcia a rozhodnutia D43–D46: `docs/PRIHLASENIE_A_SPRAVA_OSOB.md`
+
+- **Prihlásenie cez Microsoft (Entra ID) a Google.** Vedľa odkazu v e-maile, nie namiesto neho: odkaz je jediná cesta, ktorá nezávisí od cudzej služby, a keď Entra vypadne, musí zostať spôsob, ako sa dostať dnu. Ľudia bez pracovného konta (rozhodcovia, delegáti) ho potrebujú tak či tak.
+- **Aplikácia patrí zákazníkovi, nie nám (D43).** SFZ si zaregistruje vlastnú Entra aplikáciu a pošle `clientId` a `clientSecret`; my ich zadáme v `/admin/tenanti/[kod]`. Dôvod nie je technický: zväz, ktorý dá do systému vlastné predpisy, má vedieť **sám odvolať prístup** a **sám vidieť, kto sa prihlasoval** — a nemá sa o to prosiť dodávateľa. Premenné prostredia zostávajú len ako núdzový zdroj pre náš vlastný tenant a pre vývoj.
+- **Tajomstvá sa šifrujú (`lib/tajomstva.ts`, AES-256-GCM).** Nie je to náš údaj, je to prístup do cudzieho systému. GCM a nie CBC preto, že overuje aj neporušenosť — zmenený zápis spadne namiesto toho, aby sa rozšifroval na nezmysel. Obrazovka ukazuje „nastavené / nenastavené / nečitateľné", hodnotu nevracia nikdy. Chýbajúci `OAUTH_SECRET_ENCRYPTION_KEY` poskytovateľov vypne, aplikáciu nezhodí; **zle dlhý kľúč je naopak chyba** — znamená, že ho niekto nastaviť chcel a pomýlil sa.
+- **Poskytovatelia sa skladajú podľa hostiteľa (D44).** Ktorý Microsoft je „ten správny", závisí od domény (D29), takže `authOptions` nemôžu byť konštanta vyhodnotená pri štarte. Route handler ich zostavuje pri každej požiadavke; tenant má vlastnú pamäť, takže do databázy sa pri tom väčšinou vôbec nejde.
+- **Konto overuje adresu, vstup povoľuje `persons` (D45).** Konto hovorí „toto je naozaj tá adresa"; že ten človek patrí do organizácie, hovorí výhradne `persons` — tá istá brána ako doteraz. Bez tohto rozlíšenia by prvá zle nastavená Entra aplikácia otvorila interné smernice komukoľvek s pracovným kontom na svete.
+- **Kontrola pôvodu pred bránou.** Microsoft musí mať `tid` a — keď je vyplnený zoznam — musí byť medzi povolenými Entra tenantmi; pri režime `organizations` je to jediná zábrana proti tomu, aby sa dnu dostal človek z cudzej organizácie s rovnakou adresou. Google musí mať `email_verified`; `hd` sa vynucuje na odpovedi, nie požiadavkou (tam je to len nápoveda, ktorá sa dá obísť).
+- **Spájanie kont podľa overenej adresy.** Ten istý človek sa dnes prihlási e-mailom a zajtra kontom; bez toho by NextAuth druhý pokus odmietol a človek by nemal ako zistiť prečo. Bezpečné je to preto, že adresa tu **nie je identitou** — identitou je záznam v `persons`, konto je len dôkaz. Neoverená adresa sa nespojí nikdy.
+- **`persons.externalRef` sa začal plniť** (`entraObjectId`, `googleSub`) — až po povolení a len na rozpoznanie toho istého konta, keď sa človeku zmení adresa. Prístup neudeľuje.
+- Adresa návratu je na obrazovke vypísaná v presnom tvare, aký musí zákazník zapísať do svojej aplikácie — je to najčastejšia príčina toho, prečo prihlásenie hneď na prvý raz nejde.
+- 28 nových testov.
+
 ### Added (2026-08-29 — Fáza 9 rozsah B: prideľovanie prestalo byť tiché)
 
 - **Kolekcia `assignments` (D37).** Doteraz bolo rozposlanie úlohy tiché: pribudla nová verzia normy a `trackProgress()` ju začal rátať ako nepotvrdenú každému, koho sa trasa týkala — bez rozhodnutia a bez stopy. Model má odteraz dve pravdy s rôznym pôvodom: *čo mám urobiť* sa naďalej odvodzuje (D27), *že sa to má urobiť* je záznam. Záznam sa nemení a nemaže — odvolanie je `revokedAt`, nie `deleteOne`.

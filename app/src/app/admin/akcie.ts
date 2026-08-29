@@ -25,6 +25,8 @@ import {
   TenantValidationError,
 } from "@/lib/tenantAdmin"
 import { pridajDomenu, pokynyPreZakaznika, stavDomeny, preskocitVercel } from "@/lib/vercel"
+import { ulozOAuth, zmazOAuth } from "@/lib/tenantAdmin"
+import { rozdelZoznam, NAZOV_POSKYTOVATELA } from "@/lib/oauth"
 
 /** Kto akciu spustil — alebo `null`, keď na ňu nemá právo. */
 async function spravca(): Promise<string | null> {
@@ -214,4 +216,73 @@ async function zapisPokyny(kod: string, komu: string, hostnames: string[]) {
     { companyCode: kod },
     { $set: { domainSetup: { requestedAt: new Date(), requestedTo: komu, hostnames } } },
   )
+}
+
+// ── prihlasovacie údaje poskytovateľov (D43) ─────────────────────────────────
+
+/**
+ * Uloží údaje k Entra alebo Google aplikácii zákazníka.
+ *
+ * Tajomstvo prichádza z formulára čitateľné a **odchádza odtiaľto zašifrované**
+ * — do databázy sa v pôvodnej podobe nedostane ani na okamih. Do logu ani do
+ * chybovej hlášky sa nedostane vôbec; preto sa nikde nevypisuje `vstup`.
+ */
+export async function ulozPrihlasenie(fd: FormData) {
+  const kto = await spravca()
+  if (!kto) redirect("/admin")
+
+  const kod = textPola(fd, "companyCode")
+  const provider = textPola(fd, "provider") === "google" ? "google" : "microsoft"
+  let sprava = ""
+
+  try {
+    await ulozOAuth(kod, provider, {
+      clientId: textPola(fd, "clientId"),
+      // Prázdne pole znamená „nemeň" — obrazovka hodnotu nikdy neukazuje,
+      // takže je pri každom otvorení prázdne.
+      clientSecret: textPola(fd, "clientSecret"),
+      tenantMode: provider === "microsoft" ? textPola(fd, "tenantMode") : undefined,
+      allowedTenantIds: provider === "microsoft"
+        ? rozdelZoznam(textPola(fd, "allowedTenantIds"))
+        : undefined,
+      hostedDomain: provider === "google" ? textPola(fd, "hostedDomain") : undefined,
+    }, kto)
+    sprava = `Prihlásenie cez ${NAZOV_POSKYTOVATELA[provider]} uložené.`
+  } catch (e) {
+    sprava = spravaChyby(e)
+  }
+
+  revalidatePath("/admin")
+  redirect(`/admin/tenanti/${encodeURIComponent(kod)}?sprava=${encodeURIComponent(sprava)}`)
+}
+
+/**
+ * Odstráni údaje poskytovateľa — tlačidlo prihlásenia tým zmizne.
+ *
+ * Vyžiada si napísanie kódu organizácie, rovnako ako vypnutie tenanta: ľuďom,
+ * ktorí sa prihlasujú pracovným kontom, tým okamžite prestane fungovať jediná
+ * cesta, ktorú poznajú.
+ */
+export async function zmazPrihlasenie(fd: FormData) {
+  const kto = await spravca()
+  if (!kto) redirect("/admin")
+
+  const kod = textPola(fd, "companyCode")
+  const provider = textPola(fd, "provider") === "google" ? "google" : "microsoft"
+  const potvrdenie = textPola(fd, "potvrdenie")
+  let sprava = ""
+
+  if (potvrdenie.trim().toUpperCase() !== kod.toUpperCase()) {
+    sprava = `Na odstránenie napíš kód organizácie (${kod}).`
+  } else {
+    try {
+      await zmazOAuth(kod, provider, kto)
+      sprava = `Prihlásenie cez ${NAZOV_POSKYTOVATELA[provider]} odstránené.`
+    } catch (e) {
+      sprava = spravaChyby(e)
+    }
+  }
+
+  revalidatePath("/admin")
+  redirect(`/admin/tenanti/${encodeURIComponent(kod)}?sprava=${encodeURIComponent(sprava)}`)
 }

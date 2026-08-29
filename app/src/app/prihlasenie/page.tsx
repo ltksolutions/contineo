@@ -11,6 +11,7 @@ import { notFound, redirect } from "next/navigation"
 import Prihlasenie from "@/components/Prihlasenie"
 import { currentTenant, currentEmail } from "@/lib/session"
 import { brandingView } from "@/lib/tenants"
+import { dostupniPoskytovatelia } from "@/lib/oauth"
 import { tenantStyle } from "@/components/TenantHeader"
 import type { Tenant } from "@/lib/tenants"
 
@@ -48,6 +49,9 @@ export default async function StrankaPrihlasenia({
   if (await currentEmail()) redirect("/")
 
   const branding = tenant ? brandingView(tenant) : undefined
+  // Ktoré kontá má táto organizácia zapnuté (D44). Rozhoduje o tom hostiteľ,
+  // nie premenná nasadenia — na doméne zväzu je to Entra zväzu.
+  const poskytovatelia = dostupniPoskytovatelia(tenant)
 
   return (
     <div className="obal" style={{ padding: "64px 20px", maxWidth: 460, ...tenantStyle(branding) }}>
@@ -55,6 +59,7 @@ export default async function StrankaPrihlasenia({
         odoslane={parametre.odoslane === "1"}
         chyba={parametre.error}
         branding={branding}
+        poskytovatelia={poskytovatelia}
       />
     </div>
   )

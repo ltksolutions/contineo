@@ -24,6 +24,7 @@ import { getCollection } from "./mongodb"
 import { normalizeLanguage, UI_LANGUAGES } from "./i18n"
 import type { UiLanguage } from "./i18n"
 import type { Person } from "./persons"
+import type { TenantOAuth } from "./oauth"
 
 export const TENANTS_COLLECTION = "tenants"
 
@@ -61,6 +62,19 @@ export interface Tenant {
    * takže tenant sa nemaže.
    */
   status: "active" | "disabled"
+
+  /**
+   * Prihlasovacie údaje k **vlastnej** aplikácii zákazníka (D43).
+   *
+   * Nie sú to naše údaje — je to prístup do cudzieho systému, ktorý nám niekto
+   * zveril. Tajomstvo je preto zašifrované (`lib/tajomstva.ts`) a von sa
+   * nevracia; obrazovka ukazuje len „nastavené / nenastavené".
+   *
+   * Chýbajúci záznam neznamená chybu, len že tenant tento spôsob prihlásenia
+   * nemá zapnutý a tlačidlo sa neponúkne.
+   */
+  oauth?: TenantOAuth
+
   createdAt?: Date
   updatedAt?: Date
 }

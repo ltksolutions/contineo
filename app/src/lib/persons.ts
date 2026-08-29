@@ -96,10 +96,21 @@ export interface Person {
    */
   previousLoginAt?: Date
 
-  /** Pripravené na Fázu 5 (Sportnet OAuth, Entra ID). Dnes prázdne. */
+  /**
+   * Identifikátory v cudzích systémoch, ktorými sa človek prihlasuje.
+   *
+   * Zapisujú sa **až po úspešnom prihlásení** (D45) a slúžia na jedinú vec:
+   * rozpoznať, že je to to isté konto, aj keď sa zmení adresa. Adresa sa mení —
+   * ľudia sa vydávajú, organizácie sa premenúvajú; `oid` a `sub` nie.
+   *
+   * Prístup **neudeľujú**. Ten je stále len v `persons` a v `status`.
+   */
   externalRef?: {
     sportnetId?: string | null
+    /** `oid` z Entra ID. */
     entraObjectId?: string | null
+    /** `sub` z Google. */
+    googleSub?: string | null
   }
 
   createdBy?: string
@@ -221,6 +232,28 @@ export async function recordSignIn(email: string): Promise<void> {
     )
   } catch (e) {
     console.error("[persons] zápis prihlásenia zlyhal:", e)
+  }
+}
+
+/**
+ * Zapíše identifikátor konta, ktorým sa človek práve prihlásil.
+ *
+ * Bez `upsert` a bez zakladania osoby — prihlásenie nesmie nikoho pridať do
+ * organizácie. Zlyhanie sa prehltne: je to evidencia, nie brána, a človek,
+ * ktorý má na vstup nárok, nesmie zostať vonku kvôli nej.
+ */
+export async function recordExternalRef(
+  email: string,
+  provider: "microsoft" | "google",
+  externalId: string,
+): Promise<void> {
+  const address = normalizeEmail(email)
+  const pole = provider === "microsoft" ? "externalRef.entraObjectId" : "externalRef.googleSub"
+  try {
+    const col = await getCollection<Person>(PERSONS_COLLECTION)
+    await col.updateOne({ email: address }, { $set: { [pole]: externalId } })
+  } catch (e) {
+    console.error("[persons] zápis identifikátora konta zlyhal:", e)
   }
 }
 

@@ -13,8 +13,120 @@ import { platformContext } from "@/lib/admin"
 import { allTenants } from "@/lib/tenantAdmin"
 import { stavDomeny, pokynCname } from "@/lib/vercel"
 import { UI_LANGUAGES } from "@/lib/i18n"
-import { ulozTenant, prepniStav, poslatPokyny } from "../../akcie"
+import { stavPoskytovatela, NAZOV_POSKYTOVATELA, ID_POSKYTOVATELA } from "@/lib/oauth"
+import { ulozTenant, prepniStav, poslatPokyny, ulozPrihlasenie, zmazPrihlasenie } from "../../akcie"
 import type { StavDomeny } from "@/lib/vercel"
+import type { OAuthProviderName } from "@/lib/oauth"
+import type { Tenant } from "@/lib/tenants"
+
+
+/**
+ * Prihlasovacie údaje jedného poskytovateľa (D43).
+ *
+ * **Tajomstvo sa nikdy nevypisuje.** Pole je pri každom otvorení prázdne
+ * a prázdne znamená „nemeň" — inak by uloženie zmeneného `clientId` ticho
+ * vymazalo tajomstvo a prihlásenie by prestalo fungovať.
+ */
+function Poskytovatel({
+  tenant, provider, domena,
+}: {
+  tenant: Tenant
+  provider: OAuthProviderName
+  /** Prvá doména tenanta — do nej sa skladá adresa návratu. */
+  domena?: string
+}) {
+  const nazov = NAZOV_POSKYTOVATELA[provider]
+  const s = stavPoskytovatela(tenant, provider)
+  const navrat = domena
+    ? `https://${domena}/api/auth/callback/${ID_POSKYTOVATELA[provider]}`
+    : `https://<doména>/api/auth/callback/${ID_POSKYTOVATELA[provider]}`
+
+  const popisStavu = {
+    nastavene: "nastavené — vlastná aplikácia zákazníka",
+    "z-prostredia": "beží z našich premenných prostredia, nie z vlastnej aplikácie zákazníka",
+    necitatelne: "uložené, ale nedá sa prečítať — zmenil sa šifrovací kľúč, zadaj údaje znova",
+    nenastavene: "nenastavené — tlačidlo sa neponúka",
+  }[s.stav]
+
+  return (
+    <section className="karta" style={{ padding: "18px 20px", display: "grid", gap: 14 }}>
+      <div style={{ display: "flex", gap: 10, alignItems: "baseline", flexWrap: "wrap" }}>
+        <h2 style={{ fontSize: 17, margin: 0 }}>Prihlásenie cez {nazov}</h2>
+        <span
+          className="stitok"
+          style={s.stav === "necitatelne"
+            ? { background: "var(--warn-bg)", color: "var(--warn-fg)" }
+            : undefined}
+        >
+          {s.stav === "nastavene" ? "nastavené" : s.stav === "z-prostredia" ? "z prostredia" : s.stav === "necitatelne" ? "nečitateľné" : "nenastavené"}
+        </span>
+      </div>
+
+      <p className="tichy" style={{ margin: 0, fontSize: 14 }}>{popisStavu}</p>
+
+      {/* Najčastejšia príčina toho, prečo prihlásenie hneď na prvý raz nejde. */}
+      <div>
+        <div className="tichy pole-napoveda">Adresa návratu — zákazník ju musí zapísať do svojej aplikácie presne takto:</div>
+        <code style={{ fontSize: 13.5, overflowWrap: "anywhere" }}>{navrat}</code>
+      </div>
+
+      <form action={ulozPrihlasenie} style={{ display: "grid", gap: 14 }}>
+        <input type="hidden" name="companyCode" value={tenant.companyCode} />
+        <input type="hidden" name="provider" value={provider} />
+
+        <Pole meno="clientId" popis="Client ID" hodnota={s.zdroj === "tenant" ? s.clientId : ""} />
+        <Pole
+          meno="clientSecret"
+          popis="Client secret"
+          typ="password"
+          napoveda="Prázdne = nemeniť. Hodnota sa ukladá zašifrovaná a späť sa nikdy nevypíše."
+        />
+
+        {provider === "microsoft" ? (
+          <>
+            <Pole
+              meno="tenantMode"
+              popis="Režim tenanta"
+              hodnota={tenant.oauth?.microsoft?.tenantMode ?? "organizations"}
+              napoveda="organizations = pracovné a školské kontá · common = aj osobné · alebo UUID jedného Entra tenanta"
+            />
+            <Pole
+              meno="allowedTenantIds"
+              popis="Povolené Entra tenant id"
+              hodnota={(tenant.oauth?.microsoft?.allowedTenantIds ?? []).join(", ")}
+              napoveda="Oddelené čiarkou. Prázdne = nekontroluje sa — pri režime organizations je to jediná zábrana proti tomu, aby sa dnu dostal človek z cudzej organizácie s rovnakou adresou."
+            />
+          </>
+        ) : (
+          <Pole
+            meno="hostedDomain"
+            popis="Doména Workspace (hd)"
+            hodnota={tenant.oauth?.google?.hostedDomain ?? ""}
+            napoveda="Napr. futbalsfz.sk. Prázdne = ktorékoľvek Google konto."
+          />
+        )}
+
+        <div>
+          <button className="tlacidlo" type="submit">Uložiť</button>
+        </div>
+      </form>
+
+      {s.zdroj === "tenant" && (
+        <form action={zmazPrihlasenie} style={{ display: "grid", gap: 10, borderTop: "1px solid var(--line)", paddingTop: 14 }}>
+          <input type="hidden" name="companyCode" value={tenant.companyCode} />
+          <input type="hidden" name="provider" value={provider} />
+          <p className="tichy" style={{ margin: 0, fontSize: 14 }}>
+            Odstránením zmizne tlačidlo z prihlasovacej obrazovky. Ľuďom, ktorí
+            sa prihlasujú pracovným kontom, tým prestane fungovať jediná cesta,
+            ktorú poznajú.
+          </p>
+          <Pole meno="potvrdenie" popis={`Napíš ${tenant.companyCode} na potvrdenie`} />
+          <button className="tlacidlo tlacidlo--tiche" type="submit">Odstrániť</button>
+        </form>
+      )}
+    </section>
+  )
+}
 
 export const dynamic = "force-dynamic"
 
@@ -199,6 +311,13 @@ export default async function DetailTenanta({
 
         <button className="tlacidlo" type="submit">Uložiť</button>
       </form>
+
+      {/* Prihlasovacie údaje sú medzi úpravou a vypnutím zámerne: patria
+          k zavedeniu zákazníka, nie k jeho dennému nastaveniu. */}
+      <div style={{ display: "grid", gap: 16, marginTop: 16 }}>
+        <Poskytovatel tenant={tenant} provider="microsoft" domena={tenant.hostnames[0]} />
+        <Poskytovatel tenant={tenant} provider="google" domena={tenant.hostnames[0]} />
+      </div>
 
       <form action={prepniStav} className="karta admin-forma" style={{ marginTop: 16 }}>
         <input type="hidden" name="companyCode" value={tenant.companyCode} />

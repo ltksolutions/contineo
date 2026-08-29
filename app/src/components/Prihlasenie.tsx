@@ -21,16 +21,56 @@ const CHYBY: Record<string, string> = {
     "Odkaz už neplatí — buď vypršal, alebo bol použitý. Vyžiadajte si nový.",
   EmailSignin:
     "E-mail sa nepodarilo odoslať. Skúste to o chvíľu znova.",
+  // Konto sa overilo, ale do organizácie nepatrí, alebo je z cudzieho
+  // Entra tenanta. Presnejšie sa to povedať nedá — z toho, že „vaša adresa
+  // tam je, ale konto nie", by sa dalo zistiť, kto v organizácii je.
+  OAuthSignin: "Prihlásenie kontom sa nepodarilo začať. Skúste to znova.",
+  OAuthCallback: "Prihlásenie kontom sa nepodarilo dokončiť. Skúste to znova.",
+  OAuthAccountNotLinked:
+    "Toto konto sa nedá spojiť s vašou adresou. Prihláste sa odkazom v e-maile.",
 }
+
+/** Značky poskytovateľov. Kreslené, nie sťahované — e-mail ani portál nemá volať cudzí server. */
+function ZnakMicrosoft() {
+  return (
+    <svg width="17" height="17" viewBox="0 0 23 23" aria-hidden="true">
+      <path fill="#f25022" d="M1 1h10v10H1z" />
+      <path fill="#7fba00" d="M12 1h10v10H12z" />
+      <path fill="#00a4ef" d="M1 12h10v10H1z" />
+      <path fill="#ffb900" d="M12 12h10v10H12z" />
+    </svg>
+  )
+}
+
+function ZnakGoogle() {
+  return (
+    <svg width="17" height="17" viewBox="0 0 48 48" aria-hidden="true">
+      <path fill="#4285F4" d="M45.1 24.5c0-1.6-.1-2.8-.4-4H24v7.3h12.1c-.2 2-1.6 5-4.5 7l6.9 5.3c4.1-3.8 6.6-9.4 6.6-15.6z" />
+      <path fill="#34A853" d="M24 46c5.9 0 10.9-2 14.5-5.3l-6.9-5.3c-1.8 1.3-4.3 2.2-7.6 2.2-5.8 0-10.7-3.8-12.5-9.1l-7.1 5.5C8.1 41.1 15.4 46 24 46z" />
+      <path fill="#FBBC05" d="M11.5 28.5c-.5-1.4-.7-2.9-.7-4.5s.3-3.1.7-4.5l-7.1-5.5C2.9 17.1 2 20.4 2 24s.9 6.9 2.4 10z" />
+      <path fill="#EA4335" d="M24 10.6c3.2 0 5.4 1.4 6.7 2.6l6.1-6C33 3.7 29 2 24 2 15.4 2 8.1 6.9 4.4 14l7.1 5.5c1.8-5.3 6.7-8.9 12.5-8.9z" />
+    </svg>
+  )
+}
+
+const ZNAKY = { microsoft: ZnakMicrosoft, google: ZnakGoogle }
+const NAZVY = { microsoft: "Microsoft", google: "Google" }
 
 export default function Prihlasenie({
   odoslane,
   chyba,
   branding,
+  poskytovatelia = [],
 }: {
   odoslane: boolean
   chyba?: string
   branding?: TenantBrandingView
+  /**
+   * Ktoré kontá má táto organizácia zapnuté (D44). Prichádza zo servera —
+   * klient nemá ako vedieť, čie prihlasovacie údaje sú pre túto doménu
+   * nastavené, a hádať by znamenalo ponúknuť tlačidlo, ktoré skončí chybou.
+   */
+  poskytovatelia?: ("microsoft" | "google")[]
 }) {
   const [email, setEmail] = useState("")
   const [odosielam, setOdosielam] = useState(false)
@@ -112,6 +152,43 @@ export default function Prihlasenie({
         >
           {CHYBY[chyba] ?? "Prihlásenie sa nepodarilo. Skúste to znova."}
         </div>
+      )}
+
+      {/* Konto je hore: kto ho má, klikne raz a je dnu — odkaz v e-maile je
+          o dva kroky dlhší. Kto ho nemá (rozhodcovia, delegáti), pokračuje
+          formulárom pod tým. */}
+      {poskytovatelia.length > 0 && (
+        <>
+          <div style={{ display: "grid", gap: 10, marginBottom: 18 }}>
+            {poskytovatelia.map(p => {
+              const Znak = ZNAKY[p]
+              return (
+                <button
+                  key={p}
+                  type="button"
+                  className="tlacidlo tlacidlo--tiche"
+                  style={{ justifyContent: "center" }}
+                  onClick={() => signIn(p === "microsoft" ? "azure-ad" : "google", { callbackUrl: "/" })}
+                >
+                  <Znak />
+                  Prihlásiť sa cez {NAZVY[p]}
+                </button>
+              )
+            })}
+          </div>
+
+          <div
+            aria-hidden="true"
+            style={{
+              display: "flex", alignItems: "center", gap: 12,
+              margin: "0 0 18px", color: "var(--muted)", fontSize: 13,
+            }}
+          >
+            <span style={{ flex: 1, height: 1, background: "var(--line)" }} />
+            alebo
+            <span style={{ flex: 1, height: 1, background: "var(--line)" }} />
+          </div>
+        </>
       )}
 
       <form onSubmit={odosli} style={{ display: "grid", gap: 12 }}>

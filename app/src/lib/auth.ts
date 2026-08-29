@@ -22,11 +22,17 @@
 
 import { headers } from "next/headers"
 import type { NextAuthOptions } from "next-auth"
+import type { Provider } from "next-auth/providers/index"
 import type { EmailConfig } from "next-auth/providers/email"
+import AzureADProvider from "next-auth/providers/azure-ad"
+import GoogleProvider from "next-auth/providers/google"
 import { mongoAdapter } from "./authAdapter"
 import { send, signInEmail } from "./ecomail"
-import { personMaySignIn, recordSignIn, personLanguage } from "./persons"
+import { personMaySignIn, recordSignIn, recordExternalRef, personLanguage } from "./persons"
 import { resolveTenant, normalizeHostname } from "./tenants"
+import { resolveCredentials, ID_POSKYTOVATELA } from "./oauth"
+import type { OAuthProviderName, ResolvedCredentials } from "./oauth"
+import type { Tenant } from "./tenants"
 
 /**
  * Rozloží zoznam povolených adries.
@@ -225,11 +231,44 @@ export const authOptions: NextAuthOptions = {
      * ani odkaz získaný z cudzej schránky neprepustí niekoho, kto medzitým
      * zo zoznamu vypadol.
      */
-    async signIn({ user, email }) {
+    async signIn({ user, account, profile, email }) {
       // `email.verificationRequest` odlíši žiadosť o odkaz od jeho použitia.
       // Bez toho sa v logu nedá rozoznať, či človek o odkaz len požiadal,
       // alebo naň už klikol a neprešiel.
-      const faza = email?.verificationRequest ? "ziadost" : "pouzitie-odkazu"
+      const poskytovatel = poskytovatelZId(account?.provider)
+      const faza = poskytovatel ?? (email?.verificationRequest ? "ziadost" : "pouzitie-odkazu")
+
+      // ── konto od Microsoftu alebo Googlu (D45) ──
+      //
+      // Konto hovorí „toto je naozaj tá adresa". Že ten človek patrí do
+      // organizácie, hovorí až `persons` o pár riadkov nižšie.
+      let externalId: string | null = null
+      if (poskytovatel) {
+        const host = await requestHost()
+        const obmedzenia = await obmedzeniaPre(poskytovatel, host)
+        if (!obmedzenia) {
+          console.error(`[auth] ${faza}: obmedzenia sa nedali overiť — neprepúšťam`)
+          return false
+        }
+
+        const overenie = overOAuthProfil(
+          poskytovatel,
+          (profile ?? {}) as Record<string, unknown>,
+          obmedzenia,
+        )
+        if (!overenie.ok) {
+          // Menovite do logu: každý z tých dôvodov znamená inú opravu
+          // a „prihlásenie zlyhalo" neznamená ani jednu z nich.
+          console.error(`[auth] ${faza}: profil odmietnutý — ${overenie.dovod}`)
+          return false
+        }
+
+        // Adresa z overeného profilu prebije to, čo poskytovateľ dal do
+        // `user` — beriem tú, ktorú som sám skontroloval.
+        user.email = overenie.email
+        externalId = overenie.externalId
+      }
+
       if (!user.email) {
         console.error(`[auth] ${faza}: prihlásenie bez adresy`)
         return false
@@ -256,7 +295,14 @@ export const authOptions: NextAuthOptions = {
       // evidenciu. Na `lastLoginAt` má stáť príznak „nové" (D39), takže
       // ticho stratený zápis by sa neskôr prejavil ako nefunkčná funkcia
       // niekde úplne inde.
-      if (allowed) await recordSignIn(user.email)
+      if (allowed) {
+        await recordSignIn(user.email)
+        // Až po povolení. Odvtedy vieme, že je to to isté konto, aj keď
+        // organizácia zmení človeku adresu — tá sa mení, `oid` nie.
+        if (poskytovatel && externalId) {
+          await recordExternalRef(user.email, poskytovatel, externalId)
+        }
+      }
       return allowed
     },
     /**
@@ -299,4 +345,171 @@ export const authOptions: NextAuthOptions = {
       return session
     },
   },
+}
+
+// ── prihlásenie pracovným kontom (D43, D44, D45) ─────────────────────────────
+
+/**
+ * Prečo sa konto neprepustilo. Rozlíšené preto, že každý dôvod znamená inú
+ * opravu — a „prihlásenie zlyhalo" neznamená ani jednu z nich.
+ */
+export type DovodOdmietnutia =
+  | "ziadna-adresa"
+  | "neovereny-email"
+  | "cudzi-tenant"
+  | "cudzia-domena"
+
+export type OAuthOverenie =
+  | { ok: true; email: string; externalId: string | null }
+  | { ok: false; dovod: DovodOdmietnutia }
+
+/** Prvá hodnota, ktorá vyzerá ako e-mailová adresa. */
+function prvaAdresa(...kandidati: unknown[]): string | null {
+  for (const k of kandidati) {
+    if (typeof k === "string" && k.includes("@")) return k.trim().toLowerCase()
+  }
+  return null
+}
+
+/**
+ * Overí profil od poskytovateľa — **pred** tým, než sa slovo dostane k `persons`.
+ *
+ * Konto hovorí „toto je naozaj tá adresa". Nehovorí, že ten človek patrí do
+ * organizácie; to hovorí `persons`. Táto funkcia overuje len prvú vetu — a je
+ * to jediné miesto, kde sa to robí, takže je čistá a testovateľná bez siete.
+ *
+ * Microsoft vracia adresu raz ako `email`, inokedy ako `preferred_username`
+ * alebo `upn` — podľa toho, ako má zákazník nastavené kontá. Berie sa prvá,
+ * ktorá vyzerá ako adresa.
+ */
+export function overOAuthProfil(
+  provider: OAuthProviderName,
+  profil: Record<string, unknown>,
+  obmedzenia: { allowedTenantIds?: string[]; hostedDomain?: string },
+): OAuthOverenie {
+  if (provider === "microsoft") {
+    // `tid` je identifikátor Entra tenanta a v tokene od Entry je vždy.
+    // Jeho neprítomnosť znamená, že to nie je to, za čo sa to vydáva.
+    const tid = typeof profil.tid === "string" ? profil.tid.toLowerCase() : null
+    if (!tid) return { ok: false, dovod: "cudzi-tenant" }
+
+    const povolene = (obmedzenia.allowedTenantIds ?? []).map(x => x.toLowerCase())
+    // Prázdny zoznam = nekontroluje sa. Je to vedomé rozhodnutie správcu
+    // a je o ňom napísané na obrazovke, kde sa zadáva.
+    if (povolene.length > 0 && !povolene.includes(tid)) {
+      return { ok: false, dovod: "cudzi-tenant" }
+    }
+
+    const email = prvaAdresa(profil.email, profil.preferred_username, profil.upn)
+    if (!email) return { ok: false, dovod: "ziadna-adresa" }
+
+    // `oid` je nemenné v rámci tenanta; `sub` je nemenné v rámci aplikácie.
+    // Adresa nemenná nie je — ľudia sa vydávajú, organizácie sa premenúvajú.
+    const externalId = typeof profil.oid === "string" ? profil.oid
+      : typeof profil.sub === "string" ? profil.sub
+      : null
+    return { ok: true, email, externalId }
+  }
+
+  // Google
+  // `email_verified` je jediný rozdiel medzi „toto je jeho adresa" a „toto si
+  // napísal do profilu". Bez neho by spájanie kont podľa adresy bolo dierou.
+  if (profil.email_verified !== true) return { ok: false, dovod: "neovereny-email" }
+
+  const email = prvaAdresa(profil.email)
+  if (!email) return { ok: false, dovod: "ziadna-adresa" }
+
+  const hd = obmedzenia.hostedDomain?.trim().toLowerCase()
+  if (hd) {
+    // `hd` v požiadavke je pre Google len nápoveda, nie obmedzenie —
+    // vynucuje sa až tu, na odpovedi.
+    const domenaKonta = typeof profil.hd === "string" ? profil.hd.toLowerCase() : null
+    if (domenaKonta !== hd) return { ok: false, dovod: "cudzia-domena" }
+  }
+
+  const externalId = typeof profil.sub === "string" ? profil.sub : null
+  return { ok: true, email, externalId }
+}
+
+/**
+ * Poskytovateľ pre NextAuth z rozšifrovaných údajov.
+ *
+ * `allowDangerousEmailAccountLinking` je zapnuté vedome. Ten istý človek sa
+ * dnes prihlási odkazom v e-maile a zajtra pracovným kontom; bez spájania by
+ * NextAuth druhý pokus odmietol (`OAuthAccountNotLinked`) a človek by nemal
+ * ako zistiť prečo.
+ *
+ * Bezpečné je to preto, že **adresa tu nie je identitou.** Identitou je záznam
+ * v `persons`; konto je len dôkaz, že adresa patrí tomu, kto ju napísal. A ten
+ * dôkaz sa overuje v `overOAuthProfil()` — neoverená adresa sa nespojí nikdy.
+ */
+function oauthProvider(c: ResolvedCredentials): Provider {
+  if (c.provider === "microsoft") {
+    return AzureADProvider({
+      clientId: c.clientId,
+      clientSecret: c.clientSecret,
+      tenantId: c.tenantMode || "organizations",
+      allowDangerousEmailAccountLinking: true,
+    })
+  }
+  return GoogleProvider({
+    clientId: c.clientId,
+    clientSecret: c.clientSecret,
+    allowDangerousEmailAccountLinking: true,
+    authorization: c.hostedDomain
+      // Nápoveda pre Google, aby rovno ponúkol správne konto. Skutočné
+      // obmedzenie je až v `overOAuthProfil()` — toto sa dá obísť.
+      ? { params: { hd: c.hostedDomain, prompt: "select_account" } }
+      : { params: { prompt: "select_account" } },
+  })
+}
+
+/**
+ * Konfigurácia pre konkrétneho hostiteľa (D44).
+ *
+ * Ktorý Microsoft je „ten správny", závisí od domény: na `intranet.futbalsfz.sk`
+ * je to Entra zväzu, na našej doméne naša skúšobná aplikácia. Preto sa
+ * poskytovatelia neskladajú pri štarte, ale pri každej požiadavke.
+ *
+ * Prihlásenie e-mailom je tam **vždy**. Je to jediná cesta, ktorá nezávisí od
+ * cudzej služby — a keď Entra vypadne, musí zostať spôsob, ako sa dostať dnu.
+ */
+export async function authOptionsForHost(rawHost: string): Promise<NextAuthOptions> {
+  let tenant: Tenant | null = null
+  try {
+    tenant = await resolveTenant(normalizeHostname(rawHost))
+  } catch (e) {
+    // Bez tenanta zostane len e-mail. Výpadok databázy nesmie zhodiť
+    // prihlasovanie úplne.
+    console.error("[auth] tenanta pre poskytovateľov sa nepodarilo načítať:", e)
+  }
+
+  const providers: Provider[] = [emailProvider()]
+  for (const p of ["microsoft", "google"] as const) {
+    const c = resolveCredentials(tenant, p)
+    if (c) providers.push(oauthProvider(c))
+  }
+
+  return { ...authOptions, providers }
+}
+
+/** Obmedzenia poskytovateľa pre tohto hostiteľa. Prázdne, keď nie je nastavený. */
+async function obmedzeniaPre(provider: OAuthProviderName, rawHost: string) {
+  try {
+    const tenant = await resolveTenant(normalizeHostname(rawHost))
+    const c = resolveCredentials(tenant, provider)
+    return { allowedTenantIds: c?.allowedTenantIds ?? [], hostedDomain: c?.hostedDomain }
+  } catch {
+    // Nedostupná databáza — kontrola sa nedá spraviť, takže sa neprepúšťa.
+    return null
+  }
+}
+
+/** Z identifikátora NextAuthu späť na náš názov. `null` pri e-maile. */
+export function poskytovatelZId(id: string | undefined): OAuthProviderName | null {
+  if (!id) return null
+  for (const [nas, nextauth] of Object.entries(ID_POSKYTOVATELA)) {
+    if (nextauth === id) return nas as OAuthProviderName
+  }
+  return null
 }

@@ -21,6 +21,8 @@ import {
 import { UI_LANGUAGES, isUiLanguage } from "./i18n"
 import type { UiLanguage } from "./i18n"
 import type { Tenant } from "./tenants"
+import { zasifruj, sifrovanieJeKDispozicii } from "./tajomstva"
+import type { OAuthProviderName } from "./oauth"
 
 /**
  * `Tenant` plus polia, ktoré nesie len správa: kto zmenu spravil a kedy boli
@@ -229,4 +231,101 @@ export async function allTenants(): Promise<Tenant[]> {
   const col = await getCollection<TenantDoc>(TENANTS_COLLECTION)
   const surove = await col.find({}).sort({ companyCode: 1 }).toArray()
   return surove.map(normalizeTenant)
+}
+
+// ── prihlasovacie údaje poskytovateľov (D43) ─────────────────────────────────
+
+/**
+ * Uloží prístupové údaje k aplikácii zákazníka.
+ *
+ * **Prázdne tajomstvo znamená „nemeň", nie „zmaž".** Obrazovka hodnotu nikdy
+ * neukazuje, takže pole je pri každom otvorení prázdne — a keby prázdna
+ * hodnota mazala, stačilo by uložiť zmenu `clientId` a prihlásenie by
+ * prestalo fungovať bez toho, aby to ktokoľvek chcel. Na odstránenie je
+ * `zmazOAuth()`.
+ */
+export async function ulozOAuth(
+  companyCode: string,
+  provider: OAuthProviderName,
+  vstup: {
+    clientId?: string
+    /** Čitateľné tajomstvo. Zašifruje sa tu a von sa už nikdy nevráti. */
+    clientSecret?: string
+    tenantMode?: string
+    allowedTenantIds?: string[]
+    hostedDomain?: string
+  },
+  actor: string,
+): Promise<void> {
+  const kod = normalizeCompanyCode(companyCode)
+  const col = await getCollection<TenantDoc>(TENANTS_COLLECTION)
+  const existuje = await col.findOne({ companyCode: kod })
+  if (!existuje) throw new TenantValidationError(`Organizácia ${kod} neexistuje.`)
+
+  const set: Record<string, unknown> = {}
+  const cesta = `oauth.${provider}`
+
+  const clientId = vstup.clientId?.trim()
+  if (clientId) set[`${cesta}.clientId`] = clientId
+
+  const tajomstvo = vstup.clientSecret?.trim()
+  if (tajomstvo) {
+    if (!sifrovanieJeKDispozicii()) {
+      throw new TenantValidationError(
+        "Tajomstvo sa nedá uložiť: chýba OAUTH_SECRET_ENCRYPTION_KEY. " +
+        "Ukladať ho čitateľne nebudeme — je to prístup do cudzieho systému."
+      )
+    }
+    set[`${cesta}.clientSecretEnc`] = zasifruj(tajomstvo)
+  }
+
+  if (provider === "microsoft") {
+    if (vstup.tenantMode !== undefined) {
+      set[`${cesta}.tenantMode`] = vstup.tenantMode.trim() || "organizations"
+    }
+    // Zoznam sa **prepisuje celý**, aj prázdnym. Na rozdiel od tajomstva je
+    // vidieť, čo v ňom je, takže prázdne pole znamená „žiadne obmedzenie"
+    // a je to vedomé rozhodnutie, nie prehliadnutie.
+    if (vstup.allowedTenantIds !== undefined) {
+      set[`${cesta}.allowedTenantIds`] = vstup.allowedTenantIds
+    }
+  }
+  if (provider === "google" && vstup.hostedDomain !== undefined) {
+    set[`${cesta}.hostedDomain`] = vstup.hostedDomain.trim().toLowerCase() || undefined
+  }
+
+  if (Object.keys(set).length === 0) return
+
+  // Bez `clientId` je tajomstvo na nič a naopak — kontroluje sa až tu, aby
+  // sa dala doplniť polovica k tomu, čo už uložené je.
+  const poId = clientId ?? existuje.oauth?.[provider]?.clientId
+  const poTajomstve = tajomstvo ? true : Boolean(existuje.oauth?.[provider]?.clientSecretEnc)
+  if (!poId || !poTajomstve) {
+    throw new TenantValidationError(
+      "Treba aj `clientId`, aj tajomstvo — jedno bez druhého sa nedá použiť."
+    )
+  }
+
+  set[`${cesta}.updatedAt`] = new Date()
+  set[`${cesta}.updatedBy`] = actor
+  set.updatedBy = actor
+  set.updatedAt = new Date()
+
+  await col.updateOne({ companyCode: kod }, { $set: set } as never)
+  invalidateTenants()
+}
+
+/** Odstráni údaje poskytovateľa. Tlačidlo prihlásenia tým zmizne. */
+export async function zmazOAuth(
+  companyCode: string,
+  provider: OAuthProviderName,
+  actor: string,
+): Promise<void> {
+  const kod = normalizeCompanyCode(companyCode)
+  const col = await getCollection<TenantDoc>(TENANTS_COLLECTION)
+  await col.updateOne(
+    { companyCode: kod },
+    { $unset: { [`oauth.${provider}`]: "" }, $set: { updatedBy: actor, updatedAt: new Date() } } as never,
+  )
+  invalidateTenants()
 }
