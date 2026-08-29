@@ -148,6 +148,17 @@ export default function Hlavicka({
     // zo servera, kde už prešli všetky podmienky.
     ...(personalista ? [{ kam: "/hr", popis: "Pridelené normy" }] : []),
     ...(spravcaOsob ? [{ kam: "/osoby", popis: "Osoby" }] : []),
+  ]
+
+  /**
+   * Správcovské odkazy patria pod avatar, nie do lišty.
+   *
+   * Lišta je navigácia obsahu — to, čo človek otvára denne. Nastavenie
+   * organizácie a správa tenantov sú veci, ktoré sa otvárajú raz za mesiac
+   * a v lište len zaberali miesto tomu, na čo sa naozaj kliká.
+   */
+  const SPRAVA = [
+    ...(spravcaOsob ? [{ kam: "/organizacia", popis: "Nastavenie organizácie" }] : []),
     ...(spravca ? [{ kam: "/admin", popis: "Správa tenantov" }] : []),
   ]
 
@@ -333,6 +344,26 @@ export default function Hlavicka({
                     {meno && <div className="osobne-meno">{meno}</div>}
                     <div className="tichy osobne-email">{email}</div>
                   </div>
+
+                  {SPRAVA.map(o => (
+                    <Link
+                      key={o.kam}
+                      href={o.kam}
+                      role="menuitem"
+                      className="osobne-polozka"
+                      onClick={() => setOsobneOtvorene(false)}
+                    >
+                      <svg width="17" height="17" viewBox="0 0 18 18" aria-hidden="true"
+                        fill="none" stroke="currentColor" strokeWidth="1.6"
+                        strokeLinecap="round" strokeLinejoin="round">
+                        <circle cx="9" cy="9" r="2.6" />
+                        <path d="M9 1.8v1.9M9 14.3v1.9M2.9 9H1M17 9h-1.9M4.7 4.7 3.4 3.4M14.6 14.6l-1.3-1.3M13.3 4.7l1.3-1.3M3.4 14.6l1.3-1.3" />
+                      </svg>
+                      {o.popis}
+                    </Link>
+                  ))}
+
+                  {SPRAVA.length > 0 && <div className="osobne-ciara" />}
 
                   <button
                     type="button"

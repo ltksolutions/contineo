@@ -366,6 +366,13 @@ button:disabled { cursor: not-allowed; opacity: 0.55; }
 }
 
 .osobne-polozka:hover { background: var(--surface-2); }
+.osobne-polozka { text-decoration: none; }
+
+.osobne-ciara {
+  height: 1px;
+  background: var(--line);
+  margin: 6px 4px;
+}
 .osobne-polozka--odhlasit { color: var(--bad-fg); }
 
 .karta {

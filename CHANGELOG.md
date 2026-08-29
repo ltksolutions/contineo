@@ -4,6 +4,15 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Added (2026-08-29 — organizácia si spravuje nastavenie sama)
+
+- **`/organizacia` na doméne zákazníka (D48).** Vzhľad, jazyky, logo, farba, kontakt, vlastné prihlasovacie údaje Entra/Google, domény pre automatické zakladanie a **vlastné domény**. Rolou `people-admin`; kód organizácie a vypnutie portálu tam zámerne nie sú. **Správca platformy si ponecháva plnú správu všetkých organizácií** cez `/admin` — kvôli podpore a helpdesku.
+- **Domény: požiadať, nie zapísať.** Na otázku „ak to nie je nebezpečné" je odpoveď, že voľný zápis nebezpečný **je**, a to dvomi spôsobmi. Prvý: každá doména sa pridáva do *nášho* projektu vo Verceli, takže zákazník by mohol zapísať cudziu — Vercel na ňu drží nárok v našom účte a jej skutočný majiteľ si ju do svojho projektu nepridá. To je odstávka spôsobená tretej strane, z nášho účtu. Druhý: `*.contineo.app` už smeruje na naše nasadenie, takže voľná subdoména by sa zapísaním okamžite rozsvietila pod našou značkou; kontrola „nepatrí inému tenantovi" na to nestačí, lebo nepatrí zatiaľ nikomu.
+- Bezpečnou to robí **dôkaz cez DNS** — jediný, ktorý existuje. Zákazník o doménu požiada, dostane presný CNAME, a doména sa zapne (a do Vercelu pridá) až vtedy, keď smeruje na nás. Overuje sa CNAME aj výsledná adresa: apex domény a niektoré správcovstvá DNS CNAME neponúkajú a nahrádzajú ho ALIAS-om.
+- **Správcovské odkazy sa presunuli pod avatar.** Lišta je navigácia obsahu — to, čo človek otvára denne; nastavenie organizácie a správa tenantov sa otvárajú raz za mesiac a v lište len zaberali miesto.
+- 22 nových testov.
+
+
 ### Changed (2026-08-29 — jednotný vzhľad ovládacích prvkov a hlavička)
 
 - **Skupiny a trasy sa vyberajú, nepíšu.** Dovtedy to bolo textové pole oddelené čiarkou. Vyzeralo to nevinne, ale bola to pasca: `rozhodcovia` a `rozhodcova` vyzerajú v poli rovnako a v databáze sú to dve skupiny, z ktorých jedna nedostane nikdy nič — a personalista nemal ako vedieť, ktoré skupiny vôbec existujú. Teraz sa vyberá z existujúcich, pri každej je počet ľudí, a **napísať novú sa dá** — len vedome, samostatným poľom.

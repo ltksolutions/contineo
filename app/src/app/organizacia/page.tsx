@@ -1,0 +1,358 @@
+/**
+ * Nastavenie organizácie — na doméne zákazníka (D48).
+ *
+ * Čo tu **je**: vzhľad, jazyky, vlastné prihlasovacie údaje, domény
+ * s overením a domény pre automatické zakladanie.
+ *
+ * Čo tu **nie je**: vypnutie organizácie a jej kód. To sú veci medzi
+ * zákazníkom a nami a zostávajú v `/admin`, kde má správca platformy naďalej
+ * plnú správu všetkých organizácií — kvôli podpore a helpdesku.
+ */
+
+import { notFound, redirect } from "next/navigation"
+import { organizaciaContext } from "@/lib/organizacia"
+import { ziadosti, pokynPreDomenu } from "@/lib/domenyZakaznika"
+import { stavPoskytovatela, NAZOV_POSKYTOVATELA, ID_POSKYTOVATELA } from "@/lib/oauth"
+import { brandingView } from "@/lib/tenants"
+import { tenantStyle } from "@/components/TenantHeader"
+import { UI_LANGUAGES, formatDate } from "@/lib/i18n"
+import Vyber from "@/components/Vyber"
+import VyberFarby from "@/components/VyberFarby"
+import Oznam from "@/components/Oznam"
+import { ulozVzhlad, ulozPrihlasenie, zmazPrihlasenie, poziadaj, overDomenu, zrus } from "./akcie"
+import type { OAuthProviderName } from "@/lib/oauth"
+import type { Tenant } from "@/lib/tenants"
+
+export const dynamic = "force-dynamic"
+
+const JAZYKY: Record<string, string> = {
+  sk: "slovenčina",
+  cs: "čeština",
+  en: "angličtina",
+}
+
+function Poskytovatel({
+  tenant, provider, domena,
+}: {
+  tenant: Tenant
+  provider: OAuthProviderName
+  domena?: string
+}) {
+  const nazov = NAZOV_POSKYTOVATELA[provider]
+  const s = stavPoskytovatela(tenant, provider)
+  const navrat = `https://${domena ?? "<vaša doména>"}/api/auth/callback/${ID_POSKYTOVATELA[provider]}`
+
+  return (
+    <section className="karta" style={{ padding: "18px 20px", display: "grid", gap: 14 }}>
+      <div style={{ display: "flex", gap: 10, alignItems: "baseline", flexWrap: "wrap" }}>
+        <h2 style={{ fontSize: 17, margin: 0 }}>Prihlásenie cez {nazov}</h2>
+        <span
+          className="stitok"
+          style={s.stav === "necitatelne" ? { background: "var(--warn-bg)", color: "var(--warn-fg)" } : undefined}
+        >
+          {s.stav === "nastavene" ? "zapnuté"
+            : s.stav === "z-prostredia" ? "z nastavenia dodávateľa"
+            : s.stav === "necitatelne" ? "nečitateľné" : "vypnuté"}
+        </span>
+      </div>
+
+      <p className="tichy" style={{ margin: 0, fontSize: 14, lineHeight: 1.6 }}>
+        Aplikáciu si zaregistrujete <strong>vo vlastnom {nazov} adresári</strong> — vy
+        udeľujete súhlas, vy vidíte, kto sa prihlasoval, a vy viete prístup
+        kedykoľvek odvolať. My hodnotu tajomstva nikdy nevidíme.
+      </p>
+
+      <div>
+        <div className="tichy pole-napoveda">
+          Adresa návratu — zapíšte ju do svojej aplikácie presne takto:
+        </div>
+        <code style={{ fontSize: 13.5, overflowWrap: "anywhere" }}>{navrat}</code>
+      </div>
+
+      <form action={ulozPrihlasenie} style={{ display: "grid", gap: 14 }}>
+        <input type="hidden" name="provider" value={provider} />
+
+        <label className="pole">
+          <span className="pole-popis">Client ID</span>
+          <input className="pole-vstup" name="clientId" defaultValue={s.zdroj === "tenant" ? s.clientId : ""} />
+        </label>
+
+        <label className="pole">
+          <span className="pole-popis">Client secret</span>
+          <input className="pole-vstup" name="clientSecret" type="password" />
+          <span className="tichy pole-napoveda">
+            Prázdne = nemeniť. Ukladá sa zašifrované a späť sa nikdy nevypíše.
+          </span>
+        </label>
+
+        {provider === "microsoft" ? (
+          <>
+            <label className="pole">
+              <span className="pole-popis">Režim tenanta</span>
+              <input
+                className="pole-vstup"
+                name="tenantMode"
+                defaultValue={tenant.oauth?.microsoft?.tenantMode ?? "organizations"}
+              />
+              <span className="tichy pole-napoveda">
+                Pri aplikácii pre jediný adresár sem patrí vaše <strong>Directory
+                (tenant) ID</strong>. `organizations` = pracovné a školské kontá
+                odkiaľkoľvek, `common` = aj osobné.
+              </span>
+            </label>
+            <label className="pole">
+              <span className="pole-popis">Povolené Entra tenant id</span>
+              <input
+                className="pole-vstup"
+                name="allowedTenantIds"
+                defaultValue={(tenant.oauth?.microsoft?.allowedTenantIds ?? []).join(", ")}
+              />
+              <span className="tichy pole-napoveda">
+                Prázdne = nekontroluje sa. Pri režime `organizations` je to jediná
+                zábrana proti tomu, aby sa dnu dostal človek z cudzej organizácie,
+                ktorý má rovnakú adresu ako niekto u vás.
+              </span>
+            </label>
+          </>
+        ) : (
+          <label className="pole">
+            <span className="pole-popis">Doména Workspace</span>
+            <input
+              className="pole-vstup"
+              name="hostedDomain"
+              defaultValue={tenant.oauth?.google?.hostedDomain ?? ""}
+            />
+          </label>
+        )}
+
+        <div><button className="tlacidlo" type="submit">Uložiť</button></div>
+      </form>
+
+      {s.zdroj === "tenant" && (
+        <form action={zmazPrihlasenie} style={{ display: "grid", gap: 10, borderTop: "1px solid var(--line)", paddingTop: 14 }}>
+          <input type="hidden" name="provider" value={provider} />
+          <p className="tichy" style={{ margin: 0, fontSize: 14 }}>
+            Odstránením zmizne tlačidlo z prihlasovacej obrazovky. Ľuďom, ktorí
+            sa prihlasujú pracovným kontom, tým prestane fungovať jediná cesta,
+            ktorú poznajú.
+          </p>
+          <label className="pole">
+            <span className="pole-popis">Napíšte {tenant.companyCode} na potvrdenie</span>
+            <input className="pole-vstup" name="potvrdenie" autoCapitalize="characters" autoCorrect="off" />
+          </label>
+          <div><button className="tlacidlo tlacidlo--tiche" type="submit">Odstrániť</button></div>
+        </form>
+      )}
+    </section>
+  )
+}
+
+export default async function Organizacia({
+  searchParams,
+}: {
+  searchParams: Promise<{ sprava?: string; chyba?: string }>
+}) {
+  const ctx = await organizaciaContext()
+  if (ctx.state !== "ready") {
+    if (ctx.state === "not-signed-in") redirect("/prihlasenie")
+    notFound()
+  }
+
+  const { sprava, chyba } = await searchParams
+  const tenant = ctx.tenant
+  const branding = brandingView(tenant)
+  const jazyk = ctx.person.language
+  const cakajuce = (await ziadosti(tenant.companyCode)).filter(
+    z => !tenant.hostnames.includes(z.host),
+  )
+
+  return (
+    <div className="obal" style={{ padding: "28px 20px 80px", maxWidth: 720, ...tenantStyle(branding) }}>
+      <Oznam sprava={sprava} chyba={chyba === "1"} spat="/organizacia" />
+
+      <h1 style={{ fontSize: 26, letterSpacing: "-0.02em", margin: "0 0 6px" }}>Organizácia</h1>
+      <p className="tichy" style={{ fontSize: 15, margin: "0 0 22px", maxWidth: 620 }}>
+        Nastavenie, ktoré si spravujete sami. Kód organizácie
+        (<strong>{tenant.companyCode}</strong>) a vypnutie portálu tu zámerne nie sú —
+        s tým sa ozvite nám.
+      </p>
+
+      <form action={ulozVzhlad} className="karta" style={{ padding: 20, display: "grid", gap: 16 }} encType="multipart/form-data">
+        <h2 style={{ fontSize: 17, margin: 0 }}>Vzhľad a jazyky</h2>
+
+        <label className="pole">
+          <span className="pole-popis">Názov</span>
+          <input className="pole-vstup" name="displayName" defaultValue={tenant.branding.displayName} required />
+          <span className="tichy pole-napoveda">Celý názov. Je v e-mailoch a na prihlasovacej obrazovke.</span>
+        </label>
+
+        <label className="pole">
+          <span className="pole-popis">Skratka</span>
+          <input className="pole-vstup" name="shortName" defaultValue={tenant.branding.shortName ?? ""} />
+          <span className="tichy pole-napoveda">
+            Do hornej lišty, kde je vedľa nej ešte menu — „SFZ" tam povie to isté
+            čo celý názov a nechá miesto na zvyšok.
+          </span>
+        </label>
+
+        <div className="pole">
+          <span className="pole-popis">Logo</span>
+          {tenant.branding.logoUrl && (
+            <span className="logo-nahlad">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={tenant.branding.logoUrl} alt="" width={34} height={34} />
+              <span className="tichy pole-napoveda">súčasné</span>
+            </span>
+          )}
+          <input className="pole-vstup" type="file" name="logo" accept="image/png,image/jpeg,image/webp" />
+          <span className="tichy pole-napoveda">
+            PNG, JPEG alebo WebP, najviac 256 kB. Prázdne = nemeniť.
+          </span>
+        </div>
+
+        <div className="pole">
+          <span className="pole-popis">Farba</span>
+          <VyberFarby meno="accentColor" hodnota={tenant.branding.accentColor} />
+          <span className="tichy pole-napoveda">
+            Nesie ju tlačidlo s bielym textom, preto sú odtiene tmavšie, než by
+            sa chcelo — svetlejší tón znamená nečitateľné tlačidlo.
+          </span>
+        </div>
+
+        <label className="pole">
+          <span className="pole-popis">Kontaktná adresa</span>
+          <input className="pole-vstup" name="supportEmail" type="email" defaultValue={tenant.branding.supportEmail ?? ""} />
+          <span className="tichy pole-napoveda">Kam sa má obrátiť človek, ktorému niečo nesedí.</span>
+        </label>
+
+        <fieldset className="hr-skupina" style={{ border: "1px solid var(--line)" }}>
+          <legend className="pole-popis">Jazyky</legend>
+          <div className="stitky-zoznam">
+            {UI_LANGUAGES.map(j => (
+              <label key={j} className="stitok stitok--volba stitok--pole">
+                <input type="checkbox" name="languages" value={j} defaultChecked={tenant.languages.includes(j)} />
+                <span className="stitok-znak" aria-hidden="true" />
+                {JAZYKY[j] ?? j}
+              </label>
+            ))}
+          </div>
+        </fieldset>
+
+        <div className="pole">
+          <span className="pole-popis">Predvolený jazyk</span>
+          <Vyber
+            meno="defaultLanguage"
+            volby={UI_LANGUAGES.map(j => ({ hodnota: j, popis: JAZYKY[j] ?? j }))}
+            predvolena={tenant.defaultLanguage}
+            popisPola="Predvolený jazyk"
+          />
+          <span className="tichy pole-napoveda">Platí pre človeka, ktorý ešte nie je prihlásený.</span>
+        </div>
+
+        <label className="pole">
+          <span className="pole-popis">Domény pre automatické založenie</span>
+          <textarea
+            className="pole-vstup"
+            name="autoProvisionDomains"
+            rows={2}
+            defaultValue={(tenant.autoProvisionDomains ?? []).join("\n")}
+            placeholder="futbalsfz.sk&#10;sfzmarketing.sk"
+            autoCapitalize="none"
+            autoCorrect="off"
+          />
+          <span className="tichy pole-napoveda">
+            Jedna na riadok. Kto sa prihlási <strong>pracovným kontom</strong> z tejto
+            domény a v zozname osôb ešte nie je, založí sa sám ako bežný člen —
+            bez rolí a bez trás. Platí len pre kontá, nie pre odkaz v e-maile.
+          </span>
+        </label>
+
+        <div><button className="tlacidlo" type="submit">Uložiť</button></div>
+      </form>
+
+      {/* ── domény ── */}
+      <section className="karta" style={{ padding: "18px 20px", marginTop: 16, display: "grid", gap: 14 }}>
+        <h2 style={{ fontSize: 17, margin: 0 }}>Domény</h2>
+
+        <ul className="admin-domeny">
+          {tenant.hostnames.map(h => (
+            <li key={h} className="karta" style={{ padding: "10px 14px", display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
+              <span style={{ fontWeight: 600 }}>{h}</span>
+              <span className="stitok" style={{ background: "var(--ok-bg)", color: "var(--ok-fg)" }}>funguje</span>
+              {tenant.hostnames.length > 1 && (
+                <form action={zrus} style={{ marginLeft: "auto" }}>
+                  <input type="hidden" name="host" value={h} />
+                  <button className="tlacidlo tlacidlo--tiche" type="submit" style={{ padding: "5px 10px", fontSize: 13 }}>
+                    Odstrániť
+                  </button>
+                </form>
+              )}
+            </li>
+          ))}
+        </ul>
+
+        {cakajuce.length > 0 && (
+          <ul className="admin-domeny">
+            {cakajuce.map(z => {
+              const p = pokynPreDomenu(z.host)
+              return (
+                <li key={z.host} className="karta" style={{ padding: "12px 14px", display: "grid", gap: 8 }}>
+                  <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
+                    <span style={{ fontWeight: 600 }}>{z.host}</span>
+                    <span className="stitok" style={{ background: "var(--warn-bg)", color: "var(--warn-fg)" }}>
+                      čaká na DNS
+                    </span>
+                    <span className="tichy" style={{ fontSize: 13, marginLeft: "auto" }}>
+                      od {formatDate(z.requestedAt, jazyk)}
+                    </span>
+                  </div>
+
+                  {p && (
+                    <p className="tichy" style={{ margin: 0, fontSize: 13.5, overflowWrap: "anywhere" }}>
+                      U svojho správcu DNS pridajte <strong>{p.typ}</strong> záznam{" "}
+                      <code>{p.nazov}</code> → <code>{p.hodnota}</code>
+                    </p>
+                  )}
+
+                  <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                    <form action={overDomenu}>
+                      <input type="hidden" name="host" value={z.host} />
+                      <button className="tlacidlo" type="submit" style={{ padding: "6px 14px", fontSize: 13.5 }}>
+                        Overiť a zapnúť
+                      </button>
+                    </form>
+                    <form action={zrus}>
+                      <input type="hidden" name="host" value={z.host} />
+                      <button className="tlacidlo tlacidlo--tiche" type="submit" style={{ padding: "6px 14px", fontSize: 13.5 }}>
+                        Zrušiť žiadosť
+                      </button>
+                    </form>
+                  </div>
+                </li>
+              )
+            })}
+          </ul>
+        )}
+
+        <form action={poziadaj} style={{ display: "grid", gap: 10 }}>
+          <label className="pole">
+            <span className="pole-popis">Pridať vlastnú doménu</span>
+            <input className="pole-vstup" name="host" placeholder="intranet.vasazorganizacia.sk" autoCapitalize="none" autoCorrect="off" />
+            <span className="tichy pole-napoveda">
+              Doména sa zapne až vtedy, keď na nás začne smerovať DNS. Nastaviť to
+              vie len ten, kto ju naozaj ovláda — a je to jediný dôkaz, ktorý
+              existuje. Bez neho by si ktokoľvek mohol pripísať cudziu doménu.
+            </span>
+          </label>
+          <div><button className="tlacidlo tlacidlo--tiche" type="submit">Požiadať</button></div>
+        </form>
+      </section>
+
+      {/* ── prihlasovanie kontom ── */}
+      <div style={{ display: "grid", gap: 16, marginTop: 16 }}>
+        <Poskytovatel tenant={tenant} provider="microsoft" domena={tenant.hostnames[0]} />
+        <Poskytovatel tenant={tenant} provider="google" domena={tenant.hostnames[0]} />
+      </div>
+    </div>
+  )
+}

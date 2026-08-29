@@ -279,7 +279,11 @@
 - [x] rola `people-admin` a obrazovky `/osoby` (D46), import CSV s náhľadom
 - [x] čítanie CSV a mapovanie hlavičiek presunuté do `lib/` — skript aj obrazovka volajú to isté
 - [ ] **zostáva: `OAUTH_SECRET_ENCRYPTION_KEY` medzi premennými nasadenia** (`openssl rand -hex 32`). Bez neho sa tajomstvo nedá uložiť; obrazovka to povie a všetko ostatné funguje.
-- [ ] zostáva: údaje Entra aplikácie SFZ, keď ich pošle ich IT
+- [x] údaje Entra aplikácie SFZ zadané a overené (2026-08-29)
+- [x] **`AADSTS50011` pri prihlásení kontom** — `NEXTAUTH_URL` je jedna adresa na celé nasadenie a NextAuth z nej staval `redirect_uri`. V produkcii odstránená; origin sa odvodzuje z hostiteľa požiadavky. Zapísané v `NASADENIE_app.md`, lebo chýbajúca premenná vyzerá ako chyba
+- [x] **`/organizacia`** — zákazník si sám spravuje vzhľad, prihlasovanie aj domény (D48). Domény cez žiadosť + dôkaz DNS, nie voľným zápisom
+- [x] **automatické založenie z povolených domén** (D47)
+- [x] **adresa prestala byť kľúčom** — identitou je `persons.id`, adresa sa dá zmeniť a história zostáva celá
 
 **Zostáva (mimo rozsahu B)**
 

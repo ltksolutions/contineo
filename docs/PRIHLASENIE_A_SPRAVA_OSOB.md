@@ -241,3 +241,51 @@ obrazovka `/admin/tenanti/[kod]` ju preto vypisuje v hotovom tvare.
 | **D44** | Poskytovatelia sa skladajú podľa hostiteľa, nie pri štarte | ✅ 2026-08-29 |
 | **D45** | Konto overuje adresu, vstup povoľuje `persons` | ✅ 2026-08-29 |
 | **D46** | Správa osôb má vlastnú rolu `people-admin`, oddelenú od `hr` | ✅ 2026-08-29 |
+| **D47** | Kto sa prihlási kontom z povolenej domény, založí sa sám | ✅ 2026-08-29 |
+| **D48** | Organizácia si spravuje vzhľad, prihlasovanie aj domény sama — domény s dôkazom cez DNS | ✅ 2026-08-29 |
+
+### D47 — automatické založenie z povolených domén
+
+Kto sa prihlási **overeným pracovným kontom** z domény, ktorú si organizácia
+vypísala (`tenants.autoProvisionDomains`), a v `persons` ešte nie je, založí sa
+ako bežný člen: bez rolí, bez trás, rovno `active`.
+
+Nie je to zmäkčenie brány. Adresár zákazníka už raz rozhodol, že ten človek do
+organizácie patrí, a `tid` sa overuje (D45) — pozývať ho ešte raz ručne je
+práca navyše za nič.
+
+**Platí len pre kontá, nie pre odkaz v e-maile.** Konto z adresára je dôkaz
+príslušnosti; napísaná adresa nie je nič a zoznam osôb by sa zaplnil preklepmi
+a skúšaním.
+
+Porovnáva sa **celá doména**, nie koncovka: `endsWith` by pustilo aj
+`zlyfutbalsfz.sk` a `futbalsfz.sk.utocnik.com`. Poddomény treba vypísať.
+
+### D48 — organizácia si spravuje nastavenie sama
+
+Vzhľad, jazyky, vlastné prihlasovacie údaje a domény si mení zákazník na
+**svojej** doméne (`/organizacia`), rolou `people-admin`. Kód organizácie
+a vypnutie portálu tam nie sú — to sú veci medzi ním a nami.
+
+**Správca platformy si ponecháva plnú správu všetkých organizácií** cez
+`/admin`, kvôli podpore a helpdesku. Táto obrazovka mu nič neuberá.
+
+#### Prečo domény nie voľným zápisom
+
+Otázka znela „ak to nie je nebezpečné". **Voľný zápis nebezpečný je**, a to
+dvomi spôsobmi, ktoré na prvý pohľad nie sú vidieť:
+
+1. **Cudzia doména v našom účte.** Každá doména sa pridáva do *nášho* projektu
+   vo Verceli. Zákazník by mohol zapísať doménu, ktorá mu nepatrí — Vercel na
+   ňu drží nárok v našom účte a jej skutočný majiteľ si ju do svojho projektu
+   nepridá. To je odstávka spôsobená tretej strane, z nášho účtu, niekým, kto
+   nie sme my.
+2. **Naša vlastná doména.** `*.contineo.app` už dnes smeruje na naše nasadenie,
+   takže voľná subdoména (`admin.contineo.app`) by sa zapísaním okamžite
+   rozsvietila pod našou značkou. Kontrola „nepatrí inému tenantovi" na to
+   nestačí — nepatrí zatiaľ nikomu.
+
+Bezpečnou to robí **dôkaz o vlastníctve**, a ten vie dať len DNS. Preto:
+zákazník o doménu **požiada**, dostane presný CNAME, a zapne sa až vtedy, keď
+smeruje na nás. Nastaviť DNS vie len ten, kto doménu ovláda — a je to krok,
+ktorý musí spraviť tak či tak. Naše vlastné domény si neprideľuje vôbec.
