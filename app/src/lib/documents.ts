@@ -154,8 +154,11 @@ export async function addVersion(documentId: string, v: Version): Promise<void> 
   if (exists) return
 
   if (v.effectiveFrom instanceof Date) {
+    // `versions.0` v podmienke nie je ozdoba: keď pole ešte neexistuje,
+    // Mongo `arrayFilters` odmietne („The path 'versions' must exist") a padla
+    // by aj prvá verzia dokumentu — teda presne prípad, keď niet čo uzatvárať.
     await col.updateOne(
-      { documentId },
+      { documentId, "versions.0": { $exists: true } },
       { $set: { "versions.$[stara].effectiveTo": v.effectiveFrom } },
       {
         arrayFilters: [{

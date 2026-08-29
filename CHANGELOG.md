@@ -4,6 +4,18 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Added (2026-08-29 — ostré normy dostali platné znenie)
+
+- **`npm run verzie`** — deväť noriem SFZ prišlo RAG importom a `versions[]` nemalo vôbec: `versionId` navrchu, text v `document_chunks`. Pre vyhľadávanie to stačilo, pre potvrdzovanie nie — `effectiveVersion()` číta výhradne `versions[]` (D6, D25), takže všetkých deväť bolo v onboardingu „bez platného znenia".
+  - Verzia dostane **ten istý `versionId`**, aký už majú dokument aj jeho chunky. Potvrdenie sa tým viaže presne na to znenie, z ktorého systém odpovedá; nové číslo by vytvorilo druhú pravdu o tom istom texte.
+  - Text sa poskladá z chunkov v poradí `chunkIndex`. Chunky sa neprekrývajú — sú to články, každý uvedený hlavičkou „Dokument › Článok N", ktorá je tam kvôli vyhľadávaniu; pri súvislom čítaní sa odstráni a nahradí nadpisom.
+  - Dátum platnosti skript **nedopĺňa odhadom**. Musí ho zadať človek (`--od`), pretože to je presne to rozhodnutie, ktoré systém spravíť nevie (D6, D25). Bez `--zapis` nezapisuje nič.
+- **Deväť noriem SFZ má `effectiveFrom = 2026-01-01`, označenie „1.0".** — **zástupný dátum, nie skutočná účinnosť.** Disciplinárny poriadok je z 8. júna 2021, Súťažný zo 6. júna 2023. Dátum sa doslovne prepíše do potvrdzovacej formulky, a tým aj do záznamu v `acknowledgements` (D28) — pred ostrým nasadením ho treba nahradiť skutočnými dátumami. Zatiaľ slúži na to, aby sa dal celý tok odskúšať na skutočnom obsahu, nie na jednom testovacom dokumente.
+
+### Fixed (2026-08-29)
+
+- **`addVersion()` padával práve na prvej verzii dokumentu.** Uzatvorenie platnosti predchádzajúcej verzie sa robí cez `arrayFilters`, a tých sa Mongo odmietne dotknúť, keď pole `versions` ešte neexistuje („The path 'versions' must exist"). Chyba teda nastala v jedinom prípade, keď niet čo uzatvárať. Podmienka `versions.0` ten krok preskočí. Doteraz si toho nikto nevšimol, lebo jediný dokument s `versions[]` vznikol seedom, ktorý pole rovno zapisuje.
+
 ### Added (2026-08-28 — správa tenantov, rozsahy B a C)
 
 - **Úprava organizácie z obrazovky:** názov, skratka, logo, farba, kontakt, jazyky a domény. Nevyplnené pole sa **nemení, nemaže** — inak by uloženie názvu zmazalo logo (kryté testom).
