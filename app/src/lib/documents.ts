@@ -32,6 +32,13 @@ export interface Version {
   effectiveFrom: Date | null
   effectiveTo: Date | null
 
+  /**
+   * Odkiaľ dátum platnosti pochádza — spravidla citácia ustanovenia
+   * o účinnosti. Dátum bez pôvodu sa o rok nedá overiť a pritom je doslovne
+   * v každom zázname o potvrdení (D28).
+   */
+  effectiveFromSource?: string
+
   isActive: boolean
   contentHash?: string
   changeNote?: string

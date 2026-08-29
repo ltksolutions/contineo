@@ -10,7 +10,22 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
   - Verzia dostane **ten istý `versionId`**, aký už majú dokument aj jeho chunky. Potvrdenie sa tým viaže presne na to znenie, z ktorého systém odpovedá; nové číslo by vytvorilo druhú pravdu o tom istom texte.
   - Text sa poskladá z chunkov v poradí `chunkIndex`. Chunky sa neprekrývajú — sú to články, každý uvedený hlavičkou „Dokument › Článok N", ktorá je tam kvôli vyhľadávaniu; pri súvislom čítaní sa odstráni a nahradí nadpisom.
   - Dátum platnosti skript **nedopĺňa odhadom**. Musí ho zadať človek (`--od`), pretože to je presne to rozhodnutie, ktoré systém spravíť nevie (D6, D25). Bez `--zapis` nezapisuje nič.
-- **Deväť noriem SFZ má `effectiveFrom = 2026-01-01`, označenie „1.0".** — **zástupný dátum, nie skutočná účinnosť.** Disciplinárny poriadok je z 8. júna 2021, Súťažný zo 6. júna 2023. Dátum sa doslovne prepíše do potvrdzovacej formulky, a tým aj do záznamu v `acknowledgements` (D28) — pred ostrým nasadením ho treba nahradiť skutočnými dátumami. Zatiaľ slúži na to, aby sa dal celý tok odskúšať na skutočnom obsahu, nie na jednom testovacom dokumente.
+- **`npm run platnost`** — nastaví dátum platnosti znenia. Vyžaduje `--zdroj`, teda odkiaľ ten dátum je; citácia sa uloží k verzii (`versions[].effectiveFromSource`). Dátum sa doslovne prepisuje do potvrdzovacej formulky a tým aj do záznamu v `acknowledgements` (D28) — o rok musí byť možné zistiť, či pochádza z ustanovenia o účinnosti, alebo to bol niečí odhad. Bez `--zapis` nezapisuje nič.
+- **Osem noriem SFZ má skutočný dátum účinnosti**, prevzatý z ustanovenia o účinnosti v ich vlastnom texte (`scripts/datumy_sfz.sh` drží citácie):
+  | norma | účinnosť od |
+  |---|---|
+  | Organizačný a návštevný poriadok | 1. 7. 2014 |
+  | Rokovací poriadok Konferencie | 4. 6. 2016 |
+  | Volebný poriadok | 4. 6. 2016 |
+  | Poriadok komory pre riešenie sporov | 7. 12. 2021 |
+  | Disciplinárny poriadok | 1. 7. 2023 |
+  | Stanovy | 27. 2. 2026 |
+  | Registračný a prestupový poriadok | 1. 6. 2026 |
+  | Súťažný poriadok | 24. 6. 2026 |
+
+  Pri **Stanovách a Súťažnom poriadku** je dátum odvodený z dvoch miest (ustanovenie „dňom schválenia" + deň schválenia poslednej novely zo záhlavia), nie odcitovaný z jedného — a je to tak aj zapísané.
+- **Revízny poriadok zostáva zástupný.** Hovorí „nadobúda účinnosť dňom jeho schválenia VV SFZ" a dátum schválenia v texte nie je; z dokumentu sa určiť nedá. Je označený priamo v `effectiveFromSource` a treba ho doplniť z uznesenia VV SFZ.
+- **Označenie znenia je zatiaľ všade „1.0"** a to je vymyslené číslo — normy vlastné číslovanie verzií nemajú. Objaví sa v potvrdzovacej formulke, takže sa raz bude musieť nahradiť niečím, čo naozaj niečo znamená (napr. dňom schválenia novely).
 
 ### Fixed (2026-08-29)
 
