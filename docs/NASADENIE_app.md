@@ -82,7 +82,7 @@ neukáže ani po správnom DNS — neznámy hostiteľ je zakázaný (D29). Už t
 
 ```bash
 cd ~/Documents/GitHub/contineo/app
-node scripts/tenant_set.mjs --stav
+npm run tenant -- --stav
 ```
 
 Sú to zámerne dve nezávislé miesta. Preklep v jednom z nich nikoho nepustí dnu,
@@ -129,7 +129,7 @@ sebou a každá odpovedá na inú otázku:
 Postup pre novú organizáciu na **jej vlastnej doméne**, napr. `intranet.klub.sk`:
 
 ```bash
-node scripts/tenant_set.mjs --company KLUB \
+npm run tenant -- --company KLUB \
   --host intranet.klub.sk --name "Názov klubu" \
   --language sk --languages sk
 ```
@@ -268,7 +268,7 @@ wildcard, ktorý sa nastaví **raz** a odvtedy pokrýva každú budúcu subdomé
 **Overené naživo (2026-08-28)** na skúšobnom tenantovi `TEST`:
 
 ```bash
-node scripts/tenant_set.mjs --company TEST --host test.contineo.app \
+npm run tenant -- --company TEST --host test.contineo.app \
   --name 'Skúšobná organizácia'
 ```
 
@@ -282,12 +282,12 @@ Od tejto chvíle je nový zákazník **jeden príkaz** a nič viac: žiadny Verc
 
 Tenant `TEST` je zámerne ponechaný ako terč na overenie po zmenách. Nemá ani
 jednu osobu, takže sa doň nedá prihlásiť. Vypnúť sa dá kedykoľvek:
-`node scripts/tenant_set.mjs --company TEST --disable true`.
+`npm run tenant -- --company TEST --disable true`.
 
 **Odvtedy pri každom novom zákazníkovi:**
 
 ```bash
-node scripts/tenant_set.mjs --company KLUB \
+npm run tenant -- --company KLUB \
   --host klub.contineo.app --name "Názov klubu"
 ```
 
@@ -372,10 +372,10 @@ Pravidlo: **doména dodávateľa má vlastného tenanta.**
 ```bash
 # Poradie je dôležité: skript odmietne doménu, ktorá ešte patrí inému
 # tenantovi. Najprv ju treba uvoľniť, až potom priradiť.
-node scripts/tenant_set.mjs --company SFZ \
+npm run tenant -- --company SFZ \
   --host intranet.futbalsfz.sk --host sfz.localhost
 
-node scripts/tenant_set.mjs --company LTK \
+npm run tenant -- --company LTK \
   --host app.contineo.app --host localhost \
   --name Contineo --short Contineo --language sk --languages sk,cs,en
 ```

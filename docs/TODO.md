@@ -197,25 +197,28 @@
 - [x] **D41** — rola `platform-admin` v `persons`, výslovná výnimka z D32; vidí prehľad, nie obsah
 - [x] **D42** — `/admin` beží len na doméne dodávateľa; kontroluje sa rola **aj** hostiteľ
 
-**Rozsah A — vidieť `[1–2 dni]`**
+**Rozsah A ✅ hotové 2026-08-28 — vidieť**
 
-- [ ] `requirePlatformAdmin()` — rola a hostiteľ, nie jedno z toho
-- [ ] `/admin` — zoznam tenantov: domény a ich živý stav, osoby a koľko sa prihlásilo, trasy, dokumenty s platným znením, potvrdenia
-- [ ] `/admin/tenanti/[kod]` — detail vrátane menovitého zoznamu dokumentov bez platného znenia (najčastejšia tichá príčina prázdneho zoznamu)
-- [ ] mobile first; testy na to, čo môže ukázať nepravdu
+- [x] `platformContext()` — rola **a** hostiteľ, nie jedno z toho
+- [x] `/admin` — zoznam tenantov: domény, osoby a koľko sa prihlásilo, trasy, dokumenty s platným znením, potvrdenia
+- [x] `/admin/tenanti/[kod]` — detail vrátane menovitého zoznamu dokumentov bez platného znenia
+- [x] mobile first; 10 testov na bránu
 
-**Rozsah B — meniť, čo je bezpečné `[2–3 dni]`**
+**Rozsah B ✅ hotové 2026-08-28 — meniť, čo je bezpečné**
 
-- [ ] názov, logo, farba, jazyky, zapnutie/vypnutie
-- [ ] **kontrola kolízie domén sa presunie zo `tenant_set.mjs` do `lib/tenants.ts`** — aby existovala raz; druhá kópia pravidla o vlastníctve domén je presne to, čo nesmie vzniknúť
-- [ ] zápis, kto a kedy zmenu spravil
-- [ ] vypnutie tenanta si vyžiada napísanie kódu organizácie — ľudia sa okamžite prestanú prihlásiť
+- [x] názov, skratka, logo, farba, kontakt, jazyky, domény
+- [x] **pravidlá presunuté do `lib/tenantAdmin.ts`** — kontrola vlastníctva domén, normalizácia aj zápis existujú raz. `tenant_set.mjs` ich odteraz volá; predtým mal vlastnú kópiu
+- [x] zápis `updatedBy` a `updatedAt`
+- [x] vypnutie si vyžiada napísanie kódu organizácie — nie „naozaj?", to sa odklikne skôr, než sa prečíta
+- [x] nevyplnené pole sa **nemení, nemaže** — inak by uloženie názvu zmazalo logo (test)
+- [x] odobratie poslednej domény sa odmietne — portál by sa nikde neukázal (test)
 
-**Rozsah C — zakladať `[2–3 dni]`**
+**Rozsah C ✅ hotové 2026-08-28 — zakladať**
 
-- [ ] nový tenant z obrazovky vrátane domén
-- [ ] Vercel API zo servera (`VERCEL_TOKEN` medzi premennými nasadenia)
-- [ ] odoslanie pokynov zákazníkovi tlačidlom (dnes `npm run domeny -- --poslat`)
+- [x] nová organizácia z obrazovky vrátane domén
+- [x] Vercel API zo servera (`lib/vercel.ts`), doména sa priradí projektu sama
+- [x] odoslanie pokynov zákazníkovi tlačidlom; zaznamená sa `domainSetup`
+- [ ] **zostáva: `VERCEL_TOKEN` medzi premennými nasadenia.** Bez neho obrazovka doménu do Vercelu nepridá a povie to; všetko ostatné funguje. Token z `vercel login` na to nestačí — CLI si ho priebežne obnovuje, takže prevzatá hodnota po čase prestane platiť (overené 2026-08-28).
 
 ### L. Udalosti a upozornenia — **Fáza 9** 🟡 → `docs/UDALOSTI_A_UPOZORNENIA_KONCEPCIA.md`
 

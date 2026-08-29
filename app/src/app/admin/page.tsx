@@ -7,6 +7,7 @@
  */
 
 import { notFound, redirect } from "next/navigation"
+import Link from "next/link"
 import { platformContext, tenantOverviews } from "@/lib/admin"
 import { formatDate } from "@/lib/i18n"
 
@@ -37,17 +38,26 @@ export default async function SpravaTenantov() {
       <h1 style={{ fontSize: 27, letterSpacing: "-0.02em", margin: "0 0 6px" }}>
         Správa tenantov
       </h1>
-      <p className="tichy" style={{ fontSize: 15, margin: "0 0 24px", maxWidth: 640 }}>
+      <p className="tichy" style={{ fontSize: 15, margin: "0 0 16px", maxWidth: 640 }}>
         Prehľad organizácií na platforme. Čísla sa počítajú pri zobrazení, nikde
         sa neukladajú. Obsah organizácií — dokumenty a potvrdenia — táto rola
         nesprístupňuje.
+      </p>
+
+      <p style={{ margin: "0 0 24px" }}>
+        <Link className="tlacidlo" href="/admin/novy">Nová organizácia</Link>
       </p>
 
       <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "grid", gap: 14 }}>
         {prehlad.map(t => (
           <li key={t.companyCode} className="karta" style={{ padding: "18px 20px" }}>
             <div style={{ display: "flex", gap: 10, alignItems: "baseline", flexWrap: "wrap" }}>
-              <strong style={{ fontSize: 17 }}>{t.displayName}</strong>
+              <Link
+                href={`/admin/tenanti/${encodeURIComponent(t.companyCode)}`}
+                style={{ fontSize: 17, fontWeight: 700, textDecoration: "none" }}
+              >
+                {t.displayName}
+              </Link>
               <span className="stitok">{t.companyCode}</span>
               {t.status !== "active" && (
                 <span className="stitok" style={{ background: "var(--warn-bg)", color: "var(--warn-fg)" }}>

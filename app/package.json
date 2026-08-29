@@ -17,7 +17,8 @@
     "seed:test": "node scripts/seed_test_onboarding.mjs",
     "stav": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --disable-warning=DEP0205 --import ./scripts/lib/ts-hook.mjs scripts/stav.mjs",
     "domeny": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --disable-warning=DEP0205 --import ./scripts/lib/ts-hook.mjs scripts/domeny.mjs",
-    "admin": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --disable-warning=DEP0205 scripts/admin_set.mjs"
+    "admin": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --disable-warning=DEP0205 scripts/admin_set.mjs",
+    "tenant": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --disable-warning=DEP0205 --import ./scripts/lib/ts-hook.mjs scripts/tenant_set.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.27.0",

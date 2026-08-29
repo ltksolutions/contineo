@@ -4,6 +4,21 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Added (2026-08-28 — správa tenantov, rozsahy B a C)
+
+- **Úprava organizácie z obrazovky:** názov, skratka, logo, farba, kontakt, jazyky a domény. Nevyplnené pole sa **nemení, nemaže** — inak by uloženie názvu zmazalo logo (kryté testom).
+- **Vypnutie si vyžiada napísanie kódu organizácie.** Je to jediná zmena, ktorá ľudí okamžite odstrihne od portálu; obyčajné „naozaj?" sa odklikne skôr, než sa prečíta. Tenant sa pritom nemaže — záznamy potvrdení musia prežiť koniec spolupráce.
+- **Zakladanie novej organizácie**, vrátane priradenia domény projektu vo Verceli a odoslania pokynov zákazníkovi jedným tlačidlom. Poradie je zámerné: najprv `tenants`, potom Vercel — zápis je zdroj pravdy a výpadok cudzieho API nesmie brániť organizáciu založiť.
+- **Pravidlá o doménach majú jednu definíciu.** `lib/tenantAdmin.ts` (vlastníctvo, normalizácia, zápis) a `lib/vercel.ts` (priradenie projektu, stav, znenie pokynov) volajú rovnako obrazovka aj skripty. `tenant_set.mjs` mal dovtedy vlastnú kópiu kontroly kolízie a `domeny.mjs` vlastné znenie e-mailu — dva rôzne texty o tom istom nastavení sú spoľahlivý spôsob, ako poradiť dvakrát rozdielne.
+- **Serverové formuláre bez klientskeho stavu.** Správcovská obrazovka funguje aj bez jediného riadku JavaScriptu; chyby sa vracajú do adresy. Vstupy majú `font-size: 16px`, inak Safari na iPhone pri kliknutí do poľa stránku priblíži.
+- **Každá akcia začína bránou.** Serverová akcia je koncový bod ako každý iný — to, že sa volá z chránenej stránky, nie je kontrola prístupu.
+- 15 nových testov (spolu 547).
+
+### Fixed (2026-08-28)
+
+- **Parametrové vlastnosti v `UnknownHostError`** (`constructor(public readonly …)`) Node pri spúšťaní skriptov cez `--import ts-hook` odstrániť nevie (`ERR_UNSUPPORTED_TYPESCRIPT_SYNTAX`). Kým `tenants.ts` nikto zo skriptov neimportoval, nevadilo to; odkedy `tenant_set.mjs` volá pravidlá z `lib/`, musí byť načítateľný. Prepísané na priradenie v tele — rovnaký kód, bez syntaxe, ktorú Node odmieta.
+- **`node scripts/tenant_set.mjs` už nefunguje**, skript importuje z `src/lib` a potrebuje ts-hook: `npm run tenant -- …`. Príkazy v dokumentácii prepísané.
+
 ### Added (2026-08-28 — `npm run domeny`)
 
 - **Stav domén tenantov jedným príkazom.** Pre každú doménu: či je vo Verceli, či zákazník už nastavil DNS, či mu v zóne nekolidujú staré záznamy, a ak čaká, presný `CNAME`. Odpovedá na otázku „prečo mu tá doména ešte nejde" bez klikania v dashboarde.

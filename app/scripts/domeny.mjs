@@ -21,6 +21,11 @@ import os from "node:os"
 import path from "node:path"
 import { MongoClient } from "mongodb"
 import { send } from "../src/lib/ecomail.ts"
+// Pravidlá o doménach majú jednu definíciu — v `lib/`. Skript ich volá,
+// nekopíruje: dva rozdielne texty o tom istom nastavení sú spoľahlivý
+// spôsob, ako niekomu poradiť dvakrát rozdielne.
+import { preskocitVercel, pokynyPreZakaznika } from "../src/lib/vercel.ts"
+import { doplnVercelPrihlasenie } from "./lib/vercel-auth.mjs"
 
 const URI = process.env.MONGODB_URI
 const DB = process.env.MONGODB_DB ?? "contineo"
@@ -61,47 +66,15 @@ const args = parseArgs(process.argv.slice(2))
 
 // ── Vercel ───────────────────────────────────────────────────────────────────
 
-/** Rovnaké pravidlo ako v `tenant_set.mjs` — jedno miesto by bolo lepšie, ale
- *  skripty sa navzájom neimportujú a duplicita troch riadkov je menšie zlo než
- *  spoločný modul, ktorý by musel žiť medzi `src/` a `scripts/`. */
-function preskocit(host) {
-  if (host === "localhost" || host.endsWith(".localhost") || host === "127.0.0.1") {
-    return "beží lokálne"
-  }
-  if (host.endsWith(".vercel.app")) return "prideľuje Vercel"
-  if (host !== "contineo.app" && host.endsWith(".contineo.app")) return "pokrýva wildcard"
-  return null
-}
+const preskocit = preskocitVercel
 
 function vercelToken() {
-  if (process.env.VERCEL_TOKEN) return process.env.VERCEL_TOKEN
-  for (const p of [
-    path.join(os.homedir(), "Library", "Application Support", "com.vercel.cli", "auth.json"),
-    path.join(os.homedir(), ".local", "share", "com.vercel.cli", "auth.json"),
-  ]) {
-    try {
-      const t = JSON.parse(fs.readFileSync(p, "utf8")).token
-      if (t) return t
-    } catch { /* ďalší */ }
-  }
-  return null
+  return process.env.VERCEL_TOKEN ?? null
 }
 
 function vercelProjekt() {
-  if (process.env.VERCEL_PROJECT_ID) {
-    return { projectId: process.env.VERCEL_PROJECT_ID, orgId: process.env.VERCEL_ORG_ID }
-  }
-  let dir = process.cwd()
-  for (let i = 0; i < 5; i++) {
-    try {
-      const j = JSON.parse(fs.readFileSync(path.join(dir, ".vercel", "project.json"), "utf8"))
-      if (j.projectId) return { projectId: j.projectId, orgId: j.orgId }
-    } catch { /* vyššie */ }
-    const hore = path.dirname(dir)
-    if (hore === dir) break
-    dir = hore
-  }
-  return null
+  if (!process.env.VERCEL_PROJECT_ID) return null
+  return { projectId: process.env.VERCEL_PROJECT_ID, orgId: process.env.VERCEL_ORG_ID }
 }
 
 async function api(token, cesta) {
@@ -131,28 +104,7 @@ async function stavDomeny(token, { projectId, orgId }, host) {
 
 // ── pokyny pre zákazníka ─────────────────────────────────────────────────────
 
-function pokyny(host, ciel) {
-  const pod = host.split(".")[0]
-  return {
-    subject: `Nastavenie domény ${host}`,
-    text: [
-      `Dobrý deň,`,
-      ``,
-      `aby portál bežal na adrese https://${host}, treba do DNS zóny domény`,
-      `pridať jeden záznam:`,
-      ``,
-      `    typ:    CNAME`,
-      `    názov:  ${pod}`,
-      `    cieľ:   ${ciel}`,
-      ``,
-      `Bezpečnostný certifikát vybavíme my, vydá sa automaticky do niekoľkých`,
-      `minút po tom, ako sa záznam rozšíri. Dovtedy adresa nefunguje — nie je`,
-      `to chyba, len ešte nie je kam smerovať.`,
-      ``,
-      `Keď to nastavíte, dajte nám prosím vedieť a overíme to.`,
-    ].join("\n"),
-  }
-}
+const pokyny = pokynyPreZakaznika
 
 // ── beh ──────────────────────────────────────────────────────────────────────
 
@@ -169,6 +121,7 @@ try {
     process.exit(0)
   }
 
+  doplnVercelPrihlasenie()
   const token = vercelToken()
   const projekt = vercelProjekt()
   if (!token || !projekt) {
@@ -183,7 +136,7 @@ try {
   for (const t of tenanti) {
     console.log(`\n${t.companyCode} · ${t.branding?.displayName ?? ""}`)
     const kontakt = t.branding?.supportEmail
-    console.log(`  kontakt: ${kontakt ?? "(nezadaný — `tenant_set.mjs --support`)"}`)
+    console.log(`  kontakt: ${kontakt ?? "(nezadaný — `npm run tenant -- --support`)"}`)
     if (t.domainSetup?.requestedAt) {
       const kedy = new Date(t.domainSetup.requestedAt).toISOString().slice(0, 16).replace("T", " ")
       console.log(`  pokyny poslané: ${kedy} → ${t.domainSetup.requestedTo}`)
@@ -204,7 +157,7 @@ try {
       const ciel = s.odporucanyCname ?? CNAME_CIEL
       if (!s.vProjekte) {
         console.log(`  ${CHYBA} ${host} — NIE JE v projekte vo Verceli`)
-        console.log(`      oprav: node scripts/tenant_set.mjs --company ${t.companyCode} --host ${host}`)
+        console.log(`      oprav: npm run tenant -- --company ${t.companyCode} --host ${host}`)
         continue
       }
       if (s.konflikty.length) {

@@ -67,9 +67,16 @@ export interface Tenant {
 
 /** Hostiteľ, ku ktorému neexistuje aktívny tenant. */
 export class UnknownHostError extends Error {
-  constructor(public readonly hostname: string) {
+  // Priradenie v tele, nie parametrová vlastnosť: tú Node pri spúšťaní
+  // skriptov cez `--import ts-hook` odstrániť nevie
+  // (`ERR_UNSUPPORTED_TYPESCRIPT_SYNTAX`), a tento modul dnes načítava aj
+  // `scripts/tenant_set.mjs`.
+  readonly hostname: string
+
+  constructor(hostname: string) {
     super(`Neznámy hostiteľ: ${hostname || "(prázdny)"}`)
     this.name = "UnknownHostError"
+    this.hostname = hostname
   }
 }
 
