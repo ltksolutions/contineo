@@ -198,7 +198,42 @@ platformy sem prístup nemá.
 
 ---
 
-## 8. Rozhodnutia
+## 8. Čo pošleme IT správcovi zákazníka
+
+Text nižšie je určený na priame preposlanie. Zámerne neobsahuje nič o tom, ako
+systém funguje vnútri — IT správca zväzu potrebuje vedieť štyri veci a nič viac.
+
+> **Registrácia aplikácie v Microsoft Entra ID**
+>
+> 1. `https://entra.microsoft.com` → **Applications** → **App registrations** →
+>    **New registration**
+> 2. **Name:** napr. `Contineo — intranet`
+> 3. **Supported account types:** *Accounts in this organizational directory only*
+>    (jediný tenant). Stačí to a je to najužšie nastavenie.
+> 4. **Redirect URI:** typ **Web**, hodnota presne:
+>    `https://<vaša doména>/api/auth/callback/azure-ad`
+> 5. **Register**
+> 6. Na prehľade aplikácie si poznačte **Application (client) ID**
+>    a **Directory (tenant) ID**
+> 7. **Certificates & secrets** → **New client secret** → popis a platnosť →
+>    **Add**. Hodnotu v stĺpci **Value** skopírujte hneď, **ukáže sa raz**.
+> 8. Pošlite nám tie tri hodnoty bezpečným kanálom (nie e-mailom).
+>
+> Oprávnenia navyše nastavovať netreba — predvolené `User.Read` stačí.
+> Prístup viete kedykoľvek odvolať zmazaním tajomstva alebo celej aplikácie;
+> zoznam prihlásení vidíte vo vlastnom Entre pod **Sign-in logs**.
+
+**Adresa návratu je najčastejšia príčina toho, prečo prihlásenie hneď na prvý
+raz nejde.** Musí sedieť na znak vrátane `https://` a bez lomky na konci;
+obrazovka `/admin/tenanti/[kod]` ju preto vypisuje v hotovom tvare.
+
+**Google Workspace** je analogický: Google Cloud Console → *APIs & Services* →
+*Credentials* → *OAuth client ID* → typ **Web application**, redirect URI
+`https://<doména>/api/auth/callback/google`.
+
+---
+
+## 9. Rozhodnutia
 
 | # | Otázka | Stav |
 |---|---|---|

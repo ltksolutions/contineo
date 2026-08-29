@@ -21,7 +21,12 @@ const URI = process.env.MONGODB_URI
 const DB = process.env.MONGODB_DB ?? "contineo"
 const OK = "\x1b[32m✔\x1b[0m", CHYBA = "\x1b[31m✘\x1b[0m", INFO = "\x1b[33m·\x1b[0m"
 
-const ZNAME_ROLE = ["hr"]
+/**
+ * Roly, ktoré patria tenantovi. Zhodné s `PRIDELITELNE_ROLE` v `lib/people.ts`.
+ * `platform-admin` medzi nimi nie je zámerne — patrí tenantovi dodávateľa
+ * a má vlastný skript (`npm run admin`), ktorý o tom vie.
+ */
+const ZNAME_ROLE = ["hr", "people-admin"]
 
 function arg(meno) {
   const i = process.argv.indexOf(meno)
