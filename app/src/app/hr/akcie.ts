@@ -171,9 +171,12 @@ export async function poslatOznamenie(fd: FormData) {
   const pridelenie = await loadAssignment(kod, id)
   if (!pridelenie) redirect("/hr")
 
-  const prijemcovia = await nepotvrdili(kod, id)
+  // Bývalým členom útvaru sa nepíše (D50): pripomínať normu útvaru, v ktorom
+  // človek už nie je, je nezmysel. V prehľade zostávajú vidieť, aby sa
+  // personalista mohol rozhodnúť sám.
+  const prijemcovia = (await nepotvrdili(kod, id)).filter(o => !o.byvaly)
   if (prijemcovia.length === 0) {
-    redirect("/hr?chyba=1&sprava=" + encodeURIComponent("Potvrdili už všetci — nebolo komu poslať."))
+    redirect("/hr?chyba=1&sprava=" + encodeURIComponent("Nie je komu poslať — potvrdili už všetci, kto v útvare zostal."))
   }
   if (prijemcovia.length > NAJVIAC_NARAZ) {
     redirect(`/hr/${encodeURIComponent(id)}/oznamit?chyba=` + encodeURIComponent(

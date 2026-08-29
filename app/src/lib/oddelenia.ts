@@ -34,7 +34,7 @@
  */
 
 import { getCollection } from "./mongodb"
-import { PERSONS_COLLECTION } from "./persons"
+import { PERSONS_COLLECTION, novaHistoriaUtvarov } from "./persons"
 import type { Person } from "./persons"
 
 export const ODDELENIA_COLLECTION = "departments"
@@ -298,7 +298,7 @@ export async function prepocitajCesty(companyCode: string): Promise<number> {
   const vsetky = await vsetkyOddelenia(companyCode)
   const col = await getCollection<Person>(PERSONS_COLLECTION)
   const osoby = await col
-    .find({ companyCode }, { projection: { id: 1, departmentId: 1, departmentPath: 1 } })
+    .find({ companyCode }, { projection: { id: 1, departmentId: 1, departmentPath: 1, departmentHistory: 1 } })
     .toArray()
 
   let zmenene = 0
@@ -306,7 +306,19 @@ export async function prepocitajCesty(companyCode: string): Promise<number> {
     const nova = cestaIds(vsetky, o.departmentId)
     const stara = o.departmentPath ?? []
     if (nova.length === stara.length && nova.every((x, i) => x === stara[i])) continue
-    await col.updateOne({ companyCode, id: o.id }, { $set: { departmentPath: nova } } as never)
+    // Cesta sa zmenila presunom vetvy, nie presunom človeka — útvar má
+    // rovnaký, takže sa **neotvára nový záznam histórie**, len sa opraví
+    // cesta v tom otvorenom. Inak by presun vetvy vyzeral ako to, že do
+    // svojho útvaru práve prišli všetci naraz.
+    await col.updateOne(
+      { companyCode, id: o.id },
+      {
+        $set: {
+          departmentPath: nova,
+          departmentHistory: novaHistoriaUtvarov(o.departmentHistory, o.departmentId ?? null, nova, new Date()),
+        },
+      } as never,
+    )
     zmenene++
   }
   return zmenene
@@ -358,16 +370,23 @@ export async function zaradOsobu(
   }
 
   const col = await getCollection<Person>(PERSONS_COLLECTION)
-  const r = await col.updateOne(
+  const osoba = await col.findOne({ companyCode, id: personId })
+  if (!osoba) throw new OddelenieError("Osoba sa nenašla.")
+
+  const teraz = new Date()
+  const novaCesta = cestaIds(vsetky, departmentId)
+  await col.updateOne(
     { companyCode, id: personId },
     {
       $set: {
         departmentId: departmentId ?? null,
-        departmentPath: cestaIds(vsetky, departmentId),
-        updatedAt: new Date(),
+        departmentPath: novaCesta,
+        departmentHistory: novaHistoriaUtvarov(
+          osoba.departmentHistory, departmentId ?? null, novaCesta, teraz,
+        ),
+        updatedAt: teraz,
         updatedBy: actor,
       },
     } as never,
   )
-  if (r.matchedCount === 0) throw new OddelenieError("Osoba sa nenašla.")
 }

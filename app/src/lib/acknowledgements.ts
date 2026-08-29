@@ -34,6 +34,7 @@ import { ObjectId } from "mongodb"
 import { getCollection } from "./mongodb"
 import { loadDocumentFor, effectiveVersion } from "./documents"
 import type { Version } from "./documents"
+import { vsetkyOddelenia, cesta } from "./oddelenia"
 import { formatDate, dictionary, normalizeLanguage } from "./i18n"
 import type { UiLanguage } from "./i18n"
 
@@ -71,6 +72,18 @@ export interface Acknowledgement {
   acknowledgedAt: Date
   ip: string | null
   userAgent: string | null
+
+  /**
+   * Útvar v čase potvrdenia — odtlačok, rovnako ako meno a adresa (D50).
+   *
+   * Bez neho by výkaz „potvrdenia po útvaroch" za minulý rok po reorganizácii
+   * povedal niečo iné než vtedy: počítal by sa podľa dnešnej štruktúry, a tá
+   * už môže vyzerať úplne inak. Názvy, nie len identifikátory — útvar sa dá
+   * premenovať aj zrušiť a záznam má byť čitateľný sám o sebe.
+   */
+  departmentId: string | null
+  /** Názvy útvarov od koreňa po vlastný, v čase potvrdenia. */
+  departmentNames: string[]
 
   // KONTEXT
   trackId: string | null
@@ -112,6 +125,8 @@ export interface Acknowledger {
   companyCode: string
   /** Jazyk prostredia z `persons.language`. Neznámy padá na slovenčinu. */
   language?: string
+  /** Útvar v čase potvrdenia. Zapíše sa ako odtlačok (D50). */
+  departmentId?: string | null
 }
 
 export type AcknowledgeResult =
@@ -149,6 +164,19 @@ export async function acknowledge(
   const statement = buildStatement(doc.title, v.label, effectiveFrom, language)
   const now = new Date()
 
+  // Názvy útvarov sa čítajú **teraz**, aby sa uložili tak, ako vtedy zneli.
+  // Zlyhanie tohto čítania nesmie zhodiť potvrdenie: záznam bez útvaru je
+  // horší než záznam s ním, ale oveľa lepší než žiadny.
+  let departmentNames: string[] = []
+  try {
+    if (actor.departmentId) {
+      const strom = await vsetkyOddelenia(actor.companyCode)
+      departmentNames = cesta(strom, actor.departmentId).map(o => o.nazov)
+    }
+  } catch (e) {
+    console.error("[acknowledgements] útvar sa nepodarilo prečítať:", e)
+  }
+
   const record: Acknowledgement = {
     type: "acknowledgement",
     companyCode: actor.companyCode,
@@ -167,6 +195,8 @@ export async function acknowledge(
     acknowledgedAt: now,
     ip: context.ip ?? null,
     userAgent: context.userAgent ?? null,
+    departmentId: actor.departmentId ?? null,
+    departmentNames,
     trackId: context.trackId ?? null,
     origin: "portal",
     supersedes: null,

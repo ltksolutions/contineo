@@ -120,9 +120,22 @@ for (const [kluc, z] of [...skupiny].sort((a, b) => b[1].osoby.length - a[1].oso
     // Cesta plochého stromu je jednoprvková. Zapisuje sa spolu so zaradením,
     // nie zvlášť — inak by chvíľu platilo, že človek do útvaru patrí, ale
     // pridelenie útvaru sa ho netýka.
+    const teraz = new Date()
     await osobyCol.updateOne(
       { companyCode: TENANT, id: o.id },
-      { $set: { departmentId: id, departmentPath: [id], updatedAt: new Date(), updatedBy: "script:utvary_z_textu" } },
+      {
+        $set: {
+          departmentId: id,
+          departmentPath: [id],
+          // Prevod nie je príchod. História sa otvára dátumom prevodu, ale
+          // pridelenia útvaru sú v tej chvíli všetky staršie — a majú platiť,
+          // lebo tí ľudia v útvare naozaj boli. Preto `od` v minulosti:
+          // epocha znamená „odjakživa", nie „práve prišiel".
+          departmentHistory: [{ departmentId: id, departmentPath: [id], od: new Date(0) }],
+          updatedAt: teraz,
+          updatedBy: "script:utvary_z_textu",
+        },
+      },
     )
     zaradene++
   }

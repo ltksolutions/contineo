@@ -42,6 +42,20 @@ const PLAN = [
         preco: "prihlásenie hľadá podľa adresy bez znalosti tenanta" },
       { kluc: { companyCode: 1, tracks: 1, status: 1 }, opts: { name: "tenant_trasa_stav" },
         preco: "kto z tejto trasy ešte nemá hotovo" },
+      { kluc: { companyCode: 1, departmentPath: 1, status: 1 }, opts: { name: "tenant_utvar_stav" },
+        preco: "kto patrí do útvaru vrátane podriadených (D49)" },
+      { kluc: { companyCode: 1, "departmentHistory.departmentPath": 1 },
+        opts: { name: "tenant_utvar_historia" },
+        preco: "kto v útvare kedysi bol a odišiel bez potvrdenia (D50)" },
+    ],
+  },
+  {
+    kolekcia: "departments",
+    indexy: [
+      { kluc: { companyCode: 1, id: 1 }, opts: { unique: true, name: "tenant_utvar_unique" },
+        preco: "identifikátor útvaru je jedinečný v rámci tenanta" },
+      { kluc: { companyCode: 1, parentId: 1 }, opts: { name: "podla_nadriadeneho" },
+        preco: "vykreslenie stromu ide po úrovniach" },
     ],
   },
   {

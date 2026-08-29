@@ -59,6 +59,7 @@ export async function POST(request: Request) {
       fullName: person.fullName,
       companyCode: person.companyCode,
       language: person.language,
+      departmentId: person.departmentId ?? null,
     },
     documentId,
     {

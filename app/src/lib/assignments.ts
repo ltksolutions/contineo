@@ -23,7 +23,7 @@
 
 import { ObjectId } from "mongodb"
 import { getCollection } from "./mongodb"
-import { PERSONS_COLLECTION, normalizeKeys } from "./persons"
+import { PERSONS_COLLECTION, normalizeKeys, vUtvareOd } from "./persons"
 import { ACKNOWLEDGEMENTS_COLLECTION } from "./acknowledgements"
 import type { Person } from "./persons"
 
@@ -208,6 +208,26 @@ export function audienceLabel(a: Audience): string {
   }
 }
 
+/**
+ * Odkedy táto úloha visí **tejto osobe** (D50).
+ *
+ * Pri pridelení útvaru to nie je dátum pridelenia: kto do útvaru pribudol
+ * neskôr, dostal úlohu vtedy, keď prišiel. Keby platil pôvodný dátum, nováčik
+ * by mal prvý deň v práci úlohu spred roka — teda hneď po termíne, a bez
+ * príznaku „nové", lebo pridelenie je staršie než jeho predošlé prihlásenie
+ * (D39). To je presne ten stav, ktorý nikto nevie vysvetliť.
+ *
+ * U ostatných druhov publika sa nič nemení: skupina ani trasa históriu nemajú
+ * a predstierať ju by znamenalo tvrdiť niečo, čo nevieme.
+ */
+export function datumPreOsobu(
+  a: Pick<Assignment, "audience" | "assignedAt">,
+  vUtvareOd: Date | null | undefined,
+): Date {
+  if (a.audience?.kind !== "department") return a.assignedAt
+  return vUtvareOd && vUtvareOd > a.assignedAt ? vUtvareOd : a.assignedAt
+}
+
 // ── zápis ────────────────────────────────────────────────────────────────────
 
 export interface NewAssignment {
@@ -321,6 +341,8 @@ export async function assignmentsForPerson(person: {
   groups?: string[]
   tracks?: string[]
   departmentPath?: string[]
+  /** Nepoužíva sa tu, ale volajúci ju posiela ďalej do `datumPreOsobu`. */
+  departmentHistory?: Person["departmentHistory"]
 }): Promise<Assignment[]> {
   const col = await getCollection<Assignment>(ASSIGNMENTS_COLLECTION)
   const kandidati = await col.find({
@@ -350,11 +372,14 @@ export async function assignedAtByVersion(person: {
   groups?: string[]
   tracks?: string[]
   departmentPath?: string[]
+  departmentHistory?: Person["departmentHistory"]
 }): Promise<Map<string, Date>> {
   const out = new Map<string, Date>()
+  const od = vUtvareOd(person)
   for (const a of await assignmentsForPerson(person)) {
+    const kedy = datumPreOsobu(a, od)
     const doteraz = out.get(a.subject.versionId)
-    if (!doteraz || a.assignedAt < doteraz) out.set(a.subject.versionId, a.assignedAt)
+    if (!doteraz || kedy < doteraz) out.set(a.subject.versionId, kedy)
   }
   return out
 }
@@ -392,7 +417,17 @@ export async function recordNotification(
 // ── prehľad pre HR (D33) ─────────────────────────────────────────────────────
 
 /** Osoba v publiku. `language` je tu preto, že sa jej píše e-mail. */
-export type AudienceMember = Pick<Person, "id" | "email" | "fullName" | "language">
+export type AudienceMember = Pick<Person, "id" | "email" | "fullName" | "language"> & {
+  /**
+   * Bola v útvare v čase pridelenia, dnes už nie je (D50).
+   *
+   * V zozname nepotvrdených zostáva, lebo inak by ticho zmizla a nikto by
+   * sa nedozvedel, že sa to nedoriešilo. **E-mail sa jej ale neposiela** —
+   * pripomínať normu útvaru, v ktorom už človek nie je, je nezmysel; čo
+   * s tým, rozhodne personalista.
+   */
+  byvaly?: boolean
+}
 
 export interface AssignmentOverview {
   id: string
@@ -480,7 +515,10 @@ export async function nepotvrdili(
   const a = await col.findOne({ _id: new ObjectId(assignmentId), companyCode } as never)
   if (!a) return []
 
-  const clenovia = await audienceMembers(companyCode, a.audience)
+  const clenovia = [
+    ...await audienceMembers(companyCode, a.audience),
+    ...await byvaliClenovia(companyCode, a),
+  ]
   const ackCol = await getCollection(ACKNOWLEDGEMENTS_COLLECTION)
   const potvrdene = await ackCol
     .find({
@@ -493,4 +531,47 @@ export async function nepotvrdili(
 
   const hotovi = new Set(potvrdene.map(p => (p as { personId: string }).personId))
   return clenovia.filter(c => !hotovi.has(c.id))
+}
+
+/**
+ * Kto v útvare bol v čase, keď pridelenie platilo, a dnes tam už nie je (D50).
+ *
+ * Odvodiť sa to nedá — presun je práve tá udalosť, ktorá starý stav prepíše.
+ * Preto sa číta `departmentHistory`: hľadá sa uzavretý úsek, ktorý sa
+ * **prekrýva** s obdobím platnosti pridelenia. Prekryv, nie „bol tam v deň
+ * pridelenia": kto prišiel týždeň po pridelení a o mesiac odišiel, mal
+ * povinnosť tiež.
+ *
+ * Platí len pre publikum druhu útvar. Skupiny a trasy históriu nemajú a
+ * vymyslieť si ju by znamenalo tvrdiť niečo, čo nevieme.
+ */
+async function byvaliClenovia(
+  companyCode: string,
+  a: Pick<Assignment, "audience" | "assignedAt" | "revokedAt">,
+): Promise<AudienceMember[]> {
+  if (a.audience?.kind !== "department" || !a.audience.value) return []
+  const utvar = a.audience.value
+  const doKedy = a.revokedAt ?? new Date()
+
+  const col = await getCollection<Person>(PERSONS_COLLECTION)
+  const osoby = await col
+    .find(
+      { companyCode, "departmentHistory.departmentPath": utvar },
+      { projection: { id: 1, email: 1, fullName: 1, language: 1, departmentPath: 1, departmentHistory: 1 } },
+    )
+    .toArray()
+
+  const out: AudienceMember[] = []
+  for (const o of osoby) {
+    // Kto tam je aj dnes, patrí medzi bežných členov — nie sem.
+    if ((o.departmentPath ?? []).includes(utvar)) continue
+    const prekryv = (o.departmentHistory ?? []).some(z =>
+      z.departmentPath.includes(utvar) && z.od <= doKedy && (!z.do || z.do >= a.assignedAt),
+    )
+    if (!prekryv) continue
+    out.push({
+      id: o.id, email: o.email, fullName: o.fullName, language: o.language, byvaly: true,
+    })
+  }
+  return out
 }

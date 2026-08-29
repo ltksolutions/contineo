@@ -244,6 +244,7 @@ obrazovka `/admin/tenanti/[kod]` ju preto vypisuje v hotovom tvare.
 | **D47** | Kto sa prihlási kontom z povolenej domény, založí sa sám | ✅ 2026-08-29 |
 | **D48** | Organizácia si spravuje vzhľad, prihlasovanie aj domény sama — domény s dôkazom cez DNS | ✅ 2026-08-29 |
 | **D49** | Útvary sú strom, osoba patrí do práve jedného; cesta sa materializuje na osobe | ✅ 2026-08-29 |
+| **D50** | Reorganizácia: úloha z útvaru platí odo dňa príchodu, bývalí členovia zostanú vidieť, potvrdenie nesie odtlačok útvaru | ✅ 2026-08-29 |
 
 ### D47 — automatické založenie z povolených domén
 
@@ -350,3 +351,65 @@ neuhádol prečo.
 Strom je po prevode **plochý**: zo zápisu „Odbor médií" sa nedá vyčítať, pod
 koho patrí, a hádať to podľa podreťazcov by vyrobilo štruktúru, ktorá vyzerá
 hotovo a nesedí. Hierarchiu doklikne človek v `/organizacia`, záložka Útvary.
+
+### D50 — čo robí reorganizácia s už pridelenými normami
+
+D49 zaviedla štruktúru. Táto otázka je o tom, čo sa stane, keď sa štruktúra
+zmení — a mení sa stále. Tri prípady, tri odpovede.
+
+#### 1. Kto do útvaru pribudne, dostane úlohu **odo dňa príchodu**
+
+Stav úloh sa odvodzuje živo (D27), takže človek zaradený do útvaru okamžite
+vidí aj jeho staršie pridelenia. To je správne — normy útvaru sa ho odteraz
+týkajú. Nesprávny bol dátum: s pôvodným dátumom pridelenia by mal nováčik prvý
+deň v práci úlohu spred roka, teda hneď po termíne, a **bez príznaku „nové"**,
+lebo pridelenie je staršie než jeho predošlé prihlásenie (D39). To je presne
+ten stav, ktorý nikto nevie vysvetliť.
+
+Preto osoba nesie `departmentHistory` a `datumPreOsobu()` vracia neskorší
+z dvoch dátumov. Platí to **len pre publikum druhu útvar**: skupina ani trasa
+históriu nemajú a predstierať ju by znamenalo tvrdiť niečo, čo nevieme.
+
+Dve hranice, ktoré stoja za zapísanie:
+
+- **prázdna história znamená „odjakživa", nie „nikdy".** Ľudia zapísaní pred
+  zavedením štruktúry ju nemajú a pridelenie im má platiť odo dňa, keď vzniklo;
+  opačná predvoľba by im všetky staré normy schovala;
+- **presun celej vetvy nie je príchod.** Keď sa útvar presunie pod iného
+  rodiča, ľuďom v ňom sa opraví cesta, ale záznam histórie sa neotvára — inak
+  by to vyzeralo, že do svojho útvaru práve prišli všetci naraz.
+
+#### 2. Kto odíde bez potvrdenia, **zostane vidieť** — ale nedostane e-mail
+
+Bez toho by zo zoznamu nepotvrdených ticho vypadol a nikto by sa nedozvedel,
+že sa to nedoriešilo. Zostáva teda v prehľade označený *už nie je v útvare*.
+
+Pripomienku mu ale neposielame: pripomínať normu útvaru, v ktorom človek už
+nie je, je nezmysel. Čo s tým, rozhodne personalista — systém na to nemá
+podklad, lebo nevie, či ho previedli inam, alebo odchádza.
+
+Hľadá sa **prekryv** úseku histórie s obdobím platnosti pridelenia, nie „bol
+tam v deň pridelenia": kto prišiel týždeň po pridelení a o mesiac odišiel, mal
+povinnosť tiež.
+
+#### 3. Potvrdenie nesie **odtlačok útvaru**
+
+`acknowledgements` si už predtým pamätali meno, adresu, názov dokumentu aj
+doslovné znenie formulky — všetko v podobe z času potvrdenia. Útvar tam
+chýbal, a tak by výkaz „potvrdenia po útvaroch" za minulý rok po reorganizácii
+povedal niečo iné než vtedy: počítal by sa podľa dnešnej štruktúry.
+
+Ukladá sa `departmentId` **a názvy celej cesty**. Nie len identifikátor: útvar
+sa dá premenovať aj zrušiť a záznam má byť čitateľný sám o sebe. Zlyhanie
+tohto čítania nesmie zhodiť potvrdenie — záznam bez útvaru je horší než
+s ním, ale oveľa lepší než žiadny.
+
+#### Čo D50 **nerieši**
+
+- **Skupiny históriu nemajú.** Kto vypadne zo skupiny, zmizne zo zoznamu
+  nepotvrdených ticho, ako doteraz. Ak sa to ukáže ako problém, je to tá istá
+  konštrukcia — ale zatiaľ to problém nie je, lebo skupina sa mení vedome
+  a jednotlivo, kým útvar sa mení hromadne pri reorganizácii.
+- **Menovateľ v prehľade („8 z 12") sa naďalej počíta dnešnou štruktúrou.**
+  Je to odvodený stav a odvodený zostane (D27); presné čísla za minulé obdobie
+  dá výkaz z `acknowledgements`, ktorý má odtlačok.

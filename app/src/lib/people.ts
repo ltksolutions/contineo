@@ -19,7 +19,7 @@
 
 import { getCollection } from "./mongodb"
 import { currentTenant, currentPerson } from "./session"
-import { PERSONS_COLLECTION, normalizeEmail, normalizeKeys } from "./persons"
+import { PERSONS_COLLECTION, normalizeEmail, normalizeKeys, novaHistoriaUtvarov } from "./persons"
 import { normalizeLanguage } from "./i18n"
 import { HR_ROLE } from "./hr"
 import type { Person, PersonStatus, PersonType } from "./persons"
@@ -245,8 +245,12 @@ export async function savePerson(
     if (cielId && !strom.some(o => o.id === cielId)) {
       throw new PersonValidationError("Taký útvar neexistuje.")
     }
+    const novaCesta = cestaIds(strom, cielId)
     set.departmentId = cielId
-    set.departmentPath = cestaIds(strom, cielId)
+    set.departmentPath = novaCesta
+    set.departmentHistory = novaHistoriaUtvarov(
+      existuje.departmentHistory, cielId, novaCesta, new Date(),
+    )
   }
   if (zmena.personType !== undefined) {
     if (!TYPY.includes(zmena.personType)) throw new PersonValidationError("Neznámy typ osoby.")

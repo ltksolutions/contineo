@@ -86,7 +86,10 @@ export default async function DetailPridelenia({
         <ul className="admin-domeny">
           {chybajuci.map(o => (
             <li key={o.id} className="karta" style={{ padding: "12px 16px" }}>
-              <div style={{ fontWeight: 600 }}>{o.fullName}</div>
+              <div style={{ fontWeight: 600, display: "flex", gap: 8, alignItems: "baseline", flexWrap: "wrap" }}>
+                {o.fullName}
+                {o.byvaly && <span className="stitok">už nie je v útvare</span>}
+              </div>
               <div className="tichy" style={{ fontSize: 13.5 }}>{o.email}</div>
             </li>
           ))}
@@ -94,9 +97,11 @@ export default async function DetailPridelenia({
       )}
 
       <p className="tichy" style={{ fontSize: 13, marginTop: 18, maxWidth: 560 }}>
-        Zoznam sa počíta pri zobrazení a týka sa ľudí, ktorí do publika patria
-        dnes. Kto medzitým z organizácie odišiel, tu nie je — jeho potvrdenie
-        (alebo jeho chýbanie) však zostáva v záznamoch.
+        Zoznam sa počíta pri zobrazení. Kto z útvaru odišiel bez potvrdenia,
+        zostáva tu označený — inak by ticho zmizol a nikto by sa nedozvedel,
+        že sa to nedoriešilo; e-mail sa mu ale neposiela. Kto odišiel z celej
+        organizácie, tu nie je — jeho potvrdenie (alebo jeho chýbanie) však
+        zostáva v záznamoch.
       </p>
     </div>
   )

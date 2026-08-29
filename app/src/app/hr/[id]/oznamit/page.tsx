@@ -42,7 +42,10 @@ export default async function Oznamit({
   const pridelenie = await loadAssignment(kod, id)
   if (!pridelenie) notFound()
 
-  const prijemcovia = await nepotvrdili(kod, id)
+  const vsetciNepotvrdeni = await nepotvrdili(kod, id)
+  // Kto z útvaru odišiel, sa ukazuje na detaile, ale e-mail nedostane (D50).
+  const prijemcovia = vsetciNepotvrdeni.filter(o => !o.byvaly)
+  const byvali = vsetciNepotvrdeni.filter(o => o.byvaly)
   const branding = brandingView(ctx.tenant)
   const host = await requestHostname()
   const jazyk = normalizeLanguage(ctx.person.language)
@@ -106,6 +109,13 @@ export default async function Oznamit({
         </p>
       ) : (
         <>
+          {byvali.length > 0 && (
+            <p className="tichy" style={{ fontSize: 14, margin: "0 0 12px" }}>
+              Ďalší {byvali.length} nepotvrdili, ale z útvaru už odišli — tým sa
+              nepíše. Vidno ich na <Link href={`/hr/${encodeURIComponent(id)}`}>detaile pridelenia</Link>.
+            </p>
+          )}
+
           <ul className="admin-domeny" style={{ marginBottom: 26 }}>
             {prijemcovia.map(o => (
               <li key={o.id} className="karta" style={{ padding: "10px 14px" }}>

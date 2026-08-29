@@ -108,6 +108,17 @@ export interface Person {
    */
   departmentPath?: string[]
 
+  /**
+   * Kedy do ktorého útvaru patrila. Otvorený záznam (`do` chýba) je ten dnešný.
+   *
+   * Dve veci by sa bez tohto nedali povedať a obe sú pri reorganizácii bežné:
+   * odkedy sa nového človeka týkajú normy jeho útvaru (aby mu prvý deň
+   * nevisela úloha spred roka ako po termíne), a či ten, kto odišiel bez
+   * potvrdenia, tam vôbec kedy patril. Odvodiť sa to nedá — je to práve tá
+   * informácia, ktorú presun prepíše.
+   */
+  departmentHistory?: { departmentId: string | null; departmentPath: string[]; od: Date; do?: Date }[]
+
   /** Prázdne u bežnej osoby. `"hr"` alebo `"platform-admin"`. */
   roles: string[]
 
@@ -602,4 +613,45 @@ export async function zalozPodlaDomeny(
     console.error("[persons] automatické založenie zlyhalo:", e)
     return null
   }
+}
+
+
+/**
+ * Odkedy je osoba vo svojom dnešnom útvare. `null`, keď to nevieme.
+ *
+ * `null` znamená „odjakživa", nie „nikdy": pri ľuďoch zapísaných pred
+ * zavedením štruktúry história neexistuje a pridelenie im má platiť odo dňa,
+ * keď vzniklo. Opačná predvoľba by im všetky staré normy schovala.
+ */
+export function vUtvareOd(osoba: Pick<Person, "departmentHistory">): Date | null {
+  const otvoreny = (osoba.departmentHistory ?? []).filter(z => !z.do)
+  if (otvoreny.length === 0) return null
+  // Pri poškodených dátach (viac otvorených) platí ten najnovší — je to
+  // opatrnejšie než najstarší: úloha sa ukáže ako novšia, nie ako prepadnutá.
+  return otvoreny.reduce((a, b) => (a.od > b.od ? a : b)).od
+}
+
+/**
+ * Nová história po presune do iného útvaru.
+ *
+ * Čistá funkcia, aby sa dala otestovať: uzavrie otvorený záznam a otvorí
+ * nový. **Presun do toho istého útvaru nič nemení** — inak by opakované
+ * uloženie formulára posúvalo dátum príchodu a s ním aj termíny.
+ */
+export function novaHistoriaUtvarov(
+  doteraz: Person["departmentHistory"],
+  novyId: string | null,
+  novaCesta: string[],
+  kedy: Date,
+): NonNullable<Person["departmentHistory"]> {
+  const zaznamy = [...(doteraz ?? [])]
+  const otvoreny = zaznamy.find(z => !z.do)
+  if (otvoreny && (otvoreny.departmentId ?? null) === (novyId ?? null)) {
+    // Ten istý útvar, len sa mohla zmeniť cesta (presunuli vetvu vyššie).
+    otvoreny.departmentPath = novaCesta
+    return zaznamy
+  }
+  if (otvoreny) otvoreny.do = kedy
+  zaznamy.push({ departmentId: novyId ?? null, departmentPath: novaCesta, od: kedy })
+  return zaznamy
 }

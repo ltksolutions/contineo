@@ -12,7 +12,8 @@ import {
   deti, cesta, cestaIds, podstrom, hlbka, smieSaPresunut, splostiStrom, MAX_HLBKA,
   type Oddelenie,
 } from "../src/lib/oddelenia"
-import { matchesAudience, audienceLabel, audienceFromSelection } from "../src/lib/assignments"
+import { matchesAudience, audienceLabel, audienceFromSelection, datumPreOsobu } from "../src/lib/assignments"
+import { vUtvareOd, novaHistoriaUtvarov } from "../src/lib/persons"
 
 /** Malá organizácia: úsek, pod ním dva odbory, pod jedným z nich oddelenie. */
 function o(id: string, nazov: string, parentId: string | null): Oddelenie {
@@ -157,5 +158,91 @@ describe("pridelenie utvaru", () => {
     // Identifikátor v prehľade nikomu nič nepovie a vyzeral by ako názov.
     const text = audienceLabel({ kind: "department", value: "uk" })
     expect(text).not.toContain("uk")
+  })
+})
+
+describe("reorganizacia (D50)", () => {
+  const den = (d: number) => new Date(`2026-0${d}-01T00:00:00.000Z`)
+
+  it("kto bol v utvare od zaciatku, ma povodny datum pridelenia", () => {
+    const pridelenie = { audience: { kind: "department" as const, value: "uk" }, assignedAt: den(3) }
+    expect(datumPreOsobu(pridelenie, den(1))).toEqual(den(3))
+  })
+
+  it("kto prisiel neskor, ma datum svojho prichodu", () => {
+    // Inak by mal novacik prvy den v praci ulohu spred roka, teda hned po
+    // termine a bez priznaku nove.
+    const pridelenie = { audience: { kind: "department" as const, value: "uk" }, assignedAt: den(3) }
+    expect(datumPreOsobu(pridelenie, den(5))).toEqual(den(5))
+  })
+
+  it("bez historie plati datum pridelenia", () => {
+    // Ludia zapisani pred zavedenim struktury: null znamena odjakziva,
+    // nie nikdy. Opacna predvolba by im vsetky stare normy schovala.
+    const pridelenie = { audience: { kind: "department" as const, value: "uk" }, assignedAt: den(3) }
+    expect(datumPreOsobu(pridelenie, null)).toEqual(den(3))
+    expect(datumPreOsobu(pridelenie, undefined)).toEqual(den(3))
+  })
+
+  it("skupiny a trasy sa prichodom do utvaru neriadia", () => {
+    // Skupina historiu nema a vymysliet si ju by znamenalo tvrdit nieco,
+    // co nevieme.
+    for (const kind of ["all", "group", "track", "person"] as const) {
+      const p = { audience: { kind, value: "x" }, assignedAt: den(3) }
+      expect(datumPreOsobu(p, den(5))).toEqual(den(3))
+    }
+  })
+
+  it("vUtvareOd vracia otvoreny zaznam", () => {
+    expect(vUtvareOd({
+      departmentHistory: [
+        { departmentId: "lg", departmentPath: ["lg"], od: den(1), do: den(4) },
+        { departmentId: "uk", departmentPath: ["uk"], od: den(4) },
+      ],
+    })).toEqual(den(4))
+    expect(vUtvareOd({})).toBeNull()
+    expect(vUtvareOd({ departmentHistory: [] })).toBeNull()
+  })
+
+  it("presun do ineho utvaru uzavrie predosly zaznam", () => {
+    const h = novaHistoriaUtvarov(
+      [{ departmentId: "lg", departmentPath: ["lg"], od: den(1) }],
+      "uk", ["uk"], den(4),
+    )
+    expect(h).toHaveLength(2)
+    expect(h[0].do).toEqual(den(4))
+    expect(h[1]).toEqual({ departmentId: "uk", departmentPath: ["uk"], od: den(4) })
+  })
+
+  it("ulozenie toho isteho utvaru datum prichodu neposunie", () => {
+    // Inak by opakovane odoslanie formulara posuvalo prichod a s nim terminy.
+    const h = novaHistoriaUtvarov(
+      [{ departmentId: "uk", departmentPath: ["uk"], od: den(1) }],
+      "uk", ["uk"], den(4),
+    )
+    expect(h).toHaveLength(1)
+    expect(h[0].od).toEqual(den(1))
+  })
+
+  it("presun celej vetvy opravi cestu, ale neotvori novy zaznam", () => {
+    // Clovek sa nikam nepohol, pohol sa jeho utvar. Keby to zalozilo novy
+    // zaznam, vyzeralo by to, ze do svojho utvaru prave prisli vsetci naraz.
+    const h = novaHistoriaUtvarov(
+      [{ departmentId: "od-med", departmentPath: ["uk", "od-med"], od: den(1) }],
+      "od-med", ["lg", "od-med"], den(4),
+    )
+    expect(h).toHaveLength(1)
+    expect(h[0].od).toEqual(den(1))
+    expect(h[0].departmentPath).toEqual(["lg", "od-med"])
+  })
+
+  it("vyradenie zo struktury je tiez zmena", () => {
+    const h = novaHistoriaUtvarov(
+      [{ departmentId: "uk", departmentPath: ["uk"], od: den(1) }],
+      null, [], den(4),
+    )
+    expect(h).toHaveLength(2)
+    expect(h[0].do).toEqual(den(4))
+    expect(h[1].departmentId).toBeNull()
   })
 })

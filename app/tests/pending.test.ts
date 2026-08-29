@@ -18,7 +18,12 @@ const { trackProgress, assignmentsForPerson, loadDocumentFor, acknowledgedVersio
     acknowledgedVersionIds: vi.fn(),
   }))
 vi.mock("../src/lib/tracks", () => ({ trackProgress }))
-vi.mock("../src/lib/assignments", () => ({ assignmentsForPerson }))
+// `datumPreOsobu` sa **nemockuje** — je to čistá funkcia a práve na nej stojí
+// pravidlo, že úloha z útvaru visí odo dňa príchodu, nie od pridelenia (D50).
+vi.mock("../src/lib/assignments", async orig => ({
+  ...(await orig<typeof import("../src/lib/assignments")>()),
+  assignmentsForPerson,
+}))
 vi.mock("../src/lib/acknowledgements", () => ({ acknowledgedVersionIds }))
 // `effectiveVersion` sa nemockuje — je to čistá funkcia a práve na nej stojí
 // pravidlo, že pridelené znenie sa musí dať aj potvrdiť.

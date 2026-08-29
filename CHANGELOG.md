@@ -4,6 +4,15 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Added (2026-08-29 — reorganizácia)
+
+- **Úloha z útvaru platí odo dňa príchodu (D50).** Kto do útvaru pribudne, jeho staršie pridelenia dostane — to je zámer — ale s dátumom svojho zaradenia. S pôvodným dátumom by mal nováčik prvý deň v práci úlohu spred roka, teda hneď po termíne, a bez príznaku „nové", lebo pridelenie je staršie než jeho predošlé prihlásenie. Osoba preto nesie históriu zaradení. Prázdna história znamená „odjakživa", nie „nikdy" — ľuďom zapísaným pred zavedením štruktúry by inak všetky staré normy zmizli.
+- **Presun celej vetvy nie je príchod.** Keď sa útvar presunie pod iného rodiča, ľuďom sa opraví cesta, ale záznam histórie sa neotvára — inak by to vyzeralo, že do svojho útvaru práve prišli všetci naraz.
+- **Kto odíde bez potvrdenia, zostane v prehľade** označený *už nie je v útvare*. Ticho by inak vypadol a nikto by sa nedozvedel, že sa to nedoriešilo. **E-mail sa mu ale neposiela** — pripomínať normu útvaru, v ktorom človek už nie je, je nezmysel; čo s tým, rozhodne personalista. Hľadá sa prekryv s obdobím platnosti pridelenia, nie „bol tam v deň pridelenia": kto prišiel týždeň po pridelení a o mesiac odišiel, mal povinnosť tiež.
+- **Potvrdenie nesie odtlačok útvaru** — identifikátor aj názvy celej cesty v čase potvrdenia, rovnako ako meno a adresa. Bez toho by výkaz „potvrdenia po útvaroch" za minulý rok po reorganizácii povedal niečo iné než vtedy. Vo výkaze `ack:report` je preto stĺpec „Útvar (v čase potvrdenia)"; dnešné zaradenie je náhradou len tam, kde odtlačok chýba.
+- Indexy pre `departments` a dva nové nad `persons` v `onboarding_init.mjs`.
+- 9 nových testov (spolu 716).
+
 ### Added (2026-08-29 — organizačná štruktúra)
 
 - **Útvary sú strom (D49).** Zakladajú sa v `/organizacia`, záložka **Útvary**: názov, nadriadený útvar, premenovanie, presun a zrušenie. Pri každom je počet ľudí priamo a počet aj s podriadenými — to druhé je to, koho sa pridelenie naozaj týka.

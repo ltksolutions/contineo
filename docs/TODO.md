@@ -285,7 +285,9 @@
 - [x] **automatické založenie z povolených domén** (D47)
 - [x] **adresa prestala byť kľúčom** — identitou je `persons.id`, adresa sa dá zmeniť a história zostáva celá
 - [x] **útvary ako strom** (D49) — osoba v práve jednom, pridelenie platí aj pre podstrom, skupiny zostávajú samostatnou dimenziou. Prevod z textu: `npm run utvary`
-- [ ] **prevod útvarov SFZ z textu ešte nebežal** — spustiť najprv bez `--zapis` a pozrieť, čo by vzniklo
+- [x] **prevod útvarov SFZ spustený 2026-08-29** — nemal čo previesť: v databáze je zatiaľ jedna osoba a žiadna nemá útvar zapísaný textom. Zmysel dostane po importe ľudí z CSV
+- [x] **reorganizácia** (D50) — úloha z útvaru platí odo dňa príchodu, bývalí členovia zostanú v prehľade označení a bez e-mailu, potvrdenie nesie odtlačok útvaru
+- [ ] **nové indexy treba vytvoriť v Atlase** — `npm run onboarding:init` (alebo ako sa spúšťa `onboarding_init.mjs`); pribudla kolekcia `departments` a dva indexy nad `persons`
 
 **Zostáva (mimo rozsahu B)**
 
