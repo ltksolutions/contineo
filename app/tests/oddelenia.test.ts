@@ -13,7 +13,7 @@ import {
   type Oddelenie,
 } from "../src/lib/oddelenia"
 import { matchesAudience, audienceLabel, audienceFromSelection, datumPreOsobu } from "../src/lib/assignments"
-import { vUtvareOd, novaHistoriaUtvarov } from "../src/lib/persons"
+import { vUtvareOd, novaHistoriaUtvarov, novaHistoriaSkupin } from "../src/lib/persons"
 
 /** Malá organizácia: úsek, pod ním dva odbory, pod jedným z nich oddelenie. */
 function o(id: string, nazov: string, parentId: string | null): Oddelenie {
@@ -164,33 +164,83 @@ describe("pridelenie utvaru", () => {
 describe("reorganizacia (D50)", () => {
   const den = (d: number) => new Date(`2026-0${d}-01T00:00:00.000Z`)
 
+  const vUtvare = (od: Date) => ({
+    departmentHistory: [{ departmentId: "uk", departmentPath: ["uk"], od }],
+  })
+
   it("kto bol v utvare od zaciatku, ma povodny datum pridelenia", () => {
     const pridelenie = { audience: { kind: "department" as const, value: "uk" }, assignedAt: den(3) }
-    expect(datumPreOsobu(pridelenie, den(1))).toEqual(den(3))
+    expect(datumPreOsobu(pridelenie, vUtvare(den(1)))).toEqual(den(3))
   })
 
   it("kto prisiel neskor, ma datum svojho prichodu", () => {
     // Inak by mal novacik prvy den v praci ulohu spred roka, teda hned po
     // termine a bez priznaku nove.
     const pridelenie = { audience: { kind: "department" as const, value: "uk" }, assignedAt: den(3) }
-    expect(datumPreOsobu(pridelenie, den(5))).toEqual(den(5))
+    expect(datumPreOsobu(pridelenie, vUtvare(den(5)))).toEqual(den(5))
   })
 
   it("bez historie plati datum pridelenia", () => {
-    // Ludia zapisani pred zavedenim struktury: null znamena odjakziva,
-    // nie nikdy. Opacna predvolba by im vsetky stare normy schovala.
+    // Ludia zapisani pred zavedenim struktury: prazdna historia znamena
+    // odjakziva, nie nikdy. Opacna predvolba by im vsetky stare normy schovala.
     const pridelenie = { audience: { kind: "department" as const, value: "uk" }, assignedAt: den(3) }
-    expect(datumPreOsobu(pridelenie, null)).toEqual(den(3))
-    expect(datumPreOsobu(pridelenie, undefined)).toEqual(den(3))
+    expect(datumPreOsobu(pridelenie, {})).toEqual(den(3))
+    expect(datumPreOsobu(pridelenie, { departmentHistory: [] })).toEqual(den(3))
   })
 
-  it("skupiny a trasy sa prichodom do utvaru neriadia", () => {
-    // Skupina historiu nema a vymysliet si ju by znamenalo tvrdit nieco,
+  it("kto do skupiny pribudol neskor, ma datum svojho vstupu", () => {
+    const pridelenie = { audience: { kind: "group" as const, value: "rozhodcovia" }, assignedAt: den(3) }
+    const osoba = { groupHistory: [{ group: "rozhodcovia", od: den(5) }] }
+    expect(datumPreOsobu(pridelenie, osoba)).toEqual(den(5))
+  })
+
+  it("uzavrety usek clenstva datum neposuva", () => {
+    // Kto zo skupiny odisiel, uz v nej nie je; jeho stary usek nesmie
+    // rozhodovat o datume noveho pridelenia.
+    const pridelenie = { audience: { kind: "group" as const, value: "rozhodcovia" }, assignedAt: den(3) }
+    const osoba = { groupHistory: [{ group: "rozhodcovia", od: den(5), do: den(6) }] }
+    expect(datumPreOsobu(pridelenie, osoba)).toEqual(den(3))
+  })
+
+  it("trasa a jednotlivec sa clenstvom neriadia", () => {
+    // Trasa historiu nema a vymysliet si ju by znamenalo tvrdit nieco,
     // co nevieme.
-    for (const kind of ["all", "group", "track", "person"] as const) {
+    for (const kind of ["all", "track", "person"] as const) {
       const p = { audience: { kind, value: "x" }, assignedAt: den(3) }
-      expect(datumPreOsobu(p, den(5))).toEqual(den(3))
+      const osoba = {
+        departmentHistory: [{ departmentId: "uk", departmentPath: ["uk"], od: den(5) }],
+        groupHistory: [{ group: "x", od: den(5) }],
+      }
+      expect(datumPreOsobu(p, osoba)).toEqual(den(3))
     }
+  })
+
+  it("historia skupin: odchod uzavrie usek, prichod otvori novy", () => {
+    const h = novaHistoriaSkupin(
+      [{ group: "rozhodcovia", od: den(1) }, { group: "delegati", od: den(1) }],
+      ["rozhodcovia", "statutari"], den(4),
+    )
+    const najdi = (g: string) => h.filter(z => z.group === g)
+    expect(najdi("rozhodcovia")).toHaveLength(1)
+    expect(najdi("rozhodcovia")[0].od).toEqual(den(1))   // nezmenene clenstvo sa nedotkne
+    expect(najdi("delegati")[0].do).toEqual(den(4))      // odisiel
+    expect(najdi("statutari")[0].od).toEqual(den(4))     // pribudol
+  })
+
+  it("navrat do skupiny je novy usek, nie ozivenie stareho", () => {
+    // \"bol, odisiel, vratil sa\" je ina informacia nez \"bol cely cas\".
+    const h = novaHistoriaSkupin(
+      [{ group: "rozhodcovia", od: den(1), do: den(2) }],
+      ["rozhodcovia"], den(4),
+    )
+    expect(h).toHaveLength(2)
+    expect(h[1].od).toEqual(den(4))
+  })
+
+  it("velke pismena su ta ista skupina", () => {
+    const h = novaHistoriaSkupin([{ group: "rozhodcovia", od: den(1) }], ["Rozhodcovia"], den(4))
+    expect(h).toHaveLength(1)
+    expect(h[0].od).toEqual(den(1))
   })
 
   it("vUtvareOd vracia otvoreny zaznam", () => {

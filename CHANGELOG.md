@@ -4,6 +4,17 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Added (2026-08-29 — audit a história skupín)
+
+- **Audit správcovských zmien (D51).** Nová kolekcia `audit`: kto, čo a kedy zmenil — osoby (rola, stav, adresa, útvar, skupiny, trasy), útvary, pridelenia, nastavenie organizácie, domény a prihlasovacie údaje. Doteraz sa zapisovalo len `updatedBy`, čo odpovedá na „kto to menil naposledy" a na nič viac; kto komu udelil rolu `hr` alebo kto vymenil tajomstvo Entry, sa po druhej zmene už nedalo zistiť. Pri systéme, ktorý má dokazovať oboznámenie s predpismi, je to diera na nesprávnom mieste — kto si vie zmeniť rolu, vie si zmeniť publikum.
+- **Zapisuje sa rozdiel, nie celý objekt.** Inak by v zázname o zmene jazyka bolo aj meno, adresa a všetky skupiny — po roku by sa v tom nedalo nič nájsť a bola by to zbytočná kópia osobných údajov. Odvodené polia (cesta útvaru, histórie) sa do rozdielu neberú.
+- **Tajomstvá sa nezapisujú nikdy** — pri poli so `secret`, `token`, `heslo` alebo `tajomstvo` v názve je v zázname len „(zmenené)". Audit, ktorý zbiera heslá, je sám o sebe únik, a to s dlhšou retenciou než to, čo chráni.
+- **Zápis auditu nikdy nezhodí samotnú zmenu.** Jeden pokazený index by inak zablokoval správu osôb celej organizácii; zlyhanie sa loguje. Volá sa po úspešnej zmene, nie pred ňou.
+- **Vidí ho správca osôb vo svojej organizácii** (`/organizacia`, záložka Audit, s hľadaním) **a správca platformy pri každom tenantovi** (posledných 50 v `/admin/tenanti/<KOD>`) — kvôli podpore. Ten istý komponent na oboch miestach, aby jeden z nich o pol roka neukazoval niečo iné.
+- **Skupiny dostali históriu členstva.** Pôvodné odôvodnenie, že sa menia vedome a jednotlivo, neobstálo: skupina je najčastejší adresát noriem (rozhodcovia, delegáti, štatutári), takže kto z nej vypadol pred potvrdením, mizol zo zoznamu nepotvrdených presne tak ticho ako predtým pri útvaroch. Platí teraz to isté pravidlo ako pri útvaroch — vrátane toho, že návrat do skupiny je nový úsek, nie oživenie starého. Zapisuje sa aj pri CSV importe, ktorý je najčastejšia hromadná zmena.
+- Indexy pre `audit` a históriu skupín v `onboarding_init.mjs`.
+- 12 nových testov (spolu 728).
+
 ### Added (2026-08-29 — reorganizácia)
 
 - **Úloha z útvaru platí odo dňa príchodu (D50).** Kto do útvaru pribudne, jeho staršie pridelenia dostane — to je zámer — ale s dátumom svojho zaradenia. S pôvodným dátumom by mal nováčik prvý deň v práci úlohu spred roka, teda hneď po termíne, a bez príznaku „nové", lebo pridelenie je staršie než jeho predošlé prihlásenie. Osoba preto nesie históriu zaradení. Prázdna história znamená „odjakživa", nie „nikdy" — ľuďom zapísaným pred zavedením štruktúry by inak všetky staré normy zmizli.

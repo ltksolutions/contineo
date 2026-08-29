@@ -21,7 +21,6 @@ import { loadDocumentFor, effectiveVersion } from "./documents"
 import { acknowledgedVersionIds } from "./acknowledgements"
 import { assignmentsForPerson, datumPreOsobu } from "./assignments"
 import { dictionary } from "./i18n"
-import { vUtvareOd } from "./persons"
 import type { Person } from "./persons"
 
 export type PendingSourceKey = "acknowledgement" | "curation" | "helpdesk"
@@ -105,17 +104,17 @@ export const acknowledgementSource: PendingSource = {
         tracks: person.tracks,
         departmentPath: person.departmentPath,
         departmentHistory: person.departmentHistory,
+        groupHistory: person.groupHistory,
       }),
     ])
 
     // Najskoršie pridelenie danej verzie. Keď tú istú normu človek dostane
     // cez skupinu aj cez trasu, visí mu odvtedy, nie od druhého pridelenia.
-    // Pri pridelení útvaru platí neskorší z dvoch dátumov: kto do útvaru
-    // pribudol až potom, dostal úlohu vtedy, keď prišiel (D50).
-    const vUtvare = vUtvareOd(person)
+    // Pri pridelení útvaru alebo skupiny platí neskorší z dvoch dátumov: kto
+    // do nich pribudol až potom, dostal úlohu vtedy, keď prišiel (D50).
     const pridelene = new Map<string, Date>()
     for (const a of assignments) {
-      const kedy = datumPreOsobu(a, vUtvare)
+      const kedy = datumPreOsobu(a, person)
       const doteraz = pridelene.get(a.subject.versionId)
       if (!doteraz || kedy < doteraz) pridelene.set(a.subject.versionId, kedy)
     }

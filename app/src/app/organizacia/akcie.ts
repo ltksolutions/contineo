@@ -176,7 +176,7 @@ export async function overDomenu(fd: FormData) {
   let chyba = false
 
   try {
-    const v = await overZiadost(ja.companyCode, host)
+    const v = await overZiadost(ja.companyCode, host, ja.email)
     if (v.stav === "nenajdena") {
       sprava = "Takú žiadosť tu nemáme."
       chyba = true
@@ -204,7 +204,7 @@ export async function zrus(fd: FormData) {
   if (!ja) redirect("/")
 
   try {
-    await zrusDomenu(ja.companyCode, textPola(fd, "host"))
+    await zrusDomenu(ja.companyCode, textPola(fd, "host"), ja.email)
   } catch (e) {
     spat(fd, spravaChyby(e), true)
   }
@@ -270,7 +270,7 @@ export async function zrusUtvar(fd: FormData) {
   const ja = await kto()
   if (!ja) redirect("/")
   try {
-    await zmazOddelenie(ja.companyCode, textPola(fd, "id"))
+    await zmazOddelenie(ja.companyCode, textPola(fd, "id"), ja.email)
     revalidatePath("/organizacia")
     spat(fd, "Útvar sa zrušil.")
   } catch (e) {

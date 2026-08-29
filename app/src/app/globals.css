@@ -989,3 +989,57 @@ button:disabled { cursor: not-allowed; opacity: 0.55; }
   .utvar-forma { flex-direction: column; align-items: stretch; }
   .utvar-forma > * { width: 100%; }
 }
+
+/* ── audit (D51) ────────────────────────────────────────────────────────── */
+.audit {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+
+.audit-zaznam { padding: 12px 16px; display: grid; gap: 6px; }
+
+.audit-hlavicka {
+  display: flex;
+  gap: 8px;
+  align-items: baseline;
+  flex-wrap: wrap;
+}
+
+.audit-ciel { font-size: 14.5px; }
+
+.audit-kto { font-size: 13px; }
+
+.audit-zmeny {
+  list-style: none;
+  margin: 2px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 3px;
+  font-size: 13.5px;
+}
+
+.audit-pole { font-weight: 600; margin-right: 6px; }
+
+/* Stará hodnota je prečiarknutá, nie červená: nie je to chyba, len to, čo
+   tam bolo. Farba by z každého záznamu robila varovanie. */
+.audit-stara { text-decoration: line-through; color: var(--muted); }
+
+.audit-nova { color: var(--ink); }
+
+.audit-poznamka { font-size: 13px; font-style: italic; }
+
+.audit-filter {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  margin: 0 0 14px;
+}
+
+@media (max-width: 520px) {
+  .audit-filter { flex-direction: column; align-items: stretch; }
+  .audit-filter > * { width: 100%; }
+}

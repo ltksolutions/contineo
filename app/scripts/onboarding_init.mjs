@@ -47,6 +47,8 @@ const PLAN = [
       { kluc: { companyCode: 1, "departmentHistory.departmentPath": 1 },
         opts: { name: "tenant_utvar_historia" },
         preco: "kto v útvare kedysi bol a odišiel bez potvrdenia (D50)" },
+      { kluc: { companyCode: 1, "groupHistory.group": 1 }, opts: { name: "tenant_skupina_historia" },
+        preco: "kto v skupine kedysi bol a odišiel bez potvrdenia (D50)" },
     ],
   },
   {
@@ -56,6 +58,17 @@ const PLAN = [
         preco: "identifikátor útvaru je jedinečný v rámci tenanta" },
       { kluc: { companyCode: 1, parentId: 1 }, opts: { name: "podla_nadriadeneho" },
         preco: "vykreslenie stromu ide po úrovniach" },
+    ],
+  },
+  {
+    kolekcia: "audit",
+    indexy: [
+      { kluc: { companyCode: 1, kedy: -1 }, opts: { name: "podla_casu" },
+        preco: "výpis auditu, najnovšie hore (D51)" },
+      { kluc: { companyCode: 1, predmet: 1, kedy: -1 }, opts: { name: "podla_predmetu" },
+        preco: "filter na osoby, útvary, pridelenia" },
+      { kluc: { companyCode: 1, cielId: 1, kedy: -1 }, opts: { name: "podla_ciela" },
+        preco: "história jednej osoby alebo jedného útvaru" },
     ],
   },
   {

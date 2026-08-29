@@ -26,6 +26,7 @@
 
 import dns from "node:dns/promises"
 import { getCollection } from "./mongodb"
+import { zapisAudit } from "./audit"
 import { normalizeHostname, invalidateTenants, TENANTS_COLLECTION } from "./tenants"
 import { CNAME_CIEL, pokynCname, preskocitVercel } from "./vercel"
 import type { Tenant } from "./tenants"
@@ -143,6 +144,10 @@ export async function poziadajODomenu(
     { companyCode },
     { $push: { domainRequests: ziadost } } as never,
   )
+  await zapisAudit({
+    companyCode, predmet: "domena", akcia: "poziadane", aktor: actor,
+    cielId: host, cielPopis: host,
+  })
   return ziadost
 }
 
@@ -160,6 +165,7 @@ export type VysledokOverenia =
 export async function overZiadost(
   companyCode: string,
   rawHost: string,
+  aktor: string,
 ): Promise<VysledokOverenia> {
   const host = normalizeHostname(rawHost)
   const col = await getCollection<Tenant & { domainRequests?: ZiadostODomenu[] }>(TENANTS_COLLECTION)
@@ -180,12 +186,17 @@ export async function overZiadost(
     } as never,
     { arrayFilters: [{ "z.host": host }] },
   )
+  await zapisAudit({
+    companyCode, predmet: "domena", akcia: "overene", aktor,
+    cielId: host, cielPopis: host,
+    poznamka: "DNS smeruje na nás — doména zapnutá",
+  })
   invalidateTenants()
   return { stav: "zapnuta", host }
 }
 
 /** Odstráni doménu aj žiadosť. Portál na nej prestane odpovedať. */
-export async function zrusDomenu(companyCode: string, rawHost: string): Promise<void> {
+export async function zrusDomenu(companyCode: string, rawHost: string, aktor: string): Promise<void> {
   const host = normalizeHostname(rawHost)
   const col = await getCollection<Tenant>(TENANTS_COLLECTION)
   const t = await col.findOne({ companyCode })
@@ -196,6 +207,10 @@ export async function zrusDomenu(companyCode: string, rawHost: string): Promise<
     { companyCode },
     { $pull: { hostnames: host, domainRequests: { host } } } as never,
   )
+  await zapisAudit({
+    companyCode, predmet: "domena", akcia: "zrusene", aktor,
+    cielId: host, cielPopis: host,
+  })
   invalidateTenants()
 }
 

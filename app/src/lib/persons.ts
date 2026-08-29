@@ -119,6 +119,16 @@ export interface Person {
    */
   departmentHistory?: { departmentId: string | null; departmentPath: string[]; od: Date; do?: Date }[]
 
+  /**
+   * Odkedy dokedy bola v ktorej skupine. Otvorený úsek (`do` chýba) trvá.
+   *
+   * Tá istá otázka ako pri útvaroch, len skupina ich má naraz viac, takže je
+   * to zoznam úsekov, nie jeden reťazec. Dôvod je rovnaký a rovnako vážny:
+   * skupina býva adresátom noriem (rozhodcovia, delegáti), takže kto z nej
+   * vypadne pred potvrdením, by inak zo zoznamu nepotvrdených ticho zmizol.
+   */
+  groupHistory?: { group: string; od: Date; do?: Date }[]
+
   /** Prázdne u bežnej osoby. `"hr"` alebo `"platform-admin"`. */
   roles: string[]
 
@@ -388,13 +398,19 @@ export async function upsertPersons(
     const { email, companyCode } = checked
 
     const key = { companyCode, email }
+    // História členstva sa musí zapísať aj tadeto: import je najčastejší
+    // spôsob, ako sa skupiny menia hromadne, a práve pri hromadnej zmene
+    // je otázka „kto v skupine bol vtedy" najťažšia (D50).
+    const doteraz = await col.findOne(key, { projection: { groupHistory: 1 } })
+    const skupiny = normalizeKeys(r.groups)
     const changes: Record<string, unknown> = {
       fullName: r.fullName.trim(),
       department: r.department?.trim() || undefined,
       personType: r.personType ?? "employee",
       startDate: r.startDate,
       tracks: r.tracks ?? [],
-      groups: normalizeKeys(r.groups),
+      groups: skupiny,
+      groupHistory: novaHistoriaSkupin(doteraz?.groupHistory, skupiny, now),
       roles: r.roles ?? [],
     }
 
@@ -653,5 +669,51 @@ export function novaHistoriaUtvarov(
   }
   if (otvoreny) otvoreny.do = kedy
   zaznamy.push({ departmentId: novyId ?? null, departmentPath: novaCesta, od: kedy })
+  return zaznamy
+}
+
+
+/**
+ * Odkedy je osoba v danej skupine. `null`, keď v nej nie je alebo to nevieme.
+ *
+ * `null` znamená „odjakživa" rovnako ako pri útvaroch: ľuďom zapísaným pred
+ * zavedením histórie by inak všetky staršie pridelenia zmizli.
+ */
+export function vSkupineOd(
+  osoba: Pick<Person, "groupHistory">,
+  skupina: string,
+): Date | null {
+  const kluc = skupina.trim().toLowerCase()
+  const otvorene = (osoba.groupHistory ?? []).filter(z => !z.do && z.group === kluc)
+  if (otvorene.length === 0) return null
+  return otvorene.reduce((a, b) => (a.od > b.od ? a : b)).od
+}
+
+/**
+ * Nová história skupín po zmene členstva.
+ *
+ * Čistá funkcia. Uzavrie úseky skupín, ktoré v novom zozname nie sú, a otvorí
+ * úseky pre tie, ktoré pribudli. **Nezmenené členstvo sa nedotýka** — inak by
+ * uloženie formulára bez zmeny posunulo dátum vstupu a s ním aj termíny.
+ *
+ * Návrat do skupiny je nový úsek, nie oživenie starého: „bol, odišiel,
+ * vrátil sa" je iná informácia než „bol celý čas", a pri otázke, kto mal
+ * v danom období povinnosť, sa tie dve odpovede líšia.
+ */
+export function novaHistoriaSkupin(
+  doteraz: Person["groupHistory"],
+  noveSkupiny: string[],
+  kedy: Date,
+): NonNullable<Person["groupHistory"]> {
+  const nove = new Set(normalizeKeys(noveSkupiny))
+  const zaznamy = (doteraz ?? []).map(z => ({ ...z }))
+
+  for (const z of zaznamy) {
+    if (!z.do && !nove.has(z.group)) z.do = kedy
+  }
+  const otvorene = new Set(zaznamy.filter(z => !z.do).map(z => z.group))
+  for (const g of nove) {
+    if (!otvorene.has(g)) zaznamy.push({ group: g, od: kedy })
+  }
   return zaznamy
 }

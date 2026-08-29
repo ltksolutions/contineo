@@ -245,6 +245,7 @@ obrazovka `/admin/tenanti/[kod]` ju preto vypisuje v hotovom tvare.
 | **D48** | Organizácia si spravuje vzhľad, prihlasovanie aj domény sama — domény s dôkazom cez DNS | ✅ 2026-08-29 |
 | **D49** | Útvary sú strom, osoba patrí do práve jedného; cesta sa materializuje na osobe | ✅ 2026-08-29 |
 | **D50** | Reorganizácia: úloha z útvaru platí odo dňa príchodu, bývalí členovia zostanú vidieť, potvrdenie nesie odtlačok útvaru | ✅ 2026-08-29 |
+| **D51** | Audit správcovských zmien vo vlastnej kolekcii, nemenný; vidí ho `people-admin` a správca platformy | ✅ 2026-08-29 |
 
 ### D47 — automatické založenie z povolených domén
 
@@ -413,3 +414,106 @@ s ním, ale oveľa lepší než žiadny.
 - **Menovateľ v prehľade („8 z 12") sa naďalej počíta dnešnou štruktúrou.**
   Je to odvodený stav a odvodený zostane (D27); presné čísla za minulé obdobie
   dá výkaz z `acknowledgements`, ktorý má odtlačok.
+
+### D50 dodatok — skupiny majú históriu tiež
+
+Pôvodné znenie D50 nechávalo skupiny bez histórie s odôvodnením, že sa menia
+vedome a jednotlivo. **To odôvodnenie neobstálo.** Skupina je v tomto systéme
+najčastejší adresát noriem (rozhodcovia, delegáti, štatutári), a kto z nej
+vypadne pred potvrdením, mizol zo zoznamu nepotvrdených presne tak ticho ako
+predtým pri útvaroch. Dve dimenzie s dvomi rôznymi pravidlami by navyše nikto
+nevedel udržať v hlave.
+
+Osoba preto nesie aj `groupHistory` — zoznam úsekov `{ skupina, od, do }`,
+lebo skupín má naraz viac. Platí to isté ako pri útvaroch: prázdna história
+znamená „odjakživa", nezmenené členstvo sa nedotýka (inak by uloženie
+formulára posúvalo dátum vstupu), a **návrat do skupiny je nový úsek**, nie
+oživenie starého — „bol, odišiel, vrátil sa" je iná odpoveď na otázku, kto mal
+v danom období povinnosť, než „bol celý čas".
+
+Zapisuje sa na všetkých troch miestach, kde sa skupiny menia: obrazovka osoby,
+CSV import (najčastejšia hromadná zmena) a `npm run osoba`.
+
+Bez histórie zostáva už len **trasa**. Tá je obsah, nie adresát — mení sa
+s onboardingom človeka, nie s rozhodnutím o tom, komu sa čo posiela.
+
+---
+
+### D51 — audit správcovských zmien
+
+Doteraz sa pri osobe aj pri organizácii zapisovalo `updatedBy` a `updatedAt`.
+To odpovedá na otázku „kto to menil naposledy" a na nič viac: kto komu udelil
+rolu `hr`, kto koho vyradil, kto vymenil tajomstvo Entry — po druhej zmene sa
+to už nedalo zistiť.
+
+Pri systéme, ktorého celý zmysel je dokazovať oboznámenie s predpismi, je to
+diera na nesprávnom mieste: **kto si vie zmeniť rolu, vie si zmeniť publikum.**
+Potvrdenia sú neprepisovateľné (D24), ale bez stopy o tom, kto mal kedy aké
+práva, sa nedá povedať, či bolo pridelenie oprávnené.
+
+#### Vlastná kolekcia, nie pole v dokumente
+
+`audit` je samostatná kolekcia. Zapisovať históriu do dokumentu osoby by
+znamenalo, že sa dokument s časom nafukuje a že vyradenie osoby berie so sebou
+aj stopu o tom, kto ju vyradil.
+
+**Nie je to náhrada za `acknowledgements` ani za `assignments`.** Tie sú
+dôkazom o obsahu a nesú si vlastné odtlačky; audit je stopa o **správe** —
+o právach, prístupoch a nastaveniach. Zlúčiť ich by znamenalo, že sa dôkaz
+o potvrdení dá zaplaviť záznamami o klikaní v nastaveniach.
+
+**Nie je to zdroj pravdy.** Stav je vždy v `persons` a `tenants`; audit hovorí,
+ako sa tam dostal. Nič sa z neho nedopočítava.
+
+#### Čo sa zapisuje
+
+Osoby (rola, stav, adresa, útvar, skupiny, trasy, jazyk, typ), útvary
+(založenie, premenovanie, presun aj s počtom dotknutých ľudí, zrušenie),
+pridelenia (pridelenie s dôvodom, odvolanie, odoslané oznámenie s počtom
+adresátov), nastavenie organizácie, domény (žiadosť, overenie, zrušenie)
+a prihlasovacie údaje.
+
+Zapisuje sa **rozdiel, nie celý objekt**: inak by v zázname o zmene jazyka
+bolo aj meno, adresa a všetky skupiny, po roku by sa v tom nedalo nič nájsť
+a bola by to zbytočná kópia osobných údajov.
+
+Odvodené polia (`departmentPath`, obe histórie) sa do rozdielu neberú —
+v zázname by prehlušili to, čo človek naozaj menil.
+
+#### Tajomstvá
+
+Pri poli, ktorého názov obsahuje `secret`, `token`, `heslo` alebo `tajomstvo`,
+sa zapíše len `(zmenené)` — nikdy stará ani nová hodnota. **Audit, ktorý zbiera
+heslá, je sám o sebe únik**, a to s dlhšou retenciou než to, čo chráni.
+
+#### Zápis nikdy nezhodí zmenu
+
+`zapisAudit()` nevyhadzuje výnimku. Keby zlyhanie zápisu zhodilo samotnú
+zmenu, jeden pokazený index v audite by zablokoval správu osôb celej
+organizácii. Zlyhanie sa loguje — chýbajúci záznam je zlý stav, nefunkčný
+portál horší.
+
+Volá sa **po** úspešnej zmene. Opačné poradie by zapisovalo zmeny, ktoré sa
+nestali.
+
+#### Kto ho vidí
+
+`people-admin` vidí audit **svojej** organizácie (`/organizacia`, záložka
+Audit, s hľadaním a stropom 200 záznamov). Správca platformy vidí posledných
+50 záznamov každej organizácie v `/admin/tenanti/<KOD>` — kvôli podpore.
+`companyCode` je vždy v podmienke dotazu, nie v kontrole nad ňou: audit cudzej
+organizácie je presne ten druh údaja, ktorý sa nesmie dať vytiahnuť uhádnutím
+identifikátora (D32).
+
+Kto spravuje práva, má vidieť, čo sa s nimi robí. Ukryť audit len pred
+zákazníkom by znamenalo, že si pri kontrole musí pýtať výpis od nás — a to je
+presne to, čo audit potrebuje rýchlo.
+
+#### Čo D51 nerieši
+
+- **Prihlásenia sa nezapisujú.** Na osobe zostáva len `lastLoginAt`
+  a `previousLoginAt`. Záznam každého prihlásenia je spracúvanie údajov
+  o zamestnancoch navyše a patrí najprv do GDPR dokumentácie (súvisí s O14).
+- **Retencia auditu** nie je určená — otvorené v O16 spolu s retenciou
+  potvrdení. Kolekcia zatiaľ rastie bez stropu; pri stovkách ľudí to nie je
+  problém rokov, ale rozhodnúť sa to musí.

@@ -80,7 +80,20 @@ try {
     ODOBRAT ? role.delete(ROLA) : role.add(ROLA)
     zmeny.roles = [...role]
   }
-  if (SKUPINY !== null) zmeny.groups = kluceZoZoznamu(SKUPINY)
+  if (SKUPINY !== null) {
+    const skupiny = kluceZoZoznamu(SKUPINY)
+    zmeny.groups = skupiny
+    // História členstva (D50) — rovnaké pravidlo ako v `persons.ts`, len bez
+    // importu: tento skript beží bez TypeScriptového háku. Nezmenené členstvo
+    // sa nedotkne, odchod uzavrie úsek, príchod otvorí nový.
+    const teraz = new Date()
+    const nove = new Set(skupiny)
+    const historia = (osoba.groupHistory ?? []).map(z => ({ ...z }))
+    for (const z of historia) if (!z.do && !nove.has(z.group)) z.do = teraz
+    const otvorene = new Set(historia.filter(z => !z.do).map(z => z.group))
+    for (const g of nove) if (!otvorene.has(g)) historia.push({ group: g, od: teraz })
+    zmeny.groupHistory = historia
+  }
 
   if (Object.keys(zmeny).length === 0) {
     console.log(`${EMAIL} | ${osoba.companyCode} | ${osoba.fullName}`)

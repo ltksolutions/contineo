@@ -23,8 +23,9 @@
 
 import { ObjectId } from "mongodb"
 import { getCollection } from "./mongodb"
-import { PERSONS_COLLECTION, normalizeKeys, vUtvareOd } from "./persons"
+import { PERSONS_COLLECTION, normalizeKeys, vUtvareOd, vSkupineOd } from "./persons"
 import { ACKNOWLEDGEMENTS_COLLECTION } from "./acknowledgements"
+import { zapisAudit } from "./audit"
 import type { Person } from "./persons"
 
 export const ASSIGNMENTS_COLLECTION = "assignments"
@@ -222,10 +223,14 @@ export function audienceLabel(a: Audience): string {
  */
 export function datumPreOsobu(
   a: Pick<Assignment, "audience" | "assignedAt">,
-  vUtvareOd: Date | null | undefined,
+  osoba: Pick<Person, "departmentHistory" | "groupHistory">,
 ): Date {
-  if (a.audience?.kind !== "department") return a.assignedAt
-  return vUtvareOd && vUtvareOd > a.assignedAt ? vUtvareOd : a.assignedAt
+  const hodnota = a.audience?.value?.trim().toLowerCase()
+  const od =
+    a.audience?.kind === "department" ? vUtvareOd(osoba)
+    : a.audience?.kind === "group" && hodnota ? vSkupineOd(osoba, hodnota)
+    : null
+  return od && od > a.assignedAt ? od : a.assignedAt
 }
 
 // ── zápis ────────────────────────────────────────────────────────────────────
@@ -306,6 +311,12 @@ export async function assign(input: NewAssignment): Promise<AssignResult> {
     revokedAt: null,
   }
   const r = await col.insertOne(zaznam as never)
+  await zapisAudit({
+    companyCode: zaznam.companyCode, predmet: "pridelenie", akcia: "pridelene",
+    aktor: input.assignedBy, cielId: String(r.insertedId),
+    cielPopis: `${input.subject.documentTitle} (${input.subject.versionLabel}) — ${audienceLabel(audience)}`,
+    poznamka: reason,
+  })
   return { stav: "pridelene", id: String(r.insertedId) }
 }
 
@@ -320,10 +331,17 @@ export async function revoke(companyCode: string, id: string, actor: string): Pr
   const col = await getCollection<Assignment>(ASSIGNMENTS_COLLECTION)
   // `companyCode` je v podmienke, nie v kontrole nad ňou: identifikátor sa dá
   // uhádnuť a personalista jednej organizácie nesmie zasiahnuť do druhej (D32).
+  const pred = await col.findOne({ _id: new ObjectId(id), companyCode } as never)
   const r = await col.updateOne(
     { _id: new ObjectId(id), companyCode, revokedAt: null } as never,
     { $set: { revokedAt: new Date(), revokedBy: actor } },
   )
+  if (r.modifiedCount > 0 && pred) {
+    await zapisAudit({
+      companyCode, predmet: "pridelenie", akcia: "odvolane", aktor: actor, cielId: id,
+      cielPopis: `${pred.subject.documentTitle} (${pred.subject.versionLabel}) — ${audienceLabel(pred.audience)}`,
+    })
+  }
   return r.modifiedCount > 0
 }
 
@@ -341,8 +359,9 @@ export async function assignmentsForPerson(person: {
   groups?: string[]
   tracks?: string[]
   departmentPath?: string[]
-  /** Nepoužíva sa tu, ale volajúci ju posiela ďalej do `datumPreOsobu`. */
+  /** Nepoužívajú sa tu, ale volajúci ich posiela ďalej do `datumPreOsobu`. */
   departmentHistory?: Person["departmentHistory"]
+  groupHistory?: Person["groupHistory"]
 }): Promise<Assignment[]> {
   const col = await getCollection<Assignment>(ASSIGNMENTS_COLLECTION)
   const kandidati = await col.find({
@@ -373,11 +392,11 @@ export async function assignedAtByVersion(person: {
   tracks?: string[]
   departmentPath?: string[]
   departmentHistory?: Person["departmentHistory"]
+  groupHistory?: Person["groupHistory"]
 }): Promise<Map<string, Date>> {
   const out = new Map<string, Date>()
-  const od = vUtvareOd(person)
   for (const a of await assignmentsForPerson(person)) {
-    const kedy = datumPreOsobu(a, od)
+    const kedy = datumPreOsobu(a, person)
     const doteraz = out.get(a.subject.versionId)
     if (!doteraz || kedy < doteraz) out.set(a.subject.versionId, kedy)
   }
@@ -412,6 +431,10 @@ export async function recordNotification(
     { _id: new ObjectId(id), companyCode } as never,
     { $push: { notified: { at: new Date(), by, count } } } as never,
   )
+  await zapisAudit({
+    companyCode, predmet: "pridelenie", akcia: "oznamene", aktor: by, cielId: id,
+    poznamka: `odoslané ${count} ľuďom`,
+  })
 }
 
 // ── prehľad pre HR (D33) ─────────────────────────────────────────────────────
@@ -549,25 +572,46 @@ async function byvaliClenovia(
   companyCode: string,
   a: Pick<Assignment, "audience" | "assignedAt" | "revokedAt">,
 ): Promise<AudienceMember[]> {
-  if (a.audience?.kind !== "department" || !a.audience.value) return []
-  const utvar = a.audience.value
+  const kind = a.audience?.kind
+  const hodnota = a.audience?.value?.trim().toLowerCase()
+  if ((kind !== "department" && kind !== "group") || !hodnota) return []
   const doKedy = a.revokedAt ?? new Date()
 
   const col = await getCollection<Person>(PERSONS_COLLECTION)
+  const filter = kind === "department"
+    ? { companyCode, "departmentHistory.departmentPath": hodnota }
+    : { companyCode, "groupHistory.group": hodnota }
+
   const osoby = await col
     .find(
-      { companyCode, "departmentHistory.departmentPath": utvar },
-      { projection: { id: 1, email: 1, fullName: 1, language: 1, departmentPath: 1, departmentHistory: 1 } },
+      filter as never,
+      {
+        projection: {
+          id: 1, email: 1, fullName: 1, language: 1,
+          departmentPath: 1, departmentHistory: 1, groups: 1, groupHistory: 1,
+        },
+      },
     )
     .toArray()
 
+  // Prekryv úseku s obdobím platnosti pridelenia, nie „bol tam v deň
+  // pridelenia": kto prišiel týždeň po pridelení a o mesiac odišiel, mal
+  // povinnosť tiež.
+  const useky = (o: Person): { od: Date; do?: Date }[] =>
+    kind === "department"
+      ? (o.departmentHistory ?? []).filter(z => z.departmentPath.includes(hodnota))
+      : (o.groupHistory ?? []).filter(z => z.group === hodnota)
+
+  const jeDnesClenom = (o: Person): boolean =>
+    kind === "department"
+      ? (o.departmentPath ?? []).includes(hodnota)
+      : normalizeKeys(o.groups).includes(hodnota)
+
   const out: AudienceMember[] = []
   for (const o of osoby) {
-    // Kto tam je aj dnes, patrí medzi bežných členov — nie sem.
-    if ((o.departmentPath ?? []).includes(utvar)) continue
-    const prekryv = (o.departmentHistory ?? []).some(z =>
-      z.departmentPath.includes(utvar) && z.od <= doKedy && (!z.do || z.do >= a.assignedAt),
-    )
+    // Kto je členom aj dnes, patrí medzi bežných členov — nie sem.
+    if (jeDnesClenom(o)) continue
+    const prekryv = useky(o).some(z => z.od <= doKedy && (!z.do || z.do >= a.assignedAt))
     if (!prekryv) continue
     out.push({
       id: o.id, email: o.email, fullName: o.fullName, language: o.language, byvaly: true,

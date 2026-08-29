@@ -8,6 +8,8 @@
  */
 
 import { notFound, redirect } from "next/navigation"
+import { auditZaznamy } from "@/lib/audit"
+import AuditVypis from "@/components/AuditVypis"
 import Link from "next/link"
 import { platformContext } from "@/lib/admin"
 import { allTenants } from "@/lib/tenantAdmin"
@@ -207,6 +209,10 @@ export default async function DetailTenanta({
   // Stav domén sa číta naživo pri každom zobrazení (D27) — uložený by klamal
   // presne vtedy, keď si zákazník DNS prestaví.
   const domeny = await Promise.all(tenant.hostnames.map(stavDomeny))
+  // Správca platformy vidí audit každej organizácie — kvôli podpore. Je to
+  // ten istý výpis, aký vidí zákazník u seba (D51), len sem sa dostane bez
+  // prepínania domén.
+  const zaznamy = await auditZaznamy(tenant.companyCode, { limit: 50 })
   const cakajuce = domeny.filter(d => !d.preskocena && !d.nastaveneCez)
   const zapnuty = tenant.status === "active"
 
@@ -383,6 +389,15 @@ export default async function DetailTenanta({
           <button className="tlacidlo" type="submit">Zapnúť</button>
         )}
       </form>
+
+      <section style={{ marginTop: 28 }}>
+        <h2 style={{ fontSize: 17, margin: "0 0 4px" }}>Audit</h2>
+        <p className="tichy" style={{ fontSize: 14, margin: "0 0 12px" }}>
+          Posledných 50 správcovských zmien tejto organizácie. Celý výpis
+          s hľadaním má zákazník na svojej doméne v nastavení organizácie.
+        </p>
+        <AuditVypis zaznamy={zaznamy} />
+      </section>
     </div>
   )
 }

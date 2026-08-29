@@ -19,7 +19,8 @@
 
 import { getCollection } from "./mongodb"
 import { currentTenant, currentPerson } from "./session"
-import { PERSONS_COLLECTION, normalizeEmail, normalizeKeys, novaHistoriaUtvarov } from "./persons"
+import { zapisAudit, rozdiel } from "./audit"
+import { PERSONS_COLLECTION, normalizeEmail, normalizeKeys, novaHistoriaUtvarov, novaHistoriaSkupin } from "./persons"
 import { normalizeLanguage } from "./i18n"
 import { HR_ROLE } from "./hr"
 import type { Person, PersonStatus, PersonType } from "./persons"
@@ -258,7 +259,14 @@ export async function savePerson(
   }
   if (zmena.language !== undefined) set.language = normalizeLanguage(zmena.language)
   if (zmena.tracks !== undefined) set.tracks = normalizeKeys(zmena.tracks)
-  if (zmena.groups !== undefined) set.groups = normalizeKeys(zmena.groups)
+  // Skupiny a ich história sa zapisujú **spolu**, rovnako ako útvar a cesta.
+  // Rozdelené na dva zápisy by chvíľu platilo, že človek v skupine je, ale
+  // pridelenie tej skupiny sa ho ešte netýka (D50).
+  if (zmena.groups !== undefined) {
+    const skupiny = normalizeKeys(zmena.groups)
+    set.groups = skupiny
+    set.groupHistory = novaHistoriaSkupin(existuje.groupHistory, skupiny, new Date())
+  }
   if (zmena.roles !== undefined) {
     // Prideliť sa dajú len roly z tohto zoznamu. `platform-admin` medzi nimi
     // nie je a nikdy nebude: patrí tenantovi dodávateľa a má vlastnú cestu.
@@ -270,6 +278,20 @@ export async function savePerson(
   set.updatedBy = actor
   set.updatedAt = new Date()
   await col.updateOne({ companyCode, id }, { $set: set } as never)
+
+  // Audit až po úspešnom zápise (D51). Opačné poradie by zapisovalo zmeny,
+  // ktoré sa nestali. `departmentPath` a obe histórie sa do rozdielu neberú:
+  // sú to odvodené polia a v zázname by prehlušili to, čo človek naozaj menil.
+  const { departmentPath: _dp, departmentHistory: _dh, groupHistory: _gh,
+          updatedBy: _ub, updatedAt: _ua, ...zaujimave } = set
+  const pred: Record<string, unknown> = {}
+  for (const k of Object.keys(zaujimave)) pred[k] = (existuje as Record<string, unknown>)[k]
+
+  await zapisAudit({
+    companyCode, predmet: "osoba", akcia: "zmenene", aktor: actor,
+    cielId: id, cielPopis: existuje.fullName,
+    zmeny: rozdiel(pred, zaujimave),
+  })
 }
 
 /**
@@ -307,6 +329,7 @@ export async function invitePerson(
     language: normalizeLanguage(vstup.language),
     tracks: [],
     groups: [],
+    groupHistory: [],
     roles: [],
     invitedAt: now,
     externalRef: { sportnetId: null, entraObjectId: null, googleSub: null },
@@ -314,6 +337,11 @@ export async function invitePerson(
     createdAt: now,
   }
   await col.insertOne(osoba as never)
+  await zapisAudit({
+    companyCode, predmet: "osoba", akcia: "zalozene", aktor: actor,
+    cielId: osoba.id, cielPopis: osoba.fullName,
+    zmeny: { email: { na: osoba.email } },
+  })
   return naRiadok(osoba)
 }
 
@@ -333,9 +361,17 @@ export async function setPersonStatus(
   actor: string,
 ): Promise<void> {
   const col = await getCollection<Person>(PERSONS_COLLECTION)
-  const r = await col.updateOne(
+  const existuje = await col.findOne({ companyCode, id })
+  if (!existuje) throw new PersonValidationError("Taká osoba tu nie je.")
+
+  await col.updateOne(
     { companyCode, id },
     { $set: { status, updatedBy: actor, updatedAt: new Date() } } as never,
   )
-  if (r.matchedCount === 0) throw new PersonValidationError("Taká osoba tu nie je.")
+  await zapisAudit({
+    companyCode, predmet: "osoba",
+    akcia: status === "inactive" ? "vyradene" : "vratene",
+    aktor: actor, cielId: id, cielPopis: existuje.fullName,
+    zmeny: { status: { z: existuje.status, na: status } },
+  })
 }

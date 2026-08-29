@@ -12,6 +12,7 @@
  */
 
 import { getCollection } from "./mongodb"
+import { zapisAudit, rozdiel } from "./audit"
 import {
   TENANTS_COLLECTION,
   normalizeHostname,
@@ -197,6 +198,24 @@ export async function saveTenant(
   // nedajú, preto jedno pretypovanie tu a nikde inde.
   await col.updateOne({ companyCode: kod }, { $set: set } as never)
 
+  // Rozdiel sa počíta z bodkových ciest (`branding.displayName`), takže
+  // pôvodné hodnoty sa čítajú tou istou cestou — inak by v zázname bolo
+  // „z: undefined" pri každej zmene značky.
+  const hodnota = (o: unknown, cesta: string): unknown =>
+    cesta.split(".").reduce<unknown>((x, k) => (x as Record<string, unknown>)?.[k], o)
+  const predZmenou: Record<string, unknown> = {}
+  const poZmene: Record<string, unknown> = {}
+  for (const k of Object.keys(set)) {
+    if (k === "updatedBy" || k === "updatedAt") continue
+    predZmenou[k] = hodnota(existuje, k)
+    poZmene[k] = set[k]
+  }
+  await zapisAudit({
+    companyCode: kod, predmet: "organizacia", akcia: "zmenene", aktor: actor,
+    cielId: kod, cielPopis: existuje.branding?.displayName ?? kod,
+    zmeny: rozdiel(predZmenou, poZmene),
+  })
+
   // Bez tohto by sa zmena prejavila až o päť minút (pamäť v `tenants.ts`)
   // a vyzeralo by to, že sa neuložila.
   invalidateTenants()
@@ -335,6 +354,17 @@ export async function ulozOAuth(
   set.updatedAt = new Date()
 
   await col.updateOne({ companyCode: kod }, { $set: set } as never)
+  // Tajomstvo sa do auditu nezapisuje — len to, že sa zmenilo. Audit, ktorý
+  // zbiera heslá, je sám o sebe únik, a to s dlhšou retenciou než to, čo
+  // chráni (D51).
+  await zapisAudit({
+    companyCode: kod, predmet: "prihlasenie-nastavenie", akcia: "zmenene", aktor: actor,
+    cielId: provider, cielPopis: provider,
+    zmeny: {
+      ...(clientId ? { clientId: { z: existuje.oauth?.[provider]?.clientId ?? null, na: clientId } } : {}),
+      ...(tajomstvo ? { clientSecret: { na: "(zmenené)" } } : {}),
+    },
+  })
   invalidateTenants()
 }
 
@@ -350,5 +380,9 @@ export async function zmazOAuth(
     { companyCode: kod },
     { $unset: { [`oauth.${provider}`]: "" }, $set: { updatedBy: actor, updatedAt: new Date() } } as never,
   )
+  await zapisAudit({
+    companyCode: kod, predmet: "prihlasenie-nastavenie", akcia: "zrusene", aktor: actor,
+    cielId: provider, cielPopis: provider,
+  })
   invalidateTenants()
 }

@@ -287,6 +287,11 @@
 - [x] **útvary ako strom** (D49) — osoba v práve jednom, pridelenie platí aj pre podstrom, skupiny zostávajú samostatnou dimenziou. Prevod z textu: `npm run utvary`
 - [x] **prevod útvarov SFZ spustený 2026-08-29** — nemal čo previesť: v databáze je zatiaľ jedna osoba a žiadna nemá útvar zapísaný textom. Zmysel dostane po importe ľudí z CSV
 - [x] **reorganizácia** (D50) — úloha z útvaru platí odo dňa príchodu, bývalí členovia zostanú v prehľade označení a bez e-mailu, potvrdenie nesie odtlačok útvaru
+- [x] **audit správcovských zmien** (D51) — vlastná kolekcia, nemenná, rozdiel namiesto celého objektu, tajomstvá len ako „zmenené"; vidí ho `people-admin` a správca platformy
+- [x] **skupiny majú históriu členstva** — pôvodné rozhodnutie nechať ich bez nej neobstálo
+- [x] **indexy auditu a histórie skupín vytvorené 2026-08-29** — `node scripts/onboarding_init.mjs`
+- [ ] **retencia auditu nie je určená** — otvorené v O16 spolu s retenciou potvrdení
+- [ ] **prihlásenia sa nezapisujú** — zámerne; záznam každého prihlásenia patrí najprv do GDPR dokumentácie (súvisí s O14)
 - [x] **indexy vytvorené v Atlase 2026-08-29** — `node scripts/onboarding_init.mjs` (stav bez zápisu: `--stav`). Pribudla kolekcia `departments` s dvomi indexmi a dva indexy nad `persons`
 
 **Zostáva (mimo rozsahu B)**

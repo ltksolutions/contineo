@@ -23,6 +23,8 @@ import Oznam from "@/components/Oznam"
 import { ulozVzhlad, ulozPrihlasenie, zmazPrihlasenie, poziadaj, overDomenu, zrus } from "./akcie"
 import { zalozUtvar, premenujUtvar, presunUtvar, zrusUtvar } from "./akcie"
 import { vsetkyOddelenia, splostiStrom, podstrom, pocty, MAX_HLBKA, hlbka } from "@/lib/oddelenia"
+import { auditZaznamy } from "@/lib/audit"
+import AuditVypis from "@/components/AuditVypis"
 import type { OAuthProviderName } from "@/lib/oauth"
 import type { Tenant } from "@/lib/tenants"
 
@@ -31,6 +33,7 @@ const ZALOZKY = [
   { kluc: "utvary", popis: "Útvary" },
   { kluc: "domeny", popis: "Domény" },
   { kluc: "prihlasenie", popis: "Prihlasovanie" },
+  { kluc: "audit", popis: "Audit" },
 ]
 
 export const dynamic = "force-dynamic"
@@ -162,7 +165,7 @@ function Poskytovatel({
 export default async function Organizacia({
   searchParams,
 }: {
-  searchParams: Promise<{ sprava?: string; chyba?: string; zalozka?: string }>
+  searchParams: Promise<{ sprava?: string; chyba?: string; zalozka?: string; hladat?: string }>
 }) {
   const ctx = await organizaciaContext()
   if (ctx.state !== "ready") {
@@ -170,7 +173,7 @@ export default async function Organizacia({
     notFound()
   }
 
-  const { sprava, chyba, zalozka } = await searchParams
+  const { sprava, chyba, zalozka, hladat } = await searchParams
   // Záložka je v adrese, nie v klientskom stave: dá sa poslať odkazom,
   // vrátiť sa naň z histórie a funguje bez jediného riadku JavaScriptu.
   const teraz = ZALOZKY.some(z => z.kluc === zalozka) ? zalozka! : "vzhlad"
@@ -186,6 +189,9 @@ export default async function Organizacia({
   const utvary = teraz === "utvary" ? await vsetkyOddelenia(tenant.companyCode) : []
   const riadky = teraz === "utvary" ? splostiStrom(utvary) : []
   const koliOsob = teraz === "utvary" ? await pocty(tenant.companyCode) : new Map()
+  const zaznamy = teraz === "audit"
+    ? await auditZaznamy(tenant.companyCode, { hladat, limit: 200 })
+    : []
 
   return (
     <div className="obal" style={{ padding: "28px 20px 80px", maxWidth: 720, ...tenantStyle(branding) }}>
@@ -528,6 +534,50 @@ export default async function Organizacia({
       <div style={{ display: "grid", gap: 16 }}>
         <Poskytovatel tenant={tenant} provider="microsoft" domena={tenant.hostnames[0]} />
         <Poskytovatel tenant={tenant} provider="google" domena={tenant.hostnames[0]} />
+      </div>
+      )}
+
+      {teraz === "audit" && (
+      <div>
+        <p className="tichy" style={{ fontSize: 14.5, margin: "0 0 16px", maxWidth: 620 }}>
+          Kto, čo a kedy zmenil. Zapisuje sa každá správcovská zmena — rola,
+          prístup, útvar, pridelenie aj nastavenie organizácie. Záznamy sa
+          <strong> nedajú upraviť ani zmazať</strong>; to je celý zmysel.
+          Tajomstvá (napr. klientsky secret) sú tu len ako &bdquo;zmenené&ldquo; —
+          audit, ktorý zbiera heslá, je sám o sebe únik.
+        </p>
+
+        {/* Formulár metódou GET: filter je v adrese, dá sa poslať odkazom
+            a funguje bez jediného riadku JavaScriptu. */}
+        <form className="audit-filter" method="get">
+          <input type="hidden" name="zalozka" value="audit" />
+          <label className="pole" style={{ flex: "1 1 260px", margin: 0 }}>
+            <span className="pole-popis">Hľadať</span>
+            <input
+              className="pole-vstup"
+              name="hladat"
+              defaultValue={hladat ?? ""}
+              placeholder="meno, adresa, útvar…"
+              autoCapitalize="none"
+            />
+          </label>
+          <button className="tlacidlo tlacidlo--tiche" type="submit">Hľadať</button>
+          {hladat ? (
+            <Link className="tichy" href="/organizacia?zalozka=audit" style={{ fontSize: 14 }}>
+              zrušiť filter
+            </Link>
+          ) : null}
+        </form>
+
+        <AuditVypis zaznamy={zaznamy} jazyk={jazyk} />
+
+        {zaznamy.length >= 200 && (
+          <p className="tichy" style={{ fontSize: 13, marginTop: 14 }}>
+            Ukazuje sa najnovších 200 záznamov. Staršie sa dajú vyhľadať poľom vyššie —
+            načítať ich všetky naraz by obrazovku zhodilo práve vtedy, keď ju
+            niekto otvorí kvôli kontrole.
+          </p>
+        )}
       </div>
       )}
     </div>

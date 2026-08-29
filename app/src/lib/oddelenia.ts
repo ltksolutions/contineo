@@ -34,6 +34,7 @@
  */
 
 import { getCollection } from "./mongodb"
+import { zapisAudit } from "./audit"
 import { PERSONS_COLLECTION, novaHistoriaUtvarov } from "./persons"
 import type { Person } from "./persons"
 
@@ -215,6 +216,11 @@ export async function zalozOddelenie(
   }
   const col = await getCollection<Oddelenie>(ODDELENIA_COLLECTION)
   await col.insertOne(o as never)
+  await zapisAudit({
+    companyCode, predmet: "utvar", akcia: "zalozene", aktor: actor,
+    cielId: o.id, cielPopis: o.nazov,
+    zmeny: { parentId: { na: o.parentId } },
+  })
   return o
 }
 
@@ -227,11 +233,18 @@ export async function premenujOddelenie(
   const meno = nazov.trim()
   if (!meno) throw new OddelenieError("Názov oddelenia je povinný.")
   const col = await getCollection<Oddelenie>(ODDELENIA_COLLECTION)
-  const r = await col.updateOne(
+  const pred = await col.findOne({ companyCode, id })
+  if (!pred) throw new OddelenieError("Také oddelenie tu nie je.")
+
+  await col.updateOne(
     { companyCode, id },
     { $set: { nazov: meno, updatedAt: new Date(), updatedBy: actor } },
   )
-  if (!r.matchedCount) throw new OddelenieError("Také oddelenie tu nie je.")
+  await zapisAudit({
+    companyCode, predmet: "utvar", akcia: "premenovane", aktor: actor,
+    cielId: id, cielPopis: meno,
+    zmeny: { nazov: { z: pred.nazov, na: meno } },
+  })
 }
 
 /**
@@ -256,12 +269,21 @@ export async function presunOddelenie(
   const preco = smieSaPresunut(vsetky, id, novyParentId)
   if (preco) throw new OddelenieError(preco)
 
+  const pred = vsetky.find(o => o.id === id)!
   const col = await getCollection<Oddelenie>(ODDELENIA_COLLECTION)
   await col.updateOne(
     { companyCode, id },
     { $set: { parentId: novyParentId ?? null, updatedAt: new Date(), updatedBy: actor } },
   )
-  await prepocitajCesty(companyCode)
+  const dotknutych = await prepocitajCesty(companyCode)
+  await zapisAudit({
+    companyCode, predmet: "utvar", akcia: "presunute", aktor: actor,
+    cielId: id, cielPopis: pred.nazov,
+    zmeny: { parentId: { z: pred.parentId, na: novyParentId ?? null } },
+    // Presun mení, koho sa týkajú pridelenia celého podstromu. Počet je tu
+    // preto, aby bolo pri kontrole vidieť rozsah, nielen fakt zmeny.
+    poznamka: `prepočítané cesty ${dotknutych} osobám`,
+  })
 }
 
 /**
@@ -269,7 +291,7 @@ export async function presunOddelenie(
  * zostali odkazovať na niečo, čo neexistuje, a zmizli by zo štruktúry bez
  * toho, aby to niekto videl.
  */
-export async function zmazOddelenie(companyCode: string, id: string): Promise<void> {
+export async function zmazOddelenie(companyCode: string, id: string, actor: string): Promise<void> {
   const vsetky = await vsetkyOddelenia(companyCode)
   if (deti(vsetky, id).length > 0) {
     throw new OddelenieError("Oddelenie má podriadené — najprv ich presuňte alebo zmažte.")
@@ -284,7 +306,12 @@ export async function zmazOddelenie(companyCode: string, id: string): Promise<vo
   }
 
   const col = await getCollection<Oddelenie>(ODDELENIA_COLLECTION)
+  const pred = await col.findOne({ companyCode, id })
   await col.deleteOne({ companyCode, id })
+  await zapisAudit({
+    companyCode, predmet: "utvar", akcia: "zrusene", aktor: actor,
+    cielId: id, cielPopis: pred?.nazov ?? null,
+  })
 }
 
 /**
@@ -389,4 +416,9 @@ export async function zaradOsobu(
       },
     } as never,
   )
+  await zapisAudit({
+    companyCode, predmet: "osoba", akcia: "zmenene", aktor: actor,
+    cielId: personId, cielPopis: osoba.fullName,
+    zmeny: { departmentId: { z: osoba.departmentId ?? null, na: departmentId ?? null } },
+  })
 }
