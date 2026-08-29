@@ -132,6 +132,72 @@ obyčajné „naozaj?".
 
 ---
 
+## 6. `VERCEL_TOKEN` — jediné, čo ešte treba nastaviť ručne
+
+Keď správcovská obrazovka zakladá organizáciu, priradí jej doménu projektu vo
+Verceli sama. Na to potrebuje token. Bez neho sa organizácia **založí** a
+domény sa **uložia** — obrazovka len povie, že do Vercelu ich nepridala a treba
+to spraviť ručne. Poradie je zámerné: `tenants` je zdroj pravdy a výpadok
+cudzieho API nesmie brániť zákazníka založiť.
+
+**Token z `vercel login` na to nestačí.** CLI si svoju hodnotu priebežne
+obnovuje; kto ju prečíta zo súboru, dostane po čase neplatnú (overené
+2026-08-28 — Vercel vrátil 403). Skripty na vývojárskom stroji si ju doplnia
+samy (`scripts/lib/vercel-auth.mjs`), ale na server patrí vlastný token.
+
+### Vytvorenie
+
+1. `https://vercel.com/account/tokens` (avatar vpravo hore → **Settings** →
+   **Tokens**).
+2. **Create Token**.
+3. **Name:** `contineo-admin` — nech je z výpisu vidieť, čo ho používa.
+4. **Scope:** tím, pod ktorým je projekt `contineo`. Nie „Personal Account",
+   ak projekt patrí tímu — token by na projekt nevidel.
+5. **Expiration:** `No Expiration` pre prevádzku. Kratšia platnosť je bezpečnejšia,
+   ale znamená, že jedného dňa prestane obrazovka pridávať domény bez toho, aby
+   sa čokoľvek zmenilo v kóde.
+6. **Create** → hodnota sa ukáže **jediný raz**. Skopírovať hneď.
+
+### Kam ho dať
+
+**Lokálne** — `app/.env.local`, nový riadok:
+
+```
+VERCEL_TOKEN=<hodnota>
+```
+
+`.env.local` je v `.gitignore`; token do repozitára nepatrí.
+
+**Do nasadenia** — `https://vercel.com/<tím>/contineo/settings/environment-variables`:
+
+- **Key:** `VERCEL_TOKEN`
+- **Value:** tá istá hodnota
+- **Environments:** Production, Preview, Development
+- **Sensitive:** zapnúť — Vercel ju potom už nikdy neukáže späť
+
+Alebo z príkazového riadka v `app/`:
+
+```bash
+vercel env add VERCEL_TOKEN production
+```
+
+**Premenná sa prejaví až novým nasadením.** Existujúce beží so starým
+prostredím; stačí `vercel --prod` alebo ďalší commit.
+
+### Overenie
+
+```bash
+cd app
+npm run domeny            # vypíše stav domén každého tenanta
+```
+
+Keď token neplatí, skripty aj obrazovka to povedia menovite („Vercel token
+neprijal") — nie všeobecnou chybou. Rozdiel medzi „token chýba" a „token
+neplatí" je podstatný: prvé je nedokončené nastavenie, druhé je vypršaná
+hodnota, ktorá pred týždňom fungovala.
+
+---
+
 **Súvisiace:** D29 (hostiteľ určuje tenanta), D32 (viditeľnosť per
 `companyCode`), D27 (stav sa odvodzuje), D6 (platné znenie), I1c
 (overená cesta cez `persons`).
