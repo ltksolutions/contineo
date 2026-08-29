@@ -153,7 +153,8 @@ button:disabled { cursor: not-allowed; opacity: 0.55; }
   text-overflow: ellipsis;
 }
 
-.hlavicka-odznak {
+/* Rovnaký prípad ako hamburger: odznak má aj `.stitok`, ktorý je nižšie. */
+.hlavicka-riadok .hlavicka-odznak {
   display: none;
   font-weight: 600;
   letter-spacing: 0.04em;
@@ -204,7 +205,15 @@ button:disabled { cursor: not-allowed; opacity: 0.55; }
 
 @media (min-width: 760px) {
   .hlavicka-riadok { height: 60px; gap: 16px; }
-  .hlavicka-hamburger { display: none; }
+
+  /*
+   * `.hlavicka-riadok` v selektore nie je ozdoba: hamburger má aj triedu
+   * `.tlacidlo`, ktorá je v tomto súbore nižšie a nastavuje `display:
+   * inline-flex`. Pri rovnakej špecifickosti vyhráva neskorší zápis, takže
+   * samotné `.hlavicka-hamburger { display: none }` neplatilo a ikona sa
+   * ukazovala aj na širokej obrazovke vedľa rozvinutého menu.
+   */
+  .hlavicka-riadok .hlavicka-hamburger { display: none; }
 
   .hlavicka-nav,
   .hlavicka-nav.je-otvorene {
@@ -221,7 +230,7 @@ button:disabled { cursor: not-allowed; opacity: 0.55; }
 
   .hlavicka-odkaz { font-size: 14px; padding: 6px 12px; }
   .hlavicka-nazov { font-size: 17px; }
-  .hlavicka-odznak { display: inline-flex; }
+  .hlavicka-riadok .hlavicka-odznak { display: inline-flex; }
 }
 
 /*
