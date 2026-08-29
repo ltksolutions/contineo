@@ -43,8 +43,17 @@ function spravaChyby(e: unknown): string {
   return "Zmenu sa nepodarilo uložiť. Skús to znova."
 }
 
-function spat(sprava: string, chyba = false): never {
-  redirect(`/organizacia?sprava=${encodeURIComponent(sprava)}${chyba ? "&chyba=1" : ""}`)
+/**
+ * Späť na tú istú záložku, z ktorej sa odosielalo.
+ *
+ * Bez toho by človeka po uložení domény hodilo na vzhľad a musel by sa
+ * preklikať späť — pri chybe by navyše nevidel pole, ktoré má opraviť.
+ */
+function spat(fd: FormData, sprava: string, chyba = false): never {
+  const zalozka = textPola(fd, "zalozka") || "vzhlad"
+  const q = new URLSearchParams({ zalozka, sprava })
+  if (chyba) q.set("chyba", "1")
+  redirect(`/organizacia?${q.toString()}`)
 }
 
 // ── vzhľad ───────────────────────────────────────────────────────────────────
@@ -75,11 +84,11 @@ export async function ulozVzhlad(fd: FormData) {
       ...(logoUrl ? { logoUrl } : {}),
     }, ja.email)
   } catch (e) {
-    spat(spravaChyby(e), true)
+    spat(fd, spravaChyby(e), true)
   }
 
   revalidatePath("/organizacia")
-  spat("Uložené.")
+  spat(fd, "Uložené.")
 }
 
 // ── prihlasovanie kontom ─────────────────────────────────────────────────────
@@ -100,11 +109,11 @@ export async function ulozPrihlasenie(fd: FormData) {
       hostedDomain: provider === "google" ? textPola(fd, "hostedDomain") : undefined,
     }, ja.email)
   } catch (e) {
-    spat(spravaChyby(e), true)
+    spat(fd, spravaChyby(e), true)
   }
 
   revalidatePath("/organizacia")
-  spat("Prihlasovacie údaje uložené.")
+  spat(fd, "Prihlasovacie údaje uložené.")
 }
 
 export async function zmazPrihlasenie(fd: FormData) {
@@ -115,17 +124,17 @@ export async function zmazPrihlasenie(fd: FormData) {
   // Vyžiada si napísanie kódu organizácie: ľuďom, ktorí sa prihlasujú
   // pracovným kontom, tým okamžite prestane fungovať jediná cesta dnu.
   if (textPola(fd, "potvrdenie").toUpperCase() !== ja.companyCode.toUpperCase()) {
-    spat(`Na odstránenie napíš kód organizácie (${ja.companyCode}).`, true)
+    spat(fd, `Na odstránenie napíš kód organizácie (${ja.companyCode}).`, true)
   }
 
   try {
     await zmazOAuth(ja.companyCode, provider, ja.email)
   } catch (e) {
-    spat(spravaChyby(e), true)
+    spat(fd, spravaChyby(e), true)
   }
 
   revalidatePath("/organizacia")
-  spat("Prihlasovacie údaje odstránené.")
+  spat(fd, "Prihlasovacie údaje odstránené.")
 }
 
 // ── domény ───────────────────────────────────────────────────────────────────
@@ -144,11 +153,11 @@ export async function poziadaj(fd: FormData) {
   try {
     await poziadajODomenu(ja.companyCode, textPola(fd, "host"), ja.email)
   } catch (e) {
-    spat(spravaChyby(e), true)
+    spat(fd, spravaChyby(e), true)
   }
 
   revalidatePath("/organizacia")
-  spat("Zapísané. Teraz nastavte CNAME u svojho správcu DNS a dajte overiť.")
+  spat(fd, "Zapísané. Teraz nastavte CNAME u svojho správcu DNS a dajte overiť.")
 }
 
 /** Overí DNS a — keď sedí — doménu zapne a pridá do Vercelu. */
@@ -181,7 +190,7 @@ export async function overDomenu(fd: FormData) {
   }
 
   revalidatePath("/organizacia")
-  spat(sprava, chyba)
+  spat(fd, sprava, chyba)
 }
 
 export async function zrus(fd: FormData) {
@@ -191,9 +200,9 @@ export async function zrus(fd: FormData) {
   try {
     await zrusDomenu(ja.companyCode, textPola(fd, "host"))
   } catch (e) {
-    spat(spravaChyby(e), true)
+    spat(fd, spravaChyby(e), true)
   }
 
   revalidatePath("/organizacia")
-  spat("Doména odstránená. Portál na nej prestal odpovedať.")
+  spat(fd, "Doména odstránená. Portál na nej prestal odpovedať.")
 }

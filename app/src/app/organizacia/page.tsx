@@ -10,6 +10,7 @@
  */
 
 import { notFound, redirect } from "next/navigation"
+import Link from "next/link"
 import { organizaciaContext } from "@/lib/organizacia"
 import { ziadosti, pokynPreDomenu } from "@/lib/domenyZakaznika"
 import { stavPoskytovatela, NAZOV_POSKYTOVATELA, ID_POSKYTOVATELA } from "@/lib/oauth"
@@ -22,6 +23,12 @@ import Oznam from "@/components/Oznam"
 import { ulozVzhlad, ulozPrihlasenie, zmazPrihlasenie, poziadaj, overDomenu, zrus } from "./akcie"
 import type { OAuthProviderName } from "@/lib/oauth"
 import type { Tenant } from "@/lib/tenants"
+
+const ZALOZKY = [
+  { kluc: "vzhlad", popis: "Vzhľad a jazyky" },
+  { kluc: "domeny", popis: "Domény" },
+  { kluc: "prihlasenie", popis: "Prihlasovanie" },
+]
 
 export const dynamic = "force-dynamic"
 
@@ -71,6 +78,7 @@ function Poskytovatel({
 
       <form action={ulozPrihlasenie} style={{ display: "grid", gap: 14 }}>
         <input type="hidden" name="provider" value={provider} />
+        <input type="hidden" name="zalozka" value="prihlasenie" />
 
         <label className="pole">
           <span className="pole-popis">Client ID</span>
@@ -131,6 +139,7 @@ function Poskytovatel({
       {s.zdroj === "tenant" && (
         <form action={zmazPrihlasenie} style={{ display: "grid", gap: 10, borderTop: "1px solid var(--line)", paddingTop: 14 }}>
           <input type="hidden" name="provider" value={provider} />
+          <input type="hidden" name="zalozka" value="prihlasenie" />
           <p className="tichy" style={{ margin: 0, fontSize: 14 }}>
             Odstránením zmizne tlačidlo z prihlasovacej obrazovky. Ľuďom, ktorí
             sa prihlasujú pracovným kontom, tým prestane fungovať jediná cesta,
@@ -150,7 +159,7 @@ function Poskytovatel({
 export default async function Organizacia({
   searchParams,
 }: {
-  searchParams: Promise<{ sprava?: string; chyba?: string }>
+  searchParams: Promise<{ sprava?: string; chyba?: string; zalozka?: string }>
 }) {
   const ctx = await organizaciaContext()
   if (ctx.state !== "ready") {
@@ -158,7 +167,10 @@ export default async function Organizacia({
     notFound()
   }
 
-  const { sprava, chyba } = await searchParams
+  const { sprava, chyba, zalozka } = await searchParams
+  // Záložka je v adrese, nie v klientskom stave: dá sa poslať odkazom,
+  // vrátiť sa naň z histórie a funguje bez jediného riadku JavaScriptu.
+  const teraz = ZALOZKY.some(z => z.kluc === zalozka) ? zalozka! : "vzhlad"
   const tenant = ctx.tenant
   const branding = brandingView(tenant)
   const jazyk = ctx.person.language
@@ -168,7 +180,11 @@ export default async function Organizacia({
 
   return (
     <div className="obal" style={{ padding: "28px 20px 80px", maxWidth: 720, ...tenantStyle(branding) }}>
-      <Oznam sprava={sprava} chyba={chyba === "1"} spat="/organizacia" />
+      <Oznam
+        sprava={sprava}
+        chyba={chyba === "1"}
+        spat={`/organizacia?zalozka=${teraz}`}
+      />
 
       <h1 style={{ fontSize: 26, letterSpacing: "-0.02em", margin: "0 0 6px" }}>Organizácia</h1>
       <p className="tichy" style={{ fontSize: 15, margin: "0 0 22px", maxWidth: 620 }}>
@@ -177,8 +193,25 @@ export default async function Organizacia({
         s tým sa ozvite nám.
       </p>
 
+      {/* Záložky, nie jeden dlhý stĺpec. Blokov je päť a na telefóne to
+          znamenalo, že sa k prihlasovaniu človek dostal až po dvoch
+          obrazovkách posúvania cez veci, ktoré nehľadal. */}
+      <nav className="zalozky" aria-label="Časti nastavenia">
+        {ZALOZKY.map(z => (
+          <Link
+            key={z.kluc}
+            href={`/organizacia?zalozka=${z.kluc}`}
+            className={`zalozka${z.kluc === teraz ? " je-aktivna" : ""}`}
+            aria-current={z.kluc === teraz ? "page" : undefined}
+          >
+            {z.popis}
+          </Link>
+        ))}
+      </nav>
+
+      {teraz === "vzhlad" && (
       <form action={ulozVzhlad} className="karta" style={{ padding: 20, display: "grid", gap: 16 }} encType="multipart/form-data">
-        <h2 style={{ fontSize: 17, margin: 0 }}>Vzhľad a jazyky</h2>
+        <input type="hidden" name="zalozka" value="vzhlad" />
 
         <label className="pole">
           <span className="pole-popis">Názov</span>
@@ -269,10 +302,10 @@ export default async function Organizacia({
 
         <div><button className="tlacidlo" type="submit">Uložiť</button></div>
       </form>
+      )}
 
-      {/* ── domény ── */}
-      <section className="karta" style={{ padding: "18px 20px", marginTop: 16, display: "grid", gap: 14 }}>
-        <h2 style={{ fontSize: 17, margin: 0 }}>Domény</h2>
+      {teraz === "domeny" && (
+      <section className="karta" style={{ padding: "18px 20px", display: "grid", gap: 14 }}>
 
         <ul className="admin-domeny">
           {tenant.hostnames.map(h => (
@@ -282,6 +315,7 @@ export default async function Organizacia({
               {tenant.hostnames.length > 1 && (
                 <form action={zrus} style={{ marginLeft: "auto" }}>
                   <input type="hidden" name="host" value={h} />
+                  <input type="hidden" name="zalozka" value="domeny" />
                   <button className="tlacidlo tlacidlo--tiche" type="submit" style={{ padding: "5px 10px", fontSize: 13 }}>
                     Odstrániť
                   </button>
@@ -317,12 +351,14 @@ export default async function Organizacia({
                   <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
                     <form action={overDomenu}>
                       <input type="hidden" name="host" value={z.host} />
+                      <input type="hidden" name="zalozka" value="domeny" />
                       <button className="tlacidlo" type="submit" style={{ padding: "6px 14px", fontSize: 13.5 }}>
                         Overiť a zapnúť
                       </button>
                     </form>
                     <form action={zrus}>
                       <input type="hidden" name="host" value={z.host} />
+                      <input type="hidden" name="zalozka" value="domeny" />
                       <button className="tlacidlo tlacidlo--tiche" type="submit" style={{ padding: "6px 14px", fontSize: 13.5 }}>
                         Zrušiť žiadosť
                       </button>
@@ -335,6 +371,7 @@ export default async function Organizacia({
         )}
 
         <form action={poziadaj} style={{ display: "grid", gap: 10 }}>
+          <input type="hidden" name="zalozka" value="domeny" />
           <label className="pole">
             <span className="pole-popis">Pridať vlastnú doménu</span>
             <input className="pole-vstup" name="host" placeholder="intranet.vasazorganizacia.sk" autoCapitalize="none" autoCorrect="off" />
@@ -347,12 +384,14 @@ export default async function Organizacia({
           <div><button className="tlacidlo tlacidlo--tiche" type="submit">Požiadať</button></div>
         </form>
       </section>
+      )}
 
-      {/* ── prihlasovanie kontom ── */}
-      <div style={{ display: "grid", gap: 16, marginTop: 16 }}>
+      {teraz === "prihlasenie" && (
+      <div style={{ display: "grid", gap: 16 }}>
         <Poskytovatel tenant={tenant} provider="microsoft" domena={tenant.hostnames[0]} />
         <Poskytovatel tenant={tenant} provider="google" domena={tenant.hostnames[0]} />
       </div>
+      )}
     </div>
   )
 }
