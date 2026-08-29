@@ -239,7 +239,11 @@ export default function Hlavicka({
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={branding.logoUrl} alt="" width={26} height={26} style={{ display: "block" }} />
               )}
-              <span className="hlavicka-nazov">{branding.displayName}</span>
+              {/* Skratka, keď ju organizácia má. Celý názov zostáva v `title`
+                  a na prihlasovacej obrazovke — tam je miesta dosť. */}
+              <span className="hlavicka-nazov" title={branding.displayName}>
+                {branding.shortName || branding.displayName}
+              </span>
             </>
           ) : (
             <>

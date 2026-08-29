@@ -46,8 +46,10 @@ export async function ulozOsobu(fd: FormData) {
 
   const id = textPola(fd, "id")
   let sprava = ""
+  let chyba = false
   try {
     await savePerson(kto.companyCode, id, {
+      email: textPola(fd, "email"),
       fullName: textPola(fd, "fullName"),
       department: textPola(fd, "department"),
       personType: (textPola(fd, "personType") || undefined) as PersonType | undefined,
@@ -60,10 +62,11 @@ export async function ulozOsobu(fd: FormData) {
     sprava = "Uložené."
   } catch (e) {
     sprava = spravaChyby(e)
+    chyba = true
   }
 
   revalidatePath("/osoby")
-  redirect(`/osoby/${encodeURIComponent(id)}?sprava=${encodeURIComponent(sprava)}`)
+  redirect(`/osoby/${encodeURIComponent(id)}?sprava=${encodeURIComponent(sprava)}${chyba ? "&chyba=1" : ""}`)
 }
 
 export async function pozviOsobu(fd: FormData) {
@@ -113,9 +116,11 @@ export async function prepniStavOsoby(fd: FormData) {
   const email = textPola(fd, "email")
   const naStav = textPola(fd, "status") === "inactive" ? "inactive" : "invited"
   let sprava = ""
+  let chyba = false
 
   if (naStav === "inactive" && textPola(fd, "potvrdenie").toLowerCase() !== email.toLowerCase()) {
     sprava = `Na vyradenie napíš adresu (${email}).`
+    chyba = true
   } else {
     try {
       await setPersonStatus(kto.companyCode, id, naStav, kto.email)
@@ -124,11 +129,12 @@ export async function prepniStavOsoby(fd: FormData) {
         : "Vrátená. Prihlási sa a stav sa prepne sám."
     } catch (e) {
       sprava = spravaChyby(e)
+      chyba = true
     }
   }
 
   revalidatePath("/osoby")
-  redirect(`/osoby/${encodeURIComponent(id)}?sprava=${encodeURIComponent(sprava)}`)
+  redirect(`/osoby/${encodeURIComponent(id)}?sprava=${encodeURIComponent(sprava)}${chyba ? "&chyba=1" : ""}`)
 }
 
 /**

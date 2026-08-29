@@ -165,7 +165,7 @@ export async function poslatOznamenie(fd: FormData) {
 
   const prijemcovia = await nepotvrdili(kod, id)
   if (prijemcovia.length === 0) {
-    redirect("/hr?sprava=" + encodeURIComponent("Potvrdili už všetci — nebolo komu poslať."))
+    redirect("/hr?chyba=1&sprava=" + encodeURIComponent("Potvrdili už všetci — nebolo komu poslať."))
   }
   if (prijemcovia.length > NAJVIAC_NARAZ) {
     redirect(`/hr/${encodeURIComponent(id)}/oznamit?chyba=` + encodeURIComponent(
@@ -218,5 +218,5 @@ export async function poslatOznamenie(fd: FormData) {
   const sprava = zlyhali.length === 0
     ? `Odoslané ${odoslane} ľuďom, ktorí ešte nepotvrdili.`
     : `Odoslané ${odoslane}. Nedoručiteľné (${zlyhali.length}): ${zlyhali.slice(0, 5).join(", ")}${zlyhali.length > 5 ? "…" : ""}`
-  redirect("/hr?sprava=" + encodeURIComponent(sprava))
+  redirect(`/hr?sprava=${encodeURIComponent(sprava)}${zlyhali.length ? "&chyba=1" : ""}`)
 }

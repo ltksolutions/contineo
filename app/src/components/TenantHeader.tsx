@@ -21,6 +21,16 @@ import type { CSSProperties } from "react"
  */
 export interface TenantBrandingView {
   displayName: string
+  /**
+   * Krátky tvar do lišty: „SFZ" namiesto „Slovenský futbalový zväz".
+   *
+   * V hlavičke je vedľa neho ešte menu a osobné menu, takže dlhý názov ju
+   * buď rozbije, alebo sa musí skracovať tromi bodkami — a „Slovenský
+   * futbalo…" nepovie viac než „SFZ", zaberie však štvornásobok. Celý názov
+   * zostáva ako `title`, v e-mailoch a na prihlasovacej obrazovke, kde je
+   * miesta dosť a človek ho vidí prvýkrát.
+   */
+  shortName?: string
   logoUrl?: string
   accentColor?: string
 }

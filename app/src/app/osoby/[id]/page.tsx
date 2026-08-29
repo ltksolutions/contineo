@@ -13,6 +13,7 @@ import { peopleContext, loadPersonById, PRIDELITELNE_ROLE } from "@/lib/people"
 import { publikaVOrganizacii } from "@/lib/persons"
 import Vyber from "@/components/Vyber"
 import VyberStitkov from "@/components/VyberStitkov"
+import Oznam from "@/components/Oznam"
 import { brandingView } from "@/lib/tenants"
 import { tenantStyle } from "@/components/TenantHeader"
 import { formatDate, UI_LANGUAGES } from "@/lib/i18n"
@@ -44,7 +45,7 @@ export default async function DetailOsoby({
   searchParams,
 }: {
   params: Promise<{ id: string }>
-  searchParams: Promise<{ sprava?: string }>
+  searchParams: Promise<{ sprava?: string; chyba?: string }>
 }) {
   const ctx = await peopleContext()
   if (ctx.state !== "ready") {
@@ -53,7 +54,7 @@ export default async function DetailOsoby({
   }
 
   const { id } = await params
-  const { sprava } = await searchParams
+  const { sprava, chyba } = await searchParams
   const o = await loadPersonById(ctx.person.companyCode, id)
   // Neexistuje vs. patrí inej organizácii je zámerne tá istá odpoveď (D32).
   if (!o) notFound()
@@ -75,6 +76,9 @@ export default async function DetailOsoby({
       <h1 style={{ fontSize: 25, letterSpacing: "-0.02em", margin: "0 0 4px" }}>{o.fullName}</h1>
       <p className="tichy" style={{ fontSize: 14.5, margin: "0 0 4px", overflowWrap: "anywhere" }}>
         {o.email}
+        {o.emailHistory.length > 0 && (
+          <> · predtým {o.emailHistory.map(h => h.email).join(", ")}</>
+        )}
       </p>
       <p className="tichy" style={{ fontSize: 13.5, margin: "0 0 20px" }}>
         {o.status === "invited" ? "pozvaná, ešte sa neprihlásila"
@@ -83,14 +87,29 @@ export default async function DetailOsoby({
         {o.konta.length > 0 && ` · prihlasuje sa cez ${o.konta.join(", ")}`}
       </p>
 
-      {sprava && (
-        <p className="karta" style={{ padding: "12px 16px", margin: "0 0 18px", fontSize: 14.5 }}>
-          {sprava}
-        </p>
-      )}
+      <Oznam sprava={sprava} chyba={chyba === "1"} spat={`/osoby/${encodeURIComponent(id)}`} />
 
       <form action={ulozOsobu} className="karta" style={{ padding: 20, display: "grid", gap: 16 }}>
         <input type="hidden" name="id" value={o.id} />
+
+        <label className="pole">
+          <span className="pole-popis">E-mailová adresa</span>
+          <input
+            className="pole-vstup"
+            name="email"
+            type="email"
+            defaultValue={o.email}
+            required
+            autoCapitalize="none"
+            autoCorrect="off"
+          />
+          <span className="tichy pole-napoveda">
+            Zmeniť sa dá — identita človeka na nej nestojí. Potvrdenia sa viažu
+            na jeho záznam, nie na adresu, takže história zostáva celá a stará
+            adresa sa uloží do jeho histórie. Zmení sa tým to, kam chodí
+            prihlasovací odkaz; prihlásenie pracovným kontom funguje ďalej.
+          </span>
+        </label>
 
         <label className="pole">
           <span className="pole-popis">Meno</span>

@@ -82,6 +82,10 @@ export interface PersonRow {
   lastLoginAt?: Date
   /** Akými kontami sa prihlasuje. Neudeľujú prístup, len ho uľahčujú (D45). */
   konta: ("microsoft" | "google")[]
+  /** Predchádzajúce adresy — aby sa staré potvrdenie dalo spojiť s človekom. */
+  emailHistory: { email: string; doKedy: Date }[]
+  /** Kto ju zapísal. `auto:microsoft` znamená, že sa založila sama (D47). */
+  createdBy?: string
 }
 
 function naRiadok(p: Person): PersonRow {
@@ -97,6 +101,8 @@ function naRiadok(p: Person): PersonRow {
     groups: p.groups ?? [],
     roles: p.roles ?? [],
     lastLoginAt: p.lastLoginAt,
+    emailHistory: (p.emailHistory ?? []).map(h => ({ email: h.email, doKedy: h.doKedy })),
+    createdBy: p.createdBy,
     konta: [
       ...(p.externalRef?.entraObjectId ? ["microsoft" as const] : []),
       ...(p.externalRef?.googleSub ? ["google" as const] : []),
@@ -146,6 +152,8 @@ export async function loadPersonById(companyCode: string, id: string): Promise<P
 // ── zápis ────────────────────────────────────────────────────────────────────
 
 export interface PersonChange {
+  /** Nová adresa. Mení sa vedome — nie je to identita, ale je to prihlásenie. */
+  email?: string
   fullName?: string
   department?: string
   personType?: PersonType
@@ -158,12 +166,23 @@ export interface PersonChange {
 const TYPY: PersonType[] = ["employee", "external", "referee", "official"]
 
 /**
- * Uloží zmeny osoby.
+ * Uloží zmeny osoby vrátane adresy.
  *
- * **Adresa sa nemení a nedá sa meniť.** Je to kľúč, na ktorý sú naviazané
- * potvrdenia aj prihlasovacie kontá; prepísať ho pod existujúcimi záznamami
- * by znamenalo, že sa audit odkazuje na niekoho, kto tam už nie je. Preklep
- * sa rieši vyradením a pozvaním nanovo.
+ * **Adresa nie je identita — tou je `persons.id`** (nemenné UUID). Potvrdenia
+ * sa viažu naň (`acknowledgements.personId`) a adresu si nesú len ako **kópiu
+ * v čase potvrdenia**, presne ako meno. Zmena adresy preto auditný záznam
+ * nerozbije: záznam ďalej ukazuje na tú istú osobu a zároveň si pamätá, ako
+ * sa vtedy volala a akú mala adresu.
+ *
+ * *(Pôvodne tu adresu meniť nešlo a odôvodňovalo sa to práve auditom. Bola to
+ * zbytočná prísnosť z môjho nedorozumenia — audit na adrese nikdy nestál.
+ * Ľudia sa vydávajú a organizácie menia domény; nútiť ich kvôli tomu vyradiť
+ * a pozvať nanovo by znamenalo, že sa história rozpadne na dve osoby, čo je
+ * presne to, čomu sa malo predísť.)*
+ *
+ * Čo zmena adresy **naozaj** ovplyvní: prihlásenie odkazom v e-maile chodí
+ * odvtedy na novú adresu. Prihlásenie kontom funguje ďalej, lebo sa rozpozná
+ * podľa `externalRef` (`oid`), nie podľa adresy.
  *
  * Nevyplnené pole sa **nemení, nemaže** — inak by uloženie mena zmazalo útvar.
  */
@@ -178,6 +197,27 @@ export async function savePerson(
   if (!existuje) throw new PersonValidationError("Taká osoba tu nie je.")
 
   const set: Record<string, unknown> = {}
+
+  if (zmena.email !== undefined) {
+    const nova = normalizeEmail(zmena.email)
+    if (!nova.includes("@")) throw new PersonValidationError("To nie je e-mailová adresa.")
+    if (nova !== existuje.email) {
+      // Adresa musí byť v organizácii jedinečná — inak by prihlásenie
+      // odkazom nevedelo, koho prihlasuje.
+      const col2 = await getCollection<Person>(PERSONS_COLLECTION)
+      if (await col2.findOne({ companyCode, email: nova })) {
+        throw new PersonValidationError(`${nova} v organizácii už je.`)
+      }
+      set.email = nova
+      // História zmien adresy. Bez nej by sa po roku nedalo spojiť staré
+      // potvrdenie (nesie starú adresu) s dnešným človekom inak než cez `id`,
+      // a človek, ktorý ten audit číta, `id` v ruke nemá.
+      set.emailHistory = [
+        ...(existuje.emailHistory ?? []),
+        { email: existuje.email, doKedy: new Date(), zmenil: actor },
+      ]
+    }
+  }
 
   if (zmena.fullName !== undefined) {
     const meno = zmena.fullName.trim()

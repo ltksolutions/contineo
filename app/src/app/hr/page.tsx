@@ -16,6 +16,7 @@ import { assignmentOverviews, audienceLabel } from "@/lib/assignments"
 import { brandingView } from "@/lib/tenants"
 import { tenantStyle } from "@/components/TenantHeader"
 import { formatDate } from "@/lib/i18n"
+import Oznam from "@/components/Oznam"
 import { odvolat } from "./akcie"
 
 export const dynamic = "force-dynamic"
@@ -23,7 +24,7 @@ export const dynamic = "force-dynamic"
 export default async function HrPrehlad({
   searchParams,
 }: {
-  searchParams: Promise<{ sprava?: string }>
+  searchParams: Promise<{ sprava?: string; chyba?: string }>
 }) {
   const ctx = await hrContext()
   if (ctx.state !== "ready") {
@@ -31,7 +32,7 @@ export default async function HrPrehlad({
     notFound()
   }
 
-  const { sprava } = await searchParams
+  const { sprava, chyba } = await searchParams
   const prehlad = await assignmentOverviews(ctx.person.companyCode)
   const branding = brandingView(ctx.tenant)
   const jazyk = ctx.person.language
@@ -46,11 +47,7 @@ export default async function HrPrehlad({
         zobrazení — a týkajú sa ľudí, ktorí do skupiny patria <em>dnes</em>.
       </p>
 
-      {sprava && (
-        <p className="karta" style={{ padding: "12px 16px", margin: "0 0 18px", fontSize: 14.5 }}>
-          {sprava}
-        </p>
-      )}
+      <Oznam sprava={sprava} chyba={chyba === "1"} spat="/hr" />
 
       <p style={{ margin: "0 0 24px" }}>
         <Link className="tlacidlo" href="/hr/pridelit">Prideliť normu</Link>

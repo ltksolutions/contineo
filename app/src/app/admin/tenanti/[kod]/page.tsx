@@ -14,6 +14,8 @@ import { allTenants } from "@/lib/tenantAdmin"
 import { stavDomeny, pokynCname } from "@/lib/vercel"
 import { UI_LANGUAGES } from "@/lib/i18n"
 import Vyber from "@/components/Vyber"
+import VyberFarby from "@/components/VyberFarby"
+import Oznam from "@/components/Oznam"
 import { stavPoskytovatela, NAZOV_POSKYTOVATELA, ID_POSKYTOVATELA } from "@/lib/oauth"
 import { ulozTenant, prepniStav, poslatPokyny, ulozPrihlasenie, zmazPrihlasenie } from "../../akcie"
 import type { StavDomeny } from "@/lib/vercel"
@@ -189,7 +191,7 @@ export default async function DetailTenanta({
   searchParams,
 }: {
   params: Promise<{ kod: string }>
-  searchParams: Promise<{ sprava?: string }>
+  searchParams: Promise<{ sprava?: string; chyba?: string }>
 }) {
   const ctx = await platformContext()
   if (ctx.state !== "ready") {
@@ -198,7 +200,7 @@ export default async function DetailTenanta({
   }
 
   const { kod } = await params
-  const { sprava } = await searchParams
+  const { sprava, chyba } = await searchParams
   const tenant = (await allTenants()).find(t => t.companyCode === kod.toUpperCase())
   if (!tenant) notFound()
 
@@ -224,11 +226,7 @@ export default async function DetailTenanta({
         {!zapnuty && " · vypnutá"}
       </p>
 
-      {sprava && (
-        <p className="karta" style={{ padding: "12px 16px", margin: "0 0 20px", fontSize: 14.5 }}>
-          {sprava}
-        </p>
-      )}
+      <Oznam sprava={sprava} chyba={chyba === "1"} spat={`/admin/tenanti/${encodeURIComponent(kod)}`} />
 
       <section className="karta" style={{ padding: "18px 20px", marginBottom: 16 }}>
         <h2 style={{ fontSize: 17, margin: "0 0 12px" }}>Domény</h2>
@@ -252,24 +250,36 @@ export default async function DetailTenanta({
         )}
       </section>
 
-      <form action={ulozTenant} className="karta admin-forma">
+      <form action={ulozTenant} className="karta admin-forma" encType="multipart/form-data">
         <input type="hidden" name="companyCode" value={tenant.companyCode} />
         <h2 style={{ fontSize: 17, margin: 0 }}>Značka a jazyky</h2>
 
         <Pole meno="displayName" popis="Názov v hlavičke" hodnota={tenant.branding.displayName} />
         <Pole meno="shortName" popis="Skratka" hodnota={tenant.branding.shortName} />
-        <Pole
-          meno="logoUrl"
-          popis="Logo"
-          hodnota={tenant.branding.logoUrl}
-          napoveda="Cesta v aplikácii, napr. /tenants/sfz.svg"
-        />
-        <Pole
-          meno="accentColor"
-          popis="Farba"
-          hodnota={tenant.branding.accentColor}
-          napoveda="Napr. #1450DF. Prázdne = predvolená paleta."
-        />
+        <div className="pole">
+          <span className="pole-popis">Logo</span>
+          {tenant.branding.logoUrl && (
+            <span className="logo-nahlad">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={tenant.branding.logoUrl} alt="" width={34} height={34} />
+              <span className="tichy pole-napoveda">súčasné</span>
+            </span>
+          )}
+          <input className="pole-vstup" type="file" name="logo" accept="image/png,image/jpeg,image/webp" />
+          <span className="tichy pole-napoveda">
+            PNG, JPEG alebo WebP, najviac 256 kB. Prázdne = nemeniť.
+            SVG zámerne nie — môže obsahovať skript a servírovali by sme cudzí
+            kód z domény, na ktorej sa potvrdzujú smernice.
+          </span>
+        </div>
+        <div className="pole">
+          <span className="pole-popis">Farba</span>
+          <VyberFarby meno="accentColor" hodnota={tenant.branding.accentColor} />
+          <span className="tichy pole-napoveda">
+            Nesie ju tlačidlo s bielym textom, preto sú odtiene tmavšie, než by
+            sa chcelo — svetlejší tón znamená nečitateľné tlačidlo u zákazníka.
+          </span>
+        </div>
         <Pole
           meno="supportEmail"
           popis="Kontakt organizácie"
@@ -317,6 +327,26 @@ export default async function DetailTenanta({
           <span className="tichy pole-napoveda">
             Jedna na riadok. Nové sa pridajú aj do Vercelu. Doména patriaca inej
             organizácii sa odmietne — neprepíše.
+          </span>
+        </label>
+
+        <label className="pole">
+          <span className="pole-popis">Domény pre automatické založenie</span>
+          <textarea
+            className="pole-vstup"
+            name="autoProvisionDomains"
+            rows={2}
+            defaultValue={(tenant.autoProvisionDomains ?? []).join("\n")}
+            placeholder="futbalsfz.sk&#10;sfzmarketing.sk"
+            autoCapitalize="none"
+            autoCorrect="off"
+          />
+          <span className="tichy pole-napoveda">
+            Jedna na riadok. Kto sa prihlási <strong>pracovným kontom</strong> z tejto
+            domény a v zozname osôb ešte nie je, založí sa sám ako bežný člen —
+            bez rolí a bez trás. Platí len pre kontá, nie pre odkaz v e-maile:
+            konto z adresára organizácie je dôkaz príslušnosti, napísaná adresa nie.
+            Prázdne = nikoho nezakladať.
           </span>
         </label>
 

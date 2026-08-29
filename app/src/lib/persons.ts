@@ -46,8 +46,18 @@ export interface Person {
   id: string
 
   companyCode: string
-  /** Vždy malými písmenami — schránka nie je citlivá na veľkosť. */
+  /**
+   * Adresa. Vždy malými písmenami — schránka nie je citlivá na veľkosť.
+   *
+   * **Nie je to identita.** Tou je `id` vyššie. Adresa je prihlasovací údaj
+   * a kontakt: ľudia sa vydávajú, organizácie menia domény, a človek, ktorý
+   * si zmenil adresu, je stále ten istý človek s tou istou históriou
+   * potvrdení. Meniť sa preto smie (`savePerson`).
+   */
   email: string
+
+  /** Predchádzajúce adresy — aby sa staré potvrdenie dalo spojiť s človekom. */
+  emailHistory?: { email: string; doKedy: Date; zmenil: string }[]
   fullName: string
   department?: string
   personType: PersonType
@@ -439,5 +449,138 @@ export async function personLanguage(email: string): Promise<UiLanguage> {
     return normalizeLanguage(person?.language)
   } catch {
     return normalizeLanguage(undefined)
+  }
+}
+
+// ── prihlásenie kontom: rozpoznanie a založenie (D45, D47) ───────────────────
+
+/**
+ * Nájde osobu podľa **konta**, nie podľa adresy — a keď sa adresa medzitým
+ * zmenila, zosúladí ju.
+ *
+ * Toto je celý zmysel `externalRef`: `oid` z Entra je nemenné, adresa nie.
+ * Keď si niekto zmení priezvisko alebo organizácia prejde na novú doménu,
+ * prihlási sa tým istým kontom a je to stále ten istý človek s tou istou
+ * históriou potvrdení. Bez tohto by vznikla druhá osoba a história by sa
+ * rozpadla na dve polovice, z ktorých ani jedna nie je celá.
+ *
+ * Prepis adresy je bezpečný, lebo sa deje **až po overení konta** (`tid`
+ * z povoleného adresára, D45): to, že adresa patrí tomu človeku, potvrdil
+ * adresár zákazníka, nie on sám.
+ */
+export async function zosuladPodlaKonta(
+  provider: "microsoft" | "google",
+  externalId: string,
+  emailZKonta: string,
+  companyCode: string,
+): Promise<Person | null> {
+  const pole = provider === "microsoft" ? "externalRef.entraObjectId" : "externalRef.googleSub"
+  const novy = normalizeEmail(emailZKonta)
+
+  try {
+    const col = await getCollection<Person>(PERSONS_COLLECTION)
+    const osoba = await col.findOne({ companyCode, [pole]: externalId })
+    if (!osoba) return null
+    if (osoba.email === novy) return osoba
+
+    // Nová adresa už niekomu inému patrí — vtedy sa nič neprepisuje. Je to
+    // stav, ktorý musí vidieť človek: buď je to omyl v adresári, alebo tu
+    // máme dva záznamy pre jedného.
+    if (await col.findOne({ companyCode, email: novy })) {
+      console.error(
+        `[persons] ${osoba.email} má v adresári adresu ${novy}, ktorú tu už má niekto iný — neprepisujem`
+      )
+      return osoba
+    }
+
+    await col.updateOne(
+      { companyCode, id: osoba.id },
+      {
+        $set: { email: novy },
+        $push: {
+          emailHistory: { email: osoba.email, doKedy: new Date(), zmenil: `auto:${provider}` },
+        },
+      } as never,
+    )
+    console.log(`[persons] ${osoba.email} → ${novy} (podľa konta ${provider})`)
+    return { ...osoba, email: novy }
+  } catch (e) {
+    console.error("[persons] zosúladenie podľa konta zlyhalo:", e)
+    return null
+  }
+}
+
+/** Doména adresy, malými písmenami. Prázdne, keď to nie je adresa. */
+export function domenaAdresy(email: string): string {
+  const i = email.lastIndexOf("@")
+  return i === -1 ? "" : email.slice(i + 1).trim().toLowerCase()
+}
+
+/**
+ * Patrí adresa medzi domény, z ktorých sa človek smie založiť sám? (D47)
+ *
+ * Porovnáva sa **celá doména**, nie koncovka: `futbalsfz.sk` nesmie pustiť
+ * `zlyfutbalsfz.sk`. Poddomény sa nepovoľujú — kto ich chce, vypíše ich.
+ */
+export function jeDomenaPovolena(email: string, domeny: string[] | undefined): boolean {
+  const d = domenaAdresy(email)
+  if (!d) return false
+  return (domeny ?? []).some(x => x.trim().toLowerCase().replace(/^@/, "") === d)
+}
+
+/**
+ * Založí osobu, ktorá sa prihlásila overeným kontom z povolenej domény (D47).
+ *
+ * Zakladá sa **rovno ako aktívna** — práve sa prihlásila, takže „pozvaná,
+ * ešte neprihlásená" by bola nepravda hneď v prvej sekunde. Bez rolí, bez
+ * trás, bez skupín: to, že do organizácie patrí, hovorí adresár; čo má robiť,
+ * rozhoduje človek.
+ *
+ * Vracia `null`, keď sa nič nezaložilo — vrátane prípadu, keď medzitým
+ * záznam vznikol súbežnou požiadavkou (dve karty naraz).
+ */
+export async function zalozPodlaDomeny(
+  companyCode: string,
+  email: string,
+  meno: string | undefined,
+  zdroj: string,
+): Promise<Person | null> {
+  const address = normalizeEmail(email)
+  const now = new Date()
+  const osoba: Person = {
+    id: crypto.randomUUID(),
+    companyCode,
+    email: address,
+    // Meno z konta, keď ho poskytovateľ dal. Adresa je horšia než nič iné,
+    // ale v zozname osôb je čitateľnejšia než prázdno.
+    fullName: meno?.trim() || address,
+    personType: "employee",
+    status: "active",
+    language: normalizeLanguage(undefined),
+    tracks: [],
+    groups: [],
+    roles: [],
+    firstLoginAt: now,
+    externalRef: { sportnetId: null, entraObjectId: null, googleSub: null },
+    createdBy: zdroj,
+    createdAt: now,
+  }
+
+  try {
+    const col = await getCollection<Person>(PERSONS_COLLECTION)
+    // `$setOnInsert` s `upsert`, nie `insertOne`: dve karty otvorené naraz by
+    // inak založili dve osoby a jedinečný index by druhú odmietol chybou,
+    // ktorá by zhodila prihlásenie.
+    const r = await col.updateOne(
+      { companyCode, email: address },
+      { $setOnInsert: osoba as never },
+      { upsert: true },
+    )
+    if (!r.upsertedCount) return null
+    console.log(`[persons] ${address} založený automaticky do ${companyCode} (${zdroj})`)
+    return osoba
+  } catch (e) {
+    console.error("[persons] automatické založenie zlyhalo:", e)
+    return null
   }
 }

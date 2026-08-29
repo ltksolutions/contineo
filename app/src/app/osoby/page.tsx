@@ -12,6 +12,7 @@ import { peopleContext, listPeople } from "@/lib/people"
 import { brandingView } from "@/lib/tenants"
 import { tenantStyle } from "@/components/TenantHeader"
 import { formatDate } from "@/lib/i18n"
+import Oznam from "@/components/Oznam"
 
 export const dynamic = "force-dynamic"
 
@@ -24,7 +25,7 @@ const STAVY = {
 export default async function Osoby({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string; sprava?: string }>
+  searchParams: Promise<{ q?: string; sprava?: string; chyba?: string }>
 }) {
   const ctx = await peopleContext()
   if (ctx.state !== "ready") {
@@ -32,7 +33,7 @@ export default async function Osoby({
     notFound()
   }
 
-  const { q, sprava } = await searchParams
+  const { q, sprava, chyba } = await searchParams
   const osoby = await listPeople(ctx.person.companyCode, q)
   const branding = brandingView(ctx.tenant)
   const jazyk = ctx.person.language
@@ -45,11 +46,7 @@ export default async function Osoby({
         odstrihne od portálu, ale jej potvrdenia zostávajú platnými záznamami.
       </p>
 
-      {sprava && (
-        <p className="karta" style={{ padding: "12px 16px", margin: "0 0 18px", fontSize: 14.5 }}>
-          {sprava}
-        </p>
-      )}
+      <Oznam sprava={sprava} chyba={chyba === "1"} spat={q ? `/osoby?q=${encodeURIComponent(q)}` : "/osoby"} />
 
       <div style={{ display: "flex", gap: 10, flexWrap: "wrap", margin: "0 0 20px" }}>
         <Link className="tlacidlo" href="/osoby/nova">Pozvať osobu</Link>

@@ -21,12 +21,14 @@ import {
   createTenant,
   saveTenant,
   normalizeHostnames,
+  normalizeDomeny,
   DomainOwnedError,
   TenantValidationError,
 } from "@/lib/tenantAdmin"
 import { pridajDomenu, pokynyPreZakaznika, stavDomeny, preskocitVercel } from "@/lib/vercel"
 import { ulozOAuth, zmazOAuth } from "@/lib/tenantAdmin"
 import { rozdelZoznam, NAZOV_POSKYTOVATELA } from "@/lib/oauth"
+import { ulozZnacku, ZnackaError } from "@/lib/znacka"
 
 /** Kto akciu spustil — alebo `null`, keď na ňu nemá právo. */
 async function spravca(): Promise<string | null> {
@@ -41,6 +43,7 @@ function textPola(fd: FormData, meno: string): string {
 
 function spravaChyby(e: unknown): string {
   if (e instanceof DomainOwnedError || e instanceof TenantValidationError) return e.message
+  if (e instanceof ZnackaError) return e.message
   console.error("[admin] akcia zlyhala:", e)
   return "Zmenu sa nepodarilo uložiť. Skús to znova."
 }
@@ -59,6 +62,18 @@ async function zabezpecDomeny(hostnames: string[]): Promise<string[]> {
   return spravy
 }
 
+/**
+ * Uloží nahraté logo a vráti cestu, ktorou sa bude servírovať.
+ *
+ * `null`, keď sa nič nenahralo — vtedy sa logo nemení.
+ */
+async function ulozNahrateLogo(fd: FormData, kod: string, kto: string): Promise<string | null> {
+  const subor = fd.get("logo")
+  if (!(subor instanceof File) || subor.size === 0) return null
+  const bajty = Buffer.from(await subor.arrayBuffer())
+  return ulozZnacku(kod.toUpperCase(), subor.type, bajty, kto)
+}
+
 // ── rozsah B: zmena existujúcej organizácie ─────────────────────────────────
 
 export async function ulozTenant(fd: FormData) {
@@ -68,19 +83,26 @@ export async function ulozTenant(fd: FormData) {
   const kod = textPola(fd, "companyCode")
   const hostnames = normalizeHostnames(textPola(fd, "hostnames"))
   let sprava = ""
+  let chyba = false
 
   try {
+    // Nahraté logo prebije predchádzajúce. Prázdny vstup znamená „nemeň" —
+    // súbor sa vo formulári po načítaní nepamätá, takže prázdno je stav pri
+    // každom otvorení a mazať ním by znamenalo, že uloženie názvu zmaže logo.
+    const logo = await ulozNahrateLogo(fd, kod, kto)
+
     await saveTenant(
       kod,
       {
         displayName: textPola(fd, "displayName"),
         shortName: textPola(fd, "shortName"),
-        logoUrl: textPola(fd, "logoUrl"),
+        logoUrl: logo ?? textPola(fd, "logoUrl"),
         accentColor: textPola(fd, "accentColor"),
         supportEmail: textPola(fd, "supportEmail"),
         languages: fd.getAll("languages").filter(v => typeof v === "string") as string[],
         defaultLanguage: textPola(fd, "defaultLanguage"),
         hostnames,
+        autoProvisionDomains: normalizeDomeny(textPola(fd, "autoProvisionDomains")),
       },
       kto,
     )
@@ -88,10 +110,11 @@ export async function ulozTenant(fd: FormData) {
     sprava = ["Uložené.", ...vercel].join(" ")
   } catch (e) {
     sprava = spravaChyby(e)
+    chyba = true
   }
 
   revalidatePath("/admin")
-  redirect(`/admin/tenanti/${encodeURIComponent(kod)}?sprava=${encodeURIComponent(sprava)}`)
+  redirect(`/admin/tenanti/${encodeURIComponent(kod)}?sprava=${encodeURIComponent(sprava)}${chyba ? "&chyba=1" : ""}`)
 }
 
 /**
@@ -106,9 +129,11 @@ export async function prepniStav(fd: FormData) {
   const kod = textPola(fd, "companyCode")
   const zapnut = textPola(fd, "status") === "active"
   let sprava = ""
+  let chyba = false
 
   if (!zapnut && textPola(fd, "potvrdenie").trim().toUpperCase() !== kod.toUpperCase()) {
     sprava = `Na vypnutie treba napísať kód organizácie (${kod}). Nič sa nezmenilo.`
+    chyba = true
   } else {
     try {
       await saveTenant(kod, { status: zapnut ? "active" : "disabled" }, kto)
@@ -117,11 +142,13 @@ export async function prepniStav(fd: FormData) {
         : "Organizácia je vypnutá — nikto z nej sa teraz neprihlási."
     } catch (e) {
       sprava = spravaChyby(e)
+    chyba = true
+      chyba = true
     }
   }
 
   revalidatePath("/admin")
-  redirect(`/admin/tenanti/${encodeURIComponent(kod)}?sprava=${encodeURIComponent(sprava)}`)
+  redirect(`/admin/tenanti/${encodeURIComponent(kod)}?sprava=${encodeURIComponent(sprava)}${chyba ? "&chyba=1" : ""}`)
 }
 
 // ── rozsah C: založenie a pokyny ────────────────────────────────────────────
@@ -145,7 +172,7 @@ export async function zalozTenant(fd: FormData) {
     )
   } catch (e) {
     const sprava = spravaChyby(e)
-    redirect(`/admin/novy?sprava=${encodeURIComponent(sprava)}`)
+    redirect(`/admin/novy?sprava=${encodeURIComponent(sprava)}&chyba=1`)
   }
 
   // Až po uloženom tenantovi — zdroj pravdy je `tenants` a výpadok Vercelu
@@ -171,9 +198,11 @@ export async function poslatPokyny(fd: FormData) {
   const komu = textPola(fd, "komu").trim().toLowerCase()
   const hostnames = normalizeHostnames(textPola(fd, "hostnames"))
   let sprava = ""
+  let chyba = false
 
   if (!komu) {
     sprava = "Nie je kam poslať — doplň kontaktnú adresu organizácie."
+    chyba = true
   } else {
     try {
       const poslane: string[] = []
@@ -201,11 +230,13 @@ export async function poslatPokyny(fd: FormData) {
       }
     } catch (e) {
       sprava = spravaChyby(e)
+    chyba = true
+      chyba = true
     }
   }
 
   revalidatePath("/admin")
-  redirect(`/admin/tenanti/${encodeURIComponent(kod)}?sprava=${encodeURIComponent(sprava)}`)
+  redirect(`/admin/tenanti/${encodeURIComponent(kod)}?sprava=${encodeURIComponent(sprava)}${chyba ? "&chyba=1" : ""}`)
 }
 
 /** Zápis aktu. Oddelené, aby bolo v kóde vidieť, že sa ukladá len toto. */
@@ -234,6 +265,7 @@ export async function ulozPrihlasenie(fd: FormData) {
   const kod = textPola(fd, "companyCode")
   const provider = textPola(fd, "provider") === "google" ? "google" : "microsoft"
   let sprava = ""
+  let chyba = false
 
   try {
     await ulozOAuth(kod, provider, {
@@ -250,10 +282,11 @@ export async function ulozPrihlasenie(fd: FormData) {
     sprava = `Prihlásenie cez ${NAZOV_POSKYTOVATELA[provider]} uložené.`
   } catch (e) {
     sprava = spravaChyby(e)
+    chyba = true
   }
 
   revalidatePath("/admin")
-  redirect(`/admin/tenanti/${encodeURIComponent(kod)}?sprava=${encodeURIComponent(sprava)}`)
+  redirect(`/admin/tenanti/${encodeURIComponent(kod)}?sprava=${encodeURIComponent(sprava)}${chyba ? "&chyba=1" : ""}`)
 }
 
 /**
@@ -271,18 +304,22 @@ export async function zmazPrihlasenie(fd: FormData) {
   const provider = textPola(fd, "provider") === "google" ? "google" : "microsoft"
   const potvrdenie = textPola(fd, "potvrdenie")
   let sprava = ""
+  let chyba = false
 
   if (potvrdenie.trim().toUpperCase() !== kod.toUpperCase()) {
     sprava = `Na odstránenie napíš kód organizácie (${kod}).`
+    chyba = true
   } else {
     try {
       await zmazOAuth(kod, provider, kto)
       sprava = `Prihlásenie cez ${NAZOV_POSKYTOVATELA[provider]} odstránené.`
     } catch (e) {
       sprava = spravaChyby(e)
+    chyba = true
+      chyba = true
     }
   }
 
   revalidatePath("/admin")
-  redirect(`/admin/tenanti/${encodeURIComponent(kod)}?sprava=${encodeURIComponent(sprava)}`)
+  redirect(`/admin/tenanti/${encodeURIComponent(kod)}?sprava=${encodeURIComponent(sprava)}${chyba ? "&chyba=1" : ""}`)
 }

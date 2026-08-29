@@ -28,6 +28,10 @@ const VEREJNE = [
   // noriem; jediné, čo prezradia, je že tá organizácia tu má portál — a to
   // prezradí už samotná doména.
   "/tenants/",
+  // Nahraté logá (`/api/znacka/…`). Ten istý dôvod ako o riadok vyššie: je to
+  // značkový obrázok, nie obsah noriem, a prihlasovacia stránka ho potrebuje
+  // ešte pred prihlásením.
+  "/api/znacka/",
 ]
 
 export async function middleware(req: NextRequest) {

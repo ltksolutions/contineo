@@ -28,7 +28,10 @@ import AzureADProvider from "next-auth/providers/azure-ad"
 import GoogleProvider from "next-auth/providers/google"
 import { mongoAdapter } from "./authAdapter"
 import { send, signInEmail } from "./ecomail"
-import { personMaySignIn, recordSignIn, recordExternalRef, personLanguage } from "./persons"
+import {
+  personMaySignIn, recordSignIn, recordExternalRef, personLanguage,
+  zosuladPodlaKonta, zalozPodlaDomeny, jeDomenaPovolena,
+} from "./persons"
 import { resolveTenant, normalizeHostname } from "./tenants"
 import { resolveCredentials, ID_POSKYTOVATELA } from "./oauth"
 import type { OAuthProviderName, ResolvedCredentials } from "./oauth"
@@ -274,6 +277,35 @@ export const authOptions: NextAuthOptions = {
         // `user` — beriem tú, ktorú som sám skontroloval.
         user.email = overenie.email
         externalId = overenie.externalId
+
+        // Od tejto chvíle je konto overené: `tid` je z povoleného adresára
+        // (Microsoft) alebo je adresa overená (Google). Až teraz sa smie
+        // podľa neho čokoľvek zapisovať.
+        const tenant = await tenantPreHost(host)
+        if (tenant) {
+          // 1. Ten istý človek s inou adresou? Rozpozná sa podľa konta —
+          //    `oid` je nemenné, adresa nie (D45).
+          if (externalId) {
+            const znamy = await zosuladPodlaKonta(
+              poskytovatel, externalId, overenie.email, tenant.companyCode,
+            )
+            if (znamy) user.email = znamy.email
+          }
+
+          // 2. Ešte tu nie je a je z domény, ktorú organizácia povolila?
+          //    Adresár zákazníka už raz rozhodol, že tam patrí (D47).
+          if (!(await personMaySignIn(user.email)) &&
+              jeDomenaPovolena(user.email, tenant.autoProvisionDomains)) {
+            await zalozPodlaDomeny(
+              tenant.companyCode,
+              user.email,
+              typeof (profile as Record<string, unknown>)?.name === "string"
+                ? ((profile as Record<string, unknown>).name as string)
+                : user.name ?? undefined,
+              `auto:${poskytovatel}`,
+            )
+          }
+        }
       }
 
       if (!user.email) {
@@ -498,6 +530,16 @@ export async function authOptionsForHost(rawHost: string): Promise<NextAuthOptio
   }
 
   return { ...authOptions, providers }
+}
+
+/** Tenant hostiteľa, alebo `null`. Nehádže — zlyhanie znamená „nerobiť nič navyše". */
+async function tenantPreHost(rawHost: string): Promise<Tenant | null> {
+  try {
+    return await resolveTenant(normalizeHostname(rawHost))
+  } catch (e) {
+    console.error("[auth] tenanta pre hostiteľa sa nepodarilo načítať:", e)
+    return null
+  }
 }
 
 /** Obmedzenia poskytovateľa pre tohto hostiteľa. Prázdne, keď nie je nastavený. */

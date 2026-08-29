@@ -75,6 +75,21 @@ export interface Tenant {
    */
   oauth?: TenantOAuth
 
+  /**
+   * Domény, z ktorých sa človek **založí sám** pri prvom prihlásení
+   * pracovným kontom (D47). Napríklad `futbalsfz.sk`, `sfzmarketing.sk`.
+   *
+   * Bez toho musí každého niekto pozvať ručne — pri organizácii, ktorá má
+   * vlastný Entra adresár, je to práca navyše za nič: kto je v ňom, ten do
+   * organizácie patrí a už to raz niekto rozhodol.
+   *
+   * **Platí len pre prihlásenie kontom, nie pre odkaz v e-maile.** Konto
+   * z Entra adresára zákazníka je dôkaz príslušnosti (overuje sa `tid`);
+   * napísaná adresa nie je nič — a zoznam osôb by sa zaplnil preklepmi
+   * a skúšaním.
+   */
+  autoProvisionDomains?: string[]
+
   createdAt?: Date
   updatedAt?: Date
 }
@@ -204,11 +219,13 @@ export function normalizeTenant(doc: Tenant): Tenant {
  */
 export function brandingView(tenant: Tenant): {
   displayName: string
+  shortName?: string
   logoUrl?: string
   accentColor?: string
 } {
   return {
     displayName: tenant.branding.displayName,
+    shortName: tenant.branding.shortName,
     logoUrl: tenant.branding.logoUrl,
     accentColor: tenant.branding.accentColor,
   }

@@ -88,6 +88,24 @@ export interface TenantChange {
   defaultLanguage?: string
   status?: "active" | "disabled"
   hostnames?: string[]
+  /** Domény, z ktorých sa človek založí sám pri prihlásení kontom (D47). */
+  autoProvisionDomains?: string[]
+}
+
+/**
+ * Domény pre automatické založenie (D47).
+ *
+ * Zahodí sa zavináč, veľkosť písmen aj medzery, ale **nie poddoménová
+ * štruktúra** — kto chce `oblast.futbalsfz.sk`, vypíše ju. Porovnáva sa celá
+ * doména, takže `futbalsfz.sk` nikdy nepustí `zlyfutbalsfz.sk`.
+ */
+export function normalizeDomeny(raw: string[] | string): string[] {
+  const zoznam = Array.isArray(raw) ? raw : String(raw ?? "").split(/[,;\n]/)
+  return [...new Set(
+    zoznam
+      .map(d => String(d ?? "").trim().toLowerCase().replace(/^@/, "").replace(/^https?:\/\//, ""))
+      .filter(d => /^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)+$/.test(d)),
+  )]
 }
 
 const KOD = /^[A-Z0-9][A-Z0-9_-]{1,23}$/
@@ -137,6 +155,11 @@ function naSet(change: TenantChange): Record<string, unknown> {
   const dj = jazyky(change.defaultLanguage ? [change.defaultLanguage] : undefined, "predvolenom jazyku")
   if (dj?.length) set.defaultLanguage = dj[0]
   if (change.status) set.status = change.status
+  // Prepisuje sa celé, aj prázdnym: na rozdiel od tajomstva je vidieť, čo
+  // v ňom je, takže prázdny zoznam je vedomé „nikoho nezakladať".
+  if (change.autoProvisionDomains !== undefined) {
+    set.autoProvisionDomains = normalizeDomeny(change.autoProvisionDomains)
+  }
   return set
 }
 
