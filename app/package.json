@@ -18,6 +18,7 @@
     "stav": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --disable-warning=DEP0205 --import ./scripts/lib/ts-hook.mjs scripts/stav.mjs",
     "domeny": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --disable-warning=DEP0205 --import ./scripts/lib/ts-hook.mjs scripts/domeny.mjs",
     "admin": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --disable-warning=DEP0205 scripts/admin_set.mjs",
+    "osoba": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --disable-warning=DEP0205 scripts/osoba.mjs",
     "tenant": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --disable-warning=DEP0205 --import ./scripts/lib/ts-hook.mjs scripts/tenant_set.mjs",
     "verzie": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --disable-warning=DEP0205 --import ./scripts/lib/ts-hook.mjs scripts/verzie_z_chunkov.mjs",
     "platnost": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/platnost.mjs"
