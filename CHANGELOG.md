@@ -4,6 +4,18 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Added (2026-08-29 — organizačná štruktúra)
+
+- **Útvary sú strom (D49).** Zakladajú sa v `/organizacia`, záložka **Útvary**: názov, nadriadený útvar, premenovanie, presun a zrušenie. Pri každom je počet ľudí priamo a počet aj s podriadenými — to druhé je to, koho sa pridelenie naozaj týka.
+- **Osoba patrí do práve jedného útvaru.** Dovtedy to bol voľný text: pri desiatich ľuďoch to stačilo, pri stovke znamená, že „Legislatíva", „legislatíva" a „Legislat." sú tri útvary a otázka „koľko ľudí má úsek" nemá odpoveď. Pôvodný text sa **nemaže** — ostáva ako stopa, z čoho útvar vznikol.
+- **Útvar a skupina zostávajú dve rôzne veci.** Útvar je *kam patrím* (práve jeden, ako v organizačnej schéme), skupina je *komu sa to posiela* (koľko treba, naprieč útvarmi). Zlúčiť ich by znamenalo, že normu pre rozhodcov nemožno poslať bez toho, aby rozhodcovia boli útvar — čím prestane platiť, že útvar je štruktúra.
+- **Prideliť sa dá útvaru, a platí to aj pre celý jeho podstrom.** Kto prideľuje úseku, myslí tým úsek; prideľovanie po jednom odbore by znamenalo, že pri ďalšom odbore sa na to zabudne a nikto si to nevšimne.
+- **Materializovaná cesta na osobe — vedomá výnimka z D27.** O príslušnosti rozhoduje `matchesAudience()`, čistá funkcia bez databázy a jediné miesto s tým pravidlom. Bez cesty by musela dostať celý strom (a prestala by byť čistá), alebo by vznikla druhá kópia pravidla v agregácii — a tá by sa s prvou rozišla presne pri reorganizácii. Cena je zapísaná v kóde: pri presune útvaru sa cesty prepočítajú celému podstromu a zaradenie osoby sa zapisuje spolu s cestou v jednom zápise.
+- **Názov útvaru sa do pridelenia ukladá ako kópia**, rovnako ako názov dokumentu: útvar sa premenuje a o rok musí byť čitateľné, komu sa vtedy prideľovalo. Príslušnosť sa vždy počíta z identifikátora, nie z názvu.
+- **Zrušiť sa dá len prázdny útvar bez podriadených**, a strom má najviac 6 úrovní — hlbší sa na telefóne nedá prehľadne ukázať a to najhlbšie v ňom býva v skutočnosti skupina.
+- **`npm run utvary -- --tenant SFZ`** prevedie existujúce textové útvary na stromové a ľudí do nich zaradí. Predvolene nič nezapisuje. Strom po prevode je **plochý**: zo zápisu „Odbor médií" sa nedá vyčítať, pod koho patrí, a hádať to podľa podreťazcov by vyrobilo štruktúru, ktorá vyzerá hotovo a nesedí.
+- 19 nových testov (spolu 707).
+
 ### Added (2026-08-29 — organizácia si spravuje nastavenie sama)
 
 - **`/organizacia` na doméne zákazníka (D48).** Vzhľad, jazyky, logo, farba, kontakt, vlastné prihlasovacie údaje Entra/Google, domény pre automatické zakladanie a **vlastné domény**. Rolou `people-admin`; kód organizácie a vypnutie portálu tam zámerne nie sú. **Správca platformy si ponecháva plnú správu všetkých organizácií** cez `/admin` — kvôli podpore a helpdesku.

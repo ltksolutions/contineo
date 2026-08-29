@@ -243,6 +243,7 @@ obrazovka `/admin/tenanti/[kod]` ju preto vypisuje v hotovom tvare.
 | **D46** | Správa osôb má vlastnú rolu `people-admin`, oddelenú od `hr` | ✅ 2026-08-29 |
 | **D47** | Kto sa prihlási kontom z povolenej domény, založí sa sám | ✅ 2026-08-29 |
 | **D48** | Organizácia si spravuje vzhľad, prihlasovanie aj domény sama — domény s dôkazom cez DNS | ✅ 2026-08-29 |
+| **D49** | Útvary sú strom, osoba patrí do práve jedného; cesta sa materializuje na osobe | ✅ 2026-08-29 |
 
 ### D47 — automatické založenie z povolených domén
 
@@ -289,3 +290,63 @@ Bezpečnou to robí **dôkaz o vlastníctve**, a ten vie dať len DNS. Preto:
 zákazník o doménu **požiada**, dostane presný CNAME, a zapne sa až vtedy, keď
 smeruje na nás. Nastaviť DNS vie len ten, kto doménu ovláda — a je to krok,
 ktorý musí spraviť tak či tak. Naše vlastné domény si neprideľuje vôbec.
+
+### D49 — útvary ako strom, skupiny ako druhá dimenzia
+
+Útvar bol dovtedy **voľný text** na osobe. Pri desiatich ľuďoch to stačilo; pri
+stovke znamená, že „Legislatíva", „legislatíva" a „Legislat." sú tri útvary
+a otázka „koľko ľudí má úsek" nemá odpoveď.
+
+**Útvar a skupina sú dve rôzne veci a nesmú sa zlúčiť.**
+
+| | čo to je | koľko ich má človek |
+|---|---|---|
+| **útvar** | *kam patrím* — miesto v organizačnej schéme | práve jeden |
+| **skupina** | *komu sa to posiela* — adresát naprieč útvarmi | koľko treba |
+
+Zlúčiť ich by znamenalo, že normu pre rozhodcov nemožno poslať bez toho, aby
+rozhodcovia boli útvar — čím prestane platiť, že útvar je štruktúra.
+
+#### Prideľuje sa útvaru **aj celému jeho podstromu**
+
+Kto pridelí normu úseku, myslí tým úsek. Pridelenie „len priamo podriadeným"
+by v praxi znamenalo prekliknúť každý odbor zvlášť a pri ďalšom odbore na to
+zabudnúť — a nikto by si nevšimol, že mu chýba.
+
+#### Materializovaná cesta — vedomá výnimka z D27
+
+Osoba nesie okrem `departmentId` aj **`departmentPath`**: identifikátory
+všetkých nadriadených útvarov od koreňa po seba. Inde v projekte sa odvodené
+hodnoty neukladajú (D27), takže to treba zdôvodniť.
+
+O tom, koho sa pridelenie týka, rozhoduje `matchesAudience()` — **čistá funkcia
+bez databázy**, jediné miesto s tým pravidlom, testovateľné bez clustera. Bez
+cesty na osobe by musela dostať celý strom (a prestala by byť čistá), alebo by
+vznikla druhá kópia pravidla v podobe agregácie — a tá by sa s prvou rozišla
+presne pri reorganizácii.
+
+Cena je jasná a je zapísaná v kóde: **pri presune útvaru sa cesty prepočítajú**
+všetkým v podstrome (`prepocitajCesty()`), a zaradenie osoby sa zapisuje spolu
+s cestou v jednom zápise. Keby sa cesta dopĺňala neskôr, existoval by okamih,
+v ktorom človek do útvaru patrí, ale pridelenie sa ho netýka — a nikto by
+neuhádol prečo.
+
+#### Čo z toho plynie inde
+
+- názov útvaru sa do pridelenia zapisuje ako **kópia** (`audience.label`),
+  rovnako ako názov dokumentu: útvar sa premenuje a o rok musí byť čitateľné,
+  komu sa vtedy prideľovalo. Príslušnosť sa vždy počíta z identifikátora;
+- **strom má najviac 6 úrovní.** Nie je to technický limit — hlbší strom sa na
+  telefóne nedá prehľadne ukázať a to najhlbšie v ňom býva v skutočnosti skupina;
+- **zrušiť sa dá len prázdny útvar bez podriadených.** Inak by ľudia zostali
+  odkazovať na niečo, čo neexistuje, a zmizli by zo štruktúry potichu;
+- pôvodný textový zápis (`persons.department`) sa **nemaže**. Ostáva ako stopa,
+  z čoho útvar vznikol — po nevydarenom prevode je to jediný spôsob, ako
+  zistiť, kto kam patril.
+
+#### Prevod existujúcich údajov
+
+`npm run utvary -- --tenant SFZ` ukáže, čo by vzniklo; s `--zapis` to založí.
+Strom je po prevode **plochý**: zo zápisu „Odbor médií" sa nedá vyčítať, pod
+koho patrí, a hádať to podľa podreťazcov by vyrobilo štruktúru, ktorá vyzerá
+hotovo a nesedí. Hierarchiu doklikne človek v `/organizacia`, záložka Útvary.

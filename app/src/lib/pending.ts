@@ -102,6 +102,7 @@ export const acknowledgementSource: PendingSource = {
         email: person.email,
         groups: person.groups,
         tracks: person.tracks,
+        departmentPath: person.departmentPath,
       }),
     ])
 

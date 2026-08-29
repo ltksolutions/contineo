@@ -18,6 +18,7 @@ import {
   assign, revoke, loadAssignment, nepotvrdili, recordNotification,
   audienceFromSelection, AssignmentValidationError,
 } from "@/lib/assignments"
+import { vsetkyOddelenia } from "@/lib/oddelenia"
 import { send, assignmentEmail } from "@/lib/ecomail"
 import { brandingView } from "@/lib/tenants"
 import { requestHostname } from "@/lib/session"
@@ -57,10 +58,17 @@ export async function pridelit(fd: FormData) {
   if (!kto) redirect("/hr")
 
   const dovod = textPola(fd, "dovod")
+  // Názvy útvarov sa do pridelenia zapisujú ako **kópia** (`audience.label`),
+  // z rovnakého dôvodu ako názov dokumentu: útvar sa premenuje alebo zruší
+  // a o rok musí byť čitateľné, komu sa vtedy prideľovalo.
+  const utvary = await vsetkyOddelenia(kto.companyCode)
+  const nazvyOddeleni = Object.fromEntries(utvary.map(o => [o.id, o.nazov]))
+
   const publika = audienceFromSelection({
     vsetci: Boolean(fd.get("vsetci")),
     vybrane: fd.getAll("publikum").filter((v): v is string => typeof v === "string"),
     adresy: textPola(fd, "adresy"),
+    nazvyOddeleni,
   })
   if (publika.length === 0) spatSChybou("Nevybral si, komu sa prideľuje.", fd)
 

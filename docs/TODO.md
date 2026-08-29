@@ -284,6 +284,8 @@
 - [x] **`/organizacia`** — zákazník si sám spravuje vzhľad, prihlasovanie aj domény (D48). Domény cez žiadosť + dôkaz DNS, nie voľným zápisom
 - [x] **automatické založenie z povolených domén** (D47)
 - [x] **adresa prestala byť kľúčom** — identitou je `persons.id`, adresa sa dá zmeniť a história zostáva celá
+- [x] **útvary ako strom** (D49) — osoba v práve jednom, pridelenie platí aj pre podstrom, skupiny zostávajú samostatnou dimenziou. Prevod z textu: `npm run utvary`
+- [ ] **prevod útvarov SFZ z textu ešte nebežal** — spustiť najprv bez `--zapis` a pozrieť, čo by vzniklo
 
 **Zostáva (mimo rozsahu B)**
 

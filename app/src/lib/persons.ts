@@ -89,6 +89,25 @@ export interface Person {
    */
   groups: string[]
 
+  /**
+   * Útvar — **práve jeden** (D49). `null`/chýba = nezaradená osoba.
+   *
+   * Vedľa toho zostáva textové pole `department` vyššie: je to pôvodný zápis
+   * z importu, ktorý sa nemaže, aby sa dalo spätne overiť, z čoho útvar vznikol.
+   */
+  departmentId?: string | null
+
+  /**
+   * Identifikátory útvarov od koreňa po vlastný, vrátane.
+   *
+   * Zámerná duplicita voči kolekcii `departments`: bez nej by
+   * `matchesAudience()` musela dostať celý strom a prestala by byť čistou
+   * funkciou nad jednou osobou — a práve tá čistota je dôvod, prečo sa
+   * pravidlo publika dá otestovať a existuje len na jednom mieste.
+   * Prepočítava sa v `prepocitajCesty()` po každej zmene štruktúry.
+   */
+  departmentPath?: string[]
+
   /** Prázdne u bežnej osoby. `"hr"` alebo `"platform-admin"`. */
   roles: string[]
 

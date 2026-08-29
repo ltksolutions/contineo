@@ -22,6 +22,9 @@ import {
   poziadajODomenu, overZiadost, zrusDomenu, DomenaError,
 } from "@/lib/domenyZakaznika"
 import { pridajDomenu, preskocitVercel } from "@/lib/vercel"
+import {
+  zalozOddelenie, premenujOddelenie, presunOddelenie, zmazOddelenie, OddelenieError,
+} from "@/lib/oddelenia"
 
 async function kto(): Promise<{ email: string; companyCode: string } | null> {
   const ctx = await organizaciaContext()
@@ -36,7 +39,10 @@ function textPola(fd: FormData, meno: string): string {
 }
 
 function spravaChyby(e: unknown): string {
-  if (e instanceof TenantValidationError || e instanceof ZnackaError || e instanceof DomenaError) {
+  if (
+    e instanceof TenantValidationError || e instanceof ZnackaError ||
+    e instanceof DomenaError || e instanceof OddelenieError
+  ) {
     return e.message
   }
   console.error("[organizacia] akcia zlyhala:", e)
@@ -205,4 +211,69 @@ export async function zrus(fd: FormData) {
 
   revalidatePath("/organizacia")
   spat(fd, "Doména odstránená. Portál na nej prestal odpovedať.")
+}
+
+// ── útvary (D49) ─────────────────────────────────────────────────────────────
+
+/**
+ * Založenie, premenovanie, presun a zrušenie útvaru.
+ *
+ * Všetky štyri idú cez `organizaciaContext()`, ktorý stráži rolu aj kód
+ * organizácie. Identifikátory prichádzajú z formulára, a preto sa v každej
+ * funkcii v `oddelenia.ts` overuje, že patria tejto organizácii — cudzí
+ * identifikátor sa dá uhádnuť (D32).
+ */
+export async function zalozUtvar(fd: FormData) {
+  const ja = await kto()
+  if (!ja) redirect("/")
+  try {
+    await zalozOddelenie(
+      ja.companyCode, textPola(fd, "nazov"), textPola(fd, "parentId") || null, ja.email,
+    )
+    revalidatePath("/organizacia")
+    spat(fd, "Útvar pribudol.")
+  } catch (e) {
+    spat(fd, spravaChyby(e), true)
+  }
+}
+
+export async function premenujUtvar(fd: FormData) {
+  const ja = await kto()
+  if (!ja) redirect("/")
+  try {
+    await premenujOddelenie(ja.companyCode, textPola(fd, "id"), textPola(fd, "nazov"), ja.email)
+    revalidatePath("/organizacia")
+    spat(fd, "Útvar sa premenoval.")
+  } catch (e) {
+    spat(fd, spravaChyby(e), true)
+  }
+}
+
+export async function presunUtvar(fd: FormData) {
+  const ja = await kto()
+  if (!ja) redirect("/")
+  try {
+    await presunOddelenie(
+      ja.companyCode, textPola(fd, "id"), textPola(fd, "parentId") || null, ja.email,
+    )
+    // Presunom sa zmenili cesty ľudí v podstrome, a tie rozhodujú o tom, komu
+    // sa pridelenia týkajú. Prepočet robí `presunOddelenie` sám.
+    revalidatePath("/organizacia")
+    revalidatePath("/osoby")
+    spat(fd, "Útvar sa presunul.")
+  } catch (e) {
+    spat(fd, spravaChyby(e), true)
+  }
+}
+
+export async function zrusUtvar(fd: FormData) {
+  const ja = await kto()
+  if (!ja) redirect("/")
+  try {
+    await zmazOddelenie(ja.companyCode, textPola(fd, "id"))
+    revalidatePath("/organizacia")
+    spat(fd, "Útvar sa zrušil.")
+  } catch (e) {
+    spat(fd, spravaChyby(e), true)
+  }
 }

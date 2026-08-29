@@ -24,6 +24,7 @@ import { normalizeLanguage } from "./i18n"
 import { HR_ROLE } from "./hr"
 import type { Person, PersonStatus, PersonType } from "./persons"
 import type { Tenant } from "./tenants"
+import { vsetkyOddelenia, cestaIds, cesta } from "./oddelenia"
 
 export const PEOPLE_ROLE = "people-admin"
 
@@ -72,7 +73,10 @@ export interface PersonRow {
   id: string
   email: string
   fullName: string
+  /** Pôvodný textový zápis útvaru. Ostáva ako stopa, z čoho útvar vznikol. */
   department?: string
+  /** Zaradenie v štruktúre (D49). `undefined`/`null` = nezaradená. */
+  departmentId?: string | null
   personType: PersonType
   status: PersonStatus
   language: string
@@ -94,6 +98,7 @@ function naRiadok(p: Person): PersonRow {
     email: p.email,
     fullName: p.fullName,
     department: p.department,
+    departmentId: p.departmentId ?? null,
     personType: p.personType,
     status: p.status,
     language: p.language,
@@ -156,6 +161,8 @@ export interface PersonChange {
   email?: string
   fullName?: string
   department?: string
+  /** `null` = vyradiť zo štruktúry. `undefined` = nemeniť. */
+  departmentId?: string | null
   personType?: PersonType
   language?: string
   tracks?: string[]
@@ -227,6 +234,20 @@ export async function savePerson(
   // Útvar sa **dá vyprázdniť** zámerne: je to údaj, ktorý sa mení, a človek
   // ho môže naozaj nemať. Na rozdiel od mena tu prázdno niečo znamená.
   if (zmena.department !== undefined) set.department = zmena.department.trim() || undefined
+
+  // Zaradenie a cesta sa zapisujú **spolu**. Keby sa cesta nechala na neskorší
+  // prepočet, existoval by okamih, v ktorom človek do útvaru patrí, ale
+  // pridelenie „útvaru a jeho podriadeným" sa ho netýka — a nikto by neuhádol,
+  // prečo práve jemu úloha nepribudla (`matchesAudience`).
+  if (zmena.departmentId !== undefined) {
+    const cielId = zmena.departmentId || null
+    const strom = await vsetkyOddelenia(companyCode)
+    if (cielId && !strom.some(o => o.id === cielId)) {
+      throw new PersonValidationError("Taký útvar neexistuje.")
+    }
+    set.departmentId = cielId
+    set.departmentPath = cestaIds(strom, cielId)
+  }
   if (zmena.personType !== undefined) {
     if (!TYPY.includes(zmena.personType)) throw new PersonValidationError("Neznámy typ osoby.")
     set.personType = zmena.personType

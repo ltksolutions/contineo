@@ -11,6 +11,7 @@ import { notFound, redirect } from "next/navigation"
 import Link from "next/link"
 import { peopleContext, loadPersonById, PRIDELITELNE_ROLE } from "@/lib/people"
 import { publikaVOrganizacii } from "@/lib/persons"
+import { vsetkyOddelenia, splostiStrom, cesta } from "@/lib/oddelenia"
 import Vyber from "@/components/Vyber"
 import VyberStitkov from "@/components/VyberStitkov"
 import Oznam from "@/components/Oznam"
@@ -62,6 +63,12 @@ export default async function DetailOsoby({
   // Zoznam sa odvodzuje z ľudí, nie z číselníka (D38) — a je to ten istý
   // zoznam, aký vidí prideľovanie noriem.
   const publika = await publikaVOrganizacii(ctx.person.companyCode)
+  const strom = await vsetkyOddelenia(ctx.person.companyCode)
+  const stromRiadky = splostiStrom(strom)
+  // Celá cesta, nie len vlastný útvar: „Oddelenie sociálnych sietí" samo
+  // o sebe nepovie, pod koho patrí, a práve to rozhoduje o tom, ktoré
+  // pridelenia sa človeka týkajú.
+  const zaradenie = cesta(strom, o.departmentId)
 
   const branding = brandingView(ctx.tenant)
   const jazyk = ctx.person.language
@@ -116,13 +123,42 @@ export default async function DetailOsoby({
           <input className="pole-vstup" name="fullName" defaultValue={o.fullName} required />
         </label>
 
-        <label className="pole">
+        <div className="pole">
           <span className="pole-popis">Útvar</span>
-          <input className="pole-vstup" name="department" defaultValue={o.department ?? ""} />
+          <Vyber
+            meno="departmentId"
+            popisPola="Útvar"
+            predvolena={o.departmentId ?? ""}
+            volby={[
+              { hodnota: "", popis: "— bez útvaru —" },
+              ...stromRiadky.map(r => ({
+                hodnota: r.oddelenie.id,
+                popis: `${"— ".repeat(r.uroven - 1)}${r.oddelenie.nazov}`,
+              })),
+            ]}
+          />
           <span className="tichy pole-napoveda">
-            Prázdne sa uloží ako prázdne — útvar človek naozaj mať nemusí.
+            {stromRiadky.length === 0 ? (
+              <>
+                Štruktúra je zatiaľ prázdna. Útvary sa zakladajú
+                v <Link href="/organizacia?zalozka=utvary">nastavení organizácie</Link>.
+              </>
+            ) : (
+              <>
+                Práve jeden — útvar je miesto v štruktúre. Kto sa má osloviť
+                naprieč útvarmi, na to sú skupiny nižšie.
+                {zaradenie.length > 1 ? ` Zaradenie: ${zaradenie.map(x => x.nazov).join(" › ")}.` : ""}
+              </>
+            )}
           </span>
-        </label>
+        </div>
+
+        {o.department && !o.departmentId ? (
+          <p className="tichy" style={{ fontSize: 13, margin: "-6px 0 0" }}>
+            Pôvodne tu bolo zapísané textom: <strong>{o.department}</strong>. Ostáva to
+            uložené, kým sa nezaradí do štruktúry — aby bolo vidieť, z čoho útvar vznikol.
+          </p>
+        ) : null}
 
         <div className="pole">
           <span className="pole-popis">Typ osoby</span>

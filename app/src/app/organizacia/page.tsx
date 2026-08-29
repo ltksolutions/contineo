@@ -21,11 +21,14 @@ import Vyber from "@/components/Vyber"
 import VyberFarby from "@/components/VyberFarby"
 import Oznam from "@/components/Oznam"
 import { ulozVzhlad, ulozPrihlasenie, zmazPrihlasenie, poziadaj, overDomenu, zrus } from "./akcie"
+import { zalozUtvar, premenujUtvar, presunUtvar, zrusUtvar } from "./akcie"
+import { vsetkyOddelenia, splostiStrom, podstrom, pocty, MAX_HLBKA, hlbka } from "@/lib/oddelenia"
 import type { OAuthProviderName } from "@/lib/oauth"
 import type { Tenant } from "@/lib/tenants"
 
 const ZALOZKY = [
   { kluc: "vzhlad", popis: "Vzhľad a jazyky" },
+  { kluc: "utvary", popis: "Útvary" },
   { kluc: "domeny", popis: "Domény" },
   { kluc: "prihlasenie", popis: "Prihlasovanie" },
 ]
@@ -178,6 +181,12 @@ export default async function Organizacia({
     z => !tenant.hostnames.includes(z.host),
   )
 
+  // Strom sa načítava len pre svoju záložku. Na ostatných by to bol dotaz
+  // navyše za nič.
+  const utvary = teraz === "utvary" ? await vsetkyOddelenia(tenant.companyCode) : []
+  const riadky = teraz === "utvary" ? splostiStrom(utvary) : []
+  const koliOsob = teraz === "utvary" ? await pocty(tenant.companyCode) : new Map()
+
   return (
     <div className="obal" style={{ padding: "28px 20px 80px", maxWidth: 720, ...tenantStyle(branding) }}>
       <Oznam
@@ -223,7 +232,7 @@ export default async function Organizacia({
           <span className="pole-popis">Skratka</span>
           <input className="pole-vstup" name="shortName" defaultValue={tenant.branding.shortName ?? ""} />
           <span className="tichy pole-napoveda">
-            Do hornej lišty, kde je vedľa nej ešte menu — „SFZ" tam povie to isté
+            Do hornej lišty, kde je vedľa nej ešte menu — &bdquo;SFZ&ldquo; tam povie to isté
             čo celý názov a nechá miesto na zvyšok.
           </span>
         </label>
@@ -302,6 +311,135 @@ export default async function Organizacia({
 
         <div><button className="tlacidlo" type="submit">Uložiť</button></div>
       </form>
+      )}
+
+      {teraz === "utvary" && (
+      <div style={{ display: "grid", gap: 16 }}>
+        <section className="karta" style={{ padding: 20, display: "grid", gap: 12 }}>
+          <div>
+            <h2 style={{ fontSize: 17, margin: "0 0 4px" }}>Organizačná štruktúra</h2>
+            <p className="tichy" style={{ fontSize: 14, margin: 0 }}>
+              Útvar je <strong>kam človek patrí</strong> — práve jeden, ako v organizačnej
+              schéme. Kto sa má osloviť naprieč útvarmi (rozhodcovia, delegáti,
+              štatutári), na to sú <Link href="/osoby">skupiny</Link>; tie sa s útvarmi
+              nemiešajú a jeden človek ich môže mať viac.
+            </p>
+          </div>
+
+          {riadky.length === 0 ? (
+            <p className="tichy" style={{ fontSize: 14, margin: 0 }}>
+              Zatiaľ tu nie je nič. Založ prvý útvar nižšie — ak už máte útvary
+              zapísané pri ľuďoch ako text, ozvite sa nám a prevedieme ich naraz.
+            </p>
+          ) : (
+            <ul className="utvary">
+              {riadky.map(({ oddelenie, uroven }) => {
+                const p = koliOsob.get(oddelenie.id) ?? { priamo: 0, sPodriadenymi: 0 }
+                const pod = podstrom(utvary, oddelenie.id)
+                return (
+                  <li key={oddelenie.id} className="utvar" style={{ paddingLeft: (uroven - 1) * 18 }}>
+                    <details>
+                      <summary className="utvar-riadok">
+                        <span className="utvar-nazov">{oddelenie.nazov}</span>
+                        <span className="tichy utvar-pocet">
+                          {p.priamo}
+                          {p.sPodriadenymi !== p.priamo ? ` (${p.sPodriadenymi} aj s podriadenými)` : ""}
+                        </span>
+                      </summary>
+
+                      <div className="utvar-uprava">
+                        <form action={premenujUtvar} className="utvar-forma">
+                          <input type="hidden" name="zalozka" value="utvary" />
+                          <input type="hidden" name="id" value={oddelenie.id} />
+                          <input
+                            className="pole-vstup"
+                            name="nazov"
+                            defaultValue={oddelenie.nazov}
+                            aria-label={`Názov útvaru ${oddelenie.nazov}`}
+                            required
+                          />
+                          <button className="tlacidlo tlacidlo--tiche" type="submit">Premenovať</button>
+                        </form>
+
+                        <form action={presunUtvar} className="utvar-forma">
+                          <input type="hidden" name="zalozka" value="utvary" />
+                          <input type="hidden" name="id" value={oddelenie.id} />
+                          <Vyber
+                            meno="parentId"
+                            predvolena={oddelenie.parentId ?? ""}
+                            popisPola={`Nadriadený útvar pre ${oddelenie.nazov}`}
+                            volby={[
+                              { hodnota: "", popis: "— najvyššia úroveň —" },
+                              ...riadky
+                                // Pod seba ani pod vlastného potomka sa presunúť
+                                // nedá, tak sa to ani neponúka. Pravidlo aj tak
+                                // platí na serveri — toto len šetrí človeku chybu.
+                                .filter(r => !pod.has(r.oddelenie.id))
+                                .map(r => ({
+                                  hodnota: r.oddelenie.id,
+                                  popis: `${"— ".repeat(r.uroven - 1)}${r.oddelenie.nazov}`,
+                                })),
+                            ]}
+                          />
+                          <button className="tlacidlo tlacidlo--tiche" type="submit">Presunúť</button>
+                        </form>
+
+                        {p.sPodriadenymi === 0 && pod.size === 1 ? (
+                          <form action={zrusUtvar}>
+                            <input type="hidden" name="zalozka" value="utvary" />
+                            <input type="hidden" name="id" value={oddelenie.id} />
+                            <button className="tlacidlo tlacidlo--tiche" type="submit">Zrušiť útvar</button>
+                          </form>
+                        ) : (
+                          <p className="tichy" style={{ fontSize: 13, margin: 0 }}>
+                            Zrušiť sa dá až prázdny útvar bez podriadených — inak by
+                            ľudia zmizli zo štruktúry bez toho, aby si to niekto všimol.
+                          </p>
+                        )}
+                      </div>
+                    </details>
+                  </li>
+                )
+              })}
+            </ul>
+          )}
+        </section>
+
+        <form action={zalozUtvar} className="karta" style={{ padding: 20, display: "grid", gap: 14 }}>
+          <input type="hidden" name="zalozka" value="utvary" />
+          <h2 style={{ fontSize: 17, margin: 0 }}>Nový útvar</h2>
+
+          <label className="pole">
+            <span className="pole-popis">Názov</span>
+            <input className="pole-vstup" name="nazov" placeholder="Úsek komunikácie" required />
+          </label>
+
+          <label className="pole">
+            <span className="pole-popis">Nadriadený útvar</span>
+            <Vyber
+              meno="parentId"
+              predvolena=""
+              volby={[
+                { hodnota: "", popis: "— najvyššia úroveň —" },
+                ...riadky
+                  // Hlbšie než povolené sa založiť nedá, tak sa to neponúka.
+                  .filter(r => hlbka(utvary, r.oddelenie.id) < MAX_HLBKA)
+                  .map(r => ({
+                    hodnota: r.oddelenie.id,
+                    popis: `${"— ".repeat(r.uroven - 1)}${r.oddelenie.nazov}`,
+                  })),
+              ]}
+            />
+            <span className="tichy pole-napoveda">
+              Štruktúra môže mať najviac {MAX_HLBKA} úrovní. Nie je to technický
+              limit — hlbší strom sa na telefóne nedá prehľadne ukázať a to, čo
+              je v ňom najhlbšie, býva v skutočnosti skupina.
+            </span>
+          </label>
+
+          <div><button className="tlacidlo" type="submit">Založiť</button></div>
+        </form>
+      </div>
       )}
 
       {teraz === "domeny" && (

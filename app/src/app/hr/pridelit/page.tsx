@@ -23,6 +23,7 @@ import { notFound, redirect } from "next/navigation"
 import Link from "next/link"
 import { hrContext, pridelitelneDokumenty } from "@/lib/hr"
 import { publikaVOrganizacii } from "@/lib/persons"
+import { vsetkyOddelenia, splostiStrom, pocty } from "@/lib/oddelenia"
 import { brandingView } from "@/lib/tenants"
 import { tenantStyle } from "@/components/TenantHeader"
 import { formatDate } from "@/lib/i18n"
@@ -55,10 +56,13 @@ export default async function Pridelit({
   }
 
   const q = await searchParams
-  const [dokumenty, publika] = await Promise.all([
+  const [dokumenty, publika, utvary, poctyUtvarov] = await Promise.all([
     pridelitelneDokumenty(ctx.person.companyCode),
     publikaVOrganizacii(ctx.person.companyCode),
+    vsetkyOddelenia(ctx.person.companyCode),
+    pocty(ctx.person.companyCode),
   ])
+  const utvaryRiadky = splostiStrom(utvary)
   const branding = brandingView(ctx.tenant)
   const jazyk = ctx.person.language
 
@@ -130,6 +134,38 @@ export default async function Pridelit({
                 </span>
               </span>
             </label>
+
+            {utvaryRiadky.length > 0 && (
+              <>
+                <div className="hr-podnadpis">Útvary</div>
+                <p className="tichy pole-napoveda" style={{ margin: "0 0 8px" }}>
+                  Pridelenie útvaru platí <strong>aj pre všetky podriadené</strong>. Číslo
+                  je počet ľudí vrátane nich — to je to, koho sa to naozaj týka.
+                </p>
+                <div className="stitky-zoznam">
+                  {utvaryRiadky.map(({ oddelenie, uroven }) => {
+                    const p = poctyUtvarov.get(oddelenie.id) ?? { priamo: 0, sPodriadenymi: 0 }
+                    return (
+                      <label
+                        key={`d-${oddelenie.id}`}
+                        className="stitok stitok--volba stitok--pole"
+                        style={{ marginLeft: (uroven - 1) * 14 }}
+                      >
+                        <input
+                          type="checkbox"
+                          name="publikum"
+                          value={`department:${oddelenie.id}`}
+                          defaultChecked={vybranePublika.has(`department:${oddelenie.id}`)}
+                        />
+                        <span className="stitok-znak" aria-hidden="true" />
+                        {oddelenie.nazov}
+                        <span className="stitok-pocet">{p.sPodriadenymi}</span>
+                      </label>
+                    )
+                  })}
+                </div>
+              </>
+            )}
 
             {publika.skupiny.length === 0 && publika.trasy.length === 0 ? (
               <p className="tichy pole-napoveda" style={{ margin: "10px 0 0" }}>

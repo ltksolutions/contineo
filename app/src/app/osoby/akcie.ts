@@ -51,7 +51,9 @@ export async function ulozOsobu(fd: FormData) {
     await savePerson(kto.companyCode, id, {
       email: textPola(fd, "email"),
       fullName: textPola(fd, "fullName"),
-      department: textPola(fd, "department"),
+      // Voľba „— bez útvaru —" má prázdnu hodnotu a znamená vyradiť zo
+      // štruktúry, nie „nemeniť". Preto `|| null`, nie `|| undefined`.
+      departmentId: textPola(fd, "departmentId") || null,
       personType: (textPola(fd, "personType") || undefined) as PersonType | undefined,
       language: textPola(fd, "language") || undefined,
       tracks: zoznamPola(fd, "tracks"),

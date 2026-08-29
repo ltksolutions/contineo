@@ -36,12 +36,23 @@ export const ASSIGNMENTS_COLLECTION = "assignments"
  * útvar je štruktúra, skupina je adresát. Keby sa skupiny zlúčili s trasami,
  * jednorazová úloha by sa nedala prideliť bez toho, aby vznikla umelá trasa.
  */
-export type AudienceKind = "all" | "group" | "track" | "person"
+export type AudienceKind = "all" | "group" | "track" | "person" | "department"
 
 export interface Audience {
   kind: AudienceKind
-  /** Pri `all` sa nevypĺňa. Pri `person` je to adresa, malými písmenami. */
+  /**
+   * Pri `all` sa nevypĺňa. Pri `person` je to adresa, malými písmenami.
+   * Pri `department` je to identifikátor útvaru (UUID), **nie jeho názov** —
+   * útvary sa premenúvajú a pridelenie sa premenovaním nemá rozpadnúť.
+   */
   value?: string
+
+  /**
+   * Názov v čase pridelenia — **kópia, nie odkaz**, z rovnakého dôvodu ako
+   * `documentTitle` nižšie. Útvar sa môže premenovať alebo zrušiť a o rok
+   * musí byť čitateľné, komu sa vtedy prideľovalo. Na príslušnosť nemá vplyv.
+   */
+  label?: string
 }
 
 /**
@@ -107,7 +118,7 @@ export class AssignmentValidationError extends Error {
  * má radšej neprideliť nikomu než všetkým.
  */
 export function matchesAudience(
-  person: { email?: string; groups?: string[]; tracks?: string[] },
+  person: { email?: string; groups?: string[]; tracks?: string[]; departmentPath?: string[] },
   audience: Audience,
 ): boolean {
   const hodnota = audience?.value?.trim().toLowerCase()
@@ -118,6 +129,10 @@ export function matchesAudience(
     case "all": return true
     case "group": return je(person.groups)
     case "track": return je(person.tracks)
+    // Cesta obsahuje aj vlastný útvar, aj všetkých nadriadených — porovnanie
+    // s ňou preto pokrýva útvar **aj celý jeho podstrom**, presne raz a bez
+    // druhého pravidla. To je jediný dôvod, prečo je cesta zapísaná na osobe.
+    case "department": return je(person.departmentPath)
     case "person": return Boolean(hodnota) && (person.email ?? "").trim().toLowerCase() === hodnota
     default: return false
   }
@@ -142,6 +157,8 @@ export function audienceFromSelection(vyber: {
   vybrane?: string[]
   /** Ručne napísané adresy, oddelené čiarkou, bodkočiarkou alebo riadkom. */
   adresy?: string
+  /** `id` → názov útvaru. Len na zapísanie čitateľnej kópie do `label`. */
+  nazvyOddeleni?: Record<string, string>
 }): Audience[] {
   if (vyber.vsetci) return [{ kind: "all" }]
 
@@ -151,7 +168,8 @@ export function audienceFromSelection(vyber: {
     const kluc = `${kind}:${value}`
     if (videne.has(kluc)) return
     videne.add(kluc)
-    out.push({ kind, value })
+    const label = kind === "department" ? vyber.nazvyOddeleni?.[value] : undefined
+    out.push(label ? { kind, value, label } : { kind, value })
   }
 
   for (const surove of vyber.vybrane ?? []) {
@@ -159,7 +177,7 @@ export function audienceFromSelection(vyber: {
     if (oddelovac === -1) continue
     const kind = surove.slice(0, oddelovac)
     const value = surove.slice(oddelovac + 1).trim().toLowerCase()
-    if ((kind !== "group" && kind !== "track") || !value) continue
+    if ((kind !== "group" && kind !== "track" && kind !== "department") || !value) continue
     pridaj(kind, value)
   }
 
@@ -182,6 +200,9 @@ export function audienceLabel(a: Audience): string {
     case "all": return "všetci v organizácii"
     case "group": return `skupina „${a.value}"`
     case "track": return `trasa „${a.value}"`
+    // Bez názvu by v prehľade svietilo UUID. Ak kópia chýba (staršie záznamy),
+    // radšej priznať, že názov nepoznáme, než ukázať identifikátor ako názov.
+    case "department": return `útvar „${a.label ?? "(neznámy)"}" a jeho podriadené`
     case "person": return a.value ?? "(osoba nezadaná)"
     default: return "(neznáme publikum)"
   }
@@ -237,7 +258,11 @@ export async function assign(input: NewAssignment): Promise<AssignResult> {
 
   const audience: Audience = input.audience.kind === "all"
     ? { kind: "all" }
-    : { kind: input.audience.kind, value: input.audience.value!.trim().toLowerCase() }
+    : {
+        kind: input.audience.kind,
+        value: input.audience.value!.trim().toLowerCase(),
+        ...(input.audience.label?.trim() ? { label: input.audience.label.trim() } : {}),
+      }
 
   const col = await getCollection<Assignment>(ASSIGNMENTS_COLLECTION)
   const kluc = {
@@ -295,6 +320,7 @@ export async function assignmentsForPerson(person: {
   email: string
   groups?: string[]
   tracks?: string[]
+  departmentPath?: string[]
 }): Promise<Assignment[]> {
   const col = await getCollection<Assignment>(ASSIGNMENTS_COLLECTION)
   const kandidati = await col.find({
@@ -305,6 +331,7 @@ export async function assignmentsForPerson(person: {
       { "audience.kind": "group", "audience.value": { $in: normalizeKeys(person.groups) } },
       { "audience.kind": "track", "audience.value": { $in: normalizeKeys(person.tracks) } },
       { "audience.kind": "person", "audience.value": person.email.toLowerCase() },
+      { "audience.kind": "department", "audience.value": { $in: person.departmentPath ?? [] } },
     ],
   } as never).toArray()
 
@@ -322,6 +349,7 @@ export async function assignedAtByVersion(person: {
   email: string
   groups?: string[]
   tracks?: string[]
+  departmentPath?: string[]
 }): Promise<Map<string, Date>> {
   const out = new Map<string, Date>()
   for (const a of await assignmentsForPerson(person)) {
@@ -400,7 +428,7 @@ export async function audienceMembers(
   const osoby = await col
     .find(
       { companyCode, status: { $ne: "inactive" } },
-      { projection: { id: 1, email: 1, fullName: 1, language: 1, groups: 1, tracks: 1 } },
+      { projection: { id: 1, email: 1, fullName: 1, language: 1, groups: 1, tracks: 1, departmentPath: 1 } },
     )
     .toArray()
   return osoby.filter(o => matchesAudience(o, audience))
