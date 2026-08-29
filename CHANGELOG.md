@@ -4,6 +4,18 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Changed (2026-08-29 — jednotný vzhľad ovládacích prvkov a hlavička)
+
+- **Skupiny a trasy sa vyberajú, nepíšu.** Dovtedy to bolo textové pole oddelené čiarkou. Vyzeralo to nevinne, ale bola to pasca: `rozhodcovia` a `rozhodcova` vyzerajú v poli rovnako a v databáze sú to dve skupiny, z ktorých jedna nedostane nikdy nič — a personalista nemal ako vedieť, ktoré skupiny vôbec existujú. Teraz sa vyberá z existujúcich, pri každej je počet ľudí, a **napísať novú sa dá** — len vedome, samostatným poľom.
+- **Vlastný rozbaľovací výber namiesto `<select>`.** Rozbalený zoznam natívneho selectu kreslí operačný systém a CSS naň nesiaha; v tmavej téme vyzerá ako cudzí prvok a vo zvyšku rozhrania má všetko rovnaký rámček a rádius. Nový výber sa ovláda aj klávesnicou (šípky, Home/End, Enter, Escape) — `<select>` to vie a náhrada, ktorá to nevie, je krok späť. **Bez JavaScriptu zostáva v `<noscript>` skutočný `<select>`** s tým istým `name`; prehliadač obsah `noscript` pri zapnutom JS neparsuje ako prvky, takže sa hodnota nikdy neodošle dvakrát.
+- **Štítky vyzerajú rovnako na oboch obrazovkách**, hoci sú postavené inak: v správe osôb sú to tlačidlá s klientskym stavom, pri prideľovaní noriem zaškrtávacie políčka (ten formulár funguje bez JavaScriptu). Stav nesie `:has()`. Tá istá vec má vyzerať rovnako — inak človek háda, či je to naozaj to isté.
+- **Horné menu má responzivitu.** Pod 760 px sa položky schovajú za ikonu a vysunú sa pod lištu; dovtedy sa lámali do druhého riadka a hlavička rástla do výšky. Hranica je 760, nie obvyklých 640: pri troch správcovských odkazoch sa lišta láme skôr — a bude ich pribúdať.
+- **Odhlásenie a téma sa presunuli do osobného menu pod avatarom.** Patria k človeku, nie k obsahu; v lište zaberali miesto navigácii a odhlásenie navyše stálo hneď vedľa odkazov, na ktoré sa klikne omylom. Pri systéme, kde sa potvrdzujú smernice, je „vypadol som" drahšie než jeden klik navyše.
+- **Avatar má zatiaľ iniciály, nie fotografiu.** Google ju v profile vracia, Microsoft nie — vyžaduje volanie Graphu a oprávnenie navyše od IT zákazníka. Polovica ľudí s fotografiou a polovica bez nej vyzerá horšie než iniciály pre všetkých. Farba sa počíta z adresy, takže ten istý človek má vždy tú istú — inak by avatar prestal byť tým, čím má byť.
+- Dlhý názov organizácie sa v lište skracuje namiesto lámania do druhého riadka.
+- **`publikaVOrganizacii()` sa presunulo do `persons.ts`.** Volá ho prideľovanie noriem aj správa osôb; keby si to každý riešil sám, dve obrazovky by ponúkali dva rôzne zoznamy tých istých skupín.
+- 9 nových testov (spolu 657).
+
 ### Added (2026-08-29 — správa osôb, etapa 2)
 
 - **Rola `people-admin` a obrazovky `/osoby` (D46).** Zoznam s hľadaním, detail, úprava, pozvanie, vyradenie a import z CSV.

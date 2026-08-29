@@ -21,7 +21,8 @@
 
 import { notFound, redirect } from "next/navigation"
 import Link from "next/link"
-import { hrContext, pridelitelneDokumenty, publikaVOrganizacii } from "@/lib/hr"
+import { hrContext, pridelitelneDokumenty } from "@/lib/hr"
+import { publikaVOrganizacii } from "@/lib/persons"
 import { brandingView } from "@/lib/tenants"
 import { tenantStyle } from "@/components/TenantHeader"
 import { formatDate } from "@/lib/i18n"
@@ -138,51 +139,48 @@ export default async function Pridelit({
               </p>
             ) : (
               <>
+                {/* Rovnaké štítky ako pri úprave osoby — tá istá vec má
+                    vyzerať rovnako. Tu ich ale nesie zaškrtávacie políčko,
+                    lebo tento formulár funguje aj bez JavaScriptu. */}
                 {publika.skupiny.length > 0 && (
                   <>
                     <div className="hr-podnadpis">Skupiny</div>
-                    <ul className="hr-volby">
+                    <div className="stitky-zoznam">
                       {publika.skupiny.map(s => (
-                        <li key={`g-${s.hodnota}`}>
-                          <label className="hr-volba">
-                            <input
-                              type="checkbox"
-                              name="publikum"
-                              value={`group:${s.hodnota}`}
-                              defaultChecked={vybranePublika.has(`group:${s.hodnota}`)}
-                            />
-                            <span>
-                              {s.hodnota}
-                              <span className="tichy pole-napoveda"> {s.osob} osôb</span>
-                            </span>
-                          </label>
-                        </li>
+                        <label key={`g-${s.hodnota}`} className="stitok stitok--volba stitok--pole">
+                          <input
+                            type="checkbox"
+                            name="publikum"
+                            value={`group:${s.hodnota}`}
+                            defaultChecked={vybranePublika.has(`group:${s.hodnota}`)}
+                          />
+                          <span className="stitok-znak" aria-hidden="true" />
+                          {s.hodnota}
+                          <span className="stitok-pocet">{s.osob}</span>
+                        </label>
                       ))}
-                    </ul>
+                    </div>
                   </>
                 )}
 
                 {publika.trasy.length > 0 && (
                   <>
                     <div className="hr-podnadpis">Trasy</div>
-                    <ul className="hr-volby">
+                    <div className="stitky-zoznam">
                       {publika.trasy.map(t => (
-                        <li key={`t-${t.hodnota}`}>
-                          <label className="hr-volba">
-                            <input
-                              type="checkbox"
-                              name="publikum"
-                              value={`track:${t.hodnota}`}
-                              defaultChecked={vybranePublika.has(`track:${t.hodnota}`)}
-                            />
-                            <span>
-                              {t.hodnota}
-                              <span className="tichy pole-napoveda"> {t.osob} osôb</span>
-                            </span>
-                          </label>
-                        </li>
+                        <label key={`t-${t.hodnota}`} className="stitok stitok--volba stitok--pole">
+                          <input
+                            type="checkbox"
+                            name="publikum"
+                            value={`track:${t.hodnota}`}
+                            defaultChecked={vybranePublika.has(`track:${t.hodnota}`)}
+                          />
+                          <span className="stitok-znak" aria-hidden="true" />
+                          {t.hodnota}
+                          <span className="stitok-pocet">{t.osob}</span>
+                        </label>
                       ))}
-                    </ul>
+                    </div>
                   </>
                 )}
               </>

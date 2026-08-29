@@ -11,7 +11,7 @@ import "./globals.css"
 import Hlavicka from "@/components/Hlavicka"
 import Paticka from "@/components/Paticka"
 import Sedenie from "@/components/Sedenie"
-import { currentTenant, currentEmail } from "@/lib/session"
+import { currentTenant, currentEmail, currentPerson } from "@/lib/session"
 import { platformContext } from "@/lib/admin"
 import { hrContext } from "@/lib/hr"
 import { peopleContext } from "@/lib/people"
@@ -100,10 +100,21 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   // Rovnaká opatrnosť ako pri vzhľade: keď sa relácia nedá prečítať, stránka
   // sa má vykresliť ako pre neprihláseného, nie spadnúť.
   let email: string | undefined
+  let meno: string | undefined
   try {
     email = (await currentEmail()) ?? undefined
   } catch (e) {
     console.error("[layout] reláciu sa nepodarilo prečítať:", e)
+  }
+
+  // Meno pre avatar. Chýba u správcu, ktorý prešiel núdzovou brzdou a v
+  // `persons` nie je — vtedy iniciály vyjdú z adresy a je to v poriadku.
+  if (email) {
+    try {
+      meno = (await currentPerson())?.fullName
+    } catch (e) {
+      console.error("[layout] meno osoby sa nepodarilo načítať:", e)
+    }
   }
 
   // Odkaz na správu tenantov sa ukáže len tomu, kto ňou naozaj prejde —
@@ -139,6 +150,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           <Hlavicka
             branding={branding}
             email={email}
+            meno={meno}
             spravca={spravca}
             personalista={personalista}
             spravcaOsob={spravcaOsob}

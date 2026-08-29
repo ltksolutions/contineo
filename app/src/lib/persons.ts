@@ -257,6 +257,39 @@ export async function recordExternalRef(
   }
 }
 
+/**
+ * Skupiny a trasy, ktoré v organizácii naozaj existujú.
+ *
+ * Zoznam sa **odvodzuje z ľudí**, nikde sa neudržiava. Číselník skupín by bol
+ * druhá pravda: buď by v ňom chýbala skupina, ktorú niekto zapísal importom,
+ * alebo by v ňom zostávali skupiny, ktoré už nikto nemá — a prideliť niečo
+ * prázdnej skupine je tichý spôsob, ako neprideliť nikomu (D38).
+ *
+ * Volá to prideľovanie noriem aj správa osôb. Keby to mal každý svoje, dve
+ * obrazovky by ponúkali dva rôzne zoznamy tých istých skupín.
+ */
+export async function publikaVOrganizacii(companyCode: string): Promise<{
+  skupiny: { hodnota: string; osob: number }[]
+  trasy: { hodnota: string; osob: number }[]
+}> {
+  const col = await getCollection<Person>(PERSONS_COLLECTION)
+  const osoby = await col
+    .find({ companyCode, status: { $ne: "inactive" } }, { projection: { groups: 1, tracks: 1 } })
+    .toArray()
+
+  const spocitaj = (vyber: (o: Person) => string[] | undefined) => {
+    const pocty = new Map<string, number>()
+    for (const o of osoby) {
+      for (const h of normalizeKeys(vyber(o))) pocty.set(h, (pocty.get(h) ?? 0) + 1)
+    }
+    return [...pocty.entries()]
+      .map(([hodnota, osob]) => ({ hodnota, osob }))
+      .sort((a, b) => a.hodnota.localeCompare(b.hodnota, "sk"))
+  }
+
+  return { skupiny: spocitaj(o => o.groups), trasy: spocitaj(o => o.tracks) }
+}
+
 // ── Import osôb ──────────────────────────────────────────────────────────────
 
 /** Výsledok overenia jedného riadku importu. */

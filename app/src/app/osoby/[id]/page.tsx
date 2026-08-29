@@ -10,6 +10,9 @@
 import { notFound, redirect } from "next/navigation"
 import Link from "next/link"
 import { peopleContext, loadPersonById, PRIDELITELNE_ROLE } from "@/lib/people"
+import { publikaVOrganizacii } from "@/lib/persons"
+import Vyber from "@/components/Vyber"
+import VyberStitkov from "@/components/VyberStitkov"
 import { brandingView } from "@/lib/tenants"
 import { tenantStyle } from "@/components/TenantHeader"
 import { formatDate, UI_LANGUAGES } from "@/lib/i18n"
@@ -23,6 +26,13 @@ const TYPY = [
   { hodnota: "referee", popis: "rozhodca" },
   { hodnota: "official", popis: "funkcionár" },
 ]
+
+/** Kód jazyka sám o sebe nepovie nič — „sk" je pre nás jasné, pre iných nie. */
+const JAZYKY: Record<string, string> = {
+  sk: "slovenčina",
+  cs: "čeština",
+  en: "angličtina",
+}
 
 const POPIS_ROLY: Record<string, string> = {
   hr: "hr — prideľuje normy a vidí, kto ich nepotvrdil",
@@ -47,6 +57,10 @@ export default async function DetailOsoby({
   const o = await loadPersonById(ctx.person.companyCode, id)
   // Neexistuje vs. patrí inej organizácii je zámerne tá istá odpoveď (D32).
   if (!o) notFound()
+
+  // Zoznam sa odvodzuje z ľudí, nie z číselníka (D38) — a je to ten istý
+  // zoznam, aký vidí prideľovanie noriem.
+  const publika = await publikaVOrganizacii(ctx.person.companyCode)
 
   const branding = brandingView(ctx.tenant)
   const jazyk = ctx.person.language
@@ -91,52 +105,51 @@ export default async function DetailOsoby({
           </span>
         </label>
 
-        <label className="pole">
+        <div className="pole">
           <span className="pole-popis">Typ osoby</span>
-          <select className="pole-vstup" name="personType" defaultValue={o.personType}>
-            {TYPY.map(t => <option key={t.hodnota} value={t.hodnota}>{t.popis}</option>)}
-          </select>
+          <Vyber meno="personType" volby={TYPY} predvolena={o.personType} popisPola="Typ osoby" />
           <span className="tichy pole-napoveda">
             Evidenčný údaj. O prístupe k obsahu nerozhoduje — ten rieši organizácia
             a úroveň dokumentu.
           </span>
-        </label>
+        </div>
 
-        <label className="pole">
+        <div className="pole">
           <span className="pole-popis">Jazyk prostredia</span>
-          <select className="pole-vstup" name="language" defaultValue={o.language}>
-            {UI_LANGUAGES.map(l => <option key={l} value={l}>{l}</option>)}
-          </select>
+          <Vyber
+            meno="language"
+            volby={UI_LANGUAGES.map(l => ({ hodnota: l, popis: JAZYKY[l] ?? l }))}
+            predvolena={o.language}
+            popisPola="Jazyk prostredia"
+          />
           <span className="tichy pole-napoveda">
             V čom sa s človekom rozprávame. Nie jazyk dokumentov, ktoré číta.
           </span>
-        </label>
+        </div>
 
-        <label className="pole">
+        <div className="pole">
           <span className="pole-popis">Skupiny</span>
-          <input
-            className="pole-vstup"
-            name="groups"
-            defaultValue={o.groups.join(", ")}
-            autoCapitalize="none"
-            autoCorrect="off"
+          <VyberStitkov
+            meno="groups"
+            ponuka={publika.skupiny}
+            vybrane={o.groups}
+            popisNovej="nová skupina, napr. rozhodcovia"
           />
           <span className="tichy pole-napoveda">
-            Oddelené čiarkou. Podľa nich sa prideľujú normy — skupina, ktorú nikto
-            nemá, nedostane nič.
+            Podľa nich sa prideľujú normy. Číslo je počet ľudí, ktorí skupinu
+            majú — skupina, ktorú nemá nikto, nedostane nič.
           </span>
-        </label>
+        </div>
 
-        <label className="pole">
+        <div className="pole">
           <span className="pole-popis">Trasy onboardingu</span>
-          <input
-            className="pole-vstup"
-            name="tracks"
-            defaultValue={o.tracks.join(", ")}
-            autoCapitalize="none"
-            autoCorrect="off"
+          <VyberStitkov
+            meno="tracks"
+            ponuka={publika.trasy}
+            vybrane={o.tracks}
+            popisNovej="nová trasa, napr. zaklad-2026"
           />
-        </label>
+        </div>
 
         <fieldset className="hr-skupina" style={{ border: "1px solid var(--line)" }}>
           <legend className="pole-popis">Roly</legend>

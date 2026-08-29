@@ -8,7 +8,7 @@
  * pozadí je po chvíli únavné.
  */
 
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { signOut } from "next-auth/react"
@@ -72,6 +72,35 @@ function IkonaTemy({ volba }: { volba: Volba }) {
 }
 
 /**
+ * Iniciály z mena, a keď meno nie je, z adresy.
+ *
+ * Fotografia zatiaľ nie je zámerne: Google ju v profile vracia, Microsoft nie
+ * — vyžaduje volanie Graphu a oprávnenie navyše od IT zákazníka. Polovica
+ * ľudí s fotografiou a polovica bez nej vyzerá horšie než iniciály pre
+ * všetkých, a doplniť sa dá kedykoľvek bez prepisovania.
+ */
+export function iniciely(meno: string | undefined, email: string): string {
+  const slova = (meno ?? "").trim().split(/\s+/).filter(Boolean)
+  if (slova.length >= 2) return (slova[0][0] + slova[slova.length - 1][0]).toUpperCase()
+  if (slova.length === 1 && slova[0].length > 0) return slova[0].slice(0, 2).toUpperCase()
+  const pred = email.split("@")[0] ?? ""
+  return (pred.slice(0, 2) || "?").toUpperCase()
+}
+
+/**
+ * Odtieň avatara z adresy.
+ *
+ * Nie náhoda: ten istý človek má mať vždy tú istú farbu, inak sa avatar pri
+ * každom načítaní zmení a prestane byť tým, čím má byť — znakom, ktorý sa dá
+ * spoznať bez čítania.
+ */
+export function odtienAvatara(email: string): number {
+  let h = 0
+  for (let i = 0; i < email.length; i++) h = (h * 31 + email.charCodeAt(i)) % 360
+  return h
+}
+
+/**
  * `email` prichádza zo servera, nie z `useSession()`.
  *
  * Dva dôvody. Prvý: neprihlásený človek nemá vidieť menu portálu — stránky
@@ -84,12 +113,15 @@ function IkonaTemy({ volba }: { volba: Volba }) {
 export default function Hlavicka({
   branding,
   email,
+  meno,
   spravca,
   personalista,
   spravcaOsob,
 }: {
   branding?: TenantBrandingView
   email?: string
+  /** Celé meno z `persons`. Chýba u správcu, ktorý prešiel núdzovou brzdou. */
+  meno?: string
   /** Vidí správu tenantov (D41 + D42 už overené na serveri). */
   spravca?: boolean
   /** Má rolu `hr` vo vlastnej organizácii (D33 už overené na serveri). */
@@ -98,7 +130,51 @@ export default function Hlavicka({
   spravcaOsob?: boolean
 }) {
   const [volba, setVolba] = useState<Volba>("system")
+  const [menuOtvorene, setMenuOtvorene] = useState(false)
+  const [osobneOtvorene, setOsobneOtvorene] = useState(false)
+  const osobneObal = useRef<HTMLDivElement>(null)
   const cesta = usePathname()
+
+  const odtien = odtienAvatara(email ?? "")
+
+  const POLOZKY = [
+    { kam: "/", popis: "Voľné otázky" },
+    { kam: "/sada", popis: "Zlatá sada" },
+    // Odkaz vidí každý prihlásený; samotná stránka si už poradí — kto nemá
+    // čo potvrdzovať, uvidí, že nemá nič. Podmieňovať odkaz by znamenalo
+    // ťahať stav trás do hlavičky, teda do každej stránky.
+    { kam: "/dokumenty", popis: "Na potvrdenie" },
+    // Odkazy sa neukazujú podľa domnienky klienta — príznaky prichádzajú
+    // zo servera, kde už prešli všetky podmienky.
+    ...(personalista ? [{ kam: "/hr", popis: "Pridelené normy" }] : []),
+    ...(spravcaOsob ? [{ kam: "/osoby", popis: "Osoby" }] : []),
+    ...(spravca ? [{ kam: "/admin", popis: "Správa tenantov" }] : []),
+  ]
+
+  // Zmena stránky zatvorí panel. Bez toho zostane otvorený nad novým obsahom
+  // a vyzerá to, že sa nič nestalo. Je to práve to zosúladenie s vonkajším
+  // stavom (adresa v prehliadači), na ktoré efekt je.
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setMenuOtvorene(false)
+    setOsobneOtvorene(false)
+  }, [cesta])
+
+  // Kliknutie mimo zatvára osobné menu; hamburger je cez celú šírku, ten sa
+  // zatvára odkazom alebo ikonou.
+  useEffect(() => {
+    if (!osobneOtvorene) return
+    const mimo = (e: MouseEvent) => {
+      if (!osobneObal.current?.contains(e.target as Node)) setOsobneOtvorene(false)
+    }
+    const escape = (e: KeyboardEvent) => { if (e.key === "Escape") setOsobneOtvorene(false) }
+    document.addEventListener("mousedown", mimo)
+    document.addEventListener("keydown", escape)
+    return () => {
+      document.removeEventListener("mousedown", mimo)
+      document.removeEventListener("keydown", escape)
+    }
+  }, [osobneOtvorene])
 
   // Uložená voľba sa načíta raz po pripojení. Neznámu hodnotu (staršie
   // uloženie, ručná úprava) ticho prehliadneme — pri téme nemá zmysel padať.
@@ -155,10 +231,7 @@ export default function Hlavicka({
         <Link
           href="/"
           aria-label="Domov"
-          style={{
-            display: "flex", alignItems: "center", gap: 11,
-            textDecoration: "none", color: "inherit",
-          }}
+          className="hlavicka-znacka"
         >
           {branding ? (
             <>
@@ -166,22 +239,15 @@ export default function Hlavicka({
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={branding.logoUrl} alt="" width={26} height={26} style={{ display: "block" }} />
               )}
-              <span style={{ fontWeight: 700, fontSize: 17, letterSpacing: "-0.02em" }}>
-                {branding.displayName}
-              </span>
+              <span className="hlavicka-nazov">{branding.displayName}</span>
             </>
           ) : (
             <>
               <ZnakContineo />
-              <span style={{ fontWeight: 700, fontSize: 17, letterSpacing: "-0.02em" }}>
-                Contineo
-              </span>
-              <span
-                className="stitok tichy"
-                style={{ fontWeight: 600, letterSpacing: "0.04em", textTransform: "uppercase", fontSize: 11 }}
-              >
-                Testovacie rozhranie
-              </span>
+              <span className="hlavicka-nazov">Contineo</span>
+              {/* Odznak sa na úzkej obrazovke schová — je to poznámka pre nás,
+                  nie informácia, kvôli ktorej má názov organizácie zmiznúť. */}
+              <span className="stitok tichy hlavicka-odznak">Testovacie rozhranie</span>
             </>
           )}
         </Link>
@@ -189,62 +255,122 @@ export default function Hlavicka({
         {/* Menu je pre prihlásených. Neprihlásený vidí značku a prepínač
             témy — nič, čím by aj tak nemohol pohnúť. */}
         {email && (
-        <nav className="hlavicka-nav">
-          {[
-            { kam: "/", popis: "Voľné otázky" },
-            { kam: "/sada", popis: "Zlatá sada" },
-            // Odkaz vidí každý prihlásený; samotná stránka si už poradí —
-            // kto nemá čo potvrdzovať, uvidí, že nemá nič. Podmieňovať odkaz
-            // by znamenalo ťahať stav trás do hlavičky, teda do každej stránky.
-            { kam: "/dokumenty", popis: "Na potvrdenie" },
-            // Odkaz sa neukazuje podľa domnienky klienta — `spravca` prichádza
-            // zo servera, kde už prešli obe podmienky D41 aj D42.
-            ...(personalista ? [{ kam: "/hr", popis: "Pridelené normy" }] : []),
-            ...(spravcaOsob ? [{ kam: "/osoby", popis: "Osoby" }] : []),
-            ...(spravca ? [{ kam: "/admin", popis: "Správa tenantov" }] : []),
-          ].map(o => {
-            const aktivna = o.kam === "/" ? cesta === "/" : cesta.startsWith(o.kam)
-            return (
-              <Link
-                key={o.kam}
-                href={o.kam}
-                style={{
-                  textDecoration: "none", fontSize: 14, borderRadius: 8,
-                  padding: "6px 12px", fontWeight: aktivna ? 700 : 500,
-                  background: aktivna ? "var(--surface-2)" : "transparent",
-                  color: aktivna ? "var(--ink)" : "var(--muted)",
-                }}
+          <>
+            {/*
+              Pod 760 px sa položky schovajú za ikonu. Dovtedy sa lámali do
+              druhého riadka a hlavička rástla do výšky — a bude ich pribúdať,
+              takže „nejako sa to zmestí" prestane platiť čoraz skôr.
+            */}
+            <button
+              type="button"
+              className="tlacidlo tlacidlo--tiche hlavicka-hamburger"
+              aria-expanded={menuOtvorene}
+              aria-controls="hlavne-menu"
+              aria-label={menuOtvorene ? "Zavrieť menu" : "Otvoriť menu"}
+              onClick={() => setMenuOtvorene(o => !o)}
+            >
+              <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"
+                fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round">
+                {menuOtvorene
+                  ? <path d="M4 4l10 10M14 4L4 14" />
+                  : <path d="M2.5 5h13M2.5 9h13M2.5 13h13" />}
+              </svg>
+            </button>
+
+            <nav
+              id="hlavne-menu"
+              className={`hlavicka-nav${menuOtvorene ? " je-otvorene" : ""}`}
+            >
+              {POLOZKY.map(o => {
+                const aktivna = o.kam === "/" ? cesta === "/" : cesta.startsWith(o.kam)
+                return (
+                  <Link
+                    key={o.kam}
+                    href={o.kam}
+                    className={`hlavicka-odkaz${aktivna ? " je-aktivny" : ""}`}
+                    onClick={() => setMenuOtvorene(false)}
+                  >
+                    {o.popis}
+                  </Link>
+                )
+              })}
+            </nav>
+
+            {/*
+              Osobné menu. Odhlásenie aj téma patria k človeku, nie k obsahu —
+              v lište zaberali miesto navigácii a odhlásenie navyše stálo hneď
+              vedľa odkazov, na ktoré sa klikne omylom.
+            */}
+            <div className="osobne" ref={osobneObal}>
+              <button
+                type="button"
+                className="osobne-tlacidlo"
+                aria-haspopup="menu"
+                aria-expanded={osobneOtvorene}
+                aria-label={`Účet ${email}`}
+                title={email}
+                onClick={() => setOsobneOtvorene(o => !o)}
               >
-                {o.popis}
-              </Link>
-            )
-          })}
-        </nav>
+                <span
+                  className="avatar"
+                  aria-hidden="true"
+                  style={{
+                    background: `hsl(${odtien} 42% 88%)`,
+                    color: `hsl(${odtien} 45% 26%)`,
+                  }}
+                >
+                  {iniciely(meno, email)}
+                </span>
+              </button>
+
+              {osobneOtvorene && (
+                <div className="osobne-panel" role="menu">
+                  <div className="osobne-hlava">
+                    {meno && <div className="osobne-meno">{meno}</div>}
+                    <div className="tichy osobne-email">{email}</div>
+                  </div>
+
+                  <button
+                    type="button"
+                    role="menuitem"
+                    className="osobne-polozka"
+                    onClick={prepni}
+                  >
+                    <IkonaTemy volba={volba} />
+                    Téma: {POPIS[volba]}
+                  </button>
+
+                  <button
+                    type="button"
+                    role="menuitem"
+                    className="osobne-polozka osobne-polozka--odhlasit"
+                    onClick={() => signOut({ callbackUrl: "/prihlasenie" })}
+                  >
+                    <svg width="17" height="17" viewBox="0 0 18 18" aria-hidden="true"
+                      fill="none" stroke="currentColor" strokeWidth="1.6"
+                      strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M7 15H4a1.5 1.5 0 0 1-1.5-1.5v-9A1.5 1.5 0 0 1 4 3h3M11.5 12 15 9l-3.5-3M15 9H7" />
+                    </svg>
+                    Odhlásiť
+                  </button>
+                </div>
+              )}
+            </div>
+          </>
         )}
 
-        {email && (
+        {/* Neprihlásený nemá osobné menu, ale tému prepnúť môže. */}
+        {!email && (
           <button
-            type="button"
-            onClick={() => signOut({ callbackUrl: "/prihlasenie" })}
+            onClick={prepni}
             className="tlacidlo tlacidlo--tiche"
-            style={{ padding: "6px 12px", fontSize: 13.5 }}
-            title={email}
+            style={{ marginLeft: "auto", padding: "7px 9px", display: "inline-flex", alignItems: "center" }}
+            aria-label={`Téma ${POPIS[volba]}. Prepnúť na: ${POPIS[DALSIA[volba]]}`}
+            title={`Téma ${POPIS[volba]}`}
           >
-            Odhlásiť
+            <IkonaTemy volba={volba} />
           </button>
         )}
-
-        <button
-          onClick={prepni}
-          className="tlacidlo tlacidlo--tiche"
-          style={{ padding: "7px 9px", display: "inline-flex", alignItems: "center" }}
-          // Ikona sama o sebe nepovie, čo znamená. Názov aj `aria-label`
-          // preto hovoria súčasný stav **aj** to, čo sa stane po kliknutí.
-          aria-label={`Téma ${POPIS[volba]}. Prepnúť na: ${POPIS[DALSIA[volba]]}`}
-          title={`Téma ${POPIS[volba]}`}
-        >
-          <IkonaTemy volba={volba} />
-        </button>
       </div>
     </header>
   )

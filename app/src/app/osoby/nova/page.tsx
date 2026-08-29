@@ -12,7 +12,15 @@ import { peopleContext } from "@/lib/people"
 import { brandingView } from "@/lib/tenants"
 import { tenantStyle } from "@/components/TenantHeader"
 import { UI_LANGUAGES } from "@/lib/i18n"
+import Vyber from "@/components/Vyber"
 import { pozviOsobu } from "../akcie"
+
+/** Kód jazyka sám o sebe nepovie nič — „sk" je pre nás jasné, pre iných nie. */
+const JAZYKY: Record<string, string> = {
+  sk: "slovenčina",
+  cs: "čeština",
+  en: "angličtina",
+}
 
 export const dynamic = "force-dynamic"
 
@@ -76,22 +84,34 @@ export default async function NovaOsoba({
           <input className="pole-vstup" name="department" defaultValue={q.department ?? ""} />
         </label>
 
-        <label className="pole">
+        <div className="pole">
           <span className="pole-popis">Typ osoby</span>
-          <select className="pole-vstup" name="personType" defaultValue="employee">
-            <option value="employee">zamestnanec</option>
-            <option value="external">externý</option>
-            <option value="referee">rozhodca</option>
-            <option value="official">funkcionár</option>
-          </select>
-        </label>
+          <Vyber
+            meno="personType"
+            volby={[
+              { hodnota: "employee", popis: "zamestnanec" },
+              { hodnota: "external", popis: "externý" },
+              { hodnota: "referee", popis: "rozhodca" },
+              { hodnota: "official", popis: "funkcionár" },
+            ]}
+            predvolena="employee"
+            popisPola="Typ osoby"
+          />
+        </div>
 
-        <label className="pole">
+        <div className="pole">
           <span className="pole-popis">Jazyk prostredia</span>
-          <select className="pole-vstup" name="language" defaultValue="sk">
-            {UI_LANGUAGES.map(l => <option key={l} value={l}>{l}</option>)}
-          </select>
-        </label>
+          <Vyber
+            meno="language"
+            volby={UI_LANGUAGES.map(l => ({ hodnota: l, popis: JAZYKY[l] ?? l }))}
+            predvolena="sk"
+            popisPola="Jazyk prostredia"
+          />
+          <span className="tichy pole-napoveda">
+            Skupiny a trasy sa vyberajú až na detaile — tam už vidno, čo
+            v organizácii existuje.
+          </span>
+        </div>
 
         <div>
           <button className="tlacidlo" type="submit">Pozvať</button>

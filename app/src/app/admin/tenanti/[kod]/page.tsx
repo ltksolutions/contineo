@@ -13,6 +13,7 @@ import { platformContext } from "@/lib/admin"
 import { allTenants } from "@/lib/tenantAdmin"
 import { stavDomeny, pokynCname } from "@/lib/vercel"
 import { UI_LANGUAGES } from "@/lib/i18n"
+import Vyber from "@/components/Vyber"
 import { stavPoskytovatela, NAZOV_POSKYTOVATELA, ID_POSKYTOVATELA } from "@/lib/oauth"
 import { ulozTenant, prepniStav, poslatPokyny, ulozPrihlasenie, zmazPrihlasenie } from "../../akcie"
 import type { StavDomeny } from "@/lib/vercel"
@@ -126,6 +127,13 @@ function Poskytovatel({
       )}
     </section>
   )
+}
+
+/** Kód jazyka sám o sebe nepovie nič — „sk" je pre nás jasné, pre iných nie. */
+const JAZYKY: Record<string, string> = {
+  sk: "slovenčina",
+  cs: "čeština",
+  en: "angličtina",
 }
 
 export const dynamic = "force-dynamic"
@@ -287,13 +295,16 @@ export default async function DetailTenanta({
           </span>
         </fieldset>
 
-        <label className="pole">
+        <div className="pole">
           <span className="pole-popis">Predvolený jazyk</span>
-          <select className="pole-vstup" name="defaultLanguage" defaultValue={tenant.defaultLanguage}>
-            {UI_LANGUAGES.map(j => <option key={j} value={j}>{j}</option>)}
-          </select>
+          <Vyber
+            meno="defaultLanguage"
+            volby={UI_LANGUAGES.map(j => ({ hodnota: j, popis: JAZYKY[j] ?? j }))}
+            predvolena={tenant.defaultLanguage}
+            popisPola="Predvolený jazyk"
+          />
           <span className="tichy pole-napoveda">Platí pre človeka, ktorý ešte nie je prihlásený.</span>
-        </label>
+        </div>
 
         <label className="pole">
           <span className="pole-popis">Domény</span>

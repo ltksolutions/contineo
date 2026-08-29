@@ -111,30 +111,193 @@ button:disabled { cursor: not-allowed; opacity: 0.55; }
  * Preto sa na úzkom displeji zalamuje a výška je premenlivá; pevných 60 px
  * platí až od 640 px vyššie.
  */
+/*
+ * Hlavička.
+ *
+ * Mobile first a doslova: pod 760 px je v riadku len značka, hamburger
+ * a avatar — nič iné sa tam nezmestí bez toho, aby sa to zalomilo do druhého
+ * riadka. Menu sa vysunie pod lištu cez celú šírku.
+ *
+ * Hranica je 760 px, nie 640: pri troch správcovských odkazoch („Pridelené
+ * normy", „Osoby", „Správa tenantov") sa lišta láme skôr, než by čakal
+ * bežný breakpoint, a bude ich pribúdať.
+ */
 .hlavicka-riadok {
   display: flex;
   align-items: center;
   gap: 10px;
-  flex-wrap: wrap;
-  padding-block: 10px;
+  height: 56px;
+  position: relative;
+}
+
+/*
+ * Značka. `min-width: 0` je tu nutné: bez neho by dlhý názov organizácie
+ * roztiahol lištu a hamburger s avatarom by vypadli mimo obrazovku.
+ * „Slovenský futbalový zväz" sa dovtedy lámal do druhého riadka.
+ */
+.hlavicka-znacka {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  min-width: 0;
+  text-decoration: none;
+  color: inherit;
+}
+
+.hlavicka-nazov {
+  font-weight: 700;
+  font-size: 16px;
+  letter-spacing: -0.02em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.hlavicka-odznak {
+  display: none;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  font-size: 11px;
+}
+
+.hlavicka-hamburger {
+  margin-left: auto;
+  padding: 7px 9px;
+  display: inline-flex;
+  align-items: center;
 }
 
 .hlavicka-nav {
-  display: flex;
-  gap: 2px;
-  margin-left: auto;
-  flex-wrap: wrap;
+  display: none;
 }
 
-@media (min-width: 640px) {
-  .hlavicka-riadok {
-    flex-wrap: nowrap;
-    height: 60px;
-    padding-block: 0;
-    gap: 16px;
-  }
-  .hlavicka-nav { gap: 4px; margin-right: 6px; }
+.hlavicka-nav.je-otvorene {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  z-index: 20;
+  padding: 8px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--line);
+  box-shadow: var(--shadow);
 }
+
+.hlavicka-odkaz {
+  text-decoration: none;
+  font-size: 15px;
+  border-radius: 8px;
+  padding: 11px 12px;
+  font-weight: 500;
+  color: var(--muted);
+}
+
+.hlavicka-odkaz.je-aktivny {
+  font-weight: 700;
+  background: var(--surface-2);
+  color: var(--ink);
+}
+
+@media (min-width: 760px) {
+  .hlavicka-riadok { height: 60px; gap: 16px; }
+  .hlavicka-hamburger { display: none; }
+
+  .hlavicka-nav,
+  .hlavicka-nav.je-otvorene {
+    display: flex;
+    flex-direction: row;
+    gap: 4px;
+    position: static;
+    margin-left: auto;
+    padding: 0;
+    background: none;
+    border: none;
+    box-shadow: none;
+  }
+
+  .hlavicka-odkaz { font-size: 14px; padding: 6px 12px; }
+  .hlavicka-nazov { font-size: 17px; }
+  .hlavicka-odznak { display: inline-flex; }
+}
+
+/*
+ * Osobné menu.
+ *
+ * Odhlásenie aj téma patria k človeku, nie k obsahu. V lište zaberali miesto
+ * navigácii a odhlásenie navyše stálo hneď vedľa odkazov, na ktoré sa klikne
+ * omylom — pri systéme, kde sa potvrdzujú smernice, je „vypadol som" drahšie
+ * než jeden klik navyše.
+ */
+.osobne { position: relative; }
+
+.osobne-tlacidlo {
+  background: none;
+  border: none;
+  padding: 2px;
+  cursor: pointer;
+  border-radius: 999px;
+  display: inline-flex;
+}
+
+.osobne-tlacidlo:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  user-select: none;
+}
+
+.osobne-panel {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 30;
+  min-width: 232px;
+  padding: 6px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+
+.osobne-hlava {
+  padding: 8px 10px 10px;
+  border-bottom: 1px solid var(--line);
+  margin-bottom: 6px;
+}
+
+.osobne-meno { font-size: 14.5px; font-weight: 700; }
+.osobne-email { font-size: 12.5px; overflow-wrap: anywhere; }
+
+.osobne-polozka {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 10px;
+  border: none;
+  border-radius: 8px;
+  background: none;
+  color: var(--ink);
+  font: inherit;
+  font-size: 14.5px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.osobne-polozka:hover { background: var(--surface-2); }
+.osobne-polozka--odhlasit { color: var(--bad-fg); }
 
 .karta {
   background: var(--surface);
@@ -231,6 +394,127 @@ button:disabled { cursor: not-allowed; opacity: 0.55; }
 }
 
 .pole-vstup:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+/*
+ * Rozbaľovací výber.
+ *
+ * Nahrádza `<select>`, ktorého rozbalený zoznam kreslí operačný systém —
+ * a ten sa nedá zosúladiť so zvyškom, najmä v tmavej téme. Ovládací prvok
+ * má **rovnaký tvar ako `.pole-vstup`**, aby v rade polí nevytŕčal.
+ */
+.vyber { position: relative; }
+
+.vyber-tlacidlo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.vyber-sipka { flex: none; color: var(--muted); }
+
+.vyber-zoznam {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  z-index: 40;
+  margin: 0;
+  padding: 5px;
+  list-style: none;
+  max-height: 280px;
+  overflow-y: auto;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+
+.vyber-polozka {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  /* 44 px terč — na telefóne sa do menšieho palcom netrafí. */
+  min-height: 40px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  font-size: 15px;
+  cursor: pointer;
+}
+
+.vyber-polozka.je-zvyraznena { background: var(--surface-2); }
+
+.vyber-znak {
+  width: 14px;
+  flex: none;
+  color: var(--accent);
+  font-weight: 700;
+}
+
+/*
+ * Štítky na výber (skupiny, trasy).
+ *
+ * Predtým sa písali do textového poľa oddelené čiarkou. Vyzeralo to nevinne,
+ * ale `rozhodcovia` a `rozhodcova` vyzerajú v poli rovnako a v databáze sú to
+ * dve skupiny, z ktorých jedna nedostane nikdy nič.
+ */
+.stitky { display: grid; gap: 10px; }
+
+.stitky-zoznam { display: flex; flex-wrap: wrap; gap: 8px; }
+
+.stitok--volba {
+  cursor: pointer;
+  background: none;
+  color: var(--muted);
+  font: inherit;
+  font-size: 13.5px;
+  font-weight: 600;
+  padding: 7px 12px;
+  min-height: 36px;
+}
+
+.stitok--volba:hover { background: var(--surface-2); }
+
+.stitok--volba.je-zvolena {
+  background: var(--surface-2);
+  border-color: var(--accent);
+  color: var(--ink);
+}
+
+.stitok-znak { color: var(--accent); font-weight: 700; }
+.stitok-pocet { color: var(--muted); font-weight: 500; }
+
+.stitky-nova { display: flex; gap: 8px; align-items: center; }
+.stitky-nova .pole-vstup { flex: 1; min-width: 0; }
+
+/*
+ * Ten istý štítok, ale postavený na zaškrtávacom políčku.
+ *
+ * Prideľovanie noriem je serverový formulár bez JavaScriptu, takže tam štítok
+ * nemôže byť tlačidlo s klientskym stavom. Vyzerať má ale rovnako — inak by
+ * tá istá vec vyzerala na dvoch obrazovkách inak a človek by hádal, či je to
+ * naozaj to isté. Stav nesie `:has()` nad skrytým políčkom.
+ */
+.stitok--pole { position: relative; }
+.stitok--pole input {
+  position: absolute;
+  opacity: 0;
+  width: 100%;
+  height: 100%;
+  inset: 0;
+  margin: 0;
+  cursor: pointer;
+}
+.stitok--pole:has(input:checked) {
+  background: var(--surface-2);
+  border-color: var(--accent);
+  color: var(--ink);
+}
+.stitok--pole:has(input:checked) .stitok-znak::before { content: "✓"; }
+.stitok--pole .stitok-znak::before { content: "+"; }
+.stitok--pole:has(input:focus-visible) { outline: 2px solid var(--accent); outline-offset: 2px; }
 
 .admin-jazyky { display: flex; gap: 8px; flex-wrap: wrap; }
 
