@@ -196,8 +196,8 @@ ktoré tam nebudú. Widget sa preto volá tak, ako znelo zadanie —
 | # | Otázka | Stav |
 |---|---|---|
 | **D36** | Widget ukazuje „čo čaká na mňa", nie prehľad organizácie | ✅ rozhodnuté 2026-08-28 |
-| **D37** | Úloha sa odvodzuje, pridelenie sa zaznamenáva ako udalosť | 🟡 návrh |
-| **D38** | `persons.groups` ako tretia dimenzia vedľa trás a útvarov | 🟡 návrh |
+| **D37** | Úloha sa odvodzuje, pridelenie sa zaznamenáva ako udalosť | ✅ rozhodnuté a postavené 2026-08-29 |
+| **D38** | `persons.groups` ako tretia dimenzia vedľa trás a útvarov | ✅ rozhodnuté a postavené 2026-08-29 |
 | **D39** | „Nové" sa počíta voči `lastLoginAt`, bez stavu prečítané | ✅ rozhodnuté 2026-08-28 |
 | **D40** | Jednorazové systémové hlásenia sa v rozsahu A nerobia | ✅ rozhodnuté 2026-08-28 — možnosť (a) |
 

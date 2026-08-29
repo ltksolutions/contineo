@@ -7,7 +7,7 @@
  */
 
 import { describe, it, expect } from "vitest"
-import { matchesAudience, audienceLabel } from "../src/lib/assignments"
+import { matchesAudience, audienceLabel, audienceFromSelection } from "../src/lib/assignments"
 import { normalizeKeys } from "../src/lib/persons"
 
 const osoba = {
@@ -85,5 +85,62 @@ describe("normalizacia klucov", () => {
 
   it("z ničoho spraví prázdny zoznam, nie chybu", () => {
     expect(normalizeKeys(undefined)).toEqual([])
+  })
+})
+
+describe("publika z vyberu na obrazovke", () => {
+  it("zaškrtnuté skupiny a trasy sa preložia na publiká", () => {
+    expect(audienceFromSelection({ vybrane: ["group:rozhodcovia", "track:zaklad-2026"] })).toEqual([
+      { kind: "group", value: "rozhodcovia" },
+      { kind: "track", value: "zaklad-2026" },
+    ])
+  })
+
+  it("vsetci v organizacii prebije vsetko ostatne", () => {
+    // Inak by vzniklo pridelenie pre všetkých a k nemu pridelenia pre skupiny,
+    // ktoré sú jeho podmnožinou — v prehľade by to isté viselo štyrikrát.
+    expect(audienceFromSelection({
+      vsetci: true,
+      vybrane: ["group:rozhodcovia"],
+      adresy: "a@b.sk",
+    })).toEqual([{ kind: "all" }])
+  })
+
+  it("adresy sa dajú oddeliť čiarkou aj novým riadkom", () => {
+    const out = audienceFromSelection({ adresy: "a@b.sk, c@d.sk\ne@f.sk; g@h.sk" })
+    expect(out.map(a => a.value)).toEqual(["a@b.sk", "c@d.sk", "e@f.sk", "g@h.sk"])
+    expect(out.every(a => a.kind === "person")).toBe(true)
+  })
+
+  it("čo nie je adresa, sa preskočí", () => {
+    // Prideliť „niečomu, čo vyzeralo ako adresa" znamená neprideliť nikomu
+    // a tváriť sa, že je hotovo.
+    expect(audienceFromSelection({ adresy: "rozhodcovia, a@b.sk, ---" })).toEqual([
+      { kind: "person", value: "a@b.sk" },
+    ])
+  })
+
+  it("to isté publikum dvoma cestami je jedno publikum", () => {
+    expect(audienceFromSelection({
+      vybrane: ["group:rozhodcovia", "group:Rozhodcovia"],
+      adresy: "A@B.sk\na@b.sk",
+    })).toEqual([
+      { kind: "group", value: "rozhodcovia" },
+      { kind: "person", value: "a@b.sk" },
+    ])
+  })
+
+  it("neznámy druh v hodnote políčka sa preskočí, neprepadne na skupinu", () => {
+    expect(audienceFromSelection({ vybrane: ["utvar:ekonomicky", "group:x"] })).toEqual([
+      { kind: "group", value: "x" },
+    ])
+  })
+
+  it("prázdny výber je prázdny zoznam, nie všetci", () => {
+    // Najdôležitejší test v tomto súbore: keby prázdny výber znamenal
+    // „všetkým", stačilo by nezaškrtnúť nič a norma by odišla celej organizácii.
+    expect(audienceFromSelection({})).toEqual([])
+    expect(audienceFromSelection({ vybrane: [], adresy: "" })).toEqual([])
+    expect(audienceFromSelection({ vsetci: false })).toEqual([])
   })
 })

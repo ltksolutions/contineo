@@ -15,6 +15,18 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 - **Pridelené znenie, ktoré už neplatí, sa nedá potvrdiť**, tak sa počíta medzi zablokované, nie medzi úlohy. Inak by úloha z widgetu nikdy nezmizla: `/dokumenty/…` ukáže novšie znenie a potvrdenie by sa viazalo na inú verziu.
 - 32 nových testov (spolu 579).
 
+### Added (2026-08-29 — dokončenie rozsahu B)
+
+- **E-mail „pridelili sme vám…" sa posiela tlačidlom, nie ako vedľajší účinok pridelenia.** Pridelenie sa dá odvolať; odoslaný e-mail nie. Preto samostatná obrazovka s náhľadom: komu presne to pôjde a **presne to znenie**, ktoré odíde (skladá ho tá istá funkcia — podobný text by sa časom rozišiel so skutočným).
+- **Posiela sa len tým, ktorí ešte nepotvrdili.** Kto to má za sebou, by dostal pripomienku niečoho, čo spravil — a to je presne ten druh pošty, po ktorom si ľudia zapnú filter a prestanú čítať aj tú dôležitú.
+- **`assignments.notified[]`** — pole, nie jedna hodnota. Je rozdiel medzi „poslali sme raz pred pol rokom" a „posielame štvrtý týždeň po sebe". Zapisuje sa **po** odoslaní a s počtom, ktorý naozaj odišiel; zápis dopredu by pri výpadku pošty tvrdil, že ľudia vedia, hoci nedostali nič.
+- E-mail nesie **dôvod od človeka** a ide v jazyku príjemcu. Z obsahu normy len názov — do schránky, ktorá môže byť súkromná alebo mimo našej správy, obsah interného predpisu nepatrí. Odkaz vedie na dokument, nie na prihlásenie: posielať prihlasovací odkaz by znamenalo vyrobiť druhý jednorazový vstup do systému kvôli oznámeniu, ktoré nič nepotvrdzuje.
+- Strop **150 e-mailov naraz**. Nad ním sa akcia odmietne a povie prečo; serverová akcia má obmedzený čas behu a rozposlať náhodnú polovicu je horšie než neposlať nič.
+- **Hromadné pridelenie: N noriem × M publík**, jeden spoločný dôvod. Reálne zadanie znie „nový rozhodca dostáva päť predpisov" alebo „novela sa týka rozhodcov aj delegátov aj klubov"; prideľovať to po jednom znamená napísať ten istý dôvod pätnásťkrát — a pri pätnástom už nikto nepíše to isté, takže sa záznamy o tej istej udalosti rozídu.
+- „Všetkým v organizácii" **prebije zvyšok výberu**. Inak by vzniklo pridelenie pre všetkých a k nemu pridelenia pre skupiny, ktoré sú jeho podmnožinou.
+- Zaškrtávacie políčka s terčom 44 px, nie `select multiple` — ten sa na telefóne ovláda mizerne a viacnásobný výber v ňom nie je vidieť. Po chybe sa vracia **celý výber**, nie len hláška: kto zaškrtal päť noriem, tri skupiny a napísal odsek odôvodnenia, to druhýkrát nenapíše.
+- 16 nových testov (spolu 595). Medzi nimi ten najdôležitejší: **prázdny výber publík je prázdny zoznam, nie „všetci"** — inak by stačilo nezaškrtnúť nič a norma by odišla celej organizácii.
+
 ### Changed (2026-08-29)
 
 - **D30 a O13 sa rušia, nezodpovedajú sa.** Hľadala sa definícia „podstatnej zmeny" — kritérium, podľa ktorého by systém rozhodoval, kedy treba potvrdiť znova. Také kritérium neexistuje: rovnaká zmena je v jednej norme preklep a v druhej nová povinnosť. Nahradila ho **udalosť s povinným dôvodom**. „Novela čl. 12 mení lehotu na odvolanie" sa o rok dá overiť; „naplnilo sa kritérium C" nie.

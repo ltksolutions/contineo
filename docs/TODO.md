@@ -256,10 +256,22 @@
 - [x] **uzatvára D30 a O13** — definícia „podstatnej zmeny" sa ruší, nahradil ju povinný `reason`
 - [x] 32 nových testov (spolu 579)
 
-**Zostáva k rozsahu B**
+**Rozsah B — dokončenie 2026-08-29**
 
-- [ ] e-mail „pridelili sme ti…" — dnes sa človek o pridelení dozvie až pri prihlásení
-- [ ] hromadné pridelenie viacerých noriem naraz (dnes jedna po druhej)
+- [x] **e-mail „pridelili sme ti…"** — posiela sa **tlačidlom, nie ako vedľajší účinok pridelenia**. Prideliť sa dá odvolať, odoslaný e-mail nie; preto najprv náhľad (komu presne a s akým textom) a až potom tlačidlo. Rovnaký vzor ako pokyny k doménam.
+- [x] posiela sa **len tým, kto ešte nepotvrdil** — pripomienka niečoho, čo človek už spravil, je presne ten druh pošty, po ktorom si zapne filter
+- [x] `assignments.notified[]` — pole, nie jedna hodnota: je rozdiel medzi „poslali sme raz pred pol rokom" a „posielame štvrtý týždeň po sebe". Zapisuje sa **po** odoslaní a s počtom, ktorý naozaj odišiel
+- [x] e-mail nesie **dôvod** a v jazyku príjemcu; z obsahu normy len názov — do schránky mimo našej správy nepatrí obsah interného predpisu
+- [x] strop 150 naraz; nad ním sa **odmietne a povie prečo**, namiesto toho, aby rozposlal náhodnú polovicu a spadol
+- [x] **hromadné pridelenie N noriem × M publík** s jedným spoločným dôvodom. Zaškrtávacie políčka, nie `select multiple` — ten sa na telefóne ovláda mizerne
+- [x] „všetkým v organizácii" prebije zvyšok výberu, inak by to isté znenie viselo v prehľade niekoľkokrát
+- [x] `audienceFromSelection()` je v `lib/`, nie v serverovej akcii — je to pravidlo a pravidlá sa dajú otestovať (16 nových testov, spolu 595)
+
+**Zostáva (mimo rozsahu B)**
+
+- [ ] pripomienky podľa času („nepotvrdené po 14 dňoch") — potrebujú naplánovanú úlohu, tú zatiaľ nemáme
+- [ ] **Revízny poriadok má zástupný dátum účinnosti.** Text hovorí „dňom schválenia VV SFZ" a dátum schválenia v ňom nie je; treba ho z uznesenia
+- [ ] **označenie znenia „1.0" je vymyslené číslo** a objaví sa v potvrdzovacej formulke
 
 **Rozsah C — až keď existujú ďalšie zdroje**
 

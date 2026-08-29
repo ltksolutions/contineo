@@ -67,9 +67,16 @@ export default async function DetailPridelenia({
         {pridelenie.reason}
       </p>
 
-      <h2 style={{ fontSize: 18, margin: "0 0 10px" }}>
-        Nepotvrdili ({chybajuci.length} z {pridelenie.osob})
-      </h2>
+      <div style={{ display: "flex", gap: 10, alignItems: "baseline", flexWrap: "wrap", margin: "0 0 10px" }}>
+        <h2 style={{ fontSize: 18, margin: 0 }}>
+          Nepotvrdili ({chybajuci.length} z {pridelenie.osob})
+        </h2>
+        {chybajuci.length > 0 && (
+          <Link href={`/hr/${encodeURIComponent(id)}/oznamit`} style={{ fontSize: 14 }}>
+            dať im vedieť e-mailom →
+          </Link>
+        )}
+      </div>
 
       {chybajuci.length === 0 ? (
         <p className="karta" style={{ padding: 18, fontSize: 15 }}>

@@ -71,6 +71,16 @@ export interface Assignment {
   /** `null`, kým platí. Odvolané pridelenie zostáva v histórii. */
   revokedAt: Date | null
   revokedBy?: string | null
+
+  /**
+   * Kedy, komu a koľkým sme o pridelení dali vedieť.
+   *
+   * **Pole, nie jedna hodnota** — pripomenúť sa dá viackrát a je rozdiel medzi
+   * „poslali sme raz pred pol rokom" a „posielame štvrtý týždeň po sebe".
+   * Odvodiť sa to nedá: e-mail buď odišiel, alebo neodišiel, a to vie len
+   * ten, kto ho poslal. Rovnaké rozlíšenie ako medzi úlohou a jej pridelením.
+   */
+  notified?: { at: Date; by: string; count: number }[]
 }
 
 export class AssignmentValidationError extends Error {
@@ -113,6 +123,58 @@ export function matchesAudience(
   }
 }
 
+
+/**
+ * Publiká z výberu na obrazovke.
+ *
+ * **„Všetci v organizácii" prebije všetko ostatné.** Keby sa výber skladal
+ * dokopy, vzniklo by pridelenie pre všetkých a k nemu ešte pridelenia pre
+ * skupiny, ktoré sú jeho podmnožinou — v prehľade by to isté znenie viselo
+ * štyrikrát a nikto by nevedel, ktorý z tých riadkov niečo znamená.
+ *
+ * Duplicity sa zahadzujú, neplatné položky sa ticho preskočia. Je to výber
+ * z ponuky, nie vstup od cudzieho: nezmysel v ňom znamená chybu v našom
+ * formulári, nie niečo, s čím má človek niečo robiť.
+ */
+export function audienceFromSelection(vyber: {
+  vsetci?: boolean
+  /** Hodnoty zaškrtávacích políčok v tvare `group:rozhodcovia`, `track:zaklad`. */
+  vybrane?: string[]
+  /** Ručne napísané adresy, oddelené čiarkou, bodkočiarkou alebo riadkom. */
+  adresy?: string
+}): Audience[] {
+  if (vyber.vsetci) return [{ kind: "all" }]
+
+  const out: Audience[] = []
+  const videne = new Set<string>()
+  const pridaj = (kind: AudienceKind, value: string) => {
+    const kluc = `${kind}:${value}`
+    if (videne.has(kluc)) return
+    videne.add(kluc)
+    out.push({ kind, value })
+  }
+
+  for (const surove of vyber.vybrane ?? []) {
+    const oddelovac = surove.indexOf(":")
+    if (oddelovac === -1) continue
+    const kind = surove.slice(0, oddelovac)
+    const value = surove.slice(oddelovac + 1).trim().toLowerCase()
+    if ((kind !== "group" && kind !== "track") || !value) continue
+    pridaj(kind, value)
+  }
+
+  // Adresy sa píšu ručne, tak sa oddeľujú aj novým riadkom, aj čiarkou —
+  // človek prilepí zoznam z tabuľky a nemá premýšľať nad tvarom.
+  for (const a of (vyber.adresy ?? "").split(/[\n,;]+/)) {
+    const email = a.trim().toLowerCase()
+    // Bez zavináča to nie je adresa. Prideliť „niečomu, čo vyzeralo ako
+    // adresa" znamená neprideliť nikomu a tváriť sa, že je hotovo.
+    if (!email.includes("@")) continue
+    pridaj("person", email)
+  }
+
+  return out
+}
 
 /** Ľudské pomenovanie publika pre obrazovku aj pre e-mail. */
 export function audienceLabel(a: Audience): string {
@@ -269,7 +331,40 @@ export async function assignedAtByVersion(person: {
   return out
 }
 
+/** Jedno pridelenie vlastnej organizácie. `null`, keď také nie je. */
+export async function loadAssignment(companyCode: string, id: string): Promise<Assignment | null> {
+  if (!ObjectId.isValid(id)) return null
+  const col = await getCollection<Assignment>(ASSIGNMENTS_COLLECTION)
+  // `companyCode` je v podmienke, nie v kontrole nad ňou: identifikátor sa dá
+  // uhádnuť a skúšaním by sa dalo zistiť, čo prideľujú iné organizácie (D32).
+  return col.findOne({ _id: new ObjectId(id), companyCode } as never)
+}
+
+/**
+ * Zaznamená, že sme o pridelení dali vedieť.
+ *
+ * Volá sa **po** odoslaní, nie pred ním. Zápis pred odoslaním by pri výpadku
+ * pošty tvrdil, že ľudia vedia, hoci nedostali nič — a to je horší stav než
+ * neodoslaný e-mail, lebo sa nikto nepozrie, prečo nikto nepotvrdzuje.
+ */
+export async function recordNotification(
+  companyCode: string,
+  id: string,
+  by: string,
+  count: number,
+): Promise<void> {
+  if (!ObjectId.isValid(id)) return
+  const col = await getCollection<Assignment>(ASSIGNMENTS_COLLECTION)
+  await col.updateOne(
+    { _id: new ObjectId(id), companyCode } as never,
+    { $push: { notified: { at: new Date(), by, count } } } as never,
+  )
+}
+
 // ── prehľad pre HR (D33) ─────────────────────────────────────────────────────
+
+/** Osoba v publiku. `language` je tu preto, že sa jej píše e-mail. */
+export type AudienceMember = Pick<Person, "id" | "email" | "fullName" | "language">
 
 export interface AssignmentOverview {
   id: string
@@ -281,6 +376,10 @@ export interface AssignmentOverview {
   /** Koľkých ľudí sa pridelenie týka **dnes**. Počíta sa, neukladá (D27). */
   osob: number
   potvrdili: number
+  /** Posledné odoslané oznámenie. `null`, keď sme ešte nedali vedieť. */
+  oznamene: { at: Date; by: string; count: number } | null
+  /** Koľkokrát sme už dali vedieť — štvrtá pripomienka je iná informácia. */
+  oznameniSpolu: number
 }
 
 /**
@@ -296,12 +395,12 @@ export interface AssignmentOverview {
 export async function audienceMembers(
   companyCode: string,
   audience: Audience,
-): Promise<Pick<Person, "id" | "email" | "fullName">[]> {
+): Promise<AudienceMember[]> {
   const col = await getCollection<Person>(PERSONS_COLLECTION)
   const osoby = await col
     .find(
       { companyCode, status: { $ne: "inactive" } },
-      { projection: { id: 1, email: 1, fullName: 1, groups: 1, tracks: 1 } },
+      { projection: { id: 1, email: 1, fullName: 1, language: 1, groups: 1, tracks: 1 } },
     )
     .toArray()
   return osoby.filter(o => matchesAudience(o, audience))
@@ -336,6 +435,8 @@ export async function assignmentOverviews(companyCode: string): Promise<Assignme
       assignedBy: a.assignedBy,
       osob: clenovia.length,
       potvrdili,
+      oznamene: a.notified?.length ? a.notified[a.notified.length - 1] : null,
+      oznameniSpolu: a.notified?.length ?? 0,
     })
   }
   return out
@@ -345,7 +446,7 @@ export async function assignmentOverviews(companyCode: string): Promise<Assignme
 export async function nepotvrdili(
   companyCode: string,
   assignmentId: string,
-): Promise<Pick<Person, "id" | "email" | "fullName">[]> {
+): Promise<AudienceMember[]> {
   if (!ObjectId.isValid(assignmentId)) return []
   const col = await getCollection<Assignment>(ASSIGNMENTS_COLLECTION)
   const a = await col.findOne({ _id: new ObjectId(assignmentId), companyCode } as never)

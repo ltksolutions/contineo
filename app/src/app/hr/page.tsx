@@ -97,6 +97,14 @@ export default async function HrPrehlad({
                     </div>
                   </div>
                   <div>
+                    <div className="tichy" style={{ fontSize: 12.5 }}>Dali sme vedieť</div>
+                    <div style={{ fontSize: 15.5, fontWeight: 600, color: p.oznamene ? undefined : "var(--muted)" }}>
+                      {p.oznamene
+                        ? `${formatDate(p.oznamene.at, jazyk)}${p.oznameniSpolu > 1 ? ` · ${p.oznameniSpolu}×` : ""}`
+                        : "nie"}
+                    </div>
+                  </div>
+                  <div>
                     <div className="tichy" style={{ fontSize: 12.5 }}>Chýba</div>
                     <div
                       style={{
@@ -110,12 +118,21 @@ export default async function HrPrehlad({
                   </div>
                 </div>
 
-                <form action={odvolat} style={{ marginTop: 14 }}>
-                  <input type="hidden" name="id" value={p.id} />
-                  <button className="tlacidlo tlacidlo--tiche" type="submit">
-                    Odvolať pridelenie
-                  </button>
-                </form>
+                <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginTop: 14 }}>
+                  {/* Dať vedieť je samostatné rozhodnutie, nie vedľajší účinok
+                      pridelenia — preto odkaz na náhľad, nie tlačidlo „poslať". */}
+                  {chyba > 0 && (
+                    <Link className="tlacidlo tlacidlo--tiche" href={`/hr/${encodeURIComponent(p.id)}/oznamit`}>
+                      Dať vedieť e-mailom
+                    </Link>
+                  )}
+                  <form action={odvolat}>
+                    <input type="hidden" name="id" value={p.id} />
+                    <button className="tlacidlo tlacidlo--tiche" type="submit">
+                      Odvolať pridelenie
+                    </button>
+                  </form>
+                </div>
               </li>
             )
           })}

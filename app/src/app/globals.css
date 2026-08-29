@@ -245,6 +245,65 @@ button:disabled { cursor: not-allowed; opacity: 0.55; }
 }
 
 /*
+ * Hromadné prideľovanie.
+ *
+ * Mobile first: zaškrtávacie políčko musí mať terč aspoň 44 px, inak sa naň
+ * palcom netrafí. Preto `padding` na celom `label`, nie len na `input` —
+ * kliknuteľný je celý riadok vrátane textu.
+ */
+.hr-skupina {
+  border: 1px solid var(--line);
+  padding: 16px 18px 18px;
+  margin: 0;
+}
+
+.hr-skupina legend {
+  padding: 0 6px;
+}
+
+.hr-podnadpis {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+  margin: 14px 0 4px;
+}
+
+.hr-volby {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.hr-volba {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 9px 0;
+  min-height: 44px;
+  font-size: 15px;
+  line-height: 1.45;
+  cursor: pointer;
+}
+
+.hr-volba input {
+  width: 20px;
+  height: 20px;
+  margin: 1px 0 0;
+  flex: none;
+  accent-color: var(--accent);
+}
+
+/* Nápoveda vedľa názvu sa na úzkom displeji zalomí pod neho, nie vedľa. */
+.hr-volba .pole-napoveda {
+  display: block;
+}
+
+@media (min-width: 520px) {
+  .hr-volba .pole-napoveda { display: inline; }
+}
+
+/*
  * Prehľad tenantov.
  *
  * Mobile first: na úzkom displeji dva stĺpce (štyri údaje sa zmestia do dvoch

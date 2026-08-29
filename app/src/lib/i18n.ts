@@ -140,6 +140,25 @@ interface Dictionary {
     fallbackNote: string
     subtitle: string
   }
+
+  /**
+   * E-mail „bolo vám pridelené…".
+   *
+   * Nesie **dôvod, ktorý napísal človek** (D30/D37). Bez neho by to bola
+   * ďalšia automatická správa, ktorú si ľudia odfiltrujú; s ním je to veta,
+   * z ktorej sa dá pochopiť, prečo to niekto poslal.
+   */
+  assignmentEmail: {
+    subject: (organisation: string) => string
+    subtitle: string
+    intro: string
+    /** Nadpis nad dôvodom. */
+    reasonLabel: string
+    versionLine: (label: string, effectiveFrom: string) => string
+    button: string
+    /** Čo sa stane, keď to človek nechá tak. Bez toho e-mail nič nežiada. */
+    note: string
+  }
 }
 
 export const DICTIONARY: Record<UiLanguage, Dictionary> = {
@@ -204,6 +223,15 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       fallbackNote: "Ak odkaz nefunguje, skopírujte do prehliadača:",
       subtitle: "Interný portál",
     },
+    assignmentEmail: {
+      subject: org => `Nový dokument na potvrdenie — ${org}`,
+      subtitle: "Na potvrdenie",
+      intro: "Do vášho zoznamu pribudol dokument, s ktorým sa máte oboznámiť:",
+      reasonLabel: "Dôvod",
+      versionLine: (label, effectiveFrom) => `verzia ${label}, platná od ${effectiveFrom}`,
+      button: "Otvoriť a potvrdiť",
+      note: "Dokument nájdete aj po prihlásení v zozname na úvodnej strane. Kým ho nepotvrdíte, zostane vám tam.",
+    },
   },
 
   cs: {
@@ -267,6 +295,15 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       fallbackNote: "Pokud odkaz nefunguje, zkopírujte jej do prohlížeče:",
       subtitle: "Interní portál",
     },
+    assignmentEmail: {
+      subject: org => `Nový dokument k potvrzení — ${org}`,
+      subtitle: "K potvrzení",
+      intro: "Do vašeho seznamu přibyl dokument, se kterým se máte seznámit:",
+      reasonLabel: "Důvod",
+      versionLine: (label, effectiveFrom) => `verze ${label}, platná od ${effectiveFrom}`,
+      button: "Otevřít a potvrdit",
+      note: "Dokument najdete i po přihlášení v seznamu na úvodní straně. Dokud jej nepotvrdíte, zůstane vám tam.",
+    },
   },
 
   en: {
@@ -328,6 +365,15 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       validity: "The link is valid for 24 hours and can be used once. If you did not request it, ignore this e-mail — nothing happens without clicking.",
       fallbackNote: "If the link does not work, copy it into your browser:",
       subtitle: "Internal portal",
+    },
+    assignmentEmail: {
+      subject: org => `New document to acknowledge — ${org}`,
+      subtitle: "To acknowledge",
+      intro: "A document has been added to your list:",
+      reasonLabel: "Reason",
+      versionLine: (label, effectiveFrom) => `version ${label}, effective from ${effectiveFrom}`,
+      button: "Open and acknowledge",
+      note: "You will also find the document in the list on the home page after signing in. It stays there until you acknowledge it.",
     },
   },
 }
