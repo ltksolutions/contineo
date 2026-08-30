@@ -6,6 +6,7 @@
  * databáza.
  */
 
+import { readFileSync } from "node:fs"
 import { describe, it, expect } from "vitest"
 import { overHodnotu, overZoznam, CiselnikError, TVAR_KLUCA } from "../src/lib/ciselniky"
 import { idDokumentu, overMetadata, KniznicaError } from "../src/lib/kniznica.zapis"
@@ -88,5 +89,17 @@ describe("metadata z formulara", () => {
 
   it("hodnota mimo uzavreteho ciselnika sa odmietne aj tu", () => {
     expect(() => overMetadata({ ...zaklad, accessLevel: "tajne" })).toThrow(KniznicaError)
+  })
+})
+
+describe("vyber poli pri stave preindexovania", () => {
+  it("projekcia neobsahuje zaroven versions aj versions.$", () => {
+    // Mongo taky vyber odmieta chybou "Path collision at versions" a padala
+    // na tom cela zalozka Clenenie. Positional $ sa navyse bez podmienky na
+    // to pole ani pouzit neda.
+    const zdroj = readFileSync(
+      new URL("../src/lib/kniznica.zapis.ts", import.meta.url), "utf8",
+    )
+    expect(zdroj).not.toContain('"versions.$": 1')
   })
 })

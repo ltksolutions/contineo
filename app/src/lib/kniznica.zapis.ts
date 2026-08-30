@@ -695,7 +695,11 @@ export async function stavPreindexovania(
   const dokumenty = await col
     .find(
       { companyCode },
-      { projection: { documentId: 1, title: 1, chunkingId: 1, markdown: 1, "versions.$": 1, versions: 1 } },
+      // `versions.$` sa sem raz zatúlalo spolu s `versions` a Mongo taký
+      // výber odmieta („Path collision at versions") — celá záložka Členenie
+      // padala. Positional `$` sa navyše bez podmienky na to pole ani použiť
+      // nedá; potrebujeme celé pole a platné znenie sa vyberá v kóde.
+      { projection: { documentId: 1, title: 1, chunkingId: 1, markdown: 1, versions: 1 } },
     )
     .toArray() as unknown as {
       documentId: string; title?: string; chunkingId?: string; markdown?: string
