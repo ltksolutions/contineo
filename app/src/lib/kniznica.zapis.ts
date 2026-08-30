@@ -24,7 +24,7 @@ import { getCollection } from "./mongodb"
 import { DOCUMENTS_COLLECTION } from "./documents"
 import { ACKNOWLEDGEMENTS_COLLECTION } from "./acknowledgements"
 import { chunkuj, PREDVOLENY_PROFIL } from "./chunker.mjs"
-import { odtlacokTextu, odtlacokClenenia, VERZIA_CHUNKERA } from "./chunkovanie"
+import { odtlacokTextu, odtlacokClenenia, trebaPreindexovat, VERZIA_CHUNKERA } from "./chunkovanie"
 import { overHodnotu, overZoznam, CiselnikError } from "./ciselniky"
 import type { Doplnky } from "./ciselniky"
 import { ulozSubor, zmazSubor } from "./ulozisko"
@@ -670,4 +670,98 @@ export async function opravZnenie(
   })
 
   return { potvrdeni, znovaPotvrdit }
+}
+
+export interface StavPreindexovania {
+  /** Dokumenty s platným znením — teda tie, ktoré vôbec majú čo indexovať. */
+  celkom: number
+  /** Z nich tie, ktorých členenie nesedí s aktuálnym profilom. */
+  neaktualnych: number
+}
+
+/**
+ * Koľko dokumentov by nový profil preindexoval.
+ *
+ * Počíta sa **naozajstným narezaním** každého dokumentu, nie odhadom: to je
+ * jediný spôsob, ako povedať, či zmena parametra na tomto obsahu vôbec niečo
+ * spraví. Pri desiatkach dokumentov je to zlomok sekundy; pri tisícoch by to
+ * chcelo vlastný beh a nie obrazovku.
+ */
+export async function stavPreindexovania(
+  companyCode: string,
+  profil?: Partial<ProfilClenenia>,
+): Promise<StavPreindexovania> {
+  const col = await getCollection(DOCUMENTS_COLLECTION)
+  const dokumenty = await col
+    .find(
+      { companyCode },
+      { projection: { documentId: 1, title: 1, chunkingId: 1, markdown: 1, "versions.$": 1, versions: 1 } },
+    )
+    .toArray() as unknown as {
+      documentId: string; title?: string; chunkingId?: string; markdown?: string
+      versions?: { isActive?: boolean; markdown?: string }[]
+    }[]
+
+  let celkom = 0
+  let neaktualnych = 0
+
+  for (const d of dokumenty) {
+    const platna = (d.versions ?? []).find(v => v.isActive)
+    const text = String(platna?.markdown ?? d.markdown ?? "").trim()
+    if (!text) continue
+    celkom++
+
+    const { chunky } = chunkuj(text, { nazovDokumentu: d.title ?? "", profil })
+    if (!chunky.length) { neaktualnych++; continue }
+    const chunkingId = odtlacokClenenia(chunky, { ...PREDVOLENY_PROFIL, ...profil })
+    if (trebaPreindexovat(d.chunkingId, chunkingId)) neaktualnych++
+  }
+
+  return { celkom, neaktualnych }
+}
+
+/**
+ * Preindexuje všetky dokumenty, ktorých členenie nesedí s profilom (D57).
+ *
+ * **V dávkach, nie naraz.** Funkcia na Verceli má strop na čas behu a
+ * preindexovanie stovky dokumentov by doň nezmestilo — a čo je horšie,
+ * spadlo by uprostred a časť dokumentov by zostala narezaná po starom.
+ * Preto sa spracuje `limit` dokumentov a vráti sa, koľko ešte zostáva;
+ * obrazovka to zopakuje, kým nie je nula.
+ *
+ * Dokumenty, ktoré už sedia, sa preskakujú — opakované spustenie je preto
+ * lacné a bezpečné.
+ */
+export async function preindexujVsetky(
+  companyCode: string,
+  aktor: string,
+  profil?: Partial<ProfilClenenia>,
+  limit = 25,
+): Promise<{ preindexovanych: number; preskocenych: number; zostava: number; chyby: string[] }> {
+  const col = await getCollection(DOCUMENTS_COLLECTION)
+  const dokumenty = await col
+    .find({ companyCode }, { projection: { documentId: 1 } })
+    .toArray() as unknown as { documentId: string }[]
+
+  let preindexovanych = 0
+  let preskocenych = 0
+  let zostava = 0
+  const chyby: string[] = []
+
+  for (const d of dokumenty) {
+    if (preindexovanych >= limit) { zostava++; continue }
+    try {
+      const v = await preindexuj(companyCode, d.documentId, aktor, profil)
+      if (v.uzBolo) preskocenych++
+      else preindexovanych++
+    } catch (e) {
+      // Dokument bez publikovaného znenia sa preindexovať nedá a nie je to
+      // chyba — nemá čo indexovať. Ostatné dôvody sa vypíšu menovite.
+      const sprava = e instanceof KniznicaError ? e.message : String(e)
+      if (sprava.includes("publikované znenie")) preskocenych++
+      else chyby.push(`${d.documentId}: ${sprava}`)
+    }
+  }
+
+  return { preindexovanych, preskocenych, zostava, chyby }
 }

@@ -27,6 +27,7 @@ import {
 } from "@/lib/oddelenia"
 import { pridajPolozku, odoberPolozku } from "@/lib/ciselnikyTenanta"
 import { CiselnikError } from "@/lib/ciselniky"
+import { preindexujVsetky, KniznicaError } from "@/lib/kniznica.zapis"
 
 async function kto(): Promise<{ email: string; companyCode: string } | null> {
   const ctx = await organizaciaContext()
@@ -44,7 +45,7 @@ function spravaChyby(e: unknown): string {
   if (
     e instanceof TenantValidationError || e instanceof ZnackaError ||
     e instanceof DomenaError || e instanceof OddelenieError ||
-    e instanceof CiselnikError
+    e instanceof CiselnikError || e instanceof KniznicaError
   ) {
     return e.message
   }
@@ -342,6 +343,33 @@ export async function ulozClenenie(fd: FormData) {
     }, ja.email)
     revalidatePath("/organizacia")
     spat(fd, "Uložené. Existujúce dokumenty sa nepreindexovali — spusti to pri konkrétnom dokumente.")
+  } catch (e) {
+    spat(fd, spravaChyby(e), true)
+  }
+}
+
+/**
+ * Preindexuje všetky dokumenty podľa uloženého profilu.
+ *
+ * V dávke, nie naraz: funkcia má strop na čas behu a pád uprostred by nechal
+ * časť dokumentov narezanú po starom. Keď niečo zostane, obrazovka to povie
+ * a tlačidlo sa stlačí znova — opakovanie je lacné, lebo hotové dokumenty
+ * sa preskočia.
+ */
+export async function preindexujVsetkyAkcia(fd: FormData) {
+  const ctx = await organizaciaContext()
+  if (ctx.state !== "ready") redirect("/")
+
+  try {
+    const v = await preindexujVsetky(
+      ctx.person.companyCode, ctx.person.email, ctx.tenant.chunkovanie, 25,
+    )
+    const casti = [`preindexovaných ${v.preindexovanych}`]
+    if (v.preskocenych) casti.push(`bez zmeny ${v.preskocenych}`)
+    if (v.zostava) casti.push(`zostáva ${v.zostava} — spusti znova`)
+    if (v.chyby.length) casti.push(`chyby: ${v.chyby.slice(0, 3).join("; ")}`)
+    revalidatePath("/kniznica")
+    spat(fd, casti.join(" · "), v.chyby.length > 0)
   } catch (e) {
     spat(fd, spravaChyby(e), true)
   }

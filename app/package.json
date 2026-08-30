@@ -24,7 +24,8 @@
     "platnost": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/platnost.mjs",
     "utvary": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/utvary_z_textu.mjs",
     "kontrola": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/kontrola.mjs",
-    "migracia:versionid": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/migracia_versionid.mjs"
+    "migracia:versionid": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/migracia_versionid.mjs",
+    "subory:doplnit": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/dopln_povodne_subory.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.122.0",

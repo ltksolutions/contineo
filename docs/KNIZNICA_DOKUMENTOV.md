@@ -246,3 +246,41 @@ Prvý beh hneď našiel skutočný nález: `sfz:test_onboarding` má publikovan�
 znenie a ani jeden úsek — seedovací skript zapisuje dokument, nie chunky.
 Pri testovacom dokumente to nevadí, ale je to presne ten druh stavu, ktorý by
 sa inak nezistil.
+
+
+---
+
+## Doplnenie pôvodných súborov a hromadné preindexovanie
+
+### `npm run subory:doplnit`
+
+Deväť noriem SFZ prišlo do systému ako `.md` súbory z ručného prevodu; PDF
+pritom máme v `data/vzorky/`. Skript ich pripojí ako pôvodný súbor, takže sa
+v editore dá porovnávať text s originálom.
+
+Dve veci robí zámerne inak, než by sa čakalo:
+
+- **Text sa nedotýka.** Pripája súbor, neprevádza dokument. Markdown
+  v databáze je odladený a nahradiť ho novým prevodom by bola zmena znenia,
+  ktorú nikto nechcel.
+- **Priradenie je vypísané ručne**, nie hádané z názvu súboru. Názov je
+  náhodný artefakt (tá istá zásada ako pri metadátach) a uhádnuté priradenie
+  by pripojilo cudzie PDF k norme — čo je horšie než žiadne.
+
+V zázname o prevode je poctivo napísané, že text nevznikol prevodom toho PDF,
+ale ručne pred zavedením knižnice — inak by sa o rok nedalo zistiť, prečo sa
+text a nový prevod toho istého súboru líšia.
+
+### Hromadné preindexovanie
+
+V `/organizacia`, záložka Členenie, pod profilom. Ukazuje, **koľko dokumentov
+by nový profil narezal inak** — a počíta to naozajstným narezaním každého
+dokumentu, nie odhadom: to je jediný spôsob, ako povedať, či zmena parametra
+na tomto konkrétnom obsahu vôbec niečo spraví.
+
+**Spracuje najviac 25 dokumentov naraz.** Nie je to opatrnosť navyše: funkcia
+má strop na čas behu a pád uprostred by nechal časť dokumentov narezanú po
+starom — teda presne ten nekonzistentný stav, ktorému sa celé D57 vyhýba.
+Opakované spustenie je lacné, lebo dokumenty, ktoré už sedia, sa preskočia.
+
+Preindexovanie **nemení znenia ani potvrdenia** (D57).

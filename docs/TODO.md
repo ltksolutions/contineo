@@ -53,7 +53,8 @@
 - [x] **`npm run kontrola`** (D59) — invarianty medzi dokumentmi, úsekmi a potvrdeniami
 - [ ] **`sfz:test_onboarding` nemá aktívne úseky** — seedovací skript zapisuje dokument, nie chunky. Pri testovacom dokumente to nevadí, ale kontrola to bude hlásiť
 - [ ] presun dokumentu do priečinka hromadne (zatiaľ po jednom v detaile)
-- [ ] hromadné preindexovanie všetkých dokumentov po zmene profilu (zatiaľ po jednom)
+- [x] **hromadné preindexovanie** — v záložke Členenie, po dávkach 25, s počtom neaktuálnych dokumentov
+- [x] **pôvodné PDF doplnené k deviatim normám** — `npm run subory:doplnit` (2026-08-30)
 - [ ] archivácia dokumentu z obrazovky — mazanie zámerne nie je (viažu sa potvrdenia)
 - [ ] **KB / FAQ na verejnom webe** — samostatná fáza, `CMS_KONCEPCIA.md` časť B
 - [ ] Rozšíriť `documents` o `contentType` (`document`|`web`) a `webPublish` (slug, seo, navParent, publishAt) — **D-CMS-1**

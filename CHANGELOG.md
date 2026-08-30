@@ -4,6 +4,11 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Added (2026-08-30 — pôvodné súbory a hromadné preindexovanie)
+
+- **Pôvodné PDF doplnené k deviatim normám SFZ** (`npm run subory:doplnit`). Prišli do systému ako `.md` z ručného prevodu, ale PDF sme mali celý čas v repozitári — bez nich sa v editore nedalo porovnať text s originálom. Text sa pritom **nedotkol**: skript pripája súbor, neprevádza dokument. Priradenie je vypísané ručne, nie hádané z názvu súboru — uhádnuté priradenie by pripojilo cudzie PDF k norme, čo je horšie než žiadne. V zázname o prevode je poctivo napísané, že text nevznikol prevodom toho PDF.
+- **Hromadné preindexovanie** v záložke Členenie. Ukazuje, koľko dokumentov by nový profil narezal inak — počítané naozajstným narezaním, nie odhadom, lebo inak sa nedá povedať, či zmena parametra na tomto obsahu vôbec niečo spraví. Spracuje najviac 25 naraz: pád na časovom strope uprostred by nechal časť dokumentov narezanú po starom. Opakovanie je lacné, hotové sa preskočia.
+
 ### Changed (2026-08-30 — identita znenia oddelená od členenia)
 
 - **`versionId` sa počíta z textu, nie z chunkov (D57).** Doteraz z chunkov — a keďže sa naň viažu potvrdenia, vyladenie chunkera by stovke ľudí ukázalo, že normu nemajú potvrdenú, hoci sa v nej nezmenilo ani slovo. Jedno číslo nieslo dve rôzne veci: text normy je právny artefakt, členenie na úseky technický. Úseky teraz nesú vlastné `chunkingId` (verzia chunkera + profil + výsledok), takže je stále vidieť, kedy treba preindexovať.

@@ -22,7 +22,8 @@ import VyberFarby from "@/components/VyberFarby"
 import Oznam from "@/components/Oznam"
 import { ulozVzhlad, ulozPrihlasenie, zmazPrihlasenie, poziadaj, overDomenu, zrus } from "./akcie"
 import { zalozUtvar, premenujUtvar, presunUtvar, zrusUtvar } from "./akcie"
-import { pridajDoCiselnika, odoberZCiselnika, ulozClenenie } from "./akcie"
+import { pridajDoCiselnika, odoberZCiselnika, ulozClenenie, preindexujVsetkyAkcia } from "./akcie"
+import { stavPreindexovania } from "@/lib/kniznica.zapis"
 import { PREDVOLENY_PROFIL } from "@/lib/chunker.mjs"
 import { POPIS_CISELNIKA, ponuka, vlastnePolozky, pouzitie } from "@/lib/ciselnikyTenanta"
 import { VLASTNE_CISELNIKY } from "@/lib/ciselniky"
@@ -210,6 +211,13 @@ export default async function Organizacia({
         ) as Record<string, number>,
       })))
     : []
+
+  // Koľko dokumentov by nový profil narezal inak. Počíta sa naozajstným
+  // narezaním — odhad by pri zmene parametra nevedel povedať, či na tomto
+  // obsahu vôbec niečo spraví.
+  const stavIndexu = teraz === "clenenie"
+    ? await stavPreindexovania(tenant.companyCode, tenant.chunkovanie)
+    : null
 
   const zaznamy = teraz === "audit"
     ? await auditZaznamy(tenant.companyCode, { hladat, limit: 200 })
@@ -691,6 +699,34 @@ export default async function Organizacia({
         </p>
 
         <div><button className="tlacidlo" type="submit">Uložiť členenie</button></div>
+      </form>
+      )}
+
+      {teraz === "clenenie" && stavIndexu && (
+      <form action={preindexujVsetkyAkcia} className="karta" style={{ padding: 20, display: "grid", gap: 12, marginTop: 16 }}>
+        <input type="hidden" name="zalozka" value="clenenie" />
+        <h2 style={{ fontSize: 17, margin: 0 }}>Preindexovať všetko</h2>
+
+        {stavIndexu.neaktualnych === 0 ? (
+          <p className="tichy" style={{ fontSize: 14, margin: 0 }}>
+            Všetkých {stavIndexu.celkom} dokumentov je narezaných podľa tohto profilu.
+            Niet čo preindexovať.
+          </p>
+        ) : (
+          <>
+            <p className="tichy" style={{ fontSize: 14, margin: 0 }}>
+              <strong>{stavIndexu.neaktualnych}</strong> z {stavIndexu.celkom} dokumentov je
+              narezaných inak, než hovorí tento profil. Preindexovanie <strong>nemení znenia
+              ani potvrdenia</strong> — vymení len úseky, z ktorých číta vyhľadávanie.
+            </p>
+            <p className="tichy" style={{ fontSize: 13, margin: 0 }}>
+              Spracuje sa najviac 25 dokumentov naraz. Nie je to opatrnosť navyše: pri
+              väčšej dávke by beh spadol na časovom strope a časť dokumentov by zostala
+              narezaná po starom. Keď niečo zostane, stlač to znova — hotové sa preskočia.
+            </p>
+            <div><button className="tlacidlo" type="submit">Preindexovať ({stavIndexu.neaktualnych})</button></div>
+          </>
+        )}
       </form>
       )}
 
