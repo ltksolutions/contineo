@@ -19,87 +19,87 @@ import { csvToPersons, REASONS } from "@/lib/personsImport"
 import { previewImport, upsertPersons } from "@/lib/persons"
 import type { PersonType } from "@/lib/persons"
 
-async function personalny(): Promise<{ email: string; companyCode: string } | null> {
+async function peopleAdmin(): Promise<{ email: string; companyCode: string } | null> {
   const ctx = await peopleContext()
   return ctx.state === "ready"
     ? { email: ctx.person.email, companyCode: ctx.person.companyCode }
     : null
 }
 
-function textPola(fd: FormData, meno: string): string {
-  const v = fd.get(meno)
+function fieldText(fd: FormData, actorName: string): string {
+  const v = fd.get(actorName)
   return typeof v === "string" ? v.trim() : ""
 }
 
-function zoznamPola(fd: FormData, meno: string): string[] {
-  return textPola(fd, meno).split(/[,;\n]/).map(x => x.trim()).filter(Boolean)
+function listField(fd: FormData, actorName: string): string[] {
+  return fieldText(fd, actorName).split(/[,;\n]/).map(x => x.trim()).filter(Boolean)
 }
 
-function spravaChyby(e: unknown): string {
+function errorMessage(e: unknown): string {
   if (e instanceof PersonValidationError) return e.message
   console.error("[osoby] akcia zlyhala:", e)
   return "Zmenu sa nepodarilo uložiť. Skús to znova."
 }
 
 export async function savePersonAction(fd: FormData) {
-  const kto = await personalny()
-  if (!kto) redirect("/osoby")
+  const actor = await peopleAdmin()
+  if (!actor) redirect("/osoby")
 
-  const id = textPola(fd, "id")
-  let sprava = ""
-  let chyba = false
+  const id = fieldText(fd, "id")
+  let message = ""
+  let error = false
   try {
-    await savePerson(kto.companyCode, id, {
-      email: textPola(fd, "email"),
-      fullName: textPola(fd, "fullName"),
+    await savePerson(actor.companyCode, id, {
+      email: fieldText(fd, "email"),
+      fullName: fieldText(fd, "fullName"),
       // Voľba „— bez oddelenia —" má prázdnu hodnotu a znamená vyradiť zo
       // štruktúry, nie „nemeniť". Preto `|| null`, nie `|| undefined`.
-      departmentId: textPola(fd, "departmentId") || null,
-      jobTitle: textPola(fd, "jobTitle"),
-      personType: (textPola(fd, "personType") || undefined) as PersonType | undefined,
-      language: textPola(fd, "language") || undefined,
-      tracks: zoznamPola(fd, "tracks"),
-      groups: zoznamPola(fd, "groups"),
+      departmentId: fieldText(fd, "departmentId") || null,
+      jobTitle: fieldText(fd, "jobTitle"),
+      personType: (fieldText(fd, "personType") || undefined) as PersonType | undefined,
+      language: fieldText(fd, "language") || undefined,
+      tracks: listField(fd, "tracks"),
+      groups: listField(fd, "groups"),
       // Zaškrtávacie políčka: neprítomná hodnota znamená „odobrať".
       roles: fd.getAll("roles").filter((r): r is string => typeof r === "string"),
-    }, kto.email)
-    sprava = "Uložené."
+    }, actor.email)
+    message = "Uložené."
   } catch (e) {
-    sprava = spravaChyby(e)
-    chyba = true
+    message = errorMessage(e)
+    error = true
   }
 
   revalidatePath("/osoby")
-  redirect(`/osoby/${encodeURIComponent(id)}?sprava=${encodeURIComponent(sprava)}${chyba ? "&chyba=1" : ""}`)
+  redirect(`/osoby/${encodeURIComponent(id)}?sprava=${encodeURIComponent(message)}${error ? "&chyba=1" : ""}`)
 }
 
 export async function invitePersonAction(fd: FormData) {
-  const kto = await personalny()
-  if (!kto) redirect("/osoby")
+  const actor = await peopleAdmin()
+  if (!actor) redirect("/osoby")
 
   try {
-    const osoba = await invitePerson(kto.companyCode, {
-      email: textPola(fd, "email"),
-      fullName: textPola(fd, "fullName"),
-      department: textPola(fd, "department"),
-      personType: (textPola(fd, "personType") || undefined) as PersonType | undefined,
-      language: textPola(fd, "language") || undefined,
-    }, kto.email)
+    const person = await invitePerson(actor.companyCode, {
+      email: fieldText(fd, "email"),
+      fullName: fieldText(fd, "fullName"),
+      department: fieldText(fd, "department"),
+      personType: (fieldText(fd, "personType") || undefined) as PersonType | undefined,
+      language: fieldText(fd, "language") || undefined,
+    }, actor.email)
 
     revalidatePath("/osoby")
     // Rovno na detail: po pozvaní nasleduje priradenie trás a skupín,
     // a hľadať toho človeka znova v zozname je zbytočný krok.
-    redirect(`/osoby/${encodeURIComponent(osoba.id)}?sprava=${encodeURIComponent(
+    redirect(`/osoby/${encodeURIComponent(person.id)}?sprava=${encodeURIComponent(
       "Pozvaná. Prihlási sa, keď si sama vyžiada odkaz alebo použije pracovné konto."
     )}`)
   } catch (e) {
     // `redirect()` vyhadzuje výnimku — nesmie sa chytiť ako chyba zápisu.
     if (isRedirect(e)) throw e
     const q = new URLSearchParams({
-      chyba: spravaChyby(e),
-      email: textPola(fd, "email"),
-      fullName: textPola(fd, "fullName"),
-      department: textPola(fd, "department"),
+      chyba: errorMessage(e),
+      email: fieldText(fd, "email"),
+      fullName: fieldText(fd, "fullName"),
+      department: fieldText(fd, "department"),
     })
     redirect(`/osoby/nova?${q.toString()}`)
   }
@@ -113,32 +113,32 @@ export async function invitePersonAction(fd: FormData) {
  * prečíta. Vrátenie potvrdenie nepotrebuje — nič sa ním nestráca.
  */
 export async function togglePersonStatusAction(fd: FormData) {
-  const kto = await personalny()
-  if (!kto) redirect("/osoby")
+  const actor = await peopleAdmin()
+  if (!actor) redirect("/osoby")
 
-  const id = textPola(fd, "id")
-  const email = textPola(fd, "email")
-  const naStav = textPola(fd, "status") === "inactive" ? "inactive" : "invited"
-  let sprava = ""
-  let chyba = false
+  const id = fieldText(fd, "id")
+  const email = fieldText(fd, "email")
+  const toStatus = fieldText(fd, "status") === "inactive" ? "inactive" : "invited"
+  let message = ""
+  let error = false
 
-  if (naStav === "inactive" && textPola(fd, "potvrdenie").toLowerCase() !== email.toLowerCase()) {
-    sprava = `Na vyradenie napíš adresu (${email}).`
-    chyba = true
+  if (toStatus === "inactive" && fieldText(fd, "potvrdenie").toLowerCase() !== email.toLowerCase()) {
+    message = `Na vyradenie napíš adresu (${email}).`
+    error = true
   } else {
     try {
-      await setPersonStatus(kto.companyCode, id, naStav, kto.email)
-      sprava = naStav === "inactive"
+      await setPersonStatus(actor.companyCode, id, toStatus, actor.email)
+      message = toStatus === "inactive"
         ? "Vyradená. Záznam a jej potvrdenia zostávajú."
         : "Vrátená. Prihlási sa a stav sa prepne sám."
     } catch (e) {
-      sprava = spravaChyby(e)
-      chyba = true
+      message = errorMessage(e)
+      error = true
     }
   }
 
   revalidatePath("/osoby")
-  redirect(`/osoby/${encodeURIComponent(id)}?sprava=${encodeURIComponent(sprava)}${chyba ? "&chyba=1" : ""}`)
+  redirect(`/osoby/${encodeURIComponent(id)}?sprava=${encodeURIComponent(message)}${error ? "&chyba=1" : ""}`)
 }
 
 /**
@@ -156,39 +156,39 @@ export async function previewImportAction(text: string): Promise<{
   chyby?: string[]
   spolu?: number
 }> {
-  const kto = await personalny()
-  if (!kto) return { ok: false, sprava: "Nemáš na to právo." }
+  const actor = await peopleAdmin()
+  if (!actor) return { ok: false, sprava: "Nemáš na to právo." }
   if (!text?.trim()) return { ok: false, sprava: "Súbor je prázdny." }
 
   // Organizácia sa doplní z prihláseného, nie zo súboru: personalista zväzu
   // nesmie importom založiť človeka do cudzej organizácie (D32).
-  const osoby = csvToPersons(text, kto.companyCode)
-  if (osoby.length === 0) {
+  const people = csvToPersons(text, actor.companyCode)
+  if (people.length === 0) {
     return { ok: false, sprava: "V súbore nie je ani jeden riadok s údajmi. Má prvý riadok hlavičky?" }
   }
 
   try {
-    const n = await previewImport(osoby)
+    const n = await previewImport(people)
     return {
       ok: true,
-      spolu: osoby.length,
+      spolu: people.length,
       nove: n.created,
       existujuce: n.existing,
       chyby: n.errors.map(e => `${e.email || "(bez adresy)"} — ${REASONS[e.reason] ?? e.reason}`),
     }
   } catch (e) {
-    return { ok: false, sprava: spravaChyby(e) }
+    return { ok: false, sprava: errorMessage(e) }
   }
 }
 
 /** Zápis. Volá sa až po náhľade, z toho istého textu. */
 export async function runImportAction(text: string): Promise<{ ok: boolean; sprava: string }> {
-  const kto = await personalny()
-  if (!kto) return { ok: false, sprava: "Nemáš na to právo." }
+  const actor = await peopleAdmin()
+  if (!actor) return { ok: false, sprava: "Nemáš na to právo." }
 
   try {
-    const osoby = csvToPersons(text, kto.companyCode)
-    const v = await upsertPersons(osoby, kto.email)
+    const people = csvToPersons(text, actor.companyCode)
+    const v = await upsertPersons(people, actor.email)
     revalidatePath("/osoby")
     return {
       ok: true,
@@ -196,6 +196,6 @@ export async function runImportAction(text: string): Promise<{ ok: boolean; spra
         (v.errors.length ? `, chybných ${v.errors.length}` : "") + ".",
     }
   } catch (e) {
-    return { ok: false, sprava: spravaChyby(e) }
+    return { ok: false, sprava: errorMessage(e) }
   }
 }

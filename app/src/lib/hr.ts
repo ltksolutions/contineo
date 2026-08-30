@@ -72,7 +72,7 @@ export interface AssignableDocument {
  */
 export async function assignableDocuments(companyCode: string): Promise<AssignableDocument[]> {
   const col = await getCollection<DocumentRecord>(DOCUMENTS_COLLECTION)
-  const surove = await col
+  const raw = await col
     .find({
       $or: [
         { companyCode },
@@ -84,7 +84,7 @@ export async function assignableDocuments(companyCode: string): Promise<Assignab
 
   const asOf = new Date()
   const out: AssignableDocument[] = []
-  for (const d of surove) {
+  for (const d of raw) {
     // Dotaz je len predvýber; o viditeľnosti rozhoduje `canSeeDocument`,
     // aby pravidlo D32 zostalo na jednom mieste.
     if (!canSeeDocument({ companyCode }, d)) continue

@@ -20,7 +20,7 @@ import type { NewRating, RatingEdit, Verdict } from "@/lib/ratings"
  * sa dalo neskôr rozlíšiť, čo hodnotil kto (D9, otvorený bod E5: jeden
  * hodnotiteľ je pri 0/1 posudzovaní jediný bod zlyhania).
  */
-async function ktoHodnoti(req: NextRequest): Promise<string> {
+async function reviewer(req: NextRequest): Promise<string> {
   try {
     const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET })
     return (token?.email as string) ?? "anonym"
@@ -30,7 +30,7 @@ async function ktoHodnoti(req: NextRequest): Promise<string> {
 }
 
 /** Posudok smie byť len 0, 1 alebo null — nič iné sa do DB nedostane. */
-function posudok(v: unknown): Verdict | undefined {
+function verdict(v: unknown): Verdict | undefined {
   if (v === null) return null
   if (v === 0 || v === 1) return v
   return undefined
@@ -42,14 +42,14 @@ function text(v: unknown, max: number): string | undefined {
 }
 
 export async function POST(req: NextRequest) {
-  let telo: Partial<NewRating>
+  let body: Partial<NewRating>
   try {
-    telo = await req.json()
+    body = await req.json()
   } catch {
     return NextResponse.json({ chyba: "Neplatný JSON" }, { status: 400 })
   }
 
-  if (!telo.otazka?.trim() || !telo.odpoved?.trim()) {
+  if (!body.otazka?.trim() || !body.odpoved?.trim()) {
     return NextResponse.json(
       { chyba: "Chýba otázka alebo odpoveď" },
       { status: 400 }
@@ -59,21 +59,21 @@ export async function POST(req: NextRequest) {
   try {
     const id = await recordAnswer(
       {
-        otazkaId: telo.otazkaId,
-        otazka: telo.otazka,
-        odpoved: telo.odpoved,
-        zdroje: telo.zdroje ?? [],
-        citacie: telo.citacie ?? [],
-        model: telo.model ?? "",
-        provider: telo.provider ?? "",
-        overeneCitacie: Boolean(telo.overeneCitacie),
-        ttftMs: telo.ttftMs ?? null,
-        celkovoMs: telo.celkovoMs ?? 0,
-        casy: telo.casy,
-        tokeny: telo.tokeny,
-        naklad: telo.naklad,
+        otazkaId: body.otazkaId,
+        otazka: body.otazka,
+        odpoved: body.odpoved,
+        zdroje: body.zdroje ?? [],
+        citacie: body.citacie ?? [],
+        model: body.model ?? "",
+        provider: body.provider ?? "",
+        overeneCitacie: Boolean(body.overeneCitacie),
+        ttftMs: body.ttftMs ?? null,
+        celkovoMs: body.celkovoMs ?? 0,
+        casy: body.casy,
+        tokeny: body.tokeny,
+        naklad: body.naklad,
       },
-      await ktoHodnoti(req)
+      await reviewer(req)
     )
     return NextResponse.json({ id })
   } catch (e) {
@@ -83,36 +83,36 @@ export async function POST(req: NextRequest) {
 }
 
 export async function PATCH(req: NextRequest) {
-  let telo: { id?: string } & Record<string, unknown>
+  let body: { id?: string } & Record<string, unknown>
   try {
-    telo = await req.json()
+    body = await req.json()
   } catch {
     return NextResponse.json({ chyba: "Neplatný JSON" }, { status: 400 })
   }
 
-  if (!telo.id) {
+  if (!body.id) {
     return NextResponse.json({ chyba: "Chýba id" }, { status: 400 })
   }
 
-  const uprava: RatingEdit = {}
-  const s = posudok(telo.spravna)
-  const h = posudok(telo.halucinacia)
-  if (s !== undefined) uprava.spravna = s
-  if (h !== undefined) uprava.halucinacia = h
+  const edit: RatingEdit = {}
+  const s = verdict(body.spravna)
+  const h = verdict(body.halucinacia)
+  if (s !== undefined) edit.spravna = s
+  if (h !== undefined) edit.halucinacia = h
 
-  const overena = text(telo.overenaOdpoved, 4000)
-  const zdroje = text(telo.spravneZdroje, 500)
-  const poznamka = text(telo.poznamka, 2000)
-  if (overena !== undefined) uprava.overenaOdpoved = overena
-  if (zdroje !== undefined) uprava.spravneZdroje = zdroje
-  if (poznamka !== undefined) uprava.poznamka = poznamka
+  const verified = text(body.overenaOdpoved, 4000)
+  const sources = text(body.spravneZdroje, 500)
+  const note = text(body.poznamka, 2000)
+  if (verified !== undefined) edit.overenaOdpoved = verified
+  if (sources !== undefined) edit.spravneZdroje = sources
+  if (note !== undefined) edit.poznamka = note
 
-  if (Object.keys(uprava).length === 0) {
+  if (Object.keys(edit).length === 0) {
     return NextResponse.json({ chyba: "Nič na uloženie" }, { status: 400 })
   }
 
   try {
-    const ok = await saveVerdict(telo.id, uprava, await ktoHodnoti(req))
+    const ok = await saveVerdict(body.id, edit, await reviewer(req))
     if (!ok) {
       return NextResponse.json({ chyba: "Záznam sa nenašiel" }, { status: 404 })
     }

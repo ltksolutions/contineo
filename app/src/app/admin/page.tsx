@@ -13,12 +13,12 @@ import { formatDate } from "@/lib/i18n"
 
 export const dynamic = "force-dynamic"
 
-function Udaj({ popis, hodnota, tichy }: { popis: string; hodnota: string; tichy?: boolean }) {
+function Fact({ popis: label, hodnota: value, tichy: muted }: { popis: string; hodnota: string; tichy?: boolean }) {
   return (
     <div>
-      <div className="tichy" style={{ fontSize: 12.5 }}>{popis}</div>
-      <div style={{ fontSize: 15.5, fontWeight: 600, color: tichy ? "var(--muted)" : undefined }}>
-        {hodnota}
+      <div className="tichy" style={{ fontSize: 12.5 }}>{label}</div>
+      <div style={{ fontSize: 15.5, fontWeight: 600, color: muted ? "var(--muted)" : undefined }}>
+        {value}
       </div>
     </div>
   )
@@ -31,7 +31,7 @@ export default async function TenantAdminPage() {
     notFound()
   }
 
-  const prehlad = await tenantOverviews()
+  const overview = await tenantOverviews()
 
   return (
     <div className="obal" style={{ padding: "28px 20px 80px", maxWidth: 900 }}>
@@ -49,7 +49,7 @@ export default async function TenantAdminPage() {
       </p>
 
       <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "grid", gap: 14 }}>
-        {prehlad.map(t => (
+        {overview.map(t => (
           <li key={t.companyCode} className="karta" style={{ padding: "18px 20px" }}>
             <div style={{ display: "flex", gap: 10, alignItems: "baseline", flexWrap: "wrap" }}>
               <Link
@@ -74,18 +74,18 @@ export default async function TenantAdminPage() {
             </p>
 
             <div className="admin-udaje">
-              <Udaj
+              <Fact
                 popis="Osoby"
                 hodnota={`${t.osoby.prihlaseni} / ${t.osoby.spolu} prihlásených`}
                 tichy={t.osoby.spolu === 0}
               />
-              <Udaj popis="Trasy" hodnota={String(t.trasy)} tichy={t.trasy === 0} />
-              <Udaj
+              <Fact popis="Trasy" hodnota={String(t.trasy)} tichy={t.trasy === 0} />
+              <Fact
                 popis="Dokumenty"
                 hodnota={`${t.dokumenty.spolu - t.dokumenty.bezZnenia.length} / ${t.dokumenty.spolu} platných`}
                 tichy={t.dokumenty.spolu === 0}
               />
-              <Udaj popis="Potvrdenia" hodnota={String(t.potvrdenia)} tichy={t.potvrdenia === 0} />
+              <Fact popis="Potvrdenia" hodnota={String(t.potvrdenia)} tichy={t.potvrdenia === 0} />
             </div>
 
             {/* Dokumenty bez platného znenia sú menovite. Je to najčastejšia

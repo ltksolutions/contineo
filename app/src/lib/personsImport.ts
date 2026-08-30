@@ -32,27 +32,27 @@ export const REASONS: Record<string, string> = {
   "duplicate-in-file": "duplicita priamo v súbore",
 }
 
-export function fieldValue(row: Record<string, string>, pole: string): string {
-  for (const kluc of ALIASES[pole] ?? []) if (row[kluc]) return row[kluc]
+export function fieldValue(row: Record<string, string>, field: string): string {
+  for (const key of ALIASES[field] ?? []) if (row[key]) return row[key]
   return ""
 }
 
-const zoznam = (s: string) => s.split(/[,;|]/).map(x => x.trim()).filter(Boolean)
+const list = (s: string) => s.split(/[,;|]/).map(x => x.trim()).filter(Boolean)
 
 export function rowToPerson(row: Record<string, string>): NewPerson {
-  const datum = fieldValue(row, "startDate")
-  const trasy = fieldValue(row, "tracks")
-  const skupiny = fieldValue(row, "groups")
-  const typ = fieldValue(row, "personType")
+  const date = fieldValue(row, "startDate")
+  const tracks = fieldValue(row, "tracks")
+  const groups = fieldValue(row, "groups")
+  const type = fieldValue(row, "personType")
   return {
     email: fieldValue(row, "email"),
     fullName: fieldValue(row, "fullName"),
     companyCode: fieldValue(row, "companyCode"),
     department: fieldValue(row, "department") || undefined,
-    personType: (typ || undefined) as PersonType | undefined,
-    startDate: datum ? new Date(datum) : undefined,
-    tracks: trasy ? zoznam(trasy) : undefined,
-    groups: skupiny ? zoznam(skupiny) : undefined,
+    personType: (type || undefined) as PersonType | undefined,
+    startDate: date ? new Date(date) : undefined,
+    tracks: tracks ? list(tracks) : undefined,
+    groups: groups ? list(groups) : undefined,
     // Nevyplnený jazyk necháme `undefined` — `upsertPersons()` ho potom
     // existujúcej osobe neprepíše (inak by opakovaný import prepol každého
     // späť na slovenčinu).
@@ -67,9 +67,9 @@ export function rowToPerson(row: Record<string, string>): NewPerson {
  * organizácia toho, kto import robí — **nie voľba**: personalista zväzu
  * nesmie importom založiť človeka do cudzej organizácie (D32).
  */
-export function csvToPersons(text: string, predvolenaOrganizacia?: string): NewPerson[] {
+export function csvToPersons(text: string, defaultOrganisation?: string): NewPerson[] {
   return parseCsv(text).rows.map(r => {
     const o = rowToPerson(r)
-    return predvolenaOrganizacia ? { ...o, companyCode: predvolenaOrganizacia } : o
+    return defaultOrganisation ? { ...o, companyCode: defaultOrganisation } : o
   })
 }

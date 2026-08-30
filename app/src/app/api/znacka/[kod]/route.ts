@@ -20,11 +20,11 @@ export async function GET(
   _req: Request,
   { params }: { params: Promise<{ kod: string }> },
 ) {
-  const { kod } = await params
+  const { kod: code } = await params
 
   let z
   try {
-    z = await loadBrand(decodeURIComponent(kod))
+    z = await loadBrand(decodeURIComponent(code))
   } catch (e) {
     console.error("[znacka] načítanie zlyhalo:", e)
     return new Response(null, { status: 500 })
@@ -32,9 +32,9 @@ export async function GET(
   if (!z) return new Response(null, { status: 404 })
 
   // `z.data` príde z ovládača ako Binary; `buffer` je surové bajty.
-  const bajty = (z.data as unknown as { buffer?: Uint8Array }).buffer ?? z.data
+  const bytes = (z.data as unknown as { buffer?: Uint8Array }).buffer ?? z.data
 
-  return new Response(new Uint8Array(bajty as Uint8Array), {
+  return new Response(new Uint8Array(bytes as Uint8Array), {
     headers: {
       "Content-Type": z.contentType,
       "Content-Length": String(z.bajtov),

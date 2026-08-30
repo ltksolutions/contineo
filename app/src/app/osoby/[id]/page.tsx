@@ -22,7 +22,7 @@ import { savePersonAction, togglePersonStatusAction } from "../actions"
 
 export const dynamic = "force-dynamic"
 
-const TYPY = [
+const TYPES = [
   { hodnota: "employee", popis: "zamestnanec" },
   { hodnota: "external", popis: "externý" },
   { hodnota: "referee", popis: "rozhodca" },
@@ -30,13 +30,13 @@ const TYPY = [
 ]
 
 /** Kód jazyka sám o sebe nepovie nič — „sk" je pre nás jasné, pre iných nie. */
-const JAZYKY: Record<string, string> = {
+const LANGUAGES: Record<string, string> = {
   sk: "slovenčina",
   cs: "čeština",
   en: "angličtina",
 }
 
-const POPIS_ROLY: Record<string, string> = {
+const ROLE_LABEL: Record<string, string> = {
   hr: "hr — prideľuje normy a vidí, kto ich nepotvrdil",
   "people-admin": "people-admin — spravuje osoby (táto obrazovka)",
   "spravca-obsahu": "spravca-obsahu — nahráva a upravuje normy v knižnici",
@@ -56,24 +56,24 @@ export default async function PersonDetailPage({
   }
 
   const { id } = await params
-  const { sprava, chyba } = await searchParams
+  const { sprava: message, chyba: error } = await searchParams
   const o = await loadPersonById(ctx.person.companyCode, id)
   // Neexistuje vs. patrí inej organizácii je zámerne tá istá odpoveď (D32).
   if (!o) notFound()
 
   // Zoznam sa odvodzuje z ľudí, nie z číselníka (D38) — a je to ten istý
   // zoznam, aký vidí prideľovanie noriem.
-  const publika = await audiencesInOrg(ctx.person.companyCode)
-  const strom = await allDepartments(ctx.person.companyCode)
-  const stromRiadky = flattenTree(strom)
+  const audiences = await audiencesInOrg(ctx.person.companyCode)
+  const tree = await allDepartments(ctx.person.companyCode)
+  const treeRows = flattenTree(tree)
   // Celá cesta, nie len vlastné oddelenie: „Oddelenie sociálnych sietí" samo
   // o sebe nepovie, pod koho patrí, a práve to rozhoduje o tom, ktoré
   // pridelenia sa človeka týkajú.
-  const zaradenie = pathTo(strom, o.departmentId)
+  const placement = pathTo(tree, o.departmentId)
 
   const branding = brandingView(ctx.tenant)
-  const jazyk = ctx.person.language
-  const vyradena = o.status === "inactive"
+  const language = ctx.person.language
+  const excluded = o.status === "inactive"
 
   return (
     <div className="obal" style={{ padding: "28px 20px 80px", maxWidth: 680, ...tenantStyle(branding) }}>
@@ -91,11 +91,11 @@ export default async function PersonDetailPage({
       <p className="tichy" style={{ fontSize: 13.5, margin: "0 0 20px" }}>
         {o.status === "invited" ? "pozvaná, ešte sa neprihlásila"
           : o.status === "inactive" ? "vyradená — neprihlási sa"
-          : `naposledy ${o.lastLoginAt ? formatDate(o.lastLoginAt, jazyk) : "—"}`}
+          : `naposledy ${o.lastLoginAt ? formatDate(o.lastLoginAt, language) : "—"}`}
         {o.konta.length > 0 && ` · prihlasuje sa cez ${o.konta.join(", ")}`}
       </p>
 
-      <Notice sprava={sprava} chyba={chyba === "1"} spat={`/osoby/${encodeURIComponent(id)}`} />
+      <Notice sprava={message} chyba={error === "1"} spat={`/osoby/${encodeURIComponent(id)}`} />
 
       <form action={savePersonAction} className="karta" style={{ padding: 20, display: "grid", gap: 16 }}>
         <input type="hidden" name="id" value={o.id} />
@@ -141,14 +141,14 @@ export default async function PersonDetailPage({
             predvolena={o.departmentId ?? ""}
             volby={[
               { hodnota: "", popis: "— bez oddelenia —" },
-              ...stromRiadky.map(r => ({
+              ...treeRows.map(r => ({
                 hodnota: r.oddelenie.id,
                 popis: `${"— ".repeat(r.uroven - 1)}${r.oddelenie.nazov}`,
               })),
             ]}
           />
           <span className="tichy pole-napoveda">
-            {stromRiadky.length === 0 ? (
+            {treeRows.length === 0 ? (
               <>
                 Štruktúra je zatiaľ prázdna. Oddelenia sa zakladajú
                 v <Link href="/organizacia?zalozka=oddelenia">nastavení organizácie</Link>.
@@ -157,7 +157,7 @@ export default async function PersonDetailPage({
               <>
                 Práve jedno — oddelenie je miesto v štruktúre. Kto sa má osloviť
                 naprieč oddeleniami, na to sú skupiny nižšie.
-                {zaradenie.length > 1 ? ` Zaradenie: ${zaradenie.map(x => x.nazov).join(" › ")}.` : ""}
+                {placement.length > 1 ? ` Zaradenie: ${placement.map(x => x.nazov).join(" › ")}.` : ""}
               </>
             )}
           </span>
@@ -172,7 +172,7 @@ export default async function PersonDetailPage({
 
         <div className="pole">
           <span className="pole-popis">Typ osoby</span>
-          <Select meno="personType" volby={TYPY} predvolena={o.personType} popisPola="Typ osoby" />
+          <Select meno="personType" volby={TYPES} predvolena={o.personType} popisPola="Typ osoby" />
           <span className="tichy pole-napoveda">
             Evidenčný údaj. O prístupe k obsahu nerozhoduje — ten rieši organizácia
             a úroveň dokumentu.
@@ -183,7 +183,7 @@ export default async function PersonDetailPage({
           <span className="pole-popis">Jazyk prostredia</span>
           <Select
             meno="language"
-            volby={UI_LANGUAGES.map(l => ({ hodnota: l, popis: JAZYKY[l] ?? l }))}
+            volby={UI_LANGUAGES.map(l => ({ hodnota: l, popis: LANGUAGES[l] ?? l }))}
             predvolena={o.language}
             popisPola="Jazyk prostredia"
           />
@@ -196,7 +196,7 @@ export default async function PersonDetailPage({
           <span className="pole-popis">Skupiny</span>
           <TagSelect
             meno="groups"
-            ponuka={publika.skupiny}
+            ponuka={audiences.skupiny}
             vybrane={o.groups}
             popisNovej="nová skupina, napr. rozhodcovia"
           />
@@ -210,7 +210,7 @@ export default async function PersonDetailPage({
           <span className="pole-popis">Trasy onboardingu</span>
           <TagSelect
             meno="tracks"
-            ponuka={publika.trasy}
+            ponuka={audiences.trasy}
             vybrane={o.tracks}
             popisNovej="nová trasa, napr. zaklad-2026"
           />
@@ -223,7 +223,7 @@ export default async function PersonDetailPage({
               <li key={r}>
                 <label className="hr-volba">
                   <input type="checkbox" name="roles" value={r} defaultChecked={o.roles.includes(r)} />
-                  <span>{POPIS_ROLY[r] ?? r}</span>
+                  <span>{ROLE_LABEL[r] ?? r}</span>
                 </label>
               </li>
             ))}
@@ -242,11 +242,11 @@ export default async function PersonDetailPage({
       <form action={togglePersonStatusAction} className="karta" style={{ padding: 20, marginTop: 16, display: "grid", gap: 12 }}>
         <input type="hidden" name="id" value={o.id} />
         <input type="hidden" name="email" value={o.email} />
-        <input type="hidden" name="status" value={vyradena ? "invited" : "inactive"} />
+        <input type="hidden" name="status" value={excluded ? "invited" : "inactive"} />
 
-        <h2 style={{ fontSize: 17, margin: 0 }}>{vyradena ? "Vrátiť osobu" : "Vyradiť osobu"}</h2>
+        <h2 style={{ fontSize: 17, margin: 0 }}>{excluded ? "Vrátiť osobu" : "Vyradiť osobu"}</h2>
 
-        {vyradena ? (
+        {excluded ? (
           <>
             <p className="tichy" style={{ margin: 0, fontSize: 14 }}>
               Vráti sa ako <strong>pozvaná</strong>, nie aktívna — aktívna znamená

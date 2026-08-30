@@ -15,9 +15,9 @@ import NextAuth from "next-auth"
 import { authOptionsForHost } from "@/lib/auth"
 import type { NextRequest } from "next/server"
 
-type Kontext = { params: Promise<{ nextauth: string[] }> }
+type Context = { params: Promise<{ nextauth: string[] }> }
 
-async function handler(req: NextRequest, ctx: Kontext) {
+async function handler(req: NextRequest, ctx: Context) {
   // Za proxy Vercelu je pôvodný hostiteľ v `x-forwarded-host`; `host` môže
   // byť interná adresa. Poradie je preto takéto a nie opačné.
   const host = (req.headers.get("x-forwarded-host") ?? req.headers.get("host") ?? "")

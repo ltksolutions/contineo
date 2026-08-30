@@ -32,10 +32,10 @@ export default async function HrOverviewPage({
     notFound()
   }
 
-  const { sprava, chyba } = await searchParams
-  const prehlad = await assignmentOverviews(ctx.person.companyCode)
+  const { sprava: message, chyba: error } = await searchParams
+  const overview = await assignmentOverviews(ctx.person.companyCode)
   const branding = brandingView(ctx.tenant)
-  const jazyk = ctx.person.language
+  const language = ctx.person.language
 
   return (
     <div className="obal" style={{ padding: "28px 20px 80px", maxWidth: 860, ...tenantStyle(branding) }}>
@@ -47,13 +47,13 @@ export default async function HrOverviewPage({
         zobrazení — a týkajú sa ľudí, ktorí do skupiny patria <em>dnes</em>.
       </p>
 
-      <Notice sprava={sprava} chyba={chyba === "1"} spat="/hr" />
+      <Notice sprava={message} chyba={error === "1"} spat="/hr" />
 
       <p style={{ margin: "0 0 24px" }}>
         <Link className="tlacidlo" href="/hr/pridelit">Prideliť normu</Link>
       </p>
 
-      {prehlad.length === 0 ? (
+      {overview.length === 0 ? (
         <p className="karta" style={{ padding: 20, fontSize: 15 }}>
           Zatiaľ nie je pridelené nič. Kým sa norma nepridelí, ľuďom sa objaví
           len vtedy, keď je krokom ich trasy — a nikde nezostane stopa, kedy sa
@@ -61,8 +61,8 @@ export default async function HrOverviewPage({
         </p>
       ) : (
         <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "grid", gap: 14 }}>
-          {prehlad.map(p => {
-            const chyba = p.osob - p.potvrdili
+          {overview.map(p => {
+            const error = p.osob - p.potvrdili
             return (
               <li key={p.id} className="karta" style={{ padding: "18px 20px" }}>
                 <div style={{ display: "flex", gap: 10, alignItems: "baseline", flexWrap: "wrap" }}>
@@ -77,7 +77,7 @@ export default async function HrOverviewPage({
 
                 <p className="tichy" style={{ fontSize: 13.5, margin: "8px 0 0" }}>
                   {audienceLabel(p.audience)} · pridelil {p.assignedBy} ·{" "}
-                  {formatDate(p.assignedAt, jazyk)}
+                  {formatDate(p.assignedAt, language)}
                 </p>
 
                 {/* Dôvod je to, čím sa uzatvára D30 — nie ozdoba, ale jediné
@@ -97,7 +97,7 @@ export default async function HrOverviewPage({
                     <div className="tichy" style={{ fontSize: 12.5 }}>Dali sme vedieť</div>
                     <div style={{ fontSize: 15.5, fontWeight: 600, color: p.oznamene ? undefined : "var(--muted)" }}>
                       {p.oznamene
-                        ? `${formatDate(p.oznamene.at, jazyk)}${p.oznameniSpolu > 1 ? ` · ${p.oznameniSpolu}×` : ""}`
+                        ? `${formatDate(p.oznamene.at, language)}${p.oznameniSpolu > 1 ? ` · ${p.oznameniSpolu}×` : ""}`
                         : "nie"}
                     </div>
                   </div>
@@ -107,10 +107,10 @@ export default async function HrOverviewPage({
                       style={{
                         fontSize: 15.5,
                         fontWeight: 600,
-                        color: chyba > 0 ? "var(--warn-fg)" : "var(--muted)",
+                        color: error > 0 ? "var(--warn-fg)" : "var(--muted)",
                       }}
                     >
-                      {chyba === 0 ? "nikto" : `${chyba}`}
+                      {error === 0 ? "nikto" : `${error}`}
                     </div>
                   </div>
                 </div>
@@ -118,7 +118,7 @@ export default async function HrOverviewPage({
                 <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginTop: 14 }}>
                   {/* Dať vedieť je samostatné rozhodnutie, nie vedľajší účinok
                       pridelenia — preto odkaz na náhľad, nie tlačidlo „poslať". */}
-                  {chyba > 0 && (
+                  {error > 0 && (
                     <Link className="tlacidlo tlacidlo--tiche" href={`/hr/${encodeURIComponent(p.id)}/oznamit`}>
                       Dať vedieť e-mailom
                     </Link>

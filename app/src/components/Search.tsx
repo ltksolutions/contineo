@@ -17,12 +17,12 @@ import type { AnswerState } from "./Answer"
 import Rating from "./Rating"
 import type { Verdict } from "@/lib/ratings"
 
-const PRAZDNY: AnswerState = {
+const EMPTY: AnswerState = {
   otazka: "", text: "", citacie: [], hotovo: null, bezi: false,
 }
 
 /** Návrhy na začiatok — aby prvá obrazovka nebola prázdna. */
-const PRIKLADY = [
+const EXAMPLES = [
   "Aká je lehota na podanie námietky?",
   "Za akých podmienok môže prestúpiť maloletý hráč?",
   "Kedy sa platí odstupné za hráča?",
@@ -30,21 +30,21 @@ const PRIKLADY = [
 ]
 
 export default function Search({
-  otazkaId,
-  prednastavena,
-  onPosudene,
+  otazkaId: questionId,
+  prednastavena: preset,
+  onPosudene: onReviewed,
 }: {
   /** Označenie otázky zo zlatej sady — v režime sady. */
   otazkaId?: string
   /** Predvyplnené znenie otázky (režim sady). */
   prednastavena?: string
   /** Zavolá sa po posúdení správnosti; režim sady na to nadväzuje. */
-  onPosudene?: (spravna: Verdict) => void
+  onPosudene?: (correct: Verdict) => void
 } = {}) {
-  const [otazka, setOtazka] = useState(prednastavena ?? "")
-  const [stav, setStav] = useState<AnswerState>(PRAZDNY)
-  const [zaznamId, setZaznamId] = useState<string | null>(null)
-  const prerus = useRef<AbortController | null>(null)
+  const [question, setQuestion] = useState(preset ?? "")
+  const [state, setState] = useState<AnswerState>(EMPTY)
+  const [recordId, setRecordId] = useState<string | null>(null)
+  const abort = useRef<AbortController | null>(null)
 
   /**
    * Uloží odpoveď hneď, ako dobehne — ešte pred hodnotením.
@@ -53,13 +53,13 @@ export default function Search({
    * spočítať aj z neposúdených odpovedí. Keby sa záznam zakladal až pri
    * kliknutí na hodnotenie, prišli by sme o dáta z každej preskočenej otázky.
    */
-  async function zapis(q: string, v: AskResult) {
+  async function record(q: string, v: AskResult) {
     try {
       const r = await fetch("/api/hodnotenie", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          otazkaId, otazka: q, odpoved: v.text,
+          otazkaId: questionId, otazka: q, odpoved: v.text,
           zdroje: v.zdroje, citacie: v.citacie,
           model: v.model, provider: v.provider,
           overeneCitacie: v.overeneCitacie,
@@ -69,36 +69,36 @@ export default function Search({
       })
       if (!r.ok) return
       const { id } = await r.json()
-      setZaznamId(id)
+      setRecordId(id)
     } catch {
       // Nezapísané hodnotenie nesmie zhodiť zobrazenie odpovede —
       // hodnotiteľ ju stále vidí, len ju nevie posúdiť.
     }
   }
 
-  async function odosli(text: string) {
+  async function send(text: string) {
     const q = text.trim()
-    if (!q || stav.bezi) return
+    if (!q || state.bezi) return
 
-    prerus.current?.abort()
+    abort.current?.abort()
     const ctrl = new AbortController()
-    prerus.current = ctrl
+    abort.current = ctrl
 
-    setStav({ otazka: q, text: "", citacie: [], hotovo: null, bezi: true })
-    setZaznamId(null)
+    setState({ otazka: q, text: "", citacie: [], hotovo: null, bezi: true })
+    setRecordId(null)
 
     try {
       const v = await askQuestion(
         q,
-        p => setStav(s => ({ ...s, text: p.text, citacie: p.citacie })),
+        p => setState(s => ({ ...s, text: p.text, citacie: p.citacie })),
         { signal: ctrl.signal }
       )
-      setStav({ otazka: q, text: v.text, citacie: v.citacie, hotovo: v, bezi: false })
-      if (!v.chyba && v.text) void zapis(q, v)
+      setState({ otazka: q, text: v.text, citacie: v.citacie, hotovo: v, bezi: false })
+      if (!v.chyba && v.text) void record(q, v)
     } catch (e) {
       // Prerušenie používateľom nie je chyba — len sme prestali čakať.
       if ((e as Error)?.name === "AbortError") return
-      setStav(s => ({
+      setState(s => ({
         ...s, bezi: false,
         hotovo: {
           text: s.text, citacie: s.citacie, zdroje: [], model: "", provider: "",
@@ -112,33 +112,33 @@ export default function Search({
   // V režime sady je otázka zobrazená nad komponentom a upravuje sa tam.
   // Textové pole aj príklady by tu boli duplicita, ktorá zvádza pýtať sa
   // na niečo iné, než čo sa má posúdiť.
-  const vSade = Boolean(otazkaId)
+  const inGoldenSet = Boolean(questionId)
 
-  if (vSade) {
+  if (inGoldenSet) {
     return (
       <div style={{ display: "grid", gap: 22 }}>
         <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
           <button
             type="button"
             className="tlacidlo"
-            onClick={() => odosli(prednastavena ?? "")}
-            disabled={stav.bezi}
+            onClick={() => send(preset ?? "")}
+            disabled={state.bezi}
           >
-            {stav.bezi ? "Hľadám…" : stav.hotovo ? "Spýtať sa znova" : "Položiť túto otázku"}
+            {state.bezi ? "Hľadám…" : state.hotovo ? "Spýtať sa znova" : "Položiť túto otázku"}
           </button>
-          {stav.bezi && (
+          {state.bezi && (
             <button
               type="button"
               className="tlacidlo tlacidlo--tiche"
-              onClick={() => { prerus.current?.abort(); setStav(s => ({ ...s, bezi: false })) }}
+              onClick={() => { abort.current?.abort(); setState(s => ({ ...s, bezi: false })) }}
             >
               Zastaviť
             </button>
           )}
         </div>
 
-        <Answer stav={stav} />
-        <Rating zaznamId={zaznamId} otazkaId={otazkaId} onHotovo={onPosudene} />
+        <Answer stav={state} />
+        <Rating zaznamId={recordId} otazkaId={questionId} onHotovo={onReviewed} />
       </div>
     )
   }
@@ -146,18 +146,18 @@ export default function Search({
   return (
     <div style={{ display: "grid", gap: 22 }}>
       <form
-        onSubmit={e => { e.preventDefault(); odosli(otazka) }}
+        onSubmit={e => { e.preventDefault(); send(question) }}
         style={{ display: "grid", gap: 10 }}
       >
         <textarea
-          value={otazka}
-          onChange={e => setOtazka(e.target.value)}
+          value={question}
+          onChange={e => setQuestion(e.target.value)}
           onKeyDown={e => {
             // Enter odosiela, Shift+Enter robí nový riadok. Otázky bývajú
             // jednoriadkové, takže by bolo otravné klikať na tlačidlo.
             if (e.key === "Enter" && !e.shiftKey) {
               e.preventDefault()
-              odosli(otazka)
+              send(question)
             }
           }}
           placeholder="Opýtajte sa na čokoľvek z noriem…"
@@ -172,38 +172,38 @@ export default function Search({
           }}
         />
         <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
-          <button type="submit" className="tlacidlo" disabled={!otazka.trim() || stav.bezi}>
-            {stav.bezi ? "Hľadám…" : "Opýtať sa"}
+          <button type="submit" className="tlacidlo" disabled={!question.trim() || state.bezi}>
+            {state.bezi ? "Hľadám…" : "Opýtať sa"}
           </button>
-          {stav.bezi && (
+          {state.bezi && (
             <button
               type="button"
               className="tlacidlo tlacidlo--tiche"
-              onClick={() => { prerus.current?.abort(); setStav(s => ({ ...s, bezi: false })) }}
+              onClick={() => { abort.current?.abort(); setState(s => ({ ...s, bezi: false })) }}
             >
               Zastaviť
             </button>
           )}
           <span className="tichy" style={{ fontSize: 12.5, marginLeft: "auto" }}>
-            {otazka.length}/1000
+            {question.length}/1000
           </span>
         </div>
       </form>
 
       {/* Príklady zmiznú, len čo je čo ukazovať. */}
-      {!stav.text && !stav.bezi && !stav.hotovo && (
+      {!state.text && !state.bezi && !state.hotovo && (
         <div>
           <div className="tichy" style={{ fontSize: 12.5, marginBottom: 8 }}>
             Alebo skúste:
           </div>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-            {PRIKLADY.map(p => (
+            {EXAMPLES.map(p => (
               <button
                 key={p}
                 type="button"
                 className="stitok"
                 style={{ background: "var(--surface)", fontWeight: 500 }}
-                onClick={() => { setOtazka(p); odosli(p) }}
+                onClick={() => { setQuestion(p); send(p) }}
               >
                 {p}
               </button>
@@ -212,9 +212,9 @@ export default function Search({
         </div>
       )}
 
-      <Answer stav={stav} />
+      <Answer stav={state} />
 
-      <Rating zaznamId={zaznamId} otazkaId={otazkaId} onHotovo={onPosudene} />
+      <Rating zaznamId={recordId} otazkaId={questionId} onHotovo={onReviewed} />
     </div>
   )
 }

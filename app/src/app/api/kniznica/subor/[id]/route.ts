@@ -17,7 +17,7 @@ import { loadFile } from "@/lib/fileStore"
 export const dynamic = "force-dynamic"
 
 /** Typ sa určuje z prípony, nie z toho, čo pri nahratí tvrdil prehliadač. */
-const TYPY: Record<string, string> = {
+const TYPES: Record<string, string> = {
   pdf: "application/pdf",
   docx: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
   xlsx: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
@@ -46,12 +46,12 @@ export async function GET(
   }
   if (!s) return new Response(null, { status: 404 })
 
-  const pripona = s.nazov.toLowerCase().split(".").pop() ?? ""
-  const typ = TYPY[pripona] ?? "application/octet-stream"
+  const extension = s.nazov.toLowerCase().split(".").pop() ?? ""
+  const type = TYPES[extension] ?? "application/octet-stream"
 
   return new Response(new Uint8Array(s.data), {
     headers: {
-      "Content-Type": typ,
+      "Content-Type": type,
       "Content-Length": String(s.data.byteLength),
       "Content-Disposition": `inline; filename*=UTF-8''${encodeURIComponent(s.nazov)}`,
       "Cache-Control": "private, max-age=3600",

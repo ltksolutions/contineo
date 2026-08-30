@@ -20,9 +20,9 @@
 import Link from "next/link"
 
 export default function Notice({
-  sprava,
-  chyba,
-  spat,
+  sprava: message,
+  chyba: error,
+  spat: back,
 }: {
   sprava?: string
   /** Rozlíšenie je na volajúcom. Hádať to z textu by sa raz pomýlilo. */
@@ -30,18 +30,18 @@ export default function Notice({
   /** Kam vedie potvrdenie — tá istá stránka bez parametra so správou. */
   spat: string
 }) {
-  if (!sprava) return null
+  if (!message) return null
 
   return (
     <div className="oznam-tienidlo">
       <div
-        className={`oznam${chyba ? " oznam--chyba" : ""}`}
+        className={`oznam${error ? " oznam--chyba" : ""}`}
         role="alertdialog"
         aria-modal="true"
         aria-labelledby="oznam-text"
       >
         <span className="oznam-znak" aria-hidden="true">
-          {chyba ? (
+          {error ? (
             <svg width="26" height="26" viewBox="0 0 18 18" fill="none" stroke="currentColor"
               strokeWidth="1.6" strokeLinecap="round">
               <circle cx="9" cy="9" r="7" />
@@ -56,11 +56,11 @@ export default function Notice({
           )}
         </span>
 
-        <p id="oznam-text" className="oznam-text">{sprava}</p>
+        <p id="oznam-text" className="oznam-text">{message}</p>
 
         {/* `autoFocus`: na klávesnici je potvrdenie prvé, kam sa dá stlačiť
             Enter, a nie je nutné hľadať ho tabulátorom cez celú stránku. */}
-        <Link href={spat} className="tlacidlo oznam-potvrdit" autoFocus>
+        <Link href={back} className="tlacidlo oznam-potvrdit" autoFocus>
           Rozumiem
         </Link>
       </div>

@@ -16,7 +16,7 @@ import Notice from "@/components/Notice"
 
 export const dynamic = "force-dynamic"
 
-const STAVY = {
+const STATUSES = {
   invited: { text: "pozvaná", tichy: true },
   active: { text: "aktívna", tichy: false },
   inactive: { text: "vyradená", tichy: false },
@@ -33,10 +33,10 @@ export default async function PeoplePage({
     notFound()
   }
 
-  const { q, sprava, chyba } = await searchParams
-  const osoby = await listPeople(ctx.person.companyCode, q)
+  const { q, sprava: message, chyba: error } = await searchParams
+  const people = await listPeople(ctx.person.companyCode, q)
   const branding = brandingView(ctx.tenant)
-  const jazyk = ctx.person.language
+  const language = ctx.person.language
 
   return (
     <div className="obal" style={{ padding: "28px 20px 80px", maxWidth: 880, ...tenantStyle(branding) }}>
@@ -46,7 +46,7 @@ export default async function PeoplePage({
         odstrihne od portálu, ale jej potvrdenia zostávajú platnými záznamami.
       </p>
 
-      <Notice sprava={sprava} chyba={chyba === "1"} spat={q ? `/osoby?q=${encodeURIComponent(q)}` : "/osoby"} />
+      <Notice sprava={message} chyba={error === "1"} spat={q ? `/osoby?q=${encodeURIComponent(q)}` : "/osoby"} />
 
       <div style={{ display: "flex", gap: 10, flexWrap: "wrap", margin: "0 0 20px" }}>
         <Link className="tlacidlo" href="/osoby/nova">Pozvať osobu</Link>
@@ -67,15 +67,15 @@ export default async function PeoplePage({
       </form>
 
       <p className="tichy" style={{ fontSize: 13.5, margin: "0 0 10px" }}>
-        {osoby.length === 0
+        {people.length === 0
           ? "Nič sa nenašlo."
-          : `${osoby.length} ${osoby.length === 1 ? "osoba" : osoby.length < 5 ? "osoby" : "osôb"}${q ? " vyhovuje hľadaniu" : ""}`}
-        {osoby.length === 500 && " — zobrazených prvých 500, zúž hľadanie"}
+          : `${people.length} ${people.length === 1 ? "osoba" : people.length < 5 ? "osoby" : "osôb"}${q ? " vyhovuje hľadaniu" : ""}`}
+        {people.length === 500 && " — zobrazených prvých 500, zúž hľadanie"}
       </p>
 
       <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "grid", gap: 10 }}>
-        {osoby.map(o => {
-          const stav = STAVY[o.status]
+        {people.map(o => {
+          const status = STATUSES[o.status]
           return (
             <li key={o.id} className="karta" style={{ padding: "14px 18px" }}>
               <div style={{ display: "flex", gap: 10, alignItems: "baseline", flexWrap: "wrap" }}>
@@ -91,13 +91,13 @@ export default async function PeoplePage({
                     ? { background: "var(--warn-bg)", color: "var(--warn-fg)" }
                     : undefined}
                 >
-                  {stav.text}
+                  {status.text}
                 </span>
                 {o.roles.map(r => (
                   <span key={r} className="stitok">{r}</span>
                 ))}
                 <span className="tichy" style={{ fontSize: 13, marginLeft: "auto" }}>
-                  {o.lastLoginAt ? formatDate(o.lastLoginAt, jazyk) : "neprihlásená"}
+                  {o.lastLoginAt ? formatDate(o.lastLoginAt, language) : "neprihlásená"}
                 </span>
               </div>
 

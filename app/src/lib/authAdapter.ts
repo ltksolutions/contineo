@@ -15,7 +15,7 @@ import type { Adapter, AdapterUser, VerificationToken } from "next-auth/adapters
 import type { ObjectId } from "mongodb"
 import { getCollection } from "./mongodb"
 
-interface UlozenyPouzivatel {
+interface StoredUser {
   _id?: ObjectId
   id: string
   email: string
@@ -24,35 +24,35 @@ interface UlozenyPouzivatel {
   image?: string | null
 }
 
-const bezMongoId = (d: UlozenyPouzivatel | null): AdapterUser | null =>
+const withoutMongoId = (d: StoredUser | null): AdapterUser | null =>
   d ? { id: d.id, email: d.email, emailVerified: d.emailVerified, name: d.name, image: d.image } : null
 
 export function mongoAdapter(): Adapter {
-  const pouzivatelia = () => getCollection<UlozenyPouzivatel>("auth_users")
-  const tokeny = () => getCollection<VerificationToken>("auth_tokens")
+  const users = () => getCollection<StoredUser>("auth_users")
+  const tokens = () => getCollection<VerificationToken>("auth_tokens")
 
   return {
     async createUser(u: Omit<AdapterUser, "id">) {
-      const zaznam: UlozenyPouzivatel = {
+      const record: StoredUser = {
         id: crypto.randomUUID(),
         email: u.email,
         emailVerified: u.emailVerified ?? null,
         name: u.name ?? null,
         image: u.image ?? null,
       }
-      await (await pouzivatelia()).insertOne(zaznam)
-      return bezMongoId(zaznam)!
+      await (await users()).insertOne(record)
+      return withoutMongoId(record)!
     },
 
     async getUser(id) {
-      return bezMongoId(await (await pouzivatelia()).findOne({ id }))
+      return withoutMongoId(await (await users()).findOne({ id }))
     },
 
     async getUserByEmail(email) {
       // E-maily porovnávame bez ohľadu na veľkosť písmen. Bez toho by sa
       // „Jan.Letko@" a „jan.letko@" stali dvomi rôznymi používateľmi
       // a druhý by nebol na zozname pozvaných.
-      return bezMongoId(await (await pouzivatelia()).findOne({ email: email.toLowerCase() }))
+      return withoutMongoId(await (await users()).findOne({ email: email.toLowerCase() }))
     },
 
     // Prihlasujeme sa výhradne e-mailom, žiadny externý účet sa nepripája.
@@ -60,13 +60,13 @@ export function mongoAdapter(): Adapter {
     async linkAccount() { return undefined },
 
     async updateUser(u) {
-      const { id, ...zvysok } = u
-      await (await pouzivatelia()).updateOne({ id: id! }, { $set: zvysok })
-      return bezMongoId(await (await pouzivatelia()).findOne({ id: id! }))!
+      const { id, ...rest } = u
+      await (await users()).updateOne({ id: id! }, { $set: rest })
+      return withoutMongoId(await (await users()).findOne({ id: id! }))!
     },
 
     async createVerificationToken(t) {
-      await (await tokeny()).insertOne(t)
+      await (await tokens()).insertOne(t)
       return t
     },
 
@@ -79,11 +79,11 @@ export function mongoAdapter(): Adapter {
      * nie je teoretická obava.
      */
     async useVerificationToken({ identifier, token }) {
-      const col = await tokeny()
-      const najdeny = await col.findOneAndDelete({ identifier, token })
-      if (!najdeny) return null
-      const { _id, ...zvysok } = najdeny as VerificationToken & { _id?: unknown }
-      return zvysok as VerificationToken
+      const col = await tokens()
+      const found = await col.findOneAndDelete({ identifier, token })
+      if (!found) return null
+      const { _id, ...rest } = found as VerificationToken & { _id?: unknown }
+      return rest as VerificationToken
     },
 
     // Sedenie drží JWT v cookie, takže tieto metódy sa nikdy nezavolajú.

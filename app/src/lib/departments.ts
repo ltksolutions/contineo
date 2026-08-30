@@ -90,8 +90,8 @@ export class DepartmentError extends Error {
  * organizáciu očíslovať celý strom skôr, než presunie jednu položku, by
  * bolo horšie než dočasná nedôslednosť.
  */
-export function children(vsetky: Department[], parentId: string | null): Department[] {
-  return vsetky
+export function children(all: Department[], parentId: string | null): Department[] {
+  return all
     .filter(o => (o.parentId ?? null) === parentId)
     .sort((a, b) => {
       const pa = a.poradie, pb = b.poradie
@@ -109,35 +109,35 @@ export function children(vsetky: Department[], parentId: string | null): Departm
  * dátach — počítadlo je poistka, nie ozdoba: cyklus v strome by inak zavesil
  * požiadavku a nikto by nevedel prečo.
  */
-export function pathTo(vsetky: Department[], id: string | null | undefined): Department[] {
+export function pathTo(all: Department[], id: string | null | undefined): Department[] {
   if (!id) return []
-  const podla = new Map(vsetky.map(o => [o.id, o]))
+  const byId = new Map(all.map(o => [o.id, o]))
   const out: Department[] = []
-  let teraz = podla.get(id)
-  let poistka = 0
-  while (teraz && poistka++ < MAX_DEPTH + 2) {
-    out.unshift(teraz)
-    teraz = teraz.parentId ? podla.get(teraz.parentId) : undefined
+  let current = byId.get(id)
+  let guard = 0
+  while (current && guard++ < MAX_DEPTH + 2) {
+    out.unshift(current)
+    current = current.parentId ? byId.get(current.parentId) : undefined
   }
   return out
 }
 
 /** Identifikátory na ceste od koreňa po dané oddelenie vrátane neho. */
-export function pathIdsTo(vsetky: Department[], id: string | null | undefined): string[] {
-  return pathTo(vsetky, id).map(o => o.id)
+export function pathIdsTo(all: Department[], id: string | null | undefined): string[] {
+  return pathTo(all, id).map(o => o.id)
 }
 
 /** Celý podstrom vrátane samotného oddelenia. */
-export function subtree(vsetky: Department[], id: string): Set<string> {
+export function subtree(all: Department[], id: string): Set<string> {
   const out = new Set<string>([id])
-  let rastie = true
-  let poistka = 0
-  while (rastie && poistka++ < MAX_DEPTH + 2) {
-    rastie = false
-    for (const o of vsetky) {
+  let growing = true
+  let guard = 0
+  while (growing && guard++ < MAX_DEPTH + 2) {
+    growing = false
+    for (const o of all) {
       if (o.parentId && out.has(o.parentId) && !out.has(o.id)) {
         out.add(o.id)
-        rastie = true
+        growing = true
       }
     }
   }
@@ -145,8 +145,8 @@ export function subtree(vsetky: Department[], id: string): Set<string> {
 }
 
 /** Hĺbka oddelenia. Koreň má 1. */
-export function depth(vsetky: Department[], id: string | null | undefined): number {
-  return pathTo(vsetky, id).length
+export function depth(all: Department[], id: string | null | undefined): number {
+  return pathTo(all, id).length
 }
 
 /**
@@ -158,27 +158,27 @@ export function depth(vsetky: Department[], id: string | null | undefined): numb
  * nikto nič nenájde.
  */
 export function canMove(
-  vsetky: Department[],
+  all: Department[],
   id: string,
-  novyParentId: string | null,
+  newParentId: string | null,
 ): string | null {
-  if (!novyParentId) return null
-  if (novyParentId === id) return "Oddelenie nemôže byť nadriadené samo sebe."
+  if (!newParentId) return null
+  if (newParentId === id) return "Oddelenie nemôže byť nadriadené samo sebe."
 
-  const pod = subtree(vsetky, id)
-  if (pod.has(novyParentId)) {
+  const inside = subtree(all, id)
+  if (inside.has(newParentId)) {
     return "Oddelenie sa nedá presunúť pod svoje vlastné podriadené — vznikol by kruh."
   }
 
   // Hĺbka nového rodiča + najhlbšia vetva presúvaného podstromu.
-  const hlbkaRodica = depth(vsetky, novyParentId)
-  let najhlbsie = 1
-  for (const o of vsetky) {
-    if (pod.has(o.id)) {
-      najhlbsie = Math.max(najhlbsie, depth(vsetky, o.id) - depth(vsetky, id) + 1)
+  const parentDepth = depth(all, newParentId)
+  let deepest = 1
+  for (const o of all) {
+    if (inside.has(o.id)) {
+      deepest = Math.max(deepest, depth(all, o.id) - depth(all, id) + 1)
     }
   }
-  if (hlbkaRodica + najhlbsie > MAX_DEPTH) {
+  if (parentDepth + deepest > MAX_DEPTH) {
     return `Štruktúra by mala viac než ${MAX_DEPTH} úrovní. Hlbší strom sa vo výbere nedá prehľadne ukázať.`
   }
   return null
@@ -190,11 +190,11 @@ export interface DepartmentRow {
   uroven: number
 }
 
-export function flattenTree(vsetky: Department[], parentId: string | null = null, uroven = 1): DepartmentRow[] {
+export function flattenTree(all: Department[], parentId: string | null = null, level = 1): DepartmentRow[] {
   const out: DepartmentRow[] = []
-  for (const o of children(vsetky, parentId)) {
-    out.push({ oddelenie: o, uroven })
-    if (uroven < MAX_DEPTH) out.push(...flattenTree(vsetky, o.id, uroven + 1))
+  for (const o of children(all, parentId)) {
+    out.push({ oddelenie: o, uroven: level })
+    if (level < MAX_DEPTH) out.push(...flattenTree(all, o.id, level + 1))
   }
   return out
 }
@@ -208,31 +208,31 @@ export async function allDepartments(companyCode: string): Promise<Department[]>
 
 export async function createDepartment(
   companyCode: string,
-  nazov: string,
+  name: string,
   parentId: string | null,
   actor: string,
 ): Promise<Department> {
-  const meno = nazov.trim()
-  if (!meno) throw new DepartmentError("Názov oddelenia je povinný.")
+  const actorName = name.trim()
+  if (!actorName) throw new DepartmentError("Názov oddelenia je povinný.")
 
-  const vsetky = await allDepartments(companyCode)
-  if (parentId && !vsetky.some(o => o.id === parentId)) {
+  const all = await allDepartments(companyCode)
+  if (parentId && !all.some(o => o.id === parentId)) {
     throw new DepartmentError("Nadriadené oddelenie neexistuje.")
   }
-  if (depth(vsetky, parentId) + 1 > MAX_DEPTH) {
+  if (depth(all, parentId) + 1 > MAX_DEPTH) {
     throw new DepartmentError(`Štruktúra môže mať najviac ${MAX_DEPTH} úrovní.`)
   }
   // Rovnaký názov pod tým istým rodičom je takmer vždy preklep alebo dvojité
   // odoslanie formulára — a dve oddelenia s rovnakým názvom vedľa seba sa
   // v zozname nedajú rozlíšiť.
-  if (children(vsetky, parentId).some(o => o.nazov.toLowerCase() === meno.toLowerCase())) {
-    throw new DepartmentError(`Na tomto mieste už oddelenie „${meno}" je.`)
+  if (children(all, parentId).some(o => o.nazov.toLowerCase() === actorName.toLowerCase())) {
+    throw new DepartmentError(`Na tomto mieste už oddelenie „${actorName}" je.`)
   }
 
   const o: Department = {
     companyCode,
     id: crypto.randomUUID(),
-    nazov: meno,
+    nazov: actorName,
     parentId: parentId ?? null,
     createdAt: new Date(),
     createdBy: actor,
@@ -250,23 +250,23 @@ export async function createDepartment(
 export async function renameDepartment(
   companyCode: string,
   id: string,
-  nazov: string,
+  name: string,
   actor: string,
 ): Promise<void> {
-  const meno = nazov.trim()
-  if (!meno) throw new DepartmentError("Názov oddelenia je povinný.")
+  const actorName = name.trim()
+  if (!actorName) throw new DepartmentError("Názov oddelenia je povinný.")
   const col = await getCollection<Department>(DEPARTMENTS_COLLECTION)
-  const pred = await col.findOne({ companyCode, id })
-  if (!pred) throw new DepartmentError("Také oddelenie tu nie je.")
+  const before = await col.findOne({ companyCode, id })
+  if (!before) throw new DepartmentError("Také oddelenie tu nie je.")
 
   await col.updateOne(
     { companyCode, id },
-    { $set: { nazov: meno, updatedAt: new Date(), updatedBy: actor } },
+    { $set: { nazov: actorName, updatedAt: new Date(), updatedBy: actor } },
   )
   await writeAudit({
     companyCode, predmet: "oddelenie", akcia: "premenovane", aktor: actor,
-    cielId: id, cielPopis: meno,
-    zmeny: { nazov: { z: pred.nazov, na: meno } },
+    cielId: id, cielPopis: actorName,
+    zmeny: { nazov: { z: before.nazov, na: actorName } },
   })
 }
 
@@ -280,32 +280,32 @@ export async function renameDepartment(
 export async function moveDepartment(
   companyCode: string,
   id: string,
-  novyParentId: string | null,
+  newParentId: string | null,
   actor: string,
 ): Promise<void> {
-  const vsetky = await allDepartments(companyCode)
-  if (!vsetky.some(o => o.id === id)) throw new DepartmentError("Také oddelenie tu nie je.")
-  if (novyParentId && !vsetky.some(o => o.id === novyParentId)) {
+  const all = await allDepartments(companyCode)
+  if (!all.some(o => o.id === id)) throw new DepartmentError("Také oddelenie tu nie je.")
+  if (newParentId && !all.some(o => o.id === newParentId)) {
     throw new DepartmentError("Nadriadené oddelenie neexistuje.")
   }
 
-  const preco = canMove(vsetky, id, novyParentId)
-  if (preco) throw new DepartmentError(preco)
+  const why = canMove(all, id, newParentId)
+  if (why) throw new DepartmentError(why)
 
-  const pred = vsetky.find(o => o.id === id)!
+  const before = all.find(o => o.id === id)!
   const col = await getCollection<Department>(DEPARTMENTS_COLLECTION)
   await col.updateOne(
     { companyCode, id },
-    { $set: { parentId: novyParentId ?? null, updatedAt: new Date(), updatedBy: actor } },
+    { $set: { parentId: newParentId ?? null, updatedAt: new Date(), updatedBy: actor } },
   )
-  const dotknutych = await recomputePaths(companyCode)
+  const affectedCount = await recomputePaths(companyCode)
   await writeAudit({
     companyCode, predmet: "oddelenie", akcia: "presunute", aktor: actor,
-    cielId: id, cielPopis: pred.nazov,
-    zmeny: { parentId: { z: pred.parentId, na: novyParentId ?? null } },
+    cielId: id, cielPopis: before.nazov,
+    zmeny: { parentId: { z: before.parentId, na: newParentId ?? null } },
     // Presun mení, koho sa týkajú pridelenia celého podstromu. Počet je tu
     // preto, aby bolo pri kontrole vidieť rozsah, nielen fakt zmeny.
-    poznamka: `prepočítané cesty ${dotknutych} osobám`,
+    poznamka: `prepočítané cesty ${affectedCount} osobám`,
   })
 }
 
@@ -315,25 +315,25 @@ export async function moveDepartment(
  * toho, aby to niekto videl.
  */
 export async function deleteDepartment(companyCode: string, id: string, actor: string): Promise<void> {
-  const vsetky = await allDepartments(companyCode)
-  if (children(vsetky, id).length > 0) {
+  const all = await allDepartments(companyCode)
+  if (children(all, id).length > 0) {
     throw new DepartmentError("Oddelenie má podriadené — najprv ich presuňte alebo zmažte.")
   }
 
   const personCol = await getCollection<Person>(PERSONS_COLLECTION)
-  const pocet = await personCol.countDocuments({ companyCode, departmentId: id })
-  if (pocet > 0) {
+  const count = await personCol.countDocuments({ companyCode, departmentId: id })
+  if (count > 0) {
     throw new DepartmentError(
-      `Do oddelenia patrí ${pocet} ${pocet === 1 ? "osoba" : pocet < 5 ? "osoby" : "osôb"} — najprv ich preraďte.`,
+      `Do oddelenia patrí ${count} ${count === 1 ? "osoba" : count < 5 ? "osoby" : "osôb"} — najprv ich preraďte.`,
     )
   }
 
   const col = await getCollection<Department>(DEPARTMENTS_COLLECTION)
-  const pred = await col.findOne({ companyCode, id })
+  const before = await col.findOne({ companyCode, id })
   await col.deleteOne({ companyCode, id })
   await writeAudit({
     companyCode, predmet: "oddelenie", akcia: "zrusene", aktor: actor,
-    cielId: id, cielPopis: pred?.nazov ?? null,
+    cielId: id, cielPopis: before?.nazov ?? null,
   })
 }
 
@@ -345,17 +345,17 @@ export async function deleteDepartment(companyCode: string, id: string, actor: s
  * reorganizácii, teda vtedy, keď na tom najviac záleží.
  */
 export async function recomputePaths(companyCode: string): Promise<number> {
-  const vsetky = await allDepartments(companyCode)
+  const all = await allDepartments(companyCode)
   const col = await getCollection<Person>(PERSONS_COLLECTION)
-  const osoby = await col
+  const people = await col
     .find({ companyCode }, { projection: { id: 1, departmentId: 1, departmentPath: 1, departmentHistory: 1 } })
     .toArray()
 
-  let zmenene = 0
-  for (const o of osoby) {
-    const nova = pathIdsTo(vsetky, o.departmentId)
-    const stara = o.departmentPath ?? []
-    if (nova.length === stara.length && nova.every((x, i) => x === stara[i])) continue
+  let changed = 0
+  for (const o of people) {
+    const next = pathIdsTo(all, o.departmentId)
+    const old = o.departmentPath ?? []
+    if (next.length === old.length && next.every((x, i) => x === old[i])) continue
     // Cesta sa zmenila presunom vetvy, nie presunom človeka — oddelenie má
     // rovnaký, takže sa **neotvára nový záznam histórie**, len sa opraví
     // cesta v tom otvorenom. Inak by presun vetvy vyzeral ako to, že do
@@ -364,20 +364,20 @@ export async function recomputePaths(companyCode: string): Promise<number> {
       { companyCode, id: o.id },
       {
         $set: {
-          departmentPath: nova,
-          departmentHistory: newDepartmentHistory(o.departmentHistory, o.departmentId ?? null, nova, new Date()),
+          departmentPath: next,
+          departmentHistory: newDepartmentHistory(o.departmentHistory, o.departmentId ?? null, next, new Date()),
         },
       } as never,
     )
-    zmenene++
+    changed++
   }
-  return zmenene
+  return changed
 }
 
 /** Koľko ľudí patrí priamo do oddelenia a koľko aj s podriadenými. */
 export async function counts(companyCode: string): Promise<Map<string, { priamo: number; sPodriadenymi: number }>> {
   const col = await getCollection<Person>(PERSONS_COLLECTION)
-  const osoby = await col
+  const people = await col
     .find(
       { companyCode, status: { $ne: "inactive" } },
       { projection: { departmentId: 1, departmentPath: 1 } },
@@ -385,17 +385,17 @@ export async function counts(companyCode: string): Promise<Map<string, { priamo:
     .toArray()
 
   const out = new Map<string, { priamo: number; sPodriadenymi: number }>()
-  const pripocitaj = (id: string, kluc: "priamo" | "sPodriadenymi") => {
+  const addTo = (id: string, key: "priamo" | "sPodriadenymi") => {
     const z = out.get(id) ?? { priamo: 0, sPodriadenymi: 0 }
-    z[kluc]++
+    z[key]++
     out.set(id, z)
   }
 
-  for (const o of osoby) {
-    if (o.departmentId) pripocitaj(o.departmentId, "priamo")
+  for (const o of people) {
+    if (o.departmentId) addTo(o.departmentId, "priamo")
     // Cesta obsahuje aj samotné oddelenie, takže „s podriadenými" vyjde
     // rovno z nej a netreba prechádzať strom.
-    for (const id of o.departmentPath ?? []) pripocitaj(id, "sPodriadenymi")
+    for (const id of o.departmentPath ?? []) addTo(id, "sPodriadenymi")
   }
   return out
 }
@@ -414,35 +414,35 @@ export async function assignPerson(
   departmentId: string | null,
   actor: string,
 ): Promise<void> {
-  const vsetky = await allDepartments(companyCode)
-  if (departmentId && !vsetky.some(o => o.id === departmentId)) {
+  const all = await allDepartments(companyCode)
+  if (departmentId && !all.some(o => o.id === departmentId)) {
     throw new DepartmentError("Také oddelenie neexistuje.")
   }
 
   const col = await getCollection<Person>(PERSONS_COLLECTION)
-  const osoba = await col.findOne({ companyCode, id: personId })
-  if (!osoba) throw new DepartmentError("Osoba sa nenašla.")
+  const person = await col.findOne({ companyCode, id: personId })
+  if (!person) throw new DepartmentError("Osoba sa nenašla.")
 
-  const teraz = new Date()
-  const novaCesta = pathIdsTo(vsetky, departmentId)
+  const current = new Date()
+  const newPath = pathIdsTo(all, departmentId)
   await col.updateOne(
     { companyCode, id: personId },
     {
       $set: {
         departmentId: departmentId ?? null,
-        departmentPath: novaCesta,
+        departmentPath: newPath,
         departmentHistory: newDepartmentHistory(
-          osoba.departmentHistory, departmentId ?? null, novaCesta, teraz,
+          person.departmentHistory, departmentId ?? null, newPath, current,
         ),
-        updatedAt: teraz,
+        updatedAt: current,
         updatedBy: actor,
       },
     } as never,
   )
   await writeAudit({
     companyCode, predmet: "osoba", akcia: "zmenene", aktor: actor,
-    cielId: personId, cielPopis: osoba.fullName,
-    zmeny: { departmentId: { z: osoba.departmentId ?? null, na: departmentId ?? null } },
+    cielId: personId, cielPopis: person.fullName,
+    zmeny: { departmentId: { z: person.departmentId ?? null, na: departmentId ?? null } },
   })
 }
 
@@ -461,27 +461,27 @@ export async function assignPerson(
 export async function shiftDepartment(
   companyCode: string,
   id: string,
-  smer: "hore" | "dole",
-  aktor: string,
+  direction: "hore" | "dole",
+  actor: string,
 ): Promise<void> {
-  const vsetky = await allDepartments(companyCode)
-  const ja = vsetky.find(o => o.id === id)
-  if (!ja) throw new DepartmentError("Také oddelenie tu nie je.")
+  const all = await allDepartments(companyCode)
+  const self = all.find(o => o.id === id)
+  if (!self) throw new DepartmentError("Také oddelenie tu nie je.")
 
-  const surodenci = children(vsetky, ja.parentId ?? null)
-  const kde = surodenci.findIndex(o => o.id === id)
-  const kam = smer === "hore" ? kde - 1 : kde + 1
-  if (kam < 0 || kam >= surodenci.length) return
+  const siblings = children(all, self.parentId ?? null)
+  const from = siblings.findIndex(o => o.id === id)
+  const to = direction === "hore" ? from - 1 : from + 1
+  if (to < 0 || to >= siblings.length) return
 
-  const zoradene = [...surodenci]
-  const [vybrate] = zoradene.splice(kde, 1)
-  zoradene.splice(kam, 0, vybrate)
+  const sorted = [...siblings]
+  const [picked] = sorted.splice(from, 1)
+  sorted.splice(to, 0, picked)
 
-  await saveOrder(companyCode, zoradene.map(o => o.id), aktor)
+  await saveOrder(companyCode, sorted.map(o => o.id), actor)
   await writeAudit({
-    companyCode, predmet: "oddelenie", akcia: "preusporiadane", aktor,
-    cielId: id, cielPopis: ja.nazov,
-    poznamka: `posunuté ${smer} medzi súrodencami`,
+    companyCode, predmet: "oddelenie", akcia: "preusporiadane", aktor: actor,
+    cielId: id, cielPopis: self.nazov,
+    poznamka: `posunuté ${direction} medzi súrodencami`,
   })
 }
 
@@ -494,27 +494,27 @@ export async function shiftDepartment(
  */
 export async function saveOrder(
   companyCode: string,
-  idVPoradi: string[],
-  aktor: string,
+  orderedIds: string[],
+  actor: string,
 ): Promise<void> {
-  const vsetky = await allDepartments(companyCode)
-  const podla = new Map(vsetky.map(o => [o.id, o]))
+  const all = await allDepartments(companyCode)
+  const byId = new Map(all.map(o => [o.id, o]))
 
-  const dotknute = idVPoradi.map(x => podla.get(x)).filter(o => o !== undefined)
-  if (dotknute.length !== idVPoradi.length) {
+  const touched = orderedIds.map(x => byId.get(x)).filter(o => o !== undefined)
+  if (touched.length !== orderedIds.length) {
     throw new DepartmentError("Zoznam obsahuje oddelenie, ktoré tu nie je.")
   }
-  const rodicia = new Set(dotknute.map(o => o!.parentId ?? "koren"))
-  if (rodicia.size > 1) {
+  const parents = new Set(touched.map(o => o!.parentId ?? "koren"))
+  if (parents.size > 1) {
     throw new DepartmentError("Preusporiadať sa dá len v rámci jednej úrovne.")
   }
 
   const col = await getCollection<Department>(DEPARTMENTS_COLLECTION)
-  const teraz = new Date()
-  for (const [i, x] of idVPoradi.entries()) {
+  const current = new Date()
+  for (const [i, x] of orderedIds.entries()) {
     await col.updateOne(
       { companyCode, id: x },
-      { $set: { poradie: i, updatedAt: teraz, updatedBy: aktor } },
+      { $set: { poradie: i, updatedAt: current, updatedBy: actor } },
     )
   }
 }

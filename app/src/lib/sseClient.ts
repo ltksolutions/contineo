@@ -58,19 +58,19 @@ export type SseEvent =
  * ktorý patrí na začiatok ďalšieho čítania.
  */
 export function splitEvents(buf: string): { udalosti: SseEvent[]; zvysok: string } {
-  const udalosti: SseEvent[] = []
-  let zvysok = buf
+  const events: SseEvent[] = []
+  let rest = buf
 
   for (;;) {
-    const koniec = zvysok.indexOf("\n\n")
-    if (koniec === -1) break
+    const end = rest.indexOf("\n\n")
+    if (end === -1) break
 
-    const blok = zvysok.slice(0, koniec)
-    zvysok = zvysok.slice(koniec + 2)
+    const block = rest.slice(0, end)
+    rest = rest.slice(end + 2)
 
     // Blok môže mať viac riadkov; nás zaujímajú len tie s `data:`.
     // Komentáre (`:` na začiatku) sa používajú ako keep-alive.
-    const data = blok
+    const data = block
       .split("\n")
       .filter(r => r.startsWith("data:"))
       .map(r => r.slice(5).trim())
@@ -79,22 +79,22 @@ export function splitEvents(buf: string): { udalosti: SseEvent[]; zvysok: string
     if (!data) continue
 
     try {
-      udalosti.push(JSON.parse(data) as SseEvent)
+      events.push(JSON.parse(data) as SseEvent)
     } catch {
       // Poškodená udalosť sa preskočí. Zhodiť celú odpoveď kvôli jednému
       // zlému bloku by bolo horšie než prísť o jeden token.
     }
   }
 
-  return { udalosti, zvysok }
+  return { udalosti: events, zvysok: rest }
 }
 
 /** Postupne vydáva udalosti z tela odpovede. */
 export async function* readEvents(
-  telo: ReadableStream<Uint8Array>
+  body: ReadableStream<Uint8Array>
 ): AsyncGenerator<SseEvent> {
-  const reader = telo.getReader()
-  const dekoder = new TextDecoder()
+  const reader = body.getReader()
+  const decoder = new TextDecoder()
   let buf = ""
 
   try {
@@ -104,18 +104,18 @@ export async function* readEvents(
 
       // `stream: true` je dôležité — viacbajtový znak (napr. „š") sa môže
       // rozdeliť medzi dva pakety a bez toho by sa dekódoval ako otáznik.
-      buf += dekoder.decode(value, { stream: true })
+      buf += decoder.decode(value, { stream: true })
 
-      const { udalosti, zvysok } = splitEvents(buf)
-      buf = zvysok
-      for (const u of udalosti) yield u
+      const { udalosti: events, zvysok: rest } = splitEvents(buf)
+      buf = rest
+      for (const u of events) yield u
     }
 
     // Posledný blok nemusí byť ukončený prázdnym riadkom.
-    buf += dekoder.decode()
+    buf += decoder.decode()
     if (buf.trim()) {
-      const { udalosti } = splitEvents(buf + "\n\n")
-      for (const u of udalosti) yield u
+      const { udalosti: events } = splitEvents(buf + "\n\n")
+      for (const u of events) yield u
     }
   } finally {
     reader.releaseLock()
@@ -159,51 +159,51 @@ export interface AskResult extends AskProgress {
  * `onZmena` sa volá po každej udalosti — komponent si ju len prekreslí.
  */
 export async function askQuestion(
-  otazka: string,
-  onZmena: (p: AskProgress) => void,
+  question: string,
+  onChange: (p: AskProgress) => void,
   init?: { signal?: AbortSignal; url?: string }
 ): Promise<AskResult> {
-  const zaciatok = Date.now()
+  const start = Date.now()
   let ttftMs: number | null = null
   let text = ""
-  const citacie: Citation[] = []
+  const citations: Citation[] = []
 
-  const hotovo = (extra: Partial<AskResult> = {}): AskResult => ({
-    text, citacie,
+  const done = (extra: Partial<AskResult> = {}): AskResult => ({
+    text, citacie: citations,
     zdroje: [], model: "", provider: "", overeneCitacie: false,
-    ttftMs, celkovoMs: Date.now() - zaciatok,
+    ttftMs, celkovoMs: Date.now() - start,
     ...extra,
   })
 
-  const odpoved = await fetch(init?.url ?? "/api/chat", {
+  const answer = await fetch(init?.url ?? "/api/chat", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ query: otazka }),
+    body: JSON.stringify({ query: question }),
     signal: init?.signal,
   })
 
-  if (!odpoved.ok || !odpoved.body) {
+  if (!answer.ok || !answer.body) {
     // Chybové odpovede z route.ts sú obyčajný text, nie SSE.
-    const sprava = await odpoved.text().catch(() => "")
-    return hotovo({ chyba: sprava || `Server vrátil ${odpoved.status}` })
+    const message = await answer.text().catch(() => "")
+    return done({ chyba: message || `Server vrátil ${answer.status}` })
   }
 
-  for await (const u of readEvents(odpoved.body)) {
+  for await (const u of readEvents(answer.body)) {
     if (u.type === "token") {
-      if (ttftMs === null) ttftMs = Date.now() - zaciatok
+      if (ttftMs === null) ttftMs = Date.now() - start
       text += u.token
-      onZmena({ text, citacie })
+      onChange({ text, citacie: citations })
     } else if (u.type === "citation") {
-      citacie.push(u.citation)
-      onZmena({ text, citacie })
+      citations.push(u.citation)
+      onChange({ text, citacie: citations })
     } else if (u.type === "error") {
-      return hotovo({ chyba: u.message })
+      return done({ chyba: u.message })
     } else if (u.type === "done") {
-      return hotovo({
+      return done({
         zdroje: u.sources ?? [],
         // Adaptéry bez Citations API vracajú prázdne pole; vtedy sa
         // opierame o citácie nazbierané počas streamu (žiadne) a o zdroje.
-        citacie: u.citations?.length ? u.citations : citacie,
+        citacie: u.citations?.length ? u.citations : citations,
         model: u.model ?? "",
         provider: u.provider ?? "",
         overeneCitacie: u.verifiedCitations ?? false,
@@ -216,5 +216,5 @@ export async function askQuestion(
   }
 
   // Stream skončil bez `done` — server spadol uprostred.
-  return hotovo({ chyba: text ? undefined : "Odpoveď sa prerušila." })
+  return done({ chyba: text ? undefined : "Odpoveď sa prerušila." })
 }

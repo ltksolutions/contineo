@@ -17,44 +17,44 @@ import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { previewImportAction, runImportAction } from "@/app/osoby/actions"
 
-type Nahlad = Awaited<ReturnType<typeof previewImportAction>>
+type Preview = Awaited<ReturnType<typeof previewImportAction>>
 
 export default function PeopleImport() {
   const router = useRouter()
   const [text, setText] = useState("")
-  const [nazov, setNazov] = useState("")
-  const [nahlad, setNahlad] = useState<Nahlad | null>(null)
-  const [pracujem, setPracujem] = useState(false)
-  const [vysledok, setVysledok] = useState<string | null>(null)
+  const [name, setName] = useState("")
+  const [preview, setPreview] = useState<Preview | null>(null)
+  const [busy, setBusy] = useState(false)
+  const [result, setResult] = useState<string | null>(null)
 
-  async function vyber(e: React.ChangeEvent<HTMLInputElement>) {
+  async function onPick(e: React.ChangeEvent<HTMLInputElement>) {
     const f = e.target.files?.[0]
-    setNahlad(null)
-    setVysledok(null)
-    if (!f) { setText(""); setNazov(""); return }
-    setNazov(f.name)
-    setPracujem(true)
+    setPreview(null)
+    setResult(null)
+    if (!f) { setText(""); setName(""); return }
+    setName(f.name)
+    setBusy(true)
     try {
-      const obsah = await f.text()
-      setText(obsah)
-      setNahlad(await previewImportAction(obsah))
+      const content = await f.text()
+      setText(content)
+      setPreview(await previewImportAction(content))
     } finally {
-      setPracujem(false)
+      setBusy(false)
     }
   }
 
-  async function zapis() {
-    setPracujem(true)
+  async function submit() {
+    setBusy(true)
     try {
       const v = await runImportAction(text)
-      setVysledok(v.sprava)
+      setResult(v.sprava)
       if (v.ok) {
-        setNahlad(null)
+        setPreview(null)
         setText("")
         router.refresh()
       }
     } finally {
-      setPracujem(false)
+      setBusy(false)
     }
   }
 
@@ -66,8 +66,8 @@ export default function PeopleImport() {
           className="pole-vstup"
           type="file"
           accept=".csv,text/csv,text/plain"
-          onChange={vyber}
-          disabled={pracujem}
+          onChange={onPick}
+          disabled={busy}
         />
         <span className="tichy pole-napoveda">
           Prvý riadok sú hlavičky. Rozpoznajú sa <code>email</code>, <code>meno</code>,{" "}
@@ -77,69 +77,69 @@ export default function PeopleImport() {
         </span>
       </label>
 
-      {pracujem && <p className="tichy">Čítam…</p>}
+      {busy && <p className="tichy">Čítam…</p>}
 
-      {vysledok && (
+      {result && (
         <p className="karta" style={{ padding: "12px 16px", fontSize: 14.5, margin: 0 }}>
-          {vysledok}
+          {result}
         </p>
       )}
 
-      {nahlad && !nahlad.ok && (
+      {preview && !preview.ok && (
         <p className="karta" style={{ padding: "12px 16px", fontSize: 14.5, margin: 0, color: "var(--warn-fg)" }}>
-          {nahlad.sprava}
+          {preview.sprava}
         </p>
       )}
 
-      {nahlad?.ok && (
+      {preview?.ok && (
         <section className="karta" style={{ padding: "18px 20px", display: "grid", gap: 14 }}>
-          <h2 style={{ fontSize: 17, margin: 0 }}>Čo sa stane — {nazov}</h2>
+          <h2 style={{ fontSize: 17, margin: 0 }}>Čo sa stane — {name}</h2>
 
           <div className="admin-udaje" style={{ marginTop: 0 }}>
             <div>
               <div className="tichy" style={{ fontSize: 12.5 }}>Riadkov</div>
-              <div style={{ fontSize: 15.5, fontWeight: 600 }}>{nahlad.spolu}</div>
+              <div style={{ fontSize: 15.5, fontWeight: 600 }}>{preview.spolu}</div>
             </div>
             <div>
               <div className="tichy" style={{ fontSize: 12.5 }}>Pribudne</div>
-              <div style={{ fontSize: 15.5, fontWeight: 600 }}>{nahlad.nove?.length ?? 0}</div>
+              <div style={{ fontSize: 15.5, fontWeight: 600 }}>{preview.nove?.length ?? 0}</div>
             </div>
             <div>
               <div className="tichy" style={{ fontSize: 12.5 }}>Aktualizuje sa</div>
-              <div style={{ fontSize: 15.5, fontWeight: 600 }}>{nahlad.existujuce?.length ?? 0}</div>
+              <div style={{ fontSize: 15.5, fontWeight: 600 }}>{preview.existujuce?.length ?? 0}</div>
             </div>
             <div>
               <div className="tichy" style={{ fontSize: 12.5 }}>Chybných</div>
               <div
                 style={{
                   fontSize: 15.5, fontWeight: 600,
-                  color: (nahlad.chyby?.length ?? 0) > 0 ? "var(--warn-fg)" : "var(--muted)",
+                  color: (preview.chyby?.length ?? 0) > 0 ? "var(--warn-fg)" : "var(--muted)",
                 }}
               >
-                {nahlad.chyby?.length ?? 0}
+                {preview.chyby?.length ?? 0}
               </div>
             </div>
           </div>
 
-          {(nahlad.nove?.length ?? 0) > 0 && (
+          {(preview.nove?.length ?? 0) > 0 && (
             <div>
               <div className="tichy pole-napoveda">Pribudnú</div>
               <p style={{ fontSize: 14, margin: "2px 0 0", overflowWrap: "anywhere" }}>
-                {nahlad.nove!.slice(0, 25).join(", ")}
-                {nahlad.nove!.length > 25 && ` … a ďalších ${nahlad.nove!.length - 25}`}
+                {preview.nove!.slice(0, 25).join(", ")}
+                {preview.nove!.length > 25 && ` … a ďalších ${preview.nove!.length - 25}`}
               </p>
             </div>
           )}
 
-          {(nahlad.chyby?.length ?? 0) > 0 && (
+          {(preview.chyby?.length ?? 0) > 0 && (
             <div>
               {/* Chybné riadky sa vypíšu menovite. „5 chybných" sa nedá opraviť. */}
               <div className="tichy pole-napoveda">Tieto riadky sa preskočia</div>
               <ul style={{ margin: "4px 0 0", paddingLeft: 20, fontSize: 14, lineHeight: 1.6 }}>
-                {nahlad.chyby!.slice(0, 15).map((c, i) => <li key={i}>{c}</li>)}
+                {preview.chyby!.slice(0, 15).map((c, i) => <li key={i}>{c}</li>)}
               </ul>
-              {nahlad.chyby!.length > 15 && (
-                <p className="tichy pole-napoveda">… a ďalších {nahlad.chyby!.length - 15}</p>
+              {preview.chyby!.length > 15 && (
+                <p className="tichy pole-napoveda">… a ďalších {preview.chyby!.length - 15}</p>
               )}
             </div>
           )}
@@ -150,8 +150,8 @@ export default function PeopleImport() {
           </p>
 
           <div>
-            <button className="tlacidlo" type="button" onClick={zapis} disabled={pracujem}>
-              {pracujem ? "Zapisujem…" : "Zapísať"}
+            <button className="tlacidlo" type="button" onClick={submit} disabled={busy}>
+              {busy ? "Zapisujem…" : "Zapísať"}
             </button>
           </div>
         </section>

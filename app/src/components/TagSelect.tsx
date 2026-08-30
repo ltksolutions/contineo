@@ -24,67 +24,67 @@ export interface Tag {
 }
 
 /** Rovnaká normalizácia ako `normalizeKeys()` na serveri. */
-function kluc(s: string): string {
+function key(s: string): string {
   return s.trim().toLowerCase()
 }
 
 export default function TagSelect({
-  meno,
-  ponuka,
-  vybrane,
-  popisNovej,
+  meno: name,
+  ponuka: options,
+  vybrane: selected,
+  popisNovej: newLabel,
 }: {
   meno: string
   ponuka: Tag[]
   vybrane: string[]
   popisNovej: string
 }) {
-  const [zvolene, setZvolene] = useState<string[]>(vybrane.map(kluc))
-  const [nova, setNova] = useState("")
+  const [chosen, setChosen] = useState<string[]>(selected.map(key))
+  const [draft, setDraft] = useState("")
 
   // Ponuka aj to, čo osoba má, ale v organizácii to už nikto iný nemá —
   // inak by sa uložením ticho stratilo niečo, čo si nikto neželal zmazať.
-  const vsetky: Tag[] = [
-    ...ponuka,
-    ...zvolene
-      .filter(z => !ponuka.some(p => kluc(p.hodnota) === z))
+  const all: Tag[] = [
+    ...options,
+    ...chosen
+      .filter(z => !options.some(p => key(p.hodnota) === z))
       .map(z => ({ hodnota: z })),
   ]
 
-  function prepni(h: string) {
-    const k = kluc(h)
-    setZvolene(z => (z.includes(k) ? z.filter(x => x !== k) : [...z, k]))
+  function toggle(h: string) {
+    const k = key(h)
+    setChosen(z => (z.includes(k) ? z.filter(x => x !== k) : [...z, k]))
   }
 
-  function pridaj() {
-    const k = kluc(nova)
+  function add() {
+    const k = key(draft)
     if (!k) return
-    setZvolene(z => (z.includes(k) ? z : [...z, k]))
-    setNova("")
+    setChosen(z => (z.includes(k) ? z : [...z, k]))
+    setDraft("")
   }
 
   return (
     <div className="stitky">
-      <input type="hidden" name={meno} value={zvolene.join(", ")} />
+      <input type="hidden" name={name} value={chosen.join(", ")} />
 
-      {vsetky.length === 0 ? (
+      {all.length === 0 ? (
         <p className="tichy pole-napoveda" style={{ margin: 0 }}>
           Zatiaľ tu žiadne nie sú. Prvú vytvoríš dole.
         </p>
       ) : (
         <div className="stitky-zoznam">
-          {vsetky.map(s => {
-            const k = kluc(s.hodnota)
-            const je = zvolene.includes(k)
+          {all.map(s => {
+            const k = key(s.hodnota)
+            const has = chosen.includes(k)
             return (
               <button
                 key={k}
                 type="button"
-                className={`stitok stitok--volba${je ? " je-zvolena" : ""}`}
-                aria-pressed={je}
-                onClick={() => prepni(k)}
+                className={`stitok stitok--volba${has ? " je-zvolena" : ""}`}
+                aria-pressed={has}
+                onClick={() => toggle(k)}
               >
-                <span className="stitok-znak" aria-hidden="true">{je ? "✓" : "+"}</span>
+                <span className="stitok-znak" aria-hidden="true">{has ? "✓" : "+"}</span>
                 {s.hodnota}
                 {s.osob !== undefined && <span className="stitok-pocet">{s.osob}</span>}
               </button>
@@ -96,15 +96,15 @@ export default function TagSelect({
       <div className="stitky-nova">
         <input
           className="pole-vstup"
-          value={nova}
-          onChange={e => setNova(e.target.value)}
-          placeholder={popisNovej}
+          value={draft}
+          onChange={e => setDraft(e.target.value)}
+          placeholder={newLabel}
           autoCapitalize="none"
           autoCorrect="off"
           // Enter by inak odoslal celý formulár a nová skupina by sa stratila.
-          onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); pridaj() } }}
+          onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); add() } }}
         />
-        <button type="button" className="tlacidlo tlacidlo--tiche" onClick={pridaj} disabled={!nova.trim()}>
+        <button type="button" className="tlacidlo tlacidlo--tiche" onClick={add} disabled={!draft.trim()}>
           Pridať
         </button>
       </div>
@@ -113,8 +113,8 @@ export default function TagSelect({
         {/* Bez JavaScriptu zostáva pôvodné pole. Je horšie, ale funguje. */}
         <input
           className="pole-vstup"
-          name={meno}
-          defaultValue={vybrane.join(", ")}
+          name={name}
+          defaultValue={selected.join(", ")}
           autoCapitalize="none"
           autoCorrect="off"
         />

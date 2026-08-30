@@ -16,7 +16,7 @@ import Select from "@/components/Select"
 import { invitePersonAction } from "../actions"
 
 /** Kód jazyka sám o sebe nepovie nič — „sk" je pre nás jasné, pre iných nie. */
-const JAZYKY: Record<string, string> = {
+const LANGUAGES: Record<string, string> = {
   sk: "slovenčina",
   cs: "čeština",
   en: "angličtina",
@@ -103,7 +103,7 @@ export default async function NewPersonPage({
           <span className="pole-popis">Jazyk prostredia</span>
           <Select
             meno="language"
-            volby={UI_LANGUAGES.map(l => ({ hodnota: l, popis: JAZYKY[l] ?? l }))}
+            volby={UI_LANGUAGES.map(l => ({ hodnota: l, popis: LANGUAGES[l] ?? l }))}
             predvolena="sk"
             popisPola="Jazyk prostredia"
           />

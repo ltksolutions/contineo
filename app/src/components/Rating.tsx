@@ -16,7 +16,7 @@
 import { useEffect, useRef, useState } from "react"
 import type { Verdict } from "@/lib/ratings"
 
-type Stav = "cakam" | "ukladam" | "ulozene" | "chyba"
+type SaveState = "cakam" | "ukladam" | "ulozene" | "chyba"
 
 export interface RatingFields {
   spravna: Verdict
@@ -26,35 +26,35 @@ export interface RatingFields {
   poznamka: string
 }
 
-const PRAZDNE: RatingFields = {
+const EMPTY: RatingFields = {
   spravna: null, halucinacia: null,
   overenaOdpoved: "", spravneZdroje: "", poznamka: "",
 }
 
-function Volba({
-  aktivna, farba, onClick, children,
+function Choice({
+  aktivna: active, farba: color, onClick, children,
 }: {
   aktivna: boolean
   farba: "ok" | "bad"
   onClick: () => void
   children: React.ReactNode
 }) {
-  const pozadie = farba === "ok" ? "var(--ok-bg)" : "var(--bad-bg)"
-  const popredie = farba === "ok" ? "var(--ok-fg)" : "var(--bad-fg)"
+  const background = color === "ok" ? "var(--ok-bg)" : "var(--bad-bg)"
+  const foreground = color === "ok" ? "var(--ok-fg)" : "var(--bad-fg)"
   return (
     <button
       type="button"
       onClick={onClick}
       style={{
-        border: `1px solid ${aktivna ? popredie : "var(--line)"}`,
-        background: aktivna ? pozadie : "var(--surface)",
-        color: aktivna ? popredie : "var(--ink)",
-        fontWeight: aktivna ? 700 : 500,
+        border: `1px solid ${active ? foreground : "var(--line)"}`,
+        background: active ? background : "var(--surface)",
+        color: active ? foreground : "var(--ink)",
+        fontWeight: active ? 700 : 500,
         borderRadius: 9,
         padding: "7px 14px",
         fontSize: 14,
       }}
-      aria-pressed={aktivna}
+      aria-pressed={active}
     >
       {children}
     </button>
@@ -62,19 +62,19 @@ function Volba({
 }
 
 export default function Rating({
-  zaznamId,
-  otazkaId,
-  onHotovo,
+  zaznamId: recordId,
+  otazkaId: questionId,
+  onHotovo: onDone,
 }: {
   /** Id záznamu z `/api/hodnotenie`. Kým je null, panel čaká. */
   zaznamId: string | null
   /** Označenie otázky zo zlatej sady, ak ide o režim sady. */
   otazkaId?: string
   /** Zavolá sa po posúdení správnosti — režim sady na to nadväzuje. */
-  onHotovo?: (spravna: Verdict) => void
+  onHotovo?: (correct: Verdict) => void
 }) {
-  const [polia, setPolia] = useState<RatingFields>(PRAZDNE)
-  const [stav, setStav] = useState<Stav>("cakam")
+  const [fields, setFields] = useState<RatingFields>(EMPTY)
+  const [status, setStatus] = useState<SaveState>("cakam")
   const [detail, setDetail] = useState(false)
 
   // Nová odpoveď = čisté hodnotenie. Bez toho by sa posudok z predchádzajúcej
@@ -83,38 +83,38 @@ export default function Rating({
     // Vynulovanie pri zmene záznamu je práve to zosúladenie, na ktoré efekt je:
     // rozpísaný text jednej otázky sa nesmie opticky preniesť na ďalšiu.
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    setPolia(PRAZDNE)
-    setStav("cakam")
+    setFields(EMPTY)
+    setStatus("cakam")
     setDetail(false)
-  }, [zaznamId])
+  }, [recordId])
 
-  const poslednePoslane = useRef<string>("")
+  const lastSent = useRef<string>("")
 
-  async function uloz(zmena: Partial<RatingFields>) {
-    if (!zaznamId) return
-    const nove = { ...polia, ...zmena }
-    setPolia(nove)
+  async function save(change: Partial<RatingFields>) {
+    if (!recordId) return
+    const next = { ...fields, ...change }
+    setFields(next)
 
     // Nepošleme to isté dvakrát — textové polia strácajú fokus aj bez zmeny.
-    const otlacok = JSON.stringify({ zaznamId, ...zmena })
-    if (otlacok === poslednePoslane.current) return
-    poslednePoslane.current = otlacok
+    const fingerprint = JSON.stringify({ zaznamId: recordId, ...change })
+    if (fingerprint === lastSent.current) return
+    lastSent.current = fingerprint
 
-    setStav("ukladam")
+    setStatus("ukladam")
     try {
       const r = await fetch("/api/hodnotenie", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: zaznamId, ...zmena }),
+        body: JSON.stringify({ id: recordId, ...change }),
       })
-      setStav(r.ok ? "ulozene" : "chyba")
-      if (r.ok && zmena.spravna !== undefined) onHotovo?.(zmena.spravna)
+      setStatus(r.ok ? "ulozene" : "chyba")
+      if (r.ok && change.spravna !== undefined) onDone?.(change.spravna)
     } catch {
-      setStav("chyba")
+      setStatus("chyba")
     }
   }
 
-  if (!zaznamId) return null
+  if (!recordId) return null
 
   return (
     <div
@@ -126,41 +126,41 @@ export default function Rating({
                      color: "var(--muted)", margin: 0 }}>
           Ako hodnotíte túto odpoveď?
         </h3>
-        {otazkaId && (
-          <span className="stitok tichy" style={{ fontSize: 11 }}>{otazkaId}</span>
+        {questionId && (
+          <span className="stitok tichy" style={{ fontSize: 11 }}>{questionId}</span>
         )}
         <span
           className="tichy"
           style={{ fontSize: 12, marginLeft: "auto", minWidth: 90, textAlign: "right" }}
           aria-live="polite"
         >
-          {stav === "ukladam" ? "ukladám…"
-            : stav === "ulozene" ? "uložené"
-            : stav === "chyba" ? "neuložilo sa" : ""}
+          {status === "ukladam" ? "ukladám…"
+            : status === "ulozene" ? "uložené"
+            : status === "chyba" ? "neuložilo sa" : ""}
         </span>
       </div>
 
       <div style={{ display: "grid", gap: 14 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
           <span style={{ fontSize: 14.5, minWidth: 190 }}>Je odpoveď vecne správna?</span>
-          <Volba aktivna={polia.spravna === 1} farba="ok" onClick={() => uloz({ spravna: 1 })}>
+          <Choice aktivna={fields.spravna === 1} farba="ok" onClick={() => save({ spravna: 1 })}>
             Áno
-          </Volba>
-          <Volba aktivna={polia.spravna === 0} farba="bad" onClick={() => uloz({ spravna: 0 })}>
+          </Choice>
+          <Choice aktivna={fields.spravna === 0} farba="bad" onClick={() => save({ spravna: 0 })}>
             Nie
-          </Volba>
+          </Choice>
         </div>
 
         <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
           <span style={{ fontSize: 14.5, minWidth: 190 }}>
             Tvrdí niečo, čo v zdrojoch nie je?
           </span>
-          <Volba aktivna={polia.halucinacia === 1} farba="bad" onClick={() => uloz({ halucinacia: 1 })}>
+          <Choice aktivna={fields.halucinacia === 1} farba="bad" onClick={() => save({ halucinacia: 1 })}>
             Áno, vymyslel si
-          </Volba>
-          <Volba aktivna={polia.halucinacia === 0} farba="ok" onClick={() => uloz({ halucinacia: 0 })}>
+          </Choice>
+          <Choice aktivna={fields.halucinacia === 0} farba="ok" onClick={() => save({ halucinacia: 0 })}>
             Nie, všetko má oporu
-          </Volba>
+          </Choice>
         </div>
 
         {/* Doplnenie zlatej sady. Skryté, lebo pri väčšine otázok stačia
@@ -185,12 +185,12 @@ export default function Rating({
                 Ako mala odpoveď znieť?
               </span>
               <textarea
-                value={polia.overenaOdpoved}
-                onChange={e => setPolia(p => ({ ...p, overenaOdpoved: e.target.value }))}
-                onBlur={e => uloz({ overenaOdpoved: e.target.value })}
+                value={fields.overenaOdpoved}
+                onChange={e => setFields(p => ({ ...p, overenaOdpoved: e.target.value }))}
+                onBlur={e => save({ overenaOdpoved: e.target.value })}
                 rows={3}
                 maxLength={4000}
-                style={poleStyl}
+                style={fieldStyle}
               />
             </label>
 
@@ -199,11 +199,11 @@ export default function Rating({
                 Ktoré predpisy a § to upravujú? Napríklad &bdquo;SP čl. 78, DP čl. 37&ldquo;.
               </span>
               <input
-                value={polia.spravneZdroje}
-                onChange={e => setPolia(p => ({ ...p, spravneZdroje: e.target.value }))}
-                onBlur={e => uloz({ spravneZdroje: e.target.value })}
+                value={fields.spravneZdroje}
+                onChange={e => setFields(p => ({ ...p, spravneZdroje: e.target.value }))}
+                onBlur={e => save({ spravneZdroje: e.target.value })}
                 maxLength={500}
-                style={poleStyl}
+                style={fieldStyle}
               />
             </label>
 
@@ -212,12 +212,12 @@ export default function Rating({
                 Poznámka — čo bolo na odpovedi zavádzajúce alebo neúplné?
               </span>
               <textarea
-                value={polia.poznamka}
-                onChange={e => setPolia(p => ({ ...p, poznamka: e.target.value }))}
-                onBlur={e => uloz({ poznamka: e.target.value })}
+                value={fields.poznamka}
+                onChange={e => setFields(p => ({ ...p, poznamka: e.target.value }))}
+                onBlur={e => save({ poznamka: e.target.value })}
                 rows={2}
                 maxLength={2000}
-                style={poleStyl}
+                style={fieldStyle}
               />
             </label>
           </div>
@@ -227,7 +227,7 @@ export default function Rating({
   )
 }
 
-const poleStyl: React.CSSProperties = {
+const fieldStyle: React.CSSProperties = {
   width: "100%",
   background: "var(--surface)",
   color: "var(--ink)",

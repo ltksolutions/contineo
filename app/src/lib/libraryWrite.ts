@@ -74,23 +74,23 @@ export function makeDocumentId(meta: { companyCode: string; sectionKey: string }
 
 /** Overí metadáta z formulára proti číselníkom. Vyhadzuje `KniznicaError`. */
 export function checkMetadata(
-  vstup: Partial<DocumentMetadata>,
-  doplnky?: CodelistExtras,
+  input: Partial<DocumentMetadata>,
+  extras?: CodelistExtras,
 ): DocumentMetadata {
-  const title = (vstup.title ?? "").trim()
+  const title = (input.title ?? "").trim()
   if (!title) throw new LibraryError("Názov dokumentu je povinný — bez neho je v zozname len kľúč.")
 
   try {
     return {
       title,
-      sectionKey: checkValue("sectionKey", vstup.sectionKey ?? ""),
-      companyCode: checkValue("companyCode", vstup.companyCode ?? ""),
-      scope: checkValue("scope", vstup.scope ?? ""),
-      accessLevel: checkValue("accessLevel", vstup.accessLevel ?? ""),
-      language: checkValue("language", vstup.language ?? ""),
-      category: vstup.category ? checkValue("category", vstup.category, doplnky) : undefined,
-      sourceType: vstup.sourceType ? checkValue("sourceType", vstup.sourceType) : undefined,
-      tags: checkList("tags", vstup.tags ?? [], doplnky),
+      sectionKey: checkValue("sectionKey", input.sectionKey ?? ""),
+      companyCode: checkValue("companyCode", input.companyCode ?? ""),
+      scope: checkValue("scope", input.scope ?? ""),
+      accessLevel: checkValue("accessLevel", input.accessLevel ?? ""),
+      language: checkValue("language", input.language ?? ""),
+      category: input.category ? checkValue("category", input.category, extras) : undefined,
+      sourceType: input.sourceType ? checkValue("sourceType", input.sourceType) : undefined,
+      tags: checkList("tags", input.tags ?? [], extras),
     }
   } catch (e) {
     if (e instanceof CodelistError) throw new LibraryError(e.message)
@@ -114,34 +114,34 @@ export interface UploadResult {
  */
 export async function uploadDocument(
   meta: DocumentMetadata,
-  nazovSuboru: string,
+  fileName: string,
   data: Buffer,
-  aktor: string,
+  actor: string,
 ): Promise<UploadResult> {
   const documentId = makeDocumentId(meta)
-  const subor = await saveFile(meta.companyCode, nazovSuboru, "application/octet-stream", data, aktor)
+  const file = await saveFile(meta.companyCode, fileName, "application/octet-stream", data, actor)
 
-  let prevod
+  let converted
   try {
-    prevod = await convert(nazovSuboru, data)
+    converted = await convert(fileName, data)
   } catch (e) {
-    await deleteFile(meta.companyCode, subor.id)
+    await deleteFile(meta.companyCode, file.id)
     if (e instanceof ConversionError) throw new LibraryError(e.message)
     throw e
   }
 
   const col = await getCollection(DOCUMENTS_COLLECTION)
-  const uz = await col.findOne({ documentId })
-  const teraz = new Date()
+  const existing = await col.findOne({ documentId })
+  const now = new Date()
 
-  const povodny: OriginalFile = {
-    id: subor.id,
-    nazov: nazovSuboru,
-    contentType: subor.contentType,
-    bajtov: subor.bajtov,
-    typ: prevod.typ,
-    nahraneKedy: teraz,
-    nahralKto: aktor,
+  const original: OriginalFile = {
+    id: file.id,
+    nazov: fileName,
+    contentType: file.contentType,
+    bajtov: file.bajtov,
+    typ: converted.typ,
+    nahraneKedy: now,
+    nahralKto: actor,
   }
 
   await col.updateOne(
@@ -157,18 +157,18 @@ export async function uploadDocument(
         accessLevel: meta.accessLevel,
         language: meta.language,
         category: meta.category ?? null,
-        sourceType: meta.sourceType ?? prevod.typ,
+        sourceType: meta.sourceType ?? converted.typ,
         tags: meta.tags ?? [],
         // Koncept: text existuje, ale nikto ho ešte neprečítal a nepustil von.
-        draftMarkdown: prevod.markdown,
+        draftMarkdown: converted.markdown,
         processingStatus: "prevedene" as ProcessingState,
         processingError: null,
-        konverzia: { sposob: prevod.sposob, upozornenia: prevod.upozornenia, kedy: teraz },
-        originalFile: povodny,
-        updatedAt: teraz,
-        updatedBy: aktor,
+        konverzia: { sposob: converted.sposob, upozornenia: converted.upozornenia, kedy: now },
+        originalFile: original,
+        updatedAt: now,
+        updatedBy: actor,
       },
-      $setOnInsert: { createdAt: teraz, createdBy: aktor, status: "draft", versions: [] },
+      $setOnInsert: { createdAt: now, createdBy: actor, status: "draft", versions: [] },
     },
     { upsert: true },
   )
@@ -176,18 +176,18 @@ export async function uploadDocument(
   await writeAudit({
     companyCode: meta.companyCode,
     predmet: "dokument",
-    akcia: uz ? "nahrate-nove-znenie" : "zalozene",
-    aktor,
+    akcia: existing ? "nahrate-nove-znenie" : "zalozene",
+    aktor: actor,
     cielId: documentId,
     cielPopis: meta.title,
-    poznamka: `${FILE_TYPE_LABEL[prevod.typ]} · ${nazovSuboru} · ${prevod.sposob}`,
+    poznamka: `${FILE_TYPE_LABEL[converted.typ]} · ${fileName} · ${converted.sposob}`,
   })
 
   return {
     documentId,
-    markdown: prevod.markdown,
-    upozornenia: prevod.upozornenia,
-    novy: !uz,
+    markdown: converted.markdown,
+    upozornenia: converted.upozornenia,
+    novy: !existing,
   }
 }
 
@@ -196,7 +196,7 @@ export async function saveDraft(
   companyCode: string,
   documentId: string,
   markdown: string,
-  aktor: string,
+  actor: string,
 ): Promise<void> {
   const text = (markdown ?? "").trim()
   if (!text) throw new LibraryError("Prázdny text sa uložiť nedá — dokument by nemal čo obsahovať.")
@@ -204,7 +204,7 @@ export async function saveDraft(
   const col = await getCollection(DOCUMENTS_COLLECTION)
   const r = await col.updateOne(
     { documentId, companyCode },
-    { $set: { draftMarkdown: text, updatedAt: new Date(), updatedBy: aktor } },
+    { $set: { draftMarkdown: text, updatedAt: new Date(), updatedBy: actor } },
   )
   if (!r.matchedCount) throw new LibraryError("Taký dokument tu nie je.")
 }
@@ -234,18 +234,18 @@ export interface PublishResult {
 export async function publish(
   companyCode: string,
   documentId: string,
-  vstup: { label: string; effectiveFrom: Date; effectiveFromSource?: string; changeNote?: string },
-  aktor: string,
-  profil?: Partial<ProfilClenenia>,
+  input: { label: string; effectiveFrom: Date; effectiveFromSource?: string; changeNote?: string },
+  actor: string,
+  profile?: Partial<ProfilClenenia>,
 ): Promise<PublishResult> {
-  const label = (vstup.label ?? "").trim()
+  const label = (input.label ?? "").trim()
   if (!label) {
     throw new LibraryError(
       "Označenie znenia je povinné — objaví sa doslovne v každom zázname o potvrdení. " +
       "Napíš to, čo je v dokumente (napríklad: úplné znenie z 27. 2. 2026), nie vymyslené číslo.",
     )
   }
-  if (!(vstup.effectiveFrom instanceof Date) || Number.isNaN(vstup.effectiveFrom.getTime())) {
+  if (!(input.effectiveFrom instanceof Date) || Number.isNaN(input.effectiveFrom.getTime())) {
     throw new LibraryError("Dátum platnosti je povinný — bez neho sa znenie nedá potvrdiť (D6).")
   }
 
@@ -266,14 +266,14 @@ export async function publish(
   }
   const tags = Array.isArray(doc.tags) ? (doc.tags as string[]) : []
 
-  const { chunky } = chunkuj(markdown, { nazovDokumentu: meta.title, profil })
-  if (!chunky.length) {
+  const { chunky: chunks } = chunkuj(markdown, { nazovDokumentu: meta.title, profil: profile })
+  if (!chunks.length) {
     throw new LibraryError(
       "Z textu nevznikol ani jeden úsek. Skontroluj, či má dokument členenie na články alebo nadpisy.",
     )
   }
 
-  const doDb = (ch: Chunk) => ({
+  const toDb = (ch: Chunk) => ({
     chunkIndex: ch.chunkIndex,
     text: ch.text,
     heading: ch.heading,
@@ -296,33 +296,33 @@ export async function publish(
   // a dátum platnosti do identity nevstupujú zámerne: preklep v nich sa musí
   // dať opraviť bez toho, aby sa rozbili existujúce potvrdenia.
   const versionId = textFingerprint(markdown)
-  const chunkingId = chunkingFingerprint(chunky, { ...PREDVOLENY_PROFIL, ...profil })
-  const teraz = new Date()
+  const chunkingId = chunkingFingerprint(chunks, { ...PREDVOLENY_PROFIL, ...profile })
+  const now = new Date()
 
   // Rovnaké znenie už publikované? Nič sa nedeje — publikovanie je idempotentné.
-  const uz = (doc.versions as { versionId: string }[] | undefined)?.some(v => v.versionId === versionId)
-  if (uz) return { versionId, chunkov: chunky.length, archivovanych: 0, uzBolo: true }
+  const existing = (doc.versions as { versionId: string }[] | undefined)?.some(v => v.versionId === versionId)
+  if (existing) return { versionId, chunkov: chunks.length, archivovanych: 0, uzBolo: true }
 
   const chunkCol = await getCollection(CHUNKS_COLLECTION)
   // Staré chunky sa **archivujú, nemažú** (D6): do vyhľadávania vstupujú len
   // aktívne, ale otázka „čo tam stálo vlani" musí mať odpoveď.
-  const archiv = await chunkCol.updateMany(
+  const archive = await chunkCol.updateMany(
     { documentId, isActive: true },
-    { $set: { isActive: false, effectiveTo: teraz } },
+    { $set: { isActive: false, effectiveTo: now } },
   )
 
   await chunkCol.insertMany(
-    chunky.map(ch => ({
-      ...doDb(ch),
+    chunks.map(ch => ({
+      ...toDb(ch),
       documentId,
       versionId,
       chunkingId,
       verziaChunkera: CHUNKER_VERSION,
-      embeddedAt: teraz,
+      embeddedAt: now,
       isActive: true,
-      effectiveFrom: vstup.effectiveFrom,
+      effectiveFrom: input.effectiveFrom,
       effectiveTo: null,
-      createdAt: teraz,
+      createdAt: now,
     })),
     { ordered: false },
   )
@@ -331,7 +331,7 @@ export async function publish(
   // nové platnosť naozaj má.
   await col.updateOne(
     { documentId, companyCode },
-    { $set: { "versions.$[stara].effectiveTo": vstup.effectiveFrom, "versions.$[stara].isActive": false } },
+    { $set: { "versions.$[stara].effectiveTo": input.effectiveFrom, "versions.$[stara].isActive": false } },
     { arrayFilters: [{ "stara.effectiveTo": null, "stara.versionId": { $ne: versionId } }] },
   )
 
@@ -344,40 +344,40 @@ export async function publish(
         markdown,
         status: "published",
         processingStatus: "zaindexovane" as ProcessingState,
-        effectiveFrom: vstup.effectiveFrom,
+        effectiveFrom: input.effectiveFrom,
         effectiveTo: null,
-        updatedAt: teraz,
-        updatedBy: aktor,
+        updatedAt: now,
+        updatedBy: actor,
       },
       $push: {
         versions: {
           versionId,
           label,
-          effectiveFrom: vstup.effectiveFrom,
+          effectiveFrom: input.effectiveFrom,
           effectiveTo: null,
           isActive: true,
           contentHash: versionId,
-          effectiveFromSource: vstup.effectiveFromSource?.trim() || undefined,
-          changeNote: vstup.changeNote?.trim() || undefined,
+          effectiveFromSource: input.effectiveFromSource?.trim() || undefined,
+          changeNote: input.changeNote?.trim() || undefined,
           markdown,
           // `requiresReacknowledgement` sa zámerne nenastavuje: vypĺňa ho
           // človek (D30) a `false` by bolo tiché rozhodnutie, že zmena nie je
           // podstatná. Chýbajúce pole znamená „nikto zatiaľ nerozhodol".
-          publishedAt: teraz,
-          publishedBy: aktor,
+          publishedAt: now,
+          publishedBy: actor,
         },
       },
     } as never,
   )
 
   await writeAudit({
-    companyCode, predmet: "dokument", akcia: "publikovane", aktor,
+    companyCode, predmet: "dokument", akcia: "publikovane", aktor: actor,
     cielId: documentId, cielPopis: `${meta.title} — ${label}`,
-    poznamka: `${chunky.length} úsekov · platné od ${vstup.effectiveFrom.toISOString().slice(0, 10)}` +
-      (vstup.effectiveFromSource ? ` · zdroj: ${vstup.effectiveFromSource}` : ""),
+    poznamka: `${chunks.length} úsekov · platné od ${input.effectiveFrom.toISOString().slice(0, 10)}` +
+      (input.effectiveFromSource ? ` · zdroj: ${input.effectiveFromSource}` : ""),
   })
 
-  return { versionId, chunkov: chunky.length, archivovanych: archiv.modifiedCount, uzBolo: false }
+  return { versionId, chunkov: chunks.length, archivovanych: archive.modifiedCount, uzBolo: false }
 }
 
 
@@ -397,20 +397,20 @@ export async function publish(
 export async function saveMetadata(
   companyCode: string,
   documentId: string,
-  vstup: Partial<DocumentMetadata>,
-  aktor: string,
-  doplnky?: CodelistExtras,
+  input: Partial<DocumentMetadata>,
+  actor: string,
+  extras?: CodelistExtras,
 ): Promise<void> {
   const col = await getCollection(DOCUMENTS_COLLECTION)
-  const pred = await col.findOne({ documentId, companyCode }) as Record<string, unknown> | null
-  if (!pred) throw new LibraryError("Taký dokument tu nie je.")
+  const before = await col.findOne({ documentId, companyCode }) as Record<string, unknown> | null
+  if (!before) throw new LibraryError("Taký dokument tu nie je.")
 
   // Kľúč aj organizácia sa berú z existujúceho záznamu, nie z formulára.
   const meta = checkMetadata({
-    ...vstup,
-    sectionKey: String(pred.sectionKey ?? ""),
+    ...input,
+    sectionKey: String(before.sectionKey ?? ""),
     companyCode,
-  }, doplnky)
+  }, extras)
 
   const set: Record<string, unknown> = {
     title: meta.title,
@@ -420,7 +420,7 @@ export async function saveMetadata(
     category: meta.category ?? null,
     tags: meta.tags ?? [],
     updatedAt: new Date(),
-    updatedBy: aktor,
+    updatedBy: actor,
   }
 
   await col.updateOne({ documentId, companyCode }, { $set: set })
@@ -442,18 +442,18 @@ export async function saveMetadata(
     },
   )
 
-  const predMeta = {
-    title: pred.title, scope: pred.scope, accessLevel: pred.accessLevel,
-    language: pred.language, category: pred.category ?? null, tags: pred.tags ?? [],
+  const beforeMeta = {
+    title: before.title, scope: before.scope, accessLevel: before.accessLevel,
+    language: before.language, category: before.category ?? null, tags: before.tags ?? [],
   }
-  const poMeta = {
+  const afterMeta = {
     title: meta.title, scope: meta.scope, accessLevel: meta.accessLevel,
     language: meta.language, category: meta.category ?? null, tags: meta.tags ?? [],
   }
   await writeAudit({
-    companyCode, predmet: "dokument", akcia: "zmenene", aktor,
+    companyCode, predmet: "dokument", akcia: "zmenene", aktor: actor,
     cielId: documentId, cielPopis: meta.title,
-    zmeny: diff(predMeta, poMeta),
+    zmeny: diff(beforeMeta, afterMeta),
   })
 }
 
@@ -472,17 +472,17 @@ export async function saveMetadata(
 export async function reindex(
   companyCode: string,
   documentId: string,
-  aktor: string,
-  profil?: Partial<ProfilClenenia>,
+  actor: string,
+  profile?: Partial<ProfilClenenia>,
 ): Promise<{ chunkov: number; archivovanych: number; uzBolo: boolean; chunkingId: string }> {
   const col = await getCollection(DOCUMENTS_COLLECTION)
   const doc = await col.findOne({ documentId, companyCode }) as Record<string, unknown> | null
   if (!doc) throw new LibraryError("Taký dokument tu nie je.")
 
   const versions = (doc.versions ?? []) as { versionId: string; isActive?: boolean; markdown?: string }[]
-  const platna = versions.find(v => v.isActive)
-  const markdown = String(platna?.markdown ?? doc.markdown ?? "").trim()
-  if (!markdown || !platna) {
+  const effective = versions.find(v => v.isActive)
+  const markdown = String(effective?.markdown ?? doc.markdown ?? "").trim()
+  if (!markdown || !effective) {
     throw new LibraryError(
       "Dokument nemá publikované znenie — preindexovať sa dá len to, čo už je vonku.",
     )
@@ -497,25 +497,25 @@ export async function reindex(
   }
   const tags = Array.isArray(doc.tags) ? (doc.tags as string[]) : []
 
-  const { chunky } = chunkuj(markdown, { nazovDokumentu: meta.title, profil })
-  if (!chunky.length) {
+  const { chunky: chunks } = chunkuj(markdown, { nazovDokumentu: meta.title, profil: profile })
+  if (!chunks.length) {
     throw new LibraryError("Z textu nevznikol ani jeden úsek — skontroluj profil členenia.")
   }
 
-  const chunkingId = chunkingFingerprint(chunky, { ...PREDVOLENY_PROFIL, ...profil })
+  const chunkingId = chunkingFingerprint(chunks, { ...PREDVOLENY_PROFIL, ...profile })
   if (doc.chunkingId === chunkingId) {
-    return { chunkov: chunky.length, archivovanych: 0, uzBolo: true, chunkingId }
+    return { chunkov: chunks.length, archivovanych: 0, uzBolo: true, chunkingId }
   }
 
-  const teraz = new Date()
+  const now = new Date()
   const chunkCol = await getCollection(CHUNKS_COLLECTION)
-  const archiv = await chunkCol.updateMany(
+  const archive = await chunkCol.updateMany(
     { documentId, isActive: true },
-    { $set: { isActive: false, effectiveTo: teraz } },
+    { $set: { isActive: false, effectiveTo: now } },
   )
 
   await chunkCol.insertMany(
-    chunky.map(ch => ({
+    chunks.map(ch => ({
       chunkIndex: ch.chunkIndex,
       text: ch.text,
       heading: ch.heading,
@@ -532,31 +532,31 @@ export async function reindex(
       embeddingProvider: process.env.EMBEDDING_KIND ?? "atlas-auto",
       documentId,
       // Tá istá verzia znenia — mení sa len členenie.
-      versionId: platna.versionId,
+      versionId: effective.versionId,
       chunkingId,
       verziaChunkera: CHUNKER_VERSION,
-      embeddedAt: teraz,
+      embeddedAt: now,
       isActive: true,
       effectiveFrom: (doc.effectiveFrom as Date | null) ?? null,
       effectiveTo: null,
-      createdAt: teraz,
+      createdAt: now,
     })),
     { ordered: false },
   )
 
   await col.updateOne(
     { documentId, companyCode },
-    { $set: { chunkingId, updatedAt: teraz, updatedBy: aktor } },
+    { $set: { chunkingId, updatedAt: now, updatedBy: actor } },
   )
 
   await writeAudit({
-    companyCode, predmet: "dokument", akcia: "preindexovane", aktor,
+    companyCode, predmet: "dokument", akcia: "preindexovane", aktor: actor,
     cielId: documentId, cielPopis: meta.title,
-    poznamka: `${chunky.length} úsekov · ${archiv.modifiedCount} archivovaných · ` +
+    poznamka: `${chunks.length} úsekov · ${archive.modifiedCount} archivovaných · ` +
       "znenie ani potvrdenia sa nemenili",
   })
 
-  return { chunkov: chunky.length, archivovanych: archiv.modifiedCount, uzBolo: false, chunkingId }
+  return { chunkov: chunks.length, archivovanych: archive.modifiedCount, uzBolo: false, chunkingId }
 }
 
 /**
@@ -582,7 +582,7 @@ export async function fixVersion(
   companyCode: string,
   documentId: string,
   versionId: string,
-  vstup: {
+  input: {
     label?: string
     effectiveFrom?: Date
     effectiveFromSource?: string
@@ -590,10 +590,10 @@ export async function fixVersion(
     dovod: string
     priZmeneDatumu?: "oprava" | "znovaPotvrdit"
   },
-  aktor: string,
+  actor: string,
 ): Promise<{ potvrdeni: number; znovaPotvrdit: boolean }> {
-  const dovod = vstup.dovod?.trim() ?? ""
-  if (!dovod) {
+  const reason = input.dovod?.trim() ?? ""
+  if (!reason) {
     throw new LibraryError(
       "Dôvod opravy je povinný — bez neho sa o rok nedá zistiť, či išlo o preklep alebo o zmenu povinnosti.",
     )
@@ -610,37 +610,37 @@ export async function fixVersion(
   if (!v) throw new LibraryError("Také znenie tu nie je.")
 
   const ackCol = await getCollection(ACKNOWLEDGEMENTS_COLLECTION)
-  const potvrdeni = await ackCol.countDocuments({
+  const acknowledgementCount = await ackCol.countDocuments({
     type: "acknowledgement", companyCode, versionId,
   })
 
-  const meniDatum = vstup.effectiveFrom instanceof Date &&
-    (!v.effectiveFrom || new Date(v.effectiveFrom).getTime() !== vstup.effectiveFrom.getTime())
+  const changesDate = input.effectiveFrom instanceof Date &&
+    (!v.effectiveFrom || new Date(v.effectiveFrom).getTime() !== input.effectiveFrom.getTime())
 
-  if (meniDatum && potvrdeni > 0 && !vstup.priZmeneDatumu) {
+  if (changesDate && acknowledgementCount > 0 && !input.priZmeneDatumu) {
     throw new LibraryError(
-      `Toto znenie už potvrdilo ${potvrdeni} ľudí a formulka, ktorú podpísali, obsahuje starý dátum. ` +
+      `Toto znenie už potvrdilo ${acknowledgementCount} ľudí a formulka, ktorú podpísali, obsahuje starý dátum. ` +
       "Rozhodni, či je to oprava zápisu, alebo sa má znenie potvrdiť znova.",
     )
   }
 
-  const znovaPotvrdit = Boolean(meniDatum && potvrdeni > 0 && vstup.priZmeneDatumu === "znovaPotvrdit")
+  const reacknowledge = Boolean(changesDate && acknowledgementCount > 0 && input.priZmeneDatumu === "znovaPotvrdit")
 
-  const set: Record<string, unknown> = { updatedAt: new Date(), updatedBy: aktor }
-  if (vstup.label?.trim()) set["versions.$[v].label"] = vstup.label.trim()
-  if (vstup.effectiveFrom instanceof Date) {
-    set["versions.$[v].effectiveFrom"] = vstup.effectiveFrom
+  const set: Record<string, unknown> = { updatedAt: new Date(), updatedBy: actor }
+  if (input.label?.trim()) set["versions.$[v].label"] = input.label.trim()
+  if (input.effectiveFrom instanceof Date) {
+    set["versions.$[v].effectiveFrom"] = input.effectiveFrom
     // Dokument nesie kópiu platnosti kvôli filtrom; bez tejto vety by sa
     // rozišla s verziou a vyhľadávanie by filtrovalo podľa starého dátumu.
-    if (doc.versionId === versionId) set.effectiveFrom = vstup.effectiveFrom
+    if (doc.versionId === versionId) set.effectiveFrom = input.effectiveFrom
   }
-  if (vstup.effectiveFromSource !== undefined) {
-    set["versions.$[v].effectiveFromSource"] = vstup.effectiveFromSource.trim() || undefined
+  if (input.effectiveFromSource !== undefined) {
+    set["versions.$[v].effectiveFromSource"] = input.effectiveFromSource.trim() || undefined
   }
-  if (vstup.changeNote !== undefined) {
-    set["versions.$[v].changeNote"] = vstup.changeNote.trim() || undefined
+  if (input.changeNote !== undefined) {
+    set["versions.$[v].changeNote"] = input.changeNote.trim() || undefined
   }
-  if (znovaPotvrdit) set["versions.$[v].requiresReacknowledgement"] = true
+  if (reacknowledge) set["versions.$[v].requiresReacknowledgement"] = true
 
   await col.updateOne(
     { documentId, companyCode },
@@ -648,8 +648,8 @@ export async function fixVersion(
       $set: set,
       $push: {
         "versions.$[v].opravy": {
-          kedy: new Date(), kto: aktor, dovod,
-          znovaPotvrdit,
+          kedy: new Date(), kto: actor, dovod: reason,
+          znovaPotvrdit: reacknowledge,
           zLabel: v.label,
           zEffectiveFrom: v.effectiveFrom ?? null,
         },
@@ -659,17 +659,17 @@ export async function fixVersion(
   )
 
   await writeAudit({
-    companyCode, predmet: "dokument", akcia: "oprava-znenia", aktor,
+    companyCode, predmet: "dokument", akcia: "oprava-znenia", aktor: actor,
     cielId: documentId, cielPopis: `${String(doc.title ?? documentId)} — ${v.label}`,
     zmeny: diff(
       { label: v.label, effectiveFrom: v.effectiveFrom ?? null },
-      { label: vstup.label?.trim() ?? v.label, effectiveFrom: vstup.effectiveFrom ?? v.effectiveFrom ?? null },
+      { label: input.label?.trim() ?? v.label, effectiveFrom: input.effectiveFrom ?? v.effectiveFrom ?? null },
     ),
-    poznamka: `${dovod}${potvrdeni > 0 ? ` · potvrdení: ${potvrdeni}` : ""}` +
-      (znovaPotvrdit ? " · vyžaduje nové potvrdenie" : ""),
+    poznamka: `${reason}${acknowledgementCount > 0 ? ` · potvrdení: ${acknowledgementCount}` : ""}` +
+      (reacknowledge ? " · vyžaduje nové potvrdenie" : ""),
   })
 
-  return { potvrdeni, znovaPotvrdit }
+  return { potvrdeni: acknowledgementCount, znovaPotvrdit: reacknowledge }
 }
 
 export interface ReindexState {
@@ -689,10 +689,10 @@ export interface ReindexState {
  */
 export async function reindexState(
   companyCode: string,
-  profil?: Partial<ProfilClenenia>,
+  profile?: Partial<ProfilClenenia>,
 ): Promise<ReindexState> {
   const col = await getCollection(DOCUMENTS_COLLECTION)
-  const dokumenty = await col
+  const documents = await col
     .find(
       { companyCode },
       // `versions.$` sa sem raz zatúlalo spolu s `versions` a Mongo taký
@@ -706,22 +706,22 @@ export async function reindexState(
       versions?: { isActive?: boolean; markdown?: string }[]
     }[]
 
-  let celkom = 0
-  let neaktualnych = 0
+  let total = 0
+  let outdated = 0
 
-  for (const d of dokumenty) {
-    const platna = (d.versions ?? []).find(v => v.isActive)
-    const text = String(platna?.markdown ?? d.markdown ?? "").trim()
+  for (const d of documents) {
+    const effective = (d.versions ?? []).find(v => v.isActive)
+    const text = String(effective?.markdown ?? d.markdown ?? "").trim()
     if (!text) continue
-    celkom++
+    total++
 
-    const { chunky } = chunkuj(text, { nazovDokumentu: d.title ?? "", profil })
-    if (!chunky.length) { neaktualnych++; continue }
-    const chunkingId = chunkingFingerprint(chunky, { ...PREDVOLENY_PROFIL, ...profil })
-    if (needsReindex(d.chunkingId, chunkingId)) neaktualnych++
+    const { chunky: chunks } = chunkuj(text, { nazovDokumentu: d.title ?? "", profil: profile })
+    if (!chunks.length) { outdated++; continue }
+    const chunkingId = chunkingFingerprint(chunks, { ...PREDVOLENY_PROFIL, ...profile })
+    if (needsReindex(d.chunkingId, chunkingId)) outdated++
   }
 
-  return { celkom, neaktualnych }
+  return { celkom: total, neaktualnych: outdated }
 }
 
 /**
@@ -738,34 +738,34 @@ export async function reindexState(
  */
 export async function reindexAll(
   companyCode: string,
-  aktor: string,
-  profil?: Partial<ProfilClenenia>,
+  actor: string,
+  profile?: Partial<ProfilClenenia>,
   limit = 25,
 ): Promise<{ preindexovanych: number; preskocenych: number; zostava: number; chyby: string[] }> {
   const col = await getCollection(DOCUMENTS_COLLECTION)
-  const dokumenty = await col
+  const documents = await col
     .find({ companyCode }, { projection: { documentId: 1 } })
     .toArray() as unknown as { documentId: string }[]
 
-  let preindexovanych = 0
-  let preskocenych = 0
-  let zostava = 0
-  const chyby: string[] = []
+  let reindexed = 0
+  let skipped = 0
+  let remaining = 0
+  const errors: string[] = []
 
-  for (const d of dokumenty) {
-    if (preindexovanych >= limit) { zostava++; continue }
+  for (const d of documents) {
+    if (reindexed >= limit) { remaining++; continue }
     try {
-      const v = await reindex(companyCode, d.documentId, aktor, profil)
-      if (v.uzBolo) preskocenych++
-      else preindexovanych++
+      const v = await reindex(companyCode, d.documentId, actor, profile)
+      if (v.uzBolo) skipped++
+      else reindexed++
     } catch (e) {
       // Dokument bez publikovaného znenia sa preindexovať nedá a nie je to
       // chyba — nemá čo indexovať. Ostatné dôvody sa vypíšu menovite.
-      const sprava = e instanceof LibraryError ? e.message : String(e)
-      if (sprava.includes("publikované znenie")) preskocenych++
-      else chyby.push(`${d.documentId}: ${sprava}`)
+      const message = e instanceof LibraryError ? e.message : String(e)
+      if (message.includes("publikované znenie")) skipped++
+      else errors.push(`${d.documentId}: ${message}`)
     }
   }
 
-  return { preindexovanych, preskocenych, zostava, chyby }
+  return { preindexovanych: reindexed, preskocenych: skipped, zostava: remaining, chyby: errors }
 }

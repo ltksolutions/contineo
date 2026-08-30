@@ -24,13 +24,13 @@
  */
 
 /** Aké polia pýtame. Menej než celý profil — zvyšok nepotrebujeme. */
-const POLIA = "givenName,surname,displayName,department,jobTitle,preferredLanguage"
+const FIELDS = "givenName,surname,displayName,department,jobTitle,preferredLanguage"
 
 /** Fotka do hlavičky. 96 px kvôli obrazovkám s dvojnásobnou hustotou. */
 export const PHOTO_SIZE = 96
 
 /** Krátky strop. Prihlásenie nesmie visieť na cudzom API. */
-const STROP_MS = 4000
+const TIMEOUT_MS = 4000
 
 export interface GraphData {
   givenName?: string
@@ -43,13 +43,13 @@ export interface GraphData {
   fotka?: { contentType: string; data: Buffer }
 }
 
-async function fetchSoStropom(url: string, token: string): Promise<Response | null> {
-  const prerus = new AbortController()
-  const casovac = setTimeout(() => prerus.abort(), STROP_MS)
+async function fetchWithTimeout(url: string, token: string): Promise<Response | null> {
+  const abort = new AbortController()
+  const timer = setTimeout(() => abort.abort(), TIMEOUT_MS)
   try {
     return await fetch(url, {
       headers: { Authorization: `Bearer ${token}` },
-      signal: prerus.signal,
+      signal: abort.signal,
       // Odpoveď je o konkrétnom človeku a nikdy sa nesmie zdieľať medzi nimi.
       cache: "no-store",
     })
@@ -57,7 +57,7 @@ async function fetchSoStropom(url: string, token: string): Promise<Response | nu
     console.error("[graph] požiadavka zlyhala:", (e as Error).message)
     return null
   } finally {
-    clearTimeout(casovac)
+    clearTimeout(timer)
   }
 }
 
@@ -69,11 +69,11 @@ async function fetchSoStropom(url: string, token: string): Promise<Response | nu
  */
 export async function graphData(
   accessToken: string | undefined,
-  chceFotku = true,
+  wantPhoto = true,
 ): Promise<GraphData | null> {
   if (!accessToken) return null
 
-  const r = await fetchSoStropom(`https://graph.microsoft.com/v1.0/me?$select=${POLIA}`, accessToken)
+  const r = await fetchWithTimeout(`https://graph.microsoft.com/v1.0/me?$select=${FIELDS}`, accessToken)
   if (!r) return null
   if (!r.ok) {
     // 403 spravidla znamená chýbajúce `User.Read` v aplikácii zákazníka —
@@ -82,15 +82,15 @@ export async function graphData(
     return null
   }
 
-  let profil: Record<string, unknown>
+  let profile: Record<string, unknown>
   try {
-    profil = (await r.json()) as Record<string, unknown>
+    profile = (await r.json()) as Record<string, unknown>
   } catch {
     return null
   }
 
   const text = (k: string): string | undefined => {
-    const v = profil[k]
+    const v = profile[k]
     return typeof v === "string" && v.trim() ? v.trim() : undefined
   }
 
@@ -103,21 +103,21 @@ export async function graphData(
     preferredLanguage: text("preferredLanguage"),
   }
 
-  if (chceFotku) {
-    const f = await fetchSoStropom(
+  if (wantPhoto) {
+    const f = await fetchWithTimeout(
       `https://graph.microsoft.com/v1.0/me/photos/${PHOTO_SIZE}x${PHOTO_SIZE}/$value`,
       accessToken,
     )
     // Fotku nemá každý a 404 je bežná odpoveď, nie chyba — do logu nepatrí.
     if (f?.ok) {
       try {
-        const bajty = Buffer.from(await f.arrayBuffer())
+        const bytes = Buffer.from(await f.arrayBuffer())
         // Prázdna odpoveď sa tvári ako obrázok. Uložiť ju by znamenalo mať
         // v hlavičke prázdny štvorec namiesto iniciál.
-        if (bajty.byteLength > 0) {
+        if (bytes.byteLength > 0) {
           out.fotka = {
             contentType: f.headers.get("content-type") ?? "image/jpeg",
-            data: bajty,
+            data: bytes,
           }
         }
       } catch { /* fotka je bonus, nie podmienka */ }
@@ -135,6 +135,6 @@ export async function graphData(
  * a priezvisko zvlášť sú spoľahlivejšie.
  */
 export function fullName(u: GraphData): string | undefined {
-  const zlozene = [u.givenName, u.surname].filter(Boolean).join(" ").trim()
-  return zlozene || u.displayName
+  const joined = [u.givenName, u.surname].filter(Boolean).join(" ").trim()
+  return joined || u.displayName
 }

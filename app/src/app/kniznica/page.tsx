@@ -26,17 +26,17 @@ import Notice from "@/components/Notice"
 
 export const dynamic = "force-dynamic"
 
-const STAV_SPRACOVANIA: Record<string, string> = {
+const PROCESSING_LABEL: Record<string, string> = {
   nahrate: "nahraté",
   prevedene: "prevedené, nepublikované",
   zaindexovane: "vo vyhľadávaní",
   zlyhalo: "prevod zlyhal",
 }
 
-function velkost(bajtov: number): string {
-  return bajtov > 1024 * 1024
-    ? `${(bajtov / 1024 / 1024).toFixed(1)} MB`
-    : `${Math.max(1, Math.round(bajtov / 1024))} kB`
+function formatSize(bytes: number): string {
+  return bytes > 1024 * 1024
+    ? `${(bytes / 1024 / 1024).toFixed(1)} MB`
+    : `${Math.max(1, Math.round(bytes / 1024))} kB`
 }
 
 export default async function LibraryPage({
@@ -54,36 +54,36 @@ export default async function LibraryPage({
   }
 
   const q = await searchParams
-  const { sprava, chyba, hladat, stav, priecinok, category, language, accessLevel, tag } = q
+  const { sprava: message, chyba: error, hladat: search, stav: state, priecinok: folder, category, language, accessLevel, tag } = q
   const branding = brandingView(ctx.tenant)
-  const jazyk = ctx.person.language
-  const doplnky = tenantExtras(ctx.tenant)
+  const uiLanguage = ctx.person.language
+  const extras = tenantExtras(ctx.tenant)
 
-  const [riadky, priecinky, poctyPriecinkov] = await Promise.all([
-    libraryList(ctx.tenant.companyCode, { hladat, stav, priecinok, category, language, accessLevel, tag }),
+  const [rows, folders, folderCounts] = await Promise.all([
+    libraryList(ctx.tenant.companyCode, { hladat: search, stav: state, priecinok: folder, category, language, accessLevel, tag }),
     allFolders(ctx.tenant.companyCode),
     counts(ctx.tenant.companyCode),
   ])
-  const strom = flattenTree(priecinky)
+  const tree = flattenTree(folders)
 
   // Filtre sa nesú ďalej v každom odkaze aj v každom formulári — inak by sa
   // človek po založení priečinka ocitol späť na nefiltrovanom zozname.
-  const filtre = Object.entries({ hladat, stav, priecinok, category, language, accessLevel, tag })
+  const filters = Object.entries({ hladat: search, stav: state, priecinok: folder, category, language, accessLevel, tag })
     .filter(([, v]) => Boolean(v)) as [string, string][]
-  const sFiltrom = (zmena: Record<string, string | undefined>) => {
-    const p = new URLSearchParams(filtre)
-    for (const [k, v] of Object.entries(zmena)) {
+  const withFilter = (change: Record<string, string | undefined>) => {
+    const p = new URLSearchParams(filters)
+    for (const [k, v] of Object.entries(change)) {
       if (v === undefined || v === "") p.delete(k)
       else p.set(k, v)
     }
     const s = p.toString()
     return s ? `/kniznica?${s}` : "/kniznica"
   }
-  const jeFilter = filtre.length > 0
+  const hasFilter = filters.length > 0
 
   return (
     <div className="obal" style={{ padding: "28px 20px 80px", maxWidth: 900, ...tenantStyle(branding) }}>
-      <Notice sprava={sprava} chyba={chyba === "1"} spat="/kniznica" />
+      <Notice sprava={message} chyba={error === "1"} spat="/kniznica" />
 
       <div style={{ display: "flex", gap: 12, alignItems: "baseline", flexWrap: "wrap", margin: "0 0 6px" }}>
         <h1 style={{ fontSize: 26, letterSpacing: "-0.02em", margin: 0 }}>Knižnica</h1>
@@ -98,14 +98,14 @@ export default async function LibraryPage({
       <form className="audit-filter" method="get">
         <label className="pole" style={{ flex: "1 1 220px", margin: 0 }}>
           <span className="pole-popis">Hľadať</span>
-          <input className="pole-vstup" name="hladat" defaultValue={hladat ?? ""} placeholder="názov alebo kľúč" />
+          <input className="pole-vstup" name="hladat" defaultValue={search ?? ""} placeholder="názov alebo kľúč" />
         </label>
 
         <div className="pole" style={{ flex: "0 1 180px", margin: 0 }}>
           <span className="pole-popis">Druh</span>
           <Select
             meno="category"
-            volby={[{ hodnota: "", popis: "— všetky —" }, ...codelistOptions("category", doplnky)]}
+            volby={[{ hodnota: "", popis: "— všetky —" }, ...codelistOptions("category", extras)]}
             predvolena={category ?? ""}
             popisPola="Druh dokumentu"
           />
@@ -115,7 +115,7 @@ export default async function LibraryPage({
           <span className="pole-popis">Značka</span>
           <Select
             meno="tag"
-            volby={[{ hodnota: "", popis: "— všetky —" }, ...codelistOptions("tags", doplnky)]}
+            volby={[{ hodnota: "", popis: "— všetky —" }, ...codelistOptions("tags", extras)]}
             predvolena={tag ?? ""}
             popisPola="Značka"
           />
@@ -130,19 +130,19 @@ export default async function LibraryPage({
               { hodnota: "publikovane", popis: "publikované" },
               { hodnota: "koncept", popis: "koncepty" },
             ]}
-            predvolena={stav ?? ""}
+            predvolena={state ?? ""}
             popisPola="Stav"
           />
         </div>
 
         {/* Priečinok sa vyberá kliknutím v strome vedľa, nie tu — ale musí sa
             preniesť, inak by odoslanie filtra vyskočilo z priečinka von. */}
-        {priecinok && <input type="hidden" name="priecinok" value={priecinok} />}
+        {folder && <input type="hidden" name="priecinok" value={folder} />}
         {language && <input type="hidden" name="language" value={language} />}
         {accessLevel && <input type="hidden" name="accessLevel" value={accessLevel} />}
 
         <button className="tlacidlo tlacidlo--tiche" type="submit">Filtrovať</button>
-        {jeFilter && (
+        {hasFilter && (
           <Link className="tichy" href="/kniznica" style={{ fontSize: 14 }}>zrušiť filtre</Link>
         )}
       </form>
@@ -154,16 +154,16 @@ export default async function LibraryPage({
           <ul className="strom">
             <li className="strom-polozka">
               <Link
-                href={sFiltrom({ priecinok: undefined })}
-                className={`strom-riadok${!priecinok ? " je-aktivny" : ""}`}
+                href={withFilter({ priecinok: undefined })}
+                className={`strom-riadok${!folder ? " je-aktivny" : ""}`}
               >
                 <span className="strom-nazov">Všetky dokumenty</span>
               </Link>
             </li>
             <li className="strom-polozka">
               <Link
-                href={sFiltrom({ priecinok: "nezaradene" })}
-                className={`strom-riadok${priecinok === "nezaradene" ? " je-aktivny" : ""}`}
+                href={withFilter({ priecinok: "nezaradene" })}
+                className={`strom-riadok${folder === "nezaradene" ? " je-aktivny" : ""}`}
               >
                 <span className="tichy strom-nazov">Nezaradené</span>
               </Link>
@@ -174,23 +174,23 @@ export default async function LibraryPage({
           {/* Fixné položky vyššie do preusporadúvania nepatria — nie sú to
               priečinky, ale pohľady na celý zoznam. */}
           <TreeWithOrder
-            skryte={Object.fromEntries(filtre)}
+            skryte={Object.fromEntries(filters)}
             akcia={saveFolderOrderAction}
-            polozky={strom.map(({ priecinok: p, uroven }) => {
-              const c = poctyPriecinkov.get(p.id) ?? { priamo: 0, sPodriadenymi: 0 }
-              const pod = subtree(priecinky, p.id)
+            polozky={tree.map(({ priecinok: p, uroven: level }) => {
+              const c = folderCounts.get(p.id) ?? { priamo: 0, sPodriadenymi: 0 }
+              const inside = subtree(folders, p.id)
               return {
                 id: p.id,
                 nazov: p.nazov,
                 parentId: p.parentId ?? null,
-                uroven,
+                uroven: level,
                 obsah: (
                   <>
                   <div className="strom-riadok" style={{ gap: 6 }}>
                     <span className="strom-uchop" aria-hidden="true">⠿</span>
                     <Link
-                      href={sFiltrom({ priecinok: p.id })}
-                      className={`strom-nazov${priecinok === p.id ? " je-aktivny" : ""}`}
+                      href={withFilter({ priecinok: p.id })}
+                      className={`strom-nazov${folder === p.id ? " je-aktivny" : ""}`}
                     >
                       {p.nazov}
                     </Link>
@@ -207,14 +207,14 @@ export default async function LibraryPage({
                       <div className="strom-sipky">
                         <form action={shiftFolderAction}>
                           <input type="hidden" name="id" value={p.id} />
-                          {filtre.map(([k, v]) => <input key={k} type="hidden" name={k} value={v} />)}
+                          {filters.map(([k, v]) => <input key={k} type="hidden" name={k} value={v} />)}
                           <input type="hidden" name="smer" value="hore" />
                           <button className="tlacidlo tlacidlo--tiche" type="submit"
                                   aria-label={`Posunúť ${p.nazov} vyššie`}>↑ vyššie</button>
                         </form>
                         <form action={shiftFolderAction}>
                           <input type="hidden" name="id" value={p.id} />
-                          {filtre.map(([k, v]) => <input key={k} type="hidden" name={k} value={v} />)}
+                          {filters.map(([k, v]) => <input key={k} type="hidden" name={k} value={v} />)}
                           <input type="hidden" name="smer" value="dole" />
                           <button className="tlacidlo tlacidlo--tiche" type="submit"
                                   aria-label={`Posunúť ${p.nazov} nižšie`}>↓ nižšie</button>
@@ -223,7 +223,7 @@ export default async function LibraryPage({
 
                       <form action={renameFolderAction} className="strom-forma">
                         <input type="hidden" name="id" value={p.id} />
-                        {filtre.map(([k, v]) => <input key={k} type="hidden" name={k} value={v} />)}
+                        {filters.map(([k, v]) => <input key={k} type="hidden" name={k} value={v} />)}
                         <input className="pole-vstup" name="nazov" defaultValue={p.nazov}
                                aria-label={`Názov priečinka ${p.nazov}`} required />
                         <button className="tlacidlo tlacidlo--tiche" type="submit">Premenovať</button>
@@ -231,15 +231,15 @@ export default async function LibraryPage({
 
                       <form action={moveFolderAction} className="strom-forma">
                         <input type="hidden" name="id" value={p.id} />
-                        {filtre.map(([k, v]) => <input key={k} type="hidden" name={k} value={v} />)}
+                        {filters.map(([k, v]) => <input key={k} type="hidden" name={k} value={v} />)}
                         <Select
                           meno="parentId"
                           predvolena={p.parentId ?? ""}
                           popisPola={`Nadriadený priečinok pre ${p.nazov}`}
                           volby={[
                             { hodnota: "", popis: "— najvyššia úroveň —" },
-                            ...strom
-                              .filter(r => !pod.has(r.priecinok.id))
+                            ...tree
+                              .filter(r => !inside.has(r.priecinok.id))
                               .map(r => ({
                                 hodnota: r.priecinok.id,
                                 popis: `${"— ".repeat(r.uroven - 1)}${r.priecinok.nazov}`,
@@ -249,10 +249,10 @@ export default async function LibraryPage({
                         <button className="tlacidlo tlacidlo--tiche" type="submit">Presunúť</button>
                       </form>
 
-                      {c.sPodriadenymi === 0 && pod.size === 1 ? (
+                      {c.sPodriadenymi === 0 && inside.size === 1 ? (
                         <form action={deleteFolderAction}>
                           <input type="hidden" name="id" value={p.id} />
-                          {filtre.map(([k, v]) => <input key={k} type="hidden" name={k} value={v} />)}
+                          {filters.map(([k, v]) => <input key={k} type="hidden" name={k} value={v} />)}
                           <button className="tlacidlo tlacidlo--tiche" type="submit">Zrušiť priečinok</button>
                         </form>
                       ) : (
@@ -269,17 +269,17 @@ export default async function LibraryPage({
           />
 
           <form action={createFolderAction} className="strom-forma" style={{ marginTop: 12 }}>
-            {filtre.map(([k, v]) => <input key={k} type="hidden" name={k} value={v} />)}
+            {filters.map(([k, v]) => <input key={k} type="hidden" name={k} value={v} />)}
             <input className="pole-vstup" name="nazov" placeholder="Nový priečinok"
                    aria-label="Názov nového priečinka" required />
             <Select
               meno="parentId"
-              predvolena={priecinok && priecinok !== "nezaradene" ? priecinok : ""}
+              predvolena={folder && folder !== "nezaradene" ? folder : ""}
               popisPola="Nadriadený priečinok"
               volby={[
                 { hodnota: "", popis: "— najvyššia úroveň —" },
-                ...strom
-                  .filter(r => depth(priecinky, r.priecinok.id) < MAX_DEPTH)
+                ...tree
+                  .filter(r => depth(folders, r.priecinok.id) < MAX_DEPTH)
                   .map(r => ({
                     hodnota: r.priecinok.id,
                     popis: `${"— ".repeat(r.uroven - 1)}${r.priecinok.nazov}`,
@@ -292,27 +292,27 @@ export default async function LibraryPage({
 
         <div className="kniznica-zoznam">
 
-      {riadky.length === 0 ? (
+      {rows.length === 0 ? (
         <p className="karta" style={{ padding: 20, fontSize: 15 }}>
-          {hladat ? "Nič sa nenašlo." : "Zatiaľ tu nie je nič. Začni nahratím prvého dokumentu."}
+          {search ? "Nič sa nenašlo." : "Zatiaľ tu nie je nič. Začni nahratím prvého dokumentu."}
         </p>
       ) : (
         <ul className="audit">
-          {riadky.map(r => (
+          {rows.map(r => (
             <li key={r.documentId} className="karta audit-zaznam">
               <div className="audit-hlavicka">
                 <Link href={`/kniznica/${encodeURIComponent(r.documentId)}`} style={{ fontWeight: 600 }}>
                   {r.title}
                 </Link>
-                <span className="stitok">{STAV_SPRACOVANIA[r.stavSpracovania] ?? r.stavSpracovania}</span>
+                <span className="stitok">{PROCESSING_LABEL[r.stavSpracovania] ?? r.stavSpracovania}</span>
                 {r.maKoncept && r.stav !== "published" && <span className="stitok">koncept</span>}
               </div>
 
               <div className="tichy audit-kto">
                 {r.cestaPriecinkov?.length ? `${r.cestaPriecinkov.join(" / ")} · ` : ""}
                 {r.documentId}
-                {r.povodnySubor && ` · ${r.povodnySubor.nazov} (${velkost(r.povodnySubor.bajtov)})`}
-                {r.updatedAt && ` · ${formatDate(r.updatedAt, jazyk)}`}
+                {r.povodnySubor && ` · ${r.povodnySubor.nazov} (${formatSize(r.povodnySubor.bajtov)})`}
+                {r.updatedAt && ` · ${formatDate(r.updatedAt, uiLanguage)}`}
                 {r.updatedBy && ` · ${r.updatedBy}`}
               </div>
 

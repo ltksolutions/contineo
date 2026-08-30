@@ -52,9 +52,9 @@ export class DomainError extends Error {
 /** Je to doména, ktorú si zákazník prideliť nesmie? Vracia dôvod, nie `false`. */
 export function isOurDomain(host: string): string | null {
   const h = normalizeHostname(host)
-  for (const nasa of OUR_DOMAINS) {
-    if (h === nasa || h.endsWith(`.${nasa}`)) {
-      return `${nasa} je naša doména — subdoménu na nej vieme prideliť len my.`
+  for (const ours of OUR_DOMAINS) {
+    if (h === ours || h.endsWith(`.${ours}`)) {
+      return `${ours} je naša doména — subdoménu na nej vieme prideliť len my.`
     }
   }
   return null
@@ -72,19 +72,19 @@ export async function pointsToUs(host: string): Promise<boolean> {
   const h = normalizeHostname(host)
   // Surový cieľ, nie veta pre človeka — `pokynCname()` vracia text do
   // rozhrania a porovnávať s ním DNS by bolo porovnávanie s vetou.
-  const ciel = CNAME_TARGET.toLowerCase()
+  const target = CNAME_TARGET.toLowerCase()
 
   try {
     const cname = await dns.resolveCname(h).catch((): string[] => [])
-    if (cname.some(c => c.toLowerCase().replace(/\.$/, "") === ciel.replace(/\.$/, ""))) return true
+    if (cname.some(c => c.toLowerCase().replace(/\.$/, "") === target.replace(/\.$/, ""))) return true
   } catch { /* skúsi sa ešte adresa */ }
 
   try {
-    const [nase, ich] = await Promise.all([
-      dns.resolve4(ciel).catch((): string[] => []),
+    const [ourDomains, theirs] = await Promise.all([
+      dns.resolve4(target).catch((): string[] => []),
       dns.resolve4(h).catch((): string[] => []),
     ])
-    if (nase.length && ich.length && ich.some(a => nase.includes(a))) return true
+    if (ourDomains.length && theirs.length && theirs.some(a => ourDomains.includes(a))) return true
   } catch { /* neoverené */ }
 
   return false
@@ -113,23 +113,23 @@ export async function requestDomain(
   if (!/^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)+$/.test(host)) {
     throw new DomainError("To nevyzerá ako doména. Napr. `intranet.futbalsfz.sk`.")
   }
-  const nasa = isOurDomain(host)
-  if (nasa) throw new DomainError(nasa)
+  const ours = isOurDomain(host)
+  if (ours) throw new DomainError(ours)
 
   const col = await getCollection<Tenant & { domainRequests?: DomainRequest[] }>(TENANTS_COLLECTION)
 
   // Doména, ktorú už niekto má — vrátane nás samých. Neprezrádza sa kto:
   // z toho, že je „obsadená", by sa dalo skúšaním zistiť, kto tu portál má.
-  const uzJe = await col.findOne({ hostnames: host })
-  if (uzJe) {
+  const already = await col.findOne({ hostnames: host })
+  if (already) {
     throw new DomainError(
-      uzJe.companyCode === companyCode
+      already.companyCode === companyCode
         ? "Túto doménu už používate."
         : "Táto doména je už v systéme zapísaná. Ozvite sa nám."
     )
   }
 
-  const ziadost: DomainRequest = {
+  const request: DomainRequest = {
     host,
     requestedAt: new Date(),
     requestedBy: actor,
@@ -142,13 +142,13 @@ export async function requestDomain(
   )
   await col.updateOne(
     { companyCode },
-    { $push: { domainRequests: ziadost } } as never,
+    { $push: { domainRequests: request } } as never,
   )
   await writeAudit({
     companyCode, predmet: "domena", akcia: "poziadane", aktor: actor,
     cielId: host, cielPopis: host,
   })
-  return ziadost
+  return request
 }
 
 export type VerificationResult =
@@ -165,13 +165,13 @@ export type VerificationResult =
 export async function verifyRequest(
   companyCode: string,
   rawHost: string,
-  aktor: string,
+  actor: string,
 ): Promise<VerificationResult> {
   const host = normalizeHostname(rawHost)
   const col = await getCollection<Tenant & { domainRequests?: DomainRequest[] }>(TENANTS_COLLECTION)
   const t = await col.findOne({ companyCode })
-  const ziadost = (t?.domainRequests ?? []).find(z => z.host === host)
-  if (!ziadost) return { stav: "nenajdena" }
+  const request = (t?.domainRequests ?? []).find(z => z.host === host)
+  if (!request) return { stav: "nenajdena" }
 
   if (!(await pointsToUs(host))) {
     return { stav: "caka", host, cname: CNAME_TARGET }
@@ -187,7 +187,7 @@ export async function verifyRequest(
     { arrayFilters: [{ "z.host": host }] },
   )
   await writeAudit({
-    companyCode, predmet: "domena", akcia: "overene", aktor,
+    companyCode, predmet: "domena", akcia: "overene", aktor: actor,
     cielId: host, cielPopis: host,
     poznamka: "DNS smeruje na nás — doména zapnutá",
   })
@@ -196,7 +196,7 @@ export async function verifyRequest(
 }
 
 /** Odstráni doménu aj žiadosť. Portál na nej prestane odpovedať. */
-export async function cancelDomain(companyCode: string, rawHost: string, aktor: string): Promise<void> {
+export async function cancelDomain(companyCode: string, rawHost: string, actor: string): Promise<void> {
   const host = normalizeHostname(rawHost)
   const col = await getCollection<Tenant>(TENANTS_COLLECTION)
   const t = await col.findOne({ companyCode })
@@ -208,7 +208,7 @@ export async function cancelDomain(companyCode: string, rawHost: string, aktor: 
     { $pull: { hostnames: host, domainRequests: { host } } } as never,
   )
   await writeAudit({
-    companyCode, predmet: "domena", akcia: "zrusene", aktor,
+    companyCode, predmet: "domena", akcia: "zrusene", aktor: actor,
     cielId: host, cielPopis: host,
   })
   invalidateTenants()
@@ -218,10 +218,10 @@ export async function cancelDomain(companyCode: string, rawHost: string, aktor: 
 export function domainInstruction(host: string): { typ: string; nazov: string; hodnota: string } | null {
   if (skipVercel(host)) return null
   const h = normalizeHostname(host)
-  const bodky = h.split(".")
+  const dots = h.split(".")
   return {
     typ: "CNAME",
-    nazov: bodky.length > 2 ? bodky[0] : "@",
+    nazov: dots.length > 2 ? dots[0] : "@",
     hodnota: CNAME_TARGET,
   }
 }

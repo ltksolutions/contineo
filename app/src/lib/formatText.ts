@@ -22,8 +22,8 @@ export type Block =
   | { druh: "nadpis"; useky: Segment[]; uroven: number }
   | { druh: "zoznam"; polozky: Segment[][]; cislovany: boolean }
 
-const ODRAZKA = /^\s*[-*•]\s+(.*)$/
-const CISLO = /^\s*(\d+)[.)]\s+(.*)$/
+const BULLET = /^\s*[-*•]\s+(.*)$/
+const NUMBERED = /^\s*(\d+)[.)]\s+(.*)$/
 
 /**
  * Riadok, ktorý je celý tučný, je medzititulok — model ho oddeľuje iba
@@ -31,14 +31,14 @@ const CISLO = /^\s*(\d+)[.)]\s+(.*)$/
  * zlial by sa s odsekom pod sebou a odpoveď by stratila členenie práve tam,
  * kde ho čitateľ najviac potrebuje.
  */
-const MEDZITITULOK = /^\*\*(?!\s)(.+?)\*\*[:：]?$/
+const SUBHEADING = /^\*\*(?!\s)(.+?)\*\*[:：]?$/
 
 /**
  * Markdown nadpis. Model ich používa striedavo s tučnými medzititulkami —
  * v tej istej odpovedi vedľa seba. Bez tohto vzoru sa v texte objavilo
  * doslovné „## Hráči“, čo vyzerá ako chyba systému.
  */
-const NADPIS = /^(#{1,4})\s+(.+?)\s*#*$/
+const HEADING = /^(#{1,4})\s+(.+?)\s*#*$/
 
 /**
  * Rozdelí riadok na bežné a tučné úseky.
@@ -47,30 +47,30 @@ const NADPIS = /^(#{1,4})\s+(.+?)\s*#*$/
  * (vyčerpaný limit tokenov) končí uprostred a bolo by horšie zmiznúť
  * polovicu textu než ukázať jednu hviezdičku.
  */
-export function splitInline(riadok: string): Segment[] {
-  const useky: Segment[] = []
-  let zvysok = riadok
+export function splitInline(line: string): Segment[] {
+  const segments: Segment[] = []
+  let rest = line
 
   for (;;) {
-    const zaciatok = zvysok.indexOf("**")
-    if (zaciatok === -1) break
+    const start = rest.indexOf("**")
+    if (start === -1) break
 
-    const koniec = zvysok.indexOf("**", zaciatok + 2)
-    if (koniec === -1) break                     // nepárny — ďalej nespracúvame
+    const end = rest.indexOf("**", start + 2)
+    if (end === -1) break                     // nepárny — ďalej nespracúvame
 
-    const vnutro = zvysok.slice(zaciatok + 2, koniec)
-    if (!vnutro) {                               // `****` nie je zvýraznenie
-      zvysok = zvysok.slice(0, zaciatok) + zvysok.slice(koniec + 2)
+    const inner = rest.slice(start + 2, end)
+    if (!inner) {                               // `****` nie je zvýraznenie
+      rest = rest.slice(0, start) + rest.slice(end + 2)
       continue
     }
 
-    if (zaciatok > 0) useky.push({ druh: "text", text: zvysok.slice(0, zaciatok) })
-    useky.push({ druh: "tucne", text: vnutro })
-    zvysok = zvysok.slice(koniec + 2)
+    if (start > 0) segments.push({ druh: "text", text: rest.slice(0, start) })
+    segments.push({ druh: "tucne", text: inner })
+    rest = rest.slice(end + 2)
   }
 
-  if (zvysok) useky.push({ druh: "text", text: zvysok })
-  return useky.length ? useky : [{ druh: "text", text: "" }]
+  if (rest) segments.push({ druh: "text", text: rest })
+  return segments.length ? segments : [{ druh: "text", text: "" }]
 }
 
 /**
@@ -80,90 +80,90 @@ export function splitInline(riadok: string): Segment[] {
  * medzerou — model zalamuje podľa svojho, nie podľa šírky okna.
  */
 export function toBlocks(text: string): Block[] {
-  const bloky: Block[] = []
-  const riadky = text.split("\n")
+  const blocks: Block[] = []
+  const lines = text.split("\n")
 
-  let odsek: string[] = []
-  let zoznam: { polozky: string[]; cislovany: boolean } | null = null
+  let paragraph: string[] = []
+  let list: { polozky: string[]; cislovany: boolean } | null = null
 
-  const zavriOdsek = () => {
-    if (!odsek.length) return
-    bloky.push({ druh: "odsek", useky: splitInline(odsek.join(" ")) })
-    odsek = []
+  const closeParagraph = () => {
+    if (!paragraph.length) return
+    blocks.push({ druh: "odsek", useky: splitInline(paragraph.join(" ")) })
+    paragraph = []
   }
-  const zavriZoznam = () => {
-    if (!zoznam) return
-    bloky.push({
+  const closeList = () => {
+    if (!list) return
+    blocks.push({
       druh: "zoznam",
-      polozky: zoznam.polozky.map(splitInline),
-      cislovany: zoznam.cislovany,
+      polozky: list.polozky.map(splitInline),
+      cislovany: list.cislovany,
     })
-    zoznam = null
+    list = null
   }
 
-  for (const riadok of riadky) {
-    const orezany = riadok.trim()
+  for (const line of lines) {
+    const trimmed = line.trim()
 
-    if (!orezany) {
-      zavriOdsek()
-      zavriZoznam()
+    if (!trimmed) {
+      closeParagraph()
+      closeList()
       continue
     }
 
-    const nadpis = NADPIS.exec(orezany)
-    if (nadpis) {
-      zavriOdsek()
-      zavriZoznam()
-      bloky.push({
+    const heading = HEADING.exec(trimmed)
+    if (heading) {
+      closeParagraph()
+      closeList()
+      blocks.push({
         druh: "nadpis",
-        uroven: nadpis[1].length,
-        useky: splitInline(nadpis[2]),
+        uroven: heading[1].length,
+        useky: splitInline(heading[2]),
       })
       continue
     }
 
-    const medzititulok = MEDZITITULOK.exec(orezany)
-    if (medzititulok) {
-      zavriOdsek()
-      zavriZoznam()
+    const subheading = SUBHEADING.exec(trimmed)
+    if (subheading) {
+      closeParagraph()
+      closeList()
       // Tučný riadok je významovo to isté, čo `###` — zjednotíme, aby sa
       // v jednej odpovedi nestriedali dva rôzne vzhľady toho istého.
       // Koncová dvojbodka patrí k vete pod nadpisom, nie k nadpisu; model
       // ju píše dnu aj von z hviezdičiek, takže sa orezáva tu.
-      bloky.push({
+      blocks.push({
         druh: "nadpis", uroven: 3,
-        useky: [{ druh: "text", text: medzititulok[1].replace(/[:：]\s*$/, "") }],
+        useky: [{ druh: "text", text: subheading[1].replace(/[:：]\s*$/, "") }],
       })
       continue
     }
 
-    const odrazka = ODRAZKA.exec(riadok)
-    const cislo = CISLO.exec(riadok)
+    const bullet = BULLET.exec(line)
+    const number = NUMBERED.exec(line)
 
-    if (odrazka || cislo) {
-      zavriOdsek()
-      const cislovany = Boolean(cislo)
-      const obsah = (odrazka?.[1] ?? cislo?.[2] ?? "").trim()
+    if (bullet || number) {
+      closeParagraph()
+      const numbered = Boolean(number)
+      const content = (bullet?.[1] ?? number?.[2] ?? "").trim()
       // Zmena typu zoznamu uprostred = nový zoznam.
-      if (zoznam && zoznam.cislovany !== cislovany) zavriZoznam()
-      if (!zoznam) zoznam = { polozky: [], cislovany }
-      zoznam.polozky.push(obsah)
+      if (list && list.cislovany !== numbered) closeList()
+      if (!list) list = { polozky: [], cislovany: numbered }
+      list.polozky.push(content)
       continue
     }
 
     // Pokračovanie odrážky (odsadený riadok pod ňou).
-    if (zoznam && /^\s{2,}/.test(riadok)) {
-      zoznam.polozky[zoznam.polozky.length - 1] += " " + orezany
+    if (list && /^\s{2,}/.test(line)) {
+      list.polozky[list.polozky.length - 1] += " " + trimmed
       continue
     }
 
-    zavriZoznam()
-    odsek.push(orezany)
+    closeList()
+    paragraph.push(trimmed)
   }
 
-  zavriOdsek()
-  zavriZoznam()
-  return bloky
+  closeParagraph()
+  closeList()
+  return blocks
 }
 
 /**
@@ -181,13 +181,13 @@ export function cleanCitation(text: string): string {
   let t = text.trim()
 
   // Breadcrumb má tvar „Dokument › Časť › Článok — " a stojí na začiatku.
-  const sipka = t.lastIndexOf("›")
-  if (sipka !== -1 && sipka < 250) {
-    const zvysok = t.slice(sipka + 1).trim()
+  const arrow = t.lastIndexOf("›")
+  if (arrow !== -1 && arrow < 250) {
+    const rest = t.slice(arrow + 1).trim()
     // Za poslednou šípkou býva ešte označenie článku a jeho názov; odrežeme
     // až po prvý znak, ktorý začína samotné znenie — číslovaný odsek.
-    const odsek = /\(\d+\)|\d+\.\s/.exec(zvysok)
-    t = odsek ? zvysok.slice(odsek.index).trim() : zvysok
+    const paragraph = /\(\d+\)|\d+\.\s/.exec(rest)
+    t = paragraph ? rest.slice(paragraph.index).trim() : rest
   }
 
   return t.replace(/\s+$/, "")
@@ -204,25 +204,25 @@ export function cleanCitation(text: string): string {
  * Zlučujeme podľa očisteného textu, nie podľa `chunkIndex` — ten istý chunk
  * môže byť odcitovaný v rôznych rozsahoch a to sú rôzne citácie.
  */
-export function mergeCitations<T extends { citedText: string }>(citacie: T[]): T[] {
-  const kluc = (t: string) => cleanCitation(t).replace(/\s+/g, " ").toLowerCase()
+export function mergeCitations<T extends { citedText: string }>(citations: T[]): T[] {
+  const key = (t: string) => cleanCitation(t).replace(/\s+/g, " ").toLowerCase()
 
-  const zostavajuce: { k: string; c: T }[] = []
-  for (const c of citacie) {
-    const k = kluc(c.citedText)
+  const remaining: { k: string; c: T }[] = []
+  for (const c of citations) {
+    const k = key(c.citedText)
     if (!k) continue
 
     // Model tú istú pasáž niekedy odcituje kratšie a inde dlhšie — vtedy je
     // to jedno miesto, nie dve. Ponechá sa dlhšie znenie, lebo obsahuje aj
     // to kratšie; opačne by hodnotiteľ prišiel o časť kontextu.
-    const prekryv = zostavajuce.findIndex(z => z.k.startsWith(k) || k.startsWith(z.k))
-    if (prekryv === -1) {
-      zostavajuce.push({ k, c })
-    } else if (k.length > zostavajuce[prekryv].k.length) {
+    const overlap = remaining.findIndex(z => z.k.startsWith(k) || k.startsWith(z.k))
+    if (overlap === -1) {
+      remaining.push({ k, c })
+    } else if (k.length > remaining[overlap].k.length) {
       // Dlhšie znenie nahradí kratšie, ale na PÔVODNOM mieste — poradie
       // citácií má zodpovedať poradiu tvrdení v odpovedi.
-      zostavajuce[prekryv] = { k, c }
+      remaining[overlap] = { k, c }
     }
   }
-  return zostavajuce.map(z => z.c)
+  return remaining.map(z => z.c)
 }

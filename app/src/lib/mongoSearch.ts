@@ -105,9 +105,9 @@ export interface ChunkResult {
  * Zlý názov nevráti nulu — server agregáciu odmietne. Preto to nie je
  * konštanta, ale parameter.
  */
-type SkoreMeta = "searchScore" | "vectorSearchScore" | "score"
+type ScoreMeta = "searchScore" | "vectorSearchScore" | "score"
 
-function lookupDocument(skoreMeta: SkoreMeta): Document[] { return [
+function lookupDocument(scoreMeta: ScoreMeta): Document[] { return [
   {
     $lookup: {
       from: "documents",
@@ -133,7 +133,7 @@ function lookupDocument(skoreMeta: SkoreMeta): Document[] { return [
       articleRef: 1, heading: 1, chunkIndex: 1, tags: 1, chunkType: 1,
       embeddingModel: 1, isActive: 1, effectiveFrom: 1, effectiveTo: 1,
       document: 1,
-      score: { $meta: skoreMeta }
+      score: { $meta: scoreMeta }
     }
   }
 ] }
@@ -194,7 +194,7 @@ export async function fulltextSearch(
         }
       }
     },
-    ...bezPreambul(opts),
+    ...withoutPreamble(opts),
     // Rerank tu zámerne NIE JE: fulltext slúži na presné výrazy, §
     // a kódy noriem, kde je poradie podľa BM25 to, čo chceme. Počet
     // výsledkov sa ale musí zhodovať s ostatnými módmi, inak sa výsledky
@@ -225,13 +225,13 @@ export async function fulltextSearch(
  */
 /** Odfiltruje preambuly. Ide medzi vyhľadávanie a rerank, takže nepotrebuje
  *  filter v indexe — index sa nemusí prebudovať. */
-function bezPreambul(opts: SearchOptions): Document[] {
+function withoutPreamble(opts: SearchOptions): Document[] {
   return opts.includePreamble
     ? []
     : [{ $match: { chunkType: { $ne: "preambula" } } }]
 }
 
-function rerankStages(opts: SearchOptions, kandidatov: number, vysledkov: number): Document[] {
+function rerankStages(opts: SearchOptions, candidateCount: number, resultCount: number): Document[] {
   if (opts.useStageRerank === false) return []
   return [
     {
@@ -239,10 +239,10 @@ function rerankStages(opts: SearchOptions, kandidatov: number, vysledkov: number
         query: { text: opts.query },
         path: "text",
         model: opts.rerankModel ?? "rerank-2",
-        numDocsToRerank: kandidatov,
+        numDocsToRerank: candidateCount,
       }
     },
-    { $limit: vysledkov },
+    { $limit: resultCount },
   ]
 }
 
@@ -268,7 +268,7 @@ export async function vectorSearch(
     },
     // Voyage reranker. Pri on-prem režime stage vynechávame — rerank
     // rieši aplikačná vrstva cez adaptér (ADR-001).
-    ...bezPreambul(opts),
+    ...withoutPreamble(opts),
     ...rerankStages(opts, limit, rerankLimit),
     ...lookupDocument(opts.useStageRerank !== false ? "score" : "vectorSearchScore"),
   ]
@@ -335,7 +335,7 @@ export async function hybridSearch(
     },
     // Voyage reranker. Pri on-prem režime stage vynechávame — rerank
     // rieši aplikačná vrstva cez adaptér (ADR-001).
-    ...bezPreambul(opts),
+    ...withoutPreamble(opts),
     ...rerankStages(opts, limit, rerankLimit),
     ...lookupDocument("score"),
   ]

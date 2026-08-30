@@ -14,7 +14,7 @@ import { formatDate } from "@/lib/i18n"
 import type { AuditRecord } from "@/lib/audit"
 import type { UiLanguage } from "@/lib/i18n"
 
-const PREDMETY: Record<string, string> = {
+const SUBJECTS: Record<string, string> = {
   osoba: "osoba",
   oddelenie: "oddelenie",
   // Záznamy spred premenovania. Prepísať ich by znamenalo meniť audit.
@@ -28,7 +28,7 @@ const PREDMETY: Record<string, string> = {
   tenant: "tenant",
 }
 
-const AKCIE: Record<string, string> = {
+const ACTIONS: Record<string, string> = {
   zalozene: "založené",
   zmenene: "zmenené",
   vyradene: "vyradené",
@@ -47,7 +47,7 @@ const AKCIE: Record<string, string> = {
 
 /** Ľudské názvy polí. Neznáme pole sa ukáže tak, ako sa volá — radšej
  *  technický názov než zamlčaná zmena. */
-const POLIA: Record<string, string> = {
+const FIELDS: Record<string, string> = {
   email: "adresa",
   fullName: "meno",
   department: "oddelenie (text)",
@@ -71,7 +71,7 @@ const POLIA: Record<string, string> = {
   "branding.supportEmail": "kontakt",
 }
 
-function hodnotaText(v: unknown): string {
+function valueText(v: unknown): string {
   if (v === null || v === undefined || v === "") return "—"
   if (Array.isArray(v)) return v.length ? v.join(", ") : "—"
   if (v instanceof Date) return v.toISOString().slice(0, 10)
@@ -80,13 +80,13 @@ function hodnotaText(v: unknown): string {
 }
 
 export default function AuditList({
-  zaznamy,
-  jazyk = "sk",
+  zaznamy: records,
+  jazyk: language = "sk",
 }: {
   zaznamy: AuditRecord[]
   jazyk?: UiLanguage
 }) {
-  if (zaznamy.length === 0) {
+  if (records.length === 0) {
     return (
       <p className="karta" style={{ padding: 18, fontSize: 15 }}>
         Zatiaľ tu nie je nič. Záznamy pribúdajú pri každej správcovskej zmene —
@@ -97,31 +97,31 @@ export default function AuditList({
 
   return (
     <ul className="audit">
-      {zaznamy.map(z => (
+      {records.map(z => (
         <li key={String(z._id)} className="karta audit-zaznam">
           <div className="audit-hlavicka">
-            <span className="stitok">{PREDMETY[z.predmet] ?? z.predmet}</span>
-            <strong>{AKCIE[z.akcia] ?? z.akcia}</strong>
+            <span className="stitok">{SUBJECTS[z.predmet] ?? z.predmet}</span>
+            <strong>{ACTIONS[z.akcia] ?? z.akcia}</strong>
             {z.cielPopis && <span className="audit-ciel">{z.cielPopis}</span>}
           </div>
 
           <div className="tichy audit-kto">
-            {z.aktor} · {formatDate(z.kedy, jazyk)}
+            {z.aktor} · {formatDate(z.kedy, language)}
           </div>
 
           {z.zmeny && Object.keys(z.zmeny).length > 0 && (
             <ul className="audit-zmeny">
-              {Object.entries(z.zmeny).map(([pole, v]) => (
-                <li key={pole}>
-                  <span className="audit-pole">{POLIA[pole] ?? pole}</span>
+              {Object.entries(z.zmeny).map(([field, v]) => (
+                <li key={field}>
+                  <span className="audit-pole">{FIELDS[field] ?? field}</span>
                   {"z" in v ? (
                     <>
-                      <span className="audit-stara">{hodnotaText(v.z)}</span>
+                      <span className="audit-stara">{valueText(v.z)}</span>
                       <span aria-hidden="true"> → </span>
-                      <span className="audit-nova">{hodnotaText(v.na)}</span>
+                      <span className="audit-nova">{valueText(v.na)}</span>
                     </>
                   ) : (
-                    <span className="audit-nova">{hodnotaText(v.na)}</span>
+                    <span className="audit-nova">{valueText(v.na)}</span>
                   )}
                 </li>
               ))}

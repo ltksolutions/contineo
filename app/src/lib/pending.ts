@@ -112,11 +112,11 @@ export const acknowledgementSource: PendingSource = {
     // cez skupinu aj cez trasu, visí mu odvtedy, nie od druhého pridelenia.
     // Pri pridelení oddelenia alebo skupiny platí neskorší z dvoch dátumov: kto
     // do nich pribudol až potom, dostal úlohu vtedy, keď prišiel (D50).
-    const pridelene = new Map<string, Date>()
+    const assigned = new Map<string, Date>()
     for (const a of assignments) {
-      const kedy = dateForPerson(a, person)
-      const doteraz = pridelene.get(a.subject.versionId)
-      if (!doteraz || kedy < doteraz) pridelene.set(a.subject.versionId, kedy)
+      const when = dateForPerson(a, person)
+      const until = assigned.get(a.subject.versionId)
+      if (!until || when < until) assigned.set(a.subject.versionId, when)
     }
 
     const items = new Map<string, PendingItem>()
@@ -126,7 +126,7 @@ export const acknowledgementSource: PendingSource = {
       for (const step of track.steps) {
         if (step.blocked) { blockedCount += 1; continue }
         if (step.done) continue
-        const assignedAt = step.versionId ? pridelene.get(step.versionId) ?? null : null
+        const assignedAt = step.versionId ? assigned.get(step.versionId) ?? null : null
         items.set(step.documentId, {
           source: "acknowledgement",
           // Kľúčom je dokument, nie krok: ten istý dokument môže byť krokom
@@ -146,23 +146,23 @@ export const acknowledgementSource: PendingSource = {
 
     // Pridelenia mimo trás. Tie, ktoré už v zozname sú, sa preskočia —
     // pridelenie nemá zdvojiť úlohu, ktorú trasa už ukazuje.
-    const nepokryte = assignments.filter(a => !items.has(a.subject.documentId))
-    if (nepokryte.length > 0) {
-      const potvrdene = await acknowledgedVersionIds(
+    const uncovered = assignments.filter(a => !items.has(a.subject.documentId))
+    if (uncovered.length > 0) {
+      const acknowledged = await acknowledgedVersionIds(
         person.id,
-        nepokryte.map(a => a.subject.versionId),
+        uncovered.map(a => a.subject.versionId),
       )
 
-      for (const a of nepokryte) {
-        if (potvrdene.has(a.subject.versionId)) continue
+      for (const a of uncovered) {
+        if (acknowledged.has(a.subject.versionId)) continue
 
         // Pridelené znenie sa musí dať aj potvrdiť. Keď medzitým pribudlo
         // novšie, `/dokumenty/…` ukáže to novšie a potvrdenie by sa viazalo
         // na inú verziu — úloha by z widgetu nikdy nezmizla. Vtedy je to vec
         // pre HR (prideliť nové znenie), nie úloha pre človeka.
         const doc = await loadDocumentFor(person, a.subject.documentId)
-        const platna = doc ? effectiveVersion(doc) : null
-        if (!doc || !platna?.ok || platna.version.versionId !== a.subject.versionId) {
+        const effective = doc ? effectiveVersion(doc) : null
+        if (!doc || !effective?.ok || effective.version.versionId !== a.subject.versionId) {
           blockedCount += 1
           continue
         }

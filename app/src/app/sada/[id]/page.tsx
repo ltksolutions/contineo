@@ -17,37 +17,37 @@ export const dynamic = "force-dynamic"
 // `params` je od Next 15 prísľub.
 export default async function QuestionDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
-  const sedenie = await getServerSession(authOptions)
-  const vsetky = await loadGoldenSet(sedenie?.user?.email ?? "")
-  const otazka = vsetky.find(o => o.id === id)
-  if (!otazka) notFound()
+  const session = await getServerSession(authOptions)
+  const all = await loadGoldenSet(session?.user?.email ?? "")
+  const question = all.find(o => o.id === id)
+  if (!question) notFound()
 
-  const poradie = vsetky.findIndex(o => o.id === id)
-  const zvysne = vsetky.slice(poradie + 1)
+  const position = all.findIndex(o => o.id === id)
+  const remaining = all.slice(position + 1)
 
   // Najprv hľadáme otázku, ktorú TENTO človek ešte neposúdil — nie ktorú
   // neposúdil nikto. Pri prekryve je druhý posudok rovnako potrebný ako prvý.
-  const dalsia =
-    zvysne.find(o => !o.vyradena && o.stav === null)?.id ??
-    vsetky.find(o => !o.vyradena && o.stav === null && o.id !== id)?.id ??
+  const next =
+    remaining.find(o => !o.vyradena && o.stav === null)?.id ??
+    all.find(o => !o.vyradena && o.stav === null && o.id !== id)?.id ??
     null
 
   return (
     <div className="obal" style={{ padding: "28px 20px 80px" }}>
       <GoldenSetQuestion
-        id={otazka.id}
-        znenie={questionText(otazka)}
-        povodne={otazka.povodneZnenie}
-        upravene={otazka.upraveneZnenie}
-        vyradena={otazka.vyradena}
-        dovodVyradenia={otazka.dovodVyradenia}
-        trapType={otazka.trapType}
-        expectedBehaviour={otazka.expectedBehaviour}
-        precedenceRule={otazka.precedenceRule}
-        searchMode={otazka.searchMode}
-        prekryv={otazka.prekryv}
-        cudzie={otazka.cudzie.map(c => ({ hodnotitel: c.hodnotitel, spravna: c.spravna }))}
-        dalsia={dalsia}
+        id={question.id}
+        znenie={questionText(question)}
+        povodne={question.povodneZnenie}
+        upravene={question.upraveneZnenie}
+        vyradena={question.vyradena}
+        dovodVyradenia={question.dovodVyradenia}
+        trapType={question.trapType}
+        expectedBehaviour={question.expectedBehaviour}
+        precedenceRule={question.precedenceRule}
+        searchMode={question.searchMode}
+        prekryv={question.prekryv}
+        cudzie={question.cudzie.map(c => ({ hodnotitel: c.hodnotitel, spravna: c.spravna }))}
+        dalsia={next}
       />
     </div>
   )

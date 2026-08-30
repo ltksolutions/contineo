@@ -75,14 +75,14 @@ export class BedrockGenerationProvider implements GenerationProvider {
     this.cfg = cfg
   }
 
-  private url(streamovat: boolean): string {
-    const akcia = streamovat ? "invoke-with-response-stream" : "invoke"
+  private url(streaming: boolean): string {
+    const action = streaming ? "invoke-with-response-stream" : "invoke"
     return `https://bedrock-runtime.${this.region}.amazonaws.com` +
-           `/model/${encodeURIComponent(this.model)}/${akcia}`
+           `/model/${encodeURIComponent(this.model)}/${action}`
   }
 
-  private async posli(url: string, telo: Record<string, unknown>, signal?: AbortSignal) {
-    const body = JSON.stringify(telo)
+  private async posli(url: string, payload: Record<string, unknown>, signal?: AbortSignal) {
+    const body = JSON.stringify(payload)
     const headers = await signRequest({
       method: "POST",
       url,
@@ -106,11 +106,11 @@ export class BedrockGenerationProvider implements GenerationProvider {
   async *stream(req: GenerationRequest): AsyncGenerator<GenerationEvent> {
     // Bedrock berie model z URL, nie z tela — a `anthropic_version`
     // vyžaduje namiesto neho.
-    const telo = messagesBody(this.cfg, req, this.supportsCitations, this.model)
-    delete telo.model
-    telo.anthropic_version = BEDROCK_VERSION
+    const payload = messagesBody(this.cfg, req, this.supportsCitations, this.model)
+    delete payload.model
+    payload.anthropic_version = BEDROCK_VERSION
 
-    const res = await this.posli(this.url(true), telo)
+    const res = await this.posli(this.url(true), payload)
     if (!res.body) throw new Error("Bedrock: odpoveď bez tela")
 
     for await (const ev of readEventStream(res.body)) {
@@ -119,7 +119,7 @@ export class BedrockGenerationProvider implements GenerationProvider {
   }
 
   async complete(prompt: string, opts: CompleteOptions = {}): Promise<string> {
-    const telo: Record<string, unknown> = {
+    const payload: Record<string, unknown> = {
       anthropic_version: BEDROCK_VERSION,
       max_tokens: opts.maxTokens ?? 256,
       ...(opts.temperature !== undefined && { temperature: opts.temperature }),
@@ -127,7 +127,7 @@ export class BedrockGenerationProvider implements GenerationProvider {
     }
 
     const res = await this.posli(
-      this.url(false), telo,
+      this.url(false), payload,
       opts.timeoutMs ? AbortSignal.timeout(opts.timeoutMs) : undefined
     )
 

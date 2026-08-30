@@ -43,24 +43,24 @@ export class ConversionError extends Error {
  * Prvé bajty klamú ťažšie: ZIP-ová hlavička `PK` je v docx aj xlsx, `%PDF-`
  * v PDF.
  */
-export function detectFileType(nazov: string, data: Buffer): FileType {
-  const pripona = nazov.toLowerCase().split(".").pop() ?? ""
-  const zaciatok = data.subarray(0, 5).toString("latin1")
+export function detectFileType(name: string, data: Buffer): FileType {
+  const extension = name.toLowerCase().split(".").pop() ?? ""
+  const start = data.subarray(0, 5).toString("latin1")
 
-  if (zaciatok.startsWith("%PDF-")) return "pdf"
-  if (zaciatok.startsWith("PK")) {
-    if (pripona === "xlsx" || pripona === "xlsm") return "xlsx"
-    if (pripona === "docx") return "docx"
+  if (start.startsWith("%PDF-")) return "pdf"
+  if (start.startsWith("PK")) {
+    if (extension === "xlsx" || extension === "xlsm") return "xlsx"
+    if (extension === "docx") return "docx"
     throw new ConversionError(
       "Toto je ZIP-ový balík, ale ani docx, ani xlsx. Staré `.doc` a `.xls` sa prevádzať nedajú — " +
       "ulož ich vo Worde alebo Exceli ako novší formát.",
     )
   }
-  if (pripona === "md" || pripona === "markdown") return "markdown"
-  if (pripona === "txt" || pripona === "csv") return "text"
+  if (extension === "md" || extension === "markdown") return "markdown"
+  if (extension === "txt" || extension === "csv") return "text"
 
   throw new ConversionError(
-    `Formát ${pripona ? `.${pripona}` : "súboru"} zatiaľ nevieme previesť. ` +
+    `Formát ${extension ? `.${extension}` : "súboru"} zatiaľ nevieme previesť. ` +
     "Podporujeme .docx, .pdf, .xlsx, .md, .txt a .csv.",
   )
 }
@@ -75,7 +75,7 @@ export const FILE_TYPE_LABEL: Record<FileType, string> = {
 }
 
 /** Zjednotí konce riadkov a zahodí nezmyselné množstvo prázdnych. */
-function upraceny(text: string): string {
+function tidied(text: string): string {
   return text
     .replace(/\r\n?/g, "\n")
     .replace(/[ \t]+$/gm, "")
@@ -83,33 +83,33 @@ function upraceny(text: string): string {
     .trim()
 }
 
-async function zDocx(data: Buffer): Promise<ConversionResult> {
+async function fromDocx(data: Buffer): Promise<ConversionResult> {
   const mammoth = (await import("mammoth")).default
   const TurndownService = (await import("turndown")).default
 
-  const vysledok = await mammoth.convertToHtml({ buffer: data })
+  const result = await mammoth.convertToHtml({ buffer: data })
   const turndown = new TurndownService({
     headingStyle: "atx",
     bulletListMarker: "-",
     codeBlockStyle: "fenced",
   })
-  const markdown = upraceny(turndown.turndown(vysledok.value))
+  const markdown = tidied(turndown.turndown(result.value))
 
-  const upozornenia: string[] = []
+  const warnings: string[] = []
   // Mammoth hlási, čo zahodil. Väčšinou sú to štýly bez významu, ale
   // obrázky a poznámky pod čiarou stoja za zmienku — v norme to býva text.
-  if (vysledok.messages.some(m => /image/i.test(m.message))) {
-    upozornenia.push("Dokument obsahoval obrázky — do Markdownu sa neprepísali.")
+  if (result.messages.some(m => /image/i.test(m.message))) {
+    warnings.push("Dokument obsahoval obrázky — do Markdownu sa neprepísali.")
   }
-  if (!markdown) upozornenia.push("Z dokumentu nevyšiel žiadny text.")
+  if (!markdown) warnings.push("Z dokumentu nevyšiel žiadny text.")
 
-  return { markdown, sposob: "mammoth + turndown", upozornenia }
+  return { markdown, sposob: "mammoth + turndown", upozornenia: warnings }
 }
 
-async function zPdf(data: Buffer): Promise<ConversionResult> {
+async function fromPdf(data: Buffer): Promise<ConversionResult> {
   // Legacy zostava beží v Node bez prehliadačových API.
   const pdfjs = await import("pdfjs-dist/legacy/build/pdf.mjs")
-  const dokument = await pdfjs.getDocument({
+  const pdfDoc = await pdfjs.getDocument({
     data: new Uint8Array(data),
     // Bez pracovného vlákna: vo funkcii je to jeden proces a vlastný worker
     // by sa aj tak nemal odkiaľ načítať.
@@ -117,88 +117,88 @@ async function zPdf(data: Buffer): Promise<ConversionResult> {
     useSystemFonts: false,
   }).promise
 
-  const strany: string[] = []
-  for (let i = 1; i <= dokument.numPages; i++) {
-    const strana = await dokument.getPage(i)
-    const obsah = await strana.getTextContent()
-    const riadky: string[] = []
-    let riadok = ""
-    let poslednyY: number | null = null
+  const pageCount: string[] = []
+  for (let i = 1; i <= pdfDoc.numPages; i++) {
+    const page = await pdfDoc.getPage(i)
+    const content = await page.getTextContent()
+    const lines: string[] = []
+    let line = ""
+    let lastY: number | null = null
 
-    for (const polozka of obsah.items) {
-      const p = polozka as { str?: string; transform?: number[]; hasEOL?: boolean }
+    for (const item of content.items) {
+      const p = item as { str?: string; transform?: number[]; hasEOL?: boolean }
       if (typeof p.str !== "string") continue
       const y = p.transform?.[5] ?? null
       // Nový riadok podľa zvislej súradnice: PDF nemá riadky, má polohy.
-      if (poslednyY !== null && y !== null && Math.abs(y - poslednyY) > 2) {
-        riadky.push(riadok.trim())
-        riadok = ""
+      if (lastY !== null && y !== null && Math.abs(y - lastY) > 2) {
+        lines.push(line.trim())
+        line = ""
       }
-      riadok += p.str
+      line += p.str
       if (p.hasEOL) {
-        riadky.push(riadok.trim())
-        riadok = ""
+        lines.push(line.trim())
+        line = ""
       }
-      poslednyY = y
+      lastY = y
     }
-    if (riadok.trim()) riadky.push(riadok.trim())
-    strany.push(riadky.filter(Boolean).join("\n"))
+    if (line.trim()) lines.push(line.trim())
+    pageCount.push(lines.filter(Boolean).join("\n"))
   }
 
-  const markdown = upraceny(strany.join("\n\n"))
-  const upozornenia: string[] = []
+  const markdown = tidied(pageCount.join("\n\n"))
+  const warnings: string[] = []
 
   // Skenované PDF má strany a nemá text. Nepodsúvame OCR ticho: text, ktorý
   // vyzerá správne a nie je, je pri norme horší než chýbajúci dokument.
-  const znakovNaStranu = markdown.length / Math.max(dokument.numPages, 1)
+  const charsPerPage = markdown.length / Math.max(pdfDoc.numPages, 1)
   if (markdown.length === 0) {
     throw new ConversionError(
       "V tomto PDF nie je žiadny text — je to obrázok (sken). Prevod ho neprečíta. " +
       "V editore ho môžeš dať prepísať jazykovým modelom, alebo si vypýtaj od autora pôvodný súbor.",
     )
   }
-  if (znakovNaStranu < 200) {
-    upozornenia.push(
-      `Na stranu vychádza len ${Math.round(znakovNaStranu)} znakov — časť dokumentu je zrejme obrázok. ` +
+  if (charsPerPage < 200) {
+    warnings.push(
+      `Na stranu vychádza len ${Math.round(charsPerPage)} znakov — časť dokumentu je zrejme obrázok. ` +
       "Porovnaj Markdown s originálom.",
     )
   }
-  upozornenia.push(
+  warnings.push(
     "PDF nemá nadpisy ani zoznamy, len polohu textu — členenie treba doplniť v editore.",
   )
 
-  return { markdown, sposob: `pdfjs (${dokument.numPages} strán)`, upozornenia }
+  return { markdown, sposob: `pdfjs (${pdfDoc.numPages} strán)`, upozornenia: warnings }
 }
 
-async function zXlsx(data: Buffer): Promise<ConversionResult> {
+async function fromXlsx(data: Buffer): Promise<ConversionResult> {
   const XLSX = await import("xlsx")
-  const zosit = XLSX.read(data, { type: "buffer" })
+  const workbook = XLSX.read(data, { type: "buffer" })
 
-  const casti: string[] = []
-  for (const nazov of zosit.SheetNames) {
-    const harok = zosit.Sheets[nazov]
-    const riadky = XLSX.utils.sheet_to_json<string[]>(harok, { header: 1, raw: false, defval: "" })
-    if (riadky.length === 0) continue
+  const parts: string[] = []
+  for (const name of workbook.SheetNames) {
+    const sheet = workbook.Sheets[name]
+    const lines = XLSX.utils.sheet_to_json<string[]>(sheet, { header: 1, raw: false, defval: "" })
+    if (lines.length === 0) continue
 
-    casti.push(`## ${nazov}`)
-    const sirka = Math.max(...riadky.map(r => r.length))
-    const bunka = (v: unknown) => String(v ?? "").replace(/\|/g, "\\|").replace(/\n/g, " ").trim()
-    const doRiadku = (r: string[]) =>
-      "| " + Array.from({ length: sirka }, (_, i) => bunka(r[i])).join(" | ") + " |"
+    parts.push(`## ${name}`)
+    const width = Math.max(...lines.map(r => r.length))
+    const cell = (v: unknown) => String(v ?? "").replace(/\|/g, "\\|").replace(/\n/g, " ").trim()
+    const toRow = (r: string[]) =>
+      "| " + Array.from({ length: width }, (_, i) => cell(r[i])).join(" | ") + " |"
 
     // Prvý riadok ako hlavička. Nie je to vždy pravda, ale tabuľka bez
     // hlavičky sa v Markdowne nevykreslí vôbec — a opraviť ju v editore je
     // jednoduchšie než dopisovať.
-    casti.push(doRiadku(riadky[0]))
-    casti.push("| " + Array.from({ length: sirka }, () => "---").join(" | ") + " |")
-    for (const r of riadky.slice(1)) casti.push(doRiadku(r))
-    casti.push("")
+    parts.push(toRow(lines[0]))
+    parts.push("| " + Array.from({ length: width }, () => "---").join(" | ") + " |")
+    for (const r of lines.slice(1)) parts.push(toRow(r))
+    parts.push("")
   }
 
-  const markdown = upraceny(casti.join("\n"))
+  const markdown = tidied(parts.join("\n"))
   return {
     markdown,
-    sposob: `SheetJS (${zosit.SheetNames.length} hárkov)`,
+    sposob: `SheetJS (${workbook.SheetNames.length} hárkov)`,
     upozornenia: [
       "Prvý riadok každého hárka sa použil ako hlavička tabuľky — over, či to sedí.",
       "Vzorce sa prepísali ako hodnoty; zlúčené bunky sa rozpadli.",
@@ -208,27 +208,27 @@ async function zXlsx(data: Buffer): Promise<ConversionResult> {
 
 /** Prevedie nahratý súbor na Markdown. Vyhadzuje `KonverziaError` s návodom. */
 export async function convert(
-  nazov: string,
+  name: string,
   data: Buffer,
 ): Promise<ConversionResult & { typ: FileType }> {
-  const typ = detectFileType(nazov, data)
+  const type = detectFileType(name, data)
 
-  switch (typ) {
+  switch (type) {
     case "markdown":
     case "text": {
-      const text = upraceny(data.toString("utf8"))
+      const text = tidied(data.toString("utf8"))
       if (!text) throw new ConversionError("Súbor neobsahuje žiadny text.")
       return {
-        typ,
+        typ: type,
         markdown: text,
         sposob: "bez prevodu",
-        upozornenia: typ === "text"
+        upozornenia: type === "text"
           ? ["Text sa prevzal tak, ako bol — členenie na nadpisy treba doplniť v editore."]
           : [],
       }
     }
-    case "docx": return { typ, ...(await zDocx(data)) }
-    case "pdf": return { typ, ...(await zPdf(data)) }
-    case "xlsx": return { typ, ...(await zXlsx(data)) }
+    case "docx": return { typ: type, ...(await fromDocx(data)) }
+    case "pdf": return { typ: type, ...(await fromPdf(data)) }
+    case "xlsx": return { typ: type, ...(await fromXlsx(data)) }
   }
 }

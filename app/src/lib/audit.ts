@@ -88,11 +88,11 @@ export interface AuditRecord {
 }
 
 /** Polia, ktorých hodnoty sa do auditu nikdy nezapisujú. */
-const TAJOMSTVA = ["clientSecret", "secret", "tajomstvo", "password", "heslo", "token"]
+const SECRET_FIELDS = ["clientSecret", "secret", "tajomstvo", "password", "heslo", "token"]
 
-function jeTajomstvo(pole: string): boolean {
-  const p = pole.toLowerCase()
-  return TAJOMSTVA.some(t => p.includes(t.toLowerCase()))
+function isSecretField(field: string): boolean {
+  const p = field.toLowerCase()
+  return SECRET_FIELDS.some(t => p.includes(t.toLowerCase()))
 }
 
 /**
@@ -107,17 +107,17 @@ function jeTajomstvo(pole: string): boolean {
  * je vidieť. Falošný záznam navyše je menšia škoda než zamlčaná zmena.
  */
 export function diff(
-  pred: Record<string, unknown> | null | undefined,
-  po: Record<string, unknown> | null | undefined,
+  before: Record<string, unknown> | null | undefined,
+  after: Record<string, unknown> | null | undefined,
 ): Record<string, { z?: unknown; na?: unknown }> {
   const out: Record<string, { z?: unknown; na?: unknown }> = {}
-  const kluce = new Set([...Object.keys(pred ?? {}), ...Object.keys(po ?? {})])
+  const keys = new Set([...Object.keys(before ?? {}), ...Object.keys(after ?? {})])
 
-  for (const k of kluce) {
-    const a = pred?.[k]
-    const b = po?.[k]
+  for (const k of keys) {
+    const a = before?.[k]
+    const b = after?.[k]
     if (JSON.stringify(a ?? null) === JSON.stringify(b ?? null)) continue
-    out[k] = jeTajomstvo(k) ? { na: "(zmenené)" } : { z: a ?? null, na: b ?? null }
+    out[k] = isSecretField(k) ? { na: "(zmenené)" } : { z: a ?? null, na: b ?? null }
   }
   return out
 }
@@ -192,11 +192,11 @@ export async function auditRecords(
   if (filter.hladat?.trim()) {
     // Vstup od človeka ide do regulárneho výrazu — bez escapovania by `.*`
     // prehľadalo všetko a `(` zhodilo dotaz.
-    const bezpecne = filter.hladat.trim().replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+    const safe = filter.hladat.trim().replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
     q.$or = [
-      { cielPopis: { $regex: bezpecne, $options: "i" } },
-      { aktor: { $regex: bezpecne, $options: "i" } },
-      { akcia: { $regex: bezpecne, $options: "i" } },
+      { cielPopis: { $regex: safe, $options: "i" } },
+      { aktor: { $regex: safe, $options: "i" } },
+      { akcia: { $regex: safe, $options: "i" } },
     ]
   }
 

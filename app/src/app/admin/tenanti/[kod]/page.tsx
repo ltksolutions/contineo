@@ -32,21 +32,21 @@ import type { Tenant } from "@/lib/tenants"
  * a prázdne znamená „nemeň" — inak by uloženie zmeneného `clientId` ticho
  * vymazalo tajomstvo a prihlásenie by prestalo fungovať.
  */
-function Poskytovatel({
-  tenant, provider, domena,
+function ProviderRow({
+  tenant, provider, domena: domain,
 }: {
   tenant: Tenant
   provider: OAuthProviderName
   /** Prvá doména tenanta — do nej sa skladá adresa návratu. */
   domena?: string
 }) {
-  const nazov = PROVIDER_LABEL[provider]
+  const name = PROVIDER_LABEL[provider]
   const s = providerStatus(tenant, provider)
-  const navrat = domena
-    ? `https://${domena}/api/auth/callback/${PROVIDER_ID[provider]}`
+  const back = domain
+    ? `https://${domain}/api/auth/callback/${PROVIDER_ID[provider]}`
     : `https://<doména>/api/auth/callback/${PROVIDER_ID[provider]}`
 
-  const popisStavu = {
+  const statusLabel = {
     nastavene: "nastavené — vlastná aplikácia zákazníka",
     "z-prostredia": "beží z našich premenných prostredia, nie z vlastnej aplikácie zákazníka",
     necitatelne: "uložené, ale nedá sa prečítať — zmenil sa šifrovací kľúč, zadaj údaje znova",
@@ -56,7 +56,7 @@ function Poskytovatel({
   return (
     <section className="karta" style={{ padding: "18px 20px", display: "grid", gap: 14 }}>
       <div style={{ display: "flex", gap: 10, alignItems: "baseline", flexWrap: "wrap" }}>
-        <h2 style={{ fontSize: 17, margin: 0 }}>Prihlásenie cez {nazov}</h2>
+        <h2 style={{ fontSize: 17, margin: 0 }}>Prihlásenie cez {name}</h2>
         <span
           className="stitok"
           style={s.stav === "necitatelne"
@@ -67,20 +67,20 @@ function Poskytovatel({
         </span>
       </div>
 
-      <p className="tichy" style={{ margin: 0, fontSize: 14 }}>{popisStavu}</p>
+      <p className="tichy" style={{ margin: 0, fontSize: 14 }}>{statusLabel}</p>
 
       {/* Najčastejšia príčina toho, prečo prihlásenie hneď na prvý raz nejde. */}
       <div>
         <div className="tichy pole-napoveda">Adresa návratu — zákazník ju musí zapísať do svojej aplikácie presne takto:</div>
-        <code style={{ fontSize: 13.5, overflowWrap: "anywhere" }}>{navrat}</code>
+        <code style={{ fontSize: 13.5, overflowWrap: "anywhere" }}>{back}</code>
       </div>
 
       <form action={saveSignInAction} style={{ display: "grid", gap: 14 }}>
         <input type="hidden" name="companyCode" value={tenant.companyCode} />
         <input type="hidden" name="provider" value={provider} />
 
-        <Pole meno="clientId" popis="Client ID" hodnota={s.zdroj === "tenant" ? s.clientId : ""} />
-        <Pole
+        <Field meno="clientId" popis="Client ID" hodnota={s.zdroj === "tenant" ? s.clientId : ""} />
+        <Field
           meno="clientSecret"
           popis="Client secret"
           typ="password"
@@ -89,13 +89,13 @@ function Poskytovatel({
 
         {provider === "microsoft" ? (
           <>
-            <Pole
+            <Field
               meno="tenantMode"
               popis="Režim tenanta"
               hodnota={tenant.oauth?.microsoft?.tenantMode ?? "organizations"}
               napoveda="organizations = pracovné a školské kontá · common = aj osobné · alebo UUID jedného Entra tenanta"
             />
-            <Pole
+            <Field
               meno="allowedTenantIds"
               popis="Povolené Entra tenant id"
               hodnota={(tenant.oauth?.microsoft?.allowedTenantIds ?? []).join(", ")}
@@ -103,7 +103,7 @@ function Poskytovatel({
             />
           </>
         ) : (
-          <Pole
+          <Field
             meno="hostedDomain"
             popis="Doména Workspace (hd)"
             hodnota={tenant.oauth?.google?.hostedDomain ?? ""}
@@ -125,7 +125,7 @@ function Poskytovatel({
             sa prihlasujú pracovným kontom, tým prestane fungovať jediná cesta,
             ktorú poznajú.
           </p>
-          <Pole meno="potvrdenie" popis={`Napíš ${tenant.companyCode} na potvrdenie`} />
+          <Field meno="potvrdenie" popis={`Napíš ${tenant.companyCode} na potvrdenie`} />
           <button className="tlacidlo tlacidlo--tiche" type="submit">Odstrániť</button>
         </form>
       )}
@@ -134,7 +134,7 @@ function Poskytovatel({
 }
 
 /** Kód jazyka sám o sebe nepovie nič — „sk" je pre nás jasné, pre iných nie. */
-const JAZYKY: Record<string, string> = {
+const LANGUAGES: Record<string, string> = {
   sk: "slovenčina",
   cs: "čeština",
   en: "angličtina",
@@ -142,21 +142,21 @@ const JAZYKY: Record<string, string> = {
 
 export const dynamic = "force-dynamic"
 
-function Pole({
-  meno, popis, hodnota, napoveda, typ = "text",
+function Field({
+  meno: name, popis: label, hodnota: value, napoveda: hint, typ: type = "text",
 }: {
   meno: string; popis: string; hodnota?: string; napoveda?: string; typ?: string
 }) {
   return (
     <label className="pole">
-      <span className="pole-popis">{popis}</span>
-      <input className="pole-vstup" type={typ} name={meno} defaultValue={hodnota ?? ""} />
-      {napoveda && <span className="tichy pole-napoveda">{napoveda}</span>}
+      <span className="pole-popis">{label}</span>
+      <input className="pole-vstup" type={type} name={name} defaultValue={value ?? ""} />
+      {hint && <span className="tichy pole-napoveda">{hint}</span>}
     </label>
   )
 }
 
-function RiadokDomeny({ s }: { s: DomainStatus }) {
+function DomainRow({ s }: { s: DomainStatus }) {
   if (s.preskocena) {
     return <li className="tichy">{s.host} — netreba nič ({s.preskocena})</li>
   }
@@ -201,20 +201,20 @@ export default async function TenantDetailPage({
     notFound()
   }
 
-  const { kod } = await params
-  const { sprava, chyba } = await searchParams
-  const tenant = (await allTenants()).find(t => t.companyCode === kod.toUpperCase())
+  const { kod: code } = await params
+  const { sprava: message, chyba: error } = await searchParams
+  const tenant = (await allTenants()).find(t => t.companyCode === code.toUpperCase())
   if (!tenant) notFound()
 
   // Stav domén sa číta naživo pri každom zobrazení (D27) — uložený by klamal
   // presne vtedy, keď si zákazník DNS prestaví.
-  const domeny = await Promise.all(tenant.hostnames.map(domainStatus))
+  const domains = await Promise.all(tenant.hostnames.map(domainStatus))
   // Správca platformy vidí audit každej organizácie — kvôli podpore. Je to
   // ten istý výpis, aký vidí zákazník u seba (D51), len sem sa dostane bez
   // prepínania domén.
-  const zaznamy = await auditRecords(tenant.companyCode, { limit: 50 })
-  const cakajuce = domeny.filter(d => !d.preskocena && !d.nastaveneCez)
-  const zapnuty = tenant.status === "active"
+  const records = await auditRecords(tenant.companyCode, { limit: 50 })
+  const pending = domains.filter(d => !d.preskocena && !d.nastaveneCez)
+  const enabled = tenant.status === "active"
 
   return (
     <div className="obal" style={{ padding: "28px 20px 80px", maxWidth: 760 }}>
@@ -229,27 +229,27 @@ export default async function TenantDetailPage({
       </h1>
       <p className="tichy" style={{ margin: "0 0 20px" }}>
         {tenant.companyCode}
-        {!zapnuty && " · vypnutá"}
+        {!enabled && " · vypnutá"}
       </p>
 
-      <Notice sprava={sprava} chyba={chyba === "1"} spat={`/admin/tenanti/${encodeURIComponent(kod)}`} />
+      <Notice sprava={message} chyba={error === "1"} spat={`/admin/tenanti/${encodeURIComponent(code)}`} />
 
       <section className="karta" style={{ padding: "18px 20px", marginBottom: 16 }}>
         <h2 style={{ fontSize: 17, margin: "0 0 12px" }}>Domény</h2>
         <ul className="admin-domeny">
-          {domeny.map(d => <RiadokDomeny key={d.host} s={d} />)}
+          {domains.map(d => <DomainRow key={d.host} s={d} />)}
         </ul>
 
-        {cakajuce.length > 0 && (
+        {pending.length > 0 && (
           <form action={sendInstructionsAction} className="admin-podforma">
             <input type="hidden" name="companyCode" value={tenant.companyCode} />
             <input type="hidden" name="hostnames" value={tenant.hostnames.join(" ")} />
-            <Pole
+            <Field
               meno="komu"
               popis="Poslať pokyny na adresu"
               hodnota={tenant.branding.supportEmail}
               typ="email"
-              napoveda={`Odošle sa ${cakajuce.length === 1 ? "jeden pokyn" : `${cakajuce.length} pokyny`} a zaznamená sa, komu a kedy.`}
+              napoveda={`Odošle sa ${pending.length === 1 ? "jeden pokyn" : `${pending.length} pokyny`} a zaznamená sa, komu a kedy.`}
             />
             <button className="tlacidlo" type="submit">Odoslať pokyny</button>
           </form>
@@ -260,8 +260,8 @@ export default async function TenantDetailPage({
         <input type="hidden" name="companyCode" value={tenant.companyCode} />
         <h2 style={{ fontSize: 17, margin: 0 }}>Značka a jazyky</h2>
 
-        <Pole meno="displayName" popis="Názov v hlavičke" hodnota={tenant.branding.displayName} />
-        <Pole meno="shortName" popis="Skratka" hodnota={tenant.branding.shortName} />
+        <Field meno="displayName" popis="Názov v hlavičke" hodnota={tenant.branding.displayName} />
+        <Field meno="shortName" popis="Skratka" hodnota={tenant.branding.shortName} />
         <div className="pole">
           <span className="pole-popis">Logo</span>
           {tenant.branding.logoUrl && (
@@ -286,7 +286,7 @@ export default async function TenantDetailPage({
             sa chcelo — svetlejší tón znamená nečitateľné tlačidlo u zákazníka.
           </span>
         </div>
-        <Pole
+        <Field
           meno="supportEmail"
           popis="Kontakt organizácie"
           hodnota={tenant.branding.supportEmail}
@@ -315,7 +315,7 @@ export default async function TenantDetailPage({
           <span className="pole-popis">Predvolený jazyk</span>
           <Select
             meno="defaultLanguage"
-            volby={UI_LANGUAGES.map(j => ({ hodnota: j, popis: JAZYKY[j] ?? j }))}
+            volby={UI_LANGUAGES.map(j => ({ hodnota: j, popis: LANGUAGES[j] ?? j }))}
             predvolena={tenant.defaultLanguage}
             popisPola="Predvolený jazyk"
           />
@@ -362,23 +362,23 @@ export default async function TenantDetailPage({
       {/* Prihlasovacie údaje sú medzi úpravou a vypnutím zámerne: patria
           k zavedeniu zákazníka, nie k jeho dennému nastaveniu. */}
       <div style={{ display: "grid", gap: 16, marginTop: 16 }}>
-        <Poskytovatel tenant={tenant} provider="microsoft" domena={tenant.hostnames[0]} />
-        <Poskytovatel tenant={tenant} provider="google" domena={tenant.hostnames[0]} />
+        <ProviderRow tenant={tenant} provider="microsoft" domena={tenant.hostnames[0]} />
+        <ProviderRow tenant={tenant} provider="google" domena={tenant.hostnames[0]} />
       </div>
 
       <form action={toggleTenantStatusAction} className="karta admin-forma" style={{ marginTop: 16 }}>
         <input type="hidden" name="companyCode" value={tenant.companyCode} />
-        <input type="hidden" name="status" value={zapnuty ? "disabled" : "active"} />
+        <input type="hidden" name="status" value={enabled ? "disabled" : "active"} />
         <h2 style={{ fontSize: 17, margin: 0 }}>
-          {zapnuty ? "Vypnúť organizáciu" : "Zapnúť organizáciu"}
+          {enabled ? "Vypnúť organizáciu" : "Zapnúť organizáciu"}
         </h2>
-        {zapnuty ? (
+        {enabled ? (
           <>
             <p className="tichy" style={{ margin: 0, fontSize: 14 }}>
               Po vypnutí sa nikto z tejto organizácie neprihlási — okamžite.
               Záznamy potvrdení zostávajú, tenant sa nemaže.
             </p>
-            <Pole
+            <Field
               meno="potvrdenie"
               popis={`Napíš ${tenant.companyCode} na potvrdenie`}
               napoveda="Zámerne to nie je obyčajné „naozaj?“ — to sa odklikne skôr, než sa prečíta."
@@ -396,7 +396,7 @@ export default async function TenantDetailPage({
           Posledných 50 správcovských zmien tejto organizácie. Celý výpis
           s hľadaním má zákazník na svojej doméne v nastavení organizácie.
         </p>
-        <AuditList zaznamy={zaznamy} />
+        <AuditList zaznamy={records} />
       </section>
     </div>
   )

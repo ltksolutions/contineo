@@ -20,10 +20,10 @@
 
 import crypto from "node:crypto"
 
-const ALGORITMUS = "aes-256-gcm"
+const ALGORITHM = "aes-256-gcm"
 /** GCM odporúča 96-bitový nonce; dlhší sa interne aj tak hashuje. */
-const DLZKA_IV = 12
-const DLZKA_ZNACKY = 16
+const IV_LENGTH = 12
+const TAG_LENGTH = 16
 
 export class SecretError extends Error {
   constructor(message: string) {
@@ -68,16 +68,16 @@ export function encryptionAvailable(): boolean {
  * staré zápisy stali nečitateľnými — bez nej sa to zistí až vtedy, keď sa
  * pokúsiš rozšifrovať niečo z minulého roka.
  */
-export function encrypt(text: string, kluc = encryptionKey()): string {
-  if (!kluc) throw new SecretError("Šifrovanie nie je nastavené (OAUTH_SECRET_ENCRYPTION_KEY).")
+export function encrypt(text: string, key = encryptionKey()): string {
+  if (!key) throw new SecretError("Šifrovanie nie je nastavené (OAUTH_SECRET_ENCRYPTION_KEY).")
   if (!text) throw new SecretError("Prázdne tajomstvo sa nešifruje.")
 
-  const iv = crypto.randomBytes(DLZKA_IV)
-  const c = crypto.createCipheriv(ALGORITMUS, kluc, iv)
-  const sifra = Buffer.concat([c.update(text, "utf8"), c.final()])
-  const znacka = c.getAuthTag()
+  const iv = crypto.randomBytes(IV_LENGTH)
+  const c = crypto.createCipheriv(ALGORITHM, key, iv)
+  const cipher = Buffer.concat([c.update(text, "utf8"), c.final()])
+  const tag = c.getAuthTag()
 
-  return ["v1", iv.toString("base64url"), znacka.toString("base64url"), sifra.toString("base64url")].join(".")
+  return ["v1", iv.toString("base64url"), tag.toString("base64url"), cipher.toString("base64url")].join(".")
 }
 
 /**
@@ -87,25 +87,25 @@ export function encrypt(text: string, kluc = encryptionKey()): string {
  * nie je nastavené" a poskytovateľ by sa prestal ponúkať bez toho, aby
  * ktokoľvek vedel, že sa v skutočnosti pokazil kľúč.
  */
-export function decrypt(ulozene: string, kluc = encryptionKey()): string {
-  if (!kluc) throw new SecretError("Šifrovanie nie je nastavené (OAUTH_SECRET_ENCRYPTION_KEY).")
+export function decrypt(stored: string, key = encryptionKey()): string {
+  if (!key) throw new SecretError("Šifrovanie nie je nastavené (OAUTH_SECRET_ENCRYPTION_KEY).")
 
-  const casti = ulozene?.split(".") ?? []
-  if (casti.length !== 4 || casti[0] !== "v1") {
+  const parts = stored?.split(".") ?? []
+  if (parts.length !== 4 || parts[0] !== "v1") {
     throw new SecretError("Neznámy formát zašifrovaného údaja.")
   }
 
-  const iv = Buffer.from(casti[1], "base64url")
-  const znacka = Buffer.from(casti[2], "base64url")
-  const sifra = Buffer.from(casti[3], "base64url")
-  if (iv.length !== DLZKA_IV || znacka.length !== DLZKA_ZNACKY) {
+  const iv = Buffer.from(parts[1], "base64url")
+  const tag = Buffer.from(parts[2], "base64url")
+  const cipher = Buffer.from(parts[3], "base64url")
+  if (iv.length !== IV_LENGTH || tag.length !== TAG_LENGTH) {
     throw new SecretError("Poškodený zašifrovaný údaj.")
   }
 
   try {
-    const d = crypto.createDecipheriv(ALGORITMUS, kluc, iv)
-    d.setAuthTag(znacka)
-    return Buffer.concat([d.update(sifra), d.final()]).toString("utf8")
+    const d = crypto.createDecipheriv(ALGORITHM, key, iv)
+    d.setAuthTag(tag)
+    return Buffer.concat([d.update(cipher), d.final()]).toString("utf8")
   } catch {
     // Skutočná príčina sa zámerne nezverejňuje ďalej — či nesedí kľúč alebo
     // značka, je informácia pre útočníka a pre nás to isté: nedá sa to čítať.
@@ -119,10 +119,10 @@ export function decrypt(ulozene: string, kluc = encryptionKey()): string {
  * **Nikdy nevracia hodnotu.** Človek potrebuje vedieť len to, či je niečo
  * nastavené a či sa to dá prečítať; samotné tajomstvo má vo vlastnom Entre.
  */
-export function secretStatus(ulozene: string | undefined): "nenastavene" | "nastavene" | "necitatelne" {
-  if (!ulozene) return "nenastavene"
+export function secretStatus(stored: string | undefined): "nenastavene" | "nastavene" | "necitatelne" {
+  if (!stored) return "nenastavene"
   try {
-    return decrypt(ulozene) ? "nastavene" : "necitatelne"
+    return decrypt(stored) ? "nastavene" : "necitatelne"
   } catch {
     return "necitatelne"
   }

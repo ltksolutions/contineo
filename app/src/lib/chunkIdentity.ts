@@ -59,11 +59,11 @@ const hash = (s: string) => createHash("sha256").update(s).digest("hex").slice(0
  * rôzne znenia — a tým aj ako dve rôzne povinnosti.
  */
 export function textFingerprint(markdown: string): string {
-  const normalizovany = (markdown ?? "")
+  const normalized = (markdown ?? "")
     .replace(/\r\n?/g, "\n")
     .replace(/[ \t]+$/gm, "")
     .trim()
-  return hash(normalizovany)
+  return hash(normalized)
 }
 
 /**
@@ -74,13 +74,13 @@ export function textFingerprint(markdown: string): string {
  * že sa hashovalo niečo iné, než sa ukladá, a zmena sa neprejavila.
  */
 export function chunkingFingerprint(
-  chunky: Pick<Chunk, "chunkIndex" | "text" | "heading" | "articleRef" | "typ">[],
-  profil: unknown,
+  chunks: Pick<Chunk, "chunkIndex" | "text" | "heading" | "articleRef" | "typ">[],
+  profile: unknown,
 ): string {
   return hash(JSON.stringify({
     verzia: CHUNKER_VERSION,
-    profil,
-    chunky: chunky.map(ch => ({
+    profil: profile,
+    chunky: chunks.map(ch => ({
       i: ch.chunkIndex,
       t: ch.text,
       h: ch.heading,
@@ -97,8 +97,8 @@ export function chunkingFingerprint(
  * zavedenia rozdelenia a preindexovať ich treba práve preto.
  */
 export function needsReindex(
-  ulozene: string | null | undefined,
-  aktualne: string,
+  stored: string | null | undefined,
+  current: string,
 ): boolean {
-  return !ulozene || ulozene !== aktualne
+  return !stored || stored !== current
 }

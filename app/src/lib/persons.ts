@@ -201,8 +201,8 @@ export function normalizeEmail(email: string): string {
  * z nich by nedostala nič — a nikto by nevedel prečo, lebo v zozname by
  * vyzerali rovnako.
  */
-export function normalizeKeys(hodnoty: string[] | undefined): string[] {
-  return [...new Set((hodnoty ?? []).map(h => h?.trim().toLowerCase()).filter(Boolean))]
+export function normalizeKeys(values: string[] | undefined): string[] {
+  return [...new Set((values ?? []).map(h => h?.trim().toLowerCase()).filter(Boolean))]
 }
 
 
@@ -306,10 +306,10 @@ export async function recordExternalRef(
   externalId: string,
 ): Promise<void> {
   const address = normalizeEmail(email)
-  const pole = provider === "microsoft" ? "externalRef.entraObjectId" : "externalRef.googleSub"
+  const field = provider === "microsoft" ? "externalRef.entraObjectId" : "externalRef.googleSub"
   try {
     const col = await getCollection<Person>(PERSONS_COLLECTION)
-    await col.updateOne({ email: address }, { $set: { [pole]: externalId } })
+    await col.updateOne({ email: address }, { $set: { [field]: externalId } })
   } catch (e) {
     console.error("[persons] zápis identifikátora konta zlyhal:", e)
   }
@@ -331,21 +331,21 @@ export async function audiencesInOrg(companyCode: string): Promise<{
   trasy: { hodnota: string; osob: number }[]
 }> {
   const col = await getCollection<Person>(PERSONS_COLLECTION)
-  const osoby = await col
+  const people = await col
     .find({ companyCode, status: { $ne: "inactive" } }, { projection: { groups: 1, tracks: 1 } })
     .toArray()
 
-  const spocitaj = (vyber: (o: Person) => string[] | undefined) => {
-    const pocty = new Map<string, number>()
-    for (const o of osoby) {
-      for (const h of normalizeKeys(vyber(o))) pocty.set(h, (pocty.get(h) ?? 0) + 1)
+  const countInto = (pick: (o: Person) => string[] | undefined) => {
+    const counts = new Map<string, number>()
+    for (const o of people) {
+      for (const h of normalizeKeys(pick(o))) counts.set(h, (counts.get(h) ?? 0) + 1)
     }
-    return [...pocty.entries()]
-      .map(([hodnota, osob]) => ({ hodnota, osob }))
+    return [...counts.entries()]
+      .map(([value, peopleCount]) => ({ hodnota: value, osob: peopleCount }))
       .sort((a, b) => a.hodnota.localeCompare(b.hodnota, "sk"))
   }
 
-  return { skupiny: spocitaj(o => o.groups), trasy: spocitaj(o => o.tracks) }
+  return { skupiny: countInto(o => o.groups), trasy: countInto(o => o.tracks) }
 }
 
 // ── Import osôb ──────────────────────────────────────────────────────────────
@@ -409,16 +409,16 @@ export async function upsertPersons(
     // História členstva sa musí zapísať aj tadeto: import je najčastejší
     // spôsob, ako sa skupiny menia hromadne, a práve pri hromadnej zmene
     // je otázka „kto v skupine bol vtedy" najťažšia (D50).
-    const doteraz = await col.findOne(key, { projection: { groupHistory: 1 } })
-    const skupiny = normalizeKeys(r.groups)
+    const until = await col.findOne(key, { projection: { groupHistory: 1 } })
+    const groups = normalizeKeys(r.groups)
     const changes: Record<string, unknown> = {
       fullName: r.fullName.trim(),
       department: r.department?.trim() || undefined,
       personType: r.personType ?? "employee",
       startDate: r.startDate,
       tracks: r.tracks ?? [],
-      groups: skupiny,
-      groupHistory: newGroupHistory(doteraz?.groupHistory, skupiny, now),
+      groups: groups,
+      groupHistory: newGroupHistory(until?.groupHistory, groups, now),
       roles: r.roles ?? [],
     }
 
@@ -525,39 +525,39 @@ export async function personLanguage(email: string): Promise<UiLanguage> {
 export async function syncFromAccount(
   provider: "microsoft" | "google",
   externalId: string,
-  emailZKonta: string,
+  accountEmail: string,
   companyCode: string,
 ): Promise<Person | null> {
-  const pole = provider === "microsoft" ? "externalRef.entraObjectId" : "externalRef.googleSub"
-  const novy = normalizeEmail(emailZKonta)
+  const field = provider === "microsoft" ? "externalRef.entraObjectId" : "externalRef.googleSub"
+  const next = normalizeEmail(accountEmail)
 
   try {
     const col = await getCollection<Person>(PERSONS_COLLECTION)
-    const osoba = await col.findOne({ companyCode, [pole]: externalId })
-    if (!osoba) return null
-    if (osoba.email === novy) return osoba
+    const person = await col.findOne({ companyCode, [field]: externalId })
+    if (!person) return null
+    if (person.email === next) return person
 
     // Nová adresa už niekomu inému patrí — vtedy sa nič neprepisuje. Je to
     // stav, ktorý musí vidieť človek: buď je to omyl v adresári, alebo tu
     // máme dva záznamy pre jedného.
-    if (await col.findOne({ companyCode, email: novy })) {
+    if (await col.findOne({ companyCode, email: next })) {
       console.error(
-        `[persons] ${osoba.email} má v adresári adresu ${novy}, ktorú tu už má niekto iný — neprepisujem`
+        `[persons] ${person.email} má v adresári adresu ${next}, ktorú tu už má niekto iný — neprepisujem`
       )
-      return osoba
+      return person
     }
 
     await col.updateOne(
-      { companyCode, id: osoba.id },
+      { companyCode, id: person.id },
       {
-        $set: { email: novy },
+        $set: { email: next },
         $push: {
-          emailHistory: { email: osoba.email, doKedy: new Date(), zmenil: `auto:${provider}` },
+          emailHistory: { email: person.email, doKedy: new Date(), zmenil: `auto:${provider}` },
         },
       } as never,
     )
-    console.log(`[persons] ${osoba.email} → ${novy} (podľa konta ${provider})`)
-    return { ...osoba, email: novy }
+    console.log(`[persons] ${person.email} → ${next} (podľa konta ${provider})`)
+    return { ...person, email: next }
   } catch (e) {
     console.error("[persons] zosúladenie podľa konta zlyhalo:", e)
     return null
@@ -576,10 +576,10 @@ export function addressDomain(email: string): string {
  * Porovnáva sa **celá doména**, nie koncovka: `futbalsfz.sk` nesmie pustiť
  * `zlyfutbalsfz.sk`. Poddomény sa nepovoľujú — kto ich chce, vypíše ich.
  */
-export function isDomainAllowed(email: string, domeny: string[] | undefined): boolean {
+export function isDomainAllowed(email: string, domains: string[] | undefined): boolean {
   const d = addressDomain(email)
   if (!d) return false
-  return (domeny ?? []).some(x => x.trim().toLowerCase().replace(/^@/, "") === d)
+  return (domains ?? []).some(x => x.trim().toLowerCase().replace(/^@/, "") === d)
 }
 
 /**
@@ -596,18 +596,18 @@ export function isDomainAllowed(email: string, domeny: string[] | undefined): bo
 export async function createFromDomain(
   companyCode: string,
   email: string,
-  meno: string | undefined,
-  zdroj: string,
+  name: string | undefined,
+  source: string,
 ): Promise<Person | null> {
   const address = normalizeEmail(email)
   const now = new Date()
-  const osoba: Person = {
+  const person: Person = {
     id: crypto.randomUUID(),
     companyCode,
     email: address,
     // Meno z konta, keď ho poskytovateľ dal. Adresa je horšia než nič iné,
     // ale v zozname osôb je čitateľnejšia než prázdno.
-    fullName: meno?.trim() || address,
+    fullName: name?.trim() || address,
     personType: "employee",
     status: "active",
     language: normalizeLanguage(undefined),
@@ -616,7 +616,7 @@ export async function createFromDomain(
     roles: [],
     firstLoginAt: now,
     externalRef: { sportnetId: null, entraObjectId: null, googleSub: null },
-    createdBy: zdroj,
+    createdBy: source,
     createdAt: now,
   }
 
@@ -627,12 +627,12 @@ export async function createFromDomain(
     // ktorá by zhodila prihlásenie.
     const r = await col.updateOne(
       { companyCode, email: address },
-      { $setOnInsert: osoba as never },
+      { $setOnInsert: person as never },
       { upsert: true },
     )
     if (!r.upsertedCount) return null
-    console.log(`[persons] ${address} založený automaticky do ${companyCode} (${zdroj})`)
-    return osoba
+    console.log(`[persons] ${address} založený automaticky do ${companyCode} (${source})`)
+    return person
   } catch (e) {
     console.error("[persons] automatické založenie zlyhalo:", e)
     return null
@@ -647,12 +647,12 @@ export async function createFromDomain(
  * zavedením štruktúry história neexistuje a pridelenie im má platiť odo dňa,
  * keď vzniklo. Opačná predvoľba by im všetky staré normy schovala.
  */
-export function inDepartmentSince(osoba: Pick<Person, "departmentHistory">): Date | null {
-  const otvoreny = (osoba.departmentHistory ?? []).filter(z => !z.do)
-  if (otvoreny.length === 0) return null
+export function inDepartmentSince(person: Pick<Person, "departmentHistory">): Date | null {
+  const openRecord = (person.departmentHistory ?? []).filter(z => !z.do)
+  if (openRecord.length === 0) return null
   // Pri poškodených dátach (viac otvorených) platí ten najnovší — je to
   // opatrnejšie než najstarší: úloha sa ukáže ako novšia, nie ako prepadnutá.
-  return otvoreny.reduce((a, b) => (a.od > b.od ? a : b)).od
+  return openRecord.reduce((a, b) => (a.od > b.od ? a : b)).od
 }
 
 /**
@@ -663,21 +663,21 @@ export function inDepartmentSince(osoba: Pick<Person, "departmentHistory">): Dat
  * uloženie formulára posúvalo dátum príchodu a s ním aj termíny.
  */
 export function newDepartmentHistory(
-  doteraz: Person["departmentHistory"],
-  novyId: string | null,
-  novaCesta: string[],
-  kedy: Date,
+  until: Person["departmentHistory"],
+  newId: string | null,
+  newPath: string[],
+  when: Date,
 ): NonNullable<Person["departmentHistory"]> {
-  const zaznamy = [...(doteraz ?? [])]
-  const otvoreny = zaznamy.find(z => !z.do)
-  if (otvoreny && (otvoreny.departmentId ?? null) === (novyId ?? null)) {
+  const records = [...(until ?? [])]
+  const openRecord = records.find(z => !z.do)
+  if (openRecord && (openRecord.departmentId ?? null) === (newId ?? null)) {
     // To isté oddelenie, len sa mohla zmeniť cesta (presunuli vetvu vyššie).
-    otvoreny.departmentPath = novaCesta
-    return zaznamy
+    openRecord.departmentPath = newPath
+    return records
   }
-  if (otvoreny) otvoreny.do = kedy
-  zaznamy.push({ departmentId: novyId ?? null, departmentPath: novaCesta, od: kedy })
-  return zaznamy
+  if (openRecord) openRecord.do = when
+  records.push({ departmentId: newId ?? null, departmentPath: newPath, od: when })
+  return records
 }
 
 
@@ -688,13 +688,13 @@ export function newDepartmentHistory(
  * zavedením histórie by inak všetky staršie pridelenia zmizli.
  */
 export function inGroupSince(
-  osoba: Pick<Person, "groupHistory">,
-  skupina: string,
+  person: Pick<Person, "groupHistory">,
+  group: string,
 ): Date | null {
-  const kluc = skupina.trim().toLowerCase()
-  const otvorene = (osoba.groupHistory ?? []).filter(z => !z.do && z.group === kluc)
-  if (otvorene.length === 0) return null
-  return otvorene.reduce((a, b) => (a.od > b.od ? a : b)).od
+  const key = group.trim().toLowerCase()
+  const openRecords = (person.groupHistory ?? []).filter(z => !z.do && z.group === key)
+  if (openRecords.length === 0) return null
+  return openRecords.reduce((a, b) => (a.od > b.od ? a : b)).od
 }
 
 /**
@@ -709,21 +709,21 @@ export function inGroupSince(
  * v danom období povinnosť, sa tie dve odpovede líšia.
  */
 export function newGroupHistory(
-  doteraz: Person["groupHistory"],
-  noveSkupiny: string[],
-  kedy: Date,
+  until: Person["groupHistory"],
+  newGroups: string[],
+  when: Date,
 ): NonNullable<Person["groupHistory"]> {
-  const nove = new Set(normalizeKeys(noveSkupiny))
-  const zaznamy = (doteraz ?? []).map(z => ({ ...z }))
+  const added = new Set(normalizeKeys(newGroups))
+  const records = (until ?? []).map(z => ({ ...z }))
 
-  for (const z of zaznamy) {
-    if (!z.do && !nove.has(z.group)) z.do = kedy
+  for (const z of records) {
+    if (!z.do && !added.has(z.group)) z.do = when
   }
-  const otvorene = new Set(zaznamy.filter(z => !z.do).map(z => z.group))
-  for (const g of nove) {
-    if (!otvorene.has(g)) zaznamy.push({ group: g, od: kedy })
+  const openRecords = new Set(records.filter(z => !z.do).map(z => z.group))
+  for (const g of added) {
+    if (!openRecords.has(g)) records.push({ group: g, od: when })
   }
-  return zaznamy
+  return records
 }
 
 
@@ -744,7 +744,7 @@ export function newGroupHistory(
 export async function fillMissing(
   companyCode: string,
   email: string,
-  udaje: {
+  data: {
     fullName?: string
     givenName?: string
     surname?: string
@@ -757,27 +757,27 @@ export async function fillMissing(
   const address = normalizeEmail(email)
   try {
     const col = await getCollection<Person>(PERSONS_COLLECTION)
-    const osoba = await col.findOne({ companyCode, email: address })
-    if (!osoba) return []
+    const person = await col.findOne({ companyCode, email: address })
+    if (!person) return []
 
     const set: Record<string, unknown> = {}
-    const chyba = (v: unknown) => v === undefined || v === null || String(v).trim() === ""
+    const missing = (v: unknown) => v === undefined || v === null || String(v).trim() === ""
 
-    if (udaje.fullName && (chyba(osoba.fullName) || osoba.fullName.trim().toLowerCase() === address)) {
-      set.fullName = udaje.fullName
+    if (data.fullName && (missing(person.fullName) || person.fullName.trim().toLowerCase() === address)) {
+      set.fullName = data.fullName
     }
-    if (udaje.givenName && chyba(osoba.givenName)) set.givenName = udaje.givenName
-    if (udaje.surname && chyba(osoba.surname)) set.surname = udaje.surname
-    if (udaje.department && chyba(osoba.department)) set.department = udaje.department
-    if (udaje.jobTitle && chyba(osoba.jobTitle)) set.jobTitle = udaje.jobTitle
+    if (data.givenName && missing(person.givenName)) set.givenName = data.givenName
+    if (data.surname && missing(person.surname)) set.surname = data.surname
+    if (data.department && missing(person.department)) set.department = data.department
+    if (data.jobTitle && missing(person.jobTitle)) set.jobTitle = data.jobTitle
     // Jazyk má vždy hodnotu (predvolená slovenčina), takže „chýba" sa pri ňom
     // nedá zistiť. Prepíše sa len pri osobe založenej automaticky a len raz —
     // pri prvom prihlásení, keď ešte nemá fotku ani meno.
-    if (udaje.language && chyba(osoba.givenName) && chyba(osoba.photoVersion)) {
-      const jazyk = normalizeLanguage(udaje.language.slice(0, 2))
-      if (jazyk !== osoba.language) set.language = jazyk
+    if (data.language && missing(person.givenName) && missing(person.photoVersion)) {
+      const language = normalizeLanguage(data.language.slice(0, 2))
+      if (language !== person.language) set.language = language
     }
-    if (udaje.photoVersion && chyba(osoba.photoVersion)) set.photoVersion = udaje.photoVersion
+    if (data.photoVersion && missing(person.photoVersion)) set.photoVersion = data.photoVersion
 
     if (Object.keys(set).length === 0) return []
     await col.updateOne({ companyCode, email: address }, { $set: set } as never)
@@ -794,14 +794,14 @@ export async function fillMissing(
  * Bez tejto otázky by každé prihlásenie platilo dve požiadavky do Graphu za
  * nič. Väčšina prihlásení je opakovaná a vtedy je už všetko na mieste.
  */
-export function missingFromDirectory(osoba: Person | null): boolean {
-  if (!osoba) return true
-  const prazdne = (v: unknown) => v === undefined || v === null || String(v).trim() === ""
+export function missingFromDirectory(person: Person | null): boolean {
+  if (!person) return true
+  const empty = (v: unknown) => v === undefined || v === null || String(v).trim() === ""
   return (
-    prazdne(osoba.givenName) ||
-    prazdne(osoba.department) ||
-    prazdne(osoba.photoVersion) ||
-    prazdne(osoba.fullName) ||
-    osoba.fullName.trim().toLowerCase() === osoba.email
+    empty(person.givenName) ||
+    empty(person.department) ||
+    empty(person.photoVersion) ||
+    empty(person.fullName) ||
+    person.fullName.trim().toLowerCase() === person.email
   )
 }

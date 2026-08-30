@@ -24,13 +24,13 @@ import type { TenantBrandingView } from "./TenantHeader"
  * pamätať, že si ju kedysi nastavil — a diviť sa, prečo mu jediná stránka
  * v prehliadači nesvieti tak ako ostatné.
  */
-type Volba = "system" | "light" | "dark"
-type Tema = "light" | "dark"
+type ThemeChoice = "system" | "light" | "dark"
+type Theme = "light" | "dark"
 
 /** Poradie pri klikaní. Systém je prvý, lebo je to predvolený stav. */
-const DALSIA: Record<Volba, Volba> = { system: "light", light: "dark", dark: "system" }
+const NEXT_THEME: Record<ThemeChoice, ThemeChoice> = { system: "light", light: "dark", dark: "system" }
 
-const POPIS: Record<Volba, string> = {
+const THEME_LABEL: Record<ThemeChoice, string> = {
   system: "podľa systému",
   light: "svetlá",
   dark: "tmavá",
@@ -40,23 +40,23 @@ const POPIS: Record<Volba, string> = {
  * Ikona stavu. Tri rôzne tvary, nie jeden meniaci sa — človek má poznať
  * súčasný stav pohľadom, nie odvodením z toho, čo sa stane po kliknutí.
  */
-function IkonaTemy({ volba }: { volba: Volba }) {
-  const spolocne = {
+function ThemeIcon({ volba: choice }: { volba: ThemeChoice }) {
+  const shared = {
     width: 17, height: 17, viewBox: "0 0 18 18",
     fill: "none", stroke: "currentColor", strokeWidth: 1.6,
     strokeLinecap: "round" as const, strokeLinejoin: "round" as const,
     "aria-hidden": true,
   }
-  if (volba === "dark") {
+  if (choice === "dark") {
     return (
-      <svg {...spolocne}>
+      <svg {...shared}>
         <path d="M15 11.2A6.6 6.6 0 0 1 6.8 3a6.6 6.6 0 1 0 8.2 8.2z" />
       </svg>
     )
   }
-  if (volba === "light") {
+  if (choice === "light") {
     return (
-      <svg {...spolocne}>
+      <svg {...shared}>
         <circle cx="9" cy="9" r="3.4" />
         <path d="M9 1.4v1.8M9 14.8v1.8M1.4 9h1.8M14.8 9h1.8M3.6 3.6l1.3 1.3M13.1 13.1l1.3 1.3M14.4 3.6l-1.3 1.3M4.9 13.1l-1.3 1.3" />
       </svg>
@@ -64,7 +64,7 @@ function IkonaTemy({ volba }: { volba: Volba }) {
   }
   // Podľa systému — kruh do polovice vyplnený.
   return (
-    <svg {...spolocne}>
+    <svg {...shared}>
       <circle cx="9" cy="9" r="6.6" />
       <path d="M9 2.4a6.6 6.6 0 0 0 0 13.2z" fill="currentColor" stroke="none" />
     </svg>
@@ -79,12 +79,12 @@ function IkonaTemy({ volba }: { volba: Volba }) {
  * ľudí s fotografiou a polovica bez nej vyzerá horšie než iniciály pre
  * všetkých, a doplniť sa dá kedykoľvek bez prepisovania.
  */
-export function initials(meno: string | undefined, email: string): string {
-  const slova = (meno ?? "").trim().split(/\s+/).filter(Boolean)
-  if (slova.length >= 2) return (slova[0][0] + slova[slova.length - 1][0]).toUpperCase()
-  if (slova.length === 1 && slova[0].length > 0) return slova[0].slice(0, 2).toUpperCase()
-  const pred = email.split("@")[0] ?? ""
-  return (pred.slice(0, 2) || "?").toUpperCase()
+export function initials(name: string | undefined, email: string): string {
+  const words = (name ?? "").trim().split(/\s+/).filter(Boolean)
+  if (words.length >= 2) return (words[0][0] + words[words.length - 1][0]).toUpperCase()
+  if (words.length === 1 && words[0].length > 0) return words[0].slice(0, 2).toUpperCase()
+  const before = email.split("@")[0] ?? ""
+  return (before.slice(0, 2) || "?").toUpperCase()
 }
 
 /**
@@ -113,12 +113,12 @@ export function avatarShade(email: string): number {
 export default function Header({
   branding,
   email,
-  meno,
-  fotka,
-  spravca,
-  personalista,
-  spravcaOsob,
-  spravcaObsahu,
+  meno: name,
+  fotka: photo,
+  spravca: isAdmin,
+  personalista: isHr,
+  spravcaOsob: isPeopleAdmin,
+  spravcaObsahu: isContentManager,
 }: {
   branding?: TenantBrandingView
   email?: string
@@ -135,15 +135,15 @@ export default function Header({
   /** Má rolu `spravca-obsahu` vo vlastnej organizácii (D53). */
   spravcaObsahu?: boolean
 }) {
-  const [volba, setVolba] = useState<Volba>("system")
-  const [menuOtvorene, setMenuOtvorene] = useState(false)
-  const [osobneOtvorene, setOsobneOtvorene] = useState(false)
-  const osobneObal = useRef<HTMLDivElement>(null)
-  const cesta = usePathname()
+  const [choice, setChoice] = useState<ThemeChoice>("system")
+  const [menuOpen, setMenuOpen] = useState(false)
+  const [personalOpen, setPersonalOpen] = useState(false)
+  const personalWrap = useRef<HTMLDivElement>(null)
+  const pathname = usePathname()
 
-  const odtien = avatarShade(email ?? "")
+  const shade = avatarShade(email ?? "")
 
-  const POLOZKY = [
+  const ITEMS = [
     { kam: "/", popis: "Voľné otázky" },
     { kam: "/sada", popis: "Zlatá sada" },
     // Odkaz vidí každý prihlásený; samotná stránka si už poradí — kto nemá
@@ -152,9 +152,9 @@ export default function Header({
     { kam: "/dokumenty", popis: "Na potvrdenie" },
     // Odkazy sa neukazujú podľa domnienky klienta — príznaky prichádzajú
     // zo servera, kde už prešli všetky podmienky.
-    ...(personalista ? [{ kam: "/hr", popis: "Pridelené normy" }] : []),
-    ...(spravcaOsob ? [{ kam: "/osoby", popis: "Osoby" }] : []),
-    ...(spravcaObsahu ? [{ kam: "/kniznica", popis: "Knižnica" }] : []),
+    ...(isHr ? [{ kam: "/hr", popis: "Pridelené normy" }] : []),
+    ...(isPeopleAdmin ? [{ kam: "/osoby", popis: "Osoby" }] : []),
+    ...(isContentManager ? [{ kam: "/kniznica", popis: "Knižnica" }] : []),
   ]
 
   /**
@@ -164,9 +164,9 @@ export default function Header({
    * organizácie a správa tenantov sú veci, ktoré sa otvárajú raz za mesiac
    * a v lište len zaberali miesto tomu, na čo sa naozaj kliká.
    */
-  const SPRAVA = [
-    ...(spravcaOsob ? [{ kam: "/organizacia", popis: "Nastavenie organizácie" }] : []),
-    ...(spravca ? [{ kam: "/admin", popis: "Správa tenantov" }] : []),
+  const ADMIN_ITEMS = [
+    ...(isPeopleAdmin ? [{ kam: "/organizacia", popis: "Nastavenie organizácie" }] : []),
+    ...(isAdmin ? [{ kam: "/admin", popis: "Správa tenantov" }] : []),
   ]
 
   // Zmena stránky zatvorí panel. Bez toho zostane otvorený nad novým obsahom
@@ -174,36 +174,36 @@ export default function Header({
   // stavom (adresa v prehliadači), na ktoré efekt je.
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    setMenuOtvorene(false)
-    setOsobneOtvorene(false)
-  }, [cesta])
+    setMenuOpen(false)
+    setPersonalOpen(false)
+  }, [pathname])
 
   // Kliknutie mimo zatvára osobné menu; hamburger je cez celú šírku, ten sa
   // zatvára odkazom alebo ikonou.
   useEffect(() => {
-    if (!osobneOtvorene) return
-    const mimo = (e: MouseEvent) => {
-      if (!osobneObal.current?.contains(e.target as Node)) setOsobneOtvorene(false)
+    if (!personalOpen) return
+    const outside = (e: MouseEvent) => {
+      if (!personalWrap.current?.contains(e.target as Node)) setPersonalOpen(false)
     }
-    const escape = (e: KeyboardEvent) => { if (e.key === "Escape") setOsobneOtvorene(false) }
-    document.addEventListener("mousedown", mimo)
+    const escape = (e: KeyboardEvent) => { if (e.key === "Escape") setPersonalOpen(false) }
+    document.addEventListener("mousedown", outside)
     document.addEventListener("keydown", escape)
     return () => {
-      document.removeEventListener("mousedown", mimo)
+      document.removeEventListener("mousedown", outside)
       document.removeEventListener("keydown", escape)
     }
-  }, [osobneOtvorene])
+  }, [personalOpen])
 
   // Uložená voľba sa načíta raz po pripojení. Neznámu hodnotu (staršie
   // uloženie, ručná úprava) ticho prehliadneme — pri téme nemá zmysel padať.
   useEffect(() => {
-    const ulozena = window.localStorage.getItem("contineo-tema")
+    const stored = window.localStorage.getItem("contineo-tema")
     // `setState` v efekte tu nie je nedopatrenie: `localStorage` na serveri
     // neexistuje, takže sa prvé vykreslenie **musí** spraviť bez neho a voľba
     // sa doplní až po pripojení. Čítať ho pri vykresľovaní by znamenalo, že
     // sa server a prehliadač rozídu a React hydratáciu zahodí.
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    if (ulozena === "light" || ulozena === "dark" || ulozena === "system") setVolba(ulozena)
+    if (stored === "light" || stored === "dark" || stored === "system") setChoice(stored)
   }, [])
 
   // Uplatnenie voľby a — pri „podľa systému" — sledovanie zmien systému.
@@ -211,20 +211,20 @@ export default function Header({
   // večer prepne zariadenie na tmavý režim, má sa prepnúť aj rozhranie.
   useEffect(() => {
     const media = window.matchMedia?.("(prefers-color-scheme: dark)")
-    const uplatni = () => {
-      const tema: Tema = volba === "system" ? (media?.matches ? "dark" : "light") : volba
-      document.documentElement.dataset.theme = tema
+    const apply = () => {
+      const theme: Theme = choice === "system" ? (media?.matches ? "dark" : "light") : choice
+      document.documentElement.dataset.theme = theme
     }
-    uplatni()
-    if (volba !== "system" || !media) return
-    media.addEventListener("change", uplatni)
-    return () => media.removeEventListener("change", uplatni)
-  }, [volba])
+    apply()
+    if (choice !== "system" || !media) return
+    media.addEventListener("change", apply)
+    return () => media.removeEventListener("change", apply)
+  }, [choice])
 
-  function prepni() {
-    const nova = DALSIA[volba]
-    setVolba(nova)
-    window.localStorage.setItem("contineo-tema", nova)
+  function toggle() {
+    const next = NEXT_THEME[choice]
+    setChoice(next)
+    window.localStorage.setItem("contineo-tema", next)
   }
 
   return (
@@ -286,14 +286,14 @@ export default function Header({
             <button
               type="button"
               className="tlacidlo tlacidlo--tiche hlavicka-hamburger"
-              aria-expanded={menuOtvorene}
+              aria-expanded={menuOpen}
               aria-controls="hlavne-menu"
-              aria-label={menuOtvorene ? "Zavrieť menu" : "Otvoriť menu"}
-              onClick={() => setMenuOtvorene(o => !o)}
+              aria-label={menuOpen ? "Zavrieť menu" : "Otvoriť menu"}
+              onClick={() => setMenuOpen(o => !o)}
             >
               <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"
                 fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round">
-                {menuOtvorene
+                {menuOpen
                   ? <path d="M4 4l10 10M14 4L4 14" />
                   : <path d="M2.5 5h13M2.5 9h13M2.5 13h13" />}
               </svg>
@@ -301,16 +301,16 @@ export default function Header({
 
             <nav
               id="hlavne-menu"
-              className={`hlavicka-nav${menuOtvorene ? " je-otvorene" : ""}`}
+              className={`hlavicka-nav${menuOpen ? " je-otvorene" : ""}`}
             >
-              {POLOZKY.map(o => {
-                const aktivna = o.kam === "/" ? cesta === "/" : cesta.startsWith(o.kam)
+              {ITEMS.map(o => {
+                const active = o.kam === "/" ? pathname === "/" : pathname.startsWith(o.kam)
                 return (
                   <Link
                     key={o.kam}
                     href={o.kam}
-                    className={`hlavicka-odkaz${aktivna ? " je-aktivny" : ""}`}
-                    onClick={() => setMenuOtvorene(false)}
+                    className={`hlavicka-odkaz${active ? " je-aktivny" : ""}`}
+                    onClick={() => setMenuOpen(false)}
                   >
                     {o.popis}
                   </Link>
@@ -323,23 +323,23 @@ export default function Header({
               v lište zaberali miesto navigácii a odhlásenie navyše stálo hneď
               vedľa odkazov, na ktoré sa klikne omylom.
             */}
-            <div className="osobne" ref={osobneObal}>
+            <div className="osobne" ref={personalWrap}>
               <button
                 type="button"
                 className="osobne-tlacidlo"
                 aria-haspopup="menu"
-                aria-expanded={osobneOtvorene}
+                aria-expanded={personalOpen}
                 aria-label={`Účet ${email}`}
                 title={email}
-                onClick={() => setOsobneOtvorene(o => !o)}
+                onClick={() => setPersonalOpen(o => !o)}
               >
-                {fotka ? (
+                {photo ? (
                   // Fotka z adresára. Keď sa nenačíta, `onError` ju schová
                   // a zostanú iniciály — prázdny štvorec je horší než písmená.
                   /* eslint-disable-next-line @next/next/no-img-element */
                   <img
                     className="avatar avatar--fotka"
-                    src={fotka}
+                    src={photo}
                     alt=""
                     aria-hidden="true"
                     width={28}
@@ -351,29 +351,29 @@ export default function Header({
                   className="avatar"
                   aria-hidden="true"
                   style={{
-                    background: `hsl(${odtien} 42% 88%)`,
-                    color: `hsl(${odtien} 45% 26%)`,
-                    ...(fotka ? { display: "none" } : {}),
+                    background: `hsl(${shade} 42% 88%)`,
+                    color: `hsl(${shade} 45% 26%)`,
+                    ...(photo ? { display: "none" } : {}),
                   }}
                 >
-                  {initials(meno, email)}
+                  {initials(name, email)}
                 </span>
               </button>
 
-              {osobneOtvorene && (
+              {personalOpen && (
                 <div className="osobne-panel" role="menu">
                   <div className="osobne-hlava">
-                    {meno && <div className="osobne-meno">{meno}</div>}
+                    {name && <div className="osobne-meno">{name}</div>}
                     <div className="tichy osobne-email">{email}</div>
                   </div>
 
-                  {SPRAVA.map(o => (
+                  {ADMIN_ITEMS.map(o => (
                     <Link
                       key={o.kam}
                       href={o.kam}
                       role="menuitem"
                       className="osobne-polozka"
-                      onClick={() => setOsobneOtvorene(false)}
+                      onClick={() => setPersonalOpen(false)}
                     >
                       <svg width="17" height="17" viewBox="0 0 18 18" aria-hidden="true"
                         fill="none" stroke="currentColor" strokeWidth="1.6"
@@ -385,16 +385,16 @@ export default function Header({
                     </Link>
                   ))}
 
-                  {SPRAVA.length > 0 && <div className="osobne-ciara" />}
+                  {ADMIN_ITEMS.length > 0 && <div className="osobne-ciara" />}
 
                   <button
                     type="button"
                     role="menuitem"
                     className="osobne-polozka"
-                    onClick={prepni}
+                    onClick={toggle}
                   >
-                    <IkonaTemy volba={volba} />
-                    Téma: {POPIS[volba]}
+                    <ThemeIcon volba={choice} />
+                    Téma: {THEME_LABEL[choice]}
                   </button>
 
                   <button
@@ -419,13 +419,13 @@ export default function Header({
         {/* Neprihlásený nemá osobné menu, ale tému prepnúť môže. */}
         {!email && (
           <button
-            onClick={prepni}
+            onClick={toggle}
             className="tlacidlo tlacidlo--tiche"
             style={{ marginLeft: "auto", padding: "7px 9px", display: "inline-flex", alignItems: "center" }}
-            aria-label={`Téma ${POPIS[volba]}. Prepnúť na: ${POPIS[DALSIA[volba]]}`}
-            title={`Téma ${POPIS[volba]}`}
+            aria-label={`Téma ${THEME_LABEL[choice]}. Prepnúť na: ${THEME_LABEL[NEXT_THEME[choice]]}`}
+            title={`Téma ${THEME_LABEL[choice]}`}
           >
-            <IkonaTemy volba={volba} />
+            <ThemeIcon volba={choice} />
           </button>
         )}
       </div>

@@ -248,51 +248,51 @@ export const authOptions: NextAuthOptions = {
       // `email.verificationRequest` odlíši žiadosť o odkaz od jeho použitia.
       // Bez toho sa v logu nedá rozoznať, či človek o odkaz len požiadal,
       // alebo naň už klikol a neprešiel.
-      const poskytovatel = providerFromId(account?.provider)
-      const faza = poskytovatel ?? (email?.verificationRequest ? "ziadost" : "pouzitie-odkazu")
+      const signInProvider = providerFromId(account?.provider)
+      const phase = signInProvider ?? (email?.verificationRequest ? "ziadost" : "pouzitie-odkazu")
 
       // ── konto od Microsoftu alebo Googlu (D45) ──
       //
       // Konto hovorí „toto je naozaj tá adresa". Že ten človek patrí do
       // organizácie, hovorí až `persons` o pár riadkov nižšie.
       let externalId: string | null = null
-      if (poskytovatel) {
+      if (signInProvider) {
         const host = await requestHost()
-        const obmedzenia = await obmedzeniaPre(poskytovatel, host)
-        if (!obmedzenia) {
-          console.error(`[auth] ${faza}: obmedzenia sa nedali overiť — neprepúšťam`)
+        const limits = await limitsFor(signInProvider, host)
+        if (!limits) {
+          console.error(`[auth] ${phase}: obmedzenia sa nedali overiť — neprepúšťam`)
           return false
         }
 
-        const overenie = verifyOAuthProfile(
-          poskytovatel,
+        const verification = verifyOAuthProfile(
+          signInProvider,
           (profile ?? {}) as Record<string, unknown>,
-          obmedzenia,
+          limits,
         )
-        if (!overenie.ok) {
+        if (!verification.ok) {
           // Menovite do logu: každý z tých dôvodov znamená inú opravu
           // a „prihlásenie zlyhalo" neznamená ani jednu z nich.
-          console.error(`[auth] ${faza}: profil odmietnutý — ${overenie.dovod}`)
+          console.error(`[auth] ${phase}: profil odmietnutý — ${verification.dovod}`)
           return false
         }
 
         // Adresa z overeného profilu prebije to, čo poskytovateľ dal do
         // `user` — beriem tú, ktorú som sám skontroloval.
-        user.email = overenie.email
-        externalId = overenie.externalId
+        user.email = verification.email
+        externalId = verification.externalId
 
         // Od tejto chvíle je konto overené: `tid` je z povoleného adresára
         // (Microsoft) alebo je adresa overená (Google). Až teraz sa smie
         // podľa neho čokoľvek zapisovať.
-        const tenant = await tenantPreHost(host)
+        const tenant = await tenantForHost(host)
         if (tenant) {
           // 1. Ten istý človek s inou adresou? Rozpozná sa podľa konta —
           //    `oid` je nemenné, adresa nie (D45).
           if (externalId) {
-            const znamy = await syncFromAccount(
-              poskytovatel, externalId, overenie.email, tenant.companyCode,
+            const known = await syncFromAccount(
+              signInProvider, externalId, verification.email, tenant.companyCode,
             )
-            if (znamy) user.email = znamy.email
+            if (known) user.email = known.email
           }
 
           // 2. Ešte tu nie je a je z domény, ktorú organizácia povolila?
@@ -305,7 +305,7 @@ export const authOptions: NextAuthOptions = {
               typeof (profile as Record<string, unknown>)?.name === "string"
                 ? ((profile as Record<string, unknown>).name as string)
                 : user.name ?? undefined,
-              `auto:${poskytovatel}`,
+              `auto:${signInProvider}`,
             )
           }
 
@@ -314,8 +314,8 @@ export const authOptions: NextAuthOptions = {
           //    Až tu, po overení profilu aj po založení osoby. A **len keď
           //    naozaj niečo chýba** — inak by každé opakované prihlásenie
           //    platilo dve požiadavky do Graphu za nič.
-          if (poskytovatel === "microsoft") {
-            await doplnZAdresara(
+          if (signInProvider === "microsoft") {
+            await fillFromDirectory(
               tenant.companyCode, user.email, account?.access_token as string | undefined,
             )
           }
@@ -323,19 +323,19 @@ export const authOptions: NextAuthOptions = {
       }
 
       if (!user.email) {
-        console.error(`[auth] ${faza}: prihlásenie bez adresy`)
+        console.error(`[auth] ${phase}: prihlásenie bez adresy`)
         return false
       }
 
       // Núdzová brzda ide prvá — nepotrebuje databázu, takže správcu pustí
       // aj vtedy, keď je cluster nedostupný.
       if (isAllowed(user.email)) {
-        console.log(`[auth] ${faza}: ${user.email} — cez núdzovú brzdu`)
+        console.log(`[auth] ${phase}: ${user.email} — cez núdzovú brzdu`)
         return true
       }
 
       const allowed = await personMaySignIn(user.email)
-      console.log(`[auth] ${faza}: ${user.email} — persons ${allowed ? "povolil" : "ODMIETOL"}`)
+      console.log(`[auth] ${phase}: ${user.email} — persons ${allowed ? "povolil" : "ODMIETOL"}`)
       // Evidencia až po povolení. `recordSignIn` si chyby prehĺta sám, takže
       // `await` nemôže zhodiť prihlásenie človeka, ktorý naň má nárok —
       // pôvodný dôvod pre `void` tým odpadá.
@@ -352,8 +352,8 @@ export const authOptions: NextAuthOptions = {
         await recordSignIn(user.email)
         // Až po povolení. Odvtedy vieme, že je to to isté konto, aj keď
         // organizácia zmení človeku adresu — tá sa mení, `oid` nie.
-        if (poskytovatel && externalId) {
-          await recordExternalRef(user.email, poskytovatel, externalId)
+        if (signInProvider && externalId) {
+          await recordExternalRef(user.email, signInProvider, externalId)
         }
       }
       return allowed
@@ -417,8 +417,8 @@ export type OAuthVerification =
   | { ok: false; dovod: RejectionReason }
 
 /** Prvá hodnota, ktorá vyzerá ako e-mailová adresa. */
-function prvaAdresa(...kandidati: unknown[]): string | null {
-  for (const k of kandidati) {
+function firstAddress(...candidates: unknown[]): string | null {
+  for (const k of candidates) {
     if (typeof k === "string" && k.includes("@")) return k.trim().toLowerCase()
   }
   return null
@@ -437,29 +437,29 @@ function prvaAdresa(...kandidati: unknown[]): string | null {
  */
 export function verifyOAuthProfile(
   provider: OAuthProviderName,
-  profil: Record<string, unknown>,
-  obmedzenia: { allowedTenantIds?: string[]; hostedDomain?: string },
+  oauthProfile: Record<string, unknown>,
+  limits: { allowedTenantIds?: string[]; hostedDomain?: string },
 ): OAuthVerification {
   if (provider === "microsoft") {
     // `tid` je identifikátor Entra tenanta a v tokene od Entry je vždy.
     // Jeho neprítomnosť znamená, že to nie je to, za čo sa to vydáva.
-    const tid = typeof profil.tid === "string" ? profil.tid.toLowerCase() : null
+    const tid = typeof oauthProfile.tid === "string" ? oauthProfile.tid.toLowerCase() : null
     if (!tid) return { ok: false, dovod: "cudzi-tenant" }
 
-    const povolene = (obmedzenia.allowedTenantIds ?? []).map(x => x.toLowerCase())
+    const allowedDomains = (limits.allowedTenantIds ?? []).map(x => x.toLowerCase())
     // Prázdny zoznam = nekontroluje sa. Je to vedomé rozhodnutie správcu
     // a je o ňom napísané na obrazovke, kde sa zadáva.
-    if (povolene.length > 0 && !povolene.includes(tid)) {
+    if (allowedDomains.length > 0 && !allowedDomains.includes(tid)) {
       return { ok: false, dovod: "cudzi-tenant" }
     }
 
-    const email = prvaAdresa(profil.email, profil.preferred_username, profil.upn)
+    const email = firstAddress(oauthProfile.email, oauthProfile.preferred_username, oauthProfile.upn)
     if (!email) return { ok: false, dovod: "ziadna-adresa" }
 
     // `oid` je nemenné v rámci tenanta; `sub` je nemenné v rámci aplikácie.
     // Adresa nemenná nie je — ľudia sa vydávajú, organizácie sa premenúvajú.
-    const externalId = typeof profil.oid === "string" ? profil.oid
-      : typeof profil.sub === "string" ? profil.sub
+    const externalId = typeof oauthProfile.oid === "string" ? oauthProfile.oid
+      : typeof oauthProfile.sub === "string" ? oauthProfile.sub
       : null
     return { ok: true, email, externalId }
   }
@@ -467,20 +467,20 @@ export function verifyOAuthProfile(
   // Google
   // `email_verified` je jediný rozdiel medzi „toto je jeho adresa" a „toto si
   // napísal do profilu". Bez neho by spájanie kont podľa adresy bolo dierou.
-  if (profil.email_verified !== true) return { ok: false, dovod: "neovereny-email" }
+  if (oauthProfile.email_verified !== true) return { ok: false, dovod: "neovereny-email" }
 
-  const email = prvaAdresa(profil.email)
+  const email = firstAddress(oauthProfile.email)
   if (!email) return { ok: false, dovod: "ziadna-adresa" }
 
-  const hd = obmedzenia.hostedDomain?.trim().toLowerCase()
+  const hd = limits.hostedDomain?.trim().toLowerCase()
   if (hd) {
     // `hd` v požiadavke je pre Google len nápoveda, nie obmedzenie —
     // vynucuje sa až tu, na odpovedi.
-    const domenaKonta = typeof profil.hd === "string" ? profil.hd.toLowerCase() : null
-    if (domenaKonta !== hd) return { ok: false, dovod: "cudzia-domena" }
+    const accountDomain = typeof oauthProfile.hd === "string" ? oauthProfile.hd.toLowerCase() : null
+    if (accountDomain !== hd) return { ok: false, dovod: "cudzia-domena" }
   }
 
-  const externalId = typeof profil.sub === "string" ? profil.sub : null
+  const externalId = typeof oauthProfile.sub === "string" ? oauthProfile.sub : null
   return { ok: true, email, externalId }
 }
 
@@ -533,27 +533,27 @@ function oauthProvider(c: ResolvedCredentials): Provider {
  * nepríjemnosť; človek, ktorý sa nedostane dnu, lebo Graph mal výpadok, je
  * porucha.
  */
-async function doplnZAdresara(
+async function fillFromDirectory(
   companyCode: string,
   email: string,
   accessToken: string | undefined,
 ): Promise<void> {
   try {
     if (!accessToken) return
-    const osoba = await findPerson(email)
-    if (!missingFromDirectory(osoba)) return
+    const person = await findPerson(email)
+    if (!missingFromDirectory(person)) return
 
-    const u = await graphData(accessToken, !osoba?.photoVersion)
+    const u = await graphData(accessToken, !person?.photoVersion)
     if (!u) return
 
     let photoVersion: string | undefined
-    if (u.fotka && osoba) {
+    if (u.fotka && person) {
       photoVersion = (await savePhoto(
-        companyCode, osoba.id, u.fotka.contentType, u.fotka.data, "graph",
+        companyCode, person.id, u.fotka.contentType, u.fotka.data, "graph",
       )) ?? undefined
     }
 
-    const doplnene = await fillMissing(companyCode, email, {
+    const filled = await fillMissing(companyCode, email, {
       fullName: fullName(u),
       givenName: u.givenName,
       surname: u.surname,
@@ -562,8 +562,8 @@ async function doplnZAdresara(
       language: u.preferredLanguage,
       photoVersion,
     })
-    if (doplnene.length) {
-      console.log(`[graph] ${email}: doplnené ${doplnene.join(", ")}`)
+    if (filled.length) {
+      console.log(`[graph] ${email}: doplnené ${filled.join(", ")}`)
     }
   } catch (e) {
     console.error("[graph] doplnenie údajov zlyhalo:", e)
@@ -600,7 +600,7 @@ export async function authOptionsForHost(rawHost: string): Promise<NextAuthOptio
 }
 
 /** Tenant hostiteľa, alebo `null`. Nehádže — zlyhanie znamená „nerobiť nič navyše". */
-async function tenantPreHost(rawHost: string): Promise<Tenant | null> {
+async function tenantForHost(rawHost: string): Promise<Tenant | null> {
   try {
     return await resolveTenant(normalizeHostname(rawHost))
   } catch (e) {
@@ -610,7 +610,7 @@ async function tenantPreHost(rawHost: string): Promise<Tenant | null> {
 }
 
 /** Obmedzenia poskytovateľa pre tohto hostiteľa. Prázdne, keď nie je nastavený. */
-async function obmedzeniaPre(provider: OAuthProviderName, rawHost: string) {
+async function limitsFor(provider: OAuthProviderName, rawHost: string) {
   try {
     const tenant = await resolveTenant(normalizeHostname(rawHost))
     const c = resolveCredentials(tenant, provider)
@@ -624,8 +624,8 @@ async function obmedzeniaPre(provider: OAuthProviderName, rawHost: string) {
 /** Z identifikátora NextAuthu späť na náš názov. `null` pri e-maile. */
 export function providerFromId(id: string | undefined): OAuthProviderName | null {
   if (!id) return null
-  for (const [nas, nextauth] of Object.entries(PROVIDER_ID)) {
-    if (nextauth === id) return nas as OAuthProviderName
+  for (const [ours, nextauth] of Object.entries(PROVIDER_ID)) {
+    if (nextauth === id) return ours as OAuthProviderName
   }
   return null
 }

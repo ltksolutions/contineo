@@ -40,7 +40,7 @@ export default async function EditorPage({
   }
 
   const { id } = await params
-  const { sprava, chyba } = await searchParams
+  const { sprava: message, chyba: error } = await searchParams
   const documentId = decodeURIComponent(id)
   const d = await libraryDetail(ctx.tenant.companyCode, documentId)
   if (!d) notFound()
@@ -48,22 +48,22 @@ export default async function EditorPage({
   // Návrh sa nečíta cez `detailKniznice` — je to dočasná vec editora, nie
   // súčasť dokumentu, a v zozname by nemal čo robiť.
   const col = await getCollection(DOCUMENTS_COLLECTION)
-  const surovy = (await col.findOne(
+  const raw = (await col.findOne(
     { companyCode: ctx.tenant.companyCode, documentId },
     { projection: { llmNavrh: 1 } },
   )) as { llmNavrh?: { text: string; model: string; rezim: string; kedy: Date } } | null
-  const navrh = surovy?.llmNavrh
+  const draft = raw?.llmNavrh
 
   const branding = brandingView(ctx.tenant)
-  const jazyk = ctx.person.language
-  const jePdf = d.originalFile?.typ === "pdf"
-  const odkazNaSubor = d.originalFile
+  const language = ctx.person.language
+  const isPdf = d.originalFile?.typ === "pdf"
+  const fileUrl = d.originalFile
     ? `/api/kniznica/subor/${encodeURIComponent(d.originalFile.id)}`
     : null
 
   return (
     <div className="obal" style={{ padding: "24px 20px 80px", maxWidth: 1200, ...tenantStyle(branding) }}>
-      <Notice sprava={sprava} chyba={chyba === "1"} spat={`/kniznica/${encodeURIComponent(documentId)}/text`} />
+      <Notice sprava={message} chyba={error === "1"} spat={`/kniznica/${encodeURIComponent(documentId)}/text`} />
 
       <p style={{ margin: "0 0 10px" }}>
         <Link className="tichy" href={`/kniznica/${encodeURIComponent(documentId)}`} style={{ fontSize: 14 }}>
@@ -82,20 +82,20 @@ export default async function EditorPage({
         </ul>
       ) : null}
 
-      {navrh ? (
+      {draft ? (
         <section className="karta" style={{ padding: 18, display: "grid", gap: 12, margin: "0 0 18px" }}>
           <div className="audit-hlavicka">
             <span className="stitok">návrh modelu</span>
-            <strong>{navrh.rezim === "prepisat-sken" ? "prepis skenu" : "prečistenie členenia"}</strong>
+            <strong>{draft.rezim === "prepisat-sken" ? "prepis skenu" : "prečistenie členenia"}</strong>
             <span className="tichy" style={{ fontSize: 13 }}>
-              {navrh.model} · {formatDate(navrh.kedy, jazyk)} · {navrh.text.length} znakov
+              {draft.model} · {formatDate(draft.kedy, language)} · {draft.text.length} znakov
             </span>
           </div>
           <p className="tichy" style={{ fontSize: 13.5, margin: 0 }}>
             Model mal zakázané meniť znenie — <strong>over to</strong>. Prijatím sa návrh stane
             konceptom; pôvodný text sa tým prepíše.
           </p>
-          <textarea className="pole-vstup editor-text" readOnly rows={14} value={navrh.text} />
+          <textarea className="pole-vstup editor-text" readOnly rows={14} value={draft.text} />
           <form action={decideOnDraftAction} style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
             <input type="hidden" name="documentId" value={documentId} />
             <button className="tlacidlo" type="submit" name="volba" value="prijat">Použiť ako koncept</button>
@@ -107,18 +107,18 @@ export default async function EditorPage({
       <div className="editor-mriezka">
         <section className="editor-stlpec">
           <h2 className="pole-popis" style={{ margin: "0 0 8px" }}>Originál</h2>
-          {odkazNaSubor ? (
-            jePdf ? (
-              <object className="editor-nahlad" data={odkazNaSubor} type="application/pdf">
+          {fileUrl ? (
+            isPdf ? (
+              <object className="editor-nahlad" data={fileUrl} type="application/pdf">
                 <p className="tichy" style={{ fontSize: 14, padding: 12 }}>
                   Prehliadač PDF nezobrazí.{" "}
-                  <a href={odkazNaSubor} target="_blank" rel="noreferrer">Otvor ho v novom okne</a>.
+                  <a href={fileUrl} target="_blank" rel="noreferrer">Otvor ho v novom okne</a>.
                 </p>
               </object>
             ) : (
               <p className="karta" style={{ padding: 16, fontSize: 14 }}>
                 {d.originalFile?.nazov} sa v prehliadači nezobrazí.{" "}
-                <a href={odkazNaSubor} target="_blank" rel="noreferrer">Stiahni ho</a> a porovnaj vedľa.
+                <a href={fileUrl} target="_blank" rel="noreferrer">Stiahni ho</a> a porovnaj vedľa.
               </p>
             )
           ) : (
@@ -156,13 +156,13 @@ export default async function EditorPage({
           <button className="tlacidlo tlacidlo--tiche" type="submit" name="rezim" value="precistit">
             Prečistiť členenie
           </button>
-          {jePdf && (
+          {isPdf && (
             <button className="tlacidlo tlacidlo--tiche" type="submit" name="rezim" value="prepisat-sken">
               Prepísať zo skenu
             </button>
           )}
         </form>
-        {jePdf && (
+        {isPdf && (
           <p className="tichy" style={{ fontSize: 13.5, margin: 0 }}>
             &bdquo;Prepísať zo skenu&ldquo; pošle celé pôvodné PDF modelu. Má zmysel vtedy, keď PDF
             nemá textovú vrstvu alebo je prevod rozsypaný.

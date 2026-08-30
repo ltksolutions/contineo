@@ -24,15 +24,15 @@ import { brandingView } from "@/lib/tenants"
 import { requestHostname } from "@/lib/session"
 import { formatDate, normalizeLanguage } from "@/lib/i18n"
 
-async function personal(): Promise<{ email: string; companyCode: string } | null> {
+async function hr(): Promise<{ email: string; companyCode: string } | null> {
   const ctx = await hrContext()
   return ctx.state === "ready"
     ? { email: ctx.person.email, companyCode: ctx.person.companyCode }
     : null
 }
 
-function textPola(fd: FormData, meno: string): string {
-  const v = fd.get(meno)
+function fieldText(fd: FormData, actorName: string): string {
+  const v = fd.get(actorName)
   return typeof v === "string" ? v.trim() : ""
 }
 
@@ -43,99 +43,99 @@ function textPola(fd: FormData, meno: string): string {
  * skupiny a napísal odsek odôvodnenia, to po chybe druhýkrát nenapíše. Preto
  * sa vracia celý výber, nie len chybová hláška.
  */
-function spatSChybou(chyba: string, fd: FormData): never {
-  const q = new URLSearchParams({ chyba, dovod: textPola(fd, "dovod") })
+function backWithError(error: string, fd: FormData): never {
+  const q = new URLSearchParams({ chyba: error, dovod: fieldText(fd, "dovod") })
   for (const d of fd.getAll("dokument")) if (typeof d === "string") q.append("dokument", d)
   for (const p of fd.getAll("publikum")) if (typeof p === "string") q.append("publikum", p)
   if (fd.get("vsetci")) q.set("vsetci", "1")
-  const adresy = textPola(fd, "adresy")
-  if (adresy) q.set("adresy", adresy)
+  const addresses = fieldText(fd, "adresy")
+  if (addresses) q.set("adresy", addresses)
   redirect(`/hr/pridelit?${q.toString()}`)
 }
 
 export async function assignAction(fd: FormData) {
-  const kto = await personal()
-  if (!kto) redirect("/hr")
+  const actor = await hr()
+  if (!actor) redirect("/hr")
 
-  const dovod = textPola(fd, "dovod")
+  const reason = fieldText(fd, "dovod")
   // Názvy oddelení sa do pridelenia zapisujú ako **kópia** (`audience.label`),
   // z rovnakého dôvodu ako názov dokumentu: oddelenie sa premenuje alebo zruší
   // a o rok musí byť čitateľné, komu sa vtedy prideľovalo.
-  const strom = await allDepartments(kto.companyCode)
-  const nazvyOddeleni = Object.fromEntries(strom.map(o => [o.id, o.nazov]))
+  const tree = await allDepartments(actor.companyCode)
+  const departmentNames = Object.fromEntries(tree.map(o => [o.id, o.nazov]))
 
-  const publika = audienceFromSelection({
+  const audiences = audienceFromSelection({
     vsetci: Boolean(fd.get("vsetci")),
     vybrane: fd.getAll("publikum").filter((v): v is string => typeof v === "string"),
-    adresy: textPola(fd, "adresy"),
-    nazvyOddeleni,
+    adresy: fieldText(fd, "adresy"),
+    nazvyOddeleni: departmentNames,
   })
-  if (publika.length === 0) spatSChybou("Nevybral si, komu sa prideľuje.", fd)
+  if (audiences.length === 0) backWithError("Nevybral si, komu sa prideľuje.", fd)
 
   // Znenia sa berú zo servera, nie z formulára. Keby `versionId` prišlo
   // z prehliadača, dalo by sa prideliť ľubovoľné — aj z cudzej organizácie
   // alebo staré, ktoré sa už nedá potvrdiť.
-  const ponuka = await assignableDocuments(kto.companyCode)
-  const vybrane = fd.getAll("dokument")
+  const available = await assignableDocuments(actor.companyCode)
+  const selected = fd.getAll("dokument")
     .filter((d): d is string => typeof d === "string")
-    .map(id => ponuka.find(p => p.documentId === id))
+    .map(id => available.find(p => p.documentId === id))
     .filter(d => d !== undefined)
 
-  if (vybrane.length === 0) spatSChybou("Nevybral si žiadny dokument s platným znením.", fd)
+  if (selected.length === 0) backWithError("Nevybral si žiadny dokument s platným znením.", fd)
 
-  let pridelene = 0
-  let uzBolo = 0
+  let assigned = 0
+  let already = 0
 
-  for (const dokument of vybrane) {
-    for (const audience of publika) {
+  for (const document of selected) {
+    for (const audience of audiences) {
       try {
         const v = await assign({
-          companyCode: kto.companyCode,
+          companyCode: actor.companyCode,
           subject: {
-            documentId: dokument.documentId,
-            versionId: dokument.versionId,
-            documentTitle: dokument.title,
-            versionLabel: dokument.versionLabel,
-            effectiveFrom: dokument.effectiveFrom,
+            documentId: document.documentId,
+            versionId: document.versionId,
+            documentTitle: document.title,
+            versionLabel: document.versionLabel,
+            effectiveFrom: document.effectiveFrom,
           },
           audience,
-          reason: dovod,
-          assignedBy: kto.email,
+          reason: reason,
+          assignedBy: actor.email,
         })
-        v.stav === "pridelene" ? pridelene++ : uzBolo++
+        v.stav === "pridelene" ? assigned++ : already++
       } catch (e) {
         // Chyba pri prvom páre zastaví celé rozposielanie: sú to tie isté
         // pravidlá pre všetky (dôvod, publikum), takže druhý pokus by zlyhal
         // rovnako. Čiastočne prideliť a nepovedať to je horšie než neprideliť.
-        if (e instanceof AssignmentValidationError) spatSChybou(e.message, fd)
+        if (e instanceof AssignmentValidationError) backWithError(e.message, fd)
         console.error("[hr] pridelenie zlyhalo:", e)
-        spatSChybou("Pridelenie sa nepodarilo uložiť. Skús to znova.", fd)
+        backWithError("Pridelenie sa nepodarilo uložiť. Skús to znova.", fd)
       }
     }
   }
 
-  const kombinacie = `${vybrane.length} ${vybrane.length === 1 ? "norma" : vybrane.length < 5 ? "normy" : "noriem"}` +
-    ` × ${publika.length} ${publika.length === 1 ? "publikum" : publika.length < 5 ? "publiká" : "publík"}`
-  const sprava = uzBolo === 0
-    ? `Pridelené: ${pridelene} (${kombinacie}).`
-    : `Pridelené: ${pridelene} (${kombinacie}). ${uzBolo} už pridelených bolo — nič sa nezdvojilo.`
+  const combinations = `${selected.length} ${selected.length === 1 ? "norma" : selected.length < 5 ? "normy" : "noriem"}` +
+    ` × ${audiences.length} ${audiences.length === 1 ? "publikum" : audiences.length < 5 ? "publiká" : "publík"}`
+  const message = already === 0
+    ? `Pridelené: ${assigned} (${combinations}).`
+    : `Pridelené: ${assigned} (${combinations}). ${already} už pridelených bolo — nič sa nezdvojilo.`
 
   revalidatePath("/hr")
-  redirect("/hr?sprava=" + encodeURIComponent(sprava))
+  redirect("/hr?sprava=" + encodeURIComponent(message))
 }
 
 export async function revokeAction(fd: FormData) {
-  const kto = await personal()
-  if (!kto) redirect("/hr")
+  const actor = await hr()
+  if (!actor) redirect("/hr")
 
-  const id = textPola(fd, "id")
+  const id = fieldText(fd, "id")
   // Odvolanie **nemaže potvrdenia**, ktoré medzitým vznikli — človek ten
   // dokument naozaj prečítal a záznam o tom je jeho.
-  const zmenene = await revoke(kto.companyCode, id, kto.email)
+  const changed = await revoke(actor.companyCode, id, actor.email)
 
   revalidatePath("/hr")
   redirect("/hr?sprava=" + encodeURIComponent(
-    zmenene ? "Pridelenie odvolané. Záznam o ňom zostáva." : "Toto pridelenie už neplatí."
+    changed ? "Pridelenie odvolané. Záznam o ňom zostáva." : "Toto pridelenie už neplatí."
   ))
 }
 
@@ -147,10 +147,10 @@ export async function revokeAction(fd: FormData) {
  * to povedať dopredu než rozposlať náhodnú polovicu. Nad túto hranicu treba
  * naplánovanú úlohu — to je samostatný kus práce, nie prepínač.
  */
-const NAJVIAC_NARAZ = 150
+const MAX_AT_ONCE = 150
 
 /** Koľko naraz „vo vzduchu". Ecomail je cudzia služba, nie náš server. */
-const SUBEZNE = 5
+const CONCURRENCY = 5
 
 /**
  * Dá ľuďom vedieť, že im niečo pribudlo.
@@ -165,69 +165,69 @@ const SUBEZNE = 5
 export async function sendNotificationAction(fd: FormData) {
   const ctx = await hrContext()
   if (ctx.state !== "ready") redirect("/hr")
-  const kod = ctx.person.companyCode
-  const id = textPola(fd, "id")
+  const code = ctx.person.companyCode
+  const id = fieldText(fd, "id")
 
-  const pridelenie = await loadAssignment(kod, id)
-  if (!pridelenie) redirect("/hr")
+  const assignment = await loadAssignment(code, id)
+  if (!assignment) redirect("/hr")
 
   // Bývalým členom oddelenia sa nepíše (D50): pripomínať normu oddelenia, v ktorom
   // človek už nie je, je nezmysel. V prehľade zostávajú vidieť, aby sa
   // personalista mohol rozhodnúť sám.
-  const prijemcovia = (await notAcknowledged(kod, id)).filter(o => !o.byvaly)
-  if (prijemcovia.length === 0) {
+  const recipients = (await notAcknowledged(code, id)).filter(o => !o.byvaly)
+  if (recipients.length === 0) {
     redirect("/hr?chyba=1&sprava=" + encodeURIComponent("Nie je komu poslať — potvrdili už všetci, kto v oddelení zostal."))
   }
-  if (prijemcovia.length > NAJVIAC_NARAZ) {
+  if (recipients.length > MAX_AT_ONCE) {
     redirect(`/hr/${encodeURIComponent(id)}/oznamit?chyba=` + encodeURIComponent(
-      `Príjemcov je ${prijemcovia.length}, naraz sa dá poslať najviac ${NAJVIAC_NARAZ}. ` +
+      `Príjemcov je ${recipients.length}, naraz sa dá poslať najviac ${MAX_AT_ONCE}. ` +
       `Rozdeľ pridelenie na menšie publiká.`
     ))
   }
 
   const host = await requestHostname()
   const branding = brandingView(ctx.tenant)
-  const odkaz = `https://${host}/dokumenty/${encodeURIComponent(pridelenie.subject.documentId)}`
+  const link = `https://${host}/dokumenty/${encodeURIComponent(assignment.subject.documentId)}`
 
-  let odoslane = 0
-  const zlyhali: string[] = []
+  let sent = 0
+  const failed: string[] = []
 
-  for (let i = 0; i < prijemcovia.length; i += SUBEZNE) {
-    await Promise.all(prijemcovia.slice(i, i + SUBEZNE).map(async osoba => {
-      const jazyk = normalizeLanguage(osoba.language)
+  for (let i = 0; i < recipients.length; i += CONCURRENCY) {
+    await Promise.all(recipients.slice(i, i + CONCURRENCY).map(async person => {
+      const language = normalizeLanguage(person.language)
       try {
         await send({
-          to: osoba.email,
+          to: person.email,
           ...assignmentEmail(
-            odkaz,
+            link,
             host,
             {
-              title: pridelenie.subject.documentTitle,
-              versionLabel: pridelenie.subject.versionLabel,
-              effectiveFrom: pridelenie.subject.effectiveFrom
-                ? formatDate(pridelenie.subject.effectiveFrom, jazyk)
+              title: assignment.subject.documentTitle,
+              versionLabel: assignment.subject.versionLabel,
+              effectiveFrom: assignment.subject.effectiveFrom
+                ? formatDate(assignment.subject.effectiveFrom, language)
                 : "—",
             },
-            pridelenie.reason,
-            jazyk,
+            assignment.reason,
+            language,
             branding,
           ),
         })
-        odoslane++
+        sent++
       } catch (e) {
         // Jeden neplatný e-mail nesmie zastaviť zvyšok. Menovite do logu,
         // aby sa dalo zistiť, komu správa nedošla.
-        console.error(`[hr] e-mail na ${osoba.email} zlyhal:`, e)
-        zlyhali.push(osoba.email)
+        console.error(`[hr] e-mail na ${person.email} zlyhal:`, e)
+        failed.push(person.email)
       }
     }))
   }
 
-  if (odoslane > 0) await recordNotification(kod, id, ctx.person.email, odoslane)
+  if (sent > 0) await recordNotification(code, id, ctx.person.email, sent)
 
   revalidatePath("/hr")
-  const sprava = zlyhali.length === 0
-    ? `Odoslané ${odoslane} ľuďom, ktorí ešte nepotvrdili.`
-    : `Odoslané ${odoslane}. Nedoručiteľné (${zlyhali.length}): ${zlyhali.slice(0, 5).join(", ")}${zlyhali.length > 5 ? "…" : ""}`
-  redirect(`/hr?sprava=${encodeURIComponent(sprava)}${zlyhali.length ? "&chyba=1" : ""}`)
+  const message = failed.length === 0
+    ? `Odoslané ${sent} ľuďom, ktorí ešte nepotvrdili.`
+    : `Odoslané ${sent}. Nedoručiteľné (${failed.length}): ${failed.slice(0, 5).join(", ")}${failed.length > 5 ? "…" : ""}`
+  redirect(`/hr?sprava=${encodeURIComponent(message)}${failed.length ? "&chyba=1" : ""}`)
 }

@@ -61,9 +61,9 @@ export interface SigV4Input {
 export async function signRequest(i: SigV4Input): Promise<Record<string, string>> {
   const u = new URL(i.url)
   const stamp = amzDate(i.now)
-  const den = stamp.slice(0, 8)
+  const day = stamp.slice(0, 8)
 
-  const hlavicky: Record<string, string> = {
+  const headers: Record<string, string> = {
     host: u.host,
     "x-amz-date": stamp,
     ...(i.sessionToken ? { "x-amz-security-token": i.sessionToken } : {}),
@@ -73,9 +73,9 @@ export async function signRequest(i: SigV4Input): Promise<Record<string, string>
   }
 
   // Kanonické hlavičky musia byť zoradené podľa názvu a s orezanými medzerami.
-  const mena = Object.keys(hlavicky).sort()
-  const kanonickeHlavicky = mena.map(n => `${n}:${hlavicky[n].trim()}\n`).join("")
-  const podpisaneHlavicky = mena.join(";")
+  const names = Object.keys(headers).sort()
+  const canonicalHeaders = names.map(n => `${n}:${headers[n].trim()}\n`).join("")
+  const signedHeaders = names.join(";")
 
   // Query parametre musia byť zoradené a zakódované podľa RFC 3986.
   const query = [...u.searchParams.entries()]
@@ -83,36 +83,36 @@ export async function signRequest(i: SigV4Input): Promise<Record<string, string>
     .map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v)}`)
     .join("&")
 
-  const hashTela = await sha256Hex(i.body)
+  const bodyHash = await sha256Hex(i.body)
 
-  const kanonickaPoziadavka = [
+  const canonicalRequest = [
     i.method.toUpperCase(),
     u.pathname || "/",
     query,
-    kanonickeHlavicky,
-    podpisaneHlavicky,
-    hashTela,
+    canonicalHeaders,
+    signedHeaders,
+    bodyHash,
   ].join("\n")
 
-  const scope = `${den}/${i.region}/${i.service}/aws4_request`
-  const naPodpis = [
+  const scope = `${day}/${i.region}/${i.service}/aws4_request`
+  const stringToSign = [
     "AWS4-HMAC-SHA256",
     stamp,
     scope,
-    await sha256Hex(kanonickaPoziadavka),
+    await sha256Hex(canonicalRequest),
   ].join("\n")
 
   // Podpisový kľúč — štyri vnorené HMAC-y, každý z výsledku predchádzajúceho.
-  let kluc: ArrayBuffer | Uint8Array = enc.encode(`AWS4${i.secretAccessKey}`)
-  for (const cast of [den, i.region, i.service, "aws4_request"]) {
-    kluc = await hmac(kluc, cast)
+  let key: ArrayBuffer | Uint8Array = enc.encode(`AWS4${i.secretAccessKey}`)
+  for (const part of [day, i.region, i.service, "aws4_request"]) {
+    key = await hmac(key, part)
   }
-  const podpis = hex(await hmac(kluc, naPodpis))
+  const signature = hex(await hmac(key, stringToSign))
 
   return {
-    ...Object.fromEntries(mena.map(n => [n, hlavicky[n]])),
+    ...Object.fromEntries(names.map(n => [n, headers[n]])),
     Authorization:
       `AWS4-HMAC-SHA256 Credential=${i.accessKeyId}/${scope}, ` +
-      `SignedHeaders=${podpisaneHlavicky}, Signature=${podpis}`,
+      `SignedHeaders=${signedHeaders}, Signature=${signature}`,
   }
 }

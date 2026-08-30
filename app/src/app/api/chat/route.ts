@@ -51,8 +51,8 @@ export async function POST(req: NextRequest) {
   // v čase po prvý token (D9: p95 < 2 s). Či za to stojí, ukáže až zlatá
   // sada — preto sa predvoľba dá prepnúť envom a obe konfigurácie zmerať
   // tou istou sadou. Predvolene zapnuté: meníme až podľa čísel, nie dojmu.
-  const predvolenePreprocessing = process.env.PREPROCESSING_DEFAULT !== "false"
-  const { query, useLLMClassifier = false, usePreprocessing = predvolenePreprocessing } = body
+  const preprocessingDefault = process.env.PREPROCESSING_DEFAULT !== "false"
+  const { query, useLLMClassifier = false, usePreprocessing = preprocessingDefault } = body
 
   if (!query?.trim() || query.length > 1000) {
     return new Response("Neplatný dotaz (1–1000 znakov)", { status: 400 })
@@ -66,12 +66,12 @@ export async function POST(req: NextRequest) {
   // Meranie fáz. D9 sleduje čas po prvý token (p95 < 2 s) a bez rozpadu
   // na fázy sa nedá povedať, čo ho vlastne zožralo — pri prvom behu to bolo
   // 9,6 s a podozrivých miest bolo päť.
-  const casy: Record<string, number> = {}
-  let znacka = Date.now()
-  const zmeraj = (kluc: string) => {
-    const teraz = Date.now()
-    casy[kluc] = teraz - znacka
-    znacka = teraz
+  const timings: Record<string, number> = {}
+  let mark = Date.now()
+  const measure = (key: string) => {
+    const now = Date.now()
+    timings[key] = now - mark
+    mark = now
   }
 
   // 3. Profil tenanta — určuje všetky tri adaptéry aj pomocný model.
@@ -81,7 +81,7 @@ export async function POST(req: NextRequest) {
 
   // 4. Klasifikácia dotazu (predvolene heuristika, bez volania modelu)
   const searchMode = await classifyQuery(query, useLLMClassifier, providers.utility)
-  zmeraj("klasifikacia")
+  measure("klasifikacia")
 
   // 5. [Voliteľne] preprocessing na lacnejšom utility modeli
   const shouldPreprocess = usePreprocessing && searchMode !== "fulltext"
@@ -89,7 +89,7 @@ export async function POST(req: NextRequest) {
     ? await preprocessQuery(query, providers.utility)
     : { rewritten: query, subQueries: [], keywords: [] }
 
-  zmeraj("preprocessing")
+  measure("preprocessing")
 
   const searchQuery = processed.rewritten
 
@@ -115,7 +115,7 @@ export async function POST(req: NextRequest) {
   // Pozor na pomenovanie: pri `atlas-stage` je $rerank stupňom agregačnej
   // pipeline, takže sa počíta TU, nie v kroku 6c. Kľúč to musí povedať,
   // inak z čísel vyjde, že rerank je zadarmo.
-  zmeraj(providers.rerank.isPipelineStage ? "vyhladavanie a rerank" : "vyhladavanie")
+  measure(providers.rerank.isPipelineStage ? "vyhladavanie a rerank" : "vyhladavanie")
 
   // 6b. Ak máme sub-queries, pridáme ďalšie výsledky (max 3 sub-queries)
   if (processed.subQueries.length > 0) {
@@ -154,7 +154,7 @@ export async function POST(req: NextRequest) {
 
   // Aplikačný rerank (on-prem). V cloude je tu nula — a to je správne,
   // lebo prácu už odviedla pipeline vyššie.
-  if (!providers.rerank.isPipelineStage) zmeraj("rerank")
+  if (!providers.rerank.isPipelineStage) measure("rerank")
 
   // 6d. Strážca vektorového priestoru (ADR-001, sekcia 4).
   //     Vektory z rôznych modelov sa nedajú miešať — pri nezhode by retrieval
@@ -186,7 +186,7 @@ export async function POST(req: NextRequest) {
   }
 
   // 7. Generovanie odpovede (streaming SSE)
-  const stream = generateAnswer({ query, chunks, userRole, profile, casy })
+  const stream = generateAnswer({ query, chunks, userRole, profile, casy: timings })
 
   return sseResponse(stream, {
     // Debug hlavičky (v produkcii odstrán)

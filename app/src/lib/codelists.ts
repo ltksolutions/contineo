@@ -32,24 +32,24 @@ export interface Codelist {
   polozky: CodelistItem[]
 }
 
-type Surovy = { closed?: boolean; items?: { key: string; label?: string; description?: string }[] }
+type RawCodelist = { closed?: boolean; items?: { key: string; label?: string; description?: string }[] }
 
-function priprav(c: unknown): Codelist {
-  const s = c as Surovy
+function prepare(c: unknown): Codelist {
+  const s = c as RawCodelist
   // `closed` chýbajúce znamená uzavretý — prísnejšia predvoľba je správna:
   // nový číselník bez rozhodnutia nemá potichu prijímať čokoľvek.
   return { closed: s.closed !== false, polozky: s.items ?? [] }
 }
 
 export const CODELISTS: Record<string, Codelist> = {
-  accessLevel: priprav(accessLevel),
-  category: priprav(category),
-  companyCode: priprav(companyCode),
-  language: priprav(jazyk),
-  scope: priprav(scope),
-  sectionKey: priprav(sectionKey),
-  sourceType: priprav(sourceType),
-  tags: priprav(tags),
+  accessLevel: prepare(accessLevel),
+  category: prepare(category),
+  companyCode: prepare(companyCode),
+  language: prepare(jazyk),
+  scope: prepare(scope),
+  sectionKey: prepare(sectionKey),
+  sourceType: prepare(sourceType),
+  tags: prepare(tags),
 }
 
 /** Povinné metadáta dokumentu — zhodné s `scripts/lib/meta.mjs`. */
@@ -93,34 +93,34 @@ export type CodelistExtras = Partial<Record<string, CodelistItem[]>>
  * ktorými sú už otagované existujúce dokumenty, a zmiznutie kľúča z ponuky
  * by z nich spravilo neplatné údaje.
  */
-export function codelistFor(nazov: string, doplnky?: CodelistExtras): Codelist {
-  const zaklad = CODELISTS[nazov]
-  if (!zaklad) return { closed: true, polozky: [] }
-  const vlastne = doplnky?.[nazov] ?? []
-  const uz = new Set(zaklad.polozky.map(p => p.key))
+export function codelistFor(name: string, extras?: CodelistExtras): Codelist {
+  const base = CODELISTS[name]
+  if (!base) return { closed: true, polozky: [] }
+  const custom = extras?.[name] ?? []
+  const seen = new Set(base.polozky.map(p => p.key))
   return {
-    closed: zaklad.closed,
-    polozky: [...zaklad.polozky, ...vlastne.filter(p => !uz.has(p.key))],
+    closed: base.closed,
+    polozky: [...base.polozky, ...custom.filter(p => !seen.has(p.key))],
   }
 }
 
 /** Overí jednu hodnotu proti číselníku. Vracia normalizovaný kľúč. */
-export function checkValue(ciselnik: string, hodnota: string, doplnky?: CodelistExtras): string {
-  const c = codelistFor(ciselnik, doplnky)
-  const v = (hodnota ?? "").trim()
-  if (!v) throw new CodelistError(`Chýba hodnota pre ${ciselnik}.`)
-  if (!CODELISTS[ciselnik]) throw new CodelistError(`Číselník ${ciselnik} neexistuje.`)
+export function checkValue(codelist: string, value: string, extras?: CodelistExtras): string {
+  const c = codelistFor(codelist, extras)
+  const v = (value ?? "").trim()
+  if (!v) throw new CodelistError(`Chýba hodnota pre ${codelist}.`)
+  if (!CODELISTS[codelist]) throw new CodelistError(`Číselník ${codelist} neexistuje.`)
 
   if (c.polozky.some(p => p.key === v)) return v
 
   if (c.closed) {
     throw new CodelistError(
-      `„${v}" nie je platná hodnota pre ${ciselnik}. Povolené: ${c.polozky.map(p => p.key).join(", ")}.`,
+      `„${v}" nie je platná hodnota pre ${codelist}. Povolené: ${c.polozky.map(p => p.key).join(", ")}.`,
     )
   }
   if (!KEY_PATTERN.test(v)) {
     throw new CodelistError(
-      `„${v}" sa nedá použiť ako kľúč pre ${ciselnik}. Malé písmená bez diakritiky, číslice ` +
+      `„${v}" sa nedá použiť ako kľúč pre ${codelist}. Malé písmená bez diakritiky, číslice ` +
       "a podčiarkovník — kľúč ide do identifikátora dokumentu a do adries.",
     )
   }
@@ -128,19 +128,19 @@ export function checkValue(ciselnik: string, hodnota: string, doplnky?: Codelist
 }
 
 /** Overí zoznam (tagy). Prázdny zoznam je v poriadku. */
-export function checkList(ciselnik: string, hodnoty: string[], doplnky?: CodelistExtras): string[] {
+export function checkList(codelist: string, values: string[], extras?: CodelistExtras): string[] {
   const out: string[] = []
-  for (const h of hodnoty) {
+  for (const h of values) {
     const v = (h ?? "").trim()
     if (!v) continue
-    out.push(checkValue(ciselnik, v, doplnky))
+    out.push(checkValue(codelist, v, extras))
   }
   return [...new Set(out)]
 }
 
 /** Voľby do výberu na obrazovke. */
-export function codelistOptions(ciselnik: string, doplnky?: CodelistExtras): { hodnota: string; popis: string }[] {
-  return codelistFor(ciselnik, doplnky).polozky.map(p => ({
+export function codelistOptions(codelist: string, extras?: CodelistExtras): { hodnota: string; popis: string }[] {
+  return codelistFor(codelist, extras).polozky.map(p => ({
     hodnota: p.key,
     popis: p.label ? `${p.label} (${p.key})` : p.key,
   }))
@@ -152,14 +152,14 @@ export function codelistOptions(ciselnik: string, doplnky?: CodelistExtras): { h
  * Kľúč sa **nedá vziať späť**: otaguje sa ním obsah a zostane v `documents`
  * aj v `document_chunks`. Preto ten istý úzky tvar ako všade inde.
  */
-export function checkCustomItem(kluc: string, popis: string): CodelistItem {
-  const k = (kluc ?? "").trim().toLowerCase()
+export function checkCustomItem(key: string, label: string): CodelistItem {
+  const k = (key ?? "").trim().toLowerCase()
   if (!KEY_PATTERN.test(k)) {
     throw new CodelistError(
-      `„${kluc}" sa nedá použiť ako kľúč. Malé písmená bez diakritiky, číslice ` +
+      `„${key}" sa nedá použiť ako kľúč. Malé písmená bez diakritiky, číslice ` +
       "a podčiarkovník — kľúčom sa označuje obsah a zostane v ňom natrvalo.",
     )
   }
-  const l = (popis ?? "").trim()
+  const l = (label ?? "").trim()
   return l ? { key: k, label: l } : { key: k }
 }

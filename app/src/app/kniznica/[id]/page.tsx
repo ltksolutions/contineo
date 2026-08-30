@@ -38,29 +38,29 @@ export default async function DocumentDetailPage({
   }
 
   const { id } = await params
-  const { sprava, chyba } = await searchParams
+  const { sprava: message, chyba: error } = await searchParams
   const documentId = decodeURIComponent(id)
   const d = await libraryDetail(ctx.tenant.companyCode, documentId)
   if (!d) notFound()
 
   const branding = brandingView(ctx.tenant)
-  const jazyk = ctx.person.language
-  const doplnky = tenantExtras(ctx.tenant)
-  const priecinky = await allFolders(ctx.tenant.companyCode)
-  const stromPriecinkov = flattenTree(priecinky)
-  const koncept = (d.draftMarkdown ?? "").trim()
+  const language = ctx.person.language
+  const extras = tenantExtras(ctx.tenant)
+  const folders = await allFolders(ctx.tenant.companyCode)
+  const folderTree = flattenTree(folders)
+  const draft = (d.draftMarkdown ?? "").trim()
   // Publikované znenie je pri dokumentoch z importu len vo `versions[]` —
   // porovnávať koncept s prázdnym `markdown` by tvrdilo, že je čo publikovať,
   // aj keď je text ten istý.
-  const platna = d.versions.find(v => v.isActive && v.effectiveFrom)
-  const publikovany = ((d.markdown ?? platna?.markdown) ?? "").trim()
+  const effective = d.versions.find(v => v.isActive && v.effectiveFrom)
+  const published = ((d.markdown ?? effective?.markdown) ?? "").trim()
   // Koncept, ktorý sa líši od publikovaného znenia, je nedokončená práca —
   // a je to jediný stav, v ktorom má zmysel niečo publikovať.
-  const jeCoPublikovat = Boolean(koncept) && koncept !== publikovany
+  const hasChangesToPublish = Boolean(draft) && draft !== published
 
   return (
     <div className="obal" style={{ padding: "28px 20px 80px", maxWidth: 760, ...tenantStyle(branding) }}>
-      <Notice sprava={sprava} chyba={chyba === "1"} spat={`/kniznica/${encodeURIComponent(documentId)}`} />
+      <Notice sprava={message} chyba={error === "1"} spat={`/kniznica/${encodeURIComponent(documentId)}`} />
 
       <p style={{ margin: "0 0 12px" }}>
         <Link className="tichy" href="/kniznica" style={{ fontSize: 14 }}>← Späť do knižnice</Link>
@@ -110,7 +110,7 @@ export default async function DocumentDetailPage({
             <span className="pole-popis">Druh</span>
             <Select
               meno="category"
-              volby={[{ hodnota: "", popis: "— neurčené —" }, ...codelistOptions("category", doplnky)]}
+              volby={[{ hodnota: "", popis: "— neurčené —" }, ...codelistOptions("category", extras)]}
               predvolena={d.category ?? ""}
               popisPola="Druh"
             />
@@ -120,7 +120,7 @@ export default async function DocumentDetailPage({
             <span className="pole-popis">Značky</span>
             <TagSelect
               meno="tags"
-              ponuka={codelistOptions("tags", doplnky).map(v => ({ hodnota: v.hodnota }))}
+              ponuka={codelistOptions("tags", extras).map(v => ({ hodnota: v.hodnota }))}
               vybrane={d.tags}
               popisNovej="Nová značka"
             />
@@ -146,7 +146,7 @@ export default async function DocumentDetailPage({
             popisPola="Priečinok"
             volby={[
               { hodnota: "", popis: "— nezaradené —" },
-              ...stromPriecinkov.map(r => ({
+              ...folderTree.map(r => ({
                 hodnota: r.priecinok.id,
                 popis: `${"— ".repeat(r.uroven - 1)}${r.priecinok.nazov}`,
               })),
@@ -172,7 +172,7 @@ export default async function DocumentDetailPage({
             <a href={`/api/kniznica/subor/${encodeURIComponent(d.originalFile.id)}`} target="_blank" rel="noreferrer">
               {d.originalFile.nazov}
             </a>{" "}
-            · nahral {d.originalFile.nahralKto} {formatDate(d.originalFile.nahraneKedy, jazyk)}
+            · nahral {d.originalFile.nahralKto} {formatDate(d.originalFile.nahraneKedy, language)}
             {d.konverzia && ` · prevod: ${d.konverzia.sposob}`}
           </p>
         ) : (
@@ -188,9 +188,9 @@ export default async function DocumentDetailPage({
         ) : null}
 
         <p className="tichy" style={{ fontSize: 13.5, margin: 0 }}>
-          {jeCoPublikovat
+          {hasChangesToPublish
             ? "Koncept sa líši od publikovaného znenia."
-            : koncept || publikovany
+            : draft || published
               ? "Koncept je zhodný s publikovaným znením."
               : "Koncept je prázdny."}
         </p>
@@ -199,7 +199,7 @@ export default async function DocumentDetailPage({
       <section className="karta" style={{ padding: 18, display: "grid", gap: 14, margin: "0 0 18px" }}>
         <h2 style={{ fontSize: 17, margin: 0 }}>Publikovať znenie</h2>
 
-        {!jeCoPublikovat ? (
+        {!hasChangesToPublish ? (
           <p className="tichy" style={{ fontSize: 14, margin: 0 }}>
             Niet čo publikovať — koncept je prázdny alebo zhodný s tým, čo už platí.
           </p>
@@ -273,10 +273,10 @@ export default async function DocumentDetailPage({
                 {v.isActive ? <span className="stitok">aktívne</span> : <span className="stitok">archivované</span>}
               </div>
               <div className="tichy audit-kto">
-                {v.effectiveFrom ? `platné od ${formatDate(v.effectiveFrom, jazyk)}` : "bez dátumu platnosti"}
-                {v.effectiveTo && ` do ${formatDate(v.effectiveTo, jazyk)}`}
+                {v.effectiveFrom ? `platné od ${formatDate(v.effectiveFrom, language)}` : "bez dátumu platnosti"}
+                {v.effectiveTo && ` do ${formatDate(v.effectiveTo, language)}`}
                 {v.publishedBy && ` · ${v.publishedBy}`}
-                {v.publishedAt && ` · ${formatDate(v.publishedAt, jazyk)}`}
+                {v.publishedAt && ` · ${formatDate(v.publishedAt, language)}`}
               </div>
               {v.effectiveFromSource && (
                 <div className="tichy audit-poznamka">zdroj dátumu: {v.effectiveFromSource}</div>

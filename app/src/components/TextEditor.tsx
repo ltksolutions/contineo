@@ -24,23 +24,23 @@ import Editor from "@toast-ui/editor"
 import "@toast-ui/editor/dist/toastui-editor.css"
 
 export default function TextEditor({
-  meno,
-  pociatocny,
+  meno: name,
+  pociatocny: initial,
 }: {
   meno: string
   pociatocny: string
 }) {
-  const obal = useRef<HTMLDivElement>(null)
+  const wrap = useRef<HTMLDivElement>(null)
   const editor = useRef<Editor | null>(null)
-  const [hodnota, setHodnota] = useState(pociatocny)
-  const [pripraveny, setPripraveny] = useState(false)
+  const [value, setValue] = useState(initial)
+  const [ready, setReady] = useState(false)
 
   useEffect(() => {
-    if (!obal.current || editor.current) return
+    if (!wrap.current || editor.current) return
 
     const e = new Editor({
-      el: obal.current,
-      initialValue: pociatocny,
+      el: wrap.current,
+      initialValue: initial,
       initialEditType: "wysiwyg",
       previewStyle: "vertical",
       height: "70vh",
@@ -58,10 +58,10 @@ export default function TextEditor({
     // Zmena sa prepisuje do skrytého poľa priebežne, nie až pri odoslaní:
     // formulár sa dá odoslať aj klávesnicou a `onSubmit` v Reacte pri
     // serverovej akcii nie je miesto, na ktoré sa dá spoľahnúť.
-    e.on("change", () => setHodnota(e.getMarkdown()))
+    e.on("change", () => setValue(e.getMarkdown()))
 
     editor.current = e
-    setPripraveny(true)
+    setReady(true)
 
     return () => {
       e.destroy()
@@ -74,24 +74,24 @@ export default function TextEditor({
 
   return (
     <div className="editor-obal">
-      <input type="hidden" name={meno} value={hodnota} />
+      <input type="hidden" name={name} value={value} />
 
       {/* Kým sa editor nenačíta (alebo keď JavaScript nebeží), zostáva
           obyčajné textové pole s tým istým názvom. Prázdna obrazovka
           s nefunkčným tlačidlom by bola horšia než jednoduchý editor. */}
-      {!pripraveny && (
+      {!ready && (
         <noscript>
           <textarea
             className="pole-vstup editor-text"
-            name={meno}
-            defaultValue={pociatocny}
+            name={name}
+            defaultValue={initial}
             spellCheck={false}
             aria-label="Text dokumentu v Markdowne"
           />
         </noscript>
       )}
 
-      <div ref={obal} className="editor-tui" />
+      <div ref={wrap} className="editor-tui" />
     </div>
   )
 }

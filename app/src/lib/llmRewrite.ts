@@ -43,7 +43,7 @@ export class RewriteError extends Error {
   }
 }
 
-const POKYN = `Si prepisovač právnych a interných predpisov do Markdownu.
+const INSTRUCTION = `Si prepisovač právnych a interných predpisov do Markdownu.
 
 ZÁKAZ, ktorý je dôležitejší než výsledok:
 - Neprepisuj, nepreštylizuj a neskracuj znenie. Ani jedno slovo.
@@ -59,7 +59,7 @@ ZÁKAZ, ktorý je dôležitejší než výsledok:
 
 Odpovedz LEN samotným Markdownom, bez akéhokoľvek komentára pred ním či za ním.`
 
-function klient(): Anthropic {
+function client(): Anthropic {
   const key = process.env.ANTHROPIC_API_KEY
   if (!key) {
     throw new RewriteError(
@@ -74,39 +74,39 @@ function model(): string {
 }
 
 /** Zloží odpoveď z textových blokov a odreže obal ```markdown, keď ho pridá. */
-function textOdpovede(bloky: { type: string; text?: string }[]): string {
-  const text = bloky
+function answerText(blocks: { type: string; text?: string }[]): string {
+  const text = blocks
     .filter(b => b.type === "text" && typeof b.text === "string")
     .map(b => b.text as string)
     .join("")
     .trim()
 
-  const obal = /^```(?:markdown|md)?\n([\s\S]*)\n```$/
-  return (obal.exec(text)?.[1] ?? text).trim()
+  const wrapper = /^```(?:markdown|md)?\n([\s\S]*)\n```$/
+  return (wrapper.exec(text)?.[1] ?? text).trim()
 }
 
 /** Prečistí členenie už prevedeného Markdownu. */
 export async function cleanMarkdown(markdown: string): Promise<ModelDraft> {
-  const vstup = (markdown ?? "").trim()
-  if (!vstup) throw new RewriteError("Niet čo prečisťovať — text je prázdny.")
-  if (vstup.length > MAX_CHARS) {
+  const input = (markdown ?? "").trim()
+  if (!input) throw new RewriteError("Niet čo prečisťovať — text je prázdny.")
+  if (input.length > MAX_CHARS) {
     throw new RewriteError(
-      `Text má ${Math.round(vstup.length / 1000)} tisíc znakov, naraz sa dá poslať ${MAX_CHARS / 1000}. ` +
+      `Text má ${Math.round(input.length / 1000)} tisíc znakov, naraz sa dá poslať ${MAX_CHARS / 1000}. ` +
       "Rozdeľ ho a prečisti po častiach.",
     )
   }
 
-  const odpoved = await klient().messages.create({
+  const answer = await client().messages.create({
     model: model(),
     max_tokens: 32_000,
-    system: POKYN,
+    system: INSTRUCTION,
     messages: [{
       role: "user",
-      content: [{ type: "text", text: `Uprav členenie tohto textu:\n\n${vstup}` }],
+      content: [{ type: "text", text: `Uprav členenie tohto textu:\n\n${input}` }],
     }],
   })
 
-  const text = textOdpovede(odpoved.content as { type: string; text?: string }[])
+  const text = answerText(answer.content as { type: string; text?: string }[])
   if (!text) throw new RewriteError("Model vrátil prázdnu odpoveď.")
   return { text, model: model(), rezim: "precistit", kedy: new Date() }
 }
@@ -121,10 +121,10 @@ export async function rewritePdf(pdf: Buffer): Promise<ModelDraft> {
     )
   }
 
-  const odpoved = await klient().messages.create({
+  const answer = await client().messages.create({
     model: model(),
     max_tokens: 32_000,
-    system: POKYN,
+    system: INSTRUCTION,
     messages: [{
       role: "user",
       content: [
@@ -140,7 +140,7 @@ export async function rewritePdf(pdf: Buffer): Promise<ModelDraft> {
     }],
   })
 
-  const text = textOdpovede(odpoved.content as { type: string; text?: string }[])
+  const text = answerText(answer.content as { type: string; text?: string }[])
   if (!text) throw new RewriteError("Model z dokumentu nič neprečítal.")
   return { text, model: model(), rezim: "prepisat-sken", kedy: new Date() }
 }

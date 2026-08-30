@@ -70,13 +70,13 @@ export async function generateMetadata(): Promise<Metadata> {
  */
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   let branding
-  let neznamyHostitel = false
+  let unknownHost = false
   try {
     const tenant = await currentTenant()
     if (tenant) branding = brandingView(tenant)
     // `null` znamená doménu, ktorá nepatrí nikomu — nie výpadok. Výpadok
     // vyhodí výnimku a rieši sa nižšie.
-    else neznamyHostitel = true
+    else unknownHost = true
   } catch (e) {
     console.error("[layout] vzhľad tenanta sa nepodarilo načítať:", e)
   }
@@ -90,7 +90,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
    * povedali všetko naraz — a to na stránke `404`, ktorá to má práve
    * zamlčať. Zostane holý text.
    */
-  if (neznamyHostitel) {
+  if (unknownHost) {
     return (
       <html lang="sk">
         <body>{children}</body>
@@ -101,8 +101,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   // Rovnaká opatrnosť ako pri vzhľade: keď sa relácia nedá prečítať, stránka
   // sa má vykresliť ako pre neprihláseného, nie spadnúť.
   let email: string | undefined
-  let meno: string | undefined
-  let fotka: string | undefined
+  let name: string | undefined
+  let photo: string | undefined
   try {
     email = (await currentEmail()) ?? undefined
   } catch (e) {
@@ -113,12 +113,12 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   // `persons` nie je — vtedy iniciály vyjdú z adresy a je to v poriadku.
   if (email) {
     try {
-      const ja = await currentPerson()
-      meno = ja?.fullName
+      const self = await currentPerson()
+      name = self?.fullName
       // Verzia je v adrese, takže prehliadač si fotku odloží nadlho a nová
       // sa aj tak ukáže hneď (rovnako ako pri logu).
-      if (ja?.photoVersion) {
-        fotka = `/api/fotka/${encodeURIComponent(ja.id)}?v=${encodeURIComponent(ja.photoVersion)}`
+      if (self?.photoVersion) {
+        photo = `/api/fotka/${encodeURIComponent(self.id)}?v=${encodeURIComponent(self.photoVersion)}`
       }
     } catch (e) {
       console.error("[layout] meno osoby sa nepodarilo načítať:", e)
@@ -128,28 +128,28 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   // Odkaz na správu tenantov sa ukáže len tomu, kto ňou naozaj prejde —
   // rozhoduje o tom tá istá funkcia ako o samotnej stránke, nie druhá kópia
   // pravidla. Zlyhanie sa berie ako „neukazovať".
-  let spravca = false
-  let personalista = false
-  let spravcaOsob = false
-  let spravcaObsahu = false
+  let isAdmin = false
+  let isHr = false
+  let isPeopleAdmin = false
+  let isContentManager = false
   if (email) {
     try {
-      spravca = (await platformContext()).state === "ready"
+      isAdmin = (await platformContext()).state === "ready"
     } catch (e) {
       console.error("[layout] rolu správcu sa nepodarilo overiť:", e)
     }
     try {
-      personalista = (await hrContext()).state === "ready"
+      isHr = (await hrContext()).state === "ready"
     } catch (e) {
       console.error("[layout] rolu HR sa nepodarilo overiť:", e)
     }
     try {
-      spravcaOsob = (await peopleContext()).state === "ready"
+      isPeopleAdmin = (await peopleContext()).state === "ready"
     } catch (e) {
       console.error("[layout] rolu správy osôb sa nepodarilo overiť:", e)
     }
     try {
-      spravcaObsahu = (await libraryContext()).state === "ready"
+      isContentManager = (await libraryContext()).state === "ready"
     } catch (e) {
       console.error("[layout] rolu správy obsahu sa nepodarilo overiť:", e)
     }
@@ -164,12 +164,12 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           <Header
             branding={branding}
             email={email}
-            meno={meno}
-            fotka={fotka}
-            spravca={spravca}
-            personalista={personalista}
-            spravcaOsob={spravcaOsob}
-            spravcaObsahu={spravcaObsahu}
+            meno={name}
+            fotka={photo}
+            spravca={isAdmin}
+            personalista={isHr}
+            spravcaOsob={isPeopleAdmin}
+            spravcaObsahu={isContentManager}
           />
           <main style={{ flex: 1 }}>{children}</main>
           <Footer />

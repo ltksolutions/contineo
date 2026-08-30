@@ -20,7 +20,7 @@ import { REVISION, VERSION } from "@/lib/appVersion"
  * dozvedela presnú adresu, z ktorej sa na ňu kliklo — teda internú doménu
  * zväzu. Nie je to tajomstvo, ale posielať ju cudzím serverom netreba.
  */
-const VON = { target: "_blank", rel: "noreferrer" } as const
+const EXTERNAL = { target: "_blank", rel: "noreferrer" } as const
 
 export default function Footer() {
   return (
@@ -28,7 +28,7 @@ export default function Footer() {
       <div className="obal paticka-obsah">
         <p className="paticka-blok">
           <span className="tichy">Systém beží na aplikácii</span>
-          <a className="paticka-odkaz" href="https://contineo.app" {...VON}>
+          <a className="paticka-odkaz" href="https://contineo.app" {...EXTERNAL}>
             <ContineoMark size={16} />
             Contineo
           </a>
@@ -37,7 +37,7 @@ export default function Footer() {
         <a
           className="paticka-odkaz"
           href="https://github.com/ltksolutions/contineo"
-          {...VON}
+          {...EXTERNAL}
         >
           <GitHubMark />
           Zdrojový kód

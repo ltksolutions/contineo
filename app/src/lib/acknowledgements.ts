@@ -170,8 +170,8 @@ export async function acknowledge(
   let departmentNames: string[] = []
   try {
     if (actor.departmentId) {
-      const strom = await allDepartments(actor.companyCode)
-      departmentNames = pathTo(strom, actor.departmentId).map(o => o.nazov)
+      const tree = await allDepartments(actor.companyCode)
+      departmentNames = pathTo(tree, actor.departmentId).map(o => o.nazov)
     }
   } catch (e) {
     console.error("[acknowledgements] oddelenie sa nepodarilo prečítať:", e)

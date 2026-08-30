@@ -94,13 +94,13 @@ export function applyScores(
   scores: RerankScore[],
   topK: number
 ): ChunkResult[] {
-  const platne = scores.filter(
+  const valid = scores.filter(
     s => Number.isInteger(s.index) && s.index >= 0 && s.index < candidates.length
       && Number.isFinite(s.score)
   )
-  if (platne.length === 0) return candidates.slice(0, topK)
+  if (valid.length === 0) return candidates.slice(0, topK)
 
-  return platne
+  return valid
     .sort((a, b) => b.score - a.score)
     .slice(0, topK)
     .map(s => ({ ...candidates[s.index], score: s.score }))

@@ -14,7 +14,7 @@ import type { TenantBrandingView } from "./TenantHeader"
  * smernicami je to samo osebe citlivý údaj.
  */
 
-const CHYBY: Record<string, string> = {
+const ERRORS: Record<string, string> = {
   AccessDenied:
     "Táto adresa nie je medzi pozvanými. Ak si myslíte, že tam patrí, ozvite sa správcovi.",
   Verification:
@@ -31,7 +31,7 @@ const CHYBY: Record<string, string> = {
 }
 
 /** Značky poskytovateľov. Kreslené, nie sťahované — e-mail ani portál nemá volať cudzí server. */
-function ZnakMicrosoft() {
+function MicrosoftMark() {
   return (
     <svg width="17" height="17" viewBox="0 0 23 23" aria-hidden="true">
       <path fill="#f25022" d="M1 1h10v10H1z" />
@@ -42,7 +42,7 @@ function ZnakMicrosoft() {
   )
 }
 
-function ZnakGoogle() {
+function GoogleMark() {
   return (
     <svg width="17" height="17" viewBox="0 0 48 48" aria-hidden="true">
       <path fill="#4285F4" d="M45.1 24.5c0-1.6-.1-2.8-.4-4H24v7.3h12.1c-.2 2-1.6 5-4.5 7l6.9 5.3c4.1-3.8 6.6-9.4 6.6-15.6z" />
@@ -53,14 +53,14 @@ function ZnakGoogle() {
   )
 }
 
-const ZNAKY = { microsoft: ZnakMicrosoft, google: ZnakGoogle }
-const NAZVY = { microsoft: "Microsoft", google: "Google" }
+const MARKS = { microsoft: MicrosoftMark, google: GoogleMark }
+const NAMES = { microsoft: "Microsoft", google: "Google" }
 
 export default function SignIn({
-  odoslane,
-  chyba,
+  odoslane: sent,
+  chyba: error,
   branding,
-  poskytovatelia = [],
+  poskytovatelia: providers = [],
 }: {
   odoslane: boolean
   chyba?: string
@@ -73,26 +73,26 @@ export default function SignIn({
   poskytovatelia?: ("microsoft" | "google")[]
 }) {
   const [email, setEmail] = useState("")
-  const [odosielam, setOdosielam] = useState(false)
-  const [hotovo, setHotovo] = useState(odoslane)
+  const [sending, setSending] = useState(false)
+  const [done, setDone] = useState(sent)
 
-  async function odosli(e: React.FormEvent) {
+  async function submit(e: React.FormEvent) {
     e.preventDefault()
-    if (!email.trim() || odosielam) return
-    setOdosielam(true)
+    if (!email.trim() || sending) return
+    setSending(true)
     try {
       // `callbackUrl` musí byť vyplnené. Bez neho si ho NextAuth vezme
       // z aktuálnej adresy — a tou je práve táto stránka, takže odkaz
       // z e-mailu človeka prihlási a vráti späť na prihlasovací formulár.
       // Vyzerá to, akoby prihlásenie nefungovalo, hoci relácia vznikla.
       await signIn("email", { email: email.trim(), redirect: false, callbackUrl: "/" })
-      setHotovo(true)
+      setDone(true)
     } finally {
-      setOdosielam(false)
+      setSending(false)
     }
   }
 
-  if (hotovo) {
+  if (done) {
     return (
       <div className="karta" style={{ textAlign: "center" }}>
         <h1 style={{ fontSize: 20, margin: "0 0 12px" }}>Pozrite si e-mail</h1>
@@ -104,7 +104,7 @@ export default function SignIn({
           type="button"
           className="tlacidlo tlacidlo--tiche"
           style={{ marginTop: 20 }}
-          onClick={() => setHotovo(false)}
+          onClick={() => setDone(false)}
         >
           Zadať inú adresu
         </button>
@@ -141,7 +141,7 @@ export default function SignIn({
         heslo si pamätať nemusíte.
       </p>
 
-      {chyba && (
+      {error && (
         <div
           style={{
             background: "var(--bad-bg)", color: "var(--bad-fg)",
@@ -150,18 +150,18 @@ export default function SignIn({
             marginBottom: 18,
           }}
         >
-          {CHYBY[chyba] ?? "Prihlásenie sa nepodarilo. Skúste to znova."}
+          {ERRORS[error] ?? "Prihlásenie sa nepodarilo. Skúste to znova."}
         </div>
       )}
 
       {/* Konto je hore: kto ho má, klikne raz a je dnu — odkaz v e-maile je
           o dva kroky dlhší. Kto ho nemá (rozhodcovia, delegáti), pokračuje
           formulárom pod tým. */}
-      {poskytovatelia.length > 0 && (
+      {providers.length > 0 && (
         <>
           <div style={{ display: "grid", gap: 10, marginBottom: 18 }}>
-            {poskytovatelia.map(p => {
-              const Znak = ZNAKY[p]
+            {providers.map(p => {
+              const Mark = MARKS[p]
               return (
                 <button
                   key={p}
@@ -170,8 +170,8 @@ export default function SignIn({
                   style={{ justifyContent: "center" }}
                   onClick={() => signIn(p === "microsoft" ? "azure-ad" : "google", { callbackUrl: "/" })}
                 >
-                  <Znak />
-                  Prihlásiť sa cez {NAZVY[p]}
+                  <Mark />
+                  Prihlásiť sa cez {NAMES[p]}
                 </button>
               )
             })}
@@ -191,7 +191,7 @@ export default function SignIn({
         </>
       )}
 
-      <form onSubmit={odosli} style={{ display: "grid", gap: 12 }}>
+      <form onSubmit={submit} style={{ display: "grid", gap: 12 }}>
         <input
           type="email"
           required
@@ -206,8 +206,8 @@ export default function SignIn({
             padding: "12px 14px", fontSize: 15.5, fontFamily: "inherit",
           }}
         />
-        <button type="submit" className="tlacidlo" disabled={odosielam || !email.trim()}>
-          {odosielam ? "Odosielam…" : "Poslať prihlasovací odkaz"}
+        <button type="submit" className="tlacidlo" disabled={sending || !email.trim()}>
+          {sending ? "Odosielam…" : "Poslať prihlasovací odkaz"}
         </button>
       </form>
     </div>

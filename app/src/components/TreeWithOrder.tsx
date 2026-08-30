@@ -41,12 +41,12 @@ export interface TreeItem {
   obsah?: ReactNode
 }
 
-const ID_FORMULARA = "poradie-oddeleni"
+const FORM_ID = "poradie-oddeleni"
 
 export default function TreeWithOrder({
-  polozky,
-  skryte,
-  akcia,
+  polozky: items,
+  skryte: hidden,
+  akcia: action,
 }: {
   polozky: TreeItem[]
   /**
@@ -57,21 +57,21 @@ export default function TreeWithOrder({
   skryte?: Record<string, string>
   akcia: (fd: FormData) => void | Promise<void>
 }) {
-  const [poradie, setPoradie] = useState<TreeItem[]>(polozky)
-  const [tahane, setTahane] = useState<string | null>(null)
-  const [zmenene, setZmenene] = useState(false)
+  const [order, setOrder] = useState<TreeItem[]>(items)
+  const [dragged, setDragged] = useState<string | null>(null)
+  const [changed, setChanged] = useState(false)
 
-  const presun = (zId: string, naId: string) => {
-    if (zId === naId) return
-    const z = poradie.find(p => p.id === zId)
-    const na = poradie.find(p => p.id === naId)
+  const move = (fromId: string, toId: string) => {
+    if (fromId === toId) return
+    const z = order.find(p => p.id === fromId)
+    const na = order.find(p => p.id === toId)
     // Cudzí rodič = zmena štruktúry. Tá sa myšou nerobí.
     if (!z || !na || (z.parentId ?? null) !== (na.parentId ?? null)) return
 
-    const bezNeho = poradie.filter(p => p.id !== zId)
-    const kam = bezNeho.findIndex(p => p.id === naId)
-    setPoradie([...bezNeho.slice(0, kam), z, ...bezNeho.slice(kam)])
-    setZmenene(true)
+    const without = order.filter(p => p.id !== fromId)
+    const at = without.findIndex(p => p.id === toId)
+    setOrder([...without.slice(0, at), z, ...without.slice(at)])
+    setChanged(true)
   }
 
   return (
@@ -79,27 +79,27 @@ export default function TreeWithOrder({
       {/* Formulár je prázdny a stojí mimo zoznamu: formuláre sa nesmú vnárať
           a v riadkoch sú vlastné (premenovať, presunúť, zrušiť). Tlačidlo sa
           naň odkazuje cez `form`. */}
-      <form id={ID_FORMULARA} action={akcia}>
-        {Object.entries(skryte ?? {}).map(([k, v]) => (
+      <form id={FORM_ID} action={action}>
+        {Object.entries(hidden ?? {}).map(([k, v]) => (
           <input key={k} type="hidden" name={k} value={v} />
         ))}
-        <input type="hidden" name="poradie" value={poradie.map(p => p.id).join(",")} />
+        <input type="hidden" name="poradie" value={order.map(p => p.id).join(",")} />
       </form>
 
       <ul className="strom strom--ciary">
-        {poradie.map(p => (
+        {order.map(p => (
           <li
             key={p.id}
-            className={`strom-polozka${tahane === p.id ? " sa-taha" : ""}`}
+            className={`strom-polozka${dragged === p.id ? " sa-taha" : ""}`}
             style={{ "--uroven": p.uroven } as React.CSSProperties}
             draggable
-            onDragStart={() => setTahane(p.id)}
-            onDragEnd={() => setTahane(null)}
+            onDragStart={() => setDragged(p.id)}
+            onDragEnd={() => setDragged(null)}
             onDragOver={e => e.preventDefault()}
             onDrop={e => {
               e.preventDefault()
-              if (tahane) presun(tahane, p.id)
-              setTahane(null)
+              if (dragged) move(dragged, p.id)
+              setDragged(null)
             }}
           >
             {p.obsah}
@@ -107,13 +107,13 @@ export default function TreeWithOrder({
         ))}
       </ul>
 
-      {zmenene && (
+      {changed && (
         <div className="strom-ulozit">
-          <button className="tlacidlo" type="submit" form={ID_FORMULARA}>Uložiť poradie</button>
+          <button className="tlacidlo" type="submit" form={FORM_ID}>Uložiť poradie</button>
           <button
             className="tlacidlo tlacidlo--tiche"
             type="button"
-            onClick={() => { setPoradie(polozky); setZmenene(false) }}
+            onClick={() => { setOrder(items); setChanged(false) }}
           >
             Zrušiť zmeny
           </button>

@@ -59,7 +59,7 @@ export interface LibraryDetail extends LibraryRow {
   companyCode: string
 }
 
-const DOVOD: Record<string, string> = {
+const REASON: Record<string, string> = {
   "no-versions": "zatiaľ nepublikované",
   "validity-not-set": "bez dátumu platnosti — nedá sa potvrdiť",
   "all-archived": "všetky znenia archivované",
@@ -67,15 +67,15 @@ const DOVOD: Record<string, string> = {
   "no-longer-effective": "platnosť už skončila",
 }
 
-function popisPlatnosti(doc: { versions?: Version[] }): string {
+function validityLabel(doc: { versions?: Version[] }): string {
   const v = effectiveVersion(doc as never)
-  return v.ok ? v.version.label : (DOVOD[v.reason] ?? v.reason)
+  return v.ok ? v.version.label : (REASON[v.reason] ?? v.reason)
 }
 
-type Surovy = Record<string, unknown> & { versions?: Version[] }
+type RawRow = Record<string, unknown> & { versions?: Version[] }
 
-function naRiadok(d: Surovy): LibraryRow {
-  const povodny = d.originalFile as OriginalFile | undefined
+function toRow(d: RawRow): LibraryRow {
+  const original = d.originalFile as OriginalFile | undefined
   return {
     documentId: String(d.documentId),
     title: String(d.title ?? d.documentId),
@@ -92,10 +92,10 @@ function naRiadok(d: Surovy): LibraryRow {
     stav: String(d.status ?? "draft"),
     folderId: (d.folderId as string | null | undefined) ?? null,
     verzii: (d.versions ?? []).length,
-    platneZnenie: popisPlatnosti(d),
+    platneZnenie: validityLabel(d),
     maKoncept: Boolean(String(d.draftMarkdown ?? "").trim()),
-    povodnySubor: povodny
-      ? { nazov: povodny.nazov, typ: povodny.typ, bajtov: povodny.bajtov }
+    povodnySubor: original
+      ? { nazov: original.nazov, typ: original.typ, bajtov: original.bajtov }
       : undefined,
     updatedAt: d.updatedAt as Date | undefined,
     updatedBy: d.updatedBy ? String(d.updatedBy) : undefined,
@@ -143,15 +143,15 @@ export async function libraryList(
   if (filter.hladat?.trim()) {
     // Vstup od človeka ide do regulárneho výrazu — bez escapovania by `(`
     // zhodilo dotaz a `.*` prehľadalo všetko.
-    const bezpecne = filter.hladat.trim().replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+    const safe = filter.hladat.trim().replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
     q.$or = [
-      { title: { $regex: bezpecne, $options: "i" } },
-      { documentId: { $regex: bezpecne, $options: "i" } },
-      { sectionKey: { $regex: bezpecne, $options: "i" } },
+      { title: { $regex: safe, $options: "i" } },
+      { documentId: { $regex: safe, $options: "i" } },
+      { sectionKey: { $regex: safe, $options: "i" } },
     ]
   }
 
-  const zaznamy = await col
+  const records = await col
     .find(q as never, {
       projection: {
         documentId: 1, title: 1, sectionKey: 1, category: 1, language: 1, accessLevel: 1,
@@ -166,10 +166,10 @@ export async function libraryList(
     .sort({ updatedAt: -1, title: 1 })
     .toArray()
 
-  const priecinky = await allFolders(companyCode)
-  return zaznamy.map(z => {
-    const r = naRiadok(z as Surovy)
-    return { ...r, cestaPriecinkov: pathTo(priecinky, r.folderId).map(p => p.nazov) }
+  const folders = await allFolders(companyCode)
+  return records.map(z => {
+    const r = toRow(z as RawRow)
+    return { ...r, cestaPriecinkov: pathTo(folders, r.folderId).map(p => p.nazov) }
   })
 }
 
@@ -178,12 +178,12 @@ export async function libraryDetail(
   documentId: string,
 ): Promise<LibraryDetail | null> {
   const col = await getCollection(DOCUMENTS_COLLECTION)
-  const d = (await col.findOne({ companyCode, documentId })) as Surovy | null
+  const d = (await col.findOne({ companyCode, documentId })) as RawRow | null
   if (!d) return null
 
   const versions = (d.versions ?? []).slice()
-  const platna = effectiveVersion(d as never)
-  const najnovsia = versions
+  const effective = effectiveVersion(d as never)
+  const newest = versions
     .slice()
     .sort((a, b) => {
       const ta = a.publishedAt ? new Date(a.publishedAt).getTime() : 0
@@ -191,18 +191,18 @@ export async function libraryDetail(
       return tb - ta
     })[0]
 
-  const textNaUpravu =
+  const editableText =
     String(d.draftMarkdown ?? "").trim() ||
     String(d.markdown ?? "").trim() ||
-    (platna.ok ? String(platna.version.markdown ?? "") : "") ||
-    String(najnovsia?.markdown ?? "")
+    (effective.ok ? String(effective.version.markdown ?? "") : "") ||
+    String(newest?.markdown ?? "")
 
-  const priecinky = await allFolders(companyCode)
+  const folders = await allFolders(companyCode)
 
   return {
-    ...naRiadok(d),
-    cestaPriecinkov: pathTo(priecinky, (d.folderId as string | null | undefined) ?? null).map(p => p.nazov),
-    textNaUpravu,
+    ...toRow(d),
+    cestaPriecinkov: pathTo(folders, (d.folderId as string | null | undefined) ?? null).map(p => p.nazov),
+    textNaUpravu: editableText,
     companyCode,
     scope: d.scope ? String(d.scope) : undefined,
     draftMarkdown: d.draftMarkdown ? String(d.draftMarkdown) : undefined,

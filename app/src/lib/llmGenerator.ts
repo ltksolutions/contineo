@@ -87,8 +87,8 @@ export function generateAnswer(opts: GenerateOptions): ReadableStream {
         // Overiteľné citácie zbierame zvlášť — pri OpenAI adaptéri
         // zostane pole prázdne a klient sa oprie o `sources`.
         const citations: GeneratedCitation[] = []
-        let dovodUkoncenia = ""
-        const tokeny: TokenCounts = { ...EMPTY_TOKENS }
+        let stopReason = ""
+        const tokens: TokenCounts = { ...EMPTY_TOKENS }
 
         for await (const ev of generation.stream({
           system,
@@ -99,11 +99,11 @@ export function generateAnswer(opts: GenerateOptions): ReadableStream {
           if (ev.type === "text") {
             encode({ type: "token", token: ev.text })
           } else if (ev.type === "koniec") {
-            dovodUkoncenia = ev.dovod
+            stopReason = ev.dovod
           } else if (ev.type === "tokeny") {
             // Zlučujeme, nie prepisujeme: vstup príde v prvej udalosti,
             // výstup až v poslednej. Prepis by jedno z toho zahodil.
-            Object.assign(tokeny, ev.tokeny)
+            Object.assign(tokens, ev.tokeny)
           } else {
             citations.push(ev.citation)
             encode({ type: "citation", citation: ev.citation })
@@ -120,13 +120,13 @@ export function generateAnswer(opts: GenerateOptions): ReadableStream {
           casy: opts.casy,
           // "max_tokens" znamená useknutú odpoveď — klient to musí povedať
           // nahlas, inak si čitateľ odnesie neúplný záver ako úplný.
-          dovodUkoncenia,
-          tokeny,
+          dovodUkoncenia: stopReason,
+          tokeny: tokens,
           // Cena sa počíta TU a ukladá spolu s tokenmi. Je to historický
           // údaj: čo to stálo v deň, keď sa otázka položila. Spätne sa
           // nedopočíta, lebo cenníky sa menia — preto ide do záznamu aj
           // označenie použitého cenníka.
-          naklad: cost(generation.model, tokeny),
+          naklad: cost(generation.model, tokens),
         })
       } catch (err) {
         encode({ type: "error", message: err instanceof Error ? err.message : String(err) })

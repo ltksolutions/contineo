@@ -92,7 +92,7 @@ export interface RatingEdit {
   poznamka?: string
 }
 
-const KOLEKCIA = "evaluations"
+const RATINGS_COLLECTION = "evaluations"
 
 /**
  * Založí záznam o odpovedi. Hodnotenie zatiaľ prázdne.
@@ -103,21 +103,21 @@ const KOLEKCIA = "evaluations"
  */
 export async function recordAnswer(
   z: NewRating,
-  hodnotitel: string
+  reviewer: string
 ): Promise<string> {
-  const col = await getCollection<RatingRecord>(KOLEKCIA)
-  const teraz = new Date()
+  const col = await getCollection<RatingRecord>(RATINGS_COLLECTION)
+  const now = new Date()
 
-  const zaznam: RatingRecord = {
+  const record: RatingRecord = {
     ...z,
     spravna: null,
     halucinacia: null,
-    hodnotitel,
-    vytvorene: teraz,
-    upravene: teraz,
+    hodnotitel: reviewer,
+    vytvorene: now,
+    upravene: now,
   }
 
-  const r = await col.insertOne(zaznam)
+  const r = await col.insertOne(record)
   return String(r.insertedId)
 }
 
@@ -129,29 +129,29 @@ export async function recordAnswer(
  */
 export async function saveVerdict(
   id: string,
-  uprava: RatingEdit,
-  hodnotitel: string
+  edit: RatingEdit,
+  reviewer: string
 ): Promise<boolean> {
   if (!ObjectId.isValid(id)) return false
 
   // Prepisujeme len to, čo naozaj prišlo. Bez tejto kontroly by kliknutie
   // na „správna" zmazalo predtým vyplnené overené znenie.
-  const zmeny: Record<string, unknown> = { upravene: new Date(), hodnotitel }
-  for (const kluc of [
+  const changes: Record<string, unknown> = { upravene: new Date(), hodnotitel: reviewer }
+  for (const key of [
     "spravna", "halucinacia", "overenaOdpoved", "spravneZdroje", "poznamka",
   ] as const) {
-    if (uprava[kluc] !== undefined) zmeny[kluc] = uprava[kluc]
+    if (edit[key] !== undefined) changes[key] = edit[key]
   }
 
-  const col = await getCollection<RatingRecord>(KOLEKCIA)
-  const r = await col.updateOne({ _id: new ObjectId(id) }, { $set: zmeny })
+  const col = await getCollection<RatingRecord>(RATINGS_COLLECTION)
+  const r = await col.updateOne({ _id: new ObjectId(id) }, { $set: changes })
   return r.matchedCount === 1
 }
 
 /** Koľko otázok zo zlatej sady je už posúdených — na ukazovateľ postupu. */
 export async function setProgress(): Promise<Record<string, Verdict>> {
-  const col = await getCollection<RatingRecord>(KOLEKCIA)
-  const zaznamy = await col
+  const col = await getCollection<RatingRecord>(RATINGS_COLLECTION)
+  const records = await col
     .find(
       { otazkaId: { $exists: true } },
       { projection: { otazkaId: 1, spravna: 1, upravene: 1 } }
@@ -160,7 +160,7 @@ export async function setProgress(): Promise<Record<string, Verdict>> {
     .toArray()
 
   // Pri opakovanom hodnotení tej istej otázky platí posledné.
-  const stav: Record<string, Verdict> = {}
-  for (const z of zaznamy) if (z.otazkaId) stav[z.otazkaId] = z.spravna
-  return stav
+  const state: Record<string, Verdict> = {}
+  for (const z of records) if (z.otazkaId) state[z.otazkaId] = z.spravna
+  return state
 }

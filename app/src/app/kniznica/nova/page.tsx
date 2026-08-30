@@ -30,11 +30,11 @@ export default async function NewDocumentPage({
     notFound()
   }
 
-  const { chyba, title, sectionKey } = await searchParams
+  const { chyba: error, title, sectionKey } = await searchParams
   // Ponuka musí obsahovať aj to, čo si organizácia dopísala (D55).
-  const doplnky = tenantExtras(ctx.tenant)
+  const extras = tenantExtras(ctx.tenant)
   const branding = brandingView(ctx.tenant)
-  const { uploadAction: nahraj } = await import("../actions")
+  const { uploadAction: upload } = await import("../actions")
 
   return (
     <div className="obal" style={{ padding: "28px 20px 80px", maxWidth: 680, ...tenantStyle(branding) }}>
@@ -48,13 +48,13 @@ export default async function NewDocumentPage({
         prevod je odvodenina a originál musí zostať, aby sa dalo overiť, z čoho text vznikol.
       </p>
 
-      {chyba && (
+      {error && (
         <p className="karta" style={{ padding: "12px 16px", margin: "0 0 18px", fontSize: 14.5, color: "var(--warn-fg)" }}>
-          {chyba}
+          {error}
         </p>
       )}
 
-      <form action={nahraj} className="karta" style={{ padding: 20, display: "grid", gap: 16 }} encType="multipart/form-data">
+      <form action={upload} className="karta" style={{ padding: 20, display: "grid", gap: 16 }} encType="multipart/form-data">
         <label className="pole">
           <span className="pole-popis">Súbor</span>
           <input
@@ -117,14 +117,14 @@ export default async function NewDocumentPage({
 
         <div className="pole">
           <span className="pole-popis">Druh</span>
-          <Select meno="category" volby={[{ hodnota: "", popis: "— neurčené —" }, ...codelistOptions("category", doplnky)]} predvolena="" popisPola="Druh" />
+          <Select meno="category" volby={[{ hodnota: "", popis: "— neurčené —" }, ...codelistOptions("category", extras)]} predvolena="" popisPola="Druh" />
         </div>
 
         <div className="pole">
           <span className="pole-popis">Značky</span>
           <TagSelect
             meno="tags"
-            ponuka={codelistOptions("tags", doplnky).map(v => ({ hodnota: v.hodnota }))}
+            ponuka={codelistOptions("tags", extras).map(v => ({ hodnota: v.hodnota }))}
             vybrane={[]}
             popisNovej="Nová značka"
           />

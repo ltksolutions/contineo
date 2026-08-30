@@ -26,10 +26,10 @@ export interface SelectOption {
 }
 
 export default function Select({
-  meno,
-  volby,
-  predvolena,
-  popisPola,
+  meno: name,
+  volby: options,
+  predvolena: initial,
+  popisPola: fieldLabel,
 }: {
   meno: string
   volby: SelectOption[]
@@ -37,99 +37,99 @@ export default function Select({
   /** Pre čítačky obrazovky, keď `<label>` obaľuje celý blok. */
   popisPola?: string
 }) {
-  const [hodnota, setHodnota] = useState(predvolena ?? volby[0]?.hodnota ?? "")
-  const [otvorene, setOtvorene] = useState(false)
-  const [zvyraznena, setZvyraznena] = useState(0)
-  const obal = useRef<HTMLDivElement>(null)
+  const [value, setValue] = useState(initial ?? options[0]?.hodnota ?? "")
+  const [open, setOpen] = useState(false)
+  const [highlighted, setHighlighted] = useState(0)
+  const wrap = useRef<HTMLDivElement>(null)
   const id = useId()
 
-  const vybrana = volby.find(v => v.hodnota === hodnota) ?? volby[0]
+  const selected = options.find(v => v.hodnota === value) ?? options[0]
 
   // Kliknutie mimo aj Escape zatvárajú. Bez toho zostane zoznam otvorený,
   // človek klikne inam a nechápe, prečo mu prekáža.
   useEffect(() => {
-    if (!otvorene) return
-    const mimo = (e: MouseEvent) => {
-      if (!obal.current?.contains(e.target as Node)) setOtvorene(false)
+    if (!open) return
+    const outside = (e: MouseEvent) => {
+      if (!wrap.current?.contains(e.target as Node)) setOpen(false)
     }
-    document.addEventListener("mousedown", mimo)
-    return () => document.removeEventListener("mousedown", mimo)
-  }, [otvorene])
+    document.addEventListener("mousedown", outside)
+    return () => document.removeEventListener("mousedown", outside)
+  }, [open])
 
-  function otvor() {
-    setZvyraznena(Math.max(0, volby.findIndex(v => v.hodnota === hodnota)))
-    setOtvorene(true)
+  function openList() {
+    setHighlighted(Math.max(0, options.findIndex(v => v.hodnota === value)))
+    setOpen(true)
   }
 
-  function vyber(v: SelectOption) {
-    setHodnota(v.hodnota)
-    setOtvorene(false)
+  function pick(v: SelectOption) {
+    setValue(v.hodnota)
+    setOpen(false)
   }
 
-  function klavesa(e: React.KeyboardEvent) {
-    if (!otvorene) {
+  function onKey(e: React.KeyboardEvent) {
+    if (!open) {
       if (e.key === "ArrowDown" || e.key === "Enter" || e.key === " ") {
         e.preventDefault()
-        otvor()
+        openList()
       }
       return
     }
-    if (e.key === "Escape") { e.preventDefault(); setOtvorene(false); return }
+    if (e.key === "Escape") { e.preventDefault(); setOpen(false); return }
     if (e.key === "Enter" || e.key === " ") {
       e.preventDefault()
-      const v = volby[zvyraznena]
-      if (v) vyber(v)
+      const v = options[highlighted]
+      if (v) pick(v)
       return
     }
     if (e.key === "ArrowDown") {
       e.preventDefault()
-      setZvyraznena(i => Math.min(volby.length - 1, i + 1))
+      setHighlighted(i => Math.min(options.length - 1, i + 1))
       return
     }
     if (e.key === "ArrowUp") {
       e.preventDefault()
-      setZvyraznena(i => Math.max(0, i - 1))
+      setHighlighted(i => Math.max(0, i - 1))
       return
     }
-    if (e.key === "Home") { e.preventDefault(); setZvyraznena(0); return }
-    if (e.key === "End") { e.preventDefault(); setZvyraznena(volby.length - 1) }
+    if (e.key === "Home") { e.preventDefault(); setHighlighted(0); return }
+    if (e.key === "End") { e.preventDefault(); setHighlighted(options.length - 1) }
   }
 
   return (
-    <div className="vyber" ref={obal}>
-      <input type="hidden" name={meno} value={hodnota} />
+    <div className="vyber" ref={wrap}>
+      <input type="hidden" name={name} value={value} />
 
       <button
         type="button"
         className="pole-vstup vyber-tlacidlo"
         aria-haspopup="listbox"
-        aria-expanded={otvorene}
-        aria-label={popisPola}
-        onClick={() => (otvorene ? setOtvorene(false) : otvor())}
-        onKeyDown={klavesa}
+        aria-expanded={open}
+        aria-label={fieldLabel}
+        onClick={() => (open ? setOpen(false) : openList())}
+        onKeyDown={onKey}
       >
-        <span>{vybrana?.popis ?? "—"}</span>
+        <span>{selected?.popis ?? "—"}</span>
         <svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true" className="vyber-sipka">
           <path d="M2.5 4.5 6 8l3.5-3.5" fill="none" stroke="currentColor" strokeWidth="1.6"
             strokeLinecap="round" strokeLinejoin="round" />
         </svg>
       </button>
 
-      {otvorene && (
+      {open && (
         <ul className="vyber-zoznam" role="listbox" aria-labelledby={id} tabIndex={-1}>
-          {volby.map((v, i) => (
+          {options.map((v, i) => (
             <li
               key={v.hodnota}
               role="option"
-              aria-selected={v.hodnota === hodnota}
-              className={`vyber-polozka${i === zvyraznena ? " je-zvyraznena" : ""}`}
-              onMouseEnter={() => setZvyraznena(i)}
+              aria-selected={v.hodnota === value}
+              className={`vyber-polozka${i === highlighted ? " je-zvyraznena" : ""}`}
+              onMouseEnter={() => setHighlighted(i)}
               // `onMouseDown` a nie `onClick`: klik by najprv spustil
               // poslucháča „mimo" a zoznam by sa zavrel skôr, než sa vyberie.
-              onMouseDown={e => { e.preventDefault(); vyber(v) }}
+              onMouseDown={e => { e.preventDefault(); pick(v) }}
             >
               <span className="vyber-znak" aria-hidden="true">
-                {v.hodnota === hodnota ? "✓" : ""}
+                {v.hodnota === value ? "✓" : ""}
               </span>
               {v.popis}
             </li>
@@ -140,8 +140,8 @@ export default function Select({
       {/* Bez JavaScriptu sa odošle toto. Pri zapnutom JS to prehliadač
           neparsuje ako prvky, takže sa hodnota nikdy neodošle dvakrát. */}
       <noscript>
-        <select className="pole-vstup" name={meno} defaultValue={predvolena}>
-          {volby.map(v => <option key={v.hodnota} value={v.hodnota}>{v.popis}</option>)}
+        <select className="pole-vstup" name={name} defaultValue={initial}>
+          {options.map(v => <option key={v.hodnota} value={v.hodnota}>{v.popis}</option>)}
         </select>
       </noscript>
     </div>

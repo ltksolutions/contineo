@@ -75,7 +75,7 @@ export interface ResolvedCredentials {
 }
 
 /** Núdzový záložný zdroj z prostredia. Pre náš tenant a pre vývoj. */
-function zPremennych(provider: OAuthProviderName): ResolvedCredentials | null {
+function fromEnv(provider: OAuthProviderName): ResolvedCredentials | null {
   const clientId = provider === "microsoft"
     ? process.env.MICROSOFT_CLIENT_ID
     : process.env.GOOGLE_CLIENT_ID
@@ -112,16 +112,16 @@ export function resolveCredentials(
   tenant: Tenant | null,
   provider: OAuthProviderName,
 ): ResolvedCredentials | null {
-  const ulozene = tenant?.oauth?.[provider]
+  const stored = tenant?.oauth?.[provider]
 
-  if (ulozene?.clientId && ulozene?.clientSecretEnc) {
+  if (stored?.clientId && stored?.clientSecretEnc) {
     try {
-      const clientSecret = decrypt(ulozene.clientSecretEnc)
-      const ms = provider === "microsoft" ? (ulozene as TenantOAuthMicrosoft) : null
-      const g = provider === "google" ? (ulozene as TenantOAuthGoogle) : null
+      const clientSecret = decrypt(stored.clientSecretEnc)
+      const ms = provider === "microsoft" ? (stored as TenantOAuthMicrosoft) : null
+      const g = provider === "google" ? (stored as TenantOAuthGoogle) : null
       return {
         provider,
-        clientId: ulozene.clientId.trim(),
+        clientId: stored.clientId.trim(),
         clientSecret,
         source: "tenant",
         tenantMode: ms?.tenantMode?.trim() || "organizations",
@@ -129,9 +129,9 @@ export function resolveCredentials(
         hostedDomain: g?.hostedDomain?.trim().toLowerCase() || undefined,
       }
     } catch (e) {
-      const preco = e instanceof SecretError ? e.message : String(e)
+      const why = e instanceof SecretError ? e.message : String(e)
       console.error(
-        `[oauth] ${tenant?.companyCode}/${provider}: tajomstvo sa nedá prečítať — ${preco}`
+        `[oauth] ${tenant?.companyCode}/${provider}: tajomstvo sa nedá prečítať — ${why}`
       )
       // Zámerne sa **nepadá na premenné prostredia**. Zákazník má nastavené
       // vlastné údaje; prihlásiť ho potichu cez našu aplikáciu by bola presne
@@ -140,7 +140,7 @@ export function resolveCredentials(
     }
   }
 
-  return zPremennych(provider)
+  return fromEnv(provider)
 }
 
 /** Ktoré tlačidlá sa majú ukázať na prihlasovacej obrazovke. */
@@ -167,16 +167,16 @@ export function providerStatus(
   clientId?: string
   zdroj: "tenant" | "platform" | "ziadny"
 } {
-  const ulozene = tenant?.oauth?.[provider]
-  if (ulozene?.clientId && ulozene?.clientSecretEnc) {
+  const stored = tenant?.oauth?.[provider]
+  if (stored?.clientId && stored?.clientSecretEnc) {
     try {
-      decrypt(ulozene.clientSecretEnc)
-      return { stav: "nastavene", clientId: ulozene.clientId, zdroj: "tenant" }
+      decrypt(stored.clientSecretEnc)
+      return { stav: "nastavene", clientId: stored.clientId, zdroj: "tenant" }
     } catch {
-      return { stav: "necitatelne", clientId: ulozene.clientId, zdroj: "tenant" }
+      return { stav: "necitatelne", clientId: stored.clientId, zdroj: "tenant" }
     }
   }
-  const z = zPremennych(provider)
+  const z = fromEnv(provider)
   if (z) return { stav: "z-prostredia", clientId: z.clientId, zdroj: "platform" }
   return { stav: "nenastavene", zdroj: "ziadny" }
 }

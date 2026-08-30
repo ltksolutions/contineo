@@ -98,7 +98,7 @@ export interface PersonRow {
   createdBy?: string
 }
 
-function naRiadok(p: Person): PersonRow {
+function toRow(p: Person): PersonRow {
   return {
     id: p.id,
     email: p.email,
@@ -133,25 +133,25 @@ function naRiadok(p: Person): PersonRow {
  */
 export async function listPeople(
   companyCode: string,
-  hladanie?: string,
+  search?: string,
 ): Promise<PersonRow[]> {
   const col = await getCollection<Person>(PERSONS_COLLECTION)
   const filter: Record<string, unknown> = { companyCode }
 
-  const q = hladanie?.trim()
+  const q = search?.trim()
   if (q) {
     // Escapovanie je nutné: `.` v adrese by inak bolo „ľubovoľný znak"
     // a hľadanie „a.b@x.sk" by našlo aj niečo úplne iné.
-    const bezpecne = q.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+    const safe = q.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
     filter.$or = [
-      { fullName: { $regex: bezpecne, $options: "i" } },
-      { email: { $regex: bezpecne, $options: "i" } },
-      { department: { $regex: bezpecne, $options: "i" } },
+      { fullName: { $regex: safe, $options: "i" } },
+      { email: { $regex: safe, $options: "i" } },
+      { department: { $regex: safe, $options: "i" } },
     ]
   }
 
-  const osoby = await col.find(filter).sort({ fullName: 1 }).limit(500).toArray()
-  return osoby.map(naRiadok)
+  const people = await col.find(filter).sort({ fullName: 1 }).limit(500).toArray()
+  return people.map(toRow)
 }
 
 /** Jedna osoba **z vlastnej organizácie**. `null`, keď taká nie je. */
@@ -159,7 +159,7 @@ export async function loadPersonById(companyCode: string, id: string): Promise<P
   const col = await getCollection<Person>(PERSONS_COLLECTION)
   // `companyCode` je v podmienke, nie v kontrole nad ňou (D32).
   const p = await col.findOne({ companyCode, id })
-  return p ? naRiadok(p) : null
+  return p ? toRow(p) : null
 }
 
 // ── zápis ────────────────────────────────────────────────────────────────────
@@ -179,7 +179,7 @@ export interface PersonChange {
   roles?: string[]
 }
 
-const TYPY: PersonType[] = ["employee", "external", "referee", "official"]
+const TYPES: PersonType[] = ["employee", "external", "referee", "official"]
 
 /**
  * Uloží zmeny osoby vrátane adresy.
@@ -205,82 +205,82 @@ const TYPY: PersonType[] = ["employee", "external", "referee", "official"]
 export async function savePerson(
   companyCode: string,
   id: string,
-  zmena: PersonChange,
+  change: PersonChange,
   actor: string,
 ): Promise<void> {
   const col = await getCollection<Person>(PERSONS_COLLECTION)
-  const existuje = await col.findOne({ companyCode, id })
-  if (!existuje) throw new PersonValidationError("Taká osoba tu nie je.")
+  const existing = await col.findOne({ companyCode, id })
+  if (!existing) throw new PersonValidationError("Taká osoba tu nie je.")
 
   const set: Record<string, unknown> = {}
 
-  if (zmena.email !== undefined) {
-    const nova = normalizeEmail(zmena.email)
-    if (!nova.includes("@")) throw new PersonValidationError("To nie je e-mailová adresa.")
-    if (nova !== existuje.email) {
+  if (change.email !== undefined) {
+    const next = normalizeEmail(change.email)
+    if (!next.includes("@")) throw new PersonValidationError("To nie je e-mailová adresa.")
+    if (next !== existing.email) {
       // Adresa musí byť v organizácii jedinečná — inak by prihlásenie
       // odkazom nevedelo, koho prihlasuje.
       const col2 = await getCollection<Person>(PERSONS_COLLECTION)
-      if (await col2.findOne({ companyCode, email: nova })) {
-        throw new PersonValidationError(`${nova} v organizácii už je.`)
+      if (await col2.findOne({ companyCode, email: next })) {
+        throw new PersonValidationError(`${next} v organizácii už je.`)
       }
-      set.email = nova
+      set.email = next
       // História zmien adresy. Bez nej by sa po roku nedalo spojiť staré
       // potvrdenie (nesie starú adresu) s dnešným človekom inak než cez `id`,
       // a človek, ktorý ten audit číta, `id` v ruke nemá.
       set.emailHistory = [
-        ...(existuje.emailHistory ?? []),
-        { email: existuje.email, doKedy: new Date(), zmenil: actor },
+        ...(existing.emailHistory ?? []),
+        { email: existing.email, doKedy: new Date(), zmenil: actor },
       ]
     }
   }
 
-  if (zmena.fullName !== undefined) {
-    const meno = zmena.fullName.trim()
-    if (!meno) throw new PersonValidationError("Meno je povinné — bez neho je v zozname len adresa.")
-    set.fullName = meno
+  if (change.fullName !== undefined) {
+    const actorName = change.fullName.trim()
+    if (!actorName) throw new PersonValidationError("Meno je povinné — bez neho je v zozname len adresa.")
+    set.fullName = actorName
   }
   // Oddelenie sa **dá vyprázdniť** zámerne: je to údaj, ktorý sa mení, a človek
   // ho môže naozaj nemať. Na rozdiel od mena tu prázdno niečo znamená.
-  if (zmena.department !== undefined) set.department = zmena.department.trim() || undefined
-  if (zmena.jobTitle !== undefined) set.jobTitle = zmena.jobTitle.trim() || undefined
+  if (change.department !== undefined) set.department = change.department.trim() || undefined
+  if (change.jobTitle !== undefined) set.jobTitle = change.jobTitle.trim() || undefined
 
   // Zaradenie a cesta sa zapisujú **spolu**. Keby sa cesta nechala na neskorší
   // prepočet, existoval by okamih, v ktorom človek do oddelenia patrí, ale
   // pridelenie „oddelenia a jeho podriadeným" sa ho netýka — a nikto by neuhádol,
   // prečo práve jemu úloha nepribudla (`matchesAudience`).
-  if (zmena.departmentId !== undefined) {
-    const cielId = zmena.departmentId || null
-    const strom = await allDepartments(companyCode)
-    if (cielId && !strom.some(o => o.id === cielId)) {
+  if (change.departmentId !== undefined) {
+    const targetId = change.departmentId || null
+    const tree = await allDepartments(companyCode)
+    if (targetId && !tree.some(o => o.id === targetId)) {
       throw new PersonValidationError("Také oddelenie neexistuje.")
     }
-    const novaCesta = pathIdsTo(strom, cielId)
-    set.departmentId = cielId
-    set.departmentPath = novaCesta
+    const newPath = pathIdsTo(tree, targetId)
+    set.departmentId = targetId
+    set.departmentPath = newPath
     set.departmentHistory = newDepartmentHistory(
-      existuje.departmentHistory, cielId, novaCesta, new Date(),
+      existing.departmentHistory, targetId, newPath, new Date(),
     )
   }
-  if (zmena.personType !== undefined) {
-    if (!TYPY.includes(zmena.personType)) throw new PersonValidationError("Neznámy typ osoby.")
-    set.personType = zmena.personType
+  if (change.personType !== undefined) {
+    if (!TYPES.includes(change.personType)) throw new PersonValidationError("Neznámy typ osoby.")
+    set.personType = change.personType
   }
-  if (zmena.language !== undefined) set.language = normalizeLanguage(zmena.language)
-  if (zmena.tracks !== undefined) set.tracks = normalizeKeys(zmena.tracks)
+  if (change.language !== undefined) set.language = normalizeLanguage(change.language)
+  if (change.tracks !== undefined) set.tracks = normalizeKeys(change.tracks)
   // Skupiny a ich história sa zapisujú **spolu**, rovnako ako oddelenie a cesta.
   // Rozdelené na dva zápisy by chvíľu platilo, že človek v skupine je, ale
   // pridelenie tej skupiny sa ho ešte netýka (D50).
-  if (zmena.groups !== undefined) {
-    const skupiny = normalizeKeys(zmena.groups)
-    set.groups = skupiny
-    set.groupHistory = newGroupHistory(existuje.groupHistory, skupiny, new Date())
+  if (change.groups !== undefined) {
+    const groups = normalizeKeys(change.groups)
+    set.groups = groups
+    set.groupHistory = newGroupHistory(existing.groupHistory, groups, new Date())
   }
-  if (zmena.roles !== undefined) {
+  if (change.roles !== undefined) {
     // Prideliť sa dajú len roly z tohto zoznamu. `platform-admin` medzi nimi
     // nie je a nikdy nebude: patrí tenantovi dodávateľa a má vlastnú cestu.
-    const povolene = zmena.roles.filter(r => (ASSIGNABLE_ROLES as readonly string[]).includes(r))
-    set.roles = [...new Set(povolene)]
+    const allowed = change.roles.filter(r => (ASSIGNABLE_ROLES as readonly string[]).includes(r))
+    set.roles = [...new Set(allowed)]
   }
 
   if (Object.keys(set).length === 0) return
@@ -292,14 +292,14 @@ export async function savePerson(
   // ktoré sa nestali. `departmentPath` a obe histórie sa do rozdielu neberú:
   // sú to odvodené polia a v zázname by prehlušili to, čo človek naozaj menil.
   const { departmentPath: _dp, departmentHistory: _dh, groupHistory: _gh,
-          updatedBy: _ub, updatedAt: _ua, ...zaujimave } = set
-  const pred: Record<string, unknown> = {}
-  for (const k of Object.keys(zaujimave)) pred[k] = (existuje as Record<string, unknown>)[k]
+          updatedBy: _ub, updatedAt: _ua, ...interesting } = set
+  const before: Record<string, unknown> = {}
+  for (const k of Object.keys(interesting)) before[k] = (existing as Record<string, unknown>)[k]
 
   await writeAudit({
     companyCode, predmet: "osoba", akcia: "zmenene", aktor: actor,
-    cielId: id, cielPopis: existuje.fullName,
-    zmeny: diff(pred, zaujimave),
+    cielId: id, cielPopis: existing.fullName,
+    zmeny: diff(before, interesting),
   })
 }
 
@@ -312,12 +312,12 @@ export async function savePerson(
  */
 export async function invitePerson(
   companyCode: string,
-  vstup: { email: string; fullName: string; department?: string; personType?: PersonType; language?: string },
+  input: { email: string; fullName: string; department?: string; personType?: PersonType; language?: string },
   actor: string,
 ): Promise<PersonRow> {
-  const email = normalizeEmail(vstup.email ?? "")
+  const email = normalizeEmail(input.email ?? "")
   if (!email.includes("@")) throw new PersonValidationError("To nie je e-mailová adresa.")
-  if (!vstup.fullName?.trim()) throw new PersonValidationError("Meno je povinné.")
+  if (!input.fullName?.trim()) throw new PersonValidationError("Meno je povinné.")
 
   const col = await getCollection<Person>(PERSONS_COLLECTION)
   // Kľúč je organizácia + adresa. Tá istá adresa môže patriť do viacerých
@@ -327,15 +327,15 @@ export async function invitePerson(
   }
 
   const now = new Date()
-  const osoba: Person = {
+  const person: Person = {
     id: crypto.randomUUID(),
     companyCode,
     email,
-    fullName: vstup.fullName.trim(),
-    department: vstup.department?.trim() || undefined,
-    personType: (vstup.personType && TYPY.includes(vstup.personType)) ? vstup.personType : "employee",
+    fullName: input.fullName.trim(),
+    department: input.department?.trim() || undefined,
+    personType: (input.personType && TYPES.includes(input.personType)) ? input.personType : "employee",
     status: "invited",
-    language: normalizeLanguage(vstup.language),
+    language: normalizeLanguage(input.language),
     tracks: [],
     groups: [],
     groupHistory: [],
@@ -345,13 +345,13 @@ export async function invitePerson(
     createdBy: actor,
     createdAt: now,
   }
-  await col.insertOne(osoba as never)
+  await col.insertOne(person as never)
   await writeAudit({
     companyCode, predmet: "osoba", akcia: "zalozene", aktor: actor,
-    cielId: osoba.id, cielPopis: osoba.fullName,
-    zmeny: { email: { na: osoba.email } },
+    cielId: person.id, cielPopis: person.fullName,
+    zmeny: { email: { na: person.email } },
   })
-  return naRiadok(osoba)
+  return toRow(person)
 }
 
 /**
@@ -370,8 +370,8 @@ export async function setPersonStatus(
   actor: string,
 ): Promise<void> {
   const col = await getCollection<Person>(PERSONS_COLLECTION)
-  const existuje = await col.findOne({ companyCode, id })
-  if (!existuje) throw new PersonValidationError("Taká osoba tu nie je.")
+  const existing = await col.findOne({ companyCode, id })
+  if (!existing) throw new PersonValidationError("Taká osoba tu nie je.")
 
   await col.updateOne(
     { companyCode, id },
@@ -380,7 +380,7 @@ export async function setPersonStatus(
   await writeAudit({
     companyCode, predmet: "osoba",
     akcia: status === "inactive" ? "vyradene" : "vratene",
-    aktor: actor, cielId: id, cielPopis: existuje.fullName,
-    zmeny: { status: { z: existuje.status, na: status } },
+    aktor: actor, cielId: id, cielPopis: existing.fullName,
+    zmeny: { status: { z: existing.status, na: status } },
   })
 }

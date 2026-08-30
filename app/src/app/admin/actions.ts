@@ -31,17 +31,17 @@ import { splitList, PROVIDER_LABEL } from "@/lib/oauth"
 import { saveBrand, BrandError } from "@/lib/branding"
 
 /** Kto akciu spustil — alebo `null`, keď na ňu nemá právo. */
-async function spravca(): Promise<string | null> {
+async function isAdmin(): Promise<string | null> {
   const ctx = await platformContext()
   return ctx.state === "ready" ? ctx.person.email : null
 }
 
-function textPola(fd: FormData, meno: string): string {
-  const v = fd.get(meno)
+function fieldText(fd: FormData, actorName: string): string {
+  const v = fd.get(actorName)
   return typeof v === "string" ? v : ""
 }
 
-function spravaChyby(e: unknown): string {
+function errorMessage(e: unknown): string {
   if (e instanceof DomainOwnedError || e instanceof TenantValidationError) return e.message
   if (e instanceof BrandError) return e.message
   console.error("[admin] akcia zlyhala:", e)
@@ -49,17 +49,17 @@ function spravaChyby(e: unknown): string {
 }
 
 /** Domény, ktoré vo Verceli pribudli, a čo sa s nimi stalo. */
-async function zabezpecDomeny(hostnames: string[]): Promise<string[]> {
-  const spravy: string[] = []
+async function ensureDomains(hostnames: string[]): Promise<string[]> {
+  const messages: string[] = []
   for (const h of hostnames) {
     if (skipVercel(h)) continue
     const v = await addDomain(h)
-    if (v.stav === "pridana") spravy.push(`${h} pridaná do Vercelu`)
+    if (v.stav === "pridana") messages.push(`${h} pridaná do Vercelu`)
     else if (v.stav === "bez-nastavenia") {
-      spravy.push(`${h}: chýba VERCEL_TOKEN, doménu pridaj ručne`)
-    } else if (v.stav === "chyba") spravy.push(`${h}: ${v.sprava}`)
+      messages.push(`${h}: chýba VERCEL_TOKEN, doménu pridaj ručne`)
+    } else if (v.stav === "chyba") messages.push(`${h}: ${v.sprava}`)
   }
-  return spravy
+  return messages
 }
 
 /**
@@ -67,54 +67,54 @@ async function zabezpecDomeny(hostnames: string[]): Promise<string[]> {
  *
  * `null`, keď sa nič nenahralo — vtedy sa logo nemení.
  */
-async function ulozNahrateLogo(fd: FormData, kod: string, kto: string): Promise<string | null> {
-  const subor = fd.get("logo")
-  if (!(subor instanceof File) || subor.size === 0) return null
-  const bajty = Buffer.from(await subor.arrayBuffer())
-  return saveBrand(kod.toUpperCase(), subor.type, bajty, kto)
+async function saveUploadedLogo(fd: FormData, code: string, actor: string): Promise<string | null> {
+  const file = fd.get("logo")
+  if (!(file instanceof File) || file.size === 0) return null
+  const bytes = Buffer.from(await file.arrayBuffer())
+  return saveBrand(code.toUpperCase(), file.type, bytes, actor)
 }
 
 // ── rozsah B: zmena existujúcej organizácie ─────────────────────────────────
 
 export async function saveTenantAction(fd: FormData) {
-  const kto = await spravca()
-  if (!kto) redirect("/admin")
+  const actor = await isAdmin()
+  if (!actor) redirect("/admin")
 
-  const kod = textPola(fd, "companyCode")
-  const hostnames = normalizeHostnames(textPola(fd, "hostnames"))
-  let sprava = ""
-  let chyba = false
+  const code = fieldText(fd, "companyCode")
+  const hostnames = normalizeHostnames(fieldText(fd, "hostnames"))
+  let message = ""
+  let error = false
 
   try {
     // Nahraté logo prebije predchádzajúce. Prázdny vstup znamená „nemeň" —
     // súbor sa vo formulári po načítaní nepamätá, takže prázdno je stav pri
     // každom otvorení a mazať ním by znamenalo, že uloženie názvu zmaže logo.
-    const logo = await ulozNahrateLogo(fd, kod, kto)
+    const logo = await saveUploadedLogo(fd, code, actor)
 
     await saveTenant(
-      kod,
+      code,
       {
-        displayName: textPola(fd, "displayName"),
-        shortName: textPola(fd, "shortName"),
-        logoUrl: logo ?? textPola(fd, "logoUrl"),
-        accentColor: textPola(fd, "accentColor"),
-        supportEmail: textPola(fd, "supportEmail"),
+        displayName: fieldText(fd, "displayName"),
+        shortName: fieldText(fd, "shortName"),
+        logoUrl: logo ?? fieldText(fd, "logoUrl"),
+        accentColor: fieldText(fd, "accentColor"),
+        supportEmail: fieldText(fd, "supportEmail"),
         languages: fd.getAll("languages").filter(v => typeof v === "string") as string[],
-        defaultLanguage: textPola(fd, "defaultLanguage"),
+        defaultLanguage: fieldText(fd, "defaultLanguage"),
         hostnames,
-        autoProvisionDomains: normalizeDomains(textPola(fd, "autoProvisionDomains")),
+        autoProvisionDomains: normalizeDomains(fieldText(fd, "autoProvisionDomains")),
       },
-      kto,
+      actor,
     )
-    const vercel = await zabezpecDomeny(hostnames)
-    sprava = ["Uložené.", ...vercel].join(" ")
+    const vercel = await ensureDomains(hostnames)
+    message = ["Uložené.", ...vercel].join(" ")
   } catch (e) {
-    sprava = spravaChyby(e)
-    chyba = true
+    message = errorMessage(e)
+    error = true
   }
 
   revalidatePath("/admin")
-  redirect(`/admin/tenanti/${encodeURIComponent(kod)}?sprava=${encodeURIComponent(sprava)}${chyba ? "&chyba=1" : ""}`)
+  redirect(`/admin/tenanti/${encodeURIComponent(code)}?sprava=${encodeURIComponent(message)}${error ? "&chyba=1" : ""}`)
 }
 
 /**
@@ -123,65 +123,65 @@ export async function saveTenantAction(fd: FormData) {
  * odklikne skôr, než si prečíta, čoho sa týka.
  */
 export async function toggleTenantStatusAction(fd: FormData) {
-  const kto = await spravca()
-  if (!kto) redirect("/admin")
+  const actor = await isAdmin()
+  if (!actor) redirect("/admin")
 
-  const kod = textPola(fd, "companyCode")
-  const zapnut = textPola(fd, "status") === "active"
-  let sprava = ""
-  let chyba = false
+  const code = fieldText(fd, "companyCode")
+  const enable = fieldText(fd, "status") === "active"
+  let message = ""
+  let error = false
 
-  if (!zapnut && textPola(fd, "potvrdenie").trim().toUpperCase() !== kod.toUpperCase()) {
-    sprava = `Na vypnutie treba napísať kód organizácie (${kod}). Nič sa nezmenilo.`
-    chyba = true
+  if (!enable && fieldText(fd, "potvrdenie").trim().toUpperCase() !== code.toUpperCase()) {
+    message = `Na vypnutie treba napísať kód organizácie (${code}). Nič sa nezmenilo.`
+    error = true
   } else {
     try {
-      await saveTenant(kod, { status: zapnut ? "active" : "disabled" }, kto)
-      sprava = zapnut
+      await saveTenant(code, { status: enable ? "active" : "disabled" }, actor)
+      message = enable
         ? "Organizácia je zapnutá."
         : "Organizácia je vypnutá — nikto z nej sa teraz neprihlási."
     } catch (e) {
-      sprava = spravaChyby(e)
-    chyba = true
-      chyba = true
+      message = errorMessage(e)
+    error = true
+      error = true
     }
   }
 
   revalidatePath("/admin")
-  redirect(`/admin/tenanti/${encodeURIComponent(kod)}?sprava=${encodeURIComponent(sprava)}${chyba ? "&chyba=1" : ""}`)
+  redirect(`/admin/tenanti/${encodeURIComponent(code)}?sprava=${encodeURIComponent(message)}${error ? "&chyba=1" : ""}`)
 }
 
 // ── rozsah C: založenie a pokyny ────────────────────────────────────────────
 
 export async function createTenantAction(fd: FormData) {
-  const kto = await spravca()
-  if (!kto) redirect("/admin")
+  const actor = await isAdmin()
+  if (!actor) redirect("/admin")
 
-  const kod = textPola(fd, "companyCode").trim().toUpperCase()
-  const hostnames = normalizeHostnames(textPola(fd, "hostnames"))
+  const code = fieldText(fd, "companyCode").trim().toUpperCase()
+  const hostnames = normalizeHostnames(fieldText(fd, "hostnames"))
 
   try {
     await createTenant(
-      kod,
+      code,
       {
-        displayName: textPola(fd, "displayName"),
-        supportEmail: textPola(fd, "supportEmail"),
+        displayName: fieldText(fd, "displayName"),
+        supportEmail: fieldText(fd, "supportEmail"),
         hostnames,
       },
-      kto,
+      actor,
     )
   } catch (e) {
-    const sprava = spravaChyby(e)
-    redirect(`/admin/novy?sprava=${encodeURIComponent(sprava)}&chyba=1`)
+    const message = errorMessage(e)
+    redirect(`/admin/novy?sprava=${encodeURIComponent(message)}&chyba=1`)
   }
 
   // Až po uloženom tenantovi — zdroj pravdy je `tenants` a výpadok Vercelu
   // nesmie brániť organizáciu založiť.
-  const vercel = await zabezpecDomeny(hostnames)
-  const sprava = ["Organizácia založená.", ...vercel].join(" ")
+  const vercel = await ensureDomains(hostnames)
+  const message = ["Organizácia založená.", ...vercel].join(" ")
 
   revalidatePath("/admin")
-  redirect(`/admin/tenanti/${encodeURIComponent(kod)}?sprava=${encodeURIComponent(sprava)}`)
+  redirect(`/admin/tenanti/${encodeURIComponent(code)}?sprava=${encodeURIComponent(message)}`)
 }
 
 /**
@@ -191,61 +191,61 @@ export async function createTenantAction(fd: FormData) {
  * komu a kedy sme písali.
  */
 export async function sendInstructionsAction(fd: FormData) {
-  const kto = await spravca()
-  if (!kto) redirect("/admin")
+  const actor = await isAdmin()
+  if (!actor) redirect("/admin")
 
-  const kod = textPola(fd, "companyCode")
-  const komu = textPola(fd, "komu").trim().toLowerCase()
-  const hostnames = normalizeHostnames(textPola(fd, "hostnames"))
-  let sprava = ""
-  let chyba = false
+  const code = fieldText(fd, "companyCode")
+  const to = fieldText(fd, "komu").trim().toLowerCase()
+  const hostnames = normalizeHostnames(fieldText(fd, "hostnames"))
+  let message = ""
+  let error = false
 
-  if (!komu) {
-    sprava = "Nie je kam poslať — doplň kontaktnú adresu organizácie."
-    chyba = true
+  if (!to) {
+    message = "Nie je kam poslať — doplň kontaktnú adresu organizácie."
+    error = true
   } else {
     try {
-      const poslane: string[] = []
+      const sent: string[] = []
       for (const h of hostnames) {
         if (skipVercel(h)) continue
         const s = await domainStatus(h)
         if (s.nastaveneCez) continue
         const p = customerInstructions(h, s.cname)
         await send({
-          to: komu,
+          to: to,
           subject: p.subject,
           text: p.text,
           html: `<pre style="font:14px ui-monospace,monospace;white-space:pre-wrap">${p.text
             .replace(/&/g, "&amp;")
             .replace(/</g, "&lt;")}</pre>`,
         })
-        poslane.push(h)
+        sent.push(h)
       }
-      if (!poslane.length) {
-        sprava = "Niet čo posielať — všetky domény sú už nasmerované."
+      if (!sent.length) {
+        message = "Niet čo posielať — všetky domény sú už nasmerované."
       } else {
-        await saveTenant(kod, {}, kto)
-        await zapisPokyny(kod, komu, poslane)
-        sprava = `Pokyny pre ${poslane.join(", ")} odoslané na ${komu}.`
+        await saveTenant(code, {}, actor)
+        await writeInstructions(code, to, sent)
+        message = `Pokyny pre ${sent.join(", ")} odoslané na ${to}.`
       }
     } catch (e) {
-      sprava = spravaChyby(e)
-    chyba = true
-      chyba = true
+      message = errorMessage(e)
+    error = true
+      error = true
     }
   }
 
   revalidatePath("/admin")
-  redirect(`/admin/tenanti/${encodeURIComponent(kod)}?sprava=${encodeURIComponent(sprava)}${chyba ? "&chyba=1" : ""}`)
+  redirect(`/admin/tenanti/${encodeURIComponent(code)}?sprava=${encodeURIComponent(message)}${error ? "&chyba=1" : ""}`)
 }
 
 /** Zápis aktu. Oddelené, aby bolo v kóde vidieť, že sa ukladá len toto. */
-async function zapisPokyny(kod: string, komu: string, hostnames: string[]) {
+async function writeInstructions(code: string, to: string, hostnames: string[]) {
   const { getCollection } = await import("@/lib/mongodb")
   const col = await getCollection(process.env.TENANTS_COLLECTION ?? "tenants")
   await col.updateOne(
-    { companyCode: kod },
-    { $set: { domainSetup: { requestedAt: new Date(), requestedTo: komu, hostnames } } },
+    { companyCode: code },
+    { $set: { domainSetup: { requestedAt: new Date(), requestedTo: to, hostnames } } },
   )
 }
 
@@ -259,34 +259,34 @@ async function zapisPokyny(kod: string, komu: string, hostnames: string[]) {
  * chybovej hlášky sa nedostane vôbec; preto sa nikde nevypisuje `vstup`.
  */
 export async function saveSignInAction(fd: FormData) {
-  const kto = await spravca()
-  if (!kto) redirect("/admin")
+  const actor = await isAdmin()
+  if (!actor) redirect("/admin")
 
-  const kod = textPola(fd, "companyCode")
-  const provider = textPola(fd, "provider") === "google" ? "google" : "microsoft"
-  let sprava = ""
-  let chyba = false
+  const code = fieldText(fd, "companyCode")
+  const provider = fieldText(fd, "provider") === "google" ? "google" : "microsoft"
+  let message = ""
+  let error = false
 
   try {
-    await saveOAuth(kod, provider, {
-      clientId: textPola(fd, "clientId"),
+    await saveOAuth(code, provider, {
+      clientId: fieldText(fd, "clientId"),
       // Prázdne pole znamená „nemeň" — obrazovka hodnotu nikdy neukazuje,
       // takže je pri každom otvorení prázdne.
-      clientSecret: textPola(fd, "clientSecret"),
-      tenantMode: provider === "microsoft" ? textPola(fd, "tenantMode") : undefined,
+      clientSecret: fieldText(fd, "clientSecret"),
+      tenantMode: provider === "microsoft" ? fieldText(fd, "tenantMode") : undefined,
       allowedTenantIds: provider === "microsoft"
-        ? splitList(textPola(fd, "allowedTenantIds"))
+        ? splitList(fieldText(fd, "allowedTenantIds"))
         : undefined,
-      hostedDomain: provider === "google" ? textPola(fd, "hostedDomain") : undefined,
-    }, kto)
-    sprava = `Prihlásenie cez ${PROVIDER_LABEL[provider]} uložené.`
+      hostedDomain: provider === "google" ? fieldText(fd, "hostedDomain") : undefined,
+    }, actor)
+    message = `Prihlásenie cez ${PROVIDER_LABEL[provider]} uložené.`
   } catch (e) {
-    sprava = spravaChyby(e)
-    chyba = true
+    message = errorMessage(e)
+    error = true
   }
 
   revalidatePath("/admin")
-  redirect(`/admin/tenanti/${encodeURIComponent(kod)}?sprava=${encodeURIComponent(sprava)}${chyba ? "&chyba=1" : ""}`)
+  redirect(`/admin/tenanti/${encodeURIComponent(code)}?sprava=${encodeURIComponent(message)}${error ? "&chyba=1" : ""}`)
 }
 
 /**
@@ -297,29 +297,29 @@ export async function saveSignInAction(fd: FormData) {
  * cesta, ktorú poznajú.
  */
 export async function deleteSignInAction(fd: FormData) {
-  const kto = await spravca()
-  if (!kto) redirect("/admin")
+  const actor = await isAdmin()
+  if (!actor) redirect("/admin")
 
-  const kod = textPola(fd, "companyCode")
-  const provider = textPola(fd, "provider") === "google" ? "google" : "microsoft"
-  const potvrdenie = textPola(fd, "potvrdenie")
-  let sprava = ""
-  let chyba = false
+  const code = fieldText(fd, "companyCode")
+  const provider = fieldText(fd, "provider") === "google" ? "google" : "microsoft"
+  const confirmation = fieldText(fd, "potvrdenie")
+  let message = ""
+  let error = false
 
-  if (potvrdenie.trim().toUpperCase() !== kod.toUpperCase()) {
-    sprava = `Na odstránenie napíš kód organizácie (${kod}).`
-    chyba = true
+  if (confirmation.trim().toUpperCase() !== code.toUpperCase()) {
+    message = `Na odstránenie napíš kód organizácie (${code}).`
+    error = true
   } else {
     try {
-      await deleteOAuth(kod, provider, kto)
-      sprava = `Prihlásenie cez ${PROVIDER_LABEL[provider]} odstránené.`
+      await deleteOAuth(code, provider, actor)
+      message = `Prihlásenie cez ${PROVIDER_LABEL[provider]} odstránené.`
     } catch (e) {
-      sprava = spravaChyby(e)
-    chyba = true
-      chyba = true
+      message = errorMessage(e)
+    error = true
+      error = true
     }
   }
 
   revalidatePath("/admin")
-  redirect(`/admin/tenanti/${encodeURIComponent(kod)}?sprava=${encodeURIComponent(sprava)}${chyba ? "&chyba=1" : ""}`)
+  redirect(`/admin/tenanti/${encodeURIComponent(code)}?sprava=${encodeURIComponent(message)}${error ? "&chyba=1" : ""}`)
 }

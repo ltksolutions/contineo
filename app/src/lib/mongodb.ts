@@ -38,7 +38,7 @@ declare global {
 
 let clientPromise: Promise<MongoClient> | undefined
 
-function spojenie(): Promise<MongoClient> {
+function connection(): Promise<MongoClient> {
   if (process.env.NODE_ENV === "development") {
     // V dev móde zdieľame spojenie cez global — hot-reload ho inak otvára
     // znova a znova, až cluster odmietne ďalšie.
@@ -56,7 +56,7 @@ function spojenie(): Promise<MongoClient> {
 
 /** Vráti pripojeného MongoClient */
 export async function getClient(): Promise<MongoClient> {
-  return spojenie()
+  return connection()
 }
 
 /** Vráti Db inštanciu */
@@ -73,4 +73,4 @@ export async function getCollection<T extends Document = Document>(
   return db.collection<T>(name)
 }
 
-export default spojenie
+export default connection

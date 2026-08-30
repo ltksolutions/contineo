@@ -53,17 +53,17 @@ export class BrandError extends Error {
 }
 
 /** Skontroluje, čo prišlo z formulára. Vracia dôvod, nie `false`. */
-export function checkFile(typ: string, bajtov: number): void {
-  if (!(ALLOWED_TYPES as readonly string[]).includes(typ)) {
+export function checkFile(type: string, bytes: number): void {
+  if (!(ALLOWED_TYPES as readonly string[]).includes(type)) {
     throw new BrandError(
-      `Nepodporovaný formát (${typ || "neznámy"}). Použi PNG, JPEG alebo WebP. ` +
+      `Nepodporovaný formát (${type || "neznámy"}). Použi PNG, JPEG alebo WebP. ` +
       "SVG zámerne nie — môže obsahovať skript a servírovali by sme cudzí kód z vlastnej domény."
     )
   }
-  if (bajtov <= 0) throw new BrandError("Súbor je prázdny.")
-  if (bajtov > MAX_BYTES) {
+  if (bytes <= 0) throw new BrandError("Súbor je prázdny.")
+  if (bytes > MAX_BYTES) {
     throw new BrandError(
-      `Súbor má ${Math.round(bajtov / 1024)} kB, najviac je ${MAX_BYTES / 1024} kB. ` +
+      `Súbor má ${Math.round(bytes / 1024)} kB, najviac je ${MAX_BYTES / 1024} kB. ` +
       "V hlavičke má logo 26 px — väčší súbor nič nepridá."
     )
   }
@@ -72,30 +72,30 @@ export function checkFile(typ: string, bajtov: number): void {
 /** Uloží logo a vráti cestu, ktorou sa servíruje. */
 export async function saveBrand(
   companyCode: string,
-  typ: string,
+  type: string,
   data: Buffer,
   actor: string,
 ): Promise<string> {
-  checkFile(typ, data.byteLength)
+  checkFile(type, data.byteLength)
 
-  const verzia = Date.now().toString(36)
+  const version = Date.now().toString(36)
   const col = await getCollection<Brand>(BRANDING_COLLECTION)
   await col.updateOne(
     { companyCode },
     {
       $set: {
         companyCode,
-        contentType: typ,
+        contentType: type,
         data,
         bajtov: data.byteLength,
-        verzia,
+        verzia: version,
         updatedAt: new Date(),
         updatedBy: actor,
       },
     },
     { upsert: true },
   )
-  return brandPath(companyCode, verzia)
+  return brandPath(companyCode, version)
 }
 
 /**
@@ -105,8 +105,8 @@ export async function saveBrand(
  * a nové logo sa aj tak ukáže okamžite, lebo má inú adresu. Opačne (krátka
  * pamäť, rovnaká adresa) by sa obrázok sťahoval znova a znova pre nič.
  */
-export function brandPath(companyCode: string, verzia: string): string {
-  return `/api/znacka/${encodeURIComponent(companyCode.toLowerCase())}?v=${verzia}`
+export function brandPath(companyCode: string, version: string): string {
+  return `/api/znacka/${encodeURIComponent(companyCode.toLowerCase())}?v=${version}`
 }
 
 export async function loadBrand(companyCode: string): Promise<Brand | null> {

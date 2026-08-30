@@ -122,19 +122,19 @@ export function matchesAudience(
   person: { email?: string; groups?: string[]; tracks?: string[]; departmentPath?: string[] },
   audience: Audience,
 ): boolean {
-  const hodnota = audience?.value?.trim().toLowerCase()
-  const je = (zoznam: string[] | undefined) =>
-    Boolean(hodnota) && (zoznam ?? []).some(x => x?.trim().toLowerCase() === hodnota)
+  const value = audience?.value?.trim().toLowerCase()
+  const matches = (list: string[] | undefined) =>
+    Boolean(value) && (list ?? []).some(x => x?.trim().toLowerCase() === value)
 
   switch (audience?.kind) {
     case "all": return true
-    case "group": return je(person.groups)
-    case "track": return je(person.tracks)
+    case "group": return matches(person.groups)
+    case "track": return matches(person.tracks)
     // Cesta obsahuje aj vlastné oddelenie, aj všetkých nadriadených — porovnanie
     // s ňou preto pokrýva oddelenie **aj celý jeho podstrom**, presne raz a bez
     // druhého pravidla. To je jediný dôvod, prečo je cesta zapísaná na osobe.
-    case "department": return je(person.departmentPath)
-    case "person": return Boolean(hodnota) && (person.email ?? "").trim().toLowerCase() === hodnota
+    case "department": return matches(person.departmentPath)
+    case "person": return Boolean(value) && (person.email ?? "").trim().toLowerCase() === value
     default: return false
   }
 }
@@ -152,7 +152,7 @@ export function matchesAudience(
  * z ponuky, nie vstup od cudzieho: nezmysel v ňom znamená chybu v našom
  * formulári, nie niečo, s čím má človek niečo robiť.
  */
-export function audienceFromSelection(vyber: {
+export function audienceFromSelection(selection: {
   vsetci?: boolean
   /** Hodnoty zaškrtávacích políčok v tvare `group:rozhodcovia`, `track:zaklad`. */
   vybrane?: string[]
@@ -161,35 +161,35 @@ export function audienceFromSelection(vyber: {
   /** `id` → názov oddelenia. Len na zapísanie čitateľnej kópie do `label`. */
   nazvyOddeleni?: Record<string, string>
 }): Audience[] {
-  if (vyber.vsetci) return [{ kind: "all" }]
+  if (selection.vsetci) return [{ kind: "all" }]
 
   const out: Audience[] = []
-  const videne = new Set<string>()
-  const pridaj = (kind: AudienceKind, value: string) => {
-    const kluc = `${kind}:${value}`
-    if (videne.has(kluc)) return
-    videne.add(kluc)
-    const label = kind === "department" ? vyber.nazvyOddeleni?.[value] : undefined
+  const seen = new Set<string>()
+  const push = (kind: AudienceKind, value: string) => {
+    const key = `${kind}:${value}`
+    if (seen.has(key)) return
+    seen.add(key)
+    const label = kind === "department" ? selection.nazvyOddeleni?.[value] : undefined
     out.push(label ? { kind, value, label } : { kind, value })
   }
 
-  for (const surove of vyber.vybrane ?? []) {
-    const oddelovac = surove.indexOf(":")
-    if (oddelovac === -1) continue
-    const kind = surove.slice(0, oddelovac)
-    const value = surove.slice(oddelovac + 1).trim().toLowerCase()
+  for (const raw of selection.vybrane ?? []) {
+    const separator = raw.indexOf(":")
+    if (separator === -1) continue
+    const kind = raw.slice(0, separator)
+    const value = raw.slice(separator + 1).trim().toLowerCase()
     if ((kind !== "group" && kind !== "track" && kind !== "department") || !value) continue
-    pridaj(kind, value)
+    push(kind, value)
   }
 
   // Adresy sa píšu ručne, tak sa oddeľujú aj novým riadkom, aj čiarkou —
   // človek prilepí zoznam z tabuľky a nemá premýšľať nad tvarom.
-  for (const a of (vyber.adresy ?? "").split(/[\n,;]+/)) {
+  for (const a of (selection.adresy ?? "").split(/[\n,;]+/)) {
     const email = a.trim().toLowerCase()
     // Bez zavináča to nie je adresa. Prideliť „niečomu, čo vyzeralo ako
     // adresa" znamená neprideliť nikomu a tváriť sa, že je hotovo.
     if (!email.includes("@")) continue
-    pridaj("person", email)
+    push("person", email)
   }
 
   return out
@@ -223,14 +223,14 @@ export function audienceLabel(a: Audience): string {
  */
 export function dateForPerson(
   a: Pick<Assignment, "audience" | "assignedAt">,
-  osoba: Pick<Person, "departmentHistory" | "groupHistory">,
+  person: Pick<Person, "departmentHistory" | "groupHistory">,
 ): Date {
-  const hodnota = a.audience?.value?.trim().toLowerCase()
-  const od =
-    a.audience?.kind === "department" ? inDepartmentSince(osoba)
-    : a.audience?.kind === "group" && hodnota ? inGroupSince(osoba, hodnota)
+  const value = a.audience?.value?.trim().toLowerCase()
+  const since =
+    a.audience?.kind === "department" ? inDepartmentSince(person)
+    : a.audience?.kind === "group" && value ? inGroupSince(person, value)
     : null
-  return od && od > a.assignedAt ? od : a.assignedAt
+  return since && since > a.assignedAt ? since : a.assignedAt
 }
 
 // ── zápis ────────────────────────────────────────────────────────────────────
@@ -290,7 +290,7 @@ export async function assign(input: NewAssignment): Promise<AssignResult> {
       }
 
   const col = await getCollection<Assignment>(ASSIGNMENTS_COLLECTION)
-  const kluc = {
+  const key = {
     companyCode: input.companyCode.trim(),
     "subject.versionId": input.subject.versionId,
     "audience.kind": audience.kind,
@@ -298,10 +298,10 @@ export async function assign(input: NewAssignment): Promise<AssignResult> {
     revokedAt: null,
   }
 
-  const uz = await col.findOne(kluc as never)
-  if (uz) return { stav: "uz-je", id: String(uz._id) }
+  const existing = await col.findOne(key as never)
+  if (existing) return { stav: "uz-je", id: String(existing._id) }
 
-  const zaznam: Assignment = {
+  const record: Assignment = {
     companyCode: input.companyCode.trim(),
     subject: input.subject,
     audience,
@@ -310,9 +310,9 @@ export async function assign(input: NewAssignment): Promise<AssignResult> {
     assignedAt: new Date(),
     revokedAt: null,
   }
-  const r = await col.insertOne(zaznam as never)
+  const r = await col.insertOne(record as never)
   await writeAudit({
-    companyCode: zaznam.companyCode, predmet: "pridelenie", akcia: "pridelene",
+    companyCode: record.companyCode, predmet: "pridelenie", akcia: "pridelene",
     aktor: input.assignedBy, cielId: String(r.insertedId),
     cielPopis: `${input.subject.documentTitle} (${input.subject.versionLabel}) — ${audienceLabel(audience)}`,
     poznamka: reason,
@@ -331,15 +331,15 @@ export async function revoke(companyCode: string, id: string, actor: string): Pr
   const col = await getCollection<Assignment>(ASSIGNMENTS_COLLECTION)
   // `companyCode` je v podmienke, nie v kontrole nad ňou: identifikátor sa dá
   // uhádnuť a personalista jednej organizácie nesmie zasiahnuť do druhej (D32).
-  const pred = await col.findOne({ _id: new ObjectId(id), companyCode } as never)
+  const previous = await col.findOne({ _id: new ObjectId(id), companyCode } as never)
   const r = await col.updateOne(
     { _id: new ObjectId(id), companyCode, revokedAt: null } as never,
     { $set: { revokedAt: new Date(), revokedBy: actor } },
   )
-  if (r.modifiedCount > 0 && pred) {
+  if (r.modifiedCount > 0 && previous) {
     await writeAudit({
       companyCode, predmet: "pridelenie", akcia: "odvolane", aktor: actor, cielId: id,
-      cielPopis: `${pred.subject.documentTitle} (${pred.subject.versionLabel}) — ${audienceLabel(pred.audience)}`,
+      cielPopis: `${previous.subject.documentTitle} (${previous.subject.versionLabel}) — ${audienceLabel(previous.audience)}`,
     })
   }
   return r.modifiedCount > 0
@@ -364,7 +364,7 @@ export async function assignmentsForPerson(person: {
   groupHistory?: Person["groupHistory"]
 }): Promise<Assignment[]> {
   const col = await getCollection<Assignment>(ASSIGNMENTS_COLLECTION)
-  const kandidati = await col.find({
+  const candidates = await col.find({
     companyCode: person.companyCode,
     revokedAt: null,
     $or: [
@@ -376,7 +376,7 @@ export async function assignmentsForPerson(person: {
     ],
   } as never).toArray()
 
-  return kandidati.filter(a => matchesAudience(person, a.audience))
+  return candidates.filter(a => matchesAudience(person, a.audience))
 }
 
 /**
@@ -396,9 +396,9 @@ export async function assignedAtByVersion(person: {
 }): Promise<Map<string, Date>> {
   const out = new Map<string, Date>()
   for (const a of await assignmentsForPerson(person)) {
-    const kedy = dateForPerson(a, person)
-    const doteraz = out.get(a.subject.versionId)
-    if (!doteraz || kedy < doteraz) out.set(a.subject.versionId, kedy)
+    const when = dateForPerson(a, person)
+    const until = out.get(a.subject.versionId)
+    if (!until || when < until) out.set(a.subject.versionId, when)
   }
   return out
 }
@@ -483,19 +483,19 @@ export async function audienceMembers(
   audience: Audience,
 ): Promise<AudienceMember[]> {
   const col = await getCollection<Person>(PERSONS_COLLECTION)
-  const osoby = await col
+  const people = await col
     .find(
       { companyCode, status: { $ne: "inactive" } },
       { projection: { id: 1, email: 1, fullName: 1, language: 1, groups: 1, tracks: 1, departmentPath: 1 } },
     )
     .toArray()
-  return osoby.filter(o => matchesAudience(o, audience))
+  return people.filter(o => matchesAudience(o, audience))
 }
 
 /** Prehľad pridelení organizácie, najnovšie hore. */
 export async function assignmentOverviews(companyCode: string): Promise<AssignmentOverview[]> {
   const col = await getCollection<Assignment>(ASSIGNMENTS_COLLECTION)
-  const zaznamy = await col
+  const records = await col
     .find({ companyCode, revokedAt: null } as never)
     .sort({ assignedAt: -1 })
     .toArray()
@@ -503,10 +503,10 @@ export async function assignmentOverviews(companyCode: string): Promise<Assignme
   const ackCol = await getCollection(ACKNOWLEDGEMENTS_COLLECTION)
   const out: AssignmentOverview[] = []
 
-  for (const a of zaznamy) {
-    const clenovia = await audienceMembers(companyCode, a.audience)
-    const ids = clenovia.map(c => c.id)
-    const potvrdili = ids.length === 0 ? 0 : await ackCol.countDocuments({
+  for (const a of records) {
+    const members = await audienceMembers(companyCode, a.audience)
+    const ids = members.map(c => c.id)
+    const acknowledgedBy = ids.length === 0 ? 0 : await ackCol.countDocuments({
       type: "acknowledgement",
       versionId: a.subject.versionId,
       personId: { $in: ids },
@@ -519,8 +519,8 @@ export async function assignmentOverviews(companyCode: string): Promise<Assignme
       reason: a.reason,
       assignedAt: a.assignedAt,
       assignedBy: a.assignedBy,
-      osob: clenovia.length,
-      potvrdili,
+      osob: members.length,
+      potvrdili: acknowledgedBy,
       oznamene: a.notified?.length ? a.notified[a.notified.length - 1] : null,
       oznameniSpolu: a.notified?.length ?? 0,
     })
@@ -538,22 +538,22 @@ export async function notAcknowledged(
   const a = await col.findOne({ _id: new ObjectId(assignmentId), companyCode } as never)
   if (!a) return []
 
-  const clenovia = [
+  const members = [
     ...await audienceMembers(companyCode, a.audience),
-    ...await byvaliClenovia(companyCode, a),
+    ...await formerMembers(companyCode, a),
   ]
   const ackCol = await getCollection(ACKNOWLEDGEMENTS_COLLECTION)
-  const potvrdene = await ackCol
+  const acknowledgedIds = await ackCol
     .find({
       type: "acknowledgement",
       versionId: a.subject.versionId,
-      personId: { $in: clenovia.map(c => c.id) },
+      personId: { $in: members.map(c => c.id) },
     })
     .project({ personId: 1 })
     .toArray()
 
-  const hotovi = new Set(potvrdene.map(p => (p as { personId: string }).personId))
-  return clenovia.filter(c => !hotovi.has(c.id))
+  const done = new Set(acknowledgedIds.map(p => (p as { personId: string }).personId))
+  return members.filter(c => !done.has(c.id))
 }
 
 /**
@@ -568,21 +568,21 @@ export async function notAcknowledged(
  * Platí len pre publikum druhu oddelenie. Skupiny a trasy históriu nemajú a
  * vymyslieť si ju by znamenalo tvrdiť niečo, čo nevieme.
  */
-async function byvaliClenovia(
+async function formerMembers(
   companyCode: string,
   a: Pick<Assignment, "audience" | "assignedAt" | "revokedAt">,
 ): Promise<AudienceMember[]> {
   const kind = a.audience?.kind
-  const hodnota = a.audience?.value?.trim().toLowerCase()
-  if ((kind !== "department" && kind !== "group") || !hodnota) return []
-  const doKedy = a.revokedAt ?? new Date()
+  const value = a.audience?.value?.trim().toLowerCase()
+  if ((kind !== "department" && kind !== "group") || !value) return []
+  const endOfRange = a.revokedAt ?? new Date()
 
   const col = await getCollection<Person>(PERSONS_COLLECTION)
   const filter = kind === "department"
-    ? { companyCode, "departmentHistory.departmentPath": hodnota }
-    : { companyCode, "groupHistory.group": hodnota }
+    ? { companyCode, "departmentHistory.departmentPath": value }
+    : { companyCode, "groupHistory.group": value }
 
-  const osoby = await col
+  const people = await col
     .find(
       filter as never,
       {
@@ -597,22 +597,22 @@ async function byvaliClenovia(
   // Prekryv úseku s obdobím platnosti pridelenia, nie „bol tam v deň
   // pridelenia": kto prišiel týždeň po pridelení a o mesiac odišiel, mal
   // povinnosť tiež.
-  const useky = (o: Person): { od: Date; do?: Date }[] =>
+  const ranges = (o: Person): { od: Date; do?: Date }[] =>
     kind === "department"
-      ? (o.departmentHistory ?? []).filter(z => z.departmentPath.includes(hodnota))
-      : (o.groupHistory ?? []).filter(z => z.group === hodnota)
+      ? (o.departmentHistory ?? []).filter(z => z.departmentPath.includes(value))
+      : (o.groupHistory ?? []).filter(z => z.group === value)
 
-  const jeDnesClenom = (o: Person): boolean =>
+  const isMemberToday = (o: Person): boolean =>
     kind === "department"
-      ? (o.departmentPath ?? []).includes(hodnota)
-      : normalizeKeys(o.groups).includes(hodnota)
+      ? (o.departmentPath ?? []).includes(value)
+      : normalizeKeys(o.groups).includes(value)
 
   const out: AudienceMember[] = []
-  for (const o of osoby) {
+  for (const o of people) {
     // Kto je členom aj dnes, patrí medzi bežných členov — nie sem.
-    if (jeDnesClenom(o)) continue
-    const prekryv = useky(o).some(z => z.od <= doKedy && (!z.do || z.do >= a.assignedAt))
-    if (!prekryv) continue
+    if (isMemberToday(o)) continue
+    const overlaps = ranges(o).some(z => z.od <= endOfRange && (!z.do || z.do >= a.assignedAt))
+    if (!overlaps) continue
     out.push({
       id: o.id, email: o.email, fullName: o.fullName, language: o.language, byvaly: true,
     })

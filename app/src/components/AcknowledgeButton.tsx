@@ -13,7 +13,7 @@
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 
-type Stav = "ready" | "sending" | "done" | "error"
+type Status = "ready" | "sending" | "done" | "error"
 
 export default function AcknowledgeButton({
   documentId,
@@ -27,12 +27,12 @@ export default function AcknowledgeButton({
     error: Record<string, string>
   }
 }) {
-  const [stav, setStav] = useState<Stav>("ready")
+  const [status, setStatus] = useState<Status>("ready")
   const [reason, setReason] = useState<string>("")
   const router = useRouter()
 
-  async function odosli() {
-    setStav("sending")
+  async function submit() {
+    setStatus("sending")
     try {
       const r = await fetch("/api/acknowledgements", {
         method: "POST",
@@ -41,21 +41,21 @@ export default function AcknowledgeButton({
       })
       const data = await r.json().catch(() => ({}))
       if (r.ok && data.ok) {
-        setStav("done")
+        setStatus("done")
         // Zoznam aj hlavička sa musia obnoviť zo servera — stav sa nikde
         // neukladá, odvodzuje sa (D27), takže ho nemá zmysel dopočítavať tu.
         router.refresh()
         return
       }
       setReason(String(data.reason ?? "write-failed"))
-      setStav("error")
+      setStatus("error")
     } catch {
       setReason("write-failed")
-      setStav("error")
+      setStatus("error")
     }
   }
 
-  if (stav === "done") {
+  if (status === "done") {
     return <p className="stitok" style={{ background: "var(--ok-bg)", color: "var(--ok-fg)" }}>
       {labels.confirmed}
     </p>
@@ -65,14 +65,14 @@ export default function AcknowledgeButton({
     <div>
       <button
         className="tlacidlo"
-        onClick={odosli}
-        disabled={stav === "sending"}
+        onClick={submit}
+        disabled={status === "sending"}
         style={{ minWidth: 180 }}
       >
-        {stav === "sending" ? labels.pending : labels.button}
+        {status === "sending" ? labels.pending : labels.button}
       </button>
 
-      {stav === "error" && (
+      {status === "error" && (
         <p style={{ color: "var(--bad-fg)", fontSize: 14, marginTop: 12 }}>
           {labels.error[reason] ?? labels.error["write-failed"]}
         </p>

@@ -32,8 +32,8 @@ export const CODELIST_LABEL: Record<CustomCodelist, { nazov: string; napoveda: s
   },
 }
 
-export function isCustom(nazov: string): nazov is CustomCodelist {
-  return (CUSTOM_CODELISTS as readonly string[]).includes(nazov)
+export function isCustom(name: string): name is CustomCodelist {
+  return (CUSTOM_CODELISTS as readonly string[]).includes(name)
 }
 
 /** Doplnky organizácie v tvare, aký čaká `ciselniky.ts`. */
@@ -42,67 +42,67 @@ export function tenantExtras(tenant: Pick<Tenant, "ciselniky">): CodelistExtras 
 }
 
 /** Celá ponuka číselníka pre danú organizáciu — globálne aj vlastné. */
-export function availableOptions(tenant: Pick<Tenant, "ciselniky">, nazov: string): CodelistItem[] {
-  return codelistFor(nazov, tenantExtras(tenant)).polozky
+export function availableOptions(tenant: Pick<Tenant, "ciselniky">, name: string): CodelistItem[] {
+  return codelistFor(name, tenantExtras(tenant)).polozky
 }
 
 /** Len to, čo si dopísala organizácia — to jediné sa dá odobrať. */
-export function customItems(tenant: Pick<Tenant, "ciselniky">, nazov: string): CodelistItem[] {
-  return (tenant.ciselniky?.[nazov] ?? []) as CodelistItem[]
+export function customItems(tenant: Pick<Tenant, "ciselniky">, name: string): CodelistItem[] {
+  return (tenant.ciselniky?.[name] ?? []) as CodelistItem[]
 }
 
 export async function addCodelistItem(
   companyCode: string,
-  ciselnik: string,
-  kluc: string,
-  popis: string,
-  aktor: string,
+  codelist: string,
+  key: string,
+  label: string,
+  actor: string,
 ): Promise<void> {
-  if (!isCustom(ciselnik)) {
+  if (!isCustom(codelist)) {
     throw new CodelistError(
-      `Číselník ${ciselnik} si organizácia nespravuje sama — sú to filtre, na ktorých stojí prístup k obsahu.`,
+      `Číselník ${codelist} si organizácia nespravuje sama — sú to filtre, na ktorých stojí prístup k obsahu.`,
     )
   }
-  const polozka = checkCustomItem(kluc, popis)
+  const item = checkCustomItem(key, label)
 
   const col = await getCollection<Tenant>(TENANTS_COLLECTION)
   const t = await col.findOne({ companyCode })
   if (!t) throw new CodelistError("Organizácia neexistuje.")
 
-  const uz = availableOptions(t, ciselnik).some(p => p.key === polozka.key)
-  if (uz) throw new CodelistError(`„${polozka.key}" v ponuke už je.`)
+  const existing = availableOptions(t, codelist).some(p => p.key === item.key)
+  if (existing) throw new CodelistError(`„${item.key}" v ponuke už je.`)
 
   await col.updateOne(
     { companyCode },
-    { $push: { [`ciselniky.${ciselnik}`]: polozka } } as never,
+    { $push: { [`ciselniky.${codelist}`]: item } } as never,
   )
   invalidateTenants()
 
   await writeAudit({
-    companyCode, predmet: "organizacia", akcia: "zalozene", aktor,
-    cielId: `ciselnik:${ciselnik}`, cielPopis: `${CODELIST_LABEL[ciselnik].nazov} — ${polozka.key}`,
-    zmeny: { [ciselnik]: { na: polozka.label ?? polozka.key } },
+    companyCode, predmet: "organizacia", akcia: "zalozene", aktor: actor,
+    cielId: `ciselnik:${codelist}`, cielPopis: `${CODELIST_LABEL[codelist].nazov} — ${item.key}`,
+    zmeny: { [codelist]: { na: item.label ?? item.key } },
   })
 }
 
 export async function removeCodelistItem(
   companyCode: string,
-  ciselnik: string,
-  kluc: string,
-  aktor: string,
+  codelist: string,
+  key: string,
+  actor: string,
 ): Promise<void> {
-  if (!isCustom(ciselnik)) throw new CodelistError("Tento číselník sa meniť nedá.")
+  if (!isCustom(codelist)) throw new CodelistError("Tento číselník sa meniť nedá.")
 
   const col = await getCollection<Tenant>(TENANTS_COLLECTION)
   await col.updateOne(
     { companyCode },
-    { $pull: { [`ciselniky.${ciselnik}`]: { key: kluc } } } as never,
+    { $pull: { [`ciselniky.${codelist}`]: { key: key } } } as never,
   )
   invalidateTenants()
 
   await writeAudit({
-    companyCode, predmet: "organizacia", akcia: "zrusene", aktor,
-    cielId: `ciselnik:${ciselnik}`, cielPopis: `${CODELIST_LABEL[ciselnik as CustomCodelist].nazov} — ${kluc}`,
+    companyCode, predmet: "organizacia", akcia: "zrusene", aktor: actor,
+    cielId: `ciselnik:${codelist}`, cielPopis: `${CODELIST_LABEL[codelist as CustomCodelist].nazov} — ${key}`,
     poznamka: "z ponuky; dokumenty, ktoré ho majú, si ho nesú ďalej",
   })
 }
@@ -110,9 +110,9 @@ export async function removeCodelistItem(
 /** Koľko dokumentov danú hodnotu používa — aby bolo vidieť, čo sa odoberá. */
 export async function codelistUsage(
   companyCode: string,
-  ciselnik: string,
-  kluc: string,
+  codelist: string,
+  key: string,
 ): Promise<number> {
   const col = await getCollection("documents")
-  return col.countDocuments({ companyCode, [ciselnik]: kluc })
+  return col.countDocuments({ companyCode, [codelist]: key })
 }

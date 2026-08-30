@@ -37,10 +37,10 @@ export async function savePhoto(
   personId: string,
   contentType: string,
   data: Buffer,
-  zdroj: string,
+  source: string,
 ): Promise<string | null> {
   if (!data?.byteLength || data.byteLength > MAX_BYTES) return null
-  const verzia = Date.now().toString(36)
+  const version = Date.now().toString(36)
   try {
     const col = await getCollection<Photo>(PHOTOS_COLLECTION)
     await col.updateOne(
@@ -48,12 +48,12 @@ export async function savePhoto(
       {
         $set: {
           companyCode, personId, contentType, data,
-          bajtov: data.byteLength, verzia, updatedAt: new Date(), zdroj,
+          bajtov: data.byteLength, verzia: version, updatedAt: new Date(), zdroj: source,
         },
       },
       { upsert: true },
     )
-    return verzia
+    return version
   } catch (e) {
     // Fotka je bonus. Jej zlyhanie nesmie zhodiť to, čo ju vyvolalo.
     console.error("[fotka] uloženie zlyhalo:", e)

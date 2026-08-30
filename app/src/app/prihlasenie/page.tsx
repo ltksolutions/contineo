@@ -24,7 +24,7 @@ export default async function SignInPage({
 }: {
   searchParams: Promise<{ odoslane?: string; error?: string }>
 }) {
-  const parametre = await searchParams
+  const params = await searchParams
 
   // Neznámy hostiteľ nedostane ani prihlasovaciu stránku (D29) — ale výpadok
   // databázy sa od neznámej domény musí odlíšiť. Keby sme oboje riešili
@@ -32,14 +32,14 @@ export default async function SignInPage({
   // neexistuje. Prihlásiť sa pri nedostupnej databáze aj tak nedá, takže
   // strácame len vzhľad, nie kontrolu.
   let tenant: Tenant | null = null
-  let databazaZlyhala = false
+  let databaseFailed = false
   try {
     tenant = await currentTenant()
   } catch (e) {
     console.error("[prihlasenie] tenanta sa nepodarilo načítať:", e)
-    databazaZlyhala = true
+    databaseFailed = true
   }
-  if (!tenant && !databazaZlyhala) notFound()
+  if (!tenant && !databaseFailed) notFound()
 
   // Kto je prihlásený, nemá na tejto stránke čo robiť: formulár mu ponúka to,
   // čo už má, a nič ho odtiaľ nepustí ďalej. Nastane to vždy, keď odkaz
@@ -51,15 +51,15 @@ export default async function SignInPage({
   const branding = tenant ? brandingView(tenant) : undefined
   // Ktoré kontá má táto organizácia zapnuté (D44). Rozhoduje o tom hostiteľ,
   // nie premenná nasadenia — na doméne zväzu je to Entra zväzu.
-  const poskytovatelia = availableProviders(tenant)
+  const providers = availableProviders(tenant)
 
   return (
     <div className="obal" style={{ padding: "64px 20px", maxWidth: 460, ...tenantStyle(branding) }}>
       <SignIn
-        odoslane={parametre.odoslane === "1"}
-        chyba={parametre.error}
+        odoslane={params.odoslane === "1"}
+        chyba={params.error}
         branding={branding}
-        poskytovatelia={poskytovatelia}
+        poskytovatelia={providers}
       />
     </div>
   )

@@ -34,38 +34,38 @@ export const PALETTE: { hodnota: string; popis: string }[] = [
 ]
 
 export default function ColorSelect({
-  meno,
-  hodnota,
+  meno: name,
+  hodnota: value,
 }: {
   meno: string
   hodnota?: string
 }) {
-  const [farba, setFarba] = useState((hodnota ?? "").trim())
-  const [vlastna, setVlastna] = useState(
-    Boolean(farba) && !PALETTE.some(p => p.hodnota.toLowerCase() === farba.toLowerCase()),
+  const [color, setColor] = useState((value ?? "").trim())
+  const [custom, setCustom] = useState(
+    Boolean(color) && !PALETTE.some(p => p.hodnota.toLowerCase() === color.toLowerCase()),
   )
 
   return (
     <div className="farby">
-      <input type="hidden" name={meno} value={farba} />
+      <input type="hidden" name={name} value={color} />
 
       <div className="farby-zoznam">
         {PALETTE.map(p => {
-          const je = farba.toLowerCase() === p.hodnota.toLowerCase()
+          const isHex = color.toLowerCase() === p.hodnota.toLowerCase()
           return (
             <button
               key={p.hodnota}
               type="button"
-              className={`farba${je ? " je-zvolena" : ""}`}
+              className={`farba${isHex ? " je-zvolena" : ""}`}
               style={{ background: p.hodnota }}
-              aria-pressed={je}
+              aria-pressed={isHex}
               aria-label={p.popis}
               title={p.popis}
-              onClick={() => { setFarba(p.hodnota); setVlastna(false) }}
+              onClick={() => { setColor(p.hodnota); setCustom(false) }}
             >
               {/* Krížik je biely, takže je zároveň skúškou čitateľnosti:
                   keby sa na odtieni stratil, stratí sa aj text na tlačidle. */}
-              <span aria-hidden="true">{je ? "✓" : ""}</span>
+              <span aria-hidden="true">{isHex ? "✓" : ""}</span>
             </button>
           )
         })}
@@ -74,16 +74,16 @@ export default function ColorSelect({
       <button
         type="button"
         className="tlacidlo tlacidlo--tiche farby-vlastna"
-        onClick={() => setVlastna(v => !v)}
+        onClick={() => setCustom(v => !v)}
       >
-        {vlastna ? "Skryť vlastnú hodnotu" : "Zadať vlastnú hodnotu"}
+        {custom ? "Skryť vlastnú hodnotu" : "Zadať vlastnú hodnotu"}
       </button>
 
-      {vlastna && (
+      {custom && (
         <input
           className="pole-vstup"
-          value={farba}
-          onChange={e => setFarba(e.target.value)}
+          value={color}
+          onChange={e => setColor(e.target.value)}
           placeholder="#1f4ed8"
           autoCapitalize="none"
           autoCorrect="off"
@@ -91,7 +91,7 @@ export default function ColorSelect({
       )}
 
       <noscript>
-        <input className="pole-vstup" name={meno} defaultValue={hodnota ?? ""} placeholder="#1f4ed8" />
+        <input className="pole-vstup" name={name} defaultValue={value ?? ""} placeholder="#1f4ed8" />
       </noscript>
     </div>
   )

@@ -17,10 +17,10 @@
  */
 
 /** Predpona, ktorou Next označuje výnimku z `redirect()`. */
-const PREDPONA = "NEXT_REDIRECT"
+const PREFIX = "NEXT_REDIRECT"
 
 export function isRedirect(e: unknown): boolean {
   if (!e || typeof e !== "object" || !("digest" in e)) return false
   const digest = (e as { digest?: unknown }).digest
-  return typeof digest === "string" && digest.startsWith(PREDPONA)
+  return typeof digest === "string" && digest.startsWith(PREFIX)
 }

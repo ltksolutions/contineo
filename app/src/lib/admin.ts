@@ -90,7 +90,7 @@ export interface TenantOverview {
  */
 export async function tenantOverviews(): Promise<TenantOverview[]> {
   const tenantCol = await getCollection<Tenant>(TENANTS_COLLECTION)
-  const surove = await tenantCol.find({}).sort({ companyCode: 1 }).toArray()
+  const raw = await tenantCol.find({}).sort({ companyCode: 1 }).toArray()
 
   const personCol = await getCollection<Person>(PERSONS_COLLECTION)
   const trackCol = await getCollection(TRACKS_COLLECTION)
@@ -100,36 +100,36 @@ export async function tenantOverviews(): Promise<TenantOverview[]> {
   const asOf = new Date()
   const out: TenantOverview[] = []
 
-  for (const doc of surove) {
+  for (const doc of raw) {
     const t = normalizeTenant(doc)
-    const kod = t.companyCode
+    const code = t.companyCode
 
-    const [spolu, prihlaseni, trasy, potvrdenia, dokumenty] = await Promise.all([
-      personCol.countDocuments({ companyCode: kod }),
-      personCol.countDocuments({ companyCode: kod, lastLoginAt: { $exists: true } }),
-      trackCol.countDocuments({ companyCode: kod }),
-      ackCol.countDocuments({ companyCode: kod }),
+    const [total, signedIn, tracks, acknowledgements, documents] = await Promise.all([
+      personCol.countDocuments({ companyCode: code }),
+      personCol.countDocuments({ companyCode: code, lastLoginAt: { $exists: true } }),
+      trackCol.countDocuments({ companyCode: code }),
+      ackCol.countDocuments({ companyCode: code }),
       docCol
-        .find({ companyCode: kod }, { projection: { documentId: 1, title: 1, versions: 1 } })
+        .find({ companyCode: code }, { projection: { documentId: 1, title: 1, versions: 1 } })
         .toArray(),
     ])
 
-    const bezZnenia = dokumenty
+    const withoutVersion = documents
       .filter(d => !effectiveVersion(d, asOf).ok)
       .map(d => d.title || d.documentId)
 
     const ds = (doc as Tenant & { domainSetup?: { requestedAt: Date; requestedTo: string } }).domainSetup
 
     out.push({
-      companyCode: kod,
+      companyCode: code,
       displayName: t.branding.displayName,
       status: t.status,
       languages: t.languages,
       hostnames: t.hostnames,
-      osoby: { spolu, prihlaseni },
-      trasy,
-      dokumenty: { spolu: dokumenty.length, bezZnenia },
-      potvrdenia,
+      osoby: { spolu: total, prihlaseni: signedIn },
+      trasy: tracks,
+      dokumenty: { spolu: documents.length, bezZnenia: withoutVersion },
+      potvrdenia: acknowledgements,
       ...(ds?.requestedAt
         ? { pokynyPoslane: { kedy: new Date(ds.requestedAt), komu: ds.requestedTo } }
         : {}),

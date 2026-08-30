@@ -31,18 +31,18 @@ export default async function AssignmentDetailPage({
   }
 
   const { id } = await params
-  const kod = ctx.person.companyCode
+  const code = ctx.person.companyCode
 
   // Prehľad nesie kópiu údajov o pridelení; načítať ho cez ten istý zoznam
   // znamená, že sa nikde nepočíta druhýkrát niečo, čo prehľad už spočítal.
-  const pridelenie = (await assignmentOverviews(kod)).find(p => p.id === id)
+  const assignment = (await assignmentOverviews(code)).find(p => p.id === id)
   // Neexistuje vs. patrí inému tenantovi je zámerne tá istá odpoveď —
   // inak by sa skúšaním identifikátorov dalo zistiť, čo prideľujú iní.
-  if (!pridelenie) notFound()
+  if (!assignment) notFound()
 
-  const chybajuci = await notAcknowledged(kod, id)
+  const missing = await notAcknowledged(code, id)
   const branding = brandingView(ctx.tenant)
-  const jazyk = ctx.person.language
+  const language = ctx.person.language
 
   return (
     <div className="obal" style={{ padding: "28px 20px 80px", maxWidth: 720, ...tenantStyle(branding) }}>
@@ -51,40 +51,40 @@ export default async function AssignmentDetailPage({
       </p>
 
       <h1 style={{ fontSize: 25, letterSpacing: "-0.02em", margin: "0 0 6px" }}>
-        {pridelenie.subject.documentTitle}
+        {assignment.subject.documentTitle}
       </h1>
       <p className="tichy" style={{ fontSize: 14, margin: "0 0 4px" }}>
-        verzia {pridelenie.subject.versionLabel}
-        {pridelenie.subject.effectiveFrom &&
-          `, platná od ${formatDate(pridelenie.subject.effectiveFrom, jazyk)}`}
+        verzia {assignment.subject.versionLabel}
+        {assignment.subject.effectiveFrom &&
+          `, platná od ${formatDate(assignment.subject.effectiveFrom, language)}`}
       </p>
       <p className="tichy" style={{ fontSize: 14, margin: "0 0 18px" }}>
-        {audienceLabel(pridelenie.audience)} · pridelil {pridelenie.assignedBy} ·{" "}
-        {formatDate(pridelenie.assignedAt, jazyk)}
+        {audienceLabel(assignment.audience)} · pridelil {assignment.assignedBy} ·{" "}
+        {formatDate(assignment.assignedAt, language)}
       </p>
 
       <p className="karta" style={{ padding: "14px 18px", margin: "0 0 24px", fontSize: 15, lineHeight: 1.6 }}>
-        {pridelenie.reason}
+        {assignment.reason}
       </p>
 
       <div style={{ display: "flex", gap: 10, alignItems: "baseline", flexWrap: "wrap", margin: "0 0 10px" }}>
         <h2 style={{ fontSize: 18, margin: 0 }}>
-          Nepotvrdili ({chybajuci.length} z {pridelenie.osob})
+          Nepotvrdili ({missing.length} z {assignment.osob})
         </h2>
-        {chybajuci.length > 0 && (
+        {missing.length > 0 && (
           <Link href={`/hr/${encodeURIComponent(id)}/oznamit`} style={{ fontSize: 14 }}>
             dať im vedieť e-mailom →
           </Link>
         )}
       </div>
 
-      {chybajuci.length === 0 ? (
+      {missing.length === 0 ? (
         <p className="karta" style={{ padding: 18, fontSize: 15 }}>
           Potvrdili všetci, ktorých sa pridelenie dnes týka.
         </p>
       ) : (
         <ul className="admin-domeny">
-          {chybajuci.map(o => (
+          {missing.map(o => (
             <li key={o.id} className="karta" style={{ padding: "12px 16px" }}>
               <div style={{ fontWeight: 600, display: "flex", gap: 8, alignItems: "baseline", flexWrap: "wrap" }}>
                 {o.fullName}

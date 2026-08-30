@@ -92,15 +92,15 @@ export interface Cost {
  */
 export function ratesForDate(
   model: string,
-  ku: Date = new Date()
+  onDate: Date = new Date()
 ): { sadzby: ModelPrice | null; expirovany: boolean } {
   const c = PRICELIST[model]
   if (!c) return { sadzby: null, expirovany: false }
 
   if (!c.platiDo) return { sadzby: c, expirovany: false }
 
-  const koniec = new Date(c.platiDo + "T23:59:59Z")
-  if (ku <= koniec) return { sadzby: c, expirovany: false }
+  const end = new Date(c.platiDo + "T23:59:59Z")
+  if (onDate <= end) return { sadzby: c, expirovany: false }
 
   return c.potom
     ? { sadzby: c.potom, expirovany: false }
@@ -108,25 +108,25 @@ export function ratesForDate(
 }
 
 /** Vypočíta cenu v USD z počtu tokenov. */
-export function cost(model: string, t: TokenCounts, ku: Date = new Date()): Cost {
-  const { sadzby, expirovany } = ratesForDate(model, ku)
+export function cost(model: string, t: TokenCounts, onDate: Date = new Date()): Cost {
+  const { sadzby: rates, expirovany: expired } = ratesForDate(model, onDate)
 
-  if (!sadzby) {
+  if (!rates) {
     return { usd: 0, verziaCennika: PRICELIST_VERSION, neznamyModel: true, cennikExpirovany: false }
   }
 
-  const MILION = 1_000_000
+  const MILLION = 1_000_000
   const usd =
-    (t.vstup * sadzby.vstup +
-      t.vystup * sadzby.vystup +
-      t.cacheZapis * sadzby.cacheZapis +
-      t.cacheCitanie * sadzby.cacheCitanie) / MILION
+    (t.vstup * rates.vstup +
+      t.vystup * rates.vystup +
+      t.cacheZapis * rates.cacheZapis +
+      t.cacheCitanie * rates.cacheCitanie) / MILLION
 
   return {
     usd,
     verziaCennika: PRICELIST_VERSION,
     neznamyModel: false,
-    cennikExpirovany: expirovany,
+    cennikExpirovany: expired,
   }
 }
 
@@ -149,8 +149,8 @@ export function formatUsd(usd: number): string {
  * Fakturuje sa v dolároch, takže euro je len pomôcka. Kurz je v env,
  * lebo sa mení a nechceme ho mať zadrôtovaný v kóde.
  */
-export function toEur(usd: number, kurz = Number(process.env.KURZ_USD_EUR ?? 0.92)): number {
-  return usd * kurz
+export function toEur(usd: number, rate = Number(process.env.KURZ_USD_EUR ?? 0.92)): number {
+  return usd * rate
 }
 
 export function formatEur(eur: number): string {
@@ -162,8 +162,8 @@ export function formatEur(eur: number): string {
 }
 
 /** Súčet tokenov — na štatistiky za obdobie. */
-export function sumCosts(zoznam: TokenCounts[]): TokenCounts {
-  return zoznam.reduce(
+export function sumCosts(list: TokenCounts[]): TokenCounts {
+  return list.reduce(
     (a, t) => ({
       vstup: a.vstup + t.vstup,
       vystup: a.vystup + t.vystup,

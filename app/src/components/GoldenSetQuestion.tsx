@@ -14,23 +14,23 @@ import { useState } from "react"
 import Link from "next/link"
 import Search from "./Search"
 
-const POPIS_PASCE: Record<string, string> = {
+const TRAP_LABEL: Record<string, string> = {
   out_of_domain: "Otázka je mimo nahraných dokumentov. Systém má odmietnuť, nie odpovedať.",
   ambiguous_conflict: "Predpisy si tu odporujú. Systém nemá rozhodnúť autoritatívne — má na rozpor upozorniť a ponúknuť eskaláciu, lebo výklad patrí človeku.",
   access_control: "Pýta sa verejný používateľ na interný obsah. Systém ho nesmie prezradiť.",
   historical_version: "Otázka mieri na staršie znenie. Systém má citovať verziu platnú v danom čase, nie dnešnú.",
 }
 
-const POPIS_SPRAVANIA: Record<string, string> = {
+const BEHAVIOUR_LABEL: Record<string, string> = {
   answer: "má odpovedať vecne",
   refuse: "má odmietnuť",
   escalate: "má ponúknuť eskaláciu",
 }
 
 export default function GoldenSetQuestion({
-  id, znenie, povodne, upravene, vyradena, dovodVyradenia,
+  id, znenie: questionText, povodne: original, upravene: edited, vyradena: excluded, dovodVyradenia: exclusionReason,
   trapType, expectedBehaviour, precedenceRule, searchMode,
-  prekryv, cudzie, dalsia,
+  prekryv: overlap, cudzie: foreign, dalsia: next,
 }: {
   id: string
   znenie: string
@@ -48,24 +48,24 @@ export default function GoldenSetQuestion({
   cudzie: { hodnotitel: string; spravna: 0 | 1 | null }[]
   dalsia: string | null
 }) {
-  const [text, setText] = useState(znenie)
-  const [upravujem, setUpravujem] = useState(false)
-  const [vyradenaTeraz, setVyradena] = useState(vyradena)
-  const [dovod, setDovod] = useState(dovodVyradenia ?? "")
-  const [stav, setStav] = useState<"" | "ukladam" | "ulozene" | "chyba">("")
-  const [posudene, setPosudene] = useState(false)
+  const [text, setText] = useState(questionText)
+  const [editing, setEditing] = useState(false)
+  const [excludedNow, setExcluded] = useState(excluded)
+  const [reason, setReason] = useState(exclusionReason ?? "")
+  const [status, setStatus] = useState<"" | "ukladam" | "ulozene" | "chyba">("")
+  const [reviewed, setReviewed] = useState(false)
 
-  async function uloz(zmena: Record<string, unknown>) {
-    setStav("ukladam")
+  async function save(change: Record<string, unknown>) {
+    setStatus("ukladam")
     try {
       const r = await fetch("/api/sada", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id, ...zmena }),
+        body: JSON.stringify({ id, ...change }),
       })
-      setStav(r.ok ? "ulozene" : "chyba")
+      setStatus(r.ok ? "ulozene" : "chyba")
     } catch {
-      setStav("chyba")
+      setStatus("chyba")
     }
   }
 
@@ -81,12 +81,12 @@ export default function GoldenSetQuestion({
           <span className="stitok tichy" style={{ fontSize: 11 }}>{precedenceRule}</span>
         )}
         <span className="tichy" style={{ fontSize: 12, marginLeft: "auto" }}>
-          {stav === "ukladam" ? "ukladám…" : stav === "ulozene" ? "uložené" : stav === "chyba" ? "neuložilo sa" : ""}
+          {status === "ukladam" ? "ukladám…" : status === "ulozene" ? "uložené" : status === "chyba" ? "neuložilo sa" : ""}
         </span>
       </div>
 
       {/* Otázka pre dvoch — hodnotiteľ má vedieť, prečo cudzí posudok nevidí. */}
-      {prekryv && cudzie.length === 0 && (
+      {overlap && foreign.length === 0 && (
         <div className="karta" style={{ fontSize: 14, lineHeight: 1.6 }}>
           <strong>Túto otázku posudzujú dvaja nezávisle.</strong>{" "}
           <span className="tichy">
@@ -98,16 +98,16 @@ export default function GoldenSetQuestion({
       )}
 
       {/* Po vlastnom posudku sa cudzie odkryjú. Nezhoda je nález, nie chyba. */}
-      {cudzie.length > 0 && (
+      {foreign.length > 0 && (
         <div
           className="karta"
           style={{
             fontSize: 14, lineHeight: 1.6,
-            borderColor: cudzie.some(c => c.spravna !== null) ? "var(--line)" : "var(--line)",
+            borderColor: foreign.some(c => c.spravna !== null) ? "var(--line)" : "var(--line)",
           }}
         >
           <div style={{ fontWeight: 600, marginBottom: 8 }}>Ako to posúdili ostatní</div>
-          {cudzie.map((c, i) => (
+          {foreign.map((c, i) => (
             <div key={i} className="tichy" style={{ fontSize: 13.5 }}>
               {c.hodnotitel} — {c.spravna === 1 ? "správna" : c.spravna === 0 ? "nesprávna" : "neposúdené"}
             </div>
@@ -128,23 +128,23 @@ export default function GoldenSetQuestion({
           <span aria-hidden="true" style={{ fontWeight: 700 }}>▲</span>
           <span style={{ fontSize: 14, lineHeight: 1.6 }}>
             <strong>Toto je zámerná skúška.</strong>{" "}
-            {trapType && POPIS_PASCE[trapType]}
-            {" "}Systém tu <strong>{POPIS_SPRAVANIA[expectedBehaviour] ?? expectedBehaviour}</strong> —
+            {trapType && TRAP_LABEL[trapType]}
+            {" "}Systém tu <strong>{BEHAVIOUR_LABEL[expectedBehaviour] ?? expectedBehaviour}</strong> —
             posudzujte, či sa zachoval takto, nie či odpovedal vyčerpávajúco.
           </span>
         </div>
       )}
 
-      {vyradenaTeraz ? (
+      {excludedNow ? (
         <div className="karta">
           <div style={{ fontSize: 15, marginBottom: 8 }}>
             <strong>Otázka je vyradená.</strong>
           </div>
-          {dovod && <p className="tichy" style={{ fontSize: 14, margin: "0 0 12px" }}>{dovod}</p>}
+          {reason && <p className="tichy" style={{ fontSize: 14, margin: "0 0 12px" }}>{reason}</p>}
           <button
             type="button"
             className="tlacidlo tlacidlo--tiche"
-            onClick={() => { setVyradena(false); uloz({ vyradena: false }) }}
+            onClick={() => { setExcluded(false); save({ vyradena: false }) }}
           >
             Vrátiť do sady
           </button>
@@ -152,7 +152,7 @@ export default function GoldenSetQuestion({
       ) : (
         <>
           <div className="karta">
-            {upravujem ? (
+            {editing ? (
               <div style={{ display: "grid", gap: 10 }}>
                 <label className="tichy" style={{ fontSize: 13 }}>
                   Znenie otázky — napíšte ju tak, ako by sa spýtal skutočný človek.
@@ -174,7 +174,7 @@ export default function GoldenSetQuestion({
                     type="button"
                     className="tlacidlo"
                     style={{ padding: "7px 14px", fontSize: 14 }}
-                    onClick={() => { setUpravujem(false); uloz({ upraveneZnenie: text }) }}
+                    onClick={() => { setEditing(false); save({ upraveneZnenie: text }) }}
                   >
                     Uložiť znenie
                   </button>
@@ -182,16 +182,16 @@ export default function GoldenSetQuestion({
                     type="button"
                     className="tlacidlo tlacidlo--tiche"
                     style={{ padding: "7px 14px", fontSize: 14 }}
-                    onClick={() => { setText(znenie); setUpravujem(false) }}
+                    onClick={() => { setText(questionText); setEditing(false) }}
                   >
                     Zrušiť
                   </button>
-                  {upravene && (
+                  {edited && (
                     <button
                       type="button"
                       className="tlacidlo tlacidlo--tiche"
                       style={{ padding: "7px 14px", fontSize: 14 }}
-                      onClick={() => { setText(povodne); setUpravujem(false); uloz({ upraveneZnenie: "" }) }}
+                      onClick={() => { setText(original); setEditing(false); save({ upraveneZnenie: "" }) }}
                     >
                       Vrátiť pôvodné
                     </button>
@@ -204,9 +204,9 @@ export default function GoldenSetQuestion({
                   <div style={{ fontSize: 17, lineHeight: 1.5, fontWeight: 600 }}>{text}</div>
                   {/* Pôvodné znenie zostáva viditeľné — je to podklad pre
                       regresné merania, nie len história. */}
-                  {upravene && (
+                  {edited && (
                     <div className="tichy" style={{ fontSize: 12.5, marginTop: 8 }}>
-                      pôvodne: &bdquo;{povodne}&ldquo;
+                      pôvodne: &bdquo;{original}&ldquo;
                     </div>
                   )}
                 </div>
@@ -214,7 +214,7 @@ export default function GoldenSetQuestion({
                   type="button"
                   className="tlacidlo tlacidlo--tiche"
                   style={{ padding: "6px 12px", fontSize: 13.5, flexShrink: 0 }}
-                  onClick={() => setUpravujem(true)}
+                  onClick={() => setEditing(true)}
                 >
                   Upraviť
                 </button>
@@ -226,14 +226,14 @@ export default function GoldenSetQuestion({
             key={text}
             otazkaId={id}
             prednastavena={text}
-            onPosudene={() => setPosudene(true)}
+            onPosudene={() => setReviewed(true)}
           />
 
           <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
             {/* Ponuka ďalšej otázky sa objaví až po posúdení — dovtedy by
                 nabádala preskočiť prácu, kvôli ktorej sme tu. */}
-            {posudene && dalsia && (
-              <Link href={`/sada/${dalsia}`} className="tlacidlo" style={{ textDecoration: "none" }}>
+            {reviewed && next && (
+              <Link href={`/sada/${next}`} className="tlacidlo" style={{ textDecoration: "none" }}>
                 Ďalšia otázka →
               </Link>
             )}
@@ -243,9 +243,9 @@ export default function GoldenSetQuestion({
               onClick={() => {
                 const d = window.prompt("Prečo otázka nedáva zmysel?") ?? ""
                 if (d.trim()) {
-                  setVyradena(true)
-                  setDovod(d)
-                  uloz({ vyradena: true, dovodVyradenia: d })
+                  setExcluded(true)
+                  setReason(d)
+                  save({ vyradena: true, dovodVyradenia: d })
                 }
               }}
             >

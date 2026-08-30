@@ -36,34 +36,34 @@ export default async function NotifyPage({
   }
 
   const { id } = await params
-  const { chyba } = await searchParams
-  const kod = ctx.person.companyCode
+  const { chyba: error } = await searchParams
+  const code = ctx.person.companyCode
 
-  const pridelenie = await loadAssignment(kod, id)
-  if (!pridelenie) notFound()
+  const assignment = await loadAssignment(code, id)
+  if (!assignment) notFound()
 
-  const vsetciNepotvrdeni = await notAcknowledged(kod, id)
+  const allUnacknowledged = await notAcknowledged(code, id)
   // Kto z oddelenia odišiel, sa ukazuje na detaile, ale e-mail nedostane (D50).
-  const prijemcovia = vsetciNepotvrdeni.filter(o => !o.byvaly)
-  const byvali = vsetciNepotvrdeni.filter(o => o.byvaly)
+  const recipients = allUnacknowledged.filter(o => !o.byvaly)
+  const former = allUnacknowledged.filter(o => o.byvaly)
   const branding = brandingView(ctx.tenant)
   const host = await requestHostname()
-  const jazyk = normalizeLanguage(ctx.person.language)
+  const language = normalizeLanguage(ctx.person.language)
 
   // Ukazuje sa **presne to znenie**, ktoré sa odošle — zložené tou istou
   // funkciou. Podobný text by sa časom rozišiel so skutočným.
-  const ukazka = assignmentEmail(
-    `https://${host}/dokumenty/${encodeURIComponent(pridelenie.subject.documentId)}`,
+  const preview = assignmentEmail(
+    `https://${host}/dokumenty/${encodeURIComponent(assignment.subject.documentId)}`,
     host,
     {
-      title: pridelenie.subject.documentTitle,
-      versionLabel: pridelenie.subject.versionLabel,
-      effectiveFrom: pridelenie.subject.effectiveFrom
-        ? formatDate(pridelenie.subject.effectiveFrom, jazyk)
+      title: assignment.subject.documentTitle,
+      versionLabel: assignment.subject.versionLabel,
+      effectiveFrom: assignment.subject.effectiveFrom
+        ? formatDate(assignment.subject.effectiveFrom, language)
         : "—",
     },
-    pridelenie.reason,
-    jazyk,
+    assignment.reason,
+    language,
     branding,
   )
 
@@ -84,40 +84,40 @@ export default async function NotifyPage({
         druh pošty, po ktorom si ľudia zapnú filter.
       </p>
 
-      {chyba && (
+      {error && (
         <p className="karta" style={{ padding: "12px 16px", margin: "0 0 18px", fontSize: 14.5, color: "var(--warn-fg)" }}>
-          {chyba}
+          {error}
         </p>
       )}
 
-      {pridelenie.notified?.length ? (
+      {assignment.notified?.length ? (
         <p className="karta" style={{ padding: "12px 16px", margin: "0 0 18px", fontSize: 14.5 }}>
-          Naposledy odoslané {formatDate(pridelenie.notified[pridelenie.notified.length - 1].at, jazyk)}
-          {" "}({pridelenie.notified[pridelenie.notified.length - 1].count} ľuďom)
-          {pridelenie.notified.length > 1 && ` · celkovo ${pridelenie.notified.length}×`}.
+          Naposledy odoslané {formatDate(assignment.notified[assignment.notified.length - 1].at, language)}
+          {" "}({assignment.notified[assignment.notified.length - 1].count} ľuďom)
+          {assignment.notified.length > 1 && ` · celkovo ${assignment.notified.length}×`}.
         </p>
       ) : null}
 
       <h2 style={{ fontSize: 17, margin: "0 0 10px" }}>
-        Komu ({prijemcovia.length})
+        Komu ({recipients.length})
       </h2>
 
-      {prijemcovia.length === 0 ? (
+      {recipients.length === 0 ? (
         <p className="karta" style={{ padding: 18, fontSize: 15 }}>
-          Potvrdili už všetci, ktorých sa {audienceLabel(pridelenie.audience)} týka.
+          Potvrdili už všetci, ktorých sa {audienceLabel(assignment.audience)} týka.
           Nie je komu poslať.
         </p>
       ) : (
         <>
-          {byvali.length > 0 && (
+          {former.length > 0 && (
             <p className="tichy" style={{ fontSize: 14, margin: "0 0 12px" }}>
-              Ďalší {byvali.length} nepotvrdili, ale z oddelenia už odišli — tým sa
+              Ďalší {former.length} nepotvrdili, ale z oddelenia už odišli — tým sa
               nepíše. Vidno ich na <Link href={`/hr/${encodeURIComponent(id)}`}>detaile pridelenia</Link>.
             </p>
           )}
 
           <ul className="admin-domeny" style={{ marginBottom: 26 }}>
-            {prijemcovia.map(o => (
+            {recipients.map(o => (
               <li key={o.id} className="karta" style={{ padding: "10px 14px" }}>
                 <span style={{ fontWeight: 600 }}>{o.fullName}</span>{" "}
                 <span className="tichy" style={{ fontSize: 13.5 }}>{o.email}</span>
@@ -127,7 +127,7 @@ export default async function NotifyPage({
 
           <h2 style={{ fontSize: 17, margin: "0 0 10px" }}>Čo im príde</h2>
           <p className="tichy pole-napoveda" style={{ margin: "0 0 10px" }}>
-            Predmet: {ukazka.subject} · Každý ho dostane vo svojom jazyku.
+            Predmet: {preview.subject} · Každý ho dostane vo svojom jazyku.
           </p>
           <pre
             className="karta"
@@ -136,13 +136,13 @@ export default async function NotifyPage({
               whiteSpace: "pre-wrap", overflowWrap: "anywhere", fontFamily: "inherit",
             }}
           >
-            {ukazka.text}
+            {preview.text}
           </pre>
 
           <form action={sendNotificationAction}>
             <input type="hidden" name="id" value={id} />
             <button className="tlacidlo" type="submit">
-              Odoslať {prijemcovia.length} {prijemcovia.length === 1 ? "e-mail" : prijemcovia.length < 5 ? "e-maily" : "e-mailov"}
+              Odoslať {recipients.length} {recipients.length === 1 ? "e-mail" : recipients.length < 5 ? "e-maily" : "e-mailov"}
             </button>
           </form>
         </>

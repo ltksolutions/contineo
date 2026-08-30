@@ -52,10 +52,10 @@ export class FileStoreError extends Error {
  */
 export async function saveFile(
   companyCode: string,
-  nazov: string,
+  name: string,
   contentType: string,
   data: Buffer,
-  aktor: string,
+  actor: string,
 ): Promise<StoredFile> {
   if (!data?.byteLength) throw new FileStoreError("Súbor je prázdny.")
   if (data.byteLength > MAX_BYTES) {
@@ -65,20 +65,20 @@ export async function saveFile(
   }
 
   const b = await bucket()
-  const prud = b.openUploadStream(nazov, {
+  const stream = b.openUploadStream(name, {
     contentType,
-    metadata: { companyCode, aktor, nahraneKedy: new Date() },
+    metadata: { companyCode, aktor: actor, nahraneKedy: new Date() },
   })
 
-  await new Promise<void>((hotovo, chyba) => {
-    prud.on("error", chyba)
-    prud.on("finish", () => hotovo())
-    prud.end(data)
+  await new Promise<void>((done, failed) => {
+    stream.on("error", failed)
+    stream.on("finish", () => done())
+    stream.end(data)
   })
 
   return {
-    id: String(prud.id),
-    nazov,
+    id: String(stream.id),
+    nazov: name,
     contentType,
     bajtov: data.byteLength,
     nahraneKedy: new Date(),
@@ -94,21 +94,21 @@ export async function loadFile(
   const b = await bucket()
 
   // Podmienka na organizáciu je v dotaze, nie v kontrole nad ním.
-  const [zaznam] = await b.find({ _id: new ObjectId(id), "metadata.companyCode": companyCode }).toArray()
-  if (!zaznam) return null
+  const [record] = await b.find({ _id: new ObjectId(id), "metadata.companyCode": companyCode }).toArray()
+  if (!record) return null
 
-  const kusky: Buffer[] = []
-  await new Promise<void>((hotovo, chyba) => {
-    const prud = b.openDownloadStream(new ObjectId(id))
-    prud.on("data", (k: Buffer) => kusky.push(k))
-    prud.on("error", chyba)
-    prud.on("end", () => hotovo())
+  const parts: Buffer[] = []
+  await new Promise<void>((done, failed) => {
+    const stream = b.openDownloadStream(new ObjectId(id))
+    stream.on("data", (k: Buffer) => parts.push(k))
+    stream.on("error", failed)
+    stream.on("end", () => done())
   })
 
   return {
-    data: Buffer.concat(kusky),
-    contentType: zaznam.contentType ?? "application/octet-stream",
-    nazov: zaznam.filename,
+    data: Buffer.concat(parts),
+    contentType: record.contentType ?? "application/octet-stream",
+    nazov: record.filename,
   }
 }
 
@@ -122,7 +122,7 @@ export async function loadFile(
 export async function deleteFile(companyCode: string, id: string): Promise<void> {
   if (!ObjectId.isValid(id)) return
   const b = await bucket()
-  const [zaznam] = await b.find({ _id: new ObjectId(id), "metadata.companyCode": companyCode }).toArray()
-  if (!zaznam) return
+  const [record] = await b.find({ _id: new ObjectId(id), "metadata.companyCode": companyCode }).toArray()
+  if (!record) return
   await b.delete(new ObjectId(id))
 }

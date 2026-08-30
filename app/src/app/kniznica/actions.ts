@@ -33,7 +33,7 @@ import { getCollection } from "@/lib/mongodb"
 import { DOCUMENTS_COLLECTION } from "@/lib/documents"
 import { writeAudit } from "@/lib/audit"
 
-async function kto(): Promise<
+async function actor(): Promise<
   {
     email: string
     companyCode: string
@@ -55,12 +55,12 @@ async function kto(): Promise<
     : null
 }
 
-function textPola(fd: FormData, meno: string): string {
-  const v = fd.get(meno)
+function fieldText(fd: FormData, actorName: string): string {
+  const v = fd.get(actorName)
   return typeof v === "string" ? v.trim() : ""
 }
 
-function spravaChyby(e: unknown): string {
+function errorMessage(e: unknown): string {
   if (
     e instanceof LibraryError || e instanceof FileStoreError ||
     e instanceof RewriteError || e instanceof FolderError
@@ -72,29 +72,29 @@ function spravaChyby(e: unknown): string {
 }
 
 export async function uploadAction(fd: FormData) {
-  const ja = await kto()
-  if (!ja) redirect("/")
+  const self = await actor()
+  if (!self) redirect("/")
 
   try {
-    const subor = fd.get("subor")
-    if (!(subor instanceof File) || subor.size === 0) {
+    const file = fd.get("subor")
+    if (!(file instanceof File) || file.size === 0) {
       throw new LibraryError("Nevybral si súbor.")
     }
 
     // Organizácia je z prihláseného človeka, nie z formulára.
     const meta = checkMetadata({
-      title: textPola(fd, "title"),
-      sectionKey: textPola(fd, "sectionKey"),
-      companyCode: ja.companyCode,
-      scope: textPola(fd, "scope"),
-      accessLevel: textPola(fd, "accessLevel"),
-      language: textPola(fd, "language"),
-      category: textPola(fd, "category") || undefined,
+      title: fieldText(fd, "title"),
+      sectionKey: fieldText(fd, "sectionKey"),
+      companyCode: self.companyCode,
+      scope: fieldText(fd, "scope"),
+      accessLevel: fieldText(fd, "accessLevel"),
+      language: fieldText(fd, "language"),
+      category: fieldText(fd, "category") || undefined,
       tags: fd.getAll("tags").filter((t): t is string => typeof t === "string"),
-    }, ja.doplnky)
+    }, self.doplnky)
 
     const v = await uploadDocument(
-      meta, subor.name, Buffer.from(await subor.arrayBuffer()), ja.email,
+      meta, file.name, Buffer.from(await file.arrayBuffer()), self.email,
     )
 
     revalidatePath("/kniznica")
@@ -109,61 +109,61 @@ export async function uploadAction(fd: FormData) {
     // `redirect()` vyhadzuje výnimku — nesmie sa chytiť ako chyba zápisu.
     if (isRedirect(e)) throw e
     const q = new URLSearchParams({
-      chyba: spravaChyby(e),
-      title: textPola(fd, "title"),
-      sectionKey: textPola(fd, "sectionKey"),
+      chyba: errorMessage(e),
+      title: fieldText(fd, "title"),
+      sectionKey: fieldText(fd, "sectionKey"),
     })
     redirect(`/kniznica/nova?${q.toString()}`)
   }
 }
 
 export async function saveTextAction(fd: FormData) {
-  const ja = await kto()
-  if (!ja) redirect("/")
+  const self = await actor()
+  if (!self) redirect("/")
 
-  const id = textPola(fd, "documentId")
-  let sprava = "Uložené."
-  let chyba = false
+  const id = fieldText(fd, "documentId")
+  let message = "Uložené."
+  let error = false
   try {
-    await saveDraft(ja.companyCode, id, String(fd.get("markdown") ?? ""), ja.email)
+    await saveDraft(self.companyCode, id, String(fd.get("markdown") ?? ""), self.email)
   } catch (e) {
-    sprava = spravaChyby(e)
-    chyba = true
+    message = errorMessage(e)
+    error = true
   }
 
   revalidatePath(`/kniznica/${id}`)
-  redirect(`/kniznica/${encodeURIComponent(id)}/text?sprava=${encodeURIComponent(sprava)}${chyba ? "&chyba=1" : ""}`)
+  redirect(`/kniznica/${encodeURIComponent(id)}/text?sprava=${encodeURIComponent(message)}${error ? "&chyba=1" : ""}`)
 }
 
 export async function publishVersionAction(fd: FormData) {
-  const ja = await kto()
-  if (!ja) redirect("/")
+  const self = await actor()
+  if (!self) redirect("/")
 
-  const id = textPola(fd, "documentId")
-  let sprava = ""
-  let chyba = false
+  const id = fieldText(fd, "documentId")
+  let message = ""
+  let error = false
   try {
-    const den = textPola(fd, "effectiveFrom")
-    const v = await publish(ja.companyCode, id, {
-      label: textPola(fd, "label"),
+    const day = fieldText(fd, "effectiveFrom")
+    const v = await publish(self.companyCode, id, {
+      label: fieldText(fd, "label"),
       // Dátum bez času a v UTC — `effectiveFrom` je deň, nie okamih, a
       // miestne pásmo by ho pri polnoci posunulo o deň.
-      effectiveFrom: new Date(`${den}T00:00:00.000Z`),
-      effectiveFromSource: textPola(fd, "effectiveFromSource"),
-      changeNote: textPola(fd, "changeNote"),
-    }, ja.email, ja.profil)
+      effectiveFrom: new Date(`${day}T00:00:00.000Z`),
+      effectiveFromSource: fieldText(fd, "effectiveFromSource"),
+      changeNote: fieldText(fd, "changeNote"),
+    }, self.email, self.profil)
 
-    sprava = v.uzBolo
+    message = v.uzBolo
       ? "Toto znenie už publikované je — nič sa nezmenilo."
       : `Publikované: ${v.chunkov} úsekov, ${v.archivovanych} starých archivovaných.`
   } catch (e) {
-    sprava = spravaChyby(e)
-    chyba = true
+    message = errorMessage(e)
+    error = true
   }
 
   revalidatePath("/kniznica")
   revalidatePath(`/kniznica/${id}`)
-  redirect(`/kniznica/${encodeURIComponent(id)}?sprava=${encodeURIComponent(sprava)}${chyba ? "&chyba=1" : ""}`)
+  redirect(`/kniznica/${encodeURIComponent(id)}?sprava=${encodeURIComponent(message)}${error ? "&chyba=1" : ""}`)
 }
 
 /** Pomôcka pre obrazovku: aký `documentId` z týchto metadát vznikne. */
@@ -179,251 +179,251 @@ export async function previewId(companyCode: string, sectionKey: string): Promis
  * tichej zmeny, po ktorej sa o rok nedá povedať, čo v predpise vlastne stálo.
  */
 export async function sendToModelAction(fd: FormData) {
-  const ja = await kto()
-  if (!ja) redirect("/")
+  const self = await actor()
+  if (!self) redirect("/")
 
-  const id = textPola(fd, "documentId")
-  const rezim = textPola(fd, "rezim")
-  let sprava = ""
-  let chyba = false
+  const id = fieldText(fd, "documentId")
+  const mode = fieldText(fd, "rezim")
+  let message = ""
+  let error = false
 
   try {
     const col = await getCollection(DOCUMENTS_COLLECTION)
-    const doc = await col.findOne({ documentId: id, companyCode: ja.companyCode }) as Record<string, unknown> | null
+    const doc = await col.findOne({ documentId: id, companyCode: self.companyCode }) as Record<string, unknown> | null
     if (!doc) throw new LibraryError("Taký dokument tu nie je.")
 
-    const navrh = rezim === "prepisat-sken"
+    const draft = mode === "prepisat-sken"
       ? await (async () => {
-          const povodny = doc.originalFile as { id: string; typ: string } | undefined
-          if (!povodny) throw new LibraryError("Dokument nemá pôvodný súbor, ktorý by sa dal prepísať.")
-          if (povodny.typ !== "pdf") {
+          const original = doc.originalFile as { id: string; typ: string } | undefined
+          if (!original) throw new LibraryError("Dokument nemá pôvodný súbor, ktorý by sa dal prepísať.")
+          if (original.typ !== "pdf") {
             throw new LibraryError("Prepisovať sa dá len PDF — ostatné formáty sa prevedú priamo.")
           }
-          const s = await loadFile(ja.companyCode, povodny.id)
+          const s = await loadFile(self.companyCode, original.id)
           if (!s) throw new LibraryError("Pôvodný súbor sa nenašiel.")
           return rewritePdf(s.data)
         })()
       : await cleanMarkdown(String(doc.draftMarkdown ?? ""))
 
     await col.updateOne(
-      { documentId: id, companyCode: ja.companyCode },
-      { $set: { llmNavrh: navrh } } as never,
+      { documentId: id, companyCode: self.companyCode },
+      { $set: { llmNavrh: draft } } as never,
     )
     await writeAudit({
-      companyCode: ja.companyCode, predmet: "dokument", akcia: "navrh-modelu",
-      aktor: ja.email, cielId: id, cielPopis: String(doc.title ?? id),
-      poznamka: `${navrh.rezim} · ${navrh.model} · ${navrh.text.length} znakov`,
+      companyCode: self.companyCode, predmet: "dokument", akcia: "navrh-modelu",
+      aktor: self.email, cielId: id, cielPopis: String(doc.title ?? id),
+      poznamka: `${draft.rezim} · ${draft.model} · ${draft.text.length} znakov`,
     })
 
-    sprava = "Model vrátil návrh. Porovnaj ho s doterajším textom a rozhodni sa."
+    message = "Model vrátil návrh. Porovnaj ho s doterajším textom a rozhodni sa."
   } catch (e) {
-    sprava = spravaChyby(e)
-    chyba = true
+    message = errorMessage(e)
+    error = true
   }
 
-  redirect(`/kniznica/${encodeURIComponent(id)}/text?sprava=${encodeURIComponent(sprava)}${chyba ? "&chyba=1" : ""}`)
+  redirect(`/kniznica/${encodeURIComponent(id)}/text?sprava=${encodeURIComponent(message)}${error ? "&chyba=1" : ""}`)
 }
 
 /** Prijme alebo zahodí návrh modelu. Prijatie je vedomý krok človeka. */
 export async function decideOnDraftAction(fd: FormData) {
-  const ja = await kto()
-  if (!ja) redirect("/")
+  const self = await actor()
+  if (!self) redirect("/")
 
-  const id = textPola(fd, "documentId")
-  const prijat = textPola(fd, "volba") === "prijat"
-  let sprava = ""
-  let chyba = false
+  const id = fieldText(fd, "documentId")
+  const accept = fieldText(fd, "volba") === "prijat"
+  let message = ""
+  let error = false
 
   try {
     const col = await getCollection(DOCUMENTS_COLLECTION)
-    const doc = await col.findOne({ documentId: id, companyCode: ja.companyCode }) as Record<string, unknown> | null
-    const navrh = doc?.llmNavrh as { text?: string } | undefined
-    if (!navrh?.text) throw new LibraryError("Žiadny návrh tu nie je.")
+    const doc = await col.findOne({ documentId: id, companyCode: self.companyCode }) as Record<string, unknown> | null
+    const draft = doc?.llmNavrh as { text?: string } | undefined
+    if (!draft?.text) throw new LibraryError("Žiadny návrh tu nie je.")
 
-    if (prijat) {
-      await saveDraft(ja.companyCode, id, navrh.text, `${ja.email} (návrh modelu)`)
-      sprava = "Návrh je teraz konceptom. Publikovanie je stále samostatný krok."
+    if (accept) {
+      await saveDraft(self.companyCode, id, draft.text, `${self.email} (návrh modelu)`)
+      message = "Návrh je teraz konceptom. Publikovanie je stále samostatný krok."
     } else {
-      sprava = "Návrh zahodený."
+      message = "Návrh zahodený."
     }
     await col.updateOne(
-      { documentId: id, companyCode: ja.companyCode },
+      { documentId: id, companyCode: self.companyCode },
       { $unset: { llmNavrh: "" } } as never,
     )
   } catch (e) {
-    sprava = spravaChyby(e)
-    chyba = true
+    message = errorMessage(e)
+    error = true
   }
 
   revalidatePath(`/kniznica/${id}`)
-  redirect(`/kniznica/${encodeURIComponent(id)}/text?sprava=${encodeURIComponent(sprava)}${chyba ? "&chyba=1" : ""}`)
+  redirect(`/kniznica/${encodeURIComponent(id)}/text?sprava=${encodeURIComponent(message)}${error ? "&chyba=1" : ""}`)
 }
 
 /** Uloží údaje o dokumente z detailu. */
 export async function saveDocumentMetadataAction(fd: FormData) {
-  const ja = await kto()
-  if (!ja) redirect("/")
+  const self = await actor()
+  if (!self) redirect("/")
 
-  const id = textPola(fd, "documentId")
-  let sprava = "Uložené."
-  let chyba = false
+  const id = fieldText(fd, "documentId")
+  let message = "Uložené."
+  let error = false
   try {
-    await saveMetadata(ja.companyCode, id, {
-      title: textPola(fd, "title"),
-      scope: textPola(fd, "scope"),
-      accessLevel: textPola(fd, "accessLevel"),
-      language: textPola(fd, "language"),
-      category: textPola(fd, "category") || undefined,
+    await saveMetadata(self.companyCode, id, {
+      title: fieldText(fd, "title"),
+      scope: fieldText(fd, "scope"),
+      accessLevel: fieldText(fd, "accessLevel"),
+      language: fieldText(fd, "language"),
+      category: fieldText(fd, "category") || undefined,
       tags: fd.getAll("tags").filter((t): t is string => typeof t === "string"),
-    }, ja.email, ja.doplnky)
+    }, self.email, self.doplnky)
   } catch (e) {
-    sprava = spravaChyby(e)
-    chyba = true
+    message = errorMessage(e)
+    error = true
   }
 
   revalidatePath("/kniznica")
   revalidatePath(`/kniznica/${id}`)
-  redirect(`/kniznica/${encodeURIComponent(id)}?sprava=${encodeURIComponent(sprava)}${chyba ? "&chyba=1" : ""}`)
+  redirect(`/kniznica/${encodeURIComponent(id)}?sprava=${encodeURIComponent(message)}${error ? "&chyba=1" : ""}`)
 }
 
 
 // ── priečinky (D56) ──────────────────────────────────────────────────────────
 
 /** Späť na zoznam so zachovaným filtrom — inak sa človek po každej zmene stratí. */
-function spatDoKniznice(fd: FormData, sprava: string, chyba = false): never {
-  const q = new URLSearchParams({ sprava })
-  if (chyba) q.set("chyba", "1")
-  for (const pole of ["priecinok", "hladat", "stav", "category", "language", "accessLevel", "tag"]) {
-    const v = textPola(fd, pole)
-    if (v) q.set(pole, v)
+function backToLibrary(fd: FormData, message: string, error = false): never {
+  const q = new URLSearchParams({ sprava: message })
+  if (error) q.set("chyba", "1")
+  for (const field of ["priecinok", "hladat", "stav", "category", "language", "accessLevel", "tag"]) {
+    const v = fieldText(fd, field)
+    if (v) q.set(field, v)
   }
   redirect(`/kniznica?${q.toString()}`)
 }
 
 export async function createFolderAction(fd: FormData) {
-  const ja = await kto()
-  if (!ja) redirect("/")
+  const self = await actor()
+  if (!self) redirect("/")
   try {
-    await createFolder(ja.companyCode, textPola(fd, "nazov"), textPola(fd, "parentId") || null, ja.email)
+    await createFolder(self.companyCode, fieldText(fd, "nazov"), fieldText(fd, "parentId") || null, self.email)
     revalidatePath("/kniznica")
-    spatDoKniznice(fd, "Priečinok pribudol.")
+    backToLibrary(fd, "Priečinok pribudol.")
   } catch (e) {
     if (isRedirect(e)) throw e
-    spatDoKniznice(fd, spravaChyby(e), true)
+    backToLibrary(fd, errorMessage(e), true)
   }
 }
 
 export async function renameFolderAction(fd: FormData) {
-  const ja = await kto()
-  if (!ja) redirect("/")
+  const self = await actor()
+  if (!self) redirect("/")
   try {
-    await renameFolder(ja.companyCode, textPola(fd, "id"), textPola(fd, "nazov"), ja.email)
+    await renameFolder(self.companyCode, fieldText(fd, "id"), fieldText(fd, "nazov"), self.email)
     revalidatePath("/kniznica")
-    spatDoKniznice(fd, "Priečinok sa premenoval.")
+    backToLibrary(fd, "Priečinok sa premenoval.")
   } catch (e) {
     if (isRedirect(e)) throw e
-    spatDoKniznice(fd, spravaChyby(e), true)
+    backToLibrary(fd, errorMessage(e), true)
   }
 }
 
 export async function moveFolderAction(fd: FormData) {
-  const ja = await kto()
-  if (!ja) redirect("/")
+  const self = await actor()
+  if (!self) redirect("/")
   try {
-    await moveFolder(ja.companyCode, textPola(fd, "id"), textPola(fd, "parentId") || null, ja.email)
+    await moveFolder(self.companyCode, fieldText(fd, "id"), fieldText(fd, "parentId") || null, self.email)
     revalidatePath("/kniznica")
-    spatDoKniznice(fd, "Priečinok sa presunul.")
+    backToLibrary(fd, "Priečinok sa presunul.")
   } catch (e) {
     if (isRedirect(e)) throw e
-    spatDoKniznice(fd, spravaChyby(e), true)
+    backToLibrary(fd, errorMessage(e), true)
   }
 }
 
 export async function deleteFolderAction(fd: FormData) {
-  const ja = await kto()
-  if (!ja) redirect("/")
+  const self = await actor()
+  if (!self) redirect("/")
   try {
-    await deleteFolder(ja.companyCode, textPola(fd, "id"), ja.email)
+    await deleteFolder(self.companyCode, fieldText(fd, "id"), self.email)
     revalidatePath("/kniznica")
-    spatDoKniznice(fd, "Priečinok sa zrušil.")
+    backToLibrary(fd, "Priečinok sa zrušil.")
   } catch (e) {
     if (isRedirect(e)) throw e
-    spatDoKniznice(fd, spravaChyby(e), true)
+    backToLibrary(fd, errorMessage(e), true)
   }
 }
 
 /** Zaradí dokument do priečinka z jeho detailu. */
 export async function assignToFolderAction(fd: FormData) {
-  const ja = await kto()
-  if (!ja) redirect("/")
+  const self = await actor()
+  if (!self) redirect("/")
 
-  const id = textPola(fd, "documentId")
-  let sprava = "Zaradené."
-  let chyba = false
+  const id = fieldText(fd, "documentId")
+  let message = "Zaradené."
+  let error = false
   try {
-    await assignDocument(ja.companyCode, id, textPola(fd, "folderId") || null, ja.email)
+    await assignDocument(self.companyCode, id, fieldText(fd, "folderId") || null, self.email)
   } catch (e) {
-    sprava = spravaChyby(e)
-    chyba = true
+    message = errorMessage(e)
+    error = true
   }
   revalidatePath("/kniznica")
   revalidatePath(`/kniznica/${id}`)
-  redirect(`/kniznica/${encodeURIComponent(id)}?sprava=${encodeURIComponent(sprava)}${chyba ? "&chyba=1" : ""}`)
+  redirect(`/kniznica/${encodeURIComponent(id)}?sprava=${encodeURIComponent(message)}${error ? "&chyba=1" : ""}`)
 }
 
 /** Preindexuje dokument podľa aktuálneho profilu členenia (D57). */
 export async function reindexDocumentAction(fd: FormData) {
-  const ja = await kto()
-  if (!ja) redirect("/")
+  const self = await actor()
+  if (!self) redirect("/")
 
-  const id = textPola(fd, "documentId")
-  let sprava = ""
-  let chyba = false
+  const id = fieldText(fd, "documentId")
+  let message = ""
+  let error = false
   try {
-    const v = await reindex(ja.companyCode, id, ja.email, ja.profil)
-    sprava = v.uzBolo
+    const v = await reindex(self.companyCode, id, self.email, self.profil)
+    message = v.uzBolo
       ? "Členenie je už aktuálne — nič sa nemenilo."
       : `Preindexované: ${v.chunkov} úsekov, ${v.archivovanych} starých archivovaných. ` +
         "Znenie ani potvrdenia sa nedotklo."
   } catch (e) {
-    sprava = spravaChyby(e)
-    chyba = true
+    message = errorMessage(e)
+    error = true
   }
 
   revalidatePath(`/kniznica/${id}`)
-  redirect(`/kniznica/${encodeURIComponent(id)}?sprava=${encodeURIComponent(sprava)}${chyba ? "&chyba=1" : ""}`)
+  redirect(`/kniznica/${encodeURIComponent(id)}?sprava=${encodeURIComponent(message)}${error ? "&chyba=1" : ""}`)
 }
 
 /** Oprava údajov už publikovaného znenia (D57). */
 export async function fixVersionAction(fd: FormData) {
-  const ja = await kto()
-  if (!ja) redirect("/")
+  const self = await actor()
+  if (!self) redirect("/")
 
-  const id = textPola(fd, "documentId")
-  let sprava = ""
-  let chyba = false
+  const id = fieldText(fd, "documentId")
+  let message = ""
+  let error = false
   try {
-    const den = textPola(fd, "effectiveFrom")
-    const volba = textPola(fd, "priZmeneDatumu")
-    const v = await fixVersion(ja.companyCode, id, textPola(fd, "versionId"), {
-      label: textPola(fd, "label") || undefined,
-      effectiveFrom: den ? new Date(`${den}T00:00:00.000Z`) : undefined,
-      effectiveFromSource: textPola(fd, "effectiveFromSource"),
-      changeNote: textPola(fd, "changeNote"),
-      dovod: textPola(fd, "dovod"),
-      priZmeneDatumu: volba === "oprava" || volba === "znovaPotvrdit" ? volba : undefined,
-    }, ja.email)
+    const day = fieldText(fd, "effectiveFrom")
+    const choice = fieldText(fd, "priZmeneDatumu")
+    const v = await fixVersion(self.companyCode, id, fieldText(fd, "versionId"), {
+      label: fieldText(fd, "label") || undefined,
+      effectiveFrom: day ? new Date(`${day}T00:00:00.000Z`) : undefined,
+      effectiveFromSource: fieldText(fd, "effectiveFromSource"),
+      changeNote: fieldText(fd, "changeNote"),
+      dovod: fieldText(fd, "dovod"),
+      priZmeneDatumu: choice === "oprava" || choice === "znovaPotvrdit" ? choice : undefined,
+    }, self.email)
 
-    sprava = v.znovaPotvrdit
+    message = v.znovaPotvrdit
       ? `Opravené. Znenie je označené ako vyžadujúce nové potvrdenie — týka sa to ${v.potvrdeni} ľudí.`
       : "Opravené. Potvrdenia zostávajú platné."
   } catch (e) {
-    sprava = spravaChyby(e)
-    chyba = true
+    message = errorMessage(e)
+    error = true
   }
 
   revalidatePath(`/kniznica/${id}`)
-  redirect(`/kniznica/${encodeURIComponent(id)}?sprava=${encodeURIComponent(sprava)}${chyba ? "&chyba=1" : ""}`)
+  redirect(`/kniznica/${encodeURIComponent(id)}?sprava=${encodeURIComponent(message)}${error ? "&chyba=1" : ""}`)
 }
 
 /**
@@ -433,30 +433,30 @@ export async function fixVersionAction(fd: FormData) {
  * Ťahanie myšou robí to isté, ale je to nadstavba, nie jediná cesta.
  */
 export async function shiftFolderAction(fd: FormData) {
-  const ja = await kto()
-  if (!ja) redirect("/")
-  const smer = textPola(fd, "smer") === "dole" ? "dole" : "hore"
+  const self = await actor()
+  if (!self) redirect("/")
+  const direction = fieldText(fd, "smer") === "dole" ? "dole" : "hore"
   try {
-    await shiftFolder(ja.companyCode, textPola(fd, "id"), smer, ja.email)
+    await shiftFolder(self.companyCode, fieldText(fd, "id"), direction, self.email)
     revalidatePath("/kniznica")
-    spatDoKniznice(fd, "Zmeny boli uložené.")
+    backToLibrary(fd, "Zmeny boli uložené.")
   } catch (e) {
     if (isRedirect(e)) throw e
-    spatDoKniznice(fd, spravaChyby(e), true)
+    backToLibrary(fd, errorMessage(e), true)
   }
 }
 
 /** Nové poradie celej úrovne — sem posiela výsledok ťahanie myšou. */
 export async function saveFolderOrderAction(fd: FormData) {
-  const ja = await kto()
-  if (!ja) redirect("/")
-  const poradie = textPola(fd, "poradie").split(",").map(x => x.trim()).filter(Boolean)
+  const self = await actor()
+  if (!self) redirect("/")
+  const order = fieldText(fd, "poradie").split(",").map(x => x.trim()).filter(Boolean)
   try {
-    if (poradie.length > 1) await saveFolderOrder(ja.companyCode, poradie, ja.email)
+    if (order.length > 1) await saveFolderOrder(self.companyCode, order, self.email)
     revalidatePath("/kniznica")
-    spatDoKniznice(fd, "Zmeny boli uložené.")
+    backToLibrary(fd, "Zmeny boli uložené.")
   } catch (e) {
     if (isRedirect(e)) throw e
-    spatDoKniznice(fd, spravaChyby(e), true)
+    backToLibrary(fd, errorMessage(e), true)
   }
 }

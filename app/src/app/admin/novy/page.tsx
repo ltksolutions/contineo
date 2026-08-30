@@ -24,7 +24,7 @@ export default async function NewTenantPage({
     notFound()
   }
 
-  const { sprava } = await searchParams
+  const { sprava: message } = await searchParams
 
   return (
     <div className="obal" style={{ padding: "28px 20px 80px", maxWidth: 620 }}>
@@ -43,9 +43,9 @@ export default async function NewTenantPage({
         a zostane mu nastaviť jeden <code>CNAME</code>.
       </p>
 
-      {sprava && (
+      {message && (
         <p className="karta" style={{ padding: "12px 16px", margin: "0 0 20px", fontSize: 14.5 }}>
-          {sprava}
+          {message}
         </p>
       )}
 

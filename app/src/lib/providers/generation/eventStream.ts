@@ -20,7 +20,7 @@
  */
 
 const PRELUDE = 12   // dĺžka + dĺžka hlavičiek + CRC preludu
-const KONCOVE_CRC = 4
+const TRAILING_CRC = 4
 
 /**
  * Rozdelí súvislý buffer na rámce. Vráti nájdené telá a zvyšok, ktorý
@@ -30,27 +30,27 @@ const KONCOVE_CRC = 4
  * na túto chybu sme už raz naleteli pri SSE.
  */
 export function splitFrames(buf: Uint8Array<ArrayBuffer>): { tela: Uint8Array<ArrayBuffer>[]; zvysok: Uint8Array<ArrayBuffer> } {
-  const tela: Uint8Array<ArrayBuffer>[] = []
+  const bodies: Uint8Array<ArrayBuffer>[] = []
   let off = 0
 
   while (buf.length - off >= PRELUDE) {
     const dv = new DataView(buf.buffer, buf.byteOffset + off, PRELUDE)
-    const celkova = dv.getUint32(0, false)
-    const dlzkaHlaviciek = dv.getUint32(4, false)
+    const totalLength = dv.getUint32(0, false)
+    const headerLength = dv.getUint32(4, false)
 
     // Nezmyselná dĺžka = poškodený stream; ďalej sa nedá pokračovať.
-    if (celkova < PRELUDE + KONCOVE_CRC || celkova > 16 * 1024 * 1024) break
-    if (buf.length - off < celkova) break          // rámec ešte nie je celý
+    if (totalLength < PRELUDE + TRAILING_CRC || totalLength > 16 * 1024 * 1024) break
+    if (buf.length - off < totalLength) break          // rámec ešte nie je celý
 
-    const zaciatokTela = off + PRELUDE + dlzkaHlaviciek
-    const koniecTela = off + celkova - KONCOVE_CRC
-    if (koniecTela > zaciatokTela) {
-      tela.push(buf.subarray(zaciatokTela, koniecTela))
+    const bodyStart = off + PRELUDE + headerLength
+    const bodyEnd = off + totalLength - TRAILING_CRC
+    if (bodyEnd > bodyStart) {
+      bodies.push(buf.subarray(bodyStart, bodyEnd))
     }
-    off += celkova
+    off += totalLength
   }
 
-  return { tela, zvysok: buf.subarray(off) }
+  return { tela: bodies, zvysok: buf.subarray(off) }
 }
 
 /** Spojí dva buffery. */
@@ -68,16 +68,16 @@ export function concatBuffers(a: Uint8Array<ArrayBuffer>, b: Uint8Array): Uint8A
  * obsahuje base64 so skutočným eventom. Vráti null, keď rámec event
  * neobsahuje (napr. ping alebo metadáta o využití).
  */
-export function unwrapEvent(telo: Uint8Array<ArrayBuffer>): any | null {
-  let vonkajsi: any
+export function unwrapEvent(body: Uint8Array<ArrayBuffer>): any | null {
+  let outer: any
   try {
-    vonkajsi = JSON.parse(new TextDecoder().decode(telo))
+    outer = JSON.parse(new TextDecoder().decode(body))
   } catch {
     return null
   }
-  if (typeof vonkajsi?.bytes !== "string") return null
+  if (typeof outer?.bytes !== "string") return null
   try {
-    return JSON.parse(Buffer.from(vonkajsi.bytes, "base64").toString("utf8"))
+    return JSON.parse(Buffer.from(outer.bytes, "base64").toString("utf8"))
   } catch {
     return null
   }
@@ -95,9 +95,9 @@ export async function* readEventStream(
     if (done) break
     buf = concatBuffers(buf, value)
 
-    const { tela, zvysok } = splitFrames(buf)
-    buf = zvysok
-    for (const t of tela) {
+    const { tela: bodies, zvysok: rest } = splitFrames(buf)
+    buf = rest
+    for (const t of bodies) {
       const ev = unwrapEvent(t)
       if (ev) yield ev
     }

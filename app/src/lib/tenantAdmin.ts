@@ -70,13 +70,13 @@ export async function assertHostnamesFree(
 ): Promise<void> {
   if (!hostnames.length) return
   const col = await getCollection<TenantDoc>(TENANTS_COLLECTION)
-  const kolizia = await col.findOne({
+  const collision = await col.findOne({
     hostnames: { $in: hostnames },
     companyCode: { $ne: companyCode },
   })
-  if (!kolizia) return
-  const ktore = hostnames.filter(h => (kolizia.hostnames ?? []).includes(h))
-  throw new DomainOwnedError(ktore, kolizia.companyCode)
+  if (!collision) return
+  const which = hostnames.filter(h => (collision.hostnames ?? []).includes(h))
+  throw new DomainOwnedError(which, collision.companyCode)
 }
 
 export interface TenantChange {
@@ -108,47 +108,47 @@ export interface TenantChange {
  * doména, takže `futbalsfz.sk` nikdy nepustí `zlyfutbalsfz.sk`.
  */
 export function normalizeDomains(raw: string[] | string): string[] {
-  const zoznam = Array.isArray(raw) ? raw : String(raw ?? "").split(/[,;\n]/)
+  const list = Array.isArray(raw) ? raw : String(raw ?? "").split(/[,;\n]/)
   return [...new Set(
-    zoznam
+    list
       .map(d => String(d ?? "").trim().toLowerCase().replace(/^@/, "").replace(/^https?:\/\//, ""))
       .filter(d => /^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)+$/.test(d)),
   )]
 }
 
-const KOD = /^[A-Z0-9][A-Z0-9_-]{1,23}$/
+const CODE_PATTERN = /^[A-Z0-9][A-Z0-9_-]{1,23}$/
 
 export function normalizeCompanyCode(raw: string): string {
-  const kod = String(raw ?? "").trim().toUpperCase()
-  if (!KOD.test(kod)) {
+  const code = String(raw ?? "").trim().toUpperCase()
+  if (!CODE_PATTERN.test(code)) {
     throw new TenantValidationError(
       "Kód organizácie: 2–24 znakov, veľké písmená, číslice, pomlčka alebo podčiarkovník.",
     )
   }
-  return kod
+  return code
 }
 
 export function normalizeHostnames(raw: string[] | string): string[] {
-  const zoznam = Array.isArray(raw)
+  const list = Array.isArray(raw)
     ? raw
     : String(raw ?? "").split(/[\s,;]+/)
-  return [...new Set(zoznam.map(normalizeHostname).filter(Boolean))]
+  return [...new Set(list.map(normalizeHostname).filter(Boolean))]
 }
 
-function jazyky(raw: string[] | undefined, kde: string): UiLanguage[] | undefined {
+function languages(raw: string[] | undefined, where: string): UiLanguage[] | undefined {
   if (!raw) return undefined
   const ok = raw.filter(isUiLanguage)
   if (ok.length !== raw.length) {
-    const zle = raw.filter(l => !isUiLanguage(l))
+    const invalid = raw.filter(l => !isUiLanguage(l))
     throw new TenantValidationError(
-      `Neznámy jazyk v ${kde}: ${zle.join(", ")} (povolené: ${UI_LANGUAGES.join(", ")}).`,
+      `Neznámy jazyk v ${where}: ${invalid.join(", ")} (povolené: ${UI_LANGUAGES.join(", ")}).`,
     )
   }
   return ok as UiLanguage[]
 }
 
 /** Prevedie zmenu na `$set`. Nevyplnené polia sa **nemenia**, nemažú. */
-function naSet(change: TenantChange): Record<string, unknown> {
+function toSet(change: TenantChange): Record<string, unknown> {
   const set: Record<string, unknown> = { updatedAt: new Date() }
   if (change.hostnames) set.hostnames = change.hostnames
   if (change.displayName !== undefined) set["branding.displayName"] = change.displayName.trim()
@@ -158,9 +158,9 @@ function naSet(change: TenantChange): Record<string, unknown> {
   if (change.supportEmail !== undefined) {
     set["branding.supportEmail"] = change.supportEmail.trim().toLowerCase()
   }
-  const js = jazyky(change.languages, "zozname jazykov")
+  const js = languages(change.languages, "zozname jazykov")
   if (js?.length) set.languages = js
-  const dj = jazyky(change.defaultLanguage ? [change.defaultLanguage] : undefined, "predvolenom jazyku")
+  const dj = languages(change.defaultLanguage ? [change.defaultLanguage] : undefined, "predvolenom jazyku")
   if (dj?.length) set.defaultLanguage = dj[0]
   if (change.status) set.status = change.status
   // Prepisuje sa celé, aj prázdnym: na rozdiel od tajomstva je vidieť, čo
@@ -175,14 +175,14 @@ function naSet(change: TenantChange): Record<string, unknown> {
     // dokument — v oboch prípadoch vyhľadávanie prestane fungovať a nikto to
     // nespojí s číslom v nastavení.
     const c = change.chunkovanie
-    const medzi = (v: number | undefined, min: number, max: number, pred: number) =>
-      v === undefined || Number.isNaN(v) ? pred : Math.min(Math.max(Math.round(v), min), max)
+    const between = (v: number | undefined, min: number, max: number, previous: number) =>
+      v === undefined || Number.isNaN(v) ? previous : Math.min(Math.max(Math.round(v), min), max)
     set.chunkovanie = {
       slovoClanok: (c.slovoClanok ?? "Článok").trim() || "Článok",
       slovoPriloha: (c.slovoPriloha ?? "PRÍLOHA č.").trim() || "PRÍLOHA č.",
-      opakovaniHlavicky: medzi(c.opakovaniHlavicky, 2, 50, 5),
-      cielMinTokenov: medzi(c.cielMinTokenov, 50, 2000, 300),
-      cielMaxTokenov: medzi(c.cielMaxTokenov, 100, 4000, 800),
+      opakovaniHlavicky: between(c.opakovaniHlavicky, 2, 50, 5),
+      cielMinTokenov: between(c.cielMinTokenov, 50, 2000, 300),
+      cielMaxTokenov: between(c.cielMaxTokenov, 100, 4000, 800),
     }
   }
   return set
@@ -200,11 +200,11 @@ export async function saveTenant(
   change: TenantChange,
   actor: string,
 ): Promise<Tenant> {
-  const kod = normalizeCompanyCode(companyCode)
+  const code = normalizeCompanyCode(companyCode)
   const col = await getCollection<TenantDoc>(TENANTS_COLLECTION)
 
-  const existuje = await col.findOne({ companyCode: kod })
-  if (!existuje) throw new TenantValidationError(`Organizácia ${kod} neexistuje.`)
+  const existing = await col.findOne({ companyCode: code })
+  if (!existing) throw new TenantValidationError(`Organizácia ${code} neexistuje.`)
 
   if (change.hostnames) {
     if (!change.hostnames.length) {
@@ -212,40 +212,40 @@ export async function saveTenant(
         "Bez domény sa portál organizácie nikde neukáže. Nechaj aspoň jednu.",
       )
     }
-    await assertHostnamesFree(kod, change.hostnames)
+    await assertHostnamesFree(code, change.hostnames)
   }
 
-  const set = naSet(change)
+  const set = toSet(change)
   set.updatedBy = actor
 
   // Bodkové cesty (`branding.displayName`) sa v typoch ovládača vyjadriť
   // nedajú, preto jedno pretypovanie tu a nikde inde.
-  await col.updateOne({ companyCode: kod }, { $set: set } as never)
+  await col.updateOne({ companyCode: code }, { $set: set } as never)
 
   // Rozdiel sa počíta z bodkových ciest (`branding.displayName`), takže
   // pôvodné hodnoty sa čítajú tou istou cestou — inak by v zázname bolo
   // „z: undefined" pri každej zmene značky.
-  const hodnota = (o: unknown, cesta: string): unknown =>
-    cesta.split(".").reduce<unknown>((x, k) => (x as Record<string, unknown>)?.[k], o)
-  const predZmenou: Record<string, unknown> = {}
-  const poZmene: Record<string, unknown> = {}
+  const value = (o: unknown, path: string): unknown =>
+    path.split(".").reduce<unknown>((x, k) => (x as Record<string, unknown>)?.[k], o)
+  const beforeChange: Record<string, unknown> = {}
+  const afterChange: Record<string, unknown> = {}
   for (const k of Object.keys(set)) {
     if (k === "updatedBy" || k === "updatedAt") continue
-    predZmenou[k] = hodnota(existuje, k)
-    poZmene[k] = set[k]
+    beforeChange[k] = value(existing, k)
+    afterChange[k] = set[k]
   }
   await writeAudit({
-    companyCode: kod, predmet: "organizacia", akcia: "zmenene", aktor: actor,
-    cielId: kod, cielPopis: existuje.branding?.displayName ?? kod,
-    zmeny: diff(predZmenou, poZmene),
+    companyCode: code, predmet: "organizacia", akcia: "zmenene", aktor: actor,
+    cielId: code, cielPopis: existing.branding?.displayName ?? code,
+    zmeny: diff(beforeChange, afterChange),
   })
 
   // Bez tohto by sa zmena prejavila až o päť minút (pamäť v `tenants.ts`)
   // a vyzeralo by to, že sa neuložila.
   invalidateTenants()
 
-  const po = await col.findOne({ companyCode: kod })
-  return normalizeTenant(po!)
+  const after = await col.findOne({ companyCode: code })
+  return normalizeTenant(after!)
 }
 
 /**
@@ -260,23 +260,23 @@ export async function createTenant(
   change: TenantChange & { displayName: string },
   actor: string,
 ): Promise<Tenant> {
-  const kod = normalizeCompanyCode(companyCode)
+  const code = normalizeCompanyCode(companyCode)
   if (!change.displayName?.trim()) {
     throw new TenantValidationError("Názov organizácie je povinný — je to to, čo ľudia uvidia v hlavičke.")
   }
 
   const col = await getCollection<TenantDoc>(TENANTS_COLLECTION)
-  if (await col.findOne({ companyCode: kod })) {
-    throw new TenantValidationError(`Organizácia ${kod} už existuje.`)
+  if (await col.findOne({ companyCode: code })) {
+    throw new TenantValidationError(`Organizácia ${code} už existuje.`)
   }
 
   const hostnames = change.hostnames ?? []
-  await assertHostnamesFree(kod, hostnames)
+  await assertHostnamesFree(code, hostnames)
 
   const now = new Date()
-  const set = naSet(change)
+  const set = toSet(change)
   await col.insertOne({
-    companyCode: kod,
+    companyCode: code,
     hostnames,
     branding: { displayName: change.displayName.trim() },
     defaultLanguage: "sk",
@@ -288,15 +288,15 @@ export async function createTenant(
   } as unknown as TenantDoc)
 
   invalidateTenants()
-  const po = await col.findOne({ companyCode: kod })
-  return normalizeTenant(po!)
+  const after = await col.findOne({ companyCode: code })
+  return normalizeTenant(after!)
 }
 
 /** Všetky organizácie, zoradené. Len pre správu — bežná cesta ide cez hostiteľa. */
 export async function allTenants(): Promise<Tenant[]> {
   const col = await getCollection<TenantDoc>(TENANTS_COLLECTION)
-  const surove = await col.find({}).sort({ companyCode: 1 }).toArray()
-  return surove.map(normalizeTenant)
+  const raw = await col.find({}).sort({ companyCode: 1 }).toArray()
+  return raw.map(normalizeTenant)
 }
 
 // ── prihlasovacie údaje poskytovateľov (D43) ─────────────────────────────────
@@ -313,7 +313,7 @@ export async function allTenants(): Promise<Tenant[]> {
 export async function saveOAuth(
   companyCode: string,
   provider: OAuthProviderName,
-  vstup: {
+  input: {
     clientId?: string
     /** Čitateľné tajomstvo. Zašifruje sa tu a von sa už nikdy nevráti. */
     clientSecret?: string
@@ -323,70 +323,70 @@ export async function saveOAuth(
   },
   actor: string,
 ): Promise<void> {
-  const kod = normalizeCompanyCode(companyCode)
+  const code = normalizeCompanyCode(companyCode)
   const col = await getCollection<TenantDoc>(TENANTS_COLLECTION)
-  const existuje = await col.findOne({ companyCode: kod })
-  if (!existuje) throw new TenantValidationError(`Organizácia ${kod} neexistuje.`)
+  const existing = await col.findOne({ companyCode: code })
+  if (!existing) throw new TenantValidationError(`Organizácia ${code} neexistuje.`)
 
   const set: Record<string, unknown> = {}
-  const cesta = `oauth.${provider}`
+  const path = `oauth.${provider}`
 
-  const clientId = vstup.clientId?.trim()
-  if (clientId) set[`${cesta}.clientId`] = clientId
+  const clientId = input.clientId?.trim()
+  if (clientId) set[`${path}.clientId`] = clientId
 
-  const tajomstvo = vstup.clientSecret?.trim()
-  if (tajomstvo) {
+  const secret = input.clientSecret?.trim()
+  if (secret) {
     if (!encryptionAvailable()) {
       throw new TenantValidationError(
         "Tajomstvo sa nedá uložiť: chýba OAUTH_SECRET_ENCRYPTION_KEY. " +
         "Ukladať ho čitateľne nebudeme — je to prístup do cudzieho systému."
       )
     }
-    set[`${cesta}.clientSecretEnc`] = encrypt(tajomstvo)
+    set[`${path}.clientSecretEnc`] = encrypt(secret)
   }
 
   if (provider === "microsoft") {
-    if (vstup.tenantMode !== undefined) {
-      set[`${cesta}.tenantMode`] = vstup.tenantMode.trim() || "organizations"
+    if (input.tenantMode !== undefined) {
+      set[`${path}.tenantMode`] = input.tenantMode.trim() || "organizations"
     }
     // Zoznam sa **prepisuje celý**, aj prázdnym. Na rozdiel od tajomstva je
     // vidieť, čo v ňom je, takže prázdne pole znamená „žiadne obmedzenie"
     // a je to vedomé rozhodnutie, nie prehliadnutie.
-    if (vstup.allowedTenantIds !== undefined) {
-      set[`${cesta}.allowedTenantIds`] = vstup.allowedTenantIds
+    if (input.allowedTenantIds !== undefined) {
+      set[`${path}.allowedTenantIds`] = input.allowedTenantIds
     }
   }
-  if (provider === "google" && vstup.hostedDomain !== undefined) {
-    set[`${cesta}.hostedDomain`] = vstup.hostedDomain.trim().toLowerCase() || undefined
+  if (provider === "google" && input.hostedDomain !== undefined) {
+    set[`${path}.hostedDomain`] = input.hostedDomain.trim().toLowerCase() || undefined
   }
 
   if (Object.keys(set).length === 0) return
 
   // Bez `clientId` je tajomstvo na nič a naopak — kontroluje sa až tu, aby
   // sa dala doplniť polovica k tomu, čo už uložené je.
-  const poId = clientId ?? existuje.oauth?.[provider]?.clientId
-  const poTajomstve = tajomstvo ? true : Boolean(existuje.oauth?.[provider]?.clientSecretEnc)
-  if (!poId || !poTajomstve) {
+  const idPath = clientId ?? existing.oauth?.[provider]?.clientId
+  const secretPath = secret ? true : Boolean(existing.oauth?.[provider]?.clientSecretEnc)
+  if (!idPath || !secretPath) {
     throw new TenantValidationError(
       "Treba aj `clientId`, aj tajomstvo — jedno bez druhého sa nedá použiť."
     )
   }
 
-  set[`${cesta}.updatedAt`] = new Date()
-  set[`${cesta}.updatedBy`] = actor
+  set[`${path}.updatedAt`] = new Date()
+  set[`${path}.updatedBy`] = actor
   set.updatedBy = actor
   set.updatedAt = new Date()
 
-  await col.updateOne({ companyCode: kod }, { $set: set } as never)
+  await col.updateOne({ companyCode: code }, { $set: set } as never)
   // Tajomstvo sa do auditu nezapisuje — len to, že sa zmenilo. Audit, ktorý
   // zbiera heslá, je sám o sebe únik, a to s dlhšou retenciou než to, čo
   // chráni (D51).
   await writeAudit({
-    companyCode: kod, predmet: "prihlasenie-nastavenie", akcia: "zmenene", aktor: actor,
+    companyCode: code, predmet: "prihlasenie-nastavenie", akcia: "zmenene", aktor: actor,
     cielId: provider, cielPopis: provider,
     zmeny: {
-      ...(clientId ? { clientId: { z: existuje.oauth?.[provider]?.clientId ?? null, na: clientId } } : {}),
-      ...(tajomstvo ? { clientSecret: { na: "(zmenené)" } } : {}),
+      ...(clientId ? { clientId: { z: existing.oauth?.[provider]?.clientId ?? null, na: clientId } } : {}),
+      ...(secret ? { clientSecret: { na: "(zmenené)" } } : {}),
     },
   })
   invalidateTenants()
@@ -398,14 +398,14 @@ export async function deleteOAuth(
   provider: OAuthProviderName,
   actor: string,
 ): Promise<void> {
-  const kod = normalizeCompanyCode(companyCode)
+  const code = normalizeCompanyCode(companyCode)
   const col = await getCollection<TenantDoc>(TENANTS_COLLECTION)
   await col.updateOne(
-    { companyCode: kod },
+    { companyCode: code },
     { $unset: { [`oauth.${provider}`]: "" }, $set: { updatedBy: actor, updatedAt: new Date() } } as never,
   )
   await writeAudit({
-    companyCode: kod, predmet: "prihlasenie-nastavenie", akcia: "zrusene", aktor: actor,
+    companyCode: code, predmet: "prihlasenie-nastavenie", akcia: "zrusene", aktor: actor,
     cielId: provider, cielPopis: provider,
   })
   invalidateTenants()

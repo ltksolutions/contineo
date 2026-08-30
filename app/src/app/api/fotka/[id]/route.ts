@@ -19,23 +19,23 @@ export async function GET(
   _req: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  const ja = await currentPerson()
-  if (!ja) return new Response(null, { status: 401 })
+  const self = await currentPerson()
+  if (!self) return new Response(null, { status: 401 })
 
   const { id } = await params
 
   let f
   try {
-    f = await loadPhoto(ja.companyCode, decodeURIComponent(id))
+    f = await loadPhoto(self.companyCode, decodeURIComponent(id))
   } catch (e) {
     console.error("[fotka] načítanie zlyhalo:", e)
     return new Response(null, { status: 500 })
   }
   if (!f) return new Response(null, { status: 404 })
 
-  const bajty = (f.data as unknown as { buffer?: Uint8Array }).buffer ?? f.data
+  const bytes = (f.data as unknown as { buffer?: Uint8Array }).buffer ?? f.data
 
-  return new Response(new Uint8Array(bajty as Uint8Array), {
+  return new Response(new Uint8Array(bytes as Uint8Array), {
     headers: {
       "Content-Type": f.contentType,
       "Content-Length": String(f.bajtov),

@@ -32,7 +32,7 @@ import { assignAction } from "../actions"
 export const dynamic = "force-dynamic"
 
 /** Hodnoty z adresy sa vracajú späť do formulára — viď `spatSChybou`. */
-function akoPole(v: string | string[] | undefined): string[] {
+function asArray(v: string | string[] | undefined): string[] {
   if (v === undefined) return []
   return Array.isArray(v) ? v : [v]
 }
@@ -56,18 +56,18 @@ export default async function AssignPage({
   }
 
   const q = await searchParams
-  const [dokumenty, publika, strom, poctyUtvarov] = await Promise.all([
+  const [documents, audiences, tree, departmentCounts] = await Promise.all([
     assignableDocuments(ctx.person.companyCode),
     audiencesInOrg(ctx.person.companyCode),
     allDepartments(ctx.person.companyCode),
     counts(ctx.person.companyCode),
   ])
-  const stromRiadky = flattenTree(strom)
+  const treeRows = flattenTree(tree)
   const branding = brandingView(ctx.tenant)
-  const jazyk = ctx.person.language
+  const language = ctx.person.language
 
-  const vybraneDokumenty = new Set(akoPole(q.dokument))
-  const vybranePublika = new Set(akoPole(q.publikum))
+  const selectedDocuments = new Set(asArray(q.dokument))
+  const selectedAudiences = new Set(asArray(q.publikum))
 
   return (
     <div className="obal" style={{ padding: "28px 20px 80px", maxWidth: 680, ...tenantStyle(branding) }}>
@@ -90,7 +90,7 @@ export default async function AssignPage({
         </p>
       )}
 
-      {dokumenty.length === 0 ? (
+      {documents.length === 0 ? (
         <p className="karta" style={{ padding: 20, fontSize: 15 }}>
           Žiadny dokument nemá platné znenie, takže prideliť sa nedá nič.
           Znenie bez dátumu platnosti sa nedá ani potvrdiť (D6).
@@ -100,19 +100,19 @@ export default async function AssignPage({
           <fieldset className="karta hr-skupina">
             <legend className="pole-popis">Ktoré normy</legend>
             <ul className="hr-volby">
-              {dokumenty.map(d => (
+              {documents.map(d => (
                 <li key={d.documentId}>
                   <label className="hr-volba">
                     <input
                       type="checkbox"
                       name="dokument"
                       value={d.documentId}
-                      defaultChecked={vybraneDokumenty.has(d.documentId)}
+                      defaultChecked={selectedDocuments.has(d.documentId)}
                     />
                     <span>
                       {d.title}
                       <span className="tichy pole-napoveda">
-                        {" "}verzia {d.versionLabel}, platná od {formatDate(d.effectiveFrom, jazyk)}
+                        {" "}verzia {d.versionLabel}, platná od {formatDate(d.effectiveFrom, language)}
                       </span>
                     </span>
                   </label>
@@ -135,7 +135,7 @@ export default async function AssignPage({
               </span>
             </label>
 
-            {stromRiadky.length > 0 && (
+            {treeRows.length > 0 && (
               <>
                 <div className="hr-podnadpis">Oddelenia</div>
                 <p className="tichy pole-napoveda" style={{ margin: "0 0 8px" }}>
@@ -143,22 +143,22 @@ export default async function AssignPage({
                   je počet ľudí vrátane nich — to je to, koho sa to naozaj týka.
                 </p>
                 <div className="stitky-zoznam">
-                  {stromRiadky.map(({ oddelenie, uroven }) => {
-                    const p = poctyUtvarov.get(oddelenie.id) ?? { priamo: 0, sPodriadenymi: 0 }
+                  {treeRows.map(({ oddelenie: department, uroven: level }) => {
+                    const p = departmentCounts.get(department.id) ?? { priamo: 0, sPodriadenymi: 0 }
                     return (
                       <label
-                        key={`d-${oddelenie.id}`}
+                        key={`d-${department.id}`}
                         className="stitok stitok--volba stitok--pole"
-                        style={{ marginLeft: (uroven - 1) * 14 }}
+                        style={{ marginLeft: (level - 1) * 14 }}
                       >
                         <input
                           type="checkbox"
                           name="publikum"
-                          value={`department:${oddelenie.id}`}
-                          defaultChecked={vybranePublika.has(`department:${oddelenie.id}`)}
+                          value={`department:${department.id}`}
+                          defaultChecked={selectedAudiences.has(`department:${department.id}`)}
                         />
                         <span className="stitok-znak" aria-hidden="true" />
-                        {oddelenie.nazov}
+                        {department.nazov}
                         <span className="stitok-pocet">{p.sPodriadenymi}</span>
                       </label>
                     )
@@ -167,7 +167,7 @@ export default async function AssignPage({
               </>
             )}
 
-            {publika.skupiny.length === 0 && publika.trasy.length === 0 ? (
+            {audiences.skupiny.length === 0 && audiences.trasy.length === 0 ? (
               <p className="tichy pole-napoveda" style={{ margin: "10px 0 0" }}>
                 V organizácii zatiaľ nie sú skupiny ani trasy. Skupiny sa
                 zadávajú pri importe osôb (stĺpec &bdquo;skupiny&ldquo;) alebo príkazom
@@ -178,17 +178,17 @@ export default async function AssignPage({
                 {/* Rovnaké štítky ako pri úprave osoby — tá istá vec má
                     vyzerať rovnako. Tu ich ale nesie zaškrtávacie políčko,
                     lebo tento formulár funguje aj bez JavaScriptu. */}
-                {publika.skupiny.length > 0 && (
+                {audiences.skupiny.length > 0 && (
                   <>
                     <div className="hr-podnadpis">Skupiny</div>
                     <div className="stitky-zoznam">
-                      {publika.skupiny.map(s => (
+                      {audiences.skupiny.map(s => (
                         <label key={`g-${s.hodnota}`} className="stitok stitok--volba stitok--pole">
                           <input
                             type="checkbox"
                             name="publikum"
                             value={`group:${s.hodnota}`}
-                            defaultChecked={vybranePublika.has(`group:${s.hodnota}`)}
+                            defaultChecked={selectedAudiences.has(`group:${s.hodnota}`)}
                           />
                           <span className="stitok-znak" aria-hidden="true" />
                           {s.hodnota}
@@ -199,17 +199,17 @@ export default async function AssignPage({
                   </>
                 )}
 
-                {publika.trasy.length > 0 && (
+                {audiences.trasy.length > 0 && (
                   <>
                     <div className="hr-podnadpis">Trasy</div>
                     <div className="stitky-zoznam">
-                      {publika.trasy.map(t => (
+                      {audiences.trasy.map(t => (
                         <label key={`t-${t.hodnota}`} className="stitok stitok--volba stitok--pole">
                           <input
                             type="checkbox"
                             name="publikum"
                             value={`track:${t.hodnota}`}
-                            defaultChecked={vybranePublika.has(`track:${t.hodnota}`)}
+                            defaultChecked={selectedAudiences.has(`track:${t.hodnota}`)}
                           />
                           <span className="stitok-znak" aria-hidden="true" />
                           {t.hodnota}

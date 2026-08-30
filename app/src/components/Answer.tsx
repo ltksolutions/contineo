@@ -30,10 +30,10 @@ export interface AnswerState {
  * `naBloky()` a stáva sa obyčajnými React uzlami. Výstup modelu nad cudzími
  * dokumentmi sa nesmie dostať do DOM ako HTML.
  */
-function Useky({ useky }: { useky: Segment[] }) {
+function Segments({ useky: segments }: { useky: Segment[] }) {
   return (
     <>
-      {useky.map((u, i) =>
+      {segments.map((u, i) =>
         u.druh === "tucne"
           ? <strong key={i}>{u.text}</strong>
           : <span key={i}>{u.text}</span>
@@ -42,11 +42,11 @@ function Useky({ useky }: { useky: Segment[] }) {
   )
 }
 
-function TextOdpovede({ text }: { text: string }) {
-  const bloky = toBlocks(text)
+function AnswerText({ text }: { text: string }) {
+  const blocks = toBlocks(text)
   return (
     <>
-      {bloky.map((b, i) =>
+      {blocks.map((b, i) =>
         b.druh === "nadpis" ? (
           <div
             key={i}
@@ -58,19 +58,19 @@ function TextOdpovede({ text }: { text: string }) {
               margin: i === 0 ? "0 0 8px" : "18px 0 8px",
             }}
           >
-            <Useky useky={b.useky} />
+            <Segments useky={b.useky} />
           </div>
         ) : b.druh === "odsek" ? (
           <p key={i} style={{ margin: "0 0 12px" }}>
-            <Useky useky={b.useky} />
+            <Segments useky={b.useky} />
           </p>
         ) : b.cislovany ? (
           <ol key={i} style={{ margin: "0 0 12px", paddingLeft: 22 }}>
-            {b.polozky.map((p, j) => <li key={j}><Useky useky={p} /></li>)}
+            {b.polozky.map((p, j) => <li key={j}><Segments useky={p} /></li>)}
           </ol>
         ) : (
           <ul key={i} style={{ margin: "0 0 12px", paddingLeft: 22 }}>
-            {b.polozky.map((p, j) => <li key={j}><Useky useky={p} /></li>)}
+            {b.polozky.map((p, j) => <li key={j}><Segments useky={p} /></li>)}
           </ul>
         )
       )}
@@ -78,44 +78,44 @@ function TextOdpovede({ text }: { text: string }) {
   )
 }
 
-function Riadok({ popis, hodnota }: { popis: string; hodnota: string }) {
+function Line({ popis: label, hodnota: value }: { popis: string; hodnota: string }) {
   return (
     <span style={{ display: "inline-flex", gap: 6 }}>
-      <span className="tichy">{popis}</span>
-      <span style={{ fontWeight: 600 }}>{hodnota}</span>
+      <span className="tichy">{label}</span>
+      <span style={{ fontWeight: 600 }}>{value}</span>
     </span>
   )
 }
 
-export default function Answer({ stav }: { stav: AnswerState }) {
-  const { text, citacie, hotovo, bezi } = stav
-  if (!text && !bezi && !hotovo) return null
+export default function Answer({ stav: state }: { stav: AnswerState }) {
+  const { text, citacie: citations, hotovo: done, bezi: running } = state
+  if (!text && !running && !done) return null
 
-  const chyba = hotovo?.chyba
-  const useknute = hotovo?.dovodUkoncenia === "max_tokens"
+  const error = done?.chyba
+  const truncated = done?.dovodUkoncenia === "max_tokens"
 
   // Model cituje ten istý úryvok pri každom tvrdení, ktoré sa oň opiera.
   // Pri dlhej odpovedi ich vznikne aj devätnásť, z toho polovica rovnakých.
-  const jedinecne = mergeCitations(citacie)
+  const unique = mergeCitations(citations)
 
   return (
     <div style={{ display: "grid", gap: 16 }}>
       <div className="karta">
-        {chyba ? (
+        {error ? (
           <div style={{ color: "var(--bad-fg)", fontSize: 15 }}>
             <strong>Odpoveď sa nepodarilo získať.</strong>
-            <div style={{ marginTop: 6, fontSize: 14 }}>{chyba}</div>
+            <div style={{ marginTop: 6, fontSize: 14 }}>{error}</div>
           </div>
         ) : (
-          <div className={bezi ? "odpoved kurzor" : "odpoved"}>
-            {text ? <TextOdpovede text={text} /> : (bezi ? null : "—")}
+          <div className={running ? "odpoved kurzor" : "odpoved"}>
+            {text ? <AnswerText text={text} /> : (running ? null : "—")}
           </div>
         )}
 
         {/* Useknutá odpoveď sa NESMIE tváriť ako hotová. Záver býva práve to
             zhrnutie, ktoré si čitateľ odnesie — a keď chýba, nemá ako vedieť,
             že mu chýba. */}
-        {useknute && (
+        {truncated && (
           <div
             style={{
               display: "flex", gap: 9, alignItems: "flex-start",
@@ -136,19 +136,19 @@ export default function Answer({ stav }: { stav: AnswerState }) {
       </div>
 
       {/* Citácie — doslovné úryvky, o ktoré sa odpoveď opiera. */}
-      {jedinecne.length > 0 && (
+      {unique.length > 0 && (
         <div>
           <h3 style={{ fontSize: 13, textTransform: "uppercase", letterSpacing: "0.05em",
                        color: "var(--muted)", marginBottom: 10 }}>
-            Doslovné citácie ({jedinecne.length})
-            {jedinecne.length < citacie.length && (
+            Doslovné citácie ({unique.length})
+            {unique.length < citations.length && (
               <span style={{ fontWeight: 400, textTransform: "none", letterSpacing: 0 }}>
-                {" "}— {citacie.length} uvedených, zhodné zlúčené
+                {" "}— {citations.length} uvedených, zhodné zlúčené
               </span>
             )}
           </h3>
           <div style={{ display: "grid", gap: 8 }}>
-            {jedinecne.map((c, i) => (
+            {unique.map((c, i) => (
               <div
                 key={i}
                 style={{
@@ -170,14 +170,14 @@ export default function Answer({ stav }: { stav: AnswerState }) {
       )}
 
       {/* Zdroje — čo sa dostalo do kontextu, aj keď z toho model necitoval. */}
-      {hotovo && hotovo.zdroje.length > 0 && (
+      {done && done.zdroje.length > 0 && (
         <details>
           <summary style={{ cursor: "pointer", fontSize: 13, textTransform: "uppercase",
                             letterSpacing: "0.05em", color: "var(--muted)", fontWeight: 700 }}>
-            Prehľadané zdroje ({hotovo.zdroje.length})
+            Prehľadané zdroje ({done.zdroje.length})
           </summary>
           <div style={{ display: "grid", gap: 6, marginTop: 10 }}>
-            {hotovo.zdroje.map(z => (
+            {done.zdroje.map(z => (
               <div
                 key={z.index}
                 style={{
@@ -212,7 +212,7 @@ export default function Answer({ stav }: { stav: AnswerState }) {
       )}
 
       {/* Technická pätička — bez nej sa nedá porovnávať medzi konfiguráciami. */}
-      {hotovo && !chyba && (
+      {done && !error && (
         <div
           className="tichy"
           style={{
@@ -220,58 +220,58 @@ export default function Answer({ stav }: { stav: AnswerState }) {
             fontSize: 12.5, paddingTop: 4,
           }}
         >
-          {hotovo.model && <Riadok popis="model" hodnota={hotovo.model} />}
-          {hotovo.provider && <Riadok popis="adaptér" hodnota={hotovo.provider} />}
-          {hotovo.ttftMs !== null && (
-            <Riadok popis="prvý token" hodnota={`${(hotovo.ttftMs / 1000).toFixed(1)} s`} />
+          {done.model && <Line popis="model" hodnota={done.model} />}
+          {done.provider && <Line popis="adaptér" hodnota={done.provider} />}
+          {done.ttftMs !== null && (
+            <Line popis="prvý token" hodnota={`${(done.ttftMs / 1000).toFixed(1)} s`} />
           )}
-          <Riadok popis="celkom" hodnota={`${(hotovo.celkovoMs / 1000).toFixed(1)} s`} />
+          <Line popis="celkom" hodnota={`${(done.celkovoMs / 1000).toFixed(1)} s`} />
 
           {/* Tokeny a cena. Cache sa uvádza zvlášť, lebo čítanie z nej stojí
               desatinu ceny vstupu — bez toho rozlíšenia by číslo klamalo. */}
-          {hotovo.tokeny && (
-            <Riadok
+          {done.tokeny && (
+            <Line
               popis="tokeny"
               hodnota={
-                `${hotovo.tokeny.vstup.toLocaleString("sk")} → ` +
-                `${hotovo.tokeny.vystup.toLocaleString("sk")}` +
-                (hotovo.tokeny.cacheCitanie
-                  ? ` · z cache ${hotovo.tokeny.cacheCitanie.toLocaleString("sk")}` : "") +
-                (hotovo.tokeny.cacheZapis
-                  ? ` · do cache ${hotovo.tokeny.cacheZapis.toLocaleString("sk")}` : "")
+                `${done.tokeny.vstup.toLocaleString("sk")} → ` +
+                `${done.tokeny.vystup.toLocaleString("sk")}` +
+                (done.tokeny.cacheCitanie
+                  ? ` · z cache ${done.tokeny.cacheCitanie.toLocaleString("sk")}` : "") +
+                (done.tokeny.cacheZapis
+                  ? ` · do cache ${done.tokeny.cacheZapis.toLocaleString("sk")}` : "")
               }
             />
           )}
-          {hotovo.naklad && !hotovo.naklad.neznamyModel && (
+          {done.naklad && !done.naklad.neznamyModel && (
             <span
               className="stitok"
               style={{ background: "var(--surface-2)", color: "var(--muted)" }}
-              title={`Orientačne. Nezahŕňa pomocný model ani vyhľadávanie. Cenník ${hotovo.naklad.verziaCennika}.`}
+              title={`Orientačne. Nezahŕňa pomocný model ani vyhľadávanie. Cenník ${done.naklad.verziaCennika}.`}
             >
-              ≈ {formatUsd(hotovo.naklad.usd)} · {formatEur(toEur(hotovo.naklad.usd))}
+              ≈ {formatUsd(done.naklad.usd)} · {formatEur(toEur(done.naklad.usd))}
             </span>
           )}
           {/* Cenník, ktorý prestal platiť, radšej priznáme, než by sme ticho
               počítali starou sadzbou. */}
-          {hotovo.naklad?.cennikExpirovany && (
+          {done.naklad?.cennikExpirovany && (
             <span className="stitok" style={{ background: "var(--warn-bg)", color: "var(--warn-fg)" }}>
               cenník je zastaraný
             </span>
           )}
           {/* Rozpad na fázy. Nezaujíma hodnotiteľa, ale bez neho sa nedá
               povedať, prečo je prvý token pomalý. */}
-          {hotovo.casy && Object.entries(hotovo.casy).filter(([, ms]) => ms >= 50).map(([f, ms]) => (
-            <Riadok key={f} popis={f} hodnota={`${(ms / 1000).toFixed(1)} s`} />
+          {done.casy && Object.entries(done.casy).filter(([, ms]) => ms >= 50).map(([f, ms]) => (
+            <Line key={f} popis={f} hodnota={`${(ms / 1000).toFixed(1)} s`} />
           ))}
           <span
             className="stitok"
             style={
-              hotovo.overeneCitacie
+              done.overeneCitacie
                 ? { background: "var(--ok-bg)", color: "var(--ok-fg)" }
                 : { background: "var(--warn-bg)", color: "var(--warn-fg)" }
             }
           >
-            {hotovo.overeneCitacie ? "citácie overené modelom" : "citácie neoverené"}
+            {done.overeneCitacie ? "citácie overené modelom" : "citácie neoverené"}
           </span>
         </div>
       )}
