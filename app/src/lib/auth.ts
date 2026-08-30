@@ -31,9 +31,12 @@ import { send, signInEmail } from "./ecomail"
 import {
   personMaySignIn, recordSignIn, recordExternalRef, personLanguage,
   zosuladPodlaKonta, zalozPodlaDomeny, jeDomenaPovolena,
+  doplnChybajuce, chybaNiecoZAdresara, findPerson,
 } from "./persons"
 import { resolveTenant, normalizeHostname } from "./tenants"
 import { resolveCredentials, ID_POSKYTOVATELA } from "./oauth"
+import { udajeZGraphu, celeMeno, VELKOST_FOTKY } from "./graph"
+import { ulozFotku } from "./fotka"
 import type { OAuthProviderName, ResolvedCredentials } from "./oauth"
 import type { Tenant } from "./tenants"
 
@@ -305,6 +308,17 @@ export const authOptions: NextAuthOptions = {
               `auto:${poskytovatel}`,
             )
           }
+
+          // 3. Doplniť to, čo vie adresár a u nás chýba (D52).
+          //
+          //    Až tu, po overení profilu aj po založení osoby. A **len keď
+          //    naozaj niečo chýba** — inak by každé opakované prihlásenie
+          //    platilo dve požiadavky do Graphu za nič.
+          if (poskytovatel === "microsoft") {
+            await doplnZAdresara(
+              tenant.companyCode, user.email, account?.access_token as string | undefined,
+            )
+          }
         }
       }
 
@@ -489,6 +503,14 @@ function oauthProvider(c: ResolvedCredentials): Provider {
       clientSecret: c.clientSecret,
       tenantId: c.tenantMode || "organizations",
       allowDangerousEmailAccountLinking: true,
+      profilePhotoSize: VELKOST_FOTKY,
+      // `User.Read` je nad rámec predvolených troch rozsahov a je potrebné
+      // na dve veci: fotku a profil z Graphu (D52). Je to najzákladnejšie
+      // delegované oprávnenie Entry — „prečítaj profil prihláseného" —
+      // schvaľuje si ho používateľ sám a k nikomu inému neotvára prístup.
+      // Keď ho aplikácia zákazníka nemá, Graph vráti 403 a prihlásenie
+      // funguje ďalej, len bez mena, útvaru a fotky.
+      authorization: { params: { scope: "openid profile email User.Read" } },
     })
   }
   return GoogleProvider({
@@ -501,6 +523,51 @@ function oauthProvider(c: ResolvedCredentials): Provider {
       ? { params: { hd: c.hostedDomain, prompt: "select_account" } }
       : { params: { prompt: "select_account" } },
   })
+}
+
+/**
+ * Doplní z Microsoft Graphu to, čo osobe chýba (D52).
+ *
+ * Celé je to **obalené tak, aby nemohlo zhodiť prihlásenie**: najprv sa
+ * pozrie, či vôbec niečo chýba, a celé telo je v `try`. Osoba bez fotky je
+ * nepríjemnosť; človek, ktorý sa nedostane dnu, lebo Graph mal výpadok, je
+ * porucha.
+ */
+async function doplnZAdresara(
+  companyCode: string,
+  email: string,
+  accessToken: string | undefined,
+): Promise<void> {
+  try {
+    if (!accessToken) return
+    const osoba = await findPerson(email)
+    if (!chybaNiecoZAdresara(osoba)) return
+
+    const u = await udajeZGraphu(accessToken, !osoba?.photoVersion)
+    if (!u) return
+
+    let photoVersion: string | undefined
+    if (u.fotka && osoba) {
+      photoVersion = (await ulozFotku(
+        companyCode, osoba.id, u.fotka.contentType, u.fotka.data, "graph",
+      )) ?? undefined
+    }
+
+    const doplnene = await doplnChybajuce(companyCode, email, {
+      fullName: celeMeno(u),
+      givenName: u.givenName,
+      surname: u.surname,
+      department: u.department,
+      jobTitle: u.jobTitle,
+      language: u.preferredLanguage,
+      photoVersion,
+    })
+    if (doplnene.length) {
+      console.log(`[graph] ${email}: doplnené ${doplnene.join(", ")}`)
+    }
+  } catch (e) {
+    console.error("[graph] doplnenie údajov zlyhalo:", e)
+  }
 }
 
 /**

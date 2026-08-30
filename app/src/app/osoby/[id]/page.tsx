@@ -123,6 +123,15 @@ export default async function DetailOsoby({
           <input className="pole-vstup" name="fullName" defaultValue={o.fullName} required />
         </label>
 
+        <label className="pole">
+          <span className="pole-popis">Pozícia</span>
+          <input className="pole-vstup" name="jobTitle" defaultValue={o.jobTitle ?? ""} />
+          <span className="tichy pole-napoveda">
+            Evidenčný údaj. Dopĺňa sa z pracovného konta, keď ho tam adresár má —
+            ale len keď je tu prázdny, takže ručná oprava vydrží.
+          </span>
+        </label>
+
         <div className="pole">
           <span className="pole-popis">Útvar</span>
           <Vyber

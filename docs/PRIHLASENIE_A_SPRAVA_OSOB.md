@@ -246,6 +246,7 @@ obrazovka `/admin/tenanti/[kod]` ju preto vypisuje v hotovom tvare.
 | **D49** | Útvary sú strom, osoba patrí do práve jedného; cesta sa materializuje na osobe | ✅ 2026-08-29 |
 | **D50** | Reorganizácia: úloha z útvaru platí odo dňa príchodu, bývalí členovia zostanú vidieť, potvrdenie nesie odtlačok útvaru | ✅ 2026-08-29 |
 | **D51** | Audit správcovských zmien vo vlastnej kolekcii, nemenný; vidí ho `people-admin` a správca platformy | ✅ 2026-08-29 |
+| **D52** | Údaje z Microsoft Graphu sa dopĺňajú, nie prepisujú — a len keď niečo chýba | ✅ 2026-08-30 |
 
 ### D47 — automatické založenie z povolených domén
 
@@ -517,3 +518,57 @@ presne to, čo audit potrebuje rýchlo.
 - **Retencia auditu** nie je určená — otvorené v O16 spolu s retenciou
   potvrdení. Kolekcia zatiaľ rastie bez stropu; pri stovkách ľudí to nie je
   problém rokov, ale rozhodnúť sa to musí.
+
+---
+
+### D52 — meno, útvar a fotka z adresára
+
+Konto z Entry vie viac než adresu. Bez toho vznikala pri automatickom
+založení (D47) osoba, ktorá sa v zozname volala rovnako ako jej adresa —
+a personalista ju musel prepísať ručne, hoci ten údaj bol v adresári zákazníka
+celý čas.
+
+Ťahá sa: **meno a priezvisko zvlášť**, `displayName` ako záloha, **útvar**
+(textové pole, nie zaradenie do stromu), **pozícia**, **jazyk** a **fotografia**
+(96 px kvôli obrazovkám s dvojnásobnou hustotou).
+
+#### Dopĺňa sa, neprepisuje
+
+**Adresár nie je nadriadený personalistovi.** Keď niekto meno alebo útvar
+v `/osoby` opraví, ďalšie prihlásenie mu opravu neprepíše — inak by ručná
+oprava vydržala len dovtedy, kým sa ten človek znova neprihlási, a nikto by
+nepochopil, prečo sa zmena „neuložila".
+
+Zvláštny prípad: **`fullName` rovné adrese sa považuje za chýbajúce.** Presne
+tak vyzerá osoba založená automaticky, keď meno ešte nebolo odkiaľ vziať.
+
+#### Volá sa len vtedy, keď niečo chýba
+
+Väčšina prihlásení je opakovaná a vtedy je už všetko na mieste. Bez tejto
+podmienky by každé prihlásenie platilo dve cudzie požiadavky za nič.
+
+#### Zlyhanie Graphu nesmie zablokovať prihlásenie
+
+Celé doplnenie je v `try` a obe požiadavky majú **štvorsekundový strop**.
+Osoba bez fotky je nepríjemnosť; človek, ktorý sa nedostane dnu, lebo Graph
+mal výpadok, je porucha.
+
+#### `User.Read` naviac
+
+Predvolené rozsahy `azure-ad` sú `openid profile email` a s nimi Graph
+odpovie 403 — aj na fotku, ktorú si next-auth pýta sám. Pridali sme preto
+`User.Read`: je to najzákladnejšie delegované oprávnenie Entry („prečítaj
+profil prihláseného"), schvaľuje si ho používateľ sám a k nikomu inému
+neotvára prístup. Keď ho aplikácia zákazníka nemá, do logu ide menovitá hláška
+a všetko ostatné funguje ďalej.
+
+#### Fotka je neverejná — na rozdiel od loga
+
+Logo visí na prihlasovacej stránke a prezradí len to, že organizácia tu má
+portál. Fotka je osobný údaj zamestnanca, takže `/api/fotka/<id>` vyžaduje
+prihlásenie a zhodu organizácie (D32) — inak by sa dal z cudzej domény
+vyťahať fotoalbum firmy skúšaním identifikátorov. Pamäť je dlhá, ale
+`private`, aby si ju neodložila spoločná medzipamäť po ceste.
+
+Uložená je vo vlastnej kolekcii `person_photos`, nie v zázname osoby —
+rovnaký dôvod ako pri logu: záznam osoby sa číta pri každej požiadavke.

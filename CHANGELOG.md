@@ -4,6 +4,17 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Added (2026-08-30 — údaje z adresára)
+
+- **Meno, útvar, pozícia, jazyk a fotografia z Microsoft Graphu (D52).** Osoba založená automaticky (D47) sa dovtedy v zozname volala rovnako ako jej adresa a personalista ju musel prepísať ručne — hoci ten údaj bol v adresári zákazníka celý čas. Meno a priezvisko sa berú zvlášť; `displayName` je až záloha, lebo v niektorých adresároch je v tvare „Priezvisko, Meno (útvar)" a to sa v zozname číta zle.
+- **Dopĺňa sa, neprepisuje.** Adresár nie je nadriadený personalistovi: kto meno alebo útvar opraví v `/osoby`, o tú opravu ďalším prihlásením nepríde. Výnimka je meno rovné adrese — tak vyzerá osoba, ktorej meno nebolo odkiaľ vziať, a to sa berie ako chýbajúce.
+- **Do Graphu sa ide len vtedy, keď naozaj niečo chýba.** Väčšina prihlásení je opakovaná; bez tejto podmienky by každé platilo dve cudzie požiadavky za nič.
+- **Zlyhanie Graphu nikdy nezablokuje prihlásenie** — štvorsekundový strop na obe požiadavky a celé v `try`. Osoba bez fotky je nepríjemnosť, človek zamknutý vonku je porucha.
+- **Prihlasovanie cez Microsoft si teraz pýta aj `User.Read`.** S predvolenými rozsahmi Graph odpovie 403 aj na fotku, ktorú si next-auth ťahá sám. Je to najzákladnejšie delegované oprávnenie Entry, schvaľuje si ho používateľ sám a k nikomu inému neotvára prístup; keď ho aplikácia zákazníka nemá, do logu ide menovitá hláška a zvyšok funguje.
+- **Avatar v hlavičke ukáže fotku, keď ju človek má** — inak zostanú iniciály. Fotka je uložená vo vlastnej kolekcii (ten istý dôvod ako pri logu: záznam osoby sa číta pri každej požiadavke) a servíruje sa **neverejnou** cestou: vyžaduje prihlásenie a zhodu organizácie, lebo je to osobný údaj, nie značka.
+- Pozícia (`jobTitle`) pribudla aj do formulára osoby, aby sa dala opraviť.
+- 7 nových testov (spolu 735).
+
 ### Added (2026-08-29 — audit a história skupín)
 
 - **Audit správcovských zmien (D51).** Nová kolekcia `audit`: kto, čo a kedy zmenil — osoby (rola, stav, adresa, útvar, skupiny, trasy), útvary, pridelenia, nastavenie organizácie, domény a prihlasovacie údaje. Doteraz sa zapisovalo len `updatedBy`, čo odpovedá na „kto to menil naposledy" a na nič viac; kto komu udelil rolu `hr` alebo kto vymenil tajomstvo Entry, sa po druhej zmene už nedalo zistiť. Pri systéme, ktorý má dokazovať oboznámenie s predpismi, je to diera na nesprávnom mieste — kto si vie zmeniť rolu, vie si zmeniť publikum.

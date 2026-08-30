@@ -54,6 +54,7 @@ export async function ulozOsobu(fd: FormData) {
       // Voľba „— bez útvaru —" má prázdnu hodnotu a znamená vyradiť zo
       // štruktúry, nie „nemeniť". Preto `|| null`, nie `|| undefined`.
       departmentId: textPola(fd, "departmentId") || null,
+      jobTitle: textPola(fd, "jobTitle"),
       personType: (textPola(fd, "personType") || undefined) as PersonType | undefined,
       language: textPola(fd, "language") || undefined,
       tracks: zoznamPola(fd, "tracks"),

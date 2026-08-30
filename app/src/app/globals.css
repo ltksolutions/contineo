@@ -1043,3 +1043,11 @@ button:disabled { cursor: not-allowed; opacity: 0.55; }
   .audit-filter { flex-direction: column; align-items: stretch; }
   .audit-filter > * { width: 100%; }
 }
+
+/* Fotka v avatare (D52). Kruh a rovnaká veľkosť ako iniciály — inak by sa
+   hlavička pri prvom prihlásení nenápadne poskočila. */
+.avatar--fotka {
+  object-fit: cover;
+  padding: 0;
+  background: var(--surface-2);
+}

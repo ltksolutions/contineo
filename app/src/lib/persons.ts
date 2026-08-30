@@ -129,6 +129,14 @@ export interface Person {
    */
   groupHistory?: { group: string; od: Date; do?: Date }[]
 
+  /** Meno a priezvisko zvlášť, keď ich adresár vie (D52). Zobrazuje sa `fullName`. */
+  givenName?: string
+  surname?: string
+  /** Pracovná pozícia z adresára. Evidenčný údaj, o prístupe nerozhoduje. */
+  jobTitle?: string
+  /** Verzia uloženej fotky (`person_photos`). Chýba = nemá fotku. */
+  photoVersion?: string
+
   /** Prázdne u bežnej osoby. `"hr"` alebo `"platform-admin"`. */
   roles: string[]
 
@@ -716,4 +724,84 @@ export function novaHistoriaSkupin(
     if (!otvorene.has(g)) zaznamy.push({ group: g, od: kedy })
   }
   return zaznamy
+}
+
+
+/**
+ * Doplní údaje z adresára — **len tie, ktoré chýbajú** (D52).
+ *
+ * Adresár nie je nadriadený personalistovi. Keď niekto meno alebo útvar
+ * v `/osoby` opraví, ďalšie prihlásenie mu opravu neprepíše — inak by sa ručná
+ * oprava dala prežiť len dovtedy, kým sa ten človek znova neprihlási, a nikto
+ * by nepochopil, prečo sa mu zmena „nepodarilo uložiť".
+ *
+ * Preto sa aj **`fullName` rovné adrese považuje za chýbajúce**: tak vyzerá
+ * osoba založená automaticky, keď meno ešte nebolo odkiaľ vziať (D47).
+ *
+ * Vracia zoznam doplnených polí — volajúci ho dá do logu, aby bolo pri
+ * podpore vidieť, čo sa vlastne stalo.
+ */
+export async function doplnChybajuce(
+  companyCode: string,
+  email: string,
+  udaje: {
+    fullName?: string
+    givenName?: string
+    surname?: string
+    department?: string
+    jobTitle?: string
+    language?: string
+    photoVersion?: string
+  },
+): Promise<string[]> {
+  const address = normalizeEmail(email)
+  try {
+    const col = await getCollection<Person>(PERSONS_COLLECTION)
+    const osoba = await col.findOne({ companyCode, email: address })
+    if (!osoba) return []
+
+    const set: Record<string, unknown> = {}
+    const chyba = (v: unknown) => v === undefined || v === null || String(v).trim() === ""
+
+    if (udaje.fullName && (chyba(osoba.fullName) || osoba.fullName.trim().toLowerCase() === address)) {
+      set.fullName = udaje.fullName
+    }
+    if (udaje.givenName && chyba(osoba.givenName)) set.givenName = udaje.givenName
+    if (udaje.surname && chyba(osoba.surname)) set.surname = udaje.surname
+    if (udaje.department && chyba(osoba.department)) set.department = udaje.department
+    if (udaje.jobTitle && chyba(osoba.jobTitle)) set.jobTitle = udaje.jobTitle
+    // Jazyk má vždy hodnotu (predvolená slovenčina), takže „chýba" sa pri ňom
+    // nedá zistiť. Prepíše sa len pri osobe založenej automaticky a len raz —
+    // pri prvom prihlásení, keď ešte nemá fotku ani meno.
+    if (udaje.language && chyba(osoba.givenName) && chyba(osoba.photoVersion)) {
+      const jazyk = normalizeLanguage(udaje.language.slice(0, 2))
+      if (jazyk !== osoba.language) set.language = jazyk
+    }
+    if (udaje.photoVersion && chyba(osoba.photoVersion)) set.photoVersion = udaje.photoVersion
+
+    if (Object.keys(set).length === 0) return []
+    await col.updateOne({ companyCode, email: address }, { $set: set } as never)
+    return Object.keys(set)
+  } catch (e) {
+    console.error("[persons] doplnenie údajov z adresára zlyhalo:", e)
+    return []
+  }
+}
+
+/**
+ * Chýba osobe niečo, čo vie adresár doplniť?
+ *
+ * Bez tejto otázky by každé prihlásenie platilo dve požiadavky do Graphu za
+ * nič. Väčšina prihlásení je opakovaná a vtedy je už všetko na mieste.
+ */
+export function chybaNiecoZAdresara(osoba: Person | null): boolean {
+  if (!osoba) return true
+  const prazdne = (v: unknown) => v === undefined || v === null || String(v).trim() === ""
+  return (
+    prazdne(osoba.givenName) ||
+    prazdne(osoba.department) ||
+    prazdne(osoba.photoVersion) ||
+    prazdne(osoba.fullName) ||
+    osoba.fullName.trim().toLowerCase() === osoba.email
+  )
 }

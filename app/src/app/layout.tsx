@@ -101,6 +101,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   // sa má vykresliť ako pre neprihláseného, nie spadnúť.
   let email: string | undefined
   let meno: string | undefined
+  let fotka: string | undefined
   try {
     email = (await currentEmail()) ?? undefined
   } catch (e) {
@@ -111,7 +112,13 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   // `persons` nie je — vtedy iniciály vyjdú z adresy a je to v poriadku.
   if (email) {
     try {
-      meno = (await currentPerson())?.fullName
+      const ja = await currentPerson()
+      meno = ja?.fullName
+      // Verzia je v adrese, takže prehliadač si fotku odloží nadlho a nová
+      // sa aj tak ukáže hneď (rovnako ako pri logu).
+      if (ja?.photoVersion) {
+        fotka = `/api/fotka/${encodeURIComponent(ja.id)}?v=${encodeURIComponent(ja.photoVersion)}`
+      }
     } catch (e) {
       console.error("[layout] meno osoby sa nepodarilo načítať:", e)
     }
@@ -151,6 +158,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             branding={branding}
             email={email}
             meno={meno}
+            fotka={fotka}
             spravca={spravca}
             personalista={personalista}
             spravcaOsob={spravcaOsob}

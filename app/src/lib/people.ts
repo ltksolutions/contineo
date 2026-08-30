@@ -78,6 +78,10 @@ export interface PersonRow {
   department?: string
   /** Zaradenie v štruktúre (D49). `undefined`/`null` = nezaradená. */
   departmentId?: string | null
+  /** Pracovná pozícia z adresára (D52). */
+  jobTitle?: string
+  /** Verzia fotky; chýba = nemá fotku a ukážu sa iniciály. */
+  photoVersion?: string
   personType: PersonType
   status: PersonStatus
   language: string
@@ -100,6 +104,8 @@ function naRiadok(p: Person): PersonRow {
     fullName: p.fullName,
     department: p.department,
     departmentId: p.departmentId ?? null,
+    jobTitle: p.jobTitle,
+    photoVersion: p.photoVersion,
     personType: p.personType,
     status: p.status,
     language: p.language,
@@ -164,6 +170,7 @@ export interface PersonChange {
   department?: string
   /** `null` = vyradiť zo štruktúry. `undefined` = nemeniť. */
   departmentId?: string | null
+  jobTitle?: string
   personType?: PersonType
   language?: string
   tracks?: string[]
@@ -235,6 +242,7 @@ export async function savePerson(
   // Útvar sa **dá vyprázdniť** zámerne: je to údaj, ktorý sa mení, a človek
   // ho môže naozaj nemať. Na rozdiel od mena tu prázdno niečo znamená.
   if (zmena.department !== undefined) set.department = zmena.department.trim() || undefined
+  if (zmena.jobTitle !== undefined) set.jobTitle = zmena.jobTitle.trim() || undefined
 
   // Zaradenie a cesta sa zapisujú **spolu**. Keby sa cesta nechala na neskorší
   // prepočet, existoval by okamih, v ktorom človek do útvaru patrí, ale

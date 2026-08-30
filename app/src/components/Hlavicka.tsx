@@ -114,6 +114,7 @@ export default function Hlavicka({
   branding,
   email,
   meno,
+  fotka,
   spravca,
   personalista,
   spravcaOsob,
@@ -122,6 +123,8 @@ export default function Hlavicka({
   email?: string
   /** Celé meno z `persons`. Chýba u správcu, ktorý prešiel núdzovou brzdou. */
   meno?: string
+  /** Adresa fotky vrátane verzie. Chýba = ukážu sa iniciály (D52). */
+  fotka?: string
   /** Vidí správu tenantov (D41 + D42 už overené na serveri). */
   spravca?: boolean
   /** Má rolu `hr` vo vlastnej organizácii (D33 už overené na serveri). */
@@ -326,12 +329,27 @@ export default function Hlavicka({
                 title={email}
                 onClick={() => setOsobneOtvorene(o => !o)}
               >
+                {fotka ? (
+                  // Fotka z adresára. Keď sa nenačíta, `onError` ju schová
+                  // a zostanú iniciály — prázdny štvorec je horší než písmená.
+                  /* eslint-disable-next-line @next/next/no-img-element */
+                  <img
+                    className="avatar avatar--fotka"
+                    src={fotka}
+                    alt=""
+                    aria-hidden="true"
+                    width={28}
+                    height={28}
+                    onError={e => { (e.currentTarget as HTMLImageElement).hidden = true }}
+                  />
+                ) : null}
                 <span
                   className="avatar"
                   aria-hidden="true"
                   style={{
                     background: `hsl(${odtien} 42% 88%)`,
                     color: `hsl(${odtien} 45% 26%)`,
+                    ...(fotka ? { display: "none" } : {}),
                   }}
                 >
                   {iniciely(meno, email)}

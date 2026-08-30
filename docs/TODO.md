@@ -287,6 +287,8 @@
 - [x] **útvary ako strom** (D49) — osoba v práve jednom, pridelenie platí aj pre podstrom, skupiny zostávajú samostatnou dimenziou. Prevod z textu: `npm run utvary`
 - [x] **prevod útvarov SFZ spustený 2026-08-29** — nemal čo previesť: v databáze je zatiaľ jedna osoba a žiadna nemá útvar zapísaný textom. Zmysel dostane po importe ľudí z CSV
 - [x] **reorganizácia** (D50) — úloha z útvaru platí odo dňa príchodu, bývalí členovia zostanú v prehľade označení a bez e-mailu, potvrdenie nesie odtlačok útvaru
+- [x] **údaje z adresára** (D52) — meno, priezvisko, útvar, pozícia, jazyk a fotka z Microsoft Graphu; dopĺňa sa len chýbajúce, zlyhanie Graphu prihlásenie nezhodí
+- [ ] **overiť `User.Read` v Entra aplikácii SFZ** — bez neho Graph vráti 403 (v logu je menovitá hláška) a prihlásenie funguje ďalej, len bez mena, útvaru a fotky
 - [x] **audit správcovských zmien** (D51) — vlastná kolekcia, nemenná, rozdiel namiesto celého objektu, tajomstvá len ako „zmenené"; vidí ho `people-admin` a správca platformy
 - [x] **skupiny majú históriu členstva** — pôvodné rozhodnutie nechať ich bez nej neobstálo
 - [x] **indexy auditu a histórie skupín vytvorené 2026-08-29** — `node scripts/onboarding_init.mjs`
