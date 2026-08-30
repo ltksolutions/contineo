@@ -44,6 +44,7 @@ export const AUDIT_COLLECTION = "audit"
 export type AuditPredmet =
   | "osoba"
   | "utvar"
+  | "dokument"
   | "pridelenie"
   | "organizacia"
   | "domena"

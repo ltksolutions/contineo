@@ -118,6 +118,7 @@ export default function Hlavicka({
   spravca,
   personalista,
   spravcaOsob,
+  spravcaObsahu,
 }: {
   branding?: TenantBrandingView
   email?: string
@@ -131,6 +132,8 @@ export default function Hlavicka({
   personalista?: boolean
   /** Má rolu `people-admin` vo vlastnej organizácii (D46). */
   spravcaOsob?: boolean
+  /** Má rolu `spravca-obsahu` vo vlastnej organizácii (D53). */
+  spravcaObsahu?: boolean
 }) {
   const [volba, setVolba] = useState<Volba>("system")
   const [menuOtvorene, setMenuOtvorene] = useState(false)
@@ -151,6 +154,7 @@ export default function Hlavicka({
     // zo servera, kde už prešli všetky podmienky.
     ...(personalista ? [{ kam: "/hr", popis: "Pridelené normy" }] : []),
     ...(spravcaOsob ? [{ kam: "/osoby", popis: "Osoby" }] : []),
+    ...(spravcaObsahu ? [{ kam: "/kniznica", popis: "Knižnica" }] : []),
   ]
 
   /**

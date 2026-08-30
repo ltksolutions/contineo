@@ -12,6 +12,7 @@ import Hlavicka from "@/components/Hlavicka"
 import Paticka from "@/components/Paticka"
 import Sedenie from "@/components/Sedenie"
 import { currentTenant, currentEmail, currentPerson } from "@/lib/session"
+import { kniznicaContext } from "@/lib/kniznica"
 import { platformContext } from "@/lib/admin"
 import { hrContext } from "@/lib/hr"
 import { peopleContext } from "@/lib/people"
@@ -130,6 +131,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   let spravca = false
   let personalista = false
   let spravcaOsob = false
+  let spravcaObsahu = false
   if (email) {
     try {
       spravca = (await platformContext()).state === "ready"
@@ -145,6 +147,11 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       spravcaOsob = (await peopleContext()).state === "ready"
     } catch (e) {
       console.error("[layout] rolu správy osôb sa nepodarilo overiť:", e)
+    }
+    try {
+      spravcaObsahu = (await kniznicaContext()).state === "ready"
+    } catch (e) {
+      console.error("[layout] rolu správy obsahu sa nepodarilo overiť:", e)
     }
   }
 
@@ -162,6 +169,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             spravca={spravca}
             personalista={personalista}
             spravcaOsob={spravcaOsob}
+            spravcaObsahu={spravcaObsahu}
           />
           <main style={{ flex: 1 }}>{children}</main>
           <Paticka />

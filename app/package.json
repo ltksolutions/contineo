@@ -25,18 +25,23 @@
     "utvary": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/utvary_z_textu.mjs"
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.27.0",
+    "@anthropic-ai/sdk": "^0.122.0",
+    "mammoth": "^1.12.2",
     "mongodb": "^6.7.0",
     "next": "^16.3.3",
     "next-auth": "^4.24.15",
+    "pdfjs-dist": "^6.3.289",
     "react": "18.3.1",
-    "react-dom": "18.3.1"
+    "react-dom": "18.3.1",
+    "turndown": "^7.2.4",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.6",
     "@types/node": "^20.0.0",
     "@types/react": "^18.0.0",
     "@types/react-dom": "^18.0.0",
+    "@types/turndown": "^5.0.6",
     "eslint": "^9.39.5",
     "eslint-config-next": "^16.3.3",
     "typescript": "^5.0.0",

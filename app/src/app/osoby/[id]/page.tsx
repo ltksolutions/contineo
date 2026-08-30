@@ -39,6 +39,7 @@ const JAZYKY: Record<string, string> = {
 const POPIS_ROLY: Record<string, string> = {
   hr: "hr — prideľuje normy a vidí, kto ich nepotvrdil",
   "people-admin": "people-admin — spravuje osoby (táto obrazovka)",
+  "spravca-obsahu": "spravca-obsahu — nahráva a upravuje normy v knižnici",
 }
 
 export default async function DetailOsoby({

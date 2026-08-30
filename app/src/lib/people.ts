@@ -20,6 +20,7 @@
 import { getCollection } from "./mongodb"
 import { currentTenant, currentPerson } from "./session"
 import { zapisAudit, rozdiel } from "./audit"
+import { OBSAH_ROLE } from "./kniznica"
 import { PERSONS_COLLECTION, normalizeEmail, normalizeKeys, novaHistoriaUtvarov, novaHistoriaSkupin } from "./persons"
 import { normalizeLanguage } from "./i18n"
 import { HR_ROLE } from "./hr"
@@ -30,7 +31,7 @@ import { vsetkyOddelenia, cestaIds, cesta } from "./oddelenia"
 export const PEOPLE_ROLE = "people-admin"
 
 /** Roly, ktoré sa dajú prideliť z tejto obrazovky. */
-export const PRIDELITELNE_ROLE = [HR_ROLE, PEOPLE_ROLE] as const
+export const PRIDELITELNE_ROLE = [HR_ROLE, PEOPLE_ROLE, OBSAH_ROLE] as const
 
 export function isPeopleAdmin(person: Person | null): boolean {
   return Boolean(person?.roles?.includes(PEOPLE_ROLE))

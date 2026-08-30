@@ -1051,3 +1051,45 @@ button:disabled { cursor: not-allowed; opacity: 0.55; }
   padding: 0;
   background: var(--surface-2);
 }
+
+/* ── editor knižnice (D53) ───────────────────────────────────────────────
+   Dva stĺpce vedľa seba len tam, kde sa oba naozaj zmestia. Pod 900 px sa
+   poskladajú pod seba: rozdeliť telefón na dve polovice znamená, že sa
+   nečíta ani jedna. */
+.editor-mriezka {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: 1fr;
+  align-items: start;
+}
+
+@media (min-width: 900px) {
+  .editor-mriezka { grid-template-columns: 1fr 1fr; }
+}
+
+.editor-stlpec { min-width: 0; }
+
+.editor-nahlad {
+  width: 100%;
+  height: 70vh;
+  min-height: 420px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface-2);
+}
+
+/* Jednotná výška s náhľadom, aby sa dalo porovnávať bez posúvania stránky.
+   Monospace zámerne: v Markdowne rozhoduje odsadenie a v proporcionálnom
+   písme ho nevidno. */
+.editor-text {
+  width: 100%;
+  height: 70vh;
+  min-height: 420px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 13.5px;
+  line-height: 1.55;
+  resize: vertical;
+  white-space: pre;
+  overflow-wrap: normal;
+  overflow-x: auto;
+}

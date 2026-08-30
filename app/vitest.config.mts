@@ -8,9 +8,16 @@
  * Obísť sa to dalo len tak, že by sa do verejného rozhrania každého modulu
  * pridal testovací šev; `vi.mock()` to rieši bez toho.
  */
+import { fileURLToPath } from "node:url"
 import { defineConfig } from "vitest/config"
 
 export default defineConfig({
+  // `@/` funguje v Next cez `tsconfig.paths`; Vitest o tom nevie sám a bez
+  // toho zlyhá každý test, ktorý sa dotkne modulu s takým importom —
+  // napríklad číselníkov, ktoré sa čítajú ako JSON z `src/codelists/`.
+  resolve: {
+    alias: { "@": fileURLToPath(new URL("./src", import.meta.url)) },
+  },
   test: {
     environment: "node",
     include: ["tests/**/*.test.{ts,mjs}"],

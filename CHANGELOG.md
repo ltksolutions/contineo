@@ -4,6 +4,19 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Added (2026-08-30 — knižnica dokumentov)
+
+- **`/kniznica` (D53).** Normy sa dovtedy dostávali dnu len príkazovým riadkom — `.md` plus `.meta.json` pripravené vývojárom — takže si zákazník novelu nevedel nahrať sám. Teraz: zoznam s filtrami, detail s históriou znení, nahratie súboru s formulárom metadát namiesto `.meta.json`.
+- **Prevod docx, PDF, xlsx a textu do Markdownu beží v aplikácii.** Typ sa určuje z obsahu aj prípony, nie z toho, čo tvrdí prehliadač. Staré `.doc` a `.xls` sa odmietnu s návodom, čo s nimi.
+- **Jazykový model je druhý krok, ktorý vyvolá človek** — nikdy nie tichý ústup po zlyhaní prevodu. Norma je text, podľa ktorého ľudia konajú; model vie potichu preštylizovať vetu a nikto si toho nemusí všimnúť, lebo výsledok vyzerá lepšie než vstup. Volá sa kliknutím v editore (prečistiť členenie / prepísať sken) a jeho výstup sa ukladá **ako návrh vedľa konceptu**, nie doňho.
+- **Skenované PDF sa neprevádza ticho.** Prevod povie, že v súbore nie je text, a ponúkne prepis modelom — text, ktorý vyzerá správne a nie je, je pri norme horší než chýbajúci dokument.
+- **Editor ukazuje originál vedľa Markdownu.** Rozdiel medzi „vyzerá to dobre" a „je to naozaj to, čo je v norme" sa dá zistiť len porovnaním, a človek, ktorý musí prepínať okná, ho neurobí.
+- **Nahratie nič nepublikuje.** Technický stav je oddelený od kurátorského a chunky vznikajú až pri publikovaní. Publikovanie pýta **označenie znenia, dátum platnosti a citáciu, odkiaľ dátum je** — dovtedy to skript dopĺňal ako „1.0" pri všetkých deviatich normách, čo je vymyslené číslo, ktoré sa objavuje doslovne v každom zázname o potvrdení.
+- **Pôvodný súbor sa nemaže a leží v GridFS** v tej istej databáze; ďalšie úložisko by znamenalo ďalší token a ďalšie miesto, kde žijú údaje zákazníka. Cesta k nemu je neverejná — vyžaduje rolu aj zhodu organizácie.
+- **Nová rola `spravca-obsahu`**, oddelená od `hr`: kto normy prideľuje, nie je nutne ten, kto ich píše.
+- **`chunker.mjs` sa presunul do `src/lib/` bez jediného zásahu do kódu** (typy sú vedľa v `.d.ts`), takže obrazovka aj `import.mjs` režú rovnako. Prepis do TypeScriptu by bol stovky mechanických zmien v algoritme, ktorý sa meniť nemá.
+- 21 nových testov (spolu 756).
+
 ### Added (2026-08-30 — údaje z adresára)
 
 - **Meno, útvar, pozícia, jazyk a fotografia z Microsoft Graphu (D52).** Osoba založená automaticky (D47) sa dovtedy v zozname volala rovnako ako jej adresa a personalista ju musel prepísať ručne — hoci ten údaj bol v adresári zákazníka celý čas. Meno a priezvisko sa berú zvlášť; `displayName` je až záloha, lebo v niektorých adresároch je v tvare „Priezvisko, Meno (útvar)" a to sa v zozname číta zle.

@@ -40,8 +40,12 @@
 - [ ] LLM klasifikátor proti číselníku (návrh hodnôt + confidence)
 - [ ] Review UI — dropdowny z `codelists`, predvyplnené návrhom LLM, kurátor potvrdí
 
-### D2. CMS — knižnica, web obsah, kanály (Fáza 4 / nová CMS-Web / 6) → `docs/CMS_KONCEPCIA.md`
-- [ ] **Media manager:** knižnica nad `documents` (zoznam, filtre, detail, history) + `processingStatus` (uploaded→converting→chunking→embedding→indexed/failed) oddelený od `status`
+### D2. CMS — knižnica, web obsah, kanály (Fáza 4 / nová CMS-Web / 6) → `docs/CMS_KONCEPCIA.md`, `docs/KNIZNICA_DOKUMENTOV.md`
+- [x] **Media manager (D53, 2026-08-30):** `/kniznica` — zoznam, filtre, detail, história znení, nahratie docx/pdf/xlsx/md s prevodom do Markdownu, editor s originálom vedľa, publikovanie so `label` + `effectiveFrom` + citáciou zdroja. Rola `spravca-obsahu`
+- [x] pôvodné súbory v GridFS, neverejná cesta; chunker a číselníky spoločné pre obrazovku aj skript
+- [ ] náhľad Markdownu v editore (zatiaľ surový text)
+- [ ] archivácia dokumentu z obrazovky — mazanie zámerne nie je (viažu sa potvrdenia)
+- [ ] **KB / FAQ na verejnom webe** — samostatná fáza, `CMS_KONCEPCIA.md` časť B
 - [ ] Rozšíriť `documents` o `contentType` (`document`|`web`) a `webPublish` (slug, seo, navParent, publishAt) — **D-CMS-1**
 - [ ] **Web obsah (nová fáza CMS-Web):** KB články, FAQ, kategórie, navigácia, statické stránky; publikačný workflow + SSG/ISR generovanie; i18n SK/EN (AI preklad → review, **D-CMS-5**)
 - [ ] Editor: Markdown + náhľad, neskôr WYSIWYG vrstva — **D-CMS-2**

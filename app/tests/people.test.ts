@@ -20,6 +20,7 @@ vi.mock("../src/lib/mongodb", () => ({ getCollection }))
 import { peopleContext, isPeopleAdmin, savePerson, PEOPLE_ROLE, PRIDELITELNE_ROLE } from "../src/lib/people"
 import { HR_ROLE } from "../src/lib/hr"
 import { PLATFORM_ROLE } from "../src/lib/admin"
+import { OBSAH_ROLE } from "../src/lib/kniznica"
 import type { Person } from "../src/lib/persons"
 import type { Tenant } from "../src/lib/tenants"
 
@@ -107,7 +108,7 @@ describe("co sa da priradit", () => {
   it("správcu platformy z tejto obrazovky prideliť nemožno", () => {
     // Patrí tenantovi dodávateľa a má vlastnú cestu (`npm run admin`).
     expect(PRIDELITELNE_ROLE as readonly string[]).not.toContain(PLATFORM_ROLE)
-    expect(PRIDELITELNE_ROLE as readonly string[]).toEqual([HR_ROLE, PEOPLE_ROLE])
+    expect(PRIDELITELNE_ROLE as readonly string[]).toEqual([HR_ROLE, PEOPLE_ROLE, OBSAH_ROLE])
   })
 })
 

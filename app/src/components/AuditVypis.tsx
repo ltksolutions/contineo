@@ -17,6 +17,7 @@ import type { UiLanguage } from "@/lib/i18n"
 const PREDMETY: Record<string, string> = {
   osoba: "osoba",
   utvar: "útvar",
+  dokument: "dokument",
   pridelenie: "pridelenie",
   organizacia: "organizácia",
   domena: "doména",
@@ -37,6 +38,8 @@ const AKCIE: Record<string, string> = {
   oznamene: "oznámené",
   poziadane: "požiadané",
   overene: "overené",
+  publikovane: "publikované",
+  "nahrate-nove-znenie": "nahraté nové znenie",
 }
 
 /** Ľudské názvy polí. Neznáme pole sa ukáže tak, ako sa volá — radšej
