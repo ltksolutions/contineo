@@ -2,7 +2,7 @@
  * chunker.test.mjs — testy chunkovania noriem. Bez siete a bez databázy.
  *     npx vitest run tests/chunker.test.mjs
  */
-import { chunkuj, ocisti, parsujStrukturu, odhadTokenov } from "../scripts/lib/chunker.mjs"
+import { chunkText, clean, parseStructure, estimateTokens } from "../scripts/lib/chunker.mjs"
 
 import { it, expect } from "vitest"
 
@@ -40,7 +40,7 @@ PRÍLOHA č. 2 - Poplatky
 (1) Poplatok za registráciu je 10 eur.`
 
 // Hlavičky sa opakujú 3× — prah je >5, tak ich pridáme cez nazovDokumentu.
-const { riadky, odstranene } = ocisti(NORMA, { nazovDokumentu: "Nejaký poriadok SFZ" })
+const { riadky, odstranene } = clean(NORMA, { nazovDokumentu: "Nejaký poriadok SFZ" })
 
 t("čistenie: odstráni čísla strán", odstranene.cisloStrany === 3, String(odstranene.cisloStrany))
 t("čistenie: odstráni opakovanú hlavičku", odstranene.hlavicka >= 3, String(odstranene.hlavicka))
@@ -49,7 +49,7 @@ t("čistenie: odstráni poznámku pod čiarou aj pokračovanie",
 t("čistenie: poznámka nezožrala ďalší článok",
   riadky.some(r => r.startsWith("DRUHÁ ČASŤ")), riadky.slice(0, 12).join(" | "))
 
-const jednotky = parsujStrukturu(riadky)
+const jednotky = parseStructure(riadky)
 const clanky = jednotky.filter(j => j.typ === "clanok")
 const prilohy = jednotky.filter(j => j.typ === "priloha")
 
@@ -64,7 +64,7 @@ t("štruktúra: časť sa priradí článku",
 t("štruktúra: príloha NEDEDÍ časť (stojí mimo)",
   prilohy.every(p => p.cast === null), JSON.stringify(prilohy.map(p => p.cast)))
 
-const { chunky, statistiky } = chunkuj(NORMA, { nazovDokumentu: "Nejaký poriadok SFZ" })
+const { chunky, statistiky } = chunkText(NORMA, { nazovDokumentu: "Nejaký poriadok SFZ" })
 
 t("chunky: vzniknú", chunky.length >= 5, String(chunky.length))
 t("chunky: článok má ref 'čl. N'",
@@ -88,7 +88,7 @@ t("štatistiky: počíta prílohy", statistiky.priloh === 2, String(statistiky.p
 // ── delenie dlhého článku ────────────────────────────────────────────────
 const dlhy = "Dokument\nČlánok 1 - Dlhý\n" +
   Array.from({ length: 40 }, (_, i) => `(${i + 1}) ${"Veta s nejakým obsahom. ".repeat(12)}`).join("\n")
-const d = chunkuj(dlhy, { nazovDokumentu: "Dokument" })
+const d = chunkText(dlhy, { nazovDokumentu: "Dokument" })
 t("dlhý článok sa rozdelí na viac chunkov", d.chunky.length > 1, String(d.chunky.length))
 t("rozdelený článok NIE je označený ako úplný",
   d.chunky.every(c => c.uplnaJednotka === false))
@@ -96,8 +96,8 @@ t("rozdelené chunky majú rozsah odsekov v ref",
   d.chunky.some(c => /ods\. \d+[–-]\d+/.test(String(c.articleRef))),
   JSON.stringify(d.chunky.map(c => c.articleRef).slice(0, 4)))
 t("žiadny chunk nie je nezmyselne veľký",
-  d.chunky.every(c => odhadTokenov(c.text) < 1500),
-  String(Math.max(...d.chunky.map(c => odhadTokenov(c.text)))))
+  d.chunky.every(c => estimateTokens(c.text) < 1500),
+  String(Math.max(...d.chunky.map(c => estimateTokens(c.text)))))
 
 // ── tabuľky sa NIKDY nedelia (D17) ───────────────────────────────────────
 // Tabuľka zámerne dlhšia než limit — musí zostať v jednom chunku.
@@ -114,7 +114,7 @@ const sTabulkou = [
   "(3) Odsek za tabuľkou, ktorý s ňou nesúvisí.",
 ].join("\n")
 
-const tab = chunkuj(sTabulkou, { nazovDokumentu: "Predpis" })
+const tab = chunkText(sTabulkou, { nazovDokumentu: "Predpis" })
 const sTab = tab.chunky.filter(c => c.obsahujeTabulku)
 
 t("tabuľka: rozpoznaná ako tabuľka", sTab.length === 1, String(sTab.length))
@@ -124,7 +124,7 @@ t("tabuľka: zostala v JEDNOM chunku aj nad limit",
 t("tabuľka: hlavička ostala pri dátach",
   !!sTab[0] && sTab[0].text.includes("do 1.") && sTab[0].text.includes("ligy ligy"))
 t("tabuľka: presahuje bežný limit — a to je v poriadku",
-  odhadTokenov(sTab[0]?.text ?? "") > 800, String(odhadTokenov(sTab[0]?.text ?? "")))
+  estimateTokens(sTab[0]?.text ?? "") > 800, String(estimateTokens(sTab[0]?.text ?? "")))
 t("tabuľka: odsek ZA tabuľkou je v inom chunku",
   tab.chunky.some(c => !c.obsahujeTabulku && c.text.includes("Odsek za tabuľkou")),
   JSON.stringify(tab.chunky.map(c => [c.chunkIndex, c.obsahujeTabulku])))
@@ -133,7 +133,7 @@ t("tabuľka: odsek PRED tabuľkou je v inom chunku",
 t("štatistiky: počíta chunky s tabuľkou", tab.statistiky.sTabulkou === 1)
 
 // markdownová tabuľka (|) sa rozpozná rovnako
-const md = chunkuj([
+const md = chunkText([
   "Predpis", "Článok 1 - MD tabuľka", "(1) Text.",
   "| a | b |", "| --- | --- |", "| 1 | 2 |",
 ].join("\n"), { nazovDokumentu: "Predpis" })
@@ -142,14 +142,14 @@ t("tabuľka: markdownový tvar (|) sa rozpozná",
   JSON.stringify(md.chunky.map(c => c.obsahujeTabulku)))
 
 // ── prázdny a degenerovaný vstup ─────────────────────────────────────────
-t("prázdny vstup nespadne", chunkuj("", {}).chunky.length === 0)
+t("prázdny vstup nespadne", chunkText("", {}).chunky.length === 0)
 t("text bez štruktúry dá aspoň jeden chunk",
-  chunkuj("Len obyčajný text bez článkov.", { nazovDokumentu: "X" }).chunky.length === 1)
+  chunkText("Len obyčajný text bez článkov.", { nazovDokumentu: "X" }).chunky.length === 1)
 
 // ── dvojriadkový nadpis článku ────────────────────────────────────────────
 // Osem z deviatich noriem SFZ píše "Článok N" a názov až na ďalšom riadku.
 // Kým to chunker nevedel, celý dokument spadol do "Úvodné ustanovenia".
-const dvoj = chunkuj([
+const dvoj = chunkText([
   "Disciplinárny poriadok SFZ",
   "Úvodné ustanovenia (Článok 1 - 5)",
   "",
@@ -180,7 +180,7 @@ t("dvojriadkový: nič neostalo v preambule okrem úvodu",
   JSON.stringify(dvoj.chunky.map(c => c.heading)))
 
 // Text, ktorý VYZERÁ ako názov, ale je to veta -> nadpisom sa nestane
-const veta = chunkuj([
+const veta = chunkText([
   "Predpis",
   "Článok 3",
   "(1) Odsek začína hneď, žiadny názov tu nie je.",
@@ -190,7 +190,7 @@ t("dvojriadkový: odsek sa nezneužije ako názov článku",
   JSON.stringify(veta.chunky.map(c => c.heading)))
 
 // Oba tvary v jednom dokumente
-const mix = chunkuj([
+const mix = chunkText([
   "Predpis",
   "Článok 1 - S pomlčkou",
   "(1) Text prvého.",
@@ -218,7 +218,7 @@ t("typ: príloha je označená ako priloha",
 
 // „Strana N“ / „z 16“ — číslovanie rozpadnuté z PDF na viac riadkov.
 // Bez odstránenia sa dostalo na miesto názvu článku.
-const strany = chunkuj([
+const strany = chunkText([
   "Rokovací poriadok",
   "Článok 3",
   "",
@@ -244,7 +244,7 @@ t("strana: číslovanie nie je v texte chunku",
 // častejšie. Vzor ho spočiatku prehliadal, lebo vyžadoval, aby riadok
 // končil číslom. Prejavilo sa to až v citácii: model odcitoval úryvok
 // aj s číslovaním strany.
-const stranaJeden = chunkuj([
+const stranaJeden = chunkText([
   "Disciplinárny poriadok",
   "Článok 37",
   "",
@@ -265,13 +265,13 @@ t("strana: skutočný názov sa nájde aj za jednoriadkovým číslovaním",
   stranaJeden.chunky.some(c => c.heading === "Napomenutia"),
   JSON.stringify(stranaJeden.chunky.map(c => c.heading)))
 t("strana: anglické „Page 3 of 12“ sa odstráni tiež",
-  !chunkuj(["Poriadok", "Článok 1", "", "Page 3 of 12", "", "Názov", "", "(1) Text."].join("\n"),
+  !chunkText(["Poriadok", "Článok 1", "", "Page 3 of 12", "", "Názov", "", "(1) Text."].join("\n"),
     { nazovDokumentu: "Poriadok" }).chunky.some(c => /Page \d/.test(c.text)))
 
 // Neviditeľné znaky z PDF (zero-width space, BOM). Riadok s nimi nie je
 // prázdny podľa `!r`, takže sa raz stal „názvom" článku 3 Rokovacieho
 // poriadku a v citácii svietil prázdny nadpis.
-const neviditelne = chunkuj([
+const neviditelne = chunkText([
   "Rokovací poriadok",
   "Článok 3",
   "",
@@ -289,7 +289,7 @@ t("neviditeľné: nájde sa skutočný názov za nimi",
   neviditelne.chunky.some(c => c.heading === "Predsedajúci konferencie"),
   JSON.stringify(neviditelne.chunky.map(c => c.heading)))
 
-const bom = chunkuj([
+const bom = chunkText([
   "Predpis", "Článok 1", "", "\uFEFF", "Základné ustanovenia", "(1) Text.",
 ].join("\n"), { nazovDokumentu: "Predpis" })
 t("neviditeľné: BOM sa preskočí rovnako",
@@ -297,5 +297,5 @@ t("neviditeľné: BOM sa preskočí rovnako",
   JSON.stringify(bom.chunky.map(c => c.heading)))
 
 t("neviditeľné: nezlomiteľná medzera sama osebe nie je nadpis",
-  chunkuj(["Predpis", "Článok 2", "", "\u00A0", "Pôsobnosť", "(1) Text."].join("\n"),
+  chunkText(["Predpis", "Článok 2", "", "\u00A0", "Pôsobnosť", "(1) Text."].join("\n"),
     { nazovDokumentu: "Predpis" }).chunky.some(c => c.heading === "Pôsobnosť"))

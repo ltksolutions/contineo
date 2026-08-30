@@ -26,7 +26,7 @@ import { addCodelistItemAction, removeCodelistItemAction, saveChunkingProfileAct
 import { shiftDepartmentAction, saveDepartmentOrderAction } from "./actions"
 import TreeWithOrder from "@/components/TreeWithOrder"
 import { reindexState } from "@/lib/libraryWrite"
-import { PREDVOLENY_PROFIL } from "@/lib/chunker.mjs"
+import { DEFAULT_PROFILE } from "@/lib/chunker.mjs"
 import { CODELIST_LABEL, availableOptions, customItems, codelistUsage } from "@/lib/codelistsTenant"
 import { translateTabKey } from "@/lib/urlTabs"
 import { CUSTOM_CODELISTS } from "@/lib/codelists"
@@ -685,7 +685,7 @@ export default async function OrganisationPage({
         <label className="pole">
           <span className="pole-popis">Slovo, ktorým začína článok</span>
           <input className="pole-vstup" name="slovoClanok"
-                 defaultValue={tenant.chunkovanie?.slovoClanok ?? PREDVOLENY_PROFIL.slovoClanok} />
+                 defaultValue={tenant.chunkovanie?.slovoClanok ?? DEFAULT_PROFILE.slovoClanok} />
           <span className="tichy pole-napoveda">
             Predvolene <code>Článok</code>. Predpisy členené na <code>§</code> alebo na
             <code> Bod</code> sa bez tejto zmeny zlejú do jedného bloku a vyhľadávanie
@@ -696,7 +696,7 @@ export default async function OrganisationPage({
         <label className="pole">
           <span className="pole-popis">Slovo, ktorým začína príloha</span>
           <input className="pole-vstup" name="slovoPriloha"
-                 defaultValue={tenant.chunkovanie?.slovoPriloha ?? PREDVOLENY_PROFIL.slovoPriloha} />
+                 defaultValue={tenant.chunkovanie?.slovoPriloha ?? DEFAULT_PROFILE.slovoPriloha} />
           <span className="tichy pole-napoveda">
             Prílohy stoja mimo číslovania článkov — bez rozpoznania by spadli pod posledný
             článok a citácia by klamala.
@@ -706,7 +706,7 @@ export default async function OrganisationPage({
         <label className="pole">
           <span className="pole-popis">Riadok je hlavička, keď sa opakuje viac ráz než</span>
           <input className="pole-vstup" type="number" name="opakovaniHlavicky" min={2} max={50}
-                 defaultValue={tenant.chunkovanie?.opakovaniHlavicky ?? PREDVOLENY_PROFIL.opakovaniHlavicky} />
+                 defaultValue={tenant.chunkovanie?.opakovaniHlavicky ?? DEFAULT_PROFILE.opakovaniHlavicky} />
           <span className="tichy pole-napoveda">
             Hlavičky a päty sa v PDF opakujú na každej strane. Nižšie číslo odstráni viac
             šumu, ale pri krátkom dokumente môže zožrať aj obsah.
@@ -716,13 +716,13 @@ export default async function OrganisationPage({
         <label className="pole">
           <span className="pole-popis">Cieľová veľkosť úseku — od (tokenov)</span>
           <input className="pole-vstup" type="number" name="cielMinTokenov" min={50} max={2000}
-                 defaultValue={tenant.chunkovanie?.cielMinTokenov ?? PREDVOLENY_PROFIL.cielMinTokenov} />
+                 defaultValue={tenant.chunkovanie?.cielMinTokenov ?? DEFAULT_PROFILE.cielMinTokenov} />
         </label>
 
         <label className="pole">
           <span className="pole-popis">Cieľová veľkosť úseku — do (tokenov)</span>
           <input className="pole-vstup" type="number" name="cielMaxTokenov" min={100} max={4000}
-                 defaultValue={tenant.chunkovanie?.cielMaxTokenov ?? PREDVOLENY_PROFIL.cielMaxTokenov} />
+                 defaultValue={tenant.chunkovanie?.cielMaxTokenov ?? DEFAULT_PROFILE.cielMaxTokenov} />
           <span className="tichy pole-napoveda">
             Malý úsek znamená tisíce úryvkov bez kontextu, veľký zas jeden úsek na celý
             dokument. Predvolené <code>300–800</code> je odladené na slovenských predpisoch.

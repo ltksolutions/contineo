@@ -11,7 +11,7 @@
  * vyhľadávania (D1) a chybu v ňom neskôr ťažko odhalíš.
  */
 import { readFileSync, writeFileSync, existsSync } from "node:fs"
-import { chunkuj, odhadTokenov } from "./lib/chunker.mjs"
+import { chunkText, estimateTokens } from "./lib/chunker.mjs"
 import { nacitajMeta, sablonaMeta, cestaMeta } from "./lib/meta.mjs"
 
 const args = process.argv.slice(2)
@@ -48,7 +48,7 @@ try {
 }
 
 const text = readFileSync(subor, "utf8")
-const { chunky, statistiky: s } = chunkuj(text, { nazovDokumentu: meta.title })
+const { chunky, statistiky: s } = chunkText(text, { nazovDokumentu: meta.title })
 
 const ciara = (z = "─") => console.log(z.repeat(74))
 
@@ -76,7 +76,7 @@ ciara()
 if (cely >= 0) {
   const ch = chunky[cely]
   if (!ch) { console.error(`Chunk ${cely} neexistuje (0–${chunky.length - 1}).`); process.exit(1) }
-  console.log(`CHUNK ${cely}  ·  ${odhadTokenov(ch.text)} tokenov  ·  ${ch.articleRef ?? "—"}`)
+  console.log(`CHUNK ${cely}  ·  ${estimateTokens(ch.text)} tokenov  ·  ${ch.articleRef ?? "—"}`)
   ciara()
   console.log(ch.text)
   ciara()
@@ -85,7 +85,7 @@ if (cely >= 0) {
 
 // Problém = nad limitom, alebo krátky ÚLOMOK. Krátky úplný článok problém nie je.
 const vyber = lenProblemy
-  ? chunky.filter(c => { const t = odhadTokenov(c.text); return t > 800 || (!c.uplnaJednotka && t < 300) })
+  ? chunky.filter(c => { const t = estimateTokens(c.text); return t > 800 || (!c.uplnaJednotka && t < 300) })
   : chunky.slice(0, pocet)
 
 if (lenProblemy) {
@@ -94,7 +94,7 @@ if (lenProblemy) {
 }
 
 for (const ch of vyber.slice(0, lenProblemy ? 12 : pocet)) {
-  const t = odhadTokenov(ch.text)
+  const t = estimateTokens(ch.text)
   const znak = t > 800 ? "  ⚠ nad limit" : t < 300 ? "  ⚠ pod limit" : ""
   console.log(`\n[${ch.chunkIndex}]  ${t} tokenov${znak}`)
   console.log(`  articleRef: ${ch.articleRef ?? "—"}${ch.typ === "priloha" ? "   (príloha)" : ""}`)

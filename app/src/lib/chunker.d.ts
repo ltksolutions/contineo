@@ -14,15 +14,15 @@
  * by sa rozišli presne pri novele, keď na tom najviac záleží.
  */
 
-export const CIEL_MIN: number
-export const CIEL_MAX: number
+export const TARGET_MIN: number
+export const TARGET_MAX: number
 
 /**
  * Profil členenia (D58). Konfiguruje sa **slovom, nie regulárnym výrazom** —
  * vzor od zákazníka je jednak vec, ktorú nikto neodladí, jednak spôsob, ako
  * jedným zápisom zavesiť spracovanie celého dokumentu.
  */
-export interface ProfilClenenia {
+export interface ChunkingProfile {
   slovoClanok: string
   slovoPriloha: string
   opakovaniHlavicky: number
@@ -30,11 +30,11 @@ export interface ProfilClenenia {
   cielMaxTokenov: number
 }
 
-export const PREDVOLENY_PROFIL: ProfilClenenia
+export const DEFAULT_PROFILE: ChunkingProfile
 
-export function vzoryPreProfil(profil?: Partial<ProfilClenenia>): unknown
+export function patternsForProfile(profile?: Partial<ChunkingProfile>): unknown
 
-export function odhadTokenov(s: string): number
+export function estimateTokens(s: string): number
 
 export interface Chunk {
   chunkIndex: number
@@ -46,7 +46,7 @@ export interface Chunk {
   uplnaJednotka?: boolean
 }
 
-export interface Statistiky {
+export interface ChunkStats {
   riadkovPoOcisteni: number
   odstranene: { hlavicka: number; cisloStrany: number; poznamka: number; prazdne: number }
   clankov: number
@@ -61,14 +61,14 @@ export interface Statistiky {
   kratkeUplne: number
 }
 
-export function ocisti(
+export function clean(
   text: string,
   meta?: { nazovDokumentu?: string },
-): { riadky: string[]; odstranene: Statistiky["odstranene"] }
+): { riadky: string[]; odstranene: ChunkStats["odstranene"] }
 
-export function parsujStrukturu(riadky: string[]): unknown[]
+export function parseStructure(lines: string[]): unknown[]
 
-export function chunkuj(
+export function chunkText(
   text: string,
-  meta?: { nazovDokumentu?: string; profil?: Partial<ProfilClenenia> },
-): { chunky: Chunk[]; statistiky: Statistiky }
+  meta?: { nazovDokumentu?: string; profil?: Partial<ChunkingProfile> },
+): { chunky: Chunk[]; statistiky: ChunkStats }

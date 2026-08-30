@@ -23,14 +23,14 @@
 import { getCollection } from "./mongodb"
 import { DOCUMENTS_COLLECTION } from "./documents"
 import { ACKNOWLEDGEMENTS_COLLECTION } from "./acknowledgements"
-import { chunkuj, PREDVOLENY_PROFIL } from "./chunker.mjs"
+import { chunkText, DEFAULT_PROFILE } from "./chunker.mjs"
 import { textFingerprint, chunkingFingerprint, needsReindex, CHUNKER_VERSION } from "./chunkIdentity"
 import { checkValue, checkList, CodelistError } from "./codelists"
 import type { CodelistExtras } from "./codelists"
 import { saveFile, deleteFile } from "./fileStore"
 import { convert, FILE_TYPE_LABEL, ConversionError } from "./conversion"
 import { writeAudit, diff } from "./audit"
-import type { Chunk, ProfilClenenia } from "./chunker"
+import type { Chunk, ChunkingProfile } from "./chunker"
 
 export const CHUNKS_COLLECTION = "document_chunks"
 
@@ -236,7 +236,7 @@ export async function publish(
   documentId: string,
   input: { label: string; effectiveFrom: Date; effectiveFromSource?: string; changeNote?: string },
   actor: string,
-  profile?: Partial<ProfilClenenia>,
+  profile?: Partial<ChunkingProfile>,
 ): Promise<PublishResult> {
   const label = (input.label ?? "").trim()
   if (!label) {
@@ -266,7 +266,7 @@ export async function publish(
   }
   const tags = Array.isArray(doc.tags) ? (doc.tags as string[]) : []
 
-  const { chunky: chunks } = chunkuj(markdown, { nazovDokumentu: meta.title, profil: profile })
+  const { chunky: chunks } = chunkText(markdown, { nazovDokumentu: meta.title, profil: profile })
   if (!chunks.length) {
     throw new LibraryError(
       "Z textu nevznikol ani jeden úsek. Skontroluj, či má dokument členenie na články alebo nadpisy.",
@@ -296,7 +296,7 @@ export async function publish(
   // a dátum platnosti do identity nevstupujú zámerne: preklep v nich sa musí
   // dať opraviť bez toho, aby sa rozbili existujúce potvrdenia.
   const versionId = textFingerprint(markdown)
-  const chunkingId = chunkingFingerprint(chunks, { ...PREDVOLENY_PROFIL, ...profile })
+  const chunkingId = chunkingFingerprint(chunks, { ...DEFAULT_PROFILE, ...profile })
   const now = new Date()
 
   // Rovnaké znenie už publikované? Nič sa nedeje — publikovanie je idempotentné.
@@ -473,7 +473,7 @@ export async function reindex(
   companyCode: string,
   documentId: string,
   actor: string,
-  profile?: Partial<ProfilClenenia>,
+  profile?: Partial<ChunkingProfile>,
 ): Promise<{ chunkov: number; archivovanych: number; uzBolo: boolean; chunkingId: string }> {
   const col = await getCollection(DOCUMENTS_COLLECTION)
   const doc = await col.findOne({ documentId, companyCode }) as Record<string, unknown> | null
@@ -497,12 +497,12 @@ export async function reindex(
   }
   const tags = Array.isArray(doc.tags) ? (doc.tags as string[]) : []
 
-  const { chunky: chunks } = chunkuj(markdown, { nazovDokumentu: meta.title, profil: profile })
+  const { chunky: chunks } = chunkText(markdown, { nazovDokumentu: meta.title, profil: profile })
   if (!chunks.length) {
     throw new LibraryError("Z textu nevznikol ani jeden úsek — skontroluj profil členenia.")
   }
 
-  const chunkingId = chunkingFingerprint(chunks, { ...PREDVOLENY_PROFIL, ...profile })
+  const chunkingId = chunkingFingerprint(chunks, { ...DEFAULT_PROFILE, ...profile })
   if (doc.chunkingId === chunkingId) {
     return { chunkov: chunks.length, archivovanych: 0, uzBolo: true, chunkingId }
   }
@@ -689,7 +689,7 @@ export interface ReindexState {
  */
 export async function reindexState(
   companyCode: string,
-  profile?: Partial<ProfilClenenia>,
+  profile?: Partial<ChunkingProfile>,
 ): Promise<ReindexState> {
   const col = await getCollection(DOCUMENTS_COLLECTION)
   const documents = await col
@@ -715,9 +715,9 @@ export async function reindexState(
     if (!text) continue
     total++
 
-    const { chunky: chunks } = chunkuj(text, { nazovDokumentu: d.title ?? "", profil: profile })
+    const { chunky: chunks } = chunkText(text, { nazovDokumentu: d.title ?? "", profil: profile })
     if (!chunks.length) { outdated++; continue }
-    const chunkingId = chunkingFingerprint(chunks, { ...PREDVOLENY_PROFIL, ...profile })
+    const chunkingId = chunkingFingerprint(chunks, { ...DEFAULT_PROFILE, ...profile })
     if (needsReindex(d.chunkingId, chunkingId)) outdated++
   }
 
@@ -739,7 +739,7 @@ export async function reindexState(
 export async function reindexAll(
   companyCode: string,
   actor: string,
-  profile?: Partial<ProfilClenenia>,
+  profile?: Partial<ChunkingProfile>,
   limit = 25,
 ): Promise<{ preindexovanych: number; preskocenych: number; zostava: number; chyby: string[] }> {
   const col = await getCollection(DOCUMENTS_COLLECTION)

@@ -27,7 +27,7 @@ import {
   assignDocument, shiftFolder, saveFolderOrder, FolderError,
 } from "@/lib/folders"
 import type { CodelistExtras } from "@/lib/codelists"
-import type { ProfilClenenia } from "@/lib/chunker"
+import type { ChunkingProfile } from "@/lib/chunker"
 import { cleanMarkdown, rewritePdf, RewriteError } from "@/lib/llmRewrite"
 import { getCollection } from "@/lib/mongodb"
 import { DOCUMENTS_COLLECTION } from "@/lib/documents"
@@ -38,7 +38,7 @@ async function actor(): Promise<
     email: string
     companyCode: string
     doplnky: CodelistExtras
-    profil?: Partial<ProfilClenenia>
+    profil?: Partial<ChunkingProfile>
   } | null
 > {
   const ctx = await libraryContext()

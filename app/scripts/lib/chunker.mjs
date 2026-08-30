@@ -9,6 +9,6 @@
  * Kód sa pri presune **nezmenil ani o znak**; typy sú vedľa v `chunker.d.ts`.
  */
 export {
-  CIEL_MIN, CIEL_MAX, PREDVOLENY_PROFIL, vzoryPreProfil,
-  odhadTokenov, ocisti, parsujStrukturu, chunkuj,
+  TARGET_MIN, TARGET_MAX, DEFAULT_PROFILE, patternsForProfile,
+  estimateTokens, clean, parseStructure, chunkText,
 } from "../../src/lib/chunker.mjs"

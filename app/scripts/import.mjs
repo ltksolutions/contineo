@@ -21,7 +21,7 @@
 import { readFileSync } from "node:fs"
 import { createHash } from "node:crypto"
 import { MongoClient } from "mongodb"
-import { chunkuj, odhadTokenov } from "./lib/chunker.mjs"
+import { chunkText, estimateTokens } from "./lib/chunker.mjs"
 import { nacitajMeta, nacitajCiselnik } from "./lib/meta.mjs"
 
 const URI = process.env.MONGODB_URI
@@ -62,7 +62,7 @@ function pripravDokument(subor) {
   }
 
   const text = readFileSync(subor, "utf8")
-  const { chunky, statistiky } = chunkuj(text, { nazovDokumentu: meta.title })
+  const { chunky, statistiky } = chunkText(text, { nazovDokumentu: meta.title })
   if (!chunky.length) throw new Error(`${subor}: nevznikol ani jeden chunk`)
 
   const documentId = idDokumentu(meta)
@@ -254,7 +254,7 @@ for (const s of subory) {
   try {
     const d = pripravDokument(s)
     pripravene.push(d)
-    const t = d.chunky.map(c => odhadTokenov(c.text))
+    const t = d.chunky.map(c => estimateTokens(c.text))
     console.log(`${OK} ${d.meta.title}`)
     console.log(`    ${d.chunky.length} chunkov · ${Math.min(...t)}–${Math.max(...t)} tokenov · ` +
                 `${d.statistiky.priloh} príloh · verzia ${d.versionId}`)
