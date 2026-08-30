@@ -1,5 +1,5 @@
 /**
- * kontrola.mjs — invarianty medzi dokumentmi, úsekmi a potvrdeniami (D59).
+ * check.mjs — invarianty medzi dokumentmi, úsekmi a potvrdeniami (D59).
  *
  * Odkedy sa dá chunker ladiť a preindexovávať, pribudlo miest, kde sa dáta
  * môžu rozísť potichu. Nič nespadne — len sa zhoršia odpovede alebo niekomu
@@ -9,8 +9,8 @@
  * alebo nechať tak. Skript, ktorý „to spraví za teba", by pri prvej
  * nečakanej odchýlke prepísal niečo, čo nikto nechcel.
  *
- *     node --env-file=.env.local scripts/kontrola.mjs
- *     node --env-file=.env.local scripts/kontrola.mjs --tenant SFZ
+ *     node --env-file=.env.local scripts/check.mjs
+ *     node --env-file=.env.local scripts/check.mjs --tenant SFZ
  *
  * Návratový kód 1, keď našiel rozpor — dá sa zavesiť za preindexovanie.
  */

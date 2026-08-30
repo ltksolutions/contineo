@@ -10,13 +10,14 @@ import { notFound, redirect } from "next/navigation"
 import Link from "next/link"
 import { platformContext } from "@/lib/admin"
 import { createTenantAction } from "../actions"
+import { normalizeQuery, type RawQuery } from "@/lib/urlParams"
 
 export const dynamic = "force-dynamic"
 
 export default async function NewTenantPage({
   searchParams,
 }: {
-  searchParams: Promise<{ sprava?: string }>
+  searchParams: Promise<RawQuery>
 }) {
   const ctx = await platformContext()
   if (ctx.state !== "ready") {
@@ -24,7 +25,7 @@ export default async function NewTenantPage({
     notFound()
   }
 
-  const { sprava: message } = await searchParams
+  const { msg: message } = normalizeQuery<{ msg?: string }>(await searchParams)
 
   return (
     <div className="obal" style={{ padding: "28px 20px 80px", maxWidth: 620 }}>

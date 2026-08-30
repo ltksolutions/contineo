@@ -228,7 +228,7 @@ s jedným dokumentom.
 
 ## D59 — kontrola konzistencie
 
-`npm run kontrola` overí invarianty a **nič neopravuje** — oprava je vždy
+`npm run check` overí invarianty a **nič neopravuje** — oprava je vždy
 rozhodnutie (preindexovať, dopublikovať, nechať tak), a skript, ktorý „to
 spraví za teba", by pri prvej nečakanej odchýlke prepísal niečo, čo nikto
 nechcel. Návratový kód 1 pri rozpore, takže sa dá zavesiť za preindexovanie.
@@ -252,7 +252,7 @@ sa inak nezistil.
 
 ## Doplnenie pôvodných súborov a hromadné preindexovanie
 
-### `npm run subory:doplnit`
+### `npm run files:attach`
 
 Deväť noriem SFZ prišlo do systému ako `.md` súbory z ručného prevodu; PDF
 pritom máme v `data/vzorky/`. Skript ich pripojí ako pôvodný súbor, takže sa

@@ -1,8 +1,8 @@
 #!/bin/bash
 #
-# nastav_ecomail.sh — nastaví a OVERÍ kľúč k Ecomailu.
+# set_ecomail.sh — nastaví a OVERÍ kľúč k Ecomailu.
 #
-#     bash scripts/nastav_ecomail.sh 'kluc-z-ecomailu'
+#     bash scripts/set_ecomail.sh 'kluc-z-ecomailu'
 #
 # Kľúč sa najprv vyskúša priamo proti Ecomailu a až potom uloží do Vercelu.
 # Opačné poradie by znamenalo nasadiť a čakať, kým sa niekto pokúsi prihlásiť.
@@ -17,7 +17,7 @@ export PATH=/opt/homebrew/bin:/usr/local/bin:$PATH
 
 KLUC="${1:-}"
 if [ -z "$KLUC" ]; then
-  echo "Použitie: bash scripts/nastav_ecomail.sh 'kluc-z-ecomailu'"
+  echo "Použitie: bash scripts/set_ecomail.sh 'kluc-z-ecomailu'"
   exit 1
 fi
 

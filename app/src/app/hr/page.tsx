@@ -18,13 +18,14 @@ import { tenantStyle } from "@/components/TenantHeader"
 import { formatDate } from "@/lib/i18n"
 import Notice from "@/components/Notice"
 import { revokeAction } from "./actions"
+import { normalizeQuery, type RawQuery } from "@/lib/urlParams"
 
 export const dynamic = "force-dynamic"
 
 export default async function HrOverviewPage({
   searchParams,
 }: {
-  searchParams: Promise<{ sprava?: string; chyba?: string }>
+  searchParams: Promise<RawQuery>
 }) {
   const ctx = await hrContext()
   if (ctx.state !== "ready") {
@@ -32,7 +33,7 @@ export default async function HrOverviewPage({
     notFound()
   }
 
-  const { sprava: message, chyba: error } = await searchParams
+  const { msg: message, error } = normalizeQuery<{ msg?: string; error?: string }>(await searchParams)
   const overview = await assignmentOverviews(ctx.person.companyCode)
   const branding = brandingView(ctx.tenant)
   const language = ctx.person.language

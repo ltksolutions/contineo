@@ -1,7 +1,7 @@
 /**
- * stav.mjs — read-only obhliadka: čo v databáze naozaj je.
+ * status.mjs — read-only obhliadka: čo v databáze naozaj je.
  *
- *     npm run stav
+ *     npm run status
  *
  * Vznikol 2026-08-28 z konkrétnej potreby: pred overovaním Fázy 9a nebolo
  * odkiaľ zistiť, či sa cez `persons` už niekto prihlásil. Odpoveď (nie,
@@ -24,7 +24,7 @@ const ERR = "\x1b[31m✘\x1b[0m"
 
 if (!process.env.MONGODB_URI) {
   console.error(`${ERR} Chýba MONGODB_URI (app/.env.local alebo export).`)
-  console.error(`  set -a && . ./.env.local && set +a && npm run stav`)
+  console.error(`  set -a && . ./.env.local && set +a && npm run status`)
   process.exit(1)
 }
 

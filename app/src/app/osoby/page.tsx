@@ -13,6 +13,7 @@ import { brandingView } from "@/lib/tenants"
 import { tenantStyle } from "@/components/TenantHeader"
 import { formatDate } from "@/lib/i18n"
 import Notice from "@/components/Notice"
+import { normalizeQuery, type RawQuery } from "@/lib/urlParams"
 
 export const dynamic = "force-dynamic"
 
@@ -25,7 +26,7 @@ const STATUSES = {
 export default async function PeoplePage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string; sprava?: string; chyba?: string }>
+  searchParams: Promise<RawQuery>
 }) {
   const ctx = await peopleContext()
   if (ctx.state !== "ready") {
@@ -33,7 +34,7 @@ export default async function PeoplePage({
     notFound()
   }
 
-  const { q, sprava: message, chyba: error } = await searchParams
+  const { q, msg: message, error } = normalizeQuery<{ q?: string; msg?: string; error?: string }>(await searchParams)
   const people = await listPeople(ctx.person.companyCode, q)
   const branding = brandingView(ctx.tenant)
   const language = ctx.person.language

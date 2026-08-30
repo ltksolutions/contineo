@@ -1,5 +1,5 @@
 /**
- * utvary_z_textu.mjs — založí oddelenia z toho, čo je zapísané pri ľuďoch (D49).
+ * departments_from_text.mjs — založí oddelenia z toho, čo je zapísané pri ľuďoch (D49).
  *
  * Do zavedenia štruktúry bol oddelenie **voľný text** na osobe. Tento skript ho
  * prevedie na stromové oddelenia a ľudí do nich zaradí.
@@ -17,8 +17,8 @@
  *
  * Predvolene **nič nezapisuje**.
  *
- *   npm run utvary -- --tenant SFZ
- *   npm run utvary -- --tenant SFZ --zapis
+ *   npm run departments -- --tenant SFZ
+ *   npm run departments -- --tenant SFZ --zapis
  */
 
 import { randomUUID } from "node:crypto"
@@ -35,7 +35,7 @@ const TENANT = arg("--tenant")
 const WRITE = process.argv.includes("--zapis")
 
 if (!TENANT) {
-  console.error("Použitie: npm run utvary -- --tenant <KOD> [--zapis]")
+  console.error("Použitie: npm run departments -- --tenant <KOD> [--zapis]")
   process.exit(1)
 }
 if (!process.env.MONGODB_URI) {

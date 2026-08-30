@@ -34,7 +34,7 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ### Added (2026-08-30 — pôvodné súbory a hromadné preindexovanie)
 
-- **Pôvodné PDF doplnené k deviatim normám SFZ** (`npm run subory:doplnit`). Prišli do systému ako `.md` z ručného prevodu, ale PDF sme mali celý čas v repozitári — bez nich sa v editore nedalo porovnať text s originálom. Text sa pritom **nedotkol**: skript pripája súbor, neprevádza dokument. Priradenie je vypísané ručne, nie hádané z názvu súboru — uhádnuté priradenie by pripojilo cudzie PDF k norme, čo je horšie než žiadne. V zázname o prevode je poctivo napísané, že text nevznikol prevodom toho PDF.
+- **Pôvodné PDF doplnené k deviatim normám SFZ** (`npm run files:attach`). Prišli do systému ako `.md` z ručného prevodu, ale PDF sme mali celý čas v repozitári — bez nich sa v editore nedalo porovnať text s originálom. Text sa pritom **nedotkol**: skript pripája súbor, neprevádza dokument. Priradenie je vypísané ručne, nie hádané z názvu súboru — uhádnuté priradenie by pripojilo cudzie PDF k norme, čo je horšie než žiadne. V zázname o prevode je poctivo napísané, že text nevznikol prevodom toho PDF.
 - **Hromadné preindexovanie** v záložke Členenie. Ukazuje, koľko dokumentov by nový profil narezal inak — počítané naozajstným narezaním, nie odhadom, lebo inak sa nedá povedať, či zmena parametra na tomto obsahu vôbec niečo spraví. Spracuje najviac 25 naraz: pád na časovom strope uprostred by nechal časť dokumentov narezanú po starom. Opakovanie je lacné, hotové sa preskočia.
 
 ### Changed (2026-08-30 — identita znenia oddelená od členenia)
@@ -50,7 +50,7 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 - **Profil členenia per organizácia (D58)** v `/organizacia`, záložka **Členenie**: slovo článku a prílohy, prah na hlavičky, cieľová veľkosť úseku. Jeden algoritmus, parametre navonok — vlastný chunker per zákazník by znamenal N kópií jedného pravidla a chyba v jednej by sa prejavila tým, že model odcituje nesprávny článok o pol roka.
 - **Konfiguruje sa slovom, nie regulárnym výrazom**, a čísla sa držia v rozumnom rozsahu. Vzor od zákazníka je vec, ktorú nikto neodladí — a spôsob, ako jedným zápisom zavesiť spracovanie dokumentu.
 - **Predvolený profil reže presne tak ako doteraz** — overené porovnaním na všetkých desiatich vzorových dokumentoch (10 zhôd, 0 rozdielov).
-- **`npm run kontrola` (D59)** — overí, že aktívne úseky ukazujú na existujúce znenia, že dokument nemá dve aktívne členenia, že potvrdené znenie má text, že publikované znenie má úseky, že model vektorov sedí a že cesty priečinkov súhlasia. Nič neopravuje: oprava je vždy rozhodnutie. Prvý beh našiel skutočný nález (testovací dokument bez úsekov).
+- **`npm run check` (D59)** — overí, že aktívne úseky ukazujú na existujúce znenia, že dokument nemá dve aktívne členenia, že potvrdené znenie má text, že publikované znenie má úseky, že model vektorov sedí a že cesty priečinkov súhlasia. Nič neopravuje: oprava je vždy rozhodnutie. Prvý beh našiel skutočný nález (testovací dokument bez úsekov).
 - 12 nových testov (spolu 778).
 
 ### Added (2026-08-30 — knižnica: priečinky, filtre, WYSIWYG, vlastné číselníky)
@@ -120,7 +120,7 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 - **Materializovaná cesta na osobe — vedomá výnimka z D27.** O príslušnosti rozhoduje `matchesAudience()`, čistá funkcia bez databázy a jediné miesto s tým pravidlom. Bez cesty by musela dostať celý strom (a prestala by byť čistá), alebo by vznikla druhá kópia pravidla v agregácii — a tá by sa s prvou rozišla presne pri reorganizácii. Cena je zapísaná v kóde: pri presune oddelenia sa cesty prepočítajú celému podstromu a zaradenie osoby sa zapisuje spolu s cestou v jednom zápise.
 - **Názov oddelenia sa do pridelenia ukladá ako kópia**, rovnako ako názov dokumentu: oddelenie sa premenuje a o rok musí byť čitateľné, komu sa vtedy prideľovalo. Príslušnosť sa vždy počíta z identifikátora, nie z názvu.
 - **Zrušiť sa dá len prázdny oddelenie bez podriadených**, a strom má najviac 6 úrovní — hlbší sa na telefóne nedá prehľadne ukázať a to najhlbšie v ňom býva v skutočnosti skupina.
-- **`npm run utvary -- --tenant SFZ`** prevedie existujúce textové oddelenia na stromové a ľudí do nich zaradí. Predvolene nič nezapisuje. Strom po prevode je **plochý**: zo zápisu „Odbor médií" sa nedá vyčítať, pod koho patrí, a hádať to podľa podreťazcov by vyrobilo štruktúru, ktorá vyzerá hotovo a nesedí.
+- **`npm run departments -- --tenant SFZ`** prevedie existujúce textové oddelenia na stromové a ľudí do nich zaradí. Predvolene nič nezapisuje. Strom po prevode je **plochý**: zo zápisu „Odbor médií" sa nedá vyčítať, pod koho patrí, a hádať to podľa podreťazcov by vyrobilo štruktúru, ktorá vyzerá hotovo a nesedí.
 - 19 nových testov (spolu 707).
 
 ### Added (2026-08-29 — organizácia si spravuje nastavenie sama)
@@ -209,12 +209,12 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ### Added (2026-08-29 — ostré normy dostali platné znenie)
 
-- **`npm run verzie`** — deväť noriem SFZ prišlo RAG importom a `versions[]` nemalo vôbec: `versionId` navrchu, text v `document_chunks`. Pre vyhľadávanie to stačilo, pre potvrdzovanie nie — `effectiveVersion()` číta výhradne `versions[]` (D6, D25), takže všetkých deväť bolo v onboardingu „bez platného znenia".
+- **`npm run versions`** — deväť noriem SFZ prišlo RAG importom a `versions[]` nemalo vôbec: `versionId` navrchu, text v `document_chunks`. Pre vyhľadávanie to stačilo, pre potvrdzovanie nie — `effectiveVersion()` číta výhradne `versions[]` (D6, D25), takže všetkých deväť bolo v onboardingu „bez platného znenia".
   - Verzia dostane **ten istý `versionId`**, aký už majú dokument aj jeho chunky. Potvrdenie sa tým viaže presne na to znenie, z ktorého systém odpovedá; nové číslo by vytvorilo druhú pravdu o tom istom texte.
   - Text sa poskladá z chunkov v poradí `chunkIndex`. Chunky sa neprekrývajú — sú to články, každý uvedený hlavičkou „Dokument › Článok N", ktorá je tam kvôli vyhľadávaniu; pri súvislom čítaní sa odstráni a nahradí nadpisom.
   - Dátum platnosti skript **nedopĺňa odhadom**. Musí ho zadať človek (`--od`), pretože to je presne to rozhodnutie, ktoré systém spravíť nevie (D6, D25). Bez `--zapis` nezapisuje nič.
-- **`npm run platnost`** — nastaví dátum platnosti znenia. Vyžaduje `--zdroj`, teda odkiaľ ten dátum je; citácia sa uloží k verzii (`versions[].effectiveFromSource`). Dátum sa doslovne prepisuje do potvrdzovacej formulky a tým aj do záznamu v `acknowledgements` (D28) — o rok musí byť možné zistiť, či pochádza z ustanovenia o účinnosti, alebo to bol niečí odhad. Bez `--zapis` nezapisuje nič.
-- **Osem noriem SFZ má skutočný dátum účinnosti**, prevzatý z ustanovenia o účinnosti v ich vlastnom texte (`scripts/datumy_sfz.sh` drží citácie):
+- **`npm run validity`** — nastaví dátum platnosti znenia. Vyžaduje `--zdroj`, teda odkiaľ ten dátum je; citácia sa uloží k verzii (`versions[].effectiveFromSource`). Dátum sa doslovne prepisuje do potvrdzovacej formulky a tým aj do záznamu v `acknowledgements` (D28) — o rok musí byť možné zistiť, či pochádza z ustanovenia o účinnosti, alebo to bol niečí odhad. Bez `--zapis` nezapisuje nič.
+- **Osem noriem SFZ má skutočný dátum účinnosti**, prevzatý z ustanovenia o účinnosti v ich vlastnom texte (`scripts/sfz_dates.sh` drží citácie):
   | norma | účinnosť od |
   |---|---|
   | Organizačný a návštevný poriadok | 1. 7. 2014 |
@@ -249,7 +249,7 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 - **Parametrové vlastnosti v `UnknownHostError`** (`constructor(public readonly …)`) Node pri spúšťaní skriptov cez `--import ts-hook` odstrániť nevie (`ERR_UNSUPPORTED_TYPESCRIPT_SYNTAX`). Kým `tenants.ts` nikto zo skriptov neimportoval, nevadilo to; odkedy `tenant_set.mjs` volá pravidlá z `lib/`, musí byť načítateľný. Prepísané na priradenie v tele — rovnaký kód, bez syntaxe, ktorú Node odmieta.
 - **`node scripts/tenant_set.mjs` už nefunguje**, skript importuje z `src/lib` a potrebuje ts-hook: `npm run tenant -- …`. Príkazy v dokumentácii prepísané.
 
-### Added (2026-08-28 — `npm run domeny`)
+### Added (2026-08-28 — `npm run domains`)
 
 - **Stav domén tenantov jedným príkazom.** Pre každú doménu: či je vo Verceli, či zákazník už nastavil DNS, či mu v zóne nekolidujú staré záznamy, a ak čaká, presný `CNAME`. Odpovedá na otázku „prečo mu tá doména ešte nejde" bez klikania v dashboarde.
 - **`--poslat` odošle pokyny zákazníkovi** na `branding.supportEmail` (`--komu` ju prebije) cez Ecomail. Hromadné rozposielanie zámerne nie je — `--poslat` vyžaduje `--company`.
@@ -320,7 +320,7 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 - **Aj názov v záložke prehliadača je informácia.** `metadata` sa zmenila na `generateMetadata`: neznámy hostiteľ dostane „Stránka sa nenašla", nie „Contineo — testovacie rozhranie".
 - **Výpadok databázy sa od cudzej domény odlišuje.** `null` z `currentTenant()` znamená doménu, ktorá nepatrí nikomu; výpadok vyhodí výnimku a vtedy obal aj názov zostávajú — nejde o cudziu doménu, ale o našu vlastnú, ktorá sa práve nedá overiť.
 - **Slovenská stránka 404.** Dovtedy tam bol Nextov predvolený anglický text „This page could not be found.", ktorý v slovenskom rozhraní vyzerá skôr ako porucha servera než ako preklep v adrese.
-- **`npm run stav` vypisuje aj tenantov** — doména → `companyCode`. Pri „prečo mi tá doména nejde" je to prvá vec, ktorú treba vidieť.
+- **`npm run status` vypisuje aj tenantov** — doména → `companyCode`. Pri „prečo mi tá doména nejde" je to prvá vec, ktorú treba vidieť.
 - **`NASADENIE_app.md`: doména tenanta žije na troch miestach** (DNS, projekt vo Verceli, kolekcia `tenants`) a prečo to nesmie byť „Redirect" — presmerovanie mení hlavičku `Host`, z ktorej sa určuje tenant.
 
 ### Added (2026-08-28 — pätička a menu len pre prihlásených)

@@ -173,7 +173,7 @@ Testy vyhodnocovacej logiky: `python3 test_scoring.py`.
 
   **Nezávislosť drží rozhranie, nie dohoda.** Pri prekryvových otázkach sa cudzí posudok nezobrazí, kým sa hodnotiteľ nevyjadrí sám. Vidí len, že otázku už niekto posudzoval, nie jeho záver. Bez tohto by sme merali, či prvému uveril, nie či sa zhodnú.
 
-  **Nezhoda je nález, nie chyba merania.** Otázka, na ktorej sa dvaja experti rozídu, je otázka, kde je doména neurčitá — a teda kde systém nemá odpovedať autoritatívne, ale ponúknuť eskaláciu. Sada má na to typ pasce `ambiguous_conflict`, zatiaľ len podľa nášho odhadu; nezhoda ho overí v dátach. Zoznam sporných otázok vypíše `scripts/hodnotenia_prehlad.mjs`.
+  **Nezhoda je nález, nie chyba merania.** Otázka, na ktorej sa dvaja experti rozídu, je otázka, kde je doména neurčitá — a teda kde systém nemá odpovedať autoritatívne, ale ponúknuť eskaláciu. Sada má na to typ pasce `ambiguous_conflict`, zatiaľ len podľa nášho odhadu; nezhoda ho overí v dátach. Zoznam sporných otázok vypíše `scripts/ratings_overview.mjs`.
 
   Zhoda sa počíta ako holý podiel, nie Cohenovo kappa: pri dvoch hodnotiteľoch a niekoľkých desiatkach otázok by kappa dávala presnosť, ktorú tie čísla neunesú — a zoznam sporných otázok je aj tak užitočnejší než jedno číslo.
 

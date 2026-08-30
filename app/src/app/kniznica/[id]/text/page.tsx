@@ -23,6 +23,7 @@ import { formatDate } from "@/lib/i18n"
 import Notice from "@/components/Notice"
 import TextEditor from "@/components/TextEditor"
 import { saveTextAction, sendToModelAction, decideOnDraftAction } from "../../actions"
+import { normalizeQuery, type RawQuery } from "@/lib/urlParams"
 
 export const dynamic = "force-dynamic"
 
@@ -31,7 +32,7 @@ export default async function EditorPage({
   searchParams,
 }: {
   params: Promise<{ id: string }>
-  searchParams: Promise<{ sprava?: string; chyba?: string }>
+  searchParams: Promise<RawQuery>
 }) {
   const ctx = await libraryContext()
   if (ctx.state !== "ready") {
@@ -40,7 +41,7 @@ export default async function EditorPage({
   }
 
   const { id } = await params
-  const { sprava: message, chyba: error } = await searchParams
+  const { msg: message, error } = normalizeQuery<{ msg?: string; error?: string }>(await searchParams)
   const documentId = decodeURIComponent(id)
   const d = await libraryDetail(ctx.tenant.companyCode, documentId)
   if (!d) notFound()

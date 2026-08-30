@@ -100,7 +100,7 @@ export async function uploadAction(fd: FormData) {
     revalidatePath("/kniznica")
     // Rovno do editora: po nahratí nasleduje čítanie prevedeného textu
     // a hľadať dokument v zozname je zbytočný krok.
-    redirect(`/kniznica/${encodeURIComponent(v.documentId)}/text?sprava=${encodeURIComponent(
+    redirect(`/kniznica/${encodeURIComponent(v.documentId)}/text?msg=${encodeURIComponent(
       v.upozornenia.length
         ? `Prevedené. ${v.upozornenia.join(" ")}`
         : "Prevedené. Prečítaj text a porovnaj ho s originálom.",
@@ -132,7 +132,7 @@ export async function saveTextAction(fd: FormData) {
   }
 
   revalidatePath(`/kniznica/${id}`)
-  redirect(`/kniznica/${encodeURIComponent(id)}/text?sprava=${encodeURIComponent(message)}${error ? "&chyba=1" : ""}`)
+  redirect(`/kniznica/${encodeURIComponent(id)}/text?msg=${encodeURIComponent(message)}${error ? "&error=1" : ""}`)
 }
 
 export async function publishVersionAction(fd: FormData) {
@@ -163,7 +163,7 @@ export async function publishVersionAction(fd: FormData) {
 
   revalidatePath("/kniznica")
   revalidatePath(`/kniznica/${id}`)
-  redirect(`/kniznica/${encodeURIComponent(id)}?sprava=${encodeURIComponent(message)}${error ? "&chyba=1" : ""}`)
+  redirect(`/kniznica/${encodeURIComponent(id)}?msg=${encodeURIComponent(message)}${error ? "&error=1" : ""}`)
 }
 
 /** Pomôcka pre obrazovku: aký `documentId` z týchto metadát vznikne. */
@@ -221,7 +221,7 @@ export async function sendToModelAction(fd: FormData) {
     error = true
   }
 
-  redirect(`/kniznica/${encodeURIComponent(id)}/text?sprava=${encodeURIComponent(message)}${error ? "&chyba=1" : ""}`)
+  redirect(`/kniznica/${encodeURIComponent(id)}/text?msg=${encodeURIComponent(message)}${error ? "&error=1" : ""}`)
 }
 
 /** Prijme alebo zahodí návrh modelu. Prijatie je vedomý krok človeka. */
@@ -256,7 +256,7 @@ export async function decideOnDraftAction(fd: FormData) {
   }
 
   revalidatePath(`/kniznica/${id}`)
-  redirect(`/kniznica/${encodeURIComponent(id)}/text?sprava=${encodeURIComponent(message)}${error ? "&chyba=1" : ""}`)
+  redirect(`/kniznica/${encodeURIComponent(id)}/text?msg=${encodeURIComponent(message)}${error ? "&error=1" : ""}`)
 }
 
 /** Uloží údaje o dokumente z detailu. */
@@ -283,7 +283,7 @@ export async function saveDocumentMetadataAction(fd: FormData) {
 
   revalidatePath("/kniznica")
   revalidatePath(`/kniznica/${id}`)
-  redirect(`/kniznica/${encodeURIComponent(id)}?sprava=${encodeURIComponent(message)}${error ? "&chyba=1" : ""}`)
+  redirect(`/kniznica/${encodeURIComponent(id)}?msg=${encodeURIComponent(message)}${error ? "&error=1" : ""}`)
 }
 
 
@@ -291,9 +291,9 @@ export async function saveDocumentMetadataAction(fd: FormData) {
 
 /** Späť na zoznam so zachovaným filtrom — inak sa človek po každej zmene stratí. */
 function backToLibrary(fd: FormData, message: string, error = false): never {
-  const q = new URLSearchParams({ sprava: message })
-  if (error) q.set("chyba", "1")
-  for (const field of ["priecinok", "hladat", "stav", "category", "language", "accessLevel", "tag"]) {
+  const q = new URLSearchParams({ msg: message })
+  if (error) q.set("error", "1")
+  for (const field of ["folder", "search", "status", "category", "language", "accessLevel", "tag"]) {
     const v = fieldText(fd, field)
     if (v) q.set(field, v)
   }
@@ -368,7 +368,7 @@ export async function assignToFolderAction(fd: FormData) {
   }
   revalidatePath("/kniznica")
   revalidatePath(`/kniznica/${id}`)
-  redirect(`/kniznica/${encodeURIComponent(id)}?sprava=${encodeURIComponent(message)}${error ? "&chyba=1" : ""}`)
+  redirect(`/kniznica/${encodeURIComponent(id)}?msg=${encodeURIComponent(message)}${error ? "&error=1" : ""}`)
 }
 
 /** Preindexuje dokument podľa aktuálneho profilu členenia (D57). */
@@ -391,7 +391,7 @@ export async function reindexDocumentAction(fd: FormData) {
   }
 
   revalidatePath(`/kniznica/${id}`)
-  redirect(`/kniznica/${encodeURIComponent(id)}?sprava=${encodeURIComponent(message)}${error ? "&chyba=1" : ""}`)
+  redirect(`/kniznica/${encodeURIComponent(id)}?msg=${encodeURIComponent(message)}${error ? "&error=1" : ""}`)
 }
 
 /** Oprava údajov už publikovaného znenia (D57). */
@@ -423,7 +423,7 @@ export async function fixVersionAction(fd: FormData) {
   }
 
   revalidatePath(`/kniznica/${id}`)
-  redirect(`/kniznica/${encodeURIComponent(id)}?sprava=${encodeURIComponent(message)}${error ? "&chyba=1" : ""}`)
+  redirect(`/kniznica/${encodeURIComponent(id)}?msg=${encodeURIComponent(message)}${error ? "&error=1" : ""}`)
 }
 
 /**

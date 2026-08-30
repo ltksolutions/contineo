@@ -28,6 +28,7 @@ import { brandingView } from "@/lib/tenants"
 import { tenantStyle } from "@/components/TenantHeader"
 import { formatDate } from "@/lib/i18n"
 import { assignAction } from "../actions"
+import { normalizeQuery, type RawQuery } from "@/lib/urlParams"
 
 export const dynamic = "force-dynamic"
 
@@ -37,17 +38,19 @@ function asArray(v: string | string[] | undefined): string[] {
   return Array.isArray(v) ? v : [v]
 }
 
+type Query = {
+  error?: string
+  document?: string | string[]
+  audience?: string | string[]
+  vsetci?: string
+  adresy?: string
+  dovod?: string
+}
+
 export default async function AssignPage({
   searchParams,
 }: {
-  searchParams: Promise<{
-    chyba?: string
-    dokument?: string | string[]
-    publikum?: string | string[]
-    vsetci?: string
-    adresy?: string
-    dovod?: string
-  }>
+  searchParams: Promise<RawQuery>
 }) {
   const ctx = await hrContext()
   if (ctx.state !== "ready") {
@@ -55,7 +58,7 @@ export default async function AssignPage({
     notFound()
   }
 
-  const q = await searchParams
+  const q = normalizeQuery<Query>(await searchParams)
   const [documents, audiences, tree, departmentCounts] = await Promise.all([
     assignableDocuments(ctx.person.companyCode),
     audiencesInOrg(ctx.person.companyCode),
@@ -66,8 +69,8 @@ export default async function AssignPage({
   const branding = brandingView(ctx.tenant)
   const language = ctx.person.language
 
-  const selectedDocuments = new Set(asArray(q.dokument))
-  const selectedAudiences = new Set(asArray(q.publikum))
+  const selectedDocuments = new Set(asArray(q.document))
+  const selectedAudiences = new Set(asArray(q.audience))
 
   return (
     <div className="obal" style={{ padding: "28px 20px 80px", maxWidth: 680, ...tenantStyle(branding) }}>
@@ -81,12 +84,12 @@ export default async function AssignPage({
         pribudne novšie, staré pridelenie zaň neplatí — to je zámer.
       </p>
 
-      {q.chyba && (
+      {q.error && (
         <p
           className="karta"
           style={{ padding: "12px 16px", margin: "0 0 18px", fontSize: 14.5, color: "var(--warn-fg)" }}
         >
-          {q.chyba}
+          {q.error}
         </p>
       )}
 
@@ -105,7 +108,7 @@ export default async function AssignPage({
                   <label className="hr-volba">
                     <input
                       type="checkbox"
-                      name="dokument"
+                      name="document"
                       value={d.documentId}
                       defaultChecked={selectedDocuments.has(d.documentId)}
                     />
@@ -153,7 +156,7 @@ export default async function AssignPage({
                       >
                         <input
                           type="checkbox"
-                          name="publikum"
+                          name="audience"
                           value={`department:${department.id}`}
                           defaultChecked={selectedAudiences.has(`department:${department.id}`)}
                         />
@@ -171,7 +174,7 @@ export default async function AssignPage({
               <p className="tichy pole-napoveda" style={{ margin: "10px 0 0" }}>
                 V organizácii zatiaľ nie sú skupiny ani trasy. Skupiny sa
                 zadávajú pri importe osôb (stĺpec &bdquo;skupiny&ldquo;) alebo príkazom
-                <code> npm run osoba</code>.
+                <code> npm run person</code>.
               </p>
             ) : (
               <>
@@ -186,7 +189,7 @@ export default async function AssignPage({
                         <label key={`g-${s.hodnota}`} className="stitok stitok--volba stitok--pole">
                           <input
                             type="checkbox"
-                            name="publikum"
+                            name="audience"
                             value={`group:${s.hodnota}`}
                             defaultChecked={selectedAudiences.has(`group:${s.hodnota}`)}
                           />
@@ -207,7 +210,7 @@ export default async function AssignPage({
                         <label key={`t-${t.hodnota}`} className="stitok stitok--volba stitok--pole">
                           <input
                             type="checkbox"
-                            name="publikum"
+                            name="audience"
                             value={`track:${t.hodnota}`}
                             defaultChecked={selectedAudiences.has(`track:${t.hodnota}`)}
                           />

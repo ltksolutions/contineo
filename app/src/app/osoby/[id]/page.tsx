@@ -19,6 +19,7 @@ import { brandingView } from "@/lib/tenants"
 import { tenantStyle } from "@/components/TenantHeader"
 import { formatDate, UI_LANGUAGES } from "@/lib/i18n"
 import { savePersonAction, togglePersonStatusAction } from "../actions"
+import { normalizeQuery, type RawQuery } from "@/lib/urlParams"
 
 export const dynamic = "force-dynamic"
 
@@ -47,7 +48,7 @@ export default async function PersonDetailPage({
   searchParams,
 }: {
   params: Promise<{ id: string }>
-  searchParams: Promise<{ sprava?: string; chyba?: string }>
+  searchParams: Promise<RawQuery>
 }) {
   const ctx = await peopleContext()
   if (ctx.state !== "ready") {
@@ -56,7 +57,7 @@ export default async function PersonDetailPage({
   }
 
   const { id } = await params
-  const { sprava: message, chyba: error } = await searchParams
+  const { msg: message, error } = normalizeQuery<{ msg?: string; error?: string }>(await searchParams)
   const o = await loadPersonById(ctx.person.companyCode, id)
   // Neexistuje vs. patrí inej organizácii je zámerne tá istá odpoveď (D32).
   if (!o) notFound()
@@ -151,7 +152,7 @@ export default async function PersonDetailPage({
             {treeRows.length === 0 ? (
               <>
                 Štruktúra je zatiaľ prázdna. Oddelenia sa zakladajú
-                v <Link href="/organizacia?zalozka=oddelenia">nastavení organizácie</Link>.
+                v <Link href="/organizacia?tab=departments">nastavení organizácie</Link>.
               </>
             ) : (
               <>

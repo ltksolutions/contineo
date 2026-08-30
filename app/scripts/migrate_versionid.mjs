@@ -1,5 +1,5 @@
 /**
- * migracia_versionid.mjs — versionId z textu, nie z chunkov (D57).
+ * migrate_versionid.mjs — versionId z textu, nie z chunkov (D57).
  *
  * Dovtedy sa `versionId` počítal z výsledných chunkov. Znamenalo to, že
  * vyladenie chunkera vyrobilo novú verziu — a tým aj povinnosť potvrdiť
@@ -12,8 +12,8 @@
  * **Robí sa raz a teraz preto, že potvrdení je nula.** O pol roka by to bol
  * zásah do dôkazných záznamov.
  *
- *     node --env-file=.env.local scripts/migracia_versionid.mjs
- *     node --env-file=.env.local scripts/migracia_versionid.mjs --zapis
+ *     node --env-file=.env.local scripts/migrate_versionid.mjs
+ *     node --env-file=.env.local scripts/migrate_versionid.mjs --zapis
  */
 
 import { createHash } from "node:crypto"
@@ -117,6 +117,6 @@ for (const m of mapping) {
 }
 
 console.log(`\n${OK} prepísané: ${changedVersions} znení, ${chunkCount} úsekov, ${acknowledgements} potvrdení`)
-console.log(`${INFO} spusti kontrolu: npm run kontrola\n`)
+console.log(`${INFO} spusti kontrolu: npm run check\n`)
 
 await client.close()

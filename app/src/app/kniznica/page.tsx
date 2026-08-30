@@ -23,6 +23,7 @@ import { brandingView } from "@/lib/tenants"
 import { tenantStyle } from "@/components/TenantHeader"
 import { formatDate } from "@/lib/i18n"
 import Notice from "@/components/Notice"
+import { normalizeQuery, type RawQuery } from "@/lib/urlParams"
 
 export const dynamic = "force-dynamic"
 
@@ -42,10 +43,7 @@ function formatSize(bytes: number): string {
 export default async function LibraryPage({
   searchParams,
 }: {
-  searchParams: Promise<{
-    sprava?: string; chyba?: string; hladat?: string; stav?: string
-    priecinok?: string; category?: string; language?: string; accessLevel?: string; tag?: string
-  }>
+  searchParams: Promise<RawQuery>
 }) {
   const ctx = await libraryContext()
   if (ctx.state !== "ready") {
@@ -53,8 +51,11 @@ export default async function LibraryPage({
     notFound()
   }
 
-  const q = await searchParams
-  const { sprava: message, chyba: error, hladat: search, stav: state, priecinok: folder, category, language, accessLevel, tag } = q
+  const q = normalizeQuery<{
+    msg?: string; error?: string; search?: string; status?: string
+    folder?: string; category?: string; language?: string; accessLevel?: string; tag?: string
+  }>(await searchParams)
+  const { msg: message, error, search, status: state, folder, category, language, accessLevel, tag } = q
   const branding = brandingView(ctx.tenant)
   const uiLanguage = ctx.person.language
   const extras = tenantExtras(ctx.tenant)
@@ -98,7 +99,7 @@ export default async function LibraryPage({
       <form className="audit-filter" method="get">
         <label className="pole" style={{ flex: "1 1 220px", margin: 0 }}>
           <span className="pole-popis">Hľadať</span>
-          <input className="pole-vstup" name="hladat" defaultValue={search ?? ""} placeholder="názov alebo kľúč" />
+          <input className="pole-vstup" name="search" defaultValue={search ?? ""} placeholder="názov alebo kľúč" />
         </label>
 
         <div className="pole" style={{ flex: "0 1 180px", margin: 0 }}>
@@ -124,7 +125,7 @@ export default async function LibraryPage({
         <div className="pole" style={{ flex: "0 1 150px", margin: 0 }}>
           <span className="pole-popis">Stav</span>
           <Select
-            meno="stav"
+            meno="status"
             volby={[
               { hodnota: "", popis: "— všetky —" },
               { hodnota: "publikovane", popis: "publikované" },
@@ -137,7 +138,7 @@ export default async function LibraryPage({
 
         {/* Priečinok sa vyberá kliknutím v strome vedľa, nie tu — ale musí sa
             preniesť, inak by odoslanie filtra vyskočilo z priečinka von. */}
-        {folder && <input type="hidden" name="priecinok" value={folder} />}
+        {folder && <input type="hidden" name="folder" value={folder} />}
         {language && <input type="hidden" name="language" value={language} />}
         {accessLevel && <input type="hidden" name="accessLevel" value={accessLevel} />}
 

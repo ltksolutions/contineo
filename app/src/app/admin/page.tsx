@@ -111,7 +111,7 @@ export default async function TenantAdminPage() {
       </ul>
 
       <p className="tichy" style={{ fontSize: 13, marginTop: 20 }}>
-        Stav domén vo Verceli ukáže <code>npm run domeny</code>; do obrazovky
+        Stav domén vo Verceli ukáže <code>npm run domains</code>; do obrazovky
         pribudne v rozsahu C spolu so zakladaním tenantov.
       </p>
     </div>

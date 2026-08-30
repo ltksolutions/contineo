@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# datumy_sfz.sh — dátumy účinnosti deviatich noriem SFZ.
+# sfz_dates.sh — dátumy účinnosti deviatich noriem SFZ.
 #
 # Každý dátum je prevzatý z ustanovenia o účinnosti v texte samotnej normy;
 # citácia ide do databázy spolu s ním (`versions[].effectiveFromSource`).
@@ -16,12 +16,12 @@
 #     VV SFZ" a dátum schválenia v texte nie je. Zostáva zástupný, označený
 #     v `effectiveFromSource`, a treba ho doplniť z uznesenia VV SFZ.
 #
-#   bash scripts/datumy_sfz.sh              # ukáže, čo by sa zmenilo
-#   ZAPIS=--zapis bash scripts/datumy_sfz.sh
+#   bash scripts/sfz_dates.sh              # ukáže, čo by sa zmenilo
+#   ZAPIS=--zapis bash scripts/sfz_dates.sh
 #
 set -e
 cd "$(dirname "$0")/.."
-run() { npm run platnost --silent -- --doc "$1" --od "$2" --zdroj "$3" $ZAPIS; }
+run() { npm run validity --silent -- --doc "$1" --od "$2" --zdroj "$3" $ZAPIS; }
 
 run sfz:disciplinarny_poriadok 2023-07-01 \
   "čl. 91: „Tento disciplinárny poriadok bol schválený výkonným výborom dňa 6. júna 2023 a nadobúda účinnosť 1. júla 2023.\""

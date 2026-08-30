@@ -19,6 +19,7 @@ import { tenantStyle } from "@/components/TenantHeader"
 import { requestHostname } from "@/lib/session"
 import { formatDate, normalizeLanguage } from "@/lib/i18n"
 import { sendNotificationAction } from "../../actions"
+import { normalizeQuery, type RawQuery } from "@/lib/urlParams"
 
 export const dynamic = "force-dynamic"
 
@@ -27,7 +28,7 @@ export default async function NotifyPage({
   searchParams,
 }: {
   params: Promise<{ id: string }>
-  searchParams: Promise<{ chyba?: string }>
+  searchParams: Promise<RawQuery>
 }) {
   const ctx = await hrContext()
   if (ctx.state !== "ready") {
@@ -36,7 +37,7 @@ export default async function NotifyPage({
   }
 
   const { id } = await params
-  const { chyba: error } = await searchParams
+  const { error } = normalizeQuery<{ error?: string }>(await searchParams)
   const code = ctx.person.companyCode
 
   const assignment = await loadAssignment(code, id)

@@ -44,9 +44,9 @@ function fieldText(fd: FormData, actorName: string): string {
  * sa vracia celý výber, nie len chybová hláška.
  */
 function backWithError(error: string, fd: FormData): never {
-  const q = new URLSearchParams({ chyba: error, dovod: fieldText(fd, "dovod") })
-  for (const d of fd.getAll("dokument")) if (typeof d === "string") q.append("dokument", d)
-  for (const p of fd.getAll("publikum")) if (typeof p === "string") q.append("publikum", p)
+  const q = new URLSearchParams({ error, reason: fieldText(fd, "dovod") })
+  for (const d of fd.getAll("document")) if (typeof d === "string") q.append("document", d)
+  for (const p of fd.getAll("audience")) if (typeof p === "string") q.append("audience", p)
   if (fd.get("vsetci")) q.set("vsetci", "1")
   const addresses = fieldText(fd, "adresy")
   if (addresses) q.set("adresy", addresses)
@@ -66,7 +66,7 @@ export async function assignAction(fd: FormData) {
 
   const audiences = audienceFromSelection({
     vsetci: Boolean(fd.get("vsetci")),
-    vybrane: fd.getAll("publikum").filter((v): v is string => typeof v === "string"),
+    vybrane: fd.getAll("audience").filter((v): v is string => typeof v === "string"),
     adresy: fieldText(fd, "adresy"),
     nazvyOddeleni: departmentNames,
   })
@@ -76,7 +76,7 @@ export async function assignAction(fd: FormData) {
   // z prehliadača, dalo by sa prideliť ľubovoľné — aj z cudzej organizácie
   // alebo staré, ktoré sa už nedá potvrdiť.
   const available = await assignableDocuments(actor.companyCode)
-  const selected = fd.getAll("dokument")
+  const selected = fd.getAll("document")
     .filter((d): d is string => typeof d === "string")
     .map(id => available.find(p => p.documentId === id))
     .filter(d => d !== undefined)
@@ -121,7 +121,7 @@ export async function assignAction(fd: FormData) {
     : `Pridelené: ${assigned} (${combinations}). ${already} už pridelených bolo — nič sa nezdvojilo.`
 
   revalidatePath("/hr")
-  redirect("/hr?sprava=" + encodeURIComponent(message))
+  redirect("/hr?msg=" + encodeURIComponent(message))
 }
 
 export async function revokeAction(fd: FormData) {
@@ -134,7 +134,7 @@ export async function revokeAction(fd: FormData) {
   const changed = await revoke(actor.companyCode, id, actor.email)
 
   revalidatePath("/hr")
-  redirect("/hr?sprava=" + encodeURIComponent(
+  redirect("/hr?msg=" + encodeURIComponent(
     changed ? "Pridelenie odvolané. Záznam o ňom zostáva." : "Toto pridelenie už neplatí."
   ))
 }
@@ -176,7 +176,7 @@ export async function sendNotificationAction(fd: FormData) {
   // personalista mohol rozhodnúť sám.
   const recipients = (await notAcknowledged(code, id)).filter(o => !o.byvaly)
   if (recipients.length === 0) {
-    redirect("/hr?chyba=1&sprava=" + encodeURIComponent("Nie je komu poslať — potvrdili už všetci, kto v oddelení zostal."))
+    redirect("/hr?error=1&msg=" + encodeURIComponent("Nie je komu poslať — potvrdili už všetci, kto v oddelení zostal."))
   }
   if (recipients.length > MAX_AT_ONCE) {
     redirect(`/hr/${encodeURIComponent(id)}/oznamit?chyba=` + encodeURIComponent(
@@ -229,5 +229,5 @@ export async function sendNotificationAction(fd: FormData) {
   const message = failed.length === 0
     ? `Odoslané ${sent} ľuďom, ktorí ešte nepotvrdili.`
     : `Odoslané ${sent}. Nedoručiteľné (${failed.length}): ${failed.slice(0, 5).join(", ")}${failed.length > 5 ? "…" : ""}`
-  redirect(`/hr?sprava=${encodeURIComponent(message)}${failed.length ? "&chyba=1" : ""}`)
+  redirect(`/hr?msg=${encodeURIComponent(message)}${failed.length ? "&error=1" : ""}`)
 }

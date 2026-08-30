@@ -14,6 +14,7 @@ import { tenantStyle } from "@/components/TenantHeader"
 import { UI_LANGUAGES } from "@/lib/i18n"
 import Select from "@/components/Select"
 import { invitePersonAction } from "../actions"
+import { normalizeQuery, type RawQuery } from "@/lib/urlParams"
 
 /** Kód jazyka sám o sebe nepovie nič — „sk" je pre nás jasné, pre iných nie. */
 const LANGUAGES: Record<string, string> = {
@@ -27,7 +28,7 @@ export const dynamic = "force-dynamic"
 export default async function NewPersonPage({
   searchParams,
 }: {
-  searchParams: Promise<{ chyba?: string; email?: string; fullName?: string; department?: string }>
+  searchParams: Promise<RawQuery>
 }) {
   const ctx = await peopleContext()
   if (ctx.state !== "ready") {
@@ -35,7 +36,7 @@ export default async function NewPersonPage({
     notFound()
   }
 
-  const q = await searchParams
+  const q = normalizeQuery<{ error?: string; email?: string; fullName?: string; department?: string }>(await searchParams)
   const branding = brandingView(ctx.tenant)
 
   return (
@@ -50,9 +51,9 @@ export default async function NewPersonPage({
         a trasy sa doplnia na jej detaile — po pozvaní tam prídeš rovno.
       </p>
 
-      {q.chyba && (
+      {q.error && (
         <p className="karta" style={{ padding: "12px 16px", margin: "0 0 18px", fontSize: 14.5, color: "var(--warn-fg)" }}>
-          {q.chyba}
+          {q.error}
         </p>
       )}
 

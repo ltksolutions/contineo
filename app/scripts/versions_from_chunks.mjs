@@ -1,5 +1,5 @@
 /**
- * verzie_z_chunkov.mjs — doplní `versions[]` dokumentom, ktoré prišli importom.
+ * versions_from_chunks.mjs — doplní `versions[]` dokumentom, ktoré prišli importom.
  *
  * Deväť noriem SFZ prišlo cez RAG import (`import.mjs`): dokument nesie
  * `versionId` navrchu, text žije v `document_chunks` a `versions[]` nemá vôbec.
@@ -20,8 +20,8 @@
  *
  * Predvolene nič nezapisuje.
  *
- *   npm run verzie                                # ukáže, čo by spravil
- *   npm run verzie -- --od 2026-01-01 --zapis     # zapíše
+ *   npm run versions                                # ukáže, čo by spravil
+ *   npm run versions -- --od 2026-01-01 --zapis     # zapíše
  */
 
 import { MongoClient } from "mongodb"

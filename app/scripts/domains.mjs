@@ -1,10 +1,10 @@
 /**
- * domeny.mjs — v akom stave sú domény tenantov a čo ešte čaká na zákazníka.
+ * domains.mjs — v akom stave sú domény tenantov a čo ešte čaká na zákazníka.
  *
- *     npm run domeny                       # prehľad všetkých
- *     npm run domeny -- --company SFZ      # jeden tenant
- *     npm run domeny -- --company KLUB --poslat        # odošle pokyny
- *     npm run domeny -- --company KLUB --poslat --komu it@klub.sk
+ *     npm run domains                       # prehľad všetkých
+ *     npm run domains -- --company SFZ      # jeden tenant
+ *     npm run domains -- --company KLUB --poslat        # odošle pokyny
+ *     npm run domains -- --company KLUB --poslat --komu it@klub.sk
  *
  * **Stav ani pokyny sa neukladajú.** Oboje sa číta naživo z Vercelu a odvodí
  * z hostname — uložená kópia by klamala presne vtedy, keď na tom najviac
@@ -173,7 +173,7 @@ try {
   if (!args.poslat) {
     if (pending.length) {
       console.log(`\n${INFO} ${pending.length} doména/y čaká na zákazníka.`)
-      console.log(`   Pokyny odošleš: npm run domeny -- --company ${pending[0].tenant.companyCode} --poslat`)
+      console.log(`   Pokyny odošleš: npm run domains -- --company ${pending[0].tenant.companyCode} --poslat`)
     }
     process.exit(0)
   }

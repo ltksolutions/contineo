@@ -1,5 +1,5 @@
 /**
- * duplicita_probe.mjs — nájde stage, ktorý zdvojuje výsledky.
+ * duplicate_probe.mjs — nájde stage, ktorý zdvojuje výsledky.
  *
  * ⚠️ POUČENIE Z PRVÉHO BEHU: tento skript má pipeline napísanú NAZNOVO,
  * a to je jeho slabina. Prvý raz vyšiel čisto, hoci aplikácia duplicity
@@ -10,8 +10,8 @@
  * kód zo `src/lib`. Táto sonda je len na hľadanie vinníka MEDZI stage-mi,
  * keď už vieme, že problém existuje.
  *
- *     node --env-file=.env.local scripts/duplicita_probe.mjs
- *     node --env-file=.env.local scripts/duplicita_probe.mjs --dotaz "..."
+ *     node --env-file=.env.local scripts/duplicate_probe.mjs
+ *     node --env-file=.env.local scripts/duplicate_probe.mjs --dotaz "..."
  *
  * Smoke test vracia ten istý chunk dvakrát, hoci audit ukázal, že databáza
  * je čistá — žiadne zdvojené dokumenty ani chunky. Duplicita teda vzniká

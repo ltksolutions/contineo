@@ -27,7 +27,7 @@ slovensky.
 
 **Historické kľúče sa neprepisujú, prekladajú.** Starý tvar (`?zalozka=utvary`)
 zostane fungovať cez prekladovú tabuľku a zmizne, keď prestane chodiť.
-Viď `lib/urlTabs.ts`.
+Viď `lib/urlParams.ts`.
 
 ## Texty pre používateľa: vždy cez i18n, tri jazyky
 
@@ -55,8 +55,13 @@ Rozhoduje, kto sa na cestu odkazuje — nie to, či sa niečo maže.
   zabudnutý odkaz zhodí `tsc` aj build menovite, takže nemôže vzniknúť stav,
   kde to prejde a rozbije sa až u zákazníka. `git mv` zachová históriu.
 - **Verejné cesty sú zmluva:** `app/**/page.tsx` a `app/api/**/route.ts`
-  (cesta k súboru **je** adresa), preberacie body v `scripts/lib/`, názvy
-  `npm run` príkazov a kľúče v adrese. Pri tých sa neprejmenúva, ale prekladá.
+  (cesta k súboru **je** adresa) a kľúče a hodnoty v adrese. Pri tých sa
+  neprejmenúva, ale **prekladá** — starý tvar zostane fungovať cez tabuľku
+  v `lib/urlParams.ts` a zmizne, keď prestane chodiť.
+- **Názvy `npm run` príkazov a súborov v `scripts/` sú vnútorné.** Premenovať
+  sa dajú naraz s dokumentáciou; nikto zvonku sa na ne neodkazuje.
+- **Názvy polí v MongoDB a v uloženom profile tenanta sú dáta, nie kód.**
+  Menia sa len migráciou, nie refaktorom.
 
 Podrobne: `docs/AKO_TO_BEZI.md`.
 

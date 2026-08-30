@@ -70,7 +70,7 @@ export async function savePersonAction(fd: FormData) {
   }
 
   revalidatePath("/osoby")
-  redirect(`/osoby/${encodeURIComponent(id)}?sprava=${encodeURIComponent(message)}${error ? "&chyba=1" : ""}`)
+  redirect(`/osoby/${encodeURIComponent(id)}?msg=${encodeURIComponent(message)}${error ? "&error=1" : ""}`)
 }
 
 export async function invitePersonAction(fd: FormData) {
@@ -89,7 +89,7 @@ export async function invitePersonAction(fd: FormData) {
     revalidatePath("/osoby")
     // Rovno na detail: po pozvaní nasleduje priradenie trás a skupín,
     // a hľadať toho človeka znova v zozname je zbytočný krok.
-    redirect(`/osoby/${encodeURIComponent(person.id)}?sprava=${encodeURIComponent(
+    redirect(`/osoby/${encodeURIComponent(person.id)}?msg=${encodeURIComponent(
       "Pozvaná. Prihlási sa, keď si sama vyžiada odkaz alebo použije pracovné konto."
     )}`)
   } catch (e) {
@@ -138,7 +138,7 @@ export async function togglePersonStatusAction(fd: FormData) {
   }
 
   revalidatePath("/osoby")
-  redirect(`/osoby/${encodeURIComponent(id)}?sprava=${encodeURIComponent(message)}${error ? "&chyba=1" : ""}`)
+  redirect(`/osoby/${encodeURIComponent(id)}?msg=${encodeURIComponent(message)}${error ? "&error=1" : ""}`)
 }
 
 /**

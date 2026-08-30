@@ -157,21 +157,21 @@ a `*.localhost` (k Vercelu nedorazia), `*.vercel.app` (prideľuje ich Vercel).
 
 ```bash
 # overenie
-npm run domeny                        # stav domén všetkých tenantov
-npm run stav                          # sekcia TENANTS
+npm run domains                        # stav domén všetkých tenantov
+npm run status                          # sekcia TENANTS
 ```
 
-### `npm run domeny` — čo ešte čaká na zákazníka
+### `npm run domains` — čo ešte čaká na zákazníka
 
 Odpovedá na otázku *„prečo mu tá doména ešte nejde"* jedným príkazom. Pre
 každú doménu ukáže, či je vo Verceli, či zákazník už nastavil DNS, či mu
 v zóne nekoliduje starý záznam — a ak čaká, vypíše presný `CNAME`.
 
 ```bash
-npm run domeny                                   # prehľad
-npm run domeny -- --company KLUB                 # jeden tenant
-npm run domeny -- --company KLUB --poslat        # odošle pokyny na supportEmail
-npm run domeny -- --company KLUB --poslat --komu it@klub.sk
+npm run domains                                   # prehľad
+npm run domains -- --company KLUB                 # jeden tenant
+npm run domains -- --company KLUB --poslat        # odošle pokyny na supportEmail
+npm run domains -- --company KLUB --poslat --komu it@klub.sk
 ```
 
 **Stav ani pokyny sa neukladajú.** Oboje sa číta naživo z Vercelu a odvodí
@@ -486,7 +486,7 @@ Ecomail vyžaduje **platený účet a overenú odosielaciu doménu**.
 
 ```bash
 cd ~/Documents/GitHub/contineo/app
-bash scripts/nastav_ecomail.sh 'kluc-z-ecomailu'
+bash scripts/set_ecomail.sh 'kluc-z-ecomailu'
 ```
 
 Skript kľúč **najprv vyskúša priamo proti Ecomailu** a až potom uloží

@@ -1,8 +1,8 @@
 /**
- * zmaz_testovacie.mjs — odstráni záznamy z ladenia pred ostrým zberom.
+ * delete_test_data.mjs — odstráni záznamy z ladenia pred ostrým zberom.
  *
- *     node --env-file=.env.local scripts/zmaz_testovacie.mjs            (len ukáže)
- *     node --env-file=.env.local scripts/zmaz_testovacie.mjs --naozaj   (zmaže)
+ *     node --env-file=.env.local scripts/delete_test_data.mjs            (len ukáže)
+ *     node --env-file=.env.local scripts/delete_test_data.mjs --naozaj   (zmaže)
  *
  * Kritérium je jediné a zámerne úzke: `hodnotitel: "anonym"`. Tak sa označili
  * odpovede z obdobia, keď ešte nebolo prihlasovanie — teda výhradne testy pri

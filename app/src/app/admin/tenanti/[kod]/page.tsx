@@ -23,6 +23,7 @@ import { saveTenantAction, toggleTenantStatusAction, sendInstructionsAction, sav
 import type { DomainStatus } from "@/lib/vercel"
 import type { OAuthProviderName } from "@/lib/oauth"
 import type { Tenant } from "@/lib/tenants"
+import { normalizeQuery, type RawQuery } from "@/lib/urlParams"
 
 
 /**
@@ -193,7 +194,7 @@ export default async function TenantDetailPage({
   searchParams,
 }: {
   params: Promise<{ kod: string }>
-  searchParams: Promise<{ sprava?: string; chyba?: string }>
+  searchParams: Promise<RawQuery>
 }) {
   const ctx = await platformContext()
   if (ctx.state !== "ready") {
@@ -202,7 +203,7 @@ export default async function TenantDetailPage({
   }
 
   const { kod: code } = await params
-  const { sprava: message, chyba: error } = await searchParams
+  const { msg: message, error } = normalizeQuery<{ msg?: string; error?: string }>(await searchParams)
   const tenant = (await allTenants()).find(t => t.companyCode === code.toUpperCase())
   if (!tenant) notFound()
 

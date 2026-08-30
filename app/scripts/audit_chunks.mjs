@@ -1,8 +1,8 @@
 /**
- * audit_chunkov.mjs — ukáže, ako dobre chunker rozčlenil každý dokument.
+ * audit_chunks.mjs — ukáže, ako dobre chunker rozčlenil každý dokument.
  *
- *     node --env-file=.env.local scripts/audit_chunkov.mjs
- *     node --env-file=.env.local scripts/audit_chunkov.mjs --ukazky
+ *     node --env-file=.env.local scripts/audit_chunks.mjs
+ *     node --env-file=.env.local scripts/audit_chunks.mjs --ukazky
  *
  * Smoke test odhalil, že articleRef a heading sedia len pri jednom dokumente.
  * Tento skript to premení z dojmu na čísla: koľko chunkov má rozpoznaný

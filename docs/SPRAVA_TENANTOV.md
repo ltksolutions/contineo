@@ -11,7 +11,7 @@
 
 ## 1. Prečo obrazovka, keď existujú skripty
 
-`npm run stav` a `npm run domeny` odpovedia na všetko, čo obrazovka ukáže —
+`npm run status` a `npm run domains` odpovedia na všetko, čo obrazovka ukáže —
 ale len tomu, kto sedí pri repozitári s `.env.local`. To je dnes jeden človek.
 Pri druhom zákazníkovi to prestane stačiť a odpoveď na otázku „v akom stave je
 tá organizácia" nemá byť podmienená prístupom k produkčnej databáze.
@@ -113,7 +113,7 @@ príčina, prečo sa človeku v zozname nič neobjaví, a dnes ju odhalí len sk
 **Rozsah C — zakladať** `[2–3 dni]`
 - nový tenant z obrazovky vrátane domén
 - volanie Vercel API zo servera (`VERCEL_TOKEN` medzi premennými nasadenia)
-- odoslanie pokynov zákazníkovi jedným tlačidlom (dnes `npm run domeny --poslat`)
+- odoslanie pokynov zákazníkovi jedným tlačidlom (dnes `npm run domains --poslat`)
 
 **Vypnutie tenanta je jediná nezvratná vec v rozsahu B** — ľudia sa okamžite
 prestanú prihlásiť. Preto potvrdenie s napísaním kódu organizácie, nie
@@ -188,7 +188,7 @@ prostredím; stačí `vercel --prod` alebo ďalší commit.
 
 ```bash
 cd app
-npm run domeny            # vypíše stav domén každého tenanta
+npm run domains            # vypíše stav domén každého tenanta
 ```
 
 Keď token neplatí, skripty aj obrazovka to povedia menovite („Vercel token

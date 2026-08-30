@@ -1,8 +1,8 @@
 /**
- * import_sady.mjs — nahrá zlatú sadu D9 do databázy.
+ * import_goldenset.mjs — nahrá zlatú sadu D9 do databázy.
  *
- *     node --env-file=.env.local scripts/import_sady.mjs
- *     node --env-file=.env.local scripts/import_sady.mjs --nasucho
+ *     node --env-file=.env.local scripts/import_goldenset.mjs
+ *     node --env-file=.env.local scripts/import_goldenset.mjs --nasucho
  *
  * Otázky žijú v `eval/seed/questions_seed.json`, teda MIMO priečinka `app/`.
  * Kým sa spúšťali len lokálne skripty, nevadilo to; testovacie rozhranie ale

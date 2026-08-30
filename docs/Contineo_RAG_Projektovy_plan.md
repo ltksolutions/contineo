@@ -452,7 +452,7 @@ ClubUp — ADR-003 kap. 8.
 > **Koncepcia:** `docs/SPRAVA_TENANTOV.md` · **Rozhodnutia:** D41, D42
 
 Predbieha zvyšok Fázy 5 rovnako, ako Fáza 8 predbehla Fázu 4. Dôvod je vecný:
-`npm run stav` a `npm run domeny` odpovedia na všetko, ale len tomu, kto sedí
+`npm run status` a `npm run domains` odpovedia na všetko, ale len tomu, kto sedí
 pri repozitári s `.env.local`. Pri druhom zákazníkovi to prestane stačiť.
 
 Rola `platform-admin` je **výslovná výnimka z D32** a vidí prehľadové údaje,

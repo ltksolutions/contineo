@@ -28,7 +28,7 @@ import TreeWithOrder from "@/components/TreeWithOrder"
 import { reindexState } from "@/lib/libraryWrite"
 import { DEFAULT_PROFILE } from "@/lib/chunker.mjs"
 import { CODELIST_LABEL, availableOptions, customItems, codelistUsage } from "@/lib/codelistsTenant"
-import { translateTabKey } from "@/lib/urlTabs"
+import { normalizeQuery, tabValue, type RawQuery } from "@/lib/urlParams"
 import { CUSTOM_CODELISTS } from "@/lib/codelists"
 import { allDepartments, flattenTree, subtree, counts, MAX_DEPTH, depth } from "@/lib/departments"
 import { auditRecords } from "@/lib/audit"
@@ -37,12 +37,12 @@ import type { OAuthProviderName } from "@/lib/oauth"
 import type { Tenant } from "@/lib/tenants"
 
 const TABS = [
-  { kluc: "vzhlad", popis: "Vzhľad a jazyky" },
-  { kluc: "oddelenia", popis: "Oddelenia" },
-  { kluc: "domeny", popis: "Domény" },
-  { kluc: "prihlasenie", popis: "Prihlasovanie" },
-  { kluc: "ciselniky", popis: "Číselníky" },
-  { kluc: "clenenie", popis: "Členenie" },
+  { kluc: "branding", popis: "Vzhľad a jazyky" },
+  { kluc: "departments", popis: "Oddelenia" },
+  { kluc: "domains", popis: "Domény" },
+  { kluc: "signin", popis: "Prihlasovanie" },
+  { kluc: "codelists", popis: "Číselníky" },
+  { kluc: "chunking", popis: "Členenie" },
   { kluc: "audit", popis: "Audit" },
 ]
 
@@ -94,7 +94,7 @@ function ProviderRow({
 
       <form action={saveSignInAction} style={{ display: "grid", gap: 14 }}>
         <input type="hidden" name="provider" value={provider} />
-        <input type="hidden" name="zalozka" value="prihlasenie" />
+        <input type="hidden" name="tab" value="signin" />
 
         <label className="pole">
           <span className="pole-popis">Client ID</span>
@@ -155,7 +155,7 @@ function ProviderRow({
       {s.zdroj === "tenant" && (
         <form action={deleteSignInAction} style={{ display: "grid", gap: 10, borderTop: "1px solid var(--line)", paddingTop: 14 }}>
           <input type="hidden" name="provider" value={provider} />
-          <input type="hidden" name="zalozka" value="prihlasenie" />
+          <input type="hidden" name="tab" value="signin" />
           <p className="tichy" style={{ margin: 0, fontSize: 14 }}>
             Odstránením zmizne tlačidlo z prihlasovacej obrazovky. Ľuďom, ktorí
             sa prihlasujú pracovným kontom, tým prestane fungovať jediná cesta,
@@ -175,7 +175,7 @@ function ProviderRow({
 export default async function OrganisationPage({
   searchParams,
 }: {
-  searchParams: Promise<{ sprava?: string; chyba?: string; zalozka?: string; hladat?: string }>
+  searchParams: Promise<RawQuery>
 }) {
   const ctx = await orgContext()
   if (ctx.state !== "ready") {
@@ -183,14 +183,14 @@ export default async function OrganisationPage({
     notFound()
   }
 
-  const { sprava: message, chyba: error, zalozka: tab, hladat: search } = await searchParams
+  const { msg: message, error, tab, search } = normalizeQuery<{ msg?: string; error?: string; tab?: string; search?: string }>(await searchParams)
   // Záložka je v adrese, nie v klientskom stave: dá sa poslať odkazom,
   // vrátiť sa naň z histórie a funguje bez jediného riadku JavaScriptu.
   // `strom` je starý kľúč tejto záložky. Odkazy s ním existujú v e-mailoch
   // aj v záložkách prehliadača — presmerovať by ich rozbilo, tak sa len
   // preloží. Zmizne, keď prestane chodiť.
-  const key = translateTabKey(tab)
-  const now = TABS.some(z => z.kluc === key) ? key! : "vzhlad"
+  const key = tabValue(tab)
+  const now = TABS.some(z => z.kluc === key) ? key! : "branding"
   const tenant = ctx.tenant
   const branding = brandingView(tenant)
   const language = ctx.person.language
@@ -200,12 +200,12 @@ export default async function OrganisationPage({
 
   // Strom sa načítava len pre svoju záložku. Na ostatných by to bol dotaz
   // navyše za nič.
-  const tenantDepartments = now === "oddelenia" ? await allDepartments(tenant.companyCode) : []
-  const rows = now === "oddelenia" ? flattenTree(tenantDepartments) : []
-  const peopleCounts = now === "oddelenia" ? await counts(tenant.companyCode) : new Map()
+  const tenantDepartments = now === "departments" ? await allDepartments(tenant.companyCode) : []
+  const rows = now === "departments" ? flattenTree(tenantDepartments) : []
+  const peopleCounts = now === "departments" ? await counts(tenant.companyCode) : new Map()
   // Počty použití sa čítajú len pre svoju záložku — inak by to boli dva
   // dotazy na dokumenty pri každom otvorení nastavenia.
-  const codelists = now === "ciselniky"
+  const codelists = now === "codelists"
     ? await Promise.all(CUSTOM_CODELISTS.map(async name => ({
         nazov: name,
         vsetky: availableOptions(tenant, name),
@@ -222,7 +222,7 @@ export default async function OrganisationPage({
   // Koľko dokumentov by nový profil narezal inak. Počíta sa naozajstným
   // narezaním — odhad by pri zmene parametra nevedel povedať, či na tomto
   // obsahu vôbec niečo spraví.
-  const indexState = now === "clenenie"
+  const indexState = now === "chunking"
     ? await reindexState(tenant.companyCode, tenant.chunkovanie)
     : null
 
@@ -235,7 +235,7 @@ export default async function OrganisationPage({
       <Notice
         sprava={message}
         chyba={error === "1"}
-        spat={`/organizacia?zalozka=${now}`}
+        spat={`/organizacia?tab=${now}`}
       />
 
       <h1 style={{ fontSize: 26, letterSpacing: "-0.02em", margin: "0 0 6px" }}>Organizácia</h1>
@@ -252,7 +252,7 @@ export default async function OrganisationPage({
         {TABS.map(z => (
           <Link
             key={z.kluc}
-            href={`/organizacia?zalozka=${z.kluc}`}
+            href={`/organizacia?tab=${z.kluc}`}
             className={`zalozka${z.kluc === now ? " je-aktivna" : ""}`}
             aria-current={z.kluc === now ? "page" : undefined}
           >
@@ -261,9 +261,9 @@ export default async function OrganisationPage({
         ))}
       </nav>
 
-      {now === "vzhlad" && (
+      {now === "branding" && (
       <form action={saveBrandingAction} className="karta" style={{ padding: 20, display: "grid", gap: 16 }} encType="multipart/form-data">
-        <input type="hidden" name="zalozka" value="vzhlad" />
+        <input type="hidden" name="tab" value="branding" />
 
         <label className="pole">
           <span className="pole-popis">Názov</span>
@@ -356,7 +356,7 @@ export default async function OrganisationPage({
       </form>
       )}
 
-      {now === "oddelenia" && (
+      {now === "departments" && (
       <div style={{ display: "grid", gap: 16 }}>
         <section className="karta" style={{ padding: 20, display: "grid", gap: 12 }}>
           <div>
@@ -378,7 +378,7 @@ export default async function OrganisationPage({
             </p>
           ) : (
             <TreeWithOrder
-              skryte={{ zalozka: "oddelenia" }}
+              skryte={{ tab: "departments" }}
               akcia={saveDepartmentOrderAction}
               polozky={rows.map(({ oddelenie: department, uroven: level }) => {
                 const p = peopleCounts.get(department.id) ?? { priamo: 0, sPodriadenymi: 0 }
@@ -405,14 +405,14 @@ export default async function OrganisationPage({
                             JavaScriptu, klávesnicou a na telefóne. */}
                         <div className="strom-sipky">
                           <form action={shiftDepartmentAction}>
-                            <input type="hidden" name="zalozka" value="oddelenia" />
+                            <input type="hidden" name="tab" value="departments" />
                             <input type="hidden" name="id" value={department.id} />
                             <input type="hidden" name="smer" value="hore" />
                             <button className="tlacidlo tlacidlo--tiche" type="submit"
                                     aria-label={`Posunúť ${department.nazov} vyššie`}>↑ vyššie</button>
                           </form>
                           <form action={shiftDepartmentAction}>
-                            <input type="hidden" name="zalozka" value="oddelenia" />
+                            <input type="hidden" name="tab" value="departments" />
                             <input type="hidden" name="id" value={department.id} />
                             <input type="hidden" name="smer" value="dole" />
                             <button className="tlacidlo tlacidlo--tiche" type="submit"
@@ -421,7 +421,7 @@ export default async function OrganisationPage({
                         </div>
 
                         <form action={renameDepartmentAction} className="strom-forma">
-                          <input type="hidden" name="zalozka" value="oddelenia" />
+                          <input type="hidden" name="tab" value="departments" />
                           <input type="hidden" name="id" value={department.id} />
                           <input
                             className="pole-vstup"
@@ -434,7 +434,7 @@ export default async function OrganisationPage({
                         </form>
 
                         <form action={moveDepartmentAction} className="strom-forma">
-                          <input type="hidden" name="zalozka" value="oddelenia" />
+                          <input type="hidden" name="tab" value="departments" />
                           <input type="hidden" name="id" value={department.id} />
                           <Select
                             meno="parentId"
@@ -458,7 +458,7 @@ export default async function OrganisationPage({
 
                         {p.sPodriadenymi === 0 && inside.size === 1 ? (
                           <form action={deleteDepartmentAction}>
-                            <input type="hidden" name="zalozka" value="oddelenia" />
+                            <input type="hidden" name="tab" value="departments" />
                             <input type="hidden" name="id" value={department.id} />
                             <button className="tlacidlo tlacidlo--tiche" type="submit">Zrušiť oddelenie</button>
                           </form>
@@ -478,7 +478,7 @@ export default async function OrganisationPage({
         </section>
 
         <form action={createDepartmentAction} className="karta" style={{ padding: 20, display: "grid", gap: 14 }}>
-          <input type="hidden" name="zalozka" value="oddelenia" />
+          <input type="hidden" name="tab" value="departments" />
           <h2 style={{ fontSize: 17, margin: 0 }}>Nové oddelenie</h2>
 
           <label className="pole">
@@ -514,7 +514,7 @@ export default async function OrganisationPage({
       </div>
       )}
 
-      {now === "domeny" && (
+      {now === "domains" && (
       <section className="karta" style={{ padding: "18px 20px", display: "grid", gap: 14 }}>
 
         <ul className="admin-domeny">
@@ -525,7 +525,7 @@ export default async function OrganisationPage({
               {tenant.hostnames.length > 1 && (
                 <form action={cancelDomainAction} style={{ marginLeft: "auto" }}>
                   <input type="hidden" name="host" value={h} />
-                  <input type="hidden" name="zalozka" value="domeny" />
+                  <input type="hidden" name="tab" value="domains" />
                   <button className="tlacidlo tlacidlo--tiche" type="submit" style={{ padding: "5px 10px", fontSize: 13 }}>
                     Odstrániť
                   </button>
@@ -561,14 +561,14 @@ export default async function OrganisationPage({
                   <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
                     <form action={verifyDomainAction}>
                       <input type="hidden" name="host" value={z.host} />
-                      <input type="hidden" name="zalozka" value="domeny" />
+                      <input type="hidden" name="tab" value="domains" />
                       <button className="tlacidlo" type="submit" style={{ padding: "6px 14px", fontSize: 13.5 }}>
                         Overiť a zapnúť
                       </button>
                     </form>
                     <form action={cancelDomainAction}>
                       <input type="hidden" name="host" value={z.host} />
-                      <input type="hidden" name="zalozka" value="domeny" />
+                      <input type="hidden" name="tab" value="domains" />
                       <button className="tlacidlo tlacidlo--tiche" type="submit" style={{ padding: "6px 14px", fontSize: 13.5 }}>
                         Zrušiť žiadosť
                       </button>
@@ -581,7 +581,7 @@ export default async function OrganisationPage({
         )}
 
         <form action={requestDomainAction} style={{ display: "grid", gap: 10 }}>
-          <input type="hidden" name="zalozka" value="domeny" />
+          <input type="hidden" name="tab" value="domains" />
           <label className="pole">
             <span className="pole-popis">Pridať vlastnú doménu</span>
             <input className="pole-vstup" name="host" placeholder="intranet.vasazorganizacia.sk" autoCapitalize="none" autoCorrect="off" />
@@ -596,14 +596,14 @@ export default async function OrganisationPage({
       </section>
       )}
 
-      {now === "prihlasenie" && (
+      {now === "signin" && (
       <div style={{ display: "grid", gap: 16 }}>
         <ProviderRow tenant={tenant} provider="microsoft" domena={tenant.hostnames[0]} />
         <ProviderRow tenant={tenant} provider="google" domena={tenant.hostnames[0]} />
       </div>
       )}
 
-      {now === "ciselniky" && (
+      {now === "codelists" && (
       <div style={{ display: "grid", gap: 16 }}>
         <p className="tichy" style={{ fontSize: 14.5, margin: 0, maxWidth: 620 }}>
           Čím označujete vlastný obsah v knižnici. Základné hodnoty sú tu vždy —
@@ -636,7 +636,7 @@ export default async function OrganisationPage({
                       </span>
                       {custom && (
                         <form action={removeCodelistItemAction} style={{ marginLeft: "auto" }}>
-                          <input type="hidden" name="zalozka" value="ciselniky" />
+                          <input type="hidden" name="tab" value="codelists" />
                           <input type="hidden" name="ciselnik" value={c.nazov} />
                           <input type="hidden" name="kluc" value={p.key} />
                           <button className="tlacidlo tlacidlo--tiche" type="submit">Odobrať</button>
@@ -649,7 +649,7 @@ export default async function OrganisationPage({
             </ul>
 
             <form action={addCodelistItemAction} className="strom-forma">
-              <input type="hidden" name="zalozka" value="ciselniky" />
+              <input type="hidden" name="tab" value="codelists" />
               <input type="hidden" name="ciselnik" value={c.nazov} />
               <input className="pole-vstup" name="popis" placeholder="Metodický pokyn"
                      aria-label={`Názov novej položky — ${CODELIST_LABEL[c.nazov].nazov}`} required />
@@ -668,9 +668,9 @@ export default async function OrganisationPage({
       </div>
       )}
 
-      {now === "clenenie" && (
+      {now === "chunking" && (
       <form action={saveChunkingProfileAction} className="karta" style={{ padding: 20, display: "grid", gap: 16 }}>
-        <input type="hidden" name="zalozka" value="clenenie" />
+        <input type="hidden" name="tab" value="chunking" />
 
         <div>
           <h2 style={{ fontSize: 17, margin: "0 0 4px" }}>Členenie dokumentov na úseky</h2>
@@ -738,9 +738,9 @@ export default async function OrganisationPage({
       </form>
       )}
 
-      {now === "clenenie" && indexState && (
+      {now === "chunking" && indexState && (
       <form action={reindexAllAction} className="karta" style={{ padding: 20, display: "grid", gap: 12, marginTop: 16 }}>
-        <input type="hidden" name="zalozka" value="clenenie" />
+        <input type="hidden" name="tab" value="chunking" />
         <h2 style={{ fontSize: 17, margin: 0 }}>Preindexovať všetko</h2>
 
         {indexState.neaktualnych === 0 ? (
@@ -779,12 +779,12 @@ export default async function OrganisationPage({
         {/* Formulár metódou GET: filter je v adrese, dá sa poslať odkazom
             a funguje bez jediného riadku JavaScriptu. */}
         <form className="audit-filter" method="get">
-          <input type="hidden" name="zalozka" value="audit" />
+          <input type="hidden" name="tab" value="audit" />
           <label className="pole" style={{ flex: "1 1 260px", margin: 0 }}>
             <span className="pole-popis">Hľadať</span>
             <input
               className="pole-vstup"
-              name="hladat"
+              name="search"
               defaultValue={search ?? ""}
               placeholder="meno, adresa, oddelenie…"
               autoCapitalize="none"
@@ -792,7 +792,7 @@ export default async function OrganisationPage({
           </label>
           <button className="tlacidlo tlacidlo--tiche" type="submit">Hľadať</button>
           {search ? (
-            <Link className="tichy" href="/organizacia?zalozka=audit" style={{ fontSize: 14 }}>
+            <Link className="tichy" href="/organizacia?tab=audit" style={{ fontSize: 14 }}>
               zrušiť filter
             </Link>
           ) : null}

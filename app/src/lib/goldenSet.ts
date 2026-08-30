@@ -2,7 +2,7 @@
  * sada.ts — zlatá sada D9 uložená v databáze.
  *
  * Otázky pochádzajú z `eval/seed/questions_seed.json` a do kolekcie
- * `eval_questions` ich prenesie `scripts/import_sady.mjs`.
+ * `eval_questions` ich prenesie `scripts/import_goldenset.mjs`.
  *
  * Rozdelenie polí je zámerné a dôležité:
  *

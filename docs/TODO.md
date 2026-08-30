@@ -50,14 +50,14 @@
 - [x] **identita textu oddelená od identity členenia** (D57) — `versionId` z textu, `chunkingId` z členenia; preindexovanie nevytvára verziu a neruší potvrdenia. Migrácia deviatich noriem spustená 2026-08-30
 - [x] **profil členenia per organizácia** (D58) — slovo článku a prílohy, prah hlavičiek, veľkosť úseku; predvolený profil overený na 10 dokumentoch (10 zhôd, 0 rozdielov)
 - [x] **oprava údajov znenia** — pri zmene dátumu s existujúcimi potvrdeniami rozhodnutie človeka + povinný dôvod
-- [x] **`npm run kontrola`** (D59) — invarianty medzi dokumentmi, úsekmi a potvrdeniami
+- [x] **`npm run check`** (D59) — invarianty medzi dokumentmi, úsekmi a potvrdeniami
 - [ ] **`sfz:test_onboarding` nemá aktívne úseky** — seedovací skript zapisuje dokument, nie chunky. Pri testovacom dokumente to nevadí, ale kontrola to bude hlásiť
 - [x] **poradie oddelení** (D60) — ťahanie myšou v rámci úrovne, šípky ako bezJS cesta, čiary hierarchie
 - [x] **poradie aj pre priečinky knižnice** (D60) — ten istý komponent ako pri oddeleniach
 - [x] **`components/StromSPoradim.tsx`** — premenované z `StromOddeleni.tsx`, komponent slúži obom stromom
 - [ ] presun dokumentu do priečinka hromadne (zatiaľ po jednom v detaile)
 - [x] **hromadné preindexovanie** — v záložke Členenie, po dávkach 25, s počtom neaktuálnych dokumentov
-- [x] **pôvodné PDF doplnené k deviatim normám** — `npm run subory:doplnit` (2026-08-30)
+- [x] **pôvodné PDF doplnené k deviatim normám** — `npm run files:attach` (2026-08-30)
 - [ ] archivácia dokumentu z obrazovky — mazanie zámerne nie je (viažu sa potvrdenia)
 - [ ] **KB / FAQ na verejnom webe** — samostatná fáza, `CMS_KONCEPCIA.md` časť B
 - [ ] Rozšíriť `documents` o `contentType` (`document`|`web`) a `webPublish` (slug, seo, navParent, publishAt) — **D-CMS-1**
@@ -135,7 +135,7 @@
 - [x] ✅ **2026-08-28 18:17 — cesta cez `persons` je overená v produkcii.** Toto bol najdlhšie otvorený červený bod Fázy 8. Log hovorí `[auth] ziadost: … — persons povolil` aj `[auth] pouzitie-odkazu: … — persons povolil`; núdzová brzda sa nezúčastnila.
   - **Prečo to trvalo:** `jan.letko@futbalsfz.sk` bol v `POVOLENE_EMAILY`, ktorá sa vyhodnocuje **prvá**, takže sa kontrola cez `persons` roky nespustila a zvonku to vyzeralo, že všetko funguje. Brzda obsahuje odteraz samostatnú správcovskú adresu `intranet@futbalsfz.sk` — pravidlo je v `NASADENIE_app.md`.
   - **Pozor na `vercel env pull`:** vrátil `POVOLENE_EMAILY=""`, hoci premenná nastavená bola. Hodnota z pullu je **nespoľahlivá** — rozhoduje beh, nie výpis. Overovať runtime logom, nie premennou. (Raz ma to zviedlo k opačnému a nesprávnemu záveru.)
-- [x] ✅ **2026-08-28 — evidencia prihlásenia sa zapisuje.** `npm run stav` po prvom prihlásení cez `persons`: `stav=active`, `posl. prihlásenie=2026-08-28T18:17:54.682Z` — teda v tej istej sekunde ako callback. `await recordSignIn(...)` sa tým overil naostro; predtým sa nezapisovalo nikdy, lebo brzda vracala `true` skôr, než sa k zápisu došlo.
+- [x] ✅ **2026-08-28 — evidencia prihlásenia sa zapisuje.** `npm run status` po prvom prihlásení cez `persons`: `stav=active`, `posl. prihlásenie=2026-08-28T18:17:54.682Z` — teda v tej istej sekunde ako callback. `await recordSignIn(...)` sa tým overil naostro; predtým sa nezapisovalo nikdy, lebo brzda vracala `true` skôr, než sa k zápisu došlo.
 - [x] ✅ **2026-08-28 — odkaz z e-mailu vedie na úvodnú stranu.** Callback `302` → `GET /` (predtým `→ /prihlasenie`). Widget „Nevybavené žiadosti" sa zobrazil na živých dátach.
 - [ ] **Odkaz sa raz zavolal dvakrát sekundu po sebe** (2026-08-28 17:07), čím sa jednorazový token spotreboval a používateľ videl „odkaz už neplatí". Pri opakovanom pokuse sa to **nezopakovalo**, takže príčina nie je potvrdená a nič sa zatiaľ nemenilo. **Pred hromadným rozposlaním preveriť**, či poštové brány adresátov (najmä Microsoft 365 Safe Links) odkazy nepredberajú — tie to robia systematicky. Ak áno, riešenie je krátke okno na opätovné použitie tokenu (rozhodnuté 2026-08-28, čaká na potvrdenie príčiny).
 - [ ] **Neznámy hostiteľ dostane najprv `307` na `/prihlasenie` a až potom `404`.** Middleware beží pred kontrolou tenanta a presmeruje neprihláseného skôr, než sa zistí, že doména nikomu nepatrí. Obsah neuniká a koniec je správne `404`, ale D29 hovorí, že cudzia doména sa nemá dozvedieť nič — a takto sa dozvie, že existuje cesta `/prihlasenie`. Opraviť sa to dá len overením tenanta priamo v middlewari; ten beží na edge a do Atlasu nevidí, takže by to chcelo verejný endpoint s krátkou pamäťou (rovnako to rieši `inventario`). Nízka priorita, ale zapísané, nech to nezapadne.
@@ -302,7 +302,7 @@
 - [x] **`/organizacia`** — zákazník si sám spravuje vzhľad, prihlasovanie aj domény (D48). Domény cez žiadosť + dôkaz DNS, nie voľným zápisom
 - [x] **automatické založenie z povolených domén** (D47)
 - [x] **adresa prestala byť kľúčom** — identitou je `persons.id`, adresa sa dá zmeniť a história zostáva celá
-- [x] **oddelenia ako strom** (D49) — osoba v práve jednom, pridelenie platí aj pre podstrom, skupiny zostávajú samostatnou dimenziou. Prevod z textu: `npm run utvary`
+- [x] **oddelenia ako strom** (D49) — osoba v práve jednom, pridelenie platí aj pre podstrom, skupiny zostávajú samostatnou dimenziou. Prevod z textu: `npm run departments`
 - [x] **prevod oddelení SFZ spustený 2026-08-29** — nemal čo previesť: v databáze je zatiaľ jedna osoba a žiadna nemá oddelenie zapísaný textom. Zmysel dostane po importe ľudí z CSV
 - [x] **reorganizácia** (D50) — úloha z oddelenia platí odo dňa príchodu, bývalí členovia zostanú v prehľade označení a bez e-mailu, potvrdenie nesie odtlačok oddelenia
 - [x] **údaje z adresára** (D52) — meno, priezvisko, oddelenie, pozícia, jazyk a fotka z Microsoft Graphu; dopĺňa sa len chýbajúce, zlyhanie Graphu prihlásenie nezhodí

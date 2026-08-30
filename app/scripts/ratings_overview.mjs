@@ -1,8 +1,8 @@
 /**
- * hodnotenia_prehlad.mjs — stav zberu zlatej sady (D9).
+ * ratings_overview.mjs — stav zberu zlatej sady (D9).
  *
- *     node --env-file=.env.local scripts/hodnotenia_prehlad.mjs
- *     node --env-file=.env.local scripts/hodnotenia_prehlad.mjs --posledny
+ *     node --env-file=.env.local scripts/ratings_overview.mjs
+ *     node --env-file=.env.local scripts/ratings_overview.mjs --posledny
  *
  * Hodnotenia sa zbierajú priamo v testovacom rozhraní namiesto Excelu.
  * Tento skript ukáže, ako ďaleko je zber a čo z metrík D9 už vieme

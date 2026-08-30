@@ -14,6 +14,7 @@ import { brandingView } from "@/lib/tenants"
 import { availableProviders } from "@/lib/oauth"
 import { tenantStyle } from "@/components/TenantHeader"
 import type { Tenant } from "@/lib/tenants"
+import { normalizeQuery, type RawQuery } from "@/lib/urlParams"
 
 export const dynamic = "force-dynamic"
 
@@ -22,9 +23,9 @@ export const dynamic = "force-dynamic"
 export default async function SignInPage({
   searchParams,
 }: {
-  searchParams: Promise<{ odoslane?: string; error?: string }>
+  searchParams: Promise<RawQuery>
 }) {
-  const params = await searchParams
+  const params = normalizeQuery<{ sent?: string; error?: string }>(await searchParams)
 
   // Neznámy hostiteľ nedostane ani prihlasovaciu stránku (D29) — ale výpadok
   // databázy sa od neznámej domény musí odlíšiť. Keby sme oboje riešili
@@ -56,7 +57,7 @@ export default async function SignInPage({
   return (
     <div className="obal" style={{ padding: "64px 20px", maxWidth: 460, ...tenantStyle(branding) }}>
       <SignIn
-        odoslane={params.odoslane === "1"}
+        odoslane={params.sent === "1"}
         chyba={params.error}
         branding={branding}
         poskytovatelia={providers}

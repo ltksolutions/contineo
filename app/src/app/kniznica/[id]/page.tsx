@@ -21,6 +21,7 @@ import { codelistOptions } from "@/lib/codelists"
 import { tenantExtras } from "@/lib/codelistsTenant"
 import Select from "@/components/Select"
 import TagSelect from "@/components/TagSelect"
+import { normalizeQuery, type RawQuery } from "@/lib/urlParams"
 
 export const dynamic = "force-dynamic"
 
@@ -29,7 +30,7 @@ export default async function DocumentDetailPage({
   searchParams,
 }: {
   params: Promise<{ id: string }>
-  searchParams: Promise<{ sprava?: string; chyba?: string }>
+  searchParams: Promise<RawQuery>
 }) {
   const ctx = await libraryContext()
   if (ctx.state !== "ready") {
@@ -38,7 +39,7 @@ export default async function DocumentDetailPage({
   }
 
   const { id } = await params
-  const { sprava: message, chyba: error } = await searchParams
+  const { msg: message, error } = normalizeQuery<{ msg?: string; error?: string }>(await searchParams)
   const documentId = decodeURIComponent(id)
   const d = await libraryDetail(ctx.tenant.companyCode, documentId)
   if (!d) notFound()

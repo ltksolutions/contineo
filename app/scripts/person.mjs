@@ -1,11 +1,11 @@
 /**
- * osoba.mjs — role a skupiny jednej osoby (D38, D33).
+ * person.mjs — role a skupiny jednej osoby (D38, D33).
  *
- *     npm run osoba                                          # vypíše všetkých
- *     npm run osoba -- --email jan.letko@futbalsfz.sk        # jednu
- *     npm run osoba -- --email … --rola hr
- *     npm run osoba -- --email … --rola hr --odobrat
- *     npm run osoba -- --email … --skupiny "rozhodcovia, delegati"
+ *     npm run person                                          # vypíše všetkých
+ *     npm run person -- --email jan.letko@futbalsfz.sk        # jednu
+ *     npm run person -- --email … --rola hr
+ *     npm run person -- --email … --rola hr --odobrat
+ *     npm run person -- --email … --skupiny "rozhodcovia, delegati"
  *
  * **Osobu nezakladá.** Na to je import (`npm run persons:import`), ktorý má
  * náhľad — nahratie človeka naslepo je operácia, po ktorej sa hľadá, ako to

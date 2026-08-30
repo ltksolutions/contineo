@@ -16,7 +16,7 @@ import { redirect } from "next/navigation"
 import { revalidatePath } from "next/cache"
 import { orgContext } from "@/lib/orgSettings"
 import { isRedirect } from "@/lib/redirects"
-import { LEGACY_TAB_KEYS } from "@/lib/urlTabs"
+import { tabValue } from "@/lib/urlParams"
 import { saveTenant, saveOAuth, deleteOAuth, normalizeDomains, TenantValidationError } from "@/lib/tenantAdmin"
 import { saveBrand, BrandError } from "@/lib/branding"
 import { splitList } from "@/lib/oauth"
@@ -79,10 +79,10 @@ function back(fd: FormData, message: string, error = false): never {
   // Starý kľúč záložky (`utvary`) sa preloží aj tu, nielen pri čítaní stránky:
   // formulár vykreslený pred premenovaním ho ešte nesie a bez prekladu by
   // človeka po uložení hodilo na prvú záložku.
-  const given = fieldText(fd, "zalozka")
-  const tab = (LEGACY_TAB_KEYS[given] ?? given) || "vzhlad"
-  const q = new URLSearchParams({ zalozka: tab, sprava: message })
-  if (error) q.set("chyba", "1")
+  const given = fieldText(fd, "tab") || fieldText(fd, "zalozka")
+  const tab = tabValue(given) || "branding"
+  const q = new URLSearchParams({ tab, msg: message })
+  if (error) q.set("error", "1")
   redirect(`/organizacia?${q.toString()}`)
 }
 

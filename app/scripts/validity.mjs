@@ -1,5 +1,5 @@
 /**
- * platnost.mjs — nastaví dátum platnosti znenia (D6).
+ * validity.mjs — nastaví dátum platnosti znenia (D6).
  *
  * `effectiveFrom` nie je technický údaj. Doslovne sa prepisuje do
  * potvrdzovacej formulky („platná od …", D28) a tým aj do záznamu
@@ -11,8 +11,8 @@
  *     to bol niečí odhad. Bez tohto údaja je dátum tvrdenie bez pôvodu;
  *   - predvolene **nič nezapisuje**.
  *
- *   npm run platnost -- --doc sfz:stanovy --od 2026-02-27 --zdroj "..."
- *   npm run platnost -- --doc sfz:stanovy --od 2026-02-27 --zdroj "..." --zapis
+ *   npm run validity -- --doc sfz:stanovy --od 2026-02-27 --zdroj "..."
+ *   npm run validity -- --doc sfz:stanovy --od 2026-02-27 --zdroj "..." --zapis
  */
 
 import { MongoClient } from "mongodb"
@@ -31,7 +31,7 @@ const VERSION = arg("--verzia")
 const WRITE = process.argv.includes("--zapis")
 
 if (!DOC || !FROM) {
-  console.error("Použitie: npm run platnost -- --doc <documentId> --od RRRR-MM-DD --zdroj \"<citácia>\" [--verzia <versionId>] [--zapis]")
+  console.error("Použitie: npm run validity -- --doc <documentId> --od RRRR-MM-DD --zdroj \"<citácia>\" [--verzia <versionId>] [--zapis]")
   process.exit(1)
 }
 const date = new Date(`${FROM}T00:00:00.000Z`)
@@ -57,7 +57,7 @@ if (!doc) {
 
 const versions = doc.versions ?? []
 if (versions.length === 0) {
-  console.error(`${FAIL} ${DOC} nemá žiadne znenie. Najprv spusti: npm run verzie`)
+  console.error(`${FAIL} ${DOC} nemá žiadne znenie. Najprv spusti: npm run versions`)
   await client.close()
   process.exit(1)
 }

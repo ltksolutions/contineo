@@ -16,13 +16,14 @@ import { brandingView } from "@/lib/tenants"
 import { tenantStyle } from "@/components/TenantHeader"
 import Select from "@/components/Select"
 import TagSelect from "@/components/TagSelect"
+import { normalizeQuery, type RawQuery } from "@/lib/urlParams"
 
 export const dynamic = "force-dynamic"
 
 export default async function NewDocumentPage({
   searchParams,
 }: {
-  searchParams: Promise<{ chyba?: string; title?: string; sectionKey?: string }>
+  searchParams: Promise<RawQuery>
 }) {
   const ctx = await libraryContext()
   if (ctx.state !== "ready") {
@@ -30,7 +31,7 @@ export default async function NewDocumentPage({
     notFound()
   }
 
-  const { chyba: error, title, sectionKey } = await searchParams
+  const { error, title, sectionKey } = normalizeQuery<{ error?: string; title?: string; sectionKey?: string }>(await searchParams)
   // Ponuka musí obsahovať aj to, čo si organizácia dopísala (D55).
   const extras = tenantExtras(ctx.tenant)
   const branding = brandingView(ctx.tenant)

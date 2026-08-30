@@ -330,8 +330,8 @@ starého tvaru:
 | `src/app/**/page.tsx` | cesta k súboru **je** adresa stránky; premenovanie rozbije odkazy v e-mailoch a v záložkách prehliadača |
 | `src/app/api/**/route.ts` | to isté pre koncové body, ktoré volá prehliadač |
 | `scripts/lib/*.mjs` | preberacie body, ktoré importujú skripty (`chunker.mjs`, `csv.mjs`) |
-| `package.json` → `scripts` | príkazy, ktoré máte zapísané v postupoch (`npm run kontrola`) |
-| kľúče v adrese (`?zalozka=…`) | rovnaký prípad ako adresa stránky — pozri `lib/zalozky.ts` |
+| `package.json` → `scripts` | príkazy, ktoré máte zapísané v postupoch (`npm run check`) |
+| kľúče v adrese (`?tab=…`) | rovnaký prípad ako adresa stránky — pozri `lib/urlParams.ts` |
 
 Pri tých sa nepremenúva, ale **prekladá**: starý tvar zostane fungovať a
-zmizne, keď prestane chodiť. Presne tak sa riešilo `?zalozka=utvary`.
+zmizne, keď prestane chodiť. Presne tak sa rieši `?zalozka=utvary` → `?tab=departments`.

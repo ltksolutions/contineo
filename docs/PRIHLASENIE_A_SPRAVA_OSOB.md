@@ -349,7 +349,7 @@ neuhádol prečo.
 
 #### Prevod existujúcich údajov
 
-`npm run utvary -- --tenant SFZ` ukáže, čo by vzniklo; s `--zapis` to založí.
+`npm run departments -- --tenant SFZ` ukáže, čo by vzniklo; s `--zapis` to založí.
 Strom je po prevode **plochý**: zo zápisu „Odbor médií" sa nedá vyčítať, pod
 koho patrí, a hádať to podľa podreťazcov by vyrobilo štruktúru, ktorá vyzerá
 hotovo a nesedí. Hierarchiu doklikne človek v `/organizacia`, záložka Oddelenia.
@@ -433,7 +433,7 @@ oživenie starého — „bol, odišiel, vrátil sa" je iná odpoveď na otázku
 v danom období povinnosť, než „bol celý čas".
 
 Zapisuje sa na všetkých troch miestach, kde sa skupiny menia: obrazovka osoby,
-CSV import (najčastejšia hromadná zmena) a `npm run osoba`.
+CSV import (najčastejšia hromadná zmena) a `npm run person`.
 
 Bez histórie zostáva už len **trasa**. Tá je obsah, nie adresát — mení sa
 s onboardingom človeka, nie s rozhodnutím o tom, komu sa čo posiela.

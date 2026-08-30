@@ -1,5 +1,5 @@
 /**
- * dopln_povodne_subory.mjs — pripojí pôvodné PDF k normám z importu (D53).
+ * attach_original_files.mjs — pripojí pôvodné PDF k normám z importu (D53).
  *
  * Deväť noriem SFZ sa do systému dostalo príkazovým riadkom ako `.md` súbory,
  * ktoré vznikli ručným prevodom z PDF. Samotné PDF pritom máme — sú v
@@ -14,8 +14,8 @@
  * náhodný artefakt (rovnaká zásada ako pri metadátach) a uhádnuté priradenie
  * by pripojilo cudzie PDF k norme — čo je horšie než žiadne.
  *
- *     node --env-file=.env.local scripts/dopln_povodne_subory.mjs
- *     node --env-file=.env.local scripts/dopln_povodne_subory.mjs --zapis
+ *     node --env-file=.env.local scripts/attach_original_files.mjs
+ *     node --env-file=.env.local scripts/attach_original_files.mjs --zapis
  */
 
 import { readFileSync, existsSync, statSync } from "node:fs"
@@ -84,7 +84,7 @@ for (const [documentId, fileName] of Object.entries(MAPPING)) {
     contentType: "application/pdf",
     metadata: {
       companyCode: doc.companyCode,
-      aktor: "script:dopln_povodne_subory",
+      aktor: "script:attach_original_files",
       nahraneKedy: new Date(),
     },
   })
@@ -103,7 +103,7 @@ for (const [documentId, fileName] of Object.entries(MAPPING)) {
         bajtov: data.byteLength,
         typ: "pdf",
         nahraneKedy: new Date(),
-        nahralKto: "script:dopln_povodne_subory",
+        nahralKto: "script:attach_original_files",
       },
       // Poctivo: markdown v databáze nevznikol týmto prevodom, ale ručne
       // pred zavedením knižnice. Tvrdiť opak by znamenalo, že sa o rok nedá

@@ -1,5 +1,5 @@
 /**
- * premenuj_audit_utvar.mjs — `predmet: "utvar"` → `"oddelenie"` (jednorazovo).
+ * rename_audit_department.mjs — `predmet: "utvar"` → `"oddelenie"` (jednorazovo).
  *
  * Pri premenovaní v rozhraní sa zmenil aj predmet, ktorý sa do auditu
  * zapisuje. Existujúce záznamy zostali so starým kľúčom — a dva rôzne kľúče
@@ -9,8 +9,8 @@
  * záznamu, a robí sa raz, kým sú tie záznamy dva. Pri stovkách by som
  * radšej nechal starý kľúč a preložil ho pri čítaní.
  *
- *     node --env-file=.env.local scripts/premenuj_audit_utvar.mjs
- *     node --env-file=.env.local scripts/premenuj_audit_utvar.mjs --zapis
+ *     node --env-file=.env.local scripts/rename_audit_department.mjs
+ *     node --env-file=.env.local scripts/rename_audit_department.mjs --zapis
  */
 
 import { MongoClient } from "mongodb"
