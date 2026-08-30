@@ -1,7 +1,12 @@
 "use client"
 
 /**
- * StromOddeleni — presúvanie oddelení myšou v rámci jednej úrovne (D60).
+ * StromSPoradim — presúvanie položiek myšou v rámci jednej úrovne (D60).
+ *
+ * Slúži **oddeleniam v nastavení organizácie aj priečinkom v knižnici**. Sú
+ * to dva rôzne stromy s rovnakým správaním; dva komponenty by znamenali, že
+ * sa jeden z nich raz začne správať inak a nikto nebude vedieť, ktorý je
+ * ten správny. Súbor sa ešte volá podľa prvého použitia.
  *
  * **Ťahanie je nadstavba, nie jediná cesta.** Pri každej položke zostávajú
  * šípky hore/dole — obyčajné formuláre, ktoré fungujú bez JavaScriptu,
@@ -38,13 +43,18 @@ export interface PolozkaStromu {
 
 const ID_FORMULARA = "poradie-oddeleni"
 
-export default function StromOddeleni({
+export default function StromSPoradim({
   polozky,
-  zalozka,
+  skryte,
   akcia,
 }: {
   polozky: PolozkaStromu[]
-  zalozka: string
+  /**
+   * Polia, ktoré sa majú poslať spolu s poradím — záložka v nastavení
+   * organizácie, filtre v knižnici. Bez nich by človeka po uložení hodilo
+   * na iný pohľad než ten, v ktorom preusporadúval.
+   */
+  skryte?: Record<string, string>
   akcia: (fd: FormData) => void | Promise<void>
 }) {
   const [poradie, setPoradie] = useState<PolozkaStromu[]>(polozky)
@@ -70,7 +80,9 @@ export default function StromOddeleni({
           a v riadkoch sú vlastné (premenovať, presunúť, zrušiť). Tlačidlo sa
           naň odkazuje cez `form`. */}
       <form id={ID_FORMULARA} action={akcia}>
-        <input type="hidden" name="zalozka" value={zalozka} />
+        {Object.entries(skryte ?? {}).map(([k, v]) => (
+          <input key={k} type="hidden" name={k} value={v} />
+        ))}
         <input type="hidden" name="poradie" value={poradie.map(p => p.id).join(",")} />
       </form>
 

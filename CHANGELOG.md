@@ -4,6 +4,12 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Added (2026-08-30 — poradie aj pre priečinky knižnice)
+
+- **Priečinky knižnice majú vlastné poradie** (D60), rovnako ako oddelenia: ťahanie myšou v rámci úrovne, šípky hore/dole ako cesta bez JavaScriptu, čiary hierarchie. Priečinky sú usporiadanie, ktoré si niekto premyslel — „Normy" pred „Internými smernicami", nie naopak preto, že I je pred N.
+- **Jeden komponent na obidva stromy.** Dva by znamenali, že sa jeden z nich raz začne správať inak a nikto nebude vedieť, ktorý je ten správny. Preusporiadanie si so sebou nesie filtre, v ktorých človek práve je — inak by ho po uložení hodilo na iný pohľad.
+- „Všetky dokumenty" a „Nezaradené" do preusporadúvania nepatria: nie sú to priečinky, ale pohľady na celý zoznam.
+
 ### Added (2026-08-30 — poradie oddelení a čiary hierarchie)
 
 - **Vlastné poradie medzi súrodencami (D60).** Organizačná schéma nie je abecedný zoznam: prezident stojí nad výkonným výborom bez ohľadu na to, ako sa volajú. Kto poradie neurčí, má naďalej abecedu — nemuselo sa nič migrovať a miešaný stav je zámerný, lebo prinútiť organizáciu očíslovať celý strom skôr, než presunie jednu položku, by bolo horšie než dočasná nedôslednosť.

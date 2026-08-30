@@ -33,6 +33,15 @@ export interface Priecinok {
   id: string
   nazov: string
   parentId: string | null
+  /**
+   * Poradie medzi súrodencami (D60).
+   *
+   * Rovnaké ako pri oddeleniach a z rovnakého dôvodu: priečinky knižnice sú
+   * usporiadanie, ktoré si niekto premyslel — „Normy" pred „Internými
+   * smernicami", nie naopak preto, že I je pred N. Chýbajúce poradie
+   * znamená „zatiaľ neurčené" a vtedy rozhoduje názov, ako doteraz.
+   */
+  poradie?: number
   createdAt: Date
   createdBy: string
   updatedAt?: Date
@@ -46,10 +55,17 @@ export class PriecinokError extends Error {
   }
 }
 
+/** Priame podpriečinky v poradí, ktoré určil človek; inak abecedne. */
 export function deti(vsetky: Priecinok[], parentId: string | null): Priecinok[] {
   return vsetky
     .filter(p => (p.parentId ?? null) === parentId)
-    .sort((a, b) => a.nazov.localeCompare(b.nazov, "sk"))
+    .sort((a, b) => {
+      const pa = a.poradie, pb = b.poradie
+      if (typeof pa === "number" && typeof pb === "number") return pa - pb
+      if (typeof pa === "number") return -1
+      if (typeof pb === "number") return 1
+      return a.nazov.localeCompare(b.nazov, "sk")
+    })
 }
 
 /** Cesta od koreňa po daný priečinok vrátane. Nezacyklí sa ani na chybných dátach. */
@@ -310,4 +326,77 @@ export async function zaradDokument(
     },
   )
   if (!r.matchedCount) throw new PriecinokError("Taký dokument tu nie je.")
+}
+
+
+/**
+ * Posunie priečinok o jedno miesto medzi súrodencami (D60).
+ *
+ * Nikdy nemení nadriadený priečinok — na to je presun. Zlúčiť to do jedného
+ * ťahania by znamenalo, že sa človek pri preusporadúvaní omylom prepadne
+ * o úroveň nižšie.
+ */
+export async function posunPriecinok(
+  companyCode: string,
+  id: string,
+  smer: "hore" | "dole",
+  aktor: string,
+): Promise<void> {
+  const vsetky = await vsetkyPriecinky(companyCode)
+  const ja = vsetky.find(p => p.id === id)
+  if (!ja) throw new PriecinokError("Taký priečinok tu nie je.")
+
+  const surodenci = deti(vsetky, ja.parentId ?? null)
+  const kde = surodenci.findIndex(p => p.id === id)
+  const kam = smer === "hore" ? kde - 1 : kde + 1
+  if (kam < 0 || kam >= surodenci.length) return
+
+  const zoradene = [...surodenci]
+  const [vybraty] = zoradene.splice(kde, 1)
+  zoradene.splice(kam, 0, vybraty)
+
+  await ulozPoradiePriecinkov(companyCode, zoradene.map(p => p.id), aktor)
+  await zapisAudit({
+    companyCode, predmet: "priecinok", akcia: "preusporiadane", aktor,
+    cielId: id, cielPopis: ja.nazov,
+    poznamka: `posunuté ${smer} medzi súrodencami`,
+  })
+}
+
+/**
+ * Zapíše poradie súrodencov podľa zoznamu identifikátorov.
+ *
+ * Prijíma **len priečinky s tým istým nadriadeným**: zoznam z prehliadača by
+ * inak vedel prehádzať celý strom, a to je zmena štruktúry maskovaná ako
+ * preusporiadanie.
+ *
+ * Prepisuje poradie celej úrovne, nie len dvoch dotknutých — časť súrodencov
+ * nemusí mať poradie určené vôbec a bez prečíslovania by sa výsledok líšil od
+ * toho, čo človek videl.
+ */
+export async function ulozPoradiePriecinkov(
+  companyCode: string,
+  idVPoradi: string[],
+  aktor: string,
+): Promise<void> {
+  const vsetky = await vsetkyPriecinky(companyCode)
+  const podla = new Map(vsetky.map(p => [p.id, p]))
+
+  const dotknute = idVPoradi.map(x => podla.get(x))
+  if (dotknute.some(p => p === undefined)) {
+    throw new PriecinokError("Zoznam obsahuje priečinok, ktorý tu nie je.")
+  }
+  const rodicia = new Set(dotknute.map(p => p!.parentId ?? "koren"))
+  if (rodicia.size > 1) {
+    throw new PriecinokError("Preusporiadať sa dá len v rámci jednej úrovne.")
+  }
+
+  const col = await getCollection<Priecinok>(PRIECINKY_COLLECTION)
+  const teraz = new Date()
+  for (const [i, x] of idVPoradi.entries()) {
+    await col.updateOne(
+      { companyCode, id: x },
+      { $set: { poradie: i, updatedAt: teraz, updatedBy: aktor } },
+    )
+  }
 }

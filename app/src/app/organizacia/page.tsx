@@ -24,7 +24,7 @@ import { ulozVzhlad, ulozPrihlasenie, zmazPrihlasenie, poziadaj, overDomenu, zru
 import { zalozUtvar, premenujUtvar, presunUtvar, zrusUtvar } from "./akcie"
 import { pridajDoCiselnika, odoberZCiselnika, ulozClenenie, preindexujVsetkyAkcia } from "./akcie"
 import { posunOddelenieAkcia, ulozPoradieAkcia } from "./akcie"
-import StromOddeleni from "@/components/StromOddeleni"
+import StromSPoradim from "@/components/StromOddeleni"
 import { stavPreindexovania } from "@/lib/kniznica.zapis"
 import { PREDVOLENY_PROFIL } from "@/lib/chunker.mjs"
 import { POPIS_CISELNIKA, ponuka, vlastnePolozky, pouzitie } from "@/lib/ciselnikyTenanta"
@@ -377,8 +377,8 @@ export default async function Organizacia({
               zapísané pri ľuďoch ako text, ozvite sa nám a prevedieme ich naraz.
             </p>
           ) : (
-            <StromOddeleni
-              zalozka="oddelenia"
+            <StromSPoradim
+              skryte={{ zalozka: "oddelenia" }}
               akcia={ulozPoradieAkcia}
               polozky={riadky.map(({ oddelenie, uroven }) => {
                 const p = koliOsob.get(oddelenie.id) ?? { priamo: 0, sPodriadenymi: 0 }

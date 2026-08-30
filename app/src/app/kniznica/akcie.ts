@@ -24,7 +24,7 @@ import { UloziskoError, nacitajSubor } from "@/lib/ulozisko"
 import { doplnkyTenanta } from "@/lib/ciselnikyTenanta"
 import {
   zalozPriecinok, premenujPriecinok, presunPriecinok, zrusPriecinok,
-  zaradDokument, PriecinokError,
+  zaradDokument, posunPriecinok, ulozPoradiePriecinkov, PriecinokError,
 } from "@/lib/priecinky"
 import type { Doplnky } from "@/lib/ciselniky"
 import type { ProfilClenenia } from "@/lib/chunker"
@@ -424,4 +424,39 @@ export async function opravZnenieAkcia(fd: FormData) {
 
   revalidatePath(`/kniznica/${id}`)
   redirect(`/kniznica/${encodeURIComponent(id)}?sprava=${encodeURIComponent(sprava)}${chyba ? "&chyba=1" : ""}`)
+}
+
+/**
+ * Posun priečinka o jedno miesto medzi súrodencami (D60).
+ *
+ * Obyčajný formulár — funguje bez JavaScriptu a ovláda sa klávesnicou.
+ * Ťahanie myšou robí to isté, ale je to nadstavba, nie jediná cesta.
+ */
+export async function posunPriecinokAkcia(fd: FormData) {
+  const ja = await kto()
+  if (!ja) redirect("/")
+  const smer = textPola(fd, "smer") === "dole" ? "dole" : "hore"
+  try {
+    await posunPriecinok(ja.companyCode, textPola(fd, "id"), smer, ja.email)
+    revalidatePath("/kniznica")
+    spatDoKniznice(fd, "Zmeny boli uložené.")
+  } catch (e) {
+    if (jePresmerovanie(e)) throw e
+    spatDoKniznice(fd, spravaChyby(e), true)
+  }
+}
+
+/** Nové poradie celej úrovne — sem posiela výsledok ťahanie myšou. */
+export async function ulozPoradiePriecinkovAkcia(fd: FormData) {
+  const ja = await kto()
+  if (!ja) redirect("/")
+  const poradie = textPola(fd, "poradie").split(",").map(x => x.trim()).filter(Boolean)
+  try {
+    if (poradie.length > 1) await ulozPoradiePriecinkov(ja.companyCode, poradie, ja.email)
+    revalidatePath("/kniznica")
+    spatDoKniznice(fd, "Zmeny boli uložené.")
+  } catch (e) {
+    if (jePresmerovanie(e)) throw e
+    spatDoKniznice(fd, spravaChyby(e), true)
+  }
 }

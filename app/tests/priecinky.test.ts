@@ -89,3 +89,38 @@ describe("presun priecinka", () => {
     expect(smieSaPresunut(hlboky, "x", "u" + (MAX_HLBKA - 1))).toBeNull()
   })
 })
+
+describe("poradie priecinkov (D60)", () => {
+  function pp(id: string, nazov: string, parentId: string | null, poradie?: number): Priecinok {
+    return {
+      companyCode: "SFZ", id, nazov, parentId, poradie,
+      createdAt: new Date("2026-01-01"), createdBy: "test",
+    }
+  }
+
+  it("bez urceneho poradia rozhoduje nazov", () => {
+    const v = [pp("i", "Interne", null), pp("n", "Normy", null)]
+    expect(deti(v, null).map(x => x.id)).toEqual(["i", "n"])
+  })
+
+  it("urcene poradie prebije abecedu", () => {
+    // Priecinky su usporiadanie, ktore si niekto premyslel: Normy pred
+    // Internymi smernicami, nie naopak preto, ze I je pred N.
+    const v = [pp("i", "Interne", null, 1), pp("n", "Normy", null, 0)]
+    expect(deti(v, null).map(x => x.id)).toEqual(["n", "i"])
+  })
+
+  it("kto ma poradie, stoji pred tymi bez neho", () => {
+    const v = [pp("a", "Alfa", null), pp("z", "Zeta", null, 0)]
+    expect(deti(v, null).map(x => x.id)).toEqual(["z", "a"])
+  })
+
+  it("poradie plati len v ramci jednej urovne", () => {
+    const v = [
+      pp("k", "Koreň", null, 0),
+      pp("d1", "Dieťa A", "k", 1),
+      pp("d2", "Dieťa B", "k", 0),
+    ]
+    expect(deti(v, "k").map(x => x.id)).toEqual(["d2", "d1"])
+  })
+})

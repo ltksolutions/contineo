@@ -16,7 +16,9 @@ import { doplnkyTenanta } from "@/lib/ciselnikyTenanta"
 import Vyber from "@/components/Vyber"
 import {
   zalozPriecinokAkcia, premenujPriecinokAkcia, presunPriecinokAkcia, zrusPriecinokAkcia,
+  posunPriecinokAkcia, ulozPoradiePriecinkovAkcia,
 } from "./akcie"
+import StromSPoradim from "@/components/StromOddeleni"
 import { brandingView } from "@/lib/tenants"
 import { tenantStyle } from "@/components/TenantHeader"
 import { formatDate } from "@/lib/i18n"
@@ -167,12 +169,25 @@ export default async function Kniznica({
               </Link>
             </li>
 
-            {strom.map(({ priecinok: p, uroven }) => {
+          </ul>
+
+          {/* Fixné položky vyššie do preusporadúvania nepatria — nie sú to
+              priečinky, ale pohľady na celý zoznam. */}
+          <StromSPoradim
+            skryte={Object.fromEntries(filtre)}
+            akcia={ulozPoradiePriecinkovAkcia}
+            polozky={strom.map(({ priecinok: p, uroven }) => {
               const c = poctyPriecinkov.get(p.id) ?? { priamo: 0, sPodriadenymi: 0 }
               const pod = podstrom(priecinky, p.id)
-              return (
-                <li key={p.id} className="strom-polozka" style={{ paddingLeft: (uroven - 1) * 14 }}>
+              return {
+                id: p.id,
+                nazov: p.nazov,
+                parentId: p.parentId ?? null,
+                uroven,
+                obsah: (
+                  <>
                   <div className="strom-riadok" style={{ gap: 6 }}>
+                    <span className="strom-uchop" aria-hidden="true">⠿</span>
                     <Link
                       href={sFiltrom({ priecinok: p.id })}
                       className={`strom-nazov${priecinok === p.id ? " je-aktivny" : ""}`}
@@ -187,6 +202,25 @@ export default async function Kniznica({
                       upraviť
                     </summary>
                     <div className="strom-uprava">
+                      {/* Posun o jedno miesto. Ťahanie myšou robí to isté,
+                          ale toto funguje aj bez JavaScriptu a klávesnicou. */}
+                      <div className="strom-sipky">
+                        <form action={posunPriecinokAkcia}>
+                          <input type="hidden" name="id" value={p.id} />
+                          {filtre.map(([k, v]) => <input key={k} type="hidden" name={k} value={v} />)}
+                          <input type="hidden" name="smer" value="hore" />
+                          <button className="tlacidlo tlacidlo--tiche" type="submit"
+                                  aria-label={`Posunúť ${p.nazov} vyššie`}>↑ vyššie</button>
+                        </form>
+                        <form action={posunPriecinokAkcia}>
+                          <input type="hidden" name="id" value={p.id} />
+                          {filtre.map(([k, v]) => <input key={k} type="hidden" name={k} value={v} />)}
+                          <input type="hidden" name="smer" value="dole" />
+                          <button className="tlacidlo tlacidlo--tiche" type="submit"
+                                  aria-label={`Posunúť ${p.nazov} nižšie`}>↓ nižšie</button>
+                        </form>
+                      </div>
+
                       <form action={premenujPriecinokAkcia} className="strom-forma">
                         <input type="hidden" name="id" value={p.id} />
                         {filtre.map(([k, v]) => <input key={k} type="hidden" name={k} value={v} />)}
@@ -228,10 +262,11 @@ export default async function Kniznica({
                       )}
                     </div>
                   </details>
-                </li>
-              )
+                  </>
+                ),
+              }
             })}
-          </ul>
+          />
 
           <form action={zalozPriecinokAkcia} className="strom-forma" style={{ marginTop: 12 }}>
             {filtre.map(([k, v]) => <input key={k} type="hidden" name={k} value={v} />)}
