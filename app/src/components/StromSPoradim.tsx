@@ -6,7 +6,7 @@
  * Slúži **oddeleniam v nastavení organizácie aj priečinkom v knižnici**. Sú
  * to dva rôzne stromy s rovnakým správaním; dva komponenty by znamenali, že
  * sa jeden z nich raz začne správať inak a nikto nebude vedieť, ktorý je
- * ten správny. Súbor sa ešte volá podľa prvého použitia.
+ * ten správny.
  *
  * **Ťahanie je nadstavba, nie jediná cesta.** Pri každej položke zostávajú
  * šípky hore/dole — obyčajné formuláre, ktoré fungujú bez JavaScriptu,

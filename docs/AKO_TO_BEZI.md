@@ -309,3 +309,29 @@ Nič z hlavnej reťaze. Ale pozor na dve veci mimo nej:
 Aplikácia beží na zdieľanej infraštruktúre Vercelu, takže z pohľadu izolácie
 je to **T1** v oboch prípadoch — Bedrock na tom nič nemení. Vyhradený účet
 u poskytovateľa cloudu nie je vyhradený hardvér.
+
+## Premenovanie súborov: čo je vnútorný odkaz a čo verejný
+
+Otázka „smie sa tento súbor premenovať" má dve celkom rôzne odpovede podľa
+toho, kto sa naň odkazuje.
+
+**Vnútorné odkazy (importy) sa premenovať dajú a je to bezpečné.** Import
+`@/components/StromSPoradim` sa rieši pri preklade, nie za behu: keď sa cesta
+zmení a odkaz nie, `tsc` aj build zlyhajú **hneď a menovite**. Nemôže vzniknúť
+stav, kde to prejde a rozbije sa to až u zákazníka — a `git mv` zachová
+históriu súboru. Premenovanie vnútorného modulu je preto obyčajná úprava,
+nie zásah.
+
+**Verejné cesty sú zmluva a tie sa premenovať nesmú** — alebo len s prekladom
+starého tvaru:
+
+| čo | prečo je to zmluva |
+|---|---|
+| `src/app/**/page.tsx` | cesta k súboru **je** adresa stránky; premenovanie rozbije odkazy v e-mailoch a v záložkách prehliadača |
+| `src/app/api/**/route.ts` | to isté pre koncové body, ktoré volá prehliadač |
+| `scripts/lib/*.mjs` | preberacie body, ktoré importujú skripty (`chunker.mjs`, `csv.mjs`) |
+| `package.json` → `scripts` | príkazy, ktoré máte zapísané v postupoch (`npm run kontrola`) |
+| kľúče v adrese (`?zalozka=…`) | rovnaký prípad ako adresa stránky — pozri `lib/zalozky.ts` |
+
+Pri tých sa nepremenúva, ale **prekladá**: starý tvar zostane fungovať a
+zmizne, keď prestane chodiť. Presne tak sa riešilo `?zalozka=utvary`.

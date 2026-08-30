@@ -18,7 +18,7 @@ import {
   zalozPriecinokAkcia, premenujPriecinokAkcia, presunPriecinokAkcia, zrusPriecinokAkcia,
   posunPriecinokAkcia, ulozPoradiePriecinkovAkcia,
 } from "./akcie"
-import StromSPoradim from "@/components/StromOddeleni"
+import StromSPoradim from "@/components/StromSPoradim"
 import { brandingView } from "@/lib/tenants"
 import { tenantStyle } from "@/components/TenantHeader"
 import { formatDate } from "@/lib/i18n"

@@ -24,7 +24,7 @@ import { ulozVzhlad, ulozPrihlasenie, zmazPrihlasenie, poziadaj, overDomenu, zru
 import { zalozUtvar, premenujUtvar, presunUtvar, zrusUtvar } from "./akcie"
 import { pridajDoCiselnika, odoberZCiselnika, ulozClenenie, preindexujVsetkyAkcia } from "./akcie"
 import { posunOddelenieAkcia, ulozPoradieAkcia } from "./akcie"
-import StromSPoradim from "@/components/StromOddeleni"
+import StromSPoradim from "@/components/StromSPoradim"
 import { stavPreindexovania } from "@/lib/kniznica.zapis"
 import { PREDVOLENY_PROFIL } from "@/lib/chunker.mjs"
 import { POPIS_CISELNIKA, ponuka, vlastnePolozky, pouzitie } from "@/lib/ciselnikyTenanta"
