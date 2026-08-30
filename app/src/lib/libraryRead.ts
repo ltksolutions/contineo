@@ -28,7 +28,7 @@ export interface LibraryRow {
   status: string
   folderId?: string | null
   /** Názvy priečinkov od koreňa — do zoznamu, aby bolo vidieť, kde dokument je. */
-  cestaPriecinkov?: string[]
+  folderTrail?: string[]
   versionCount: number
   /** Označenie platného znenia, alebo dôvod, prečo žiadne neplatí. */
   effectiveLabel: string
@@ -117,8 +117,13 @@ export async function libraryList(
   const col = await getCollection(DOCUMENTS_COLLECTION)
   const q: Record<string, unknown> = { companyCode }
 
-  if (filter.status === "koncept") q.status = { $ne: "published" }
-  if (filter.status === "publikovane") q.status = "published"
+  // Staré slovenské hodnoty z odkazov spred premenovania sa prekladajú,
+  // nie zahadzujú — inak by záložka v prehliadači potichu ukázala všetko.
+  const status = filter.status === "koncept" ? "draft"
+    : filter.status === "publikovane" ? "published"
+    : filter.status
+  if (status === "draft") q.status = { $ne: "published" }
+  if (status === "published") q.status = "published"
 
   // Priečinok sa filtruje cez cestu, takže „úsek komunikácie" nájde aj to,
   // čo je v jeho podpriečinkoch. Jeden dotaz namiesto rekurzie pri každom
@@ -165,7 +170,7 @@ export async function libraryList(
   const folders = await allFolders(companyCode)
   return records.map(z => {
     const r = toRow(z as RawRow)
-    return { ...r, cestaPriecinkov: pathTo(folders, r.folderId).map(p => p.name) }
+    return { ...r, folderTrail: pathTo(folders, r.folderId).map(p => p.name) }
   })
 }
 
@@ -197,7 +202,7 @@ export async function libraryDetail(
 
   return {
     ...toRow(d),
-    cestaPriecinkov: pathTo(folders, (d.folderId as string | null | undefined) ?? null).map(p => p.name),
+    folderTrail: pathTo(folders, (d.folderId as string | null | undefined) ?? null).map(p => p.name),
     editableText: editableText,
     companyCode,
     scope: d.scope ? String(d.scope) : undefined,

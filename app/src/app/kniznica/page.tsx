@@ -21,18 +21,11 @@ import {
 import TreeWithOrder from "@/components/TreeWithOrder"
 import { brandingView } from "@/lib/tenants"
 import { tenantStyle } from "@/components/TenantHeader"
-import { formatDate } from "@/lib/i18n"
+import { formatDate, dictionary } from "@/lib/i18n"
 import Notice from "@/components/Notice"
 import { normalizeQuery, type RawQuery } from "@/lib/urlParams"
 
 export const dynamic = "force-dynamic"
-
-const PROCESSING_LABEL: Record<string, string> = {
-  uploaded: "nahraté",
-  converted: "prevedené, nepublikované",
-  indexed: "vo vyhľadávaní",
-  failed: "prevod zlyhal",
-}
 
 function formatSize(bytes: number): string {
   return bytes > 1024 * 1024
@@ -58,6 +51,8 @@ export default async function LibraryPage({
   const { msg: message, error, search, status: state, folder, category, language, accessLevel, tag } = q
   const branding = brandingView(ctx.tenant)
   const uiLanguage = ctx.person.language
+  const t = dictionary(uiLanguage).library.list
+  const tf = dictionary(uiLanguage).library.folders
   const extras = tenantExtras(ctx.tenant)
 
   const [rows, folders, folderCounts] = await Promise.all([
@@ -87,52 +82,50 @@ export default async function LibraryPage({
       <Notice message={message} error={error === "1"} back="/kniznica" />
 
       <div style={{ display: "flex", gap: 12, alignItems: "baseline", flexWrap: "wrap", margin: "0 0 6px" }}>
-        <h1 style={{ fontSize: 26, letterSpacing: "-0.02em", margin: 0 }}>Knižnica</h1>
-        <Link className="tlacidlo" href="/kniznica/nova">Nahrať dokument</Link>
+        <h1 style={{ fontSize: 26, letterSpacing: "-0.02em", margin: 0 }}>{t.heading}</h1>
+        <Link className="tlacidlo" href="/kniznica/nova">{t.upload}</Link>
       </div>
       <p className="tichy" style={{ fontSize: 15, margin: "0 0 20px", maxWidth: 640 }}>
-        Nahratý súbor sa prevedie na text, ktorý si <strong>prečítaš a opravíš</strong> —
-        až potom sa publikuje. Prevod z PDF nikdy nie je dokonalý a je to znenie,
-        ktoré budú ľudia potvrdzovať.
+        {t.introBefore}<strong>{t.introHighlight}</strong>{t.introAfter}
       </p>
 
       <form className="audit-filter" method="get">
         <label className="pole" style={{ flex: "1 1 220px", margin: 0 }}>
-          <span className="pole-popis">Hľadať</span>
-          <input className="pole-vstup" name="search" defaultValue={search ?? ""} placeholder="názov alebo kľúč" />
+          <span className="pole-popis">{t.search}</span>
+          <input className="pole-vstup" name="search" defaultValue={search ?? ""} placeholder={t.searchPlaceholder} />
         </label>
 
         <div className="pole" style={{ flex: "0 1 180px", margin: 0 }}>
-          <span className="pole-popis">Druh</span>
+          <span className="pole-popis">{t.category}</span>
           <Select
             name="category"
-            options={[{ value: "", label: "— všetky —" }, ...codelistOptions("category", extras)]}
+            options={[{ value: "", label: t.all }, ...codelistOptions("category", extras)]}
             initial={category ?? ""}
-            fieldLabel="Druh dokumentu"
+            fieldLabel={t.categoryField}
           />
         </div>
 
         <div className="pole" style={{ flex: "0 1 160px", margin: 0 }}>
-          <span className="pole-popis">Značka</span>
+          <span className="pole-popis">{t.tag}</span>
           <Select
             name="tag"
-            options={[{ value: "", label: "— všetky —" }, ...codelistOptions("tags", extras)]}
+            options={[{ value: "", label: t.all }, ...codelistOptions("tags", extras)]}
             initial={tag ?? ""}
-            fieldLabel="Značka"
+            fieldLabel={t.tag}
           />
         </div>
 
         <div className="pole" style={{ flex: "0 1 150px", margin: 0 }}>
-          <span className="pole-popis">Stav</span>
+          <span className="pole-popis">{t.status}</span>
           <Select
             name="status"
             options={[
-              { value: "", label: "— všetky —" },
-              { value: "publikovane", label: "publikované" },
-              { value: "koncept", label: "koncepty" },
+              { value: "", label: t.all },
+              { value: "published", label: t.statusPublished },
+              { value: "draft", label: t.statusDrafts },
             ]}
             initial={state ?? ""}
-            fieldLabel="Stav"
+            fieldLabel={t.status}
           />
         </div>
 
@@ -142,15 +135,15 @@ export default async function LibraryPage({
         {language && <input type="hidden" name="language" value={language} />}
         {accessLevel && <input type="hidden" name="accessLevel" value={accessLevel} />}
 
-        <button className="tlacidlo tlacidlo--tiche" type="submit">Filtrovať</button>
+        <button className="tlacidlo tlacidlo--tiche" type="submit">{t.filter}</button>
         {hasFilter && (
-          <Link className="tichy" href="/kniznica" style={{ fontSize: 14 }}>zrušiť filtre</Link>
+          <Link className="tichy" href="/kniznica" style={{ fontSize: 14 }}>{t.clearFilters}</Link>
         )}
       </form>
 
       <div className="kniznica-mriezka">
         <aside className="kniznica-priecinky">
-          <h2 className="pole-popis" style={{ margin: "0 0 8px" }}>Priečinky</h2>
+          <h2 className="pole-popis" style={{ margin: "0 0 8px" }}>{tf.heading}</h2>
 
           <ul className="strom">
             <li className="strom-polozka">
@@ -158,7 +151,7 @@ export default async function LibraryPage({
                 href={withFilter({ priecinok: undefined })}
                 className={`strom-riadok${!folder ? " je-aktivny" : ""}`}
               >
-                <span className="strom-nazov">Všetky dokumenty</span>
+                <span className="strom-nazov">{tf.allDocuments}</span>
               </Link>
             </li>
             <li className="strom-polozka">
@@ -166,7 +159,7 @@ export default async function LibraryPage({
                 href={withFilter({ priecinok: "nezaradene" })}
                 className={`strom-riadok${folder === "nezaradene" ? " je-aktivny" : ""}`}
               >
-                <span className="tichy strom-nazov">Nezaradené</span>
+                <span className="tichy strom-nazov">{tf.unfiled}</span>
               </Link>
             </li>
 
@@ -175,6 +168,7 @@ export default async function LibraryPage({
           {/* Fixné položky vyššie do preusporadúvania nepatria — nie sú to
               priečinky, ale pohľady na celý zoznam. */}
           <TreeWithOrder
+            language={uiLanguage}
             hidden={Object.fromEntries(filters)}
             action={saveFolderOrderAction}
             items={tree.map(({ folder: p, level: level }) => {
@@ -200,7 +194,7 @@ export default async function LibraryPage({
 
                   <details>
                     <summary className="tichy" style={{ fontSize: 12.5, cursor: "pointer", padding: "0 12px 6px" }}>
-                      upraviť
+                      {tf.edit}
                     </summary>
                     <div className="strom-uprava">
                       {/* Posun o jedno miesto. Ťahanie myšou robí to isté,
@@ -211,14 +205,14 @@ export default async function LibraryPage({
                           {filters.map(([k, v]) => <input key={k} type="hidden" name={k} value={v} />)}
                           <input type="hidden" name="smer" value="hore" />
                           <button className="tlacidlo tlacidlo--tiche" type="submit"
-                                  aria-label={`Posunúť ${p.name} vyššie`}>↑ vyššie</button>
+                                  aria-label={tf.moveUp(p.name)}>{tf.up}</button>
                         </form>
                         <form action={shiftFolderAction}>
                           <input type="hidden" name="id" value={p.id} />
                           {filters.map(([k, v]) => <input key={k} type="hidden" name={k} value={v} />)}
                           <input type="hidden" name="smer" value="dole" />
                           <button className="tlacidlo tlacidlo--tiche" type="submit"
-                                  aria-label={`Posunúť ${p.name} nižšie`}>↓ nižšie</button>
+                                  aria-label={tf.moveDown(p.name)}>{tf.down}</button>
                         </form>
                       </div>
 
@@ -226,8 +220,8 @@ export default async function LibraryPage({
                         <input type="hidden" name="id" value={p.id} />
                         {filters.map(([k, v]) => <input key={k} type="hidden" name={k} value={v} />)}
                         <input className="pole-vstup" name="name" defaultValue={p.name}
-                               aria-label={`Názov priečinka ${p.name}`} required />
-                        <button className="tlacidlo tlacidlo--tiche" type="submit">Premenovať</button>
+                               aria-label={tf.nameOf(p.name)} required />
+                        <button className="tlacidlo tlacidlo--tiche" type="submit">{tf.rename}</button>
                       </form>
 
                       <form action={moveFolderAction} className="strom-forma">
@@ -236,9 +230,9 @@ export default async function LibraryPage({
                         <Select
                           name="parentId"
                           initial={p.parentId ?? ""}
-                          fieldLabel={`Nadriadený priečinok pre ${p.name}`}
+                          fieldLabel={tf.parentOf(p.name)}
                           options={[
-                            { value: "", label: "— najvyššia úroveň —" },
+                            { value: "", label: tf.topLevel },
                             ...tree
                               .filter(r => !inside.has(r.folder.id))
                               .map(r => ({
@@ -247,18 +241,18 @@ export default async function LibraryPage({
                               })),
                           ]}
                         />
-                        <button className="tlacidlo tlacidlo--tiche" type="submit">Presunúť</button>
+                        <button className="tlacidlo tlacidlo--tiche" type="submit">{tf.move}</button>
                       </form>
 
                       {c.withDescendants === 0 && inside.size === 1 ? (
                         <form action={deleteFolderAction}>
                           <input type="hidden" name="id" value={p.id} />
                           {filters.map(([k, v]) => <input key={k} type="hidden" name={k} value={v} />)}
-                          <button className="tlacidlo tlacidlo--tiche" type="submit">Zrušiť priečinok</button>
+                          <button className="tlacidlo tlacidlo--tiche" type="submit">{tf.remove}</button>
                         </form>
                       ) : (
                         <p className="tichy" style={{ fontSize: 12.5, margin: 0 }}>
-                          Zrušiť sa dá až prázdny priečinok bez podpriečinkov.
+                          {tf.removeHint}
                         </p>
                       )}
                     </div>
@@ -271,14 +265,14 @@ export default async function LibraryPage({
 
           <form action={createFolderAction} className="strom-forma" style={{ marginTop: 12 }}>
             {filters.map(([k, v]) => <input key={k} type="hidden" name={k} value={v} />)}
-            <input className="pole-vstup" name="name" placeholder="Nový priečinok"
-                   aria-label="Názov nového priečinka" required />
+            <input className="pole-vstup" name="name" placeholder={tf.newFolder}
+                   aria-label={tf.newFolderName} required />
             <Select
               name="parentId"
               initial={folder && folder !== "nezaradene" ? folder : ""}
-              fieldLabel="Nadriadený priečinok"
+              fieldLabel={tf.parentFolder}
               options={[
-                { value: "", label: "— najvyššia úroveň —" },
+                { value: "", label: tf.topLevel },
                 ...tree
                   .filter(r => depth(folders, r.folder.id) < MAX_DEPTH)
                   .map(r => ({
@@ -287,7 +281,7 @@ export default async function LibraryPage({
                   })),
               ]}
             />
-            <button className="tlacidlo tlacidlo--tiche" type="submit">Založiť</button>
+            <button className="tlacidlo tlacidlo--tiche" type="submit">{tf.create}</button>
           </form>
         </aside>
 
@@ -295,7 +289,7 @@ export default async function LibraryPage({
 
       {rows.length === 0 ? (
         <p className="karta" style={{ padding: 20, fontSize: 15 }}>
-          {search ? "Nič sa nenašlo." : "Zatiaľ tu nie je nič. Začni nahratím prvého dokumentu."}
+          {search ? t.nothingFound : t.empty}
         </p>
       ) : (
         <ul className="audit">
@@ -305,12 +299,12 @@ export default async function LibraryPage({
                 <Link href={`/kniznica/${encodeURIComponent(r.documentId)}`} style={{ fontWeight: 600 }}>
                   {r.title}
                 </Link>
-                <span className="stitok">{PROCESSING_LABEL[r.processingState] ?? r.processingState}</span>
-                {r.hasDraft && r.status !== "published" && <span className="stitok">koncept</span>}
+                <span className="stitok">{t.processing[r.processingState] ?? r.processingState}</span>
+                {r.hasDraft && r.status !== "published" && <span className="stitok">{t.draft}</span>}
               </div>
 
               <div className="tichy audit-kto">
-                {r.cestaPriecinkov?.length ? `${r.cestaPriecinkov.join(" / ")} · ` : ""}
+                {r.folderTrail?.length ? `${r.folderTrail.join(" / ")} · ` : ""}
                 {r.documentId}
                 {r.originalFile && ` · ${r.originalFile.name} (${formatSize(r.originalFile.bytes)})`}
                 {r.updatedAt && ` · ${formatDate(r.updatedAt, uiLanguage)}`}
@@ -319,9 +313,9 @@ export default async function LibraryPage({
 
               <div className="audit-zmeny">
                 <div>
-                  <span className="audit-pole">platné znenie</span>
+                  <span className="audit-pole">{t.effectiveVersion}</span>
                   <span>{r.effectiveLabel}</span>
-                  {r.versionCount > 0 && <span className="tichy"> · {r.versionCount} znení</span>}
+                  {r.versionCount > 0 && <span className="tichy"> · {t.versions(r.versionCount)}</span>}
                 </div>
               </div>
             </li>

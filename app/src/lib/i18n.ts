@@ -341,6 +341,83 @@ interface Dictionary {
     empty: string
     add: string
   }
+  /** Knižnica dokumentov (D53). */
+  library: {
+    list: {
+      heading: string
+      upload: string
+      introBefore: string
+      introHighlight: string
+      introAfter: string
+      search: string
+      searchPlaceholder: string
+      category: string
+      categoryField: string
+      tag: string
+      status: string
+      all: string
+      statusPublished: string
+      statusDrafts: string
+      filter: string
+      clearFilters: string
+      /** Stav spracovania súboru — kľúče sú hodnoty z databázy. */
+      processing: Record<string, string>
+      draft: string
+      effectiveVersion: string
+      versions: (n: number) => string
+      nothingFound: string
+      empty: string
+    }
+    folders: {
+      heading: string
+      allDocuments: string
+      unfiled: string
+      edit: string
+      moveUp: (name: string) => string
+      up: string
+      moveDown: (name: string) => string
+      down: string
+      nameOf: (name: string) => string
+      rename: string
+      parentOf: (name: string) => string
+      topLevel: string
+      move: string
+      remove: string
+      removeHint: string
+      newFolder: string
+      newFolderName: string
+      parentFolder: string
+      create: string
+    }
+    upload: {
+      back: string
+      heading: string
+      intro: string
+      file: string
+      /** Veta okolo `.doc` a `.xls` — značky zostávajú v JSX. */
+      oldFormatsBefore: string
+      oldFormatsMiddle: string
+      oldFormatsAfter: string
+      title: string
+      titlePlaceholder: string
+      titleNote: string
+      key: string
+      keyNoteBefore: string
+      keyNoteAfterCode: string
+      keyNoteHighlight: string
+      keyNoteAfter: string
+      scope: string
+      accessLevel: string
+      accessInternalNote: string
+      accessPublicNote: string
+      documentLanguage: string
+      documentLanguageNote: string
+      unset: string
+      tags: string
+      newTag: string
+      submit: string
+    }
+  }
 }
 
 export const DICTIONARY: Record<UiLanguage, Dictionary> = {
@@ -605,6 +682,85 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     empty: "Zatiaľ tu žiadne nie sú. Prvú vytvoríš dole.",
     add: "Pridať",
   },
+  library: {
+    list: {
+      heading: "Knižnica",
+      upload: "Nahrať dokument",
+      introBefore: "Nahratý súbor sa prevedie na text, ktorý si ",
+      introHighlight: "prečítaš a opravíš",
+      introAfter: " — až potom sa publikuje. Prevod z PDF nikdy nie je dokonalý a je to znenie, ktoré budú ľudia potvrdzovať.",
+      search: "Hľadať",
+      searchPlaceholder: "názov alebo kľúč",
+      category: "Druh",
+      categoryField: "Druh dokumentu",
+      tag: "Značka",
+      status: "Stav",
+      all: "— všetky —",
+      statusPublished: "publikované",
+      statusDrafts: "koncepty",
+      filter: "Filtrovať",
+      clearFilters: "zrušiť filtre",
+      processing: {
+        uploaded: "nahraté",
+        converted: "prevedené, nepublikované",
+        indexed: "vo vyhľadávaní",
+        failed: "prevod zlyhal",
+      },
+      draft: "koncept",
+      effectiveVersion: "platné znenie",
+      versions: (n) => `${n} ${n === 1 ? "znenie" : n < 5 ? "znenia" : "znení"}`,
+      nothingFound: "Nič sa nenašlo.",
+      empty: "Zatiaľ tu nie je nič. Začni nahratím prvého dokumentu.",
+    },
+    folders: {
+      heading: "Priečinky",
+      allDocuments: "Všetky dokumenty",
+      unfiled: "Nezaradené",
+      edit: "upraviť",
+      moveUp: (name) => `Posunúť ${name} vyššie`,
+      up: "↑ vyššie",
+      moveDown: (name) => `Posunúť ${name} nižšie`,
+      down: "↓ nižšie",
+      nameOf: (name) => `Názov priečinka ${name}`,
+      rename: "Premenovať",
+      parentOf: (name) => `Nadriadený priečinok pre ${name}`,
+      topLevel: "— najvyššia úroveň —",
+      move: "Presunúť",
+      remove: "Zrušiť priečinok",
+      removeHint: "Zrušiť sa dá až prázdny priečinok bez podpriečinkov.",
+      newFolder: "Nový priečinok",
+      newFolderName: "Názov nového priečinka",
+      parentFolder: "Nadriadený priečinok",
+      create: "Založiť",
+    },
+    upload: {
+      back: "← Späť do knižnice",
+      heading: "Nahrať dokument",
+      intro: "Word, PDF, Excel, Markdown alebo text. Súbor sa uloží tak, ako prišiel — prevod je odvodenina a originál musí zostať, aby sa dalo overiť, z čoho text vznikol.",
+      file: "Súbor",
+      oldFormatsBefore: "Staré ",
+      oldFormatsMiddle: " a ",
+      oldFormatsAfter: " sa previesť nedajú — ulož ich vo Worde alebo Exceli ako novší formát. Skenované PDF bez textu sa dá dať prepísať jazykovým modelom až v editore.",
+      title: "Názov",
+      titlePlaceholder: "Súťažný poriadok futbalu SFZ",
+      titleNote: "Objaví sa doslovne v potvrdzovacej formulke, takže nech je to celý úradný názov.",
+      key: "Kľúč dokumentu",
+      keyNoteBefore: "Malé písmená bez diakritiky a podčiarkovníky. Spolu s kódom organizácie tvorí identifikátor (",
+      keyNoteAfterCode: ").",
+      keyNoteHighlight: " Ten istý kľúč znamená ten istý dokument",
+      keyNoteAfter: " — nahratie naň založí nové znenie, nie druhý dokument. Existujúce: ",
+      scope: "Pôsobnosť",
+      accessLevel: "Prístupnosť",
+      accessInternalNote: " vidia len ľudia organizácie, ",
+      accessPublicNote: " ktokoľvek prihlásený.",
+      documentLanguage: "Jazyk dokumentu",
+      documentLanguageNote: "Jazyk, v ktorom je norma napísaná. Nič neprekladáme — dokument v inom jazyku je samostatný dokument.",
+      unset: "— neurčené —",
+      tags: "Značky",
+      newTag: "Nová značka",
+      submit: "Nahrať a previesť",
+    },
+  },
   },
 
   cs: {
@@ -868,6 +1024,85 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     empty: "Zatím tu žádné nejsou. První vytvoříš dole.",
     add: "Přidat",
   },
+  library: {
+    list: {
+      heading: "Knihovna",
+      upload: "Nahrát dokument",
+      introBefore: "Nahraný soubor se převede na text, který si ",
+      introHighlight: "přečteš a opravíš",
+      introAfter: " — teprve pak se publikuje. Převod z PDF nikdy není dokonalý a je to znění, které budou lidé potvrzovat.",
+      search: "Hledat",
+      searchPlaceholder: "název nebo klíč",
+      category: "Druh",
+      categoryField: "Druh dokumentu",
+      tag: "Značka",
+      status: "Stav",
+      all: "— všechny —",
+      statusPublished: "publikované",
+      statusDrafts: "koncepty",
+      filter: "Filtrovat",
+      clearFilters: "zrušit filtry",
+      processing: {
+        uploaded: "nahráno",
+        converted: "převedeno, nepublikováno",
+        indexed: "ve vyhledávání",
+        failed: "převod selhal",
+      },
+      draft: "koncept",
+      effectiveVersion: "platné znění",
+      versions: (n) => `${n} ${n === 1 ? "znění" : n < 5 ? "znění" : "znění"}`,
+      nothingFound: "Nic se nenašlo.",
+      empty: "Zatím tu nic není. Začni nahráním prvního dokumentu.",
+    },
+    folders: {
+      heading: "Složky",
+      allDocuments: "Všechny dokumenty",
+      unfiled: "Nezařazené",
+      edit: "upravit",
+      moveUp: (name) => `Posunout ${name} výš`,
+      up: "↑ výš",
+      moveDown: (name) => `Posunout ${name} níž`,
+      down: "↓ níž",
+      nameOf: (name) => `Název složky ${name}`,
+      rename: "Přejmenovat",
+      parentOf: (name) => `Nadřazená složka pro ${name}`,
+      topLevel: "— nejvyšší úroveň —",
+      move: "Přesunout",
+      remove: "Zrušit složku",
+      removeHint: "Zrušit lze jen prázdnou složku bez podsložek.",
+      newFolder: "Nová složka",
+      newFolderName: "Název nové složky",
+      parentFolder: "Nadřazená složka",
+      create: "Založit",
+    },
+    upload: {
+      back: "← Zpět do knihovny",
+      heading: "Nahrát dokument",
+      intro: "Word, PDF, Excel, Markdown nebo text. Soubor se uloží tak, jak přišel — převod je odvozenina a originál musí zůstat, aby šlo ověřit, z čeho text vznikl.",
+      file: "Soubor",
+      oldFormatsBefore: "Staré ",
+      oldFormatsMiddle: " a ",
+      oldFormatsAfter: " převést nelze — ulož je ve Wordu nebo Excelu jako novější formát. Skenované PDF bez textu lze nechat přepsat jazykovým modelem až v editoru.",
+      title: "Název",
+      titlePlaceholder: "Soutěžní řád fotbalu",
+      titleNote: "Objeví se doslovně v potvrzovací formulaci, ať je to tedy celý úřední název.",
+      key: "Klíč dokumentu",
+      keyNoteBefore: "Malá písmena bez diakritiky a podtržítka. Spolu s kódem organizace tvoří identifikátor (",
+      keyNoteAfterCode: ").",
+      keyNoteHighlight: " Týž klíč znamená týž dokument",
+      keyNoteAfter: " — nahrání na něj založí nové znění, ne druhý dokument. Existující: ",
+      scope: "Působnost",
+      accessLevel: "Přístupnost",
+      accessInternalNote: " vidí jen lidé organizace, ",
+      accessPublicNote: " kdokoli přihlášený.",
+      documentLanguage: "Jazyk dokumentu",
+      documentLanguageNote: "Jazyk, ve kterém je předpis napsán. Nic nepřekládáme — dokument v jiném jazyce je samostatný dokument.",
+      unset: "— neurčeno —",
+      tags: "Značky",
+      newTag: "Nová značka",
+      submit: "Nahrát a převést",
+    },
+  },
   },
 
   en: {
@@ -1129,6 +1364,85 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
   tags: {
     empty: "There are none yet. Create the first one below.",
     add: "Add",
+  },
+  library: {
+    list: {
+      heading: "Library",
+      upload: "Upload a document",
+      introBefore: "An uploaded file is converted into text that you ",
+      introHighlight: "read and correct",
+      introAfter: " — only then is it published. Conversion from PDF is never perfect, and this is the wording people will be acknowledging.",
+      search: "Search",
+      searchPlaceholder: "title or key",
+      category: "Category",
+      categoryField: "Document category",
+      tag: "Tag",
+      status: "Status",
+      all: "— all —",
+      statusPublished: "published",
+      statusDrafts: "drafts",
+      filter: "Filter",
+      clearFilters: "clear filters",
+      processing: {
+        uploaded: "uploaded",
+        converted: "converted, not published",
+        indexed: "in search",
+        failed: "conversion failed",
+      },
+      draft: "draft",
+      effectiveVersion: "effective version",
+      versions: (n) => `${n} ${n === 1 ? "version" : "versions"}`,
+      nothingFound: "Nothing found.",
+      empty: "There is nothing here yet. Start by uploading the first document.",
+    },
+    folders: {
+      heading: "Folders",
+      allDocuments: "All documents",
+      unfiled: "Unfiled",
+      edit: "edit",
+      moveUp: (name) => `Move ${name} up`,
+      up: "↑ up",
+      moveDown: (name) => `Move ${name} down`,
+      down: "↓ down",
+      nameOf: (name) => `Name of folder ${name}`,
+      rename: "Rename",
+      parentOf: (name) => `Parent folder for ${name}`,
+      topLevel: "— top level —",
+      move: "Move",
+      remove: "Delete folder",
+      removeHint: "Only an empty folder with no subfolders can be deleted.",
+      newFolder: "New folder",
+      newFolderName: "Name of the new folder",
+      parentFolder: "Parent folder",
+      create: "Create",
+    },
+    upload: {
+      back: "← Back to the library",
+      heading: "Upload a document",
+      intro: "Word, PDF, Excel, Markdown or plain text. The file is stored exactly as it arrived — the conversion is derived from it, and the original has to stay so it can be checked what the text came from.",
+      file: "File",
+      oldFormatsBefore: "Legacy ",
+      oldFormatsMiddle: " and ",
+      oldFormatsAfter: " cannot be converted — save them from Word or Excel in a newer format. A scanned PDF with no text layer can be transcribed by the language model later, in the editor.",
+      title: "Title",
+      titlePlaceholder: "Competition Rules of the Football Association",
+      titleNote: "It appears verbatim in the acknowledgement statement, so use the full official title.",
+      key: "Document key",
+      keyNoteBefore: "Lower-case letters without diacritics, and underscores. Together with the organisation code it forms the identifier (",
+      keyNoteAfterCode: ").",
+      keyNoteHighlight: " The same key means the same document",
+      keyNoteAfter: " — uploading to it creates a new version, not a second document. Existing: ",
+      scope: "Scope",
+      accessLevel: "Access level",
+      accessInternalNote: " is visible only to people of the organisation, ",
+      accessPublicNote: " to anyone signed in.",
+      documentLanguage: "Document language",
+      documentLanguageNote: "The language the document is written in. We translate nothing — a document in another language is a separate document.",
+      unset: "— unset —",
+      tags: "Tags",
+      newTag: "New tag",
+      submit: "Upload and convert",
+    },
   },
   },
 }
