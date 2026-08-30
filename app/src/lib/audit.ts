@@ -42,31 +42,29 @@ export const AUDIT_COLLECTION = "audit"
 
 /** Čoho sa zmena týkala. Nie tabuľka — vec, ktorej človek rozumie. */
 export type AuditSubject =
-  | "osoba"
-  | "oddelenie"
-  /** Starý názov pre `oddelenie`. Ostáva kvôli záznamom spred premenovania. */
-  | "utvar"
-  | "dokument"
-  | "priecinok"
-  | "pridelenie"
-  | "organizacia"
-  | "domena"
-  | "prihlasenie-nastavenie"
+  | "person"
+  | "department"
+  | "document"
+  | "folder"
+  | "assignment"
+  | "organisation"
+  | "domain"
+  | "signin-settings"
   | "tenant"
 
 export interface AuditRecord {
   _id?: ObjectId
   /** Organizácia, ktorej sa zmena týka. Podľa nej sa aj číta (D32). */
   companyCode: string
-  predmet: AuditSubject
+  subject: AuditSubject
   /**
-   * Čo sa stalo, slovesom: `zalozene`, `zmenene`, `vyradene`, `vratene`,
-   * `premenovane`, `presunute`, `zrusene`, `pridelene`, `odvolane`,
-   * `oznamene`, `overene`.
+   * Čo sa stalo, slovesom: `created`, `changed`, `excluded`, `restored`,
+   * `renamed`, `moved`, `deleted`, `assigned`, `revoked`, `notified`,
+   * `verified`.
    */
-  akcia: string
+  action: string
   /** Identifikátor dotknutej veci: `persons.id`, id oddelenia, `_id` pridelenia. */
-  cielId: string | null
+  targetId: string | null
   /**
    * Ľudský popis cieľa v čase zmeny — meno osoby, názov oddelenia.
    *
@@ -74,17 +72,17 @@ export interface AuditRecord {
    * osoba sa dá vyradiť a oddelenie zrušiť, a záznam „zrušil oddelenie 8f3a…" o rok
    * nepovie nikomu nič.
    */
-  cielPopis: string | null
+  targetLabel: string | null
   /** Kto to spravil. Adresa, nie `persons.id` — čitateľná bez ďalšieho dotazu. */
-  aktor: string
-  kedy: Date
+  actor: string
+  at: Date
   /**
    * Zmenené polia: staré a nové hodnoty. Pri tajomstvách len `{ zmenene: true }`.
    * Prázdne, keď akcia hodnoty nemá (napr. odoslanie oznámenia).
    */
-  zmeny?: Record<string, { z?: unknown; na?: unknown }>
+  changes?: Record<string, { from?: unknown; to?: unknown }>
   /** Voľná poznámka — napr. dôvod pridelenia alebo počet adresátov. */
-  poznamka?: string
+  note?: string
 }
 
 /** Polia, ktorých hodnoty sa do auditu nikdy nezapisujú. */
@@ -109,28 +107,28 @@ function isSecretField(field: string): boolean {
 export function diff(
   before: Record<string, unknown> | null | undefined,
   after: Record<string, unknown> | null | undefined,
-): Record<string, { z?: unknown; na?: unknown }> {
-  const out: Record<string, { z?: unknown; na?: unknown }> = {}
+): Record<string, { from?: unknown; to?: unknown }> {
+  const out: Record<string, { from?: unknown; to?: unknown }> = {}
   const keys = new Set([...Object.keys(before ?? {}), ...Object.keys(after ?? {})])
 
   for (const k of keys) {
     const a = before?.[k]
     const b = after?.[k]
     if (JSON.stringify(a ?? null) === JSON.stringify(b ?? null)) continue
-    out[k] = isSecretField(k) ? { na: "(zmenené)" } : { z: a ?? null, na: b ?? null }
+    out[k] = isSecretField(k) ? { to: "(zmenené)" } : { from: a ?? null, to: b ?? null }
   }
   return out
 }
 
 export interface NewAudit {
   companyCode: string
-  predmet: AuditSubject
-  akcia: string
-  aktor: string
-  cielId?: string | null
-  cielPopis?: string | null
-  zmeny?: Record<string, { z?: unknown; na?: unknown }>
-  poznamka?: string
+  subject: AuditSubject
+  action: string
+  actor: string
+  targetId?: string | null
+  targetLabel?: string | null
+  changes?: Record<string, { from?: unknown; to?: unknown }>
+  note?: string
 }
 
 /**
@@ -144,19 +142,19 @@ export interface NewAudit {
  * Volá sa **po** úspešnej zmene, nie pred ňou. Opačné poradie by zapisovalo
  * zmeny, ktoré sa nestali.
  */
-export async function writeAudit(z: NewAudit): Promise<void> {
+export async function writeAudit(from: NewAudit): Promise<void> {
   try {
     const col = await getCollection<AuditRecord>(AUDIT_COLLECTION)
     await col.insertOne({
-      companyCode: z.companyCode,
-      predmet: z.predmet,
-      akcia: z.akcia,
-      cielId: z.cielId ?? null,
-      cielPopis: z.cielPopis ?? null,
-      aktor: z.aktor,
-      kedy: new Date(),
-      ...(z.zmeny && Object.keys(z.zmeny).length > 0 ? { zmeny: z.zmeny } : {}),
-      ...(z.poznamka ? { poznamka: z.poznamka } : {}),
+      companyCode: from.companyCode,
+      subject: from.subject,
+      action: from.action,
+      targetId: from.targetId ?? null,
+      targetLabel: from.targetLabel ?? null,
+      actor: from.actor,
+      at: new Date(),
+      ...(from.changes && Object.keys(from.changes).length > 0 ? { changes: from.changes } : {}),
+      ...(from.note ? { note: from.note } : {}),
     } as AuditRecord)
   } catch (e) {
     console.error("[audit] záznam sa nepodarilo zapísať:", e)
@@ -164,11 +162,11 @@ export async function writeAudit(z: NewAudit): Promise<void> {
 }
 
 export interface AuditFilter {
-  predmet?: AuditSubject
-  aktor?: string
-  cielId?: string
+  subject?: AuditSubject
+  actor?: string
+  targetId?: string
   /** Voľný text — hľadá v popise cieľa a v aktorovi. */
-  hladat?: string
+  search?: string
   limit?: number
 }
 
@@ -186,22 +184,22 @@ export async function auditRecords(
   const col = await getCollection<AuditRecord>(AUDIT_COLLECTION)
   const q: Record<string, unknown> = { companyCode }
 
-  if (filter.predmet) q.predmet = filter.predmet
-  if (filter.aktor) q.aktor = filter.aktor
-  if (filter.cielId) q.cielId = filter.cielId
-  if (filter.hladat?.trim()) {
+  if (filter.subject) q.subject = filter.subject
+  if (filter.actor) q.actor = filter.actor
+  if (filter.targetId) q.cielId = filter.targetId
+  if (filter.search?.trim()) {
     // Vstup od človeka ide do regulárneho výrazu — bez escapovania by `.*`
     // prehľadalo všetko a `(` zhodilo dotaz.
-    const safe = filter.hladat.trim().replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+    const safe = filter.search.trim().replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
     q.$or = [
-      { cielPopis: { $regex: safe, $options: "i" } },
-      { aktor: { $regex: safe, $options: "i" } },
-      { akcia: { $regex: safe, $options: "i" } },
+      { targetLabel: { $regex: safe, $options: "i" } },
+      { actor: { $regex: safe, $options: "i" } },
+      { action: { $regex: safe, $options: "i" } },
     ]
   }
 
   // Strop je tu preto, že obrazovka bez neho o rok načíta desaťtisíce riadkov
   // a spadne práve vtedy, keď ju niekto otvorí kvôli kontrole.
   const limit = Math.min(Math.max(filter.limit ?? 200, 1), 1000)
-  return col.find(q as never).sort({ kedy: -1 }).limit(limit).toArray()
+  return col.find(q as never).sort({ at: -1 }).limit(limit).toArray()
 }

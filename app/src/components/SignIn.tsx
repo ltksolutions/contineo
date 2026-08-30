@@ -57,20 +57,20 @@ const MARKS = { microsoft: MicrosoftMark, google: GoogleMark }
 const NAMES = { microsoft: "Microsoft", google: "Google" }
 
 export default function SignIn({
-  odoslane: sent,
-  chyba: error,
+  sent: sent,
+  error: error,
   branding,
-  poskytovatelia: providers = [],
+  providers: providers = [],
 }: {
-  odoslane: boolean
-  chyba?: string
+  sent: boolean
+  error?: string
   branding?: TenantBrandingView
   /**
    * Ktoré kontá má táto organizácia zapnuté (D44). Prichádza zo servera —
    * klient nemá ako vedieť, čie prihlasovacie údaje sú pre túto doménu
    * nastavené, a hádať by znamenalo ponúknuť tlačidlo, ktoré skončí chybou.
    */
-  poskytovatelia?: ("microsoft" | "google")[]
+  providers?: ("microsoft" | "google")[]
 }) {
   const [email, setEmail] = useState("")
   const [sending, setSending] = useState(false)

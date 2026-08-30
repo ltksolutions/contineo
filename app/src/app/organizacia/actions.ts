@@ -205,16 +205,16 @@ export async function verifyDomainAction(fd: FormData) {
 
   try {
     const v = await verifyRequest(self.companyCode, host, self.email)
-    if (v.stav === "nenajdena") {
+    if (v.state === "nenajdena") {
       message = "Takú žiadosť tu nemáme."
       error = true
-    } else if (v.stav === "caka") {
+    } else if (v.state === "caka") {
       message = `${v.host} zatiaľ nesmeruje na nás. Zmena DNS býva viditeľná do hodiny; ak je to dlhšie, skontrolujte CNAME.`
       error = true
     } else {
       // Až teraz — dôkaz existuje. Do Vercelu sa doména pridáva až po ňom.
       const toVercel = skipVercel(v.host) ? null : await addDomain(v.host)
-      message = toVercel && toVercel.stav !== "pridana" && toVercel.stav !== "uz-je"
+      message = toVercel && toVercel.state !== "pridana" && toVercel.state !== "uz-je"
         ? `${v.host} je zapnutá, ale do Vercelu sa nepridala — ozvite sa nám.`
         : `${v.host} je zapnutá. Portál na nej odpovedá.`
     }
@@ -257,7 +257,7 @@ export async function createDepartmentAction(fd: FormData) {
   if (!self) redirect("/")
   try {
     await createDepartment(
-      self.companyCode, fieldText(fd, "nazov"), fieldText(fd, "parentId") || null, self.email,
+      self.companyCode, fieldText(fd, "name"), fieldText(fd, "parentId") || null, self.email,
     )
     revalidatePath("/organizacia")
     back(fd, SAVED)
@@ -271,7 +271,7 @@ export async function renameDepartmentAction(fd: FormData) {
   const self = await actor()
   if (!self) redirect("/")
   try {
-    await renameDepartment(self.companyCode, fieldText(fd, "id"), fieldText(fd, "nazov"), self.email)
+    await renameDepartment(self.companyCode, fieldText(fd, "id"), fieldText(fd, "name"), self.email)
     revalidatePath("/organizacia")
     back(fd, SAVED)
   } catch (e) {
@@ -364,10 +364,10 @@ export async function saveChunkingProfileAction(fd: FormData) {
 
   try {
     await saveTenant(self.companyCode, {
-      chunkovanie: {
+      chunking: {
         slovoClanok: fieldText(fd, "slovoClanok"),
-        slovoPriloha: fieldText(fd, "slovoPriloha"),
-        opakovaniHlavicky: number("opakovaniHlavicky"),
+        annexWord: fieldText(fd, "slovoPriloha"),
+        headerRepeats: number("opakovaniHlavicky"),
         cielMinTokenov: number("cielMinTokenov"),
         cielMaxTokenov: number("cielMaxTokenov"),
       },
@@ -394,14 +394,14 @@ export async function reindexAllAction(fd: FormData) {
 
   try {
     const v = await reindexAll(
-      ctx.person.companyCode, ctx.person.email, ctx.tenant.chunkovanie, 25,
+      ctx.person.companyCode, ctx.person.email, ctx.tenant.chunking, 25,
     )
     const parts = [`preindexovaných ${v.preindexovanych}`]
     if (v.preskocenych) parts.push(`bez zmeny ${v.preskocenych}`)
-    if (v.zostava) parts.push(`zostáva ${v.zostava} — spusti znova`)
-    if (v.chyby.length) parts.push(`chyby: ${v.chyby.slice(0, 3).join("; ")}`)
+    if (v.remaining) parts.push(`zostáva ${v.remaining} — spusti znova`)
+    if (v.errors.length) parts.push(`chyby: ${v.errors.slice(0, 3).join("; ")}`)
     revalidatePath("/kniznica")
-    back(fd, parts.join(" · "), v.chyby.length > 0)
+    back(fd, parts.join(" · "), v.errors.length > 0)
   } catch (e) {
     if (isRedirect(e)) throw e
     back(fd, errorMessage(e), true)
@@ -434,7 +434,7 @@ export async function shiftDepartmentAction(fd: FormData) {
 export async function saveDepartmentOrderAction(fd: FormData) {
   const self = await actor()
   if (!self) redirect("/")
-  const order = fieldText(fd, "poradie").split(",").map(x => x.trim()).filter(Boolean)
+  const order = fieldText(fd, "order").split(",").map(x => x.trim()).filter(Boolean)
   try {
     if (order.length > 1) await saveOrder(self.companyCode, order, self.email)
     revalidatePath("/organizacia")

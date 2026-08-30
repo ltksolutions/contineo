@@ -145,16 +145,16 @@ export async function requestDomain(
     { $push: { domainRequests: request } } as never,
   )
   await writeAudit({
-    companyCode, predmet: "domena", akcia: "poziadane", aktor: actor,
-    cielId: host, cielPopis: host,
+    companyCode, subject: "domain", action: "requested", actor: actor,
+    targetId: host, targetLabel: host,
   })
   return request
 }
 
 export type VerificationResult =
-  | { stav: "zapnuta"; host: string }
-  | { stav: "caka"; host: string; cname: string }
-  | { stav: "nenajdena" }
+  | { state: "zapnuta"; host: string }
+  | { state: "caka"; host: string; cname: string }
+  | { state: "nenajdena" }
 
 /**
  * Skúsi žiadosť overiť a — keď DNS sedí — doménu zapnúť.
@@ -171,10 +171,10 @@ export async function verifyRequest(
   const col = await getCollection<Tenant & { domainRequests?: DomainRequest[] }>(TENANTS_COLLECTION)
   const t = await col.findOne({ companyCode })
   const request = (t?.domainRequests ?? []).find(z => z.host === host)
-  if (!request) return { stav: "nenajdena" }
+  if (!request) return { state: "nenajdena" }
 
   if (!(await pointsToUs(host))) {
-    return { stav: "caka", host, cname: CNAME_TARGET }
+    return { state: "caka", host, cname: CNAME_TARGET }
   }
 
   // Dôkaz existuje: doménu vie na nás nasmerovať len ten, kto ju ovláda.
@@ -187,12 +187,12 @@ export async function verifyRequest(
     { arrayFilters: [{ "z.host": host }] },
   )
   await writeAudit({
-    companyCode, predmet: "domena", akcia: "overene", aktor: actor,
-    cielId: host, cielPopis: host,
-    poznamka: "DNS smeruje na nás — doména zapnutá",
+    companyCode, subject: "domain", action: "verified", actor: actor,
+    targetId: host, targetLabel: host,
+    note: "DNS smeruje na nás — doména zapnutá",
   })
   invalidateTenants()
-  return { stav: "zapnuta", host }
+  return { state: "zapnuta", host }
 }
 
 /** Odstráni doménu aj žiadosť. Portál na nej prestane odpovedať. */
@@ -208,20 +208,20 @@ export async function cancelDomain(companyCode: string, rawHost: string, actor: 
     { $pull: { hostnames: host, domainRequests: { host } } } as never,
   )
   await writeAudit({
-    companyCode, predmet: "domena", akcia: "zrusene", aktor: actor,
-    cielId: host, cielPopis: host,
+    companyCode, subject: "domain", action: "deleted", actor: actor,
+    targetId: host, targetLabel: host,
   })
   invalidateTenants()
 }
 
 /** Pokyn, ktorý zákazník zapíše u svojho správcu DNS. */
-export function domainInstruction(host: string): { typ: string; nazov: string; hodnota: string } | null {
+export function domainInstruction(host: string): { type: string; name: string; value: string } | null {
   if (skipVercel(host)) return null
   const h = normalizeHostname(host)
   const dots = h.split(".")
   return {
-    typ: "CNAME",
-    nazov: dots.length > 2 ? dots[0] : "@",
-    hodnota: CNAME_TARGET,
+    type: "CNAME",
+    name: dots.length > 2 ? dots[0] : "@",
+    value: CNAME_TARGET,
   }
 }

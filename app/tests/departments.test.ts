@@ -18,7 +18,7 @@ import { inDepartmentSince, newDepartmentHistory, newGroupHistory } from "../src
 /** Malá organizácia: úsek, pod ním dva odbory, pod jedným z nich oddelenie. */
 function o(id: string, name: string, parentId: string | null): Department {
   return {
-    companyCode: "SFZ", id, nazov: name, parentId,
+    companyCode: "SFZ", id, name: name, parentId,
     createdAt: new Date("2026-01-01"), createdBy: "test",
   }
 }
@@ -69,12 +69,12 @@ describe("strom utvarov", () => {
 
   it("splostenie da rodica pred jeho podriadenych a doplni uroven", () => {
     const rows = flattenTree(tree)
-    const where = (id: string) => rows.findIndex(r => r.oddelenie.id === id)
+    const where = (id: string) => rows.findIndex(r => r.department.id === id)
     expect(rows).toHaveLength(tree.length)
     expect(where("uk")).toBeLessThan(where("od-med"))
     expect(where("od-med")).toBeLessThan(where("odd-soc"))
-    expect(rows[where("odd-soc")].uroven).toBe(3)
-    expect(rows[where("lg")].uroven).toBe(1)
+    expect(rows[where("odd-soc")].level).toBe(3)
+    expect(rows[where("lg")].level).toBe(1)
   })
 })
 
@@ -139,8 +139,8 @@ describe("pridelenie utvaru", () => {
 
   it("vyber z formulara rozozna utvar od skupiny", () => {
     const audiences = audienceFromSelection({
-      vybrane: ["group:rozhodcovia", "department:uk"],
-      nazvyOddeleni: { uk: "Usek komunikacie" },
+      selected: ["group:rozhodcovia", "department:uk"],
+      departmentNames: { uk: "Usek komunikacie" },
     })
     expect(audiences).toEqual([
       { kind: "group", value: "rozhodcovia" },
@@ -165,7 +165,7 @@ describe("reorganizacia (D50)", () => {
   const day = (d: number) => new Date(`2026-0${d}-01T00:00:00.000Z`)
 
   const inDepartment = (since: Date) => ({
-    departmentHistory: [{ departmentId: "uk", departmentPath: ["uk"], od: since }],
+    departmentHistory: [{ departmentId: "uk", departmentPath: ["uk"], from: since }],
   })
 
   it("kto bol v utvare od zaciatku, ma povodny datum pridelenia", () => {
@@ -190,7 +190,7 @@ describe("reorganizacia (D50)", () => {
 
   it("kto do skupiny pribudol neskor, ma datum svojho vstupu", () => {
     const assignment = { audience: { kind: "group" as const, value: "rozhodcovia" }, assignedAt: day(3) }
-    const person = { groupHistory: [{ group: "rozhodcovia", od: day(5) }] }
+    const person = { groupHistory: [{ group: "rozhodcovia", from: day(5) }] }
     expect(dateForPerson(assignment, person)).toEqual(day(5))
   })
 
@@ -198,7 +198,7 @@ describe("reorganizacia (D50)", () => {
     // Kto zo skupiny odisiel, uz v nej nie je; jeho stary usek nesmie
     // rozhodovat o datume noveho pridelenia.
     const assignment = { audience: { kind: "group" as const, value: "rozhodcovia" }, assignedAt: day(3) }
-    const person = { groupHistory: [{ group: "rozhodcovia", od: day(5), do: day(6) }] }
+    const person = { groupHistory: [{ group: "rozhodcovia", from: day(5), to: day(6) }] }
     expect(dateForPerson(assignment, person)).toEqual(day(3))
   })
 
@@ -208,8 +208,8 @@ describe("reorganizacia (D50)", () => {
     for (const kind of ["all", "track", "person"] as const) {
       const p = { audience: { kind, value: "x" }, assignedAt: day(3) }
       const person = {
-        departmentHistory: [{ departmentId: "uk", departmentPath: ["uk"], od: day(5) }],
-        groupHistory: [{ group: "x", od: day(5) }],
+        departmentHistory: [{ departmentId: "uk", departmentPath: ["uk"], from: day(5) }],
+        groupHistory: [{ group: "x", from: day(5) }],
       }
       expect(dateForPerson(p, person)).toEqual(day(3))
     }
@@ -217,37 +217,37 @@ describe("reorganizacia (D50)", () => {
 
   it("historia skupin: odchod uzavrie usek, prichod otvori novy", () => {
     const h = newGroupHistory(
-      [{ group: "rozhodcovia", od: day(1) }, { group: "delegati", od: day(1) }],
+      [{ group: "rozhodcovia", from: day(1) }, { group: "delegati", from: day(1) }],
       ["rozhodcovia", "statutari"], day(4),
     )
     const find = (g: string) => h.filter(z => z.group === g)
     expect(find("rozhodcovia")).toHaveLength(1)
-    expect(find("rozhodcovia")[0].od).toEqual(day(1))   // nezmenene clenstvo sa nedotkne
-    expect(find("delegati")[0].do).toEqual(day(4))      // odisiel
-    expect(find("statutari")[0].od).toEqual(day(4))     // pribudol
+    expect(find("rozhodcovia")[0].from).toEqual(day(1))   // nezmenene clenstvo sa nedotkne
+    expect(find("delegati")[0].to).toEqual(day(4))      // odisiel
+    expect(find("statutari")[0].from).toEqual(day(4))     // pribudol
   })
 
   it("navrat do skupiny je novy usek, nie ozivenie stareho", () => {
     // \"bol, odisiel, vratil sa\" je ina informacia nez \"bol cely cas\".
     const h = newGroupHistory(
-      [{ group: "rozhodcovia", od: day(1), do: day(2) }],
+      [{ group: "rozhodcovia", from: day(1), to: day(2) }],
       ["rozhodcovia"], day(4),
     )
     expect(h).toHaveLength(2)
-    expect(h[1].od).toEqual(day(4))
+    expect(h[1].from).toEqual(day(4))
   })
 
   it("velke pismena su ta ista skupina", () => {
-    const h = newGroupHistory([{ group: "rozhodcovia", od: day(1) }], ["Rozhodcovia"], day(4))
+    const h = newGroupHistory([{ group: "rozhodcovia", from: day(1) }], ["Rozhodcovia"], day(4))
     expect(h).toHaveLength(1)
-    expect(h[0].od).toEqual(day(1))
+    expect(h[0].from).toEqual(day(1))
   })
 
   it("vUtvareOd vracia otvoreny zaznam", () => {
     expect(inDepartmentSince({
       departmentHistory: [
-        { departmentId: "lg", departmentPath: ["lg"], od: day(1), do: day(4) },
-        { departmentId: "uk", departmentPath: ["uk"], od: day(4) },
+        { departmentId: "lg", departmentPath: ["lg"], from: day(1), to: day(4) },
+        { departmentId: "uk", departmentPath: ["uk"], from: day(4) },
       ],
     })).toEqual(day(4))
     expect(inDepartmentSince({})).toBeNull()
@@ -256,43 +256,43 @@ describe("reorganizacia (D50)", () => {
 
   it("presun do ineho utvaru uzavrie predosly zaznam", () => {
     const h = newDepartmentHistory(
-      [{ departmentId: "lg", departmentPath: ["lg"], od: day(1) }],
+      [{ departmentId: "lg", departmentPath: ["lg"], from: day(1) }],
       "uk", ["uk"], day(4),
     )
     expect(h).toHaveLength(2)
-    expect(h[0].do).toEqual(day(4))
-    expect(h[1]).toEqual({ departmentId: "uk", departmentPath: ["uk"], od: day(4) })
+    expect(h[0].to).toEqual(day(4))
+    expect(h[1]).toEqual({ departmentId: "uk", departmentPath: ["uk"], from: day(4) })
   })
 
   it("ulozenie toho isteho utvaru datum prichodu neposunie", () => {
     // Inak by opakovane odoslanie formulara posuvalo prichod a s nim terminy.
     const h = newDepartmentHistory(
-      [{ departmentId: "uk", departmentPath: ["uk"], od: day(1) }],
+      [{ departmentId: "uk", departmentPath: ["uk"], from: day(1) }],
       "uk", ["uk"], day(4),
     )
     expect(h).toHaveLength(1)
-    expect(h[0].od).toEqual(day(1))
+    expect(h[0].from).toEqual(day(1))
   })
 
   it("presun celej vetvy opravi cestu, ale neotvori novy zaznam", () => {
     // Clovek sa nikam nepohol, pohol sa jeho utvar. Keby to zalozilo novy
     // zaznam, vyzeralo by to, ze do svojho utvaru prave prisli vsetci naraz.
     const h = newDepartmentHistory(
-      [{ departmentId: "od-med", departmentPath: ["uk", "od-med"], od: day(1) }],
+      [{ departmentId: "od-med", departmentPath: ["uk", "od-med"], from: day(1) }],
       "od-med", ["lg", "od-med"], day(4),
     )
     expect(h).toHaveLength(1)
-    expect(h[0].od).toEqual(day(1))
+    expect(h[0].from).toEqual(day(1))
     expect(h[0].departmentPath).toEqual(["lg", "od-med"])
   })
 
   it("vyradenie zo struktury je tiez zmena", () => {
     const h = newDepartmentHistory(
-      [{ departmentId: "uk", departmentPath: ["uk"], od: day(1) }],
+      [{ departmentId: "uk", departmentPath: ["uk"], from: day(1) }],
       null, [], day(4),
     )
     expect(h).toHaveLength(2)
-    expect(h[0].do).toEqual(day(4))
+    expect(h[0].to).toEqual(day(4))
     expect(h[1].departmentId).toBeNull()
   })
 })
@@ -300,7 +300,7 @@ describe("reorganizacia (D50)", () => {
 describe("poradie medzi surodencami (D60)", () => {
   function so(id: string, name: string, parentId: string | null, order?: number): Department {
     return {
-      companyCode: "SFZ", id, nazov: name, parentId, poradie: order,
+      companyCode: "SFZ", id, name: name, parentId, order: order,
       createdAt: new Date("2026-01-01"), createdBy: "test",
     }
   }

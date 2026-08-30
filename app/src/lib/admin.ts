@@ -70,13 +70,13 @@ export interface TenantOverview {
   status: Tenant["status"]
   languages: string[]
   hostnames: string[]
-  osoby: { spolu: number; prihlaseni: number }
-  trasy: number
+  people: { total: number; signedIn: number }
+  tracks: number
   /** `bezZnenia` sú vypísané menovite — je to najčastejšia tichá príčina
    *  toho, že sa človeku v zozname nič neobjaví (D6). */
-  dokumenty: { spolu: number; bezZnenia: string[] }
-  potvrdenia: number
-  pokynyPoslane?: { kedy: Date; komu: string }
+  documents: { total: number; withoutVersion: string[] }
+  acknowledgements: number
+  pokynyPoslane?: { at: Date; to: string }
 }
 
 /**
@@ -126,12 +126,12 @@ export async function tenantOverviews(): Promise<TenantOverview[]> {
       status: t.status,
       languages: t.languages,
       hostnames: t.hostnames,
-      osoby: { spolu: total, prihlaseni: signedIn },
-      trasy: tracks,
-      dokumenty: { spolu: documents.length, bezZnenia: withoutVersion },
-      potvrdenia: acknowledgements,
+      people: { total: total, signedIn: signedIn },
+      tracks,
+      documents: { total: documents.length, withoutVersion: withoutVersion },
+      acknowledgements: acknowledgements,
       ...(ds?.requestedAt
-        ? { pokynyPoslane: { kedy: new Date(ds.requestedAt), komu: ds.requestedTo } }
+        ? { pokynyPoslane: { at: new Date(ds.requestedAt), to: ds.requestedTo } }
         : {}),
     })
   }

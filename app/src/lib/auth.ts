@@ -547,9 +547,9 @@ async function fillFromDirectory(
     if (!u) return
 
     let photoVersion: string | undefined
-    if (u.fotka && person) {
+    if (u.photo && person) {
       photoVersion = (await savePhoto(
-        companyCode, person.id, u.fotka.contentType, u.fotka.data, "graph",
+        companyCode, person.id, u.photo.contentType, u.photo.data, "graph",
       )) ?? undefined
     }
 

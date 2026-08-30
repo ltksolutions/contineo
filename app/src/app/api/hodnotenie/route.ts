@@ -46,12 +46,12 @@ export async function POST(req: NextRequest) {
   try {
     body = await req.json()
   } catch {
-    return NextResponse.json({ chyba: "Neplatný JSON" }, { status: 400 })
+    return NextResponse.json({ error: "Neplatný JSON" }, { status: 400 })
   }
 
-  if (!body.otazka?.trim() || !body.odpoved?.trim()) {
+  if (!body.question?.trim() || !body.answer?.trim()) {
     return NextResponse.json(
-      { chyba: "Chýba otázka alebo odpoveď" },
+      { error: "Chýba otázka alebo odpoveď" },
       { status: 400 }
     )
   }
@@ -59,26 +59,26 @@ export async function POST(req: NextRequest) {
   try {
     const id = await recordAnswer(
       {
-        otazkaId: body.otazkaId,
-        otazka: body.otazka,
-        odpoved: body.odpoved,
-        zdroje: body.zdroje ?? [],
-        citacie: body.citacie ?? [],
+        questionId: body.questionId,
+        question: body.question,
+        answer: body.answer,
+        sources: body.sources ?? [],
+        citations: body.citations ?? [],
         model: body.model ?? "",
         provider: body.provider ?? "",
-        overeneCitacie: Boolean(body.overeneCitacie),
+        verifiedCitations: Boolean(body.verifiedCitations),
         ttftMs: body.ttftMs ?? null,
-        celkovoMs: body.celkovoMs ?? 0,
-        casy: body.casy,
-        tokeny: body.tokeny,
-        naklad: body.naklad,
+        totalMs: body.totalMs ?? 0,
+        timings: body.timings,
+        tokens: body.tokens,
+        cost: body.cost,
       },
       await reviewer(req)
     )
     return NextResponse.json({ id })
   } catch (e) {
     console.error("Zápis odpovede zlyhal:", e)
-    return NextResponse.json({ chyba: "Zápis zlyhal" }, { status: 500 })
+    return NextResponse.json({ error: "Zápis zlyhal" }, { status: 500 })
   }
 }
 
@@ -87,38 +87,38 @@ export async function PATCH(req: NextRequest) {
   try {
     body = await req.json()
   } catch {
-    return NextResponse.json({ chyba: "Neplatný JSON" }, { status: 400 })
+    return NextResponse.json({ error: "Neplatný JSON" }, { status: 400 })
   }
 
   if (!body.id) {
-    return NextResponse.json({ chyba: "Chýba id" }, { status: 400 })
+    return NextResponse.json({ error: "Chýba id" }, { status: 400 })
   }
 
   const edit: RatingEdit = {}
-  const s = verdict(body.spravna)
-  const h = verdict(body.halucinacia)
-  if (s !== undefined) edit.spravna = s
-  if (h !== undefined) edit.halucinacia = h
+  const s = verdict(body.correct)
+  const h = verdict(body.hallucination)
+  if (s !== undefined) edit.correct = s
+  if (h !== undefined) edit.hallucination = h
 
-  const verified = text(body.overenaOdpoved, 4000)
-  const sources = text(body.spravneZdroje, 500)
-  const note = text(body.poznamka, 2000)
-  if (verified !== undefined) edit.overenaOdpoved = verified
-  if (sources !== undefined) edit.spravneZdroje = sources
-  if (note !== undefined) edit.poznamka = note
+  const verified = text(body.verifiedAnswer, 4000)
+  const sources = text(body.correctSources, 500)
+  const note = text(body.note, 2000)
+  if (verified !== undefined) edit.verifiedAnswer = verified
+  if (sources !== undefined) edit.correctSources = sources
+  if (note !== undefined) edit.note = note
 
   if (Object.keys(edit).length === 0) {
-    return NextResponse.json({ chyba: "Nič na uloženie" }, { status: 400 })
+    return NextResponse.json({ error: "Nič na uloženie" }, { status: 400 })
   }
 
   try {
     const ok = await saveVerdict(body.id, edit, await reviewer(req))
     if (!ok) {
-      return NextResponse.json({ chyba: "Záznam sa nenašiel" }, { status: 404 })
+      return NextResponse.json({ error: "Záznam sa nenašiel" }, { status: 404 })
     }
     return NextResponse.json({ ok: true })
   } catch (e) {
     console.error("Uloženie posudku zlyhalo:", e)
-    return NextResponse.json({ chyba: "Uloženie zlyhalo" }, { status: 500 })
+    return NextResponse.json({ error: "Uloženie zlyhalo" }, { status: 500 })
   }
 }

@@ -19,23 +19,23 @@ import type { Verdict } from "@/lib/ratings"
 type SaveState = "cakam" | "ukladam" | "ulozene" | "chyba"
 
 export interface RatingFields {
-  spravna: Verdict
-  halucinacia: Verdict
-  overenaOdpoved: string
-  spravneZdroje: string
-  poznamka: string
+  correct: Verdict
+  hallucination: Verdict
+  verifiedAnswer: string
+  correctSources: string
+  note: string
 }
 
 const EMPTY: RatingFields = {
-  spravna: null, halucinacia: null,
-  overenaOdpoved: "", spravneZdroje: "", poznamka: "",
+  correct: null, hallucination: null,
+  verifiedAnswer: "", correctSources: "", note: "",
 }
 
 function Choice({
-  aktivna: active, farba: color, onClick, children,
+  active: active, color: color, onClick, children,
 }: {
-  aktivna: boolean
-  farba: "ok" | "bad"
+  active: boolean
+  color: "ok" | "bad"
   onClick: () => void
   children: React.ReactNode
 }) {
@@ -62,16 +62,16 @@ function Choice({
 }
 
 export default function Rating({
-  zaznamId: recordId,
-  otazkaId: questionId,
-  onHotovo: onDone,
+  recordId: recordId,
+  questionId: questionId,
+  onDone: onDone,
 }: {
   /** Id záznamu z `/api/hodnotenie`. Kým je null, panel čaká. */
-  zaznamId: string | null
+  recordId: string | null
   /** Označenie otázky zo zlatej sady, ak ide o režim sady. */
-  otazkaId?: string
+  questionId?: string
   /** Zavolá sa po posúdení správnosti — režim sady na to nadväzuje. */
-  onHotovo?: (correct: Verdict) => void
+  onDone?: (correct: Verdict) => void
 }) {
   const [fields, setFields] = useState<RatingFields>(EMPTY)
   const [status, setStatus] = useState<SaveState>("cakam")
@@ -96,7 +96,7 @@ export default function Rating({
     setFields(next)
 
     // Nepošleme to isté dvakrát — textové polia strácajú fokus aj bez zmeny.
-    const fingerprint = JSON.stringify({ zaznamId: recordId, ...change })
+    const fingerprint = JSON.stringify({ recordId, ...change })
     if (fingerprint === lastSent.current) return
     lastSent.current = fingerprint
 
@@ -108,7 +108,7 @@ export default function Rating({
         body: JSON.stringify({ id: recordId, ...change }),
       })
       setStatus(r.ok ? "ulozene" : "chyba")
-      if (r.ok && change.spravna !== undefined) onDone?.(change.spravna)
+      if (r.ok && change.correct !== undefined) onDone?.(change.correct)
     } catch {
       setStatus("chyba")
     }
@@ -143,10 +143,10 @@ export default function Rating({
       <div style={{ display: "grid", gap: 14 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
           <span style={{ fontSize: 14.5, minWidth: 190 }}>Je odpoveď vecne správna?</span>
-          <Choice aktivna={fields.spravna === 1} farba="ok" onClick={() => save({ spravna: 1 })}>
+          <Choice active={fields.correct === 1} color="ok" onClick={() => save({ correct: 1 })}>
             Áno
           </Choice>
-          <Choice aktivna={fields.spravna === 0} farba="bad" onClick={() => save({ spravna: 0 })}>
+          <Choice active={fields.correct === 0} color="bad" onClick={() => save({ correct: 0 })}>
             Nie
           </Choice>
         </div>
@@ -155,10 +155,10 @@ export default function Rating({
           <span style={{ fontSize: 14.5, minWidth: 190 }}>
             Tvrdí niečo, čo v zdrojoch nie je?
           </span>
-          <Choice aktivna={fields.halucinacia === 1} farba="bad" onClick={() => save({ halucinacia: 1 })}>
+          <Choice active={fields.hallucination === 1} color="bad" onClick={() => save({ hallucination: 1 })}>
             Áno, vymyslel si
           </Choice>
-          <Choice aktivna={fields.halucinacia === 0} farba="ok" onClick={() => save({ halucinacia: 0 })}>
+          <Choice active={fields.hallucination === 0} color="ok" onClick={() => save({ hallucination: 0 })}>
             Nie, všetko má oporu
           </Choice>
         </div>
@@ -185,9 +185,9 @@ export default function Rating({
                 Ako mala odpoveď znieť?
               </span>
               <textarea
-                value={fields.overenaOdpoved}
-                onChange={e => setFields(p => ({ ...p, overenaOdpoved: e.target.value }))}
-                onBlur={e => save({ overenaOdpoved: e.target.value })}
+                value={fields.verifiedAnswer}
+                onChange={e => setFields(p => ({ ...p, verifiedAnswer: e.target.value }))}
+                onBlur={e => save({ verifiedAnswer: e.target.value })}
                 rows={3}
                 maxLength={4000}
                 style={fieldStyle}
@@ -199,9 +199,9 @@ export default function Rating({
                 Ktoré predpisy a § to upravujú? Napríklad &bdquo;SP čl. 78, DP čl. 37&ldquo;.
               </span>
               <input
-                value={fields.spravneZdroje}
-                onChange={e => setFields(p => ({ ...p, spravneZdroje: e.target.value }))}
-                onBlur={e => save({ spravneZdroje: e.target.value })}
+                value={fields.correctSources}
+                onChange={e => setFields(p => ({ ...p, correctSources: e.target.value }))}
+                onBlur={e => save({ correctSources: e.target.value })}
                 maxLength={500}
                 style={fieldStyle}
               />
@@ -212,9 +212,9 @@ export default function Rating({
                 Poznámka — čo bolo na odpovedi zavádzajúce alebo neúplné?
               </span>
               <textarea
-                value={fields.poznamka}
-                onChange={e => setFields(p => ({ ...p, poznamka: e.target.value }))}
-                onBlur={e => save({ poznamka: e.target.value })}
+                value={fields.note}
+                onChange={e => setFields(p => ({ ...p, note: e.target.value }))}
+                onBlur={e => save({ note: e.target.value })}
                 rows={2}
                 maxLength={2000}
                 style={fieldStyle}

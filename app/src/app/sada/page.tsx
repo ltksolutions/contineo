@@ -17,7 +17,7 @@ import { loadGoldenSet, goldenSetSummary, questionText, verdictCount, AREA_LABEL
 
 export const dynamic = "force-dynamic"
 
-function Badge({ text, farba: color }: { text: string; farba?: "ok" | "bad" | "warn" }) {
+function Badge({ text, color: color }: { text: string; color?: "ok" | "bad" | "warn" }) {
   const styles =
     color === "ok" ? { background: "var(--ok-bg)", color: "var(--ok-fg)" }
     : color === "bad" ? { background: "var(--bad-bg)", color: "var(--bad-fg)" }
@@ -31,7 +31,7 @@ function Badge({ text, farba: color }: { text: string; farba?: "ok" | "bad" | "w
   )
 }
 
-function Meter({ hotovo: done, spolu: total }: { hotovo: number; spolu: number }) {
+function Meter({ done: done, total: total }: { done: number; total: number }) {
   const ratio = total ? Math.round((done / total) * 100) : 0
   return (
     <div style={{ display: "grid", gap: 6 }}>
@@ -67,12 +67,12 @@ export default async function GoldenSetPage() {
       </div>
 
       <div className="karta" style={{ marginBottom: 26 }}>
-        <Meter hotovo={s.posudene} spolu={s.spolu} />
+        <Meter done={s.posudene} total={s.total} />
         <div style={{ display: "flex", gap: 18, flexWrap: "wrap", marginTop: 14, fontSize: 13.5 }}>
           <span><strong style={{ color: "var(--ok-fg)" }}>{s.spravne}</strong> <span className="tichy">správnych</span></span>
           <span><strong style={{ color: "var(--bad-fg)" }}>{s.nespravne}</strong> <span className="tichy">nesprávnych</span></span>
-          {s.halucinacie > 0 && (
-            <span><strong style={{ color: "var(--bad-fg)" }}>{s.halucinacie}</strong> <span className="tichy">s halucináciou</span></span>
+          {s.hallucinations > 0 && (
+            <span><strong style={{ color: "var(--bad-fg)" }}>{s.hallucinations}</strong> <span className="tichy">s halucináciou</span></span>
           )}
           {s.vyradene > 0 && (
             <span><strong>{s.vyradene}</strong> <span className="tichy">vyradených</span></span>
@@ -93,7 +93,7 @@ export default async function GoldenSetPage() {
 
       <div style={{ display: "grid", gap: 7 }}>
         {questions.map(o => {
-          const reviewed = o.stav?.spravna !== null && o.stav !== null
+          const reviewed = o.state?.correct !== null && o.state !== null
           return (
             <Link
               key={o.id}
@@ -105,14 +105,14 @@ export default async function GoldenSetPage() {
                 // Ľavý pruh nesie stav — dá sa prebehnúť očami po stĺpci
                 // bez čítania štítkov.
                 borderLeft: `3px solid ${
-                  o.vyradena ? "var(--line)"
+                  o.excluded ? "var(--line)"
                   : !reviewed ? "var(--line)"
-                  : o.stav?.spravna === 1 ? "var(--ok-fg)" : "var(--bad-fg)"
+                  : o.state?.correct === 1 ? "var(--ok-fg)" : "var(--bad-fg)"
                 }`,
                 borderRadius: 10,
                 padding: "12px 15px",
                 textDecoration: "none",
-                opacity: o.vyradena ? 0.55 : 1,
+                opacity: o.excluded ? 0.55 : 1,
               }}
             >
               <span
@@ -126,7 +126,7 @@ export default async function GoldenSetPage() {
                 <span
                   style={{
                     display: "block", fontSize: 14.5, lineHeight: 1.5,
-                    textDecoration: o.vyradena ? "line-through" : "none",
+                    textDecoration: o.excluded ? "line-through" : "none",
                   }}
                 >
                   {questionText(o)}
@@ -136,43 +136,43 @@ export default async function GoldenSetPage() {
                   <Badge text={o.searchMode} />
                   {/* Pasca znamená, že systém NEMÁ odpovedať vecne — hodnotiteľ
                       to musí vedieť vopred, inak posúdi odmietnutie ako chybu. */}
-                  {o.trapType && <Badge text={`pasca · ${o.trapType}`} farba="warn" />}
+                  {o.trapType && <Badge text={`pasca · ${o.trapType}`} color="warn" />}
                   {o.precedenceRule && <Badge text={o.precedenceRule} />}
-                  {o.upraveneZnenie && <Badge text="upravená" />}
+                  {o.editedText && <Badge text="upravená" />}
                   <Badge text={AREA_LABEL[o.oblast]} />
-                  {o.prekryv && (
+                  {o.overlap && (
                     <Badge
                       text={
                         (counts[o.id] ?? 0) >= 2 ? "posúdili dvaja"
                         : (counts[o.id] ?? 0) === 1 ? "čaká na druhého"
                         : "pre dvoch"
                       }
-                      farba={(counts[o.id] ?? 0) >= 2 ? "ok" : undefined}
+                      color={(counts[o.id] ?? 0) >= 2 ? "ok" : undefined}
                     />
                   )}
-                  {o.stav?.halucinacia === 1 && <Badge text="halucinácia" farba="bad" />}
+                  {o.state?.hallucination === 1 && <Badge text="halucinácia" color="bad" />}
                 </span>
               </span>
 
               <span style={{ textAlign: "right", minWidth: 96 }}>
-                {o.vyradena ? (
+                {o.excluded ? (
                   <Badge text="vyradená" />
                 ) : reviewed ? (
                   <>
                     <Badge
-                      text={o.stav?.spravna === 1 ? "správna" : "nesprávna"}
-                      farba={o.stav?.spravna === 1 ? "ok" : "bad"}
+                      text={o.state?.correct === 1 ? "správna" : "nesprávna"}
+                      color={o.state?.correct === 1 ? "ok" : "bad"}
                     />
                     {/* Nezhoda sa musí vidieť — je to nález, nie chyba. */}
-                    {o.cudzie.some(c => c.spravna !== o.stav?.spravna) && (
+                    {o.others.some(c => c.correct !== o.state?.correct) && (
                       <span style={{ display: "block", marginTop: 5 }}>
-                        <Badge text="nezhoda" farba="warn" />
+                        <Badge text="nezhoda" color="warn" />
                       </span>
                     )}
                   </>
                 ) : (counts[o.id] ?? 0) > 0 ? (
                   <span className="tichy" style={{ fontSize: 12.5 }}>
-                    {o.prekryv ? "čaká na vás" : "posúdená"}
+                    {o.overlap ? "čaká na vás" : "posúdená"}
                   </span>
                 ) : (
                   <span className="tichy" style={{ fontSize: 12.5 }}>neposúdená</span>

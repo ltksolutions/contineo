@@ -206,8 +206,8 @@ function generationIsolation(g: GenerationConfig): Isolation {
 export interface IsolationViolation {
   adapter: "embedding" | "rerank" | "generation" | "utility" | "profil"
   kind: string
-  izolacia: Isolation
-  sprava: string
+  isolation: Isolation
+  message: string
 }
 
 /**
@@ -219,8 +219,8 @@ export function checkIsolation(p: TenantProfile): IsolationViolation[] {
   const allowed = ALLOWED_ISOLATION[tier]
   if (!allowed) {
     return [{
-      adapter: "profil", kind: "-", izolacia: "neznama",
-      sprava: `neznáma hodnota tier: "${p.tier}"`,
+      adapter: "profil", kind: "-", isolation: "neznama",
+      message: `neznáma hodnota tier: "${p.tier}"`,
     }]
   }
 
@@ -230,8 +230,8 @@ export function checkIsolation(p: TenantProfile): IsolationViolation[] {
   const required = TIER_REQUIRES_RESIDENCY[tier]
   if (required && p.dataResidency !== required) {
     violations.push({
-      adapter: "profil", kind: tier, izolacia: "neznama",
-      sprava: `tier="${tier}" (${TIER_LABEL[tier]}) vyžaduje dataResidency="${required}", ` +
+      adapter: "profil", kind: tier, isolation: "neznama",
+      message: `tier="${tier}" (${TIER_LABEL[tier]}) vyžaduje dataResidency="${required}", ` +
               `nie "${p.dataResidency}" — inak by odpojenie bolo len na papieri`,
     })
   }
@@ -254,8 +254,8 @@ export function checkIsolation(p: TenantProfile): IsolationViolation[] {
       : `ide o cudziu službu spoločnú pre viacerých zákazníkov`
 
     violations.push({
-      adapter, kind, izolacia: isolation,
-      sprava: `${adapter}.kind="${kind}" (${isolation}) je v rozpore s tierom ` +
+      adapter, kind, isolation: isolation,
+      message: `${adapter}.kind="${kind}" (${isolation}) je v rozpore s tierom ` +
               `"${tier}" (${TIER_LABEL[tier]}): ${why}`,
     })
   }
@@ -276,8 +276,8 @@ export function isolationOverview(p: TenantProfile): Record<string, Isolation> {
 export interface ResidencyViolation {
   adapter: "embedding" | "rerank" | "generation" | "utility"
   kind: string
-  lokalita: DataLocation
-  sprava: string
+  location: DataLocation
+  message: string
 }
 
 /**
@@ -290,8 +290,8 @@ export function checkResidency(p: TenantProfile): ResidencyViolation[] {
   const allowed = ALLOWED[residency]
   if (!allowed) {
     return [{
-      adapter: "embedding", kind: "-", lokalita: "neznama",
-      sprava: `neznáma hodnota dataResidency: "${p.dataResidency}"`,
+      adapter: "embedding", kind: "-", location: "neznama",
+      message: `neznáma hodnota dataResidency: "${p.dataResidency}"`,
     }]
   }
 
@@ -315,8 +315,8 @@ export function checkResidency(p: TenantProfile): ResidencyViolation[] {
       : `spracovanie prebieha ${location === "mimo-eu" ? "mimo EÚ" : "v cudzej službe"}`
 
     violations.push({
-      adapter, kind, lokalita: location,
-      sprava: `${adapter}.kind="${kind}" (${location}) je v rozpore s rezidenciou ` +
+      adapter, kind, location: location,
+      message: `${adapter}.kind="${kind}" (${location}) je v rozpore s rezidenciou ` +
               `"${residency}" (${RESIDENCY_LABEL[residency]}): ${why}`,
     })
   }

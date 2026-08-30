@@ -20,12 +20,12 @@ export const PRICELIST_VERSION = "2026-07-27"
 
 /** Ceny za milión tokenov v USD. */
 export interface ModelPrice {
-  vstup: number
+  input: number
   /** Zápis do cache na 5 minút — 1,25× základnej ceny vstupu. */
-  cacheZapis: number
+  cacheWrite: number
   /** Čítanie z cache — 0,1× ceny vstupu. Preto sa caching oplatí. */
-  cacheCitanie: number
-  vystup: number
+  cacheRead: number
+  output: number
   /**
    * Dokedy cena platí (ISO dátum). Po tomto dni je odhad nespoľahlivý
    * a UI to musí povedať — mlčky počítať starou cenou by bolo horšie
@@ -45,42 +45,42 @@ export interface ModelPrice {
  */
 export const PRICELIST: Record<string, ModelPrice> = {
   "claude-sonnet-5": {
-    vstup: 2, cacheZapis: 2.5, cacheCitanie: 0.2, vystup: 10,
+    input: 2, cacheWrite: 2.5, cacheRead: 0.2, output: 10,
     platiDo: "2026-08-31",
-    potom: { vstup: 3, cacheZapis: 3.75, cacheCitanie: 0.3, vystup: 15 },
+    potom: { input: 3, cacheWrite: 3.75, cacheRead: 0.3, output: 15 },
   },
   "claude-opus-5": {
-    vstup: 5, cacheZapis: 6.25, cacheCitanie: 0.5, vystup: 25,
+    input: 5, cacheWrite: 6.25, cacheRead: 0.5, output: 25,
   },
   "claude-haiku-4-5-20251001": {
-    vstup: 1, cacheZapis: 1.25, cacheCitanie: 0.1, vystup: 5,
+    input: 1, cacheWrite: 1.25, cacheRead: 0.1, output: 5,
   },
   "claude-sonnet-4-5": {
-    vstup: 3, cacheZapis: 3.75, cacheCitanie: 0.3, vystup: 15,
+    input: 3, cacheWrite: 3.75, cacheRead: 0.3, output: 15,
   },
 }
 
 /** Počty tokenov tak, ako ich hlási Anthropic API. */
 export interface TokenCounts {
-  vstup: number
-  vystup: number
-  cacheZapis: number
-  cacheCitanie: number
+  input: number
+  output: number
+  cacheWrite: number
+  cacheRead: number
 }
 
 export const EMPTY_TOKENS: TokenCounts = {
-  vstup: 0, vystup: 0, cacheZapis: 0, cacheCitanie: 0,
+  input: 0, output: 0, cacheWrite: 0, cacheRead: 0,
 }
 
 export interface Cost {
   /** Cena v USD. */
   usd: number
   /** Ktorý cenník sa použil. */
-  verziaCennika: string
+  pricelistVersion: string
   /** true = model nie je v cenníku, cena je 0 a nedá sa jej veriť. */
-  neznamyModel: boolean
+  unknownModel: boolean
   /** true = použila sa cena, ktorá už neplatí (po `platiDo`). */
-  cennikExpirovany: boolean
+  pricelistExpired: boolean
 }
 
 /**
@@ -112,21 +112,21 @@ export function cost(model: string, t: TokenCounts, onDate: Date = new Date()): 
   const { sadzby: rates, expirovany: expired } = ratesForDate(model, onDate)
 
   if (!rates) {
-    return { usd: 0, verziaCennika: PRICELIST_VERSION, neznamyModel: true, cennikExpirovany: false }
+    return { usd: 0, pricelistVersion: PRICELIST_VERSION, unknownModel: true, pricelistExpired: false }
   }
 
   const MILLION = 1_000_000
   const usd =
-    (t.vstup * rates.vstup +
-      t.vystup * rates.vystup +
-      t.cacheZapis * rates.cacheZapis +
-      t.cacheCitanie * rates.cacheCitanie) / MILLION
+    (t.input * rates.input +
+      t.output * rates.output +
+      t.cacheWrite * rates.cacheWrite +
+      t.cacheRead * rates.cacheRead) / MILLION
 
   return {
     usd,
-    verziaCennika: PRICELIST_VERSION,
-    neznamyModel: false,
-    cennikExpirovany: expired,
+    pricelistVersion: PRICELIST_VERSION,
+    unknownModel: false,
+    pricelistExpired: expired,
   }
 }
 
@@ -165,10 +165,10 @@ export function formatEur(eur: number): string {
 export function sumCosts(list: TokenCounts[]): TokenCounts {
   return list.reduce(
     (a, t) => ({
-      vstup: a.vstup + t.vstup,
-      vystup: a.vystup + t.vystup,
-      cacheZapis: a.cacheZapis + t.cacheZapis,
-      cacheCitanie: a.cacheCitanie + t.cacheCitanie,
+      input: a.input + t.input,
+      output: a.output + t.output,
+      cacheWrite: a.cacheWrite + t.cacheWrite,
+      cacheRead: a.cacheRead + t.cacheRead,
     }),
     { ...EMPTY_TOKENS }
   )

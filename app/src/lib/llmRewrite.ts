@@ -33,7 +33,7 @@ export interface ModelDraft {
   text: string
   model: string
   rezim: RewriteMode
-  kedy: Date
+  at: Date
 }
 
 export class RewriteError extends Error {
@@ -108,7 +108,7 @@ export async function cleanMarkdown(markdown: string): Promise<ModelDraft> {
 
   const text = answerText(answer.content as { type: string; text?: string }[])
   if (!text) throw new RewriteError("Model vrátil prázdnu odpoveď.")
-  return { text, model: model(), rezim: "precistit", kedy: new Date() }
+  return { text, model: model(), rezim: "precistit", at: new Date() }
 }
 
 /** Prepíše skenované PDF, ktoré nemá textovú vrstvu. */
@@ -142,5 +142,5 @@ export async function rewritePdf(pdf: Buffer): Promise<ModelDraft> {
 
   const text = answerText(answer.content as { type: string; text?: string }[])
   if (!text) throw new RewriteError("Model z dokumentu nič neprečítal.")
-  return { text, model: model(), rezim: "prepisat-sken", kedy: new Date() }
+  return { text, model: model(), rezim: "prepisat-sken", at: new Date() }
 }

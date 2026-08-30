@@ -51,18 +51,18 @@ export function skipVercel(host: string): string | null {
 }
 
 export type DomainResult =
-  | { stav: "pridana" }
-  | { stav: "uz-je" }
-  | { stav: "preskocena"; dovod: string }
-  | { stav: "bez-nastavenia" }
+  | { state: "pridana" }
+  | { state: "uz-je" }
+  | { state: "preskocena"; reason: string }
+  | { state: "bez-nastavenia" }
   /**
    * Token existuje, ale Vercel ho neprijal. Najčastejšia príčina: hodnota
    * prevzatá z lokálneho `vercel login` medzitým vypršala — CLI si ju
    * priebežne obnovuje, kto ju číta zo súboru, dostane starú. Na stálu
    * prevádzku patrí vlastný `VERCEL_TOKEN`.
    */
-  | { stav: "neplatny-token" }
-  | { stav: "chyba"; sprava: string }
+  | { state: "neplatny-token" }
+  | { state: "chyba"; message: string }
 
 async function volaj(c: VercelConfig, cesta: string, init?: RequestInit) {
   const oddelovac = cesta.includes("?") ? "&" : "?"
@@ -82,39 +82,39 @@ async function volaj(c: VercelConfig, cesta: string, init?: RequestInit) {
 
 /** Priradí doménu projektu. Opakované volanie nie je chyba. */
 export async function addDomain(host: string): Promise<DomainResult> {
-  const dovod = skipVercel(host)
-  if (dovod) return { stav: "preskocena", dovod }
+  const skipReason = skipVercel(host)
+  if (skipReason) return { state: "preskocena", reason: skipReason }
 
   const c = vercelConfig()
-  if (!c) return { stav: "bez-nastavenia" }
+  if (!c) return { state: "bez-nastavenia" }
 
   try {
-    const { stav, telo } = await volaj(c, `/v10/projects/${encodeURIComponent(c.projectId)}/domains`, {
+    const { stav: state, telo } = await volaj(c, `/v10/projects/${encodeURIComponent(c.projectId)}/domains`, {
       method: "POST",
       body: JSON.stringify({ name: host }),
     })
-    if (stav >= 200 && stav < 300) return { stav: "pridana" }
+    if (state >= 200 && state < 300) return { state: "pridana" }
     // Tá istá doména na tom istom projekte je hotový stav, nie chyba.
     const e = (telo as { error?: { code?: string; message?: string; domain?: { projectId?: string } } }).error
     if (e?.code === "domain_already_in_use" && e.domain?.projectId === c.projectId) {
-      return { stav: "uz-je" }
+      return { state: "uz-je" }
     }
-    if (stav === 401 || stav === 403) return { stav: "neplatny-token" }
-    return { stav: "chyba", sprava: e?.message ?? `HTTP ${stav}` }
+    if (state === 401 || state === 403) return { state: "neplatny-token" }
+    return { state: "chyba", message: e?.message ?? `HTTP ${state}` }
   } catch (err) {
-    return { stav: "chyba", sprava: err instanceof Error ? err.message : String(err) }
+    return { state: "chyba", message: err instanceof Error ? err.message : String(err) }
   }
 }
 
 export interface DomainStatus {
   host: string
   /** Netýka sa Vercelu — a vtedy je `null` všetko ostatné. */
-  preskocena: string | null
+  skipped: string | null
   vProjekte: boolean
-  overena: boolean
+  verified: boolean
   /** `null` = zákazník ešte nenasmeroval DNS. */
   nastaveneCez: string | null
-  konflikty: string[]
+  conflicts: string[]
   /** Čo má zákazník nastaviť. */
   cname: string
 }
@@ -130,14 +130,14 @@ export const CNAME_TARGET = "cname.vercel-dns.com"
 export async function domainStatus(host: string): Promise<DomainStatus> {
   const zaklad: DomainStatus = {
     host,
-    preskocena: skipVercel(host),
+    skipped: skipVercel(host),
     vProjekte: false,
-    overena: false,
+    verified: false,
     nastaveneCez: null,
-    konflikty: [],
+    conflicts: [],
     cname: CNAME_TARGET,
   }
-  if (zaklad.preskocena) return zaklad
+  if (zaklad.skipped) return zaklad
 
   const c = vercelConfig()
   if (!c) return zaklad
@@ -154,9 +154,9 @@ export async function domainStatus(host: string): Promise<DomainStatus> {
     return {
       ...zaklad,
       vProjekte: vProjekte.stav === 200,
-      overena: (vProjekte.telo as { verified?: boolean }).verified === true,
+      verified: (vProjekte.telo as { verified?: boolean }).verified === true,
       nastaveneCez: kt.configuredBy ?? null,
-      konflikty: (kt.conflicts ?? []).map(k => `${k.type ?? "?"} ${k.value ?? ""}`.trim()),
+      conflicts: (kt.conflicts ?? []).map(k => `${k.type ?? "?"} ${k.value ?? ""}`.trim()),
       cname: kt.recommendedCNAME?.[0]?.value ?? CNAME_TARGET,
     }
   } catch (e) {

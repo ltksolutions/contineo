@@ -21,14 +21,14 @@ import { writeAudit } from "./audit"
 import type { CodelistExtras, CodelistItem, CustomCodelist } from "./codelists"
 import type { Tenant } from "./tenants"
 
-export const CODELIST_LABEL: Record<CustomCodelist, { nazov: string; napoveda: string }> = {
+export const CODELIST_LABEL: Record<CustomCodelist, { name: string; hint: string }> = {
   category: {
-    nazov: "Druhy dokumentov",
-    napoveda: "Čím dokument je: norma, smernica, metodický pokyn, zápisnica…",
+    name: "Druhy dokumentov",
+    hint: "Čím dokument je: norma, smernica, metodický pokyn, zápisnica…",
   },
   tags: {
-    nazov: "Značky",
-    napoveda: "Voľné triedenie naprieč druhmi — napríklad mládež, rozhodcovia, financie.",
+    name: "Značky",
+    hint: "Voľné triedenie naprieč druhmi — napríklad mládež, rozhodcovia, financie.",
   },
 }
 
@@ -37,18 +37,18 @@ export function isCustom(name: string): name is CustomCodelist {
 }
 
 /** Doplnky organizácie v tvare, aký čaká `ciselniky.ts`. */
-export function tenantExtras(tenant: Pick<Tenant, "ciselniky">): CodelistExtras {
-  return (tenant.ciselniky ?? {}) as CodelistExtras
+export function tenantExtras(tenant: Pick<Tenant, "codelists">): CodelistExtras {
+  return (tenant.codelists ?? {}) as CodelistExtras
 }
 
 /** Celá ponuka číselníka pre danú organizáciu — globálne aj vlastné. */
-export function availableOptions(tenant: Pick<Tenant, "ciselniky">, name: string): CodelistItem[] {
-  return codelistFor(name, tenantExtras(tenant)).polozky
+export function availableOptions(tenant: Pick<Tenant, "codelists">, name: string): CodelistItem[] {
+  return codelistFor(name, tenantExtras(tenant)).items
 }
 
 /** Len to, čo si dopísala organizácia — to jediné sa dá odobrať. */
-export function customItems(tenant: Pick<Tenant, "ciselniky">, name: string): CodelistItem[] {
-  return (tenant.ciselniky?.[name] ?? []) as CodelistItem[]
+export function customItems(tenant: Pick<Tenant, "codelists">, name: string): CodelistItem[] {
+  return (tenant.codelists?.[name] ?? []) as CodelistItem[]
 }
 
 export async function addCodelistItem(
@@ -79,9 +79,9 @@ export async function addCodelistItem(
   invalidateTenants()
 
   await writeAudit({
-    companyCode, predmet: "organizacia", akcia: "zalozene", aktor: actor,
-    cielId: `ciselnik:${codelist}`, cielPopis: `${CODELIST_LABEL[codelist].nazov} — ${item.key}`,
-    zmeny: { [codelist]: { na: item.label ?? item.key } },
+    companyCode, subject: "organisation", action: "created", actor: actor,
+    targetId: `ciselnik:${codelist}`, targetLabel: `${CODELIST_LABEL[codelist].name} — ${item.key}`,
+    changes: { [codelist]: { to: item.label ?? item.key } },
   })
 }
 
@@ -101,9 +101,9 @@ export async function removeCodelistItem(
   invalidateTenants()
 
   await writeAudit({
-    companyCode, predmet: "organizacia", akcia: "zrusene", aktor: actor,
-    cielId: `ciselnik:${codelist}`, cielPopis: `${CODELIST_LABEL[codelist as CustomCodelist].nazov} — ${key}`,
-    poznamka: "z ponuky; dokumenty, ktoré ho majú, si ho nesú ďalej",
+    companyCode, subject: "organisation", action: "deleted", actor: actor,
+    targetId: `ciselnik:${codelist}`, targetLabel: `${CODELIST_LABEL[codelist as CustomCodelist].name} — ${key}`,
+    note: "z ponuky; dokumenty, ktoré ho majú, si ho nesú ďalej",
   })
 }
 

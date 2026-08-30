@@ -20,15 +20,15 @@
 import Link from "next/link"
 
 export default function Notice({
-  sprava: message,
-  chyba: error,
-  spat: back,
+  message: message,
+  error: error,
+  back: back,
 }: {
-  sprava?: string
+  message?: string
   /** Rozlíšenie je na volajúcom. Hádať to z textu by sa raz pomýlilo. */
-  chyba?: boolean
+  error?: boolean
   /** Kam vedie potvrdenie — tá istá stránka bez parametra so správou. */
-  spat: string
+  back: string
 }) {
   if (!message) return null
 

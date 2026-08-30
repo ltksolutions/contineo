@@ -28,10 +28,10 @@ import { normalizeQuery, type RawQuery } from "@/lib/urlParams"
 export const dynamic = "force-dynamic"
 
 const PROCESSING_LABEL: Record<string, string> = {
-  nahrate: "nahraté",
-  prevedene: "prevedené, nepublikované",
-  zaindexovane: "vo vyhľadávaní",
-  zlyhalo: "prevod zlyhal",
+  uploaded: "nahraté",
+  converted: "prevedené, nepublikované",
+  indexed: "vo vyhľadávaní",
+  failed: "prevod zlyhal",
 }
 
 function formatSize(bytes: number): string {
@@ -61,7 +61,7 @@ export default async function LibraryPage({
   const extras = tenantExtras(ctx.tenant)
 
   const [rows, folders, folderCounts] = await Promise.all([
-    libraryList(ctx.tenant.companyCode, { hladat: search, stav: state, priecinok: folder, category, language, accessLevel, tag }),
+    libraryList(ctx.tenant.companyCode, { search: search, status: state, priecinok: folder, category, language, accessLevel, tag }),
     allFolders(ctx.tenant.companyCode),
     counts(ctx.tenant.companyCode),
   ])
@@ -84,7 +84,7 @@ export default async function LibraryPage({
 
   return (
     <div className="obal" style={{ padding: "28px 20px 80px", maxWidth: 900, ...tenantStyle(branding) }}>
-      <Notice sprava={message} chyba={error === "1"} spat="/kniznica" />
+      <Notice message={message} error={error === "1"} back="/kniznica" />
 
       <div style={{ display: "flex", gap: 12, alignItems: "baseline", flexWrap: "wrap", margin: "0 0 6px" }}>
         <h1 style={{ fontSize: 26, letterSpacing: "-0.02em", margin: 0 }}>Knižnica</h1>
@@ -105,34 +105,34 @@ export default async function LibraryPage({
         <div className="pole" style={{ flex: "0 1 180px", margin: 0 }}>
           <span className="pole-popis">Druh</span>
           <Select
-            meno="category"
-            volby={[{ hodnota: "", popis: "— všetky —" }, ...codelistOptions("category", extras)]}
-            predvolena={category ?? ""}
-            popisPola="Druh dokumentu"
+            name="category"
+            options={[{ value: "", label: "— všetky —" }, ...codelistOptions("category", extras)]}
+            initial={category ?? ""}
+            fieldLabel="Druh dokumentu"
           />
         </div>
 
         <div className="pole" style={{ flex: "0 1 160px", margin: 0 }}>
           <span className="pole-popis">Značka</span>
           <Select
-            meno="tag"
-            volby={[{ hodnota: "", popis: "— všetky —" }, ...codelistOptions("tags", extras)]}
-            predvolena={tag ?? ""}
-            popisPola="Značka"
+            name="tag"
+            options={[{ value: "", label: "— všetky —" }, ...codelistOptions("tags", extras)]}
+            initial={tag ?? ""}
+            fieldLabel="Značka"
           />
         </div>
 
         <div className="pole" style={{ flex: "0 1 150px", margin: 0 }}>
           <span className="pole-popis">Stav</span>
           <Select
-            meno="status"
-            volby={[
-              { hodnota: "", popis: "— všetky —" },
-              { hodnota: "publikovane", popis: "publikované" },
-              { hodnota: "koncept", popis: "koncepty" },
+            name="status"
+            options={[
+              { value: "", label: "— všetky —" },
+              { value: "publikovane", label: "publikované" },
+              { value: "koncept", label: "koncepty" },
             ]}
-            predvolena={state ?? ""}
-            popisPola="Stav"
+            initial={state ?? ""}
+            fieldLabel="Stav"
           />
         </div>
 
@@ -175,17 +175,17 @@ export default async function LibraryPage({
           {/* Fixné položky vyššie do preusporadúvania nepatria — nie sú to
               priečinky, ale pohľady na celý zoznam. */}
           <TreeWithOrder
-            skryte={Object.fromEntries(filters)}
-            akcia={saveFolderOrderAction}
-            polozky={tree.map(({ priecinok: p, uroven: level }) => {
+            hidden={Object.fromEntries(filters)}
+            action={saveFolderOrderAction}
+            items={tree.map(({ folder: p, level: level }) => {
               const c = folderCounts.get(p.id) ?? { priamo: 0, sPodriadenymi: 0 }
               const inside = subtree(folders, p.id)
               return {
                 id: p.id,
-                nazov: p.nazov,
+                name: p.name,
                 parentId: p.parentId ?? null,
-                uroven: level,
-                obsah: (
+                level: level,
+                content: (
                   <>
                   <div className="strom-riadok" style={{ gap: 6 }}>
                     <span className="strom-uchop" aria-hidden="true">⠿</span>
@@ -193,7 +193,7 @@ export default async function LibraryPage({
                       href={withFilter({ priecinok: p.id })}
                       className={`strom-nazov${folder === p.id ? " je-aktivny" : ""}`}
                     >
-                      {p.nazov}
+                      {p.name}
                     </Link>
                     <span className="tichy strom-pocet">{c.sPodriadenymi}</span>
                   </div>
@@ -211,22 +211,22 @@ export default async function LibraryPage({
                           {filters.map(([k, v]) => <input key={k} type="hidden" name={k} value={v} />)}
                           <input type="hidden" name="smer" value="hore" />
                           <button className="tlacidlo tlacidlo--tiche" type="submit"
-                                  aria-label={`Posunúť ${p.nazov} vyššie`}>↑ vyššie</button>
+                                  aria-label={`Posunúť ${p.name} vyššie`}>↑ vyššie</button>
                         </form>
                         <form action={shiftFolderAction}>
                           <input type="hidden" name="id" value={p.id} />
                           {filters.map(([k, v]) => <input key={k} type="hidden" name={k} value={v} />)}
                           <input type="hidden" name="smer" value="dole" />
                           <button className="tlacidlo tlacidlo--tiche" type="submit"
-                                  aria-label={`Posunúť ${p.nazov} nižšie`}>↓ nižšie</button>
+                                  aria-label={`Posunúť ${p.name} nižšie`}>↓ nižšie</button>
                         </form>
                       </div>
 
                       <form action={renameFolderAction} className="strom-forma">
                         <input type="hidden" name="id" value={p.id} />
                         {filters.map(([k, v]) => <input key={k} type="hidden" name={k} value={v} />)}
-                        <input className="pole-vstup" name="nazov" defaultValue={p.nazov}
-                               aria-label={`Názov priečinka ${p.nazov}`} required />
+                        <input className="pole-vstup" name="name" defaultValue={p.name}
+                               aria-label={`Názov priečinka ${p.name}`} required />
                         <button className="tlacidlo tlacidlo--tiche" type="submit">Premenovať</button>
                       </form>
 
@@ -234,16 +234,16 @@ export default async function LibraryPage({
                         <input type="hidden" name="id" value={p.id} />
                         {filters.map(([k, v]) => <input key={k} type="hidden" name={k} value={v} />)}
                         <Select
-                          meno="parentId"
-                          predvolena={p.parentId ?? ""}
-                          popisPola={`Nadriadený priečinok pre ${p.nazov}`}
-                          volby={[
-                            { hodnota: "", popis: "— najvyššia úroveň —" },
+                          name="parentId"
+                          initial={p.parentId ?? ""}
+                          fieldLabel={`Nadriadený priečinok pre ${p.name}`}
+                          options={[
+                            { value: "", label: "— najvyššia úroveň —" },
                             ...tree
-                              .filter(r => !inside.has(r.priecinok.id))
+                              .filter(r => !inside.has(r.folder.id))
                               .map(r => ({
-                                hodnota: r.priecinok.id,
-                                popis: `${"— ".repeat(r.uroven - 1)}${r.priecinok.nazov}`,
+                                value: r.folder.id,
+                                label: `${"— ".repeat(r.level - 1)}${r.folder.name}`,
                               })),
                           ]}
                         />
@@ -271,19 +271,19 @@ export default async function LibraryPage({
 
           <form action={createFolderAction} className="strom-forma" style={{ marginTop: 12 }}>
             {filters.map(([k, v]) => <input key={k} type="hidden" name={k} value={v} />)}
-            <input className="pole-vstup" name="nazov" placeholder="Nový priečinok"
+            <input className="pole-vstup" name="name" placeholder="Nový priečinok"
                    aria-label="Názov nového priečinka" required />
             <Select
-              meno="parentId"
-              predvolena={folder && folder !== "nezaradene" ? folder : ""}
-              popisPola="Nadriadený priečinok"
-              volby={[
-                { hodnota: "", popis: "— najvyššia úroveň —" },
+              name="parentId"
+              initial={folder && folder !== "nezaradene" ? folder : ""}
+              fieldLabel="Nadriadený priečinok"
+              options={[
+                { value: "", label: "— najvyššia úroveň —" },
                 ...tree
-                  .filter(r => depth(folders, r.priecinok.id) < MAX_DEPTH)
+                  .filter(r => depth(folders, r.folder.id) < MAX_DEPTH)
                   .map(r => ({
-                    hodnota: r.priecinok.id,
-                    popis: `${"— ".repeat(r.uroven - 1)}${r.priecinok.nazov}`,
+                    value: r.folder.id,
+                    label: `${"— ".repeat(r.level - 1)}${r.folder.name}`,
                   })),
               ]}
             />
@@ -305,14 +305,14 @@ export default async function LibraryPage({
                 <Link href={`/kniznica/${encodeURIComponent(r.documentId)}`} style={{ fontWeight: 600 }}>
                   {r.title}
                 </Link>
-                <span className="stitok">{PROCESSING_LABEL[r.stavSpracovania] ?? r.stavSpracovania}</span>
-                {r.maKoncept && r.stav !== "published" && <span className="stitok">koncept</span>}
+                <span className="stitok">{PROCESSING_LABEL[r.processingState] ?? r.processingState}</span>
+                {r.hasDraft && r.status !== "published" && <span className="stitok">koncept</span>}
               </div>
 
               <div className="tichy audit-kto">
                 {r.cestaPriecinkov?.length ? `${r.cestaPriecinkov.join(" / ")} · ` : ""}
                 {r.documentId}
-                {r.povodnySubor && ` · ${r.povodnySubor.nazov} (${formatSize(r.povodnySubor.bajtov)})`}
+                {r.originalFile && ` · ${r.originalFile.name} (${formatSize(r.originalFile.bytes)})`}
                 {r.updatedAt && ` · ${formatDate(r.updatedAt, uiLanguage)}`}
                 {r.updatedBy && ` · ${r.updatedBy}`}
               </div>
@@ -320,8 +320,8 @@ export default async function LibraryPage({
               <div className="audit-zmeny">
                 <div>
                   <span className="audit-pole">platné znenie</span>
-                  <span>{r.platneZnenie}</span>
-                  {r.verzii > 0 && <span className="tichy"> · {r.verzii} znení</span>}
+                  <span>{r.effectiveLabel}</span>
+                  {r.versionCount > 0 && <span className="tichy"> · {r.versionCount} znení</span>}
                 </div>
               </div>
             </li>

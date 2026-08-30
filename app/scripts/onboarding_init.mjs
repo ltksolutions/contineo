@@ -83,11 +83,11 @@ const PLAN = [
   {
     kolekcia: "audit",
     indexy: [
-      { kluc: { companyCode: 1, kedy: -1 }, opts: { name: "podla_casu" },
+      { kluc: { companyCode: 1, at: -1 }, opts: { name: "by_time" },
         preco: "výpis auditu, najnovšie hore (D51)" },
-      { kluc: { companyCode: 1, predmet: 1, kedy: -1 }, opts: { name: "podla_predmetu" },
+      { kluc: { companyCode: 1, subject: 1, at: -1 }, opts: { name: "by_subject" },
         preco: "filter na osoby, oddelenia, pridelenia" },
-      { kluc: { companyCode: 1, cielId: 1, kedy: -1 }, opts: { name: "podla_ciela" },
+      { kluc: { companyCode: 1, targetId: 1, at: -1 }, opts: { name: "by_target" },
         preco: "história jednej osoby alebo jedného oddelenia" },
     ],
   },

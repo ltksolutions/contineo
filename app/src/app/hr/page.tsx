@@ -48,7 +48,7 @@ export default async function HrOverviewPage({
         zobrazení — a týkajú sa ľudí, ktorí do skupiny patria <em>dnes</em>.
       </p>
 
-      <Notice sprava={message} chyba={error === "1"} spat="/hr" />
+      <Notice message={message} error={error === "1"} back="/hr" />
 
       <p style={{ margin: "0 0 24px" }}>
         <Link className="tlacidlo" href="/hr/pridelit">Prideliť normu</Link>
@@ -63,7 +63,7 @@ export default async function HrOverviewPage({
       ) : (
         <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "grid", gap: 14 }}>
           {overview.map(p => {
-            const error = p.osob - p.potvrdili
+            const error = p.count - p.acknowledged
             return (
               <li key={p.id} className="karta" style={{ padding: "18px 20px" }}>
                 <div style={{ display: "flex", gap: 10, alignItems: "baseline", flexWrap: "wrap" }}>
@@ -91,14 +91,14 @@ export default async function HrOverviewPage({
                   <div>
                     <div className="tichy" style={{ fontSize: 12.5 }}>Potvrdili</div>
                     <div style={{ fontSize: 15.5, fontWeight: 600 }}>
-                      {p.potvrdili} / {p.osob}
+                      {p.acknowledged} / {p.count}
                     </div>
                   </div>
                   <div>
                     <div className="tichy" style={{ fontSize: 12.5 }}>Dali sme vedieť</div>
                     <div style={{ fontSize: 15.5, fontWeight: 600, color: p.oznamene ? undefined : "var(--muted)" }}>
                       {p.oznamene
-                        ? `${formatDate(p.oznamene.at, language)}${p.oznameniSpolu > 1 ? ` · ${p.oznameniSpolu}×` : ""}`
+                        ? `${formatDate(p.oznamene.at, language)}${p.notifiedTotal > 1 ? ` · ${p.notifiedTotal}×` : ""}`
                         : "nie"}
                     </div>
                   </div>

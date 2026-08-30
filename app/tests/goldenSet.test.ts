@@ -12,8 +12,8 @@ import type { GoldenQuestion, QuestionState } from "../src/lib/goldenSet"
 import { t } from "./helper"
 
 const question = (u: Partial<GoldenQuestion> = {}): GoldenQuestion => ({
-  id: "D9-001", povodneZnenie: "Otázka?", upraveneZnenie: null,
-  vyradena: false, dovodVyradenia: null,
+  id: "D9-001", originalText: "Otázka?", editedText: null,
+  excluded: false, exclusionReason: null,
   searchMode: "hybrid", sectionKey: "sutazny_poriadok", companyCode: "SFZ",
   accessLevel: "public", precedenceRule: null, trapType: null,
   expectedBehaviour: "answer", goldChunkIds: [],
@@ -21,7 +21,7 @@ const question = (u: Partial<GoldenQuestion> = {}): GoldenQuestion => ({
 })
 
 const verdict = (who: string, correct: 0 | 1 | null): QuestionState => ({
-  spravna: correct, halucinacia: 0, hodnotitel: who, kedy: new Date(),
+  correct: correct, hallucination: 0, reviewer: who, at: new Date(),
 })
 
 // ── ktoré otázky idú dvom ────────────────────────────────────────────────────

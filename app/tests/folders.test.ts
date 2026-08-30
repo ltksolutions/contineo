@@ -13,7 +13,7 @@ import {
 } from "../src/lib/folders"
 
 function p(id: string, name: string, parentId: string | null): Folder {
-  return { companyCode: "SFZ", id, nazov: name, parentId, createdAt: new Date("2026-01-01"), createdBy: "test" }
+  return { companyCode: "SFZ", id, name: name, parentId, createdAt: new Date("2026-01-01"), createdBy: "test" }
 }
 
 const tree: Folder[] = [
@@ -58,11 +58,11 @@ describe("strom priecinkov", () => {
 
   it("splostenie da rodica pred deti", () => {
     const rows = flattenTree(tree)
-    const where = (id: string) => rows.findIndex(r => r.priecinok.id === id)
+    const where = (id: string) => rows.findIndex(r => r.folder.id === id)
     expect(rows).toHaveLength(tree.length)
     expect(where("normy")).toBeLessThan(where("sutaz"))
     expect(where("sutaz")).toBeLessThan(where("mladez"))
-    expect(rows[where("mladez")].uroven).toBe(3)
+    expect(rows[where("mladez")].level).toBe(3)
   })
 })
 
@@ -93,7 +93,7 @@ describe("presun priecinka", () => {
 describe("poradie priecinkov (D60)", () => {
   function pp(id: string, name: string, parentId: string | null, order?: number): Folder {
     return {
-      companyCode: "SFZ", id, nazov: name, parentId, poradie: order,
+      companyCode: "SFZ", id, name: name, parentId, order: order,
       createdAt: new Date("2026-01-01"), createdBy: "test",
     }
   }

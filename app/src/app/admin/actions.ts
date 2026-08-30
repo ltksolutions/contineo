@@ -54,10 +54,10 @@ async function ensureDomains(hostnames: string[]): Promise<string[]> {
   for (const h of hostnames) {
     if (skipVercel(h)) continue
     const v = await addDomain(h)
-    if (v.stav === "pridana") messages.push(`${h} pridaná do Vercelu`)
-    else if (v.stav === "bez-nastavenia") {
+    if (v.state === "pridana") messages.push(`${h} pridaná do Vercelu`)
+    else if (v.state === "bez-nastavenia") {
       messages.push(`${h}: chýba VERCEL_TOKEN, doménu pridaj ručne`)
-    } else if (v.stav === "chyba") messages.push(`${h}: ${v.sprava}`)
+    } else if (v.state === "chyba") messages.push(`${h}: ${v.message}`)
   }
   return messages
 }

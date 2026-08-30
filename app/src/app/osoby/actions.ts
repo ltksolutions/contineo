@@ -150,41 +150,41 @@ export async function togglePersonStatusAction(fd: FormData) {
  */
 export async function previewImportAction(text: string): Promise<{
   ok: boolean
-  sprava?: string
-  nove?: string[]
-  existujuce?: string[]
-  chyby?: string[]
-  spolu?: number
+  message?: string
+  created?: string[]
+  existing?: string[]
+  errors?: string[]
+  total?: number
 }> {
   const actor = await peopleAdmin()
-  if (!actor) return { ok: false, sprava: "Nemáš na to právo." }
-  if (!text?.trim()) return { ok: false, sprava: "Súbor je prázdny." }
+  if (!actor) return { ok: false, message: "Nemáš na to právo." }
+  if (!text?.trim()) return { ok: false, message: "Súbor je prázdny." }
 
   // Organizácia sa doplní z prihláseného, nie zo súboru: personalista zväzu
   // nesmie importom založiť človeka do cudzej organizácie (D32).
   const people = csvToPersons(text, actor.companyCode)
   if (people.length === 0) {
-    return { ok: false, sprava: "V súbore nie je ani jeden riadok s údajmi. Má prvý riadok hlavičky?" }
+    return { ok: false, message: "V súbore nie je ani jeden riadok s údajmi. Má prvý riadok hlavičky?" }
   }
 
   try {
     const n = await previewImport(people)
     return {
       ok: true,
-      spolu: people.length,
-      nove: n.created,
-      existujuce: n.existing,
-      chyby: n.errors.map(e => `${e.email || "(bez adresy)"} — ${REASONS[e.reason] ?? e.reason}`),
+      total: people.length,
+      created: n.created,
+      existing: n.existing,
+      errors: n.errors.map(e => `${e.email || "(bez adresy)"} — ${REASONS[e.reason] ?? e.reason}`),
     }
   } catch (e) {
-    return { ok: false, sprava: errorMessage(e) }
+    return { ok: false, message: errorMessage(e) }
   }
 }
 
 /** Zápis. Volá sa až po náhľade, z toho istého textu. */
-export async function runImportAction(text: string): Promise<{ ok: boolean; sprava: string }> {
+export async function runImportAction(text: string): Promise<{ ok: boolean; message: string }> {
   const actor = await peopleAdmin()
-  if (!actor) return { ok: false, sprava: "Nemáš na to právo." }
+  if (!actor) return { ok: false, message: "Nemáš na to právo." }
 
   try {
     const people = csvToPersons(text, actor.companyCode)
@@ -192,10 +192,10 @@ export async function runImportAction(text: string): Promise<{ ok: boolean; spra
     revalidatePath("/osoby")
     return {
       ok: true,
-      sprava: `Pribudlo ${v.created}, zmenených ${v.updated}, bez zmeny ${v.unchanged}` +
+      message: `Pribudlo ${v.created}, zmenených ${v.updated}, bez zmeny ${v.unchanged}` +
         (v.errors.length ? `, chybných ${v.errors.length}` : "") + ".",
     }
   } catch (e) {
-    return { ok: false, sprava: errorMessage(e) }
+    return { ok: false, message: errorMessage(e) }
   }
 }

@@ -24,8 +24,8 @@ export const TARGET_MAX: number
  */
 export interface ChunkingProfile {
   slovoClanok: string
-  slovoPriloha: string
-  opakovaniHlavicky: number
+  annexWord: string
+  headerRepeats: number
   cielMinTokenov: number
   cielMaxTokenov: number
 }
@@ -41,34 +41,34 @@ export interface Chunk {
   text: string
   heading: string
   articleRef: string | null
-  typ?: "clanok" | "priloha" | "preambula"
-  obsahujeTabulku?: boolean
-  uplnaJednotka?: boolean
+  kind?: "clanok" | "priloha" | "preambula"
+  hasTable?: boolean
+  wholeUnit?: boolean
 }
 
 export interface ChunkStats {
-  riadkovPoOcisteni: number
-  odstranene: { hlavicka: number; cisloStrany: number; poznamka: number; prazdne: number }
+  linesAfterClean: number
+  odstranene: { header: number; pageNumber: number; footnote: number; prazdne: number }
   clankov: number
   chunkov: number
   tokenyMin: number
   tokenyMax: number
   tokenyPriemer: number
   priloh: number
-  sTabulkou: number
+  withTable: number
   nadLimit: number
-  kratkeUlomky: number
+  shortFragments: number
   kratkeUplne: number
 }
 
 export function clean(
   text: string,
-  meta?: { nazovDokumentu?: string },
-): { riadky: string[]; odstranene: ChunkStats["odstranene"] }
+  meta?: { documentName?: string },
+): { lines: string[]; odstranene: ChunkStats["odstranene"] }
 
 export function parseStructure(lines: string[]): unknown[]
 
 export function chunkText(
   text: string,
-  meta?: { nazovDokumentu?: string; profil?: Partial<ChunkingProfile> },
-): { chunky: Chunk[]; statistiky: ChunkStats }
+  meta?: { documentName?: string; profil?: Partial<ChunkingProfile> },
+): { chunks: Chunk[]; stats: ChunkStats }

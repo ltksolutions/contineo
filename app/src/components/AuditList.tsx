@@ -15,34 +15,36 @@ import type { AuditRecord } from "@/lib/audit"
 import type { UiLanguage } from "@/lib/i18n"
 
 const SUBJECTS: Record<string, string> = {
-  osoba: "osoba",
-  oddelenie: "oddelenie",
-  // Záznamy spred premenovania. Prepísať ich by znamenalo meniť audit.
-  utvar: "oddelenie",
-  dokument: "dokument",
-  priecinok: "priečinok",
-  pridelenie: "pridelenie",
-  organizacia: "organizácia",
-  domena: "doména",
-  "prihlasenie-nastavenie": "prihlasovanie",
+  person: "osoba",
+  department: "oddelenie",
+  document: "dokument",
+  folder: "priečinok",
+  assignment: "pridelenie",
+  organisation: "organizácia",
+  domain: "doména",
+  "signin-settings": "prihlasovanie",
   tenant: "tenant",
 }
 
 const ACTIONS: Record<string, string> = {
-  zalozene: "založené",
-  zmenene: "zmenené",
-  vyradene: "vyradené",
-  vratene: "vrátené",
-  premenovane: "premenované",
-  presunute: "presunuté",
-  zrusene: "zrušené",
-  pridelene: "pridelené",
-  odvolane: "odvolané",
-  oznamene: "oznámené",
-  poziadane: "požiadané",
-  overene: "overené",
-  publikovane: "publikované",
-  "nahrate-nove-znenie": "nahraté nové znenie",
+  created: "založené",
+  changed: "zmenené",
+  excluded: "vyradené",
+  restored: "vrátené",
+  renamed: "premenované",
+  moved: "presunuté",
+  deleted: "zrušené",
+  assigned: "pridelené",
+  revoked: "odvolané",
+  notified: "oznámené",
+  requested: "požiadané",
+  verified: "overené",
+  published: "publikované",
+  reindexed: "preindexované",
+  reordered: "preusporiadané",
+  "model-draft": "návrh modelu",
+  "version-fix": "oprava znenia",
+  "new-version": "nahraté nové znenie",
 }
 
 /** Ľudské názvy polí. Neznáme pole sa ukáže tak, ako sa volá — radšej
@@ -80,11 +82,11 @@ function valueText(v: unknown): string {
 }
 
 export default function AuditList({
-  zaznamy: records,
-  jazyk: language = "sk",
+  records: records,
+  language: language = "sk",
 }: {
-  zaznamy: AuditRecord[]
-  jazyk?: UiLanguage
+  records: AuditRecord[]
+  language?: UiLanguage
 }) {
   if (records.length === 0) {
     return (
@@ -100,35 +102,35 @@ export default function AuditList({
       {records.map(z => (
         <li key={String(z._id)} className="karta audit-zaznam">
           <div className="audit-hlavicka">
-            <span className="stitok">{SUBJECTS[z.predmet] ?? z.predmet}</span>
-            <strong>{ACTIONS[z.akcia] ?? z.akcia}</strong>
-            {z.cielPopis && <span className="audit-ciel">{z.cielPopis}</span>}
+            <span className="stitok">{SUBJECTS[z.subject] ?? z.subject}</span>
+            <strong>{ACTIONS[z.action] ?? z.action}</strong>
+            {z.targetLabel && <span className="audit-ciel">{z.targetLabel}</span>}
           </div>
 
           <div className="tichy audit-kto">
-            {z.aktor} · {formatDate(z.kedy, language)}
+            {z.actor} · {formatDate(z.at, language)}
           </div>
 
-          {z.zmeny && Object.keys(z.zmeny).length > 0 && (
+          {z.changes && Object.keys(z.changes).length > 0 && (
             <ul className="audit-zmeny">
-              {Object.entries(z.zmeny).map(([field, v]) => (
+              {Object.entries(z.changes).map(([field, v]) => (
                 <li key={field}>
                   <span className="audit-pole">{FIELDS[field] ?? field}</span>
                   {"z" in v ? (
                     <>
-                      <span className="audit-stara">{valueText(v.z)}</span>
+                      <span className="audit-stara">{valueText(v.from)}</span>
                       <span aria-hidden="true"> → </span>
-                      <span className="audit-nova">{valueText(v.na)}</span>
+                      <span className="audit-nova">{valueText(v.to)}</span>
                     </>
                   ) : (
-                    <span className="audit-nova">{valueText(v.na)}</span>
+                    <span className="audit-nova">{valueText(v.to)}</span>
                   )}
                 </li>
               ))}
             </ul>
           )}
 
-          {z.poznamka && <div className="tichy audit-poznamka">{z.poznamka}</div>}
+          {z.note && <div className="tichy audit-poznamka">{z.note}</div>}
         </li>
       ))}
     </ul>

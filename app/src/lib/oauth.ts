@@ -163,7 +163,7 @@ export function providerStatus(
   tenant: Tenant | null,
   provider: OAuthProviderName,
 ): {
-  stav: "nenastavene" | "nastavene" | "necitatelne" | "z-prostredia"
+  state: "nenastavene" | "nastavene" | "necitatelne" | "z-prostredia"
   clientId?: string
   zdroj: "tenant" | "platform" | "ziadny"
 } {
@@ -171,14 +171,14 @@ export function providerStatus(
   if (stored?.clientId && stored?.clientSecretEnc) {
     try {
       decrypt(stored.clientSecretEnc)
-      return { stav: "nastavene", clientId: stored.clientId, zdroj: "tenant" }
+      return { state: "nastavene", clientId: stored.clientId, zdroj: "tenant" }
     } catch {
-      return { stav: "necitatelne", clientId: stored.clientId, zdroj: "tenant" }
+      return { state: "necitatelne", clientId: stored.clientId, zdroj: "tenant" }
     }
   }
   const z = fromEnv(provider)
-  if (z) return { stav: "z-prostredia", clientId: z.clientId, zdroj: "platform" }
-  return { stav: "nenastavene", zdroj: "ziadny" }
+  if (z) return { state: "z-prostredia", clientId: z.clientId, zdroj: "platform" }
+  return { state: "nenastavene", zdroj: "ziadny" }
 }
 
 /** Ako sa poskytovateľ volá pre človeka. */

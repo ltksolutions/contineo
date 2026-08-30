@@ -57,10 +57,10 @@ export default async function SignInPage({
   return (
     <div className="obal" style={{ padding: "64px 20px", maxWidth: 460, ...tenantStyle(branding) }}>
       <SignIn
-        odoslane={params.sent === "1"}
-        chyba={params.error}
+        sent={params.sent === "1"}
+        error={params.error}
         branding={branding}
-        poskytovatelia={providers}
+        providers={providers}
       />
     </div>
   )

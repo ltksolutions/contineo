@@ -49,12 +49,12 @@ describe("nase domeny si zakaznik nepridelí", () => {
 describe("pokyn pre DNS", () => {
   it("pri subdoméne pomenuje jej prvú časť", () => {
     const p = domainInstruction("intranet.futbalsfz.sk")
-    expect(p).toMatchObject({ typ: "CNAME", nazov: "intranet" })
-    expect(p?.hodnota).toContain("vercel-dns")
+    expect(p).toMatchObject({ type: "CNAME", name: "intranet" })
+    expect(p?.value).toContain("vercel-dns")
   })
 
   it("pri koreňovej doméne je to zavináč", () => {
-    expect(domainInstruction("futbalsfz.sk")).toMatchObject({ nazov: "@" })
+    expect(domainInstruction("futbalsfz.sk")).toMatchObject({ name: "@" })
   })
 
   it("kde netreba nič, nevracia pokyn", () => {

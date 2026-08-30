@@ -33,29 +33,29 @@ import type { ReactNode } from "react"
 
 export interface TreeItem {
   id: string
-  nazov: string
+  name: string
   parentId: string | null
-  uroven: number
-  popis?: string
+  level: number
+  label?: string
   /** Vykreslené priamo zo serverovej stránky — formuláre úprav. */
-  obsah?: ReactNode
+  content?: ReactNode
 }
 
-const FORM_ID = "poradie-oddeleni"
+const FORM_ID = "department-order"
 
 export default function TreeWithOrder({
-  polozky: items,
-  skryte: hidden,
-  akcia: action,
+  items: items,
+  hidden: hidden,
+  action: action,
 }: {
-  polozky: TreeItem[]
+  items: TreeItem[]
   /**
    * Polia, ktoré sa majú poslať spolu s poradím — záložka v nastavení
    * organizácie, filtre v knižnici. Bez nich by človeka po uložení hodilo
    * na iný pohľad než ten, v ktorom preusporadúval.
    */
-  skryte?: Record<string, string>
-  akcia: (fd: FormData) => void | Promise<void>
+  hidden?: Record<string, string>
+  action: (fd: FormData) => void | Promise<void>
 }) {
   const [order, setOrder] = useState<TreeItem[]>(items)
   const [dragged, setDragged] = useState<string | null>(null)
@@ -83,7 +83,7 @@ export default function TreeWithOrder({
         {Object.entries(hidden ?? {}).map(([k, v]) => (
           <input key={k} type="hidden" name={k} value={v} />
         ))}
-        <input type="hidden" name="poradie" value={order.map(p => p.id).join(",")} />
+        <input type="hidden" name="order" value={order.map(p => p.id).join(",")} />
       </form>
 
       <ul className="strom strom--ciary">
@@ -91,7 +91,7 @@ export default function TreeWithOrder({
           <li
             key={p.id}
             className={`strom-polozka${dragged === p.id ? " sa-taha" : ""}`}
-            style={{ "--uroven": p.uroven } as React.CSSProperties}
+            style={{ "--uroven": p.level } as React.CSSProperties}
             draggable
             onDragStart={() => setDragged(p.id)}
             onDragEnd={() => setDragged(null)}
@@ -102,7 +102,7 @@ export default function TreeWithOrder({
               setDragged(null)
             }}
           >
-            {p.obsah}
+            {p.content}
           </li>
         ))}
       </ul>

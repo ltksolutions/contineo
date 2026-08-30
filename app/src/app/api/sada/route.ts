@@ -16,28 +16,28 @@ export async function PATCH(req: NextRequest) {
   try {
     body = await req.json()
   } catch {
-    return NextResponse.json({ chyba: "Neplatný JSON" }, { status: 400 })
+    return NextResponse.json({ error: "Neplatný JSON" }, { status: 400 })
   }
 
   if (!body.id || typeof body.id !== "string") {
-    return NextResponse.json({ chyba: "Chýba id otázky" }, { status: 400 })
+    return NextResponse.json({ error: "Chýba id otázky" }, { status: 400 })
   }
 
   const edit: Parameters<typeof editQuestion>[1] = {}
-  if (typeof body.upraveneZnenie === "string") edit.upraveneZnenie = body.upraveneZnenie
-  if (typeof body.vyradena === "boolean") edit.vyradena = body.vyradena
-  if (typeof body.dovodVyradenia === "string") edit.dovodVyradenia = body.dovodVyradenia
+  if (typeof body.editedText === "string") edit.editedText = body.editedText
+  if (typeof body.excluded === "boolean") edit.excluded = body.excluded
+  if (typeof body.exclusionReason === "string") edit.exclusionReason = body.exclusionReason
 
   if (!Object.keys(edit).length) {
-    return NextResponse.json({ chyba: "Nič na uloženie" }, { status: 400 })
+    return NextResponse.json({ error: "Nič na uloženie" }, { status: 400 })
   }
 
   try {
     const ok = await editQuestion(body.id, edit)
-    if (!ok) return NextResponse.json({ chyba: "Otázka sa nenašla" }, { status: 404 })
+    if (!ok) return NextResponse.json({ error: "Otázka sa nenašla" }, { status: 404 })
     return NextResponse.json({ ok: true })
   } catch (e) {
     console.error("Úprava otázky zlyhala:", e)
-    return NextResponse.json({ chyba: "Uloženie zlyhalo" }, { status: 500 })
+    return NextResponse.json({ error: "Uloženie zlyhalo" }, { status: 500 })
   }
 }

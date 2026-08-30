@@ -57,7 +57,7 @@ export interface Person {
   email: string
 
   /** Predchádzajúce adresy — aby sa staré potvrdenie dalo spojiť s človekom. */
-  emailHistory?: { email: string; doKedy: Date; zmenil: string }[]
+  emailHistory?: { email: string; until: Date; changedBy: string }[]
   fullName: string
   department?: string
   personType: PersonType
@@ -117,7 +117,7 @@ export interface Person {
    * potvrdenia, tam vôbec kedy patril. Odvodiť sa to nedá — je to práve tá
    * informácia, ktorú presun prepíše.
    */
-  departmentHistory?: { departmentId: string | null; departmentPath: string[]; od: Date; do?: Date }[]
+  departmentHistory?: { departmentId: string | null; departmentPath: string[]; from: Date; to?: Date }[]
 
   /**
    * Odkedy dokedy bola v ktorej skupine. Otvorený úsek (`do` chýba) trvá.
@@ -127,7 +127,7 @@ export interface Person {
    * skupina býva adresátom noriem (rozhodcovia, delegáti), takže kto z nej
    * vypadne pred potvrdením, by inak zo zoznamu nepotvrdených ticho zmizol.
    */
-  groupHistory?: { group: string; od: Date; do?: Date }[]
+  groupHistory?: { group: string; from: Date; to?: Date }[]
 
   /** Meno a priezvisko zvlášť, keď ich adresár vie (D52). Zobrazuje sa `fullName`. */
   givenName?: string
@@ -327,8 +327,8 @@ export async function recordExternalRef(
  * obrazovky by ponúkali dva rôzne zoznamy tých istých skupín.
  */
 export async function audiencesInOrg(companyCode: string): Promise<{
-  skupiny: { hodnota: string; osob: number }[]
-  trasy: { hodnota: string; osob: number }[]
+  groups: { value: string; count: number }[]
+  tracks: { value: string; count: number }[]
 }> {
   const col = await getCollection<Person>(PERSONS_COLLECTION)
   const people = await col
@@ -341,11 +341,11 @@ export async function audiencesInOrg(companyCode: string): Promise<{
       for (const h of normalizeKeys(pick(o))) counts.set(h, (counts.get(h) ?? 0) + 1)
     }
     return [...counts.entries()]
-      .map(([value, peopleCount]) => ({ hodnota: value, osob: peopleCount }))
-      .sort((a, b) => a.hodnota.localeCompare(b.hodnota, "sk"))
+      .map(([value, peopleCount]) => ({ value, count: peopleCount }))
+      .sort((a, b) => a.value.localeCompare(b.value, "sk"))
   }
 
-  return { skupiny: countInto(o => o.groups), trasy: countInto(o => o.tracks) }
+  return { groups: countInto(o => o.groups), tracks: countInto(o => o.tracks) }
 }
 
 // ── Import osôb ──────────────────────────────────────────────────────────────
@@ -648,11 +648,11 @@ export async function createFromDomain(
  * keď vzniklo. Opačná predvoľba by im všetky staré normy schovala.
  */
 export function inDepartmentSince(person: Pick<Person, "departmentHistory">): Date | null {
-  const openRecord = (person.departmentHistory ?? []).filter(z => !z.do)
+  const openRecord = (person.departmentHistory ?? []).filter(z => !z.to)
   if (openRecord.length === 0) return null
   // Pri poškodených dátach (viac otvorených) platí ten najnovší — je to
   // opatrnejšie než najstarší: úloha sa ukáže ako novšia, nie ako prepadnutá.
-  return openRecord.reduce((a, b) => (a.od > b.od ? a : b)).od
+  return openRecord.reduce((a, b) => (a.from > b.from ? a : b)).from
 }
 
 /**
@@ -669,14 +669,14 @@ export function newDepartmentHistory(
   when: Date,
 ): NonNullable<Person["departmentHistory"]> {
   const records = [...(until ?? [])]
-  const openRecord = records.find(z => !z.do)
+  const openRecord = records.find(z => !z.to)
   if (openRecord && (openRecord.departmentId ?? null) === (newId ?? null)) {
     // To isté oddelenie, len sa mohla zmeniť cesta (presunuli vetvu vyššie).
     openRecord.departmentPath = newPath
     return records
   }
-  if (openRecord) openRecord.do = when
-  records.push({ departmentId: newId ?? null, departmentPath: newPath, od: when })
+  if (openRecord) openRecord.to = when
+  records.push({ departmentId: newId ?? null, departmentPath: newPath, from: when })
   return records
 }
 
@@ -692,9 +692,9 @@ export function inGroupSince(
   group: string,
 ): Date | null {
   const key = group.trim().toLowerCase()
-  const openRecords = (person.groupHistory ?? []).filter(z => !z.do && z.group === key)
+  const openRecords = (person.groupHistory ?? []).filter(z => !z.to && z.group === key)
   if (openRecords.length === 0) return null
-  return openRecords.reduce((a, b) => (a.od > b.od ? a : b)).od
+  return openRecords.reduce((a, b) => (a.from > b.from ? a : b)).from
 }
 
 /**
@@ -717,11 +717,11 @@ export function newGroupHistory(
   const records = (until ?? []).map(z => ({ ...z }))
 
   for (const z of records) {
-    if (!z.do && !added.has(z.group)) z.do = when
+    if (!z.to && !added.has(z.group)) z.to = when
   }
-  const openRecords = new Set(records.filter(z => !z.do).map(z => z.group))
+  const openRecords = new Set(records.filter(z => !z.to).map(z => z.group))
   for (const g of added) {
-    if (!openRecords.has(g)) records.push({ group: g, od: when })
+    if (!openRecords.has(g)) records.push({ group: g, from: when })
   }
   return records
 }

@@ -13,7 +13,7 @@ import { formatDate } from "@/lib/i18n"
 
 export const dynamic = "force-dynamic"
 
-function Fact({ popis: label, hodnota: value, tichy: muted }: { popis: string; hodnota: string; tichy?: boolean }) {
+function Fact({ label: label, value: value, muted: muted }: { label: string; value: string; muted?: boolean }) {
   return (
     <div>
       <div className="tichy" style={{ fontSize: 12.5 }}>{label}</div>
@@ -75,35 +75,35 @@ export default async function TenantAdminPage() {
 
             <div className="admin-udaje">
               <Fact
-                popis="Osoby"
-                hodnota={`${t.osoby.prihlaseni} / ${t.osoby.spolu} prihlásených`}
-                tichy={t.osoby.spolu === 0}
+                label="Osoby"
+                value={`${t.people.signedIn} / ${t.people.total} prihlásených`}
+                muted={t.people.total === 0}
               />
-              <Fact popis="Trasy" hodnota={String(t.trasy)} tichy={t.trasy === 0} />
+              <Fact label="Trasy" value={String(t.tracks)} muted={t.tracks === 0} />
               <Fact
-                popis="Dokumenty"
-                hodnota={`${t.dokumenty.spolu - t.dokumenty.bezZnenia.length} / ${t.dokumenty.spolu} platných`}
-                tichy={t.dokumenty.spolu === 0}
+                label="Dokumenty"
+                value={`${t.documents.total - t.documents.withoutVersion.length} / ${t.documents.total} platných`}
+                muted={t.documents.total === 0}
               />
-              <Fact popis="Potvrdenia" hodnota={String(t.potvrdenia)} tichy={t.potvrdenia === 0} />
+              <Fact label="Potvrdenia" value={String(t.acknowledgements)} muted={t.acknowledgements === 0} />
             </div>
 
             {/* Dokumenty bez platného znenia sú menovite. Je to najčastejšia
                 tichá príčina, prečo človek v zozname nič nevidí (D6) — a bez
                 mena sa nedá povedať, ktorý z nich opraviť. */}
-            {t.dokumenty.bezZnenia.length > 0 && (
+            {t.documents.withoutVersion.length > 0 && (
               <p style={{ margin: "12px 0 0", fontSize: 13.5 }}>
                 <span className="stitok" style={{ background: "var(--warn-bg)", color: "var(--warn-fg)" }}>
                   bez platného znenia
                 </span>{" "}
-                <span className="tichy">{t.dokumenty.bezZnenia.join(", ")}</span>
+                <span className="tichy">{t.documents.withoutVersion.join(", ")}</span>
               </p>
             )}
 
             {t.pokynyPoslane && (
               <p className="tichy" style={{ margin: "10px 0 0", fontSize: 13 }}>
-                Pokyny k doméne poslané {formatDate(t.pokynyPoslane.kedy, "sk")} na{" "}
-                {t.pokynyPoslane.komu}
+                Pokyny k doméne poslané {formatDate(t.pokynyPoslane.at, "sk")} na{" "}
+                {t.pokynyPoslane.to}
               </p>
             )}
           </li>

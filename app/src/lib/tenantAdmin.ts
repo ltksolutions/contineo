@@ -91,10 +91,10 @@ export interface TenantChange {
   hostnames?: string[]
   /** Domény, z ktorých sa človek založí sám pri prihlásení kontom (D47). */
   autoProvisionDomains?: string[]
-  chunkovanie?: {
+  chunking?: {
     slovoClanok?: string
-    slovoPriloha?: string
-    opakovaniHlavicky?: number
+    annexWord?: string
+    headerRepeats?: number
     cielMinTokenov?: number
     cielMaxTokenov?: number
   }
@@ -168,19 +168,19 @@ function toSet(change: TenantChange): Record<string, unknown> {
   if (change.autoProvisionDomains !== undefined) {
     set.autoProvisionDomains = normalizeDomains(change.autoProvisionDomains)
   }
-  if (change.chunkovanie !== undefined) {
+  if (change.chunking !== undefined) {
     // Čísla sa držia v rozumnom rozsahu tu, nie v chunkeri: chunker dostane
     // hodnotu a poslúchne ju, aj keby bola nezmyselná. Úsek na 20 tokenov
     // znamená tisíce úryvkov bez významu, na 5000 zas jeden úsek na celý
     // dokument — v oboch prípadoch vyhľadávanie prestane fungovať a nikto to
     // nespojí s číslom v nastavení.
-    const c = change.chunkovanie
+    const c = change.chunking
     const between = (v: number | undefined, min: number, max: number, previous: number) =>
       v === undefined || Number.isNaN(v) ? previous : Math.min(Math.max(Math.round(v), min), max)
     set.chunkovanie = {
       slovoClanok: (c.slovoClanok ?? "Článok").trim() || "Článok",
-      slovoPriloha: (c.slovoPriloha ?? "PRÍLOHA č.").trim() || "PRÍLOHA č.",
-      opakovaniHlavicky: between(c.opakovaniHlavicky, 2, 50, 5),
+      slovoPriloha: (c.annexWord ?? "PRÍLOHA č.").trim() || "PRÍLOHA č.",
+      opakovaniHlavicky: between(c.headerRepeats, 2, 50, 5),
       cielMinTokenov: between(c.cielMinTokenov, 50, 2000, 300),
       cielMaxTokenov: between(c.cielMaxTokenov, 100, 4000, 800),
     }
@@ -235,9 +235,9 @@ export async function saveTenant(
     afterChange[k] = set[k]
   }
   await writeAudit({
-    companyCode: code, predmet: "organizacia", akcia: "zmenene", aktor: actor,
-    cielId: code, cielPopis: existing.branding?.displayName ?? code,
-    zmeny: diff(beforeChange, afterChange),
+    companyCode: code, subject: "organisation", action: "changed", actor: actor,
+    targetId: code, targetLabel: existing.branding?.displayName ?? code,
+    changes: diff(beforeChange, afterChange),
   })
 
   // Bez tohto by sa zmena prejavila až o päť minút (pamäť v `tenants.ts`)
@@ -382,11 +382,11 @@ export async function saveOAuth(
   // zbiera heslá, je sám o sebe únik, a to s dlhšou retenciou než to, čo
   // chráni (D51).
   await writeAudit({
-    companyCode: code, predmet: "prihlasenie-nastavenie", akcia: "zmenene", aktor: actor,
-    cielId: provider, cielPopis: provider,
-    zmeny: {
-      ...(clientId ? { clientId: { z: existing.oauth?.[provider]?.clientId ?? null, na: clientId } } : {}),
-      ...(secret ? { clientSecret: { na: "(zmenené)" } } : {}),
+    companyCode: code, subject: "signin-settings", action: "changed", actor: actor,
+    targetId: provider, targetLabel: provider,
+    changes: {
+      ...(clientId ? { clientId: { from: existing.oauth?.[provider]?.clientId ?? null, to: clientId } } : {}),
+      ...(secret ? { clientSecret: { to: "(zmenené)" } } : {}),
     },
   })
   invalidateTenants()
@@ -405,8 +405,8 @@ export async function deleteOAuth(
     { $unset: { [`oauth.${provider}`]: "" }, $set: { updatedBy: actor, updatedAt: new Date() } } as never,
   )
   await writeAudit({
-    companyCode: code, predmet: "prihlasenie-nastavenie", akcia: "zrusene", aktor: actor,
-    cielId: provider, cielPopis: provider,
+    companyCode: code, subject: "signin-settings", action: "deleted", actor: actor,
+    targetId: provider, targetLabel: provider,
   })
   invalidateTenants()
 }

@@ -69,7 +69,7 @@ export default async function AssignmentDetailPage({
 
       <div style={{ display: "flex", gap: 10, alignItems: "baseline", flexWrap: "wrap", margin: "0 0 10px" }}>
         <h2 style={{ fontSize: 18, margin: 0 }}>
-          Nepotvrdili ({missing.length} z {assignment.osob})
+          Nepotvrdili ({missing.length} z {assignment.count})
         </h2>
         {missing.length > 0 && (
           <Link href={`/hr/${encodeURIComponent(id)}/oznamit`} style={{ fontSize: 14 }}>
@@ -88,7 +88,7 @@ export default async function AssignmentDetailPage({
             <li key={o.id} className="karta" style={{ padding: "12px 16px" }}>
               <div style={{ fontWeight: 600, display: "flex", gap: 8, alignItems: "baseline", flexWrap: "wrap" }}>
                 {o.fullName}
-                {o.byvaly && <span className="stitok">už nie je v oddelení</span>}
+                {o.former && <span className="stitok">už nie je v oddelení</span>}
               </div>
               <div className="tichy" style={{ fontSize: 13.5 }}>{o.email}</div>
             </li>

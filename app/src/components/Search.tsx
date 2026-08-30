@@ -18,7 +18,7 @@ import Rating from "./Rating"
 import type { Verdict } from "@/lib/ratings"
 
 const EMPTY: AnswerState = {
-  otazka: "", text: "", citacie: [], hotovo: null, bezi: false,
+  question: "", text: "", citations: [], done: null, running: false,
 }
 
 /** Návrhy na začiatok — aby prvá obrazovka nebola prázdna. */
@@ -30,16 +30,16 @@ const EXAMPLES = [
 ]
 
 export default function Search({
-  otazkaId: questionId,
-  prednastavena: preset,
-  onPosudene: onReviewed,
+  questionId: questionId,
+  preset: preset,
+  onReviewed: onReviewed,
 }: {
   /** Označenie otázky zo zlatej sady — v režime sady. */
-  otazkaId?: string
+  questionId?: string
   /** Predvyplnené znenie otázky (režim sady). */
-  prednastavena?: string
+  preset?: string
   /** Zavolá sa po posúdení správnosti; režim sady na to nadväzuje. */
-  onPosudene?: (correct: Verdict) => void
+  onReviewed?: (correct: Verdict) => void
 } = {}) {
   const [question, setQuestion] = useState(preset ?? "")
   const [state, setState] = useState<AnswerState>(EMPTY)
@@ -59,12 +59,12 @@ export default function Search({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          otazkaId: questionId, otazka: q, odpoved: v.text,
-          zdroje: v.zdroje, citacie: v.citacie,
+          questionId, question: q, answer: v.text,
+          sources: v.sources, citations: v.citations,
           model: v.model, provider: v.provider,
-          overeneCitacie: v.overeneCitacie,
-          ttftMs: v.ttftMs, celkovoMs: v.celkovoMs, casy: v.casy,
-          tokeny: v.tokeny, naklad: v.naklad,
+          verifiedCitations: v.verifiedCitations,
+          ttftMs: v.ttftMs, totalMs: v.totalMs, timings: v.timings,
+          tokens: v.tokens, cost: v.cost,
         }),
       })
       if (!r.ok) return
@@ -78,32 +78,32 @@ export default function Search({
 
   async function send(text: string) {
     const q = text.trim()
-    if (!q || state.bezi) return
+    if (!q || state.running) return
 
     abort.current?.abort()
     const ctrl = new AbortController()
     abort.current = ctrl
 
-    setState({ otazka: q, text: "", citacie: [], hotovo: null, bezi: true })
+    setState({ question: q, text: "", citations: [], done: null, running: true })
     setRecordId(null)
 
     try {
       const v = await askQuestion(
         q,
-        p => setState(s => ({ ...s, text: p.text, citacie: p.citacie })),
+        p => setState(s => ({ ...s, text: p.text, citations: p.citations })),
         { signal: ctrl.signal }
       )
-      setState({ otazka: q, text: v.text, citacie: v.citacie, hotovo: v, bezi: false })
-      if (!v.chyba && v.text) void record(q, v)
+      setState({ question: q, text: v.text, citations: v.citations, done: v, running: false })
+      if (!v.error && v.text) void record(q, v)
     } catch (e) {
       // Prerušenie používateľom nie je chyba — len sme prestali čakať.
       if ((e as Error)?.name === "AbortError") return
       setState(s => ({
-        ...s, bezi: false,
-        hotovo: {
-          text: s.text, citacie: s.citacie, zdroje: [], model: "", provider: "",
-          overeneCitacie: false, ttftMs: null, celkovoMs: 0,
-          chyba: (e as Error)?.message ?? "Neznáma chyba",
+        ...s, running: false,
+        done: {
+          text: s.text, citations: s.citations, sources: [], model: "", provider: "",
+          verifiedCitations: false, ttftMs: null, totalMs: 0,
+          error: (e as Error)?.message ?? "Neznáma chyba",
         },
       }))
     }
@@ -122,23 +122,23 @@ export default function Search({
             type="button"
             className="tlacidlo"
             onClick={() => send(preset ?? "")}
-            disabled={state.bezi}
+            disabled={state.running}
           >
-            {state.bezi ? "Hľadám…" : state.hotovo ? "Spýtať sa znova" : "Položiť túto otázku"}
+            {state.running ? "Hľadám…" : state.done ? "Spýtať sa znova" : "Položiť túto otázku"}
           </button>
-          {state.bezi && (
+          {state.running && (
             <button
               type="button"
               className="tlacidlo tlacidlo--tiche"
-              onClick={() => { abort.current?.abort(); setState(s => ({ ...s, bezi: false })) }}
+              onClick={() => { abort.current?.abort(); setState(s => ({ ...s, running: false })) }}
             >
               Zastaviť
             </button>
           )}
         </div>
 
-        <Answer stav={state} />
-        <Rating zaznamId={recordId} otazkaId={questionId} onHotovo={onReviewed} />
+        <Answer state={state} />
+        <Rating recordId={recordId} questionId={questionId} onDone={onReviewed} />
       </div>
     )
   }
@@ -172,14 +172,14 @@ export default function Search({
           }}
         />
         <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
-          <button type="submit" className="tlacidlo" disabled={!question.trim() || state.bezi}>
-            {state.bezi ? "Hľadám…" : "Opýtať sa"}
+          <button type="submit" className="tlacidlo" disabled={!question.trim() || state.running}>
+            {state.running ? "Hľadám…" : "Opýtať sa"}
           </button>
-          {state.bezi && (
+          {state.running && (
             <button
               type="button"
               className="tlacidlo tlacidlo--tiche"
-              onClick={() => { abort.current?.abort(); setState(s => ({ ...s, bezi: false })) }}
+              onClick={() => { abort.current?.abort(); setState(s => ({ ...s, running: false })) }}
             >
               Zastaviť
             </button>
@@ -191,7 +191,7 @@ export default function Search({
       </form>
 
       {/* Príklady zmiznú, len čo je čo ukazovať. */}
-      {!state.text && !state.bezi && !state.hotovo && (
+      {!state.text && !state.running && !state.done && (
         <div>
           <div className="tichy" style={{ fontSize: 12.5, marginBottom: 8 }}>
             Alebo skúste:
@@ -212,9 +212,9 @@ export default function Search({
         </div>
       )}
 
-      <Answer stav={state} />
+      <Answer state={state} />
 
-      <Rating zaznamId={recordId} otazkaId={questionId} onHotovo={onReviewed} />
+      <Rating recordId={recordId} questionId={questionId} onDone={onReviewed} />
     </div>
   )
 }

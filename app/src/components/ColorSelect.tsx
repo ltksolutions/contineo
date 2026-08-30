@@ -20,29 +20,29 @@ import { useState } from "react"
  * nesie biely text na tlačidle, takže pri svetlejšom tóne prestane byť
  * čitateľný — a to sa ukáže až na produkcii, u zákazníka.
  */
-export const PALETTE: { hodnota: string; popis: string }[] = [
-  { hodnota: "#232a35", popis: "grafitová (predvolená)" },
-  { hodnota: "#1f4ed8", popis: "modrá" },
-  { hodnota: "#0e7490", popis: "petrolejová" },
-  { hodnota: "#047857", popis: "zelená" },
-  { hodnota: "#4d7c0f", popis: "olivová" },
-  { hodnota: "#b45309", popis: "jantárová" },
-  { hodnota: "#b91c1c", popis: "červená" },
-  { hodnota: "#9f1239", popis: "vínová" },
-  { hodnota: "#6d28d9", popis: "fialová" },
-  { hodnota: "#334155", popis: "bridlicová" },
+export const PALETTE: { value: string; label: string }[] = [
+  { value: "#232a35", label: "grafitová (predvolená)" },
+  { value: "#1f4ed8", label: "modrá" },
+  { value: "#0e7490", label: "petrolejová" },
+  { value: "#047857", label: "zelená" },
+  { value: "#4d7c0f", label: "olivová" },
+  { value: "#b45309", label: "jantárová" },
+  { value: "#b91c1c", label: "červená" },
+  { value: "#9f1239", label: "vínová" },
+  { value: "#6d28d9", label: "fialová" },
+  { value: "#334155", label: "bridlicová" },
 ]
 
 export default function ColorSelect({
-  meno: name,
-  hodnota: value,
+  name: name,
+  value: value,
 }: {
-  meno: string
-  hodnota?: string
+  name: string
+  value?: string
 }) {
   const [color, setColor] = useState((value ?? "").trim())
   const [custom, setCustom] = useState(
-    Boolean(color) && !PALETTE.some(p => p.hodnota.toLowerCase() === color.toLowerCase()),
+    Boolean(color) && !PALETTE.some(p => p.value.toLowerCase() === color.toLowerCase()),
   )
 
   return (
@@ -51,17 +51,17 @@ export default function ColorSelect({
 
       <div className="farby-zoznam">
         {PALETTE.map(p => {
-          const isHex = color.toLowerCase() === p.hodnota.toLowerCase()
+          const isHex = color.toLowerCase() === p.value.toLowerCase()
           return (
             <button
-              key={p.hodnota}
+              key={p.value}
               type="button"
               className={`farba${isHex ? " je-zvolena" : ""}`}
-              style={{ background: p.hodnota }}
+              style={{ background: p.value }}
               aria-pressed={isHex}
-              aria-label={p.popis}
-              title={p.popis}
-              onClick={() => { setColor(p.hodnota); setCustom(false) }}
+              aria-label={p.label}
+              title={p.label}
+              onClick={() => { setColor(p.value); setCustom(false) }}
             >
               {/* Krížik je biely, takže je zároveň skúškou čitateľnosti:
                   keby sa na odtieni stratil, stratí sa aj text na tlačidle. */}

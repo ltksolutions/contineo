@@ -31,7 +31,7 @@ export const MAX_DEPTH = 6
 export interface Folder {
   companyCode: string
   id: string
-  nazov: string
+  name: string
   parentId: string | null
   /**
    * Poradie medzi súrodencami (D60).
@@ -41,7 +41,7 @@ export interface Folder {
    * smernicami", nie naopak preto, že I je pred N. Chýbajúce poradie
    * znamená „zatiaľ neurčené" a vtedy rozhoduje názov, ako doteraz.
    */
-  poradie?: number
+  order?: number
   createdAt: Date
   createdBy: string
   updatedAt?: Date
@@ -60,11 +60,11 @@ export function children(all: Folder[], parentId: string | null): Folder[] {
   return all
     .filter(p => (p.parentId ?? null) === parentId)
     .sort((a, b) => {
-      const pa = a.poradie, pb = b.poradie
+      const pa = a.order, pb = b.order
       if (typeof pa === "number" && typeof pb === "number") return pa - pb
       if (typeof pa === "number") return -1
       if (typeof pb === "number") return 1
-      return a.nazov.localeCompare(b.nazov, "sk")
+      return a.name.localeCompare(b.name, "sk")
     })
 }
 
@@ -132,14 +132,14 @@ export function canMove(
 }
 
 export interface FolderRow {
-  priecinok: Folder
-  uroven: number
+  folder: Folder
+  level: number
 }
 
 export function flattenTree(all: Folder[], parentId: string | null = null, level = 1): FolderRow[] {
   const out: FolderRow[] = []
   for (const p of children(all, parentId)) {
-    out.push({ priecinok: p, uroven: level })
+    out.push({ folder: p, level: level })
     if (level < MAX_DEPTH) out.push(...flattenTree(all, p.id, level + 1))
   }
   return out
@@ -168,14 +168,14 @@ export async function createFolder(
   if (depth(all, parentId) + 1 > MAX_DEPTH) {
     throw new FolderError(`Štruktúra môže mať najviac ${MAX_DEPTH} úrovní.`)
   }
-  if (children(all, parentId ?? null).some(p => p.nazov.toLowerCase() === actorName.toLowerCase())) {
+  if (children(all, parentId ?? null).some(p => p.name.toLowerCase() === actorName.toLowerCase())) {
     throw new FolderError(`Na tejto úrovni už priečinok „${actorName}" je.`)
   }
 
   const p: Folder = {
     companyCode,
     id: crypto.randomUUID(),
-    nazov: actorName,
+    name: actorName,
     parentId: parentId ?? null,
     createdAt: new Date(),
     createdBy: actor,
@@ -183,8 +183,8 @@ export async function createFolder(
   const col = await getCollection<Folder>(FOLDERS_COLLECTION)
   await col.insertOne(p as never)
   await writeAudit({
-    companyCode, predmet: "priecinok", akcia: "zalozene", aktor: actor,
-    cielId: p.id, cielPopis: actorName,
+    companyCode, subject: "folder", action: "created", actor: actor,
+    targetId: p.id, targetLabel: actorName,
   })
   return p
 }
@@ -198,10 +198,10 @@ export async function renameFolder(
   const before = await col.findOne({ companyCode, id })
   if (!before) throw new FolderError("Taký priečinok tu nie je.")
 
-  await col.updateOne({ companyCode, id }, { $set: { nazov: actorName, updatedAt: new Date(), updatedBy: actor } })
+  await col.updateOne({ companyCode, id }, { $set: { name: actorName, updatedAt: new Date(), updatedBy: actor } })
   await writeAudit({
-    companyCode, predmet: "priecinok", akcia: "premenovane", aktor: actor,
-    cielId: id, cielPopis: actorName, zmeny: { nazov: { z: before.nazov, na: actorName } },
+    companyCode, subject: "folder", action: "renamed", actor: actor,
+    targetId: id, targetLabel: actorName, changes: { name: { from: before.name, to: actorName } },
   })
 }
 
@@ -224,10 +224,10 @@ export async function moveFolder(
   )
   const affectedCount = await recomputePaths(companyCode)
   await writeAudit({
-    companyCode, predmet: "priecinok", akcia: "presunute", aktor: actor,
-    cielId: id, cielPopis: before.nazov,
-    zmeny: { parentId: { z: before.parentId, na: newParentId ?? null } },
-    poznamka: `prepočítané cesty ${affectedCount} dokumentom`,
+    companyCode, subject: "folder", action: "moved", actor: actor,
+    targetId: id, targetLabel: before.name,
+    changes: { parentId: { from: before.parentId, to: newParentId ?? null } },
+    note: `prepočítané cesty ${affectedCount} dokumentom`,
   })
 }
 
@@ -250,8 +250,8 @@ export async function deleteFolder(companyCode: string, id: string, actor: strin
   const before = await col.findOne({ companyCode, id })
   await col.deleteOne({ companyCode, id })
   await writeAudit({
-    companyCode, predmet: "priecinok", akcia: "zrusene", aktor: actor,
-    cielId: id, cielPopis: before?.nazov ?? null,
+    companyCode, subject: "folder", action: "deleted", actor: actor,
+    targetId: id, targetLabel: before?.name ?? null,
   })
 }
 
@@ -357,9 +357,9 @@ export async function shiftFolder(
 
   await saveFolderOrder(companyCode, sorted.map(p => p.id), actor)
   await writeAudit({
-    companyCode, predmet: "priecinok", akcia: "preusporiadane", aktor: actor,
-    cielId: id, cielPopis: self.nazov,
-    poznamka: `posunuté ${direction} medzi súrodencami`,
+    companyCode, subject: "folder", action: "reordered", actor: actor,
+    targetId: id, targetLabel: self.name,
+    note: `posunuté ${direction} medzi súrodencami`,
   })
 }
 
@@ -396,7 +396,7 @@ export async function saveFolderOrder(
   for (const [i, x] of orderedIds.entries()) {
     await col.updateOne(
       { companyCode, id: x },
-      { $set: { poradie: i, updatedAt: current, updatedBy: actor } },
+      { $set: { order: i, updatedAt: current, updatedBy: actor } },
     )
   }
 }

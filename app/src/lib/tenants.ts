@@ -87,7 +87,7 @@ export interface Tenant {
    * filtre, na ktorých stojí prístup, a vlastná hodnota v nich by bola niečo,
    * čomu nikde inde v systéme nikto nerozumie.
    */
-  ciselniky?: Partial<Record<string, { key: string; label?: string }[]>>
+  codelists?: Partial<Record<string, { key: string; label?: string }[]>>
 
   /**
    * Profil členenia dokumentov na úseky (D58).
@@ -100,10 +100,10 @@ export interface Tenant {
    * Chýbajúci profil znamená predvolený, nie „nič" — a predvolený reže presne
    * tak, ako sa rezalo doteraz (overené na deviatich normách).
    */
-  chunkovanie?: Partial<{
+  chunking?: Partial<{
     slovoClanok: string
-    slovoPriloha: string
-    opakovaniHlavicky: number
+    annexWord: string
+    headerRepeats: number
     cielMinTokenov: number
     cielMaxTokenov: number
   }>

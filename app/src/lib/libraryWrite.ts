@@ -35,17 +35,17 @@ import type { Chunk, ChunkingProfile } from "./chunker"
 export const CHUNKS_COLLECTION = "document_chunks"
 
 /** Technický stav — čo s dokumentom urobili stroje. */
-export type ProcessingState = "nahrate" | "prevedene" | "zaindexovane" | "zlyhalo"
+export type ProcessingState = "uploaded" | "converted" | "indexed" | "failed"
 
 export interface OriginalFile {
   /** Identifikátor v GridFS. */
   id: string
-  nazov: string
+  name: string
   contentType: string
-  bajtov: number
-  typ: string
-  nahraneKedy: Date
-  nahralKto: string
+  bytes: number
+  type: string
+  uploadedAt: Date
+  uploadedBy: string
 }
 
 export interface DocumentMetadata {
@@ -101,8 +101,8 @@ export function checkMetadata(
 export interface UploadResult {
   documentId: string
   markdown: string
-  upozornenia: string[]
-  novy: boolean
+  warnings: string[]
+  isNew: boolean
 }
 
 /**
@@ -136,12 +136,12 @@ export async function uploadDocument(
 
   const original: OriginalFile = {
     id: file.id,
-    nazov: fileName,
+    name: fileName,
     contentType: file.contentType,
-    bajtov: file.bajtov,
-    typ: converted.typ,
-    nahraneKedy: now,
-    nahralKto: actor,
+    bytes: file.bajtov,
+    type: converted.type,
+    uploadedAt: now,
+    uploadedBy: actor,
   }
 
   await col.updateOne(
@@ -157,13 +157,13 @@ export async function uploadDocument(
         accessLevel: meta.accessLevel,
         language: meta.language,
         category: meta.category ?? null,
-        sourceType: meta.sourceType ?? converted.typ,
+        sourceType: meta.sourceType ?? converted.type,
         tags: meta.tags ?? [],
         // Koncept: text existuje, ale nikto ho ešte neprečítal a nepustil von.
         draftMarkdown: converted.markdown,
-        processingStatus: "prevedene" as ProcessingState,
+        processingStatus: "converted" as ProcessingState,
         processingError: null,
-        konverzia: { sposob: converted.sposob, upozornenia: converted.upozornenia, kedy: now },
+        conversion: { method: converted.method, warnings: converted.warnings, at: now },
         originalFile: original,
         updatedAt: now,
         updatedBy: actor,
@@ -175,19 +175,19 @@ export async function uploadDocument(
 
   await writeAudit({
     companyCode: meta.companyCode,
-    predmet: "dokument",
-    akcia: existing ? "nahrate-nove-znenie" : "zalozene",
-    aktor: actor,
-    cielId: documentId,
-    cielPopis: meta.title,
-    poznamka: `${FILE_TYPE_LABEL[converted.typ]} · ${fileName} · ${converted.sposob}`,
+    subject: "document",
+    action: existing ? "nahrate-nove-znenie" : "zalozene",
+    actor: actor,
+    targetId: documentId,
+    targetLabel: meta.title,
+    note: `${FILE_TYPE_LABEL[converted.type]} · ${fileName} · ${converted.method}`,
   })
 
   return {
     documentId,
     markdown: converted.markdown,
-    upozornenia: converted.upozornenia,
-    novy: !existing,
+    warnings: converted.warnings,
+    isNew: !existing,
   }
 }
 
@@ -278,7 +278,7 @@ export async function publish(
     text: ch.text,
     heading: ch.heading,
     articleRef: ch.articleRef ?? null,
-    chunkType: ch.typ ?? "clanok",
+    chunkType: ch.kind ?? "clanok",
     sectionKey: meta.sectionKey,
     companyCode,
     scope: meta.scope,
@@ -343,7 +343,7 @@ export async function publish(
         chunkingId,
         markdown,
         status: "published",
-        processingStatus: "zaindexovane" as ProcessingState,
+        processingStatus: "indexed" as ProcessingState,
         effectiveFrom: input.effectiveFrom,
         effectiveTo: null,
         updatedAt: now,
@@ -371,9 +371,9 @@ export async function publish(
   )
 
   await writeAudit({
-    companyCode, predmet: "dokument", akcia: "publikovane", aktor: actor,
-    cielId: documentId, cielPopis: `${meta.title} — ${label}`,
-    poznamka: `${chunks.length} úsekov · platné od ${input.effectiveFrom.toISOString().slice(0, 10)}` +
+    companyCode, subject: "document", action: "published", actor: actor,
+    targetId: documentId, targetLabel: `${meta.title} — ${label}`,
+    note: `${chunks.length} úsekov · platné od ${input.effectiveFrom.toISOString().slice(0, 10)}` +
       (input.effectiveFromSource ? ` · zdroj: ${input.effectiveFromSource}` : ""),
   })
 
@@ -451,9 +451,9 @@ export async function saveMetadata(
     language: meta.language, category: meta.category ?? null, tags: meta.tags ?? [],
   }
   await writeAudit({
-    companyCode, predmet: "dokument", akcia: "zmenene", aktor: actor,
-    cielId: documentId, cielPopis: meta.title,
-    zmeny: diff(beforeMeta, afterMeta),
+    companyCode, subject: "document", action: "changed", actor: actor,
+    targetId: documentId, targetLabel: meta.title,
+    changes: diff(beforeMeta, afterMeta),
   })
 }
 
@@ -550,9 +550,9 @@ export async function reindex(
   )
 
   await writeAudit({
-    companyCode, predmet: "dokument", akcia: "preindexovane", aktor: actor,
-    cielId: documentId, cielPopis: meta.title,
-    poznamka: `${chunks.length} úsekov · ${archive.modifiedCount} archivovaných · ` +
+    companyCode, subject: "document", action: "reindexed", actor: actor,
+    targetId: documentId, targetLabel: meta.title,
+    note: `${chunks.length} úsekov · ${archive.modifiedCount} archivovaných · ` +
       "znenie ani potvrdenia sa nemenili",
   })
 
@@ -587,12 +587,12 @@ export async function fixVersion(
     effectiveFrom?: Date
     effectiveFromSource?: string
     changeNote?: string
-    dovod: string
-    priZmeneDatumu?: "oprava" | "znovaPotvrdit"
+    reason: string
+    onDateChange?: "oprava" | "znovaPotvrdit"
   },
   actor: string,
-): Promise<{ potvrdeni: number; znovaPotvrdit: boolean }> {
-  const reason = input.dovod?.trim() ?? ""
+): Promise<{ acknowledgementCount: number; znovaPotvrdit: boolean }> {
+  const reason = input.reason?.trim() ?? ""
   if (!reason) {
     throw new LibraryError(
       "Dôvod opravy je povinný — bez neho sa o rok nedá zistiť, či išlo o preklep alebo o zmenu povinnosti.",
@@ -617,14 +617,14 @@ export async function fixVersion(
   const changesDate = input.effectiveFrom instanceof Date &&
     (!v.effectiveFrom || new Date(v.effectiveFrom).getTime() !== input.effectiveFrom.getTime())
 
-  if (changesDate && acknowledgementCount > 0 && !input.priZmeneDatumu) {
+  if (changesDate && acknowledgementCount > 0 && !input.onDateChange) {
     throw new LibraryError(
       `Toto znenie už potvrdilo ${acknowledgementCount} ľudí a formulka, ktorú podpísali, obsahuje starý dátum. ` +
       "Rozhodni, či je to oprava zápisu, alebo sa má znenie potvrdiť znova.",
     )
   }
 
-  const reacknowledge = Boolean(changesDate && acknowledgementCount > 0 && input.priZmeneDatumu === "znovaPotvrdit")
+  const reacknowledge = Boolean(changesDate && acknowledgementCount > 0 && input.onDateChange === "znovaPotvrdit")
 
   const set: Record<string, unknown> = { updatedAt: new Date(), updatedBy: actor }
   if (input.label?.trim()) set["versions.$[v].label"] = input.label.trim()
@@ -659,17 +659,17 @@ export async function fixVersion(
   )
 
   await writeAudit({
-    companyCode, predmet: "dokument", akcia: "oprava-znenia", aktor: actor,
-    cielId: documentId, cielPopis: `${String(doc.title ?? documentId)} — ${v.label}`,
-    zmeny: diff(
+    companyCode, subject: "document", action: "version-fix", actor: actor,
+    targetId: documentId, targetLabel: `${String(doc.title ?? documentId)} — ${v.label}`,
+    changes: diff(
       { label: v.label, effectiveFrom: v.effectiveFrom ?? null },
       { label: input.label?.trim() ?? v.label, effectiveFrom: input.effectiveFrom ?? v.effectiveFrom ?? null },
     ),
-    poznamka: `${reason}${acknowledgementCount > 0 ? ` · potvrdení: ${acknowledgementCount}` : ""}` +
+    note: `${reason}${acknowledgementCount > 0 ? ` · potvrdení: ${acknowledgementCount}` : ""}` +
       (reacknowledge ? " · vyžaduje nové potvrdenie" : ""),
   })
 
-  return { potvrdeni: acknowledgementCount, znovaPotvrdit: reacknowledge }
+  return { acknowledgementCount: acknowledgementCount, znovaPotvrdit: reacknowledge }
 }
 
 export interface ReindexState {
@@ -741,7 +741,7 @@ export async function reindexAll(
   actor: string,
   profile?: Partial<ChunkingProfile>,
   limit = 25,
-): Promise<{ preindexovanych: number; preskocenych: number; zostava: number; chyby: string[] }> {
+): Promise<{ preindexovanych: number; preskocenych: number; remaining: number; errors: string[] }> {
   const col = await getCollection(DOCUMENTS_COLLECTION)
   const documents = await col
     .find({ companyCode }, { projection: { documentId: 1 } })
@@ -767,5 +767,5 @@ export async function reindexAll(
     }
   }
 
-  return { preindexovanych: reindexed, preskocenych: skipped, zostava: remaining, chyby: errors }
+  return { preindexovanych: reindexed, preskocenych: skipped, remaining: remaining, errors: errors }
 }

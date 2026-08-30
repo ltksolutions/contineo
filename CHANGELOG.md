@@ -4,6 +4,16 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Changed (2026-08-30 — kód, príkazy, adresa aj databáza po anglicky)
+
+- **Identifikátory v kóde sú anglické, komentáre a texty pre používateľa slovenské.** Dôvod je praktický: celý ekosystém okolo (Next, Mongo, typy, chybové hlášky) je anglický a miešanie znamenalo prekladať medzi kódom a databázou v každom druhom riadku (`Oddelenie` verzus `departments`). Pravidlo je zapísané v `CLAUDE.md`, nech sa to neopravuje znova.
+- Premenovanie prebehlo cez jazykový server TypeScriptu (`findRenameLocations`), nie hľadaj-nahraď: menili sa skutočné symboly, nie výskyty v komentároch a v slovenských textoch. Spolu ~2 300 identifikátorov a názvov polí.
+- **Výstup chunkera sa nezmenil ani o bajt** — overené na desiatich vzorkových dokumentoch pred aj po. Potvrdenia sa teda nemajú prečo rozísť.
+- **`npm run` príkazy a súbory v `scripts/`**: `kontrola` → `check`, `stav` → `status`, `domeny` → `domains`, `osoba` → `person`, `verzie` → `versions`, `platnost` → `validity`, `utvary` → `departments`, `subory:doplnit` → `files:attach`.
+- **Kľúče a hodnoty v adrese** sú anglické (`?zalozka=clenenie` → `?tab=chunking`). **Staré odkazy fungujú ďalej** — prekladajú sa cez tabuľku v `lib/urlParams.ts`, pri čítaní stránky aj pri návrate zo serverovej akcie. Zmizne, keď staré odkazy prestanú chodiť.
+- **Migrácia databázy** (`npm run migrate:fields`): názvy polí aj tie hodnoty, ktoré sú v skutočnosti identifikátory — `audit.predmet: "oddelenie"` → `subject: "department"`, `akcia: "zalozene"` → `action: "created"`. Spravilo sa to teraz, kým sú v databáze desiatky dokumentov a ani jedno potvrdenie; o rok by to bola úplne iná operácia. Skript zálohuje dotknuté kolekcie do `data/backup/<čas>/` a bez zálohy nezapisuje.
+- Staré indexy auditu (`podla_casu`, `podla_predmetu`, `podla_ciela`) sa zrušili a nahradili `by_time`, `by_subject`, `by_target` — kľúčovali podľa polí, ktoré po migrácii neexistujú.
+
 ### Added (2026-08-30 — poradie aj pre priečinky knižnice)
 
 - **Priečinky knižnice majú vlastné poradie** (D60), rovnako ako oddelenia: ťahanie myšou v rámci úrovne, šípky hore/dole ako cesta bez JavaScriptu, čiary hierarchie. Priečinky sú usporiadanie, ktoré si niekto premyslel — „Normy" pred „Internými smernicami", nie naopak preto, že I je pred N.

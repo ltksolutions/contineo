@@ -26,7 +26,7 @@ export interface Photo {
   data: Buffer
   bajtov: number
   /** Súčasť adresy, takže nová fotka sa ukáže okamžite napriek dlhej pamäti. */
-  verzia: string
+  version: string
   updatedAt: Date
   zdroj: string
 }
@@ -48,7 +48,7 @@ export async function savePhoto(
       {
         $set: {
           companyCode, personId, contentType, data,
-          bajtov: data.byteLength, verzia: version, updatedAt: new Date(), zdroj: source,
+          bajtov: data.byteLength, version: version, updatedAt: new Date(), zdroj: source,
         },
       },
       { upsert: true },

@@ -186,7 +186,7 @@ export async function POST(req: NextRequest) {
   }
 
   // 7. Generovanie odpovede (streaming SSE)
-  const stream = generateAnswer({ query, chunks, userRole, profile, casy: timings })
+  const stream = generateAnswer({ query, chunks, userRole, profile, timings })
 
   return sseResponse(stream, {
     // Debug hlavičky (v produkcii odstrán)

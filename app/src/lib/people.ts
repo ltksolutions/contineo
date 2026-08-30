@@ -91,9 +91,9 @@ export interface PersonRow {
   roles: string[]
   lastLoginAt?: Date
   /** Akými kontami sa prihlasuje. Neudeľujú prístup, len ho uľahčujú (D45). */
-  konta: ("microsoft" | "google")[]
+  accounts: ("microsoft" | "google")[]
   /** Predchádzajúce adresy — aby sa staré potvrdenie dalo spojiť s človekom. */
-  emailHistory: { email: string; doKedy: Date }[]
+  emailHistory: { email: string; until: Date }[]
   /** Kto ju zapísal. `auto:microsoft` znamená, že sa založila sama (D47). */
   createdBy?: string
 }
@@ -114,9 +114,9 @@ function toRow(p: Person): PersonRow {
     groups: p.groups ?? [],
     roles: p.roles ?? [],
     lastLoginAt: p.lastLoginAt,
-    emailHistory: (p.emailHistory ?? []).map(h => ({ email: h.email, doKedy: h.doKedy })),
+    emailHistory: (p.emailHistory ?? []).map(h => ({ email: h.email, until: h.until })),
     createdBy: p.createdBy,
-    konta: [
+    accounts: [
       ...(p.externalRef?.entraObjectId ? ["microsoft" as const] : []),
       ...(p.externalRef?.googleSub ? ["google" as const] : []),
     ],
@@ -230,7 +230,7 @@ export async function savePerson(
       // a človek, ktorý ten audit číta, `id` v ruke nemá.
       set.emailHistory = [
         ...(existing.emailHistory ?? []),
-        { email: existing.email, doKedy: new Date(), zmenil: actor },
+        { email: existing.email, until: new Date(), changedBy: actor },
       ]
     }
   }
@@ -297,9 +297,9 @@ export async function savePerson(
   for (const k of Object.keys(interesting)) before[k] = (existing as Record<string, unknown>)[k]
 
   await writeAudit({
-    companyCode, predmet: "osoba", akcia: "zmenene", aktor: actor,
-    cielId: id, cielPopis: existing.fullName,
-    zmeny: diff(before, interesting),
+    companyCode, subject: "person", action: "changed", actor: actor,
+    targetId: id, targetLabel: existing.fullName,
+    changes: diff(before, interesting),
   })
 }
 
@@ -347,9 +347,9 @@ export async function invitePerson(
   }
   await col.insertOne(person as never)
   await writeAudit({
-    companyCode, predmet: "osoba", akcia: "zalozene", aktor: actor,
-    cielId: person.id, cielPopis: person.fullName,
-    zmeny: { email: { na: person.email } },
+    companyCode, subject: "person", action: "created", actor: actor,
+    targetId: person.id, targetLabel: person.fullName,
+    changes: { email: { to: person.email } },
   })
   return toRow(person)
 }
@@ -378,9 +378,9 @@ export async function setPersonStatus(
     { $set: { status, updatedBy: actor, updatedAt: new Date() } } as never,
   )
   await writeAudit({
-    companyCode, predmet: "osoba",
-    akcia: status === "inactive" ? "vyradene" : "vratene",
-    aktor: actor, cielId: id, cielPopis: existing.fullName,
-    zmeny: { status: { z: existing.status, na: status } },
+    companyCode, subject: "person",
+    action: status === "inactive" ? "vyradene" : "vratene",
+    actor: actor, targetId: id, targetLabel: existing.fullName,
+    changes: { status: { from: existing.status, to: status } },
   })
 }

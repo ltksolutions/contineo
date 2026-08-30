@@ -28,26 +28,26 @@ export default async function QuestionDetailPage({ params }: { params: Promise<{
   // Najprv hľadáme otázku, ktorú TENTO človek ešte neposúdil — nie ktorú
   // neposúdil nikto. Pri prekryve je druhý posudok rovnako potrebný ako prvý.
   const next =
-    remaining.find(o => !o.vyradena && o.stav === null)?.id ??
-    all.find(o => !o.vyradena && o.stav === null && o.id !== id)?.id ??
+    remaining.find(o => !o.excluded && o.state === null)?.id ??
+    all.find(o => !o.excluded && o.state === null && o.id !== id)?.id ??
     null
 
   return (
     <div className="obal" style={{ padding: "28px 20px 80px" }}>
       <GoldenSetQuestion
         id={question.id}
-        znenie={questionText(question)}
-        povodne={question.povodneZnenie}
-        upravene={question.upraveneZnenie}
-        vyradena={question.vyradena}
-        dovodVyradenia={question.dovodVyradenia}
+        text={questionText(question)}
+        original={question.originalText}
+        edited={question.editedText}
+        excluded={question.excluded}
+        exclusionReason={question.exclusionReason}
         trapType={question.trapType}
         expectedBehaviour={question.expectedBehaviour}
         precedenceRule={question.precedenceRule}
         searchMode={question.searchMode}
-        prekryv={question.prekryv}
-        cudzie={question.cudzie.map(c => ({ hodnotitel: c.hodnotitel, spravna: c.spravna }))}
-        dalsia={next}
+        overlap={question.overlap}
+        others={question.others.map(c => ({ reviewer: c.reviewer, correct: c.correct }))}
+        next={next}
       />
     </div>
   )

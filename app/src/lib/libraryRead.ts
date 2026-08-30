@@ -23,17 +23,17 @@ export interface LibraryRow {
   language?: string
   accessLevel?: string
   tags: string[]
-  stavSpracovania: ProcessingState
+  processingState: ProcessingState
   /** `draft` = ešte nepublikované, `published` = má aspoň jedno vydané znenie. */
-  stav: string
+  status: string
   folderId?: string | null
   /** Názvy priečinkov od koreňa — do zoznamu, aby bolo vidieť, kde dokument je. */
   cestaPriecinkov?: string[]
-  verzii: number
+  versionCount: number
   /** Označenie platného znenia, alebo dôvod, prečo žiadne neplatí. */
-  platneZnenie: string
-  maKoncept: boolean
-  povodnySubor?: { nazov: string; typ: string; bajtov: number }
+  effectiveLabel: string
+  hasDraft: boolean
+  originalFile?: { name: string; type: string; bytes: number }
   updatedAt?: Date
   updatedBy?: string
 }
@@ -50,10 +50,10 @@ export interface LibraryDetail extends LibraryRow {
    * Poradie je zámerné: rozpracovaný koncept, potom platné znenie, až potom
    * najnovšie zapísané.
    */
-  textNaUpravu: string
+  editableText: string
   versions: Version[]
   originalFile?: OriginalFile
-  konverzia?: { sposob: string; upozornenia: string[]; kedy: Date }
+  conversion?: { method: string; warnings: string[]; at: Date }
   processingError?: string | null
   scope?: string
   companyCode: string
@@ -84,18 +84,14 @@ function toRow(d: RawRow): LibraryRow {
     language: d.language ? String(d.language) : undefined,
     accessLevel: d.accessLevel ? String(d.accessLevel) : undefined,
     tags: Array.isArray(d.tags) ? (d.tags as string[]) : [],
-    // Dokumenty naimportované skriptom majú `processingStatus: "indexed"`
-    // v anglickom tvare. Prekladá sa tu, nie migráciou — prepisovať existujúce
-    // záznamy kvôli pomenovaniu by bola zmena dát bez dôvodu.
-    stavSpracovania: (d.processingStatus === "indexed" ? "zaindexovane"
-      : (d.processingStatus as ProcessingState | undefined) ?? "nahrate"),
-    stav: String(d.status ?? "draft"),
+    processingState: (d.processingStatus as ProcessingState | undefined) ?? "uploaded",
+    status: String(d.status ?? "draft"),
     folderId: (d.folderId as string | null | undefined) ?? null,
-    verzii: (d.versions ?? []).length,
-    platneZnenie: validityLabel(d),
-    maKoncept: Boolean(String(d.draftMarkdown ?? "").trim()),
-    povodnySubor: original
-      ? { nazov: original.nazov, typ: original.typ, bajtov: original.bajtov }
+    versionCount: (d.versions ?? []).length,
+    effectiveLabel: validityLabel(d),
+    hasDraft: Boolean(String(d.draftMarkdown ?? "").trim()),
+    originalFile: original
+      ? { name: original.name, type: original.type, bytes: original.bytes }
       : undefined,
     updatedAt: d.updatedAt as Date | undefined,
     updatedBy: d.updatedBy ? String(d.updatedBy) : undefined,
@@ -103,8 +99,8 @@ function toRow(d: RawRow): LibraryRow {
 }
 
 export interface LibraryFilter {
-  hladat?: string
-  stav?: string
+  search?: string
+  status?: string
   /** Priečinok **vrátane podpriečinkov** — hľadá sa v materializovanej ceste. */
   priecinok?: string
   /** `nezaradene` = dokumenty, ktoré v žiadnom priečinku nie sú. */
@@ -121,8 +117,8 @@ export async function libraryList(
   const col = await getCollection(DOCUMENTS_COLLECTION)
   const q: Record<string, unknown> = { companyCode }
 
-  if (filter.stav === "koncept") q.status = { $ne: "published" }
-  if (filter.stav === "publikovane") q.status = "published"
+  if (filter.status === "koncept") q.status = { $ne: "published" }
+  if (filter.status === "publikovane") q.status = "published"
 
   // Priečinok sa filtruje cez cestu, takže „úsek komunikácie" nájde aj to,
   // čo je v jeho podpriečinkoch. Jeden dotaz namiesto rekurzie pri každom
@@ -140,10 +136,10 @@ export async function libraryList(
   if (filter.accessLevel) q.accessLevel = filter.accessLevel
   if (filter.tag) q.tags = filter.tag
 
-  if (filter.hladat?.trim()) {
+  if (filter.search?.trim()) {
     // Vstup od človeka ide do regulárneho výrazu — bez escapovania by `(`
     // zhodilo dotaz a `.*` prehľadalo všetko.
-    const safe = filter.hladat.trim().replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+    const safe = filter.search.trim().replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
     q.$or = [
       { title: { $regex: safe, $options: "i" } },
       { documentId: { $regex: safe, $options: "i" } },
@@ -169,7 +165,7 @@ export async function libraryList(
   const folders = await allFolders(companyCode)
   return records.map(z => {
     const r = toRow(z as RawRow)
-    return { ...r, cestaPriecinkov: pathTo(folders, r.folderId).map(p => p.nazov) }
+    return { ...r, cestaPriecinkov: pathTo(folders, r.folderId).map(p => p.name) }
   })
 }
 
@@ -201,8 +197,8 @@ export async function libraryDetail(
 
   return {
     ...toRow(d),
-    cestaPriecinkov: pathTo(folders, (d.folderId as string | null | undefined) ?? null).map(p => p.nazov),
-    textNaUpravu: editableText,
+    cestaPriecinkov: pathTo(folders, (d.folderId as string | null | undefined) ?? null).map(p => p.name),
+    editableText: editableText,
     companyCode,
     scope: d.scope ? String(d.scope) : undefined,
     draftMarkdown: d.draftMarkdown ? String(d.draftMarkdown) : undefined,
@@ -213,7 +209,7 @@ export async function libraryDetail(
       return tb - ta
     }),
     originalFile: d.originalFile as OriginalFile | undefined,
-    konverzia: d.konverzia as LibraryDetail["konverzia"],
+    conversion: d.konverzia as LibraryDetail["conversion"],
     processingError: (d.processingError as string | null) ?? null,
   }
 }

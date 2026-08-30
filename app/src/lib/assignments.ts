@@ -153,15 +153,15 @@ export function matchesAudience(
  * formulári, nie niečo, s čím má človek niečo robiť.
  */
 export function audienceFromSelection(selection: {
-  vsetci?: boolean
+  all?: boolean
   /** Hodnoty zaškrtávacích políčok v tvare `group:rozhodcovia`, `track:zaklad`. */
-  vybrane?: string[]
+  selected?: string[]
   /** Ručne napísané adresy, oddelené čiarkou, bodkočiarkou alebo riadkom. */
-  adresy?: string
+  addresses?: string
   /** `id` → názov oddelenia. Len na zapísanie čitateľnej kópie do `label`. */
-  nazvyOddeleni?: Record<string, string>
+  departmentNames?: Record<string, string>
 }): Audience[] {
-  if (selection.vsetci) return [{ kind: "all" }]
+  if (selection.all) return [{ kind: "all" }]
 
   const out: Audience[] = []
   const seen = new Set<string>()
@@ -169,11 +169,11 @@ export function audienceFromSelection(selection: {
     const key = `${kind}:${value}`
     if (seen.has(key)) return
     seen.add(key)
-    const label = kind === "department" ? selection.nazvyOddeleni?.[value] : undefined
+    const label = kind === "department" ? selection.departmentNames?.[value] : undefined
     out.push(label ? { kind, value, label } : { kind, value })
   }
 
-  for (const raw of selection.vybrane ?? []) {
+  for (const raw of selection.selected ?? []) {
     const separator = raw.indexOf(":")
     if (separator === -1) continue
     const kind = raw.slice(0, separator)
@@ -184,7 +184,7 @@ export function audienceFromSelection(selection: {
 
   // Adresy sa píšu ručne, tak sa oddeľujú aj novým riadkom, aj čiarkou —
   // človek prilepí zoznam z tabuľky a nemá premýšľať nad tvarom.
-  for (const a of (selection.adresy ?? "").split(/[\n,;]+/)) {
+  for (const a of (selection.addresses ?? "").split(/[\n,;]+/)) {
     const email = a.trim().toLowerCase()
     // Bez zavináča to nie je adresa. Prideliť „niečomu, čo vyzeralo ako
     // adresa" znamená neprideliť nikomu a tváriť sa, že je hotovo.
@@ -244,9 +244,9 @@ export interface NewAssignment {
 }
 
 export type AssignResult =
-  | { stav: "pridelene"; id: string }
+  | { status: "pridelene"; id: string }
   /** To isté znenie je tomu istému publiku pridelené a neodvolané. */
-  | { stav: "uz-je"; id: string }
+  | { status: "uz-je"; id: string }
 
 /**
  * Zapíše pridelenie.
@@ -299,7 +299,7 @@ export async function assign(input: NewAssignment): Promise<AssignResult> {
   }
 
   const existing = await col.findOne(key as never)
-  if (existing) return { stav: "uz-je", id: String(existing._id) }
+  if (existing) return { status: "uz-je", id: String(existing._id) }
 
   const record: Assignment = {
     companyCode: input.companyCode.trim(),
@@ -312,12 +312,12 @@ export async function assign(input: NewAssignment): Promise<AssignResult> {
   }
   const r = await col.insertOne(record as never)
   await writeAudit({
-    companyCode: record.companyCode, predmet: "pridelenie", akcia: "pridelene",
-    aktor: input.assignedBy, cielId: String(r.insertedId),
-    cielPopis: `${input.subject.documentTitle} (${input.subject.versionLabel}) — ${audienceLabel(audience)}`,
-    poznamka: reason,
+    companyCode: record.companyCode, subject: "assignment", action: "assigned",
+    actor: input.assignedBy, targetId: String(r.insertedId),
+    targetLabel: `${input.subject.documentTitle} (${input.subject.versionLabel}) — ${audienceLabel(audience)}`,
+    note: reason,
   })
-  return { stav: "pridelene", id: String(r.insertedId) }
+  return { status: "pridelene", id: String(r.insertedId) }
 }
 
 /**
@@ -338,8 +338,8 @@ export async function revoke(companyCode: string, id: string, actor: string): Pr
   )
   if (r.modifiedCount > 0 && previous) {
     await writeAudit({
-      companyCode, predmet: "pridelenie", akcia: "odvolane", aktor: actor, cielId: id,
-      cielPopis: `${previous.subject.documentTitle} (${previous.subject.versionLabel}) — ${audienceLabel(previous.audience)}`,
+      companyCode, subject: "assignment", action: "revoked", actor: actor, targetId: id,
+      targetLabel: `${previous.subject.documentTitle} (${previous.subject.versionLabel}) — ${audienceLabel(previous.audience)}`,
     })
   }
   return r.modifiedCount > 0
@@ -432,8 +432,8 @@ export async function recordNotification(
     { $push: { notified: { at: new Date(), by, count } } } as never,
   )
   await writeAudit({
-    companyCode, predmet: "pridelenie", akcia: "oznamene", aktor: by, cielId: id,
-    poznamka: `odoslané ${count} ľuďom`,
+    companyCode, subject: "assignment", action: "notified", actor: by, targetId: id,
+    note: `odoslané ${count} ľuďom`,
   })
 }
 
@@ -449,7 +449,7 @@ export type AudienceMember = Pick<Person, "id" | "email" | "fullName" | "languag
    * pripomínať normu oddelenia, v ktorom už človek nie je, je nezmysel; čo
    * s tým, rozhodne personalista.
    */
-  byvaly?: boolean
+  former?: boolean
 }
 
 export interface AssignmentOverview {
@@ -460,12 +460,12 @@ export interface AssignmentOverview {
   assignedAt: Date
   assignedBy: string
   /** Koľkých ľudí sa pridelenie týka **dnes**. Počíta sa, neukladá (D27). */
-  osob: number
-  potvrdili: number
+  count: number
+  acknowledged: number
   /** Posledné odoslané oznámenie. `null`, keď sme ešte nedali vedieť. */
   oznamene: { at: Date; by: string; count: number } | null
   /** Koľkokrát sme už dali vedieť — štvrtá pripomienka je iná informácia. */
-  oznameniSpolu: number
+  notifiedTotal: number
 }
 
 /**
@@ -519,10 +519,10 @@ export async function assignmentOverviews(companyCode: string): Promise<Assignme
       reason: a.reason,
       assignedAt: a.assignedAt,
       assignedBy: a.assignedBy,
-      osob: members.length,
-      potvrdili: acknowledgedBy,
+      count: members.length,
+      acknowledged: acknowledgedBy,
       oznamene: a.notified?.length ? a.notified[a.notified.length - 1] : null,
-      oznameniSpolu: a.notified?.length ?? 0,
+      notifiedTotal: a.notified?.length ?? 0,
     })
   }
   return out
@@ -597,7 +597,7 @@ async function formerMembers(
   // Prekryv úseku s obdobím platnosti pridelenia, nie „bol tam v deň
   // pridelenia": kto prišiel týždeň po pridelení a o mesiac odišiel, mal
   // povinnosť tiež.
-  const ranges = (o: Person): { od: Date; do?: Date }[] =>
+  const ranges = (o: Person): { from: Date; to?: Date }[] =>
     kind === "department"
       ? (o.departmentHistory ?? []).filter(z => z.departmentPath.includes(value))
       : (o.groupHistory ?? []).filter(z => z.group === value)
@@ -611,10 +611,10 @@ async function formerMembers(
   for (const o of people) {
     // Kto je členom aj dnes, patrí medzi bežných členov — nie sem.
     if (isMemberToday(o)) continue
-    const overlaps = ranges(o).some(z => z.od <= endOfRange && (!z.do || z.do >= a.assignedAt))
+    const overlaps = ranges(o).some(z => z.from <= endOfRange && (!z.to || z.to >= a.assignedAt))
     if (!overlaps) continue
     out.push({
-      id: o.id, email: o.email, fullName: o.fullName, language: o.language, byvaly: true,
+      id: o.id, email: o.email, fullName: o.fullName, language: o.language, former: true,
     })
   }
   return out

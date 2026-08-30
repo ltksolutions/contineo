@@ -40,11 +40,11 @@ export interface Completion {
   provider: string
   verifiedCitations: boolean
   /** Trvanie jednotlivých fáz pred generovaním (ms). */
-  casy?: Record<string, number>
+  timings?: Record<string, number>
   /** Prečo model prestal písať; "max_tokens" = useknuté. */
   dovodUkoncenia?: string
-  tokeny?: TokenCounts
-  naklad?: Cost
+  tokens?: TokenCounts
+  cost?: Cost
 }
 
 export type SseEvent =
@@ -57,7 +57,7 @@ export type SseEvent =
  * Rozdelí buffer na úplné SSE bloky. Vráti nájdené udalosti a zvyšok,
  * ktorý patrí na začiatok ďalšieho čítania.
  */
-export function splitEvents(buf: string): { udalosti: SseEvent[]; zvysok: string } {
+export function splitEvents(buf: string): { events: SseEvent[]; rest: string } {
   const events: SseEvent[] = []
   let rest = buf
 
@@ -86,7 +86,7 @@ export function splitEvents(buf: string): { udalosti: SseEvent[]; zvysok: string
     }
   }
 
-  return { udalosti: events, zvysok: rest }
+  return { events, rest }
 }
 
 /** Postupne vydáva udalosti z tela odpovede. */
@@ -106,7 +106,7 @@ export async function* readEvents(
       // rozdeliť medzi dva pakety a bez toho by sa dekódoval ako otáznik.
       buf += decoder.decode(value, { stream: true })
 
-      const { udalosti: events, zvysok: rest } = splitEvents(buf)
+      const { events, rest } = splitEvents(buf)
       buf = rest
       for (const u of events) yield u
     }
@@ -114,7 +114,7 @@ export async function* readEvents(
     // Posledný blok nemusí byť ukončený prázdnym riadkom.
     buf += decoder.decode()
     if (buf.trim()) {
-      const { udalosti: events } = splitEvents(buf + "\n\n")
+      const { events } = splitEvents(buf + "\n\n")
       for (const u of events) yield u
     }
   } finally {
@@ -125,32 +125,32 @@ export async function* readEvents(
 export interface AskProgress {
   /** Postupne rastúci text odpovede. */
   text: string
-  citacie: Citation[]
+  citations: Citation[]
 }
 
 export interface AskResult extends AskProgress {
-  zdroje: AnswerSource[]
+  sources: AnswerSource[]
   model: string
   provider: string
-  overeneCitacie: boolean
+  verifiedCitations: boolean
   /**
    * Čas po prvý token v milisekundách. D9 meria p95 pod 2 s a nikde inde
    * sa to zmerať nedá — server nevie, kedy to dorazilo k človeku.
    */
   ttftMs: number | null
-  celkovoMs: number
+  totalMs: number
   /** Rozpad času pred generovaním na fázy — bez neho je TTFT bez príčiny. */
-  casy?: Record<string, number>
+  timings?: Record<string, number>
   /**
    * Prečo model prestal písať. `"max_tokens"` znamená, že odpoveď je
    * useknutá — používateľ to musí vidieť, nie sa domýšľať.
    */
   dovodUkoncenia?: string
   /** Spotreba tokenov podľa modelu — vstup, výstup a cache zvlášť. */
-  tokeny?: TokenCounts
+  tokens?: TokenCounts
   /** Odhad ceny v deň položenia otázky, aj s označením cenníka. */
-  naklad?: Cost
-  chyba?: string
+  cost?: Cost
+  error?: string
 }
 
 /**
@@ -169,9 +169,9 @@ export async function askQuestion(
   const citations: Citation[] = []
 
   const done = (extra: Partial<AskResult> = {}): AskResult => ({
-    text, citacie: citations,
-    zdroje: [], model: "", provider: "", overeneCitacie: false,
-    ttftMs, celkovoMs: Date.now() - start,
+    text, citations: citations,
+    sources: [], model: "", provider: "", verifiedCitations: false,
+    ttftMs, totalMs: Date.now() - start,
     ...extra,
   })
 
@@ -185,36 +185,36 @@ export async function askQuestion(
   if (!answer.ok || !answer.body) {
     // Chybové odpovede z route.ts sú obyčajný text, nie SSE.
     const message = await answer.text().catch(() => "")
-    return done({ chyba: message || `Server vrátil ${answer.status}` })
+    return done({ error: message || `Server vrátil ${answer.status}` })
   }
 
   for await (const u of readEvents(answer.body)) {
     if (u.type === "token") {
       if (ttftMs === null) ttftMs = Date.now() - start
       text += u.token
-      onChange({ text, citacie: citations })
+      onChange({ text, citations: citations })
     } else if (u.type === "citation") {
       citations.push(u.citation)
-      onChange({ text, citacie: citations })
+      onChange({ text, citations: citations })
     } else if (u.type === "error") {
-      return done({ chyba: u.message })
+      return done({ error: u.message })
     } else if (u.type === "done") {
       return done({
-        zdroje: u.sources ?? [],
+        sources: u.sources ?? [],
         // Adaptéry bez Citations API vracajú prázdne pole; vtedy sa
         // opierame o citácie nazbierané počas streamu (žiadne) a o zdroje.
-        citacie: u.citations?.length ? u.citations : citations,
+        citations: u.citations?.length ? u.citations : citations,
         model: u.model ?? "",
         provider: u.provider ?? "",
-        overeneCitacie: u.verifiedCitations ?? false,
-        casy: u.casy,
+        verifiedCitations: u.verifiedCitations ?? false,
+        timings: u.timings,
         dovodUkoncenia: u.dovodUkoncenia,
-        tokeny: u.tokeny,
-        naklad: u.naklad,
+        tokens: u.tokens,
+        cost: u.cost,
       })
     }
   }
 
   // Stream skončil bez `done` — server spadol uprostred.
-  return done({ chyba: text ? undefined : "Odpoveď sa prerušila." })
+  return done({ error: text ? undefined : "Odpoveď sa prerušila." })
 }

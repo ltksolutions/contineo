@@ -29,7 +29,7 @@ export interface CodelistItem {
 
 export interface Codelist {
   closed: boolean
-  polozky: CodelistItem[]
+  items: CodelistItem[]
 }
 
 type RawCodelist = { closed?: boolean; items?: { key: string; label?: string; description?: string }[] }
@@ -38,7 +38,7 @@ function prepare(c: unknown): Codelist {
   const s = c as RawCodelist
   // `closed` chýbajúce znamená uzavretý — prísnejšia predvoľba je správna:
   // nový číselník bez rozhodnutia nemá potichu prijímať čokoľvek.
-  return { closed: s.closed !== false, polozky: s.items ?? [] }
+  return { closed: s.closed !== false, items: s.items ?? [] }
 }
 
 export const CODELISTS: Record<string, Codelist> = {
@@ -95,12 +95,12 @@ export type CodelistExtras = Partial<Record<string, CodelistItem[]>>
  */
 export function codelistFor(name: string, extras?: CodelistExtras): Codelist {
   const base = CODELISTS[name]
-  if (!base) return { closed: true, polozky: [] }
+  if (!base) return { closed: true, items: [] }
   const custom = extras?.[name] ?? []
-  const seen = new Set(base.polozky.map(p => p.key))
+  const seen = new Set(base.items.map(p => p.key))
   return {
     closed: base.closed,
-    polozky: [...base.polozky, ...custom.filter(p => !seen.has(p.key))],
+    items: [...base.items, ...custom.filter(p => !seen.has(p.key))],
   }
 }
 
@@ -111,11 +111,11 @@ export function checkValue(codelist: string, value: string, extras?: CodelistExt
   if (!v) throw new CodelistError(`Chýba hodnota pre ${codelist}.`)
   if (!CODELISTS[codelist]) throw new CodelistError(`Číselník ${codelist} neexistuje.`)
 
-  if (c.polozky.some(p => p.key === v)) return v
+  if (c.items.some(p => p.key === v)) return v
 
   if (c.closed) {
     throw new CodelistError(
-      `„${v}" nie je platná hodnota pre ${codelist}. Povolené: ${c.polozky.map(p => p.key).join(", ")}.`,
+      `„${v}" nie je platná hodnota pre ${codelist}. Povolené: ${c.items.map(p => p.key).join(", ")}.`,
     )
   }
   if (!KEY_PATTERN.test(v)) {
@@ -139,10 +139,10 @@ export function checkList(codelist: string, values: string[], extras?: CodelistE
 }
 
 /** Voľby do výberu na obrazovke. */
-export function codelistOptions(codelist: string, extras?: CodelistExtras): { hodnota: string; popis: string }[] {
-  return codelistFor(codelist, extras).polozky.map(p => ({
-    hodnota: p.key,
-    popis: p.label ? `${p.label} (${p.key})` : p.key,
+export function codelistOptions(codelist: string, extras?: CodelistExtras): { value: string; label: string }[] {
+  return codelistFor(codelist, extras).items.map(p => ({
+    value: p.key,
+    label: p.label ? `${p.label} (${p.key})` : p.key,
   }))
 }
 

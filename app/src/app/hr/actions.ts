@@ -62,13 +62,13 @@ export async function assignAction(fd: FormData) {
   // z rovnakého dôvodu ako názov dokumentu: oddelenie sa premenuje alebo zruší
   // a o rok musí byť čitateľné, komu sa vtedy prideľovalo.
   const tree = await allDepartments(actor.companyCode)
-  const departmentNames = Object.fromEntries(tree.map(o => [o.id, o.nazov]))
+  const departmentNames = Object.fromEntries(tree.map(o => [o.id, o.name]))
 
   const audiences = audienceFromSelection({
-    vsetci: Boolean(fd.get("vsetci")),
-    vybrane: fd.getAll("audience").filter((v): v is string => typeof v === "string"),
-    adresy: fieldText(fd, "adresy"),
-    nazvyOddeleni: departmentNames,
+    all: Boolean(fd.get("vsetci")),
+    selected: fd.getAll("audience").filter((v): v is string => typeof v === "string"),
+    addresses: fieldText(fd, "adresy"),
+    departmentNames: departmentNames,
   })
   if (audiences.length === 0) backWithError("Nevybral si, komu sa prideľuje.", fd)
 
@@ -102,7 +102,7 @@ export async function assignAction(fd: FormData) {
           reason: reason,
           assignedBy: actor.email,
         })
-        v.stav === "pridelene" ? assigned++ : already++
+        v.status === "pridelene" ? assigned++ : already++
       } catch (e) {
         // Chyba pri prvom páre zastaví celé rozposielanie: sú to tie isté
         // pravidlá pre všetky (dôvod, publikum), takže druhý pokus by zlyhal
@@ -174,7 +174,7 @@ export async function sendNotificationAction(fd: FormData) {
   // Bývalým členom oddelenia sa nepíše (D50): pripomínať normu oddelenia, v ktorom
   // človek už nie je, je nezmysel. V prehľade zostávajú vidieť, aby sa
   // personalista mohol rozhodnúť sám.
-  const recipients = (await notAcknowledged(code, id)).filter(o => !o.byvaly)
+  const recipients = (await notAcknowledged(code, id)).filter(o => !o.former)
   if (recipients.length === 0) {
     redirect("/hr?error=1&msg=" + encodeURIComponent("Nie je komu poslať — potvrdili už všetci, kto v oddelení zostal."))
   }

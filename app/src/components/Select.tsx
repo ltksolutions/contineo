@@ -21,29 +21,29 @@
 import { useEffect, useId, useRef, useState } from "react"
 
 export interface SelectOption {
-  hodnota: string
-  popis: string
+  value: string
+  label: string
 }
 
 export default function Select({
-  meno: name,
-  volby: options,
-  predvolena: initial,
-  popisPola: fieldLabel,
+  name: name,
+  options: options,
+  initial: initial,
+  fieldLabel: fieldLabel,
 }: {
-  meno: string
-  volby: SelectOption[]
-  predvolena?: string
+  name: string
+  options: SelectOption[]
+  initial?: string
   /** Pre čítačky obrazovky, keď `<label>` obaľuje celý blok. */
-  popisPola?: string
+  fieldLabel?: string
 }) {
-  const [value, setValue] = useState(initial ?? options[0]?.hodnota ?? "")
+  const [value, setValue] = useState(initial ?? options[0]?.value ?? "")
   const [open, setOpen] = useState(false)
   const [highlighted, setHighlighted] = useState(0)
   const wrap = useRef<HTMLDivElement>(null)
   const id = useId()
 
-  const selected = options.find(v => v.hodnota === value) ?? options[0]
+  const selected = options.find(v => v.value === value) ?? options[0]
 
   // Kliknutie mimo aj Escape zatvárajú. Bez toho zostane zoznam otvorený,
   // človek klikne inam a nechápe, prečo mu prekáža.
@@ -57,12 +57,12 @@ export default function Select({
   }, [open])
 
   function openList() {
-    setHighlighted(Math.max(0, options.findIndex(v => v.hodnota === value)))
+    setHighlighted(Math.max(0, options.findIndex(v => v.value === value)))
     setOpen(true)
   }
 
   function pick(v: SelectOption) {
-    setValue(v.hodnota)
+    setValue(v.value)
     setOpen(false)
   }
 
@@ -108,7 +108,7 @@ export default function Select({
         onClick={() => (open ? setOpen(false) : openList())}
         onKeyDown={onKey}
       >
-        <span>{selected?.popis ?? "—"}</span>
+        <span>{selected?.label ?? "—"}</span>
         <svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true" className="vyber-sipka">
           <path d="M2.5 4.5 6 8l3.5-3.5" fill="none" stroke="currentColor" strokeWidth="1.6"
             strokeLinecap="round" strokeLinejoin="round" />
@@ -119,9 +119,9 @@ export default function Select({
         <ul className="vyber-zoznam" role="listbox" aria-labelledby={id} tabIndex={-1}>
           {options.map((v, i) => (
             <li
-              key={v.hodnota}
+              key={v.value}
               role="option"
-              aria-selected={v.hodnota === value}
+              aria-selected={v.value === value}
               className={`vyber-polozka${i === highlighted ? " je-zvyraznena" : ""}`}
               onMouseEnter={() => setHighlighted(i)}
               // `onMouseDown` a nie `onClick`: klik by najprv spustil
@@ -129,9 +129,9 @@ export default function Select({
               onMouseDown={e => { e.preventDefault(); pick(v) }}
             >
               <span className="vyber-znak" aria-hidden="true">
-                {v.hodnota === value ? "✓" : ""}
+                {v.value === value ? "✓" : ""}
               </span>
-              {v.popis}
+              {v.label}
             </li>
           ))}
         </ul>
@@ -141,7 +141,7 @@ export default function Select({
           neparsuje ako prvky, takže sa hodnota nikdy neodošle dvakrát. */}
       <noscript>
         <select className="pole-vstup" name={name} defaultValue={initial}>
-          {options.map(v => <option key={v.hodnota} value={v.hodnota}>{v.popis}</option>)}
+          {options.map(v => <option key={v.value} value={v.value}>{v.label}</option>)}
         </select>
       </noscript>
     </div>

@@ -63,7 +63,7 @@ for (const [documentId, fileName] of Object.entries(MAPPING)) {
     continue
   }
   if (doc.originalFile) {
-    console.log(`  ${INFO} ${documentId}: pôvodný súbor už má (${doc.originalFile.nazov})`)
+    console.log(`  ${INFO} ${documentId}: pôvodný súbor už má (${doc.originalFile.name})`)
     skipped++
     continue
   }
@@ -84,8 +84,8 @@ for (const [documentId, fileName] of Object.entries(MAPPING)) {
     contentType: "application/pdf",
     metadata: {
       companyCode: doc.companyCode,
-      aktor: "script:attach_original_files",
-      nahraneKedy: new Date(),
+      actor: "script:attach_original_files",
+      uploadedAt: new Date(),
     },
   })
   await new Promise((done, failed) => {
@@ -98,22 +98,22 @@ for (const [documentId, fileName] of Object.entries(MAPPING)) {
     $set: {
       originalFile: {
         id: String(stream.id),
-        nazov: fileName,
+        name: fileName,
         contentType: "application/pdf",
-        bajtov: data.byteLength,
-        typ: "pdf",
-        nahraneKedy: new Date(),
-        nahralKto: "script:attach_original_files",
+        bytes: data.byteLength,
+        type: "pdf",
+        uploadedAt: new Date(),
+        uploadedBy: "script:attach_original_files",
       },
       // Poctivo: markdown v databáze nevznikol týmto prevodom, ale ručne
       // pred zavedením knižnice. Tvrdiť opak by znamenalo, že sa o rok nedá
       // zistiť, prečo sa text a nový prevod toho istého PDF líšia.
-      konverzia: {
-        sposob: "ručný prevod pred zavedením knižnice; PDF doplnené dodatočne",
-        upozornenia: [
+      conversion: {
+        method: "ručný prevod pred zavedením knižnice; PDF doplnené dodatočne",
+        warnings: [
           "Text nevznikol automatickým prevodom tohto PDF — porovnaj ho s originálom.",
         ],
-        kedy: new Date(),
+        at: new Date(),
       },
     },
   })

@@ -37,8 +37,8 @@ async function actor(): Promise<
   {
     email: string
     companyCode: string
-    doplnky: CodelistExtras
-    profil?: Partial<ChunkingProfile>
+    extras: CodelistExtras
+    profile?: Partial<ChunkingProfile>
   } | null
 > {
   const ctx = await libraryContext()
@@ -48,9 +48,9 @@ async function actor(): Promise<
         companyCode: ctx.person.companyCode,
         // Vlastné položky číselníkov organizácie (D55) — bez nich by
         // obrazovka ponúkala druh dokumentu, ktorý zápis vzápätí odmietne.
-        doplnky: tenantExtras(ctx.tenant),
+        extras: tenantExtras(ctx.tenant),
         // Profil členenia organizácie (D58). Chýbajúci znamená predvolený.
-        profil: ctx.tenant.chunkovanie,
+        profile: ctx.tenant.chunking,
       }
     : null
 }
@@ -91,7 +91,7 @@ export async function uploadAction(fd: FormData) {
       language: fieldText(fd, "language"),
       category: fieldText(fd, "category") || undefined,
       tags: fd.getAll("tags").filter((t): t is string => typeof t === "string"),
-    }, self.doplnky)
+    }, self.extras)
 
     const v = await uploadDocument(
       meta, file.name, Buffer.from(await file.arrayBuffer()), self.email,
@@ -101,8 +101,8 @@ export async function uploadAction(fd: FormData) {
     // Rovno do editora: po nahratí nasleduje čítanie prevedeného textu
     // a hľadať dokument v zozname je zbytočný krok.
     redirect(`/kniznica/${encodeURIComponent(v.documentId)}/text?msg=${encodeURIComponent(
-      v.upozornenia.length
-        ? `Prevedené. ${v.upozornenia.join(" ")}`
+      v.warnings.length
+        ? `Prevedené. ${v.warnings.join(" ")}`
         : "Prevedené. Prečítaj text a porovnaj ho s originálom.",
     )}`)
   } catch (e) {
@@ -151,7 +151,7 @@ export async function publishVersionAction(fd: FormData) {
       effectiveFrom: new Date(`${day}T00:00:00.000Z`),
       effectiveFromSource: fieldText(fd, "effectiveFromSource"),
       changeNote: fieldText(fd, "changeNote"),
-    }, self.email, self.profil)
+    }, self.email, self.profile)
 
     message = v.uzBolo
       ? "Toto znenie už publikované je — nič sa nezmenilo."
@@ -194,9 +194,9 @@ export async function sendToModelAction(fd: FormData) {
 
     const draft = mode === "prepisat-sken"
       ? await (async () => {
-          const original = doc.originalFile as { id: string; typ: string } | undefined
+          const original = doc.originalFile as { id: string; type: string } | undefined
           if (!original) throw new LibraryError("Dokument nemá pôvodný súbor, ktorý by sa dal prepísať.")
-          if (original.typ !== "pdf") {
+          if (original.type !== "pdf") {
             throw new LibraryError("Prepisovať sa dá len PDF — ostatné formáty sa prevedú priamo.")
           }
           const s = await loadFile(self.companyCode, original.id)
@@ -210,9 +210,9 @@ export async function sendToModelAction(fd: FormData) {
       { $set: { llmNavrh: draft } } as never,
     )
     await writeAudit({
-      companyCode: self.companyCode, predmet: "dokument", akcia: "navrh-modelu",
-      aktor: self.email, cielId: id, cielPopis: String(doc.title ?? id),
-      poznamka: `${draft.rezim} · ${draft.model} · ${draft.text.length} znakov`,
+      companyCode: self.companyCode, subject: "document", action: "model-draft",
+      actor: self.email, targetId: id, targetLabel: String(doc.title ?? id),
+      note: `${draft.rezim} · ${draft.model} · ${draft.text.length} znakov`,
     })
 
     message = "Model vrátil návrh. Porovnaj ho s doterajším textom a rozhodni sa."
@@ -275,7 +275,7 @@ export async function saveDocumentMetadataAction(fd: FormData) {
       language: fieldText(fd, "language"),
       category: fieldText(fd, "category") || undefined,
       tags: fd.getAll("tags").filter((t): t is string => typeof t === "string"),
-    }, self.email, self.doplnky)
+    }, self.email, self.extras)
   } catch (e) {
     message = errorMessage(e)
     error = true
@@ -304,7 +304,7 @@ export async function createFolderAction(fd: FormData) {
   const self = await actor()
   if (!self) redirect("/")
   try {
-    await createFolder(self.companyCode, fieldText(fd, "nazov"), fieldText(fd, "parentId") || null, self.email)
+    await createFolder(self.companyCode, fieldText(fd, "name"), fieldText(fd, "parentId") || null, self.email)
     revalidatePath("/kniznica")
     backToLibrary(fd, "Priečinok pribudol.")
   } catch (e) {
@@ -317,7 +317,7 @@ export async function renameFolderAction(fd: FormData) {
   const self = await actor()
   if (!self) redirect("/")
   try {
-    await renameFolder(self.companyCode, fieldText(fd, "id"), fieldText(fd, "nazov"), self.email)
+    await renameFolder(self.companyCode, fieldText(fd, "id"), fieldText(fd, "name"), self.email)
     revalidatePath("/kniznica")
     backToLibrary(fd, "Priečinok sa premenoval.")
   } catch (e) {
@@ -380,7 +380,7 @@ export async function reindexDocumentAction(fd: FormData) {
   let message = ""
   let error = false
   try {
-    const v = await reindex(self.companyCode, id, self.email, self.profil)
+    const v = await reindex(self.companyCode, id, self.email, self.profile)
     message = v.uzBolo
       ? "Členenie je už aktuálne — nič sa nemenilo."
       : `Preindexované: ${v.chunkov} úsekov, ${v.archivovanych} starých archivovaných. ` +
@@ -410,12 +410,12 @@ export async function fixVersionAction(fd: FormData) {
       effectiveFrom: day ? new Date(`${day}T00:00:00.000Z`) : undefined,
       effectiveFromSource: fieldText(fd, "effectiveFromSource"),
       changeNote: fieldText(fd, "changeNote"),
-      dovod: fieldText(fd, "dovod"),
-      priZmeneDatumu: choice === "oprava" || choice === "znovaPotvrdit" ? choice : undefined,
+      reason: fieldText(fd, "dovod"),
+      onDateChange: choice === "oprava" || choice === "znovaPotvrdit" ? choice : undefined,
     }, self.email)
 
     message = v.znovaPotvrdit
-      ? `Opravené. Znenie je označené ako vyžadujúce nové potvrdenie — týka sa to ${v.potvrdeni} ľudí.`
+      ? `Opravené. Znenie je označené ako vyžadujúce nové potvrdenie — týka sa to ${v.acknowledgementCount} ľudí.`
       : "Opravené. Potvrdenia zostávajú platné."
   } catch (e) {
     message = errorMessage(e)
@@ -450,7 +450,7 @@ export async function shiftFolderAction(fd: FormData) {
 export async function saveFolderOrderAction(fd: FormData) {
   const self = await actor()
   if (!self) redirect("/")
-  const order = fieldText(fd, "poradie").split(",").map(x => x.trim()).filter(Boolean)
+  const order = fieldText(fd, "order").split(",").map(x => x.trim()).filter(Boolean)
   try {
     if (order.length > 1) await saveFolderOrder(self.companyCode, order, self.email)
     revalidatePath("/kniznica")

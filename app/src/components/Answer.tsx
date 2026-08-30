@@ -16,11 +16,11 @@ import type { Segment } from "@/lib/formatText"
 
 /** Stav odpovede počas streamovania — kým nepríde `done`, máme len text. */
 export interface AnswerState {
-  otazka: string
+  question: string
   text: string
-  citacie: Citation[]
-  hotovo: AskResult | null
-  bezi: boolean
+  citations: Citation[]
+  done: AskResult | null
+  running: boolean
 }
 
 /**
@@ -30,7 +30,7 @@ export interface AnswerState {
  * `naBloky()` a stáva sa obyčajnými React uzlami. Výstup modelu nad cudzími
  * dokumentmi sa nesmie dostať do DOM ako HTML.
  */
-function Segments({ useky: segments }: { useky: Segment[] }) {
+function Segments({ segments: segments }: { segments: Segment[] }) {
   return (
     <>
       {segments.map((u, i) =>
@@ -53,24 +53,24 @@ function AnswerText({ text }: { text: string }) {
             style={{
               // Úrovne sa líšia len jemne — odpoveď má mať jeden hlas,
               // nie hierarchiu ako dokumentácia.
-              fontSize: b.uroven <= 2 ? 16.5 : 15.5,
+              fontSize: b.level <= 2 ? 16.5 : 15.5,
               fontWeight: 700,
               margin: i === 0 ? "0 0 8px" : "18px 0 8px",
             }}
           >
-            <Segments useky={b.useky} />
+            <Segments segments={b.segments} />
           </div>
         ) : b.druh === "odsek" ? (
           <p key={i} style={{ margin: "0 0 12px" }}>
-            <Segments useky={b.useky} />
+            <Segments segments={b.segments} />
           </p>
-        ) : b.cislovany ? (
+        ) : b.numbered ? (
           <ol key={i} style={{ margin: "0 0 12px", paddingLeft: 22 }}>
-            {b.polozky.map((p, j) => <li key={j}><Segments useky={p} /></li>)}
+            {b.items.map((p, j) => <li key={j}><Segments segments={p} /></li>)}
           </ol>
         ) : (
           <ul key={i} style={{ margin: "0 0 12px", paddingLeft: 22 }}>
-            {b.polozky.map((p, j) => <li key={j}><Segments useky={p} /></li>)}
+            {b.items.map((p, j) => <li key={j}><Segments segments={p} /></li>)}
           </ul>
         )
       )}
@@ -78,7 +78,7 @@ function AnswerText({ text }: { text: string }) {
   )
 }
 
-function Line({ popis: label, hodnota: value }: { popis: string; hodnota: string }) {
+function Line({ label: label, value: value }: { label: string; value: string }) {
   return (
     <span style={{ display: "inline-flex", gap: 6 }}>
       <span className="tichy">{label}</span>
@@ -87,11 +87,11 @@ function Line({ popis: label, hodnota: value }: { popis: string; hodnota: string
   )
 }
 
-export default function Answer({ stav: state }: { stav: AnswerState }) {
-  const { text, citacie: citations, hotovo: done, bezi: running } = state
+export default function Answer({ state: state }: { state: AnswerState }) {
+  const { text, citations: citations, done: done, running: running } = state
   if (!text && !running && !done) return null
 
-  const error = done?.chyba
+  const error = done?.error
   const truncated = done?.dovodUkoncenia === "max_tokens"
 
   // Model cituje ten istý úryvok pri každom tvrdení, ktoré sa oň opiera.
@@ -170,14 +170,14 @@ export default function Answer({ stav: state }: { stav: AnswerState }) {
       )}
 
       {/* Zdroje — čo sa dostalo do kontextu, aj keď z toho model necitoval. */}
-      {done && done.zdroje.length > 0 && (
+      {done && done.sources.length > 0 && (
         <details>
           <summary style={{ cursor: "pointer", fontSize: 13, textTransform: "uppercase",
                             letterSpacing: "0.05em", color: "var(--muted)", fontWeight: 700 }}>
-            Prehľadané zdroje ({done.zdroje.length})
+            Prehľadané zdroje ({done.sources.length})
           </summary>
           <div style={{ display: "grid", gap: 6, marginTop: 10 }}>
-            {done.zdroje.map(z => (
+            {done.sources.map(z => (
               <div
                 key={z.index}
                 style={{
@@ -220,58 +220,58 @@ export default function Answer({ stav: state }: { stav: AnswerState }) {
             fontSize: 12.5, paddingTop: 4,
           }}
         >
-          {done.model && <Line popis="model" hodnota={done.model} />}
-          {done.provider && <Line popis="adaptér" hodnota={done.provider} />}
+          {done.model && <Line label="model" value={done.model} />}
+          {done.provider && <Line label="adaptér" value={done.provider} />}
           {done.ttftMs !== null && (
-            <Line popis="prvý token" hodnota={`${(done.ttftMs / 1000).toFixed(1)} s`} />
+            <Line label="prvý token" value={`${(done.ttftMs / 1000).toFixed(1)} s`} />
           )}
-          <Line popis="celkom" hodnota={`${(done.celkovoMs / 1000).toFixed(1)} s`} />
+          <Line label="celkom" value={`${(done.totalMs / 1000).toFixed(1)} s`} />
 
           {/* Tokeny a cena. Cache sa uvádza zvlášť, lebo čítanie z nej stojí
               desatinu ceny vstupu — bez toho rozlíšenia by číslo klamalo. */}
-          {done.tokeny && (
+          {done.tokens && (
             <Line
-              popis="tokeny"
-              hodnota={
-                `${done.tokeny.vstup.toLocaleString("sk")} → ` +
-                `${done.tokeny.vystup.toLocaleString("sk")}` +
-                (done.tokeny.cacheCitanie
-                  ? ` · z cache ${done.tokeny.cacheCitanie.toLocaleString("sk")}` : "") +
-                (done.tokeny.cacheZapis
-                  ? ` · do cache ${done.tokeny.cacheZapis.toLocaleString("sk")}` : "")
+              label="tokeny"
+              value={
+                `${done.tokens.input.toLocaleString("sk")} → ` +
+                `${done.tokens.output.toLocaleString("sk")}` +
+                (done.tokens.cacheRead
+                  ? ` · z cache ${done.tokens.cacheRead.toLocaleString("sk")}` : "") +
+                (done.tokens.cacheWrite
+                  ? ` · do cache ${done.tokens.cacheWrite.toLocaleString("sk")}` : "")
               }
             />
           )}
-          {done.naklad && !done.naklad.neznamyModel && (
+          {done.cost && !done.cost.unknownModel && (
             <span
               className="stitok"
               style={{ background: "var(--surface-2)", color: "var(--muted)" }}
-              title={`Orientačne. Nezahŕňa pomocný model ani vyhľadávanie. Cenník ${done.naklad.verziaCennika}.`}
+              title={`Orientačne. Nezahŕňa pomocný model ani vyhľadávanie. Cenník ${done.cost.pricelistVersion}.`}
             >
-              ≈ {formatUsd(done.naklad.usd)} · {formatEur(toEur(done.naklad.usd))}
+              ≈ {formatUsd(done.cost.usd)} · {formatEur(toEur(done.cost.usd))}
             </span>
           )}
           {/* Cenník, ktorý prestal platiť, radšej priznáme, než by sme ticho
               počítali starou sadzbou. */}
-          {done.naklad?.cennikExpirovany && (
+          {done.cost?.pricelistExpired && (
             <span className="stitok" style={{ background: "var(--warn-bg)", color: "var(--warn-fg)" }}>
               cenník je zastaraný
             </span>
           )}
           {/* Rozpad na fázy. Nezaujíma hodnotiteľa, ale bez neho sa nedá
               povedať, prečo je prvý token pomalý. */}
-          {done.casy && Object.entries(done.casy).filter(([, ms]) => ms >= 50).map(([f, ms]) => (
-            <Line key={f} popis={f} hodnota={`${(ms / 1000).toFixed(1)} s`} />
+          {done.timings && Object.entries(done.timings).filter(([, ms]) => ms >= 50).map(([f, ms]) => (
+            <Line key={f} label={f} value={`${(ms / 1000).toFixed(1)} s`} />
           ))}
           <span
             className="stitok"
             style={
-              done.overeneCitacie
+              done.verifiedCitations
                 ? { background: "var(--ok-bg)", color: "var(--ok-fg)" }
                 : { background: "var(--warn-bg)", color: "var(--warn-fg)" }
             }
           >
-            {done.overeneCitacie ? "citácie overené modelom" : "citácie neoverené"}
+            {done.verifiedCitations ? "citácie overené modelom" : "citácie neoverené"}
           </span>
         </div>
       )}

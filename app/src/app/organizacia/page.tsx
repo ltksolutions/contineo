@@ -37,13 +37,13 @@ import type { OAuthProviderName } from "@/lib/oauth"
 import type { Tenant } from "@/lib/tenants"
 
 const TABS = [
-  { kluc: "branding", popis: "Vzhľad a jazyky" },
-  { kluc: "departments", popis: "Oddelenia" },
-  { kluc: "domains", popis: "Domény" },
-  { kluc: "signin", popis: "Prihlasovanie" },
-  { kluc: "codelists", popis: "Číselníky" },
-  { kluc: "chunking", popis: "Členenie" },
-  { kluc: "audit", popis: "Audit" },
+  { key: "branding", label: "Vzhľad a jazyky" },
+  { key: "departments", label: "Oddelenia" },
+  { key: "domains", label: "Domény" },
+  { key: "signin", label: "Prihlasovanie" },
+  { key: "codelists", label: "Číselníky" },
+  { key: "chunking", label: "Členenie" },
+  { key: "audit", label: "Audit" },
 ]
 
 export const dynamic = "force-dynamic"
@@ -55,11 +55,11 @@ const LANGUAGES: Record<string, string> = {
 }
 
 function ProviderRow({
-  tenant, provider, domena: domain,
+  tenant, provider, domain: domain,
 }: {
   tenant: Tenant
   provider: OAuthProviderName
-  domena?: string
+  domain?: string
 }) {
   const name = PROVIDER_LABEL[provider]
   const s = providerStatus(tenant, provider)
@@ -71,11 +71,11 @@ function ProviderRow({
         <h2 style={{ fontSize: 17, margin: 0 }}>Prihlásenie cez {name}</h2>
         <span
           className="stitok"
-          style={s.stav === "necitatelne" ? { background: "var(--warn-bg)", color: "var(--warn-fg)" } : undefined}
+          style={s.state === "necitatelne" ? { background: "var(--warn-bg)", color: "var(--warn-fg)" } : undefined}
         >
-          {s.stav === "nastavene" ? "zapnuté"
-            : s.stav === "z-prostredia" ? "z nastavenia dodávateľa"
-            : s.stav === "necitatelne" ? "nečitateľné" : "vypnuté"}
+          {s.state === "nastavene" ? "zapnuté"
+            : s.state === "z-prostredia" ? "z nastavenia dodávateľa"
+            : s.state === "necitatelne" ? "nečitateľné" : "vypnuté"}
         </span>
       </div>
 
@@ -190,7 +190,7 @@ export default async function OrganisationPage({
   // aj v záložkách prehliadača — presmerovať by ich rozbilo, tak sa len
   // preloží. Zmizne, keď prestane chodiť.
   const key = tabValue(tab)
-  const now = TABS.some(z => z.kluc === key) ? key! : "branding"
+  const now = TABS.some(z => z.key === key) ? key! : "branding"
   const tenant = ctx.tenant
   const branding = brandingView(tenant)
   const language = ctx.person.language
@@ -207,7 +207,7 @@ export default async function OrganisationPage({
   // dotazy na dokumenty pri každom otvorení nastavenia.
   const codelists = now === "codelists"
     ? await Promise.all(CUSTOM_CODELISTS.map(async name => ({
-        nazov: name,
+        name: name,
         vsetky: availableOptions(tenant, name),
         vlastne: customItems(tenant, name),
         pocty: Object.fromEntries(
@@ -223,19 +223,19 @@ export default async function OrganisationPage({
   // narezaním — odhad by pri zmene parametra nevedel povedať, či na tomto
   // obsahu vôbec niečo spraví.
   const indexState = now === "chunking"
-    ? await reindexState(tenant.companyCode, tenant.chunkovanie)
+    ? await reindexState(tenant.companyCode, tenant.chunking)
     : null
 
   const records = now === "audit"
-    ? await auditRecords(tenant.companyCode, { hladat: search, limit: 200 })
+    ? await auditRecords(tenant.companyCode, { search: search, limit: 200 })
     : []
 
   return (
     <div className="obal" style={{ padding: "28px 20px 80px", maxWidth: 720, ...tenantStyle(branding) }}>
       <Notice
-        sprava={message}
-        chyba={error === "1"}
-        spat={`/organizacia?tab=${now}`}
+        message={message}
+        error={error === "1"}
+        back={`/organizacia?tab=${now}`}
       />
 
       <h1 style={{ fontSize: 26, letterSpacing: "-0.02em", margin: "0 0 6px" }}>Organizácia</h1>
@@ -251,12 +251,12 @@ export default async function OrganisationPage({
       <nav className="zalozky" aria-label="Časti nastavenia">
         {TABS.map(z => (
           <Link
-            key={z.kluc}
-            href={`/organizacia?tab=${z.kluc}`}
-            className={`zalozka${z.kluc === now ? " je-aktivna" : ""}`}
-            aria-current={z.kluc === now ? "page" : undefined}
+            key={z.key}
+            href={`/organizacia?tab=${z.key}`}
+            className={`zalozka${z.key === now ? " je-aktivna" : ""}`}
+            aria-current={z.key === now ? "page" : undefined}
           >
-            {z.popis}
+            {z.label}
           </Link>
         ))}
       </nav>
@@ -297,7 +297,7 @@ export default async function OrganisationPage({
 
         <div className="pole">
           <span className="pole-popis">Farba</span>
-          <ColorSelect meno="accentColor" hodnota={tenant.branding.accentColor} />
+          <ColorSelect name="accentColor" value={tenant.branding.accentColor} />
           <span className="tichy pole-napoveda">
             Nesie ju tlačidlo s bielym textom, preto sú odtiene tmavšie, než by
             sa chcelo — svetlejší tón znamená nečitateľné tlačidlo.
@@ -326,10 +326,10 @@ export default async function OrganisationPage({
         <div className="pole">
           <span className="pole-popis">Predvolený jazyk</span>
           <Select
-            meno="defaultLanguage"
-            volby={UI_LANGUAGES.map(j => ({ hodnota: j, popis: LANGUAGES[j] ?? j }))}
-            predvolena={tenant.defaultLanguage}
-            popisPola="Predvolený jazyk"
+            name="defaultLanguage"
+            options={UI_LANGUAGES.map(j => ({ value: j, label: LANGUAGES[j] ?? j }))}
+            initial={tenant.defaultLanguage}
+            fieldLabel="Predvolený jazyk"
           />
           <span className="tichy pole-napoveda">Platí pre človeka, ktorý ešte nie je prihlásený.</span>
         </div>
@@ -378,21 +378,21 @@ export default async function OrganisationPage({
             </p>
           ) : (
             <TreeWithOrder
-              skryte={{ tab: "departments" }}
-              akcia={saveDepartmentOrderAction}
-              polozky={rows.map(({ oddelenie: department, uroven: level }) => {
+              hidden={{ tab: "departments" }}
+              action={saveDepartmentOrderAction}
+              items={rows.map(({ department: department, level: level }) => {
                 const p = peopleCounts.get(department.id) ?? { priamo: 0, sPodriadenymi: 0 }
                 const inside = subtree(tenantDepartments, department.id)
                 return {
                   id: department.id,
-                  nazov: department.nazov,
+                  name: department.name,
                   parentId: department.parentId ?? null,
-                  uroven: level,
-                  obsah: (
+                  level: level,
+                  content: (
                     <details>
                       <summary className="strom-riadok">
                         <span className="strom-uchop" aria-hidden="true">⠿</span>
-                        <span className="strom-nazov">{department.nazov}</span>
+                        <span className="strom-nazov">{department.name}</span>
                         <span className="tichy strom-pocet">
                           {p.priamo}
                           {p.sPodriadenymi !== p.priamo ? ` (${p.sPodriadenymi} aj s podriadenými)` : ""}
@@ -409,14 +409,14 @@ export default async function OrganisationPage({
                             <input type="hidden" name="id" value={department.id} />
                             <input type="hidden" name="smer" value="hore" />
                             <button className="tlacidlo tlacidlo--tiche" type="submit"
-                                    aria-label={`Posunúť ${department.nazov} vyššie`}>↑ vyššie</button>
+                                    aria-label={`Posunúť ${department.name} vyššie`}>↑ vyššie</button>
                           </form>
                           <form action={shiftDepartmentAction}>
                             <input type="hidden" name="tab" value="departments" />
                             <input type="hidden" name="id" value={department.id} />
                             <input type="hidden" name="smer" value="dole" />
                             <button className="tlacidlo tlacidlo--tiche" type="submit"
-                                    aria-label={`Posunúť ${department.nazov} nižšie`}>↓ nižšie</button>
+                                    aria-label={`Posunúť ${department.name} nižšie`}>↓ nižšie</button>
                           </form>
                         </div>
 
@@ -425,9 +425,9 @@ export default async function OrganisationPage({
                           <input type="hidden" name="id" value={department.id} />
                           <input
                             className="pole-vstup"
-                            name="nazov"
-                            defaultValue={department.nazov}
-                            aria-label={`Názov oddelenia ${department.nazov}`}
+                            name="name"
+                            defaultValue={department.name}
+                            aria-label={`Názov oddelenia ${department.name}`}
                             required
                           />
                           <button className="tlacidlo tlacidlo--tiche" type="submit">Premenovať</button>
@@ -437,19 +437,19 @@ export default async function OrganisationPage({
                           <input type="hidden" name="tab" value="departments" />
                           <input type="hidden" name="id" value={department.id} />
                           <Select
-                            meno="parentId"
-                            predvolena={department.parentId ?? ""}
-                            popisPola={`Nadriadené oddelenie pre ${department.nazov}`}
-                            volby={[
-                              { hodnota: "", popis: "— najvyššia úroveň —" },
+                            name="parentId"
+                            initial={department.parentId ?? ""}
+                            fieldLabel={`Nadriadené oddelenie pre ${department.name}`}
+                            options={[
+                              { value: "", label: "— najvyššia úroveň —" },
                               ...rows
                                 // Pod seba ani pod vlastného potomka sa presunúť
                                 // nedá, tak sa to ani neponúka. Pravidlo aj tak
                                 // platí na serveri — toto len šetrí človeku chybu.
-                                .filter(r => !inside.has(r.oddelenie.id))
+                                .filter(r => !inside.has(r.department.id))
                                 .map(r => ({
-                                  hodnota: r.oddelenie.id,
-                                  popis: `${"— ".repeat(r.uroven - 1)}${r.oddelenie.nazov}`,
+                                  value: r.department.id,
+                                  label: `${"— ".repeat(r.level - 1)}${r.department.name}`,
                                 })),
                             ]}
                           />
@@ -483,22 +483,22 @@ export default async function OrganisationPage({
 
           <label className="pole">
             <span className="pole-popis">Názov</span>
-            <input className="pole-vstup" name="nazov" placeholder="Úsek komunikácie" required />
+            <input className="pole-vstup" name="name" placeholder="Úsek komunikácie" required />
           </label>
 
           <label className="pole">
             <span className="pole-popis">Nadriadené oddelenie</span>
             <Select
-              meno="parentId"
-              predvolena=""
-              volby={[
-                { hodnota: "", popis: "— najvyššia úroveň —" },
+              name="parentId"
+              initial=""
+              options={[
+                { value: "", label: "— najvyššia úroveň —" },
                 ...rows
                   // Hlbšie než povolené sa založiť nedá, tak sa to neponúka.
-                  .filter(r => depth(tenantDepartments, r.oddelenie.id) < MAX_DEPTH)
+                  .filter(r => depth(tenantDepartments, r.department.id) < MAX_DEPTH)
                   .map(r => ({
-                    hodnota: r.oddelenie.id,
-                    popis: `${"— ".repeat(r.uroven - 1)}${r.oddelenie.nazov}`,
+                    value: r.department.id,
+                    label: `${"— ".repeat(r.level - 1)}${r.department.name}`,
                   })),
               ]}
             />
@@ -553,8 +553,8 @@ export default async function OrganisationPage({
 
                   {p && (
                     <p className="tichy" style={{ margin: 0, fontSize: 13.5, overflowWrap: "anywhere" }}>
-                      U svojho správcu DNS pridajte <strong>{p.typ}</strong> záznam{" "}
-                      <code>{p.nazov}</code> → <code>{p.hodnota}</code>
+                      U svojho správcu DNS pridajte <strong>{p.type}</strong> záznam{" "}
+                      <code>{p.name}</code> → <code>{p.value}</code>
                     </p>
                   )}
 
@@ -598,8 +598,8 @@ export default async function OrganisationPage({
 
       {now === "signin" && (
       <div style={{ display: "grid", gap: 16 }}>
-        <ProviderRow tenant={tenant} provider="microsoft" domena={tenant.hostnames[0]} />
-        <ProviderRow tenant={tenant} provider="google" domena={tenant.hostnames[0]} />
+        <ProviderRow tenant={tenant} provider="microsoft" domain={tenant.hostnames[0]} />
+        <ProviderRow tenant={tenant} provider="google" domain={tenant.hostnames[0]} />
       </div>
       )}
 
@@ -614,11 +614,11 @@ export default async function OrganisationPage({
         </p>
 
         {codelists.map(c => (
-          <section key={c.nazov} className="karta" style={{ padding: 20, display: "grid", gap: 12 }}>
+          <section key={c.name} className="karta" style={{ padding: 20, display: "grid", gap: 12 }}>
             <div>
-              <h2 style={{ fontSize: 17, margin: "0 0 4px" }}>{CODELIST_LABEL[c.nazov].nazov}</h2>
+              <h2 style={{ fontSize: 17, margin: "0 0 4px" }}>{CODELIST_LABEL[c.name].name}</h2>
               <p className="tichy" style={{ fontSize: 14, margin: 0 }}>
-                {CODELIST_LABEL[c.nazov].napoveda}
+                {CODELIST_LABEL[c.name].hint}
               </p>
             </div>
 
@@ -637,7 +637,7 @@ export default async function OrganisationPage({
                       {custom && (
                         <form action={removeCodelistItemAction} style={{ marginLeft: "auto" }}>
                           <input type="hidden" name="tab" value="codelists" />
-                          <input type="hidden" name="ciselnik" value={c.nazov} />
+                          <input type="hidden" name="ciselnik" value={c.name} />
                           <input type="hidden" name="kluc" value={p.key} />
                           <button className="tlacidlo tlacidlo--tiche" type="submit">Odobrať</button>
                         </form>
@@ -650,9 +650,9 @@ export default async function OrganisationPage({
 
             <form action={addCodelistItemAction} className="strom-forma">
               <input type="hidden" name="tab" value="codelists" />
-              <input type="hidden" name="ciselnik" value={c.nazov} />
+              <input type="hidden" name="ciselnik" value={c.name} />
               <input className="pole-vstup" name="popis" placeholder="Metodický pokyn"
-                     aria-label={`Názov novej položky — ${CODELIST_LABEL[c.nazov].nazov}`} required />
+                     aria-label={`Názov novej položky — ${CODELIST_LABEL[c.name].name}`} required />
               <input className="pole-vstup" name="kluc" placeholder="metodicky_pokyn"
                      aria-label="Kľúč" autoCapitalize="none" autoCorrect="off" required
                      style={{ maxWidth: 220 }} />
@@ -685,7 +685,7 @@ export default async function OrganisationPage({
         <label className="pole">
           <span className="pole-popis">Slovo, ktorým začína článok</span>
           <input className="pole-vstup" name="slovoClanok"
-                 defaultValue={tenant.chunkovanie?.slovoClanok ?? DEFAULT_PROFILE.slovoClanok} />
+                 defaultValue={tenant.chunking?.slovoClanok ?? DEFAULT_PROFILE.slovoClanok} />
           <span className="tichy pole-napoveda">
             Predvolene <code>Článok</code>. Predpisy členené na <code>§</code> alebo na
             <code> Bod</code> sa bez tejto zmeny zlejú do jedného bloku a vyhľadávanie
@@ -696,7 +696,7 @@ export default async function OrganisationPage({
         <label className="pole">
           <span className="pole-popis">Slovo, ktorým začína príloha</span>
           <input className="pole-vstup" name="slovoPriloha"
-                 defaultValue={tenant.chunkovanie?.slovoPriloha ?? DEFAULT_PROFILE.slovoPriloha} />
+                 defaultValue={tenant.chunking?.annexWord ?? DEFAULT_PROFILE.slovoPriloha} />
           <span className="tichy pole-napoveda">
             Prílohy stoja mimo číslovania článkov — bez rozpoznania by spadli pod posledný
             článok a citácia by klamala.
@@ -706,7 +706,7 @@ export default async function OrganisationPage({
         <label className="pole">
           <span className="pole-popis">Riadok je hlavička, keď sa opakuje viac ráz než</span>
           <input className="pole-vstup" type="number" name="opakovaniHlavicky" min={2} max={50}
-                 defaultValue={tenant.chunkovanie?.opakovaniHlavicky ?? DEFAULT_PROFILE.opakovaniHlavicky} />
+                 defaultValue={tenant.chunking?.headerRepeats ?? DEFAULT_PROFILE.opakovaniHlavicky} />
           <span className="tichy pole-napoveda">
             Hlavičky a päty sa v PDF opakujú na každej strane. Nižšie číslo odstráni viac
             šumu, ale pri krátkom dokumente môže zožrať aj obsah.
@@ -716,13 +716,13 @@ export default async function OrganisationPage({
         <label className="pole">
           <span className="pole-popis">Cieľová veľkosť úseku — od (tokenov)</span>
           <input className="pole-vstup" type="number" name="cielMinTokenov" min={50} max={2000}
-                 defaultValue={tenant.chunkovanie?.cielMinTokenov ?? DEFAULT_PROFILE.cielMinTokenov} />
+                 defaultValue={tenant.chunking?.cielMinTokenov ?? DEFAULT_PROFILE.cielMinTokenov} />
         </label>
 
         <label className="pole">
           <span className="pole-popis">Cieľová veľkosť úseku — do (tokenov)</span>
           <input className="pole-vstup" type="number" name="cielMaxTokenov" min={100} max={4000}
-                 defaultValue={tenant.chunkovanie?.cielMaxTokenov ?? DEFAULT_PROFILE.cielMaxTokenov} />
+                 defaultValue={tenant.chunking?.cielMaxTokenov ?? DEFAULT_PROFILE.cielMaxTokenov} />
           <span className="tichy pole-napoveda">
             Malý úsek znamená tisíce úryvkov bez kontextu, veľký zas jeden úsek na celý
             dokument. Predvolené <code>300–800</code> je odladené na slovenských predpisoch.
@@ -798,7 +798,7 @@ export default async function OrganisationPage({
           ) : null}
         </form>
 
-        <AuditList zaznamy={records} jazyk={language} />
+        <AuditList records={records} language={language} />
 
         {records.length >= 200 && (
           <p className="tichy" style={{ fontSize: 13, marginTop: 14 }}>

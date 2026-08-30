@@ -27,20 +27,20 @@ export interface RatingRecord {
   _id?: ObjectId
 
   /** Väzba na zlatú sadu, napr. „D9-001". Chýba pri voľnom dotaze. */
-  otazkaId?: string
+  questionId?: string
 
-  otazka: string
-  odpoved: string
-  zdroje: AnswerSource[]
-  citacie: Citation[]
+  question: string
+  answer: string
+  sources: AnswerSource[]
+  citations: Citation[]
 
   // Technické údaje — bez nich sa nedajú porovnať dve konfigurácie.
   model: string
   provider: string
-  overeneCitacie: boolean
+  verifiedCitations: boolean
   ttftMs: number | null
-  celkovoMs: number
-  casy?: Record<string, number>
+  totalMs: number
+  timings?: Record<string, number>
 
   /**
    * Spotreba a cena. Ukladá sa oboje zámerne: cena je historický fakt,
@@ -48,48 +48,48 @@ export interface RatingRecord {
    * prepočet podľa nových sadzieb. `naklad.verziaCennika` hovorí, ktoré
    * sumy sa smú sčítavať.
    */
-  tokeny?: TokenCounts
-  naklad?: Cost
+  tokens?: TokenCounts
+  cost?: Cost
 
   // To, čo vie povedať len človek (D9, kapitola 3).
-  spravna: Verdict
-  halucinacia: Verdict
+  correct: Verdict
+  hallucination: Verdict
 
   /** Overené znenie odpovede — napĺňa `goldAnswer` v zlatej sade. */
-  overenaOdpoved?: string
+  verifiedAnswer?: string
   /** Správne predpisy a §, napr. „SP čl. 78". Napĺňa `goldSources`. */
-  spravneZdroje?: string
-  poznamka?: string
+  correctSources?: string
+  note?: string
 
-  hodnotitel: string
-  vytvorene: Date
-  upravene: Date
+  reviewer: string
+  createdAt: Date
+  updatedAt: Date
 }
 
 /** Údaje, ktoré prídu z prehliadača po dobehnutí odpovede. */
 export interface NewRating {
-  otazkaId?: string
-  otazka: string
-  odpoved: string
-  zdroje: AnswerSource[]
-  citacie: Citation[]
+  questionId?: string
+  question: string
+  answer: string
+  sources: AnswerSource[]
+  citations: Citation[]
   model: string
   provider: string
-  overeneCitacie: boolean
+  verifiedCitations: boolean
   ttftMs: number | null
-  celkovoMs: number
-  casy?: Record<string, number>
-  tokeny?: TokenCounts
-  naklad?: Cost
+  totalMs: number
+  timings?: Record<string, number>
+  tokens?: TokenCounts
+  cost?: Cost
 }
 
 /** Polia, ktoré smie hodnotiteľ meniť. Nič iné sa cez API prepísať nedá. */
 export interface RatingEdit {
-  spravna?: Verdict
-  halucinacia?: Verdict
-  overenaOdpoved?: string
-  spravneZdroje?: string
-  poznamka?: string
+  correct?: Verdict
+  hallucination?: Verdict
+  verifiedAnswer?: string
+  correctSources?: string
+  note?: string
 }
 
 const RATINGS_COLLECTION = "evaluations"
@@ -110,11 +110,11 @@ export async function recordAnswer(
 
   const record: RatingRecord = {
     ...z,
-    spravna: null,
-    halucinacia: null,
-    hodnotitel: reviewer,
-    vytvorene: now,
-    upravene: now,
+    correct: null,
+    hallucination: null,
+    reviewer: reviewer,
+    createdAt: now,
+    updatedAt: now,
   }
 
   const r = await col.insertOne(record)
@@ -136,9 +136,9 @@ export async function saveVerdict(
 
   // Prepisujeme len to, čo naozaj prišlo. Bez tejto kontroly by kliknutie
   // na „správna" zmazalo predtým vyplnené overené znenie.
-  const changes: Record<string, unknown> = { upravene: new Date(), hodnotitel: reviewer }
+  const changes: Record<string, unknown> = { updatedAt: new Date(), reviewer }
   for (const key of [
-    "spravna", "halucinacia", "overenaOdpoved", "spravneZdroje", "poznamka",
+    "correct", "hallucination", "verifiedAnswer", "correctSources", "note",
   ] as const) {
     if (edit[key] !== undefined) changes[key] = edit[key]
   }
@@ -153,14 +153,14 @@ export async function setProgress(): Promise<Record<string, Verdict>> {
   const col = await getCollection<RatingRecord>(RATINGS_COLLECTION)
   const records = await col
     .find(
-      { otazkaId: { $exists: true } },
-      { projection: { otazkaId: 1, spravna: 1, upravene: 1 } }
+      { questionId: { $exists: true } },
+      { projection: { questionId: 1, correct: 1, updatedAt: 1 } }
     )
-    .sort({ upravene: 1 })
+    .sort({ updatedAt: 1 })
     .toArray()
 
   // Pri opakovanom hodnotení tej istej otázky platí posledné.
   const state: Record<string, Verdict> = {}
-  for (const z of records) if (z.otazkaId) state[z.otazkaId] = z.spravna
+  for (const z of records) if (z.questionId) state[z.questionId] = z.correct
   return state
 }

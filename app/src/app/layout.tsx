@@ -164,12 +164,12 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           <Header
             branding={branding}
             email={email}
-            meno={name}
-            fotka={photo}
-            spravca={isAdmin}
-            personalista={isHr}
-            spravcaOsob={isPeopleAdmin}
-            spravcaObsahu={isContentManager}
+            name={name}
+            photo={photo}
+            isAdmin={isAdmin}
+            isHr={isHr}
+            isPeopleAdmin={isPeopleAdmin}
+            isContentManager={isContentManager}
           />
           <main style={{ flex: 1 }}>{children}</main>
           <Footer />

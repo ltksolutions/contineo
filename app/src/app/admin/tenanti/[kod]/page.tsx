@@ -34,12 +34,12 @@ import { normalizeQuery, type RawQuery } from "@/lib/urlParams"
  * vymazalo tajomstvo a prihlásenie by prestalo fungovať.
  */
 function ProviderRow({
-  tenant, provider, domena: domain,
+  tenant, provider, domain: domain,
 }: {
   tenant: Tenant
   provider: OAuthProviderName
   /** Prvá doména tenanta — do nej sa skladá adresa návratu. */
-  domena?: string
+  domain?: string
 }) {
   const name = PROVIDER_LABEL[provider]
   const s = providerStatus(tenant, provider)
@@ -52,7 +52,7 @@ function ProviderRow({
     "z-prostredia": "beží z našich premenných prostredia, nie z vlastnej aplikácie zákazníka",
     necitatelne: "uložené, ale nedá sa prečítať — zmenil sa šifrovací kľúč, zadaj údaje znova",
     nenastavene: "nenastavené — tlačidlo sa neponúka",
-  }[s.stav]
+  }[s.state]
 
   return (
     <section className="karta" style={{ padding: "18px 20px", display: "grid", gap: 14 }}>
@@ -60,11 +60,11 @@ function ProviderRow({
         <h2 style={{ fontSize: 17, margin: 0 }}>Prihlásenie cez {name}</h2>
         <span
           className="stitok"
-          style={s.stav === "necitatelne"
+          style={s.state === "necitatelne"
             ? { background: "var(--warn-bg)", color: "var(--warn-fg)" }
             : undefined}
         >
-          {s.stav === "nastavene" ? "nastavené" : s.stav === "z-prostredia" ? "z prostredia" : s.stav === "necitatelne" ? "nečitateľné" : "nenastavené"}
+          {s.state === "nastavene" ? "nastavené" : s.state === "z-prostredia" ? "z prostredia" : s.state === "necitatelne" ? "nečitateľné" : "nenastavené"}
         </span>
       </div>
 
@@ -80,35 +80,35 @@ function ProviderRow({
         <input type="hidden" name="companyCode" value={tenant.companyCode} />
         <input type="hidden" name="provider" value={provider} />
 
-        <Field meno="clientId" popis="Client ID" hodnota={s.zdroj === "tenant" ? s.clientId : ""} />
+        <Field name="clientId" label="Client ID" value={s.zdroj === "tenant" ? s.clientId : ""} />
         <Field
-          meno="clientSecret"
-          popis="Client secret"
-          typ="password"
-          napoveda="Prázdne = nemeniť. Hodnota sa ukladá zašifrovaná a späť sa nikdy nevypíše."
+          name="clientSecret"
+          label="Client secret"
+          type="password"
+          hint="Prázdne = nemeniť. Hodnota sa ukladá zašifrovaná a späť sa nikdy nevypíše."
         />
 
         {provider === "microsoft" ? (
           <>
             <Field
-              meno="tenantMode"
-              popis="Režim tenanta"
-              hodnota={tenant.oauth?.microsoft?.tenantMode ?? "organizations"}
-              napoveda="organizations = pracovné a školské kontá · common = aj osobné · alebo UUID jedného Entra tenanta"
+              name="tenantMode"
+              label="Režim tenanta"
+              value={tenant.oauth?.microsoft?.tenantMode ?? "organizations"}
+              hint="organizations = pracovné a školské kontá · common = aj osobné · alebo UUID jedného Entra tenanta"
             />
             <Field
-              meno="allowedTenantIds"
-              popis="Povolené Entra tenant id"
-              hodnota={(tenant.oauth?.microsoft?.allowedTenantIds ?? []).join(", ")}
-              napoveda="Oddelené čiarkou. Prázdne = nekontroluje sa — pri režime organizations je to jediná zábrana proti tomu, aby sa dnu dostal človek z cudzej organizácie s rovnakou adresou."
+              name="allowedTenantIds"
+              label="Povolené Entra tenant id"
+              value={(tenant.oauth?.microsoft?.allowedTenantIds ?? []).join(", ")}
+              hint="Oddelené čiarkou. Prázdne = nekontroluje sa — pri režime organizations je to jediná zábrana proti tomu, aby sa dnu dostal človek z cudzej organizácie s rovnakou adresou."
             />
           </>
         ) : (
           <Field
-            meno="hostedDomain"
-            popis="Doména Workspace (hd)"
-            hodnota={tenant.oauth?.google?.hostedDomain ?? ""}
-            napoveda="Napr. futbalsfz.sk. Prázdne = ktorékoľvek Google konto."
+            name="hostedDomain"
+            label="Doména Workspace (hd)"
+            value={tenant.oauth?.google?.hostedDomain ?? ""}
+            hint="Napr. futbalsfz.sk. Prázdne = ktorékoľvek Google konto."
           />
         )}
 
@@ -126,7 +126,7 @@ function ProviderRow({
             sa prihlasujú pracovným kontom, tým prestane fungovať jediná cesta,
             ktorú poznajú.
           </p>
-          <Field meno="potvrdenie" popis={`Napíš ${tenant.companyCode} na potvrdenie`} />
+          <Field name="potvrdenie" label={`Napíš ${tenant.companyCode} na potvrdenie`} />
           <button className="tlacidlo tlacidlo--tiche" type="submit">Odstrániť</button>
         </form>
       )}
@@ -144,9 +144,9 @@ const LANGUAGES: Record<string, string> = {
 export const dynamic = "force-dynamic"
 
 function Field({
-  meno: name, popis: label, hodnota: value, napoveda: hint, typ: type = "text",
+  name: name, label: label, value: value, hint: hint, type: type = "text",
 }: {
-  meno: string; popis: string; hodnota?: string; napoveda?: string; typ?: string
+  name: string; label: string; value?: string; hint?: string; type?: string
 }) {
   return (
     <label className="pole">
@@ -158,8 +158,8 @@ function Field({
 }
 
 function DomainRow({ s }: { s: DomainStatus }) {
-  if (s.preskocena) {
-    return <li className="tichy">{s.host} — netreba nič ({s.preskocena})</li>
+  if (s.skipped) {
+    return <li className="tichy">{s.host} — netreba nič ({s.skipped})</li>
   }
   if (!s.vProjekte) {
     return (
@@ -173,9 +173,9 @@ function DomainRow({ s }: { s: DomainStatus }) {
       <li>
         <strong>{s.host}</strong> — čaká na zákazníka:{" "}
         <code>{cnameInstruction(s.host, s.cname)}</code>
-        {s.konflikty.length > 0 && (
+        {s.conflicts.length > 0 && (
           <div style={{ color: "var(--bad-fg)", fontSize: 13 }}>
-            v zóne kolidujú: {s.konflikty.join(", ")}
+            v zóne kolidujú: {s.conflicts.join(", ")}
           </div>
         )}
       </li>
@@ -184,7 +184,7 @@ function DomainRow({ s }: { s: DomainStatus }) {
   return (
     <li>
       <strong>{s.host}</strong> — nastavené ({s.nastaveneCez})
-      {!s.overena && <span style={{ color: "var(--warn-fg)" }}>, neoverené</span>}
+      {!s.verified && <span style={{ color: "var(--warn-fg)" }}>, neoverené</span>}
     </li>
   )
 }
@@ -214,7 +214,7 @@ export default async function TenantDetailPage({
   // ten istý výpis, aký vidí zákazník u seba (D51), len sem sa dostane bez
   // prepínania domén.
   const records = await auditRecords(tenant.companyCode, { limit: 50 })
-  const pending = domains.filter(d => !d.preskocena && !d.nastaveneCez)
+  const pending = domains.filter(d => !d.skipped && !d.nastaveneCez)
   const enabled = tenant.status === "active"
 
   return (
@@ -233,7 +233,7 @@ export default async function TenantDetailPage({
         {!enabled && " · vypnutá"}
       </p>
 
-      <Notice sprava={message} chyba={error === "1"} spat={`/admin/tenanti/${encodeURIComponent(code)}`} />
+      <Notice message={message} error={error === "1"} back={`/admin/tenanti/${encodeURIComponent(code)}`} />
 
       <section className="karta" style={{ padding: "18px 20px", marginBottom: 16 }}>
         <h2 style={{ fontSize: 17, margin: "0 0 12px" }}>Domény</h2>
@@ -246,11 +246,11 @@ export default async function TenantDetailPage({
             <input type="hidden" name="companyCode" value={tenant.companyCode} />
             <input type="hidden" name="hostnames" value={tenant.hostnames.join(" ")} />
             <Field
-              meno="komu"
-              popis="Poslať pokyny na adresu"
-              hodnota={tenant.branding.supportEmail}
-              typ="email"
-              napoveda={`Odošle sa ${pending.length === 1 ? "jeden pokyn" : `${pending.length} pokyny`} a zaznamená sa, komu a kedy.`}
+              name="komu"
+              label="Poslať pokyny na adresu"
+              value={tenant.branding.supportEmail}
+              type="email"
+              hint={`Odošle sa ${pending.length === 1 ? "jeden pokyn" : `${pending.length} pokyny`} a zaznamená sa, komu a kedy.`}
             />
             <button className="tlacidlo" type="submit">Odoslať pokyny</button>
           </form>
@@ -261,8 +261,8 @@ export default async function TenantDetailPage({
         <input type="hidden" name="companyCode" value={tenant.companyCode} />
         <h2 style={{ fontSize: 17, margin: 0 }}>Značka a jazyky</h2>
 
-        <Field meno="displayName" popis="Názov v hlavičke" hodnota={tenant.branding.displayName} />
-        <Field meno="shortName" popis="Skratka" hodnota={tenant.branding.shortName} />
+        <Field name="displayName" label="Názov v hlavičke" value={tenant.branding.displayName} />
+        <Field name="shortName" label="Skratka" value={tenant.branding.shortName} />
         <div className="pole">
           <span className="pole-popis">Logo</span>
           {tenant.branding.logoUrl && (
@@ -281,18 +281,18 @@ export default async function TenantDetailPage({
         </div>
         <div className="pole">
           <span className="pole-popis">Farba</span>
-          <ColorSelect meno="accentColor" hodnota={tenant.branding.accentColor} />
+          <ColorSelect name="accentColor" value={tenant.branding.accentColor} />
           <span className="tichy pole-napoveda">
             Nesie ju tlačidlo s bielym textom, preto sú odtiene tmavšie, než by
             sa chcelo — svetlejší tón znamená nečitateľné tlačidlo u zákazníka.
           </span>
         </div>
         <Field
-          meno="supportEmail"
-          popis="Kontakt organizácie"
-          hodnota={tenant.branding.supportEmail}
-          typ="email"
-          napoveda="Sem chodia pokyny k doméne."
+          name="supportEmail"
+          label="Kontakt organizácie"
+          value={tenant.branding.supportEmail}
+          type="email"
+          hint="Sem chodia pokyny k doméne."
         />
 
         <fieldset className="pole" style={{ border: 0, padding: 0, margin: 0 }}>
@@ -315,10 +315,10 @@ export default async function TenantDetailPage({
         <div className="pole">
           <span className="pole-popis">Predvolený jazyk</span>
           <Select
-            meno="defaultLanguage"
-            volby={UI_LANGUAGES.map(j => ({ hodnota: j, popis: LANGUAGES[j] ?? j }))}
-            predvolena={tenant.defaultLanguage}
-            popisPola="Predvolený jazyk"
+            name="defaultLanguage"
+            options={UI_LANGUAGES.map(j => ({ value: j, label: LANGUAGES[j] ?? j }))}
+            initial={tenant.defaultLanguage}
+            fieldLabel="Predvolený jazyk"
           />
           <span className="tichy pole-napoveda">Platí pre človeka, ktorý ešte nie je prihlásený.</span>
         </div>
@@ -363,8 +363,8 @@ export default async function TenantDetailPage({
       {/* Prihlasovacie údaje sú medzi úpravou a vypnutím zámerne: patria
           k zavedeniu zákazníka, nie k jeho dennému nastaveniu. */}
       <div style={{ display: "grid", gap: 16, marginTop: 16 }}>
-        <ProviderRow tenant={tenant} provider="microsoft" domena={tenant.hostnames[0]} />
-        <ProviderRow tenant={tenant} provider="google" domena={tenant.hostnames[0]} />
+        <ProviderRow tenant={tenant} provider="microsoft" domain={tenant.hostnames[0]} />
+        <ProviderRow tenant={tenant} provider="google" domain={tenant.hostnames[0]} />
       </div>
 
       <form action={toggleTenantStatusAction} className="karta admin-forma" style={{ marginTop: 16 }}>
@@ -380,9 +380,9 @@ export default async function TenantDetailPage({
               Záznamy potvrdení zostávajú, tenant sa nemaže.
             </p>
             <Field
-              meno="potvrdenie"
-              popis={`Napíš ${tenant.companyCode} na potvrdenie`}
-              napoveda="Zámerne to nie je obyčajné „naozaj?“ — to sa odklikne skôr, než sa prečíta."
+              name="potvrdenie"
+              label={`Napíš ${tenant.companyCode} na potvrdenie`}
+              hint="Zámerne to nie je obyčajné „naozaj?“ — to sa odklikne skôr, než sa prečíta."
             />
             <button className="tlacidlo tlacidlo--tiche" type="submit">Vypnúť</button>
           </>
@@ -397,7 +397,7 @@ export default async function TenantDetailPage({
           Posledných 50 správcovských zmien tejto organizácie. Celý výpis
           s hľadaním má zákazník na svojej doméne v nastavení organizácie.
         </p>
-        <AuditList zaznamy={records} />
+        <AuditList records={records} />
       </section>
     </div>
   )

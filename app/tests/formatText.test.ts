@@ -42,8 +42,8 @@ t("prázdne ** sa nepovažuje za zvýraznenie",
 const one = toBlocks("Prvá veta.\nDruhá veta.")
 t("riadky jedného odseku sa spoja", one.length === 1, String(one.length))
 t("spájajú sa medzerou",
-  one[0].druh === "odsek" && text(one[0].useky) === "Prvá veta. Druhá veta.",
-  one[0].druh === "odsek" ? text(one[0].useky) : "")
+  one[0].druh === "odsek" && text(one[0].segments) === "Prvá veta. Druhá veta.",
+  one[0].druh === "odsek" ? text(one[0].segments) : "")
 
 t("prázdny riadok oddelí odseky",
   toBlocks("Prvý.\n\nDruhý.").length === 2)
@@ -52,14 +52,14 @@ const withList = toBlocks("Platí toto:\n\n- prvá vec\n- druhá vec\n\nZáver."
 t("odsek, zoznam a odsek", withList.length === 3,
   JSON.stringify(withList.map(b => b.druh)))
 t("zoznam má dve položky",
-  withList[1].druh === "zoznam" && withList[1].polozky.length === 2)
+  withList[1].druh === "zoznam" && withList[1].items.length === 2)
 t("odrážka sa neberie ako súčasť textu",
-  withList[1].druh === "zoznam" && text(withList[1].polozky[0]) === "prvá vec",
-  withList[1].druh === "zoznam" ? text(withList[1].polozky[0]) : "")
+  withList[1].druh === "zoznam" && text(withList[1].items[0]) === "prvá vec",
+  withList[1].druh === "zoznam" ? text(withList[1].items[0]) : "")
 
 const numbered = toBlocks("1. prvé\n2. druhé")
 t("číslovaný zoznam sa rozpozná",
-  numbered[0].druh === "zoznam" && numbered[0].cislovany === true)
+  numbered[0].druh === "zoznam" && numbered[0].numbered === true)
 
 t("zmena typu zoznamu založí nový",
   toBlocks("- a\n1. b").length === 2)
@@ -67,13 +67,13 @@ t("zmena typu zoznamu založí nový",
 t("odsadené pokračovanie patrí k odrážke",
   (() => {
     const b = toBlocks("- prvá vec\n  pokračovanie")
-    return b.length === 1 && b[0].druh === "zoznam" && text(b[0].polozky[0]) === "prvá vec pokračovanie"
+    return b.length === 1 && b[0].druh === "zoznam" && text(b[0].items[0]) === "prvá vec pokračovanie"
   })())
 
 t("zvýraznenie funguje aj v odrážke",
   (() => {
     const b = toBlocks("- podľa **čl. 78**")
-    return b[0].druh === "zoznam" && b[0].polozky[0].some(u => u.druh === "tucne")
+    return b[0].druh === "zoznam" && b[0].items[0].some(u => u.druh === "tucne")
   })())
 
 t("prázdny vstup nedá nič", toBlocks("").length === 0)
@@ -90,8 +90,8 @@ const real = toBlocks(
 t("skutočná odpoveď dá päť blokov", real.length === 5,
   JSON.stringify(real.map(b => b.druh)))
 t("medzititulok sa stane nadpisom",
-  real[1].druh === "nadpis" && text(real[1].useky) === "Lehota podľa čl. 78 (zápis o stretnutí)",
-  real[1].druh === "nadpis" ? text(real[1].useky) : real[1].druh)
+  real[1].druh === "nadpis" && text(real[1].segments) === "Lehota podľa čl. 78 (zápis o stretnutí)",
+  real[1].druh === "nadpis" ? text(real[1].segments) : real[1].druh)
 
 // ── markdown nadpisy ─────────────────────────────────────────────────────────
 //
@@ -102,10 +102,10 @@ const withHeading = toBlocks("## Hráči\n\nPo 5. napomenutí sa ukladá sankcia
 t("## sa rozpozná ako nadpis",
   withHeading[0].druh === "nadpis", JSON.stringify(withHeading.map(b => b.druh)))
 t("mriežky nezostanú v texte",
-  withHeading[0].druh === "nadpis" && text(withHeading[0].useky) === "Hráči",
-  withHeading[0].druh === "nadpis" ? text(withHeading[0].useky) : "")
+  withHeading[0].druh === "nadpis" && text(withHeading[0].segments) === "Hráči",
+  withHeading[0].druh === "nadpis" ? text(withHeading[0].segments) : "")
 t("úroveň nadpisu sa zachová",
-  withHeading[0].druh === "nadpis" && withHeading[0].uroven === 2)
+  withHeading[0].druh === "nadpis" && withHeading[0].level === 2)
 
 t("nadpis nepotrebuje prázdny riadok pod sebou",
   (() => {
@@ -119,7 +119,7 @@ t("# aj ### fungujú",
 t("uzavretý nadpis ## Text ## sa očistí",
   (() => {
     const b = toBlocks("## Hráči ##")
-    return b[0].druh === "nadpis" && text(b[0].useky) === "Hráči"
+    return b[0].druh === "nadpis" && text(b[0].segments) === "Hráči"
   })())
 
 t("mriežka bez medzery nie je nadpis",
@@ -128,7 +128,7 @@ t("mriežka bez medzery nie je nadpis",
 t("zvýraznenie v nadpise funguje",
   (() => {
     const b = toBlocks("## Podľa **čl. 37**")
-    return b[0].druh === "nadpis" && b[0].useky.some(u => u.druh === "tucne")
+    return b[0].druh === "nadpis" && b[0].segments.some(u => u.druh === "tucne")
   })())
 
 // Tučný riadok a ### znamenajú to isté — v jednej odpovedi sa nesmú
@@ -141,12 +141,12 @@ t("tučný medzititulok je tiež nadpis",
 t("koncová dvojbodka sa z nadpisu oreže (vnútri hviezdičiek)",
   (() => {
     const b = toBlocks("**Náležitosti:**")
-    return b[0].druh === "nadpis" && text(b[0].useky) === "Náležitosti"
+    return b[0].druh === "nadpis" && text(b[0].segments) === "Náležitosti"
   })())
 t("koncová dvojbodka sa z nadpisu oreže (za hviezdičkami)",
   (() => {
     const b = toBlocks("**Náležitosti**:")
-    return b[0].druh === "nadpis" && text(b[0].useky) === "Náležitosti"
+    return b[0].druh === "nadpis" && text(b[0].segments) === "Náležitosti"
   })())
 
 // Skutočná odpoveď z rozhrania: model zmiešal oba tvary.

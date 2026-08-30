@@ -52,19 +52,19 @@ export default async function EditorPage({
   const raw = (await col.findOne(
     { companyCode: ctx.tenant.companyCode, documentId },
     { projection: { llmNavrh: 1 } },
-  )) as { llmNavrh?: { text: string; model: string; rezim: string; kedy: Date } } | null
-  const draft = raw?.llmNavrh
+  )) as { llmDraft?: { text: string; model: string; mode: string; at: Date } } | null
+  const draft = raw?.llmDraft
 
   const branding = brandingView(ctx.tenant)
   const language = ctx.person.language
-  const isPdf = d.originalFile?.typ === "pdf"
+  const isPdf = d.originalFile?.type === "pdf"
   const fileUrl = d.originalFile
     ? `/api/kniznica/subor/${encodeURIComponent(d.originalFile.id)}`
     : null
 
   return (
     <div className="obal" style={{ padding: "24px 20px 80px", maxWidth: 1200, ...tenantStyle(branding) }}>
-      <Notice sprava={message} chyba={error === "1"} spat={`/kniznica/${encodeURIComponent(documentId)}/text`} />
+      <Notice message={message} error={error === "1"} back={`/kniznica/${encodeURIComponent(documentId)}/text`} />
 
       <p style={{ margin: "0 0 10px" }}>
         <Link className="tichy" href={`/kniznica/${encodeURIComponent(documentId)}`} style={{ fontSize: 14 }}>
@@ -77,9 +77,9 @@ export default async function EditorPage({
         Porovnaj text s originálom. Publikovanie je samostatný krok — tu sa nič nepúšťa von.
       </p>
 
-      {d.konverzia?.upozornenia?.length ? (
+      {d.conversion?.warnings?.length ? (
         <ul className="karta" style={{ padding: "12px 16px 12px 34px", margin: "0 0 16px", fontSize: 14 }}>
-          {d.konverzia.upozornenia.map((u, i) => <li key={i}>{u}</li>)}
+          {d.conversion.warnings.map((u, i) => <li key={i}>{u}</li>)}
         </ul>
       ) : null}
 
@@ -87,9 +87,9 @@ export default async function EditorPage({
         <section className="karta" style={{ padding: 18, display: "grid", gap: 12, margin: "0 0 18px" }}>
           <div className="audit-hlavicka">
             <span className="stitok">návrh modelu</span>
-            <strong>{draft.rezim === "prepisat-sken" ? "prepis skenu" : "prečistenie členenia"}</strong>
+            <strong>{draft.mode === "prepisat-sken" ? "prepis skenu" : "prečistenie členenia"}</strong>
             <span className="tichy" style={{ fontSize: 13 }}>
-              {draft.model} · {formatDate(draft.kedy, language)} · {draft.text.length} znakov
+              {draft.model} · {formatDate(draft.at, language)} · {draft.text.length} znakov
             </span>
           </div>
           <p className="tichy" style={{ fontSize: 13.5, margin: 0 }}>
@@ -118,7 +118,7 @@ export default async function EditorPage({
               </object>
             ) : (
               <p className="karta" style={{ padding: 16, fontSize: 14 }}>
-                {d.originalFile?.nazov} sa v prehliadači nezobrazí.{" "}
+                {d.originalFile?.name} sa v prehliadači nezobrazí.{" "}
                 <a href={fileUrl} target="_blank" rel="noreferrer">Stiahni ho</a> a porovnaj vedľa.
               </p>
             )
@@ -139,7 +139,7 @@ export default async function EditorPage({
           </h2>
           <form action={saveTextAction} style={{ display: "grid", gap: 10 }}>
             <input type="hidden" name="documentId" value={documentId} />
-            <TextEditor meno="markdown" pociatocny={d.textNaUpravu} />
+            <TextEditor name="markdown" initial={d.editableText} />
             <div><button className="tlacidlo" type="submit">Uložiť text</button></div>
           </form>
         </section>

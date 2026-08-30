@@ -42,9 +42,9 @@ type Query = {
   error?: string
   document?: string | string[]
   audience?: string | string[]
-  vsetci?: string
-  adresy?: string
-  dovod?: string
+  all?: string
+  addresses?: string
+  reason?: string
 }
 
 export default async function AssignPage({
@@ -128,7 +128,7 @@ export default async function AssignPage({
             <legend className="pole-popis">Komu</legend>
 
             <label className="hr-volba" style={{ marginBottom: 10 }}>
-              <input type="checkbox" name="vsetci" value="1" defaultChecked={q.vsetci === "1"} />
+              <input type="checkbox" name="vsetci" value="1" defaultChecked={q.all === "1"} />
               <span>
                 <strong>Všetkým v organizácii</strong>
                 <span className="tichy pole-napoveda">
@@ -146,7 +146,7 @@ export default async function AssignPage({
                   je počet ľudí vrátane nich — to je to, koho sa to naozaj týka.
                 </p>
                 <div className="stitky-zoznam">
-                  {treeRows.map(({ oddelenie: department, uroven: level }) => {
+                  {treeRows.map(({ department: department, level: level }) => {
                     const p = departmentCounts.get(department.id) ?? { priamo: 0, sPodriadenymi: 0 }
                     return (
                       <label
@@ -161,7 +161,7 @@ export default async function AssignPage({
                           defaultChecked={selectedAudiences.has(`department:${department.id}`)}
                         />
                         <span className="stitok-znak" aria-hidden="true" />
-                        {department.nazov}
+                        {department.name}
                         <span className="stitok-pocet">{p.sPodriadenymi}</span>
                       </label>
                     )
@@ -170,7 +170,7 @@ export default async function AssignPage({
               </>
             )}
 
-            {audiences.skupiny.length === 0 && audiences.trasy.length === 0 ? (
+            {audiences.groups.length === 0 && audiences.tracks.length === 0 ? (
               <p className="tichy pole-napoveda" style={{ margin: "10px 0 0" }}>
                 V organizácii zatiaľ nie sú skupiny ani trasy. Skupiny sa
                 zadávajú pri importe osôb (stĺpec &bdquo;skupiny&ldquo;) alebo príkazom
@@ -181,42 +181,42 @@ export default async function AssignPage({
                 {/* Rovnaké štítky ako pri úprave osoby — tá istá vec má
                     vyzerať rovnako. Tu ich ale nesie zaškrtávacie políčko,
                     lebo tento formulár funguje aj bez JavaScriptu. */}
-                {audiences.skupiny.length > 0 && (
+                {audiences.groups.length > 0 && (
                   <>
                     <div className="hr-podnadpis">Skupiny</div>
                     <div className="stitky-zoznam">
-                      {audiences.skupiny.map(s => (
-                        <label key={`g-${s.hodnota}`} className="stitok stitok--volba stitok--pole">
+                      {audiences.groups.map(s => (
+                        <label key={`g-${s.value}`} className="stitok stitok--volba stitok--pole">
                           <input
                             type="checkbox"
                             name="audience"
-                            value={`group:${s.hodnota}`}
-                            defaultChecked={selectedAudiences.has(`group:${s.hodnota}`)}
+                            value={`group:${s.value}`}
+                            defaultChecked={selectedAudiences.has(`group:${s.value}`)}
                           />
                           <span className="stitok-znak" aria-hidden="true" />
-                          {s.hodnota}
-                          <span className="stitok-pocet">{s.osob}</span>
+                          {s.value}
+                          <span className="stitok-pocet">{s.count}</span>
                         </label>
                       ))}
                     </div>
                   </>
                 )}
 
-                {audiences.trasy.length > 0 && (
+                {audiences.tracks.length > 0 && (
                   <>
                     <div className="hr-podnadpis">Trasy</div>
                     <div className="stitky-zoznam">
-                      {audiences.trasy.map(t => (
-                        <label key={`t-${t.hodnota}`} className="stitok stitok--volba stitok--pole">
+                      {audiences.tracks.map(t => (
+                        <label key={`t-${t.value}`} className="stitok stitok--volba stitok--pole">
                           <input
                             type="checkbox"
                             name="audience"
-                            value={`track:${t.hodnota}`}
-                            defaultChecked={selectedAudiences.has(`track:${t.hodnota}`)}
+                            value={`track:${t.value}`}
+                            defaultChecked={selectedAudiences.has(`track:${t.value}`)}
                           />
                           <span className="stitok-znak" aria-hidden="true" />
-                          {t.hodnota}
-                          <span className="stitok-pocet">{t.osob}</span>
+                          {t.value}
+                          <span className="stitok-pocet">{t.count}</span>
                         </label>
                       ))}
                     </div>
@@ -231,7 +231,7 @@ export default async function AssignPage({
                 className="pole-vstup"
                 name="adresy"
                 rows={2}
-                defaultValue={q.adresy ?? ""}
+                defaultValue={q.addresses ?? ""}
                 placeholder="jan.novak@example.sk, eva.mala@example.sk"
                 autoCapitalize="none"
                 autoCorrect="off"
@@ -246,7 +246,7 @@ export default async function AssignPage({
             <span className="pole-popis">Dôvod</span>
             <textarea
               name="dovod"
-              defaultValue={q.dovod ?? ""}
+              defaultValue={q.reason ?? ""}
               required
               rows={3}
               className="pole-vstup"

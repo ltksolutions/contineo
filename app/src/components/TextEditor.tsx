@@ -24,11 +24,11 @@ import Editor from "@toast-ui/editor"
 import "@toast-ui/editor/dist/toastui-editor.css"
 
 export default function TextEditor({
-  meno: name,
-  pociatocny: initial,
+  name: name,
+  initial: initial,
 }: {
-  meno: string
-  pociatocny: string
+  name: string
+  initial: string
 }) {
   const wrap = useRef<HTMLDivElement>(null)
   const editor = useRef<Editor | null>(null)

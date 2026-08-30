@@ -88,25 +88,25 @@ export default async function NewPersonPage({
         <div className="pole">
           <span className="pole-popis">Typ osoby</span>
           <Select
-            meno="personType"
-            volby={[
-              { hodnota: "employee", popis: "zamestnanec" },
-              { hodnota: "external", popis: "externý" },
-              { hodnota: "referee", popis: "rozhodca" },
-              { hodnota: "official", popis: "funkcionár" },
+            name="personType"
+            options={[
+              { value: "employee", label: "zamestnanec" },
+              { value: "external", label: "externý" },
+              { value: "referee", label: "rozhodca" },
+              { value: "official", label: "funkcionár" },
             ]}
-            predvolena="employee"
-            popisPola="Typ osoby"
+            initial="employee"
+            fieldLabel="Typ osoby"
           />
         </div>
 
         <div className="pole">
           <span className="pole-popis">Jazyk prostredia</span>
           <Select
-            meno="language"
-            volby={UI_LANGUAGES.map(l => ({ hodnota: l, popis: LANGUAGES[l] ?? l }))}
-            predvolena="sk"
-            popisPola="Jazyk prostredia"
+            name="language"
+            options={UI_LANGUAGES.map(l => ({ value: l, label: LANGUAGES[l] ?? l }))}
+            initial="sk"
+            fieldLabel="Jazyk prostredia"
           />
           <span className="tichy pole-napoveda">
             Skupiny a trasy sa vyberajú až na detaile — tam už vidno, čo

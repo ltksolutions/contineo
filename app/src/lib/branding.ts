@@ -40,7 +40,7 @@ export interface Brand {
   data: Buffer
   bajtov: number
   /** Mení sa pri každom nahratí — je súčasťou adresy, takže vynúti obnovu. */
-  verzia: string
+  version: string
   updatedAt: Date
   updatedBy: string
 }
@@ -88,7 +88,7 @@ export async function saveBrand(
         contentType: type,
         data,
         bajtov: data.byteLength,
-        verzia: version,
+        version: version,
         updatedAt: new Date(),
         updatedBy: actor,
       },

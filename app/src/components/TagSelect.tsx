@@ -18,9 +18,9 @@
 import { useState } from "react"
 
 export interface Tag {
-  hodnota: string
+  value: string
   /** Koľko ľudí ju má. Prázdna skupina je varovanie, nie chyba. */
-  osob?: number
+  count?: number
 }
 
 /** Rovnaká normalizácia ako `normalizeKeys()` na serveri. */
@@ -29,15 +29,15 @@ function key(s: string): string {
 }
 
 export default function TagSelect({
-  meno: name,
-  ponuka: options,
-  vybrane: selected,
-  popisNovej: newLabel,
+  name: name,
+  options: options,
+  selected: selected,
+  newLabel: newLabel,
 }: {
-  meno: string
-  ponuka: Tag[]
-  vybrane: string[]
-  popisNovej: string
+  name: string
+  options: Tag[]
+  selected: string[]
+  newLabel: string
 }) {
   const [chosen, setChosen] = useState<string[]>(selected.map(key))
   const [draft, setDraft] = useState("")
@@ -47,8 +47,8 @@ export default function TagSelect({
   const all: Tag[] = [
     ...options,
     ...chosen
-      .filter(z => !options.some(p => key(p.hodnota) === z))
-      .map(z => ({ hodnota: z })),
+      .filter(z => !options.some(p => key(p.value) === z))
+      .map(z => ({ value: z })),
   ]
 
   function toggle(h: string) {
@@ -74,7 +74,7 @@ export default function TagSelect({
       ) : (
         <div className="stitky-zoznam">
           {all.map(s => {
-            const k = key(s.hodnota)
+            const k = key(s.value)
             const has = chosen.includes(k)
             return (
               <button
@@ -85,8 +85,8 @@ export default function TagSelect({
                 onClick={() => toggle(k)}
               >
                 <span className="stitok-znak" aria-hidden="true">{has ? "✓" : "+"}</span>
-                {s.hodnota}
-                {s.osob !== undefined && <span className="stitok-pocet">{s.osob}</span>}
+                {s.value}
+                {s.count !== undefined && <span className="stitok-pocet">{s.count}</span>}
               </button>
             )
           })}

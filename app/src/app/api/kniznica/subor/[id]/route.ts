@@ -46,14 +46,14 @@ export async function GET(
   }
   if (!s) return new Response(null, { status: 404 })
 
-  const extension = s.nazov.toLowerCase().split(".").pop() ?? ""
+  const extension = s.name.toLowerCase().split(".").pop() ?? ""
   const type = TYPES[extension] ?? "application/octet-stream"
 
   return new Response(new Uint8Array(s.data), {
     headers: {
       "Content-Type": type,
       "Content-Length": String(s.data.byteLength),
-      "Content-Disposition": `inline; filename*=UTF-8''${encodeURIComponent(s.nazov)}`,
+      "Content-Disposition": `inline; filename*=UTF-8''${encodeURIComponent(s.name)}`,
       "Cache-Control": "private, max-age=3600",
       "X-Content-Type-Options": "nosniff",
     },

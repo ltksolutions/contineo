@@ -25,10 +25,10 @@ export const MAX_BYTES = 32 * 1024 * 1024
 
 export interface StoredFile {
   id: string
-  nazov: string
+  name: string
   contentType: string
   bajtov: number
-  nahraneKedy: Date
+  uploadedAt: Date
 }
 
 async function bucket(): Promise<GridFSBucket> {
@@ -67,7 +67,7 @@ export async function saveFile(
   const b = await bucket()
   const stream = b.openUploadStream(name, {
     contentType,
-    metadata: { companyCode, aktor: actor, nahraneKedy: new Date() },
+    metadata: { companyCode, actor, uploadedAt: new Date() },
   })
 
   await new Promise<void>((done, failed) => {
@@ -78,10 +78,10 @@ export async function saveFile(
 
   return {
     id: String(stream.id),
-    nazov: name,
+    name: name,
     contentType,
     bajtov: data.byteLength,
-    nahraneKedy: new Date(),
+    uploadedAt: new Date(),
   }
 }
 
@@ -89,7 +89,7 @@ export async function saveFile(
 export async function loadFile(
   companyCode: string,
   id: string,
-): Promise<{ data: Buffer; contentType: string; nazov: string } | null> {
+): Promise<{ data: Buffer; contentType: string; name: string } | null> {
   if (!ObjectId.isValid(id)) return null
   const b = await bucket()
 
@@ -108,7 +108,7 @@ export async function loadFile(
   return {
     data: Buffer.concat(parts),
     contentType: record.contentType ?? "application/octet-stream",
-    nazov: record.filename,
+    name: record.filename,
   }
 }
 

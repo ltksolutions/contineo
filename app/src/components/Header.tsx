@@ -40,7 +40,7 @@ const THEME_LABEL: Record<ThemeChoice, string> = {
  * Ikona stavu. Tri rôzne tvary, nie jeden meniaci sa — človek má poznať
  * súčasný stav pohľadom, nie odvodením z toho, čo sa stane po kliknutí.
  */
-function ThemeIcon({ volba: choice }: { volba: ThemeChoice }) {
+function ThemeIcon({ choice: choice }: { choice: ThemeChoice }) {
   const shared = {
     width: 17, height: 17, viewBox: "0 0 18 18",
     fill: "none", stroke: "currentColor", strokeWidth: 1.6,
@@ -113,27 +113,27 @@ export function avatarShade(email: string): number {
 export default function Header({
   branding,
   email,
-  meno: name,
-  fotka: photo,
-  spravca: isAdmin,
-  personalista: isHr,
-  spravcaOsob: isPeopleAdmin,
-  spravcaObsahu: isContentManager,
+  name: name,
+  photo: photo,
+  isAdmin: isAdmin,
+  isHr: isHr,
+  isPeopleAdmin: isPeopleAdmin,
+  isContentManager: isContentManager,
 }: {
   branding?: TenantBrandingView
   email?: string
   /** Celé meno z `persons`. Chýba u správcu, ktorý prešiel núdzovou brzdou. */
-  meno?: string
+  name?: string
   /** Adresa fotky vrátane verzie. Chýba = ukážu sa iniciály (D52). */
-  fotka?: string
+  photo?: string
   /** Vidí správu tenantov (D41 + D42 už overené na serveri). */
-  spravca?: boolean
+  isAdmin?: boolean
   /** Má rolu `hr` vo vlastnej organizácii (D33 už overené na serveri). */
-  personalista?: boolean
+  isHr?: boolean
   /** Má rolu `people-admin` vo vlastnej organizácii (D46). */
-  spravcaOsob?: boolean
+  isPeopleAdmin?: boolean
   /** Má rolu `spravca-obsahu` vo vlastnej organizácii (D53). */
-  spravcaObsahu?: boolean
+  isContentManager?: boolean
 }) {
   const [choice, setChoice] = useState<ThemeChoice>("system")
   const [menuOpen, setMenuOpen] = useState(false)
@@ -393,7 +393,7 @@ export default function Header({
                     className="osobne-polozka"
                     onClick={toggle}
                   >
-                    <ThemeIcon volba={choice} />
+                    <ThemeIcon choice={choice} />
                     Téma: {THEME_LABEL[choice]}
                   </button>
 
@@ -425,7 +425,7 @@ export default function Header({
             aria-label={`Téma ${THEME_LABEL[choice]}. Prepnúť na: ${THEME_LABEL[NEXT_THEME[choice]]}`}
             title={`Téma ${THEME_LABEL[choice]}`}
           >
-            <ThemeIcon volba={choice} />
+            <ThemeIcon choice={choice} />
           </button>
         )}
       </div>

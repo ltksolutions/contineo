@@ -132,7 +132,7 @@ export function validateProfile(p: TenantProfile): void {
   if (violations.length) {
     throw new ProviderConfigError(
       `${p.companyCode}: profil je v rozpore s dátovou rezidenciou.\n` +
-      violations.map(v => `  · ${v.sprava}`).join("\n")
+      violations.map(v => `  · ${v.message}`).join("\n")
     )
   }
 
@@ -143,7 +143,7 @@ export function validateProfile(p: TenantProfile): void {
   if (isolation.length) {
     throw new ProviderConfigError(
       `${p.companyCode}: profil je v rozpore s úrovňou izolácie.\n` +
-      isolation.map(v => `  · ${v.sprava}`).join("\n")
+      isolation.map(v => `  · ${v.message}`).join("\n")
     )
   }
 }

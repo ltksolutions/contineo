@@ -61,7 +61,7 @@ export default async function DocumentDetailPage({
 
   return (
     <div className="obal" style={{ padding: "28px 20px 80px", maxWidth: 760, ...tenantStyle(branding) }}>
-      <Notice sprava={message} chyba={error === "1"} spat={`/kniznica/${encodeURIComponent(documentId)}`} />
+      <Notice message={message} error={error === "1"} back={`/kniznica/${encodeURIComponent(documentId)}`} />
 
       <p style={{ margin: "0 0 12px" }}>
         <Link className="tichy" href="/kniznica" style={{ fontSize: 14 }}>← Späť do knižnice</Link>
@@ -94,36 +94,36 @@ export default async function DocumentDetailPage({
 
           <div className="pole">
             <span className="pole-popis">Pôsobnosť</span>
-            <Select meno="scope" volby={codelistOptions("scope")} predvolena={d.scope ?? "company"} popisPola="Pôsobnosť" />
+            <Select name="scope" options={codelistOptions("scope")} initial={d.scope ?? "company"} fieldLabel="Pôsobnosť" />
           </div>
 
           <div className="pole">
             <span className="pole-popis">Prístupnosť</span>
-            <Select meno="accessLevel" volby={codelistOptions("accessLevel")} predvolena={d.accessLevel ?? "internal"} popisPola="Prístupnosť" />
+            <Select name="accessLevel" options={codelistOptions("accessLevel")} initial={d.accessLevel ?? "internal"} fieldLabel="Prístupnosť" />
           </div>
 
           <div className="pole">
             <span className="pole-popis">Jazyk dokumentu</span>
-            <Select meno="language" volby={codelistOptions("language")} predvolena={d.language ?? "sk"} popisPola="Jazyk dokumentu" />
+            <Select name="language" options={codelistOptions("language")} initial={d.language ?? "sk"} fieldLabel="Jazyk dokumentu" />
           </div>
 
           <div className="pole">
             <span className="pole-popis">Druh</span>
             <Select
-              meno="category"
-              volby={[{ hodnota: "", popis: "— neurčené —" }, ...codelistOptions("category", extras)]}
-              predvolena={d.category ?? ""}
-              popisPola="Druh"
+              name="category"
+              options={[{ value: "", label: "— neurčené —" }, ...codelistOptions("category", extras)]}
+              initial={d.category ?? ""}
+              fieldLabel="Druh"
             />
           </div>
 
           <div className="pole">
             <span className="pole-popis">Značky</span>
             <TagSelect
-              meno="tags"
-              ponuka={codelistOptions("tags", extras).map(v => ({ hodnota: v.hodnota }))}
-              vybrane={d.tags}
-              popisNovej="Nová značka"
+              name="tags"
+              options={codelistOptions("tags", extras).map(v => ({ value: v.value }))}
+              selected={d.tags}
+              newLabel="Nová značka"
             />
           </div>
 
@@ -142,14 +142,14 @@ export default async function DocumentDetailPage({
         <div className="pole" style={{ flex: "1 1 260px", margin: 0 }}>
           <span className="pole-popis">Priečinok</span>
           <Select
-            meno="folderId"
-            predvolena={d.folderId ?? ""}
-            popisPola="Priečinok"
-            volby={[
-              { hodnota: "", popis: "— nezaradené —" },
+            name="folderId"
+            initial={d.folderId ?? ""}
+            fieldLabel="Priečinok"
+            options={[
+              { value: "", label: "— nezaradené —" },
               ...folderTree.map(r => ({
-                hodnota: r.priecinok.id,
-                popis: `${"— ".repeat(r.uroven - 1)}${r.priecinok.nazov}`,
+                value: r.folder.id,
+                label: `${"— ".repeat(r.level - 1)}${r.folder.name}`,
               })),
             ]}
           />
@@ -171,10 +171,10 @@ export default async function DocumentDetailPage({
           <p className="tichy" style={{ fontSize: 14, margin: 0 }}>
             Pôvodný súbor:{" "}
             <a href={`/api/kniznica/subor/${encodeURIComponent(d.originalFile.id)}`} target="_blank" rel="noreferrer">
-              {d.originalFile.nazov}
+              {d.originalFile.name}
             </a>{" "}
-            · nahral {d.originalFile.nahralKto} {formatDate(d.originalFile.nahraneKedy, language)}
-            {d.konverzia && ` · prevod: ${d.konverzia.sposob}`}
+            · nahral {d.originalFile.uploadedBy} {formatDate(d.originalFile.uploadedAt, language)}
+            {d.conversion && ` · prevod: ${d.conversion.method}`}
           </p>
         ) : (
           <p className="tichy" style={{ fontSize: 14, margin: 0 }}>
@@ -182,9 +182,9 @@ export default async function DocumentDetailPage({
           </p>
         )}
 
-        {d.konverzia?.upozornenia?.length ? (
+        {d.conversion?.warnings?.length ? (
           <ul className="tichy" style={{ fontSize: 13.5, margin: 0, paddingLeft: 18 }}>
-            {d.konverzia.upozornenia.map((u, i) => <li key={i}>{u}</li>)}
+            {d.conversion.warnings.map((u, i) => <li key={i}>{u}</li>)}
           </ul>
         ) : null}
 
@@ -327,13 +327,13 @@ export default async function DocumentDetailPage({
                   <div className="pole">
                     <span className="pole-popis">Ak sa mení dátum a znenie už niekto potvrdil</span>
                     <Select
-                      meno="priZmeneDatumu"
-                      predvolena=""
-                      popisPola="Ako naložiť s potvrdeniami"
-                      volby={[
-                        { hodnota: "", popis: "— rozhodnem, až keď sa spýta —" },
-                        { hodnota: "oprava", popis: "oprava zápisu, potvrdenia zostávajú" },
-                        { hodnota: "znovaPotvrdit", popis: "podstatná zmena, potvrdiť znova" },
+                      name="priZmeneDatumu"
+                      initial=""
+                      fieldLabel="Ako naložiť s potvrdeniami"
+                      options={[
+                        { value: "", label: "— rozhodnem, až keď sa spýta —" },
+                        { value: "oprava", label: "oprava zápisu, potvrdenia zostávajú" },
+                        { value: "znovaPotvrdit", label: "podstatná zmena, potvrdiť znova" },
                       ]}
                     />
                   </div>

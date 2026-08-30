@@ -28,25 +28,25 @@ const BEHAVIOUR_LABEL: Record<string, string> = {
 }
 
 export default function GoldenSetQuestion({
-  id, znenie: questionText, povodne: original, upravene: edited, vyradena: excluded, dovodVyradenia: exclusionReason,
+  id, text: questionText, original: original, edited: edited, excluded: excluded, exclusionReason: exclusionReason,
   trapType, expectedBehaviour, precedenceRule, searchMode,
-  prekryv: overlap, cudzie: foreign, dalsia: next,
+  overlap: overlap, others: foreign, next: next,
 }: {
   id: string
-  znenie: string
-  povodne: string
-  upravene: string | null
-  vyradena: boolean
-  dovodVyradenia: string | null
+  text: string
+  original: string
+  edited: string | null
+  excluded: boolean
+  exclusionReason: string | null
   trapType: string | null
   expectedBehaviour: string
   precedenceRule: string | null
   searchMode: string
   /** Má otázku posúdiť viac ľudí nezávisle? */
-  prekryv: boolean
+  overlap: boolean
   /** Posudky ostatných. Pri prekryve prázdne, kým neposúdim sám. */
-  cudzie: { hodnotitel: string; spravna: 0 | 1 | null }[]
-  dalsia: string | null
+  others: { reviewer: string; correct: 0 | 1 | null }[]
+  next: string | null
 }) {
   const [text, setText] = useState(questionText)
   const [editing, setEditing] = useState(false)
@@ -103,13 +103,13 @@ export default function GoldenSetQuestion({
           className="karta"
           style={{
             fontSize: 14, lineHeight: 1.6,
-            borderColor: foreign.some(c => c.spravna !== null) ? "var(--line)" : "var(--line)",
+            borderColor: foreign.some(c => c.correct !== null) ? "var(--line)" : "var(--line)",
           }}
         >
           <div style={{ fontWeight: 600, marginBottom: 8 }}>Ako to posúdili ostatní</div>
           {foreign.map((c, i) => (
             <div key={i} className="tichy" style={{ fontSize: 13.5 }}>
-              {c.hodnotitel} — {c.spravna === 1 ? "správna" : c.spravna === 0 ? "nesprávna" : "neposúdené"}
+              {c.reviewer} — {c.correct === 1 ? "správna" : c.correct === 0 ? "nesprávna" : "neposúdené"}
             </div>
           ))}
         </div>
@@ -144,7 +144,7 @@ export default function GoldenSetQuestion({
           <button
             type="button"
             className="tlacidlo tlacidlo--tiche"
-            onClick={() => { setExcluded(false); save({ vyradena: false }) }}
+            onClick={() => { setExcluded(false); save({ excluded: false }) }}
           >
             Vrátiť do sady
           </button>
@@ -174,7 +174,7 @@ export default function GoldenSetQuestion({
                     type="button"
                     className="tlacidlo"
                     style={{ padding: "7px 14px", fontSize: 14 }}
-                    onClick={() => { setEditing(false); save({ upraveneZnenie: text }) }}
+                    onClick={() => { setEditing(false); save({ editedText: text }) }}
                   >
                     Uložiť znenie
                   </button>
@@ -191,7 +191,7 @@ export default function GoldenSetQuestion({
                       type="button"
                       className="tlacidlo tlacidlo--tiche"
                       style={{ padding: "7px 14px", fontSize: 14 }}
-                      onClick={() => { setText(original); setEditing(false); save({ upraveneZnenie: "" }) }}
+                      onClick={() => { setText(original); setEditing(false); save({ editedText: "" }) }}
                     >
                       Vrátiť pôvodné
                     </button>
@@ -224,9 +224,9 @@ export default function GoldenSetQuestion({
 
           <Search
             key={text}
-            otazkaId={id}
-            prednastavena={text}
-            onPosudene={() => setReviewed(true)}
+            questionId={id}
+            preset={text}
+            onReviewed={() => setReviewed(true)}
           />
 
           <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
@@ -245,7 +245,7 @@ export default function GoldenSetQuestion({
                 if (d.trim()) {
                   setExcluded(true)
                   setReason(d)
-                  save({ vyradena: true, dovodVyradenia: d })
+                  save({ excluded: true, exclusionReason: d })
                 }
               }}
             >

@@ -180,12 +180,12 @@ export function* anthropicEvent(
   if (ev?.type === "message_start" && ev.message?.usage) {
     const u = ev.message.usage
     yield {
-      type: "tokeny",
-      tokeny: {
-        vstup: u.input_tokens ?? 0,
-        cacheZapis: u.cache_creation_input_tokens ?? 0,
-        cacheCitanie: u.cache_read_input_tokens ?? 0,
-        vystup: u.output_tokens ?? 0,
+      type: "tokens",
+      tokens: {
+        input: u.input_tokens ?? 0,
+        cacheWrite: u.cache_creation_input_tokens ?? 0,
+        cacheRead: u.cache_read_input_tokens ?? 0,
+        output: u.output_tokens ?? 0,
       },
     }
     return
@@ -196,7 +196,7 @@ export function* anthropicEvent(
   // odpoveď tak vyzerala ako hotová.
   if (ev?.type === "message_delta") {
     if (ev.usage?.output_tokens != null) {
-      yield { type: "tokeny", tokeny: { vystup: ev.usage.output_tokens } }
+      yield { type: "tokens", tokens: { output: ev.usage.output_tokens } }
     }
     if (ev.delta?.stop_reason) {
       yield { type: "koniec", dovod: String(ev.delta.stop_reason) }

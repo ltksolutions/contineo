@@ -4,7 +4,7 @@
  *     node --env-file=.env.local scripts/delete_test_data.mjs            (len ukáže)
  *     node --env-file=.env.local scripts/delete_test_data.mjs --naozaj   (zmaže)
  *
- * Kritérium je jediné a zámerne úzke: `hodnotitel: "anonym"`. Tak sa označili
+ * Kritérium je jediné a zámerne úzke: `reviewer: "anonym"`. Tak sa označili
  * odpovede z obdobia, keď ešte nebolo prihlasovanie — teda výhradne testy pri
  * stavbe. Od nasadenia má každý záznam e-mail prihláseného človeka, takže sa
  * skutočná práca hodnotiteľa nemôže zmazať ani omylom.
@@ -27,7 +27,7 @@ try {
   await client.connect()
   const col = client.db(process.env.MONGODB_DB ?? "contineo").collection("evaluations")
 
-  const filter = { hodnotitel: "anonym" }
+  const filter = { reviewer: "anonym" }
   const toDelete = await col.find(filter).toArray()
 
   if (!toDelete.length) {
@@ -37,15 +37,15 @@ try {
 
   console.log(`Nájdených ${toDelete.length} záznamov od „anonym":\n`)
   for (const z of toDelete) {
-    const when = z.vytvorene?.toISOString?.().slice(0, 16).replace("T", " ") ?? "?"
-    console.log(`  ${when}  ${z.otazkaId ?? "(voľný dotaz)"}  „${(z.otazka ?? "").slice(0, 60)}"`)
-    console.log(`              správna: ${z.spravna}, halucinácia: ${z.halucinacia}`)
+    const when = z.createdAt?.toISOString?.().slice(0, 16).replace("T", " ") ?? "?"
+    console.log(`  ${when}  ${z.questionId ?? "(voľný dotaz)"}  „${(z.question ?? "").slice(0, 60)}"`)
+    console.log(`              správna: ${z.correct}, halucinácia: ${z.hallucination}`)
   }
   console.log()
 
   // Poistka: keby sa niekedy zmenilo, ako sa označuje neprihlásený, nech to
   // radšej spadne, než aby to zmazalo prácu človeka.
-  const withEmail = toDelete.filter(z => String(z.hodnotitel ?? "").includes("@"))
+  const withEmail = toDelete.filter(z => String(z.reviewer ?? "").includes("@"))
   if (withEmail.length) {
     console.error(`${BAD} Medzi nájdenými je ${withEmail.length} záznamov s e-mailom. Nemažem nič.`)
     process.exit(1)

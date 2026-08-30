@@ -66,7 +66,7 @@ try {
     // Polia zo seedu — tie sa prepisujú vždy, sú našou pravdou.
     const fromSeed = {
       id: q.id,
-      povodneZnenie: q.question,
+      originalText: q.question,
       searchMode: q.searchMode ?? "hybrid",
       sectionKey: q.sectionKey ?? null,
       companyCode: q.companyCode ?? "SFZ",
@@ -81,10 +81,10 @@ try {
       await (dryRun ? Promise.resolve() : col.insertOne({
         ...fromSeed,
         // Prácu hodnotiteľa zakladáme prázdnu; seed do nej nikdy nesiahne.
-        upraveneZnenie: null,
-        vyradena: false,
-        dovodVyradenia: null,
-        vytvorene: new Date(),
+        editedText: null,
+        excluded: false,
+        exclusionReason: null,
+        createdAt: new Date(),
       }))
       created++
       continue
@@ -95,7 +95,7 @@ try {
     // znamenalo zmazať hodiny odbornej práce pri rutinnom reimporte.
     await (dryRun ? Promise.resolve() : col.updateOne({ id: q.id }, { $set: fromSeed }))
     updated++
-    if (existing.upraveneZnenie) edited++
+    if (existing.updatedAtZnenie) edited++
   }
 
   console.log()

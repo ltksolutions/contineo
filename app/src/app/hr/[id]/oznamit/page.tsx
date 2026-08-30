@@ -45,8 +45,8 @@ export default async function NotifyPage({
 
   const allUnacknowledged = await notAcknowledged(code, id)
   // Kto z oddelenia odišiel, sa ukazuje na detaile, ale e-mail nedostane (D50).
-  const recipients = allUnacknowledged.filter(o => !o.byvaly)
-  const former = allUnacknowledged.filter(o => o.byvaly)
+  const recipients = allUnacknowledged.filter(o => !o.former)
+  const former = allUnacknowledged.filter(o => o.former)
   const branding = brandingView(ctx.tenant)
   const host = await requestHostname()
   const language = normalizeLanguage(ctx.person.language)

@@ -54,7 +54,7 @@ export interface Department {
   companyCode: string
   /** Nemenné UUID. Názov sa mení, väzby na osobách nie. */
   id: string
-  nazov: string
+  name: string
   /** `null` = koreňové oddelenie. */
   parentId: string | null
   /**
@@ -64,7 +64,7 @@ export interface Department {
    * výborom bez ohľadu na to, ako sa volajú. Chýbajúce poradie znamená
    * „zatiaľ neurčené" — vtedy rozhoduje názov, ako doteraz.
    */
-  poradie?: number
+  order?: number
   createdAt: Date
   createdBy: string
   updatedAt?: Date
@@ -94,11 +94,11 @@ export function children(all: Department[], parentId: string | null): Department
   return all
     .filter(o => (o.parentId ?? null) === parentId)
     .sort((a, b) => {
-      const pa = a.poradie, pb = b.poradie
+      const pa = a.order, pb = b.order
       if (typeof pa === "number" && typeof pb === "number") return pa - pb
       if (typeof pa === "number") return -1
       if (typeof pb === "number") return 1
-      return a.nazov.localeCompare(b.nazov, "sk")
+      return a.name.localeCompare(b.name, "sk")
     })
 }
 
@@ -186,14 +186,14 @@ export function canMove(
 
 /** Strom sploštený do zoznamu s hĺbkou — na výber a na výpis. */
 export interface DepartmentRow {
-  oddelenie: Department
-  uroven: number
+  department: Department
+  level: number
 }
 
 export function flattenTree(all: Department[], parentId: string | null = null, level = 1): DepartmentRow[] {
   const out: DepartmentRow[] = []
   for (const o of children(all, parentId)) {
-    out.push({ oddelenie: o, uroven: level })
+    out.push({ department: o, level: level })
     if (level < MAX_DEPTH) out.push(...flattenTree(all, o.id, level + 1))
   }
   return out
@@ -225,14 +225,14 @@ export async function createDepartment(
   // Rovnaký názov pod tým istým rodičom je takmer vždy preklep alebo dvojité
   // odoslanie formulára — a dve oddelenia s rovnakým názvom vedľa seba sa
   // v zozname nedajú rozlíšiť.
-  if (children(all, parentId).some(o => o.nazov.toLowerCase() === actorName.toLowerCase())) {
+  if (children(all, parentId).some(o => o.name.toLowerCase() === actorName.toLowerCase())) {
     throw new DepartmentError(`Na tomto mieste už oddelenie „${actorName}" je.`)
   }
 
   const o: Department = {
     companyCode,
     id: crypto.randomUUID(),
-    nazov: actorName,
+    name: actorName,
     parentId: parentId ?? null,
     createdAt: new Date(),
     createdBy: actor,
@@ -240,9 +240,9 @@ export async function createDepartment(
   const col = await getCollection<Department>(DEPARTMENTS_COLLECTION)
   await col.insertOne(o as never)
   await writeAudit({
-    companyCode, predmet: "oddelenie", akcia: "zalozene", aktor: actor,
-    cielId: o.id, cielPopis: o.nazov,
-    zmeny: { parentId: { na: o.parentId } },
+    companyCode, subject: "department", action: "created", actor: actor,
+    targetId: o.id, targetLabel: o.name,
+    changes: { parentId: { to: o.parentId } },
   })
   return o
 }
@@ -261,12 +261,12 @@ export async function renameDepartment(
 
   await col.updateOne(
     { companyCode, id },
-    { $set: { nazov: actorName, updatedAt: new Date(), updatedBy: actor } },
+    { $set: { name: actorName, updatedAt: new Date(), updatedBy: actor } },
   )
   await writeAudit({
-    companyCode, predmet: "oddelenie", akcia: "premenovane", aktor: actor,
-    cielId: id, cielPopis: actorName,
-    zmeny: { nazov: { z: before.nazov, na: actorName } },
+    companyCode, subject: "department", action: "renamed", actor: actor,
+    targetId: id, targetLabel: actorName,
+    changes: { name: { from: before.name, to: actorName } },
   })
 }
 
@@ -300,12 +300,12 @@ export async function moveDepartment(
   )
   const affectedCount = await recomputePaths(companyCode)
   await writeAudit({
-    companyCode, predmet: "oddelenie", akcia: "presunute", aktor: actor,
-    cielId: id, cielPopis: before.nazov,
-    zmeny: { parentId: { z: before.parentId, na: newParentId ?? null } },
+    companyCode, subject: "department", action: "moved", actor: actor,
+    targetId: id, targetLabel: before.name,
+    changes: { parentId: { from: before.parentId, to: newParentId ?? null } },
     // Presun mení, koho sa týkajú pridelenia celého podstromu. Počet je tu
     // preto, aby bolo pri kontrole vidieť rozsah, nielen fakt zmeny.
-    poznamka: `prepočítané cesty ${affectedCount} osobám`,
+    note: `prepočítané cesty ${affectedCount} osobám`,
   })
 }
 
@@ -332,8 +332,8 @@ export async function deleteDepartment(companyCode: string, id: string, actor: s
   const before = await col.findOne({ companyCode, id })
   await col.deleteOne({ companyCode, id })
   await writeAudit({
-    companyCode, predmet: "oddelenie", akcia: "zrusene", aktor: actor,
-    cielId: id, cielPopis: before?.nazov ?? null,
+    companyCode, subject: "department", action: "deleted", actor: actor,
+    targetId: id, targetLabel: before?.name ?? null,
   })
 }
 
@@ -440,9 +440,9 @@ export async function assignPerson(
     } as never,
   )
   await writeAudit({
-    companyCode, predmet: "osoba", akcia: "zmenene", aktor: actor,
-    cielId: personId, cielPopis: person.fullName,
-    zmeny: { departmentId: { z: person.departmentId ?? null, na: departmentId ?? null } },
+    companyCode, subject: "person", action: "changed", actor: actor,
+    targetId: personId, targetLabel: person.fullName,
+    changes: { departmentId: { from: person.departmentId ?? null, to: departmentId ?? null } },
   })
 }
 
@@ -479,9 +479,9 @@ export async function shiftDepartment(
 
   await saveOrder(companyCode, sorted.map(o => o.id), actor)
   await writeAudit({
-    companyCode, predmet: "oddelenie", akcia: "preusporiadane", aktor: actor,
-    cielId: id, cielPopis: self.nazov,
-    poznamka: `posunuté ${direction} medzi súrodencami`,
+    companyCode, subject: "department", action: "reordered", actor: actor,
+    targetId: id, targetLabel: self.name,
+    note: `posunuté ${direction} medzi súrodencami`,
   })
 }
 
@@ -514,7 +514,7 @@ export async function saveOrder(
   for (const [i, x] of orderedIds.entries()) {
     await col.updateOne(
       { companyCode, id: x },
-      { $set: { poradie: i, updatedAt: current, updatedBy: actor } },
+      { $set: { order: i, updatedAt: current, updatedBy: actor } },
     )
   }
 }

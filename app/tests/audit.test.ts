@@ -13,7 +13,7 @@ describe("rozdiel dvoch stavov", () => {
   it("zapisuje len to, co sa naozaj zmenilo", () => {
     const r = diff({ meno: "Jan", jazyk: "sk" }, { meno: "Jan", jazyk: "en" })
     expect(Object.keys(r)).toEqual(["jazyk"])
-    expect(r.jazyk).toEqual({ z: "sk", na: "en" })
+    expect(r.jazyk).toEqual({ from: "sk", to: "en" })
   })
 
   it("prazdny rozdiel je prazdny objekt", () => {
@@ -22,8 +22,8 @@ describe("rozdiel dvoch stavov", () => {
   })
 
   it("pribudnute a odobrane pole je tiez zmena", () => {
-    expect(diff({}, { rola: "hr" })).toEqual({ rola: { z: null, na: "hr" } })
-    expect(diff({ rola: "hr" }, {})).toEqual({ rola: { z: "hr", na: null } })
+    expect(diff({}, { rola: "hr" })).toEqual({ rola: { from: null, to: "hr" } })
+    expect(diff({ rola: "hr" }, {})).toEqual({ rola: { from: "hr", to: null } })
   })
 
   it("zoznamy sa porovnavaju podla obsahu aj poradia", () => {
@@ -40,7 +40,7 @@ describe("rozdiel dvoch stavov", () => {
 
   it("tajomstvo sa nikdy nezapise, ani stare ani nove", () => {
     const r = diff({ clientSecret: "stare" }, { clientSecret: "nove" })
-    expect(r.clientSecret).toEqual({ na: "(zmenené)" })
+    expect(r.clientSecret).toEqual({ to: "(zmenené)" })
     expect(JSON.stringify(r)).not.toContain("stare")
     expect(JSON.stringify(r)).not.toContain("nove")
   })

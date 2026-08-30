@@ -33,7 +33,7 @@ export interface GenerateOptions {
    * aby sa dalo povedať, ktorá časť reťaze zožrala čas — D9 meria
    * p95 po prvý token a bez rozpadu je to len jedno číslo bez príčiny.
    */
-  casy?: Record<string, number>
+  timings?: Record<string, number>
 }
 
 // ── Zostavenie systémového promptu ──────────────────────────────────────────
@@ -100,10 +100,10 @@ export function generateAnswer(opts: GenerateOptions): ReadableStream {
             encode({ type: "token", token: ev.text })
           } else if (ev.type === "koniec") {
             stopReason = ev.dovod
-          } else if (ev.type === "tokeny") {
+          } else if (ev.type === "tokens") {
             // Zlučujeme, nie prepisujeme: vstup príde v prvej udalosti,
             // výstup až v poslednej. Prepis by jedno z toho zahodil.
-            Object.assign(tokens, ev.tokeny)
+            Object.assign(tokens, ev.tokens)
           } else {
             citations.push(ev.citation)
             encode({ type: "citation", citation: ev.citation })
@@ -117,7 +117,7 @@ export function generateAnswer(opts: GenerateOptions): ReadableStream {
           model: generation.model,
           provider: generation.kind,
           verifiedCitations: generation.supportsCitations,
-          casy: opts.casy,
+          timings: opts.timings,
           // "max_tokens" znamená useknutú odpoveď — klient to musí povedať
           // nahlas, inak si čitateľ odnesie neúplný záver ako úplný.
           dovodUkoncenia: stopReason,

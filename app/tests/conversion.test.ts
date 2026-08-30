@@ -53,7 +53,7 @@ describe("prevod", () => {
   it("markdown sa nemeni", async () => {
     const r = await convert("norma.md", Buffer.from("# Článok 1\n\nText normy.\n"))
     expect(r.markdown).toBe("# Článok 1\n\nText normy.")
-    expect(r.sposob).toBe("bez prevodu")
+    expect(r.method).toBe("bez prevodu")
   })
 
   it("prazdny subor sa odmietne", async () => {
@@ -71,12 +71,12 @@ describe("prevod", () => {
     const data = XLSX.write(wb, { type: "buffer", bookType: "xlsx" }) as Buffer
 
     const r = await convert("sadzobnik.xlsx", data)
-    expect(r.typ).toBe("xlsx")
+    expect(r.type).toBe("xlsx")
     expect(r.markdown).toContain("## Sadzobník")
     expect(r.markdown).toContain("| Kód | Názov |")
     expect(r.markdown).toContain("Prvý \\| s rúrou")
     // Upozornenie o hlavicke je sucast vysledku, nie ozdoba: prvy riadok
     // nemusi byt hlavicka a clovek to ma vidiet.
-    expect(r.upozornenia.join(" ")).toMatch(/hlavičk/i)
+    expect(r.warnings.join(" ")).toMatch(/hlavičk/i)
   })
 })

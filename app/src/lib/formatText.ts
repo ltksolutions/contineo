@@ -18,9 +18,9 @@ export type Segment =
   | { druh: "tucne"; text: string }
 
 export type Block =
-  | { druh: "odsek"; useky: Segment[] }
-  | { druh: "nadpis"; useky: Segment[]; uroven: number }
-  | { druh: "zoznam"; polozky: Segment[][]; cislovany: boolean }
+  | { druh: "odsek"; segments: Segment[] }
+  | { druh: "nadpis"; segments: Segment[]; level: number }
+  | { druh: "zoznam"; items: Segment[][]; numbered: boolean }
 
 const BULLET = /^\s*[-*•]\s+(.*)$/
 const NUMBERED = /^\s*(\d+)[.)]\s+(.*)$/
@@ -84,19 +84,19 @@ export function toBlocks(text: string): Block[] {
   const lines = text.split("\n")
 
   let paragraph: string[] = []
-  let list: { polozky: string[]; cislovany: boolean } | null = null
+  let list: { items: string[]; numbered: boolean } | null = null
 
   const closeParagraph = () => {
     if (!paragraph.length) return
-    blocks.push({ druh: "odsek", useky: splitInline(paragraph.join(" ")) })
+    blocks.push({ druh: "odsek", segments: splitInline(paragraph.join(" ")) })
     paragraph = []
   }
   const closeList = () => {
     if (!list) return
     blocks.push({
       druh: "zoznam",
-      polozky: list.polozky.map(splitInline),
-      cislovany: list.cislovany,
+      items: list.items.map(splitInline),
+      numbered: list.numbered,
     })
     list = null
   }
@@ -116,8 +116,8 @@ export function toBlocks(text: string): Block[] {
       closeList()
       blocks.push({
         druh: "nadpis",
-        uroven: heading[1].length,
-        useky: splitInline(heading[2]),
+        level: heading[1].length,
+        segments: splitInline(heading[2]),
       })
       continue
     }
@@ -131,8 +131,8 @@ export function toBlocks(text: string): Block[] {
       // Koncová dvojbodka patrí k vete pod nadpisom, nie k nadpisu; model
       // ju píše dnu aj von z hviezdičiek, takže sa orezáva tu.
       blocks.push({
-        druh: "nadpis", uroven: 3,
-        useky: [{ druh: "text", text: subheading[1].replace(/[:：]\s*$/, "") }],
+        druh: "nadpis", level: 3,
+        segments: [{ druh: "text", text: subheading[1].replace(/[:：]\s*$/, "") }],
       })
       continue
     }
@@ -145,15 +145,15 @@ export function toBlocks(text: string): Block[] {
       const numbered = Boolean(number)
       const content = (bullet?.[1] ?? number?.[2] ?? "").trim()
       // Zmena typu zoznamu uprostred = nový zoznam.
-      if (list && list.cislovany !== numbered) closeList()
-      if (!list) list = { polozky: [], cislovany: numbered }
-      list.polozky.push(content)
+      if (list && list.numbered !== numbered) closeList()
+      if (!list) list = { items: [], numbered: numbered }
+      list.items.push(content)
       continue
     }
 
     // Pokračovanie odrážky (odsadený riadok pod ňou).
     if (list && /^\s{2,}/.test(line)) {
-      list.polozky[list.polozky.length - 1] += " " + trimmed
+      list.items[list.items.length - 1] += " " + trimmed
       continue
     }
 

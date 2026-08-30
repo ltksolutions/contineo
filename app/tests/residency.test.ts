@@ -49,15 +49,15 @@ const euFull = checkResidency(profile({ dataResidency: "eu-full" }))
 t("eu-full odmietne cloudovú trojicu", euFull.length === 3,
   JSON.stringify(euFull.map(v => v.adapter)))
 t("eu-full pomenuje $rerank ako spracovanie mimo EÚ",
-  euFull.some(v => v.adapter === "rerank" && v.lokalita === "mimo-eu"))
+  euFull.some(v => v.adapter === "rerank" && v.location === "mimo-eu"))
 // O5 a O6 uzavreté 2026-07-26 — obe sú doložene mimo EÚ, nie neznáme.
 t("eu-full odmietne atlas-auto (Google LLC, US — zoznam subprocesorov)",
-  euFull.some(v => v.adapter === "embedding" && v.lokalita === "mimo-eu"))
+  euFull.some(v => v.adapter === "embedding" && v.location === "mimo-eu"))
 t("eu-full odmietne priame Anthropic API (US infraštruktúra)",
-  euFull.some(v => v.adapter === "generation" && v.lokalita === "mimo-eu"))
+  euFull.some(v => v.adapter === "generation" && v.location === "mimo-eu"))
 t("eu-full prepustí vlastnú trojicu",
   checkResidency(custom({ dataResidency: "eu-full" })).length === 0,
-  JSON.stringify(checkResidency(custom({ dataResidency: "eu-full" })).map(v => v.sprava)))
+  JSON.stringify(checkResidency(custom({ dataResidency: "eu-full" })).map(v => v.message)))
 
 // ── on-prem a air-gap ────────────────────────────────────────────────────────
 
@@ -90,7 +90,7 @@ const foreign = custom({
   },
 } as Partial<TenantProfile>)
 t("openai na verejnú doménu sa NEráta ako vlastná infraštruktúra",
-  checkResidency(foreign).some(v => v.adapter === "generation" && v.lokalita === "neznama"),
+  checkResidency(foreign).some(v => v.adapter === "generation" && v.location === "neznama"),
   JSON.stringify(locationOverview(foreign)))
 
 for (const [url, expected] of [
@@ -128,15 +128,15 @@ const t2Cloud = checkIsolation(profile({ tier: "T2" }))
 t("T2 odmietne zdieľané adaptéry", t2Cloud.length === 3,
   JSON.stringify(t2Cloud.map(v => v.adapter)))
 t("T2 pomenuje Automated Embedding",
-  t2Cloud.some(v => v.adapter === "embedding" && v.izolacia === "zdielana"))
+  t2Cloud.some(v => v.adapter === "embedding" && v.isolation === "zdielana"))
 t("T2 pomenuje $rerank",
-  t2Cloud.some(v => v.adapter === "rerank" && v.izolacia === "zdielana"))
+  t2Cloud.some(v => v.adapter === "rerank" && v.isolation === "zdielana"))
 t("T2 pomenuje priame Anthropic API",
-  t2Cloud.some(v => v.adapter === "generation" && v.izolacia === "zdielana"))
+  t2Cloud.some(v => v.adapter === "generation" && v.isolation === "zdielana"))
 
 t("T2 prepustí vlastnú trojicu",
   checkIsolation(custom({ tier: "T2" })).length === 0,
-  JSON.stringify(checkIsolation(custom({ tier: "T2" })).map(v => v.sprava)))
+  JSON.stringify(checkIsolation(custom({ tier: "T2" })).map(v => v.message)))
 
 // Vyhradený účet nie je vyhradený hardvér — Bedrock beží na infraštruktúre
 // AWS spoločnej pre zákazníkov, takže na T2 neprejde ani v EU regióne.
@@ -150,7 +150,7 @@ const t2Bedrock = checkIsolation(custom({
 } as Partial<TenantProfile>))
 t("T2 odmietne Bedrock aj v EU regióne",
   t2Bedrock.some(v => v.adapter === "generation"),
-  JSON.stringify(t2Bedrock.map(v => v.sprava)))
+  JSON.stringify(t2Bedrock.map(v => v.message)))
 
 // Cudzia adresa pri openai — nevieme, či inštancia patrí len nám.
 const t2Cudzia = checkIsolation(custom({
@@ -162,15 +162,15 @@ const t2Cudzia = checkIsolation(custom({
   },
 } as Partial<TenantProfile>))
 t("T2 odmietne openai na cudzej adrese ako neznámu izoláciu",
-  t2Cudzia.some(v => v.adapter === "generation" && v.izolacia === "neznama"),
-  JSON.stringify(t2Cudzia.map(v => v.sprava)))
+  t2Cudzia.some(v => v.adapter === "generation" && v.isolation === "neznama"),
+  JSON.stringify(t2Cudzia.map(v => v.message)))
 
 // ── T3 musí sedieť s air-gapom ───────────────────────────────────────────────
 
 const t3Bez = checkIsolation(custom({ tier: "T3", dataResidency: "eu-full" }))
 t("T3 bez air-gapu je porušenie",
   t3Bez.some(v => v.adapter === "profil"),
-  JSON.stringify(t3Bez.map(v => v.sprava)))
+  JSON.stringify(t3Bez.map(v => v.message)))
 t("T3 + air-gap + vlastná trojica prejde",
   checkIsolation(custom({ tier: "T3", dataResidency: "air-gap" })).length === 0)
 

@@ -171,7 +171,7 @@ export async function acknowledge(
   try {
     if (actor.departmentId) {
       const tree = await allDepartments(actor.companyCode)
-      departmentNames = pathTo(tree, actor.departmentId).map(o => o.nazov)
+      departmentNames = pathTo(tree, actor.departmentId).map(o => o.name)
     }
   } catch (e) {
     console.error("[acknowledgements] oddelenie sa nepodarilo prečítať:", e)

@@ -90,18 +90,18 @@ export default async function NewDocumentPage({
             identifikátor (<code>{ctx.tenant.companyCode.toLowerCase()}:kluc</code>).
             <strong> Ten istý kľúč znamená ten istý dokument</strong> — nahratie naň založí
             nové znenie, nie druhý dokument. Existujúce:{" "}
-            {CODELISTS.sectionKey.polozky.slice(0, 8).map(p => p.key).join(", ")}.
+            {CODELISTS.sectionKey.items.slice(0, 8).map(p => p.key).join(", ")}.
           </span>
         </label>
 
         <div className="pole">
           <span className="pole-popis">Pôsobnosť</span>
-          <Select meno="scope" volby={codelistOptions("scope")} predvolena="company" popisPola="Pôsobnosť" />
+          <Select name="scope" options={codelistOptions("scope")} initial="company" fieldLabel="Pôsobnosť" />
         </div>
 
         <div className="pole">
           <span className="pole-popis">Prístupnosť</span>
-          <Select meno="accessLevel" volby={codelistOptions("accessLevel")} predvolena="internal" popisPola="Prístupnosť" />
+          <Select name="accessLevel" options={codelistOptions("accessLevel")} initial="internal" fieldLabel="Prístupnosť" />
           <span className="tichy pole-napoveda">
             <code>internal</code> vidia len ľudia organizácie, <code>public</code> ktokoľvek prihlásený.
           </span>
@@ -109,7 +109,7 @@ export default async function NewDocumentPage({
 
         <div className="pole">
           <span className="pole-popis">Jazyk dokumentu</span>
-          <Select meno="language" volby={codelistOptions("language")} predvolena={ctx.tenant.defaultLanguage ?? "sk"} popisPola="Jazyk dokumentu" />
+          <Select name="language" options={codelistOptions("language")} initial={ctx.tenant.defaultLanguage ?? "sk"} fieldLabel="Jazyk dokumentu" />
           <span className="tichy pole-napoveda">
             Jazyk, v ktorom je norma napísaná. Nič neprekladáme — dokument v inom jazyku
             je samostatný dokument.
@@ -118,16 +118,16 @@ export default async function NewDocumentPage({
 
         <div className="pole">
           <span className="pole-popis">Druh</span>
-          <Select meno="category" volby={[{ hodnota: "", popis: "— neurčené —" }, ...codelistOptions("category", extras)]} predvolena="" popisPola="Druh" />
+          <Select name="category" options={[{ value: "", label: "— neurčené —" }, ...codelistOptions("category", extras)]} initial="" fieldLabel="Druh" />
         </div>
 
         <div className="pole">
           <span className="pole-popis">Značky</span>
           <TagSelect
-            meno="tags"
-            ponuka={codelistOptions("tags", extras).map(v => ({ hodnota: v.hodnota }))}
-            vybrane={[]}
-            popisNovej="Nová značka"
+            name="tags"
+            options={codelistOptions("tags", extras).map(v => ({ value: v.value }))}
+            selected={[]}
+            newLabel="Nová značka"
           />
         </div>
 

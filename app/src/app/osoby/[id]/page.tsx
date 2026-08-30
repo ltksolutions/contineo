@@ -24,10 +24,10 @@ import { normalizeQuery, type RawQuery } from "@/lib/urlParams"
 export const dynamic = "force-dynamic"
 
 const TYPES = [
-  { hodnota: "employee", popis: "zamestnanec" },
-  { hodnota: "external", popis: "externý" },
-  { hodnota: "referee", popis: "rozhodca" },
-  { hodnota: "official", popis: "funkcionár" },
+  { value: "employee", label: "zamestnanec" },
+  { value: "external", label: "externý" },
+  { value: "referee", label: "rozhodca" },
+  { value: "official", label: "funkcionár" },
 ]
 
 /** Kód jazyka sám o sebe nepovie nič — „sk" je pre nás jasné, pre iných nie. */
@@ -93,10 +93,10 @@ export default async function PersonDetailPage({
         {o.status === "invited" ? "pozvaná, ešte sa neprihlásila"
           : o.status === "inactive" ? "vyradená — neprihlási sa"
           : `naposledy ${o.lastLoginAt ? formatDate(o.lastLoginAt, language) : "—"}`}
-        {o.konta.length > 0 && ` · prihlasuje sa cez ${o.konta.join(", ")}`}
+        {o.accounts.length > 0 && ` · prihlasuje sa cez ${o.accounts.join(", ")}`}
       </p>
 
-      <Notice sprava={message} chyba={error === "1"} spat={`/osoby/${encodeURIComponent(id)}`} />
+      <Notice message={message} error={error === "1"} back={`/osoby/${encodeURIComponent(id)}`} />
 
       <form action={savePersonAction} className="karta" style={{ padding: 20, display: "grid", gap: 16 }}>
         <input type="hidden" name="id" value={o.id} />
@@ -137,14 +137,14 @@ export default async function PersonDetailPage({
         <div className="pole">
           <span className="pole-popis">Oddelenie</span>
           <Select
-            meno="departmentId"
-            popisPola="Oddelenie"
-            predvolena={o.departmentId ?? ""}
-            volby={[
-              { hodnota: "", popis: "— bez oddelenia —" },
+            name="departmentId"
+            fieldLabel="Oddelenie"
+            initial={o.departmentId ?? ""}
+            options={[
+              { value: "", label: "— bez oddelenia —" },
               ...treeRows.map(r => ({
-                hodnota: r.oddelenie.id,
-                popis: `${"— ".repeat(r.uroven - 1)}${r.oddelenie.nazov}`,
+                value: r.department.id,
+                label: `${"— ".repeat(r.level - 1)}${r.department.name}`,
               })),
             ]}
           />
@@ -158,7 +158,7 @@ export default async function PersonDetailPage({
               <>
                 Práve jedno — oddelenie je miesto v štruktúre. Kto sa má osloviť
                 naprieč oddeleniami, na to sú skupiny nižšie.
-                {placement.length > 1 ? ` Zaradenie: ${placement.map(x => x.nazov).join(" › ")}.` : ""}
+                {placement.length > 1 ? ` Zaradenie: ${placement.map(x => x.name).join(" › ")}.` : ""}
               </>
             )}
           </span>
@@ -173,7 +173,7 @@ export default async function PersonDetailPage({
 
         <div className="pole">
           <span className="pole-popis">Typ osoby</span>
-          <Select meno="personType" volby={TYPES} predvolena={o.personType} popisPola="Typ osoby" />
+          <Select name="personType" options={TYPES} initial={o.personType} fieldLabel="Typ osoby" />
           <span className="tichy pole-napoveda">
             Evidenčný údaj. O prístupe k obsahu nerozhoduje — ten rieši organizácia
             a úroveň dokumentu.
@@ -183,10 +183,10 @@ export default async function PersonDetailPage({
         <div className="pole">
           <span className="pole-popis">Jazyk prostredia</span>
           <Select
-            meno="language"
-            volby={UI_LANGUAGES.map(l => ({ hodnota: l, popis: LANGUAGES[l] ?? l }))}
-            predvolena={o.language}
-            popisPola="Jazyk prostredia"
+            name="language"
+            options={UI_LANGUAGES.map(l => ({ value: l, label: LANGUAGES[l] ?? l }))}
+            initial={o.language}
+            fieldLabel="Jazyk prostredia"
           />
           <span className="tichy pole-napoveda">
             V čom sa s človekom rozprávame. Nie jazyk dokumentov, ktoré číta.
@@ -196,10 +196,10 @@ export default async function PersonDetailPage({
         <div className="pole">
           <span className="pole-popis">Skupiny</span>
           <TagSelect
-            meno="groups"
-            ponuka={audiences.skupiny}
-            vybrane={o.groups}
-            popisNovej="nová skupina, napr. rozhodcovia"
+            name="groups"
+            options={audiences.groups}
+            selected={o.groups}
+            newLabel="nová skupina, napr. rozhodcovia"
           />
           <span className="tichy pole-napoveda">
             Podľa nich sa prideľujú normy. Číslo je počet ľudí, ktorí skupinu
@@ -210,10 +210,10 @@ export default async function PersonDetailPage({
         <div className="pole">
           <span className="pole-popis">Trasy onboardingu</span>
           <TagSelect
-            meno="tracks"
-            ponuka={audiences.trasy}
-            vybrane={o.tracks}
-            popisNovej="nová trasa, napr. zaklad-2026"
+            name="tracks"
+            options={audiences.tracks}
+            selected={o.tracks}
+            newLabel="nová trasa, napr. zaklad-2026"
           />
         </div>
 

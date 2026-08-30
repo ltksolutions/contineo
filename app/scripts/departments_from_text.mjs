@@ -73,7 +73,7 @@ for (const o of people) {
 }
 
 const existing = await departmentCol.find({ companyCode: TENANT }).toArray()
-const byName = new Map(existing.map(u => [u.nazov.trim().toLowerCase(), u]))
+const byName = new Map(existing.map(u => [u.name.trim().toLowerCase(), u]))
 
 const withoutDepartment = people.filter(o => !(o.department ?? "").trim() && !o.departmentId)
 const alreadyPlaced = people.filter(o => o.departmentId).length
@@ -108,7 +108,7 @@ for (const [key, z] of [...groups].sort((a, b) => b[1].osoby.length - a[1].osoby
     await departmentCol.insertOne({
       companyCode: TENANT,
       id,
-      nazov: name,
+      name: name,
       parentId: null,
       createdAt: new Date(),
       createdBy: "script:utvary_z_textu",

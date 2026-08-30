@@ -20,12 +20,12 @@ export type FileType = "markdown" | "docx" | "pdf" | "xlsx" | "text"
 export interface ConversionResult {
   markdown: string
   /** Čím to prešlo — ide do záznamu, aby bolo o rok vidieť, ako text vznikol. */
-  sposob: string
+  method: string
   /**
    * Upozornenia pre človeka v editore. Nie chyby — text existuje, len s ním
    * niečo je: chýbajúce obrázky, zlúčené bunky, podozrivo málo textu.
    */
-  upozornenia: string[]
+  warnings: string[]
 }
 
 export class ConversionError extends Error {
@@ -103,7 +103,7 @@ async function fromDocx(data: Buffer): Promise<ConversionResult> {
   }
   if (!markdown) warnings.push("Z dokumentu nevyšiel žiadny text.")
 
-  return { markdown, sposob: "mammoth + turndown", upozornenia: warnings }
+  return { markdown, method: "mammoth + turndown", warnings: warnings }
 }
 
 async function fromPdf(data: Buffer): Promise<ConversionResult> {
@@ -167,7 +167,7 @@ async function fromPdf(data: Buffer): Promise<ConversionResult> {
     "PDF nemá nadpisy ani zoznamy, len polohu textu — členenie treba doplniť v editore.",
   )
 
-  return { markdown, sposob: `pdfjs (${pdfDoc.numPages} strán)`, upozornenia: warnings }
+  return { markdown, method: `pdfjs (${pdfDoc.numPages} strán)`, warnings: warnings }
 }
 
 async function fromXlsx(data: Buffer): Promise<ConversionResult> {
@@ -198,8 +198,8 @@ async function fromXlsx(data: Buffer): Promise<ConversionResult> {
   const markdown = tidied(parts.join("\n"))
   return {
     markdown,
-    sposob: `SheetJS (${workbook.SheetNames.length} hárkov)`,
-    upozornenia: [
+    method: `SheetJS (${workbook.SheetNames.length} hárkov)`,
+    warnings: [
       "Prvý riadok každého hárka sa použil ako hlavička tabuľky — over, či to sedí.",
       "Vzorce sa prepísali ako hodnoty; zlúčené bunky sa rozpadli.",
     ],
@@ -210,7 +210,7 @@ async function fromXlsx(data: Buffer): Promise<ConversionResult> {
 export async function convert(
   name: string,
   data: Buffer,
-): Promise<ConversionResult & { typ: FileType }> {
+): Promise<ConversionResult & { type: FileType }> {
   const type = detectFileType(name, data)
 
   switch (type) {
@@ -219,16 +219,16 @@ export async function convert(
       const text = tidied(data.toString("utf8"))
       if (!text) throw new ConversionError("Súbor neobsahuje žiadny text.")
       return {
-        typ: type,
+        type: type,
         markdown: text,
-        sposob: "bez prevodu",
-        upozornenia: type === "text"
+        method: "bez prevodu",
+        warnings: type === "text"
           ? ["Text sa prevzal tak, ako bol — členenie na nadpisy treba doplniť v editore."]
           : [],
       }
     }
-    case "docx": return { typ: type, ...(await fromDocx(data)) }
-    case "pdf": return { typ: type, ...(await fromPdf(data)) }
-    case "xlsx": return { typ: type, ...(await fromXlsx(data)) }
+    case "docx": return { type: type, ...(await fromDocx(data)) }
+    case "pdf": return { type: type, ...(await fromPdf(data)) }
+    case "xlsx": return { type: type, ...(await fromXlsx(data)) }
   }
 }

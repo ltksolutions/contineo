@@ -1,1 +1,4 @@
 .vercel
+
+# Zálohy pred migráciami — patria na disk, nie do repozitára.
+data/backup/

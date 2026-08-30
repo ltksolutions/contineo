@@ -47,7 +47,7 @@ export default async function PeoplePage({
         odstrihne od portálu, ale jej potvrdenia zostávajú platnými záznamami.
       </p>
 
-      <Notice sprava={message} chyba={error === "1"} spat={q ? `/osoby?q=${encodeURIComponent(q)}` : "/osoby"} />
+      <Notice message={message} error={error === "1"} back={q ? `/osoby?q=${encodeURIComponent(q)}` : "/osoby"} />
 
       <div style={{ display: "flex", gap: 10, flexWrap: "wrap", margin: "0 0 20px" }}>
         <Link className="tlacidlo" href="/osoby/nova">Pozvať osobu</Link>

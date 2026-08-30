@@ -37,7 +37,7 @@ try {
   const db = client.db(process.env.MONGODB_DB ?? "contineo")
   const col = db.collection("evaluations")
 
-  const records = await col.find({}).sort({ vytvorene: 1 }).toArray()
+  const records = await col.find({}).sort({ createdAt: 1 }).toArray()
 
   if (!records.length) {
     console.log(`${WARN} Kolekcia evaluations je prázdna — zatiaľ nikto nič nehodnotil.`)
@@ -47,32 +47,32 @@ try {
   if (last) {
     const z = records[records.length - 1]
     console.log("── posledný záznam ────────────────────────────────────")
-    console.log("otázka:      ", z.otazka)
-    console.log("otázkaId:    ", z.otazkaId ?? "(voľný dotaz)")
-    console.log("odpoveď:     ", (z.odpoved ?? "").slice(0, 120) + "…")
-    console.log("zdroje:      ", z.zdroje?.length ?? 0, "· citácie:", z.citacie?.length ?? 0)
-    console.log("správna:     ", z.spravna, "· halucinácia:", z.halucinacia)
-    console.log("§ od človeka:", z.spravneZdroje ?? "—")
-    console.log("overená odp.:", z.overenaOdpoved ? z.overenaOdpoved.slice(0, 80) + "…" : "—")
-    console.log("poznámka:    ", z.poznamka ?? "—")
-    console.log("hodnotiteľ:  ", z.hodnotitel, "· model:", z.model)
+    console.log("otázka:      ", z.question)
+    console.log("otázkaId:    ", z.questionId ?? "(voľný dotaz)")
+    console.log("odpoveď:     ", (z.answer ?? "").slice(0, 120) + "…")
+    console.log("zdroje:      ", z.sources?.length ?? 0, "· citácie:", z.citations?.length ?? 0)
+    console.log("správna:     ", z.correct, "· halucinácia:", z.hallucination)
+    console.log("§ od človeka:", z.correctSources ?? "—")
+    console.log("overená odp.:", z.verifiedAnswer ? z.verifiedAnswer.slice(0, 80) + "…" : "—")
+    console.log("poznámka:    ", z.note ?? "—")
+    console.log("hodnotiteľ:  ", z.reviewer, "· model:", z.model)
     console.log("TTFT:        ", z.ttftMs, "ms · celkovo:", z.celkovoMs, "ms")
     console.log("fázy:        ", JSON.stringify(z.casy ?? {}))
     console.log()
   }
 
-  const fromSet = records.filter(z => z.otazkaId)
-  const free = records.filter(z => !z.otazkaId)
+  const fromSet = records.filter(z => z.questionId)
+  const free = records.filter(z => !z.questionId)
 
   // Pri opakovanom hodnotení tej istej otázky platí posledné.
   const byQuestion = new Map()
-  for (const z of fromSet) byQuestion.set(z.otazkaId, z)
+  for (const z of fromSet) byQuestion.set(z.questionId, z)
 
-  const reviewed = records.filter(z => z.spravna !== null)
-  const correct = reviewed.filter(z => z.spravna === 1)
-  const hallucinations = records.filter(z => z.halucinacia === 1)
-  const withVerified = records.filter(z => z.overenaOdpoved?.trim())
-  const withParagraphs = records.filter(z => z.spravneZdroje?.trim())
+  const reviewed = records.filter(z => z.correct !== null)
+  const correct = reviewed.filter(z => z.correct === 1)
+  const hallucinations = records.filter(z => z.hallucination === 1)
+  const withVerified = records.filter(z => z.verifiedAnswer?.trim())
+  const withParagraphs = records.filter(z => z.correctSources?.trim())
 
   console.log("── zber ───────────────────────────────────────────────")
   console.log(`odpovedí spolu:        ${records.length}`)
@@ -100,10 +100,10 @@ try {
   }
 
   // Únik dát je tvrdá brána: interný obsah medzi zdrojmi verejnej odpovede.
-  const leaks = records.filter(z => z.zdroje?.some(s => s.accessLevel === "internal"))
+  const leaks = records.filter(z => z.sources?.some(s => s.accessLevel === "internal"))
   console.log(`${leaks.length === 0 ? OK : BAD} únik interného obsahu ${leaks.length}  (prah 0 — tvrdá brána)`)
 
-  const withoutCitations = records.filter(z => !z.citacie?.length)
+  const withoutCitations = records.filter(z => !z.citations?.length)
   console.log(`${WARN} odpovede bez citácie  ${withoutCitations.length}  (${pct(withoutCitations.length, records.length)} %)`)
   console.log()
 
@@ -139,9 +139,9 @@ try {
   // Posudok každého človeka zvlášť; pri opakovaní platí posledný.
   const byPerson = new Map()
   for (const z of records) {
-    if (!z.otazkaId || z.spravna === null || z.spravna === undefined) continue
-    if (!byPerson.has(z.otazkaId)) byPerson.set(z.otazkaId, new Map())
-    byPerson.get(z.otazkaId).set(z.hodnotitel ?? "anonym", z.spravna)
+    if (!z.questionId || z.correct === null || z.correct === undefined) continue
+    if (!byPerson.has(z.questionId)) byPerson.set(z.questionId, new Map())
+    byPerson.get(z.questionId).set(z.reviewer ?? "anonym", z.correct)
   }
 
   const doubled = [...byPerson].filter(([, people]) => people.size >= 2)

@@ -20,11 +20,11 @@ import type { Verdict } from "./ratings"
 
 export interface GoldenQuestion {
   id: string
-  povodneZnenie: string
+  originalText: string
   /** Znenie upravené hodnotiteľom. `null` = používa sa pôvodné. */
-  upraveneZnenie: string | null
-  vyradena: boolean
-  dovodVyradenia: string | null
+  editedText: string | null
+  excluded: boolean
+  exclusionReason: string | null
 
   searchMode: "fulltext" | "vector" | "hybrid"
   sectionKey: string | null
@@ -40,26 +40,26 @@ export interface GoldenQuestion {
 
 /** Znenie, ktoré sa má položiť — upravené má prednosť pred pôvodným. */
 export function questionText(o: GoldenQuestion): string {
-  return o.upraveneZnenie?.trim() || o.povodneZnenie
+  return o.editedText?.trim() || o.originalText
 }
 
 export interface QuestionState {
-  spravna: Verdict
-  halucinacia: Verdict
-  hodnotitel: string
-  kedy: Date
+  correct: Verdict
+  hallucination: Verdict
+  reviewer: string
+  at: Date
 }
 
 export interface QuestionWithState extends GoldenQuestion {
   /** Posudok prihláseného hodnotiteľa. */
-  stav: QuestionState | null
+  state: QuestionState | null
   /**
    * Posudky ostatných. Pri otázkach v prekryve je pole prázdne, kým
    * hodnotiteľ neposúdi sám — viď `vPrekryve()`.
    */
-  cudzie: QuestionState[]
+  others: QuestionState[]
   /** Má túto otázku posúdiť viac ľudí nezávisle? */
-  prekryv: boolean
+  overlap: boolean
   /** Komu otázka sedí najskôr — pomôcka pri rozdelení práce. */
   oblast: QuestionArea
 }
@@ -128,10 +128,10 @@ export async function loadGoldenSet(reviewer = ""): Promise<QuestionWithState[]>
   const ratings = await getCollection("evaluations")
   const reviewed = await ratings
     .find(
-      { otazkaId: { $exists: true }, spravna: { $ne: null } },
-      { projection: { otazkaId: 1, spravna: 1, halucinacia: 1, hodnotitel: 1, upravene: 1 } }
+      { questionId: { $exists: true }, correct: { $ne: null } },
+      { projection: { questionId: 1, correct: 1, hallucination: 1, reviewer: 1, updatedAt: 1 } }
     )
-    .sort({ upravene: 1 })
+    .sort({ updatedAt: 1 })
     .toArray()
 
   // Kľúč je otázka + hodnotiteľ. Zoradené vzostupne, takže pri opakovanom
@@ -139,29 +139,29 @@ export async function loadGoldenSet(reviewer = ""): Promise<QuestionWithState[]>
   // ale posudky RÔZNYCH ľudí sa navzájom neprepíšu, čo je celý zmysel.
   const byQuestion = new Map<string, Map<string, QuestionState>>()
   for (const h of reviewed) {
-    if (!h.otazkaId) continue
-    const who = h.hodnotitel ?? "anonym"
-    if (!byQuestion.has(h.otazkaId)) byQuestion.set(h.otazkaId, new Map())
-    byQuestion.get(h.otazkaId)!.set(who, {
-      spravna: h.spravna ?? null,
-      halucinacia: h.halucinacia ?? null,
-      hodnotitel: who,
-      kedy: h.upravene ?? new Date(0),
+    if (!h.questionId) continue
+    const who = h.reviewer ?? "anonym"
+    if (!byQuestion.has(h.questionId)) byQuestion.set(h.questionId, new Map())
+    byQuestion.get(h.questionId)!.set(who, {
+      correct: h.correct ?? null,
+      hallucination: h.hallucination ?? null,
+      reviewer: who,
+      at: h.updatedAt ?? new Date(0),
     })
   }
 
   return list.map(o => {
     const all = byQuestion.get(o.id) ?? new Map<string, QuestionState>()
     const own = reviewer ? all.get(reviewer) ?? null : null
-    const others = [...all.values()].filter(s => s.hodnotitel !== reviewer)
+    const others = [...all.values()].filter(s => s.reviewer !== reviewer)
     const overlap = inOverlap(o)
 
     return {
       ...o,
-      stav: own,
+      state: own,
       // Pri prekryve sa cudzie posudky odkryjú až po vlastnom.
-      cudzie: overlap && !own ? [] : others,
-      prekryv: overlap,
+      others: overlap && !own ? [] : others,
+      overlap,
       oblast: questionAreaOf(o),
     }
   })
@@ -178,16 +178,16 @@ export async function verdictCount(): Promise<Record<string, number>> {
   const col = await getCollection("evaluations")
   const records = await col
     .find(
-      { otazkaId: { $exists: true }, spravna: { $ne: null } },
-      { projection: { otazkaId: 1, hodnotitel: 1 } }
+      { questionId: { $exists: true }, correct: { $ne: null } },
+      { projection: { questionId: 1, reviewer: 1 } }
     )
     .toArray()
 
   const people = new Map<string, Set<string>>()
   for (const z of records) {
-    if (!z.otazkaId) continue
-    if (!people.has(z.otazkaId)) people.set(z.otazkaId, new Set())
-    people.get(z.otazkaId)!.add(z.hodnotitel ?? "anonym")
+    if (!z.questionId) continue
+    if (!people.has(z.questionId)) people.set(z.questionId, new Set())
+    people.get(z.questionId)!.add(z.reviewer ?? "anonym")
   }
   return Object.fromEntries([...people].map(([k, v]) => [k, v.size]))
 }
@@ -202,23 +202,23 @@ export async function loadQuestion(
 
 /** Čo smie hodnotiteľ na otázke zmeniť. */
 export interface QuestionEdit {
-  upraveneZnenie?: string | null
-  vyradena?: boolean
-  dovodVyradenia?: string | null
+  editedText?: string | null
+  excluded?: boolean
+  exclusionReason?: string | null
 }
 
 export async function editQuestion(id: string, u: QuestionEdit): Promise<boolean> {
   const col = await getCollection<GoldenQuestion>("eval_questions")
 
   const changes: Record<string, unknown> = {}
-  if (u.upraveneZnenie !== undefined) {
+  if (u.editedText !== undefined) {
     // Prázdny reťazec znamená „vrátiť pôvodné", nie „prázdna otázka".
-    const t = u.upraveneZnenie?.trim()
-    changes.upraveneZnenie = t ? t.slice(0, 1000) : null
+    const t = u.editedText?.trim()
+    changes.editedText = t ? t.slice(0, 1000) : null
   }
-  if (u.vyradena !== undefined) changes.vyradena = u.vyradena
-  if (u.dovodVyradenia !== undefined) {
-    changes.dovodVyradenia = u.dovodVyradenia?.trim().slice(0, 1000) || null
+  if (u.excluded !== undefined) changes.excluded = u.excluded
+  if (u.exclusionReason !== undefined) {
+    changes.exclusionReason = u.exclusionReason?.trim().slice(0, 1000) || null
   }
   if (!Object.keys(changes).length) return false
 
@@ -228,12 +228,12 @@ export async function editQuestion(id: string, u: QuestionEdit): Promise<boolean
 
 /** Súhrn pre ukazovateľ postupu. */
 export interface GoldenSetSummary {
-  spolu: number
+  total: number
   posudene: number
   spravne: number
   nespravne: number
   vyradene: number
-  halucinacie: number
+  hallucinations: number
   /** Koľko otázok vyžaduje dvojité posúdenie. */
   vPrekryve: number
   /** Z nich koľko už posúdili aspoň dvaja. */
@@ -241,17 +241,17 @@ export interface GoldenSetSummary {
 }
 
 export function goldenSetSummary(questions: QuestionWithState[], counts: Record<string, number> = {}): GoldenSetSummary {
-  const valid = questions.filter(o => !o.vyradena)
-  const withVerdict = valid.filter(o => o.stav?.spravna !== null && o.stav !== null)
-  const overlapping = valid.filter(o => o.prekryv)
+  const valid = questions.filter(o => !o.excluded)
+  const withVerdict = valid.filter(o => o.state?.correct !== null && o.state !== null)
+  const overlapping = valid.filter(o => o.overlap)
 
   return {
-    spolu: valid.length,
+    total: valid.length,
     posudene: withVerdict.length,
-    spravne: withVerdict.filter(o => o.stav?.spravna === 1).length,
-    nespravne: withVerdict.filter(o => o.stav?.spravna === 0).length,
-    vyradene: questions.filter(o => o.vyradena).length,
-    halucinacie: valid.filter(o => o.stav?.halucinacia === 1).length,
+    spravne: withVerdict.filter(o => o.state?.correct === 1).length,
+    nespravne: withVerdict.filter(o => o.state?.correct === 0).length,
+    vyradene: questions.filter(o => o.excluded).length,
+    hallucinations: valid.filter(o => o.state?.hallucination === 1).length,
     vPrekryve: overlapping.length,
     prekryvHotove: overlapping.filter(o => (counts[o.id] ?? 0) >= 2).length,
   }
@@ -286,7 +286,7 @@ export function agreement(allVerdicts: Map<string, QuestionState[]>): Agreement 
   for (const [questionId, verdicts] of allVerdicts) {
     if (verdicts.length < 2) continue
     comparable++
-    const values = new Set(verdicts.map(p => p.spravna))
+    const values = new Set(verdicts.map(p => p.correct))
     if (values.size === 1) matching++
     else disputed.push(questionId)
   }

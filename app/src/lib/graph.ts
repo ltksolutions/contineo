@@ -40,7 +40,7 @@ export interface GraphData {
   jobTitle?: string
   /** Napr. `sk-SK`. Prevádza sa až v `persons.ts`. */
   preferredLanguage?: string
-  fotka?: { contentType: string; data: Buffer }
+  photo?: { contentType: string; data: Buffer }
 }
 
 async function fetchWithTimeout(url: string, token: string): Promise<Response | null> {
@@ -115,7 +115,7 @@ export async function graphData(
         // Prázdna odpoveď sa tvári ako obrázok. Uložiť ju by znamenalo mať
         // v hlavičke prázdny štvorec namiesto iniciál.
         if (bytes.byteLength > 0) {
-          out.fotka = {
+          out.photo = {
             contentType: f.headers.get("content-type") ?? "image/jpeg",
             data: bytes,
           }

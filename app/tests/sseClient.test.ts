@@ -19,38 +19,38 @@ async function running() {
 // ── delenie blokov ───────────────────────────────────────────────────────────
 
 const one = splitEvents(token("Ahoj"))
-t("jedna udalosť sa prečíta", one.udalosti.length === 1)
-t("po úplnej udalosti nezostáva zvyšok", one.zvysok === "", JSON.stringify(one.zvysok))
+t("jedna udalosť sa prečíta", one.events.length === 1)
+t("po úplnej udalosti nezostáva zvyšok", one.rest === "", JSON.stringify(one.rest))
 t("token sa rozbalí",
-  one.udalosti[0].type === "token" && (one.udalosti[0] as any).token === "Ahoj")
+  one.events[0].type === "token" && (one.events[0] as any).token === "Ahoj")
 
 const three = splitEvents(token("a") + token("b") + token("c"))
-t("tri udalosti za sebou", three.udalosti.length === 3, String(three.udalosti.length))
+t("tri udalosti za sebou", three.events.length === 3, String(three.events.length))
 
 // Jadro veci: neúplná udalosť sa musí odložiť, nie zahodiť.
 const whole = token("Rozdelené")
 const partial = splitEvents(whole.slice(0, 12))
-t("neúplná udalosť sa odloží", partial.udalosti.length === 0 && partial.zvysok.length === 12,
-  `${partial.udalosti.length} udalostí, zvyšok ${partial.zvysok.length}`)
-const completed = splitEvents(partial.zvysok + whole.slice(12))
+t("neúplná udalosť sa odloží", partial.events.length === 0 && partial.rest.length === 12,
+  `${partial.events.length} udalostí, zvyšok ${partial.rest.length}`)
+const completed = splitEvents(partial.rest + whole.slice(12))
 t("po doplnení sa udalosť prečíta celá",
-  completed.udalosti.length === 1 && (completed.udalosti[0] as any).token === "Rozdelené")
+  completed.events.length === 1 && (completed.events[0] as any).token === "Rozdelené")
 
 // Prvá udalosť úplná, druhá useknutá — nesmie sa stratiť ani jedna.
 const mixed = splitEvents(token("prvy") + token("druhy").slice(0, 10))
 t("úplná prejde, neúplná počká",
-  mixed.udalosti.length === 1 && mixed.zvysok.length === 10,
-  `${mixed.udalosti.length}, zvyšok ${mixed.zvysok.length}`)
+  mixed.events.length === 1 && mixed.rest.length === 10,
+  `${mixed.events.length}, zvyšok ${mixed.rest.length}`)
 
 t("poškodený JSON sa preskočí, ostatné prejde",
-  splitEvents("data: {nie json}\n\n" + token("ok")).udalosti.length === 1)
+  splitEvents("data: {nie json}\n\n" + token("ok")).events.length === 1)
 
 t("keep-alive komentár sa ignoruje",
-  splitEvents(": ping\n\n" + token("ok")).udalosti.length === 1)
+  splitEvents(": ping\n\n" + token("ok")).events.length === 1)
 
 t("viacriadkový data blok sa spojí",
   (() => {
-    const u = splitEvents('data: {"type":"token",\ndata: "token":"X"}\n\n').udalosti
+    const u = splitEvents('data: {"type":"token",\ndata: "token":"X"}\n\n').events
     return u.length === 1 && (u[0] as any).token === "X"
   })())
 

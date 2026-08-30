@@ -74,7 +74,7 @@ export function textFingerprint(markdown: string): string {
  * že sa hashovalo niečo iné, než sa ukladá, a zmena sa neprejavila.
  */
 export function chunkingFingerprint(
-  chunks: Pick<Chunk, "chunkIndex" | "text" | "heading" | "articleRef" | "typ">[],
+  chunks: Pick<Chunk, "chunkIndex" | "text" | "heading" | "articleRef" | "kind">[],
   profile: unknown,
 ): string {
   return hash(JSON.stringify({
@@ -85,7 +85,7 @@ export function chunkingFingerprint(
       t: ch.text,
       h: ch.heading,
       a: ch.articleRef ?? null,
-      typ: ch.typ ?? "clanok",
+      typ: ch.kind ?? "clanok",
     })),
   }))
 }

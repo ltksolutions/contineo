@@ -47,7 +47,7 @@ export default function PeopleImport() {
     setBusy(true)
     try {
       const v = await runImportAction(text)
-      setResult(v.sprava)
+      setResult(v.message)
       if (v.ok) {
         setPreview(null)
         setText("")
@@ -87,7 +87,7 @@ export default function PeopleImport() {
 
       {preview && !preview.ok && (
         <p className="karta" style={{ padding: "12px 16px", fontSize: 14.5, margin: 0, color: "var(--warn-fg)" }}>
-          {preview.sprava}
+          {preview.message}
         </p>
       )}
 
@@ -98,48 +98,48 @@ export default function PeopleImport() {
           <div className="admin-udaje" style={{ marginTop: 0 }}>
             <div>
               <div className="tichy" style={{ fontSize: 12.5 }}>Riadkov</div>
-              <div style={{ fontSize: 15.5, fontWeight: 600 }}>{preview.spolu}</div>
+              <div style={{ fontSize: 15.5, fontWeight: 600 }}>{preview.total}</div>
             </div>
             <div>
               <div className="tichy" style={{ fontSize: 12.5 }}>Pribudne</div>
-              <div style={{ fontSize: 15.5, fontWeight: 600 }}>{preview.nove?.length ?? 0}</div>
+              <div style={{ fontSize: 15.5, fontWeight: 600 }}>{preview.created?.length ?? 0}</div>
             </div>
             <div>
               <div className="tichy" style={{ fontSize: 12.5 }}>Aktualizuje sa</div>
-              <div style={{ fontSize: 15.5, fontWeight: 600 }}>{preview.existujuce?.length ?? 0}</div>
+              <div style={{ fontSize: 15.5, fontWeight: 600 }}>{preview.existing?.length ?? 0}</div>
             </div>
             <div>
               <div className="tichy" style={{ fontSize: 12.5 }}>Chybných</div>
               <div
                 style={{
                   fontSize: 15.5, fontWeight: 600,
-                  color: (preview.chyby?.length ?? 0) > 0 ? "var(--warn-fg)" : "var(--muted)",
+                  color: (preview.errors?.length ?? 0) > 0 ? "var(--warn-fg)" : "var(--muted)",
                 }}
               >
-                {preview.chyby?.length ?? 0}
+                {preview.errors?.length ?? 0}
               </div>
             </div>
           </div>
 
-          {(preview.nove?.length ?? 0) > 0 && (
+          {(preview.created?.length ?? 0) > 0 && (
             <div>
               <div className="tichy pole-napoveda">Pribudnú</div>
               <p style={{ fontSize: 14, margin: "2px 0 0", overflowWrap: "anywhere" }}>
-                {preview.nove!.slice(0, 25).join(", ")}
-                {preview.nove!.length > 25 && ` … a ďalších ${preview.nove!.length - 25}`}
+                {preview.created!.slice(0, 25).join(", ")}
+                {preview.created!.length > 25 && ` … a ďalších ${preview.created!.length - 25}`}
               </p>
             </div>
           )}
 
-          {(preview.chyby?.length ?? 0) > 0 && (
+          {(preview.errors?.length ?? 0) > 0 && (
             <div>
               {/* Chybné riadky sa vypíšu menovite. „5 chybných" sa nedá opraviť. */}
               <div className="tichy pole-napoveda">Tieto riadky sa preskočia</div>
               <ul style={{ margin: "4px 0 0", paddingLeft: 20, fontSize: 14, lineHeight: 1.6 }}>
-                {preview.chyby!.slice(0, 15).map((c, i) => <li key={i}>{c}</li>)}
+                {preview.errors!.slice(0, 15).map((c, i) => <li key={i}>{c}</li>)}
               </ul>
-              {preview.chyby!.length > 15 && (
-                <p className="tichy pole-napoveda">… a ďalších {preview.chyby!.length - 15}</p>
+              {preview.errors!.length > 15 && (
+                <p className="tichy pole-napoveda">… a ďalších {preview.errors!.length - 15}</p>
               )}
             </div>
           )}
