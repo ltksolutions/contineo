@@ -8,4 +8,7 @@
  *
  * Kód sa pri presune **nezmenil ani o znak**; typy sú vedľa v `chunker.d.ts`.
  */
-export { CIEL_MIN, CIEL_MAX, odhadTokenov, ocisti, parsujStrukturu, chunkuj } from "../../src/lib/chunker.mjs"
+export {
+  CIEL_MIN, CIEL_MAX, PREDVOLENY_PROFIL, vzoryPreProfil,
+  odhadTokenov, ocisti, parsujStrukturu, chunkuj,
+} from "../../src/lib/chunker.mjs"

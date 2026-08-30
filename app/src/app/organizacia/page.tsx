@@ -22,7 +22,8 @@ import VyberFarby from "@/components/VyberFarby"
 import Oznam from "@/components/Oznam"
 import { ulozVzhlad, ulozPrihlasenie, zmazPrihlasenie, poziadaj, overDomenu, zrus } from "./akcie"
 import { zalozUtvar, premenujUtvar, presunUtvar, zrusUtvar } from "./akcie"
-import { pridajDoCiselnika, odoberZCiselnika } from "./akcie"
+import { pridajDoCiselnika, odoberZCiselnika, ulozClenenie } from "./akcie"
+import { PREDVOLENY_PROFIL } from "@/lib/chunker.mjs"
 import { POPIS_CISELNIKA, ponuka, vlastnePolozky, pouzitie } from "@/lib/ciselnikyTenanta"
 import { VLASTNE_CISELNIKY } from "@/lib/ciselniky"
 import { vsetkyOddelenia, splostiStrom, podstrom, pocty, MAX_HLBKA, hlbka } from "@/lib/oddelenia"
@@ -37,6 +38,7 @@ const ZALOZKY = [
   { kluc: "domeny", popis: "Domény" },
   { kluc: "prihlasenie", popis: "Prihlasovanie" },
   { kluc: "ciselniky", popis: "Číselníky" },
+  { kluc: "clenenie", popis: "Členenie" },
   { kluc: "audit", popis: "Audit" },
 ]
 
@@ -620,6 +622,76 @@ export default async function Organizacia({
           </section>
         ))}
       </div>
+      )}
+
+      {teraz === "clenenie" && (
+      <form action={ulozClenenie} className="karta" style={{ padding: 20, display: "grid", gap: 16 }}>
+        <input type="hidden" name="zalozka" value="clenenie" />
+
+        <div>
+          <h2 style={{ fontSize: 17, margin: "0 0 4px" }}>Členenie dokumentov na úseky</h2>
+          <p className="tichy" style={{ fontSize: 14, margin: 0 }}>
+            Vyhľadávanie nepracuje s celým dokumentom — model dostane niekoľko úsekov
+            a odpovedá z nich. Tieto hodnoty určujú, ako sa dokument na úseky reže.
+            <strong> S textom normy ani s potvrdeniami to nemá nič spoločné:</strong> členenie
+            sa dá meniť koľkokrát treba a nikomu nenaskočí povinnosť potvrdzovať znova.
+          </p>
+        </div>
+
+        <label className="pole">
+          <span className="pole-popis">Slovo, ktorým začína článok</span>
+          <input className="pole-vstup" name="slovoClanok"
+                 defaultValue={tenant.chunkovanie?.slovoClanok ?? PREDVOLENY_PROFIL.slovoClanok} />
+          <span className="tichy pole-napoveda">
+            Predvolene <code>Článok</code>. Predpisy členené na <code>§</code> alebo na
+            <code> Bod</code> sa bez tejto zmeny zlejú do jedného bloku a vyhľadávanie
+            nemá čoho chytiť. Je to <strong>slovo, nie vzor</strong> — okolie si doplní systém.
+          </span>
+        </label>
+
+        <label className="pole">
+          <span className="pole-popis">Slovo, ktorým začína príloha</span>
+          <input className="pole-vstup" name="slovoPriloha"
+                 defaultValue={tenant.chunkovanie?.slovoPriloha ?? PREDVOLENY_PROFIL.slovoPriloha} />
+          <span className="tichy pole-napoveda">
+            Prílohy stoja mimo číslovania článkov — bez rozpoznania by spadli pod posledný
+            článok a citácia by klamala.
+          </span>
+        </label>
+
+        <label className="pole">
+          <span className="pole-popis">Riadok je hlavička, keď sa opakuje viac ráz než</span>
+          <input className="pole-vstup" type="number" name="opakovaniHlavicky" min={2} max={50}
+                 defaultValue={tenant.chunkovanie?.opakovaniHlavicky ?? PREDVOLENY_PROFIL.opakovaniHlavicky} />
+          <span className="tichy pole-napoveda">
+            Hlavičky a päty sa v PDF opakujú na každej strane. Nižšie číslo odstráni viac
+            šumu, ale pri krátkom dokumente môže zožrať aj obsah.
+          </span>
+        </label>
+
+        <label className="pole">
+          <span className="pole-popis">Cieľová veľkosť úseku — od (tokenov)</span>
+          <input className="pole-vstup" type="number" name="cielMinTokenov" min={50} max={2000}
+                 defaultValue={tenant.chunkovanie?.cielMinTokenov ?? PREDVOLENY_PROFIL.cielMinTokenov} />
+        </label>
+
+        <label className="pole">
+          <span className="pole-popis">Cieľová veľkosť úseku — do (tokenov)</span>
+          <input className="pole-vstup" type="number" name="cielMaxTokenov" min={100} max={4000}
+                 defaultValue={tenant.chunkovanie?.cielMaxTokenov ?? PREDVOLENY_PROFIL.cielMaxTokenov} />
+          <span className="tichy pole-napoveda">
+            Malý úsek znamená tisíce úryvkov bez kontextu, veľký zas jeden úsek na celý
+            dokument. Predvolené <code>300–800</code> je odladené na slovenských predpisoch.
+          </span>
+        </label>
+
+        <p className="tichy" style={{ fontSize: 13.5, margin: 0 }}>
+          Uloženie <strong>nepreindexuje existujúce dokumenty</strong>. Vyskúšaj nový profil
+          najprv na jednom — v jeho detaile v knižnici je tlačidlo <em>Preindexovať</em>.
+        </p>
+
+        <div><button className="tlacidlo" type="submit">Uložiť členenie</button></div>
+      </form>
       )}
 
       {teraz === "audit" && (

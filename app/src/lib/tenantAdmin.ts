@@ -91,6 +91,13 @@ export interface TenantChange {
   hostnames?: string[]
   /** Domény, z ktorých sa človek založí sám pri prihlásení kontom (D47). */
   autoProvisionDomains?: string[]
+  chunkovanie?: {
+    slovoClanok?: string
+    slovoPriloha?: string
+    opakovaniHlavicky?: number
+    cielMinTokenov?: number
+    cielMaxTokenov?: number
+  }
 }
 
 /**
@@ -160,6 +167,23 @@ function naSet(change: TenantChange): Record<string, unknown> {
   // v ňom je, takže prázdny zoznam je vedomé „nikoho nezakladať".
   if (change.autoProvisionDomains !== undefined) {
     set.autoProvisionDomains = normalizeDomeny(change.autoProvisionDomains)
+  }
+  if (change.chunkovanie !== undefined) {
+    // Čísla sa držia v rozumnom rozsahu tu, nie v chunkeri: chunker dostane
+    // hodnotu a poslúchne ju, aj keby bola nezmyselná. Úsek na 20 tokenov
+    // znamená tisíce úryvkov bez významu, na 5000 zas jeden úsek na celý
+    // dokument — v oboch prípadoch vyhľadávanie prestane fungovať a nikto to
+    // nespojí s číslom v nastavení.
+    const c = change.chunkovanie
+    const medzi = (v: number | undefined, min: number, max: number, pred: number) =>
+      v === undefined || Number.isNaN(v) ? pred : Math.min(Math.max(Math.round(v), min), max)
+    set.chunkovanie = {
+      slovoClanok: (c.slovoClanok ?? "Článok").trim() || "Článok",
+      slovoPriloha: (c.slovoPriloha ?? "PRÍLOHA č.").trim() || "PRÍLOHA č.",
+      opakovaniHlavicky: medzi(c.opakovaniHlavicky, 2, 50, 5),
+      cielMinTokenov: medzi(c.cielMinTokenov, 50, 2000, 300),
+      cielMaxTokenov: medzi(c.cielMaxTokenov, 100, 4000, 800),
+    }
   }
   return set
 }

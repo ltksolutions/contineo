@@ -47,7 +47,13 @@
 - [x] **virtuálne priečinky + filtre** (D56) — strom, dokument v práve jednom, filter vrátane podpriečinkov
 - [x] **vlastné číselníky organizácie** (D55) — druhy dokumentov a značky v `/organizacia`
 - [x] **oprava: editor sa pri normách z importu otváral prázdny** — text je len vo `versions[]`
+- [x] **identita textu oddelená od identity členenia** (D57) — `versionId` z textu, `chunkingId` z členenia; preindexovanie nevytvára verziu a neruší potvrdenia. Migrácia deviatich noriem spustená 2026-08-30
+- [x] **profil členenia per organizácia** (D58) — slovo článku a prílohy, prah hlavičiek, veľkosť úseku; predvolený profil overený na 10 dokumentoch (10 zhôd, 0 rozdielov)
+- [x] **oprava údajov znenia** — pri zmene dátumu s existujúcimi potvrdeniami rozhodnutie človeka + povinný dôvod
+- [x] **`npm run kontrola`** (D59) — invarianty medzi dokumentmi, úsekmi a potvrdeniami
+- [ ] **`sfz:test_onboarding` nemá aktívne úseky** — seedovací skript zapisuje dokument, nie chunky. Pri testovacom dokumente to nevadí, ale kontrola to bude hlásiť
 - [ ] presun dokumentu do priečinka hromadne (zatiaľ po jednom v detaile)
+- [ ] hromadné preindexovanie všetkých dokumentov po zmene profilu (zatiaľ po jednom)
 - [ ] archivácia dokumentu z obrazovky — mazanie zámerne nie je (viažu sa potvrdenia)
 - [ ] **KB / FAQ na verejnom webe** — samostatná fáza, `CMS_KONCEPCIA.md` časť B
 - [ ] Rozšíriť `documents` o `contentType` (`document`|`web`) a `webPublish` (slug, seo, navParent, publishAt) — **D-CMS-1**

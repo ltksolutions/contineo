@@ -17,6 +17,23 @@
 export const CIEL_MIN: number
 export const CIEL_MAX: number
 
+/**
+ * Profil členenia (D58). Konfiguruje sa **slovom, nie regulárnym výrazom** —
+ * vzor od zákazníka je jednak vec, ktorú nikto neodladí, jednak spôsob, ako
+ * jedným zápisom zavesiť spracovanie celého dokumentu.
+ */
+export interface ProfilClenenia {
+  slovoClanok: string
+  slovoPriloha: string
+  opakovaniHlavicky: number
+  cielMinTokenov: number
+  cielMaxTokenov: number
+}
+
+export const PREDVOLENY_PROFIL: ProfilClenenia
+
+export function vzoryPreProfil(profil?: Partial<ProfilClenenia>): unknown
+
 export function odhadTokenov(s: string): number
 
 export interface Chunk {
@@ -53,5 +70,5 @@ export function parsujStrukturu(riadky: string[]): unknown[]
 
 export function chunkuj(
   text: string,
-  meta?: { nazovDokumentu?: string },
+  meta?: { nazovDokumentu?: string; profil?: Partial<ProfilClenenia> },
 ): { chunky: Chunk[]; statistiky: Statistiky }

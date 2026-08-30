@@ -16,7 +16,8 @@ import { redirect } from "next/navigation"
 import { revalidatePath } from "next/cache"
 import { kniznicaContext } from "@/lib/kniznica"
 import {
-  nahrajDokument, ulozKoncept, publikuj, overMetadata, idDokumentu, ulozUdaje, KniznicaError,
+  nahrajDokument, ulozKoncept, publikuj, overMetadata, idDokumentu, ulozUdaje,
+  preindexuj, opravZnenie, KniznicaError,
 } from "@/lib/kniznica.zapis"
 import { UloziskoError, nacitajSubor } from "@/lib/ulozisko"
 import { doplnkyTenanta } from "@/lib/ciselnikyTenanta"
@@ -25,13 +26,19 @@ import {
   zaradDokument, PriecinokError,
 } from "@/lib/priecinky"
 import type { Doplnky } from "@/lib/ciselniky"
+import type { ProfilClenenia } from "@/lib/chunker"
 import { precisti, prepisPdf, PrepisError } from "@/lib/prepisLlm"
 import { getCollection } from "@/lib/mongodb"
 import { DOCUMENTS_COLLECTION } from "@/lib/documents"
 import { zapisAudit } from "@/lib/audit"
 
 async function kto(): Promise<
-  { email: string; companyCode: string; doplnky: Doplnky } | null
+  {
+    email: string
+    companyCode: string
+    doplnky: Doplnky
+    profil?: Partial<ProfilClenenia>
+  } | null
 > {
   const ctx = await kniznicaContext()
   return ctx.state === "ready"
@@ -41,6 +48,8 @@ async function kto(): Promise<
         // Vlastné položky číselníkov organizácie (D55) — bez nich by
         // obrazovka ponúkala druh dokumentu, ktorý zápis vzápätí odmietne.
         doplnky: doplnkyTenanta(ctx.tenant),
+        // Profil členenia organizácie (D58). Chýbajúci znamená predvolený.
+        profil: ctx.tenant.chunkovanie,
       }
     : null
 }
@@ -141,7 +150,7 @@ export async function publikujZnenie(fd: FormData) {
       effectiveFrom: new Date(`${den}T00:00:00.000Z`),
       effectiveFromSource: textPola(fd, "effectiveFromSource"),
       changeNote: textPola(fd, "changeNote"),
-    }, ja.email)
+    }, ja.email, ja.profil)
 
     sprava = v.uzBolo
       ? "Toto znenie už publikované je — nič sa nezmenilo."
@@ -357,6 +366,61 @@ export async function zaradDoPriecinka(fd: FormData) {
     chyba = true
   }
   revalidatePath("/kniznica")
+  revalidatePath(`/kniznica/${id}`)
+  redirect(`/kniznica/${encodeURIComponent(id)}?sprava=${encodeURIComponent(sprava)}${chyba ? "&chyba=1" : ""}`)
+}
+
+/** Preindexuje dokument podľa aktuálneho profilu členenia (D57). */
+export async function preindexujDokument(fd: FormData) {
+  const ja = await kto()
+  if (!ja) redirect("/")
+
+  const id = textPola(fd, "documentId")
+  let sprava = ""
+  let chyba = false
+  try {
+    const v = await preindexuj(ja.companyCode, id, ja.email, ja.profil)
+    sprava = v.uzBolo
+      ? "Členenie je už aktuálne — nič sa nemenilo."
+      : `Preindexované: ${v.chunkov} úsekov, ${v.archivovanych} starých archivovaných. ` +
+        "Znenie ani potvrdenia sa nedotklo."
+  } catch (e) {
+    sprava = spravaChyby(e)
+    chyba = true
+  }
+
+  revalidatePath(`/kniznica/${id}`)
+  redirect(`/kniznica/${encodeURIComponent(id)}?sprava=${encodeURIComponent(sprava)}${chyba ? "&chyba=1" : ""}`)
+}
+
+/** Oprava údajov už publikovaného znenia (D57). */
+export async function opravZnenieAkcia(fd: FormData) {
+  const ja = await kto()
+  if (!ja) redirect("/")
+
+  const id = textPola(fd, "documentId")
+  let sprava = ""
+  let chyba = false
+  try {
+    const den = textPola(fd, "effectiveFrom")
+    const volba = textPola(fd, "priZmeneDatumu")
+    const v = await opravZnenie(ja.companyCode, id, textPola(fd, "versionId"), {
+      label: textPola(fd, "label") || undefined,
+      effectiveFrom: den ? new Date(`${den}T00:00:00.000Z`) : undefined,
+      effectiveFromSource: textPola(fd, "effectiveFromSource"),
+      changeNote: textPola(fd, "changeNote"),
+      dovod: textPola(fd, "dovod"),
+      priZmeneDatumu: volba === "oprava" || volba === "znovaPotvrdit" ? volba : undefined,
+    }, ja.email)
+
+    sprava = v.znovaPotvrdit
+      ? `Opravené. Znenie je označené ako vyžadujúce nové potvrdenie — týka sa to ${v.potvrdeni} ľudí.`
+      : "Opravené. Potvrdenia zostávajú platné."
+  } catch (e) {
+    sprava = spravaChyby(e)
+    chyba = true
+  }
+
   revalidatePath(`/kniznica/${id}`)
   redirect(`/kniznica/${encodeURIComponent(id)}?sprava=${encodeURIComponent(sprava)}${chyba ? "&chyba=1" : ""}`)
 }

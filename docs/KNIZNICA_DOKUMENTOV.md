@@ -151,3 +151,98 @@ bežia, typy sedia s tým, čo sa naozaj deje.
 
 Ak sa chunker bude niekedy podstatne meniť, prepis dáva zmysel — ale
 s porovnaním výstupu na všetkých deviatich normách pred a po, nie „naslepo".
+
+
+---
+
+## D57 — identita textu a identita členenia
+
+`versionId` sa počítal **z výsledných chunkov**. Malo to dobrý dôvod: keď sa
+opravil chunker, obsah súborov sa nezmenil, import všetko preskočil a
+v databáze zostalo staré zlé členenie.
+
+Lenže na `versionId` sa viažu **potvrdenia** a `trackProgress()` počíta
+„hotovo" ako *je táto verzia potvrdená*. Vyladenie chunkera by teda stovke
+ľudí ukázalo, že normu nemajú potvrdenú — ich staré potvrdenia by ukazovali
+na verziu, ktorá už neplatí, a nikto by to nespojil so zmenou členenia.
+
+Jedno číslo nieslo dve rôzne veci:
+
+| | z čoho sa počíta | čo sa naň viaže |
+|---|---|---|
+| `versionId` | **len text znenia** | potvrdenia, pridelenia, trasy |
+| `chunkingId` | verzia chunkera + profil + výsledné úseky | `document_chunks` |
+
+**Označenie, dátum platnosti ani citácia do `versionId` nevstupujú.** Sú to
+údaje *o* verzii, nie jej identita — preklep v označení sa musí dať opraviť
+bez toho, aby sa rozbili potvrdenia.
+
+Preindexovanie tak vymení úseky pri tom istom `versionId`, `versions[]` sa
+nedotkne a potvrdenia zostávajú. A keďže `chunkingId` nesie aj profil a verziu
+chunkera, stále platí to, čo pôvodné riešenie zabezpečovalo: po zmene členenia
+je vidieť, že sa preindexovať treba.
+
+### Oprava údajov znenia
+
+Preklep v označení alebo v citácii: text je ten istý, to, čo ľudia potvrdili,
+je aj po oprave pravda. Oprava sa zapíše (s povinným dôvodom), potvrdenia
+zostávajú.
+
+**Zmena dátumu platnosti je iná.** Potvrdzovacia formulka ho obsahuje doslovne
+a záznam si ju uložil ako text. Ak bol dátum zlý, tí ľudia potvrdili tvrdenie,
+ktoré nie je pravdivé; ticho im ho opraviť pod už podpísaným záznamom by
+z auditu spravilo niečo, čo sa dá spätne meniť.
+
+Preto pri zmene dátumu na znení, ktoré už niekto potvrdil, obrazovka **odmietne
+uložiť bez rozhodnutia**: buď oprava zápisu (potvrdenia zostávajú), alebo
+podstatná zmena (`requiresReacknowledgement`, D30). Systém to rozhodnúť nevie —
+nepozná, či medzi tými dvoma dátumami niekto podľa normy konal. Obe možnosti
+sa zapisujú do `versions[].opravy[]` aj do auditu.
+
+## D58 — profil členenia per organizácia
+
+Chunker sa bude ladiť často. Vlastný **kód** per zákazník by ale znamenal N
+kópií jedného pravidla, ktoré sa rozídu — a chyba v jednej sa neprejaví pádom,
+ale tým, že model odcituje nesprávny článok u jedného zákazníka o pol roka.
+
+Preto: **jeden algoritmus, parametre navonok.** V `/organizacia`, záložka
+Členenie: slovo, ktorým začína článok a príloha, prah na hlavičky a cieľová
+veľkosť úseku.
+
+**Konfiguruje sa slovom, nie regulárnym výrazom.** Vzor od zákazníka je jednak
+vec, ktorú nikto neodladí, jednak spôsob, ako jedným zápisom zavesiť
+spracovanie celého dokumentu. Slovo sa escapuje a vzor okolo neho zostáva náš.
+Čísla sa držia v rozumnom rozsahu: úsek na 20 tokenov znamená tisíce úryvkov
+bez významu, na 5000 zas jeden úsek na celý dokument — v oboch prípadoch
+vyhľadávanie prestane fungovať a nikto to nespojí s číslom v nastavení.
+
+**Predvolený profil reže presne tak, ako sa rezalo doteraz.** Overené
+porovnaním výstupu na všetkých desiatich vzorových dokumentoch: 10 zhôd,
+0 rozdielov. Pri predvolenom slove sa navyše berú pôvodné konštanty, nie
+znovu zostavený vzor — pôvodná `PRÍLOHA` má `[ÍI]`, takže chytí aj zápis bez
+dĺžňa, a zostavený vzor by o to potichu prišiel.
+
+Uloženie profilu **nepreindexuje nič samo**. Preindexovanie všetkého naraz sa
+nedá vziať späť jedným klikom; človek má najprv vidieť, čo nový profil spraví
+s jedným dokumentom.
+
+## D59 — kontrola konzistencie
+
+`npm run kontrola` overí invarianty a **nič neopravuje** — oprava je vždy
+rozhodnutie (preindexovať, dopublikovať, nechať tak), a skript, ktorý „to
+spraví za teba", by pri prvej nečakanej odchýlke prepísal niečo, čo nikto
+nechcel. Návratový kód 1 pri rozpore, takže sa dá zavesiť za preindexovanie.
+
+Čo kontroluje:
+
+1. aktívny úsek ukazuje na existujúce znenie,
+2. dokument nemá naraz dve aktívne členenia (ten istý text dvakrát vo výsledkoch),
+3. potvrdené znenie má uložený text (dôkaz bez textu je bezcenný),
+4. publikované znenie má aktívne úseky (inak o norme vyhľadávanie nevie),
+5. model vektorov sedí s nastavením (miešanie modelov nič nezhodí, len ticho zhorší výsledky),
+6. cesta priečinkov sedí so zaradením.
+
+Prvý beh hneď našiel skutočný nález: `sfz:test_onboarding` má publikované
+znenie a ani jeden úsek — seedovací skript zapisuje dokument, nie chunky.
+Pri testovacom dokumente to nevadí, ale je to presne ten druh stavu, ktorý by
+sa inak nezistil.

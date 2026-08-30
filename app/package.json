@@ -22,7 +22,9 @@
     "tenant": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --disable-warning=DEP0205 --import ./scripts/lib/ts-hook.mjs scripts/tenant_set.mjs",
     "verzie": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --disable-warning=DEP0205 --import ./scripts/lib/ts-hook.mjs scripts/verzie_z_chunkov.mjs",
     "platnost": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/platnost.mjs",
-    "utvary": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/utvary_z_textu.mjs"
+    "utvary": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/utvary_z_textu.mjs",
+    "kontrola": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/kontrola.mjs",
+    "migracia:versionid": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/migracia_versionid.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.122.0",

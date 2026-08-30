@@ -90,6 +90,25 @@ export interface Tenant {
   ciselniky?: Partial<Record<string, { key: string; label?: string }[]>>
 
   /**
+   * Profil členenia dokumentov na úseky (D58).
+   *
+   * Jeden algoritmus, parametre navonok. Vlastný chunker per zákazník by
+   * znamenal N kópií jedného pravidla — a chyba v jednej by sa neprejavila
+   * pádom, ale tým, že model odcituje nesprávny článok u jedného zákazníka
+   * o pol roka.
+   *
+   * Chýbajúci profil znamená predvolený, nie „nič" — a predvolený reže presne
+   * tak, ako sa rezalo doteraz (overené na deviatich normách).
+   */
+  chunkovanie?: Partial<{
+    slovoClanok: string
+    slovoPriloha: string
+    opakovaniHlavicky: number
+    cielMinTokenov: number
+    cielMaxTokenov: number
+  }>
+
+  /**
    * Domény, z ktorých sa človek **založí sám** pri prvom prihlásení
    * pracovným kontom (D47). Napríklad `futbalsfz.sk`, `sfzmarketing.sk`.
    *

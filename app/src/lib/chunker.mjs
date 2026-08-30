@@ -37,6 +37,68 @@ const PRILOHA = /^PR[ÍI]LOHA\s+č\.\s*(\d+[a-z]?)\s*[-–—]?\s*(.*)$/i
 // Písmená v odsekoch — záchytný bod na delenie dlhých výpočtov (napr. definície).
 const PISMENO = /^[a-záäčďéíĺľňóôŕšťúýž]\)\s/
 
+// ── Profil členenia (D58) ────────────────────────────────────────────────────
+//
+// Vzory vyššie sú predvolené a odladené na normách SFZ. Iná organizácia môže
+// mať predpisy členené na `§` alebo na `Bod`, a bez toho by sa jej dokument
+// zlial do jedného bloku.
+//
+// **Konfiguruje sa slovom, nie regulárnym výrazom.** Vzor od zákazníka je
+// jednak vec, ktorú nikto neodladí, jednak spôsob, ako jedným zápisom zavesiť
+// spracovanie celého dokumentu. Slovo sa escapuje a vzor okolo neho zostáva
+// náš.
+
+/** Predvolený profil — presne to správanie, aké mal chunker predtým. */
+export const PREDVOLENY_PROFIL = {
+  slovoClanok: "Článok",
+  slovoPriloha: "PRÍLOHA č.",
+  /** Riadok opakovaný viac ráz je takmer isto hlavička alebo päta. */
+  opakovaniHlavicky: 5,
+  cielMinTokenov: 300,
+  cielMaxTokenov: 800,
+}
+
+const escapuj = (s) => String(s).replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+
+/**
+ * Zostaví vzory pre daný profil.
+ *
+ * Volá sa raz na začiatku `chunkuj()`; funkcie si ich potom podávajú ďalej.
+ * Modulová premenná to zámerne nie je — tá by pri dvoch tenantoch s rôznym
+ * profilom znamenala, že výsledok závisí od poradia volaní.
+ */
+export function vzoryPreProfil(profil = {}) {
+  const p = { ...PREDVOLENY_PROFIL, ...profil }
+  const clanok = escapuj(p.slovoClanok)
+  const priloha = escapuj(p.slovoPriloha)
+
+  // Pri predvolenom slove sa berú **pôvodné konštanty**, nie znovu zostavený
+  // vzor. Nie je to opatrnosť navyše: pôvodná PRÍLOHA má `[ÍI]`, takže chytí
+  // aj zápis bez dĺžňa, a zostavený vzor by o to potichu prišiel. Predvolený
+  // profil musí dať presne to členenie, aké dával doteraz.
+  const jeVlastnyClanok = p.slovoClanok !== PREDVOLENY_PROFIL.slovoClanok
+  const jeVlastnaPriloha = p.slovoPriloha !== PREDVOLENY_PROFIL.slovoPriloha
+
+  return {
+    profil: p,
+    CLANOK: jeVlastnyClanok
+      ? new RegExp(`^${clanok}\\s+(\\d+[a-z]?)\\s*[-–—]\\s*(.+)$`)
+      : CLANOK,
+    CLANOK_SAM: jeVlastnyClanok
+      ? new RegExp(`^${clanok}\\s+(\\d+[a-z]?)\\s*$`)
+      : CLANOK_SAM,
+    PRILOHA: jeVlastnaPriloha
+      ? new RegExp(`^${priloha}\\s*(\\d+[a-z]?)\\s*[-–—]?\\s*(.*)$`, "i")
+      : PRILOHA,
+    CAST,
+    ODSEK,
+    TABULKA_START,
+    opakovaniHlavicky: p.opakovaniHlavicky,
+    cielMin: Math.round(p.cielMinTokenov * ZNAKY_NA_TOKEN),
+    cielMax: Math.round(p.cielMaxTokenov * ZNAKY_NA_TOKEN),
+  }
+}
+
 // Tabuľky. Otvára ich buď popis („Tabuľka č. 2 – Odstupné…“), alebo riadok
 // markdownovej tabuľky. Zatvára ich až štruktúrny prvok — článok, časť,
 // príloha alebo nový odsek.
@@ -105,7 +167,8 @@ function normalizuj(riadok) {
     .trim()
 }
 
-export function ocisti(text, { nazovDokumentu } = {}) {
+export function ocisti(text, { nazovDokumentu, vzory } = {}) {
+  const v = vzory ?? vzoryPreProfil()
   const vsetky = text.split(/\r?\n/)
   const odstranene = { hlavicka: 0, cisloStrany: 0, poznamka: 0, prazdne: 0 }
 
@@ -115,7 +178,9 @@ export function ocisti(text, { nazovDokumentu } = {}) {
     const k = normalizuj(r)
     if (k.length > 10) pocty.set(k, (pocty.get(k) ?? 0) + 1)
   }
-  const opakujuce = new Set([...pocty].filter(([, n]) => n > 5).map(([k]) => k))
+  const opakujuce = new Set(
+    [...pocty].filter(([, n]) => n > v.opakovaniHlavicky).map(([k]) => k),
+  )
   if (nazovDokumentu) opakujuce.add(nazovDokumentu.trim())
 
   const riadky = []
@@ -134,7 +199,7 @@ export function ocisti(text, { nazovDokumentu } = {}) {
     // na ďalšom riadku. Vypadnú, kým nenarazíme na štruktúrny prvok.
     if (POZNAMKA.test(r)) { vPoznamke = true; odstranene.poznamka++; continue }
     if (vPoznamke) {
-      if (CLANOK.test(r) || CLANOK_SAM.test(r) || CAST.test(r) || ODSEK.test(r)) {
+      if (v.CLANOK.test(r) || v.CLANOK_SAM.test(r) || v.CAST.test(r) || v.ODSEK.test(r)) {
         vPoznamke = false
       } else {
         odstranene.poznamka++
@@ -153,7 +218,8 @@ export function ocisti(text, { nazovDokumentu } = {}) {
  * Z očistených riadkov poskladá zoznam článkov aj s odsekmi.
  * Text pred prvým článkom (preambula) sa zachová ako pseudo-článok bez čísla.
  */
-export function parsujStrukturu(riadky) {
+export function parsujStrukturu(riadky, vzory) {
+  const v = vzory ?? vzoryPreProfil()
   const clanky = []
   let cast = null
   let aktualny = null
@@ -189,8 +255,8 @@ export function parsujStrukturu(riadky) {
     for (let j = i + 1; j < riadky.length && j <= i + 2; j++) {
       const d = riadky[j]
       if (!d) continue
-      if (CLANOK.test(d) || CLANOK_SAM.test(d) || CAST.test(d) ||
-          PRILOHA.test(d) || ODSEK.test(d) || TABULKA_START.test(d)) return null
+      if (v.CLANOK.test(d) || v.CLANOK_SAM.test(d) || v.CAST.test(d) ||
+          v.PRILOHA.test(d) || v.ODSEK.test(d) || v.TABULKA_START.test(d)) return null
       if (d.length > 120 || /[.:;]$/.test(d)) return null
       // Poistka: prázdny alebo neviditeľný text nie je názov článku.
       const cisty = normalizuj(d)
@@ -202,7 +268,7 @@ export function parsujStrukturu(riadky) {
 
   for (let i = 0; i < riadky.length; i++) {
     const r = riadky[i]
-    const mPriloha = PRILOHA.exec(r)
+    const mPriloha = v.PRILOHA.exec(r)
     if (mPriloha) {
       vTabulke = false
       vPrilohach = true
@@ -215,14 +281,14 @@ export function parsujStrukturu(riadky) {
       continue
     }
 
-    const mCast = CAST.exec(r)
+    const mCast = v.CAST.exec(r)
     if (mCast && !vPrilohach) { vTabulke = false; cast = r; continue }
 
-    const mClanok = CLANOK.exec(r)
+    const mClanok = v.CLANOK.exec(r)
     if (mClanok && !vPrilohach) { vTabulke = false; zacniClanok(mClanok[1], mClanok[2].trim()); continue }
 
     // „Článok N“ samostatne — názov hľadáme na nasledujúcom riadku.
-    const mClanokSam = CLANOK_SAM.exec(r)
+    const mClanokSam = v.CLANOK_SAM.exec(r)
     if (mClanokSam && !vPrilohach) {
       vTabulke = false
       const n = nazovPodNadpisom(i)
@@ -297,19 +363,20 @@ function rozdelRiadky(riadky, maxZnakov) {
  * lepší chunk než umelo zlepený s cudzím obsahom.
  */
 function chunkujJednotku(j, meta) {
+  const v = meta.vzory ?? vzoryPreProfil()
   const bc = breadcrumb(meta.nazovDokumentu, j)
   const hlavicka = `${bc}\n\n`
   const ref = refJednotky(j)
-  const priestor = CIEL_MAX - hlavicka.length
+  const priestor = v.cielMax - hlavicka.length
 
   const neprazdne = j.odseky.filter(o => textOdseku(o).trim())
   if (!neprazdne.length) return []
 
   const cely = neprazdne.map(textOdseku).join("\n")
-  const uplny = neprazdne.length === 1 || (hlavicka.length + cely.length <= CIEL_MAX)
+  const uplny = neprazdne.length === 1 || (hlavicka.length + cely.length <= v.cielMax)
 
   // Zmestí sa celá? Nedeľ — je to najlepší možný chunk.
-  if (hlavicka.length + cely.length <= CIEL_MAX) {
+  if (hlavicka.length + cely.length <= v.cielMax) {
     return [{ text: hlavicka + cely, heading: j.nadpis, articleRef: ref,
               cast: j.cast, typ: j.typ, uplnaJednotka: true,
               obsahujeTabulku: neprazdne.some(o => o.maTabulku) }]
@@ -406,12 +473,13 @@ function zlucRef(a, b) {
 }
 
 export function chunkuj(text, meta = {}) {
-  const { riadky, odstranene } = ocisti(text, meta)
-  const clanky = parsujStrukturu(riadky)
+  const v = vzoryPreProfil(meta.profil)
+  const { riadky, odstranene } = ocisti(text, { ...meta, vzory: v })
+  const clanky = parsujStrukturu(riadky, v)
 
   const chunky = []
   for (const j of clanky) {
-    for (const ch of chunkujJednotku(j, meta)) {
+    for (const ch of chunkujJednotku(j, { ...meta, vzory: v })) {
       chunky.push({ ...ch, chunkIndex: chunky.length })
     }
   }

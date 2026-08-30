@@ -20,16 +20,17 @@
  * pri publikovaní, nie pri nahratí.
  */
 
-import { createHash } from "node:crypto"
 import { getCollection } from "./mongodb"
 import { DOCUMENTS_COLLECTION } from "./documents"
-import { chunkuj } from "./chunker.mjs"
+import { ACKNOWLEDGEMENTS_COLLECTION } from "./acknowledgements"
+import { chunkuj, PREDVOLENY_PROFIL } from "./chunker.mjs"
+import { odtlacokTextu, odtlacokClenenia, VERZIA_CHUNKERA } from "./chunkovanie"
 import { overHodnotu, overZoznam, CiselnikError } from "./ciselniky"
 import type { Doplnky } from "./ciselniky"
 import { ulozSubor, zmazSubor } from "./ulozisko"
 import { preved, NAZOV_TYPU, KonverziaError } from "./konverzia"
 import { zapisAudit, rozdiel } from "./audit"
-import type { Chunk } from "./chunker"
+import type { Chunk, ProfilClenenia } from "./chunker"
 
 export const CHUNKS_COLLECTION = "document_chunks"
 
@@ -70,8 +71,6 @@ export class KniznicaError extends Error {
 export function idDokumentu(meta: { companyCode: string; sectionKey: string }): string {
   return `${meta.companyCode}:${meta.sectionKey}`.toLowerCase()
 }
-
-const hash = (s: string) => createHash("sha256").update(s).digest("hex").slice(0, 16)
 
 /** Overí metadáta z formulára proti číselníkom. Vyhadzuje `KniznicaError`. */
 export function overMetadata(
@@ -237,6 +236,7 @@ export async function publikuj(
   documentId: string,
   vstup: { label: string; effectiveFrom: Date; effectiveFromSource?: string; changeNote?: string },
   aktor: string,
+  profil?: Partial<ProfilClenenia>,
 ): Promise<VysledokPublikovania> {
   const label = (vstup.label ?? "").trim()
   if (!label) {
@@ -266,7 +266,7 @@ export async function publikuj(
   }
   const tags = Array.isArray(doc.tags) ? (doc.tags as string[]) : []
 
-  const { chunky } = chunkuj(markdown, { nazovDokumentu: meta.title })
+  const { chunky } = chunkuj(markdown, { nazovDokumentu: meta.title, profil })
   if (!chunky.length) {
     throw new KniznicaError(
       "Z textu nevznikol ani jeden úsek. Skontroluj, či má dokument členenie na články alebo nadpisy.",
@@ -290,7 +290,13 @@ export async function publikuj(
     embeddingProvider: process.env.EMBEDDING_KIND ?? "atlas-auto",
   })
 
-  const versionId = hash(JSON.stringify(chunky.map(doDb)))
+  // **Identita znenia je odtlačok textu, nie chunkov (D57).** Kým sa počítala
+  // z chunkov, vyladenie chunkera vyrobilo novú verziu — a tým aj povinnosť
+  // potvrdiť normu znova, hoci sa v nej nezmenilo ani slovo. Označenie
+  // a dátum platnosti do identity nevstupujú zámerne: preklep v nich sa musí
+  // dať opraviť bez toho, aby sa rozbili existujúce potvrdenia.
+  const versionId = odtlacokTextu(markdown)
+  const chunkingId = odtlacokClenenia(chunky, { ...PREDVOLENY_PROFIL, ...profil })
   const teraz = new Date()
 
   // Rovnaké znenie už publikované? Nič sa nedeje — publikovanie je idempotentné.
@@ -310,6 +316,8 @@ export async function publikuj(
       ...doDb(ch),
       documentId,
       versionId,
+      chunkingId,
+      verziaChunkera: VERZIA_CHUNKERA,
       embeddedAt: teraz,
       isActive: true,
       effectiveFrom: vstup.effectiveFrom,
@@ -332,6 +340,7 @@ export async function publikuj(
     {
       $set: {
         versionId,
+        chunkingId,
         markdown,
         status: "published",
         processingStatus: "zaindexovane" as StavSpracovania,
@@ -446,4 +455,219 @@ export async function ulozUdaje(
     cielId: documentId, cielPopis: meta.title,
     zmeny: rozdiel(predMeta, poMeta),
   })
+}
+
+/**
+ * Preindexuje dokument **bez novej verzie** (D57).
+ *
+ * Toto je tá operácia, kvôli ktorej sa identita rozdelila. Vyladí sa profil
+ * členenia, spustí sa toto — a úseky sa vymenia pri tom istom `versionId`.
+ * `versions[]` sa nedotkne, potvrdenia zostávajú platné, nikomu nenaskočí
+ * povinnosť potvrdzovať znova.
+ *
+ * Staré úseky sa **archivujú, nemažú** (D6): do vyhľadávania vstupujú len
+ * aktívne, ale otázka „ako to bolo narezané vlani" musí mať odpoveď, keď sa
+ * bude hľadať, prečo model kedysi odcitoval niečo iné.
+ */
+export async function preindexuj(
+  companyCode: string,
+  documentId: string,
+  aktor: string,
+  profil?: Partial<ProfilClenenia>,
+): Promise<{ chunkov: number; archivovanych: number; uzBolo: boolean; chunkingId: string }> {
+  const col = await getCollection(DOCUMENTS_COLLECTION)
+  const doc = await col.findOne({ documentId, companyCode }) as Record<string, unknown> | null
+  if (!doc) throw new KniznicaError("Taký dokument tu nie je.")
+
+  const versions = (doc.versions ?? []) as { versionId: string; isActive?: boolean; markdown?: string }[]
+  const platna = versions.find(v => v.isActive)
+  const markdown = String(platna?.markdown ?? doc.markdown ?? "").trim()
+  if (!markdown || !platna) {
+    throw new KniznicaError(
+      "Dokument nemá publikované znenie — preindexovať sa dá len to, čo už je vonku.",
+    )
+  }
+
+  const meta = {
+    title: String(doc.title ?? ""),
+    sectionKey: String(doc.sectionKey ?? ""),
+    scope: String(doc.scope ?? ""),
+    accessLevel: String(doc.accessLevel ?? ""),
+    language: String(doc.language ?? ""),
+  }
+  const tags = Array.isArray(doc.tags) ? (doc.tags as string[]) : []
+
+  const { chunky } = chunkuj(markdown, { nazovDokumentu: meta.title, profil })
+  if (!chunky.length) {
+    throw new KniznicaError("Z textu nevznikol ani jeden úsek — skontroluj profil členenia.")
+  }
+
+  const chunkingId = odtlacokClenenia(chunky, { ...PREDVOLENY_PROFIL, ...profil })
+  if (doc.chunkingId === chunkingId) {
+    return { chunkov: chunky.length, archivovanych: 0, uzBolo: true, chunkingId }
+  }
+
+  const teraz = new Date()
+  const chunkCol = await getCollection(CHUNKS_COLLECTION)
+  const archiv = await chunkCol.updateMany(
+    { documentId, isActive: true },
+    { $set: { isActive: false, effectiveTo: teraz } },
+  )
+
+  await chunkCol.insertMany(
+    chunky.map(ch => ({
+      chunkIndex: ch.chunkIndex,
+      text: ch.text,
+      heading: ch.heading,
+      articleRef: ch.articleRef ?? null,
+      chunkType: ch.typ ?? "clanok",
+      sectionKey: meta.sectionKey,
+      companyCode,
+      scope: meta.scope,
+      accessLevel: meta.accessLevel,
+      language: meta.language,
+      tags,
+      embeddingModel: process.env.EMBEDDING_MODEL ?? "voyage-4",
+      embeddingDim: Number(process.env.EMBEDDING_DIM ?? 1024),
+      embeddingProvider: process.env.EMBEDDING_KIND ?? "atlas-auto",
+      documentId,
+      // Tá istá verzia znenia — mení sa len členenie.
+      versionId: platna.versionId,
+      chunkingId,
+      verziaChunkera: VERZIA_CHUNKERA,
+      embeddedAt: teraz,
+      isActive: true,
+      effectiveFrom: (doc.effectiveFrom as Date | null) ?? null,
+      effectiveTo: null,
+      createdAt: teraz,
+    })),
+    { ordered: false },
+  )
+
+  await col.updateOne(
+    { documentId, companyCode },
+    { $set: { chunkingId, updatedAt: teraz, updatedBy: aktor } },
+  )
+
+  await zapisAudit({
+    companyCode, predmet: "dokument", akcia: "preindexovane", aktor,
+    cielId: documentId, cielPopis: meta.title,
+    poznamka: `${chunky.length} úsekov · ${archiv.modifiedCount} archivovaných · ` +
+      "znenie ani potvrdenia sa nemenili",
+  })
+
+  return { chunkov: chunky.length, archivovanych: archiv.modifiedCount, uzBolo: false, chunkingId }
+}
+
+/**
+ * Opraví údaje publikovaného znenia — označenie, dátum, citáciu, poznámku.
+ *
+ * `versionId` je odtlačok textu, takže oprava týchto údajov identitu nemení
+ * a potvrdenia sa nerušia. To ale **neplatí bez výhrady pre dátum platnosti**:
+ * potvrdzovacia formulka ho obsahuje doslovne a záznam si ju uložil ako text.
+ * Ak bol dátum zlý, tí ľudia potvrdili tvrdenie, ktoré nie je pravdivé —
+ * a ticho im ho opraviť pod už podpísaným záznamom by z auditu spravilo
+ * niečo, čo sa dá spätne meniť.
+ *
+ * Rozhodnutie preto patrí človeku a obe možnosti sa zapisujú:
+ *
+ *   - `oprava` — rozdiel je nepodstatný, potvrdenia zostávajú;
+ *   - `znovaPotvrdit` — nastaví `requiresReacknowledgement` (D30), takže
+ *     znenie sa musí potvrdiť znova.
+ *
+ * Systém to rozhodnúť nevie: nepozná, či medzi tými dvoma dátumami niekto
+ * podľa normy konal.
+ */
+export async function opravZnenie(
+  companyCode: string,
+  documentId: string,
+  versionId: string,
+  vstup: {
+    label?: string
+    effectiveFrom?: Date
+    effectiveFromSource?: string
+    changeNote?: string
+    dovod: string
+    priZmeneDatumu?: "oprava" | "znovaPotvrdit"
+  },
+  aktor: string,
+): Promise<{ potvrdeni: number; znovaPotvrdit: boolean }> {
+  const dovod = vstup.dovod?.trim() ?? ""
+  if (!dovod) {
+    throw new KniznicaError(
+      "Dôvod opravy je povinný — bez neho sa o rok nedá zistiť, či išlo o preklep alebo o zmenu povinnosti.",
+    )
+  }
+
+  const col = await getCollection(DOCUMENTS_COLLECTION)
+  const doc = await col.findOne({ documentId, companyCode }) as Record<string, unknown> | null
+  if (!doc) throw new KniznicaError("Taký dokument tu nie je.")
+
+  const versions = (doc.versions ?? []) as {
+    versionId: string; label: string; effectiveFrom: Date | null
+  }[]
+  const v = versions.find(x => x.versionId === versionId)
+  if (!v) throw new KniznicaError("Také znenie tu nie je.")
+
+  const ackCol = await getCollection(ACKNOWLEDGEMENTS_COLLECTION)
+  const potvrdeni = await ackCol.countDocuments({
+    type: "acknowledgement", companyCode, versionId,
+  })
+
+  const meniDatum = vstup.effectiveFrom instanceof Date &&
+    (!v.effectiveFrom || new Date(v.effectiveFrom).getTime() !== vstup.effectiveFrom.getTime())
+
+  if (meniDatum && potvrdeni > 0 && !vstup.priZmeneDatumu) {
+    throw new KniznicaError(
+      `Toto znenie už potvrdilo ${potvrdeni} ľudí a formulka, ktorú podpísali, obsahuje starý dátum. ` +
+      "Rozhodni, či je to oprava zápisu, alebo sa má znenie potvrdiť znova.",
+    )
+  }
+
+  const znovaPotvrdit = Boolean(meniDatum && potvrdeni > 0 && vstup.priZmeneDatumu === "znovaPotvrdit")
+
+  const set: Record<string, unknown> = { updatedAt: new Date(), updatedBy: aktor }
+  if (vstup.label?.trim()) set["versions.$[v].label"] = vstup.label.trim()
+  if (vstup.effectiveFrom instanceof Date) {
+    set["versions.$[v].effectiveFrom"] = vstup.effectiveFrom
+    // Dokument nesie kópiu platnosti kvôli filtrom; bez tejto vety by sa
+    // rozišla s verziou a vyhľadávanie by filtrovalo podľa starého dátumu.
+    if (doc.versionId === versionId) set.effectiveFrom = vstup.effectiveFrom
+  }
+  if (vstup.effectiveFromSource !== undefined) {
+    set["versions.$[v].effectiveFromSource"] = vstup.effectiveFromSource.trim() || undefined
+  }
+  if (vstup.changeNote !== undefined) {
+    set["versions.$[v].changeNote"] = vstup.changeNote.trim() || undefined
+  }
+  if (znovaPotvrdit) set["versions.$[v].requiresReacknowledgement"] = true
+
+  await col.updateOne(
+    { documentId, companyCode },
+    {
+      $set: set,
+      $push: {
+        "versions.$[v].opravy": {
+          kedy: new Date(), kto: aktor, dovod,
+          znovaPotvrdit,
+          zLabel: v.label,
+          zEffectiveFrom: v.effectiveFrom ?? null,
+        },
+      },
+    } as never,
+    { arrayFilters: [{ "v.versionId": versionId }] },
+  )
+
+  await zapisAudit({
+    companyCode, predmet: "dokument", akcia: "oprava-znenia", aktor,
+    cielId: documentId, cielPopis: `${String(doc.title ?? documentId)} — ${v.label}`,
+    zmeny: rozdiel(
+      { label: v.label, effectiveFrom: v.effectiveFrom ?? null },
+      { label: vstup.label?.trim() ?? v.label, effectiveFrom: vstup.effectiveFrom ?? v.effectiveFrom ?? null },
+    ),
+    poznamka: `${dovod}${potvrdeni > 0 ? ` · potvrdení: ${potvrdeni}` : ""}` +
+      (znovaPotvrdit ? " · vyžaduje nové potvrdenie" : ""),
+  })
+
+  return { potvrdeni, znovaPotvrdit }
 }

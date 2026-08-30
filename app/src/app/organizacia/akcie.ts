@@ -310,3 +310,39 @@ export async function odoberZCiselnika(fd: FormData) {
     spat(fd, spravaChyby(e), true)
   }
 }
+
+// ── profil členenia (D58) ────────────────────────────────────────────────────
+
+/**
+ * Uloží profil členenia dokumentov.
+ *
+ * Zmena profilu **nepreindexuje nič sama**. Je to zámer: preindexovanie
+ * všetkých dokumentov naraz je operácia, ktorá sa nedá vziať späť jedným
+ * klikom, a človek má najprv vidieť, čo nový profil spraví s jedným
+ * dokumentom (`Preindexovať` v jeho detaile).
+ */
+export async function ulozClenenie(fd: FormData) {
+  const ja = await kto()
+  if (!ja) redirect("/")
+
+  const cislo = (meno: string) => {
+    const v = Number(textPola(fd, meno))
+    return Number.isFinite(v) ? v : undefined
+  }
+
+  try {
+    await saveTenant(ja.companyCode, {
+      chunkovanie: {
+        slovoClanok: textPola(fd, "slovoClanok"),
+        slovoPriloha: textPola(fd, "slovoPriloha"),
+        opakovaniHlavicky: cislo("opakovaniHlavicky"),
+        cielMinTokenov: cislo("cielMinTokenov"),
+        cielMaxTokenov: cislo("cielMaxTokenov"),
+      },
+    }, ja.email)
+    revalidatePath("/organizacia")
+    spat(fd, "Uložené. Existujúce dokumenty sa nepreindexovali — spusti to pri konkrétnom dokumente.")
+  } catch (e) {
+    spat(fd, spravaChyby(e), true)
+  }
+}

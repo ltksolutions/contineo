@@ -4,6 +4,22 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Changed (2026-08-30 — identita znenia oddelená od členenia)
+
+- **`versionId` sa počíta z textu, nie z chunkov (D57).** Doteraz z chunkov — a keďže sa naň viažu potvrdenia, vyladenie chunkera by stovke ľudí ukázalo, že normu nemajú potvrdenú, hoci sa v nej nezmenilo ani slovo. Jedno číslo nieslo dve rôzne veci: text normy je právny artefakt, členenie na úseky technický. Úseky teraz nesú vlastné `chunkingId` (verzia chunkera + profil + výsledok), takže je stále vidieť, kedy treba preindexovať.
+- **Označenie ani dátum platnosti do identity nevstupujú** — preklep sa musí dať opraviť bez toho, aby sa rozbili potvrdenia.
+- **Preindexovanie bez novej verzie.** V detaile dokumentu; nareže platné znenie znova podľa aktuálneho profilu, `versions[]` sa nedotkne a potvrdenia zostávajú.
+- **Oprava údajov znenia.** Pri zmene dátumu na znení, ktoré už niekto potvrdil, obrazovka odmietne uložiť bez rozhodnutia: oprava zápisu, alebo podstatná zmena vyžadujúca nové potvrdenie. Dôvod je povinný. Potvrdzovacia formulka obsahuje dátum doslovne — ticho ho opraviť pod podpísaným záznamom by z auditu spravilo niečo, čo sa dá spätne meniť.
+- **Migrácia spustená**: 10 znení, 581 úsekov, 0 potvrdení. Robilo sa to teraz práve preto, že potvrdení je nula.
+
+### Added (2026-08-30 — profil členenia a kontrola konzistencie)
+
+- **Profil členenia per organizácia (D58)** v `/organizacia`, záložka **Členenie**: slovo článku a prílohy, prah na hlavičky, cieľová veľkosť úseku. Jeden algoritmus, parametre navonok — vlastný chunker per zákazník by znamenal N kópií jedného pravidla a chyba v jednej by sa prejavila tým, že model odcituje nesprávny článok o pol roka.
+- **Konfiguruje sa slovom, nie regulárnym výrazom**, a čísla sa držia v rozumnom rozsahu. Vzor od zákazníka je vec, ktorú nikto neodladí — a spôsob, ako jedným zápisom zavesiť spracovanie dokumentu.
+- **Predvolený profil reže presne tak ako doteraz** — overené porovnaním na všetkých desiatich vzorových dokumentoch (10 zhôd, 0 rozdielov).
+- **`npm run kontrola` (D59)** — overí, že aktívne úseky ukazujú na existujúce znenia, že dokument nemá dve aktívne členenia, že potvrdené znenie má text, že publikované znenie má úseky, že model vektorov sedí a že cesty priečinkov súhlasia. Nič neopravuje: oprava je vždy rozhodnutie. Prvý beh našiel skutočný nález (testovací dokument bez úsekov).
+- 12 nových testov (spolu 778).
+
 ### Added (2026-08-30 — knižnica: priečinky, filtre, WYSIWYG, vlastné číselníky)
 
 - **Virtuálne priečinky (D56).** Strom s rovnakým tvarom ako útvary — dokument je práve v jednom, filter nájde aj to, čo je v podpriečinkoch. „Virtuálne" znamená, že sa nič nepresúva: súbor leží v GridFS a text v `documents`, priečinok je len zaradenie, ktoré sa dá kedykoľvek zmeniť. Zrušiť sa dá len prázdny priečinok bez podpriečinkov.

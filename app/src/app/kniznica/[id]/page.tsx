@@ -15,7 +15,7 @@ import { brandingView } from "@/lib/tenants"
 import { tenantStyle } from "@/components/TenantHeader"
 import { formatDate } from "@/lib/i18n"
 import Oznam from "@/components/Oznam"
-import { publikujZnenie, ulozUdajeDokumentu, zaradDoPriecinka } from "../akcie"
+import { publikujZnenie, ulozUdajeDokumentu, zaradDoPriecinka, preindexujDokument, opravZnenieAkcia } from "../akcie"
 import { vsetkyPriecinky, splostiStrom } from "@/lib/priecinky"
 import { volby } from "@/lib/ciselniky"
 import { doplnkyTenanta } from "@/lib/ciselnikyTenanta"
@@ -246,6 +246,18 @@ export default async function DetailDokumentu({
         )}
       </section>
 
+      <form action={preindexujDokument} className="karta" style={{ padding: 18, display: "grid", gap: 10, margin: "0 0 18px" }}>
+        <input type="hidden" name="documentId" value={d.documentId} />
+        <h2 style={{ fontSize: 17, margin: 0 }}>Preindexovať</h2>
+        <p className="tichy" style={{ fontSize: 14, margin: 0 }}>
+          Nareže platné znenie znova podľa aktuálneho profilu členenia. <strong>Nevytvorí
+          novú verziu</strong> — text sa nemení, takže potvrdenia zostávajú platné a nikomu
+          nenaskočí povinnosť potvrdzovať znova. Používa sa po vyladení profilu
+          v nastavení organizácie.
+        </p>
+        <div><button className="tlacidlo tlacidlo--tiche" type="submit">Preindexovať</button></div>
+      </form>
+
       <h2 style={{ fontSize: 17, margin: "0 0 10px" }}>Znenia ({d.versions.length})</h2>
 
       {d.versions.length === 0 ? (
@@ -270,6 +282,64 @@ export default async function DetailDokumentu({
                 <div className="tichy audit-poznamka">zdroj dátumu: {v.effectiveFromSource}</div>
               )}
               {v.changeNote && <div className="tichy audit-poznamka">{v.changeNote}</div>}
+
+              <details style={{ marginTop: 6 }}>
+                <summary className="tichy" style={{ fontSize: 13, cursor: "pointer" }}>opraviť údaje</summary>
+                <form action={opravZnenieAkcia} style={{ display: "grid", gap: 10, marginTop: 10 }}>
+                  <input type="hidden" name="documentId" value={d.documentId} />
+                  <input type="hidden" name="versionId" value={v.versionId} />
+
+                  <label className="pole">
+                    <span className="pole-popis">Označenie</span>
+                    <input className="pole-vstup" name="label" defaultValue={v.label} />
+                  </label>
+
+                  <label className="pole">
+                    <span className="pole-popis">Platné od</span>
+                    <input
+                      className="pole-vstup"
+                      type="date"
+                      name="effectiveFrom"
+                      defaultValue={v.effectiveFrom ? new Date(v.effectiveFrom).toISOString().slice(0, 10) : ""}
+                    />
+                    <span className="tichy pole-napoveda">
+                      Dátum je <strong>doslovne</strong> vo formulke, ktorú ľudia podpísali. Ak ho
+                      meníš a znenie už niekto potvrdil, budeš musieť rozhodnúť, či ide o opravu
+                      zápisu, alebo o zmenu, ktorú treba potvrdiť znova.
+                    </span>
+                  </label>
+
+                  <label className="pole">
+                    <span className="pole-popis">Odkiaľ je dátum</span>
+                    <input className="pole-vstup" name="effectiveFromSource" defaultValue={v.effectiveFromSource ?? ""} />
+                  </label>
+
+                  <label className="pole">
+                    <span className="pole-popis">Dôvod opravy</span>
+                    <input className="pole-vstup" name="dovod" required
+                           placeholder="preklep v označení; dátum z uznesenia VV SFZ" />
+                    <span className="tichy pole-napoveda">
+                      Povinný. Bez neho sa o rok nedá zistiť, či išlo o preklep alebo o zmenu povinnosti.
+                    </span>
+                  </label>
+
+                  <div className="pole">
+                    <span className="pole-popis">Ak sa mení dátum a znenie už niekto potvrdil</span>
+                    <Vyber
+                      meno="priZmeneDatumu"
+                      predvolena=""
+                      popisPola="Ako naložiť s potvrdeniami"
+                      volby={[
+                        { hodnota: "", popis: "— rozhodnem, až keď sa spýta —" },
+                        { hodnota: "oprava", popis: "oprava zápisu, potvrdenia zostávajú" },
+                        { hodnota: "znovaPotvrdit", popis: "podstatná zmena, potvrdiť znova" },
+                      ]}
+                    />
+                  </div>
+
+                  <div><button className="tlacidlo tlacidlo--tiche" type="submit">Opraviť</button></div>
+                </form>
+              </details>
             </li>
           ))}
         </ul>
