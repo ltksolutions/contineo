@@ -14,6 +14,7 @@
 
 import { ContineoMark, GitHubMark } from "./ContineoMark"
 import { REVISION, VERSION } from "@/lib/appVersion"
+import { dictionary, type UiLanguage } from "@/lib/i18n"
 
 /**
  * Odkazy von majú `rel="noreferrer"` zámerne: bez neho by sa cieľová stránka
@@ -22,12 +23,13 @@ import { REVISION, VERSION } from "@/lib/appVersion"
  */
 const EXTERNAL = { target: "_blank", rel: "noreferrer" } as const
 
-export default function Footer() {
+export default function Footer({ language }: { language?: UiLanguage }) {
+  const t = dictionary(language)
   return (
     <footer className="paticka">
       <div className="obal paticka-obsah">
         <p className="paticka-blok">
-          <span className="tichy">Systém beží na aplikácii</span>
+          <span className="tichy">{t.footer.runsOn}</span>
           <a className="paticka-odkaz" href="https://contineo.app" {...EXTERNAL}>
             <ContineoMark size={16} />
             Contineo
@@ -40,7 +42,7 @@ export default function Footer() {
           {...EXTERNAL}
         >
           <GitHubMark />
-          Zdrojový kód
+          {t.footer.sourceCode}
         </a>
 
         <p className="tichy paticka-verzia">

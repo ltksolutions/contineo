@@ -33,13 +33,13 @@ export default async function DocumentsPage() {
     return (
       <div className="obal" style={{ padding: "36px 20px 80px", maxWidth: 760 }}>
         <h1 style={{ fontSize: 27, letterSpacing: "-0.02em", margin: "0 0 8px" }}>
-          Dokumenty na potvrdenie
+          {dictionary(ctx.tenant.defaultLanguage).onboarding.listHeading}
         </h1>
         <p className="karta" style={{ padding: 20 }}>
-          Ste prihlásený ako <strong>{ctx.email}</strong>, ale nie ste vedený medzi
-          osobami organizácie <strong>{ctx.tenant.branding.displayName}</strong> —
-          takže vám systém nemá čo priradiť. Ak tu máte niečo potvrdzovať,
-          požiadajte HR o zaradenie.
+          {dictionary(ctx.tenant.defaultLanguage).documents.notInOrganisation(
+            ctx.email ?? "",
+            ctx.tenant.branding.displayName,
+          )}
         </p>
       </div>
     )

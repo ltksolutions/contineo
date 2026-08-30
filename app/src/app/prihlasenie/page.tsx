@@ -15,6 +15,7 @@ import { availableProviders } from "@/lib/oauth"
 import { tenantStyle } from "@/components/TenantHeader"
 import type { Tenant } from "@/lib/tenants"
 import { normalizeQuery, type RawQuery } from "@/lib/urlParams"
+import { normalizeLanguage } from "@/lib/i18n"
 
 export const dynamic = "force-dynamic"
 
@@ -61,6 +62,7 @@ export default async function SignInPage({
         error={params.error}
         branding={branding}
         providers={providers}
+        language={normalizeLanguage(tenant?.defaultLanguage)}
       />
     </div>
   )

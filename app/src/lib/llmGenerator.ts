@@ -120,7 +120,7 @@ export function generateAnswer(opts: GenerateOptions): ReadableStream {
           timings: opts.timings,
           // "max_tokens" znamená useknutú odpoveď — klient to musí povedať
           // nahlas, inak si čitateľ odnesie neúplný záver ako úplný.
-          dovodUkoncenia: stopReason,
+          stopReason: stopReason,
           tokeny: tokens,
           // Cena sa počíta TU a ukladá spolu s tokenmi. Je to historický
           // údaj: čo to stálo v deň, keď sa otázka položila. Spätne sa

@@ -17,6 +17,7 @@ import Search from "@/components/Search"
 import PendingWidget from "@/components/PendingWidget"
 import { onboardingContext } from "@/lib/session"
 import { pendingForPerson } from "@/lib/pending"
+import { dictionary } from "@/lib/i18n"
 
 // Stránka číta hlavičky požiadavky (hostiteľ → tenant) a reláciu, takže sa
 // nedá predgenerovať. Bez tohto by Next.js skúsil statický výstup a spadol.
@@ -31,6 +32,7 @@ export default async function HomePage() {
   if (ctx.state === "unknown-host") notFound()
 
   const person = ctx.state === "ready" ? ctx.person : null
+  const t = dictionary(person?.language)
   const overview =
     person && person.tracks.length > 0 ? await pendingForPerson(person) : null
 
@@ -44,16 +46,14 @@ export default async function HomePage() {
 
       <div style={{ marginBottom: 28 }}>
         <h1 style={{ fontSize: 27, letterSpacing: "-0.02em", margin: "0 0 8px" }}>
-          Vyskúšajte, ako systém odpovedá
+          {t.home.heading}
         </h1>
         <p className="tichy" style={{ fontSize: 15.5, margin: 0, maxWidth: 620 }}>
-          Odpoveď sa skladá výlučne z nahraných dokumentov. Ak informácia
-          v nich nie je, systém to má povedať — a to je rovnako dôležité ako
-          správna odpoveď.
+          {t.home.intro}
         </p>
       </div>
 
-      <Search />
+      <Search language={person?.language} />
     </div>
   )
 }

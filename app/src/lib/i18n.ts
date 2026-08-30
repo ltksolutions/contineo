@@ -159,6 +159,92 @@ interface Dictionary {
     /** Čo sa stane, keď to človek nechá tak. Bez toho e-mail nič nežiada. */
     note: string
   }
+
+  /** Hlavička: navigácia, téma, účet. */
+  nav: {
+    ask: string
+    goldenSet: string
+    toAcknowledge: string
+    assigned: string
+    people: string
+    library: string
+    organisation: string
+    tenants: string
+    openMenu: string
+    closeMenu: string
+    account: (email: string) => string
+    signOut: string
+    themeLabel: string
+    theme: Record<"system" | "light" | "dark", string>
+    /** Popis pre čítačku obrazovky — hovorí aj to, čo sa stane po kliknutí. */
+    themeToggle: (now: string, next: string) => string
+    themeState: (now: string) => string
+  }
+
+  footer: {
+    runsOn: string
+    sourceCode: string
+  }
+
+  notFound: {
+    heading: string
+    intro: string
+    home: string
+  }
+
+  home: {
+    heading: string
+    intro: string
+  }
+
+  /** Prihlasovacia obrazovka. Jazyk určuje organizácia — človek ešte nie je známy. */
+  signIn: {
+    heading: string
+    intro: string
+    submit: string
+    sending: string
+    checkEmail: string
+    sent: string
+    otherAddress: string
+    withProvider: (provider: string) => string
+    /** Kľúče sú chybové kódy next-auth, nie naše — prichádzajú v adrese. */
+    error: Record<string, string>
+    genericError: string
+  }
+
+  documents: {
+    notInOrganisation: (email: string, organisation: string) => string
+  }
+
+  /** Voľné otázky — vyhľadávanie aj odpoveď. */
+  ask: {
+    placeholder: string
+    submit: string
+    stop: string
+    searching: string
+    askAgain: string
+    askThis: string
+    examplesLabel: string
+    examples: string[]
+    unknownError: string
+  }
+
+  answer: {
+    failed: string
+    incompleteHeading: string
+    incompleteNote: string
+    citations: (shown: number) => string
+    citationsNote: string
+    sourceMissing: string
+    sources: (n: number) => string
+    internal: string
+    adapter: string
+    firstToken: string
+    costNote: (pricelistVersion: string) => string
+    pricelistStale: string
+    citationsVerified: string
+    citationsUnverified: string
+  }
 }
 
 export const DICTIONARY: Record<UiLanguage, Dictionary> = {
@@ -232,6 +318,99 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       button: "Otvoriť a potvrdiť",
       note: "Dokument nájdete aj po prihlásení v zozname na úvodnej strane. Kým ho nepotvrdíte, zostane vám tam.",
     },
+  nav: {
+    ask: "Voľné otázky",
+    goldenSet: "Zlatá sada",
+    toAcknowledge: "Na potvrdenie",
+    assigned: "Pridelené normy",
+    people: "Osoby",
+    library: "Knižnica",
+    organisation: "Nastavenie organizácie",
+    tenants: "Správa tenantov",
+    openMenu: "Otvoriť menu",
+    closeMenu: "Zavrieť menu",
+    account: (email) => `Účet ${email}`,
+    signOut: "Odhlásiť",
+    themeLabel: "Téma:",
+    theme: { system: "podľa systému", light: "svetlá", dark: "tmavá" },
+    themeToggle: (now, next) => `Téma ${now}. Prepnúť na: ${next}`,
+    themeState: (now) => `Téma ${now}`,
+  },
+
+  footer: {
+    runsOn: "Systém beží na aplikácii",
+    sourceCode: "Zdrojový kód",
+  },
+
+  notFound: {
+    heading: "Stránka sa nenašla",
+    intro: "Adresa neexistuje alebo už neplatí.",
+    home: "Na úvodnú stranu",
+  },
+
+  home: {
+    heading: "Vyskúšajte, ako systém odpovedá",
+    intro: "Odpoveď sa skladá výlučne z nahraných dokumentov. Ak informácia v nich nie je, systém to má povedať — a to je rovnako dôležité ako správna odpoveď.",
+  },
+
+  signIn: {
+    heading: "Prihlásenie",
+    intro: "Zadajte e-mail, na ktorý ste dostali pozvánku. Pošleme vám odkaz — heslo si pamätať nemusíte.",
+    submit: "Poslať prihlasovací odkaz",
+    sending: "Odosielam…",
+    checkEmail: "Pozrite si e-mail",
+    sent: "Ak je adresa medzi pozvanými, práve na ňu odišiel prihlasovací odkaz. Platí 24 hodín a dá sa použiť raz.",
+    otherAddress: "Zadať inú adresu",
+    withProvider: (provider) => `Prihlásiť sa cez ${provider}`,
+    error: {
+      AccessDenied: "Táto adresa nie je medzi pozvanými. Ak si myslíte, že tam patrí, ozvite sa správcovi.",
+      Verification: "Odkaz už neplatí — buď vypršal, alebo bol použitý. Vyžiadajte si nový.",
+      EmailSignin: "E-mail sa nepodarilo odoslať. Skúste to o chvíľu znova.",
+      OAuthSignin: "Prihlásenie kontom sa nepodarilo začať. Skúste to znova.",
+      OAuthCallback: "Prihlásenie kontom sa nepodarilo dokončiť. Skúste to znova.",
+      OAuthAccountNotLinked: "Toto konto sa nedá spojiť s vašou adresou. Prihláste sa odkazom v e-maile.",
+    },
+    genericError: "Prihlásenie sa nepodarilo. Skúste to znova.",
+  },
+
+  documents: {
+    notInOrganisation: (email, organisation) =>
+      `Ste prihlásený ako ${email}, ale nie ste vedený medzi osobami organizácie ${organisation} — takže vám systém nemá čo priradiť. Ak tu máte niečo potvrdzovať, požiadajte HR o zaradenie.`,
+  },
+
+  ask: {
+    placeholder: "Opýtajte sa na čokoľvek z noriem…",
+    submit: "Opýtať sa",
+    stop: "Zastaviť",
+    searching: "Hľadám…",
+    askAgain: "Spýtať sa znova",
+    askThis: "Položiť túto otázku",
+    examplesLabel: "Alebo skúste:",
+    examples: [
+      "Aká je lehota na podanie námietky?",
+      "Za akých podmienok môže prestúpiť maloletý hráč?",
+      "Kedy sa platí odstupné za hráča?",
+      "Koľko žltých kariet znamená zastavenie činnosti?",
+    ],
+    unknownError: "Neznáma chyba",
+  },
+
+  answer: {
+    failed: "Odpoveď sa nepodarilo získať.",
+    incompleteHeading: "Odpoveď je neúplná.",
+    incompleteNote: "Model dosiahol limit dĺžky a zastavil sa uprostred — chýba jej záver. Skúste sa opýtať na užšiu časť problému.",
+    citations: (shown) => `Doslovné citácie (${shown})`,
+    citationsNote: "uvedených, zhodné zlúčené",
+    sourceMissing: "zdroj neuvedený",
+    sources: (n) => `Prehľadané zdroje (${n})`,
+    internal: "interné",
+    adapter: "adaptér",
+    firstToken: "prvý token",
+    costNote: (pricelistVersion) => `Orientačne. Nezahŕňa pomocný model ani vyhľadávanie. Cenník ${pricelistVersion}.`,
+    pricelistStale: "cenník je zastaraný",
+    citationsVerified: "citácie overené modelom",
+    citationsUnverified: "citácie neoverené",
+  },
   },
 
   cs: {
@@ -304,6 +483,99 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       button: "Otevřít a potvrdit",
       note: "Dokument najdete i po přihlášení v seznamu na úvodní straně. Dokud jej nepotvrdíte, zůstane vám tam.",
     },
+  nav: {
+    ask: "Volné otázky",
+    goldenSet: "Zlatá sada",
+    toAcknowledge: "K potvrzení",
+    assigned: "Přidělené předpisy",
+    people: "Osoby",
+    library: "Knihovna",
+    organisation: "Nastavení organizace",
+    tenants: "Správa tenantů",
+    openMenu: "Otevřít menu",
+    closeMenu: "Zavřít menu",
+    account: (email) => `Účet ${email}`,
+    signOut: "Odhlásit",
+    themeLabel: "Motiv:",
+    theme: { system: "podle systému", light: "světlý", dark: "tmavý" },
+    themeToggle: (now, next) => `Motiv ${now}. Přepnout na: ${next}`,
+    themeState: (now) => `Motiv ${now}`,
+  },
+
+  footer: {
+    runsOn: "Systém běží na aplikaci",
+    sourceCode: "Zdrojový kód",
+  },
+
+  notFound: {
+    heading: "Stránka nebyla nalezena",
+    intro: "Adresa neexistuje nebo už neplatí.",
+    home: "Na úvodní stranu",
+  },
+
+  home: {
+    heading: "Vyzkoušejte, jak systém odpovídá",
+    intro: "Odpověď se skládá výhradně z nahraných dokumentů. Pokud v nich informace není, systém to má říct — a to je stejně důležité jako správná odpověď.",
+  },
+
+  signIn: {
+    heading: "Přihlášení",
+    intro: "Zadejte e-mail, na který jste dostali pozvánku. Pošleme vám odkaz — heslo si pamatovat nemusíte.",
+    submit: "Poslat přihlašovací odkaz",
+    sending: "Odesílám…",
+    checkEmail: "Podívejte se do e-mailu",
+    sent: "Pokud je adresa mezi pozvanými, právě na ni odešel přihlašovací odkaz. Platí 24 hodin a lze jej použít jednou.",
+    otherAddress: "Zadat jinou adresu",
+    withProvider: (provider) => `Přihlásit se přes ${provider}`,
+    error: {
+      AccessDenied: "Tato adresa není mezi pozvanými. Pokud si myslíte, že tam patří, ozvěte se správci.",
+      Verification: "Odkaz už neplatí — buď vypršel, nebo byl použit. Vyžádejte si nový.",
+      EmailSignin: "E-mail se nepodařilo odeslat. Zkuste to za chvíli znovu.",
+      OAuthSignin: "Přihlášení účtem se nepodařilo zahájit. Zkuste to znovu.",
+      OAuthCallback: "Přihlášení účtem se nepodařilo dokončit. Zkuste to znovu.",
+      OAuthAccountNotLinked: "Tento účet nelze spojit s vaší adresou. Přihlaste se odkazem v e-mailu.",
+    },
+    genericError: "Přihlášení se nepodařilo. Zkuste to znovu.",
+  },
+
+  documents: {
+    notInOrganisation: (email, organisation) =>
+      `Jste přihlášeni jako ${email}, ale nejste vedeni mezi osobami organizace ${organisation} — takže vám systém nemá co přiřadit. Pokud tu máte něco potvrzovat, požádejte HR o zařazení.`,
+  },
+
+  ask: {
+    placeholder: "Zeptejte se na cokoli z předpisů…",
+    submit: "Zeptat se",
+    stop: "Zastavit",
+    searching: "Hledám…",
+    askAgain: "Zeptat se znovu",
+    askThis: "Položit tuto otázku",
+    examplesLabel: "Nebo zkuste:",
+    examples: [
+      "Jaká je lhůta pro podání námitky?",
+      "Za jakých podmínek může přestoupit nezletilý hráč?",
+      "Kdy se platí odstupné za hráče?",
+      "Kolik žlutých karet znamená zastavení činnosti?",
+    ],
+    unknownError: "Neznámá chyba",
+  },
+
+  answer: {
+    failed: "Odpověď se nepodařilo získat.",
+    incompleteHeading: "Odpověď je neúplná.",
+    incompleteNote: "Model dosáhl limitu délky a zastavil se uprostřed — chybí jí závěr. Zkuste se zeptat na užší část problému.",
+    citations: (shown) => `Doslovné citace (${shown})`,
+    citationsNote: "uvedených, shodné sloučené",
+    sourceMissing: "zdroj neuveden",
+    sources: (n) => `Prohledané zdroje (${n})`,
+    internal: "interní",
+    adapter: "adaptér",
+    firstToken: "první token",
+    costNote: (pricelistVersion) => `Orientačně. Nezahrnuje pomocný model ani vyhledávání. Ceník ${pricelistVersion}.`,
+    pricelistStale: "ceník je zastaralý",
+    citationsVerified: "citace ověřené modelem",
+    citationsUnverified: "citace neověřené",
+  },
   },
 
   en: {
@@ -375,6 +647,99 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       button: "Open and acknowledge",
       note: "You will also find the document in the list on the home page after signing in. It stays there until you acknowledge it.",
     },
+  nav: {
+    ask: "Ask a question",
+    goldenSet: "Golden set",
+    toAcknowledge: "To acknowledge",
+    assigned: "Assigned documents",
+    people: "People",
+    library: "Library",
+    organisation: "Organisation settings",
+    tenants: "Tenant administration",
+    openMenu: "Open menu",
+    closeMenu: "Close menu",
+    account: (email) => `Account ${email}`,
+    signOut: "Sign out",
+    themeLabel: "Theme:",
+    theme: { system: "system", light: "light", dark: "dark" },
+    themeToggle: (now, next) => `Theme ${now}. Switch to: ${next}`,
+    themeState: (now) => `Theme ${now}`,
+  },
+
+  footer: {
+    runsOn: "Running on",
+    sourceCode: "Source code",
+  },
+
+  notFound: {
+    heading: "Page not found",
+    intro: "This address does not exist or is no longer valid.",
+    home: "Go to the home page",
+  },
+
+  home: {
+    heading: "See how the system answers",
+    intro: "Every answer is built solely from the uploaded documents. If the information is not in them, the system should say so — that matters just as much as a correct answer.",
+  },
+
+  signIn: {
+    heading: "Sign in",
+    intro: "Enter the e-mail address your invitation was sent to. We will send you a link — no password to remember.",
+    submit: "Send sign-in link",
+    sending: "Sending…",
+    checkEmail: "Check your e-mail",
+    sent: "If the address is on the invited list, a sign-in link has just been sent to it. It is valid for 24 hours and can be used once.",
+    otherAddress: "Use a different address",
+    withProvider: (provider) => `Sign in with ${provider}`,
+    error: {
+      AccessDenied: "This address is not on the invited list. If you believe it should be, contact your administrator.",
+      Verification: "The link is no longer valid — it has expired or has already been used. Request a new one.",
+      EmailSignin: "The e-mail could not be sent. Please try again in a moment.",
+      OAuthSignin: "Signing in with that account could not be started. Please try again.",
+      OAuthCallback: "Signing in with that account could not be completed. Please try again.",
+      OAuthAccountNotLinked: "This account cannot be linked to your address. Sign in with the link in your e-mail.",
+    },
+    genericError: "Sign-in failed. Please try again.",
+  },
+
+  documents: {
+    notInOrganisation: (email, organisation) =>
+      `You are signed in as ${email}, but you are not listed among the people of ${organisation} — so there is nothing the system can assign to you. If you are supposed to acknowledge something here, ask HR to add you.`,
+  },
+
+  ask: {
+    placeholder: "Ask anything about the documents…",
+    submit: "Ask",
+    stop: "Stop",
+    searching: "Searching…",
+    askAgain: "Ask again",
+    askThis: "Ask this question",
+    examplesLabel: "Or try:",
+    examples: [
+      "What is the deadline for filing an objection?",
+      "Under what conditions may a minor player transfer?",
+      "When is a transfer fee payable for a player?",
+      "How many yellow cards lead to a suspension?",
+    ],
+    unknownError: "Unknown error",
+  },
+
+  answer: {
+    failed: "The answer could not be retrieved.",
+    incompleteHeading: "The answer is incomplete.",
+    incompleteNote: "The model hit its length limit and stopped mid-sentence — the conclusion is missing. Try asking about a narrower part of the problem.",
+    citations: (shown) => `Verbatim citations (${shown})`,
+    citationsNote: "given, identical ones merged",
+    sourceMissing: "source not given",
+    sources: (n) => `Sources searched (${n})`,
+    internal: "internal",
+    adapter: "adapter",
+    firstToken: "first token",
+    costNote: (pricelistVersion) => `Approximate. Excludes the helper model and retrieval. Price list ${pricelistVersion}.`,
+    pricelistStale: "the price list is out of date",
+    citationsVerified: "citations verified by the model",
+    citationsUnverified: "citations not verified",
+  },
   },
 }
 

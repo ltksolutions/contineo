@@ -13,6 +13,7 @@ import type { Citation, AskResult } from "@/lib/sseClient"
 import { toBlocks, cleanCitation, mergeCitations } from "@/lib/formatText"
 import { formatUsd, formatEur, toEur } from "@/lib/pricing"
 import type { Segment } from "@/lib/formatText"
+import { dictionary, type UiLanguage } from "@/lib/i18n"
 
 /** Stav odpovede počas streamovania — kým nepríde `done`, máme len text. */
 export interface AnswerState {
@@ -87,12 +88,13 @@ function Line({ label: label, value: value }: { label: string; value: string }) 
   )
 }
 
-export default function Answer({ state: state }: { state: AnswerState }) {
+export default function Answer({ state: state, language }: { state: AnswerState; language?: UiLanguage }) {
+  const t = dictionary(language).answer
   const { text, citations: citations, done: done, running: running } = state
   if (!text && !running && !done) return null
 
   const error = done?.error
-  const truncated = done?.dovodUkoncenia === "max_tokens"
+  const truncated = done?.stopReason === "max_tokens"
 
   // Model cituje ten istý úryvok pri každom tvrdení, ktoré sa oň opiera.
   // Pri dlhej odpovedi ich vznikne aj devätnásť, z toho polovica rovnakých.
@@ -103,7 +105,7 @@ export default function Answer({ state: state }: { state: AnswerState }) {
       <div className="karta">
         {error ? (
           <div style={{ color: "var(--bad-fg)", fontSize: 15 }}>
-            <strong>Odpoveď sa nepodarilo získať.</strong>
+            <strong>{t.failed}</strong>
             <div style={{ marginTop: 6, fontSize: 14 }}>{error}</div>
           </div>
         ) : (
@@ -127,9 +129,8 @@ export default function Answer({ state: state }: { state: AnswerState }) {
           >
             <span aria-hidden="true" style={{ fontWeight: 700 }}>▲</span>
             <span>
-              <strong>Odpoveď je neúplná.</strong>{" "}
-              Model dosiahol limit dĺžky a zastavil sa uprostred — chýba jej záver.
-              Skúste sa opýtať na užšiu časť problému.
+              <strong>{t.incompleteHeading}</strong>{" "}
+              {t.incompleteNote}
             </span>
           </div>
         )}
@@ -140,10 +141,10 @@ export default function Answer({ state: state }: { state: AnswerState }) {
         <div>
           <h3 style={{ fontSize: 13, textTransform: "uppercase", letterSpacing: "0.05em",
                        color: "var(--muted)", marginBottom: 10 }}>
-            Doslovné citácie ({unique.length})
+            {t.citations(unique.length)}
             {unique.length < citations.length && (
               <span style={{ fontWeight: 400, textTransform: "none", letterSpacing: 0 }}>
-                {" "}— {citations.length} uvedených, zhodné zlúčené
+                {" "}— {citations.length} {t.citationsNote}
               </span>
             )}
           </h3>
@@ -161,7 +162,7 @@ export default function Answer({ state: state }: { state: AnswerState }) {
               >
                 <div style={{ fontSize: 14.5, lineHeight: 1.6 }}>„{cleanCitation(c.citedText)}“</div>
                 <div className="tichy" style={{ fontSize: 12.5, marginTop: 6 }}>
-                  {[c.documentTitle, c.articleRef].filter(Boolean).join(" · ") || "zdroj neuvedený"}
+                  {[c.documentTitle, c.articleRef].filter(Boolean).join(" · ") || t.sourceMissing}
                 </div>
               </div>
             ))}
@@ -174,7 +175,7 @@ export default function Answer({ state: state }: { state: AnswerState }) {
         <details>
           <summary style={{ cursor: "pointer", fontSize: 13, textTransform: "uppercase",
                             letterSpacing: "0.05em", color: "var(--muted)", fontWeight: 700 }}>
-            Prehľadané zdroje ({done.sources.length})
+            {t.sources(done.sources.length)}
           </summary>
           <div style={{ display: "grid", gap: 6, marginTop: 10 }}>
             {done.sources.map(z => (
@@ -202,7 +203,7 @@ export default function Answer({ state: state }: { state: AnswerState }) {
                     className="stitok"
                     style={{ background: "var(--warn-bg)", color: "var(--warn-fg)", fontSize: 11 }}
                   >
-                    interné
+                    {t.internal}
                   </span>
                 )}
               </div>
@@ -221,9 +222,9 @@ export default function Answer({ state: state }: { state: AnswerState }) {
           }}
         >
           {done.model && <Line label="model" value={done.model} />}
-          {done.provider && <Line label="adaptér" value={done.provider} />}
+          {done.provider && <Line label={t.adapter} value={done.provider} />}
           {done.ttftMs !== null && (
-            <Line label="prvý token" value={`${(done.ttftMs / 1000).toFixed(1)} s`} />
+            <Line label={t.firstToken} value={`${(done.ttftMs / 1000).toFixed(1)} s`} />
           )}
           <Line label="celkom" value={`${(done.totalMs / 1000).toFixed(1)} s`} />
 
@@ -246,7 +247,7 @@ export default function Answer({ state: state }: { state: AnswerState }) {
             <span
               className="stitok"
               style={{ background: "var(--surface-2)", color: "var(--muted)" }}
-              title={`Orientačne. Nezahŕňa pomocný model ani vyhľadávanie. Cenník ${done.cost.pricelistVersion}.`}
+              title={t.costNote(done.cost.pricelistVersion)}
             >
               ≈ {formatUsd(done.cost.usd)} · {formatEur(toEur(done.cost.usd))}
             </span>
@@ -255,7 +256,7 @@ export default function Answer({ state: state }: { state: AnswerState }) {
               počítali starou sadzbou. */}
           {done.cost?.pricelistExpired && (
             <span className="stitok" style={{ background: "var(--warn-bg)", color: "var(--warn-fg)" }}>
-              cenník je zastaraný
+              {t.pricelistStale}
             </span>
           )}
           {/* Rozpad na fázy. Nezaujíma hodnotiteľa, ale bez neho sa nedá
@@ -271,7 +272,7 @@ export default function Answer({ state: state }: { state: AnswerState }) {
                 : { background: "var(--warn-bg)", color: "var(--warn-fg)" }
             }
           >
-            {done.verifiedCitations ? "citácie overené modelom" : "citácie neoverené"}
+            {done.verifiedCitations ? t.citationsVerified : t.citationsUnverified}
           </span>
         </div>
       )}

@@ -18,6 +18,7 @@ import { hrContext } from "@/lib/hr"
 import { peopleContext } from "@/lib/people"
 import { brandingView } from "@/lib/tenants"
 import { tenantStyle } from "@/components/TenantHeader"
+import { normalizeLanguage, type UiLanguage } from "@/lib/i18n"
 
 /**
  * Názov v záložke prehliadača je tiež informácia.
@@ -103,6 +104,9 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   let email: string | undefined
   let name: string | undefined
   let photo: string | undefined
+  // Jazyk prostredia (D…): riadi sa osobou, nie hostiteľom. Kto prihlásený
+  // nie je, dostane predvolený jazyk organizácie.
+  let language: UiLanguage | undefined
   try {
     email = (await currentEmail()) ?? undefined
   } catch (e) {
@@ -115,6 +119,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     try {
       const self = await currentPerson()
       name = self?.fullName
+      if (self?.language) language = normalizeLanguage(self.language)
       // Verzia je v adrese, takže prehliadač si fotku odloží nadlho a nová
       // sa aj tak ukáže hneď (rovnako ako pri logu).
       if (self?.photoVersion) {
@@ -170,9 +175,10 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             isHr={isHr}
             isPeopleAdmin={isPeopleAdmin}
             isContentManager={isContentManager}
+            language={language}
           />
           <main style={{ flex: 1 }}>{children}</main>
-          <Footer />
+          <Footer language={language} />
         </SessionProvider>
       </body>
     </html>

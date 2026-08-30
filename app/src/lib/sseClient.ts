@@ -42,7 +42,7 @@ export interface Completion {
   /** Trvanie jednotlivých fáz pred generovaním (ms). */
   timings?: Record<string, number>
   /** Prečo model prestal písať; "max_tokens" = useknuté. */
-  dovodUkoncenia?: string
+  stopReason?: string
   tokens?: TokenCounts
   cost?: Cost
 }
@@ -145,7 +145,7 @@ export interface AskResult extends AskProgress {
    * Prečo model prestal písať. `"max_tokens"` znamená, že odpoveď je
    * useknutá — používateľ to musí vidieť, nie sa domýšľať.
    */
-  dovodUkoncenia?: string
+  stopReason?: string
   /** Spotreba tokenov podľa modelu — vstup, výstup a cache zvlášť. */
   tokens?: TokenCounts
   /** Odhad ceny v deň položenia otázky, aj s označením cenníka. */
@@ -208,7 +208,7 @@ export async function askQuestion(
         provider: u.provider ?? "",
         verifiedCitations: u.verifiedCitations ?? false,
         timings: u.timings,
-        dovodUkoncenia: u.dovodUkoncenia,
+        stopReason: u.stopReason,
         tokens: u.tokens,
         cost: u.cost,
       })

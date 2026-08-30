@@ -16,23 +16,18 @@ import Answer from "./Answer"
 import type { AnswerState } from "./Answer"
 import Rating from "./Rating"
 import type { Verdict } from "@/lib/ratings"
+import { dictionary, type UiLanguage } from "@/lib/i18n"
 
 const EMPTY: AnswerState = {
   question: "", text: "", citations: [], done: null, running: false,
 }
 
 /** Návrhy na začiatok — aby prvá obrazovka nebola prázdna. */
-const EXAMPLES = [
-  "Aká je lehota na podanie námietky?",
-  "Za akých podmienok môže prestúpiť maloletý hráč?",
-  "Kedy sa platí odstupné za hráča?",
-  "Koľko žltých kariet znamená zastavenie činnosti?",
-]
-
 export default function Search({
   questionId: questionId,
   preset: preset,
   onReviewed: onReviewed,
+  language,
 }: {
   /** Označenie otázky zo zlatej sady — v režime sady. */
   questionId?: string
@@ -40,7 +35,10 @@ export default function Search({
   preset?: string
   /** Zavolá sa po posúdení správnosti; režim sady na to nadväzuje. */
   onReviewed?: (correct: Verdict) => void
+  /** Jazyk prostredia. Bez neho slovenčina. */
+  language?: UiLanguage
 } = {}) {
+  const t = dictionary(language).ask
   const [question, setQuestion] = useState(preset ?? "")
   const [state, setState] = useState<AnswerState>(EMPTY)
   const [recordId, setRecordId] = useState<string | null>(null)
@@ -103,7 +101,7 @@ export default function Search({
         done: {
           text: s.text, citations: s.citations, sources: [], model: "", provider: "",
           verifiedCitations: false, ttftMs: null, totalMs: 0,
-          error: (e as Error)?.message ?? "Neznáma chyba",
+          error: (e as Error)?.message ?? t.unknownError,
         },
       }))
     }
@@ -124,7 +122,7 @@ export default function Search({
             onClick={() => send(preset ?? "")}
             disabled={state.running}
           >
-            {state.running ? "Hľadám…" : state.done ? "Spýtať sa znova" : "Položiť túto otázku"}
+            {state.running ? t.searching : state.done ? t.askAgain : t.askThis}
           </button>
           {state.running && (
             <button
@@ -132,12 +130,12 @@ export default function Search({
               className="tlacidlo tlacidlo--tiche"
               onClick={() => { abort.current?.abort(); setState(s => ({ ...s, running: false })) }}
             >
-              Zastaviť
+              {t.stop}
             </button>
           )}
         </div>
 
-        <Answer state={state} />
+        <Answer state={state} language={language} />
         <Rating recordId={recordId} questionId={questionId} onDone={onReviewed} />
       </div>
     )
@@ -160,7 +158,7 @@ export default function Search({
               send(question)
             }
           }}
-          placeholder="Opýtajte sa na čokoľvek z noriem…"
+          placeholder={t.placeholder}
           rows={3}
           maxLength={1000}
           style={{
@@ -173,7 +171,7 @@ export default function Search({
         />
         <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
           <button type="submit" className="tlacidlo" disabled={!question.trim() || state.running}>
-            {state.running ? "Hľadám…" : "Opýtať sa"}
+            {state.running ? t.searching : t.submit}
           </button>
           {state.running && (
             <button
@@ -181,7 +179,7 @@ export default function Search({
               className="tlacidlo tlacidlo--tiche"
               onClick={() => { abort.current?.abort(); setState(s => ({ ...s, running: false })) }}
             >
-              Zastaviť
+              {t.stop}
             </button>
           )}
           <span className="tichy" style={{ fontSize: 12.5, marginLeft: "auto" }}>
@@ -194,10 +192,10 @@ export default function Search({
       {!state.text && !state.running && !state.done && (
         <div>
           <div className="tichy" style={{ fontSize: 12.5, marginBottom: 8 }}>
-            Alebo skúste:
+            {t.examplesLabel}
           </div>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-            {EXAMPLES.map(p => (
+            {t.examples.map(p => (
               <button
                 key={p}
                 type="button"
@@ -212,7 +210,7 @@ export default function Search({
         </div>
       )}
 
-      <Answer state={state} />
+      <Answer state={state} language={language} />
 
       <Rating recordId={recordId} questionId={questionId} onDone={onReviewed} />
     </div>

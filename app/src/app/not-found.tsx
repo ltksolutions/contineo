@@ -12,18 +12,25 @@
  */
 
 import Link from "next/link"
+import { currentPerson } from "@/lib/session"
+import { dictionary } from "@/lib/i18n"
 
-export default function NotFoundPage() {
+export default async function NotFoundPage() {
+  // Jazyk sa berie z prihlásenej osoby, keď nejaká je. Neznámy hostiteľ ju
+  // nemá — a vtedy je slovenčina správna predvoľba (D29).
+  let language: unknown
+  try { language = (await currentPerson())?.language } catch { language = undefined }
+  const t = dictionary(language)
   return (
     <div className="obal" style={{ padding: "72px 20px", maxWidth: 520 }}>
       <h1 style={{ fontSize: 27, letterSpacing: "-0.02em", margin: "0 0 8px" }}>
-        Stránka sa nenašla
+        {t.notFound.heading}
       </h1>
       <p className="tichy" style={{ margin: "0 0 22px", fontSize: 15.5 }}>
-        Adresa neexistuje alebo už neplatí.
+        {t.notFound.intro}
       </p>
       <Link className="tlacidlo tlacidlo--tiche" href="/">
-        Na úvodnú stranu
+        {t.notFound.home}
       </Link>
     </div>
   )

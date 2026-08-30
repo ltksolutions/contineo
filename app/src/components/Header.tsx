@@ -14,6 +14,7 @@ import { usePathname } from "next/navigation"
 import { signOut } from "next-auth/react"
 import { ContineoMark } from "./ContineoMark"
 import type { TenantBrandingView } from "./TenantHeader"
+import { dictionary, type UiLanguage } from "@/lib/i18n"
 
 /**
  * Voľba témy má **tri** stavy, nie dva.
@@ -30,11 +31,6 @@ type Theme = "light" | "dark"
 /** Poradie pri klikaní. Systém je prvý, lebo je to predvolený stav. */
 const NEXT_THEME: Record<ThemeChoice, ThemeChoice> = { system: "light", light: "dark", dark: "system" }
 
-const THEME_LABEL: Record<ThemeChoice, string> = {
-  system: "podľa systému",
-  light: "svetlá",
-  dark: "tmavá",
-}
 
 /**
  * Ikona stavu. Tri rôzne tvary, nie jeden meniaci sa — človek má poznať
@@ -119,6 +115,7 @@ export default function Header({
   isHr: isHr,
   isPeopleAdmin: isPeopleAdmin,
   isContentManager: isContentManager,
+  language,
 }: {
   branding?: TenantBrandingView
   email?: string
@@ -134,7 +131,10 @@ export default function Header({
   isPeopleAdmin?: boolean
   /** Má rolu `spravca-obsahu` vo vlastnej organizácii (D53). */
   isContentManager?: boolean
+  /** Jazyk prostredia prihlásenej osoby; bez nej slovenčina. */
+  language?: UiLanguage
 }) {
+  const t = dictionary(language)
   const [choice, setChoice] = useState<ThemeChoice>("system")
   const [menuOpen, setMenuOpen] = useState(false)
   const [personalOpen, setPersonalOpen] = useState(false)
@@ -144,17 +144,17 @@ export default function Header({
   const shade = avatarShade(email ?? "")
 
   const ITEMS = [
-    { kam: "/", popis: "Voľné otázky" },
-    { kam: "/sada", popis: "Zlatá sada" },
+    { href: "/", label: t.nav.ask },
+    { href: "/sada", label: t.nav.goldenSet },
     // Odkaz vidí každý prihlásený; samotná stránka si už poradí — kto nemá
     // čo potvrdzovať, uvidí, že nemá nič. Podmieňovať odkaz by znamenalo
     // ťahať stav trás do hlavičky, teda do každej stránky.
-    { kam: "/dokumenty", popis: "Na potvrdenie" },
+    { href: "/dokumenty", label: t.nav.toAcknowledge },
     // Odkazy sa neukazujú podľa domnienky klienta — príznaky prichádzajú
     // zo servera, kde už prešli všetky podmienky.
-    ...(isHr ? [{ kam: "/hr", popis: "Pridelené normy" }] : []),
-    ...(isPeopleAdmin ? [{ kam: "/osoby", popis: "Osoby" }] : []),
-    ...(isContentManager ? [{ kam: "/kniznica", popis: "Knižnica" }] : []),
+    ...(isHr ? [{ href: "/hr", label: t.nav.assigned }] : []),
+    ...(isPeopleAdmin ? [{ href: "/osoby", label: t.nav.people }] : []),
+    ...(isContentManager ? [{ href: "/kniznica", label: t.nav.library }] : []),
   ]
 
   /**
@@ -165,8 +165,8 @@ export default function Header({
    * a v lište len zaberali miesto tomu, na čo sa naozaj kliká.
    */
   const ADMIN_ITEMS = [
-    ...(isPeopleAdmin ? [{ kam: "/organizacia", popis: "Nastavenie organizácie" }] : []),
-    ...(isAdmin ? [{ kam: "/admin", popis: "Správa tenantov" }] : []),
+    ...(isPeopleAdmin ? [{ href: "/organizacia", label: t.nav.organisation }] : []),
+    ...(isAdmin ? [{ href: "/admin", label: t.nav.tenants }] : []),
   ]
 
   // Zmena stránky zatvorí panel. Bez toho zostane otvorený nad novým obsahom
@@ -288,7 +288,7 @@ export default function Header({
               className="tlacidlo tlacidlo--tiche hlavicka-hamburger"
               aria-expanded={menuOpen}
               aria-controls="hlavne-menu"
-              aria-label={menuOpen ? "Zavrieť menu" : "Otvoriť menu"}
+              aria-label={menuOpen ? t.nav.closeMenu : t.nav.openMenu}
               onClick={() => setMenuOpen(o => !o)}
             >
               <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"
@@ -304,15 +304,15 @@ export default function Header({
               className={`hlavicka-nav${menuOpen ? " je-otvorene" : ""}`}
             >
               {ITEMS.map(o => {
-                const active = o.kam === "/" ? pathname === "/" : pathname.startsWith(o.kam)
+                const active = o.href === "/" ? pathname === "/" : pathname.startsWith(o.href)
                 return (
                   <Link
-                    key={o.kam}
-                    href={o.kam}
+                    key={o.href}
+                    href={o.href}
                     className={`hlavicka-odkaz${active ? " je-aktivny" : ""}`}
                     onClick={() => setMenuOpen(false)}
                   >
-                    {o.popis}
+                    {o.label}
                   </Link>
                 )
               })}
@@ -329,7 +329,7 @@ export default function Header({
                 className="osobne-tlacidlo"
                 aria-haspopup="menu"
                 aria-expanded={personalOpen}
-                aria-label={`Účet ${email}`}
+                aria-label={t.nav.account(email ?? "")}
                 title={email}
                 onClick={() => setPersonalOpen(o => !o)}
               >
@@ -369,8 +369,8 @@ export default function Header({
 
                   {ADMIN_ITEMS.map(o => (
                     <Link
-                      key={o.kam}
-                      href={o.kam}
+                      key={o.href}
+                      href={o.href}
                       role="menuitem"
                       className="osobne-polozka"
                       onClick={() => setPersonalOpen(false)}
@@ -381,7 +381,7 @@ export default function Header({
                         <circle cx="9" cy="9" r="2.6" />
                         <path d="M9 1.8v1.9M9 14.3v1.9M2.9 9H1M17 9h-1.9M4.7 4.7 3.4 3.4M14.6 14.6l-1.3-1.3M13.3 4.7l1.3-1.3M3.4 14.6l1.3-1.3" />
                       </svg>
-                      {o.popis}
+                      {o.label}
                     </Link>
                   ))}
 
@@ -394,7 +394,7 @@ export default function Header({
                     onClick={toggle}
                   >
                     <ThemeIcon choice={choice} />
-                    Téma: {THEME_LABEL[choice]}
+                    {t.nav.themeLabel} {t.nav.theme[choice]}
                   </button>
 
                   <button
@@ -408,7 +408,7 @@ export default function Header({
                       strokeLinecap="round" strokeLinejoin="round">
                       <path d="M7 15H4a1.5 1.5 0 0 1-1.5-1.5v-9A1.5 1.5 0 0 1 4 3h3M11.5 12 15 9l-3.5-3M15 9H7" />
                     </svg>
-                    Odhlásiť
+                    {t.nav.signOut}
                   </button>
                 </div>
               )}
@@ -422,8 +422,8 @@ export default function Header({
             onClick={toggle}
             className="tlacidlo tlacidlo--tiche"
             style={{ marginLeft: "auto", padding: "7px 9px", display: "inline-flex", alignItems: "center" }}
-            aria-label={`Téma ${THEME_LABEL[choice]}. Prepnúť na: ${THEME_LABEL[NEXT_THEME[choice]]}`}
-            title={`Téma ${THEME_LABEL[choice]}`}
+            aria-label={t.nav.themeToggle(t.nav.theme[choice], t.nav.theme[NEXT_THEME[choice]])}
+            title={t.nav.themeState(t.nav.theme[choice])}
           >
             <ThemeIcon choice={choice} />
           </button>

@@ -4,6 +4,7 @@ import { useState } from "react"
 import { signIn } from "next-auth/react"
 import TenantHeader from "./TenantHeader"
 import type { TenantBrandingView } from "./TenantHeader"
+import { dictionary, type UiLanguage } from "@/lib/i18n"
 
 /**
  * Formulár prihlásenia e-mailom.
@@ -13,22 +14,6 @@ import type { TenantBrandingView } from "./TenantHeader"
  * adries dá zistiť, kto zo zväzu má prístup — a pri systéme s internými
  * smernicami je to samo osebe citlivý údaj.
  */
-
-const ERRORS: Record<string, string> = {
-  AccessDenied:
-    "Táto adresa nie je medzi pozvanými. Ak si myslíte, že tam patrí, ozvite sa správcovi.",
-  Verification:
-    "Odkaz už neplatí — buď vypršal, alebo bol použitý. Vyžiadajte si nový.",
-  EmailSignin:
-    "E-mail sa nepodarilo odoslať. Skúste to o chvíľu znova.",
-  // Konto sa overilo, ale do organizácie nepatrí, alebo je z cudzieho
-  // Entra tenanta. Presnejšie sa to povedať nedá — z toho, že „vaša adresa
-  // tam je, ale konto nie", by sa dalo zistiť, kto v organizácii je.
-  OAuthSignin: "Prihlásenie kontom sa nepodarilo začať. Skúste to znova.",
-  OAuthCallback: "Prihlásenie kontom sa nepodarilo dokončiť. Skúste to znova.",
-  OAuthAccountNotLinked:
-    "Toto konto sa nedá spojiť s vašou adresou. Prihláste sa odkazom v e-maile.",
-}
 
 /** Značky poskytovateľov. Kreslené, nie sťahované — e-mail ani portál nemá volať cudzí server. */
 function MicrosoftMark() {
@@ -61,6 +46,7 @@ export default function SignIn({
   error: error,
   branding,
   providers: providers = [],
+  language,
 }: {
   sent: boolean
   error?: string
@@ -71,7 +57,10 @@ export default function SignIn({
    * nastavené, a hádať by znamenalo ponúknuť tlačidlo, ktoré skončí chybou.
    */
   providers?: ("microsoft" | "google")[]
+  /** Jazyk určuje organizácia — človek ešte nie je známy. */
+  language?: UiLanguage
 }) {
+  const t = dictionary(language).signIn
   const [email, setEmail] = useState("")
   const [sending, setSending] = useState(false)
   const [done, setDone] = useState(sent)
@@ -95,10 +84,9 @@ export default function SignIn({
   if (done) {
     return (
       <div className="karta" style={{ textAlign: "center" }}>
-        <h1 style={{ fontSize: 20, margin: "0 0 12px" }}>Pozrite si e-mail</h1>
+        <h1 style={{ fontSize: 20, margin: "0 0 12px" }}>{t.checkEmail}</h1>
         <p className="tichy" style={{ fontSize: 15, lineHeight: 1.65, margin: 0 }}>
-          Ak je adresa medzi pozvanými, práve na ňu odišiel prihlasovací odkaz.
-          Platí 24 hodín a dá sa použiť raz.
+          {t.sent}
         </p>
         <button
           type="button"
@@ -106,7 +94,7 @@ export default function SignIn({
           style={{ marginTop: 20 }}
           onClick={() => setDone(false)}
         >
-          Zadať inú adresu
+          {t.otherAddress}
         </button>
       </div>
     )
@@ -134,11 +122,10 @@ export default function SignIn({
       )}
 
       <h1 style={{ fontSize: 21, margin: "0 0 8px", letterSpacing: "-0.02em" }}>
-        Prihlásenie
+        {t.heading}
       </h1>
       <p className="tichy" style={{ fontSize: 14.5, lineHeight: 1.65, margin: "0 0 22px" }}>
-        Zadajte e-mail, na ktorý ste dostali pozvánku. Pošleme vám odkaz —
-        heslo si pamätať nemusíte.
+        {t.intro}
       </p>
 
       {error && (
@@ -150,7 +137,7 @@ export default function SignIn({
             marginBottom: 18,
           }}
         >
-          {ERRORS[error] ?? "Prihlásenie sa nepodarilo. Skúste to znova."}
+          {t.error[error] ?? t.genericError}
         </div>
       )}
 
@@ -171,7 +158,7 @@ export default function SignIn({
                   onClick={() => signIn(p === "microsoft" ? "azure-ad" : "google", { callbackUrl: "/" })}
                 >
                   <Mark />
-                  Prihlásiť sa cez {NAMES[p]}
+                  {t.withProvider(NAMES[p])}
                 </button>
               )
             })}
@@ -207,7 +194,7 @@ export default function SignIn({
           }}
         />
         <button type="submit" className="tlacidlo" disabled={sending || !email.trim()}>
-          {sending ? "Odosielam…" : "Poslať prihlasovací odkaz"}
+          {sending ? t.sending : t.submit}
         </button>
       </form>
     </div>
