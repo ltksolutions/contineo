@@ -61,8 +61,8 @@ export async function pridelit(fd: FormData) {
   // Názvy oddelení sa do pridelenia zapisujú ako **kópia** (`audience.label`),
   // z rovnakého dôvodu ako názov dokumentu: oddelenie sa premenuje alebo zruší
   // a o rok musí byť čitateľné, komu sa vtedy prideľovalo.
-  const utvary = await vsetkyOddelenia(kto.companyCode)
-  const nazvyOddeleni = Object.fromEntries(utvary.map(o => [o.id, o.nazov]))
+  const strom = await vsetkyOddelenia(kto.companyCode)
+  const nazvyOddeleni = Object.fromEntries(strom.map(o => [o.id, o.nazov]))
 
   const publika = audienceFromSelection({
     vsetci: Boolean(fd.get("vsetci")),

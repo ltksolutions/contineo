@@ -35,7 +35,7 @@ import type { Tenant } from "@/lib/tenants"
 
 const ZALOZKY = [
   { kluc: "vzhlad", popis: "Vzhľad a jazyky" },
-  { kluc: "utvary", popis: "Oddelenia" },
+  { kluc: "oddelenia", popis: "Oddelenia" },
   { kluc: "domeny", popis: "Domény" },
   { kluc: "prihlasenie", popis: "Prihlasovanie" },
   { kluc: "ciselniky", popis: "Číselníky" },
@@ -183,7 +183,12 @@ export default async function Organizacia({
   const { sprava, chyba, zalozka, hladat } = await searchParams
   // Záložka je v adrese, nie v klientskom stave: dá sa poslať odkazom,
   // vrátiť sa naň z histórie a funguje bez jediného riadku JavaScriptu.
-  const teraz = ZALOZKY.some(z => z.kluc === zalozka) ? zalozka! : "vzhlad"
+  // `strom` je starý kľúč tejto záložky. Odkazy s ním existujú v e-mailoch
+  // aj v záložkách prehliadača — presmerovať by ich rozbilo, tak sa len
+  // preloží. Zmizne, keď prestane chodiť.
+  const STARE_KLUCE: Record<string, string> = { strom: "oddelenia" }
+  const kluc = zalozka ? (STARE_KLUCE[zalozka] ?? zalozka) : undefined
+  const teraz = ZALOZKY.some(z => z.kluc === kluc) ? kluc! : "vzhlad"
   const tenant = ctx.tenant
   const branding = brandingView(tenant)
   const jazyk = ctx.person.language
@@ -193,9 +198,9 @@ export default async function Organizacia({
 
   // Strom sa načítava len pre svoju záložku. Na ostatných by to bol dotaz
   // navyše za nič.
-  const utvary = teraz === "utvary" ? await vsetkyOddelenia(tenant.companyCode) : []
-  const riadky = teraz === "utvary" ? splostiStrom(utvary) : []
-  const koliOsob = teraz === "utvary" ? await pocty(tenant.companyCode) : new Map()
+  const oddeleniaTenanta = teraz === "oddelenia" ? await vsetkyOddelenia(tenant.companyCode) : []
+  const riadky = teraz === "oddelenia" ? splostiStrom(oddeleniaTenanta) : []
+  const koliOsob = teraz === "oddelenia" ? await pocty(tenant.companyCode) : new Map()
   // Počty použití sa čítajú len pre svoju záložku — inak by to boli dva
   // dotazy na dokumenty pri každom otvorení nastavenia.
   const ciselniky = teraz === "ciselniky"
@@ -349,7 +354,7 @@ export default async function Organizacia({
       </form>
       )}
 
-      {teraz === "utvary" && (
+      {teraz === "oddelenia" && (
       <div style={{ display: "grid", gap: 16 }}>
         <section className="karta" style={{ padding: 20, display: "grid", gap: 12 }}>
           <div>
@@ -368,24 +373,24 @@ export default async function Organizacia({
               zapísané pri ľuďoch ako text, ozvite sa nám a prevedieme ich naraz.
             </p>
           ) : (
-            <ul className="utvary">
+            <ul className="strom">
               {riadky.map(({ oddelenie, uroven }) => {
                 const p = koliOsob.get(oddelenie.id) ?? { priamo: 0, sPodriadenymi: 0 }
-                const pod = podstrom(utvary, oddelenie.id)
+                const pod = podstrom(oddeleniaTenanta, oddelenie.id)
                 return (
-                  <li key={oddelenie.id} className="utvar" style={{ paddingLeft: (uroven - 1) * 18 }}>
+                  <li key={oddelenie.id} className="strom-polozka" style={{ paddingLeft: (uroven - 1) * 18 }}>
                     <details>
-                      <summary className="utvar-riadok">
-                        <span className="utvar-nazov">{oddelenie.nazov}</span>
-                        <span className="tichy utvar-pocet">
+                      <summary className="strom-riadok">
+                        <span className="strom-nazov">{oddelenie.nazov}</span>
+                        <span className="tichy strom-pocet">
                           {p.priamo}
                           {p.sPodriadenymi !== p.priamo ? ` (${p.sPodriadenymi} aj s podriadenými)` : ""}
                         </span>
                       </summary>
 
-                      <div className="utvar-uprava">
-                        <form action={premenujUtvar} className="utvar-forma">
-                          <input type="hidden" name="zalozka" value="utvary" />
+                      <div className="strom-uprava">
+                        <form action={premenujUtvar} className="strom-forma">
+                          <input type="hidden" name="zalozka" value="oddelenia" />
                           <input type="hidden" name="id" value={oddelenie.id} />
                           <input
                             className="pole-vstup"
@@ -397,8 +402,8 @@ export default async function Organizacia({
                           <button className="tlacidlo tlacidlo--tiche" type="submit">Premenovať</button>
                         </form>
 
-                        <form action={presunUtvar} className="utvar-forma">
-                          <input type="hidden" name="zalozka" value="utvary" />
+                        <form action={presunUtvar} className="strom-forma">
+                          <input type="hidden" name="zalozka" value="oddelenia" />
                           <input type="hidden" name="id" value={oddelenie.id} />
                           <Vyber
                             meno="parentId"
@@ -422,7 +427,7 @@ export default async function Organizacia({
 
                         {p.sPodriadenymi === 0 && pod.size === 1 ? (
                           <form action={zrusUtvar}>
-                            <input type="hidden" name="zalozka" value="utvary" />
+                            <input type="hidden" name="zalozka" value="oddelenia" />
                             <input type="hidden" name="id" value={oddelenie.id} />
                             <button className="tlacidlo tlacidlo--tiche" type="submit">Zrušiť oddelenie</button>
                           </form>
@@ -442,7 +447,7 @@ export default async function Organizacia({
         </section>
 
         <form action={zalozUtvar} className="karta" style={{ padding: 20, display: "grid", gap: 14 }}>
-          <input type="hidden" name="zalozka" value="utvary" />
+          <input type="hidden" name="zalozka" value="oddelenia" />
           <h2 style={{ fontSize: 17, margin: 0 }}>Nové oddelenie</h2>
 
           <label className="pole">
@@ -459,7 +464,7 @@ export default async function Organizacia({
                 { hodnota: "", popis: "— najvyššia úroveň —" },
                 ...riadky
                   // Hlbšie než povolené sa založiť nedá, tak sa to neponúka.
-                  .filter(r => hlbka(utvary, r.oddelenie.id) < MAX_HLBKA)
+                  .filter(r => hlbka(oddeleniaTenanta, r.oddelenie.id) < MAX_HLBKA)
                   .map(r => ({
                     hodnota: r.oddelenie.id,
                     popis: `${"— ".repeat(r.uroven - 1)}${r.oddelenie.nazov}`,
@@ -586,14 +591,14 @@ export default async function Organizacia({
               </p>
             </div>
 
-            <ul className="utvary">
+            <ul className="strom">
               {c.vsetky.map(p => {
                 const vlastna = c.vlastne.some(v => v.key === p.key)
                 return (
-                  <li key={p.key} className="utvar">
-                    <div className="utvar-riadok">
-                      <span className="utvar-nazov">{p.label ?? p.key}</span>
-                      <span className="tichy utvar-pocet">
+                  <li key={p.key} className="strom-polozka">
+                    <div className="strom-riadok">
+                      <span className="strom-nazov">{p.label ?? p.key}</span>
+                      <span className="tichy strom-pocet">
                         <code>{p.key}</code>
                         {!vlastna && " · základná"}
                         {vlastna && c.pocty[p.key] > 0 && ` · použitá ${c.pocty[p.key]}×`}
@@ -612,7 +617,7 @@ export default async function Organizacia({
               })}
             </ul>
 
-            <form action={pridajDoCiselnika} className="utvar-forma">
+            <form action={pridajDoCiselnika} className="strom-forma">
               <input type="hidden" name="zalozka" value="ciselniky" />
               <input type="hidden" name="ciselnik" value={c.nazov} />
               <input className="pole-vstup" name="popis" placeholder="Metodický pokyn"

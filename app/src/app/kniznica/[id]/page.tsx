@@ -136,7 +136,7 @@ export default async function DetailDokumentu({
         </form>
       </details>
 
-      <form action={zaradDoPriecinka} className="karta utvar-forma" style={{ padding: 18, margin: "0 0 18px" }}>
+      <form action={zaradDoPriecinka} className="karta strom-forma" style={{ padding: 18, margin: "0 0 18px" }}>
         <input type="hidden" name="documentId" value={d.documentId} />
         <div className="pole" style={{ flex: "1 1 260px", margin: 0 }}>
           <span className="pole-popis">Priečinok</span>

@@ -56,13 +56,13 @@ export default async function Pridelit({
   }
 
   const q = await searchParams
-  const [dokumenty, publika, utvary, poctyUtvarov] = await Promise.all([
+  const [dokumenty, publika, strom, poctyUtvarov] = await Promise.all([
     pridelitelneDokumenty(ctx.person.companyCode),
     publikaVOrganizacii(ctx.person.companyCode),
     vsetkyOddelenia(ctx.person.companyCode),
     pocty(ctx.person.companyCode),
   ])
-  const utvaryRiadky = splostiStrom(utvary)
+  const stromRiadky = splostiStrom(strom)
   const branding = brandingView(ctx.tenant)
   const jazyk = ctx.person.language
 
@@ -135,7 +135,7 @@ export default async function Pridelit({
               </span>
             </label>
 
-            {utvaryRiadky.length > 0 && (
+            {stromRiadky.length > 0 && (
               <>
                 <div className="hr-podnadpis">Oddelenia</div>
                 <p className="tichy pole-napoveda" style={{ margin: "0 0 8px" }}>
@@ -143,7 +143,7 @@ export default async function Pridelit({
                   je počet ľudí vrátane nich — to je to, koho sa to naozaj týka.
                 </p>
                 <div className="stitky-zoznam">
-                  {utvaryRiadky.map(({ oddelenie, uroven }) => {
+                  {stromRiadky.map(({ oddelenie, uroven }) => {
                     const p = poctyUtvarov.get(oddelenie.id) ?? { priamo: 0, sPodriadenymi: 0 }
                     return (
                       <label

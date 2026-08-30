@@ -16,6 +16,8 @@ import type { UiLanguage } from "@/lib/i18n"
 
 const PREDMETY: Record<string, string> = {
   osoba: "osoba",
+  oddelenie: "oddelenie",
+  // Záznamy spred premenovania. Prepísať ich by znamenalo meniť audit.
   utvar: "oddelenie",
   dokument: "dokument",
   priecinok: "priečinok",

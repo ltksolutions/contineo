@@ -149,21 +149,21 @@ export default async function Kniznica({
         <aside className="kniznica-priecinky">
           <h2 className="pole-popis" style={{ margin: "0 0 8px" }}>Priečinky</h2>
 
-          <ul className="utvary">
-            <li className="utvar">
+          <ul className="strom">
+            <li className="strom-polozka">
               <Link
                 href={sFiltrom({ priecinok: undefined })}
-                className={`utvar-riadok${!priecinok ? " je-aktivny" : ""}`}
+                className={`strom-riadok${!priecinok ? " je-aktivny" : ""}`}
               >
-                <span className="utvar-nazov">Všetky dokumenty</span>
+                <span className="strom-nazov">Všetky dokumenty</span>
               </Link>
             </li>
-            <li className="utvar">
+            <li className="strom-polozka">
               <Link
                 href={sFiltrom({ priecinok: "nezaradene" })}
-                className={`utvar-riadok${priecinok === "nezaradene" ? " je-aktivny" : ""}`}
+                className={`strom-riadok${priecinok === "nezaradene" ? " je-aktivny" : ""}`}
               >
-                <span className="tichy utvar-nazov">Nezaradené</span>
+                <span className="tichy strom-nazov">Nezaradené</span>
               </Link>
             </li>
 
@@ -171,23 +171,23 @@ export default async function Kniznica({
               const c = poctyPriecinkov.get(p.id) ?? { priamo: 0, sPodriadenymi: 0 }
               const pod = podstrom(priecinky, p.id)
               return (
-                <li key={p.id} className="utvar" style={{ paddingLeft: (uroven - 1) * 14 }}>
-                  <div className="utvar-riadok" style={{ gap: 6 }}>
+                <li key={p.id} className="strom-polozka" style={{ paddingLeft: (uroven - 1) * 14 }}>
+                  <div className="strom-riadok" style={{ gap: 6 }}>
                     <Link
                       href={sFiltrom({ priecinok: p.id })}
-                      className={`utvar-nazov${priecinok === p.id ? " je-aktivny" : ""}`}
+                      className={`strom-nazov${priecinok === p.id ? " je-aktivny" : ""}`}
                     >
                       {p.nazov}
                     </Link>
-                    <span className="tichy utvar-pocet">{c.sPodriadenymi}</span>
+                    <span className="tichy strom-pocet">{c.sPodriadenymi}</span>
                   </div>
 
                   <details>
                     <summary className="tichy" style={{ fontSize: 12.5, cursor: "pointer", padding: "0 12px 6px" }}>
                       upraviť
                     </summary>
-                    <div className="utvar-uprava">
-                      <form action={premenujPriecinokAkcia} className="utvar-forma">
+                    <div className="strom-uprava">
+                      <form action={premenujPriecinokAkcia} className="strom-forma">
                         <input type="hidden" name="id" value={p.id} />
                         {filtre.map(([k, v]) => <input key={k} type="hidden" name={k} value={v} />)}
                         <input className="pole-vstup" name="nazov" defaultValue={p.nazov}
@@ -195,7 +195,7 @@ export default async function Kniznica({
                         <button className="tlacidlo tlacidlo--tiche" type="submit">Premenovať</button>
                       </form>
 
-                      <form action={presunPriecinokAkcia} className="utvar-forma">
+                      <form action={presunPriecinokAkcia} className="strom-forma">
                         <input type="hidden" name="id" value={p.id} />
                         {filtre.map(([k, v]) => <input key={k} type="hidden" name={k} value={v} />)}
                         <Vyber
@@ -233,7 +233,7 @@ export default async function Kniznica({
             })}
           </ul>
 
-          <form action={zalozPriecinokAkcia} className="utvar-forma" style={{ marginTop: 12 }}>
+          <form action={zalozPriecinokAkcia} className="strom-forma" style={{ marginTop: 12 }}>
             {filtre.map(([k, v]) => <input key={k} type="hidden" name={k} value={v} />)}
             <input className="pole-vstup" name="nazov" placeholder="Nový priečinok"
                    aria-label="Názov nového priečinka" required />

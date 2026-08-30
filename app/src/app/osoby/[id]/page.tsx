@@ -151,7 +151,7 @@ export default async function DetailOsoby({
             {stromRiadky.length === 0 ? (
               <>
                 Štruktúra je zatiaľ prázdna. Oddelenia sa zakladajú
-                v <Link href="/organizacia?zalozka=utvary">nastavení organizácie</Link>.
+                v <Link href="/organizacia?zalozka=oddelenia">nastavení organizácie</Link>.
               </>
             ) : (
               <>

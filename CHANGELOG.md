@@ -11,6 +11,7 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 ### Changed (2026-08-30)
 
 - **„Útvar" sa premenoval na „Oddelenie"** v celom rozhraní aj dokumentácii. Je to štandardnejšie pomenovanie pre organizačnú štruktúru; databázové polia (`departmentId`, `departmentPath`, kolekcia `departments`) sa nemenili — je to len pomenovanie, nie zmena významu.
+- **Aj kľúč záložky v adrese** (`?zalozka=utvary` → `oddelenia`), predmet v audite a názvy CSS tried. Starý kľúč záložky sa **prekladá, nie presmerováva**: odkazy s ním existujú v záložkách prehliadača a presmerovanie by ich rozbilo; zmizne, keď prestane chodiť. Dva staré audítorské záznamy sa prepísali jednorazovým skriptom — dva rôzne kľúče pre tú istú vec by znamenali, že filter na oddelenia časť histórie nenájde. CSS triedy dostali neutrálne `.strom-*`, lebo ich medzitým používajú aj priečinky knižnice a číselníky.
 
 ### Added (2026-08-30 — pôvodné súbory a hromadné preindexovanie)
 

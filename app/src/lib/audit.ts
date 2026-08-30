@@ -43,6 +43,8 @@ export const AUDIT_COLLECTION = "audit"
 /** Čoho sa zmena týkala. Nie tabuľka — vec, ktorej človek rozumie. */
 export type AuditPredmet =
   | "osoba"
+  | "oddelenie"
+  /** Starý názov pre `oddelenie`. Ostáva kvôli záznamom spred premenovania. */
   | "utvar"
   | "dokument"
   | "priecinok"

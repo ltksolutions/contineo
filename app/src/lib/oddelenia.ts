@@ -217,7 +217,7 @@ export async function zalozOddelenie(
   const col = await getCollection<Oddelenie>(ODDELENIA_COLLECTION)
   await col.insertOne(o as never)
   await zapisAudit({
-    companyCode, predmet: "utvar", akcia: "zalozene", aktor: actor,
+    companyCode, predmet: "oddelenie", akcia: "zalozene", aktor: actor,
     cielId: o.id, cielPopis: o.nazov,
     zmeny: { parentId: { na: o.parentId } },
   })
@@ -241,7 +241,7 @@ export async function premenujOddelenie(
     { $set: { nazov: meno, updatedAt: new Date(), updatedBy: actor } },
   )
   await zapisAudit({
-    companyCode, predmet: "utvar", akcia: "premenovane", aktor: actor,
+    companyCode, predmet: "oddelenie", akcia: "premenovane", aktor: actor,
     cielId: id, cielPopis: meno,
     zmeny: { nazov: { z: pred.nazov, na: meno } },
   })
@@ -277,7 +277,7 @@ export async function presunOddelenie(
   )
   const dotknutych = await prepocitajCesty(companyCode)
   await zapisAudit({
-    companyCode, predmet: "utvar", akcia: "presunute", aktor: actor,
+    companyCode, predmet: "oddelenie", akcia: "presunute", aktor: actor,
     cielId: id, cielPopis: pred.nazov,
     zmeny: { parentId: { z: pred.parentId, na: novyParentId ?? null } },
     // Presun mení, koho sa týkajú pridelenia celého podstromu. Počet je tu
@@ -309,7 +309,7 @@ export async function zmazOddelenie(companyCode: string, id: string, actor: stri
   const pred = await col.findOne({ companyCode, id })
   await col.deleteOne({ companyCode, id })
   await zapisAudit({
-    companyCode, predmet: "utvar", akcia: "zrusene", aktor: actor,
+    companyCode, predmet: "oddelenie", akcia: "zrusene", aktor: actor,
     cielId: id, cielPopis: pred?.nazov ?? null,
   })
 }

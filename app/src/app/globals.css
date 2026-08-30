@@ -927,11 +927,13 @@ button:disabled { cursor: not-allowed; opacity: 0.55; }
   .kurzor::after { animation: none; }
 }
 
-/* ── strom oddelení (D49) ──────────────────────────────────────────────────
-   Odsadenie sa počíta v komponente (paddingLeft podľa úrovne), nie tu:
-   hĺbka je údaj, nie vzhľad, a v CSS by sa dala zapísať len ako šesť tried,
-   ktoré by sa museli držať v súlade s MAX_HLBKA. */
-.utvary {
+/* ── stromový zoznam (D49) ─────────────────────────────────────────────────
+   Používajú ho oddelenia, priečinky knižnice aj číselníky — preto neutrálne
+   `.strom-*`, nie `.oddelenie-*`. Odsadenie sa počíta v komponente
+   (paddingLeft podľa úrovne), nie tu: hĺbka je údaj, nie vzhľad, a v CSS by
+   sa dala zapísať len ako šesť tried, ktoré by sa museli držať v súlade
+   s MAX_HLBKA. */
+.strom {
   list-style: none;
   margin: 0;
   padding: 0;
@@ -939,14 +941,14 @@ button:disabled { cursor: not-allowed; opacity: 0.55; }
   gap: 2px;
 }
 
-.utvar > details > summary {
+.strom-polozka > details > summary {
   list-style: none;
   cursor: pointer;
 }
 
-.utvar > details > summary::-webkit-details-marker { display: none; }
+.strom-polozka > details > summary::-webkit-details-marker { display: none; }
 
-.utvar-riadok {
+.strom-riadok {
   display: flex;
   align-items: baseline;
   gap: 10px;
@@ -958,15 +960,15 @@ button:disabled { cursor: not-allowed; opacity: 0.55; }
   min-height: 44px;
 }
 
-.utvar-riadok:hover { background: var(--surface-2); }
+.strom-riadok:hover { background: var(--surface-2); }
 
-.utvar > details[open] > summary .utvar-riadok { background: var(--surface-2); }
+.strom-polozka > details[open] > summary .strom-riadok { background: var(--surface-2); }
 
-.utvar-nazov { font-weight: 600; }
+.strom-nazov { font-weight: 600; }
 
-.utvar-pocet { font-size: 13px; }
+.strom-pocet { font-size: 13px; }
 
-.utvar-uprava {
+.strom-uprava {
   display: grid;
   gap: 10px;
   padding: 12px;
@@ -974,7 +976,7 @@ button:disabled { cursor: not-allowed; opacity: 0.55; }
   border-left: 2px solid var(--line);
 }
 
-.utvar-forma {
+.strom-forma {
   display: flex;
   gap: 8px;
   flex-wrap: wrap;
@@ -983,11 +985,11 @@ button:disabled { cursor: not-allowed; opacity: 0.55; }
 
 /* Na telefóne majú pole aj tlačidlo celú šírku — vedľa seba by na pole
    zostalo toľko miesta, že by v ňom nebolo vidieť názov. */
-.utvar-forma > :first-child { flex: 1 1 220px; min-width: 0; }
+.strom-forma > :first-child { flex: 1 1 220px; min-width: 0; }
 
 @media (max-width: 520px) {
-  .utvar-forma { flex-direction: column; align-items: stretch; }
-  .utvar-forma > * { width: 100%; }
+  .strom-forma { flex-direction: column; align-items: stretch; }
+  .strom-forma > * { width: 100%; }
 }
 
 /* ── audit (D51) ────────────────────────────────────────────────────────── */
@@ -1145,9 +1147,9 @@ html[data-theme="dark"] .editor-tui .CodeMirror {
 .kniznica-zoznam { min-width: 0; }
 
 /* Odkaz v strome sa nesmie správať ako odsek textu — celý riadok je cieľ. */
-.kniznica-priecinky .utvar-riadok { text-decoration: none; color: inherit; }
-.kniznica-priecinky .utvar-nazov { text-decoration: none; color: inherit; }
-.kniznica-priecinky .utvar-nazov:hover { text-decoration: underline; }
+.kniznica-priecinky .strom-riadok { text-decoration: none; color: inherit; }
+.kniznica-priecinky .strom-nazov { text-decoration: none; color: inherit; }
+.kniznica-priecinky .strom-nazov:hover { text-decoration: underline; }
 
 .kniznica-priecinky .je-aktivny {
   font-weight: 700;
