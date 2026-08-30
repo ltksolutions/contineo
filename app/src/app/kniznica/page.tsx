@@ -178,7 +178,7 @@ export default async function LibraryPage({
             hidden={Object.fromEntries(filters)}
             action={saveFolderOrderAction}
             items={tree.map(({ folder: p, level: level }) => {
-              const c = folderCounts.get(p.id) ?? { priamo: 0, sPodriadenymi: 0 }
+              const c = folderCounts.get(p.id) ?? { direct: 0, withDescendants: 0 }
               const inside = subtree(folders, p.id)
               return {
                 id: p.id,
@@ -195,7 +195,7 @@ export default async function LibraryPage({
                     >
                       {p.name}
                     </Link>
-                    <span className="tichy strom-pocet">{c.sPodriadenymi}</span>
+                    <span className="tichy strom-pocet">{c.withDescendants}</span>
                   </div>
 
                   <details>
@@ -250,7 +250,7 @@ export default async function LibraryPage({
                         <button className="tlacidlo tlacidlo--tiche" type="submit">Presunúť</button>
                       </form>
 
-                      {c.sPodriadenymi === 0 && inside.size === 1 ? (
+                      {c.withDescendants === 0 && inside.size === 1 ? (
                         <form action={deleteFolderAction}>
                           <input type="hidden" name="id" value={p.id} />
                           {filters.map(([k, v]) => <input key={k} type="hidden" name={k} value={v} />)}

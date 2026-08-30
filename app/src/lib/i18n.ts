@@ -245,6 +245,102 @@ interface Dictionary {
     citationsVerified: string
     citationsUnverified: string
   }
+  /** Prideľovanie noriem (HR). */
+  hr: {
+    overview: {
+      heading: string
+      intro: string
+      assign: string
+      empty: string
+      acknowledged: string
+      notified: string
+      no: string
+      nobody: string
+      missing: string
+      notifyByEmail: string
+      revoke: string
+    }
+    detail: {
+      back: string
+      version: string
+      assignedBy: string
+      notAcknowledged: (missing: number, total: number) => string
+      effectiveFrom: (date: string) => string
+      notifyLink: string
+      allAcknowledged: string
+      noLongerInDepartment: string
+      note: string
+    }
+    notify: {
+      back: string
+      heading: string
+      introBefore: string
+      introHighlight: string
+      introAfter: string
+      lastSent: (date: string, count: number) => string
+      lastSentTotal: (times: number) => string
+      to: (n: number) => string
+      allAcknowledged: (audience: string) => string
+      formerMembers: (n: number) => string
+      formerMembersLink: string
+      preview: string
+      previewSubject: (subject: string) => string
+      /** Tvar čísla je v každom jazyku iný, preto sa skladá tu. */
+      send: (n: number) => string
+    }
+    assign: {
+      back: string
+      heading: string
+      introBefore: string
+      introHighlight: string
+      introAfter: string
+      noEffectiveVersion: string
+      whichDocuments: string
+      versionLine: (label: string, date: string) => string
+      to: string
+      departments: string
+      groups: string
+      tracks: string
+      everyone: string
+      everyoneNote: string
+      departmentNoteBefore: string
+      departmentNoteHighlight: string
+      departmentNoteAfter: string
+      noGroupsOrTracks: string
+      addresses: string
+      addressesNote: string
+      reason: string
+      reasonPlaceholder: string
+      reasonNote: string
+      submit: string
+    }
+    actions: {
+      noAudience: string
+      noDocument: string
+      saveFailed: string
+      /** „Pridelené: 3 (2 normy × 2 publiká)." Tvary čísloviek patria sem. */
+      assigned: (count: number, documents: number, audiences: number) => string
+      assignedWithExisting: (count: number, documents: number, audiences: number, already: number) => string
+      revoked: string
+      alreadyRevoked: string
+      nobodyToNotify: string
+      tooManyRecipients: (recipients: number, max: number) => string
+      sent: (n: number) => string
+      sentWithFailures: (n: number, failed: string) => string
+    }
+  }
+
+  /** Strom s poradím — oddelenia aj priečinky knižnice. */
+  tree: {
+    saveOrder: string
+    cancel: string
+    hint: string
+  }
+
+  tags: {
+    empty: string
+    add: string
+  }
 }
 
 export const DICTIONARY: Record<UiLanguage, Dictionary> = {
@@ -411,6 +507,104 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     citationsVerified: "citácie overené modelom",
     citationsUnverified: "citácie neoverené",
   },
+  hr: {
+    overview: {
+      heading: "Pridelené normy",
+      intro: "Čo bolo komu uložené a kto to už potvrdil. Počty sa počítajú pri zobrazení — a týkajú sa ľudí, ktorí do skupiny patria",
+      assign: "Prideliť normu",
+      empty: "Zatiaľ nie je pridelené nič. Kým sa norma nepridelí, ľuďom sa objaví len vtedy, keď je krokom ich trasy — a nikde nezostane stopa, kedy sa to stalo a prečo.",
+      acknowledged: "Potvrdili",
+      notified: "Dali sme vedieť",
+      no: "nie",
+      nobody: "nikto",
+      missing: "Chýba",
+      notifyByEmail: "Dať vedieť e-mailom",
+      revoke: "Odvolať pridelenie",
+    },
+    detail: {
+      back: "← Späť na prehľad",
+      version: "verzia",
+      assignedBy: "pridelil",
+      notAcknowledged: (missing, total) => `Nepotvrdili (${missing} z ${total})`,
+      effectiveFrom: (date) => `, platná od ${date}`,
+      notifyLink: "dať im vedieť e-mailom →",
+      allAcknowledged: "Potvrdili všetci, ktorých sa pridelenie dnes týka.",
+      noLongerInDepartment: "už nie je v oddelení",
+      note: "Zoznam sa počíta pri zobrazení. Kto z oddelenia odišiel bez potvrdenia, zostáva tu označený — inak by ticho zmizol a nikto by sa nedozvedel, že sa to nedoriešilo; e-mail sa mu ale neposiela. Kto odišiel z celej organizácie, tu nie je — jeho potvrdenie (alebo jeho chýbanie) však zostáva v záznamoch.",
+    },
+    notify: {
+      back: "← Späť na detail",
+      heading: "Dať vedieť e-mailom",
+      introBefore: "Pošle sa ",
+      introHighlight: "len tým, ktorí ešte nepotvrdili",
+      introAfter: ". Kto to už má za sebou, by dostal pripomienku niečoho, čo spravil — a to je presne ten druh pošty, po ktorom si ľudia zapnú filter.",
+      lastSent: (date, count) => `Naposledy odoslané ${date} (${count} ${count === 1 ? "človeku" : "ľuďom"})`,
+      lastSentTotal: (times) => ` · celkovo ${times}×`,
+      to: (n) => `Komu (${n})`,
+      allAcknowledged: (audience) => `Potvrdili už všetci, ktorých sa ${audience} týka. Nie je komu poslať.`,
+      formerMembers: (n) => `Ďalší ${n} nepotvrdili, ale z oddelenia už odišli — tým sa nepíše. Vidno ich na`,
+      formerMembersLink: "detaile pridelenia",
+      preview: "Čo im príde",
+      previewSubject: (subject) => `Predmet: ${subject} · Každý ho dostane vo svojom jazyku.`,
+      send: (n) => `Odoslať ${n} ${n === 1 ? "e-mail" : n < 5 ? "e-maily" : "e-mailov"}`,
+    },
+    assign: {
+      back: "← Späť na prehľad",
+      heading: "Prideliť normy",
+      introBefore: "Prideľuje sa ",
+      introHighlight: "konkrétne znenie",
+      introAfter: ", nie dokument. Keď pribudne novšie, staré pridelenie zaň neplatí — to je zámer.",
+      noEffectiveVersion: "Žiadny dokument nemá platné znenie, takže prideliť sa nedá nič. Znenie bez dátumu platnosti sa nedá ani potvrdiť (D6).",
+      whichDocuments: "Ktoré normy",
+      versionLine: (label, date) => `verzia ${label}, platná od ${date}`,
+      to: "Komu",
+      departments: "Oddelenia",
+      groups: "Skupiny",
+      tracks: "Trasy",
+      everyone: "Všetkým v organizácii",
+      everyoneNote: "prebije výber nižšie — inak by to isté znenie viselo v prehľade niekoľkokrát a nikto by nevedel, ktorý riadok niečo znamená",
+      departmentNoteBefore: "Pridelenie oddelenia platí ",
+      departmentNoteHighlight: "aj pre všetky podriadené",
+      departmentNoteAfter: ". Číslo je počet ľudí vrátane nich — to je to, koho sa to naozaj týka.",
+      noGroupsOrTracks: "V organizácii zatiaľ nie sú skupiny ani trasy. Skupiny sa zadávajú pri importe osôb (stĺpec „skupiny“) alebo príkazom",
+      addresses: "Jednotlivé adresy",
+      addressesNote: "Nepovinné. Oddeľ čiarkou alebo novým riadkom.",
+      reason: "Dôvod",
+      reasonPlaceholder: "napr. novela čl. 12 — mení sa lehota na podanie odvolania",
+      reasonNote: "Povinný a spoločný pre celý výber. Je to jediné miesto, kde bude o rok napísané, prečo sa normy potvrdzovali znova — a príde aj v e-maile ľuďom.",
+      submit: "Prideliť",
+    },
+    actions: {
+      noAudience: "Nevybral si, komu sa prideľuje.",
+      noDocument: "Nevybral si žiadny dokument s platným znením.",
+      saveFailed: "Pridelenie sa nepodarilo uložiť. Skús to znova.",
+      assigned: (count, documents, audiences) =>
+        `Pridelené: ${count} (${documents} ${documents === 1 ? "norma" : documents < 5 ? "normy" : "noriem"}` +
+        ` × ${audiences} ${audiences === 1 ? "publikum" : audiences < 5 ? "publiká" : "publík"}).`,
+      assignedWithExisting: (count, documents, audiences, already) =>
+        `Pridelené: ${count} (${documents} ${documents === 1 ? "norma" : documents < 5 ? "normy" : "noriem"}` +
+        ` × ${audiences} ${audiences === 1 ? "publikum" : audiences < 5 ? "publiká" : "publík"}).` +
+        ` ${already} už pridelených bolo — nič sa nezdvojilo.`,
+      revoked: "Pridelenie odvolané. Záznam o ňom zostáva.",
+      alreadyRevoked: "Toto pridelenie už neplatí.",
+      nobodyToNotify: "Nie je komu poslať — potvrdili už všetci, kto v oddelení zostal.",
+      tooManyRecipients: (recipients, max) =>
+        `Príjemcov je ${recipients}, naraz sa dá poslať najviac ${max}. Rozdeľ pridelenie na menšie publiká.`,
+      sent: (n) => `Odoslané ${n} ľuďom, ktorí ešte nepotvrdili.`,
+      sentWithFailures: (n, failed) => `Odoslané ${n}. Nedoručiteľné: ${failed}`,
+    },
+  },
+
+  tree: {
+    saveOrder: "Uložiť poradie",
+    cancel: "Zrušiť zmeny",
+    hint: "Poradie sa zapíše až tlačidlom.",
+  },
+
+  tags: {
+    empty: "Zatiaľ tu žiadne nie sú. Prvú vytvoríš dole.",
+    add: "Pridať",
+  },
   },
 
   cs: {
@@ -576,6 +770,104 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     citationsVerified: "citace ověřené modelem",
     citationsUnverified: "citace neověřené",
   },
+  hr: {
+    overview: {
+      heading: "Přidělené předpisy",
+      intro: "Co bylo komu uloženo a kdo to už potvrdil. Počty se počítají při zobrazení — a týkají se lidí, kteří do skupiny patří",
+      assign: "Přidělit předpis",
+      empty: "Zatím není přiděleno nic. Dokud se předpis nepřidělí, lidem se objeví jen tehdy, když je krokem jejich trasy — a nikde nezůstane stopa, kdy se to stalo a proč.",
+      acknowledged: "Potvrdili",
+      notified: "Dali jsme vědět",
+      no: "ne",
+      nobody: "nikdo",
+      missing: "Chybí",
+      notifyByEmail: "Dát vědět e-mailem",
+      revoke: "Odvolat přidělení",
+    },
+    detail: {
+      back: "← Zpět na přehled",
+      version: "verze",
+      assignedBy: "přidělil",
+      notAcknowledged: (missing, total) => `Nepotvrdili (${missing} z ${total})`,
+      effectiveFrom: (date) => `, platná od ${date}`,
+      notifyLink: "dát jim vědět e-mailem →",
+      allAcknowledged: "Potvrdili všichni, kterých se přidělení dnes týká.",
+      noLongerInDepartment: "už není v oddělení",
+      note: "Seznam se počítá při zobrazení. Kdo z oddělení odešel bez potvrzení, zůstává tu označený — jinak by tiše zmizel a nikdo by se nedozvěděl, že se to nedořešilo; e-mail se mu ale neposílá. Kdo odešel z celé organizace, tu není — jeho potvrzení (nebo jeho chybění) však zůstává v záznamech.",
+    },
+    notify: {
+      back: "← Zpět na detail",
+      heading: "Dát vědět e-mailem",
+      introBefore: "Pošle se ",
+      introHighlight: "jen těm, kteří ještě nepotvrdili",
+      introAfter: ". Kdo to už má za sebou, by dostal připomínku něčeho, co udělal — a to je přesně ten druh pošty, po kterém si lidé zapnou filtr.",
+      lastSent: (date, count) => `Naposledy odesláno ${date} (${count} ${count === 1 ? "člověku" : "lidem"})`,
+      lastSentTotal: (times) => ` · celkem ${times}×`,
+      to: (n) => `Komu (${n})`,
+      allAcknowledged: (audience) => `Potvrdili už všichni, kterých se ${audience} týká. Není komu poslat.`,
+      formerMembers: (n) => `Další ${n} nepotvrdili, ale z oddělení už odešli — těm se nepíše. Vidět je lze na`,
+      formerMembersLink: "detailu přidělení",
+      preview: "Co jim přijde",
+      previewSubject: (subject) => `Předmět: ${subject} · Každý ho dostane ve svém jazyce.`,
+      send: (n) => `Odeslat ${n} ${n === 1 ? "e-mail" : n < 5 ? "e-maily" : "e-mailů"}`,
+    },
+    assign: {
+      back: "← Zpět na přehled",
+      heading: "Přidělit předpisy",
+      introBefore: "Přiděluje se ",
+      introHighlight: "konkrétní znění",
+      introAfter: ", ne dokument. Když přibude novější, staré přidělení pro ně neplatí — to je záměr.",
+      noEffectiveVersion: "Žádný dokument nemá platné znění, takže přidělit nelze nic. Znění bez data platnosti nelze ani potvrdit (D6).",
+      whichDocuments: "Které předpisy",
+      versionLine: (label, date) => `verze ${label}, platná od ${date}`,
+      to: "Komu",
+      departments: "Oddělení",
+      groups: "Skupiny",
+      tracks: "Trasy",
+      everyone: "Všem v organizaci",
+      everyoneNote: "přebije výběr níže — jinak by totéž znění viselo v přehledu několikrát a nikdo by nevěděl, který řádek něco znamená",
+      departmentNoteBefore: "Přidělení oddělení platí ",
+      departmentNoteHighlight: "i pro všechna podřízená",
+      departmentNoteAfter: ". Číslo je počet lidí včetně nich — to je to, koho se to opravdu týká.",
+      noGroupsOrTracks: "V organizaci zatím nejsou skupiny ani trasy. Skupiny se zadávají při importu osob (sloupec „skupiny“) nebo příkazem",
+      addresses: "Jednotlivé adresy",
+      addressesNote: "Nepovinné. Odděl čárkou nebo novým řádkem.",
+      reason: "Důvod",
+      reasonPlaceholder: "např. novela čl. 12 — mění se lhůta pro podání odvolání",
+      reasonNote: "Povinný a společný pro celý výběr. Je to jediné místo, kde bude za rok napsáno, proč se předpisy potvrzovaly znovu — a přijde i v e-mailu lidem.",
+      submit: "Přidělit",
+    },
+    actions: {
+      noAudience: "Nevybral jsi, komu se přiděluje.",
+      noDocument: "Nevybral jsi žádný dokument s platným zněním.",
+      saveFailed: "Přidělení se nepodařilo uložit. Zkus to znovu.",
+      assigned: (count, documents, audiences) =>
+        `Přiděleno: ${count} (${documents} ${documents === 1 ? "předpis" : documents < 5 ? "předpisy" : "předpisů"}` +
+        ` × ${audiences} ${audiences === 1 ? "publikum" : audiences < 5 ? "publika" : "publik"}).`,
+      assignedWithExisting: (count, documents, audiences, already) =>
+        `Přiděleno: ${count} (${documents} ${documents === 1 ? "předpis" : documents < 5 ? "předpisy" : "předpisů"}` +
+        ` × ${audiences} ${audiences === 1 ? "publikum" : audiences < 5 ? "publika" : "publik"}).` +
+        ` ${already} už přidělených bylo — nic se nezdvojilo.`,
+      revoked: "Přidělení odvoláno. Záznam o něm zůstává.",
+      alreadyRevoked: "Toto přidělení už neplatí.",
+      nobodyToNotify: "Není komu poslat — potvrdili už všichni, kdo v oddělení zůstal.",
+      tooManyRecipients: (recipients, max) =>
+        `Příjemců je ${recipients}, najednou lze poslat nejvýše ${max}. Rozděl přidělení na menší publika.`,
+      sent: (n) => `Odesláno ${n} lidem, kteří ještě nepotvrdili.`,
+      sentWithFailures: (n, failed) => `Odesláno ${n}. Nedoručitelné: ${failed}`,
+    },
+  },
+
+  tree: {
+    saveOrder: "Uložit pořadí",
+    cancel: "Zrušit změny",
+    hint: "Pořadí se zapíše až tlačítkem.",
+  },
+
+  tags: {
+    empty: "Zatím tu žádné nejsou. První vytvoříš dole.",
+    add: "Přidat",
+  },
   },
 
   en: {
@@ -739,6 +1031,104 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     pricelistStale: "the price list is out of date",
     citationsVerified: "citations verified by the model",
     citationsUnverified: "citations not verified",
+  },
+  hr: {
+    overview: {
+      heading: "Assigned documents",
+      intro: "What has been assigned to whom and who has already acknowledged it. The counts are computed when the page is opened — and cover the people who belong to the group",
+      assign: "Assign a document",
+      empty: "Nothing has been assigned yet. Until a document is assigned, people only see it when it is a step on their track — and nothing records when that happened or why.",
+      acknowledged: "Acknowledged",
+      notified: "Notified",
+      no: "no",
+      nobody: "nobody",
+      missing: "Missing",
+      notifyByEmail: "Notify by e-mail",
+      revoke: "Revoke assignment",
+    },
+    detail: {
+      back: "← Back to the overview",
+      version: "version",
+      assignedBy: "assigned by",
+      notAcknowledged: (missing, total) => `Not acknowledged (${missing} of ${total})`,
+      effectiveFrom: (date) => `, effective from ${date}`,
+      notifyLink: "notify them by e-mail →",
+      allAcknowledged: "Everyone the assignment applies to today has acknowledged it.",
+      noLongerInDepartment: "no longer in the department",
+      note: "The list is computed when the page is opened. Anyone who left the department without acknowledging stays here, marked — otherwise they would quietly disappear and nobody would learn it was left unresolved; they are not e-mailed, though. Anyone who left the organisation altogether is not here — but their acknowledgement (or the lack of it) stays in the records.",
+    },
+    notify: {
+      back: "← Back to the detail",
+      heading: "Notify by e-mail",
+      introBefore: "It goes ",
+      introHighlight: "only to those who have not acknowledged yet",
+      introAfter: ". Anyone who is done would get a reminder about something they already did — and that is exactly the kind of mail people set up filters for.",
+      lastSent: (date, count) => `Last sent ${date} (to ${count} ${count === 1 ? "person" : "people"})`,
+      lastSentTotal: (times) => ` · ${times} times in total`,
+      to: (n) => `Recipients (${n})`,
+      allAcknowledged: (audience) => `Everyone the ${audience} covers has already acknowledged. There is nobody to send to.`,
+      formerMembers: (n) => `Another ${n} have not acknowledged but have already left the department — they are not written to. You can see them on the`,
+      formerMembersLink: "assignment detail",
+      preview: "What they will receive",
+      previewSubject: (subject) => `Subject: ${subject} · Each person gets it in their own language.`,
+      send: (n) => `Send ${n} ${n === 1 ? "e-mail" : "e-mails"}`,
+    },
+    assign: {
+      back: "← Back to the overview",
+      heading: "Assign documents",
+      introBefore: "What is assigned is ",
+      introHighlight: "a specific version",
+      introAfter: ", not a document. When a newer one is issued, the old assignment does not carry over to it — that is deliberate.",
+      noEffectiveVersion: "No document has an effective version, so there is nothing to assign. A version without an effective date cannot be acknowledged either (D6).",
+      whichDocuments: "Which documents",
+      versionLine: (label, date) => `version ${label}, effective from ${date}`,
+      to: "Recipients",
+      departments: "Departments",
+      groups: "Groups",
+      tracks: "Tracks",
+      everyone: "Everyone in the organisation",
+      everyoneNote: "overrides the selection below — otherwise the same version would appear in the overview several times and nobody would know which row meant anything",
+      departmentNoteBefore: "Assigning to a department also applies ",
+      departmentNoteHighlight: "to every department below it",
+      departmentNoteAfter: ". The number counts those people too — that is who it actually reaches.",
+      noGroupsOrTracks: "The organisation has no groups or tracks yet. Groups are set when importing people (the “groups” column) or with the command",
+      addresses: "Individual addresses",
+      addressesNote: "Optional. Separate with a comma or a new line.",
+      reason: "Reason",
+      reasonPlaceholder: "e.g. amendment to Article 12 — the deadline for an appeal changes",
+      reasonNote: "Required, and shared by the whole selection. It is the only place where, a year from now, it will say why these documents had to be acknowledged again — and it goes out in the e-mail as well.",
+      submit: "Assign",
+    },
+    actions: {
+      noAudience: "You did not choose who to assign to.",
+      noDocument: "You did not choose any document with an effective version.",
+      saveFailed: "The assignment could not be saved. Please try again.",
+      assigned: (count, documents, audiences) =>
+        `Assigned: ${count} (${documents} ${documents === 1 ? "document" : "documents"}` +
+        ` × ${audiences} ${audiences === 1 ? "audience" : "audiences"}).`,
+      assignedWithExisting: (count, documents, audiences, already) =>
+        `Assigned: ${count} (${documents} ${documents === 1 ? "document" : "documents"}` +
+        ` × ${audiences} ${audiences === 1 ? "audience" : "audiences"}).` +
+        ` ${already} had already been assigned — nothing was duplicated.`,
+      revoked: "Assignment revoked. The record of it stays.",
+      alreadyRevoked: "This assignment is no longer in force.",
+      nobodyToNotify: "There is nobody to send to — everyone still in the department has acknowledged.",
+      tooManyRecipients: (recipients, max) =>
+        `There are ${recipients} recipients; at most ${max} can be sent at once. Split the assignment into smaller audiences.`,
+      sent: (n) => `Sent to ${n} people who have not acknowledged yet.`,
+      sentWithFailures: (n, failed) => `Sent ${n}. Undeliverable: ${failed}`,
+    },
+  },
+
+  tree: {
+    saveOrder: "Save order",
+    cancel: "Discard changes",
+    hint: "The order is written only when you press the button.",
+  },
+
+  tags: {
+    empty: "There are none yet. Create the first one below.",
+    add: "Add",
   },
   },
 }

@@ -374,8 +374,8 @@ export async function recomputePaths(companyCode: string): Promise<number> {
   return changed
 }
 
-/** Koľko ľudí patrí priamo do oddelenia a koľko aj s podriadenými. */
-export async function counts(companyCode: string): Promise<Map<string, { priamo: number; sPodriadenymi: number }>> {
+/** Koľko ľudí patrí direct do oddelenia a koľko aj s podriadenými. */
+export async function counts(companyCode: string): Promise<Map<string, { direct: number; withDescendants: number }>> {
   const col = await getCollection<Person>(PERSONS_COLLECTION)
   const people = await col
     .find(
@@ -384,18 +384,18 @@ export async function counts(companyCode: string): Promise<Map<string, { priamo:
     )
     .toArray()
 
-  const out = new Map<string, { priamo: number; sPodriadenymi: number }>()
-  const addTo = (id: string, key: "priamo" | "sPodriadenymi") => {
-    const z = out.get(id) ?? { priamo: 0, sPodriadenymi: 0 }
+  const out = new Map<string, { direct: number; withDescendants: number }>()
+  const addTo = (id: string, key: "direct" | "withDescendants") => {
+    const z = out.get(id) ?? { direct: 0, withDescendants: 0 }
     z[key]++
     out.set(id, z)
   }
 
   for (const o of people) {
-    if (o.departmentId) addTo(o.departmentId, "priamo")
+    if (o.departmentId) addTo(o.departmentId, "direct")
     // Cesta obsahuje aj samotné oddelenie, takže „s podriadenými" vyjde
     // rovno z nej a netreba prechádzať strom.
-    for (const id of o.departmentPath ?? []) addTo(id, "sPodriadenymi")
+    for (const id of o.departmentPath ?? []) addTo(id, "withDescendants")
   }
   return out
 }

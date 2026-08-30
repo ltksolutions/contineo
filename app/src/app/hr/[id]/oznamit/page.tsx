@@ -17,7 +17,7 @@ import { assignmentEmail } from "@/lib/ecomail"
 import { brandingView } from "@/lib/tenants"
 import { tenantStyle } from "@/components/TenantHeader"
 import { requestHostname } from "@/lib/session"
-import { formatDate, normalizeLanguage } from "@/lib/i18n"
+import { formatDate, normalizeLanguage, dictionary } from "@/lib/i18n"
 import { sendNotificationAction } from "../../actions"
 import { normalizeQuery, type RawQuery } from "@/lib/urlParams"
 
@@ -49,6 +49,7 @@ export default async function NotifyPage({
   const former = allUnacknowledged.filter(o => o.former)
   const branding = brandingView(ctx.tenant)
   const host = await requestHostname()
+  const t = dictionary(ctx.person.language).hr.notify
   const language = normalizeLanguage(ctx.person.language)
 
   // Ukazuje sa **presne to znenie**, ktoré sa odošle — zložené tou istou
@@ -72,17 +73,15 @@ export default async function NotifyPage({
     <div className="obal" style={{ padding: "28px 20px 80px", maxWidth: 720, ...tenantStyle(branding) }}>
       <p style={{ margin: "0 0 16px" }}>
         <Link className="tichy" href={`/hr/${encodeURIComponent(id)}`} style={{ fontSize: 14 }}>
-          ← Späť na detail
+          {t.back}
         </Link>
       </p>
 
       <h1 style={{ fontSize: 25, letterSpacing: "-0.02em", margin: "0 0 6px" }}>
-        Dať vedieť e-mailom
+        {t.heading}
       </h1>
       <p className="tichy" style={{ fontSize: 15, margin: "0 0 20px", maxWidth: 600 }}>
-        Pošle sa <strong>len tým, ktorí ešte nepotvrdili</strong>. Kto to už má
-        za sebou, by dostal pripomienku niečoho, čo spravil — a to je presne ten
-        druh pošty, po ktorom si ľudia zapnú filter.
+        {t.introBefore}<strong>{t.introHighlight}</strong>{t.introAfter}
       </p>
 
       {error && (
@@ -93,27 +92,28 @@ export default async function NotifyPage({
 
       {assignment.notified?.length ? (
         <p className="karta" style={{ padding: "12px 16px", margin: "0 0 18px", fontSize: 14.5 }}>
-          Naposledy odoslané {formatDate(assignment.notified[assignment.notified.length - 1].at, language)}
-          {" "}({assignment.notified[assignment.notified.length - 1].count} ľuďom)
-          {assignment.notified.length > 1 && ` · celkovo ${assignment.notified.length}×`}.
+          {t.lastSent(
+            formatDate(assignment.notified[assignment.notified.length - 1].at, language),
+            assignment.notified[assignment.notified.length - 1].count,
+          )}
+          {assignment.notified.length > 1 && t.lastSentTotal(assignment.notified.length)}.
         </p>
       ) : null}
 
       <h2 style={{ fontSize: 17, margin: "0 0 10px" }}>
-        Komu ({recipients.length})
+        {t.to(recipients.length)}
       </h2>
 
       {recipients.length === 0 ? (
         <p className="karta" style={{ padding: 18, fontSize: 15 }}>
-          Potvrdili už všetci, ktorých sa {audienceLabel(assignment.audience)} týka.
-          Nie je komu poslať.
+          {t.allAcknowledged(audienceLabel(assignment.audience))}
         </p>
       ) : (
         <>
           {former.length > 0 && (
             <p className="tichy" style={{ fontSize: 14, margin: "0 0 12px" }}>
-              Ďalší {former.length} nepotvrdili, ale z oddelenia už odišli — tým sa
-              nepíše. Vidno ich na <Link href={`/hr/${encodeURIComponent(id)}`}>detaile pridelenia</Link>.
+              {t.formerMembers(former.length)}{" "}
+              <Link href={`/hr/${encodeURIComponent(id)}`}>{t.formerMembersLink}</Link>.
             </p>
           )}
 
@@ -126,9 +126,9 @@ export default async function NotifyPage({
             ))}
           </ul>
 
-          <h2 style={{ fontSize: 17, margin: "0 0 10px" }}>Čo im príde</h2>
+          <h2 style={{ fontSize: 17, margin: "0 0 10px" }}>{t.preview}</h2>
           <p className="tichy pole-napoveda" style={{ margin: "0 0 10px" }}>
-            Predmet: {preview.subject} · Každý ho dostane vo svojom jazyku.
+            {t.previewSubject(preview.subject)}
           </p>
           <pre
             className="karta"
@@ -143,7 +143,7 @@ export default async function NotifyPage({
           <form action={sendNotificationAction}>
             <input type="hidden" name="id" value={id} />
             <button className="tlacidlo" type="submit">
-              Odoslať {recipients.length} {recipients.length === 1 ? "e-mail" : recipients.length < 5 ? "e-maily" : "e-mailov"}
+              {t.send(recipients.length)}
             </button>
           </form>
         </>

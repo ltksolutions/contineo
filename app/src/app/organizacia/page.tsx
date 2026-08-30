@@ -381,7 +381,7 @@ export default async function OrganisationPage({
               hidden={{ tab: "departments" }}
               action={saveDepartmentOrderAction}
               items={rows.map(({ department: department, level: level }) => {
-                const p = peopleCounts.get(department.id) ?? { priamo: 0, sPodriadenymi: 0 }
+                const p = peopleCounts.get(department.id) ?? { direct: 0, withDescendants: 0 }
                 const inside = subtree(tenantDepartments, department.id)
                 return {
                   id: department.id,
@@ -394,8 +394,8 @@ export default async function OrganisationPage({
                         <span className="strom-uchop" aria-hidden="true">⠿</span>
                         <span className="strom-nazov">{department.name}</span>
                         <span className="tichy strom-pocet">
-                          {p.priamo}
-                          {p.sPodriadenymi !== p.priamo ? ` (${p.sPodriadenymi} aj s podriadenými)` : ""}
+                          {p.direct}
+                          {p.withDescendants !== p.direct ? ` (${p.withDescendants} aj s podriadenými)` : ""}
                         </span>
                       </summary>
 
@@ -456,7 +456,7 @@ export default async function OrganisationPage({
                           <button className="tlacidlo tlacidlo--tiche" type="submit">Presunúť</button>
                         </form>
 
-                        {p.sPodriadenymi === 0 && inside.size === 1 ? (
+                        {p.withDescendants === 0 && inside.size === 1 ? (
                           <form action={deleteDepartmentAction}>
                             <input type="hidden" name="tab" value="departments" />
                             <input type="hidden" name="id" value={department.id} />

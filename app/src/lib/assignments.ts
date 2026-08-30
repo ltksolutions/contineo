@@ -463,7 +463,7 @@ export interface AssignmentOverview {
   count: number
   acknowledged: number
   /** Posledné odoslané oznámenie. `null`, keď sme ešte nedali vedieť. */
-  oznamene: { at: Date; by: string; count: number } | null
+  lastNotified: { at: Date; by: string; count: number } | null
   /** Koľkokrát sme už dali vedieť — štvrtá pripomienka je iná informácia. */
   notifiedTotal: number
 }
@@ -521,7 +521,7 @@ export async function assignmentOverviews(companyCode: string): Promise<Assignme
       assignedBy: a.assignedBy,
       count: members.length,
       acknowledged: acknowledgedBy,
-      oznamene: a.notified?.length ? a.notified[a.notified.length - 1] : null,
+      lastNotified: a.notified?.length ? a.notified[a.notified.length - 1] : null,
       notifiedTotal: a.notified?.length ?? 0,
     })
   }

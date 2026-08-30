@@ -274,24 +274,24 @@ export async function recomputePaths(companyCode: string): Promise<number> {
   return changed
 }
 
-/** Koľko dokumentov je priamo v priečinku a koľko aj s podpriečinkami. */
+/** Koľko dokumentov je direct v priečinku a koľko aj s podpriečinkami. */
 export async function counts(
   companyCode: string,
-): Promise<Map<string, { priamo: number; sPodriadenymi: number }>> {
+): Promise<Map<string, { direct: number; withDescendants: number }>> {
   const col = await getCollection(DOCUMENTS_COLLECTION)
   const documents = await col
     .find({ companyCode }, { projection: { folderId: 1, folderPath: 1 } })
     .toArray()
 
-  const out = new Map<string, { priamo: number; sPodriadenymi: number }>()
-  const addTo = (id: string, key: "priamo" | "sPodriadenymi") => {
-    const z = out.get(id) ?? { priamo: 0, sPodriadenymi: 0 }
+  const out = new Map<string, { direct: number; withDescendants: number }>()
+  const addTo = (id: string, key: "direct" | "withDescendants") => {
+    const z = out.get(id) ?? { direct: 0, withDescendants: 0 }
     z[key]++
     out.set(id, z)
   }
   for (const d of documents as unknown as { folderId?: string | null; folderPath?: string[] }[]) {
-    if (d.folderId) addTo(d.folderId, "priamo")
-    for (const id of d.folderPath ?? []) addTo(id, "sPodriadenymi")
+    if (d.folderId) addTo(d.folderId, "direct")
+    for (const id of d.folderPath ?? []) addTo(id, "withDescendants")
   }
   return out
 }

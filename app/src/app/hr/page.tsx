@@ -15,7 +15,7 @@ import { hrContext } from "@/lib/hr"
 import { assignmentOverviews, audienceLabel } from "@/lib/assignments"
 import { brandingView } from "@/lib/tenants"
 import { tenantStyle } from "@/components/TenantHeader"
-import { formatDate } from "@/lib/i18n"
+import { dictionary, formatDate } from "@/lib/i18n"
 import Notice from "@/components/Notice"
 import { revokeAction } from "./actions"
 import { normalizeQuery, type RawQuery } from "@/lib/urlParams"
@@ -37,28 +37,26 @@ export default async function HrOverviewPage({
   const overview = await assignmentOverviews(ctx.person.companyCode)
   const branding = brandingView(ctx.tenant)
   const language = ctx.person.language
+  const t = dictionary(language).hr.overview
 
   return (
     <div className="obal" style={{ padding: "28px 20px 80px", maxWidth: 860, ...tenantStyle(branding) }}>
       <h1 style={{ fontSize: 26, letterSpacing: "-0.02em", margin: "0 0 6px" }}>
-        Pridelené normy
+        {t.heading}
       </h1>
       <p className="tichy" style={{ fontSize: 15, margin: "0 0 18px", maxWidth: 620 }}>
-        Čo bolo komu uložené a kto to už potvrdil. Počty sa počítajú pri
-        zobrazení — a týkajú sa ľudí, ktorí do skupiny patria <em>dnes</em>.
+        {t.intro} <em>dnes</em>.
       </p>
 
       <Notice message={message} error={error === "1"} back="/hr" />
 
       <p style={{ margin: "0 0 24px" }}>
-        <Link className="tlacidlo" href="/hr/pridelit">Prideliť normu</Link>
+        <Link className="tlacidlo" href="/hr/pridelit">{t.assign}</Link>
       </p>
 
       {overview.length === 0 ? (
         <p className="karta" style={{ padding: 20, fontSize: 15 }}>
-          Zatiaľ nie je pridelené nič. Kým sa norma nepridelí, ľuďom sa objaví
-          len vtedy, keď je krokom ich trasy — a nikde nezostane stopa, kedy sa
-          to stalo a prečo.
+          {t.empty}
         </p>
       ) : (
         <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "grid", gap: 14 }}>
@@ -89,21 +87,21 @@ export default async function HrOverviewPage({
 
                 <div className="admin-udaje">
                   <div>
-                    <div className="tichy" style={{ fontSize: 12.5 }}>Potvrdili</div>
+                    <div className="tichy" style={{ fontSize: 12.5 }}>{t.acknowledged}</div>
                     <div style={{ fontSize: 15.5, fontWeight: 600 }}>
                       {p.acknowledged} / {p.count}
                     </div>
                   </div>
                   <div>
-                    <div className="tichy" style={{ fontSize: 12.5 }}>Dali sme vedieť</div>
-                    <div style={{ fontSize: 15.5, fontWeight: 600, color: p.oznamene ? undefined : "var(--muted)" }}>
-                      {p.oznamene
-                        ? `${formatDate(p.oznamene.at, language)}${p.notifiedTotal > 1 ? ` · ${p.notifiedTotal}×` : ""}`
-                        : "nie"}
+                    <div className="tichy" style={{ fontSize: 12.5 }}>{t.notified}</div>
+                    <div style={{ fontSize: 15.5, fontWeight: 600, color: p.lastNotified ? undefined : "var(--muted)" }}>
+                      {p.lastNotified
+                        ? `${formatDate(p.lastNotified.at, language)}${p.notifiedTotal > 1 ? ` · ${p.notifiedTotal}×` : ""}`
+                        : t.no}
                     </div>
                   </div>
                   <div>
-                    <div className="tichy" style={{ fontSize: 12.5 }}>Chýba</div>
+                    <div className="tichy" style={{ fontSize: 12.5 }}>{t.missing}</div>
                     <div
                       style={{
                         fontSize: 15.5,
@@ -111,7 +109,7 @@ export default async function HrOverviewPage({
                         color: error > 0 ? "var(--warn-fg)" : "var(--muted)",
                       }}
                     >
-                      {error === 0 ? "nikto" : `${error}`}
+                      {error === 0 ? t.nobody : `${error}`}
                     </div>
                   </div>
                 </div>
@@ -121,13 +119,13 @@ export default async function HrOverviewPage({
                       pridelenia — preto odkaz na náhľad, nie tlačidlo „poslať". */}
                   {error > 0 && (
                     <Link className="tlacidlo tlacidlo--tiche" href={`/hr/${encodeURIComponent(p.id)}/oznamit`}>
-                      Dať vedieť e-mailom
+                      {t.notifyByEmail}
                     </Link>
                   )}
                   <form action={revokeAction}>
                     <input type="hidden" name="id" value={p.id} />
                     <button className="tlacidlo tlacidlo--tiche" type="submit">
-                      Odvolať pridelenie
+                      {t.revoke}
                     </button>
                   </form>
                 </div>

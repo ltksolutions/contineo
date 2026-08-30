@@ -26,7 +26,7 @@ import { audiencesInOrg } from "@/lib/persons"
 import { allDepartments, flattenTree, counts } from "@/lib/departments"
 import { brandingView } from "@/lib/tenants"
 import { tenantStyle } from "@/components/TenantHeader"
-import { formatDate } from "@/lib/i18n"
+import { formatDate, dictionary } from "@/lib/i18n"
 import { assignAction } from "../actions"
 import { normalizeQuery, type RawQuery } from "@/lib/urlParams"
 
@@ -67,6 +67,7 @@ export default async function AssignPage({
   ])
   const treeRows = flattenTree(tree)
   const branding = brandingView(ctx.tenant)
+  const t = dictionary(ctx.person.language).hr.assign
   const language = ctx.person.language
 
   const selectedDocuments = new Set(asArray(q.document))
@@ -75,13 +76,12 @@ export default async function AssignPage({
   return (
     <div className="obal" style={{ padding: "28px 20px 80px", maxWidth: 680, ...tenantStyle(branding) }}>
       <p style={{ margin: "0 0 16px" }}>
-        <Link className="tichy" href="/hr" style={{ fontSize: 14 }}>← Späť na prehľad</Link>
+        <Link className="tichy" href="/hr" style={{ fontSize: 14 }}>{t.back}</Link>
       </p>
 
-      <h1 style={{ fontSize: 25, letterSpacing: "-0.02em", margin: "0 0 6px" }}>Prideliť normy</h1>
+      <h1 style={{ fontSize: 25, letterSpacing: "-0.02em", margin: "0 0 6px" }}>{t.heading}</h1>
       <p className="tichy" style={{ fontSize: 15, margin: "0 0 20px" }}>
-        Prideľuje sa <strong>konkrétne znenie</strong>, nie dokument. Keď
-        pribudne novšie, staré pridelenie zaň neplatí — to je zámer.
+        {t.introBefore}<strong>{t.introHighlight}</strong>{t.introAfter}
       </p>
 
       {q.error && (
@@ -95,13 +95,12 @@ export default async function AssignPage({
 
       {documents.length === 0 ? (
         <p className="karta" style={{ padding: 20, fontSize: 15 }}>
-          Žiadny dokument nemá platné znenie, takže prideliť sa nedá nič.
-          Znenie bez dátumu platnosti sa nedá ani potvrdiť (D6).
+          {t.noEffectiveVersion}
         </p>
       ) : (
         <form action={assignAction} style={{ display: "grid", gap: 22 }}>
           <fieldset className="karta hr-skupina">
-            <legend className="pole-popis">Ktoré normy</legend>
+            <legend className="pole-popis">{t.whichDocuments}</legend>
             <ul className="hr-volby">
               {documents.map(d => (
                 <li key={d.documentId}>
@@ -115,7 +114,7 @@ export default async function AssignPage({
                     <span>
                       {d.title}
                       <span className="tichy pole-napoveda">
-                        {" "}verzia {d.versionLabel}, platná od {formatDate(d.effectiveFrom, language)}
+                        {" "}{t.versionLine(d.versionLabel ?? "", formatDate(d.effectiveFrom, language))}
                       </span>
                     </span>
                   </label>
@@ -125,29 +124,27 @@ export default async function AssignPage({
           </fieldset>
 
           <fieldset className="karta hr-skupina">
-            <legend className="pole-popis">Komu</legend>
+            <legend className="pole-popis">{t.to}</legend>
 
             <label className="hr-volba" style={{ marginBottom: 10 }}>
               <input type="checkbox" name="vsetci" value="1" defaultChecked={q.all === "1"} />
               <span>
-                <strong>Všetkým v organizácii</strong>
+                <strong>{t.everyone}</strong>
                 <span className="tichy pole-napoveda">
-                  {" "}prebije výber nižšie — inak by to isté znenie viselo v prehľade
-                  niekoľkokrát a nikto by nevedel, ktorý riadok niečo znamená
+                  {" "}{t.everyoneNote}
                 </span>
               </span>
             </label>
 
             {treeRows.length > 0 && (
               <>
-                <div className="hr-podnadpis">Oddelenia</div>
+                <div className="hr-podnadpis">{t.departments}</div>
                 <p className="tichy pole-napoveda" style={{ margin: "0 0 8px" }}>
-                  Pridelenie oddelenia platí <strong>aj pre všetky podriadené</strong>. Číslo
-                  je počet ľudí vrátane nich — to je to, koho sa to naozaj týka.
+                  {t.departmentNoteBefore}<strong>{t.departmentNoteHighlight}</strong>{t.departmentNoteAfter}
                 </p>
                 <div className="stitky-zoznam">
                   {treeRows.map(({ department: department, level: level }) => {
-                    const p = departmentCounts.get(department.id) ?? { priamo: 0, sPodriadenymi: 0 }
+                    const p = departmentCounts.get(department.id) ?? { direct: 0, withDescendants: 0 }
                     return (
                       <label
                         key={`d-${department.id}`}
@@ -162,7 +159,7 @@ export default async function AssignPage({
                         />
                         <span className="stitok-znak" aria-hidden="true" />
                         {department.name}
-                        <span className="stitok-pocet">{p.sPodriadenymi}</span>
+                        <span className="stitok-pocet">{p.withDescendants}</span>
                       </label>
                     )
                   })}
@@ -172,8 +169,7 @@ export default async function AssignPage({
 
             {audiences.groups.length === 0 && audiences.tracks.length === 0 ? (
               <p className="tichy pole-napoveda" style={{ margin: "10px 0 0" }}>
-                V organizácii zatiaľ nie sú skupiny ani trasy. Skupiny sa
-                zadávajú pri importe osôb (stĺpec &bdquo;skupiny&ldquo;) alebo príkazom
+                {t.noGroupsOrTracks}
                 <code> npm run person</code>.
               </p>
             ) : (
@@ -183,7 +179,7 @@ export default async function AssignPage({
                     lebo tento formulár funguje aj bez JavaScriptu. */}
                 {audiences.groups.length > 0 && (
                   <>
-                    <div className="hr-podnadpis">Skupiny</div>
+                    <div className="hr-podnadpis">{t.groups}</div>
                     <div className="stitky-zoznam">
                       {audiences.groups.map(s => (
                         <label key={`g-${s.value}`} className="stitok stitok--volba stitok--pole">
@@ -204,7 +200,7 @@ export default async function AssignPage({
 
                 {audiences.tracks.length > 0 && (
                   <>
-                    <div className="hr-podnadpis">Trasy</div>
+                    <div className="hr-podnadpis">{t.tracks}</div>
                     <div className="stitky-zoznam">
                       {audiences.tracks.map(t => (
                         <label key={`t-${t.value}`} className="stitok stitok--volba stitok--pole">
@@ -226,7 +222,7 @@ export default async function AssignPage({
             )}
 
             <label className="pole" style={{ marginTop: 14 }}>
-              <span className="pole-popis">Jednotlivé adresy</span>
+              <span className="pole-popis">{t.addresses}</span>
               <textarea
                 className="pole-vstup"
                 name="adresy"
@@ -237,30 +233,28 @@ export default async function AssignPage({
                 autoCorrect="off"
               />
               <span className="tichy pole-napoveda">
-                Nepovinné. Oddeľ čiarkou alebo novým riadkom.
+                {t.addressesNote}
               </span>
             </label>
           </fieldset>
 
           <label className="pole">
-            <span className="pole-popis">Dôvod</span>
+            <span className="pole-popis">{t.reason}</span>
             <textarea
               name="dovod"
               defaultValue={q.reason ?? ""}
               required
               rows={3}
               className="pole-vstup"
-              placeholder="napr. novela čl. 12 — mení sa lehota na podanie odvolania"
+              placeholder={t.reasonPlaceholder}
             />
             <span className="tichy pole-napoveda">
-              Povinný a spoločný pre celý výber. Je to jediné miesto, kde bude
-              o rok napísané, prečo sa normy potvrdzovali znova — a príde aj
-              v e-maile ľuďom.
+              {t.reasonNote}
             </span>
           </label>
 
           <div>
-            <button className="tlacidlo" type="submit">Prideliť</button>
+            <button className="tlacidlo" type="submit">{t.submit}</button>
           </div>
         </form>
       )}

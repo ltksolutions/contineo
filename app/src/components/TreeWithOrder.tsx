@@ -30,6 +30,7 @@
 
 import { useState } from "react"
 import type { ReactNode } from "react"
+import { dictionary, type UiLanguage } from "@/lib/i18n"
 
 export interface TreeItem {
   id: string
@@ -47,6 +48,7 @@ export default function TreeWithOrder({
   items: items,
   hidden: hidden,
   action: action,
+  language,
 }: {
   items: TreeItem[]
   /**
@@ -56,7 +58,10 @@ export default function TreeWithOrder({
    */
   hidden?: Record<string, string>
   action: (fd: FormData) => void | Promise<void>
+  /** Jazyk prostredia. */
+  language?: UiLanguage
 }) {
+  const t = dictionary(language).tree
   const [order, setOrder] = useState<TreeItem[]>(items)
   const [dragged, setDragged] = useState<string | null>(null)
   const [changed, setChanged] = useState(false)
@@ -109,16 +114,16 @@ export default function TreeWithOrder({
 
       {changed && (
         <div className="strom-ulozit">
-          <button className="tlacidlo" type="submit" form={FORM_ID}>Uložiť poradie</button>
+          <button className="tlacidlo" type="submit" form={FORM_ID}>{t.saveOrder}</button>
           <button
             className="tlacidlo tlacidlo--tiche"
             type="button"
             onClick={() => { setOrder(items); setChanged(false) }}
           >
-            Zrušiť zmeny
+            {t.cancel}
           </button>
           <span className="tichy" style={{ fontSize: 13 }}>
-            Poradie sa zapíše až tlačidlom.
+            {t.hint}
           </span>
         </div>
       )}

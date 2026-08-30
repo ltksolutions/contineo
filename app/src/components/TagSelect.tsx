@@ -16,6 +16,7 @@
  */
 
 import { useState } from "react"
+import { dictionary, type UiLanguage } from "@/lib/i18n"
 
 export interface Tag {
   value: string
@@ -33,12 +34,16 @@ export default function TagSelect({
   options: options,
   selected: selected,
   newLabel: newLabel,
+  language,
 }: {
   name: string
   options: Tag[]
   selected: string[]
   newLabel: string
+  /** Jazyk prostredia. */
+  language?: UiLanguage
 }) {
+  const t = dictionary(language).tags
   const [chosen, setChosen] = useState<string[]>(selected.map(key))
   const [draft, setDraft] = useState("")
 
@@ -69,7 +74,7 @@ export default function TagSelect({
 
       {all.length === 0 ? (
         <p className="tichy pole-napoveda" style={{ margin: 0 }}>
-          Zatiaľ tu žiadne nie sú. Prvú vytvoríš dole.
+          {t.empty}
         </p>
       ) : (
         <div className="stitky-zoznam">
@@ -105,7 +110,7 @@ export default function TagSelect({
           onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); add() } }}
         />
         <button type="button" className="tlacidlo tlacidlo--tiche" onClick={add} disabled={!draft.trim()}>
-          Pridať
+          {t.add}
         </button>
       </div>
 

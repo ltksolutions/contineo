@@ -22,17 +22,17 @@ import { allDepartments } from "@/lib/departments"
 import { send, assignmentEmail } from "@/lib/ecomail"
 import { brandingView } from "@/lib/tenants"
 import { requestHostname } from "@/lib/session"
-import { formatDate, normalizeLanguage } from "@/lib/i18n"
+import { dictionary, formatDate, normalizeLanguage } from "@/lib/i18n"
 
-async function hr(): Promise<{ email: string; companyCode: string } | null> {
+async function hr(): Promise<{ email: string; companyCode: string; language?: string } | null> {
   const ctx = await hrContext()
   return ctx.state === "ready"
-    ? { email: ctx.person.email, companyCode: ctx.person.companyCode }
+    ? { email: ctx.person.email, companyCode: ctx.person.companyCode, language: ctx.person.language }
     : null
 }
 
-function fieldText(fd: FormData, actorName: string): string {
-  const v = fd.get(actorName)
+function fieldText(fd: FormData, field: string): string {
+  const v = fd.get(field)
   return typeof v === "string" ? v.trim() : ""
 }
 
@@ -109,16 +109,15 @@ export async function assignAction(fd: FormData) {
         // rovnako. Čiastočne prideliť a nepovedať to je horšie než neprideliť.
         if (e instanceof AssignmentValidationError) backWithError(e.message, fd)
         console.error("[hr] pridelenie zlyhalo:", e)
-        backWithError("Pridelenie sa nepodarilo uložiť. Skús to znova.", fd)
+        backWithError(dictionary(actor.language).hr.actions.saveFailed, fd)
       }
     }
   }
 
-  const combinations = `${selected.length} ${selected.length === 1 ? "norma" : selected.length < 5 ? "normy" : "noriem"}` +
-    ` × ${audiences.length} ${audiences.length === 1 ? "publikum" : audiences.length < 5 ? "publiká" : "publík"}`
+  const t = dictionary(actor.language).hr.actions
   const message = already === 0
-    ? `Pridelené: ${assigned} (${combinations}).`
-    : `Pridelené: ${assigned} (${combinations}). ${already} už pridelených bolo — nič sa nezdvojilo.`
+    ? t.assigned(assigned, selected.length, audiences.length)
+    : t.assignedWithExisting(assigned, selected.length, audiences.length, already)
 
   revalidatePath("/hr")
   redirect("/hr?msg=" + encodeURIComponent(message))
@@ -135,7 +134,7 @@ export async function revokeAction(fd: FormData) {
 
   revalidatePath("/hr")
   redirect("/hr?msg=" + encodeURIComponent(
-    changed ? "Pridelenie odvolané. Záznam o ňom zostáva." : "Toto pridelenie už neplatí."
+    changed ? dictionary(actor.language).hr.actions.revoked : dictionary(actor.language).hr.actions.alreadyRevoked
   ))
 }
 
@@ -166,6 +165,7 @@ export async function sendNotificationAction(fd: FormData) {
   const ctx = await hrContext()
   if (ctx.state !== "ready") redirect("/hr")
   const code = ctx.person.companyCode
+  const t = dictionary(ctx.person.language).hr.actions
   const id = fieldText(fd, "id")
 
   const assignment = await loadAssignment(code, id)
@@ -176,12 +176,11 @@ export async function sendNotificationAction(fd: FormData) {
   // personalista mohol rozhodnúť sám.
   const recipients = (await notAcknowledged(code, id)).filter(o => !o.former)
   if (recipients.length === 0) {
-    redirect("/hr?error=1&msg=" + encodeURIComponent("Nie je komu poslať — potvrdili už všetci, kto v oddelení zostal."))
+    redirect("/hr?error=1&msg=" + encodeURIComponent(t.nobodyToNotify))
   }
   if (recipients.length > MAX_AT_ONCE) {
-    redirect(`/hr/${encodeURIComponent(id)}/oznamit?chyba=` + encodeURIComponent(
-      `Príjemcov je ${recipients.length}, naraz sa dá poslať najviac ${MAX_AT_ONCE}. ` +
-      `Rozdeľ pridelenie na menšie publiká.`
+    redirect(`/hr/${encodeURIComponent(id)}/oznamit?error=` + encodeURIComponent(
+      t.tooManyRecipients(recipients.length, MAX_AT_ONCE)
     ))
   }
 
@@ -227,7 +226,7 @@ export async function sendNotificationAction(fd: FormData) {
 
   revalidatePath("/hr")
   const message = failed.length === 0
-    ? `Odoslané ${sent} ľuďom, ktorí ešte nepotvrdili.`
-    : `Odoslané ${sent}. Nedoručiteľné (${failed.length}): ${failed.slice(0, 5).join(", ")}${failed.length > 5 ? "…" : ""}`
+    ? t.sent(sent)
+    : t.sentWithFailures(sent, `(${failed.length}) ${failed.slice(0, 5).join(", ")}${failed.length > 5 ? "…" : ""}`)
   redirect(`/hr?msg=${encodeURIComponent(message)}${failed.length ? "&error=1" : ""}`)
 }
