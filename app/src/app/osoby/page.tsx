@@ -12,7 +12,7 @@ import { peopleContext, listPeople } from "@/lib/people"
 import { brandingView } from "@/lib/tenants"
 import { tenantStyle } from "@/components/TenantHeader"
 import { formatDate } from "@/lib/i18n"
-import Oznam from "@/components/Oznam"
+import Oznam from "@/components/Notice"
 
 export const dynamic = "force-dynamic"
 

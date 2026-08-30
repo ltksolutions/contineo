@@ -14,7 +14,7 @@
  */
 
 import { useEffect, useRef, useState } from "react"
-import type { Posudok } from "@/lib/hodnotenia"
+import type { Posudok } from "@/lib/ratings"
 
 type Stav = "cakam" | "ukladam" | "ulozene" | "chyba"
 

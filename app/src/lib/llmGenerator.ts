@@ -16,8 +16,8 @@
 import { ChunkResult } from "./mongoSearch"
 import { getTenantProfile, defaultProfile } from "./tenantProfile"
 import { getProviders } from "./providers/factory"
-import { cena, PRAZDNE_TOKENY } from "./cennik"
-import type { Tokeny } from "./cennik"
+import { cena, PRAZDNE_TOKENY } from "./pricing"
+import type { Tokeny } from "./pricing"
 import { GeneratedCitation, TenantProfile } from "./providers/types"
 
 export interface GenerateOptions {

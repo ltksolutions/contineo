@@ -36,7 +36,7 @@ import {
 import { resolveTenant, normalizeHostname } from "./tenants"
 import { resolveCredentials, ID_POSKYTOVATELA } from "./oauth"
 import { udajeZGraphu, celeMeno, VELKOST_FOTKY } from "./graph"
-import { ulozFotku } from "./fotka"
+import { ulozFotku } from "./photo"
 import type { OAuthProviderName, ResolvedCredentials } from "./oauth"
 import type { Tenant } from "./tenants"
 

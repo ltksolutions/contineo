@@ -16,7 +16,7 @@
  */
 
 import { getCollection } from "./mongodb"
-import type { Posudok } from "./hodnotenia"
+import type { Posudok } from "./ratings"
 
 export interface OtazkaSady {
   id: string

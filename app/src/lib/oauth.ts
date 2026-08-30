@@ -21,7 +21,7 @@
  * hodnotu nepozná.
  */
 
-import { rozsifruj, TajomstvoError } from "./tajomstva"
+import { rozsifruj, TajomstvoError } from "./secrets"
 import type { Tenant } from "./tenants"
 
 export type OAuthProviderName = "microsoft" | "google"

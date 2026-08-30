@@ -9,7 +9,7 @@
  */
 
 import { describe, it, expect } from "vitest"
-import { jePresmerovanie } from "../src/lib/presmerovanie"
+import { jePresmerovanie } from "../src/lib/redirects"
 
 /** Tvar, aký má výnimka z `redirect()` v Nexte. */
 function vynimkaRedirect(): Error & { digest: string } {

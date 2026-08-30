@@ -12,8 +12,8 @@
 
 import { NextRequest, NextResponse } from "next/server"
 import { getToken } from "next-auth/jwt"
-import { zapisOdpoved, ulozPosudok } from "@/lib/hodnotenia"
-import type { NovyZaznam, UpravaHodnotenia, Posudok } from "@/lib/hodnotenia"
+import { zapisOdpoved, ulozPosudok } from "@/lib/ratings"
+import type { NovyZaznam, UpravaHodnotenia, Posudok } from "@/lib/ratings"
 
 /**
  * Kto hodnotí. Kým nie je prihlasovanie, ide o „anonym" — dôležité je, aby

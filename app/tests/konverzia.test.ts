@@ -9,7 +9,7 @@
 
 import { describe, it, expect } from "vitest"
 import * as XLSX from "xlsx"
-import { urcTyp, preved, KonverziaError, NAZOV_TYPU } from "../src/lib/konverzia"
+import { urcTyp, preved, KonverziaError, NAZOV_TYPU } from "../src/lib/conversion"
 
 const zip = Buffer.from([0x50, 0x4b, 0x03, 0x04, 0x00])
 const pdf = Buffer.from("%PDF-1.7\n...")

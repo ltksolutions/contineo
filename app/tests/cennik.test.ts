@@ -11,7 +11,7 @@
 import {
   cena, sadzbyKuDnu, formatUsd, formatEur, naEur, spocitaj,
   CENNIK, PRAZDNE_TOKENY,
-} from "../src/lib/cennik"
+} from "../src/lib/pricing"
 
 import { t } from "./helper"
 

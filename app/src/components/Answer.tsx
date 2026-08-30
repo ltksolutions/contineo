@@ -9,9 +9,9 @@
  * model niečo nedomyslel.
  */
 
-import type { Citacia, Vysledok } from "@/lib/sseKlient"
+import type { Citacia, Vysledok } from "@/lib/sseClient"
 import { naBloky, ocistiCitaciu, zlucCitacie } from "@/lib/formatText"
-import { formatUsd, formatEur, naEur } from "@/lib/cennik"
+import { formatUsd, formatEur, naEur } from "@/lib/pricing"
 import type { Usek } from "@/lib/formatText"
 
 /** Stav odpovede počas streamovania — kým nepríde `done`, máme len text. */

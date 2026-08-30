@@ -12,7 +12,7 @@ import { useEffect, useRef, useState } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { signOut } from "next-auth/react"
-import { ZnakContineo } from "./ZnakContineo"
+import { ZnakContineo } from "./ContineoMark"
 import type { TenantBrandingView } from "./TenantHeader"
 
 /**

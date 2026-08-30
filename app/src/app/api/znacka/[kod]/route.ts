@@ -12,7 +12,7 @@
  * načítaní stránky pre nič.
  */
 
-import { nacitajZnacku } from "@/lib/znacka"
+import { nacitajZnacku } from "@/lib/branding"
 
 export const dynamic = "force-dynamic"
 

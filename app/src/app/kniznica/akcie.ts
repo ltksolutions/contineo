@@ -14,21 +14,21 @@
 
 import { redirect } from "next/navigation"
 import { revalidatePath } from "next/cache"
-import { kniznicaContext } from "@/lib/kniznica"
-import { jePresmerovanie } from "@/lib/presmerovanie"
+import { kniznicaContext } from "@/lib/library"
+import { jePresmerovanie } from "@/lib/redirects"
 import {
   nahrajDokument, ulozKoncept, publikuj, overMetadata, idDokumentu, ulozUdaje,
   preindexuj, opravZnenie, KniznicaError,
-} from "@/lib/kniznica.zapis"
-import { UloziskoError, nacitajSubor } from "@/lib/ulozisko"
-import { doplnkyTenanta } from "@/lib/ciselnikyTenanta"
+} from "@/lib/libraryWrite"
+import { UloziskoError, nacitajSubor } from "@/lib/fileStore"
+import { doplnkyTenanta } from "@/lib/codelistsTenant"
 import {
   zalozPriecinok, premenujPriecinok, presunPriecinok, zrusPriecinok,
   zaradDokument, posunPriecinok, ulozPoradiePriecinkov, PriecinokError,
-} from "@/lib/priecinky"
-import type { Doplnky } from "@/lib/ciselniky"
+} from "@/lib/folders"
+import type { Doplnky } from "@/lib/codelists"
 import type { ProfilClenenia } from "@/lib/chunker"
-import { precisti, prepisPdf, PrepisError } from "@/lib/prepisLlm"
+import { precisti, prepisPdf, PrepisError } from "@/lib/llmRewrite"
 import { getCollection } from "@/lib/mongodb"
 import { DOCUMENTS_COLLECTION } from "@/lib/documents"
 import { zapisAudit } from "@/lib/audit"

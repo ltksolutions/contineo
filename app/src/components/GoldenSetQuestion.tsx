@@ -12,7 +12,7 @@
 
 import { useState } from "react"
 import Link from "next/link"
-import Hladanie from "./Hladanie"
+import Hladanie from "./Search"
 
 const POPIS_PASCE: Record<string, string> = {
   out_of_domain: "Otázka je mimo nahraných dokumentov. Systém má odmietnuť, nie odpovedať.",

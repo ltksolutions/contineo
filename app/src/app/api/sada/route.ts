@@ -9,7 +9,7 @@
  */
 
 import { NextRequest, NextResponse } from "next/server"
-import { upravOtazku } from "@/lib/sada"
+import { upravOtazku } from "@/lib/goldenSet"
 
 export async function PATCH(req: NextRequest) {
   let telo: { id?: string } & Record<string, unknown>

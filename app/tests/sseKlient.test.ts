@@ -6,8 +6,8 @@
  * čítania sa stratí. Na localhoste sa to neprejaví, lebo odpoveď príde
  * v jednom kuse. Preto sa to musí testovať umelo.
  */
-import { rozdelUdalosti, citajUdalosti } from "../src/lib/sseKlient"
-import type { UdalostSSE } from "../src/lib/sseKlient"
+import { rozdelUdalosti, citajUdalosti } from "../src/lib/sseClient"
+import type { UdalostSSE } from "../src/lib/sseClient"
 
 import { t } from "./helper"
 

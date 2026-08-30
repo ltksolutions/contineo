@@ -1,6 +1,6 @@
 /** Read-only kontrola nastavenia prihlasovania. Tajomstvo nevypisuje. */
 import { MongoClient } from "mongodb"
-import { rozsifruj } from "../src/lib/tajomstva.ts"
+import { rozsifruj } from "../src/lib/secrets.ts"
 
 const c = new MongoClient(process.env.MONGODB_URI)
 await c.connect()

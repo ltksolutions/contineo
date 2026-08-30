@@ -6,8 +6,8 @@
  * videl, merali by sme, či prvému uveril — a to je iná otázka než či sa
  * zhodnú. Preto sú tu testy aj na to, čo sa NEMÁ stať.
  */
-import { vPrekryve, zhoda } from "../src/lib/sada"
-import type { OtazkaSady, StavOtazky } from "../src/lib/sada"
+import { vPrekryve, zhoda } from "../src/lib/goldenSet"
+import type { OtazkaSady, StavOtazky } from "../src/lib/goldenSet"
 
 import { t } from "./helper"
 

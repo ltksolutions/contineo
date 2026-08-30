@@ -20,7 +20,7 @@ vi.mock("../src/lib/mongodb", () => ({ getCollection }))
 import { peopleContext, isPeopleAdmin, savePerson, PEOPLE_ROLE, PRIDELITELNE_ROLE } from "../src/lib/people"
 import { HR_ROLE } from "../src/lib/hr"
 import { PLATFORM_ROLE } from "../src/lib/admin"
-import { OBSAH_ROLE } from "../src/lib/kniznica"
+import { OBSAH_ROLE } from "../src/lib/library"
 import type { Person } from "../src/lib/persons"
 import type { Tenant } from "../src/lib/tenants"
 

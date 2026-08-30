@@ -11,7 +11,7 @@
  */
 
 import { currentPerson } from "@/lib/session"
-import { nacitajFotku } from "@/lib/fotka"
+import { nacitajFotku } from "@/lib/photo"
 
 export const dynamic = "force-dynamic"
 

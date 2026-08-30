@@ -7,7 +7,7 @@
  */
 
 import { describe, it, expect } from "vitest"
-import { nasaDomena, pokynPreDomenu, NASE_DOMENY } from "../src/lib/domenyZakaznika"
+import { nasaDomena, pokynPreDomenu, NASE_DOMENY } from "../src/lib/customerDomains"
 
 describe("nase domeny si zakaznik nepridelí", () => {
   it("subdoménu na contineo.app nie", () => {

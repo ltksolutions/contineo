@@ -8,7 +8,7 @@
  */
 
 import { notFound, redirect } from "next/navigation"
-import Prihlasenie from "@/components/Prihlasenie"
+import Prihlasenie from "@/components/SignIn"
 import { currentTenant, currentEmail } from "@/lib/session"
 import { brandingView } from "@/lib/tenants"
 import { dostupniPoskytovatelia } from "@/lib/oauth"

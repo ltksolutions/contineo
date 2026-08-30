@@ -9,7 +9,7 @@
 import { describe, it, expect } from "vitest"
 import {
   zasifruj, rozsifruj, sifrovaciKluc, stavTajomstva, TajomstvoError,
-} from "../src/lib/tajomstva"
+} from "../src/lib/secrets"
 
 const KLUC = Buffer.from("a".repeat(64), "hex")
 const INY = Buffer.from("b".repeat(64), "hex")

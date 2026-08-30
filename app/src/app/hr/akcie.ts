@@ -18,7 +18,7 @@ import {
   assign, revoke, loadAssignment, nepotvrdili, recordNotification,
   audienceFromSelection, AssignmentValidationError,
 } from "@/lib/assignments"
-import { vsetkyOddelenia } from "@/lib/oddelenia"
+import { vsetkyOddelenia } from "@/lib/departments"
 import { send, assignmentEmail } from "@/lib/ecomail"
 import { brandingView } from "@/lib/tenants"
 import { requestHostname } from "@/lib/session"

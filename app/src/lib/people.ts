@@ -20,13 +20,13 @@
 import { getCollection } from "./mongodb"
 import { currentTenant, currentPerson } from "./session"
 import { zapisAudit, rozdiel } from "./audit"
-import { OBSAH_ROLE } from "./kniznica"
+import { OBSAH_ROLE } from "./library"
 import { PERSONS_COLLECTION, normalizeEmail, normalizeKeys, novaHistoriaUtvarov, novaHistoriaSkupin } from "./persons"
 import { normalizeLanguage } from "./i18n"
 import { HR_ROLE } from "./hr"
 import type { Person, PersonStatus, PersonType } from "./persons"
 import type { Tenant } from "./tenants"
-import { vsetkyOddelenia, cestaIds, cesta } from "./oddelenia"
+import { vsetkyOddelenia, cestaIds, cesta } from "./departments"
 
 export const PEOPLE_ROLE = "people-admin"
 

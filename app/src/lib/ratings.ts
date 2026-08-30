@@ -17,8 +17,8 @@
 
 import { ObjectId } from "mongodb"
 import { getCollection } from "./mongodb"
-import type { Zdroj, Citacia } from "./sseKlient"
-import type { Tokeny, Naklad } from "./cennik"
+import type { Zdroj, Citacia } from "./sseClient"
+import type { Tokeny, Naklad } from "./pricing"
 
 /** Ľudský úsudok. `null` = zatiaľ neposúdené, čo je iný stav než 0. */
 export type Posudok = 0 | 1 | null

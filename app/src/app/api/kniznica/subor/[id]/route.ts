@@ -11,8 +11,8 @@
  * zobrazí sám, čo je presne to, čo editor potrebuje vedľa Markdownu.
  */
 
-import { kniznicaContext } from "@/lib/kniznica"
-import { nacitajSubor } from "@/lib/ulozisko"
+import { kniznicaContext } from "@/lib/library"
+import { nacitajSubor } from "@/lib/fileStore"
 
 export const dynamic = "force-dynamic"
 

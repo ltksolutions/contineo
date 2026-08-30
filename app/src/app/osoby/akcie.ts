@@ -12,7 +12,7 @@
  */
 
 import { redirect } from "next/navigation"
-import { jePresmerovanie } from "@/lib/presmerovanie"
+import { jePresmerovanie } from "@/lib/redirects"
 import { revalidatePath } from "next/cache"
 import { peopleContext, savePerson, invitePerson, setPersonStatus, PersonValidationError } from "@/lib/people"
 import { csvNaOsoby, DOVODY } from "@/lib/personsImport"

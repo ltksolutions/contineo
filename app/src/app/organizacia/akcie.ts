@@ -14,23 +14,23 @@
 
 import { redirect } from "next/navigation"
 import { revalidatePath } from "next/cache"
-import { organizaciaContext } from "@/lib/organizacia"
-import { jePresmerovanie } from "@/lib/presmerovanie"
-import { STARE_KLUCE } from "@/lib/zalozky"
+import { organizaciaContext } from "@/lib/orgSettings"
+import { jePresmerovanie } from "@/lib/redirects"
+import { STARE_KLUCE } from "@/lib/urlTabs"
 import { saveTenant, ulozOAuth, zmazOAuth, normalizeDomeny, TenantValidationError } from "@/lib/tenantAdmin"
-import { ulozZnacku, ZnackaError } from "@/lib/znacka"
+import { ulozZnacku, ZnackaError } from "@/lib/branding"
 import { rozdelZoznam } from "@/lib/oauth"
 import {
   poziadajODomenu, overZiadost, zrusDomenu, DomenaError,
-} from "@/lib/domenyZakaznika"
+} from "@/lib/customerDomains"
 import { pridajDomenu, preskocitVercel } from "@/lib/vercel"
 import {
   zalozOddelenie, premenujOddelenie, presunOddelenie, zmazOddelenie,
   posunOddelenie, ulozPoradie, OddelenieError,
-} from "@/lib/oddelenia"
-import { pridajPolozku, odoberPolozku } from "@/lib/ciselnikyTenanta"
-import { CiselnikError } from "@/lib/ciselniky"
-import { preindexujVsetky, KniznicaError } from "@/lib/kniznica.zapis"
+} from "@/lib/departments"
+import { pridajPolozku, odoberPolozku } from "@/lib/codelistsTenant"
+import { CiselnikError } from "@/lib/codelists"
+import { preindexujVsetky, KniznicaError } from "@/lib/libraryWrite"
 
 async function kto(): Promise<{ email: string; companyCode: string } | null> {
   const ctx = await organizaciaContext()

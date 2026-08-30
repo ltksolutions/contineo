@@ -12,8 +12,8 @@
  * než hádaním.
  */
 
-import { ZnakContineo, ZnakGitHub } from "./ZnakContineo"
-import { REVIZIA, VERZIA } from "@/lib/verzia"
+import { ZnakContineo, ZnakGitHub } from "./ContineoMark"
+import { REVIZIA, VERZIA } from "@/lib/appVersion"
 
 /**
  * Odkazy von majú `rel="noreferrer"` zámerne: bez neho by sa cieľová stránka

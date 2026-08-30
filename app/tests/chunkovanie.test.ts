@@ -8,7 +8,7 @@
  */
 
 import { describe, it, expect } from "vitest"
-import { odtlacokTextu, odtlacokClenenia, trebaPreindexovat, VERZIA_CHUNKERA } from "../src/lib/chunkovanie"
+import { odtlacokTextu, odtlacokClenenia, trebaPreindexovat, VERZIA_CHUNKERA } from "../src/lib/chunkIdentity"
 import { chunkuj, PREDVOLENY_PROFIL } from "../src/lib/chunker.mjs"
 
 const NORMA = `Článok 1

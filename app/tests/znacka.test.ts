@@ -6,7 +6,7 @@
  */
 
 import { describe, it, expect } from "vitest"
-import { skontrolujSubor, cestaZnacky, MAX_BAJTOV, ZnackaError } from "../src/lib/znacka"
+import { skontrolujSubor, cestaZnacky, MAX_BAJTOV, ZnackaError } from "../src/lib/branding"
 
 describe("kontrola nahrateho suboru", () => {
   it("bežné rastrové formáty prejdú", () => {

@@ -8,7 +8,7 @@
  */
 
 import { describe, it, expect } from "vitest"
-import { iniciely, odtienAvatara } from "../src/components/Hlavicka"
+import { iniciely, odtienAvatara } from "../src/components/Header"
 
 describe("iniciely", () => {
   it("z mena a priezviska", () => {

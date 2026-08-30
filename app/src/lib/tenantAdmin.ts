@@ -22,7 +22,7 @@ import {
 import { UI_LANGUAGES, isUiLanguage } from "./i18n"
 import type { UiLanguage } from "./i18n"
 import type { Tenant } from "./tenants"
-import { zasifruj, sifrovanieJeKDispozicii } from "./tajomstva"
+import { zasifruj, sifrovanieJeKDispozicii } from "./secrets"
 import type { OAuthProviderName } from "./oauth"
 
 /**

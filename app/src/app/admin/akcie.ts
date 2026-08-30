@@ -28,7 +28,7 @@ import {
 import { pridajDomenu, pokynyPreZakaznika, stavDomeny, preskocitVercel } from "@/lib/vercel"
 import { ulozOAuth, zmazOAuth } from "@/lib/tenantAdmin"
 import { rozdelZoznam, NAZOV_POSKYTOVATELA } from "@/lib/oauth"
-import { ulozZnacku, ZnackaError } from "@/lib/znacka"
+import { ulozZnacku, ZnackaError } from "@/lib/branding"
 
 /** Kto akciu spustil — alebo `null`, keď na ňu nemá právo. */
 async function spravca(): Promise<string | null> {

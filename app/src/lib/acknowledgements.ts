@@ -34,7 +34,7 @@ import { ObjectId } from "mongodb"
 import { getCollection } from "./mongodb"
 import { loadDocumentFor, effectiveVersion } from "./documents"
 import type { Version } from "./documents"
-import { vsetkyOddelenia, cesta } from "./oddelenia"
+import { vsetkyOddelenia, cesta } from "./departments"
 import { formatDate, dictionary, normalizeLanguage } from "./i18n"
 import type { UiLanguage } from "./i18n"
 

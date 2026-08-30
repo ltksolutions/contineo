@@ -10,7 +10,7 @@ import { describe, it, expect } from "vitest"
 import {
   deti, cesta, cestaIds, podstrom, hlbka, smieSaPresunut, splostiStrom, MAX_HLBKA,
   type Priecinok,
-} from "../src/lib/priecinky"
+} from "../src/lib/folders"
 
 function p(id: string, nazov: string, parentId: string | null): Priecinok {
   return { companyCode: "SFZ", id, nazov, parentId, createdAt: new Date("2026-01-01"), createdBy: "test" }

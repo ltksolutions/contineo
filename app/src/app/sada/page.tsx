@@ -13,7 +13,7 @@
 import Link from "next/link"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
-import { nacitajSadu, suhrn, znenie, pocetPosudkov, POPIS_OBLASTI } from "@/lib/sada"
+import { nacitajSadu, suhrn, znenie, pocetPosudkov, POPIS_OBLASTI } from "@/lib/goldenSet"
 
 export const dynamic = "force-dynamic"
 

@@ -8,8 +8,8 @@
 
 import { readFileSync } from "node:fs"
 import { describe, it, expect } from "vitest"
-import { overHodnotu, overZoznam, CiselnikError, TVAR_KLUCA } from "../src/lib/ciselniky"
-import { idDokumentu, overMetadata, KniznicaError } from "../src/lib/kniznica.zapis"
+import { overHodnotu, overZoznam, CiselnikError, TVAR_KLUCA } from "../src/lib/codelists"
+import { idDokumentu, overMetadata, KniznicaError } from "../src/lib/libraryWrite"
 
 describe("ciselniky", () => {
   it("uzavrety ciselnik neprijme nic navyse", () => {
@@ -98,7 +98,7 @@ describe("vyber poli pri stave preindexovania", () => {
     // na tom cela zalozka Clenenie. Positional $ sa navyse bez podmienky na
     // to pole ani pouzit neda.
     const zdroj = readFileSync(
-      new URL("../src/lib/kniznica.zapis.ts", import.meta.url), "utf8",
+      new URL("../src/lib/libraryWrite.ts", import.meta.url), "utf8",
     )
     expect(zdroj).not.toContain('"versions.$": 1')
   })

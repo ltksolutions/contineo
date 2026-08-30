@@ -11,7 +11,7 @@ import Link from "next/link"
 import { peopleContext } from "@/lib/people"
 import { brandingView } from "@/lib/tenants"
 import { tenantStyle } from "@/components/TenantHeader"
-import ImportOsob from "@/components/ImportOsob"
+import ImportOsob from "@/components/PeopleImport"
 
 export const dynamic = "force-dynamic"
 

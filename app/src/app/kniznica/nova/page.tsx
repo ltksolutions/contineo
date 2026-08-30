@@ -9,13 +9,13 @@
 
 import { notFound, redirect } from "next/navigation"
 import Link from "next/link"
-import { kniznicaContext } from "@/lib/kniznica"
-import { volby, CISELNIKY } from "@/lib/ciselniky"
-import { doplnkyTenanta } from "@/lib/ciselnikyTenanta"
+import { kniznicaContext } from "@/lib/library"
+import { volby, CISELNIKY } from "@/lib/codelists"
+import { doplnkyTenanta } from "@/lib/codelistsTenant"
 import { brandingView } from "@/lib/tenants"
 import { tenantStyle } from "@/components/TenantHeader"
-import Vyber from "@/components/Vyber"
-import VyberStitkov from "@/components/VyberStitkov"
+import Vyber from "@/components/Select"
+import VyberStitkov from "@/components/TagSelect"
 
 export const dynamic = "force-dynamic"
 

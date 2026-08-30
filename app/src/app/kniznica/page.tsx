@@ -8,21 +8,21 @@
 
 import { notFound, redirect } from "next/navigation"
 import Link from "next/link"
-import { kniznicaContext } from "@/lib/kniznica"
-import { zoznamKniznice } from "@/lib/kniznica.citanie"
-import { vsetkyPriecinky, splostiStrom, podstrom, pocty, hlbka, MAX_HLBKA } from "@/lib/priecinky"
-import { volby } from "@/lib/ciselniky"
-import { doplnkyTenanta } from "@/lib/ciselnikyTenanta"
-import Vyber from "@/components/Vyber"
+import { kniznicaContext } from "@/lib/library"
+import { zoznamKniznice } from "@/lib/libraryRead"
+import { vsetkyPriecinky, splostiStrom, podstrom, pocty, hlbka, MAX_HLBKA } from "@/lib/folders"
+import { volby } from "@/lib/codelists"
+import { doplnkyTenanta } from "@/lib/codelistsTenant"
+import Vyber from "@/components/Select"
 import {
   zalozPriecinokAkcia, premenujPriecinokAkcia, presunPriecinokAkcia, zrusPriecinokAkcia,
   posunPriecinokAkcia, ulozPoradiePriecinkovAkcia,
 } from "./akcie"
-import StromSPoradim from "@/components/StromSPoradim"
+import StromSPoradim from "@/components/TreeWithOrder"
 import { brandingView } from "@/lib/tenants"
 import { tenantStyle } from "@/components/TenantHeader"
 import { formatDate } from "@/lib/i18n"
-import Oznam from "@/components/Oznam"
+import Oznam from "@/components/Notice"
 
 export const dynamic = "force-dynamic"
 

@@ -16,9 +16,9 @@
 
 import { getCollection } from "./mongodb"
 import { TENANTS_COLLECTION, invalidateTenants } from "./tenants"
-import { overVlastnuPolozku, CiselnikError, VLASTNE_CISELNIKY, ciselnikPre } from "./ciselniky"
+import { overVlastnuPolozku, CiselnikError, VLASTNE_CISELNIKY, ciselnikPre } from "./codelists"
 import { zapisAudit } from "./audit"
-import type { Doplnky, Polozka, VlastnyCiselnik } from "./ciselniky"
+import type { Doplnky, Polozka, VlastnyCiselnik } from "./codelists"
 import type { Tenant } from "./tenants"
 
 export const POPIS_CISELNIKA: Record<VlastnyCiselnik, { nazov: string; napoveda: string }> = {

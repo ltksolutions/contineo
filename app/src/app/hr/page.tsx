@@ -16,7 +16,7 @@ import { assignmentOverviews, audienceLabel } from "@/lib/assignments"
 import { brandingView } from "@/lib/tenants"
 import { tenantStyle } from "@/components/TenantHeader"
 import { formatDate } from "@/lib/i18n"
-import Oznam from "@/components/Oznam"
+import Oznam from "@/components/Notice"
 import { odvolat } from "./akcie"
 
 export const dynamic = "force-dynamic"

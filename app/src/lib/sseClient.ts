@@ -13,7 +13,7 @@
  * dal otestovať nad umelým streamom — viď `tests/sseKlient.test.ts`.
  */
 
-import type { Tokeny, Naklad } from "./cennik"
+import type { Tokeny, Naklad } from "./pricing"
 
 export interface Zdroj {
   index: number

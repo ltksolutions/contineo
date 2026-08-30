@@ -10,10 +10,10 @@
  */
 
 import { getCollection } from "./mongodb"
-import { vsetkyPriecinky, cesta } from "./priecinky"
+import { vsetkyPriecinky, cesta } from "./folders"
 import { DOCUMENTS_COLLECTION, effectiveVersion } from "./documents"
 import type { Version } from "./documents"
-import type { PovodnySubor, StavSpracovania } from "./kniznica.zapis"
+import type { PovodnySubor, StavSpracovania } from "./libraryWrite"
 
 export interface RiadokKniznice {
   documentId: string

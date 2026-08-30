@@ -11,7 +11,7 @@ import { describe, it, expect } from "vitest"
 import {
   deti, cesta, cestaIds, podstrom, hlbka, smieSaPresunut, splostiStrom, MAX_HLBKA,
   type Oddelenie,
-} from "../src/lib/oddelenia"
+} from "../src/lib/departments"
 import { matchesAudience, audienceLabel, audienceFromSelection, datumPreOsobu } from "../src/lib/assignments"
 import { vUtvareOd, novaHistoriaUtvarov, novaHistoriaSkupin } from "../src/lib/persons"
 

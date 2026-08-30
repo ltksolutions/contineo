@@ -9,8 +9,8 @@
 import { notFound } from "next/navigation"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
-import { nacitajSadu, znenie } from "@/lib/sada"
-import OtazkaSady from "@/components/OtazkaSady"
+import { nacitajSadu, znenie } from "@/lib/goldenSet"
+import OtazkaSady from "@/components/GoldenSetQuestion"
 
 export const dynamic = "force-dynamic"
 

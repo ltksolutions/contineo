@@ -13,8 +13,8 @@
  */
 
 import { notFound } from "next/navigation"
-import Hladanie from "@/components/Hladanie"
-import NevybaveneZiadosti from "@/components/NevybaveneZiadosti"
+import Hladanie from "@/components/Search"
+import NevybaveneZiadosti from "@/components/PendingWidget"
 import { onboardingContext } from "@/lib/session"
 import { pendingForPerson } from "@/lib/pending"
 

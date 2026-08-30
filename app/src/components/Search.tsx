@@ -10,12 +10,12 @@
  */
 
 import { useRef, useState } from "react"
-import { polozOtazku } from "@/lib/sseKlient"
-import type { Vysledok } from "@/lib/sseKlient"
-import Odpoved from "./Odpoved"
-import type { StavOdpovede } from "./Odpoved"
-import Hodnotenie from "./Hodnotenie"
-import type { Posudok } from "@/lib/hodnotenia"
+import { polozOtazku } from "@/lib/sseClient"
+import type { Vysledok } from "@/lib/sseClient"
+import Odpoved from "./Answer"
+import type { StavOdpovede } from "./Answer"
+import Hodnotenie from "./Rating"
+import type { Posudok } from "@/lib/ratings"
 
 const PRAZDNY: StavOdpovede = {
   otazka: "", text: "", citacie: [], hotovo: null, bezi: false,

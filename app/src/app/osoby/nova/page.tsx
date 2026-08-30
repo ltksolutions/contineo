@@ -12,7 +12,7 @@ import { peopleContext } from "@/lib/people"
 import { brandingView } from "@/lib/tenants"
 import { tenantStyle } from "@/components/TenantHeader"
 import { UI_LANGUAGES } from "@/lib/i18n"
-import Vyber from "@/components/Vyber"
+import Vyber from "@/components/Select"
 import { pozviOsobu } from "../akcie"
 
 /** Kód jazyka sám o sebe nepovie nič — „sk" je pre nás jasné, pre iných nie. */
