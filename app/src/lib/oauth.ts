@@ -21,7 +21,7 @@
  * hodnotu nepozná.
  */
 
-import { rozsifruj, TajomstvoError } from "./secrets"
+import { decrypt, SecretError } from "./secrets"
 import type { Tenant } from "./tenants"
 
 export type OAuthProviderName = "microsoft" | "google"
@@ -91,13 +91,13 @@ function zPremennych(provider: OAuthProviderName): ResolvedCredentials | null {
     clientSecret: clientSecret.trim(),
     source: "platform",
     tenantMode: process.env.MICROSOFT_TENANT_MODE?.trim() || "organizations",
-    allowedTenantIds: rozdelZoznam(process.env.MICROSOFT_ALLOWED_TENANT_IDS),
+    allowedTenantIds: splitList(process.env.MICROSOFT_ALLOWED_TENANT_IDS),
     hostedDomain: process.env.GOOGLE_HOSTED_DOMAIN?.trim() || undefined,
   }
 }
 
 /** Zoznam oddelený čiarkou, bodkočiarkou alebo novým riadkom. */
-export function rozdelZoznam(s: string | undefined | null): string[] {
+export function splitList(s: string | undefined | null): string[] {
   return [...new Set((s ?? "").split(/[,;\n]/).map(x => x.trim().toLowerCase()).filter(Boolean))]
 }
 
@@ -116,7 +116,7 @@ export function resolveCredentials(
 
   if (ulozene?.clientId && ulozene?.clientSecretEnc) {
     try {
-      const clientSecret = rozsifruj(ulozene.clientSecretEnc)
+      const clientSecret = decrypt(ulozene.clientSecretEnc)
       const ms = provider === "microsoft" ? (ulozene as TenantOAuthMicrosoft) : null
       const g = provider === "google" ? (ulozene as TenantOAuthGoogle) : null
       return {
@@ -129,7 +129,7 @@ export function resolveCredentials(
         hostedDomain: g?.hostedDomain?.trim().toLowerCase() || undefined,
       }
     } catch (e) {
-      const preco = e instanceof TajomstvoError ? e.message : String(e)
+      const preco = e instanceof SecretError ? e.message : String(e)
       console.error(
         `[oauth] ${tenant?.companyCode}/${provider}: tajomstvo sa nedá prečítať — ${preco}`
       )
@@ -144,7 +144,7 @@ export function resolveCredentials(
 }
 
 /** Ktoré tlačidlá sa majú ukázať na prihlasovacej obrazovke. */
-export function dostupniPoskytovatelia(tenant: Tenant | null): OAuthProviderName[] {
+export function availableProviders(tenant: Tenant | null): OAuthProviderName[] {
   const out: OAuthProviderName[] = []
   for (const p of ["microsoft", "google"] as const) {
     if (resolveCredentials(tenant, p)) out.push(p)
@@ -159,7 +159,7 @@ export function dostupniPoskytovatelia(tenant: Tenant | null): OAuthProviderName
  * kľúč, a to je úplne iná úloha než „doplň údaje" — treba ich zadať znova,
  * lebo pôvodné sa už prečítať nedajú.
  */
-export function stavPoskytovatela(
+export function providerStatus(
   tenant: Tenant | null,
   provider: OAuthProviderName,
 ): {
@@ -170,7 +170,7 @@ export function stavPoskytovatela(
   const ulozene = tenant?.oauth?.[provider]
   if (ulozene?.clientId && ulozene?.clientSecretEnc) {
     try {
-      rozsifruj(ulozene.clientSecretEnc)
+      decrypt(ulozene.clientSecretEnc)
       return { stav: "nastavene", clientId: ulozene.clientId, zdroj: "tenant" }
     } catch {
       return { stav: "necitatelne", clientId: ulozene.clientId, zdroj: "tenant" }
@@ -182,7 +182,7 @@ export function stavPoskytovatela(
 }
 
 /** Ako sa poskytovateľ volá pre človeka. */
-export const NAZOV_POSKYTOVATELA: Record<OAuthProviderName, string> = {
+export const PROVIDER_LABEL: Record<OAuthProviderName, string> = {
   microsoft: "Microsoft",
   google: "Google",
 }
@@ -195,7 +195,7 @@ export const NAZOV_POSKYTOVATELA: Record<OAuthProviderName, string> = {
  * zapisuje do svojej Entra aplikácie. Premenovať ju znamená rozbiť nastavenie
  * každému zákazníkovi, takže tu má vlastný názov, nie odvodený.
  */
-export const ID_POSKYTOVATELA: Record<OAuthProviderName, string> = {
+export const PROVIDER_ID: Record<OAuthProviderName, string> = {
   microsoft: "azure-ad",
   google: "google",
 }

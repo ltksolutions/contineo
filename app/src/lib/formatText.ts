@@ -13,14 +13,14 @@
  * Modul je čistý TypeScript bez JSX, aby sa dal testovať bez prehliadača.
  */
 
-export type Usek =
+export type Segment =
   | { druh: "text"; text: string }
   | { druh: "tucne"; text: string }
 
-export type Blok =
-  | { druh: "odsek"; useky: Usek[] }
-  | { druh: "nadpis"; useky: Usek[]; uroven: number }
-  | { druh: "zoznam"; polozky: Usek[][]; cislovany: boolean }
+export type Block =
+  | { druh: "odsek"; useky: Segment[] }
+  | { druh: "nadpis"; useky: Segment[]; uroven: number }
+  | { druh: "zoznam"; polozky: Segment[][]; cislovany: boolean }
 
 const ODRAZKA = /^\s*[-*•]\s+(.*)$/
 const CISLO = /^\s*(\d+)[.)]\s+(.*)$/
@@ -47,8 +47,8 @@ const NADPIS = /^(#{1,4})\s+(.+?)\s*#*$/
  * (vyčerpaný limit tokenov) končí uprostred a bolo by horšie zmiznúť
  * polovicu textu než ukázať jednu hviezdičku.
  */
-export function rozdelInline(riadok: string): Usek[] {
-  const useky: Usek[] = []
+export function splitInline(riadok: string): Segment[] {
+  const useky: Segment[] = []
   let zvysok = riadok
 
   for (;;) {
@@ -79,8 +79,8 @@ export function rozdelInline(riadok: string): Usek[] {
  * Prázdny riadok oddeľuje odseky. Riadky vo vnútri odseku sa spájajú
  * medzerou — model zalamuje podľa svojho, nie podľa šírky okna.
  */
-export function naBloky(text: string): Blok[] {
-  const bloky: Blok[] = []
+export function toBlocks(text: string): Block[] {
+  const bloky: Block[] = []
   const riadky = text.split("\n")
 
   let odsek: string[] = []
@@ -88,14 +88,14 @@ export function naBloky(text: string): Blok[] {
 
   const zavriOdsek = () => {
     if (!odsek.length) return
-    bloky.push({ druh: "odsek", useky: rozdelInline(odsek.join(" ")) })
+    bloky.push({ druh: "odsek", useky: splitInline(odsek.join(" ")) })
     odsek = []
   }
   const zavriZoznam = () => {
     if (!zoznam) return
     bloky.push({
       druh: "zoznam",
-      polozky: zoznam.polozky.map(rozdelInline),
+      polozky: zoznam.polozky.map(splitInline),
       cislovany: zoznam.cislovany,
     })
     zoznam = null
@@ -117,7 +117,7 @@ export function naBloky(text: string): Blok[] {
       bloky.push({
         druh: "nadpis",
         uroven: nadpis[1].length,
-        useky: rozdelInline(nadpis[2]),
+        useky: splitInline(nadpis[2]),
       })
       continue
     }
@@ -177,7 +177,7 @@ export function naBloky(text: string): Blok[] {
  * v kontexte modelu má zmysel, lebo hovorí, z ktorej časti predpisu úryvok
  * pochádza.
  */
-export function ocistiCitaciu(text: string): string {
+export function cleanCitation(text: string): string {
   let t = text.trim()
 
   // Breadcrumb má tvar „Dokument › Časť › Článok — " a stojí na začiatku.
@@ -204,8 +204,8 @@ export function ocistiCitaciu(text: string): string {
  * Zlučujeme podľa očisteného textu, nie podľa `chunkIndex` — ten istý chunk
  * môže byť odcitovaný v rôznych rozsahoch a to sú rôzne citácie.
  */
-export function zlucCitacie<T extends { citedText: string }>(citacie: T[]): T[] {
-  const kluc = (t: string) => ocistiCitaciu(t).replace(/\s+/g, " ").toLowerCase()
+export function mergeCitations<T extends { citedText: string }>(citacie: T[]): T[] {
+  const kluc = (t: string) => cleanCitation(t).replace(/\s+/g, " ").toLowerCase()
 
   const zostavajuce: { k: string; c: T }[] = []
   for (const c of citacie) {

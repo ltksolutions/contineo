@@ -8,52 +8,52 @@
 
 import { readFileSync } from "node:fs"
 import { describe, it, expect } from "vitest"
-import { overHodnotu, overZoznam, CiselnikError, TVAR_KLUCA } from "../src/lib/codelists"
-import { idDokumentu, overMetadata, KniznicaError } from "../src/lib/libraryWrite"
+import { checkValue, checkList, CodelistError, KEY_PATTERN } from "../src/lib/codelists"
+import { makeDocumentId, checkMetadata, LibraryError } from "../src/lib/libraryWrite"
 
 describe("ciselniky", () => {
   it("uzavrety ciselnik neprijme nic navyse", () => {
     // scope je closed: true — nova hodnota by znamenala filter, ktoremu
     // nikde inde nikto nerozumie.
-    expect(overHodnotu("scope", "company")).toBe("company")
-    expect(() => overHodnotu("scope", "vesmir")).toThrow(CiselnikError)
+    expect(checkValue("scope", "company")).toBe("company")
+    expect(() => checkValue("scope", "vesmir")).toThrow(CodelistError)
   })
 
   it("otvoreny ciselnik prijme novy kluc v spravnom tvare", () => {
-    expect(overHodnotu("sectionKey", "novy_poriadok")).toBe("novy_poriadok")
+    expect(checkValue("sectionKey", "novy_poriadok")).toBe("novy_poriadok")
   })
 
   it("otvoreny ciselnik neprijme vetu ani diakritiku", () => {
     // Kluc ide do documentId a odtial do adries a exportov.
     for (const zle of ["Nový poriadok", "novy poriadok", "NOVY", "a", "x".repeat(70)]) {
-      expect(() => overHodnotu("sectionKey", zle), zle).toThrow(CiselnikError)
+      expect(() => checkValue("sectionKey", zle), zle).toThrow(CodelistError)
     }
   })
 
   it("tvar kluca je uzky zamerne", () => {
-    expect(TVAR_KLUCA.test("sutazny_poriadok")).toBe(true)
-    expect(TVAR_KLUCA.test("_zaciatok")).toBe(false)
-    expect(TVAR_KLUCA.test("s-pomlckou")).toBe(false)
+    expect(KEY_PATTERN.test("sutazny_poriadok")).toBe(true)
+    expect(KEY_PATTERN.test("_zaciatok")).toBe(false)
+    expect(KEY_PATTERN.test("s-pomlckou")).toBe(false)
   })
 
   it("prazdna hodnota je chyba, nie ticho preskocena", () => {
-    expect(() => overHodnotu("language", "  ")).toThrow(CiselnikError)
+    expect(() => checkValue("language", "  ")).toThrow(CodelistError)
   })
 
   it("zoznam zahodi prazdne a duplicity", () => {
-    expect(overZoznam("tags", ["poriadok", "", "poriadok", "stanovy"]))
+    expect(checkList("tags", ["poriadok", "", "poriadok", "stanovy"]))
       .toEqual(["poriadok", "stanovy"])
   })
 })
 
 describe("identifikator dokumentu", () => {
   it("je z organizacie a kluca, nie z nazvu suboru", () => {
-    expect(idDokumentu({ companyCode: "SFZ", sectionKey: "stanovy" })).toBe("sfz:stanovy")
+    expect(makeDocumentId({ companyCode: "SFZ", sectionKey: "stanovy" })).toBe("sfz:stanovy")
   })
 
   it("velke pismena organizacie nerobia druhy dokument", () => {
-    expect(idDokumentu({ companyCode: "sfz", sectionKey: "stanovy" }))
-      .toBe(idDokumentu({ companyCode: "SFZ", sectionKey: "stanovy" }))
+    expect(makeDocumentId({ companyCode: "sfz", sectionKey: "stanovy" }))
+      .toBe(makeDocumentId({ companyCode: "SFZ", sectionKey: "stanovy" }))
   })
 })
 
@@ -68,19 +68,19 @@ describe("metadata z formulara", () => {
   }
 
   it("uplne metadata prejdu", () => {
-    const m = overMetadata(zaklad)
+    const m = checkMetadata(zaklad)
     expect(m.title).toBe("Stanovy")
     expect(m.tags).toEqual([])
   })
 
   it("bez nazvu to neprejde", () => {
     // Bez nazvu je v zozname len kluc a v potvrdzovacej formulke prazdno.
-    expect(() => overMetadata({ ...zaklad, title: "   " })).toThrow(KniznicaError)
+    expect(() => checkMetadata({ ...zaklad, title: "   " })).toThrow(LibraryError)
   })
 
   it("chybajuce povinne pole je chyba s nazvom pola", () => {
     try {
-      overMetadata({ ...zaklad, accessLevel: "" })
+      checkMetadata({ ...zaklad, accessLevel: "" })
       throw new Error("malo to zlyhat")
     } catch (e) {
       expect((e as Error).message).toContain("accessLevel")
@@ -88,7 +88,7 @@ describe("metadata z formulara", () => {
   })
 
   it("hodnota mimo uzavreteho ciselnika sa odmietne aj tu", () => {
-    expect(() => overMetadata({ ...zaklad, accessLevel: "tajne" })).toThrow(KniznicaError)
+    expect(() => checkMetadata({ ...zaklad, accessLevel: "tajne" })).toThrow(LibraryError)
   })
 })
 

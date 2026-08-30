@@ -8,15 +8,15 @@
 
 import { describe, it, expect } from "vitest"
 import {
-  deti, cesta, cestaIds, podstrom, hlbka, smieSaPresunut, splostiStrom, MAX_HLBKA,
-  type Priecinok,
+  children, pathTo, pathIdsTo, subtree, depth, canMove, flattenTree, MAX_DEPTH,
+  type Folder,
 } from "../src/lib/folders"
 
-function p(id: string, nazov: string, parentId: string | null): Priecinok {
+function p(id: string, nazov: string, parentId: string | null): Folder {
   return { companyCode: "SFZ", id, nazov, parentId, createdAt: new Date("2026-01-01"), createdBy: "test" }
 }
 
-const strom: Priecinok[] = [
+const strom: Folder[] = [
   p("normy", "Normy", null),
   p("sutaz", "Sutazne", "normy"),
   p("disc", "Disciplinarne", "normy"),
@@ -26,38 +26,38 @@ const strom: Priecinok[] = [
 
 describe("strom priecinkov", () => {
   it("deti su len priame podpriecinky", () => {
-    expect(deti(strom, "normy").map(x => x.id).sort()).toEqual(["disc", "sutaz"])
-    expect(deti(strom, null).map(x => x.id).sort()).toEqual(["interne", "normy"])
+    expect(children(strom, "normy").map(x => x.id).sort()).toEqual(["disc", "sutaz"])
+    expect(children(strom, null).map(x => x.id).sort()).toEqual(["interne", "normy"])
   })
 
   it("cesta ide od korena po vlastny priecinok", () => {
-    expect(cestaIds(strom, "mladez")).toEqual(["normy", "sutaz", "mladez"])
+    expect(pathIdsTo(strom, "mladez")).toEqual(["normy", "sutaz", "mladez"])
   })
 
   it("nezaradeny dokument ma prazdnu cestu", () => {
     // Prazdna cesta znamena, ze ho ziadny filter na priecinok nenajde --
     // a to je spravne: nie je nikde.
-    expect(cestaIds(strom, null)).toEqual([])
-    expect(cestaIds(strom, "neexistuje")).toEqual([])
+    expect(pathIdsTo(strom, null)).toEqual([])
+    expect(pathIdsTo(strom, "neexistuje")).toEqual([])
   })
 
   it("cesta sa nezacykli na pokazenych datach", () => {
-    const zle: Priecinok[] = [p("a", "A", "b"), p("b", "B", "a")]
-    expect(cesta(zle, "a").length).toBeLessThanOrEqual(MAX_HLBKA + 2)
+    const zle: Folder[] = [p("a", "A", "b"), p("b", "B", "a")]
+    expect(pathTo(zle, "a").length).toBeLessThanOrEqual(MAX_DEPTH + 2)
   })
 
   it("podstrom obsahuje aj sam seba", () => {
-    expect([...podstrom(strom, "sutaz")].sort()).toEqual(["mladez", "sutaz"])
+    expect([...subtree(strom, "sutaz")].sort()).toEqual(["mladez", "sutaz"])
   })
 
   it("hlbka sa pocita od jednotky", () => {
-    expect(hlbka(strom, null)).toBe(0)
-    expect(hlbka(strom, "normy")).toBe(1)
-    expect(hlbka(strom, "mladez")).toBe(3)
+    expect(depth(strom, null)).toBe(0)
+    expect(depth(strom, "normy")).toBe(1)
+    expect(depth(strom, "mladez")).toBe(3)
   })
 
   it("splostenie da rodica pred deti", () => {
-    const riadky = splostiStrom(strom)
+    const riadky = flattenTree(strom)
     const kde = (id: string) => riadky.findIndex(r => r.priecinok.id === id)
     expect(riadky).toHaveLength(strom.length)
     expect(kde("normy")).toBeLessThan(kde("sutaz"))
@@ -68,30 +68,30 @@ describe("strom priecinkov", () => {
 
 describe("presun priecinka", () => {
   it("do seba ani do vlastneho podpriecinka to nejde", () => {
-    expect(smieSaPresunut(strom, "normy", "normy")).not.toBeNull()
-    expect(smieSaPresunut(strom, "normy", "mladez")).not.toBeNull()
+    expect(canMove(strom, "normy", "normy")).not.toBeNull()
+    expect(canMove(strom, "normy", "mladez")).not.toBeNull()
   })
 
   it("na koren a k surodencovi to ide", () => {
-    expect(smieSaPresunut(strom, "mladez", null)).toBeNull()
-    expect(smieSaPresunut(strom, "mladez", "disc")).toBeNull()
+    expect(canMove(strom, "mladez", null)).toBeNull()
+    expect(canMove(strom, "mladez", "disc")).toBeNull()
   })
 
   it("hlbsie nez povolene sa odmietne", () => {
-    const hlboky: Priecinok[] = []
+    const hlboky: Folder[] = []
     let rodic: string | null = null
-    for (let i = 1; i <= MAX_HLBKA; i++) {
+    for (let i = 1; i <= MAX_DEPTH; i++) {
       hlboky.push(p("u" + i, "U" + i, rodic))
       rodic = "u" + i
     }
     hlboky.push(p("x", "X", null))
-    expect(smieSaPresunut(hlboky, "x", "u" + MAX_HLBKA)).not.toBeNull()
-    expect(smieSaPresunut(hlboky, "x", "u" + (MAX_HLBKA - 1))).toBeNull()
+    expect(canMove(hlboky, "x", "u" + MAX_DEPTH)).not.toBeNull()
+    expect(canMove(hlboky, "x", "u" + (MAX_DEPTH - 1))).toBeNull()
   })
 })
 
 describe("poradie priecinkov (D60)", () => {
-  function pp(id: string, nazov: string, parentId: string | null, poradie?: number): Priecinok {
+  function pp(id: string, nazov: string, parentId: string | null, poradie?: number): Folder {
     return {
       companyCode: "SFZ", id, nazov, parentId, poradie,
       createdAt: new Date("2026-01-01"), createdBy: "test",
@@ -100,19 +100,19 @@ describe("poradie priecinkov (D60)", () => {
 
   it("bez urceneho poradia rozhoduje nazov", () => {
     const v = [pp("i", "Interne", null), pp("n", "Normy", null)]
-    expect(deti(v, null).map(x => x.id)).toEqual(["i", "n"])
+    expect(children(v, null).map(x => x.id)).toEqual(["i", "n"])
   })
 
   it("urcene poradie prebije abecedu", () => {
     // Priecinky su usporiadanie, ktore si niekto premyslel: Normy pred
     // Internymi smernicami, nie naopak preto, ze I je pred N.
     const v = [pp("i", "Interne", null, 1), pp("n", "Normy", null, 0)]
-    expect(deti(v, null).map(x => x.id)).toEqual(["n", "i"])
+    expect(children(v, null).map(x => x.id)).toEqual(["n", "i"])
   })
 
   it("kto ma poradie, stoji pred tymi bez neho", () => {
     const v = [pp("a", "Alfa", null), pp("z", "Zeta", null, 0)]
-    expect(deti(v, null).map(x => x.id)).toEqual(["z", "a"])
+    expect(children(v, null).map(x => x.id)).toEqual(["z", "a"])
   })
 
   it("poradie plati len v ramci jednej urovne", () => {
@@ -121,6 +121,6 @@ describe("poradie priecinkov (D60)", () => {
       pp("d1", "Dieťa A", "k", 1),
       pp("d2", "Dieťa B", "k", 0),
     ]
-    expect(deti(v, "k").map(x => x.id)).toEqual(["d2", "d1"])
+    expect(children(v, "k").map(x => x.id)).toEqual(["d2", "d1"])
   })
 })

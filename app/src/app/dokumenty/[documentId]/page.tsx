@@ -23,7 +23,7 @@ import AcknowledgeButton from "@/components/AcknowledgeButton"
 export const dynamic = "force-dynamic"
 
 // `params` je od Next 15 prísľub.
-export default async function Dokument({ params }: { params: Promise<{ documentId: string }> }) {
+export default async function DocumentPage({ params }: { params: Promise<{ documentId: string }> }) {
   const ctx = await onboardingContext()
   if (ctx.state === "unknown-host") notFound()
   if (ctx.state === "not-signed-in") redirect("/prihlasenie")

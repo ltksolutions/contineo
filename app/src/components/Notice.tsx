@@ -19,7 +19,7 @@
 
 import Link from "next/link"
 
-export default function Oznam({
+export default function Notice({
   sprava,
   chyba,
   spat,

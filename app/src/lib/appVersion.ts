@@ -10,11 +10,11 @@
  */
 
 /** Číslo verzie z `package.json`, napr. `0.1.0`. */
-export const VERZIA = process.env.APP_VERZIA ?? "?"
+export const VERSION = process.env.APP_VERZIA ?? "?"
 
 /**
  * Prvých sedem znakov commitu, z ktorého nasadenie vzniklo. Lokálne je
  * prázdne — a to je v poriadku, lokálny beh nie je nasadenie, o ktorom by
  * sa niekto pýtal.
  */
-export const REVIZIA = process.env.APP_REVIZIA ?? ""
+export const REVISION = process.env.APP_REVIZIA ?? ""

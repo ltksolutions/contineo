@@ -12,14 +12,14 @@
 import { notFound, redirect } from "next/navigation"
 import Link from "next/link"
 import { hrContext } from "@/lib/hr"
-import { assignmentOverviews, nepotvrdili, audienceLabel } from "@/lib/assignments"
+import { assignmentOverviews, notAcknowledged, audienceLabel } from "@/lib/assignments"
 import { brandingView } from "@/lib/tenants"
 import { tenantStyle } from "@/components/TenantHeader"
 import { formatDate } from "@/lib/i18n"
 
 export const dynamic = "force-dynamic"
 
-export default async function DetailPridelenia({
+export default async function AssignmentDetailPage({
   params,
 }: {
   params: Promise<{ id: string }>
@@ -40,7 +40,7 @@ export default async function DetailPridelenia({
   // inak by sa skúšaním identifikátorov dalo zistiť, čo prideľujú iní.
   if (!pridelenie) notFound()
 
-  const chybajuci = await nepotvrdili(kod, id)
+  const chybajuci = await notAcknowledged(kod, id)
   const branding = brandingView(ctx.tenant)
   const jazyk = ctx.person.language
 

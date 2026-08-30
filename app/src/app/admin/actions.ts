@@ -1,7 +1,7 @@
 "use server"
 
 /**
- * akcie.ts — zápisy zo správy tenantov (Fáza 5b, rozsahy B a C).
+ * actions.ts — zápisy zo správy tenantov (Fáza 5b, rozsahy B a C).
  *
  * **Každá akcia začína bránou.** Serverová akcia je koncový bod ako každý iný;
  * to, že sa volá z formulára na chránenej stránke, nie je kontrola prístupu —
@@ -21,14 +21,14 @@ import {
   createTenant,
   saveTenant,
   normalizeHostnames,
-  normalizeDomeny,
+  normalizeDomains,
   DomainOwnedError,
   TenantValidationError,
 } from "@/lib/tenantAdmin"
-import { pridajDomenu, pokynyPreZakaznika, stavDomeny, preskocitVercel } from "@/lib/vercel"
-import { ulozOAuth, zmazOAuth } from "@/lib/tenantAdmin"
-import { rozdelZoznam, NAZOV_POSKYTOVATELA } from "@/lib/oauth"
-import { ulozZnacku, ZnackaError } from "@/lib/branding"
+import { addDomain, customerInstructions, domainStatus, skipVercel } from "@/lib/vercel"
+import { saveOAuth, deleteOAuth } from "@/lib/tenantAdmin"
+import { splitList, PROVIDER_LABEL } from "@/lib/oauth"
+import { saveBrand, BrandError } from "@/lib/branding"
 
 /** Kto akciu spustil — alebo `null`, keď na ňu nemá právo. */
 async function spravca(): Promise<string | null> {
@@ -43,7 +43,7 @@ function textPola(fd: FormData, meno: string): string {
 
 function spravaChyby(e: unknown): string {
   if (e instanceof DomainOwnedError || e instanceof TenantValidationError) return e.message
-  if (e instanceof ZnackaError) return e.message
+  if (e instanceof BrandError) return e.message
   console.error("[admin] akcia zlyhala:", e)
   return "Zmenu sa nepodarilo uložiť. Skús to znova."
 }
@@ -52,8 +52,8 @@ function spravaChyby(e: unknown): string {
 async function zabezpecDomeny(hostnames: string[]): Promise<string[]> {
   const spravy: string[] = []
   for (const h of hostnames) {
-    if (preskocitVercel(h)) continue
-    const v = await pridajDomenu(h)
+    if (skipVercel(h)) continue
+    const v = await addDomain(h)
     if (v.stav === "pridana") spravy.push(`${h} pridaná do Vercelu`)
     else if (v.stav === "bez-nastavenia") {
       spravy.push(`${h}: chýba VERCEL_TOKEN, doménu pridaj ručne`)
@@ -71,12 +71,12 @@ async function ulozNahrateLogo(fd: FormData, kod: string, kto: string): Promise<
   const subor = fd.get("logo")
   if (!(subor instanceof File) || subor.size === 0) return null
   const bajty = Buffer.from(await subor.arrayBuffer())
-  return ulozZnacku(kod.toUpperCase(), subor.type, bajty, kto)
+  return saveBrand(kod.toUpperCase(), subor.type, bajty, kto)
 }
 
 // ── rozsah B: zmena existujúcej organizácie ─────────────────────────────────
 
-export async function ulozTenant(fd: FormData) {
+export async function saveTenantAction(fd: FormData) {
   const kto = await spravca()
   if (!kto) redirect("/admin")
 
@@ -102,7 +102,7 @@ export async function ulozTenant(fd: FormData) {
         languages: fd.getAll("languages").filter(v => typeof v === "string") as string[],
         defaultLanguage: textPola(fd, "defaultLanguage"),
         hostnames,
-        autoProvisionDomains: normalizeDomeny(textPola(fd, "autoProvisionDomains")),
+        autoProvisionDomains: normalizeDomains(textPola(fd, "autoProvisionDomains")),
       },
       kto,
     )
@@ -122,7 +122,7 @@ export async function ulozTenant(fd: FormData) {
  * Preto sa žiada napísať kód organizácie — nie „naozaj?", ktoré človek
  * odklikne skôr, než si prečíta, čoho sa týka.
  */
-export async function prepniStav(fd: FormData) {
+export async function toggleTenantStatusAction(fd: FormData) {
   const kto = await spravca()
   if (!kto) redirect("/admin")
 
@@ -153,7 +153,7 @@ export async function prepniStav(fd: FormData) {
 
 // ── rozsah C: založenie a pokyny ────────────────────────────────────────────
 
-export async function zalozTenant(fd: FormData) {
+export async function createTenantAction(fd: FormData) {
   const kto = await spravca()
   if (!kto) redirect("/admin")
 
@@ -190,7 +190,7 @@ export async function zalozTenant(fd: FormData) {
  * keď si zákazník DNS prestaví. Zaznamenáva sa len to, čo sa odvodiť nedá:
  * komu a kedy sme písali.
  */
-export async function poslatPokyny(fd: FormData) {
+export async function sendInstructionsAction(fd: FormData) {
   const kto = await spravca()
   if (!kto) redirect("/admin")
 
@@ -207,10 +207,10 @@ export async function poslatPokyny(fd: FormData) {
     try {
       const poslane: string[] = []
       for (const h of hostnames) {
-        if (preskocitVercel(h)) continue
-        const s = await stavDomeny(h)
+        if (skipVercel(h)) continue
+        const s = await domainStatus(h)
         if (s.nastaveneCez) continue
-        const p = pokynyPreZakaznika(h, s.cname)
+        const p = customerInstructions(h, s.cname)
         await send({
           to: komu,
           subject: p.subject,
@@ -258,7 +258,7 @@ async function zapisPokyny(kod: string, komu: string, hostnames: string[]) {
  * — do databázy sa v pôvodnej podobe nedostane ani na okamih. Do logu ani do
  * chybovej hlášky sa nedostane vôbec; preto sa nikde nevypisuje `vstup`.
  */
-export async function ulozPrihlasenie(fd: FormData) {
+export async function saveSignInAction(fd: FormData) {
   const kto = await spravca()
   if (!kto) redirect("/admin")
 
@@ -268,18 +268,18 @@ export async function ulozPrihlasenie(fd: FormData) {
   let chyba = false
 
   try {
-    await ulozOAuth(kod, provider, {
+    await saveOAuth(kod, provider, {
       clientId: textPola(fd, "clientId"),
       // Prázdne pole znamená „nemeň" — obrazovka hodnotu nikdy neukazuje,
       // takže je pri každom otvorení prázdne.
       clientSecret: textPola(fd, "clientSecret"),
       tenantMode: provider === "microsoft" ? textPola(fd, "tenantMode") : undefined,
       allowedTenantIds: provider === "microsoft"
-        ? rozdelZoznam(textPola(fd, "allowedTenantIds"))
+        ? splitList(textPola(fd, "allowedTenantIds"))
         : undefined,
       hostedDomain: provider === "google" ? textPola(fd, "hostedDomain") : undefined,
     }, kto)
-    sprava = `Prihlásenie cez ${NAZOV_POSKYTOVATELA[provider]} uložené.`
+    sprava = `Prihlásenie cez ${PROVIDER_LABEL[provider]} uložené.`
   } catch (e) {
     sprava = spravaChyby(e)
     chyba = true
@@ -296,7 +296,7 @@ export async function ulozPrihlasenie(fd: FormData) {
  * ktorí sa prihlasujú pracovným kontom, tým okamžite prestane fungovať jediná
  * cesta, ktorú poznajú.
  */
-export async function zmazPrihlasenie(fd: FormData) {
+export async function deleteSignInAction(fd: FormData) {
   const kto = await spravca()
   if (!kto) redirect("/admin")
 
@@ -311,8 +311,8 @@ export async function zmazPrihlasenie(fd: FormData) {
     chyba = true
   } else {
     try {
-      await zmazOAuth(kod, provider, kto)
-      sprava = `Prihlásenie cez ${NAZOV_POSKYTOVATELA[provider]} odstránené.`
+      await deleteOAuth(kod, provider, kto)
+      sprava = `Prihlásenie cez ${PROVIDER_LABEL[provider]} odstránené.`
     } catch (e) {
       sprava = spravaChyby(e)
     chyba = true

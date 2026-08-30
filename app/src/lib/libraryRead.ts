@@ -10,12 +10,12 @@
  */
 
 import { getCollection } from "./mongodb"
-import { vsetkyPriecinky, cesta } from "./folders"
+import { allFolders, pathTo } from "./folders"
 import { DOCUMENTS_COLLECTION, effectiveVersion } from "./documents"
 import type { Version } from "./documents"
-import type { PovodnySubor, StavSpracovania } from "./libraryWrite"
+import type { OriginalFile, ProcessingState } from "./libraryWrite"
 
-export interface RiadokKniznice {
+export interface LibraryRow {
   documentId: string
   title: string
   sectionKey: string
@@ -23,7 +23,7 @@ export interface RiadokKniznice {
   language?: string
   accessLevel?: string
   tags: string[]
-  stavSpracovania: StavSpracovania
+  stavSpracovania: ProcessingState
   /** `draft` = ešte nepublikované, `published` = má aspoň jedno vydané znenie. */
   stav: string
   folderId?: string | null
@@ -38,7 +38,7 @@ export interface RiadokKniznice {
   updatedBy?: string
 }
 
-export interface DetailKniznice extends RiadokKniznice {
+export interface LibraryDetail extends LibraryRow {
   draftMarkdown?: string
   markdown?: string
   /**
@@ -52,7 +52,7 @@ export interface DetailKniznice extends RiadokKniznice {
    */
   textNaUpravu: string
   versions: Version[]
-  originalFile?: PovodnySubor
+  originalFile?: OriginalFile
   konverzia?: { sposob: string; upozornenia: string[]; kedy: Date }
   processingError?: string | null
   scope?: string
@@ -74,8 +74,8 @@ function popisPlatnosti(doc: { versions?: Version[] }): string {
 
 type Surovy = Record<string, unknown> & { versions?: Version[] }
 
-function naRiadok(d: Surovy): RiadokKniznice {
-  const povodny = d.originalFile as PovodnySubor | undefined
+function naRiadok(d: Surovy): LibraryRow {
+  const povodny = d.originalFile as OriginalFile | undefined
   return {
     documentId: String(d.documentId),
     title: String(d.title ?? d.documentId),
@@ -88,7 +88,7 @@ function naRiadok(d: Surovy): RiadokKniznice {
     // v anglickom tvare. Prekladá sa tu, nie migráciou — prepisovať existujúce
     // záznamy kvôli pomenovaniu by bola zmena dát bez dôvodu.
     stavSpracovania: (d.processingStatus === "indexed" ? "zaindexovane"
-      : (d.processingStatus as StavSpracovania | undefined) ?? "nahrate"),
+      : (d.processingStatus as ProcessingState | undefined) ?? "nahrate"),
     stav: String(d.status ?? "draft"),
     folderId: (d.folderId as string | null | undefined) ?? null,
     verzii: (d.versions ?? []).length,
@@ -102,7 +102,7 @@ function naRiadok(d: Surovy): RiadokKniznice {
   }
 }
 
-export interface FilterKniznice {
+export interface LibraryFilter {
   hladat?: string
   stav?: string
   /** Priečinok **vrátane podpriečinkov** — hľadá sa v materializovanej ceste. */
@@ -114,10 +114,10 @@ export interface FilterKniznice {
   tag?: string
 }
 
-export async function zoznamKniznice(
+export async function libraryList(
   companyCode: string,
-  filter: FilterKniznice = {},
-): Promise<RiadokKniznice[]> {
+  filter: LibraryFilter = {},
+): Promise<LibraryRow[]> {
   const col = await getCollection(DOCUMENTS_COLLECTION)
   const q: Record<string, unknown> = { companyCode }
 
@@ -166,17 +166,17 @@ export async function zoznamKniznice(
     .sort({ updatedAt: -1, title: 1 })
     .toArray()
 
-  const priecinky = await vsetkyPriecinky(companyCode)
+  const priecinky = await allFolders(companyCode)
   return zaznamy.map(z => {
     const r = naRiadok(z as Surovy)
-    return { ...r, cestaPriecinkov: cesta(priecinky, r.folderId).map(p => p.nazov) }
+    return { ...r, cestaPriecinkov: pathTo(priecinky, r.folderId).map(p => p.nazov) }
   })
 }
 
-export async function detailKniznice(
+export async function libraryDetail(
   companyCode: string,
   documentId: string,
-): Promise<DetailKniznice | null> {
+): Promise<LibraryDetail | null> {
   const col = await getCollection(DOCUMENTS_COLLECTION)
   const d = (await col.findOne({ companyCode, documentId })) as Surovy | null
   if (!d) return null
@@ -197,11 +197,11 @@ export async function detailKniznice(
     (platna.ok ? String(platna.version.markdown ?? "") : "") ||
     String(najnovsia?.markdown ?? "")
 
-  const priecinky = await vsetkyPriecinky(companyCode)
+  const priecinky = await allFolders(companyCode)
 
   return {
     ...naRiadok(d),
-    cestaPriecinkov: cesta(priecinky, (d.folderId as string | null | undefined) ?? null).map(p => p.nazov),
+    cestaPriecinkov: pathTo(priecinky, (d.folderId as string | null | undefined) ?? null).map(p => p.nazov),
     textNaUpravu,
     companyCode,
     scope: d.scope ? String(d.scope) : undefined,
@@ -212,8 +212,8 @@ export async function detailKniznice(
       const tb = b.effectiveFrom ? new Date(b.effectiveFrom).getTime() : 0
       return tb - ta
     }),
-    originalFile: d.originalFile as PovodnySubor | undefined,
-    konverzia: d.konverzia as DetailKniznice["konverzia"],
+    originalFile: d.originalFile as OriginalFile | undefined,
+    konverzia: d.konverzia as LibraryDetail["konverzia"],
     processingError: (d.processingError as string | null) ?? null,
   }
 }

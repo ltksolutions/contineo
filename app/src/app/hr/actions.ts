@@ -1,7 +1,7 @@
 "use server"
 
 /**
- * akcie.ts — zápisy z HR obrazovky (Fáza 9, rozsah B).
+ * actions.ts — zápisy z HR obrazovky (Fáza 9, rozsah B).
  *
  * **Každá akcia začína bránou.** Serverová akcia je koncový bod ako každý iný;
  * to, že sa volá z formulára na chránenej stránke, nie je kontrola prístupu.
@@ -13,12 +13,12 @@
 
 import { redirect } from "next/navigation"
 import { revalidatePath } from "next/cache"
-import { hrContext, pridelitelneDokumenty } from "@/lib/hr"
+import { hrContext, assignableDocuments } from "@/lib/hr"
 import {
-  assign, revoke, loadAssignment, nepotvrdili, recordNotification,
+  assign, revoke, loadAssignment, notAcknowledged, recordNotification,
   audienceFromSelection, AssignmentValidationError,
 } from "@/lib/assignments"
-import { vsetkyOddelenia } from "@/lib/departments"
+import { allDepartments } from "@/lib/departments"
 import { send, assignmentEmail } from "@/lib/ecomail"
 import { brandingView } from "@/lib/tenants"
 import { requestHostname } from "@/lib/session"
@@ -53,7 +53,7 @@ function spatSChybou(chyba: string, fd: FormData): never {
   redirect(`/hr/pridelit?${q.toString()}`)
 }
 
-export async function pridelit(fd: FormData) {
+export async function assignAction(fd: FormData) {
   const kto = await personal()
   if (!kto) redirect("/hr")
 
@@ -61,7 +61,7 @@ export async function pridelit(fd: FormData) {
   // Názvy oddelení sa do pridelenia zapisujú ako **kópia** (`audience.label`),
   // z rovnakého dôvodu ako názov dokumentu: oddelenie sa premenuje alebo zruší
   // a o rok musí byť čitateľné, komu sa vtedy prideľovalo.
-  const strom = await vsetkyOddelenia(kto.companyCode)
+  const strom = await allDepartments(kto.companyCode)
   const nazvyOddeleni = Object.fromEntries(strom.map(o => [o.id, o.nazov]))
 
   const publika = audienceFromSelection({
@@ -75,7 +75,7 @@ export async function pridelit(fd: FormData) {
   // Znenia sa berú zo servera, nie z formulára. Keby `versionId` prišlo
   // z prehliadača, dalo by sa prideliť ľubovoľné — aj z cudzej organizácie
   // alebo staré, ktoré sa už nedá potvrdiť.
-  const ponuka = await pridelitelneDokumenty(kto.companyCode)
+  const ponuka = await assignableDocuments(kto.companyCode)
   const vybrane = fd.getAll("dokument")
     .filter((d): d is string => typeof d === "string")
     .map(id => ponuka.find(p => p.documentId === id))
@@ -124,7 +124,7 @@ export async function pridelit(fd: FormData) {
   redirect("/hr?sprava=" + encodeURIComponent(sprava))
 }
 
-export async function odvolat(fd: FormData) {
+export async function revokeAction(fd: FormData) {
   const kto = await personal()
   if (!kto) redirect("/hr")
 
@@ -162,7 +162,7 @@ const SUBEZNE = 5
  * Záznam sa zapíše **po** odoslaní a s počtom, ktorý naozaj odišiel. Zápis
  * dopredu by pri výpadku pošty tvrdil, že ľudia vedia, hoci nedostali nič.
  */
-export async function poslatOznamenie(fd: FormData) {
+export async function sendNotificationAction(fd: FormData) {
   const ctx = await hrContext()
   if (ctx.state !== "ready") redirect("/hr")
   const kod = ctx.person.companyCode
@@ -174,7 +174,7 @@ export async function poslatOznamenie(fd: FormData) {
   // Bývalým členom oddelenia sa nepíše (D50): pripomínať normu oddelenia, v ktorom
   // človek už nie je, je nezmysel. V prehľade zostávajú vidieť, aby sa
   // personalista mohol rozhodnúť sám.
-  const prijemcovia = (await nepotvrdili(kod, id)).filter(o => !o.byvaly)
+  const prijemcovia = (await notAcknowledged(kod, id)).filter(o => !o.byvaly)
   if (prijemcovia.length === 0) {
     redirect("/hr?chyba=1&sprava=" + encodeURIComponent("Nie je komu poslať — potvrdili už všetci, kto v oddelení zostal."))
   }

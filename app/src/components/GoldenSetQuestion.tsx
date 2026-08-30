@@ -12,7 +12,7 @@
 
 import { useState } from "react"
 import Link from "next/link"
-import Hladanie from "./Search"
+import Search from "./Search"
 
 const POPIS_PASCE: Record<string, string> = {
   out_of_domain: "Otázka je mimo nahraných dokumentov. Systém má odmietnuť, nie odpovedať.",
@@ -27,7 +27,7 @@ const POPIS_SPRAVANIA: Record<string, string> = {
   escalate: "má ponúknuť eskaláciu",
 }
 
-export default function OtazkaSady({
+export default function GoldenSetQuestion({
   id, znenie, povodne, upravene, vyradena, dovodVyradenia,
   trapType, expectedBehaviour, precedenceRule, searchMode,
   prekryv, cudzie, dalsia,
@@ -222,7 +222,7 @@ export default function OtazkaSady({
             )}
           </div>
 
-          <Hladanie
+          <Search
             key={text}
             otazkaId={id}
             prednastavena={text}

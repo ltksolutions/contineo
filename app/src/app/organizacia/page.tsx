@@ -11,28 +11,28 @@
 
 import { notFound, redirect } from "next/navigation"
 import Link from "next/link"
-import { organizaciaContext } from "@/lib/orgSettings"
-import { ziadosti, pokynPreDomenu } from "@/lib/customerDomains"
-import { stavPoskytovatela, NAZOV_POSKYTOVATELA, ID_POSKYTOVATELA } from "@/lib/oauth"
+import { orgContext } from "@/lib/orgSettings"
+import { domainRequests, domainInstruction } from "@/lib/customerDomains"
+import { providerStatus, PROVIDER_LABEL, PROVIDER_ID } from "@/lib/oauth"
 import { brandingView } from "@/lib/tenants"
 import { tenantStyle } from "@/components/TenantHeader"
 import { UI_LANGUAGES, formatDate } from "@/lib/i18n"
-import Vyber from "@/components/Select"
-import VyberFarby from "@/components/ColorSelect"
-import Oznam from "@/components/Notice"
-import { ulozVzhlad, ulozPrihlasenie, zmazPrihlasenie, poziadaj, overDomenu, zrus } from "./akcie"
-import { zalozUtvar, premenujUtvar, presunUtvar, zrusUtvar } from "./akcie"
-import { pridajDoCiselnika, odoberZCiselnika, ulozClenenie, preindexujVsetkyAkcia } from "./akcie"
-import { posunOddelenieAkcia, ulozPoradieAkcia } from "./akcie"
-import StromSPoradim from "@/components/TreeWithOrder"
-import { stavPreindexovania } from "@/lib/libraryWrite"
+import Select from "@/components/Select"
+import ColorSelect from "@/components/ColorSelect"
+import Notice from "@/components/Notice"
+import { saveBrandingAction, saveSignInAction, deleteSignInAction, requestDomainAction, verifyDomainAction, cancelDomainAction } from "./actions"
+import { createDepartmentAction, renameDepartmentAction, moveDepartmentAction, deleteDepartmentAction } from "./actions"
+import { addCodelistItemAction, removeCodelistItemAction, saveChunkingProfileAction, reindexAllAction } from "./actions"
+import { shiftDepartmentAction, saveDepartmentOrderAction } from "./actions"
+import TreeWithOrder from "@/components/TreeWithOrder"
+import { reindexState } from "@/lib/libraryWrite"
 import { PREDVOLENY_PROFIL } from "@/lib/chunker.mjs"
-import { POPIS_CISELNIKA, ponuka, vlastnePolozky, pouzitie } from "@/lib/codelistsTenant"
-import { preloz } from "@/lib/urlTabs"
-import { VLASTNE_CISELNIKY } from "@/lib/codelists"
-import { vsetkyOddelenia, splostiStrom, podstrom, pocty, MAX_HLBKA, hlbka } from "@/lib/departments"
-import { auditZaznamy } from "@/lib/audit"
-import AuditVypis from "@/components/AuditList"
+import { CODELIST_LABEL, availableOptions, customItems, codelistUsage } from "@/lib/codelistsTenant"
+import { translateTabKey } from "@/lib/urlTabs"
+import { CUSTOM_CODELISTS } from "@/lib/codelists"
+import { allDepartments, flattenTree, subtree, counts, MAX_DEPTH, depth } from "@/lib/departments"
+import { auditRecords } from "@/lib/audit"
+import AuditList from "@/components/AuditList"
 import type { OAuthProviderName } from "@/lib/oauth"
 import type { Tenant } from "@/lib/tenants"
 
@@ -61,9 +61,9 @@ function Poskytovatel({
   provider: OAuthProviderName
   domena?: string
 }) {
-  const nazov = NAZOV_POSKYTOVATELA[provider]
-  const s = stavPoskytovatela(tenant, provider)
-  const navrat = `https://${domena ?? "<vaša doména>"}/api/auth/callback/${ID_POSKYTOVATELA[provider]}`
+  const nazov = PROVIDER_LABEL[provider]
+  const s = providerStatus(tenant, provider)
+  const navrat = `https://${domena ?? "<vaša doména>"}/api/auth/callback/${PROVIDER_ID[provider]}`
 
   return (
     <section className="karta" style={{ padding: "18px 20px", display: "grid", gap: 14 }}>
@@ -92,7 +92,7 @@ function Poskytovatel({
         <code style={{ fontSize: 13.5, overflowWrap: "anywhere" }}>{navrat}</code>
       </div>
 
-      <form action={ulozPrihlasenie} style={{ display: "grid", gap: 14 }}>
+      <form action={saveSignInAction} style={{ display: "grid", gap: 14 }}>
         <input type="hidden" name="provider" value={provider} />
         <input type="hidden" name="zalozka" value="prihlasenie" />
 
@@ -153,7 +153,7 @@ function Poskytovatel({
       </form>
 
       {s.zdroj === "tenant" && (
-        <form action={zmazPrihlasenie} style={{ display: "grid", gap: 10, borderTop: "1px solid var(--line)", paddingTop: 14 }}>
+        <form action={deleteSignInAction} style={{ display: "grid", gap: 10, borderTop: "1px solid var(--line)", paddingTop: 14 }}>
           <input type="hidden" name="provider" value={provider} />
           <input type="hidden" name="zalozka" value="prihlasenie" />
           <p className="tichy" style={{ margin: 0, fontSize: 14 }}>
@@ -172,12 +172,12 @@ function Poskytovatel({
   )
 }
 
-export default async function Organizacia({
+export default async function OrganisationPage({
   searchParams,
 }: {
   searchParams: Promise<{ sprava?: string; chyba?: string; zalozka?: string; hladat?: string }>
 }) {
-  const ctx = await organizaciaContext()
+  const ctx = await orgContext()
   if (ctx.state !== "ready") {
     if (ctx.state === "not-signed-in") redirect("/prihlasenie")
     notFound()
@@ -189,31 +189,31 @@ export default async function Organizacia({
   // `strom` je starý kľúč tejto záložky. Odkazy s ním existujú v e-mailoch
   // aj v záložkách prehliadača — presmerovať by ich rozbilo, tak sa len
   // preloží. Zmizne, keď prestane chodiť.
-  const kluc = preloz(zalozka)
+  const kluc = translateTabKey(zalozka)
   const teraz = ZALOZKY.some(z => z.kluc === kluc) ? kluc! : "vzhlad"
   const tenant = ctx.tenant
   const branding = brandingView(tenant)
   const jazyk = ctx.person.language
-  const cakajuce = (await ziadosti(tenant.companyCode)).filter(
+  const cakajuce = (await domainRequests(tenant.companyCode)).filter(
     z => !tenant.hostnames.includes(z.host),
   )
 
   // Strom sa načítava len pre svoju záložku. Na ostatných by to bol dotaz
   // navyše za nič.
-  const oddeleniaTenanta = teraz === "oddelenia" ? await vsetkyOddelenia(tenant.companyCode) : []
-  const riadky = teraz === "oddelenia" ? splostiStrom(oddeleniaTenanta) : []
-  const koliOsob = teraz === "oddelenia" ? await pocty(tenant.companyCode) : new Map()
+  const oddeleniaTenanta = teraz === "oddelenia" ? await allDepartments(tenant.companyCode) : []
+  const riadky = teraz === "oddelenia" ? flattenTree(oddeleniaTenanta) : []
+  const koliOsob = teraz === "oddelenia" ? await counts(tenant.companyCode) : new Map()
   // Počty použití sa čítajú len pre svoju záložku — inak by to boli dva
   // dotazy na dokumenty pri každom otvorení nastavenia.
   const ciselniky = teraz === "ciselniky"
-    ? await Promise.all(VLASTNE_CISELNIKY.map(async nazov => ({
+    ? await Promise.all(CUSTOM_CODELISTS.map(async nazov => ({
         nazov,
-        vsetky: ponuka(tenant, nazov),
-        vlastne: vlastnePolozky(tenant, nazov),
+        vsetky: availableOptions(tenant, nazov),
+        vlastne: customItems(tenant, nazov),
         pocty: Object.fromEntries(
           await Promise.all(
-            vlastnePolozky(tenant, nazov).map(async p =>
-              [p.key, await pouzitie(tenant.companyCode, nazov, p.key)] as const),
+            customItems(tenant, nazov).map(async p =>
+              [p.key, await codelistUsage(tenant.companyCode, nazov, p.key)] as const),
           ),
         ) as Record<string, number>,
       })))
@@ -223,16 +223,16 @@ export default async function Organizacia({
   // narezaním — odhad by pri zmene parametra nevedel povedať, či na tomto
   // obsahu vôbec niečo spraví.
   const stavIndexu = teraz === "clenenie"
-    ? await stavPreindexovania(tenant.companyCode, tenant.chunkovanie)
+    ? await reindexState(tenant.companyCode, tenant.chunkovanie)
     : null
 
   const zaznamy = teraz === "audit"
-    ? await auditZaznamy(tenant.companyCode, { hladat, limit: 200 })
+    ? await auditRecords(tenant.companyCode, { hladat, limit: 200 })
     : []
 
   return (
     <div className="obal" style={{ padding: "28px 20px 80px", maxWidth: 720, ...tenantStyle(branding) }}>
-      <Oznam
+      <Notice
         sprava={sprava}
         chyba={chyba === "1"}
         spat={`/organizacia?zalozka=${teraz}`}
@@ -262,7 +262,7 @@ export default async function Organizacia({
       </nav>
 
       {teraz === "vzhlad" && (
-      <form action={ulozVzhlad} className="karta" style={{ padding: 20, display: "grid", gap: 16 }} encType="multipart/form-data">
+      <form action={saveBrandingAction} className="karta" style={{ padding: 20, display: "grid", gap: 16 }} encType="multipart/form-data">
         <input type="hidden" name="zalozka" value="vzhlad" />
 
         <label className="pole">
@@ -297,7 +297,7 @@ export default async function Organizacia({
 
         <div className="pole">
           <span className="pole-popis">Farba</span>
-          <VyberFarby meno="accentColor" hodnota={tenant.branding.accentColor} />
+          <ColorSelect meno="accentColor" hodnota={tenant.branding.accentColor} />
           <span className="tichy pole-napoveda">
             Nesie ju tlačidlo s bielym textom, preto sú odtiene tmavšie, než by
             sa chcelo — svetlejší tón znamená nečitateľné tlačidlo.
@@ -325,7 +325,7 @@ export default async function Organizacia({
 
         <div className="pole">
           <span className="pole-popis">Predvolený jazyk</span>
-          <Vyber
+          <Select
             meno="defaultLanguage"
             volby={UI_LANGUAGES.map(j => ({ hodnota: j, popis: JAZYKY[j] ?? j }))}
             predvolena={tenant.defaultLanguage}
@@ -377,12 +377,12 @@ export default async function Organizacia({
               zapísané pri ľuďoch ako text, ozvite sa nám a prevedieme ich naraz.
             </p>
           ) : (
-            <StromSPoradim
+            <TreeWithOrder
               skryte={{ zalozka: "oddelenia" }}
-              akcia={ulozPoradieAkcia}
+              akcia={saveDepartmentOrderAction}
               polozky={riadky.map(({ oddelenie, uroven }) => {
                 const p = koliOsob.get(oddelenie.id) ?? { priamo: 0, sPodriadenymi: 0 }
-                const pod = podstrom(oddeleniaTenanta, oddelenie.id)
+                const pod = subtree(oddeleniaTenanta, oddelenie.id)
                 return {
                   id: oddelenie.id,
                   nazov: oddelenie.nazov,
@@ -404,14 +404,14 @@ export default async function Organizacia({
                             myšou robí to isté, ale toto funguje aj bez
                             JavaScriptu, klávesnicou a na telefóne. */}
                         <div className="strom-sipky">
-                          <form action={posunOddelenieAkcia}>
+                          <form action={shiftDepartmentAction}>
                             <input type="hidden" name="zalozka" value="oddelenia" />
                             <input type="hidden" name="id" value={oddelenie.id} />
                             <input type="hidden" name="smer" value="hore" />
                             <button className="tlacidlo tlacidlo--tiche" type="submit"
                                     aria-label={`Posunúť ${oddelenie.nazov} vyššie`}>↑ vyššie</button>
                           </form>
-                          <form action={posunOddelenieAkcia}>
+                          <form action={shiftDepartmentAction}>
                             <input type="hidden" name="zalozka" value="oddelenia" />
                             <input type="hidden" name="id" value={oddelenie.id} />
                             <input type="hidden" name="smer" value="dole" />
@@ -420,7 +420,7 @@ export default async function Organizacia({
                           </form>
                         </div>
 
-                        <form action={premenujUtvar} className="strom-forma">
+                        <form action={renameDepartmentAction} className="strom-forma">
                           <input type="hidden" name="zalozka" value="oddelenia" />
                           <input type="hidden" name="id" value={oddelenie.id} />
                           <input
@@ -433,10 +433,10 @@ export default async function Organizacia({
                           <button className="tlacidlo tlacidlo--tiche" type="submit">Premenovať</button>
                         </form>
 
-                        <form action={presunUtvar} className="strom-forma">
+                        <form action={moveDepartmentAction} className="strom-forma">
                           <input type="hidden" name="zalozka" value="oddelenia" />
                           <input type="hidden" name="id" value={oddelenie.id} />
-                          <Vyber
+                          <Select
                             meno="parentId"
                             predvolena={oddelenie.parentId ?? ""}
                             popisPola={`Nadriadené oddelenie pre ${oddelenie.nazov}`}
@@ -457,7 +457,7 @@ export default async function Organizacia({
                         </form>
 
                         {p.sPodriadenymi === 0 && pod.size === 1 ? (
-                          <form action={zrusUtvar}>
+                          <form action={deleteDepartmentAction}>
                             <input type="hidden" name="zalozka" value="oddelenia" />
                             <input type="hidden" name="id" value={oddelenie.id} />
                             <button className="tlacidlo tlacidlo--tiche" type="submit">Zrušiť oddelenie</button>
@@ -477,7 +477,7 @@ export default async function Organizacia({
           )}
         </section>
 
-        <form action={zalozUtvar} className="karta" style={{ padding: 20, display: "grid", gap: 14 }}>
+        <form action={createDepartmentAction} className="karta" style={{ padding: 20, display: "grid", gap: 14 }}>
           <input type="hidden" name="zalozka" value="oddelenia" />
           <h2 style={{ fontSize: 17, margin: 0 }}>Nové oddelenie</h2>
 
@@ -488,14 +488,14 @@ export default async function Organizacia({
 
           <label className="pole">
             <span className="pole-popis">Nadriadené oddelenie</span>
-            <Vyber
+            <Select
               meno="parentId"
               predvolena=""
               volby={[
                 { hodnota: "", popis: "— najvyššia úroveň —" },
                 ...riadky
                   // Hlbšie než povolené sa založiť nedá, tak sa to neponúka.
-                  .filter(r => hlbka(oddeleniaTenanta, r.oddelenie.id) < MAX_HLBKA)
+                  .filter(r => depth(oddeleniaTenanta, r.oddelenie.id) < MAX_DEPTH)
                   .map(r => ({
                     hodnota: r.oddelenie.id,
                     popis: `${"— ".repeat(r.uroven - 1)}${r.oddelenie.nazov}`,
@@ -503,7 +503,7 @@ export default async function Organizacia({
               ]}
             />
             <span className="tichy pole-napoveda">
-              Štruktúra môže mať najviac {MAX_HLBKA} úrovní. Nie je to technický
+              Štruktúra môže mať najviac {MAX_DEPTH} úrovní. Nie je to technický
               limit — hlbší strom sa na telefóne nedá prehľadne ukázať a to, čo
               je v ňom najhlbšie, býva v skutočnosti skupina.
             </span>
@@ -523,7 +523,7 @@ export default async function Organizacia({
               <span style={{ fontWeight: 600 }}>{h}</span>
               <span className="stitok" style={{ background: "var(--ok-bg)", color: "var(--ok-fg)" }}>funguje</span>
               {tenant.hostnames.length > 1 && (
-                <form action={zrus} style={{ marginLeft: "auto" }}>
+                <form action={cancelDomainAction} style={{ marginLeft: "auto" }}>
                   <input type="hidden" name="host" value={h} />
                   <input type="hidden" name="zalozka" value="domeny" />
                   <button className="tlacidlo tlacidlo--tiche" type="submit" style={{ padding: "5px 10px", fontSize: 13 }}>
@@ -538,7 +538,7 @@ export default async function Organizacia({
         {cakajuce.length > 0 && (
           <ul className="admin-domeny">
             {cakajuce.map(z => {
-              const p = pokynPreDomenu(z.host)
+              const p = domainInstruction(z.host)
               return (
                 <li key={z.host} className="karta" style={{ padding: "12px 14px", display: "grid", gap: 8 }}>
                   <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
@@ -559,14 +559,14 @@ export default async function Organizacia({
                   )}
 
                   <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                    <form action={overDomenu}>
+                    <form action={verifyDomainAction}>
                       <input type="hidden" name="host" value={z.host} />
                       <input type="hidden" name="zalozka" value="domeny" />
                       <button className="tlacidlo" type="submit" style={{ padding: "6px 14px", fontSize: 13.5 }}>
                         Overiť a zapnúť
                       </button>
                     </form>
-                    <form action={zrus}>
+                    <form action={cancelDomainAction}>
                       <input type="hidden" name="host" value={z.host} />
                       <input type="hidden" name="zalozka" value="domeny" />
                       <button className="tlacidlo tlacidlo--tiche" type="submit" style={{ padding: "6px 14px", fontSize: 13.5 }}>
@@ -580,7 +580,7 @@ export default async function Organizacia({
           </ul>
         )}
 
-        <form action={poziadaj} style={{ display: "grid", gap: 10 }}>
+        <form action={requestDomainAction} style={{ display: "grid", gap: 10 }}>
           <input type="hidden" name="zalozka" value="domeny" />
           <label className="pole">
             <span className="pole-popis">Pridať vlastnú doménu</span>
@@ -616,9 +616,9 @@ export default async function Organizacia({
         {ciselniky.map(c => (
           <section key={c.nazov} className="karta" style={{ padding: 20, display: "grid", gap: 12 }}>
             <div>
-              <h2 style={{ fontSize: 17, margin: "0 0 4px" }}>{POPIS_CISELNIKA[c.nazov].nazov}</h2>
+              <h2 style={{ fontSize: 17, margin: "0 0 4px" }}>{CODELIST_LABEL[c.nazov].nazov}</h2>
               <p className="tichy" style={{ fontSize: 14, margin: 0 }}>
-                {POPIS_CISELNIKA[c.nazov].napoveda}
+                {CODELIST_LABEL[c.nazov].napoveda}
               </p>
             </div>
 
@@ -635,7 +635,7 @@ export default async function Organizacia({
                         {vlastna && c.pocty[p.key] > 0 && ` · použitá ${c.pocty[p.key]}×`}
                       </span>
                       {vlastna && (
-                        <form action={odoberZCiselnika} style={{ marginLeft: "auto" }}>
+                        <form action={removeCodelistItemAction} style={{ marginLeft: "auto" }}>
                           <input type="hidden" name="zalozka" value="ciselniky" />
                           <input type="hidden" name="ciselnik" value={c.nazov} />
                           <input type="hidden" name="kluc" value={p.key} />
@@ -648,11 +648,11 @@ export default async function Organizacia({
               })}
             </ul>
 
-            <form action={pridajDoCiselnika} className="strom-forma">
+            <form action={addCodelistItemAction} className="strom-forma">
               <input type="hidden" name="zalozka" value="ciselniky" />
               <input type="hidden" name="ciselnik" value={c.nazov} />
               <input className="pole-vstup" name="popis" placeholder="Metodický pokyn"
-                     aria-label={`Názov novej položky — ${POPIS_CISELNIKA[c.nazov].nazov}`} required />
+                     aria-label={`Názov novej položky — ${CODELIST_LABEL[c.nazov].nazov}`} required />
               <input className="pole-vstup" name="kluc" placeholder="metodicky_pokyn"
                      aria-label="Kľúč" autoCapitalize="none" autoCorrect="off" required
                      style={{ maxWidth: 220 }} />
@@ -669,7 +669,7 @@ export default async function Organizacia({
       )}
 
       {teraz === "clenenie" && (
-      <form action={ulozClenenie} className="karta" style={{ padding: 20, display: "grid", gap: 16 }}>
+      <form action={saveChunkingProfileAction} className="karta" style={{ padding: 20, display: "grid", gap: 16 }}>
         <input type="hidden" name="zalozka" value="clenenie" />
 
         <div>
@@ -739,7 +739,7 @@ export default async function Organizacia({
       )}
 
       {teraz === "clenenie" && stavIndexu && (
-      <form action={preindexujVsetkyAkcia} className="karta" style={{ padding: 20, display: "grid", gap: 12, marginTop: 16 }}>
+      <form action={reindexAllAction} className="karta" style={{ padding: 20, display: "grid", gap: 12, marginTop: 16 }}>
         <input type="hidden" name="zalozka" value="clenenie" />
         <h2 style={{ fontSize: 17, margin: 0 }}>Preindexovať všetko</h2>
 
@@ -798,7 +798,7 @@ export default async function Organizacia({
           ) : null}
         </form>
 
-        <AuditVypis zaznamy={zaznamy} jazyk={jazyk} />
+        <AuditList zaznamy={zaznamy} jazyk={jazyk} />
 
         {zaznamy.length >= 200 && (
           <p className="tichy" style={{ fontSize: 13, marginTop: 14 }}>

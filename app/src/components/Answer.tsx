@@ -9,17 +9,17 @@
  * model niečo nedomyslel.
  */
 
-import type { Citacia, Vysledok } from "@/lib/sseClient"
-import { naBloky, ocistiCitaciu, zlucCitacie } from "@/lib/formatText"
-import { formatUsd, formatEur, naEur } from "@/lib/pricing"
-import type { Usek } from "@/lib/formatText"
+import type { Citation, AskResult } from "@/lib/sseClient"
+import { toBlocks, cleanCitation, mergeCitations } from "@/lib/formatText"
+import { formatUsd, formatEur, toEur } from "@/lib/pricing"
+import type { Segment } from "@/lib/formatText"
 
 /** Stav odpovede počas streamovania — kým nepríde `done`, máme len text. */
-export interface StavOdpovede {
+export interface AnswerState {
   otazka: string
   text: string
-  citacie: Citacia[]
-  hotovo: Vysledok | null
+  citacie: Citation[]
+  hotovo: AskResult | null
   bezi: boolean
 }
 
@@ -30,7 +30,7 @@ export interface StavOdpovede {
  * `naBloky()` a stáva sa obyčajnými React uzlami. Výstup modelu nad cudzími
  * dokumentmi sa nesmie dostať do DOM ako HTML.
  */
-function Useky({ useky }: { useky: Usek[] }) {
+function Useky({ useky }: { useky: Segment[] }) {
   return (
     <>
       {useky.map((u, i) =>
@@ -43,7 +43,7 @@ function Useky({ useky }: { useky: Usek[] }) {
 }
 
 function TextOdpovede({ text }: { text: string }) {
-  const bloky = naBloky(text)
+  const bloky = toBlocks(text)
   return (
     <>
       {bloky.map((b, i) =>
@@ -87,7 +87,7 @@ function Riadok({ popis, hodnota }: { popis: string; hodnota: string }) {
   )
 }
 
-export default function Odpoved({ stav }: { stav: StavOdpovede }) {
+export default function Answer({ stav }: { stav: AnswerState }) {
   const { text, citacie, hotovo, bezi } = stav
   if (!text && !bezi && !hotovo) return null
 
@@ -96,7 +96,7 @@ export default function Odpoved({ stav }: { stav: StavOdpovede }) {
 
   // Model cituje ten istý úryvok pri každom tvrdení, ktoré sa oň opiera.
   // Pri dlhej odpovedi ich vznikne aj devätnásť, z toho polovica rovnakých.
-  const jedinecne = zlucCitacie(citacie)
+  const jedinecne = mergeCitations(citacie)
 
   return (
     <div style={{ display: "grid", gap: 16 }}>
@@ -159,7 +159,7 @@ export default function Odpoved({ stav }: { stav: StavOdpovede }) {
                   padding: "11px 14px",
                 }}
               >
-                <div style={{ fontSize: 14.5, lineHeight: 1.6 }}>„{ocistiCitaciu(c.citedText)}“</div>
+                <div style={{ fontSize: 14.5, lineHeight: 1.6 }}>„{cleanCitation(c.citedText)}“</div>
                 <div className="tichy" style={{ fontSize: 12.5, marginTop: 6 }}>
                   {[c.documentTitle, c.articleRef].filter(Boolean).join(" · ") || "zdroj neuvedený"}
                 </div>
@@ -248,7 +248,7 @@ export default function Odpoved({ stav }: { stav: StavOdpovede }) {
               style={{ background: "var(--surface-2)", color: "var(--muted)" }}
               title={`Orientačne. Nezahŕňa pomocný model ani vyhľadávanie. Cenník ${hotovo.naklad.verziaCennika}.`}
             >
-              ≈ {formatUsd(hotovo.naklad.usd)} · {formatEur(naEur(hotovo.naklad.usd))}
+              ≈ {formatUsd(hotovo.naklad.usd)} · {formatEur(toEur(hotovo.naklad.usd))}
             </span>
           )}
           {/* Cenník, ktorý prestal platiť, radšej priznáme, než by sme ticho

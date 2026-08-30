@@ -12,17 +12,17 @@
 import { notFound, redirect } from "next/navigation"
 import Link from "next/link"
 import { hrContext } from "@/lib/hr"
-import { loadAssignment, nepotvrdili, audienceLabel } from "@/lib/assignments"
+import { loadAssignment, notAcknowledged, audienceLabel } from "@/lib/assignments"
 import { assignmentEmail } from "@/lib/ecomail"
 import { brandingView } from "@/lib/tenants"
 import { tenantStyle } from "@/components/TenantHeader"
 import { requestHostname } from "@/lib/session"
 import { formatDate, normalizeLanguage } from "@/lib/i18n"
-import { poslatOznamenie } from "../../akcie"
+import { sendNotificationAction } from "../../actions"
 
 export const dynamic = "force-dynamic"
 
-export default async function Oznamit({
+export default async function NotifyPage({
   params,
   searchParams,
 }: {
@@ -42,7 +42,7 @@ export default async function Oznamit({
   const pridelenie = await loadAssignment(kod, id)
   if (!pridelenie) notFound()
 
-  const vsetciNepotvrdeni = await nepotvrdili(kod, id)
+  const vsetciNepotvrdeni = await notAcknowledged(kod, id)
   // Kto z oddelenia odišiel, sa ukazuje na detaile, ale e-mail nedostane (D50).
   const prijemcovia = vsetciNepotvrdeni.filter(o => !o.byvaly)
   const byvali = vsetciNepotvrdeni.filter(o => o.byvaly)
@@ -139,7 +139,7 @@ export default async function Oznamit({
             {ukazka.text}
           </pre>
 
-          <form action={poslatOznamenie}>
+          <form action={sendNotificationAction}>
             <input type="hidden" name="id" value={id} />
             <button className="tlacidlo" type="submit">
               Odoslať {prijemcovia.length} {prijemcovia.length === 1 ? "e-mail" : prijemcovia.length < 5 ? "e-maily" : "e-mailov"}

@@ -23,7 +23,7 @@ import type { UiLanguage } from "@/lib/i18n"
  */
 export const LIMIT = 5
 
-export default function NevybaveneZiadosti({
+export default function PendingWidget({
   overview,
   language,
 }: {

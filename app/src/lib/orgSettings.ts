@@ -18,13 +18,13 @@ import { PEOPLE_ROLE } from "./people"
 import type { Person } from "./persons"
 import type { Tenant } from "./tenants"
 
-export type OrganizaciaContext =
+export type OrgContext =
   | { state: "unknown-host" }
   | { state: "not-signed-in" }
   | { state: "forbidden" }
   | { state: "ready"; person: Person; tenant: Tenant }
 
-export async function organizaciaContext(): Promise<OrganizaciaContext> {
+export async function orgContext(): Promise<OrgContext> {
   let tenant: Tenant | null = null
   try {
     tenant = await currentTenant()

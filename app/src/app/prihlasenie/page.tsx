@@ -8,10 +8,10 @@
  */
 
 import { notFound, redirect } from "next/navigation"
-import Prihlasenie from "@/components/SignIn"
+import SignIn from "@/components/SignIn"
 import { currentTenant, currentEmail } from "@/lib/session"
 import { brandingView } from "@/lib/tenants"
-import { dostupniPoskytovatelia } from "@/lib/oauth"
+import { availableProviders } from "@/lib/oauth"
 import { tenantStyle } from "@/components/TenantHeader"
 import type { Tenant } from "@/lib/tenants"
 
@@ -19,7 +19,7 @@ export const dynamic = "force-dynamic"
 
 // Od Next 15 sú `params` aj `searchParams` prísľuby — stránka sa smie začať
 // vykresľovať skôr, než sú známe. Preto `await`, nie priamy prístup.
-export default async function StrankaPrihlasenia({
+export default async function SignInPage({
   searchParams,
 }: {
   searchParams: Promise<{ odoslane?: string; error?: string }>
@@ -51,11 +51,11 @@ export default async function StrankaPrihlasenia({
   const branding = tenant ? brandingView(tenant) : undefined
   // Ktoré kontá má táto organizácia zapnuté (D44). Rozhoduje o tom hostiteľ,
   // nie premenná nasadenia — na doméne zväzu je to Entra zväzu.
-  const poskytovatelia = dostupniPoskytovatelia(tenant)
+  const poskytovatelia = availableProviders(tenant)
 
   return (
     <div className="obal" style={{ padding: "64px 20px", maxWidth: 460, ...tenantStyle(branding) }}>
-      <Prihlasenie
+      <SignIn
         odoslane={parametre.odoslane === "1"}
         chyba={parametre.error}
         branding={branding}

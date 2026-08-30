@@ -56,7 +56,7 @@ function ZnakGoogle() {
 const ZNAKY = { microsoft: ZnakMicrosoft, google: ZnakGoogle }
 const NAZVY = { microsoft: "Microsoft", google: "Google" }
 
-export default function Prihlasenie({
+export default function SignIn({
   odoslane,
   chyba,
   branding,

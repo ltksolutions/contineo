@@ -47,7 +47,7 @@ import type { Chunk } from "./chunker"
  * Odvodiť sa to nedá — hash zdrojáku by sa menil aj po oprave komentára
  * a preindexoval by celý systém pre nič.
  */
-export const VERZIA_CHUNKERA = 1
+export const CHUNKER_VERSION = 1
 
 const hash = (s: string) => createHash("sha256").update(s).digest("hex").slice(0, 16)
 
@@ -58,7 +58,7 @@ const hash = (s: string) => createHash("sha256").update(s).digest("hex").slice(0
  * koncoch. Inak by ten istý text uložený z Windows a z Macu vyzeral ako dve
  * rôzne znenia — a tým aj ako dve rôzne povinnosti.
  */
-export function odtlacokTextu(markdown: string): string {
+export function textFingerprint(markdown: string): string {
   const normalizovany = (markdown ?? "")
     .replace(/\r\n?/g, "\n")
     .replace(/[ \t]+$/gm, "")
@@ -73,12 +73,12 @@ export function odtlacokTextu(markdown: string): string {
  * ako predtým pri `versionId`, a z rovnakého dôvodu: dvakrát nás doplatilo,
  * že sa hashovalo niečo iné, než sa ukladá, a zmena sa neprejavila.
  */
-export function odtlacokClenenia(
+export function chunkingFingerprint(
   chunky: Pick<Chunk, "chunkIndex" | "text" | "heading" | "articleRef" | "typ">[],
   profil: unknown,
 ): string {
   return hash(JSON.stringify({
-    verzia: VERZIA_CHUNKERA,
+    verzia: CHUNKER_VERSION,
     profil,
     chunky: chunky.map(ch => ({
       i: ch.chunkIndex,
@@ -96,7 +96,7 @@ export function odtlacokClenenia(
  * `true` aj vtedy, keď `chunkingId` chýba — tak vyzerajú dokumenty spred
  * zavedenia rozdelenia a preindexovať ich treba práve preto.
  */
-export function trebaPreindexovat(
+export function needsReindex(
   ulozene: string | null | undefined,
   aktualne: string,
 ): boolean {

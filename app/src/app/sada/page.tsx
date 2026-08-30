@@ -13,7 +13,7 @@
 import Link from "next/link"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
-import { nacitajSadu, suhrn, znenie, pocetPosudkov, POPIS_OBLASTI } from "@/lib/goldenSet"
+import { loadGoldenSet, goldenSetSummary, questionText, verdictCount, AREA_LABEL } from "@/lib/goldenSet"
 
 export const dynamic = "force-dynamic"
 
@@ -46,12 +46,12 @@ function Ukazovatel({ hotovo, spolu }: { hotovo: number; spolu: number }) {
   )
 }
 
-export default async function Sada() {
+export default async function GoldenSetPage() {
   const sedenie = await getServerSession(authOptions)
   const ja = sedenie?.user?.email ?? ""
 
-  const [otazky, pocty] = await Promise.all([nacitajSadu(ja), pocetPosudkov()])
-  const s = suhrn(otazky, pocty)
+  const [otazky, pocty] = await Promise.all([loadGoldenSet(ja), verdictCount()])
+  const s = goldenSetSummary(otazky, pocty)
 
   return (
     <div className="obal" style={{ padding: "32px 20px 80px", maxWidth: 1040 }}>
@@ -129,7 +129,7 @@ export default async function Sada() {
                     textDecoration: o.vyradena ? "line-through" : "none",
                   }}
                 >
-                  {znenie(o)}
+                  {questionText(o)}
                 </span>
 
                 <span style={{ display: "flex", gap: 6, flexWrap: "wrap", marginTop: 7 }}>
@@ -139,7 +139,7 @@ export default async function Sada() {
                   {o.trapType && <Stitok text={`pasca · ${o.trapType}`} farba="warn" />}
                   {o.precedenceRule && <Stitok text={o.precedenceRule} />}
                   {o.upraveneZnenie && <Stitok text="upravená" />}
-                  <Stitok text={POPIS_OBLASTI[o.oblast]} />
+                  <Stitok text={AREA_LABEL[o.oblast]} />
                   {o.prekryv && (
                     <Stitok
                       text={

@@ -9,7 +9,7 @@
  */
 
 import { NextRequest, NextResponse } from "next/server"
-import { upravOtazku } from "@/lib/goldenSet"
+import { editQuestion } from "@/lib/goldenSet"
 
 export async function PATCH(req: NextRequest) {
   let telo: { id?: string } & Record<string, unknown>
@@ -23,7 +23,7 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json({ chyba: "Chýba id otázky" }, { status: 400 })
   }
 
-  const uprava: Parameters<typeof upravOtazku>[1] = {}
+  const uprava: Parameters<typeof editQuestion>[1] = {}
   if (typeof telo.upraveneZnenie === "string") uprava.upraveneZnenie = telo.upraveneZnenie
   if (typeof telo.vyradena === "boolean") uprava.vyradena = telo.vyradena
   if (typeof telo.dovodVyradenia === "string") uprava.dovodVyradenia = telo.dovodVyradenia
@@ -33,7 +33,7 @@ export async function PATCH(req: NextRequest) {
   }
 
   try {
-    const ok = await upravOtazku(telo.id, uprava)
+    const ok = await editQuestion(telo.id, uprava)
     if (!ok) return NextResponse.json({ chyba: "Otázka sa nenašla" }, { status: 404 })
     return NextResponse.json({ ok: true })
   } catch (e) {

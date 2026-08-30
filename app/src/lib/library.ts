@@ -15,19 +15,19 @@ import { currentTenant, currentPerson } from "./session"
 import type { Person } from "./persons"
 import type { Tenant } from "./tenants"
 
-export const OBSAH_ROLE = "spravca-obsahu"
+export const CONTENT_ROLE = "spravca-obsahu"
 
-export type KniznicaContext =
+export type LibraryContext =
   | { state: "unknown-host" }
   | { state: "not-signed-in" }
   | { state: "forbidden" }
   | { state: "ready"; person: Person; tenant: Tenant }
 
-export function jeSpravcaObsahu(person: Person | null): boolean {
-  return Boolean(person?.roles?.includes(OBSAH_ROLE))
+export function isContentManager(person: Person | null): boolean {
+  return Boolean(person?.roles?.includes(CONTENT_ROLE))
 }
 
-export async function kniznicaContext(): Promise<KniznicaContext> {
+export async function libraryContext(): Promise<LibraryContext> {
   let tenant: Tenant | null = null
   try {
     tenant = await currentTenant()
@@ -39,7 +39,7 @@ export async function kniznicaContext(): Promise<KniznicaContext> {
 
   const person = await currentPerson()
   if (!person) return { state: "not-signed-in" }
-  if (person.companyCode !== tenant.companyCode || !jeSpravcaObsahu(person)) {
+  if (person.companyCode !== tenant.companyCode || !isContentManager(person)) {
     return { state: "forbidden" }
   }
   return { state: "ready", person, tenant }

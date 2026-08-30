@@ -16,7 +16,7 @@ import { dictionary, formatDate } from "@/lib/i18n"
 
 export const dynamic = "force-dynamic"
 
-export default async function Dokumenty() {
+export default async function DocumentsPage() {
   const ctx = await onboardingContext()
 
   // Neznámy hostiteľ sa správa ako zakázaný (D29) — a to `notFound()`, nie

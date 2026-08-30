@@ -1,7 +1,7 @@
 "use server"
 
 /**
- * akcie.ts — zmeny, ktoré si organizácia robí sama (D48).
+ * actions.ts — zmeny, ktoré si organizácia robí sama (D48).
  *
  * **Kód organizácie sa nikdy neberie z formulára**, vždy z prihláseného
  * človeka. Keby prišiel z prehliadača, personalista jedného zväzu by mohol
@@ -14,26 +14,26 @@
 
 import { redirect } from "next/navigation"
 import { revalidatePath } from "next/cache"
-import { organizaciaContext } from "@/lib/orgSettings"
-import { jePresmerovanie } from "@/lib/redirects"
-import { STARE_KLUCE } from "@/lib/urlTabs"
-import { saveTenant, ulozOAuth, zmazOAuth, normalizeDomeny, TenantValidationError } from "@/lib/tenantAdmin"
-import { ulozZnacku, ZnackaError } from "@/lib/branding"
-import { rozdelZoznam } from "@/lib/oauth"
+import { orgContext } from "@/lib/orgSettings"
+import { isRedirect } from "@/lib/redirects"
+import { LEGACY_TAB_KEYS } from "@/lib/urlTabs"
+import { saveTenant, saveOAuth, deleteOAuth, normalizeDomains, TenantValidationError } from "@/lib/tenantAdmin"
+import { saveBrand, BrandError } from "@/lib/branding"
+import { splitList } from "@/lib/oauth"
 import {
-  poziadajODomenu, overZiadost, zrusDomenu, DomenaError,
+  requestDomain, verifyRequest, cancelDomain, DomainError,
 } from "@/lib/customerDomains"
-import { pridajDomenu, preskocitVercel } from "@/lib/vercel"
+import { addDomain, skipVercel } from "@/lib/vercel"
 import {
-  zalozOddelenie, premenujOddelenie, presunOddelenie, zmazOddelenie,
-  posunOddelenie, ulozPoradie, OddelenieError,
+  createDepartment, renameDepartment, moveDepartment, deleteDepartment,
+  shiftDepartment, saveOrder, DepartmentError,
 } from "@/lib/departments"
-import { pridajPolozku, odoberPolozku } from "@/lib/codelistsTenant"
-import { CiselnikError } from "@/lib/codelists"
-import { preindexujVsetky, KniznicaError } from "@/lib/libraryWrite"
+import { addCodelistItem, removeCodelistItem } from "@/lib/codelistsTenant"
+import { CodelistError } from "@/lib/codelists"
+import { reindexAll, LibraryError } from "@/lib/libraryWrite"
 
 async function kto(): Promise<{ email: string; companyCode: string } | null> {
-  const ctx = await organizaciaContext()
+  const ctx = await orgContext()
   return ctx.state === "ready"
     ? { email: ctx.person.email, companyCode: ctx.person.companyCode }
     : null
@@ -46,9 +46,9 @@ function textPola(fd: FormData, meno: string): string {
 
 function spravaChyby(e: unknown): string {
   if (
-    e instanceof TenantValidationError || e instanceof ZnackaError ||
-    e instanceof DomenaError || e instanceof OddelenieError ||
-    e instanceof CiselnikError || e instanceof KniznicaError
+    e instanceof TenantValidationError || e instanceof BrandError ||
+    e instanceof DomainError || e instanceof DepartmentError ||
+    e instanceof CodelistError || e instanceof LibraryError
   ) {
     return e.message
   }
@@ -80,7 +80,7 @@ function spat(fd: FormData, sprava: string, chyba = false): never {
   // formulár vykreslený pred premenovaním ho ešte nesie a bez prekladu by
   // človeka po uložení hodilo na prvú záložku.
   const zadana = textPola(fd, "zalozka")
-  const zalozka = (STARE_KLUCE[zadana] ?? zadana) || "vzhlad"
+  const zalozka = (LEGACY_TAB_KEYS[zadana] ?? zadana) || "vzhlad"
   const q = new URLSearchParams({ zalozka, sprava })
   if (chyba) q.set("chyba", "1")
   redirect(`/organizacia?${q.toString()}`)
@@ -88,7 +88,7 @@ function spat(fd: FormData, sprava: string, chyba = false): never {
 
 // ── vzhľad ───────────────────────────────────────────────────────────────────
 
-export async function ulozVzhlad(fd: FormData) {
+export async function saveBrandingAction(fd: FormData) {
   const ja = await kto()
   if (!ja) redirect("/")
 
@@ -98,7 +98,7 @@ export async function ulozVzhlad(fd: FormData) {
     const subor = fd.get("logo")
     let logoUrl: string | undefined
     if (subor instanceof File && subor.size > 0) {
-      logoUrl = await ulozZnacku(
+      logoUrl = await saveBrand(
         ja.companyCode, subor.type, Buffer.from(await subor.arrayBuffer()), ja.email,
       )
     }
@@ -110,11 +110,11 @@ export async function ulozVzhlad(fd: FormData) {
       supportEmail: textPola(fd, "supportEmail"),
       languages: fd.getAll("languages").filter(v => typeof v === "string") as string[],
       defaultLanguage: textPola(fd, "defaultLanguage"),
-      autoProvisionDomains: normalizeDomeny(textPola(fd, "autoProvisionDomains")),
+      autoProvisionDomains: normalizeDomains(textPola(fd, "autoProvisionDomains")),
       ...(logoUrl ? { logoUrl } : {}),
     }, ja.email)
   } catch (e) {
-    if (jePresmerovanie(e)) throw e
+    if (isRedirect(e)) throw e
     spat(fd, spravaChyby(e), true)
   }
 
@@ -124,23 +124,23 @@ export async function ulozVzhlad(fd: FormData) {
 
 // ── prihlasovanie kontom ─────────────────────────────────────────────────────
 
-export async function ulozPrihlasenie(fd: FormData) {
+export async function saveSignInAction(fd: FormData) {
   const ja = await kto()
   if (!ja) redirect("/")
 
   const provider = textPola(fd, "provider") === "google" ? "google" : "microsoft"
   try {
-    await ulozOAuth(ja.companyCode, provider, {
+    await saveOAuth(ja.companyCode, provider, {
       clientId: textPola(fd, "clientId"),
       clientSecret: textPola(fd, "clientSecret"),
       tenantMode: provider === "microsoft" ? textPola(fd, "tenantMode") : undefined,
       allowedTenantIds: provider === "microsoft"
-        ? rozdelZoznam(textPola(fd, "allowedTenantIds"))
+        ? splitList(textPola(fd, "allowedTenantIds"))
         : undefined,
       hostedDomain: provider === "google" ? textPola(fd, "hostedDomain") : undefined,
     }, ja.email)
   } catch (e) {
-    if (jePresmerovanie(e)) throw e
+    if (isRedirect(e)) throw e
     spat(fd, spravaChyby(e), true)
   }
 
@@ -148,7 +148,7 @@ export async function ulozPrihlasenie(fd: FormData) {
   spat(fd, HOTOVO)
 }
 
-export async function zmazPrihlasenie(fd: FormData) {
+export async function deleteSignInAction(fd: FormData) {
   const ja = await kto()
   if (!ja) redirect("/")
 
@@ -160,9 +160,9 @@ export async function zmazPrihlasenie(fd: FormData) {
   }
 
   try {
-    await zmazOAuth(ja.companyCode, provider, ja.email)
+    await deleteOAuth(ja.companyCode, provider, ja.email)
   } catch (e) {
-    if (jePresmerovanie(e)) throw e
+    if (isRedirect(e)) throw e
     spat(fd, spravaChyby(e), true)
   }
 
@@ -179,14 +179,14 @@ export async function zmazPrihlasenie(fd: FormData) {
  * len ten, kto ju naozaj ovláda. Zapísať ju rovno by znamenalo, že si ktokoľvek
  * pripíše cudziu doménu do nášho účtu vo Verceli.
  */
-export async function poziadaj(fd: FormData) {
+export async function requestDomainAction(fd: FormData) {
   const ja = await kto()
   if (!ja) redirect("/")
 
   try {
-    await poziadajODomenu(ja.companyCode, textPola(fd, "host"), ja.email)
+    await requestDomain(ja.companyCode, textPola(fd, "host"), ja.email)
   } catch (e) {
-    if (jePresmerovanie(e)) throw e
+    if (isRedirect(e)) throw e
     spat(fd, spravaChyby(e), true)
   }
 
@@ -195,7 +195,7 @@ export async function poziadaj(fd: FormData) {
 }
 
 /** Overí DNS a — keď sedí — doménu zapne a pridá do Vercelu. */
-export async function overDomenu(fd: FormData) {
+export async function verifyDomainAction(fd: FormData) {
   const ja = await kto()
   if (!ja) redirect("/")
 
@@ -204,7 +204,7 @@ export async function overDomenu(fd: FormData) {
   let chyba = false
 
   try {
-    const v = await overZiadost(ja.companyCode, host, ja.email)
+    const v = await verifyRequest(ja.companyCode, host, ja.email)
     if (v.stav === "nenajdena") {
       sprava = "Takú žiadosť tu nemáme."
       chyba = true
@@ -213,7 +213,7 @@ export async function overDomenu(fd: FormData) {
       chyba = true
     } else {
       // Až teraz — dôkaz existuje. Do Vercelu sa doména pridáva až po ňom.
-      const doVercelu = preskocitVercel(v.host) ? null : await pridajDomenu(v.host)
+      const doVercelu = skipVercel(v.host) ? null : await addDomain(v.host)
       sprava = doVercelu && doVercelu.stav !== "pridana" && doVercelu.stav !== "uz-je"
         ? `${v.host} je zapnutá, ale do Vercelu sa nepridala — ozvite sa nám.`
         : `${v.host} je zapnutá. Portál na nej odpovedá.`
@@ -227,14 +227,14 @@ export async function overDomenu(fd: FormData) {
   spat(fd, sprava, chyba)
 }
 
-export async function zrus(fd: FormData) {
+export async function cancelDomainAction(fd: FormData) {
   const ja = await kto()
   if (!ja) redirect("/")
 
   try {
-    await zrusDomenu(ja.companyCode, textPola(fd, "host"), ja.email)
+    await cancelDomain(ja.companyCode, textPola(fd, "host"), ja.email)
   } catch (e) {
-    if (jePresmerovanie(e)) throw e
+    if (isRedirect(e)) throw e
     spat(fd, spravaChyby(e), true)
   }
 
@@ -252,39 +252,39 @@ export async function zrus(fd: FormData) {
  * funkcii v `oddelenia.ts` overuje, že patria tejto organizácii — cudzí
  * identifikátor sa dá uhádnuť (D32).
  */
-export async function zalozUtvar(fd: FormData) {
+export async function createDepartmentAction(fd: FormData) {
   const ja = await kto()
   if (!ja) redirect("/")
   try {
-    await zalozOddelenie(
+    await createDepartment(
       ja.companyCode, textPola(fd, "nazov"), textPola(fd, "parentId") || null, ja.email,
     )
     revalidatePath("/organizacia")
     spat(fd, HOTOVO)
   } catch (e) {
-    if (jePresmerovanie(e)) throw e
+    if (isRedirect(e)) throw e
     spat(fd, spravaChyby(e), true)
   }
 }
 
-export async function premenujUtvar(fd: FormData) {
+export async function renameDepartmentAction(fd: FormData) {
   const ja = await kto()
   if (!ja) redirect("/")
   try {
-    await premenujOddelenie(ja.companyCode, textPola(fd, "id"), textPola(fd, "nazov"), ja.email)
+    await renameDepartment(ja.companyCode, textPola(fd, "id"), textPola(fd, "nazov"), ja.email)
     revalidatePath("/organizacia")
     spat(fd, HOTOVO)
   } catch (e) {
-    if (jePresmerovanie(e)) throw e
+    if (isRedirect(e)) throw e
     spat(fd, spravaChyby(e), true)
   }
 }
 
-export async function presunUtvar(fd: FormData) {
+export async function moveDepartmentAction(fd: FormData) {
   const ja = await kto()
   if (!ja) redirect("/")
   try {
-    await presunOddelenie(
+    await moveDepartment(
       ja.companyCode, textPola(fd, "id"), textPola(fd, "parentId") || null, ja.email,
     )
     // Presunom sa zmenili cesty ľudí v podstrome, a tie rozhodujú o tom, komu
@@ -293,52 +293,52 @@ export async function presunUtvar(fd: FormData) {
     revalidatePath("/osoby")
     spat(fd, HOTOVO)
   } catch (e) {
-    if (jePresmerovanie(e)) throw e
+    if (isRedirect(e)) throw e
     spat(fd, spravaChyby(e), true)
   }
 }
 
-export async function zrusUtvar(fd: FormData) {
+export async function deleteDepartmentAction(fd: FormData) {
   const ja = await kto()
   if (!ja) redirect("/")
   try {
-    await zmazOddelenie(ja.companyCode, textPola(fd, "id"), ja.email)
+    await deleteDepartment(ja.companyCode, textPola(fd, "id"), ja.email)
     revalidatePath("/organizacia")
     spat(fd, HOTOVO)
   } catch (e) {
-    if (jePresmerovanie(e)) throw e
+    if (isRedirect(e)) throw e
     spat(fd, spravaChyby(e), true)
   }
 }
 
 // ── číselníky organizácie (D55) ──────────────────────────────────────────────
 
-export async function pridajDoCiselnika(fd: FormData) {
+export async function addCodelistItemAction(fd: FormData) {
   const ja = await kto()
   if (!ja) redirect("/")
   try {
-    await pridajPolozku(
+    await addCodelistItem(
       ja.companyCode, textPola(fd, "ciselnik"), textPola(fd, "kluc"), textPola(fd, "popis"), ja.email,
     )
     revalidatePath("/organizacia")
     revalidatePath("/kniznica")
     spat(fd, HOTOVO)
   } catch (e) {
-    if (jePresmerovanie(e)) throw e
+    if (isRedirect(e)) throw e
     spat(fd, spravaChyby(e), true)
   }
 }
 
-export async function odoberZCiselnika(fd: FormData) {
+export async function removeCodelistItemAction(fd: FormData) {
   const ja = await kto()
   if (!ja) redirect("/")
   try {
-    await odoberPolozku(ja.companyCode, textPola(fd, "ciselnik"), textPola(fd, "kluc"), ja.email)
+    await removeCodelistItem(ja.companyCode, textPola(fd, "ciselnik"), textPola(fd, "kluc"), ja.email)
     revalidatePath("/organizacia")
     revalidatePath("/kniznica")
     spat(fd, "Odobraté z ponuky. Dokumenty, ktoré túto hodnotu majú, si ju nesú ďalej.")
   } catch (e) {
-    if (jePresmerovanie(e)) throw e
+    if (isRedirect(e)) throw e
     spat(fd, spravaChyby(e), true)
   }
 }
@@ -353,7 +353,7 @@ export async function odoberZCiselnika(fd: FormData) {
  * klikom, a človek má najprv vidieť, čo nový profil spraví s jedným
  * dokumentom (`Preindexovať` v jeho detaile).
  */
-export async function ulozClenenie(fd: FormData) {
+export async function saveChunkingProfileAction(fd: FormData) {
   const ja = await kto()
   if (!ja) redirect("/")
 
@@ -375,7 +375,7 @@ export async function ulozClenenie(fd: FormData) {
     revalidatePath("/organizacia")
     spat(fd, "Uložené. Existujúce dokumenty sa nepreindexovali — spusti to pri konkrétnom dokumente.")
   } catch (e) {
-    if (jePresmerovanie(e)) throw e
+    if (isRedirect(e)) throw e
     spat(fd, spravaChyby(e), true)
   }
 }
@@ -388,12 +388,12 @@ export async function ulozClenenie(fd: FormData) {
  * a tlačidlo sa stlačí znova — opakovanie je lacné, lebo hotové dokumenty
  * sa preskočia.
  */
-export async function preindexujVsetkyAkcia(fd: FormData) {
-  const ctx = await organizaciaContext()
+export async function reindexAllAction(fd: FormData) {
+  const ctx = await orgContext()
   if (ctx.state !== "ready") redirect("/")
 
   try {
-    const v = await preindexujVsetky(
+    const v = await reindexAll(
       ctx.person.companyCode, ctx.person.email, ctx.tenant.chunkovanie, 25,
     )
     const casti = [`preindexovaných ${v.preindexovanych}`]
@@ -403,7 +403,7 @@ export async function preindexujVsetkyAkcia(fd: FormData) {
     revalidatePath("/kniznica")
     spat(fd, casti.join(" · "), v.chyby.length > 0)
   } catch (e) {
-    if (jePresmerovanie(e)) throw e
+    if (isRedirect(e)) throw e
     spat(fd, spravaChyby(e), true)
   }
 }
@@ -416,31 +416,31 @@ export async function preindexujVsetkyAkcia(fd: FormData) {
  * cesta: organizačnú schému niekto usporadúva raz za rok a nemá pri tom
  * bojovať s presnosťou pustenia.
  */
-export async function posunOddelenieAkcia(fd: FormData) {
+export async function shiftDepartmentAction(fd: FormData) {
   const ja = await kto()
   if (!ja) redirect("/")
   const smer = textPola(fd, "smer") === "dole" ? "dole" : "hore"
   try {
-    await posunOddelenie(ja.companyCode, textPola(fd, "id"), smer, ja.email)
+    await shiftDepartment(ja.companyCode, textPola(fd, "id"), smer, ja.email)
     revalidatePath("/organizacia")
     spat(fd, HOTOVO)
   } catch (e) {
-    if (jePresmerovanie(e)) throw e
+    if (isRedirect(e)) throw e
     spat(fd, spravaChyby(e), true)
   }
 }
 
 /** Nové poradie celej úrovne — sem posiela výsledok ťahanie myšou. */
-export async function ulozPoradieAkcia(fd: FormData) {
+export async function saveDepartmentOrderAction(fd: FormData) {
   const ja = await kto()
   if (!ja) redirect("/")
   const poradie = textPola(fd, "poradie").split(",").map(x => x.trim()).filter(Boolean)
   try {
-    if (poradie.length > 1) await ulozPoradie(ja.companyCode, poradie, ja.email)
+    if (poradie.length > 1) await saveOrder(ja.companyCode, poradie, ja.email)
     revalidatePath("/organizacia")
     spat(fd, HOTOVO)
   } catch (e) {
-    if (jePresmerovanie(e)) throw e
+    if (isRedirect(e)) throw e
     spat(fd, spravaChyby(e), true)
   }
 }

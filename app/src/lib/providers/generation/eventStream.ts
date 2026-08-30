@@ -29,7 +29,7 @@ const KONCOVE_CRC = 4
  * Bez toho by sa rámec rozdelený medzi dva TCP pakety stratil. Presne
  * na túto chybu sme už raz naleteli pri SSE.
  */
-export function rozdelRamce(buf: Uint8Array<ArrayBuffer>): { tela: Uint8Array<ArrayBuffer>[]; zvysok: Uint8Array<ArrayBuffer> } {
+export function splitFrames(buf: Uint8Array<ArrayBuffer>): { tela: Uint8Array<ArrayBuffer>[]; zvysok: Uint8Array<ArrayBuffer> } {
   const tela: Uint8Array<ArrayBuffer>[] = []
   let off = 0
 
@@ -54,7 +54,7 @@ export function rozdelRamce(buf: Uint8Array<ArrayBuffer>): { tela: Uint8Array<Ar
 }
 
 /** Spojí dva buffery. */
-export function spoj(a: Uint8Array<ArrayBuffer>, b: Uint8Array): Uint8Array<ArrayBuffer> {
+export function concatBuffers(a: Uint8Array<ArrayBuffer>, b: Uint8Array): Uint8Array<ArrayBuffer> {
   const v = new Uint8Array(a.length + b.length)
   v.set(a, 0)
   v.set(b, a.length)
@@ -68,7 +68,7 @@ export function spoj(a: Uint8Array<ArrayBuffer>, b: Uint8Array): Uint8Array<Arra
  * obsahuje base64 so skutočným eventom. Vráti null, keď rámec event
  * neobsahuje (napr. ping alebo metadáta o využití).
  */
-export function rozbalEvent(telo: Uint8Array<ArrayBuffer>): any | null {
+export function unwrapEvent(telo: Uint8Array<ArrayBuffer>): any | null {
   let vonkajsi: any
   try {
     vonkajsi = JSON.parse(new TextDecoder().decode(telo))
@@ -84,7 +84,7 @@ export function rozbalEvent(telo: Uint8Array<ArrayBuffer>): any | null {
 }
 
 /** Prečíta celý stream a postupne vydáva rozbalené eventy. */
-export async function* citajEventy(
+export async function* readEventStream(
   body: ReadableStream<Uint8Array>
 ): AsyncGenerator<any> {
   const reader = body.getReader()
@@ -93,12 +93,12 @@ export async function* citajEventy(
   while (true) {
     const { done, value } = await reader.read()
     if (done) break
-    buf = spoj(buf, value)
+    buf = concatBuffers(buf, value)
 
-    const { tela, zvysok } = rozdelRamce(buf)
+    const { tela, zvysok } = splitFrames(buf)
     buf = zvysok
     for (const t of tela) {
-      const ev = rozbalEvent(t)
+      const ev = unwrapEvent(t)
       if (ev) yield ev
     }
   }

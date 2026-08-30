@@ -13,8 +13,8 @@
  */
 
 import { notFound } from "next/navigation"
-import Hladanie from "@/components/Search"
-import NevybaveneZiadosti from "@/components/PendingWidget"
+import Search from "@/components/Search"
+import PendingWidget from "@/components/PendingWidget"
 import { onboardingContext } from "@/lib/session"
 import { pendingForPerson } from "@/lib/pending"
 
@@ -22,7 +22,7 @@ import { pendingForPerson } from "@/lib/pending"
 // nedá predgenerovať. Bez tohto by Next.js skúsil statický výstup a spadol.
 export const dynamic = "force-dynamic"
 
-export default async function Domov() {
+export default async function HomePage() {
   const ctx = await onboardingContext()
 
   // Neznámy hostiteľ je zakázaný, nie predvolený (D29). `notFound()`, nie
@@ -38,7 +38,7 @@ export default async function Domov() {
     <div className="obal" style={{ padding: "28px 20px 80px" }}>
       {overview && person && (
         <div style={{ marginBottom: 32 }}>
-          <NevybaveneZiadosti overview={overview} language={person.language} />
+          <PendingWidget overview={overview} language={person.language} />
         </div>
       )}
 
@@ -53,7 +53,7 @@ export default async function Domov() {
         </p>
       </div>
 
-      <Hladanie />
+      <Search />
     </div>
   )
 }

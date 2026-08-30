@@ -9,22 +9,22 @@
 
 import { notFound, redirect } from "next/navigation"
 import Link from "next/link"
-import { kniznicaContext } from "@/lib/library"
-import { volby, CISELNIKY } from "@/lib/codelists"
-import { doplnkyTenanta } from "@/lib/codelistsTenant"
+import { libraryContext } from "@/lib/library"
+import { codelistOptions, CODELISTS } from "@/lib/codelists"
+import { tenantExtras } from "@/lib/codelistsTenant"
 import { brandingView } from "@/lib/tenants"
 import { tenantStyle } from "@/components/TenantHeader"
-import Vyber from "@/components/Select"
-import VyberStitkov from "@/components/TagSelect"
+import Select from "@/components/Select"
+import TagSelect from "@/components/TagSelect"
 
 export const dynamic = "force-dynamic"
 
-export default async function NovyDokument({
+export default async function NewDocumentPage({
   searchParams,
 }: {
   searchParams: Promise<{ chyba?: string; title?: string; sectionKey?: string }>
 }) {
-  const ctx = await kniznicaContext()
+  const ctx = await libraryContext()
   if (ctx.state !== "ready") {
     if (ctx.state === "not-signed-in") redirect("/prihlasenie")
     notFound()
@@ -32,9 +32,9 @@ export default async function NovyDokument({
 
   const { chyba, title, sectionKey } = await searchParams
   // Ponuka musí obsahovať aj to, čo si organizácia dopísala (D55).
-  const doplnky = doplnkyTenanta(ctx.tenant)
+  const doplnky = tenantExtras(ctx.tenant)
   const branding = brandingView(ctx.tenant)
-  const { nahraj } = await import("../akcie")
+  const { uploadAction: nahraj } = await import("../actions")
 
   return (
     <div className="obal" style={{ padding: "28px 20px 80px", maxWidth: 680, ...tenantStyle(branding) }}>
@@ -89,18 +89,18 @@ export default async function NovyDokument({
             identifikátor (<code>{ctx.tenant.companyCode.toLowerCase()}:kluc</code>).
             <strong> Ten istý kľúč znamená ten istý dokument</strong> — nahratie naň založí
             nové znenie, nie druhý dokument. Existujúce:{" "}
-            {CISELNIKY.sectionKey.polozky.slice(0, 8).map(p => p.key).join(", ")}.
+            {CODELISTS.sectionKey.polozky.slice(0, 8).map(p => p.key).join(", ")}.
           </span>
         </label>
 
         <div className="pole">
           <span className="pole-popis">Pôsobnosť</span>
-          <Vyber meno="scope" volby={volby("scope")} predvolena="company" popisPola="Pôsobnosť" />
+          <Select meno="scope" volby={codelistOptions("scope")} predvolena="company" popisPola="Pôsobnosť" />
         </div>
 
         <div className="pole">
           <span className="pole-popis">Prístupnosť</span>
-          <Vyber meno="accessLevel" volby={volby("accessLevel")} predvolena="internal" popisPola="Prístupnosť" />
+          <Select meno="accessLevel" volby={codelistOptions("accessLevel")} predvolena="internal" popisPola="Prístupnosť" />
           <span className="tichy pole-napoveda">
             <code>internal</code> vidia len ľudia organizácie, <code>public</code> ktokoľvek prihlásený.
           </span>
@@ -108,7 +108,7 @@ export default async function NovyDokument({
 
         <div className="pole">
           <span className="pole-popis">Jazyk dokumentu</span>
-          <Vyber meno="language" volby={volby("language")} predvolena={ctx.tenant.defaultLanguage ?? "sk"} popisPola="Jazyk dokumentu" />
+          <Select meno="language" volby={codelistOptions("language")} predvolena={ctx.tenant.defaultLanguage ?? "sk"} popisPola="Jazyk dokumentu" />
           <span className="tichy pole-napoveda">
             Jazyk, v ktorom je norma napísaná. Nič neprekladáme — dokument v inom jazyku
             je samostatný dokument.
@@ -117,14 +117,14 @@ export default async function NovyDokument({
 
         <div className="pole">
           <span className="pole-popis">Druh</span>
-          <Vyber meno="category" volby={[{ hodnota: "", popis: "— neurčené —" }, ...volby("category", doplnky)]} predvolena="" popisPola="Druh" />
+          <Select meno="category" volby={[{ hodnota: "", popis: "— neurčené —" }, ...codelistOptions("category", doplnky)]} predvolena="" popisPola="Druh" />
         </div>
 
         <div className="pole">
           <span className="pole-popis">Značky</span>
-          <VyberStitkov
+          <TagSelect
             meno="tags"
-            ponuka={volby("tags", doplnky).map(v => ({ hodnota: v.hodnota }))}
+            ponuka={codelistOptions("tags", doplnky).map(v => ({ hodnota: v.hodnota }))}
             vybrane={[]}
             popisNovej="Nová značka"
           />

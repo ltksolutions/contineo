@@ -20,7 +20,7 @@ import { useState } from "react"
  * nesie biely text na tlačidle, takže pri svetlejšom tóne prestane byť
  * čitateľný — a to sa ukáže až na produkcii, u zákazníka.
  */
-export const PALETA: { hodnota: string; popis: string }[] = [
+export const PALETTE: { hodnota: string; popis: string }[] = [
   { hodnota: "#232a35", popis: "grafitová (predvolená)" },
   { hodnota: "#1f4ed8", popis: "modrá" },
   { hodnota: "#0e7490", popis: "petrolejová" },
@@ -33,7 +33,7 @@ export const PALETA: { hodnota: string; popis: string }[] = [
   { hodnota: "#334155", popis: "bridlicová" },
 ]
 
-export default function VyberFarby({
+export default function ColorSelect({
   meno,
   hodnota,
 }: {
@@ -42,7 +42,7 @@ export default function VyberFarby({
 }) {
   const [farba, setFarba] = useState((hodnota ?? "").trim())
   const [vlastna, setVlastna] = useState(
-    Boolean(farba) && !PALETA.some(p => p.hodnota.toLowerCase() === farba.toLowerCase()),
+    Boolean(farba) && !PALETTE.some(p => p.hodnota.toLowerCase() === farba.toLowerCase()),
   )
 
   return (
@@ -50,7 +50,7 @@ export default function VyberFarby({
       <input type="hidden" name={meno} value={farba} />
 
       <div className="farby-zoznam">
-        {PALETA.map(p => {
+        {PALETTE.map(p => {
           const je = farba.toLowerCase() === p.hodnota.toLowerCase()
           return (
             <button

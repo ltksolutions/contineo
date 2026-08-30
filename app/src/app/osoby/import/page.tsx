@@ -11,11 +11,11 @@ import Link from "next/link"
 import { peopleContext } from "@/lib/people"
 import { brandingView } from "@/lib/tenants"
 import { tenantStyle } from "@/components/TenantHeader"
-import ImportOsob from "@/components/PeopleImport"
+import PeopleImport from "@/components/PeopleImport"
 
 export const dynamic = "force-dynamic"
 
-export default async function ImportStranka() {
+export default async function ImportPage() {
   const ctx = await peopleContext()
   if (ctx.state !== "ready") {
     if (ctx.state === "not-signed-in") redirect("/prihlasenie")
@@ -38,7 +38,7 @@ export default async function ImportStranka() {
         <strong>{ctx.tenant.companyCode}</strong>, aj keď je v súbore niečo iné.
       </p>
 
-      <ImportOsob />
+      <PeopleImport />
     </div>
   )
 }

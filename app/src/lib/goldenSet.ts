@@ -16,9 +16,9 @@
  */
 
 import { getCollection } from "./mongodb"
-import type { Posudok } from "./ratings"
+import type { Verdict } from "./ratings"
 
-export interface OtazkaSady {
+export interface GoldenQuestion {
   id: string
   povodneZnenie: string
   /** Znenie upravené hodnotiteľom. `null` = používa sa pôvodné. */
@@ -39,29 +39,29 @@ export interface OtazkaSady {
 }
 
 /** Znenie, ktoré sa má položiť — upravené má prednosť pred pôvodným. */
-export function znenie(o: OtazkaSady): string {
+export function questionText(o: GoldenQuestion): string {
   return o.upraveneZnenie?.trim() || o.povodneZnenie
 }
 
-export interface StavOtazky {
-  spravna: Posudok
-  halucinacia: Posudok
+export interface QuestionState {
+  spravna: Verdict
+  halucinacia: Verdict
   hodnotitel: string
   kedy: Date
 }
 
-export interface OtazkaSoStavom extends OtazkaSady {
+export interface QuestionWithState extends GoldenQuestion {
   /** Posudok prihláseného hodnotiteľa. */
-  stav: StavOtazky | null
+  stav: QuestionState | null
   /**
    * Posudky ostatných. Pri otázkach v prekryve je pole prázdne, kým
    * hodnotiteľ neposúdi sám — viď `vPrekryve()`.
    */
-  cudzie: StavOtazky[]
+  cudzie: QuestionState[]
   /** Má túto otázku posúdiť viac ľudí nezávisle? */
   prekryv: boolean
   /** Komu otázka sedí najskôr — pomôcka pri rozdelení práce. */
-  oblast: Oblast
+  oblast: QuestionArea
 }
 
 /**
@@ -72,9 +72,9 @@ export interface OtazkaSoStavom extends OtazkaSady {
  * pracuje — právnik povie, ako sa to má robiť podľa predpisu, matrikár, ako
  * sa to robí.
  */
-export type Oblast = "pravo" | "prevadzka" | "oboje"
+export type QuestionArea = "pravo" | "prevadzka" | "oboje"
 
-const OBLAST_PODLA_SEKCIE: Record<string, Oblast> = {
+const OBLAST_PODLA_SEKCIE: Record<string, QuestionArea> = {
   sutazny_poriadok: "pravo",
   disciplinarny_poriadok: "pravo",
   prestupovy_poriadok: "pravo",
@@ -83,13 +83,13 @@ const OBLAST_PODLA_SEKCIE: Record<string, Oblast> = {
   it_aplikacie: "prevadzka",
 }
 
-export const POPIS_OBLASTI: Record<Oblast, string> = {
+export const AREA_LABEL: Record<QuestionArea, string> = {
   pravo: "právo",
   prevadzka: "prevádzka",
   oboje: "ktokoľvek",
 }
 
-function oblastOtazky(o: OtazkaSady): Oblast {
+function oblastOtazky(o: GoldenQuestion): QuestionArea {
   return OBLAST_PODLA_SEKCIE[o.sectionKey ?? ""] ?? "oboje"
 }
 
@@ -103,7 +103,7 @@ function oblastOtazky(o: OtazkaSady): Oblast {
  * Zvyšok sady posudzuje jeden človek; zdvojovať všetko by znamenalo dvakrát
  * toľko práce za informáciu, ktorú tam nečakáme.
  */
-export function vPrekryve(o: OtazkaSady): boolean {
+export function inOverlap(o: GoldenQuestion): boolean {
   return Boolean(o.precedenceRule || o.trapType)
 }
 
@@ -118,8 +118,8 @@ export function vPrekryve(o: OtazkaSady): boolean {
  * `hodnotitel` je e-mail prihláseného. Bez neho sa skryjú všetky posudky
  * na prekryvových otázkach — to je prísnejšie a bezpečnejšie.
  */
-export async function nacitajSadu(hodnotitel = ""): Promise<OtazkaSoStavom[]> {
-  const otazky = await getCollection<OtazkaSady>("eval_questions")
+export async function loadGoldenSet(hodnotitel = ""): Promise<QuestionWithState[]> {
+  const otazky = await getCollection<GoldenQuestion>("eval_questions")
   const zoznam = await otazky
     .find({}, { projection: { _id: 0 } })
     .sort({ id: 1 })
@@ -137,7 +137,7 @@ export async function nacitajSadu(hodnotitel = ""): Promise<OtazkaSoStavom[]> {
   // Kľúč je otázka + hodnotiteľ. Zoradené vzostupne, takže pri opakovanom
   // posúdení tej istej otázky tým istým človekom platí to najnovšie —
   // ale posudky RÔZNYCH ľudí sa navzájom neprepíšu, čo je celý zmysel.
-  const podlaOtazky = new Map<string, Map<string, StavOtazky>>()
+  const podlaOtazky = new Map<string, Map<string, QuestionState>>()
   for (const h of posudene) {
     if (!h.otazkaId) continue
     const kto = h.hodnotitel ?? "anonym"
@@ -151,10 +151,10 @@ export async function nacitajSadu(hodnotitel = ""): Promise<OtazkaSoStavom[]> {
   }
 
   return zoznam.map(o => {
-    const vsetky = podlaOtazky.get(o.id) ?? new Map<string, StavOtazky>()
+    const vsetky = podlaOtazky.get(o.id) ?? new Map<string, QuestionState>()
     const vlastny = hodnotitel ? vsetky.get(hodnotitel) ?? null : null
     const ostatni = [...vsetky.values()].filter(s => s.hodnotitel !== hodnotitel)
-    const prekryv = vPrekryve(o)
+    const prekryv = inOverlap(o)
 
     return {
       ...o,
@@ -174,7 +174,7 @@ export async function nacitajSadu(hodnotitel = ""): Promise<OtazkaSoStavom[]> {
  * ale nie jeho záver. Bez tohto údaja by pri prekryve nevedel, či má ešte
  * čakať na druhého, alebo je otázka hotová.
  */
-export async function pocetPosudkov(): Promise<Record<string, number>> {
+export async function verdictCount(): Promise<Record<string, number>> {
   const col = await getCollection("evaluations")
   const zaznamy = await col
     .find(
@@ -192,23 +192,23 @@ export async function pocetPosudkov(): Promise<Record<string, number>> {
   return Object.fromEntries([...ludia].map(([k, v]) => [k, v.size]))
 }
 
-export async function nacitajOtazku(
+export async function loadQuestion(
   id: string,
   hodnotitel = ""
-): Promise<OtazkaSoStavom | null> {
-  const vsetky = await nacitajSadu(hodnotitel)
+): Promise<QuestionWithState | null> {
+  const vsetky = await loadGoldenSet(hodnotitel)
   return vsetky.find(o => o.id === id) ?? null
 }
 
 /** Čo smie hodnotiteľ na otázke zmeniť. */
-export interface UpravaOtazky {
+export interface QuestionEdit {
   upraveneZnenie?: string | null
   vyradena?: boolean
   dovodVyradenia?: string | null
 }
 
-export async function upravOtazku(id: string, u: UpravaOtazky): Promise<boolean> {
-  const col = await getCollection<OtazkaSady>("eval_questions")
+export async function editQuestion(id: string, u: QuestionEdit): Promise<boolean> {
+  const col = await getCollection<GoldenQuestion>("eval_questions")
 
   const zmeny: Record<string, unknown> = {}
   if (u.upraveneZnenie !== undefined) {
@@ -227,7 +227,7 @@ export async function upravOtazku(id: string, u: UpravaOtazky): Promise<boolean>
 }
 
 /** Súhrn pre ukazovateľ postupu. */
-export interface Suhrn {
+export interface GoldenSetSummary {
   spolu: number
   posudene: number
   spravne: number
@@ -240,7 +240,7 @@ export interface Suhrn {
   prekryvHotove: number
 }
 
-export function suhrn(otazky: OtazkaSoStavom[], pocty: Record<string, number> = {}): Suhrn {
+export function goldenSetSummary(otazky: QuestionWithState[], pocty: Record<string, number> = {}): GoldenSetSummary {
   const platne = otazky.filter(o => !o.vyradena)
   const sPosudkom = platne.filter(o => o.stav?.spravna !== null && o.stav !== null)
   const prekryvove = platne.filter(o => o.prekryv)
@@ -257,7 +257,7 @@ export function suhrn(otazky: OtazkaSoStavom[], pocty: Record<string, number> = 
   }
 }
 
-export interface Zhoda {
+export interface Agreement {
   /** Otázky, kde sa vyjadrili aspoň dvaja. */
   porovnatelnych: number
   zhodnych: number
@@ -278,7 +278,7 @@ export interface Zhoda {
  * a niekoľkých desiatkach otázok by kappa dávala presnosť, ktorú tie čísla
  * neunesú — a zoznam sporných otázok je aj tak užitočnejší než jedno číslo.
  */
-export function zhoda(vsetkyPosudky: Map<string, StavOtazky[]>): Zhoda {
+export function agreement(vsetkyPosudky: Map<string, QuestionState[]>): Agreement {
   let porovnatelnych = 0
   let zhodnych = 0
   const sporne: string[] = []

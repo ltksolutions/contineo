@@ -9,29 +9,29 @@
 
 import { notFound, redirect } from "next/navigation"
 import Link from "next/link"
-import { kniznicaContext } from "@/lib/library"
-import { detailKniznice } from "@/lib/libraryRead"
+import { libraryContext } from "@/lib/library"
+import { libraryDetail } from "@/lib/libraryRead"
 import { brandingView } from "@/lib/tenants"
 import { tenantStyle } from "@/components/TenantHeader"
 import { formatDate } from "@/lib/i18n"
-import Oznam from "@/components/Notice"
-import { publikujZnenie, ulozUdajeDokumentu, zaradDoPriecinka, preindexujDokument, opravZnenieAkcia } from "../akcie"
-import { vsetkyPriecinky, splostiStrom } from "@/lib/folders"
-import { volby } from "@/lib/codelists"
-import { doplnkyTenanta } from "@/lib/codelistsTenant"
-import Vyber from "@/components/Select"
-import VyberStitkov from "@/components/TagSelect"
+import Notice from "@/components/Notice"
+import { publishVersionAction, saveDocumentMetadataAction, assignToFolderAction, reindexDocumentAction, fixVersionAction } from "../actions"
+import { allFolders, flattenTree } from "@/lib/folders"
+import { codelistOptions } from "@/lib/codelists"
+import { tenantExtras } from "@/lib/codelistsTenant"
+import Select from "@/components/Select"
+import TagSelect from "@/components/TagSelect"
 
 export const dynamic = "force-dynamic"
 
-export default async function DetailDokumentu({
+export default async function DocumentDetailPage({
   params,
   searchParams,
 }: {
   params: Promise<{ id: string }>
   searchParams: Promise<{ sprava?: string; chyba?: string }>
 }) {
-  const ctx = await kniznicaContext()
+  const ctx = await libraryContext()
   if (ctx.state !== "ready") {
     if (ctx.state === "not-signed-in") redirect("/prihlasenie")
     notFound()
@@ -40,14 +40,14 @@ export default async function DetailDokumentu({
   const { id } = await params
   const { sprava, chyba } = await searchParams
   const documentId = decodeURIComponent(id)
-  const d = await detailKniznice(ctx.tenant.companyCode, documentId)
+  const d = await libraryDetail(ctx.tenant.companyCode, documentId)
   if (!d) notFound()
 
   const branding = brandingView(ctx.tenant)
   const jazyk = ctx.person.language
-  const doplnky = doplnkyTenanta(ctx.tenant)
-  const priecinky = await vsetkyPriecinky(ctx.tenant.companyCode)
-  const stromPriecinkov = splostiStrom(priecinky)
+  const doplnky = tenantExtras(ctx.tenant)
+  const priecinky = await allFolders(ctx.tenant.companyCode)
+  const stromPriecinkov = flattenTree(priecinky)
   const koncept = (d.draftMarkdown ?? "").trim()
   // Publikované znenie je pri dokumentoch z importu len vo `versions[]` —
   // porovnávať koncept s prázdnym `markdown` by tvrdilo, že je čo publikovať,
@@ -60,7 +60,7 @@ export default async function DetailDokumentu({
 
   return (
     <div className="obal" style={{ padding: "28px 20px 80px", maxWidth: 760, ...tenantStyle(branding) }}>
-      <Oznam sprava={sprava} chyba={chyba === "1"} spat={`/kniznica/${encodeURIComponent(documentId)}`} />
+      <Notice sprava={sprava} chyba={chyba === "1"} spat={`/kniznica/${encodeURIComponent(documentId)}`} />
 
       <p style={{ margin: "0 0 12px" }}>
         <Link className="tichy" href="/kniznica" style={{ fontSize: 14 }}>← Späť do knižnice</Link>
@@ -79,7 +79,7 @@ export default async function DetailDokumentu({
           </span>
         </summary>
 
-        <form action={ulozUdajeDokumentu} style={{ display: "grid", gap: 14, marginTop: 14 }}>
+        <form action={saveDocumentMetadataAction} style={{ display: "grid", gap: 14, marginTop: 14 }}>
           <input type="hidden" name="documentId" value={d.documentId} />
 
           <label className="pole">
@@ -93,24 +93,24 @@ export default async function DetailDokumentu({
 
           <div className="pole">
             <span className="pole-popis">Pôsobnosť</span>
-            <Vyber meno="scope" volby={volby("scope")} predvolena={d.scope ?? "company"} popisPola="Pôsobnosť" />
+            <Select meno="scope" volby={codelistOptions("scope")} predvolena={d.scope ?? "company"} popisPola="Pôsobnosť" />
           </div>
 
           <div className="pole">
             <span className="pole-popis">Prístupnosť</span>
-            <Vyber meno="accessLevel" volby={volby("accessLevel")} predvolena={d.accessLevel ?? "internal"} popisPola="Prístupnosť" />
+            <Select meno="accessLevel" volby={codelistOptions("accessLevel")} predvolena={d.accessLevel ?? "internal"} popisPola="Prístupnosť" />
           </div>
 
           <div className="pole">
             <span className="pole-popis">Jazyk dokumentu</span>
-            <Vyber meno="language" volby={volby("language")} predvolena={d.language ?? "sk"} popisPola="Jazyk dokumentu" />
+            <Select meno="language" volby={codelistOptions("language")} predvolena={d.language ?? "sk"} popisPola="Jazyk dokumentu" />
           </div>
 
           <div className="pole">
             <span className="pole-popis">Druh</span>
-            <Vyber
+            <Select
               meno="category"
-              volby={[{ hodnota: "", popis: "— neurčené —" }, ...volby("category", doplnky)]}
+              volby={[{ hodnota: "", popis: "— neurčené —" }, ...codelistOptions("category", doplnky)]}
               predvolena={d.category ?? ""}
               popisPola="Druh"
             />
@@ -118,9 +118,9 @@ export default async function DetailDokumentu({
 
           <div className="pole">
             <span className="pole-popis">Značky</span>
-            <VyberStitkov
+            <TagSelect
               meno="tags"
-              ponuka={volby("tags", doplnky).map(v => ({ hodnota: v.hodnota }))}
+              ponuka={codelistOptions("tags", doplnky).map(v => ({ hodnota: v.hodnota }))}
               vybrane={d.tags}
               popisNovej="Nová značka"
             />
@@ -136,11 +136,11 @@ export default async function DetailDokumentu({
         </form>
       </details>
 
-      <form action={zaradDoPriecinka} className="karta strom-forma" style={{ padding: 18, margin: "0 0 18px" }}>
+      <form action={assignToFolderAction} className="karta strom-forma" style={{ padding: 18, margin: "0 0 18px" }}>
         <input type="hidden" name="documentId" value={d.documentId} />
         <div className="pole" style={{ flex: "1 1 260px", margin: 0 }}>
           <span className="pole-popis">Priečinok</span>
-          <Vyber
+          <Select
             meno="folderId"
             predvolena={d.folderId ?? ""}
             popisPola="Priečinok"
@@ -204,7 +204,7 @@ export default async function DetailDokumentu({
             Niet čo publikovať — koncept je prázdny alebo zhodný s tým, čo už platí.
           </p>
         ) : (
-          <form action={publikujZnenie} style={{ display: "grid", gap: 14 }}>
+          <form action={publishVersionAction} style={{ display: "grid", gap: 14 }}>
             <input type="hidden" name="documentId" value={d.documentId} />
 
             <label className="pole">
@@ -246,7 +246,7 @@ export default async function DetailDokumentu({
         )}
       </section>
 
-      <form action={preindexujDokument} className="karta" style={{ padding: 18, display: "grid", gap: 10, margin: "0 0 18px" }}>
+      <form action={reindexDocumentAction} className="karta" style={{ padding: 18, display: "grid", gap: 10, margin: "0 0 18px" }}>
         <input type="hidden" name="documentId" value={d.documentId} />
         <h2 style={{ fontSize: 17, margin: 0 }}>Preindexovať</h2>
         <p className="tichy" style={{ fontSize: 14, margin: 0 }}>
@@ -285,7 +285,7 @@ export default async function DetailDokumentu({
 
               <details style={{ marginTop: 6 }}>
                 <summary className="tichy" style={{ fontSize: 13, cursor: "pointer" }}>opraviť údaje</summary>
-                <form action={opravZnenieAkcia} style={{ display: "grid", gap: 10, marginTop: 10 }}>
+                <form action={fixVersionAction} style={{ display: "grid", gap: 10, marginTop: 10 }}>
                   <input type="hidden" name="documentId" value={d.documentId} />
                   <input type="hidden" name="versionId" value={v.versionId} />
 
@@ -325,7 +325,7 @@ export default async function DetailDokumentu({
 
                   <div className="pole">
                     <span className="pole-popis">Ak sa mení dátum a znenie už niekto potvrdil</span>
-                    <Vyber
+                    <Select
                       meno="priZmeneDatumu"
                       predvolena=""
                       popisPola="Ako naložiť s potvrdeniami"

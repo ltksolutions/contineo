@@ -8,7 +8,7 @@
  */
 
 import { describe, it, expect } from "vitest"
-import { odtlacokTextu, odtlacokClenenia, trebaPreindexovat, VERZIA_CHUNKERA } from "../src/lib/chunkIdentity"
+import { textFingerprint, chunkingFingerprint, needsReindex, CHUNKER_VERSION } from "../src/lib/chunkIdentity"
 import { chunkuj, PREDVOLENY_PROFIL } from "../src/lib/chunker.mjs"
 
 const NORMA = `Článok 1
@@ -25,26 +25,26 @@ Základné ustanovenia
 
 describe("odtlacok textu", () => {
   it("rovnaky text da rovnaky odtlacok", () => {
-    expect(odtlacokTextu(NORMA)).toBe(odtlacokTextu(NORMA))
+    expect(textFingerprint(NORMA)).toBe(textFingerprint(NORMA))
   })
 
   it("konce riadkov a medzery na konci nie su zmena znenia", () => {
     // Inak by ten isty text ulozeny z Windows a z Macu vyzeral ako dve rozne
     // znenia -- a tym aj ako dve rozne povinnosti.
-    expect(odtlacokTextu("a\nb\n")).toBe(odtlacokTextu("a\r\nb\r\n"))
-    expect(odtlacokTextu("a  \nb")).toBe(odtlacokTextu("a\nb"))
-    expect(odtlacokTextu("  a\nb  ")).toBe(odtlacokTextu("a\nb"))
+    expect(textFingerprint("a\nb\n")).toBe(textFingerprint("a\r\nb\r\n"))
+    expect(textFingerprint("a  \nb")).toBe(textFingerprint("a\nb"))
+    expect(textFingerprint("  a\nb  ")).toBe(textFingerprint("a\nb"))
   })
 
   it("zmena slova je zmena znenia", () => {
-    expect(odtlacokTextu("moze")).not.toBe(odtlacokTextu("musi"))
+    expect(textFingerprint("moze")).not.toBe(textFingerprint("musi"))
   })
 
   it("oznacenie ani datum do identity nevstupuju", () => {
     // Cely dovod, preco funkcia berie len text: preklep v oznaceni sa musi
     // dat opravit bez toho, aby sa rozbili potvrdenia.
-    expect(odtlacokTextu(NORMA)).toBe(odtlacokTextu(NORMA))
-    expect(odtlacokTextu.length).toBe(1)
+    expect(textFingerprint(NORMA)).toBe(textFingerprint(NORMA))
+    expect(textFingerprint.length).toBe(1)
   })
 })
 
@@ -54,17 +54,17 @@ describe("odtlacok clenenia", () => {
     const b = chunkuj(NORMA, { nazovDokumentu: "Norma", profil: { slovoClanok: "Paragraf" } })
 
     // Text je ten isty -> identita znenia sa nemeni.
-    expect(odtlacokTextu(NORMA)).toBe(odtlacokTextu(NORMA))
+    expect(textFingerprint(NORMA)).toBe(textFingerprint(NORMA))
     // Clenenie je ine -> chunkingId sa lisi a je vidiet, ze treba preindexovat.
-    expect(odtlacokClenenia(a.chunky, PREDVOLENY_PROFIL))
-      .not.toBe(odtlacokClenenia(b.chunky, { ...PREDVOLENY_PROFIL, slovoClanok: "Paragraf" }))
+    expect(chunkingFingerprint(a.chunky, PREDVOLENY_PROFIL))
+      .not.toBe(chunkingFingerprint(b.chunky, { ...PREDVOLENY_PROFIL, slovoClanok: "Paragraf" }))
   })
 
   it("rovnaky vstup aj profil daju rovnaky odtlacok", () => {
     const a = chunkuj(NORMA, { nazovDokumentu: "Norma" })
     const b = chunkuj(NORMA, { nazovDokumentu: "Norma" })
-    expect(odtlacokClenenia(a.chunky, PREDVOLENY_PROFIL))
-      .toBe(odtlacokClenenia(b.chunky, PREDVOLENY_PROFIL))
+    expect(chunkingFingerprint(a.chunky, PREDVOLENY_PROFIL))
+      .toBe(chunkingFingerprint(b.chunky, PREDVOLENY_PROFIL))
   })
 
   it("profil je sucastou odtlacku aj ked vysledok vyzera rovnako", () => {
@@ -72,24 +72,24 @@ describe("odtlacok clenenia", () => {
     // tvarila ako "netreba preindexovat" -- a pri dalsom dokumente by uz
     // spravila, ale nikto by nevedel preco.
     const a = chunkuj(NORMA, { nazovDokumentu: "Norma" })
-    expect(odtlacokClenenia(a.chunky, PREDVOLENY_PROFIL))
-      .not.toBe(odtlacokClenenia(a.chunky, { ...PREDVOLENY_PROFIL, cielMaxTokenov: 900 }))
+    expect(chunkingFingerprint(a.chunky, PREDVOLENY_PROFIL))
+      .not.toBe(chunkingFingerprint(a.chunky, { ...PREDVOLENY_PROFIL, cielMaxTokenov: 900 }))
   })
 })
 
 describe("kedy preindexovat", () => {
   it("chybajuce chunkingId znamena preindexovat", () => {
     // Tak vyzeraju dokumenty spred rozdelenia identit.
-    expect(trebaPreindexovat(undefined, "abc")).toBe(true)
-    expect(trebaPreindexovat(null, "abc")).toBe(true)
+    expect(needsReindex(undefined, "abc")).toBe(true)
+    expect(needsReindex(null, "abc")).toBe(true)
   })
 
   it("zhodne chunkingId znamena nic nerobit", () => {
-    expect(trebaPreindexovat("abc", "abc")).toBe(false)
+    expect(needsReindex("abc", "abc")).toBe(false)
   })
 
   it("verzia chunkera je cislo, ktore zvysuje clovek", () => {
-    expect(VERZIA_CHUNKERA).toBeGreaterThan(0)
+    expect(CHUNKER_VERSION).toBeGreaterThan(0)
   })
 })
 

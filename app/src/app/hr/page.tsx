@@ -16,12 +16,12 @@ import { assignmentOverviews, audienceLabel } from "@/lib/assignments"
 import { brandingView } from "@/lib/tenants"
 import { tenantStyle } from "@/components/TenantHeader"
 import { formatDate } from "@/lib/i18n"
-import Oznam from "@/components/Notice"
-import { odvolat } from "./akcie"
+import Notice from "@/components/Notice"
+import { revokeAction } from "./actions"
 
 export const dynamic = "force-dynamic"
 
-export default async function HrPrehlad({
+export default async function HrOverviewPage({
   searchParams,
 }: {
   searchParams: Promise<{ sprava?: string; chyba?: string }>
@@ -47,7 +47,7 @@ export default async function HrPrehlad({
         zobrazení — a týkajú sa ľudí, ktorí do skupiny patria <em>dnes</em>.
       </p>
 
-      <Oznam sprava={sprava} chyba={chyba === "1"} spat="/hr" />
+      <Notice sprava={sprava} chyba={chyba === "1"} spat="/hr" />
 
       <p style={{ margin: "0 0 24px" }}>
         <Link className="tlacidlo" href="/hr/pridelit">Prideliť normu</Link>
@@ -123,7 +123,7 @@ export default async function HrPrehlad({
                       Dať vedieť e-mailom
                     </Link>
                   )}
-                  <form action={odvolat}>
+                  <form action={revokeAction}>
                     <input type="hidden" name="id" value={p.id} />
                     <button className="tlacidlo tlacidlo--tiche" type="submit">
                       Odvolať pridelenie

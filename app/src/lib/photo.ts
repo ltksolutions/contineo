@@ -13,12 +13,12 @@
 
 import { getCollection } from "./mongodb"
 
-export const FOTKY_COLLECTION = "person_photos"
+export const PHOTOS_COLLECTION = "person_photos"
 
 /** Fotka z Graphu má 96 px. Väčšia sem nemá ako prísť. */
-export const MAX_BAJTOV = 512 * 1024
+export const MAX_BYTES = 512 * 1024
 
-export interface Fotka {
+export interface Photo {
   companyCode: string
   /** `persons.id`, nie adresa — adresa sa mení, identita nie (D45). */
   personId: string
@@ -32,17 +32,17 @@ export interface Fotka {
 }
 
 /** Uloží fotku. Vracia verziu do `persons.photoVersion`. */
-export async function ulozFotku(
+export async function savePhoto(
   companyCode: string,
   personId: string,
   contentType: string,
   data: Buffer,
   zdroj: string,
 ): Promise<string | null> {
-  if (!data?.byteLength || data.byteLength > MAX_BAJTOV) return null
+  if (!data?.byteLength || data.byteLength > MAX_BYTES) return null
   const verzia = Date.now().toString(36)
   try {
-    const col = await getCollection<Fotka>(FOTKY_COLLECTION)
+    const col = await getCollection<Photo>(PHOTOS_COLLECTION)
     await col.updateOne(
       { companyCode, personId },
       {
@@ -61,7 +61,7 @@ export async function ulozFotku(
   }
 }
 
-export async function nacitajFotku(companyCode: string, personId: string): Promise<Fotka | null> {
-  const col = await getCollection<Fotka>(FOTKY_COLLECTION)
+export async function loadPhoto(companyCode: string, personId: string): Promise<Photo | null> {
+  const col = await getCollection<Photo>(PHOTOS_COLLECTION)
   return col.findOne({ companyCode, personId })
 }

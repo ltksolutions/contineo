@@ -31,7 +31,7 @@
 import { useState } from "react"
 import type { ReactNode } from "react"
 
-export interface PolozkaStromu {
+export interface TreeItem {
   id: string
   nazov: string
   parentId: string | null
@@ -43,12 +43,12 @@ export interface PolozkaStromu {
 
 const ID_FORMULARA = "poradie-oddeleni"
 
-export default function StromSPoradim({
+export default function TreeWithOrder({
   polozky,
   skryte,
   akcia,
 }: {
-  polozky: PolozkaStromu[]
+  polozky: TreeItem[]
   /**
    * Polia, ktoré sa majú poslať spolu s poradím — záložka v nastavení
    * organizácie, filtre v knižnici. Bez nich by človeka po uložení hodilo
@@ -57,7 +57,7 @@ export default function StromSPoradim({
   skryte?: Record<string, string>
   akcia: (fd: FormData) => void | Promise<void>
 }) {
-  const [poradie, setPoradie] = useState<PolozkaStromu[]>(polozky)
+  const [poradie, setPoradie] = useState<TreeItem[]>(polozky)
   const [tahane, setTahane] = useState<string | null>(null)
   const [zmenene, setZmenene] = useState(false)
 

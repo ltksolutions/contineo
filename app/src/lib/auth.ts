@@ -30,13 +30,13 @@ import { mongoAdapter } from "./authAdapter"
 import { send, signInEmail } from "./ecomail"
 import {
   personMaySignIn, recordSignIn, recordExternalRef, personLanguage,
-  zosuladPodlaKonta, zalozPodlaDomeny, jeDomenaPovolena,
-  doplnChybajuce, chybaNiecoZAdresara, findPerson,
+  syncFromAccount, createFromDomain, isDomainAllowed,
+  fillMissing, missingFromDirectory, findPerson,
 } from "./persons"
 import { resolveTenant, normalizeHostname } from "./tenants"
-import { resolveCredentials, ID_POSKYTOVATELA } from "./oauth"
-import { udajeZGraphu, celeMeno, VELKOST_FOTKY } from "./graph"
-import { ulozFotku } from "./photo"
+import { resolveCredentials, PROVIDER_ID } from "./oauth"
+import { graphData, fullName, PHOTO_SIZE } from "./graph"
+import { savePhoto } from "./photo"
 import type { OAuthProviderName, ResolvedCredentials } from "./oauth"
 import type { Tenant } from "./tenants"
 
@@ -48,7 +48,7 @@ import type { Tenant } from "./tenants"
  * lebo e-mailová schránka nie je citlivá na veľkosť a používateľ napíše
  * adresu tak, ako je zvyknutý.
  */
-export function povoleneEmaily(rows = process.env.POVOLENE_EMAILY ?? ""): string[] {
+export function allowedEmails(rows = process.env.POVOLENE_EMAILY ?? ""): string[] {
   return rows
     .split(/[,;\n]/)
     .map(e => e.trim().toLowerCase())
@@ -62,7 +62,7 @@ export function povoleneEmaily(rows = process.env.POVOLENE_EMAILY ?? ""): string
  * ale opak by bol horší: zabudnutá premenná pri nasadení by otvorila
  * rozhranie s internými smernicami komukoľvek na internete.
  */
-export function jePovoleny(email: string, rows = povoleneEmaily()): boolean {
+export function isAllowed(email: string, rows = allowedEmails()): boolean {
   if (!rows.length) return false
   const e = email.trim().toLowerCase()
 
@@ -248,7 +248,7 @@ export const authOptions: NextAuthOptions = {
       // `email.verificationRequest` odlíši žiadosť o odkaz od jeho použitia.
       // Bez toho sa v logu nedá rozoznať, či človek o odkaz len požiadal,
       // alebo naň už klikol a neprešiel.
-      const poskytovatel = poskytovatelZId(account?.provider)
+      const poskytovatel = providerFromId(account?.provider)
       const faza = poskytovatel ?? (email?.verificationRequest ? "ziadost" : "pouzitie-odkazu")
 
       // ── konto od Microsoftu alebo Googlu (D45) ──
@@ -264,7 +264,7 @@ export const authOptions: NextAuthOptions = {
           return false
         }
 
-        const overenie = overOAuthProfil(
+        const overenie = verifyOAuthProfile(
           poskytovatel,
           (profile ?? {}) as Record<string, unknown>,
           obmedzenia,
@@ -289,7 +289,7 @@ export const authOptions: NextAuthOptions = {
           // 1. Ten istý človek s inou adresou? Rozpozná sa podľa konta —
           //    `oid` je nemenné, adresa nie (D45).
           if (externalId) {
-            const znamy = await zosuladPodlaKonta(
+            const znamy = await syncFromAccount(
               poskytovatel, externalId, overenie.email, tenant.companyCode,
             )
             if (znamy) user.email = znamy.email
@@ -298,8 +298,8 @@ export const authOptions: NextAuthOptions = {
           // 2. Ešte tu nie je a je z domény, ktorú organizácia povolila?
           //    Adresár zákazníka už raz rozhodol, že tam patrí (D47).
           if (!(await personMaySignIn(user.email)) &&
-              jeDomenaPovolena(user.email, tenant.autoProvisionDomains)) {
-            await zalozPodlaDomeny(
+              isDomainAllowed(user.email, tenant.autoProvisionDomains)) {
+            await createFromDomain(
               tenant.companyCode,
               user.email,
               typeof (profile as Record<string, unknown>)?.name === "string"
@@ -329,7 +329,7 @@ export const authOptions: NextAuthOptions = {
 
       // Núdzová brzda ide prvá — nepotrebuje databázu, takže správcu pustí
       // aj vtedy, keď je cluster nedostupný.
-      if (jePovoleny(user.email)) {
+      if (isAllowed(user.email)) {
         console.log(`[auth] ${faza}: ${user.email} — cez núdzovú brzdu`)
         return true
       }
@@ -406,15 +406,15 @@ export const authOptions: NextAuthOptions = {
  * Prečo sa konto neprepustilo. Rozlíšené preto, že každý dôvod znamená inú
  * opravu — a „prihlásenie zlyhalo" neznamená ani jednu z nich.
  */
-export type DovodOdmietnutia =
+export type RejectionReason =
   | "ziadna-adresa"
   | "neovereny-email"
   | "cudzi-tenant"
   | "cudzia-domena"
 
-export type OAuthOverenie =
+export type OAuthVerification =
   | { ok: true; email: string; externalId: string | null }
-  | { ok: false; dovod: DovodOdmietnutia }
+  | { ok: false; dovod: RejectionReason }
 
 /** Prvá hodnota, ktorá vyzerá ako e-mailová adresa. */
 function prvaAdresa(...kandidati: unknown[]): string | null {
@@ -435,11 +435,11 @@ function prvaAdresa(...kandidati: unknown[]): string | null {
  * alebo `upn` — podľa toho, ako má zákazník nastavené kontá. Berie sa prvá,
  * ktorá vyzerá ako adresa.
  */
-export function overOAuthProfil(
+export function verifyOAuthProfile(
   provider: OAuthProviderName,
   profil: Record<string, unknown>,
   obmedzenia: { allowedTenantIds?: string[]; hostedDomain?: string },
-): OAuthOverenie {
+): OAuthVerification {
   if (provider === "microsoft") {
     // `tid` je identifikátor Entra tenanta a v tokene od Entry je vždy.
     // Jeho neprítomnosť znamená, že to nie je to, za čo sa to vydáva.
@@ -503,7 +503,7 @@ function oauthProvider(c: ResolvedCredentials): Provider {
       clientSecret: c.clientSecret,
       tenantId: c.tenantMode || "organizations",
       allowDangerousEmailAccountLinking: true,
-      profilePhotoSize: VELKOST_FOTKY,
+      profilePhotoSize: PHOTO_SIZE,
       // `User.Read` je nad rámec predvolených troch rozsahov a je potrebné
       // na dve veci: fotku a profil z Graphu (D52). Je to najzákladnejšie
       // delegované oprávnenie Entry — „prečítaj profil prihláseného" —
@@ -541,20 +541,20 @@ async function doplnZAdresara(
   try {
     if (!accessToken) return
     const osoba = await findPerson(email)
-    if (!chybaNiecoZAdresara(osoba)) return
+    if (!missingFromDirectory(osoba)) return
 
-    const u = await udajeZGraphu(accessToken, !osoba?.photoVersion)
+    const u = await graphData(accessToken, !osoba?.photoVersion)
     if (!u) return
 
     let photoVersion: string | undefined
     if (u.fotka && osoba) {
-      photoVersion = (await ulozFotku(
+      photoVersion = (await savePhoto(
         companyCode, osoba.id, u.fotka.contentType, u.fotka.data, "graph",
       )) ?? undefined
     }
 
-    const doplnene = await doplnChybajuce(companyCode, email, {
-      fullName: celeMeno(u),
+    const doplnene = await fillMissing(companyCode, email, {
+      fullName: fullName(u),
       givenName: u.givenName,
       surname: u.surname,
       department: u.department,
@@ -622,9 +622,9 @@ async function obmedzeniaPre(provider: OAuthProviderName, rawHost: string) {
 }
 
 /** Z identifikátora NextAuthu späť na náš názov. `null` pri e-maile. */
-export function poskytovatelZId(id: string | undefined): OAuthProviderName | null {
+export function providerFromId(id: string | undefined): OAuthProviderName | null {
   if (!id) return null
-  for (const [nas, nextauth] of Object.entries(ID_POSKYTOVATELA)) {
+  for (const [nas, nextauth] of Object.entries(PROVIDER_ID)) {
     if (nextauth === id) return nas as OAuthProviderName
   }
   return null

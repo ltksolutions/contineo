@@ -1,7 +1,7 @@
 "use server"
 
 /**
- * akcie.ts — zápisy zo správy osôb (D46).
+ * actions.ts — zápisy zo správy osôb (D46).
  *
  * **Každá akcia začína bránou.** Serverová akcia je koncový bod ako každý iný;
  * to, že sa volá z formulára na chránenej stránke, nie je kontrola prístupu.
@@ -12,10 +12,10 @@
  */
 
 import { redirect } from "next/navigation"
-import { jePresmerovanie } from "@/lib/redirects"
+import { isRedirect } from "@/lib/redirects"
 import { revalidatePath } from "next/cache"
 import { peopleContext, savePerson, invitePerson, setPersonStatus, PersonValidationError } from "@/lib/people"
-import { csvNaOsoby, DOVODY } from "@/lib/personsImport"
+import { csvToPersons, REASONS } from "@/lib/personsImport"
 import { previewImport, upsertPersons } from "@/lib/persons"
 import type { PersonType } from "@/lib/persons"
 
@@ -41,7 +41,7 @@ function spravaChyby(e: unknown): string {
   return "Zmenu sa nepodarilo uložiť. Skús to znova."
 }
 
-export async function ulozOsobu(fd: FormData) {
+export async function savePersonAction(fd: FormData) {
   const kto = await personalny()
   if (!kto) redirect("/osoby")
 
@@ -73,7 +73,7 @@ export async function ulozOsobu(fd: FormData) {
   redirect(`/osoby/${encodeURIComponent(id)}?sprava=${encodeURIComponent(sprava)}${chyba ? "&chyba=1" : ""}`)
 }
 
-export async function pozviOsobu(fd: FormData) {
+export async function invitePersonAction(fd: FormData) {
   const kto = await personalny()
   if (!kto) redirect("/osoby")
 
@@ -94,7 +94,7 @@ export async function pozviOsobu(fd: FormData) {
     )}`)
   } catch (e) {
     // `redirect()` vyhadzuje výnimku — nesmie sa chytiť ako chyba zápisu.
-    if (jePresmerovanie(e)) throw e
+    if (isRedirect(e)) throw e
     const q = new URLSearchParams({
       chyba: spravaChyby(e),
       email: textPola(fd, "email"),
@@ -112,7 +112,7 @@ export async function pozviOsobu(fd: FormData) {
  * okamžite odstrihne od portálu; obyčajné „naozaj?" sa odklikne skôr, než sa
  * prečíta. Vrátenie potvrdenie nepotrebuje — nič sa ním nestráca.
  */
-export async function prepniStavOsoby(fd: FormData) {
+export async function togglePersonStatusAction(fd: FormData) {
   const kto = await personalny()
   if (!kto) redirect("/osoby")
 
@@ -148,7 +148,7 @@ export async function prepniStavOsoby(fd: FormData) {
  * operácia, po ktorej sa hľadá, ako to vrátiť späť, a `persons` nemá rollback.
  * Preto import bez náhľadu neexistuje ani na obrazovke, ani v skripte.
  */
-export async function nahladImportu(text: string): Promise<{
+export async function previewImportAction(text: string): Promise<{
   ok: boolean
   sprava?: string
   nove?: string[]
@@ -162,7 +162,7 @@ export async function nahladImportu(text: string): Promise<{
 
   // Organizácia sa doplní z prihláseného, nie zo súboru: personalista zväzu
   // nesmie importom založiť človeka do cudzej organizácie (D32).
-  const osoby = csvNaOsoby(text, kto.companyCode)
+  const osoby = csvToPersons(text, kto.companyCode)
   if (osoby.length === 0) {
     return { ok: false, sprava: "V súbore nie je ani jeden riadok s údajmi. Má prvý riadok hlavičky?" }
   }
@@ -174,7 +174,7 @@ export async function nahladImportu(text: string): Promise<{
       spolu: osoby.length,
       nove: n.created,
       existujuce: n.existing,
-      chyby: n.errors.map(e => `${e.email || "(bez adresy)"} — ${DOVODY[e.reason] ?? e.reason}`),
+      chyby: n.errors.map(e => `${e.email || "(bez adresy)"} — ${REASONS[e.reason] ?? e.reason}`),
     }
   } catch (e) {
     return { ok: false, sprava: spravaChyby(e) }
@@ -182,12 +182,12 @@ export async function nahladImportu(text: string): Promise<{
 }
 
 /** Zápis. Volá sa až po náhľade, z toho istého textu. */
-export async function vykonajImport(text: string): Promise<{ ok: boolean; sprava: string }> {
+export async function runImportAction(text: string): Promise<{ ok: boolean; sprava: string }> {
   const kto = await personalny()
   if (!kto) return { ok: false, sprava: "Nemáš na to právo." }
 
   try {
-    const osoby = csvNaOsoby(text, kto.companyCode)
+    const osoby = csvToPersons(text, kto.companyCode)
     const v = await upsertPersons(osoby, kto.email)
     revalidatePath("/osoby")
     return {

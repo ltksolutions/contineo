@@ -8,11 +8,11 @@
 
 import type { Metadata } from "next"
 import "./globals.css"
-import Hlavicka from "@/components/Header"
-import Paticka from "@/components/Footer"
-import Sedenie from "@/components/SessionProvider"
+import Header from "@/components/Header"
+import Footer from "@/components/Footer"
+import SessionProvider from "@/components/SessionProvider"
 import { currentTenant, currentEmail, currentPerson } from "@/lib/session"
-import { kniznicaContext } from "@/lib/library"
+import { libraryContext } from "@/lib/library"
 import { platformContext } from "@/lib/admin"
 import { hrContext } from "@/lib/hr"
 import { peopleContext } from "@/lib/people"
@@ -149,7 +149,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       console.error("[layout] rolu správy osôb sa nepodarilo overiť:", e)
     }
     try {
-      spravcaObsahu = (await kniznicaContext()).state === "ready"
+      spravcaObsahu = (await libraryContext()).state === "ready"
     } catch (e) {
       console.error("[layout] rolu správy obsahu sa nepodarilo overiť:", e)
     }
@@ -160,8 +160,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       {/* Stĺpec s `min-height`, aby pätička na krátkej stránke sedela dole
           a nie hneď pod obsahom uprostred prázdnej obrazovky. */}
       <body style={{ ...tenantStyle(branding), minHeight: "100dvh", display: "flex", flexDirection: "column" }}>
-        <Sedenie>
-          <Hlavicka
+        <SessionProvider>
+          <Header
             branding={branding}
             email={email}
             meno={meno}
@@ -172,8 +172,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             spravcaObsahu={spravcaObsahu}
           />
           <main style={{ flex: 1 }}>{children}</main>
-          <Paticka />
-        </Sedenie>
+          <Footer />
+        </SessionProvider>
       </body>
     </html>
   )

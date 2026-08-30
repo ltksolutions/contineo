@@ -174,7 +174,7 @@ export type GenerationEvent =
    * (teda ešte pred prvým slovom odpovede), výstup až v `message_delta` na
    * konci. Preto sa zbiera priebežne a nie naraz.
    */
-  | { type: "tokeny"; tokeny: Partial<import("../pricing").Tokeny> }
+  | { type: "tokeny"; tokeny: Partial<import("../pricing").TokenCounts> }
 
 export interface GenerationRequest {
   system: string

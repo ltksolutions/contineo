@@ -15,11 +15,11 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
-import { nahladImportu, vykonajImport } from "@/app/osoby/akcie"
+import { previewImportAction, runImportAction } from "@/app/osoby/actions"
 
-type Nahlad = Awaited<ReturnType<typeof nahladImportu>>
+type Nahlad = Awaited<ReturnType<typeof previewImportAction>>
 
-export default function ImportOsob() {
+export default function PeopleImport() {
   const router = useRouter()
   const [text, setText] = useState("")
   const [nazov, setNazov] = useState("")
@@ -37,7 +37,7 @@ export default function ImportOsob() {
     try {
       const obsah = await f.text()
       setText(obsah)
-      setNahlad(await nahladImportu(obsah))
+      setNahlad(await previewImportAction(obsah))
     } finally {
       setPracujem(false)
     }
@@ -46,7 +46,7 @@ export default function ImportOsob() {
   async function zapis() {
     setPracujem(true)
     try {
-      const v = await vykonajImport(text)
+      const v = await runImportAction(text)
       setVysledok(v.sprava)
       if (v.ok) {
         setNahlad(null)

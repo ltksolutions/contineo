@@ -11,8 +11,8 @@
  * zobrazí sám, čo je presne to, čo editor potrebuje vedľa Markdownu.
  */
 
-import { kniznicaContext } from "@/lib/library"
-import { nacitajSubor } from "@/lib/fileStore"
+import { libraryContext } from "@/lib/library"
+import { loadFile } from "@/lib/fileStore"
 
 export const dynamic = "force-dynamic"
 
@@ -30,7 +30,7 @@ export async function GET(
   _req: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  const ctx = await kniznicaContext()
+  const ctx = await libraryContext()
   if (ctx.state !== "ready") {
     return new Response(null, { status: ctx.state === "not-signed-in" ? 401 : 403 })
   }
@@ -39,7 +39,7 @@ export async function GET(
 
   let s
   try {
-    s = await nacitajSubor(ctx.tenant.companyCode, decodeURIComponent(id))
+    s = await loadFile(ctx.tenant.companyCode, decodeURIComponent(id))
   } catch (e) {
     console.error("[kniznica] súbor sa nepodarilo načítať:", e)
     return new Response(null, { status: 500 })

@@ -41,7 +41,7 @@ import { getCollection } from "./mongodb"
 export const AUDIT_COLLECTION = "audit"
 
 /** Čoho sa zmena týkala. Nie tabuľka — vec, ktorej človek rozumie. */
-export type AuditPredmet =
+export type AuditSubject =
   | "osoba"
   | "oddelenie"
   /** Starý názov pre `oddelenie`. Ostáva kvôli záznamom spred premenovania. */
@@ -54,11 +54,11 @@ export type AuditPredmet =
   | "prihlasenie-nastavenie"
   | "tenant"
 
-export interface AuditZaznam {
+export interface AuditRecord {
   _id?: ObjectId
   /** Organizácia, ktorej sa zmena týka. Podľa nej sa aj číta (D32). */
   companyCode: string
-  predmet: AuditPredmet
+  predmet: AuditSubject
   /**
    * Čo sa stalo, slovesom: `zalozene`, `zmenene`, `vyradene`, `vratene`,
    * `premenovane`, `presunute`, `zrusene`, `pridelene`, `odvolane`,
@@ -106,7 +106,7 @@ function jeTajomstvo(pole: string): boolean {
  * je tu **správne**: zmena poradia skupín je zmena zapísanej hodnoty a nech
  * je vidieť. Falošný záznam navyše je menšia škoda než zamlčaná zmena.
  */
-export function rozdiel(
+export function diff(
   pred: Record<string, unknown> | null | undefined,
   po: Record<string, unknown> | null | undefined,
 ): Record<string, { z?: unknown; na?: unknown }> {
@@ -122,9 +122,9 @@ export function rozdiel(
   return out
 }
 
-export interface NovyAudit {
+export interface NewAudit {
   companyCode: string
-  predmet: AuditPredmet
+  predmet: AuditSubject
   akcia: string
   aktor: string
   cielId?: string | null
@@ -144,9 +144,9 @@ export interface NovyAudit {
  * Volá sa **po** úspešnej zmene, nie pred ňou. Opačné poradie by zapisovalo
  * zmeny, ktoré sa nestali.
  */
-export async function zapisAudit(z: NovyAudit): Promise<void> {
+export async function writeAudit(z: NewAudit): Promise<void> {
   try {
-    const col = await getCollection<AuditZaznam>(AUDIT_COLLECTION)
+    const col = await getCollection<AuditRecord>(AUDIT_COLLECTION)
     await col.insertOne({
       companyCode: z.companyCode,
       predmet: z.predmet,
@@ -157,14 +157,14 @@ export async function zapisAudit(z: NovyAudit): Promise<void> {
       kedy: new Date(),
       ...(z.zmeny && Object.keys(z.zmeny).length > 0 ? { zmeny: z.zmeny } : {}),
       ...(z.poznamka ? { poznamka: z.poznamka } : {}),
-    } as AuditZaznam)
+    } as AuditRecord)
   } catch (e) {
     console.error("[audit] záznam sa nepodarilo zapísať:", e)
   }
 }
 
 export interface AuditFilter {
-  predmet?: AuditPredmet
+  predmet?: AuditSubject
   aktor?: string
   cielId?: string
   /** Voľný text — hľadá v popise cieľa a v aktorovi. */
@@ -179,11 +179,11 @@ export interface AuditFilter {
  * cudzej organizácie je presne ten druh údaja, ktorý sa nesmie dať vytiahnuť
  * uhádnutím identifikátora (D32).
  */
-export async function auditZaznamy(
+export async function auditRecords(
   companyCode: string,
   filter: AuditFilter = {},
-): Promise<AuditZaznam[]> {
-  const col = await getCollection<AuditZaznam>(AUDIT_COLLECTION)
+): Promise<AuditRecord[]> {
+  const col = await getCollection<AuditRecord>(AUDIT_COLLECTION)
   const q: Record<string, unknown> = { companyCode }
 
   if (filter.predmet) q.predmet = filter.predmet

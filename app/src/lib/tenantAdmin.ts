@@ -12,7 +12,7 @@
  */
 
 import { getCollection } from "./mongodb"
-import { zapisAudit, rozdiel } from "./audit"
+import { writeAudit, diff } from "./audit"
 import {
   TENANTS_COLLECTION,
   normalizeHostname,
@@ -22,7 +22,7 @@ import {
 import { UI_LANGUAGES, isUiLanguage } from "./i18n"
 import type { UiLanguage } from "./i18n"
 import type { Tenant } from "./tenants"
-import { zasifruj, sifrovanieJeKDispozicii } from "./secrets"
+import { encrypt, encryptionAvailable } from "./secrets"
 import type { OAuthProviderName } from "./oauth"
 
 /**
@@ -107,7 +107,7 @@ export interface TenantChange {
  * štruktúra** — kto chce `oblast.futbalsfz.sk`, vypíše ju. Porovnáva sa celá
  * doména, takže `futbalsfz.sk` nikdy nepustí `zlyfutbalsfz.sk`.
  */
-export function normalizeDomeny(raw: string[] | string): string[] {
+export function normalizeDomains(raw: string[] | string): string[] {
   const zoznam = Array.isArray(raw) ? raw : String(raw ?? "").split(/[,;\n]/)
   return [...new Set(
     zoznam
@@ -166,7 +166,7 @@ function naSet(change: TenantChange): Record<string, unknown> {
   // Prepisuje sa celé, aj prázdnym: na rozdiel od tajomstva je vidieť, čo
   // v ňom je, takže prázdny zoznam je vedomé „nikoho nezakladať".
   if (change.autoProvisionDomains !== undefined) {
-    set.autoProvisionDomains = normalizeDomeny(change.autoProvisionDomains)
+    set.autoProvisionDomains = normalizeDomains(change.autoProvisionDomains)
   }
   if (change.chunkovanie !== undefined) {
     // Čísla sa držia v rozumnom rozsahu tu, nie v chunkeri: chunker dostane
@@ -234,10 +234,10 @@ export async function saveTenant(
     predZmenou[k] = hodnota(existuje, k)
     poZmene[k] = set[k]
   }
-  await zapisAudit({
+  await writeAudit({
     companyCode: kod, predmet: "organizacia", akcia: "zmenene", aktor: actor,
     cielId: kod, cielPopis: existuje.branding?.displayName ?? kod,
-    zmeny: rozdiel(predZmenou, poZmene),
+    zmeny: diff(predZmenou, poZmene),
   })
 
   // Bez tohto by sa zmena prejavila až o päť minút (pamäť v `tenants.ts`)
@@ -310,7 +310,7 @@ export async function allTenants(): Promise<Tenant[]> {
  * prestalo fungovať bez toho, aby to ktokoľvek chcel. Na odstránenie je
  * `zmazOAuth()`.
  */
-export async function ulozOAuth(
+export async function saveOAuth(
   companyCode: string,
   provider: OAuthProviderName,
   vstup: {
@@ -336,13 +336,13 @@ export async function ulozOAuth(
 
   const tajomstvo = vstup.clientSecret?.trim()
   if (tajomstvo) {
-    if (!sifrovanieJeKDispozicii()) {
+    if (!encryptionAvailable()) {
       throw new TenantValidationError(
         "Tajomstvo sa nedá uložiť: chýba OAUTH_SECRET_ENCRYPTION_KEY. " +
         "Ukladať ho čitateľne nebudeme — je to prístup do cudzieho systému."
       )
     }
-    set[`${cesta}.clientSecretEnc`] = zasifruj(tajomstvo)
+    set[`${cesta}.clientSecretEnc`] = encrypt(tajomstvo)
   }
 
   if (provider === "microsoft") {
@@ -381,7 +381,7 @@ export async function ulozOAuth(
   // Tajomstvo sa do auditu nezapisuje — len to, že sa zmenilo. Audit, ktorý
   // zbiera heslá, je sám o sebe únik, a to s dlhšou retenciou než to, čo
   // chráni (D51).
-  await zapisAudit({
+  await writeAudit({
     companyCode: kod, predmet: "prihlasenie-nastavenie", akcia: "zmenene", aktor: actor,
     cielId: provider, cielPopis: provider,
     zmeny: {
@@ -393,7 +393,7 @@ export async function ulozOAuth(
 }
 
 /** Odstráni údaje poskytovateľa. Tlačidlo prihlásenia tým zmizne. */
-export async function zmazOAuth(
+export async function deleteOAuth(
   companyCode: string,
   provider: OAuthProviderName,
   actor: string,
@@ -404,7 +404,7 @@ export async function zmazOAuth(
     { companyCode: kod },
     { $unset: { [`oauth.${provider}`]: "" }, $set: { updatedBy: actor, updatedAt: new Date() } } as never,
   )
-  await zapisAudit({
+  await writeAudit({
     companyCode: kod, predmet: "prihlasenie-nastavenie", akcia: "zrusene", aktor: actor,
     cielId: provider, cielPopis: provider,
   })

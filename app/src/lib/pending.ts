@@ -19,7 +19,7 @@
 import { trackProgress } from "./tracks"
 import { loadDocumentFor, effectiveVersion } from "./documents"
 import { acknowledgedVersionIds } from "./acknowledgements"
-import { assignmentsForPerson, datumPreOsobu } from "./assignments"
+import { assignmentsForPerson, dateForPerson } from "./assignments"
 import { dictionary } from "./i18n"
 import type { Person } from "./persons"
 
@@ -114,7 +114,7 @@ export const acknowledgementSource: PendingSource = {
     // do nich pribudol až potom, dostal úlohu vtedy, keď prišiel (D50).
     const pridelene = new Map<string, Date>()
     for (const a of assignments) {
-      const kedy = datumPreOsobu(a, person)
+      const kedy = dateForPerson(a, person)
       const doteraz = pridelene.get(a.subject.versionId)
       if (!doteraz || kedy < doteraz) pridelene.set(a.subject.versionId, kedy)
     }

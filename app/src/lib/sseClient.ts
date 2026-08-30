@@ -13,9 +13,9 @@
  * dal otestovať nad umelým streamom — viď `tests/sseKlient.test.ts`.
  */
 
-import type { Tokeny, Naklad } from "./pricing"
+import type { TokenCounts, Cost } from "./pricing"
 
-export interface Zdroj {
+export interface AnswerSource {
   index: number
   title: string
   slug?: string
@@ -25,7 +25,7 @@ export interface Zdroj {
   accessLevel?: string
 }
 
-export interface Citacia {
+export interface Citation {
   chunkIndex: number
   citedText: string
   documentTitle?: string
@@ -33,9 +33,9 @@ export interface Citacia {
 }
 
 /** Zhrnutie, ktoré príde v poslednej udalosti. */
-export interface Dokoncenie {
-  sources: Zdroj[]
-  citations: Citacia[]
+export interface Completion {
+  sources: AnswerSource[]
+  citations: Citation[]
   model: string
   provider: string
   verifiedCitations: boolean
@@ -43,22 +43,22 @@ export interface Dokoncenie {
   casy?: Record<string, number>
   /** Prečo model prestal písať; "max_tokens" = useknuté. */
   dovodUkoncenia?: string
-  tokeny?: Tokeny
-  naklad?: Naklad
+  tokeny?: TokenCounts
+  naklad?: Cost
 }
 
-export type UdalostSSE =
+export type SseEvent =
   | { type: "token"; token: string }
-  | { type: "citation"; citation: Citacia }
-  | ({ type: "done" } & Partial<Dokoncenie>)
+  | { type: "citation"; citation: Citation }
+  | ({ type: "done" } & Partial<Completion>)
   | { type: "error"; message: string }
 
 /**
  * Rozdelí buffer na úplné SSE bloky. Vráti nájdené udalosti a zvyšok,
  * ktorý patrí na začiatok ďalšieho čítania.
  */
-export function rozdelUdalosti(buf: string): { udalosti: UdalostSSE[]; zvysok: string } {
-  const udalosti: UdalostSSE[] = []
+export function splitEvents(buf: string): { udalosti: SseEvent[]; zvysok: string } {
+  const udalosti: SseEvent[] = []
   let zvysok = buf
 
   for (;;) {
@@ -79,7 +79,7 @@ export function rozdelUdalosti(buf: string): { udalosti: UdalostSSE[]; zvysok: s
     if (!data) continue
 
     try {
-      udalosti.push(JSON.parse(data) as UdalostSSE)
+      udalosti.push(JSON.parse(data) as SseEvent)
     } catch {
       // Poškodená udalosť sa preskočí. Zhodiť celú odpoveď kvôli jednému
       // zlému bloku by bolo horšie než prísť o jeden token.
@@ -90,9 +90,9 @@ export function rozdelUdalosti(buf: string): { udalosti: UdalostSSE[]; zvysok: s
 }
 
 /** Postupne vydáva udalosti z tela odpovede. */
-export async function* citajUdalosti(
+export async function* readEvents(
   telo: ReadableStream<Uint8Array>
-): AsyncGenerator<UdalostSSE> {
+): AsyncGenerator<SseEvent> {
   const reader = telo.getReader()
   const dekoder = new TextDecoder()
   let buf = ""
@@ -106,7 +106,7 @@ export async function* citajUdalosti(
       // rozdeliť medzi dva pakety a bez toho by sa dekódoval ako otáznik.
       buf += dekoder.decode(value, { stream: true })
 
-      const { udalosti, zvysok } = rozdelUdalosti(buf)
+      const { udalosti, zvysok } = splitEvents(buf)
       buf = zvysok
       for (const u of udalosti) yield u
     }
@@ -114,7 +114,7 @@ export async function* citajUdalosti(
     // Posledný blok nemusí byť ukončený prázdnym riadkom.
     buf += dekoder.decode()
     if (buf.trim()) {
-      const { udalosti } = rozdelUdalosti(buf + "\n\n")
+      const { udalosti } = splitEvents(buf + "\n\n")
       for (const u of udalosti) yield u
     }
   } finally {
@@ -122,14 +122,14 @@ export async function* citajUdalosti(
   }
 }
 
-export interface Priebeh {
+export interface AskProgress {
   /** Postupne rastúci text odpovede. */
   text: string
-  citacie: Citacia[]
+  citacie: Citation[]
 }
 
-export interface Vysledok extends Priebeh {
-  zdroje: Zdroj[]
+export interface AskResult extends AskProgress {
+  zdroje: AnswerSource[]
   model: string
   provider: string
   overeneCitacie: boolean
@@ -147,9 +147,9 @@ export interface Vysledok extends Priebeh {
    */
   dovodUkoncenia?: string
   /** Spotreba tokenov podľa modelu — vstup, výstup a cache zvlášť. */
-  tokeny?: Tokeny
+  tokeny?: TokenCounts
   /** Odhad ceny v deň položenia otázky, aj s označením cenníka. */
-  naklad?: Naklad
+  naklad?: Cost
   chyba?: string
 }
 
@@ -158,17 +158,17 @@ export interface Vysledok extends Priebeh {
  *
  * `onZmena` sa volá po každej udalosti — komponent si ju len prekreslí.
  */
-export async function polozOtazku(
+export async function askQuestion(
   otazka: string,
-  onZmena: (p: Priebeh) => void,
+  onZmena: (p: AskProgress) => void,
   init?: { signal?: AbortSignal; url?: string }
-): Promise<Vysledok> {
+): Promise<AskResult> {
   const zaciatok = Date.now()
   let ttftMs: number | null = null
   let text = ""
-  const citacie: Citacia[] = []
+  const citacie: Citation[] = []
 
-  const hotovo = (extra: Partial<Vysledok> = {}): Vysledok => ({
+  const hotovo = (extra: Partial<AskResult> = {}): AskResult => ({
     text, citacie,
     zdroje: [], model: "", provider: "", overeneCitacie: false,
     ttftMs, celkovoMs: Date.now() - zaciatok,
@@ -188,7 +188,7 @@ export async function polozOtazku(
     return hotovo({ chyba: sprava || `Server vrátil ${odpoved.status}` })
   }
 
-  for await (const u of citajUdalosti(odpoved.body)) {
+  for await (const u of readEvents(odpoved.body)) {
     if (u.type === "token") {
       if (ttftMs === null) ttftMs = Date.now() - zaciatok
       text += u.token

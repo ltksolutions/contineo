@@ -12,7 +12,7 @@ import { peopleContext, listPeople } from "@/lib/people"
 import { brandingView } from "@/lib/tenants"
 import { tenantStyle } from "@/components/TenantHeader"
 import { formatDate } from "@/lib/i18n"
-import Oznam from "@/components/Notice"
+import Notice from "@/components/Notice"
 
 export const dynamic = "force-dynamic"
 
@@ -22,7 +22,7 @@ const STAVY = {
   inactive: { text: "vyradená", tichy: false },
 } as const
 
-export default async function Osoby({
+export default async function PeoplePage({
   searchParams,
 }: {
   searchParams: Promise<{ q?: string; sprava?: string; chyba?: string }>
@@ -46,7 +46,7 @@ export default async function Osoby({
         odstrihne od portálu, ale jej potvrdenia zostávajú platnými záznamami.
       </p>
 
-      <Oznam sprava={sprava} chyba={chyba === "1"} spat={q ? `/osoby?q=${encodeURIComponent(q)}` : "/osoby"} />
+      <Notice sprava={sprava} chyba={chyba === "1"} spat={q ? `/osoby?q=${encodeURIComponent(q)}` : "/osoby"} />
 
       <div style={{ display: "flex", gap: 10, flexWrap: "wrap", margin: "0 0 20px" }}>
         <Link className="tlacidlo" href="/osoby/nova">Pozvať osobu</Link>

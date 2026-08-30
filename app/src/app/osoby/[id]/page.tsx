@@ -9,16 +9,16 @@
 
 import { notFound, redirect } from "next/navigation"
 import Link from "next/link"
-import { peopleContext, loadPersonById, PRIDELITELNE_ROLE } from "@/lib/people"
-import { publikaVOrganizacii } from "@/lib/persons"
-import { vsetkyOddelenia, splostiStrom, cesta } from "@/lib/departments"
-import Vyber from "@/components/Select"
-import VyberStitkov from "@/components/TagSelect"
-import Oznam from "@/components/Notice"
+import { peopleContext, loadPersonById, ASSIGNABLE_ROLES } from "@/lib/people"
+import { audiencesInOrg } from "@/lib/persons"
+import { allDepartments, flattenTree, pathTo } from "@/lib/departments"
+import Select from "@/components/Select"
+import TagSelect from "@/components/TagSelect"
+import Notice from "@/components/Notice"
 import { brandingView } from "@/lib/tenants"
 import { tenantStyle } from "@/components/TenantHeader"
 import { formatDate, UI_LANGUAGES } from "@/lib/i18n"
-import { ulozOsobu, prepniStavOsoby } from "../akcie"
+import { savePersonAction, togglePersonStatusAction } from "../actions"
 
 export const dynamic = "force-dynamic"
 
@@ -42,7 +42,7 @@ const POPIS_ROLY: Record<string, string> = {
   "spravca-obsahu": "spravca-obsahu — nahráva a upravuje normy v knižnici",
 }
 
-export default async function DetailOsoby({
+export default async function PersonDetailPage({
   params,
   searchParams,
 }: {
@@ -63,13 +63,13 @@ export default async function DetailOsoby({
 
   // Zoznam sa odvodzuje z ľudí, nie z číselníka (D38) — a je to ten istý
   // zoznam, aký vidí prideľovanie noriem.
-  const publika = await publikaVOrganizacii(ctx.person.companyCode)
-  const strom = await vsetkyOddelenia(ctx.person.companyCode)
-  const stromRiadky = splostiStrom(strom)
+  const publika = await audiencesInOrg(ctx.person.companyCode)
+  const strom = await allDepartments(ctx.person.companyCode)
+  const stromRiadky = flattenTree(strom)
   // Celá cesta, nie len vlastné oddelenie: „Oddelenie sociálnych sietí" samo
   // o sebe nepovie, pod koho patrí, a práve to rozhoduje o tom, ktoré
   // pridelenia sa človeka týkajú.
-  const zaradenie = cesta(strom, o.departmentId)
+  const zaradenie = pathTo(strom, o.departmentId)
 
   const branding = brandingView(ctx.tenant)
   const jazyk = ctx.person.language
@@ -95,9 +95,9 @@ export default async function DetailOsoby({
         {o.konta.length > 0 && ` · prihlasuje sa cez ${o.konta.join(", ")}`}
       </p>
 
-      <Oznam sprava={sprava} chyba={chyba === "1"} spat={`/osoby/${encodeURIComponent(id)}`} />
+      <Notice sprava={sprava} chyba={chyba === "1"} spat={`/osoby/${encodeURIComponent(id)}`} />
 
-      <form action={ulozOsobu} className="karta" style={{ padding: 20, display: "grid", gap: 16 }}>
+      <form action={savePersonAction} className="karta" style={{ padding: 20, display: "grid", gap: 16 }}>
         <input type="hidden" name="id" value={o.id} />
 
         <label className="pole">
@@ -135,7 +135,7 @@ export default async function DetailOsoby({
 
         <div className="pole">
           <span className="pole-popis">Oddelenie</span>
-          <Vyber
+          <Select
             meno="departmentId"
             popisPola="Oddelenie"
             predvolena={o.departmentId ?? ""}
@@ -172,7 +172,7 @@ export default async function DetailOsoby({
 
         <div className="pole">
           <span className="pole-popis">Typ osoby</span>
-          <Vyber meno="personType" volby={TYPY} predvolena={o.personType} popisPola="Typ osoby" />
+          <Select meno="personType" volby={TYPY} predvolena={o.personType} popisPola="Typ osoby" />
           <span className="tichy pole-napoveda">
             Evidenčný údaj. O prístupe k obsahu nerozhoduje — ten rieši organizácia
             a úroveň dokumentu.
@@ -181,7 +181,7 @@ export default async function DetailOsoby({
 
         <div className="pole">
           <span className="pole-popis">Jazyk prostredia</span>
-          <Vyber
+          <Select
             meno="language"
             volby={UI_LANGUAGES.map(l => ({ hodnota: l, popis: JAZYKY[l] ?? l }))}
             predvolena={o.language}
@@ -194,7 +194,7 @@ export default async function DetailOsoby({
 
         <div className="pole">
           <span className="pole-popis">Skupiny</span>
-          <VyberStitkov
+          <TagSelect
             meno="groups"
             ponuka={publika.skupiny}
             vybrane={o.groups}
@@ -208,7 +208,7 @@ export default async function DetailOsoby({
 
         <div className="pole">
           <span className="pole-popis">Trasy onboardingu</span>
-          <VyberStitkov
+          <TagSelect
             meno="tracks"
             ponuka={publika.trasy}
             vybrane={o.tracks}
@@ -219,7 +219,7 @@ export default async function DetailOsoby({
         <fieldset className="hr-skupina" style={{ border: "1px solid var(--line)" }}>
           <legend className="pole-popis">Roly</legend>
           <ul className="hr-volby">
-            {PRIDELITELNE_ROLE.map(r => (
+            {ASSIGNABLE_ROLES.map(r => (
               <li key={r}>
                 <label className="hr-volba">
                   <input type="checkbox" name="roles" value={r} defaultChecked={o.roles.includes(r)} />
@@ -239,7 +239,7 @@ export default async function DetailOsoby({
         </div>
       </form>
 
-      <form action={prepniStavOsoby} className="karta" style={{ padding: 20, marginTop: 16, display: "grid", gap: 12 }}>
+      <form action={togglePersonStatusAction} className="karta" style={{ padding: 20, marginTop: 16, display: "grid", gap: 12 }}>
         <input type="hidden" name="id" value={o.id} />
         <input type="hidden" name="email" value={o.email} />
         <input type="hidden" name="status" value={vyradena ? "invited" : "inactive"} />

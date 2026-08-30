@@ -10,8 +10,8 @@
  *      podľa špecifikácie — vrátane rámca rozdeleného medzi dve čítania.
  */
 import { signRequest, sha256Hex, amzDate } from "../src/lib/providers/generation/sigv4"
-import { rozdelRamce, spoj, rozbalEvent, citajEventy } from "../src/lib/providers/generation/eventStream"
-import { jeEuRegion } from "../src/lib/providers/generation/bedrock"
+import { splitFrames, concatBuffers, unwrapEvent, readEventStream } from "../src/lib/providers/generation/eventStream"
+import { isEuRegion } from "../src/lib/providers/generation/bedrock"
 import { anthropicEvent } from "../src/lib/providers/generation/anthropic"
 
 import { t } from "./helper"
@@ -99,39 +99,39 @@ const ev = (obj: unknown) =>
 
 const delta = { type: "content_block_delta", delta: { type: "text_delta", text: "Ahoj" } }
 
-const jeden = rozdelRamce(ramec(ev(delta)))
+const jeden = splitFrames(ramec(ev(delta)))
 t("stream: jeden rámec sa prečíta", jeden.tela.length === 1, String(jeden.tela.length))
 t("stream: po jednom rámci nezostáva zvyšok", jeden.zvysok.length === 0)
 t("stream: event sa rozbalí z base64",
-  rozbalEvent(jeden.tela[0])?.delta?.text === "Ahoj",
-  JSON.stringify(rozbalEvent(jeden.tela[0])))
+  unwrapEvent(jeden.tela[0])?.delta?.text === "Ahoj",
+  JSON.stringify(unwrapEvent(jeden.tela[0])))
 
-const dva = rozdelRamce(spoj(ramec(ev(delta)), ramec(ev(delta))))
+const dva = splitFrames(concatBuffers(ramec(ev(delta)), ramec(ev(delta))))
 t("stream: dva rámce za sebou", dva.tela.length === 2, String(dva.tela.length))
 
 // Najdôležitejší test: rámec rozdelený medzi dve čítania sa NESMIE stratiť.
 const cely = ramec(ev(delta))
 const prva = cely.subarray(0, 10)
 const druha = cely.subarray(10)
-const neuplny = rozdelRamce(prva as Uint8Array<ArrayBuffer>)
+const neuplny = splitFrames(prva as Uint8Array<ArrayBuffer>)
 t("stream: neúplný rámec sa odloží, nie zahodí",
   neuplny.tela.length === 0 && neuplny.zvysok.length === 10,
   `${neuplny.tela.length} tiel, zvyšok ${neuplny.zvysok.length}`)
-const dokoncene = rozdelRamce(spoj(neuplny.zvysok, druha))
+const dokoncene = splitFrames(concatBuffers(neuplny.zvysok, druha))
 t("stream: po doplnení sa rámec prečíta celý",
-  dokoncene.tela.length === 1 && rozbalEvent(dokoncene.tela[0])?.delta?.text === "Ahoj")
+  dokoncene.tela.length === 1 && unwrapEvent(dokoncene.tela[0])?.delta?.text === "Ahoj")
 
 // Rámec s hlavičkami — telo sa musí nájsť až za nimi.
-const sHlavickami = rozdelRamce(ramec(ev(delta), new Uint8Array([1, 2, 3, 4, 5])))
+const sHlavickami = splitFrames(ramec(ev(delta), new Uint8Array([1, 2, 3, 4, 5])))
 t("stream: hlavičky sa preskočia",
-  rozbalEvent(sHlavickami.tela[0])?.delta?.text === "Ahoj")
+  unwrapEvent(sHlavickami.tela[0])?.delta?.text === "Ahoj")
 
 t("stream: nezmyselná dĺžka nespôsobí zacyklenie",
-  rozdelRamce(new Uint8Array(new ArrayBuffer(16))).tela.length === 0)
+  splitFrames(new Uint8Array(new ArrayBuffer(16))).tela.length === 0)
 t("stream: rámec bez poľa bytes sa preskočí",
-  rozbalEvent(rozdelRamce(ramec('{"metrics":{}}')).tela[0]) === null)
+  unwrapEvent(splitFrames(ramec('{"metrics":{}}')).tela[0]) === null)
 t("stream: nevalidný JSON sa preskočí",
-  rozbalEvent(rozdelRamce(ramec("nie json")).tela[0]) === null)
+  unwrapEvent(splitFrames(ramec("nie json")).tela[0]) === null)
 
 // ── celý stream cez citajEventy ──────────────────────────────────────────────
 
@@ -147,7 +147,7 @@ const citacia = {
   delta: { type: "citations_delta", citation: { document_index: 0, cited_text: "úryvok" } },
 }
 const vsetky: any[] = []
-for await (const e of citajEventy(streamZ([
+for await (const e of readEventStream(streamZ([
   cely.subarray(0, 7), cely.subarray(7), ramec(ev(citacia)),
 ]))) vsetky.push(e)
 
@@ -164,7 +164,7 @@ for (const [r, cakame] of [
   ["eu-central-1", true], ["eu-west-1", true], ["eu-north-1", true],
   ["us-east-1", false], ["ap-south-1", false], [undefined, false],
 ] as const) {
-  t(`región ${r ?? "(chýba)"} → ${cakame ? "EÚ" : "mimo EÚ"}`, jeEuRegion(r) === cakame)
+  t(`región ${r ?? "(chýba)"} → ${cakame ? "EÚ" : "mimo EÚ"}`, isEuRegion(r) === cakame)
 }
 
 }

@@ -7,8 +7,8 @@
  */
 
 import { describe, it, expect } from "vitest"
-import { celeMeno } from "../src/lib/graph"
-import { chybaNiecoZAdresara } from "../src/lib/persons"
+import { fullName } from "../src/lib/graph"
+import { missingFromDirectory } from "../src/lib/persons"
 import type { Person } from "../src/lib/persons"
 
 function osoba(z: Partial<Person> = {}): Person {
@@ -32,40 +32,40 @@ function osoba(z: Partial<Person> = {}): Person {
 
 describe("cele meno z Graphu", () => {
   it("sklada sa z mena a priezviska", () => {
-    expect(celeMeno({ givenName: "Jan", surname: "Letko" })).toBe("Jan Letko")
+    expect(fullName({ givenName: "Jan", surname: "Letko" })).toBe("Jan Letko")
   })
 
   it("displayName je az druha volba", () => {
     // V niektorych adresaroch je displayName v tvare "Priezvisko, Meno (utvar)"
     // a to sa v zozname osob cita zle.
-    expect(celeMeno({ givenName: "Jan", surname: "Letko", displayName: "Letko, Jan (LEG)" }))
+    expect(fullName({ givenName: "Jan", surname: "Letko", displayName: "Letko, Jan (LEG)" }))
       .toBe("Jan Letko")
-    expect(celeMeno({ displayName: "Letko, Jan (LEG)" })).toBe("Letko, Jan (LEG)")
+    expect(fullName({ displayName: "Letko, Jan (LEG)" })).toBe("Letko, Jan (LEG)")
   })
 
   it("bez udajov nevrati prazdny retazec", () => {
-    expect(celeMeno({})).toBeUndefined()
+    expect(fullName({})).toBeUndefined()
   })
 })
 
 describe("oplati sa ist do Graphu", () => {
   it("kompletna osoba uz nic nepotrebuje", () => {
-    expect(chybaNiecoZAdresara(osoba())).toBe(false)
+    expect(missingFromDirectory(osoba())).toBe(false)
   })
 
   it("chybajuce meno, utvar alebo fotka staci na jedno volanie", () => {
-    expect(chybaNiecoZAdresara(osoba({ givenName: undefined }))).toBe(true)
-    expect(chybaNiecoZAdresara(osoba({ department: undefined }))).toBe(true)
-    expect(chybaNiecoZAdresara(osoba({ photoVersion: undefined }))).toBe(true)
+    expect(missingFromDirectory(osoba({ givenName: undefined }))).toBe(true)
+    expect(missingFromDirectory(osoba({ department: undefined }))).toBe(true)
+    expect(missingFromDirectory(osoba({ photoVersion: undefined }))).toBe(true)
   })
 
   it("meno rovne adrese sa berie ako chybajuce", () => {
     // Tak vyzera osoba zalozena automaticky, ked meno nebolo odkial vziat.
-    expect(chybaNiecoZAdresara(osoba({ fullName: "jan.letko@futbalsfz.sk" }))).toBe(true)
-    expect(chybaNiecoZAdresara(osoba({ fullName: "Jan.Letko@futbalsfz.sk" }))).toBe(true)
+    expect(missingFromDirectory(osoba({ fullName: "jan.letko@futbalsfz.sk" }))).toBe(true)
+    expect(missingFromDirectory(osoba({ fullName: "Jan.Letko@futbalsfz.sk" }))).toBe(true)
   })
 
   it("neznama osoba sa berie ako chybajuca", () => {
-    expect(chybaNiecoZAdresara(null)).toBe(true)
+    expect(missingFromDirectory(null)).toBe(true)
   })
 })

@@ -5,7 +5,7 @@
  * a internetom. Chyba tu je drahšia než ktorákoľvek iná v tomto projekte,
  * preto sú testy podrobnejšie, než by sa pri troch funkciách čakalo.
  */
-import { povoleneEmaily, jePovoleny } from "../src/lib/auth"
+import { allowedEmails, isAllowed } from "../src/lib/auth"
 import { signInEmail } from "../src/lib/ecomail"
 
 import { t } from "./helper"
@@ -13,51 +13,51 @@ import { t } from "./helper"
 // ── rozobratie zoznamu ───────────────────────────────────────────────────────
 
 t("čiarka oddeľuje adresy",
-  povoleneEmaily("a@sfz.sk,b@sfz.sk").length === 2)
+  allowedEmails("a@sfz.sk,b@sfz.sk").length === 2)
 t("bodkočiarka tiež",
-  povoleneEmaily("a@sfz.sk;b@sfz.sk").length === 2)
+  allowedEmails("a@sfz.sk;b@sfz.sk").length === 2)
 t("nový riadok tiež — pri vkladaní do Vercelu sa to stáva",
-  povoleneEmaily("a@sfz.sk\nb@sfz.sk").length === 2)
+  allowedEmails("a@sfz.sk\nb@sfz.sk").length === 2)
 t("medzery okolo adries sa orežú",
-  povoleneEmaily("  a@sfz.sk , b@sfz.sk ")[0] === "a@sfz.sk")
+  allowedEmails("  a@sfz.sk , b@sfz.sk ")[0] === "a@sfz.sk")
 t("veľké písmená sa zjednotia",
-  povoleneEmaily("Jan.Letko@FutbalSFZ.sk")[0] === "jan.letko@futbalsfz.sk")
+  allowedEmails("Jan.Letko@FutbalSFZ.sk")[0] === "jan.letko@futbalsfz.sk")
 t("čo nie je adresa, sa zahodí",
-  povoleneEmaily("a@sfz.sk, poznamka, b@sfz.sk").length === 2)
-t("prázdny zoznam dá prázdne pole", povoleneEmaily("").length === 0)
+  allowedEmails("a@sfz.sk, poznamka, b@sfz.sk").length === 2)
+t("prázdny zoznam dá prázdne pole", allowedEmails("").length === 0)
 
 // ── kto prejde ───────────────────────────────────────────────────────────────
 
-const ZOZNAM = povoleneEmaily("jan.letko@futbalsfz.sk, pravnik@futbalsfz.sk")
+const ZOZNAM = allowedEmails("jan.letko@futbalsfz.sk, pravnik@futbalsfz.sk")
 
-t("adresa zo zoznamu prejde", jePovoleny("jan.letko@futbalsfz.sk", ZOZNAM))
-t("nezáleží na veľkosti písmen", jePovoleny("Jan.Letko@FutbalSFZ.sk", ZOZNAM))
-t("medzery okolo nevadia", jePovoleny("  jan.letko@futbalsfz.sk  ", ZOZNAM))
-t("cudzia adresa neprejde", !jePovoleny("nikto@inde.sk", ZOZNAM))
+t("adresa zo zoznamu prejde", isAllowed("jan.letko@futbalsfz.sk", ZOZNAM))
+t("nezáleží na veľkosti písmen", isAllowed("Jan.Letko@FutbalSFZ.sk", ZOZNAM))
+t("medzery okolo nevadia", isAllowed("  jan.letko@futbalsfz.sk  ", ZOZNAM))
+t("cudzia adresa neprejde", !isAllowed("nikto@inde.sk", ZOZNAM))
 
 // Toto je to najdôležitejšie pravidlo v celom súbore.
-t("PRÁZDNY ZOZNAM NEPUSTÍ NIKOHO", !jePovoleny("jan.letko@futbalsfz.sk", []))
-t("prázdny zoznam nepustí ani prázdnu adresu", !jePovoleny("", []))
+t("PRÁZDNY ZOZNAM NEPUSTÍ NIKOHO", !isAllowed("jan.letko@futbalsfz.sk", []))
+t("prázdny zoznam nepustí ani prázdnu adresu", !isAllowed("", []))
 
 // Doménové pravidlo — keď má prístup dostať celé oddelenie.
-const DOMENA = povoleneEmaily("@futbalsfz.sk")
+const DOMENA = allowedEmails("@futbalsfz.sk")
 t("zápis @domena pustí adresu z tej domény",
-  jePovoleny("ktokolvek@futbalsfz.sk", DOMENA))
+  isAllowed("ktokolvek@futbalsfz.sk", DOMENA))
 t("zápis @domena nepustí inú doménu",
-  !jePovoleny("nikto@inde.sk", DOMENA))
+  !isAllowed("nikto@inde.sk", DOMENA))
 
 // Pasce, na ktorých sa dá naivná kontrola domény zlomiť.
 t("podvrhnutá doména na konci neprejde",
-  !jePovoleny("utocnik@zlefutbalsfz.sk", povoleneEmaily("@futbalsfz.sk")) ||
+  !isAllowed("utocnik@zlefutbalsfz.sk", allowedEmails("@futbalsfz.sk")) ||
   // `endsWith("@futbalsfz.sk")` toto správne odmietne, lebo zavináč
   // je súčasťou vzoru — test to overuje explicitne.
   false)
 t("doména ako podreťazec inde v adrese neprejde",
-  !jePovoleny("utocnik@futbalsfz.sk.zle.sk", povoleneEmaily("@futbalsfz.sk")))
+  !isAllowed("utocnik@futbalsfz.sk.zle.sk", allowedEmails("@futbalsfz.sk")))
 t("čiastočná zhoda mena neprejde",
-  !jePovoleny("jan.letko@futbalsfz.sk.utok.sk", ZOZNAM))
+  !isAllowed("jan.letko@futbalsfz.sk.utok.sk", ZOZNAM))
 t("prefix adresy neprejde",
-  !jePovoleny("jan.letk@futbalsfz.sk", ZOZNAM))
+  !isAllowed("jan.letk@futbalsfz.sk", ZOZNAM))
 
 // ── obsah e-mailu ────────────────────────────────────────────────────────────
 

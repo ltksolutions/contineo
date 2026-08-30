@@ -19,19 +19,19 @@
 
 import { getCollection } from "./mongodb"
 import { currentTenant, currentPerson } from "./session"
-import { zapisAudit, rozdiel } from "./audit"
-import { OBSAH_ROLE } from "./library"
-import { PERSONS_COLLECTION, normalizeEmail, normalizeKeys, novaHistoriaUtvarov, novaHistoriaSkupin } from "./persons"
+import { writeAudit, diff } from "./audit"
+import { CONTENT_ROLE } from "./library"
+import { PERSONS_COLLECTION, normalizeEmail, normalizeKeys, newDepartmentHistory, newGroupHistory } from "./persons"
 import { normalizeLanguage } from "./i18n"
 import { HR_ROLE } from "./hr"
 import type { Person, PersonStatus, PersonType } from "./persons"
 import type { Tenant } from "./tenants"
-import { vsetkyOddelenia, cestaIds, cesta } from "./departments"
+import { allDepartments, pathIdsTo, pathTo } from "./departments"
 
 export const PEOPLE_ROLE = "people-admin"
 
 /** Roly, ktoré sa dajú prideliť z tejto obrazovky. */
-export const PRIDELITELNE_ROLE = [HR_ROLE, PEOPLE_ROLE, OBSAH_ROLE] as const
+export const ASSIGNABLE_ROLES = [HR_ROLE, PEOPLE_ROLE, CONTENT_ROLE] as const
 
 export function isPeopleAdmin(person: Person | null): boolean {
   return Boolean(person?.roles?.includes(PEOPLE_ROLE))
@@ -251,14 +251,14 @@ export async function savePerson(
   // prečo práve jemu úloha nepribudla (`matchesAudience`).
   if (zmena.departmentId !== undefined) {
     const cielId = zmena.departmentId || null
-    const strom = await vsetkyOddelenia(companyCode)
+    const strom = await allDepartments(companyCode)
     if (cielId && !strom.some(o => o.id === cielId)) {
       throw new PersonValidationError("Také oddelenie neexistuje.")
     }
-    const novaCesta = cestaIds(strom, cielId)
+    const novaCesta = pathIdsTo(strom, cielId)
     set.departmentId = cielId
     set.departmentPath = novaCesta
-    set.departmentHistory = novaHistoriaUtvarov(
+    set.departmentHistory = newDepartmentHistory(
       existuje.departmentHistory, cielId, novaCesta, new Date(),
     )
   }
@@ -274,12 +274,12 @@ export async function savePerson(
   if (zmena.groups !== undefined) {
     const skupiny = normalizeKeys(zmena.groups)
     set.groups = skupiny
-    set.groupHistory = novaHistoriaSkupin(existuje.groupHistory, skupiny, new Date())
+    set.groupHistory = newGroupHistory(existuje.groupHistory, skupiny, new Date())
   }
   if (zmena.roles !== undefined) {
     // Prideliť sa dajú len roly z tohto zoznamu. `platform-admin` medzi nimi
     // nie je a nikdy nebude: patrí tenantovi dodávateľa a má vlastnú cestu.
-    const povolene = zmena.roles.filter(r => (PRIDELITELNE_ROLE as readonly string[]).includes(r))
+    const povolene = zmena.roles.filter(r => (ASSIGNABLE_ROLES as readonly string[]).includes(r))
     set.roles = [...new Set(povolene)]
   }
 
@@ -296,10 +296,10 @@ export async function savePerson(
   const pred: Record<string, unknown> = {}
   for (const k of Object.keys(zaujimave)) pred[k] = (existuje as Record<string, unknown>)[k]
 
-  await zapisAudit({
+  await writeAudit({
     companyCode, predmet: "osoba", akcia: "zmenene", aktor: actor,
     cielId: id, cielPopis: existuje.fullName,
-    zmeny: rozdiel(pred, zaujimave),
+    zmeny: diff(pred, zaujimave),
   })
 }
 
@@ -346,7 +346,7 @@ export async function invitePerson(
     createdAt: now,
   }
   await col.insertOne(osoba as never)
-  await zapisAudit({
+  await writeAudit({
     companyCode, predmet: "osoba", akcia: "zalozene", aktor: actor,
     cielId: osoba.id, cielPopis: osoba.fullName,
     zmeny: { email: { na: osoba.email } },
@@ -377,7 +377,7 @@ export async function setPersonStatus(
     { companyCode, id },
     { $set: { status, updatedBy: actor, updatedAt: new Date() } } as never,
   )
-  await zapisAudit({
+  await writeAudit({
     companyCode, predmet: "osoba",
     akcia: status === "inactive" ? "vyradene" : "vratene",
     aktor: actor, cielId: id, cielPopis: existuje.fullName,

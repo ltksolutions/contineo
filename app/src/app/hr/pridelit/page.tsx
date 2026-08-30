@@ -21,13 +21,13 @@
 
 import { notFound, redirect } from "next/navigation"
 import Link from "next/link"
-import { hrContext, pridelitelneDokumenty } from "@/lib/hr"
-import { publikaVOrganizacii } from "@/lib/persons"
-import { vsetkyOddelenia, splostiStrom, pocty } from "@/lib/departments"
+import { hrContext, assignableDocuments } from "@/lib/hr"
+import { audiencesInOrg } from "@/lib/persons"
+import { allDepartments, flattenTree, counts } from "@/lib/departments"
 import { brandingView } from "@/lib/tenants"
 import { tenantStyle } from "@/components/TenantHeader"
 import { formatDate } from "@/lib/i18n"
-import { pridelit } from "../akcie"
+import { assignAction } from "../actions"
 
 export const dynamic = "force-dynamic"
 
@@ -37,7 +37,7 @@ function akoPole(v: string | string[] | undefined): string[] {
   return Array.isArray(v) ? v : [v]
 }
 
-export default async function Pridelit({
+export default async function AssignPage({
   searchParams,
 }: {
   searchParams: Promise<{
@@ -57,12 +57,12 @@ export default async function Pridelit({
 
   const q = await searchParams
   const [dokumenty, publika, strom, poctyUtvarov] = await Promise.all([
-    pridelitelneDokumenty(ctx.person.companyCode),
-    publikaVOrganizacii(ctx.person.companyCode),
-    vsetkyOddelenia(ctx.person.companyCode),
-    pocty(ctx.person.companyCode),
+    assignableDocuments(ctx.person.companyCode),
+    audiencesInOrg(ctx.person.companyCode),
+    allDepartments(ctx.person.companyCode),
+    counts(ctx.person.companyCode),
   ])
-  const stromRiadky = splostiStrom(strom)
+  const stromRiadky = flattenTree(strom)
   const branding = brandingView(ctx.tenant)
   const jazyk = ctx.person.language
 
@@ -96,7 +96,7 @@ export default async function Pridelit({
           Znenie bez dátumu platnosti sa nedá ani potvrdiť (D6).
         </p>
       ) : (
-        <form action={pridelit} style={{ display: "grid", gap: 22 }}>
+        <form action={assignAction} style={{ display: "grid", gap: 22 }}>
           <fieldset className="karta hr-skupina">
             <legend className="pole-popis">Ktoré normy</legend>
             <ul className="hr-volby">

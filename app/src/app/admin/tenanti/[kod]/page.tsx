@@ -8,19 +8,19 @@
  */
 
 import { notFound, redirect } from "next/navigation"
-import { auditZaznamy } from "@/lib/audit"
-import AuditVypis from "@/components/AuditList"
+import { auditRecords } from "@/lib/audit"
+import AuditList from "@/components/AuditList"
 import Link from "next/link"
 import { platformContext } from "@/lib/admin"
 import { allTenants } from "@/lib/tenantAdmin"
-import { stavDomeny, pokynCname } from "@/lib/vercel"
+import { domainStatus, cnameInstruction } from "@/lib/vercel"
 import { UI_LANGUAGES } from "@/lib/i18n"
-import Vyber from "@/components/Select"
-import VyberFarby from "@/components/ColorSelect"
-import Oznam from "@/components/Notice"
-import { stavPoskytovatela, NAZOV_POSKYTOVATELA, ID_POSKYTOVATELA } from "@/lib/oauth"
-import { ulozTenant, prepniStav, poslatPokyny, ulozPrihlasenie, zmazPrihlasenie } from "../../akcie"
-import type { StavDomeny } from "@/lib/vercel"
+import Select from "@/components/Select"
+import ColorSelect from "@/components/ColorSelect"
+import Notice from "@/components/Notice"
+import { providerStatus, PROVIDER_LABEL, PROVIDER_ID } from "@/lib/oauth"
+import { saveTenantAction, toggleTenantStatusAction, sendInstructionsAction, saveSignInAction, deleteSignInAction } from "../../actions"
+import type { DomainStatus } from "@/lib/vercel"
 import type { OAuthProviderName } from "@/lib/oauth"
 import type { Tenant } from "@/lib/tenants"
 
@@ -40,11 +40,11 @@ function Poskytovatel({
   /** Prvá doména tenanta — do nej sa skladá adresa návratu. */
   domena?: string
 }) {
-  const nazov = NAZOV_POSKYTOVATELA[provider]
-  const s = stavPoskytovatela(tenant, provider)
+  const nazov = PROVIDER_LABEL[provider]
+  const s = providerStatus(tenant, provider)
   const navrat = domena
-    ? `https://${domena}/api/auth/callback/${ID_POSKYTOVATELA[provider]}`
-    : `https://<doména>/api/auth/callback/${ID_POSKYTOVATELA[provider]}`
+    ? `https://${domena}/api/auth/callback/${PROVIDER_ID[provider]}`
+    : `https://<doména>/api/auth/callback/${PROVIDER_ID[provider]}`
 
   const popisStavu = {
     nastavene: "nastavené — vlastná aplikácia zákazníka",
@@ -75,7 +75,7 @@ function Poskytovatel({
         <code style={{ fontSize: 13.5, overflowWrap: "anywhere" }}>{navrat}</code>
       </div>
 
-      <form action={ulozPrihlasenie} style={{ display: "grid", gap: 14 }}>
+      <form action={saveSignInAction} style={{ display: "grid", gap: 14 }}>
         <input type="hidden" name="companyCode" value={tenant.companyCode} />
         <input type="hidden" name="provider" value={provider} />
 
@@ -117,7 +117,7 @@ function Poskytovatel({
       </form>
 
       {s.zdroj === "tenant" && (
-        <form action={zmazPrihlasenie} style={{ display: "grid", gap: 10, borderTop: "1px solid var(--line)", paddingTop: 14 }}>
+        <form action={deleteSignInAction} style={{ display: "grid", gap: 10, borderTop: "1px solid var(--line)", paddingTop: 14 }}>
           <input type="hidden" name="companyCode" value={tenant.companyCode} />
           <input type="hidden" name="provider" value={provider} />
           <p className="tichy" style={{ margin: 0, fontSize: 14 }}>
@@ -156,7 +156,7 @@ function Pole({
   )
 }
 
-function RiadokDomeny({ s }: { s: StavDomeny }) {
+function RiadokDomeny({ s }: { s: DomainStatus }) {
   if (s.preskocena) {
     return <li className="tichy">{s.host} — netreba nič ({s.preskocena})</li>
   }
@@ -171,7 +171,7 @@ function RiadokDomeny({ s }: { s: StavDomeny }) {
     return (
       <li>
         <strong>{s.host}</strong> — čaká na zákazníka:{" "}
-        <code>{pokynCname(s.host, s.cname)}</code>
+        <code>{cnameInstruction(s.host, s.cname)}</code>
         {s.konflikty.length > 0 && (
           <div style={{ color: "var(--bad-fg)", fontSize: 13 }}>
             v zóne kolidujú: {s.konflikty.join(", ")}
@@ -188,7 +188,7 @@ function RiadokDomeny({ s }: { s: StavDomeny }) {
   )
 }
 
-export default async function DetailTenanta({
+export default async function TenantDetailPage({
   params,
   searchParams,
 }: {
@@ -208,11 +208,11 @@ export default async function DetailTenanta({
 
   // Stav domén sa číta naživo pri každom zobrazení (D27) — uložený by klamal
   // presne vtedy, keď si zákazník DNS prestaví.
-  const domeny = await Promise.all(tenant.hostnames.map(stavDomeny))
+  const domeny = await Promise.all(tenant.hostnames.map(domainStatus))
   // Správca platformy vidí audit každej organizácie — kvôli podpore. Je to
   // ten istý výpis, aký vidí zákazník u seba (D51), len sem sa dostane bez
   // prepínania domén.
-  const zaznamy = await auditZaznamy(tenant.companyCode, { limit: 50 })
+  const zaznamy = await auditRecords(tenant.companyCode, { limit: 50 })
   const cakajuce = domeny.filter(d => !d.preskocena && !d.nastaveneCez)
   const zapnuty = tenant.status === "active"
 
@@ -232,7 +232,7 @@ export default async function DetailTenanta({
         {!zapnuty && " · vypnutá"}
       </p>
 
-      <Oznam sprava={sprava} chyba={chyba === "1"} spat={`/admin/tenanti/${encodeURIComponent(kod)}`} />
+      <Notice sprava={sprava} chyba={chyba === "1"} spat={`/admin/tenanti/${encodeURIComponent(kod)}`} />
 
       <section className="karta" style={{ padding: "18px 20px", marginBottom: 16 }}>
         <h2 style={{ fontSize: 17, margin: "0 0 12px" }}>Domény</h2>
@@ -241,7 +241,7 @@ export default async function DetailTenanta({
         </ul>
 
         {cakajuce.length > 0 && (
-          <form action={poslatPokyny} className="admin-podforma">
+          <form action={sendInstructionsAction} className="admin-podforma">
             <input type="hidden" name="companyCode" value={tenant.companyCode} />
             <input type="hidden" name="hostnames" value={tenant.hostnames.join(" ")} />
             <Pole
@@ -256,7 +256,7 @@ export default async function DetailTenanta({
         )}
       </section>
 
-      <form action={ulozTenant} className="karta admin-forma" encType="multipart/form-data">
+      <form action={saveTenantAction} className="karta admin-forma" encType="multipart/form-data">
         <input type="hidden" name="companyCode" value={tenant.companyCode} />
         <h2 style={{ fontSize: 17, margin: 0 }}>Značka a jazyky</h2>
 
@@ -280,7 +280,7 @@ export default async function DetailTenanta({
         </div>
         <div className="pole">
           <span className="pole-popis">Farba</span>
-          <VyberFarby meno="accentColor" hodnota={tenant.branding.accentColor} />
+          <ColorSelect meno="accentColor" hodnota={tenant.branding.accentColor} />
           <span className="tichy pole-napoveda">
             Nesie ju tlačidlo s bielym textom, preto sú odtiene tmavšie, než by
             sa chcelo — svetlejší tón znamená nečitateľné tlačidlo u zákazníka.
@@ -313,7 +313,7 @@ export default async function DetailTenanta({
 
         <div className="pole">
           <span className="pole-popis">Predvolený jazyk</span>
-          <Vyber
+          <Select
             meno="defaultLanguage"
             volby={UI_LANGUAGES.map(j => ({ hodnota: j, popis: JAZYKY[j] ?? j }))}
             predvolena={tenant.defaultLanguage}
@@ -366,7 +366,7 @@ export default async function DetailTenanta({
         <Poskytovatel tenant={tenant} provider="google" domena={tenant.hostnames[0]} />
       </div>
 
-      <form action={prepniStav} className="karta admin-forma" style={{ marginTop: 16 }}>
+      <form action={toggleTenantStatusAction} className="karta admin-forma" style={{ marginTop: 16 }}>
         <input type="hidden" name="companyCode" value={tenant.companyCode} />
         <input type="hidden" name="status" value={zapnuty ? "disabled" : "active"} />
         <h2 style={{ fontSize: 17, margin: 0 }}>
@@ -396,7 +396,7 @@ export default async function DetailTenanta({
           Posledných 50 správcovských zmien tejto organizácie. Celý výpis
           s hľadaním má zákazník na svojej doméne v nastavení organizácie.
         </p>
-        <AuditVypis zaznamy={zaznamy} />
+        <AuditList zaznamy={zaznamy} />
       </section>
     </div>
   )

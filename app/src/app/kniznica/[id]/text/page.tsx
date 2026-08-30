@@ -13,27 +13,27 @@
 
 import { notFound, redirect } from "next/navigation"
 import Link from "next/link"
-import { kniznicaContext } from "@/lib/library"
-import { detailKniznice } from "@/lib/libraryRead"
+import { libraryContext } from "@/lib/library"
+import { libraryDetail } from "@/lib/libraryRead"
 import { getCollection } from "@/lib/mongodb"
 import { DOCUMENTS_COLLECTION } from "@/lib/documents"
 import { brandingView } from "@/lib/tenants"
 import { tenantStyle } from "@/components/TenantHeader"
 import { formatDate } from "@/lib/i18n"
-import Oznam from "@/components/Notice"
-import EditorTextu from "@/components/TextEditor"
-import { ulozText, poslatNaModel, rozhodniONavrhu } from "../../akcie"
+import Notice from "@/components/Notice"
+import TextEditor from "@/components/TextEditor"
+import { saveTextAction, sendToModelAction, decideOnDraftAction } from "../../actions"
 
 export const dynamic = "force-dynamic"
 
-export default async function StranaEditora({
+export default async function EditorPage({
   params,
   searchParams,
 }: {
   params: Promise<{ id: string }>
   searchParams: Promise<{ sprava?: string; chyba?: string }>
 }) {
-  const ctx = await kniznicaContext()
+  const ctx = await libraryContext()
   if (ctx.state !== "ready") {
     if (ctx.state === "not-signed-in") redirect("/prihlasenie")
     notFound()
@@ -42,7 +42,7 @@ export default async function StranaEditora({
   const { id } = await params
   const { sprava, chyba } = await searchParams
   const documentId = decodeURIComponent(id)
-  const d = await detailKniznice(ctx.tenant.companyCode, documentId)
+  const d = await libraryDetail(ctx.tenant.companyCode, documentId)
   if (!d) notFound()
 
   // Návrh sa nečíta cez `detailKniznice` — je to dočasná vec editora, nie
@@ -63,7 +63,7 @@ export default async function StranaEditora({
 
   return (
     <div className="obal" style={{ padding: "24px 20px 80px", maxWidth: 1200, ...tenantStyle(branding) }}>
-      <Oznam sprava={sprava} chyba={chyba === "1"} spat={`/kniznica/${encodeURIComponent(documentId)}/text`} />
+      <Notice sprava={sprava} chyba={chyba === "1"} spat={`/kniznica/${encodeURIComponent(documentId)}/text`} />
 
       <p style={{ margin: "0 0 10px" }}>
         <Link className="tichy" href={`/kniznica/${encodeURIComponent(documentId)}`} style={{ fontSize: 14 }}>
@@ -96,7 +96,7 @@ export default async function StranaEditora({
             konceptom; pôvodný text sa tým prepíše.
           </p>
           <textarea className="pole-vstup editor-text" readOnly rows={14} value={navrh.text} />
-          <form action={rozhodniONavrhu} style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+          <form action={decideOnDraftAction} style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
             <input type="hidden" name="documentId" value={documentId} />
             <button className="tlacidlo" type="submit" name="volba" value="prijat">Použiť ako koncept</button>
             <button className="tlacidlo tlacidlo--tiche" type="submit" name="volba" value="zahodit">Zahodiť</button>
@@ -136,9 +136,9 @@ export default async function StranaEditora({
               {" "}— prepínač <em>Markdown / WYSIWYG</em> je dole v editore
             </span>
           </h2>
-          <form action={ulozText} style={{ display: "grid", gap: 10 }}>
+          <form action={saveTextAction} style={{ display: "grid", gap: 10 }}>
             <input type="hidden" name="documentId" value={documentId} />
-            <EditorTextu meno="markdown" pociatocny={d.textNaUpravu} />
+            <TextEditor meno="markdown" pociatocny={d.textNaUpravu} />
             <div><button className="tlacidlo" type="submit">Uložiť text</button></div>
           </form>
         </section>
@@ -151,7 +151,7 @@ export default async function StranaEditora({
           nie doňho: model má zakázané meniť znenie, ale tichú zmenu v predpise by
           nikto nezachytil, keby sa zapisovala rovno.
         </p>
-        <form action={poslatNaModel} style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+        <form action={sendToModelAction} style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
           <input type="hidden" name="documentId" value={documentId} />
           <button className="tlacidlo tlacidlo--tiche" type="submit" name="rezim" value="precistit">
             Prečistiť členenie

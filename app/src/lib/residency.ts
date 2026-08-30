@@ -13,7 +13,7 @@
  * kde počíta, sa v prísnom režime NEPOVOLÍ — nevedomosť nie je súhlas.
  */
 
-import { jeEuRegion } from "./providers/generation/bedrock"
+import { isEuRegion } from "./providers/generation/bedrock"
 import type {
   TenantProfile, EmbeddingConfig, RerankConfig, GenerationConfig, Tier,
 } from "./providers/types"
@@ -26,7 +26,7 @@ import type {
  *   mimo-eu  — cudzia služba mimo EÚ (doložené)
  *   neznama  — dodávateľ lokalitu neuvádza a nemáme ju potvrdenú
  */
-export type Lokalita = "vlastna" | "eu" | "mimo-eu" | "neznama"
+export type DataLocation = "vlastna" | "eu" | "mimo-eu" | "neznama"
 
 /**
  * Úrovne ochrany. Poradie je od najvoľnejšej po najprísnejšiu.
@@ -41,7 +41,7 @@ export type Lokalita = "vlastna" | "eu" | "mimo-eu" | "neznama"
 export type DataResidency = "global" | "eu-data" | "eu-full" | "on-prem" | "air-gap"
 
 /** Ktoré lokality daná rezidencia pripúšťa. */
-const POVOLENE: Record<DataResidency, Lokalita[]> = {
+const POVOLENE: Record<DataResidency, DataLocation[]> = {
   "global":  ["vlastna", "eu", "mimo-eu", "neznama"],
   "eu-data": ["vlastna", "eu", "mimo-eu", "neznama"],
   "eu-full": ["vlastna", "eu"],
@@ -50,7 +50,7 @@ const POVOLENE: Record<DataResidency, Lokalita[]> = {
 }
 
 /** Ľudský popis do chybovej hlášky. */
-export const POPIS_REZIDENCIE: Record<DataResidency, string> = {
+export const RESIDENCY_LABEL: Record<DataResidency, string> = {
   "global":  "bez obmedzenia",
   "eu-data": "dáta v pokoji v EÚ, spracovanie môže byť mimo EÚ",
   "eu-full": "žiadny text neopustí EÚ",
@@ -63,7 +63,7 @@ export const POPIS_REZIDENCIE: Record<DataResidency, string> = {
 // Zdroje sú uvedené zámerne — pri audite sa treba vedieť oprieť o dôkaz,
 // nie o dojem. Čokoľvek neoverené patrí do "neznama", nie do "eu".
 
-const LOKALITA_EMBEDDING: Record<EmbeddingConfig["kind"], Lokalita> = {
+const LOKALITA_EMBEDDING: Record<EmbeddingConfig["kind"], DataLocation> = {
   // O5 UZAVRETÉ 2026-07-26. Zoznam subprocesorov MongoDB uvádza:
   //   "Google LLC — Model hosting services for the optional embedding and
   //    reranking model services included in the Cloud Services — United States"
@@ -73,7 +73,7 @@ const LOKALITA_EMBEDDING: Record<EmbeddingConfig["kind"], Lokalita> = {
   "infinity":   "vlastna",
 }
 
-const LOKALITA_RERANK: Record<RerankConfig["kind"], Lokalita> = {
+const LOKALITA_RERANK: Record<RerankConfig["kind"], DataLocation> = {
   // Atlas to píše priamo v Project Settings: "The model inference platform
   // runs on MongoDB's infrastructure in GCP cloud in a US region."
   "atlas-stage": "mimo-eu",
@@ -82,7 +82,7 @@ const LOKALITA_RERANK: Record<RerankConfig["kind"], Lokalita> = {
   "none":        "vlastna",
 }
 
-const LOKALITA_GENERATION: Record<GenerationConfig["kind"], Lokalita> = {
+const LOKALITA_GENERATION: Record<GenerationConfig["kind"], DataLocation> = {
   // O6 UZAVRETÉ 2026-07-26. Priame Anthropic API spracúva v americkej
   // infraštruktúre. Cesta do EÚ vedie cez AWS Bedrock (eu-central-1,
   // eu-west-1, eu-west-3, eu-north-1) alebo Google Vertex AI v EU regiónoch
@@ -122,11 +122,11 @@ function jeVlastnaAdresa(url?: string): boolean | "neznama" {
  * vlastná infraštruktúra; čokoľvek verejné je neznáme, kým to niekto
  * nepotvrdí.
  */
-function lokalitaGenerovania(g: GenerationConfig): Lokalita {
+function lokalitaGenerovania(g: GenerationConfig): DataLocation {
   // Bedrock v EU regióne spracúva v EÚ — to je celý dôvod jeho existencie.
   // Región mimo EÚ ale robí presne to isté, čo priame Anthropic API,
   // takže sa nesmie prepustiť len preto, že „ideme cez AWS".
-  if (g.kind === "bedrock") return jeEuRegion(g.region) ? "eu" : "mimo-eu"
+  if (g.kind === "bedrock") return isEuRegion(g.region) ? "eu" : "mimo-eu"
   if (g.kind !== "openai") return LOKALITA_GENERATION[g.kind]
   return jeVlastnaAdresa(g.url) === true ? "vlastna" : "neznama"
 }
@@ -149,16 +149,16 @@ function lokalitaGenerovania(g: GenerationConfig): Lokalita {
  *                ako text ostatných zákazníkov dodávateľa
  *   neznama    — nevieme; rovnako ako pri lokalite sa berie ako to horšie
  */
-export type Izolacia = "dedikovana" | "zdielana" | "neznama"
+export type Isolation = "dedikovana" | "zdielana" | "neznama"
 
-const IZOLACIA_EMBEDDING: Record<EmbeddingConfig["kind"], Izolacia> = {
+const IZOLACIA_EMBEDDING: Record<EmbeddingConfig["kind"], Isolation> = {
   // Automated Embedding je služba MongoDB, nie náš proces.
   "atlas-auto": "zdielana",
   "tei":        "dedikovana",
   "infinity":   "dedikovana",
 }
 
-const IZOLACIA_RERANK: Record<RerankConfig["kind"], Izolacia> = {
+const IZOLACIA_RERANK: Record<RerankConfig["kind"], Isolation> = {
   // $rerank počíta na inferenčnej platforme MongoDB, spoločnej pre všetkých.
   "atlas-stage": "zdielana",
   "tei":         "dedikovana",
@@ -167,7 +167,7 @@ const IZOLACIA_RERANK: Record<RerankConfig["kind"], Izolacia> = {
   "none":        "dedikovana",
 }
 
-const IZOLACIA_GENERATION: Record<GenerationConfig["kind"], Izolacia> = {
+const IZOLACIA_GENERATION: Record<GenerationConfig["kind"], Isolation> = {
   "anthropic": "zdielana",
   // Bedrock je vyhradený účet, ale model beží na infraštruktúre AWS
   // spoločnej pre zákazníkov. Vyhradený účet nie je vyhradený hardvér.
@@ -177,13 +177,13 @@ const IZOLACIA_GENERATION: Record<GenerationConfig["kind"], Izolacia> = {
 }
 
 /** Ktoré úrovne zdieľania daný tier pripúšťa. */
-const POVOLENA_IZOLACIA: Record<Tier, Izolacia[]> = {
+const POVOLENA_IZOLACIA: Record<Tier, Isolation[]> = {
   "T1": ["dedikovana", "zdielana", "neznama"],
   "T2": ["dedikovana"],
   "T3": ["dedikovana"],
 }
 
-export const POPIS_TIERU: Record<Tier, string> = {
+export const TIER_LABEL: Record<Tier, string> = {
   "T1": "zdieľaná infraštruktúra",
   "T2": "vyhradené prostredie pre jedného tenanta",
   "T3": "vyhradené a odpojené od siete",
@@ -198,15 +198,15 @@ const TIER_VYZADUJE_REZIDENCIU: Partial<Record<Tier, DataResidency>> = {
   "T3": "air-gap",
 }
 
-function izolaciaGenerovania(g: GenerationConfig): Izolacia {
+function izolaciaGenerovania(g: GenerationConfig): Isolation {
   if (g.kind !== "openai") return IZOLACIA_GENERATION[g.kind]
   return jeVlastnaAdresa(g.url) === true ? "dedikovana" : "neznama"
 }
 
-export interface PorusenieIzolacie {
+export interface IsolationViolation {
   adapter: "embedding" | "rerank" | "generation" | "utility" | "profil"
   kind: string
-  izolacia: Izolacia
+  izolacia: Isolation
   sprava: string
 }
 
@@ -214,7 +214,7 @@ export interface PorusenieIzolacie {
  * Vráti zoznam porušení izolácie. Rovnako ako pri rezidencii nevyhadzuje
  * výnimku — volajúci rozhodne, či ide o tvrdú chybu alebo o hlásenie.
  */
-export function skontrolujIzolaciu(p: TenantProfile): PorusenieIzolacie[] {
+export function checkIsolation(p: TenantProfile): IsolationViolation[] {
   const tier = (p.tier ?? "T1") as Tier
   const povolene = POVOLENA_IZOLACIA[tier]
   if (!povolene) {
@@ -224,19 +224,19 @@ export function skontrolujIzolaciu(p: TenantProfile): PorusenieIzolacie[] {
     }]
   }
 
-  const porusenia: PorusenieIzolacie[] = []
+  const porusenia: IsolationViolation[] = []
 
   // Konzistencia oboch osí — T3 bez air-gapu je len vyhradené prostredie.
   const vyzadovana = TIER_VYZADUJE_REZIDENCIU[tier]
   if (vyzadovana && p.dataResidency !== vyzadovana) {
     porusenia.push({
       adapter: "profil", kind: tier, izolacia: "neznama",
-      sprava: `tier="${tier}" (${POPIS_TIERU[tier]}) vyžaduje dataResidency="${vyzadovana}", ` +
+      sprava: `tier="${tier}" (${TIER_LABEL[tier]}) vyžaduje dataResidency="${vyzadovana}", ` +
               `nie "${p.dataResidency}" — inak by odpojenie bolo len na papieri`,
     })
   }
 
-  const kandidati: Array<[PorusenieIzolacie["adapter"], string, Izolacia]> = [
+  const kandidati: Array<[IsolationViolation["adapter"], string, Isolation]> = [
     ["embedding",  p.providers.embedding.kind,  IZOLACIA_EMBEDDING[p.providers.embedding.kind]],
     ["rerank",     p.providers.rerank.kind,     IZOLACIA_RERANK[p.providers.rerank.kind]],
     ["generation", p.providers.generation.kind, izolaciaGenerovania(p.providers.generation)],
@@ -256,15 +256,15 @@ export function skontrolujIzolaciu(p: TenantProfile): PorusenieIzolacie[] {
     porusenia.push({
       adapter, kind, izolacia,
       sprava: `${adapter}.kind="${kind}" (${izolacia}) je v rozpore s tierom ` +
-              `"${tier}" (${POPIS_TIERU[tier]}): ${preco}`,
+              `"${tier}" (${TIER_LABEL[tier]}): ${preco}`,
     })
   }
   return porusenia
 }
 
 /** Izolácia všetkých adaptérov — na výpis do admin prehľadu a do auditu. */
-export function prehladIzolacie(p: TenantProfile): Record<string, Izolacia> {
-  const v: Record<string, Izolacia> = {
+export function isolationOverview(p: TenantProfile): Record<string, Isolation> {
+  const v: Record<string, Isolation> = {
     embedding:  IZOLACIA_EMBEDDING[p.providers.embedding.kind],
     rerank:     IZOLACIA_RERANK[p.providers.rerank.kind],
     generation: izolaciaGenerovania(p.providers.generation),
@@ -273,10 +273,10 @@ export function prehladIzolacie(p: TenantProfile): Record<string, Izolacia> {
   return v
 }
 
-export interface PorusenieRezidencie {
+export interface ResidencyViolation {
   adapter: "embedding" | "rerank" | "generation" | "utility"
   kind: string
-  lokalita: Lokalita
+  lokalita: DataLocation
   sprava: string
 }
 
@@ -285,7 +285,7 @@ export interface PorusenieRezidencie {
  * v poriadku. Zámerne nevyhadzuje výnimku — volajúci sa rozhodne, či ide
  * o tvrdú chybu (načítanie profilu) alebo len o hlásenie (admin prehľad).
  */
-export function skontrolujRezidenciu(p: TenantProfile): PorusenieRezidencie[] {
+export function checkResidency(p: TenantProfile): ResidencyViolation[] {
   const rezidencia = (p.dataResidency ?? "global") as DataResidency
   const povolene = POVOLENE[rezidencia]
   if (!povolene) {
@@ -295,7 +295,7 @@ export function skontrolujRezidenciu(p: TenantProfile): PorusenieRezidencie[] {
     }]
   }
 
-  const kandidati: Array<[PorusenieRezidencie["adapter"], string, Lokalita]> = [
+  const kandidati: Array<[ResidencyViolation["adapter"], string, DataLocation]> = [
     ["embedding",  p.providers.embedding.kind, LOKALITA_EMBEDDING[p.providers.embedding.kind]],
     ["rerank",     p.providers.rerank.kind,    LOKALITA_RERANK[p.providers.rerank.kind]],
     ["generation", p.providers.generation.kind, lokalitaGenerovania(p.providers.generation)],
@@ -304,7 +304,7 @@ export function skontrolujRezidenciu(p: TenantProfile): PorusenieRezidencie[] {
     kandidati.push(["utility", p.providers.utility.kind, lokalitaGenerovania(p.providers.utility)])
   }
 
-  const porusenia: PorusenieRezidencie[] = []
+  const porusenia: ResidencyViolation[] = []
   for (const [adapter, kind, lokalita] of kandidati) {
     if (lokalita === undefined) continue           // neznámy kind rieši iná validácia
     if (povolene.includes(lokalita)) continue
@@ -317,15 +317,15 @@ export function skontrolujRezidenciu(p: TenantProfile): PorusenieRezidencie[] {
     porusenia.push({
       adapter, kind, lokalita,
       sprava: `${adapter}.kind="${kind}" (${lokalita}) je v rozpore s rezidenciou ` +
-              `"${rezidencia}" (${POPIS_REZIDENCIE[rezidencia]}): ${preco}`,
+              `"${rezidencia}" (${RESIDENCY_LABEL[rezidencia]}): ${preco}`,
     })
   }
   return porusenia
 }
 
 /** Lokality všetkých adaptérov — na výpis do admin prehľadu a do auditu. */
-export function prehladLokalit(p: TenantProfile): Record<string, Lokalita> {
-  const v: Record<string, Lokalita> = {
+export function locationOverview(p: TenantProfile): Record<string, DataLocation> {
+  const v: Record<string, DataLocation> = {
     embedding:  LOKALITA_EMBEDDING[p.providers.embedding.kind],
     rerank:     LOKALITA_RERANK[p.providers.rerank.kind],
     generation: lokalitaGenerovania(p.providers.generation),

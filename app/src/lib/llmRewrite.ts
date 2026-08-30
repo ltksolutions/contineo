@@ -22,21 +22,21 @@
 import Anthropic from "@anthropic-ai/sdk"
 
 /** Strop na jeden prepis. Dlhšia norma sa robí po častiach v editore. */
-export const MAX_ZNAKOV = 120_000
+export const MAX_CHARS = 120_000
 
 /** Skenované PDF sa posiela celé — nad týmto to nemá zmysel skúšať. */
-export const MAX_PDF_BAJTOV = 24 * 1024 * 1024
+export const MAX_PDF_BYTES = 24 * 1024 * 1024
 
-export type RezimPrepisu = "precistit" | "prepisat-sken"
+export type RewriteMode = "precistit" | "prepisat-sken"
 
-export interface NavrhModelu {
+export interface ModelDraft {
   text: string
   model: string
-  rezim: RezimPrepisu
+  rezim: RewriteMode
   kedy: Date
 }
 
-export class PrepisError extends Error {
+export class RewriteError extends Error {
   constructor(message: string) {
     super(message)
     this.name = "PrepisError"
@@ -62,7 +62,7 @@ Odpovedz LEN samotným Markdownom, bez akéhokoľvek komentára pred ním či za
 function klient(): Anthropic {
   const key = process.env.ANTHROPIC_API_KEY
   if (!key) {
-    throw new PrepisError(
+    throw new RewriteError(
       "Prepis modelom nie je nastavený — chýba ANTHROPIC_API_KEY. Prevod v aplikácii funguje ďalej.",
     )
   }
@@ -86,12 +86,12 @@ function textOdpovede(bloky: { type: string; text?: string }[]): string {
 }
 
 /** Prečistí členenie už prevedeného Markdownu. */
-export async function precisti(markdown: string): Promise<NavrhModelu> {
+export async function cleanMarkdown(markdown: string): Promise<ModelDraft> {
   const vstup = (markdown ?? "").trim()
-  if (!vstup) throw new PrepisError("Niet čo prečisťovať — text je prázdny.")
-  if (vstup.length > MAX_ZNAKOV) {
-    throw new PrepisError(
-      `Text má ${Math.round(vstup.length / 1000)} tisíc znakov, naraz sa dá poslať ${MAX_ZNAKOV / 1000}. ` +
+  if (!vstup) throw new RewriteError("Niet čo prečisťovať — text je prázdny.")
+  if (vstup.length > MAX_CHARS) {
+    throw new RewriteError(
+      `Text má ${Math.round(vstup.length / 1000)} tisíc znakov, naraz sa dá poslať ${MAX_CHARS / 1000}. ` +
       "Rozdeľ ho a prečisti po častiach.",
     )
   }
@@ -107,16 +107,16 @@ export async function precisti(markdown: string): Promise<NavrhModelu> {
   })
 
   const text = textOdpovede(odpoved.content as { type: string; text?: string }[])
-  if (!text) throw new PrepisError("Model vrátil prázdnu odpoveď.")
+  if (!text) throw new RewriteError("Model vrátil prázdnu odpoveď.")
   return { text, model: model(), rezim: "precistit", kedy: new Date() }
 }
 
 /** Prepíše skenované PDF, ktoré nemá textovú vrstvu. */
-export async function prepisPdf(pdf: Buffer): Promise<NavrhModelu> {
-  if (!pdf?.byteLength) throw new PrepisError("Súbor je prázdny.")
-  if (pdf.byteLength > MAX_PDF_BAJTOV) {
-    throw new PrepisError(
-      `PDF má ${Math.round(pdf.byteLength / 1024 / 1024)} MB, naraz sa dá poslať ${MAX_PDF_BAJTOV / 1024 / 1024}. ` +
+export async function rewritePdf(pdf: Buffer): Promise<ModelDraft> {
+  if (!pdf?.byteLength) throw new RewriteError("Súbor je prázdny.")
+  if (pdf.byteLength > MAX_PDF_BYTES) {
+    throw new RewriteError(
+      `PDF má ${Math.round(pdf.byteLength / 1024 / 1024)} MB, naraz sa dá poslať ${MAX_PDF_BYTES / 1024 / 1024}. ` +
       "Rozdeľ ho na časti.",
     )
   }
@@ -141,6 +141,6 @@ export async function prepisPdf(pdf: Buffer): Promise<NavrhModelu> {
   })
 
   const text = textOdpovede(odpoved.content as { type: string; text?: string }[])
-  if (!text) throw new PrepisError("Model z dokumentu nič neprečítal.")
+  if (!text) throw new RewriteError("Model z dokumentu nič neprečítal.")
   return { text, model: model(), rezim: "prepisat-sken", kedy: new Date() }
 }

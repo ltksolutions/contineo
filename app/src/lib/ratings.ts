@@ -17,13 +17,13 @@
 
 import { ObjectId } from "mongodb"
 import { getCollection } from "./mongodb"
-import type { Zdroj, Citacia } from "./sseClient"
-import type { Tokeny, Naklad } from "./pricing"
+import type { AnswerSource, Citation } from "./sseClient"
+import type { TokenCounts, Cost } from "./pricing"
 
 /** Ľudský úsudok. `null` = zatiaľ neposúdené, čo je iný stav než 0. */
-export type Posudok = 0 | 1 | null
+export type Verdict = 0 | 1 | null
 
-export interface Hodnotenie {
+export interface RatingRecord {
   _id?: ObjectId
 
   /** Väzba na zlatú sadu, napr. „D9-001". Chýba pri voľnom dotaze. */
@@ -31,8 +31,8 @@ export interface Hodnotenie {
 
   otazka: string
   odpoved: string
-  zdroje: Zdroj[]
-  citacie: Citacia[]
+  zdroje: AnswerSource[]
+  citacie: Citation[]
 
   // Technické údaje — bez nich sa nedajú porovnať dve konfigurácie.
   model: string
@@ -48,12 +48,12 @@ export interface Hodnotenie {
    * prepočet podľa nových sadzieb. `naklad.verziaCennika` hovorí, ktoré
    * sumy sa smú sčítavať.
    */
-  tokeny?: Tokeny
-  naklad?: Naklad
+  tokeny?: TokenCounts
+  naklad?: Cost
 
   // To, čo vie povedať len človek (D9, kapitola 3).
-  spravna: Posudok
-  halucinacia: Posudok
+  spravna: Verdict
+  halucinacia: Verdict
 
   /** Overené znenie odpovede — napĺňa `goldAnswer` v zlatej sade. */
   overenaOdpoved?: string
@@ -67,26 +67,26 @@ export interface Hodnotenie {
 }
 
 /** Údaje, ktoré prídu z prehliadača po dobehnutí odpovede. */
-export interface NovyZaznam {
+export interface NewRating {
   otazkaId?: string
   otazka: string
   odpoved: string
-  zdroje: Zdroj[]
-  citacie: Citacia[]
+  zdroje: AnswerSource[]
+  citacie: Citation[]
   model: string
   provider: string
   overeneCitacie: boolean
   ttftMs: number | null
   celkovoMs: number
   casy?: Record<string, number>
-  tokeny?: Tokeny
-  naklad?: Naklad
+  tokeny?: TokenCounts
+  naklad?: Cost
 }
 
 /** Polia, ktoré smie hodnotiteľ meniť. Nič iné sa cez API prepísať nedá. */
-export interface UpravaHodnotenia {
-  spravna?: Posudok
-  halucinacia?: Posudok
+export interface RatingEdit {
+  spravna?: Verdict
+  halucinacia?: Verdict
   overenaOdpoved?: string
   spravneZdroje?: string
   poznamka?: string
@@ -101,14 +101,14 @@ const KOLEKCIA = "evaluations"
  * chunkovania či modelu sa už tá istá odpoveď nedá zopakovať a bez nej by
  * bolo hodnotenie neoveriteľné.
  */
-export async function zapisOdpoved(
-  z: NovyZaznam,
+export async function recordAnswer(
+  z: NewRating,
   hodnotitel: string
 ): Promise<string> {
-  const col = await getCollection<Hodnotenie>(KOLEKCIA)
+  const col = await getCollection<RatingRecord>(KOLEKCIA)
   const teraz = new Date()
 
-  const zaznam: Hodnotenie = {
+  const zaznam: RatingRecord = {
     ...z,
     spravna: null,
     halucinacia: null,
@@ -127,9 +127,9 @@ export async function zapisOdpoved(
  * Vracia `false`, keď záznam neexistuje — volajúci to má ohlásiť, nie
  * ticho prejsť. Stratené hodnotenie je horšie než chybová hláška.
  */
-export async function ulozPosudok(
+export async function saveVerdict(
   id: string,
-  uprava: UpravaHodnotenia,
+  uprava: RatingEdit,
   hodnotitel: string
 ): Promise<boolean> {
   if (!ObjectId.isValid(id)) return false
@@ -143,14 +143,14 @@ export async function ulozPosudok(
     if (uprava[kluc] !== undefined) zmeny[kluc] = uprava[kluc]
   }
 
-  const col = await getCollection<Hodnotenie>(KOLEKCIA)
+  const col = await getCollection<RatingRecord>(KOLEKCIA)
   const r = await col.updateOne({ _id: new ObjectId(id) }, { $set: zmeny })
   return r.matchedCount === 1
 }
 
 /** Koľko otázok zo zlatej sady je už posúdených — na ukazovateľ postupu. */
-export async function postupSady(): Promise<Record<string, Posudok>> {
-  const col = await getCollection<Hodnotenie>(KOLEKCIA)
+export async function setProgress(): Promise<Record<string, Verdict>> {
+  const col = await getCollection<RatingRecord>(KOLEKCIA)
   const zaznamy = await col
     .find(
       { otazkaId: { $exists: true } },
@@ -160,7 +160,7 @@ export async function postupSady(): Promise<Record<string, Posudok>> {
     .toArray()
 
   // Pri opakovanom hodnotení tej istej otázky platí posledné.
-  const stav: Record<string, Posudok> = {}
+  const stav: Record<string, Verdict> = {}
   for (const z of zaznamy) if (z.otazkaId) stav[z.otazkaId] = z.spravna
   return stav
 }

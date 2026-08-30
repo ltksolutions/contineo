@@ -11,7 +11,7 @@
  */
 
 import { currentPerson } from "@/lib/session"
-import { nacitajFotku } from "@/lib/photo"
+import { loadPhoto } from "@/lib/photo"
 
 export const dynamic = "force-dynamic"
 
@@ -26,7 +26,7 @@ export async function GET(
 
   let f
   try {
-    f = await nacitajFotku(ja.companyCode, decodeURIComponent(id))
+    f = await loadPhoto(ja.companyCode, decodeURIComponent(id))
   } catch (e) {
     console.error("[fotka] načítanie zlyhalo:", e)
     return new Response(null, { status: 500 })

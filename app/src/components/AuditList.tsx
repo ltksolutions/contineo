@@ -11,7 +11,7 @@
  */
 
 import { formatDate } from "@/lib/i18n"
-import type { AuditZaznam } from "@/lib/audit"
+import type { AuditRecord } from "@/lib/audit"
 import type { UiLanguage } from "@/lib/i18n"
 
 const PREDMETY: Record<string, string> = {
@@ -79,11 +79,11 @@ function hodnotaText(v: unknown): string {
   return String(v)
 }
 
-export default function AuditVypis({
+export default function AuditList({
   zaznamy,
   jazyk = "sk",
 }: {
-  zaznamy: AuditZaznam[]
+  zaznamy: AuditRecord[]
   jazyk?: UiLanguage
 }) {
   if (zaznamy.length === 0) {

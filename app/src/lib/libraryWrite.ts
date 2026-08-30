@@ -24,20 +24,20 @@ import { getCollection } from "./mongodb"
 import { DOCUMENTS_COLLECTION } from "./documents"
 import { ACKNOWLEDGEMENTS_COLLECTION } from "./acknowledgements"
 import { chunkuj, PREDVOLENY_PROFIL } from "./chunker.mjs"
-import { odtlacokTextu, odtlacokClenenia, trebaPreindexovat, VERZIA_CHUNKERA } from "./chunkIdentity"
-import { overHodnotu, overZoznam, CiselnikError } from "./codelists"
-import type { Doplnky } from "./codelists"
-import { ulozSubor, zmazSubor } from "./fileStore"
-import { preved, NAZOV_TYPU, KonverziaError } from "./conversion"
-import { zapisAudit, rozdiel } from "./audit"
+import { textFingerprint, chunkingFingerprint, needsReindex, CHUNKER_VERSION } from "./chunkIdentity"
+import { checkValue, checkList, CodelistError } from "./codelists"
+import type { CodelistExtras } from "./codelists"
+import { saveFile, deleteFile } from "./fileStore"
+import { convert, FILE_TYPE_LABEL, ConversionError } from "./conversion"
+import { writeAudit, diff } from "./audit"
 import type { Chunk, ProfilClenenia } from "./chunker"
 
 export const CHUNKS_COLLECTION = "document_chunks"
 
 /** Technický stav — čo s dokumentom urobili stroje. */
-export type StavSpracovania = "nahrate" | "prevedene" | "zaindexovane" | "zlyhalo"
+export type ProcessingState = "nahrate" | "prevedene" | "zaindexovane" | "zlyhalo"
 
-export interface PovodnySubor {
+export interface OriginalFile {
   /** Identifikátor v GridFS. */
   id: string
   nazov: string
@@ -48,7 +48,7 @@ export interface PovodnySubor {
   nahralKto: string
 }
 
-export interface MetadataDokumentu {
+export interface DocumentMetadata {
   title: string
   sectionKey: string
   companyCode: string
@@ -60,7 +60,7 @@ export interface MetadataDokumentu {
   tags?: string[]
 }
 
-export class KniznicaError extends Error {
+export class LibraryError extends Error {
   constructor(message: string) {
     super(message)
     this.name = "KniznicaError"
@@ -68,37 +68,37 @@ export class KniznicaError extends Error {
 }
 
 /** Identifikátor dokumentu — zhodne so skriptom, nezávisle od názvu súboru. */
-export function idDokumentu(meta: { companyCode: string; sectionKey: string }): string {
+export function makeDocumentId(meta: { companyCode: string; sectionKey: string }): string {
   return `${meta.companyCode}:${meta.sectionKey}`.toLowerCase()
 }
 
 /** Overí metadáta z formulára proti číselníkom. Vyhadzuje `KniznicaError`. */
-export function overMetadata(
-  vstup: Partial<MetadataDokumentu>,
-  doplnky?: Doplnky,
-): MetadataDokumentu {
+export function checkMetadata(
+  vstup: Partial<DocumentMetadata>,
+  doplnky?: CodelistExtras,
+): DocumentMetadata {
   const title = (vstup.title ?? "").trim()
-  if (!title) throw new KniznicaError("Názov dokumentu je povinný — bez neho je v zozname len kľúč.")
+  if (!title) throw new LibraryError("Názov dokumentu je povinný — bez neho je v zozname len kľúč.")
 
   try {
     return {
       title,
-      sectionKey: overHodnotu("sectionKey", vstup.sectionKey ?? ""),
-      companyCode: overHodnotu("companyCode", vstup.companyCode ?? ""),
-      scope: overHodnotu("scope", vstup.scope ?? ""),
-      accessLevel: overHodnotu("accessLevel", vstup.accessLevel ?? ""),
-      language: overHodnotu("language", vstup.language ?? ""),
-      category: vstup.category ? overHodnotu("category", vstup.category, doplnky) : undefined,
-      sourceType: vstup.sourceType ? overHodnotu("sourceType", vstup.sourceType) : undefined,
-      tags: overZoznam("tags", vstup.tags ?? [], doplnky),
+      sectionKey: checkValue("sectionKey", vstup.sectionKey ?? ""),
+      companyCode: checkValue("companyCode", vstup.companyCode ?? ""),
+      scope: checkValue("scope", vstup.scope ?? ""),
+      accessLevel: checkValue("accessLevel", vstup.accessLevel ?? ""),
+      language: checkValue("language", vstup.language ?? ""),
+      category: vstup.category ? checkValue("category", vstup.category, doplnky) : undefined,
+      sourceType: vstup.sourceType ? checkValue("sourceType", vstup.sourceType) : undefined,
+      tags: checkList("tags", vstup.tags ?? [], doplnky),
     }
   } catch (e) {
-    if (e instanceof CiselnikError) throw new KniznicaError(e.message)
+    if (e instanceof CodelistError) throw new LibraryError(e.message)
     throw e
   }
 }
 
-export interface VysledokNahratia {
+export interface UploadResult {
   documentId: string
   markdown: string
   upozornenia: string[]
@@ -112,21 +112,21 @@ export interface VysledokNahratia {
  * zostane a dá sa naň pozrieť. Zmaže sa len vtedy, keď nevznikol ani záznam
  * dokumentu — teda keď by po ňom nezostala žiadna stopa, ako sa k nemu dostať.
  */
-export async function nahrajDokument(
-  meta: MetadataDokumentu,
+export async function uploadDocument(
+  meta: DocumentMetadata,
   nazovSuboru: string,
   data: Buffer,
   aktor: string,
-): Promise<VysledokNahratia> {
-  const documentId = idDokumentu(meta)
-  const subor = await ulozSubor(meta.companyCode, nazovSuboru, "application/octet-stream", data, aktor)
+): Promise<UploadResult> {
+  const documentId = makeDocumentId(meta)
+  const subor = await saveFile(meta.companyCode, nazovSuboru, "application/octet-stream", data, aktor)
 
   let prevod
   try {
-    prevod = await preved(nazovSuboru, data)
+    prevod = await convert(nazovSuboru, data)
   } catch (e) {
-    await zmazSubor(meta.companyCode, subor.id)
-    if (e instanceof KonverziaError) throw new KniznicaError(e.message)
+    await deleteFile(meta.companyCode, subor.id)
+    if (e instanceof ConversionError) throw new LibraryError(e.message)
     throw e
   }
 
@@ -134,7 +134,7 @@ export async function nahrajDokument(
   const uz = await col.findOne({ documentId })
   const teraz = new Date()
 
-  const povodny: PovodnySubor = {
+  const povodny: OriginalFile = {
     id: subor.id,
     nazov: nazovSuboru,
     contentType: subor.contentType,
@@ -161,7 +161,7 @@ export async function nahrajDokument(
         tags: meta.tags ?? [],
         // Koncept: text existuje, ale nikto ho ešte neprečítal a nepustil von.
         draftMarkdown: prevod.markdown,
-        processingStatus: "prevedene" as StavSpracovania,
+        processingStatus: "prevedene" as ProcessingState,
         processingError: null,
         konverzia: { sposob: prevod.sposob, upozornenia: prevod.upozornenia, kedy: teraz },
         originalFile: povodny,
@@ -173,14 +173,14 @@ export async function nahrajDokument(
     { upsert: true },
   )
 
-  await zapisAudit({
+  await writeAudit({
     companyCode: meta.companyCode,
     predmet: "dokument",
     akcia: uz ? "nahrate-nove-znenie" : "zalozene",
     aktor,
     cielId: documentId,
     cielPopis: meta.title,
-    poznamka: `${NAZOV_TYPU[prevod.typ]} · ${nazovSuboru} · ${prevod.sposob}`,
+    poznamka: `${FILE_TYPE_LABEL[prevod.typ]} · ${nazovSuboru} · ${prevod.sposob}`,
   })
 
   return {
@@ -192,24 +192,24 @@ export async function nahrajDokument(
 }
 
 /** Uloží upravený Markdown konceptu. Publikované znenie sa tým nemení. */
-export async function ulozKoncept(
+export async function saveDraft(
   companyCode: string,
   documentId: string,
   markdown: string,
   aktor: string,
 ): Promise<void> {
   const text = (markdown ?? "").trim()
-  if (!text) throw new KniznicaError("Prázdny text sa uložiť nedá — dokument by nemal čo obsahovať.")
+  if (!text) throw new LibraryError("Prázdny text sa uložiť nedá — dokument by nemal čo obsahovať.")
 
   const col = await getCollection(DOCUMENTS_COLLECTION)
   const r = await col.updateOne(
     { documentId, companyCode },
     { $set: { draftMarkdown: text, updatedAt: new Date(), updatedBy: aktor } },
   )
-  if (!r.matchedCount) throw new KniznicaError("Taký dokument tu nie je.")
+  if (!r.matchedCount) throw new LibraryError("Taký dokument tu nie je.")
 }
 
-export interface VysledokPublikovania {
+export interface PublishResult {
   versionId: string
   chunkov: number
   archivovanych: number
@@ -231,30 +231,30 @@ export interface VysledokPublikovania {
  * v chunkeri je rovnako podstatná zmena ako oprava v texte, a keď sa hashoval
  * zdroj, tichým dôsledkom bolo, že sa nové členenie nikdy nezapísalo.
  */
-export async function publikuj(
+export async function publish(
   companyCode: string,
   documentId: string,
   vstup: { label: string; effectiveFrom: Date; effectiveFromSource?: string; changeNote?: string },
   aktor: string,
   profil?: Partial<ProfilClenenia>,
-): Promise<VysledokPublikovania> {
+): Promise<PublishResult> {
   const label = (vstup.label ?? "").trim()
   if (!label) {
-    throw new KniznicaError(
+    throw new LibraryError(
       "Označenie znenia je povinné — objaví sa doslovne v každom zázname o potvrdení. " +
       "Napíš to, čo je v dokumente (napríklad: úplné znenie z 27. 2. 2026), nie vymyslené číslo.",
     )
   }
   if (!(vstup.effectiveFrom instanceof Date) || Number.isNaN(vstup.effectiveFrom.getTime())) {
-    throw new KniznicaError("Dátum platnosti je povinný — bez neho sa znenie nedá potvrdiť (D6).")
+    throw new LibraryError("Dátum platnosti je povinný — bez neho sa znenie nedá potvrdiť (D6).")
   }
 
   const col = await getCollection(DOCUMENTS_COLLECTION)
   const doc = await col.findOne({ documentId, companyCode }) as Record<string, unknown> | null
-  if (!doc) throw new KniznicaError("Taký dokument tu nie je.")
+  if (!doc) throw new LibraryError("Taký dokument tu nie je.")
 
   const markdown = String(doc.draftMarkdown ?? "").trim()
-  if (!markdown) throw new KniznicaError("Dokument nemá text — najprv nahraj súbor alebo napíš znenie.")
+  if (!markdown) throw new LibraryError("Dokument nemá text — najprv nahraj súbor alebo napíš znenie.")
 
   const meta = {
     title: String(doc.title ?? ""),
@@ -268,7 +268,7 @@ export async function publikuj(
 
   const { chunky } = chunkuj(markdown, { nazovDokumentu: meta.title, profil })
   if (!chunky.length) {
-    throw new KniznicaError(
+    throw new LibraryError(
       "Z textu nevznikol ani jeden úsek. Skontroluj, či má dokument členenie na články alebo nadpisy.",
     )
   }
@@ -295,8 +295,8 @@ export async function publikuj(
   // potvrdiť normu znova, hoci sa v nej nezmenilo ani slovo. Označenie
   // a dátum platnosti do identity nevstupujú zámerne: preklep v nich sa musí
   // dať opraviť bez toho, aby sa rozbili existujúce potvrdenia.
-  const versionId = odtlacokTextu(markdown)
-  const chunkingId = odtlacokClenenia(chunky, { ...PREDVOLENY_PROFIL, ...profil })
+  const versionId = textFingerprint(markdown)
+  const chunkingId = chunkingFingerprint(chunky, { ...PREDVOLENY_PROFIL, ...profil })
   const teraz = new Date()
 
   // Rovnaké znenie už publikované? Nič sa nedeje — publikovanie je idempotentné.
@@ -317,7 +317,7 @@ export async function publikuj(
       documentId,
       versionId,
       chunkingId,
-      verziaChunkera: VERZIA_CHUNKERA,
+      verziaChunkera: CHUNKER_VERSION,
       embeddedAt: teraz,
       isActive: true,
       effectiveFrom: vstup.effectiveFrom,
@@ -343,7 +343,7 @@ export async function publikuj(
         chunkingId,
         markdown,
         status: "published",
-        processingStatus: "zaindexovane" as StavSpracovania,
+        processingStatus: "zaindexovane" as ProcessingState,
         effectiveFrom: vstup.effectiveFrom,
         effectiveTo: null,
         updatedAt: teraz,
@@ -370,7 +370,7 @@ export async function publikuj(
     } as never,
   )
 
-  await zapisAudit({
+  await writeAudit({
     companyCode, predmet: "dokument", akcia: "publikovane", aktor,
     cielId: documentId, cielPopis: `${meta.title} — ${label}`,
     poznamka: `${chunky.length} úsekov · platné od ${vstup.effectiveFrom.toISOString().slice(0, 10)}` +
@@ -394,19 +394,19 @@ export async function publikuj(
  * potvrdeniach, ale staré záznamy si nesú kópiu názvu v čase potvrdenia,
  * takže sa spätne nezmenia (rovnaký princíp ako pri adrese osoby, D45).
  */
-export async function ulozUdaje(
+export async function saveMetadata(
   companyCode: string,
   documentId: string,
-  vstup: Partial<MetadataDokumentu>,
+  vstup: Partial<DocumentMetadata>,
   aktor: string,
-  doplnky?: Doplnky,
+  doplnky?: CodelistExtras,
 ): Promise<void> {
   const col = await getCollection(DOCUMENTS_COLLECTION)
   const pred = await col.findOne({ documentId, companyCode }) as Record<string, unknown> | null
-  if (!pred) throw new KniznicaError("Taký dokument tu nie je.")
+  if (!pred) throw new LibraryError("Taký dokument tu nie je.")
 
   // Kľúč aj organizácia sa berú z existujúceho záznamu, nie z formulára.
-  const meta = overMetadata({
+  const meta = checkMetadata({
     ...vstup,
     sectionKey: String(pred.sectionKey ?? ""),
     companyCode,
@@ -450,10 +450,10 @@ export async function ulozUdaje(
     title: meta.title, scope: meta.scope, accessLevel: meta.accessLevel,
     language: meta.language, category: meta.category ?? null, tags: meta.tags ?? [],
   }
-  await zapisAudit({
+  await writeAudit({
     companyCode, predmet: "dokument", akcia: "zmenene", aktor,
     cielId: documentId, cielPopis: meta.title,
-    zmeny: rozdiel(predMeta, poMeta),
+    zmeny: diff(predMeta, poMeta),
   })
 }
 
@@ -469,7 +469,7 @@ export async function ulozUdaje(
  * aktívne, ale otázka „ako to bolo narezané vlani" musí mať odpoveď, keď sa
  * bude hľadať, prečo model kedysi odcitoval niečo iné.
  */
-export async function preindexuj(
+export async function reindex(
   companyCode: string,
   documentId: string,
   aktor: string,
@@ -477,13 +477,13 @@ export async function preindexuj(
 ): Promise<{ chunkov: number; archivovanych: number; uzBolo: boolean; chunkingId: string }> {
   const col = await getCollection(DOCUMENTS_COLLECTION)
   const doc = await col.findOne({ documentId, companyCode }) as Record<string, unknown> | null
-  if (!doc) throw new KniznicaError("Taký dokument tu nie je.")
+  if (!doc) throw new LibraryError("Taký dokument tu nie je.")
 
   const versions = (doc.versions ?? []) as { versionId: string; isActive?: boolean; markdown?: string }[]
   const platna = versions.find(v => v.isActive)
   const markdown = String(platna?.markdown ?? doc.markdown ?? "").trim()
   if (!markdown || !platna) {
-    throw new KniznicaError(
+    throw new LibraryError(
       "Dokument nemá publikované znenie — preindexovať sa dá len to, čo už je vonku.",
     )
   }
@@ -499,10 +499,10 @@ export async function preindexuj(
 
   const { chunky } = chunkuj(markdown, { nazovDokumentu: meta.title, profil })
   if (!chunky.length) {
-    throw new KniznicaError("Z textu nevznikol ani jeden úsek — skontroluj profil členenia.")
+    throw new LibraryError("Z textu nevznikol ani jeden úsek — skontroluj profil členenia.")
   }
 
-  const chunkingId = odtlacokClenenia(chunky, { ...PREDVOLENY_PROFIL, ...profil })
+  const chunkingId = chunkingFingerprint(chunky, { ...PREDVOLENY_PROFIL, ...profil })
   if (doc.chunkingId === chunkingId) {
     return { chunkov: chunky.length, archivovanych: 0, uzBolo: true, chunkingId }
   }
@@ -534,7 +534,7 @@ export async function preindexuj(
       // Tá istá verzia znenia — mení sa len členenie.
       versionId: platna.versionId,
       chunkingId,
-      verziaChunkera: VERZIA_CHUNKERA,
+      verziaChunkera: CHUNKER_VERSION,
       embeddedAt: teraz,
       isActive: true,
       effectiveFrom: (doc.effectiveFrom as Date | null) ?? null,
@@ -549,7 +549,7 @@ export async function preindexuj(
     { $set: { chunkingId, updatedAt: teraz, updatedBy: aktor } },
   )
 
-  await zapisAudit({
+  await writeAudit({
     companyCode, predmet: "dokument", akcia: "preindexovane", aktor,
     cielId: documentId, cielPopis: meta.title,
     poznamka: `${chunky.length} úsekov · ${archiv.modifiedCount} archivovaných · ` +
@@ -578,7 +578,7 @@ export async function preindexuj(
  * Systém to rozhodnúť nevie: nepozná, či medzi tými dvoma dátumami niekto
  * podľa normy konal.
  */
-export async function opravZnenie(
+export async function fixVersion(
   companyCode: string,
   documentId: string,
   versionId: string,
@@ -594,20 +594,20 @@ export async function opravZnenie(
 ): Promise<{ potvrdeni: number; znovaPotvrdit: boolean }> {
   const dovod = vstup.dovod?.trim() ?? ""
   if (!dovod) {
-    throw new KniznicaError(
+    throw new LibraryError(
       "Dôvod opravy je povinný — bez neho sa o rok nedá zistiť, či išlo o preklep alebo o zmenu povinnosti.",
     )
   }
 
   const col = await getCollection(DOCUMENTS_COLLECTION)
   const doc = await col.findOne({ documentId, companyCode }) as Record<string, unknown> | null
-  if (!doc) throw new KniznicaError("Taký dokument tu nie je.")
+  if (!doc) throw new LibraryError("Taký dokument tu nie je.")
 
   const versions = (doc.versions ?? []) as {
     versionId: string; label: string; effectiveFrom: Date | null
   }[]
   const v = versions.find(x => x.versionId === versionId)
-  if (!v) throw new KniznicaError("Také znenie tu nie je.")
+  if (!v) throw new LibraryError("Také znenie tu nie je.")
 
   const ackCol = await getCollection(ACKNOWLEDGEMENTS_COLLECTION)
   const potvrdeni = await ackCol.countDocuments({
@@ -618,7 +618,7 @@ export async function opravZnenie(
     (!v.effectiveFrom || new Date(v.effectiveFrom).getTime() !== vstup.effectiveFrom.getTime())
 
   if (meniDatum && potvrdeni > 0 && !vstup.priZmeneDatumu) {
-    throw new KniznicaError(
+    throw new LibraryError(
       `Toto znenie už potvrdilo ${potvrdeni} ľudí a formulka, ktorú podpísali, obsahuje starý dátum. ` +
       "Rozhodni, či je to oprava zápisu, alebo sa má znenie potvrdiť znova.",
     )
@@ -658,10 +658,10 @@ export async function opravZnenie(
     { arrayFilters: [{ "v.versionId": versionId }] },
   )
 
-  await zapisAudit({
+  await writeAudit({
     companyCode, predmet: "dokument", akcia: "oprava-znenia", aktor,
     cielId: documentId, cielPopis: `${String(doc.title ?? documentId)} — ${v.label}`,
-    zmeny: rozdiel(
+    zmeny: diff(
       { label: v.label, effectiveFrom: v.effectiveFrom ?? null },
       { label: vstup.label?.trim() ?? v.label, effectiveFrom: vstup.effectiveFrom ?? v.effectiveFrom ?? null },
     ),
@@ -672,7 +672,7 @@ export async function opravZnenie(
   return { potvrdeni, znovaPotvrdit }
 }
 
-export interface StavPreindexovania {
+export interface ReindexState {
   /** Dokumenty s platným znením — teda tie, ktoré vôbec majú čo indexovať. */
   celkom: number
   /** Z nich tie, ktorých členenie nesedí s aktuálnym profilom. */
@@ -687,10 +687,10 @@ export interface StavPreindexovania {
  * spraví. Pri desiatkach dokumentov je to zlomok sekundy; pri tisícoch by to
  * chcelo vlastný beh a nie obrazovku.
  */
-export async function stavPreindexovania(
+export async function reindexState(
   companyCode: string,
   profil?: Partial<ProfilClenenia>,
-): Promise<StavPreindexovania> {
+): Promise<ReindexState> {
   const col = await getCollection(DOCUMENTS_COLLECTION)
   const dokumenty = await col
     .find(
@@ -717,8 +717,8 @@ export async function stavPreindexovania(
 
     const { chunky } = chunkuj(text, { nazovDokumentu: d.title ?? "", profil })
     if (!chunky.length) { neaktualnych++; continue }
-    const chunkingId = odtlacokClenenia(chunky, { ...PREDVOLENY_PROFIL, ...profil })
-    if (trebaPreindexovat(d.chunkingId, chunkingId)) neaktualnych++
+    const chunkingId = chunkingFingerprint(chunky, { ...PREDVOLENY_PROFIL, ...profil })
+    if (needsReindex(d.chunkingId, chunkingId)) neaktualnych++
   }
 
   return { celkom, neaktualnych }
@@ -736,7 +736,7 @@ export async function stavPreindexovania(
  * Dokumenty, ktoré už sedia, sa preskakujú — opakované spustenie je preto
  * lacné a bezpečné.
  */
-export async function preindexujVsetky(
+export async function reindexAll(
   companyCode: string,
   aktor: string,
   profil?: Partial<ProfilClenenia>,
@@ -755,13 +755,13 @@ export async function preindexujVsetky(
   for (const d of dokumenty) {
     if (preindexovanych >= limit) { zostava++; continue }
     try {
-      const v = await preindexuj(companyCode, d.documentId, aktor, profil)
+      const v = await reindex(companyCode, d.documentId, aktor, profil)
       if (v.uzBolo) preskocenych++
       else preindexovanych++
     } catch (e) {
       // Dokument bez publikovaného znenia sa preindexovať nedá a nie je to
       // chyba — nemá čo indexovať. Ostatné dôvody sa vypíšu menovite.
-      const sprava = e instanceof KniznicaError ? e.message : String(e)
+      const sprava = e instanceof LibraryError ? e.message : String(e)
       if (sprava.includes("publikované znenie")) preskocenych++
       else chyby.push(`${d.documentId}: ${sprava}`)
     }

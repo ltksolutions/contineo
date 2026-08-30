@@ -12,8 +12,8 @@ import { peopleContext } from "@/lib/people"
 import { brandingView } from "@/lib/tenants"
 import { tenantStyle } from "@/components/TenantHeader"
 import { UI_LANGUAGES } from "@/lib/i18n"
-import Vyber from "@/components/Select"
-import { pozviOsobu } from "../akcie"
+import Select from "@/components/Select"
+import { invitePersonAction } from "../actions"
 
 /** Kód jazyka sám o sebe nepovie nič — „sk" je pre nás jasné, pre iných nie. */
 const JAZYKY: Record<string, string> = {
@@ -24,7 +24,7 @@ const JAZYKY: Record<string, string> = {
 
 export const dynamic = "force-dynamic"
 
-export default async function NovaOsoba({
+export default async function NewPersonPage({
   searchParams,
 }: {
   searchParams: Promise<{ chyba?: string; email?: string; fullName?: string; department?: string }>
@@ -56,7 +56,7 @@ export default async function NovaOsoba({
         </p>
       )}
 
-      <form action={pozviOsobu} className="karta" style={{ padding: 20, display: "grid", gap: 16 }}>
+      <form action={invitePersonAction} className="karta" style={{ padding: 20, display: "grid", gap: 16 }}>
         <label className="pole">
           <span className="pole-popis">E-mailová adresa</span>
           <input
@@ -86,7 +86,7 @@ export default async function NovaOsoba({
 
         <div className="pole">
           <span className="pole-popis">Typ osoby</span>
-          <Vyber
+          <Select
             meno="personType"
             volby={[
               { hodnota: "employee", popis: "zamestnanec" },
@@ -101,7 +101,7 @@ export default async function NovaOsoba({
 
         <div className="pole">
           <span className="pole-popis">Jazyk prostredia</span>
-          <Vyber
+          <Select
             meno="language"
             volby={UI_LANGUAGES.map(l => ({ hodnota: l, popis: JAZYKY[l] ?? l }))}
             predvolena="sk"

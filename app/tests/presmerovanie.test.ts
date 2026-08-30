@@ -9,7 +9,7 @@
  */
 
 import { describe, it, expect } from "vitest"
-import { jePresmerovanie } from "../src/lib/redirects"
+import { isRedirect } from "../src/lib/redirects"
 
 /** Tvar, aký má výnimka z `redirect()` v Nexte. */
 function vynimkaRedirect(): Error & { digest: string } {
@@ -20,12 +20,12 @@ function vynimkaRedirect(): Error & { digest: string } {
 
 describe("rozoznanie presmerovania", () => {
   it("vynimka z redirect() sa pozna", () => {
-    expect(jePresmerovanie(vynimkaRedirect())).toBe(true)
+    expect(isRedirect(vynimkaRedirect())).toBe(true)
   })
 
   it("bezna chyba nie je presmerovanie", () => {
-    expect(jePresmerovanie(new Error("spojenie zlyhalo"))).toBe(false)
-    expect(jePresmerovanie({ message: "nieco" })).toBe(false)
+    expect(isRedirect(new Error("spojenie zlyhalo"))).toBe(false)
+    expect(isRedirect({ message: "nieco" })).toBe(false)
   })
 
   it("notFound() sa za presmerovanie nepovazuje", () => {
@@ -34,16 +34,16 @@ describe("rozoznanie presmerovania", () => {
     const notFound = Object.assign(new Error("NEXT_HTTP_ERROR_FALLBACK"), {
       digest: "NEXT_HTTP_ERROR_FALLBACK;404",
     })
-    expect(jePresmerovanie(notFound)).toBe(false)
+    expect(isRedirect(notFound)).toBe(false)
   })
 
   it("nic a primitivne hodnoty neprejdu", () => {
     for (const x of [null, undefined, "NEXT_REDIRECT", 0, false]) {
-      expect(jePresmerovanie(x)).toBe(false)
+      expect(isRedirect(x)).toBe(false)
     }
   })
 
   it("digest, ktory nie je retazec, neprejde", () => {
-    expect(jePresmerovanie({ digest: 123 })).toBe(false)
+    expect(isRedirect({ digest: 123 })).toBe(false)
   })
 })

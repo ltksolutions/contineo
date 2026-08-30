@@ -326,7 +326,7 @@ export async function recordExternalRef(
  * Volá to prideľovanie noriem aj správa osôb. Keby to mal každý svoje, dve
  * obrazovky by ponúkali dva rôzne zoznamy tých istých skupín.
  */
-export async function publikaVOrganizacii(companyCode: string): Promise<{
+export async function audiencesInOrg(companyCode: string): Promise<{
   skupiny: { hodnota: string; osob: number }[]
   trasy: { hodnota: string; osob: number }[]
 }> {
@@ -418,7 +418,7 @@ export async function upsertPersons(
       startDate: r.startDate,
       tracks: r.tracks ?? [],
       groups: skupiny,
-      groupHistory: novaHistoriaSkupin(doteraz?.groupHistory, skupiny, now),
+      groupHistory: newGroupHistory(doteraz?.groupHistory, skupiny, now),
       roles: r.roles ?? [],
     }
 
@@ -522,7 +522,7 @@ export async function personLanguage(email: string): Promise<UiLanguage> {
  * z povoleného adresára, D45): to, že adresa patrí tomu človeku, potvrdil
  * adresár zákazníka, nie on sám.
  */
-export async function zosuladPodlaKonta(
+export async function syncFromAccount(
   provider: "microsoft" | "google",
   externalId: string,
   emailZKonta: string,
@@ -565,7 +565,7 @@ export async function zosuladPodlaKonta(
 }
 
 /** Doména adresy, malými písmenami. Prázdne, keď to nie je adresa. */
-export function domenaAdresy(email: string): string {
+export function addressDomain(email: string): string {
   const i = email.lastIndexOf("@")
   return i === -1 ? "" : email.slice(i + 1).trim().toLowerCase()
 }
@@ -576,8 +576,8 @@ export function domenaAdresy(email: string): string {
  * Porovnáva sa **celá doména**, nie koncovka: `futbalsfz.sk` nesmie pustiť
  * `zlyfutbalsfz.sk`. Poddomény sa nepovoľujú — kto ich chce, vypíše ich.
  */
-export function jeDomenaPovolena(email: string, domeny: string[] | undefined): boolean {
-  const d = domenaAdresy(email)
+export function isDomainAllowed(email: string, domeny: string[] | undefined): boolean {
+  const d = addressDomain(email)
   if (!d) return false
   return (domeny ?? []).some(x => x.trim().toLowerCase().replace(/^@/, "") === d)
 }
@@ -593,7 +593,7 @@ export function jeDomenaPovolena(email: string, domeny: string[] | undefined): b
  * Vracia `null`, keď sa nič nezaložilo — vrátane prípadu, keď medzitým
  * záznam vznikol súbežnou požiadavkou (dve karty naraz).
  */
-export async function zalozPodlaDomeny(
+export async function createFromDomain(
   companyCode: string,
   email: string,
   meno: string | undefined,
@@ -647,7 +647,7 @@ export async function zalozPodlaDomeny(
  * zavedením štruktúry história neexistuje a pridelenie im má platiť odo dňa,
  * keď vzniklo. Opačná predvoľba by im všetky staré normy schovala.
  */
-export function vUtvareOd(osoba: Pick<Person, "departmentHistory">): Date | null {
+export function inDepartmentSince(osoba: Pick<Person, "departmentHistory">): Date | null {
   const otvoreny = (osoba.departmentHistory ?? []).filter(z => !z.do)
   if (otvoreny.length === 0) return null
   // Pri poškodených dátach (viac otvorených) platí ten najnovší — je to
@@ -662,7 +662,7 @@ export function vUtvareOd(osoba: Pick<Person, "departmentHistory">): Date | null
  * nový. **Presun do toho istého oddelenia nič nemení** — inak by opakované
  * uloženie formulára posúvalo dátum príchodu a s ním aj termíny.
  */
-export function novaHistoriaUtvarov(
+export function newDepartmentHistory(
   doteraz: Person["departmentHistory"],
   novyId: string | null,
   novaCesta: string[],
@@ -687,7 +687,7 @@ export function novaHistoriaUtvarov(
  * `null` znamená „odjakživa" rovnako ako pri oddelenieoch: ľuďom zapísaným pred
  * zavedením histórie by inak všetky staršie pridelenia zmizli.
  */
-export function vSkupineOd(
+export function inGroupSince(
   osoba: Pick<Person, "groupHistory">,
   skupina: string,
 ): Date | null {
@@ -708,7 +708,7 @@ export function vSkupineOd(
  * vrátil sa" je iná informácia než „bol celý čas", a pri otázke, kto mal
  * v danom období povinnosť, sa tie dve odpovede líšia.
  */
-export function novaHistoriaSkupin(
+export function newGroupHistory(
   doteraz: Person["groupHistory"],
   noveSkupiny: string[],
   kedy: Date,
@@ -741,7 +741,7 @@ export function novaHistoriaSkupin(
  * Vracia zoznam doplnených polí — volajúci ho dá do logu, aby bolo pri
  * podpore vidieť, čo sa vlastne stalo.
  */
-export async function doplnChybajuce(
+export async function fillMissing(
   companyCode: string,
   email: string,
   udaje: {
@@ -794,7 +794,7 @@ export async function doplnChybajuce(
  * Bez tejto otázky by každé prihlásenie platilo dve požiadavky do Graphu za
  * nič. Väčšina prihlásení je opakovaná a vtedy je už všetko na mieste.
  */
-export function chybaNiecoZAdresara(osoba: Person | null): boolean {
+export function missingFromDirectory(osoba: Person | null): boolean {
   if (!osoba) return true
   const prazdne = (v: unknown) => v === undefined || v === null || String(v).trim() === ""
   return (

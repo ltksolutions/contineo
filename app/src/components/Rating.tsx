@@ -14,19 +14,19 @@
  */
 
 import { useEffect, useRef, useState } from "react"
-import type { Posudok } from "@/lib/ratings"
+import type { Verdict } from "@/lib/ratings"
 
 type Stav = "cakam" | "ukladam" | "ulozene" | "chyba"
 
-export interface HodnoteniePolia {
-  spravna: Posudok
-  halucinacia: Posudok
+export interface RatingFields {
+  spravna: Verdict
+  halucinacia: Verdict
   overenaOdpoved: string
   spravneZdroje: string
   poznamka: string
 }
 
-const PRAZDNE: HodnoteniePolia = {
+const PRAZDNE: RatingFields = {
   spravna: null, halucinacia: null,
   overenaOdpoved: "", spravneZdroje: "", poznamka: "",
 }
@@ -61,7 +61,7 @@ function Volba({
   )
 }
 
-export default function Hodnotenie({
+export default function Rating({
   zaznamId,
   otazkaId,
   onHotovo,
@@ -71,9 +71,9 @@ export default function Hodnotenie({
   /** Označenie otázky zo zlatej sady, ak ide o režim sady. */
   otazkaId?: string
   /** Zavolá sa po posúdení správnosti — režim sady na to nadväzuje. */
-  onHotovo?: (spravna: Posudok) => void
+  onHotovo?: (spravna: Verdict) => void
 }) {
-  const [polia, setPolia] = useState<HodnoteniePolia>(PRAZDNE)
+  const [polia, setPolia] = useState<RatingFields>(PRAZDNE)
   const [stav, setStav] = useState<Stav>("cakam")
   const [detail, setDetail] = useState(false)
 
@@ -90,7 +90,7 @@ export default function Hodnotenie({
 
   const poslednePoslane = useRef<string>("")
 
-  async function uloz(zmena: Partial<HodnoteniePolia>) {
+  async function uloz(zmena: Partial<RatingFields>) {
     if (!zaznamId) return
     const nove = { ...polia, ...zmena }
     setPolia(nove)

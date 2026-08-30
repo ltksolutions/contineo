@@ -13,7 +13,7 @@
 
 import Link from "next/link"
 
-export default function Nenajdene() {
+export default function NotFoundPage() {
   return (
     <div className="obal" style={{ padding: "72px 20px", maxWidth: 520 }}>
       <h1 style={{ fontSize: 27, letterSpacing: "-0.02em", margin: "0 0 8px" }}>

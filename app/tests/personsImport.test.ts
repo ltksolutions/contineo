@@ -7,23 +7,23 @@
  */
 
 import { describe, it, expect } from "vitest"
-import { riadokNaOsobu, csvNaOsoby, hodnota, DOVODY } from "../src/lib/personsImport"
+import { rowToPerson, csvToPersons, fieldValue, REASONS } from "../src/lib/personsImport"
 
 describe("mapovanie hlaviciek", () => {
   it("rozpozná slovenské aj anglické názvy stĺpcov", () => {
-    expect(hodnota({ utvar: "Legislatíva" }, "department")).toBe("Legislatíva")
-    expect(hodnota({ department: "Legal" }, "department")).toBe("Legal")
-    expect(hodnota({ oddelenie: "Úsek" }, "department")).toBe("Úsek")
+    expect(fieldValue({ utvar: "Legislatíva" }, "department")).toBe("Legislatíva")
+    expect(fieldValue({ department: "Legal" }, "department")).toBe("Legal")
+    expect(fieldValue({ oddelenie: "Úsek" }, "department")).toBe("Úsek")
   })
 
   it("chýbajúci stĺpec dá prázdno, nie undefined v strede reťazca", () => {
-    expect(hodnota({}, "department")).toBe("")
+    expect(fieldValue({}, "department")).toBe("")
   })
 })
 
 describe("riadok na osobu", () => {
   it("zoznamy sa rozdelia čiarkou, bodkočiarkou aj zvislou čiarou", () => {
-    const o = riadokNaOsobu({ skupiny: "rozhodcovia; delegati|statutari", trasy: "zaklad,druha" })
+    const o = rowToPerson({ skupiny: "rozhodcovia; delegati|statutari", trasy: "zaklad,druha" })
     expect(o.groups).toEqual(["rozhodcovia", "delegati", "statutari"])
     expect(o.tracks).toEqual(["zaklad", "druha"])
   })
@@ -31,12 +31,12 @@ describe("riadok na osobu", () => {
   it("nevyplnený jazyk zostane nevyplnený", () => {
     // Inak by opakovaný import bez stĺpca jazyka prepol každého späť na
     // slovenčinu — a prejavilo by sa to až v e-maile, ktorý už niekomu odišiel.
-    expect(riadokNaOsobu({ email: "a@b.sk" }).language).toBeUndefined()
+    expect(rowToPerson({ email: "a@b.sk" }).language).toBeUndefined()
   })
 
   it("nevyplnené zoznamy zostanú nevyplnené, nie prázdne", () => {
     // `undefined` znamená „nemeň", prázdne pole znamená „zmaž".
-    const o = riadokNaOsobu({ email: "a@b.sk" })
+    const o = rowToPerson({ email: "a@b.sk" })
     expect(o.groups).toBeUndefined()
     expect(o.tracks).toBeUndefined()
   })
@@ -46,7 +46,7 @@ describe("cely subor", () => {
   const CSV = "email;meno;útvar;skupiny\na@b.sk;Anna B;Legislatíva;rozhodcovia\nc@d.sk;Cyril D;;delegati\n"
 
   it("prečíta bodkočiarkou oddelený súbor z Excelu", () => {
-    const osoby = csvNaOsoby(CSV)
+    const osoby = csvToPersons(CSV)
     expect(osoby).toHaveLength(2)
     expect(osoby[0]).toMatchObject({ email: "a@b.sk", fullName: "Anna B", department: "Legislatíva" })
     expect(osoby[1].department).toBeUndefined()
@@ -56,17 +56,17 @@ describe("cely subor", () => {
     // Personalista zväzu nesmie importom založiť človeka do cudzej
     // organizácie (D32) — aj keby to bolo v súbore napísané.
     const csv = "email;meno;organizacia\na@b.sk;Anna B;CUDZI\n"
-    expect(csvNaOsoby(csv, "SFZ")[0].companyCode).toBe("SFZ")
+    expect(csvToPersons(csv, "SFZ")[0].companyCode).toBe("SFZ")
   })
 
   it("bez prebitia zostane, čo je v súbore", () => {
     const csv = "email;meno;organizacia\na@b.sk;Anna B;LTK\n"
-    expect(csvNaOsoby(csv)[0].companyCode).toBe("LTK")
+    expect(csvToPersons(csv)[0].companyCode).toBe("LTK")
   })
 
   it("prázdny súbor dá prázdny zoznam, nie chybu", () => {
-    expect(csvNaOsoby("")).toEqual([])
-    expect(csvNaOsoby("email;meno\n")).toEqual([])
+    expect(csvToPersons("")).toEqual([])
+    expect(csvToPersons("email;meno\n")).toEqual([])
   })
 })
 
@@ -75,10 +75,10 @@ describe("dovody odmietnutia", () => {
     // „missing-companyCode" v zozname chýb je informácia pre nás, nie pre
     // personalistu, ktorý má opraviť súbor.
     for (const kluc of ["invalid-email", "missing-companyCode", "missing-name", "duplicate-in-file"]) {
-      expect(DOVODY[kluc]).toBeTruthy()
-      expect(DOVODY[kluc]).not.toBe(kluc)
+      expect(REASONS[kluc]).toBeTruthy()
+      expect(REASONS[kluc]).not.toBe(kluc)
       // Veta, nie kľúč: `missing-companyCode` sa nedá opraviť v Exceli.
-      expect(DOVODY[kluc]).toMatch(/\s/)
+      expect(REASONS[kluc]).toMatch(/\s/)
     }
   })
 })

@@ -23,9 +23,9 @@
 
 import { ObjectId } from "mongodb"
 import { getCollection } from "./mongodb"
-import { PERSONS_COLLECTION, normalizeKeys, vUtvareOd, vSkupineOd } from "./persons"
+import { PERSONS_COLLECTION, normalizeKeys, inDepartmentSince, inGroupSince } from "./persons"
 import { ACKNOWLEDGEMENTS_COLLECTION } from "./acknowledgements"
-import { zapisAudit } from "./audit"
+import { writeAudit } from "./audit"
 import type { Person } from "./persons"
 
 export const ASSIGNMENTS_COLLECTION = "assignments"
@@ -221,14 +221,14 @@ export function audienceLabel(a: Audience): string {
  * U ostatných druhov publika sa nič nemení: skupina ani trasa históriu nemajú
  * a predstierať ju by znamenalo tvrdiť niečo, čo nevieme.
  */
-export function datumPreOsobu(
+export function dateForPerson(
   a: Pick<Assignment, "audience" | "assignedAt">,
   osoba: Pick<Person, "departmentHistory" | "groupHistory">,
 ): Date {
   const hodnota = a.audience?.value?.trim().toLowerCase()
   const od =
-    a.audience?.kind === "department" ? vUtvareOd(osoba)
-    : a.audience?.kind === "group" && hodnota ? vSkupineOd(osoba, hodnota)
+    a.audience?.kind === "department" ? inDepartmentSince(osoba)
+    : a.audience?.kind === "group" && hodnota ? inGroupSince(osoba, hodnota)
     : null
   return od && od > a.assignedAt ? od : a.assignedAt
 }
@@ -311,7 +311,7 @@ export async function assign(input: NewAssignment): Promise<AssignResult> {
     revokedAt: null,
   }
   const r = await col.insertOne(zaznam as never)
-  await zapisAudit({
+  await writeAudit({
     companyCode: zaznam.companyCode, predmet: "pridelenie", akcia: "pridelene",
     aktor: input.assignedBy, cielId: String(r.insertedId),
     cielPopis: `${input.subject.documentTitle} (${input.subject.versionLabel}) — ${audienceLabel(audience)}`,
@@ -337,7 +337,7 @@ export async function revoke(companyCode: string, id: string, actor: string): Pr
     { $set: { revokedAt: new Date(), revokedBy: actor } },
   )
   if (r.modifiedCount > 0 && pred) {
-    await zapisAudit({
+    await writeAudit({
       companyCode, predmet: "pridelenie", akcia: "odvolane", aktor: actor, cielId: id,
       cielPopis: `${pred.subject.documentTitle} (${pred.subject.versionLabel}) — ${audienceLabel(pred.audience)}`,
     })
@@ -396,7 +396,7 @@ export async function assignedAtByVersion(person: {
 }): Promise<Map<string, Date>> {
   const out = new Map<string, Date>()
   for (const a of await assignmentsForPerson(person)) {
-    const kedy = datumPreOsobu(a, person)
+    const kedy = dateForPerson(a, person)
     const doteraz = out.get(a.subject.versionId)
     if (!doteraz || kedy < doteraz) out.set(a.subject.versionId, kedy)
   }
@@ -431,7 +431,7 @@ export async function recordNotification(
     { _id: new ObjectId(id), companyCode } as never,
     { $push: { notified: { at: new Date(), by, count } } } as never,
   )
-  await zapisAudit({
+  await writeAudit({
     companyCode, predmet: "pridelenie", akcia: "oznamene", aktor: by, cielId: id,
     poznamka: `odoslané ${count} ľuďom`,
   })
@@ -529,7 +529,7 @@ export async function assignmentOverviews(companyCode: string): Promise<Assignme
 }
 
 /** Kto z publika ešte nepotvrdil. Menovite — s tým sa dá niečo spraviť. */
-export async function nepotvrdili(
+export async function notAcknowledged(
   companyCode: string,
   assignmentId: string,
 ): Promise<AudienceMember[]> {

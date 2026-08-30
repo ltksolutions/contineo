@@ -24,7 +24,7 @@ function Udaj({ popis, hodnota, tichy }: { popis: string; hodnota: string; tichy
   )
 }
 
-export default async function SpravaTenantov() {
+export default async function TenantAdminPage() {
   const ctx = await platformContext()
   if (ctx.state !== "ready") {
     if (ctx.state === "not-signed-in") redirect("/prihlasenie")

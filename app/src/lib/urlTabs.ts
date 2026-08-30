@@ -11,11 +11,11 @@
  *
  * Zmizne, keď staré odkazy prestanú chodiť.
  */
-export const STARE_KLUCE: Record<string, string> = {
+export const LEGACY_TAB_KEYS: Record<string, string> = {
   utvary: "oddelenia",
 }
 
-export function preloz(kluc: string | undefined): string | undefined {
+export function translateTabKey(kluc: string | undefined): string | undefined {
   if (!kluc) return undefined
-  return STARE_KLUCE[kluc] ?? kluc
+  return LEGACY_TAB_KEYS[kluc] ?? kluc
 }

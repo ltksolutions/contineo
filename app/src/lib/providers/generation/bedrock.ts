@@ -29,14 +29,14 @@ import {
   CompleteOptions, ProviderConfigError,
 } from "../types"
 import { anthropicEvent, messagesBody } from "./anthropic"
-import { citajEventy } from "./eventStream"
+import { readEventStream } from "./eventStream"
 import { signRequest } from "./sigv4"
 
 /** Verzia Messages API, ktorú Bedrock očakáva v tele požiadavky. */
 const BEDROCK_VERSION = "bedrock-2023-05-31"
 
 /** Regióny so spracovaním v EÚ — viď residency.ts. */
-export const EU_REGIONY = new Set([
+export const EU_REGIONS = new Set([
   "eu-central-1", "eu-central-2",
   "eu-west-1", "eu-west-2", "eu-west-3",
   "eu-north-1", "eu-south-1", "eu-south-2",
@@ -113,7 +113,7 @@ export class BedrockGenerationProvider implements GenerationProvider {
     const res = await this.posli(this.url(true), telo)
     if (!res.body) throw new Error("Bedrock: odpoveď bez tela")
 
-    for await (const ev of citajEventy(res.body)) {
+    for await (const ev of readEventStream(res.body)) {
       yield* anthropicEvent(ev, req.chunks)
     }
   }
@@ -139,8 +139,8 @@ export class BedrockGenerationProvider implements GenerationProvider {
 }
 
 /** Používa tento profil región v EÚ? Rozhoduje o lokalite v residency.ts. */
-export function jeEuRegion(region?: string): boolean {
-  return !!region && EU_REGIONY.has(region)
+export function isEuRegion(region?: string): boolean {
+  return !!region && EU_REGIONS.has(region)
 }
 
 export type { ChunkResult }

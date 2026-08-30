@@ -20,10 +20,10 @@
 
 import { getCollection } from "./mongodb"
 
-export const ZNACKY_COLLECTION = "tenant_assets"
+export const BRANDING_COLLECTION = "tenant_assets"
 
 /** Väčšie logo nemá dôvod existovať — v hlavičke má 26 px. */
-export const MAX_BAJTOV = 256 * 1024
+export const MAX_BYTES = 256 * 1024
 
 /**
  * Povolené typy. SVG **zámerne nie je**: je to spustiteľný dokument, môže
@@ -31,9 +31,9 @@ export const MAX_BAJTOV = 256 * 1024
  * kód na doménu, na ktorej sa potvrdzujú smernice. Kto má logo v SVG, nech
  * ho vyexportuje do PNG — stratí sa ostrosť pri zväčšení, nie bezpečnosť.
  */
-export const POVOLENE_TYPY = ["image/png", "image/jpeg", "image/webp"] as const
+export const ALLOWED_TYPES = ["image/png", "image/jpeg", "image/webp"] as const
 
-export interface Znacka {
+export interface Brand {
   companyCode: string
   contentType: string
   /** Samotný obrázok. Malý a čítaný zriedka, takže priamo v zázname. */
@@ -45,7 +45,7 @@ export interface Znacka {
   updatedBy: string
 }
 
-export class ZnackaError extends Error {
+export class BrandError extends Error {
   constructor(message: string) {
     super(message)
     this.name = "ZnackaError"
@@ -53,33 +53,33 @@ export class ZnackaError extends Error {
 }
 
 /** Skontroluje, čo prišlo z formulára. Vracia dôvod, nie `false`. */
-export function skontrolujSubor(typ: string, bajtov: number): void {
-  if (!(POVOLENE_TYPY as readonly string[]).includes(typ)) {
-    throw new ZnackaError(
+export function checkFile(typ: string, bajtov: number): void {
+  if (!(ALLOWED_TYPES as readonly string[]).includes(typ)) {
+    throw new BrandError(
       `Nepodporovaný formát (${typ || "neznámy"}). Použi PNG, JPEG alebo WebP. ` +
       "SVG zámerne nie — môže obsahovať skript a servírovali by sme cudzí kód z vlastnej domény."
     )
   }
-  if (bajtov <= 0) throw new ZnackaError("Súbor je prázdny.")
-  if (bajtov > MAX_BAJTOV) {
-    throw new ZnackaError(
-      `Súbor má ${Math.round(bajtov / 1024)} kB, najviac je ${MAX_BAJTOV / 1024} kB. ` +
+  if (bajtov <= 0) throw new BrandError("Súbor je prázdny.")
+  if (bajtov > MAX_BYTES) {
+    throw new BrandError(
+      `Súbor má ${Math.round(bajtov / 1024)} kB, najviac je ${MAX_BYTES / 1024} kB. ` +
       "V hlavičke má logo 26 px — väčší súbor nič nepridá."
     )
   }
 }
 
 /** Uloží logo a vráti cestu, ktorou sa servíruje. */
-export async function ulozZnacku(
+export async function saveBrand(
   companyCode: string,
   typ: string,
   data: Buffer,
   actor: string,
 ): Promise<string> {
-  skontrolujSubor(typ, data.byteLength)
+  checkFile(typ, data.byteLength)
 
   const verzia = Date.now().toString(36)
-  const col = await getCollection<Znacka>(ZNACKY_COLLECTION)
+  const col = await getCollection<Brand>(BRANDING_COLLECTION)
   await col.updateOne(
     { companyCode },
     {
@@ -95,7 +95,7 @@ export async function ulozZnacku(
     },
     { upsert: true },
   )
-  return cestaZnacky(companyCode, verzia)
+  return brandPath(companyCode, verzia)
 }
 
 /**
@@ -105,16 +105,16 @@ export async function ulozZnacku(
  * a nové logo sa aj tak ukáže okamžite, lebo má inú adresu. Opačne (krátka
  * pamäť, rovnaká adresa) by sa obrázok sťahoval znova a znova pre nič.
  */
-export function cestaZnacky(companyCode: string, verzia: string): string {
+export function brandPath(companyCode: string, verzia: string): string {
   return `/api/znacka/${encodeURIComponent(companyCode.toLowerCase())}?v=${verzia}`
 }
 
-export async function nacitajZnacku(companyCode: string): Promise<Znacka | null> {
-  const col = await getCollection<Znacka>(ZNACKY_COLLECTION)
+export async function loadBrand(companyCode: string): Promise<Brand | null> {
+  const col = await getCollection<Brand>(BRANDING_COLLECTION)
   return col.findOne({ companyCode: companyCode.toUpperCase() })
 }
 
-export async function zmazZnacku(companyCode: string): Promise<void> {
-  const col = await getCollection<Znacka>(ZNACKY_COLLECTION)
+export async function deleteBrand(companyCode: string): Promise<void> {
+  const col = await getCollection<Brand>(BRANDING_COLLECTION)
   await col.deleteOne({ companyCode })
 }

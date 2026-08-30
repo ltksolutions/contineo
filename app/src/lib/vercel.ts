@@ -38,7 +38,7 @@ export function vercelConfig(): VercelConfig | null {
  * Vracia **dôvod**, nie `true/false` — obrazovka aj skript ho ukazujú človeku
  * a „nič sa nestalo" bez vysvetlenia vyzerá ako chyba.
  */
-export function preskocitVercel(host: string): string | null {
+export function skipVercel(host: string): string | null {
   if (host === "localhost" || host.endsWith(".localhost") || host === "127.0.0.1") {
     return "beží lokálne, k Vercelu nedorazí"
   }
@@ -50,7 +50,7 @@ export function preskocitVercel(host: string): string | null {
   return null
 }
 
-export type VysledokDomeny =
+export type DomainResult =
   | { stav: "pridana" }
   | { stav: "uz-je" }
   | { stav: "preskocena"; dovod: string }
@@ -81,8 +81,8 @@ async function volaj(c: VercelConfig, cesta: string, init?: RequestInit) {
 }
 
 /** Priradí doménu projektu. Opakované volanie nie je chyba. */
-export async function pridajDomenu(host: string): Promise<VysledokDomeny> {
-  const dovod = preskocitVercel(host)
+export async function addDomain(host: string): Promise<DomainResult> {
+  const dovod = skipVercel(host)
   if (dovod) return { stav: "preskocena", dovod }
 
   const c = vercelConfig()
@@ -106,7 +106,7 @@ export async function pridajDomenu(host: string): Promise<VysledokDomeny> {
   }
 }
 
-export interface StavDomeny {
+export interface DomainStatus {
   host: string
   /** Netýka sa Vercelu — a vtedy je `null` všetko ostatné. */
   preskocena: string | null
@@ -120,22 +120,22 @@ export interface StavDomeny {
 }
 
 /** Univerzálny cieľ, ktorý Vercel uvádza v dokumentácii. */
-export const CNAME_CIEL = "cname.vercel-dns.com"
+export const CNAME_TARGET = "cname.vercel-dns.com"
 
 /**
  * Stav sa **číta naživo**, nikde sa neukladá. Uložená kópia by klamala presne
  * vtedy, keď si zákazník prestaví DNS — a to je jediný okamih, keď na tomto
  * údaji záleží. Rovnaké pravidlo ako D27.
  */
-export async function stavDomeny(host: string): Promise<StavDomeny> {
-  const zaklad: StavDomeny = {
+export async function domainStatus(host: string): Promise<DomainStatus> {
+  const zaklad: DomainStatus = {
     host,
-    preskocena: preskocitVercel(host),
+    preskocena: skipVercel(host),
     vProjekte: false,
     overena: false,
     nastaveneCez: null,
     konflikty: [],
-    cname: CNAME_CIEL,
+    cname: CNAME_TARGET,
   }
   if (zaklad.preskocena) return zaklad
 
@@ -157,7 +157,7 @@ export async function stavDomeny(host: string): Promise<StavDomeny> {
       overena: (vProjekte.telo as { verified?: boolean }).verified === true,
       nastaveneCez: kt.configuredBy ?? null,
       konflikty: (kt.conflicts ?? []).map(k => `${k.type ?? "?"} ${k.value ?? ""}`.trim()),
-      cname: kt.recommendedCNAME?.[0]?.value ?? CNAME_CIEL,
+      cname: kt.recommendedCNAME?.[0]?.value ?? CNAME_TARGET,
     }
   } catch (e) {
     console.error(`[vercel] stav domény ${host} sa nepodarilo zistiť:`, e)
@@ -166,7 +166,7 @@ export async function stavDomeny(host: string): Promise<StavDomeny> {
 }
 
 /** Pokyn pre zákazníka. Odvodí sa z hostiteľa — neukladá sa nikde. */
-export function pokynCname(host: string, cname = CNAME_CIEL): string {
+export function cnameInstruction(host: string, cname = CNAME_TARGET): string {
   const [pod] = host.split(".")
   return `CNAME ${pod} → ${cname}`
 }
@@ -176,7 +176,7 @@ export function pokynCname(host: string, cname = CNAME_CIEL): string {
  * dva rôzne texty o tom istom nastavení sú spoľahlivý spôsob, ako niekomu
  * poradiť dvakrát rozdielne.
  */
-export function pokynyPreZakaznika(host: string, cname = CNAME_CIEL) {
+export function customerInstructions(host: string, cname = CNAME_TARGET) {
   const [pod] = host.split(".")
   return {
     subject: `Nastavenie domény ${host}`,

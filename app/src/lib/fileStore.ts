@@ -21,9 +21,9 @@ import { getDb } from "./mongodb"
 export const BUCKET = "cms_files"
 
 /** Nad tým už to nie je norma, ale archív. Strop je aj ochrana funkcie. */
-export const MAX_BAJTOV = 32 * 1024 * 1024
+export const MAX_BYTES = 32 * 1024 * 1024
 
-export interface UlozenySubor {
+export interface StoredFile {
   id: string
   nazov: string
   contentType: string
@@ -36,7 +36,7 @@ async function bucket(): Promise<GridFSBucket> {
   return new GridFSBucket(db, { bucketName: BUCKET })
 }
 
-export class UloziskoError extends Error {
+export class FileStoreError extends Error {
   constructor(message: string) {
     super(message)
     this.name = "UloziskoError"
@@ -50,17 +50,17 @@ export class UloziskoError extends Error {
  * identifikátor v GridFS sa dá uhádnuť a súbory cudzej organizácie sa nesmú
  * dať vytiahnuť skúšaním (D32).
  */
-export async function ulozSubor(
+export async function saveFile(
   companyCode: string,
   nazov: string,
   contentType: string,
   data: Buffer,
   aktor: string,
-): Promise<UlozenySubor> {
-  if (!data?.byteLength) throw new UloziskoError("Súbor je prázdny.")
-  if (data.byteLength > MAX_BAJTOV) {
-    throw new UloziskoError(
-      `Súbor má ${Math.round(data.byteLength / 1024 / 1024)} MB, strop je ${MAX_BAJTOV / 1024 / 1024} MB.`,
+): Promise<StoredFile> {
+  if (!data?.byteLength) throw new FileStoreError("Súbor je prázdny.")
+  if (data.byteLength > MAX_BYTES) {
+    throw new FileStoreError(
+      `Súbor má ${Math.round(data.byteLength / 1024 / 1024)} MB, strop je ${MAX_BYTES / 1024 / 1024} MB.`,
     )
   }
 
@@ -86,7 +86,7 @@ export async function ulozSubor(
 }
 
 /** Načíta súbor vlastnej organizácie. `null`, keď taký nie je. */
-export async function nacitajSubor(
+export async function loadFile(
   companyCode: string,
   id: string,
 ): Promise<{ data: Buffer; contentType: string; nazov: string } | null> {
@@ -119,7 +119,7 @@ export async function nacitajSubor(
  * nevznikol. Pôvodný súbor publikovaného dokumentu sa nemaže nikdy — je to
  * jediný dôkaz, z čoho Markdown vznikol.
  */
-export async function zmazSubor(companyCode: string, id: string): Promise<void> {
+export async function deleteFile(companyCode: string, id: string): Promise<void> {
   if (!ObjectId.isValid(id)) return
   const b = await bucket()
   const [zaznam] = await b.find({ _id: new ObjectId(id), "metadata.companyCode": companyCode }).toArray()

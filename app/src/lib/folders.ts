@@ -21,14 +21,14 @@
 
 import { getCollection } from "./mongodb"
 import { DOCUMENTS_COLLECTION } from "./documents"
-import { zapisAudit } from "./audit"
+import { writeAudit } from "./audit"
 
-export const PRIECINKY_COLLECTION = "cms_folders"
+export const FOLDERS_COLLECTION = "cms_folders"
 
 /** Rovnaká hranica ako pri oddelenieoch — a z rovnakého dôvodu (čitateľnosť). */
-export const MAX_HLBKA = 6
+export const MAX_DEPTH = 6
 
-export interface Priecinok {
+export interface Folder {
   companyCode: string
   id: string
   nazov: string
@@ -48,7 +48,7 @@ export interface Priecinok {
   updatedBy?: string
 }
 
-export class PriecinokError extends Error {
+export class FolderError extends Error {
   constructor(message: string) {
     super(message)
     this.name = "PriecinokError"
@@ -56,7 +56,7 @@ export class PriecinokError extends Error {
 }
 
 /** Priame podpriečinky v poradí, ktoré určil človek; inak abecedne. */
-export function deti(vsetky: Priecinok[], parentId: string | null): Priecinok[] {
+export function children(vsetky: Folder[], parentId: string | null): Folder[] {
   return vsetky
     .filter(p => (p.parentId ?? null) === parentId)
     .sort((a, b) => {
@@ -69,28 +69,28 @@ export function deti(vsetky: Priecinok[], parentId: string | null): Priecinok[] 
 }
 
 /** Cesta od koreňa po daný priečinok vrátane. Nezacyklí sa ani na chybných dátach. */
-export function cesta(vsetky: Priecinok[], id: string | null | undefined): Priecinok[] {
+export function pathTo(vsetky: Folder[], id: string | null | undefined): Folder[] {
   if (!id) return []
   const podla = new Map(vsetky.map(p => [p.id, p]))
-  const out: Priecinok[] = []
+  const out: Folder[] = []
   let teraz = podla.get(id)
   let poistka = 0
-  while (teraz && poistka++ < MAX_HLBKA + 2) {
+  while (teraz && poistka++ < MAX_DEPTH + 2) {
     out.unshift(teraz)
     teraz = teraz.parentId ? podla.get(teraz.parentId) : undefined
   }
   return out
 }
 
-export function cestaIds(vsetky: Priecinok[], id: string | null | undefined): string[] {
-  return cesta(vsetky, id).map(p => p.id)
+export function pathIdsTo(vsetky: Folder[], id: string | null | undefined): string[] {
+  return pathTo(vsetky, id).map(p => p.id)
 }
 
-export function podstrom(vsetky: Priecinok[], id: string): Set<string> {
+export function subtree(vsetky: Folder[], id: string): Set<string> {
   const out = new Set<string>([id])
   let rastie = true
   let poistka = 0
-  while (rastie && poistka++ < MAX_HLBKA + 2) {
+  while (rastie && poistka++ < MAX_DEPTH + 2) {
     rastie = false
     for (const p of vsetky) {
       if (p.parentId && out.has(p.parentId) && !out.has(p.id)) {
@@ -102,77 +102,77 @@ export function podstrom(vsetky: Priecinok[], id: string): Set<string> {
   return out
 }
 
-export function hlbka(vsetky: Priecinok[], id: string | null | undefined): number {
-  return cesta(vsetky, id).length
+export function depth(vsetky: Folder[], id: string | null | undefined): number {
+  return pathTo(vsetky, id).length
 }
 
 /** Smie sa priečinok presunúť? Vracia dôvod, nie `false`. */
-export function smieSaPresunut(
-  vsetky: Priecinok[],
+export function canMove(
+  vsetky: Folder[],
   id: string,
   novyParentId: string | null,
 ): string | null {
   if (!novyParentId) return null
   if (novyParentId === id) return "Priečinok nemôže byť nadriadený sám sebe."
 
-  const pod = podstrom(vsetky, id)
+  const pod = subtree(vsetky, id)
   if (pod.has(novyParentId)) {
     return "Priečinok sa nedá presunúť do svojho vlastného podpriečinka — vznikol by kruh."
   }
 
-  const hlbkaRodica = hlbka(vsetky, novyParentId)
+  const hlbkaRodica = depth(vsetky, novyParentId)
   let najhlbsie = 1
   for (const p of vsetky) {
-    if (pod.has(p.id)) najhlbsie = Math.max(najhlbsie, hlbka(vsetky, p.id) - hlbka(vsetky, id) + 1)
+    if (pod.has(p.id)) najhlbsie = Math.max(najhlbsie, depth(vsetky, p.id) - depth(vsetky, id) + 1)
   }
-  if (hlbkaRodica + najhlbsie > MAX_HLBKA) {
-    return `Štruktúra by mala viac než ${MAX_HLBKA} úrovní.`
+  if (hlbkaRodica + najhlbsie > MAX_DEPTH) {
+    return `Štruktúra by mala viac než ${MAX_DEPTH} úrovní.`
   }
   return null
 }
 
-export interface RiadokStromu {
-  priecinok: Priecinok
+export interface FolderRow {
+  priecinok: Folder
   uroven: number
 }
 
-export function splostiStrom(vsetky: Priecinok[], parentId: string | null = null, uroven = 1): RiadokStromu[] {
-  const out: RiadokStromu[] = []
-  for (const p of deti(vsetky, parentId)) {
+export function flattenTree(vsetky: Folder[], parentId: string | null = null, uroven = 1): FolderRow[] {
+  const out: FolderRow[] = []
+  for (const p of children(vsetky, parentId)) {
     out.push({ priecinok: p, uroven })
-    if (uroven < MAX_HLBKA) out.push(...splostiStrom(vsetky, p.id, uroven + 1))
+    if (uroven < MAX_DEPTH) out.push(...flattenTree(vsetky, p.id, uroven + 1))
   }
   return out
 }
 
 // ── databáza ─────────────────────────────────────────────────────────────────
 
-export async function vsetkyPriecinky(companyCode: string): Promise<Priecinok[]> {
-  const col = await getCollection<Priecinok>(PRIECINKY_COLLECTION)
+export async function allFolders(companyCode: string): Promise<Folder[]> {
+  const col = await getCollection<Folder>(FOLDERS_COLLECTION)
   return col.find({ companyCode }).toArray()
 }
 
-export async function zalozPriecinok(
+export async function createFolder(
   companyCode: string,
   nazov: string,
   parentId: string | null,
   aktor: string,
-): Promise<Priecinok> {
+): Promise<Folder> {
   const meno = nazov.trim()
-  if (!meno) throw new PriecinokError("Názov priečinka je povinný.")
+  if (!meno) throw new FolderError("Názov priečinka je povinný.")
 
-  const vsetky = await vsetkyPriecinky(companyCode)
+  const vsetky = await allFolders(companyCode)
   if (parentId && !vsetky.some(p => p.id === parentId)) {
-    throw new PriecinokError("Nadriadený priečinok neexistuje.")
+    throw new FolderError("Nadriadený priečinok neexistuje.")
   }
-  if (hlbka(vsetky, parentId) + 1 > MAX_HLBKA) {
-    throw new PriecinokError(`Štruktúra môže mať najviac ${MAX_HLBKA} úrovní.`)
+  if (depth(vsetky, parentId) + 1 > MAX_DEPTH) {
+    throw new FolderError(`Štruktúra môže mať najviac ${MAX_DEPTH} úrovní.`)
   }
-  if (deti(vsetky, parentId ?? null).some(p => p.nazov.toLowerCase() === meno.toLowerCase())) {
-    throw new PriecinokError(`Na tejto úrovni už priečinok „${meno}" je.`)
+  if (children(vsetky, parentId ?? null).some(p => p.nazov.toLowerCase() === meno.toLowerCase())) {
+    throw new FolderError(`Na tejto úrovni už priečinok „${meno}" je.`)
   }
 
-  const p: Priecinok = {
+  const p: Folder = {
     companyCode,
     id: crypto.randomUUID(),
     nazov: meno,
@@ -180,50 +180,50 @@ export async function zalozPriecinok(
     createdAt: new Date(),
     createdBy: aktor,
   }
-  const col = await getCollection<Priecinok>(PRIECINKY_COLLECTION)
+  const col = await getCollection<Folder>(FOLDERS_COLLECTION)
   await col.insertOne(p as never)
-  await zapisAudit({
+  await writeAudit({
     companyCode, predmet: "priecinok", akcia: "zalozene", aktor,
     cielId: p.id, cielPopis: meno,
   })
   return p
 }
 
-export async function premenujPriecinok(
+export async function renameFolder(
   companyCode: string, id: string, nazov: string, aktor: string,
 ): Promise<void> {
   const meno = nazov.trim()
-  if (!meno) throw new PriecinokError("Názov priečinka je povinný.")
-  const col = await getCollection<Priecinok>(PRIECINKY_COLLECTION)
+  if (!meno) throw new FolderError("Názov priečinka je povinný.")
+  const col = await getCollection<Folder>(FOLDERS_COLLECTION)
   const pred = await col.findOne({ companyCode, id })
-  if (!pred) throw new PriecinokError("Taký priečinok tu nie je.")
+  if (!pred) throw new FolderError("Taký priečinok tu nie je.")
 
   await col.updateOne({ companyCode, id }, { $set: { nazov: meno, updatedAt: new Date(), updatedBy: aktor } })
-  await zapisAudit({
+  await writeAudit({
     companyCode, predmet: "priecinok", akcia: "premenovane", aktor,
     cielId: id, cielPopis: meno, zmeny: { nazov: { z: pred.nazov, na: meno } },
   })
 }
 
-export async function presunPriecinok(
+export async function moveFolder(
   companyCode: string, id: string, novyParentId: string | null, aktor: string,
 ): Promise<void> {
-  const vsetky = await vsetkyPriecinky(companyCode)
+  const vsetky = await allFolders(companyCode)
   const pred = vsetky.find(p => p.id === id)
-  if (!pred) throw new PriecinokError("Taký priečinok tu nie je.")
+  if (!pred) throw new FolderError("Taký priečinok tu nie je.")
   if (novyParentId && !vsetky.some(p => p.id === novyParentId)) {
-    throw new PriecinokError("Nadriadený priečinok neexistuje.")
+    throw new FolderError("Nadriadený priečinok neexistuje.")
   }
-  const preco = smieSaPresunut(vsetky, id, novyParentId)
-  if (preco) throw new PriecinokError(preco)
+  const preco = canMove(vsetky, id, novyParentId)
+  if (preco) throw new FolderError(preco)
 
-  const col = await getCollection<Priecinok>(PRIECINKY_COLLECTION)
+  const col = await getCollection<Folder>(FOLDERS_COLLECTION)
   await col.updateOne(
     { companyCode, id },
     { $set: { parentId: novyParentId ?? null, updatedAt: new Date(), updatedBy: aktor } },
   )
-  const dotknutych = await prepocitajCesty(companyCode)
-  await zapisAudit({
+  const dotknutych = await recomputePaths(companyCode)
+  await writeAudit({
     companyCode, predmet: "priecinok", akcia: "presunute", aktor,
     cielId: id, cielPopis: pred.nazov,
     zmeny: { parentId: { z: pred.parentId, na: novyParentId ?? null } },
@@ -235,29 +235,29 @@ export async function presunPriecinok(
  * Zruší priečinok. **Len prázdny** — inak by dokumenty odkazovali na niečo,
  * čo neexistuje, a zmizli by z každého filtra naraz.
  */
-export async function zrusPriecinok(companyCode: string, id: string, aktor: string): Promise<void> {
-  const vsetky = await vsetkyPriecinky(companyCode)
-  if (deti(vsetky, id).length > 0) {
-    throw new PriecinokError("Priečinok má podpriečinky — najprv ich presuňte alebo zrušte.")
+export async function deleteFolder(companyCode: string, id: string, aktor: string): Promise<void> {
+  const vsetky = await allFolders(companyCode)
+  if (children(vsetky, id).length > 0) {
+    throw new FolderError("Priečinok má podpriečinky — najprv ich presuňte alebo zrušte.")
   }
   const docs = await getCollection(DOCUMENTS_COLLECTION)
   const pocet = await docs.countDocuments({ companyCode, folderId: id })
   if (pocet > 0) {
-    throw new PriecinokError(`V priečinku je ${pocet} dokumentov — najprv ich preraďte.`)
+    throw new FolderError(`V priečinku je ${pocet} dokumentov — najprv ich preraďte.`)
   }
 
-  const col = await getCollection<Priecinok>(PRIECINKY_COLLECTION)
+  const col = await getCollection<Folder>(FOLDERS_COLLECTION)
   const pred = await col.findOne({ companyCode, id })
   await col.deleteOne({ companyCode, id })
-  await zapisAudit({
+  await writeAudit({
     companyCode, predmet: "priecinok", akcia: "zrusene", aktor,
     cielId: id, cielPopis: pred?.nazov ?? null,
   })
 }
 
 /** Prepočíta `folderPath` všetkým dokumentom organizácie. */
-export async function prepocitajCesty(companyCode: string): Promise<number> {
-  const vsetky = await vsetkyPriecinky(companyCode)
+export async function recomputePaths(companyCode: string): Promise<number> {
+  const vsetky = await allFolders(companyCode)
   const col = await getCollection(DOCUMENTS_COLLECTION)
   const dokumenty = await col
     .find({ companyCode }, { projection: { documentId: 1, folderId: 1, folderPath: 1 } })
@@ -265,7 +265,7 @@ export async function prepocitajCesty(companyCode: string): Promise<number> {
 
   let zmenene = 0
   for (const d of dokumenty as unknown as { documentId: string; folderId?: string | null; folderPath?: string[] }[]) {
-    const nova = cestaIds(vsetky, d.folderId)
+    const nova = pathIdsTo(vsetky, d.folderId)
     const stara = d.folderPath ?? []
     if (nova.length === stara.length && nova.every((x, i) => x === stara[i])) continue
     await col.updateOne({ companyCode, documentId: d.documentId }, { $set: { folderPath: nova } })
@@ -275,7 +275,7 @@ export async function prepocitajCesty(companyCode: string): Promise<number> {
 }
 
 /** Koľko dokumentov je priamo v priečinku a koľko aj s podpriečinkami. */
-export async function pocty(
+export async function counts(
   companyCode: string,
 ): Promise<Map<string, { priamo: number; sPodriadenymi: number }>> {
   const col = await getCollection(DOCUMENTS_COLLECTION)
@@ -302,15 +302,15 @@ export async function pocty(
  * Cesta sa zapisuje **v tom istom zápise**: rozdelené na dva by chvíľu platilo,
  * že dokument v priečinku je, ale filter „aj s podpriečinkami" ho nenájde.
  */
-export async function zaradDokument(
+export async function assignDocument(
   companyCode: string,
   documentId: string,
   folderId: string | null,
   aktor: string,
 ): Promise<void> {
-  const vsetky = await vsetkyPriecinky(companyCode)
+  const vsetky = await allFolders(companyCode)
   if (folderId && !vsetky.some(p => p.id === folderId)) {
-    throw new PriecinokError("Taký priečinok neexistuje.")
+    throw new FolderError("Taký priečinok neexistuje.")
   }
 
   const col = await getCollection(DOCUMENTS_COLLECTION)
@@ -319,13 +319,13 @@ export async function zaradDokument(
     {
       $set: {
         folderId: folderId ?? null,
-        folderPath: cestaIds(vsetky, folderId),
+        folderPath: pathIdsTo(vsetky, folderId),
         updatedAt: new Date(),
         updatedBy: aktor,
       },
     },
   )
-  if (!r.matchedCount) throw new PriecinokError("Taký dokument tu nie je.")
+  if (!r.matchedCount) throw new FolderError("Taký dokument tu nie je.")
 }
 
 
@@ -336,17 +336,17 @@ export async function zaradDokument(
  * ťahania by znamenalo, že sa človek pri preusporadúvaní omylom prepadne
  * o úroveň nižšie.
  */
-export async function posunPriecinok(
+export async function shiftFolder(
   companyCode: string,
   id: string,
   smer: "hore" | "dole",
   aktor: string,
 ): Promise<void> {
-  const vsetky = await vsetkyPriecinky(companyCode)
+  const vsetky = await allFolders(companyCode)
   const ja = vsetky.find(p => p.id === id)
-  if (!ja) throw new PriecinokError("Taký priečinok tu nie je.")
+  if (!ja) throw new FolderError("Taký priečinok tu nie je.")
 
-  const surodenci = deti(vsetky, ja.parentId ?? null)
+  const surodenci = children(vsetky, ja.parentId ?? null)
   const kde = surodenci.findIndex(p => p.id === id)
   const kam = smer === "hore" ? kde - 1 : kde + 1
   if (kam < 0 || kam >= surodenci.length) return
@@ -355,8 +355,8 @@ export async function posunPriecinok(
   const [vybraty] = zoradene.splice(kde, 1)
   zoradene.splice(kam, 0, vybraty)
 
-  await ulozPoradiePriecinkov(companyCode, zoradene.map(p => p.id), aktor)
-  await zapisAudit({
+  await saveFolderOrder(companyCode, zoradene.map(p => p.id), aktor)
+  await writeAudit({
     companyCode, predmet: "priecinok", akcia: "preusporiadane", aktor,
     cielId: id, cielPopis: ja.nazov,
     poznamka: `posunuté ${smer} medzi súrodencami`,
@@ -374,24 +374,24 @@ export async function posunPriecinok(
  * nemusí mať poradie určené vôbec a bez prečíslovania by sa výsledok líšil od
  * toho, čo človek videl.
  */
-export async function ulozPoradiePriecinkov(
+export async function saveFolderOrder(
   companyCode: string,
   idVPoradi: string[],
   aktor: string,
 ): Promise<void> {
-  const vsetky = await vsetkyPriecinky(companyCode)
+  const vsetky = await allFolders(companyCode)
   const podla = new Map(vsetky.map(p => [p.id, p]))
 
   const dotknute = idVPoradi.map(x => podla.get(x))
   if (dotknute.some(p => p === undefined)) {
-    throw new PriecinokError("Zoznam obsahuje priečinok, ktorý tu nie je.")
+    throw new FolderError("Zoznam obsahuje priečinok, ktorý tu nie je.")
   }
   const rodicia = new Set(dotknute.map(p => p!.parentId ?? "koren"))
   if (rodicia.size > 1) {
-    throw new PriecinokError("Preusporiadať sa dá len v rámci jednej úrovne.")
+    throw new FolderError("Preusporiadať sa dá len v rámci jednej úrovne.")
   }
 
-  const col = await getCollection<Priecinok>(PRIECINKY_COLLECTION)
+  const col = await getCollection<Folder>(FOLDERS_COLLECTION)
   const teraz = new Date()
   for (const [i, x] of idVPoradi.entries()) {
     await col.updateOne(

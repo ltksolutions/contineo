@@ -23,7 +23,7 @@ import { useEffect, useRef, useState } from "react"
 import Editor from "@toast-ui/editor"
 import "@toast-ui/editor/dist/toastui-editor.css"
 
-export default function EditorTextu({
+export default function TextEditor({
   meno,
   pociatocny,
 }: {

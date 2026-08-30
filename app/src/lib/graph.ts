@@ -27,12 +27,12 @@
 const POLIA = "givenName,surname,displayName,department,jobTitle,preferredLanguage"
 
 /** Fotka do hlavičky. 96 px kvôli obrazovkám s dvojnásobnou hustotou. */
-export const VELKOST_FOTKY = 96
+export const PHOTO_SIZE = 96
 
 /** Krátky strop. Prihlásenie nesmie visieť na cudzom API. */
 const STROP_MS = 4000
 
-export interface UdajeZGraphu {
+export interface GraphData {
   givenName?: string
   surname?: string
   displayName?: string
@@ -67,10 +67,10 @@ async function fetchSoStropom(url: string, token: string): Promise<Response | nu
  * `chceFotku` je tu preto, že fotka je druhá požiadavka a väčšina prihlásení
  * ju nepotrebuje — má ju už uloženú z prvého.
  */
-export async function udajeZGraphu(
+export async function graphData(
   accessToken: string | undefined,
   chceFotku = true,
-): Promise<UdajeZGraphu | null> {
+): Promise<GraphData | null> {
   if (!accessToken) return null
 
   const r = await fetchSoStropom(`https://graph.microsoft.com/v1.0/me?$select=${POLIA}`, accessToken)
@@ -94,7 +94,7 @@ export async function udajeZGraphu(
     return typeof v === "string" && v.trim() ? v.trim() : undefined
   }
 
-  const out: UdajeZGraphu = {
+  const out: GraphData = {
     givenName: text("givenName"),
     surname: text("surname"),
     displayName: text("displayName"),
@@ -105,7 +105,7 @@ export async function udajeZGraphu(
 
   if (chceFotku) {
     const f = await fetchSoStropom(
-      `https://graph.microsoft.com/v1.0/me/photos/${VELKOST_FOTKY}x${VELKOST_FOTKY}/$value`,
+      `https://graph.microsoft.com/v1.0/me/photos/${PHOTO_SIZE}x${PHOTO_SIZE}/$value`,
       accessToken,
     )
     // Fotku nemá každý a 404 je bežná odpoveď, nie chyba — do logu nepatrí.
@@ -134,7 +134,7 @@ export async function udajeZGraphu(
  * „Priezvisko, Meno (oddelenie)" a to sa v zozname osôb číta zle. Meno
  * a priezvisko zvlášť sú spoľahlivejšie.
  */
-export function celeMeno(u: UdajeZGraphu): string | undefined {
+export function fullName(u: GraphData): string | undefined {
   const zlozene = [u.givenName, u.surname].filter(Boolean).join(" ").trim()
   return zlozene || u.displayName
 }

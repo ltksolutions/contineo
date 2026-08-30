@@ -17,10 +17,10 @@ const { currentTenant, currentPerson, getCollection } = vi.hoisted(() => ({
 vi.mock("../src/lib/session", () => ({ currentTenant, currentPerson }))
 vi.mock("../src/lib/mongodb", () => ({ getCollection }))
 
-import { peopleContext, isPeopleAdmin, savePerson, PEOPLE_ROLE, PRIDELITELNE_ROLE } from "../src/lib/people"
+import { peopleContext, isPeopleAdmin, savePerson, PEOPLE_ROLE, ASSIGNABLE_ROLES } from "../src/lib/people"
 import { HR_ROLE } from "../src/lib/hr"
 import { PLATFORM_ROLE } from "../src/lib/admin"
-import { OBSAH_ROLE } from "../src/lib/library"
+import { CONTENT_ROLE } from "../src/lib/library"
 import type { Person } from "../src/lib/persons"
 import type { Tenant } from "../src/lib/tenants"
 
@@ -107,8 +107,8 @@ describe("brana spravy osob", () => {
 describe("co sa da priradit", () => {
   it("správcu platformy z tejto obrazovky prideliť nemožno", () => {
     // Patrí tenantovi dodávateľa a má vlastnú cestu (`npm run admin`).
-    expect(PRIDELITELNE_ROLE as readonly string[]).not.toContain(PLATFORM_ROLE)
-    expect(PRIDELITELNE_ROLE as readonly string[]).toEqual([HR_ROLE, PEOPLE_ROLE, OBSAH_ROLE])
+    expect(ASSIGNABLE_ROLES as readonly string[]).not.toContain(PLATFORM_ROLE)
+    expect(ASSIGNABLE_ROLES as readonly string[]).toEqual([HR_ROLE, PEOPLE_ROLE, CONTENT_ROLE])
   })
 })
 

@@ -9,11 +9,11 @@
 import { notFound, redirect } from "next/navigation"
 import Link from "next/link"
 import { platformContext } from "@/lib/admin"
-import { zalozTenant } from "../akcie"
+import { createTenantAction } from "../actions"
 
 export const dynamic = "force-dynamic"
 
-export default async function NovyTenant({
+export default async function NewTenantPage({
   searchParams,
 }: {
   searchParams: Promise<{ sprava?: string }>
@@ -49,7 +49,7 @@ export default async function NovyTenant({
         </p>
       )}
 
-      <form action={zalozTenant} className="karta admin-forma">
+      <form action={createTenantAction} className="karta admin-forma">
         <label className="pole">
           <span className="pole-popis">Kód organizácie</span>
           <input className="pole-vstup" name="companyCode" required />

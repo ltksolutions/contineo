@@ -20,19 +20,19 @@
 
 import { useEffect, useId, useRef, useState } from "react"
 
-export interface Volba {
+export interface SelectOption {
   hodnota: string
   popis: string
 }
 
-export default function Vyber({
+export default function Select({
   meno,
   volby,
   predvolena,
   popisPola,
 }: {
   meno: string
-  volby: Volba[]
+  volby: SelectOption[]
   predvolena?: string
   /** Pre čítačky obrazovky, keď `<label>` obaľuje celý blok. */
   popisPola?: string
@@ -61,7 +61,7 @@ export default function Vyber({
     setOtvorene(true)
   }
 
-  function vyber(v: Volba) {
+  function vyber(v: SelectOption) {
     setHodnota(v.hodnota)
     setOtvorene(false)
   }

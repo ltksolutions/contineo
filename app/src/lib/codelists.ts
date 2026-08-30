@@ -21,27 +21,27 @@ import sectionKey from "@/codelists/sectionKey.json"
 import sourceType from "@/codelists/sourceType.json"
 import tags from "@/codelists/tags.json"
 
-export interface Polozka {
+export interface CodelistItem {
   key: string
   label?: string
   description?: string
 }
 
-export interface Ciselnik {
+export interface Codelist {
   closed: boolean
-  polozky: Polozka[]
+  polozky: CodelistItem[]
 }
 
 type Surovy = { closed?: boolean; items?: { key: string; label?: string; description?: string }[] }
 
-function priprav(c: unknown): Ciselnik {
+function priprav(c: unknown): Codelist {
   const s = c as Surovy
   // `closed` chýbajúce znamená uzavretý — prísnejšia predvoľba je správna:
   // nový číselník bez rozhodnutia nemá potichu prijímať čokoľvek.
   return { closed: s.closed !== false, polozky: s.items ?? [] }
 }
 
-export const CISELNIKY: Record<string, Ciselnik> = {
+export const CODELISTS: Record<string, Codelist> = {
   accessLevel: priprav(accessLevel),
   category: priprav(category),
   companyCode: priprav(companyCode),
@@ -53,7 +53,7 @@ export const CISELNIKY: Record<string, Ciselnik> = {
 }
 
 /** Povinné metadáta dokumentu — zhodné s `scripts/lib/meta.mjs`. */
-export const POVINNE = ["title", "sectionKey", "companyCode", "scope", "accessLevel", "language"] as const
+export const REQUIRED_CODELISTS = ["title", "sectionKey", "companyCode", "scope", "accessLevel", "language"] as const
 
 /**
  * Tvar nového kľúča v otvorenom číselníku.
@@ -62,9 +62,9 @@ export const POVINNE = ["title", "sectionKey", "companyCode", "scope", "accessLe
  * `documentId` (`sfz:sutazny_poriadok`) a ten sa objaví v adresách, v logoch
  * a v exportoch. Diakritika a medzery by tam robili neplechu roky.
  */
-export const TVAR_KLUCA = /^[a-z0-9][a-z0-9_]{1,60}$/
+export const KEY_PATTERN = /^[a-z0-9][a-z0-9_]{1,60}$/
 
-export class CiselnikError extends Error {
+export class CodelistError extends Error {
   constructor(message: string) {
     super(message)
     this.name = "CiselnikError"
@@ -80,11 +80,11 @@ export class CiselnikError extends Error {
  * a keby si ich zákazník rozšíril, vznikla by hodnota, ktorej nikde inde
  * v systéme nikto nerozumie.
  */
-export const VLASTNE_CISELNIKY = ["category", "tags"] as const
-export type VlastnyCiselnik = (typeof VLASTNE_CISELNIKY)[number]
+export const CUSTOM_CODELISTS = ["category", "tags"] as const
+export type CustomCodelist = (typeof CUSTOM_CODELISTS)[number]
 
 /** Položky, ktoré si k číselníku dopísala organizácia. */
-export type Doplnky = Partial<Record<string, Polozka[]>>
+export type CodelistExtras = Partial<Record<string, CodelistItem[]>>
 
 /**
  * Číselník aj s tým, čo si k nemu organizácia pridala.
@@ -93,8 +93,8 @@ export type Doplnky = Partial<Record<string, Polozka[]>>
  * ktorými sú už otagované existujúce dokumenty, a zmiznutie kľúča z ponuky
  * by z nich spravilo neplatné údaje.
  */
-export function ciselnikPre(nazov: string, doplnky?: Doplnky): Ciselnik {
-  const zaklad = CISELNIKY[nazov]
+export function codelistFor(nazov: string, doplnky?: CodelistExtras): Codelist {
+  const zaklad = CODELISTS[nazov]
   if (!zaklad) return { closed: true, polozky: [] }
   const vlastne = doplnky?.[nazov] ?? []
   const uz = new Set(zaklad.polozky.map(p => p.key))
@@ -105,21 +105,21 @@ export function ciselnikPre(nazov: string, doplnky?: Doplnky): Ciselnik {
 }
 
 /** Overí jednu hodnotu proti číselníku. Vracia normalizovaný kľúč. */
-export function overHodnotu(ciselnik: string, hodnota: string, doplnky?: Doplnky): string {
-  const c = ciselnikPre(ciselnik, doplnky)
+export function checkValue(ciselnik: string, hodnota: string, doplnky?: CodelistExtras): string {
+  const c = codelistFor(ciselnik, doplnky)
   const v = (hodnota ?? "").trim()
-  if (!v) throw new CiselnikError(`Chýba hodnota pre ${ciselnik}.`)
-  if (!CISELNIKY[ciselnik]) throw new CiselnikError(`Číselník ${ciselnik} neexistuje.`)
+  if (!v) throw new CodelistError(`Chýba hodnota pre ${ciselnik}.`)
+  if (!CODELISTS[ciselnik]) throw new CodelistError(`Číselník ${ciselnik} neexistuje.`)
 
   if (c.polozky.some(p => p.key === v)) return v
 
   if (c.closed) {
-    throw new CiselnikError(
+    throw new CodelistError(
       `„${v}" nie je platná hodnota pre ${ciselnik}. Povolené: ${c.polozky.map(p => p.key).join(", ")}.`,
     )
   }
-  if (!TVAR_KLUCA.test(v)) {
-    throw new CiselnikError(
+  if (!KEY_PATTERN.test(v)) {
+    throw new CodelistError(
       `„${v}" sa nedá použiť ako kľúč pre ${ciselnik}. Malé písmená bez diakritiky, číslice ` +
       "a podčiarkovník — kľúč ide do identifikátora dokumentu a do adries.",
     )
@@ -128,19 +128,19 @@ export function overHodnotu(ciselnik: string, hodnota: string, doplnky?: Doplnky
 }
 
 /** Overí zoznam (tagy). Prázdny zoznam je v poriadku. */
-export function overZoznam(ciselnik: string, hodnoty: string[], doplnky?: Doplnky): string[] {
+export function checkList(ciselnik: string, hodnoty: string[], doplnky?: CodelistExtras): string[] {
   const out: string[] = []
   for (const h of hodnoty) {
     const v = (h ?? "").trim()
     if (!v) continue
-    out.push(overHodnotu(ciselnik, v, doplnky))
+    out.push(checkValue(ciselnik, v, doplnky))
   }
   return [...new Set(out)]
 }
 
 /** Voľby do výberu na obrazovke. */
-export function volby(ciselnik: string, doplnky?: Doplnky): { hodnota: string; popis: string }[] {
-  return ciselnikPre(ciselnik, doplnky).polozky.map(p => ({
+export function codelistOptions(ciselnik: string, doplnky?: CodelistExtras): { hodnota: string; popis: string }[] {
+  return codelistFor(ciselnik, doplnky).polozky.map(p => ({
     hodnota: p.key,
     popis: p.label ? `${p.label} (${p.key})` : p.key,
   }))
@@ -152,10 +152,10 @@ export function volby(ciselnik: string, doplnky?: Doplnky): { hodnota: string; p
  * Kľúč sa **nedá vziať späť**: otaguje sa ním obsah a zostane v `documents`
  * aj v `document_chunks`. Preto ten istý úzky tvar ako všade inde.
  */
-export function overVlastnuPolozku(kluc: string, popis: string): Polozka {
+export function checkCustomItem(kluc: string, popis: string): CodelistItem {
   const k = (kluc ?? "").trim().toLowerCase()
-  if (!TVAR_KLUCA.test(k)) {
-    throw new CiselnikError(
+  if (!KEY_PATTERN.test(k)) {
+    throw new CodelistError(
       `„${kluc}" sa nedá použiť ako kľúč. Malé písmená bez diakritiky, číslice ` +
       "a podčiarkovník — kľúčom sa označuje obsah a zostane v ňom natrvalo.",
     )

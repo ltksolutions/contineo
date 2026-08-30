@@ -12,8 +12,8 @@
 
 import { NextRequest, NextResponse } from "next/server"
 import { getToken } from "next-auth/jwt"
-import { zapisOdpoved, ulozPosudok } from "@/lib/ratings"
-import type { NovyZaznam, UpravaHodnotenia, Posudok } from "@/lib/ratings"
+import { recordAnswer, saveVerdict } from "@/lib/ratings"
+import type { NewRating, RatingEdit, Verdict } from "@/lib/ratings"
 
 /**
  * Kto hodnotí. Kým nie je prihlasovanie, ide o „anonym" — dôležité je, aby
@@ -30,7 +30,7 @@ async function ktoHodnoti(req: NextRequest): Promise<string> {
 }
 
 /** Posudok smie byť len 0, 1 alebo null — nič iné sa do DB nedostane. */
-function posudok(v: unknown): Posudok | undefined {
+function posudok(v: unknown): Verdict | undefined {
   if (v === null) return null
   if (v === 0 || v === 1) return v
   return undefined
@@ -42,7 +42,7 @@ function text(v: unknown, max: number): string | undefined {
 }
 
 export async function POST(req: NextRequest) {
-  let telo: Partial<NovyZaznam>
+  let telo: Partial<NewRating>
   try {
     telo = await req.json()
   } catch {
@@ -57,7 +57,7 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const id = await zapisOdpoved(
+    const id = await recordAnswer(
       {
         otazkaId: telo.otazkaId,
         otazka: telo.otazka,
@@ -94,7 +94,7 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json({ chyba: "Chýba id" }, { status: 400 })
   }
 
-  const uprava: UpravaHodnotenia = {}
+  const uprava: RatingEdit = {}
   const s = posudok(telo.spravna)
   const h = posudok(telo.halucinacia)
   if (s !== undefined) uprava.spravna = s
@@ -112,7 +112,7 @@ export async function PATCH(req: NextRequest) {
   }
 
   try {
-    const ok = await ulozPosudok(telo.id, uprava, await ktoHodnoti(req))
+    const ok = await saveVerdict(telo.id, uprava, await ktoHodnoti(req))
     if (!ok) {
       return NextResponse.json({ chyba: "Záznam sa nenašiel" }, { status: 404 })
     }

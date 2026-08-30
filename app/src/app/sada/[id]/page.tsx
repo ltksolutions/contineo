@@ -9,16 +9,16 @@
 import { notFound } from "next/navigation"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
-import { nacitajSadu, znenie } from "@/lib/goldenSet"
-import OtazkaSady from "@/components/GoldenSetQuestion"
+import { loadGoldenSet, questionText } from "@/lib/goldenSet"
+import GoldenSetQuestion from "@/components/GoldenSetQuestion"
 
 export const dynamic = "force-dynamic"
 
 // `params` je od Next 15 prísľub.
-export default async function DetailOtazky({ params }: { params: Promise<{ id: string }> }) {
+export default async function QuestionDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   const sedenie = await getServerSession(authOptions)
-  const vsetky = await nacitajSadu(sedenie?.user?.email ?? "")
+  const vsetky = await loadGoldenSet(sedenie?.user?.email ?? "")
   const otazka = vsetky.find(o => o.id === id)
   if (!otazka) notFound()
 
@@ -34,9 +34,9 @@ export default async function DetailOtazky({ params }: { params: Promise<{ id: s
 
   return (
     <div className="obal" style={{ padding: "28px 20px 80px" }}>
-      <OtazkaSady
+      <GoldenSetQuestion
         id={otazka.id}
-        znenie={znenie(otazka)}
+        znenie={questionText(otazka)}
         povodne={otazka.povodneZnenie}
         upravene={otazka.upraveneZnenie}
         vyradena={otazka.vyradena}

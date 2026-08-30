@@ -34,7 +34,7 @@ import { ObjectId } from "mongodb"
 import { getCollection } from "./mongodb"
 import { loadDocumentFor, effectiveVersion } from "./documents"
 import type { Version } from "./documents"
-import { vsetkyOddelenia, cesta } from "./departments"
+import { allDepartments, pathTo } from "./departments"
 import { formatDate, dictionary, normalizeLanguage } from "./i18n"
 import type { UiLanguage } from "./i18n"
 
@@ -170,8 +170,8 @@ export async function acknowledge(
   let departmentNames: string[] = []
   try {
     if (actor.departmentId) {
-      const strom = await vsetkyOddelenia(actor.companyCode)
-      departmentNames = cesta(strom, actor.departmentId).map(o => o.nazov)
+      const strom = await allDepartments(actor.companyCode)
+      departmentNames = pathTo(strom, actor.departmentId).map(o => o.nazov)
     }
   } catch (e) {
     console.error("[acknowledgements] oddelenie sa nepodarilo prečítať:", e)

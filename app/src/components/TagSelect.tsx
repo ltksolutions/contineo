@@ -17,7 +17,7 @@
 
 import { useState } from "react"
 
-export interface Stitok {
+export interface Tag {
   hodnota: string
   /** Koľko ľudí ju má. Prázdna skupina je varovanie, nie chyba. */
   osob?: number
@@ -28,14 +28,14 @@ function kluc(s: string): string {
   return s.trim().toLowerCase()
 }
 
-export default function VyberStitkov({
+export default function TagSelect({
   meno,
   ponuka,
   vybrane,
   popisNovej,
 }: {
   meno: string
-  ponuka: Stitok[]
+  ponuka: Tag[]
   vybrane: string[]
   popisNovej: string
 }) {
@@ -44,7 +44,7 @@ export default function VyberStitkov({
 
   // Ponuka aj to, čo osoba má, ale v organizácii to už nikto iný nemá —
   // inak by sa uložením ticho stratilo niečo, čo si nikto neželal zmazať.
-  const vsetky: Stitok[] = [
+  const vsetky: Tag[] = [
     ...ponuka,
     ...zvolene
       .filter(z => !ponuka.some(p => kluc(p.hodnota) === z))

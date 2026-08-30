@@ -25,7 +25,7 @@ const ALGORITMUS = "aes-256-gcm"
 const DLZKA_IV = 12
 const DLZKA_ZNACKY = 16
 
-export class TajomstvoError extends Error {
+export class SecretError extends Error {
   constructor(message: string) {
     super(message)
     this.name = "TajomstvoError"
@@ -39,11 +39,11 @@ export class TajomstvoError extends Error {
  * nastaviť chcel a pomýlil sa, a ticho vypnúť šifrovanie by v takom prípade
  * bolo to najhoršie, čo sa dá spraviť.
  */
-export function sifrovaciKluc(hex = process.env.OAUTH_SECRET_ENCRYPTION_KEY): Buffer | null {
+export function encryptionKey(hex = process.env.OAUTH_SECRET_ENCRYPTION_KEY): Buffer | null {
   const s = hex?.trim()
   if (!s) return null
   if (!/^[0-9a-fA-F]{64}$/.test(s)) {
-    throw new TajomstvoError(
+    throw new SecretError(
       "OAUTH_SECRET_ENCRYPTION_KEY musí mať 64 hexadecimálnych znakov (32 bajtov). " +
       "Nový vygeneruješ: openssl rand -hex 32"
     )
@@ -52,9 +52,9 @@ export function sifrovaciKluc(hex = process.env.OAUTH_SECRET_ENCRYPTION_KEY): Bu
 }
 
 /** Je šifrovanie k dispozícii? Nehádže — na rozhodovanie, nie na zápis. */
-export function sifrovanieJeKDispozicii(): boolean {
+export function encryptionAvailable(): boolean {
   try {
-    return sifrovaciKluc() !== null
+    return encryptionKey() !== null
   } catch {
     return false
   }
@@ -68,9 +68,9 @@ export function sifrovanieJeKDispozicii(): boolean {
  * staré zápisy stali nečitateľnými — bez nej sa to zistí až vtedy, keď sa
  * pokúsiš rozšifrovať niečo z minulého roka.
  */
-export function zasifruj(text: string, kluc = sifrovaciKluc()): string {
-  if (!kluc) throw new TajomstvoError("Šifrovanie nie je nastavené (OAUTH_SECRET_ENCRYPTION_KEY).")
-  if (!text) throw new TajomstvoError("Prázdne tajomstvo sa nešifruje.")
+export function encrypt(text: string, kluc = encryptionKey()): string {
+  if (!kluc) throw new SecretError("Šifrovanie nie je nastavené (OAUTH_SECRET_ENCRYPTION_KEY).")
+  if (!text) throw new SecretError("Prázdne tajomstvo sa nešifruje.")
 
   const iv = crypto.randomBytes(DLZKA_IV)
   const c = crypto.createCipheriv(ALGORITMUS, kluc, iv)
@@ -87,19 +87,19 @@ export function zasifruj(text: string, kluc = sifrovaciKluc()): string {
  * nie je nastavené" a poskytovateľ by sa prestal ponúkať bez toho, aby
  * ktokoľvek vedel, že sa v skutočnosti pokazil kľúč.
  */
-export function rozsifruj(ulozene: string, kluc = sifrovaciKluc()): string {
-  if (!kluc) throw new TajomstvoError("Šifrovanie nie je nastavené (OAUTH_SECRET_ENCRYPTION_KEY).")
+export function decrypt(ulozene: string, kluc = encryptionKey()): string {
+  if (!kluc) throw new SecretError("Šifrovanie nie je nastavené (OAUTH_SECRET_ENCRYPTION_KEY).")
 
   const casti = ulozene?.split(".") ?? []
   if (casti.length !== 4 || casti[0] !== "v1") {
-    throw new TajomstvoError("Neznámy formát zašifrovaného údaja.")
+    throw new SecretError("Neznámy formát zašifrovaného údaja.")
   }
 
   const iv = Buffer.from(casti[1], "base64url")
   const znacka = Buffer.from(casti[2], "base64url")
   const sifra = Buffer.from(casti[3], "base64url")
   if (iv.length !== DLZKA_IV || znacka.length !== DLZKA_ZNACKY) {
-    throw new TajomstvoError("Poškodený zašifrovaný údaj.")
+    throw new SecretError("Poškodený zašifrovaný údaj.")
   }
 
   try {
@@ -109,7 +109,7 @@ export function rozsifruj(ulozene: string, kluc = sifrovaciKluc()): string {
   } catch {
     // Skutočná príčina sa zámerne nezverejňuje ďalej — či nesedí kľúč alebo
     // značka, je informácia pre útočníka a pre nás to isté: nedá sa to čítať.
-    throw new TajomstvoError("Údaj sa nepodarilo rozšifrovať — nesedí kľúč alebo je zápis poškodený.")
+    throw new SecretError("Údaj sa nepodarilo rozšifrovať — nesedí kľúč alebo je zápis poškodený.")
   }
 }
 
@@ -119,10 +119,10 @@ export function rozsifruj(ulozene: string, kluc = sifrovaciKluc()): string {
  * **Nikdy nevracia hodnotu.** Človek potrebuje vedieť len to, či je niečo
  * nastavené a či sa to dá prečítať; samotné tajomstvo má vo vlastnom Entre.
  */
-export function stavTajomstva(ulozene: string | undefined): "nenastavene" | "nastavene" | "necitatelne" {
+export function secretStatus(ulozene: string | undefined): "nenastavene" | "nastavene" | "necitatelne" {
   if (!ulozene) return "nenastavene"
   try {
-    return rozsifruj(ulozene) ? "nastavene" : "necitatelne"
+    return decrypt(ulozene) ? "nastavene" : "necitatelne"
   } catch {
     return "necitatelne"
   }

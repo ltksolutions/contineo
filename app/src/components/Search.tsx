@@ -10,14 +10,14 @@
  */
 
 import { useRef, useState } from "react"
-import { polozOtazku } from "@/lib/sseClient"
-import type { Vysledok } from "@/lib/sseClient"
-import Odpoved from "./Answer"
-import type { StavOdpovede } from "./Answer"
-import Hodnotenie from "./Rating"
-import type { Posudok } from "@/lib/ratings"
+import { askQuestion } from "@/lib/sseClient"
+import type { AskResult } from "@/lib/sseClient"
+import Answer from "./Answer"
+import type { AnswerState } from "./Answer"
+import Rating from "./Rating"
+import type { Verdict } from "@/lib/ratings"
 
-const PRAZDNY: StavOdpovede = {
+const PRAZDNY: AnswerState = {
   otazka: "", text: "", citacie: [], hotovo: null, bezi: false,
 }
 
@@ -29,7 +29,7 @@ const PRIKLADY = [
   "Koľko žltých kariet znamená zastavenie činnosti?",
 ]
 
-export default function Hladanie({
+export default function Search({
   otazkaId,
   prednastavena,
   onPosudene,
@@ -39,10 +39,10 @@ export default function Hladanie({
   /** Predvyplnené znenie otázky (režim sady). */
   prednastavena?: string
   /** Zavolá sa po posúdení správnosti; režim sady na to nadväzuje. */
-  onPosudene?: (spravna: Posudok) => void
+  onPosudene?: (spravna: Verdict) => void
 } = {}) {
   const [otazka, setOtazka] = useState(prednastavena ?? "")
-  const [stav, setStav] = useState<StavOdpovede>(PRAZDNY)
+  const [stav, setStav] = useState<AnswerState>(PRAZDNY)
   const [zaznamId, setZaznamId] = useState<string | null>(null)
   const prerus = useRef<AbortController | null>(null)
 
@@ -53,7 +53,7 @@ export default function Hladanie({
    * spočítať aj z neposúdených odpovedí. Keby sa záznam zakladal až pri
    * kliknutí na hodnotenie, prišli by sme o dáta z každej preskočenej otázky.
    */
-  async function zapis(q: string, v: Vysledok) {
+  async function zapis(q: string, v: AskResult) {
     try {
       const r = await fetch("/api/hodnotenie", {
         method: "POST",
@@ -88,7 +88,7 @@ export default function Hladanie({
     setZaznamId(null)
 
     try {
-      const v = await polozOtazku(
+      const v = await askQuestion(
         q,
         p => setStav(s => ({ ...s, text: p.text, citacie: p.citacie })),
         { signal: ctrl.signal }
@@ -137,8 +137,8 @@ export default function Hladanie({
           )}
         </div>
 
-        <Odpoved stav={stav} />
-        <Hodnotenie zaznamId={zaznamId} otazkaId={otazkaId} onHotovo={onPosudene} />
+        <Answer stav={stav} />
+        <Rating zaznamId={zaznamId} otazkaId={otazkaId} onHotovo={onPosudene} />
       </div>
     )
   }
@@ -212,9 +212,9 @@ export default function Hladanie({
         </div>
       )}
 
-      <Odpoved stav={stav} />
+      <Answer stav={stav} />
 
-      <Hodnotenie zaznamId={zaznamId} otazkaId={otazkaId} onHotovo={onPosudene} />
+      <Rating zaznamId={zaznamId} otazkaId={otazkaId} onHotovo={onPosudene} />
     </div>
   )
 }

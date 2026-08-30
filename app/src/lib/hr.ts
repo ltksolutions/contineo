@@ -55,7 +55,7 @@ export async function hrContext(): Promise<HrContext> {
 // ── čo sa dá prideliť a komu ────────────────────────────────────────────────
 
 /** Dokument so znením, ktoré sa dá prideliť. */
-export interface PridelitelnyDokument {
+export interface AssignableDocument {
   documentId: string
   title: string
   versionId: string
@@ -70,7 +70,7 @@ export interface PridelitelnyDokument {
  * nedal (D6) a ponúkať niečo, čo skončí chybou, je horšie než to neponúknuť —
  * prečo tam nie je, povie prehľad v `/admin`.
  */
-export async function pridelitelneDokumenty(companyCode: string): Promise<PridelitelnyDokument[]> {
+export async function assignableDocuments(companyCode: string): Promise<AssignableDocument[]> {
   const col = await getCollection<DocumentRecord>(DOCUMENTS_COLLECTION)
   const surove = await col
     .find({
@@ -83,7 +83,7 @@ export async function pridelitelneDokumenty(companyCode: string): Promise<Pridel
     .toArray()
 
   const asOf = new Date()
-  const out: PridelitelnyDokument[] = []
+  const out: AssignableDocument[] = []
   for (const d of surove) {
     // Dotaz je len predvýber; o viditeľnosti rozhoduje `canSeeDocument`,
     // aby pravidlo D32 zostalo na jednom mieste.

@@ -16,10 +16,10 @@
  */
 
 /** Označenie cenníka, ktoré sa ukladá k záznamu. */
-export const VERZIA_CENNIKA = "2026-07-27"
+export const PRICELIST_VERSION = "2026-07-27"
 
 /** Ceny za milión tokenov v USD. */
-export interface CenaModelu {
+export interface ModelPrice {
   vstup: number
   /** Zápis do cache na 5 minút — 1,25× základnej ceny vstupu. */
   cacheZapis: number
@@ -33,7 +33,7 @@ export interface CenaModelu {
    */
   platiDo?: string
   /** Čo príde po `platiDo` — aby sa dal dopredu odhadnúť dopad. */
-  potom?: Omit<CenaModelu, "platiDo" | "potom">
+  potom?: Omit<ModelPrice, "platiDo" | "potom">
 }
 
 /**
@@ -43,7 +43,7 @@ export interface CenaModelu {
  * nabieha štandardná $3/$15. To je **o 50 % viac** a pri plánovaní rozpočtu
  * na rok to nie je detail.
  */
-export const CENNIK: Record<string, CenaModelu> = {
+export const PRICELIST: Record<string, ModelPrice> = {
   "claude-sonnet-5": {
     vstup: 2, cacheZapis: 2.5, cacheCitanie: 0.2, vystup: 10,
     platiDo: "2026-08-31",
@@ -61,18 +61,18 @@ export const CENNIK: Record<string, CenaModelu> = {
 }
 
 /** Počty tokenov tak, ako ich hlási Anthropic API. */
-export interface Tokeny {
+export interface TokenCounts {
   vstup: number
   vystup: number
   cacheZapis: number
   cacheCitanie: number
 }
 
-export const PRAZDNE_TOKENY: Tokeny = {
+export const EMPTY_TOKENS: TokenCounts = {
   vstup: 0, vystup: 0, cacheZapis: 0, cacheCitanie: 0,
 }
 
-export interface Naklad {
+export interface Cost {
   /** Cena v USD. */
   usd: number
   /** Ktorý cenník sa použil. */
@@ -90,11 +90,11 @@ export interface Naklad {
  * nepoznáme, vrátime pôvodnú, ale s príznakom — UI potom povie, že odhad
  * je zastaraný, namiesto toho, aby ticho ukazovalo staré číslo.
  */
-export function sadzbyKuDnu(
+export function ratesForDate(
   model: string,
   ku: Date = new Date()
-): { sadzby: CenaModelu | null; expirovany: boolean } {
-  const c = CENNIK[model]
+): { sadzby: ModelPrice | null; expirovany: boolean } {
+  const c = PRICELIST[model]
   if (!c) return { sadzby: null, expirovany: false }
 
   if (!c.platiDo) return { sadzby: c, expirovany: false }
@@ -108,11 +108,11 @@ export function sadzbyKuDnu(
 }
 
 /** Vypočíta cenu v USD z počtu tokenov. */
-export function cena(model: string, t: Tokeny, ku: Date = new Date()): Naklad {
-  const { sadzby, expirovany } = sadzbyKuDnu(model, ku)
+export function cost(model: string, t: TokenCounts, ku: Date = new Date()): Cost {
+  const { sadzby, expirovany } = ratesForDate(model, ku)
 
   if (!sadzby) {
-    return { usd: 0, verziaCennika: VERZIA_CENNIKA, neznamyModel: true, cennikExpirovany: false }
+    return { usd: 0, verziaCennika: PRICELIST_VERSION, neznamyModel: true, cennikExpirovany: false }
   }
 
   const MILION = 1_000_000
@@ -124,7 +124,7 @@ export function cena(model: string, t: Tokeny, ku: Date = new Date()): Naklad {
 
   return {
     usd,
-    verziaCennika: VERZIA_CENNIKA,
+    verziaCennika: PRICELIST_VERSION,
     neznamyModel: false,
     cennikExpirovany: expirovany,
   }
@@ -149,7 +149,7 @@ export function formatUsd(usd: number): string {
  * Fakturuje sa v dolároch, takže euro je len pomôcka. Kurz je v env,
  * lebo sa mení a nechceme ho mať zadrôtovaný v kóde.
  */
-export function naEur(usd: number, kurz = Number(process.env.KURZ_USD_EUR ?? 0.92)): number {
+export function toEur(usd: number, kurz = Number(process.env.KURZ_USD_EUR ?? 0.92)): number {
   return usd * kurz
 }
 
@@ -162,7 +162,7 @@ export function formatEur(eur: number): string {
 }
 
 /** Súčet tokenov — na štatistiky za obdobie. */
-export function spocitaj(zoznam: Tokeny[]): Tokeny {
+export function sumCosts(zoznam: TokenCounts[]): TokenCounts {
   return zoznam.reduce(
     (a, t) => ({
       vstup: a.vstup + t.vstup,
@@ -170,6 +170,6 @@ export function spocitaj(zoznam: Tokeny[]): Tokeny {
       cacheZapis: a.cacheZapis + t.cacheZapis,
       cacheCitanie: a.cacheCitanie + t.cacheCitanie,
     }),
-    { ...PRAZDNE_TOKENY }
+    { ...EMPTY_TOKENS }
   )
 }

@@ -8,21 +8,21 @@
 
 import { notFound, redirect } from "next/navigation"
 import Link from "next/link"
-import { kniznicaContext } from "@/lib/library"
-import { zoznamKniznice } from "@/lib/libraryRead"
-import { vsetkyPriecinky, splostiStrom, podstrom, pocty, hlbka, MAX_HLBKA } from "@/lib/folders"
-import { volby } from "@/lib/codelists"
-import { doplnkyTenanta } from "@/lib/codelistsTenant"
-import Vyber from "@/components/Select"
+import { libraryContext } from "@/lib/library"
+import { libraryList } from "@/lib/libraryRead"
+import { allFolders, flattenTree, subtree, counts, depth, MAX_DEPTH } from "@/lib/folders"
+import { codelistOptions } from "@/lib/codelists"
+import { tenantExtras } from "@/lib/codelistsTenant"
+import Select from "@/components/Select"
 import {
-  zalozPriecinokAkcia, premenujPriecinokAkcia, presunPriecinokAkcia, zrusPriecinokAkcia,
-  posunPriecinokAkcia, ulozPoradiePriecinkovAkcia,
-} from "./akcie"
-import StromSPoradim from "@/components/TreeWithOrder"
+  createFolderAction, renameFolderAction, moveFolderAction, deleteFolderAction,
+  shiftFolderAction, saveFolderOrderAction,
+} from "./actions"
+import TreeWithOrder from "@/components/TreeWithOrder"
 import { brandingView } from "@/lib/tenants"
 import { tenantStyle } from "@/components/TenantHeader"
 import { formatDate } from "@/lib/i18n"
-import Oznam from "@/components/Notice"
+import Notice from "@/components/Notice"
 
 export const dynamic = "force-dynamic"
 
@@ -39,7 +39,7 @@ function velkost(bajtov: number): string {
     : `${Math.max(1, Math.round(bajtov / 1024))} kB`
 }
 
-export default async function Kniznica({
+export default async function LibraryPage({
   searchParams,
 }: {
   searchParams: Promise<{
@@ -47,7 +47,7 @@ export default async function Kniznica({
     priecinok?: string; category?: string; language?: string; accessLevel?: string; tag?: string
   }>
 }) {
-  const ctx = await kniznicaContext()
+  const ctx = await libraryContext()
   if (ctx.state !== "ready") {
     if (ctx.state === "not-signed-in") redirect("/prihlasenie")
     notFound()
@@ -57,14 +57,14 @@ export default async function Kniznica({
   const { sprava, chyba, hladat, stav, priecinok, category, language, accessLevel, tag } = q
   const branding = brandingView(ctx.tenant)
   const jazyk = ctx.person.language
-  const doplnky = doplnkyTenanta(ctx.tenant)
+  const doplnky = tenantExtras(ctx.tenant)
 
   const [riadky, priecinky, poctyPriecinkov] = await Promise.all([
-    zoznamKniznice(ctx.tenant.companyCode, { hladat, stav, priecinok, category, language, accessLevel, tag }),
-    vsetkyPriecinky(ctx.tenant.companyCode),
-    pocty(ctx.tenant.companyCode),
+    libraryList(ctx.tenant.companyCode, { hladat, stav, priecinok, category, language, accessLevel, tag }),
+    allFolders(ctx.tenant.companyCode),
+    counts(ctx.tenant.companyCode),
   ])
-  const strom = splostiStrom(priecinky)
+  const strom = flattenTree(priecinky)
 
   // Filtre sa nesú ďalej v každom odkaze aj v každom formulári — inak by sa
   // človek po založení priečinka ocitol späť na nefiltrovanom zozname.
@@ -83,7 +83,7 @@ export default async function Kniznica({
 
   return (
     <div className="obal" style={{ padding: "28px 20px 80px", maxWidth: 900, ...tenantStyle(branding) }}>
-      <Oznam sprava={sprava} chyba={chyba === "1"} spat="/kniznica" />
+      <Notice sprava={sprava} chyba={chyba === "1"} spat="/kniznica" />
 
       <div style={{ display: "flex", gap: 12, alignItems: "baseline", flexWrap: "wrap", margin: "0 0 6px" }}>
         <h1 style={{ fontSize: 26, letterSpacing: "-0.02em", margin: 0 }}>Knižnica</h1>
@@ -103,9 +103,9 @@ export default async function Kniznica({
 
         <div className="pole" style={{ flex: "0 1 180px", margin: 0 }}>
           <span className="pole-popis">Druh</span>
-          <Vyber
+          <Select
             meno="category"
-            volby={[{ hodnota: "", popis: "— všetky —" }, ...volby("category", doplnky)]}
+            volby={[{ hodnota: "", popis: "— všetky —" }, ...codelistOptions("category", doplnky)]}
             predvolena={category ?? ""}
             popisPola="Druh dokumentu"
           />
@@ -113,9 +113,9 @@ export default async function Kniznica({
 
         <div className="pole" style={{ flex: "0 1 160px", margin: 0 }}>
           <span className="pole-popis">Značka</span>
-          <Vyber
+          <Select
             meno="tag"
-            volby={[{ hodnota: "", popis: "— všetky —" }, ...volby("tags", doplnky)]}
+            volby={[{ hodnota: "", popis: "— všetky —" }, ...codelistOptions("tags", doplnky)]}
             predvolena={tag ?? ""}
             popisPola="Značka"
           />
@@ -123,7 +123,7 @@ export default async function Kniznica({
 
         <div className="pole" style={{ flex: "0 1 150px", margin: 0 }}>
           <span className="pole-popis">Stav</span>
-          <Vyber
+          <Select
             meno="stav"
             volby={[
               { hodnota: "", popis: "— všetky —" },
@@ -173,12 +173,12 @@ export default async function Kniznica({
 
           {/* Fixné položky vyššie do preusporadúvania nepatria — nie sú to
               priečinky, ale pohľady na celý zoznam. */}
-          <StromSPoradim
+          <TreeWithOrder
             skryte={Object.fromEntries(filtre)}
-            akcia={ulozPoradiePriecinkovAkcia}
+            akcia={saveFolderOrderAction}
             polozky={strom.map(({ priecinok: p, uroven }) => {
               const c = poctyPriecinkov.get(p.id) ?? { priamo: 0, sPodriadenymi: 0 }
-              const pod = podstrom(priecinky, p.id)
+              const pod = subtree(priecinky, p.id)
               return {
                 id: p.id,
                 nazov: p.nazov,
@@ -205,14 +205,14 @@ export default async function Kniznica({
                       {/* Posun o jedno miesto. Ťahanie myšou robí to isté,
                           ale toto funguje aj bez JavaScriptu a klávesnicou. */}
                       <div className="strom-sipky">
-                        <form action={posunPriecinokAkcia}>
+                        <form action={shiftFolderAction}>
                           <input type="hidden" name="id" value={p.id} />
                           {filtre.map(([k, v]) => <input key={k} type="hidden" name={k} value={v} />)}
                           <input type="hidden" name="smer" value="hore" />
                           <button className="tlacidlo tlacidlo--tiche" type="submit"
                                   aria-label={`Posunúť ${p.nazov} vyššie`}>↑ vyššie</button>
                         </form>
-                        <form action={posunPriecinokAkcia}>
+                        <form action={shiftFolderAction}>
                           <input type="hidden" name="id" value={p.id} />
                           {filtre.map(([k, v]) => <input key={k} type="hidden" name={k} value={v} />)}
                           <input type="hidden" name="smer" value="dole" />
@@ -221,7 +221,7 @@ export default async function Kniznica({
                         </form>
                       </div>
 
-                      <form action={premenujPriecinokAkcia} className="strom-forma">
+                      <form action={renameFolderAction} className="strom-forma">
                         <input type="hidden" name="id" value={p.id} />
                         {filtre.map(([k, v]) => <input key={k} type="hidden" name={k} value={v} />)}
                         <input className="pole-vstup" name="nazov" defaultValue={p.nazov}
@@ -229,10 +229,10 @@ export default async function Kniznica({
                         <button className="tlacidlo tlacidlo--tiche" type="submit">Premenovať</button>
                       </form>
 
-                      <form action={presunPriecinokAkcia} className="strom-forma">
+                      <form action={moveFolderAction} className="strom-forma">
                         <input type="hidden" name="id" value={p.id} />
                         {filtre.map(([k, v]) => <input key={k} type="hidden" name={k} value={v} />)}
-                        <Vyber
+                        <Select
                           meno="parentId"
                           predvolena={p.parentId ?? ""}
                           popisPola={`Nadriadený priečinok pre ${p.nazov}`}
@@ -250,7 +250,7 @@ export default async function Kniznica({
                       </form>
 
                       {c.sPodriadenymi === 0 && pod.size === 1 ? (
-                        <form action={zrusPriecinokAkcia}>
+                        <form action={deleteFolderAction}>
                           <input type="hidden" name="id" value={p.id} />
                           {filtre.map(([k, v]) => <input key={k} type="hidden" name={k} value={v} />)}
                           <button className="tlacidlo tlacidlo--tiche" type="submit">Zrušiť priečinok</button>
@@ -268,18 +268,18 @@ export default async function Kniznica({
             })}
           />
 
-          <form action={zalozPriecinokAkcia} className="strom-forma" style={{ marginTop: 12 }}>
+          <form action={createFolderAction} className="strom-forma" style={{ marginTop: 12 }}>
             {filtre.map(([k, v]) => <input key={k} type="hidden" name={k} value={v} />)}
             <input className="pole-vstup" name="nazov" placeholder="Nový priečinok"
                    aria-label="Názov nového priečinka" required />
-            <Vyber
+            <Select
               meno="parentId"
               predvolena={priecinok && priecinok !== "nezaradene" ? priecinok : ""}
               popisPola="Nadriadený priečinok"
               volby={[
                 { hodnota: "", popis: "— najvyššia úroveň —" },
                 ...strom
-                  .filter(r => hlbka(priecinky, r.priecinok.id) < MAX_HLBKA)
+                  .filter(r => depth(priecinky, r.priecinok.id) < MAX_DEPTH)
                   .map(r => ({
                     hodnota: r.priecinok.id,
                     popis: `${"— ".repeat(r.uroven - 1)}${r.priecinok.nazov}`,

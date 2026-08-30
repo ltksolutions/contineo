@@ -1,7 +1,7 @@
 "use server"
 
 /**
- * akcie.ts — zápisy z knižnice (D53).
+ * actions.ts — zápisy z knižnice (D53).
  *
  * Každá akcia začína bránou `kniznicaContext()`. Serverová akcia je koncový
  * bod ako každý iný; to, že sa volá z formulára na chránenej stránke, nie je
@@ -14,41 +14,41 @@
 
 import { redirect } from "next/navigation"
 import { revalidatePath } from "next/cache"
-import { kniznicaContext } from "@/lib/library"
-import { jePresmerovanie } from "@/lib/redirects"
+import { libraryContext } from "@/lib/library"
+import { isRedirect } from "@/lib/redirects"
 import {
-  nahrajDokument, ulozKoncept, publikuj, overMetadata, idDokumentu, ulozUdaje,
-  preindexuj, opravZnenie, KniznicaError,
+  uploadDocument, saveDraft, publish, checkMetadata, makeDocumentId, saveMetadata,
+  reindex, fixVersion, LibraryError,
 } from "@/lib/libraryWrite"
-import { UloziskoError, nacitajSubor } from "@/lib/fileStore"
-import { doplnkyTenanta } from "@/lib/codelistsTenant"
+import { FileStoreError, loadFile } from "@/lib/fileStore"
+import { tenantExtras } from "@/lib/codelistsTenant"
 import {
-  zalozPriecinok, premenujPriecinok, presunPriecinok, zrusPriecinok,
-  zaradDokument, posunPriecinok, ulozPoradiePriecinkov, PriecinokError,
+  createFolder, renameFolder, moveFolder, deleteFolder,
+  assignDocument, shiftFolder, saveFolderOrder, FolderError,
 } from "@/lib/folders"
-import type { Doplnky } from "@/lib/codelists"
+import type { CodelistExtras } from "@/lib/codelists"
 import type { ProfilClenenia } from "@/lib/chunker"
-import { precisti, prepisPdf, PrepisError } from "@/lib/llmRewrite"
+import { cleanMarkdown, rewritePdf, RewriteError } from "@/lib/llmRewrite"
 import { getCollection } from "@/lib/mongodb"
 import { DOCUMENTS_COLLECTION } from "@/lib/documents"
-import { zapisAudit } from "@/lib/audit"
+import { writeAudit } from "@/lib/audit"
 
 async function kto(): Promise<
   {
     email: string
     companyCode: string
-    doplnky: Doplnky
+    doplnky: CodelistExtras
     profil?: Partial<ProfilClenenia>
   } | null
 > {
-  const ctx = await kniznicaContext()
+  const ctx = await libraryContext()
   return ctx.state === "ready"
     ? {
         email: ctx.person.email,
         companyCode: ctx.person.companyCode,
         // Vlastné položky číselníkov organizácie (D55) — bez nich by
         // obrazovka ponúkala druh dokumentu, ktorý zápis vzápätí odmietne.
-        doplnky: doplnkyTenanta(ctx.tenant),
+        doplnky: tenantExtras(ctx.tenant),
         // Profil členenia organizácie (D58). Chýbajúci znamená predvolený.
         profil: ctx.tenant.chunkovanie,
       }
@@ -62,8 +62,8 @@ function textPola(fd: FormData, meno: string): string {
 
 function spravaChyby(e: unknown): string {
   if (
-    e instanceof KniznicaError || e instanceof UloziskoError ||
-    e instanceof PrepisError || e instanceof PriecinokError
+    e instanceof LibraryError || e instanceof FileStoreError ||
+    e instanceof RewriteError || e instanceof FolderError
   ) {
     return e.message
   }
@@ -71,18 +71,18 @@ function spravaChyby(e: unknown): string {
   return "Nepodarilo sa to. Skús to znova."
 }
 
-export async function nahraj(fd: FormData) {
+export async function uploadAction(fd: FormData) {
   const ja = await kto()
   if (!ja) redirect("/")
 
   try {
     const subor = fd.get("subor")
     if (!(subor instanceof File) || subor.size === 0) {
-      throw new KniznicaError("Nevybral si súbor.")
+      throw new LibraryError("Nevybral si súbor.")
     }
 
     // Organizácia je z prihláseného človeka, nie z formulára.
-    const meta = overMetadata({
+    const meta = checkMetadata({
       title: textPola(fd, "title"),
       sectionKey: textPola(fd, "sectionKey"),
       companyCode: ja.companyCode,
@@ -93,7 +93,7 @@ export async function nahraj(fd: FormData) {
       tags: fd.getAll("tags").filter((t): t is string => typeof t === "string"),
     }, ja.doplnky)
 
-    const v = await nahrajDokument(
+    const v = await uploadDocument(
       meta, subor.name, Buffer.from(await subor.arrayBuffer()), ja.email,
     )
 
@@ -107,7 +107,7 @@ export async function nahraj(fd: FormData) {
     )}`)
   } catch (e) {
     // `redirect()` vyhadzuje výnimku — nesmie sa chytiť ako chyba zápisu.
-    if (jePresmerovanie(e)) throw e
+    if (isRedirect(e)) throw e
     const q = new URLSearchParams({
       chyba: spravaChyby(e),
       title: textPola(fd, "title"),
@@ -117,7 +117,7 @@ export async function nahraj(fd: FormData) {
   }
 }
 
-export async function ulozText(fd: FormData) {
+export async function saveTextAction(fd: FormData) {
   const ja = await kto()
   if (!ja) redirect("/")
 
@@ -125,7 +125,7 @@ export async function ulozText(fd: FormData) {
   let sprava = "Uložené."
   let chyba = false
   try {
-    await ulozKoncept(ja.companyCode, id, String(fd.get("markdown") ?? ""), ja.email)
+    await saveDraft(ja.companyCode, id, String(fd.get("markdown") ?? ""), ja.email)
   } catch (e) {
     sprava = spravaChyby(e)
     chyba = true
@@ -135,7 +135,7 @@ export async function ulozText(fd: FormData) {
   redirect(`/kniznica/${encodeURIComponent(id)}/text?sprava=${encodeURIComponent(sprava)}${chyba ? "&chyba=1" : ""}`)
 }
 
-export async function publikujZnenie(fd: FormData) {
+export async function publishVersionAction(fd: FormData) {
   const ja = await kto()
   if (!ja) redirect("/")
 
@@ -144,7 +144,7 @@ export async function publikujZnenie(fd: FormData) {
   let chyba = false
   try {
     const den = textPola(fd, "effectiveFrom")
-    const v = await publikuj(ja.companyCode, id, {
+    const v = await publish(ja.companyCode, id, {
       label: textPola(fd, "label"),
       // Dátum bez času a v UTC — `effectiveFrom` je deň, nie okamih, a
       // miestne pásmo by ho pri polnoci posunulo o deň.
@@ -167,8 +167,8 @@ export async function publikujZnenie(fd: FormData) {
 }
 
 /** Pomôcka pre obrazovku: aký `documentId` z týchto metadát vznikne. */
-export async function nahladId(companyCode: string, sectionKey: string): Promise<string> {
-  return idDokumentu({ companyCode, sectionKey })
+export async function previewId(companyCode: string, sectionKey: string): Promise<string> {
+  return makeDocumentId({ companyCode, sectionKey })
 }
 
 /**
@@ -178,7 +178,7 @@ export async function nahladId(companyCode: string, sectionKey: string): Promise
  * znenie normy strojom bez toho, aby to niekto videl, je presne ten druh
  * tichej zmeny, po ktorej sa o rok nedá povedať, čo v predpise vlastne stálo.
  */
-export async function poslatNaModel(fd: FormData) {
+export async function sendToModelAction(fd: FormData) {
   const ja = await kto()
   if (!ja) redirect("/")
 
@@ -190,26 +190,26 @@ export async function poslatNaModel(fd: FormData) {
   try {
     const col = await getCollection(DOCUMENTS_COLLECTION)
     const doc = await col.findOne({ documentId: id, companyCode: ja.companyCode }) as Record<string, unknown> | null
-    if (!doc) throw new KniznicaError("Taký dokument tu nie je.")
+    if (!doc) throw new LibraryError("Taký dokument tu nie je.")
 
     const navrh = rezim === "prepisat-sken"
       ? await (async () => {
           const povodny = doc.originalFile as { id: string; typ: string } | undefined
-          if (!povodny) throw new KniznicaError("Dokument nemá pôvodný súbor, ktorý by sa dal prepísať.")
+          if (!povodny) throw new LibraryError("Dokument nemá pôvodný súbor, ktorý by sa dal prepísať.")
           if (povodny.typ !== "pdf") {
-            throw new KniznicaError("Prepisovať sa dá len PDF — ostatné formáty sa prevedú priamo.")
+            throw new LibraryError("Prepisovať sa dá len PDF — ostatné formáty sa prevedú priamo.")
           }
-          const s = await nacitajSubor(ja.companyCode, povodny.id)
-          if (!s) throw new KniznicaError("Pôvodný súbor sa nenašiel.")
-          return prepisPdf(s.data)
+          const s = await loadFile(ja.companyCode, povodny.id)
+          if (!s) throw new LibraryError("Pôvodný súbor sa nenašiel.")
+          return rewritePdf(s.data)
         })()
-      : await precisti(String(doc.draftMarkdown ?? ""))
+      : await cleanMarkdown(String(doc.draftMarkdown ?? ""))
 
     await col.updateOne(
       { documentId: id, companyCode: ja.companyCode },
       { $set: { llmNavrh: navrh } } as never,
     )
-    await zapisAudit({
+    await writeAudit({
       companyCode: ja.companyCode, predmet: "dokument", akcia: "navrh-modelu",
       aktor: ja.email, cielId: id, cielPopis: String(doc.title ?? id),
       poznamka: `${navrh.rezim} · ${navrh.model} · ${navrh.text.length} znakov`,
@@ -225,7 +225,7 @@ export async function poslatNaModel(fd: FormData) {
 }
 
 /** Prijme alebo zahodí návrh modelu. Prijatie je vedomý krok človeka. */
-export async function rozhodniONavrhu(fd: FormData) {
+export async function decideOnDraftAction(fd: FormData) {
   const ja = await kto()
   if (!ja) redirect("/")
 
@@ -238,10 +238,10 @@ export async function rozhodniONavrhu(fd: FormData) {
     const col = await getCollection(DOCUMENTS_COLLECTION)
     const doc = await col.findOne({ documentId: id, companyCode: ja.companyCode }) as Record<string, unknown> | null
     const navrh = doc?.llmNavrh as { text?: string } | undefined
-    if (!navrh?.text) throw new KniznicaError("Žiadny návrh tu nie je.")
+    if (!navrh?.text) throw new LibraryError("Žiadny návrh tu nie je.")
 
     if (prijat) {
-      await ulozKoncept(ja.companyCode, id, navrh.text, `${ja.email} (návrh modelu)`)
+      await saveDraft(ja.companyCode, id, navrh.text, `${ja.email} (návrh modelu)`)
       sprava = "Návrh je teraz konceptom. Publikovanie je stále samostatný krok."
     } else {
       sprava = "Návrh zahodený."
@@ -260,7 +260,7 @@ export async function rozhodniONavrhu(fd: FormData) {
 }
 
 /** Uloží údaje o dokumente z detailu. */
-export async function ulozUdajeDokumentu(fd: FormData) {
+export async function saveDocumentMetadataAction(fd: FormData) {
   const ja = await kto()
   if (!ja) redirect("/")
 
@@ -268,7 +268,7 @@ export async function ulozUdajeDokumentu(fd: FormData) {
   let sprava = "Uložené."
   let chyba = false
   try {
-    await ulozUdaje(ja.companyCode, id, {
+    await saveMetadata(ja.companyCode, id, {
       title: textPola(fd, "title"),
       scope: textPola(fd, "scope"),
       accessLevel: textPola(fd, "accessLevel"),
@@ -300,60 +300,60 @@ function spatDoKniznice(fd: FormData, sprava: string, chyba = false): never {
   redirect(`/kniznica?${q.toString()}`)
 }
 
-export async function zalozPriecinokAkcia(fd: FormData) {
+export async function createFolderAction(fd: FormData) {
   const ja = await kto()
   if (!ja) redirect("/")
   try {
-    await zalozPriecinok(ja.companyCode, textPola(fd, "nazov"), textPola(fd, "parentId") || null, ja.email)
+    await createFolder(ja.companyCode, textPola(fd, "nazov"), textPola(fd, "parentId") || null, ja.email)
     revalidatePath("/kniznica")
     spatDoKniznice(fd, "Priečinok pribudol.")
   } catch (e) {
-    if (jePresmerovanie(e)) throw e
+    if (isRedirect(e)) throw e
     spatDoKniznice(fd, spravaChyby(e), true)
   }
 }
 
-export async function premenujPriecinokAkcia(fd: FormData) {
+export async function renameFolderAction(fd: FormData) {
   const ja = await kto()
   if (!ja) redirect("/")
   try {
-    await premenujPriecinok(ja.companyCode, textPola(fd, "id"), textPola(fd, "nazov"), ja.email)
+    await renameFolder(ja.companyCode, textPola(fd, "id"), textPola(fd, "nazov"), ja.email)
     revalidatePath("/kniznica")
     spatDoKniznice(fd, "Priečinok sa premenoval.")
   } catch (e) {
-    if (jePresmerovanie(e)) throw e
+    if (isRedirect(e)) throw e
     spatDoKniznice(fd, spravaChyby(e), true)
   }
 }
 
-export async function presunPriecinokAkcia(fd: FormData) {
+export async function moveFolderAction(fd: FormData) {
   const ja = await kto()
   if (!ja) redirect("/")
   try {
-    await presunPriecinok(ja.companyCode, textPola(fd, "id"), textPola(fd, "parentId") || null, ja.email)
+    await moveFolder(ja.companyCode, textPola(fd, "id"), textPola(fd, "parentId") || null, ja.email)
     revalidatePath("/kniznica")
     spatDoKniznice(fd, "Priečinok sa presunul.")
   } catch (e) {
-    if (jePresmerovanie(e)) throw e
+    if (isRedirect(e)) throw e
     spatDoKniznice(fd, spravaChyby(e), true)
   }
 }
 
-export async function zrusPriecinokAkcia(fd: FormData) {
+export async function deleteFolderAction(fd: FormData) {
   const ja = await kto()
   if (!ja) redirect("/")
   try {
-    await zrusPriecinok(ja.companyCode, textPola(fd, "id"), ja.email)
+    await deleteFolder(ja.companyCode, textPola(fd, "id"), ja.email)
     revalidatePath("/kniznica")
     spatDoKniznice(fd, "Priečinok sa zrušil.")
   } catch (e) {
-    if (jePresmerovanie(e)) throw e
+    if (isRedirect(e)) throw e
     spatDoKniznice(fd, spravaChyby(e), true)
   }
 }
 
 /** Zaradí dokument do priečinka z jeho detailu. */
-export async function zaradDoPriecinka(fd: FormData) {
+export async function assignToFolderAction(fd: FormData) {
   const ja = await kto()
   if (!ja) redirect("/")
 
@@ -361,7 +361,7 @@ export async function zaradDoPriecinka(fd: FormData) {
   let sprava = "Zaradené."
   let chyba = false
   try {
-    await zaradDokument(ja.companyCode, id, textPola(fd, "folderId") || null, ja.email)
+    await assignDocument(ja.companyCode, id, textPola(fd, "folderId") || null, ja.email)
   } catch (e) {
     sprava = spravaChyby(e)
     chyba = true
@@ -372,7 +372,7 @@ export async function zaradDoPriecinka(fd: FormData) {
 }
 
 /** Preindexuje dokument podľa aktuálneho profilu členenia (D57). */
-export async function preindexujDokument(fd: FormData) {
+export async function reindexDocumentAction(fd: FormData) {
   const ja = await kto()
   if (!ja) redirect("/")
 
@@ -380,7 +380,7 @@ export async function preindexujDokument(fd: FormData) {
   let sprava = ""
   let chyba = false
   try {
-    const v = await preindexuj(ja.companyCode, id, ja.email, ja.profil)
+    const v = await reindex(ja.companyCode, id, ja.email, ja.profil)
     sprava = v.uzBolo
       ? "Členenie je už aktuálne — nič sa nemenilo."
       : `Preindexované: ${v.chunkov} úsekov, ${v.archivovanych} starých archivovaných. ` +
@@ -395,7 +395,7 @@ export async function preindexujDokument(fd: FormData) {
 }
 
 /** Oprava údajov už publikovaného znenia (D57). */
-export async function opravZnenieAkcia(fd: FormData) {
+export async function fixVersionAction(fd: FormData) {
   const ja = await kto()
   if (!ja) redirect("/")
 
@@ -405,7 +405,7 @@ export async function opravZnenieAkcia(fd: FormData) {
   try {
     const den = textPola(fd, "effectiveFrom")
     const volba = textPola(fd, "priZmeneDatumu")
-    const v = await opravZnenie(ja.companyCode, id, textPola(fd, "versionId"), {
+    const v = await fixVersion(ja.companyCode, id, textPola(fd, "versionId"), {
       label: textPola(fd, "label") || undefined,
       effectiveFrom: den ? new Date(`${den}T00:00:00.000Z`) : undefined,
       effectiveFromSource: textPola(fd, "effectiveFromSource"),
@@ -432,31 +432,31 @@ export async function opravZnenieAkcia(fd: FormData) {
  * Obyčajný formulár — funguje bez JavaScriptu a ovláda sa klávesnicou.
  * Ťahanie myšou robí to isté, ale je to nadstavba, nie jediná cesta.
  */
-export async function posunPriecinokAkcia(fd: FormData) {
+export async function shiftFolderAction(fd: FormData) {
   const ja = await kto()
   if (!ja) redirect("/")
   const smer = textPola(fd, "smer") === "dole" ? "dole" : "hore"
   try {
-    await posunPriecinok(ja.companyCode, textPola(fd, "id"), smer, ja.email)
+    await shiftFolder(ja.companyCode, textPola(fd, "id"), smer, ja.email)
     revalidatePath("/kniznica")
     spatDoKniznice(fd, "Zmeny boli uložené.")
   } catch (e) {
-    if (jePresmerovanie(e)) throw e
+    if (isRedirect(e)) throw e
     spatDoKniznice(fd, spravaChyby(e), true)
   }
 }
 
 /** Nové poradie celej úrovne — sem posiela výsledok ťahanie myšou. */
-export async function ulozPoradiePriecinkovAkcia(fd: FormData) {
+export async function saveFolderOrderAction(fd: FormData) {
   const ja = await kto()
   if (!ja) redirect("/")
   const poradie = textPola(fd, "poradie").split(",").map(x => x.trim()).filter(Boolean)
   try {
-    if (poradie.length > 1) await ulozPoradiePriecinkov(ja.companyCode, poradie, ja.email)
+    if (poradie.length > 1) await saveFolderOrder(ja.companyCode, poradie, ja.email)
     revalidatePath("/kniznica")
     spatDoKniznice(fd, "Zmeny boli uložené.")
   } catch (e) {
-    if (jePresmerovanie(e)) throw e
+    if (isRedirect(e)) throw e
     spatDoKniznice(fd, spravaChyby(e), true)
   }
 }

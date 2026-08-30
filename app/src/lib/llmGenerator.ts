@@ -16,8 +16,8 @@
 import { ChunkResult } from "./mongoSearch"
 import { getTenantProfile, defaultProfile } from "./tenantProfile"
 import { getProviders } from "./providers/factory"
-import { cena, PRAZDNE_TOKENY } from "./pricing"
-import type { Tokeny } from "./pricing"
+import { cost, EMPTY_TOKENS } from "./pricing"
+import type { TokenCounts } from "./pricing"
 import { GeneratedCitation, TenantProfile } from "./providers/types"
 
 export interface GenerateOptions {
@@ -88,7 +88,7 @@ export function generateAnswer(opts: GenerateOptions): ReadableStream {
         // zostane pole prázdne a klient sa oprie o `sources`.
         const citations: GeneratedCitation[] = []
         let dovodUkoncenia = ""
-        const tokeny: Tokeny = { ...PRAZDNE_TOKENY }
+        const tokeny: TokenCounts = { ...EMPTY_TOKENS }
 
         for await (const ev of generation.stream({
           system,
@@ -126,7 +126,7 @@ export function generateAnswer(opts: GenerateOptions): ReadableStream {
           // údaj: čo to stálo v deň, keď sa otázka položila. Spätne sa
           // nedopočíta, lebo cenníky sa menia — preto ide do záznamu aj
           // označenie použitého cenníka.
-          naklad: cena(generation.model, tokeny),
+          naklad: cost(generation.model, tokeny),
         })
       } catch (err) {
         encode({ type: "error", message: err instanceof Error ? err.message : String(err) })

@@ -10,7 +10,7 @@
 
 import { getCollection } from "./mongodb"
 import { TenantProfile, ProviderConfigError } from "./providers/types"
-import { skontrolujRezidenciu, skontrolujIzolaciu } from "./residency"
+import { checkResidency, checkIsolation } from "./residency"
 
 const TTL_MS = 5 * 60 * 1000   // 5 minút
 
@@ -128,7 +128,7 @@ export function validateProfile(p: TenantProfile): void {
   // Rezidencia. Nahrádza pôvodné dve podmienky na air-gap — tie pokrývali
   // len dva prípady z mnohých a mlčky prepúšťali napríklad $rerank, ktorý
   // počíta v USA. Pravidlá sú v jednej tabuľke, viď ADR-002.
-  const porusenia = skontrolujRezidenciu(p)
+  const porusenia = checkResidency(p)
   if (porusenia.length) {
     throw new ProviderConfigError(
       `${p.companyCode}: profil je v rozpore s dátovou rezidenciou.\n` +
@@ -139,7 +139,7 @@ export function validateProfile(p: TenantProfile): void {
   // Izolácia infraštruktúry (tier). Druhá, nezávislá os — profil môže byť
   // geograficky v poriadku a napriek tomu posielať text cez službu zdieľanú
   // s inými zákazníkmi, čo si tenant na T2 nekúpil.
-  const izolacia = skontrolujIzolaciu(p)
+  const izolacia = checkIsolation(p)
   if (izolacia.length) {
     throw new ProviderConfigError(
       `${p.companyCode}: profil je v rozpore s úrovňou izolácie.\n` +

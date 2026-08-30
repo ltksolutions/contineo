@@ -12,7 +12,7 @@ import { useEffect, useRef, useState } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { signOut } from "next-auth/react"
-import { ZnakContineo } from "./ContineoMark"
+import { ContineoMark } from "./ContineoMark"
 import type { TenantBrandingView } from "./TenantHeader"
 
 /**
@@ -79,7 +79,7 @@ function IkonaTemy({ volba }: { volba: Volba }) {
  * ľudí s fotografiou a polovica bez nej vyzerá horšie než iniciály pre
  * všetkých, a doplniť sa dá kedykoľvek bez prepisovania.
  */
-export function iniciely(meno: string | undefined, email: string): string {
+export function initials(meno: string | undefined, email: string): string {
   const slova = (meno ?? "").trim().split(/\s+/).filter(Boolean)
   if (slova.length >= 2) return (slova[0][0] + slova[slova.length - 1][0]).toUpperCase()
   if (slova.length === 1 && slova[0].length > 0) return slova[0].slice(0, 2).toUpperCase()
@@ -94,7 +94,7 @@ export function iniciely(meno: string | undefined, email: string): string {
  * každom načítaní zmení a prestane byť tým, čím má byť — znakom, ktorý sa dá
  * spoznať bez čítania.
  */
-export function odtienAvatara(email: string): number {
+export function avatarShade(email: string): number {
   let h = 0
   for (let i = 0; i < email.length; i++) h = (h * 31 + email.charCodeAt(i)) % 360
   return h
@@ -110,7 +110,7 @@ export function odtienAvatara(email: string): number {
  * požiadavke, takže menu by na okamih **bliklo** aj tam, kde byť nemá.
  * Server to vie hneď pri prvom vykreslení.
  */
-export default function Hlavicka({
+export default function Header({
   branding,
   email,
   meno,
@@ -141,7 +141,7 @@ export default function Hlavicka({
   const osobneObal = useRef<HTMLDivElement>(null)
   const cesta = usePathname()
 
-  const odtien = odtienAvatara(email ?? "")
+  const odtien = avatarShade(email ?? "")
 
   const POLOZKY = [
     { kam: "/", popis: "Voľné otázky" },
@@ -265,7 +265,7 @@ export default function Hlavicka({
             </>
           ) : (
             <>
-              <ZnakContineo />
+              <ContineoMark />
               <span className="hlavicka-nazov">Contineo</span>
               {/* Odznak sa na úzkej obrazovke schová — je to poznámka pre nás,
                   nie informácia, kvôli ktorej má názov organizácie zmiznúť. */}
@@ -356,7 +356,7 @@ export default function Hlavicka({
                     ...(fotka ? { display: "none" } : {}),
                   }}
                 >
-                  {iniciely(meno, email)}
+                  {initials(meno, email)}
                 </span>
               </button>
 

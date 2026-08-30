@@ -12,8 +12,8 @@
  * než hádaním.
  */
 
-import { ZnakContineo, ZnakGitHub } from "./ContineoMark"
-import { REVIZIA, VERZIA } from "@/lib/appVersion"
+import { ContineoMark, GitHubMark } from "./ContineoMark"
+import { REVISION, VERSION } from "@/lib/appVersion"
 
 /**
  * Odkazy von majú `rel="noreferrer"` zámerne: bez neho by sa cieľová stránka
@@ -22,14 +22,14 @@ import { REVIZIA, VERZIA } from "@/lib/appVersion"
  */
 const VON = { target: "_blank", rel: "noreferrer" } as const
 
-export default function Paticka() {
+export default function Footer() {
   return (
     <footer className="paticka">
       <div className="obal paticka-obsah">
         <p className="paticka-blok">
           <span className="tichy">Systém beží na aplikácii</span>
           <a className="paticka-odkaz" href="https://contineo.app" {...VON}>
-            <ZnakContineo size={16} />
+            <ContineoMark size={16} />
             Contineo
           </a>
         </p>
@@ -39,13 +39,13 @@ export default function Paticka() {
           href="https://github.com/ltksolutions/contineo"
           {...VON}
         >
-          <ZnakGitHub />
+          <GitHubMark />
           Zdrojový kód
         </a>
 
         <p className="tichy paticka-verzia">
-          verzia {VERZIA}
-          {REVIZIA && <> · {REVIZIA}</>}
+          verzia {VERSION}
+          {REVISION && <> · {REVISION}</>}
         </p>
       </div>
     </footer>

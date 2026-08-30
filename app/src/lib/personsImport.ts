@@ -12,7 +12,7 @@ import { parseCsv } from "./csv"
 import type { NewPerson, PersonType } from "./persons"
 
 /** Hlavičky sa normalizujú (malé písmená, bez diakritiky), takže stačí tvar. */
-export const ALIASY: Record<string, string[]> = {
+export const ALIASES: Record<string, string[]> = {
   email: ["email", "mail", "emailovaadresa", "adresa"],
   fullName: ["meno", "menoapriezvisko", "celemeno", "fullname", "name", "priezviskoameno"],
   companyCode: ["organizacia", "zvaz", "companycode", "firma", "jednotka", "kodorganizacie"],
@@ -25,30 +25,30 @@ export const ALIASY: Record<string, string[]> = {
 }
 
 /** Strojové kľúče z `validateRow()` → veta pre človeka. */
-export const DOVODY: Record<string, string> = {
+export const REASONS: Record<string, string> = {
   "invalid-email": "neplatná e-mailová adresa",
   "missing-companyCode": "chýba organizácia (companyCode)",
   "missing-name": "chýba meno",
   "duplicate-in-file": "duplicita priamo v súbore",
 }
 
-export function hodnota(row: Record<string, string>, pole: string): string {
-  for (const kluc of ALIASY[pole] ?? []) if (row[kluc]) return row[kluc]
+export function fieldValue(row: Record<string, string>, pole: string): string {
+  for (const kluc of ALIASES[pole] ?? []) if (row[kluc]) return row[kluc]
   return ""
 }
 
 const zoznam = (s: string) => s.split(/[,;|]/).map(x => x.trim()).filter(Boolean)
 
-export function riadokNaOsobu(row: Record<string, string>): NewPerson {
-  const datum = hodnota(row, "startDate")
-  const trasy = hodnota(row, "tracks")
-  const skupiny = hodnota(row, "groups")
-  const typ = hodnota(row, "personType")
+export function rowToPerson(row: Record<string, string>): NewPerson {
+  const datum = fieldValue(row, "startDate")
+  const trasy = fieldValue(row, "tracks")
+  const skupiny = fieldValue(row, "groups")
+  const typ = fieldValue(row, "personType")
   return {
-    email: hodnota(row, "email"),
-    fullName: hodnota(row, "fullName"),
-    companyCode: hodnota(row, "companyCode"),
-    department: hodnota(row, "department") || undefined,
+    email: fieldValue(row, "email"),
+    fullName: fieldValue(row, "fullName"),
+    companyCode: fieldValue(row, "companyCode"),
+    department: fieldValue(row, "department") || undefined,
     personType: (typ || undefined) as PersonType | undefined,
     startDate: datum ? new Date(datum) : undefined,
     tracks: trasy ? zoznam(trasy) : undefined,
@@ -56,7 +56,7 @@ export function riadokNaOsobu(row: Record<string, string>): NewPerson {
     // Nevyplnený jazyk necháme `undefined` — `upsertPersons()` ho potom
     // existujúcej osobe neprepíše (inak by opakovaný import prepol každého
     // späť na slovenčinu).
-    language: hodnota(row, "language") || undefined,
+    language: fieldValue(row, "language") || undefined,
   }
 }
 
@@ -67,9 +67,9 @@ export function riadokNaOsobu(row: Record<string, string>): NewPerson {
  * organizácia toho, kto import robí — **nie voľba**: personalista zväzu
  * nesmie importom založiť človeka do cudzej organizácie (D32).
  */
-export function csvNaOsoby(text: string, predvolenaOrganizacia?: string): NewPerson[] {
+export function csvToPersons(text: string, predvolenaOrganizacia?: string): NewPerson[] {
   return parseCsv(text).rows.map(r => {
-    const o = riadokNaOsobu(r)
+    const o = rowToPerson(r)
     return predvolenaOrganizacia ? { ...o, companyCode: predvolenaOrganizacia } : o
   })
 }

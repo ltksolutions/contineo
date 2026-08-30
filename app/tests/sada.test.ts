@@ -6,12 +6,12 @@
  * videl, merali by sme, či prvému uveril — a to je iná otázka než či sa
  * zhodnú. Preto sú tu testy aj na to, čo sa NEMÁ stať.
  */
-import { vPrekryve, zhoda } from "../src/lib/goldenSet"
-import type { OtazkaSady, StavOtazky } from "../src/lib/goldenSet"
+import { inOverlap, agreement } from "../src/lib/goldenSet"
+import type { GoldenQuestion, QuestionState } from "../src/lib/goldenSet"
 
 import { t } from "./helper"
 
-const otazka = (u: Partial<OtazkaSady> = {}): OtazkaSady => ({
+const otazka = (u: Partial<GoldenQuestion> = {}): GoldenQuestion => ({
   id: "D9-001", povodneZnenie: "Otázka?", upraveneZnenie: null,
   vyradena: false, dovodVyradenia: null,
   searchMode: "hybrid", sectionKey: "sutazny_poriadok", companyCode: "SFZ",
@@ -20,21 +20,21 @@ const otazka = (u: Partial<OtazkaSady> = {}): OtazkaSady => ({
   ...u,
 })
 
-const posudok = (kto: string, spravna: 0 | 1 | null): StavOtazky => ({
+const posudok = (kto: string, spravna: 0 | 1 | null): QuestionState => ({
   spravna, halucinacia: 0, hodnotitel: kto, kedy: new Date(),
 })
 
 // ── ktoré otázky idú dvom ────────────────────────────────────────────────────
 
-t("bežná otázka ide jednému", !vPrekryve(otazka()))
-t("otázka na precedenciu ide dvom", vPrekryve(otazka({ precedenceRule: "R1" })))
-t("pasca ide dvom", vPrekryve(otazka({ trapType: "out_of_domain" })))
+t("bežná otázka ide jednému", !inOverlap(otazka()))
+t("otázka na precedenciu ide dvom", inOverlap(otazka({ precedenceRule: "R1" })))
+t("pasca ide dvom", inOverlap(otazka({ trapType: "out_of_domain" })))
 t("pasca aj precedencia naraz ide dvom",
-  vPrekryve(otazka({ precedenceRule: "R3", trapType: "historical_version" })))
+  inOverlap(otazka({ precedenceRule: "R3", trapType: "historical_version" })))
 
 // ── miera zhody ──────────────────────────────────────────────────────────────
 
-const z = (v: [string, StavOtazky[]][]) => zhoda(new Map(v))
+const z = (v: [string, QuestionState[]][]) => agreement(new Map(v))
 
 t("jeden posudok sa neráta — nie je s čím porovnávať",
   z([["D9-001", [posudok("a@x.sk", 1)]]]).porovnatelnych === 0)

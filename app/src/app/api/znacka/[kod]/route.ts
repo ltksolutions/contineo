@@ -12,7 +12,7 @@
  * načítaní stránky pre nič.
  */
 
-import { nacitajZnacku } from "@/lib/branding"
+import { loadBrand } from "@/lib/branding"
 
 export const dynamic = "force-dynamic"
 
@@ -24,7 +24,7 @@ export async function GET(
 
   let z
   try {
-    z = await nacitajZnacku(decodeURIComponent(kod))
+    z = await loadBrand(decodeURIComponent(kod))
   } catch (e) {
     console.error("[znacka] načítanie zlyhalo:", e)
     return new Response(null, { status: 500 })

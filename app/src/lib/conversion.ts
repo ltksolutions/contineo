@@ -15,9 +15,9 @@
  * a číselníky (to je `metadata.ts`), ukladanie (to je `ulozisko.ts`).
  */
 
-export type TypSuboru = "markdown" | "docx" | "pdf" | "xlsx" | "text"
+export type FileType = "markdown" | "docx" | "pdf" | "xlsx" | "text"
 
-export interface VysledokPrevodu {
+export interface ConversionResult {
   markdown: string
   /** Čím to prešlo — ide do záznamu, aby bolo o rok vidieť, ako text vznikol. */
   sposob: string
@@ -28,7 +28,7 @@ export interface VysledokPrevodu {
   upozornenia: string[]
 }
 
-export class KonverziaError extends Error {
+export class ConversionError extends Error {
   constructor(message: string) {
     super(message)
     this.name = "KonverziaError"
@@ -43,7 +43,7 @@ export class KonverziaError extends Error {
  * Prvé bajty klamú ťažšie: ZIP-ová hlavička `PK` je v docx aj xlsx, `%PDF-`
  * v PDF.
  */
-export function urcTyp(nazov: string, data: Buffer): TypSuboru {
+export function detectFileType(nazov: string, data: Buffer): FileType {
   const pripona = nazov.toLowerCase().split(".").pop() ?? ""
   const zaciatok = data.subarray(0, 5).toString("latin1")
 
@@ -51,7 +51,7 @@ export function urcTyp(nazov: string, data: Buffer): TypSuboru {
   if (zaciatok.startsWith("PK")) {
     if (pripona === "xlsx" || pripona === "xlsm") return "xlsx"
     if (pripona === "docx") return "docx"
-    throw new KonverziaError(
+    throw new ConversionError(
       "Toto je ZIP-ový balík, ale ani docx, ani xlsx. Staré `.doc` a `.xls` sa prevádzať nedajú — " +
       "ulož ich vo Worde alebo Exceli ako novší formát.",
     )
@@ -59,14 +59,14 @@ export function urcTyp(nazov: string, data: Buffer): TypSuboru {
   if (pripona === "md" || pripona === "markdown") return "markdown"
   if (pripona === "txt" || pripona === "csv") return "text"
 
-  throw new KonverziaError(
+  throw new ConversionError(
     `Formát ${pripona ? `.${pripona}` : "súboru"} zatiaľ nevieme previesť. ` +
     "Podporujeme .docx, .pdf, .xlsx, .md, .txt a .csv.",
   )
 }
 
 /** Poľudštený názov typu do hlášok a do záznamu. */
-export const NAZOV_TYPU: Record<TypSuboru, string> = {
+export const FILE_TYPE_LABEL: Record<FileType, string> = {
   markdown: "Markdown",
   docx: "Word (.docx)",
   pdf: "PDF",
@@ -83,7 +83,7 @@ function upraceny(text: string): string {
     .trim()
 }
 
-async function zDocx(data: Buffer): Promise<VysledokPrevodu> {
+async function zDocx(data: Buffer): Promise<ConversionResult> {
   const mammoth = (await import("mammoth")).default
   const TurndownService = (await import("turndown")).default
 
@@ -106,7 +106,7 @@ async function zDocx(data: Buffer): Promise<VysledokPrevodu> {
   return { markdown, sposob: "mammoth + turndown", upozornenia }
 }
 
-async function zPdf(data: Buffer): Promise<VysledokPrevodu> {
+async function zPdf(data: Buffer): Promise<ConversionResult> {
   // Legacy zostava beží v Node bez prehliadačových API.
   const pdfjs = await import("pdfjs-dist/legacy/build/pdf.mjs")
   const dokument = await pdfjs.getDocument({
@@ -152,7 +152,7 @@ async function zPdf(data: Buffer): Promise<VysledokPrevodu> {
   // vyzerá správne a nie je, je pri norme horší než chýbajúci dokument.
   const znakovNaStranu = markdown.length / Math.max(dokument.numPages, 1)
   if (markdown.length === 0) {
-    throw new KonverziaError(
+    throw new ConversionError(
       "V tomto PDF nie je žiadny text — je to obrázok (sken). Prevod ho neprečíta. " +
       "V editore ho môžeš dať prepísať jazykovým modelom, alebo si vypýtaj od autora pôvodný súbor.",
     )
@@ -170,7 +170,7 @@ async function zPdf(data: Buffer): Promise<VysledokPrevodu> {
   return { markdown, sposob: `pdfjs (${dokument.numPages} strán)`, upozornenia }
 }
 
-async function zXlsx(data: Buffer): Promise<VysledokPrevodu> {
+async function zXlsx(data: Buffer): Promise<ConversionResult> {
   const XLSX = await import("xlsx")
   const zosit = XLSX.read(data, { type: "buffer" })
 
@@ -207,17 +207,17 @@ async function zXlsx(data: Buffer): Promise<VysledokPrevodu> {
 }
 
 /** Prevedie nahratý súbor na Markdown. Vyhadzuje `KonverziaError` s návodom. */
-export async function preved(
+export async function convert(
   nazov: string,
   data: Buffer,
-): Promise<VysledokPrevodu & { typ: TypSuboru }> {
-  const typ = urcTyp(nazov, data)
+): Promise<ConversionResult & { typ: FileType }> {
+  const typ = detectFileType(nazov, data)
 
   switch (typ) {
     case "markdown":
     case "text": {
       const text = upraceny(data.toString("utf8"))
-      if (!text) throw new KonverziaError("Súbor neobsahuje žiadny text.")
+      if (!text) throw new ConversionError("Súbor neobsahuje žiadny text.")
       return {
         typ,
         markdown: text,

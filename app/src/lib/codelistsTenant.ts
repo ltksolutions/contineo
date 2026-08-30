@@ -16,12 +16,12 @@
 
 import { getCollection } from "./mongodb"
 import { TENANTS_COLLECTION, invalidateTenants } from "./tenants"
-import { overVlastnuPolozku, CiselnikError, VLASTNE_CISELNIKY, ciselnikPre } from "./codelists"
-import { zapisAudit } from "./audit"
-import type { Doplnky, Polozka, VlastnyCiselnik } from "./codelists"
+import { checkCustomItem, CodelistError, CUSTOM_CODELISTS, codelistFor } from "./codelists"
+import { writeAudit } from "./audit"
+import type { CodelistExtras, CodelistItem, CustomCodelist } from "./codelists"
 import type { Tenant } from "./tenants"
 
-export const POPIS_CISELNIKA: Record<VlastnyCiselnik, { nazov: string; napoveda: string }> = {
+export const CODELIST_LABEL: Record<CustomCodelist, { nazov: string; napoveda: string }> = {
   category: {
     nazov: "Druhy dokumentov",
     napoveda: "Čím dokument je: norma, smernica, metodický pokyn, zápisnica…",
@@ -32,45 +32,45 @@ export const POPIS_CISELNIKA: Record<VlastnyCiselnik, { nazov: string; napoveda:
   },
 }
 
-export function jeVlastny(nazov: string): nazov is VlastnyCiselnik {
-  return (VLASTNE_CISELNIKY as readonly string[]).includes(nazov)
+export function isCustom(nazov: string): nazov is CustomCodelist {
+  return (CUSTOM_CODELISTS as readonly string[]).includes(nazov)
 }
 
 /** Doplnky organizácie v tvare, aký čaká `ciselniky.ts`. */
-export function doplnkyTenanta(tenant: Pick<Tenant, "ciselniky">): Doplnky {
-  return (tenant.ciselniky ?? {}) as Doplnky
+export function tenantExtras(tenant: Pick<Tenant, "ciselniky">): CodelistExtras {
+  return (tenant.ciselniky ?? {}) as CodelistExtras
 }
 
 /** Celá ponuka číselníka pre danú organizáciu — globálne aj vlastné. */
-export function ponuka(tenant: Pick<Tenant, "ciselniky">, nazov: string): Polozka[] {
-  return ciselnikPre(nazov, doplnkyTenanta(tenant)).polozky
+export function availableOptions(tenant: Pick<Tenant, "ciselniky">, nazov: string): CodelistItem[] {
+  return codelistFor(nazov, tenantExtras(tenant)).polozky
 }
 
 /** Len to, čo si dopísala organizácia — to jediné sa dá odobrať. */
-export function vlastnePolozky(tenant: Pick<Tenant, "ciselniky">, nazov: string): Polozka[] {
-  return (tenant.ciselniky?.[nazov] ?? []) as Polozka[]
+export function customItems(tenant: Pick<Tenant, "ciselniky">, nazov: string): CodelistItem[] {
+  return (tenant.ciselniky?.[nazov] ?? []) as CodelistItem[]
 }
 
-export async function pridajPolozku(
+export async function addCodelistItem(
   companyCode: string,
   ciselnik: string,
   kluc: string,
   popis: string,
   aktor: string,
 ): Promise<void> {
-  if (!jeVlastny(ciselnik)) {
-    throw new CiselnikError(
+  if (!isCustom(ciselnik)) {
+    throw new CodelistError(
       `Číselník ${ciselnik} si organizácia nespravuje sama — sú to filtre, na ktorých stojí prístup k obsahu.`,
     )
   }
-  const polozka = overVlastnuPolozku(kluc, popis)
+  const polozka = checkCustomItem(kluc, popis)
 
   const col = await getCollection<Tenant>(TENANTS_COLLECTION)
   const t = await col.findOne({ companyCode })
-  if (!t) throw new CiselnikError("Organizácia neexistuje.")
+  if (!t) throw new CodelistError("Organizácia neexistuje.")
 
-  const uz = ponuka(t, ciselnik).some(p => p.key === polozka.key)
-  if (uz) throw new CiselnikError(`„${polozka.key}" v ponuke už je.`)
+  const uz = availableOptions(t, ciselnik).some(p => p.key === polozka.key)
+  if (uz) throw new CodelistError(`„${polozka.key}" v ponuke už je.`)
 
   await col.updateOne(
     { companyCode },
@@ -78,20 +78,20 @@ export async function pridajPolozku(
   )
   invalidateTenants()
 
-  await zapisAudit({
+  await writeAudit({
     companyCode, predmet: "organizacia", akcia: "zalozene", aktor,
-    cielId: `ciselnik:${ciselnik}`, cielPopis: `${POPIS_CISELNIKA[ciselnik].nazov} — ${polozka.key}`,
+    cielId: `ciselnik:${ciselnik}`, cielPopis: `${CODELIST_LABEL[ciselnik].nazov} — ${polozka.key}`,
     zmeny: { [ciselnik]: { na: polozka.label ?? polozka.key } },
   })
 }
 
-export async function odoberPolozku(
+export async function removeCodelistItem(
   companyCode: string,
   ciselnik: string,
   kluc: string,
   aktor: string,
 ): Promise<void> {
-  if (!jeVlastny(ciselnik)) throw new CiselnikError("Tento číselník sa meniť nedá.")
+  if (!isCustom(ciselnik)) throw new CodelistError("Tento číselník sa meniť nedá.")
 
   const col = await getCollection<Tenant>(TENANTS_COLLECTION)
   await col.updateOne(
@@ -100,15 +100,15 @@ export async function odoberPolozku(
   )
   invalidateTenants()
 
-  await zapisAudit({
+  await writeAudit({
     companyCode, predmet: "organizacia", akcia: "zrusene", aktor,
-    cielId: `ciselnik:${ciselnik}`, cielPopis: `${POPIS_CISELNIKA[ciselnik as VlastnyCiselnik].nazov} — ${kluc}`,
+    cielId: `ciselnik:${ciselnik}`, cielPopis: `${CODELIST_LABEL[ciselnik as CustomCodelist].nazov} — ${kluc}`,
     poznamka: "z ponuky; dokumenty, ktoré ho majú, si ho nesú ďalej",
   })
 }
 
 /** Koľko dokumentov danú hodnotu používa — aby bolo vidieť, čo sa odoberá. */
-export async function pouzitie(
+export async function codelistUsage(
   companyCode: string,
   ciselnik: string,
   kluc: string,
