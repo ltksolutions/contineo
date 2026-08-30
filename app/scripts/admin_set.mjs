@@ -24,14 +24,14 @@ import { MongoClient } from "mongodb"
 
 const URI = process.env.MONGODB_URI
 const DB = process.env.MONGODB_DB ?? "contineo"
-const OK = "\x1b[32m✔\x1b[0m", CHYBA = "\x1b[31m✘\x1b[0m", INFO = "\x1b[33m·\x1b[0m"
+const OK = "\x1b[32m✔\x1b[0m", FAIL = "\x1b[31m✘\x1b[0m", INFO = "\x1b[33m·\x1b[0m"
 
-const ROLA = "platform-admin"
+const ROLE = "platform-admin"
 /** Tenant dodávateľa. Správca zákazníka touto rolou nikdy nie je. */
 const TENANT = process.env.PLATFORM_TENANT ?? "LTK"
 
 if (!URI) {
-  console.error(`${CHYBA} Chýba MONGODB_URI (app/.env.local alebo export).`)
+  console.error(`${FAIL} Chýba MONGODB_URI (app/.env.local alebo export).`)
   process.exit(1)
 }
 
@@ -43,13 +43,13 @@ function parseArgs(argv) {
     if (!a.startsWith("--")) continue
     const v = argv[i + 1]
     if (v === undefined || v.startsWith("--")) {
-      console.error(`${CHYBA} Prepínač ${a} potrebuje hodnotu`)
+      console.error(`${FAIL} Prepínač ${a} potrebuje hodnotu`)
       process.exit(1)
     }
     i++
     if (a === "--email") out.email = v.trim().toLowerCase()
     else if (a === "--meno") out.meno = v
-    else { console.error(`${CHYBA} Neznámy prepínač ${a}`); process.exit(1) }
+    else { console.error(`${FAIL} Neznámy prepínač ${a}`); process.exit(1) }
   }
   return out
 }
@@ -62,45 +62,45 @@ try {
   const col = client.db(DB).collection("persons")
 
   if (!args.email) {
-    const drzitelia = await col.find({ roles: ROLA }).toArray()
-    if (!drzitelia.length) {
-      console.log(`${INFO} rolu ${ROLA} nemá nikto — správa tenantov je zavretá`)
+    const holders = await col.find({ roles: ROLE }).toArray()
+    if (!holders.length) {
+      console.log(`${INFO} rolu ${ROLE} nemá nikto — správa tenantov je zavretá`)
     }
-    for (const p of drzitelia) {
-      const kedy = p.lastLoginAt ? new Date(p.lastLoginAt).toISOString().slice(0, 16).replace("T", " ") : "—"
-      console.log(`${OK} ${p.email} · ${p.companyCode} · stav=${p.status} · posl. prihlásenie=${kedy}`)
+    for (const p of holders) {
+      const when = p.lastLoginAt ? new Date(p.lastLoginAt).toISOString().slice(0, 16).replace("T", " ") : "—"
+      console.log(`${OK} ${p.email} · ${p.companyCode} · stav=${p.status} · posl. prihlásenie=${when}`)
     }
     process.exit(0)
   }
 
-  const existuje = await col.findOne({ email: args.email })
+  const existing = await col.findOne({ email: args.email })
 
   if (args.odobrat) {
-    if (!existuje) {
-      console.error(`${CHYBA} ${args.email} v persons nie je`)
+    if (!existing) {
+      console.error(`${FAIL} ${args.email} v persons nie je`)
       process.exit(1)
     }
     // Odoberá sa **rola**, nie osoba. Zmazať človeka, ktorý niečo potvrdil,
     // by znamenalo osirotené auditné záznamy (D24).
-    await col.updateOne({ email: args.email }, { $pull: { roles: ROLA } })
-    console.log(`${OK} ${args.email} — rola ${ROLA} odobraná (osoba zostáva)`)
+    await col.updateOne({ email: args.email }, { $pull: { roles: ROLE } })
+    console.log(`${OK} ${args.email} — rola ${ROLE} odobraná (osoba zostáva)`)
     process.exit(0)
   }
 
-  if (existuje) {
-    if (existuje.companyCode !== TENANT) {
-      console.error(`${CHYBA} ${args.email} patrí organizácii ${existuje.companyCode}, nie ${TENANT}.`)
-      console.error(`     Rolu ${ROLA} dostáva len človek dodávateľa — inak by správca`)
+  if (existing) {
+    if (existing.companyCode !== TENANT) {
+      console.error(`${FAIL} ${args.email} patrí organizácii ${existing.companyCode}, nie ${TENANT}.`)
+      console.error(`     Rolu ${ROLE} dostáva len človek dodávateľa — inak by správca`)
       console.error(`     zákazníka videl prehľad ostatných organizácií (D41).`)
       process.exit(1)
     }
-    await col.updateOne({ email: args.email }, { $addToSet: { roles: ROLA } })
-    console.log(`${OK} ${args.email} — rola ${ROLA} pridaná k existujúcej osobe`)
+    await col.updateOne({ email: args.email }, { $addToSet: { roles: ROLE } })
+    console.log(`${OK} ${args.email} — rola ${ROLE} pridaná k existujúcej osobe`)
     process.exit(0)
   }
 
   if (!args.meno) {
-    console.error(`${CHYBA} nová osoba potrebuje --meno`)
+    console.error(`${FAIL} nová osoba potrebuje --meno`)
     process.exit(1)
   }
 
@@ -116,16 +116,16 @@ try {
     status: "invited",
     language: "sk",
     tracks: [],
-    roles: [ROLA],
+    roles: [ROLE],
     invitedAt: now,
     externalRef: { sportnetId: null, entraObjectId: null },
     createdBy: "admin_set.mjs",
     createdAt: now,
   })
-  console.log(`${OK} ${args.email} založený v ${TENANT} s rolou ${ROLA}`)
+  console.log(`${OK} ${args.email} založený v ${TENANT} s rolou ${ROLE}`)
   console.log(`   Prihlásiť sa dá na doméne tenanta ${TENANT} (app.contineo.app).`)
 } catch (e) {
-  console.error(`${CHYBA} ${e.message}`)
+  console.error(`${FAIL} ${e.message}`)
   process.exit(1)
 } finally {
   await client.close()

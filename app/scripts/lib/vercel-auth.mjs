@@ -30,28 +30,28 @@ function token() {
 }
 
 /** `.vercel/project.json` býva v koreni repozitára, skripty bežia v `app/`. */
-function projekt() {
+function project() {
   let dir = process.cwd()
   for (let i = 0; i < 5; i++) {
     try {
       const j = JSON.parse(fs.readFileSync(path.join(dir, ".vercel", "project.json"), "utf8"))
       if (j.projectId) return j
     } catch { /* o úroveň vyššie */ }
-    const hore = path.dirname(dir)
-    if (hore === dir) break
-    dir = hore
+    const up = path.dirname(dir)
+    if (up === dir) break
+    dir = up
   }
   return null
 }
 
 /** Vráti `true`, keď je po jeho behu prostredie na volanie Vercelu pripravené. */
-export function doplnVercelPrihlasenie() {
+export function addVercelAuth() {
   if (!process.env.VERCEL_TOKEN) {
     const t = token()
     if (t) process.env.VERCEL_TOKEN = t
   }
   if (!process.env.VERCEL_PROJECT_ID) {
-    const p = projekt()
+    const p = project()
     if (p) {
       process.env.VERCEL_PROJECT_ID = p.projectId
       if (p.orgId && !process.env.VERCEL_ORG_ID) process.env.VERCEL_ORG_ID = p.orgId

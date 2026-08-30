@@ -18,14 +18,14 @@ import { readFileSync } from "node:fs"
 import { dirname, join } from "node:path"
 import { fileURLToPath } from "node:url"
 
-const OK = "\x1b[32m✔\x1b[0m", ZLE = "\x1b[31m✘\x1b[0m", INFO = "\x1b[33m·\x1b[0m"
-const nasucho = process.argv.includes("--nasucho")
+const OK = "\x1b[32m✔\x1b[0m", BAD = "\x1b[31m✘\x1b[0m", INFO = "\x1b[33m·\x1b[0m"
+const dryRun = process.argv.includes("--nasucho")
 
 const HERE = dirname(fileURLToPath(import.meta.url))
 const SEED = join(HERE, "..", "..", "eval", "seed", "questions_seed.json")
 
 if (!process.env.MONGODB_URI) {
-  console.error(`${ZLE} Chýba MONGODB_URI. Spusti s --env-file=.env.local`)
+  console.error(`${BAD} Chýba MONGODB_URI. Spusti s --env-file=.env.local`)
   process.exit(1)
 }
 
@@ -33,12 +33,12 @@ let seed
 try {
   seed = JSON.parse(readFileSync(SEED, "utf8"))
 } catch (e) {
-  console.error(`${ZLE} Nedá sa načítať ${SEED}\n   ${e.message}`)
+  console.error(`${BAD} Nedá sa načítať ${SEED}\n   ${e.message}`)
   process.exit(1)
 }
 
 if (!Array.isArray(seed) || !seed.length) {
-  console.error(`${ZLE} Seed je prázdny alebo nemá tvar poľa.`)
+  console.error(`${BAD} Seed je prázdny alebo nemá tvar poľa.`)
   process.exit(1)
 }
 
@@ -53,18 +53,18 @@ try {
 
   await col.createIndex({ id: 1 }, { unique: true })
 
-  let novych = 0, aktualizovanych = 0, sUpravou = 0
+  let created = 0, updated = 0, edited = 0
 
   for (const q of seed) {
     if (!q.id || !q.question) {
-      console.warn(`${ZLE} Otázka bez id alebo znenia, preskakujem:`, JSON.stringify(q).slice(0, 80))
+      console.warn(`${BAD} Otázka bez id alebo znenia, preskakujem:`, JSON.stringify(q).slice(0, 80))
       continue
     }
 
-    const existujuca = await col.findOne({ id: q.id })
+    const existing = await col.findOne({ id: q.id })
 
     // Polia zo seedu — tie sa prepisujú vždy, sú našou pravdou.
-    const zoSeedu = {
+    const fromSeed = {
       id: q.id,
       povodneZnenie: q.question,
       searchMode: q.searchMode ?? "hybrid",
@@ -77,41 +77,41 @@ try {
       goldChunkIds: q.goldChunkIds ?? [],
     }
 
-    if (!existujuca) {
-      await (nasucho ? Promise.resolve() : col.insertOne({
-        ...zoSeedu,
+    if (!existing) {
+      await (dryRun ? Promise.resolve() : col.insertOne({
+        ...fromSeed,
         // Prácu hodnotiteľa zakladáme prázdnu; seed do nej nikdy nesiahne.
         upraveneZnenie: null,
         vyradena: false,
         dovodVyradenia: null,
         vytvorene: new Date(),
       }))
-      novych++
+      created++
       continue
     }
 
     // Aktualizujeme LEN polia zo seedu. `upraveneZnenie`, `vyradena`
     // a `dovodVyradenia` sú výsledkom práce človeka — prepísať ich by
     // znamenalo zmazať hodiny odbornej práce pri rutinnom reimporte.
-    await (nasucho ? Promise.resolve() : col.updateOne({ id: q.id }, { $set: zoSeedu }))
-    aktualizovanych++
-    if (existujuca.upraveneZnenie) sUpravou++
+    await (dryRun ? Promise.resolve() : col.updateOne({ id: q.id }, { $set: fromSeed }))
+    updated++
+    if (existing.upraveneZnenie) edited++
   }
 
   console.log()
-  console.log(`${OK} Nových: ${novych}`)
-  console.log(`${OK} Aktualizovaných: ${aktualizovanych}`)
-  if (sUpravou) {
-    console.log(`${INFO} Z toho ${sUpravou} má znenie upravené hodnotiteľom — ponechané.`)
+  console.log(`${OK} Nových: ${created}`)
+  console.log(`${OK} Aktualizovaných: ${updated}`)
+  if (edited) {
+    console.log(`${INFO} Z toho ${edited} má znenie upravené hodnotiteľom — ponechané.`)
   }
-  if (nasucho) console.log(`\n${INFO} Beh nasucho — do databázy sa nič nezapísalo.`)
+  if (dryRun) console.log(`\n${INFO} Beh nasucho — do databázy sa nič nezapísalo.`)
 
   // Prehľad pokrytia, nech je vidieť, či sada sedí s D9.
-  if (!nasucho) {
-    const spolu = await col.countDocuments()
-    const pasce = await col.countDocuments({ trapType: { $ne: null } })
-    const precedencia = await col.countDocuments({ precedenceRule: { $ne: null } })
-    console.log(`\n${INFO} V databáze: ${spolu} otázok, z toho ${pasce} pascí a ${precedencia} na precedenciu.`)
+  if (!dryRun) {
+    const total = await col.countDocuments()
+    const traps = await col.countDocuments({ trapType: { $ne: null } })
+    const precedence = await col.countDocuments({ precedenceRule: { $ne: null } })
+    console.log(`\n${INFO} V databáze: ${total} otázok, z toho ${traps} pascí a ${precedence} na precedenciu.`)
   }
 } finally {
   await client.close()

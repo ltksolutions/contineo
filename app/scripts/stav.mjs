@@ -33,18 +33,18 @@ const p = await getCollection("persons")
 const t = await getCollection("onboarding_tracks")
 const d = await getCollection("documents")
 
-const tenanti = await ten.find({}).toArray()
-console.log(`TENANTS: ${tenanti.length}`)
-for (const x of tenanti) {
+const tenants = await ten.find({}).toArray()
+console.log(`TENANTS: ${tenants.length}`)
+for (const x of tenants) {
   console.log(`  ${x.companyCode} | stav=${x.status} | ${(x.hostnames ?? []).join(", ")}`)
 }
 
-const osoby = await p
+const people = await p
   .find({}, { projection: { email: 1, companyCode: 1, tracks: 1, groups: 1, roles: 1, status: 1, lastLoginAt: 1 } })
   .toArray()
 
-console.log(`\nPERSONS: ${osoby.length}`)
-for (const o of osoby) {
+console.log(`\nPERSONS: ${people.length}`)
+for (const o of people) {
   console.log(
     `  ${o.email} | ${o.companyCode} | stav=${o.status}` +
     ` | trasy=[${(o.tracks ?? []).join(",")}]` +
@@ -54,26 +54,26 @@ for (const o of osoby) {
   )
 }
 
-const trasy = await t.find({}).toArray()
-console.log(`\nTRACKS: ${trasy.length}`)
-for (const tr of trasy) {
-  const kroky = (tr.steps ?? []).map(s => s.documentId ?? s.pageId).join(", ")
-  console.log(`  ${tr.key} | ${tr.companyCode} | aktívna=${tr.isActive} | krokov=${(tr.steps ?? []).length} | ${kroky}`)
+const tracks = await t.find({}).toArray()
+console.log(`\nTRACKS: ${tracks.length}`)
+for (const tr of tracks) {
+  const steps = (tr.steps ?? []).map(s => s.documentId ?? s.pageId).join(", ")
+  console.log(`  ${tr.key} | ${tr.companyCode} | aktívna=${tr.isActive} | krokov=${(tr.steps ?? []).length} | ${steps}`)
 }
 
-const doky = await d
+const docs = await d
   .find({}, { projection: { documentId: 1, title: 1, companyCode: 1, versions: 1 } })
   .toArray()
 
-console.log(`\nDOCUMENTS: ${doky.length}`)
-for (const dd of doky) {
+console.log(`\nDOCUMENTS: ${docs.length}`)
+for (const dd of docs) {
   const vs = dd.versions ?? []
   // Platí len aktívna verzia s určeným `effectiveFrom` (D6). Dokument bez
   // takej verzie sa nedá potvrdiť — a to je najčastejšia tichá príčina,
   // prečo sa niečo v zozname neobjaví.
-  const platne = vs.filter(v => v.isActive && v.effectiveFrom)
-  const znak = platne.length > 0 ? " " : "!"
-  console.log(`${znak} ${dd.documentId} | ${dd.companyCode ?? "—"} | verzií=${vs.length} | s platnosťou=${platne.length} | ${dd.title ?? ""}`)
+  const valid = vs.filter(v => v.isActive && v.effectiveFrom)
+  const mark = valid.length > 0 ? " " : "!"
+  console.log(`${mark} ${dd.documentId} | ${dd.companyCode ?? "—"} | verzií=${vs.length} | s platnosťou=${valid.length} | ${dd.title ?? ""}`)
 }
 
 console.log(`\n(! = dokument nemá platné znenie, nedá sa potvrdiť)`)

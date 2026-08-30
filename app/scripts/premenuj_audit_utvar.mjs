@@ -15,11 +15,11 @@
 
 import { MongoClient } from "mongodb"
 
-const OK = "\x1b[32m✔\x1b[0m", CHYBA = "\x1b[31m✘\x1b[0m", INFO = "\x1b[33m·\x1b[0m"
-const ZAPIS = process.argv.includes("--zapis")
+const OK = "\x1b[32m✔\x1b[0m", FAIL = "\x1b[31m✘\x1b[0m", INFO = "\x1b[33m·\x1b[0m"
+const WRITE = process.argv.includes("--zapis")
 
 if (!process.env.MONGODB_URI) {
-  console.error(`${CHYBA} Chýba MONGODB_URI.`)
+  console.error(`${FAIL} Chýba MONGODB_URI.`)
   process.exit(1)
 }
 
@@ -28,13 +28,13 @@ await client.connect()
 const db = client.db(process.env.MONGODB_DB ?? "contineo")
 const col = db.collection("audit")
 
-const zaznamy = await col.find({ predmet: "utvar" }).sort({ kedy: 1 }).toArray()
-console.log(`\nzáznamov so starým predmetom: ${zaznamy.length}\n`)
-for (const z of zaznamy) {
+const records = await col.find({ predmet: "utvar" }).sort({ kedy: 1 }).toArray()
+console.log(`\nzáznamov so starým predmetom: ${records.length}\n`)
+for (const z of records) {
   console.log(`  ${z.kedy?.toISOString?.()} · ${z.akcia} · ${z.cielPopis ?? ""} · ${z.aktor}`)
 }
 
-if (!ZAPIS) {
+if (!WRITE) {
   console.log(`\n${INFO} nasucho — nič sa nezapísalo. Zápis: rovnaký príkaz s --zapis\n`)
   await client.close()
   process.exit(0)

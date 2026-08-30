@@ -19,7 +19,7 @@ import { register } from "node:module"
 import { pathToFileURL } from "node:url"
 import { existsSync } from "node:fs"
 
-const PRIPONY = [".ts", ".mjs", ".js", "/index.ts"]
+const EXTENSIONS = [".ts", ".mjs", ".js", "/index.ts"]
 
 register(
   "data:text/javascript," + encodeURIComponent(`
@@ -27,7 +27,7 @@ register(
       const relativny = specifier.startsWith("./") || specifier.startsWith("../")
       const maPriponu = /\\.[cm]?[jt]s$/.test(specifier)
       if (relativny && !maPriponu && context.parentURL) {
-        for (const p of ${JSON.stringify(PRIPONY)}) {
+        for (const p of ${JSON.stringify(EXTENSIONS)}) {
           try { return await nextResolve(specifier + p, context) } catch {}
         }
       }

@@ -19,35 +19,35 @@ import { MongoClient } from "mongodb"
 
 const URI = process.env.MONGODB_URI
 const DB = process.env.MONGODB_DB ?? "contineo"
-const OK = "\x1b[32m✔\x1b[0m", CHYBA = "\x1b[31m✘\x1b[0m", INFO = "\x1b[33m·\x1b[0m"
+const OK = "\x1b[32m✔\x1b[0m", FAIL = "\x1b[31m✘\x1b[0m", INFO = "\x1b[33m·\x1b[0m"
 
 /**
  * Roly, ktoré patria tenantovi. Zhodné s `PRIDELITELNE_ROLE` v `lib/people.ts`.
  * `platform-admin` medzi nimi nie je zámerne — patrí tenantovi dodávateľa
  * a má vlastný skript (`npm run admin`), ktorý o tom vie.
  */
-const ZNAME_ROLE = ["hr", "people-admin"]
+const KNOWN_ROLES = ["hr", "people-admin"]
 
-function arg(meno) {
-  const i = process.argv.indexOf(meno)
+function arg(name) {
+  const i = process.argv.indexOf(name)
   return i === -1 ? null : process.argv[i + 1] ?? null
 }
 const EMAIL = arg("--email")?.trim().toLowerCase() ?? null
-const ROLA = arg("--rola")
-const SKUPINY = arg("--skupiny")
-const ODOBRAT = process.argv.includes("--odobrat")
+const ROLE = arg("--rola")
+const GROUPS = arg("--skupiny")
+const REMOVE = process.argv.includes("--odobrat")
 
 if (!URI) {
-  console.error(`${CHYBA} Chýba MONGODB_URI (app/.env.local alebo export).`)
+  console.error(`${FAIL} Chýba MONGODB_URI (app/.env.local alebo export).`)
   process.exit(1)
 }
-if (ROLA && !ZNAME_ROLE.includes(ROLA)) {
-  console.error(`${CHYBA} Neznáma rola „${ROLA}". Známe: ${ZNAME_ROLE.join(", ")}.`)
+if (ROLE && !KNOWN_ROLES.includes(ROLE)) {
+  console.error(`${FAIL} Neznáma rola „${ROLE}". Známe: ${KNOWN_ROLES.join(", ")}.`)
   console.error(`     Správcu platformy nastavuje: npm run admin`)
   process.exit(1)
 }
 
-const kluceZoZoznamu = s =>
+const keysFromList = s =>
   [...new Set(s.split(/[,;|]/).map(x => x.trim().toLowerCase()).filter(Boolean))]
 
 const client = new MongoClient(URI, { serverSelectionTimeoutMS: 15000 })
@@ -56,57 +56,57 @@ try {
   const col = client.db(DB).collection("persons")
 
   if (!EMAIL) {
-    const vsetci = await col
+    const all = await col
       .find({}, { projection: { email: 1, companyCode: 1, fullName: 1, roles: 1, groups: 1 } })
       .sort({ companyCode: 1, email: 1 })
       .toArray()
-    for (const o of vsetci) {
+    for (const o of all) {
       console.log(`${o.email} | ${o.companyCode} | ${o.fullName}`)
       console.log(`   role=[${(o.roles ?? []).join(", ")}] skupiny=[${(o.groups ?? []).join(", ")}]`)
     }
-    console.log(`\n${INFO} ${vsetci.length} osôb`)
+    console.log(`\n${INFO} ${all.length} osôb`)
     process.exit(0)
   }
 
-  const osoba = await col.findOne({ email: EMAIL })
-  if (!osoba) {
-    console.error(`${CHYBA} ${EMAIL} v persons nie je. Založ ju importom: npm run persons:import`)
+  const person = await col.findOne({ email: EMAIL })
+  if (!person) {
+    console.error(`${FAIL} ${EMAIL} v persons nie je. Založ ju importom: npm run persons:import`)
     process.exit(1)
   }
 
-  const zmeny = {}
-  if (ROLA) {
-    const role = new Set(osoba.roles ?? [])
-    ODOBRAT ? role.delete(ROLA) : role.add(ROLA)
-    zmeny.roles = [...role]
+  const changes = {}
+  if (ROLE) {
+    const role = new Set(person.roles ?? [])
+    REMOVE ? role.delete(ROLE) : role.add(ROLE)
+    changes.roles = [...role]
   }
-  if (SKUPINY !== null) {
-    const skupiny = kluceZoZoznamu(SKUPINY)
-    zmeny.groups = skupiny
+  if (GROUPS !== null) {
+    const groups = keysFromList(GROUPS)
+    changes.groups = groups
     // História členstva (D50) — rovnaké pravidlo ako v `persons.ts`, len bez
     // importu: tento skript beží bez TypeScriptového háku. Nezmenené členstvo
     // sa nedotkne, odchod uzavrie úsek, príchod otvorí nový.
-    const teraz = new Date()
-    const nove = new Set(skupiny)
-    const historia = (osoba.groupHistory ?? []).map(z => ({ ...z }))
-    for (const z of historia) if (!z.do && !nove.has(z.group)) z.do = teraz
-    const otvorene = new Set(historia.filter(z => !z.do).map(z => z.group))
-    for (const g of nove) if (!otvorene.has(g)) historia.push({ group: g, od: teraz })
-    zmeny.groupHistory = historia
+    const now = new Date()
+    const added = new Set(groups)
+    const history = (person.groupHistory ?? []).map(z => ({ ...z }))
+    for (const z of history) if (!z.do && !added.has(z.group)) z.do = now
+    const open = new Set(history.filter(z => !z.do).map(z => z.group))
+    for (const g of added) if (!open.has(g)) history.push({ group: g, od: now })
+    changes.groupHistory = history
   }
 
-  if (Object.keys(zmeny).length === 0) {
-    console.log(`${EMAIL} | ${osoba.companyCode} | ${osoba.fullName}`)
-    console.log(`   role=[${(osoba.roles ?? []).join(", ")}] skupiny=[${(osoba.groups ?? []).join(", ")}]`)
+  if (Object.keys(changes).length === 0) {
+    console.log(`${EMAIL} | ${person.companyCode} | ${person.fullName}`)
+    console.log(`   role=[${(person.roles ?? []).join(", ")}] skupiny=[${(person.groups ?? []).join(", ")}]`)
     process.exit(0)
   }
 
-  await col.updateOne({ email: EMAIL }, { $set: zmeny })
+  await col.updateOne({ email: EMAIL }, { $set: changes })
   const po = await col.findOne({ email: EMAIL })
   console.log(`${OK} ${EMAIL} | ${po.companyCode}`)
   console.log(`   role=[${(po.roles ?? []).join(", ")}] skupiny=[${(po.groups ?? []).join(", ")}]`)
 } catch (e) {
-  console.error(`${CHYBA} ${e.message ?? e}`)
+  console.error(`${FAIL} ${e.message ?? e}`)
   process.exitCode = 1
 } finally {
   await client.close()

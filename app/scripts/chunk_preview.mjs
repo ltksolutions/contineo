@@ -12,101 +12,101 @@
  */
 import { readFileSync, writeFileSync, existsSync } from "node:fs"
 import { chunkText, estimateTokens } from "./lib/chunker.mjs"
-import { nacitajMeta, sablonaMeta, cestaMeta } from "./lib/meta.mjs"
+import { loadMeta, metaTemplate, metaPath } from "./lib/meta.mjs"
 
 const args = process.argv.slice(2)
-const subor = args.find(a => !a.startsWith("--"))
-const cislo = (f, d) => { const i = args.indexOf(f); return i >= 0 && args[i + 1] ? Number(args[i + 1]) : d }
-const pocet = cislo("--pocet", 3)
-const cely = cislo("--cely", -1)
-const lenProblemy = args.includes("--problemy")
+const file = args.find(a => !a.startsWith("--"))
+const num = (f, d) => { const i = args.indexOf(f); return i >= 0 && args[i + 1] ? Number(args[i + 1]) : d }
+const count = num("--pocet", 3)
+const whole = num("--cely", -1)
+const onlyProblems = args.includes("--problemy")
 
-if (!subor) {
+if (!file) {
   console.error("Použitie: node scripts/chunk_preview.mjs <subor.md> [--pocet N] [--cely N] [--problemy] [--vytvor-meta]")
   process.exit(1)
 }
 
 // Vytvorenie šablóny metadát — hodnoty NEODHADUJEME z názvu súboru.
 if (args.includes("--vytvor-meta")) {
-  const cesta = cestaMeta(subor)
-  if (existsSync(cesta)) {
-    console.error(`${cesta} už existuje — nechcem ho prepísať.`)
+  const path = metaPath(file)
+  if (existsSync(path)) {
+    console.error(`${path} už existuje — nechcem ho prepísať.`)
     process.exit(1)
   }
-  writeFileSync(cesta, JSON.stringify(sablonaMeta(), null, 2) + "\n", "utf8")
-  console.log(`Vytvorená šablóna: ${cesta}`)
+  writeFileSync(path, JSON.stringify(metaTemplate(), null, 2) + "\n", "utf8")
+  console.log(`Vytvorená šablóna: ${path}`)
   console.log("Vyplň ju — najmä title, sectionKey a companyCode (hodnoty z číselníkov).")
   process.exit(0)
 }
 
 let meta
 try {
-  meta = nacitajMeta(subor)
+  meta = loadMeta(file)
 } catch (e) {
   console.error(`\n${e.message}\n`)
   process.exit(1)
 }
 
-const text = readFileSync(subor, "utf8")
-const { chunky, statistiky: s } = chunkText(text, { nazovDokumentu: meta.title })
+const text = readFileSync(file, "utf8")
+const { chunky: chunks, statistiky: s } = chunkText(text, { nazovDokumentu: meta.title })
 
-const ciara = (z = "─") => console.log(z.repeat(74))
+const rule = (z = "─") => console.log(z.repeat(74))
 
-console.log(`\nSúbor: ${subor}`)
+console.log(`\nSúbor: ${file}`)
 console.log(`Dokument: ${meta.title}`)
 console.log(`Tagy: ${meta.sectionKey} · ${meta.companyCode} · ${meta.scope} · ${meta.accessLevel}`)
-ciara()
+rule()
 console.log("ČISTENIE")
 console.log(`  odstránené hlavičky/päty:   ${s.odstranene.hlavicka}`)
 console.log(`  odstránené čísla strán:     ${s.odstranene.cisloStrany}`)
 console.log(`  odstránené poznámky p. č.:  ${s.odstranene.poznamka}`)
 console.log(`  riadkov po očistení:        ${s.riadkovPoOcisteni}`)
-ciara()
+rule()
 console.log("ŠTRUKTÚRA")
 console.log(`  jednotiek: ${s.clankov}  (z toho príloh: ${s.priloh})`)
 console.log(`  chunkov:   ${s.chunkov}`)
-ciara()
+rule()
 console.log("VEĽKOSTI (odhad tokenov, cieľ 300–800)")
 console.log(`  min ${s.tokenyMin} · priemer ${s.tokenyPriemer} · max ${s.tokenyMax}`)
 console.log(`  nad 800:            ${s.nadLimit}${s.nadLimit ? "  ← pozri --problemy" : ""}`)
 console.log(`  krátke úlomky:      ${s.kratkeUlomky}${s.kratkeUlomky ? "  ← pozri --problemy" : ""}`)
 console.log(`  krátke úplné články: ${s.kratkeUplne}  (v poriadku — celý článok je dobrý chunk)`)
-ciara()
+rule()
 
-if (cely >= 0) {
-  const ch = chunky[cely]
-  if (!ch) { console.error(`Chunk ${cely} neexistuje (0–${chunky.length - 1}).`); process.exit(1) }
-  console.log(`CHUNK ${cely}  ·  ${estimateTokens(ch.text)} tokenov  ·  ${ch.articleRef ?? "—"}`)
-  ciara()
+if (whole >= 0) {
+  const ch = chunks[whole]
+  if (!ch) { console.error(`Chunk ${whole} neexistuje (0–${chunks.length - 1}).`); process.exit(1) }
+  console.log(`CHUNK ${whole}  ·  ${estimateTokens(ch.text)} tokenov  ·  ${ch.articleRef ?? "—"}`)
+  rule()
   console.log(ch.text)
-  ciara()
+  rule()
   process.exit(0)
 }
 
 // Problém = nad limitom, alebo krátky ÚLOMOK. Krátky úplný článok problém nie je.
-const vyber = lenProblemy
-  ? chunky.filter(c => { const t = estimateTokens(c.text); return t > 800 || (!c.uplnaJednotka && t < 300) })
-  : chunky.slice(0, pocet)
+const pick = onlyProblems
+  ? chunks.filter(c => { const t = estimateTokens(c.text); return t > 800 || (!c.uplnaJednotka && t < 300) })
+  : chunks.slice(0, count)
 
-if (lenProblemy) {
-  console.log(`PROBLÉMOVÉ CHUNKY (${vyber.length} z ${chunky.length})`)
-  if (!vyber.length) console.log("  žiadne — všetky sú v rozsahu 300–800 tokenov")
+if (onlyProblems) {
+  console.log(`PROBLÉMOVÉ CHUNKY (${pick.length} z ${chunks.length})`)
+  if (!pick.length) console.log("  žiadne — všetky sú v rozsahu 300–800 tokenov")
 }
 
-for (const ch of vyber.slice(0, lenProblemy ? 12 : pocet)) {
+for (const ch of pick.slice(0, onlyProblems ? 12 : count)) {
   const t = estimateTokens(ch.text)
-  const znak = t > 800 ? "  ⚠ nad limit" : t < 300 ? "  ⚠ pod limit" : ""
-  console.log(`\n[${ch.chunkIndex}]  ${t} tokenov${znak}`)
+  const mark = t > 800 ? "  ⚠ nad limit" : t < 300 ? "  ⚠ pod limit" : ""
+  console.log(`\n[${ch.chunkIndex}]  ${t} tokenov${mark}`)
   console.log(`  articleRef: ${ch.articleRef ?? "—"}${ch.typ === "priloha" ? "   (príloha)" : ""}`)
   console.log(`  heading:    ${ch.heading}`)
   console.log(`  časť:       ${ch.cast ?? "—"}`)
   console.log(`  ── text ──`)
-  const ukazka = ch.text.length > 600 ? ch.text.slice(0, 600) + "\n  […]" : ch.text
-  console.log(ukazka.split("\n").map(r => "  " + r).join("\n"))
+  const sample = ch.text.length > 600 ? ch.text.slice(0, 600) + "\n  […]" : ch.text
+  console.log(sample.split("\n").map(r => "  " + r).join("\n"))
 }
 
 console.log()
-if (!lenProblemy) {
-  console.log(`Celý chunk:  node scripts/chunk_preview.mjs ${subor} --cely 12`)
-  console.log(`Len problémy: node scripts/chunk_preview.mjs ${subor} --problemy`)
+if (!onlyProblems) {
+  console.log(`Celý chunk:  node scripts/chunk_preview.mjs ${file} --cely 12`)
+  console.log(`Len problémy: node scripts/chunk_preview.mjs ${file} --problemy`)
 }

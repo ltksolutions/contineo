@@ -53,7 +53,7 @@ await client.connect()
 const col = client.db(DB).collection(COL)
 
 try {
-  if (has("--stav")) await stav()
+  if (has("--stav")) await state()
   else if (has("--backfill")) await backfill()
   else if (has("--reembed")) await reembed()
   else {
@@ -64,38 +64,38 @@ try {
 }
 
 // ── prehľad ──────────────────────────────────────────────────────────────────
-async function stav() {
-  const spolu = await col.countDocuments({})
-  const bezModelu = await col.countDocuments({ embeddingModel: { $in: [null, ""] } })
-  const chybaPole = await col.countDocuments({ embeddingModel: { $exists: false } })
+async function state() {
+  const total = await col.countDocuments({})
+  const withoutModel = await col.countDocuments({ embeddingModel: { $in: [null, ""] } })
+  const missingField = await col.countDocuments({ embeddingModel: { $exists: false } })
   const pending = await col.countDocuments({ reembedPending: true })
 
-  const podlaModelu = await col.aggregate([
+  const byModel = await col.aggregate([
     { $group: { _id: { model: "$embeddingModel", dim: "$embeddingDim", provider: "$embeddingProvider" },
                 pocet: { $sum: 1 } } },
     { $sort: { pocet: -1 } },
   ]).toArray()
 
-  console.log(`\nKorpus: ${spolu} chunkov v ${DB}.${COL}\n`)
+  console.log(`\nKorpus: ${total} chunkov v ${DB}.${COL}\n`)
   console.log("Podľa modelu:")
-  for (const r of podlaModelu) {
+  for (const r of byModel) {
     const m = r._id.model ?? "(pole chýba)"
     const d = r._id.dim ? `${r._id.dim} dim` : "dim neznámy"
     const p = r._id.provider ?? "provider neznámy"
     console.log(`  ${String(m).padEnd(28)} ${String(d).padEnd(14)} ${String(p).padEnd(14)} ${r.pocet}`)
   }
 
-  const naBackfill = bezModelu + chybaPole
-  console.log(`\n  čaká na backfill: ${naBackfill}`)
+  const toBackfill = withoutModel + missingField
+  console.log(`\n  čaká na backfill: ${toBackfill}`)
   console.log(`  označené na re-embed: ${pending}`)
 
-  const modely = podlaModelu.map(r => r._id.model).filter(Boolean)
-  const priestory = [...new Set(modely.map(space))]
-  if (priestory.length > 1) {
-    console.log(`\n  POZOR: korpus obsahuje ${priestory.length} nekompatibilné vektorové priestory (${priestory.join(", ")}).`)
+  const models = byModel.map(r => r._id.model).filter(Boolean)
+  const spaces = [...new Set(models.map(space))]
+  if (spaces.length > 1) {
+    console.log(`\n  POZOR: korpus obsahuje ${spaces.length} nekompatibilné vektorové priestory (${spaces.join(", ")}).`)
     console.log("  Retrieval bude vracať nezmysly, kým sa to nezjednotí.")
-  } else if (priestory.length === 1) {
-    console.log(`\n  Vektorový priestor je jednotný: ${priestory[0]}`)
+  } else if (spaces.length === 1) {
+    console.log(`\n  Vektorový priestor je jednotný: ${spaces[0]}`)
   }
   console.log()
 }
@@ -108,12 +108,12 @@ async function backfill() {
   if (!model) { console.error("Chýba --model (napr. --model voyage-4)"); process.exit(1) }
 
   const filter = { $or: [{ embeddingModel: { $exists: false } }, { embeddingModel: { $in: [null, ""] } }] }
-  const pocet = await col.countDocuments(filter)
+  const count = await col.countDocuments(filter)
 
-  console.log(`\nBackfill: ${pocet} chunkov dostane embeddingModel="${model}", dim=${dim}, provider="${provider}"`)
+  console.log(`\nBackfill: ${count} chunkov dostane embeddingModel="${model}", dim=${dim}, provider="${provider}"`)
   console.log("Vektory sa NEPREPOČÍTAVAJÚ — len sa označia. Použi len ak vieš, ktorým modelom vznikli.\n")
 
-  if (!pocet) { console.log("Niet čo dopĺňať.\n"); return }
+  if (!count) { console.log("Niet čo dopĺňať.\n"); return }
   if (DRY) { console.log("--dry-run: nič sa nezapísalo.\n"); return }
 
   const r = await col.updateMany(filter, {
@@ -137,17 +137,17 @@ async function reembed() {
   }
 
   const filter = { embeddingModel: from }
-  const pocet = await col.countDocuments(filter)
+  const count = await col.countDocuments(filter)
 
   console.log(`\nRe-embed: ${from} → ${to} (${dim} dim)`)
-  console.log(`Dotknutých chunkov: ${pocet}`)
+  console.log(`Dotknutých chunkov: ${count}`)
   console.log("\nPostup:")
   console.log("  1. tento skript označí chunky ako reembedPending")
   console.log("  2. worker ich prepočíta novým modelom a prepíše embedding + embeddingModel")
   console.log("  3. AŽ POTOM prepni vektorový index a model v profile tenanta")
   console.log("\n  Index neprepínaj skôr — časť korpusu by bola v starom priestore.\n")
 
-  if (!pocet) { console.log("Niet čo prepočítavať.\n"); return }
+  if (!count) { console.log("Niet čo prepočítavať.\n"); return }
   if (DRY) { console.log("--dry-run: nič sa nezapísalo.\n"); return }
 
   const r = await col.updateMany(filter, {

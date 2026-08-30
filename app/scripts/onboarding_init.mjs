@@ -18,11 +18,11 @@ import { MongoClient } from "mongodb"
 const URI = process.env.MONGODB_URI
 const DB = process.env.MONGODB_DB ?? "contineo"
 
-const OK = "\x1b[32m✔\x1b[0m", CHYBA = "\x1b[31m✘\x1b[0m", INFO = "\x1b[33m·\x1b[0m"
-const lenStav = process.argv.includes("--stav")
+const OK = "\x1b[32m✔\x1b[0m", FAIL = "\x1b[31m✘\x1b[0m", INFO = "\x1b[33m·\x1b[0m"
+const statusOnly = process.argv.includes("--stav")
 
 if (!URI) {
-  console.error(`${CHYBA} Chýba MONGODB_URI. Nastav ju v app/.env.local alebo:`)
+  console.error(`${FAIL} Chýba MONGODB_URI. Nastav ju v app/.env.local alebo:`)
   console.error(`     export MONGODB_URI="mongodb+srv://..."`)
   process.exit(1)
 }
@@ -143,41 +143,41 @@ try {
   const info = await client.db().admin().command({ buildInfo: 1 })
   console.log(`${OK} pripojené · MongoDB ${info.version} · databáza ${DB}\n`)
   const db = client.db(DB)
-  const existujuce = (await db.listCollections().toArray()).map(c => c.name)
+  const existing = (await db.listCollections().toArray()).map(c => c.name)
 
-  for (const { kolekcia, indexy } of PLAN) {
-    if (existujuce.includes(kolekcia)) {
-      console.log(`${INFO} kolekcia ${kolekcia} už existuje`)
-    } else if (lenStav) {
-      console.log(`${INFO} kolekcia ${kolekcia} CHÝBA`)
+  for (const { kolekcia: collection, indexy: indexes } of PLAN) {
+    if (existing.includes(collection)) {
+      console.log(`${INFO} kolekcia ${collection} už existuje`)
+    } else if (statusOnly) {
+      console.log(`${INFO} kolekcia ${collection} CHÝBA`)
       continue
     } else {
-      await db.createCollection(kolekcia)
-      console.log(`${OK} vytvorená kolekcia ${kolekcia}`)
+      await db.createCollection(collection)
+      console.log(`${OK} vytvorená kolekcia ${collection}`)
     }
 
-    const col = db.collection(kolekcia)
+    const col = db.collection(collection)
     const uz = await col.indexes()
-    for (const { kluc, opts, preco } of indexy) {
-      const mena = uz.map(i => i.name)
-      if (mena.includes(opts.name)) {
+    for (const { kluc: key, opts, preco: why } of indexes) {
+      const names = uz.map(i => i.name)
+      if (names.includes(opts.name)) {
         console.log(`   ${INFO} index ${opts.name} už existuje`)
         continue
       }
-      if (lenStav) {
-        console.log(`   ${INFO} index ${opts.name} CHÝBA — ${preco}`)
+      if (statusOnly) {
+        console.log(`   ${INFO} index ${opts.name} CHÝBA — ${why}`)
         continue
       }
-      await col.createIndex(kluc, opts)
-      console.log(`   ${OK} index ${opts.name} — ${preco}`)
+      await col.createIndex(key, opts)
+      console.log(`   ${OK} index ${opts.name} — ${why}`)
     }
     console.log("")
   }
 
-  if (lenStav) console.log(`${INFO} len výpis stavu, nič sa nezmenilo`)
+  if (statusOnly) console.log(`${INFO} len výpis stavu, nič sa nezmenilo`)
   else console.log(`${OK} hotovo`)
 } catch (e) {
-  console.error(`${CHYBA} ${e.message ?? e}`)
+  console.error(`${FAIL} ${e.message ?? e}`)
   process.exitCode = 1
 } finally {
   await client.close()

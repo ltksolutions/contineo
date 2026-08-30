@@ -22,7 +22,7 @@ import { readFileSync } from "node:fs"
 import { createHash } from "node:crypto"
 import { MongoClient } from "mongodb"
 import { chunkText, estimateTokens } from "./lib/chunker.mjs"
-import { nacitajMeta, nacitajCiselnik } from "./lib/meta.mjs"
+import { loadMeta, loadCodelist } from "./lib/meta.mjs"
 
 const URI = process.env.MONGODB_URI
 const DB = process.env.MONGODB_DB ?? "contineo"
@@ -30,42 +30,42 @@ const EMBEDDING_MODEL = process.env.EMBEDDING_MODEL ?? "voyage-4"
 const EMBEDDING_DIM = Number(process.env.EMBEDDING_DIM ?? 1024)
 const EMBEDDING_KIND = process.env.EMBEDDING_KIND ?? "atlas-auto"
 
-const OK = "\x1b[32m✔\x1b[0m", CHYBA = "\x1b[31m✘\x1b[0m", INFO = "\x1b[33m·\x1b[0m"
+const OK = "\x1b[32m✔\x1b[0m", FAIL = "\x1b[31m✘\x1b[0m", INFO = "\x1b[33m·\x1b[0m"
 
 const args = process.argv.slice(2)
-const nasucho = args.includes("--nasucho")
-const subory = args.filter(a => !a.startsWith("--"))
+const dryRun = args.includes("--nasucho")
+const files = args.filter(a => !a.startsWith("--"))
 
-if (!subory.length) {
+if (!files.length) {
   console.error("Použitie: node --env-file=.env.local scripts/import.mjs <subor.md…> [--nasucho]")
   process.exit(1)
 }
-if (!URI && !nasucho) {
-  console.error(`${CHYBA} Chýba MONGODB_URI (alebo použi --nasucho).`)
+if (!URI && !dryRun) {
+  console.error(`${FAIL} Chýba MONGODB_URI (alebo použi --nasucho).`)
   process.exit(1)
 }
 
 const hash = (s) => createHash("sha256").update(s).digest("hex").slice(0, 16)
 
 /** Stabilný identifikátor dokumentu — nezávislý od názvu súboru. */
-const idDokumentu = (meta) => `${meta.companyCode}:${meta.sectionKey}`.toLowerCase()
+const documentIdOf = (meta) => `${meta.companyCode}:${meta.sectionKey}`.toLowerCase()
 
-function pripravDokument(subor) {
-  const meta = nacitajMeta(subor)
+function prepareDocument(file) {
+  const meta = loadMeta(file)
 
   // Tagy sa validujú zvlášť — je to pole, nie skalár.
-  const cTags = nacitajCiselnik("tags")
+  const tagCodelist = loadCodelist("tags")
   const tags = Array.isArray(meta.tags) ? meta.tags : []
-  const zleTagy = cTags ? tags.filter(t => !cTags.kluce.has(t)) : []
-  if (zleTagy.length) {
-    throw new Error(`${subor}: tagy mimo číselníka: ${zleTagy.join(", ")}`)
+  const badTags = tagCodelist ? tags.filter(t => !tagCodelist.kluce.has(t)) : []
+  if (badTags.length) {
+    throw new Error(`${file}: tagy mimo číselníka: ${badTags.join(", ")}`)
   }
 
-  const text = readFileSync(subor, "utf8")
-  const { chunky, statistiky } = chunkText(text, { nazovDokumentu: meta.title })
-  if (!chunky.length) throw new Error(`${subor}: nevznikol ani jeden chunk`)
+  const text = readFileSync(file, "utf8")
+  const { chunky: chunks, statistiky: stats } = chunkText(text, { nazovDokumentu: meta.title })
+  if (!chunks.length) throw new Error(`${file}: nevznikol ani jeden chunk`)
 
-  const documentId = idDokumentu(meta)
+  const documentId = documentIdOf(meta)
   /**
    * Verzia sa počíta z VÝSLEDNÝCH CHUNKOV, nie zo zdrojového textu.
    *
@@ -78,11 +78,11 @@ function pripravDokument(subor) {
    * Hashuje sa PRESNE TO, čo sa zapíše do databázy (viď `chunkDoDb`),
    * takže každé nové pole sa do verzie premietne samo.
    */
-  const predbezne = { meta, tags }
-  const otlacok = JSON.stringify(chunky.map(ch => chunkDoDb(ch, predbezne)))
-  const versionId = hash(otlacok)
+  const provisional = { meta, tags }
+  const fingerprint = JSON.stringify(chunks.map(ch => chunkToDb(ch, provisional)))
+  const versionId = hash(fingerprint)
 
-  return { subor, meta, tags, chunky, statistiky, documentId, versionId, markdown: text }
+  return { subor: file, meta, tags, chunky: chunks, statistiky: stats, documentId, versionId, markdown: text }
 }
 
 /**
@@ -97,7 +97,7 @@ function pripravDokument(subor) {
  *
  * Takto sa každé nové pole premietne do verzie samo a nedá sa naň zabudnúť.
  */
-function chunkDoDb(ch, d) {
+function chunkToDb(ch, d) {
   return {
     chunkIndex: ch.chunkIndex,
     text: ch.text,                    // <- Atlas z tohto poľa robí vektor
@@ -140,23 +140,23 @@ function chunkDoDb(ch, d) {
  * > Zapisujeme preto stav taký, aký naozaj je, a nepredstierame schválenie.
  * > Zosúladiť pri review UI — vedené v `docs/TODO.md` sekcii I.
  */
-async function dopisVerziu(kolDoc, d, teraz) {
-  const ma = await kolDoc.findOne({
+async function appendVersion(docCol, d, now) {
+  const ma = await docCol.findOne({
     documentId: d.documentId, "versions.versionId": d.versionId,
   })
   if (ma) return
 
-  const platnaOd = d.meta.effectiveFrom ?? null
+  const effectiveFrom = d.meta.effectiveFrom ?? null
 
-  if (platnaOd) {
-    await kolDoc.updateOne(
+  if (effectiveFrom) {
+    await docCol.updateOne(
       { documentId: d.documentId },
-      { $set: { "versions.$[stara].effectiveTo": platnaOd, "versions.$[stara].isActive": false } },
+      { $set: { "versions.$[stara].effectiveTo": effectiveFrom, "versions.$[stara].isActive": false } },
       { arrayFilters: [{ "stara.effectiveTo": null, "stara.versionId": { $ne: d.versionId } }] }
     )
   }
 
-  await kolDoc.updateOne(
+  await docCol.updateOne(
     { documentId: d.documentId },
     {
       $push: {
@@ -165,7 +165,7 @@ async function dopisVerziu(kolDoc, d, teraz) {
           // Ľudské označenie zatiaľ nemáme — meta ho nenesie. Otlačok obsahu
           // je aspoň jednoznačný; kurátor ho premenuje, keď bude čím.
           label: d.meta.version ?? d.versionId,
-          effectiveFrom: platnaOd,
+          effectiveFrom: effectiveFrom,
           effectiveTo: d.meta.effectiveTo ?? null,
           isActive: true,
           contentHash: d.versionId,
@@ -175,7 +175,7 @@ async function dopisVerziu(kolDoc, d, teraz) {
           // `requiresReacknowledgement` sa zámerne NEnastavuje: vypĺňa ho
           // človek (D30) a `false` by bolo tiché rozhodnutie, že zmena nie je
           // podstatná. Chýbajúce pole znamená „nikto zatiaľ nerozhodol".
-          publishedAt: teraz,
+          publishedAt: now,
           publishedBy: "import.mjs",
         },
       },
@@ -184,28 +184,28 @@ async function dopisVerziu(kolDoc, d, teraz) {
   )
 }
 
-async function zapis(db, d) {
-  const kolDoc = db.collection("documents")
-  const kolChunk = db.collection("document_chunks")
-  const teraz = new Date()
+async function write(db, d) {
+  const docCol = db.collection("documents")
+  const chunkCol = db.collection("document_chunks")
+  const now = new Date()
 
   // Rovnaký obsah už naimportovaný? Chunky sa nedotýkame — import je idempotentný.
-  const existuje = await kolDoc.findOne({ documentId: d.documentId, versionId: d.versionId })
-  if (existuje) {
+  const existing = await docCol.findOne({ documentId: d.documentId, versionId: d.versionId })
+  if (existing) {
     // Dokumentu, ktorý vznikol pred zavedením `versions[]` (D25), sa záznam
     // o verzii doplní aj tak. Bez neho sa nedá potvrdiť oboznámenie, lebo
     // potvrdenie sa viaže na verziu, nie na dokument.
-    await dopisVerziu(kolDoc, d, teraz)
+    await appendVersion(docCol, d, now)
     return { preskocene: true, deaktivovane: 0, vlozene: 0 }
   }
 
   // Nová verzia — staré chunky archivujeme, NEMAŽEME (D6).
-  const deakt = await kolChunk.updateMany(
+  const deactivated = await chunkCol.updateMany(
     { documentId: d.documentId, isActive: true },
-    { $set: { isActive: false, effectiveTo: teraz } }
+    { $set: { isActive: false, effectiveTo: now } }
   )
 
-  await kolDoc.updateOne(
+  await docCol.updateOne(
     { documentId: d.documentId },
     {
       $set: {
@@ -219,41 +219,41 @@ async function zapis(db, d) {
         effectiveFrom: d.meta.effectiveFrom ?? null,
         effectiveTo: d.meta.effectiveTo ?? null,
         status: "published", processingStatus: "indexed",
-        updatedAt: teraz,
+        updatedAt: now,
       },
-      $setOnInsert: { createdAt: teraz },
+      $setOnInsert: { createdAt: now },
     },
     { upsert: true }
   )
 
-  await dopisVerziu(kolDoc, d, teraz)
+  await appendVersion(docCol, d, now)
 
-  const dokumenty = d.chunky.map(ch => ({
-    ...chunkDoDb(ch, d),
+  const documents = d.chunky.map(ch => ({
+    ...chunkToDb(ch, d),
     // Premenlivé polia — zámerne MIMO chunkDoDb, aby nekazili otlačok.
     documentId: d.documentId, versionId: d.versionId,
-    embeddedAt: teraz,
+    embeddedAt: now,
     // stav
     isActive: true,
     effectiveFrom: d.meta.effectiveFrom ?? null,
     effectiveTo: null,
-    createdAt: teraz,
+    createdAt: now,
   }))
 
-  await kolChunk.insertMany(dokumenty, { ordered: false })
-  return { preskocene: false, deaktivovane: deakt.modifiedCount, vlozene: dokumenty.length }
+  await chunkCol.insertMany(documents, { ordered: false })
+  return { preskocene: false, deaktivovane: deactivated.modifiedCount, vlozene: documents.length }
 }
 
 // ── beh ──────────────────────────────────────────────────────────────────────
-const pripravene = []
-let chyb = 0
-const preskocene = []
-const davka = subory.length > 1
+const prepared = []
+let errorCount = 0
+const skipped = []
+const batch = files.length > 1
 
-for (const s of subory) {
+for (const s of files) {
   try {
-    const d = pripravDokument(s)
-    pripravene.push(d)
+    const d = prepareDocument(s)
+    prepared.push(d)
     const t = d.chunky.map(c => estimateTokens(c.text))
     console.log(`${OK} ${d.meta.title}`)
     console.log(`    ${d.chunky.length} chunkov · ${Math.min(...t)}–${Math.max(...t)} tokenov · ` +
@@ -261,35 +261,35 @@ for (const s of subory) {
   } catch (e) {
     // V dávke je súbor bez metadát skoro vždy cudzí (README a pod.) —
     // preskočíme ho. Pri jednom výslovne zadanom súbore je to chyba.
-    const chybaMeta = e.message.startsWith("Chýba súbor s metadátami")
-    if (davka && chybaMeta) {
-      preskocene.push(s)
+    const missingMeta = e.message.startsWith("Chýba súbor s metadátami")
+    if (batch && missingMeta) {
+      skipped.push(s)
       console.log(`${INFO} ${s} — bez .meta.json, preskakujem`)
     } else {
-      chyb++
-      console.error(`${CHYBA} ${e.message}`)
+      errorCount++
+      console.error(`${FAIL} ${e.message}`)
     }
   }
 }
 
-if (chyb) {
-  console.error(`\n${CHYBA} ${chyb} dokument(ov) neprešlo — nič sa nezapísalo.`)
+if (errorCount) {
+  console.error(`\n${FAIL} ${errorCount} dokument(ov) neprešlo — nič sa nezapísalo.`)
   process.exit(1)
 }
 
-const spolu = pripravene.reduce((n, d) => n + d.chunky.length, 0)
-console.log(`\nSpolu: ${pripravene.length} dokumentov, ${spolu} chunkov`)
+const total = prepared.reduce((n, d) => n + d.chunky.length, 0)
+console.log(`\nSpolu: ${prepared.length} dokumentov, ${total} chunkov`)
 
-if (preskocene.length) {
+if (skipped.length) {
   // Vypisujeme menovite — pri väčšej dávke sa jednotlivé riadky odrolujú
   // a zabudnuté .meta.json pri skutočnom dokumente by tak prešlo bez povšimnutia.
-  console.log(`\n${INFO} Preskočené (${preskocene.length}) — bez .meta.json:`)
-  for (const s of preskocene) console.log(`    ${s}`)
+  console.log(`\n${INFO} Preskočené (${skipped.length}) — bez .meta.json:`)
+  for (const s of skipped) console.log(`    ${s}`)
   console.log(`    Ak niektorý z nich MÁ byť v korpuse, vytvor mu metadáta:`)
   console.log(`    node scripts/chunk_preview.mjs <subor.md> --vytvor-meta`)
 }
 
-if (nasucho) {
+if (dryRun) {
   console.log(`${INFO} --nasucho: do databázy sa nezapisovalo.`)
   process.exit(0)
 }
@@ -299,24 +299,24 @@ try {
   await client.connect()
   const db = client.db(DB)
   console.log()
-  let vlozeneSpolu = 0
-  for (const d of pripravene) {
-    const r = await zapis(db, d)
+  let insertedTotal = 0
+  for (const d of prepared) {
+    const r = await write(db, d)
     if (r.preskocene) {
       console.log(`${INFO} ${d.meta.title} — rovnaká verzia už je v DB, preskakujem`)
     } else {
-      vlozeneSpolu += r.vlozene
-      const arch = r.deaktivovane ? `, ${r.deaktivovane} starých archivovaných` : ""
-      console.log(`${OK} ${d.meta.title} — ${r.vlozene} chunkov${arch}`)
+      insertedTotal += r.vlozene
+      const archived = r.deaktivovane ? `, ${r.deaktivovane} starých archivovaných` : ""
+      console.log(`${OK} ${d.meta.title} — ${r.vlozene} chunkov${archived}`)
     }
   }
-  console.log(`\n${OK} Zapísaných ${vlozeneSpolu} chunkov.`)
-  if (vlozeneSpolu) {
+  console.log(`\n${OK} Zapísaných ${insertedTotal} chunkov.`)
+  if (insertedTotal) {
     console.log(`${INFO} Automated Embedding generuje vektory asynchrónne —`)
     console.log(`    kým nedobehne, vyhľadávanie ich ešte nenájde.`)
   }
 } catch (e) {
-  console.error(`\n${CHYBA} ${e.message}`)
+  console.error(`\n${FAIL} ${e.message}`)
   process.exitCode = 1
 } finally {
   await client.close()

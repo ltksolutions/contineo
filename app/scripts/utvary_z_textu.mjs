@@ -25,103 +25,103 @@ import { randomUUID } from "node:crypto"
 import { MongoClient } from "mongodb"
 
 const OK = "\x1b[32m✓\x1b[0m"
-const CHYBA = "\x1b[31m✗\x1b[0m"
+const FAIL = "\x1b[31m✗\x1b[0m"
 
-function arg(meno) {
-  const i = process.argv.indexOf(meno)
+function arg(name) {
+  const i = process.argv.indexOf(name)
   return i === -1 ? null : process.argv[i + 1] ?? null
 }
 const TENANT = arg("--tenant")
-const ZAPIS = process.argv.includes("--zapis")
+const WRITE = process.argv.includes("--zapis")
 
 if (!TENANT) {
   console.error("Použitie: npm run utvary -- --tenant <KOD> [--zapis]")
   process.exit(1)
 }
 if (!process.env.MONGODB_URI) {
-  console.error(`${CHYBA} Chýba MONGODB_URI.`)
+  console.error(`${FAIL} Chýba MONGODB_URI.`)
   process.exit(1)
 }
 
 const client = new MongoClient(process.env.MONGODB_URI)
 await client.connect()
 const db = client.db(process.env.MONGODB_DB ?? "contineo")
-const osobyCol = db.collection("persons")
-const utvaryCol = db.collection("departments")
+const personCol = db.collection("persons")
+const departmentCol = db.collection("departments")
 
-const osoby = await osobyCol
+const people = await personCol
   .find({ companyCode: TENANT })
   .project({ id: 1, fullName: 1, department: 1, departmentId: 1 })
   .toArray()
 
-if (osoby.length === 0) {
-  console.error(`${CHYBA} Organizácia ${TENANT} nemá žiadne osoby.`)
+if (people.length === 0) {
+  console.error(`${FAIL} Organizácia ${TENANT} nemá žiadne osoby.`)
   await client.close()
   process.exit(1)
 }
 
 // Zoskupenie podľa normalizovaného tvaru; zapíše sa najčastejší zápis.
-const skupiny = new Map()
-for (const o of osoby) {
+const groups = new Map()
+for (const o of people) {
   const text = (o.department ?? "").trim()
   if (!text) continue
-  const kluc = text.toLowerCase()
-  const z = skupiny.get(kluc) ?? { tvary: new Map(), osoby: [] }
+  const key = text.toLowerCase()
+  const z = groups.get(key) ?? { tvary: new Map(), osoby: [] }
   z.tvary.set(text, (z.tvary.get(text) ?? 0) + 1)
   z.osoby.push(o)
-  skupiny.set(kluc, z)
+  groups.set(key, z)
 }
 
-const existujuce = await utvaryCol.find({ companyCode: TENANT }).toArray()
-const podlaNazvu = new Map(existujuce.map(u => [u.nazov.trim().toLowerCase(), u]))
+const existing = await departmentCol.find({ companyCode: TENANT }).toArray()
+const byName = new Map(existing.map(u => [u.nazov.trim().toLowerCase(), u]))
 
-const bezUtvaru = osoby.filter(o => !(o.department ?? "").trim() && !o.departmentId)
-const uzZaradeni = osoby.filter(o => o.departmentId).length
+const withoutDepartment = people.filter(o => !(o.department ?? "").trim() && !o.departmentId)
+const alreadyPlaced = people.filter(o => o.departmentId).length
 
-console.log(`\nOrganizácia ${TENANT}: ${osoby.length} osôb, ${uzZaradeni} už zaradených v štruktúre.`)
-console.log(`Textových oddelení: ${skupiny.size}. Bez akéhokoľvek oddelenia: ${bezUtvaru.length}.\n`)
+console.log(`\nOrganizácia ${TENANT}: ${people.length} osôb, ${alreadyPlaced} už zaradených v štruktúre.`)
+console.log(`Textových oddelení: ${groups.size}. Bez akéhokoľvek oddelenia: ${withoutDepartment.length}.\n`)
 
-let zalozene = 0
-let zaradene = 0
+let created = 0
+let placed = 0
 
-for (const [kluc, z] of [...skupiny].sort((a, b) => b[1].osoby.length - a[1].osoby.length)) {
-  const nazov = [...z.tvary].sort((a, b) => b[1] - a[1])[0][0]
-  const uz = podlaNazvu.get(kluc)
+for (const [key, z] of [...groups].sort((a, b) => b[1].osoby.length - a[1].osoby.length)) {
+  const name = [...z.tvary].sort((a, b) => b[1] - a[1])[0][0]
+  const uz = byName.get(key)
   const id = uz?.id ?? randomUUID()
 
-  const naZaradenie = z.osoby.filter(o => !o.departmentId)
+  const toPlace = z.osoby.filter(o => !o.departmentId)
   console.log(
-    `${uz ? "existuje" : "nový   "}  ${nazov.padEnd(34)} ${String(z.osoby.length).padStart(4)} osôb` +
-    (naZaradenie.length !== z.osoby.length ? `  (zaradí sa ${naZaradenie.length})` : ""),
+    `${uz ? "existuje" : "nový   "}  ${name.padEnd(34)} ${String(z.osoby.length).padStart(4)} osôb` +
+    (toPlace.length !== z.osoby.length ? `  (zaradí sa ${toPlace.length})` : ""),
   )
   if (z.tvary.size > 1) {
     console.log(`          zlúčené zápisy: ${[...z.tvary.keys()].join(" | ")}`)
   }
 
-  if (!ZAPIS) {
-    zalozene += uz ? 0 : 1
-    zaradene += naZaradenie.length
+  if (!WRITE) {
+    created += uz ? 0 : 1
+    placed += toPlace.length
     continue
   }
 
   if (!uz) {
-    await utvaryCol.insertOne({
+    await departmentCol.insertOne({
       companyCode: TENANT,
       id,
-      nazov,
+      nazov: name,
       parentId: null,
       createdAt: new Date(),
       createdBy: "script:utvary_z_textu",
     })
-    zalozene++
+    created++
   }
 
-  for (const o of naZaradenie) {
+  for (const o of toPlace) {
     // Cesta plochého stromu je jednoprvková. Zapisuje sa spolu so zaradením,
     // nie zvlášť — inak by chvíľu platilo, že človek do oddelenia patrí, ale
     // pridelenie oddelenia sa ho netýka.
-    const teraz = new Date()
-    await osobyCol.updateOne(
+    const now = new Date()
+    await personCol.updateOne(
       { companyCode: TENANT, id: o.id },
       {
         $set: {
@@ -132,20 +132,20 @@ for (const [kluc, z] of [...skupiny].sort((a, b) => b[1].osoby.length - a[1].oso
           // lebo tí ľudia v oddelení naozaj boli. Preto `od` v minulosti:
           // epocha znamená „odjakživa", nie „práve prišiel".
           departmentHistory: [{ departmentId: id, departmentPath: [id], od: new Date(0) }],
-          updatedAt: teraz,
+          updatedAt: now,
           updatedBy: "script:utvary_z_textu",
         },
       },
     )
-    zaradene++
+    placed++
   }
 }
 
 console.log(
-  `\n${ZAPIS ? OK : "skúšobne"} oddelení ${ZAPIS ? "založených" : "by pribudlo"}: ${zalozene}, ` +
-  `osôb ${ZAPIS ? "zaradených" : "by sa zaradilo"}: ${zaradene}.`,
+  `\n${WRITE ? OK : "skúšobne"} oddelení ${WRITE ? "založených" : "by pribudlo"}: ${created}, ` +
+  `osôb ${WRITE ? "zaradených" : "by sa zaradilo"}: ${placed}.`,
 )
-if (!ZAPIS) console.log("Nič sa nezapísalo. Zápis: rovnaký príkaz s --zapis.\n")
+if (!WRITE) console.log("Nič sa nezapísalo. Zápis: rovnaký príkaz s --zapis.\n")
 else console.log("Strom je plochý — hierarchiu nastav v /organizacia, záložka Oddelenia.\n")
 
 await client.close()

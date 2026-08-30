@@ -22,19 +22,19 @@ import { send } from "../src/lib/ecomail.ts"
 // nekopíruje: dva rozdielne texty o tom istom nastavení sú spoľahlivý
 // spôsob, ako niekomu poradiť dvakrát rozdielne.
 import { preskocitVercel, pokynyPreZakaznika } from "../src/lib/vercel.ts"
-import { doplnVercelPrihlasenie } from "./lib/vercel-auth.mjs"
+import { addVercelAuth } from "./lib/vercel-auth.mjs"
 
 const URI = process.env.MONGODB_URI
 const DB = process.env.MONGODB_DB ?? "contineo"
-const OK = "\x1b[32m✔\x1b[0m", CHYBA = "\x1b[31m✘\x1b[0m", INFO = "\x1b[33m·\x1b[0m"
-const CAKA = "\x1b[33m…\x1b[0m"
+const OK = "\x1b[32m✔\x1b[0m", FAIL = "\x1b[31m✘\x1b[0m", INFO = "\x1b[33m·\x1b[0m"
+const WAITING = "\x1b[33m…\x1b[0m"
 const VERCEL_API = "https://api.vercel.com"
 
 /** Cieľ, ktorý sa hovorí zákazníkovi. Vercel uvádza ako univerzálny. */
-const CNAME_CIEL = "cname.vercel-dns.com"
+const CNAME_TARGET = "cname.vercel-dns.com"
 
 if (!URI) {
-  console.error(`${CHYBA} Chýba MONGODB_URI (app/.env.local alebo export).`)
+  console.error(`${FAIL} Chýba MONGODB_URI (app/.env.local alebo export).`)
   process.exit(1)
 }
 
@@ -48,13 +48,13 @@ function parseArgs(argv) {
     if (!a.startsWith("--")) continue
     const v = argv[i + 1]
     if (v === undefined || v.startsWith("--")) {
-      console.error(`${CHYBA} Prepínač ${a} potrebuje hodnotu`)
+      console.error(`${FAIL} Prepínač ${a} potrebuje hodnotu`)
       process.exit(1)
     }
     i++
     if (a === "--company") out.company = v
     else if (a === "--komu") out.komu = v
-    else { console.error(`${CHYBA} Neznámy prepínač ${a}`); process.exit(1) }
+    else { console.error(`${FAIL} Neznámy prepínač ${a}`); process.exit(1) }
   }
   return out
 }
@@ -63,19 +63,19 @@ const args = parseArgs(process.argv.slice(2))
 
 // ── Vercel ───────────────────────────────────────────────────────────────────
 
-const preskocit = preskocitVercel
+const skip = preskocitVercel
 
 function vercelToken() {
   return process.env.VERCEL_TOKEN ?? null
 }
 
-function vercelProjekt() {
+function vercelProject() {
   if (!process.env.VERCEL_PROJECT_ID) return null
   return { projectId: process.env.VERCEL_PROJECT_ID, orgId: process.env.VERCEL_ORG_ID }
 }
 
-async function api(token, cesta) {
-  const r = await fetch(VERCEL_API + cesta, {
+async function api(token, path) {
+  const r = await fetch(VERCEL_API + path, {
     headers: { Authorization: `Bearer ${token}` },
   })
   return { stav: r.status, telo: await r.json().catch(() => ({})) }
@@ -85,23 +85,23 @@ async function api(token, cesta) {
  * Stav jednej domény. Dva dotazy, lebo Vercel to má na dvoch miestach:
  * „patrí nám" (projekt) a „smeruje sem" (konfigurácia zóny).
  */
-async function stavDomeny(token, { projectId, orgId }, host) {
+async function domainStatus(token, { projectId, orgId }, host) {
   const t = orgId ? `?teamId=${encodeURIComponent(orgId)}` : ""
   const q = encodeURIComponent(host)
-  const vProjekte = await api(token, `/v9/projects/${encodeURIComponent(projectId)}/domains/${q}${t}`)
-  const konfig = await api(token, `/v6/domains/${q}/config${t}`)
+  const inProject = await api(token, `/v9/projects/${encodeURIComponent(projectId)}/domains/${q}${t}`)
+  const config = await api(token, `/v6/domains/${q}/config${t}`)
   return {
-    vProjekte: vProjekte.stav === 200,
-    overena: vProjekte.telo?.verified === true,
-    nastaveneCez: konfig.telo?.configuredBy ?? null,
-    konflikty: konfig.telo?.conflicts ?? [],
-    odporucanyCname: konfig.telo?.recommendedCNAME?.[0]?.value ?? null,
+    vProjekte: inProject.stav === 200,
+    overena: inProject.telo?.verified === true,
+    nastaveneCez: config.telo?.configuredBy ?? null,
+    konflikty: config.telo?.conflicts ?? [],
+    odporucanyCname: config.telo?.recommendedCNAME?.[0]?.value ?? null,
   }
 }
 
 // ── pokyny pre zákazníka ─────────────────────────────────────────────────────
 
-const pokyny = pokynyPreZakaznika
+const instructions = pokynyPreZakaznika
 
 // ── beh ──────────────────────────────────────────────────────────────────────
 
@@ -111,58 +111,58 @@ try {
   await client.connect()
   const col = client.db(DB).collection("tenants")
   const filter = args.company ? { companyCode: args.company } : {}
-  const tenanti = await col.find(filter).sort({ companyCode: 1 }).toArray()
+  const tenants = await col.find(filter).sort({ companyCode: 1 }).toArray()
 
-  if (!tenanti.length) {
+  if (!tenants.length) {
     console.log(`${INFO} nič sa nenašlo${args.company ? ` pre ${args.company}` : ""}`)
     process.exit(0)
   }
 
-  doplnVercelPrihlasenie()
+  addVercelAuth()
   const token = vercelToken()
-  const projekt = vercelProjekt()
-  if (!token || !projekt) {
-    console.error(`${CHYBA} bez prihlásenia do Vercelu sa stav domén zistiť nedá`)
+  const project = vercelProject()
+  if (!token || !project) {
+    console.error(`${FAIL} bez prihlásenia do Vercelu sa stav domén zistiť nedá`)
     console.error(`     spusti \`vercel login\` alebo nastav VERCEL_TOKEN`)
     process.exit(1)
   }
 
   /** Domény, ktoré ešte čakajú na zákazníka — kvôli `--poslat`. */
-  const cakajuce = []
+  const pending = []
 
-  for (const t of tenanti) {
+  for (const t of tenants) {
     console.log(`\n${t.companyCode} · ${t.branding?.displayName ?? ""}`)
-    const kontakt = t.branding?.supportEmail
-    console.log(`  kontakt: ${kontakt ?? "(nezadaný — `npm run tenant -- --support`)"}`)
+    const contact = t.branding?.supportEmail
+    console.log(`  kontakt: ${contact ?? "(nezadaný — `npm run tenant -- --support`)"}`)
     if (t.domainSetup?.requestedAt) {
-      const kedy = new Date(t.domainSetup.requestedAt).toISOString().slice(0, 16).replace("T", " ")
-      console.log(`  pokyny poslané: ${kedy} → ${t.domainSetup.requestedTo}`)
+      const when = new Date(t.domainSetup.requestedAt).toISOString().slice(0, 16).replace("T", " ")
+      console.log(`  pokyny poslané: ${when} → ${t.domainSetup.requestedTo}`)
     }
 
     for (const host of t.hostnames ?? []) {
-      const preco = preskocit(host)
-      if (preco) { console.log(`  ${INFO} ${host} — netreba nič (${preco})`); continue }
+      const why = skip(host)
+      if (why) { console.log(`  ${INFO} ${host} — netreba nič (${why})`); continue }
 
       let s
       try {
-        s = await stavDomeny(token, projekt, host)
+        s = await domainStatus(token, project, host)
       } catch (e) {
-        console.log(`  ${CHYBA} ${host} — stav sa nepodarilo zistiť: ${e.message}`)
+        console.log(`  ${FAIL} ${host} — stav sa nepodarilo zistiť: ${e.message}`)
         continue
       }
 
-      const ciel = s.odporucanyCname ?? CNAME_CIEL
+      const target = s.odporucanyCname ?? CNAME_TARGET
       if (!s.vProjekte) {
-        console.log(`  ${CHYBA} ${host} — NIE JE v projekte vo Verceli`)
+        console.log(`  ${FAIL} ${host} — NIE JE v projekte vo Verceli`)
         console.log(`      oprav: npm run tenant -- --company ${t.companyCode} --host ${host}`)
         continue
       }
       if (s.konflikty.length) {
-        console.log(`  ${CHYBA} ${host} — v zóne sú kolidujúce záznamy: ${s.konflikty.map(k => `${k.type} ${k.value}`).join(", ")}`)
+        console.log(`  ${FAIL} ${host} — v zóne sú kolidujúce záznamy: ${s.konflikty.map(k => `${k.type} ${k.value}`).join(", ")}`)
       }
       if (!s.nastaveneCez) {
-        console.log(`  ${CAKA} ${host} — čaká na zákazníka: CNAME ${host.split(".")[0]} → ${ciel}`)
-        cakajuce.push({ tenant: t, host, ciel })
+        console.log(`  ${WAITING} ${host} — čaká na zákazníka: CNAME ${host.split(".")[0]} → ${target}`)
+        pending.push({ tenant: t, host, ciel: target })
         continue
       }
       console.log(`  ${OK} ${host} — nastavené (${s.nastaveneCez})${s.overena ? "" : ", ale NEOVERENÉ"}`)
@@ -171,39 +171,39 @@ try {
 
   // ── odoslanie pokynov ──────────────────────────────────────────────────────
   if (!args.poslat) {
-    if (cakajuce.length) {
-      console.log(`\n${INFO} ${cakajuce.length} doména/y čaká na zákazníka.`)
-      console.log(`   Pokyny odošleš: npm run domeny -- --company ${cakajuce[0].tenant.companyCode} --poslat`)
+    if (pending.length) {
+      console.log(`\n${INFO} ${pending.length} doména/y čaká na zákazníka.`)
+      console.log(`   Pokyny odošleš: npm run domeny -- --company ${pending[0].tenant.companyCode} --poslat`)
     }
     process.exit(0)
   }
 
   if (!args.company) {
-    console.error(`\n${CHYBA} --poslat vyžaduje --company. Hromadné rozposielanie zámerne nie je.`)
+    console.error(`\n${FAIL} --poslat vyžaduje --company. Hromadné rozposielanie zámerne nie je.`)
     process.exit(1)
   }
-  if (!cakajuce.length) {
+  if (!pending.length) {
     console.log(`\n${INFO} niet čo posielať — všetky domény sú nastavené`)
     process.exit(0)
   }
 
-  const t = cakajuce[0].tenant
-  const komu = args.komu ?? t.branding?.supportEmail
-  if (!komu) {
-    console.error(`\n${CHYBA} nie je kam poslať — doplň --komu alebo \`tenant_set.mjs --support\``)
+  const t = pending[0].tenant
+  const to = args.komu ?? t.branding?.supportEmail
+  if (!to) {
+    console.error(`\n${FAIL} nie je kam poslať — doplň --komu alebo \`tenant_set.mjs --support\``)
     process.exit(1)
   }
 
-  for (const { host, ciel } of cakajuce) {
-    const p = pokyny(host, ciel)
+  for (const { host, ciel: target } of pending) {
+    const p = instructions(host, target)
     await send({
-      to: komu,
+      to: to,
       subject: p.subject,
       text: p.text,
       html: `<pre style="font:14px ui-monospace,monospace;white-space:pre-wrap">${p.text
         .replace(/&/g, "&amp;").replace(/</g, "&lt;")}</pre>`,
     })
-    console.log(`${OK} pokyny pre ${host} odoslané na ${komu}`)
+    console.log(`${OK} pokyny pre ${host} odoslané na ${to}`)
   }
 
   // Záznam aktu — nie stavu. Čo sme pýtali a kedy; či to zákazník spravil,
@@ -214,15 +214,15 @@ try {
       $set: {
         domainSetup: {
           requestedAt: new Date(),
-          requestedTo: komu,
-          hostnames: cakajuce.map(c => c.host),
+          requestedTo: to,
+          hostnames: pending.map(c => c.host),
         },
       },
     },
   )
   console.log(`${OK} zaznamenané na tenantovi ${t.companyCode}`)
 } catch (e) {
-  console.error(`${CHYBA} ${e.message}`)
+  console.error(`${FAIL} ${e.message}`)
   process.exit(1)
 } finally {
   await client.close()

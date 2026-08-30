@@ -15,11 +15,11 @@
  */
 import { MongoClient } from "mongodb"
 
-const OK = "\x1b[32m✔\x1b[0m", ZLE = "\x1b[31m✘\x1b[0m", VARUJ = "\x1b[33m▲\x1b[0m"
-const ukazky = process.argv.includes("--ukazky")
+const OK = "\x1b[32m✔\x1b[0m", BAD = "\x1b[31m✘\x1b[0m", WARN = "\x1b[33m▲\x1b[0m"
+const samples = process.argv.includes("--ukazky")
 
 if (!process.env.MONGODB_URI) {
-  console.error(`${ZLE} Chýba MONGODB_URI. Spusti s --env-file=.env.local`)
+  console.error(`${BAD} Chýba MONGODB_URI. Spusti s --env-file=.env.local`)
   process.exit(1)
 }
 
@@ -30,7 +30,7 @@ try {
   const db = client.db(process.env.MONGODB_DB ?? "contineo")
   const col = db.collection("document_chunks")
 
-  const riadky = await col.aggregate([
+  const rows = await col.aggregate([
     { $match: { isActive: true } },
     { $group: {
         _id: "$documentId",
@@ -53,27 +53,27 @@ try {
               "nadpisov".padStart(10) + "priem. zn.".padStart(12) + "  stav")
   console.log("─".repeat(88))
 
-  let zlych = 0
-  for (const r of riadky) {
-    const podiel = r.chunkov ? r.sClankom / r.chunkov : 0
-    const nadpisov = r.nadpisy.filter(Boolean).length
+  let badCount = 0
+  for (const r of rows) {
+    const ratio = r.chunkov ? r.sClankom / r.chunkov : 0
+    const headings = r.nadpisy.filter(Boolean).length
     // Dokument s jedným nadpisom a bez článkov chunker nerozobral.
-    const zle  = podiel < 0.2 || nadpisov <= 2
-    const vlazne = !zle && podiel < 0.8
-    if (zle) zlych++
-    const stav = zle ? `${ZLE} nerozobraný` : vlazne ? `${VARUJ} čiastočne` : `${OK} v poriadku`
+    const broken  = ratio < 0.2 || headings <= 2
+    const lukewarm = !broken && ratio < 0.8
+    if (broken) badCount++
+    const state = broken ? `${BAD} nerozobraný` : lukewarm ? `${WARN} čiastočne` : `${OK} v poriadku`
     console.log(
       String(r._id).padEnd(38) +
       String(r.chunkov).padStart(8) +
-      `${Math.round(podiel * 100)} %`.padStart(8) +
-      String(nadpisov).padStart(10) +
+      `${Math.round(ratio * 100)} %`.padStart(8) +
+      String(headings).padStart(10) +
       String(Math.round(r.znakovPriem)).padStart(12) +
-      "  " + stav
+      "  " + state
     )
   }
 
   console.log("─".repeat(88))
-  console.log(`\n${riadky.length} dokumentov · ${zlych} nerozobraných\n`)
+  console.log(`\n${rows.length} dokumentov · ${badCount} nerozobraných\n`)
 
 
   // ── Duplicity ──────────────────────────────────────────────────────────────
@@ -82,24 +82,24 @@ try {
   // $lookup + $unwind zdvojí každý chunk. Overujeme obe strany.
 
   // Rozpis podľa typu — filter na preambuly stojí a padá na tomto poli.
-  const podlaTypu = await col.aggregate([
+  const byType = await col.aggregate([
     { $match: { isActive: true } },
     { $group: { _id: "$chunkType", n: { $sum: 1 } } },
     { $sort: { n: -1 } },
   ]).toArray()
-  console.log("Typy chunkov: " + podlaTypu.map(x => `${x._id ?? "(chýba)"}=${x.n}`).join(" · "))
+  console.log("Typy chunkov: " + byType.map(x => `${x._id ?? "(chýba)"}=${x.n}`).join(" · "))
 
   // Chunky bez článku, ktoré NIE SÚ označené ako preambula — tie prechádzajú
   // filtrom a tlačia sa do výsledkov.
-  const podozrive = await col.find({
+  const suspicious = await col.find({
     isActive: true,
     $or: [{ articleRef: null }, { articleRef: "" }],
     chunkType: { $ne: "preambula" },
   }).project({ documentId: 1, heading: 1, chunkType: 1, chunkIndex: 1 }).limit(15).toArray()
 
-  if (podozrive.length) {
-    console.log(`\n${VARUJ} ${podozrive.length} chunkov bez článku, ktoré NIE SÚ preambuly:`)
-    for (const c of podozrive) {
+  if (suspicious.length) {
+    console.log(`\n${WARN} ${suspicious.length} chunkov bez článku, ktoré NIE SÚ preambuly:`)
+    for (const c of suspicious) {
       console.log(`   ${c.documentId} #${c.chunkIndex} · typ=${c.chunkType ?? "(chýba)"} · "${(c.heading ?? "").slice(0, 50)}"`)
     }
   } else {
@@ -109,48 +109,48 @@ try {
   console.log("\nKontrola duplicít")
   console.log("─".repeat(88))
 
-  const dokDupl = await db.collection("documents").aggregate([
+  const docDupes = await db.collection("documents").aggregate([
     { $group: { _id: "$documentId", n: { $sum: 1 }, verzie: { $addToSet: "$versionId" } } },
     { $match: { n: { $gt: 1 } } },
   ]).toArray()
 
-  if (dokDupl.length) {
-    console.log(`${ZLE} kolekcia documents má viacnásobné záznamy — TOTO zdvojuje výsledky:`)
-    for (const d of dokDupl) {
+  if (docDupes.length) {
+    console.log(`${BAD} kolekcia documents má viacnásobné záznamy — TOTO zdvojuje výsledky:`)
+    for (const d of docDupes) {
       console.log(`   ${d._id}: ${d.n} záznamov, verzie: ${d.verzie.join(", ")}`)
     }
   } else {
     console.log(`${OK} documents — každý documentId práve raz`)
   }
 
-  const chunkDupl = await col.aggregate([
+  const chunkDupes = await col.aggregate([
     { $match: { isActive: true } },
     { $group: { _id: { d: "$documentId", i: "$chunkIndex" }, n: { $sum: 1 } } },
     { $match: { n: { $gt: 1 } } },
     { $count: "spolu" },
   ]).toArray()
 
-  const n = chunkDupl[0]?.spolu ?? 0
+  const n = chunkDupes[0]?.spolu ?? 0
   console.log(n
-    ? `${ZLE} ${n} aktívnych chunkov má rovnaký documentId + chunkIndex`
+    ? `${BAD} ${n} aktívnych chunkov má rovnaký documentId + chunkIndex`
     : `${OK} document_chunks — žiadne zdvojené aktívne chunky`)
 
-  const podlaVerzie = await col.aggregate([
+  const byVersion = await col.aggregate([
     { $match: { isActive: true } },
     { $group: { _id: "$documentId", verzie: { $addToSet: "$versionId" } } },
     { $match: { $expr: { $gt: [{ $size: "$verzie" }, 1] } } },
   ]).toArray()
 
-  if (podlaVerzie.length) {
-    console.log(`${ZLE} niektoré dokumenty majú aktívne chunky z VIACERÝCH verzií:`)
-    for (const d of podlaVerzie) console.log(`   ${d._id}: ${d.verzie.join(", ")}`)
+  if (byVersion.length) {
+    console.log(`${BAD} niektoré dokumenty majú aktívne chunky z VIACERÝCH verzií:`)
+    for (const d of byVersion) console.log(`   ${d._id}: ${d.verzie.join(", ")}`)
   } else {
     console.log(`${OK} každý dokument má aktívne chunky len z jednej verzie`)
   }
 
-  if (ukazky) {
+  if (samples) {
     console.log("Ukážky nadpisov podľa dokumentu:\n")
-    for (const r of riadky) {
+    for (const r of rows) {
       const n = r.nadpisy.filter(Boolean)
       console.log(`  ${r._id}`)
       console.log(`    nadpisy (${n.length}): ${n.slice(0, 5).map(x => `"${x}"`).join(", ")}${n.length > 5 ? " …" : ""}`)
@@ -162,13 +162,13 @@ try {
     console.log(`Podrobnosti o nadpisoch: --ukazky`)
   }
 
-  if (zlych) {
-    console.log(`\n${VARUJ} Nerozobrané dokumenty treba pozrieť v markdowne v app/data/vzorky/`)
+  if (badCount) {
+    console.log(`\n${WARN} Nerozobrané dokumenty treba pozrieť v markdowne v app/data/vzorky/`)
     console.log(`   — pravdepodobne majú nadpisy článkov zapísané inak, než chunker očakáva.`)
   }
 
 } catch (e) {
-  console.error(`\n${ZLE} ${e.message}`)
+  console.error(`\n${BAD} ${e.message}`)
   process.exitCode = 1
 } finally {
   await client.close()

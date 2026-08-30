@@ -13,11 +13,11 @@
  */
 import { MongoClient } from "mongodb"
 
-const OK = "\x1b[32m✔\x1b[0m", ZLE = "\x1b[31m✘\x1b[0m", INFO = "\x1b[33m·\x1b[0m"
-const naozaj = process.argv.includes("--naozaj")
+const OK = "\x1b[32m✔\x1b[0m", BAD = "\x1b[31m✘\x1b[0m", INFO = "\x1b[33m·\x1b[0m"
+const confirm = process.argv.includes("--naozaj")
 
 if (!process.env.MONGODB_URI) {
-  console.error(`${ZLE} Chýba MONGODB_URI. Spusti s --env-file=.env.local`)
+  console.error(`${BAD} Chýba MONGODB_URI. Spusti s --env-file=.env.local`)
   process.exit(1)
 }
 
@@ -28,30 +28,30 @@ try {
   const col = client.db(process.env.MONGODB_DB ?? "contineo").collection("evaluations")
 
   const filter = { hodnotitel: "anonym" }
-  const naZmazanie = await col.find(filter).toArray()
+  const toDelete = await col.find(filter).toArray()
 
-  if (!naZmazanie.length) {
+  if (!toDelete.length) {
     console.log(`${OK} Žiadne testovacie záznamy — kolekcia je čistá.`)
     process.exit(0)
   }
 
-  console.log(`Nájdených ${naZmazanie.length} záznamov od „anonym":\n`)
-  for (const z of naZmazanie) {
-    const kedy = z.vytvorene?.toISOString?.().slice(0, 16).replace("T", " ") ?? "?"
-    console.log(`  ${kedy}  ${z.otazkaId ?? "(voľný dotaz)"}  „${(z.otazka ?? "").slice(0, 60)}"`)
+  console.log(`Nájdených ${toDelete.length} záznamov od „anonym":\n`)
+  for (const z of toDelete) {
+    const when = z.vytvorene?.toISOString?.().slice(0, 16).replace("T", " ") ?? "?"
+    console.log(`  ${when}  ${z.otazkaId ?? "(voľný dotaz)"}  „${(z.otazka ?? "").slice(0, 60)}"`)
     console.log(`              správna: ${z.spravna}, halucinácia: ${z.halucinacia}`)
   }
   console.log()
 
   // Poistka: keby sa niekedy zmenilo, ako sa označuje neprihlásený, nech to
   // radšej spadne, než aby to zmazalo prácu človeka.
-  const sEmailom = naZmazanie.filter(z => String(z.hodnotitel ?? "").includes("@"))
-  if (sEmailom.length) {
-    console.error(`${ZLE} Medzi nájdenými je ${sEmailom.length} záznamov s e-mailom. Nemažem nič.`)
+  const withEmail = toDelete.filter(z => String(z.hodnotitel ?? "").includes("@"))
+  if (withEmail.length) {
+    console.error(`${BAD} Medzi nájdenými je ${withEmail.length} záznamov s e-mailom. Nemažem nič.`)
     process.exit(1)
   }
 
-  if (!naozaj) {
+  if (!confirm) {
     console.log(`${INFO} Beh nasucho. Na zmazanie spusti znova s --naozaj`)
     process.exit(0)
   }
@@ -59,8 +59,8 @@ try {
   const r = await col.deleteMany(filter)
   console.log(`${OK} Zmazaných ${r.deletedCount} záznamov.`)
 
-  const zostava = await col.countDocuments()
-  console.log(`${INFO} V kolekcii zostáva ${zostava} záznamov.`)
+  const remaining = await col.countDocuments()
+  console.log(`${INFO} V kolekcii zostáva ${remaining} záznamov.`)
 } finally {
   await client.close()
 }

@@ -25,17 +25,17 @@ import {
   TenantValidationError,
 } from "../src/lib/tenantAdmin.ts"
 import { pridajDomenu } from "../src/lib/vercel.ts"
-import { doplnVercelPrihlasenie } from "./lib/vercel-auth.mjs"
+import { addVercelAuth } from "./lib/vercel-auth.mjs"
 
 // `lib/vercel.ts` číta výhradne premenné prostredia — na serveri iná možnosť
 // nie je. Na vývojárskom stroji ich doplníme z toho, čo si uložilo `vercel
 // login`, aby skript nepýtal token zvlášť.
-doplnVercelPrihlasenie()
+addVercelAuth()
 
-const OK = "\x1b[32m✔\x1b[0m", CHYBA = "\x1b[31m✘\x1b[0m", INFO = "\x1b[33m·\x1b[0m"
+const OK = "\x1b[32m✔\x1b[0m", FAIL = "\x1b[31m✘\x1b[0m", INFO = "\x1b[33m·\x1b[0m"
 
 if (!process.env.MONGODB_URI) {
-  console.error(`${CHYBA} Chýba MONGODB_URI. Nastav ju v app/.env.local alebo:`)
+  console.error(`${FAIL} Chýba MONGODB_URI. Nastav ju v app/.env.local alebo:`)
   console.error(`     export MONGODB_URI="mongodb+srv://..."`)
   process.exit(1)
 }
@@ -50,7 +50,7 @@ function parseArgs(argv) {
     if (!a.startsWith("--")) continue
     const value = argv[i + 1]
     if (value === undefined || value.startsWith("--")) {
-      console.error(`${CHYBA} Prepínač ${a} potrebuje hodnotu`)
+      console.error(`${FAIL} Prepínač ${a} potrebuje hodnotu`)
       process.exit(1)
     }
     i++
@@ -66,7 +66,7 @@ function parseArgs(argv) {
       case "--languages": out.languages = value.split(",").map(s => s.trim()); break
       case "--disable": out.disable = value === "true" || value === "1"; break
       default:
-        console.error(`${CHYBA} Neznámy prepínač ${a}`)
+        console.error(`${FAIL} Neznámy prepínač ${a}`)
         process.exit(1)
     }
   }
@@ -74,9 +74,9 @@ function parseArgs(argv) {
 }
 
 const args = parseArgs(process.argv.slice(2))
-const AKTOR = process.env.USER ? `${process.env.USER}@cli` : "cli"
+const ACTOR = process.env.USER ? `${process.env.USER}@cli` : "cli"
 
-function vypis(t) {
+function print(t) {
   const mark = t.status === "active" ? OK : INFO
   console.log(`${mark} ${t.companyCode} · ${t.branding?.displayName ?? ""} · ${t.status}`)
   console.log(`   domény: ${(t.hostnames ?? []).join(", ") || "(žiadne)"}`)
@@ -85,11 +85,11 @@ function vypis(t) {
 
 try {
   if (args.status || !args.company) {
-    const vsetky = await allTenants()
-    if (!vsetky.length) {
+    const all = await allTenants()
+    if (!all.length) {
       console.log(`${INFO} kolekcia tenants je prázdna — na žiadnej doméne sa nič neukáže`)
     }
-    vsetky.forEach(vypis)
+    all.forEach(print)
     if (!args.company) {
       console.log(`\n${INFO} bez --company sa nič nemení`)
       process.exit(0)
@@ -97,7 +97,7 @@ try {
   }
 
   const hostnames = normalizeHostnames(args.hosts)
-  const zmena = {
+  const change = {
     ...(hostnames.length ? { hostnames } : {}),
     ...(args.name !== undefined ? { displayName: args.name } : {}),
     ...(args.short !== undefined ? { shortName: args.short } : {}),
@@ -109,20 +109,20 @@ try {
     ...(args.disable !== undefined ? { status: args.disable ? "disabled" : "active" } : {}),
   }
 
-  const uzJe = (await allTenants()).some(t => t.companyCode === args.company.toUpperCase())
-  const po = uzJe
-    ? await saveTenant(args.company, zmena, AKTOR)
-    : await createTenant(args.company, { ...zmena, displayName: args.name ?? args.company }, AKTOR)
+  const already = (await allTenants()).some(t => t.companyCode === args.company.toUpperCase())
+  const after = already
+    ? await saveTenant(args.company, change, ACTOR)
+    : await createTenant(args.company, { ...change, displayName: args.name ?? args.company }, ACTOR)
 
-  console.log(`${OK} ${uzJe ? "upravený" : "založený"} tenant ${po.companyCode}`)
-  vypis(po)
+  console.log(`${OK} ${already ? "upravený" : "založený"} tenant ${after.companyCode}`)
+  print(after)
 
   // Až po uloženom tenantovi: `tenants` je zdroj pravdy a výpadok cudzieho
   // API nesmie brániť organizáciu založiť.
   if (args.noVercel) {
     if (hostnames.length) console.log(`${INFO} --no-vercel: domény pridaj do Vercelu ručne`)
   } else {
-    for (const h of po.hostnames) {
+    for (const h of after.hostnames) {
       const v = await pridajDomenu(h)
       if (v.stav === "preskocena") console.log(`${INFO} ${h} — vo Verceli netreba (${v.dovod})`)
       else if (v.stav === "pridana") {
@@ -130,23 +130,23 @@ try {
         console.log(`   Zákazník nech nastaví: CNAME ${h.split(".")[0]} → cname.vercel-dns.com`)
       } else if (v.stav === "uz-je") console.log(`${OK} ${h} už v projekte je`)
       else if (v.stav === "bez-nastavenia") {
-        console.error(`${CHYBA} ${h}: chýba VERCEL_TOKEN — doménu pridaj ručne (tenant je uložený)`)
+        console.error(`${FAIL} ${h}: chýba VERCEL_TOKEN — doménu pridaj ručne (tenant je uložený)`)
       } else if (v.stav === "neplatny-token") {
-        console.error(`${CHYBA} ${h}: Vercel token neprijal (tenant je uložený).`)
+        console.error(`${FAIL} ${h}: Vercel token neprijal (tenant je uložený).`)
         console.error(`     Hodnota z \`vercel login\` vyprší; na stálu prevádzku si vytvor`)
         console.error(`     vlastný token vo Verceli a daj ho do app/.env.local ako VERCEL_TOKEN.`)
-      } else console.error(`${CHYBA} ${h}: ${v.sprava} (tenant je uložený)`)
+      } else console.error(`${FAIL} ${h}: ${v.sprava} (tenant je uložený)`)
     }
   }
   process.exit(0)
 } catch (e) {
   if (e instanceof DomainOwnedError) {
-    console.error(`${CHYBA} ${e.message}`)
+    console.error(`${FAIL} ${e.message}`)
     console.error(`     Najprv ju odober tam, potom prirad sem. Nič sa nezapísalo.`)
   } else if (e instanceof TenantValidationError) {
-    console.error(`${CHYBA} ${e.message}`)
+    console.error(`${FAIL} ${e.message}`)
   } else {
-    console.error(`${CHYBA} ${e.message}`)
+    console.error(`${FAIL} ${e.message}`)
   }
   process.exit(1)
 }

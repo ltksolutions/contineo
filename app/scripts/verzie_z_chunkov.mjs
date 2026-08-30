@@ -28,91 +28,91 @@ import { MongoClient } from "mongodb"
 import { addVersion, loadDocument } from "../src/lib/documents.ts"
 
 const OK = "\x1b[32m✓\x1b[0m"
-const CHYBA = "\x1b[31m✗\x1b[0m"
+const FAIL = "\x1b[31m✗\x1b[0m"
 
-function arg(meno) {
-  const i = process.argv.indexOf(meno)
+function arg(name) {
+  const i = process.argv.indexOf(name)
   return i === -1 ? null : process.argv[i + 1] ?? null
 }
-const ZAPIS = process.argv.includes("--zapis")
+const WRITE = process.argv.includes("--zapis")
 const LEN = arg("--doc")
 const LABEL = arg("--label") ?? "1.0"
 const OD = arg("--od")
 
-if (ZAPIS && !OD) {
-  console.error(`${CHYBA} Zápis bez --od nedáva zmysel: verzia bez dátumu platnosti neplatí (D6).`)
+if (WRITE && !OD) {
+  console.error(`${FAIL} Zápis bez --od nedáva zmysel: verzia bez dátumu platnosti neplatí (D6).`)
   process.exit(1)
 }
-const datum = OD ? new Date(`${OD}T00:00:00.000Z`) : null
-if (OD && Number.isNaN(datum.getTime())) {
-  console.error(`${CHYBA} --od ${OD} nie je dátum. Očakáva sa RRRR-MM-DD.`)
+const date = OD ? new Date(`${OD}T00:00:00.000Z`) : null
+if (OD && Number.isNaN(date.getTime())) {
+  console.error(`${FAIL} --od ${OD} nie je dátum. Očakáva sa RRRR-MM-DD.`)
   process.exit(1)
 }
 
 /** Hlavička „Dokument › Článok 1 - Nadpis" na začiatku chunku. */
-function bezHlavicky(text) {
+function withoutHeader(text) {
   const i = text.indexOf("\n\n")
   if (i !== -1 && i < 240 && text.slice(0, i).includes("›")) return text.slice(i + 2)
   return text
 }
 
-function zlozMarkdown(chunky) {
-  const casti = []
-  let posledny = null
-  for (const ch of chunky) {
-    const nadpis = [ch.articleRef, ch.heading].filter(Boolean).join(" — ")
-    if (nadpis && nadpis !== posledny) {
-      casti.push(`## ${nadpis}`)
-      posledny = nadpis
+function buildMarkdown(chunks) {
+  const parts = []
+  let last = null
+  for (const ch of chunks) {
+    const heading = [ch.articleRef, ch.heading].filter(Boolean).join(" — ")
+    if (heading && heading !== last) {
+      parts.push(`## ${heading}`)
+      last = heading
     }
-    const t = bezHlavicky(ch.text ?? "").trim()
-    if (t) casti.push(t)
+    const t = withoutHeader(ch.text ?? "").trim()
+    if (t) parts.push(t)
   }
-  return casti.join("\n\n").trim()
+  return parts.join("\n\n").trim()
 }
 
-const klient = new MongoClient(process.env.MONGODB_URI)
-await klient.connect()
-const db = klient.db(process.env.MONGODB_DB ?? "contineo")
+const client = new MongoClient(process.env.MONGODB_URI)
+await client.connect()
+const db = client.db(process.env.MONGODB_DB ?? "contineo")
 
 const filter = { versionId: { $exists: true }, versions: { $exists: false } }
 if (LEN) filter.documentId = LEN
-const dokumenty = await db.collection("documents").find(filter).sort({ documentId: 1 }).toArray()
+const documents = await db.collection("documents").find(filter).sort({ documentId: 1 }).toArray()
 
-if (dokumenty.length === 0) {
+if (documents.length === 0) {
   console.log("Žiadny dokument bez `versions[]`. Niet čo doplniť.")
-  await klient.close()
+  await client.close()
   process.exit(0)
 }
 
-console.log(ZAPIS
+console.log(WRITE
   ? `Zapisujem znenie platné od ${OD}, označenie „${LABEL}".\n`
   : `Skúška nasucho — nič sa nemení. Zápis: --od RRRR-MM-DD --zapis\n`)
 
-let hotovo = 0
-for (const d of dokumenty) {
-  const chunky = await db.collection("document_chunks")
+let done = 0
+for (const d of documents) {
+  const chunks = await db.collection("document_chunks")
     .find({ documentId: d.documentId, versionId: d.versionId })
     .project({ chunkIndex: 1, text: 1, heading: 1, articleRef: 1 })
     .sort({ chunkIndex: 1 })
     .toArray()
 
-  if (chunky.length === 0) {
-    console.log(`${CHYBA} ${d.documentId}: k verzii ${d.versionId} nie sú chunky — preskakujem`)
+  if (chunks.length === 0) {
+    console.log(`${FAIL} ${d.documentId}: k verzii ${d.versionId} nie sú chunky — preskakujem`)
     continue
   }
 
-  const markdown = zlozMarkdown(chunky)
+  const markdown = buildMarkdown(chunks)
   console.log(`${d.documentId}`)
-  console.log(`   verzia ${d.versionId} · ${chunky.length} chunkov · ${markdown.length} znakov`)
+  console.log(`   verzia ${d.versionId} · ${chunks.length} chunkov · ${markdown.length} znakov`)
   console.log(`   začiatok: ${JSON.stringify(markdown.slice(0, 90))}`)
 
-  if (!ZAPIS) { hotovo++; continue }
+  if (!WRITE) { done++; continue }
 
   await addVersion(d.documentId, {
     versionId: d.versionId,
     label: LABEL,
-    effectiveFrom: datum,
+    effectiveFrom: date,
     effectiveTo: null,
     isActive: true,
     markdown,
@@ -123,9 +123,9 @@ for (const d of dokumenty) {
 
   const po = await loadDocument(d.documentId)
   const n = (po?.versions ?? []).length
-  console.log(n === 1 ? `   ${OK} zapísané` : `   ${CHYBA} po zápise má ${n} verzií — pozri sa na to`)
-  hotovo++
+  console.log(n === 1 ? `   ${OK} zapísané` : `   ${FAIL} po zápise má ${n} verzií — pozri sa na to`)
+  done++
 }
 
-console.log(`\n${hotovo}/${dokumenty.length} ${ZAPIS ? "zapísaných" : "pripravených"}.`)
-await klient.close()
+console.log(`\n${done}/${documents.length} ${WRITE ? "zapísaných" : "pripravených"}.`)
+await client.close()

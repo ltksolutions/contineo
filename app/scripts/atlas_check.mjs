@@ -17,16 +17,16 @@ const VECTOR_INDEX = process.env.VECTOR_INDEX ?? "rag_vector_index"
 const TEXT_INDEX = process.env.TEXT_INDEX ?? "rag_text_index"
 
 const OK = "[32m✔[0m"
-const CHYBA = "[31m✘[0m"
-const VAROVANIE = "[33m![0m"
+const FAIL = "[31m✘[0m"
+const WARN = "[33m![0m"
 
 if (!URI) {
-  console.error(`${CHYBA} Chýba MONGODB_URI.\n  Nastav ju v app/.env.local alebo:`)
+  console.error(`${FAIL} Chýba MONGODB_URI.\n  Nastav ju v app/.env.local alebo:`)
   console.error(`     export MONGODB_URI="mongodb+srv://..."`)
   process.exit(1)
 }
 
-let problemy = 0
+let problems = 0
 const client = new MongoClient(URI, { serverSelectionTimeoutMS: 15000 })
 
 try {
@@ -38,82 +38,82 @@ try {
 
   const [major, minor] = info.version.split(".").map(Number)
   if (major < 8 || (major === 8 && minor < 3)) {
-    console.log(`${VAROVANIE} $rerank vyžaduje 8.3+ — nastav v profile rerank.kind = "none"`)
+    console.log(`${WARN} $rerank vyžaduje 8.3+ — nastav v profile rerank.kind = "none"`)
   }
 
   const db = client.db(DB)
 
   // ── kolekcie ──
-  const kolekcie = (await db.listCollections().toArray()).map(c => c.name)
-  for (const nazov of ["documents", COL]) {
-    if (kolekcie.includes(nazov)) {
-      const pocet = await db.collection(nazov).countDocuments()
-      console.log(`${OK} kolekcia ${nazov} · ${pocet} dokumentov`)
+  const collections = (await db.listCollections().toArray()).map(c => c.name)
+  for (const name of ["documents", COL]) {
+    if (collections.includes(name)) {
+      const count = await db.collection(name).countDocuments()
+      console.log(`${OK} kolekcia ${name} · ${count} dokumentov`)
     } else {
-      console.log(`${VAROVANIE} kolekcia ${nazov} neexistuje — vznikne pri prvom importe`)
+      console.log(`${WARN} kolekcia ${name} neexistuje — vznikne pri prvom importe`)
     }
   }
 
   // ── indexy ──
-  let indexy = []
+  let indexes = []
   try {
-    indexy = await db.collection(COL).listSearchIndexes().toArray()
+    indexes = await db.collection(COL).listSearchIndexes().toArray()
   } catch (e) {
-    console.log(`${CHYBA} nepodarilo sa načítať search indexy: ${e.message}`)
+    console.log(`${FAIL} nepodarilo sa načítať search indexy: ${e.message}`)
     console.log(`    (Search indexy nie sú dostupné na lokálnom MongoDB bez mongot.)`)
-    problemy++
+    problems++
   }
 
-  for (const [nazov, typ] of [[VECTOR_INDEX, "vectorSearch"], [TEXT_INDEX, "search"]]) {
-    const idx = indexy.find(i => i.name === nazov)
+  for (const [name, type] of [[VECTOR_INDEX, "vectorSearch"], [TEXT_INDEX, "search"]]) {
+    const idx = indexes.find(i => i.name === name)
     if (!idx) {
-      console.log(`${CHYBA} index ${nazov} neexistuje — viď docs/ATLAS_SETUP.md`)
-      problemy++
+      console.log(`${FAIL} index ${name} neexistuje — viď docs/ATLAS_SETUP.md`)
+      problems++
       continue
     }
-    const stav = idx.status ?? "?"
-    if (stav === "READY") {
-      console.log(`${OK} index ${nazov} · ${stav}`)
+    const state = idx.status ?? "?"
+    if (state === "READY") {
+      console.log(`${OK} index ${name} · ${state}`)
     } else {
-      console.log(`${VAROVANIE} index ${nazov} · ${stav} — ešte sa buduje, dotazy vrátia prázdno`)
-      problemy++
+      console.log(`${WARN} index ${name} · ${state} — ešte sa buduje, dotazy vrátia prázdno`)
+      problems++
     }
 
     // pri vektorovom indexe overíme, ze path ukazuje na TEXTOVE pole
-    if (typ === "vectorSearch") {
-      const polia = idx.latestDefinition?.fields ?? []
-      const auto = polia.find(f => f.type === "autoEmbed")
+    if (type === "vectorSearch") {
+      const fields = idx.latestDefinition?.fields ?? []
+      const auto = fields.find(f => f.type === "autoEmbed")
       if (auto) {
         console.log(`    autoEmbed · model ${auto.model} · path "${auto.path}"`)
         if (auto.path === "embedding") {
-          console.log(`${CHYBA} path je "embedding" — pri autoEmbed musí ukazovať na TEXTOVÉ pole (napr. "text")`)
-          problemy++
+          console.log(`${FAIL} path je "embedding" — pri autoEmbed musí ukazovať na TEXTOVÉ pole (napr. "text")`)
+          problems++
         }
       } else {
-        console.log(`    ${VAROVANIE} index nemá autoEmbed — vektory musí zapisovať aplikácia`)
+        console.log(`    ${WARN} index nemá autoEmbed — vektory musí zapisovať aplikácia`)
       }
-      const filtre = polia.filter(f => f.type === "filter").map(f => f.path)
-      const treba = ["companyCode", "sectionKey", "accessLevel", "isActive"]
-      const chyba = treba.filter(p => !filtre.includes(p))
-      if (chyba.length) {
-        console.log(`${CHYBA} chýbajú filtre: ${chyba.join(", ")} — dotaz s nimi zlyhá`)
-        problemy++
+      const filters = fields.filter(f => f.type === "filter").map(f => f.path)
+      const needed = ["companyCode", "sectionKey", "accessLevel", "isActive"]
+      const error = needed.filter(p => !filters.includes(p))
+      if (error.length) {
+        console.log(`${FAIL} chýbajú filtre: ${error.join(", ")} — dotaz s nimi zlyhá`)
+        problems++
       } else {
-        console.log(`    filtre: ${filtre.join(", ")}`)
+        console.log(`    filtre: ${filters.join(", ")}`)
       }
     }
   }
 
   console.log()
-  if (problemy === 0) {
+  if (problems === 0) {
     console.log(`${OK} Atlas je pripravený. Môžeš spustiť import.`)
   } else {
-    console.log(`${CHYBA} ${problemy} problém(ov) — postup nájdeš v docs/ATLAS_SETUP.md`)
+    console.log(`${FAIL} ${problems} problém(ov) — postup nájdeš v docs/ATLAS_SETUP.md`)
   }
-  process.exitCode = problemy ? 1 : 0
+  process.exitCode = problems ? 1 : 0
 
 } catch (e) {
-  console.error(`${CHYBA} ${e.message}`)
+  console.error(`${FAIL} ${e.message}`)
   if (/authentication|auth failed/i.test(e.message)) {
     console.error("    Skontroluj používateľa a heslo v connection stringu.")
   } else if (/ENOTFOUND|ETIMEDOUT|serverSelection/i.test(e.message)) {

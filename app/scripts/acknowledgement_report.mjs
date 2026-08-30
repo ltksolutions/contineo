@@ -25,7 +25,7 @@ const ERR = "\x1b[31m✘\x1b[0m", INFO = "\x1b[33m·\x1b[0m"
 const log = (...a) => console.error(...a)
 
 /** Prečo dokument nemá platné znenie — strojový kľúč na vetu pre človeka. */
-const BEZ_VERZIE = {
+const NO_VERSION = {
   "no-versions": "dokument nemá ani jednu verziu",
   "validity-not-set": "verzii nikto neurčil dátum platnosti",
   "all-archived": "všetky verzie sú archivované",
@@ -34,8 +34,8 @@ const BEZ_VERZIE = {
 }
 
 const args = process.argv.slice(2)
-const arg = (meno) => {
-  const i = args.indexOf(meno)
+const arg = (name) => {
+  const i = args.indexOf(name)
   return i >= 0 ? args[i + 1] : undefined
 }
 
@@ -59,55 +59,55 @@ if (!process.env.MONGODB_URI) {
 
 // ── platné znenie ku každému dokumentu ───────────────────────────────────────
 
-const platne = []
+const valid = []
 for (const documentId of documents) {
   const doc = await loadDocument(documentId)
   if (!doc) { log(`${ERR} dokument ${documentId} neexistuje — preskakujem`); continue }
 
   const v = effectiveVersion(doc)
   if (!v.ok) {
-    log(`${ERR} ${documentId}: ${BEZ_VERZIE[v.reason] ?? v.reason} — nedá sa potvrdiť, preskakujem`)
+    log(`${ERR} ${documentId}: ${NO_VERSION[v.reason] ?? v.reason} — nedá sa potvrdiť, preskakujem`)
     continue
   }
-  platne.push({ doc, version: v.version })
+  valid.push({ doc, version: v.version })
   log(`${INFO} ${documentId}: platná verzia ${v.version.label} (${v.version.versionId})`)
 }
 
-if (platne.length === 0) {
+if (valid.length === 0) {
   log(`${ERR} Ani jeden dokument nemá platné znenie — výkaz by bol prázdny.`)
   process.exit(1)
 }
 
 // ── osoby a ich potvrdenia ───────────────────────────────────────────────────
 
-const filterOsob = { companyCode: company, status: { $ne: "inactive" } }
-if (track) filterOsob.tracks = track
+const personFilter = { companyCode: company, status: { $ne: "inactive" } }
+if (track) personFilter.tracks = track
 
 const persons = await (await getCollection(PERSONS_COLLECTION))
-  .find(filterOsob).sort({ email: 1 }).toArray()
+  .find(personFilter).sort({ email: 1 }).toArray()
 
 log(`${INFO} osôb v rozsahu: ${persons.length}${track ? ` (trasa ${track})` : ""}`)
 
 const acks = await (await getCollection(ACKNOWLEDGEMENTS_COLLECTION)).find({
   companyCode: company,
   type: "acknowledgement",
-  versionId: { $in: platne.map(p => p.version.versionId) },
+  versionId: { $in: valid.map(p => p.version.versionId) },
 }).toArray()
 
 // Kľúč osoba+verzia — potvrdenie je jedno na dvojicu (unikátny index, D24).
-const podlaKluca = new Map(acks.map(a => [`${a.personId}|${a.versionId}`, a]))
+const byKey = new Map(acks.map(a => [`${a.personId}|${a.versionId}`, a]))
 
-const riadky = []
+const rows = []
 for (const person of persons) {
-  for (const { doc, version } of platne) {
-    const ack = podlaKluca.get(`${person.id}|${version.versionId}`)
-    riadky.push({ person, doc, version, ack })
+  for (const { doc, version } of valid) {
+    const ack = byKey.get(`${person.id}|${version.versionId}`)
+    rows.push({ person, doc, version, ack })
   }
 }
 
 // ── výkaz ────────────────────────────────────────────────────────────────────
 
-const STLPCE = [
+const COLUMNS = [
   { label: "Organizácia",       value: r => r.person.companyCode },
   { label: "E-mail",            value: r => r.person.email },
   { label: "Meno",              value: r => r.person.fullName },
@@ -123,22 +123,22 @@ const STLPCE = [
   },
   { label: "Dokument",          value: r => r.doc.title },
   { label: "Verzia",            value: r => r.version.label },
-  { label: "Platná od",         value: r => datum(r.version.effectiveFrom) },
+  { label: "Platná od",         value: r => date(r.version.effectiveFrom) },
   { label: "Stav",              value: r => (r.ack ? "potvrdené" : "NEPOTVRDENÉ") },
-  { label: "Potvrdené dňa",     value: r => (r.ack ? datum(r.ack.acknowledgedAt) : "") },
+  { label: "Potvrdené dňa",     value: r => (r.ack ? date(r.ack.acknowledgedAt) : "") },
   { label: "Jazyk potvrdenia",  value: r => r.ack?.language ?? "" },
   { label: "Jazyk dokumentu",   value: r => r.doc.language ?? "" },
 ]
 
 /** Dátum aj s časom, lebo pri audite ide o poradie udalostí, nie o deň. */
-function datum(d) {
+function date(d) {
   if (!(d instanceof Date)) return ""
   const p = (n) => String(n).padStart(2, "0")
   return `${d.getUTCDate()}. ${d.getUTCMonth() + 1}. ${d.getUTCFullYear()} ${p(d.getUTCHours())}:${p(d.getUTCMinutes())}`
 }
 
-process.stdout.write(toCsv(riadky, STLPCE))
+process.stdout.write(toCsv(rows, COLUMNS))
 
-const chyba = riadky.filter(r => !r.ack).length
-log(`\n${INFO} spolu ${riadky.length} riadkov · nepotvrdených ${chyba}`)
+const error = rows.filter(r => !r.ack).length
+log(`\n${INFO} spolu ${rows.length} riadkov · nepotvrdených ${error}`)
 process.exit(0)

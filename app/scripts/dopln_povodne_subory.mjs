@@ -22,12 +22,12 @@ import { readFileSync, existsSync, statSync } from "node:fs"
 import { join } from "node:path"
 import { MongoClient, GridFSBucket } from "mongodb"
 
-const OK = "\x1b[32m✔\x1b[0m", CHYBA = "\x1b[31m✘\x1b[0m", INFO = "\x1b[33m·\x1b[0m"
-const ZAPIS = process.argv.includes("--zapis")
-const PRIECINOK = "data/vzorky"
+const OK = "\x1b[32m✔\x1b[0m", FAIL = "\x1b[31m✘\x1b[0m", INFO = "\x1b[33m·\x1b[0m"
+const WRITE = process.argv.includes("--zapis")
+const FOLDER = "data/vzorky"
 
 /** documentId → názov pôvodného PDF. Ručne, nie podľa podobnosti názvov. */
-const PRIRADENIE = {
+const MAPPING = {
   "sfz:disciplinarny_poriadok": "Disciplinárny poriadok SFZ.pdf",
   "sfz:organizacny_navstevny_poriadok": "Organizačný a návštevný poriadok.pdf",
   "sfz:poriadok_komory_sporov": "Poriadok komory pre riešenie sporov.pdf",
@@ -40,47 +40,47 @@ const PRIRADENIE = {
 }
 
 if (!process.env.MONGODB_URI) {
-  console.error(`${CHYBA} Chýba MONGODB_URI.`)
+  console.error(`${FAIL} Chýba MONGODB_URI.`)
   process.exit(1)
 }
 
 const client = new MongoClient(process.env.MONGODB_URI)
 await client.connect()
 const db = client.db(process.env.MONGODB_DB ?? "contineo")
-const kolDoc = db.collection("documents")
+const docCol = db.collection("documents")
 const bucket = new GridFSBucket(db, { bucketName: "cms_files" })
 
-let doplnenych = 0
-let preskocenych = 0
-let chybajucich = 0
+let added = 0
+let skipped = 0
+let missing = 0
 
 console.log("")
-for (const [documentId, nazovSuboru] of Object.entries(PRIRADENIE)) {
-  const doc = await kolDoc.findOne({ documentId })
+for (const [documentId, fileName] of Object.entries(MAPPING)) {
+  const doc = await docCol.findOne({ documentId })
   if (!doc) {
-    console.log(`  ${CHYBA} ${documentId}: dokument v databáze nie je`)
-    chybajucich++
+    console.log(`  ${FAIL} ${documentId}: dokument v databáze nie je`)
+    missing++
     continue
   }
   if (doc.originalFile) {
     console.log(`  ${INFO} ${documentId}: pôvodný súbor už má (${doc.originalFile.nazov})`)
-    preskocenych++
+    skipped++
     continue
   }
 
-  const cesta = join(PRIECINOK, nazovSuboru)
-  if (!existsSync(cesta)) {
-    console.log(`  ${CHYBA} ${documentId}: chýba ${cesta}`)
-    chybajucich++
+  const path = join(FOLDER, fileName)
+  if (!existsSync(path)) {
+    console.log(`  ${FAIL} ${documentId}: chýba ${path}`)
+    missing++
     continue
   }
 
-  const bajtov = statSync(cesta).size
-  console.log(`  ${ZAPIS ? OK : INFO} ${documentId.padEnd(38)} ← ${nazovSuboru} (${Math.round(bajtov / 1024)} kB)`)
-  if (!ZAPIS) { doplnenych++; continue }
+  const bytes = statSync(path).size
+  console.log(`  ${WRITE ? OK : INFO} ${documentId.padEnd(38)} ← ${fileName} (${Math.round(bytes / 1024)} kB)`)
+  if (!WRITE) { added++; continue }
 
-  const data = readFileSync(cesta)
-  const prud = bucket.openUploadStream(nazovSuboru, {
+  const data = readFileSync(path)
+  const stream = bucket.openUploadStream(fileName, {
     contentType: "application/pdf",
     metadata: {
       companyCode: doc.companyCode,
@@ -88,17 +88,17 @@ for (const [documentId, nazovSuboru] of Object.entries(PRIRADENIE)) {
       nahraneKedy: new Date(),
     },
   })
-  await new Promise((hotovo, chyba) => {
-    prud.on("error", chyba)
-    prud.on("finish", hotovo)
-    prud.end(data)
+  await new Promise((done, failed) => {
+    stream.on("error", failed)
+    stream.on("finish", done)
+    stream.end(data)
   })
 
-  await kolDoc.updateOne({ documentId }, {
+  await docCol.updateOne({ documentId }, {
     $set: {
       originalFile: {
-        id: String(prud.id),
-        nazov: nazovSuboru,
+        id: String(stream.id),
+        nazov: fileName,
         contentType: "application/pdf",
         bajtov: data.byteLength,
         typ: "pdf",
@@ -117,15 +117,15 @@ for (const [documentId, nazovSuboru] of Object.entries(PRIRADENIE)) {
       },
     },
   })
-  doplnenych++
+  added++
 }
 
 console.log(
-  `\n${ZAPIS ? OK : INFO} ${ZAPIS ? "doplnených" : "doplnilo by sa"}: ${doplnenych}` +
-  `${preskocenych ? ` · preskočených: ${preskocenych}` : ""}` +
-  `${chybajucich ? ` · chýbajúcich: ${chybajucich}` : ""}`,
+  `\n${WRITE ? OK : INFO} ${WRITE ? "doplnených" : "doplnilo by sa"}: ${added}` +
+  `${skipped ? ` · preskočených: ${skipped}` : ""}` +
+  `${missing ? ` · chýbajúcich: ${missing}` : ""}`,
 )
-if (!ZAPIS) console.log(`${INFO} nasucho — nič sa nezapísalo. Zápis: rovnaký príkaz s --zapis\n`)
+if (!WRITE) console.log(`${INFO} nasucho — nič sa nezapísalo. Zápis: rovnaký príkaz s --zapis\n`)
 else console.log("")
 
 await client.close()
