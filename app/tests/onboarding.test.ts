@@ -19,8 +19,8 @@ const v = (p: Partial<Version>): Version => ({
 })
 const doc = (versions: Version[]): DocumentRecord => ({ documentId: "d1", title: "Smernica", versions: versions })
 
-const DNES = day(2026, 6, 1)
-const reason = (d: DocumentRecord) => { const r = effectiveVersion(d, DNES); return r.ok ? "(platná)" : r.reason }
+const TODAY = day(2026, 6, 1)
+const reason = (d: DocumentRecord) => { const r = effectiveVersion(d, TODAY); return r.ok ? "(platná)" : r.reason }
 
 // ── čo neplatí a prečo ───────────────────────────────────────────────────────
 
@@ -42,29 +42,29 @@ t("platnosť skončila → uz-neplati",
 
 // ── čo platí ─────────────────────────────────────────────────────────────────
 
-const jedna = effectiveVersion(doc([v({})]), DNES)
-t("jedna otvorená verzia platí", jedna.ok)
+const one = effectiveVersion(doc([v({})]), TODAY)
+t("jedna otvorená verzia platí", one.ok)
 
-const dve = effectiveVersion(doc([
+const two = effectiveVersion(doc([
   v({ versionId: "stara", label: "1.0", effectiveFrom: day(2026, 1, 1), effectiveTo: day(2026, 4, 1) }),
   v({ versionId: "nova", label: "2.0", effectiveFrom: day(2026, 4, 1) }),
-]), DNES)
+]), TODAY)
 t("z dvoch znení platí to, ktoré je práve v platnosti",
-  dve.ok && dve.version.versionId === "nova", JSON.stringify(dve))
+  two.ok && two.version.versionId === "nova", JSON.stringify(two))
 
 // Lex posterior (R3 v PRECEDENCIA_NORIEM): pri dvoch prekrývajúcich sa platí novšia.
-const prekryv = effectiveVersion(doc([
+const overlap = effectiveVersion(doc([
   v({ versionId: "starsia", effectiveFrom: day(2026, 1, 1) }),
   v({ versionId: "novsia", effectiveFrom: day(2026, 5, 1) }),
-]), DNES)
+]), TODAY)
 t("pri prekryve platí novšia (lex posterior)",
-  prekryv.ok && prekryv.version.versionId === "novsia", JSON.stringify(prekryv))
+  overlap.ok && overlap.version.versionId === "novsia", JSON.stringify(overlap))
 
 t("archivovaná verzia sa nevyberie, aj keď dátumy sedia", (() => {
   const r = effectiveVersion(doc([
     v({ versionId: "archiv", isActive: false }),
     v({ versionId: "ziva", effectiveFrom: day(2026, 2, 1) }),
-  ]), DNES)
+  ]), TODAY)
   return r.ok && r.version.versionId === "ziva"
 })())
 
@@ -79,9 +79,9 @@ t("historický dotaz vráti vtedy platné znenie", (() => {
 
 // Hranica: effectiveTo je vylučujúce, effectiveFrom zahŕňajúce.
 t("v deň začiatku platnosti už verzia platí",
-  effectiveVersion(doc([v({ effectiveFrom: DNES })]), DNES).ok)
+  effectiveVersion(doc([v({ effectiveFrom: TODAY })]), TODAY).ok)
 t("v deň konca platnosti už verzia neplatí",
-  !effectiveVersion(doc([v({ effectiveTo: DNES })]), DNES).ok)
+  !effectiveVersion(doc([v({ effectiveTo: TODAY })]), TODAY).ok)
 
 // ── jazyk prostredia ─────────────────────────────────────────────────────────
 
@@ -128,7 +128,7 @@ t("neznámy jazyk nespadne, vráti slovenskú formulku",
 
 // ── odtlačok znenia ──────────────────────────────────────────────────────────
 
-const hlavne = async () => {
+const main = async () => {
   const a = await hashStatement(statement)
   const b = await hashStatement(statement)
   const c = await hashStatement(statement + " ")
@@ -139,4 +139,4 @@ const hlavne = async () => {
 
 }
 
-await hlavne()
+await main()

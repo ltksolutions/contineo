@@ -25,8 +25,8 @@ vi.mock("../src/lib/mongodb", () => ({
 }))
 
 vi.mock("../src/lib/tenants", async () => {
-  const skutocne = await vi.importActual<typeof import("../src/lib/tenants")>("../src/lib/tenants")
-  return { ...skutocne, invalidateTenants }
+  const real = await vi.importActual<typeof import("../src/lib/tenants")>("../src/lib/tenants")
+  return { ...real, invalidateTenants }
 })
 
 import {

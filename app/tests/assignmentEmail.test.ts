@@ -9,16 +9,16 @@
 import { describe, it, expect } from "vitest"
 import { assignmentEmail } from "../src/lib/ecomail"
 
-const dokument = {
+const document = {
   title: "Súťažný poriadok futbalu SFZ",
   versionLabel: "1.0",
   effectiveFrom: "24. 6. 2026",
 }
-const DOVOD = "Novela čl. 12 — mení sa lehota na podanie odvolania."
-const ODKAZ = "https://intranet.futbalsfz.sk/dokumenty/sfz%3Asutazny_poriadok"
+const REASON = "Novela čl. 12 — mení sa lehota na podanie odvolania."
+const LINK = "https://intranet.futbalsfz.sk/dokumenty/sfz%3Asutazny_poriadok"
 
-function email(over: Partial<Parameters<typeof assignmentEmail>[2]> = {}, jazyk: "sk" | "cs" | "en" = "sk") {
-  return assignmentEmail(ODKAZ, "intranet.futbalsfz.sk", { ...dokument, ...over }, DOVOD, jazyk, {
+function email(check: Partial<Parameters<typeof assignmentEmail>[2]> = {}, language: "sk" | "cs" | "en" = "sk") {
+  return assignmentEmail(LINK, "intranet.futbalsfz.sk", { ...document, ...check }, REASON, language, {
     displayName: "Slovenský futbalový zväz",
   })
 }
@@ -28,7 +28,7 @@ describe("e-mail o pridelení", () => {
     // Bez neho je to ďalšia automatická správa. S ním je to veta, z ktorej
     // sa dá pochopiť, či to treba čítať dnes alebo o týždeň (D30, D37).
     const e = email()
-    expect(e.text).toContain(DOVOD)
+    expect(e.text).toContain(REASON)
     expect(e.html).toContain("lehota na podanie odvolania")
   })
 
@@ -43,8 +43,8 @@ describe("e-mail o pridelení", () => {
     // Posielať prihlasovací odkaz by znamenalo vyrobiť druhý jednorazový
     // vstup do systému kvôli oznámeniu, ktoré nič nepotvrdzuje.
     const e = email()
-    expect(e.text).toContain(ODKAZ)
-    expect(e.html).toContain(`href="${ODKAZ}"`)
+    expect(e.text).toContain(LINK)
+    expect(e.html).toContain(`href="${LINK}"`)
     expect(e.text).not.toContain("/prihlasenie")
   })
 
@@ -56,7 +56,7 @@ describe("e-mail o pridelení", () => {
   })
 
   it("bez tenanta zostane značka dodávateľa, e-mail sa nerozsype", () => {
-    const e = assignmentEmail(ODKAZ, "app.contineo.app", dokument, DOVOD, "sk")
+    const e = assignmentEmail(LINK, "app.contineo.app", document, REASON, "sk")
     expect(e.subject).toContain("Contineo")
   })
 

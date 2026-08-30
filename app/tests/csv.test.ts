@@ -69,21 +69,21 @@ describe("parseCsv", () => {
 })
 
 describe("toCsv", () => {
-  const stlpce = [{ label: "Meno", value: (r: any) => r.meno }]
+  const columns = [{ label: "Meno", value: (r: any) => r.meno }]
 
   it("začína BOM, aby Excel na Windows nezobrazil paškvil", () => {
-    expect(toCsv([], stlpce).startsWith("﻿")).toBe(true)
+    expect(toCsv([], columns).startsWith("﻿")).toBe(true)
   })
 
   it("hodnotu s oddeľovačom uzavrie do úvodzoviek", () => {
-    expect(toCsv([{ meno: "Novák; Ján" }], stlpce)).toContain('"Novák; Ján"')
+    expect(toCsv([{ meno: "Novák; Ján" }], columns)).toContain('"Novák; Ján"')
   })
 
   it("úvodzovky vo vnútri zdvojí", () => {
-    expect(toCsv([{ meno: 'Ján "Jano"' }], stlpce)).toContain('"Ján ""Jano"""')
+    expect(toCsv([{ meno: 'Ján "Jano"' }], columns)).toContain('"Ján ""Jano"""')
   })
 
   it("null a undefined sú prázdne, nie „null“", () => {
-    expect(toCsv([{ meno: null }], stlpce)).not.toContain("null")
+    expect(toCsv([{ meno: null }], columns)).not.toContain("null")
   })
 })

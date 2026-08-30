@@ -10,8 +10,8 @@ import { checkFile, brandPath, MAX_BYTES, BrandError } from "../src/lib/branding
 
 describe("kontrola nahrateho suboru", () => {
   it("bežné rastrové formáty prejdú", () => {
-    for (const typ of ["image/png", "image/jpeg", "image/webp"]) {
-      expect(() => checkFile(typ, 10_000)).not.toThrow()
+    for (const type of ["image/png", "image/jpeg", "image/webp"]) {
+      expect(() => checkFile(type, 10_000)).not.toThrow()
     }
   })
 

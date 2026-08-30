@@ -13,7 +13,7 @@ import type { TenantProfile } from "../src/lib/providers/types"
 
 import { t } from "./helper"
 
-const profil = (uprav: Partial<TenantProfile> = {}): TenantProfile => ({
+const profile = (tweak: Partial<TenantProfile> = {}): TenantProfile => ({
   companyCode: "TEST",
   tier: "T1",
   displayName: "Test",
@@ -23,29 +23,29 @@ const profil = (uprav: Partial<TenantProfile> = {}): TenantProfile => ({
     rerank:     { kind: "atlas-stage", model: "rerank-2", topK: 8 },
     generation: { kind: "anthropic", model: "claude-sonnet-5", citations: true, maxTokens: 1024 },
   },
-  ...uprav,
+  ...tweak,
 } as TenantProfile)
 
 /** Plne vlastná trojica — jediná, ktorá prejde v on-prem a air-gap. */
-const vlastne = (uprav: Partial<TenantProfile> = {}): TenantProfile => profil({
+const custom = (tweak: Partial<TenantProfile> = {}): TenantProfile => profile({
   providers: {
     embedding:  { kind: "tei", url: "http://tei:8080", model: "voyage-4-nano", dim: 1024, vectorPath: "embedding" },
     rerank:     { kind: "infinity", url: "http://infinity:7997", model: "BAAI/bge-reranker-v2-m3", topK: 8 },
     generation: { kind: "openai", url: "http://vllm:8000/v1", model: "Qwen3-8B", citations: false, maxTokens: 1024 },
   },
-  ...uprav,
+  ...tweak,
 })
 
 // ── voľné režimy prepustia všetko ────────────────────────────────────────────
 
 t("global prepustí cloudovú trojicu",
-  checkResidency(profil({ dataResidency: "global" })).length === 0)
+  checkResidency(profile({ dataResidency: "global" })).length === 0)
 t("eu-data prepustí cloudovú trojicu — dáta ležia v EÚ, spracovanie smie von",
-  checkResidency(profil({ dataResidency: "eu-data" })).length === 0)
+  checkResidency(profile({ dataResidency: "eu-data" })).length === 0)
 
 // ── eu-full je hranica, kde sa cloud láme ────────────────────────────────────
 
-const euFull = checkResidency(profil({ dataResidency: "eu-full" }))
+const euFull = checkResidency(profile({ dataResidency: "eu-full" }))
 t("eu-full odmietne cloudovú trojicu", euFull.length === 3,
   JSON.stringify(euFull.map(v => v.adapter)))
 t("eu-full pomenuje $rerank ako spracovanie mimo EÚ",
@@ -56,44 +56,44 @@ t("eu-full odmietne atlas-auto (Google LLC, US — zoznam subprocesorov)",
 t("eu-full odmietne priame Anthropic API (US infraštruktúra)",
   euFull.some(v => v.adapter === "generation" && v.lokalita === "mimo-eu"))
 t("eu-full prepustí vlastnú trojicu",
-  checkResidency(vlastne({ dataResidency: "eu-full" })).length === 0,
-  JSON.stringify(checkResidency(vlastne({ dataResidency: "eu-full" })).map(v => v.sprava)))
+  checkResidency(custom({ dataResidency: "eu-full" })).length === 0,
+  JSON.stringify(checkResidency(custom({ dataResidency: "eu-full" })).map(v => v.sprava)))
 
 // ── on-prem a air-gap ────────────────────────────────────────────────────────
 
 t("on-prem prepustí vlastnú trojicu",
-  checkResidency(vlastne({ dataResidency: "on-prem" })).length === 0)
+  checkResidency(custom({ dataResidency: "on-prem" })).length === 0)
 t("air-gap prepustí vlastnú trojicu",
-  checkResidency(vlastne({ dataResidency: "air-gap" })).length === 0)
+  checkResidency(custom({ dataResidency: "air-gap" })).length === 0)
 t("air-gap odmietne atlas-auto",
-  checkResidency(profil({ dataResidency: "air-gap" }))
+  checkResidency(profile({ dataResidency: "air-gap" }))
     .some(v => v.adapter === "embedding"))
 t("air-gap odmietne Claude",
-  checkResidency(profil({ dataResidency: "air-gap" }))
+  checkResidency(profile({ dataResidency: "air-gap" }))
     .some(v => v.adapter === "generation"))
 
 // ── rerank "none" je vždy v poriadku ─────────────────────────────────────────
 
 t("rerank none prejde aj v air-gap",
-  !checkResidency(vlastne({
+  !checkResidency(custom({
     dataResidency: "air-gap",
-    providers: { ...vlastne().providers, rerank: { kind: "none" } },
+    providers: { ...custom().providers, rerank: { kind: "none" } },
   } as Partial<TenantProfile>)).some(v => v.adapter === "rerank"))
 
 // ── openai s cudzou url nie je vlastná infraštruktúra ────────────────────────
 
-const cudzia = vlastne({
+const foreign = custom({
   dataResidency: "eu-full",
   providers: {
-    ...vlastne().providers,
+    ...custom().providers,
     generation: { kind: "openai", url: "https://api.example.com/v1", model: "x", maxTokens: 100 },
   },
 } as Partial<TenantProfile>)
 t("openai na verejnú doménu sa NEráta ako vlastná infraštruktúra",
-  checkResidency(cudzia).some(v => v.adapter === "generation" && v.lokalita === "neznama"),
-  JSON.stringify(locationOverview(cudzia)))
+  checkResidency(foreign).some(v => v.adapter === "generation" && v.lokalita === "neznama"),
+  JSON.stringify(locationOverview(foreign)))
 
-for (const [url, cakame] of [
+for (const [url, expected] of [
   ["http://vllm:8000/v1", "vlastna"],
   ["http://localhost:8000/v1", "vlastna"],
   ["http://127.0.0.1:8000/v1", "vlastna"],
@@ -102,18 +102,18 @@ for (const [url, cakame] of [
   ["http://172.16.0.9:8000/v1", "vlastna"],
   ["https://api.openai.com/v1", "neznama"],
 ] as const) {
-  const p = vlastne({
-    providers: { ...vlastne().providers,
+  const p = custom({
+    providers: { ...custom().providers,
       generation: { kind: "openai", url, model: "x", maxTokens: 100 } },
   } as Partial<TenantProfile>)
-  t(`lokalita generovania pre ${url} = ${cakame}`,
-    locationOverview(p).generation === cakame, locationOverview(p).generation)
+  t(`lokalita generovania pre ${url} = ${expected}`,
+    locationOverview(p).generation === expected, locationOverview(p).generation)
 }
 
 // ── neplatná hodnota rezidencie ──────────────────────────────────────────────
 
 t("neznáma rezidencia sa nahlási ako porušenie",
-  checkResidency(profil({ dataResidency: "vymyslena" as never })).length === 1)
+  checkResidency(profile({ dataResidency: "vymyslena" as never })).length === 1)
 
 // ── Druhá os: izolácia infraštruktúry (tier) ─────────────────────────────────
 //
@@ -122,9 +122,9 @@ t("neznáma rezidencia sa nahlási ako porušenie",
 // validácie, spadnú.
 
 t("T1 prepustí zdieľanú cloudovú trojicu",
-  checkIsolation(profil({ tier: "T1" })).length === 0)
+  checkIsolation(profile({ tier: "T1" })).length === 0)
 
-const t2Cloud = checkIsolation(profil({ tier: "T2" }))
+const t2Cloud = checkIsolation(profile({ tier: "T2" }))
 t("T2 odmietne zdieľané adaptéry", t2Cloud.length === 3,
   JSON.stringify(t2Cloud.map(v => v.adapter)))
 t("T2 pomenuje Automated Embedding",
@@ -135,12 +135,12 @@ t("T2 pomenuje priame Anthropic API",
   t2Cloud.some(v => v.adapter === "generation" && v.izolacia === "zdielana"))
 
 t("T2 prepustí vlastnú trojicu",
-  checkIsolation(vlastne({ tier: "T2" })).length === 0,
-  JSON.stringify(checkIsolation(vlastne({ tier: "T2" })).map(v => v.sprava)))
+  checkIsolation(custom({ tier: "T2" })).length === 0,
+  JSON.stringify(checkIsolation(custom({ tier: "T2" })).map(v => v.sprava)))
 
 // Vyhradený účet nie je vyhradený hardvér — Bedrock beží na infraštruktúre
 // AWS spoločnej pre zákazníkov, takže na T2 neprejde ani v EU regióne.
-const t2Bedrock = checkIsolation(vlastne({
+const t2Bedrock = checkIsolation(custom({
   tier: "T2",
   providers: {
     embedding:  { kind: "tei", url: "http://tei:8080", model: "m", dim: 1024, vectorPath: "embedding" },
@@ -153,7 +153,7 @@ t("T2 odmietne Bedrock aj v EU regióne",
   JSON.stringify(t2Bedrock.map(v => v.sprava)))
 
 // Cudzia adresa pri openai — nevieme, či inštancia patrí len nám.
-const t2Cudzia = checkIsolation(vlastne({
+const t2Cudzia = checkIsolation(custom({
   tier: "T2",
   providers: {
     embedding:  { kind: "tei", url: "http://tei:8080", model: "m", dim: 1024, vectorPath: "embedding" },
@@ -167,15 +167,15 @@ t("T2 odmietne openai na cudzej adrese ako neznámu izoláciu",
 
 // ── T3 musí sedieť s air-gapom ───────────────────────────────────────────────
 
-const t3Bez = checkIsolation(vlastne({ tier: "T3", dataResidency: "eu-full" }))
+const t3Bez = checkIsolation(custom({ tier: "T3", dataResidency: "eu-full" }))
 t("T3 bez air-gapu je porušenie",
   t3Bez.some(v => v.adapter === "profil"),
   JSON.stringify(t3Bez.map(v => v.sprava)))
 t("T3 + air-gap + vlastná trojica prejde",
-  checkIsolation(vlastne({ tier: "T3", dataResidency: "air-gap" })).length === 0)
+  checkIsolation(custom({ tier: "T3", dataResidency: "air-gap" })).length === 0)
 
 t("neznámy tier sa nahlási ako porušenie",
-  checkIsolation(profil({ tier: "T9" as never })).length === 1)
+  checkIsolation(profile({ tier: "T9" as never })).length === 1)
 
 // ── osi sú naozaj nezávislé ──────────────────────────────────────────────────
 //
@@ -183,41 +183,41 @@ t("neznámy tier sa nahlási ako porušenie",
 // zliali, jedna z nich by prestala niečo znamenať.
 
 t("T2 + global: prísna izolácia, voľná geografia",
-  checkIsolation(vlastne({ tier: "T2", dataResidency: "global" })).length === 0 &&
-  checkResidency(vlastne({ tier: "T2", dataResidency: "global" })).length === 0)
+  checkIsolation(custom({ tier: "T2", dataResidency: "global" })).length === 0 &&
+  checkResidency(custom({ tier: "T2", dataResidency: "global" })).length === 0)
 
 t("T1 + eu-full: voľná izolácia, prísna geografia",
-  checkIsolation(vlastne({ tier: "T1", dataResidency: "eu-full" })).length === 0 &&
-  checkResidency(vlastne({ tier: "T1", dataResidency: "eu-full" })).length === 0)
+  checkIsolation(custom({ tier: "T1", dataResidency: "eu-full" })).length === 0 &&
+  checkResidency(custom({ tier: "T1", dataResidency: "eu-full" })).length === 0)
 
 t("prehľad izolácie vypíše všetky tri adaptéry",
-  Object.keys(isolationOverview(profil())).length === 3 &&
-  isolationOverview(profil()).rerank === "zdielana",
-  JSON.stringify(isolationOverview(profil())))
+  Object.keys(isolationOverview(profile())).length === 3 &&
+  isolationOverview(profile()).rerank === "zdielana",
+  JSON.stringify(isolationOverview(profile())))
 
 // ── napojenie na validáciu profilu ───────────────────────────────────────────
 
-let spadlo = false, sprava = ""
-try { validateProfile(profil({ dataResidency: "eu-full" })) }
-catch (e) { spadlo = true; sprava = (e as Error).message }
-t("validateProfile odmietne profil v rozpore s rezidenciou", spadlo)
-t("chybová hláška menuje konkrétny adaptér", /rerank/.test(sprava), sprava.slice(0, 200))
-t("chybová hláška menuje rezidenciu", /eu-full/.test(sprava))
+let failed = false, message = ""
+try { validateProfile(profile({ dataResidency: "eu-full" })) }
+catch (e) { failed = true; message = (e as Error).message }
+t("validateProfile odmietne profil v rozpore s rezidenciou", failed)
+t("chybová hláška menuje konkrétny adaptér", /rerank/.test(message), message.slice(0, 200))
+t("chybová hláška menuje rezidenciu", /eu-full/.test(message))
 
 t("validateProfile prepustí vlastnú trojicu v air-gap", (() => {
-  try { validateProfile(vlastne({ dataResidency: "air-gap" })); return true }
+  try { validateProfile(custom({ dataResidency: "air-gap" })); return true }
   catch { return false }
 })())
 
-let spadloT = false, spravaT = ""
-try { validateProfile(profil({ tier: "T2" })) }
-catch (e) { spadloT = true; spravaT = (e as Error).message }
-t("validateProfile odmietne T2 so zdieľanými adaptérmi", spadloT)
-t("chybová hláška menuje izoláciu", /izol/i.test(spravaT), spravaT.slice(0, 200))
-t("chybová hláška menuje tier", /T2/.test(spravaT))
+let failedT = false, messageT = ""
+try { validateProfile(profile({ tier: "T2" })) }
+catch (e) { failedT = true; messageT = (e as Error).message }
+t("validateProfile odmietne T2 so zdieľanými adaptérmi", failedT)
+t("chybová hláška menuje izoláciu", /izol/i.test(messageT), messageT.slice(0, 200))
+t("chybová hláška menuje tier", /T2/.test(messageT))
 
 t("validateProfile prepustí T3 s air-gapom a vlastnou trojicou", (() => {
-  try { validateProfile(vlastne({ tier: "T3", dataResidency: "air-gap" })); return true }
+  try { validateProfile(custom({ tier: "T3", dataResidency: "air-gap" })); return true }
   catch { return false }
 })())
 

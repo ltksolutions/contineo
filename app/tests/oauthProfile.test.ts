@@ -11,25 +11,25 @@ import { describe, it, expect } from "vitest"
 import { verifyOAuthProfile } from "../src/lib/auth"
 
 const TID_SFZ = "11111111-2222-3333-4444-555555555555"
-const TID_CUDZI = "99999999-8888-7777-6666-555555555555"
+const TID_FOREIGN = "99999999-8888-7777-6666-555555555555"
 
-function ms(over: Record<string, unknown> = {}) {
+function ms(check: Record<string, unknown> = {}) {
   return {
     tid: TID_SFZ,
     oid: "abc-oid",
     sub: "abc-sub",
     email: "jan.letko@futbalsfz.sk",
-    ...over,
+    ...check,
   }
 }
 
-function google(over: Record<string, unknown> = {}) {
+function google(check: Record<string, unknown> = {}) {
   return {
     sub: "google-sub",
     email: "jan.letko@futbalsfz.sk",
     email_verified: true,
     hd: "futbalsfz.sk",
-    ...over,
+    ...check,
   }
 }
 
@@ -43,7 +43,7 @@ describe("Microsoft (Entra ID)", () => {
     // Toto je celý dôvod, prečo sa `tid` kontroluje. Pri režime
     // „organizations" by inak stačilo mať v cudzom Entre používateľa
     // s adresou, ktorá je v `persons`.
-    const r = verifyOAuthProfile("microsoft", ms({ tid: TID_CUDZI }), { allowedTenantIds: [TID_SFZ] })
+    const r = verifyOAuthProfile("microsoft", ms({ tid: TID_FOREIGN }), { allowedTenantIds: [TID_SFZ] })
     expect(r).toEqual({ ok: false, dovod: "cudzi-tenant" })
   })
 
@@ -59,7 +59,7 @@ describe("Microsoft (Entra ID)", () => {
   it("prázdny zoznam povolených tenantov znamená bez obmedzenia", () => {
     // Je to vedomé rozhodnutie správcu a je o ňom napísané na obrazovke,
     // kde sa zadáva — nie tichý predvolený stav.
-    const r = verifyOAuthProfile("microsoft", ms({ tid: TID_CUDZI }), { allowedTenantIds: [] })
+    const r = verifyOAuthProfile("microsoft", ms({ tid: TID_FOREIGN }), { allowedTenantIds: [] })
     expect(r.ok).toBe(true)
   })
 

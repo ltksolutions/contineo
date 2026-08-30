@@ -14,8 +14,8 @@
  */
 import { it, expect } from "vitest"
 
-export function t(nazov: string, ok: boolean, extra = ""): void {
-  it(nazov, () => {
+export function t(name: string, ok: boolean, extra = ""): void {
+  it(name, () => {
     // Porovnávame reťazce, nie boolean: pri zlyhaní tak Vitest vypíše
     // `extra` ako skutočnú hodnotu namiesto neužitočného `false !== true`.
     expect(ok ? "OK" : (extra || "podmienka nebola splnená")).toBe("OK")

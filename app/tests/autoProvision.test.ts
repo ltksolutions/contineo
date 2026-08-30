@@ -24,27 +24,27 @@ describe("domena adresy", () => {
 })
 
 describe("povolene domeny", () => {
-  const POVOLENE = ["futbalsfz.sk", "sfzmarketing.sk"]
+  const ALLOWED = ["futbalsfz.sk", "sfzmarketing.sk"]
 
   it("adresa z povolenej domény prejde", () => {
-    expect(isDomainAllowed("jan.letko@futbalsfz.sk", POVOLENE)).toBe(true)
-    expect(isDomainAllowed("kto@sfzmarketing.sk", POVOLENE)).toBe(true)
+    expect(isDomainAllowed("jan.letko@futbalsfz.sk", ALLOWED)).toBe(true)
+    expect(isDomainAllowed("kto@sfzmarketing.sk", ALLOWED)).toBe(true)
   })
 
   it("veľkosť písmen nerozhoduje", () => {
-    expect(isDomainAllowed("Jan.Letko@FutbalSFZ.sk", POVOLENE)).toBe(true)
+    expect(isDomainAllowed("Jan.Letko@FutbalSFZ.sk", ALLOWED)).toBe(true)
   })
 
   it("podobná doména neprejde", () => {
     // Toto je celý dôvod, prečo sa porovnáva celá doména a nie koncovka.
     // `endsWith` by pustilo `zlyfutbalsfz.sk` aj `futbalsfz.sk.utocnik.com`.
-    expect(isDomainAllowed("kto@zlyfutbalsfz.sk", POVOLENE)).toBe(false)
-    expect(isDomainAllowed("kto@futbalsfz.sk.utocnik.com", POVOLENE)).toBe(false)
-    expect(isDomainAllowed("kto@futbalsfz.sk.sk", POVOLENE)).toBe(false)
+    expect(isDomainAllowed("kto@zlyfutbalsfz.sk", ALLOWED)).toBe(false)
+    expect(isDomainAllowed("kto@futbalsfz.sk.utocnik.com", ALLOWED)).toBe(false)
+    expect(isDomainAllowed("kto@futbalsfz.sk.sk", ALLOWED)).toBe(false)
   })
 
   it("poddoména neprejde, kým ju niekto nevypíše", () => {
-    expect(isDomainAllowed("kto@mail.futbalsfz.sk", POVOLENE)).toBe(false)
+    expect(isDomainAllowed("kto@mail.futbalsfz.sk", ALLOWED)).toBe(false)
     expect(isDomainAllowed("kto@mail.futbalsfz.sk", ["mail.futbalsfz.sk"])).toBe(true)
   })
 
@@ -56,8 +56,8 @@ describe("povolene domeny", () => {
   })
 
   it("čo nie je adresa, neprejde", () => {
-    expect(isDomainAllowed("jan.letko", POVOLENE)).toBe(false)
-    expect(isDomainAllowed("", POVOLENE)).toBe(false)
+    expect(isDomainAllowed("jan.letko", ALLOWED)).toBe(false)
+    expect(isDomainAllowed("", ALLOWED)).toBe(false)
   })
 })
 

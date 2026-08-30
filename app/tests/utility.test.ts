@@ -7,68 +7,68 @@ import { GenerationProvider } from "../src/lib/providers/types"
 import { t } from "./helper"
 
 function mockFetch(handler: (url: string, body: any) => { status?: number; json?: any; text?: string }) {
-  const volania: { url: string; body: any }[] = []
+  const calls: { url: string; body: any }[] = []
   ;(globalThis as any).fetch = async (url: string, init: any) => {
     const body = init?.body ? JSON.parse(init.body) : null
-    volania.push({ url, body })
+    calls.push({ url, body })
     const r = handler(url, body)
     return {
       ok: (r.status ?? 200) < 400, status: r.status ?? 200,
       json: async () => r.json, text: async () => r.text ?? JSON.stringify(r.json),
     }
   }
-  return volania
+  return calls
 }
 
 /** Falošný adaptér — vráti, čo mu povieme, alebo hodí chybu. */
-const fake = (odpoved: string | Error): GenerationProvider => ({
+const fake = (answer: string | Error): GenerationProvider => ({
   kind: "openai", model: "test", supportsCitations: false,
   async *stream() {},
-  async complete() { if (odpoved instanceof Error) throw odpoved; return odpoved },
+  async complete() { if (answer instanceof Error) throw answer; return answer },
 })
 
 async function main() {
   // ── complete(): Anthropic ────────────────────────────────────────────
   process.env.ANTHROPIC_API_KEY = "k"
-  let volania = mockFetch(() => ({ json: { content: [{ type: "text", text: "  hybrid  " }] } }))
+  let calls = mockFetch(() => ({ json: { content: [{ type: "text", text: "  hybrid  " }] } }))
   const ant = new AnthropicGenerationProvider({ kind: "anthropic", model: "claude-haiku-4-5-20251001" })
   let out = await ant.complete("otazka", { maxTokens: 5 })
   t("anthropic complete: vrati orezany text", out === "hybrid", JSON.stringify(out))
-  t("anthropic complete: nestreamuje", volania[0].body.stream === undefined)
-  t("anthropic complete: respektuje maxTokens", volania[0].body.max_tokens === 5)
+  t("anthropic complete: nestreamuje", calls[0].body.stream === undefined)
+  t("anthropic complete: respektuje maxTokens", calls[0].body.max_tokens === 5)
 
   mockFetch(() => ({ status: 429, text: "rate limit" }))
-  let chyba = false
-  try { await ant.complete("x") } catch { chyba = true }
-  t("anthropic complete: chyba servera vyhodi", chyba)
+  let error = false
+  try { await ant.complete("x") } catch { error = true }
+  t("anthropic complete: chyba servera vyhodi", error)
 
   // ── complete(): OpenAI-compat ────────────────────────────────────────
-  volania = mockFetch(() => ({ json: { choices: [{ message: { content: "vector" } }] } }))
+  calls = mockFetch(() => ({ json: { choices: [{ message: { content: "vector" } }] } }))
   const oai = new OpenAICompatGenerationProvider({ kind: "openai", url: "http://vllm:8000/v1", model: "Qwen3-8B" })
   out = await oai.complete("otazka")
   t("openai complete: vrati text", out === "vector")
-  t("openai complete: posiela stream:false", volania[0].body.stream === false)
-  t("openai complete: spravna cesta", volania[0].url === "http://vllm:8000/v1/chat/completions", volania[0].url)
+  t("openai complete: posiela stream:false", calls[0].body.stream === false)
+  t("openai complete: spravna cesta", calls[0].url === "http://vllm:8000/v1/chat/completions", calls[0].url)
 
   // ── klasifikátor ─────────────────────────────────────────────────────
   // 10 slov -> heuristika vracia "vector" (prah VECTOR_MIN_WORDS = 8)
-  const dlha = "ako sa registruje novy hrac do sutaze za novy klub"
+  const long = "ako sa registruje novy hrac do sutaze za novy klub"
   t("heuristika: § -> fulltext", classifyByHeuristic("§ 84 ods. 2") === "fulltext")
-  t("heuristika: dlha otazka (10 slov) -> vector", classifyByHeuristic(dlha) === "vector")
+  t("heuristika: dlha otazka (10 slov) -> vector", classifyByHeuristic(long) === "vector")
   t("heuristika: stredne dlha (7 slov) -> hybrid",
     classifyByHeuristic("ako sa registruje novy hrac do sutaze") === "hybrid")
   t("heuristika: kratky vyraz -> fulltext", classifyByHeuristic("prestup hraca") === "fulltext")
 
   t("predvolene sa model NEVOLA",
-    await classifyQuery(dlha, false, fake("fulltext")) === "vector")
+    await classifyQuery(long, false, fake("fulltext")) === "vector")
   t("s useLLM sa model pouzije",
-    await classifyQuery(dlha, true, fake("fulltext")) === "fulltext")
+    await classifyQuery(long, true, fake("fulltext")) === "fulltext")
   t("nezmyselna odpoved modelu -> heuristika",
-    await classifyQuery(dlha, true, fake("banan")) === "vector")
+    await classifyQuery(long, true, fake("banan")) === "vector")
   t("vypadok modelu -> heuristika",
-    await classifyQuery(dlha, true, fake(new Error("timeout"))) === "vector")
+    await classifyQuery(long, true, fake(new Error("timeout"))) === "vector")
   t("bez adaptera -> heuristika",
-    await classifyQuery(dlha, true, undefined) === "vector")
+    await classifyQuery(long, true, undefined) === "vector")
 
   // ── parsovanie preprocessora ─────────────────────────────────────────
   let p = parsePreprocessed('{"rewritten":"prepis","subQueries":["a","b"],"keywords":["k1"]}', "povodna")
@@ -93,16 +93,16 @@ async function main() {
   p = await preprocessQuery("kratky dotaz", fake('{"rewritten":"NEMALO SA VOLAT"}'))
   t("kratky dotaz sa nepredspracuva", p.rewritten === "kratky dotaz")
 
-  p = await preprocessQuery(dlha, undefined)
-  t("bez adaptera vrati povodny dotaz", p.rewritten === dlha)
+  p = await preprocessQuery(long, undefined)
+  t("bez adaptera vrati povodny dotaz", p.rewritten === long)
 
-  p = await preprocessQuery(dlha, fake(new Error("model padol")))
-  t("vypadok modelu vrati povodny dotaz", p.rewritten === dlha)
+  p = await preprocessQuery(long, fake(new Error("model padol")))
+  t("vypadok modelu vrati povodny dotaz", p.rewritten === long)
 
-  p = await preprocessQuery(dlha, fake("toto nie je JSON"))
-  t("nevalidna odpoved vrati povodny dotaz", p.rewritten === dlha)
+  p = await preprocessQuery(long, fake("toto nie je JSON"))
+  t("nevalidna odpoved vrati povodny dotaz", p.rewritten === long)
 
-  p = await preprocessQuery(dlha, fake('{"rewritten":"vycisteny dotaz","subQueries":[],"keywords":[]}'))
+  p = await preprocessQuery(long, fake('{"rewritten":"vycisteny dotaz","subQueries":[],"keywords":[]}'))
   t("uspesny prepis sa pouzije", p.rewritten === "vycisteny dotaz")
 
 }

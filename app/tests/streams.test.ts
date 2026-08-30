@@ -48,12 +48,12 @@ async function main() {
   t("anthropic: articleRef doplneny z chunku", cits[0]?.citation.articleRef === "§ 84 ods. 2")
 
   // ── 2. Anthropic: JSON rozdeleny medzi pakety ────────────────────────
-  const rozdelene = [
+  const split = [
     'data: {"type":"content_block_delta","delta":{"type":"text_',
     'delta","text":"rozdelene"}}\n\ndata: {"type":"content_block_delta",',
     '"delta":{"type":"text_delta","text":" spravne"}}\n\n',
   ]
-  ev = await collect(parseAnthropicStream(streamOf(rozdelene), chunks))
+  ev = await collect(parseAnthropicStream(streamOf(split), chunks))
   const t2 = ev.map(e => e.text).join("")
   t("anthropic: JSON delený medzi paketmi sa nestratí", t2 === "rozdelene spravne", `dostal "${t2}"`)
 

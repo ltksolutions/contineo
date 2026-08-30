@@ -46,9 +46,9 @@ describe("rozdiel dvoch stavov", () => {
   })
 
   it("tajomstvo sa rozpozna aj vnorene v nazve pola", () => {
-    for (const pole of ["oauth.azure.clientSecret", "heslo", "apiToken", "TAJOMSTVO"]) {
-      const r = diff({ [pole]: "a" }, { [pole]: "b" })
-      expect(JSON.stringify(r), pole).not.toContain("\"a\"")
+    for (const field of ["oauth.azure.clientSecret", "heslo", "apiToken", "TAJOMSTVO"]) {
+      const r = diff({ [field]: "a" }, { [field]: "b" })
+      expect(JSON.stringify(r), field).not.toContain("\"a\"")
     }
   })
 })

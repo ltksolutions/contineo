@@ -33,10 +33,10 @@ describe("rewriteLinkHost", () => {
   })
 
   it("cudziu adresu v callbackUrl NEPREPÍŠE — prepis by ju zamaskoval", () => {
-    const cudzia = "https://utocnik.example/zle"
-    const url = `${BASE}&callbackUrl=${encodeURIComponent(cudzia)}`
+    const foreign = "https://utocnik.example/zle"
+    const url = `${BASE}&callbackUrl=${encodeURIComponent(foreign)}`
     const out = new URL(rewriteLinkHost(url, "intranet.futbalsfz.sk"))
-    expect(out.searchParams.get("callbackUrl")).toBe(cudzia)
+    expect(out.searchParams.get("callbackUrl")).toBe(foreign)
   })
 
   it("port sa zachová — lokálny vývoj beží na localhost:3000", () => {

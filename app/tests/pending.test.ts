@@ -97,7 +97,7 @@ function item(over: Partial<PendingItem> = {}): PendingItem {
 }
 
 /** Pridelenie v tvare, v akom ho `pending.ts` dostane. */
-function pridelenie(over: Record<string, unknown> = {}) {
+function assignment(over: Record<string, unknown> = {}) {
   return {
     companyCode: "SFZ",
     subject: {
@@ -274,17 +274,17 @@ describe("prehľad pre osobu", () => {
     // nečaká" — čo je horšie než neúplný zoznam.
     trackProgress.mockResolvedValue([track([step({ documentId: "a" })])])
 
-    const rozbity: PendingSource = {
+    const broken: PendingSource = {
       key: "helpdesk",
       collect: async () => { throw new Error("nedostupné") },
     }
-    const chyby = vi.spyOn(console, "error").mockImplementation(() => {})
+    const errors = vi.spyOn(console, "error").mockImplementation(() => {})
 
-    const o = await pendingForPerson(person(), [acknowledgementSource, rozbity])
+    const o = await pendingForPerson(person(), [acknowledgementSource, broken])
 
     expect(o.items.map(i => i.id)).toEqual(["a"])
-    expect(chyby).toHaveBeenCalled()
-    chyby.mockRestore()
+    expect(errors).toHaveBeenCalled()
+    errors.mockRestore()
   })
 
   it("človek bez nepotvrdených noriem má prázdny prehľad", async () => {
@@ -303,7 +303,7 @@ describe("pridelenie (rozsah B)", () => {
     trackProgress.mockResolvedValue([
       track([step({ documentId: "a", versionId: "v1", effectiveFrom: new Date("2019-01-01") })]),
     ])
-    assignmentsForPerson.mockResolvedValue([pridelenie({ subject: {
+    assignmentsForPerson.mockResolvedValue([assignment({ subject: {
       documentId: "a", versionId: "v1", documentTitle: "A", versionLabel: "1.0",
       effectiveFrom: new Date("2019-01-01"),
     } })])
@@ -324,7 +324,7 @@ describe("pridelenie (rozsah B)", () => {
 
   it("norma pridelená mimo trasy sa v zozname objaví", async () => {
     trackProgress.mockResolvedValue([])
-    assignmentsForPerson.mockResolvedValue([pridelenie()])
+    assignmentsForPerson.mockResolvedValue([assignment()])
     loadDocumentFor.mockResolvedValue({
       documentId: "smernica-1",
       title: "Smernica",
@@ -339,7 +339,7 @@ describe("pridelenie (rozsah B)", () => {
 
   it("pridelenie normy, ktorá je aj krokom trasy, úlohu nezdvojí", async () => {
     trackProgress.mockResolvedValue([track([step({ documentId: "smernica-1", versionId: "v1" })])])
-    assignmentsForPerson.mockResolvedValue([pridelenie()])
+    assignmentsForPerson.mockResolvedValue([assignment()])
 
     const r = await acknowledgementSource.collect(person())
 
@@ -348,7 +348,7 @@ describe("pridelenie (rozsah B)", () => {
 
   it("už potvrdené pridelenie sa medzi úlohy nedostane", async () => {
     trackProgress.mockResolvedValue([])
-    assignmentsForPerson.mockResolvedValue([pridelenie()])
+    assignmentsForPerson.mockResolvedValue([assignment()])
     acknowledgedVersionIds.mockResolvedValue(new Set(["v1"]))
 
     const r = await acknowledgementSource.collect(person({ tracks: [] }))
@@ -360,7 +360,7 @@ describe("pridelenie (rozsah B)", () => {
     // Inak by úloha z widgetu nikdy nezmizla: `/dokumenty/…` ukáže novšie
     // znenie a potvrdenie by sa viazalo na inú verziu.
     trackProgress.mockResolvedValue([])
-    assignmentsForPerson.mockResolvedValue([pridelenie()])
+    assignmentsForPerson.mockResolvedValue([assignment()])
     loadDocumentFor.mockResolvedValue({
       documentId: "smernica-1",
       title: "Smernica",
@@ -375,7 +375,7 @@ describe("pridelenie (rozsah B)", () => {
 
   it("nové je to, čo pribudlo po predchádzajúcom prihlásení", async () => {
     trackProgress.mockResolvedValue([track([step({ documentId: "smernica-1", versionId: "v1" })])])
-    assignmentsForPerson.mockResolvedValue([pridelenie({ assignedAt: new Date("2026-06-01") })])
+    assignmentsForPerson.mockResolvedValue([assignment({ assignedAt: new Date("2026-06-01") })])
 
     const r = await acknowledgementSource.collect(
       person({ previousLoginAt: new Date("2026-05-01") }),
@@ -386,7 +386,7 @@ describe("pridelenie (rozsah B)", () => {
 
   it("staršie pridelenie ako predchádzajúce prihlásenie nové nie je", async () => {
     trackProgress.mockResolvedValue([track([step({ documentId: "smernica-1", versionId: "v1" })])])
-    assignmentsForPerson.mockResolvedValue([pridelenie({ assignedAt: new Date("2026-04-01") })])
+    assignmentsForPerson.mockResolvedValue([assignment({ assignedAt: new Date("2026-04-01") })])
 
     const r = await acknowledgementSource.collect(
       person({ previousLoginAt: new Date("2026-05-01") }),
@@ -398,7 +398,7 @@ describe("pridelenie (rozsah B)", () => {
   it("pri prvom prihlásení nie je nové nič", async () => {
     // Zvýrazniť pri prvom vstupe celý zoznam nie je informácia, je to šum.
     trackProgress.mockResolvedValue([track([step({ documentId: "smernica-1", versionId: "v1" })])])
-    assignmentsForPerson.mockResolvedValue([pridelenie()])
+    assignmentsForPerson.mockResolvedValue([assignment()])
 
     const r = await acknowledgementSource.collect(person({ previousLoginAt: undefined }))
 
@@ -408,8 +408,8 @@ describe("pridelenie (rozsah B)", () => {
   it("z dvoch pridelení tej istej verzie platí skoršie", async () => {
     trackProgress.mockResolvedValue([track([step({ documentId: "smernica-1", versionId: "v1" })])])
     assignmentsForPerson.mockResolvedValue([
-      pridelenie({ assignedAt: new Date("2026-06-01") }),
-      pridelenie({ assignedAt: new Date("2026-03-01"), audience: { kind: "track", value: "zaklad" } }),
+      assignment({ assignedAt: new Date("2026-06-01") }),
+      assignment({ assignedAt: new Date("2026-03-01"), audience: { kind: "track", value: "zaklad" } }),
     ])
 
     const r = await acknowledgementSource.collect(person())
@@ -419,7 +419,7 @@ describe("pridelenie (rozsah B)", () => {
 
   it("prehľad povie, koľko je nových", async () => {
     trackProgress.mockResolvedValue([track([step({ documentId: "smernica-1", versionId: "v1" })])])
-    assignmentsForPerson.mockResolvedValue([pridelenie()])
+    assignmentsForPerson.mockResolvedValue([assignment()])
 
     const o = await pendingForPerson(person({ previousLoginAt: new Date("2026-05-01") }))
 

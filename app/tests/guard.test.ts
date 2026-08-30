@@ -9,7 +9,7 @@ const chunk = (id: string, model?: string): any => ({
   _id: id, text: "x", documentId: "d", embeddingModel: model,
 })
 
-function hodi(fn: () => unknown): Error | null {
+function throws(fn: () => unknown): Error | null {
   try { fn(); return null } catch (e) { return e as Error }
 }
 
@@ -26,12 +26,12 @@ t("neznamy model je sam sebe priestorom", embeddingSpace("BAAI/bge-m3") === "baa
 
 // ── assertEmbeddingSpace ─────────────────────────────────────────────────
 t("zhodny korpus prejde",
-  hodi(() => assertEmbeddingSpace([chunk("1", "voyage-4"), chunk("2", "voyage-4")], "voyage-4")) === null)
+  throws(() => assertEmbeddingSpace([chunk("1", "voyage-4"), chunk("2", "voyage-4")], "voyage-4")) === null)
 
 t("korpus z inej rodiny voyage-4 prejde (zdielany priestor)",
-  hodi(() => assertEmbeddingSpace([chunk("1", "voyage-4-nano")], "voyage-4")) === null)
+  throws(() => assertEmbeddingSpace([chunk("1", "voyage-4-nano")], "voyage-4")) === null)
 
-const e = hodi(() => assertEmbeddingSpace([chunk("1", "voyage-4"), chunk("2", "BAAI/bge-m3")], "voyage-4"))
+const e = throws(() => assertEmbeddingSpace([chunk("1", "voyage-4"), chunk("2", "BAAI/bge-m3")], "voyage-4"))
 t("zmiesany korpus spadne", e instanceof EmbeddingSpaceMismatchError, String(e))
 t("chyba menuje najdeny model", !!e && e.message.includes("BAAI/bge-m3"), String(e?.message))
 t("chyba menuje ocakavany model", !!e && e.message.includes("voyage-4"), String(e?.message))
@@ -39,9 +39,9 @@ t("chyba odkazuje na reembed skript", !!e && e.message.includes("reembed.mjs"), 
 t("chyba uvadza vzorku chunkov", !!e && e.message.includes("2"), String(e?.message))
 
 t("stare chunky bez modelu sa preskocia (backfill ich doplni)",
-  hodi(() => assertEmbeddingSpace([chunk("1"), chunk("2", "voyage-4")], "voyage-4")) === null)
+  throws(() => assertEmbeddingSpace([chunk("1"), chunk("2", "voyage-4")], "voyage-4")) === null)
 
-t("prazdny korpus prejde", hodi(() => assertEmbeddingSpace([], "voyage-4")) === null)
+t("prazdny korpus prejde", throws(() => assertEmbeddingSpace([], "voyage-4")) === null)
 
 // ── embeddingStats ───────────────────────────────────────────────────────
 const s = embeddingStats(

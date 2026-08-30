@@ -12,7 +12,7 @@ import { describe, it, expect } from "vitest"
 import { isRedirect } from "../src/lib/redirects"
 
 /** Tvar, aký má výnimka z `redirect()` v Nexte. */
-function vynimkaRedirect(): Error & { digest: string } {
+function redirectError(): Error & { digest: string } {
   return Object.assign(new Error("NEXT_REDIRECT"), {
     digest: "NEXT_REDIRECT;replace;/organizacia?zalozka=utvary;307;",
   })
@@ -20,7 +20,7 @@ function vynimkaRedirect(): Error & { digest: string } {
 
 describe("rozoznanie presmerovania", () => {
   it("vynimka z redirect() sa pozna", () => {
-    expect(isRedirect(vynimkaRedirect())).toBe(true)
+    expect(isRedirect(redirectError())).toBe(true)
   })
 
   it("bezna chyba nie je presmerovanie", () => {

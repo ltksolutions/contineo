@@ -138,10 +138,10 @@ describe("potvrd — zápis právneho záznamu", () => {
     const v = await acknowledge(ACTOR, "smernica-gdpr")
 
     expect(v.ok).toBe(true)
-    const zapis = collection("acknowledgements").insertOne.mock.calls[0][0]
+    const write = collection("acknowledgements").insertOne.mock.calls[0][0]
     // Platná je v2; keby sa verzia brala z požiadavky, dala by sa podvrhnúť v1.
-    expect(zapis.versionId).toBe("v2")
-    expect(zapis.versionLabel).toBe("2.0")
+    expect(write.versionId).toBe("v2")
+    expect(write.versionLabel).toBe("2.0")
   })
 
   it("záznam si pamätá jazyk človeka aj jazyk dokumentu zvlášť", async () => {
@@ -209,8 +209,8 @@ describe("potvrd — zápis právneho záznamu", () => {
 
   it("druhé potvrdenie tej istej verzie je 'uz-potvrdene', nie chyba servera", async () => {
     collection("documents").findOne.mockResolvedValue(DOCUMENT)
-    const duplicita = Object.assign(new Error("E11000 duplicate key"), { code: 11000 })
-    collection("acknowledgements").insertOne.mockRejectedValue(duplicita)
+    const duplicate = Object.assign(new Error("E11000 duplicate key"), { code: 11000 })
+    collection("acknowledgements").insertOne.mockRejectedValue(duplicate)
 
     const v = await acknowledge(ACTOR, "smernica-gdpr")
     expect(v).toEqual({ ok: false, reason: "already-acknowledged" })

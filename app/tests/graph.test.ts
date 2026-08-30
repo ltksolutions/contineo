@@ -11,7 +11,7 @@ import { fullName } from "../src/lib/graph"
 import { missingFromDirectory } from "../src/lib/persons"
 import type { Person } from "../src/lib/persons"
 
-function osoba(z: Partial<Person> = {}): Person {
+function person(z: Partial<Person> = {}): Person {
   return {
     id: "p1",
     companyCode: "SFZ",
@@ -50,19 +50,19 @@ describe("cele meno z Graphu", () => {
 
 describe("oplati sa ist do Graphu", () => {
   it("kompletna osoba uz nic nepotrebuje", () => {
-    expect(missingFromDirectory(osoba())).toBe(false)
+    expect(missingFromDirectory(person())).toBe(false)
   })
 
   it("chybajuce meno, utvar alebo fotka staci na jedno volanie", () => {
-    expect(missingFromDirectory(osoba({ givenName: undefined }))).toBe(true)
-    expect(missingFromDirectory(osoba({ department: undefined }))).toBe(true)
-    expect(missingFromDirectory(osoba({ photoVersion: undefined }))).toBe(true)
+    expect(missingFromDirectory(person({ givenName: undefined }))).toBe(true)
+    expect(missingFromDirectory(person({ department: undefined }))).toBe(true)
+    expect(missingFromDirectory(person({ photoVersion: undefined }))).toBe(true)
   })
 
   it("meno rovne adrese sa berie ako chybajuce", () => {
     // Tak vyzera osoba zalozena automaticky, ked meno nebolo odkial vziat.
-    expect(missingFromDirectory(osoba({ fullName: "jan.letko@futbalsfz.sk" }))).toBe(true)
-    expect(missingFromDirectory(osoba({ fullName: "Jan.Letko@futbalsfz.sk" }))).toBe(true)
+    expect(missingFromDirectory(person({ fullName: "jan.letko@futbalsfz.sk" }))).toBe(true)
+    expect(missingFromDirectory(person({ fullName: "Jan.Letko@futbalsfz.sk" }))).toBe(true)
   })
 
   it("neznama osoba sa berie ako chybajuca", () => {

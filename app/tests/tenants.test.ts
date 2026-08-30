@@ -27,7 +27,7 @@ import {
 import type { Tenant } from "../src/lib/tenants"
 import type { Person } from "../src/lib/persons"
 
-function tenant(over: Partial<Tenant> = {}): Tenant {
+function tenant(check: Partial<Tenant> = {}): Tenant {
   return {
     companyCode: "SFZ",
     hostnames: ["intranet.futbalsfz.sk"],
@@ -35,11 +35,11 @@ function tenant(over: Partial<Tenant> = {}): Tenant {
     defaultLanguage: "sk",
     languages: ["sk", "cs", "en"],
     status: "active",
-    ...over,
+    ...check,
   }
 }
 
-function person(over: Partial<Person> = {}): Person {
+function person(check: Partial<Person> = {}): Person {
   return {
     id: "p1",
     companyCode: "SFZ",
@@ -50,7 +50,7 @@ function person(over: Partial<Person> = {}): Person {
     language: "sk",
     tracks: [],
     roles: [],
-    ...over,
+    ...check,
   } as Person
 }
 

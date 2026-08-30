@@ -11,7 +11,7 @@ import { describe, it, expect } from "vitest"
 import { textFingerprint, chunkingFingerprint, needsReindex, CHUNKER_VERSION } from "../src/lib/chunkIdentity"
 import { chunkuj, PREDVOLENY_PROFIL } from "../src/lib/chunker.mjs"
 
-const NORMA = `Článok 1
+const NORM = `Článok 1
 Základné ustanovenia
 
 (1) Toto je prvý odsek normy, ktorý má dosť textu na to, aby z neho vznikol úsek.
@@ -25,7 +25,7 @@ Základné ustanovenia
 
 describe("odtlacok textu", () => {
   it("rovnaky text da rovnaky odtlacok", () => {
-    expect(textFingerprint(NORMA)).toBe(textFingerprint(NORMA))
+    expect(textFingerprint(NORM)).toBe(textFingerprint(NORM))
   })
 
   it("konce riadkov a medzery na konci nie su zmena znenia", () => {
@@ -43,26 +43,26 @@ describe("odtlacok textu", () => {
   it("oznacenie ani datum do identity nevstupuju", () => {
     // Cely dovod, preco funkcia berie len text: preklep v oznaceni sa musi
     // dat opravit bez toho, aby sa rozbili potvrdenia.
-    expect(textFingerprint(NORMA)).toBe(textFingerprint(NORMA))
+    expect(textFingerprint(NORM)).toBe(textFingerprint(NORM))
     expect(textFingerprint.length).toBe(1)
   })
 })
 
 describe("odtlacok clenenia", () => {
   it("zmena profilu zmeni clenenie, nie text", () => {
-    const a = chunkuj(NORMA, { nazovDokumentu: "Norma" })
-    const b = chunkuj(NORMA, { nazovDokumentu: "Norma", profil: { slovoClanok: "Paragraf" } })
+    const a = chunkuj(NORM, { nazovDokumentu: "Norma" })
+    const b = chunkuj(NORM, { nazovDokumentu: "Norma", profil: { slovoClanok: "Paragraf" } })
 
     // Text je ten isty -> identita znenia sa nemeni.
-    expect(textFingerprint(NORMA)).toBe(textFingerprint(NORMA))
+    expect(textFingerprint(NORM)).toBe(textFingerprint(NORM))
     // Clenenie je ine -> chunkingId sa lisi a je vidiet, ze treba preindexovat.
     expect(chunkingFingerprint(a.chunky, PREDVOLENY_PROFIL))
       .not.toBe(chunkingFingerprint(b.chunky, { ...PREDVOLENY_PROFIL, slovoClanok: "Paragraf" }))
   })
 
   it("rovnaky vstup aj profil daju rovnaky odtlacok", () => {
-    const a = chunkuj(NORMA, { nazovDokumentu: "Norma" })
-    const b = chunkuj(NORMA, { nazovDokumentu: "Norma" })
+    const a = chunkuj(NORM, { nazovDokumentu: "Norma" })
+    const b = chunkuj(NORM, { nazovDokumentu: "Norma" })
     expect(chunkingFingerprint(a.chunky, PREDVOLENY_PROFIL))
       .toBe(chunkingFingerprint(b.chunky, PREDVOLENY_PROFIL))
   })
@@ -71,7 +71,7 @@ describe("odtlacok clenenia", () => {
     // Bez toho by sa zmena parametra, ktora na tomto dokumente nic nespravila,
     // tvarila ako "netreba preindexovat" -- a pri dalsom dokumente by uz
     // spravila, ale nikto by nevedel preco.
-    const a = chunkuj(NORMA, { nazovDokumentu: "Norma" })
+    const a = chunkuj(NORM, { nazovDokumentu: "Norma" })
     expect(chunkingFingerprint(a.chunky, PREDVOLENY_PROFIL))
       .not.toBe(chunkingFingerprint(a.chunky, { ...PREDVOLENY_PROFIL, cielMaxTokenov: 900 }))
   })
@@ -95,17 +95,17 @@ describe("kedy preindexovat", () => {
 
 describe("profil clenenia", () => {
   it("predvolene slovo rozpozna clanky", () => {
-    const { chunky } = chunkuj(NORMA, { nazovDokumentu: "Norma" })
-    expect(chunky.length).toBeGreaterThan(0)
-    expect(chunky.some(c => (c.articleRef ?? "").includes("1"))).toBe(true)
+    const { chunky: chunks } = chunkuj(NORM, { nazovDokumentu: "Norma" })
+    expect(chunks.length).toBeGreaterThan(0)
+    expect(chunks.some(c => (c.articleRef ?? "").includes("1"))).toBe(true)
   })
 
   it("iné slovo rozpozná iné členenie", () => {
-    const paragrafy = NORMA.replace(/Článok/g, "Paragraf")
-    const s = chunkuj(paragrafy, { nazovDokumentu: "Norma", profil: { slovoClanok: "Paragraf" } })
-    const bez = chunkuj(paragrafy, { nazovDokumentu: "Norma" })
+    const paragraphs = NORM.replace(/Článok/g, "Paragraf")
+    const s = chunkuj(paragraphs, { nazovDokumentu: "Norma", profil: { slovoClanok: "Paragraf" } })
+    const without = chunkuj(paragraphs, { nazovDokumentu: "Norma" })
     // Bez profilu sa dokument zleje do jedného bloku a vyhľadávanie nemá
     // čoho chytiť — presne to, kvôli čomu profil existuje.
-    expect(s.statistiky.clankov).toBeGreaterThan(bez.statistiky.clankov)
+    expect(s.statistiky.clankov).toBeGreaterThan(without.statistiky.clankov)
   })
 })

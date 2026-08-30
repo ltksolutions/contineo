@@ -46,10 +46,10 @@ describe("cely subor", () => {
   const CSV = "email;meno;útvar;skupiny\na@b.sk;Anna B;Legislatíva;rozhodcovia\nc@d.sk;Cyril D;;delegati\n"
 
   it("prečíta bodkočiarkou oddelený súbor z Excelu", () => {
-    const osoby = csvToPersons(CSV)
-    expect(osoby).toHaveLength(2)
-    expect(osoby[0]).toMatchObject({ email: "a@b.sk", fullName: "Anna B", department: "Legislatíva" })
-    expect(osoby[1].department).toBeUndefined()
+    const people = csvToPersons(CSV)
+    expect(people).toHaveLength(2)
+    expect(people[0]).toMatchObject({ email: "a@b.sk", fullName: "Anna B", department: "Legislatíva" })
+    expect(people[1].department).toBeUndefined()
   })
 
   it("organizácia sa prebije tou, kto import robí", () => {
@@ -74,11 +74,11 @@ describe("dovody odmietnutia", () => {
   it("strojový kľúč má vetu pre človeka", () => {
     // „missing-companyCode" v zozname chýb je informácia pre nás, nie pre
     // personalistu, ktorý má opraviť súbor.
-    for (const kluc of ["invalid-email", "missing-companyCode", "missing-name", "duplicate-in-file"]) {
-      expect(REASONS[kluc]).toBeTruthy()
-      expect(REASONS[kluc]).not.toBe(kluc)
+    for (const key of ["invalid-email", "missing-companyCode", "missing-name", "duplicate-in-file"]) {
+      expect(REASONS[key]).toBeTruthy()
+      expect(REASONS[key]).not.toBe(key)
       // Veta, nie kľúč: `missing-companyCode` sa nedá opraviť v Exceli.
-      expect(REASONS[kluc]).toMatch(/\s/)
+      expect(REASONS[key]).toMatch(/\s/)
     }
   })
 })

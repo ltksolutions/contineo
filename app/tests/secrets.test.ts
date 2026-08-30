@@ -11,46 +11,46 @@ import {
   encrypt, decrypt, encryptionKey, secretStatus, SecretError,
 } from "../src/lib/secrets"
 
-const KLUC = Buffer.from("a".repeat(64), "hex")
-const INY = Buffer.from("b".repeat(64), "hex")
-const TAJOMSTVO = "Abc~8Q~velmiTajnyClientSecret.z-Entra"
+const KEY = Buffer.from("a".repeat(64), "hex")
+const OTHER = Buffer.from("b".repeat(64), "hex")
+const SECRET = "Abc~8Q~velmiTajnyClientSecret.z-Entra"
 
 describe("sifrovanie a rozsifrovanie", () => {
   it("čo sa zašifruje, sa dá rozšifrovať", () => {
-    expect(decrypt(encrypt(TAJOMSTVO, KLUC), KLUC)).toBe(TAJOMSTVO)
+    expect(decrypt(encrypt(SECRET, KEY), KEY)).toBe(SECRET)
   })
 
   it("dvakrát to isté dá dva rôzne zápisy", () => {
     // Rovnaký výstup by prezrádzal, že dvaja zákazníci majú rovnaké tajomstvo.
-    expect(encrypt(TAJOMSTVO, KLUC)).not.toBe(encrypt(TAJOMSTVO, KLUC))
+    expect(encrypt(SECRET, KEY)).not.toBe(encrypt(SECRET, KEY))
   })
 
   it("zašifrovaný zápis neobsahuje pôvodný text", () => {
-    expect(encrypt(TAJOMSTVO, KLUC)).not.toContain("Entra")
+    expect(encrypt(SECRET, KEY)).not.toContain("Entra")
   })
 
   it("iný kľúč neprejde", () => {
-    expect(() => decrypt(encrypt(TAJOMSTVO, KLUC), INY)).toThrow(SecretError)
+    expect(() => decrypt(encrypt(SECRET, KEY), OTHER)).toThrow(SecretError)
   })
 
   it("zmenený zápis spadne, nerozšifruje sa na nezmysel", () => {
     // Toto je celý dôvod, prečo GCM a nie CBC.
-    const z = encrypt(TAJOMSTVO, KLUC)
-    const casti = z.split(".")
-    const sifra = Buffer.from(casti[3], "base64url")
-    sifra[0] ^= 0xff
-    casti[3] = sifra.toString("base64url")
-    expect(() => decrypt(casti.join("."), KLUC)).toThrow(SecretError)
+    const z = encrypt(SECRET, KEY)
+    const parts = z.split(".")
+    const cipher = Buffer.from(parts[3], "base64url")
+    cipher[0] ^= 0xff
+    parts[3] = cipher.toString("base64url")
+    expect(() => decrypt(parts.join("."), KEY)).toThrow(SecretError)
   })
 
   it("neznámy formát spadne, nevráti prázdno", () => {
-    expect(() => decrypt("nieco-uplne-ine", KLUC)).toThrow(SecretError)
-    expect(() => decrypt("v2.a.b.c", KLUC)).toThrow(SecretError)
-    expect(() => decrypt("", KLUC)).toThrow(SecretError)
+    expect(() => decrypt("nieco-uplne-ine", KEY)).toThrow(SecretError)
+    expect(() => decrypt("v2.a.b.c", KEY)).toThrow(SecretError)
+    expect(() => decrypt("", KEY)).toThrow(SecretError)
   })
 
   it("prázdne tajomstvo sa nešifruje", () => {
-    expect(() => encrypt("", KLUC)).toThrow(SecretError)
+    expect(() => encrypt("", KEY)).toThrow(SecretError)
   })
 })
 
@@ -79,9 +79,9 @@ describe("kluc z prostredia", () => {
 
 describe("stav tajomstva pre obrazovku", () => {
   it("nikdy nevráti samotnú hodnotu", () => {
-    const stav = secretStatus(encrypt(TAJOMSTVO, KLUC))
-    expect(["nenastavene", "nastavene", "necitatelne"]).toContain(stav)
-    expect(stav).not.toContain("Entra")
+    const status = secretStatus(encrypt(SECRET, KEY))
+    expect(["nenastavene", "nastavene", "necitatelne"]).toContain(status)
+    expect(status).not.toContain("Entra")
   })
 
   it("rozlíši nenastavené od nečitateľného", () => {

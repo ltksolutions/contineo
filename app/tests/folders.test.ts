@@ -12,11 +12,11 @@ import {
   type Folder,
 } from "../src/lib/folders"
 
-function p(id: string, nazov: string, parentId: string | null): Folder {
-  return { companyCode: "SFZ", id, nazov, parentId, createdAt: new Date("2026-01-01"), createdBy: "test" }
+function p(id: string, name: string, parentId: string | null): Folder {
+  return { companyCode: "SFZ", id, nazov: name, parentId, createdAt: new Date("2026-01-01"), createdBy: "test" }
 }
 
-const strom: Folder[] = [
+const tree: Folder[] = [
   p("normy", "Normy", null),
   p("sutaz", "Sutazne", "normy"),
   p("disc", "Disciplinarne", "normy"),
@@ -26,74 +26,74 @@ const strom: Folder[] = [
 
 describe("strom priecinkov", () => {
   it("deti su len priame podpriecinky", () => {
-    expect(children(strom, "normy").map(x => x.id).sort()).toEqual(["disc", "sutaz"])
-    expect(children(strom, null).map(x => x.id).sort()).toEqual(["interne", "normy"])
+    expect(children(tree, "normy").map(x => x.id).sort()).toEqual(["disc", "sutaz"])
+    expect(children(tree, null).map(x => x.id).sort()).toEqual(["interne", "normy"])
   })
 
   it("cesta ide od korena po vlastny priecinok", () => {
-    expect(pathIdsTo(strom, "mladez")).toEqual(["normy", "sutaz", "mladez"])
+    expect(pathIdsTo(tree, "mladez")).toEqual(["normy", "sutaz", "mladez"])
   })
 
   it("nezaradeny dokument ma prazdnu cestu", () => {
     // Prazdna cesta znamena, ze ho ziadny filter na priecinok nenajde --
     // a to je spravne: nie je nikde.
-    expect(pathIdsTo(strom, null)).toEqual([])
-    expect(pathIdsTo(strom, "neexistuje")).toEqual([])
+    expect(pathIdsTo(tree, null)).toEqual([])
+    expect(pathIdsTo(tree, "neexistuje")).toEqual([])
   })
 
   it("cesta sa nezacykli na pokazenych datach", () => {
-    const zle: Folder[] = [p("a", "A", "b"), p("b", "B", "a")]
-    expect(pathTo(zle, "a").length).toBeLessThanOrEqual(MAX_DEPTH + 2)
+    const broken: Folder[] = [p("a", "A", "b"), p("b", "B", "a")]
+    expect(pathTo(broken, "a").length).toBeLessThanOrEqual(MAX_DEPTH + 2)
   })
 
   it("podstrom obsahuje aj sam seba", () => {
-    expect([...subtree(strom, "sutaz")].sort()).toEqual(["mladez", "sutaz"])
+    expect([...subtree(tree, "sutaz")].sort()).toEqual(["mladez", "sutaz"])
   })
 
   it("hlbka sa pocita od jednotky", () => {
-    expect(depth(strom, null)).toBe(0)
-    expect(depth(strom, "normy")).toBe(1)
-    expect(depth(strom, "mladez")).toBe(3)
+    expect(depth(tree, null)).toBe(0)
+    expect(depth(tree, "normy")).toBe(1)
+    expect(depth(tree, "mladez")).toBe(3)
   })
 
   it("splostenie da rodica pred deti", () => {
-    const riadky = flattenTree(strom)
-    const kde = (id: string) => riadky.findIndex(r => r.priecinok.id === id)
-    expect(riadky).toHaveLength(strom.length)
-    expect(kde("normy")).toBeLessThan(kde("sutaz"))
-    expect(kde("sutaz")).toBeLessThan(kde("mladez"))
-    expect(riadky[kde("mladez")].uroven).toBe(3)
+    const rows = flattenTree(tree)
+    const where = (id: string) => rows.findIndex(r => r.priecinok.id === id)
+    expect(rows).toHaveLength(tree.length)
+    expect(where("normy")).toBeLessThan(where("sutaz"))
+    expect(where("sutaz")).toBeLessThan(where("mladez"))
+    expect(rows[where("mladez")].uroven).toBe(3)
   })
 })
 
 describe("presun priecinka", () => {
   it("do seba ani do vlastneho podpriecinka to nejde", () => {
-    expect(canMove(strom, "normy", "normy")).not.toBeNull()
-    expect(canMove(strom, "normy", "mladez")).not.toBeNull()
+    expect(canMove(tree, "normy", "normy")).not.toBeNull()
+    expect(canMove(tree, "normy", "mladez")).not.toBeNull()
   })
 
   it("na koren a k surodencovi to ide", () => {
-    expect(canMove(strom, "mladez", null)).toBeNull()
-    expect(canMove(strom, "mladez", "disc")).toBeNull()
+    expect(canMove(tree, "mladez", null)).toBeNull()
+    expect(canMove(tree, "mladez", "disc")).toBeNull()
   })
 
   it("hlbsie nez povolene sa odmietne", () => {
-    const hlboky: Folder[] = []
-    let rodic: string | null = null
+    const deep: Folder[] = []
+    let parent: string | null = null
     for (let i = 1; i <= MAX_DEPTH; i++) {
-      hlboky.push(p("u" + i, "U" + i, rodic))
-      rodic = "u" + i
+      deep.push(p("u" + i, "U" + i, parent))
+      parent = "u" + i
     }
-    hlboky.push(p("x", "X", null))
-    expect(canMove(hlboky, "x", "u" + MAX_DEPTH)).not.toBeNull()
-    expect(canMove(hlboky, "x", "u" + (MAX_DEPTH - 1))).toBeNull()
+    deep.push(p("x", "X", null))
+    expect(canMove(deep, "x", "u" + MAX_DEPTH)).not.toBeNull()
+    expect(canMove(deep, "x", "u" + (MAX_DEPTH - 1))).toBeNull()
   })
 })
 
 describe("poradie priecinkov (D60)", () => {
-  function pp(id: string, nazov: string, parentId: string | null, poradie?: number): Folder {
+  function pp(id: string, name: string, parentId: string | null, order?: number): Folder {
     return {
-      companyCode: "SFZ", id, nazov, parentId, poradie,
+      companyCode: "SFZ", id, nazov: name, parentId, poradie: order,
       createdAt: new Date("2026-01-01"), createdBy: "test",
     }
   }

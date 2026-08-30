@@ -16,7 +16,7 @@ import { anthropicEvent } from "../src/lib/providers/generation/anthropic"
 
 import { t } from "./helper"
 
-async function bezi() {
+async function running() {
 
 // ── SigV4 proti oficiálnym testovacím vektorom AWS ───────────────────────────
 //
@@ -24,15 +24,15 @@ async function bezi() {
 // Kľúče aj dátum sú z dokumentácie, nie skutočné.
 const AWS_KEY = "AKIDEXAMPLE"
 const AWS_SECRET = "wJalrXUtnFEMI/K7MDENG+bPxRfiCYEXAMPLEKEY"
-const DATUM = new Date(Date.UTC(2015, 7, 30, 12, 36, 0))
+const DATE = new Date(Date.UTC(2015, 7, 30, 12, 36, 0))
 
 t("sha256: prázdny reťazec má známy hash",
   (await sha256Hex("")) === "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855")
 
 t("amzDate: tvar 20150830T123600Z",
-  amzDate(DATUM) === "20150830T123600Z", amzDate(DATUM))
+  amzDate(DATE) === "20150830T123600Z", amzDate(DATE))
 
-const podpis = await signRequest({
+const signature = await signRequest({
   method: "GET",
   url: "https://example.amazonaws.com/",
   region: "us-east-1",
@@ -40,57 +40,57 @@ const podpis = await signRequest({
   body: "",
   accessKeyId: AWS_KEY,
   secretAccessKey: AWS_SECRET,
-  now: DATUM,
+  now: DATE,
 })
 
 t("sigv4: Authorization má správny scope",
-  podpis.Authorization.includes(`Credential=${AWS_KEY}/20150830/us-east-1/service/aws4_request`),
-  podpis.Authorization)
+  signature.Authorization.includes(`Credential=${AWS_KEY}/20150830/us-east-1/service/aws4_request`),
+  signature.Authorization)
 t("sigv4: podpísané hlavičky sú zoradené",
-  podpis.Authorization.includes("SignedHeaders=host;x-amz-date"),
-  podpis.Authorization)
+  signature.Authorization.includes("SignedHeaders=host;x-amz-date"),
+  signature.Authorization)
 t("sigv4: podpis sedí s oficiálnym vektorom AWS (get-vanilla)",
-  podpis.Authorization.includes(
+  signature.Authorization.includes(
     "Signature=5fa00fa31553b73ebf1942676e86291e8372ff2a2260956d9b8aae1d763fbf31"),
-  podpis.Authorization)
+  signature.Authorization)
 t("sigv4: hlavička x-amz-date je v odpovedi",
-  podpis["x-amz-date"] === "20150830T123600Z")
+  signature["x-amz-date"] === "20150830T123600Z")
 t("sigv4: host sa odvodí z URL",
-  podpis.host === "example.amazonaws.com", podpis.host)
+  signature.host === "example.amazonaws.com", signature.host)
 
 // Dočasné údaje (STS) pridávajú token, ktorý MUSÍ vstúpiť do podpisu.
-const sToken = await signRequest({
+const withToken = await signRequest({
   method: "POST", url: "https://bedrock-runtime.eu-central-1.amazonaws.com/model/x/invoke",
   region: "eu-central-1", service: "bedrock", body: "{}",
   accessKeyId: AWS_KEY, secretAccessKey: AWS_SECRET,
-  sessionToken: "TOKEN123", now: DATUM,
+  sessionToken: "TOKEN123", now: DATE,
 })
 t("sigv4: session token je medzi podpísanými hlavičkami",
-  sToken.Authorization.includes("x-amz-security-token"), sToken.Authorization)
+  withToken.Authorization.includes("x-amz-security-token"), withToken.Authorization)
 t("sigv4: token bez podpisu by neplatil — je aj v hlavičkách",
-  sToken["x-amz-security-token"] === "TOKEN123")
+  withToken["x-amz-security-token"] === "TOKEN123")
 
-const bezTokenu = await signRequest({
+const withoutToken = await signRequest({
   method: "POST", url: "https://bedrock-runtime.eu-central-1.amazonaws.com/model/x/invoke",
   region: "eu-central-1", service: "bedrock", body: "{}",
-  accessKeyId: AWS_KEY, secretAccessKey: AWS_SECRET, now: DATUM,
+  accessKeyId: AWS_KEY, secretAccessKey: AWS_SECRET, now: DATE,
 })
 t("sigv4: iné telo dá iný podpis",
-  bezTokenu.Authorization !== sToken.Authorization)
+  withoutToken.Authorization !== withToken.Authorization)
 
 // ── Binárny event stream ─────────────────────────────────────────────────────
 
 /** Zostaví rámec presne podľa špecifikácie AWS. */
-function ramec(telo: string, hlavicky = new Uint8Array(0)): Uint8Array<ArrayBuffer> {
-  const t = new TextEncoder().encode(telo)
-  const celkova = 12 + hlavicky.length + t.length + 4
-  const buf = new Uint8Array(new ArrayBuffer(celkova))
+function frame(body: string, headers = new Uint8Array(0)): Uint8Array<ArrayBuffer> {
+  const t = new TextEncoder().encode(body)
+  const total = 12 + headers.length + t.length + 4
+  const buf = new Uint8Array(new ArrayBuffer(total))
   const dv = new DataView(buf.buffer)
-  dv.setUint32(0, celkova, false)
-  dv.setUint32(4, hlavicky.length, false)
+  dv.setUint32(0, total, false)
+  dv.setUint32(4, headers.length, false)
   dv.setUint32(8, 0, false)                 // CRC preludu — neoverujeme
-  buf.set(hlavicky, 12)
-  buf.set(t, 12 + hlavicky.length)
+  buf.set(headers, 12)
+  buf.set(t, 12 + headers.length)
   return buf
 }
 
@@ -99,76 +99,76 @@ const ev = (obj: unknown) =>
 
 const delta = { type: "content_block_delta", delta: { type: "text_delta", text: "Ahoj" } }
 
-const jeden = splitFrames(ramec(ev(delta)))
-t("stream: jeden rámec sa prečíta", jeden.tela.length === 1, String(jeden.tela.length))
-t("stream: po jednom rámci nezostáva zvyšok", jeden.zvysok.length === 0)
+const one = splitFrames(frame(ev(delta)))
+t("stream: jeden rámec sa prečíta", one.tela.length === 1, String(one.tela.length))
+t("stream: po jednom rámci nezostáva zvyšok", one.zvysok.length === 0)
 t("stream: event sa rozbalí z base64",
-  unwrapEvent(jeden.tela[0])?.delta?.text === "Ahoj",
-  JSON.stringify(unwrapEvent(jeden.tela[0])))
+  unwrapEvent(one.tela[0])?.delta?.text === "Ahoj",
+  JSON.stringify(unwrapEvent(one.tela[0])))
 
-const dva = splitFrames(concatBuffers(ramec(ev(delta)), ramec(ev(delta))))
-t("stream: dva rámce za sebou", dva.tela.length === 2, String(dva.tela.length))
+const two = splitFrames(concatBuffers(frame(ev(delta)), frame(ev(delta))))
+t("stream: dva rámce za sebou", two.tela.length === 2, String(two.tela.length))
 
 // Najdôležitejší test: rámec rozdelený medzi dve čítania sa NESMIE stratiť.
-const cely = ramec(ev(delta))
-const prva = cely.subarray(0, 10)
-const druha = cely.subarray(10)
-const neuplny = splitFrames(prva as Uint8Array<ArrayBuffer>)
+const whole = frame(ev(delta))
+const first = whole.subarray(0, 10)
+const second = whole.subarray(10)
+const partial = splitFrames(first as Uint8Array<ArrayBuffer>)
 t("stream: neúplný rámec sa odloží, nie zahodí",
-  neuplny.tela.length === 0 && neuplny.zvysok.length === 10,
-  `${neuplny.tela.length} tiel, zvyšok ${neuplny.zvysok.length}`)
-const dokoncene = splitFrames(concatBuffers(neuplny.zvysok, druha))
+  partial.tela.length === 0 && partial.zvysok.length === 10,
+  `${partial.tela.length} tiel, zvyšok ${partial.zvysok.length}`)
+const finished = splitFrames(concatBuffers(partial.zvysok, second))
 t("stream: po doplnení sa rámec prečíta celý",
-  dokoncene.tela.length === 1 && unwrapEvent(dokoncene.tela[0])?.delta?.text === "Ahoj")
+  finished.tela.length === 1 && unwrapEvent(finished.tela[0])?.delta?.text === "Ahoj")
 
 // Rámec s hlavičkami — telo sa musí nájsť až za nimi.
-const sHlavickami = splitFrames(ramec(ev(delta), new Uint8Array([1, 2, 3, 4, 5])))
+const withHeaders = splitFrames(frame(ev(delta), new Uint8Array([1, 2, 3, 4, 5])))
 t("stream: hlavičky sa preskočia",
-  unwrapEvent(sHlavickami.tela[0])?.delta?.text === "Ahoj")
+  unwrapEvent(withHeaders.tela[0])?.delta?.text === "Ahoj")
 
 t("stream: nezmyselná dĺžka nespôsobí zacyklenie",
   splitFrames(new Uint8Array(new ArrayBuffer(16))).tela.length === 0)
 t("stream: rámec bez poľa bytes sa preskočí",
-  unwrapEvent(splitFrames(ramec('{"metrics":{}}')).tela[0]) === null)
+  unwrapEvent(splitFrames(frame('{"metrics":{}}')).tela[0]) === null)
 t("stream: nevalidný JSON sa preskočí",
-  unwrapEvent(splitFrames(ramec("nie json")).tela[0]) === null)
+  unwrapEvent(splitFrames(frame("nie json")).tela[0]) === null)
 
 // ── celý stream cez citajEventy ──────────────────────────────────────────────
 
-function streamZ(kusy: Uint8Array[]): ReadableStream<Uint8Array> {
+function streamOf(chunks: Uint8Array[]): ReadableStream<Uint8Array> {
   let i = 0
   return new ReadableStream({
-    pull(c) { i < kusy.length ? c.enqueue(kusy[i++]) : c.close() },
+    pull(c) { i < chunks.length ? c.enqueue(chunks[i++]) : c.close() },
   })
 }
 
-const citacia = {
+const citation = {
   type: "content_block_delta",
   delta: { type: "citations_delta", citation: { document_index: 0, cited_text: "úryvok" } },
 }
-const vsetky: any[] = []
-for await (const e of readEventStream(streamZ([
-  cely.subarray(0, 7), cely.subarray(7), ramec(ev(citacia)),
-]))) vsetky.push(e)
+const all: any[] = []
+for await (const e of readEventStream(streamOf([
+  whole.subarray(0, 7), whole.subarray(7), frame(ev(citation)),
+]))) all.push(e)
 
 t("stream: prečíta oba eventy aj pri rozdelení paketov",
-  vsetky.length === 2, String(vsetky.length))
+  all.length === 2, String(all.length))
 
-const udalosti = [...anthropicEvent(vsetky[0], []), ...anthropicEvent(vsetky[1], [])]
-t("stream: text_delta sa premení na text", udalosti[0]?.type === "text")
-t("stream: citations_delta sa premení na citáciu", udalosti[1]?.type === "citation")
+const events = [...anthropicEvent(all[0], []), ...anthropicEvent(all[1], [])]
+t("stream: text_delta sa premení na text", events[0]?.type === "text")
+t("stream: citations_delta sa premení na citáciu", events[1]?.type === "citation")
 
 // ── EU regióny ───────────────────────────────────────────────────────────────
 
-for (const [r, cakame] of [
+for (const [r, expected] of [
   ["eu-central-1", true], ["eu-west-1", true], ["eu-north-1", true],
   ["us-east-1", false], ["ap-south-1", false], [undefined, false],
 ] as const) {
-  t(`región ${r ?? "(chýba)"} → ${cakame ? "EÚ" : "mimo EÚ"}`, isEuRegion(r) === cakame)
+  t(`región ${r ?? "(chýba)"} → ${expected ? "EÚ" : "mimo EÚ"}`, isEuRegion(r) === expected)
 }
 
 }
 
 // Testy sú v async funkcii, lebo podpisovanie je asynchrónne (Web Crypto)
 // a suita sa bundluje do CommonJS, kde top-level await nie je.
-await bezi()
+await running()

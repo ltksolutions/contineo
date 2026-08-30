@@ -25,8 +25,8 @@ describe("ciselniky", () => {
 
   it("otvoreny ciselnik neprijme vetu ani diakritiku", () => {
     // Kluc ide do documentId a odtial do adries a exportov.
-    for (const zle of ["Nový poriadok", "novy poriadok", "NOVY", "a", "x".repeat(70)]) {
-      expect(() => checkValue("sectionKey", zle), zle).toThrow(CodelistError)
+    for (const invalid of ["Nový poriadok", "novy poriadok", "NOVY", "a", "x".repeat(70)]) {
+      expect(() => checkValue("sectionKey", invalid), invalid).toThrow(CodelistError)
     }
   })
 
@@ -58,7 +58,7 @@ describe("identifikator dokumentu", () => {
 })
 
 describe("metadata z formulara", () => {
-  const zaklad = {
+  const base = {
     title: "Stanovy",
     sectionKey: "stanovy",
     companyCode: "SFZ",
@@ -68,19 +68,19 @@ describe("metadata z formulara", () => {
   }
 
   it("uplne metadata prejdu", () => {
-    const m = checkMetadata(zaklad)
+    const m = checkMetadata(base)
     expect(m.title).toBe("Stanovy")
     expect(m.tags).toEqual([])
   })
 
   it("bez nazvu to neprejde", () => {
     // Bez nazvu je v zozname len kluc a v potvrdzovacej formulke prazdno.
-    expect(() => checkMetadata({ ...zaklad, title: "   " })).toThrow(LibraryError)
+    expect(() => checkMetadata({ ...base, title: "   " })).toThrow(LibraryError)
   })
 
   it("chybajuce povinne pole je chyba s nazvom pola", () => {
     try {
-      checkMetadata({ ...zaklad, accessLevel: "" })
+      checkMetadata({ ...base, accessLevel: "" })
       throw new Error("malo to zlyhat")
     } catch (e) {
       expect((e as Error).message).toContain("accessLevel")
@@ -88,7 +88,7 @@ describe("metadata z formulara", () => {
   })
 
   it("hodnota mimo uzavreteho ciselnika sa odmietne aj tu", () => {
-    expect(() => checkMetadata({ ...zaklad, accessLevel: "tajne" })).toThrow(LibraryError)
+    expect(() => checkMetadata({ ...base, accessLevel: "tajne" })).toThrow(LibraryError)
   })
 })
 
@@ -97,9 +97,9 @@ describe("vyber poli pri stave preindexovania", () => {
     // Mongo taky vyber odmieta chybou "Path collision at versions" a padala
     // na tom cela zalozka Clenenie. Positional $ sa navyse bez podmienky na
     // to pole ani pouzit neda.
-    const zdroj = readFileSync(
+    const source = readFileSync(
       new URL("../src/lib/libraryWrite.ts", import.meta.url), "utf8",
     )
-    expect(zdroj).not.toContain('"versions.$": 1')
+    expect(source).not.toContain('"versions.$": 1')
   })
 })

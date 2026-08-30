@@ -10,7 +10,7 @@ import { describe, it, expect } from "vitest"
 import { matchesAudience, audienceLabel, audienceFromSelection } from "../src/lib/assignments"
 import { normalizeKeys } from "../src/lib/persons"
 
-const osoba = {
+const person = {
   email: "Jan.Letko@futbalsfz.sk",
   groups: ["rozhodcovia", "delegati"],
   tracks: ["zaklad-2026"],
@@ -22,43 +22,43 @@ describe("komu sa pridelenie tyka", () => {
   })
 
   it("skupina sedí podľa členstva", () => {
-    expect(matchesAudience(osoba, { kind: "group", value: "rozhodcovia" })).toBe(true)
-    expect(matchesAudience(osoba, { kind: "group", value: "statutari" })).toBe(false)
+    expect(matchesAudience(person, { kind: "group", value: "rozhodcovia" })).toBe(true)
+    expect(matchesAudience(person, { kind: "group", value: "statutari" })).toBe(false)
   })
 
   it("veľké a malé písmená sú tá istá skupina", () => {
     // Inak by „Rozhodcovia" a „rozhodcovia" boli dve skupiny a jedna
     // z nich by nedostala nič — a v zozname by vyzerali rovnako.
-    expect(matchesAudience(osoba, { kind: "group", value: "Rozhodcovia" })).toBe(true)
+    expect(matchesAudience(person, { kind: "group", value: "Rozhodcovia" })).toBe(true)
     expect(matchesAudience({ groups: ["Rozhodcovia"] }, { kind: "group", value: "rozhodcovia" })).toBe(true)
   })
 
   it("medzery navyše nerozhodujú", () => {
-    expect(matchesAudience(osoba, { kind: "group", value: "  rozhodcovia " })).toBe(true)
+    expect(matchesAudience(person, { kind: "group", value: "  rozhodcovia " })).toBe(true)
   })
 
   it("trasa je iná dimenzia než skupina", () => {
     // Zlúčiť ich by znamenalo, že jednorazovú úlohu nemožno prideliť bez
     // toho, aby vznikla umelá trasa (D38).
-    expect(matchesAudience(osoba, { kind: "track", value: "zaklad-2026" })).toBe(true)
-    expect(matchesAudience(osoba, { kind: "group", value: "zaklad-2026" })).toBe(false)
+    expect(matchesAudience(person, { kind: "track", value: "zaklad-2026" })).toBe(true)
+    expect(matchesAudience(person, { kind: "group", value: "zaklad-2026" })).toBe(false)
   })
 
   it("adresa sa porovnáva bez ohľadu na veľkosť písmen", () => {
-    expect(matchesAudience(osoba, { kind: "person", value: "jan.letko@futbalsfz.sk" })).toBe(true)
+    expect(matchesAudience(person, { kind: "person", value: "jan.letko@futbalsfz.sk" })).toBe(true)
   })
 
   it("prázdna hodnota nesedí nikomu", () => {
     // Prideliť „skupine bez mena" musí znamenať nikomu, nie všetkým.
-    expect(matchesAudience(osoba, { kind: "group", value: "" })).toBe(false)
-    expect(matchesAudience(osoba, { kind: "group" })).toBe(false)
-    expect(matchesAudience(osoba, { kind: "person", value: "   " })).toBe(false)
+    expect(matchesAudience(person, { kind: "group", value: "" })).toBe(false)
+    expect(matchesAudience(person, { kind: "group" })).toBe(false)
+    expect(matchesAudience(person, { kind: "person", value: "   " })).toBe(false)
   })
 
   it("neznámy druh publika nesedí nikomu", () => {
     // Nový druh, ktorý sa zabudne doplniť, má radšej neprideliť nikomu
     // než všetkým.
-    expect(matchesAudience(osoba, { kind: "utvar" as never, value: "x" })).toBe(false)
+    expect(matchesAudience(person, { kind: "utvar" as never, value: "x" })).toBe(false)
   })
 
   it("osoba bez skupín neprepadne do žiadnej", () => {

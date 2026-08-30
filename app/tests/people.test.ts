@@ -35,7 +35,7 @@ function tenant(companyCode = "SFZ"): Tenant {
   }
 }
 
-function person(over: Partial<Person> = {}): Person {
+function person(check: Partial<Person> = {}): Person {
   return {
     id: "p1",
     companyCode: "SFZ",
@@ -47,7 +47,7 @@ function person(over: Partial<Person> = {}): Person {
     tracks: [],
     groups: [],
     roles: [PEOPLE_ROLE],
-    ...over,
+    ...check,
   } as Person
 }
 
@@ -113,52 +113,52 @@ describe("co sa da priradit", () => {
 })
 
 describe("ulozenie osoby", () => {
-  function kolekcia(najdena: Partial<Person> | null) {
+  function collection(found: Partial<Person> | null) {
     const updateOne = vi.fn().mockResolvedValue({ matchedCount: 1 })
     getCollection.mockResolvedValue({
-      findOne: vi.fn().mockResolvedValue(najdena),
+      findOne: vi.fn().mockResolvedValue(found),
       updateOne,
     })
     return updateOne
   }
 
   it("neznáma rola sa zahodí, neuloží sa", async () => {
-    const updateOne = kolekcia(person())
+    const updateOne = collection(person())
     await savePerson("SFZ", "p1", { roles: [HR_ROLE, PLATFORM_ROLE, "vymyslena"] }, "ja@sfz.sk")
     expect(updateOne.mock.calls[0][1].$set.roles).toEqual([HR_ROLE])
   })
 
   it("prázdne meno sa odmietne", async () => {
-    kolekcia(person())
+    collection(person())
     await expect(savePerson("SFZ", "p1", { fullName: "  " }, "ja@sfz.sk")).rejects.toThrow()
   })
 
   it("útvar sa dá vyprázdniť, meno nie", async () => {
     // Útvar človek naozaj mať nemusí — tam prázdno niečo znamená.
-    const updateOne = kolekcia(person())
+    const updateOne = collection(person())
     await savePerson("SFZ", "p1", { department: "" }, "ja@sfz.sk")
     expect(updateOne.mock.calls[0][1].$set.department).toBeUndefined()
   })
 
   it("skupiny sa zjednotia na malé písmená a bez duplicít", async () => {
-    const updateOne = kolekcia(person())
+    const updateOne = collection(person())
     await savePerson("SFZ", "p1", { groups: [" Rozhodcovia ", "rozhodcovia", ""] }, "ja@sfz.sk")
     expect(updateOne.mock.calls[0][1].$set.groups).toEqual(["rozhodcovia"])
   })
 
   it("neexistujúca osoba sa odmietne", async () => {
-    kolekcia(null)
+    collection(null)
     await expect(savePerson("SFZ", "p1", { fullName: "X" }, "ja@sfz.sk")).rejects.toThrow()
   })
 
   it("prázdna zmena nezapíše nič", async () => {
-    const updateOne = kolekcia(person())
+    const updateOne = collection(person())
     await savePerson("SFZ", "p1", {}, "ja@sfz.sk")
     expect(updateOne).not.toHaveBeenCalled()
   })
 
   it("neznámy typ osoby sa odmietne", async () => {
-    kolekcia(person())
+    collection(person())
     await expect(
       savePerson("SFZ", "p1", { personType: "kapitan" as never }, "ja@sfz.sk"),
     ).rejects.toThrow()

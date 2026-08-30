@@ -16,82 +16,82 @@ import {
 import { t } from "./helper"
 
 /** Porovnanie s toleranciou — počíta sa v plávajúcej čiarke. */
-const skoro = (a: number, b: number, tol = 1e-9) => Math.abs(a - b) < tol
+const approx = (a: number, b: number, tolerance = 1e-9) => Math.abs(a - b) < tolerance
 
 const tok = (u: Partial<typeof EMPTY_TOKENS>) => ({ ...EMPTY_TOKENS, ...u })
 
-const PRED = new Date("2026-08-15T12:00:00Z")
-const PO = new Date("2026-09-15T12:00:00Z")
+const BEFORE = new Date("2026-08-15T12:00:00Z")
+const AFTER = new Date("2026-09-15T12:00:00Z")
 
 // ── základný výpočet ─────────────────────────────────────────────────────────
 
 t("milión vstupných tokenov Sonnet 5 = $2",
-  skoro(cost("claude-sonnet-5", tok({ vstup: 1_000_000 }), PRED).usd, 2),
-  String(cost("claude-sonnet-5", tok({ vstup: 1_000_000 }), PRED).usd))
+  approx(cost("claude-sonnet-5", tok({ vstup: 1_000_000 }), BEFORE).usd, 2),
+  String(cost("claude-sonnet-5", tok({ vstup: 1_000_000 }), BEFORE).usd))
 
 t("milión výstupných tokenov Sonnet 5 = $10",
-  skoro(cost("claude-sonnet-5", tok({ vystup: 1_000_000 }), PRED).usd, 10))
+  approx(cost("claude-sonnet-5", tok({ vystup: 1_000_000 }), BEFORE).usd, 10))
 
 t("nulové tokeny = nulová cena",
-  cost("claude-sonnet-5", EMPTY_TOKENS, PRED).usd === 0)
+  cost("claude-sonnet-5", EMPTY_TOKENS, BEFORE).usd === 0)
 
 // Cache je jadro veci: čítanie stojí desatinu, zápis o štvrtinu viac.
 t("čítanie z cache stojí desatinu vstupu",
-  skoro(cost("claude-sonnet-5", tok({ cacheCitanie: 1_000_000 }), PRED).usd, 0.2))
+  approx(cost("claude-sonnet-5", tok({ cacheCitanie: 1_000_000 }), BEFORE).usd, 0.2))
 t("zápis do cache stojí 1,25× vstupu",
-  skoro(cost("claude-sonnet-5", tok({ cacheZapis: 1_000_000 }), PRED).usd, 2.5))
+  approx(cost("claude-sonnet-5", tok({ cacheZapis: 1_000_000 }), BEFORE).usd, 2.5))
 
 t("zložená odpoveď sa spočíta správne",
-  skoro(
-    cost("claude-sonnet-5", tok({ vstup: 5_000, vystup: 1_200, cacheCitanie: 3_000 }), PRED).usd,
+  approx(
+    cost("claude-sonnet-5", tok({ vstup: 5_000, vystup: 1_200, cacheCitanie: 3_000 }), BEFORE).usd,
     (5_000 * 2 + 1_200 * 10 + 3_000 * 0.2) / 1_000_000
   ))
 
 // Typická odpoveď na normu — kontrola rádu, aby sa nestalo, že sa niekde
 // stratí či pribudne nula.
-const typicka = cost("claude-sonnet-5", tok({ vstup: 6_000, vystup: 1_500 }), PRED).usd
+const typical = cost("claude-sonnet-5", tok({ vstup: 6_000, vystup: 1_500 }), BEFORE).usd
 t("typická odpoveď stojí rádovo centy",
-  typicka > 0.005 && typicka < 0.1, formatUsd(typicka))
+  typical > 0.005 && typical < 0.1, formatUsd(typical))
 
 // ── zmena cenníka 1. septembra 2026 ──────────────────────────────────────────
 
 t("do 31. 8. platí úvodná cena $2",
-  ratesForDate("claude-sonnet-5", PRED).sadzby?.vstup === 2)
+  ratesForDate("claude-sonnet-5", BEFORE).sadzby?.vstup === 2)
 t("od 1. 9. platí štandardná cena $3",
-  ratesForDate("claude-sonnet-5", PO).sadzby?.vstup === 3)
+  ratesForDate("claude-sonnet-5", AFTER).sadzby?.vstup === 3)
 t("výstup stúpne z $10 na $15",
-  ratesForDate("claude-sonnet-5", PO).sadzby?.vystup === 15)
+  ratesForDate("claude-sonnet-5", AFTER).sadzby?.vystup === 15)
 
 t("tá istá otázka bude po 1. 9. drahšia o 50 %",
-  skoro(
-    cost("claude-sonnet-5", tok({ vstup: 6_000, vystup: 1_500 }), PO).usd,
-    cost("claude-sonnet-5", tok({ vstup: 6_000, vystup: 1_500 }), PRED).usd * 1.5
+  approx(
+    cost("claude-sonnet-5", tok({ vstup: 6_000, vystup: 1_500 }), AFTER).usd,
+    cost("claude-sonnet-5", tok({ vstup: 6_000, vystup: 1_500 }), BEFORE).usd * 1.5
   ),
-  `${formatUsd(cost("claude-sonnet-5", tok({ vstup: 6_000, vystup: 1_500 }), PRED).usd)} → ` +
-  `${formatUsd(cost("claude-sonnet-5", tok({ vstup: 6_000, vystup: 1_500 }), PO).usd)}`)
+  `${formatUsd(cost("claude-sonnet-5", tok({ vstup: 6_000, vystup: 1_500 }), BEFORE).usd)} → ` +
+  `${formatUsd(cost("claude-sonnet-5", tok({ vstup: 6_000, vystup: 1_500 }), AFTER).usd)}`)
 
 t("prepnutie na novú cenu sa NEoznačí ako expirované",
-  cost("claude-sonnet-5", tok({ vstup: 100 }), PO).cennikExpirovany === false)
+  cost("claude-sonnet-5", tok({ vstup: 100 }), AFTER).cennikExpirovany === false)
 
 // Model s vypršanou cenou a bez známej následnej sa musí priznať.
 t("vypršaný cenník bez následníka sa označí", (() => {
-  const povodny = PRICELIST["test-expiruje"]
+  const original = PRICELIST["test-expiruje"]
   PRICELIST["test-expiruje"] = { vstup: 1, cacheZapis: 1, cacheCitanie: 1, vystup: 1, platiDo: "2026-01-01" }
-  const v = cost("test-expiruje", tok({ vstup: 100 }), PO)
-  if (povodny) PRICELIST["test-expiruje"] = povodny
+  const v = cost("test-expiruje", tok({ vstup: 100 }), AFTER)
+  if (original) PRICELIST["test-expiruje"] = original
   else delete PRICELIST["test-expiruje"]
   return v.cennikExpirovany === true
 })())
 
 // ── neznámy model ────────────────────────────────────────────────────────────
 
-const neznamy = cost("nejaky-lokalny-model", tok({ vstup: 10_000, vystup: 5_000 }))
-t("neznámy model sa označí", neznamy.neznamyModel === true)
-t("neznámy model nevymýšľa cenu", neznamy.usd === 0)
+const unknown = cost("nejaky-lokalny-model", tok({ vstup: 10_000, vystup: 5_000 }))
+t("neznámy model sa označí", unknown.neznamyModel === true)
+t("neznámy model nevymýšľa cenu", unknown.usd === 0)
 
 t("Haiku je lacnejší než Sonnet",
-  cost("claude-haiku-4-5-20251001", tok({ vstup: 1_000_000 }), PRED).usd <
-  cost("claude-sonnet-5", tok({ vstup: 1_000_000 }), PRED).usd)
+  cost("claude-haiku-4-5-20251001", tok({ vstup: 1_000_000 }), BEFORE).usd <
+  cost("claude-sonnet-5", tok({ vstup: 1_000_000 }), BEFORE).usd)
 
 t("záznam nesie označenie cenníka",
   /^\d{4}-\d{2}-\d{2}$/.test(cost("claude-sonnet-5", EMPTY_TOKENS).verziaCennika))
@@ -110,17 +110,17 @@ t("suma nad dolár má dve miesta", formatUsd(12.3456) === "$12.35", formatUsd(1
 t("nula je len nula", formatUsd(0) === "$0")
 t("dve blízke sumy sa nezlejú", formatUsd(0.0234) !== formatUsd(0.0156))
 
-t("euro sa prepočíta kurzom", skoro(toEur(1, 0.92), 0.92))
+t("euro sa prepočíta kurzom", approx(toEur(1, 0.92), 0.92))
 t("euro sa formátuje so značkou", formatEur(0.5).endsWith("€"))
 
 // ── súčty pre štatistiky ─────────────────────────────────────────────────────
 
-const suma = sumCosts([
+const total = sumCosts([
   tok({ vstup: 100, vystup: 50 }),
   tok({ vstup: 200, vystup: 70, cacheCitanie: 300 }),
 ])
 t("súčet tokenov sedí",
-  suma.vstup === 300 && suma.vystup === 120 && suma.cacheCitanie === 300,
-  JSON.stringify(suma))
+  total.vstup === 300 && total.vystup === 120 && total.cacheCitanie === 300,
+  JSON.stringify(total))
 t("prázdny súčet nespadne", sumCosts([]).vstup === 0)
 

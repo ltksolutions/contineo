@@ -16,50 +16,50 @@ const text = (b: ReturnType<typeof splitInline>) => b.map(u => u.text).join("")
 t("obyčajný text zostane jedným úsekom",
   splitInline("Podľa čl. 78 platí").length === 1)
 
-const tucne = splitInline("Podľa **čl. 78** platí")
-t("tučný úsek sa vydelí", tucne.length === 3, JSON.stringify(tucne))
-t("tučný úsek má správny druh", tucne[1].druh === "tucne" && tucne[1].text === "čl. 78")
-t("text okolo sa zachová", text(tucne) === "Podľa čl. 78 platí", text(tucne))
+const bold = splitInline("Podľa **čl. 78** platí")
+t("tučný úsek sa vydelí", bold.length === 3, JSON.stringify(bold))
+t("tučný úsek má správny druh", bold[1].druh === "tucne" && bold[1].text === "čl. 78")
+t("text okolo sa zachová", text(bold) === "Podľa čl. 78 platí", text(bold))
 
-const celyRiadok = splitInline("**Lehota podľa čl. 78:**")
+const wholeLine = splitInline("**Lehota podľa čl. 78:**")
 t("celý riadok môže byť tučný",
-  celyRiadok.length === 1 && celyRiadok[0].druh === "tucne",
-  JSON.stringify(celyRiadok))
+  wholeLine.length === 1 && wholeLine[0].druh === "tucne",
+  JSON.stringify(wholeLine))
 
 t("dva tučné úseky v jednom riadku",
   splitInline("**a** medzi **b**").filter(u => u.druh === "tucne").length === 2)
 
 // Useknutá odpoveď: limit tokenov sa vyčerpal uprostred zvýraznenia.
-const useknuty = splitInline("Text pokračuje **ale skončil")
+const truncated = splitInline("Text pokračuje **ale skončil")
 t("nepárny oddeľovač nezožerie zvyšok textu",
-  text(useknuty) === "Text pokračuje **ale skončil", text(useknuty))
+  text(truncated) === "Text pokračuje **ale skončil", text(truncated))
 
 t("prázdne ** sa nepovažuje za zvýraznenie",
   text(splitInline("a****b")) === "ab", text(splitInline("a****b")))
 
 // ── bloky ────────────────────────────────────────────────────────────────────
 
-const jeden = toBlocks("Prvá veta.\nDruhá veta.")
-t("riadky jedného odseku sa spoja", jeden.length === 1, String(jeden.length))
+const one = toBlocks("Prvá veta.\nDruhá veta.")
+t("riadky jedného odseku sa spoja", one.length === 1, String(one.length))
 t("spájajú sa medzerou",
-  jeden[0].druh === "odsek" && text(jeden[0].useky) === "Prvá veta. Druhá veta.",
-  jeden[0].druh === "odsek" ? text(jeden[0].useky) : "")
+  one[0].druh === "odsek" && text(one[0].useky) === "Prvá veta. Druhá veta.",
+  one[0].druh === "odsek" ? text(one[0].useky) : "")
 
 t("prázdny riadok oddelí odseky",
   toBlocks("Prvý.\n\nDruhý.").length === 2)
 
-const sZoznamom = toBlocks("Platí toto:\n\n- prvá vec\n- druhá vec\n\nZáver.")
-t("odsek, zoznam a odsek", sZoznamom.length === 3,
-  JSON.stringify(sZoznamom.map(b => b.druh)))
+const withList = toBlocks("Platí toto:\n\n- prvá vec\n- druhá vec\n\nZáver.")
+t("odsek, zoznam a odsek", withList.length === 3,
+  JSON.stringify(withList.map(b => b.druh)))
 t("zoznam má dve položky",
-  sZoznamom[1].druh === "zoznam" && sZoznamom[1].polozky.length === 2)
+  withList[1].druh === "zoznam" && withList[1].polozky.length === 2)
 t("odrážka sa neberie ako súčasť textu",
-  sZoznamom[1].druh === "zoznam" && text(sZoznamom[1].polozky[0]) === "prvá vec",
-  sZoznamom[1].druh === "zoznam" ? text(sZoznamom[1].polozky[0]) : "")
+  withList[1].druh === "zoznam" && text(withList[1].polozky[0]) === "prvá vec",
+  withList[1].druh === "zoznam" ? text(withList[1].polozky[0]) : "")
 
-const cislovany = toBlocks("1. prvé\n2. druhé")
+const numbered = toBlocks("1. prvé\n2. druhé")
 t("číslovaný zoznam sa rozpozná",
-  cislovany[0].druh === "zoznam" && cislovany[0].cislovany === true)
+  numbered[0].druh === "zoznam" && numbered[0].cislovany === true)
 
 t("zmena typu zoznamu založí nový",
   toBlocks("- a\n1. b").length === 2)
@@ -80,32 +80,32 @@ t("prázdny vstup nedá nič", toBlocks("").length === 0)
 t("samé prázdne riadky nedajú nič", toBlocks("\n\n\n").length === 0)
 
 // Skutočný tvar odpovede z prvého behu proti živému Atlasu.
-const skutocna = toBlocks(
+const real = toBlocks(
   "Na základe dokumentov nemôžem uviesť lehotu:\n\n" +
   "**Lehota podľa čl. 78 (zápis o stretnutí):**\n" +
   "Kapitán družstva má právo podať námietku.\n\n" +
   "**Náležitosti (čl. 86):**\n" +
   "Námietka obsahuje najmä tieto náležitosti."
 )
-t("skutočná odpoveď dá päť blokov", skutocna.length === 5,
-  JSON.stringify(skutocna.map(b => b.druh)))
+t("skutočná odpoveď dá päť blokov", real.length === 5,
+  JSON.stringify(real.map(b => b.druh)))
 t("medzititulok sa stane nadpisom",
-  skutocna[1].druh === "nadpis" && text(skutocna[1].useky) === "Lehota podľa čl. 78 (zápis o stretnutí)",
-  skutocna[1].druh === "nadpis" ? text(skutocna[1].useky) : skutocna[1].druh)
+  real[1].druh === "nadpis" && text(real[1].useky) === "Lehota podľa čl. 78 (zápis o stretnutí)",
+  real[1].druh === "nadpis" ? text(real[1].useky) : real[1].druh)
 
 // ── markdown nadpisy ─────────────────────────────────────────────────────────
 //
 // Model ich používa striedavo s tučnými medzititulkami, niekedy oboje
 // v jednej odpovedi. Doslovné „## Hráči“ v texte vyzerá ako chyba systému.
 
-const sNadpisom = toBlocks("## Hráči\n\nPo 5. napomenutí sa ukladá sankcia.")
+const withHeading = toBlocks("## Hráči\n\nPo 5. napomenutí sa ukladá sankcia.")
 t("## sa rozpozná ako nadpis",
-  sNadpisom[0].druh === "nadpis", JSON.stringify(sNadpisom.map(b => b.druh)))
+  withHeading[0].druh === "nadpis", JSON.stringify(withHeading.map(b => b.druh)))
 t("mriežky nezostanú v texte",
-  sNadpisom[0].druh === "nadpis" && text(sNadpisom[0].useky) === "Hráči",
-  sNadpisom[0].druh === "nadpis" ? text(sNadpisom[0].useky) : "")
+  withHeading[0].druh === "nadpis" && text(withHeading[0].useky) === "Hráči",
+  withHeading[0].druh === "nadpis" ? text(withHeading[0].useky) : "")
 t("úroveň nadpisu sa zachová",
-  sNadpisom[0].druh === "nadpis" && sNadpisom[0].uroven === 2)
+  withHeading[0].druh === "nadpis" && withHeading[0].uroven === 2)
 
 t("nadpis nepotrebuje prázdny riadok pod sebou",
   (() => {
@@ -150,18 +150,18 @@ t("koncová dvojbodka sa z nadpisu oreže (za hviezdičkami)",
   })())
 
 // Skutočná odpoveď z rozhrania: model zmiešal oba tvary.
-const zmiesane = toBlocks(
+const mixed = toBlocks(
   "Podľa Disciplinárneho poriadku (čl. 37) sa tresty uplatňujú rozdielne.\n\n" +
   "## Hráči\n\n" +
   "Po 5. napomenutí pozastavenie výkonu športu.\n\n" +
   "**Členovia realizačného tímu:**\n" +
   "Po 3. napomenutí pozastavenie funkcie."
 )
-t("zmiešané tvary dajú päť blokov", zmiesane.length === 5,
-  JSON.stringify(zmiesane.map(b => b.druh)))
+t("zmiešané tvary dajú päť blokov", mixed.length === 5,
+  JSON.stringify(mixed.map(b => b.druh)))
 t("oba tvary skončia ako nadpis",
-  zmiesane.filter(b => b.druh === "nadpis").length === 2,
-  JSON.stringify(zmiesane.map(b => b.druh)))
+  mixed.filter(b => b.druh === "nadpis").length === 2,
+  JSON.stringify(mixed.map(b => b.druh)))
 
 // ── čistenie citácií ─────────────────────────────────────────────────────────
 
@@ -173,12 +173,12 @@ t("koncové zalomenie sa oreže",
   cleanCitation("(3) Kapitán družstva podá námietku.\n") ===
   "(3) Kapitán družstva podá námietku.")
 
-const sBreadcrumbom = cleanCitation(
+const withBreadcrumb = cleanCitation(
   "Súťažný poriadok futbalu SFZ › DESIATA ČASŤ › Článok 86 - Náležitosti námietky " +
   "(1) Námietka obsahuje najmä tieto náležitosti: a) označenie subjektu"
 )
 t("breadcrumb sa pri zobrazení skryje",
-  sBreadcrumbom.startsWith("(1) Námietka obsahuje"), sBreadcrumbom.slice(0, 60))
+  withBreadcrumb.startsWith("(1) Námietka obsahuje"), withBreadcrumb.slice(0, 60))
 
 t("citácia bez breadcrumbu s medzerou v texte zostane celá",
   cleanCitation("Podľa čl. 3 › nasleduje výnimka (2) ktorá platí").length > 0)
@@ -228,13 +228,13 @@ t("prázdny vstup dá prázdny výstup", mergeCitations([]).length === 0)
 // Skutočný prípad z odpovede o prestupe: model odcitoval to isté miesto
 // raz po vetu, raz s pokračovaním. Sú to dve citácie toho istého, nie dve
 // rôzne — a hodnotiteľ ich číta dvakrát zbytočne.
-const prekryv = mergeCitations([
+const overlap = mergeCitations([
   c("(2) Transfer maloletého hráča je možné vykonať so súhlasom zástupcu."),
   c("(2) Transfer maloletého hráča je možné vykonať so súhlasom zástupcu. Transfer podľa predchádzajúcej vety je možné vykonať aj mimo územia kraja."),
 ])
-t("kratšia citácia sa zlúči do dlhšej", prekryv.length === 1, JSON.stringify(prekryv))
+t("kratšia citácia sa zlúči do dlhšej", overlap.length === 1, JSON.stringify(overlap))
 t("zostane to dlhšie znenie",
-  prekryv[0].citedText.includes("mimo územia kraja"), prekryv[0].citedText.slice(0, 70))
+  overlap[0].citedText.includes("mimo územia kraja"), overlap[0].citedText.slice(0, 70))
 
 t("dlhšia pred kratšou dá ten istý výsledok",
   (() => {

@@ -10,16 +10,16 @@
 
 import { describe, it, expect, vi, beforeEach } from "vitest"
 
-const { personMaySignIn, recordSignIn, hotovo } = vi.hoisted(() => {
-  const hotovo = { zapisane: false }
+const { personMaySignIn, recordSignIn, hotovo: done } = vi.hoisted(() => {
+  const done = { zapisane: false }
   return {
-    hotovo,
+    hotovo: done,
     personMaySignIn: vi.fn(async () => true),
     // Atrapa dokončí zápis až na ďalšom kole slučky — presne ako skutočný
     // dotaz do databázy. Bez `await` sa `signIn` vráti skôr než sa to stane.
     recordSignIn: vi.fn(async () => {
       await new Promise(r => setTimeout(r, 0))
-      hotovo.zapisane = true
+      done.zapisane = true
     }),
   }
 })
@@ -31,7 +31,7 @@ import { authOptions } from "../src/lib/auth"
 beforeEach(() => {
   personMaySignIn.mockClear()
   recordSignIn.mockClear()
-  hotovo.zapisane = false
+  done.zapisane = false
 })
 
 function signIn(email: string, verificationRequest = false) {
@@ -47,7 +47,7 @@ describe("evidencia prihlásenia", () => {
     expect(ok).toBe(true)
     // Toto je celý zmysel súboru: `true` bez dokončeného zápisu je práve tá
     // chyba, ktorá sa na Verceli prejaví a lokálne nie.
-    expect(hotovo.zapisane).toBe(true)
+    expect(done.zapisane).toBe(true)
   })
 
   it("kto neprejde bránou, sa do evidencie nedostane", async () => {
@@ -69,11 +69,11 @@ describe("evidencia prihlásenia", () => {
   })
 
   it("prihlásenie bez adresy neprejde", async () => {
-    const chyby = vi.spyOn(console, "error").mockImplementation(() => {})
+    const errors = vi.spyOn(console, "error").mockImplementation(() => {})
 
     expect(await signIn("")).toBe(false)
     expect(personMaySignIn).not.toHaveBeenCalled()
 
-    chyby.mockRestore()
+    errors.mockRestore()
   })
 })

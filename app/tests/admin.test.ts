@@ -31,7 +31,7 @@ function tenant(companyCode = "LTK"): Tenant {
   }
 }
 
-function person(over: Partial<Person> = {}): Person {
+function person(check: Partial<Person> = {}): Person {
   return {
     id: "p1",
     companyCode: "LTK",
@@ -42,7 +42,7 @@ function person(over: Partial<Person> = {}): Person {
     language: "sk",
     tracks: [],
     roles: [PLATFORM_ROLE],
-    ...over,
+    ...check,
   } as Person
 }
 
@@ -105,11 +105,11 @@ describe("brána správy tenantov", () => {
     // cestou dnu. Radšej zavreté.
     currentTenant.mockRejectedValue(new Error("Atlas nedostupný"))
     currentPerson.mockResolvedValue(person())
-    const chyby = vi.spyOn(console, "error").mockImplementation(() => {})
+    const errors = vi.spyOn(console, "error").mockImplementation(() => {})
 
     expect((await platformContext()).state).toBe("wrong-host")
 
-    chyby.mockRestore()
+    errors.mockRestore()
   })
 })
 

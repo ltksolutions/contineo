@@ -28,23 +28,23 @@ t("prázdny zoznam dá prázdne pole", allowedEmails("").length === 0)
 
 // ── kto prejde ───────────────────────────────────────────────────────────────
 
-const ZOZNAM = allowedEmails("jan.letko@futbalsfz.sk, pravnik@futbalsfz.sk")
+const LIST = allowedEmails("jan.letko@futbalsfz.sk, pravnik@futbalsfz.sk")
 
-t("adresa zo zoznamu prejde", isAllowed("jan.letko@futbalsfz.sk", ZOZNAM))
-t("nezáleží na veľkosti písmen", isAllowed("Jan.Letko@FutbalSFZ.sk", ZOZNAM))
-t("medzery okolo nevadia", isAllowed("  jan.letko@futbalsfz.sk  ", ZOZNAM))
-t("cudzia adresa neprejde", !isAllowed("nikto@inde.sk", ZOZNAM))
+t("adresa zo zoznamu prejde", isAllowed("jan.letko@futbalsfz.sk", LIST))
+t("nezáleží na veľkosti písmen", isAllowed("Jan.Letko@FutbalSFZ.sk", LIST))
+t("medzery okolo nevadia", isAllowed("  jan.letko@futbalsfz.sk  ", LIST))
+t("cudzia adresa neprejde", !isAllowed("nikto@inde.sk", LIST))
 
 // Toto je to najdôležitejšie pravidlo v celom súbore.
 t("PRÁZDNY ZOZNAM NEPUSTÍ NIKOHO", !isAllowed("jan.letko@futbalsfz.sk", []))
 t("prázdny zoznam nepustí ani prázdnu adresu", !isAllowed("", []))
 
 // Doménové pravidlo — keď má prístup dostať celé oddelenie.
-const DOMENA = allowedEmails("@futbalsfz.sk")
+const DOMAIN = allowedEmails("@futbalsfz.sk")
 t("zápis @domena pustí adresu z tej domény",
-  isAllowed("ktokolvek@futbalsfz.sk", DOMENA))
+  isAllowed("ktokolvek@futbalsfz.sk", DOMAIN))
 t("zápis @domena nepustí inú doménu",
-  !isAllowed("nikto@inde.sk", DOMENA))
+  !isAllowed("nikto@inde.sk", DOMAIN))
 
 // Pasce, na ktorých sa dá naivná kontrola domény zlomiť.
 t("podvrhnutá doména na konci neprejde",
@@ -55,20 +55,20 @@ t("podvrhnutá doména na konci neprejde",
 t("doména ako podreťazec inde v adrese neprejde",
   !isAllowed("utocnik@futbalsfz.sk.zle.sk", allowedEmails("@futbalsfz.sk")))
 t("čiastočná zhoda mena neprejde",
-  !isAllowed("jan.letko@futbalsfz.sk.utok.sk", ZOZNAM))
+  !isAllowed("jan.letko@futbalsfz.sk.utok.sk", LIST))
 t("prefix adresy neprejde",
-  !isAllowed("jan.letk@futbalsfz.sk", ZOZNAM))
+  !isAllowed("jan.letk@futbalsfz.sk", LIST))
 
 // ── obsah e-mailu ────────────────────────────────────────────────────────────
 
-const ODKAZ = "https://app.contineo.app/api/auth/callback/email?token=abc&email=x%40y.sk"
-const e = signInEmail(ODKAZ, "app.contineo.app")
+const LINK = "https://app.contineo.app/api/auth/callback/email?token=abc&email=x%40y.sk"
+const e = signInEmail(LINK, "app.contineo.app")
 
 t("e-mail má predmet", e.subject.length > 0)
-t("odkaz je v textovej verzii", e.text.includes(ODKAZ))
-t("odkaz je v HTML verzii", e.html.includes(ODKAZ))
+t("odkaz je v textovej verzii", e.text.includes(LINK))
+t("odkaz je v HTML verzii", e.html.includes(LINK))
 t("HTML má aj čitateľnú podobu odkazu na skopírovanie",
-  e.html.split(ODKAZ).length >= 3, String(e.html.split(ODKAZ).length))
+  e.html.split(LINK).length >= 3, String(e.html.split(LINK).length))
 t("e-mail hovorí, ako dlho odkaz platí", /24 hod/.test(e.text))
 t("e-mail hovorí, čo robiť pri nevyžiadanej správe", /ignorujte/i.test(e.text))
 t("uvádza, odkiaľ prišiel", e.html.includes("app.contineo.app"))
