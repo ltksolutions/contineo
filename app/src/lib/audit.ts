@@ -45,6 +45,7 @@ export type AuditPredmet =
   | "osoba"
   | "utvar"
   | "dokument"
+  | "priecinok"
   | "pridelenie"
   | "organizacia"
   | "domena"

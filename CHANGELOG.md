@@ -4,6 +4,20 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Added (2026-08-30 — knižnica: priečinky, filtre, WYSIWYG, vlastné číselníky)
+
+- **Virtuálne priečinky (D56).** Strom s rovnakým tvarom ako útvary — dokument je práve v jednom, filter nájde aj to, čo je v podpriečinkoch. „Virtuálne" znamená, že sa nič nepresúva: súbor leží v GridFS a text v `documents`, priečinok je len zaradenie, ktoré sa dá kedykoľvek zmeniť. Zrušiť sa dá len prázdny priečinok bez podpriečinkov.
+- **Filtrovanie a hľadanie** nad knižnicou: priečinok, druh, značka, stav (publikované / koncepty) a fulltext v názve a kľúči. Filtre sa nesú v adrese aj vo formulároch — po založení priečinka sa človek nevráti na nefiltrovaný zoznam.
+- **Vlastné číselníky organizácie (D55).** Druhy dokumentov a značky si zákazník spravuje sám v `/organizacia`, záložka **Číselníky**; dovtedy ich musel dopísať vývojár do repozitára a nasadiť. Základné hodnoty zostávajú v ponuke vždy — je nimi otagovaný existujúci obsah. Odobratie vlastnej položky ju odstráni **len z ponuky**; dokumenty, ktoré ju majú, si ju nesú ďalej, lebo prepisovať cudzí obsah kvôli upratovaniu číselníka by bola tichá zmena dát. `scope`, `accessLevel` a `language` zostávajú globálne a uzavreté — sú to filtre, na ktorých stojí prístup.
+- **WYSIWYG editor (D54).** Správca obsahu je legislatívec, nie vývojár; v surovom Markdowne buď nechá členenie tak, ako ho vypľul prevod, alebo ho pokazí. Uložený tvar zostáva Markdown — z neho žije chunker aj potvrdzovanie — takže vizuálny režim je pohľad na ten istý text a prepínač je rovnocenný, nie „pokročilé nastavenie".
+- **Úprava údajov o dokumente** priamo v detaile: názov, pôsobnosť, prístupnosť, jazyk, druh a značky. Zmena filtrov sa prepíše **aj do úsekov** — bez toho by sa prejavila v knižnici, ale vyhľadávanie by ďalej filtrovalo podľa starých hodnôt. Kľúč a organizácia sa meniť nedajú: tvoria `documentId`, ktorý je v úsekoch, prideleniach aj potvrdeniach.
+- Indexy pre `cms_folders` a filtre nad `documents`.
+- 10 nových testov (spolu 766).
+
+### Fixed (2026-08-30)
+
+- **Editor knižnice sa pri normách z importu otváral prázdny.** Čítal `draftMarkdown ?? markdown`, ale dokumenty naimportované skriptom nemajú ani jedno — text si nesie len položka vo `versions[]`. Vyzeralo to, akoby sa norma stratila. Text sa teraz berie v poradí koncept → platné znenie → najnovšie zapísané.
+
 ### Added (2026-08-30 — knižnica dokumentov)
 
 - **`/kniznica` (D53).** Normy sa dovtedy dostávali dnu len príkazovým riadkom — `.md` plus `.meta.json` pripravené vývojárom — takže si zákazník novelu nevedel nahrať sám. Teraz: zoznam s filtrami, detail s históriou znení, nahratie súboru s formulárom metadát namiesto `.meta.json`.

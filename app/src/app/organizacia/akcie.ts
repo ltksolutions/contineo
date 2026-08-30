@@ -25,6 +25,8 @@ import { pridajDomenu, preskocitVercel } from "@/lib/vercel"
 import {
   zalozOddelenie, premenujOddelenie, presunOddelenie, zmazOddelenie, OddelenieError,
 } from "@/lib/oddelenia"
+import { pridajPolozku, odoberPolozku } from "@/lib/ciselnikyTenanta"
+import { CiselnikError } from "@/lib/ciselniky"
 
 async function kto(): Promise<{ email: string; companyCode: string } | null> {
   const ctx = await organizaciaContext()
@@ -41,7 +43,8 @@ function textPola(fd: FormData, meno: string): string {
 function spravaChyby(e: unknown): string {
   if (
     e instanceof TenantValidationError || e instanceof ZnackaError ||
-    e instanceof DomenaError || e instanceof OddelenieError
+    e instanceof DomenaError || e instanceof OddelenieError ||
+    e instanceof CiselnikError
   ) {
     return e.message
   }
@@ -273,6 +276,36 @@ export async function zrusUtvar(fd: FormData) {
     await zmazOddelenie(ja.companyCode, textPola(fd, "id"), ja.email)
     revalidatePath("/organizacia")
     spat(fd, "Útvar sa zrušil.")
+  } catch (e) {
+    spat(fd, spravaChyby(e), true)
+  }
+}
+
+// ── číselníky organizácie (D55) ──────────────────────────────────────────────
+
+export async function pridajDoCiselnika(fd: FormData) {
+  const ja = await kto()
+  if (!ja) redirect("/")
+  try {
+    await pridajPolozku(
+      ja.companyCode, textPola(fd, "ciselnik"), textPola(fd, "kluc"), textPola(fd, "popis"), ja.email,
+    )
+    revalidatePath("/organizacia")
+    revalidatePath("/kniznica")
+    spat(fd, "Pridané.")
+  } catch (e) {
+    spat(fd, spravaChyby(e), true)
+  }
+}
+
+export async function odoberZCiselnika(fd: FormData) {
+  const ja = await kto()
+  if (!ja) redirect("/")
+  try {
+    await odoberPolozku(ja.companyCode, textPola(fd, "ciselnik"), textPola(fd, "kluc"), ja.email)
+    revalidatePath("/organizacia")
+    revalidatePath("/kniznica")
+    spat(fd, "Odobraté z ponuky. Dokumenty, ktoré túto hodnotu majú, si ju nesú ďalej.")
   } catch (e) {
     spat(fd, spravaChyby(e), true)
   }

@@ -22,6 +22,9 @@ import VyberFarby from "@/components/VyberFarby"
 import Oznam from "@/components/Oznam"
 import { ulozVzhlad, ulozPrihlasenie, zmazPrihlasenie, poziadaj, overDomenu, zrus } from "./akcie"
 import { zalozUtvar, premenujUtvar, presunUtvar, zrusUtvar } from "./akcie"
+import { pridajDoCiselnika, odoberZCiselnika } from "./akcie"
+import { POPIS_CISELNIKA, ponuka, vlastnePolozky, pouzitie } from "@/lib/ciselnikyTenanta"
+import { VLASTNE_CISELNIKY } from "@/lib/ciselniky"
 import { vsetkyOddelenia, splostiStrom, podstrom, pocty, MAX_HLBKA, hlbka } from "@/lib/oddelenia"
 import { auditZaznamy } from "@/lib/audit"
 import AuditVypis from "@/components/AuditVypis"
@@ -33,6 +36,7 @@ const ZALOZKY = [
   { kluc: "utvary", popis: "Útvary" },
   { kluc: "domeny", popis: "Domény" },
   { kluc: "prihlasenie", popis: "Prihlasovanie" },
+  { kluc: "ciselniky", popis: "Číselníky" },
   { kluc: "audit", popis: "Audit" },
 ]
 
@@ -189,6 +193,22 @@ export default async function Organizacia({
   const utvary = teraz === "utvary" ? await vsetkyOddelenia(tenant.companyCode) : []
   const riadky = teraz === "utvary" ? splostiStrom(utvary) : []
   const koliOsob = teraz === "utvary" ? await pocty(tenant.companyCode) : new Map()
+  // Počty použití sa čítajú len pre svoju záložku — inak by to boli dva
+  // dotazy na dokumenty pri každom otvorení nastavenia.
+  const ciselniky = teraz === "ciselniky"
+    ? await Promise.all(VLASTNE_CISELNIKY.map(async nazov => ({
+        nazov,
+        vsetky: ponuka(tenant, nazov),
+        vlastne: vlastnePolozky(tenant, nazov),
+        pocty: Object.fromEntries(
+          await Promise.all(
+            vlastnePolozky(tenant, nazov).map(async p =>
+              [p.key, await pouzitie(tenant.companyCode, nazov, p.key)] as const),
+          ),
+        ) as Record<string, number>,
+      })))
+    : []
+
   const zaznamy = teraz === "audit"
     ? await auditZaznamy(tenant.companyCode, { hladat, limit: 200 })
     : []
@@ -534,6 +554,71 @@ export default async function Organizacia({
       <div style={{ display: "grid", gap: 16 }}>
         <Poskytovatel tenant={tenant} provider="microsoft" domena={tenant.hostnames[0]} />
         <Poskytovatel tenant={tenant} provider="google" domena={tenant.hostnames[0]} />
+      </div>
+      )}
+
+      {teraz === "ciselniky" && (
+      <div style={{ display: "grid", gap: 16 }}>
+        <p className="tichy" style={{ fontSize: 14.5, margin: 0, maxWidth: 620 }}>
+          Čím označujete vlastný obsah v knižnici. Základné hodnoty sú tu vždy —
+          je nimi označený existujúci obsah a ich zmiznutie by z neho spravilo
+          neplatné údaje. Odobrať sa dá len to, čo ste pridali vy, a aj vtedy
+          zmizne <strong>len z ponuky</strong>: dokumenty, ktoré hodnotu majú,
+          si ju nesú ďalej.
+        </p>
+
+        {ciselniky.map(c => (
+          <section key={c.nazov} className="karta" style={{ padding: 20, display: "grid", gap: 12 }}>
+            <div>
+              <h2 style={{ fontSize: 17, margin: "0 0 4px" }}>{POPIS_CISELNIKA[c.nazov].nazov}</h2>
+              <p className="tichy" style={{ fontSize: 14, margin: 0 }}>
+                {POPIS_CISELNIKA[c.nazov].napoveda}
+              </p>
+            </div>
+
+            <ul className="utvary">
+              {c.vsetky.map(p => {
+                const vlastna = c.vlastne.some(v => v.key === p.key)
+                return (
+                  <li key={p.key} className="utvar">
+                    <div className="utvar-riadok">
+                      <span className="utvar-nazov">{p.label ?? p.key}</span>
+                      <span className="tichy utvar-pocet">
+                        <code>{p.key}</code>
+                        {!vlastna && " · základná"}
+                        {vlastna && c.pocty[p.key] > 0 && ` · použitá ${c.pocty[p.key]}×`}
+                      </span>
+                      {vlastna && (
+                        <form action={odoberZCiselnika} style={{ marginLeft: "auto" }}>
+                          <input type="hidden" name="zalozka" value="ciselniky" />
+                          <input type="hidden" name="ciselnik" value={c.nazov} />
+                          <input type="hidden" name="kluc" value={p.key} />
+                          <button className="tlacidlo tlacidlo--tiche" type="submit">Odobrať</button>
+                        </form>
+                      )}
+                    </div>
+                  </li>
+                )
+              })}
+            </ul>
+
+            <form action={pridajDoCiselnika} className="utvar-forma">
+              <input type="hidden" name="zalozka" value="ciselniky" />
+              <input type="hidden" name="ciselnik" value={c.nazov} />
+              <input className="pole-vstup" name="popis" placeholder="Metodický pokyn"
+                     aria-label={`Názov novej položky — ${POPIS_CISELNIKA[c.nazov].nazov}`} required />
+              <input className="pole-vstup" name="kluc" placeholder="metodicky_pokyn"
+                     aria-label="Kľúč" autoCapitalize="none" autoCorrect="off" required
+                     style={{ maxWidth: 220 }} />
+              <button className="tlacidlo tlacidlo--tiche" type="submit">Pridať</button>
+            </form>
+
+            <p className="tichy" style={{ fontSize: 13, margin: 0 }}>
+              Kľúč: malé písmená bez diakritiky, číslice a podčiarkovník. Zostáva v obsahu
+              natrvalo, takže sa nedá vziať späť — názov vedľa neho sa meniť dá.
+            </p>
+          </section>
+        ))}
       </div>
       )}
 

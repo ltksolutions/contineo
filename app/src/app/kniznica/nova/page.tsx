@@ -11,6 +11,7 @@ import { notFound, redirect } from "next/navigation"
 import Link from "next/link"
 import { kniznicaContext } from "@/lib/kniznica"
 import { volby, CISELNIKY } from "@/lib/ciselniky"
+import { doplnkyTenanta } from "@/lib/ciselnikyTenanta"
 import { brandingView } from "@/lib/tenants"
 import { tenantStyle } from "@/components/TenantHeader"
 import Vyber from "@/components/Vyber"
@@ -30,6 +31,8 @@ export default async function NovyDokument({
   }
 
   const { chyba, title, sectionKey } = await searchParams
+  // Ponuka musí obsahovať aj to, čo si organizácia dopísala (D55).
+  const doplnky = doplnkyTenanta(ctx.tenant)
   const branding = brandingView(ctx.tenant)
   const { nahraj } = await import("../akcie")
 
@@ -114,14 +117,14 @@ export default async function NovyDokument({
 
         <div className="pole">
           <span className="pole-popis">Druh</span>
-          <Vyber meno="category" volby={[{ hodnota: "", popis: "— neurčené —" }, ...volby("category")]} predvolena="" popisPola="Druh" />
+          <Vyber meno="category" volby={[{ hodnota: "", popis: "— neurčené —" }, ...volby("category", doplnky)]} predvolena="" popisPola="Druh" />
         </div>
 
         <div className="pole">
           <span className="pole-popis">Značky</span>
           <VyberStitkov
             meno="tags"
-            ponuka={volby("tags").map(v => ({ hodnota: v.hodnota }))}
+            ponuka={volby("tags", doplnky).map(v => ({ hodnota: v.hodnota }))}
             vybrane={[]}
             popisNovej="Nová značka"
           />

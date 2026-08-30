@@ -10,6 +10,7 @@
  */
 
 import { getCollection } from "./mongodb"
+import { vsetkyPriecinky, cesta } from "./priecinky"
 import { DOCUMENTS_COLLECTION, effectiveVersion } from "./documents"
 import type { Version } from "./documents"
 import type { PovodnySubor, StavSpracovania } from "./kniznica.zapis"
@@ -25,6 +26,9 @@ export interface RiadokKniznice {
   stavSpracovania: StavSpracovania
   /** `draft` = ešte nepublikované, `published` = má aspoň jedno vydané znenie. */
   stav: string
+  folderId?: string | null
+  /** Názvy priečinkov od koreňa — do zoznamu, aby bolo vidieť, kde dokument je. */
+  cestaPriecinkov?: string[]
   verzii: number
   /** Označenie platného znenia, alebo dôvod, prečo žiadne neplatí. */
   platneZnenie: string
@@ -37,6 +41,16 @@ export interface RiadokKniznice {
 export interface DetailKniznice extends RiadokKniznice {
   draftMarkdown?: string
   markdown?: string
+  /**
+   * Text, ktorý sa má otvoriť v editore.
+   *
+   * Nie je to `draftMarkdown ?? markdown`: dokumenty naimportované skriptom
+   * nemajú **ani jedno** — text si nesie len položka vo `versions[]`. Editor
+   * sa im preto otváral prázdny, čo vyzeralo, akoby sa norma stratila.
+   * Poradie je zámerné: rozpracovaný koncept, potom platné znenie, až potom
+   * najnovšie zapísané.
+   */
+  textNaUpravu: string
   versions: Version[]
   originalFile?: PovodnySubor
   konverzia?: { sposob: string; upozornenia: string[]; kedy: Date }
@@ -76,6 +90,7 @@ function naRiadok(d: Surovy): RiadokKniznice {
     stavSpracovania: (d.processingStatus === "indexed" ? "zaindexovane"
       : (d.processingStatus as StavSpracovania | undefined) ?? "nahrate"),
     stav: String(d.status ?? "draft"),
+    folderId: (d.folderId as string | null | undefined) ?? null,
     verzii: (d.versions ?? []).length,
     platneZnenie: popisPlatnosti(d),
     maKoncept: Boolean(String(d.draftMarkdown ?? "").trim()),
@@ -87,15 +102,43 @@ function naRiadok(d: Surovy): RiadokKniznice {
   }
 }
 
+export interface FilterKniznice {
+  hladat?: string
+  stav?: string
+  /** Priečinok **vrátane podpriečinkov** — hľadá sa v materializovanej ceste. */
+  priecinok?: string
+  /** `nezaradene` = dokumenty, ktoré v žiadnom priečinku nie sú. */
+  category?: string
+  language?: string
+  accessLevel?: string
+  tag?: string
+}
+
 export async function zoznamKniznice(
   companyCode: string,
-  filter: { hladat?: string; stav?: string } = {},
+  filter: FilterKniznice = {},
 ): Promise<RiadokKniznice[]> {
   const col = await getCollection(DOCUMENTS_COLLECTION)
   const q: Record<string, unknown> = { companyCode }
 
   if (filter.stav === "koncept") q.status = { $ne: "published" }
   if (filter.stav === "publikovane") q.status = "published"
+
+  // Priečinok sa filtruje cez cestu, takže „úsek komunikácie" nájde aj to,
+  // čo je v jeho podpriečinkoch. Jeden dotaz namiesto rekurzie pri každom
+  // zobrazení — to je celý dôvod, prečo sa cesta ukladá.
+  if (filter.priecinok === "nezaradene") {
+    q.$and = [
+      { $or: [{ folderId: null }, { folderId: { $exists: false } }] },
+    ]
+  } else if (filter.priecinok) {
+    q.folderPath = filter.priecinok
+  }
+
+  if (filter.category) q.category = filter.category
+  if (filter.language) q.language = filter.language
+  if (filter.accessLevel) q.accessLevel = filter.accessLevel
+  if (filter.tag) q.tags = filter.tag
 
   if (filter.hladat?.trim()) {
     // Vstup od človeka ide do regulárneho výrazu — bez escapovania by `(`
@@ -113,7 +156,7 @@ export async function zoznamKniznice(
       projection: {
         documentId: 1, title: 1, sectionKey: 1, category: 1, language: 1, accessLevel: 1,
         tags: 1, status: 1, processingStatus: 1, draftMarkdown: 1, originalFile: 1,
-        updatedAt: 1, updatedBy: 1,
+        folderId: 1, folderPath: 1, updatedAt: 1, updatedBy: 1,
         // Z verzií len to, čo treba na „ktoré znenie platí" — samotné texty
         // znení sú veľké a v zozname by sa ťahali zbytočne.
         "versions.versionId": 1, "versions.label": 1, "versions.isActive": 1,
@@ -123,7 +166,11 @@ export async function zoznamKniznice(
     .sort({ updatedAt: -1, title: 1 })
     .toArray()
 
-  return zaznamy.map(z => naRiadok(z as Surovy))
+  const priecinky = await vsetkyPriecinky(companyCode)
+  return zaznamy.map(z => {
+    const r = naRiadok(z as Surovy)
+    return { ...r, cestaPriecinkov: cesta(priecinky, r.folderId).map(p => p.nazov) }
+  })
 }
 
 export async function detailKniznice(
@@ -134,8 +181,28 @@ export async function detailKniznice(
   const d = (await col.findOne({ companyCode, documentId })) as Surovy | null
   if (!d) return null
 
+  const versions = (d.versions ?? []).slice()
+  const platna = effectiveVersion(d as never)
+  const najnovsia = versions
+    .slice()
+    .sort((a, b) => {
+      const ta = a.publishedAt ? new Date(a.publishedAt).getTime() : 0
+      const tb = b.publishedAt ? new Date(b.publishedAt).getTime() : 0
+      return tb - ta
+    })[0]
+
+  const textNaUpravu =
+    String(d.draftMarkdown ?? "").trim() ||
+    String(d.markdown ?? "").trim() ||
+    (platna.ok ? String(platna.version.markdown ?? "") : "") ||
+    String(najnovsia?.markdown ?? "")
+
+  const priecinky = await vsetkyPriecinky(companyCode)
+
   return {
     ...naRiadok(d),
+    cestaPriecinkov: cesta(priecinky, (d.folderId as string | null | undefined) ?? null).map(p => p.nazov),
+    textNaUpravu,
     companyCode,
     scope: d.scope ? String(d.scope) : undefined,
     draftMarkdown: d.draftMarkdown ? String(d.draftMarkdown) : undefined,

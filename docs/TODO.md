@@ -43,7 +43,11 @@
 ### D2. CMS — knižnica, web obsah, kanály (Fáza 4 / nová CMS-Web / 6) → `docs/CMS_KONCEPCIA.md`, `docs/KNIZNICA_DOKUMENTOV.md`
 - [x] **Media manager (D53, 2026-08-30):** `/kniznica` — zoznam, filtre, detail, história znení, nahratie docx/pdf/xlsx/md s prevodom do Markdownu, editor s originálom vedľa, publikovanie so `label` + `effectiveFrom` + citáciou zdroja. Rola `spravca-obsahu`
 - [x] pôvodné súbory v GridFS, neverejná cesta; chunker a číselníky spoločné pre obrazovku aj skript
-- [ ] náhľad Markdownu v editore (zatiaľ surový text)
+- [x] **WYSIWYG editor** (D54) — prepínač Markdown / vizuálny režim, uložený tvar zostáva Markdown
+- [x] **virtuálne priečinky + filtre** (D56) — strom, dokument v práve jednom, filter vrátane podpriečinkov
+- [x] **vlastné číselníky organizácie** (D55) — druhy dokumentov a značky v `/organizacia`
+- [x] **oprava: editor sa pri normách z importu otváral prázdny** — text je len vo `versions[]`
+- [ ] presun dokumentu do priečinka hromadne (zatiaľ po jednom v detaile)
 - [ ] archivácia dokumentu z obrazovky — mazanie zámerne nie je (viažu sa potvrdenia)
 - [ ] **KB / FAQ na verejnom webe** — samostatná fáza, `CMS_KONCEPCIA.md` časť B
 - [ ] Rozšíriť `documents` o `contentType` (`document`|`web`) a `webPublish` (slug, seo, navParent, publishAt) — **D-CMS-1**

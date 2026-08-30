@@ -61,6 +61,26 @@ const PLAN = [
     ],
   },
   {
+    kolekcia: "cms_folders",
+    indexy: [
+      { kluc: { companyCode: 1, id: 1 }, opts: { unique: true, name: "tenant_priecinok_unique" },
+        preco: "identifikátor priečinka je jedinečný v rámci tenanta (D56)" },
+      { kluc: { companyCode: 1, parentId: 1 }, opts: { name: "podla_nadriadeneho" },
+        preco: "vykreslenie stromu ide po úrovniach" },
+    ],
+  },
+  {
+    kolekcia: "documents",
+    indexy: [
+      { kluc: { companyCode: 1, folderPath: 1 }, opts: { name: "tenant_priecinok" },
+        preco: "filter na priečinok vrátane podpriečinkov (D56)" },
+      { kluc: { companyCode: 1, category: 1 }, opts: { name: "tenant_druh" },
+        preco: "filter na druh dokumentu" },
+      { kluc: { companyCode: 1, tags: 1 }, opts: { name: "tenant_znacky" },
+        preco: "filter na značku" },
+    ],
+  },
+  {
     kolekcia: "audit",
     indexy: [
       { kluc: { companyCode: 1, kedy: -1 }, opts: { name: "podla_casu" },

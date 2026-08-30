@@ -25,9 +25,10 @@ import { getCollection } from "./mongodb"
 import { DOCUMENTS_COLLECTION } from "./documents"
 import { chunkuj } from "./chunker.mjs"
 import { overHodnotu, overZoznam, CiselnikError } from "./ciselniky"
+import type { Doplnky } from "./ciselniky"
 import { ulozSubor, zmazSubor } from "./ulozisko"
 import { preved, NAZOV_TYPU, KonverziaError } from "./konverzia"
-import { zapisAudit } from "./audit"
+import { zapisAudit, rozdiel } from "./audit"
 import type { Chunk } from "./chunker"
 
 export const CHUNKS_COLLECTION = "document_chunks"
@@ -73,7 +74,10 @@ export function idDokumentu(meta: { companyCode: string; sectionKey: string }): 
 const hash = (s: string) => createHash("sha256").update(s).digest("hex").slice(0, 16)
 
 /** Overí metadáta z formulára proti číselníkom. Vyhadzuje `KniznicaError`. */
-export function overMetadata(vstup: Partial<MetadataDokumentu>): MetadataDokumentu {
+export function overMetadata(
+  vstup: Partial<MetadataDokumentu>,
+  doplnky?: Doplnky,
+): MetadataDokumentu {
   const title = (vstup.title ?? "").trim()
   if (!title) throw new KniznicaError("Názov dokumentu je povinný — bez neho je v zozname len kľúč.")
 
@@ -85,9 +89,9 @@ export function overMetadata(vstup: Partial<MetadataDokumentu>): MetadataDokumen
       scope: overHodnotu("scope", vstup.scope ?? ""),
       accessLevel: overHodnotu("accessLevel", vstup.accessLevel ?? ""),
       language: overHodnotu("language", vstup.language ?? ""),
-      category: vstup.category ? overHodnotu("category", vstup.category) : undefined,
+      category: vstup.category ? overHodnotu("category", vstup.category, doplnky) : undefined,
       sourceType: vstup.sourceType ? overHodnotu("sourceType", vstup.sourceType) : undefined,
-      tags: overZoznam("tags", vstup.tags ?? []),
+      tags: overZoznam("tags", vstup.tags ?? [], doplnky),
     }
   } catch (e) {
     if (e instanceof CiselnikError) throw new KniznicaError(e.message)
@@ -365,4 +369,81 @@ export async function publikuj(
   })
 
   return { versionId, chunkov: chunky.length, archivovanych: archiv.modifiedCount, uzBolo: false }
+}
+
+
+/**
+ * Upraví údaje o dokumente.
+ *
+ * **Kľúč (`sectionKey`) a organizácia sa meniť nedajú.** Tvoria `documentId`
+ * a ten je v `document_chunks`, v prideleniach aj v záznamoch o potvrdení.
+ * Zmeniť ho by neznamenalo premenovanie, ale vznik druhého dokumentu, ku
+ * ktorému by sa história nedostala. Kto sa pomýlil v kľúči, nahrá dokument
+ * znova pod správnym.
+ *
+ * Názov sa meniť **dá** — a je to vedomé rozhodnutie: objaví sa v ďalších
+ * potvrdeniach, ale staré záznamy si nesú kópiu názvu v čase potvrdenia,
+ * takže sa spätne nezmenia (rovnaký princíp ako pri adrese osoby, D45).
+ */
+export async function ulozUdaje(
+  companyCode: string,
+  documentId: string,
+  vstup: Partial<MetadataDokumentu>,
+  aktor: string,
+  doplnky?: Doplnky,
+): Promise<void> {
+  const col = await getCollection(DOCUMENTS_COLLECTION)
+  const pred = await col.findOne({ documentId, companyCode }) as Record<string, unknown> | null
+  if (!pred) throw new KniznicaError("Taký dokument tu nie je.")
+
+  // Kľúč aj organizácia sa berú z existujúceho záznamu, nie z formulára.
+  const meta = overMetadata({
+    ...vstup,
+    sectionKey: String(pred.sectionKey ?? ""),
+    companyCode,
+  }, doplnky)
+
+  const set: Record<string, unknown> = {
+    title: meta.title,
+    scope: meta.scope,
+    accessLevel: meta.accessLevel,
+    language: meta.language,
+    category: meta.category ?? null,
+    tags: meta.tags ?? [],
+    updatedAt: new Date(),
+    updatedBy: aktor,
+  }
+
+  await col.updateOne({ documentId, companyCode }, { $set: set })
+
+  // Chunky nesú kópiu filtrov (`accessLevel`, `language`, `scope`, `tags`) —
+  // bez tejto vety by sa zmena prejavila v knižnici, ale vyhľadávanie by
+  // ďalej filtrovalo podľa starých hodnôt. Tichý rozpor presne toho druhu,
+  // ktorý sa hľadá týždne.
+  const chunkCol = await getCollection(CHUNKS_COLLECTION)
+  await chunkCol.updateMany(
+    { documentId },
+    {
+      $set: {
+        scope: meta.scope,
+        accessLevel: meta.accessLevel,
+        language: meta.language,
+        tags: meta.tags ?? [],
+      },
+    },
+  )
+
+  const predMeta = {
+    title: pred.title, scope: pred.scope, accessLevel: pred.accessLevel,
+    language: pred.language, category: pred.category ?? null, tags: pred.tags ?? [],
+  }
+  const poMeta = {
+    title: meta.title, scope: meta.scope, accessLevel: meta.accessLevel,
+    language: meta.language, category: meta.category ?? null, tags: meta.tags ?? [],
+  }
+  await zapisAudit({
+    companyCode, predmet: "dokument", akcia: "zmenene", aktor,
+    cielId: documentId, cielPopis: meta.title,
+    zmeny: rozdiel(predMeta, poMeta),
+  })
 }

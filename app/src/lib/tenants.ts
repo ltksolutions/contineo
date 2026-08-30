@@ -76,6 +76,20 @@ export interface Tenant {
   oauth?: TenantOAuth
 
   /**
+   * Vlastné položky číselníkov, ktoré si organizácia dopísala (D55).
+   *
+   * **Dopĺňajú globálne, neprepisujú ich.** V globálnych sú hodnoty, ktorými
+   * je už otagovaný existujúci obsah; ich zmiznutie z ponuky by z nich
+   * spravilo neplatné údaje na dokumentoch, ktoré nikto nemenil.
+   *
+   * Len číselníky, ktoré popisujú obsah zákazníka (`category`, `tags`).
+   * `scope`, `accessLevel` a `language` zostávajú globálne a uzavreté — sú to
+   * filtre, na ktorých stojí prístup, a vlastná hodnota v nich by bola niečo,
+   * čomu nikde inde v systéme nikto nerozumie.
+   */
+  ciselniky?: Partial<Record<string, { key: string; label?: string }[]>>
+
+  /**
    * Domény, z ktorých sa človek **založí sám** pri prvom prihlásení
    * pracovným kontom (D47). Napríklad `futbalsfz.sk`, `sfzmarketing.sk`.
    *

@@ -15,7 +15,12 @@ import { brandingView } from "@/lib/tenants"
 import { tenantStyle } from "@/components/TenantHeader"
 import { formatDate } from "@/lib/i18n"
 import Oznam from "@/components/Oznam"
-import { publikujZnenie } from "../akcie"
+import { publikujZnenie, ulozUdajeDokumentu, zaradDoPriecinka } from "../akcie"
+import { vsetkyPriecinky, splostiStrom } from "@/lib/priecinky"
+import { volby } from "@/lib/ciselniky"
+import { doplnkyTenanta } from "@/lib/ciselnikyTenanta"
+import Vyber from "@/components/Vyber"
+import VyberStitkov from "@/components/VyberStitkov"
 
 export const dynamic = "force-dynamic"
 
@@ -40,8 +45,15 @@ export default async function DetailDokumentu({
 
   const branding = brandingView(ctx.tenant)
   const jazyk = ctx.person.language
+  const doplnky = doplnkyTenanta(ctx.tenant)
+  const priecinky = await vsetkyPriecinky(ctx.tenant.companyCode)
+  const stromPriecinkov = splostiStrom(priecinky)
   const koncept = (d.draftMarkdown ?? "").trim()
-  const publikovany = (d.markdown ?? "").trim()
+  // Publikované znenie je pri dokumentoch z importu len vo `versions[]` —
+  // porovnávať koncept s prázdnym `markdown` by tvrdilo, že je čo publikovať,
+  // aj keď je text ten istý.
+  const platna = d.versions.find(v => v.isActive && v.effectiveFrom)
+  const publikovany = ((d.markdown ?? platna?.markdown) ?? "").trim()
   // Koncept, ktorý sa líši od publikovaného znenia, je nedokončená práca —
   // a je to jediný stav, v ktorom má zmysel niečo publikovať.
   const jeCoPublikovat = Boolean(koncept) && koncept !== publikovany
@@ -55,11 +67,98 @@ export default async function DetailDokumentu({
       </p>
 
       <h1 style={{ fontSize: 25, letterSpacing: "-0.02em", margin: "0 0 4px" }}>{d.title}</h1>
-      <p className="tichy" style={{ fontSize: 14, margin: "0 0 18px" }}>
-        {d.documentId} · {d.language} · {d.accessLevel}
-        {d.category && ` · ${d.category}`}
-        {d.tags.length > 0 && ` · ${d.tags.join(", ")}`}
-      </p>
+      <p className="tichy" style={{ fontSize: 14, margin: "0 0 18px" }}>{d.documentId}</p>
+
+      <details className="karta" style={{ padding: 18, margin: "0 0 18px" }}>
+        <summary style={{ cursor: "pointer", fontWeight: 600 }}>
+          Údaje o dokumente
+          <span className="tichy" style={{ fontWeight: 400, fontSize: 13.5 }}>
+            {" "}· {d.language} · {d.accessLevel}
+            {d.category && ` · ${d.category}`}
+            {d.tags.length > 0 && ` · ${d.tags.join(", ")}`}
+          </span>
+        </summary>
+
+        <form action={ulozUdajeDokumentu} style={{ display: "grid", gap: 14, marginTop: 14 }}>
+          <input type="hidden" name="documentId" value={d.documentId} />
+
+          <label className="pole">
+            <span className="pole-popis">Názov</span>
+            <input className="pole-vstup" name="title" defaultValue={d.title} required />
+            <span className="tichy pole-napoveda">
+              Meniť sa dá. Objaví sa v ďalších potvrdeniach; staré záznamy si nesú kópiu
+              názvu z času potvrdenia, takže sa spätne nezmenia.
+            </span>
+          </label>
+
+          <div className="pole">
+            <span className="pole-popis">Pôsobnosť</span>
+            <Vyber meno="scope" volby={volby("scope")} predvolena={d.scope ?? "company"} popisPola="Pôsobnosť" />
+          </div>
+
+          <div className="pole">
+            <span className="pole-popis">Prístupnosť</span>
+            <Vyber meno="accessLevel" volby={volby("accessLevel")} predvolena={d.accessLevel ?? "internal"} popisPola="Prístupnosť" />
+          </div>
+
+          <div className="pole">
+            <span className="pole-popis">Jazyk dokumentu</span>
+            <Vyber meno="language" volby={volby("language")} predvolena={d.language ?? "sk"} popisPola="Jazyk dokumentu" />
+          </div>
+
+          <div className="pole">
+            <span className="pole-popis">Druh</span>
+            <Vyber
+              meno="category"
+              volby={[{ hodnota: "", popis: "— neurčené —" }, ...volby("category", doplnky)]}
+              predvolena={d.category ?? ""}
+              popisPola="Druh"
+            />
+          </div>
+
+          <div className="pole">
+            <span className="pole-popis">Značky</span>
+            <VyberStitkov
+              meno="tags"
+              ponuka={volby("tags", doplnky).map(v => ({ hodnota: v.hodnota }))}
+              vybrane={d.tags}
+              popisNovej="Nová značka"
+            />
+          </div>
+
+          <p className="tichy" style={{ fontSize: 13.5, margin: 0 }}>
+            Kľúč <code>{d.documentId}</code> sa meniť nedá — je v úsekoch, v prideleniach
+            aj v záznamoch o potvrdení. Zmena by nebola premenovanie, ale druhý dokument,
+            ku ktorému by sa história nedostala.
+          </p>
+
+          <div><button className="tlacidlo" type="submit">Uložiť údaje</button></div>
+        </form>
+      </details>
+
+      <form action={zaradDoPriecinka} className="karta utvar-forma" style={{ padding: 18, margin: "0 0 18px" }}>
+        <input type="hidden" name="documentId" value={d.documentId} />
+        <div className="pole" style={{ flex: "1 1 260px", margin: 0 }}>
+          <span className="pole-popis">Priečinok</span>
+          <Vyber
+            meno="folderId"
+            predvolena={d.folderId ?? ""}
+            popisPola="Priečinok"
+            volby={[
+              { hodnota: "", popis: "— nezaradené —" },
+              ...stromPriecinkov.map(r => ({
+                hodnota: r.priecinok.id,
+                popis: `${"— ".repeat(r.uroven - 1)}${r.priecinok.nazov}`,
+              })),
+            ]}
+          />
+          <span className="tichy pole-napoveda">
+            Priečinky sú len zaradenie — súbor ani text sa nikam nepresúva. Filter
+            v knižnici nájde dokument aj cez nadriadený priečinok.
+          </span>
+        </div>
+        <button className="tlacidlo tlacidlo--tiche" type="submit">Zaradiť</button>
+      </form>
 
       <section className="karta" style={{ padding: 18, display: "grid", gap: 10, margin: "0 0 18px" }}>
         <div style={{ display: "flex", gap: 10, alignItems: "baseline", flexWrap: "wrap" }}>
@@ -91,7 +190,7 @@ export default async function DetailDokumentu({
         <p className="tichy" style={{ fontSize: 13.5, margin: 0 }}>
           {jeCoPublikovat
             ? "Koncept sa líši od publikovaného znenia."
-            : koncept
+            : koncept || publikovany
               ? "Koncept je zhodný s publikovaným znením."
               : "Koncept je prázdny."}
         </p>

@@ -21,11 +21,12 @@ import { brandingView } from "@/lib/tenants"
 import { tenantStyle } from "@/components/TenantHeader"
 import { formatDate } from "@/lib/i18n"
 import Oznam from "@/components/Oznam"
+import EditorTextu from "@/components/EditorTextu"
 import { ulozText, poslatNaModel, rozhodniONavrhu } from "../../akcie"
 
 export const dynamic = "force-dynamic"
 
-export default async function EditorTextu({
+export default async function StranaEditora({
   params,
   searchParams,
 }: {
@@ -129,16 +130,15 @@ export default async function EditorTextu({
         </section>
 
         <section className="editor-stlpec">
-          <h2 className="pole-popis" style={{ margin: "0 0 8px" }}>Markdown</h2>
+          <h2 className="pole-popis" style={{ margin: "0 0 8px" }}>
+            Text
+            <span className="tichy" style={{ fontWeight: 400 }}>
+              {" "}— prepínač <em>Markdown / WYSIWYG</em> je dole v editore
+            </span>
+          </h2>
           <form action={ulozText} style={{ display: "grid", gap: 10 }}>
             <input type="hidden" name="documentId" value={documentId} />
-            <textarea
-              className="pole-vstup editor-text"
-              name="markdown"
-              defaultValue={d.draftMarkdown ?? d.markdown ?? ""}
-              spellCheck={false}
-              aria-label="Text dokumentu v Markdowne"
-            />
+            <EditorTextu meno="markdown" pociatocny={d.textNaUpravu} />
             <div><button className="tlacidlo" type="submit">Uložiť text</button></div>
           </form>
         </section>

@@ -1093,3 +1093,63 @@ button:disabled { cursor: not-allowed; opacity: 0.55; }
   overflow-wrap: normal;
   overflow-x: auto;
 }
+
+/* ── WYSIWYG editor (D54) ────────────────────────────────────────────────
+   Toast UI si nesie vlastné farby. Namiesto prepisovania celej jeho témy
+   preberáme len to, čo inak v tmavom režime svieti: pozadie, text a rámček.
+   Menej presné než ich tmavá téma, ale nerozíde sa s ňou pri aktualizácii. */
+.editor-obal { min-width: 0; }
+
+.editor-tui .toastui-editor-defaultUI {
+  border-radius: 12px;
+  border-color: var(--line);
+}
+
+html[data-theme="dark"] .editor-tui .toastui-editor-defaultUI,
+html[data-theme="dark"] .editor-tui .toastui-editor-md-container,
+html[data-theme="dark"] .editor-tui .toastui-editor-ww-container,
+html[data-theme="dark"] .editor-tui .toastui-editor-defaultUI-toolbar,
+html[data-theme="dark"] .editor-tui .toastui-editor-mode-switch {
+  background: var(--surface);
+  color: var(--ink);
+}
+
+html[data-theme="dark"] .editor-tui .ProseMirror,
+html[data-theme="dark"] .editor-tui .toastui-editor-contents,
+html[data-theme="dark"] .editor-tui .CodeMirror {
+  background: var(--surface);
+  color: var(--ink);
+}
+
+/* Panel nástrojov sa na telefóne láme do viacerých riadkov — nechať ho
+   preto rásť do výšky, nie orezať tlačidlá, ktoré sa nezmestili. */
+@media (max-width: 640px) {
+  .editor-tui .toastui-editor-defaultUI-toolbar { flex-wrap: wrap; height: auto; }
+}
+
+/* ── knižnica: priečinky vedľa zoznamu (D56) ─────────────────────────────
+   Bočný panel len tam, kde má zoznam ešte dosť miesta. Pod 860 px ide nad
+   zoznam: na telefóne je strom priečinkov navigácia, nie stĺpec. */
+.kniznica-mriezka {
+  display: grid;
+  gap: 20px;
+  grid-template-columns: 1fr;
+  align-items: start;
+}
+
+@media (min-width: 860px) {
+  .kniznica-mriezka { grid-template-columns: 250px 1fr; }
+}
+
+.kniznica-priecinky { min-width: 0; }
+.kniznica-zoznam { min-width: 0; }
+
+/* Odkaz v strome sa nesmie správať ako odsek textu — celý riadok je cieľ. */
+.kniznica-priecinky .utvar-riadok { text-decoration: none; color: inherit; }
+.kniznica-priecinky .utvar-nazov { text-decoration: none; color: inherit; }
+.kniznica-priecinky .utvar-nazov:hover { text-decoration: underline; }
+
+.kniznica-priecinky .je-aktivny {
+  font-weight: 700;
+  color: var(--accent, var(--ink));
+}

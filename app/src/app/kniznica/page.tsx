@@ -10,6 +10,13 @@ import { notFound, redirect } from "next/navigation"
 import Link from "next/link"
 import { kniznicaContext } from "@/lib/kniznica"
 import { zoznamKniznice } from "@/lib/kniznica.citanie"
+import { vsetkyPriecinky, splostiStrom, podstrom, pocty, hlbka, MAX_HLBKA } from "@/lib/priecinky"
+import { volby } from "@/lib/ciselniky"
+import { doplnkyTenanta } from "@/lib/ciselnikyTenanta"
+import Vyber from "@/components/Vyber"
+import {
+  zalozPriecinokAkcia, premenujPriecinokAkcia, presunPriecinokAkcia, zrusPriecinokAkcia,
+} from "./akcie"
 import { brandingView } from "@/lib/tenants"
 import { tenantStyle } from "@/components/TenantHeader"
 import { formatDate } from "@/lib/i18n"
@@ -33,7 +40,10 @@ function velkost(bajtov: number): string {
 export default async function Kniznica({
   searchParams,
 }: {
-  searchParams: Promise<{ sprava?: string; chyba?: string; hladat?: string; stav?: string }>
+  searchParams: Promise<{
+    sprava?: string; chyba?: string; hladat?: string; stav?: string
+    priecinok?: string; category?: string; language?: string; accessLevel?: string; tag?: string
+  }>
 }) {
   const ctx = await kniznicaContext()
   if (ctx.state !== "ready") {
@@ -41,10 +51,33 @@ export default async function Kniznica({
     notFound()
   }
 
-  const { sprava, chyba, hladat, stav } = await searchParams
+  const q = await searchParams
+  const { sprava, chyba, hladat, stav, priecinok, category, language, accessLevel, tag } = q
   const branding = brandingView(ctx.tenant)
   const jazyk = ctx.person.language
-  const riadky = await zoznamKniznice(ctx.tenant.companyCode, { hladat, stav })
+  const doplnky = doplnkyTenanta(ctx.tenant)
+
+  const [riadky, priecinky, poctyPriecinkov] = await Promise.all([
+    zoznamKniznice(ctx.tenant.companyCode, { hladat, stav, priecinok, category, language, accessLevel, tag }),
+    vsetkyPriecinky(ctx.tenant.companyCode),
+    pocty(ctx.tenant.companyCode),
+  ])
+  const strom = splostiStrom(priecinky)
+
+  // Filtre sa nesú ďalej v každom odkaze aj v každom formulári — inak by sa
+  // človek po založení priečinka ocitol späť na nefiltrovanom zozname.
+  const filtre = Object.entries({ hladat, stav, priecinok, category, language, accessLevel, tag })
+    .filter(([, v]) => Boolean(v)) as [string, string][]
+  const sFiltrom = (zmena: Record<string, string | undefined>) => {
+    const p = new URLSearchParams(filtre)
+    for (const [k, v] of Object.entries(zmena)) {
+      if (v === undefined || v === "") p.delete(k)
+      else p.set(k, v)
+    }
+    const s = p.toString()
+    return s ? `/kniznica?${s}` : "/kniznica"
+  }
+  const jeFilter = filtre.length > 0
 
   return (
     <div className="obal" style={{ padding: "28px 20px 80px", maxWidth: 900, ...tenantStyle(branding) }}>
@@ -61,15 +94,168 @@ export default async function Kniznica({
       </p>
 
       <form className="audit-filter" method="get">
-        <label className="pole" style={{ flex: "1 1 240px", margin: 0 }}>
+        <label className="pole" style={{ flex: "1 1 220px", margin: 0 }}>
           <span className="pole-popis">Hľadať</span>
           <input className="pole-vstup" name="hladat" defaultValue={hladat ?? ""} placeholder="názov alebo kľúč" />
         </label>
-        <button className="tlacidlo tlacidlo--tiche" type="submit">Hľadať</button>
-        {(hladat || stav) && (
-          <Link className="tichy" href="/kniznica" style={{ fontSize: 14 }}>zrušiť filter</Link>
+
+        <div className="pole" style={{ flex: "0 1 180px", margin: 0 }}>
+          <span className="pole-popis">Druh</span>
+          <Vyber
+            meno="category"
+            volby={[{ hodnota: "", popis: "— všetky —" }, ...volby("category", doplnky)]}
+            predvolena={category ?? ""}
+            popisPola="Druh dokumentu"
+          />
+        </div>
+
+        <div className="pole" style={{ flex: "0 1 160px", margin: 0 }}>
+          <span className="pole-popis">Značka</span>
+          <Vyber
+            meno="tag"
+            volby={[{ hodnota: "", popis: "— všetky —" }, ...volby("tags", doplnky)]}
+            predvolena={tag ?? ""}
+            popisPola="Značka"
+          />
+        </div>
+
+        <div className="pole" style={{ flex: "0 1 150px", margin: 0 }}>
+          <span className="pole-popis">Stav</span>
+          <Vyber
+            meno="stav"
+            volby={[
+              { hodnota: "", popis: "— všetky —" },
+              { hodnota: "publikovane", popis: "publikované" },
+              { hodnota: "koncept", popis: "koncepty" },
+            ]}
+            predvolena={stav ?? ""}
+            popisPola="Stav"
+          />
+        </div>
+
+        {/* Priečinok sa vyberá kliknutím v strome vedľa, nie tu — ale musí sa
+            preniesť, inak by odoslanie filtra vyskočilo z priečinka von. */}
+        {priecinok && <input type="hidden" name="priecinok" value={priecinok} />}
+        {language && <input type="hidden" name="language" value={language} />}
+        {accessLevel && <input type="hidden" name="accessLevel" value={accessLevel} />}
+
+        <button className="tlacidlo tlacidlo--tiche" type="submit">Filtrovať</button>
+        {jeFilter && (
+          <Link className="tichy" href="/kniznica" style={{ fontSize: 14 }}>zrušiť filtre</Link>
         )}
       </form>
+
+      <div className="kniznica-mriezka">
+        <aside className="kniznica-priecinky">
+          <h2 className="pole-popis" style={{ margin: "0 0 8px" }}>Priečinky</h2>
+
+          <ul className="utvary">
+            <li className="utvar">
+              <Link
+                href={sFiltrom({ priecinok: undefined })}
+                className={`utvar-riadok${!priecinok ? " je-aktivny" : ""}`}
+              >
+                <span className="utvar-nazov">Všetky dokumenty</span>
+              </Link>
+            </li>
+            <li className="utvar">
+              <Link
+                href={sFiltrom({ priecinok: "nezaradene" })}
+                className={`utvar-riadok${priecinok === "nezaradene" ? " je-aktivny" : ""}`}
+              >
+                <span className="tichy utvar-nazov">Nezaradené</span>
+              </Link>
+            </li>
+
+            {strom.map(({ priecinok: p, uroven }) => {
+              const c = poctyPriecinkov.get(p.id) ?? { priamo: 0, sPodriadenymi: 0 }
+              const pod = podstrom(priecinky, p.id)
+              return (
+                <li key={p.id} className="utvar" style={{ paddingLeft: (uroven - 1) * 14 }}>
+                  <div className="utvar-riadok" style={{ gap: 6 }}>
+                    <Link
+                      href={sFiltrom({ priecinok: p.id })}
+                      className={`utvar-nazov${priecinok === p.id ? " je-aktivny" : ""}`}
+                    >
+                      {p.nazov}
+                    </Link>
+                    <span className="tichy utvar-pocet">{c.sPodriadenymi}</span>
+                  </div>
+
+                  <details>
+                    <summary className="tichy" style={{ fontSize: 12.5, cursor: "pointer", padding: "0 12px 6px" }}>
+                      upraviť
+                    </summary>
+                    <div className="utvar-uprava">
+                      <form action={premenujPriecinokAkcia} className="utvar-forma">
+                        <input type="hidden" name="id" value={p.id} />
+                        {filtre.map(([k, v]) => <input key={k} type="hidden" name={k} value={v} />)}
+                        <input className="pole-vstup" name="nazov" defaultValue={p.nazov}
+                               aria-label={`Názov priečinka ${p.nazov}`} required />
+                        <button className="tlacidlo tlacidlo--tiche" type="submit">Premenovať</button>
+                      </form>
+
+                      <form action={presunPriecinokAkcia} className="utvar-forma">
+                        <input type="hidden" name="id" value={p.id} />
+                        {filtre.map(([k, v]) => <input key={k} type="hidden" name={k} value={v} />)}
+                        <Vyber
+                          meno="parentId"
+                          predvolena={p.parentId ?? ""}
+                          popisPola={`Nadriadený priečinok pre ${p.nazov}`}
+                          volby={[
+                            { hodnota: "", popis: "— najvyššia úroveň —" },
+                            ...strom
+                              .filter(r => !pod.has(r.priecinok.id))
+                              .map(r => ({
+                                hodnota: r.priecinok.id,
+                                popis: `${"— ".repeat(r.uroven - 1)}${r.priecinok.nazov}`,
+                              })),
+                          ]}
+                        />
+                        <button className="tlacidlo tlacidlo--tiche" type="submit">Presunúť</button>
+                      </form>
+
+                      {c.sPodriadenymi === 0 && pod.size === 1 ? (
+                        <form action={zrusPriecinokAkcia}>
+                          <input type="hidden" name="id" value={p.id} />
+                          {filtre.map(([k, v]) => <input key={k} type="hidden" name={k} value={v} />)}
+                          <button className="tlacidlo tlacidlo--tiche" type="submit">Zrušiť priečinok</button>
+                        </form>
+                      ) : (
+                        <p className="tichy" style={{ fontSize: 12.5, margin: 0 }}>
+                          Zrušiť sa dá až prázdny priečinok bez podpriečinkov.
+                        </p>
+                      )}
+                    </div>
+                  </details>
+                </li>
+              )
+            })}
+          </ul>
+
+          <form action={zalozPriecinokAkcia} className="utvar-forma" style={{ marginTop: 12 }}>
+            {filtre.map(([k, v]) => <input key={k} type="hidden" name={k} value={v} />)}
+            <input className="pole-vstup" name="nazov" placeholder="Nový priečinok"
+                   aria-label="Názov nového priečinka" required />
+            <Vyber
+              meno="parentId"
+              predvolena={priecinok && priecinok !== "nezaradene" ? priecinok : ""}
+              popisPola="Nadriadený priečinok"
+              volby={[
+                { hodnota: "", popis: "— najvyššia úroveň —" },
+                ...strom
+                  .filter(r => hlbka(priecinky, r.priecinok.id) < MAX_HLBKA)
+                  .map(r => ({
+                    hodnota: r.priecinok.id,
+                    popis: `${"— ".repeat(r.uroven - 1)}${r.priecinok.nazov}`,
+                  })),
+              ]}
+            />
+            <button className="tlacidlo tlacidlo--tiche" type="submit">Založiť</button>
+          </form>
+        </aside>
+
+        <div className="kniznica-zoznam">
 
       {riadky.length === 0 ? (
         <p className="karta" style={{ padding: 20, fontSize: 15 }}>
@@ -88,6 +274,7 @@ export default async function Kniznica({
               </div>
 
               <div className="tichy audit-kto">
+                {r.cestaPriecinkov?.length ? `${r.cestaPriecinkov.join(" / ")} · ` : ""}
                 {r.documentId}
                 {r.povodnySubor && ` · ${r.povodnySubor.nazov} (${velkost(r.povodnySubor.bajtov)})`}
                 {r.updatedAt && ` · ${formatDate(r.updatedAt, jazyk)}`}
@@ -105,6 +292,8 @@ export default async function Kniznica({
           ))}
         </ul>
       )}
+        </div>
+      </div>
     </div>
   )
 }

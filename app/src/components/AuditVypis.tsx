@@ -18,6 +18,7 @@ const PREDMETY: Record<string, string> = {
   osoba: "osoba",
   utvar: "útvar",
   dokument: "dokument",
+  priecinok: "priečinok",
   pridelenie: "pridelenie",
   organizacia: "organizácia",
   domena: "doména",

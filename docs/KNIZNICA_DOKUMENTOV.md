@@ -98,3 +98,56 @@ nesmie obrazovka odmietnuť ani naopak.
 - **Zmazanie dokumentu** z obrazovky — vedome nie je. Dokument, na ktorý sa
   viažu potvrdenia, sa mazať nemá; archivácia je iná operácia a treba ju
   navrhnúť zvlášť.
+
+
+---
+
+## Čo presne robí chunker
+
+Je to jediné miesto, kde sa rozhoduje, **na aké kusy sa norma rozdelí** pre
+vyhľadávanie. Vyhľadávanie totiž nepracuje s celým dokumentom — model dostane
+niekoľko úsekov a odpovedá z nich. Ak sú úseky zle narezané, odpoveď je
+nepresná alebo cituje nesprávny článok, a nikto to nespojí s tým, ako sa text
+delil.
+
+Robí štyri veci:
+
+1. **Vyčistí opakujúci sa šum.** Hlavičky, päty a „Strana 17 z 49" sa
+   v PDF opakujú na každej strane. Bez toho by sa dostali do úseku a skresľovali
+   by vyhľadávanie — a raz sa aj stalo, že citácia začínala slovami „Strana 17
+   z 49 (6) V majstrovskej súťaži…". Text bol pritom správny, čo je horší druh
+   chyby než zjavný pád. Rieši aj neviditeľné znaky, ktoré PDF zanáša
+   (`U+200B`, BOM) — riadok s jediným takým znakom vyzerá prázdny, ale
+   `if (!riadok)` ho neodhalí, a raz sa vďaka tomu stal „názvom" článku.
+2. **Rozpozná štruktúru.** Články, odseky, prílohy a preambulu (titulná strana,
+   zoznam novelizácií, osnova). Preambula sa ukladá — sú v nej dátumy
+   schválenia, ktoré treba pri posudzovaní platného znenia — ale vyhľadávanie
+   ju preskakuje: sémanticky sa podobá na hocijakú otázku o danej doméne
+   a vytláčala z výsledkov skutočné články.
+3. **Reže po článkoch, nie po znakoch.** Článok je prirodzená sémantická
+   jednotka; delenie po 2000 znakoch by rozseklo vetu uprostred definície.
+   Cieľ je 300–800 tokenov (~1050–2800 znakov v slovenčine); dlhý článok sa
+   rozdelí, krátke susedné sa spoja.
+4. **Do každého úseku vloží breadcrumb** — z ktorého dokumentu a článku
+   pochádza. Vďaka tomu vie model odcitovať „čl. 12 ods. 3 Súťažného poriadku"
+   a nie „niekde v texte".
+
+### Prečo nie je v TypeScripte
+
+Krátka odpoveď: **nie je to potrebné a prepis by bol drahší než jeho prínos.**
+
+Typy na hraniciach — čo do funkcie vchádza a čo vychádza — sú v
+`chunker.d.ts`, takže volajúci kód je kontrolovaný. Chýba len kontrola *vnútri*
+tých 439 riadkov, a to je kód, ktorý sa skladá z regulárnych výrazov nad
+reťazcami; typový systém tam veľa neuchráni. Naopak, prepis znamená stovky
+mechanických zmien v algoritme, ktorý je odladený na deviatich skutočných
+predpisoch a ktorého chyby sú **tiché** — neprejavia sa pádom, ale tým, že
+model raz odcituje nesprávny článok.
+
+Jedno riziko tá dvojica má a treba ho vedieť: `.d.ts` sa môže rozísť
+s implementáciou a nikto si to nevšimne. Kryje ho `tests/chunker.test.mjs`
+(53 testov, volá skutočné funkcie so skutočnými reťazcami) — pokiaľ testy
+bežia, typy sedia s tým, čo sa naozaj deje.
+
+Ak sa chunker bude niekedy podstatne meniť, prepis dáva zmysel — ale
+s porovnaním výstupu na všetkých deviatich normách pred a po, nie „naslepo".
