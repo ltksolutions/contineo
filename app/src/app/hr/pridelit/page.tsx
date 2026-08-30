@@ -137,9 +137,9 @@ export default async function Pridelit({
 
             {utvaryRiadky.length > 0 && (
               <>
-                <div className="hr-podnadpis">Útvary</div>
+                <div className="hr-podnadpis">Oddelenia</div>
                 <p className="tichy pole-napoveda" style={{ margin: "0 0 8px" }}>
-                  Pridelenie útvaru platí <strong>aj pre všetky podriadené</strong>. Číslo
+                  Pridelenie oddelenia platí <strong>aj pre všetky podriadené</strong>. Číslo
                   je počet ľudí vrátane nich — to je to, koho sa to naozaj týka.
                 </p>
                 <div className="stitky-zoznam">

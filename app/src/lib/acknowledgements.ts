@@ -74,15 +74,15 @@ export interface Acknowledgement {
   userAgent: string | null
 
   /**
-   * Útvar v čase potvrdenia — odtlačok, rovnako ako meno a adresa (D50).
+   * Oddelenie v čase potvrdenia — odtlačok, rovnako ako meno a adresa (D50).
    *
-   * Bez neho by výkaz „potvrdenia po útvaroch" za minulý rok po reorganizácii
+   * Bez neho by výkaz „potvrdenia po oddelenieoch" za minulý rok po reorganizácii
    * povedal niečo iné než vtedy: počítal by sa podľa dnešnej štruktúry, a tá
-   * už môže vyzerať úplne inak. Názvy, nie len identifikátory — útvar sa dá
+   * už môže vyzerať úplne inak. Názvy, nie len identifikátory — oddelenie sa dá
    * premenovať aj zrušiť a záznam má byť čitateľný sám o sebe.
    */
   departmentId: string | null
-  /** Názvy útvarov od koreňa po vlastný, v čase potvrdenia. */
+  /** Názvy oddelení od koreňa po vlastný, v čase potvrdenia. */
   departmentNames: string[]
 
   // KONTEXT
@@ -125,7 +125,7 @@ export interface Acknowledger {
   companyCode: string
   /** Jazyk prostredia z `persons.language`. Neznámy padá na slovenčinu. */
   language?: string
-  /** Útvar v čase potvrdenia. Zapíše sa ako odtlačok (D50). */
+  /** Oddelenie v čase potvrdenia. Zapíše sa ako odtlačok (D50). */
   departmentId?: string | null
 }
 
@@ -164,8 +164,8 @@ export async function acknowledge(
   const statement = buildStatement(doc.title, v.label, effectiveFrom, language)
   const now = new Date()
 
-  // Názvy útvarov sa čítajú **teraz**, aby sa uložili tak, ako vtedy zneli.
-  // Zlyhanie tohto čítania nesmie zhodiť potvrdenie: záznam bez útvaru je
+  // Názvy oddelení sa čítajú **teraz**, aby sa uložili tak, ako vtedy zneli.
+  // Zlyhanie tohto čítania nesmie zhodiť potvrdenie: záznam bez oddelenia je
   // horší než záznam s ním, ale oveľa lepší než žiadny.
   let departmentNames: string[] = []
   try {
@@ -174,7 +174,7 @@ export async function acknowledge(
       departmentNames = cesta(strom, actor.departmentId).map(o => o.nazov)
     }
   } catch (e) {
-    console.error("[acknowledgements] útvar sa nepodarilo prečítať:", e)
+    console.error("[acknowledgements] oddelenie sa nepodarilo prečítať:", e)
   }
 
   const record: Acknowledgement = {

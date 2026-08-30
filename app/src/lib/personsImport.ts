@@ -2,7 +2,7 @@
  * personsImport.ts — z CSV riadka na osobu.
  *
  * Mapovanie hlavičiek **je pravidlo**, nie pomôcka skriptu: rozhoduje o tom,
- * či sa stĺpec „Útvar" naozaj zapíše ako útvar, alebo sa ticho stratí. Preto
+ * či sa stĺpec „Oddelenie" naozaj zapíše ako oddelenie, alebo sa ticho stratí. Preto
  * je v knižnici a volá ho aj skript, aj obrazovka — dva importéry toho istého
  * súboru sú spoľahlivý spôsob, ako jedného dňa naimportovať dva rôzne
  * výsledky.

@@ -80,7 +80,7 @@ export default async function NovaOsoba({
         </label>
 
         <label className="pole">
-          <span className="pole-popis">Útvar</span>
+          <span className="pole-popis">Oddelenie</span>
           <input className="pole-vstup" name="department" defaultValue={q.department ?? ""} />
         </label>
 

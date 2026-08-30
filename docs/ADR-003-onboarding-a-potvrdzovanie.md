@@ -184,7 +184,7 @@ potvrdenie právne bezcenné. Detail v `ONBOARDING_KONCEPCIA.md` kap. 3.
 
 To bola pri piatich hodnotiteľoch správna úvaha. Pri **stovke ľudí prestáva platiť**, a
 to z troch dôvodov naraz: zoznam sa nedá udržiavať, každá zmena znamená nasadenie, a
-hlavne — k adrese treba priviazať ďalšie údaje (meno, útvar, dátum nástupu, ktorý
+hlavne — k adrese treba priviazať ďalšie údaje (meno, oddelenie, dátum nástupu, ktorý
 onboarding sa jej týka), ktoré do reťazca oddeleného čiarkami nepatria.
 
 Zavádza sa preto kolekcia **`persons`** a prihlásenie sa opiera o ňu. Premenná

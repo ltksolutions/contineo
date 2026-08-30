@@ -66,7 +66,7 @@ export default async function DetailOsoby({
   const publika = await publikaVOrganizacii(ctx.person.companyCode)
   const strom = await vsetkyOddelenia(ctx.person.companyCode)
   const stromRiadky = splostiStrom(strom)
-  // Celá cesta, nie len vlastný útvar: „Oddelenie sociálnych sietí" samo
+  // Celá cesta, nie len vlastné oddelenie: „Oddelenie sociálnych sietí" samo
   // o sebe nepovie, pod koho patrí, a práve to rozhoduje o tom, ktoré
   // pridelenia sa človeka týkajú.
   const zaradenie = cesta(strom, o.departmentId)
@@ -134,13 +134,13 @@ export default async function DetailOsoby({
         </label>
 
         <div className="pole">
-          <span className="pole-popis">Útvar</span>
+          <span className="pole-popis">Oddelenie</span>
           <Vyber
             meno="departmentId"
-            popisPola="Útvar"
+            popisPola="Oddelenie"
             predvolena={o.departmentId ?? ""}
             volby={[
-              { hodnota: "", popis: "— bez útvaru —" },
+              { hodnota: "", popis: "— bez oddelenia —" },
               ...stromRiadky.map(r => ({
                 hodnota: r.oddelenie.id,
                 popis: `${"— ".repeat(r.uroven - 1)}${r.oddelenie.nazov}`,
@@ -150,13 +150,13 @@ export default async function DetailOsoby({
           <span className="tichy pole-napoveda">
             {stromRiadky.length === 0 ? (
               <>
-                Štruktúra je zatiaľ prázdna. Útvary sa zakladajú
+                Štruktúra je zatiaľ prázdna. Oddelenia sa zakladajú
                 v <Link href="/organizacia?zalozka=utvary">nastavení organizácie</Link>.
               </>
             ) : (
               <>
-                Práve jeden — útvar je miesto v štruktúre. Kto sa má osloviť
-                naprieč útvarmi, na to sú skupiny nižšie.
+                Práve jedno — oddelenie je miesto v štruktúre. Kto sa má osloviť
+                naprieč oddeleniami, na to sú skupiny nižšie.
                 {zaradenie.length > 1 ? ` Zaradenie: ${zaradenie.map(x => x.nazov).join(" › ")}.` : ""}
               </>
             )}
@@ -166,7 +166,7 @@ export default async function DetailOsoby({
         {o.department && !o.departmentId ? (
           <p className="tichy" style={{ fontSize: 13, margin: "-6px 0 0" }}>
             Pôvodne tu bolo zapísané textom: <strong>{o.department}</strong>. Ostáva to
-            uložené, kým sa nezaradí do štruktúry — aby bolo vidieť, z čoho útvar vznikol.
+            uložené, kým sa nezaradí do štruktúry — aby bolo vidieť, z čoho oddelenie vznikol.
           </p>
         ) : null}
 

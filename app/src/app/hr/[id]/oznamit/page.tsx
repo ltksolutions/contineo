@@ -43,7 +43,7 @@ export default async function Oznamit({
   if (!pridelenie) notFound()
 
   const vsetciNepotvrdeni = await nepotvrdili(kod, id)
-  // Kto z útvaru odišiel, sa ukazuje na detaile, ale e-mail nedostane (D50).
+  // Kto z oddelenia odišiel, sa ukazuje na detaile, ale e-mail nedostane (D50).
   const prijemcovia = vsetciNepotvrdeni.filter(o => !o.byvaly)
   const byvali = vsetciNepotvrdeni.filter(o => o.byvaly)
   const branding = brandingView(ctx.tenant)
@@ -111,7 +111,7 @@ export default async function Oznamit({
         <>
           {byvali.length > 0 && (
             <p className="tichy" style={{ fontSize: 14, margin: "0 0 12px" }}>
-              Ďalší {byvali.length} nepotvrdili, ale z útvaru už odišli — tým sa
+              Ďalší {byvali.length} nepotvrdili, ale z oddelenia už odišli — tým sa
               nepíše. Vidno ich na <Link href={`/hr/${encodeURIComponent(id)}`}>detaile pridelenia</Link>.
             </p>
           )}

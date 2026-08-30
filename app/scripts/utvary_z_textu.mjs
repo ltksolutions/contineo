@@ -1,18 +1,18 @@
 /**
- * utvary_z_textu.mjs — založí útvary z toho, čo je zapísané pri ľuďoch (D49).
+ * utvary_z_textu.mjs — založí oddelenia z toho, čo je zapísané pri ľuďoch (D49).
  *
- * Do zavedenia štruktúry bol útvar **voľný text** na osobe. Tento skript ho
- * prevedie na stromové útvary a ľudí do nich zaradí.
+ * Do zavedenia štruktúry bol oddelenie **voľný text** na osobe. Tento skript ho
+ * prevedie na stromové oddelenia a ľudí do nich zaradí.
  *
  * Tri veci, ktoré robí zámerne inak, než by sa čakalo:
  *
  *   - **pôvodný text sa nemaže.** Zostáva v `department` ako stopa, z čoho
- *     útvar vznikol. Keby zmizol, po nevydarenom prevode by sa nedalo zistiť,
+ *     oddelenie vznikol. Keby zmizol, po nevydarenom prevode by sa nedalo zistiť,
  *     kto kam patril;
  *   - **strom je plochý.** Zo zápisu „Odbor médií" sa nedá vyčítať, pod koho
  *     patrí. Hádať to podľa podreťazcov by vyrobilo štruktúru, ktorá vyzerá
  *     hotovo a nesedí. Hierarchiu doklikne človek v `/organizacia`;
- *   - **veľké a malé písmená sú ten istý útvar** („Legislatíva" aj
+ *   - **veľké a malé písmená sú ten istý oddelenie** („Legislatíva" aj
  *     „legislatíva"), ale zapíše sa najčastejší tvar zápisu.
  *
  * Predvolene **nič nezapisuje**.
@@ -79,7 +79,7 @@ const bezUtvaru = osoby.filter(o => !(o.department ?? "").trim() && !o.departmen
 const uzZaradeni = osoby.filter(o => o.departmentId).length
 
 console.log(`\nOrganizácia ${TENANT}: ${osoby.length} osôb, ${uzZaradeni} už zaradených v štruktúre.`)
-console.log(`Textových útvarov: ${skupiny.size}. Bez akéhokoľvek útvaru: ${bezUtvaru.length}.\n`)
+console.log(`Textových oddelení: ${skupiny.size}. Bez akéhokoľvek oddelenia: ${bezUtvaru.length}.\n`)
 
 let zalozene = 0
 let zaradene = 0
@@ -118,8 +118,8 @@ for (const [kluc, z] of [...skupiny].sort((a, b) => b[1].osoby.length - a[1].oso
 
   for (const o of naZaradenie) {
     // Cesta plochého stromu je jednoprvková. Zapisuje sa spolu so zaradením,
-    // nie zvlášť — inak by chvíľu platilo, že človek do útvaru patrí, ale
-    // pridelenie útvaru sa ho netýka.
+    // nie zvlášť — inak by chvíľu platilo, že človek do oddelenia patrí, ale
+    // pridelenie oddelenia sa ho netýka.
     const teraz = new Date()
     await osobyCol.updateOne(
       { companyCode: TENANT, id: o.id },
@@ -128,8 +128,8 @@ for (const [kluc, z] of [...skupiny].sort((a, b) => b[1].osoby.length - a[1].oso
           departmentId: id,
           departmentPath: [id],
           // Prevod nie je príchod. História sa otvára dátumom prevodu, ale
-          // pridelenia útvaru sú v tej chvíli všetky staršie — a majú platiť,
-          // lebo tí ľudia v útvare naozaj boli. Preto `od` v minulosti:
+          // pridelenia oddelenia sú v tej chvíli všetky staršie — a majú platiť,
+          // lebo tí ľudia v oddelení naozaj boli. Preto `od` v minulosti:
           // epocha znamená „odjakživa", nie „práve prišiel".
           departmentHistory: [{ departmentId: id, departmentPath: [id], od: new Date(0) }],
           updatedAt: teraz,
@@ -142,10 +142,10 @@ for (const [kluc, z] of [...skupiny].sort((a, b) => b[1].osoby.length - a[1].oso
 }
 
 console.log(
-  `\n${ZAPIS ? OK : "skúšobne"} útvarov ${ZAPIS ? "založených" : "by pribudlo"}: ${zalozene}, ` +
+  `\n${ZAPIS ? OK : "skúšobne"} oddelení ${ZAPIS ? "založených" : "by pribudlo"}: ${zalozene}, ` +
   `osôb ${ZAPIS ? "zaradených" : "by sa zaradilo"}: ${zaradene}.`,
 )
 if (!ZAPIS) console.log("Nič sa nezapísalo. Zápis: rovnaký príkaz s --zapis.\n")
-else console.log("Strom je plochý — hierarchiu nastav v /organizacia, záložka Útvary.\n")
+else console.log("Strom je plochý — hierarchiu nastav v /organizacia, záložka Oddelenia.\n")
 
 await client.close()

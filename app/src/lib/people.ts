@@ -75,7 +75,7 @@ export interface PersonRow {
   id: string
   email: string
   fullName: string
-  /** Pôvodný textový zápis útvaru. Ostáva ako stopa, z čoho útvar vznikol. */
+  /** Pôvodný textový zápis oddelenia. Ostáva ako stopa, z čoho oddelenie vznikol. */
   department?: string
   /** Zaradenie v štruktúre (D49). `undefined`/`null` = nezaradená. */
   departmentId?: string | null
@@ -126,7 +126,7 @@ function naRiadok(p: Person): PersonRow {
 /**
  * Osoby organizácie, voliteľne prefiltrované.
  *
- * Hľadá sa **v mene, adrese a útvare naraz** — človek, ktorý niekoho hľadá,
+ * Hľadá sa **v mene, adrese a oddelení naraz** — človek, ktorý niekoho hľadá,
  * nevie dopredu, či si pamätá meno alebo adresu, a nemá sa to učiť.
  * Vyradení sú v zozname tiež, len označení: skryť ich by znamenalo, že
  * personalista nevie, prečo sa mu nedá pozvať adresa, ktorú tam „nikto nemá".
@@ -200,7 +200,7 @@ const TYPY: PersonType[] = ["employee", "external", "referee", "official"]
  * odvtedy na novú adresu. Prihlásenie kontom funguje ďalej, lebo sa rozpozná
  * podľa `externalRef` (`oid`), nie podľa adresy.
  *
- * Nevyplnené pole sa **nemení, nemaže** — inak by uloženie mena zmazalo útvar.
+ * Nevyplnené pole sa **nemení, nemaže** — inak by uloženie mena zmazalo oddelenie.
  */
 export async function savePerson(
   companyCode: string,
@@ -240,20 +240,20 @@ export async function savePerson(
     if (!meno) throw new PersonValidationError("Meno je povinné — bez neho je v zozname len adresa.")
     set.fullName = meno
   }
-  // Útvar sa **dá vyprázdniť** zámerne: je to údaj, ktorý sa mení, a človek
+  // Oddelenie sa **dá vyprázdniť** zámerne: je to údaj, ktorý sa mení, a človek
   // ho môže naozaj nemať. Na rozdiel od mena tu prázdno niečo znamená.
   if (zmena.department !== undefined) set.department = zmena.department.trim() || undefined
   if (zmena.jobTitle !== undefined) set.jobTitle = zmena.jobTitle.trim() || undefined
 
   // Zaradenie a cesta sa zapisujú **spolu**. Keby sa cesta nechala na neskorší
-  // prepočet, existoval by okamih, v ktorom človek do útvaru patrí, ale
-  // pridelenie „útvaru a jeho podriadeným" sa ho netýka — a nikto by neuhádol,
+  // prepočet, existoval by okamih, v ktorom človek do oddelenia patrí, ale
+  // pridelenie „oddelenia a jeho podriadeným" sa ho netýka — a nikto by neuhádol,
   // prečo práve jemu úloha nepribudla (`matchesAudience`).
   if (zmena.departmentId !== undefined) {
     const cielId = zmena.departmentId || null
     const strom = await vsetkyOddelenia(companyCode)
     if (cielId && !strom.some(o => o.id === cielId)) {
-      throw new PersonValidationError("Taký útvar neexistuje.")
+      throw new PersonValidationError("Také oddelenie neexistuje.")
     }
     const novaCesta = cestaIds(strom, cielId)
     set.departmentId = cielId
@@ -268,7 +268,7 @@ export async function savePerson(
   }
   if (zmena.language !== undefined) set.language = normalizeLanguage(zmena.language)
   if (zmena.tracks !== undefined) set.tracks = normalizeKeys(zmena.tracks)
-  // Skupiny a ich história sa zapisujú **spolu**, rovnako ako útvar a cesta.
+  // Skupiny a ich história sa zapisujú **spolu**, rovnako ako oddelenie a cesta.
   // Rozdelené na dva zápisy by chvíľu platilo, že človek v skupine je, ale
   // pridelenie tej skupiny sa ho ešte netýka (D50).
   if (zmena.groups !== undefined) {

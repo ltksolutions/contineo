@@ -75,7 +75,7 @@ Doména Contineo = SFZ a podriadené zväzy, normy s paragrafmi, helpdesk. Ploch
 
 | Kolekcia | Účel | Poznámka ku konzistencii |
 |---|---|---|
-| `persons` | kto do organizácie patrí (meno, útvar, typ osoby, trasy, roly) | **doménová** vrstva nad technickou `auth_users`, ktorú zakladá `src/lib/authAdapter.ts`. `auth_users` zostáva bez zmeny. Väzba cez `persons.id` = `auth_users.id`. |
+| `persons` | kto do organizácie patrí (meno, oddelenie, typ osoby, trasy, roly) | **doménová** vrstva nad technickou `auth_users`, ktorú zakladá `src/lib/authAdapter.ts`. `auth_users` zostáva bez zmeny. Väzba cez `persons.id` = `auth_users.id`. |
 | `acknowledgements` | auditný záznam „prečítal som a zaväzujem sa" | **append-only**. Nesie odtlačky (`email`, `fullName`, `documentTitle`, `versionLabel`) a doslovné znenie formulky, aby bol čitateľný bez `$lookup` do kolekcií, ktoré sa medzitým zmenili. |
 | `onboarding_tracks` | poradie krokov onboardingu | stav dokončenia sa **neukladá** — odvodzuje sa z `acknowledgements` (D27). Žiadna `onboarding_progress`. |
 

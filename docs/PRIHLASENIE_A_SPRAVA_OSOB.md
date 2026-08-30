@@ -160,9 +160,9 @@ platformy sem prístup nemá.
 
 | | |
 |---|---|
-| Zoznam a hľadanie | meno, adresa, útvar, stav, posledné prihlásenie |
+| Zoznam a hľadanie | meno, adresa, oddelenie, stav, posledné prihlásenie |
 | Detail | vrátane toho, čo má osoba nepotvrdené a akými kontami sa prihlasuje |
-| Úprava | meno, útvar, typ osoby, jazyk, skupiny, trasy, roly |
+| Úprava | meno, oddelenie, typ osoby, jazyk, skupiny, trasy, roly |
 | Pozvanie | jedna osoba z obrazovky |
 | Vyradenie | `status: "inactive"` — **nemazanie.** Potvrdenia sú záznamy a musia prežiť odchod človeka (O16). Vyradenie odstrihne okamžite, preto s potvrdením. |
 | Import CSV | s **náhľadom pred zápisom** — nahratie stovky ľudí naslepo je operácia, po ktorej sa hľadá, ako to vrátiť späť, a `persons` nemá rollback |
@@ -243,8 +243,8 @@ obrazovka `/admin/tenanti/[kod]` ju preto vypisuje v hotovom tvare.
 | **D46** | Správa osôb má vlastnú rolu `people-admin`, oddelenú od `hr` | ✅ 2026-08-29 |
 | **D47** | Kto sa prihlási kontom z povolenej domény, založí sa sám | ✅ 2026-08-29 |
 | **D48** | Organizácia si spravuje vzhľad, prihlasovanie aj domény sama — domény s dôkazom cez DNS | ✅ 2026-08-29 |
-| **D49** | Útvary sú strom, osoba patrí do práve jedného; cesta sa materializuje na osobe | ✅ 2026-08-29 |
-| **D50** | Reorganizácia: úloha z útvaru platí odo dňa príchodu, bývalí členovia zostanú vidieť, potvrdenie nesie odtlačok útvaru | ✅ 2026-08-29 |
+| **D49** | Oddelenia sú strom, osoba patrí do práve jedného; cesta sa materializuje na osobe | ✅ 2026-08-29 |
+| **D50** | Reorganizácia: úloha z oddelenia platí odo dňa príchodu, bývalí členovia zostanú vidieť, potvrdenie nesie odtlačok oddelenia | ✅ 2026-08-29 |
 | **D51** | Audit správcovských zmien vo vlastnej kolekcii, nemenný; vidí ho `people-admin` a správca platformy | ✅ 2026-08-29 |
 | **D52** | Údaje z Microsoft Graphu sa dopĺňajú, nie prepisujú — a len keď niečo chýba | ✅ 2026-08-30 |
 
@@ -294,23 +294,23 @@ zákazník o doménu **požiada**, dostane presný CNAME, a zapne sa až vtedy, 
 smeruje na nás. Nastaviť DNS vie len ten, kto doménu ovláda — a je to krok,
 ktorý musí spraviť tak či tak. Naše vlastné domény si neprideľuje vôbec.
 
-### D49 — útvary ako strom, skupiny ako druhá dimenzia
+### D49 — oddelenia ako strom, skupiny ako druhá dimenzia
 
-Útvar bol dovtedy **voľný text** na osobe. Pri desiatich ľuďoch to stačilo; pri
-stovke znamená, že „Legislatíva", „legislatíva" a „Legislat." sú tri útvary
+Oddelenie bol dovtedy **voľný text** na osobe. Pri desiatich ľuďoch to stačilo; pri
+stovke znamená, že „Legislatíva", „legislatíva" a „Legislat." sú tri oddelenia
 a otázka „koľko ľudí má úsek" nemá odpoveď.
 
-**Útvar a skupina sú dve rôzne veci a nesmú sa zlúčiť.**
+**Oddelenie a skupina sú dve rôzne veci a nesmú sa zlúčiť.**
 
 | | čo to je | koľko ich má človek |
 |---|---|---|
-| **útvar** | *kam patrím* — miesto v organizačnej schéme | práve jeden |
-| **skupina** | *komu sa to posiela* — adresát naprieč útvarmi | koľko treba |
+| **oddelenie** | *kam patrím* — miesto v organizačnej schéme | práve jeden |
+| **skupina** | *komu sa to posiela* — adresát naprieč oddeleniami | koľko treba |
 
 Zlúčiť ich by znamenalo, že normu pre rozhodcov nemožno poslať bez toho, aby
-rozhodcovia boli útvar — čím prestane platiť, že útvar je štruktúra.
+rozhodcovia boli oddelením — čím prestane platiť, že oddelenie je štruktúra.
 
-#### Prideľuje sa útvaru **aj celému jeho podstromu**
+#### Prideľuje sa oddelenia **aj celému jeho podstromu**
 
 Kto pridelí normu úseku, myslí tým úsek. Pridelenie „len priamo podriadeným"
 by v praxi znamenalo prekliknúť každý odbor zvlášť a pri ďalšom odbore na to
@@ -319,7 +319,7 @@ zabudnúť — a nikto by si nevšimol, že mu chýba.
 #### Materializovaná cesta — vedomá výnimka z D27
 
 Osoba nesie okrem `departmentId` aj **`departmentPath`**: identifikátory
-všetkých nadriadených útvarov od koreňa po seba. Inde v projekte sa odvodené
+všetkých nadriadených oddelení od koreňa po seba. Inde v projekte sa odvodené
 hodnoty neukladajú (D27), takže to treba zdôvodniť.
 
 O tom, koho sa pridelenie týka, rozhoduje `matchesAudience()` — **čistá funkcia
@@ -328,23 +328,23 @@ cesty na osobe by musela dostať celý strom (a prestala by byť čistá), alebo
 vznikla druhá kópia pravidla v podobe agregácie — a tá by sa s prvou rozišla
 presne pri reorganizácii.
 
-Cena je jasná a je zapísaná v kóde: **pri presune útvaru sa cesty prepočítajú**
+Cena je jasná a je zapísaná v kóde: **pri presune oddelenia sa cesty prepočítajú**
 všetkým v podstrome (`prepocitajCesty()`), a zaradenie osoby sa zapisuje spolu
 s cestou v jednom zápise. Keby sa cesta dopĺňala neskôr, existoval by okamih,
-v ktorom človek do útvaru patrí, ale pridelenie sa ho netýka — a nikto by
+v ktorom človek do oddelenia patrí, ale pridelenie sa ho netýka — a nikto by
 neuhádol prečo.
 
 #### Čo z toho plynie inde
 
-- názov útvaru sa do pridelenia zapisuje ako **kópia** (`audience.label`),
-  rovnako ako názov dokumentu: útvar sa premenuje a o rok musí byť čitateľné,
+- názov oddelenia sa do pridelenia zapisuje ako **kópia** (`audience.label`),
+  rovnako ako názov dokumentu: oddelenie sa premenuje a o rok musí byť čitateľné,
   komu sa vtedy prideľovalo. Príslušnosť sa vždy počíta z identifikátora;
 - **strom má najviac 6 úrovní.** Nie je to technický limit — hlbší strom sa na
   telefóne nedá prehľadne ukázať a to najhlbšie v ňom býva v skutočnosti skupina;
-- **zrušiť sa dá len prázdny útvar bez podriadených.** Inak by ľudia zostali
+- **zrušiť sa dá len prázdny oddelenie bez podriadených.** Inak by ľudia zostali
   odkazovať na niečo, čo neexistuje, a zmizli by zo štruktúry potichu;
 - pôvodný textový zápis (`persons.department`) sa **nemaže**. Ostáva ako stopa,
-  z čoho útvar vznikol — po nevydarenom prevode je to jediný spôsob, ako
+  z čoho oddelenie vznikol — po nevydarenom prevode je to jediný spôsob, ako
   zistiť, kto kam patril.
 
 #### Prevod existujúcich údajov
@@ -352,24 +352,24 @@ neuhádol prečo.
 `npm run utvary -- --tenant SFZ` ukáže, čo by vzniklo; s `--zapis` to založí.
 Strom je po prevode **plochý**: zo zápisu „Odbor médií" sa nedá vyčítať, pod
 koho patrí, a hádať to podľa podreťazcov by vyrobilo štruktúru, ktorá vyzerá
-hotovo a nesedí. Hierarchiu doklikne človek v `/organizacia`, záložka Útvary.
+hotovo a nesedí. Hierarchiu doklikne človek v `/organizacia`, záložka Oddelenia.
 
 ### D50 — čo robí reorganizácia s už pridelenými normami
 
 D49 zaviedla štruktúru. Táto otázka je o tom, čo sa stane, keď sa štruktúra
 zmení — a mení sa stále. Tri prípady, tri odpovede.
 
-#### 1. Kto do útvaru pribudne, dostane úlohu **odo dňa príchodu**
+#### 1. Kto do oddelenia pribudne, dostane úlohu **odo dňa príchodu**
 
-Stav úloh sa odvodzuje živo (D27), takže človek zaradený do útvaru okamžite
-vidí aj jeho staršie pridelenia. To je správne — normy útvaru sa ho odteraz
+Stav úloh sa odvodzuje živo (D27), takže človek zaradený do oddelenia okamžite
+vidí aj jeho staršie pridelenia. To je správne — normy oddelenia sa ho odteraz
 týkajú. Nesprávny bol dátum: s pôvodným dátumom pridelenia by mal nováčik prvý
 deň v práci úlohu spred roka, teda hneď po termíne, a **bez príznaku „nové"**,
 lebo pridelenie je staršie než jeho predošlé prihlásenie (D39). To je presne
 ten stav, ktorý nikto nevie vysvetliť.
 
 Preto osoba nesie `departmentHistory` a `datumPreOsobu()` vracia neskorší
-z dvoch dátumov. Platí to **len pre publikum druhu útvar**: skupina ani trasa
+z dvoch dátumov. Platí to **len pre publikum druhu oddelenie**: skupina ani trasa
 históriu nemajú a predstierať ju by znamenalo tvrdiť niečo, čo nevieme.
 
 Dve hranice, ktoré stoja za zapísanie:
@@ -377,16 +377,16 @@ Dve hranice, ktoré stoja za zapísanie:
 - **prázdna história znamená „odjakživa", nie „nikdy".** Ľudia zapísaní pred
   zavedením štruktúry ju nemajú a pridelenie im má platiť odo dňa, keď vzniklo;
   opačná predvoľba by im všetky staré normy schovala;
-- **presun celej vetvy nie je príchod.** Keď sa útvar presunie pod iného
+- **presun celej vetvy nie je príchod.** Keď sa oddelenie presunie pod iného
   rodiča, ľuďom v ňom sa opraví cesta, ale záznam histórie sa neotvára — inak
-  by to vyzeralo, že do svojho útvaru práve prišli všetci naraz.
+  by to vyzeralo, že do svojho oddelenia práve prišli všetci naraz.
 
 #### 2. Kto odíde bez potvrdenia, **zostane vidieť** — ale nedostane e-mail
 
 Bez toho by zo zoznamu nepotvrdených ticho vypadol a nikto by sa nedozvedel,
-že sa to nedoriešilo. Zostáva teda v prehľade označený *už nie je v útvare*.
+že sa to nedoriešilo. Zostáva teda v prehľade označený *už nie je v oddelení*.
 
-Pripomienku mu ale neposielame: pripomínať normu útvaru, v ktorom človek už
+Pripomienku mu ale neposielame: pripomínať normu oddelenia, v ktorom človek už
 nie je, je nezmysel. Čo s tým, rozhodne personalista — systém na to nemá
 podklad, lebo nevie, či ho previedli inam, alebo odchádza.
 
@@ -394,16 +394,16 @@ Hľadá sa **prekryv** úseku histórie s obdobím platnosti pridelenia, nie „
 tam v deň pridelenia": kto prišiel týždeň po pridelení a o mesiac odišiel, mal
 povinnosť tiež.
 
-#### 3. Potvrdenie nesie **odtlačok útvaru**
+#### 3. Potvrdenie nesie **odtlačok oddelenia**
 
 `acknowledgements` si už predtým pamätali meno, adresu, názov dokumentu aj
-doslovné znenie formulky — všetko v podobe z času potvrdenia. Útvar tam
-chýbal, a tak by výkaz „potvrdenia po útvaroch" za minulý rok po reorganizácii
+doslovné znenie formulky — všetko v podobe z času potvrdenia. Oddelenie tam
+chýbal, a tak by výkaz „potvrdenia po oddeleniach" za minulý rok po reorganizácii
 povedal niečo iné než vtedy: počítal by sa podľa dnešnej štruktúry.
 
-Ukladá sa `departmentId` **a názvy celej cesty**. Nie len identifikátor: útvar
+Ukladá sa `departmentId` **a názvy celej cesty**. Nie len identifikátor: oddelenie
 sa dá premenovať aj zrušiť a záznam má byť čitateľný sám o sebe. Zlyhanie
-tohto čítania nesmie zhodiť potvrdenie — záznam bez útvaru je horší než
+tohto čítania nesmie zhodiť potvrdenie — záznam bez oddelenia je horší než
 s ním, ale oveľa lepší než žiadny.
 
 #### Čo D50 **nerieši**
@@ -411,7 +411,7 @@ s ním, ale oveľa lepší než žiadny.
 - **Skupiny históriu nemajú.** Kto vypadne zo skupiny, zmizne zo zoznamu
   nepotvrdených ticho, ako doteraz. Ak sa to ukáže ako problém, je to tá istá
   konštrukcia — ale zatiaľ to problém nie je, lebo skupina sa mení vedome
-  a jednotlivo, kým útvar sa mení hromadne pri reorganizácii.
+  a jednotlivo, kým oddelenie sa mení hromadne pri reorganizácii.
 - **Menovateľ v prehľade („8 z 12") sa naďalej počíta dnešnou štruktúrou.**
   Je to odvodený stav a odvodený zostane (D27); presné čísla za minulé obdobie
   dá výkaz z `acknowledgements`, ktorý má odtlačok.
@@ -422,11 +422,11 @@ Pôvodné znenie D50 nechávalo skupiny bez histórie s odôvodnením, že sa me
 vedome a jednotlivo. **To odôvodnenie neobstálo.** Skupina je v tomto systéme
 najčastejší adresát noriem (rozhodcovia, delegáti, štatutári), a kto z nej
 vypadne pred potvrdením, mizol zo zoznamu nepotvrdených presne tak ticho ako
-predtým pri útvaroch. Dve dimenzie s dvomi rôznymi pravidlami by navyše nikto
+predtým pri oddeleniach. Dve dimenzie s dvomi rôznymi pravidlami by navyše nikto
 nevedel udržať v hlave.
 
 Osoba preto nesie aj `groupHistory` — zoznam úsekov `{ skupina, od, do }`,
-lebo skupín má naraz viac. Platí to isté ako pri útvaroch: prázdna história
+lebo skupín má naraz viac. Platí to isté ako pri oddeleniach: prázdna história
 znamená „odjakživa", nezmenené členstvo sa nedotýka (inak by uloženie
 formulára posúvalo dátum vstupu), a **návrat do skupiny je nový úsek**, nie
 oživenie starého — „bol, odišiel, vrátil sa" je iná odpoveď na otázku, kto mal
@@ -468,7 +468,7 @@ ako sa tam dostal. Nič sa z neho nedopočítava.
 
 #### Čo sa zapisuje
 
-Osoby (rola, stav, adresa, útvar, skupiny, trasy, jazyk, typ), útvary
+Osoby (rola, stav, adresa, oddelenie, skupiny, trasy, jazyk, typ), oddelenia
 (založenie, premenovanie, presun aj s počtom dotknutých ľudí, zrušenie),
 pridelenia (pridelenie s dôvodom, odvolanie, odoslané oznámenie s počtom
 adresátov), nastavenie organizácie, domény (žiadosť, overenie, zrušenie)
@@ -521,20 +521,20 @@ presne to, čo audit potrebuje rýchlo.
 
 ---
 
-### D52 — meno, útvar a fotka z adresára
+### D52 — meno, oddelenie a fotka z adresára
 
 Konto z Entry vie viac než adresu. Bez toho vznikala pri automatickom
 založení (D47) osoba, ktorá sa v zozname volala rovnako ako jej adresa —
 a personalista ju musel prepísať ručne, hoci ten údaj bol v adresári zákazníka
 celý čas.
 
-Ťahá sa: **meno a priezvisko zvlášť**, `displayName` ako záloha, **útvar**
+Ťahá sa: **meno a priezvisko zvlášť**, `displayName` ako záloha, **oddelenie**
 (textové pole, nie zaradenie do stromu), **pozícia**, **jazyk** a **fotografia**
 (96 px kvôli obrazovkám s dvojnásobnou hustotou).
 
 #### Dopĺňa sa, neprepisuje
 
-**Adresár nie je nadriadený personalistovi.** Keď niekto meno alebo útvar
+**Adresár nie je nadriadený personalistovi.** Keď niekto meno alebo oddelenie
 v `/osoby` opraví, ďalšie prihlásenie mu opravu neprepíše — inak by ručná
 oprava vydržala len dovtedy, kým sa ten človek znova neprihlási, a nikto by
 nepochopil, prečo sa zmena „neuložila".

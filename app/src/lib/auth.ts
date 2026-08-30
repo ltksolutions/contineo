@@ -509,7 +509,7 @@ function oauthProvider(c: ResolvedCredentials): Provider {
       // delegované oprávnenie Entry — „prečítaj profil prihláseného" —
       // schvaľuje si ho používateľ sám a k nikomu inému neotvára prístup.
       // Keď ho aplikácia zákazníka nemá, Graph vráti 403 a prihlásenie
-      // funguje ďalej, len bez mena, útvaru a fotky.
+      // funguje ďalej, len bez mena, oddelenia a fotky.
       authorization: { params: { scope: "openid profile email User.Read" } },
     })
   }

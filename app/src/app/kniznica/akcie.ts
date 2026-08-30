@@ -15,6 +15,7 @@
 import { redirect } from "next/navigation"
 import { revalidatePath } from "next/cache"
 import { kniznicaContext } from "@/lib/kniznica"
+import { jePresmerovanie } from "@/lib/presmerovanie"
 import {
   nahrajDokument, ulozKoncept, publikuj, overMetadata, idDokumentu, ulozUdaje,
   preindexuj, opravZnenie, KniznicaError,
@@ -106,7 +107,7 @@ export async function nahraj(fd: FormData) {
     )}`)
   } catch (e) {
     // `redirect()` vyhadzuje výnimku — nesmie sa chytiť ako chyba zápisu.
-    if (e && typeof e === "object" && "digest" in e) throw e
+    if (jePresmerovanie(e)) throw e
     const q = new URLSearchParams({
       chyba: spravaChyby(e),
       title: textPola(fd, "title"),
@@ -307,7 +308,7 @@ export async function zalozPriecinokAkcia(fd: FormData) {
     revalidatePath("/kniznica")
     spatDoKniznice(fd, "Priečinok pribudol.")
   } catch (e) {
-    if (e && typeof e === "object" && "digest" in e) throw e
+    if (jePresmerovanie(e)) throw e
     spatDoKniznice(fd, spravaChyby(e), true)
   }
 }
@@ -320,7 +321,7 @@ export async function premenujPriecinokAkcia(fd: FormData) {
     revalidatePath("/kniznica")
     spatDoKniznice(fd, "Priečinok sa premenoval.")
   } catch (e) {
-    if (e && typeof e === "object" && "digest" in e) throw e
+    if (jePresmerovanie(e)) throw e
     spatDoKniznice(fd, spravaChyby(e), true)
   }
 }
@@ -333,7 +334,7 @@ export async function presunPriecinokAkcia(fd: FormData) {
     revalidatePath("/kniznica")
     spatDoKniznice(fd, "Priečinok sa presunul.")
   } catch (e) {
-    if (e && typeof e === "object" && "digest" in e) throw e
+    if (jePresmerovanie(e)) throw e
     spatDoKniznice(fd, spravaChyby(e), true)
   }
 }
@@ -346,7 +347,7 @@ export async function zrusPriecinokAkcia(fd: FormData) {
     revalidatePath("/kniznica")
     spatDoKniznice(fd, "Priečinok sa zrušil.")
   } catch (e) {
-    if (e && typeof e === "object" && "digest" in e) throw e
+    if (jePresmerovanie(e)) throw e
     spatDoKniznice(fd, spravaChyby(e), true)
   }
 }

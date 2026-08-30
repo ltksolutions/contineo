@@ -58,8 +58,8 @@ export async function pridelit(fd: FormData) {
   if (!kto) redirect("/hr")
 
   const dovod = textPola(fd, "dovod")
-  // Názvy útvarov sa do pridelenia zapisujú ako **kópia** (`audience.label`),
-  // z rovnakého dôvodu ako názov dokumentu: útvar sa premenuje alebo zruší
+  // Názvy oddelení sa do pridelenia zapisujú ako **kópia** (`audience.label`),
+  // z rovnakého dôvodu ako názov dokumentu: oddelenie sa premenuje alebo zruší
   // a o rok musí byť čitateľné, komu sa vtedy prideľovalo.
   const utvary = await vsetkyOddelenia(kto.companyCode)
   const nazvyOddeleni = Object.fromEntries(utvary.map(o => [o.id, o.nazov]))
@@ -171,12 +171,12 @@ export async function poslatOznamenie(fd: FormData) {
   const pridelenie = await loadAssignment(kod, id)
   if (!pridelenie) redirect("/hr")
 
-  // Bývalým členom útvaru sa nepíše (D50): pripomínať normu útvaru, v ktorom
+  // Bývalým členom oddelenia sa nepíše (D50): pripomínať normu oddelenia, v ktorom
   // človek už nie je, je nezmysel. V prehľade zostávajú vidieť, aby sa
   // personalista mohol rozhodnúť sám.
   const prijemcovia = (await nepotvrdili(kod, id)).filter(o => !o.byvaly)
   if (prijemcovia.length === 0) {
-    redirect("/hr?chyba=1&sprava=" + encodeURIComponent("Nie je komu poslať — potvrdili už všetci, kto v útvare zostal."))
+    redirect("/hr?chyba=1&sprava=" + encodeURIComponent("Nie je komu poslať — potvrdili už všetci, kto v oddelení zostal."))
   }
   if (prijemcovia.length > NAJVIAC_NARAZ) {
     redirect(`/hr/${encodeURIComponent(id)}/oznamit?chyba=` + encodeURIComponent(

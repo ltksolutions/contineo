@@ -292,7 +292,7 @@ Z toho plynú dve pravidlá, ktoré platia pre všetky kanály:
 **Prečo:** `src/lib/auth.ts` dnes drží zoznam v premennej a v komentári to aj zdôvodňuje
 (*„pri piatich až desiatich ľuďoch je zmena premennej jednoduchšia"*). Pri stovke ľudí
 to prestáva platiť: zoznam sa nedá udržiavať, každá zmena znamená nasadenie a k adrese
-treba priviazať meno, útvar, typ osoby a trasu — čo do reťazca oddeleného čiarkami nepatrí.
+treba priviazať meno, oddelenie, typ osoby a trasu — čo do reťazca oddeleného čiarkami nepatrí.
 
 **✅ Rozhodnuté (2026-08-27):** kolekcia **`persons`** ako doménová vrstva nad existujúcou
 technickou `auth_users`. `POVOLENE_EMAILY` **zostáva ako núdzová brzda pre správcov**,
@@ -631,7 +631,7 @@ nikomu.
 
 Dnes existuje `persons.tracks` (čo mám prejsť) a `persons.department` (kam
 patrím v štruktúre). Ani jedno nie je skupina na prideľovanie: trasa je obsah,
-útvar je štruktúra. Zlúčiť skupiny s trasami by znamenalo, že jednorazovú
+oddelenie je štruktúra. Zlúčiť skupiny s trasami by znamenalo, že jednorazovú
 úlohu nemožno prideliť bez toho, aby vznikla umelá trasa.
 
 **Súvisiace:** D26, `PRISTUPOVE_PRAVA.md` (ortogonalita atribútov).

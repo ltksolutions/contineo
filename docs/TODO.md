@@ -299,11 +299,11 @@
 - [x] **`/organizacia`** — zákazník si sám spravuje vzhľad, prihlasovanie aj domény (D48). Domény cez žiadosť + dôkaz DNS, nie voľným zápisom
 - [x] **automatické založenie z povolených domén** (D47)
 - [x] **adresa prestala byť kľúčom** — identitou je `persons.id`, adresa sa dá zmeniť a história zostáva celá
-- [x] **útvary ako strom** (D49) — osoba v práve jednom, pridelenie platí aj pre podstrom, skupiny zostávajú samostatnou dimenziou. Prevod z textu: `npm run utvary`
-- [x] **prevod útvarov SFZ spustený 2026-08-29** — nemal čo previesť: v databáze je zatiaľ jedna osoba a žiadna nemá útvar zapísaný textom. Zmysel dostane po importe ľudí z CSV
-- [x] **reorganizácia** (D50) — úloha z útvaru platí odo dňa príchodu, bývalí členovia zostanú v prehľade označení a bez e-mailu, potvrdenie nesie odtlačok útvaru
-- [x] **údaje z adresára** (D52) — meno, priezvisko, útvar, pozícia, jazyk a fotka z Microsoft Graphu; dopĺňa sa len chýbajúce, zlyhanie Graphu prihlásenie nezhodí
-- [ ] **overiť `User.Read` v Entra aplikácii SFZ** — bez neho Graph vráti 403 (v logu je menovitá hláška) a prihlásenie funguje ďalej, len bez mena, útvaru a fotky
+- [x] **oddelenia ako strom** (D49) — osoba v práve jednom, pridelenie platí aj pre podstrom, skupiny zostávajú samostatnou dimenziou. Prevod z textu: `npm run utvary`
+- [x] **prevod oddelení SFZ spustený 2026-08-29** — nemal čo previesť: v databáze je zatiaľ jedna osoba a žiadna nemá oddelenie zapísaný textom. Zmysel dostane po importe ľudí z CSV
+- [x] **reorganizácia** (D50) — úloha z oddelenia platí odo dňa príchodu, bývalí členovia zostanú v prehľade označení a bez e-mailu, potvrdenie nesie odtlačok oddelenia
+- [x] **údaje z adresára** (D52) — meno, priezvisko, oddelenie, pozícia, jazyk a fotka z Microsoft Graphu; dopĺňa sa len chýbajúce, zlyhanie Graphu prihlásenie nezhodí
+- [ ] **overiť `User.Read` v Entra aplikácii SFZ** — bez neho Graph vráti 403 (v logu je menovitá hláška) a prihlásenie funguje ďalej, len bez mena, oddelenia a fotky
 - [x] **audit správcovských zmien** (D51) — vlastná kolekcia, nemenná, rozdiel namiesto celého objektu, tajomstvá len ako „zmenené"; vidí ho `people-admin` a správca platformy
 - [x] **skupiny majú históriu členstva** — pôvodné rozhodnutie nechať ich bez nej neobstálo
 - [x] **indexy auditu a histórie skupín vytvorené 2026-08-29** — `node scripts/onboarding_init.mjs`

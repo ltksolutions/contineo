@@ -33,8 +33,8 @@ export const ASSIGNMENTS_COLLECTION = "assignments"
 /**
  * Komu sa prideľuje.
  *
- * `group` je tretia dimenzia vedľa trás a útvarov (D38): trasa je obsah,
- * útvar je štruktúra, skupina je adresát. Keby sa skupiny zlúčili s trasami,
+ * `group` je tretia dimenzia vedľa trás a oddelení (D38): trasa je obsah,
+ * oddelenie je štruktúra, skupina je adresát. Keby sa skupiny zlúčili s trasami,
  * jednorazová úloha by sa nedala prideliť bez toho, aby vznikla umelá trasa.
  */
 export type AudienceKind = "all" | "group" | "track" | "person" | "department"
@@ -43,14 +43,14 @@ export interface Audience {
   kind: AudienceKind
   /**
    * Pri `all` sa nevypĺňa. Pri `person` je to adresa, malými písmenami.
-   * Pri `department` je to identifikátor útvaru (UUID), **nie jeho názov** —
-   * útvary sa premenúvajú a pridelenie sa premenovaním nemá rozpadnúť.
+   * Pri `department` je to identifikátor oddelenia (UUID), **nie jeho názov** —
+   * oddelenia sa premenúvajú a pridelenie sa premenovaním nemá rozpadnúť.
    */
   value?: string
 
   /**
    * Názov v čase pridelenia — **kópia, nie odkaz**, z rovnakého dôvodu ako
-   * `documentTitle` nižšie. Útvar sa môže premenovať alebo zrušiť a o rok
+   * `documentTitle` nižšie. Oddelenie sa môže premenovať alebo zrušiť a o rok
    * musí byť čitateľné, komu sa vtedy prideľovalo. Na príslušnosť nemá vplyv.
    */
   label?: string
@@ -130,8 +130,8 @@ export function matchesAudience(
     case "all": return true
     case "group": return je(person.groups)
     case "track": return je(person.tracks)
-    // Cesta obsahuje aj vlastný útvar, aj všetkých nadriadených — porovnanie
-    // s ňou preto pokrýva útvar **aj celý jeho podstrom**, presne raz a bez
+    // Cesta obsahuje aj vlastné oddelenie, aj všetkých nadriadených — porovnanie
+    // s ňou preto pokrýva oddelenie **aj celý jeho podstrom**, presne raz a bez
     // druhého pravidla. To je jediný dôvod, prečo je cesta zapísaná na osobe.
     case "department": return je(person.departmentPath)
     case "person": return Boolean(hodnota) && (person.email ?? "").trim().toLowerCase() === hodnota
@@ -158,7 +158,7 @@ export function audienceFromSelection(vyber: {
   vybrane?: string[]
   /** Ručne napísané adresy, oddelené čiarkou, bodkočiarkou alebo riadkom. */
   adresy?: string
-  /** `id` → názov útvaru. Len na zapísanie čitateľnej kópie do `label`. */
+  /** `id` → názov oddelenia. Len na zapísanie čitateľnej kópie do `label`. */
   nazvyOddeleni?: Record<string, string>
 }): Audience[] {
   if (vyber.vsetci) return [{ kind: "all" }]
@@ -203,7 +203,7 @@ export function audienceLabel(a: Audience): string {
     case "track": return `trasa „${a.value}"`
     // Bez názvu by v prehľade svietilo UUID. Ak kópia chýba (staršie záznamy),
     // radšej priznať, že názov nepoznáme, než ukázať identifikátor ako názov.
-    case "department": return `útvar „${a.label ?? "(neznámy)"}" a jeho podriadené`
+    case "department": return `oddelenie „${a.label ?? "(neznámy)"}" a jeho podriadené`
     case "person": return a.value ?? "(osoba nezadaná)"
     default: return "(neznáme publikum)"
   }
@@ -212,7 +212,7 @@ export function audienceLabel(a: Audience): string {
 /**
  * Odkedy táto úloha visí **tejto osobe** (D50).
  *
- * Pri pridelení útvaru to nie je dátum pridelenia: kto do útvaru pribudol
+ * Pri pridelení oddelenia to nie je dátum pridelenia: kto do oddelenia pribudol
  * neskôr, dostal úlohu vtedy, keď prišiel. Keby platil pôvodný dátum, nováčik
  * by mal prvý deň v práci úlohu spred roka — teda hneď po termíne, a bez
  * príznaku „nové", lebo pridelenie je staršie než jeho predošlé prihlásenie
@@ -442,11 +442,11 @@ export async function recordNotification(
 /** Osoba v publiku. `language` je tu preto, že sa jej píše e-mail. */
 export type AudienceMember = Pick<Person, "id" | "email" | "fullName" | "language"> & {
   /**
-   * Bola v útvare v čase pridelenia, dnes už nie je (D50).
+   * Bola v oddelení v čase pridelenia, dnes už nie je (D50).
    *
    * V zozname nepotvrdených zostáva, lebo inak by ticho zmizla a nikto by
    * sa nedozvedel, že sa to nedoriešilo. **E-mail sa jej ale neposiela** —
-   * pripomínať normu útvaru, v ktorom už človek nie je, je nezmysel; čo
+   * pripomínať normu oddelenia, v ktorom už človek nie je, je nezmysel; čo
    * s tým, rozhodne personalista.
    */
   byvaly?: boolean
@@ -557,7 +557,7 @@ export async function nepotvrdili(
 }
 
 /**
- * Kto v útvare bol v čase, keď pridelenie platilo, a dnes tam už nie je (D50).
+ * Kto v oddelení bol v čase, keď pridelenie platilo, a dnes tam už nie je (D50).
  *
  * Odvodiť sa to nedá — presun je práve tá udalosť, ktorá starý stav prepíše.
  * Preto sa číta `departmentHistory`: hľadá sa uzavretý úsek, ktorý sa
@@ -565,7 +565,7 @@ export async function nepotvrdili(
  * pridelenia": kto prišiel týždeň po pridelení a o mesiac odišiel, mal
  * povinnosť tiež.
  *
- * Platí len pre publikum druhu útvar. Skupiny a trasy históriu nemajú a
+ * Platí len pre publikum druhu oddelenie. Skupiny a trasy históriu nemajú a
  * vymyslieť si ju by znamenalo tvrdiť niečo, čo nevieme.
  */
 async function byvaliClenovia(

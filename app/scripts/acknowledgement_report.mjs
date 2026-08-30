@@ -111,13 +111,13 @@ const STLPCE = [
   { label: "Organizácia",       value: r => r.person.companyCode },
   { label: "E-mail",            value: r => r.person.email },
   { label: "Meno",              value: r => r.person.fullName },
-  // Útvar v čase potvrdenia, nie dnešný: po reorganizácii by výkaz za minulý
+  // Oddelenie v čase potvrdenia, nie dnešný: po reorganizácii by výkaz za minulý
   // rok inak povedal niečo iné než vtedy (D50). Dnešné zaradenie je náhradou
   // len tam, kde odtlačok chýba — teda pri potvrdeniach spred zavedenia poľa.
   {
-    label: "Útvar (v čase potvrdenia)",
+    label: "Oddelenie (v čase potvrdenia)",
     value: r => r.ack?.departmentNames?.join(" › ")
-      || r.ack?.departmentId && "(zrušený útvar)"
+      || r.ack?.departmentId && "(zrušený oddelenie)"
       || r.person.department
       || "",
   },

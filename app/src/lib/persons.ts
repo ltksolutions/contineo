@@ -7,7 +7,7 @@
  *
  * Pri stovke ľudí to prestáva platiť z troch dôvodov naraz: zoznam sa nedá
  * udržiavať, každá zmena znamená nasadenie, a hlavne — k adrese treba priviazať
- * meno, útvar, typ osoby a trasu onboardingu. To do reťazca oddeleného čiarkami
+ * meno, oddelenie, typ osoby a trasu onboardingu. To do reťazca oddeleného čiarkami
  * nepatrí (rozhodnutie D26).
  *
  * Táto kolekcia je **doménová vrstva**: kto to je v organizácii. Technická
@@ -76,13 +76,13 @@ export interface Person {
   tracks: string[]
 
   /**
-   * Skupiny na prideľovanie — **tretia dimenzia** vedľa trás a útvarov (D38).
+   * Skupiny na prideľovanie — **tretia dimenzia** vedľa trás a oddelení (D38).
    *
-   * Trasa je obsah („čím mám prejsť"), útvar je štruktúra („kam patrím“),
+   * Trasa je obsah („čím mám prejsť"), oddelenie je štruktúra („kam patrím“),
    * skupina je adresát („komu sa to posiela"). Zlúčiť skupiny s trasami by
    * znamenalo, že jednorazovú úlohu nemožno prideliť bez toho, aby vznikla
-   * umelá trasa; zlúčiť ich s útvarmi by znamenalo, že sa nedá osloviť
-   * skupina naprieč útvarmi — a práve tá býva adresátom noriem
+   * umelá trasa; zlúčiť ich s oddeleniami by znamenalo, že sa nedá osloviť
+   * skupina naprieč oddeleniami — a práve tá býva adresátom noriem
    * (rozhodcovia, delegáti, štatutári).
    *
    * Vždy malými písmenami — porovnáva sa s publikom pridelenia.
@@ -90,15 +90,15 @@ export interface Person {
   groups: string[]
 
   /**
-   * Útvar — **práve jeden** (D49). `null`/chýba = nezaradená osoba.
+   * Oddelenie — **práve jeden** (D49). `null`/chýba = nezaradená osoba.
    *
    * Vedľa toho zostáva textové pole `department` vyššie: je to pôvodný zápis
-   * z importu, ktorý sa nemaže, aby sa dalo spätne overiť, z čoho útvar vznikol.
+   * z importu, ktorý sa nemaže, aby sa dalo spätne overiť, z čoho oddelenie vznikol.
    */
   departmentId?: string | null
 
   /**
-   * Identifikátory útvarov od koreňa po vlastný, vrátane.
+   * Identifikátory oddelení od koreňa po vlastný, vrátane.
    *
    * Zámerná duplicita voči kolekcii `departments`: bez nej by
    * `matchesAudience()` musela dostať celý strom a prestala by byť čistou
@@ -109,10 +109,10 @@ export interface Person {
   departmentPath?: string[]
 
   /**
-   * Kedy do ktorého útvaru patrila. Otvorený záznam (`do` chýba) je ten dnešný.
+   * Kedy do ktorého oddelenia patrila. Otvorený záznam (`do` chýba) je ten dnešný.
    *
    * Dve veci by sa bez tohto nedali povedať a obe sú pri reorganizácii bežné:
-   * odkedy sa nového človeka týkajú normy jeho útvaru (aby mu prvý deň
+   * odkedy sa nového človeka týkajú normy jeho oddelenia (aby mu prvý deň
    * nevisela úloha spred roka ako po termíne), a či ten, kto odišiel bez
    * potvrdenia, tam vôbec kedy patril. Odvodiť sa to nedá — je to práve tá
    * informácia, ktorú presun prepíše.
@@ -122,7 +122,7 @@ export interface Person {
   /**
    * Odkedy dokedy bola v ktorej skupine. Otvorený úsek (`do` chýba) trvá.
    *
-   * Tá istá otázka ako pri útvaroch, len skupina ich má naraz viac, takže je
+   * Tá istá otázka ako pri oddelenieoch, len skupina ich má naraz viac, takže je
    * to zoznam úsekov, nie jeden reťazec. Dôvod je rovnaký a rovnako vážny:
    * skupina býva adresátom noriem (rozhodcovia, delegáti), takže kto z nej
    * vypadne pred potvrdením, by inak zo zoznamu nepotvrdených ticho zmizol.
@@ -641,7 +641,7 @@ export async function zalozPodlaDomeny(
 
 
 /**
- * Odkedy je osoba vo svojom dnešnom útvare. `null`, keď to nevieme.
+ * Odkedy je osoba vo svojom dnešnom oddelení. `null`, keď to nevieme.
  *
  * `null` znamená „odjakživa", nie „nikdy": pri ľuďoch zapísaných pred
  * zavedením štruktúry história neexistuje a pridelenie im má platiť odo dňa,
@@ -656,10 +656,10 @@ export function vUtvareOd(osoba: Pick<Person, "departmentHistory">): Date | null
 }
 
 /**
- * Nová história po presune do iného útvaru.
+ * Nová história po presune do iného oddelenia.
  *
  * Čistá funkcia, aby sa dala otestovať: uzavrie otvorený záznam a otvorí
- * nový. **Presun do toho istého útvaru nič nemení** — inak by opakované
+ * nový. **Presun do toho istého oddelenia nič nemení** — inak by opakované
  * uloženie formulára posúvalo dátum príchodu a s ním aj termíny.
  */
 export function novaHistoriaUtvarov(
@@ -671,7 +671,7 @@ export function novaHistoriaUtvarov(
   const zaznamy = [...(doteraz ?? [])]
   const otvoreny = zaznamy.find(z => !z.do)
   if (otvoreny && (otvoreny.departmentId ?? null) === (novyId ?? null)) {
-    // Ten istý útvar, len sa mohla zmeniť cesta (presunuli vetvu vyššie).
+    // To isté oddelenie, len sa mohla zmeniť cesta (presunuli vetvu vyššie).
     otvoreny.departmentPath = novaCesta
     return zaznamy
   }
@@ -684,7 +684,7 @@ export function novaHistoriaUtvarov(
 /**
  * Odkedy je osoba v danej skupine. `null`, keď v nej nie je alebo to nevieme.
  *
- * `null` znamená „odjakživa" rovnako ako pri útvaroch: ľuďom zapísaným pred
+ * `null` znamená „odjakživa" rovnako ako pri oddelenieoch: ľuďom zapísaným pred
  * zavedením histórie by inak všetky staršie pridelenia zmizli.
  */
 export function vSkupineOd(
@@ -730,7 +730,7 @@ export function novaHistoriaSkupin(
 /**
  * Doplní údaje z adresára — **len tie, ktoré chýbajú** (D52).
  *
- * Adresár nie je nadriadený personalistovi. Keď niekto meno alebo útvar
+ * Adresár nie je nadriadený personalistovi. Keď niekto meno alebo oddelenie
  * v `/osoby` opraví, ďalšie prihlásenie mu opravu neprepíše — inak by sa ručná
  * oprava dala prežiť len dovtedy, kým sa ten človek znova neprihlási, a nikto
  * by nepochopil, prečo sa mu zmena „nepodarilo uložiť".

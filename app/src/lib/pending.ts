@@ -110,7 +110,7 @@ export const acknowledgementSource: PendingSource = {
 
     // Najskoršie pridelenie danej verzie. Keď tú istú normu človek dostane
     // cez skupinu aj cez trasu, visí mu odvtedy, nie od druhého pridelenia.
-    // Pri pridelení útvaru alebo skupiny platí neskorší z dvoch dátumov: kto
+    // Pri pridelení oddelenia alebo skupiny platí neskorší z dvoch dátumov: kto
     // do nich pribudol až potom, dostal úlohu vtedy, keď prišiel (D50).
     const pridelene = new Map<string, Date>()
     for (const a of assignments) {

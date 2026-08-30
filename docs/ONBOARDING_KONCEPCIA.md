@@ -271,7 +271,7 @@ bez potvrdenia (`page`), doplní sa **ľahký** záznam o dokončení kroku, nie
 ### 4.1 Pozvanie
 
 ```
-HR nahrá CSV (e-mail, meno, útvar, typ, dátum nástupu, trasa)
+HR nahrá CSV (e-mail, meno, oddelenie, typ, dátum nástupu, trasa)
    → validácia (duplicity, formát adresy, existencia trasy)
    → náhľad: koľko nových, koľko už existuje, čo sa preskočí
    → zápis do persons (status: "invited")

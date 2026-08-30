@@ -15,6 +15,7 @@
 import { redirect } from "next/navigation"
 import { revalidatePath } from "next/cache"
 import { organizaciaContext } from "@/lib/organizacia"
+import { jePresmerovanie } from "@/lib/presmerovanie"
 import { saveTenant, ulozOAuth, zmazOAuth, normalizeDomeny, TenantValidationError } from "@/lib/tenantAdmin"
 import { ulozZnacku, ZnackaError } from "@/lib/znacka"
 import { rozdelZoznam } from "@/lib/oauth"
@@ -94,6 +95,7 @@ export async function ulozVzhlad(fd: FormData) {
       ...(logoUrl ? { logoUrl } : {}),
     }, ja.email)
   } catch (e) {
+    if (jePresmerovanie(e)) throw e
     spat(fd, spravaChyby(e), true)
   }
 
@@ -119,6 +121,7 @@ export async function ulozPrihlasenie(fd: FormData) {
       hostedDomain: provider === "google" ? textPola(fd, "hostedDomain") : undefined,
     }, ja.email)
   } catch (e) {
+    if (jePresmerovanie(e)) throw e
     spat(fd, spravaChyby(e), true)
   }
 
@@ -140,6 +143,7 @@ export async function zmazPrihlasenie(fd: FormData) {
   try {
     await zmazOAuth(ja.companyCode, provider, ja.email)
   } catch (e) {
+    if (jePresmerovanie(e)) throw e
     spat(fd, spravaChyby(e), true)
   }
 
@@ -163,6 +167,7 @@ export async function poziadaj(fd: FormData) {
   try {
     await poziadajODomenu(ja.companyCode, textPola(fd, "host"), ja.email)
   } catch (e) {
+    if (jePresmerovanie(e)) throw e
     spat(fd, spravaChyby(e), true)
   }
 
@@ -210,6 +215,7 @@ export async function zrus(fd: FormData) {
   try {
     await zrusDomenu(ja.companyCode, textPola(fd, "host"), ja.email)
   } catch (e) {
+    if (jePresmerovanie(e)) throw e
     spat(fd, spravaChyby(e), true)
   }
 
@@ -217,10 +223,10 @@ export async function zrus(fd: FormData) {
   spat(fd, "Doména odstránená. Portál na nej prestal odpovedať.")
 }
 
-// ── útvary (D49) ─────────────────────────────────────────────────────────────
+// ── oddelenia (D49) ─────────────────────────────────────────────────────────────
 
 /**
- * Založenie, premenovanie, presun a zrušenie útvaru.
+ * Založenie, premenovanie, presun a zrušenie oddelenia.
  *
  * Všetky štyri idú cez `organizaciaContext()`, ktorý stráži rolu aj kód
  * organizácie. Identifikátory prichádzajú z formulára, a preto sa v každej
@@ -235,8 +241,9 @@ export async function zalozUtvar(fd: FormData) {
       ja.companyCode, textPola(fd, "nazov"), textPola(fd, "parentId") || null, ja.email,
     )
     revalidatePath("/organizacia")
-    spat(fd, "Útvar pribudol.")
+    spat(fd, "Oddelenie pribudol.")
   } catch (e) {
+    if (jePresmerovanie(e)) throw e
     spat(fd, spravaChyby(e), true)
   }
 }
@@ -247,8 +254,9 @@ export async function premenujUtvar(fd: FormData) {
   try {
     await premenujOddelenie(ja.companyCode, textPola(fd, "id"), textPola(fd, "nazov"), ja.email)
     revalidatePath("/organizacia")
-    spat(fd, "Útvar sa premenoval.")
+    spat(fd, "Oddelenie sa premenoval.")
   } catch (e) {
+    if (jePresmerovanie(e)) throw e
     spat(fd, spravaChyby(e), true)
   }
 }
@@ -264,8 +272,9 @@ export async function presunUtvar(fd: FormData) {
     // sa pridelenia týkajú. Prepočet robí `presunOddelenie` sám.
     revalidatePath("/organizacia")
     revalidatePath("/osoby")
-    spat(fd, "Útvar sa presunul.")
+    spat(fd, "Oddelenie sa presunul.")
   } catch (e) {
+    if (jePresmerovanie(e)) throw e
     spat(fd, spravaChyby(e), true)
   }
 }
@@ -276,8 +285,9 @@ export async function zrusUtvar(fd: FormData) {
   try {
     await zmazOddelenie(ja.companyCode, textPola(fd, "id"), ja.email)
     revalidatePath("/organizacia")
-    spat(fd, "Útvar sa zrušil.")
+    spat(fd, "Oddelenie sa zrušil.")
   } catch (e) {
+    if (jePresmerovanie(e)) throw e
     spat(fd, spravaChyby(e), true)
   }
 }
@@ -295,6 +305,7 @@ export async function pridajDoCiselnika(fd: FormData) {
     revalidatePath("/kniznica")
     spat(fd, "Pridané.")
   } catch (e) {
+    if (jePresmerovanie(e)) throw e
     spat(fd, spravaChyby(e), true)
   }
 }
@@ -308,6 +319,7 @@ export async function odoberZCiselnika(fd: FormData) {
     revalidatePath("/kniznica")
     spat(fd, "Odobraté z ponuky. Dokumenty, ktoré túto hodnotu majú, si ju nesú ďalej.")
   } catch (e) {
+    if (jePresmerovanie(e)) throw e
     spat(fd, spravaChyby(e), true)
   }
 }
@@ -344,6 +356,7 @@ export async function ulozClenenie(fd: FormData) {
     revalidatePath("/organizacia")
     spat(fd, "Uložené. Existujúce dokumenty sa nepreindexovali — spusti to pri konkrétnom dokumente.")
   } catch (e) {
+    if (jePresmerovanie(e)) throw e
     spat(fd, spravaChyby(e), true)
   }
 }
@@ -371,6 +384,7 @@ export async function preindexujVsetkyAkcia(fd: FormData) {
     revalidatePath("/kniznica")
     spat(fd, casti.join(" · "), v.chyby.length > 0)
   } catch (e) {
+    if (jePresmerovanie(e)) throw e
     spat(fd, spravaChyby(e), true)
   }
 }

@@ -16,7 +16,7 @@ import type { UiLanguage } from "@/lib/i18n"
 
 const PREDMETY: Record<string, string> = {
   osoba: "osoba",
-  utvar: "útvar",
+  utvar: "oddelenie",
   dokument: "dokument",
   priecinok: "priečinok",
   pridelenie: "pridelenie",
@@ -48,8 +48,8 @@ const AKCIE: Record<string, string> = {
 const POLIA: Record<string, string> = {
   email: "adresa",
   fullName: "meno",
-  department: "útvar (text)",
-  departmentId: "útvar",
+  department: "oddelenie (text)",
+  departmentId: "oddelenie",
   personType: "typ osoby",
   status: "stav",
   language: "jazyk",
@@ -57,7 +57,7 @@ const POLIA: Record<string, string> = {
   groups: "skupiny",
   roles: "role",
   nazov: "názov",
-  parentId: "nadriadený útvar",
+  parentId: "nadriadené oddelenie",
   clientId: "clientId",
   clientSecret: "tajomstvo",
   hostnames: "domény",
@@ -88,7 +88,7 @@ export default function AuditVypis({
     return (
       <p className="karta" style={{ padding: 18, fontSize: 15 }}>
         Zatiaľ tu nie je nič. Záznamy pribúdajú pri každej správcovskej zmene —
-        pri role, prístupe, útvare, pridelení aj nastavení organizácie.
+        pri role, prístupe, oddelení, pridelení aj nastavení organizácie.
       </p>
     )
   }

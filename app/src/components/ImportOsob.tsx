@@ -71,7 +71,7 @@ export default function ImportOsob() {
         />
         <span className="tichy pole-napoveda">
           Prvý riadok sú hlavičky. Rozpoznajú sa <code>email</code>, <code>meno</code>,{" "}
-          <code>útvar</code>, <code>typ</code>, <code>nástup</code>, <code>trasy</code>,{" "}
+          <code>oddelenie</code>, <code>typ</code>, <code>nástup</code>, <code>trasy</code>,{" "}
           <code>skupiny</code>, <code>jazyk</code> — aj bez diakritiky a s bodkočiarkou
           ako oddeľovačom, tak ako to ukladá Excel.
         </span>

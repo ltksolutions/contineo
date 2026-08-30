@@ -60,7 +60,7 @@ export default async function Osoby({
           className="pole-vstup"
           name="q"
           defaultValue={q ?? ""}
-          placeholder="Hľadať v mene, adrese alebo útvare"
+          placeholder="Hľadať v mene, adrese alebo oddelení"
           autoCapitalize="none"
           autoCorrect="off"
         />

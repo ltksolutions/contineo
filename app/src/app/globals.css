@@ -927,7 +927,7 @@ button:disabled { cursor: not-allowed; opacity: 0.55; }
   .kurzor::after { animation: none; }
 }
 
-/* ── strom útvarov (D49) ──────────────────────────────────────────────────
+/* ── strom oddelení (D49) ──────────────────────────────────────────────────
    Odsadenie sa počíta v komponente (paddingLeft podľa úrovne), nie tu:
    hĺbka je údaj, nie vzhľad, a v CSS by sa dala zapísať len ako šesť tried,
    ktoré by sa museli držať v súlade s MAX_HLBKA. */
@@ -954,7 +954,7 @@ button:disabled { cursor: not-allowed; opacity: 0.55; }
   padding: 10px 12px;
   border-radius: 10px;
   /* Dotykový cieľ na telefóne. Riadok stromu je jediné miesto, kde sa dá
-     útvar otvoriť, takže musí byť dosť veľký aj bez presného kliknutia. */
+     oddelenie otvoriť, takže musí byť dosť veľký aj bez presného kliknutia. */
   min-height: 44px;
 }
 

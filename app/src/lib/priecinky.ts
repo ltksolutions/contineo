@@ -10,11 +10,11 @@
  * bez toho, aby sa čokoľvek presúvalo. Preto sa aj dokument z priečinka
  * odobrať dá — nezmizne, len prestane byť zaradený.
  *
- * Tvar je zámerne **ten istý ako pri útvaroch** (D49): strom s materializovanou
+ * Tvar je zámerne **ten istý ako pri oddelenieoch** (D49): strom s materializovanou
  * cestou na dokumente. Dva rôzne stromy s dvomi rôznymi pravidlami by nikto
  * neudržal v hlave a jeden z nich by sa začal správať inak.
  *
- * Rozdiel oproti útvarom je jeden a je vedomý: **cesta sa tu neukladá kvôli
+ * Rozdiel oproti oddelením je jeden a je vedomý: **cesta sa tu neukladá kvôli
  * čistej funkcii, ale kvôli dotazu.** Filter „tento priečinok aj s podriadenými"
  * je `{ folderPath: id }` — jeden index namiesto rekurzie pri každom zobrazení.
  */
@@ -25,7 +25,7 @@ import { zapisAudit } from "./audit"
 
 export const PRIECINKY_COLLECTION = "cms_folders"
 
-/** Rovnaká hranica ako pri útvaroch — a z rovnakého dôvodu (čitateľnosť). */
+/** Rovnaká hranica ako pri oddelenieoch — a z rovnakého dôvodu (čitateľnosť). */
 export const MAX_HLBKA = 6
 
 export interface Priecinok {

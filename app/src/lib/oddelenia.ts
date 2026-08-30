@@ -1,9 +1,9 @@
 /**
  * oddelenia.ts — organizačná štruktúra ako strom (D49).
  *
- * Útvar bol dovtedy **voľný text** na osobe. Pri desiatich ľuďoch to stačilo;
+ * Oddelenie bol dovtedy **voľný text** na osobe. Pri desiatich ľuďoch to stačilo;
  * pri stovke znamená, že „Legislatíva", „legislatíva" a „Legislat." sú tri
- * útvary a otázka „koľko ľudí má úsek" nemá odpoveď.
+ * oddelenia a otázka „koľko ľudí má úsek" nemá odpoveď.
  *
  * **Oddelenie a skupina sú dve rôzne veci** a nesmú sa zlúčiť:
  *
@@ -333,10 +333,10 @@ export async function prepocitajCesty(companyCode: string): Promise<number> {
     const nova = cestaIds(vsetky, o.departmentId)
     const stara = o.departmentPath ?? []
     if (nova.length === stara.length && nova.every((x, i) => x === stara[i])) continue
-    // Cesta sa zmenila presunom vetvy, nie presunom človeka — útvar má
+    // Cesta sa zmenila presunom vetvy, nie presunom človeka — oddelenie má
     // rovnaký, takže sa **neotvára nový záznam histórie**, len sa opraví
     // cesta v tom otvorenom. Inak by presun vetvy vyzeral ako to, že do
-    // svojho útvaru práve prišli všetci naraz.
+    // svojho oddelenia práve prišli všetci naraz.
     await col.updateOne(
       { companyCode, id: o.id },
       {
@@ -382,7 +382,7 @@ export async function pocty(companyCode: string): Promise<Map<string, { priamo: 
  *
  * Cestu zapisuje **v tom istom zápise** ako samotné zaradenie. Keby sa nechala
  * na neskorší prepočet, existoval by okamih, v ktorom osoba do oddelenia patrí,
- * ale pridelenie „útvaru a jeho podriadeným" sa jej netýka — a nikto by
+ * ale pridelenie „oddelenia a jeho podriadeným" sa jej netýka — a nikto by
  * neuhádol, prečo jednému človeku úloha nepribudla.
  */
 export async function zaradOsobu(

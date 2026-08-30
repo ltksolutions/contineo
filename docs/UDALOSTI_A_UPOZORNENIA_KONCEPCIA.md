@@ -101,7 +101,7 @@ z `audience` a aktuálneho stavu `persons`. Uložený zoznam by o mesiac klamal 
 
 Dnes existuje `persons.tracks` (čo mám prejsť) a `persons.department` (kam
 patrím v organizačnej štruktúre). Ani jedno nie je skupina na prideľovanie:
-trasa je obsah, útvar je štruktúra.
+trasa je obsah, oddelenie je štruktúra.
 
 Návrh: `persons.groups: string[]` ako **tretia, samostatná dimenzia**.
 Zlúčiť ju s trasami by znamenalo, že sa nedá prideliť jednorazová úloha bez
@@ -197,7 +197,7 @@ ktoré tam nebudú. Widget sa preto volá tak, ako znelo zadanie —
 |---|---|---|
 | **D36** | Widget ukazuje „čo čaká na mňa", nie prehľad organizácie | ✅ rozhodnuté 2026-08-28 |
 | **D37** | Úloha sa odvodzuje, pridelenie sa zaznamenáva ako udalosť | ✅ rozhodnuté a postavené 2026-08-29 |
-| **D38** | `persons.groups` ako tretia dimenzia vedľa trás a útvarov | ✅ rozhodnuté a postavené 2026-08-29 |
+| **D38** | `persons.groups` ako tretia dimenzia vedľa trás a oddelení | ✅ rozhodnuté a postavené 2026-08-29 |
 | **D39** | „Nové" sa počíta voči `lastLoginAt`, bez stavu prečítané | ✅ rozhodnuté 2026-08-28 |
 | **D40** | Jednorazové systémové hlásenia sa v rozsahu A nerobia | ✅ rozhodnuté 2026-08-28 — možnosť (a) |
 

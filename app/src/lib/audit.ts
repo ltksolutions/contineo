@@ -63,13 +63,13 @@ export interface AuditZaznam {
    * `oznamene`, `overene`.
    */
   akcia: string
-  /** Identifikátor dotknutej veci: `persons.id`, id útvaru, `_id` pridelenia. */
+  /** Identifikátor dotknutej veci: `persons.id`, id oddelenia, `_id` pridelenia. */
   cielId: string | null
   /**
-   * Ľudský popis cieľa v čase zmeny — meno osoby, názov útvaru.
+   * Ľudský popis cieľa v čase zmeny — meno osoby, názov oddelenia.
    *
    * Kópia, nie odkaz, z rovnakého dôvodu ako všade inde v tomto projekte:
-   * osoba sa dá vyradiť a útvar zrušiť, a záznam „zrušil útvar 8f3a…" o rok
+   * osoba sa dá vyradiť a oddelenie zrušiť, a záznam „zrušil oddelenie 8f3a…" o rok
    * nepovie nikomu nič.
    */
   cielPopis: string | null

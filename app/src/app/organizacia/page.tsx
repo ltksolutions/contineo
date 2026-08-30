@@ -35,7 +35,7 @@ import type { Tenant } from "@/lib/tenants"
 
 const ZALOZKY = [
   { kluc: "vzhlad", popis: "Vzhľad a jazyky" },
-  { kluc: "utvary", popis: "Útvary" },
+  { kluc: "utvary", popis: "Oddelenia" },
   { kluc: "domeny", popis: "Domény" },
   { kluc: "prihlasenie", popis: "Prihlasovanie" },
   { kluc: "ciselniky", popis: "Číselníky" },
@@ -355,16 +355,16 @@ export default async function Organizacia({
           <div>
             <h2 style={{ fontSize: 17, margin: "0 0 4px" }}>Organizačná štruktúra</h2>
             <p className="tichy" style={{ fontSize: 14, margin: 0 }}>
-              Útvar je <strong>kam človek patrí</strong> — práve jeden, ako v organizačnej
-              schéme. Kto sa má osloviť naprieč útvarmi (rozhodcovia, delegáti,
-              štatutári), na to sú <Link href="/osoby">skupiny</Link>; tie sa s útvarmi
+              Oddelenie je <strong>kam človek patrí</strong> — práve jeden, ako v organizačnej
+              schéme. Kto sa má osloviť naprieč oddeleniami (rozhodcovia, delegáti,
+              štatutári), na to sú <Link href="/osoby">skupiny</Link>; tie sa s oddeleniami
               nemiešajú a jeden človek ich môže mať viac.
             </p>
           </div>
 
           {riadky.length === 0 ? (
             <p className="tichy" style={{ fontSize: 14, margin: 0 }}>
-              Zatiaľ tu nie je nič. Založ prvý útvar nižšie — ak už máte útvary
+              Zatiaľ tu nie je nič. Založ prvý oddelenie nižšie — ak už máte oddelenia
               zapísané pri ľuďoch ako text, ozvite sa nám a prevedieme ich naraz.
             </p>
           ) : (
@@ -391,7 +391,7 @@ export default async function Organizacia({
                             className="pole-vstup"
                             name="nazov"
                             defaultValue={oddelenie.nazov}
-                            aria-label={`Názov útvaru ${oddelenie.nazov}`}
+                            aria-label={`Názov oddelenia ${oddelenie.nazov}`}
                             required
                           />
                           <button className="tlacidlo tlacidlo--tiche" type="submit">Premenovať</button>
@@ -403,7 +403,7 @@ export default async function Organizacia({
                           <Vyber
                             meno="parentId"
                             predvolena={oddelenie.parentId ?? ""}
-                            popisPola={`Nadriadený útvar pre ${oddelenie.nazov}`}
+                            popisPola={`Nadriadené oddelenie pre ${oddelenie.nazov}`}
                             volby={[
                               { hodnota: "", popis: "— najvyššia úroveň —" },
                               ...riadky
@@ -424,11 +424,11 @@ export default async function Organizacia({
                           <form action={zrusUtvar}>
                             <input type="hidden" name="zalozka" value="utvary" />
                             <input type="hidden" name="id" value={oddelenie.id} />
-                            <button className="tlacidlo tlacidlo--tiche" type="submit">Zrušiť útvar</button>
+                            <button className="tlacidlo tlacidlo--tiche" type="submit">Zrušiť oddelenie</button>
                           </form>
                         ) : (
                           <p className="tichy" style={{ fontSize: 13, margin: 0 }}>
-                            Zrušiť sa dá až prázdny útvar bez podriadených — inak by
+                            Zrušiť sa dá až prázdne oddelenie bez podriadených — inak by
                             ľudia zmizli zo štruktúry bez toho, aby si to niekto všimol.
                           </p>
                         )}
@@ -443,7 +443,7 @@ export default async function Organizacia({
 
         <form action={zalozUtvar} className="karta" style={{ padding: 20, display: "grid", gap: 14 }}>
           <input type="hidden" name="zalozka" value="utvary" />
-          <h2 style={{ fontSize: 17, margin: 0 }}>Nový útvar</h2>
+          <h2 style={{ fontSize: 17, margin: 0 }}>Nové oddelenie</h2>
 
           <label className="pole">
             <span className="pole-popis">Názov</span>
@@ -451,7 +451,7 @@ export default async function Organizacia({
           </label>
 
           <label className="pole">
-            <span className="pole-popis">Nadriadený útvar</span>
+            <span className="pole-popis">Nadriadené oddelenie</span>
             <Vyber
               meno="parentId"
               predvolena=""
@@ -734,7 +734,7 @@ export default async function Organizacia({
       <div>
         <p className="tichy" style={{ fontSize: 14.5, margin: "0 0 16px", maxWidth: 620 }}>
           Kto, čo a kedy zmenil. Zapisuje sa každá správcovská zmena — rola,
-          prístup, útvar, pridelenie aj nastavenie organizácie. Záznamy sa
+          prístup, oddelenie, pridelenie aj nastavenie organizácie. Záznamy sa
           <strong> nedajú upraviť ani zmazať</strong>; to je celý zmysel.
           Tajomstvá (napr. klientsky secret) sú tu len ako &bdquo;zmenené&ldquo; —
           audit, ktorý zbiera heslá, je sám o sebe únik.
@@ -750,7 +750,7 @@ export default async function Organizacia({
               className="pole-vstup"
               name="hladat"
               defaultValue={hladat ?? ""}
-              placeholder="meno, adresa, útvar…"
+              placeholder="meno, adresa, oddelenie…"
               autoCapitalize="none"
             />
           </label>

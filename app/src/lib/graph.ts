@@ -1,7 +1,7 @@
 /**
  * graph.ts — údaje o človeku z Microsoft Graphu (D52).
  *
- * Konto z Entry vie viac než adresu: meno a priezvisko zvlášť, útvar, jazyk
+ * Konto z Entry vie viac než adresu: meno a priezvisko zvlášť, oddelenie, jazyk
  * a fotografiu. Bez toho vznikala pri automatickom založení (D47) osoba, ktorá
  * sa v zozname volala rovnako ako jej adresa — a personalista ju musel
  * prepísať ručne, hoci ten údaj bol v adresári zákazníka celý čas.
@@ -12,7 +12,7 @@
  *     nič nevyhadzuje a všetko má krátky časový strop: prihlásenie, ktoré
  *     čaká na cudzie API, je horšie než osoba bez fotky.
  *  2. **Dopĺňa sa len to, čo chýba** (`doplnChybajuce` v `persons.ts`).
- *     Adresár nie je nadriadený personalistovi: keď niekto meno alebo útvar
+ *     Adresár nie je nadriadený personalistovi: keď niekto meno alebo oddelenie
  *     v `/osoby` opraví, ďalšie prihlásenie mu opravu neprepíše.
  *  3. **Volá sa len vtedy, keď naozaj niečo chýba.** Inak by každé prihlásenie
  *     platilo dve cudzie požiadavky za nič.
@@ -131,7 +131,7 @@ export async function udajeZGraphu(
  * Celé meno z častí.
  *
  * `displayName` sa berie až ako druhé: v niektorých adresároch je v tvare
- * „Priezvisko, Meno (útvar)" a to sa v zozname osôb číta zle. Meno
+ * „Priezvisko, Meno (oddelenie)" a to sa v zozname osôb číta zle. Meno
  * a priezvisko zvlášť sú spoľahlivejšie.
  */
 export function celeMeno(u: UdajeZGraphu): string | undefined {

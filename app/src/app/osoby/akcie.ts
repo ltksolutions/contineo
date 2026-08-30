@@ -12,6 +12,7 @@
  */
 
 import { redirect } from "next/navigation"
+import { jePresmerovanie } from "@/lib/presmerovanie"
 import { revalidatePath } from "next/cache"
 import { peopleContext, savePerson, invitePerson, setPersonStatus, PersonValidationError } from "@/lib/people"
 import { csvNaOsoby, DOVODY } from "@/lib/personsImport"
@@ -51,7 +52,7 @@ export async function ulozOsobu(fd: FormData) {
     await savePerson(kto.companyCode, id, {
       email: textPola(fd, "email"),
       fullName: textPola(fd, "fullName"),
-      // Voľba „— bez útvaru —" má prázdnu hodnotu a znamená vyradiť zo
+      // Voľba „— bez oddelenia —" má prázdnu hodnotu a znamená vyradiť zo
       // štruktúry, nie „nemeniť". Preto `|| null`, nie `|| undefined`.
       departmentId: textPola(fd, "departmentId") || null,
       jobTitle: textPola(fd, "jobTitle"),
@@ -93,7 +94,7 @@ export async function pozviOsobu(fd: FormData) {
     )}`)
   } catch (e) {
     // `redirect()` vyhadzuje výnimku — nesmie sa chytiť ako chyba zápisu.
-    if (e && typeof e === "object" && "digest" in e) throw e
+    if (jePresmerovanie(e)) throw e
     const q = new URLSearchParams({
       chyba: spravaChyby(e),
       email: textPola(fd, "email"),
