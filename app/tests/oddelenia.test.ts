@@ -296,3 +296,43 @@ describe("reorganizacia (D50)", () => {
     expect(h[1].departmentId).toBeNull()
   })
 })
+
+describe("poradie medzi surodencami (D60)", () => {
+  function so(id: string, nazov: string, parentId: string | null, poradie?: number): Oddelenie {
+    return {
+      companyCode: "SFZ", id, nazov, parentId, poradie,
+      createdAt: new Date("2026-01-01"), createdBy: "test",
+    }
+  }
+
+  it("bez urceneho poradia rozhoduje nazov", () => {
+    // Nic sa nemuselo migrovat: stary stav sa sprava ako predtym.
+    const v = [so("b", "Beta", null), so("a", "Alfa", null)]
+    expect(deti(v, null).map(x => x.id)).toEqual(["a", "b"])
+  })
+
+  it("urcene poradie prebije abecedu", () => {
+    // Organizacna schema nie je abecedny zoznam: prezident stoji nad
+    // vykonnym vyborom bez ohladu na to, ako sa volaju.
+    const v = [so("vv", "Výkonný výbor", null, 1), so("prez", "Prezident", null, 0)]
+    expect(deti(v, null).map(x => x.id)).toEqual(["prez", "vv"])
+  })
+
+  it("kto ma poradie, stoji pred tymi bez neho", () => {
+    // Miesany stav je zamerny -- prinutit organizaciu ocislovat cely strom
+    // skor, nez presunie jednu polozku, by bolo horsie nez docasna
+    // nedoslednost.
+    const v = [so("a", "Alfa", null), so("z", "Zeta", null, 0)]
+    expect(deti(v, null).map(x => x.id)).toEqual(["z", "a"])
+  })
+
+  it("poradie plati len v ramci jednej urovne", () => {
+    const v = [
+      so("k1", "Koreň 1", null, 0),
+      so("d1", "Dieťa A", "k1", 1),
+      so("d2", "Dieťa B", "k1", 0),
+    ]
+    expect(deti(v, "k1").map(x => x.id)).toEqual(["d2", "d1"])
+    expect(deti(v, null).map(x => x.id)).toEqual(["k1"])
+  })
+})

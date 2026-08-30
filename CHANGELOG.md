@@ -4,6 +4,19 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Added (2026-08-30 — poradie oddelení a čiary hierarchie)
+
+- **Vlastné poradie medzi súrodencami (D60).** Organizačná schéma nie je abecedný zoznam: prezident stojí nad výkonným výborom bez ohľadu na to, ako sa volajú. Kto poradie neurčí, má naďalej abecedu — nemuselo sa nič migrovať a miešaný stav je zámerný, lebo prinútiť organizáciu očíslovať celý strom skôr, než presunie jednu položku, by bolo horšie než dočasná nedôslednosť.
+- **Presúvanie ťahaním myšou** v rámci jednej úrovne. **Ťahať sa dá len medzi súrodencami** — pretiahnuť oddelenie inému rodičovi by bola zmena štruktúry maskovaná ako preusporiadanie, a práve to je pohyb, ktorý sa myšou spraví omylom; na zmenu nadriadeného zostáva samostatný výber.
+- **Šípky hore/dole pri každej položke** ako rovnocenná cesta: obyčajný formulár, funguje bez JavaScriptu, ovláda sa klávesnicou a na telefóne sa trafí ľahšie než ťahanie prstom. Na dotykových obrazovkách sa úchop na ťahanie ani neponúka — bil by sa s posúvaním stránky.
+- **Poradie sa zapíše až tlačidlom**, nie po každom pustení: ťahanie po zozname je hľadanie miesta, nie sedem rozhodnutí, a sedem zápisov v audite by z histórie spravilo šum.
+- **Čiary hierarchie** v strome. Bez nich je hlbší strom len zoznam s medzerami naľavo a odsadenie sa musí merať očami.
+
+### Changed (2026-08-30)
+
+- **Jedno hlásenie na všetky uloženia** — „Zmeny boli uložené." Každá akcia mala vlastnú vetu a bola to zbytočná príležitosť pomýliť sa v skloňovaní; po premenovaní z toho vzniklo „Oddelenie pribudol." Vlastnú vetu si nechávajú len akcie, ktoré hovoria niečo, čo z obrazovky vidieť nie je (napríklad že treba nastaviť CNAME).
+- Preklad starého kľúča záložky je teraz **jedna tabuľka na jednom mieste** — potrebuje ho stránka pri čítaní adresy aj serverová akcia pri návrate. Dve kópie sa hneď aj rozišli: hromadné premenovanie CSS tried prepísalo `utvary` aj v tej druhej.
+
 ### Fixed (2026-08-30)
 
 - **Zakladanie oddelenia hlásilo chybu, hoci sa oddelenie vytvorilo.** `redirect()` v Nexte vyhadzuje výnimku a v mojich nových akciách bolo volanie na ceste úspechu **vnútri `try`**, takže ho zachytil vlastný `catch` a ohlásil ako neúspech. Je to najhorší druh chyby: hlási neúspech tam, kde bol úspech, takže sa akcia opakuje a vzniknú duplicity. Týkalo sa to trinástich akcií v nastavení organizácie (oddelenia, číselníky, členenie, domény). Rozoznanie presmerovania je teraz **jedna funkcia na jednom mieste** — nie `"digest" in e` rozpísané v každej akcii, čo by navyše zožralo aj `notFound()`.

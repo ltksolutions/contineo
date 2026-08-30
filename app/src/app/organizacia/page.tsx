@@ -23,9 +23,12 @@ import Oznam from "@/components/Oznam"
 import { ulozVzhlad, ulozPrihlasenie, zmazPrihlasenie, poziadaj, overDomenu, zrus } from "./akcie"
 import { zalozUtvar, premenujUtvar, presunUtvar, zrusUtvar } from "./akcie"
 import { pridajDoCiselnika, odoberZCiselnika, ulozClenenie, preindexujVsetkyAkcia } from "./akcie"
+import { posunOddelenieAkcia, ulozPoradieAkcia } from "./akcie"
+import StromOddeleni from "@/components/StromOddeleni"
 import { stavPreindexovania } from "@/lib/kniznica.zapis"
 import { PREDVOLENY_PROFIL } from "@/lib/chunker.mjs"
 import { POPIS_CISELNIKA, ponuka, vlastnePolozky, pouzitie } from "@/lib/ciselnikyTenanta"
+import { preloz } from "@/lib/zalozky"
 import { VLASTNE_CISELNIKY } from "@/lib/ciselniky"
 import { vsetkyOddelenia, splostiStrom, podstrom, pocty, MAX_HLBKA, hlbka } from "@/lib/oddelenia"
 import { auditZaznamy } from "@/lib/audit"
@@ -186,8 +189,7 @@ export default async function Organizacia({
   // `strom` je starý kľúč tejto záložky. Odkazy s ním existujú v e-mailoch
   // aj v záložkách prehliadača — presmerovať by ich rozbilo, tak sa len
   // preloží. Zmizne, keď prestane chodiť.
-  const STARE_KLUCE: Record<string, string> = { strom: "oddelenia" }
-  const kluc = zalozka ? (STARE_KLUCE[zalozka] ?? zalozka) : undefined
+  const kluc = preloz(zalozka)
   const teraz = ZALOZKY.some(z => z.kluc === kluc) ? kluc! : "vzhlad"
   const tenant = ctx.tenant
   const branding = brandingView(tenant)
@@ -360,7 +362,9 @@ export default async function Organizacia({
           <div>
             <h2 style={{ fontSize: 17, margin: "0 0 4px" }}>Organizačná štruktúra</h2>
             <p className="tichy" style={{ fontSize: 14, margin: 0 }}>
-              Oddelenie je <strong>kam človek patrí</strong> — práve jeden, ako v organizačnej
+              Poradie sa dá meniť ťahaním myšou alebo šípkami po rozbalení položky —
+            organizačná schéma nie je abecedný zoznam.{" "}
+            Oddelenie je <strong>kam človek patrí</strong> — práve jeden, ako v organizačnej
               schéme. Kto sa má osloviť naprieč oddeleniami (rozhodcovia, delegáti,
               štatutári), na to sú <Link href="/osoby">skupiny</Link>; tie sa s oddeleniami
               nemiešajú a jeden človek ich môže mať viac.
@@ -369,18 +373,25 @@ export default async function Organizacia({
 
           {riadky.length === 0 ? (
             <p className="tichy" style={{ fontSize: 14, margin: 0 }}>
-              Zatiaľ tu nie je nič. Založ prvý oddelenie nižšie — ak už máte oddelenia
+              Zatiaľ tu nie je nič. Založ prvé oddelenie nižšie — ak už máte oddelenia
               zapísané pri ľuďoch ako text, ozvite sa nám a prevedieme ich naraz.
             </p>
           ) : (
-            <ul className="strom">
-              {riadky.map(({ oddelenie, uroven }) => {
+            <StromOddeleni
+              zalozka="oddelenia"
+              akcia={ulozPoradieAkcia}
+              polozky={riadky.map(({ oddelenie, uroven }) => {
                 const p = koliOsob.get(oddelenie.id) ?? { priamo: 0, sPodriadenymi: 0 }
                 const pod = podstrom(oddeleniaTenanta, oddelenie.id)
-                return (
-                  <li key={oddelenie.id} className="strom-polozka" style={{ paddingLeft: (uroven - 1) * 18 }}>
+                return {
+                  id: oddelenie.id,
+                  nazov: oddelenie.nazov,
+                  parentId: oddelenie.parentId ?? null,
+                  uroven,
+                  obsah: (
                     <details>
                       <summary className="strom-riadok">
+                        <span className="strom-uchop" aria-hidden="true">⠿</span>
                         <span className="strom-nazov">{oddelenie.nazov}</span>
                         <span className="tichy strom-pocet">
                           {p.priamo}
@@ -389,6 +400,26 @@ export default async function Organizacia({
                       </summary>
 
                       <div className="strom-uprava">
+                        {/* Posun o jedno miesto — obyčajné tlačidlá. Ťahanie
+                            myšou robí to isté, ale toto funguje aj bez
+                            JavaScriptu, klávesnicou a na telefóne. */}
+                        <div className="strom-sipky">
+                          <form action={posunOddelenieAkcia}>
+                            <input type="hidden" name="zalozka" value="oddelenia" />
+                            <input type="hidden" name="id" value={oddelenie.id} />
+                            <input type="hidden" name="smer" value="hore" />
+                            <button className="tlacidlo tlacidlo--tiche" type="submit"
+                                    aria-label={`Posunúť ${oddelenie.nazov} vyššie`}>↑ vyššie</button>
+                          </form>
+                          <form action={posunOddelenieAkcia}>
+                            <input type="hidden" name="zalozka" value="oddelenia" />
+                            <input type="hidden" name="id" value={oddelenie.id} />
+                            <input type="hidden" name="smer" value="dole" />
+                            <button className="tlacidlo tlacidlo--tiche" type="submit"
+                                    aria-label={`Posunúť ${oddelenie.nazov} nižšie`}>↓ nižšie</button>
+                          </form>
+                        </div>
+
                         <form action={premenujUtvar} className="strom-forma">
                           <input type="hidden" name="zalozka" value="oddelenia" />
                           <input type="hidden" name="id" value={oddelenie.id} />
@@ -439,10 +470,10 @@ export default async function Organizacia({
                         )}
                       </div>
                     </details>
-                  </li>
-                )
+                  ),
+                }
               })}
-            </ul>
+            />
           )}
         </section>
 

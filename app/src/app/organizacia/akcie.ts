@@ -16,6 +16,7 @@ import { redirect } from "next/navigation"
 import { revalidatePath } from "next/cache"
 import { organizaciaContext } from "@/lib/organizacia"
 import { jePresmerovanie } from "@/lib/presmerovanie"
+import { STARE_KLUCE } from "@/lib/zalozky"
 import { saveTenant, ulozOAuth, zmazOAuth, normalizeDomeny, TenantValidationError } from "@/lib/tenantAdmin"
 import { ulozZnacku, ZnackaError } from "@/lib/znacka"
 import { rozdelZoznam } from "@/lib/oauth"
@@ -24,7 +25,8 @@ import {
 } from "@/lib/domenyZakaznika"
 import { pridajDomenu, preskocitVercel } from "@/lib/vercel"
 import {
-  zalozOddelenie, premenujOddelenie, presunOddelenie, zmazOddelenie, OddelenieError,
+  zalozOddelenie, premenujOddelenie, presunOddelenie, zmazOddelenie,
+  posunOddelenie, ulozPoradie, OddelenieError,
 } from "@/lib/oddelenia"
 import { pridajPolozku, odoberPolozku } from "@/lib/ciselnikyTenanta"
 import { CiselnikError } from "@/lib/ciselniky"
@@ -60,8 +62,25 @@ function spravaChyby(e: unknown): string {
  * Bez toho by človeka po uložení domény hodilo na vzhľad a musel by sa
  * preklikať späť — pri chybe by navyše nevidel pole, ktoré má opraviť.
  */
+/**
+ * Jedno hlásenie na všetky uloženia.
+ *
+ * Predtým mala každá akcia vlastnú vetu („Oddelenie pribudol.", „Doména
+ * odstránená.") a bola to zbytočná príležitosť pomýliť sa v skloňovaní —
+ * čo sa aj stalo. Človek navyše vidí výsledok na obrazovke pod dialógom;
+ * hlásenie má povedať, že sa zápis podaril, nie ho prerozprávať.
+ *
+ * Vlastnú vetu si nechávajú len akcie, ktoré hovoria niečo, čo z obrazovky
+ * vidieť nie je — napríklad že treba nastaviť DNS.
+ */
+const HOTOVO = "Zmeny boli uložené."
+
 function spat(fd: FormData, sprava: string, chyba = false): never {
-  const zalozka = textPola(fd, "zalozka") || "vzhlad"
+  // Starý kľúč záložky (`utvary`) sa preloží aj tu, nielen pri čítaní stránky:
+  // formulár vykreslený pred premenovaním ho ešte nesie a bez prekladu by
+  // človeka po uložení hodilo na prvú záložku.
+  const zadana = textPola(fd, "zalozka")
+  const zalozka = (STARE_KLUCE[zadana] ?? zadana) || "vzhlad"
   const q = new URLSearchParams({ zalozka, sprava })
   if (chyba) q.set("chyba", "1")
   redirect(`/organizacia?${q.toString()}`)
@@ -100,7 +119,7 @@ export async function ulozVzhlad(fd: FormData) {
   }
 
   revalidatePath("/organizacia")
-  spat(fd, "Uložené.")
+  spat(fd, HOTOVO)
 }
 
 // ── prihlasovanie kontom ─────────────────────────────────────────────────────
@@ -126,7 +145,7 @@ export async function ulozPrihlasenie(fd: FormData) {
   }
 
   revalidatePath("/organizacia")
-  spat(fd, "Prihlasovacie údaje uložené.")
+  spat(fd, HOTOVO)
 }
 
 export async function zmazPrihlasenie(fd: FormData) {
@@ -241,7 +260,7 @@ export async function zalozUtvar(fd: FormData) {
       ja.companyCode, textPola(fd, "nazov"), textPola(fd, "parentId") || null, ja.email,
     )
     revalidatePath("/organizacia")
-    spat(fd, "Oddelenie pribudol.")
+    spat(fd, HOTOVO)
   } catch (e) {
     if (jePresmerovanie(e)) throw e
     spat(fd, spravaChyby(e), true)
@@ -254,7 +273,7 @@ export async function premenujUtvar(fd: FormData) {
   try {
     await premenujOddelenie(ja.companyCode, textPola(fd, "id"), textPola(fd, "nazov"), ja.email)
     revalidatePath("/organizacia")
-    spat(fd, "Oddelenie sa premenoval.")
+    spat(fd, HOTOVO)
   } catch (e) {
     if (jePresmerovanie(e)) throw e
     spat(fd, spravaChyby(e), true)
@@ -272,7 +291,7 @@ export async function presunUtvar(fd: FormData) {
     // sa pridelenia týkajú. Prepočet robí `presunOddelenie` sám.
     revalidatePath("/organizacia")
     revalidatePath("/osoby")
-    spat(fd, "Oddelenie sa presunul.")
+    spat(fd, HOTOVO)
   } catch (e) {
     if (jePresmerovanie(e)) throw e
     spat(fd, spravaChyby(e), true)
@@ -285,7 +304,7 @@ export async function zrusUtvar(fd: FormData) {
   try {
     await zmazOddelenie(ja.companyCode, textPola(fd, "id"), ja.email)
     revalidatePath("/organizacia")
-    spat(fd, "Oddelenie sa zrušil.")
+    spat(fd, HOTOVO)
   } catch (e) {
     if (jePresmerovanie(e)) throw e
     spat(fd, spravaChyby(e), true)
@@ -303,7 +322,7 @@ export async function pridajDoCiselnika(fd: FormData) {
     )
     revalidatePath("/organizacia")
     revalidatePath("/kniznica")
-    spat(fd, "Pridané.")
+    spat(fd, HOTOVO)
   } catch (e) {
     if (jePresmerovanie(e)) throw e
     spat(fd, spravaChyby(e), true)
@@ -383,6 +402,43 @@ export async function preindexujVsetkyAkcia(fd: FormData) {
     if (v.chyby.length) casti.push(`chyby: ${v.chyby.slice(0, 3).join("; ")}`)
     revalidatePath("/kniznica")
     spat(fd, casti.join(" · "), v.chyby.length > 0)
+  } catch (e) {
+    if (jePresmerovanie(e)) throw e
+    spat(fd, spravaChyby(e), true)
+  }
+}
+
+/**
+ * Posun o jedno miesto medzi súrodencami (D60).
+ *
+ * Obyčajný formulár s tlačidlom — funguje bez JavaScriptu a dá sa ovládať
+ * klávesnicou. Ťahanie myšou je nadstavba nad tým istým zápisom, nie jediná
+ * cesta: organizačnú schému niekto usporadúva raz za rok a nemá pri tom
+ * bojovať s presnosťou pustenia.
+ */
+export async function posunOddelenieAkcia(fd: FormData) {
+  const ja = await kto()
+  if (!ja) redirect("/")
+  const smer = textPola(fd, "smer") === "dole" ? "dole" : "hore"
+  try {
+    await posunOddelenie(ja.companyCode, textPola(fd, "id"), smer, ja.email)
+    revalidatePath("/organizacia")
+    spat(fd, HOTOVO)
+  } catch (e) {
+    if (jePresmerovanie(e)) throw e
+    spat(fd, spravaChyby(e), true)
+  }
+}
+
+/** Nové poradie celej úrovne — sem posiela výsledok ťahanie myšou. */
+export async function ulozPoradieAkcia(fd: FormData) {
+  const ja = await kto()
+  if (!ja) redirect("/")
+  const poradie = textPola(fd, "poradie").split(",").map(x => x.trim()).filter(Boolean)
+  try {
+    if (poradie.length > 1) await ulozPoradie(ja.companyCode, poradie, ja.email)
+    revalidatePath("/organizacia")
+    spat(fd, HOTOVO)
   } catch (e) {
     if (jePresmerovanie(e)) throw e
     spat(fd, spravaChyby(e), true)

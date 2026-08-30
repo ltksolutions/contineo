@@ -57,6 +57,14 @@ export interface Oddelenie {
   nazov: string
   /** `null` = koreňové oddelenie. */
   parentId: string | null
+  /**
+   * Poradie medzi súrodencami (D60).
+   *
+   * Organizačná schéma nie je abecedný zoznam: prezident stojí nad výkonným
+   * výborom bez ohľadu na to, ako sa volajú. Chýbajúce poradie znamená
+   * „zatiaľ neurčené" — vtedy rozhoduje názov, ako doteraz.
+   */
+  poradie?: number
   createdAt: Date
   createdBy: string
   updatedAt?: Date
@@ -73,10 +81,25 @@ export class OddelenieError extends Error {
 // ── čisté pravidlá nad stromom ───────────────────────────────────────────────
 
 /** Priame deti daného oddelenia, zoradené podľa názvu. */
+/**
+ * Priami podriadení, v poradí, ktoré určil človek.
+ *
+ * Bez určeného poradia rozhoduje názov — to je rozumné východisko a zároveň
+ * to znamená, že sa nemuselo nič migrovať. Kto raz poradie určí, ten ho má;
+ * ostatní zostanú abecedne za ním. Miešaný stav je zámerný: prinútiť
+ * organizáciu očíslovať celý strom skôr, než presunie jednu položku, by
+ * bolo horšie než dočasná nedôslednosť.
+ */
 export function deti(vsetky: Oddelenie[], parentId: string | null): Oddelenie[] {
   return vsetky
     .filter(o => (o.parentId ?? null) === parentId)
-    .sort((a, b) => a.nazov.localeCompare(b.nazov, "sk"))
+    .sort((a, b) => {
+      const pa = a.poradie, pb = b.poradie
+      if (typeof pa === "number" && typeof pb === "number") return pa - pb
+      if (typeof pa === "number") return -1
+      if (typeof pb === "number") return 1
+      return a.nazov.localeCompare(b.nazov, "sk")
+    })
 }
 
 /**
@@ -421,4 +444,77 @@ export async function zaradOsobu(
     cielId: personId, cielPopis: osoba.fullName,
     zmeny: { departmentId: { z: osoba.departmentId ?? null, na: departmentId ?? null } },
   })
+}
+
+
+/**
+ * Prehodí oddelenie o jedno miesto hore alebo dole **medzi súrodencami** (D60).
+ *
+ * Nikdy nemení nadriadené oddelenie — na to je presun. Sú to dve rôzne veci
+ * a zlúčiť ich do jedného ťahania by znamenalo, že sa človek pri
+ * preusporadúvaní omylom prepadne o úroveň nižšie.
+ *
+ * Prepisuje poradie **celej úrovne**, nie len dvoch dotknutých: časť
+ * súrodencov nemusí mať poradie určené vôbec a bez prečíslovania by sa
+ * výsledok líšil od toho, čo človek videl.
+ */
+export async function posunOddelenie(
+  companyCode: string,
+  id: string,
+  smer: "hore" | "dole",
+  aktor: string,
+): Promise<void> {
+  const vsetky = await vsetkyOddelenia(companyCode)
+  const ja = vsetky.find(o => o.id === id)
+  if (!ja) throw new OddelenieError("Také oddelenie tu nie je.")
+
+  const surodenci = deti(vsetky, ja.parentId ?? null)
+  const kde = surodenci.findIndex(o => o.id === id)
+  const kam = smer === "hore" ? kde - 1 : kde + 1
+  if (kam < 0 || kam >= surodenci.length) return
+
+  const zoradene = [...surodenci]
+  const [vybrate] = zoradene.splice(kde, 1)
+  zoradene.splice(kam, 0, vybrate)
+
+  await ulozPoradie(companyCode, zoradene.map(o => o.id), aktor)
+  await zapisAudit({
+    companyCode, predmet: "oddelenie", akcia: "preusporiadane", aktor,
+    cielId: id, cielPopis: ja.nazov,
+    poznamka: `posunuté ${smer} medzi súrodencami`,
+  })
+}
+
+/**
+ * Zapíše poradie súrodencov podľa zoznamu identifikátorov.
+ *
+ * Prijíma **len oddelenia s tým istým nadriadeným** — zoznam z prehliadača
+ * by inak vedel prepísať poradie naprieč celým stromom, a to je zmena
+ * štruktúry maskovaná ako preusporiadanie.
+ */
+export async function ulozPoradie(
+  companyCode: string,
+  idVPoradi: string[],
+  aktor: string,
+): Promise<void> {
+  const vsetky = await vsetkyOddelenia(companyCode)
+  const podla = new Map(vsetky.map(o => [o.id, o]))
+
+  const dotknute = idVPoradi.map(x => podla.get(x)).filter(o => o !== undefined)
+  if (dotknute.length !== idVPoradi.length) {
+    throw new OddelenieError("Zoznam obsahuje oddelenie, ktoré tu nie je.")
+  }
+  const rodicia = new Set(dotknute.map(o => o!.parentId ?? "koren"))
+  if (rodicia.size > 1) {
+    throw new OddelenieError("Preusporiadať sa dá len v rámci jednej úrovne.")
+  }
+
+  const col = await getCollection<Oddelenie>(ODDELENIA_COLLECTION)
+  const teraz = new Date()
+  for (const [i, x] of idVPoradi.entries()) {
+    await col.updateOne(
+      { companyCode, id: x },
+      { $set: { poradie: i, updatedAt: teraz, updatedBy: aktor } },
+    )
+  }
 }

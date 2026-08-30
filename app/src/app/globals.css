@@ -1155,3 +1155,71 @@ html[data-theme="dark"] .editor-tui .CodeMirror {
   font-weight: 700;
   color: var(--accent, var(--ink));
 }
+
+/* ── strom s čiarami hierarchie (D60) ────────────────────────────────────
+   Čiary sa kreslia z odsadenia, ktoré nesie premenná `--uroven`. Bez nich
+   je hlbší strom len zoznam s medzerami naľavo a človek musí odsadenie
+   merať očami. */
+.strom--ciary { position: relative; }
+
+.strom--ciary .strom-polozka {
+  position: relative;
+  padding-left: calc((var(--uroven, 1) - 1) * 22px);
+}
+
+/* Zvislá čiara od rodiča nadol a vodorovná odbočka k položke. Kreslia sa
+   len od druhej úrovne — koreňové oddelenia nemajú z čoho vychádzať. */
+.strom--ciary .strom-polozka[style*="--uroven"]:not([style*="--uroven: 1"])::before,
+.strom--ciary .strom-polozka[style*="--uroven"]:not([style*="--uroven: 1"])::after {
+  content: "";
+  position: absolute;
+  border-color: var(--line);
+  pointer-events: none;
+}
+
+.strom--ciary .strom-polozka:not([style*="--uroven: 1"])::before {
+  left: calc((var(--uroven, 1) - 1) * 22px - 12px);
+  top: 0;
+  bottom: 0;
+  border-left: 1px solid var(--line);
+}
+
+.strom--ciary .strom-polozka:not([style*="--uroven: 1"])::after {
+  left: calc((var(--uroven, 1) - 1) * 22px - 12px);
+  top: 21px;
+  width: 10px;
+  border-top: 1px solid var(--line);
+}
+
+/* Úchop na ťahanie. Kurzor je jediné, čo napovie, že sa dá ťahať —
+   samotný riadok to nijako neprezradí. */
+.strom-uchop {
+  color: var(--muted);
+  cursor: grab;
+  font-size: 13px;
+  letter-spacing: -1px;
+  user-select: none;
+}
+
+.strom--ciary .strom-polozka { cursor: grab; }
+.strom--ciary .strom-polozka.sa-taha { opacity: 0.45; cursor: grabbing; }
+
+.strom-sipky { display: flex; gap: 8px; flex-wrap: wrap; }
+
+.strom-ulozit {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+}
+
+/* Ťahanie prstom po zozname sa bije s posúvaním stránky. Na dotykových
+   obrazovkách preto úchop nesľubuje niečo, čo tam nefunguje — šípky
+   v rozbalenej položke zostávajú. */
+@media (hover: none) {
+  .strom-uchop { display: none; }
+  .strom--ciary .strom-polozka { cursor: default; }
+}

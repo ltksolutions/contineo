@@ -52,6 +52,8 @@
 - [x] **oprava údajov znenia** — pri zmene dátumu s existujúcimi potvrdeniami rozhodnutie človeka + povinný dôvod
 - [x] **`npm run kontrola`** (D59) — invarianty medzi dokumentmi, úsekmi a potvrdeniami
 - [ ] **`sfz:test_onboarding` nemá aktívne úseky** — seedovací skript zapisuje dokument, nie chunky. Pri testovacom dokumente to nevadí, ale kontrola to bude hlásiť
+- [x] **poradie oddelení** (D60) — ťahanie myšou v rámci úrovne, šípky ako bezJS cesta, čiary hierarchie
+- [ ] poradie aj pre priečinky knižnice (zatiaľ abecedne)
 - [ ] presun dokumentu do priečinka hromadne (zatiaľ po jednom v detaile)
 - [x] **hromadné preindexovanie** — v záložke Členenie, po dávkach 25, s počtom neaktuálnych dokumentov
 - [x] **pôvodné PDF doplnené k deviatim normám** — `npm run subory:doplnit` (2026-08-30)
