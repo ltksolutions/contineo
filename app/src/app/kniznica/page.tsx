@@ -203,14 +203,14 @@ export default async function LibraryPage({
                         <form action={shiftFolderAction}>
                           <input type="hidden" name="id" value={p.id} />
                           {filters.map(([k, v]) => <input key={k} type="hidden" name={k} value={v} />)}
-                          <input type="hidden" name="smer" value="hore" />
+                          <input type="hidden" name="direction" value="up" />
                           <button className="tlacidlo tlacidlo--tiche" type="submit"
                                   aria-label={tf.moveUp(p.name)}>{tf.up}</button>
                         </form>
                         <form action={shiftFolderAction}>
                           <input type="hidden" name="id" value={p.id} />
                           {filters.map(([k, v]) => <input key={k} type="hidden" name={k} value={v} />)}
-                          <input type="hidden" name="smer" value="dole" />
+                          <input type="hidden" name="direction" value="down" />
                           <button className="tlacidlo tlacidlo--tiche" type="submit"
                                   aria-label={tf.moveDown(p.name)}>{tf.down}</button>
                         </form>

@@ -339,7 +339,7 @@ export async function assignDocument(
 export async function shiftFolder(
   companyCode: string,
   id: string,
-  direction: "hore" | "dole",
+  direction: "up" | "down",
   actor: string,
 ): Promise<void> {
   const all = await allFolders(companyCode)
@@ -348,7 +348,7 @@ export async function shiftFolder(
 
   const siblings = children(all, self.parentId ?? null)
   const from = siblings.findIndex(p => p.id === id)
-  const to = direction === "hore" ? from - 1 : from + 1
+  const to = direction === "up" ? from - 1 : from + 1
   if (to < 0 || to >= siblings.length) return
 
   const sorted = [...siblings]

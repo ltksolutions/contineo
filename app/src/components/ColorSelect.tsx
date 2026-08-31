@@ -14,35 +14,31 @@
  */
 
 import { useState } from "react"
+import { dictionary, type UiLanguage } from "@/lib/i18n"
 
 /**
  * Odtiene sú tmavšie, než by sa na prvý pohľad chcelo. Je to zámer: farba
  * nesie biely text na tlačidle, takže pri svetlejšom tóne prestane byť
  * čitateľný — a to sa ukáže až na produkcii, u zákazníka.
  */
-export const PALETTE: { value: string; label: string }[] = [
-  { value: "#232a35", label: "grafitová (predvolená)" },
-  { value: "#1f4ed8", label: "modrá" },
-  { value: "#0e7490", label: "petrolejová" },
-  { value: "#047857", label: "zelená" },
-  { value: "#4d7c0f", label: "olivová" },
-  { value: "#b45309", label: "jantárová" },
-  { value: "#b91c1c", label: "červená" },
-  { value: "#9f1239", label: "vínová" },
-  { value: "#6d28d9", label: "fialová" },
-  { value: "#334155", label: "bridlicová" },
+export const PALETTE: string[] = [
+  "#232a35", "#1f4ed8", "#0e7490", "#047857", "#4d7c0f",
+  "#b45309", "#b91c1c", "#9f1239", "#6d28d9", "#334155",
 ]
 
 export default function ColorSelect({
-  name: name,
-  value: value,
+  name,
+  value,
+  language,
 }: {
   name: string
   value?: string
+  language?: UiLanguage
 }) {
+  const t = dictionary(language).colors
   const [color, setColor] = useState((value ?? "").trim())
   const [custom, setCustom] = useState(
-    Boolean(color) && !PALETTE.some(p => p.value.toLowerCase() === color.toLowerCase()),
+    Boolean(color) && !PALETTE.some(p => p.toLowerCase() === color.toLowerCase()),
   )
 
   return (
@@ -51,17 +47,18 @@ export default function ColorSelect({
 
       <div className="farby-zoznam">
         {PALETTE.map(p => {
-          const isHex = color.toLowerCase() === p.value.toLowerCase()
+          const isHex = color.toLowerCase() === p.toLowerCase()
+          const label = t.palette[p] ?? p
           return (
             <button
-              key={p.value}
+              key={p}
               type="button"
               className={`farba${isHex ? " je-zvolena" : ""}`}
-              style={{ background: p.value }}
+              style={{ background: p }}
               aria-pressed={isHex}
-              aria-label={p.label}
-              title={p.label}
-              onClick={() => { setColor(p.value); setCustom(false) }}
+              aria-label={label}
+              title={label}
+              onClick={() => { setColor(p); setCustom(false) }}
             >
               {/* Krížik je biely, takže je zároveň skúškou čitateľnosti:
                   keby sa na odtieni stratil, stratí sa aj text na tlačidle. */}
@@ -76,7 +73,7 @@ export default function ColorSelect({
         className="tlacidlo tlacidlo--tiche farby-vlastna"
         onClick={() => setCustom(v => !v)}
       >
-        {custom ? "Skryť vlastnú hodnotu" : "Zadať vlastnú hodnotu"}
+        {custom ? t.hideCustom : t.showCustom}
       </button>
 
       {custom && (

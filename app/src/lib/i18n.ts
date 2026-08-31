@@ -342,6 +342,193 @@ interface Dictionary {
     add: string
   }
   /** Knižnica dokumentov (D53). */
+  /** Výpis auditu — používa ho nastavenie organizácie aj `/admin`. */
+  audit: {
+    empty: string
+    subjects: Record<string, string>
+    actions: Record<string, string>
+    fields: Record<string, string>
+    none: string
+  }
+  /** Paleta doplnkovej farby. Kľúč je hodnota v hex. */
+  colors: {
+    palette: Record<string, string>
+    showCustom: string
+    hideCustom: string
+  }
+  org: {
+    heading: string
+    introBefore: string
+    introAfter: string
+    tabsLabel: string
+    tabs: Record<string, string>
+    branding: {
+      name: string
+      nameNote: string
+      shortName: string
+      shortNameNote: string
+      logo: string
+      logoCurrent: string
+      logoNote: string
+      color: string
+      colorNote: string
+      supportEmail: string
+      supportEmailNote: string
+      languages: string
+      defaultLanguage: string
+      defaultLanguageNote: string
+      autoProvision: string
+      autoProvisionBefore: string
+      autoProvisionHighlight: string
+      autoProvisionAfter: string
+      save: string
+    }
+    departments: {
+      heading: string
+      introBefore: string
+      introHighlight: string
+      introMiddle: string
+      groupsLink: string
+      introAfter: string
+      empty: string
+      withDescendants: (n: number) => string
+      moveUp: (name: string) => string
+      up: string
+      moveDown: (name: string) => string
+      down: string
+      nameOf: (name: string) => string
+      rename: string
+      parentOf: (name: string) => string
+      topLevel: string
+      move: string
+      remove: string
+      removeHint: string
+      newHeading: string
+      name: string
+      namePlaceholder: string
+      parent: string
+      maxDepth: (n: number) => string
+      create: string
+    }
+    domains: {
+      works: string
+      remove: string
+      waitingDns: string
+      since: (date: string) => string
+      dnsBefore: string
+      dnsMiddle: string
+      verify: string
+      cancelRequest: string
+      add: string
+      hostPlaceholder: string
+      addNote: string
+      request: string
+    }
+    signIn: {
+      heading: (provider: string) => string
+      stateOn: string
+      stateFromSupplier: string
+      stateUnreadable: string
+      stateOff: string
+      introBefore: string
+      introHighlight: (provider: string) => string
+      introAfter: string
+      callback: string
+      clientId: string
+      clientSecret: string
+      clientSecretNote: string
+      tenantMode: string
+      tenantModeBefore: string
+      tenantModeHighlight: string
+      tenantModeAfter: string
+      allowedTenantIds: string
+      allowedTenantIdsNote: string
+      hostedDomain: string
+      save: string
+      deleteNote: string
+      confirmLabel: (code: string) => string
+      deleteSubmit: string
+    }
+    codelists: {
+      introBefore: string
+      introHighlight: string
+      introAfter: string
+      labels: Record<string, { name: string; hint: string }>
+      base: string
+      used: (n: number) => string
+      remove: string
+      newItemPlaceholder: string
+      newItemLabel: (codelist: string) => string
+      key: string
+      keyPlaceholder: string
+      add: string
+      keyNote: string
+    }
+    chunking: {
+      heading: string
+      introBefore: string
+      introHighlight: string
+      introAfter: string
+      articleWord: string
+      /** Veta okolo ukážok `Článok`, `§` a `Bod` — tie zostávajú v JSX. */
+      articleNote1: string
+      articleNote2: string
+      articleNote3: string
+      articleNote4: string
+      articleNoteHighlight: string
+      articleNote5: string
+      annexWord: string
+      annexWordNote: string
+      headerRepeats: string
+      headerRepeatsNote: string
+      minTokens: string
+      maxTokens: string
+      tokensNoteBefore: string
+      tokensNoteAfter: string
+      saveNoteBefore: string
+      saveNoteHighlight: string
+      saveNoteMiddle: string
+      saveNoteButton: string
+      saveNoteAfter: string
+      save: string
+      reindexAllHeading: string
+      allUpToDate: (total: number) => string
+      outdatedOf: (total: number) => string
+      outdatedHighlight: string
+      outdatedAfter: string
+      batchNote: string
+      reindexAll: (n: number) => string
+    }
+    /** Hlásenia serverových akcií nastavenia organizácie. */
+    actions: {
+      saved: string
+      failed: string
+      confirmCode: (code: string) => string
+      signInRemoved: string
+      domainRequested: string
+      domainNotFound: string
+      domainWaiting: (host: string) => string
+      domainOnNotInVercel: (host: string) => string
+      domainOn: (host: string) => string
+      domainRemoved: string
+      codelistRemoved: string
+      chunkingSaved: string
+      reindexedCount: (n: number) => string
+      reindexSkipped: (n: number) => string
+      reindexRemaining: (n: number) => string
+      reindexErrors: (list: string) => string
+    }
+    auditTab: {
+      introBefore: string
+      introHighlight: string
+      introAfter: string
+      search: string
+      searchPlaceholder: string
+      searchSubmit: string
+      clearFilter: string
+      capped: string
+    }
+  }
   people: {
     /** Typ osoby — kľúče sú hodnoty z databázy. */
     types: Record<string, string>
@@ -927,6 +1114,270 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
   tags: {
     empty: "Zatiaľ tu žiadne nie sú. Prvú vytvoríš dole.",
     add: "Pridať",
+  },
+  audit: {
+    empty: "Zatiaľ tu nie je nič. Záznamy pribúdajú pri každej správcovskej zmene — pri role, prístupe, oddelení, pridelení aj nastavení organizácie.",
+    subjects: {
+      person: "osoba",
+      department: "oddelenie",
+      document: "dokument",
+      folder: "priečinok",
+      assignment: "pridelenie",
+      organisation: "organizácia",
+      domain: "doména",
+      "signin-settings": "prihlasovanie",
+      tenant: "tenant",
+    },
+    actions: {
+      created: "založené",
+      changed: "zmenené",
+      excluded: "vyradené",
+      restored: "vrátené",
+      renamed: "premenované",
+      moved: "presunuté",
+      deleted: "zrušené",
+      assigned: "pridelené",
+      revoked: "odvolané",
+      notified: "oznámené",
+      requested: "požiadané",
+      verified: "overené",
+      published: "publikované",
+      reindexed: "preindexované",
+      reordered: "preusporiadané",
+      "model-draft": "návrh modelu",
+      "version-fix": "oprava znenia",
+      "new-version": "nahraté nové znenie",
+    },
+    fields: {
+      email: "adresa",
+      fullName: "meno",
+      department: "oddelenie (text)",
+      departmentId: "oddelenie",
+      personType: "typ osoby",
+      status: "stav",
+      language: "jazyk",
+      tracks: "trasy",
+      groups: "skupiny",
+      roles: "role",
+      name: "názov",
+      parentId: "nadriadené oddelenie",
+      clientId: "clientId",
+      clientSecret: "tajomstvo",
+      hostnames: "domény",
+      autoProvisionDomains: "domény pre automatické zakladanie",
+      "branding.displayName": "názov",
+      "branding.shortName": "skratka",
+      "branding.accentColor": "farba",
+      "branding.logoUrl": "logo",
+      "branding.supportEmail": "kontakt",
+    },
+    none: "—",
+  },
+  colors: {
+    palette: {
+      "#232a35": "grafitová (predvolená)",
+      "#1f4ed8": "modrá",
+      "#0e7490": "petrolejová",
+      "#047857": "zelená",
+      "#4d7c0f": "olivová",
+      "#b45309": "jantárová",
+      "#b91c1c": "červená",
+      "#9f1239": "vínová",
+      "#6d28d9": "fialová",
+      "#334155": "bridlicová",
+    },
+    showCustom: "Zadať vlastnú hodnotu",
+    hideCustom: "Skryť vlastnú hodnotu",
+  },
+  org: {
+    heading: "Organizácia",
+    introBefore: "Nastavenie, ktoré si spravujete sami. Kód organizácie (",
+    introAfter: ") a vypnutie portálu tu zámerne nie sú — s tým sa ozvite nám.",
+    tabsLabel: "Časti nastavenia",
+    tabs: {
+      branding: "Vzhľad a jazyky",
+      departments: "Oddelenia",
+      domains: "Domény",
+      signin: "Prihlasovanie",
+      codelists: "Číselníky",
+      chunking: "Členenie",
+      audit: "Audit",
+    },
+    branding: {
+      name: "Názov",
+      nameNote: "Celý názov. Je v e-mailoch a na prihlasovacej obrazovke.",
+      shortName: "Skratka",
+      shortNameNote: "Do hornej lišty, kde je vedľa nej ešte menu — „SFZ“ tam povie to isté čo celý názov a nechá miesto na zvyšok.",
+      logo: "Logo",
+      logoCurrent: "súčasné",
+      logoNote: "PNG, JPEG alebo WebP, najviac 256 kB. Prázdne = nemeniť.",
+      color: "Farba",
+      colorNote: "Nesie ju tlačidlo s bielym textom, preto sú odtiene tmavšie, než by sa chcelo — svetlejší tón znamená nečitateľné tlačidlo.",
+      supportEmail: "Kontaktná adresa",
+      supportEmailNote: "Kam sa má obrátiť človek, ktorému niečo nesedí.",
+      languages: "Jazyky",
+      defaultLanguage: "Predvolený jazyk",
+      defaultLanguageNote: "Platí pre človeka, ktorý ešte nie je prihlásený.",
+      autoProvision: "Domény pre automatické založenie",
+      autoProvisionBefore: "Jedna na riadok. Kto sa prihlási ",
+      autoProvisionHighlight: "pracovným kontom",
+      autoProvisionAfter: " z tejto domény a v zozname osôb ešte nie je, založí sa sám ako bežný člen — bez rolí a bez trás. Platí len pre kontá, nie pre odkaz v e-maile.",
+      save: "Uložiť",
+    },
+    departments: {
+      heading: "Organizačná štruktúra",
+      introBefore: "Poradie sa dá meniť ťahaním myšou alebo šípkami po rozbalení položky — organizačná schéma nie je abecedný zoznam. Oddelenie je ",
+      introHighlight: "kam človek patrí",
+      introMiddle: " — práve jedno, ako v organizačnej schéme. Kto sa má osloviť naprieč oddeleniami (rozhodcovia, delegáti, štatutári), na to sú ",
+      groupsLink: "skupiny",
+      introAfter: "; tie sa s oddeleniami nemiešajú a jeden človek ich môže mať viac.",
+      empty: "Zatiaľ tu nie je nič. Založ prvé oddelenie nižšie — ak už máte oddelenia zapísané pri ľuďoch ako text, ozvite sa nám a prevedieme ich naraz.",
+      withDescendants: (n) => ` (${n} aj s podriadenými)`,
+      moveUp: (name) => `Posunúť ${name} vyššie`,
+      up: "↑ vyššie",
+      moveDown: (name) => `Posunúť ${name} nižšie`,
+      down: "↓ nižšie",
+      nameOf: (name) => `Názov oddelenia ${name}`,
+      rename: "Premenovať",
+      parentOf: (name) => `Nadriadené oddelenie pre ${name}`,
+      topLevel: "— najvyššia úroveň —",
+      move: "Presunúť",
+      remove: "Zrušiť oddelenie",
+      removeHint: "Zrušiť sa dá až prázdne oddelenie bez podriadených — inak by ľudia zmizli zo štruktúry bez toho, aby si to niekto všimol.",
+      newHeading: "Nové oddelenie",
+      name: "Názov",
+      namePlaceholder: "Úsek komunikácie",
+      parent: "Nadriadené oddelenie",
+      maxDepth: (n) => `Štruktúra môže mať najviac ${n} úrovní. Nie je to technický limit — hlbší strom sa na telefóne nedá prehľadne ukázať a to, čo je v ňom najhlbšie, býva v skutočnosti skupina.`,
+      create: "Založiť",
+    },
+    domains: {
+      works: "funguje",
+      remove: "Odstrániť",
+      waitingDns: "čaká na DNS",
+      since: (date) => `od ${date}`,
+      dnsBefore: "U svojho správcu DNS pridajte ",
+      dnsMiddle: " záznam ",
+      verify: "Overiť a zapnúť",
+      cancelRequest: "Zrušiť žiadosť",
+      add: "Pridať vlastnú doménu",
+      hostPlaceholder: "intranet.vasaorganizacia.sk",
+      addNote: "Doména sa zapne až vtedy, keď na nás začne smerovať DNS. Nastaviť to vie len ten, kto ju naozaj ovláda — a je to jediný dôkaz, ktorý existuje. Bez neho by si ktokoľvek mohol pripísať cudziu doménu.",
+      request: "Požiadať",
+    },
+    signIn: {
+      heading: (provider) => `Prihlásenie cez ${provider}`,
+      stateOn: "zapnuté",
+      stateFromSupplier: "z nastavenia dodávateľa",
+      stateUnreadable: "nečitateľné",
+      stateOff: "vypnuté",
+      introBefore: "Aplikáciu si zaregistrujete ",
+      introHighlight: (provider) => `vo vlastnom ${provider} adresári`,
+      introAfter: " — vy udeľujete súhlas, vy vidíte, kto sa prihlasoval, a vy viete prístup kedykoľvek odvolať. My hodnotu tajomstva nikdy nevidíme.",
+      callback: "Adresa návratu — zapíšte ju do svojej aplikácie presne takto:",
+      clientId: "Client ID",
+      clientSecret: "Client secret",
+      clientSecretNote: "Prázdne = nemeniť. Ukladá sa zašifrované a späť sa nikdy nevypíše.",
+      tenantMode: "Režim tenanta",
+      tenantModeBefore: "Pri aplikácii pre jediný adresár sem patrí vaše ",
+      tenantModeHighlight: "Directory (tenant) ID",
+      tenantModeAfter: ". „organizations“ = pracovné a školské kontá odkiaľkoľvek, „common“ = aj osobné.",
+      allowedTenantIds: "Povolené Entra tenant id",
+      allowedTenantIdsNote: "Prázdne = nekontroluje sa. Pri režime „organizations“ je to jediná zábrana proti tomu, aby sa dnu dostal človek z cudzej organizácie, ktorý má rovnakú adresu ako niekto u vás.",
+      hostedDomain: "Doména Workspace",
+      save: "Uložiť",
+      deleteNote: "Odstránením zmizne tlačidlo z prihlasovacej obrazovky. Ľuďom, ktorí sa prihlasujú pracovným kontom, tým prestane fungovať jediná cesta, ktorú poznajú.",
+      confirmLabel: (code) => `Napíšte ${code} na potvrdenie`,
+      deleteSubmit: "Odstrániť",
+    },
+    codelists: {
+      introBefore: "Čím označujete vlastný obsah v knižnici. Základné hodnoty sú tu vždy — je nimi označený existujúci obsah a ich zmiznutie by z neho spravilo neplatné údaje. Odobrať sa dá len to, čo ste pridali vy, a aj vtedy zmizne ",
+      introHighlight: "len z ponuky",
+      introAfter: ": dokumenty, ktoré hodnotu majú, si ju nesú ďalej.",
+      labels: {
+        category: {
+          name: "Druhy dokumentov",
+          hint: "Čím dokument je: norma, smernica, metodický pokyn, zápisnica…",
+        },
+        tags: {
+          name: "Značky",
+          hint: "Voľné triedenie naprieč druhmi — napríklad mládež, rozhodcovia, financie.",
+        },
+      },
+      base: " · základná",
+      used: (n) => ` · použitá ${n}×`,
+      remove: "Odobrať",
+      newItemPlaceholder: "Metodický pokyn",
+      newItemLabel: (codelist) => `Názov novej položky — ${codelist}`,
+      key: "Kľúč",
+      keyPlaceholder: "metodicky_pokyn",
+      add: "Pridať",
+      keyNote: "Kľúč: malé písmená bez diakritiky, číslice a podčiarkovník. Zostáva v obsahu natrvalo, takže sa nedá vziať späť — názov vedľa neho sa meniť dá.",
+    },
+    chunking: {
+      heading: "Členenie dokumentov na úseky",
+      introBefore: "Vyhľadávanie nepracuje s celým dokumentom — model dostane niekoľko úsekov a odpovedá z nich. Tieto hodnoty určujú, ako sa dokument na úseky reže.",
+      introHighlight: " S textom normy ani s potvrdeniami to nemá nič spoločné:",
+      introAfter: " členenie sa dá meniť koľkokrát treba a nikomu nenaskočí povinnosť potvrdzovať znova.",
+      articleWord: "Slovo, ktorým začína článok",
+      articleNote1: "Predvolene ",
+      articleNote2: ". Predpisy členené na ",
+      articleNote3: " alebo na ",
+      articleNote4: " sa bez tejto zmeny zlejú do jedného bloku a vyhľadávanie nemá čoho chytiť. Je to ",
+      articleNoteHighlight: "slovo, nie vzor",
+      articleNote5: " — okolie si doplní systém.",
+      annexWord: "Slovo, ktorým začína príloha",
+      annexWordNote: "Prílohy stoja mimo číslovania článkov — bez rozpoznania by spadli pod posledný článok a citácia by klamala.",
+      headerRepeats: "Riadok je hlavička, keď sa opakuje viac ráz než",
+      headerRepeatsNote: "Hlavičky a päty sa v PDF opakujú na každej strane. Nižšie číslo odstráni viac šumu, ale pri krátkom dokumente môže zožrať aj obsah.",
+      minTokens: "Cieľová veľkosť úseku — od (tokenov)",
+      maxTokens: "Cieľová veľkosť úseku — do (tokenov)",
+      tokensNoteBefore: "Malý úsek znamená tisíce úryvkov bez kontextu, veľký zas jeden úsek na celý dokument. Predvolené ",
+      tokensNoteAfter: " je odladené na slovenských predpisoch.",
+      saveNoteBefore: "Uloženie ",
+      saveNoteHighlight: "nepreindexuje existujúce dokumenty",
+      saveNoteMiddle: ". Vyskúšaj nový profil najprv na jednom — v jeho detaile v knižnici je tlačidlo ",
+      saveNoteButton: "Preindexovať",
+      saveNoteAfter: ".",
+      save: "Uložiť členenie",
+      reindexAllHeading: "Preindexovať všetko",
+      allUpToDate: (total) => `Všetkých ${total} dokumentov je narezaných podľa tohto profilu. Niet čo preindexovať.`,
+      outdatedOf: (total) => ` z ${total} dokumentov je narezaných inak, než hovorí tento profil. Preindexovanie `,
+      outdatedHighlight: "nemení znenia ani potvrdenia",
+      outdatedAfter: " — vymení len úseky, z ktorých číta vyhľadávanie.",
+      batchNote: "Spracuje sa najviac 25 dokumentov naraz. Nie je to opatrnosť navyše: pri väčšej dávke by beh spadol na časovom strope a časť dokumentov by zostala narezaná po starom. Keď niečo zostane, stlač to znova — hotové sa preskočia.",
+      reindexAll: (n) => `Preindexovať (${n})`,
+    },
+    actions: {
+      saved: "Zmeny boli uložené.",
+      failed: "Zmenu sa nepodarilo uložiť. Skús to znova.",
+      confirmCode: (code) => `Na odstránenie napíš kód organizácie (${code}).`,
+      signInRemoved: "Prihlasovacie údaje odstránené.",
+      domainRequested: "Zapísané. Teraz nastavte CNAME u svojho správcu DNS a dajte overiť.",
+      domainNotFound: "Takú žiadosť tu nemáme.",
+      domainWaiting: (host) =>
+        `${host} zatiaľ nesmeruje na nás. Zmena DNS býva viditeľná do hodiny;` +
+        " ak je to dlhšie, skontrolujte CNAME.",
+      domainOnNotInVercel: (host) => `${host} je zapnutá, ale do Vercelu sa nepridala — ozvite sa nám.`,
+      domainOn: (host) => `${host} je zapnutá. Portál na nej odpovedá.`,
+      domainRemoved: "Doména odstránená. Portál na nej prestal odpovedať.",
+      codelistRemoved: "Odobraté z ponuky. Dokumenty, ktoré túto hodnotu majú, si ju nesú ďalej.",
+      chunkingSaved: "Uložené. Existujúce dokumenty sa nepreindexovali — spusti to pri konkrétnom dokumente.",
+      reindexedCount: (n) => `preindexovaných ${n}`,
+      reindexSkipped: (n) => `bez zmeny ${n}`,
+      reindexRemaining: (n) => `zostáva ${n} — spusti znova`,
+      reindexErrors: (list) => `chyby: ${list}`,
+    },
+    auditTab: {
+      introBefore: "Kto, čo a kedy zmenil. Zapisuje sa každá správcovská zmena — rola, prístup, oddelenie, pridelenie aj nastavenie organizácie. Záznamy sa",
+      introHighlight: " nedajú upraviť ani zmazať",
+      introAfter: "; to je celý zmysel. Tajomstvá (napr. klientsky secret) sú tu len ako „zmenené“ — audit, ktorý zbiera heslá, je sám o sebe únik.",
+      search: "Hľadať",
+      searchPlaceholder: "meno, adresa, oddelenie…",
+      searchSubmit: "Hľadať",
+      clearFilter: "zrušiť filter",
+      capped: "Ukazuje sa najnovších 200 záznamov. Staršie sa dajú vyhľadať poľom vyššie — načítať ich všetky naraz by obrazovku zhodilo práve vtedy, keď ju niekto otvorí kvôli kontrole.",
+    },
   },
   people: {
     types: {
@@ -1537,6 +1988,270 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     empty: "Zatím tu žádné nejsou. První vytvoříš dole.",
     add: "Přidat",
   },
+  audit: {
+    empty: "Zatím tu nic není. Záznamy přibývají při každé správcovské změně — u role, přístupu, oddělení, přidělení i nastavení organizace.",
+    subjects: {
+      person: "osoba",
+      department: "oddělení",
+      document: "dokument",
+      folder: "složka",
+      assignment: "přidělení",
+      organisation: "organizace",
+      domain: "doména",
+      "signin-settings": "přihlašování",
+      tenant: "tenant",
+    },
+    actions: {
+      created: "založeno",
+      changed: "změněno",
+      excluded: "vyřazeno",
+      restored: "vráceno",
+      renamed: "přejmenováno",
+      moved: "přesunuto",
+      deleted: "zrušeno",
+      assigned: "přiděleno",
+      revoked: "odvoláno",
+      notified: "oznámeno",
+      requested: "požádáno",
+      verified: "ověřeno",
+      published: "publikováno",
+      reindexed: "přeindexováno",
+      reordered: "přeuspořádáno",
+      "model-draft": "návrh modelu",
+      "version-fix": "oprava znění",
+      "new-version": "nahráno nové znění",
+    },
+    fields: {
+      email: "adresa",
+      fullName: "jméno",
+      department: "oddělení (text)",
+      departmentId: "oddělení",
+      personType: "typ osoby",
+      status: "stav",
+      language: "jazyk",
+      tracks: "trasy",
+      groups: "skupiny",
+      roles: "role",
+      name: "název",
+      parentId: "nadřazené oddělení",
+      clientId: "clientId",
+      clientSecret: "tajemství",
+      hostnames: "domény",
+      autoProvisionDomains: "domény pro automatické zakládání",
+      "branding.displayName": "název",
+      "branding.shortName": "zkratka",
+      "branding.accentColor": "barva",
+      "branding.logoUrl": "logo",
+      "branding.supportEmail": "kontakt",
+    },
+    none: "—",
+  },
+  colors: {
+    palette: {
+      "#232a35": "grafitová (výchozí)",
+      "#1f4ed8": "modrá",
+      "#0e7490": "petrolejová",
+      "#047857": "zelená",
+      "#4d7c0f": "olivová",
+      "#b45309": "jantarová",
+      "#b91c1c": "červená",
+      "#9f1239": "vínová",
+      "#6d28d9": "fialová",
+      "#334155": "břidlicová",
+    },
+    showCustom: "Zadat vlastní hodnotu",
+    hideCustom: "Skrýt vlastní hodnotu",
+  },
+  org: {
+    heading: "Organizace",
+    introBefore: "Nastavení, které si spravujete sami. Kód organizace (",
+    introAfter: ") a vypnutí portálu tu záměrně nejsou — s tím se ozvěte nám.",
+    tabsLabel: "Části nastavení",
+    tabs: {
+      branding: "Vzhled a jazyky",
+      departments: "Oddělení",
+      domains: "Domény",
+      signin: "Přihlašování",
+      codelists: "Číselníky",
+      chunking: "Členění",
+      audit: "Audit",
+    },
+    branding: {
+      name: "Název",
+      nameNote: "Celý název. Je v e-mailech a na přihlašovací obrazovce.",
+      shortName: "Zkratka",
+      shortNameNote: "Do horní lišty, kde je vedle ní ještě menu — „SFZ“ tam řekne totéž co celý název a nechá místo na zbytek.",
+      logo: "Logo",
+      logoCurrent: "současné",
+      logoNote: "PNG, JPEG nebo WebP, nejvýše 256 kB. Prázdné = neměnit.",
+      color: "Barva",
+      colorNote: "Nese ji tlačítko s bílým textem, proto jsou odstíny tmavší, než by se chtělo — světlejší tón znamená nečitelné tlačítko.",
+      supportEmail: "Kontaktní adresa",
+      supportEmailNote: "Kam se má obrátit člověk, kterému něco nesedí.",
+      languages: "Jazyky",
+      defaultLanguage: "Výchozí jazyk",
+      defaultLanguageNote: "Platí pro člověka, který ještě není přihlášený.",
+      autoProvision: "Domény pro automatické založení",
+      autoProvisionBefore: "Jedna na řádek. Kdo se přihlásí ",
+      autoProvisionHighlight: "pracovním účtem",
+      autoProvisionAfter: " z této domény a v seznamu osob ještě není, založí se sám jako běžný člen — bez rolí a bez tras. Platí jen pro účty, ne pro odkaz v e-mailu.",
+      save: "Uložit",
+    },
+    departments: {
+      heading: "Organizační struktura",
+      introBefore: "Pořadí se dá měnit tažením myší nebo šipkami po rozbalení položky — organizační schéma není abecední seznam. Oddělení je ",
+      introHighlight: "kam člověk patří",
+      introMiddle: " — právě jedno, jako v organizačním schématu. Kdo se má oslovit napříč odděleními (rozhodčí, delegáti, statutáři), na to jsou ",
+      groupsLink: "skupiny",
+      introAfter: "; ty se s odděleními nemíchají a jeden člověk jich může mít víc.",
+      empty: "Zatím tu nic není. Založ první oddělení níže — pokud už máte oddělení zapsaná u lidí jako text, ozvěte se nám a převedeme je najednou.",
+      withDescendants: (n) => ` (${n} i s podřízenými)`,
+      moveUp: (name) => `Posunout ${name} výš`,
+      up: "↑ výš",
+      moveDown: (name) => `Posunout ${name} níž`,
+      down: "↓ níž",
+      nameOf: (name) => `Název oddělení ${name}`,
+      rename: "Přejmenovat",
+      parentOf: (name) => `Nadřazené oddělení pro ${name}`,
+      topLevel: "— nejvyšší úroveň —",
+      move: "Přesunout",
+      remove: "Zrušit oddělení",
+      removeHint: "Zrušit se dá až prázdné oddělení bez podřízených — jinak by lidé zmizeli ze struktury, aniž by si toho někdo všiml.",
+      newHeading: "Nové oddělení",
+      name: "Název",
+      namePlaceholder: "Úsek komunikace",
+      parent: "Nadřazené oddělení",
+      maxDepth: (n) => `Struktura může mít nejvýše ${n} úrovní. Není to technický limit — hlubší strom se na telefonu nedá přehledně ukázat a to, co je v něm nejhlouběji, bývá ve skutečnosti skupina.`,
+      create: "Založit",
+    },
+    domains: {
+      works: "funguje",
+      remove: "Odstranit",
+      waitingDns: "čeká na DNS",
+      since: (date) => `od ${date}`,
+      dnsBefore: "U svého správce DNS přidejte ",
+      dnsMiddle: " záznam ",
+      verify: "Ověřit a zapnout",
+      cancelRequest: "Zrušit žádost",
+      add: "Přidat vlastní doménu",
+      hostPlaceholder: "intranet.vaseorganizace.cz",
+      addNote: "Doména se zapne až tehdy, když na nás začne směrovat DNS. Nastavit to umí jen ten, kdo ji opravdu ovládá — a je to jediný důkaz, který existuje. Bez něj by si kdokoli mohl připsat cizí doménu.",
+      request: "Požádat",
+    },
+    signIn: {
+      heading: (provider) => `Přihlášení přes ${provider}`,
+      stateOn: "zapnuto",
+      stateFromSupplier: "z nastavení dodavatele",
+      stateUnreadable: "nečitelné",
+      stateOff: "vypnuto",
+      introBefore: "Aplikaci si zaregistrujete ",
+      introHighlight: (provider) => `ve vlastním ${provider} adresáři`,
+      introAfter: " — vy udělujete souhlas, vy vidíte, kdo se přihlašoval, a vy můžete přístup kdykoli odvolat. My hodnotu tajemství nikdy nevidíme.",
+      callback: "Adresa návratu — zapište ji do své aplikace přesně takto:",
+      clientId: "Client ID",
+      clientSecret: "Client secret",
+      clientSecretNote: "Prázdné = neměnit. Ukládá se zašifrované a zpět se nikdy nevypíše.",
+      tenantMode: "Režim tenanta",
+      tenantModeBefore: "U aplikace pro jediný adresář sem patří vaše ",
+      tenantModeHighlight: "Directory (tenant) ID",
+      tenantModeAfter: ". „organizations“ = pracovní a školní účty odkudkoli, „common“ = i osobní.",
+      allowedTenantIds: "Povolená Entra tenant id",
+      allowedTenantIdsNote: "Prázdné = nekontroluje se. U režimu „organizations“ je to jediná zábrana proti tomu, aby se dovnitř dostal člověk z cizí organizace, který má stejnou adresu jako někdo u vás.",
+      hostedDomain: "Doména Workspace",
+      save: "Uložit",
+      deleteNote: "Odstraněním zmizí tlačítko z přihlašovací obrazovky. Lidem, kteří se přihlašují pracovním účtem, tím přestane fungovat jediná cesta, kterou znají.",
+      confirmLabel: (code) => `Napište ${code} pro potvrzení`,
+      deleteSubmit: "Odstranit",
+    },
+    codelists: {
+      introBefore: "Čím označujete vlastní obsah v knihovně. Základní hodnoty jsou tu vždy — je jimi označený existující obsah a jejich zmizení by z něj udělalo neplatné údaje. Odebrat se dá jen to, co jste přidali vy, a i tehdy zmizí ",
+      introHighlight: "jen z nabídky",
+      introAfter: ": dokumenty, které hodnotu mají, si ji nesou dál.",
+      labels: {
+        category: {
+          name: "Druhy dokumentů",
+          hint: "Čím dokument je: norma, směrnice, metodický pokyn, zápis…",
+        },
+        tags: {
+          name: "Značky",
+          hint: "Volné třídění napříč druhy — například mládež, rozhodčí, finance.",
+        },
+      },
+      base: " · základní",
+      used: (n) => ` · použita ${n}×`,
+      remove: "Odebrat",
+      newItemPlaceholder: "Metodický pokyn",
+      newItemLabel: (codelist) => `Název nové položky — ${codelist}`,
+      key: "Klíč",
+      keyPlaceholder: "metodicky_pokyn",
+      add: "Přidat",
+      keyNote: "Klíč: malá písmena bez diakritiky, číslice a podtržítko. Zůstává v obsahu natrvalo, takže se nedá vzít zpět — název vedle něj se měnit dá.",
+    },
+    chunking: {
+      heading: "Členění dokumentů na úseky",
+      introBefore: "Vyhledávání nepracuje s celým dokumentem — model dostane několik úseků a odpovídá z nich. Tyto hodnoty určují, jak se dokument na úseky řeže.",
+      introHighlight: " S textem normy ani s potvrzeními to nemá nic společného:",
+      introAfter: " členění se dá měnit kolikrát je třeba a nikomu nenaskočí povinnost potvrzovat znovu.",
+      articleWord: "Slovo, kterým začíná článek",
+      articleNote1: "Výchozí je ",
+      articleNote2: ". Předpisy členěné na ",
+      articleNote3: " nebo na ",
+      articleNote4: " se bez této změny slijí do jednoho bloku a vyhledávání nemá čeho se chytit. Je to ",
+      articleNoteHighlight: "slovo, ne vzor",
+      articleNote5: " — okolí si doplní systém.",
+      annexWord: "Slovo, kterým začíná příloha",
+      annexWordNote: "Přílohy stojí mimo číslování článků — bez rozpoznání by spadly pod poslední článek a citace by lhala.",
+      headerRepeats: "Řádek je hlavička, když se opakuje víckrát než",
+      headerRepeatsNote: "Hlavičky a patičky se v PDF opakují na každé straně. Nižší číslo odstraní víc šumu, ale u krátkého dokumentu může sežrat i obsah.",
+      minTokens: "Cílová velikost úseku — od (tokenů)",
+      maxTokens: "Cílová velikost úseku — do (tokenů)",
+      tokensNoteBefore: "Malý úsek znamená tisíce úryvků bez kontextu, velký zase jeden úsek na celý dokument. Výchozí ",
+      tokensNoteAfter: " je odladěné na slovenských předpisech.",
+      saveNoteBefore: "Uložení ",
+      saveNoteHighlight: "nepřeindexuje existující dokumenty",
+      saveNoteMiddle: ". Vyzkoušej nový profil nejdřív na jednom — v jeho detailu v knihovně je tlačítko ",
+      saveNoteButton: "Přeindexovat",
+      saveNoteAfter: ".",
+      save: "Uložit členění",
+      reindexAllHeading: "Přeindexovat vše",
+      allUpToDate: (total) => `Všech ${total} dokumentů je nařezaných podle tohoto profilu. Není co přeindexovat.`,
+      outdatedOf: (total) => ` z ${total} dokumentů je nařezaných jinak, než říká tento profil. Přeindexování `,
+      outdatedHighlight: "nemění znění ani potvrzení",
+      outdatedAfter: " — vymění jen úseky, ze kterých čte vyhledávání.",
+      batchNote: "Zpracuje se nejvýše 25 dokumentů najednou. Není to opatrnost navíc: u větší dávky by běh spadl na časovém stropu a část dokumentů by zůstala nařezaná po starém. Když něco zůstane, stiskni to znovu — hotové se přeskočí.",
+      reindexAll: (n) => `Přeindexovat (${n})`,
+    },
+    actions: {
+      saved: "Změny byly uloženy.",
+      failed: "Změnu se nepodařilo uložit. Zkus to znovu.",
+      confirmCode: (code) => `Pro odstranění napiš kód organizace (${code}).`,
+      signInRemoved: "Přihlašovací údaje odstraněny.",
+      domainRequested: "Zapsáno. Teď nastavte CNAME u svého správce DNS a dejte ověřit.",
+      domainNotFound: "Takovou žádost tu nemáme.",
+      domainWaiting: (host) =>
+        `${host} zatím nesměruje na nás. Změna DNS bývá viditelná do hodiny;` +
+        " pokud je to déle, zkontrolujte CNAME.",
+      domainOnNotInVercel: (host) => `${host} je zapnutá, ale do Vercelu se nepřidala — ozvěte se nám.`,
+      domainOn: (host) => `${host} je zapnutá. Portál na ní odpovídá.`,
+      domainRemoved: "Doména odstraněna. Portál na ní přestal odpovídat.",
+      codelistRemoved: "Odebráno z nabídky. Dokumenty, které tuto hodnotu mají, si ji nesou dál.",
+      chunkingSaved: "Uloženo. Existující dokumenty se nepřeindexovaly — spusť to u konkrétního dokumentu.",
+      reindexedCount: (n) => `přeindexováno ${n}`,
+      reindexSkipped: (n) => `beze změny ${n}`,
+      reindexRemaining: (n) => `zbývá ${n} — spusť znovu`,
+      reindexErrors: (list) => `chyby: ${list}`,
+    },
+    auditTab: {
+      introBefore: "Kdo, co a kdy změnil. Zapisuje se každá správcovská změna — role, přístup, oddělení, přidělení i nastavení organizace. Záznamy se",
+      introHighlight: " nedají upravit ani smazat",
+      introAfter: "; to je celý smysl. Tajemství (např. client secret) jsou tu jen jako „změněno“ — audit, který sbírá hesla, je sám o sobě únik.",
+      search: "Hledat",
+      searchPlaceholder: "jméno, adresa, oddělení…",
+      searchSubmit: "Hledat",
+      clearFilter: "zrušit filtr",
+      capped: "Ukazuje se nejnovějších 200 záznamů. Starší se dají vyhledat polem výše — načíst je všechny najednou by obrazovku shodilo právě tehdy, když ji někdo otevře kvůli kontrole.",
+    },
+  },
   people: {
     types: {
       employee: "zaměstnanec",
@@ -2143,6 +2858,270 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
   tags: {
     empty: "There are none yet. Create the first one below.",
     add: "Add",
+  },
+  audit: {
+    empty: "Nothing here yet. Records appear with every administrative change — a role, an access level, a department, an assignment or an organisation setting.",
+    subjects: {
+      person: "person",
+      department: "department",
+      document: "document",
+      folder: "folder",
+      assignment: "assignment",
+      organisation: "organisation",
+      domain: "domain",
+      "signin-settings": "sign-in",
+      tenant: "tenant",
+    },
+    actions: {
+      created: "created",
+      changed: "changed",
+      excluded: "excluded",
+      restored: "restored",
+      renamed: "renamed",
+      moved: "moved",
+      deleted: "deleted",
+      assigned: "assigned",
+      revoked: "revoked",
+      notified: "notified",
+      requested: "requested",
+      verified: "verified",
+      published: "published",
+      reindexed: "reindexed",
+      reordered: "reordered",
+      "model-draft": "model draft",
+      "version-fix": "version correction",
+      "new-version": "new version uploaded",
+    },
+    fields: {
+      email: "address",
+      fullName: "name",
+      department: "department (text)",
+      departmentId: "department",
+      personType: "person type",
+      status: "status",
+      language: "language",
+      tracks: "tracks",
+      groups: "groups",
+      roles: "roles",
+      name: "name",
+      parentId: "parent department",
+      clientId: "clientId",
+      clientSecret: "secret",
+      hostnames: "domains",
+      autoProvisionDomains: "auto-provisioning domains",
+      "branding.displayName": "name",
+      "branding.shortName": "short name",
+      "branding.accentColor": "colour",
+      "branding.logoUrl": "logo",
+      "branding.supportEmail": "contact",
+    },
+    none: "—",
+  },
+  colors: {
+    palette: {
+      "#232a35": "graphite (default)",
+      "#1f4ed8": "blue",
+      "#0e7490": "teal",
+      "#047857": "green",
+      "#4d7c0f": "olive",
+      "#b45309": "amber",
+      "#b91c1c": "red",
+      "#9f1239": "wine",
+      "#6d28d9": "violet",
+      "#334155": "slate",
+    },
+    showCustom: "Enter a custom value",
+    hideCustom: "Hide the custom value",
+  },
+  org: {
+    heading: "Organisation",
+    introBefore: "The settings you manage yourselves. The organisation code (",
+    introAfter: ") and switching the portal off are deliberately not here — for those, get in touch with us.",
+    tabsLabel: "Settings sections",
+    tabs: {
+      branding: "Appearance and languages",
+      departments: "Departments",
+      domains: "Domains",
+      signin: "Sign-in",
+      codelists: "Code lists",
+      chunking: "Chunking",
+      audit: "Audit",
+    },
+    branding: {
+      name: "Name",
+      nameNote: "The full name. It appears in emails and on the sign-in screen.",
+      shortName: "Short name",
+      shortNameNote: "For the top bar, where a menu sits next to it — “SFZ” says the same thing there as the full name and leaves room for the rest.",
+      logo: "Logo",
+      logoCurrent: "current",
+      logoNote: "PNG, JPEG or WebP, at most 256 kB. Empty = leave unchanged.",
+      color: "Colour",
+      colorNote: "Buttons carry it with white text on top, which is why the shades are darker than you might want — a lighter tone means an unreadable button.",
+      supportEmail: "Contact address",
+      supportEmailNote: "Where someone should turn when something does not add up.",
+      languages: "Languages",
+      defaultLanguage: "Default language",
+      defaultLanguageNote: "Applies to anyone who is not signed in yet.",
+      autoProvision: "Auto-provisioning domains",
+      autoProvisionBefore: "One per line. Anyone who signs in with a ",
+      autoProvisionHighlight: "work account",
+      autoProvisionAfter: " from this domain and is not yet in the list of people is created automatically as an ordinary member — no roles and no tracks. This applies to accounts only, not to the emailed link.",
+      save: "Save",
+    },
+    departments: {
+      heading: "Organisational structure",
+      introBefore: "The order can be changed by dragging or with the arrows once an item is expanded — an org chart is not an alphabetical list. A department is ",
+      introHighlight: "where a person belongs",
+      introMiddle: " — exactly one, as in an org chart. For reaching people across departments (referees, delegates, officers) there are ",
+      groupsLink: "groups",
+      introAfter: "; those do not mix with departments and one person can have several.",
+      empty: "Nothing here yet. Create the first department below — if you already have departments recorded on people as free text, get in touch and we will convert them in one go.",
+      withDescendants: (n) => ` (${n} including sub-departments)`,
+      moveUp: (name) => `Move ${name} up`,
+      up: "↑ up",
+      moveDown: (name) => `Move ${name} down`,
+      down: "↓ down",
+      nameOf: (name) => `Name of department ${name}`,
+      rename: "Rename",
+      parentOf: (name) => `Parent department for ${name}`,
+      topLevel: "— top level —",
+      move: "Move",
+      remove: "Delete the department",
+      removeHint: "Only an empty department with no sub-departments can be deleted — otherwise people would disappear from the structure without anyone noticing.",
+      newHeading: "New department",
+      name: "Name",
+      namePlaceholder: "Communications division",
+      parent: "Parent department",
+      maxDepth: (n) => `The structure can be at most ${n} levels deep. This is not a technical limit — a deeper tree cannot be shown clearly on a phone, and whatever sits deepest in it is usually a group in disguise.`,
+      create: "Create",
+    },
+    domains: {
+      works: "working",
+      remove: "Remove",
+      waitingDns: "waiting for DNS",
+      since: (date) => `since ${date}`,
+      dnsBefore: "With your DNS administrator, add a ",
+      dnsMiddle: " record ",
+      verify: "Verify and enable",
+      cancelRequest: "Cancel the request",
+      add: "Add your own domain",
+      hostPlaceholder: "intranet.yourorganisation.com",
+      addNote: "The domain is enabled only once its DNS starts pointing at us. Only someone who actually controls it can set that up — and it is the only proof there is. Without it, anyone could claim someone else's domain.",
+      request: "Request",
+    },
+    signIn: {
+      heading: (provider) => `Sign in with ${provider}`,
+      stateOn: "on",
+      stateFromSupplier: "from the supplier's settings",
+      stateUnreadable: "unreadable",
+      stateOff: "off",
+      introBefore: "You register the application ",
+      introHighlight: (provider) => `in your own ${provider} directory`,
+      introAfter: " — you grant the consent, you see who signed in, and you can revoke access at any time. We never see the secret's value.",
+      callback: "Redirect URI — enter it in your application exactly like this:",
+      clientId: "Client ID",
+      clientSecret: "Client secret",
+      clientSecretNote: "Empty = leave unchanged. It is stored encrypted and is never printed back.",
+      tenantMode: "Tenant mode",
+      tenantModeBefore: "For a single-directory application, your ",
+      tenantModeHighlight: "Directory (tenant) ID",
+      tenantModeAfter: " belongs here. “organizations” = work and school accounts from anywhere, “common” = personal ones too.",
+      allowedTenantIds: "Allowed Entra tenant ids",
+      allowedTenantIdsNote: "Empty = not checked. In “organizations” mode this is the only thing standing between you and someone from a different organisation who happens to have the same address as one of your people.",
+      hostedDomain: "Workspace domain",
+      save: "Save",
+      deleteNote: "Removing it makes the button disappear from the sign-in screen. For people who sign in with a work account, the only route they know stops working.",
+      confirmLabel: (code) => `Type ${code} to confirm`,
+      deleteSubmit: "Remove",
+    },
+    codelists: {
+      introBefore: "What you label your own library content with. The base values are always here — existing content is labelled with them, and their disappearance would turn it into invalid data. Only what you added can be removed, and even then it disappears ",
+      introHighlight: "from the menu only",
+      introAfter: ": documents that carry the value keep it.",
+      labels: {
+        category: {
+          name: "Document types",
+          hint: "What the document is: a regulation, a directive, a guideline, minutes…",
+        },
+        tags: {
+          name: "Tags",
+          hint: "Free classification across types — youth, referees, finance, for example.",
+        },
+      },
+      base: " · base",
+      used: (n) => ` · used ${n}×`,
+      remove: "Remove",
+      newItemPlaceholder: "Guideline",
+      newItemLabel: (codelist) => `Name of the new item — ${codelist}`,
+      key: "Key",
+      keyPlaceholder: "guideline",
+      add: "Add",
+      keyNote: "Key: lowercase letters without diacritics, digits and underscores. It stays in the content permanently and cannot be taken back — the name beside it can be changed.",
+    },
+    chunking: {
+      heading: "Splitting documents into chunks",
+      introBefore: "Search does not work on the whole document — the model receives a few chunks and answers from them. These values decide how a document is cut into chunks.",
+      introHighlight: " This has nothing to do with the text of the regulation or with acknowledgements:",
+      introAfter: " the chunking can be changed as often as needed and nobody is asked to acknowledge again.",
+      articleWord: "The word an article starts with",
+      articleNote1: "The default is ",
+      articleNote2: ". Regulations organised by ",
+      articleNote3: " or by ",
+      articleNote4: " merge into a single block without this change, and search has nothing to grab onto. It is ",
+      articleNoteHighlight: "a word, not a pattern",
+      articleNote5: " — the system fills in what surrounds it.",
+      annexWord: "The word an annex starts with",
+      annexWordNote: "Annexes sit outside the article numbering — unrecognised, they fall under the last article and the citation lies.",
+      headerRepeats: "A line is a running head when it repeats more often than",
+      headerRepeatsNote: "Headers and footers repeat on every page of a PDF. A lower number removes more noise, but on a short document it can eat the content too.",
+      minTokens: "Target chunk size — from (tokens)",
+      maxTokens: "Target chunk size — to (tokens)",
+      tokensNoteBefore: "A small chunk means thousands of context-free snippets; a large one means a single chunk for the whole document. The default ",
+      tokensNoteAfter: " is tuned on Slovak regulations.",
+      saveNoteBefore: "Saving ",
+      saveNoteHighlight: "does not reindex existing documents",
+      saveNoteMiddle: ". Try a new profile on one document first — its library detail has a ",
+      saveNoteButton: "Reindex",
+      saveNoteAfter: " button.",
+      save: "Save the chunking profile",
+      reindexAllHeading: "Reindex everything",
+      allUpToDate: (total) => `All ${total} documents are chunked according to this profile. There is nothing to reindex.`,
+      outdatedOf: (total) => ` of ${total} documents are chunked differently from what this profile says. Reindexing `,
+      outdatedHighlight: "changes neither the wording nor the acknowledgements",
+      outdatedAfter: " — it only replaces the chunks that search reads from.",
+      batchNote: "At most 25 documents are processed at a time. This is not extra caution: with a larger batch the run would hit the time limit and some documents would stay chunked the old way. If anything is left, press it again — what is done is skipped.",
+      reindexAll: (n) => `Reindex (${n})`,
+    },
+    actions: {
+      saved: "Changes saved.",
+      failed: "The change could not be saved. Try again.",
+      confirmCode: (code) => `To remove it, type the organisation code (${code}).`,
+      signInRemoved: "Sign-in credentials removed.",
+      domainRequested: "Recorded. Now set the CNAME with your DNS administrator and ask for verification.",
+      domainNotFound: "We have no such request.",
+      domainWaiting: (host) =>
+        `${host} does not point at us yet. A DNS change is usually visible within the hour;` +
+        " if it takes longer, check the CNAME.",
+      domainOnNotInVercel: (host) => `${host} is on, but it was not added to Vercel — get in touch with us.`,
+      domainOn: (host) => `${host} is on. The portal answers there.`,
+      domainRemoved: "Domain removed. The portal stopped answering there.",
+      codelistRemoved: "Removed from the menu. Documents that carry this value keep it.",
+      chunkingSaved: "Saved. Existing documents were not reindexed — run that on a specific document.",
+      reindexedCount: (n) => `${n} reindexed`,
+      reindexSkipped: (n) => `${n} unchanged`,
+      reindexRemaining: (n) => `${n} remaining — run it again`,
+      reindexErrors: (list) => `errors: ${list}`,
+    },
+    auditTab: {
+      introBefore: "Who changed what and when. Every administrative change is recorded — a role, an access level, a department, an assignment and organisation settings. Records",
+      introHighlight: " cannot be edited or deleted",
+      introAfter: "; that is the whole point. Secrets (a client secret, say) appear only as “changed” — an audit log that collects passwords is a leak in its own right.",
+      search: "Search",
+      searchPlaceholder: "name, address, department…",
+      searchSubmit: "Search",
+      clearFilter: "clear the filter",
+      capped: "The 200 most recent records are shown. Older ones can be found with the field above — loading them all at once would bring the screen down exactly when someone opens it to check something.",
+    },
   },
   people: {
     types: {

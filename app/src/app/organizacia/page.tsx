@@ -16,7 +16,8 @@ import { domainRequests, domainInstruction } from "@/lib/customerDomains"
 import { providerStatus, PROVIDER_LABEL, PROVIDER_ID } from "@/lib/oauth"
 import { brandingView } from "@/lib/tenants"
 import { tenantStyle } from "@/components/TenantHeader"
-import { UI_LANGUAGES, formatDate } from "@/lib/i18n"
+import { UI_LANGUAGES, formatDate, dictionary } from "@/lib/i18n"
+import type { UiLanguage } from "@/lib/i18n"
 import Select from "@/components/Select"
 import ColorSelect from "@/components/ColorSelect"
 import Notice from "@/components/Notice"
@@ -27,7 +28,7 @@ import { shiftDepartmentAction, saveDepartmentOrderAction } from "./actions"
 import TreeWithOrder from "@/components/TreeWithOrder"
 import { reindexState } from "@/lib/libraryWrite"
 import { DEFAULT_PROFILE } from "@/lib/chunker.mjs"
-import { CODELIST_LABEL, availableOptions, customItems, codelistUsage } from "@/lib/codelistsTenant"
+import { availableOptions, customItems, codelistUsage } from "@/lib/codelistsTenant"
 import { normalizeQuery, tabValue, type RawQuery } from "@/lib/urlParams"
 import { CUSTOM_CODELISTS } from "@/lib/codelists"
 import { allDepartments, flattenTree, subtree, counts, MAX_DEPTH, depth } from "@/lib/departments"
@@ -36,58 +37,44 @@ import AuditList from "@/components/AuditList"
 import type { OAuthProviderName } from "@/lib/oauth"
 import type { Tenant } from "@/lib/tenants"
 
-const TABS = [
-  { key: "branding", label: "Vzhľad a jazyky" },
-  { key: "departments", label: "Oddelenia" },
-  { key: "domains", label: "Domény" },
-  { key: "signin", label: "Prihlasovanie" },
-  { key: "codelists", label: "Číselníky" },
-  { key: "chunking", label: "Členenie" },
-  { key: "audit", label: "Audit" },
-]
+const TAB_KEYS = ["branding", "departments", "domains", "signin", "codelists", "chunking", "audit"]
 
 export const dynamic = "force-dynamic"
 
-const LANGUAGES: Record<string, string> = {
-  sk: "slovenčina",
-  cs: "čeština",
-  en: "angličtina",
-}
-
 function ProviderRow({
-  tenant, provider, domain: domain,
+  tenant, provider, domain, language,
 }: {
   tenant: Tenant
   provider: OAuthProviderName
   domain?: string
+  language?: UiLanguage
 }) {
+  const t = dictionary(language).org.signIn
   const name = PROVIDER_LABEL[provider]
   const s = providerStatus(tenant, provider)
-  const back = `https://${domain ?? "<vaša doména>"}/api/auth/callback/${PROVIDER_ID[provider]}`
+  const back = `https://${domain ?? "<…>"}/api/auth/callback/${PROVIDER_ID[provider]}`
 
   return (
     <section className="karta" style={{ padding: "18px 20px", display: "grid", gap: 14 }}>
       <div style={{ display: "flex", gap: 10, alignItems: "baseline", flexWrap: "wrap" }}>
-        <h2 style={{ fontSize: 17, margin: 0 }}>Prihlásenie cez {name}</h2>
+        <h2 style={{ fontSize: 17, margin: 0 }}>{t.heading(name)}</h2>
         <span
           className="stitok"
           style={s.state === "necitatelne" ? { background: "var(--warn-bg)", color: "var(--warn-fg)" } : undefined}
         >
-          {s.state === "nastavene" ? "zapnuté"
-            : s.state === "z-prostredia" ? "z nastavenia dodávateľa"
-            : s.state === "necitatelne" ? "nečitateľné" : "vypnuté"}
+          {s.state === "nastavene" ? t.stateOn
+            : s.state === "z-prostredia" ? t.stateFromSupplier
+            : s.state === "necitatelne" ? t.stateUnreadable : t.stateOff}
         </span>
       </div>
 
       <p className="tichy" style={{ margin: 0, fontSize: 14, lineHeight: 1.6 }}>
-        Aplikáciu si zaregistrujete <strong>vo vlastnom {name} adresári</strong> — vy
-        udeľujete súhlas, vy vidíte, kto sa prihlasoval, a vy viete prístup
-        kedykoľvek odvolať. My hodnotu tajomstva nikdy nevidíme.
+        {t.introBefore}<strong>{t.introHighlight(name)}</strong>{t.introAfter}
       </p>
 
       <div>
         <div className="tichy pole-napoveda">
-          Adresa návratu — zapíšte ju do svojej aplikácie presne takto:
+          {t.callback}
         </div>
         <code style={{ fontSize: 13.5, overflowWrap: "anywhere" }}>{back}</code>
       </div>
@@ -97,50 +84,42 @@ function ProviderRow({
         <input type="hidden" name="tab" value="signin" />
 
         <label className="pole">
-          <span className="pole-popis">Client ID</span>
+          <span className="pole-popis">{t.clientId}</span>
           <input className="pole-vstup" name="clientId" defaultValue={s.zdroj === "tenant" ? s.clientId : ""} />
         </label>
 
         <label className="pole">
-          <span className="pole-popis">Client secret</span>
+          <span className="pole-popis">{t.clientSecret}</span>
           <input className="pole-vstup" name="clientSecret" type="password" />
-          <span className="tichy pole-napoveda">
-            Prázdne = nemeniť. Ukladá sa zašifrované a späť sa nikdy nevypíše.
-          </span>
+          <span className="tichy pole-napoveda">{t.clientSecretNote}</span>
         </label>
 
         {provider === "microsoft" ? (
           <>
             <label className="pole">
-              <span className="pole-popis">Režim tenanta</span>
+              <span className="pole-popis">{t.tenantMode}</span>
               <input
                 className="pole-vstup"
                 name="tenantMode"
                 defaultValue={tenant.oauth?.microsoft?.tenantMode ?? "organizations"}
               />
               <span className="tichy pole-napoveda">
-                Pri aplikácii pre jediný adresár sem patrí vaše <strong>Directory
-                (tenant) ID</strong>. `organizations` = pracovné a školské kontá
-                odkiaľkoľvek, `common` = aj osobné.
+                {t.tenantModeBefore}<strong>{t.tenantModeHighlight}</strong>{t.tenantModeAfter}
               </span>
             </label>
             <label className="pole">
-              <span className="pole-popis">Povolené Entra tenant id</span>
+              <span className="pole-popis">{t.allowedTenantIds}</span>
               <input
                 className="pole-vstup"
                 name="allowedTenantIds"
                 defaultValue={(tenant.oauth?.microsoft?.allowedTenantIds ?? []).join(", ")}
               />
-              <span className="tichy pole-napoveda">
-                Prázdne = nekontroluje sa. Pri režime `organizations` je to jediná
-                zábrana proti tomu, aby sa dnu dostal človek z cudzej organizácie,
-                ktorý má rovnakú adresu ako niekto u vás.
-              </span>
+              <span className="tichy pole-napoveda">{t.allowedTenantIdsNote}</span>
             </label>
           </>
         ) : (
           <label className="pole">
-            <span className="pole-popis">Doména Workspace</span>
+            <span className="pole-popis">{t.hostedDomain}</span>
             <input
               className="pole-vstup"
               name="hostedDomain"
@@ -149,23 +128,19 @@ function ProviderRow({
           </label>
         )}
 
-        <div><button className="tlacidlo" type="submit">Uložiť</button></div>
+        <div><button className="tlacidlo" type="submit">{t.save}</button></div>
       </form>
 
       {s.zdroj === "tenant" && (
         <form action={deleteSignInAction} style={{ display: "grid", gap: 10, borderTop: "1px solid var(--line)", paddingTop: 14 }}>
           <input type="hidden" name="provider" value={provider} />
           <input type="hidden" name="tab" value="signin" />
-          <p className="tichy" style={{ margin: 0, fontSize: 14 }}>
-            Odstránením zmizne tlačidlo z prihlasovacej obrazovky. Ľuďom, ktorí
-            sa prihlasujú pracovným kontom, tým prestane fungovať jediná cesta,
-            ktorú poznajú.
-          </p>
+          <p className="tichy" style={{ margin: 0, fontSize: 14 }}>{t.deleteNote}</p>
           <label className="pole">
-            <span className="pole-popis">Napíšte {tenant.companyCode} na potvrdenie</span>
-            <input className="pole-vstup" name="potvrdenie" autoCapitalize="characters" autoCorrect="off" />
+            <span className="pole-popis">{t.confirmLabel(tenant.companyCode)}</span>
+            <input className="pole-vstup" name="confirmation" autoCapitalize="characters" autoCorrect="off" />
           </label>
-          <div><button className="tlacidlo tlacidlo--tiche" type="submit">Odstrániť</button></div>
+          <div><button className="tlacidlo tlacidlo--tiche" type="submit">{t.deleteSubmit}</button></div>
         </form>
       )}
     </section>
@@ -190,10 +165,12 @@ export default async function OrganisationPage({
   // aj v záložkách prehliadača — presmerovať by ich rozbilo, tak sa len
   // preloží. Zmizne, keď prestane chodiť.
   const key = tabValue(tab)
-  const now = TABS.some(z => z.key === key) ? key! : "branding"
+  const now = TAB_KEYS.includes(key ?? "") ? key! : "branding"
   const tenant = ctx.tenant
   const branding = brandingView(tenant)
   const language = ctx.person.language
+  const d = dictionary(language)
+  const t = d.org
   const pending = (await domainRequests(tenant.companyCode)).filter(
     z => !tenant.hostnames.includes(z.host),
   )
@@ -207,7 +184,7 @@ export default async function OrganisationPage({
   // dotazy na dokumenty pri každom otvorení nastavenia.
   const codelists = now === "codelists"
     ? await Promise.all(CUSTOM_CODELISTS.map(async name => ({
-        name: name,
+        name,
         vsetky: availableOptions(tenant, name),
         vlastne: customItems(tenant, name),
         pocty: Object.fromEntries(
@@ -238,25 +215,23 @@ export default async function OrganisationPage({
         back={`/organizacia?tab=${now}`}
       />
 
-      <h1 style={{ fontSize: 26, letterSpacing: "-0.02em", margin: "0 0 6px" }}>Organizácia</h1>
+      <h1 style={{ fontSize: 26, letterSpacing: "-0.02em", margin: "0 0 6px" }}>{t.heading}</h1>
       <p className="tichy" style={{ fontSize: 15, margin: "0 0 22px", maxWidth: 620 }}>
-        Nastavenie, ktoré si spravujete sami. Kód organizácie
-        (<strong>{tenant.companyCode}</strong>) a vypnutie portálu tu zámerne nie sú —
-        s tým sa ozvite nám.
+        {t.introBefore}<strong>{tenant.companyCode}</strong>{t.introAfter}
       </p>
 
       {/* Záložky, nie jeden dlhý stĺpec. Blokov je päť a na telefóne to
           znamenalo, že sa k prihlasovaniu človek dostal až po dvoch
           obrazovkách posúvania cez veci, ktoré nehľadal. */}
-      <nav className="zalozky" aria-label="Časti nastavenia">
-        {TABS.map(z => (
+      <nav className="zalozky" aria-label={t.tabsLabel}>
+        {TAB_KEYS.map(k => (
           <Link
-            key={z.key}
-            href={`/organizacia?tab=${z.key}`}
-            className={`zalozka${z.key === now ? " je-aktivna" : ""}`}
-            aria-current={z.key === now ? "page" : undefined}
+            key={k}
+            href={`/organizacia?tab=${k}`}
+            className={`zalozka${k === now ? " je-aktivna" : ""}`}
+            aria-current={k === now ? "page" : undefined}
           >
-            {z.label}
+            {t.tabs[k] ?? k}
           </Link>
         ))}
       </nav>
@@ -266,76 +241,68 @@ export default async function OrganisationPage({
         <input type="hidden" name="tab" value="branding" />
 
         <label className="pole">
-          <span className="pole-popis">Názov</span>
+          <span className="pole-popis">{t.branding.name}</span>
           <input className="pole-vstup" name="displayName" defaultValue={tenant.branding.displayName} required />
-          <span className="tichy pole-napoveda">Celý názov. Je v e-mailoch a na prihlasovacej obrazovke.</span>
+          <span className="tichy pole-napoveda">{t.branding.nameNote}</span>
         </label>
 
         <label className="pole">
-          <span className="pole-popis">Skratka</span>
+          <span className="pole-popis">{t.branding.shortName}</span>
           <input className="pole-vstup" name="shortName" defaultValue={tenant.branding.shortName ?? ""} />
-          <span className="tichy pole-napoveda">
-            Do hornej lišty, kde je vedľa nej ešte menu — &bdquo;SFZ&ldquo; tam povie to isté
-            čo celý názov a nechá miesto na zvyšok.
-          </span>
+          <span className="tichy pole-napoveda">{t.branding.shortNameNote}</span>
         </label>
 
         <div className="pole">
-          <span className="pole-popis">Logo</span>
+          <span className="pole-popis">{t.branding.logo}</span>
           {tenant.branding.logoUrl && (
             <span className="logo-nahlad">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={tenant.branding.logoUrl} alt="" width={34} height={34} />
-              <span className="tichy pole-napoveda">súčasné</span>
+              <span className="tichy pole-napoveda">{t.branding.logoCurrent}</span>
             </span>
           )}
           <input className="pole-vstup" type="file" name="logo" accept="image/png,image/jpeg,image/webp" />
-          <span className="tichy pole-napoveda">
-            PNG, JPEG alebo WebP, najviac 256 kB. Prázdne = nemeniť.
-          </span>
+          <span className="tichy pole-napoveda">{t.branding.logoNote}</span>
         </div>
 
         <div className="pole">
-          <span className="pole-popis">Farba</span>
-          <ColorSelect name="accentColor" value={tenant.branding.accentColor} />
-          <span className="tichy pole-napoveda">
-            Nesie ju tlačidlo s bielym textom, preto sú odtiene tmavšie, než by
-            sa chcelo — svetlejší tón znamená nečitateľné tlačidlo.
-          </span>
+          <span className="pole-popis">{t.branding.color}</span>
+          <ColorSelect name="accentColor" value={tenant.branding.accentColor} language={language} />
+          <span className="tichy pole-napoveda">{t.branding.colorNote}</span>
         </div>
 
         <label className="pole">
-          <span className="pole-popis">Kontaktná adresa</span>
+          <span className="pole-popis">{t.branding.supportEmail}</span>
           <input className="pole-vstup" name="supportEmail" type="email" defaultValue={tenant.branding.supportEmail ?? ""} />
-          <span className="tichy pole-napoveda">Kam sa má obrátiť človek, ktorému niečo nesedí.</span>
+          <span className="tichy pole-napoveda">{t.branding.supportEmailNote}</span>
         </label>
 
         <fieldset className="hr-skupina" style={{ border: "1px solid var(--line)" }}>
-          <legend className="pole-popis">Jazyky</legend>
+          <legend className="pole-popis">{t.branding.languages}</legend>
           <div className="stitky-zoznam">
             {UI_LANGUAGES.map(j => (
               <label key={j} className="stitok stitok--volba stitok--pole">
                 <input type="checkbox" name="languages" value={j} defaultChecked={tenant.languages.includes(j)} />
                 <span className="stitok-znak" aria-hidden="true" />
-                {LANGUAGES[j] ?? j}
+                {d.people.languages[j] ?? j}
               </label>
             ))}
           </div>
         </fieldset>
 
         <div className="pole">
-          <span className="pole-popis">Predvolený jazyk</span>
+          <span className="pole-popis">{t.branding.defaultLanguage}</span>
           <Select
             name="defaultLanguage"
-            options={UI_LANGUAGES.map(j => ({ value: j, label: LANGUAGES[j] ?? j }))}
+            options={UI_LANGUAGES.map(j => ({ value: j, label: d.people.languages[j] ?? j }))}
             initial={tenant.defaultLanguage}
-            fieldLabel="Predvolený jazyk"
+            fieldLabel={t.branding.defaultLanguage}
           />
-          <span className="tichy pole-napoveda">Platí pre človeka, ktorý ešte nie je prihlásený.</span>
+          <span className="tichy pole-napoveda">{t.branding.defaultLanguageNote}</span>
         </div>
 
         <label className="pole">
-          <span className="pole-popis">Domény pre automatické založenie</span>
+          <span className="pole-popis">{t.branding.autoProvision}</span>
           <textarea
             className="pole-vstup"
             name="autoProvisionDomains"
@@ -346,13 +313,11 @@ export default async function OrganisationPage({
             autoCorrect="off"
           />
           <span className="tichy pole-napoveda">
-            Jedna na riadok. Kto sa prihlási <strong>pracovným kontom</strong> z tejto
-            domény a v zozname osôb ešte nie je, založí sa sám ako bežný člen —
-            bez rolí a bez trás. Platí len pre kontá, nie pre odkaz v e-maile.
+            {t.branding.autoProvisionBefore}<strong>{t.branding.autoProvisionHighlight}</strong>{t.branding.autoProvisionAfter}
           </span>
         </label>
 
-        <div><button className="tlacidlo" type="submit">Uložiť</button></div>
+        <div><button className="tlacidlo" type="submit">{t.branding.save}</button></div>
       </form>
       )}
 
@@ -360,27 +325,22 @@ export default async function OrganisationPage({
       <div style={{ display: "grid", gap: 16 }}>
         <section className="karta" style={{ padding: 20, display: "grid", gap: 12 }}>
           <div>
-            <h2 style={{ fontSize: 17, margin: "0 0 4px" }}>Organizačná štruktúra</h2>
+            <h2 style={{ fontSize: 17, margin: "0 0 4px" }}>{t.departments.heading}</h2>
             <p className="tichy" style={{ fontSize: 14, margin: 0 }}>
-              Poradie sa dá meniť ťahaním myšou alebo šípkami po rozbalení položky —
-            organizačná schéma nie je abecedný zoznam.{" "}
-            Oddelenie je <strong>kam človek patrí</strong> — práve jeden, ako v organizačnej
-              schéme. Kto sa má osloviť naprieč oddeleniami (rozhodcovia, delegáti,
-              štatutári), na to sú <Link href="/osoby">skupiny</Link>; tie sa s oddeleniami
-              nemiešajú a jeden človek ich môže mať viac.
+              {t.departments.introBefore}<strong>{t.departments.introHighlight}</strong>
+              {t.departments.introMiddle}
+              <Link href="/osoby">{t.departments.groupsLink}</Link>
+              {t.departments.introAfter}
             </p>
           </div>
 
           {rows.length === 0 ? (
-            <p className="tichy" style={{ fontSize: 14, margin: 0 }}>
-              Zatiaľ tu nie je nič. Založ prvé oddelenie nižšie — ak už máte oddelenia
-              zapísané pri ľuďoch ako text, ozvite sa nám a prevedieme ich naraz.
-            </p>
+            <p className="tichy" style={{ fontSize: 14, margin: 0 }}>{t.departments.empty}</p>
           ) : (
             <TreeWithOrder
               hidden={{ tab: "departments" }}
               action={saveDepartmentOrderAction}
-              items={rows.map(({ department: department, level: level }) => {
+              items={rows.map(({ department, level }) => {
                 const p = peopleCounts.get(department.id) ?? { direct: 0, withDescendants: 0 }
                 const inside = subtree(tenantDepartments, department.id)
                 return {
@@ -395,7 +355,7 @@ export default async function OrganisationPage({
                         <span className="strom-nazov">{department.name}</span>
                         <span className="tichy strom-pocet">
                           {p.direct}
-                          {p.withDescendants !== p.direct ? ` (${p.withDescendants} aj s podriadenými)` : ""}
+                          {p.withDescendants !== p.direct ? t.departments.withDescendants(p.withDescendants) : ""}
                         </span>
                       </summary>
 
@@ -407,16 +367,16 @@ export default async function OrganisationPage({
                           <form action={shiftDepartmentAction}>
                             <input type="hidden" name="tab" value="departments" />
                             <input type="hidden" name="id" value={department.id} />
-                            <input type="hidden" name="smer" value="hore" />
+                            <input type="hidden" name="direction" value="up" />
                             <button className="tlacidlo tlacidlo--tiche" type="submit"
-                                    aria-label={`Posunúť ${department.name} vyššie`}>↑ vyššie</button>
+                                    aria-label={t.departments.moveUp(department.name)}>{t.departments.up}</button>
                           </form>
                           <form action={shiftDepartmentAction}>
                             <input type="hidden" name="tab" value="departments" />
                             <input type="hidden" name="id" value={department.id} />
-                            <input type="hidden" name="smer" value="dole" />
+                            <input type="hidden" name="direction" value="down" />
                             <button className="tlacidlo tlacidlo--tiche" type="submit"
-                                    aria-label={`Posunúť ${department.name} nižšie`}>↓ nižšie</button>
+                                    aria-label={t.departments.moveDown(department.name)}>{t.departments.down}</button>
                           </form>
                         </div>
 
@@ -427,10 +387,10 @@ export default async function OrganisationPage({
                             className="pole-vstup"
                             name="name"
                             defaultValue={department.name}
-                            aria-label={`Názov oddelenia ${department.name}`}
+                            aria-label={t.departments.nameOf(department.name)}
                             required
                           />
-                          <button className="tlacidlo tlacidlo--tiche" type="submit">Premenovať</button>
+                          <button className="tlacidlo tlacidlo--tiche" type="submit">{t.departments.rename}</button>
                         </form>
 
                         <form action={moveDepartmentAction} className="strom-forma">
@@ -439,9 +399,9 @@ export default async function OrganisationPage({
                           <Select
                             name="parentId"
                             initial={department.parentId ?? ""}
-                            fieldLabel={`Nadriadené oddelenie pre ${department.name}`}
+                            fieldLabel={t.departments.parentOf(department.name)}
                             options={[
-                              { value: "", label: "— najvyššia úroveň —" },
+                              { value: "", label: t.departments.topLevel },
                               ...rows
                                 // Pod seba ani pod vlastného potomka sa presunúť
                                 // nedá, tak sa to ani neponúka. Pravidlo aj tak
@@ -453,20 +413,17 @@ export default async function OrganisationPage({
                                 })),
                             ]}
                           />
-                          <button className="tlacidlo tlacidlo--tiche" type="submit">Presunúť</button>
+                          <button className="tlacidlo tlacidlo--tiche" type="submit">{t.departments.move}</button>
                         </form>
 
                         {p.withDescendants === 0 && inside.size === 1 ? (
                           <form action={deleteDepartmentAction}>
                             <input type="hidden" name="tab" value="departments" />
                             <input type="hidden" name="id" value={department.id} />
-                            <button className="tlacidlo tlacidlo--tiche" type="submit">Zrušiť oddelenie</button>
+                            <button className="tlacidlo tlacidlo--tiche" type="submit">{t.departments.remove}</button>
                           </form>
                         ) : (
-                          <p className="tichy" style={{ fontSize: 13, margin: 0 }}>
-                            Zrušiť sa dá až prázdne oddelenie bez podriadených — inak by
-                            ľudia zmizli zo štruktúry bez toho, aby si to niekto všimol.
-                          </p>
+                          <p className="tichy" style={{ fontSize: 13, margin: 0 }}>{t.departments.removeHint}</p>
                         )}
                       </div>
                     </details>
@@ -479,20 +436,20 @@ export default async function OrganisationPage({
 
         <form action={createDepartmentAction} className="karta" style={{ padding: 20, display: "grid", gap: 14 }}>
           <input type="hidden" name="tab" value="departments" />
-          <h2 style={{ fontSize: 17, margin: 0 }}>Nové oddelenie</h2>
+          <h2 style={{ fontSize: 17, margin: 0 }}>{t.departments.newHeading}</h2>
 
           <label className="pole">
-            <span className="pole-popis">Názov</span>
-            <input className="pole-vstup" name="name" placeholder="Úsek komunikácie" required />
+            <span className="pole-popis">{t.departments.name}</span>
+            <input className="pole-vstup" name="name" placeholder={t.departments.namePlaceholder} required />
           </label>
 
           <label className="pole">
-            <span className="pole-popis">Nadriadené oddelenie</span>
+            <span className="pole-popis">{t.departments.parent}</span>
             <Select
               name="parentId"
               initial=""
               options={[
-                { value: "", label: "— najvyššia úroveň —" },
+                { value: "", label: t.departments.topLevel },
                 ...rows
                   // Hlbšie než povolené sa založiť nedá, tak sa to neponúka.
                   .filter(r => depth(tenantDepartments, r.department.id) < MAX_DEPTH)
@@ -502,14 +459,10 @@ export default async function OrganisationPage({
                   })),
               ]}
             />
-            <span className="tichy pole-napoveda">
-              Štruktúra môže mať najviac {MAX_DEPTH} úrovní. Nie je to technický
-              limit — hlbší strom sa na telefóne nedá prehľadne ukázať a to, čo
-              je v ňom najhlbšie, býva v skutočnosti skupina.
-            </span>
+            <span className="tichy pole-napoveda">{t.departments.maxDepth(MAX_DEPTH)}</span>
           </label>
 
-          <div><button className="tlacidlo" type="submit">Založiť</button></div>
+          <div><button className="tlacidlo" type="submit">{t.departments.create}</button></div>
         </form>
       </div>
       )}
@@ -521,13 +474,13 @@ export default async function OrganisationPage({
           {tenant.hostnames.map(h => (
             <li key={h} className="karta" style={{ padding: "10px 14px", display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
               <span style={{ fontWeight: 600 }}>{h}</span>
-              <span className="stitok" style={{ background: "var(--ok-bg)", color: "var(--ok-fg)" }}>funguje</span>
+              <span className="stitok" style={{ background: "var(--ok-bg)", color: "var(--ok-fg)" }}>{t.domains.works}</span>
               {tenant.hostnames.length > 1 && (
                 <form action={cancelDomainAction} style={{ marginLeft: "auto" }}>
                   <input type="hidden" name="host" value={h} />
                   <input type="hidden" name="tab" value="domains" />
                   <button className="tlacidlo tlacidlo--tiche" type="submit" style={{ padding: "5px 10px", fontSize: 13 }}>
-                    Odstrániť
+                    {t.domains.remove}
                   </button>
                 </form>
               )}
@@ -544,16 +497,16 @@ export default async function OrganisationPage({
                   <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
                     <span style={{ fontWeight: 600 }}>{z.host}</span>
                     <span className="stitok" style={{ background: "var(--warn-bg)", color: "var(--warn-fg)" }}>
-                      čaká na DNS
+                      {t.domains.waitingDns}
                     </span>
                     <span className="tichy" style={{ fontSize: 13, marginLeft: "auto" }}>
-                      od {formatDate(z.requestedAt, language)}
+                      {t.domains.since(formatDate(z.requestedAt, language))}
                     </span>
                   </div>
 
                   {p && (
                     <p className="tichy" style={{ margin: 0, fontSize: 13.5, overflowWrap: "anywhere" }}>
-                      U svojho správcu DNS pridajte <strong>{p.type}</strong> záznam{" "}
+                      {t.domains.dnsBefore}<strong>{p.type}</strong>{t.domains.dnsMiddle}
                       <code>{p.name}</code> → <code>{p.value}</code>
                     </p>
                   )}
@@ -563,14 +516,14 @@ export default async function OrganisationPage({
                       <input type="hidden" name="host" value={z.host} />
                       <input type="hidden" name="tab" value="domains" />
                       <button className="tlacidlo" type="submit" style={{ padding: "6px 14px", fontSize: 13.5 }}>
-                        Overiť a zapnúť
+                        {t.domains.verify}
                       </button>
                     </form>
                     <form action={cancelDomainAction}>
                       <input type="hidden" name="host" value={z.host} />
                       <input type="hidden" name="tab" value="domains" />
                       <button className="tlacidlo tlacidlo--tiche" type="submit" style={{ padding: "6px 14px", fontSize: 13.5 }}>
-                        Zrušiť žiadosť
+                        {t.domains.cancelRequest}
                       </button>
                     </form>
                   </div>
@@ -583,42 +536,34 @@ export default async function OrganisationPage({
         <form action={requestDomainAction} style={{ display: "grid", gap: 10 }}>
           <input type="hidden" name="tab" value="domains" />
           <label className="pole">
-            <span className="pole-popis">Pridať vlastnú doménu</span>
-            <input className="pole-vstup" name="host" placeholder="intranet.vasazorganizacia.sk" autoCapitalize="none" autoCorrect="off" />
-            <span className="tichy pole-napoveda">
-              Doména sa zapne až vtedy, keď na nás začne smerovať DNS. Nastaviť to
-              vie len ten, kto ju naozaj ovláda — a je to jediný dôkaz, ktorý
-              existuje. Bez neho by si ktokoľvek mohol pripísať cudziu doménu.
-            </span>
+            <span className="pole-popis">{t.domains.add}</span>
+            <input className="pole-vstup" name="host" placeholder={t.domains.hostPlaceholder} autoCapitalize="none" autoCorrect="off" />
+            <span className="tichy pole-napoveda">{t.domains.addNote}</span>
           </label>
-          <div><button className="tlacidlo tlacidlo--tiche" type="submit">Požiadať</button></div>
+          <div><button className="tlacidlo tlacidlo--tiche" type="submit">{t.domains.request}</button></div>
         </form>
       </section>
       )}
 
       {now === "signin" && (
       <div style={{ display: "grid", gap: 16 }}>
-        <ProviderRow tenant={tenant} provider="microsoft" domain={tenant.hostnames[0]} />
-        <ProviderRow tenant={tenant} provider="google" domain={tenant.hostnames[0]} />
+        <ProviderRow tenant={tenant} provider="microsoft" domain={tenant.hostnames[0]} language={language} />
+        <ProviderRow tenant={tenant} provider="google" domain={tenant.hostnames[0]} language={language} />
       </div>
       )}
 
       {now === "codelists" && (
       <div style={{ display: "grid", gap: 16 }}>
         <p className="tichy" style={{ fontSize: 14.5, margin: 0, maxWidth: 620 }}>
-          Čím označujete vlastný obsah v knižnici. Základné hodnoty sú tu vždy —
-          je nimi označený existujúci obsah a ich zmiznutie by z neho spravilo
-          neplatné údaje. Odobrať sa dá len to, čo ste pridali vy, a aj vtedy
-          zmizne <strong>len z ponuky</strong>: dokumenty, ktoré hodnotu majú,
-          si ju nesú ďalej.
+          {t.codelists.introBefore}<strong>{t.codelists.introHighlight}</strong>{t.codelists.introAfter}
         </p>
 
         {codelists.map(c => (
           <section key={c.name} className="karta" style={{ padding: 20, display: "grid", gap: 12 }}>
             <div>
-              <h2 style={{ fontSize: 17, margin: "0 0 4px" }}>{CODELIST_LABEL[c.name].name}</h2>
+              <h2 style={{ fontSize: 17, margin: "0 0 4px" }}>{t.codelists.labels[c.name].name}</h2>
               <p className="tichy" style={{ fontSize: 14, margin: 0 }}>
-                {CODELIST_LABEL[c.name].hint}
+                {t.codelists.labels[c.name].hint}
               </p>
             </div>
 
@@ -631,15 +576,15 @@ export default async function OrganisationPage({
                       <span className="strom-nazov">{p.label ?? p.key}</span>
                       <span className="tichy strom-pocet">
                         <code>{p.key}</code>
-                        {!custom && " · základná"}
-                        {custom && c.pocty[p.key] > 0 && ` · použitá ${c.pocty[p.key]}×`}
+                        {!custom && t.codelists.base}
+                        {custom && c.pocty[p.key] > 0 && t.codelists.used(c.pocty[p.key])}
                       </span>
                       {custom && (
                         <form action={removeCodelistItemAction} style={{ marginLeft: "auto" }}>
                           <input type="hidden" name="tab" value="codelists" />
-                          <input type="hidden" name="ciselnik" value={c.name} />
-                          <input type="hidden" name="kluc" value={p.key} />
-                          <button className="tlacidlo tlacidlo--tiche" type="submit">Odobrať</button>
+                          <input type="hidden" name="codelist" value={c.name} />
+                          <input type="hidden" name="key" value={p.key} />
+                          <button className="tlacidlo tlacidlo--tiche" type="submit">{t.codelists.remove}</button>
                         </form>
                       )}
                     </div>
@@ -650,19 +595,16 @@ export default async function OrganisationPage({
 
             <form action={addCodelistItemAction} className="strom-forma">
               <input type="hidden" name="tab" value="codelists" />
-              <input type="hidden" name="ciselnik" value={c.name} />
-              <input className="pole-vstup" name="popis" placeholder="Metodický pokyn"
-                     aria-label={`Názov novej položky — ${CODELIST_LABEL[c.name].name}`} required />
-              <input className="pole-vstup" name="kluc" placeholder="metodicky_pokyn"
-                     aria-label="Kľúč" autoCapitalize="none" autoCorrect="off" required
+              <input type="hidden" name="codelist" value={c.name} />
+              <input className="pole-vstup" name="label" placeholder={t.codelists.newItemPlaceholder}
+                     aria-label={t.codelists.newItemLabel(t.codelists.labels[c.name].name)} required />
+              <input className="pole-vstup" name="key" placeholder={t.codelists.keyPlaceholder}
+                     aria-label={t.codelists.key} autoCapitalize="none" autoCorrect="off" required
                      style={{ maxWidth: 220 }} />
-              <button className="tlacidlo tlacidlo--tiche" type="submit">Pridať</button>
+              <button className="tlacidlo tlacidlo--tiche" type="submit">{t.codelists.add}</button>
             </form>
 
-            <p className="tichy" style={{ fontSize: 13, margin: 0 }}>
-              Kľúč: malé písmená bez diakritiky, číslice a podčiarkovník. Zostáva v obsahu
-              natrvalo, takže sa nedá vziať späť — názov vedľa neho sa meniť dá.
-            </p>
+            <p className="tichy" style={{ fontSize: 13, margin: 0 }}>{t.codelists.keyNote}</p>
           </section>
         ))}
       </div>
@@ -673,94 +615,83 @@ export default async function OrganisationPage({
         <input type="hidden" name="tab" value="chunking" />
 
         <div>
-          <h2 style={{ fontSize: 17, margin: "0 0 4px" }}>Členenie dokumentov na úseky</h2>
+          <h2 style={{ fontSize: 17, margin: "0 0 4px" }}>{t.chunking.heading}</h2>
           <p className="tichy" style={{ fontSize: 14, margin: 0 }}>
-            Vyhľadávanie nepracuje s celým dokumentom — model dostane niekoľko úsekov
-            a odpovedá z nich. Tieto hodnoty určujú, ako sa dokument na úseky reže.
-            <strong> S textom normy ani s potvrdeniami to nemá nič spoločné:</strong> členenie
-            sa dá meniť koľkokrát treba a nikomu nenaskočí povinnosť potvrdzovať znova.
+            {t.chunking.introBefore}
+            <strong>{t.chunking.introHighlight}</strong>{t.chunking.introAfter}
           </p>
         </div>
 
         <label className="pole">
-          <span className="pole-popis">Slovo, ktorým začína článok</span>
+          <span className="pole-popis">{t.chunking.articleWord}</span>
           <input className="pole-vstup" name="slovoClanok"
                  defaultValue={tenant.chunking?.slovoClanok ?? DEFAULT_PROFILE.slovoClanok} />
           <span className="tichy pole-napoveda">
-            Predvolene <code>Článok</code>. Predpisy členené na <code>§</code> alebo na
-            <code> Bod</code> sa bez tejto zmeny zlejú do jedného bloku a vyhľadávanie
-            nemá čoho chytiť. Je to <strong>slovo, nie vzor</strong> — okolie si doplní systém.
+            {t.chunking.articleNote1}<code>Článok</code>{t.chunking.articleNote2}<code>§</code>
+            {t.chunking.articleNote3}<code>Bod</code>{t.chunking.articleNote4}
+            <strong>{t.chunking.articleNoteHighlight}</strong>{t.chunking.articleNote5}
           </span>
         </label>
 
         <label className="pole">
-          <span className="pole-popis">Slovo, ktorým začína príloha</span>
+          <span className="pole-popis">{t.chunking.annexWord}</span>
           <input className="pole-vstup" name="slovoPriloha"
                  defaultValue={tenant.chunking?.annexWord ?? DEFAULT_PROFILE.slovoPriloha} />
-          <span className="tichy pole-napoveda">
-            Prílohy stoja mimo číslovania článkov — bez rozpoznania by spadli pod posledný
-            článok a citácia by klamala.
-          </span>
+          <span className="tichy pole-napoveda">{t.chunking.annexWordNote}</span>
         </label>
 
         <label className="pole">
-          <span className="pole-popis">Riadok je hlavička, keď sa opakuje viac ráz než</span>
+          <span className="pole-popis">{t.chunking.headerRepeats}</span>
           <input className="pole-vstup" type="number" name="opakovaniHlavicky" min={2} max={50}
                  defaultValue={tenant.chunking?.headerRepeats ?? DEFAULT_PROFILE.opakovaniHlavicky} />
-          <span className="tichy pole-napoveda">
-            Hlavičky a päty sa v PDF opakujú na každej strane. Nižšie číslo odstráni viac
-            šumu, ale pri krátkom dokumente môže zožrať aj obsah.
-          </span>
+          <span className="tichy pole-napoveda">{t.chunking.headerRepeatsNote}</span>
         </label>
 
         <label className="pole">
-          <span className="pole-popis">Cieľová veľkosť úseku — od (tokenov)</span>
+          <span className="pole-popis">{t.chunking.minTokens}</span>
           <input className="pole-vstup" type="number" name="cielMinTokenov" min={50} max={2000}
                  defaultValue={tenant.chunking?.cielMinTokenov ?? DEFAULT_PROFILE.cielMinTokenov} />
         </label>
 
         <label className="pole">
-          <span className="pole-popis">Cieľová veľkosť úseku — do (tokenov)</span>
+          <span className="pole-popis">{t.chunking.maxTokens}</span>
           <input className="pole-vstup" type="number" name="cielMaxTokenov" min={100} max={4000}
                  defaultValue={tenant.chunking?.cielMaxTokenov ?? DEFAULT_PROFILE.cielMaxTokenov} />
           <span className="tichy pole-napoveda">
-            Malý úsek znamená tisíce úryvkov bez kontextu, veľký zas jeden úsek na celý
-            dokument. Predvolené <code>300–800</code> je odladené na slovenských predpisoch.
+            {t.chunking.tokensNoteBefore}<code>300–800</code>{t.chunking.tokensNoteAfter}
           </span>
         </label>
 
         <p className="tichy" style={{ fontSize: 13.5, margin: 0 }}>
-          Uloženie <strong>nepreindexuje existujúce dokumenty</strong>. Vyskúšaj nový profil
-          najprv na jednom — v jeho detaile v knižnici je tlačidlo <em>Preindexovať</em>.
+          {t.chunking.saveNoteBefore}<strong>{t.chunking.saveNoteHighlight}</strong>
+          {t.chunking.saveNoteMiddle}<em>{t.chunking.saveNoteButton}</em>{t.chunking.saveNoteAfter}
         </p>
 
-        <div><button className="tlacidlo" type="submit">Uložiť členenie</button></div>
+        <div><button className="tlacidlo" type="submit">{t.chunking.save}</button></div>
       </form>
       )}
 
       {now === "chunking" && indexState && (
       <form action={reindexAllAction} className="karta" style={{ padding: 20, display: "grid", gap: 12, marginTop: 16 }}>
         <input type="hidden" name="tab" value="chunking" />
-        <h2 style={{ fontSize: 17, margin: 0 }}>Preindexovať všetko</h2>
+        <h2 style={{ fontSize: 17, margin: 0 }}>{t.chunking.reindexAllHeading}</h2>
 
         {indexState.neaktualnych === 0 ? (
           <p className="tichy" style={{ fontSize: 14, margin: 0 }}>
-            Všetkých {indexState.celkom} dokumentov je narezaných podľa tohto profilu.
-            Niet čo preindexovať.
+            {t.chunking.allUpToDate(indexState.celkom)}
           </p>
         ) : (
           <>
             <p className="tichy" style={{ fontSize: 14, margin: 0 }}>
-              <strong>{indexState.neaktualnych}</strong> z {indexState.celkom} dokumentov je
-              narezaných inak, než hovorí tento profil. Preindexovanie <strong>nemení znenia
-              ani potvrdenia</strong> — vymení len úseky, z ktorých číta vyhľadávanie.
+              <strong>{indexState.neaktualnych}</strong>{t.chunking.outdatedOf(indexState.celkom)}
+              <strong>{t.chunking.outdatedHighlight}</strong>{t.chunking.outdatedAfter}
             </p>
-            <p className="tichy" style={{ fontSize: 13, margin: 0 }}>
-              Spracuje sa najviac 25 dokumentov naraz. Nie je to opatrnosť navyše: pri
-              väčšej dávke by beh spadol na časovom strope a časť dokumentov by zostala
-              narezaná po starom. Keď niečo zostane, stlač to znova — hotové sa preskočia.
-            </p>
-            <div><button className="tlacidlo" type="submit">Preindexovať ({indexState.neaktualnych})</button></div>
+            <p className="tichy" style={{ fontSize: 13, margin: 0 }}>{t.chunking.batchNote}</p>
+            <div>
+              <button className="tlacidlo" type="submit">
+                {t.chunking.reindexAll(indexState.neaktualnych)}
+              </button>
+            </div>
           </>
         )}
       </form>
@@ -769,11 +700,7 @@ export default async function OrganisationPage({
       {now === "audit" && (
       <div>
         <p className="tichy" style={{ fontSize: 14.5, margin: "0 0 16px", maxWidth: 620 }}>
-          Kto, čo a kedy zmenil. Zapisuje sa každá správcovská zmena — rola,
-          prístup, oddelenie, pridelenie aj nastavenie organizácie. Záznamy sa
-          <strong> nedajú upraviť ani zmazať</strong>; to je celý zmysel.
-          Tajomstvá (napr. klientsky secret) sú tu len ako &bdquo;zmenené&ldquo; —
-          audit, ktorý zbiera heslá, je sám o sebe únik.
+          {t.auditTab.introBefore}<strong>{t.auditTab.introHighlight}</strong>{t.auditTab.introAfter}
         </p>
 
         {/* Formulár metódou GET: filter je v adrese, dá sa poslať odkazom
@@ -781,19 +708,19 @@ export default async function OrganisationPage({
         <form className="audit-filter" method="get">
           <input type="hidden" name="tab" value="audit" />
           <label className="pole" style={{ flex: "1 1 260px", margin: 0 }}>
-            <span className="pole-popis">Hľadať</span>
+            <span className="pole-popis">{t.auditTab.search}</span>
             <input
               className="pole-vstup"
               name="search"
               defaultValue={search ?? ""}
-              placeholder="meno, adresa, oddelenie…"
+              placeholder={t.auditTab.searchPlaceholder}
               autoCapitalize="none"
             />
           </label>
-          <button className="tlacidlo tlacidlo--tiche" type="submit">Hľadať</button>
+          <button className="tlacidlo tlacidlo--tiche" type="submit">{t.auditTab.searchSubmit}</button>
           {search ? (
             <Link className="tichy" href="/organizacia?tab=audit" style={{ fontSize: 14 }}>
-              zrušiť filter
+              {t.auditTab.clearFilter}
             </Link>
           ) : null}
         </form>
@@ -801,11 +728,7 @@ export default async function OrganisationPage({
         <AuditList records={records} language={language} />
 
         {records.length >= 200 && (
-          <p className="tichy" style={{ fontSize: 13, marginTop: 14 }}>
-            Ukazuje sa najnovších 200 záznamov. Staršie sa dajú vyhľadať poľom vyššie —
-            načítať ich všetky naraz by obrazovku zhodilo práve vtedy, keď ju
-            niekto otvorí kvôli kontrole.
-          </p>
+          <p className="tichy" style={{ fontSize: 13, marginTop: 14 }}>{t.auditTab.capped}</p>
         )}
       </div>
       )}

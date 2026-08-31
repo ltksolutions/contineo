@@ -443,7 +443,7 @@ export async function fixVersionAction(fd: FormData) {
 export async function shiftFolderAction(fd: FormData) {
   const self = await actor()
   if (!self) redirect("/")
-  const direction = fieldText(fd, "smer") === "dole" ? "dole" : "hore"
+  const direction = fieldText(fd, "direction") === "down" ? "down" : "up"
   try {
     await shiftFolder(self.companyCode, fieldText(fd, "id"), direction, self.email)
     revalidatePath("/kniznica")

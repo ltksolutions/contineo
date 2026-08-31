@@ -31,11 +31,12 @@ import {
 import { addCodelistItem, removeCodelistItem } from "@/lib/codelistsTenant"
 import { CodelistError } from "@/lib/codelists"
 import { reindexAll, LibraryError } from "@/lib/libraryWrite"
+import { dictionary, type UiLanguage } from "@/lib/i18n"
 
-async function actor(): Promise<{ email: string; companyCode: string } | null> {
+async function actor(): Promise<{ email: string; companyCode: string; language: UiLanguage } | null> {
   const ctx = await orgContext()
   return ctx.state === "ready"
-    ? { email: ctx.person.email, companyCode: ctx.person.companyCode }
+    ? { email: ctx.person.email, companyCode: ctx.person.companyCode, language: ctx.person.language }
     : null
 }
 
@@ -44,7 +45,12 @@ function fieldText(fd: FormData, actorName: string): string {
   return typeof v === "string" ? v.trim() : ""
 }
 
-function errorMessage(e: unknown): string {
+/** Hlásenia v jazyku prihláseného človeka. */
+function say(language: UiLanguage) {
+  return dictionary(language).org.actions
+}
+
+function errorMessage(e: unknown, language: UiLanguage): string {
   if (
     e instanceof TenantValidationError || e instanceof BrandError ||
     e instanceof DomainError || e instanceof DepartmentError ||
@@ -53,7 +59,7 @@ function errorMessage(e: unknown): string {
     return e.message
   }
   console.error("[organizacia] akcia zlyhala:", e)
-  return "Zmenu sa nepodarilo uložiť. Skús to znova."
+  return say(language).failed
 }
 
 /**
@@ -73,7 +79,7 @@ function errorMessage(e: unknown): string {
  * Vlastnú vetu si nechávajú len akcie, ktoré hovoria niečo, čo z obrazovky
  * vidieť nie je — napríklad že treba nastaviť DNS.
  */
-const SAVED = "Zmeny boli uložené."
+
 
 function back(fd: FormData, message: string, error = false): never {
   // Starý kľúč záložky (`utvary`) sa preloží aj tu, nielen pri čítaní stránky:
@@ -115,11 +121,11 @@ export async function saveBrandingAction(fd: FormData) {
     }, self.email)
   } catch (e) {
     if (isRedirect(e)) throw e
-    back(fd, errorMessage(e), true)
+    back(fd, errorMessage(e, self.language), true)
   }
 
   revalidatePath("/organizacia")
-  back(fd, SAVED)
+  back(fd, say(self.language).saved)
 }
 
 // ── prihlasovanie kontom ─────────────────────────────────────────────────────
@@ -141,11 +147,11 @@ export async function saveSignInAction(fd: FormData) {
     }, self.email)
   } catch (e) {
     if (isRedirect(e)) throw e
-    back(fd, errorMessage(e), true)
+    back(fd, errorMessage(e, self.language), true)
   }
 
   revalidatePath("/organizacia")
-  back(fd, SAVED)
+  back(fd, say(self.language).saved)
 }
 
 export async function deleteSignInAction(fd: FormData) {
@@ -155,19 +161,19 @@ export async function deleteSignInAction(fd: FormData) {
   const provider = fieldText(fd, "provider") === "google" ? "google" : "microsoft"
   // Vyžiada si napísanie kódu organizácie: ľuďom, ktorí sa prihlasujú
   // pracovným kontom, tým okamžite prestane fungovať jediná cesta dnu.
-  if (fieldText(fd, "potvrdenie").toUpperCase() !== self.companyCode.toUpperCase()) {
-    back(fd, `Na odstránenie napíš kód organizácie (${self.companyCode}).`, true)
+  if (fieldText(fd, "confirmation").toUpperCase() !== self.companyCode.toUpperCase()) {
+    back(fd, say(self.language).confirmCode(self.companyCode), true)
   }
 
   try {
     await deleteOAuth(self.companyCode, provider, self.email)
   } catch (e) {
     if (isRedirect(e)) throw e
-    back(fd, errorMessage(e), true)
+    back(fd, errorMessage(e, self.language), true)
   }
 
   revalidatePath("/organizacia")
-  back(fd, "Prihlasovacie údaje odstránené.")
+  back(fd, say(self.language).signInRemoved)
 }
 
 // ── domény ───────────────────────────────────────────────────────────────────
@@ -187,11 +193,11 @@ export async function requestDomainAction(fd: FormData) {
     await requestDomain(self.companyCode, fieldText(fd, "host"), self.email)
   } catch (e) {
     if (isRedirect(e)) throw e
-    back(fd, errorMessage(e), true)
+    back(fd, errorMessage(e, self.language), true)
   }
 
   revalidatePath("/organizacia")
-  back(fd, "Zapísané. Teraz nastavte CNAME u svojho správcu DNS a dajte overiť.")
+  back(fd, say(self.language).domainRequested)
 }
 
 /** Overí DNS a — keď sedí — doménu zapne a pridá do Vercelu. */
@@ -206,20 +212,20 @@ export async function verifyDomainAction(fd: FormData) {
   try {
     const v = await verifyRequest(self.companyCode, host, self.email)
     if (v.state === "nenajdena") {
-      message = "Takú žiadosť tu nemáme."
+      message = say(self.language).domainNotFound
       error = true
     } else if (v.state === "caka") {
-      message = `${v.host} zatiaľ nesmeruje na nás. Zmena DNS býva viditeľná do hodiny; ak je to dlhšie, skontrolujte CNAME.`
+      message = say(self.language).domainWaiting(v.host)
       error = true
     } else {
       // Až teraz — dôkaz existuje. Do Vercelu sa doména pridáva až po ňom.
       const toVercel = skipVercel(v.host) ? null : await addDomain(v.host)
       message = toVercel && toVercel.state !== "pridana" && toVercel.state !== "uz-je"
-        ? `${v.host} je zapnutá, ale do Vercelu sa nepridala — ozvite sa nám.`
-        : `${v.host} je zapnutá. Portál na nej odpovedá.`
+        ? say(self.language).domainOnNotInVercel(v.host)
+        : say(self.language).domainOn(v.host)
     }
   } catch (e) {
-    message = errorMessage(e)
+    message = errorMessage(e, self.language)
     error = true
   }
 
@@ -235,11 +241,11 @@ export async function cancelDomainAction(fd: FormData) {
     await cancelDomain(self.companyCode, fieldText(fd, "host"), self.email)
   } catch (e) {
     if (isRedirect(e)) throw e
-    back(fd, errorMessage(e), true)
+    back(fd, errorMessage(e, self.language), true)
   }
 
   revalidatePath("/organizacia")
-  back(fd, "Doména odstránená. Portál na nej prestal odpovedať.")
+  back(fd, say(self.language).domainRemoved)
 }
 
 // ── oddelenia (D49) ─────────────────────────────────────────────────────────────
@@ -260,10 +266,10 @@ export async function createDepartmentAction(fd: FormData) {
       self.companyCode, fieldText(fd, "name"), fieldText(fd, "parentId") || null, self.email,
     )
     revalidatePath("/organizacia")
-    back(fd, SAVED)
+    back(fd, say(self.language).saved)
   } catch (e) {
     if (isRedirect(e)) throw e
-    back(fd, errorMessage(e), true)
+    back(fd, errorMessage(e, self.language), true)
   }
 }
 
@@ -273,10 +279,10 @@ export async function renameDepartmentAction(fd: FormData) {
   try {
     await renameDepartment(self.companyCode, fieldText(fd, "id"), fieldText(fd, "name"), self.email)
     revalidatePath("/organizacia")
-    back(fd, SAVED)
+    back(fd, say(self.language).saved)
   } catch (e) {
     if (isRedirect(e)) throw e
-    back(fd, errorMessage(e), true)
+    back(fd, errorMessage(e, self.language), true)
   }
 }
 
@@ -291,10 +297,10 @@ export async function moveDepartmentAction(fd: FormData) {
     // sa pridelenia týkajú. Prepočet robí `presunOddelenie` sám.
     revalidatePath("/organizacia")
     revalidatePath("/osoby")
-    back(fd, SAVED)
+    back(fd, say(self.language).saved)
   } catch (e) {
     if (isRedirect(e)) throw e
-    back(fd, errorMessage(e), true)
+    back(fd, errorMessage(e, self.language), true)
   }
 }
 
@@ -304,10 +310,10 @@ export async function deleteDepartmentAction(fd: FormData) {
   try {
     await deleteDepartment(self.companyCode, fieldText(fd, "id"), self.email)
     revalidatePath("/organizacia")
-    back(fd, SAVED)
+    back(fd, say(self.language).saved)
   } catch (e) {
     if (isRedirect(e)) throw e
-    back(fd, errorMessage(e), true)
+    back(fd, errorMessage(e, self.language), true)
   }
 }
 
@@ -318,14 +324,14 @@ export async function addCodelistItemAction(fd: FormData) {
   if (!self) redirect("/")
   try {
     await addCodelistItem(
-      self.companyCode, fieldText(fd, "ciselnik"), fieldText(fd, "kluc"), fieldText(fd, "popis"), self.email,
+      self.companyCode, fieldText(fd, "codelist"), fieldText(fd, "key"), fieldText(fd, "label"), self.email,
     )
     revalidatePath("/organizacia")
     revalidatePath("/kniznica")
-    back(fd, SAVED)
+    back(fd, say(self.language).saved)
   } catch (e) {
     if (isRedirect(e)) throw e
-    back(fd, errorMessage(e), true)
+    back(fd, errorMessage(e, self.language), true)
   }
 }
 
@@ -333,13 +339,13 @@ export async function removeCodelistItemAction(fd: FormData) {
   const self = await actor()
   if (!self) redirect("/")
   try {
-    await removeCodelistItem(self.companyCode, fieldText(fd, "ciselnik"), fieldText(fd, "kluc"), self.email)
+    await removeCodelistItem(self.companyCode, fieldText(fd, "codelist"), fieldText(fd, "key"), self.email)
     revalidatePath("/organizacia")
     revalidatePath("/kniznica")
-    back(fd, "Odobraté z ponuky. Dokumenty, ktoré túto hodnotu majú, si ju nesú ďalej.")
+    back(fd, say(self.language).codelistRemoved)
   } catch (e) {
     if (isRedirect(e)) throw e
-    back(fd, errorMessage(e), true)
+    back(fd, errorMessage(e, self.language), true)
   }
 }
 
@@ -373,10 +379,10 @@ export async function saveChunkingProfileAction(fd: FormData) {
       },
     }, self.email)
     revalidatePath("/organizacia")
-    back(fd, "Uložené. Existujúce dokumenty sa nepreindexovali — spusti to pri konkrétnom dokumente.")
+    back(fd, say(self.language).chunkingSaved)
   } catch (e) {
     if (isRedirect(e)) throw e
-    back(fd, errorMessage(e), true)
+    back(fd, errorMessage(e, self.language), true)
   }
 }
 
@@ -391,20 +397,21 @@ export async function saveChunkingProfileAction(fd: FormData) {
 export async function reindexAllAction(fd: FormData) {
   const ctx = await orgContext()
   if (ctx.state !== "ready") redirect("/")
+  const m = say(ctx.person.language)
 
   try {
     const v = await reindexAll(
       ctx.person.companyCode, ctx.person.email, ctx.tenant.chunking, 25,
     )
-    const parts = [`preindexovaných ${v.preindexovanych}`]
-    if (v.preskocenych) parts.push(`bez zmeny ${v.preskocenych}`)
-    if (v.remaining) parts.push(`zostáva ${v.remaining} — spusti znova`)
-    if (v.errors.length) parts.push(`chyby: ${v.errors.slice(0, 3).join("; ")}`)
+    const parts = [m.reindexedCount(v.preindexovanych)]
+    if (v.preskocenych) parts.push(m.reindexSkipped(v.preskocenych))
+    if (v.remaining) parts.push(m.reindexRemaining(v.remaining))
+    if (v.errors.length) parts.push(m.reindexErrors(v.errors.slice(0, 3).join("; ")))
     revalidatePath("/kniznica")
     back(fd, parts.join(" · "), v.errors.length > 0)
   } catch (e) {
     if (isRedirect(e)) throw e
-    back(fd, errorMessage(e), true)
+    back(fd, errorMessage(e, ctx.person.language), true)
   }
 }
 
@@ -419,14 +426,14 @@ export async function reindexAllAction(fd: FormData) {
 export async function shiftDepartmentAction(fd: FormData) {
   const self = await actor()
   if (!self) redirect("/")
-  const direction = fieldText(fd, "smer") === "dole" ? "dole" : "hore"
+  const direction = fieldText(fd, "direction") === "down" ? "down" : "up"
   try {
     await shiftDepartment(self.companyCode, fieldText(fd, "id"), direction, self.email)
     revalidatePath("/organizacia")
-    back(fd, SAVED)
+    back(fd, say(self.language).saved)
   } catch (e) {
     if (isRedirect(e)) throw e
-    back(fd, errorMessage(e), true)
+    back(fd, errorMessage(e, self.language), true)
   }
 }
 
@@ -438,9 +445,9 @@ export async function saveDepartmentOrderAction(fd: FormData) {
   try {
     if (order.length > 1) await saveOrder(self.companyCode, order, self.email)
     revalidatePath("/organizacia")
-    back(fd, SAVED)
+    back(fd, say(self.language).saved)
   } catch (e) {
     if (isRedirect(e)) throw e
-    back(fd, errorMessage(e), true)
+    back(fd, errorMessage(e, self.language), true)
   }
 }
