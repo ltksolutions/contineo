@@ -27,12 +27,12 @@ export const MAX_CHARS = 120_000
 /** Skenované PDF sa posiela celé — nad týmto to nemá zmysel skúšať. */
 export const MAX_PDF_BYTES = 24 * 1024 * 1024
 
-export type RewriteMode = "precistit" | "prepisat-sken"
+export type RewriteMode = "clean" | "rewrite-scan"
 
 export interface ModelDraft {
   text: string
   model: string
-  rezim: RewriteMode
+  mode: RewriteMode
   at: Date
 }
 
@@ -108,7 +108,7 @@ export async function cleanMarkdown(markdown: string): Promise<ModelDraft> {
 
   const text = answerText(answer.content as { type: string; text?: string }[])
   if (!text) throw new RewriteError("Model vrátil prázdnu odpoveď.")
-  return { text, model: model(), rezim: "precistit", at: new Date() }
+  return { text, model: model(), mode: "clean", at: new Date() }
 }
 
 /** Prepíše skenované PDF, ktoré nemá textovú vrstvu. */
@@ -142,5 +142,5 @@ export async function rewritePdf(pdf: Buffer): Promise<ModelDraft> {
 
   const text = answerText(answer.content as { type: string; text?: string }[])
   if (!text) throw new RewriteError("Model z dokumentu nič neprečítal.")
-  return { text, model: model(), rezim: "prepisat-sken", at: new Date() }
+  return { text, model: model(), mode: "rewrite-scan", at: new Date() }
 }

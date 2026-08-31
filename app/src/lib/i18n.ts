@@ -389,6 +389,128 @@ interface Dictionary {
       parentFolder: string
       create: string
     }
+    detail: {
+      back: string
+      documentData: string
+      title: string
+      titleNote: string
+      scope: string
+      accessLevel: string
+      documentLanguage: string
+      category: string
+      unset: string
+      tags: string
+      newTag: string
+      /** Veta okolo kľúča dokumentu — `<code>` zostáva v JSX. */
+      keyNoteBefore: string
+      keyNoteAfter: string
+      save: string
+      folder: string
+      folderUnfiled: string
+      folderNote: string
+      assign: string
+      text: string
+      openEditor: string
+      originalFile: string
+      uploadedBy: (who: string, when: string) => string
+      conversionMethod: (method: string) => string
+      noOriginal: string
+      draftDiffers: string
+      draftSame: string
+      draftEmpty: string
+      publishHeading: string
+      nothingToPublish: string
+      versionLabel: string
+      versionLabelPlaceholder: string
+      /** Veta okolo zvýrazneného „doslovne v každom zázname“. */
+      labelNoteBefore: string
+      labelNoteHighlight: string
+      labelNoteAfter: string
+      effectiveFrom: string
+      effectiveFromNote: string
+      effectiveFromSource: string
+      effectiveFromSourcePlaceholder: string
+      effectiveFromSourceNote: string
+      changeNote: string
+      changeNotePlaceholder: string
+      publish: string
+      reindexHeading: string
+      reindexNoteBefore: string
+      reindexNoteHighlight: string
+      reindexNoteAfter: string
+      reindex: string
+      versionsHeading: (n: number) => string
+      nothingPublished: string
+      active: string
+      archived: string
+      effectiveFromOn: (date: string) => string
+      noEffectiveDate: string
+      effectiveTo: (date: string) => string
+      dateSource: (source: string) => string
+      fix: string
+      fixLabel: string
+      fixEffectiveFromNoteBefore: string
+      fixEffectiveFromNoteHighlight: string
+      fixEffectiveFromNoteAfter: string
+      fixReason: string
+      fixReasonPlaceholder: string
+      fixReasonNote: string
+      onDateChange: string
+      onDateChangeAsk: string
+      onDateChangeCorrection: string
+      onDateChangeReacknowledge: string
+      fixSubmit: string
+    }
+    editor: {
+      back: string
+      intro: string
+      modelDraft: string
+      modeRewriteScan: string
+      modeClean: string
+      draftMeta: (model: string, when: string, chars: number) => string
+      draftNoteBefore: string
+      draftNoteHighlight: string
+      draftNoteAfter: string
+      useAsDraft: string
+      discard: string
+      original: string
+      pdfNotShown: string
+      openInNewWindow: string
+      fileNotShown: (name: string) => string
+      download: string
+      compareAfterDownload: string
+      noOriginal: string
+      text: string
+      switchNoteBefore: string
+      switchNoteModes: string
+      switchNoteAfter: string
+      saveText: string
+      llmHeading: string
+      llmNoteBefore: string
+      llmNoteHighlight: string
+      llmNoteAfter: string
+      clean: string
+      rewriteScan: string
+      rewriteScanNote: string
+    }
+    /** Hlásenia serverových akcií — chodia späť cez `?msg=`. */
+    actions: {
+      converted: string
+      convertedWithWarnings: (warnings: string) => string
+      saved: string
+      changesSaved: string
+      alreadyPublished: string
+      published: (chunks: number, archived: number) => string
+      modelReturnedDraft: string
+      draftAccepted: string
+      draftDiscarded: string
+      assigned: string
+      reindexUpToDate: string
+      reindexed: (chunks: number, archived: number) => string
+      fixedNeedsReacknowledge: (people: number) => string
+      fixed: string
+      failed: string
+    }
     upload: {
       back: string
       heading: string
@@ -734,6 +856,131 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       parentFolder: "Nadriadený priečinok",
       create: "Založiť",
     },
+    detail: {
+      back: "← Späť do knižnice",
+      documentData: "Údaje o dokumente",
+      title: "Názov",
+      titleNote: "Meniť sa dá. Objaví sa v ďalších potvrdeniach; staré záznamy si nesú kópiu názvu z času potvrdenia, takže sa spätne nezmenia.",
+      scope: "Pôsobnosť",
+      accessLevel: "Prístupnosť",
+      documentLanguage: "Jazyk dokumentu",
+      category: "Druh",
+      unset: "— neurčené —",
+      tags: "Značky",
+      newTag: "Nová značka",
+      keyNoteBefore: "Kľúč ",
+      keyNoteAfter: " sa meniť nedá — je v úsekoch, v prideleniach aj v záznamoch o potvrdení. Zmena by nebola premenovanie, ale druhý dokument, ku ktorému by sa história nedostala.",
+      save: "Uložiť údaje",
+      folder: "Priečinok",
+      folderUnfiled: "— nezaradené —",
+      folderNote: "Priečinky sú len zaradenie — súbor ani text sa nikam nepresúva. Filter v knižnici nájde dokument aj cez nadriadený priečinok.",
+      assign: "Zaradiť",
+      text: "Text",
+      openEditor: "otvoriť editor →",
+      originalFile: "Pôvodný súbor:",
+      uploadedBy: (who, when) => `nahral ${who} ${when}`,
+      conversionMethod: (method) => `prevod: ${method}`,
+      noOriginal: "Bez pôvodného súboru — dokument sa sem dostal importom z príkazového riadka.",
+      draftDiffers: "Koncept sa líši od publikovaného znenia.",
+      draftSame: "Koncept je zhodný s publikovaným znením.",
+      draftEmpty: "Koncept je prázdny.",
+      publishHeading: "Publikovať znenie",
+      nothingToPublish: "Niet čo publikovať — koncept je prázdny alebo zhodný s tým, čo už platí.",
+      versionLabel: "Označenie znenia",
+      versionLabelPlaceholder: "úplné znenie z 27. 2. 2026",
+      labelNoteBefore: "Objaví sa ",
+      labelNoteHighlight: "doslovne v každom zázname o potvrdení",
+      labelNoteAfter: ". Napíš to, čo je v dokumente — nie vymyslené číslo verzie, ktoré sa o rok nedá s ničím spojiť.",
+      effectiveFrom: "Platné od",
+      effectiveFromNote: "Povinné. Znenie bez dátumu platnosti sa nedá ani potvrdiť a formulka ho obsahuje doslovne.",
+      effectiveFromSource: "Odkiaľ je dátum",
+      effectiveFromSourcePlaceholder: "čl. 62 ods. 2 — účinnosť dňom schválenia VV SFZ 27. 2. 2026",
+      effectiveFromSourceNote: "Citácia ustanovenia o účinnosti. Dátum bez pôvodu sa o rok nedá overiť — a pritom je v každom zázname o potvrdení.",
+      changeNote: "Čo sa zmenilo",
+      changeNotePlaceholder: "novela čl. 12 a 18",
+      publish: "Publikovať",
+      reindexHeading: "Preindexovať",
+      reindexNoteBefore: "Nareže platné znenie znova podľa aktuálneho profilu členenia. ",
+      reindexNoteHighlight: "Nevytvorí novú verziu",
+      reindexNoteAfter: " — text sa nemení, takže potvrdenia zostávajú platné a nikomu nenaskočí povinnosť potvrdzovať znova. Používa sa po vyladení profilu v nastavení organizácie.",
+      reindex: "Preindexovať",
+      versionsHeading: (n) => `Znenia (${n})`,
+      nothingPublished: "Zatiaľ nič nebolo publikované, takže sa nedá ani prideliť na potvrdenie.",
+      active: "aktívne",
+      archived: "archivované",
+      effectiveFromOn: (date) => `platné od ${date}`,
+      noEffectiveDate: "bez dátumu platnosti",
+      effectiveTo: (date) => `do ${date}`,
+      dateSource: (source) => `zdroj dátumu: ${source}`,
+      fix: "opraviť údaje",
+      fixLabel: "Označenie",
+      fixEffectiveFromNoteBefore: "Dátum je ",
+      fixEffectiveFromNoteHighlight: "doslovne",
+      fixEffectiveFromNoteAfter: " vo formulke, ktorú ľudia podpísali. Ak ho meníš a znenie už niekto potvrdil, budeš musieť rozhodnúť, či ide o opravu zápisu, alebo o zmenu, ktorú treba potvrdiť znova.",
+      fixReason: "Dôvod opravy",
+      fixReasonPlaceholder: "preklep v označení; dátum z uznesenia VV SFZ",
+      fixReasonNote: "Povinný. Bez neho sa o rok nedá zistiť, či išlo o preklep alebo o zmenu povinnosti.",
+      onDateChange: "Ak sa mení dátum a znenie už niekto potvrdil",
+      onDateChangeAsk: "— rozhodnem, až keď sa spýta —",
+      onDateChangeCorrection: "oprava zápisu, potvrdenia zostávajú",
+      onDateChangeReacknowledge: "podstatná zmena, potvrdiť znova",
+      fixSubmit: "Opraviť",
+    },
+    editor: {
+      back: "← Späť na dokument",
+      intro: "Porovnaj text s originálom. Publikovanie je samostatný krok — tu sa nič nepúšťa von.",
+      modelDraft: "návrh modelu",
+      modeRewriteScan: "prepis skenu",
+      modeClean: "prečistenie členenia",
+      draftMeta: (model, when, chars) => `${model} · ${when} · ${chars} znakov`,
+      draftNoteBefore: "Model mal zakázané meniť znenie — ",
+      draftNoteHighlight: "over to",
+      draftNoteAfter: ". Prijatím sa návrh stane konceptom; pôvodný text sa tým prepíše.",
+      useAsDraft: "Použiť ako koncept",
+      discard: "Zahodiť",
+      original: "Originál",
+      pdfNotShown: "Prehliadač PDF nezobrazí. ",
+      openInNewWindow: "Otvor ho v novom okne",
+      fileNotShown: (name) => `${name} sa v prehliadači nezobrazí. `,
+      download: "Stiahni ho",
+      compareAfterDownload: " a porovnaj vedľa.",
+      noOriginal: "Bez pôvodného súboru — dokument sa sem dostal importom z príkazového riadka, takže niet čo porovnávať.",
+      text: "Text",
+      switchNoteBefore: " — prepínač ",
+      switchNoteModes: "Markdown / WYSIWYG",
+      switchNoteAfter: " je dole v editore",
+      saveText: "Uložiť text",
+      llmHeading: "Pomoc jazykového modelu",
+      llmNoteBefore: "Volá sa len takto — kliknutím. Výsledok sa uloží ako ",
+      llmNoteHighlight: "návrh vedľa textu",
+      llmNoteAfter: ", nie doňho: model má zakázané meniť znenie, ale tichú zmenu v predpise by nikto nezachytil, keby sa zapisovala rovno.",
+      clean: "Prečistiť členenie",
+      rewriteScan: "Prepísať zo skenu",
+      rewriteScanNote: "„Prepísať zo skenu“ pošle celé pôvodné PDF modelu. Má zmysel vtedy, keď PDF nemá textovú vrstvu alebo je prevod rozsypaný.",
+    },
+    actions: {
+      converted: "Prevedené. Prečítaj text a porovnaj ho s originálom.",
+      convertedWithWarnings: (warnings) => `Prevedené. ${warnings}`,
+      saved: "Uložené.",
+      changesSaved: "Zmeny boli uložené.",
+      alreadyPublished: "Toto znenie už publikované je — nič sa nezmenilo.",
+      published: (chunks, archived) =>
+        `Publikované: ${chunks} ${chunks === 1 ? "úsek" : chunks < 5 ? "úseky" : "úsekov"},` +
+        ` ${archived} starých archivovaných.`,
+      modelReturnedDraft: "Model vrátil návrh. Porovnaj ho s doterajším textom a rozhodni sa.",
+      draftAccepted: "Návrh je teraz konceptom. Publikovanie je stále samostatný krok.",
+      draftDiscarded: "Návrh zahodený.",
+      assigned: "Zaradené.",
+      reindexUpToDate: "Členenie je už aktuálne — nič sa nemenilo.",
+      reindexed: (chunks, archived) =>
+        `Preindexované: ${chunks} ${chunks === 1 ? "úsek" : chunks < 5 ? "úseky" : "úsekov"},` +
+        ` ${archived} starých archivovaných. Znenie ani potvrdenia sa nedotklo.`,
+      fixedNeedsReacknowledge: (people) =>
+        "Opravené. Znenie je označené ako vyžadujúce nové potvrdenie —" +
+        ` týka sa to ${people} ${people === 1 ? "človeka" : "ľudí"}.`,
+      fixed: "Opravené. Potvrdenia zostávajú platné.",
+      failed: "Nepodarilo sa to. Skús to znova.",
+    },
     upload: {
       back: "← Späť do knižnice",
       heading: "Nahrať dokument",
@@ -1077,6 +1324,131 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       parentFolder: "Nadřazená složka",
       create: "Založit",
     },
+    detail: {
+      back: "← Zpět do knihovny",
+      documentData: "Údaje o dokumentu",
+      title: "Název",
+      titleNote: "Měnit se dá. Objeví se v dalších potvrzeních; staré záznamy si nesou kopii názvu z doby potvrzení, takže se zpětně nezmění.",
+      scope: "Působnost",
+      accessLevel: "Přístupnost",
+      documentLanguage: "Jazyk dokumentu",
+      category: "Druh",
+      unset: "— neurčeno —",
+      tags: "Značky",
+      newTag: "Nová značka",
+      keyNoteBefore: "Klíč ",
+      keyNoteAfter: " se měnit nedá — je v úsecích, v přiděleních i v záznamech o potvrzení. Změna by nebyla přejmenování, ale druhý dokument, ke kterému by se historie nedostala.",
+      save: "Uložit údaje",
+      folder: "Složka",
+      folderUnfiled: "— nezařazeno —",
+      folderNote: "Složky jsou jen zařazení — soubor ani text se nikam nepřesouvá. Filtr v knihovně najde dokument i přes nadřazenou složku.",
+      assign: "Zařadit",
+      text: "Text",
+      openEditor: "otevřít editor →",
+      originalFile: "Původní soubor:",
+      uploadedBy: (who, when) => `nahrál ${who} ${when}`,
+      conversionMethod: (method) => `převod: ${method}`,
+      noOriginal: "Bez původního souboru — dokument se sem dostal importem z příkazové řádky.",
+      draftDiffers: "Koncept se liší od publikovaného znění.",
+      draftSame: "Koncept je shodný s publikovaným zněním.",
+      draftEmpty: "Koncept je prázdný.",
+      publishHeading: "Publikovat znění",
+      nothingToPublish: "Není co publikovat — koncept je prázdný nebo shodný s tím, co už platí.",
+      versionLabel: "Označení znění",
+      versionLabelPlaceholder: "úplné znění z 27. 2. 2026",
+      labelNoteBefore: "Objeví se ",
+      labelNoteHighlight: "doslovně v každém záznamu o potvrzení",
+      labelNoteAfter: ". Napiš to, co je v dokumentu — ne vymyšlené číslo verze, které se za rok nedá s ničím spojit.",
+      effectiveFrom: "Platné od",
+      effectiveFromNote: "Povinné. Znění bez data platnosti se nedá ani potvrdit a formulka ho obsahuje doslovně.",
+      effectiveFromSource: "Odkud je datum",
+      effectiveFromSourcePlaceholder: "čl. 62 odst. 2 — účinnost dnem schválení VV SFZ 27. 2. 2026",
+      effectiveFromSourceNote: "Citace ustanovení o účinnosti. Datum bez původu se za rok nedá ověřit — a přitom je v každém záznamu o potvrzení.",
+      changeNote: "Co se změnilo",
+      changeNotePlaceholder: "novela čl. 12 a 18",
+      publish: "Publikovat",
+      reindexHeading: "Přeindexovat",
+      reindexNoteBefore: "Nařeže platné znění znovu podle aktuálního profilu členění. ",
+      reindexNoteHighlight: "Nevytvoří novou verzi",
+      reindexNoteAfter: " — text se nemění, takže potvrzení zůstávají platná a nikomu nenaskočí povinnost potvrzovat znovu. Používá se po vyladění profilu v nastavení organizace.",
+      reindex: "Přeindexovat",
+      versionsHeading: (n) => `Znění (${n})`,
+      nothingPublished: "Zatím nic nebylo publikováno, takže se nedá ani přidělit k potvrzení.",
+      active: "aktivní",
+      archived: "archivováno",
+      effectiveFromOn: (date) => `platné od ${date}`,
+      noEffectiveDate: "bez data platnosti",
+      effectiveTo: (date) => `do ${date}`,
+      dateSource: (source) => `zdroj data: ${source}`,
+      fix: "opravit údaje",
+      fixLabel: "Označení",
+      fixEffectiveFromNoteBefore: "Datum je ",
+      fixEffectiveFromNoteHighlight: "doslovně",
+      fixEffectiveFromNoteAfter: " ve formulce, kterou lidé podepsali. Pokud ho měníš a znění už někdo potvrdil, budeš muset rozhodnout, jestli jde o opravu zápisu, nebo o změnu, kterou je třeba potvrdit znovu.",
+      fixReason: "Důvod opravy",
+      fixReasonPlaceholder: "překlep v označení; datum z usnesení VV SFZ",
+      fixReasonNote: "Povinný. Bez něj se za rok nedá zjistit, jestli šlo o překlep nebo o změnu povinnosti.",
+      onDateChange: "Pokud se mění datum a znění už někdo potvrdil",
+      onDateChangeAsk: "— rozhodnu, až když se zeptá —",
+      onDateChangeCorrection: "oprava zápisu, potvrzení zůstávají",
+      onDateChangeReacknowledge: "podstatná změna, potvrdit znovu",
+      fixSubmit: "Opravit",
+    },
+    editor: {
+      back: "← Zpět na dokument",
+      intro: "Porovnej text s originálem. Publikování je samostatný krok — tady se nic nepouští ven.",
+      modelDraft: "návrh modelu",
+      modeRewriteScan: "přepis skenu",
+      modeClean: "pročištění členění",
+      draftMeta: (model, when, chars) => `${model} · ${when} · ${chars} znaků`,
+      draftNoteBefore: "Model měl zakázáno měnit znění — ",
+      draftNoteHighlight: "ověř to",
+      draftNoteAfter: ". Přijetím se návrh stane konceptem; původní text se tím přepíše.",
+      useAsDraft: "Použít jako koncept",
+      discard: "Zahodit",
+      original: "Originál",
+      pdfNotShown: "Prohlížeč PDF nezobrazí. ",
+      openInNewWindow: "Otevři ho v novém okně",
+      fileNotShown: (name) => `${name} se v prohlížeči nezobrazí. `,
+      download: "Stáhni ho",
+      compareAfterDownload: " a porovnej vedle.",
+      noOriginal: "Bez původního souboru — dokument se sem dostal importem z příkazové řádky, takže není co porovnávat.",
+      text: "Text",
+      switchNoteBefore: " — přepínač ",
+      switchNoteModes: "Markdown / WYSIWYG",
+      switchNoteAfter: " je dole v editoru",
+      saveText: "Uložit text",
+      llmHeading: "Pomoc jazykového modelu",
+      llmNoteBefore: "Volá se jen takto — kliknutím. Výsledek se uloží jako ",
+      llmNoteHighlight: "návrh vedle textu",
+      llmNoteAfter: ", ne do něj: model má zakázáno měnit znění, ale tichou změnu v předpisu by nikdo nezachytil, kdyby se zapisovala rovnou.",
+      clean: "Pročistit členění",
+      rewriteScan: "Přepsat ze skenu",
+      rewriteScanNote: "„Přepsat ze skenu“ pošle celé původní PDF modelu. Má smysl tehdy, když PDF nemá textovou vrstvu nebo je převod rozsypaný.",
+    },
+    actions: {
+      converted: "Převedeno. Přečti text a porovnej ho s originálem.",
+      convertedWithWarnings: (warnings) => `Převedeno. ${warnings}`,
+      saved: "Uloženo.",
+      changesSaved: "Změny byly uloženy.",
+      alreadyPublished: "Toto znění už publikované je — nic se nezměnilo.",
+      published: (chunks, archived) =>
+        `Publikováno: ${chunks} ${chunks === 1 ? "úsek" : chunks < 5 ? "úseky" : "úseků"},` +
+        ` ${archived} starých archivováno.`,
+      modelReturnedDraft: "Model vrátil návrh. Porovnej ho s dosavadním textem a rozhodni se.",
+      draftAccepted: "Návrh je teď konceptem. Publikování je stále samostatný krok.",
+      draftDiscarded: "Návrh zahozen.",
+      assigned: "Zařazeno.",
+      reindexUpToDate: "Členění je už aktuální — nic se neměnilo.",
+      reindexed: (chunks, archived) =>
+        `Přeindexováno: ${chunks} ${chunks === 1 ? "úsek" : chunks < 5 ? "úseky" : "úseků"},` +
+        ` ${archived} starých archivováno. Znění ani potvrzení se nedotklo.`,
+      fixedNeedsReacknowledge: (people) =>
+        "Opraveno. Znění je označeno jako vyžadující nové potvrzení —" +
+        ` týká se to ${people} ${people === 1 ? "člověka" : "lidí"}.`,
+      fixed: "Opraveno. Potvrzení zůstávají platná.",
+      failed: "Nepodařilo se to. Zkus to znovu.",
+    },
     upload: {
       back: "← Zpět do knihovny",
       heading: "Nahrát dokument",
@@ -1417,6 +1789,130 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       newFolderName: "Name of the new folder",
       parentFolder: "Parent folder",
       create: "Create",
+    },
+    detail: {
+      back: "← Back to library",
+      documentData: "Document details",
+      title: "Title",
+      titleNote: "Editable. It appears in future acknowledgements; existing records carry a copy of the title from the moment of acknowledgement, so they do not change retroactively.",
+      scope: "Scope",
+      accessLevel: "Access",
+      documentLanguage: "Document language",
+      category: "Type",
+      unset: "— unset —",
+      tags: "Tags",
+      newTag: "New tag",
+      keyNoteBefore: "The key ",
+      keyNoteAfter: " cannot be changed — it is in the chunks, in the assignments and in the acknowledgement records. Changing it would not be a rename but a second document the history could never reach.",
+      save: "Save details",
+      folder: "Folder",
+      folderUnfiled: "— unfiled —",
+      folderNote: "Folders are filing only — neither the file nor the text moves anywhere. The library filter finds the document through a parent folder too.",
+      assign: "File",
+      text: "Text",
+      openEditor: "open editor →",
+      originalFile: "Original file:",
+      uploadedBy: (who, when) => `uploaded by ${who} ${when}`,
+      conversionMethod: (method) => `conversion: ${method}`,
+      noOriginal: "No original file — this document arrived through a command-line import.",
+      draftDiffers: "The draft differs from the published version.",
+      draftSame: "The draft matches the published version.",
+      draftEmpty: "The draft is empty.",
+      publishHeading: "Publish a version",
+      nothingToPublish: "Nothing to publish — the draft is empty or identical to what already applies.",
+      versionLabel: "Version label",
+      versionLabelPlaceholder: "consolidated text of 27 February 2026",
+      labelNoteBefore: "It appears ",
+      labelNoteHighlight: "verbatim in every acknowledgement record",
+      labelNoteAfter: ". Write what the document itself says — not an invented version number that a year from now will connect to nothing.",
+      effectiveFrom: "Effective from",
+      effectiveFromNote: "Required. A version with no effective date cannot even be acknowledged, and the statement quotes it verbatim.",
+      effectiveFromSource: "Where the date comes from",
+      effectiveFromSourcePlaceholder: "Art. 62 (2) — effective on approval by the SFZ Executive Committee, 27 February 2026",
+      effectiveFromSourceNote: "The citation of the effectiveness provision. A date without a source cannot be verified a year later — and it is in every acknowledgement record.",
+      changeNote: "What changed",
+      changeNotePlaceholder: "amendment to Art. 12 and 18",
+      publish: "Publish",
+      reindexHeading: "Reindex",
+      reindexNoteBefore: "Re-chunks the effective version using the current chunking profile. ",
+      reindexNoteHighlight: "It does not create a new version",
+      reindexNoteAfter: " — the text does not change, so acknowledgements stay valid and nobody is asked to acknowledge again. Use it after tuning the profile in the organisation settings.",
+      reindex: "Reindex",
+      versionsHeading: (n) => `Versions (${n})`,
+      nothingPublished: "Nothing has been published yet, so it cannot be assigned for acknowledgement either.",
+      active: "active",
+      archived: "archived",
+      effectiveFromOn: (date) => `effective from ${date}`,
+      noEffectiveDate: "no effective date",
+      effectiveTo: (date) => `to ${date}`,
+      dateSource: (source) => `date source: ${source}`,
+      fix: "correct the details",
+      fixLabel: "Label",
+      fixEffectiveFromNoteBefore: "The date is in the statement people signed ",
+      fixEffectiveFromNoteHighlight: "verbatim",
+      fixEffectiveFromNoteAfter: ". If you change it and someone has already acknowledged the version, you will have to decide whether this is a correction of the record or a change that has to be acknowledged again.",
+      fixReason: "Reason for the correction",
+      fixReasonPlaceholder: "typo in the label; date from the SFZ Executive Committee resolution",
+      fixReasonNote: "Required. Without it, a year from now there is no way to tell whether it was a typo or a change of obligation.",
+      onDateChange: "If the date changes and someone has already acknowledged the version",
+      onDateChangeAsk: "— I will decide when asked —",
+      onDateChangeCorrection: "correction of the record, acknowledgements stand",
+      onDateChangeReacknowledge: "substantive change, acknowledge again",
+      fixSubmit: "Correct",
+    },
+    editor: {
+      back: "← Back to the document",
+      intro: "Compare the text with the original. Publishing is a separate step — nothing goes out from here.",
+      modelDraft: "model draft",
+      modeRewriteScan: "scan transcription",
+      modeClean: "structure cleanup",
+      draftMeta: (model, when, chars) => `${model} · ${when} · ${chars} characters`,
+      draftNoteBefore: "The model was forbidden to change the wording — ",
+      draftNoteHighlight: "verify that",
+      draftNoteAfter: ". Accepting turns the draft into the working text; the previous text is overwritten.",
+      useAsDraft: "Use as draft",
+      discard: "Discard",
+      original: "Original",
+      pdfNotShown: "Your browser will not display the PDF. ",
+      openInNewWindow: "Open it in a new window",
+      fileNotShown: (name) => `${name} will not display in the browser. `,
+      download: "Download it",
+      compareAfterDownload: " and compare side by side.",
+      noOriginal: "No original file — this document arrived through a command-line import, so there is nothing to compare.",
+      text: "Text",
+      switchNoteBefore: " — the ",
+      switchNoteModes: "Markdown / WYSIWYG",
+      switchNoteAfter: " switch is at the bottom of the editor",
+      saveText: "Save text",
+      llmHeading: "Language-model assistance",
+      llmNoteBefore: "It runs only like this — on a click. The result is saved as a ",
+      llmNoteHighlight: "draft beside the text",
+      llmNoteAfter: ", not into it: the model is forbidden to change the wording, but a silent change in a regulation would go unnoticed if it were written straight in.",
+      clean: "Clean up the structure",
+      rewriteScan: "Transcribe from the scan",
+      rewriteScanNote: "“Transcribe from the scan” sends the whole original PDF to the model. It makes sense when the PDF has no text layer or the conversion fell apart.",
+    },
+    actions: {
+      converted: "Converted. Read the text and compare it with the original.",
+      convertedWithWarnings: (warnings) => `Converted. ${warnings}`,
+      saved: "Saved.",
+      changesSaved: "Changes saved.",
+      alreadyPublished: "This version is already published — nothing changed.",
+      published: (chunks, archived) =>
+        `Published: ${chunks} ${chunks === 1 ? "chunk" : "chunks"}, ${archived} older archived.`,
+      modelReturnedDraft: "The model returned a draft. Compare it with the current text and decide.",
+      draftAccepted: "The draft is now the working text. Publishing is still a separate step.",
+      draftDiscarded: "Draft discarded.",
+      assigned: "Filed.",
+      reindexUpToDate: "The chunking is already up to date — nothing changed.",
+      reindexed: (chunks, archived) =>
+        `Reindexed: ${chunks} ${chunks === 1 ? "chunk" : "chunks"}, ${archived} older archived.` +
+        " Neither the wording nor the acknowledgements were touched.",
+      fixedNeedsReacknowledge: (people) =>
+        "Corrected. The version is marked as requiring a new acknowledgement —" +
+        ` this affects ${people} ${people === 1 ? "person" : "people"}.`,
+      fixed: "Corrected. Acknowledgements stay valid.",
+      failed: "That did not work. Try again.",
     },
     upload: {
       back: "← Back to the library",

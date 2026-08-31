@@ -13,7 +13,7 @@ import { libraryContext } from "@/lib/library"
 import { libraryDetail } from "@/lib/libraryRead"
 import { brandingView } from "@/lib/tenants"
 import { tenantStyle } from "@/components/TenantHeader"
-import { formatDate } from "@/lib/i18n"
+import { formatDate, dictionary } from "@/lib/i18n"
 import Notice from "@/components/Notice"
 import { publishVersionAction, saveDocumentMetadataAction, assignToFolderAction, reindexDocumentAction, fixVersionAction } from "../actions"
 import { allFolders, flattenTree } from "@/lib/folders"
@@ -46,6 +46,7 @@ export default async function DocumentDetailPage({
 
   const branding = brandingView(ctx.tenant)
   const language = ctx.person.language
+  const t = dictionary(language).library.detail
   const extras = tenantExtras(ctx.tenant)
   const folders = await allFolders(ctx.tenant.companyCode)
   const folderTree = flattenTree(folders)
@@ -64,7 +65,7 @@ export default async function DocumentDetailPage({
       <Notice message={message} error={error === "1"} back={`/kniznica/${encodeURIComponent(documentId)}`} />
 
       <p style={{ margin: "0 0 12px" }}>
-        <Link className="tichy" href="/kniznica" style={{ fontSize: 14 }}>← Späť do knižnice</Link>
+        <Link className="tichy" href="/kniznica" style={{ fontSize: 14 }}>{t.back}</Link>
       </p>
 
       <h1 style={{ fontSize: 25, letterSpacing: "-0.02em", margin: "0 0 4px" }}>{d.title}</h1>
@@ -72,7 +73,7 @@ export default async function DocumentDetailPage({
 
       <details className="karta" style={{ padding: 18, margin: "0 0 18px" }}>
         <summary style={{ cursor: "pointer", fontWeight: 600 }}>
-          Údaje o dokumente
+          {t.documentData}
           <span className="tichy" style={{ fontWeight: 400, fontSize: 13.5 }}>
             {" "}· {d.language} · {d.accessLevel}
             {d.category && ` · ${d.category}`}
@@ -84,101 +85,94 @@ export default async function DocumentDetailPage({
           <input type="hidden" name="documentId" value={d.documentId} />
 
           <label className="pole">
-            <span className="pole-popis">Názov</span>
+            <span className="pole-popis">{t.title}</span>
             <input className="pole-vstup" name="title" defaultValue={d.title} required />
-            <span className="tichy pole-napoveda">
-              Meniť sa dá. Objaví sa v ďalších potvrdeniach; staré záznamy si nesú kópiu
-              názvu z času potvrdenia, takže sa spätne nezmenia.
-            </span>
+            <span className="tichy pole-napoveda">{t.titleNote}</span>
           </label>
 
           <div className="pole">
-            <span className="pole-popis">Pôsobnosť</span>
-            <Select name="scope" options={codelistOptions("scope")} initial={d.scope ?? "company"} fieldLabel="Pôsobnosť" />
+            <span className="pole-popis">{t.scope}</span>
+            <Select name="scope" options={codelistOptions("scope")} initial={d.scope ?? "company"} fieldLabel={t.scope} />
           </div>
 
           <div className="pole">
-            <span className="pole-popis">Prístupnosť</span>
-            <Select name="accessLevel" options={codelistOptions("accessLevel")} initial={d.accessLevel ?? "internal"} fieldLabel="Prístupnosť" />
+            <span className="pole-popis">{t.accessLevel}</span>
+            <Select name="accessLevel" options={codelistOptions("accessLevel")} initial={d.accessLevel ?? "internal"} fieldLabel={t.accessLevel} />
           </div>
 
           <div className="pole">
-            <span className="pole-popis">Jazyk dokumentu</span>
-            <Select name="language" options={codelistOptions("language")} initial={d.language ?? "sk"} fieldLabel="Jazyk dokumentu" />
+            <span className="pole-popis">{t.documentLanguage}</span>
+            <Select name="language" options={codelistOptions("language")} initial={d.language ?? "sk"} fieldLabel={t.documentLanguage} />
           </div>
 
           <div className="pole">
-            <span className="pole-popis">Druh</span>
+            <span className="pole-popis">{t.category}</span>
             <Select
               name="category"
-              options={[{ value: "", label: "— neurčené —" }, ...codelistOptions("category", extras)]}
+              options={[{ value: "", label: t.unset }, ...codelistOptions("category", extras)]}
               initial={d.category ?? ""}
-              fieldLabel="Druh"
+              fieldLabel={t.category}
             />
           </div>
 
           <div className="pole">
-            <span className="pole-popis">Značky</span>
+            <span className="pole-popis">{t.tags}</span>
             <TagSelect
               name="tags"
               options={codelistOptions("tags", extras).map(v => ({ value: v.value }))}
               selected={d.tags}
-              newLabel="Nová značka"
+              newLabel={t.newTag}
+              language={language}
             />
           </div>
 
           <p className="tichy" style={{ fontSize: 13.5, margin: 0 }}>
-            Kľúč <code>{d.documentId}</code> sa meniť nedá — je v úsekoch, v prideleniach
-            aj v záznamoch o potvrdení. Zmena by nebola premenovanie, ale druhý dokument,
-            ku ktorému by sa história nedostala.
+            {t.keyNoteBefore}<code>{d.documentId}</code>{t.keyNoteAfter}
           </p>
 
-          <div><button className="tlacidlo" type="submit">Uložiť údaje</button></div>
+          <div><button className="tlacidlo" type="submit">{t.save}</button></div>
         </form>
       </details>
 
       <form action={assignToFolderAction} className="karta strom-forma" style={{ padding: 18, margin: "0 0 18px" }}>
         <input type="hidden" name="documentId" value={d.documentId} />
         <div className="pole" style={{ flex: "1 1 260px", margin: 0 }}>
-          <span className="pole-popis">Priečinok</span>
+          <span className="pole-popis">{t.folder}</span>
           <Select
             name="folderId"
             initial={d.folderId ?? ""}
-            fieldLabel="Priečinok"
+            fieldLabel={t.folder}
             options={[
-              { value: "", label: "— nezaradené —" },
+              { value: "", label: t.folderUnfiled },
               ...folderTree.map(r => ({
                 value: r.folder.id,
                 label: `${"— ".repeat(r.level - 1)}${r.folder.name}`,
               })),
             ]}
           />
-          <span className="tichy pole-napoveda">
-            Priečinky sú len zaradenie — súbor ani text sa nikam nepresúva. Filter
-            v knižnici nájde dokument aj cez nadriadený priečinok.
-          </span>
+          <span className="tichy pole-napoveda">{t.folderNote}</span>
         </div>
-        <button className="tlacidlo tlacidlo--tiche" type="submit">Zaradiť</button>
+        <button className="tlacidlo tlacidlo--tiche" type="submit">{t.assign}</button>
       </form>
 
       <section className="karta" style={{ padding: 18, display: "grid", gap: 10, margin: "0 0 18px" }}>
         <div style={{ display: "flex", gap: 10, alignItems: "baseline", flexWrap: "wrap" }}>
-          <h2 style={{ fontSize: 17, margin: 0 }}>Text</h2>
-          <Link href={`/kniznica/${encodeURIComponent(documentId)}/text`}>otvoriť editor →</Link>
+          <h2 style={{ fontSize: 17, margin: 0 }}>{t.text}</h2>
+          <Link href={`/kniznica/${encodeURIComponent(documentId)}/text`}>{t.openEditor}</Link>
         </div>
 
         {d.originalFile ? (
           <p className="tichy" style={{ fontSize: 14, margin: 0 }}>
-            Pôvodný súbor:{" "}
+            {t.originalFile}{" "}
             <a href={`/api/kniznica/subor/${encodeURIComponent(d.originalFile.id)}`} target="_blank" rel="noreferrer">
               {d.originalFile.name}
             </a>{" "}
-            · nahral {d.originalFile.uploadedBy} {formatDate(d.originalFile.uploadedAt, language)}
-            {d.conversion && ` · prevod: ${d.conversion.method}`}
+            · {t.uploadedBy(d.originalFile.uploadedBy, formatDate(d.originalFile.uploadedAt, language))}
+            {d.conversion && ` · ${t.conversionMethod(d.conversion.method)}`}
           </p>
         ) : (
           <p className="tichy" style={{ fontSize: 14, margin: 0 }}>
-            Bez pôvodného súboru — dokument sa sem dostal importom z príkazového riadka.
+            {t.noOriginal}
           </p>
         )}
 
@@ -190,80 +184,70 @@ export default async function DocumentDetailPage({
 
         <p className="tichy" style={{ fontSize: 13.5, margin: 0 }}>
           {hasChangesToPublish
-            ? "Koncept sa líši od publikovaného znenia."
+            ? t.draftDiffers
             : draft || published
-              ? "Koncept je zhodný s publikovaným znením."
-              : "Koncept je prázdny."}
+              ? t.draftSame
+              : t.draftEmpty}
         </p>
       </section>
 
       <section className="karta" style={{ padding: 18, display: "grid", gap: 14, margin: "0 0 18px" }}>
-        <h2 style={{ fontSize: 17, margin: 0 }}>Publikovať znenie</h2>
+        <h2 style={{ fontSize: 17, margin: 0 }}>{t.publishHeading}</h2>
 
         {!hasChangesToPublish ? (
           <p className="tichy" style={{ fontSize: 14, margin: 0 }}>
-            Niet čo publikovať — koncept je prázdny alebo zhodný s tým, čo už platí.
+            {t.nothingToPublish}
           </p>
         ) : (
           <form action={publishVersionAction} style={{ display: "grid", gap: 14 }}>
             <input type="hidden" name="documentId" value={d.documentId} />
 
             <label className="pole">
-              <span className="pole-popis">Označenie znenia</span>
+              <span className="pole-popis">{t.versionLabel}</span>
               <input className="pole-vstup" name="label" required
-                     placeholder="úplné znenie z 27. 2. 2026" />
+                     placeholder={t.versionLabelPlaceholder} />
               <span className="tichy pole-napoveda">
-                Objaví sa <strong>doslovne v každom zázname o potvrdení</strong>. Napíš to, čo je
-                v dokumente — nie vymyslené číslo verzie, ktoré sa o rok nedá s ničím spojiť.
+                {t.labelNoteBefore}<strong>{t.labelNoteHighlight}</strong>{t.labelNoteAfter}
               </span>
             </label>
 
             <label className="pole">
-              <span className="pole-popis">Platné od</span>
+              <span className="pole-popis">{t.effectiveFrom}</span>
               <input className="pole-vstup" type="date" name="effectiveFrom" required />
-              <span className="tichy pole-napoveda">
-                Povinné. Znenie bez dátumu platnosti sa nedá ani potvrdiť a formulka ho
-                obsahuje doslovne.
-              </span>
+              <span className="tichy pole-napoveda">{t.effectiveFromNote}</span>
             </label>
 
             <label className="pole">
-              <span className="pole-popis">Odkiaľ je dátum</span>
+              <span className="pole-popis">{t.effectiveFromSource}</span>
               <input className="pole-vstup" name="effectiveFromSource"
-                     placeholder="čl. 62 ods. 2 — účinnosť dňom schválenia VV SFZ 27. 2. 2026" />
-              <span className="tichy pole-napoveda">
-                Citácia ustanovenia o účinnosti. Dátum bez pôvodu sa o rok nedá overiť —
-                a pritom je v každom zázname o potvrdení.
-              </span>
+                     placeholder={t.effectiveFromSourcePlaceholder} />
+              <span className="tichy pole-napoveda">{t.effectiveFromSourceNote}</span>
             </label>
 
             <label className="pole">
-              <span className="pole-popis">Čo sa zmenilo</span>
-              <input className="pole-vstup" name="changeNote" placeholder="novela čl. 12 a 18" />
+              <span className="pole-popis">{t.changeNote}</span>
+              <input className="pole-vstup" name="changeNote" placeholder={t.changeNotePlaceholder} />
             </label>
 
-            <div><button className="tlacidlo" type="submit">Publikovať</button></div>
+            <div><button className="tlacidlo" type="submit">{t.publish}</button></div>
           </form>
         )}
       </section>
 
       <form action={reindexDocumentAction} className="karta" style={{ padding: 18, display: "grid", gap: 10, margin: "0 0 18px" }}>
         <input type="hidden" name="documentId" value={d.documentId} />
-        <h2 style={{ fontSize: 17, margin: 0 }}>Preindexovať</h2>
+        <h2 style={{ fontSize: 17, margin: 0 }}>{t.reindexHeading}</h2>
         <p className="tichy" style={{ fontSize: 14, margin: 0 }}>
-          Nareže platné znenie znova podľa aktuálneho profilu členenia. <strong>Nevytvorí
-          novú verziu</strong> — text sa nemení, takže potvrdenia zostávajú platné a nikomu
-          nenaskočí povinnosť potvrdzovať znova. Používa sa po vyladení profilu
-          v nastavení organizácie.
+          {t.reindexNoteBefore}<strong>{t.reindexNoteHighlight}</strong>{t.reindexNoteAfter}
         </p>
-        <div><button className="tlacidlo tlacidlo--tiche" type="submit">Preindexovať</button></div>
+        <div><button className="tlacidlo tlacidlo--tiche" type="submit">{t.reindex}</button></div>
       </form>
 
-      <h2 style={{ fontSize: 17, margin: "0 0 10px" }}>Znenia ({d.versions.length})</h2>
+      <h2 style={{ fontSize: 17, margin: "0 0 10px" }}>{t.versionsHeading(d.versions.length)}</h2>
 
       {d.versions.length === 0 ? (
         <p className="karta" style={{ padding: 18, fontSize: 15 }}>
-          Zatiaľ nič nebolo publikované, takže sa nedá ani prideliť na potvrdenie.
+          {t.nothingPublished}
         </p>
       ) : (
         <ul className="audit">
@@ -271,32 +255,32 @@ export default async function DocumentDetailPage({
             <li key={v.versionId} className="karta audit-zaznam">
               <div className="audit-hlavicka">
                 <strong>{v.label}</strong>
-                {v.isActive ? <span className="stitok">aktívne</span> : <span className="stitok">archivované</span>}
+                {v.isActive ? <span className="stitok">{t.active}</span> : <span className="stitok">{t.archived}</span>}
               </div>
               <div className="tichy audit-kto">
-                {v.effectiveFrom ? `platné od ${formatDate(v.effectiveFrom, language)}` : "bez dátumu platnosti"}
-                {v.effectiveTo && ` do ${formatDate(v.effectiveTo, language)}`}
+                {v.effectiveFrom ? t.effectiveFromOn(formatDate(v.effectiveFrom, language)) : t.noEffectiveDate}
+                {v.effectiveTo && ` ${t.effectiveTo(formatDate(v.effectiveTo, language))}`}
                 {v.publishedBy && ` · ${v.publishedBy}`}
                 {v.publishedAt && ` · ${formatDate(v.publishedAt, language)}`}
               </div>
               {v.effectiveFromSource && (
-                <div className="tichy audit-poznamka">zdroj dátumu: {v.effectiveFromSource}</div>
+                <div className="tichy audit-poznamka">{t.dateSource(v.effectiveFromSource)}</div>
               )}
               {v.changeNote && <div className="tichy audit-poznamka">{v.changeNote}</div>}
 
               <details style={{ marginTop: 6 }}>
-                <summary className="tichy" style={{ fontSize: 13, cursor: "pointer" }}>opraviť údaje</summary>
+                <summary className="tichy" style={{ fontSize: 13, cursor: "pointer" }}>{t.fix}</summary>
                 <form action={fixVersionAction} style={{ display: "grid", gap: 10, marginTop: 10 }}>
                   <input type="hidden" name="documentId" value={d.documentId} />
                   <input type="hidden" name="versionId" value={v.versionId} />
 
                   <label className="pole">
-                    <span className="pole-popis">Označenie</span>
+                    <span className="pole-popis">{t.fixLabel}</span>
                     <input className="pole-vstup" name="label" defaultValue={v.label} />
                   </label>
 
                   <label className="pole">
-                    <span className="pole-popis">Platné od</span>
+                    <span className="pole-popis">{t.effectiveFrom}</span>
                     <input
                       className="pole-vstup"
                       type="date"
@@ -304,41 +288,37 @@ export default async function DocumentDetailPage({
                       defaultValue={v.effectiveFrom ? new Date(v.effectiveFrom).toISOString().slice(0, 10) : ""}
                     />
                     <span className="tichy pole-napoveda">
-                      Dátum je <strong>doslovne</strong> vo formulke, ktorú ľudia podpísali. Ak ho
-                      meníš a znenie už niekto potvrdil, budeš musieť rozhodnúť, či ide o opravu
-                      zápisu, alebo o zmenu, ktorú treba potvrdiť znova.
+                      {t.fixEffectiveFromNoteBefore}<strong>{t.fixEffectiveFromNoteHighlight}</strong>{t.fixEffectiveFromNoteAfter}
                     </span>
                   </label>
 
                   <label className="pole">
-                    <span className="pole-popis">Odkiaľ je dátum</span>
+                    <span className="pole-popis">{t.effectiveFromSource}</span>
                     <input className="pole-vstup" name="effectiveFromSource" defaultValue={v.effectiveFromSource ?? ""} />
                   </label>
 
                   <label className="pole">
-                    <span className="pole-popis">Dôvod opravy</span>
-                    <input className="pole-vstup" name="dovod" required
-                           placeholder="preklep v označení; dátum z uznesenia VV SFZ" />
-                    <span className="tichy pole-napoveda">
-                      Povinný. Bez neho sa o rok nedá zistiť, či išlo o preklep alebo o zmenu povinnosti.
-                    </span>
+                    <span className="pole-popis">{t.fixReason}</span>
+                    <input className="pole-vstup" name="reason" required
+                           placeholder={t.fixReasonPlaceholder} />
+                    <span className="tichy pole-napoveda">{t.fixReasonNote}</span>
                   </label>
 
                   <div className="pole">
-                    <span className="pole-popis">Ak sa mení dátum a znenie už niekto potvrdil</span>
+                    <span className="pole-popis">{t.onDateChange}</span>
                     <Select
-                      name="priZmeneDatumu"
+                      name="onDateChange"
                       initial=""
-                      fieldLabel="Ako naložiť s potvrdeniami"
+                      fieldLabel={t.onDateChange}
                       options={[
-                        { value: "", label: "— rozhodnem, až keď sa spýta —" },
-                        { value: "oprava", label: "oprava zápisu, potvrdenia zostávajú" },
-                        { value: "znovaPotvrdit", label: "podstatná zmena, potvrdiť znova" },
+                        { value: "", label: t.onDateChangeAsk },
+                        { value: "correction", label: t.onDateChangeCorrection },
+                        { value: "reacknowledge", label: t.onDateChangeReacknowledge },
                       ]}
                     />
                   </div>
 
-                  <div><button className="tlacidlo tlacidlo--tiche" type="submit">Opraviť</button></div>
+                  <div><button className="tlacidlo tlacidlo--tiche" type="submit">{t.fixSubmit}</button></div>
                 </form>
               </details>
             </li>

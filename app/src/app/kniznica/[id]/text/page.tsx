@@ -19,7 +19,7 @@ import { getCollection } from "@/lib/mongodb"
 import { DOCUMENTS_COLLECTION } from "@/lib/documents"
 import { brandingView } from "@/lib/tenants"
 import { tenantStyle } from "@/components/TenantHeader"
-import { formatDate } from "@/lib/i18n"
+import { formatDate, dictionary } from "@/lib/i18n"
 import Notice from "@/components/Notice"
 import TextEditor from "@/components/TextEditor"
 import { saveTextAction, sendToModelAction, decideOnDraftAction } from "../../actions"
@@ -51,12 +51,13 @@ export default async function EditorPage({
   const col = await getCollection(DOCUMENTS_COLLECTION)
   const raw = (await col.findOne(
     { companyCode: ctx.tenant.companyCode, documentId },
-    { projection: { llmNavrh: 1 } },
+    { projection: { llmDraft: 1 } },
   )) as { llmDraft?: { text: string; model: string; mode: string; at: Date } } | null
   const draft = raw?.llmDraft
 
   const branding = brandingView(ctx.tenant)
   const language = ctx.person.language
+  const t = dictionary(language).library.editor
   const isPdf = d.originalFile?.type === "pdf"
   const fileUrl = d.originalFile
     ? `/api/kniznica/subor/${encodeURIComponent(d.originalFile.id)}`
@@ -68,13 +69,13 @@ export default async function EditorPage({
 
       <p style={{ margin: "0 0 10px" }}>
         <Link className="tichy" href={`/kniznica/${encodeURIComponent(documentId)}`} style={{ fontSize: 14 }}>
-          ← Späť na dokument
+          {t.back}
         </Link>
       </p>
 
       <h1 style={{ fontSize: 22, letterSpacing: "-0.02em", margin: "0 0 4px" }}>{d.title}</h1>
       <p className="tichy" style={{ fontSize: 14, margin: "0 0 16px" }}>
-        Porovnaj text s originálom. Publikovanie je samostatný krok — tu sa nič nepúšťa von.
+        {t.intro}
       </p>
 
       {d.conversion?.warnings?.length ? (
@@ -86,87 +87,82 @@ export default async function EditorPage({
       {draft ? (
         <section className="karta" style={{ padding: 18, display: "grid", gap: 12, margin: "0 0 18px" }}>
           <div className="audit-hlavicka">
-            <span className="stitok">návrh modelu</span>
-            <strong>{draft.mode === "prepisat-sken" ? "prepis skenu" : "prečistenie členenia"}</strong>
+            <span className="stitok">{t.modelDraft}</span>
+            <strong>{draft.mode === "rewrite-scan" ? t.modeRewriteScan : t.modeClean}</strong>
             <span className="tichy" style={{ fontSize: 13 }}>
-              {draft.model} · {formatDate(draft.at, language)} · {draft.text.length} znakov
+              {t.draftMeta(draft.model, formatDate(draft.at, language), draft.text.length)}
             </span>
           </div>
           <p className="tichy" style={{ fontSize: 13.5, margin: 0 }}>
-            Model mal zakázané meniť znenie — <strong>over to</strong>. Prijatím sa návrh stane
-            konceptom; pôvodný text sa tým prepíše.
+            {t.draftNoteBefore}<strong>{t.draftNoteHighlight}</strong>{t.draftNoteAfter}
           </p>
           <textarea className="pole-vstup editor-text" readOnly rows={14} value={draft.text} />
           <form action={decideOnDraftAction} style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
             <input type="hidden" name="documentId" value={documentId} />
-            <button className="tlacidlo" type="submit" name="volba" value="prijat">Použiť ako koncept</button>
-            <button className="tlacidlo tlacidlo--tiche" type="submit" name="volba" value="zahodit">Zahodiť</button>
+            <button className="tlacidlo" type="submit" name="choice" value="accept">{t.useAsDraft}</button>
+            <button className="tlacidlo tlacidlo--tiche" type="submit" name="choice" value="discard">{t.discard}</button>
           </form>
         </section>
       ) : null}
 
       <div className="editor-mriezka">
         <section className="editor-stlpec">
-          <h2 className="pole-popis" style={{ margin: "0 0 8px" }}>Originál</h2>
+          <h2 className="pole-popis" style={{ margin: "0 0 8px" }}>{t.original}</h2>
           {fileUrl ? (
             isPdf ? (
               <object className="editor-nahlad" data={fileUrl} type="application/pdf">
                 <p className="tichy" style={{ fontSize: 14, padding: 12 }}>
-                  Prehliadač PDF nezobrazí.{" "}
-                  <a href={fileUrl} target="_blank" rel="noreferrer">Otvor ho v novom okne</a>.
+                  {t.pdfNotShown}
+                  <a href={fileUrl} target="_blank" rel="noreferrer">{t.openInNewWindow}</a>.
                 </p>
               </object>
             ) : (
               <p className="karta" style={{ padding: 16, fontSize: 14 }}>
-                {d.originalFile?.name} sa v prehliadači nezobrazí.{" "}
-                <a href={fileUrl} target="_blank" rel="noreferrer">Stiahni ho</a> a porovnaj vedľa.
+                {t.fileNotShown(d.originalFile?.name ?? "")}
+                <a href={fileUrl} target="_blank" rel="noreferrer">{t.download}</a>{t.compareAfterDownload}
               </p>
             )
           ) : (
             <p className="karta" style={{ padding: 16, fontSize: 14 }}>
-              Bez pôvodného súboru — dokument sa sem dostal importom z príkazového riadka,
-              takže niet čo porovnávať.
+              {t.noOriginal}
             </p>
           )}
         </section>
 
         <section className="editor-stlpec">
           <h2 className="pole-popis" style={{ margin: "0 0 8px" }}>
-            Text
+            {t.text}
             <span className="tichy" style={{ fontWeight: 400 }}>
-              {" "}— prepínač <em>Markdown / WYSIWYG</em> je dole v editore
+              {t.switchNoteBefore}<em>{t.switchNoteModes}</em>{t.switchNoteAfter}
             </span>
           </h2>
           <form action={saveTextAction} style={{ display: "grid", gap: 10 }}>
             <input type="hidden" name="documentId" value={documentId} />
             <TextEditor name="markdown" initial={d.editableText} />
-            <div><button className="tlacidlo" type="submit">Uložiť text</button></div>
+            <div><button className="tlacidlo" type="submit">{t.saveText}</button></div>
           </form>
         </section>
       </div>
 
       <section className="karta" style={{ padding: 18, display: "grid", gap: 10, marginTop: 18 }}>
-        <h2 style={{ fontSize: 17, margin: 0 }}>Pomoc jazykového modelu</h2>
+        <h2 style={{ fontSize: 17, margin: 0 }}>{t.llmHeading}</h2>
         <p className="tichy" style={{ fontSize: 14, margin: 0 }}>
-          Volá sa len takto — kliknutím. Výsledok sa uloží ako <strong>návrh vedľa textu</strong>,
-          nie doňho: model má zakázané meniť znenie, ale tichú zmenu v predpise by
-          nikto nezachytil, keby sa zapisovala rovno.
+          {t.llmNoteBefore}<strong>{t.llmNoteHighlight}</strong>{t.llmNoteAfter}
         </p>
         <form action={sendToModelAction} style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
           <input type="hidden" name="documentId" value={documentId} />
-          <button className="tlacidlo tlacidlo--tiche" type="submit" name="rezim" value="precistit">
-            Prečistiť členenie
+          <button className="tlacidlo tlacidlo--tiche" type="submit" name="mode" value="clean">
+            {t.clean}
           </button>
           {isPdf && (
-            <button className="tlacidlo tlacidlo--tiche" type="submit" name="rezim" value="prepisat-sken">
-              Prepísať zo skenu
+            <button className="tlacidlo tlacidlo--tiche" type="submit" name="mode" value="rewrite-scan">
+              {t.rewriteScan}
             </button>
           )}
         </form>
         {isPdf && (
           <p className="tichy" style={{ fontSize: 13.5, margin: 0 }}>
-            &bdquo;Prepísať zo skenu&ldquo; pošle celé pôvodné PDF modelu. Má zmysel vtedy, keď PDF
-            nemá textovú vrstvu alebo je prevod rozsypaný.
+            {t.rewriteScanNote}
           </p>
         )}
       </section>

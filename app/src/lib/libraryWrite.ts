@@ -211,9 +211,9 @@ export async function saveDraft(
 
 export interface PublishResult {
   versionId: string
-  chunkov: number
-  archivovanych: number
-  uzBolo: boolean
+  chunks: number
+  archived: number
+  alreadyDone: boolean
 }
 
 /**
@@ -301,7 +301,7 @@ export async function publish(
 
   // Rovnaké znenie už publikované? Nič sa nedeje — publikovanie je idempotentné.
   const existing = (doc.versions as { versionId: string }[] | undefined)?.some(v => v.versionId === versionId)
-  if (existing) return { versionId, chunkov: chunks.length, archivovanych: 0, uzBolo: true }
+  if (existing) return { versionId, chunks: chunks.length, archived: 0, alreadyDone: true }
 
   const chunkCol = await getCollection(CHUNKS_COLLECTION)
   // Staré chunky sa **archivujú, nemažú** (D6): do vyhľadávania vstupujú len
@@ -377,7 +377,7 @@ export async function publish(
       (input.effectiveFromSource ? ` · zdroj: ${input.effectiveFromSource}` : ""),
   })
 
-  return { versionId, chunkov: chunks.length, archivovanych: archive.modifiedCount, uzBolo: false }
+  return { versionId, chunks: chunks.length, archived: archive.modifiedCount, alreadyDone: false }
 }
 
 
@@ -474,7 +474,7 @@ export async function reindex(
   documentId: string,
   actor: string,
   profile?: Partial<ChunkingProfile>,
-): Promise<{ chunkov: number; archivovanych: number; uzBolo: boolean; chunkingId: string }> {
+): Promise<{ chunks: number; archived: number; alreadyDone: boolean; chunkingId: string }> {
   const col = await getCollection(DOCUMENTS_COLLECTION)
   const doc = await col.findOne({ documentId, companyCode }) as Record<string, unknown> | null
   if (!doc) throw new LibraryError("Taký dokument tu nie je.")
@@ -504,7 +504,7 @@ export async function reindex(
 
   const chunkingId = chunkingFingerprint(chunks, { ...DEFAULT_PROFILE, ...profile })
   if (doc.chunkingId === chunkingId) {
-    return { chunkov: chunks.length, archivovanych: 0, uzBolo: true, chunkingId }
+    return { chunks: chunks.length, archived: 0, alreadyDone: true, chunkingId }
   }
 
   const now = new Date()
@@ -556,7 +556,7 @@ export async function reindex(
       "znenie ani potvrdenia sa nemenili",
   })
 
-  return { chunkov: chunks.length, archivovanych: archive.modifiedCount, uzBolo: false, chunkingId }
+  return { chunks: chunks.length, archived: archive.modifiedCount, alreadyDone: false, chunkingId }
 }
 
 /**
@@ -571,8 +571,8 @@ export async function reindex(
  *
  * Rozhodnutie preto patrí človeku a obe možnosti sa zapisujú:
  *
- *   - `oprava` — rozdiel je nepodstatný, potvrdenia zostávajú;
- *   - `znovaPotvrdit` — nastaví `requiresReacknowledgement` (D30), takže
+ *   - `correction` — rozdiel je nepodstatný, potvrdenia zostávajú;
+ *   - `reacknowledge` — nastaví `requiresReacknowledgement` (D30), takže
  *     znenie sa musí potvrdiť znova.
  *
  * Systém to rozhodnúť nevie: nepozná, či medzi tými dvoma dátumami niekto
@@ -588,10 +588,10 @@ export async function fixVersion(
     effectiveFromSource?: string
     changeNote?: string
     reason: string
-    onDateChange?: "oprava" | "znovaPotvrdit"
+    onDateChange?: "correction" | "reacknowledge"
   },
   actor: string,
-): Promise<{ acknowledgementCount: number; znovaPotvrdit: boolean }> {
+): Promise<{ acknowledgementCount: number; reacknowledged: boolean }> {
   const reason = input.reason?.trim() ?? ""
   if (!reason) {
     throw new LibraryError(
@@ -624,7 +624,7 @@ export async function fixVersion(
     )
   }
 
-  const reacknowledge = Boolean(changesDate && acknowledgementCount > 0 && input.onDateChange === "znovaPotvrdit")
+  const reacknowledge = Boolean(changesDate && acknowledgementCount > 0 && input.onDateChange === "reacknowledge")
 
   const set: Record<string, unknown> = { updatedAt: new Date(), updatedBy: actor }
   if (input.label?.trim()) set["versions.$[v].label"] = input.label.trim()
@@ -669,7 +669,7 @@ export async function fixVersion(
       (reacknowledge ? " · vyžaduje nové potvrdenie" : ""),
   })
 
-  return { acknowledgementCount: acknowledgementCount, znovaPotvrdit: reacknowledge }
+  return { acknowledgementCount, reacknowledged: reacknowledge }
 }
 
 export interface ReindexState {
@@ -756,7 +756,7 @@ export async function reindexAll(
     if (reindexed >= limit) { remaining++; continue }
     try {
       const v = await reindex(companyCode, d.documentId, actor, profile)
-      if (v.uzBolo) skipped++
+      if (v.alreadyDone) skipped++
       else reindexed++
     } catch (e) {
       // Dokument bez publikovaného znenia sa preindexovať nedá a nie je to

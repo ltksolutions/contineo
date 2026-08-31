@@ -32,11 +32,14 @@ import { cleanMarkdown, rewritePdf, RewriteError } from "@/lib/llmRewrite"
 import { getCollection } from "@/lib/mongodb"
 import { DOCUMENTS_COLLECTION } from "@/lib/documents"
 import { writeAudit } from "@/lib/audit"
+import { dictionary, type UiLanguage } from "@/lib/i18n"
 
 async function actor(): Promise<
   {
     email: string
     companyCode: string
+    /** Jazyk prostredia — hlásenia sa vracajú v ňom. */
+    language: UiLanguage
     extras: CodelistExtras
     profile?: Partial<ChunkingProfile>
   } | null
@@ -46,6 +49,7 @@ async function actor(): Promise<
     ? {
         email: ctx.person.email,
         companyCode: ctx.person.companyCode,
+        language: ctx.person.language,
         // Vlastné položky číselníkov organizácie (D55) — bez nich by
         // obrazovka ponúkala druh dokumentu, ktorý zápis vzápätí odmietne.
         extras: tenantExtras(ctx.tenant),
@@ -60,7 +64,12 @@ function fieldText(fd: FormData, actorName: string): string {
   return typeof v === "string" ? v.trim() : ""
 }
 
-function errorMessage(e: unknown): string {
+/** Hlásenia akcií v jazyku prihláseného človeka. */
+function say(language: UiLanguage) {
+  return dictionary(language).library.actions
+}
+
+function errorMessage(e: unknown, language: UiLanguage): string {
   if (
     e instanceof LibraryError || e instanceof FileStoreError ||
     e instanceof RewriteError || e instanceof FolderError
@@ -68,7 +77,7 @@ function errorMessage(e: unknown): string {
     return e.message
   }
   console.error("[kniznica] akcia zlyhala:", e)
-  return "Nepodarilo sa to. Skús to znova."
+  return say(language).failed
 }
 
 export async function uploadAction(fd: FormData) {
@@ -76,7 +85,7 @@ export async function uploadAction(fd: FormData) {
   if (!self) redirect("/")
 
   try {
-    const file = fd.get("subor")
+    const file = fd.get("file")
     if (!(file instanceof File) || file.size === 0) {
       throw new LibraryError("Nevybral si súbor.")
     }
@@ -102,14 +111,14 @@ export async function uploadAction(fd: FormData) {
     // a hľadať dokument v zozname je zbytočný krok.
     redirect(`/kniznica/${encodeURIComponent(v.documentId)}/text?msg=${encodeURIComponent(
       v.warnings.length
-        ? `Prevedené. ${v.warnings.join(" ")}`
-        : "Prevedené. Prečítaj text a porovnaj ho s originálom.",
+        ? say(self.language).convertedWithWarnings(v.warnings.join(" "))
+        : say(self.language).converted,
     )}`)
   } catch (e) {
     // `redirect()` vyhadzuje výnimku — nesmie sa chytiť ako chyba zápisu.
     if (isRedirect(e)) throw e
     const q = new URLSearchParams({
-      chyba: errorMessage(e),
+      error: errorMessage(e, self.language),
       title: fieldText(fd, "title"),
       sectionKey: fieldText(fd, "sectionKey"),
     })
@@ -122,12 +131,12 @@ export async function saveTextAction(fd: FormData) {
   if (!self) redirect("/")
 
   const id = fieldText(fd, "documentId")
-  let message = "Uložené."
+  let message = say(self.language).saved
   let error = false
   try {
     await saveDraft(self.companyCode, id, String(fd.get("markdown") ?? ""), self.email)
   } catch (e) {
-    message = errorMessage(e)
+    message = errorMessage(e, self.language)
     error = true
   }
 
@@ -153,11 +162,11 @@ export async function publishVersionAction(fd: FormData) {
       changeNote: fieldText(fd, "changeNote"),
     }, self.email, self.profile)
 
-    message = v.uzBolo
-      ? "Toto znenie už publikované je — nič sa nezmenilo."
-      : `Publikované: ${v.chunkov} úsekov, ${v.archivovanych} starých archivovaných.`
+    message = v.alreadyDone
+      ? say(self.language).alreadyPublished
+      : say(self.language).published(v.chunks, v.archived)
   } catch (e) {
-    message = errorMessage(e)
+    message = errorMessage(e, self.language)
     error = true
   }
 
@@ -183,7 +192,7 @@ export async function sendToModelAction(fd: FormData) {
   if (!self) redirect("/")
 
   const id = fieldText(fd, "documentId")
-  const mode = fieldText(fd, "rezim")
+  const mode = fieldText(fd, "mode")
   let message = ""
   let error = false
 
@@ -192,7 +201,7 @@ export async function sendToModelAction(fd: FormData) {
     const doc = await col.findOne({ documentId: id, companyCode: self.companyCode }) as Record<string, unknown> | null
     if (!doc) throw new LibraryError("Taký dokument tu nie je.")
 
-    const draft = mode === "prepisat-sken"
+    const draft = mode === "rewrite-scan"
       ? await (async () => {
           const original = doc.originalFile as { id: string; type: string } | undefined
           if (!original) throw new LibraryError("Dokument nemá pôvodný súbor, ktorý by sa dal prepísať.")
@@ -207,17 +216,17 @@ export async function sendToModelAction(fd: FormData) {
 
     await col.updateOne(
       { documentId: id, companyCode: self.companyCode },
-      { $set: { llmNavrh: draft } } as never,
+      { $set: { llmDraft: draft }, $unset: { llmNavrh: "" } } as never,
     )
     await writeAudit({
       companyCode: self.companyCode, subject: "document", action: "model-draft",
       actor: self.email, targetId: id, targetLabel: String(doc.title ?? id),
-      note: `${draft.rezim} · ${draft.model} · ${draft.text.length} znakov`,
+      note: `${draft.mode} · ${draft.model} · ${draft.text.length} znakov`,
     })
 
-    message = "Model vrátil návrh. Porovnaj ho s doterajším textom a rozhodni sa."
+    message = say(self.language).modelReturnedDraft
   } catch (e) {
-    message = errorMessage(e)
+    message = errorMessage(e, self.language)
     error = true
   }
 
@@ -230,28 +239,28 @@ export async function decideOnDraftAction(fd: FormData) {
   if (!self) redirect("/")
 
   const id = fieldText(fd, "documentId")
-  const accept = fieldText(fd, "volba") === "prijat"
+  const accept = fieldText(fd, "choice") === "accept"
   let message = ""
   let error = false
 
   try {
     const col = await getCollection(DOCUMENTS_COLLECTION)
     const doc = await col.findOne({ documentId: id, companyCode: self.companyCode }) as Record<string, unknown> | null
-    const draft = doc?.llmNavrh as { text?: string } | undefined
+    const draft = doc?.llmDraft as { text?: string } | undefined
     if (!draft?.text) throw new LibraryError("Žiadny návrh tu nie je.")
 
     if (accept) {
       await saveDraft(self.companyCode, id, draft.text, `${self.email} (návrh modelu)`)
-      message = "Návrh je teraz konceptom. Publikovanie je stále samostatný krok."
+      message = say(self.language).draftAccepted
     } else {
-      message = "Návrh zahodený."
+      message = say(self.language).draftDiscarded
     }
     await col.updateOne(
       { documentId: id, companyCode: self.companyCode },
-      { $unset: { llmNavrh: "" } } as never,
+      { $unset: { llmDraft: "", llmNavrh: "" } } as never,
     )
   } catch (e) {
-    message = errorMessage(e)
+    message = errorMessage(e, self.language)
     error = true
   }
 
@@ -265,7 +274,7 @@ export async function saveDocumentMetadataAction(fd: FormData) {
   if (!self) redirect("/")
 
   const id = fieldText(fd, "documentId")
-  let message = "Uložené."
+  let message = say(self.language).saved
   let error = false
   try {
     await saveMetadata(self.companyCode, id, {
@@ -277,7 +286,7 @@ export async function saveDocumentMetadataAction(fd: FormData) {
       tags: fd.getAll("tags").filter((t): t is string => typeof t === "string"),
     }, self.email, self.extras)
   } catch (e) {
-    message = errorMessage(e)
+    message = errorMessage(e, self.language)
     error = true
   }
 
@@ -306,10 +315,10 @@ export async function createFolderAction(fd: FormData) {
   try {
     await createFolder(self.companyCode, fieldText(fd, "name"), fieldText(fd, "parentId") || null, self.email)
     revalidatePath("/kniznica")
-    backToLibrary(fd, "Priečinok pribudol.")
+    backToLibrary(fd, say(self.language).changesSaved)
   } catch (e) {
     if (isRedirect(e)) throw e
-    backToLibrary(fd, errorMessage(e), true)
+    backToLibrary(fd, errorMessage(e, self.language), true)
   }
 }
 
@@ -319,10 +328,10 @@ export async function renameFolderAction(fd: FormData) {
   try {
     await renameFolder(self.companyCode, fieldText(fd, "id"), fieldText(fd, "name"), self.email)
     revalidatePath("/kniznica")
-    backToLibrary(fd, "Priečinok sa premenoval.")
+    backToLibrary(fd, say(self.language).changesSaved)
   } catch (e) {
     if (isRedirect(e)) throw e
-    backToLibrary(fd, errorMessage(e), true)
+    backToLibrary(fd, errorMessage(e, self.language), true)
   }
 }
 
@@ -332,10 +341,10 @@ export async function moveFolderAction(fd: FormData) {
   try {
     await moveFolder(self.companyCode, fieldText(fd, "id"), fieldText(fd, "parentId") || null, self.email)
     revalidatePath("/kniznica")
-    backToLibrary(fd, "Priečinok sa presunul.")
+    backToLibrary(fd, say(self.language).changesSaved)
   } catch (e) {
     if (isRedirect(e)) throw e
-    backToLibrary(fd, errorMessage(e), true)
+    backToLibrary(fd, errorMessage(e, self.language), true)
   }
 }
 
@@ -345,10 +354,10 @@ export async function deleteFolderAction(fd: FormData) {
   try {
     await deleteFolder(self.companyCode, fieldText(fd, "id"), self.email)
     revalidatePath("/kniznica")
-    backToLibrary(fd, "Priečinok sa zrušil.")
+    backToLibrary(fd, say(self.language).changesSaved)
   } catch (e) {
     if (isRedirect(e)) throw e
-    backToLibrary(fd, errorMessage(e), true)
+    backToLibrary(fd, errorMessage(e, self.language), true)
   }
 }
 
@@ -358,12 +367,12 @@ export async function assignToFolderAction(fd: FormData) {
   if (!self) redirect("/")
 
   const id = fieldText(fd, "documentId")
-  let message = "Zaradené."
+  let message = say(self.language).assigned
   let error = false
   try {
     await assignDocument(self.companyCode, id, fieldText(fd, "folderId") || null, self.email)
   } catch (e) {
-    message = errorMessage(e)
+    message = errorMessage(e, self.language)
     error = true
   }
   revalidatePath("/kniznica")
@@ -381,12 +390,11 @@ export async function reindexDocumentAction(fd: FormData) {
   let error = false
   try {
     const v = await reindex(self.companyCode, id, self.email, self.profile)
-    message = v.uzBolo
-      ? "Členenie je už aktuálne — nič sa nemenilo."
-      : `Preindexované: ${v.chunkov} úsekov, ${v.archivovanych} starých archivovaných. ` +
-        "Znenie ani potvrdenia sa nedotklo."
+    message = v.alreadyDone
+      ? say(self.language).reindexUpToDate
+      : say(self.language).reindexed(v.chunks, v.archived)
   } catch (e) {
-    message = errorMessage(e)
+    message = errorMessage(e, self.language)
     error = true
   }
 
@@ -404,21 +412,21 @@ export async function fixVersionAction(fd: FormData) {
   let error = false
   try {
     const day = fieldText(fd, "effectiveFrom")
-    const choice = fieldText(fd, "priZmeneDatumu")
+    const choice = fieldText(fd, "onDateChange")
     const v = await fixVersion(self.companyCode, id, fieldText(fd, "versionId"), {
       label: fieldText(fd, "label") || undefined,
       effectiveFrom: day ? new Date(`${day}T00:00:00.000Z`) : undefined,
       effectiveFromSource: fieldText(fd, "effectiveFromSource"),
       changeNote: fieldText(fd, "changeNote"),
-      reason: fieldText(fd, "dovod"),
-      onDateChange: choice === "oprava" || choice === "znovaPotvrdit" ? choice : undefined,
+      reason: fieldText(fd, "reason"),
+      onDateChange: choice === "correction" || choice === "reacknowledge" ? choice : undefined,
     }, self.email)
 
-    message = v.znovaPotvrdit
-      ? `Opravené. Znenie je označené ako vyžadujúce nové potvrdenie — týka sa to ${v.acknowledgementCount} ľudí.`
-      : "Opravené. Potvrdenia zostávajú platné."
+    message = v.reacknowledged
+      ? say(self.language).fixedNeedsReacknowledge(v.acknowledgementCount)
+      : say(self.language).fixed
   } catch (e) {
-    message = errorMessage(e)
+    message = errorMessage(e, self.language)
     error = true
   }
 
@@ -439,10 +447,10 @@ export async function shiftFolderAction(fd: FormData) {
   try {
     await shiftFolder(self.companyCode, fieldText(fd, "id"), direction, self.email)
     revalidatePath("/kniznica")
-    backToLibrary(fd, "Zmeny boli uložené.")
+    backToLibrary(fd, say(self.language).changesSaved)
   } catch (e) {
     if (isRedirect(e)) throw e
-    backToLibrary(fd, errorMessage(e), true)
+    backToLibrary(fd, errorMessage(e, self.language), true)
   }
 }
 
@@ -454,9 +462,9 @@ export async function saveFolderOrderAction(fd: FormData) {
   try {
     if (order.length > 1) await saveFolderOrder(self.companyCode, order, self.email)
     revalidatePath("/kniznica")
-    backToLibrary(fd, "Zmeny boli uložené.")
+    backToLibrary(fd, say(self.language).changesSaved)
   } catch (e) {
     if (isRedirect(e)) throw e
-    backToLibrary(fd, errorMessage(e), true)
+    backToLibrary(fd, errorMessage(e, self.language), true)
   }
 }

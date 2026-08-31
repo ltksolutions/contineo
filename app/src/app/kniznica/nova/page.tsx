@@ -62,7 +62,7 @@ export default async function NewDocumentPage({
           <input
             className="pole-vstup"
             type="file"
-            name="subor"
+            name="file"
             required
             accept=".pdf,.docx,.xlsx,.md,.txt,.csv"
           />
