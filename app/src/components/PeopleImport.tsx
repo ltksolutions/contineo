@@ -16,10 +16,12 @@
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { previewImportAction, runImportAction } from "@/app/osoby/actions"
+import { dictionary, type UiLanguage } from "@/lib/i18n"
 
 type Preview = Awaited<ReturnType<typeof previewImportAction>>
 
-export default function PeopleImport() {
+export default function PeopleImport({ language }: { language?: UiLanguage }) {
+  const t = dictionary(language).people.import
   const router = useRouter()
   const [text, setText] = useState("")
   const [name, setName] = useState("")
@@ -61,7 +63,7 @@ export default function PeopleImport() {
   return (
     <div style={{ display: "grid", gap: 18 }}>
       <label className="pole">
-        <span className="pole-popis">Súbor CSV</span>
+        <span className="pole-popis">{t.file}</span>
         <input
           className="pole-vstup"
           type="file"
@@ -70,14 +72,13 @@ export default function PeopleImport() {
           disabled={busy}
         />
         <span className="tichy pole-napoveda">
-          Prvý riadok sú hlavičky. Rozpoznajú sa <code>email</code>, <code>meno</code>,{" "}
+          {t.fileNoteBefore}<code>email</code>, <code>meno</code>,{" "}
           <code>oddelenie</code>, <code>typ</code>, <code>nástup</code>, <code>trasy</code>,{" "}
-          <code>skupiny</code>, <code>jazyk</code> — aj bez diakritiky a s bodkočiarkou
-          ako oddeľovačom, tak ako to ukladá Excel.
+          <code>skupiny</code>, <code>jazyk</code>{t.fileNoteAfter}
         </span>
       </label>
 
-      {busy && <p className="tichy">Čítam…</p>}
+      {busy && <p className="tichy">{t.reading}</p>}
 
       {result && (
         <p className="karta" style={{ padding: "12px 16px", fontSize: 14.5, margin: 0 }}>
@@ -93,23 +94,23 @@ export default function PeopleImport() {
 
       {preview?.ok && (
         <section className="karta" style={{ padding: "18px 20px", display: "grid", gap: 14 }}>
-          <h2 style={{ fontSize: 17, margin: 0 }}>Čo sa stane — {name}</h2>
+          <h2 style={{ fontSize: 17, margin: 0 }}>{t.whatHappens(name)}</h2>
 
           <div className="admin-udaje" style={{ marginTop: 0 }}>
             <div>
-              <div className="tichy" style={{ fontSize: 12.5 }}>Riadkov</div>
+              <div className="tichy" style={{ fontSize: 12.5 }}>{t.rows}</div>
               <div style={{ fontSize: 15.5, fontWeight: 600 }}>{preview.total}</div>
             </div>
             <div>
-              <div className="tichy" style={{ fontSize: 12.5 }}>Pribudne</div>
+              <div className="tichy" style={{ fontSize: 12.5 }}>{t.willAdd}</div>
               <div style={{ fontSize: 15.5, fontWeight: 600 }}>{preview.created?.length ?? 0}</div>
             </div>
             <div>
-              <div className="tichy" style={{ fontSize: 12.5 }}>Aktualizuje sa</div>
+              <div className="tichy" style={{ fontSize: 12.5 }}>{t.willUpdate}</div>
               <div style={{ fontSize: 15.5, fontWeight: 600 }}>{preview.existing?.length ?? 0}</div>
             </div>
             <div>
-              <div className="tichy" style={{ fontSize: 12.5 }}>Chybných</div>
+              <div className="tichy" style={{ fontSize: 12.5 }}>{t.invalid}</div>
               <div
                 style={{
                   fontSize: 15.5, fontWeight: 600,
@@ -123,10 +124,10 @@ export default function PeopleImport() {
 
           {(preview.created?.length ?? 0) > 0 && (
             <div>
-              <div className="tichy pole-napoveda">Pribudnú</div>
+              <div className="tichy pole-napoveda">{t.added}</div>
               <p style={{ fontSize: 14, margin: "2px 0 0", overflowWrap: "anywhere" }}>
                 {preview.created!.slice(0, 25).join(", ")}
-                {preview.created!.length > 25 && ` … a ďalších ${preview.created!.length - 25}`}
+                {preview.created!.length > 25 && t.andMore(preview.created!.length - 25)}
               </p>
             </div>
           )}
@@ -134,24 +135,23 @@ export default function PeopleImport() {
           {(preview.errors?.length ?? 0) > 0 && (
             <div>
               {/* Chybné riadky sa vypíšu menovite. „5 chybných" sa nedá opraviť. */}
-              <div className="tichy pole-napoveda">Tieto riadky sa preskočia</div>
+              <div className="tichy pole-napoveda">{t.skippedRows}</div>
               <ul style={{ margin: "4px 0 0", paddingLeft: 20, fontSize: 14, lineHeight: 1.6 }}>
                 {preview.errors!.slice(0, 15).map((c, i) => <li key={i}>{c}</li>)}
               </ul>
               {preview.errors!.length > 15 && (
-                <p className="tichy pole-napoveda">… a ďalších {preview.errors!.length - 15}</p>
+                <p className="tichy pole-napoveda">{t.andMore(preview.errors!.length - 15)}</p>
               )}
             </div>
           )}
 
           <p className="tichy" style={{ fontSize: 13.5, margin: 0 }}>
-            Existujúcim osobám sa <strong>nemení stav</strong> — kto sa už prihlásil,
-            zostáva prihlásený. Nevyplnený jazyk sa neprepíše.
+            {t.statusNoteBefore}<strong>{t.statusNoteHighlight}</strong>{t.statusNoteAfter}
           </p>
 
           <div>
             <button className="tlacidlo" type="button" onClick={submit} disabled={busy}>
-              {busy ? "Zapisujem…" : "Zapísať"}
+              {busy ? t.writing : t.write}
             </button>
           </div>
         </section>

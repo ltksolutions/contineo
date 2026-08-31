@@ -12,6 +12,7 @@ import { peopleContext } from "@/lib/people"
 import { brandingView } from "@/lib/tenants"
 import { tenantStyle } from "@/components/TenantHeader"
 import PeopleImport from "@/components/PeopleImport"
+import { dictionary } from "@/lib/i18n"
 
 export const dynamic = "force-dynamic"
 
@@ -23,22 +24,22 @@ export default async function ImportPage() {
   }
 
   const branding = brandingView(ctx.tenant)
+  const language = ctx.person.language
+  const t = dictionary(language).people.import
 
   return (
     <div className="obal" style={{ padding: "28px 20px 80px", maxWidth: 680, ...tenantStyle(branding) }}>
       <p style={{ margin: "0 0 16px" }}>
-        <Link className="tichy" href="/osoby" style={{ fontSize: 14 }}>← Späť na zoznam</Link>
+        <Link className="tichy" href="/osoby" style={{ fontSize: 14 }}>{t.back}</Link>
       </p>
 
-      <h1 style={{ fontSize: 25, letterSpacing: "-0.02em", margin: "0 0 6px" }}>Import z CSV</h1>
+      <h1 style={{ fontSize: 25, letterSpacing: "-0.02em", margin: "0 0 6px" }}>{t.heading}</h1>
       <p className="tichy" style={{ fontSize: 15, margin: "0 0 20px", maxWidth: 600 }}>
-        Najprv uvidíš, <strong>čo by sa stalo</strong>, a zapíše sa až potom.
-        Nahratie stovky ľudí naslepo je presne tá operácia, po ktorej sa hľadá,
-        ako to vrátiť späť — a vrátiť sa nedá. Všetci sa zapíšu do organizácie{" "}
-        <strong>{ctx.tenant.companyCode}</strong>, aj keď je v súbore niečo iné.
+        {t.introBefore}<strong>{t.introHighlight}</strong>{t.introMiddle}
+        <strong>{ctx.tenant.companyCode}</strong>{t.introAfter}
       </p>
 
-      <PeopleImport />
+      <PeopleImport language={language} />
     </div>
   )
 }

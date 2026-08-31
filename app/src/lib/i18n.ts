@@ -342,6 +342,129 @@ interface Dictionary {
     add: string
   }
   /** Knižnica dokumentov (D53). */
+  people: {
+    /** Typ osoby — kľúče sú hodnoty z databázy. */
+    types: Record<string, string>
+    /** Jazyk prostredia — kľúče sú kódy z `UI_LANGUAGES`. */
+    languages: Record<string, string>
+    /** Roly — kľúč je názov roly, hodnota celý riadok aj s vysvetlením. */
+    roles: Record<string, string>
+    list: {
+      heading: string
+      introBefore: string
+      introHighlight: string
+      introAfter: string
+      invite: string
+      importCsv: string
+      searchPlaceholder: string
+      nothingFound: string
+      count: (n: number) => string
+      matchesSearch: string
+      capped: string
+      status: Record<string, string>
+      neverSignedIn: string
+    }
+    invite: {
+      back: string
+      heading: string
+      introBefore: string
+      introAfter: string
+      email: string
+      emailNote: string
+      fullName: string
+      department: string
+      personType: string
+      language: string
+      languageNote: string
+      submit: string
+    }
+    import: {
+      back: string
+      heading: string
+      introBefore: string
+      introHighlight: string
+      introMiddle: string
+      introAfter: string
+      file: string
+      /** Veta okolo zoznamu hlavičiek CSV — tie sa neprekladajú. */
+      fileNoteBefore: string
+      fileNoteAfter: string
+      reading: string
+      whatHappens: (name: string) => string
+      rows: string
+      willAdd: string
+      willUpdate: string
+      invalid: string
+      added: string
+      andMore: (n: number) => string
+      skippedRows: string
+      statusNoteBefore: string
+      statusNoteHighlight: string
+      statusNoteAfter: string
+      write: string
+      writing: string
+      /** Dôvod, prečo sa riadok preskočí — kľúče sú kódy z `personsImport`. */
+      reasons: Record<string, string>
+    }
+    detail: {
+      back: string
+      previously: (list: string) => string
+      invitedNotSignedIn: string
+      excludedNoSignIn: string
+      lastSeen: (when: string) => string
+      never: string
+      signsInVia: (list: string) => string
+      email: string
+      emailNote: string
+      fullName: string
+      jobTitle: string
+      jobTitleNote: string
+      department: string
+      departmentNone: string
+      /** Veta s odkazom do nastavenia organizácie. */
+      noDepartmentsBefore: string
+      noDepartmentsLink: string
+      noDepartmentsAfter: string
+      departmentNote: string
+      placement: (path: string) => string
+      legacyDepartmentBefore: string
+      legacyDepartmentAfter: string
+      personType: string
+      personTypeNote: string
+      language: string
+      languageNote: string
+      groups: string
+      newGroup: string
+      groupsNote: string
+      tracks: string
+      newTrack: string
+      roles: string
+      rolesNote: string
+      save: string
+      returnHeading: string
+      excludeHeading: string
+      returnNoteBefore: string
+      returnNoteHighlight: string
+      returnNoteAfter: string
+      returnSubmit: string
+      excludeNote: string
+      confirmLabel: string
+      confirmNote: string
+      excludeSubmit: string
+    }
+    actions: {
+      saved: string
+      invited: string
+      excluded: string
+      returned: string
+      confirmAddress: (email: string) => string
+      failed: string
+      noRight: string
+      fileEmpty: string
+      noRows: string
+      importResult: (created: number, updated: number, unchanged: number, invalid: number) => string
+    }
+  },
   library: {
     list: {
       heading: string
@@ -804,6 +927,147 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
   tags: {
     empty: "Zatiaľ tu žiadne nie sú. Prvú vytvoríš dole.",
     add: "Pridať",
+  },
+  people: {
+    types: {
+      employee: "zamestnanec",
+      external: "externý",
+      referee: "rozhodca",
+      official: "funkcionár",
+    },
+    languages: {
+      sk: "slovenčina",
+      cs: "čeština",
+      en: "angličtina",
+    },
+    roles: {
+      hr: "hr — prideľuje normy a vidí, kto ich nepotvrdil",
+      "people-admin": "people-admin — spravuje osoby (táto obrazovka)",
+      "spravca-obsahu": "spravca-obsahu — nahráva a upravuje normy v knižnici",
+    },
+    list: {
+      heading: "Osoby",
+      introBefore: "Kto do organizácie patrí. Osoba sa ",
+      introHighlight: "nemaže",
+      introAfter: " — vyradenie ju odstrihne od portálu, ale jej potvrdenia zostávajú platnými záznamami.",
+      invite: "Pozvať osobu",
+      importCsv: "Import z CSV",
+      searchPlaceholder: "Hľadať v mene, adrese alebo oddelení",
+      nothingFound: "Nič sa nenašlo.",
+      count: (n) => `${n} ${n === 1 ? "osoba" : n < 5 ? "osoby" : "osôb"}`,
+      matchesSearch: " vyhovuje hľadaniu",
+      capped: " — zobrazených prvých 500, zúž hľadanie",
+      status: {
+        invited: "pozvaná",
+        active: "aktívna",
+        inactive: "vyradená",
+      },
+      neverSignedIn: "neprihlásená",
+    },
+    invite: {
+      back: "← Späť na zoznam",
+      heading: "Pozvať osobu",
+      introBefore: "Zapíše sa do organizácie ",
+      introAfter: ". Skupiny a trasy sa doplnia na jej detaile — po pozvaní tam prídeš rovno.",
+      email: "E-mailová adresa",
+      emailNote: "Neskôr sa meniť dá, ale je to adresa, na ktorú chodí prihlasovací odkaz. Skontroluj ju.",
+      fullName: "Meno",
+      department: "Oddelenie",
+      personType: "Typ osoby",
+      language: "Jazyk prostredia",
+      languageNote: "Skupiny a trasy sa vyberajú až na detaile — tam už vidno, čo v organizácii existuje.",
+      submit: "Pozvať",
+    },
+    import: {
+      back: "← Späť na zoznam",
+      heading: "Import z CSV",
+      introBefore: "Najprv uvidíš, ",
+      introHighlight: "čo by sa stalo",
+      introMiddle: ", a zapíše sa až potom. Nahratie stovky ľudí naslepo je presne tá operácia, po ktorej sa hľadá, ako to vrátiť späť — a vrátiť sa nedá. Všetci sa zapíšu do organizácie ",
+      introAfter: ", aj keď je v súbore niečo iné.",
+      file: "Súbor CSV",
+      fileNoteBefore: "Prvý riadok sú hlavičky. Rozpoznajú sa ",
+      fileNoteAfter: " — aj bez diakritiky a s bodkočiarkou ako oddeľovačom, tak ako to ukladá Excel.",
+      reading: "Čítam…",
+      whatHappens: (name) => `Čo sa stane — ${name}`,
+      rows: "Riadkov",
+      willAdd: "Pribudne",
+      willUpdate: "Aktualizuje sa",
+      invalid: "Chybných",
+      added: "Pribudnú",
+      andMore: (n) => ` … a ďalších ${n}`,
+      skippedRows: "Tieto riadky sa preskočia",
+      statusNoteBefore: "Existujúcim osobám sa ",
+      statusNoteHighlight: "nemení stav",
+      statusNoteAfter: " — kto sa už prihlásil, zostáva prihlásený. Nevyplnený jazyk sa neprepíše.",
+      write: "Zapísať",
+      writing: "Zapisujem…",
+      reasons: {
+        "invalid-email": "neplatná e-mailová adresa",
+        "missing-companyCode": "chýba organizácia (companyCode)",
+        "missing-name": "chýba meno",
+        "duplicate-in-file": "duplicita priamo v súbore",
+      },
+    },
+    detail: {
+      back: "← Späť na zoznam",
+      previously: (list) => `predtým ${list}`,
+      invitedNotSignedIn: "pozvaná, ešte sa neprihlásila",
+      excludedNoSignIn: "vyradená — neprihlási sa",
+      lastSeen: (when) => `naposledy ${when}`,
+      never: "—",
+      signsInVia: (list) => `prihlasuje sa cez ${list}`,
+      email: "E-mailová adresa",
+      emailNote: "Zmeniť sa dá — identita človeka na nej nestojí. Potvrdenia sa viažu na jeho záznam, nie na adresu, takže história zostáva celá a stará adresa sa uloží do jeho histórie. Zmení sa tým to, kam chodí prihlasovací odkaz; prihlásenie pracovným kontom funguje ďalej.",
+      fullName: "Meno",
+      jobTitle: "Pozícia",
+      jobTitleNote: "Evidenčný údaj. Dopĺňa sa z pracovného konta, keď ho tam adresár má — ale len keď je tu prázdny, takže ručná oprava vydrží.",
+      department: "Oddelenie",
+      departmentNone: "— bez oddelenia —",
+      noDepartmentsBefore: "Štruktúra je zatiaľ prázdna. Oddelenia sa zakladajú v ",
+      noDepartmentsLink: "nastavení organizácie",
+      noDepartmentsAfter: ".",
+      departmentNote: "Práve jedno — oddelenie je miesto v štruktúre. Kto sa má osloviť naprieč oddeleniami, na to sú skupiny nižšie.",
+      placement: (path) => ` Zaradenie: ${path}.`,
+      legacyDepartmentBefore: "Pôvodne tu bolo zapísané textom: ",
+      legacyDepartmentAfter: ". Ostáva to uložené, kým sa nezaradí do štruktúry — aby bolo vidieť, z čoho oddelenie vzniklo.",
+      personType: "Typ osoby",
+      personTypeNote: "Evidenčný údaj. O prístupe k obsahu nerozhoduje — ten rieši organizácia a úroveň dokumentu.",
+      language: "Jazyk prostredia",
+      languageNote: "V čom sa s človekom rozprávame. Nie jazyk dokumentov, ktoré číta.",
+      groups: "Skupiny",
+      newGroup: "nová skupina, napr. rozhodcovia",
+      groupsNote: "Podľa nich sa prideľujú normy. Číslo je počet ľudí, ktorí skupinu majú — skupina, ktorú nemá nikto, nedostane nič.",
+      tracks: "Trasy onboardingu",
+      newTrack: "nová trasa, napr. zaklad-2026",
+      roles: "Roly",
+      rolesNote: "Správcu platformy sa odtiaľto prideliť nedá — patrí tenantovi dodávateľa a má vlastnú cestu.",
+      save: "Uložiť",
+      returnHeading: "Vrátiť osobu",
+      excludeHeading: "Vyradiť osobu",
+      returnNoteBefore: "Vráti sa ako ",
+      returnNoteHighlight: "pozvaná",
+      returnNoteAfter: ", nie aktívna — aktívna znamená „už sa prihlásila“ a to sa vrátením nestalo. Prepne ju prvé prihlásenie.",
+      returnSubmit: "Vrátiť",
+      excludeNote: "Po vyradení sa neprihlási — okamžite. Záznam ani jej potvrdenia sa nemažú; sú to platné doklady o tom, čo si prečítala, a musia prežiť jej odchod.",
+      confirmLabel: "Napíš adresu na potvrdenie",
+      confirmNote: "Zámerne to nie je „naozaj?“ — to sa odklikne skôr, než sa prečíta.",
+      excludeSubmit: "Vyradiť",
+    },
+    actions: {
+      saved: "Uložené.",
+      invited: "Pozvaná. Prihlási sa, keď si sama vyžiada odkaz alebo použije pracovné konto.",
+      excluded: "Vyradená. Záznam a jej potvrdenia zostávajú.",
+      returned: "Vrátená. Prihlási sa a stav sa prepne sám.",
+      confirmAddress: (email) => `Na vyradenie napíš adresu (${email}).`,
+      failed: "Zmenu sa nepodarilo uložiť. Skús to znova.",
+      noRight: "Nemáš na to právo.",
+      fileEmpty: "Súbor je prázdny.",
+      noRows: "V súbore nie je ani jeden riadok s údajmi. Má prvý riadok hlavičky?",
+      importResult: (created, updated, unchanged, invalid) =>
+        `Pribudlo ${created}, zmenených ${updated}, bez zmeny ${unchanged}` +
+        (invalid ? `, chybných ${invalid}` : "") + ".",
+    },
   },
   library: {
     list: {
@@ -1273,6 +1537,147 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     empty: "Zatím tu žádné nejsou. První vytvoříš dole.",
     add: "Přidat",
   },
+  people: {
+    types: {
+      employee: "zaměstnanec",
+      external: "externí",
+      referee: "rozhodčí",
+      official: "funkcionář",
+    },
+    languages: {
+      sk: "slovenština",
+      cs: "čeština",
+      en: "angličtina",
+    },
+    roles: {
+      hr: "hr — přiděluje normy a vidí, kdo je nepotvrdil",
+      "people-admin": "people-admin — spravuje osoby (tato obrazovka)",
+      "spravca-obsahu": "spravca-obsahu — nahrává a upravuje normy v knihovně",
+    },
+    list: {
+      heading: "Osoby",
+      introBefore: "Kdo do organizace patří. Osoba se ",
+      introHighlight: "nemaže",
+      introAfter: " — vyřazení ji odstřihne od portálu, ale její potvrzení zůstávají platnými záznamy.",
+      invite: "Pozvat osobu",
+      importCsv: "Import z CSV",
+      searchPlaceholder: "Hledat ve jménu, adrese nebo oddělení",
+      nothingFound: "Nic se nenašlo.",
+      count: (n) => `${n} ${n === 1 ? "osoba" : n < 5 ? "osoby" : "osob"}`,
+      matchesSearch: " vyhovuje hledání",
+      capped: " — zobrazeno prvních 500, zužte hledání",
+      status: {
+        invited: "pozvaná",
+        active: "aktivní",
+        inactive: "vyřazená",
+      },
+      neverSignedIn: "nepřihlášená",
+    },
+    invite: {
+      back: "← Zpět na seznam",
+      heading: "Pozvat osobu",
+      introBefore: "Zapíše se do organizace ",
+      introAfter: ". Skupiny a trasy se doplní na jejím detailu — po pozvání tam přijdeš rovnou.",
+      email: "E-mailová adresa",
+      emailNote: "Později se měnit dá, ale je to adresa, na kterou chodí přihlašovací odkaz. Zkontroluj ji.",
+      fullName: "Jméno",
+      department: "Oddělení",
+      personType: "Typ osoby",
+      language: "Jazyk prostředí",
+      languageNote: "Skupiny a trasy se vybírají až na detailu — tam už je vidět, co v organizaci existuje.",
+      submit: "Pozvat",
+    },
+    import: {
+      back: "← Zpět na seznam",
+      heading: "Import z CSV",
+      introBefore: "Nejdřív uvidíš, ",
+      introHighlight: "co by se stalo",
+      introMiddle: ", a zapíše se až potom. Nahrání stovky lidí naslepo je přesně ta operace, po které se hledá, jak to vrátit zpět — a vrátit se nedá. Všichni se zapíšou do organizace ",
+      introAfter: ", i když je v souboru něco jiného.",
+      file: "Soubor CSV",
+      fileNoteBefore: "První řádek jsou hlavičky. Rozpoznají se ",
+      fileNoteAfter: " — i bez diakritiky a se středníkem jako oddělovačem, tak jak to ukládá Excel.",
+      reading: "Čtu…",
+      whatHappens: (name) => `Co se stane — ${name}`,
+      rows: "Řádků",
+      willAdd: "Přibude",
+      willUpdate: "Aktualizuje se",
+      invalid: "Chybných",
+      added: "Přibudou",
+      andMore: (n) => ` … a dalších ${n}`,
+      skippedRows: "Tyto řádky se přeskočí",
+      statusNoteBefore: "Existujícím osobám se ",
+      statusNoteHighlight: "nemění stav",
+      statusNoteAfter: " — kdo se už přihlásil, zůstává přihlášený. Nevyplněný jazyk se nepřepíše.",
+      write: "Zapsat",
+      writing: "Zapisuji…",
+      reasons: {
+        "invalid-email": "neplatná e-mailová adresa",
+        "missing-companyCode": "chybí organizace (companyCode)",
+        "missing-name": "chybí jméno",
+        "duplicate-in-file": "duplicita přímo v souboru",
+      },
+    },
+    detail: {
+      back: "← Zpět na seznam",
+      previously: (list) => `dříve ${list}`,
+      invitedNotSignedIn: "pozvaná, ještě se nepřihlásila",
+      excludedNoSignIn: "vyřazená — nepřihlásí se",
+      lastSeen: (when) => `naposledy ${when}`,
+      never: "—",
+      signsInVia: (list) => `přihlašuje se přes ${list}`,
+      email: "E-mailová adresa",
+      emailNote: "Změnit se dá — identita člověka na ní nestojí. Potvrzení se vážou na jeho záznam, ne na adresu, takže historie zůstává celá a stará adresa se uloží do jeho historie. Změní se tím to, kam chodí přihlašovací odkaz; přihlášení pracovním účtem funguje dál.",
+      fullName: "Jméno",
+      jobTitle: "Pozice",
+      jobTitleNote: "Evidenční údaj. Doplňuje se z pracovního účtu, když ho tam adresář má — ale jen když je tu prázdný, takže ruční oprava vydrží.",
+      department: "Oddělení",
+      departmentNone: "— bez oddělení —",
+      noDepartmentsBefore: "Struktura je zatím prázdná. Oddělení se zakládají v ",
+      noDepartmentsLink: "nastavení organizace",
+      noDepartmentsAfter: ".",
+      departmentNote: "Právě jedno — oddělení je místo ve struktuře. Kdo se má oslovit napříč odděleními, na to jsou skupiny níže.",
+      placement: (path) => ` Zařazení: ${path}.`,
+      legacyDepartmentBefore: "Původně tu bylo zapsáno textem: ",
+      legacyDepartmentAfter: ". Zůstává to uložené, dokud se nezařadí do struktury — aby bylo vidět, z čeho oddělení vzniklo.",
+      personType: "Typ osoby",
+      personTypeNote: "Evidenční údaj. O přístupu k obsahu nerozhoduje — ten řeší organizace a úroveň dokumentu.",
+      language: "Jazyk prostředí",
+      languageNote: "V čem se s člověkem bavíme. Ne jazyk dokumentů, které čte.",
+      groups: "Skupiny",
+      newGroup: "nová skupina, např. rozhodčí",
+      groupsNote: "Podle nich se přidělují normy. Číslo je počet lidí, kteří skupinu mají — skupina, kterou nemá nikdo, nedostane nic.",
+      tracks: "Trasy onboardingu",
+      newTrack: "nová trasa, např. zaklad-2026",
+      roles: "Role",
+      rolesNote: "Správce platformy se odsud přidělit nedá — patří tenantovi dodavatele a má vlastní cestu.",
+      save: "Uložit",
+      returnHeading: "Vrátit osobu",
+      excludeHeading: "Vyřadit osobu",
+      returnNoteBefore: "Vrátí se jako ",
+      returnNoteHighlight: "pozvaná",
+      returnNoteAfter: ", ne aktivní — aktivní znamená „už se přihlásila“ a to se vrácením nestalo. Přepne ji první přihlášení.",
+      returnSubmit: "Vrátit",
+      excludeNote: "Po vyřazení se nepřihlásí — okamžitě. Záznam ani její potvrzení se nemažou; jsou to platné doklady o tom, co si přečetla, a musí přežít její odchod.",
+      confirmLabel: "Napiš adresu pro potvrzení",
+      confirmNote: "Záměrně to není „opravdu?“ — to se odklikne dřív, než se přečte.",
+      excludeSubmit: "Vyřadit",
+    },
+    actions: {
+      saved: "Uloženo.",
+      invited: "Pozvaná. Přihlásí se, až si sama vyžádá odkaz nebo použije pracovní účet.",
+      excluded: "Vyřazená. Záznam a její potvrzení zůstávají.",
+      returned: "Vrácená. Přihlásí se a stav se přepne sám.",
+      confirmAddress: (email) => `Pro vyřazení napiš adresu (${email}).`,
+      failed: "Změnu se nepodařilo uložit. Zkus to znovu.",
+      noRight: "Nemáš na to právo.",
+      fileEmpty: "Soubor je prázdný.",
+      noRows: "V souboru není ani jeden řádek s údaji. Má první řádek hlavičky?",
+      importResult: (created, updated, unchanged, invalid) =>
+        `Přibylo ${created}, změněných ${updated}, beze změny ${unchanged}` +
+        (invalid ? `, chybných ${invalid}` : "") + ".",
+    },
+  },
   library: {
     list: {
       heading: "Knihovna",
@@ -1738,6 +2143,147 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
   tags: {
     empty: "There are none yet. Create the first one below.",
     add: "Add",
+  },
+  people: {
+    types: {
+      employee: "employee",
+      external: "external",
+      referee: "referee",
+      official: "official",
+    },
+    languages: {
+      sk: "Slovak",
+      cs: "Czech",
+      en: "English",
+    },
+    roles: {
+      hr: "hr — assigns documents and sees who has not acknowledged them",
+      "people-admin": "people-admin — manages people (this screen)",
+      "spravca-obsahu": "spravca-obsahu — uploads and edits documents in the library",
+    },
+    list: {
+      heading: "People",
+      introBefore: "Who belongs to the organisation. A person is ",
+      introHighlight: "never deleted",
+      introAfter: " — exclusion cuts them off from the portal, but their acknowledgements remain valid records.",
+      invite: "Invite a person",
+      importCsv: "Import from CSV",
+      searchPlaceholder: "Search by name, address or department",
+      nothingFound: "Nothing found.",
+      count: (n) => `${n} ${n === 1 ? "person" : "people"}`,
+      matchesSearch: " matching the search",
+      capped: " — showing the first 500, narrow the search",
+      status: {
+        invited: "invited",
+        active: "active",
+        inactive: "excluded",
+      },
+      neverSignedIn: "never signed in",
+    },
+    invite: {
+      back: "← Back to the list",
+      heading: "Invite a person",
+      introBefore: "They will be recorded in organisation ",
+      introAfter: ". Groups and tracks are added on their detail page — the invitation takes you straight there.",
+      email: "Email address",
+      emailNote: "It can be changed later, but it is the address the sign-in link goes to. Check it.",
+      fullName: "Name",
+      department: "Department",
+      personType: "Person type",
+      language: "Interface language",
+      languageNote: "Groups and tracks are chosen on the detail page — there you can see what already exists in the organisation.",
+      submit: "Invite",
+    },
+    import: {
+      back: "← Back to the list",
+      heading: "Import from CSV",
+      introBefore: "First you see ",
+      introHighlight: "what would happen",
+      introMiddle: ", and only then is anything written. Uploading a hundred people blind is exactly the operation after which people look for the undo button — and there is none. Everyone is recorded in organisation ",
+      introAfter: ", even if the file says otherwise.",
+      file: "CSV file",
+      fileNoteBefore: "The first row is the header. These are recognised: ",
+      fileNoteAfter: " — with or without diacritics, and with a semicolon as the separator, the way Excel saves it.",
+      reading: "Reading…",
+      whatHappens: (name) => `What will happen — ${name}`,
+      rows: "Rows",
+      willAdd: "Will be added",
+      willUpdate: "Will be updated",
+      invalid: "Invalid",
+      added: "Will be added",
+      andMore: (n) => ` … and ${n} more`,
+      skippedRows: "These rows will be skipped",
+      statusNoteBefore: "Existing people ",
+      statusNoteHighlight: "keep their status",
+      statusNoteAfter: " — whoever has signed in stays signed in. An empty language field does not overwrite anything.",
+      write: "Write",
+      writing: "Writing…",
+      reasons: {
+        "invalid-email": "invalid email address",
+        "missing-companyCode": "organisation missing (companyCode)",
+        "missing-name": "name missing",
+        "duplicate-in-file": "duplicate within the file",
+      },
+    },
+    detail: {
+      back: "← Back to the list",
+      previously: (list) => `previously ${list}`,
+      invitedNotSignedIn: "invited, has not signed in yet",
+      excludedNoSignIn: "excluded — cannot sign in",
+      lastSeen: (when) => `last seen ${when}`,
+      never: "—",
+      signsInVia: (list) => `signs in via ${list}`,
+      email: "Email address",
+      emailNote: "It can be changed — a person's identity does not rest on it. Acknowledgements are tied to their record, not to the address, so the history stays whole and the old address is kept in their history. What changes is where the sign-in link goes; signing in with a work account keeps working.",
+      fullName: "Name",
+      jobTitle: "Job title",
+      jobTitleNote: "A record-keeping field. It is filled in from the work account when the directory has it — but only while it is empty here, so a manual correction survives.",
+      department: "Department",
+      departmentNone: "— no department —",
+      noDepartmentsBefore: "The structure is still empty. Departments are created in the ",
+      noDepartmentsLink: "organisation settings",
+      noDepartmentsAfter: ".",
+      departmentNote: "Exactly one — a department is a place in the structure. For reaching people across departments there are groups below.",
+      placement: (path) => ` Placement: ${path}.`,
+      legacyDepartmentBefore: "Originally recorded here as text: ",
+      legacyDepartmentAfter: ". It stays stored until the person is placed in the structure — so it is visible where the department came from.",
+      personType: "Person type",
+      personTypeNote: "A record-keeping field. It does not decide access to content — that is settled by the organisation and the document's access level.",
+      language: "Interface language",
+      languageNote: "The language we speak to this person in. Not the language of the documents they read.",
+      groups: "Groups",
+      newGroup: "new group, e.g. referees",
+      groupsNote: "Documents are assigned by these. The number is how many people have the group — a group nobody has receives nothing.",
+      tracks: "Onboarding tracks",
+      newTrack: "new track, e.g. basics-2026",
+      roles: "Roles",
+      rolesNote: "The platform administrator cannot be assigned from here — that role belongs to the supplier's tenant and has its own path.",
+      save: "Save",
+      returnHeading: "Reinstate the person",
+      excludeHeading: "Exclude the person",
+      returnNoteBefore: "They come back as ",
+      returnNoteHighlight: "invited",
+      returnNoteAfter: ", not active — active means “has already signed in”, and reinstating did not make that happen. Their first sign-in switches it.",
+      returnSubmit: "Reinstate",
+      excludeNote: "After exclusion they cannot sign in — immediately. Neither the record nor their acknowledgements are deleted; they are valid evidence of what the person read, and they have to outlive their departure.",
+      confirmLabel: "Type the address to confirm",
+      confirmNote: "Deliberately not “are you sure?” — that gets clicked away before it is read.",
+      excludeSubmit: "Exclude",
+    },
+    actions: {
+      saved: "Saved.",
+      invited: "Invited. They will sign in once they request a link themselves or use their work account.",
+      excluded: "Excluded. The record and their acknowledgements remain.",
+      returned: "Reinstated. They sign in and the status switches by itself.",
+      confirmAddress: (email) => `To exclude, type the address (${email}).`,
+      failed: "The change could not be saved. Try again.",
+      noRight: "You do not have permission for that.",
+      fileEmpty: "The file is empty.",
+      noRows: "The file has no data rows. Does the first row contain headers?",
+      importResult: (created, updated, unchanged, invalid) =>
+        `Added ${created}, updated ${updated}, unchanged ${unchanged}` +
+        (invalid ? `, invalid ${invalid}` : "") + ".",
+    },
   },
   library: {
     list: {

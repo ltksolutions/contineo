@@ -17,31 +17,11 @@ import TagSelect from "@/components/TagSelect"
 import Notice from "@/components/Notice"
 import { brandingView } from "@/lib/tenants"
 import { tenantStyle } from "@/components/TenantHeader"
-import { formatDate, UI_LANGUAGES } from "@/lib/i18n"
+import { formatDate, UI_LANGUAGES, dictionary } from "@/lib/i18n"
 import { savePersonAction, togglePersonStatusAction } from "../actions"
 import { normalizeQuery, type RawQuery } from "@/lib/urlParams"
 
 export const dynamic = "force-dynamic"
-
-const TYPES = [
-  { value: "employee", label: "zamestnanec" },
-  { value: "external", label: "externý" },
-  { value: "referee", label: "rozhodca" },
-  { value: "official", label: "funkcionár" },
-]
-
-/** Kód jazyka sám o sebe nepovie nič — „sk" je pre nás jasné, pre iných nie. */
-const LANGUAGES: Record<string, string> = {
-  sk: "slovenčina",
-  cs: "čeština",
-  en: "angličtina",
-}
-
-const ROLE_LABEL: Record<string, string> = {
-  hr: "hr — prideľuje normy a vidí, kto ich nepotvrdil",
-  "people-admin": "people-admin — spravuje osoby (táto obrazovka)",
-  "spravca-obsahu": "spravca-obsahu — nahráva a upravuje normy v knižnici",
-}
 
 export default async function PersonDetailPage({
   params,
@@ -74,26 +54,28 @@ export default async function PersonDetailPage({
 
   const branding = brandingView(ctx.tenant)
   const language = ctx.person.language
+  const d = dictionary(language).people
+  const t = d.detail
   const excluded = o.status === "inactive"
 
   return (
     <div className="obal" style={{ padding: "28px 20px 80px", maxWidth: 680, ...tenantStyle(branding) }}>
       <p style={{ margin: "0 0 16px" }}>
-        <Link className="tichy" href="/osoby" style={{ fontSize: 14 }}>← Späť na zoznam</Link>
+        <Link className="tichy" href="/osoby" style={{ fontSize: 14 }}>{t.back}</Link>
       </p>
 
       <h1 style={{ fontSize: 25, letterSpacing: "-0.02em", margin: "0 0 4px" }}>{o.fullName}</h1>
       <p className="tichy" style={{ fontSize: 14.5, margin: "0 0 4px", overflowWrap: "anywhere" }}>
         {o.email}
         {o.emailHistory.length > 0 && (
-          <> · predtým {o.emailHistory.map(h => h.email).join(", ")}</>
+          <> · {t.previously(o.emailHistory.map(h => h.email).join(", "))}</>
         )}
       </p>
       <p className="tichy" style={{ fontSize: 13.5, margin: "0 0 20px" }}>
-        {o.status === "invited" ? "pozvaná, ešte sa neprihlásila"
-          : o.status === "inactive" ? "vyradená — neprihlási sa"
-          : `naposledy ${o.lastLoginAt ? formatDate(o.lastLoginAt, language) : "—"}`}
-        {o.accounts.length > 0 && ` · prihlasuje sa cez ${o.accounts.join(", ")}`}
+        {o.status === "invited" ? t.invitedNotSignedIn
+          : o.status === "inactive" ? t.excludedNoSignIn
+          : t.lastSeen(o.lastLoginAt ? formatDate(o.lastLoginAt, language) : t.never)}
+        {o.accounts.length > 0 && ` · ${t.signsInVia(o.accounts.join(", "))}`}
       </p>
 
       <Notice message={message} error={error === "1"} back={`/osoby/${encodeURIComponent(id)}`} />
@@ -102,7 +84,7 @@ export default async function PersonDetailPage({
         <input type="hidden" name="id" value={o.id} />
 
         <label className="pole">
-          <span className="pole-popis">E-mailová adresa</span>
+          <span className="pole-popis">{t.email}</span>
           <input
             className="pole-vstup"
             name="email"
@@ -112,36 +94,28 @@ export default async function PersonDetailPage({
             autoCapitalize="none"
             autoCorrect="off"
           />
-          <span className="tichy pole-napoveda">
-            Zmeniť sa dá — identita človeka na nej nestojí. Potvrdenia sa viažu
-            na jeho záznam, nie na adresu, takže história zostáva celá a stará
-            adresa sa uloží do jeho histórie. Zmení sa tým to, kam chodí
-            prihlasovací odkaz; prihlásenie pracovným kontom funguje ďalej.
-          </span>
+          <span className="tichy pole-napoveda">{t.emailNote}</span>
         </label>
 
         <label className="pole">
-          <span className="pole-popis">Meno</span>
+          <span className="pole-popis">{t.fullName}</span>
           <input className="pole-vstup" name="fullName" defaultValue={o.fullName} required />
         </label>
 
         <label className="pole">
-          <span className="pole-popis">Pozícia</span>
+          <span className="pole-popis">{t.jobTitle}</span>
           <input className="pole-vstup" name="jobTitle" defaultValue={o.jobTitle ?? ""} />
-          <span className="tichy pole-napoveda">
-            Evidenčný údaj. Dopĺňa sa z pracovného konta, keď ho tam adresár má —
-            ale len keď je tu prázdny, takže ručná oprava vydrží.
-          </span>
+          <span className="tichy pole-napoveda">{t.jobTitleNote}</span>
         </label>
 
         <div className="pole">
-          <span className="pole-popis">Oddelenie</span>
+          <span className="pole-popis">{t.department}</span>
           <Select
             name="departmentId"
-            fieldLabel="Oddelenie"
+            fieldLabel={t.department}
             initial={o.departmentId ?? ""}
             options={[
-              { value: "", label: "— bez oddelenia —" },
+              { value: "", label: t.departmentNone },
               ...treeRows.map(r => ({
                 value: r.department.id,
                 label: `${"— ".repeat(r.level - 1)}${r.department.name}`,
@@ -151,14 +125,14 @@ export default async function PersonDetailPage({
           <span className="tichy pole-napoveda">
             {treeRows.length === 0 ? (
               <>
-                Štruktúra je zatiaľ prázdna. Oddelenia sa zakladajú
-                v <Link href="/organizacia?tab=departments">nastavení organizácie</Link>.
+                {t.noDepartmentsBefore}
+                <Link href="/organizacia?tab=departments">{t.noDepartmentsLink}</Link>
+                {t.noDepartmentsAfter}
               </>
             ) : (
               <>
-                Práve jedno — oddelenie je miesto v štruktúre. Kto sa má osloviť
-                naprieč oddeleniami, na to sú skupiny nižšie.
-                {placement.length > 1 ? ` Zaradenie: ${placement.map(x => x.name).join(" › ")}.` : ""}
+                {t.departmentNote}
+                {placement.length > 1 ? t.placement(placement.map(x => x.name).join(" › ")) : ""}
               </>
             )}
           </span>
@@ -166,77 +140,74 @@ export default async function PersonDetailPage({
 
         {o.department && !o.departmentId ? (
           <p className="tichy" style={{ fontSize: 13, margin: "-6px 0 0" }}>
-            Pôvodne tu bolo zapísané textom: <strong>{o.department}</strong>. Ostáva to
-            uložené, kým sa nezaradí do štruktúry — aby bolo vidieť, z čoho oddelenie vznikol.
+            {t.legacyDepartmentBefore}<strong>{o.department}</strong>{t.legacyDepartmentAfter}
           </p>
         ) : null}
 
         <div className="pole">
-          <span className="pole-popis">Typ osoby</span>
-          <Select name="personType" options={TYPES} initial={o.personType} fieldLabel="Typ osoby" />
-          <span className="tichy pole-napoveda">
-            Evidenčný údaj. O prístupe k obsahu nerozhoduje — ten rieši organizácia
-            a úroveň dokumentu.
-          </span>
+          <span className="pole-popis">{t.personType}</span>
+          <Select
+            name="personType"
+            options={Object.entries(d.types).map(([value, label]) => ({ value, label }))}
+            initial={o.personType}
+            fieldLabel={t.personType}
+          />
+          <span className="tichy pole-napoveda">{t.personTypeNote}</span>
         </div>
 
         <div className="pole">
-          <span className="pole-popis">Jazyk prostredia</span>
+          <span className="pole-popis">{t.language}</span>
           <Select
             name="language"
-            options={UI_LANGUAGES.map(l => ({ value: l, label: LANGUAGES[l] ?? l }))}
+            options={UI_LANGUAGES.map(l => ({ value: l, label: d.languages[l] ?? l }))}
             initial={o.language}
-            fieldLabel="Jazyk prostredia"
+            fieldLabel={t.language}
           />
-          <span className="tichy pole-napoveda">
-            V čom sa s človekom rozprávame. Nie jazyk dokumentov, ktoré číta.
-          </span>
+          <span className="tichy pole-napoveda">{t.languageNote}</span>
         </div>
 
         <div className="pole">
-          <span className="pole-popis">Skupiny</span>
+          <span className="pole-popis">{t.groups}</span>
           <TagSelect
             name="groups"
             options={audiences.groups}
             selected={o.groups}
-            newLabel="nová skupina, napr. rozhodcovia"
+            newLabel={t.newGroup}
+            language={language}
           />
-          <span className="tichy pole-napoveda">
-            Podľa nich sa prideľujú normy. Číslo je počet ľudí, ktorí skupinu
-            majú — skupina, ktorú nemá nikto, nedostane nič.
-          </span>
+          <span className="tichy pole-napoveda">{t.groupsNote}</span>
         </div>
 
         <div className="pole">
-          <span className="pole-popis">Trasy onboardingu</span>
+          <span className="pole-popis">{t.tracks}</span>
           <TagSelect
             name="tracks"
             options={audiences.tracks}
             selected={o.tracks}
-            newLabel="nová trasa, napr. zaklad-2026"
+            newLabel={t.newTrack}
+            language={language}
           />
         </div>
 
         <fieldset className="hr-skupina" style={{ border: "1px solid var(--line)" }}>
-          <legend className="pole-popis">Roly</legend>
+          <legend className="pole-popis">{t.roles}</legend>
           <ul className="hr-volby">
             {ASSIGNABLE_ROLES.map(r => (
               <li key={r}>
                 <label className="hr-volba">
                   <input type="checkbox" name="roles" value={r} defaultChecked={o.roles.includes(r)} />
-                  <span>{ROLE_LABEL[r] ?? r}</span>
+                  <span>{d.roles[r] ?? r}</span>
                 </label>
               </li>
             ))}
           </ul>
           <p className="tichy pole-napoveda" style={{ margin: "6px 0 0" }}>
-            Správcu platformy sa odtiaľto prideliť nedá — patrí tenantovi dodávateľa
-            a má vlastnú cestu.
+            {t.rolesNote}
           </p>
         </fieldset>
 
         <div>
-          <button className="tlacidlo" type="submit">Uložiť</button>
+          <button className="tlacidlo" type="submit">{t.save}</button>
         </div>
       </form>
 
@@ -245,31 +216,24 @@ export default async function PersonDetailPage({
         <input type="hidden" name="email" value={o.email} />
         <input type="hidden" name="status" value={excluded ? "invited" : "inactive"} />
 
-        <h2 style={{ fontSize: 17, margin: 0 }}>{excluded ? "Vrátiť osobu" : "Vyradiť osobu"}</h2>
+        <h2 style={{ fontSize: 17, margin: 0 }}>{excluded ? t.returnHeading : t.excludeHeading}</h2>
 
         {excluded ? (
           <>
             <p className="tichy" style={{ margin: 0, fontSize: 14 }}>
-              Vráti sa ako <strong>pozvaná</strong>, nie aktívna — aktívna znamená
-              &bdquo;už sa prihlásila&ldquo; a to sa vrátením nestalo. Prepne ju prvé prihlásenie.
+              {t.returnNoteBefore}<strong>{t.returnNoteHighlight}</strong>{t.returnNoteAfter}
             </p>
-            <div><button className="tlacidlo" type="submit">Vrátiť</button></div>
+            <div><button className="tlacidlo" type="submit">{t.returnSubmit}</button></div>
           </>
         ) : (
           <>
-            <p className="tichy" style={{ margin: 0, fontSize: 14 }}>
-              Po vyradení sa neprihlási — okamžite. Záznam ani jej potvrdenia sa
-              nemažú; sú to platné doklady o tom, čo si prečítala, a musia prežiť
-              jej odchod.
-            </p>
+            <p className="tichy" style={{ margin: 0, fontSize: 14 }}>{t.excludeNote}</p>
             <label className="pole">
-              <span className="pole-popis">Napíš adresu na potvrdenie</span>
-              <input className="pole-vstup" name="potvrdenie" autoCapitalize="none" autoCorrect="off" />
-              <span className="tichy pole-napoveda">
-                Zámerne to nie je &bdquo;naozaj?&ldquo; — to sa odklikne skôr, než sa prečíta.
-              </span>
+              <span className="pole-popis">{t.confirmLabel}</span>
+              <input className="pole-vstup" name="confirmation" autoCapitalize="none" autoCorrect="off" />
+              <span className="tichy pole-napoveda">{t.confirmNote}</span>
             </label>
-            <div><button className="tlacidlo tlacidlo--tiche" type="submit">Vyradiť</button></div>
+            <div><button className="tlacidlo tlacidlo--tiche" type="submit">{t.excludeSubmit}</button></div>
           </>
         )}
       </form>

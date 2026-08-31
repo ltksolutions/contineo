@@ -15,16 +15,27 @@ import { redirect } from "next/navigation"
 import { isRedirect } from "@/lib/redirects"
 import { revalidatePath } from "next/cache"
 import { peopleContext, savePerson, invitePerson, setPersonStatus, PersonValidationError } from "@/lib/people"
-import { csvToPersons, REASONS } from "@/lib/personsImport"
+import { csvToPersons } from "@/lib/personsImport"
 import { previewImport, upsertPersons } from "@/lib/persons"
 import type { PersonType } from "@/lib/persons"
+import { dictionary, type UiLanguage } from "@/lib/i18n"
 
-async function peopleAdmin(): Promise<{ email: string; companyCode: string } | null> {
+async function peopleAdmin(): Promise<
+  { email: string; companyCode: string; language: UiLanguage } | null
+> {
   const ctx = await peopleContext()
   return ctx.state === "ready"
-    ? { email: ctx.person.email, companyCode: ctx.person.companyCode }
+    ? { email: ctx.person.email, companyCode: ctx.person.companyCode, language: ctx.person.language }
     : null
 }
+
+/** Hlásenia v jazyku prihláseného človeka. */
+function say(language: UiLanguage) {
+  return dictionary(language).people.actions
+}
+
+/** Kým nevieme, kto sa pýta, nevieme ani v akom jazyku — predvolený. */
+const NO_RIGHT = dictionary(undefined).people.actions.noRight
 
 function fieldText(fd: FormData, actorName: string): string {
   const v = fd.get(actorName)
@@ -35,10 +46,10 @@ function listField(fd: FormData, actorName: string): string[] {
   return fieldText(fd, actorName).split(/[,;\n]/).map(x => x.trim()).filter(Boolean)
 }
 
-function errorMessage(e: unknown): string {
+function errorMessage(e: unknown, language: UiLanguage): string {
   if (e instanceof PersonValidationError) return e.message
   console.error("[osoby] akcia zlyhala:", e)
-  return "Zmenu sa nepodarilo uložiť. Skús to znova."
+  return say(language).failed
 }
 
 export async function savePersonAction(fd: FormData) {
@@ -63,9 +74,9 @@ export async function savePersonAction(fd: FormData) {
       // Zaškrtávacie políčka: neprítomná hodnota znamená „odobrať".
       roles: fd.getAll("roles").filter((r): r is string => typeof r === "string"),
     }, actor.email)
-    message = "Uložené."
+    message = say(actor.language).saved
   } catch (e) {
-    message = errorMessage(e)
+    message = errorMessage(e, actor.language)
     error = true
   }
 
@@ -90,13 +101,13 @@ export async function invitePersonAction(fd: FormData) {
     // Rovno na detail: po pozvaní nasleduje priradenie trás a skupín,
     // a hľadať toho človeka znova v zozname je zbytočný krok.
     redirect(`/osoby/${encodeURIComponent(person.id)}?msg=${encodeURIComponent(
-      "Pozvaná. Prihlási sa, keď si sama vyžiada odkaz alebo použije pracovné konto."
+      say(actor.language).invited,
     )}`)
   } catch (e) {
     // `redirect()` vyhadzuje výnimku — nesmie sa chytiť ako chyba zápisu.
     if (isRedirect(e)) throw e
     const q = new URLSearchParams({
-      chyba: errorMessage(e),
+      error: errorMessage(e, actor.language),
       email: fieldText(fd, "email"),
       fullName: fieldText(fd, "fullName"),
       department: fieldText(fd, "department"),
@@ -122,17 +133,17 @@ export async function togglePersonStatusAction(fd: FormData) {
   let message = ""
   let error = false
 
-  if (toStatus === "inactive" && fieldText(fd, "potvrdenie").toLowerCase() !== email.toLowerCase()) {
-    message = `Na vyradenie napíš adresu (${email}).`
+  if (toStatus === "inactive" && fieldText(fd, "confirmation").toLowerCase() !== email.toLowerCase()) {
+    message = say(actor.language).confirmAddress(email)
     error = true
   } else {
     try {
       await setPersonStatus(actor.companyCode, id, toStatus, actor.email)
       message = toStatus === "inactive"
-        ? "Vyradená. Záznam a jej potvrdenia zostávajú."
-        : "Vrátená. Prihlási sa a stav sa prepne sám."
+        ? say(actor.language).excluded
+        : say(actor.language).returned
     } catch (e) {
-      message = errorMessage(e)
+      message = errorMessage(e, actor.language)
       error = true
     }
   }
@@ -157,14 +168,14 @@ export async function previewImportAction(text: string): Promise<{
   total?: number
 }> {
   const actor = await peopleAdmin()
-  if (!actor) return { ok: false, message: "Nemáš na to právo." }
-  if (!text?.trim()) return { ok: false, message: "Súbor je prázdny." }
+  if (!actor) return { ok: false, message: NO_RIGHT }
+  if (!text?.trim()) return { ok: false, message: say(actor.language).fileEmpty }
 
   // Organizácia sa doplní z prihláseného, nie zo súboru: personalista zväzu
   // nesmie importom založiť človeka do cudzej organizácie (D32).
   const people = csvToPersons(text, actor.companyCode)
   if (people.length === 0) {
-    return { ok: false, message: "V súbore nie je ani jeden riadok s údajmi. Má prvý riadok hlavičky?" }
+    return { ok: false, message: say(actor.language).noRows }
   }
 
   try {
@@ -174,17 +185,18 @@ export async function previewImportAction(text: string): Promise<{
       total: people.length,
       created: n.created,
       existing: n.existing,
-      errors: n.errors.map(e => `${e.email || "(bez adresy)"} — ${REASONS[e.reason] ?? e.reason}`),
+      errors: n.errors.map(e =>
+        `${e.email || "—"} — ${dictionary(actor.language).people.import.reasons[e.reason] ?? e.reason}`),
     }
   } catch (e) {
-    return { ok: false, message: errorMessage(e) }
+    return { ok: false, message: errorMessage(e, actor.language) }
   }
 }
 
 /** Zápis. Volá sa až po náhľade, z toho istého textu. */
 export async function runImportAction(text: string): Promise<{ ok: boolean; message: string }> {
   const actor = await peopleAdmin()
-  if (!actor) return { ok: false, message: "Nemáš na to právo." }
+  if (!actor) return { ok: false, message: NO_RIGHT }
 
   try {
     const people = csvToPersons(text, actor.companyCode)
@@ -192,10 +204,9 @@ export async function runImportAction(text: string): Promise<{ ok: boolean; mess
     revalidatePath("/osoby")
     return {
       ok: true,
-      message: `Pribudlo ${v.created}, zmenených ${v.updated}, bez zmeny ${v.unchanged}` +
-        (v.errors.length ? `, chybných ${v.errors.length}` : "") + ".",
+      message: say(actor.language).importResult(v.created, v.updated, v.unchanged, v.errors.length),
     }
   } catch (e) {
-    return { ok: false, message: errorMessage(e) }
+    return { ok: false, message: errorMessage(e, actor.language) }
   }
 }
