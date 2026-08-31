@@ -146,7 +146,12 @@
 - [x] `app/src/lib/i18n.ts` ✅ 2026-08-27 — zoznam jazykov prostredia (oddelený od číselníka `language`, ktorý tagguje obsah), formulka a e-mail per jazyk, deterministický dátum
 - [x] `persons.language` + prihlasovací e-mail v jazyku osoby ✅ 2026-08-27
 - [x] `acknowledgements.language` + `documentLanguage` ✅ 2026-08-27 — záznam unesie, že Čech potvrdzoval slovenský text
-- [ ] Preklad **rozhrania** portálu (SK hotové, CS/EN po termíne — SFZ prvá vlna je len SK)
+- [ ] Preklad **rozhrania** portálu — po častiach, poradie podľa toho, kto obrazovku vidí:
+  - [x] **1 — človek** ✅ 2026-08-30: formulka, onboarding, čakajúce, e-maily, hlavička, pätička, 404, domov, prihlásenie, dokumenty, otázky a odpovede
+  - [x] **2a/2b — knižnica: zoznam, priečinky, nahrávanie** ✅ 2026-08-30
+  - [x] **2c — knižnica: detail dokumentu, editor, hlásenia akcií** ✅ 2026-08-31 (`d75d951`)
+  - [ ] **3 — správcovia:** nastavenie organizácie, admin, osoby (~250 reťazcov). Patrí sem aj `ColorSelect.tsx`, popisky v `AuditList` a `language` pre `<TreeWithOrder>` a `<TagSelect>` v `osoby/[id]`
+  - [ ] **4 — chyby z `src/lib`** prekladané až na obrazovke (~80 miest), podľa rozhodnutia „kódy chýb, preklad až na obrazovke"
 - [ ] **Otázka pre HR/právnika:** má formulka pomenovať jazyk dokumentu, keď sa líši od jazyka prostredia?
 
 **I2. Rozsah B `[2–3,5 týždňa]`**
@@ -203,6 +208,20 @@
 - [x] `tests/onboardingDb.test.ts` — 17 testov nad falošnou databázou (`vi.mock`), vrátane toho, že **chyba DB neotvára prístup**
 - [x] **`app/tests/run.mjs` zmazaný** ✅ 2026-08-28 — pôvodný beh testov nahradil Vitest a s odstránením `esbuildu` prestal byť spustiteľný.
 - [ ] Postupne prepísať staré suity na idiomatické `expect()` — nie naraz, ale vždy, keď sa nejakej suity aj tak dotýkame
+
+### N. Slovenčina v kóde — zvyšok po veľkom premenovaní
+
+> Premenovanie identifikátorov (2026-08-30) prešlo **deklarované identifikátory**,
+> nie **názvy vlastností** — nástroj ich zámerne nechal na pokoji, aby nerozbil
+> polia v databáze. Zostali teda slovenské názvy vlastností a niekoľko polí
+> v Mongo. Ide o samostatnú úlohu, nie o i18n.
+
+- [x] Návratové hodnoty `libraryWrite` (`chunkov`, `archivovanych`, `uzBolo`, `znovaPotvrdit`) a `RewriteMode` ✅ 2026-08-31 — spolu s i18n 2c, lebo sa ich dotýkali formuláre
+- [ ] **Polia v databáze** — potrebujú migráciu, nie premenovanie:
+      `documents.versions[].opravy[]` (`kedy`, `kto`, `dovod`, `znovaPotvrdit`, `zLabel`, `zEffectiveFrom`),
+      `tenants.chunkovanie` → už `chunking`, ale skontrolovať zvyšky
+- [ ] Vlastnosti mimo knižnice: `chunker.mjs` / `chunker.d.ts` (`chunkov`, `chunky`, `vlozene`), `hr/actions.ts` a `osoby/actions.ts` (`dovod`, kľúč `chyba`)
+- [ ] `TagSelect.tsx` a spol. — po premenovaní zostali rozpísané skratky vlastností (`name: name,`); kozmetika, urobiť pri najbližšom dotyku súboru
 
 ### M. Správa tenantov — **Fáza 5b** 🟡 → `docs/SPRAVA_TENANTOV.md`
 
