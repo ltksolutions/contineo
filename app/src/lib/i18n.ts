@@ -661,7 +661,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       assignedWithExisting: (count, documents, audiences, already) =>
         `Pridelené: ${count} (${documents} ${documents === 1 ? "norma" : documents < 5 ? "normy" : "noriem"}` +
         ` × ${audiences} ${audiences === 1 ? "publikum" : audiences < 5 ? "publiká" : "publík"}).` +
-        ` ${already} už pridelených bolo — nič sa nezdvojilo.`,
+        ` ${already} už ${already === 1 ? "pridelené bolo" : already < 5 ? "pridelené boli" : "pridelených bolo"}` +
+        " — nič sa nezdvojilo.",
       revoked: "Pridelenie odvolané. Záznam o ňom zostáva.",
       alreadyRevoked: "Toto pridelenie už neplatí.",
       nobodyToNotify: "Nie je komu poslať — potvrdili už všetci, kto v oddelení zostal.",
@@ -1003,7 +1004,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       assignedWithExisting: (count, documents, audiences, already) =>
         `Přiděleno: ${count} (${documents} ${documents === 1 ? "předpis" : documents < 5 ? "předpisy" : "předpisů"}` +
         ` × ${audiences} ${audiences === 1 ? "publikum" : audiences < 5 ? "publika" : "publik"}).` +
-        ` ${already} už přidělených bylo — nic se nezdvojilo.`,
+        ` ${already} už ${already === 1 ? "přidělené bylo" : already < 5 ? "přidělená byla" : "přidělených bylo"}` +
+        " — nic se nezdvojilo.",
       revoked: "Přidělení odvoláno. Záznam o něm zůstává.",
       alreadyRevoked: "Toto přidělení už neplatí.",
       nobodyToNotify: "Není komu poslat — potvrdili už všichni, kdo v oddělení zůstal.",
