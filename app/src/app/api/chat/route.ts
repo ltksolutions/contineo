@@ -27,11 +27,14 @@ import { generateAnswer }     from "@/lib/llmGenerator"
 import { defaultProfile }     from "@/lib/tenantProfile"
 import { getProviders }       from "@/lib/providers/factory"
 import { assertEmbeddingSpace, EmbeddingSpaceMismatchError } from "@/lib/embeddingGuard"
+import { dictionary } from "@/lib/i18n"
 
 // ── Typy ────────────────────────────────────────────────────────────────────
 
 interface ChatRequest {
   query:              string
+  /** Jazyk prostredia. Veta „nič som nenašiel" je súčasť odpovede, nie chyba. */
+  language?:          string
   useLLMClassifier?:  boolean   // default: false (heuristika)
   usePreprocessing?:  boolean   // default: true pre vector/hybrid
 }
@@ -44,7 +47,7 @@ export async function POST(req: NextRequest) {
   try {
     body = await req.json()
   } catch {
-    return new Response("Neplatný JSON", { status: 400 })
+    return new Response("invalid-json", { status: 400 })
   }
 
   // Preprocessing stojí ~2,5 s PRED vyhľadávaním a platí sa zaň priamo
@@ -52,10 +55,10 @@ export async function POST(req: NextRequest) {
   // sada — preto sa predvoľba dá prepnúť envom a obe konfigurácie zmerať
   // tou istou sadou. Predvolene zapnuté: meníme až podľa čísel, nie dojmu.
   const preprocessingDefault = process.env.PREPROCESSING_DEFAULT !== "false"
-  const { query, useLLMClassifier = false, usePreprocessing = preprocessingDefault } = body
+  const { query, language, useLLMClassifier = false, usePreprocessing = preprocessingDefault } = body
 
   if (!query?.trim() || query.length > 1000) {
-    return new Response("Neplatný dotaz (1–1000 znakov)", { status: 400 })
+    return new Response("invalid-query", { status: 400 })
   }
 
   // 2. Autentifikácia – zistenie roly používateľa
@@ -174,7 +177,7 @@ export async function POST(req: NextRequest) {
       start(c) {
         const enc = new TextEncoder()
         c.enqueue(enc.encode(
-          `data: ${JSON.stringify({ type: "token", token: "Nenašiel som relevantné informácie k vašej otázke v dostupných dokumentoch." })}\n\n`
+          `data: ${JSON.stringify({ type: "token", token: dictionary(language).answer.noResults })}\n\n`
         ))
         c.enqueue(enc.encode(
           `data: ${JSON.stringify({ type: "done", sources: [], model: "none" })}\n\n`

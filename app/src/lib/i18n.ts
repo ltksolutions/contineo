@@ -235,6 +235,7 @@ interface Dictionary {
 
   answer: {
     failed: string
+    noResults: string
     incompleteHeading: string
     incompleteNote: string
     citations: (shown: number) => string
@@ -1208,6 +1209,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
 
   answer: {
     failed: "Odpoveď sa nepodarilo získať.",
+    noResults: "Nenašiel som relevantné informácie k vašej otázke v dostupných dokumentoch.",
     incompleteHeading: "Odpoveď je neúplná.",
     incompleteNote: "Model dosiahol limit dĺžky a zastavil sa uprostred — chýba jej záver. Skúste sa opýtať na užšiu časť problému.",
     citations: (shown) => `Doslovné citácie (${shown})`,
@@ -1575,6 +1577,23 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "codelist.tenantMissing": "Organizácia neexistuje.",
     "codelist.alreadyThere": "„{key}“ v ponuke už je.",
     "codelist.readOnly": "Tento číselník sa meniť nedá.",
+
+    // ── osoby ──────────────────────────────────────────────────────────────
+    "person.notFound": "Taká osoba tu nie je.",
+    "person.badEmail": "To nie je e-mailová adresa.",
+    "person.emailTaken": "{email} v organizácii už je.",
+    "person.alreadyInvited": "{email} je v organizácii už zapísaná.",
+    "person.nameRequired": "Meno je povinné — bez neho je v zozname len adresa.",
+    "person.nameRequiredShort": "Meno je povinné.",
+    "person.departmentNotFound": "Také oddelenie neexistuje.",
+    "person.unknownType": "Neznámy typ osoby.",
+
+    // ── prideľovanie noriem ────────────────────────────────────────────────
+    "assignment.missingReason": "Dôvod pridelenia je povinný — je to jediné miesto, kde sa dá zaznamenať, prečo sa má norma potvrdiť znova (D30).",
+    "assignment.missingCompany": "Chýba kód organizácie.",
+    "assignment.missingSubject": "Chýba dokument alebo jeho znenie.",
+    "assignment.versionNotEffective": "Znenie nemá dátum platnosti, a tak sa nedá ani potvrdiť (D6). Najprv mu doplň platnosť.",
+    "assignment.missingAudience": "Chýba, komu sa prideľuje.",
 
     // ── oddelenia ──────────────────────────────────────────────────────────
     "department.nameRequired": "Názov oddelenia je povinný.",
@@ -2404,6 +2423,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
 
   answer: {
     failed: "Odpověď se nepodařilo získat.",
+    noResults: "Nenašel jsem relevantní informace k vaší otázce v dostupných dokumentech.",
     incompleteHeading: "Odpověď je neúplná.",
     incompleteNote: "Model dosáhl limitu délky a zastavil se uprostřed — chybí jí závěr. Zkuste se zeptat na užší část problému.",
     citations: (shown) => `Doslovné citace (${shown})`,
@@ -2771,6 +2791,23 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "codelist.tenantMissing": "Organizace neexistuje.",
     "codelist.alreadyThere": "„{key}“ v nabídce už je.",
     "codelist.readOnly": "Tento číselník měnit nelze.",
+
+    // ── osoby ──────────────────────────────────────────────────────────────
+    "person.notFound": "Taková osoba tu není.",
+    "person.badEmail": "To není e-mailová adresa.",
+    "person.emailTaken": "{email} v organizaci už je.",
+    "person.alreadyInvited": "{email} je v organizaci už zapsaná.",
+    "person.nameRequired": "Jméno je povinné — bez něj je v seznamu jen adresa.",
+    "person.nameRequiredShort": "Jméno je povinné.",
+    "person.departmentNotFound": "Takové oddělení neexistuje.",
+    "person.unknownType": "Neznámý typ osoby.",
+
+    // ── přidělování předpisů ───────────────────────────────────────────────
+    "assignment.missingReason": "Důvod přidělení je povinný — je to jediné místo, kde lze zaznamenat, proč se má předpis potvrdit znovu (D30).",
+    "assignment.missingCompany": "Chybí kód organizace.",
+    "assignment.missingSubject": "Chybí dokument nebo jeho znění.",
+    "assignment.versionNotEffective": "Znění nemá datum platnosti, a tak je nelze ani potvrdit (D6). Nejprve mu doplň platnost.",
+    "assignment.missingAudience": "Chybí, komu se přiděluje.",
 
     // ── oddělení ───────────────────────────────────────────────────────────
     "department.nameRequired": "Název oddělení je povinný.",
@@ -3599,6 +3636,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
 
   answer: {
     failed: "The answer could not be retrieved.",
+    noResults: "I found no information relevant to your question in the available documents.",
     incompleteHeading: "The answer is incomplete.",
     incompleteNote: "The model hit its length limit and stopped mid-sentence — the conclusion is missing. Try asking about a narrower part of the problem.",
     citations: (shown) => `Verbatim citations (${shown})`,
@@ -3965,6 +4003,23 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "codelist.tenantMissing": "The organisation does not exist.",
     "codelist.alreadyThere": "“{key}” is already in the menu.",
     "codelist.readOnly": "This code list cannot be changed.",
+
+    // ── people ─────────────────────────────────────────────────────────────
+    "person.notFound": "There is no such person here.",
+    "person.badEmail": "That is not an email address.",
+    "person.emailTaken": "{email} is already in the organisation.",
+    "person.alreadyInvited": "{email} is already recorded in the organisation.",
+    "person.nameRequired": "The name is required — without it the list shows only the address.",
+    "person.nameRequiredShort": "The name is required.",
+    "person.departmentNotFound": "There is no such department.",
+    "person.unknownType": "Unknown person type.",
+
+    // ── assigning documents ────────────────────────────────────────────────
+    "assignment.missingReason": "The reason for the assignment is required — it is the only place to record why the document has to be acknowledged again (D30).",
+    "assignment.missingCompany": "The organisation code is missing.",
+    "assignment.missingSubject": "The document or its version is missing.",
+    "assignment.versionNotEffective": "The version has no effective date, so it cannot be acknowledged either (D6). Give it an effective date first.",
+    "assignment.missingAudience": "It is missing who this is assigned to.",
 
     // ── departments ────────────────────────────────────────────────────────
     "department.nameRequired": "The department name is required.",

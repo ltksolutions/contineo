@@ -46,12 +46,12 @@ export async function POST(req: NextRequest) {
   try {
     body = await req.json()
   } catch {
-    return NextResponse.json({ error: "Neplatný JSON" }, { status: 400 })
+    return NextResponse.json({ error: "invalid-json" }, { status: 400 })
   }
 
   if (!body.question?.trim() || !body.answer?.trim()) {
     return NextResponse.json(
-      { error: "Chýba otázka alebo odpoveď" },
+      { error: "missing-question-or-answer" },
       { status: 400 }
     )
   }
@@ -78,7 +78,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ id })
   } catch (e) {
     console.error("Zápis odpovede zlyhal:", e)
-    return NextResponse.json({ error: "Zápis zlyhal" }, { status: 500 })
+    return NextResponse.json({ error: "write-failed" }, { status: 500 })
   }
 }
 
@@ -87,11 +87,11 @@ export async function PATCH(req: NextRequest) {
   try {
     body = await req.json()
   } catch {
-    return NextResponse.json({ error: "Neplatný JSON" }, { status: 400 })
+    return NextResponse.json({ error: "invalid-json" }, { status: 400 })
   }
 
   if (!body.id) {
-    return NextResponse.json({ error: "Chýba id" }, { status: 400 })
+    return NextResponse.json({ error: "missing-id" }, { status: 400 })
   }
 
   const edit: RatingEdit = {}
@@ -108,17 +108,17 @@ export async function PATCH(req: NextRequest) {
   if (note !== undefined) edit.note = note
 
   if (Object.keys(edit).length === 0) {
-    return NextResponse.json({ error: "Nič na uloženie" }, { status: 400 })
+    return NextResponse.json({ error: "nothing-to-save" }, { status: 400 })
   }
 
   try {
     const ok = await saveVerdict(body.id, edit, await reviewer(req))
     if (!ok) {
-      return NextResponse.json({ error: "Záznam sa nenašiel" }, { status: 404 })
+      return NextResponse.json({ error: "record-not-found" }, { status: 404 })
     }
     return NextResponse.json({ ok: true })
   } catch (e) {
     console.error("Uloženie posudku zlyhalo:", e)
-    return NextResponse.json({ error: "Uloženie zlyhalo" }, { status: 500 })
+    return NextResponse.json({ error: "save-failed" }, { status: 500 })
   }
 }

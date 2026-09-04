@@ -154,9 +154,9 @@
   - [x] **3b — nastavenie organizácie** ✅ 2026-09-04 (`f587847`) — všetkých sedem záložiek, `AuditList`, `ColorSelect`, hlásenia
   - [x] **3c — admin a zvyšné komponenty** ✅ 2026-09-04 (`22ef0a2`) — správa tenantov, zlatá sada (zoznam, detail, hodnotenie), metadáta stránky
   - [x] **4a — knižnica** ✅ 2026-09-04 (`c2db9be`) — `AppError` s kódom a hodnotami, `errorText()` na okraji; `LibraryError`, `FolderError`, `RewriteError`, `FileStoreError`, `ConversionError`, `CodelistError` (62 miest, 47 kódov)
-  - [ ] **4b — organizácia:** `DepartmentError`, `TenantValidationError`, `BrandError`, `DomainError`, `DomainOwnedError` (~33 miest)
-  - [ ] **4c — osoby, prideľovanie a API:** `PersonValidationError`, `AssignmentValidationError`, odpovede `/api/chat`, `/api/hodnotenie`, `/api/sada` a middleware
-  - [ ] **4 — chyby prekladané až na obrazovke** (~80 miest), podľa rozhodnutia „kódy chýb, preklad až na obrazovke". Patria sem výnimky z `src/lib` (`LibraryError`, `DepartmentError`, `FolderError`, `PersonValidationError`, `AssignmentValidationError`…) aj odpovede API ciest `/api/chat`, `/api/hodnotenie`, `/api/sada` a middleware. Zvlášť si všimnúť `/api/chat` — veta „Nenašiel som relevantné informácie…" nie je chybová hláška, ale **text odpovede**, ktorý človek číta.
+  - [x] **4b — organizácia** ✅ 2026-09-04 (`3e53e49`) — `DepartmentError`, `TenantValidationError`, `BrandError`, `DomainError`, `DomainOwnedError` (33 miest)
+  - [x] **4c — osoby, prideľovanie a API** ✅ 2026-09-04 — `PersonValidationError`, `AssignmentValidationError`; veta „Nenašiel som relevantné informácie…" ide zo slovníka (jazyk posiela klient, `/api/chat` prihláseného nepozná); odpovede `/api/hodnotenie`, `/api/sada` a middleware sú kódy pre vývojára — klient telo chyby nikdy nezobrazí
+  - [x] **4 — chyby prekladané až na obrazovke** ✅ 2026-09-04 — 110 hlášok v 13 triedach; `AppError` nesie kód a hodnoty, vetu skladá `errorText()` na okraji
 - [ ] **Otázka pre HR/právnika:** má formulka pomenovať jazyk dokumentu, keď sa líši od jazyka prostredia?
 
 **I2. Rozsah B `[2–3,5 týždňa]`**

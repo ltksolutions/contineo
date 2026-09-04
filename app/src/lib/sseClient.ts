@@ -161,7 +161,12 @@ export interface AskResult extends AskProgress {
 export async function askQuestion(
   question: string,
   onChange: (p: AskProgress) => void,
-  init?: { signal?: AbortSignal; url?: string }
+  /**
+   * `language` ide na server preto, že veta „nič som nenašiel" je **súčasť
+   * odpovede**, nie chybová hláška — skladá ju ten, kto odpoveď tvorí.
+   * Cesta `/api/chat` prihláseného človeka nepozná, tak si jazyk povieme.
+   */
+  init?: { signal?: AbortSignal; url?: string; language?: string }
 ): Promise<AskResult> {
   const start = Date.now()
   let ttftMs: number | null = null
@@ -178,7 +183,7 @@ export async function askQuestion(
   const answer = await fetch(init?.url ?? "/api/chat", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ query: question }),
+    body: JSON.stringify({ query: question, language: init?.language }),
     signal: init?.signal,
   })
 

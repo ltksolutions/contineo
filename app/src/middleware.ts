@@ -45,7 +45,7 @@ export async function middleware(req: NextRequest) {
   // API vracia 401, nie presmerovanie. Presmerovanie na HTML stránku by
   // klient dostal ako odpoveď na dotaz a pokúsil by sa ju čítať ako SSE.
   if (pathname.startsWith("/api/")) {
-    return NextResponse.json({ error: "Neprihlásený" }, { status: 401 })
+    return NextResponse.json({ error: "not-signed-in" }, { status: 401 })
   }
 
   const kam = new URL("/prihlasenie", req.url)

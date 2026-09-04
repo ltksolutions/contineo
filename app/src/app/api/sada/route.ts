@@ -16,11 +16,11 @@ export async function PATCH(req: NextRequest) {
   try {
     body = await req.json()
   } catch {
-    return NextResponse.json({ error: "Neplatný JSON" }, { status: 400 })
+    return NextResponse.json({ error: "invalid-json" }, { status: 400 })
   }
 
   if (!body.id || typeof body.id !== "string") {
-    return NextResponse.json({ error: "Chýba id otázky" }, { status: 400 })
+    return NextResponse.json({ error: "missing-question-id" }, { status: 400 })
   }
 
   const edit: Parameters<typeof editQuestion>[1] = {}
@@ -29,15 +29,15 @@ export async function PATCH(req: NextRequest) {
   if (typeof body.exclusionReason === "string") edit.exclusionReason = body.exclusionReason
 
   if (!Object.keys(edit).length) {
-    return NextResponse.json({ error: "Nič na uloženie" }, { status: 400 })
+    return NextResponse.json({ error: "nothing-to-save" }, { status: 400 })
   }
 
   try {
     const ok = await editQuestion(body.id, edit)
-    if (!ok) return NextResponse.json({ error: "Otázka sa nenašla" }, { status: 404 })
+    if (!ok) return NextResponse.json({ error: "question-not-found" }, { status: 404 })
     return NextResponse.json({ ok: true })
   } catch (e) {
     console.error("Úprava otázky zlyhala:", e)
-    return NextResponse.json({ error: "Uloženie zlyhalo" }, { status: 500 })
+    return NextResponse.json({ error: "save-failed" }, { status: 500 })
   }
 }

@@ -89,7 +89,7 @@ export default function Search({
       const v = await askQuestion(
         q,
         p => setState(s => ({ ...s, text: p.text, citations: p.citations })),
-        { signal: ctrl.signal }
+        { signal: ctrl.signal, language }
       )
       setState({ question: q, text: v.text, citations: v.citations, done: v, running: false })
       if (!v.error && v.text) void record(q, v)

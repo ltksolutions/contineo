@@ -27,6 +27,7 @@ import { HR_ROLE } from "./hr"
 import type { Person, PersonStatus, PersonType } from "./persons"
 import type { Tenant } from "./tenants"
 import { allDepartments, pathIdsTo, pathTo } from "./departments"
+import { AppError } from "./appError"
 
 export const PEOPLE_ROLE = "people-admin"
 
@@ -62,12 +63,7 @@ export async function peopleContext(): Promise<PeopleContext> {
   return { state: "ready", person, tenant }
 }
 
-export class PersonValidationError extends Error {
-  constructor(message: string) {
-    super(message)
-    this.name = "PersonValidationError"
-  }
-}
+export class PersonValidationError extends AppError {}
 
 // ── čítanie ──────────────────────────────────────────────────────────────────
 
@@ -210,19 +206,19 @@ export async function savePerson(
 ): Promise<void> {
   const col = await getCollection<Person>(PERSONS_COLLECTION)
   const existing = await col.findOne({ companyCode, id })
-  if (!existing) throw new PersonValidationError("Taká osoba tu nie je.")
+  if (!existing) throw new PersonValidationError("person.notFound", "Taká osoba tu nie je.")
 
   const set: Record<string, unknown> = {}
 
   if (change.email !== undefined) {
     const next = normalizeEmail(change.email)
-    if (!next.includes("@")) throw new PersonValidationError("To nie je e-mailová adresa.")
+    if (!next.includes("@")) throw new PersonValidationError("person.badEmail", "To nie je e-mailová adresa.")
     if (next !== existing.email) {
       // Adresa musí byť v organizácii jedinečná — inak by prihlásenie
       // odkazom nevedelo, koho prihlasuje.
       const col2 = await getCollection<Person>(PERSONS_COLLECTION)
       if (await col2.findOne({ companyCode, email: next })) {
-        throw new PersonValidationError(`${next} v organizácii už je.`)
+        throw new PersonValidationError("person.emailTaken", `${next} v organizácii už je.`, { email: next })
       }
       set.email = next
       // História zmien adresy. Bez nej by sa po roku nedalo spojiť staré
@@ -237,7 +233,7 @@ export async function savePerson(
 
   if (change.fullName !== undefined) {
     const actorName = change.fullName.trim()
-    if (!actorName) throw new PersonValidationError("Meno je povinné — bez neho je v zozname len adresa.")
+    if (!actorName) throw new PersonValidationError("person.nameRequired", "Meno je povinné — bez neho je v zozname len adresa.")
     set.fullName = actorName
   }
   // Oddelenie sa **dá vyprázdniť** zámerne: je to údaj, ktorý sa mení, a človek
@@ -253,7 +249,7 @@ export async function savePerson(
     const targetId = change.departmentId || null
     const tree = await allDepartments(companyCode)
     if (targetId && !tree.some(o => o.id === targetId)) {
-      throw new PersonValidationError("Také oddelenie neexistuje.")
+      throw new PersonValidationError("person.departmentNotFound", "Také oddelenie neexistuje.")
     }
     const newPath = pathIdsTo(tree, targetId)
     set.departmentId = targetId
@@ -263,7 +259,7 @@ export async function savePerson(
     )
   }
   if (change.personType !== undefined) {
-    if (!TYPES.includes(change.personType)) throw new PersonValidationError("Neznámy typ osoby.")
+    if (!TYPES.includes(change.personType)) throw new PersonValidationError("person.unknownType", "Neznámy typ osoby.")
     set.personType = change.personType
   }
   if (change.language !== undefined) set.language = normalizeLanguage(change.language)
@@ -316,14 +312,14 @@ export async function invitePerson(
   actor: string,
 ): Promise<PersonRow> {
   const email = normalizeEmail(input.email ?? "")
-  if (!email.includes("@")) throw new PersonValidationError("To nie je e-mailová adresa.")
-  if (!input.fullName?.trim()) throw new PersonValidationError("Meno je povinné.")
+  if (!email.includes("@")) throw new PersonValidationError("person.badEmail", "To nie je e-mailová adresa.")
+  if (!input.fullName?.trim()) throw new PersonValidationError("person.nameRequiredShort", "Meno je povinné.")
 
   const col = await getCollection<Person>(PERSONS_COLLECTION)
   // Kľúč je organizácia + adresa. Tá istá adresa môže patriť do viacerých
   // jednotiek a sú to z pohľadu organizácie dva rôzne vzťahy (D32).
   if (await col.findOne({ companyCode, email })) {
-    throw new PersonValidationError(`${email} je v organizácii už zapísaná.`)
+    throw new PersonValidationError("person.alreadyInvited", `${email} je v organizácii už zapísaná.`, { email })
   }
 
   const now = new Date()
@@ -371,7 +367,7 @@ export async function setPersonStatus(
 ): Promise<void> {
   const col = await getCollection<Person>(PERSONS_COLLECTION)
   const existing = await col.findOne({ companyCode, id })
-  if (!existing) throw new PersonValidationError("Taká osoba tu nie je.")
+  if (!existing) throw new PersonValidationError("person.notFound", "Taká osoba tu nie je.")
 
   await col.updateOne(
     { companyCode, id },

@@ -16,13 +16,14 @@ import { revalidatePath } from "next/cache"
 import { hrContext, assignableDocuments } from "@/lib/hr"
 import {
   assign, revoke, loadAssignment, notAcknowledged, recordNotification,
-  audienceFromSelection, AssignmentValidationError,
+  audienceFromSelection,
 } from "@/lib/assignments"
 import { allDepartments } from "@/lib/departments"
 import { send, assignmentEmail } from "@/lib/ecomail"
 import { brandingView } from "@/lib/tenants"
 import { requestHostname } from "@/lib/session"
-import { dictionary, formatDate, normalizeLanguage } from "@/lib/i18n"
+import { dictionary, errorText, formatDate, normalizeLanguage } from "@/lib/i18n"
+import { AppError } from "@/lib/appError"
 
 async function hr(): Promise<{ email: string; companyCode: string; language?: string } | null> {
   const ctx = await hrContext()
@@ -111,7 +112,7 @@ export async function assignAction(fd: FormData) {
         // Chyba pri prvom páre zastaví celé rozposielanie: sú to tie isté
         // pravidlá pre všetky (dôvod, publikum), takže druhý pokus by zlyhal
         // rovnako. Čiastočne prideliť a nepovedať to je horšie než neprideliť.
-        if (e instanceof AssignmentValidationError) backWithError(e.message, fd)
+        if (e instanceof AppError) backWithError(errorText(e, actor.language), fd)
         console.error("[hr] pridelenie zlyhalo:", e)
         backWithError(dictionary(actor.language).hr.actions.saveFailed, fd)
       }

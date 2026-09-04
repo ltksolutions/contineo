@@ -27,6 +27,7 @@ import { PERSONS_COLLECTION, normalizeKeys, inDepartmentSince, inGroupSince } fr
 import { ACKNOWLEDGEMENTS_COLLECTION } from "./acknowledgements"
 import { writeAudit } from "./audit"
 import type { Person } from "./persons"
+import { AppError } from "./appError"
 
 export const ASSIGNMENTS_COLLECTION = "assignments"
 
@@ -95,12 +96,10 @@ export interface Assignment {
   notified?: { at: Date; by: string; count: number }[]
 }
 
-export class AssignmentValidationError extends Error {
-  reason: string
-  constructor(reason: string, message: string) {
-    super(message)
-    this.name = "AssignmentValidationError"
-    this.reason = reason
+export class AssignmentValidationError extends AppError {
+  /** Starší názov pre `code`. Zostáva, aby sa nemusel meniť volajúci kód. */
+  get reason(): string {
+    return this.code
   }
 }
 
@@ -264,21 +263,21 @@ export type AssignResult =
 export async function assign(input: NewAssignment): Promise<AssignResult> {
   const reason = input.reason?.trim() ?? ""
   if (!reason) {
-    throw new AssignmentValidationError("missing-reason",
+    throw new AssignmentValidationError("assignment.missingReason",
       "Dôvod pridelenia je povinný — je to jediné miesto, kde sa dá zaznamenať, prečo sa má norma potvrdiť znova (D30).")
   }
   if (!input.companyCode?.trim()) {
-    throw new AssignmentValidationError("missing-company", "Chýba kód organizácie.")
+    throw new AssignmentValidationError("assignment.missingCompany", "Chýba kód organizácie.")
   }
   if (!input.subject?.versionId || !input.subject?.documentId) {
-    throw new AssignmentValidationError("missing-subject", "Chýba dokument alebo jeho znenie.")
+    throw new AssignmentValidationError("assignment.missingSubject", "Chýba dokument alebo jeho znenie.")
   }
   if (!(input.subject.effectiveFrom instanceof Date)) {
-    throw new AssignmentValidationError("version-not-effective",
+    throw new AssignmentValidationError("assignment.versionNotEffective",
       "Znenie nemá dátum platnosti, a tak sa nedá ani potvrdiť (D6). Najprv mu doplň platnosť.")
   }
   if (input.audience?.kind !== "all" && !input.audience?.value?.trim()) {
-    throw new AssignmentValidationError("missing-audience", "Chýba, komu sa prideľuje.")
+    throw new AssignmentValidationError("assignment.missingAudience", "Chýba, komu sa prideľuje.")
   }
 
   const audience: Audience = input.audience.kind === "all"

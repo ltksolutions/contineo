@@ -14,11 +14,12 @@
 import { redirect } from "next/navigation"
 import { isRedirect } from "@/lib/redirects"
 import { revalidatePath } from "next/cache"
-import { peopleContext, savePerson, invitePerson, setPersonStatus, PersonValidationError } from "@/lib/people"
+import { peopleContext, savePerson, invitePerson, setPersonStatus } from "@/lib/people"
 import { csvToPersons } from "@/lib/personsImport"
 import { previewImport, upsertPersons } from "@/lib/persons"
 import type { PersonType } from "@/lib/persons"
-import { dictionary, type UiLanguage } from "@/lib/i18n"
+import { dictionary, errorText, type UiLanguage } from "@/lib/i18n"
+import { AppError } from "@/lib/appError"
 
 async function peopleAdmin(): Promise<
   { email: string; companyCode: string; language: UiLanguage } | null
@@ -47,9 +48,8 @@ function listField(fd: FormData, actorName: string): string[] {
 }
 
 function errorMessage(e: unknown, language: UiLanguage): string {
-  if (e instanceof PersonValidationError) return e.message
-  console.error("[osoby] akcia zlyhala:", e)
-  return say(language).failed
+  if (!(e instanceof AppError)) console.error("[osoby] akcia zlyhala:", e)
+  return errorText(e, language)
 }
 
 export async function savePersonAction(fd: FormData) {
