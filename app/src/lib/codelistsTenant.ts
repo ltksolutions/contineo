@@ -60,21 +60,23 @@ export async function addCodelistItem(
 ): Promise<void> {
   if (!isCustom(codelist)) {
     throw new CodelistError(
+      "codelist.notTenantManaged",
       `Číselník ${codelist} si organizácia nespravuje sama — sú to filtre, na ktorých stojí prístup k obsahu.`,
+      { codelist },
     )
   }
   const item = checkCustomItem(key, label)
 
   const col = await getCollection<Tenant>(TENANTS_COLLECTION)
   const t = await col.findOne({ companyCode })
-  if (!t) throw new CodelistError("Organizácia neexistuje.")
+  if (!t) throw new CodelistError("codelist.tenantMissing", "Organizácia neexistuje.")
 
   const existing = availableOptions(t, codelist).some(p => p.key === item.key)
-  if (existing) throw new CodelistError(`„${item.key}" v ponuke už je.`)
+  if (existing) throw new CodelistError("codelist.alreadyThere", `„${item.key}" v ponuke už je.`, { key: item.key })
 
   await col.updateOne(
     { companyCode },
-    { $push: { [`ciselniky.${codelist}`]: item } } as never,
+    { $push: { [`codelists.${codelist}`]: item } } as never,
   )
   invalidateTenants()
 
@@ -91,12 +93,12 @@ export async function removeCodelistItem(
   key: string,
   actor: string,
 ): Promise<void> {
-  if (!isCustom(codelist)) throw new CodelistError("Tento číselník sa meniť nedá.")
+  if (!isCustom(codelist)) throw new CodelistError("codelist.readOnly", "Tento číselník sa meniť nedá.")
 
   const col = await getCollection<Tenant>(TENANTS_COLLECTION)
   await col.updateOne(
     { companyCode },
-    { $pull: { [`ciselniky.${codelist}`]: { key: key } } } as never,
+    { $pull: { [`codelists.${codelist}`]: { key: key } } } as never,
   )
   invalidateTenants()
 

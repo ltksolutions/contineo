@@ -22,6 +22,7 @@
 import { getCollection } from "./mongodb"
 import { DOCUMENTS_COLLECTION } from "./documents"
 import { writeAudit } from "./audit"
+import { AppError, type Reason } from "./appError"
 
 export const FOLDERS_COLLECTION = "cms_folders"
 
@@ -48,12 +49,7 @@ export interface Folder {
   updatedBy?: string
 }
 
-export class FolderError extends Error {
-  constructor(message: string) {
-    super(message)
-    this.name = "PriecinokError"
-  }
-}
+export class FolderError extends AppError {}
 
 /** Priame podpriečinky v poradí, ktoré určil človek; inak abecedne. */
 export function children(all: Folder[], parentId: string | null): Folder[] {
@@ -111,14 +107,12 @@ export function canMove(
   all: Folder[],
   id: string,
   newParentId: string | null,
-): string | null {
+): Reason | null {
   if (!newParentId) return null
-  if (newParentId === id) return "Priečinok nemôže byť nadriadený sám sebe."
+  if (newParentId === id) return { code: "folder.selfParent" }
 
   const inside = subtree(all, id)
-  if (inside.has(newParentId)) {
-    return "Priečinok sa nedá presunúť do svojho vlastného podpriečinka — vznikol by kruh."
-  }
+  if (inside.has(newParentId)) return { code: "folder.ownSubtree" }
 
   const parentDepth = depth(all, newParentId)
   let deepest = 1
@@ -126,7 +120,7 @@ export function canMove(
     if (inside.has(p.id)) deepest = Math.max(deepest, depth(all, p.id) - depth(all, id) + 1)
   }
   if (parentDepth + deepest > MAX_DEPTH) {
-    return `Štruktúra by mala viac než ${MAX_DEPTH} úrovní.`
+    return { code: "folder.wouldExceedDepth", params: { max: MAX_DEPTH } }
   }
   return null
 }
@@ -159,17 +153,25 @@ export async function createFolder(
   actor: string,
 ): Promise<Folder> {
   const actorName = name.trim()
-  if (!actorName) throw new FolderError("Názov priečinka je povinný.")
+  if (!actorName) throw new FolderError("folder.nameRequired", "Názov priečinka je povinný.")
 
   const all = await allFolders(companyCode)
   if (parentId && !all.some(p => p.id === parentId)) {
-    throw new FolderError("Nadriadený priečinok neexistuje.")
+    throw new FolderError("folder.parentMissing", "Nadriadený priečinok neexistuje.")
   }
   if (depth(all, parentId) + 1 > MAX_DEPTH) {
-    throw new FolderError(`Štruktúra môže mať najviac ${MAX_DEPTH} úrovní.`)
+    throw new FolderError(
+      "folder.tooDeep",
+      `Štruktúra môže mať najviac ${MAX_DEPTH} úrovní.`,
+      { max: MAX_DEPTH },
+    )
   }
   if (children(all, parentId ?? null).some(p => p.name.toLowerCase() === actorName.toLowerCase())) {
-    throw new FolderError(`Na tejto úrovni už priečinok „${actorName}" je.`)
+    throw new FolderError(
+      "folder.duplicateName",
+      `Na tejto úrovni už priečinok „${actorName}" je.`,
+      { name: actorName },
+    )
   }
 
   const p: Folder = {
@@ -193,10 +195,10 @@ export async function renameFolder(
   companyCode: string, id: string, name: string, actor: string,
 ): Promise<void> {
   const actorName = name.trim()
-  if (!actorName) throw new FolderError("Názov priečinka je povinný.")
+  if (!actorName) throw new FolderError("folder.nameRequired", "Názov priečinka je povinný.")
   const col = await getCollection<Folder>(FOLDERS_COLLECTION)
   const before = await col.findOne({ companyCode, id })
-  if (!before) throw new FolderError("Taký priečinok tu nie je.")
+  if (!before) throw new FolderError("folder.notFound", "Taký priečinok tu nie je.")
 
   await col.updateOne({ companyCode, id }, { $set: { name: actorName, updatedAt: new Date(), updatedBy: actor } })
   await writeAudit({
@@ -210,12 +212,14 @@ export async function moveFolder(
 ): Promise<void> {
   const all = await allFolders(companyCode)
   const before = all.find(p => p.id === id)
-  if (!before) throw new FolderError("Taký priečinok tu nie je.")
+  if (!before) throw new FolderError("folder.notFound", "Taký priečinok tu nie je.")
   if (newParentId && !all.some(p => p.id === newParentId)) {
-    throw new FolderError("Nadriadený priečinok neexistuje.")
+    throw new FolderError("folder.parentMissing", "Nadriadený priečinok neexistuje.")
   }
   const why = canMove(all, id, newParentId)
-  if (why) throw new FolderError(why)
+  // Dôvod je kód, nie veta — presun sa odmieta v knižnici, text sa skladá
+  // až na obrazovke.
+  if (why) throw new FolderError(why.code, "Presun sa nedá spraviť.", why.params)
 
   const col = await getCollection<Folder>(FOLDERS_COLLECTION)
   await col.updateOne(
@@ -238,12 +242,16 @@ export async function moveFolder(
 export async function deleteFolder(companyCode: string, id: string, actor: string): Promise<void> {
   const all = await allFolders(companyCode)
   if (children(all, id).length > 0) {
-    throw new FolderError("Priečinok má podpriečinky — najprv ich presuňte alebo zrušte.")
+    throw new FolderError("folder.hasChildren", "Priečinok má podpriečinky — najprv ich presuňte alebo zrušte.")
   }
   const docs = await getCollection(DOCUMENTS_COLLECTION)
   const count = await docs.countDocuments({ companyCode, folderId: id })
   if (count > 0) {
-    throw new FolderError(`V priečinku je ${count} dokumentov — najprv ich preraďte.`)
+    throw new FolderError(
+      "folder.hasDocuments",
+      `V priečinku je ${count} dokumentov — najprv ich preraďte.`,
+      { count },
+    )
   }
 
   const col = await getCollection<Folder>(FOLDERS_COLLECTION)
@@ -310,7 +318,7 @@ export async function assignDocument(
 ): Promise<void> {
   const all = await allFolders(companyCode)
   if (folderId && !all.some(p => p.id === folderId)) {
-    throw new FolderError("Taký priečinok neexistuje.")
+    throw new FolderError("folder.notFound", "Taký priečinok neexistuje.")
   }
 
   const col = await getCollection(DOCUMENTS_COLLECTION)
@@ -325,7 +333,7 @@ export async function assignDocument(
       },
     },
   )
-  if (!r.matchedCount) throw new FolderError("Taký dokument tu nie je.")
+  if (!r.matchedCount) throw new FolderError("folder.documentNotFound", "Taký dokument tu nie je.")
 }
 
 
@@ -344,7 +352,7 @@ export async function shiftFolder(
 ): Promise<void> {
   const all = await allFolders(companyCode)
   const self = all.find(p => p.id === id)
-  if (!self) throw new FolderError("Taký priečinok tu nie je.")
+  if (!self) throw new FolderError("folder.notFound", "Taký priečinok tu nie je.")
 
   const siblings = children(all, self.parentId ?? null)
   const from = siblings.findIndex(p => p.id === id)
@@ -384,11 +392,11 @@ export async function saveFolderOrder(
 
   const touched = orderedIds.map(x => byId.get(x))
   if (touched.some(p => p === undefined)) {
-    throw new FolderError("Zoznam obsahuje priečinok, ktorý tu nie je.")
+    throw new FolderError("folder.orderUnknownFolder", "Zoznam obsahuje priečinok, ktorý tu nie je.")
   }
   const parents = new Set(touched.map(p => p!.parentId ?? "koren"))
   if (parents.size > 1) {
-    throw new FolderError("Preusporiadať sa dá len v rámci jednej úrovne.")
+    throw new FolderError("folder.orderSameLevel", "Preusporiadať sa dá len v rámci jednej úrovne.")
   }
 
   const col = await getCollection<Folder>(FOLDERS_COLLECTION)

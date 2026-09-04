@@ -20,6 +20,7 @@
  */
 
 import Anthropic from "@anthropic-ai/sdk"
+import { AppError } from "./appError"
 
 /** Strop na jeden prepis. Dlhšia norma sa robí po častiach v editore. */
 export const MAX_CHARS = 120_000
@@ -36,12 +37,7 @@ export interface ModelDraft {
   at: Date
 }
 
-export class RewriteError extends Error {
-  constructor(message: string) {
-    super(message)
-    this.name = "PrepisError"
-  }
-}
+export class RewriteError extends AppError {}
 
 const INSTRUCTION = `Si prepisovač právnych a interných predpisov do Markdownu.
 
@@ -63,6 +59,7 @@ function client(): Anthropic {
   const key = process.env.ANTHROPIC_API_KEY
   if (!key) {
     throw new RewriteError(
+      "rewrite.notConfigured",
       "Prepis modelom nie je nastavený — chýba ANTHROPIC_API_KEY. Prevod v aplikácii funguje ďalej.",
     )
   }
@@ -88,11 +85,13 @@ function answerText(blocks: { type: string; text?: string }[]): string {
 /** Prečistí členenie už prevedeného Markdownu. */
 export async function cleanMarkdown(markdown: string): Promise<ModelDraft> {
   const input = (markdown ?? "").trim()
-  if (!input) throw new RewriteError("Niet čo prečisťovať — text je prázdny.")
+  if (!input) throw new RewriteError("rewrite.emptyInput", "Niet čo prečisťovať — text je prázdny.")
   if (input.length > MAX_CHARS) {
     throw new RewriteError(
+      "rewrite.textTooLong",
       `Text má ${Math.round(input.length / 1000)} tisíc znakov, naraz sa dá poslať ${MAX_CHARS / 1000}. ` +
       "Rozdeľ ho a prečisti po častiach.",
+      { thousands: Math.round(input.length / 1000), maxThousands: MAX_CHARS / 1000 },
     )
   }
 
@@ -107,17 +106,19 @@ export async function cleanMarkdown(markdown: string): Promise<ModelDraft> {
   })
 
   const text = answerText(answer.content as { type: string; text?: string }[])
-  if (!text) throw new RewriteError("Model vrátil prázdnu odpoveď.")
+  if (!text) throw new RewriteError("rewrite.emptyAnswer", "Model vrátil prázdnu odpoveď.")
   return { text, model: model(), mode: "clean", at: new Date() }
 }
 
 /** Prepíše skenované PDF, ktoré nemá textovú vrstvu. */
 export async function rewritePdf(pdf: Buffer): Promise<ModelDraft> {
-  if (!pdf?.byteLength) throw new RewriteError("Súbor je prázdny.")
+  if (!pdf?.byteLength) throw new RewriteError("rewrite.emptyFile", "Súbor je prázdny.")
   if (pdf.byteLength > MAX_PDF_BYTES) {
     throw new RewriteError(
+      "rewrite.pdfTooLarge",
       `PDF má ${Math.round(pdf.byteLength / 1024 / 1024)} MB, naraz sa dá poslať ${MAX_PDF_BYTES / 1024 / 1024}. ` +
       "Rozdeľ ho na časti.",
+      { mb: Math.round(pdf.byteLength / 1024 / 1024), maxMb: MAX_PDF_BYTES / 1024 / 1024 },
     )
   }
 
@@ -141,6 +142,6 @@ export async function rewritePdf(pdf: Buffer): Promise<ModelDraft> {
   })
 
   const text = answerText(answer.content as { type: string; text?: string }[])
-  if (!text) throw new RewriteError("Model z dokumentu nič neprečítal.")
+  if (!text) throw new RewriteError("rewrite.modelReadNothing", "Model z dokumentu nič neprečítal.")
   return { text, model: model(), mode: "rewrite-scan", at: new Date() }
 }

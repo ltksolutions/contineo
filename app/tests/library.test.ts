@@ -6,6 +6,7 @@
  * databáza.
  */
 
+import { AppError } from "../src/lib/appError"
 import { readFileSync } from "node:fs"
 import { describe, it, expect } from "vitest"
 import { checkValue, checkList, CodelistError, KEY_PATTERN } from "../src/lib/codelists"
@@ -88,7 +89,15 @@ describe("metadata z formulara", () => {
   })
 
   it("hodnota mimo uzavreteho ciselnika sa odmietne aj tu", () => {
-    expect(() => checkMetadata({ ...base, accessLevel: "tajne" })).toThrow(LibraryError)
+    // Chyba prejde von taka, aka je (CodelistError) — prebalovanie do
+    // LibraryError zahadzovalo kod, a bez kodu sa veta neda prelozit.
+    // Pre okraj je podstatne, ze je to AppError; ktora presne, uz nie.
+    expect(() => checkMetadata({ ...base, accessLevel: "tajne" })).toThrow(AppError)
+    try {
+      checkMetadata({ ...base, accessLevel: "tajne" })
+    } catch (e) {
+      expect((e as AppError).code).toBe("codelist.notAllowed")
+    }
   })
 })
 

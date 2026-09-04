@@ -20,6 +20,7 @@ import scope from "@/codelists/scope.json"
 import sectionKey from "@/codelists/sectionKey.json"
 import sourceType from "@/codelists/sourceType.json"
 import tags from "@/codelists/tags.json"
+import { AppError } from "./appError"
 
 export interface CodelistItem {
   key: string
@@ -64,12 +65,7 @@ export const REQUIRED_CODELISTS = ["title", "sectionKey", "companyCode", "scope"
  */
 export const KEY_PATTERN = /^[a-z0-9][a-z0-9_]{1,60}$/
 
-export class CodelistError extends Error {
-  constructor(message: string) {
-    super(message)
-    this.name = "CiselnikError"
-  }
-}
+export class CodelistError extends AppError {}
 
 /**
  * Číselníky, ktoré si organizácia spravuje sama (D55).
@@ -108,20 +104,24 @@ export function codelistFor(name: string, extras?: CodelistExtras): Codelist {
 export function checkValue(codelist: string, value: string, extras?: CodelistExtras): string {
   const c = codelistFor(codelist, extras)
   const v = (value ?? "").trim()
-  if (!v) throw new CodelistError(`Chýba hodnota pre ${codelist}.`)
-  if (!CODELISTS[codelist]) throw new CodelistError(`Číselník ${codelist} neexistuje.`)
+  if (!v) throw new CodelistError("codelist.valueMissing", `Chýba hodnota pre ${codelist}.`, { codelist })
+  if (!CODELISTS[codelist]) throw new CodelistError("codelist.unknown", `Číselník ${codelist} neexistuje.`, { codelist })
 
   if (c.items.some(p => p.key === v)) return v
 
   if (c.closed) {
     throw new CodelistError(
+      "codelist.notAllowed",
       `„${v}" nie je platná hodnota pre ${codelist}. Povolené: ${c.items.map(p => p.key).join(", ")}.`,
+      { value: v, codelist, allowed: c.items.map(p => p.key).join(", ") },
     )
   }
   if (!KEY_PATTERN.test(v)) {
     throw new CodelistError(
+      "codelist.badKeyFor",
       `„${v}" sa nedá použiť ako kľúč pre ${codelist}. Malé písmená bez diakritiky, číslice ` +
       "a podčiarkovník — kľúč ide do identifikátora dokumentu a do adries.",
+      { value: v, codelist },
     )
   }
   return v
@@ -156,8 +156,10 @@ export function checkCustomItem(key: string, label: string): CodelistItem {
   const k = (key ?? "").trim().toLowerCase()
   if (!KEY_PATTERN.test(k)) {
     throw new CodelistError(
+      "codelist.badKey",
       `„${key}" sa nedá použiť ako kľúč. Malé písmená bez diakritiky, číslice ` +
       "a podčiarkovník — kľúčom sa označuje obsah a zostane v ňom natrvalo.",
+      { key },
     )
   }
   const l = (label ?? "").trim()

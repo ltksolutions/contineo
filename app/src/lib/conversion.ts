@@ -15,6 +15,8 @@
  * a číselníky (to je `metadata.ts`), ukladanie (to je `ulozisko.ts`).
  */
 
+import { AppError } from "./appError"
+
 export type FileType = "markdown" | "docx" | "pdf" | "xlsx" | "text"
 
 export interface ConversionResult {
@@ -28,12 +30,7 @@ export interface ConversionResult {
   warnings: string[]
 }
 
-export class ConversionError extends Error {
-  constructor(message: string) {
-    super(message)
-    this.name = "KonverziaError"
-  }
-}
+export class ConversionError extends AppError {}
 
 /**
  * Typ súboru **z obsahu a prípony**, nie z toho, čo tvrdí prehliadač.
@@ -52,6 +49,7 @@ export function detectFileType(name: string, data: Buffer): FileType {
     if (extension === "xlsx" || extension === "xlsm") return "xlsx"
     if (extension === "docx") return "docx"
     throw new ConversionError(
+      "conversion.zipNotOffice",
       "Toto je ZIP-ový balík, ale ani docx, ani xlsx. Staré `.doc` a `.xls` sa prevádzať nedajú — " +
       "ulož ich vo Worde alebo Exceli ako novší formát.",
     )
@@ -60,8 +58,10 @@ export function detectFileType(name: string, data: Buffer): FileType {
   if (extension === "txt" || extension === "csv") return "text"
 
   throw new ConversionError(
+    "conversion.unsupportedFormat",
     `Formát ${extension ? `.${extension}` : "súboru"} zatiaľ nevieme previesť. ` +
     "Podporujeme .docx, .pdf, .xlsx, .md, .txt a .csv.",
+    { format: extension ? `.${extension}` : "súboru" },
   )
 }
 
@@ -153,6 +153,7 @@ async function fromPdf(data: Buffer): Promise<ConversionResult> {
   const charsPerPage = markdown.length / Math.max(pdfDoc.numPages, 1)
   if (markdown.length === 0) {
     throw new ConversionError(
+      "conversion.pdfNoText",
       "V tomto PDF nie je žiadny text — je to obrázok (sken). Prevod ho neprečíta. " +
       "V editore ho môžeš dať prepísať jazykovým modelom, alebo si vypýtaj od autora pôvodný súbor.",
     )
@@ -217,7 +218,7 @@ export async function convert(
     case "markdown":
     case "text": {
       const text = tidied(data.toString("utf8"))
-      if (!text) throw new ConversionError("Súbor neobsahuje žiadny text.")
+      if (!text) throw new ConversionError("conversion.noText", "Súbor neobsahuje žiadny text.")
       return {
         type: type,
         markdown: text,

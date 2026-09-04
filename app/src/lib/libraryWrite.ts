@@ -25,13 +25,14 @@ import { DOCUMENTS_COLLECTION } from "./documents"
 import { ACKNOWLEDGEMENTS_COLLECTION } from "./acknowledgements"
 import { chunkText, DEFAULT_PROFILE } from "./chunker.mjs"
 import { textFingerprint, chunkingFingerprint, needsReindex, CHUNKER_VERSION } from "./chunkIdentity"
-import { checkValue, checkList, CodelistError } from "./codelists"
+import { checkValue, checkList } from "./codelists"
 import type { CodelistExtras } from "./codelists"
 import { saveFile, deleteFile } from "./fileStore"
-import { convert, FILE_TYPE_LABEL, ConversionError } from "./conversion"
+import { convert, FILE_TYPE_LABEL } from "./conversion"
 import { writeAudit, diff } from "./audit"
 import type { Chunk } from "./chunker.mjs"
 import { toChunkerProfile, type ChunkingProfile } from "./chunkingProfile"
+import { AppError } from "./appError"
 
 export const CHUNKS_COLLECTION = "document_chunks"
 
@@ -61,12 +62,7 @@ export interface DocumentMetadata {
   tags?: string[]
 }
 
-export class LibraryError extends Error {
-  constructor(message: string) {
-    super(message)
-    this.name = "KniznicaError"
-  }
-}
+export class LibraryError extends AppError {}
 
 /** Identifikátor dokumentu — zhodne so skriptom, nezávisle od názvu súboru. */
 export function makeDocumentId(meta: { companyCode: string; sectionKey: string }): string {
@@ -79,7 +75,7 @@ export function checkMetadata(
   extras?: CodelistExtras,
 ): DocumentMetadata {
   const title = (input.title ?? "").trim()
-  if (!title) throw new LibraryError("Názov dokumentu je povinný — bez neho je v zozname len kľúč.")
+  if (!title) throw new LibraryError("library.titleRequired", "Názov dokumentu je povinný — bez neho je v zozname len kľúč.")
 
   try {
     return {
@@ -94,7 +90,6 @@ export function checkMetadata(
       tags: checkList("tags", input.tags ?? [], extras),
     }
   } catch (e) {
-    if (e instanceof CodelistError) throw new LibraryError(e.message)
     throw e
   }
 }
@@ -127,7 +122,6 @@ export async function uploadDocument(
     converted = await convert(fileName, data)
   } catch (e) {
     await deleteFile(meta.companyCode, file.id)
-    if (e instanceof ConversionError) throw new LibraryError(e.message)
     throw e
   }
 
@@ -200,14 +194,14 @@ export async function saveDraft(
   actor: string,
 ): Promise<void> {
   const text = (markdown ?? "").trim()
-  if (!text) throw new LibraryError("Prázdny text sa uložiť nedá — dokument by nemal čo obsahovať.")
+  if (!text) throw new LibraryError("library.emptyText", "Prázdny text sa uložiť nedá — dokument by nemal čo obsahovať.")
 
   const col = await getCollection(DOCUMENTS_COLLECTION)
   const r = await col.updateOne(
     { documentId, companyCode },
     { $set: { draftMarkdown: text, updatedAt: new Date(), updatedBy: actor } },
   )
-  if (!r.matchedCount) throw new LibraryError("Taký dokument tu nie je.")
+  if (!r.matchedCount) throw new LibraryError("library.documentNotFound", "Taký dokument tu nie je.")
 }
 
 export interface PublishResult {
@@ -242,20 +236,21 @@ export async function publish(
   const label = (input.label ?? "").trim()
   if (!label) {
     throw new LibraryError(
+      "library.labelRequired",
       "Označenie znenia je povinné — objaví sa doslovne v každom zázname o potvrdení. " +
       "Napíš to, čo je v dokumente (napríklad: úplné znenie z 27. 2. 2026), nie vymyslené číslo.",
     )
   }
   if (!(input.effectiveFrom instanceof Date) || Number.isNaN(input.effectiveFrom.getTime())) {
-    throw new LibraryError("Dátum platnosti je povinný — bez neho sa znenie nedá potvrdiť (D6).")
+    throw new LibraryError("library.effectiveFromRequired", "Dátum platnosti je povinný — bez neho sa znenie nedá potvrdiť (D6).")
   }
 
   const col = await getCollection(DOCUMENTS_COLLECTION)
   const doc = await col.findOne({ documentId, companyCode }) as Record<string, unknown> | null
-  if (!doc) throw new LibraryError("Taký dokument tu nie je.")
+  if (!doc) throw new LibraryError("library.documentNotFound", "Taký dokument tu nie je.")
 
   const markdown = String(doc.draftMarkdown ?? "").trim()
-  if (!markdown) throw new LibraryError("Dokument nemá text — najprv nahraj súbor alebo napíš znenie.")
+  if (!markdown) throw new LibraryError("library.documentHasNoText", "Dokument nemá text — najprv nahraj súbor alebo napíš znenie.")
 
   const meta = {
     title: String(doc.title ?? ""),
@@ -271,6 +266,7 @@ export async function publish(
   const { chunky: chunks } = chunkText(markdown, { nazovDokumentu: meta.title, profil: forChunker })
   if (!chunks.length) {
     throw new LibraryError(
+      "library.noChunks",
       "Z textu nevznikol ani jeden úsek. Skontroluj, či má dokument členenie na články alebo nadpisy.",
     )
   }
@@ -405,7 +401,7 @@ export async function saveMetadata(
 ): Promise<void> {
   const col = await getCollection(DOCUMENTS_COLLECTION)
   const before = await col.findOne({ documentId, companyCode }) as Record<string, unknown> | null
-  if (!before) throw new LibraryError("Taký dokument tu nie je.")
+  if (!before) throw new LibraryError("library.documentNotFound", "Taký dokument tu nie je.")
 
   // Kľúč aj organizácia sa berú z existujúceho záznamu, nie z formulára.
   const meta = checkMetadata({
@@ -479,13 +475,14 @@ export async function reindex(
 ): Promise<{ chunks: number; archived: number; alreadyDone: boolean; chunkingId: string }> {
   const col = await getCollection(DOCUMENTS_COLLECTION)
   const doc = await col.findOne({ documentId, companyCode }) as Record<string, unknown> | null
-  if (!doc) throw new LibraryError("Taký dokument tu nie je.")
+  if (!doc) throw new LibraryError("library.documentNotFound", "Taký dokument tu nie je.")
 
   const versions = (doc.versions ?? []) as { versionId: string; isActive?: boolean; markdown?: string }[]
   const effective = versions.find(v => v.isActive)
   const markdown = String(effective?.markdown ?? doc.markdown ?? "").trim()
   if (!markdown || !effective) {
     throw new LibraryError(
+      "library.noPublishedVersion",
       "Dokument nemá publikované znenie — preindexovať sa dá len to, čo už je vonku.",
     )
   }
@@ -502,7 +499,7 @@ export async function reindex(
   const forChunker = toChunkerProfile(profile)
   const { chunky: chunks } = chunkText(markdown, { nazovDokumentu: meta.title, profil: forChunker })
   if (!chunks.length) {
-    throw new LibraryError("Z textu nevznikol ani jeden úsek — skontroluj profil členenia.")
+    throw new LibraryError("library.noChunksProfile", "Z textu nevznikol ani jeden úsek — skontroluj profil členenia.")
   }
 
   const chunkingId = chunkingFingerprint(chunks, { ...DEFAULT_PROFILE, ...forChunker })
@@ -598,19 +595,20 @@ export async function fixVersion(
   const reason = input.reason?.trim() ?? ""
   if (!reason) {
     throw new LibraryError(
+      "library.reasonRequired",
       "Dôvod opravy je povinný — bez neho sa o rok nedá zistiť, či išlo o preklep alebo o zmenu povinnosti.",
     )
   }
 
   const col = await getCollection(DOCUMENTS_COLLECTION)
   const doc = await col.findOne({ documentId, companyCode }) as Record<string, unknown> | null
-  if (!doc) throw new LibraryError("Taký dokument tu nie je.")
+  if (!doc) throw new LibraryError("library.documentNotFound", "Taký dokument tu nie je.")
 
   const versions = (doc.versions ?? []) as {
     versionId: string; label: string; effectiveFrom: Date | null
   }[]
   const v = versions.find(x => x.versionId === versionId)
-  if (!v) throw new LibraryError("Také znenie tu nie je.")
+  if (!v) throw new LibraryError("library.versionNotFound", "Také znenie tu nie je.")
 
   const ackCol = await getCollection(ACKNOWLEDGEMENTS_COLLECTION)
   const acknowledgementCount = await ackCol.countDocuments({
@@ -622,8 +620,10 @@ export async function fixVersion(
 
   if (changesDate && acknowledgementCount > 0 && !input.onDateChange) {
     throw new LibraryError(
+      "library.dateChangeNeedsDecision",
       `Toto znenie už potvrdilo ${acknowledgementCount} ľudí a formulka, ktorú podpísali, obsahuje starý dátum. ` +
       "Rozhodni, či je to oprava zápisu, alebo sa má znenie potvrdiť znova.",
+      { count: acknowledgementCount },
     )
   }
 

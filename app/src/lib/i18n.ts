@@ -20,6 +20,8 @@
  * v českom rozhraní a záznam o potvrdení to musí uniesť.
  */
 
+import { AppError } from "./appError"
+
 export const UI_LANGUAGES = ["sk", "cs", "en"] as const
 export type UiLanguage = (typeof UI_LANGUAGES)[number]
 
@@ -538,6 +540,13 @@ interface Dictionary {
       signInRemoved: (provider: string) => string
     }
   }
+  /**
+   * Chybové hlášky podľa kódu z `AppError`.
+   *
+   * Kľúč je kód, hodnota veta. Miesta na dosadenie sú `{meno}` — skladá ich
+   * `errorText()`, nie volajúci: poradie slov je v každom jazyku iné.
+   */
+  errors: Record<string, string>
   audit: {
     empty: string
     subjects: Record<string, string>
@@ -1527,6 +1536,73 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       confirmCodeToDelete: (code) => `Na odstránenie napíš kód organizácie (${code}).`,
       signInRemoved: (provider) => `Prihlásenie cez ${provider} odstránené.`,
     },
+  },
+  errors: {
+    unknown: "Nepodarilo sa to. Skús to znova.",
+
+    // ── prevod súboru ──────────────────────────────────────────────────────
+    "conversion.zipNotOffice": "Toto je ZIP-ový balík, ale ani docx, ani xlsx. Staré .doc a .xls sa prevádzať nedajú — ulož ich vo Worde alebo Exceli ako novší formát.",
+    "conversion.unsupportedFormat": "Formát {format} zatiaľ nevieme previesť. Podporujeme .docx, .pdf, .xlsx, .md, .txt a .csv.",
+    "conversion.pdfNoText": "V tomto PDF nie je žiadny text — je to obrázok (sken). Prevod ho neprečíta. V editore ho môžeš dať prepísať jazykovým modelom, alebo si vypýtaj od autora pôvodný súbor.",
+    "conversion.noText": "Súbor neobsahuje žiadny text.",
+
+    // ── uložený súbor ──────────────────────────────────────────────────────
+    "file.empty": "Súbor je prázdny.",
+    "file.tooLarge": "Súbor má {mb} MB, strop je {maxMb} MB.",
+
+    // ── priečinky knižnice ─────────────────────────────────────────────────
+    "folder.nameRequired": "Názov priečinka je povinný.",
+    "folder.parentMissing": "Nadriadený priečinok neexistuje.",
+    "folder.tooDeep": "Štruktúra môže mať najviac {max} úrovní.",
+    "folder.duplicateName": "Na tejto úrovni už priečinok „{name}“ je.",
+    "folder.notFound": "Taký priečinok tu nie je.",
+    "folder.hasChildren": "Priečinok má podpriečinky — najprv ich presuňte alebo zrušte.",
+    "folder.hasDocuments": "V priečinku je {count} dokumentov — najprv ich preraďte.",
+    "folder.documentNotFound": "Taký dokument tu nie je.",
+    "folder.orderUnknownFolder": "Zoznam obsahuje priečinok, ktorý tu nie je.",
+    "folder.orderSameLevel": "Preusporiadať sa dá len v rámci jednej úrovne.",
+    "folder.selfParent": "Priečinok nemôže byť nadriadený sám sebe.",
+    "folder.ownSubtree": "Priečinok sa nedá presunúť do svojho vlastného podpriečinka — vznikol by kruh.",
+    "folder.wouldExceedDepth": "Štruktúra by mala viac než {max} úrovní.",
+
+    // ── číselníky ──────────────────────────────────────────────────────────
+    "codelist.valueMissing": "Chýba hodnota pre {codelist}.",
+    "codelist.unknown": "Číselník {codelist} neexistuje.",
+    "codelist.notAllowed": "„{value}“ nie je platná hodnota pre {codelist}. Povolené: {allowed}.",
+    "codelist.badKeyFor": "„{value}“ sa nedá použiť ako kľúč pre {codelist}. Malé písmená bez diakritiky, číslice a podčiarkovník — kľúč ide do identifikátora dokumentu a do adries.",
+    "codelist.badKey": "„{key}“ sa nedá použiť ako kľúč. Malé písmená bez diakritiky, číslice a podčiarkovník — kľúčom sa označuje obsah a zostane v ňom natrvalo.",
+    "codelist.notTenantManaged": "Číselník {codelist} si organizácia nespravuje sama — sú to filtre, na ktorých stojí prístup k obsahu.",
+    "codelist.tenantMissing": "Organizácia neexistuje.",
+    "codelist.alreadyThere": "„{key}“ v ponuke už je.",
+    "codelist.readOnly": "Tento číselník sa meniť nedá.",
+
+    // ── knižnica ───────────────────────────────────────────────────────────
+    "library.noFileChosen": "Nevybral si súbor.",
+    "library.documentNotFound": "Taký dokument tu nie je.",
+    "library.noOriginalFile": "Dokument nemá pôvodný súbor, ktorý by sa dal prepísať.",
+    "library.onlyPdfRewrite": "Prepisovať sa dá len PDF — ostatné formáty sa prevedú priamo.",
+    "library.originalNotFound": "Pôvodný súbor sa nenašiel.",
+    "library.noDraft": "Žiadny návrh tu nie je.",
+    "library.titleRequired": "Názov dokumentu je povinný — bez neho je v zozname len kľúč.",
+    "library.emptyText": "Prázdny text sa uložiť nedá — dokument by nemal čo obsahovať.",
+    "library.labelRequired": "Označenie znenia je povinné — objaví sa doslovne v každom zázname o potvrdení. Napíš to, čo je v dokumente (napríklad: úplné znenie z 27. 2. 2026), nie vymyslené číslo.",
+    "library.effectiveFromRequired": "Dátum platnosti je povinný — bez neho sa znenie nedá potvrdiť (D6).",
+    "library.documentHasNoText": "Dokument nemá text — najprv nahraj súbor alebo napíš znenie.",
+    "library.noChunks": "Z textu nevznikol ani jeden úsek. Skontroluj, či má dokument členenie na články alebo nadpisy.",
+    "library.noPublishedVersion": "Dokument nemá publikované znenie — preindexovať sa dá len to, čo už je vonku.",
+    "library.noChunksProfile": "Z textu nevznikol ani jeden úsek — skontroluj profil členenia.",
+    "library.reasonRequired": "Dôvod opravy je povinný — bez neho sa o rok nedá zistiť, či išlo o preklep alebo o zmenu povinnosti.",
+    "library.versionNotFound": "Také znenie tu nie je.",
+    "library.dateChangeNeedsDecision": "Toto znenie už potvrdilo {count} ľudí a formulka, ktorú podpísali, obsahuje starý dátum. Rozhodni, či je to oprava zápisu, alebo sa má znenie potvrdiť znova.",
+
+    // ── prepis jazykovým modelom ───────────────────────────────────────────
+    "rewrite.notConfigured": "Prepis modelom nie je nastavený — chýba ANTHROPIC_API_KEY. Prevod v aplikácii funguje ďalej.",
+    "rewrite.emptyInput": "Niet čo prečisťovať — text je prázdny.",
+    "rewrite.textTooLong": "Text má {thousands} tisíc znakov, naraz sa dá poslať {maxThousands}. Rozdeľ ho a prečisti po častiach.",
+    "rewrite.emptyAnswer": "Model vrátil prázdnu odpoveď.",
+    "rewrite.emptyFile": "Súbor je prázdny.",
+    "rewrite.pdfTooLarge": "PDF má {mb} MB, naraz sa dá poslať {maxMb}. Rozdeľ ho na časti.",
+    "rewrite.modelReadNothing": "Model z dokumentu nič neprečítal.",
   },
   audit: {
     empty: "Zatiaľ tu nie je nič. Záznamy pribúdajú pri každej správcovskej zmene — pri role, prístupe, oddelení, pridelení aj nastavení organizácie.",
@@ -2619,6 +2695,73 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       signInRemoved: (provider) => `Přihlášení přes ${provider} odstraněno.`,
     },
   },
+  errors: {
+    unknown: "Nepodařilo se to. Zkus to znovu.",
+
+    // ── převod souboru ─────────────────────────────────────────────────────
+    "conversion.zipNotOffice": "Toto je ZIP balík, ale ani docx, ani xlsx. Staré .doc a .xls převádět nelze — ulož je ve Wordu nebo Excelu jako novější formát.",
+    "conversion.unsupportedFormat": "Formát {format} zatím neumíme převést. Podporujeme .docx, .pdf, .xlsx, .md, .txt a .csv.",
+    "conversion.pdfNoText": "V tomto PDF není žádný text — je to obrázek (sken). Převod ho nepřečte. V editoru ho můžeš nechat přepsat jazykovým modelem, nebo si vyžádej od autora původní soubor.",
+    "conversion.noText": "Soubor neobsahuje žádný text.",
+
+    // ── uložený soubor ─────────────────────────────────────────────────────
+    "file.empty": "Soubor je prázdný.",
+    "file.tooLarge": "Soubor má {mb} MB, strop je {maxMb} MB.",
+
+    // ── složky knihovny ────────────────────────────────────────────────────
+    "folder.nameRequired": "Název složky je povinný.",
+    "folder.parentMissing": "Nadřazená složka neexistuje.",
+    "folder.tooDeep": "Struktura může mít nejvýše {max} úrovní.",
+    "folder.duplicateName": "Na této úrovni už složka „{name}“ je.",
+    "folder.notFound": "Taková složka tu není.",
+    "folder.hasChildren": "Složka má podsložky — nejprve je přesuňte nebo zrušte.",
+    "folder.hasDocuments": "Ve složce je {count} dokumentů — nejprve je přeřaďte.",
+    "folder.documentNotFound": "Takový dokument tu není.",
+    "folder.orderUnknownFolder": "Seznam obsahuje složku, která tu není.",
+    "folder.orderSameLevel": "Přeuspořádat lze jen v rámci jedné úrovně.",
+    "folder.selfParent": "Složka nemůže být nadřazená sama sobě.",
+    "folder.ownSubtree": "Složku nelze přesunout do své vlastní podsložky — vznikl by kruh.",
+    "folder.wouldExceedDepth": "Struktura by měla více než {max} úrovní.",
+
+    // ── číselníky ──────────────────────────────────────────────────────────
+    "codelist.valueMissing": "Chybí hodnota pro {codelist}.",
+    "codelist.unknown": "Číselník {codelist} neexistuje.",
+    "codelist.notAllowed": "„{value}“ není platná hodnota pro {codelist}. Povoleno: {allowed}.",
+    "codelist.badKeyFor": "„{value}“ nelze použít jako klíč pro {codelist}. Malá písmena bez diakritiky, číslice a podtržítko — klíč jde do identifikátoru dokumentu a do adres.",
+    "codelist.badKey": "„{key}“ nelze použít jako klíč. Malá písmena bez diakritiky, číslice a podtržítko — klíčem se označuje obsah a zůstane v něm natrvalo.",
+    "codelist.notTenantManaged": "Číselník {codelist} si organizace nespravuje sama — jsou to filtry, na kterých stojí přístup k obsahu.",
+    "codelist.tenantMissing": "Organizace neexistuje.",
+    "codelist.alreadyThere": "„{key}“ v nabídce už je.",
+    "codelist.readOnly": "Tento číselník měnit nelze.",
+
+    // ── knihovna ───────────────────────────────────────────────────────────
+    "library.noFileChosen": "Nevybral jsi soubor.",
+    "library.documentNotFound": "Takový dokument tu není.",
+    "library.noOriginalFile": "Dokument nemá původní soubor, který by šel přepsat.",
+    "library.onlyPdfRewrite": "Přepisovat lze jen PDF — ostatní formáty se převedou přímo.",
+    "library.originalNotFound": "Původní soubor se nenašel.",
+    "library.noDraft": "Žádný návrh tu není.",
+    "library.titleRequired": "Název dokumentu je povinný — bez něj je v seznamu jen klíč.",
+    "library.emptyText": "Prázdný text uložit nelze — dokument by neměl co obsahovat.",
+    "library.labelRequired": "Označení znění je povinné — objeví se doslovně v každém záznamu o potvrzení. Napiš to, co je v dokumentu (například: úplné znění z 27. 2. 2026), ne vymyšlené číslo.",
+    "library.effectiveFromRequired": "Datum platnosti je povinné — bez něj znění nelze potvrdit (D6).",
+    "library.documentHasNoText": "Dokument nemá text — nejprve nahraj soubor nebo napiš znění.",
+    "library.noChunks": "Z textu nevznikl ani jeden úsek. Zkontroluj, jestli má dokument členění na články nebo nadpisy.",
+    "library.noPublishedVersion": "Dokument nemá publikované znění — přeindexovat lze jen to, co už je venku.",
+    "library.noChunksProfile": "Z textu nevznikl ani jeden úsek — zkontroluj profil členění.",
+    "library.reasonRequired": "Důvod opravy je povinný — bez něj se za rok nedá zjistit, jestli šlo o překlep nebo o změnu povinnosti.",
+    "library.versionNotFound": "Takové znění tu není.",
+    "library.dateChangeNeedsDecision": "Toto znění už potvrdilo {count} lidí a formulka, kterou podepsali, obsahuje staré datum. Rozhodni, jestli je to oprava zápisu, nebo se má znění potvrdit znovu.",
+
+    // ── přepis jazykovým modelem ───────────────────────────────────────────
+    "rewrite.notConfigured": "Přepis modelem není nastavený — chybí ANTHROPIC_API_KEY. Převod v aplikaci funguje dál.",
+    "rewrite.emptyInput": "Není co pročišťovat — text je prázdný.",
+    "rewrite.textTooLong": "Text má {thousands} tisíc znaků, najednou lze poslat {maxThousands}. Rozděl ho a pročisti po částech.",
+    "rewrite.emptyAnswer": "Model vrátil prázdnou odpověď.",
+    "rewrite.emptyFile": "Soubor je prázdný.",
+    "rewrite.pdfTooLarge": "PDF má {mb} MB, najednou lze poslat {maxMb}. Rozděl ho na části.",
+    "rewrite.modelReadNothing": "Model z dokumentu nic nepřečetl.",
+  },
   audit: {
     empty: "Zatím tu nic není. Záznamy přibývají při každé správcovské změně — u role, přístupu, oddělení, přidělení i nastavení organizace.",
     subjects: {
@@ -3708,6 +3851,73 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       signInRemoved: (provider) => `Sign-in with ${provider} removed.`,
     },
   },
+  errors: {
+    unknown: "That did not work. Try again.",
+
+    // ── file conversion ────────────────────────────────────────────────────
+    "conversion.zipNotOffice": "This is a ZIP archive, but neither docx nor xlsx. Legacy .doc and .xls cannot be converted — save them from Word or Excel in a newer format.",
+    "conversion.unsupportedFormat": "We cannot convert {format} yet. Supported: .docx, .pdf, .xlsx, .md, .txt and .csv.",
+    "conversion.pdfNoText": "This PDF contains no text — it is an image (a scan). The conversion cannot read it. In the editor you can have the language model transcribe it, or ask the author for the original file.",
+    "conversion.noText": "The file contains no text.",
+
+    // ── stored file ────────────────────────────────────────────────────────
+    "file.empty": "The file is empty.",
+    "file.tooLarge": "The file is {mb} MB; the limit is {maxMb} MB.",
+
+    // ── library folders ────────────────────────────────────────────────────
+    "folder.nameRequired": "The folder name is required.",
+    "folder.parentMissing": "The parent folder does not exist.",
+    "folder.tooDeep": "The structure can be at most {max} levels deep.",
+    "folder.duplicateName": "There is already a folder called “{name}” at this level.",
+    "folder.notFound": "There is no such folder here.",
+    "folder.hasChildren": "The folder has subfolders — move or delete them first.",
+    "folder.hasDocuments": "The folder holds {count} documents — refile them first.",
+    "folder.documentNotFound": "There is no such document here.",
+    "folder.orderUnknownFolder": "The list contains a folder that is not here.",
+    "folder.orderSameLevel": "Reordering works within a single level only.",
+    "folder.selfParent": "A folder cannot be its own parent.",
+    "folder.ownSubtree": "A folder cannot be moved into its own subfolder — that would make a cycle.",
+    "folder.wouldExceedDepth": "The structure would be more than {max} levels deep.",
+
+    // ── číselníky ──────────────────────────────────────────────────────────
+    "codelist.valueMissing": "A value for {codelist} is missing.",
+    "codelist.unknown": "The code list {codelist} does not exist.",
+    "codelist.notAllowed": "“{value}” is not a valid value for {codelist}. Allowed: {allowed}.",
+    "codelist.badKeyFor": "“{value}” cannot be used as a key for {codelist}. Lowercase letters without diacritics, digits and underscores — the key goes into the document identifier and into URLs.",
+    "codelist.badKey": "“{key}” cannot be used as a key. Lowercase letters without diacritics, digits and underscores — the key labels content and stays with it permanently.",
+    "codelist.notTenantManaged": "The organisation does not manage the code list {codelist} itself — these are the filters that access to content rests on.",
+    "codelist.tenantMissing": "The organisation does not exist.",
+    "codelist.alreadyThere": "“{key}” is already in the menu.",
+    "codelist.readOnly": "This code list cannot be changed.",
+
+    // ── library ────────────────────────────────────────────────────────────
+    "library.noFileChosen": "You did not choose a file.",
+    "library.documentNotFound": "There is no such document here.",
+    "library.noOriginalFile": "The document has no original file that could be transcribed.",
+    "library.onlyPdfRewrite": "Only PDFs can be transcribed — other formats are converted directly.",
+    "library.originalNotFound": "The original file was not found.",
+    "library.noDraft": "There is no draft here.",
+    "library.titleRequired": "The document title is required — without it the list shows only the key.",
+    "library.emptyText": "Empty text cannot be saved — the document would have no content.",
+    "library.labelRequired": "The version label is required — it appears verbatim in every acknowledgement record. Write what the document says (for example: consolidated text of 27 February 2026), not an invented number.",
+    "library.effectiveFromRequired": "The effective date is required — without it the version cannot be acknowledged (D6).",
+    "library.documentHasNoText": "The document has no text — upload a file or write the wording first.",
+    "library.noChunks": "The text produced no chunks at all. Check whether the document is organised into articles or headings.",
+    "library.noPublishedVersion": "The document has no published version — only what is already out can be reindexed.",
+    "library.noChunksProfile": "The text produced no chunks at all — check the chunking profile.",
+    "library.reasonRequired": "The reason for the correction is required — without it, a year from now there is no way to tell whether it was a typo or a change of obligation.",
+    "library.versionNotFound": "There is no such version here.",
+    "library.dateChangeNeedsDecision": "{count} people have already acknowledged this version, and the statement they signed contains the old date. Decide whether this is a correction of the record or whether the version has to be acknowledged again.",
+
+    // ── language-model transcription ───────────────────────────────────────
+    "rewrite.notConfigured": "Model transcription is not configured — ANTHROPIC_API_KEY is missing. Conversion in the application keeps working.",
+    "rewrite.emptyInput": "Nothing to clean up — the text is empty.",
+    "rewrite.textTooLong": "The text is {thousands} thousand characters; {maxThousands} can be sent at once. Split it and clean it up in parts.",
+    "rewrite.emptyAnswer": "The model returned an empty answer.",
+    "rewrite.emptyFile": "The file is empty.",
+    "rewrite.pdfTooLarge": "The PDF is {mb} MB; {maxMb} can be sent at once. Split it into parts.",
+    "rewrite.modelReadNothing": "The model read nothing from the document.",
+  },
   audit: {
     empty: "Nothing here yet. Records appear with every administrative change — a role, an access level, a department, an assignment or an organisation setting.",
     subjects: {
@@ -4322,4 +4532,25 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
 /** Slovník pre daný jazyk; pri neznámom padá na predvolený, nikdy nespadne. */
 export function dictionary(language: unknown): Dictionary {
   return DICTIONARY[normalizeLanguage(language)]
+}
+
+/**
+ * Veta k chybe, v jazyku toho, kto sa pozerá.
+ *
+ * `AppError` nesie kód a hodnoty, nie hotový text — knižnica o jazyku
+ * čitateľa nevie a vedieť nemá. Skladá sa to až tu, na okraji.
+ *
+ * **Nikdy nevráti prázdno.** Neznámy kód spadne na slovenskú vetu z výnimky
+ * (tá je aj v logu) a čokoľvek iné než `AppError` na všeobecnú hlášku —
+ * podrobnosti cudzej výnimky na obrazovku nepatria.
+ */
+export function errorText(error: unknown, language?: unknown): string {
+  const t = dictionary(language).errors
+  if (!(error instanceof AppError)) return t.unknown
+  const template = t[error.code]
+  if (!template) return error.message || t.unknown
+  return template.replace(
+    /\{(\w+)\}/g,
+    (whole, key: string) => String(error.params[key] ?? whole),
+  )
 }

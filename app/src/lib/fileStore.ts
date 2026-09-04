@@ -17,6 +17,7 @@
 
 import { GridFSBucket, ObjectId } from "mongodb"
 import { getDb } from "./mongodb"
+import { AppError } from "./appError"
 
 export const BUCKET = "cms_files"
 
@@ -36,12 +37,7 @@ async function bucket(): Promise<GridFSBucket> {
   return new GridFSBucket(db, { bucketName: BUCKET })
 }
 
-export class FileStoreError extends Error {
-  constructor(message: string) {
-    super(message)
-    this.name = "UloziskoError"
-  }
-}
+export class FileStoreError extends AppError {}
 
 /**
  * Uloží súbor a vráti jeho identifikátor.
@@ -57,10 +53,12 @@ export async function saveFile(
   data: Buffer,
   actor: string,
 ): Promise<StoredFile> {
-  if (!data?.byteLength) throw new FileStoreError("Súbor je prázdny.")
+  if (!data?.byteLength) throw new FileStoreError("file.empty", "Súbor je prázdny.")
   if (data.byteLength > MAX_BYTES) {
     throw new FileStoreError(
+      "file.tooLarge",
       `Súbor má ${Math.round(data.byteLength / 1024 / 1024)} MB, strop je ${MAX_BYTES / 1024 / 1024} MB.`,
+      { mb: Math.round(data.byteLength / 1024 / 1024), maxMb: MAX_BYTES / 1024 / 1024 },
     )
   }
 

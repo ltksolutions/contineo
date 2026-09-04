@@ -20,19 +20,20 @@ import {
   uploadDocument, saveDraft, publish, checkMetadata, makeDocumentId, saveMetadata,
   reindex, fixVersion, LibraryError,
 } from "@/lib/libraryWrite"
-import { FileStoreError, loadFile } from "@/lib/fileStore"
+import { loadFile } from "@/lib/fileStore"
 import { tenantExtras } from "@/lib/codelistsTenant"
 import {
   createFolder, renameFolder, moveFolder, deleteFolder,
-  assignDocument, shiftFolder, saveFolderOrder, FolderError,
+  assignDocument, shiftFolder, saveFolderOrder,
 } from "@/lib/folders"
 import type { CodelistExtras } from "@/lib/codelists"
 import type { ChunkingProfile } from "@/lib/chunkingProfile"
-import { cleanMarkdown, rewritePdf, RewriteError } from "@/lib/llmRewrite"
+import { cleanMarkdown, rewritePdf } from "@/lib/llmRewrite"
 import { getCollection } from "@/lib/mongodb"
 import { DOCUMENTS_COLLECTION } from "@/lib/documents"
 import { writeAudit } from "@/lib/audit"
-import { dictionary, type UiLanguage } from "@/lib/i18n"
+import { dictionary, errorText, type UiLanguage } from "@/lib/i18n"
+import { AppError } from "@/lib/appError"
 
 async function actor(): Promise<
   {
@@ -70,14 +71,11 @@ function say(language: UiLanguage) {
 }
 
 function errorMessage(e: unknown, language: UiLanguage): string {
-  if (
-    e instanceof LibraryError || e instanceof FileStoreError ||
-    e instanceof RewriteError || e instanceof FolderError
-  ) {
-    return e.message
-  }
-  console.error("[kniznica] akcia zlyhala:", e)
-  return say(language).failed
+  // `errorText()` pozná kódy zo `src/lib` a zloží z nich vetu v jazyku
+  // prihláseného človeka. Cudziu výnimku nerozbalí — jej text na obrazovku
+  // nepatrí, do logu áno.
+  if (!(e instanceof AppError)) console.error("[kniznica] akcia zlyhala:", e)
+  return errorText(e, language)
 }
 
 export async function uploadAction(fd: FormData) {
@@ -87,7 +85,7 @@ export async function uploadAction(fd: FormData) {
   try {
     const file = fd.get("file")
     if (!(file instanceof File) || file.size === 0) {
-      throw new LibraryError("Nevybral si súbor.")
+      throw new LibraryError("library.noFileChosen", "Nevybral si súbor.")
     }
 
     // Organizácia je z prihláseného človeka, nie z formulára.
@@ -199,17 +197,17 @@ export async function sendToModelAction(fd: FormData) {
   try {
     const col = await getCollection(DOCUMENTS_COLLECTION)
     const doc = await col.findOne({ documentId: id, companyCode: self.companyCode }) as Record<string, unknown> | null
-    if (!doc) throw new LibraryError("Taký dokument tu nie je.")
+    if (!doc) throw new LibraryError("library.documentNotFound", "Taký dokument tu nie je.")
 
     const draft = mode === "rewrite-scan"
       ? await (async () => {
           const original = doc.originalFile as { id: string; type: string } | undefined
-          if (!original) throw new LibraryError("Dokument nemá pôvodný súbor, ktorý by sa dal prepísať.")
+          if (!original) throw new LibraryError("library.noOriginalFile", "Dokument nemá pôvodný súbor, ktorý by sa dal prepísať.")
           if (original.type !== "pdf") {
-            throw new LibraryError("Prepisovať sa dá len PDF — ostatné formáty sa prevedú priamo.")
+            throw new LibraryError("library.onlyPdfRewrite", "Prepisovať sa dá len PDF — ostatné formáty sa prevedú priamo.")
           }
           const s = await loadFile(self.companyCode, original.id)
-          if (!s) throw new LibraryError("Pôvodný súbor sa nenašiel.")
+          if (!s) throw new LibraryError("library.originalNotFound", "Pôvodný súbor sa nenašiel.")
           return rewritePdf(s.data)
         })()
       : await cleanMarkdown(String(doc.draftMarkdown ?? ""))
@@ -247,7 +245,7 @@ export async function decideOnDraftAction(fd: FormData) {
     const col = await getCollection(DOCUMENTS_COLLECTION)
     const doc = await col.findOne({ documentId: id, companyCode: self.companyCode }) as Record<string, unknown> | null
     const draft = doc?.llmDraft as { text?: string } | undefined
-    if (!draft?.text) throw new LibraryError("Žiadny návrh tu nie je.")
+    if (!draft?.text) throw new LibraryError("library.noDraft", "Žiadny návrh tu nie je.")
 
     if (accept) {
       await saveDraft(self.companyCode, id, draft.text, `${self.email} (návrh modelu)`)
