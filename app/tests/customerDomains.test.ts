@@ -36,8 +36,13 @@ describe("nase domeny si zakaznik nepridelí", () => {
     expect(isOurDomain("contineo.app.utocnik.sk")).toBeNull()
   })
 
-  it("dôvod sa dá ukázať človeku, nie je to len `true`", () => {
-    expect(isOurDomain("admin.contineo.app")).toMatch(/contineo\.app/)
+  it("dôvod nesie kód a doménu, nie hotovú vetu", () => {
+    // Vetu skladá až obrazovka, v jazyku človeka — knižnica vracia kód
+    // a hodnotu, ktorá sa doň dosadí.
+    expect(isOurDomain("admin.contineo.app")).toEqual({
+      code: "domain.ours",
+      params: { domain: "contineo.app" },
+    })
   })
 
   it("zoznam našich domén nie je prázdny", () => {

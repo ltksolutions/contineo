@@ -17,21 +17,19 @@ import { revalidatePath } from "next/cache"
 import { orgContext } from "@/lib/orgSettings"
 import { isRedirect } from "@/lib/redirects"
 import { tabValue } from "@/lib/urlParams"
-import { saveTenant, saveOAuth, deleteOAuth, normalizeDomains, TenantValidationError } from "@/lib/tenantAdmin"
-import { saveBrand, BrandError } from "@/lib/branding"
+import { saveTenant, saveOAuth, deleteOAuth, normalizeDomains } from "@/lib/tenantAdmin"
+import { saveBrand } from "@/lib/branding"
 import { splitList } from "@/lib/oauth"
-import {
-  requestDomain, verifyRequest, cancelDomain, DomainError,
-} from "@/lib/customerDomains"
+import { requestDomain, verifyRequest, cancelDomain } from "@/lib/customerDomains"
 import { addDomain, skipVercel } from "@/lib/vercel"
 import {
   createDepartment, renameDepartment, moveDepartment, deleteDepartment,
-  shiftDepartment, saveOrder, DepartmentError,
+  shiftDepartment, saveOrder,
 } from "@/lib/departments"
 import { addCodelistItem, removeCodelistItem } from "@/lib/codelistsTenant"
-import { CodelistError } from "@/lib/codelists"
-import { reindexAll, LibraryError } from "@/lib/libraryWrite"
-import { dictionary, type UiLanguage } from "@/lib/i18n"
+import { reindexAll } from "@/lib/libraryWrite"
+import { dictionary, errorText, type UiLanguage } from "@/lib/i18n"
+import { AppError } from "@/lib/appError"
 
 async function actor(): Promise<{ email: string; companyCode: string; language: UiLanguage } | null> {
   const ctx = await orgContext()
@@ -51,15 +49,10 @@ function say(language: UiLanguage) {
 }
 
 function errorMessage(e: unknown, language: UiLanguage): string {
-  if (
-    e instanceof TenantValidationError || e instanceof BrandError ||
-    e instanceof DomainError || e instanceof DepartmentError ||
-    e instanceof CodelistError || e instanceof LibraryError
-  ) {
-    return e.message
-  }
-  console.error("[organizacia] akcia zlyhala:", e)
-  return say(language).failed
+  // Vetu skladá `errorText()` z kódu, ktorý chyba nesie. Cudzia výnimka sa
+  // na obrazovku nerozbalí — jej text môže obsahovať čokoľvek.
+  if (!(e instanceof AppError)) console.error("[organizacia] akcia zlyhala:", e)
+  return errorText(e, language)
 }
 
 /**

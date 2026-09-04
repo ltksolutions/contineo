@@ -19,6 +19,7 @@
  */
 
 import { getCollection } from "./mongodb"
+import { AppError } from "./appError"
 
 export const BRANDING_COLLECTION = "tenant_assets"
 
@@ -45,26 +46,25 @@ export interface Brand {
   updatedBy: string
 }
 
-export class BrandError extends Error {
-  constructor(message: string) {
-    super(message)
-    this.name = "ZnackaError"
-  }
-}
+export class BrandError extends AppError {}
 
 /** Skontroluje, čo prišlo z formulára. Vracia dôvod, nie `false`. */
 export function checkFile(type: string, bytes: number): void {
   if (!(ALLOWED_TYPES as readonly string[]).includes(type)) {
     throw new BrandError(
+      "brand.unsupportedFormat",
       `Nepodporovaný formát (${type || "neznámy"}). Použi PNG, JPEG alebo WebP. ` +
-      "SVG zámerne nie — môže obsahovať skript a servírovali by sme cudzí kód z vlastnej domény."
+      "SVG zámerne nie — môže obsahovať skript a servírovali by sme cudzí kód z vlastnej domény.",
+      { type: type || "neznámy" },
     )
   }
-  if (bytes <= 0) throw new BrandError("Súbor je prázdny.")
+  if (bytes <= 0) throw new BrandError("brand.emptyFile", "Súbor je prázdny.")
   if (bytes > MAX_BYTES) {
     throw new BrandError(
+      "brand.tooLarge",
       `Súbor má ${Math.round(bytes / 1024)} kB, najviac je ${MAX_BYTES / 1024} kB. ` +
-      "V hlavičke má logo 26 px — väčší súbor nič nepridá."
+      "V hlavičke má logo 26 px — väčší súbor nič nepridá.",
+      { kb: Math.round(bytes / 1024), maxKb: MAX_BYTES / 1024 },
     )
   }
 }

@@ -22,14 +22,13 @@ import {
   saveTenant,
   normalizeHostnames,
   normalizeDomains,
-  DomainOwnedError,
-  TenantValidationError,
 } from "@/lib/tenantAdmin"
 import { addDomain, customerInstructions, domainStatus, skipVercel } from "@/lib/vercel"
 import { saveOAuth, deleteOAuth } from "@/lib/tenantAdmin"
 import { splitList, PROVIDER_LABEL } from "@/lib/oauth"
-import { saveBrand, BrandError } from "@/lib/branding"
-import { dictionary, type UiLanguage } from "@/lib/i18n"
+import { saveBrand } from "@/lib/branding"
+import { dictionary, errorText, type UiLanguage } from "@/lib/i18n"
+import { AppError } from "@/lib/appError"
 
 /** Kto akciu spustil — alebo `null`, keď na ňu nemá právo. */
 async function isAdmin(): Promise<{ email: string; language: UiLanguage } | null> {
@@ -50,10 +49,8 @@ function fieldText(fd: FormData, actorName: string): string {
 }
 
 function errorMessage(e: unknown, language: UiLanguage): string {
-  if (e instanceof DomainOwnedError || e instanceof TenantValidationError) return e.message
-  if (e instanceof BrandError) return e.message
-  console.error("[admin] akcia zlyhala:", e)
-  return say(language).failed
+  if (!(e instanceof AppError)) console.error("[admin] akcia zlyhala:", e)
+  return errorText(e, language)
 }
 
 /** Domény, ktoré vo Verceli pribudli, a čo sa s nimi stalo. */

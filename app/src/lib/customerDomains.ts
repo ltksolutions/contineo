@@ -30,6 +30,7 @@ import { writeAudit } from "./audit"
 import { normalizeHostname, invalidateTenants, TENANTS_COLLECTION } from "./tenants"
 import { CNAME_TARGET, cnameInstruction, skipVercel } from "./vercel"
 import type { Tenant } from "./tenants"
+import { AppError, type Reason } from "./appError"
 
 /** Domény, ktoré si zákazník nepridelí. Naše, nech sú akokoľvek voľné. */
 export const OUR_DOMAINS = ["contineo.app", "vercel.app", "localhost"]
@@ -42,19 +43,14 @@ export interface DomainRequest {
   verifiedAt?: Date | null
 }
 
-export class DomainError extends Error {
-  constructor(message: string) {
-    super(message)
-    this.name = "DomenaError"
-  }
-}
+export class DomainError extends AppError {}
 
 /** Je to doména, ktorú si zákazník prideliť nesmie? Vracia dôvod, nie `false`. */
-export function isOurDomain(host: string): string | null {
+export function isOurDomain(host: string): Reason | null {
   const h = normalizeHostname(host)
   for (const ours of OUR_DOMAINS) {
     if (h === ours || h.endsWith(`.${ours}`)) {
-      return `${ours} je naša doména — subdoménu na nej vieme prideliť len my.`
+      return { code: "domain.ours", params: { domain: ours } }
     }
   }
   return null
@@ -111,10 +107,10 @@ export async function requestDomain(
 ): Promise<DomainRequest> {
   const host = normalizeHostname(rawHost)
   if (!/^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)+$/.test(host)) {
-    throw new DomainError("To nevyzerá ako doména. Napr. `intranet.futbalsfz.sk`.")
+    throw new DomainError("domain.notADomain", "To nevyzerá ako doména. Napr. intranet.futbalsfz.sk.")
   }
   const ours = isOurDomain(host)
-  if (ours) throw new DomainError(ours)
+  if (ours) throw new DomainError(ours.code, "Doména patrí nám.", ours.params)
 
   const col = await getCollection<Tenant & { domainRequests?: DomainRequest[] }>(TENANTS_COLLECTION)
 
@@ -123,9 +119,10 @@ export async function requestDomain(
   const already = await col.findOne({ hostnames: host })
   if (already) {
     throw new DomainError(
+      already.companyCode === companyCode ? "domain.alreadyYours" : "domain.alreadyTaken",
       already.companyCode === companyCode
         ? "Túto doménu už používate."
-        : "Táto doména je už v systéme zapísaná. Ozvite sa nám."
+        : "Táto doména je už v systéme zapísaná. Ozvite sa nám.",
     )
   }
 
@@ -201,7 +198,7 @@ export async function cancelDomain(companyCode: string, rawHost: string, actor: 
   const col = await getCollection<Tenant>(TENANTS_COLLECTION)
   const t = await col.findOne({ companyCode })
   if ((t?.hostnames ?? []).length <= 1 && (t?.hostnames ?? []).includes(host)) {
-    throw new DomainError("Toto je vaša posledná doména — bez nej sa portál nikde neukáže.")
+    throw new DomainError("domain.lastOne", "Toto je vaša posledná doména — bez nej sa portál nikde neukáže.")
   }
   await col.updateOne(
     { companyCode },

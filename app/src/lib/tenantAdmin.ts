@@ -25,6 +25,7 @@ import type { Tenant } from "./tenants"
 import { encrypt, encryptionAvailable } from "./secrets"
 import type { OAuthProviderName } from "./oauth"
 import { DEFAULT_CHUNKING, type ChunkingProfile } from "./chunkingProfile"
+import { AppError } from "./appError"
 
 /**
  * `Tenant` plus polia, ktoré nesie len správa: kto zmenu spravil a kedy boli
@@ -38,25 +39,23 @@ type TenantDoc = Tenant & {
   domainSetup?: { requestedAt: Date; requestedTo: string; hostnames: string[] }
 }
 
-export class DomainOwnedError extends Error {
+export class DomainOwnedError extends AppError {
   // Bez parametrových vlastností — viď poznámku pri `UnknownHostError`.
   readonly hostnames: string[]
   readonly owner: string
 
   constructor(hostnames: string[], owner: string) {
-    super(`Doména ${hostnames.join(", ")} už patrí organizácii ${owner}.`)
-    this.name = "DomainOwnedError"
+    super(
+      "domain.ownedByOther",
+      `Doména ${hostnames.join(", ")} už patrí organizácii ${owner}.`,
+      { domains: hostnames.join(", "), owner },
+    )
     this.hostnames = hostnames
     this.owner = owner
   }
 }
 
-export class TenantValidationError extends Error {
-  constructor(message: string) {
-    super(message)
-    this.name = "TenantValidationError"
-  }
-}
+export class TenantValidationError extends AppError {}
 
 /**
  * Doména patrí najviac jednej organizácii.
@@ -117,6 +116,7 @@ export function normalizeCompanyCode(raw: string): string {
   const code = String(raw ?? "").trim().toUpperCase()
   if (!CODE_PATTERN.test(code)) {
     throw new TenantValidationError(
+      "tenant.badCode",
       "Kód organizácie: 2–24 znakov, veľké písmená, číslice, pomlčka alebo podčiarkovník.",
     )
   }
@@ -136,7 +136,9 @@ function languages(raw: string[] | undefined, where: string): UiLanguage[] | und
   if (ok.length !== raw.length) {
     const invalid = raw.filter(l => !isUiLanguage(l))
     throw new TenantValidationError(
+      "tenant.unknownLanguage",
       `Neznámy jazyk v ${where}: ${invalid.join(", ")} (povolené: ${UI_LANGUAGES.join(", ")}).`,
+      { where, invalid: invalid.join(", "), allowed: UI_LANGUAGES.join(", ") },
     )
   }
   return ok as UiLanguage[]
@@ -202,11 +204,12 @@ export async function saveTenant(
   const col = await getCollection<TenantDoc>(TENANTS_COLLECTION)
 
   const existing = await col.findOne({ companyCode: code })
-  if (!existing) throw new TenantValidationError(`Organizácia ${code} neexistuje.`)
+  if (!existing) throw new TenantValidationError("tenant.notFound", `Organizácia ${code} neexistuje.`, { code })
 
   if (change.hostnames) {
     if (!change.hostnames.length) {
       throw new TenantValidationError(
+        "tenant.needsDomain",
         "Bez domény sa portál organizácie nikde neukáže. Nechaj aspoň jednu.",
       )
     }
@@ -260,12 +263,12 @@ export async function createTenant(
 ): Promise<Tenant> {
   const code = normalizeCompanyCode(companyCode)
   if (!change.displayName?.trim()) {
-    throw new TenantValidationError("Názov organizácie je povinný — je to to, čo ľudia uvidia v hlavičke.")
+    throw new TenantValidationError("tenant.nameRequired", "Názov organizácie je povinný — je to to, čo ľudia uvidia v hlavičke.")
   }
 
   const col = await getCollection<TenantDoc>(TENANTS_COLLECTION)
   if (await col.findOne({ companyCode: code })) {
-    throw new TenantValidationError(`Organizácia ${code} už existuje.`)
+    throw new TenantValidationError("tenant.alreadyExists", `Organizácia ${code} už existuje.`, { code })
   }
 
   const hostnames = change.hostnames ?? []
@@ -324,7 +327,7 @@ export async function saveOAuth(
   const code = normalizeCompanyCode(companyCode)
   const col = await getCollection<TenantDoc>(TENANTS_COLLECTION)
   const existing = await col.findOne({ companyCode: code })
-  if (!existing) throw new TenantValidationError(`Organizácia ${code} neexistuje.`)
+  if (!existing) throw new TenantValidationError("tenant.notFound", `Organizácia ${code} neexistuje.`, { code })
 
   const set: Record<string, unknown> = {}
   const path = `oauth.${provider}`
@@ -336,6 +339,7 @@ export async function saveOAuth(
   if (secret) {
     if (!encryptionAvailable()) {
       throw new TenantValidationError(
+        "tenant.noEncryptionKey",
         "Tajomstvo sa nedá uložiť: chýba OAUTH_SECRET_ENCRYPTION_KEY. " +
         "Ukladať ho čitateľne nebudeme — je to prístup do cudzieho systému."
       )
@@ -366,6 +370,7 @@ export async function saveOAuth(
   const secretPath = secret ? true : Boolean(existing.oauth?.[provider]?.clientSecretEnc)
   if (!idPath || !secretPath) {
     throw new TenantValidationError(
+      "tenant.needsBothCredentials",
       "Treba aj `clientId`, aj tajomstvo — jedno bez druhého sa nedá použiť."
     )
   }

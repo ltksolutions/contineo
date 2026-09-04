@@ -37,6 +37,7 @@ import { getCollection } from "./mongodb"
 import { writeAudit } from "./audit"
 import { PERSONS_COLLECTION, newDepartmentHistory } from "./persons"
 import type { Person } from "./persons"
+import { AppError, type Reason } from "./appError"
 
 export const DEPARTMENTS_COLLECTION = "departments"
 
@@ -71,12 +72,7 @@ export interface Department {
   updatedBy?: string
 }
 
-export class DepartmentError extends Error {
-  constructor(message: string) {
-    super(message)
-    this.name = "OddelenieError"
-  }
-}
+export class DepartmentError extends AppError {}
 
 // ── čisté pravidlá nad stromom ───────────────────────────────────────────────
 
@@ -161,14 +157,12 @@ export function canMove(
   all: Department[],
   id: string,
   newParentId: string | null,
-): string | null {
+): Reason | null {
   if (!newParentId) return null
-  if (newParentId === id) return "Oddelenie nemôže byť nadriadené samo sebe."
+  if (newParentId === id) return { code: "department.selfParent" }
 
   const inside = subtree(all, id)
-  if (inside.has(newParentId)) {
-    return "Oddelenie sa nedá presunúť pod svoje vlastné podriadené — vznikol by kruh."
-  }
+  if (inside.has(newParentId)) return { code: "department.ownSubtree" }
 
   // Hĺbka nového rodiča + najhlbšia vetva presúvaného podstromu.
   const parentDepth = depth(all, newParentId)
@@ -179,7 +173,7 @@ export function canMove(
     }
   }
   if (parentDepth + deepest > MAX_DEPTH) {
-    return `Štruktúra by mala viac než ${MAX_DEPTH} úrovní. Hlbší strom sa vo výbere nedá prehľadne ukázať.`
+    return { code: "department.wouldExceedDepth", params: { max: MAX_DEPTH } }
   }
   return null
 }
@@ -213,20 +207,28 @@ export async function createDepartment(
   actor: string,
 ): Promise<Department> {
   const actorName = name.trim()
-  if (!actorName) throw new DepartmentError("Názov oddelenia je povinný.")
+  if (!actorName) throw new DepartmentError("department.nameRequired", "Názov oddelenia je povinný.")
 
   const all = await allDepartments(companyCode)
   if (parentId && !all.some(o => o.id === parentId)) {
-    throw new DepartmentError("Nadriadené oddelenie neexistuje.")
+    throw new DepartmentError("department.parentMissing", "Nadriadené oddelenie neexistuje.")
   }
   if (depth(all, parentId) + 1 > MAX_DEPTH) {
-    throw new DepartmentError(`Štruktúra môže mať najviac ${MAX_DEPTH} úrovní.`)
+    throw new DepartmentError(
+      "department.tooDeep",
+      `Štruktúra môže mať najviac ${MAX_DEPTH} úrovní.`,
+      { max: MAX_DEPTH },
+    )
   }
   // Rovnaký názov pod tým istým rodičom je takmer vždy preklep alebo dvojité
   // odoslanie formulára — a dve oddelenia s rovnakým názvom vedľa seba sa
   // v zozname nedajú rozlíšiť.
   if (children(all, parentId).some(o => o.name.toLowerCase() === actorName.toLowerCase())) {
-    throw new DepartmentError(`Na tomto mieste už oddelenie „${actorName}" je.`)
+    throw new DepartmentError(
+      "department.duplicateName",
+      `Na tomto mieste už oddelenie „${actorName}" je.`,
+      { name: actorName },
+    )
   }
 
   const o: Department = {
@@ -254,10 +256,10 @@ export async function renameDepartment(
   actor: string,
 ): Promise<void> {
   const actorName = name.trim()
-  if (!actorName) throw new DepartmentError("Názov oddelenia je povinný.")
+  if (!actorName) throw new DepartmentError("department.nameRequired", "Názov oddelenia je povinný.")
   const col = await getCollection<Department>(DEPARTMENTS_COLLECTION)
   const before = await col.findOne({ companyCode, id })
-  if (!before) throw new DepartmentError("Také oddelenie tu nie je.")
+  if (!before) throw new DepartmentError("department.notFound", "Také oddelenie tu nie je.")
 
   await col.updateOne(
     { companyCode, id },
@@ -284,13 +286,14 @@ export async function moveDepartment(
   actor: string,
 ): Promise<void> {
   const all = await allDepartments(companyCode)
-  if (!all.some(o => o.id === id)) throw new DepartmentError("Také oddelenie tu nie je.")
+  if (!all.some(o => o.id === id)) throw new DepartmentError("department.notFound", "Také oddelenie tu nie je.")
   if (newParentId && !all.some(o => o.id === newParentId)) {
-    throw new DepartmentError("Nadriadené oddelenie neexistuje.")
+    throw new DepartmentError("department.parentMissing", "Nadriadené oddelenie neexistuje.")
   }
 
   const why = canMove(all, id, newParentId)
-  if (why) throw new DepartmentError(why)
+  // Dôvod je kód, nie veta — text sa skladá až na obrazovke.
+  if (why) throw new DepartmentError(why.code, "Presun sa nedá spraviť.", why.params)
 
   const before = all.find(o => o.id === id)!
   const col = await getCollection<Department>(DEPARTMENTS_COLLECTION)
@@ -317,14 +320,16 @@ export async function moveDepartment(
 export async function deleteDepartment(companyCode: string, id: string, actor: string): Promise<void> {
   const all = await allDepartments(companyCode)
   if (children(all, id).length > 0) {
-    throw new DepartmentError("Oddelenie má podriadené — najprv ich presuňte alebo zmažte.")
+    throw new DepartmentError("department.hasChildren", "Oddelenie má podriadené — najprv ich presuňte alebo zmažte.")
   }
 
   const personCol = await getCollection<Person>(PERSONS_COLLECTION)
   const count = await personCol.countDocuments({ companyCode, departmentId: id })
   if (count > 0) {
     throw new DepartmentError(
+      "department.hasPeople",
       `Do oddelenia patrí ${count} ${count === 1 ? "osoba" : count < 5 ? "osoby" : "osôb"} — najprv ich preraďte.`,
+      { count },
     )
   }
 
@@ -416,12 +421,12 @@ export async function assignPerson(
 ): Promise<void> {
   const all = await allDepartments(companyCode)
   if (departmentId && !all.some(o => o.id === departmentId)) {
-    throw new DepartmentError("Také oddelenie neexistuje.")
+    throw new DepartmentError("department.notFound", "Také oddelenie neexistuje.")
   }
 
   const col = await getCollection<Person>(PERSONS_COLLECTION)
   const person = await col.findOne({ companyCode, id: personId })
-  if (!person) throw new DepartmentError("Osoba sa nenašla.")
+  if (!person) throw new DepartmentError("department.personNotFound", "Osoba sa nenašla.")
 
   const current = new Date()
   const newPath = pathIdsTo(all, departmentId)
@@ -466,7 +471,7 @@ export async function shiftDepartment(
 ): Promise<void> {
   const all = await allDepartments(companyCode)
   const self = all.find(o => o.id === id)
-  if (!self) throw new DepartmentError("Také oddelenie tu nie je.")
+  if (!self) throw new DepartmentError("department.notFound", "Také oddelenie tu nie je.")
 
   const siblings = children(all, self.parentId ?? null)
   const from = siblings.findIndex(o => o.id === id)
@@ -502,11 +507,11 @@ export async function saveOrder(
 
   const touched = orderedIds.map(x => byId.get(x)).filter(o => o !== undefined)
   if (touched.length !== orderedIds.length) {
-    throw new DepartmentError("Zoznam obsahuje oddelenie, ktoré tu nie je.")
+    throw new DepartmentError("department.orderUnknown", "Zoznam obsahuje oddelenie, ktoré tu nie je.")
   }
   const parents = new Set(touched.map(o => o!.parentId ?? "koren"))
   if (parents.size > 1) {
-    throw new DepartmentError("Preusporiadať sa dá len v rámci jednej úrovne.")
+    throw new DepartmentError("department.orderSameLevel", "Preusporiadať sa dá len v rámci jednej úrovne.")
   }
 
   const col = await getCollection<Department>(DEPARTMENTS_COLLECTION)

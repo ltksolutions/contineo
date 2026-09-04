@@ -1557,7 +1557,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "folder.duplicateName": "Na tejto úrovni už priečinok „{name}“ je.",
     "folder.notFound": "Taký priečinok tu nie je.",
     "folder.hasChildren": "Priečinok má podpriečinky — najprv ich presuňte alebo zrušte.",
-    "folder.hasDocuments": "V priečinku je {count} dokumentov — najprv ich preraďte.",
+    "folder.hasDocuments": "V priečinku sú ešte dokumenty (počet: {count}) — najprv ich preraďte.",
     "folder.documentNotFound": "Taký dokument tu nie je.",
     "folder.orderUnknownFolder": "Zoznam obsahuje priečinok, ktorý tu nie je.",
     "folder.orderSameLevel": "Preusporiadať sa dá len v rámci jednej úrovne.",
@@ -1576,6 +1576,44 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "codelist.alreadyThere": "„{key}“ v ponuke už je.",
     "codelist.readOnly": "Tento číselník sa meniť nedá.",
 
+    // ── oddelenia ──────────────────────────────────────────────────────────
+    "department.nameRequired": "Názov oddelenia je povinný.",
+    "department.parentMissing": "Nadriadené oddelenie neexistuje.",
+    "department.tooDeep": "Štruktúra môže mať najviac {max} úrovní.",
+    "department.duplicateName": "Na tomto mieste už oddelenie „{name}“ je.",
+    "department.notFound": "Také oddelenie tu nie je.",
+    "department.personNotFound": "Osoba sa nenašla.",
+    "department.hasChildren": "Oddelenie má podriadené — najprv ich presuňte alebo zmažte.",
+    "department.hasPeople": "K oddeleniu sú priradení ľudia (počet: {count}) — najprv ich preraďte.",
+    "department.orderUnknown": "Zoznam obsahuje oddelenie, ktoré tu nie je.",
+    "department.orderSameLevel": "Preusporiadať sa dá len v rámci jednej úrovne.",
+    "department.selfParent": "Oddelenie nemôže byť nadriadené samo sebe.",
+    "department.ownSubtree": "Oddelenie sa nedá presunúť pod svoje vlastné podriadené — vznikol by kruh.",
+    "department.wouldExceedDepth": "Štruktúra by mala viac než {max} úrovní. Hlbší strom sa vo výbere nedá prehľadne ukázať.",
+
+    // ── značka organizácie ─────────────────────────────────────────────────
+    "brand.unsupportedFormat": "Nepodporovaný formát ({type}). Použi PNG, JPEG alebo WebP. SVG zámerne nie — môže obsahovať skript a servírovali by sme cudzí kód z vlastnej domény.",
+    "brand.emptyFile": "Súbor je prázdny.",
+    "brand.tooLarge": "Súbor má {kb} kB, najviac je {maxKb} kB. V hlavičke má logo 26 px — väčší súbor nič nepridá.",
+
+    // ── domény zákazníka ───────────────────────────────────────────────────
+    "domain.notADomain": "To nevyzerá ako doména. Napríklad intranet.futbalsfz.sk.",
+    "domain.ours": "{domain} je naša doména — subdoménu na nej vieme prideliť len my.",
+    "domain.alreadyYours": "Túto doménu už používate.",
+    "domain.alreadyTaken": "Táto doména je už v systéme zapísaná. Ozvite sa nám.",
+    "domain.lastOne": "Toto je vaša posledná doména — bez nej sa portál nikde neukáže.",
+    "domain.ownedByOther": "Doména {domains} už patrí organizácii {owner}.",
+
+    // ── organizácia ────────────────────────────────────────────────────────
+    "tenant.badCode": "Kód organizácie: 2–24 znakov, veľké písmená, číslice, pomlčka alebo podčiarkovník.",
+    "tenant.unknownLanguage": "Neznámy jazyk v {where}: {invalid} (povolené: {allowed}).",
+    "tenant.notFound": "Organizácia {code} neexistuje.",
+    "tenant.needsDomain": "Bez domény sa portál organizácie nikde neukáže. Nechaj aspoň jednu.",
+    "tenant.nameRequired": "Názov organizácie je povinný — je to to, čo ľudia uvidia v hlavičke.",
+    "tenant.alreadyExists": "Organizácia {code} už existuje.",
+    "tenant.noEncryptionKey": "Tajomstvo sa nedá uložiť: chýba OAUTH_SECRET_ENCRYPTION_KEY. Ukladať ho čitateľne nebudeme — je to prístup do cudzieho systému.",
+    "tenant.needsBothCredentials": "Treba aj clientId, aj tajomstvo — jedno bez druhého sa nedá použiť.",
+
     // ── knižnica ───────────────────────────────────────────────────────────
     "library.noFileChosen": "Nevybral si súbor.",
     "library.documentNotFound": "Taký dokument tu nie je.",
@@ -1593,7 +1631,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "library.noChunksProfile": "Z textu nevznikol ani jeden úsek — skontroluj profil členenia.",
     "library.reasonRequired": "Dôvod opravy je povinný — bez neho sa o rok nedá zistiť, či išlo o preklep alebo o zmenu povinnosti.",
     "library.versionNotFound": "Také znenie tu nie je.",
-    "library.dateChangeNeedsDecision": "Toto znenie už potvrdilo {count} ľudí a formulka, ktorú podpísali, obsahuje starý dátum. Rozhodni, či je to oprava zápisu, alebo sa má znenie potvrdiť znova.",
+    "library.dateChangeNeedsDecision": "Toto znenie už bolo potvrdené (počet potvrdení: {count}) a formulka, ktorú ľudia podpísali, obsahuje starý dátum. Rozhodni, či je to oprava zápisu, alebo sa má znenie potvrdiť znova.",
 
     // ── prepis jazykovým modelom ───────────────────────────────────────────
     "rewrite.notConfigured": "Prepis modelom nie je nastavený — chýba ANTHROPIC_API_KEY. Prevod v aplikácii funguje ďalej.",
@@ -2715,7 +2753,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "folder.duplicateName": "Na této úrovni už složka „{name}“ je.",
     "folder.notFound": "Taková složka tu není.",
     "folder.hasChildren": "Složka má podsložky — nejprve je přesuňte nebo zrušte.",
-    "folder.hasDocuments": "Ve složce je {count} dokumentů — nejprve je přeřaďte.",
+    "folder.hasDocuments": "Ve složce jsou ještě dokumenty (počet: {count}) — nejprve je přeřaďte.",
     "folder.documentNotFound": "Takový dokument tu není.",
     "folder.orderUnknownFolder": "Seznam obsahuje složku, která tu není.",
     "folder.orderSameLevel": "Přeuspořádat lze jen v rámci jedné úrovně.",
@@ -2734,6 +2772,44 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "codelist.alreadyThere": "„{key}“ v nabídce už je.",
     "codelist.readOnly": "Tento číselník měnit nelze.",
 
+    // ── oddělení ───────────────────────────────────────────────────────────
+    "department.nameRequired": "Název oddělení je povinný.",
+    "department.parentMissing": "Nadřazené oddělení neexistuje.",
+    "department.tooDeep": "Struktura může mít nejvýše {max} úrovní.",
+    "department.duplicateName": "Na tomto místě už oddělení „{name}“ je.",
+    "department.notFound": "Takové oddělení tu není.",
+    "department.personNotFound": "Osoba se nenašla.",
+    "department.hasChildren": "Oddělení má podřízená — nejprve je přesuňte nebo smažte.",
+    "department.hasPeople": "K oddělení jsou přiřazeni lidé (počet: {count}) — nejprve je přeřaďte.",
+    "department.orderUnknown": "Seznam obsahuje oddělení, které tu není.",
+    "department.orderSameLevel": "Přeuspořádat lze jen v rámci jedné úrovně.",
+    "department.selfParent": "Oddělení nemůže být nadřazené samo sobě.",
+    "department.ownSubtree": "Oddělení nelze přesunout pod své vlastní podřízené — vznikl by kruh.",
+    "department.wouldExceedDepth": "Struktura by měla více než {max} úrovní. Hlubší strom se ve výběru nedá přehledně ukázat.",
+
+    // ── značka organizace ──────────────────────────────────────────────────
+    "brand.unsupportedFormat": "Nepodporovaný formát ({type}). Použij PNG, JPEG nebo WebP. SVG záměrně ne — může obsahovat skript a servírovali bychom cizí kód z vlastní domény.",
+    "brand.emptyFile": "Soubor je prázdný.",
+    "brand.tooLarge": "Soubor má {kb} kB, nejvýše je {maxKb} kB. V hlavičce má logo 26 px — větší soubor nic nepřidá.",
+
+    // ── domény zákazníka ───────────────────────────────────────────────────
+    "domain.notADomain": "To nevypadá jako doména. Například intranet.futbalsfz.sk.",
+    "domain.ours": "{domain} je naše doména — subdoménu na ní umíme přidělit jen my.",
+    "domain.alreadyYours": "Tuto doménu už používáte.",
+    "domain.alreadyTaken": "Tato doména je už v systému zapsaná. Ozvěte se nám.",
+    "domain.lastOne": "Toto je vaše poslední doména — bez ní se portál nikde neukáže.",
+    "domain.ownedByOther": "Doména {domains} už patří organizaci {owner}.",
+
+    // ── organizace ─────────────────────────────────────────────────────────
+    "tenant.badCode": "Kód organizace: 2–24 znaků, velká písmena, číslice, pomlčka nebo podtržítko.",
+    "tenant.unknownLanguage": "Neznámý jazyk v {where}: {invalid} (povoleno: {allowed}).",
+    "tenant.notFound": "Organizace {code} neexistuje.",
+    "tenant.needsDomain": "Bez domény se portál organizace nikde neukáže. Nech aspoň jednu.",
+    "tenant.nameRequired": "Název organizace je povinný — je to to, co lidé uvidí v hlavičce.",
+    "tenant.alreadyExists": "Organizace {code} už existuje.",
+    "tenant.noEncryptionKey": "Tajemství nelze uložit: chybí OAUTH_SECRET_ENCRYPTION_KEY. Ukládat ho čitelně nebudeme — je to přístup do cizího systému.",
+    "tenant.needsBothCredentials": "Je potřeba clientId i tajemství — jedno bez druhého použít nelze.",
+
     // ── knihovna ───────────────────────────────────────────────────────────
     "library.noFileChosen": "Nevybral jsi soubor.",
     "library.documentNotFound": "Takový dokument tu není.",
@@ -2751,7 +2827,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "library.noChunksProfile": "Z textu nevznikl ani jeden úsek — zkontroluj profil členění.",
     "library.reasonRequired": "Důvod opravy je povinný — bez něj se za rok nedá zjistit, jestli šlo o překlep nebo o změnu povinnosti.",
     "library.versionNotFound": "Takové znění tu není.",
-    "library.dateChangeNeedsDecision": "Toto znění už potvrdilo {count} lidí a formulka, kterou podepsali, obsahuje staré datum. Rozhodni, jestli je to oprava zápisu, nebo se má znění potvrdit znovu.",
+    "library.dateChangeNeedsDecision": "Toto znění už bylo potvrzeno (počet potvrzení: {count}) a formulka, kterou lidé podepsali, obsahuje staré datum. Rozhodni, jestli je to oprava zápisu, nebo se má znění potvrdit znovu.",
 
     // ── přepis jazykovým modelem ───────────────────────────────────────────
     "rewrite.notConfigured": "Přepis modelem není nastavený — chybí ANTHROPIC_API_KEY. Převod v aplikaci funguje dál.",
@@ -3871,7 +3947,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "folder.duplicateName": "There is already a folder called “{name}” at this level.",
     "folder.notFound": "There is no such folder here.",
     "folder.hasChildren": "The folder has subfolders — move or delete them first.",
-    "folder.hasDocuments": "The folder holds {count} documents — refile them first.",
+    "folder.hasDocuments": "The folder still holds documents ({count}) — refile them first.",
     "folder.documentNotFound": "There is no such document here.",
     "folder.orderUnknownFolder": "The list contains a folder that is not here.",
     "folder.orderSameLevel": "Reordering works within a single level only.",
@@ -3890,6 +3966,44 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "codelist.alreadyThere": "“{key}” is already in the menu.",
     "codelist.readOnly": "This code list cannot be changed.",
 
+    // ── departments ────────────────────────────────────────────────────────
+    "department.nameRequired": "The department name is required.",
+    "department.parentMissing": "The parent department does not exist.",
+    "department.tooDeep": "The structure can be at most {max} levels deep.",
+    "department.duplicateName": "There is already a department called “{name}” in this place.",
+    "department.notFound": "There is no such department here.",
+    "department.personNotFound": "The person was not found.",
+    "department.hasChildren": "The department has sub-departments — move or delete them first.",
+    "department.hasPeople": "People are assigned to this department ({count}) — reassign them first.",
+    "department.orderUnknown": "The list contains a department that is not here.",
+    "department.orderSameLevel": "Reordering works within a single level only.",
+    "department.selfParent": "A department cannot be its own parent.",
+    "department.ownSubtree": "A department cannot be moved under its own sub-department — that would make a cycle.",
+    "department.wouldExceedDepth": "The structure would be more than {max} levels deep. A deeper tree cannot be shown clearly in the picker.",
+
+    // ── organisation branding ──────────────────────────────────────────────
+    "brand.unsupportedFormat": "Unsupported format ({type}). Use PNG, JPEG or WebP. SVG deliberately not — it can carry a script, and we would be serving someone else's code from our own domain.",
+    "brand.emptyFile": "The file is empty.",
+    "brand.tooLarge": "The file is {kb} kB; the limit is {maxKb} kB. The logo is 26 px in the header — a larger file adds nothing.",
+
+    // ── customer domains ───────────────────────────────────────────────────
+    "domain.notADomain": "That does not look like a domain. For example intranet.futbalsfz.sk.",
+    "domain.ours": "{domain} is our own domain — only we can assign a subdomain on it.",
+    "domain.alreadyYours": "You already use this domain.",
+    "domain.alreadyTaken": "This domain is already recorded in the system. Get in touch with us.",
+    "domain.lastOne": "This is your last domain — without it the portal will not appear anywhere.",
+    "domain.ownedByOther": "The domain {domains} already belongs to organisation {owner}.",
+
+    // ── organisation ───────────────────────────────────────────────────────
+    "tenant.badCode": "Organisation code: 2–24 characters, capital letters, digits, hyphen or underscore.",
+    "tenant.unknownLanguage": "Unknown language in {where}: {invalid} (allowed: {allowed}).",
+    "tenant.notFound": "Organisation {code} does not exist.",
+    "tenant.needsDomain": "Without a domain the organisation's portal will not appear anywhere. Leave at least one.",
+    "tenant.nameRequired": "The organisation name is required — it is what people see in the header.",
+    "tenant.alreadyExists": "Organisation {code} already exists.",
+    "tenant.noEncryptionKey": "The secret cannot be stored: OAUTH_SECRET_ENCRYPTION_KEY is missing. We will not store it readable — it is access to someone else's system.",
+    "tenant.needsBothCredentials": "Both clientId and the secret are needed — one without the other cannot be used.",
+
     // ── library ────────────────────────────────────────────────────────────
     "library.noFileChosen": "You did not choose a file.",
     "library.documentNotFound": "There is no such document here.",
@@ -3907,7 +4021,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "library.noChunksProfile": "The text produced no chunks at all — check the chunking profile.",
     "library.reasonRequired": "The reason for the correction is required — without it, a year from now there is no way to tell whether it was a typo or a change of obligation.",
     "library.versionNotFound": "There is no such version here.",
-    "library.dateChangeNeedsDecision": "{count} people have already acknowledged this version, and the statement they signed contains the old date. Decide whether this is a correction of the record or whether the version has to be acknowledged again.",
+    "library.dateChangeNeedsDecision": "This version has already been acknowledged ({count} times), and the statement those people signed contains the old date. Decide whether this is a correction of the record or whether the version has to be acknowledged again.",
 
     // ── language-model transcription ───────────────────────────────────────
     "rewrite.notConfigured": "Model transcription is not configured — ANTHROPIC_API_KEY is missing. Conversion in the application keeps working.",
