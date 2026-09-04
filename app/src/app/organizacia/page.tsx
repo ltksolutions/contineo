@@ -27,7 +27,7 @@ import { addCodelistItemAction, removeCodelistItemAction, saveChunkingProfileAct
 import { shiftDepartmentAction, saveDepartmentOrderAction } from "./actions"
 import TreeWithOrder from "@/components/TreeWithOrder"
 import { reindexState } from "@/lib/libraryWrite"
-import { DEFAULT_PROFILE } from "@/lib/chunker.mjs"
+import { DEFAULT_CHUNKING } from "@/lib/chunkingProfile"
 import { availableOptions, customItems, codelistUsage } from "@/lib/codelistsTenant"
 import { normalizeQuery, tabValue, type RawQuery } from "@/lib/urlParams"
 import { CUSTOM_CODELISTS } from "@/lib/codelists"
@@ -624,8 +624,8 @@ export default async function OrganisationPage({
 
         <label className="pole">
           <span className="pole-popis">{t.chunking.articleWord}</span>
-          <input className="pole-vstup" name="slovoClanok"
-                 defaultValue={tenant.chunking?.slovoClanok ?? DEFAULT_PROFILE.slovoClanok} />
+          <input className="pole-vstup" name="articleWord"
+                 defaultValue={tenant.chunking?.articleWord ?? DEFAULT_CHUNKING.articleWord} />
           <span className="tichy pole-napoveda">
             {t.chunking.articleNote1}<code>Článok</code>{t.chunking.articleNote2}<code>§</code>
             {t.chunking.articleNote3}<code>Bod</code>{t.chunking.articleNote4}
@@ -635,28 +635,28 @@ export default async function OrganisationPage({
 
         <label className="pole">
           <span className="pole-popis">{t.chunking.annexWord}</span>
-          <input className="pole-vstup" name="slovoPriloha"
-                 defaultValue={tenant.chunking?.annexWord ?? DEFAULT_PROFILE.slovoPriloha} />
+          <input className="pole-vstup" name="annexWord"
+                 defaultValue={tenant.chunking?.annexWord ?? DEFAULT_CHUNKING.annexWord} />
           <span className="tichy pole-napoveda">{t.chunking.annexWordNote}</span>
         </label>
 
         <label className="pole">
           <span className="pole-popis">{t.chunking.headerRepeats}</span>
-          <input className="pole-vstup" type="number" name="opakovaniHlavicky" min={2} max={50}
-                 defaultValue={tenant.chunking?.headerRepeats ?? DEFAULT_PROFILE.opakovaniHlavicky} />
+          <input className="pole-vstup" type="number" name="headerRepeats" min={2} max={50}
+                 defaultValue={tenant.chunking?.headerRepeats ?? DEFAULT_CHUNKING.headerRepeats} />
           <span className="tichy pole-napoveda">{t.chunking.headerRepeatsNote}</span>
         </label>
 
         <label className="pole">
           <span className="pole-popis">{t.chunking.minTokens}</span>
-          <input className="pole-vstup" type="number" name="cielMinTokenov" min={50} max={2000}
-                 defaultValue={tenant.chunking?.cielMinTokenov ?? DEFAULT_PROFILE.cielMinTokenov} />
+          <input className="pole-vstup" type="number" name="minTokens" min={50} max={2000}
+                 defaultValue={tenant.chunking?.minTokens ?? DEFAULT_CHUNKING.minTokens} />
         </label>
 
         <label className="pole">
           <span className="pole-popis">{t.chunking.maxTokens}</span>
-          <input className="pole-vstup" type="number" name="cielMaxTokenov" min={100} max={4000}
-                 defaultValue={tenant.chunking?.cielMaxTokenov ?? DEFAULT_PROFILE.cielMaxTokenov} />
+          <input className="pole-vstup" type="number" name="maxTokens" min={100} max={4000}
+                 defaultValue={tenant.chunking?.maxTokens ?? DEFAULT_CHUNKING.maxTokens} />
           <span className="tichy pole-napoveda">
             {t.chunking.tokensNoteBefore}<code>300–800</code>{t.chunking.tokensNoteAfter}
           </span>

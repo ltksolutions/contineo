@@ -26,7 +26,8 @@
     "check": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/check.mjs",
     "migrate:versionid": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/migrate_versionid.mjs",
     "files:attach": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/attach_original_files.mjs",
-    "migrate:fields": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/migrate_english_fields.mjs"
+    "migrate:fields": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/migrate_english_fields.mjs",
+    "migrate:chunking": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/migrate_chunking_profile.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.122.0",

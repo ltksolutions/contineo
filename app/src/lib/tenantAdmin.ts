@@ -24,6 +24,7 @@ import type { UiLanguage } from "./i18n"
 import type { Tenant } from "./tenants"
 import { encrypt, encryptionAvailable } from "./secrets"
 import type { OAuthProviderName } from "./oauth"
+import { DEFAULT_CHUNKING, type ChunkingProfile } from "./chunkingProfile"
 
 /**
  * `Tenant` plus polia, ktoré nesie len správa: kto zmenu spravil a kedy boli
@@ -91,13 +92,7 @@ export interface TenantChange {
   hostnames?: string[]
   /** Domény, z ktorých sa človek založí sám pri prihlásení kontom (D47). */
   autoProvisionDomains?: string[]
-  chunking?: {
-    slovoClanok?: string
-    annexWord?: string
-    headerRepeats?: number
-    cielMinTokenov?: number
-    cielMaxTokenov?: number
-  }
+  chunking?: Partial<ChunkingProfile>
 }
 
 /**
@@ -177,12 +172,15 @@ function toSet(change: TenantChange): Record<string, unknown> {
     const c = change.chunking
     const between = (v: number | undefined, min: number, max: number, previous: number) =>
       v === undefined || Number.isNaN(v) ? previous : Math.min(Math.max(Math.round(v), min), max)
-    set.chunkovanie = {
-      slovoClanok: (c.slovoClanok ?? "Článok").trim() || "Článok",
-      slovoPriloha: (c.annexWord ?? "PRÍLOHA č.").trim() || "PRÍLOHA č.",
-      opakovaniHlavicky: between(c.headerRepeats, 2, 50, 5),
-      cielMinTokenov: between(c.cielMinTokenov, 50, 2000, 300),
-      cielMaxTokenov: between(c.cielMaxTokenov, 100, 4000, 800),
+    // Pole sa volá `chunking`, nie `chunkovanie`: po migrácii na anglické
+    // názvy sa zapisovalo do starého poľa, ktoré už nikto nečítal, takže
+    // uloženie profilu nemalo žiadny účinok.
+    set.chunking = {
+      articleWord: (c.articleWord ?? DEFAULT_CHUNKING.articleWord).trim() || DEFAULT_CHUNKING.articleWord,
+      annexWord: (c.annexWord ?? DEFAULT_CHUNKING.annexWord).trim() || DEFAULT_CHUNKING.annexWord,
+      headerRepeats: between(c.headerRepeats, 2, 50, DEFAULT_CHUNKING.headerRepeats),
+      minTokens: between(c.minTokens, 50, 2000, DEFAULT_CHUNKING.minTokens),
+      maxTokens: between(c.maxTokens, 100, 4000, DEFAULT_CHUNKING.maxTokens),
     }
   }
   return set

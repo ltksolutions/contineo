@@ -38,7 +38,7 @@
  */
 
 import { createHash } from "node:crypto"
-import type { Chunk } from "./chunker"
+import type { Chunk } from "./chunker.mjs"
 
 /**
  * Verzia chunkovacieho algoritmu.
@@ -74,7 +74,7 @@ export function textFingerprint(markdown: string): string {
  * že sa hashovalo niečo iné, než sa ukladá, a zmena sa neprejavila.
  */
 export function chunkingFingerprint(
-  chunks: Pick<Chunk, "chunkIndex" | "text" | "heading" | "articleRef" | "kind">[],
+  chunks: Pick<Chunk, "chunkIndex" | "text" | "heading" | "articleRef" | "typ">[],
   profile: unknown,
 ): string {
   return hash(JSON.stringify({
@@ -85,7 +85,7 @@ export function chunkingFingerprint(
       t: ch.text,
       h: ch.heading,
       a: ch.articleRef ?? null,
-      typ: ch.kind ?? "clanok",
+      typ: ch.typ ?? "clanok",
     })),
   }))
 }

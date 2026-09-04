@@ -25,6 +25,7 @@ import { normalizeLanguage, UI_LANGUAGES } from "./i18n"
 import type { UiLanguage } from "./i18n"
 import type { Person } from "./persons"
 import type { TenantOAuth } from "./oauth"
+import type { ChunkingProfile } from "./chunkingProfile"
 
 export const TENANTS_COLLECTION = "tenants"
 
@@ -100,13 +101,7 @@ export interface Tenant {
    * Chýbajúci profil znamená predvolený, nie „nič" — a predvolený reže presne
    * tak, ako sa rezalo doteraz (overené na deviatich normách).
    */
-  chunking?: Partial<{
-    slovoClanok: string
-    annexWord: string
-    headerRepeats: number
-    cielMinTokenov: number
-    cielMaxTokenov: number
-  }>
+  chunking?: Partial<ChunkingProfile>
 
   /**
    * Domény, z ktorých sa človek **založí sám** pri prvom prihlásení

@@ -371,11 +371,11 @@ export async function saveChunkingProfileAction(fd: FormData) {
   try {
     await saveTenant(self.companyCode, {
       chunking: {
-        slovoClanok: fieldText(fd, "slovoClanok"),
-        annexWord: fieldText(fd, "slovoPriloha"),
-        headerRepeats: number("opakovaniHlavicky"),
-        cielMinTokenov: number("cielMinTokenov"),
-        cielMaxTokenov: number("cielMaxTokenov"),
+        articleWord: fieldText(fd, "articleWord"),
+        annexWord: fieldText(fd, "annexWord"),
+        headerRepeats: number("headerRepeats"),
+        minTokens: number("minTokens"),
+        maxTokens: number("maxTokens"),
       },
     }, self.email)
     revalidatePath("/organizacia")

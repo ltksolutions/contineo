@@ -30,7 +30,8 @@ import type { CodelistExtras } from "./codelists"
 import { saveFile, deleteFile } from "./fileStore"
 import { convert, FILE_TYPE_LABEL, ConversionError } from "./conversion"
 import { writeAudit, diff } from "./audit"
-import type { Chunk, ChunkingProfile } from "./chunker"
+import type { Chunk } from "./chunker.mjs"
+import { toChunkerProfile, type ChunkingProfile } from "./chunkingProfile"
 
 export const CHUNKS_COLLECTION = "document_chunks"
 
@@ -266,7 +267,8 @@ export async function publish(
   }
   const tags = Array.isArray(doc.tags) ? (doc.tags as string[]) : []
 
-  const { chunky: chunks } = chunkText(markdown, { nazovDokumentu: meta.title, profil: profile })
+  const forChunker = toChunkerProfile(profile)
+  const { chunky: chunks } = chunkText(markdown, { nazovDokumentu: meta.title, profil: forChunker })
   if (!chunks.length) {
     throw new LibraryError(
       "Z textu nevznikol ani jeden úsek. Skontroluj, či má dokument členenie na články alebo nadpisy.",
@@ -278,7 +280,7 @@ export async function publish(
     text: ch.text,
     heading: ch.heading,
     articleRef: ch.articleRef ?? null,
-    chunkType: ch.kind ?? "clanok",
+    chunkType: ch.typ ?? "clanok",
     sectionKey: meta.sectionKey,
     companyCode,
     scope: meta.scope,
@@ -296,7 +298,7 @@ export async function publish(
   // a dátum platnosti do identity nevstupujú zámerne: preklep v nich sa musí
   // dať opraviť bez toho, aby sa rozbili existujúce potvrdenia.
   const versionId = textFingerprint(markdown)
-  const chunkingId = chunkingFingerprint(chunks, { ...DEFAULT_PROFILE, ...profile })
+  const chunkingId = chunkingFingerprint(chunks, { ...DEFAULT_PROFILE, ...forChunker })
   const now = new Date()
 
   // Rovnaké znenie už publikované? Nič sa nedeje — publikovanie je idempotentné.
@@ -497,12 +499,13 @@ export async function reindex(
   }
   const tags = Array.isArray(doc.tags) ? (doc.tags as string[]) : []
 
-  const { chunky: chunks } = chunkText(markdown, { nazovDokumentu: meta.title, profil: profile })
+  const forChunker = toChunkerProfile(profile)
+  const { chunky: chunks } = chunkText(markdown, { nazovDokumentu: meta.title, profil: forChunker })
   if (!chunks.length) {
     throw new LibraryError("Z textu nevznikol ani jeden úsek — skontroluj profil členenia.")
   }
 
-  const chunkingId = chunkingFingerprint(chunks, { ...DEFAULT_PROFILE, ...profile })
+  const chunkingId = chunkingFingerprint(chunks, { ...DEFAULT_PROFILE, ...forChunker })
   if (doc.chunkingId === chunkingId) {
     return { chunks: chunks.length, archived: 0, alreadyDone: true, chunkingId }
   }
@@ -715,9 +718,10 @@ export async function reindexState(
     if (!text) continue
     total++
 
-    const { chunky: chunks } = chunkText(text, { nazovDokumentu: d.title ?? "", profil: profile })
+    const forChunker = toChunkerProfile(profile)
+    const { chunky: chunks } = chunkText(text, { nazovDokumentu: d.title ?? "", profil: forChunker })
     if (!chunks.length) { outdated++; continue }
-    const chunkingId = chunkingFingerprint(chunks, { ...DEFAULT_PROFILE, ...profile })
+    const chunkingId = chunkingFingerprint(chunks, { ...DEFAULT_PROFILE, ...forChunker })
     if (needsReindex(d.chunkingId, chunkingId)) outdated++
   }
 

@@ -27,7 +27,7 @@ import {
   assignDocument, shiftFolder, saveFolderOrder, FolderError,
 } from "@/lib/folders"
 import type { CodelistExtras } from "@/lib/codelists"
-import type { ChunkingProfile } from "@/lib/chunker"
+import type { ChunkingProfile } from "@/lib/chunkingProfile"
 import { cleanMarkdown, rewritePdf, RewriteError } from "@/lib/llmRewrite"
 import { getCollection } from "@/lib/mongodb"
 import { DOCUMENTS_COLLECTION } from "@/lib/documents"
