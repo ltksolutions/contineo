@@ -12,7 +12,7 @@
  * Prečo záznam v `persons` a nie premenná so zoznamom: ide overenou cestou
  * prihlásenia (I1c) vrátane evidencie a odhlásenia, a odobratie práv je zmena
  * jedného záznamu, nie premennej a nasadenia. Presne taká premenná
- * (`POVOLENE_EMAILY`) navyše skrývala, že sa cesta cez `persons` nikdy
+ * (`ALLOWED_EMAILS`) navyše skrývala, že sa cesta cez `persons` nikdy
  * netestovala.
  *
  * Správca patrí pod tenanta dodávateľa (`LTK`), nie pod zákazníka — obrazovka
