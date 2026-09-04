@@ -226,6 +226,7 @@
       `tenants.chunkovanie` → už `chunking`, ale skontrolovať zvyšky
 - [x] `osoby/actions.ts` ✅ 2026-09-04 — spolu s i18n 3a (`confirmation`, kľúč `error`)
 - [x] `hr/actions.ts` a `hr/pridelit` ✅ 2026-09-04 — `reason`, `addresses`, `all`; pri tom sa ukázalo, že po chybe sa vyplnený formulár nevracal
+- [ ] Premenná prostredia `POVOLENE_EMAILY` → `ALLOWED_EMAILS`. Je to zmluva s nastavením vo Verceli, takže sa **prekladá, nepremenúva**: kód číta novú aj starú, stará zmizne, keď sa premenná vo Verceli prepíše
 - [ ] `chunker.mjs` a jeho `.d.mts` majú slovenské názvy **zámerne** — sú to jeho parametre a prekladajú sa v `chunkingProfile.ts`. Nechať tak.
 - [ ] `TagSelect.tsx` a spol. — po premenovaní zostali rozpísané skratky vlastností (`name: name,`); kozmetika, urobiť pri najbližšom dotyku súboru
 
