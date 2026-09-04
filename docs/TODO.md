@@ -150,7 +150,9 @@
   - [x] **1 — človek** ✅ 2026-08-30: formulka, onboarding, čakajúce, e-maily, hlavička, pätička, 404, domov, prihlásenie, dokumenty, otázky a odpovede
   - [x] **2a/2b — knižnica: zoznam, priečinky, nahrávanie** ✅ 2026-08-30
   - [x] **2c — knižnica: detail dokumentu, editor, hlásenia akcií** ✅ 2026-08-31 (`d75d951`)
-  - [ ] **3 — správcovia:** nastavenie organizácie, admin, osoby (~250 reťazcov). Patrí sem aj `ColorSelect.tsx`, popisky v `AuditList` a `language` pre `<TreeWithOrder>` a `<TagSelect>` v `osoby/[id]`
+  - [x] **3a — osoby** ✅ 2026-09-04 (`2d794ee`) — zoznam, pozvanie, detail, import z CSV, hlásenia
+  - [x] **3b — nastavenie organizácie** ✅ 2026-09-04 (`f587847`) — všetkých sedem záložiek, `AuditList`, `ColorSelect`, hlásenia
+  - [ ] **3c — admin** (`/admin`, `/admin/tenanti/[kod]`, `admin/actions.ts`) a zvyšné komponenty
   - [ ] **4 — chyby z `src/lib`** prekladané až na obrazovke (~80 miest), podľa rozhodnutia „kódy chýb, preklad až na obrazovke"
 - [ ] **Otázka pre HR/právnika:** má formulka pomenovať jazyk dokumentu, keď sa líši od jazyka prostredia?
 
@@ -217,10 +219,13 @@
 > v Mongo. Ide o samostatnú úlohu, nie o i18n.
 
 - [x] Návratové hodnoty `libraryWrite` (`chunkov`, `archivovanych`, `uzBolo`, `znovaPotvrdit`) a `RewriteMode` ✅ 2026-08-31 — spolu s i18n 2c, lebo sa ich dotýkali formuláre
+- [x] **Profil členenia** ✅ 2026-09-04 (`eea2bf6`) — `chunker.mjs` zostáva nedotknutý, preklad je v `src/lib/chunkingProfile.ts`; databáza, typy aj formulár po anglicky. **Migrácia `npm run migrate:chunking` ešte nebežala** — `.env.local` nemá hodnotu `MONGODB_URI`.
+- [x] `chunker.d.ts` → `chunker.d.mts` ✅ 2026-09-04 — pri prípone `.mjs` hľadá TypeScript `.d.mts`, takže starý súbor sa nikdy nečítal
 - [ ] **Polia v databáze** — potrebujú migráciu, nie premenovanie:
       `documents.versions[].opravy[]` (`kedy`, `kto`, `dovod`, `znovaPotvrdit`, `zLabel`, `zEffectiveFrom`),
       `tenants.chunkovanie` → už `chunking`, ale skontrolovať zvyšky
-- [ ] Vlastnosti mimo knižnice: `chunker.mjs` / `chunker.d.ts` (`chunkov`, `chunky`, `vlozene`), `hr/actions.ts` a `osoby/actions.ts` (`dovod`, kľúč `chyba`)
+- [x] `osoby/actions.ts` ✅ 2026-09-04 — spolu s i18n 3a (`confirmation`, kľúč `error`)
+- [ ] Vlastnosti mimo knižnice: `hr/actions.ts` (`dovod`, kľúč `chyba`); `chunker.mjs` a jeho `.d.mts` majú slovenské názvy **zámerne** — sú to jeho parametre a prekladajú sa v `chunkingProfile.ts`
 - [ ] `TagSelect.tsx` a spol. — po premenovaní zostali rozpísané skratky vlastností (`name: name,`); kozmetika, urobiť pri najbližšom dotyku súboru
 
 ### M. Správa tenantov — **Fáza 5b** 🟡 → `docs/SPRAVA_TENANTOV.md`
