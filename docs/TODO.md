@@ -153,6 +153,9 @@
   - [x] **3a — osoby** ✅ 2026-09-04 (`2d794ee`) — zoznam, pozvanie, detail, import z CSV, hlásenia
   - [x] **3b — nastavenie organizácie** ✅ 2026-09-04 (`f587847`) — všetkých sedem záložiek, `AuditList`, `ColorSelect`, hlásenia
   - [x] **3c — admin a zvyšné komponenty** ✅ 2026-09-04 (`22ef0a2`) — správa tenantov, zlatá sada (zoznam, detail, hodnotenie), metadáta stránky
+  - [x] **4a — knižnica** ✅ 2026-09-04 (`c2db9be`) — `AppError` s kódom a hodnotami, `errorText()` na okraji; `LibraryError`, `FolderError`, `RewriteError`, `FileStoreError`, `ConversionError`, `CodelistError` (62 miest, 47 kódov)
+  - [ ] **4b — organizácia:** `DepartmentError`, `TenantValidationError`, `BrandError`, `DomainError`, `DomainOwnedError` (~33 miest)
+  - [ ] **4c — osoby, prideľovanie a API:** `PersonValidationError`, `AssignmentValidationError`, odpovede `/api/chat`, `/api/hodnotenie`, `/api/sada` a middleware
   - [ ] **4 — chyby prekladané až na obrazovke** (~80 miest), podľa rozhodnutia „kódy chýb, preklad až na obrazovke". Patria sem výnimky z `src/lib` (`LibraryError`, `DepartmentError`, `FolderError`, `PersonValidationError`, `AssignmentValidationError`…) aj odpovede API ciest `/api/chat`, `/api/hodnotenie`, `/api/sada` a middleware. Zvlášť si všimnúť `/api/chat` — veta „Nenašiel som relevantné informácie…" nie je chybová hláška, ale **text odpovede**, ktorý človek číta.
 - [ ] **Otázka pre HR/právnika:** má formulka pomenovať jazyk dokumentu, keď sa líši od jazyka prostredia?
 
