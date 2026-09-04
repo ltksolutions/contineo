@@ -13,24 +13,12 @@
 import { useState } from "react"
 import Link from "next/link"
 import Search from "./Search"
-
-const TRAP_LABEL: Record<string, string> = {
-  out_of_domain: "Otázka je mimo nahraných dokumentov. Systém má odmietnuť, nie odpovedať.",
-  ambiguous_conflict: "Predpisy si tu odporujú. Systém nemá rozhodnúť autoritatívne — má na rozpor upozorniť a ponúknuť eskaláciu, lebo výklad patrí človeku.",
-  access_control: "Pýta sa verejný používateľ na interný obsah. Systém ho nesmie prezradiť.",
-  historical_version: "Otázka mieri na staršie znenie. Systém má citovať verziu platnú v danom čase, nie dnešnú.",
-}
-
-const BEHAVIOUR_LABEL: Record<string, string> = {
-  answer: "má odpovedať vecne",
-  refuse: "má odmietnuť",
-  escalate: "má ponúknuť eskaláciu",
-}
+import { dictionary, type UiLanguage } from "@/lib/i18n"
 
 export default function GoldenSetQuestion({
-  id, text: questionText, original: original, edited: edited, excluded: excluded, exclusionReason: exclusionReason,
+  id, text: questionText, original, edited, excluded, exclusionReason,
   trapType, expectedBehaviour, precedenceRule, searchMode,
-  overlap: overlap, others: foreign, next: next,
+  overlap, others: foreign, next, language,
 }: {
   id: string
   text: string
@@ -47,7 +35,10 @@ export default function GoldenSetQuestion({
   /** Posudky ostatných. Pri prekryve prázdne, kým neposúdim sám. */
   others: { reviewer: string; correct: 0 | 1 | null }[]
   next: string | null
+  language?: UiLanguage
 }) {
+  const d = dictionary(language).goldenSet
+  const t = d.detail
   const [text, setText] = useState(questionText)
   const [editing, setEditing] = useState(false)
   const [excludedNow, setExcluded] = useState(excluded)
@@ -73,7 +64,7 @@ export default function GoldenSetQuestion({
     <div style={{ display: "grid", gap: 20 }}>
       <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
         <Link href="/sada" className="tichy" style={{ fontSize: 13.5, textDecoration: "none" }}>
-          ← Späť na zoznam
+          {t.back}
         </Link>
         <span className="stitok tichy" style={{ fontSize: 11 }}>{id}</span>
         <span className="stitok tichy" style={{ fontSize: 11 }}>{searchMode}</span>
@@ -81,19 +72,15 @@ export default function GoldenSetQuestion({
           <span className="stitok tichy" style={{ fontSize: 11 }}>{precedenceRule}</span>
         )}
         <span className="tichy" style={{ fontSize: 12, marginLeft: "auto" }}>
-          {status === "ukladam" ? "ukladám…" : status === "ulozene" ? "uložené" : status === "chyba" ? "neuložilo sa" : ""}
+          {status === "ukladam" ? t.saving : status === "ulozene" ? t.saved : status === "chyba" ? t.saveFailed : ""}
         </span>
       </div>
 
       {/* Otázka pre dvoch — hodnotiteľ má vedieť, prečo cudzí posudok nevidí. */}
       {overlap && foreign.length === 0 && (
         <div className="karta" style={{ fontSize: 14, lineHeight: 1.6 }}>
-          <strong>Túto otázku posudzujú dvaja nezávisle.</strong>{" "}
-          <span className="tichy">
-            Ak ju už niekto posúdil, jeho záver uvidíte až po tom, ako sa vyjadríte
-            sami. Nejde o tajnostkárstvo — keby ste ho videli vopred, merali by sme,
-            či ste mu uverili, nie či sa zhodnete.
-          </span>
+          <strong>{t.twoReviewersHeading}</strong>{" "}
+          <span className="tichy">{t.twoReviewersNote}</span>
         </div>
       )}
 
@@ -106,10 +93,10 @@ export default function GoldenSetQuestion({
             borderColor: foreign.some(c => c.correct !== null) ? "var(--line)" : "var(--line)",
           }}
         >
-          <div style={{ fontWeight: 600, marginBottom: 8 }}>Ako to posúdili ostatní</div>
+          <div style={{ fontWeight: 600, marginBottom: 8 }}>{t.othersHeading}</div>
           {foreign.map((c, i) => (
             <div key={i} className="tichy" style={{ fontSize: 13.5 }}>
-              {c.reviewer} — {c.correct === 1 ? "správna" : c.correct === 0 ? "nesprávna" : "neposúdené"}
+              {c.reviewer} — {c.correct === 1 ? t.verdict.correct : c.correct === 0 ? t.verdict.incorrect : t.verdict.none}
             </div>
           ))}
         </div>
@@ -127,10 +114,11 @@ export default function GoldenSetQuestion({
         >
           <span aria-hidden="true" style={{ fontWeight: 700 }}>▲</span>
           <span style={{ fontSize: 14, lineHeight: 1.6 }}>
-            <strong>Toto je zámerná skúška.</strong>{" "}
-            {trapType && TRAP_LABEL[trapType]}
-            {" "}Systém tu <strong>{BEHAVIOUR_LABEL[expectedBehaviour] ?? expectedBehaviour}</strong> —
-            posudzujte, či sa zachoval takto, nie či odpovedal vyčerpávajúco.
+            <strong>{t.trapHeading}</strong>{" "}
+            {trapType && t.traps[trapType]}
+            {t.trapBeforeBehaviour}
+            <strong>{t.behaviours[expectedBehaviour] ?? expectedBehaviour}</strong>
+            {t.trapAfterBehaviour}
           </span>
         </div>
       )}
@@ -138,7 +126,7 @@ export default function GoldenSetQuestion({
       {excludedNow ? (
         <div className="karta">
           <div style={{ fontSize: 15, marginBottom: 8 }}>
-            <strong>Otázka je vyradená.</strong>
+            <strong>{t.excludedHeading}</strong>
           </div>
           {reason && <p className="tichy" style={{ fontSize: 14, margin: "0 0 12px" }}>{reason}</p>}
           <button
@@ -146,7 +134,7 @@ export default function GoldenSetQuestion({
             className="tlacidlo tlacidlo--tiche"
             onClick={() => { setExcluded(false); save({ excluded: false }) }}
           >
-            Vrátiť do sady
+            {t.returnToSet}
           </button>
         </div>
       ) : (
@@ -155,7 +143,7 @@ export default function GoldenSetQuestion({
             {editing ? (
               <div style={{ display: "grid", gap: 10 }}>
                 <label className="tichy" style={{ fontSize: 13 }}>
-                  Znenie otázky — napíšte ju tak, ako by sa spýtal skutočný človek.
+                  {t.editLabel}
                 </label>
                 <textarea
                   value={text}
@@ -176,7 +164,7 @@ export default function GoldenSetQuestion({
                     style={{ padding: "7px 14px", fontSize: 14 }}
                     onClick={() => { setEditing(false); save({ editedText: text }) }}
                   >
-                    Uložiť znenie
+                    {t.saveText}
                   </button>
                   <button
                     type="button"
@@ -184,7 +172,7 @@ export default function GoldenSetQuestion({
                     style={{ padding: "7px 14px", fontSize: 14 }}
                     onClick={() => { setText(questionText); setEditing(false) }}
                   >
-                    Zrušiť
+                    {t.cancel}
                   </button>
                   {edited && (
                     <button
@@ -193,7 +181,7 @@ export default function GoldenSetQuestion({
                       style={{ padding: "7px 14px", fontSize: 14 }}
                       onClick={() => { setText(original); setEditing(false); save({ editedText: "" }) }}
                     >
-                      Vrátiť pôvodné
+                      {t.restoreOriginal}
                     </button>
                   )}
                 </div>
@@ -206,7 +194,7 @@ export default function GoldenSetQuestion({
                       regresné merania, nie len história. */}
                   {edited && (
                     <div className="tichy" style={{ fontSize: 12.5, marginTop: 8 }}>
-                      pôvodne: &bdquo;{original}&ldquo;
+                      {t.originally(original)}
                     </div>
                   )}
                 </div>
@@ -216,7 +204,7 @@ export default function GoldenSetQuestion({
                   style={{ padding: "6px 12px", fontSize: 13.5, flexShrink: 0 }}
                   onClick={() => setEditing(true)}
                 >
-                  Upraviť
+                  {t.edit}
                 </button>
               </div>
             )}
@@ -227,6 +215,7 @@ export default function GoldenSetQuestion({
             questionId={id}
             preset={text}
             onReviewed={() => setReviewed(true)}
+            language={language}
           />
 
           <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
@@ -234,22 +223,22 @@ export default function GoldenSetQuestion({
                 nabádala preskočiť prácu, kvôli ktorej sme tu. */}
             {reviewed && next && (
               <Link href={`/sada/${next}`} className="tlacidlo" style={{ textDecoration: "none" }}>
-                Ďalšia otázka →
+                {t.nextQuestion}
               </Link>
             )}
             <button
               type="button"
               className="tlacidlo tlacidlo--tiche"
               onClick={() => {
-                const d = window.prompt("Prečo otázka nedáva zmysel?") ?? ""
-                if (d.trim()) {
+                const why = window.prompt(t.excludePrompt) ?? ""
+                if (why.trim()) {
                   setExcluded(true)
-                  setReason(d)
-                  save({ excluded: true, exclusionReason: d })
+                  setReason(why)
+                  save({ excluded: true, exclusionReason: why })
                 }
               }}
             >
-              Vyradiť otázku
+              {t.excludeQuestion}
             </button>
           </div>
         </>

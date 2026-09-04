@@ -11,6 +11,7 @@ import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { loadGoldenSet, questionText } from "@/lib/goldenSet"
 import GoldenSetQuestion from "@/components/GoldenSetQuestion"
+import { currentPerson } from "@/lib/session"
 
 export const dynamic = "force-dynamic"
 
@@ -22,6 +23,7 @@ export default async function QuestionDetailPage({ params }: { params: Promise<{
   const question = all.find(o => o.id === id)
   if (!question) notFound()
 
+  const language = (await currentPerson())?.language
   const position = all.findIndex(o => o.id === id)
   const remaining = all.slice(position + 1)
 
@@ -48,6 +50,7 @@ export default async function QuestionDetailPage({ params }: { params: Promise<{
         overlap={question.overlap}
         others={question.others.map(c => ({ reviewer: c.reviewer, correct: c.correct }))}
         next={next}
+        language={language}
       />
     </div>
   )

@@ -15,6 +15,7 @@
 
 import { useEffect, useRef, useState } from "react"
 import type { Verdict } from "@/lib/ratings"
+import { dictionary, type UiLanguage } from "@/lib/i18n"
 
 type SaveState = "cakam" | "ukladam" | "ulozene" | "chyba"
 
@@ -62,9 +63,10 @@ function Choice({
 }
 
 export default function Rating({
-  recordId: recordId,
-  questionId: questionId,
-  onDone: onDone,
+  recordId,
+  questionId,
+  onDone,
+  language,
 }: {
   /** Id záznamu z `/api/hodnotenie`. Kým je null, panel čaká. */
   recordId: string | null
@@ -72,7 +74,9 @@ export default function Rating({
   questionId?: string
   /** Zavolá sa po posúdení správnosti — režim sady na to nadväzuje. */
   onDone?: (correct: Verdict) => void
+  language?: UiLanguage
 }) {
+  const t = dictionary(language).goldenSet.rating
   const [fields, setFields] = useState<RatingFields>(EMPTY)
   const [status, setStatus] = useState<SaveState>("cakam")
   const [detail, setDetail] = useState(false)
@@ -124,7 +128,7 @@ export default function Rating({
       <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14, flexWrap: "wrap" }}>
         <h3 style={{ fontSize: 13, textTransform: "uppercase", letterSpacing: "0.05em",
                      color: "var(--muted)", margin: 0 }}>
-          Ako hodnotíte túto odpoveď?
+          {t.heading}
         </h3>
         {questionId && (
           <span className="stitok tichy" style={{ fontSize: 11 }}>{questionId}</span>
@@ -134,32 +138,30 @@ export default function Rating({
           style={{ fontSize: 12, marginLeft: "auto", minWidth: 90, textAlign: "right" }}
           aria-live="polite"
         >
-          {status === "ukladam" ? "ukladám…"
-            : status === "ulozene" ? "uložené"
-            : status === "chyba" ? "neuložilo sa" : ""}
+          {status === "ukladam" ? t.saving
+            : status === "ulozene" ? t.saved
+            : status === "chyba" ? t.saveFailed : ""}
         </span>
       </div>
 
       <div style={{ display: "grid", gap: 14 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
-          <span style={{ fontSize: 14.5, minWidth: 190 }}>Je odpoveď vecne správna?</span>
+          <span style={{ fontSize: 14.5, minWidth: 190 }}>{t.correctQuestion}</span>
           <Choice active={fields.correct === 1} color="ok" onClick={() => save({ correct: 1 })}>
-            Áno
+            {t.yes}
           </Choice>
           <Choice active={fields.correct === 0} color="bad" onClick={() => save({ correct: 0 })}>
-            Nie
+            {t.no}
           </Choice>
         </div>
 
         <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
-          <span style={{ fontSize: 14.5, minWidth: 190 }}>
-            Tvrdí niečo, čo v zdrojoch nie je?
-          </span>
+          <span style={{ fontSize: 14.5, minWidth: 190 }}>{t.hallucinationQuestion}</span>
           <Choice active={fields.hallucination === 1} color="bad" onClick={() => save({ hallucination: 1 })}>
-            Áno, vymyslel si
+            {t.yesInvented}
           </Choice>
           <Choice active={fields.hallucination === 0} color="ok" onClick={() => save({ hallucination: 0 })}>
-            Nie, všetko má oporu
+            {t.noGrounded}
           </Choice>
         </div>
 
@@ -175,15 +177,13 @@ export default function Rating({
             textUnderlineOffset: 3, width: "fit-content",
           }}
         >
-          {detail ? "Skryť doplnenie" : "Doplniť správnu odpoveď a §"}
+          {detail ? t.hideDetail : t.showDetail}
         </button>
 
         {detail && (
           <div style={{ display: "grid", gap: 12 }}>
             <label style={{ display: "grid", gap: 6 }}>
-              <span className="tichy" style={{ fontSize: 13 }}>
-                Ako mala odpoveď znieť?
-              </span>
+              <span className="tichy" style={{ fontSize: 13 }}>{t.expectedAnswer}</span>
               <textarea
                 value={fields.verifiedAnswer}
                 onChange={e => setFields(p => ({ ...p, verifiedAnswer: e.target.value }))}
@@ -195,9 +195,7 @@ export default function Rating({
             </label>
 
             <label style={{ display: "grid", gap: 6 }}>
-              <span className="tichy" style={{ fontSize: 13 }}>
-                Ktoré predpisy a § to upravujú? Napríklad &bdquo;SP čl. 78, DP čl. 37&ldquo;.
-              </span>
+              <span className="tichy" style={{ fontSize: 13 }}>{t.sources}</span>
               <input
                 value={fields.correctSources}
                 onChange={e => setFields(p => ({ ...p, correctSources: e.target.value }))}
@@ -208,9 +206,7 @@ export default function Rating({
             </label>
 
             <label style={{ display: "grid", gap: 6 }}>
-              <span className="tichy" style={{ fontSize: 13 }}>
-                Poznámka — čo bolo na odpovedi zavádzajúce alebo neúplné?
-              </span>
+              <span className="tichy" style={{ fontSize: 13 }}>{t.note}</span>
               <textarea
                 value={fields.note}
                 onChange={e => setFields(p => ({ ...p, note: e.target.value }))}

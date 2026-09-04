@@ -44,12 +44,12 @@ function fieldText(fd: FormData, field: string): string {
  * sa vracia celý výber, nie len chybová hláška.
  */
 function backWithError(error: string, fd: FormData): never {
-  const q = new URLSearchParams({ error, reason: fieldText(fd, "dovod") })
+  const q = new URLSearchParams({ error, reason: fieldText(fd, "reason") })
   for (const d of fd.getAll("document")) if (typeof d === "string") q.append("document", d)
   for (const p of fd.getAll("audience")) if (typeof p === "string") q.append("audience", p)
-  if (fd.get("vsetci")) q.set("vsetci", "1")
-  const addresses = fieldText(fd, "adresy")
-  if (addresses) q.set("adresy", addresses)
+  if (fd.get("all")) q.set("all", "1")
+  const addresses = fieldText(fd, "addresses")
+  if (addresses) q.set("addresses", addresses)
   redirect(`/hr/pridelit?${q.toString()}`)
 }
 
@@ -57,7 +57,7 @@ export async function assignAction(fd: FormData) {
   const actor = await hr()
   if (!actor) redirect("/hr")
 
-  const reason = fieldText(fd, "dovod")
+  const reason = fieldText(fd, "reason")
   // Názvy oddelení sa do pridelenia zapisujú ako **kópia** (`audience.label`),
   // z rovnakého dôvodu ako názov dokumentu: oddelenie sa premenuje alebo zruší
   // a o rok musí byť čitateľné, komu sa vtedy prideľovalo.
@@ -65,12 +65,14 @@ export async function assignAction(fd: FormData) {
   const departmentNames = Object.fromEntries(tree.map(o => [o.id, o.name]))
 
   const audiences = audienceFromSelection({
-    all: Boolean(fd.get("vsetci")),
+    all: Boolean(fd.get("all")),
     selected: fd.getAll("audience").filter((v): v is string => typeof v === "string"),
-    addresses: fieldText(fd, "adresy"),
+    addresses: fieldText(fd, "addresses"),
     departmentNames: departmentNames,
   })
-  if (audiences.length === 0) backWithError("Nevybral si, komu sa prideľuje.", fd)
+  if (audiences.length === 0) {
+    backWithError(dictionary(actor.language).hr.actions.noAudience, fd)
+  }
 
   // Znenia sa berú zo servera, nie z formulára. Keby `versionId` prišlo
   // z prehliadača, dalo by sa prideliť ľubovoľné — aj z cudzej organizácie
@@ -81,7 +83,9 @@ export async function assignAction(fd: FormData) {
     .map(id => available.find(p => p.documentId === id))
     .filter(d => d !== undefined)
 
-  if (selected.length === 0) backWithError("Nevybral si žiadny dokument s platným znením.", fd)
+  if (selected.length === 0) {
+    backWithError(dictionary(actor.language).hr.actions.noDocument, fd)
+  }
 
   let assigned = 0
   let already = 0

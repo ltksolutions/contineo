@@ -18,7 +18,7 @@ import { hrContext } from "@/lib/hr"
 import { peopleContext } from "@/lib/people"
 import { brandingView } from "@/lib/tenants"
 import { tenantStyle } from "@/components/TenantHeader"
-import { normalizeLanguage, type UiLanguage } from "@/lib/i18n"
+import { normalizeLanguage, dictionary, type UiLanguage } from "@/lib/i18n"
 
 /**
  * Názov v záložke prehliadača je tiež informácia.
@@ -48,14 +48,20 @@ export const dynamic = "force-dynamic"
 export async function generateMetadata(): Promise<Metadata> {
   try {
     if (!(await currentTenant())) {
-      return { title: "Stránka sa nenašla", robots: { index: false, follow: false } }
+      return {
+        title: dictionary(undefined).notFound.heading,
+        robots: { index: false, follow: false },
+      }
     }
   } catch {
     // ticho — vysvetlenie je nižšie v `RootLayout`, kde sa to aj zaloguje
   }
+  // Metadáta sa skladajú skôr, než je jasné, kto sa pozerá — jazyk osoby tu
+  // ešte nepoznáme, takže sa berie predvolený.
+  const t = dictionary(undefined)
   return {
-    title: "Contineo — testovacie rozhranie",
-    description: "Overovanie kvality odpovedí nad normami a smernicami.",
+    title: t.home.metaTitle,
+    description: t.home.metaDescription,
     robots: { index: false, follow: false },
   }
 }

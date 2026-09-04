@@ -127,7 +127,7 @@ export default async function AssignPage({
             <legend className="pole-popis">{t.to}</legend>
 
             <label className="hr-volba" style={{ marginBottom: 10 }}>
-              <input type="checkbox" name="vsetci" value="1" defaultChecked={q.all === "1"} />
+              <input type="checkbox" name="all" value="1" defaultChecked={q.all === "1"} />
               <span>
                 <strong>{t.everyone}</strong>
                 <span className="tichy pole-napoveda">
@@ -225,7 +225,7 @@ export default async function AssignPage({
               <span className="pole-popis">{t.addresses}</span>
               <textarea
                 className="pole-vstup"
-                name="adresy"
+                name="addresses"
                 rows={2}
                 defaultValue={q.addresses ?? ""}
                 placeholder="jan.novak@example.sk, eva.mala@example.sk"
@@ -241,7 +241,7 @@ export default async function AssignPage({
           <label className="pole">
             <span className="pole-popis">{t.reason}</span>
             <textarea
-              name="dovod"
+              name="reason"
               defaultValue={q.reason ?? ""}
               required
               rows={3}

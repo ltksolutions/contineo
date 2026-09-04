@@ -193,6 +193,8 @@ interface Dictionary {
   }
 
   home: {
+    metaTitle: string
+    metaDescription: string
     heading: string
     intro: string
   }
@@ -343,6 +345,199 @@ interface Dictionary {
   }
   /** Knižnica dokumentov (D53). */
   /** Výpis auditu — používa ho nastavenie organizácie aj `/admin`. */
+  /** Správa tenantov — vidí ju len správca platformy (Fáza 5b). */
+  /** Zlatá sada — overovanie kvality odpovedí (D9). */
+  goldenSet: {
+    heading: string
+    intro: string
+    reviewedLabel: string
+    doneOf: (done: number, total: number) => string
+    correct: string
+    incorrect: string
+    withHallucination: string
+    excluded: string
+    overlapCount: (done: number, total: number) => string
+    overlapNote: string
+    /** Oblasť otázky — kľúče sú hodnoty z `goldenSet.ts`. */
+    areas: Record<string, string>
+    badges: {
+      trap: (type: string) => string
+      edited: string
+      reviewedByTwo: string
+      waitingForSecond: string
+      forTwo: string
+      hallucination: string
+      excluded: string
+      correct: string
+      incorrect: string
+      disagreement: string
+      waitingForYou: string
+      reviewed: string
+      notReviewed: string
+    }
+    detail: {
+      back: string
+      saving: string
+      saved: string
+      saveFailed: string
+      twoReviewersHeading: string
+      twoReviewersNote: string
+      othersHeading: string
+      verdict: Record<string, string>
+      trapHeading: string
+      trapBeforeBehaviour: string
+      trapAfterBehaviour: string
+      /** Druh pasce — kľúče sú hodnoty z databázy. */
+      traps: Record<string, string>
+      /** Očakávané správanie systému. */
+      behaviours: Record<string, string>
+      excludedHeading: string
+      returnToSet: string
+      editLabel: string
+      saveText: string
+      cancel: string
+      restoreOriginal: string
+      originally: (text: string) => string
+      edit: string
+      nextQuestion: string
+      excludeQuestion: string
+      excludePrompt: string
+    }
+    rating: {
+      heading: string
+      saving: string
+      saved: string
+      saveFailed: string
+      correctQuestion: string
+      yes: string
+      no: string
+      hallucinationQuestion: string
+      yesInvented: string
+      noGrounded: string
+      showDetail: string
+      hideDetail: string
+      expectedAnswer: string
+      sources: string
+      note: string
+    }
+  }
+  admin: {
+    list: {
+      heading: string
+      intro: string
+      newTenant: string
+      disabled: string
+      noDomain: string
+      people: string
+      peopleValue: (signedIn: number, total: number) => string
+      tracks: string
+      documents: string
+      documentsValue: (valid: number, total: number) => string
+      acknowledgements: string
+      withoutVersion: string
+      instructionsSent: (when: string, to: string) => string
+      domainsNoteBefore: string
+      domainsNoteAfter: string
+    }
+    create: {
+      back: string
+      heading: string
+      /** Veta okolo `contineo.app` a `CNAME` — tie zostávajú v JSX. */
+      introBefore: string
+      introMiddle: string
+      introAfter: string
+      code: string
+      codeNoteBefore: string
+      codeNoteHighlight: string
+      codeNoteAfter: string
+      name: string
+      nameNote: string
+      supportEmail: string
+      supportEmailNote: string
+      domains: string
+      domainsPlaceholder: string
+      domainsNote: string
+      submit: string
+    }
+    detail: {
+      back: string
+      disabled: string
+      domainsHeading: string
+      nothingNeeded: (host: string, reason: string) => string
+      notInVercel: string
+      waitingForCustomer: string
+      conflicts: (list: string) => string
+      configuredVia: (via: string) => string
+      unverified: string
+      sendTo: string
+      sendHint: (n: number) => string
+      send: string
+      brandingHeading: string
+      displayName: string
+      shortName: string
+      logo: string
+      logoCurrent: string
+      logoNote: string
+      color: string
+      colorNote: string
+      supportEmail: string
+      supportEmailNote: string
+      languages: string
+      defaultLanguage: string
+      defaultLanguageNote: string
+      domains: string
+      domainsNote: string
+      autoProvision: string
+      autoProvisionBefore: string
+      autoProvisionHighlight: string
+      autoProvisionAfter: string
+      save: string
+      disableHeading: string
+      enableHeading: string
+      disableNote: string
+      confirmLabel: (code: string) => string
+      confirmHint: string
+      disable: string
+      enable: string
+      auditHeading: string
+      auditNote: string
+    }
+    signIn: {
+      heading: (provider: string) => string
+      state: Record<string, string>
+      stateLong: Record<string, string>
+      callback: string
+      clientId: string
+      clientSecret: string
+      clientSecretHint: string
+      tenantMode: string
+      tenantModeHint: string
+      allowedTenantIds: string
+      allowedTenantIdsHint: string
+      hostedDomain: string
+      hostedDomainHint: string
+      save: string
+      deleteNote: string
+      confirmLabel: (code: string) => string
+      deleteSubmit: string
+    }
+    actions: {
+      failed: string
+      addedToVercel: (host: string) => string
+      missingVercelToken: (host: string) => string
+      saved: string
+      confirmCodeToDisable: (code: string) => string
+      enabled: string
+      disabled: string
+      created: string
+      noContact: string
+      nothingToSend: string
+      instructionsSent: (hosts: string, to: string) => string
+      signInSaved: (provider: string) => string
+      confirmCodeToDelete: (code: string) => string
+      signInRemoved: (provider: string) => string
+    }
+  }
   audit: {
     empty: string
     subjects: Record<string, string>
@@ -954,6 +1149,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
   },
 
   home: {
+    metaTitle: "Contineo — testovacie rozhranie",
+    metaDescription: "Overovanie kvality odpovedí nad normami a smernicami.",
     heading: "Vyskúšajte, ako systém odpovedá",
     intro: "Odpoveď sa skladá výlučne z nahraných dokumentov. Ak informácia v nich nie je, systém to má povedať — a to je rovnako dôležité ako správna odpoveď.",
   },
@@ -1114,6 +1311,222 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
   tags: {
     empty: "Zatiaľ tu žiadne nie sú. Prvú vytvoríš dole.",
     add: "Pridať",
+  },
+  goldenSet: {
+    heading: "Zlatá sada",
+    intro: "Otázky sú návrhy. Ak niektorá nedáva zmysel alebo znie neprirodzene, upravte ju alebo vyraďte — to je rovnako cenná informácia ako posudok odpovede.",
+    reviewedLabel: "Posúdených",
+    doneOf: (done, total) => `${done} zo ${total}`,
+    correct: "správnych",
+    incorrect: "nesprávnych",
+    withHallucination: "s halucináciou",
+    excluded: "vyradených",
+    overlapCount: (done, total) => `${done} z ${total}`,
+    overlapNote: " otázok na precedenciu a pasce má posudok od dvoch ľudí. Pri nich sa cudzí posudok ukáže až potom, ako ich posúdite sami — inak by miera zhody merala len to, či ste prvému uverili.",
+    areas: {
+      pravo: "právo",
+      prevadzka: "prevádzka",
+      oboje: "ktokoľvek",
+    },
+    badges: {
+      trap: (type) => `pasca · ${type}`,
+      edited: "upravená",
+      reviewedByTwo: "posúdili dvaja",
+      waitingForSecond: "čaká na druhého",
+      forTwo: "pre dvoch",
+      hallucination: "halucinácia",
+      excluded: "vyradená",
+      correct: "správna",
+      incorrect: "nesprávna",
+      disagreement: "nezhoda",
+      waitingForYou: "čaká na vás",
+      reviewed: "posúdená",
+      notReviewed: "neposúdená",
+    },
+    detail: {
+      back: "← Späť na zoznam",
+      saving: "ukladám…",
+      saved: "uložené",
+      saveFailed: "neuložilo sa",
+      twoReviewersHeading: "Túto otázku posudzujú dvaja nezávisle.",
+      twoReviewersNote: "Ak ju už niekto posúdil, jeho záver uvidíte až po tom, ako sa vyjadríte sami. Nejde o tajnostkárstvo — keby ste ho videli vopred, merali by sme, či ste mu uverili, nie či sa zhodnete.",
+      othersHeading: "Ako to posúdili ostatní",
+      verdict: {
+        correct: "správna",
+        incorrect: "nesprávna",
+        none: "neposúdené",
+      },
+      trapHeading: "Toto je zámerná skúška.",
+      trapBeforeBehaviour: " Systém tu ",
+      trapAfterBehaviour: " — posudzujte, či sa zachoval takto, nie či odpovedal vyčerpávajúco.",
+      traps: {
+        out_of_domain: "Otázka je mimo nahraných dokumentov. Systém má odmietnuť, nie odpovedať.",
+        ambiguous_conflict: "Predpisy si tu odporujú. Systém nemá rozhodnúť autoritatívne — má na rozpor upozorniť a ponúknuť eskaláciu, lebo výklad patrí človeku.",
+        access_control: "Pýta sa verejný používateľ na interný obsah. Systém ho nesmie prezradiť.",
+        historical_version: "Otázka mieri na staršie znenie. Systém má citovať verziu platnú v danom čase, nie dnešnú.",
+      },
+      behaviours: {
+        answer: "má odpovedať vecne",
+        refuse: "má odmietnuť",
+        escalate: "má ponúknuť eskaláciu",
+      },
+      excludedHeading: "Otázka je vyradená.",
+      returnToSet: "Vrátiť do sady",
+      editLabel: "Znenie otázky — napíšte ju tak, ako by sa spýtal skutočný človek.",
+      saveText: "Uložiť znenie",
+      cancel: "Zrušiť",
+      restoreOriginal: "Vrátiť pôvodné",
+      originally: (text) => `pôvodne: „${text}“`,
+      edit: "Upraviť",
+      nextQuestion: "Ďalšia otázka →",
+      excludeQuestion: "Vyradiť otázku",
+      excludePrompt: "Prečo otázka nedáva zmysel?",
+    },
+    rating: {
+      heading: "Ako hodnotíte túto odpoveď?",
+      saving: "ukladám…",
+      saved: "uložené",
+      saveFailed: "neuložilo sa",
+      correctQuestion: "Je odpoveď vecne správna?",
+      yes: "Áno",
+      no: "Nie",
+      hallucinationQuestion: "Tvrdí niečo, čo v zdrojoch nie je?",
+      yesInvented: "Áno, vymyslel si",
+      noGrounded: "Nie, všetko má oporu",
+      showDetail: "Doplniť správnu odpoveď a §",
+      hideDetail: "Skryť doplnenie",
+      expectedAnswer: "Ako mala odpoveď znieť?",
+      sources: "Ktoré predpisy a § to upravujú? Napríklad „SP čl. 78, DP čl. 37“.",
+      note: "Poznámka — čo bolo na odpovedi zavádzajúce alebo neúplné?",
+    },
+  },
+  admin: {
+    list: {
+      heading: "Správa tenantov",
+      intro: "Prehľad organizácií na platforme. Čísla sa počítajú pri zobrazení, nikde sa neukladajú. Obsah organizácií — dokumenty a potvrdenia — táto rola nesprístupňuje.",
+      newTenant: "Nová organizácia",
+      disabled: "vypnutý",
+      noDomain: "žiadna doména — portál sa nikde neukáže",
+      people: "Osoby",
+      peopleValue: (signedIn, total) => `${signedIn} / ${total} prihlásených`,
+      tracks: "Trasy",
+      documents: "Dokumenty",
+      documentsValue: (valid, total) => `${valid} / ${total} platných`,
+      acknowledgements: "Potvrdenia",
+      withoutVersion: "bez platného znenia",
+      instructionsSent: (when, to) => `Pokyny k doméne poslané ${when} na ${to}`,
+      domainsNoteBefore: "Stav domén vo Verceli ukáže ",
+      domainsNoteAfter: "; do obrazovky pribudne v rozsahu C spolu so zakladaním tenantov.",
+    },
+    create: {
+      back: "← Správa tenantov",
+      heading: "Nová organizácia",
+      introBefore: "Subdoména pod ",
+      introMiddle: " funguje hneď — pokrýva ju wildcard. Vlastná doména zákazníka sa pridá do Vercelu automaticky a zostane mu nastaviť jeden ",
+      introAfter: ".",
+      code: "Kód organizácie",
+      codeNoteBefore: "Veľké písmená, číslice, pomlčka. Nesie ho každá osoba, dokument aj potvrdenie — ",
+      codeNoteHighlight: "neskôr sa nemení",
+      codeNoteAfter: ".",
+      name: "Názov",
+      nameNote: "To, čo ľudia uvidia v hlavičke portálu.",
+      supportEmail: "Kontakt organizácie",
+      supportEmailNote: "Sem pôjdu pokyny k doméne.",
+      domains: "Domény",
+      domainsPlaceholder: "klub.contineo.app",
+      domainsNote: "Jedna na riadok. Bez domény sa portál organizácie nikde neukáže.",
+      submit: "Založiť",
+    },
+    detail: {
+      back: "← Správa tenantov",
+      disabled: " · vypnutá",
+      domainsHeading: "Domény",
+      nothingNeeded: (host, reason) => `${host} — netreba nič (${reason})`,
+      notInVercel: "nie je vo Verceli",
+      waitingForCustomer: "čaká na zákazníka:",
+      conflicts: (list) => `v zóne kolidujú: ${list}`,
+      configuredVia: (via) => `nastavené (${via})`,
+      unverified: ", neoverené",
+      sendTo: "Poslať pokyny na adresu",
+      sendHint: (n) =>
+        `Odošle sa ${n === 1 ? "jeden pokyn" : n < 5 ? `${n} pokyny` : `${n} pokynov`}` +
+        " a zaznamená sa, komu a kedy.",
+      send: "Odoslať pokyny",
+      brandingHeading: "Značka a jazyky",
+      displayName: "Názov v hlavičke",
+      shortName: "Skratka",
+      logo: "Logo",
+      logoCurrent: "súčasné",
+      logoNote: "PNG, JPEG alebo WebP, najviac 256 kB. Prázdne = nemeniť. SVG zámerne nie — môže obsahovať skript a servírovali by sme cudzí kód z domény, na ktorej sa potvrdzujú smernice.",
+      color: "Farba",
+      colorNote: "Nesie ju tlačidlo s bielym textom, preto sú odtiene tmavšie, než by sa chcelo — svetlejší tón znamená nečitateľné tlačidlo u zákazníka.",
+      supportEmail: "Kontakt organizácie",
+      supportEmailNote: "Sem chodia pokyny k doméne.",
+      languages: "Jazyky prostredia",
+      defaultLanguage: "Predvolený jazyk",
+      defaultLanguageNote: "Platí pre človeka, ktorý ešte nie je prihlásený.",
+      domains: "Domény",
+      domainsNote: "Jedna na riadok. Nové sa pridajú aj do Vercelu. Doména patriaca inej organizácii sa odmietne — neprepíše.",
+      autoProvision: "Domény pre automatické založenie",
+      autoProvisionBefore: "Jedna na riadok. Kto sa prihlási ",
+      autoProvisionHighlight: "pracovným kontom",
+      autoProvisionAfter: " z tejto domény a v zozname osôb ešte nie je, založí sa sám ako bežný člen — bez rolí a bez trás. Platí len pre kontá, nie pre odkaz v e-maile: konto z adresára organizácie je dôkaz príslušnosti, napísaná adresa nie. Prázdne = nikoho nezakladať.",
+      save: "Uložiť",
+      disableHeading: "Vypnúť organizáciu",
+      enableHeading: "Zapnúť organizáciu",
+      disableNote: "Po vypnutí sa nikto z tejto organizácie neprihlási — okamžite. Záznamy potvrdení zostávajú, tenant sa nemaže.",
+      confirmLabel: (code) => `Napíš ${code} na potvrdenie`,
+      confirmHint: "Zámerne to nie je obyčajné „naozaj?“ — to sa odklikne skôr, než sa prečíta.",
+      disable: "Vypnúť",
+      enable: "Zapnúť",
+      auditHeading: "Audit",
+      auditNote: "Posledných 50 správcovských zmien tejto organizácie. Celý výpis s hľadaním má zákazník na svojej doméne v nastavení organizácie.",
+    },
+    signIn: {
+      heading: (provider) => `Prihlásenie cez ${provider}`,
+      state: {
+        nastavene: "nastavené",
+        "z-prostredia": "z prostredia",
+        necitatelne: "nečitateľné",
+        nenastavene: "nenastavené",
+      },
+      stateLong: {
+        nastavene: "nastavené — vlastná aplikácia zákazníka",
+        "z-prostredia": "beží z našich premenných prostredia, nie z vlastnej aplikácie zákazníka",
+        necitatelne: "uložené, ale nedá sa prečítať — zmenil sa šifrovací kľúč, zadaj údaje znova",
+        nenastavene: "nenastavené — tlačidlo sa neponúka",
+      },
+      callback: "Adresa návratu — zákazník ju musí zapísať do svojej aplikácie presne takto:",
+      clientId: "Client ID",
+      clientSecret: "Client secret",
+      clientSecretHint: "Prázdne = nemeniť. Hodnota sa ukladá zašifrovaná a späť sa nikdy nevypíše.",
+      tenantMode: "Režim tenanta",
+      tenantModeHint: "organizations = pracovné a školské kontá · common = aj osobné · alebo UUID jedného Entra tenanta",
+      allowedTenantIds: "Povolené Entra tenant id",
+      allowedTenantIdsHint: "Oddelené čiarkou. Prázdne = nekontroluje sa — pri režime organizations je to jediná zábrana proti tomu, aby sa dnu dostal človek z cudzej organizácie s rovnakou adresou.",
+      hostedDomain: "Doména Workspace (hd)",
+      hostedDomainHint: "Napr. futbalsfz.sk. Prázdne = ktorékoľvek Google konto.",
+      save: "Uložiť",
+      deleteNote: "Odstránením zmizne tlačidlo z prihlasovacej obrazovky. Ľuďom, ktorí sa prihlasujú pracovným kontom, tým prestane fungovať jediná cesta, ktorú poznajú.",
+      confirmLabel: (code) => `Napíš ${code} na potvrdenie`,
+      deleteSubmit: "Odstrániť",
+    },
+    actions: {
+      failed: "Zmenu sa nepodarilo uložiť. Skús to znova.",
+      addedToVercel: (host) => `${host} pridaná do Vercelu`,
+      missingVercelToken: (host) => `${host}: chýba VERCEL_TOKEN, doménu pridaj ručne`,
+      saved: "Uložené.",
+      confirmCodeToDisable: (code) => `Na vypnutie treba napísať kód organizácie (${code}). Nič sa nezmenilo.`,
+      enabled: "Organizácia je zapnutá.",
+      disabled: "Organizácia je vypnutá — nikto z nej sa teraz neprihlási.",
+      created: "Organizácia založená.",
+      noContact: "Nie je kam poslať — doplň kontaktnú adresu organizácie.",
+      nothingToSend: "Niet čo posielať — všetky domény sú už nasmerované.",
+      instructionsSent: (hosts, to) => `Pokyny pre ${hosts} odoslané na ${to}.`,
+      signInSaved: (provider) => `Prihlásenie cez ${provider} uložené.`,
+      confirmCodeToDelete: (code) => `Na odstránenie napíš kód organizácie (${code}).`,
+      signInRemoved: (provider) => `Prihlásenie cez ${provider} odstránené.`,
+    },
   },
   audit: {
     empty: "Zatiaľ tu nie je nič. Záznamy pribúdajú pri každej správcovskej zmene — pri role, prístupe, oddelení, pridelení aj nastavení organizácie.",
@@ -1827,6 +2240,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
   },
 
   home: {
+    metaTitle: "Contineo — testovací rozhraní",
+    metaDescription: "Ověřování kvality odpovědí nad předpisy a směrnicemi.",
     heading: "Vyzkoušejte, jak systém odpovídá",
     intro: "Odpověď se skládá výhradně z nahraných dokumentů. Pokud v nich informace není, systém to má říct — a to je stejně důležité jako správná odpověď.",
   },
@@ -1987,6 +2402,222 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
   tags: {
     empty: "Zatím tu žádné nejsou. První vytvoříš dole.",
     add: "Přidat",
+  },
+  goldenSet: {
+    heading: "Zlatá sada",
+    intro: "Otázky jsou návrhy. Pokud některá nedává smysl nebo zní nepřirozeně, upravte ji nebo vyřaďte — to je stejně cenná informace jako posudek odpovědi.",
+    reviewedLabel: "Posouzených",
+    doneOf: (done, total) => `${done} z ${total}`,
+    correct: "správných",
+    incorrect: "nesprávných",
+    withHallucination: "s halucinací",
+    excluded: "vyřazených",
+    overlapCount: (done, total) => `${done} z ${total}`,
+    overlapNote: " otázek na precedenci a pasti má posudek od dvou lidí. U nich se cizí posudek ukáže až poté, co je posoudíte sami — jinak by míra shody měřila jen to, jestli jste prvnímu uvěřili.",
+    areas: {
+      pravo: "právo",
+      prevadzka: "provoz",
+      oboje: "kdokoli",
+    },
+    badges: {
+      trap: (type) => `past · ${type}`,
+      edited: "upravená",
+      reviewedByTwo: "posoudili dva",
+      waitingForSecond: "čeká na druhého",
+      forTwo: "pro dva",
+      hallucination: "halucinace",
+      excluded: "vyřazená",
+      correct: "správná",
+      incorrect: "nesprávná",
+      disagreement: "neshoda",
+      waitingForYou: "čeká na vás",
+      reviewed: "posouzená",
+      notReviewed: "neposouzená",
+    },
+    detail: {
+      back: "← Zpět na seznam",
+      saving: "ukládám…",
+      saved: "uloženo",
+      saveFailed: "neuložilo se",
+      twoReviewersHeading: "Tuto otázku posuzují dva nezávisle.",
+      twoReviewersNote: "Pokud ji už někdo posoudil, jeho závěr uvidíte až poté, co se vyjádříte sami. Nejde o tajnůstkářství — kdybyste ho viděli předem, měřili bychom, jestli jste mu uvěřili, ne jestli se shodnete.",
+      othersHeading: "Jak to posoudili ostatní",
+      verdict: {
+        correct: "správná",
+        incorrect: "nesprávná",
+        none: "neposouzeno",
+      },
+      trapHeading: "Toto je záměrná zkouška.",
+      trapBeforeBehaviour: " Systém tu ",
+      trapAfterBehaviour: " — posuzujte, jestli se zachoval takto, ne jestli odpověděl vyčerpávajícím způsobem.",
+      traps: {
+        out_of_domain: "Otázka je mimo nahrané dokumenty. Systém má odmítnout, ne odpovídat.",
+        ambiguous_conflict: "Předpisy si tu odporují. Systém nemá rozhodnout autoritativně — má na rozpor upozornit a nabídnout eskalaci, protože výklad patří člověku.",
+        access_control: "Ptá se veřejný uživatel na interní obsah. Systém ho nesmí prozradit.",
+        historical_version: "Otázka míří na starší znění. Systém má citovat verzi platnou v daném čase, ne dnešní.",
+      },
+      behaviours: {
+        answer: "má odpovědět věcně",
+        refuse: "má odmítnout",
+        escalate: "má nabídnout eskalaci",
+      },
+      excludedHeading: "Otázka je vyřazená.",
+      returnToSet: "Vrátit do sady",
+      editLabel: "Znění otázky — napište ji tak, jak by se zeptal skutečný člověk.",
+      saveText: "Uložit znění",
+      cancel: "Zrušit",
+      restoreOriginal: "Vrátit původní",
+      originally: (text) => `původně: „${text}“`,
+      edit: "Upravit",
+      nextQuestion: "Další otázka →",
+      excludeQuestion: "Vyřadit otázku",
+      excludePrompt: "Proč otázka nedává smysl?",
+    },
+    rating: {
+      heading: "Jak hodnotíte tuto odpověď?",
+      saving: "ukládám…",
+      saved: "uloženo",
+      saveFailed: "neuložilo se",
+      correctQuestion: "Je odpověď věcně správná?",
+      yes: "Ano",
+      no: "Ne",
+      hallucinationQuestion: "Tvrdí něco, co ve zdrojích není?",
+      yesInvented: "Ano, vymyslel si",
+      noGrounded: "Ne, všechno má oporu",
+      showDetail: "Doplnit správnou odpověď a §",
+      hideDetail: "Skrýt doplnění",
+      expectedAnswer: "Jak měla odpověď znít?",
+      sources: "Které předpisy a § to upravují? Například „SP čl. 78, DP čl. 37“.",
+      note: "Poznámka — co bylo na odpovědi zavádějící nebo neúplné?",
+    },
+  },
+  admin: {
+    list: {
+      heading: "Správa tenantů",
+      intro: "Přehled organizací na platformě. Čísla se počítají při zobrazení, nikde se neukládají. Obsah organizací — dokumenty a potvrzení — tato role nezpřístupňuje.",
+      newTenant: "Nová organizace",
+      disabled: "vypnutý",
+      noDomain: "žádná doména — portál se nikde neukáže",
+      people: "Osoby",
+      peopleValue: (signedIn, total) => `${signedIn} / ${total} přihlášených`,
+      tracks: "Trasy",
+      documents: "Dokumenty",
+      documentsValue: (valid, total) => `${valid} / ${total} platných`,
+      acknowledgements: "Potvrzení",
+      withoutVersion: "bez platného znění",
+      instructionsSent: (when, to) => `Pokyny k doméně poslány ${when} na ${to}`,
+      domainsNoteBefore: "Stav domén ve Vercelu ukáže ",
+      domainsNoteAfter: "; do obrazovky přibude v rozsahu C spolu se zakládáním tenantů.",
+    },
+    create: {
+      back: "← Správa tenantů",
+      heading: "Nová organizace",
+      introBefore: "Subdoména pod ",
+      introMiddle: " funguje hned — pokrývá ji wildcard. Vlastní doména zákazníka se přidá do Vercelu automaticky a zbude mu nastavit jeden ",
+      introAfter: ".",
+      code: "Kód organizace",
+      codeNoteBefore: "Velká písmena, číslice, pomlčka. Nese ho každá osoba, dokument i potvrzení — ",
+      codeNoteHighlight: "později se nemění",
+      codeNoteAfter: ".",
+      name: "Název",
+      nameNote: "To, co lidé uvidí v hlavičce portálu.",
+      supportEmail: "Kontakt organizace",
+      supportEmailNote: "Sem půjdou pokyny k doméně.",
+      domains: "Domény",
+      domainsPlaceholder: "klub.contineo.app",
+      domainsNote: "Jedna na řádek. Bez domény se portál organizace nikde neukáže.",
+      submit: "Založit",
+    },
+    detail: {
+      back: "← Správa tenantů",
+      disabled: " · vypnutá",
+      domainsHeading: "Domény",
+      nothingNeeded: (host, reason) => `${host} — netřeba nic (${reason})`,
+      notInVercel: "není ve Vercelu",
+      waitingForCustomer: "čeká na zákazníka:",
+      conflicts: (list) => `v zóně kolidují: ${list}`,
+      configuredVia: (via) => `nastaveno (${via})`,
+      unverified: ", neověřeno",
+      sendTo: "Poslat pokyny na adresu",
+      sendHint: (n) =>
+        `Odešle se ${n === 1 ? "jeden pokyn" : n < 5 ? `${n} pokyny` : `${n} pokynů`}` +
+        " a zaznamená se, komu a kdy.",
+      send: "Odeslat pokyny",
+      brandingHeading: "Značka a jazyky",
+      displayName: "Název v hlavičce",
+      shortName: "Zkratka",
+      logo: "Logo",
+      logoCurrent: "současné",
+      logoNote: "PNG, JPEG nebo WebP, nejvýše 256 kB. Prázdné = neměnit. SVG záměrně ne — může obsahovat skript a servírovali bychom cizí kód z domény, na které se potvrzují směrnice.",
+      color: "Barva",
+      colorNote: "Nese ji tlačítko s bílým textem, proto jsou odstíny tmavší, než by se chtělo — světlejší tón znamená nečitelné tlačítko u zákazníka.",
+      supportEmail: "Kontakt organizace",
+      supportEmailNote: "Sem chodí pokyny k doméně.",
+      languages: "Jazyky prostředí",
+      defaultLanguage: "Výchozí jazyk",
+      defaultLanguageNote: "Platí pro člověka, který ještě není přihlášený.",
+      domains: "Domény",
+      domainsNote: "Jedna na řádek. Nové se přidají i do Vercelu. Doména patřící jiné organizaci se odmítne — nepřepíše.",
+      autoProvision: "Domény pro automatické založení",
+      autoProvisionBefore: "Jedna na řádek. Kdo se přihlásí ",
+      autoProvisionHighlight: "pracovním účtem",
+      autoProvisionAfter: " z této domény a v seznamu osob ještě není, založí se sám jako běžný člen — bez rolí a bez tras. Platí jen pro účty, ne pro odkaz v e-mailu: účet z adresáře organizace je důkaz příslušnosti, napsaná adresa ne. Prázdné = nikoho nezakládat.",
+      save: "Uložit",
+      disableHeading: "Vypnout organizaci",
+      enableHeading: "Zapnout organizaci",
+      disableNote: "Po vypnutí se nikdo z této organizace nepřihlásí — okamžitě. Záznamy potvrzení zůstávají, tenant se nemaže.",
+      confirmLabel: (code) => `Napiš ${code} pro potvrzení`,
+      confirmHint: "Záměrně to není obyčejné „opravdu?“ — to se odklikne dřív, než se přečte.",
+      disable: "Vypnout",
+      enable: "Zapnout",
+      auditHeading: "Audit",
+      auditNote: "Posledních 50 správcovských změn této organizace. Celý výpis s hledáním má zákazník na své doméně v nastavení organizace.",
+    },
+    signIn: {
+      heading: (provider) => `Přihlášení přes ${provider}`,
+      state: {
+        nastavene: "nastaveno",
+        "z-prostredia": "z prostředí",
+        necitatelne: "nečitelné",
+        nenastavene: "nenastaveno",
+      },
+      stateLong: {
+        nastavene: "nastaveno — vlastní aplikace zákazníka",
+        "z-prostredia": "běží z našich proměnných prostředí, ne z vlastní aplikace zákazníka",
+        necitatelne: "uloženo, ale nelze přečíst — změnil se šifrovací klíč, zadej údaje znovu",
+        nenastavene: "nenastaveno — tlačítko se nenabízí",
+      },
+      callback: "Adresa návratu — zákazník ji musí zapsat do své aplikace přesně takto:",
+      clientId: "Client ID",
+      clientSecret: "Client secret",
+      clientSecretHint: "Prázdné = neměnit. Hodnota se ukládá zašifrovaná a zpět se nikdy nevypíše.",
+      tenantMode: "Režim tenanta",
+      tenantModeHint: "organizations = pracovní a školní účty · common = i osobní · nebo UUID jednoho Entra tenanta",
+      allowedTenantIds: "Povolená Entra tenant id",
+      allowedTenantIdsHint: "Oddělená čárkou. Prázdné = nekontroluje se — u režimu organizations je to jediná zábrana proti tomu, aby se dovnitř dostal člověk z cizí organizace se stejnou adresou.",
+      hostedDomain: "Doména Workspace (hd)",
+      hostedDomainHint: "Např. futbalsfz.sk. Prázdné = kterýkoli účet Google.",
+      save: "Uložit",
+      deleteNote: "Odstraněním zmizí tlačítko z přihlašovací obrazovky. Lidem, kteří se přihlašují pracovním účtem, tím přestane fungovat jediná cesta, kterou znají.",
+      confirmLabel: (code) => `Napiš ${code} pro potvrzení`,
+      deleteSubmit: "Odstranit",
+    },
+    actions: {
+      failed: "Změnu se nepodařilo uložit. Zkus to znovu.",
+      addedToVercel: (host) => `${host} přidána do Vercelu`,
+      missingVercelToken: (host) => `${host}: chybí VERCEL_TOKEN, doménu přidej ručně`,
+      saved: "Uloženo.",
+      confirmCodeToDisable: (code) => `Pro vypnutí je třeba napsat kód organizace (${code}). Nic se nezměnilo.`,
+      enabled: "Organizace je zapnutá.",
+      disabled: "Organizace je vypnutá — nikdo z ní se teď nepřihlásí.",
+      created: "Organizace založena.",
+      noContact: "Není kam poslat — doplň kontaktní adresu organizace.",
+      nothingToSend: "Není co posílat — všechny domény už jsou nasměrované.",
+      instructionsSent: (hosts, to) => `Pokyny pro ${hosts} odeslány na ${to}.`,
+      signInSaved: (provider) => `Přihlášení přes ${provider} uloženo.`,
+      confirmCodeToDelete: (code) => `Pro odstranění napiš kód organizace (${code}).`,
+      signInRemoved: (provider) => `Přihlášení přes ${provider} odstraněno.`,
+    },
   },
   audit: {
     empty: "Zatím tu nic není. Záznamy přibývají při každé správcovské změně — u role, přístupu, oddělení, přidělení i nastavení organizace.",
@@ -2699,6 +3330,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
   },
 
   home: {
+    metaTitle: "Contineo — test interface",
+    metaDescription: "Checking the quality of answers over regulations and directives.",
     heading: "See how the system answers",
     intro: "Every answer is built solely from the uploaded documents. If the information is not in them, the system should say so — that matters just as much as a correct answer.",
   },
@@ -2858,6 +3491,222 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
   tags: {
     empty: "There are none yet. Create the first one below.",
     add: "Add",
+  },
+  goldenSet: {
+    heading: "Golden set",
+    intro: "The questions are proposals. If one makes no sense or sounds unnatural, edit it or drop it — that is just as valuable as a verdict on the answer.",
+    reviewedLabel: "Reviewed",
+    doneOf: (done, total) => `${done} of ${total}`,
+    correct: "correct",
+    incorrect: "incorrect",
+    withHallucination: "with a hallucination",
+    excluded: "excluded",
+    overlapCount: (done, total) => `${done} of ${total}`,
+    overlapNote: " precedence questions and traps have a verdict from two people. For those, the other verdict appears only after you have given yours — otherwise the agreement rate would measure whether you believed the first reviewer, nothing more.",
+    areas: {
+      pravo: "legal",
+      prevadzka: "operations",
+      oboje: "anyone",
+    },
+    badges: {
+      trap: (type) => `trap · ${type}`,
+      edited: "edited",
+      reviewedByTwo: "reviewed by two",
+      waitingForSecond: "waiting for the second",
+      forTwo: "for two",
+      hallucination: "hallucination",
+      excluded: "excluded",
+      correct: "correct",
+      incorrect: "incorrect",
+      disagreement: "disagreement",
+      waitingForYou: "waiting for you",
+      reviewed: "reviewed",
+      notReviewed: "not reviewed",
+    },
+    detail: {
+      back: "← Back to the list",
+      saving: "saving…",
+      saved: "saved",
+      saveFailed: "not saved",
+      twoReviewersHeading: "Two people review this question independently.",
+      twoReviewersNote: "If someone has already reviewed it, you will see their verdict only after you have given yours. This is not secrecy — if you saw it beforehand, we would be measuring whether you believed them, not whether you agree.",
+      othersHeading: "How the others judged it",
+      verdict: {
+        correct: "correct",
+        incorrect: "incorrect",
+        none: "not reviewed",
+      },
+      trapHeading: "This is a deliberate test.",
+      trapBeforeBehaviour: " Here the system ",
+      trapAfterBehaviour: " — judge whether it behaved that way, not whether it answered exhaustively.",
+      traps: {
+        out_of_domain: "The question is outside the uploaded documents. The system should refuse, not answer.",
+        ambiguous_conflict: "The regulations contradict each other here. The system should not rule authoritatively — it should flag the conflict and offer escalation, because interpretation belongs to a person.",
+        access_control: "A public user is asking about internal content. The system must not reveal it.",
+        historical_version: "The question targets an older version. The system should cite the version effective at that time, not today's.",
+      },
+      behaviours: {
+        answer: "should answer on the merits",
+        refuse: "should refuse",
+        escalate: "should offer escalation",
+      },
+      excludedHeading: "This question is excluded.",
+      returnToSet: "Return it to the set",
+      editLabel: "The wording of the question — write it the way a real person would ask.",
+      saveText: "Save the wording",
+      cancel: "Cancel",
+      restoreOriginal: "Restore the original",
+      originally: (text) => `originally: “${text}”`,
+      edit: "Edit",
+      nextQuestion: "Next question →",
+      excludeQuestion: "Exclude the question",
+      excludePrompt: "Why does the question make no sense?",
+    },
+    rating: {
+      heading: "How do you rate this answer?",
+      saving: "saving…",
+      saved: "saved",
+      saveFailed: "not saved",
+      correctQuestion: "Is the answer factually correct?",
+      yes: "Yes",
+      no: "No",
+      hallucinationQuestion: "Does it claim something the sources do not contain?",
+      yesInvented: "Yes, it made something up",
+      noGrounded: "No, everything is grounded",
+      showDetail: "Add the correct answer and the provisions",
+      hideDetail: "Hide the additions",
+      expectedAnswer: "How should the answer have read?",
+      sources: "Which regulations and provisions govern this? For example “SP Art. 78, DP Art. 37”.",
+      note: "A note — what was misleading or incomplete about the answer?",
+    },
+  },
+  admin: {
+    list: {
+      heading: "Tenant administration",
+      intro: "An overview of the organisations on the platform. The numbers are computed when the page is opened and are stored nowhere. This role does not give access to the organisations' content — documents and acknowledgements.",
+      newTenant: "New organisation",
+      disabled: "disabled",
+      noDomain: "no domain — the portal will not appear anywhere",
+      people: "People",
+      peopleValue: (signedIn, total) => `${signedIn} / ${total} signed in`,
+      tracks: "Tracks",
+      documents: "Documents",
+      documentsValue: (valid, total) => `${valid} / ${total} effective`,
+      acknowledgements: "Acknowledgements",
+      withoutVersion: "no effective version",
+      instructionsSent: (when, to) => `Domain instructions sent ${when} to ${to}`,
+      domainsNoteBefore: "The state of the domains in Vercel is shown by ",
+      domainsNoteAfter: "; it will appear on this screen in scope C, together with tenant creation.",
+    },
+    create: {
+      back: "← Tenant administration",
+      heading: "New organisation",
+      introBefore: "A subdomain under ",
+      introMiddle: " works straight away — a wildcard covers it. A customer's own domain is added to Vercel automatically and all that is left for them is to set one ",
+      introAfter: ".",
+      code: "Organisation code",
+      codeNoteBefore: "Capital letters, digits, hyphen. Every person, document and acknowledgement carries it — ",
+      codeNoteHighlight: "it never changes afterwards",
+      codeNoteAfter: ".",
+      name: "Name",
+      nameNote: "What people will see in the portal header.",
+      supportEmail: "Organisation contact",
+      supportEmailNote: "The domain instructions go here.",
+      domains: "Domains",
+      domainsPlaceholder: "club.contineo.app",
+      domainsNote: "One per line. Without a domain the organisation's portal will not appear anywhere.",
+      submit: "Create",
+    },
+    detail: {
+      back: "← Tenant administration",
+      disabled: " · disabled",
+      domainsHeading: "Domains",
+      nothingNeeded: (host, reason) => `${host} — nothing needed (${reason})`,
+      notInVercel: "not in Vercel",
+      waitingForCustomer: "waiting for the customer:",
+      conflicts: (list) => `conflicting records in the zone: ${list}`,
+      configuredVia: (via) => `configured (${via})`,
+      unverified: ", unverified",
+      sendTo: "Send the instructions to",
+      sendHint: (n) =>
+        `${n === 1 ? "One instruction" : `${n} instructions`} will be sent,` +
+        " and who received it and when is recorded.",
+      send: "Send the instructions",
+      brandingHeading: "Branding and languages",
+      displayName: "Name in the header",
+      shortName: "Short name",
+      logo: "Logo",
+      logoCurrent: "current",
+      logoNote: "PNG, JPEG or WebP, at most 256 kB. Empty = leave unchanged. SVG deliberately not — it can carry a script, and we would be serving someone else's code from the domain where directives are acknowledged.",
+      color: "Colour",
+      colorNote: "Buttons carry it with white text on top, which is why the shades are darker than you might want — a lighter tone means an unreadable button at the customer's end.",
+      supportEmail: "Organisation contact",
+      supportEmailNote: "The domain instructions go here.",
+      languages: "Interface languages",
+      defaultLanguage: "Default language",
+      defaultLanguageNote: "Applies to anyone who is not signed in yet.",
+      domains: "Domains",
+      domainsNote: "One per line. New ones are added to Vercel as well. A domain belonging to another organisation is refused, not overwritten.",
+      autoProvision: "Auto-provisioning domains",
+      autoProvisionBefore: "One per line. Anyone who signs in with a ",
+      autoProvisionHighlight: "work account",
+      autoProvisionAfter: " from this domain and is not yet in the list of people is created automatically as an ordinary member — no roles and no tracks. This applies to accounts only, not to the emailed link: an account from the organisation's directory proves membership, a typed address does not. Empty = create nobody.",
+      save: "Save",
+      disableHeading: "Disable the organisation",
+      enableHeading: "Enable the organisation",
+      disableNote: "Once disabled, nobody from this organisation can sign in — immediately. The acknowledgement records remain and the tenant is not deleted.",
+      confirmLabel: (code) => `Type ${code} to confirm`,
+      confirmHint: "Deliberately not a plain “are you sure?” — that gets clicked away before it is read.",
+      disable: "Disable",
+      enable: "Enable",
+      auditHeading: "Audit",
+      auditNote: "The 50 most recent administrative changes to this organisation. The customer has the full, searchable log on their own domain in the organisation settings.",
+    },
+    signIn: {
+      heading: (provider) => `Sign in with ${provider}`,
+      state: {
+        nastavene: "configured",
+        "z-prostredia": "from the environment",
+        necitatelne: "unreadable",
+        nenastavene: "not configured",
+      },
+      stateLong: {
+        nastavene: "configured — the customer's own application",
+        "z-prostredia": "running from our environment variables, not from the customer's own application",
+        necitatelne: "stored but unreadable — the encryption key changed, enter the credentials again",
+        nenastavene: "not configured — the button is not offered",
+      },
+      callback: "Redirect URI — the customer has to enter it in their application exactly like this:",
+      clientId: "Client ID",
+      clientSecret: "Client secret",
+      clientSecretHint: "Empty = leave unchanged. The value is stored encrypted and is never printed back.",
+      tenantMode: "Tenant mode",
+      tenantModeHint: "organizations = work and school accounts · common = personal ones too · or the UUID of a single Entra tenant",
+      allowedTenantIds: "Allowed Entra tenant ids",
+      allowedTenantIdsHint: "Comma-separated. Empty = not checked — in organizations mode this is the only thing standing between you and someone from a different organisation with the same address.",
+      hostedDomain: "Workspace domain (hd)",
+      hostedDomainHint: "For example futbalsfz.sk. Empty = any Google account.",
+      save: "Save",
+      deleteNote: "Removing it makes the button disappear from the sign-in screen. For people who sign in with a work account, the only route they know stops working.",
+      confirmLabel: (code) => `Type ${code} to confirm`,
+      deleteSubmit: "Remove",
+    },
+    actions: {
+      failed: "The change could not be saved. Try again.",
+      addedToVercel: (host) => `${host} added to Vercel`,
+      missingVercelToken: (host) => `${host}: VERCEL_TOKEN is missing, add the domain by hand`,
+      saved: "Saved.",
+      confirmCodeToDisable: (code) => `Disabling requires typing the organisation code (${code}). Nothing changed.`,
+      enabled: "The organisation is enabled.",
+      disabled: "The organisation is disabled — nobody from it can sign in now.",
+      created: "Organisation created.",
+      noContact: "Nowhere to send it — fill in the organisation's contact address.",
+      nothingToSend: "Nothing to send — every domain already points at us.",
+      instructionsSent: (hosts, to) => `Instructions for ${hosts} sent to ${to}.`,
+      signInSaved: (provider) => `Sign-in with ${provider} saved.`,
+      confirmCodeToDelete: (code) => `To remove it, type the organisation code (${code}).`,
+      signInRemoved: (provider) => `Sign-in with ${provider} removed.`,
+    },
   },
   audit: {
     empty: "Nothing here yet. Records appear with every administrative change — a role, an access level, a department, an assignment or an organisation setting.",

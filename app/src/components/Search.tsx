@@ -136,7 +136,7 @@ export default function Search({
         </div>
 
         <Answer state={state} language={language} />
-        <Rating recordId={recordId} questionId={questionId} onDone={onReviewed} />
+        <Rating recordId={recordId} questionId={questionId} onDone={onReviewed} language={language} />
       </div>
     )
   }
@@ -212,7 +212,7 @@ export default function Search({
 
       <Answer state={state} language={language} />
 
-      <Rating recordId={recordId} questionId={questionId} onDone={onReviewed} />
+      <Rating recordId={recordId} questionId={questionId} onDone={onReviewed} language={language} />
     </div>
   )
 }

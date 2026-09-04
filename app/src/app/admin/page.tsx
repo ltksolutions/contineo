@@ -9,11 +9,11 @@
 import { notFound, redirect } from "next/navigation"
 import Link from "next/link"
 import { platformContext, tenantOverviews } from "@/lib/admin"
-import { formatDate } from "@/lib/i18n"
+import { formatDate, dictionary } from "@/lib/i18n"
 
 export const dynamic = "force-dynamic"
 
-function Fact({ label: label, value: value, muted: muted }: { label: string; value: string; muted?: boolean }) {
+function Fact({ label, value, muted }: { label: string; value: string; muted?: boolean }) {
   return (
     <div>
       <div className="tichy" style={{ fontSize: 12.5 }}>{label}</div>
@@ -32,78 +32,83 @@ export default async function TenantAdminPage() {
   }
 
   const overview = await tenantOverviews()
+  const language = ctx.person.language
+  const t = dictionary(language).admin.list
 
   return (
     <div className="obal" style={{ padding: "28px 20px 80px", maxWidth: 900 }}>
-      <h1 style={{ fontSize: 27, letterSpacing: "-0.02em", margin: "0 0 6px" }}>
-        Správa tenantov
-      </h1>
-      <p className="tichy" style={{ fontSize: 15, margin: "0 0 16px", maxWidth: 640 }}>
-        Prehľad organizácií na platforme. Čísla sa počítajú pri zobrazení, nikde
-        sa neukladajú. Obsah organizácií — dokumenty a potvrdenia — táto rola
-        nesprístupňuje.
-      </p>
+      <h1 style={{ fontSize: 27, letterSpacing: "-0.02em", margin: "0 0 6px" }}>{t.heading}</h1>
+      <p className="tichy" style={{ fontSize: 15, margin: "0 0 16px", maxWidth: 640 }}>{t.intro}</p>
 
       <p style={{ margin: "0 0 24px" }}>
-        <Link className="tlacidlo" href="/admin/novy">Nová organizácia</Link>
+        <Link className="tlacidlo" href="/admin/novy">{t.newTenant}</Link>
       </p>
 
       <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "grid", gap: 14 }}>
-        {overview.map(t => (
-          <li key={t.companyCode} className="karta" style={{ padding: "18px 20px" }}>
+        {overview.map(tenant => (
+          <li key={tenant.companyCode} className="karta" style={{ padding: "18px 20px" }}>
             <div style={{ display: "flex", gap: 10, alignItems: "baseline", flexWrap: "wrap" }}>
               <Link
-                href={`/admin/tenanti/${encodeURIComponent(t.companyCode)}`}
+                href={`/admin/tenanti/${encodeURIComponent(tenant.companyCode)}`}
                 style={{ fontSize: 17, fontWeight: 700, textDecoration: "none" }}
               >
-                {t.displayName}
+                {tenant.displayName}
               </Link>
-              <span className="stitok">{t.companyCode}</span>
-              {t.status !== "active" && (
+              <span className="stitok">{tenant.companyCode}</span>
+              {tenant.status !== "active" && (
                 <span className="stitok" style={{ background: "var(--warn-bg)", color: "var(--warn-fg)" }}>
-                  vypnutý
+                  {t.disabled}
                 </span>
               )}
               <span className="tichy" style={{ fontSize: 13, marginLeft: "auto" }}>
-                {t.languages.join(" · ")}
+                {tenant.languages.join(" · ")}
               </span>
             </div>
 
             <p className="tichy" style={{ fontSize: 13.5, margin: "8px 0 0", overflowWrap: "anywhere" }}>
-              {t.hostnames.join(", ") || "žiadna doména — portál sa nikde neukáže"}
+              {tenant.hostnames.join(", ") || t.noDomain}
             </p>
 
             <div className="admin-udaje">
               <Fact
-                label="Osoby"
-                value={`${t.people.signedIn} / ${t.people.total} prihlásených`}
-                muted={t.people.total === 0}
+                label={t.people}
+                value={t.peopleValue(tenant.people.signedIn, tenant.people.total)}
+                muted={tenant.people.total === 0}
               />
-              <Fact label="Trasy" value={String(t.tracks)} muted={t.tracks === 0} />
+              <Fact label={t.tracks} value={String(tenant.tracks)} muted={tenant.tracks === 0} />
               <Fact
-                label="Dokumenty"
-                value={`${t.documents.total - t.documents.withoutVersion.length} / ${t.documents.total} platných`}
-                muted={t.documents.total === 0}
+                label={t.documents}
+                value={t.documentsValue(
+                  tenant.documents.total - tenant.documents.withoutVersion.length,
+                  tenant.documents.total,
+                )}
+                muted={tenant.documents.total === 0}
               />
-              <Fact label="Potvrdenia" value={String(t.acknowledgements)} muted={t.acknowledgements === 0} />
+              <Fact
+                label={t.acknowledgements}
+                value={String(tenant.acknowledgements)}
+                muted={tenant.acknowledgements === 0}
+              />
             </div>
 
             {/* Dokumenty bez platného znenia sú menovite. Je to najčastejšia
                 tichá príčina, prečo človek v zozname nič nevidí (D6) — a bez
                 mena sa nedá povedať, ktorý z nich opraviť. */}
-            {t.documents.withoutVersion.length > 0 && (
+            {tenant.documents.withoutVersion.length > 0 && (
               <p style={{ margin: "12px 0 0", fontSize: 13.5 }}>
                 <span className="stitok" style={{ background: "var(--warn-bg)", color: "var(--warn-fg)" }}>
-                  bez platného znenia
+                  {t.withoutVersion}
                 </span>{" "}
-                <span className="tichy">{t.documents.withoutVersion.join(", ")}</span>
+                <span className="tichy">{tenant.documents.withoutVersion.join(", ")}</span>
               </p>
             )}
 
-            {t.pokynyPoslane && (
+            {tenant.pokynyPoslane && (
               <p className="tichy" style={{ margin: "10px 0 0", fontSize: 13 }}>
-                Pokyny k doméne poslané {formatDate(t.pokynyPoslane.at, "sk")} na{" "}
-                {t.pokynyPoslane.to}
+                {t.instructionsSent(
+                  formatDate(tenant.pokynyPoslane.at, language),
+                  tenant.pokynyPoslane.to,
+                )}
               </p>
             )}
           </li>
@@ -111,8 +116,7 @@ export default async function TenantAdminPage() {
       </ul>
 
       <p className="tichy" style={{ fontSize: 13, marginTop: 20 }}>
-        Stav domén vo Verceli ukáže <code>npm run domains</code>; do obrazovky
-        pribudne v rozsahu C spolu so zakladaním tenantov.
+        {t.domainsNoteBefore}<code>npm run domains</code>{t.domainsNoteAfter}
       </p>
     </div>
   )

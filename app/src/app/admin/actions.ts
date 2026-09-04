@@ -29,11 +29,19 @@ import { addDomain, customerInstructions, domainStatus, skipVercel } from "@/lib
 import { saveOAuth, deleteOAuth } from "@/lib/tenantAdmin"
 import { splitList, PROVIDER_LABEL } from "@/lib/oauth"
 import { saveBrand, BrandError } from "@/lib/branding"
+import { dictionary, type UiLanguage } from "@/lib/i18n"
 
 /** Kto akciu spustil — alebo `null`, keď na ňu nemá právo. */
-async function isAdmin(): Promise<string | null> {
+async function isAdmin(): Promise<{ email: string; language: UiLanguage } | null> {
   const ctx = await platformContext()
-  return ctx.state === "ready" ? ctx.person.email : null
+  return ctx.state === "ready"
+    ? { email: ctx.person.email, language: ctx.person.language }
+    : null
+}
+
+/** Hlásenia v jazyku prihláseného správcu. */
+function say(language: UiLanguage) {
+  return dictionary(language).admin.actions
 }
 
 function fieldText(fd: FormData, actorName: string): string {
@@ -41,23 +49,23 @@ function fieldText(fd: FormData, actorName: string): string {
   return typeof v === "string" ? v : ""
 }
 
-function errorMessage(e: unknown): string {
+function errorMessage(e: unknown, language: UiLanguage): string {
   if (e instanceof DomainOwnedError || e instanceof TenantValidationError) return e.message
   if (e instanceof BrandError) return e.message
   console.error("[admin] akcia zlyhala:", e)
-  return "Zmenu sa nepodarilo uložiť. Skús to znova."
+  return say(language).failed
 }
 
 /** Domény, ktoré vo Verceli pribudli, a čo sa s nimi stalo. */
-async function ensureDomains(hostnames: string[]): Promise<string[]> {
+async function ensureDomains(hostnames: string[], language: UiLanguage): Promise<string[]> {
+  const m = say(language)
   const messages: string[] = []
   for (const h of hostnames) {
     if (skipVercel(h)) continue
     const v = await addDomain(h)
-    if (v.state === "pridana") messages.push(`${h} pridaná do Vercelu`)
-    else if (v.state === "bez-nastavenia") {
-      messages.push(`${h}: chýba VERCEL_TOKEN, doménu pridaj ručne`)
-    } else if (v.state === "chyba") messages.push(`${h}: ${v.message}`)
+    if (v.state === "pridana") messages.push(m.addedToVercel(h))
+    else if (v.state === "bez-nastavenia") messages.push(m.missingVercelToken(h))
+    else if (v.state === "chyba") messages.push(`${h}: ${v.message}`)
   }
   return messages
 }
@@ -89,7 +97,7 @@ export async function saveTenantAction(fd: FormData) {
     // Nahraté logo prebije predchádzajúce. Prázdny vstup znamená „nemeň" —
     // súbor sa vo formulári po načítaní nepamätá, takže prázdno je stav pri
     // každom otvorení a mazať ním by znamenalo, že uloženie názvu zmaže logo.
-    const logo = await saveUploadedLogo(fd, code, actor)
+    const logo = await saveUploadedLogo(fd, code, actor.email)
 
     await saveTenant(
       code,
@@ -104,12 +112,12 @@ export async function saveTenantAction(fd: FormData) {
         hostnames,
         autoProvisionDomains: normalizeDomains(fieldText(fd, "autoProvisionDomains")),
       },
-      actor,
+      actor.email,
     )
-    const vercel = await ensureDomains(hostnames)
-    message = ["Uložené.", ...vercel].join(" ")
+    const vercel = await ensureDomains(hostnames, actor.language)
+    message = [say(actor.language).saved, ...vercel].join(" ")
   } catch (e) {
-    message = errorMessage(e)
+    message = errorMessage(e, actor.language)
     error = true
   }
 
@@ -131,18 +139,15 @@ export async function toggleTenantStatusAction(fd: FormData) {
   let message = ""
   let error = false
 
-  if (!enable && fieldText(fd, "potvrdenie").trim().toUpperCase() !== code.toUpperCase()) {
-    message = `Na vypnutie treba napísať kód organizácie (${code}). Nič sa nezmenilo.`
+  if (!enable && fieldText(fd, "confirmation").trim().toUpperCase() !== code.toUpperCase()) {
+    message = say(actor.language).confirmCodeToDisable(code)
     error = true
   } else {
     try {
-      await saveTenant(code, { status: enable ? "active" : "disabled" }, actor)
-      message = enable
-        ? "Organizácia je zapnutá."
-        : "Organizácia je vypnutá — nikto z nej sa teraz neprihlási."
+      await saveTenant(code, { status: enable ? "active" : "disabled" }, actor.email)
+      message = enable ? say(actor.language).enabled : say(actor.language).disabled
     } catch (e) {
-      message = errorMessage(e)
-    error = true
+      message = errorMessage(e, actor.language)
       error = true
     }
   }
@@ -168,17 +173,17 @@ export async function createTenantAction(fd: FormData) {
         supportEmail: fieldText(fd, "supportEmail"),
         hostnames,
       },
-      actor,
+      actor.email,
     )
   } catch (e) {
-    const message = errorMessage(e)
+    const message = errorMessage(e, actor.language)
     redirect(`/admin/novy?msg=${encodeURIComponent(message)}&error=1`)
   }
 
   // Až po uloženom tenantovi — zdroj pravdy je `tenants` a výpadok Vercelu
   // nesmie brániť organizáciu založiť.
-  const vercel = await ensureDomains(hostnames)
-  const message = ["Organizácia založená.", ...vercel].join(" ")
+  const vercel = await ensureDomains(hostnames, actor.language)
+  const message = [say(actor.language).created, ...vercel].join(" ")
 
   revalidatePath("/admin")
   redirect(`/admin/tenanti/${encodeURIComponent(code)}?msg=${encodeURIComponent(message)}`)
@@ -195,13 +200,13 @@ export async function sendInstructionsAction(fd: FormData) {
   if (!actor) redirect("/admin")
 
   const code = fieldText(fd, "companyCode")
-  const to = fieldText(fd, "komu").trim().toLowerCase()
+  const to = fieldText(fd, "to").trim().toLowerCase()
   const hostnames = normalizeHostnames(fieldText(fd, "hostnames"))
   let message = ""
   let error = false
 
   if (!to) {
-    message = "Nie je kam poslať — doplň kontaktnú adresu organizácie."
+    message = say(actor.language).noContact
     error = true
   } else {
     try {
@@ -222,15 +227,14 @@ export async function sendInstructionsAction(fd: FormData) {
         sent.push(h)
       }
       if (!sent.length) {
-        message = "Niet čo posielať — všetky domény sú už nasmerované."
+        message = say(actor.language).nothingToSend
       } else {
-        await saveTenant(code, {}, actor)
+        await saveTenant(code, {}, actor.email)
         await writeInstructions(code, to, sent)
-        message = `Pokyny pre ${sent.join(", ")} odoslané na ${to}.`
+        message = say(actor.language).instructionsSent(sent.join(", "), to)
       }
     } catch (e) {
-      message = errorMessage(e)
-    error = true
+      message = errorMessage(e, actor.language)
       error = true
     }
   }
@@ -278,10 +282,10 @@ export async function saveSignInAction(fd: FormData) {
         ? splitList(fieldText(fd, "allowedTenantIds"))
         : undefined,
       hostedDomain: provider === "google" ? fieldText(fd, "hostedDomain") : undefined,
-    }, actor)
-    message = `Prihlásenie cez ${PROVIDER_LABEL[provider]} uložené.`
+    }, actor.email)
+    message = say(actor.language).signInSaved(PROVIDER_LABEL[provider])
   } catch (e) {
-    message = errorMessage(e)
+    message = errorMessage(e, actor.language)
     error = true
   }
 
@@ -302,20 +306,19 @@ export async function deleteSignInAction(fd: FormData) {
 
   const code = fieldText(fd, "companyCode")
   const provider = fieldText(fd, "provider") === "google" ? "google" : "microsoft"
-  const confirmation = fieldText(fd, "potvrdenie")
+  const confirmation = fieldText(fd, "confirmation")
   let message = ""
   let error = false
 
   if (confirmation.trim().toUpperCase() !== code.toUpperCase()) {
-    message = `Na odstránenie napíš kód organizácie (${code}).`
+    message = say(actor.language).confirmCodeToDelete(code)
     error = true
   } else {
     try {
-      await deleteOAuth(code, provider, actor)
-      message = `Prihlásenie cez ${PROVIDER_LABEL[provider]} odstránené.`
+      await deleteOAuth(code, provider, actor.email)
+      message = say(actor.language).signInRemoved(PROVIDER_LABEL[provider])
     } catch (e) {
-      message = errorMessage(e)
-    error = true
+      message = errorMessage(e, actor.language)
       error = true
     }
   }

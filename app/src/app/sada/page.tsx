@@ -13,7 +13,9 @@
 import Link from "next/link"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
-import { loadGoldenSet, goldenSetSummary, questionText, verdictCount, AREA_LABEL } from "@/lib/goldenSet"
+import { loadGoldenSet, goldenSetSummary, questionText, verdictCount } from "@/lib/goldenSet"
+import { dictionary, type UiLanguage } from "@/lib/i18n"
+import { currentPerson } from "@/lib/session"
 
 export const dynamic = "force-dynamic"
 
@@ -31,13 +33,14 @@ function Badge({ text, color: color }: { text: string; color?: "ok" | "bad" | "w
   )
 }
 
-function Meter({ done: done, total: total }: { done: number; total: number }) {
+function Meter({ done, total, language }: { done: number; total: number; language?: UiLanguage }) {
+  const t = dictionary(language).goldenSet
   const ratio = total ? Math.round((done / total) * 100) : 0
   return (
     <div style={{ display: "grid", gap: 6 }}>
       <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13 }}>
-        <span className="tichy">Posúdených</span>
-        <span style={{ fontWeight: 700 }}>{done} zo {total}</span>
+        <span className="tichy">{t.reviewedLabel}</span>
+        <span style={{ fontWeight: 700 }}>{t.doneOf(done, total)}</span>
       </div>
       <div style={{ height: 7, background: "var(--surface-2)", borderRadius: 999, overflow: "hidden" }}>
         <div style={{ width: `${ratio}%`, height: "100%", background: "var(--teal-700)" }} />
@@ -52,30 +55,26 @@ export default async function GoldenSetPage() {
 
   const [questions, counts] = await Promise.all([loadGoldenSet(self), verdictCount()])
   const s = goldenSetSummary(questions, counts)
+  const language = (await currentPerson())?.language
+  const t = dictionary(language).goldenSet
 
   return (
     <div className="obal" style={{ padding: "32px 20px 80px", maxWidth: 1040 }}>
       <div style={{ marginBottom: 24 }}>
-        <h1 style={{ fontSize: 25, letterSpacing: "-0.02em", margin: "0 0 8px" }}>
-          Zlatá sada
-        </h1>
-        <p className="tichy" style={{ fontSize: 15, margin: 0, maxWidth: 680 }}>
-          Otázky sú návrhy. Ak niektorá nedáva zmysel alebo znie neprirodzene,
-          upravte ju alebo vyraďte — to je rovnako cenná informácia ako posudok
-          odpovede.
-        </p>
+        <h1 style={{ fontSize: 25, letterSpacing: "-0.02em", margin: "0 0 8px" }}>{t.heading}</h1>
+        <p className="tichy" style={{ fontSize: 15, margin: 0, maxWidth: 680 }}>{t.intro}</p>
       </div>
 
       <div className="karta" style={{ marginBottom: 26 }}>
-        <Meter done={s.posudene} total={s.total} />
+        <Meter done={s.posudene} total={s.total} language={language} />
         <div style={{ display: "flex", gap: 18, flexWrap: "wrap", marginTop: 14, fontSize: 13.5 }}>
-          <span><strong style={{ color: "var(--ok-fg)" }}>{s.spravne}</strong> <span className="tichy">správnych</span></span>
-          <span><strong style={{ color: "var(--bad-fg)" }}>{s.nespravne}</strong> <span className="tichy">nesprávnych</span></span>
+          <span><strong style={{ color: "var(--ok-fg)" }}>{s.spravne}</strong> <span className="tichy">{t.correct}</span></span>
+          <span><strong style={{ color: "var(--bad-fg)" }}>{s.nespravne}</strong> <span className="tichy">{t.incorrect}</span></span>
           {s.hallucinations > 0 && (
-            <span><strong style={{ color: "var(--bad-fg)" }}>{s.hallucinations}</strong> <span className="tichy">s halucináciou</span></span>
+            <span><strong style={{ color: "var(--bad-fg)" }}>{s.hallucinations}</strong> <span className="tichy">{t.withHallucination}</span></span>
           )}
           {s.vyradene > 0 && (
-            <span><strong>{s.vyradene}</strong> <span className="tichy">vyradených</span></span>
+            <span><strong>{s.vyradene}</strong> <span className="tichy">{t.excluded}</span></span>
           )}
         </div>
 
@@ -84,10 +83,8 @@ export default async function GoldenSetPage() {
           className="tichy"
           style={{ fontSize: 13, marginTop: 14, paddingTop: 14, borderTop: "1px solid var(--line)", lineHeight: 1.6 }}
         >
-          <strong style={{ color: "var(--ink)" }}>{s.prekryvHotove} z {s.vPrekryve}</strong>{" "}
-          otázok na precedenciu a pasce má posudok od dvoch ľudí. Pri nich sa cudzí
-          posudok ukáže až potom, ako ich posúdite sami — inak by miera zhody merala
-          len to, či ste prvému uverili.
+          <strong style={{ color: "var(--ink)" }}>{t.overlapCount(s.prekryvHotove, s.vPrekryve)}</strong>
+          {t.overlapNote}
         </div>
       </div>
 
@@ -136,46 +133,46 @@ export default async function GoldenSetPage() {
                   <Badge text={o.searchMode} />
                   {/* Pasca znamená, že systém NEMÁ odpovedať vecne — hodnotiteľ
                       to musí vedieť vopred, inak posúdi odmietnutie ako chybu. */}
-                  {o.trapType && <Badge text={`pasca · ${o.trapType}`} color="warn" />}
+                  {o.trapType && <Badge text={t.badges.trap(o.trapType)} color="warn" />}
                   {o.precedenceRule && <Badge text={o.precedenceRule} />}
-                  {o.editedText && <Badge text="upravená" />}
-                  <Badge text={AREA_LABEL[o.oblast]} />
+                  {o.editedText && <Badge text={t.badges.edited} />}
+                  <Badge text={t.areas[o.oblast] ?? o.oblast} />
                   {o.overlap && (
                     <Badge
                       text={
-                        (counts[o.id] ?? 0) >= 2 ? "posúdili dvaja"
-                        : (counts[o.id] ?? 0) === 1 ? "čaká na druhého"
-                        : "pre dvoch"
+                        (counts[o.id] ?? 0) >= 2 ? t.badges.reviewedByTwo
+                        : (counts[o.id] ?? 0) === 1 ? t.badges.waitingForSecond
+                        : t.badges.forTwo
                       }
                       color={(counts[o.id] ?? 0) >= 2 ? "ok" : undefined}
                     />
                   )}
-                  {o.state?.hallucination === 1 && <Badge text="halucinácia" color="bad" />}
+                  {o.state?.hallucination === 1 && <Badge text={t.badges.hallucination} color="bad" />}
                 </span>
               </span>
 
               <span style={{ textAlign: "right", minWidth: 96 }}>
                 {o.excluded ? (
-                  <Badge text="vyradená" />
+                  <Badge text={t.badges.excluded} />
                 ) : reviewed ? (
                   <>
                     <Badge
-                      text={o.state?.correct === 1 ? "správna" : "nesprávna"}
+                      text={o.state?.correct === 1 ? t.badges.correct : t.badges.incorrect}
                       color={o.state?.correct === 1 ? "ok" : "bad"}
                     />
                     {/* Nezhoda sa musí vidieť — je to nález, nie chyba. */}
                     {o.others.some(c => c.correct !== o.state?.correct) && (
                       <span style={{ display: "block", marginTop: 5 }}>
-                        <Badge text="nezhoda" color="warn" />
+                        <Badge text={t.badges.disagreement} color="warn" />
                       </span>
                     )}
                   </>
                 ) : (counts[o.id] ?? 0) > 0 ? (
                   <span className="tichy" style={{ fontSize: 12.5 }}>
-                    {o.overlap ? "čaká na vás" : "posúdená"}
+                    {o.overlap ? t.badges.waitingForYou : t.badges.reviewed}
                   </span>
                 ) : (
-                  <span className="tichy" style={{ fontSize: 12.5 }}>neposúdená</span>
+                  <span className="tichy" style={{ fontSize: 12.5 }}>{t.badges.notReviewed}</span>
                 )}
               </span>
             </Link>
