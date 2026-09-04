@@ -503,14 +503,20 @@ Kým kľúč nefunguje, **neprihlási sa nikto** — vrátane teba.
 
 ## 4. Kto má prístup
 
-Zoznam je v premennej `POVOLENE_EMAILY`, oddeľovač čiarka, bodkočiarka alebo
+Zoznam je v premennej `ALLOWED_EMAILS`, oddeľovač čiarka, bodkočiarka alebo
 nový riadok. Zápis `@futbalsfz.sk` povolí celú doménu.
 
 ```bash
 printf '%s' 'jan.letko@futbalsfz.sk,legislativec@futbalsfz.sk' \
-  | vercel env add POVOLENE_EMAILY production --yes --force
+  | vercel env add ALLOWED_EMAILS production --yes --force
 vercel deploy --prod --yes
 ```
+
+Premenná sa **volala `POVOLENE_EMAILY`** a kód ju číta ďalej — nová má
+prednosť, stará platí, kým nová nie je nastavená. Prázdna nová hodnota starú
+neumlčí (`vercel env pull` vracia premenné prázdne, a keby sa prázdna brala
+ako platná, brzda by sa ticho vypla). Starú premennú vo Verceli odstráň až
+potom, ako sa nová overí **behom, nie výpisom**.
 
 **Prázdny zoznam nepustí nikoho** — zámerne. Zabudnutá premenná by inak
 otvorila rozhranie s internými smernicami komukoľvek.
@@ -544,7 +550,8 @@ podľa neho sa riadiť nedá. Rozhodujúce je, čo napíše beh:
 
 `MONGODB_URI` · `MONGODB_DB` · `ANTHROPIC_API_KEY` · `EMBEDDING_MODEL` ·
 `VECTOR_INDEX` · `VECTOR_PATH` · `NEXTAUTH_SECRET` · `NEXTAUTH_URL` ·
-`POVOLENE_EMAILY` · `EMAIL_ODOSIELATEL` · `EMAIL_MENO_ODOSIELATELA` ·
+`ALLOWED_EMAILS` (predtým `POVOLENE_EMAILY`) · `EMAIL_ODOSIELATEL` ·
+`EMAIL_MENO_ODOSIELATELA` ·
 `GENERATION_KIND` · `GENERATION_MODEL` · `DATA_RESIDENCY`
 
 **Overené 2026-08-28:** nastavené sú všetky vrátane `ECOMAIL_API_KEY`. (Skorší text tvrdil, že chýba — už neplatí.)

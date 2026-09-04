@@ -1,7 +1,7 @@
 /**
  * persons.ts — kto do organizácie patrí (kolekcia `persons`, Fáza 8).
  *
- * Doteraz rozhodovala o prístupe premenná `POVOLENE_EMAILY` a v `auth.ts` to
+ * Doteraz rozhodovala o prístupe premenná `ALLOWED_EMAILS` a v `auth.ts` to
  * bolo aj zdôvodnené: pri piatich až desiatich hodnotiteľoch je zmena premennej
  * prehľadnejšia než admin rozhranie, ktoré by samo potrebovalo správu prístupov.
  *
@@ -217,7 +217,7 @@ export async function findPerson(email: string): Promise<Person | null> {
 /**
  * Smie sa táto adresa prihlásiť **podľa kolekcie `persons`**?
  *
- * Zámerne nevie o núdzovej brzde `POVOLENE_EMAILY` — tú skladá `auth.ts`.
+ * Zámerne nevie o núdzovej brzde `ALLOWED_EMAILS` — tú skladá `auth.ts`.
  * Keby si tento modul importoval `auth.ts` a `auth.ts` jeho, vznikol by
  * kruh; a hlavne: každý z tých dvoch zdrojov povolenia má odpovedať na inú
  * otázku. Tu je otázka „patrí do organizácie?", tam „je to správca?".
@@ -245,7 +245,7 @@ export async function personMaySignIn(email: string): Promise<boolean> {
   } catch (e) {
     // Nahlas, nie ticho — inak by sa výpadok tváril ako „nemáš prístup"
     // a nikto by nehľadal príčinu.
-    console.error("[persons] persons sa nedá prečítať, platí len POVOLENE_EMAILY:", e)
+    console.error("[persons] persons sa nedá prečítať, platí len ALLOWED_EMAILS:", e)
     return false
   }
 }

@@ -27,7 +27,7 @@ export default async function DocumentsPage() {
 
   if (ctx.state === "not-in-tenant") {
     // Prihlásený, ale medzi osobami tohto tenanta nie je — typicky správca,
-    // ktorý prešiel núdzovou brzdou `POVOLENE_EMAILY`, alebo človek inej
+    // ktorý prešiel núdzovou brzdou `ALLOWED_EMAILS`, alebo človek inej
     // organizácie na cudzej doméne. Poslať ho späť na prihlásenie by vyzeralo
     // ako pokazená stránka: je predsa prihlásený.
     return (

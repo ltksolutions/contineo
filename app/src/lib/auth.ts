@@ -12,12 +12,18 @@
  * Fázy 8 sú zdroje povolenia dva:
  *
  *   1. kolekcia `persons` — hlavná cesta, viď `persons.ts`,
- *   2. `POVOLENE_EMAILY` — **núdzová brzda pre správcov**, ktorá nepotrebuje
+ *   2. `ALLOWED_EMAILS` — **núdzová brzda pre správcov**, ktorá nepotrebuje
  *      databázu. Zostáva zámerne: keď sa pokazí import alebo sa niekto vyklikne
  *      z vlastnej kolekcie, musí existovať cesta späť dnu.
  *
- * Funkcie `povoleneEmaily()` a `jePovoleny()` sa nemenia — sú to čisté funkcie
- * nad premennou a testujú sa samostatne.
+ * Premenná sa volala `POVOLENE_EMAILY`. Názov premennej prostredia je zmluva
+ * s nastavením vo Verceli, takže sa **prekladá, nepremenúva**: číta sa nová
+ * aj stará a stará zmizne, keď sa vo Verceli prepíše. Prepnúť to naraz by
+ * znamenalo, že medzi nasadením kódu a prepísaním premennej nemá núdzová
+ * brzda hodnotu — a to je presne tá chvíľa, keď ju človek potrebuje.
+ *
+ * `allowedEmails()` a `isAllowed()` sú čisté funkcie nad premennou
+ * a testujú sa samostatne.
  */
 
 import { headers } from "next/headers"
@@ -41,6 +47,19 @@ import type { OAuthProviderName, ResolvedCredentials } from "./oauth"
 import type { Tenant } from "./tenants"
 
 /**
+ * Hodnota núdzovej brzdy z prostredia — nová premenná, inak stará.
+ *
+ * Prázdna hodnota sa berie ako nenastavená, nie ako „prázdny zoznam": inak
+ * by `ALLOWED_EMAILS=""` (tak vracia premenné `vercel env pull`) umlčalo
+ * starú premennú a brzda by sa ticho vypla.
+ */
+function allowedEmailsRaw(): string {
+  const next = (process.env.ALLOWED_EMAILS ?? "").trim()
+  if (next) return next
+  return process.env.POVOLENE_EMAILY ?? ""
+}
+
+/**
  * Rozloží zoznam povolených adries.
  *
  * Oddeľovačom môže byť čiarka, bodkočiarka aj nový riadok — pri vkladaní
@@ -48,7 +67,7 @@ import type { Tenant } from "./tenants"
  * lebo e-mailová schránka nie je citlivá na veľkosť a používateľ napíše
  * adresu tak, ako je zvyknutý.
  */
-export function allowedEmails(rows = process.env.POVOLENE_EMAILY ?? ""): string[] {
+export function allowedEmails(rows = allowedEmailsRaw()): string[] {
   return rows
     .split(/[,;\n]/)
     .map(e => e.trim().toLowerCase())

@@ -26,6 +26,51 @@ t("čo nie je adresa, sa zahodí",
   allowedEmails("a@sfz.sk, poznamka, b@sfz.sk").length === 2)
 t("prázdny zoznam dá prázdne pole", allowedEmails("").length === 0)
 
+// ── premenná prostredia: nová aj stará ───────────────────────────────────────
+//
+// Premenná sa premenovala z POVOLENE_EMAILY na ALLOWED_EMAILS. Kým sa nová
+// nenastaví vo Verceli, musí platiť stará — inak by núdzová brzda nemala
+// hodnotu práve v čase, keď ju niekto potrebuje.
+
+function withEnv(vars: Record<string, string | undefined>, run: () => string[]): string[] {
+  const before: Record<string, string | undefined> = {}
+  for (const [k, v] of Object.entries(vars)) {
+    before[k] = process.env[k]
+    if (v === undefined) delete process.env[k]
+    else process.env[k] = v
+  }
+  try {
+    return run()
+  } finally {
+    for (const [k, v] of Object.entries(before)) {
+      if (v === undefined) delete process.env[k]
+      else process.env[k] = v
+    }
+  }
+}
+
+t("nová premenná platí",
+  withEnv({ ALLOWED_EMAILS: "a@sfz.sk", POVOLENE_EMAILY: undefined },
+    () => allowedEmails())[0] === "a@sfz.sk")
+
+t("bez novej platí stará",
+  withEnv({ ALLOWED_EMAILS: undefined, POVOLENE_EMAILY: "b@sfz.sk" },
+    () => allowedEmails())[0] === "b@sfz.sk")
+
+t("nová prebije starú",
+  withEnv({ ALLOWED_EMAILS: "a@sfz.sk", POVOLENE_EMAILY: "b@sfz.sk" },
+    () => allowedEmails())[0] === "a@sfz.sk")
+
+// `vercel env pull` vracia premenné prázdne. Keby sa prázdna nová brala ako
+// platná, umlčala by starú a brzda by sa ticho vypla.
+t("prázdna nová neumlčí starú",
+  withEnv({ ALLOWED_EMAILS: "", POVOLENE_EMAILY: "b@sfz.sk" },
+    () => allowedEmails())[0] === "b@sfz.sk")
+
+t("bez oboch je zoznam prázdny",
+  withEnv({ ALLOWED_EMAILS: undefined, POVOLENE_EMAILY: undefined },
+    () => allowedEmails()).length === 0)
+
 // ── kto prejde ───────────────────────────────────────────────────────────────
 
 const LIST = allowedEmails("jan.letko@futbalsfz.sk, pravnik@futbalsfz.sk")

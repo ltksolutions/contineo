@@ -10,7 +10,7 @@
  *     vidí (D32), `tracks` o tom, čo má prejsť, a `language` o tom, v akej
  *     reči sa s ňou hovorí.
  *
- * Správca, ktorý prešiel núdzovou brzdou (`POVOLENE_EMAILY`), v `persons`
+ * Správca, ktorý prešiel núdzovou brzdou (`ALLOWED_EMAILS`), v `persons`
  * byť nemusí — vtedy tu nie je osoba a stránky onboardingu mu nemajú čo
  * ukázať. Nie je to chyba, je to legitímny stav.
  */
