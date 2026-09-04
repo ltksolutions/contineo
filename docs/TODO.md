@@ -152,8 +152,8 @@
   - [x] **2c — knižnica: detail dokumentu, editor, hlásenia akcií** ✅ 2026-08-31 (`d75d951`)
   - [x] **3a — osoby** ✅ 2026-09-04 (`2d794ee`) — zoznam, pozvanie, detail, import z CSV, hlásenia
   - [x] **3b — nastavenie organizácie** ✅ 2026-09-04 (`f587847`) — všetkých sedem záložiek, `AuditList`, `ColorSelect`, hlásenia
-  - [ ] **3c — admin** (`/admin`, `/admin/tenanti/[kod]`, `admin/actions.ts`) a zvyšné komponenty
-  - [ ] **4 — chyby z `src/lib`** prekladané až na obrazovke (~80 miest), podľa rozhodnutia „kódy chýb, preklad až na obrazovke"
+  - [x] **3c — admin a zvyšné komponenty** ✅ 2026-09-04 (`22ef0a2`) — správa tenantov, zlatá sada (zoznam, detail, hodnotenie), metadáta stránky
+  - [ ] **4 — chyby prekladané až na obrazovke** (~80 miest), podľa rozhodnutia „kódy chýb, preklad až na obrazovke". Patria sem výnimky z `src/lib` (`LibraryError`, `DepartmentError`, `FolderError`, `PersonValidationError`, `AssignmentValidationError`…) aj odpovede API ciest `/api/chat`, `/api/hodnotenie`, `/api/sada` a middleware. Zvlášť si všimnúť `/api/chat` — veta „Nenašiel som relevantné informácie…" nie je chybová hláška, ale **text odpovede**, ktorý človek číta.
 - [ ] **Otázka pre HR/právnika:** má formulka pomenovať jazyk dokumentu, keď sa líši od jazyka prostredia?
 
 **I2. Rozsah B `[2–3,5 týždňa]`**
@@ -225,7 +225,8 @@
       `documents.versions[].opravy[]` (`kedy`, `kto`, `dovod`, `znovaPotvrdit`, `zLabel`, `zEffectiveFrom`),
       `tenants.chunkovanie` → už `chunking`, ale skontrolovať zvyšky
 - [x] `osoby/actions.ts` ✅ 2026-09-04 — spolu s i18n 3a (`confirmation`, kľúč `error`)
-- [ ] Vlastnosti mimo knižnice: `hr/actions.ts` (`dovod`, kľúč `chyba`); `chunker.mjs` a jeho `.d.mts` majú slovenské názvy **zámerne** — sú to jeho parametre a prekladajú sa v `chunkingProfile.ts`
+- [x] `hr/actions.ts` a `hr/pridelit` ✅ 2026-09-04 — `reason`, `addresses`, `all`; pri tom sa ukázalo, že po chybe sa vyplnený formulár nevracal
+- [ ] `chunker.mjs` a jeho `.d.mts` majú slovenské názvy **zámerne** — sú to jeho parametre a prekladajú sa v `chunkingProfile.ts`. Nechať tak.
 - [ ] `TagSelect.tsx` a spol. — po premenovaní zostali rozpísané skratky vlastností (`name: name,`); kozmetika, urobiť pri najbližšom dotyku súboru
 
 ### M. Správa tenantov — **Fáza 5b** 🟡 → `docs/SPRAVA_TENANTOV.md`
