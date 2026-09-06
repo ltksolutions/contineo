@@ -1595,6 +1595,15 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "assignment.versionNotEffective": "Znenie nemá dátum platnosti, a tak sa nedá ani potvrdiť (D6). Najprv mu doplň platnosť.",
     "assignment.missingAudience": "Chýba, komu sa prideľuje.",
 
+    // ── trasy ──────────────────────────────────────────────────────────────
+    "track.keyRequired": "Kľúč trasy je povinný.",
+    "track.badKey": "„{key}“ sa nedá použiť ako kľúč trasy. Malé písmená bez diakritiky, číslice a pomlčka — kľúč ide do adries a zostáva.",
+    "track.titleRequired": "Názov trasy je povinný.",
+    "track.notFound": "Taká trasa tu nie je.",
+    "track.alreadyExists": "Trasa „{key}“ už existuje.",
+    "track.documentNotFound": "Dokument „{documentId}“ v tejto organizácii nie je.",
+    "track.noSteps": "Prázdnu trasu zapnúť nejde — najprv jej pridaj kroky.",
+
     // ── oddelenia ──────────────────────────────────────────────────────────
     "department.nameRequired": "Názov oddelenia je povinný.",
     "department.parentMissing": "Nadriadené oddelenie neexistuje.",
@@ -1673,6 +1682,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       domain: "doména",
       "signin-settings": "prihlasovanie",
       tenant: "tenant",
+      track: "trasa",
     },
     actions: {
       created: "založené",
@@ -2809,6 +2819,15 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "assignment.versionNotEffective": "Znění nemá datum platnosti, a tak je nelze ani potvrdit (D6). Nejprve mu doplň platnost.",
     "assignment.missingAudience": "Chybí, komu se přiděluje.",
 
+    // ── trasy ──────────────────────────────────────────────────────────────
+    "track.keyRequired": "Klíč trasy je povinný.",
+    "track.badKey": "„{key}“ nelze použít jako klíč trasy. Malá písmena bez diakritiky, číslice a pomlčka — klíč jde do adres a zůstává.",
+    "track.titleRequired": "Název trasy je povinný.",
+    "track.notFound": "Taková trasa tu není.",
+    "track.alreadyExists": "Trasa „{key}“ už existuje.",
+    "track.documentNotFound": "Dokument „{documentId}“ v této organizaci není.",
+    "track.noSteps": "Prázdnou trasu zapnout nelze — nejdřív jí přidej kroky.",
+
     // ── oddělení ───────────────────────────────────────────────────────────
     "department.nameRequired": "Název oddělení je povinný.",
     "department.parentMissing": "Nadřazené oddělení neexistuje.",
@@ -2887,6 +2906,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       domain: "doména",
       "signin-settings": "přihlašování",
       tenant: "tenant",
+      track: "trasa",
     },
     actions: {
       created: "založeno",
@@ -4021,6 +4041,15 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "assignment.versionNotEffective": "The version has no effective date, so it cannot be acknowledged either (D6). Give it an effective date first.",
     "assignment.missingAudience": "It is missing who this is assigned to.",
 
+    // ── tracks ─────────────────────────────────────────────────────────────
+    "track.keyRequired": "The track key is required.",
+    "track.badKey": "“{key}” cannot be used as a track key. Lower-case letters without diacritics, digits and a hyphen — the key goes into addresses and stays there.",
+    "track.titleRequired": "The track title is required.",
+    "track.notFound": "There is no such track here.",
+    "track.alreadyExists": "Track “{key}” already exists.",
+    "track.documentNotFound": "Document “{documentId}” is not in this organisation.",
+    "track.noSteps": "An empty track cannot be switched on — add steps to it first.",
+
     // ── departments ────────────────────────────────────────────────────────
     "department.nameRequired": "The department name is required.",
     "department.parentMissing": "The parent department does not exist.",
@@ -4099,6 +4128,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       domain: "domain",
       "signin-settings": "sign-in",
       tenant: "tenant",
+      track: "track",
     },
     actions: {
       created: "created",

@@ -13,11 +13,16 @@
  */
 
 import { getCollection } from "./mongodb"
+import { AppError } from "./appError"
+import { writeAudit, diff } from "./audit"
+import { DOCUMENTS_COLLECTION } from "./documents"
 import { loadDocumentFor, effectiveVersion } from "./documents"
 import type { NoVersionReason } from "./documents"
 import { acknowledgedVersionIds } from "./acknowledgements"
 
 export const TRACKS_COLLECTION = "onboarding_tracks"
+
+export class TrackError extends AppError {}
 
 export interface TrackStep {
   order: number
@@ -145,5 +150,171 @@ export async function trackProgress(person: {
       doneCount: steps.filter(s => s.done).length,
       totalCount: steps.length,
     }
+  })
+}
+
+// ── zápis (rozsah C) ─────────────────────────────────────────────────────────
+//
+// Trasa dovtedy vznikala len seedovacím skriptom. Kurátor ju teraz skladá
+// z obrazovky — a to znamená, že sa musí dať aj pokaziť, takže sa kontroluje.
+
+/** Kľúč trasy — rovnaký tvar ako pri číselníkoch: ide do adries a zostáva. */
+const TRACK_KEY = /^[a-z0-9][a-z0-9-]{1,60}$/
+
+/** Krok tak, ako ho zadáva človek. Poradie sa odvodí z poľa, nečísluje ho. */
+export interface StepInput {
+  documentId: string
+  requiresAcknowledgement?: boolean
+}
+
+/** Všetky trasy tenanta vrátane neaktívnych — kurátor musí vidieť aj tie. */
+export async function allTracks(companyCode: string): Promise<Track[]> {
+  const col = await getCollection<Track>(TRACKS_COLLECTION)
+  return col.find({ companyCode }).sort({ title: 1 }).toArray()
+}
+
+async function trackOrThrow(companyCode: string, key: string): Promise<Track> {
+  const col = await getCollection<Track>(TRACKS_COLLECTION)
+  const found = await col.findOne({ companyCode, key })
+  if (!found) throw new TrackError("track.notFound", "Taká trasa tu nie je.")
+  return found
+}
+
+function checkTitle(title: string): string {
+  const t = title.trim()
+  if (!t) throw new TrackError("track.titleRequired", "Názov trasy je povinný.")
+  return t
+}
+
+export async function createTrack(
+  companyCode: string,
+  input: { key: string; title: string; description?: string },
+  actor: string,
+): Promise<void> {
+  const key = input.key.trim().toLowerCase()
+  if (!key) throw new TrackError("track.keyRequired", "Kľúč trasy je povinný.")
+  if (!TRACK_KEY.test(key)) {
+    throw new TrackError(
+      "track.badKey",
+      `„${key}" sa nedá použiť ako kľúč trasy. Malé písmená bez diakritiky, číslice a pomlčka.`,
+      { key },
+    )
+  }
+  const title = checkTitle(input.title)
+
+  const col = await getCollection<Track>(TRACKS_COLLECTION)
+  if (await col.findOne({ companyCode, key })) {
+    throw new TrackError("track.alreadyExists", `Trasa „${key}" už existuje.`, { key })
+  }
+
+  // Nová trasa je prázdna a **neaktívna**: kroky sa dopĺňajú vzápätí a trasa,
+  // ktorá by medzitým visela na ľuďoch bez krokov, by tvrdila „hotovo".
+  await col.insertOne({
+    companyCode, key, title,
+    description: input.description?.trim() || undefined,
+    steps: [], isActive: false,
+  } as Track)
+
+  await writeAudit({
+    companyCode, subject: "track", action: "created",
+    actor, targetId: key, targetLabel: title,
+  })
+}
+
+export async function renameTrack(
+  companyCode: string,
+  key: string,
+  input: { title: string; description?: string },
+  actor: string,
+): Promise<void> {
+  const before = await trackOrThrow(companyCode, key)
+  const title = checkTitle(input.title)
+  const description = input.description?.trim() || undefined
+
+  const col = await getCollection<Track>(TRACKS_COLLECTION)
+  await col.updateOne({ companyCode, key }, { $set: { title, description } })
+  await writeAudit({
+    companyCode, subject: "track", action: "changed",
+    actor, targetId: key, targetLabel: title,
+    changes: diff(
+      { title: before.title, description: before.description ?? null },
+      { title, description: description ?? null },
+    ),
+  })
+}
+
+/**
+ * Prepíše kroky trasy.
+ *
+ * Poradie je **poradie v poli**, nie číslo, ktoré by niekto zadával: dve
+ * položky s `order: 3` sú stav, ktorý sa v zozname nedá opraviť, len uhádnuť.
+ *
+ * Dokumenty sa overujú proti tenantovi. Krok na cudzí `documentId` by trasu
+ * nezhodil — `trackProgress()` ho ukáže ako zablokovaný — ale kurátor by sa
+ * o preklepe dozvedel až od človeka, ktorý pred ním uviazne.
+ */
+export async function setTrackSteps(
+  companyCode: string,
+  key: string,
+  steps: StepInput[],
+  actor: string,
+): Promise<void> {
+  const before = await trackOrThrow(companyCode, key)
+
+  const documents = await getCollection(DOCUMENTS_COLLECTION)
+  const seen = new Set<string>()
+  const next: TrackStep[] = []
+  for (const s of steps) {
+    const documentId = s.documentId.trim()
+    if (!documentId || seen.has(documentId)) continue
+    seen.add(documentId)
+    if (!(await documents.findOne({ companyCode, documentId }))) {
+      throw new TrackError(
+        "track.documentNotFound",
+        `Dokument „${documentId}" v tejto organizácii nie je.`,
+        { documentId },
+      )
+    }
+    next.push({
+      order: next.length + 1,
+      type: "document",
+      documentId,
+      requiresAcknowledgement: s.requiresAcknowledgement !== false,
+    })
+  }
+
+  const col = await getCollection<Track>(TRACKS_COLLECTION)
+  await col.updateOne({ companyCode, key }, { $set: { steps: next } })
+  await writeAudit({
+    companyCode, subject: "track", action: "changed",
+    actor, targetId: key, targetLabel: before.title,
+    changes: diff(
+      { steps: before.steps.map(s => s.documentId ?? "").join(", ") },
+      { steps: next.map(s => s.documentId ?? "").join(", ") },
+    ),
+  })
+}
+
+/**
+ * Zapne alebo vypne trasu.
+ *
+ * Vypnutá trasa sa ľuďom neukáže, ale **zostáva na nich zapísaná** — a to je
+ * zámer: zmazať ju by znamenalo, že sa o rok nedá povedať, čo mal kto prejsť.
+ */
+export async function setTrackActive(
+  companyCode: string,
+  key: string,
+  isActive: boolean,
+  actor: string,
+): Promise<void> {
+  const before = await trackOrThrow(companyCode, key)
+  if (isActive && before.steps.length === 0) {
+    throw new TrackError("track.noSteps", "Prázdnu trasu zapnúť nejde — najprv jej pridaj kroky.")
+  }
+  const col = await getCollection<Track>(TRACKS_COLLECTION)
+  await col.updateOne({ companyCode, key }, { $set: { isActive } })
+  await writeAudit({
+    companyCode, subject: "track", action: isActive ? "restored" : "excluded",
+    actor, targetId: key, targetLabel: before.title,
   })
 }

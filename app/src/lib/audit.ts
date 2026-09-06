@@ -51,6 +51,7 @@ export type AuditSubject =
   | "domain"
   | "signin-settings"
   | "tenant"
+  | "track"
 
 export interface AuditRecord {
   _id?: ObjectId
