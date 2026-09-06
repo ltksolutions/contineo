@@ -83,6 +83,14 @@ interface Dictionary {
     listIntro: string
     nothingToDo: string
     progress: (done: number, total: number) => string
+    /**
+     * Kroky sa zobrazujú po trasách, nie ako jedna kopa. Trasa je poradie
+     * — sploštený zoznam zahodí aj poradie, aj to, kde človek skončil.
+     */
+    step: (order: number, total: number) => string
+    /** Prvý nedokončený krok trasy. Bez neho je zoznam len zoznam. */
+    continueHere: string
+    trackComplete: string
     open: string
     done: string
     todo: string
@@ -883,6 +891,48 @@ interface Dictionary {
       nothingFound: string
       empty: string
     }
+    /**
+     * Skladanie trás onboardingu (rozsah C).
+     *
+     * Trasa je poradie krokov. Kým vznikala seedovacím skriptom, obrazovku
+     * nepotrebovala; odkedy ju skladá kurátor, potrebuje aj slová.
+     */
+    tracks: {
+      heading: string
+      intro: string
+      back: string
+      newHeading: string
+      key: string
+      keyHint: string
+      title: string
+      description: string
+      create: string
+      empty: string
+      active: string
+      inactive: string
+      enable: string
+      disable: string
+      stepCount: (n: number) => string
+      detailHeading: (title: string) => string
+      rename: string
+      steps: string
+      noSteps: string
+      addStep: string
+      chooseDocument: string
+      requiresAck: string
+      requiresAckHint: string
+      ackYes: string
+      ackNo: string
+      remove: string
+      moveUp: string
+      moveDown: string
+      created: string
+      renamed: string
+      stepsSaved: string
+      enabled: string
+      disabled: string
+    }
+
     folders: {
       heading: string
       allDocuments: string
@@ -1064,6 +1114,9 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     listIntro: "Prečítajte si každý dokument a potvrďte, že ste sa s ním oboznámili. Potvrdenie sa viaže na konkrétne znenie — pri novej verzii vás systém požiada znova.",
     nothingToDo: "Momentálne nemáte nič na potvrdenie.",
     progress: (done, total) => `Hotové ${done} z ${total}`,
+    step: (order, total) => `Krok ${order} z ${total}`,
+    continueHere: "pokračujte tu",
+    trackComplete: "trasa je hotová",
     open: "Otvoriť",
     done: "potvrdené",
     todo: "čaká na vás",
@@ -2106,6 +2159,42 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       nothingFound: "Nič sa nenašlo.",
       empty: "Zatiaľ tu nie je nič. Začni nahratím prvého dokumentu.",
     },
+    tracks: {
+      heading: "Trasy onboardingu",
+      intro: "Trasa je poradie krokov — „prejdi tieto dokumenty v tomto poradí“. Človek na nej vidí, kde skončil.",
+      back: "Späť na trasy",
+      newHeading: "Nová trasa",
+      key: "Kľúč",
+      keyHint: "Malé písmená bez diakritiky, číslice a pomlčka. Ide do adries a zostáva.",
+      title: "Názov",
+      description: "Popis (nepovinný)",
+      create: "Založiť trasu",
+      empty: "Zatiaľ tu nie je žiadna trasa.",
+      active: "zapnutá",
+      inactive: "vypnutá",
+      enable: "Zapnúť",
+      disable: "Vypnúť",
+      stepCount: n => (n === 1 ? "1 krok" : n >= 2 && n <= 4 ? `${n} kroky` : `${n} krokov`),
+      detailHeading: title => `Trasa ${title}`,
+      rename: "Uložiť názov",
+      steps: "Kroky",
+      noSteps: "Trasa zatiaľ nemá kroky. Prázdnu trasu zapnúť nejde — ľuďom by tvrdila „hotovo“.",
+      addStep: "Pridať krok",
+      chooseDocument: "— vyberte dokument —",
+      requiresAck: "Vyžaduje potvrdenie",
+      requiresAckHint: "Bez potvrdenia je krok len na prečítanie a do dôkazov sa nezapíše.",
+      ackYes: "s potvrdením",
+      ackNo: "bez potvrdenia",
+      remove: "Odobrať",
+      moveUp: "Vyššie",
+      moveDown: "Nižšie",
+      created: "Trasa je založená. Zapnúť ju pôjde, až keď bude mať kroky.",
+      renamed: "Názov je uložený.",
+      stepsSaved: "Kroky sú uložené.",
+      enabled: "Trasa je zapnutá.",
+      disabled: "Trasa je vypnutá. Zostáva zapísaná na ľuďoch, ktorí ju už majú.",
+    },
+
     folders: {
       heading: "Priečinky",
       allDocuments: "Všetky dokumenty",
@@ -2288,6 +2377,9 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     listIntro: "Přečtěte si každý dokument a potvrďte, že jste se s ním seznámili. Potvrzení se váže na konkrétní znění — u nové verze vás systém požádá znovu.",
     nothingToDo: "Momentálně nemáte nic k potvrzení.",
     progress: (done, total) => `Hotovo ${done} z ${total}`,
+    step: (order, total) => `Krok ${order} z ${total}`,
+    continueHere: "pokračujte tu",
+    trackComplete: "trasa je hotová",
     open: "Otevřít",
     done: "potvrzeno",
     todo: "čeká na vás",
@@ -3330,6 +3422,42 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       nothingFound: "Nic se nenašlo.",
       empty: "Zatím tu nic není. Začni nahráním prvního dokumentu.",
     },
+    tracks: {
+      heading: "Trasy onboardingu",
+      intro: "Trasa je pořadí kroků — „projdi tyto dokumenty v tomto pořadí“. Člověk na ní vidí, kde skončil.",
+      back: "Zpět na trasy",
+      newHeading: "Nová trasa",
+      key: "Klíč",
+      keyHint: "Malá písmena bez diakritiky, číslice a pomlčka. Jde do adres a zůstává.",
+      title: "Název",
+      description: "Popis (nepovinný)",
+      create: "Založit trasu",
+      empty: "Zatím tu není žádná trasa.",
+      active: "zapnutá",
+      inactive: "vypnutá",
+      enable: "Zapnout",
+      disable: "Vypnout",
+      stepCount: n => (n === 1 ? "1 krok" : n >= 2 && n <= 4 ? `${n} kroky` : `${n} kroků`),
+      detailHeading: title => `Trasa ${title}`,
+      rename: "Uložit název",
+      steps: "Kroky",
+      noSteps: "Trasa zatím nemá kroky. Prázdnou trasu zapnout nelze — lidem by tvrdila „hotovo“.",
+      addStep: "Přidat krok",
+      chooseDocument: "— vyberte dokument —",
+      requiresAck: "Vyžaduje potvrzení",
+      requiresAckHint: "Bez potvrzení je krok jen ke čtení a do důkazů se nezapíše.",
+      ackYes: "s potvrzením",
+      ackNo: "bez potvrzení",
+      remove: "Odebrat",
+      moveUp: "Výše",
+      moveDown: "Níže",
+      created: "Trasa je založena. Zapnout ji půjde, až bude mít kroky.",
+      renamed: "Název je uložen.",
+      stepsSaved: "Kroky jsou uloženy.",
+      enabled: "Trasa je zapnutá.",
+      disabled: "Trasa je vypnutá. Zůstává zapsaná u lidí, kteří ji už mají.",
+    },
+
     folders: {
       heading: "Složky",
       allDocuments: "Všechny dokumenty",
@@ -3512,6 +3640,9 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     listIntro: "Read each document and confirm that you have familiarised yourself with it. An acknowledgement is tied to a specific version — when a new one is issued, you will be asked again.",
     nothingToDo: "You have nothing to acknowledge at the moment.",
     progress: (done, total) => `${done} of ${total} done`,
+    step: (order, total) => `Step ${order} of ${total}`,
+    continueHere: "continue here",
+    trackComplete: "track complete",
     open: "Open",
     done: "acknowledged",
     todo: "waiting for you",
@@ -4552,6 +4683,42 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       nothingFound: "Nothing found.",
       empty: "There is nothing here yet. Start by uploading the first document.",
     },
+    tracks: {
+      heading: "Onboarding tracks",
+      intro: "A track is an order of steps — “go through these documents in this order”. It is what shows a person where they stopped.",
+      back: "Back to tracks",
+      newHeading: "New track",
+      key: "Key",
+      keyHint: "Lower-case letters without diacritics, digits and a hyphen. It goes into addresses and stays there.",
+      title: "Title",
+      description: "Description (optional)",
+      create: "Create track",
+      empty: "There is no track here yet.",
+      active: "on",
+      inactive: "off",
+      enable: "Switch on",
+      disable: "Switch off",
+      stepCount: n => (n === 1 ? "1 step" : `${n} steps`),
+      detailHeading: title => `Track ${title}`,
+      rename: "Save title",
+      steps: "Steps",
+      noSteps: "The track has no steps yet. An empty track cannot be switched on — it would tell people they are done.",
+      addStep: "Add a step",
+      chooseDocument: "— choose a document —",
+      requiresAck: "Requires an acknowledgement",
+      requiresAckHint: "Without it the step is reading only and nothing is written to the evidence.",
+      ackYes: "with an acknowledgement",
+      ackNo: "reading only",
+      remove: "Remove",
+      moveUp: "Up",
+      moveDown: "Down",
+      created: "The track is created. You can switch it on once it has steps.",
+      renamed: "The title is saved.",
+      stepsSaved: "The steps are saved.",
+      enabled: "The track is on.",
+      disabled: "The track is off. It stays recorded for the people who already have it.",
+    },
+
     folders: {
       heading: "Folders",
       allDocuments: "All documents",

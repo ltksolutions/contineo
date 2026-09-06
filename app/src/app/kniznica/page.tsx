@@ -84,6 +84,9 @@ export default async function LibraryPage({
       <div style={{ display: "flex", gap: 12, alignItems: "baseline", flexWrap: "wrap", margin: "0 0 6px" }}>
         <h1 style={{ fontSize: 26, letterSpacing: "-0.02em", margin: 0 }}>{t.heading}</h1>
         <Link className="tlacidlo" href="/kniznica/nova">{t.upload}</Link>
+        <Link className="tlacidlo tlacidlo--tiche" href="/kniznica/trasy">
+          {dictionary(uiLanguage).library.tracks.heading}
+        </Link>
       </div>
       <p className="tichy" style={{ fontSize: 15, margin: "0 0 20px", maxWidth: 640 }}>
         {t.introBefore}<strong>{t.introHighlight}</strong>{t.introAfter}

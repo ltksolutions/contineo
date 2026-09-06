@@ -50,7 +50,6 @@ export default async function DocumentsPage() {
 
   const t = dictionary(person.language).onboarding
   const tracks = await trackProgress(person)
-  const steps = tracks.flatMap(tr => tr.steps)
   const done = tracks.reduce((a, tr) => a + tr.doneCount, 0)
   const total = tracks.reduce((a, tr) => a + tr.totalCount, 0)
 
@@ -67,45 +66,85 @@ export default async function DocumentsPage() {
         </p>
       )}
 
-      {steps.length === 0 && (
+      {total === 0 && (
         <p className="karta" style={{ padding: 20 }}>{t.nothingToDo}</p>
       )}
 
-      <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "grid", gap: 12 }}>
-        {steps.map(s => (
-          <li key={`${s.documentId}-${s.order}`} className="karta" style={{ padding: "16px 18px" }}>
-            <div style={{ display: "flex", gap: 16, alignItems: "baseline", flexWrap: "wrap" }}>
-              <strong style={{ fontSize: 16, flex: "1 1 320px" }}>{s.title}</strong>
+      {/*
+        Trasy sa **nesplošťujú**. Jedna kopa dokumentov by zahodila poradie
+        aj to, kde človek skončil — a práve to sú jediné dve veci, ktoré
+        trasa navyše hovorí.
+      */}
+      {tracks.map(tr => (
+        <section key={tr.key} style={{ margin: "0 0 32px" }}>
+          <div style={{ display: "flex", gap: 12, alignItems: "baseline", flexWrap: "wrap", margin: "0 0 4px" }}>
+            <h2 style={{ fontSize: 19, letterSpacing: "-0.01em", margin: 0, flex: "1 1 auto" }}>
+              {tr.title}
+            </h2>
+            <span className="tichy" style={{ fontSize: 13.5 }}>
+              {tr.nextOrder === null ? t.trackComplete : t.progress(tr.doneCount, tr.totalCount)}
+            </span>
+          </div>
 
-              {s.blocked ? (
-                <span className="stitok" style={{ background: "var(--warn-bg)", color: "var(--warn-fg)" }}>
-                  {t.blocked}
-                </span>
-              ) : s.done ? (
-                <span className="stitok" style={{ background: "var(--ok-bg)", color: "var(--ok-fg)" }}>
-                  {t.done}
-                </span>
-              ) : (
-                <span className="stitok">{t.todo}</span>
-              )}
-            </div>
+          {tr.description && (
+            <p className="tichy" style={{ fontSize: 14, margin: "0 0 12px" }}>{tr.description}</p>
+          )}
 
-            <p className="tichy" style={{ fontSize: 13.5, margin: "8px 0 0" }}>
-              {s.blocked
-                ? t.blockedReason[s.blocked] ?? s.blocked
-                : t.version(s.versionLabel ?? "", formatDate(s.effectiveFrom!, person.language))}
-            </p>
+          <ul style={{ listStyle: "none", padding: 0, margin: "12px 0 0", display: "grid", gap: 12 }}>
+            {tr.steps.map(s => {
+              const isNext = s.order === tr.nextOrder
+              return (
+                <li
+                  key={`${tr.key}-${s.order}`}
+                  className="karta"
+                  style={{
+                    padding: "16px 18px",
+                    // Miesto, kde človek skončil, musí byť vidieť na prvý
+                    // pohľad — nie až po prečítaní všetkých štítkov.
+                    borderColor: isNext ? "var(--accent)" : undefined,
+                  }}
+                >
+                  <div style={{ display: "flex", gap: 16, alignItems: "baseline", flexWrap: "wrap" }}>
+                    <span className="tichy" style={{ fontSize: 13, flex: "0 0 auto" }}>
+                      {t.step(s.order, tr.totalCount)}
+                    </span>
+                    <strong style={{ fontSize: 16, flex: "1 1 260px" }}>{s.title}</strong>
 
-            {!s.blocked && (
-              <p style={{ margin: "12px 0 0" }}>
-                <Link className="tlacidlo tlacidlo--tiche" href={`/dokumenty/${encodeURIComponent(s.documentId)}`}>
-                  {t.open}
-                </Link>
-              </p>
-            )}
-          </li>
-        ))}
-      </ul>
+                    {s.blocked ? (
+                      <span className="stitok" style={{ background: "var(--warn-bg)", color: "var(--warn-fg)" }}>
+                        {t.blocked}
+                      </span>
+                    ) : s.done ? (
+                      <span className="stitok" style={{ background: "var(--ok-bg)", color: "var(--ok-fg)" }}>
+                        {t.done}
+                      </span>
+                    ) : (
+                      <span className="stitok">{isNext ? t.continueHere : t.todo}</span>
+                    )}
+                  </div>
+
+                  <p className="tichy" style={{ fontSize: 13.5, margin: "8px 0 0" }}>
+                    {s.blocked
+                      ? t.blockedReason[s.blocked] ?? s.blocked
+                      : t.version(s.versionLabel ?? "", formatDate(s.effectiveFrom!, person.language))}
+                  </p>
+
+                  {!s.blocked && (
+                    <p style={{ margin: "12px 0 0" }}>
+                      <Link
+                        className={isNext ? "tlacidlo" : "tlacidlo tlacidlo--tiche"}
+                        href={`/dokumenty/${encodeURIComponent(s.documentId)}`}
+                      >
+                        {t.open}
+                      </Link>
+                    </p>
+                  )}
+                </li>
+              )
+            })}
+          </ul>
+        </section>
+      ))}
     </div>
   )
 }

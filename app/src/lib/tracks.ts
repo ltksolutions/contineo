@@ -173,9 +173,14 @@ export async function allTracks(companyCode: string): Promise<Track[]> {
   return col.find({ companyCode }).sort({ title: 1 }).toArray()
 }
 
-async function trackOrThrow(companyCode: string, key: string): Promise<Track> {
+/** Jedna trasa vrátane neaktívnej. `null`, keď taká nie je. */
+export async function trackByKey(companyCode: string, key: string): Promise<Track | null> {
   const col = await getCollection<Track>(TRACKS_COLLECTION)
-  const found = await col.findOne({ companyCode, key })
+  return col.findOne({ companyCode, key })
+}
+
+async function trackOrThrow(companyCode: string, key: string): Promise<Track> {
+  const found = await trackByKey(companyCode, key)
   if (!found) throw new TrackError("track.notFound", "Taká trasa tu nie je.")
   return found
 }
