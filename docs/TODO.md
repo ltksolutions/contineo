@@ -169,7 +169,7 @@
 - [x] **Zápis trás** ✅ 2026-09-06 (`a321b39`) — `createTrack`, `renameTrack`, `setTrackSteps`, `setTrackActive`, `allTracks`, `trackByKey`. Poradie je poradie v poli, nie číslo zvonka; nová trasa je prázdna a **neaktívna**; vypnutie trasu **nemaže** (D24). 14 testov.
 - [x] **Obrazovka kurátora** ✅ 2026-09-06 (`485f2a1`) — `/kniznica/trasy` + detail. Kroky sa posielajú celé pri každej zmene, takže poradie je na jednom mieste a dve otvorené záložky sa navzájom potichu neprepíšu.
 - [x] **Guided reading: poradie krokov, návrat na rozpracované** ✅ 2026-09-06 — `/dokumenty` už kroky nesplošťuje (`flatMap` zahodil poradie aj „kde som skončil"). Zoznam je po trasách, prvý nedokončený krok je zvýraznený.
-- [ ] **Čas čítania** — kolekcia `reading_times`, TTL 1 rok, viditeľný čas cez Page Visibility API, veta pre človeka. Podrobnosti v I0/O14 vyššie.
+- [x] **Čas čítania** ✅ 2026-09-06 (`df4d879`) — kolekcia `reading_times`, TTL 1 rok, viditeľný čas cez Page Visibility API, veta pre človeka. Podrobnosti v I0/O14 vyššie.
 - [x] **HR výkaz: podľa dokumentu / osoby / trasy + export** ✅ 2026-09-06 — `/hr/overview`, výpočet v `lib/hrReport.ts`, CSV cez `/hr/overview/csv`.
       **Menovateľ je pridelenie + trasa** (rozhodnuté 2026-09-06): sú to jediné dva spôsoby, ako sa dokument k človeku dostane. „Všetci v organizácii" by nafúkol každé číslo o ľudí, ktorých sa vec netýka; „len pridelenia" by mlčky vynechal onboarding cez trasu.
       Jedna povinnosť na osobu a znenie — dokument z trasy aj z pridelenia je jedna povinnosť s dvomi dôvodmi, inak sa dá súčet nafúknuť dvojitým pridelením.
