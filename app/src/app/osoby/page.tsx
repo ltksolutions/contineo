@@ -46,6 +46,9 @@ export default async function PeoplePage({
       <div style={{ display: "flex", gap: 10, flexWrap: "wrap", margin: "0 0 20px" }}>
         <Link className="tlacidlo" href="/osoby/nova">{t.invite}</Link>
         <Link className="tlacidlo tlacidlo--tiche" href="/osoby/import">{t.importCsv}</Link>
+        <Link className="tlacidlo tlacidlo--tiche" href="/osoby/pozvat">
+          {dictionary(language).people.inviteAll.open}
+        </Link>
       </div>
 
       {/* Serverový formulár — hľadanie je v adrese, takže sa dá poslať odkazom

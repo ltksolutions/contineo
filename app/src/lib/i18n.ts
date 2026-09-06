@@ -831,6 +831,18 @@ interface Dictionary {
       status: Record<string, string>
       neverSignedIn: string
     }
+    /** Hromadné pozvánky ľuďom, ktorí ešte nikdy neboli dnu. */
+    inviteAll: {
+      heading: string
+      intro: string
+      back: string
+      none: string
+      preview: string
+      send: (people: number) => string
+      sent: (n: number) => string
+      nobody: string
+      open: string
+    }
     invite: {
       back: string
       heading: string
@@ -2147,6 +2159,17 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
         inactive: "vyradená",
       },
       neverSignedIn: "neprihlásená",
+    },
+    inviteAll: {
+      heading: "Hromadné pozvánky",
+      intro: "Ľudia, ktorí sa ešte ani raz neprihlásili. E-mail nesie odkaz na portál, nie prihlasovací odkaz — ten platí len krátko a poštové brány ho spotrebujú skôr, než sa k nemu človek dostane.",
+      back: "← Späť na osoby",
+      none: "Všetci sa už aspoň raz prihlásili.",
+      preview: "Toto pôjde na uvedené adresy. Odoslaný e-mail sa odvolať nedá.",
+      send: people => people === 1 ? "Odoslať 1 pozvánku" : people >= 2 && people <= 4 ? `Odoslať ${people} pozvánky` : `Odoslať ${people} pozvánok`,
+      sent: n => `Odoslané: ${n}.`,
+      nobody: "Nie je koho pozývať.",
+      open: "Hromadné pozvánky",
     },
     invite: {
       back: "← Späť na zoznam",
@@ -3468,6 +3491,17 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       },
       neverSignedIn: "nepřihlášená",
     },
+    inviteAll: {
+      heading: "Hromadné pozvánky",
+      intro: "Lidé, kteří se ještě ani jednou nepřihlásili. E-mail nese odkaz na portál, ne přihlašovací odkaz — ten platí jen krátce a poštovní brány ho spotřebují dřív, než se k němu člověk dostane.",
+      back: "← Zpět na osoby",
+      none: "Všichni se už aspoň jednou přihlásili.",
+      preview: "Toto půjde na uvedené adresy. Odeslaný e-mail se odvolat nedá.",
+      send: people => people === 1 ? "Odeslat 1 pozvánku" : people >= 2 && people <= 4 ? `Odeslat ${people} pozvánky` : `Odeslat ${people} pozvánek`,
+      sent: n => `Odesláno: ${n}.`,
+      nobody: "Není koho zvát.",
+      open: "Hromadné pozvánky",
+    },
     invite: {
       back: "← Zpět na seznam",
       heading: "Pozvat osobu",
@@ -4783,6 +4817,17 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
         inactive: "excluded",
       },
       neverSignedIn: "never signed in",
+    },
+    inviteAll: {
+      heading: "Bulk invitations",
+      intro: "People who have never signed in. The email carries a link to the portal, not a sign-in link — those are short-lived and mail gateways consume them before the person gets there.",
+      back: "← Back to people",
+      none: "Everyone has signed in at least once.",
+      preview: "This goes to the addresses listed. A sent email cannot be taken back.",
+      send: people => people === 1 ? "Send 1 invitation" : `Send ${people} invitations`,
+      sent: n => `Sent: ${n}.`,
+      nobody: "There is nobody to invite.",
+      open: "Bulk invitations",
     },
     invite: {
       back: "← Back to the list",

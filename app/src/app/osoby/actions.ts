@@ -14,7 +14,15 @@
 import { redirect } from "next/navigation"
 import { isRedirect } from "@/lib/redirects"
 import { revalidatePath } from "next/cache"
-import { peopleContext, savePerson, invitePerson, setPersonStatus } from "@/lib/people"
+import { peopleContext, savePerson, invitePerson, setPersonStatus, neverSignedIn } from "@/lib/people"
+import { send, inviteEmail } from "@/lib/ecomail"
+import { brandingView } from "@/lib/tenants"
+import { requestHostname } from "@/lib/session"
+import { writeAudit, diff } from "@/lib/audit"
+import { normalizeLanguage } from "@/lib/i18n"
+
+/** Koľko e-mailov naraz. Rovnaká hodnota ako pri oznámeniach v `/hr`. */
+const INVITE_CONCURRENCY = 5
 import { csvToPersons } from "@/lib/personsImport"
 import { previewImport, upsertPersons } from "@/lib/persons"
 import type { PersonType } from "@/lib/persons"
@@ -209,4 +217,64 @@ export async function runImportAction(text: string): Promise<{ ok: boolean; mess
   } catch (e) {
     return { ok: false, message: errorMessage(e, actor.language) }
   }
+}
+
+/**
+ * Hromadné pozvánky ľuďom, ktorí ešte nikdy neboli dnu.
+ *
+ * Zoznam sa **prepočíta tu znova**, neberie sa z formulára: medzi zobrazením
+ * náhľadu a kliknutím sa mohol niekto prihlásiť a pozvánka niekomu, kto je
+ * už dnu, je zbytočná pošta.
+ *
+ * E-mail nesie **odkaz na portál, nie prihlasovací odkaz** — ten platí 24
+ * hodín a raz, takže pri stovke adries naraz časť vyprší skôr, než si to
+ * niekto prečíta, a poštové brány ho spotrebujú ešte pred človekom
+ * (zaznamenané 2026-08-28).
+ */
+export async function sendInvitationsAction() {
+  const ctx = await peopleContext()
+  if (ctx.state !== "ready") redirect("/osoby")
+  const language = ctx.person.language
+  const t = dictionary(language).people.inviteAll
+
+  const people = await neverSignedIn(ctx.person.companyCode)
+  if (people.length === 0) {
+    redirect("/osoby/pozvat?error=1&msg=" + encodeURIComponent(t.nobody))
+  }
+
+  const host = await requestHostname()
+  const branding = brandingView(ctx.tenant)
+  const signInUrl = `https://${host}/prihlasenie`
+
+  let sent = 0
+  const failed: string[] = []
+
+  for (let i = 0; i < people.length; i += INVITE_CONCURRENCY) {
+    await Promise.all(people.slice(i, i + INVITE_CONCURRENCY).map(async person => {
+      try {
+        await send({
+          to: person.email,
+          ...inviteEmail(signInUrl, host, normalizeLanguage(person.language), branding),
+        })
+        sent++
+      } catch (e) {
+        // Jedna neplatná adresa nesmie zastaviť zvyšok. Menovite do logu,
+        // aby sa dalo zistiť, komu správa nedošla.
+        console.error(`[osoby] pozvánka na ${person.email} zlyhala:`, e)
+        failed.push(person.email)
+      }
+    }))
+  }
+
+  await writeAudit({
+    companyCode: ctx.person.companyCode, subject: "person", action: "changed",
+    actor: ctx.person.email, targetId: "invitations", targetLabel: t.heading,
+    changes: diff({ sent: 0 }, { sent }),
+  })
+
+  revalidatePath("/osoby/pozvat")
+  const message = failed.length === 0
+    ? t.sent(sent)
+    : `${t.sent(sent)} (${failed.length}) ${failed.slice(0, 5).join(", ")}${failed.length > 5 ? "…" : ""}`
+  redirect(`/osoby?msg=${encodeURIComponent(message)}${failed.length ? "&error=1" : ""}`)
 }

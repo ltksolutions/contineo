@@ -380,3 +380,24 @@ export async function setPersonStatus(
     changes: { status: { from: existing.status, to: status } },
   })
 }
+
+/**
+ * Kto ešte nikdy nebol dnu.
+ *
+ * Kritérium je **`firstLoginAt`, nie `status`**. Stav `invited` sa pri prvom
+ * prihlásení prepíše na `active`, takže by stačil — až na osoby, ktoré
+ * vznikli inak než pozvaním (import, samozaloženie cez pracovné konto, D47).
+ * Tie majú stav rovno `active` a pozvánku nikdy nedostali, hoci sú presne tí,
+ * ktorých treba osloviť.
+ *
+ * Vyradené osoby sa neoslovujú: pozvánka niekomu, kto v organizácii už nie je,
+ * je horšia než žiadna.
+ */
+export async function neverSignedIn(companyCode: string): Promise<PersonRow[]> {
+  const col = await getCollection<Person>(PERSONS_COLLECTION)
+  const people = await col
+    .find({ companyCode, status: { $ne: "inactive" }, firstLoginAt: { $exists: false } } as never)
+    .sort({ fullName: 1 })
+    .toArray()
+  return people.map(toRow)
+}
