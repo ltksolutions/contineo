@@ -60,7 +60,11 @@ export default async function DocumentsPage() {
       </h1>
       <p className="tichy" style={{ fontSize: 15.5, margin: "0 0 8px" }}>{t.listIntro}</p>
 
-      {total > 0 && (
+      {/*
+        Celkový súčet len pri viacerých trasách. Pri jednej by pod sebou
+        stálo dvakrát to isté číslo — raz ako súčet, raz pri trase.
+      */}
+      {total > 0 && tracks.length > 1 && (
         <p className="tichy" style={{ fontSize: 14, margin: "0 0 24px" }}>
           {t.progress(done, total)}
         </p>

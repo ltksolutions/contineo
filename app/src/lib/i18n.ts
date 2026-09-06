@@ -1186,6 +1186,18 @@ interface Dictionary {
   }
 }
 
+/**
+ * Dni s číslovkou.
+ *
+ * Slovenčina aj čeština majú tri tvary (1 / 2–4 / 5+). Bez toho vznikne
+ * „nepotvrdené dlhšie než 1 dní" — chyba, ktorú v kóde nikto nevidí a ktorú
+ * si na obrazovke všimne každý. `Intl.PluralRules` by tvar vybralo, ale text
+ * by aj tak musel byť napísaný trikrát; pribudla by závislosť bez úspory.
+ */
+const daysSk = (n: number) => (n === 1 ? "1 deň" : n >= 2 && n <= 4 ? `${n} dni` : `${n} dní`)
+const daysCs = (n: number) => (n === 1 ? "1 den" : n >= 2 && n <= 4 ? `${n} dny` : `${n} dní`)
+const daysEn = (n: number) => (n === 1 ? "1 day" : `${n} days`)
+
 export const DICTIONARY: Record<UiLanguage, Dictionary> = {
   sk: {
   onboarding: {
@@ -1263,7 +1275,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
         : count >= 2 && count <= 4
           ? `${count} dokumenty stále čakajú na vaše potvrdenie.`
           : `${count} dokumentov stále čaká na vaše potvrdenie.`,
-      itemLine: (label, days) => `verzia ${label}, čaká ${days} dní`,
+      itemLine: (label, days) => `verzia ${label}, čaká ${daysSk(days)}`,
       button: "Otvoriť zoznam",
       note: "Potvrdenie sa viaže na konkrétne znenie a zaberie pár minút. Ak si myslíte, že sa vás dokument netýka, ozvite sa personálnemu oddeleniu.",
     },
@@ -1490,11 +1502,11 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
 
     reminders: {
       heading: "Pripomienky",
-      intro: days => `Ľudia, ktorí majú niečo nepotvrdené dlhšie než ${days} dní. Jeden e-mail na človeka — kto mešká so štyrmi smernicami, dostane jednu správu so štyrmi riadkami.`,
+      intro: days => `Ľudia, ktorí majú niečo nepotvrdené dlhšie než ${daysSk(days)}. Jeden e-mail na človeka — kto mešká so štyrmi smernicami, dostane jednu správu so štyrmi riadkami.`,
       back: "← Späť na prehľad",
       open: "Pripomenúť",
-      none: days => `Nikto nemešká viac než ${days} dní.`,
-      person: (documents, days) => `${documents === 1 ? "1 dokument" : documents >= 2 && documents <= 4 ? `${documents} dokumenty` : `${documents} dokumentov`} · najdlhšie ${days} dní`,
+      none: days => `Nikto nemešká viac než ${daysSk(days)}.`,
+      person: (documents, days) => `${documents === 1 ? "1 dokument" : documents >= 2 && documents <= 4 ? `${documents} dokumenty` : `${documents} dokumentov`} · najdlhšie ${daysSk(days)}`,
       send: people => people === 1 ? "Odoslať 1 pripomienku" : people >= 2 && people <= 4 ? `Odoslať ${people} pripomienky` : `Odoslať ${people} pripomienok`,
       preview: "Toto pôjde na uvedené adresy. Odoslaný e-mail sa odvolať nedá.",
       sent: n => `Odoslané: ${n}.`,
@@ -2594,7 +2606,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
         : count >= 2 && count <= 4
           ? `${count} dokumenty stále čekají na vaše potvrzení.`
           : `${count} dokumentů stále čeká na vaše potvrzení.`,
-      itemLine: (label, days) => `verze ${label}, čeká ${days} dní`,
+      itemLine: (label, days) => `verze ${label}, čeká ${daysCs(days)}`,
       button: "Otevřít seznam",
       note: "Potvrzení se váže na konkrétní znění a zabere pár minut. Pokud si myslíte, že se vás dokument netýká, ozvěte se personálnímu oddělení.",
     },
@@ -2821,11 +2833,11 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
 
     reminders: {
       heading: "Připomínky",
-      intro: days => `Lidé, kteří mají něco nepotvrzené déle než ${days} dní. Jeden e-mail na člověka — kdo mešká se čtyřmi předpisy, dostane jednu zprávu se čtyřmi řádky.`,
+      intro: days => `Lidé, kteří mají něco nepotvrzené déle než ${daysCs(days)}. Jeden e-mail na člověka — kdo mešká se čtyřmi předpisy, dostane jednu zprávu se čtyřmi řádky.`,
       back: "← Zpět na přehled",
       open: "Připomenout",
-      none: days => `Nikdo nemešká více než ${days} dní.`,
-      person: (documents, days) => `${documents === 1 ? "1 dokument" : documents >= 2 && documents <= 4 ? `${documents} dokumenty` : `${documents} dokumentů`} · nejdéle ${days} dní`,
+      none: days => `Nikdo nemešká více než ${daysCs(days)}.`,
+      person: (documents, days) => `${documents === 1 ? "1 dokument" : documents >= 2 && documents <= 4 ? `${documents} dokumenty` : `${documents} dokumentů`} · nejdéle ${daysCs(days)}`,
       send: people => people === 1 ? "Odeslat 1 připomínku" : people >= 2 && people <= 4 ? `Odeslat ${people} připomínky` : `Odeslat ${people} připomínek`,
       preview: "Toto půjde na uvedené adresy. Odeslaný e-mail se odvolat nedá.",
       sent: n => `Odesláno: ${n}.`,
@@ -3922,7 +3934,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       intro: count => count === 1
         ? "One document is still waiting for your acknowledgement."
         : `${count} documents are still waiting for your acknowledgement.`,
-      itemLine: (label, days) => `version ${label}, waiting ${days} days`,
+      itemLine: (label, days) => `version ${label}, waiting ${daysEn(days)}`,
       button: "Open the list",
       note: "An acknowledgement is tied to one specific version and takes a couple of minutes. If you believe a document does not apply to you, contact HR.",
     },
@@ -4148,11 +4160,11 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
 
     reminders: {
       heading: "Reminders",
-      intro: days => `People with something unacknowledged for more than ${days} days. One email per person — someone behind on four documents gets one message with four lines.`,
+      intro: days => `People with something unacknowledged for more than ${daysEn(days)}. One email per person — someone behind on four documents gets one message with four lines.`,
       back: "← Back to the overview",
       open: "Remind",
-      none: days => `Nobody is more than ${days} days behind.`,
-      person: (documents, days) => `${documents === 1 ? "1 document" : `${documents} documents`} · longest ${days} days`,
+      none: days => `Nobody is more than ${daysEn(days)} behind.`,
+      person: (documents, days) => `${documents === 1 ? "1 document" : `${documents} documents`} · longest ${daysEn(days)}`,
       send: people => people === 1 ? "Send 1 reminder" : `Send ${people} reminders`,
       preview: "This goes to the addresses listed. A sent email cannot be taken back.",
       sent: n => `Sent: ${n}.`,
