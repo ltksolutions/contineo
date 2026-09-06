@@ -112,8 +112,11 @@
 - [x] **O14 — meriame čas nad dokumentom** ✅ 2026-08-28 rozhodnuté: **áno, čas sa meria.** Ultra-MVP ho nemeral, takže ide o rozšírenie, nie o zmenu. Rozhodnutie so sebou nesie tri veci, ktoré treba vybaviť **pred** zapnutím merania, nie po ňom:
   - [ ] Právny základ a retencia pre údaj o správaní (O15, O16) — čas nad dokumentom je osobný údaj o tom, ako sa človek správal, nie súčasť vyhlásenia
   - [x] **Rozhodnuté 2026-09-06 (Ján Letko): merať sa bude.** Čas je informatívny a sám osebe nič nevyvoláva — pri spolutvorcovi dokumentu bude krátky oprávnene, pri novom človeku je to silný signál. **Následok teda žiadny nie je**, a to je zámer, nie prehliadnutie.
-  - [ ] Čo z toho vyplýva a je ešte otvorené: (a) človeku sa musí **povedať, že sa to meria** — veta na potvrdzovacej obrazovke, nie mlčky; (b) údaj potrebuje **retenciu** — na rozdiel od potvrdenia, ktoré musí prežiť, meranie nie; (c) meria sa na klientovi, takže je **orientačné** a nesmie sa použiť ako dôkaz (kto nechá kartu otvorenú, má hodinu)
-  - [ ] Implementácia: `acknowledgements.readingSeconds` (čas od otvorenia po potvrdenie, meraný na klientovi, teda **orientačný** — kto chce, nechá kartu otvorenú)
+  - [x] **Tri následky vybavené 2026-09-06 (Ján Letko):**
+        (a) **transparentnosť** — človek vidí svoj čas aj vetu, že je informatívny a nie je súčasťou potvrdenia. Meranie, o ktorom sa dozvie až zo zásad ochrany údajov, je presne to, čo pri audite robí problém;
+        (b) **retencia 1 rok** — TTL index, samostatná kolekcia;
+        (c) **nikdy dôkaz** — a preto **nie** `acknowledgements.readingSeconds`. Údaj s vlastnou retenciou nesmie bývať v zázname, ktorý musí prežiť: TTL maže celé dokumenty, nie polia, a čokoľvek v `acknowledgements` sa raz ocitne vo výkaze pre právnika.
+  - [ ] Implementácia: samostatná kolekcia `reading_times` (companyCode, personId, documentId, versionId, seconds), TTL 365 dní, unikátny index nad (personId, versionId). Meria sa **viditeľný čas** (Page Visibility API) — karta na pozadí sa nepočíta. Server ukladá `max()`, takže hodnota je monotónna a druhé otvorenie ju nezníži.
 - [ ] **O15, O16 — právny základ a retencia** `acknowledgements` (DPO, právnik) — rozširuje D10
 - [ ] Zoznam dokumentov prvej vlny + kto je ich kurátor
 
@@ -162,8 +165,11 @@
 
 **I2. Rozsah B `[2–3,5 týždňa]`**
 
-- [ ] Kolekcia `onboarding_tracks`; progres sa **odvodzuje**, neukladá — **D27**
-- [ ] Guided reading: poradie krokov, návrat na rozpracované
+- [x] Kolekcia `onboarding_tracks`; progres sa **odvodzuje**, neukladá — **D27** ✅ 2026-08-28
+- [x] **Zápis trás** ✅ 2026-09-06 (`a321b39`) — `createTrack`, `renameTrack`, `setTrackSteps`, `setTrackActive`, `allTracks`, `trackByKey`. Poradie je poradie v poli, nie číslo zvonka; nová trasa je prázdna a **neaktívna**; vypnutie trasu **nemaže** (D24). 14 testov.
+- [x] **Obrazovka kurátora** ✅ 2026-09-06 (`485f2a1`) — `/kniznica/trasy` + detail. Kroky sa posielajú celé pri každej zmene, takže poradie je na jednom mieste a dve otvorené záložky sa navzájom potichu neprepíšu.
+- [x] **Guided reading: poradie krokov, návrat na rozpracované** ✅ 2026-09-06 — `/dokumenty` už kroky nesplošťuje (`flatMap` zahodil poradie aj „kde som skončil"). Zoznam je po trasách, prvý nedokončený krok je zvýraznený.
+- [ ] **Čas čítania** — kolekcia `reading_times`, TTL 1 rok, viditeľný čas cez Page Visibility API, veta pre človeka. Podrobnosti v I0/O14 vyššie.
 - [ ] HR dashboard: podľa dokumentu / osoby / trasy + export
 - [ ] Hromadné pozvánky a pripomienky z UI
 - [x] Opätovné potvrdenie pri novej verzii ✅ — cez pridelenie s povinným dôvodom (**D37**, nie D30)
@@ -234,6 +240,9 @@
   - [ ] **Nastaviť `ALLOWED_EMAILS` vo Verceli** (production aj preview) a overiť **behom, nie výpisom** — `vercel env pull` vracia hodnotu prázdnu. Až potom odstrániť `POVOLENE_EMAILY`.
 - [ ] `chunker.mjs` a jeho `.d.mts` majú slovenské názvy **zámerne** — sú to jeho parametre a prekladajú sa v `chunkingProfile.ts`. Nechať tak.
 - [ ] `TagSelect.tsx` a spol. — po premenovaní zostali rozpísané skratky vlastností (`name: name,`); kozmetika, urobiť pri najbližšom dotyku súboru
+- [ ] **Názvy indexov v Mongo** — `tenant_kluc_unique`, `tenant_utvar_unique`, `tenant_priecinok_unique`, `potvrdenie_unique` (`scripts/onboarding_init.mjs`, tam aj lokálne `kluc:`). Premenovanie = vytvoriť nový a zahodiť starý; pri `acknowledgements` **v tomto poradí**, nikdy naopak — je to unikátny index nad právnymi dôkazmi.
+- [ ] **Slovenské identifikátory v `lib/`** — `vercel.ts` (`stav`, `telo`, `volaj`, `vProjekte`), `oauth.ts` + `secrets.ts` (hodnoty `"nastavene"`, `"nenastavene"`, `"necitatelne"`, `"z-prostredia"`, pole `zdroj`), `admin/` (`nastaveneCez`, segment `[kod]`). Čisté premenovanie, bez dopadu na dáta.
+- [ ] **Routy → anglické** ✅ rozhodnuté 2026-09-06 (Ján Letko): **preložiť, nie premenovať.** `/dokumenty` → `/documents`, `/kniznica` → `/library`, `/osoby` → `/people`, `/organizacia` → `/organisation`, `/prihlasenie` → `/sign-in`, `/sada` → `/golden-set`, `/kniznica/trasy` → `/library/tracks`. Staré adresy zostávajú natrvalo cez 307 v middleware — rovnaký vzor ako pri query parametroch v `urlParams.ts`. **Pozor na:** `NEXTAUTH` callback a `signIn`/`signOut` cesty, odkazy v e-mailoch (`lib/email*.ts`), `redirects.ts`, `revalidatePath()` vo všetkých akciách. **Až po rozsahu C.**
 
 ### M. Správa tenantov — **Fáza 5b** 🟡 → `docs/SPRAVA_TENANTOV.md`
 
