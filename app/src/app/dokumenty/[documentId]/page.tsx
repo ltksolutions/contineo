@@ -19,6 +19,7 @@ import { loadDocumentFor, effectiveVersion } from "@/lib/documents"
 import { buildStatement, hasAcknowledged } from "@/lib/acknowledgements"
 import { dictionary, formatDate } from "@/lib/i18n"
 import AcknowledgeButton from "@/components/AcknowledgeButton"
+import ReadingTimer from "@/components/ReadingTimer"
 
 export const dynamic = "force-dynamic"
 
@@ -63,6 +64,20 @@ export default async function DocumentPage({ params }: { params: Promise<{ docum
           <article className="odpoved" style={{ whiteSpace: "pre-wrap", lineHeight: 1.7 }}>
             {version.version.markdown ?? doc.markdown ?? ""}
           </article>
+
+          {/*
+            Merač je pod textom, nie nad ním. Hore by z neho bola stopka nad
+            hlavou; údaj nemá následok a nemá tak ani vyzerať.
+          */}
+          <ReadingTimer
+            documentId={doc.documentId}
+            labels={{
+              elapsed: t.readingElapsed,
+              note: t.readingNote,
+              seconds: t.readingSeconds,
+              minutes: t.readingMinutes,
+            }}
+          />
 
           <section className="karta" style={{ padding: 20, marginTop: 32 }}>
             <h2 style={{ fontSize: 17, margin: "0 0 10px" }}>{t.confirmHeading}</h2>

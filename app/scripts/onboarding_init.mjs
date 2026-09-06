@@ -116,6 +116,20 @@ const PLAN = [
     ],
   },
   {
+    kolekcia: "reading_times",
+    indexy: [
+      { kluc: { personId: 1, versionId: 1 }, opts: { unique: true, name: "reading_person_version_unique" },
+        preco: "jeden zaznam na osobu a znenie \u2014 uklada sa maximum, nie kazde meranie" },
+      { kluc: { companyCode: 1, documentId: 1 }, opts: { name: "reading_by_document" },
+        preco: "prehlad casov nad jednym dokumentom" },
+      // TTL: rok (rozhodnutie 2026-09-06). Cas citania nie je dokaz a na rozdiel
+      // od potvrdenia prezit nemusi. TTL maze cele dokumenty, nie polia \u2014 preto
+      // je to samostatna kolekcia a nie pole v `acknowledgements`.
+      { kluc: { updatedAt: 1 }, opts: { name: "reading_ttl", expireAfterSeconds: 365 * 24 * 60 * 60 },
+        preco: "retencia 1 rok" },
+    ],
+  },
+  {
     kolekcia: "onboarding_tracks",
     indexy: [
       { kluc: { companyCode: 1, key: 1 }, opts: { unique: true, name: "tenant_kluc_unique" },

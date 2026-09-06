@@ -97,6 +97,15 @@ interface Dictionary {
     blocked: string
     blockedReason: Record<string, string>
     version: (label: string, from: string) => string
+    /**
+     * Čas čítania (O14). Je **informatívny** a človek to musí vidieť —
+     * meranie, o ktorom sa dozvie až zo zásad ochrany údajov, je presne to,
+     * čo pri audite robí problém.
+     */
+    readingElapsed: (formatted: string) => string
+    readingNote: string
+    readingSeconds: (n: number) => string
+    readingMinutes: (n: number) => string
     confirmHeading: string
     confirmButton: string
     confirmPending: string
@@ -1130,6 +1139,10 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       "document-unavailable": "dokument nie je dostupný",
     },
     version: (label, from) => `verzia ${label}, platná od ${from}`,
+    readingElapsed: t => `Čas čítania: ${t}`,
+    readingNote: "Zaznamenáva sa, je informatívny a nie je súčasťou potvrdenia.",
+    readingSeconds: n => `${n} s`,
+    readingMinutes: n => (n === 1 ? "1 minúta" : n >= 2 && n <= 4 ? `${n} minúty` : `${n} minút`),
     confirmHeading: "Potvrdenie oboznámenia",
     confirmButton: "Potvrdzujem",
     confirmPending: "Ukladá sa…",
@@ -2393,6 +2406,10 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       "document-unavailable": "dokument není dostupný",
     },
     version: (label, from) => `verze ${label}, platná od ${from}`,
+    readingElapsed: t => `Čas čtení: ${t}`,
+    readingNote: "Zaznamenává se, je informativní a není součástí potvrzení.",
+    readingSeconds: n => `${n} s`,
+    readingMinutes: n => (n === 1 ? "1 minuta" : n >= 2 && n <= 4 ? `${n} minuty` : `${n} minut`),
     confirmHeading: "Potvrzení seznámení",
     confirmButton: "Potvrzuji",
     confirmPending: "Ukládá se…",
@@ -3656,6 +3673,10 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       "document-unavailable": "the document is not available",
     },
     version: (label, from) => `version ${label}, effective from ${from}`,
+    readingElapsed: t => `Reading time: ${t}`,
+    readingNote: "It is recorded, informative, and not part of the acknowledgement.",
+    readingSeconds: n => `${n} s`,
+    readingMinutes: n => (n === 1 ? "1 minute" : `${n} minutes`),
     confirmHeading: "Acknowledgement",
     confirmButton: "I confirm",
     confirmPending: "Saving…",
