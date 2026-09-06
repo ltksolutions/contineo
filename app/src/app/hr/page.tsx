@@ -50,8 +50,11 @@ export default async function HrOverviewPage({
 
       <Notice message={message} error={error === "1"} back="/hr" />
 
-      <p style={{ margin: "0 0 24px" }}>
+      <p style={{ margin: "0 0 24px", display: "flex", gap: 8, flexWrap: "wrap" }}>
         <Link className="tlacidlo" href="/hr/pridelit">{t.assign}</Link>
+        <Link className="tlacidlo tlacidlo--tiche" href="/hr/overview">
+          {dictionary(language).hr.report.heading}
+        </Link>
       </p>
 
       {overview.length === 0 ? (

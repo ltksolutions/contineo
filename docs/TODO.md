@@ -170,7 +170,12 @@
 - [x] **Obrazovka kurátora** ✅ 2026-09-06 (`485f2a1`) — `/kniznica/trasy` + detail. Kroky sa posielajú celé pri každej zmene, takže poradie je na jednom mieste a dve otvorené záložky sa navzájom potichu neprepíšu.
 - [x] **Guided reading: poradie krokov, návrat na rozpracované** ✅ 2026-09-06 — `/dokumenty` už kroky nesplošťuje (`flatMap` zahodil poradie aj „kde som skončil"). Zoznam je po trasách, prvý nedokončený krok je zvýraznený.
 - [ ] **Čas čítania** — kolekcia `reading_times`, TTL 1 rok, viditeľný čas cez Page Visibility API, veta pre človeka. Podrobnosti v I0/O14 vyššie.
-- [ ] HR dashboard: podľa dokumentu / osoby / trasy + export
+- [x] **HR výkaz: podľa dokumentu / osoby / trasy + export** ✅ 2026-09-06 — `/hr/overview`, výpočet v `lib/hrReport.ts`, CSV cez `/hr/overview/csv`.
+      **Menovateľ je pridelenie + trasa** (rozhodnuté 2026-09-06): sú to jediné dva spôsoby, ako sa dokument k človeku dostane. „Všetci v organizácii" by nafúkol každé číslo o ľudí, ktorých sa vec netýka; „len pridelenia" by mlčky vynechal onboarding cez trasu.
+      Jedna povinnosť na osobu a znenie — dokument z trasy aj z pridelenia je jedna povinnosť s dvomi dôvodmi, inak sa dá súčet nafúknuť dvojitým pridelením.
+      Export ide z **toho istého** zoznamu ako obrazovka, nie z druhého dotazu — výkaz, ktorý sa nezhoduje s obrazovkou, sa rozíde práve vtedy, keď si to nikto nevšimne.
+      Zhrnutie používa **medián**, nie priemer: jeden človek na strope štyroch hodín posunie priemer o hodiny.
+  - [ ] **Do záznamu o spracúvaní (O15/O16):** HR vidí čas čítania **aj pri jednotlivých ľuďoch** (rozhodnuté 2026-09-06). Je to údaj o správaní konkrétnej osoby zobrazený inej osobe — patrí do záznamu a do informovania zamestnancov, nie len do kódu. Zoradiť sa podľa neho nedá zámerne (rebríček by z merania bez následku následok vyrobil), ale to samo osebe nestačí.
 - [ ] Hromadné pozvánky a pripomienky z UI
 - [x] Opätovné potvrdenie pri novej verzii ✅ — cez pridelenie s povinným dôvodom (**D37**, nie D30)
 - [x] Tenant podľa hostiteľa; neznámy hostiteľ = zakázaný ✅ 2026-08-28 — **D29**. `app/src/lib/tenants.ts` (kolekcia `tenants`, cache kladných aj záporných výsledkov), `onboardingContext()` v `session.ts` skladá „tenant + osoba + patria k sebe" na jednom mieste — keby si to každá stránka robila sama, jedna z nich raz niektorú časť vynechá a vyzerá to ako fungujúca stránka. `scripts/tenant_set.mjs` + unikátny index `hostname_unique` (doména patrí najviac jednému tenantovi — databáza to drží aj vtedy, keď to skript prehliadne). 25 testov.
@@ -237,7 +242,9 @@
 - [x] `osoby/actions.ts` ✅ 2026-09-04 — spolu s i18n 3a (`confirmation`, kľúč `error`)
 - [x] `hr/actions.ts` a `hr/pridelit` ✅ 2026-09-04 — `reason`, `addresses`, `all`; pri tom sa ukázalo, že po chybe sa vyplnený formulár nevracal
 - [x] Premenná prostredia `POVOLENE_EMAILY` → `ALLOWED_EMAILS` ✅ 2026-09-04 — preložená, nie premenovaná: `auth.ts` číta novú, a keď nie je, starú. Prázdna nová starú neumlčí.
-  - [ ] **Nastaviť `ALLOWED_EMAILS` vo Verceli** (production aj preview) a overiť **behom, nie výpisom** — `vercel env pull` vracia hodnotu prázdnu. Až potom odstrániť `POVOLENE_EMAILY`.
+  - [x] **`ALLOWED_EMAILS` vo Verceli nastavená** ✅ 2026-09-06 — hodnota je **jedna adresa správcu**, nie doména. Zoznam je núdzová brzda pred `persons`, nie zoznam používateľov: kto je na ňom, dostane sa dnu aj bez `persons` a aj pri nedostupnom Atlase. `@futbalsfz.sk` by znamenalo, že celý zväz obíde evidenciu prístupov.
+  - [ ] Odstrániť `POVOLENE_EMAILY` z Vercelu — až po overení prihlásením, nie výpisom (`vercel env pull` vracia hodnotu prázdnu)
+  - [ ] `EMAIL_MENO_ODOSIELATELA` a `EMAIL_ODOSIELATEL` → `EMAIL_SENDER_NAME`, `EMAIL_SENDER` — rovnaký vzor: **preložiť, nie premenovať** (kód číta novú, pri prázdnej starú), aby nasadenie nespadlo medzi zmenou kódu a zmenou premennej
 - [ ] `chunker.mjs` a jeho `.d.mts` majú slovenské názvy **zámerne** — sú to jeho parametre a prekladajú sa v `chunkingProfile.ts`. Nechať tak.
 - [ ] `TagSelect.tsx` a spol. — po premenovaní zostali rozpísané skratky vlastností (`name: name,`); kozmetika, urobiť pri najbližšom dotyku súboru
 - [ ] **Názvy indexov v Mongo** — `tenant_kluc_unique`, `tenant_utvar_unique`, `tenant_priecinok_unique`, `potvrdenie_unique` (`scripts/onboarding_init.mjs`, tam aj lokálne `kluc:`). Premenovanie = vytvoriť nový a zahodiť starý; pri `acknowledgements` **v tomto poradí**, nikdy naopak — je to unikátny index nad právnymi dôkazmi.

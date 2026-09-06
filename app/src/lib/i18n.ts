@@ -269,6 +269,30 @@ interface Dictionary {
   }
   /** Prideľovanie noriem (HR). */
   hr: {
+    /**
+     * Výkaz „ako je na tom organizácia" (D33). Iný pohľad než `overview`:
+     * ten je o prideleniach, teda o tom, čo kurátor poslal. Tento je o tom,
+     * čo z toho vyšlo — po dokumentoch, ľuďoch a trasách.
+     */
+    report: {
+      heading: string
+      intro: string
+      views: Record<"document" | "person" | "track", string>
+      empty: string
+      done: (done: number, total: number) => string
+      missing: (n: number) => string
+      complete: string
+      medianReading: string
+      noReading: string
+      readingNote: string
+      export: string
+      open: string
+      /** Riadky detailu jednej položky. */
+      acknowledgedAt: string
+      notAcknowledged: string
+      readingTime: string
+      source: Record<"assignment" | "track" | "both", string>
+    }
     overview: {
       heading: string
       intro: string
@@ -1291,6 +1315,24 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     citationsUnverified: "citácie neoverené",
   },
   hr: {
+    report: {
+      heading: "Výkaz potvrdení",
+      intro: "Kto čo má potvrdiť a kto to už potvrdil. Do menovateľa vstupuje ten, komu bol dokument pridelený alebo ho má ako krok v zapnutej trase — nie všetci v organizácii.",
+      views: { document: "Podľa dokumentu", person: "Podľa osoby", track: "Podľa trasy" },
+      empty: "Zatiaľ nie je čo vykazovať. Povinnosť vzniká pridelením alebo krokom v zapnutej trase.",
+      done: (done, total) => `${done} z ${total}`,
+      missing: n => (n === 1 ? "chýba 1" : n >= 2 && n <= 4 ? `chýbajú ${n}` : `chýba ${n}`),
+      complete: "hotové",
+      medianReading: "medián čítania",
+      noReading: "nemerané",
+      readingNote: "Čas čítania je informatívny. Meria sa na klientovi, takže sa ním nič nedokazuje — kto nechá kartu otvorenú, „číta“ hodinu.",
+      export: "Stiahnuť ako CSV",
+      open: "Rozpísať",
+      acknowledgedAt: "potvrdené",
+      notAcknowledged: "nepotvrdené",
+      readingTime: "čítal",
+      source: { assignment: "pridelenie", track: "trasa", both: "pridelenie aj trasa" },
+    },
     overview: {
       heading: "Pridelené normy",
       intro: "Čo bolo komu uložené a kto to už potvrdil. Počty sa počítajú pri zobrazení — a týkajú sa ľudí, ktorí do skupiny patria",
@@ -2558,6 +2600,24 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     citationsUnverified: "citace neověřené",
   },
   hr: {
+    report: {
+      heading: "Výkaz potvrzení",
+      intro: "Kdo co má potvrdit a kdo to už potvrdil. Do jmenovatele vstupuje ten, komu byl dokument přidělen nebo ho má jako krok v zapnuté trase — ne všichni v organizaci.",
+      views: { document: "Podle dokumentu", person: "Podle osoby", track: "Podle trasy" },
+      empty: "Zatím není co vykazovat. Povinnost vzniká přidělením nebo krokem v zapnuté trase.",
+      done: (done, total) => `${done} z ${total}`,
+      missing: n => (n === 1 ? "chybí 1" : `chybí ${n}`),
+      complete: "hotovo",
+      medianReading: "medián čtení",
+      noReading: "neměřeno",
+      readingNote: "Čas čtení je informativní. Měří se na klientovi, takže se jím nic nedokazuje — kdo nechá kartu otevřenou, „čte“ hodinu.",
+      export: "Stáhnout jako CSV",
+      open: "Rozepsat",
+      acknowledgedAt: "potvrzeno",
+      notAcknowledged: "nepotvrzeno",
+      readingTime: "četl",
+      source: { assignment: "přidělení", track: "trasa", both: "přidělení i trasa" },
+    },
     overview: {
       heading: "Přidělené předpisy",
       intro: "Co bylo komu uloženo a kdo to už potvrdil. Počty se počítají při zobrazení — a týkají se lidí, kteří do skupiny patří",
@@ -3824,6 +3884,24 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     citationsUnverified: "citations not verified",
   },
   hr: {
+    report: {
+      heading: "Acknowledgement report",
+      intro: "Who has to acknowledge what, and who already did. The denominator counts a person when the document was assigned to them or is a step in a track they are on — not everyone in the organisation.",
+      views: { document: "By document", person: "By person", track: "By track" },
+      empty: "There is nothing to report yet. A duty comes from an assignment or from a step in an active track.",
+      done: (done, total) => `${done} of ${total}`,
+      missing: n => `${n} missing`,
+      complete: "complete",
+      medianReading: "median reading",
+      noReading: "not measured",
+      readingNote: "Reading time is informative. It is measured in the browser, so it proves nothing — leave the tab open and you “read” for an hour.",
+      export: "Download as CSV",
+      open: "Break down",
+      acknowledgedAt: "acknowledged",
+      notAcknowledged: "not acknowledged",
+      readingTime: "read for",
+      source: { assignment: "assignment", track: "track", both: "assignment and track" },
+    },
     overview: {
       heading: "Assigned documents",
       intro: "What has been assigned to whom and who has already acknowledged it. The counts are computed when the page is opened — and cover the people who belong to the group",
