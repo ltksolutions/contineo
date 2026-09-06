@@ -80,8 +80,12 @@ try {
   process.exit(1)
 }
 
-// vectorPath rovnako ako defaultProfile() v tenantProfile.ts
-const vectorPath = process.env.VECTOR_PATH ?? "text"
+// vectorPath rovnako ako defaultProfile() v tenantProfile.ts.
+// Zámerne `||`, nie `??`: `vercel env pull` zapisuje premenné bez hodnoty ako
+// `VECTOR_PATH=`, čo je prázdny reťazec, nie `undefined` — `??` ho pustí ďalej
+// a $vectorSearch potom spadne na `Path '' is not indexed`. Rovnaká pasca je
+// popísaná v auth.ts pri ALLOWED_EMAILS.
+const vectorPath = process.env.VECTOR_PATH || "text"
 
 // ── metriky ──────────────────────────────────────────────────────────────────
 const prekryv = (a, b) => {
