@@ -37,7 +37,9 @@ vi.mock("../src/lib/mongodb", () => ({
   getClient: vi.fn(),
 }))
 
-const { audit } = vi.hoisted(() => ({ audit: vi.fn(async () => {}) }))
+const { audit } = vi.hoisted(() => ({
+  audit: vi.fn<(record: { subject: string; changes?: unknown }) => Promise<void>>(async () => {}),
+}))
 vi.mock("../src/lib/audit", async importOriginal => {
   const original = await importOriginal<typeof import("../src/lib/audit")>()
   return { ...original, writeAudit: audit }
@@ -215,7 +217,7 @@ describe("premenovanie a zoznam", () => {
     collection(TRACKS_COLLECTION).findOne.mockResolvedValue(existingTrack())
     await renameTrack(COMPANY, "novy-zamestnanec", { title: "Nástup" }, ACTOR)
 
-    const record = audit.mock.calls[0][0] as unknown as { subject: string; changes?: unknown }
+    const record = audit.mock.calls[0][0]
     expect(record.subject).toBe("track")
     expect(JSON.stringify(record.changes)).toContain("Nástup")
   })
