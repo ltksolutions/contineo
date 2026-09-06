@@ -34,118 +34,118 @@ if (!URI) {
  */
 const PLAN = [
   {
-    kolekcia: "persons",
-    indexy: [
-      { kluc: { companyCode: 1, email: 1 }, opts: { unique: true, name: "tenant_email_unique" },
-        preco: "jedna osoba = jedna adresa v rámci tenanta" },
-      { kluc: { email: 1 }, opts: { name: "email" },
-        preco: "prihlásenie hľadá podľa adresy bez znalosti tenanta" },
-      { kluc: { companyCode: 1, tracks: 1, status: 1 }, opts: { name: "tenant_trasa_stav" },
-        preco: "kto z tejto trasy ešte nemá hotovo" },
-      { kluc: { companyCode: 1, departmentPath: 1, status: 1 }, opts: { name: "tenant_utvar_stav" },
-        preco: "kto patrí do oddelenia vrátane podriadených (D49)" },
-      { kluc: { companyCode: 1, "departmentHistory.departmentPath": 1 },
-        opts: { name: "tenant_utvar_historia" },
-        preco: "kto v oddelení kedysi bol a odišiel bez potvrdenia (D50)" },
-      { kluc: { companyCode: 1, "groupHistory.group": 1 }, opts: { name: "tenant_skupina_historia" },
-        preco: "kto v skupine kedysi bol a odišiel bez potvrdenia (D50)" },
+    collection: "persons",
+    indexes: [
+      { key: { companyCode: 1, email: 1 }, opts: { unique: true, name: "tenant_email_unique" },
+        why: "jedna osoba = jedna adresa v rámci tenanta" },
+      { key: { email: 1 }, opts: { name: "email" },
+        why: "prihlásenie hľadá podľa adresy bez znalosti tenanta" },
+      { key: { companyCode: 1, tracks: 1, status: 1 }, opts: { name: "tenant_track_status" },
+        why: "kto z tejto trasy ešte nemá hotovo" },
+      { key: { companyCode: 1, departmentPath: 1, status: 1 }, opts: { name: "tenant_department_status" },
+        why: "kto patrí do oddelenia vrátane podriadených (D49)" },
+      { key: { companyCode: 1, "departmentHistory.departmentPath": 1 },
+        opts: { name: "tenant_department_history" },
+        why: "kto v oddelení kedysi bol a odišiel bez potvrdenia (D50)" },
+      { key: { companyCode: 1, "groupHistory.group": 1 }, opts: { name: "tenant_group_history" },
+        why: "kto v skupine kedysi bol a odišiel bez potvrdenia (D50)" },
     ],
   },
   {
-    kolekcia: "departments",
-    indexy: [
-      { kluc: { companyCode: 1, id: 1 }, opts: { unique: true, name: "tenant_utvar_unique" },
-        preco: "identifikátor oddelenia je jedinečný v rámci tenanta" },
-      { kluc: { companyCode: 1, parentId: 1 }, opts: { name: "podla_nadriadeneho" },
-        preco: "vykreslenie stromu ide po úrovniach" },
+    collection: "departments",
+    indexes: [
+      { key: { companyCode: 1, id: 1 }, opts: { unique: true, name: "tenant_department_unique" },
+        why: "identifikátor oddelenia je jedinečný v rámci tenanta" },
+      { key: { companyCode: 1, parentId: 1 }, opts: { name: "by_parent" },
+        why: "vykreslenie stromu ide po úrovniach" },
     ],
   },
   {
-    kolekcia: "cms_folders",
-    indexy: [
-      { kluc: { companyCode: 1, id: 1 }, opts: { unique: true, name: "tenant_priecinok_unique" },
-        preco: "identifikátor priečinka je jedinečný v rámci tenanta (D56)" },
-      { kluc: { companyCode: 1, parentId: 1 }, opts: { name: "podla_nadriadeneho" },
-        preco: "vykreslenie stromu ide po úrovniach" },
+    collection: "cms_folders",
+    indexes: [
+      { key: { companyCode: 1, id: 1 }, opts: { unique: true, name: "tenant_folder_unique" },
+        why: "identifikátor priečinka je jedinečný v rámci tenanta (D56)" },
+      { key: { companyCode: 1, parentId: 1 }, opts: { name: "by_parent" },
+        why: "vykreslenie stromu ide po úrovniach" },
     ],
   },
   {
-    kolekcia: "documents",
-    indexy: [
-      { kluc: { companyCode: 1, folderPath: 1 }, opts: { name: "tenant_priecinok" },
-        preco: "filter na priečinok vrátane podpriečinkov (D56)" },
-      { kluc: { companyCode: 1, category: 1 }, opts: { name: "tenant_druh" },
-        preco: "filter na druh dokumentu" },
-      { kluc: { companyCode: 1, tags: 1 }, opts: { name: "tenant_znacky" },
-        preco: "filter na značku" },
+    collection: "documents",
+    indexes: [
+      { key: { companyCode: 1, folderPath: 1 }, opts: { name: "tenant_folder" },
+        why: "filter na priečinok vrátane podpriečinkov (D56)" },
+      { key: { companyCode: 1, category: 1 }, opts: { name: "tenant_category" },
+        why: "filter na druh dokumentu" },
+      { key: { companyCode: 1, tags: 1 }, opts: { name: "tenant_tags" },
+        why: "filter na značku" },
     ],
   },
   {
-    kolekcia: "audit",
-    indexy: [
-      { kluc: { companyCode: 1, at: -1 }, opts: { name: "by_time" },
-        preco: "výpis auditu, najnovšie hore (D51)" },
-      { kluc: { companyCode: 1, subject: 1, at: -1 }, opts: { name: "by_subject" },
-        preco: "filter na osoby, oddelenia, pridelenia" },
-      { kluc: { companyCode: 1, targetId: 1, at: -1 }, opts: { name: "by_target" },
-        preco: "história jednej osoby alebo jedného oddelenia" },
+    collection: "audit",
+    indexes: [
+      { key: { companyCode: 1, at: -1 }, opts: { name: "by_time" },
+        why: "výpis auditu, najnovšie hore (D51)" },
+      { key: { companyCode: 1, subject: 1, at: -1 }, opts: { name: "by_subject" },
+        why: "filter na osoby, oddelenia, pridelenia" },
+      { key: { companyCode: 1, targetId: 1, at: -1 }, opts: { name: "by_target" },
+        why: "história jednej osoby alebo jedného oddelenia" },
     ],
   },
   {
-    kolekcia: "acknowledgements",
-    indexy: [
-      { kluc: { companyCode: 1, personId: 1, versionId: 1 },
-        opts: { unique: true, name: "potvrdenie_unique",
+    collection: "acknowledgements",
+    indexes: [
+      { key: { companyCode: 1, personId: 1, versionId: 1 },
+        opts: { unique: true, name: "acknowledgement_unique",
                 partialFilterExpression: { type: "acknowledgement" } },
-        preco: "dvojité potvrdenie tej istej verzie nie je chyba používateľa, ale naša" },
-      { kluc: { companyCode: 1, documentId: 1, versionId: 1, acknowledgedAt: -1 },
-        opts: { name: "podla_dokumentu" },
-        preco: "dashboard „kto potvrdil túto smernicu“" },
-      { kluc: { companyCode: 1, personId: 1, acknowledgedAt: -1 },
-        opts: { name: "podla_osoby" },
-        preco: "história jednej osoby" },
+        why: "dvojité potvrdenie tej istej verzie nie je chyba používateľa, ale naša" },
+      { key: { companyCode: 1, documentId: 1, versionId: 1, acknowledgedAt: -1 },
+        opts: { name: "by_document" },
+        why: "dashboard „kto potvrdil túto smernicu“" },
+      { key: { companyCode: 1, personId: 1, acknowledgedAt: -1 },
+        opts: { name: "by_person" },
+        why: "história jednej osoby" },
     ],
   },
   {
-    kolekcia: "tenants",
-    indexy: [
-      { kluc: { companyCode: 1 }, opts: { unique: true, name: "tenant_unique" },
-        preco: "jeden zaznam na tenanta" },
-      { kluc: { hostnames: 1 }, opts: { unique: true, name: "hostname_unique" },
-        preco: "domena patri najviac jednemu tenantovi \u2014 databaza to drzi aj vtedy, ked to skript prehliadne" },
+    collection: "tenants",
+    indexes: [
+      { key: { companyCode: 1 }, opts: { unique: true, name: "tenant_unique" },
+        why: "jeden zaznam na tenanta" },
+      { key: { hostnames: 1 }, opts: { unique: true, name: "hostname_unique" },
+        why: "domena patri najviac jednemu tenantovi \u2014 databaza to drzi aj vtedy, ked to skript prehliadne" },
     ],
   },
   {
-    kolekcia: "reading_times",
-    indexy: [
-      { kluc: { personId: 1, versionId: 1 }, opts: { unique: true, name: "reading_person_version_unique" },
-        preco: "jeden zaznam na osobu a znenie \u2014 uklada sa maximum, nie kazde meranie" },
-      { kluc: { companyCode: 1, documentId: 1 }, opts: { name: "reading_by_document" },
-        preco: "prehlad casov nad jednym dokumentom" },
+    collection: "reading_times",
+    indexes: [
+      { key: { personId: 1, versionId: 1 }, opts: { unique: true, name: "reading_person_version_unique" },
+        why: "jeden zaznam na osobu a znenie \u2014 uklada sa maximum, nie kazde meranie" },
+      { key: { companyCode: 1, documentId: 1 }, opts: { name: "reading_by_document" },
+        why: "prehlad casov nad jednym dokumentom" },
       // TTL: rok (rozhodnutie 2026-09-06). Cas citania nie je dokaz a na rozdiel
       // od potvrdenia prezit nemusi. TTL maze cele dokumenty, nie polia \u2014 preto
       // je to samostatna kolekcia a nie pole v `acknowledgements`.
-      { kluc: { updatedAt: 1 }, opts: { name: "reading_ttl", expireAfterSeconds: 365 * 24 * 60 * 60 },
-        preco: "retencia 1 rok" },
+      { key: { updatedAt: 1 }, opts: { name: "reading_ttl", expireAfterSeconds: 365 * 24 * 60 * 60 },
+        why: "retencia 1 rok" },
     ],
   },
   {
-    kolekcia: "onboarding_tracks",
-    indexy: [
-      { kluc: { companyCode: 1, key: 1 }, opts: { unique: true, name: "tenant_kluc_unique" },
-        preco: "kľúč trasy je jedinečný v rámci tenanta" },
+    collection: "onboarding_tracks",
+    indexes: [
+      { key: { companyCode: 1, key: 1 }, opts: { unique: true, name: "tenant_key_unique" },
+        why: "kľúč trasy je jedinečný v rámci tenanta" },
     ],
   },
   {
-    kolekcia: "assignments",
-    indexy: [
-      { kluc: { companyCode: 1, "subject.versionId": 1 }, opts: { name: "podla_znenia" },
-        preco: "prehľad „kto má potvrdiť toto znenie“" },
-      { kluc: { companyCode: 1, revokedAt: 1, "audience.kind": 1, "audience.value": 1 },
-        opts: { name: "podla_publika" },
-        preco: "widget sa pri každom otvorení úvodnej strany pýta, čo je pridelené mne" },
-      { kluc: { companyCode: 1, assignedAt: -1 }, opts: { name: "podla_casu" },
-        preco: "HR prehľad, najnovšie hore" },
+    collection: "assignments",
+    indexes: [
+      { key: { companyCode: 1, "subject.versionId": 1 }, opts: { name: "by_version" },
+        why: "prehľad „kto má potvrdiť toto znenie“" },
+      { key: { companyCode: 1, revokedAt: 1, "audience.kind": 1, "audience.value": 1 },
+        opts: { name: "by_audience" },
+        why: "widget sa pri každom otvorení úvodnej strany pýta, čo je pridelené mne" },
+      { key: { companyCode: 1, assignedAt: -1 }, opts: { name: "by_time" },
+        why: "HR prehľad, najnovšie hore" },
     ],
   },
 ]
@@ -159,7 +159,7 @@ try {
   const db = client.db(DB)
   const existing = (await db.listCollections().toArray()).map(c => c.name)
 
-  for (const { kolekcia: collection, indexy: indexes } of PLAN) {
+  for (const { collection, indexes } of PLAN) {
     if (existing.includes(collection)) {
       console.log(`${INFO} kolekcia ${collection} už existuje`)
     } else if (statusOnly) {
@@ -171,9 +171,9 @@ try {
     }
 
     const col = db.collection(collection)
-    const uz = await col.indexes()
-    for (const { kluc: key, opts, preco: why } of indexes) {
-      const names = uz.map(i => i.name)
+    const existingIndexes = await col.indexes()
+    for (const { key, opts, why } of indexes) {
+      const names = existingIndexes.map(i => i.name)
       if (names.includes(opts.name)) {
         console.log(`   ${INFO} index ${opts.name} už existuje`)
         continue
