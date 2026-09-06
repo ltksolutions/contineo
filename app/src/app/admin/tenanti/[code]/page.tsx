@@ -55,7 +55,7 @@ function ProviderRow({
         <h2 style={{ fontSize: 17, margin: 0 }}>{t.heading(name)}</h2>
         <span
           className="stitok"
-          style={s.state === "necitatelne"
+          style={s.state === "unreadable"
             ? { background: "var(--warn-bg)", color: "var(--warn-fg)" }
             : undefined}
         >
@@ -75,7 +75,7 @@ function ProviderRow({
         <input type="hidden" name="companyCode" value={tenant.companyCode} />
         <input type="hidden" name="provider" value={provider} />
 
-        <Field name="clientId" label={t.clientId} value={s.zdroj === "tenant" ? s.clientId : ""} />
+        <Field name="clientId" label={t.clientId} value={s.source === "tenant" ? s.clientId : ""} />
         <Field name="clientSecret" label={t.clientSecret} type="password" hint={t.clientSecretHint} />
 
         {provider === "microsoft" ? (
@@ -107,7 +107,7 @@ function ProviderRow({
         </div>
       </form>
 
-      {s.zdroj === "tenant" && (
+      {s.source === "tenant" && (
         <form action={deleteSignInAction} style={{ display: "grid", gap: 10, borderTop: "1px solid var(--line)", paddingTop: 14 }}>
           <input type="hidden" name="companyCode" value={tenant.companyCode} />
           <input type="hidden" name="provider" value={provider} />
@@ -141,14 +141,14 @@ function DomainRow({ s, language }: { s: DomainStatus; language?: UiLanguage }) 
   if (s.skipped) {
     return <li className="tichy">{t.nothingNeeded(s.host, s.skipped)}</li>
   }
-  if (!s.vProjekte) {
+  if (!s.inProject) {
     return (
       <li>
         <strong>{s.host}</strong> — <span style={{ color: "var(--bad-fg)" }}>{t.notInVercel}</span>
       </li>
     )
   }
-  if (!s.nastaveneCez) {
+  if (!s.configuredBy) {
     return (
       <li>
         <strong>{s.host}</strong> — {t.waitingForCustomer}{" "}
@@ -163,7 +163,7 @@ function DomainRow({ s, language }: { s: DomainStatus; language?: UiLanguage }) 
   }
   return (
     <li>
-      <strong>{s.host}</strong> — {t.configuredVia(s.nastaveneCez)}
+      <strong>{s.host}</strong> — {t.configuredVia(s.configuredBy)}
       {!s.verified && <span style={{ color: "var(--warn-fg)" }}>{t.unverified}</span>}
     </li>
   )
@@ -173,7 +173,7 @@ export default async function TenantDetailPage({
   params,
   searchParams,
 }: {
-  params: Promise<{ kod: string }>
+  params: Promise<{ code: string }>
   searchParams: Promise<RawQuery>
 }) {
   const ctx = await platformContext()
@@ -182,7 +182,7 @@ export default async function TenantDetailPage({
     notFound()
   }
 
-  const { kod: code } = await params
+  const { code } = await params
   const { msg: message, error } = normalizeQuery<{ msg?: string; error?: string }>(await searchParams)
   const tenant = (await allTenants()).find(t => t.companyCode === code.toUpperCase())
   if (!tenant) notFound()
@@ -194,7 +194,7 @@ export default async function TenantDetailPage({
   // ten istý výpis, aký vidí zákazník u seba (D51), len sem sa dostane bez
   // prepínania domén.
   const records = await auditRecords(tenant.companyCode, { limit: 50 })
-  const pending = domains.filter(d => !d.skipped && !d.nastaveneCez)
+  const pending = domains.filter(d => !d.skipped && !d.configuredBy)
   const enabled = tenant.status === "active"
   const language = ctx.person.language
   const d = dictionary(language)

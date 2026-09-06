@@ -60,9 +60,9 @@ async function ensureDomains(hostnames: string[], language: UiLanguage): Promise
   for (const h of hostnames) {
     if (skipVercel(h)) continue
     const v = await addDomain(h)
-    if (v.state === "pridana") messages.push(m.addedToVercel(h))
-    else if (v.state === "bez-nastavenia") messages.push(m.missingVercelToken(h))
-    else if (v.state === "chyba") messages.push(`${h}: ${v.message}`)
+    if (v.state === "added") messages.push(m.addedToVercel(h))
+    else if (v.state === "not-configured") messages.push(m.missingVercelToken(h))
+    else if (v.state === "failed") messages.push(`${h}: ${v.message}`)
   }
   return messages
 }
@@ -211,7 +211,7 @@ export async function sendInstructionsAction(fd: FormData) {
       for (const h of hostnames) {
         if (skipVercel(h)) continue
         const s = await domainStatus(h)
-        if (s.nastaveneCez) continue
+        if (s.configuredBy) continue
         const p = customerInstructions(h, s.cname)
         await send({
           to: to,

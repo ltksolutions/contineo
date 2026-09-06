@@ -60,11 +60,11 @@ function ProviderRow({
         <h2 style={{ fontSize: 17, margin: 0 }}>{t.heading(name)}</h2>
         <span
           className="stitok"
-          style={s.state === "necitatelne" ? { background: "var(--warn-bg)", color: "var(--warn-fg)" } : undefined}
+          style={s.state === "unreadable" ? { background: "var(--warn-bg)", color: "var(--warn-fg)" } : undefined}
         >
-          {s.state === "nastavene" ? t.stateOn
-            : s.state === "z-prostredia" ? t.stateFromSupplier
-            : s.state === "necitatelne" ? t.stateUnreadable : t.stateOff}
+          {s.state === "set" ? t.stateOn
+            : s.state === "from-environment" ? t.stateFromSupplier
+            : s.state === "unreadable" ? t.stateUnreadable : t.stateOff}
         </span>
       </div>
 
@@ -85,7 +85,7 @@ function ProviderRow({
 
         <label className="pole">
           <span className="pole-popis">{t.clientId}</span>
-          <input className="pole-vstup" name="clientId" defaultValue={s.zdroj === "tenant" ? s.clientId : ""} />
+          <input className="pole-vstup" name="clientId" defaultValue={s.source === "tenant" ? s.clientId : ""} />
         </label>
 
         <label className="pole">
@@ -131,7 +131,7 @@ function ProviderRow({
         <div><button className="tlacidlo" type="submit">{t.save}</button></div>
       </form>
 
-      {s.zdroj === "tenant" && (
+      {s.source === "tenant" && (
         <form action={deleteSignInAction} style={{ display: "grid", gap: 10, borderTop: "1px solid var(--line)", paddingTop: 14 }}>
           <input type="hidden" name="provider" value={provider} />
           <input type="hidden" name="tab" value="signin" />

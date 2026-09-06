@@ -1,5 +1,5 @@
 /**
- * vercel.ts — priradenie domény projektu a jej stav (Fáza 5b, rozsah C).
+ * vercel.ts — priradenie domény projektu a jej status (Fáza 5b, rozsah C).
  *
  * Doména tenanta žije na troch miestach a toto je prostredné z nich:
  *
@@ -51,22 +51,22 @@ export function skipVercel(host: string): string | null {
 }
 
 export type DomainResult =
-  | { state: "pridana" }
-  | { state: "uz-je" }
-  | { state: "preskocena"; reason: string }
-  | { state: "bez-nastavenia" }
+  | { state: "added" }
+  | { state: "already-there" }
+  | { state: "skipped"; reason: string }
+  | { state: "not-configured" }
   /**
    * Token existuje, ale Vercel ho neprijal. Najčastejšia príčina: hodnota
    * prevzatá z lokálneho `vercel login` medzitým vypršala — CLI si ju
    * priebežne obnovuje, kto ju číta zo súboru, dostane starú. Na stálu
    * prevádzku patrí vlastný `VERCEL_TOKEN`.
    */
-  | { state: "neplatny-token" }
-  | { state: "chyba"; message: string }
+  | { state: "invalid-token" }
+  | { state: "failed"; message: string }
 
-async function volaj(c: VercelConfig, cesta: string, init?: RequestInit) {
-  const oddelovac = cesta.includes("?") ? "&" : "?"
-  const url = `${API}${cesta}${c.orgId ? `${oddelovac}teamId=${encodeURIComponent(c.orgId)}` : ""}`
+async function call(c: VercelConfig, path: string, init?: RequestInit) {
+  const separator = path.includes("?") ? "&" : "?"
+  const url = `${API}${path}${c.orgId ? `${separator}teamId=${encodeURIComponent(c.orgId)}` : ""}`
   const r = await fetch(url, {
     ...init,
     headers: {
@@ -77,32 +77,32 @@ async function volaj(c: VercelConfig, cesta: string, init?: RequestInit) {
     // Stav domény sa mení mimo nás; odpoveď sa nesmie cachovať.
     cache: "no-store",
   })
-  return { stav: r.status, telo: await r.json().catch(() => ({})) }
+  return { status: r.status, body: await r.json().catch(() => ({})) }
 }
 
 /** Priradí doménu projektu. Opakované volanie nie je chyba. */
 export async function addDomain(host: string): Promise<DomainResult> {
   const skipReason = skipVercel(host)
-  if (skipReason) return { state: "preskocena", reason: skipReason }
+  if (skipReason) return { state: "skipped", reason: skipReason }
 
   const c = vercelConfig()
-  if (!c) return { state: "bez-nastavenia" }
+  if (!c) return { state: "not-configured" }
 
   try {
-    const { stav: state, telo } = await volaj(c, `/v10/projects/${encodeURIComponent(c.projectId)}/domains`, {
+    const { status: state, body } = await call(c, `/v10/projects/${encodeURIComponent(c.projectId)}/domains`, {
       method: "POST",
       body: JSON.stringify({ name: host }),
     })
-    if (state >= 200 && state < 300) return { state: "pridana" }
-    // Tá istá doména na tom istom projekte je hotový stav, nie chyba.
-    const e = (telo as { error?: { code?: string; message?: string; domain?: { projectId?: string } } }).error
+    if (state >= 200 && state < 300) return { state: "added" }
+    // Tá istá doména na tom istom projekte je hotový status, nie chyba.
+    const e = (body as { error?: { code?: string; message?: string; domain?: { projectId?: string } } }).error
     if (e?.code === "domain_already_in_use" && e.domain?.projectId === c.projectId) {
-      return { state: "uz-je" }
+      return { state: "already-there" }
     }
-    if (state === 401 || state === 403) return { state: "neplatny-token" }
-    return { state: "chyba", message: e?.message ?? `HTTP ${state}` }
+    if (state === 401 || state === 403) return { state: "invalid-token" }
+    return { state: "failed", message: e?.message ?? `HTTP ${state}` }
   } catch (err) {
-    return { state: "chyba", message: err instanceof Error ? err.message : String(err) }
+    return { state: "failed", message: err instanceof Error ? err.message : String(err) }
   }
 }
 
@@ -110,10 +110,10 @@ export interface DomainStatus {
   host: string
   /** Netýka sa Vercelu — a vtedy je `null` všetko ostatné. */
   skipped: string | null
-  vProjekte: boolean
+  inProject: boolean
   verified: boolean
   /** `null` = zákazník ešte nenasmeroval DNS. */
-  nastaveneCez: string | null
+  configuredBy: string | null
   conflicts: string[]
   /** Čo má zákazník nastaviť. */
   cname: string
@@ -128,40 +128,40 @@ export const CNAME_TARGET = "cname.vercel-dns.com"
  * údaji záleží. Rovnaké pravidlo ako D27.
  */
 export async function domainStatus(host: string): Promise<DomainStatus> {
-  const zaklad: DomainStatus = {
+  const base: DomainStatus = {
     host,
     skipped: skipVercel(host),
-    vProjekte: false,
+    inProject: false,
     verified: false,
-    nastaveneCez: null,
+    configuredBy: null,
     conflicts: [],
     cname: CNAME_TARGET,
   }
-  if (zaklad.skipped) return zaklad
+  if (base.skipped) return base
 
   const c = vercelConfig()
-  if (!c) return zaklad
+  if (!c) return base
 
   try {
     const q = encodeURIComponent(host)
-    const vProjekte = await volaj(c, `/v9/projects/${encodeURIComponent(c.projectId)}/domains/${q}`)
-    const konfig = await volaj(c, `/v6/domains/${q}/config`)
-    const kt = konfig.telo as {
+    const inProject = await call(c, `/v9/projects/${encodeURIComponent(c.projectId)}/domains/${q}`)
+    const dnsConfig = await call(c, `/v6/domains/${q}/config`)
+    const dns = dnsConfig.body as {
       configuredBy?: string | null
       conflicts?: { type?: string; value?: string }[]
       recommendedCNAME?: { value?: string }[]
     }
     return {
-      ...zaklad,
-      vProjekte: vProjekte.stav === 200,
-      verified: (vProjekte.telo as { verified?: boolean }).verified === true,
-      nastaveneCez: kt.configuredBy ?? null,
-      conflicts: (kt.conflicts ?? []).map(k => `${k.type ?? "?"} ${k.value ?? ""}`.trim()),
-      cname: kt.recommendedCNAME?.[0]?.value ?? CNAME_TARGET,
+      ...base,
+      inProject: inProject.status === 200,
+      verified: (inProject.body as { verified?: boolean }).verified === true,
+      configuredBy: dns.configuredBy ?? null,
+      conflicts: (dns.conflicts ?? []).map(k => `${k.type ?? "?"} ${k.value ?? ""}`.trim()),
+      cname: dns.recommendedCNAME?.[0]?.value ?? CNAME_TARGET,
     }
   } catch (e) {
-    console.error(`[vercel] stav domény ${host} sa nepodarilo zistiť:`, e)
-    return zaklad
+    console.error(`[vercel] status domény ${host} sa nepodarilo zistiť:`, e)
+    return base
   }
 }
 

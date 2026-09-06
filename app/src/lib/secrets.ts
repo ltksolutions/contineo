@@ -119,11 +119,11 @@ export function decrypt(stored: string, key = encryptionKey()): string {
  * **Nikdy nevracia hodnotu.** Človek potrebuje vedieť len to, či je niečo
  * nastavené a či sa to dá prečítať; samotné tajomstvo má vo vlastnom Entre.
  */
-export function secretStatus(stored: string | undefined): "nenastavene" | "nastavene" | "necitatelne" {
-  if (!stored) return "nenastavene"
+export function secretStatus(stored: string | undefined): "unset" | "set" | "unreadable" {
+  if (!stored) return "unset"
   try {
-    return decrypt(stored) ? "nastavene" : "necitatelne"
+    return decrypt(stored) ? "set" : "unreadable"
   } catch {
-    return "necitatelne"
+    return "unreadable"
   }
 }

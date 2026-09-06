@@ -80,15 +80,15 @@ describe("kluc z prostredia", () => {
 describe("stav tajomstva pre obrazovku", () => {
   it("nikdy nevráti samotnú hodnotu", () => {
     const status = secretStatus(encrypt(SECRET, KEY))
-    expect(["nenastavene", "nastavene", "necitatelne"]).toContain(status)
+    expect(["unset", "set", "unreadable"]).toContain(status)
     expect(status).not.toContain("Entra")
   })
 
   it("rozlíši nenastavené od nečitateľného", () => {
     // Sú to dve úplne rôzne situácie: prvá znamená „dokonči nastavenie",
     // druhá „niekto zmenil kľúč a treba údaje zadať znova".
-    expect(secretStatus(undefined)).toBe("nenastavene")
-    expect(secretStatus("")).toBe("nenastavene")
-    expect(secretStatus("v1.zlé.údaje.tu")).toBe("necitatelne")
+    expect(secretStatus(undefined)).toBe("unset")
+    expect(secretStatus("")).toBe("unset")
+    expect(secretStatus("v1.zlé.údaje.tu")).toBe("unreadable")
   })
 })

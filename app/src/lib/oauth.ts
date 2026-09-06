@@ -11,7 +11,7 @@
  * Poradie hľadania:
  *
  *   1. údaje tenanta (`tenants.oauth`) — bežný prípad,
- *   2. premenné prostredia — **len núdzový záložný zdroj** pre náš vlastný
+ *   2. premenné prostredia — **len núdzový záložný source** pre náš vlastný
  *      tenant a pre vývoj. V produkcii u zákazníka by znamenali, že sa
  *      prihlasuje cez našu aplikáciu bez toho, aby o tom vedel.
  *   3. nič — poskytovateľ sa neponúkne.
@@ -74,7 +74,7 @@ export interface ResolvedCredentials {
   hostedDomain?: string
 }
 
-/** Núdzový záložný zdroj z prostredia. Pre náš tenant a pre vývoj. */
+/** Núdzový záložný source z prostredia. Pre náš tenant a pre vývoj. */
 function fromEnv(provider: OAuthProviderName): ResolvedCredentials | null {
   const clientId = provider === "microsoft"
     ? process.env.MICROSOFT_CLIENT_ID
@@ -163,22 +163,22 @@ export function providerStatus(
   tenant: Tenant | null,
   provider: OAuthProviderName,
 ): {
-  state: "nenastavene" | "nastavene" | "necitatelne" | "z-prostredia"
+  state: "unset" | "set" | "unreadable" | "from-environment"
   clientId?: string
-  zdroj: "tenant" | "platform" | "ziadny"
+  source: "tenant" | "platform" | "none"
 } {
   const stored = tenant?.oauth?.[provider]
   if (stored?.clientId && stored?.clientSecretEnc) {
     try {
       decrypt(stored.clientSecretEnc)
-      return { state: "nastavene", clientId: stored.clientId, zdroj: "tenant" }
+      return { state: "set", clientId: stored.clientId, source: "tenant" }
     } catch {
-      return { state: "necitatelne", clientId: stored.clientId, zdroj: "tenant" }
+      return { state: "unreadable", clientId: stored.clientId, source: "tenant" }
     }
   }
   const z = fromEnv(provider)
-  if (z) return { state: "z-prostredia", clientId: z.clientId, zdroj: "platform" }
-  return { state: "nenastavene", zdroj: "ziadny" }
+  if (z) return { state: "from-environment", clientId: z.clientId, source: "platform" }
+  return { state: "unset", source: "none" }
 }
 
 /** Ako sa poskytovateľ volá pre človeka. */

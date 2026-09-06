@@ -17,7 +17,7 @@ import { useEffect, useRef, useState } from "react"
 import type { Verdict } from "@/lib/ratings"
 import { dictionary, type UiLanguage } from "@/lib/i18n"
 
-type SaveState = "cakam" | "ukladam" | "ulozene" | "chyba"
+type SaveState = "idle" | "saving" | "saved" | "failed"
 
 export interface RatingFields {
   correct: Verdict
@@ -78,7 +78,7 @@ export default function Rating({
 }) {
   const t = dictionary(language).goldenSet.rating
   const [fields, setFields] = useState<RatingFields>(EMPTY)
-  const [status, setStatus] = useState<SaveState>("cakam")
+  const [status, setStatus] = useState<SaveState>("idle")
   const [detail, setDetail] = useState(false)
 
   // Nová odpoveď = čisté hodnotenie. Bez toho by sa posudok z predchádzajúcej
@@ -88,7 +88,7 @@ export default function Rating({
     // rozpísaný text jednej otázky sa nesmie opticky preniesť na ďalšiu.
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setFields(EMPTY)
-    setStatus("cakam")
+    setStatus("idle")
     setDetail(false)
   }, [recordId])
 
@@ -104,17 +104,17 @@ export default function Rating({
     if (fingerprint === lastSent.current) return
     lastSent.current = fingerprint
 
-    setStatus("ukladam")
+    setStatus("saving")
     try {
       const r = await fetch("/api/hodnotenie", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id: recordId, ...change }),
       })
-      setStatus(r.ok ? "ulozene" : "chyba")
+      setStatus(r.ok ? "saved" : "failed")
       if (r.ok && change.correct !== undefined) onDone?.(change.correct)
     } catch {
-      setStatus("chyba")
+      setStatus("failed")
     }
   }
 
@@ -138,9 +138,9 @@ export default function Rating({
           style={{ fontSize: 12, marginLeft: "auto", minWidth: 90, textAlign: "right" }}
           aria-live="polite"
         >
-          {status === "ukladam" ? t.saving
-            : status === "ulozene" ? t.saved
-            : status === "chyba" ? t.saveFailed : ""}
+          {status === "saving" ? t.saving
+            : status === "saved" ? t.saved
+            : status === "failed" ? t.saveFailed : ""}
         </span>
       </div>
 

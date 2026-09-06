@@ -18,9 +18,9 @@ export const dynamic = "force-dynamic"
 
 export async function GET(
   _req: Request,
-  { params }: { params: Promise<{ kod: string }> },
+  { params }: { params: Promise<{ code: string }> },
 ) {
-  const { kod: code } = await params
+  const { code } = await params
 
   let z
   try {

@@ -43,20 +43,20 @@ export default function GoldenSetQuestion({
   const [editing, setEditing] = useState(false)
   const [excludedNow, setExcluded] = useState(excluded)
   const [reason, setReason] = useState(exclusionReason ?? "")
-  const [status, setStatus] = useState<"" | "ukladam" | "ulozene" | "chyba">("")
+  const [status, setStatus] = useState<"" | "saving" | "saved" | "failed">("")
   const [reviewed, setReviewed] = useState(false)
 
   async function save(change: Record<string, unknown>) {
-    setStatus("ukladam")
+    setStatus("saving")
     try {
       const r = await fetch("/api/sada", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id, ...change }),
       })
-      setStatus(r.ok ? "ulozene" : "chyba")
+      setStatus(r.ok ? "saved" : "failed")
     } catch {
-      setStatus("chyba")
+      setStatus("failed")
     }
   }
 
@@ -72,7 +72,7 @@ export default function GoldenSetQuestion({
           <span className="stitok tichy" style={{ fontSize: 11 }}>{precedenceRule}</span>
         )}
         <span className="tichy" style={{ fontSize: 12, marginLeft: "auto" }}>
-          {status === "ukladam" ? t.saving : status === "ulozene" ? t.saved : status === "chyba" ? t.saveFailed : ""}
+          {status === "saving" ? t.saving : status === "saved" ? t.saved : status === "failed" ? t.saveFailed : ""}
         </span>
       </div>
 

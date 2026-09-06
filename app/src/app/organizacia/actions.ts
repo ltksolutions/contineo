@@ -213,7 +213,7 @@ export async function verifyDomainAction(fd: FormData) {
     } else {
       // Až teraz — dôkaz existuje. Do Vercelu sa doména pridáva až po ňom.
       const toVercel = skipVercel(v.host) ? null : await addDomain(v.host)
-      message = toVercel && toVercel.state !== "pridana" && toVercel.state !== "uz-je"
+      message = toVercel && toVercel.state !== "added" && toVercel.state !== "already-there"
         ? say(self.language).domainOnNotInVercel(v.host)
         : say(self.language).domainOn(v.host)
     }
