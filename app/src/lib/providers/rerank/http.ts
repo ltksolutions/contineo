@@ -15,8 +15,9 @@
  *             -> { results: [{ index, relevance_score }] }
  */
 
-import { ChunkResult } from "../../mongoSearch"
-import { RerankConfig, RerankProvider, ProviderConfigError } from "../types"
+import type { ChunkResult } from "../../mongoSearch"
+import { ProviderConfigError } from "../types"
+import type { RerankConfig, RerankProvider } from "../types"
 
 export interface RerankScore { index: number; score: number }
 

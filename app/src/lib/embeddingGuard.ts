@@ -15,7 +15,7 @@
  * `voyage-4` a on-prem cez `voyage-4-nano` bez re-embedu.
  */
 
-import { ChunkResult } from "./mongoSearch"
+import type { ChunkResult } from "./mongoSearch"
 
 /**
  * Rodiny modelov, v rámci ktorých sú vektory navzájom porovnateľné.
@@ -41,10 +41,19 @@ export function isCompatible(a: string, b: string): boolean {
 }
 
 export class EmbeddingSpaceMismatchError extends Error {
+  // Polia sa priraďujú výslovne, nie cez parameter properties konštruktora.
+  // Tie totiž nie sú len typový zápis — musia sa transformovať na kód, a Node
+  // pri spúšťaní TypeScriptu iba odstraňuje typy (scripts/lib/ts-hook.mjs).
+  // Skript, ktorý si tento modul naimportuje, by inak spadol na
+  // `TypeScript parameter property is not supported in strip-only mode`.
+  readonly expected: string
+  readonly found: string[]
+  readonly sampleChunkIds: string[]
+
   constructor(
-    readonly expected: string,
-    readonly found: string[],
-    readonly sampleChunkIds: string[]
+    expected: string,
+    found: string[],
+    sampleChunkIds: string[]
   ) {
     super(
       `Nezhoda vektorového priestoru: profil tenanta používa "${expected}", ` +
@@ -53,6 +62,9 @@ export class EmbeddingSpaceMismatchError extends Error {
       `(app/scripts/reembed.mjs). Vzorka chunkov: ${sampleChunkIds.slice(0, 3).join(", ")}`
     )
     this.name = "EmbeddingSpaceMismatchError"
+    this.expected = expected
+    this.found = found
+    this.sampleChunkIds = sampleChunkIds
   }
 }
 

@@ -9,7 +9,8 @@
  */
 
 import { getCollection } from "./mongodb"
-import { TenantProfile, ProviderConfigError } from "./providers/types"
+import { ProviderConfigError } from "./providers/types"
+import type { TenantProfile } from "./providers/types"
 import { checkResidency, checkIsolation } from "./residency"
 
 const TTL_MS = 5 * 60 * 1000   // 5 minút

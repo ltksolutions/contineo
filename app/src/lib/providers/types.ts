@@ -11,7 +11,7 @@
  * Viď docs/ADR-001-provider-adaptery.md
  */
 
-import { ChunkResult } from "../mongoSearch"
+import type { ChunkResult } from "../mongoSearch"
 
 // ── Profil tenanta ───────────────────────────────────────────────────────────
 

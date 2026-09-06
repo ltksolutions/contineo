@@ -7,7 +7,7 @@
  * zámerne lacnejším než ten, ktorý tvorí odpoveď.
  */
 
-import { GenerationProvider } from "./providers/types"
+import type { GenerationProvider } from "./providers/types"
 
 export interface PreprocessedQuery {
   rewritten: string        // vyčistený/prepísaný dotaz

@@ -13,9 +13,8 @@
  * jednoduchšie a stabilnejšie, tak ideme cezeň.
  */
 
-import {
-  EmbeddingConfig, EmbeddingProvider, ProviderConfigError,
-} from "../types"
+import { ProviderConfigError } from "../types"
+import type { EmbeddingConfig, EmbeddingProvider } from "../types"
 
 /**
  * MRL truncation — skráti vektor na cieľový počet dimenzií a znormalizuje.

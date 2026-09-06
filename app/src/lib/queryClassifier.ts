@@ -6,7 +6,7 @@
  * Voliteľne: model cez utility adaptér (ADR-001) — presnejší, ale pomalší.
  */
 
-import { GenerationProvider } from "./providers/types"
+import type { GenerationProvider } from "./providers/types"
 
 export type SearchMode = "fulltext" | "vector" | "hybrid"
 

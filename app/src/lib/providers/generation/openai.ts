@@ -12,10 +12,14 @@
  *     ale riadi si ho sám a cez API sa neovláda.
  */
 
-import { ChunkResult } from "../../mongoSearch"
-import {
-  GenerationConfig, GenerationProvider, GenerationRequest, GenerationEvent,
-  CompleteOptions, ProviderConfigError,
+import type { ChunkResult } from "../../mongoSearch"
+import { ProviderConfigError } from "../types"
+import type {
+  GenerationConfig,
+  GenerationProvider,
+  GenerationRequest,
+  GenerationEvent,
+  CompleteOptions,
 } from "../types"
 
 /** Kontext ako číslovaný text — model má citovať [1], [2]… */

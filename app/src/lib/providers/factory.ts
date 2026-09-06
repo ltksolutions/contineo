@@ -6,12 +6,17 @@
  * volajúci kód o vendoroch nevie.
  */
 
-import { ChunkResult } from "../mongoSearch"
-import {
-  TenantProfile, Providers, ProviderConfigError,
-  EmbeddingProvider, EmbeddingConfig,
-  RerankProvider, RerankConfig,
-  GenerationProvider, GenerationConfig,
+import type { ChunkResult } from "../mongoSearch"
+import { ProviderConfigError } from "./types"
+import type {
+  TenantProfile,
+  Providers,
+  EmbeddingProvider,
+  EmbeddingConfig,
+  RerankProvider,
+  RerankConfig,
+  GenerationProvider,
+  GenerationConfig,
 } from "./types"
 import { AnthropicGenerationProvider } from "./generation/anthropic"
 import { BedrockGenerationProvider } from "./generation/bedrock"

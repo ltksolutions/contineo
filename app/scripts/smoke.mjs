@@ -1,23 +1,28 @@
 /**
  * smoke.mjs — overí celú reťaz od dotazu po odpoveď nad reálnymi dátami.
  *
- *     node --env-file=.env.local scripts/smoke.mjs
- *     node --env-file=.env.local scripts/smoke.mjs --odpoved     (aj generovanie cez Claude)
- *     node --env-file=.env.local scripts/smoke.mjs --dotaz "Aká je lehota na námietku?"
+ *     npm run smoke
+ *     npm run smoke -- --odpoved     (aj generovanie cez Claude)
+ *     npm run smoke -- --dotaz "Aká je lehota na námietku?"
  *
- * Zámerne používa SKUTOČNÝ kód z src/lib (zbundlovaný esbuildom), nie jeho
- * kópiu — inak by test overoval niečo iné, než čo beží v aplikácii.
+ * Zámerne používa SKUTOČNÝ kód z src/lib, nie jeho kópiu — inak by test
+ * overoval niečo iné, než čo beží v aplikácii. TypeScript spúšťa priamo Node
+ * (odstránenie typov) cez háčik scripts/lib/ts-hook.mjs; esbuild bol
+ * z projektu odstránený 28. 8. 2026 a skript bol odvtedy nespustiteľný.
  *
  * Bez --odpoved nevolá Claude, takže nič nestojí a testuje len retrieval.
  */
-import { build } from "esbuild"
-import { mkdirSync, rmSync } from "node:fs"
-import { join, dirname, resolve } from "node:path"
-import { fileURLToPath, pathToFileURL } from "node:url"
 import { MongoClient } from "mongodb"
 
-const HERE = dirname(fileURLToPath(import.meta.url))
-const SRC = resolve(HERE, "../src")
+// Skutočný kód aplikácie, nie jeho kópia. Bezpríponové importy vnútri týchto
+// modulov dopĺňa scripts/lib/ts-hook.mjs — preto sa skript spúšťa cez
+// `npm run smoke`, nie holým `node`.
+import { fulltextSearch, vectorSearch, hybridSearch } from "../src/lib/mongoSearch.ts"
+import { classifyQuery } from "../src/lib/queryClassifier.ts"
+import { defaultProfile } from "../src/lib/tenantProfile.ts"
+import { getProviders } from "../src/lib/providers/factory.ts"
+import { assertEmbeddingSpace } from "../src/lib/embeddingGuard.ts"
+import { generateAnswer } from "../src/lib/llmGenerator.ts"
 
 const args = process.argv.slice(2)
 const wantAnswer = args.includes("--odpoved")
@@ -41,30 +46,6 @@ if (!process.env.MONGODB_URI) {
   process.exit(1)
 }
 
-// ── zbundlovanie skutočného kódu ─────────────────────────────────────────────
-// Bundle musí vzniknúť VNÚTRI projektu — `mongodb` necháme ako externú
-// závislosť a Node ju hľadá v node_modules relatívne k súboru. Z /tmp
-// by ju nenašiel.
-const tmp = resolve(HERE, "../node_modules/.contineo-smoke")
-mkdirSync(tmp, { recursive: true })
-const bundle = join(tmp, "lib.mjs")
-await build({
-  stdin: {
-    contents: `
-      export { fulltextSearch, vectorSearch, hybridSearch } from "${SRC}/lib/mongoSearch.ts"
-      export { classifyQuery } from "${SRC}/lib/queryClassifier.ts"
-      export { defaultProfile } from "${SRC}/lib/tenantProfile.ts"
-      export { getProviders } from "${SRC}/lib/providers/factory.ts"
-      export { assertEmbeddingSpace, embeddingStats } from "${SRC}/lib/embeddingGuard.ts"
-      export { generateAnswer } from "${SRC}/lib/llmGenerator.ts"
-    `,
-    resolveDir: SRC,
-    loader: "ts",
-  },
-  bundle: true, outfile: bundle, format: "esm", platform: "node",
-  external: ["mongodb"], logLevel: "error",
-})
-const lib = await import(pathToFileURL(bundle).href)
 
 const client = new MongoClient(process.env.MONGODB_URI, { serverSelectionTimeoutMS: 15000 })
 
@@ -100,8 +81,8 @@ try {
     process.exit(1)
   }
 
-  const profile = lib.defaultProfile()
-  const providers = lib.getProviders(profile)
+  const profile = defaultProfile()
+  const providers = getProviders(profile)
   console.log(`Profil: embedding=${profile.providers.embedding.kind}/${profile.providers.embedding.model}` +
               ` · rerank=${profile.providers.rerank.kind}` +
               ` · generovanie=${profile.providers.generation.kind}/${profile.providers.generation.model}`)
@@ -113,7 +94,7 @@ try {
     console.log("─".repeat(74))
     console.log(`DOTAZ: ${query}`)
 
-    const mod = await lib.classifyQuery(query, false)
+    const mod = await classifyQuery(query, false)
     const opts = {
       query: query, accessLevel: role, limit: 20, rerankLimit: 5,
       useStageRerank: providers.rerank.isPipelineStage,
@@ -124,9 +105,9 @@ try {
     let chunks
     const t0 = Date.now()
     try {
-      chunks = mod === "fulltext" ? await lib.fulltextSearch(col, opts)
-             : mod === "vector"   ? await lib.vectorSearch(col, opts)
-             :                      await lib.hybridSearch(col, opts)
+      chunks = mod === "fulltext" ? await fulltextSearch(col, opts)
+             : mod === "vector"   ? await vectorSearch(col, opts)
+             :                      await hybridSearch(col, opts)
     } catch (e) {
       failed++
       console.log(`  ${FAIL} vyhľadávanie zlyhalo (${mod}):`)
@@ -146,7 +127,7 @@ try {
     }
 
     try {
-      lib.assertEmbeddingSpace(chunks, profile.providers.embedding.model)
+      assertEmbeddingSpace(chunks, profile.providers.embedding.model)
     } catch (e) {
       failed++
       console.log(`  ${FAIL} ${e.message.slice(0, 160)}`)
@@ -183,7 +164,7 @@ try {
     }
 
     if (wantAnswer) {
-      const stream = lib.generateAnswer({ query: query, chunks: chunks.slice(0, 8), userRole: role, profile })
+      const stream = generateAnswer({ query: query, chunks: chunks.slice(0, 8), userRole: role, profile })
       const reader = stream.getReader()
       const dec = new TextDecoder()
       let text = "", citations = 0, model = "?", buf = ""
@@ -223,5 +204,4 @@ try {
   process.exitCode = 1
 } finally {
   await client.close()
-  rmSync(tmp, { recursive: true, force: true })
 }

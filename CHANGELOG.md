@@ -4,6 +4,19 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Fixed (2026-09-06 — skripty vedia znova spustiť TypeScript zo `src/`)
+
+- **`smoke.mjs` bol od 28. 8. nespustiteľný.** Vtedajšie bezpečnostné upratovanie odstránilo `esbuild` z devDependencies a s ním aj bundlovanie, na ktorom skript stál. Nevšimlo sa to, lebo `smoke.mjs` nie je súčasťou `npm test` — spúšťa sa ručne. Opravené **bez vrátenia závislosti**: skript teraz importuje moduly zo `src/` priamo a beží cez `scripts/lib/ts-hook.mjs`, rovnako ako `status`, `tenant` či `persons:import`. Pribudol `npm run smoke`.
+- **Typové importy sú označené ako typové.** Node pri spúšťaní TypeScriptu iba odstraňuje typy — nevie, že `ChunkResult` je interface, a `import { ChunkResult }` sa preto pokúsi vykonať za behu. Trinásť súborov v `src/lib` prepísaných na `import type`; kde sa v jednom importe miešali typy s triedou `ProviderConfigError`, import sa rozdelil. Pri `isolatedModules: true` je to aj tak odporúčaný tvar, takže pre `tsc` ani Next sa nemení nič.
+- **`EmbeddingSpaceMismatchError` už nepoužíva parameter properties** v konštruktore. Tie nie sú len typový zápis — musia sa transformovať na kód, čo odstraňovanie typov nerobí. Polia sa priraďujú výslovne; správanie identické.
+- Overené: `npm run type-check` čisto, **865 testov prechádza**, `npm run lint` bez chýb, `npm run smoke` prejde celou reťazou nad 581 chunkami.
+
+### Added (2026-09-06 — porovnanie rerank modelov)
+
+- **`scripts/rerank_compare.mjs`** — zmeria, **o koľko** sa od seba líšia rerank modely (prekryv top-K, zhoda na prvom mieste, zhoda celého poradia), a každý z nich aj proti poradiu bez reranku. Kvalitu **nemeria a merať nemôže**: zlatá sada D9 má zatiaľ prázdne `goldChunkIds`, takže neexistuje pravda, voči ktorej by sa porovnávalo. Skript má povedať jedinú vec — či sa výberom modelu vôbec oplatí zaoberať, kým sada nie je vyplnená.
+- Overené na Atlase (cluster 9.0.0, FCV 8.3): `$rankFusion` aj `$rerank` fungujú a stage prijme `rerank-2`, `rerank-2.5`, `rerank-3` aj ich `-lite` varianty. Skupinové limity sú spoločné, takže prechod na novší model nestojí žiadnu kapacitu. Skóre z rôznych rerankerov sa **navzájom porovnávať nedajú** — každý má vlastnú kalibráciu.
+
+
 ### Changed (2026-08-30 — kód, príkazy, adresa aj databáza po anglicky)
 
 - **Identifikátory v kóde sú anglické, komentáre a texty pre používateľa slovenské.** Dôvod je praktický: celý ekosystém okolo (Next, Mongo, typy, chybové hlášky) je anglický a miešanie znamenalo prekladať medzi kódom a databázou v každom druhom riadku (`Oddelenie` verzus `departments`). Pravidlo je zapísané v `CLAUDE.md`, nech sa to neopravuje znova.

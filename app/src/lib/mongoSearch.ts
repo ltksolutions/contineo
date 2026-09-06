@@ -8,7 +8,7 @@
  * Canonical data model = Model B. See docs/DATA_MODEL_konzistencia.md.
  */
 
-import { Collection, Document } from "mongodb"
+import type { Collection, Document } from "mongodb"
 
 export interface SearchOptions {
   query: string

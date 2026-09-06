@@ -202,7 +202,7 @@
   - [ ] Súbežne (lacné, dáva zmysel aj za pevnou IP): samostatný produkčný Atlas projekt + cluster, DB používateľ s minimálnymi právami, audit log a upozornenia na neúspešné prihlásenia
 - [x] **D31 — Atlas M0 → M10+** ✅ 2026-08-28: beží M10 (AWS Frankfurt) s Cloud Backup. M0 nemá zálohy; auditný záznam bez zálohy nie je auditný záznam (`ATLAS_SETUP.md` kap. 1).
   - [ ] Pri prechode zapnúť **auto-scaling úložiska aj tieru**, strop aspoň M30 (vyžaduje Automated Embedding)
-  - [ ] Overiť, že vektorový a fulltextový index prešli a `smoke.mjs` beží
+  - [x] Overiť, že vektorový a fulltextový index prešli a `smoke.mjs` beží ✅ 2026-09-06 — oba indexy sedia (`rag_vector_index`, `rag_text_index`), 581 aktívnych chunkov, celá reťaz prejde. `smoke.mjs` bol od 28. 8. nespustiteľný: s `esbuildom` mu odišlo bundlovanie TypeScriptu. Opravené bez návratu závislosti — beží cez `scripts/lib/ts-hook.mjs` ako ostatné skripty (`npm run smoke`).
 - [x] **Bezpečnostné aktualizácie závislostí** ✅ 2026-08-28 — Next 14.2.35 → **16.3.3**, next-auth → 4.24.15, `esbuild` odstránený z devDependencies. `npm audit`: **0 zraniteľností**. Migrácia bola menšia, než hrozila: next-auth 4.24.15 podporuje Next 16 a Next 16 akceptuje React 18, takže ani Auth.js v5, ani React 19. Zásah do kódu si vyžiadali len `params`/`searchParams`, ktoré sú od Next 15 prísľuby.
   <details><summary>pôvodný zápis</summary>
   - `next` 14.2.35 spadá do rozsahu vysoko závažného upozornenia (9.3.4-canary.0 – 16.3.0-preview.10)

@@ -13,12 +13,12 @@
  *   providers/generation/openai.ts     → vLLM / SGLang / Ollama
  */
 
-import { ChunkResult } from "./mongoSearch"
+import type { ChunkResult } from "./mongoSearch"
 import { getTenantProfile, defaultProfile } from "./tenantProfile"
 import { getProviders } from "./providers/factory"
 import { cost, EMPTY_TOKENS } from "./pricing"
 import type { TokenCounts } from "./pricing"
-import { GeneratedCitation, TenantProfile } from "./providers/types"
+import type { GeneratedCitation, TenantProfile } from "./providers/types"
 
 export interface GenerateOptions {
   query: string
