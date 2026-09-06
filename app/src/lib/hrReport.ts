@@ -46,6 +46,14 @@ export interface Duty {
   sources: DutySource[]
   /** Názvy trás, z ktorých povinnosť plynie. Prázdne pri čistom pridelení. */
   trackTitles: string[]
+  /**
+   * Odkedy povinnosť beží — od toho sa počíta meškanie.
+   *
+   * Pri pridelení je to `assignedAt`, pri trase odkedy má človek prístup.
+   * Keď má povinnosť oba pôvody, platí **neskorší** z nich: nové pridelenie
+   * (D37) je nová žiadosť o potvrdenie a hodiny sa ním vracajú na nulu.
+   */
+  since: Date | null
   acknowledgedAt: Date | null
   /**
    * Viditeľný čas nad znením. `null` znamená „nevieme", nie „nula" —
@@ -61,6 +69,18 @@ interface PersonRow {
   groups?: string[]
   tracks?: string[]
   departmentPath?: string[]
+  firstLoginAt?: Date
+  invitedAt?: Date
+  createdAt?: Date
+}
+
+/**
+ * Odkedy má človek prístup. Pre povinnosť z trasy je to jediný rozumný
+ * začiatok — trasa sama dátum na osobu neviaže a `lastLoginAt` sa pri
+ * každom prihlásení prepíše, takže by meškanie nikdy nenarástlo.
+ */
+function accessSince(person: PersonRow): Date | null {
+  return person.firstLoginAt ?? person.invitedAt ?? person.createdAt ?? null
 }
 
 /**
@@ -82,7 +102,12 @@ export async function duties(companyCode: string): Promise<Duty[]> {
     personCol
       .find(
         { companyCode, status: { $ne: "inactive" } } as never,
-        { projection: { id: 1, email: 1, fullName: 1, groups: 1, tracks: 1, departmentPath: 1 } },
+        {
+          projection: {
+            id: 1, email: 1, fullName: 1, groups: 1, tracks: 1, departmentPath: 1,
+            firstLoginAt: 1, invitedAt: 1, createdAt: 1,
+          },
+        },
       )
       .toArray(),
     docCol.find({ companyCode }).toArray(),
@@ -100,6 +125,7 @@ export async function duties(companyCode: string): Promise<Duty[]> {
     person: PersonRow,
     subject: { documentId: string; documentTitle: string; versionId: string; versionLabel: string },
     source: DutySource,
+    since: Date | null,
     trackTitle?: string,
   ) => {
     const key = `${person.id} ${subject.versionId}`
@@ -107,6 +133,8 @@ export async function duties(companyCode: string): Promise<Duty[]> {
     if (existing) {
       if (!existing.sources.includes(source)) existing.sources.push(source)
       if (trackTitle && !existing.trackTitles.includes(trackTitle)) existing.trackTitles.push(trackTitle)
+      // Neskorší začiatok vyhráva: nové pridelenie vracia hodiny na nulu.
+      if (since && (!existing.since || since > existing.since)) existing.since = since
       return
     }
     collected.set(key, {
@@ -119,6 +147,7 @@ export async function duties(companyCode: string): Promise<Duty[]> {
       versionLabel: subject.versionLabel,
       sources: [source],
       trackTitles: trackTitle ? [trackTitle] : [],
+      since,
       acknowledgedAt: null,
       readingSeconds: null,
     })
@@ -132,7 +161,7 @@ export async function duties(companyCode: string): Promise<Duty[]> {
   for (const a of assignments) {
     for (const person of people) {
       if (!matchesAudience(person, a.audience)) continue
-      add(person, a.subject, "assignment")
+      add(person, a.subject, "assignment", a.assignedAt ?? null)
     }
   }
 
@@ -161,7 +190,7 @@ export async function duties(companyCode: string): Promise<Duty[]> {
           documentTitle: doc.title,
           versionId: effective.version.versionId,
           versionLabel: effective.version.label,
-        }, "track", track.title)
+        }, "track", accessSince(person), track.title)
       }
     }
   }

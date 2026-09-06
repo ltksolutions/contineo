@@ -167,6 +167,26 @@ interface Dictionary {
    * ďalšia automatická správa, ktorú si ľudia odfiltrujú; s ním je to veta,
    * z ktorej sa dá pochopiť, prečo to niekto poslal.
    */
+  /** Pripomienka meškajúcemu potvrdeniu. Jedna správa na človeka, nie na dokument. */
+  reminderEmail: {
+    subject: (organisation: string) => string
+    subtitle: string
+    intro: (count: number) => string
+    itemLine: (versionLabel: string, days: number) => string
+    button: string
+    note: string
+  }
+
+  /** Hromadná pozvánka. Bez tokenu — človek si odkaz vyžiada sám. */
+  inviteEmail: {
+    subject: (organisation: string) => string
+    subtitle: string
+    intro: (organisation: string) => string
+    how: string
+    button: string
+    note: string
+  }
+
   assignmentEmail: {
     subject: (organisation: string) => string
     subtitle: string
@@ -373,6 +393,20 @@ interface Dictionary {
       tooManyRecipients: (recipients: number, max: number) => string
       sent: (n: number) => string
       sentWithFailures: (n: number, failed: string) => string
+    }
+
+    /** Hromadné pripomienky meškajúcim (rozsah C). */
+    reminders: {
+      heading: string
+      intro: (days: number) => string
+      back: string
+      open: string
+      none: (days: number) => string
+      person: (documents: number, days: number) => string
+      send: (people: number) => string
+      preview: string
+      sent: (n: number) => string
+      nobody: string
     }
   }
 
@@ -1209,6 +1243,28 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       fallbackNote: "Ak odkaz nefunguje, skopírujte do prehliadača:",
       subtitle: "Interný portál",
     },
+    reminderEmail: {
+      subject: organisation => `Pripomienka: nepotvrdené dokumenty — ${organisation}`,
+      subtitle: "Pripomienka",
+      intro: count => count === 1
+        ? "Jeden dokument stále čaká na vaše potvrdenie."
+        : count >= 2 && count <= 4
+          ? `${count} dokumenty stále čakajú na vaše potvrdenie.`
+          : `${count} dokumentov stále čaká na vaše potvrdenie.`,
+      itemLine: (label, days) => `verzia ${label}, čaká ${days} dní`,
+      button: "Otvoriť zoznam",
+      note: "Potvrdenie sa viaže na konkrétne znenie a zaberie pár minút. Ak si myslíte, že sa vás dokument netýka, ozvite sa personálnemu oddeleniu.",
+    },
+
+    inviteEmail: {
+      subject: organisation => `Prístup do interného portálu — ${organisation}`,
+      subtitle: "Pozvánka",
+      intro: organisation => `Boli ste zaradení do interného portálu organizácie ${organisation}. Nájdete v ňom smernice, ktoré sa vás týkajú, a potvrdíte v ňom, že ste sa s nimi oboznámili.`,
+      how: "Otvorte stránku nižšie a vypýtajte si prihlasovací odkaz na svoju pracovnú adresu. Odkaz vám nesmieme poslať vopred — platí len krátko a poštové brány ho spotrebujú skôr, než sa k nemu dostanete.",
+      button: "Otvoriť portál",
+      note: "Ak sa prihlásiť nedá, ozvite sa personálnemu oddeleniu — adresa musí byť v zozname osôb.",
+    },
+
     assignmentEmail: {
       subject: org => `Nový dokument na potvrdenie — ${org}`,
       subtitle: "Na potvrdenie",
@@ -1418,6 +1474,19 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
         `Príjemcov je ${recipients}, naraz sa dá poslať najviac ${max}. Rozdeľ pridelenie na menšie publiká.`,
       sent: (n) => `Odoslané ${n} ľuďom, ktorí ešte nepotvrdili.`,
       sentWithFailures: (n, failed) => `Odoslané ${n}. Nedoručiteľné: ${failed}`,
+    },
+
+    reminders: {
+      heading: "Pripomienky",
+      intro: days => `Ľudia, ktorí majú niečo nepotvrdené dlhšie než ${days} dní. Jeden e-mail na človeka — kto mešká so štyrmi smernicami, dostane jednu správu so štyrmi riadkami.`,
+      back: "← Späť na prehľad",
+      open: "Pripomenúť",
+      none: days => `Nikto nemešká viac než ${days} dní.`,
+      person: (documents, days) => `${documents === 1 ? "1 dokument" : documents >= 2 && documents <= 4 ? `${documents} dokumenty` : `${documents} dokumentov`} · najdlhšie ${days} dní`,
+      send: people => people === 1 ? "Odoslať 1 pripomienku" : people >= 2 && people <= 4 ? `Odoslať ${people} pripomienky` : `Odoslať ${people} pripomienok`,
+      preview: "Toto pôjde na uvedené adresy. Odoslaný e-mail sa odvolať nedá.",
+      sent: n => `Odoslané: ${n}.`,
+      nobody: "Nie je komu pripomínať.",
     },
   },
 
@@ -2494,6 +2563,28 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       fallbackNote: "Pokud odkaz nefunguje, zkopírujte jej do prohlížeče:",
       subtitle: "Interní portál",
     },
+    reminderEmail: {
+      subject: organisation => `Připomínka: nepotvrzené dokumenty — ${organisation}`,
+      subtitle: "Připomínka",
+      intro: count => count === 1
+        ? "Jeden dokument stále čeká na vaše potvrzení."
+        : count >= 2 && count <= 4
+          ? `${count} dokumenty stále čekají na vaše potvrzení.`
+          : `${count} dokumentů stále čeká na vaše potvrzení.`,
+      itemLine: (label, days) => `verze ${label}, čeká ${days} dní`,
+      button: "Otevřít seznam",
+      note: "Potvrzení se váže na konkrétní znění a zabere pár minut. Pokud si myslíte, že se vás dokument netýká, ozvěte se personálnímu oddělení.",
+    },
+
+    inviteEmail: {
+      subject: organisation => `Přístup do interního portálu — ${organisation}`,
+      subtitle: "Pozvánka",
+      intro: organisation => `Byli jste zařazeni do interního portálu organizace ${organisation}. Najdete v něm předpisy, které se vás týkají, a potvrdíte v něm, že jste se s nimi seznámili.`,
+      how: "Otevřete stránku níže a vyžádejte si přihlašovací odkaz na svou pracovní adresu. Odkaz vám nesmíme poslat předem — platí jen krátce a poštovní brány ho spotřebují dřív, než se k němu dostanete.",
+      button: "Otevřít portál",
+      note: "Pokud se přihlásit nedá, ozvěte se personálnímu oddělení — adresa musí být v seznamu osob.",
+    },
+
     assignmentEmail: {
       subject: org => `Nový dokument k potvrzení — ${org}`,
       subtitle: "K potvrzení",
@@ -2703,6 +2794,19 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
         `Příjemců je ${recipients}, najednou lze poslat nejvýše ${max}. Rozděl přidělení na menší publika.`,
       sent: (n) => `Odesláno ${n} lidem, kteří ještě nepotvrdili.`,
       sentWithFailures: (n, failed) => `Odesláno ${n}. Nedoručitelné: ${failed}`,
+    },
+
+    reminders: {
+      heading: "Připomínky",
+      intro: days => `Lidé, kteří mají něco nepotvrzené déle než ${days} dní. Jeden e-mail na člověka — kdo mešká se čtyřmi předpisy, dostane jednu zprávu se čtyřmi řádky.`,
+      back: "← Zpět na přehled",
+      open: "Připomenout",
+      none: days => `Nikdo nemešká více než ${days} dní.`,
+      person: (documents, days) => `${documents === 1 ? "1 dokument" : documents >= 2 && documents <= 4 ? `${documents} dokumenty` : `${documents} dokumentů`} · nejdéle ${days} dní`,
+      send: people => people === 1 ? "Odeslat 1 připomínku" : people >= 2 && people <= 4 ? `Odeslat ${people} připomínky` : `Odeslat ${people} připomínek`,
+      preview: "Toto půjde na uvedené adresy. Odeslaný e-mail se odvolat nedá.",
+      sent: n => `Odesláno: ${n}.`,
+      nobody: "Není komu připomínat.",
     },
   },
 
@@ -3778,6 +3882,26 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       fallbackNote: "If the link does not work, copy it into your browser:",
       subtitle: "Internal portal",
     },
+    reminderEmail: {
+      subject: organisation => `Reminder: documents not acknowledged — ${organisation}`,
+      subtitle: "Reminder",
+      intro: count => count === 1
+        ? "One document is still waiting for your acknowledgement."
+        : `${count} documents are still waiting for your acknowledgement.`,
+      itemLine: (label, days) => `version ${label}, waiting ${days} days`,
+      button: "Open the list",
+      note: "An acknowledgement is tied to one specific version and takes a couple of minutes. If you believe a document does not apply to you, contact HR.",
+    },
+
+    inviteEmail: {
+      subject: organisation => `Access to the internal portal — ${organisation}`,
+      subtitle: "Invitation",
+      intro: organisation => `You have been added to the internal portal of ${organisation}. It holds the documents that apply to you, and it is where you acknowledge that you have read them.`,
+      how: "Open the page below and request a sign-in link to your work address. We cannot send the link in advance — it is short-lived and mail gateways consume it before you get to it.",
+      button: "Open the portal",
+      note: "If you cannot sign in, contact HR — your address has to be on the list of people.",
+    },
+
     assignmentEmail: {
       subject: org => `New document to acknowledge — ${org}`,
       subtitle: "To acknowledge",
@@ -3986,6 +4110,19 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
         `There are ${recipients} recipients; at most ${max} can be sent at once. Split the assignment into smaller audiences.`,
       sent: (n) => `Sent to ${n} people who have not acknowledged yet.`,
       sentWithFailures: (n, failed) => `Sent ${n}. Undeliverable: ${failed}`,
+    },
+
+    reminders: {
+      heading: "Reminders",
+      intro: days => `People with something unacknowledged for more than ${days} days. One email per person — someone behind on four documents gets one message with four lines.`,
+      back: "← Back to the overview",
+      open: "Remind",
+      none: days => `Nobody is more than ${days} days behind.`,
+      person: (documents, days) => `${documents === 1 ? "1 document" : `${documents} documents`} · longest ${days} days`,
+      send: people => people === 1 ? "Send 1 reminder" : `Send ${people} reminders`,
+      preview: "This goes to the addresses listed. A sent email cannot be taken back.",
+      sent: n => `Sent: ${n}.`,
+      nobody: "There is nobody to remind.",
     },
   },
 

@@ -55,6 +55,9 @@ export default async function HrOverviewPage({
         <Link className="tlacidlo tlacidlo--tiche" href="/hr/overview">
           {dictionary(language).hr.report.heading}
         </Link>
+        <Link className="tlacidlo tlacidlo--tiche" href="/hr/reminders">
+          {dictionary(language).hr.reminders.heading}
+        </Link>
       </p>
 
       {overview.length === 0 ? (

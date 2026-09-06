@@ -234,3 +234,114 @@ export function assignmentEmail(
 
   return { subject: s.subject(organisation), text, html }
 }
+
+/**
+ * Pripomienka — **jedna správa na človeka**, nie na povinnosť.
+ *
+ * Kto mešká so štyrmi smernicami, dostane jeden e-mail so štyrmi riadkami.
+ * Štyri samostatné správy v jednej minúte vyzerajú ako pokazený systém
+ * a človek ich prestane čítať — čím prestane fungovať aj pripomínanie samo.
+ *
+ * Odkaz vedie na **zoznam**, nie na konkrétny dokument: keď má človek za
+ * sebou viac úloh, jeden odkaz na „čo ma čaká" je použiteľnejší než tri
+ * odkazy, z ktorých si má vybrať.
+ */
+export function reminderEmail(
+  link: string,
+  host: string,
+  items: { title: string; versionLabel: string; days: number }[],
+  language: UiLanguage = "sk",
+  branding?: SignInBranding,
+): Omit<Message, "to"> {
+  const s = dictionary(language).reminderEmail
+  const organisation = branding?.displayName ?? "Contineo"
+  const accent = branding?.accentColor ?? "#232a35"
+
+  const logo = branding?.logoUrl
+    ? `<img src="${branding.logoUrl}" alt="" width="34" height="34" style="display:inline-block;vertical-align:middle;margin-right:10px;border:0">`
+    : ""
+
+  const line = (i: { title: string; versionLabel: string; days: number }) =>
+    `${i.title} — ${s.itemLine(i.versionLabel, i.days)}`
+
+  const text = [
+    s.intro(items.length),
+    "",
+    ...items.map(line),
+    "",
+    link,
+    "",
+    s.note,
+  ].join("\n")
+
+  const rows = items.map(i => `
+    <div style="border-left:3px solid ${accent};padding:2px 0 2px 14px;margin:0 0 14px">
+      <div style="font-size:16px;font-weight:700;line-height:1.4">${escapujHtml(i.title)}</div>
+      <div style="font-size:13.5px;color:#5c6675;margin-top:3px">${escapujHtml(s.itemLine(i.versionLabel, i.days))}</div>
+    </div>`).join("")
+
+  const html = `<!doctype html>
+<html lang="${language}"><body style="margin:0;padding:24px;background:#f5f6f8;font-family:ui-sans-serif,system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;color:#161b22">
+  <div style="max-width:520px;margin:0 auto;background:#fff;border:1px solid rgba(20,28,42,.12);border-radius:12px;padding:28px">
+    <div style="font-size:18px;font-weight:700;letter-spacing:-.02em;margin-bottom:6px">${logo}<span style="vertical-align:middle">${escapujHtml(organisation)}</span></div>
+    <div style="font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:#5c6675;margin-bottom:22px">${escapujHtml(s.subtitle)}</div>
+    <p style="font-size:15.5px;line-height:1.65;margin:0 0 18px">${escapujHtml(s.intro(items.length))}</p>
+    ${rows}
+    <a href="${link}" style="display:inline-block;background:${accent};color:#fff;text-decoration:none;border-radius:10px;padding:12px 22px;font-size:15px;font-weight:600;margin-top:8px">
+      ${escapujHtml(s.button)}
+    </a>
+    <p style="font-size:13px;line-height:1.6;color:#5c6675;margin:22px 0 0">${escapujHtml(s.note)}</p>
+    <hr style="border:none;border-top:1px solid rgba(20,28,42,.12);margin:22px 0 14px">
+    <div style="font-size:12px;color:#5c6675">${escapujHtml(host)} · LTK Solutions</div>
+  </div>
+</body></html>`
+
+  return { subject: s.subject(organisation), text, html }
+}
+
+/**
+ * Hromadná pozvánka — **bez tokenu** (rozhodnuté 2026-09-06).
+ *
+ * Nesie obyčajný odkaz na prihlasovaciu stránku. Prihlasovací odkaz
+ * s jednorazovým tokenom by pri stovke adries naraz zlyhal dvakrát:
+ * platí 24 hodín, takže časť vyprší skôr, než si to niekto prečíta, a
+ * poštové brány (M365 Safe Links) odkazy predberajú a token spotrebujú
+ * ešte pred človekom — máme to zaznamenané z 2026-08-28.
+ *
+ * Človek si teda odkaz vyžiada sám na stránke. O jedno kliknutie viac,
+ * zato funguje vždy.
+ */
+export function inviteEmail(
+  signInUrl: string,
+  host: string,
+  language: UiLanguage = "sk",
+  branding?: SignInBranding,
+): Omit<Message, "to"> {
+  const s = dictionary(language).inviteEmail
+  const organisation = branding?.displayName ?? "Contineo"
+  const accent = branding?.accentColor ?? "#232a35"
+
+  const logo = branding?.logoUrl
+    ? `<img src="${branding.logoUrl}" alt="" width="34" height="34" style="display:inline-block;vertical-align:middle;margin-right:10px;border:0">`
+    : ""
+
+  const text = [s.intro(organisation), "", s.how, signInUrl, "", s.note].join("\n")
+
+  const html = `<!doctype html>
+<html lang="${language}"><body style="margin:0;padding:24px;background:#f5f6f8;font-family:ui-sans-serif,system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;color:#161b22">
+  <div style="max-width:520px;margin:0 auto;background:#fff;border:1px solid rgba(20,28,42,.12);border-radius:12px;padding:28px">
+    <div style="font-size:18px;font-weight:700;letter-spacing:-.02em;margin-bottom:6px">${logo}<span style="vertical-align:middle">${escapujHtml(organisation)}</span></div>
+    <div style="font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:#5c6675;margin-bottom:22px">${escapujHtml(s.subtitle)}</div>
+    <p style="font-size:15.5px;line-height:1.65;margin:0 0 16px">${escapujHtml(s.intro(organisation))}</p>
+    <p style="font-size:15px;line-height:1.65;margin:0 0 22px">${escapujHtml(s.how)}</p>
+    <a href="${signInUrl}" style="display:inline-block;background:${accent};color:#fff;text-decoration:none;border-radius:10px;padding:12px 22px;font-size:15px;font-weight:600">
+      ${escapujHtml(s.button)}
+    </a>
+    <p style="font-size:13px;line-height:1.6;color:#5c6675;margin:22px 0 0">${escapujHtml(s.note)}</p>
+    <hr style="border:none;border-top:1px solid rgba(20,28,42,.12);margin:22px 0 14px">
+    <div style="font-size:12px;color:#5c6675">${escapujHtml(host)} · LTK Solutions</div>
+  </div>
+</body></html>`
+
+  return { subject: s.subject(organisation), text, html }
+}

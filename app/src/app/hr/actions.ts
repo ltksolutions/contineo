@@ -19,7 +19,9 @@ import {
   audienceFromSelection,
 } from "@/lib/assignments"
 import { allDepartments } from "@/lib/departments"
-import { send, assignmentEmail } from "@/lib/ecomail"
+import { send, assignmentEmail, reminderEmail } from "@/lib/ecomail"
+import { overdue, byPersonReminder, DEFAULT_DAYS } from "@/lib/reminders"
+import { writeAudit, diff } from "@/lib/audit"
 import { brandingView } from "@/lib/tenants"
 import { requestHostname } from "@/lib/session"
 import { dictionary, errorText, formatDate, normalizeLanguage } from "@/lib/i18n"
@@ -233,5 +235,86 @@ export async function sendNotificationAction(fd: FormData) {
   const message = failed.length === 0
     ? t.sent(sent)
     : t.sentWithFailures(sent, `(${failed.length}) ${failed.slice(0, 5).join(", ")}${failed.length > 5 ? "…" : ""}`)
+  redirect(`/hr?msg=${encodeURIComponent(message)}${failed.length ? "&error=1" : ""}`)
+}
+
+/**
+ * Hromadné pripomienky meškajúcim.
+ *
+ * **Jeden e-mail na človeka**, nie na povinnosť: kto mešká so štyrmi
+ * smernicami, dostane jednu správu so štyrmi riadkami. Štyri samostatné
+ * správy v jednej minúte vyzerajú ako pokazený systém a človek si na ne
+ * zapne filter — čím prestane fungovať aj pripomínanie samo.
+ *
+ * Zoznam sa **prepočíta tu znova**, neberie sa z formulára. Medzi zobrazením
+ * náhľadu a kliknutím mohol niekto potvrdiť; poslať mu pripomienku niečoho,
+ * čo pred minútou spravil, je presne ten druh pošty, ktorý ľudí odnaučí
+ * čítať aj tú dôležitú.
+ */
+export async function sendRemindersAction(fd: FormData) {
+  const ctx = await hrContext()
+  if (ctx.state !== "ready") redirect("/hr")
+  const code = ctx.person.companyCode
+  const t = dictionary(ctx.person.language).hr.reminders
+
+  const days = Number(fieldText(fd, "days")) || DEFAULT_DAYS
+  const people = byPersonReminder(await overdue(code, days))
+  if (people.length === 0) {
+    redirect("/hr/reminders?error=1&msg=" + encodeURIComponent(t.nobody))
+  }
+  if (people.length > MAX_AT_ONCE) {
+    redirect("/hr/reminders?error=1&msg=" + encodeURIComponent(
+      dictionary(ctx.person.language).hr.actions.tooManyRecipients(people.length, MAX_AT_ONCE),
+    ))
+  }
+
+  const host = await requestHostname()
+  const branding = brandingView(ctx.tenant)
+  const link = `https://${host}/dokumenty`
+
+  let sent = 0
+  const failed: string[] = []
+
+  for (let i = 0; i < people.length; i += CONCURRENCY) {
+    await Promise.all(people.slice(i, i + CONCURRENCY).map(async person => {
+      try {
+        await send({
+          to: person.email,
+          ...reminderEmail(
+            link,
+            host,
+            person.items.map(o => ({
+              title: o.duty.documentTitle,
+              versionLabel: o.duty.versionLabel,
+              days: o.days,
+            })),
+            // Jazyk sa berie z povinnosti, nie z prihláseného personalistu —
+            // pripomienka ide človeku, nie tomu, kto ju odosiela.
+            normalizeLanguage(ctx.person.language),
+            branding,
+          ),
+        })
+        sent++
+      } catch (e) {
+        console.error(`[hr] pripomienka na ${person.email} zlyhala:`, e)
+        failed.push(person.email)
+      }
+    }))
+  }
+
+  await writeAudit({
+    companyCode: code, subject: "assignment", action: "changed",
+    actor: ctx.person.email,
+    targetId: "reminders",
+    targetLabel: t.heading,
+    changes: diff({ sent: 0 }, { sent }),
+  })
+
+  revalidatePath("/hr/reminders")
+  const message = failed.length === 0
+    ? t.sent(sent)
+    : dictionary(ctx.person.language).hr.actions.sentWithFailures(
+        sent, `(${failed.length}) ${failed.slice(0, 5).join(", ")}${failed.length > 5 ? "…" : ""}`,
+      )
   redirect(`/hr?msg=${encodeURIComponent(message)}${failed.length ? "&error=1" : ""}`)
 }
