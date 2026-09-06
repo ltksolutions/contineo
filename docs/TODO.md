@@ -176,7 +176,13 @@
       Export ide z **toho istého** zoznamu ako obrazovka, nie z druhého dotazu — výkaz, ktorý sa nezhoduje s obrazovkou, sa rozíde práve vtedy, keď si to nikto nevšimne.
       Zhrnutie používa **medián**, nie priemer: jeden človek na strope štyroch hodín posunie priemer o hodiny.
   - [ ] **Do záznamu o spracúvaní (O15/O16):** HR vidí čas čítania **aj pri jednotlivých ľuďoch** (rozhodnuté 2026-09-06). Je to údaj o správaní konkrétnej osoby zobrazený inej osobe — patrí do záznamu a do informovania zamestnancov, nie len do kódu. Zoradiť sa podľa neho nedá zámerne (rebríček by z merania bez následku následok vyrobil), ale to samo osebe nestačí.
-- [ ] Hromadné pozvánky a pripomienky z UI
+- [x] **Pripomienky meškajúcim z UI** ✅ 2026-09-06 — `/hr/reminders` s náhľadom, `lib/reminders.ts`.
+      **Jeden e-mail na človeka, nie na povinnosť** — štyri správy v jednej minúte vyzerajú ako pokazený systém a človek si na ne zapne filter.
+      Meškanie sa počíta od `Duty.since`: pri pridelení jeho dátum, pri trase odkedy má človek prístup. Oba pôvody → platí **neskorší** (D37: nové pridelenie vracia hodiny na nulu). Povinnosť bez začiatku sa za meškajúcu nepovažuje.
+- [x] **Naplánovaná úloha** ✅ 2026-09-06 — `/api/cron/overdue` + `vercel.json`, **týždenne v pondelok 06:00 UTC**. Prah je 14 dní; denný e-mail o tom istom zozname personalista do troch dní prestane otvárať.
+      **Cron nerozposiela ľuďom, upozorňuje personalistu** (rozhodnuté 2026-09-06). Jedna chyba v podmienke by sa pri automatickom rozposielaní prejavila až tým, že sa ozve sto nahnevaných ľudí; takto sa prejaví tým, že personalista otvorí zoznam a povie „toto nesedí".
+  - [ ] **Nastaviť `CRON_SECRET` vo Verceli.** Bez nej sa beh odmietne (401) — zámerne: chýbajúca premenná by inak spravila z odkazu verejný výpis toho, koľko ľudí mešká.
+- [ ] **Hromadné pozvánky z UI** — `inviteEmail()` je hotový (bez tokenu, rozhodnuté 2026-09-06: prihlasovací odkaz platí 24 h a raz, M365 Safe Links ho spotrebuje pred človekom). Chýba obrazovka: vybrať ľudí so stavom `invited`, náhľad, odoslať.
 - [x] Opätovné potvrdenie pri novej verzii ✅ — cez pridelenie s povinným dôvodom (**D37**, nie D30)
 - [x] Tenant podľa hostiteľa; neznámy hostiteľ = zakázaný ✅ 2026-08-28 — **D29**. `app/src/lib/tenants.ts` (kolekcia `tenants`, cache kladných aj záporných výsledkov), `onboardingContext()` v `session.ts` skladá „tenant + osoba + patria k sebe" na jednom mieste — keby si to každá stránka robila sama, jedna z nich raz niektorú časť vynechá a vyzerá to ako fungujúca stránka. `scripts/tenant_set.mjs` + unikátny index `hostname_unique` (doména patrí najviac jednému tenantovi — databáza to drží aj vtedy, keď to skript prehliadne). 25 testov.
   - [ ] **Kontrola nie je v middleware**, ale v serverových komponentoch a route handleroch. Staršie plochy (`/`, `/sada`, `/api/chat`) sú chránené prihlásením, nie tenantom. Doplniť pri Fáze 5.
