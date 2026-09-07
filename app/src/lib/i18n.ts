@@ -203,6 +203,8 @@ interface Dictionary {
   nav: {
     ask: string
     goldenSet: string
+    /** Popis navigačnej oblasti shellu pre čítačky obrazovky. */
+    sections: string
     toAcknowledge: string
     assigned: string
     people: string
@@ -1327,6 +1329,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
   nav: {
     ask: "Voľné otázky",
     goldenSet: "Zlatá sada",
+    sections: "Sekcie",
     toAcknowledge: "Na potvrdenie",
     assigned: "Pridelené normy",
     people: "Osoby",
@@ -2673,6 +2676,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
   nav: {
     ask: "Volné otázky",
     goldenSet: "Zlatá sada",
+    sections: "Sekce",
     toAcknowledge: "K potvrzení",
     assigned: "Přidělené předpisy",
     people: "Osoby",
@@ -4016,6 +4020,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
   nav: {
     ask: "Ask a question",
     goldenSet: "Golden set",
+    sections: "Sections",
     toAcknowledge: "To acknowledge",
     assigned: "Assigned documents",
     people: "People",

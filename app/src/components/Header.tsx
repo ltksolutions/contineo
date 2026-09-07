@@ -15,6 +15,7 @@ import { signOut } from "next-auth/react"
 import { ContineoMark } from "./ContineoMark"
 import type { TenantBrandingView } from "./TenantHeader"
 import { dictionary, type UiLanguage } from "@/lib/i18n"
+import { isShellRoute } from "@/lib/shellRoutes"
 
 /**
  * Voľba témy má **tri** stavy, nie dva.
@@ -140,6 +141,13 @@ export default function Header({
   const [personalOpen, setPersonalOpen] = useState(false)
   const personalWrap = useRef<HTMLDivElement>(null)
   const pathname = usePathname()
+
+  /*
+   * Na stránke, ktorá beží v aplikačnom shelli, má navigáciu shell — tu by
+   * bola druhá nad ňou. Osobné menu pod avatarom zostáva: sú v ňom
+   * nastavenia, správa tenantov, téma a odhlásenie, a tie shell nemá.
+   */
+  const inShell = isShellRoute(pathname)
 
   const shade = avatarShade(email ?? "")
 
@@ -283,6 +291,8 @@ export default function Header({
               druhého riadka a hlavička rástla do výšky — a bude ich pribúdať,
               takže „nejako sa to zmestí" prestane platiť čoraz skôr.
             */}
+            {!inShell && (
+              <>
             <button
               type="button"
               className="tlacidlo tlacidlo--tiche hlavicka-hamburger"
@@ -317,6 +327,8 @@ export default function Header({
                 )
               })}
             </nav>
+              </>
+            )}
 
             {/*
               Osobné menu. Odhlásenie aj téma patria k človeku, nie k obsahu —

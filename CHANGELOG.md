@@ -4,6 +4,22 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Added (2026-09-07 — aplikačný shell, opt-in)
+
+Krok 2 z handoffu `design_handoff_contineo_intranet`, ale **inak, než návrh žiadal**.
+
+- **`layout.tsx` zostáva nedotknutý.** Návrh chcel prepnúť globálny obal z `.obal` (max 900 px) na aplikačný shell. Ten obal však nesú všetky stránky — `/documents`, `/hr`, `/people`, `/admin`, `/golden-set` — a sú na tú šírku postavené; globálna zmena by ich rozbila všetky naraz. Shell je preto **opt-in**: `components/AppShell.tsx` si vyžiada stránka sama. Prvá a zatiaľ jediná je `/library`. Ostatné sa presúvajú po jednej, každá vlastným PR, a kým sú mimo shellu, fungujú presne ako dnes.
+- **`components/AppNav.tsx`** — navigácia v dvoch variantoch (`sidebar`, `topbar`), jeden komponent a rozdiel len v CSS. **Mobile first doslova:** oba varianty sú na úzkej obrazovke ten istý vodorovný pás, ktorý sa dá posunúť prstom; bočným panelom sa `sidebar` stáva od 760 px, na tej istej hranici, kde sa rozbaľuje menu v hlavičke. Bočný panel na 360 px by zabral tretinu šírky a obsahu nechal stĺpec, do ktorého sa nezmestí ani názov dokumentu.
+- Aktívna položka na páse sa **doroluje do výrezu** — inak človek na telefóne nevidí, kde je. Posúva sa vlastný `scrollLeft` pásu, nie `scrollIntoView()`: ten hýbe aj stránkou a pri načítaní by ju stiahol pod hlavičku.
+- **Položky sú skutočné routy podmienené rolami**, nie zoznam z prototypu: odkaz na neexistujúcu obrazovku vedie na 404 a odkaz do sekcie, kam človek nesmie, mu prezrádza, čo v systéme je. Príznaky rolí si `AppShell` zisťuje tými istými funkciami, ktoré rozhodujú aj o samotných stránkach — druhá kópia pravidla „kto smie kam" je horšia než pár dotazov navyše. Správcovské odkazy zostávajú pod avatarom v hlavičke, kde sú dnes.
+- **Ikony navigácie zatiaľ nie sú.** Prototyp má na ich mieste textové znaky (▦ ▤ ⌕), tie do produkcie nepatria, projekt vlastný ikonový set nemá a kresliť šesť nových od ruky handoff zakazuje. Rovnako zatiaľ **nie sú badge čísla** — každé je dotaz do databázy a patria k prehľadu, ktorý ešte neexistuje.
+- **Prepínač organizácie sa nerobil.** Tenanta určuje hostiteľ (D29) — jedna doména, jedna organizácia — takže v produkcii by to bolo tlačidlo predstierajúce schopnosť, ktorú systém nemá. V prototype je ako ukážka multitenantu; správca platformy prepína organizácie cez `/admin`.
+- **Variant navigácie je zatiaľ len z adresy** (`?layout=sidebar`, predvolený `topbar`) a nesie sa ďalej spolu s filtrami. Uložiť ho na osobu alebo organizáciu znamená zmenu schémy — samostatné rozhodnutie s vlastnou migráciou.
+- **`Header` skrýva svoje menu na stránkach v shelli** (`lib/shellRoutes.ts`), inak by na `/library` boli dve navigácie nad sebou. Zhoda je **presná, nie na prefix**: `/library/new` v shelli ešte nie je a prefix by mu menu zobral a nič nedal. Osobné menu pod avatarom zostáva všade — sú v ňom nastavenia, téma a odhlásenie, ktoré shell nemá.
+- `/library` zahodila `.obal` s max. 900 px: je to zoznam, ku ktorému v kroku 4 pribudne panel filtrov vedľa, a na 900 px sa vedľa seba nezmestia.
+- Aktívna položka je **prvý skutočný odberateľ `--accent-soft`** z predchádzajúceho kroku — farbu organizácie nesie naznačenú, nie plnú.
+- Overené: `tsc --noEmit` čisto, `eslint` bez chýb, **909 testov prechádza** (10 nových), oba varianty prekreslené na 390 px aj na desktope, vo svetlej aj tmavej téme a s farbou tenanta.
+
 ### Added (2026-09-07 — dizajnové tokeny a viacnásobný výber)
 
 Prvé dva kroky z dizajnového handoffu `design_handoff_contineo_intranet` (návrh intranetu, knižnice a inteligentných zoznamov). Obidva sú **aditívne** — žiadna existujúca obrazovka nemení vzhľad ani správanie a dajú sa mergnúť samostatne.
