@@ -388,7 +388,11 @@
 **Zostáva (mimo rozsahu B)**
 
 - [ ] pripomienky podľa času („nepotvrdené po 14 dňoch") — potrebujú naplánovanú úlohu, tú zatiaľ nemáme
-- [ ] **Revízny poriadok má zástupný dátum účinnosti.** Text hovorí „dňom schválenia VV SFZ" a dátum schválenia v ňom nie je; treba ho z uznesenia
+- [x] **Skúšobný korpus označený značkou `test`** ✅ 2026-09-07 — všetkých 10 dokumentov SFZ, `npm run tag:test -- --company SFZ --zapis`. Rozhodnutie Jána Letka: tieto znenia sú len skúšobné, ostré sa nahrajú znova a von nikdy nepôjdu.
+      **Značka nič nezakazuje** — je to štítok, nie brána. Dokument so značkou `test` sa dá stále prideliť aj potvrdiť; slúži na orientáciu pri nahradzovaní. Skutočnou hranicou je tenant a doména.
+      Zápis šiel cez `saveMetadata()`, nie priamo do Mongo, takže vzniklo 11 auditných záznamov. Pozor: `saveMetadata()` prepisuje **všetky** metadáta naraz — skript preto posiela aj scope, accessLevel, language a category, inak by sa stratili.
+- [ ] ~~**Revízny poriadok má zástupný dátum účinnosti**~~ — bezpredmetné, kým je korpus skúšobný. Pri nahrávaní ostrých znení treba dátum z uznesenia VV SFZ (web SFZ uvádza účinnosť od 6. 12. 2023, ale autorita je uznesenie).
+- [ ] **Pri nahrávaní ostrých znení porovnať dátumy s futbalsfz.sk** — skúšobný korpus mal aspoň tri staršie znenia, než SFZ zverejňuje (Disciplinárny 2023 vs 2025, Organizačný a návštevný 2014 vs 2019, Revízny zástupný). Pri ostrom nahrávaní to overiť dokument po dokumente.
 - [ ] **označenie znenia „1.0" je vymyslené číslo** a objaví sa v potvrdzovacej formulke
 
 **Rozsah C — až keď existujú ďalšie zdroje**
