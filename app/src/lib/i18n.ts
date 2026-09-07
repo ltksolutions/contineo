@@ -997,6 +997,15 @@ interface Dictionary {
       viewSwitch: string
       viewTable: string
       viewCards: string
+      /** Hromadné akcie nad označenými dokumentmi. */
+      bulk: {
+        heading: string
+        pickColumn: string
+        pick: (title: string) => string
+        moveTo: string
+        move: string
+        assign: string
+      }
       /** Query builder: podmienky, ktoré si človek zostaví sám. */
       builder: {
         heading: string
@@ -1216,6 +1225,10 @@ interface Dictionary {
       draftAccepted: string
       draftDiscarded: string
       assigned: string
+      /** Hromadné akcie: prázdny výber a výsledok dávky. */
+      bulkNothingSelected: string
+      bulkMoved: (moved: number, total: number) => string
+      bulkMovedPartly: (moved: number, total: number, failed: string) => string
       reindexUpToDate: string
       reindexed: (chunks: number, archived: number) => string
       fixedNeedsReacknowledge: (people: number) => string
@@ -2397,6 +2410,14 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       viewSwitch: "Pohľad",
       viewTable: "Tabuľka",
       viewCards: "Karty",
+      bulk: {
+        heading: "S označenými",
+        pickColumn: "Výber",
+        pick: (title) => `Označiť ${title}`,
+        moveTo: "Presunúť do",
+        move: "Presunúť",
+        assign: "Vyžiadať potvrdenie",
+      },
       builder: {
         heading: "Podmienky",
         hint: "Zátvorky zatiaľ nevieme, preto platí jeden režim pre celý dotaz — inak by výsledok znamenal niečo iné, než ste napísali.",
@@ -2620,6 +2641,10 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       draftAccepted: "Návrh je teraz konceptom. Publikovanie je stále samostatný krok.",
       draftDiscarded: "Návrh zahodený.",
       assigned: "Zaradené.",
+      bulkNothingSelected: "Neoznačili ste žiadny dokument.",
+      bulkMoved: (moved) => `Presunuté: ${moved}.`,
+      bulkMovedPartly: (moved, total, failed) =>
+        `Presunuté ${moved} z ${total}. Neprešli: ${failed}`,
       reindexUpToDate: "Členenie je už aktuálne — nič sa nemenilo.",
       reindexed: (chunks, archived) =>
         `Preindexované: ${chunks} ${chunks === 1 ? "úsek" : chunks < 5 ? "úseky" : "úsekov"},` +
@@ -3791,6 +3816,14 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       viewSwitch: "Pohled",
       viewTable: "Tabulka",
       viewCards: "Karty",
+      bulk: {
+        heading: "S označenými",
+        pickColumn: "Výběr",
+        pick: (title) => `Označit ${title}`,
+        moveTo: "Přesunout do",
+        move: "Přesunout",
+        assign: "Vyžádat potvrzení",
+      },
       builder: {
         heading: "Podmínky",
         hint: "Závorky zatím neumíme, proto platí jeden režim pro celý dotaz — jinak by výsledek znamenal něco jiného, než jste napsali.",
@@ -4014,6 +4047,10 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       draftAccepted: "Návrh je teď konceptem. Publikování je stále samostatný krok.",
       draftDiscarded: "Návrh zahozen.",
       assigned: "Zařazeno.",
+      bulkNothingSelected: "Neoznačili jste žádný dokument.",
+      bulkMoved: (moved) => `Přesunuto: ${moved}.`,
+      bulkMovedPartly: (moved, total, failed) =>
+        `Přesunuto ${moved} z ${total}. Neprošly: ${failed}`,
       reindexUpToDate: "Členění je už aktuální — nic se neměnilo.",
       reindexed: (chunks, archived) =>
         `Přeindexováno: ${chunks} ${chunks === 1 ? "úsek" : chunks < 5 ? "úseky" : "úseků"},` +
@@ -5181,6 +5218,14 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       viewSwitch: "View",
       viewTable: "Table",
       viewCards: "Cards",
+      bulk: {
+        heading: "With selected",
+        pickColumn: "Select",
+        pick: (title) => `Select ${title}`,
+        moveTo: "Move to",
+        move: "Move",
+        assign: "Request acknowledgement",
+      },
       builder: {
         heading: "Conditions",
         hint: "Parentheses are not supported yet, so one mode applies to the whole query — otherwise the result would mean something other than what you wrote.",
@@ -5403,6 +5448,10 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       draftAccepted: "The draft is now the working text. Publishing is still a separate step.",
       draftDiscarded: "Draft discarded.",
       assigned: "Filed.",
+      bulkNothingSelected: "You have not selected any document.",
+      bulkMoved: (moved) => `Moved: ${moved}.`,
+      bulkMovedPartly: (moved, total, failed) =>
+        `Moved ${moved} of ${total}. Failed: ${failed}`,
       reindexUpToDate: "The chunking is already up to date — nothing changed.",
       reindexed: (chunks, archived) =>
         `Reindexed: ${chunks} ${chunks === 1 ? "chunk" : "chunks"}, ${archived} older archived.` +

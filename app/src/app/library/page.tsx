@@ -16,7 +16,7 @@ import { tenantExtras } from "@/lib/codelistsTenant"
 import Select from "@/components/Select"
 import {
   createFolderAction, renameFolderAction, moveFolderAction, deleteFolderAction,
-  shiftFolderAction, saveFolderOrderAction,
+  shiftFolderAction, saveFolderOrderAction, moveManyAction, assignManyAction,
 } from "./actions"
 import TreeWithOrder from "@/components/TreeWithOrder"
 import AppShell from "@/components/AppShell"
@@ -118,6 +118,7 @@ export default async function LibraryPage({
   const paged = pageRows(sortRows(rows, sort.key, sort.dir), pageOf(filters))
   const view = currentView(filters)
   const tb = t.builder
+  const tl = t.bulk
   const conditions = filters.conditions
 
   /*
@@ -570,12 +571,20 @@ export default async function LibraryPage({
           {search ? t.nothingFound : t.empty}
         </p>
       ) : (
-        <>
+        /*
+          Výber riadkov je stav formulára, nie klienta — celá knižnica beží
+          bez JavaScriptu. Dôsledok, ktorý je lepšie povedať nahlas: **výber
+          platí pre viditeľnú stranu.** Prechod na inú stranu ho zabudne, lebo
+          formulár sa odošle až akciou. Pri 25 riadkoch na stranu to na bežnú
+          prácu stačí a je to čitateľnejšie než výber, ktorý sa neviditeľne
+          vlečie naprieč filtrami a človek netuší, čo v ňom ešte je.
+        */
+        <form className="bulk-form">
           {/*
             Tabuľka, nie karty: v knižnici sa dokumenty **porovnávajú** —
             ktoré znenie platí, čo sa kedy zmenilo. Na to musia byť tie isté
             údaje pod sebou v stĺpci, nie rozsypané v každej karte inak.
-            Kartový pohľad pribudne ako voľba (krok 4c).
+            Kartový pohľad je vedľa nej ako voľba, nie namiesto nej.
 
             Obal roluje vodorovne a tabuľka má `min-width`: stĺpce sa nesmú
             stlačiť tak, že sa dátum zalomí do troch riadkov. Na telefóne je
@@ -592,6 +601,10 @@ export default async function LibraryPage({
             {paged.rows.map(r => (
               <li key={r.documentId} className="doc-card">
                 <div className="doc-card-top">
+                  <label className="bulk-pick">
+                    <input type="checkbox" name="document" value={r.documentId} />
+                    <span className="bulk-pick-text">{tl.pick(r.title)}</span>
+                  </label>
                   <span className="stitok">{t.processing[r.processingState] ?? r.processingState}</span>
                   {r.hasDraft && r.status !== "published" && <span className="stitok">{t.draft}</span>}
                   {r.category && <span className="tichy doc-card-kind">{categoryLabel(r.category)}</span>}
@@ -618,12 +631,15 @@ export default async function LibraryPage({
             <table className="doc-table">
               <thead>
                 <tr>
+                  <th scope="col" className="doc-col-pick">
+                    <span className="bulk-pick-text">{tl.pickColumn}</span>
+                  </th>
                   {([
                     ["title", t.colDocument],
                     ["category", t.category],
                     ["status", t.status],
                   ] as [SortKey, string][]).map(([key, label]) => (
-                    <th key={key} scope="col">
+                    <th key={key} scope="col" className={key === "title" ? "doc-col-title" : undefined}>
                       <Link href={toQuery(sortBy(filters, key))} className="doc-sort"
                             aria-label={t.sortBy(label)}>
                         {label}
@@ -648,7 +664,13 @@ export default async function LibraryPage({
               <tbody>
                 {paged.rows.map(r => (
                   <tr key={r.documentId}>
-                    <td>
+                    <td className="doc-col-pick">
+                      <label className="bulk-pick">
+                        <input type="checkbox" name="document" value={r.documentId} />
+                        <span className="bulk-pick-text">{tl.pick(r.title)}</span>
+                      </label>
+                    </td>
+                    <td className="doc-col-title">
                       <Link href={`/library/${encodeURIComponent(r.documentId)}`} className="doc-title">
                         {r.title}
                       </Link>
@@ -683,6 +705,48 @@ export default async function LibraryPage({
           )}
 
           {/*
+            Panel hromadných akcií.
+
+            Je vidieť stále, nie až po označení: bez JavaScriptu sa server
+            nedozvie, či je niečo zaškrtnuté, a panel, ktorý sa zjaví „až
+            keď", by tu nefungoval. Prázdny výber preto rieši akcia hlásením,
+            nie skrytým tlačidlom.
+
+            „Vyžiadať potvrdenie" nič nezapisuje — odovzdá výber obrazovke
+            `/hr/assign`, ktorá prideľovanie už vie: N noriem × M publík
+            s jedným dôvodom, povinným (D30), a znenie bez platnosti odmietne
+            (D6). Druhá kópia tých pravidiel tu by sa raz rozišla s prvou.
+          */}
+          <div className="bulk-bar">
+            <span className="bulk-title">{tl.heading}</span>
+
+            <div className="pole bulk-folder">
+              <span className="pole-popis">{tl.moveTo}</span>
+              <Select
+                name="folderId"
+                fieldLabel={tl.moveTo}
+                options={[
+                  { value: "", label: tf.unfiled },
+                  ...tree.map(r => ({
+                    value: r.folder.id,
+                    label: `${"— ".repeat(r.level - 1)}${r.folder.name}`,
+                  })),
+                ]}
+              />
+            </div>
+
+            <button className="tlacidlo tlacidlo--tiche" type="submit" formAction={moveManyAction}>
+              {tl.move}
+            </button>
+            <button className="tlacidlo tlacidlo--tiche" type="submit" formAction={assignManyAction}>
+              {tl.assign}
+            </button>
+
+            {/* Kam sa vrátiť — s filtrom, triedením aj stranou. */}
+            <input type="hidden" name="back" value={toQuery(filters)} />
+          </div>
+
+          {/*
             Pätička je aj tam, kde je strana jediná — číslo „koľko z koľkých"
             je odpoveď na otázku, ktorú si človek kladie vždy, nielen keď sa
             stránkuje.
@@ -705,7 +769,7 @@ export default async function LibraryPage({
               </span>
             )}
           </div>
-        </>
+        </form>
       )}
         </div>
       </div>

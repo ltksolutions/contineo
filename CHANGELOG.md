@@ -4,6 +4,20 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Added (2026-09-07 — knižnica: hromadné akcie)
+
+Krok 4e z handoffu `design_handoff_contineo_intranet`. Tým je krok 4 hotový celý.
+
+- **Prideľovanie sa nepísalo druhýkrát.** `/hr/assign` už prideľuje N noriem × M publík s jedným spoločným dôvodom, dôvod má povinný (D30) a znenie bez platnosti odmieta (D6) — a už dnes číta predvybrané dokumenty z adresy. Knižnica preto výber len **odovzdá**: „Vyžiadať potvrdenie" nič nezapisuje, prenesie označené dokumenty na tú obrazovku. Druhá kópia pravidiel okolo dôkazných záznamov by sa raz rozišla s prvou.
+- **Hromadný presun do priečinka** je cyklus nad tou istou `assignDocument()`, akú používa presun po jednom — kontroly aj audit zostávajú a nevzniká druhá cesta, ako sa dokument dostane do priečinka.
+- **Dávka môže skončiť čiastočne a je to zámer.** Kolekcie sa v tomto projekte menia po zázname; transakcia naprieč dokumentmi by sem zaviedla nástroj, ktorý sa nikde inde nepoužíva. Preto sa na konci vypíše „presunuté 23 z 25" aj s tým, ktoré neprešli a prečo — ticho presunúť časť je horšie než nepresunúť nič.
+- **Výber platí pre viditeľnú stranu.** Celá knižnica beží bez JavaScriptu, takže výber je stav formulára; prechod na inú stranu ho zabudne. Pri 25 riadkoch na stranu to na bežnú prácu stačí a je to čitateľnejšie než výber, ktorý sa neviditeľne vlečie naprieč filtrami.
+- **Panel je vidieť stále**, nie až po označení — bez skriptu sa server nedozvie, či je niečo zaškrtnuté. Prázdny výber rieši akcia hlásením, nie skrytým tlačidlom.
+- Po akcii sa človek vracia **na ten istý filter, triedenie aj stranu** (nesie sa v skrytom poli). Z formulára sa prijíma len cesta v knižnici — celá adresa by sa dala zneužiť na presmerovanie preč.
+- Popisky zaškrtávacích políčok sú pre čítačku obrazovky, nie na obrazovku; skrývajú sa `clip-path`, nie `display: none`, ktorý by ich zahodil aj pre ňu.
+- **Chyba, ktorú našiel render:** spodná hranica šírky stĺpca s názvom bola viazaná na `:first-child`, takže po pridaní stĺpca s políčkom sa presunula naň a tabuľka mala prázdnu tretinu vľavo. Teraz visí na triede.
+- Overené: `tsc --noEmit` čisto, `eslint` bez chýb, **965 testov prechádza** (6 nových).
+
 ### Added (2026-09-07 — knižnica: query builder)
 
 Krok 4d z handoffu `design_handoff_contineo_intranet`. Tým je krok 4 hotový okrem hromadných akcií (4e), ktoré sú zápisy do dát a čakajú na rozhodnutie.

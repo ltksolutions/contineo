@@ -80,7 +80,8 @@
 - [x] **4c. Kartový pohľad** + prepínač `?view=`
 - [x] **4d. Query builder** — podmienky v adrese, bez JavaScriptu, monospace náhľad dotazu. Pole a operátor sú jeden výber, takže nezmyselná dvojica sa nedá zostaviť
 - [ ] **Zátvorky v query builderi** — dnes platí jeden režim pre celý dotaz (spĺňa všetky / ktorúkoľvek), lebo `A alebo B a C` nemá bez zátvoriek jednoznačný význam. Miešanie spojok má zmysel doplniť až so zátvorkami, inak by dotaz znamenal niečo iné, než človek napísal
-- [ ] **4e. Hromadné akcie** — priradiť oddeleniam, vyžiadať potvrdenie, presunúť. **Sú to zápisy do dát** (D24, D32) — najprv rozhodnutie, potom kód
+- [x] **4e. Hromadné akcie** — hromadný presun do priečinka (cyklus nad `assignDocument`, audit zostáva) a odovzdanie výberu na `/hr/assign`, ktoré prideľovanie už vie. **Prideľovanie sa nepísalo druhýkrát.** Výber platí pre viditeľnú stranu; dávka môže skončiť čiastočne a vypíše, čo neprešlo
+- [ ] Výber, ktorý prežije stránkovanie — dnes platí len pre viditeľnú stranu. Má zmysel až s klientskym stavom alebo s id v adrese; treba doriešiť, čo s označeným dokumentom, ktorý už filtru nevyhovuje
 - [ ] **5. Detail dokumentu, nahrávanie, vyhľadávanie** — layouty a pravý panel; znovupoužiť `Answer.tsx`, `AcknowledgeButton.tsx`, `Rating.tsx`
 - [ ] **6. Nastavenia** — živý náhľad farby v `ColorSelect.tsx`, slot na logo na `saveBrand()`
 - [ ] **7. Dotiahnutie** — tmavá téma, `:focus-visible` všade, mobilná zásuvka filtrov, `<noscript>` cesty

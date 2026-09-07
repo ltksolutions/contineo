@@ -1631,9 +1631,13 @@ html[data-theme="dark"] .editor-tui .CodeMirror {
  * Stĺpec s názvom má spodnú hranicu šírky. Bez nej ho prehliadač pri
  * rolovaní stlačí na tretinu a názov dokumentu spadne do štyroch riadkov —
  * pritom je to jediný stĺpec, podľa ktorého sa v zozname hľadá.
+ *
+ * Viaže sa na triedu, nie na `:first-child`: keď pred názov pribudol stĺpec
+ * so zaškrtávacím políčkom, šírka sa presunula na neho a tabuľka mala
+ * prázdnu tretinu vľavo.
  */
-.doc-table th:first-child,
-.doc-table td:first-child { min-width: 280px; }
+.doc-table th.doc-col-title,
+.doc-table td.doc-col-title { min-width: 280px; }
 
 .doc-table th {
   padding: 8px 12px;
@@ -1713,6 +1717,62 @@ html[data-theme="dark"] .editor-tui .CodeMirror {
 }
 
 .doc-page:hover { background: var(--surface-2); }
+
+/* ── knižnica: hromadné akcie ───────────────────────────────────────────
+   Panel je vidieť stále, nie až po označení: bez skriptu server nevie, či je
+   niečo zaškrtnuté. Prázdny výber preto rieši akcia hlásením. */
+.bulk-form { display: contents; }
+
+.bulk-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 10px;
+  margin-top: 12px;
+  padding: 10px 12px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+
+.bulk-title {
+  align-self: center;
+  font-size: 13.5px;
+  font-weight: 600;
+}
+
+.bulk-bar .pole { margin: 0; }
+.bulk-folder { flex: 0 1 240px; }
+
+.doc-col-pick { width: 40px; }
+
+/* Terč je celé políčko aj s jeho okolím — na dotyku sa do 15 px netrafí. */
+.bulk-pick {
+  display: inline-grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  cursor: pointer;
+}
+
+.bulk-pick input { width: 17px; height: 17px; accent-color: var(--accent); }
+
+/*
+ * Popis políčka je pre čítačku obrazovky, nie na obrazovku: v stĺpci by sa
+ * názov dokumentu zopakoval pri každom riadku druhýkrát. `display: none` sa
+ * použiť nedá — to by ho čítačka preskočila tiež.
+ */
+.bulk-pick-text {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
 
 /* ── knižnica: query builder ────────────────────────────────────────────
    `<details>` a nie vlastný rozbaľovač: otvára a zatvára ho prehliadač, takže
