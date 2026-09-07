@@ -598,58 +598,55 @@ button:disabled { cursor: not-allowed; opacity: 0.55; }
  * Mobile first tu má konkrétny dôsledok: krížik na chipse a riadky v zozname
  * musia byť palcom trafiteľné, takže sú väčšie, než by na myš stačilo.
  */
-.multivyber {
+.multiselect {
   position: relative;
   display: grid;
   gap: 5px;
   min-width: 0;
 }
 
-.multivyber-popis {
-  font-size: 11px;
-  font-weight: 650;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--muted);
+.multiselect-label {
+  font-size: 13.5px;
+  font-weight: 600;
 }
 
-.multivyber-kontrolka {
+.multiselect-control {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: 5px;
   min-height: 44px;
   padding: 5px 7px;
-  background: var(--surface);
+  background: var(--bg);
   border: 1px solid var(--line);
   border-radius: 10px;
   /* Kurzor textu, lebo celá plocha je klikacia plocha pre vstup. */
   cursor: text;
 }
 
-.multivyber-kontrolka:hover { border-color: var(--accent); }
+.multiselect-control:hover { border-color: var(--accent); }
 
 /* Rámček dostane celá kontrolka, nie skryté vnútorné pole — inak nie je
    pri prechode klávesnicou vidieť, kde človek je. */
-.multivyber-kontrolka:focus-within {
+.multiselect-control:focus-within {
   border-color: var(--accent);
   box-shadow: 0 0 0 3px var(--accent-soft);
 }
 
-.multivyber-chip {
+.multiselect-chip {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  min-height: 30px;
+  min-height: 32px;
   padding: 0 4px 0 10px;
   border-radius: 7px;
   background: var(--surface-2);
   color: var(--ink);
-  font-size: 14px;
+  font-size: 15px;
   white-space: nowrap;
 }
 
-.multivyber-chip-x {
+.multiselect-chip-remove {
   display: grid;
   place-items: center;
   width: 26px;
@@ -663,10 +660,10 @@ button:disabled { cursor: not-allowed; opacity: 0.55; }
   line-height: 1;
 }
 
-.multivyber-chip-x:hover { background: var(--line); color: var(--ink); }
-.multivyber-chip-x:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.multiselect-chip-remove:hover { background: var(--line); color: var(--ink); }
+.multiselect-chip-remove:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
 
-.multivyber-vstup {
+.multiselect-input {
   flex: 1 1 80px;
   min-width: 70px;
   padding: 4px 2px;
@@ -674,18 +671,20 @@ button:disabled { cursor: not-allowed; opacity: 0.55; }
   outline: none;
   background: transparent;
   font: inherit;
-  font-size: 15px;
+  /* 16 px zámerne, rovnako ako `.pole-vstup`: pod touto hodnotou Safari na
+     iPhone pri kliknutí do poľa celú stránku priblíži. */
+  font-size: 16px;
   color: var(--ink);
 }
 
-.multivyber-pocet {
+.multiselect-counter {
   padding: 0 2px;
   font-size: 12px;
   color: var(--muted);
   font-variant-numeric: tabular-nums;
 }
 
-.multivyber-zoznam {
+.multiselect-list {
   position: absolute;
   top: calc(100% + 4px);
   left: 0;
@@ -700,7 +699,7 @@ button:disabled { cursor: not-allowed; opacity: 0.55; }
   box-shadow: var(--shadow);
 }
 
-.multivyber-polozka {
+.multiselect-option {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -712,16 +711,16 @@ button:disabled { cursor: not-allowed; opacity: 0.55; }
   cursor: pointer;
 }
 
-.multivyber-polozka.je-zvyraznena { background: var(--surface-2); }
+.multiselect-option.is-highlighted { background: var(--surface-2); }
 
-.multivyber-znak {
+.multiselect-mark {
   width: 14px;
   flex: none;
   color: var(--accent);
   font-weight: 700;
 }
 
-.multivyber-nazov {
+.multiselect-option-name {
   flex: 1;
   min-width: 0;
   overflow: hidden;
@@ -729,14 +728,14 @@ button:disabled { cursor: not-allowed; opacity: 0.55; }
   white-space: nowrap;
 }
 
-.multivyber-pocet-polozky {
+.multiselect-option-count {
   flex: none;
   font-size: 12px;
   color: var(--muted);
   font-variant-numeric: tabular-nums;
 }
 
-.multivyber-prazdne {
+.multiselect-empty {
   margin: 0;
   padding: 10px;
   font-size: 13.5px;
@@ -745,7 +744,7 @@ button:disabled { cursor: not-allowed; opacity: 0.55; }
 
 /* Pätička je prilepená dole: pri dlhom zozname sa „Hotovo" inak schová
    pod ním a človek zatvára klikom mimo, čo na dotyku netrafí. */
-.multivyber-pata {
+.multiselect-footer {
   position: sticky;
   bottom: -5px;
   display: flex;
@@ -757,8 +756,8 @@ button:disabled { cursor: not-allowed; opacity: 0.55; }
   border-top: 1px solid var(--line);
 }
 
-.multivyber-zrusit,
-.multivyber-hotovo {
+.multiselect-clear,
+.multiselect-done {
   min-height: 32px;
   padding: 0 6px;
   border: 0;
@@ -768,12 +767,12 @@ button:disabled { cursor: not-allowed; opacity: 0.55; }
   font-size: 13.5px;
 }
 
-.multivyber-zrusit { color: var(--muted); }
-.multivyber-zrusit:hover { color: var(--ink); }
-.multivyber-hotovo { color: var(--accent); font-weight: 600; }
+.multiselect-clear { color: var(--muted); }
+.multiselect-clear:hover { color: var(--ink); }
+.multiselect-done { color: var(--accent); font-weight: 600; }
 
-.multivyber-zrusit:focus-visible,
-.multivyber-hotovo:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.multiselect-clear:focus-visible,
+.multiselect-done:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
 
 /*
  * Štítky na výber (skupiny, trasy).

@@ -174,21 +174,21 @@ export default function MultiSelect({
   }
 
   return (
-    <div className="multivyber" ref={wrap}>
+    <div className="multiselect" ref={wrap}>
       <input type="hidden" name={name} value={serialize(chosen)} />
 
-      {label && <span className="multivyber-popis">{label}</span>}
+      {label && <span className="multiselect-label">{label}</span>}
 
       {/* Celá kontrolka je klikacia plocha pre vstup — pri poli, ktoré vyzerá
           ako rámček s textom, človek klikne kamkoľvek doň, nie do 70 px
           medzery medzi poslednou chipsou a okrajom. */}
-      <div className="multivyber-kontrolka" onClick={() => { input.current?.focus(); setOpen(true) }}>
+      <div className="multiselect-control" onClick={() => { input.current?.focus(); setOpen(true) }}>
         {chosen.map(v => (
-          <span key={v} className="multivyber-chip">
+          <span key={v} className="multiselect-chip">
             {byValue.get(v) ?? v}
             <button
               type="button"
-              className="multivyber-chip-x"
+              className="multiselect-chip-remove"
               aria-label={t.remove(byValue.get(v) ?? v)}
               onClick={e => { e.stopPropagation(); toggle(v) }}
             >
@@ -199,7 +199,7 @@ export default function MultiSelect({
 
         <input
           ref={input}
-          className="multivyber-vstup"
+          className="multiselect-input"
           type="text"
           role="combobox"
           aria-expanded={open}
@@ -216,14 +216,14 @@ export default function MultiSelect({
         />
 
         {chosen.length > 0 && (
-          <span className="multivyber-pocet" aria-label={t.chosenOf(chosen.length, all.length)}>
+          <span className="multiselect-counter" aria-label={t.chosenOf(chosen.length, all.length)}>
             {chosen.length}/{all.length}
           </span>
         )}
       </div>
 
       {open && (
-        <div className="multivyber-zoznam" id={listId} role="listbox" aria-multiselectable="true">
+        <div className="multiselect-list" id={listId} role="listbox" aria-multiselectable="true">
           {visible.map((o, i) => {
             const v = normalizeValue(o.value)
             const has = chosen.includes(v)
@@ -232,36 +232,36 @@ export default function MultiSelect({
                 key={v}
                 role="option"
                 aria-selected={has}
-                className={`multivyber-polozka${i === highlighted ? " je-zvyraznena" : ""}`}
+                className={`multiselect-option${i === highlighted ? " is-highlighted" : ""}`}
                 onMouseEnter={() => setHighlighted(i)}
                 // `onMouseDown` a nie `onClick`: klik by najprv spustil
                 // poslucháča „mimo" a zoznam by sa zavrel skôr, než sa vyberie.
                 onMouseDown={e => { e.preventDefault(); toggle(v) }}
               >
-                <span className="multivyber-znak" aria-hidden="true">{has ? "✓" : ""}</span>
-                <span className="multivyber-nazov">{o.label}</span>
-                {o.count !== undefined && <span className="multivyber-pocet-polozky">{o.count}</span>}
+                <span className="multiselect-mark" aria-hidden="true">{has ? "✓" : ""}</span>
+                <span className="multiselect-option-name">{o.label}</span>
+                {o.count !== undefined && <span className="multiselect-option-count">{o.count}</span>}
               </div>
             )
           })}
 
           {visible.length === 0 && (
-            <p className="multivyber-prazdne">
+            <p className="multiselect-empty">
               {all.length === 0 ? t.empty : allowNew ? t.nothingFoundNew : t.nothingFound}
             </p>
           )}
 
-          <div className="multivyber-pata">
+          <div className="multiselect-footer">
             <button
               type="button"
-              className="multivyber-zrusit"
+              className="multiselect-clear"
               onMouseDown={e => { e.preventDefault(); setChosen([]) }}
             >
               {t.clearAll}
             </button>
             <button
               type="button"
-              className="multivyber-hotovo"
+              className="multiselect-done"
               onMouseDown={e => { e.preventDefault(); setOpen(false); setQuery("") }}
             >
               {t.done}
