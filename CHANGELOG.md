@@ -4,6 +4,20 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Added (2026-09-07 — knižnica: query builder)
+
+Krok 4d z handoffu `design_handoff_contineo_intranet`. Tým je krok 4 hotový okrem hromadných akcií (4e), ktoré sú zápisy do dát a čakajú na rozhodnutie.
+
+- **Podmienky sú nad facetmi, nie namiesto nich.** Facet odpovedá na „ktoré z týchto", podmienka na „všetko, čo spĺňa" — sú to dve otázky a preto dva nástroje. V dotaze sa spájajú: vybraný druh a zostavená podmienka platia naraz.
+- **Nemieša sa „a" s „alebo".** Prototyp má spojku pri každom riadku, lenže `A alebo B a C` nemá bez zátvoriek jednoznačný význam a builder, ktorý si ho domyslí, vracia potichu iné výsledky, než človek čakal. Platí **jeden režim pre celý dotaz** — spĺňa všetky, alebo ktorúkoľvek — a je to na obrazovke napísané aj s dôvodom. Zátvorky sú samostatná úloha.
+- **Celý builder beží bez JavaScriptu.** Podmienky sú v adrese (opakovaný kľúč `cond`), pridanie je odoslanie formulára, odobranie je odkaz. Zostavený dotaz sa dá poslať odkazom.
+- **Pole a operátor sú jeden výber**, nie dva. „Názov obsahuje" je veta, ktorou to človek povie — a hlavne sa tak nedá zostaviť dvojica, ktorá nedáva zmysel („Zmenené obsahuje"). Ponuka vzniká z tabuľky povolených operátorov, takže nezmyselná kombinácia v zozname nie je a ručne upravená adresa ju neprepašuje.
+- **Pridanie sa dokončí presmerovaním na čistú adresu.** Keby `add` a `value` zostali v adrese, každý ďalší odkaz by ich niesol a podmienka by sa pri návrate v histórii pridala druhýkrát.
+- **Náhľad dotazu vetou** v monospace: je to kontrola, že človek a systém rozumejú tomu istému, a skladá sa z uložených podmienok, nie z rozpísaného formulára.
+- Neplatný dátum sa **zahodí, nie použije** — `$lt: Invalid Date` nevráti nič a vyzeralo by to, že knižnica je prázdna. Text v „obsahuje" sa escapuje rovnako ako pri fulltexte.
+- **Chyba, ktorú našiel test:** `encodeURIComponent` nechá vlnovku nezakódovanú, takže názov s `~` rozsekal podmienku na štyri časti a tá sa ticho zahodila. Dekódovanie teraz odreže prvé dva oddeľovače a zvyšok berie ako hodnotu.
+- Overené: `tsc --noEmit` čisto, `eslint` bez chýb, **959 testov prechádza** (16 nových), builder prekreslený na 390 px aj na desktope.
+
 ### Added (2026-09-07 — knižnica: kartový pohľad)
 
 Krok 4c z handoffu `design_handoff_contineo_intranet`.

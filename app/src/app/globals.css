@@ -1714,6 +1714,122 @@ html[data-theme="dark"] .editor-tui .CodeMirror {
 
 .doc-page:hover { background: var(--surface-2); }
 
+/* ── knižnica: query builder ────────────────────────────────────────────
+   `<details>` a nie vlastný rozbaľovač: otvára a zatvára ho prehliadač, takže
+   to funguje bez skriptu a čítačka obrazovky o stave vie sama. Otvorený je
+   vtedy, keď nejaké podmienky sú — inak by človek nevidel, prečo je zoznam
+   krátky. */
+.builder {
+  margin-bottom: 16px;
+  padding: 10px 12px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+
+.builder-summary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 32px;
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.builder-count {
+  display: inline-grid;
+  place-items: center;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 6px;
+  border-radius: 20px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+.builder-rows {
+  display: grid;
+  gap: 4px;
+  margin: 10px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.builder-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  min-height: 36px;
+  padding: 4px 6px;
+  border-radius: 8px;
+  background: var(--bg);
+  font-size: 14px;
+}
+
+/* Spojka má pevnú šírku, nech riadky začínajú pod sebou a dá sa prečítať
+   stĺpec podmienok, nie zubatý zoznam. */
+.builder-join {
+  flex: none;
+  min-width: 84px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.builder-text { flex: 1; min-width: 0; }
+
+.builder-remove {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 32px;
+  height: 32px;
+  border-radius: 7px;
+  color: var(--muted);
+  font-size: 17px;
+  line-height: 1;
+  text-decoration: none;
+}
+
+.builder-remove:hover { background: var(--bad-bg); color: var(--bad-fg); }
+.builder-remove:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+
+.builder-match { display: inline-flex; gap: 2px; margin-top: 8px; padding: 2px; background: var(--surface-2); border-radius: 9px; }
+
+/* Náhľad dotazu je monospace zámerne: je to strojová veta, nie text pre
+   plynulé čítanie, a pri kontrole sa v nej hľadá slovo po slove. */
+.builder-preview {
+  margin: 10px 0 0;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: var(--muted);
+}
+
+.builder-add {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 10px;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+}
+
+.builder-add .pole { margin: 0; flex: 0 1 220px; }
+.builder-value { flex: 1 1 200px; }
+
+.builder-hint {
+  margin: 10px 0 0;
+  font-size: 12.5px;
+  line-height: 1.5;
+  max-width: 68ch;
+}
+
 /* ── knižnica: kartový pohľad a prepínač ────────────────────────────────
    Karty sú na prezeranie: názov dostane miesto na tri riadky a údaje idú pod
    neho. Šírka stĺpca je `minmax(250px, 1fr)` s `auto-fill` — počet stĺpcov

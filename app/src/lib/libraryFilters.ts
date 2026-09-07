@@ -18,6 +18,9 @@
  */
 
 import type { RawQuery } from "./urlParams"
+import {
+  readConditions, readMatch, conditionFields, type Condition, type MatchMode,
+} from "./libraryConditions"
 
 /** Facety, ktoré sa dajú vybrať viackrát. */
 export const MULTI_KEYS = ["category", "status", "tag", "accessLevel", "language"] as const
@@ -84,10 +87,14 @@ export interface ActiveFilters {
   sort?: SortKey
   dir?: SortDir
   page?: number
+  /** Podmienky query buildera a režim ich spájania. */
+  conditions: Condition[]
+  match: MatchMode
 }
 
 const EMPTY: ActiveFilters = {
   category: [], status: [], tag: [], accessLevel: [], language: [],
+  conditions: [], match: "all",
 }
 
 /** Jedna hodnota z adresy. Pole (opakovaný kľúč) → prvá hodnota. */
@@ -145,7 +152,22 @@ export function readFilters(q: RawQuery): ActiveFilters {
     sort: normalizeSort(q.sort),
     dir: normalizeDir(q.dir),
     page: normalizePage(q.page),
+    conditions: readConditions(q),
+    match: readMatch(q),
   }
+}
+
+/** Pridanie a odobranie podmienky. Obe vracajú na prvú stranu. */
+export function addCondition(filters: ActiveFilters, condition: Condition): ActiveFilters {
+  return firstPage({ ...filters, conditions: [...filters.conditions, condition] })
+}
+
+export function removeCondition(filters: ActiveFilters, index: number): ActiveFilters {
+  return firstPage({ ...filters, conditions: filters.conditions.filter((_, i) => i !== index) })
+}
+
+export function setMatch(filters: ActiveFilters, match: MatchMode): ActiveFilters {
+  return firstPage({ ...filters, match })
 }
 
 /**
@@ -230,7 +252,7 @@ export function clearFilters(filters: ActiveFilters): ActiveFilters {
 }
 
 export function isEmpty(filters: ActiveFilters): boolean {
-  return !filters.search && !filters.folder &&
+  return !filters.search && !filters.folder && filters.conditions.length === 0 &&
     MULTI_KEYS.every(k => filters[k].length === 0)
 }
 
@@ -268,6 +290,7 @@ export function carryFields(filters: ActiveFilters): [string, string][] {
     out.push(["dir", filters.dir])
   }
   if (filters.page && filters.page > 1) out.push(["page", String(filters.page)])
+  out.push(...conditionFields(filters.conditions, filters.match))
   return out
 }
 

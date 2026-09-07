@@ -14,6 +14,7 @@ import { allFolders, pathTo } from "./folders"
 import { DOCUMENTS_COLLECTION, effectiveVersion } from "./documents"
 import type { Version } from "./documents"
 import type { OriginalFile, ProcessingState } from "./libraryWrite"
+import { conditionQuery, type Condition, type MatchMode } from "./libraryConditions"
 
 export interface LibraryRow {
   documentId: string
@@ -118,10 +119,14 @@ export interface LibraryFilter {
   language?: string | string[]
   accessLevel?: string | string[]
   tag?: string | string[]
+  /** Podmienky z query buildera. Sú nad facetmi, nie namiesto nich. */
+  conditions?: Condition[]
+  match?: MatchMode
 }
 
 /** Filter, ktorý podmienku vyrobil. Podľa neho sa dá jedna vynechať. */
-export type FilterKey = "status" | "folder" | "category" | "language" | "accessLevel" | "tag" | "search"
+export type FilterKey =
+  | "status" | "folder" | "category" | "language" | "accessLevel" | "tag" | "search" | "conditions"
 
 function listOf(value: string | string[] | undefined): string[] {
   const raw = Array.isArray(value) ? value : value === undefined ? [] : [value]
@@ -167,7 +172,7 @@ export function queryParts(filter: LibraryFilter): { key: FilterKey; cond: Recor
     parts.push({ key: "folder", cond: { folderPath: filter.priecinok } })
   }
 
-  const fields: [Exclude<FilterKey, "status" | "folder" | "search">, string][] = [
+  const fields: [Exclude<FilterKey, "status" | "folder" | "search" | "conditions">, string][] = [
     ["category", "category"],
     ["language", "language"],
     ["accessLevel", "accessLevel"],
@@ -180,6 +185,9 @@ export function queryParts(filter: LibraryFilter): { key: FilterKey; cond: Recor
     if (values.length === 1) parts.push({ key, cond: { [field]: values[0] } })
     else if (values.length > 1) parts.push({ key, cond: { [field]: { $in: values } } })
   }
+
+  const conds = conditionQuery(filter.conditions ?? [], filter.match ?? "all")
+  if (conds) parts.push({ key: "conditions", cond: conds })
 
   if (filter.search?.trim()) {
     // Vstup od človeka ide do regulárneho výrazu — bez escapovania by `(`

@@ -997,6 +997,25 @@ interface Dictionary {
       viewSwitch: string
       viewTable: string
       viewCards: string
+      /** Query builder: podmienky, ktoré si človek zostaví sám. */
+      builder: {
+        heading: string
+        hint: string
+        field: string
+        op: string
+        value: string
+        add: string
+        remove: (description: string) => string
+        matchAll: string
+        matchAny: string
+        joinAll: string
+        joinAny: string
+        /** Spojka pred prvou podmienkou. Krátka, nech riadky sedia pod sebou. */
+        joinFirst: string
+        preview: string
+        fields: Record<string, string>
+        ops: Record<string, string>
+      }
       statusPublished: string
       statusDrafts: string
       filter: string
@@ -2378,6 +2397,36 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       viewSwitch: "Pohľad",
       viewTable: "Tabuľka",
       viewCards: "Karty",
+      builder: {
+        heading: "Podmienky",
+        hint: "Zátvorky zatiaľ nevieme, preto platí jeden režim pre celý dotaz — inak by výsledok znamenal niečo iné, než ste napísali.",
+        field: "Pole",
+        op: "Operátor",
+        value: "Hodnota",
+        add: "Pridať podmienku",
+        remove: (description) => `Odobrať podmienku ${description}`,
+        matchAll: "spĺňa všetky",
+        matchAny: "spĺňa ktorúkoľvek",
+        joinAll: "a zároveň",
+        joinAny: "alebo",
+        joinFirst: "kde",
+        preview: "Dokumenty, kde",
+        fields: {
+          title: "Názov",
+          category: "Druh",
+          status: "Stav",
+          tag: "Značka",
+          accessLevel: "Prístup",
+          updatedAt: "Zmenené",
+        },
+        ops: {
+          is: "je",
+          not: "nie je",
+          contains: "obsahuje",
+          before: "pred",
+          after: "po",
+        },
+      },
       statusPublished: "publikované",
       statusDrafts: "koncepty",
       filter: "Filtrovať",
@@ -3742,6 +3791,36 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       viewSwitch: "Pohled",
       viewTable: "Tabulka",
       viewCards: "Karty",
+      builder: {
+        heading: "Podmínky",
+        hint: "Závorky zatím neumíme, proto platí jeden režim pro celý dotaz — jinak by výsledek znamenal něco jiného, než jste napsali.",
+        field: "Pole",
+        op: "Operátor",
+        value: "Hodnota",
+        add: "Přidat podmínku",
+        remove: (description) => `Odebrat podmínku ${description}`,
+        matchAll: "splňuje všechny",
+        matchAny: "splňuje kteroukoli",
+        joinAll: "a zároveň",
+        joinAny: "nebo",
+        joinFirst: "kde",
+        preview: "Dokumenty, kde",
+        fields: {
+          title: "Název",
+          category: "Druh",
+          status: "Stav",
+          tag: "Značka",
+          accessLevel: "Přístup",
+          updatedAt: "Změněno",
+        },
+        ops: {
+          is: "je",
+          not: "není",
+          contains: "obsahuje",
+          before: "před",
+          after: "po",
+        },
+      },
       statusPublished: "publikované",
       statusDrafts: "koncepty",
       filter: "Filtrovat",
@@ -5102,6 +5181,36 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       viewSwitch: "View",
       viewTable: "Table",
       viewCards: "Cards",
+      builder: {
+        heading: "Conditions",
+        hint: "Parentheses are not supported yet, so one mode applies to the whole query — otherwise the result would mean something other than what you wrote.",
+        field: "Field",
+        op: "Operator",
+        value: "Value",
+        add: "Add condition",
+        remove: (description) => `Remove condition ${description}`,
+        matchAll: "match all",
+        matchAny: "match any",
+        joinAll: "and",
+        joinAny: "or",
+        joinFirst: "where",
+        preview: "Documents where",
+        fields: {
+          title: "Title",
+          category: "Category",
+          status: "Status",
+          tag: "Tag",
+          accessLevel: "Access",
+          updatedAt: "Changed",
+        },
+        ops: {
+          is: "is",
+          not: "is not",
+          contains: "contains",
+          before: "before",
+          after: "after",
+        },
+      },
       statusPublished: "published",
       statusDrafts: "drafts",
       filter: "Filter",

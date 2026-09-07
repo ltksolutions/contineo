@@ -29,8 +29,13 @@ import { normalizeQuery, type RawQuery } from "@/lib/urlParams"
 import {
   readFilters, toggle, setValue, clearFilters, isEmpty, toQuery, carryFields, activeChips,
   sortBy, currentSort, pageOf, withPage, sortRows, pageRows, setView, currentView,
+  addCondition, removeCondition, setMatch,
   type MultiKey, type SortKey,
 } from "@/lib/libraryFilters"
+import {
+  OPS_FOR_FIELD, CONDITION_FIELDS, decodeCondition, describeConditions,
+  type ConditionField, type ConditionOp,
+} from "@/lib/libraryConditions"
 import MultiSelect from "@/components/MultiSelect"
 
 export const dynamic = "force-dynamic"
@@ -56,10 +61,21 @@ export default async function LibraryPage({
     msg?: string; error?: string; search?: string; status?: string
     folder?: string; category?: string; language?: string; accessLevel?: string; tag?: string
     layout?: string
+    add?: string; value?: string
   }>(await searchParams)
   const { msg: message, error } = q
   const filters = readFilters(q)
   const { search, folder } = filters
+
+  /*
+   * Pridanie podmienky sa dokončí presmerovaním na čistú adresu.
+   *
+   * Formulár odošle `add` a `value`; keby zostali v adrese, každý ďalší odkaz
+   * by ich niesol so sebou a podmienka by sa pri návrate v histórii pridala
+   * druhýkrát. `redirect()` je tu zámerne mimo `try` — vyhadzuje výnimku.
+   */
+  const pending = q.add && q.value ? decodeCondition(`${q.add}~${encodeURIComponent(q.value)}`) : null
+  if (pending) redirect(toQuery(addCondition(filters, pending)))
   const branding = brandingView(ctx.tenant)
   const uiLanguage = ctx.person.language
   const t = dictionary(uiLanguage).library.list
@@ -77,6 +93,8 @@ export default async function LibraryPage({
     language: filters.language,
     accessLevel: filters.accessLevel,
     tag: filters.tag,
+    conditions: filters.conditions,
+    match: filters.match,
   }
 
   const [rows, folders, folderCounts, facets] = await Promise.all([
@@ -99,6 +117,20 @@ export default async function LibraryPage({
   const sort = currentSort(filters)
   const paged = pageRows(sortRows(rows, sort.key, sort.dir), pageOf(filters))
   const view = currentView(filters)
+  const tb = t.builder
+  const conditions = filters.conditions
+
+  /*
+   * Dvojice pole + operátor ako jedna ponuka. Vzniká z tabuľky povolených
+   * operátorov, takže neplatná kombinácia sa nedá vybrať — nie preto, že ju
+   * server odmietne, ale preto, že v zozname nie je.
+   */
+  const fieldOps = CONDITION_FIELDS.flatMap((field: ConditionField) =>
+    OPS_FOR_FIELD[field].map((op: ConditionOp) => ({
+      value: `${field}~${op}`,
+      label: `${tb.fields[field]} ${tb.ops[op]}`,
+    })),
+  )
 
   /** Odkaz s vymeneným priečinkom; ostatné filtre zostávajú. */
   const withFolder = (folderId?: string) => toQuery(setValue(filters, "folder", folderId))
@@ -224,6 +256,94 @@ export default async function LibraryPage({
           <Link className="library-chips-clear" href={toQuery(clearFilters(filters))}>{t.clearFilters}</Link>
         </div>
       )}
+
+      {/*
+        Query builder.
+        
+        Celý beží bez JavaScriptu: podmienky sú v adrese, pridanie je odoslanie
+        formulára a odobranie je odkaz. Preto sa tu nekombinuje „a" s „alebo" —
+        `A alebo B a C` nemá bez zátvoriek jednoznačný význam a builder, ktorý
+        si ho domyslí, vracia potichu iné výsledky, než človek čakal. Platí
+        jeden režim pre celý dotaz a je to na obrazovke napísané.
+
+        Pole a operátor sú **jeden výber**, nie dva: „Názov obsahuje" je aj
+        veta, ktorou to človek povie, a hlavne sa tak nedá zostaviť dvojica,
+        ktorá nedáva zmysel („Zmenené obsahuje").
+      */}
+      <details className="builder" open={conditions.length > 0}>
+        <summary className="builder-summary">
+          {tb.heading}
+          {conditions.length > 0 && <span className="builder-count">{conditions.length}</span>}
+        </summary>
+
+        {conditions.length > 0 && (
+          <>
+            <ul className="builder-rows">
+              {conditions.map((c, i) => (
+                <li key={`${c.field}-${c.op}-${c.value}-${i}`} className="builder-row">
+                  <span className="builder-join">
+                    {i === 0 ? tb.joinFirst : (filters.match === "any" ? tb.joinAny : tb.joinAll)}
+                  </span>
+                  <span className="builder-text">
+                    {tb.fields[c.field]} {tb.ops[c.op]} <strong>{c.value}</strong>
+                  </span>
+                  <Link
+                    className="builder-remove"
+                    href={toQuery(removeCondition(filters, i))}
+                    aria-label={tb.remove(`${tb.fields[c.field]} ${tb.ops[c.op]} ${c.value}`)}
+                  >
+                    ×
+                  </Link>
+                </li>
+              ))}
+            </ul>
+
+            {conditions.length > 1 && (
+              <div className="builder-match">
+                {([["all", tb.matchAll], ["any", tb.matchAny]] as const).map(([mode, label]) => (
+                  <Link
+                    key={mode}
+                    href={toQuery(setMatch(filters, mode))}
+                    className={`view-switch-item${filters.match === mode ? " is-on" : ""}`}
+                    aria-current={filters.match === mode ? "true" : undefined}
+                  >
+                    {label}
+                  </Link>
+                ))}
+              </div>
+            )}
+
+            {/* Náhľad dotazu vetou — kontrola, že človek a systém rozumejú
+                tomu istému. Skladá sa z uložených podmienok, nie z toho,
+                čo je práve rozpísané vo formulári. */}
+            <p className="builder-preview">
+              {tb.preview}{" "}
+              {describeConditions(
+                conditions,
+                filters.match,
+                f => tb.fields[f],
+                o => tb.ops[o],
+                m => (m === "any" ? tb.joinAny : tb.joinAll),
+              )}
+            </p>
+          </>
+        )}
+
+        <form className="builder-add" method="get" action="/library">
+          <div className="pole">
+            <span className="pole-popis">{tb.field}</span>
+            <Select name="add" options={fieldOps} initial={fieldOps[0]?.value} fieldLabel={tb.field} />
+          </div>
+          <label className="pole builder-value">
+            <span className="pole-popis">{tb.value}</span>
+            <input className="pole-vstup" name="value" required />
+          </label>
+          {carried.map(([k, v], i) => <input key={`${k}-${i}`} type="hidden" name={k} value={v} />)}
+          <button className="tlacidlo tlacidlo--tiche" type="submit">{tb.add}</button>
+        </form>
+
+        <p className="tichy builder-hint">{tb.hint}</p>
+      </details>
 
       <div className="kniznica-mriezka">
         <aside className="kniznica-priecinky">
