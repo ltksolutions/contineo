@@ -4,6 +4,24 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Added (2026-09-07 — knižnica: faceted filtre s počtami)
+
+Krok 4a z handoffu `design_handoff_contineo_intranet`. Krok 4 je rozdelený na päť častí, lebo ako jeden diff je nerecenzovateľný: **4a filtre**, 4b tabuľka a triedenie, 4c kartový pohľad, 4d query builder, 4e hromadné akcie.
+
+- **Facety sú viachodnotové.** „Norma alebo smernica" je bežná otázka a jednohodnotový filter na ňu odpovedať nevie. V adrese je to opakovaný kľúč (`?category=norma&category=smernica`) — presne to, čo prehliadač pošle z formulára s viacerými zaškrtnutými políčkami, nie vlastný formát s čiarkami, ktorý by nikto iný neprečítal. Dotaz z nich skladá `$in`; jedna hodnota zostáva rovnosťou a **staré odkazy s jednou hodnotou ďalej fungujú**.
+- **Počty pri hodnotách sa počítajú bez vlastného filtra.** Keby sa počítali s ním, po kliknutí na „Norma" by ostatné druhy mali nulu — a pritom práve to číslo o prepnutí rozhoduje. Rieši to jedna agregácia (`libraryFacets`) s `$facet`: kolekcia sa prechádza raz a každá vetva si priloží svoj `$match` bez tej podmienky, ktorú počíta.
+- **`lib/libraryFilters.ts`** — filtre ako hodnota, nie ako reťazec v adrese: `readFilters` → `toggle`/`replace`/`clearFilters` → `toQuery`. Adresa zostáva zdrojom pravdy, takže pohľad sa dá poslať odkazom, otvoriť zo záložky a funguje bez JavaScriptu. Poradie kľúčov je pevné — dva odkazy na ten istý pohľad musia vyzerať rovnako, inak nesadnú na seba v histórii prehliadača.
+- **Podmienky dotazu sa skladajú do `$and`** (`queryParts`), nie do jedného objektu: fulltext aj „nezaradené" používajú `$or` a v jednom objekte by si ho navzájom prepísali — jeden z filtrov by potichu prestal platiť. Test to stráži.
+- **Oba stavy naraz nie sú filter.** Zaškrtnuté „publikované" aj „koncepty" znamená „všetko"; `$and` dvoch protikladov by nevrátil nič.
+- **`MultiSelect` je nasadený na značky** — je ich rádovo viac než druhov a tridsať riadkov v paneli sa nedá prečítať. Pribudol mu prepínač tvaru skrytého poľa (`emit`): `csv` pre formulár záznamu (`FormData.get()` by z opakovaného kľúča vrátil len prvú hodnotu), `repeat` pre adresu. Vlastnú hodnotu tu pridať nemožno — filtrovať podľa značky, ktorú nikto nemá, znamená prázdny zoznam a hľadanie chyby v dátach.
+- **Chips aktívnych filtrov** nad zoznamom: panel sa na úzkej obrazovke zabalí a človek by inak nemal ako vidieť, prečo je zoznam krátky. Krížik odoberá jeden filter, nie všetky.
+- **Na telefóne sú najprv výsledky, potom panel na ich zmenu.** V jednom stĺpci by nad prvým dokumentom stál celý panel aj strom priečinkov — obrazovka a pol rolovania k tomu, po čo človek prišiel. Zásuvka z návrhu potrebuje JavaScript a je to krok 7; toto je poradie v mriežke a funguje bez neho.
+- Hlavička ukazuje **„N z M dokumentov"** — bez toho čísla sa nedá rozoznať, či je krátky zoznam výsledok filtra alebo stav knižnice.
+- `TreeWithOrder` prijíma skryté polia aj ako zoznam dvojíc; v objekte sa viachodnotový filter nezmestí (`Object.fromEntries` by z troch značiek nechal jednu). Volanie v nastavení organizácie sa nemenilo.
+- Terminológia: panel používa **„Druh" a „Značka"**, ako hovorí zvyšok aplikácie — nie „Kategória" a „Štítok" z prototypu.
+- **Čo v dátach nie je a preto sa nerobilo:** facet „Oddelenie" (dokument oddelenie nenesie, pridelenie je v `assignments`), stĺpec „Potvrdenia %" (agregácia nad potvrdeniami pre každý riadok) a stavy „Na schválenie" a „Expirovaný" (schvaľovací workflow v knižnici neexistuje). Sú to samostatné rozhodnutia, nie prílepok k filtrom.
+- Overené: `tsc --noEmit` čisto, `eslint` bez chýb, **928 testov prechádza** (19 nových), panel prekreslený na 390 px aj na desktope, vo svetlej aj tmavej téme a s farbou tenanta.
+
 ### Added (2026-09-07 — aplikačný shell, opt-in)
 
 Krok 2 z handoffu `design_handoff_contineo_intranet`, ale **inak, než návrh žiadal**.
@@ -27,11 +45,11 @@ Prvé dva kroky z dizajnového handoffu `design_handoff_contineo_intranet` (náv
 - **`--accent-soft`** — hlavná farba s 11 % alfou. Je to jediný nový farebný token a patrí tam, kde má byť farba organizácie len naznačená: chip aktívneho filtra, aktívna položka navigácie, označený riadok tabuľky. Priehľadnosť, a nie predpočítaný svetlý odtieň, preto, že podklad pod ním nie je vždy rovnaký (`--surface` v karte, `--bg` v pätičke) a v tmavej téme je opačný. Tenantovi ju skladá `tenantStyle()` cez novú `soft()`; pri nečitateľnej farbe sa premenná vôbec nenastaví a platí predvolená — pokazená hodnota by zahodila aj tú.
 - **Hustota rozhrania** — šestica premenných (`--pad-main`, `--card-pad`, `--list-py`, `--gap`, `--row-py`, `--font-row`) prepínaná atribútom `html[data-density="comfortable"]`, nie druhá sada tried. Duplikované triedy by znamenali, že každý nový prvok treba napísať dvakrát, a raz sa na to zabudne. Kompaktné je predvolené: knižnica dokumentov je pracovný nástroj, kde rozhoduje, koľko riadkov je vidieť naraz.
 - **`darken(hex, 0.16)` zostáva nezmenený.** Handoff navrhoval 0,24; zmena koeficientu by potichu prekreslila hover stavy u všetkých existujúcich tenantov.
-- **`components/MultiSelect.tsx`** — viacnásobný výber s hľadaním. `TagSelect` vypíše všetky možnosti naraz, čo pri skupinách osôb stačí, ale pri útvaroch a štítkoch knižnice nie: tridsať pilulák je stena, v ktorej sa nedá nič nájsť. Tu sú zvolené hodnoty vidieť ako chips a ostatné sa hľadajú písaním — **bez diakritiky**, lebo kto píše „utvar", myslí „Útvar". Ponúka aj hodnotu, ktorú má už len tento jediný záznam, inak by ju uloženie ticho odstránilo (rovnaký dôvod ako v `TagSelect`).
+- **`components/MultiSelect.tsx`** — viacnásobný výber s hľadaním. `TagSelect` vypíše všetky možnosti naraz, čo pri skupinách osôb stačí, ale pri oddeleniach a štítkoch knižnice nie: tridsať pilulák je stena, v ktorej sa nedá nič nájsť. Tu sú zvolené hodnoty vidieť ako chips a ostatné sa hľadajú písaním — **bez diakritiky**, lebo kto píše „oddelenie", myslí „Oddelenie". Ponúka aj hodnotu, ktorú má už len tento jediný záznam, inak by ju uloženie ticho odstránilo (rovnaký dôvod ako v `TagSelect`).
 - **Normalizácia je `trim().toLowerCase()`, teda presne `normalizeKeys()` na serveri.** Handoff navrhoval nahrádzať medzery podčiarkovníkom — server to nerobí, takže by pre tú istú vec vznikli dve hodnoty a jedna by nikdy nikomu nesadla. Test to porovnáva priamo so serverovou funkciou a uzatvára kruh cez `splitList()`.
 - Zo `Select.tsx` prevzaté zámerne: výber na `onMouseDown` s `preventDefault()` (pri `onClick` zatvorí zoznam poslucháč „klik mimo" skôr, než sa hodnota vyberie), `<noscript>` s obyčajným poľom rovnakého mena a ovládanie klávesnicou. Rozmery sedia s `.vyber`, nie s prototypom: obe polia stoja na tom istom formulári vedľa seba.
 - **Nové CSS triedy sú anglické** (`.multiselect-*`, `.is-highlighted`). Zvyšných 125 tried v `globals.css` je zatiaľ slovenských — angličtina v nich je posledná vrstva, na ktorú sa po identifikátoroch, routách a názvoch indexov ešte nedostalo; premenovanie patrí do vlastného PR, nie sem.
-- **Komponent zatiaľ nikde nie je nasadený.** Nasadenie na útvary, štítky a osoby mení existujúce formuláre a patrí do vlastného PR.
+- **Komponent zatiaľ nikde nie je nasadený.** Nasadenie na oddelenia, štítky a osoby mení existujúce formuláre a patrí do vlastného PR.
 - Overené: `tsc --noEmit` čisto, `eslint` bez chýb, **899 testov prechádza** (13 nových).
 
 ### Fixed (2026-09-06 — skripty vedia znova spustiť TypeScript zo `src/`)

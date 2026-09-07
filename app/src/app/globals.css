@@ -1467,10 +1467,23 @@ html[data-theme="dark"] .editor-tui .CodeMirror {
 
 @media (min-width: 860px) {
   .kniznica-mriezka { grid-template-columns: 250px 1fr; }
+  /* V dvoch stĺpcoch platí poradie v kóde: panel vľavo, zoznam vpravo. */
+  .kniznica-priecinky, .kniznica-zoznam { order: 0; }
 }
 
-.kniznica-priecinky { min-width: 0; }
-.kniznica-zoznam { min-width: 0; }
+/*
+ * Na telefóne **najprv výsledky, potom panel na ich zmenu.**
+ *
+ * V jednom stĺpci by inak nad prvým dokumentom stál celý panel filtrov aj
+ * strom priečinkov — skoro obrazovka a pol rolovania k tomu, po čo človek
+ * prišiel. Čo je práve zapnuté, vidno aj tak: chips sú nad zoznamom
+ * a „zrušiť filtre" je v nich.
+ *
+ * Zásuvka z návrhu (filtre schované za tlačidlom) je krok 7 a potrebuje
+ * JavaScript; toto funguje aj bez neho a je to jeden riadok.
+ */
+.kniznica-priecinky { min-width: 0; order: 2; }
+.kniznica-zoznam { min-width: 0; order: 1; }
 
 /* Odkaz v strome sa nesmie správať ako odsek textu — celý riadok je cieľ. */
 .kniznica-priecinky .strom-riadok { text-decoration: none; color: inherit; }
@@ -1481,6 +1494,151 @@ html[data-theme="dark"] .editor-tui .CodeMirror {
   font-weight: 700;
   color: var(--accent, var(--ink));
 }
+
+/* ── knižnica: panel filtrov s počtami ──────────────────────────────────
+   Počty sú súčasť ovládacieho prvku, nie ozdoba: bez nich je facet hádanie.
+   Preto majú pevné miesto vpravo a `tabular-nums`, aby sa stĺpec čísel
+   neposúval podľa toho, či je tam 7 alebo 31. */
+.facets {
+  display: grid;
+  /*
+   * `minmax(0, 1fr)` a nie predvolené `auto`: automatický track v mriežke sa
+   * nafúkne na `max-content`, takže dlhý názov druhu roztiahol celý panel do
+   * stĺpca so zoznamom a `text-overflow: ellipsis` nemal na čom zabrať.
+   */
+  grid-template-columns: minmax(0, 1fr);
+  gap: 14px;
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--line);
+}
+
+.facets-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.facets-title {
+  margin: 0;
+  font-size: 13.5px;
+  font-weight: 600;
+}
+
+.facets-clear {
+  font-size: 13px;
+  color: var(--accent);
+}
+
+.facet-group { display: grid; grid-template-columns: minmax(0, 1fr); gap: 2px; }
+
+.facet-group-title {
+  margin: 0 0 2px;
+  font-size: 12px;
+  font-weight: 650;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.facet {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  gap: 8px;
+  /* Celý riadok je terč, aj na dotyk. */
+  min-height: 36px;
+  padding: 4px 6px;
+  border-radius: 8px;
+  font-size: 14.5px;
+  color: inherit;
+  text-decoration: none;
+}
+
+.facet:hover { background: var(--surface-2); }
+.facet:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+
+/* Štvorček, nie `<input type=checkbox>`: je to odkaz, ktorý mení adresu,
+   a políčko by sľubovalo, že sa niekde odošle. */
+.facet-box {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 17px;
+  height: 17px;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.facet.is-on { background: var(--accent-soft); font-weight: 600; }
+
+.facet.is-on .facet-box {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--on-accent);
+}
+
+.facet-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.facet-count {
+  flex: none;
+  font-size: 12.5px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.facet-apply { margin-top: 8px; justify-self: start; }
+
+/* ── knižnica: hľadanie a chips aktívnych filtrov ───────────────────────── */
+.library-search {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.library-count { font-size: 14px; font-variant-numeric: tabular-nums; }
+
+.library-chips {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 16px;
+}
+
+.library-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 32px;
+  padding: 0 10px;
+  border-radius: 8px;
+  background: var(--accent-soft);
+  color: var(--ink);
+  font-size: 13.5px;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.library-chip:hover { background: var(--surface-2); }
+.library-chip:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+.library-chip-key { color: var(--muted); }
+.library-chip-x { font-size: 15px; line-height: 1; color: var(--muted); }
+
+.library-chips-clear { font-size: 13px; color: var(--accent); }
 
 /* ── strom s čiarami hierarchie (D60) ────────────────────────────────────
    Čiary sa kreslia z odsadenia, ktoré nesie premenná `--uroven`. Bez nich

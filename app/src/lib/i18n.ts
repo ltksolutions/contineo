@@ -977,6 +977,13 @@ interface Dictionary {
       tag: string
       status: string
       all: string
+      /** Panel filtrov: nadpis, prístup, potvrdenie výberu, počet nájdených. */
+      filtersTitle: string
+      accessLevel: string
+      apply: string
+      tagSearch: string
+      shown: (found: number, all: number) => string
+      removeFilter: (value: string) => string
       statusPublished: string
       statusDrafts: string
       filter: string
@@ -2341,6 +2348,12 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       tag: "Značka",
       status: "Stav",
       all: "— všetky —",
+      filtersTitle: "Filtre",
+      accessLevel: "Prístup",
+      apply: "Použiť",
+      tagSearch: "hľadať značku…",
+      shown: (found, all) => `${found} z ${all} dokumentov`,
+      removeFilter: (value) => `Odobrať filter ${value}`,
       statusPublished: "publikované",
       statusDrafts: "koncepty",
       filter: "Filtrovať",
@@ -3688,6 +3701,12 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       tag: "Značka",
       status: "Stav",
       all: "— všechny —",
+      filtersTitle: "Filtry",
+      accessLevel: "Přístup",
+      apply: "Použít",
+      tagSearch: "hledat značku…",
+      shown: (found, all) => `${found} z ${all} dokumentů`,
+      removeFilter: (value) => `Odebrat filtr ${value}`,
       statusPublished: "publikované",
       statusDrafts: "koncepty",
       filter: "Filtrovat",
@@ -5031,6 +5050,12 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       tag: "Tag",
       status: "Status",
       all: "— all —",
+      filtersTitle: "Filters",
+      accessLevel: "Access",
+      apply: "Apply",
+      tagSearch: "search tags…",
+      shown: (found, all) => `${found} of ${all} documents`,
+      removeFilter: (value) => `Remove filter ${value}`,
       statusPublished: "published",
       statusDrafts: "drafts",
       filter: "Filter",
