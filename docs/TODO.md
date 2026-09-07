@@ -76,9 +76,10 @@
 - [x] **3. `MultiSelect`** — viacnásobný výber s hľadaním bez diakritiky, `<noscript>` cesta, prepínač `emit` (`csv` pre formuláre, `repeat` pre adresu)
 - [x] **2. `AppShell` + `AppNav`** — varianty `sidebar`/`topbar`, `lib/shellRoutes.ts`, `Header` skrýva menu na shell routach; v shelli je zatiaľ len `/library`
 - [x] **4a. Faceted filtre** — viachodnotové facety v adrese, počty bez vlastného filtra (`libraryFacets`), chips, `MultiSelect` na značky
-- [ ] **4b. Kompaktná tabuľka** — triedenie v adrese (`localeCompare` po slovensky), stránkovanie, pätička s počtami
-- [ ] **4c. Kartový pohľad** + prepínač `?view=`
-- [ ] **4d. Query builder** — podmienky s AND/ALEBO a monospace náhľadom dotazu
+- [x] **4b. Kompaktná tabuľka** — triedenie v adrese (`localeCompare` po slovensky), stránkovanie, pätička s počtami
+- [x] **4c. Kartový pohľad** + prepínač `?view=`
+- [x] **4d. Query builder** — podmienky v adrese, bez JavaScriptu, monospace náhľad dotazu. Pole a operátor sú jeden výber, takže nezmyselná dvojica sa nedá zostaviť
+- [ ] **Zátvorky v query builderi** — dnes platí jeden režim pre celý dotaz (spĺňa všetky / ktorúkoľvek), lebo `A alebo B a C` nemá bez zátvoriek jednoznačný význam. Miešanie spojok má zmysel doplniť až so zátvorkami, inak by dotaz znamenal niečo iné, než človek napísal
 - [ ] **4e. Hromadné akcie** — priradiť oddeleniam, vyžiadať potvrdenie, presunúť. **Sú to zápisy do dát** (D24, D32) — najprv rozhodnutie, potom kód
 - [ ] **5. Detail dokumentu, nahrávanie, vyhľadávanie** — layouty a pravý panel; znovupoužiť `Answer.tsx`, `AcknowledgeButton.tsx`, `Rating.tsx`
 - [ ] **6. Nastavenia** — živý náhľad farby v `ColorSelect.tsx`, slot na logo na `saveBrand()`
