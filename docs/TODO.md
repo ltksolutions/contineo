@@ -392,6 +392,7 @@
       **Značka nič nezakazuje** — je to štítok, nie brána. Dokument so značkou `test` sa dá stále prideliť aj potvrdiť; slúži na orientáciu pri nahradzovaní. Skutočnou hranicou je tenant a doména.
       Zápis šiel cez `saveMetadata()`, nie priamo do Mongo, takže vzniklo 11 auditných záznamov. Pozor: `saveMetadata()` prepisuje **všetky** metadáta naraz — skript preto posiela aj scope, accessLevel, language a category, inak by sa stratili.
 - [ ] ~~**Revízny poriadok má zástupný dátum účinnosti**~~ — bezpredmetné, kým je korpus skúšobný. Pri nahrávaní ostrých znení treba dátum z uznesenia VV SFZ (web SFZ uvádza účinnosť od 6. 12. 2023, ale autorita je uznesenie).
+- [ ] **`acknowledgements.trackId` sa nikdy nevyplní** — `acknowledge()` ten údaj prijíma, ale `/api/acknowledgements` posiela natvrdo `null`. Overené na prvom ostrom potvrdení (2026-09-07). Znamená to, že zo záznamu sa nedá povedať, či človek dokument potvrdil ako krok trasy alebo z pridelenia — HR výkaz si to odvodzuje z `duties()`, ale samotný dôkaz to nenesie. Rovnaká polovica ako pri `fixes[]`: parameter existuje, cesta k nemu nie.
 - [ ] **Pri nahrávaní ostrých znení porovnať dátumy s futbalsfz.sk** — skúšobný korpus mal aspoň tri staršie znenia, než SFZ zverejňuje (Disciplinárny 2023 vs 2025, Organizačný a návštevný 2014 vs 2019, Revízny zástupný). Pri ostrom nahrávaní to overiť dokument po dokumente.
 - [ ] **označenie znenia „1.0" je vymyslené číslo** a objaví sa v potvrdzovacej formulke
 
