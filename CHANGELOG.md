@@ -4,6 +4,28 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Fixed (2026-09-08 — knižnica padala na 500)
+
+`/library` v produkcii nešla: SSR skončilo hláškou „Attempted to call
+`normalizeLayout()` from the server but `normalizeLayout` is on the client".
+
+- **Príčina.** `normalizeLayout()` bývalo vyexportované z `components/AppNav.tsx`,
+  čo je klientsky komponent (`"use client"`). Z takého modulu nie je pre server
+  funkcia, ale **odkaz na klienta** — zavolať sa nedá. Serverová `/library` ho
+  pritom volá, aby z adresy určila variant navigácie.
+- **Prečo to neodhalil ani `tsc`, ani testy, ani vývojový režim.** Typy sedia
+  (je to obyčajná funkcia), test si ju importuje priamo (mimo Next.js) a vo
+  vývojovom režime hranica server → klient tak prísna nie je. Zlyhá to až
+  v produkčnom builde, za behu.
+- **Oprava.** Čisté funkcie a typy navigácie sú v novom `lib/appNav.ts`, ktorý
+  žiadnu direktívu nemá — importuje si ich server aj `AppNav.tsx`. Správanie
+  ani jedna z nich nemení, sťahujú sa len o súbor nižšie.
+- Pravidlo do budúcna: **čo potrebuje server aj klient, nesmie bývať v module
+  s `"use client"`.** Zapísané v hlavičke `lib/appNav.ts`.
+- Overené: `tsc --noEmit` čisto, `eslint` bez chýb, 969 testov, produkčný build
+  prejde a v serverových chunkoch po `normalizeLayout` nezostal klientský odkaz.
+
+
 ### Changed (2026-09-08 — nahrávanie dokumentu)
 
 Druhá časť kroku 5.

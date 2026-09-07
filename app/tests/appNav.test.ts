@@ -7,7 +7,7 @@
  */
 
 import { describe, it, expect } from "vitest"
-import { navItems, normalizeLayout, isActive } from "../src/components/AppNav"
+import { navItems, normalizeLayout, isActive } from "../src/lib/appNav"
 import { isShellRoute, SHELL_ROUTES } from "../src/lib/shellRoutes"
 
 describe("položky navigácie", () => {
