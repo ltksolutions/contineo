@@ -19,6 +19,8 @@ import {
   shiftFolderAction, saveFolderOrderAction,
 } from "./actions"
 import TreeWithOrder from "@/components/TreeWithOrder"
+import AppShell from "@/components/AppShell"
+import { normalizeLayout } from "@/components/AppNav"
 import { brandingView } from "@/lib/tenants"
 import { tenantStyle } from "@/components/TenantHeader"
 import { formatDate, dictionary } from "@/lib/i18n"
@@ -47,6 +49,7 @@ export default async function LibraryPage({
   const q = normalizeQuery<{
     msg?: string; error?: string; search?: string; status?: string
     folder?: string; category?: string; language?: string; accessLevel?: string; tag?: string
+    layout?: string
   }>(await searchParams)
   const { msg: message, error, search, status: state, folder, category, language, accessLevel, tag } = q
   const branding = brandingView(ctx.tenant)
@@ -64,7 +67,9 @@ export default async function LibraryPage({
 
   // Filtre sa nesú ďalej v každom odkaze aj v každom formulári — inak by sa
   // človek po založení priečinka ocitol späť na nefiltrovanom zozname.
-  const filters = Object.entries({ hladat: search, stav: state, priecinok: folder, category, language, accessLevel, tag })
+  // `layout` sa nesie ďalej ako filtre: bez toho by prvý klik na filter
+  // prepol navigáciu späť na predvolený variant.
+  const filters = Object.entries({ hladat: search, stav: state, priecinok: folder, category, language, accessLevel, tag, layout: q.layout })
     .filter(([, v]) => Boolean(v)) as [string, string][]
   const withFilter = (change: Record<string, string | undefined>) => {
     const p = new URLSearchParams(filters)
@@ -78,7 +83,19 @@ export default async function LibraryPage({
   const hasFilter = filters.length > 0
 
   return (
-    <div className="obal" style={{ padding: "28px 20px 80px", maxWidth: 900, ...tenantStyle(branding) }}>
+    /*
+     * Prvá stránka v aplikačnom shelli (viď `components/AppShell.tsx`).
+     *
+     * `.obal` s max. 900 px tu skončil zámerne: knižnica je zoznam s filtrami
+     * a na 900 px sa vedľa seba nezmestí panel filtrov a zoznam. Ostatné
+     * stránky ho majú ďalej — shell je opt-in a presúvajú sa po jednej.
+     *
+     * Variant navigácie je zatiaľ len z adresy (`?layout=sidebar`). Uložiť ho
+     * na osobu alebo organizáciu znamená zmenu schémy, a tá je samostatné
+     * rozhodnutie s vlastnou migráciou.
+     */
+    <AppShell layout={normalizeLayout(q.layout)} language={uiLanguage}>
+    <div style={tenantStyle(branding)}>
       <Notice message={message} error={error === "1"} back="/library" />
 
       <div style={{ display: "flex", gap: 12, alignItems: "baseline", flexWrap: "wrap", margin: "0 0 6px" }}>
@@ -328,5 +345,6 @@ export default async function LibraryPage({
         </div>
       </div>
     </div>
+    </AppShell>
   )
 }
