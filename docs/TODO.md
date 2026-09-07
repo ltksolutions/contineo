@@ -375,7 +375,9 @@
 - [x] **prevod oddelení SFZ spustený 2026-08-29** — nemal čo previesť: v databáze je zatiaľ jedna osoba a žiadna nemá oddelenie zapísaný textom. Zmysel dostane po importe ľudí z CSV
 - [x] **reorganizácia** (D50) — úloha z oddelenia platí odo dňa príchodu, bývalí členovia zostanú v prehľade označení a bez e-mailu, potvrdenie nesie odtlačok oddelenia
 - [x] **údaje z adresára** (D52) — meno, priezvisko, oddelenie, pozícia, jazyk a fotka z Microsoft Graphu; dopĺňa sa len chýbajúce, zlyhanie Graphu prihlásenie nezhodí
-- [ ] **overiť `User.Read` v Entra aplikácii SFZ** — bez neho Graph vráti 403 (v logu je menovitá hláška) a prihlásenie funguje ďalej, len bez mena, oddelenia a fotky
+- [x] **`User.Read` v Entra aplikácii SFZ funguje** ✅ 2026-09-07 — overené **stavom v databáze, nie logom**: `jan.letko@futbalsfz.sk` má vyplnené `jobTitle: CIO`, `department: IT department` a `photoVersion`, a to sú presne tie tri údaje, ktoré dopĺňa `fillFromDirectory()` z Graphu. Pri 403 by zostali prázdne.
+      Logy sa na to nedali použiť — Vercel Pro ich drží deň a za ten čas sa nikto cez Microsoft neprihlásil. Stav v `persons` je trvalý dôkaz, log je pominuteľný.
+- [x] **Núdzová brzda zamrazovala `lastLoginAt`** ✅ opravené 2026-09-07 — kto je na `ALLOWED_EMAILS`, tomu sa prihlásenie neevidovalo vôbec, lebo brzda sa vracala hneď. Prejavilo sa to tak, že `jan.letko@futbalsfz.sk` má posledné prihlásenie 30. 8., hoci sa prihlasuje denne — a s ním zamrzol aj príznak „nové od posledného prihlásenia" (D39), ktorý sa z `previousLoginAt` počíta. Evidencia sa teraz skúsi aj na tejto ceste, ale s 2-sekundovým stropom: brzda existuje pre chvíle, keď je Atlas nedostupný, a čakanie bez stropu by ju znefunkčnilo.
 - [x] **audit správcovských zmien** (D51) — vlastná kolekcia, nemenná, rozdiel namiesto celého objektu, tajomstvá len ako „zmenené"; vidí ho `people-admin` a správca platformy
 - [x] **skupiny majú históriu členstva** — pôvodné rozhodnutie nechať ich bez nej neobstálo
 - [x] **indexy auditu a histórie skupín vytvorené 2026-08-29** — `node scripts/onboarding_init.mjs`

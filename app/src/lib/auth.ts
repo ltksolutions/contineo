@@ -81,6 +81,14 @@ export function allowedEmails(rows = allowedEmailsRaw()): string[] {
  * ale opak by bol horší: zabudnutá premenná pri nasadení by otvorila
  * rozhranie s internými smernicami komukoľvek na internete.
  */
+/**
+ * Koľko sa čaká na evidenciu prihlásenia pri núdzovej brzde.
+ *
+ * Dosť na zápis do dostupného Atlasu, málo na to, aby nedostupný Atlas
+ * zdržal správcu, ktorý sa práve pre jeho nedostupnosť prihlasuje brzdou.
+ */
+const RECORD_DEADLINE_MS = 2000
+
 export function isAllowed(email: string, rows = allowedEmails()): boolean {
   if (!rows.length) return false
   const e = email.trim().toLowerCase()
@@ -350,6 +358,26 @@ export const authOptions: NextAuthOptions = {
       // aj vtedy, keď je cluster nedostupný.
       if (isAllowed(user.email)) {
         console.log(`[auth] ${phase}: ${user.email} — cez núdzovú brzdu`)
+        // Evidencia sa **skúsi aj tu**, len sa na ňu nečaká donekonečna.
+        //
+        // Dovtedy sa brzda vracala hneď, takže komu adresa na zozname
+        // pribudla, tomu `lastLoginAt` zamrzol — a s ním aj príznak „nové od
+        // posledného prihlásenia" (D39), ktorý sa z neho počíta. Vyzeralo to
+        // ako funkčná aplikácia; človek len prestal vidieť, čo mu pribudlo.
+        //
+        // Čakať sa nedá bez stropu: brzda existuje práve pre chvíle, keď
+        // databáza nie je dostupná, a `getCollection()` by vtedy visel až do
+        // vlastného časového limitu. Preto pretek s krátkym termínom —
+        // evidencia je pekná vec, prihlásenie správcu v poruche je dôležitejšia.
+        await Promise.race([
+          (async () => {
+            await recordSignIn(user.email!)
+            if (signInProvider && externalId) {
+              await recordExternalRef(user.email!, signInProvider, externalId)
+            }
+          })(),
+          new Promise(resolve => setTimeout(resolve, RECORD_DEADLINE_MS)),
+        ])
         return true
       }
 
