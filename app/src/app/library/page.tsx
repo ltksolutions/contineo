@@ -28,7 +28,7 @@ import Notice from "@/components/Notice"
 import { normalizeQuery, type RawQuery } from "@/lib/urlParams"
 import {
   readFilters, toggle, setValue, clearFilters, isEmpty, toQuery, carryFields, activeChips,
-  sortBy, currentSort, pageOf, withPage, sortRows, pageRows,
+  sortBy, currentSort, pageOf, withPage, sortRows, pageRows, setView, currentView,
   type MultiKey, type SortKey,
 } from "@/lib/libraryFilters"
 import MultiSelect from "@/components/MultiSelect"
@@ -98,6 +98,7 @@ export default async function LibraryPage({
   // triediť nedá, lebo obe vznikajú až tu.
   const sort = currentSort(filters)
   const paged = pageRows(sortRows(rows, sort.key, sort.dir), pageOf(filters))
+  const view = currentView(filters)
 
   /** Odkaz s vymeneným priečinkom; ostatné filtre zostávajú. */
   const withFolder = (folderId?: string) => toQuery(setValue(filters, "folder", folderId))
@@ -156,6 +157,25 @@ export default async function LibraryPage({
         {/* „N z M" hovorí, či je krátky zoznam výsledok filtra alebo stav
             knižnice. Bez toho čísla sa to nedá rozoznať. */}
         <span className="tichy library-count">{t.shown(facets.total, facets.all)}</span>
+
+        {/*
+          Prepínač pohľadu. Sú to dva odkazy, nie tlačidlá s JavaScriptom:
+          pohľad je súčasť adresy, takže sa dá poslať aj s ním — a funguje bez
+          skriptu. Aktívny odkaz zostáva odkazom (vedie sám na seba), lebo
+          `aria-current` povie čítačke to isté a nemusí sa riešiť dvojaký tvar.
+        */}
+        <span className="view-switch" role="group" aria-label={t.viewSwitch}>
+          {([["table", t.viewTable], ["cards", t.viewCards]] as const).map(([key, label]) => (
+            <Link
+              key={key}
+              href={toQuery(setView(filters, key))}
+              className={`view-switch-item${view === key ? " is-on" : ""}`}
+              aria-current={view === key ? "true" : undefined}
+            >
+              {label}
+            </Link>
+          ))}
+        </span>
         <Link className="tlacidlo" href="/library/new">{t.upload}</Link>
         <Link className="tlacidlo tlacidlo--tiche" href="/library/tracks">
           {dictionary(uiLanguage).library.tracks.heading}
@@ -441,6 +461,39 @@ export default async function LibraryPage({
             stlačiť tak, že sa dátum zalomí do troch riadkov. Na telefóne je
             posun prstom čitateľnejší než rozbitá mriežka.
           */}
+          {view === "cards" ? (
+          /*
+            Karty sú na prezeranie, nie na porovnávanie: názov má miesto na tri
+            riadky a údaje sú pod ním, nie v stĺpci. Preto tu nie sú hlavičky
+            na triedenie — poradie sa nastavilo v tabuľke a nesie sa ďalej
+            v adrese, len sa tu nedá meniť klikom na stĺpec, ktorý neexistuje.
+          */
+          <ul className="doc-cards">
+            {paged.rows.map(r => (
+              <li key={r.documentId} className="doc-card">
+                <div className="doc-card-top">
+                  <span className="stitok">{t.processing[r.processingState] ?? r.processingState}</span>
+                  {r.hasDraft && r.status !== "published" && <span className="stitok">{t.draft}</span>}
+                  {r.category && <span className="tichy doc-card-kind">{categoryLabel(r.category)}</span>}
+                </div>
+
+                <Link href={`/library/${encodeURIComponent(r.documentId)}`} className="doc-card-title">
+                  {r.title}
+                </Link>
+
+                <div className="tichy doc-meta">
+                  {r.folderTrail?.length ? `${r.folderTrail.join(" / ")} · ` : ""}
+                  {r.documentId}
+                </div>
+
+                <div className="tichy doc-meta doc-card-foot">
+                  {r.effectiveLabel}
+                  {r.updatedAt && ` · ${formatDate(r.updatedAt, uiLanguage)}`}
+                </div>
+              </li>
+            ))}
+          </ul>
+          ) : (
           <div className="doc-table-wrap">
             <table className="doc-table">
               <thead>
@@ -507,6 +560,7 @@ export default async function LibraryPage({
               </tbody>
             </table>
           </div>
+          )}
 
           {/*
             Pätička je aj tam, kde je strana jediná — číslo „koľko z koľkých"

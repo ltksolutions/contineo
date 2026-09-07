@@ -9,7 +9,7 @@
 import { describe, it, expect } from "vitest"
 import {
   readFilters, toggle, replace, setValue, clearFilters, isEmpty, toQuery, activeChips,
-  sortBy, currentSort, pageOf, withPage, sortRows, pageRows,
+  sortBy, currentSort, pageOf, withPage, sortRows, pageRows, setView, currentView, normalizeView,
 } from "../src/lib/libraryFilters"
 import { queryParts, buildQuery } from "../src/lib/libraryRead"
 
@@ -244,5 +244,35 @@ describe("stránkovanie", () => {
     expect(pageOf(sortBy(onPage5, "title"))).toBe(1)
     // Variant navigácie filtrom nie je.
     expect(pageOf(setValue(onPage5, "layout", "sidebar"))).toBe(5)
+  })
+})
+
+describe("pohľad", () => {
+  it("predvolený je tabuľka a čokoľvek neznáme tiež", () => {
+    expect(currentView(readFilters({}))).toBe("table")
+    expect(normalizeView("mriezka")).toBe("table")
+    expect(normalizeView("cards")).toBe("cards")
+  })
+
+  it("do adresy sa píšu len karty", () => {
+    // Inak by každý odkaz niesol `view=table` a dva odkazy na ten istý
+    // pohľad by vyzerali ako dva rôzne.
+    const cards = setView(readFilters({}), "cards")
+    expect(toQuery(cards)).toBe("/library?view=cards")
+    expect(toQuery(setView(cards, "table"))).toBe("/library")
+    expect(toQuery(readFilters({ view: "table" }))).toBe("/library")
+  })
+
+  it("prepnutie pohľadu nemení filtre, stranu ani triedenie", () => {
+    // Je to tá istá množina dokumentov, len inak nakreslená.
+    const f = withPage(sortBy(readFilters({ category: "norma" }), "title"), 3)
+    const cards = setView(f, "cards")
+    expect(cards.category).toEqual(["norma"])
+    expect(pageOf(cards)).toBe(3)
+    expect(currentSort(cards)).toEqual({ key: "title", dir: "asc" })
+  })
+
+  it("zrušenie filtrov pohľad nechá", () => {
+    expect(currentView(clearFilters(setView(readFilters({ tag: "x" }), "cards")))).toBe("cards")
   })
 })

@@ -52,6 +52,18 @@ export function defaultDirFor(key: SortKey): SortDir {
 /** Koľko riadkov na stranu. */
 export const PAGE_SIZE = 25
 
+/**
+ * Pohľad na zoznam.
+ *
+ * Tabuľka je predvolená, lebo v knižnici sa dokumenty porovnávajú. Karty sú
+ * pre prezeranie — na telefóne a vtedy, keď človek nevie, čo hľadá, a listuje.
+ */
+export type View = "table" | "cards"
+
+export function normalizeView(value: string | string[] | undefined): View {
+  return one(value) === "cards" ? "cards" : "table"
+}
+
 export interface ActiveFilters {
   /** Fulltext v názve, identifikátore a kľúči sekcie. */
   search?: string
@@ -67,7 +79,7 @@ export interface ActiveFilters {
    * prepol navigáciu späť na predvolený variant a pohľad na predvolený.
    */
   layout?: string
-  view?: string
+  view?: View
   /** Triedenie a strana. Tiež v adrese, aby sa dal poslať aj zoradený pohľad. */
   sort?: SortKey
   dir?: SortDir
@@ -127,7 +139,9 @@ export function readFilters(q: RawQuery): ActiveFilters {
     accessLevel: list(q.accessLevel),
     language: list(q.language),
     layout: one(q.layout),
-    view: one(q.view),
+    // Predvolený pohľad sa nedrží ako hodnota — `undefined` znamená tabuľka
+    // a do adresy sa nezapíše. Inak by každý odkaz niesol `view=table`.
+    view: normalizeView(q.view) === "cards" ? "cards" : undefined,
     sort: normalizeSort(q.sort),
     dir: normalizeDir(q.dir),
     page: normalizePage(q.page),
@@ -161,12 +175,24 @@ export function replace(filters: ActiveFilters, key: MultiKey, values: string[])
 
 export function setValue(
   filters: ActiveFilters,
-  key: "search" | "folder" | "layout" | "view",
+  key: "search" | "folder" | "layout",
   value: string | undefined,
 ): ActiveFilters {
   const next = { ...filters, [key]: value?.trim() ? value.trim() : undefined }
-  // Variant navigácie a pohľad nie sú filtre, tie stranu nemenia.
-  return key === "layout" || key === "view" ? next : firstPage(next)
+  // Variant navigácie nie je filter, ten stranu nemení.
+  return key === "layout" ? next : firstPage(next)
+}
+
+/**
+ * Prepnutie pohľadu. Stranu ani filtre nemení — je to tá istá množina
+ * dokumentov, len inak nakreslená.
+ */
+export function setView(filters: ActiveFilters, view: View): ActiveFilters {
+  return { ...filters, view: view === "cards" ? "cards" : undefined }
+}
+
+export function currentView(filters: ActiveFilters): View {
+  return filters.view === "cards" ? "cards" : "table"
 }
 
 /**

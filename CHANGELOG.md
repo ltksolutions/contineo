@@ -4,6 +4,17 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Added (2026-09-07 — knižnica: kartový pohľad)
+
+Krok 4c z handoffu `design_handoff_contineo_intranet`.
+
+- **Karty ako druhý pohľad na ten istý zoznam.** Tabuľka zostáva predvolená, lebo v knižnici sa dokumenty porovnávajú; karty sú na prezeranie — názov dostane miesto na tri riadky a údaje idú pod neho, nie do stĺpca. Počet stĺpcov určuje šírka okna (`auto-fill` s `minmax(250px, 1fr)`), nie breakpoint, takže to sedí aj na tablete na šírku.
+- **Prepínač sú dva odkazy, nie tlačidlá so skriptom.** Pohľad je súčasť adresy, takže sa dá poslať odkazom aj s ním a funguje bez JavaScriptu.
+- **Do adresy sa píšu len karty** (`?view=cards`); tabuľka je predvolená a nezapisuje sa — rovnaké pravidlo ako pri triedení, aby dva odkazy na ten istý pohľad nevyzerali ako dva rôzne.
+- **Prepnutie pohľadu nemení filtre, stranu ani triedenie.** Je to tá istá množina dokumentov, len inak nakreslená; zrušenie filtrov pohľad tiež necháva.
+- V kartách nie sú hlavičky na triedenie — poradie sa nastaví v tabuľke a nesie sa ďalej, len sa v kartách nedá meniť klikom na stĺpec, ktorý tam nie je.
+- Overené: `tsc --noEmit` čisto, `eslint` bez chýb, **943 testov prechádza** (4 nové), karty prekreslené na 390 px aj na desktope.
+
 ### Added (2026-09-07 — knižnica: kompaktná tabuľka, triedenie a stránkovanie)
 
 Krok 4b z handoffu `design_handoff_contineo_intranet`.

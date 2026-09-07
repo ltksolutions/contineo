@@ -993,6 +993,10 @@ interface Dictionary {
       pageOf: (page: number, pages: number) => string
       prevPage: string
       nextPage: string
+      /** Prepínač pohľadu: tabuľka verzus karty. */
+      viewSwitch: string
+      viewTable: string
+      viewCards: string
       statusPublished: string
       statusDrafts: string
       filter: string
@@ -2371,6 +2375,9 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       pageOf: (page, pages) => `Strana ${page} z ${pages}`,
       prevPage: "Predchádzajúca",
       nextPage: "Ďalšia",
+      viewSwitch: "Pohľad",
+      viewTable: "Tabuľka",
+      viewCards: "Karty",
       statusPublished: "publikované",
       statusDrafts: "koncepty",
       filter: "Filtrovať",
@@ -3732,6 +3739,9 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       pageOf: (page, pages) => `Strana ${page} z ${pages}`,
       prevPage: "Předchozí",
       nextPage: "Další",
+      viewSwitch: "Pohled",
+      viewTable: "Tabulka",
+      viewCards: "Karty",
       statusPublished: "publikované",
       statusDrafts: "koncepty",
       filter: "Filtrovat",
@@ -5089,6 +5099,9 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       pageOf: (page, pages) => `Page ${page} of ${pages}`,
       prevPage: "Previous",
       nextPage: "Next",
+      viewSwitch: "View",
+      viewTable: "Table",
+      viewCards: "Cards",
       statusPublished: "published",
       statusDrafts: "drafts",
       filter: "Filter",
