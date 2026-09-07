@@ -68,6 +68,34 @@
 - [ ] Helpdesk: štart **web widget** (`tickets`), e-mailový kanál ako druhý krok — **D-CMS-3**
 - [ ] Preniesť D-CMS-1..6 do `OPEN_DECISIONS.md` (D16+) pri revízii backlogu
 
+#### Intranet — dizajnový handoff (`design_handoff_contineo_intranet`, od 2026-09-07)
+
+> Návrh aplikačného shellu, knižnice s inteligentnými zoznamami a nastavení. Balík je **dizajnová referencia, nie kód na skopírovanie**. Shell je **opt-in** — `layout.tsx` sa nemení a stránky sa doň presúvajú po jednej.
+
+- [x] **1. Tokeny** — `--accent-soft` a šestica premenných hustoty v `globals.css`, `soft()` v `TenantHeader.tsx`
+- [x] **3. `MultiSelect`** — viacnásobný výber s hľadaním bez diakritiky, `<noscript>` cesta, prepínač `emit` (`csv` pre formuláre, `repeat` pre adresu)
+- [x] **2. `AppShell` + `AppNav`** — varianty `sidebar`/`topbar`, `lib/shellRoutes.ts`, `Header` skrýva menu na shell routach; v shelli je zatiaľ len `/library`
+- [x] **4a. Faceted filtre** — viachodnotové facety v adrese, počty bez vlastného filtra (`libraryFacets`), chips, `MultiSelect` na značky
+- [ ] **4b. Kompaktná tabuľka** — triedenie v adrese (`localeCompare` po slovensky), stránkovanie, pätička s počtami
+- [ ] **4c. Kartový pohľad** + prepínač `?view=`
+- [ ] **4d. Query builder** — podmienky s AND/ALEBO a monospace náhľadom dotazu
+- [ ] **4e. Hromadné akcie** — priradiť oddeleniam, vyžiadať potvrdenie, presunúť. **Sú to zápisy do dát** (D24, D32) — najprv rozhodnutie, potom kód
+- [ ] **5. Detail dokumentu, nahrávanie, vyhľadávanie** — layouty a pravý panel; znovupoužiť `Answer.tsx`, `AcknowledgeButton.tsx`, `Rating.tsx`
+- [ ] **6. Nastavenia** — živý náhľad farby v `ColorSelect.tsx`, slot na logo na `saveBrand()`
+- [ ] **7. Dotiahnutie** — tmavá téma, `:focus-visible` všade, mobilná zásuvka filtrov, `<noscript>` cesty
+- [ ] Presunúť do shellu zvyšné stránky (`/documents`, `/hr`, `/people`, `/golden-set`, `/admin`), každú vlastným PR; potom zmizne menu v hlavičke
+- [ ] Uložiť variant navigácie a hustotu na osobu alebo organizáciu — **zmena schémy**, zatiaľ len `?layout=` v adrese
+- [ ] Premenovať 125 slovenských CSS tried na anglické (a `je-*` → `is-*`) — samostatný PR
+- [ ] Obaliť `platformContext()` / `hrContext()` / `peopleContext()` / `libraryContext()` do `cache()` z Reactu — `layout.tsx` aj `AppShell` ich volajú v tej istej požiadavke
+
+##### Chýba to v dátach — návrh to žiada, model to zatiaľ nevie
+
+> Tri veci z handoffu sa **nedali spraviť pri filtroch**, lebo pod nimi nie sú dáta. Doplniť ich treba, ale každá je vlastné rozhodnutie s dopadom na model, nie prílepok k obrazovke.
+
+- [ ] **Facet a stĺpec „Oddelenie"** — dokument oddelenie **nenesie**. Pridelenie žije v `assignments` (`audience.kind` = `department` / `group` / `track`), takže filter aj stĺpec znamenajú spojenie naprieč kolekciami. Rozhodnúť: denormalizovať zoznam adresátov na dokument (rýchle čítanie, ale stav sa ukladá — proti D27), alebo počítať z `assignments` agregáciou pri každom zobrazení
+- [ ] **Stĺpec „Potvrdenia %"** — percento potvrdení pre každý riadok je agregácia nad `acknowledgements` a nad počtom adresátov. Rozhodnúť rozsah (kto je menovateľ: pridelení, alebo celá organizácia?) a či sa počíta pri zobrazení, alebo sa drží predpočítané
+- [ ] **Stavy „Na schválenie" a „Expirovaný"** — v knižnici **neexistuje schvaľovací workflow**; dnes sú stavy len `draft` / `published` a platnosť sa odvodzuje z `effectiveFrom` / `effectiveTo` znenia. „Expirovaný" sa dá odvodiť (D27), „Na schválenie" je nový stav so schvaľovacou cestou — a tá je vlastná fáza, viď schvaľovatelia v kroku 5
+
 ### E. Source-adaptéry + provenance (Fáza 4/6)
 - [ ] Rozhranie `SourceAdapter` + refaktor existujúceho file (PDF/MD) adaptéra
 - [ ] Provenance polia v `documents` (`source.{type,connector,externalId,url,fetchedAt,contentHash,adapterVersion}`)
