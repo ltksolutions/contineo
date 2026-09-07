@@ -4,6 +4,19 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Added (2026-09-07 — dizajnové tokeny a viacnásobný výber)
+
+Prvé dva kroky z dizajnového handoffu `design_handoff_contineo_intranet` (návrh intranetu, knižnice a inteligentných zoznamov). Obidva sú **aditívne** — žiadna existujúca obrazovka nemení vzhľad ani správanie a dajú sa mergnúť samostatne.
+
+- **`--accent-soft`** — hlavná farba s 11 % alfou. Je to jediný nový farebný token a patrí tam, kde má byť farba organizácie len naznačená: chip aktívneho filtra, aktívna položka navigácie, označený riadok tabuľky. Priehľadnosť, a nie predpočítaný svetlý odtieň, preto, že podklad pod ním nie je vždy rovnaký (`--surface` v karte, `--bg` v pätičke) a v tmavej téme je opačný. Tenantovi ju skladá `tenantStyle()` cez novú `soft()`; pri nečitateľnej farbe sa premenná vôbec nenastaví a platí predvolená — pokazená hodnota by zahodila aj tú.
+- **Hustota rozhrania** — šestica premenných (`--pad-main`, `--card-pad`, `--list-py`, `--gap`, `--row-py`, `--font-row`) prepínaná atribútom `html[data-density="comfortable"]`, nie druhá sada tried. Duplikované triedy by znamenali, že každý nový prvok treba napísať dvakrát, a raz sa na to zabudne. Kompaktné je predvolené: knižnica dokumentov je pracovný nástroj, kde rozhoduje, koľko riadkov je vidieť naraz.
+- **`darken(hex, 0.16)` zostáva nezmenený.** Handoff navrhoval 0,24; zmena koeficientu by potichu prekreslila hover stavy u všetkých existujúcich tenantov.
+- **`components/MultiSelect.tsx`** — viacnásobný výber s hľadaním. `TagSelect` vypíše všetky možnosti naraz, čo pri skupinách osôb stačí, ale pri útvaroch a štítkoch knižnice nie: tridsať pilulák je stena, v ktorej sa nedá nič nájsť. Tu sú zvolené hodnoty vidieť ako chips a ostatné sa hľadajú písaním — **bez diakritiky**, lebo kto píše „utvar", myslí „Útvar". Ponúka aj hodnotu, ktorú má už len tento jediný záznam, inak by ju uloženie ticho odstránilo (rovnaký dôvod ako v `TagSelect`).
+- **Normalizácia je `trim().toLowerCase()`, teda presne `normalizeKeys()` na serveri.** Handoff navrhoval nahrádzať medzery podčiarkovníkom — server to nerobí, takže by pre tú istú vec vznikli dve hodnoty a jedna by nikdy nikomu nesadla. Test to porovnáva priamo so serverovou funkciou a uzatvára kruh cez `splitList()`.
+- Zo `Select.tsx` prevzaté zámerne: výber na `onMouseDown` s `preventDefault()` (pri `onClick` zatvorí zoznam poslucháč „klik mimo" skôr, než sa hodnota vyberie), `<noscript>` s obyčajným poľom rovnakého mena a ovládanie klávesnicou. Rozmery sedia s `.vyber`, nie s prototypom: obe polia stoja na tom istom formulári vedľa seba.
+- **Komponent zatiaľ nikde nie je nasadený.** Nasadenie na útvary, štítky a osoby mení existujúce formuláre a patrí do vlastného PR.
+- Overené: `tsc --noEmit` čisto, `eslint` bez chýb, **899 testov prechádza** (13 nových).
+
 ### Fixed (2026-09-06 — skripty vedia znova spustiť TypeScript zo `src/`)
 
 - **`smoke.mjs` bol od 28. 8. nespustiteľný.** Vtedajšie bezpečnostné upratovanie odstránilo `esbuild` z devDependencies a s ním aj bundlovanie, na ktorom skript stál. Nevšimlo sa to, lebo `smoke.mjs` nie je súčasťou `npm test` — spúšťa sa ručne. Opravené **bez vrátenia závislosti**: skript teraz importuje moduly zo `src/` priamo a beží cez `scripts/lib/ts-hook.mjs`, rovnako ako `status`, `tenant` či `persons:import`. Pribudol `npm run smoke`.
