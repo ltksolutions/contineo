@@ -103,6 +103,17 @@ export default function Answer({ state: state, language }: { state: AnswerState;
   return (
     <div style={{ display: "grid", gap: 16 }}>
       <div className="karta">
+        {/* Hlavička hovorí to, čo sa inak dá len tušiť: odpoveď je zostavená
+            z dokumentov organizácie, nie z toho, čo model vie odinakiaľ.
+            Pri chybe sa neukáže — nad hláškou „nepodarilo sa" by to bolo
+            tvrdenie o niečom, čo neexistuje. */}
+        {!error && (
+          <div className="answer-head">
+            <span className="answer-mark" aria-hidden="true" />
+            <span className="answer-kicker">{t.fromDocuments}</span>
+          </div>
+        )}
+
         {error ? (
           <div style={{ color: "var(--bad-fg)", fontSize: 15 }}>
             <strong>{t.failed}</strong>
@@ -177,37 +188,50 @@ export default function Answer({ state: state, language }: { state: AnswerState;
                             letterSpacing: "0.05em", color: "var(--muted)", fontWeight: 700 }}>
             {t.sources(done.sources.length)}
           </summary>
-          <div style={{ display: "grid", gap: 6, marginTop: 10 }}>
-            {done.sources.map(z => (
-              <div
-                key={z.index}
-                style={{
-                  display: "flex", gap: 10, alignItems: "baseline",
-                  fontSize: 14, padding: "7px 12px",
-                  background: "var(--surface)", border: "1px solid var(--line)",
-                  borderRadius: 8,
-                }}
-              >
-                <span className="tichy" style={{ fontVariantNumeric: "tabular-nums" }}>
-                  {z.index}.
-                </span>
-                <span style={{ flex: 1 }}>
-                  {z.title}
-                  {z.articleRef && <span className="tichy"> · {z.articleRef}</span>}
-                  {z.heading && <span className="tichy"> — {z.heading}</span>}
-                </span>
-                {/* Interný obsah vo verejnej odpovedi je tvrdá brána D9,
-                    preto to musí byť vidieť na prvý pohľad. */}
-                {z.accessLevel === "internal" && (
-                  <span
-                    className="stitok"
-                    style={{ background: "var(--warn-bg)", color: "var(--warn-fg)", fontSize: 11 }}
-                  >
-                    {t.internal}
+          <div className="answer-sources">
+            {done.sources.map(z => {
+              const body = (
+                <>
+                  <span className="answer-source-index">{z.index}.</span>
+                  <span className="answer-source-body">
+                    <span className="answer-source-title">{z.title}</span>
+                    {(z.articleRef || z.heading) && (
+                      <span className="tichy answer-source-meta" style={{ display: "block" }}>
+                        {[z.articleRef, z.heading].filter(Boolean).join(" · ")}
+                      </span>
+                    )}
                   </span>
-                )}
-              </div>
-            ))}
+                  {/* Interný obsah vo verejnej odpovedi je tvrdá brána D9,
+                      preto to musí byť vidieť na prvý pohľad. */}
+                  {z.accessLevel === "internal" && (
+                    <span
+                      className="stitok"
+                      style={{ background: "var(--warn-bg)", color: "var(--warn-fg)", fontSize: 11 }}
+                    >
+                      {t.internal}
+                    </span>
+                  )}
+                </>
+              )
+
+              // Odkaz len vtedy, keď zdroj naozaj niekam vedie. Karta, ktorá
+              // vyzerá klikateľne a nič nerobí, je horšia než obyčajný riadok.
+              // Adresa je originál dokumentu (`sourceUrl`) — býva mimo nášho
+              // webu, preto `rel`.
+              return z.url ? (
+                <a
+                  key={z.index}
+                  className="answer-source"
+                  href={z.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  {body}
+                </a>
+              ) : (
+                <div key={z.index} className="answer-source">{body}</div>
+              )
+            })}
           </div>
         </details>
       )}

@@ -273,6 +273,8 @@ interface Dictionary {
   }
 
   answer: {
+    /** Hlavička karty odpovede — hovorí, odkiaľ odpoveď je. */
+    fromDocuments: string
     failed: string
     noResults: string
     incompleteHeading: string
@@ -1476,6 +1478,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
   },
 
   answer: {
+    fromDocuments: "Odpoveď z vašich dokumentov",
     failed: "Odpoveď sa nepodarilo získať.",
     noResults: "Nenašiel som relevantné informácie k vašej otázke v dostupných dokumentoch.",
     incompleteHeading: "Odpoveď je neúplná.",
@@ -2897,6 +2900,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
   },
 
   answer: {
+    fromDocuments: "Odpověď z vašich dokumentů",
     failed: "Odpověď se nepodařilo získat.",
     noResults: "Nenašel jsem relevantní informace k vaší otázce v dostupných dokumentech.",
     incompleteHeading: "Odpověď je neúplná.",
@@ -4315,6 +4319,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
   },
 
   answer: {
+    fromDocuments: "Answer from your documents",
     failed: "The answer could not be retrieved.",
     noResults: "I found no information relevant to your question in the available documents.",
     incompleteHeading: "The answer is incomplete.",
