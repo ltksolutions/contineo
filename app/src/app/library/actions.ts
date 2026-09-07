@@ -34,6 +34,7 @@ import { DOCUMENTS_COLLECTION } from "@/lib/documents"
 import { writeAudit } from "@/lib/audit"
 import { dictionary, errorText, type UiLanguage } from "@/lib/i18n"
 import { AppError } from "@/lib/appError"
+import { assignHref, summarize, type BulkOutcome } from "@/lib/libraryBulk"
 
 async function actor(): Promise<
   {
@@ -376,6 +377,83 @@ export async function assignToFolderAction(fd: FormData) {
   revalidatePath("/library")
   revalidatePath(`/library/${id}`)
   redirect(`/library/${encodeURIComponent(id)}?msg=${encodeURIComponent(message)}${error ? "&error=1" : ""}`)
+}
+
+/** Označené dokumenty z formulára. Prázdny zoznam je platný stav, nie chyba. */
+function selectedDocuments(fd: FormData): string[] {
+  return fd.getAll("document")
+    .filter((v): v is string => typeof v === "string")
+    .map(v => v.trim())
+    .filter(Boolean)
+}
+
+/**
+ * Kam sa človek vráti. Nesie sa vo formulári, aby po akcii zostal pri tom
+ * istom filtri, triedení a strane — inak by ho každý presun vyhodil na
+ * začiatok nefiltrovaného zoznamu.
+ */
+function backTo(fd: FormData, message: string, error = false): string {
+  const raw = fieldText(fd, "back") || "/library"
+  // Z formulára smie prísť len cesta v knižnici; celá adresa by sa dala
+  // zneužiť na presmerovanie preč (open redirect).
+  const back = raw.startsWith("/library") ? raw : "/library"
+  const sep = back.includes("?") ? "&" : "?"
+  return `${back}${sep}msg=${encodeURIComponent(message)}${error ? "&error=1" : ""}`
+}
+
+/**
+ * Hromadný presun do priečinka.
+ *
+ * Cyklus nad tou istou `assignDocument()`, akú používa presun po jednom —
+ * takže kontroly aj audit zostávajú a nevzniká druhá cesta, ako sa dokument
+ * dostane do priečinka.
+ *
+ * **Dávka môže skončiť čiastočne** a je to zámer: kolekcie sa v tomto projekte
+ * menia po zázname a transakcia naprieč dokumentmi by sem zaviedla nástroj,
+ * ktorý sa nikde inde nepoužíva. Preto sa na konci vypíše, čo neprešlo.
+ */
+export async function moveManyAction(fd: FormData) {
+  const self = await actor()
+  if (!self) redirect("/")
+
+  const ids = selectedDocuments(fd)
+  const t = say(self.language)
+  if (ids.length === 0) redirect(backTo(fd, t.bulkNothingSelected, true))
+
+  const folderId = fieldText(fd, "folderId") || null
+  const outcome: BulkOutcome = { moved: [], failed: [] }
+
+  for (const id of ids) {
+    try {
+      await assignDocument(self.companyCode, id, folderId, self.email)
+      outcome.moved.push(id)
+    } catch (e) {
+      if (isRedirect(e)) throw e
+      outcome.failed.push({ documentId: id, reason: errorMessage(e, self.language) })
+    }
+  }
+
+  revalidatePath("/library")
+  for (const id of outcome.moved) revalidatePath(`/library/${id}`)
+
+  const message = summarize(outcome, t.bulkMoved, t.bulkMovedPartly)
+  redirect(backTo(fd, message, outcome.failed.length > 0))
+}
+
+/**
+ * Odovzdá výber prideľovaniu.
+ *
+ * Nič nezapisuje — len prenesie označené dokumenty na obrazovku, ktorá
+ * prideľovanie už vie (`/hr/assign`). Je to serverová akcia, a nie odkaz,
+ * lebo výber žije v zaškrtávacích políčkach formulára, nie v adrese.
+ */
+export async function assignManyAction(fd: FormData) {
+  const self = await actor()
+  if (!self) redirect("/")
+
+  const ids = selectedDocuments(fd)
+  if (ids.length === 0) redirect(backTo(fd, say(self.language).bulkNothingSelected, true))
+  redirect(assignHref(ids))
 }
 
 /** Preindexuje dokument podľa aktuálneho profilu členenia (D57). */

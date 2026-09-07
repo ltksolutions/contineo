@@ -56,7 +56,11 @@ export default function TreeWithOrder({
    * organizácie, filtre v knižnici. Bez nich by človeka po uložení hodilo
    * na iný pohľad než ten, v ktorom preusporadúval.
    */
-  hidden?: Record<string, string>
+  /**
+   * Skryté polia, ktoré si formulár nesie. Zoznam dvojíc **aj** objekt:
+   * viachodnotový filter je opakovaný kľúč a v objekte sa nezmestí.
+   */
+  hidden?: Record<string, string> | [string, string][]
   action: (fd: FormData) => void | Promise<void>
   /** Jazyk prostredia. */
   language?: UiLanguage
@@ -85,8 +89,8 @@ export default function TreeWithOrder({
           a v riadkoch sú vlastné (premenovať, presunúť, zrušiť). Tlačidlo sa
           naň odkazuje cez `form`. */}
       <form id={FORM_ID} action={action}>
-        {Object.entries(hidden ?? {}).map(([k, v]) => (
-          <input key={k} type="hidden" name={k} value={v} />
+        {(Array.isArray(hidden) ? hidden : Object.entries(hidden ?? {})).map(([k, v], i) => (
+          <input key={`${k}-${i}`} type="hidden" name={k} value={v} />
         ))}
         <input type="hidden" name="order" value={order.map(p => p.id).join(",")} />
       </form>

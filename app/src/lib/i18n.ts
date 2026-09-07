@@ -977,6 +977,54 @@ interface Dictionary {
       tag: string
       status: string
       all: string
+      /** Panel filtrov: nadpis, prístup, potvrdenie výberu, počet nájdených. */
+      filtersTitle: string
+      accessLevel: string
+      apply: string
+      tagSearch: string
+      shown: (found: number, all: number) => string
+      removeFilter: (value: string) => string
+      /** Tabuľka: hlavičky stĺpcov, triedenie a stránkovanie. */
+      colDocument: string
+      colVersion: string
+      colChanged: string
+      sortBy: (column: string) => string
+      pageRange: (from: number, to: number, total: number) => string
+      pageOf: (page: number, pages: number) => string
+      prevPage: string
+      nextPage: string
+      /** Prepínač pohľadu: tabuľka verzus karty. */
+      viewSwitch: string
+      viewTable: string
+      viewCards: string
+      /** Hromadné akcie nad označenými dokumentmi. */
+      bulk: {
+        heading: string
+        pickColumn: string
+        pick: (title: string) => string
+        moveTo: string
+        move: string
+        assign: string
+      }
+      /** Query builder: podmienky, ktoré si človek zostaví sám. */
+      builder: {
+        heading: string
+        hint: string
+        field: string
+        op: string
+        value: string
+        add: string
+        remove: (description: string) => string
+        matchAll: string
+        matchAny: string
+        joinAll: string
+        joinAny: string
+        /** Spojka pred prvou podmienkou. Krátka, nech riadky sedia pod sebou. */
+        joinFirst: string
+        preview: string
+        fields: Record<string, string>
+        ops: Record<string, string>
+      }
       statusPublished: string
       statusDrafts: string
       filter: string
@@ -1177,6 +1225,10 @@ interface Dictionary {
       draftAccepted: string
       draftDiscarded: string
       assigned: string
+      /** Hromadné akcie: prázdny výber a výsledok dávky. */
+      bulkNothingSelected: string
+      bulkMoved: (moved: number, total: number) => string
+      bulkMovedPartly: (moved: number, total: number, failed: string) => string
       reindexUpToDate: string
       reindexed: (chunks: number, archived: number) => string
       fixedNeedsReacknowledge: (people: number) => string
@@ -2341,6 +2393,61 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       tag: "Značka",
       status: "Stav",
       all: "— všetky —",
+      filtersTitle: "Filtre",
+      accessLevel: "Prístup",
+      apply: "Použiť",
+      tagSearch: "hľadať značku…",
+      shown: (found, all) => `${found} z ${all} dokumentov`,
+      removeFilter: (value) => `Odobrať filter ${value}`,
+      colDocument: "Dokument",
+      colVersion: "Platné znenie",
+      colChanged: "Zmenené",
+      sortBy: (column) => `Zoradiť podľa ${column}`,
+      pageRange: (from, to, total) => `Zobrazené ${from}–${to} z ${total}`,
+      pageOf: (page, pages) => `Strana ${page} z ${pages}`,
+      prevPage: "Predchádzajúca",
+      nextPage: "Ďalšia",
+      viewSwitch: "Pohľad",
+      viewTable: "Tabuľka",
+      viewCards: "Karty",
+      bulk: {
+        heading: "S označenými",
+        pickColumn: "Výber",
+        pick: (title) => `Označiť ${title}`,
+        moveTo: "Presunúť do",
+        move: "Presunúť",
+        assign: "Vyžiadať potvrdenie",
+      },
+      builder: {
+        heading: "Podmienky",
+        hint: "Zátvorky zatiaľ nevieme, preto platí jeden režim pre celý dotaz — inak by výsledok znamenal niečo iné, než ste napísali.",
+        field: "Pole",
+        op: "Operátor",
+        value: "Hodnota",
+        add: "Pridať podmienku",
+        remove: (description) => `Odobrať podmienku ${description}`,
+        matchAll: "spĺňa všetky",
+        matchAny: "spĺňa ktorúkoľvek",
+        joinAll: "a zároveň",
+        joinAny: "alebo",
+        joinFirst: "kde",
+        preview: "Dokumenty, kde",
+        fields: {
+          title: "Názov",
+          category: "Druh",
+          status: "Stav",
+          tag: "Značka",
+          accessLevel: "Prístup",
+          updatedAt: "Zmenené",
+        },
+        ops: {
+          is: "je",
+          not: "nie je",
+          contains: "obsahuje",
+          before: "pred",
+          after: "po",
+        },
+      },
       statusPublished: "publikované",
       statusDrafts: "koncepty",
       filter: "Filtrovať",
@@ -2534,6 +2641,10 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       draftAccepted: "Návrh je teraz konceptom. Publikovanie je stále samostatný krok.",
       draftDiscarded: "Návrh zahodený.",
       assigned: "Zaradené.",
+      bulkNothingSelected: "Neoznačili ste žiadny dokument.",
+      bulkMoved: (moved) => `Presunuté: ${moved}.`,
+      bulkMovedPartly: (moved, total, failed) =>
+        `Presunuté ${moved} z ${total}. Neprešli: ${failed}`,
       reindexUpToDate: "Členenie je už aktuálne — nič sa nemenilo.",
       reindexed: (chunks, archived) =>
         `Preindexované: ${chunks} ${chunks === 1 ? "úsek" : chunks < 5 ? "úseky" : "úsekov"},` +
@@ -3688,6 +3799,61 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       tag: "Značka",
       status: "Stav",
       all: "— všechny —",
+      filtersTitle: "Filtry",
+      accessLevel: "Přístup",
+      apply: "Použít",
+      tagSearch: "hledat značku…",
+      shown: (found, all) => `${found} z ${all} dokumentů`,
+      removeFilter: (value) => `Odebrat filtr ${value}`,
+      colDocument: "Dokument",
+      colVersion: "Platné znění",
+      colChanged: "Změněno",
+      sortBy: (column) => `Seřadit podle ${column}`,
+      pageRange: (from, to, total) => `Zobrazeno ${from}–${to} z ${total}`,
+      pageOf: (page, pages) => `Strana ${page} z ${pages}`,
+      prevPage: "Předchozí",
+      nextPage: "Další",
+      viewSwitch: "Pohled",
+      viewTable: "Tabulka",
+      viewCards: "Karty",
+      bulk: {
+        heading: "S označenými",
+        pickColumn: "Výběr",
+        pick: (title) => `Označit ${title}`,
+        moveTo: "Přesunout do",
+        move: "Přesunout",
+        assign: "Vyžádat potvrzení",
+      },
+      builder: {
+        heading: "Podmínky",
+        hint: "Závorky zatím neumíme, proto platí jeden režim pro celý dotaz — jinak by výsledek znamenal něco jiného, než jste napsali.",
+        field: "Pole",
+        op: "Operátor",
+        value: "Hodnota",
+        add: "Přidat podmínku",
+        remove: (description) => `Odebrat podmínku ${description}`,
+        matchAll: "splňuje všechny",
+        matchAny: "splňuje kteroukoli",
+        joinAll: "a zároveň",
+        joinAny: "nebo",
+        joinFirst: "kde",
+        preview: "Dokumenty, kde",
+        fields: {
+          title: "Název",
+          category: "Druh",
+          status: "Stav",
+          tag: "Značka",
+          accessLevel: "Přístup",
+          updatedAt: "Změněno",
+        },
+        ops: {
+          is: "je",
+          not: "není",
+          contains: "obsahuje",
+          before: "před",
+          after: "po",
+        },
+      },
       statusPublished: "publikované",
       statusDrafts: "koncepty",
       filter: "Filtrovat",
@@ -3881,6 +4047,10 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       draftAccepted: "Návrh je teď konceptem. Publikování je stále samostatný krok.",
       draftDiscarded: "Návrh zahozen.",
       assigned: "Zařazeno.",
+      bulkNothingSelected: "Neoznačili jste žádný dokument.",
+      bulkMoved: (moved) => `Přesunuto: ${moved}.`,
+      bulkMovedPartly: (moved, total, failed) =>
+        `Přesunuto ${moved} z ${total}. Neprošly: ${failed}`,
       reindexUpToDate: "Členění je už aktuální — nic se neměnilo.",
       reindexed: (chunks, archived) =>
         `Přeindexováno: ${chunks} ${chunks === 1 ? "úsek" : chunks < 5 ? "úseky" : "úseků"},` +
@@ -5031,6 +5201,61 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       tag: "Tag",
       status: "Status",
       all: "— all —",
+      filtersTitle: "Filters",
+      accessLevel: "Access",
+      apply: "Apply",
+      tagSearch: "search tags…",
+      shown: (found, all) => `${found} of ${all} documents`,
+      removeFilter: (value) => `Remove filter ${value}`,
+      colDocument: "Document",
+      colVersion: "Effective version",
+      colChanged: "Changed",
+      sortBy: (column) => `Sort by ${column}`,
+      pageRange: (from, to, total) => `Showing ${from}–${to} of ${total}`,
+      pageOf: (page, pages) => `Page ${page} of ${pages}`,
+      prevPage: "Previous",
+      nextPage: "Next",
+      viewSwitch: "View",
+      viewTable: "Table",
+      viewCards: "Cards",
+      bulk: {
+        heading: "With selected",
+        pickColumn: "Select",
+        pick: (title) => `Select ${title}`,
+        moveTo: "Move to",
+        move: "Move",
+        assign: "Request acknowledgement",
+      },
+      builder: {
+        heading: "Conditions",
+        hint: "Parentheses are not supported yet, so one mode applies to the whole query — otherwise the result would mean something other than what you wrote.",
+        field: "Field",
+        op: "Operator",
+        value: "Value",
+        add: "Add condition",
+        remove: (description) => `Remove condition ${description}`,
+        matchAll: "match all",
+        matchAny: "match any",
+        joinAll: "and",
+        joinAny: "or",
+        joinFirst: "where",
+        preview: "Documents where",
+        fields: {
+          title: "Title",
+          category: "Category",
+          status: "Status",
+          tag: "Tag",
+          accessLevel: "Access",
+          updatedAt: "Changed",
+        },
+        ops: {
+          is: "is",
+          not: "is not",
+          contains: "contains",
+          before: "before",
+          after: "after",
+        },
+      },
       statusPublished: "published",
       statusDrafts: "drafts",
       filter: "Filter",
@@ -5223,6 +5448,10 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       draftAccepted: "The draft is now the working text. Publishing is still a separate step.",
       draftDiscarded: "Draft discarded.",
       assigned: "Filed.",
+      bulkNothingSelected: "You have not selected any document.",
+      bulkMoved: (moved) => `Moved: ${moved}.`,
+      bulkMovedPartly: (moved, total, failed) =>
+        `Moved ${moved} of ${total}. Failed: ${failed}`,
       reindexUpToDate: "The chunking is already up to date — nothing changed.",
       reindexed: (chunks, archived) =>
         `Reindexed: ${chunks} ${chunks === 1 ? "chunk" : "chunks"}, ${archived} older archived.` +

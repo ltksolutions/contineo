@@ -14,6 +14,7 @@ import { allFolders, pathTo } from "./folders"
 import { DOCUMENTS_COLLECTION, effectiveVersion } from "./documents"
 import type { Version } from "./documents"
 import type { OriginalFile, ProcessingState } from "./libraryWrite"
+import { conditionQuery, type Condition, type MatchMode } from "./libraryConditions"
 
 export interface LibraryRow {
   documentId: string
@@ -98,16 +99,222 @@ function toRow(d: RawRow): LibraryRow {
   }
 }
 
+/**
+ * Filtre knižnice. Facety sú **viachodnotové** — „norma alebo smernica" je
+ * bežná otázka a jednohodnotový filter na ňu odpovedať nevie. Jedna hodnota
+ * sa prijíma ďalej: staré odkazy s `?category=norma` musia chodiť.
+ */
 export interface LibraryFilter {
   search?: string
-  status?: string
-  /** Priečinok **vrátane podpriečinkov** — hľadá sa v materializovanej ceste. */
+  status?: string | string[]
+  /**
+   * Priečinok **vrátane podpriečinkov** — hľadá sa v materializovanej ceste.
+   * `nezaradene` = dokumenty, ktoré v žiadnom priečinku nie sú.
+   *
+   * Jednohodnotový zámerne: je to miesto v strome, v ktorom sa človek
+   * nachádza, nie vlastnosť dokumentu.
+   */
   priecinok?: string
-  /** `nezaradene` = dokumenty, ktoré v žiadnom priečinku nie sú. */
-  category?: string
-  language?: string
-  accessLevel?: string
-  tag?: string
+  category?: string | string[]
+  language?: string | string[]
+  accessLevel?: string | string[]
+  tag?: string | string[]
+  /** Podmienky z query buildera. Sú nad facetmi, nie namiesto nich. */
+  conditions?: Condition[]
+  match?: MatchMode
+}
+
+/** Filter, ktorý podmienku vyrobil. Podľa neho sa dá jedna vynechať. */
+export type FilterKey =
+  | "status" | "folder" | "category" | "language" | "accessLevel" | "tag" | "search" | "conditions"
+
+function listOf(value: string | string[] | undefined): string[] {
+  const raw = Array.isArray(value) ? value : value === undefined ? [] : [value]
+  return [...new Set(raw.map(v => v.trim()).filter(Boolean))]
+}
+
+/**
+ * Podmienky dotazu rozložené podľa filtra, ktorý ich vyrobil.
+ *
+ * Rozdelené preto, že **počty pri facetoch sa počítajú bez vlastného filtra**.
+ * Keby sa počítali s ním, po kliknutí na „Norma" by ostatné kategórie mali
+ * nulu a človek by prišel o informáciu, ktorá ho zaujíma najviac: čo by
+ * dostal, keby prepol.
+ *
+ * Podmienky sa skladajú do `$and`, nie do jedného objektu: fulltext aj
+ * „nezaradené" používajú `$or` a v jednom objekte by si ho navzájom prepísali.
+ */
+export function queryParts(filter: LibraryFilter): { key: FilterKey; cond: Record<string, unknown> }[] {
+  const parts: { key: FilterKey; cond: Record<string, unknown> }[] = []
+
+  // Staré slovenské hodnoty z odkazov spred premenovania sa prekladajú,
+  // nie zahadzujú — inak by záložka v prehliadači potichu ukázala všetko.
+  const statuses = listOf(filter.status).map(v =>
+    v === "koncept" ? "draft" : v === "publikovane" ? "published" : v,
+  )
+  const wantsPublished = statuses.includes("published")
+  const wantsDraft = statuses.includes("draft")
+  // Oboje naraz nie je filter, je to „všetko" — a `$and` dvoch protikladov
+  // by nevrátil nič.
+  if (wantsPublished !== wantsDraft) {
+    parts.push({
+      key: "status",
+      cond: wantsPublished ? { status: "published" } : { status: { $ne: "published" } },
+    })
+  }
+
+  // Priečinok sa filtruje cez cestu, takže „oddelenie komunikácie" nájde aj
+  // to, čo je v jeho podpriečinkoch. Jeden dotaz namiesto rekurzie pri každom
+  // zobrazení — to je celý dôvod, prečo sa cesta ukladá.
+  if (filter.priecinok === "nezaradene") {
+    parts.push({ key: "folder", cond: { $or: [{ folderId: null }, { folderId: { $exists: false } }] } })
+  } else if (filter.priecinok) {
+    parts.push({ key: "folder", cond: { folderPath: filter.priecinok } })
+  }
+
+  const fields: [Exclude<FilterKey, "status" | "folder" | "search" | "conditions">, string][] = [
+    ["category", "category"],
+    ["language", "language"],
+    ["accessLevel", "accessLevel"],
+    // Štítky sú na dokumente pole; rovnosť aj `$in` na ňom fungujú ako
+    // „obsahuje", takže netreba `$elemMatch`.
+    ["tag", "tags"],
+  ]
+  for (const [key, field] of fields) {
+    const values = listOf(filter[key])
+    if (values.length === 1) parts.push({ key, cond: { [field]: values[0] } })
+    else if (values.length > 1) parts.push({ key, cond: { [field]: { $in: values } } })
+  }
+
+  const conds = conditionQuery(filter.conditions ?? [], filter.match ?? "all")
+  if (conds) parts.push({ key: "conditions", cond: conds })
+
+  if (filter.search?.trim()) {
+    // Vstup od človeka ide do regulárneho výrazu — bez escapovania by `(`
+    // zhodilo dotaz a `.*` prehľadalo všetko.
+    const safe = filter.search.trim().replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+    parts.push({
+      key: "search",
+      cond: {
+        $or: [
+          { title: { $regex: safe, $options: "i" } },
+          { documentId: { $regex: safe, $options: "i" } },
+          { sectionKey: { $regex: safe, $options: "i" } },
+        ],
+      },
+    })
+  }
+
+  return parts
+}
+
+/**
+ * Dotaz na dokumenty. `except` vynechá jednu podmienku — to je celý trik za
+ * počtami pri facetoch.
+ *
+ * **`companyCode` je v podmienke, nie v kontrole nad ňou** (D32).
+ */
+export function buildQuery(
+  companyCode: string,
+  filter: LibraryFilter = {},
+  except?: FilterKey,
+): Record<string, unknown> {
+  const conds = queryParts(filter)
+    .filter(p => p.key !== except)
+    .map(p => p.cond)
+  return conds.length ? { companyCode, $and: conds } : { companyCode }
+}
+
+export interface FacetCount {
+  value: string
+  count: number
+}
+
+/**
+ * Počty pri facetoch. Kľúče sú tie isté ako vo filtri.
+ *
+ * `total` je počet dokumentov, ktoré vyhovujú **celému** filtru — to je číslo
+ * do hlavičky („N z M"). Počty v jednotlivých facetoch sú naopak bez vlastnej
+ * podmienky, aby človek videl, čo by dostal, keby prepol.
+ */
+export interface LibraryFacets {
+  total: number
+  all: number
+  category: FacetCount[]
+  status: FacetCount[]
+  tag: FacetCount[]
+  accessLevel: FacetCount[]
+  language: FacetCount[]
+}
+
+/** Zoradenie počtov: najprv najčetnejšie, pri rovnosti podľa hodnoty. */
+function sortCounts(rows: { _id: unknown; n: number }[]): FacetCount[] {
+  return rows
+    .filter(r => typeof r._id === "string" && r._id !== "")
+    .map(r => ({ value: String(r._id), count: r.n }))
+    .sort((a, b) => b.count - a.count || a.value.localeCompare(b.value, "sk"))
+}
+
+/**
+ * Jedna agregácia namiesto šiestich dotazov.
+ *
+ * `$facet` pustí každú vetvu nad tým istým vstupom, takže sa kolekcia
+ * prechádza raz. Vstup je zúžený len na organizáciu — každá vetva si potom
+ * priloží svoj vlastný `$match` bez toho filtra, ktorý počíta.
+ */
+export async function libraryFacets(
+  companyCode: string,
+  filter: LibraryFilter = {},
+): Promise<LibraryFacets> {
+  const col = await getCollection(DOCUMENTS_COLLECTION)
+
+  const without = (except?: FilterKey) => {
+    const conds = queryParts(filter).filter(p => p.key !== except).map(p => p.cond)
+    return conds.length ? { $and: conds } : {}
+  }
+
+  const [out] = await col
+    .aggregate([
+      { $match: { companyCode } },
+      {
+        $facet: {
+          total: [{ $match: without() }, { $count: "n" }],
+          all: [{ $count: "n" }],
+          category: [{ $match: without("category") }, { $group: { _id: "$category", n: { $sum: 1 } } }],
+          // Stav nie je pole s hodnotami, ale rozdelenie na dve skupiny —
+          // rovnaké, aké robí filter: publikované verzus všetko ostatné.
+          status: [
+            { $match: without("status") },
+            {
+              $group: {
+                _id: { $cond: [{ $eq: ["$status", "published"] }, "published", "draft"] },
+                n: { $sum: 1 },
+              },
+            },
+          ],
+          tag: [
+            { $match: without("tag") },
+            { $unwind: "$tags" },
+            { $group: { _id: "$tags", n: { $sum: 1 } } },
+          ],
+          accessLevel: [{ $match: without("accessLevel") }, { $group: { _id: "$accessLevel", n: { $sum: 1 } } }],
+          language: [{ $match: without("language") }, { $group: { _id: "$language", n: { $sum: 1 } } }],
+        },
+      },
+    ])
+    .toArray() as unknown as [Record<string, { _id: unknown; n: number }[]>]
+
+  const count = (rows: { n: number }[] | undefined) => rows?.[0]?.n ?? 0
+
+  return {
+    total: count(out?.total as { n: number }[] | undefined),
+    all: count(out?.all as { n: number }[] | undefined),
+    category: sortCounts(out?.category ?? []),
+    status: sortCounts(out?.status ?? []),
+    tag: sortCounts(out?.tag ?? []),
+    accessLevel: sortCounts(out?.accessLevel ?? []),
+    language: sortCounts(out?.language ?? []),
+  }
 }
 
 export async function libraryList(
@@ -115,42 +322,7 @@ export async function libraryList(
   filter: LibraryFilter = {},
 ): Promise<LibraryRow[]> {
   const col = await getCollection(DOCUMENTS_COLLECTION)
-  const q: Record<string, unknown> = { companyCode }
-
-  // Staré slovenské hodnoty z odkazov spred premenovania sa prekladajú,
-  // nie zahadzujú — inak by záložka v prehliadači potichu ukázala všetko.
-  const status = filter.status === "koncept" ? "draft"
-    : filter.status === "publikovane" ? "published"
-    : filter.status
-  if (status === "draft") q.status = { $ne: "published" }
-  if (status === "published") q.status = "published"
-
-  // Priečinok sa filtruje cez cestu, takže „úsek komunikácie" nájde aj to,
-  // čo je v jeho podpriečinkoch. Jeden dotaz namiesto rekurzie pri každom
-  // zobrazení — to je celý dôvod, prečo sa cesta ukladá.
-  if (filter.priecinok === "nezaradene") {
-    q.$and = [
-      { $or: [{ folderId: null }, { folderId: { $exists: false } }] },
-    ]
-  } else if (filter.priecinok) {
-    q.folderPath = filter.priecinok
-  }
-
-  if (filter.category) q.category = filter.category
-  if (filter.language) q.language = filter.language
-  if (filter.accessLevel) q.accessLevel = filter.accessLevel
-  if (filter.tag) q.tags = filter.tag
-
-  if (filter.search?.trim()) {
-    // Vstup od človeka ide do regulárneho výrazu — bez escapovania by `(`
-    // zhodilo dotaz a `.*` prehľadalo všetko.
-    const safe = filter.search.trim().replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
-    q.$or = [
-      { title: { $regex: safe, $options: "i" } },
-      { documentId: { $regex: safe, $options: "i" } },
-      { sectionKey: { $regex: safe, $options: "i" } },
-    ]
-  }
+  const q = buildQuery(companyCode, filter)
 
   const records = await col
     .find(q as never, {

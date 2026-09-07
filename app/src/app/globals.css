@@ -1469,8 +1469,30 @@ html[data-theme="dark"] .editor-tui .CodeMirror {
   .kniznica-mriezka { grid-template-columns: 250px 1fr; }
 }
 
-.kniznica-priecinky { min-width: 0; }
-.kniznica-zoznam { min-width: 0; }
+/*
+ * Na telefóne **najprv výsledky, potom panel na ich zmenu.**
+ *
+ * V jednom stĺpci by inak nad prvým dokumentom stál celý panel filtrov aj
+ * strom priečinkov — skoro obrazovka a pol rolovania k tomu, po čo človek
+ * prišiel. Čo je práve zapnuté, vidno aj tak: chips sú nad zoznamom
+ * a „zrušiť filtre" je v nich.
+ *
+ * Zásuvka z návrhu (filtre schované za tlačidlom) je krok 7 a potrebuje
+ * JavaScript; toto funguje aj bez neho a je to jeden riadok.
+ */
+.kniznica-priecinky { min-width: 0; order: 2; }
+.kniznica-zoznam { min-width: 0; order: 1; }
+
+/*
+ * Reset poradia **musí byť až za** deklaráciami vyššie, nie v media bloku
+ * pri `grid-template-columns`. Špecifickosť je rovnaká, takže pri rovnosti
+ * vyhráva neskorší zápis — v opačnom poradí základ prebil media blok
+ * a na širokej obrazovke sa stĺpce vymenili: panel filtrov vpravo, tabuľka
+ * stlačená v 250 px stĺpci vľavo.
+ */
+@media (min-width: 860px) {
+  .kniznica-priecinky, .kniznica-zoznam { order: 0; }
+}
 
 /* Odkaz v strome sa nesmie správať ako odsek textu — celý riadok je cieľ. */
 .kniznica-priecinky .strom-riadok { text-decoration: none; color: inherit; }
@@ -1481,6 +1503,509 @@ html[data-theme="dark"] .editor-tui .CodeMirror {
   font-weight: 700;
   color: var(--accent, var(--ink));
 }
+
+/* ── knižnica: panel filtrov s počtami ──────────────────────────────────
+   Počty sú súčasť ovládacieho prvku, nie ozdoba: bez nich je facet hádanie.
+   Preto majú pevné miesto vpravo a `tabular-nums`, aby sa stĺpec čísel
+   neposúval podľa toho, či je tam 7 alebo 31. */
+.facets {
+  display: grid;
+  /*
+   * `minmax(0, 1fr)` a nie predvolené `auto`: automatický track v mriežke sa
+   * nafúkne na `max-content`, takže dlhý názov druhu roztiahol celý panel do
+   * stĺpca so zoznamom a `text-overflow: ellipsis` nemal na čom zabrať.
+   */
+  grid-template-columns: minmax(0, 1fr);
+  gap: 14px;
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--line);
+}
+
+.facets-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.facets-title {
+  margin: 0;
+  font-size: 13.5px;
+  font-weight: 600;
+}
+
+.facets-clear {
+  font-size: 13px;
+  color: var(--accent);
+}
+
+.facet-group { display: grid; grid-template-columns: minmax(0, 1fr); gap: 2px; }
+
+.facet-group-title {
+  margin: 0 0 2px;
+  font-size: 12px;
+  font-weight: 650;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.facet {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  gap: 8px;
+  /* Celý riadok je terč, aj na dotyk. */
+  min-height: 36px;
+  padding: 4px 6px;
+  border-radius: 8px;
+  font-size: 14.5px;
+  color: inherit;
+  text-decoration: none;
+}
+
+.facet:hover { background: var(--surface-2); }
+.facet:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+
+/* Štvorček, nie `<input type=checkbox>`: je to odkaz, ktorý mení adresu,
+   a políčko by sľubovalo, že sa niekde odošle. */
+.facet-box {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 17px;
+  height: 17px;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.facet.is-on { background: var(--accent-soft); font-weight: 600; }
+
+.facet.is-on .facet-box {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--on-accent);
+}
+
+.facet-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.facet-count {
+  flex: none;
+  font-size: 12.5px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.facet-apply { margin-top: 8px; justify-self: start; }
+
+/* ── knižnica: kompaktná tabuľka dokumentov ─────────────────────────────
+   Tabuľka je tu preto, že dokumenty sa porovnávajú: tie isté údaje musia byť
+   pod sebou v stĺpci. Roluje sa vodorovne a má `min-width` — stlačené stĺpce,
+   v ktorých sa dátum láme do troch riadkov, sa čítajú horšie než posun
+   prstom. */
+.doc-table-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+
+.doc-table {
+  width: 100%;
+  min-width: 720px;
+  border-collapse: collapse;
+  font-size: var(--font-row);
+}
+
+/*
+ * Stĺpec s názvom má spodnú hranicu šírky. Bez nej ho prehliadač pri
+ * rolovaní stlačí na tretinu a názov dokumentu spadne do štyroch riadkov —
+ * pritom je to jediný stĺpec, podľa ktorého sa v zozname hľadá.
+ *
+ * Viaže sa na triedu, nie na `:first-child`: keď pred názov pribudol stĺpec
+ * so zaškrtávacím políčkom, šírka sa presunula na neho a tabuľka mala
+ * prázdnu tretinu vľavo.
+ */
+.doc-table th.doc-col-title,
+.doc-table td.doc-col-title { min-width: 280px; }
+
+.doc-table th {
+  padding: 8px 12px;
+  background: var(--bg);
+  border-bottom: 1px solid var(--line);
+  font-size: 12px;
+  font-weight: 650;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--muted);
+  text-align: left;
+  white-space: nowrap;
+}
+
+.doc-table td {
+  padding: var(--row-py) 12px;
+  border-bottom: 1px solid var(--line);
+  vertical-align: top;
+}
+
+.doc-table tbody tr:last-child td { border-bottom: 0; }
+.doc-table tbody tr:hover { background: var(--bg); }
+
+/* Hlavička je odkaz, ktorý mení adresu — musí to byť vidieť aj bez farby. */
+.doc-sort {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: inherit;
+  text-decoration: none;
+}
+
+.doc-sort:hover { color: var(--ink); }
+.doc-sort:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* Šípka má miesto aj keď nie je — inak sa hlavičky pri triedení posúvajú. */
+.doc-sort-mark {
+  display: inline-block;
+  min-width: 9px;
+  color: var(--accent);
+}
+
+.doc-title { font-weight: 600; }
+
+.doc-meta {
+  margin-top: 2px;
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.doc-cell-quiet { color: var(--muted); }
+.doc-col-right { text-align: right; white-space: nowrap; }
+
+.doc-foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 2px;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+
+.doc-pager { display: inline-flex; align-items: center; gap: 10px; }
+
+.doc-page {
+  display: inline-flex;
+  align-items: center;
+  min-height: 36px;
+  padding: 0 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  color: var(--accent);
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.doc-page:hover { background: var(--surface-2); }
+
+/* ── knižnica: hromadné akcie ───────────────────────────────────────────
+   Panel je vidieť stále, nie až po označení: bez skriptu server nevie, či je
+   niečo zaškrtnuté. Prázdny výber preto rieši akcia hlásením. */
+.bulk-form { display: contents; }
+
+.bulk-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 10px;
+  margin-top: 12px;
+  padding: 10px 12px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+
+.bulk-title {
+  align-self: center;
+  font-size: 13.5px;
+  font-weight: 600;
+}
+
+.bulk-bar .pole { margin: 0; }
+.bulk-folder { flex: 0 1 240px; }
+
+.doc-col-pick { width: 40px; }
+
+/* Terč je celé políčko aj s jeho okolím — na dotyku sa do 15 px netrafí. */
+.bulk-pick {
+  display: inline-grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  cursor: pointer;
+}
+
+.bulk-pick input { width: 17px; height: 17px; accent-color: var(--accent); }
+
+/*
+ * Popis políčka je pre čítačku obrazovky, nie na obrazovku: v stĺpci by sa
+ * názov dokumentu zopakoval pri každom riadku druhýkrát. `display: none` sa
+ * použiť nedá — to by ho čítačka preskočila tiež.
+ */
+.bulk-pick-text {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ── knižnica: query builder ────────────────────────────────────────────
+   `<details>` a nie vlastný rozbaľovač: otvára a zatvára ho prehliadač, takže
+   to funguje bez skriptu a čítačka obrazovky o stave vie sama. Otvorený je
+   vtedy, keď nejaké podmienky sú — inak by človek nevidel, prečo je zoznam
+   krátky. */
+.builder {
+  margin-bottom: 16px;
+  padding: 10px 12px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+
+.builder-summary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 32px;
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.builder-count {
+  display: inline-grid;
+  place-items: center;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 6px;
+  border-radius: 20px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+.builder-rows {
+  display: grid;
+  gap: 4px;
+  margin: 10px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.builder-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  min-height: 36px;
+  padding: 4px 6px;
+  border-radius: 8px;
+  background: var(--bg);
+  font-size: 14px;
+}
+
+/* Spojka má pevnú šírku, nech riadky začínajú pod sebou a dá sa prečítať
+   stĺpec podmienok, nie zubatý zoznam. */
+.builder-join {
+  flex: none;
+  min-width: 84px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.builder-text { flex: 1; min-width: 0; }
+
+.builder-remove {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 32px;
+  height: 32px;
+  border-radius: 7px;
+  color: var(--muted);
+  font-size: 17px;
+  line-height: 1;
+  text-decoration: none;
+}
+
+.builder-remove:hover { background: var(--bad-bg); color: var(--bad-fg); }
+.builder-remove:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+
+.builder-match { display: inline-flex; gap: 2px; margin-top: 8px; padding: 2px; background: var(--surface-2); border-radius: 9px; }
+
+/* Náhľad dotazu je monospace zámerne: je to strojová veta, nie text pre
+   plynulé čítanie, a pri kontrole sa v nej hľadá slovo po slove. */
+.builder-preview {
+  margin: 10px 0 0;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: var(--muted);
+}
+
+.builder-add {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 10px;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+}
+
+.builder-add .pole { margin: 0; flex: 0 1 220px; }
+.builder-value { flex: 1 1 200px; }
+
+.builder-hint {
+  margin: 10px 0 0;
+  font-size: 12.5px;
+  line-height: 1.5;
+  max-width: 68ch;
+}
+
+/* ── knižnica: kartový pohľad a prepínač ────────────────────────────────
+   Karty sú na prezeranie: názov dostane miesto na tri riadky a údaje idú pod
+   neho. Šírka stĺpca je `minmax(250px, 1fr)` s `auto-fill` — počet stĺpcov
+   určuje šírka okna, nie breakpoint, takže to sedí aj na tablete na šírku. */
+.doc-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.doc-card {
+  display: grid;
+  align-content: start;
+  gap: 6px;
+  min-width: 0;
+  padding: 12px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 11px;
+}
+
+.doc-card:hover { border-color: var(--accent); }
+
+.doc-card-top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.doc-card-kind { font-size: 12.5px; }
+
+.doc-card-title {
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.35;
+  /* Zalomenie, ktoré nenechá na poslednom riadku jedno slovo. */
+  text-wrap: pretty;
+}
+
+.doc-card-foot { margin-top: 2px; }
+
+/* Prepínač pohľadu. Dva odkazy v jednom rámiku — vyzerá to ako prepínač,
+   ale je to navigácia, takže funguje aj bez skriptu. */
+.view-switch {
+  display: inline-flex;
+  gap: 2px;
+  padding: 2px;
+  background: var(--surface-2);
+  border-radius: 9px;
+}
+
+.view-switch-item {
+  display: inline-flex;
+  align-items: center;
+  min-height: 32px;
+  padding: 0 11px;
+  border-radius: 7px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--muted);
+  text-decoration: none;
+}
+
+.view-switch-item:hover { color: var(--ink); }
+
+.view-switch-item.is-on {
+  background: var(--surface);
+  color: var(--ink);
+}
+
+.view-switch-item:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+/* ── knižnica: hľadanie a chips aktívnych filtrov ───────────────────────── */
+.library-search {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.library-count { font-size: 14px; font-variant-numeric: tabular-nums; }
+
+.library-chips {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 16px;
+}
+
+.library-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 32px;
+  padding: 0 10px;
+  border-radius: 8px;
+  background: var(--accent-soft);
+  color: var(--ink);
+  font-size: 13.5px;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.library-chip:hover { background: var(--surface-2); }
+.library-chip:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+.library-chip-key { color: var(--muted); }
+.library-chip-x { font-size: 15px; line-height: 1; color: var(--muted); }
+
+.library-chips-clear { font-size: 13px; color: var(--accent); }
 
 /* ── strom s čiarami hierarchie (D60) ────────────────────────────────────
    Čiary sa kreslia z odsadenia, ktoré nesie premenná `--uroven`. Bez nich

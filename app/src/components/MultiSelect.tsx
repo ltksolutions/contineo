@@ -4,12 +4,12 @@
  * MultiSelect — viacnásobný výber s hľadaním.
  *
  * `TagSelect` vypíše všetky možnosti naraz ako pilulky. Pri skupinách osôb to
- * stačí — je ich pár. Pri útvaroch, štítkoch knižnice a schvaľovateľoch nie:
+ * stačí — je ich pár. Pri oddeleniach, štítkoch knižnice a schvaľovateľoch nie:
  * tridsať pilulák je stena, v ktorej sa nedá nič nájsť, a formulár sa kvôli
  * jednému poľu roztiahne na dve obrazovky.
  *
  * Preto tento tvar: zvolené sú vidieť ako chips, ostatné sa hľadajú písaním.
- * Hľadá sa **bez diakritiky** — kto píše „utvar", myslí „Útvar", a nútiť ho
+ * Hľadá sa **bez diakritiky** — kto píše „oddelenie", myslí „Oddelenie", a nútiť ho
  * trafiť dĺžne v poli, ktoré má hľadanie zjednodušiť, je posmech.
  *
  * Čo je prevzaté zo `Select.tsx` a nie je to náhoda:
@@ -79,6 +79,20 @@ export function serialize(chosen: string[]): string {
   return chosen.join(", ")
 }
 
+/**
+ * Ako sa vybrané hodnoty dostanú do odoslaného formulára.
+ *
+ * `csv` je jedno pole s hodnotami oddelenými čiarkou — tak to číta server
+ * pri ukladaní záznamu (`splitList()`), a `FormData.get()` by z opakovaného
+ * kľúča vrátil len prvú hodnotu.
+ *
+ * `repeat` je jedno pole na každú hodnotu, teda `?tag=a&tag=b` v adrese —
+ * tvar, ktorý prehliadač posiela z políčok a ktorý filtre knižnice čítajú
+ * ako zoznam. V jednom poli s čiarkou by bola adresa neprečítateľná pre
+ * kohokoľvek okrem nás.
+ */
+export type EmitShape = "csv" | "repeat"
+
 export default function MultiSelect({
   name: name,
   label: label,
@@ -86,6 +100,7 @@ export default function MultiSelect({
   selected: selected,
   placeholder: placeholder,
   allowNew: allowNew = false,
+  emit: emit = "csv",
   language,
 }: {
   name: string
@@ -96,6 +111,8 @@ export default function MultiSelect({
   placeholder?: string
   /** Smie sa napísať hodnota, ktorá v ponuke nie je? Pri číselníkoch nie. */
   allowNew?: boolean
+  /** Tvar skrytého poľa — `csv` do formulára záznamu, `repeat` do adresy. */
+  emit?: EmitShape
   /** Jazyk prostredia. */
   language?: UiLanguage
 }) {
@@ -175,7 +192,9 @@ export default function MultiSelect({
 
   return (
     <div className="multiselect" ref={wrap}>
-      <input type="hidden" name={name} value={serialize(chosen)} />
+      {emit === "repeat"
+        ? chosen.map(v => <input key={v} type="hidden" name={name} value={v} />)
+        : <input type="hidden" name={name} value={serialize(chosen)} />}
 
       {label && <span className="multiselect-label">{label}</span>}
 
