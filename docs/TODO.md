@@ -249,7 +249,9 @@
       Pole je odteraz aj v type `Version` — dovtedy sa zapisovalo, ale nikde nedeklarovalo.
   - [x] **História opráv v detaile dokumentu** ✅ 2026-09-07 — rozbaľovacia položka pri každom znení, najnovšia oprava hore. Ukazuje dôvod, kto a kedy, a **stav pred opravou** — bez neho by sa dalo prečítať, že sa niečo zmenilo, ale nie na čo. 4 testy nad tvarom zápisu: `$push` ide cez reťazcovú cestu s `as never`, takže názvy polí TypeScript nekontroluje a práve tento tvar nás v projekte zradil trikrát.
 - [x] Premenné pre odosielateľa ✅ 2026-09-07 — `EMAIL_SENDER`, `EMAIL_SENDER_NAME`; kód číta najprv anglickú, pri prázdnej starú slovenskú. Pribudol pomocník `env()`, ktorý **prázdny reťazec nepovažuje za hodnotu** — `??` ho nechytí a `vercel env pull` zapisuje nenastavené premenné práve ako `X=`.
-  - [ ] Nastaviť `EMAIL_SENDER` a `EMAIL_SENDER_NAME` vo Verceli, potom odstrániť slovenské
+  - [x] `EMAIL_SENDER` a `EMAIL_SENDER_NAME` nastavené vo Verceli aj v `.env.local`, slovenské odstránené ✅ 2026-09-07 (Ján Letko). Hodnoty overené pullom, nasadené nanovo — premenné sa viažu na nasadenie v čase buildu, takže bez redeploy by bežal stav, ktorý už v konfigurácii nie je (rovnaká pasca ako pri `MONGODB_DB`).
+  - [ ] **Overiť odosielanie behom, nie výpisom** — vyžiadať si prihlasovací odkaz na `/sign-in` a pozrieť, či príde a s akou adresou odosielateľa. Z konfigurácie sa to zistiť nedá.
+  - [ ] **Pozor na rollback:** staré slovenské premenné už na Verceli nie sú. Návrat na nasadenie staršie než `0886f39` rozbije odosielanie e-mailov (ten kód pozná len `EMAIL_ODOSIELATEL`); staršie než `5b18cfc` nepozná anglické routy. Pri rollbacku ďalej než po `b0b1f8e` treba premenné dočasne vrátiť.
 - [x] `osoby/actions.ts` ✅ 2026-09-04 — spolu s i18n 3a (`confirmation`, kľúč `error`)
 - [x] `hr/actions.ts` a `hr/pridelit` ✅ 2026-09-04 — `reason`, `addresses`, `all`; pri tom sa ukázalo, že po chybe sa vyplnený formulár nevracal
 - [x] Premenná prostredia `POVOLENE_EMAILY` → `ALLOWED_EMAILS` ✅ 2026-09-04 — preložená, nie premenovaná: `auth.ts` číta novú, a keď nie je, starú. Prázdna nová starú neumlčí.
