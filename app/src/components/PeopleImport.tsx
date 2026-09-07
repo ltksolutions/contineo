@@ -15,7 +15,7 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
-import { previewImportAction, runImportAction } from "@/app/osoby/actions"
+import { previewImportAction, runImportAction } from "@/app/people/actions"
 import { dictionary, type UiLanguage } from "@/lib/i18n"
 
 type Preview = Awaited<ReturnType<typeof previewImportAction>>

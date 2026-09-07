@@ -87,13 +87,13 @@ export default function PendingWidget({
       {(total > LIMIT || blockedCount > 0) && (
         <p className="widget-ziadosti-pata">
           {total > LIMIT && (
-            <Link href="/dokumenty" className="ziadost-nazov">
+            <Link href="/documents" className="ziadost-nazov">
               {t.showAll(total)}
             </Link>
           )}
           {/* Zablokované sa medzi úlohy nedávajú — úloha, s ktorou človek
               nemôže pohnúť, nie je úloha a v zozname by len visela. Zamlčať
-              ich ale nemožno: na `/dokumenty` ich uvidí aj s dôvodom. */}
+              ich ale nemožno: na `/documents` ich uvidí aj s dôvodom. */}
           {blockedCount > 0 && (
             <span className="tichy" style={{ fontSize: 13.5 }}>
               {t.blockedNote(blockedCount)}

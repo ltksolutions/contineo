@@ -88,7 +88,7 @@ function item(over: Partial<PendingItem> = {}): PendingItem {
     source: "acknowledgement",
     id: "smernica-1",
     title: "Smernica",
-    href: "/dokumenty/smernica-1",
+    href: "/documents/smernica-1",
     sortAt: new Date("2026-01-01"),
     assignedAt: null,
     isNew: false,
@@ -162,7 +162,7 @@ describe("zdroj nepotvrdenych noriem", () => {
 
     const r = await acknowledgementSource.collect(person())
 
-    expect(r.items[0].href).toBe("/dokumenty/smernica%201%2F2026")
+    expect(r.items[0].href).toBe("/documents/smernica%201%2F2026")
   })
 
   it("druhý riadok nesie aj slovo verzia, nie len číslo", async () => {
@@ -357,7 +357,7 @@ describe("pridelenie (rozsah B)", () => {
   })
 
   it("pridelené znenie, ktoré už neplatí, je zablokované, nie úloha", async () => {
-    // Inak by úloha z widgetu nikdy nezmizla: `/dokumenty/…` ukáže novšie
+    // Inak by úloha z widgetu nikdy nezmizla: `/documents/…` ukáže novšie
     // znenie a potvrdenie by sa viazalo na inú verziu.
     trackProgress.mockResolvedValue([])
     assignmentsForPerson.mockResolvedValue([assignment()])

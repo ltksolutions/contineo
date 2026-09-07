@@ -68,7 +68,7 @@ export default function Rating({
   onDone,
   language,
 }: {
-  /** Id záznamu z `/api/hodnotenie`. Kým je null, panel čaká. */
+  /** Id záznamu z `/api/rating`. Kým je null, panel čaká. */
   recordId: string | null
   /** Označenie otázky zo zlatej sady, ak ide o režim sady. */
   questionId?: string
@@ -106,7 +106,7 @@ export default function Rating({
 
     setStatus("saving")
     try {
-      const r = await fetch("/api/hodnotenie", {
+      const r = await fetch("/api/rating", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id: recordId, ...change }),

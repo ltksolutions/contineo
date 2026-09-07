@@ -29,7 +29,7 @@ export default async function HrOverviewPage({
 }) {
   const ctx = await hrContext()
   if (ctx.state !== "ready") {
-    if (ctx.state === "not-signed-in") redirect("/prihlasenie")
+    if (ctx.state === "not-signed-in") redirect("/sign-in")
     notFound()
   }
 
@@ -51,7 +51,7 @@ export default async function HrOverviewPage({
       <Notice message={message} error={error === "1"} back="/hr" />
 
       <p style={{ margin: "0 0 24px", display: "flex", gap: 8, flexWrap: "wrap" }}>
-        <Link className="tlacidlo" href="/hr/pridelit">{t.assign}</Link>
+        <Link className="tlacidlo" href="/hr/assign">{t.assign}</Link>
         <Link className="tlacidlo tlacidlo--tiche" href="/hr/overview">
           {dictionary(language).hr.report.heading}
         </Link>
@@ -124,7 +124,7 @@ export default async function HrOverviewPage({
                   {/* Dať vedieť je samostatné rozhodnutie, nie vedľajší účinok
                       pridelenia — preto odkaz na náhľad, nie tlačidlo „poslať". */}
                   {error > 0 && (
-                    <Link className="tlacidlo tlacidlo--tiche" href={`/hr/${encodeURIComponent(p.id)}/oznamit`}>
+                    <Link className="tlacidlo tlacidlo--tiche" href={`/hr/${encodeURIComponent(p.id)}/notify`}>
                       {t.notifyByEmail}
                     </Link>
                   )}

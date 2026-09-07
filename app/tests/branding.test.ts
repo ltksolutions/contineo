@@ -1,5 +1,5 @@
 /**
- * znacka.test.ts — nahrávanie loga.
+ * branding.test.ts — nahrávanie loga.
  *
  * Kontrola vstupu je tu jediné, čo môže spôsobiť škodu: logo sa servíruje
  * z **našej** domény, teda z tej istej, na ktorej sa potvrdzujú smernice.
@@ -55,7 +55,7 @@ describe("cesta k logu", () => {
   })
 
   it("kód organizácie je v adrese malými písmenami a zakódovaný", () => {
-    expect(brandPath("SFZ", "v1")).toContain("/api/znacka/sfz")
+    expect(brandPath("SFZ", "v1")).toContain("/api/brand/sfz")
     expect(brandPath("A/B", "v1")).toContain("a%2Fb")
   })
 })

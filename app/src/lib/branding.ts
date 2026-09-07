@@ -106,7 +106,7 @@ export async function saveBrand(
  * pamäť, rovnaká adresa) by sa obrázok sťahoval znova a znova pre nič.
  */
 export function brandPath(companyCode: string, version: string): string {
-  return `/api/znacka/${encodeURIComponent(companyCode.toLowerCase())}?v=${version}`
+  return `/api/brand/${encodeURIComponent(companyCode.toLowerCase())}?v=${version}`
 }
 
 export async function loadBrand(companyCode: string): Promise<Brand | null> {

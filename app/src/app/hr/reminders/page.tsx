@@ -26,7 +26,7 @@ export default async function RemindersPage({
 }) {
   const ctx = await hrContext()
   if (ctx.state !== "ready") {
-    if (ctx.state === "not-signed-in") redirect("/prihlasenie")
+    if (ctx.state === "not-signed-in") redirect("/sign-in")
     notFound()
   }
 

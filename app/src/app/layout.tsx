@@ -129,7 +129,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       // Verzia je v adrese, takže prehliadač si fotku odloží nadlho a nová
       // sa aj tak ukáže hneď (rovnako ako pri logu).
       if (self?.photoVersion) {
-        photo = `/api/fotka/${encodeURIComponent(self.id)}?v=${encodeURIComponent(self.photoVersion)}`
+        photo = `/api/photo/${encodeURIComponent(self.id)}?v=${encodeURIComponent(self.photoVersion)}`
       }
     } catch (e) {
       console.error("[layout] meno osoby sa nepodarilo načítať:", e)

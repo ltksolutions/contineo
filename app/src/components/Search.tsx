@@ -53,7 +53,7 @@ export default function Search({
    */
   async function record(q: string, v: AskResult) {
     try {
-      const r = await fetch("/api/hodnotenie", {
+      const r = await fetch("/api/rating", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

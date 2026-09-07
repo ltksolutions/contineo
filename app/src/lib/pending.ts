@@ -84,7 +84,7 @@ export function isNewFor(person: Pick<Person, "previousLoginAt">, assignedAt: Da
  * je jedna úloha, nie dve.
  *
  *   1. **trasa** — `trackProgress()`, ten istý odvodený stav, aký ukazuje
- *      `/dokumenty`. Druhý výpočet toho istého by sa raz rozišiel, a rozišiel
+ *      `/documents`. Druhý výpočet toho istého by sa raz rozišiel, a rozišiel
  *      by sa práve pri novej verzii (D27);
  *   2. **pridelenie** — `assignments`, teda to, čo niekto niekomu vedome
  *      uložil (D37). Norma sa tak dá poslať aj mimo trasy, bez toho, aby
@@ -133,7 +133,7 @@ export const acknowledgementSource: PendingSource = {
           // v dvoch trasách a človek ho má potvrdiť raz, nie dvakrát.
           id: step.documentId,
           title: step.title,
-          href: `/dokumenty/${encodeURIComponent(step.documentId)}`,
+          href: `/documents/${encodeURIComponent(step.documentId)}`,
           // Text druhého riadka skladá **zdroj**, nie widget: len zdroj vie,
           // čo jeho `detail` znamená. Helpdesk tam raz bude mať číslo tiketu.
           detail: step.versionLabel ? t.version(step.versionLabel) : undefined,
@@ -157,7 +157,7 @@ export const acknowledgementSource: PendingSource = {
         if (acknowledged.has(a.subject.versionId)) continue
 
         // Pridelené znenie sa musí dať aj potvrdiť. Keď medzitým pribudlo
-        // novšie, `/dokumenty/…` ukáže to novšie a potvrdenie by sa viazalo
+        // novšie, `/documents/…` ukáže to novšie a potvrdenie by sa viazalo
         // na inú verziu — úloha by z widgetu nikdy nezmizla. Vtedy je to vec
         // pre HR (prideliť nové znenie), nie úloha pre človeka.
         const doc = await loadDocumentFor(person, a.subject.documentId)
@@ -171,7 +171,7 @@ export const acknowledgementSource: PendingSource = {
           source: "acknowledgement",
           id: a.subject.documentId,
           title: doc.title,
-          href: `/dokumenty/${encodeURIComponent(a.subject.documentId)}`,
+          href: `/documents/${encodeURIComponent(a.subject.documentId)}`,
           detail: t.version(a.subject.versionLabel),
           sortAt: a.assignedAt,
           assignedAt: a.assignedAt,

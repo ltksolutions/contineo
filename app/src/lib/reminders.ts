@@ -3,7 +3,7 @@
  *
  * **Nič sa tu neposiela.** Táto vrstva len spočíta, kto mešká; odoslanie je
  * samostatné rozhodnutie človeka na obrazovke, presne ako pri prideleniach
- * (`/hr/[id]/oznamit`). Naplánovaná úloha smie *upozorniť HR*, nie rozposlať
+ * (`/hr/[id]/notify`). Naplánovaná úloha smie *upozorniť HR*, nie rozposlať
  * stovku e-mailov — jedna chyba v podmienke by sa inak prejavila až tým, že
  * sa ozve sto nahnevaných ľudí.
  *

@@ -53,7 +53,7 @@ function backWithError(error: string, fd: FormData): never {
   if (fd.get("all")) q.set("all", "1")
   const addresses = fieldText(fd, "addresses")
   if (addresses) q.set("addresses", addresses)
-  redirect(`/hr/pridelit?${q.toString()}`)
+  redirect(`/hr/assign?${q.toString()}`)
 }
 
 export async function assignAction(fd: FormData) {
@@ -186,14 +186,14 @@ export async function sendNotificationAction(fd: FormData) {
     redirect("/hr?error=1&msg=" + encodeURIComponent(t.nobodyToNotify))
   }
   if (recipients.length > MAX_AT_ONCE) {
-    redirect(`/hr/${encodeURIComponent(id)}/oznamit?error=` + encodeURIComponent(
+    redirect(`/hr/${encodeURIComponent(id)}/notify?error=` + encodeURIComponent(
       t.tooManyRecipients(recipients.length, MAX_AT_ONCE)
     ))
   }
 
   const host = await requestHostname()
   const branding = brandingView(ctx.tenant)
-  const link = `https://${host}/dokumenty/${encodeURIComponent(assignment.subject.documentId)}`
+  const link = `https://${host}/documents/${encodeURIComponent(assignment.subject.documentId)}`
 
   let sent = 0
   const failed: string[] = []
@@ -270,7 +270,7 @@ export async function sendRemindersAction(fd: FormData) {
 
   const host = await requestHostname()
   const branding = brandingView(ctx.tenant)
-  const link = `https://${host}/dokumenty`
+  const link = `https://${host}/documents`
 
   let sent = 0
   const failed: string[] = []

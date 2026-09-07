@@ -145,16 +145,16 @@ export default function Header({
 
   const ITEMS = [
     { href: "/", label: t.nav.ask },
-    { href: "/sada", label: t.nav.goldenSet },
+    { href: "/golden-set", label: t.nav.goldenSet },
     // Odkaz vidí každý prihlásený; samotná stránka si už poradí — kto nemá
     // čo potvrdzovať, uvidí, že nemá nič. Podmieňovať odkaz by znamenalo
     // ťahať stav trás do hlavičky, teda do každej stránky.
-    { href: "/dokumenty", label: t.nav.toAcknowledge },
+    { href: "/documents", label: t.nav.toAcknowledge },
     // Odkazy sa neukazujú podľa domnienky klienta — príznaky prichádzajú
     // zo servera, kde už prešli všetky podmienky.
     ...(isHr ? [{ href: "/hr", label: t.nav.assigned }] : []),
-    ...(isPeopleAdmin ? [{ href: "/osoby", label: t.nav.people }] : []),
-    ...(isContentManager ? [{ href: "/kniznica", label: t.nav.library }] : []),
+    ...(isPeopleAdmin ? [{ href: "/people", label: t.nav.people }] : []),
+    ...(isContentManager ? [{ href: "/library", label: t.nav.library }] : []),
   ]
 
   /**
@@ -165,7 +165,7 @@ export default function Header({
    * a v lište len zaberali miesto tomu, na čo sa naozaj kliká.
    */
   const ADMIN_ITEMS = [
-    ...(isPeopleAdmin ? [{ href: "/organizacia", label: t.nav.organisation }] : []),
+    ...(isPeopleAdmin ? [{ href: "/organisation", label: t.nav.organisation }] : []),
     ...(isAdmin ? [{ href: "/admin", label: t.nav.tenants }] : []),
   ]
 
@@ -401,7 +401,7 @@ export default function Header({
                     type="button"
                     role="menuitem"
                     className="osobne-polozka osobne-polozka--odhlasit"
-                    onClick={() => signOut({ callbackUrl: "/prihlasenie" })}
+                    onClick={() => signOut({ callbackUrl: "/sign-in" })}
                   >
                     <svg width="17" height="17" viewBox="0 0 18 18" aria-hidden="true"
                       fill="none" stroke="currentColor" strokeWidth="1.6"

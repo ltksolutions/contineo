@@ -13,7 +13,7 @@
  *     čaká na cudzie API, je horšie než osoba bez fotky.
  *  2. **Dopĺňa sa len to, čo chýba** (`doplnChybajuce` v `persons.ts`).
  *     Adresár nie je nadriadený personalistovi: keď niekto meno alebo oddelenie
- *     v `/osoby` opraví, ďalšie prihlásenie mu opravu neprepíše.
+ *     v `/people` opraví, ďalšie prihlásenie mu opravu neprepíše.
  *  3. **Volá sa len vtedy, keď naozaj niečo chýba.** Inak by každé prihlásenie
  *     platilo dve cudzie požiadavky za nič.
  *

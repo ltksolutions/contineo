@@ -27,7 +27,7 @@ function Fact({ label, value, muted }: { label: string; value: string; muted?: b
 export default async function TenantAdminPage() {
   const ctx = await platformContext()
   if (ctx.state !== "ready") {
-    if (ctx.state === "not-signed-in") redirect("/prihlasenie")
+    if (ctx.state === "not-signed-in") redirect("/sign-in")
     notFound()
   }
 
@@ -41,7 +41,7 @@ export default async function TenantAdminPage() {
       <p className="tichy" style={{ fontSize: 15, margin: "0 0 16px", maxWidth: 640 }}>{t.intro}</p>
 
       <p style={{ margin: "0 0 24px" }}>
-        <Link className="tlacidlo" href="/admin/novy">{t.newTenant}</Link>
+        <Link className="tlacidlo" href="/admin/new">{t.newTenant}</Link>
       </p>
 
       <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "grid", gap: 14 }}>
@@ -49,7 +49,7 @@ export default async function TenantAdminPage() {
           <li key={tenant.companyCode} className="karta" style={{ padding: "18px 20px" }}>
             <div style={{ display: "flex", gap: 10, alignItems: "baseline", flexWrap: "wrap" }}>
               <Link
-                href={`/admin/tenanti/${encodeURIComponent(tenant.companyCode)}`}
+                href={`/admin/tenants/${encodeURIComponent(tenant.companyCode)}`}
                 style={{ fontSize: 17, fontWeight: 700, textDecoration: "none" }}
               >
                 {tenant.displayName}

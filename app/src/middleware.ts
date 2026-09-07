@@ -14,28 +14,40 @@
 import { NextResponse } from "next/server"
 import type { NextRequest } from "next/server"
 import { getToken } from "next-auth/jwt"
+import { legacyRoute } from "@/lib/legacyRoutes"
 
 /**
  * Cesty prístupné bez prihlásenia. Držať krátke a vedieť o každej prečo.
  */
 const VEREJNE = [
-  "/prihlasenie",
+  "/sign-in",
   "/api/auth",      // samotné prihlasovanie
   // Logá tenantov. Prihlasovacia stránka nesie logo organizácie a načítava ho
   // ako obrázok — teda ďalšou požiadavkou, ktorá v tej chvíli ešte nie je
-  // prihlásená. Bez tejto výnimky by sa presmerovala na `/prihlasenie` a
+  // prihlásená. Bez tejto výnimky by sa presmerovala na `/sign-in` a
   // z hlavičky by zostal holý text. Sú to verejné značkové súbory, nie obsah
   // noriem; jediné, čo prezradia, je že tá organizácia tu má portál — a to
   // prezradí už samotná doména.
   "/tenants/",
-  // Nahraté logá (`/api/znacka/…`). Ten istý dôvod ako o riadok vyššie: je to
+  // Nahraté logá (`/api/brand/…`). Ten istý dôvod ako o riadok vyššie: je to
   // značkový obrázok, nie obsah noriem, a prihlasovacia stránka ho potrebuje
   // ešte pred prihlásením.
-  "/api/znacka/",
+  "/api/brand/",
 ]
 
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl
+
+  // Staré slovenské adresy idú **ako prvé**, pred bránou prihlásenia.
+  // Opačné poradie by neprihlásenému človeku zo starej záložky uložilo do
+  // `callbackUrl` cestu, ktorá už neexistuje — prihlásil by sa a skončil
+  // na 404.
+  const modern = legacyRoute(pathname)
+  if (modern) {
+    const to = new URL(modern, req.url)
+    to.search = req.nextUrl.search
+    return NextResponse.redirect(to, 307)
+  }
 
   if (VEREJNE.some(c => pathname.startsWith(c))) return NextResponse.next()
 
@@ -48,7 +60,7 @@ export async function middleware(req: NextRequest) {
     return NextResponse.json({ error: "not-signed-in" }, { status: 401 })
   }
 
-  const kam = new URL("/prihlasenie", req.url)
+  const kam = new URL("/sign-in", req.url)
   // Kam sa chcel dostať — po prihlásení ho tam vrátime.
   if (pathname !== "/") kam.searchParams.set("callbackUrl", pathname)
   return NextResponse.redirect(kam)

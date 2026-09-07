@@ -233,9 +233,9 @@ export const authOptions: NextAuthOptions = {
   adapter: mongoAdapter(),
   session: { strategy: "jwt" },
   pages: {
-    signIn: "/prihlasenie",
-    verifyRequest: "/prihlasenie?odoslane=1",
-    error: "/prihlasenie",
+    signIn: "/sign-in",
+    verifyRequest: "/sign-in?odoslane=1",
+    error: "/sign-in",
   },
   providers: [emailProvider()],
 

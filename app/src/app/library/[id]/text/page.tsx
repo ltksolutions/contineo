@@ -1,0 +1,171 @@
+/**
+ * Editor textu — originál vedľa Markdownu (D53).
+ *
+ * **Prečo obidve strany naraz:** prevod z PDF je odhad. Rozdiel medzi „vyzerá
+ * to dobre" a „je to naozaj to, čo je v norme" sa dá zistiť len porovnaním
+ * a človek, ktorý musí prepínať okná, ho neurobí. Na telefóne sa stĺpce
+ * poskladajú pod seba — originál je vtedy zbalený, aby sa text dal upravovať.
+ *
+ * Bez klientskeho stavu: je to formulár, ktorý sa odosiela na server. Návrh
+ * modelu je uložený vedľa konceptu, nie v pamäti prehliadača — inak by sa
+ * stratil obnovením stránky, presne keď má človek rozhodnúť.
+ */
+
+import { notFound, redirect } from "next/navigation"
+import Link from "next/link"
+import { libraryContext } from "@/lib/library"
+import { libraryDetail } from "@/lib/libraryRead"
+import { getCollection } from "@/lib/mongodb"
+import { DOCUMENTS_COLLECTION } from "@/lib/documents"
+import { brandingView } from "@/lib/tenants"
+import { tenantStyle } from "@/components/TenantHeader"
+import { formatDate, dictionary } from "@/lib/i18n"
+import Notice from "@/components/Notice"
+import TextEditor from "@/components/TextEditor"
+import { saveTextAction, sendToModelAction, decideOnDraftAction } from "../../actions"
+import { normalizeQuery, type RawQuery } from "@/lib/urlParams"
+
+export const dynamic = "force-dynamic"
+
+export default async function EditorPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ id: string }>
+  searchParams: Promise<RawQuery>
+}) {
+  const ctx = await libraryContext()
+  if (ctx.state !== "ready") {
+    if (ctx.state === "not-signed-in") redirect("/sign-in")
+    notFound()
+  }
+
+  const { id } = await params
+  const { msg: message, error } = normalizeQuery<{ msg?: string; error?: string }>(await searchParams)
+  const documentId = decodeURIComponent(id)
+  const d = await libraryDetail(ctx.tenant.companyCode, documentId)
+  if (!d) notFound()
+
+  // Návrh sa nečíta cez `detailKniznice` — je to dočasná vec editora, nie
+  // súčasť dokumentu, a v zozname by nemal čo robiť.
+  const col = await getCollection(DOCUMENTS_COLLECTION)
+  const raw = (await col.findOne(
+    { companyCode: ctx.tenant.companyCode, documentId },
+    { projection: { llmDraft: 1 } },
+  )) as { llmDraft?: { text: string; model: string; mode: string; at: Date } } | null
+  const draft = raw?.llmDraft
+
+  const branding = brandingView(ctx.tenant)
+  const language = ctx.person.language
+  const t = dictionary(language).library.editor
+  const isPdf = d.originalFile?.type === "pdf"
+  const fileUrl = d.originalFile
+    ? `/api/library/file/${encodeURIComponent(d.originalFile.id)}`
+    : null
+
+  return (
+    <div className="obal" style={{ padding: "24px 20px 80px", maxWidth: 1200, ...tenantStyle(branding) }}>
+      <Notice message={message} error={error === "1"} back={`/library/${encodeURIComponent(documentId)}/text`} />
+
+      <p style={{ margin: "0 0 10px" }}>
+        <Link className="tichy" href={`/library/${encodeURIComponent(documentId)}`} style={{ fontSize: 14 }}>
+          {t.back}
+        </Link>
+      </p>
+
+      <h1 style={{ fontSize: 22, letterSpacing: "-0.02em", margin: "0 0 4px" }}>{d.title}</h1>
+      <p className="tichy" style={{ fontSize: 14, margin: "0 0 16px" }}>
+        {t.intro}
+      </p>
+
+      {d.conversion?.warnings?.length ? (
+        <ul className="karta" style={{ padding: "12px 16px 12px 34px", margin: "0 0 16px", fontSize: 14 }}>
+          {d.conversion.warnings.map((u, i) => <li key={i}>{u}</li>)}
+        </ul>
+      ) : null}
+
+      {draft ? (
+        <section className="karta" style={{ padding: 18, display: "grid", gap: 12, margin: "0 0 18px" }}>
+          <div className="audit-hlavicka">
+            <span className="stitok">{t.modelDraft}</span>
+            <strong>{draft.mode === "rewrite-scan" ? t.modeRewriteScan : t.modeClean}</strong>
+            <span className="tichy" style={{ fontSize: 13 }}>
+              {t.draftMeta(draft.model, formatDate(draft.at, language), draft.text.length)}
+            </span>
+          </div>
+          <p className="tichy" style={{ fontSize: 13.5, margin: 0 }}>
+            {t.draftNoteBefore}<strong>{t.draftNoteHighlight}</strong>{t.draftNoteAfter}
+          </p>
+          <textarea className="pole-vstup editor-text" readOnly rows={14} value={draft.text} />
+          <form action={decideOnDraftAction} style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+            <input type="hidden" name="documentId" value={documentId} />
+            <button className="tlacidlo" type="submit" name="choice" value="accept">{t.useAsDraft}</button>
+            <button className="tlacidlo tlacidlo--tiche" type="submit" name="choice" value="discard">{t.discard}</button>
+          </form>
+        </section>
+      ) : null}
+
+      <div className="editor-mriezka">
+        <section className="editor-stlpec">
+          <h2 className="pole-popis" style={{ margin: "0 0 8px" }}>{t.original}</h2>
+          {fileUrl ? (
+            isPdf ? (
+              <object className="editor-nahlad" data={fileUrl} type="application/pdf">
+                <p className="tichy" style={{ fontSize: 14, padding: 12 }}>
+                  {t.pdfNotShown}
+                  <a href={fileUrl} target="_blank" rel="noreferrer">{t.openInNewWindow}</a>.
+                </p>
+              </object>
+            ) : (
+              <p className="karta" style={{ padding: 16, fontSize: 14 }}>
+                {t.fileNotShown(d.originalFile?.name ?? "")}
+                <a href={fileUrl} target="_blank" rel="noreferrer">{t.download}</a>{t.compareAfterDownload}
+              </p>
+            )
+          ) : (
+            <p className="karta" style={{ padding: 16, fontSize: 14 }}>
+              {t.noOriginal}
+            </p>
+          )}
+        </section>
+
+        <section className="editor-stlpec">
+          <h2 className="pole-popis" style={{ margin: "0 0 8px" }}>
+            {t.text}
+            <span className="tichy" style={{ fontWeight: 400 }}>
+              {t.switchNoteBefore}<em>{t.switchNoteModes}</em>{t.switchNoteAfter}
+            </span>
+          </h2>
+          <form action={saveTextAction} style={{ display: "grid", gap: 10 }}>
+            <input type="hidden" name="documentId" value={documentId} />
+            <TextEditor name="markdown" initial={d.editableText} />
+            <div><button className="tlacidlo" type="submit">{t.saveText}</button></div>
+          </form>
+        </section>
+      </div>
+
+      <section className="karta" style={{ padding: 18, display: "grid", gap: 10, marginTop: 18 }}>
+        <h2 style={{ fontSize: 17, margin: 0 }}>{t.llmHeading}</h2>
+        <p className="tichy" style={{ fontSize: 14, margin: 0 }}>
+          {t.llmNoteBefore}<strong>{t.llmNoteHighlight}</strong>{t.llmNoteAfter}
+        </p>
+        <form action={sendToModelAction} style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+          <input type="hidden" name="documentId" value={documentId} />
+          <button className="tlacidlo tlacidlo--tiche" type="submit" name="mode" value="clean">
+            {t.clean}
+          </button>
+          {isPdf && (
+            <button className="tlacidlo tlacidlo--tiche" type="submit" name="mode" value="rewrite-scan">
+              {t.rewriteScan}
+            </button>
+          )}
+        </form>
+        {isPdf && (
+          <p className="tichy" style={{ fontSize: 13.5, margin: 0 }}>
+            {t.rewriteScanNote}
+          </p>
+        )}
+      </section>
+    </div>
+  )
+}

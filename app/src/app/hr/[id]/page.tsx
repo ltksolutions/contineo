@@ -26,7 +26,7 @@ export default async function AssignmentDetailPage({
 }) {
   const ctx = await hrContext()
   if (ctx.state !== "ready") {
-    if (ctx.state === "not-signed-in") redirect("/prihlasenie")
+    if (ctx.state === "not-signed-in") redirect("/sign-in")
     notFound()
   }
 
@@ -73,7 +73,7 @@ export default async function AssignmentDetailPage({
           {t.notAcknowledged(missing.length, assignment.count)}
         </h2>
         {missing.length > 0 && (
-          <Link href={`/hr/${encodeURIComponent(id)}/oznamit`} style={{ fontSize: 14 }}>
+          <Link href={`/hr/${encodeURIComponent(id)}/notify`} style={{ fontSize: 14 }}>
             {t.notifyLink}
           </Link>
         )}

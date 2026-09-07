@@ -133,7 +133,7 @@ interface Dictionary {
     /**
      * Druhý riadok položky. Samotné „1.0" pod názvom normy nepovie nič —
      * vyzerá to ako číslo bez významu. Dátum platnosti sa sem nedáva:
-     * v úzkom stĺpci by riadok zalomil a `/dokumenty` ho aj tak ukazuje.
+     * v úzkom stĺpci by riadok zalomil a `/documents` ho aj tak ukazuje.
      */
     version: (label: string) => string
     /**

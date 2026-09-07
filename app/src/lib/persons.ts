@@ -731,7 +731,7 @@ export function newGroupHistory(
  * Doplní údaje z adresára — **len tie, ktoré chýbajú** (D52).
  *
  * Adresár nie je nadriadený personalistovi. Keď niekto meno alebo oddelenie
- * v `/osoby` opraví, ďalšie prihlásenie mu opravu neprepíše — inak by sa ručná
+ * v `/people` opraví, ďalšie prihlásenie mu opravu neprepíše — inak by sa ručná
  * oprava dala prežiť len dovtedy, kým sa ten človek znova neprihlási, a nikto
  * by nepochopil, prečo sa mu zmena „nepodarilo uložiť".
  *

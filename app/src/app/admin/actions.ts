@@ -119,7 +119,7 @@ export async function saveTenantAction(fd: FormData) {
   }
 
   revalidatePath("/admin")
-  redirect(`/admin/tenanti/${encodeURIComponent(code)}?msg=${encodeURIComponent(message)}${error ? "&error=1" : ""}`)
+  redirect(`/admin/tenants/${encodeURIComponent(code)}?msg=${encodeURIComponent(message)}${error ? "&error=1" : ""}`)
 }
 
 /**
@@ -150,7 +150,7 @@ export async function toggleTenantStatusAction(fd: FormData) {
   }
 
   revalidatePath("/admin")
-  redirect(`/admin/tenanti/${encodeURIComponent(code)}?msg=${encodeURIComponent(message)}${error ? "&error=1" : ""}`)
+  redirect(`/admin/tenants/${encodeURIComponent(code)}?msg=${encodeURIComponent(message)}${error ? "&error=1" : ""}`)
 }
 
 // ── rozsah C: založenie a pokyny ────────────────────────────────────────────
@@ -174,7 +174,7 @@ export async function createTenantAction(fd: FormData) {
     )
   } catch (e) {
     const message = errorMessage(e, actor.language)
-    redirect(`/admin/novy?msg=${encodeURIComponent(message)}&error=1`)
+    redirect(`/admin/new?msg=${encodeURIComponent(message)}&error=1`)
   }
 
   // Až po uloženom tenantovi — zdroj pravdy je `tenants` a výpadok Vercelu
@@ -183,7 +183,7 @@ export async function createTenantAction(fd: FormData) {
   const message = [say(actor.language).created, ...vercel].join(" ")
 
   revalidatePath("/admin")
-  redirect(`/admin/tenanti/${encodeURIComponent(code)}?msg=${encodeURIComponent(message)}`)
+  redirect(`/admin/tenants/${encodeURIComponent(code)}?msg=${encodeURIComponent(message)}`)
 }
 
 /**
@@ -237,7 +237,7 @@ export async function sendInstructionsAction(fd: FormData) {
   }
 
   revalidatePath("/admin")
-  redirect(`/admin/tenanti/${encodeURIComponent(code)}?msg=${encodeURIComponent(message)}${error ? "&error=1" : ""}`)
+  redirect(`/admin/tenants/${encodeURIComponent(code)}?msg=${encodeURIComponent(message)}${error ? "&error=1" : ""}`)
 }
 
 /** Zápis aktu. Oddelené, aby bolo v kóde vidieť, že sa ukladá len toto. */
@@ -287,7 +287,7 @@ export async function saveSignInAction(fd: FormData) {
   }
 
   revalidatePath("/admin")
-  redirect(`/admin/tenanti/${encodeURIComponent(code)}?msg=${encodeURIComponent(message)}${error ? "&error=1" : ""}`)
+  redirect(`/admin/tenants/${encodeURIComponent(code)}?msg=${encodeURIComponent(message)}${error ? "&error=1" : ""}`)
 }
 
 /**
@@ -321,5 +321,5 @@ export async function deleteSignInAction(fd: FormData) {
   }
 
   revalidatePath("/admin")
-  redirect(`/admin/tenanti/${encodeURIComponent(code)}?msg=${encodeURIComponent(message)}${error ? "&error=1" : ""}`)
+  redirect(`/admin/tenants/${encodeURIComponent(code)}?msg=${encodeURIComponent(message)}${error ? "&error=1" : ""}`)
 }

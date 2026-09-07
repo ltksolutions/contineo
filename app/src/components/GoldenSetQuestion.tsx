@@ -49,7 +49,7 @@ export default function GoldenSetQuestion({
   async function save(change: Record<string, unknown>) {
     setStatus("saving")
     try {
-      const r = await fetch("/api/sada", {
+      const r = await fetch("/api/golden-set", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id, ...change }),
@@ -63,7 +63,7 @@ export default function GoldenSetQuestion({
   return (
     <div style={{ display: "grid", gap: 20 }}>
       <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
-        <Link href="/sada" className="tichy" style={{ fontSize: 13.5, textDecoration: "none" }}>
+        <Link href="/golden-set" className="tichy" style={{ fontSize: 13.5, textDecoration: "none" }}>
           {t.back}
         </Link>
         <span className="stitok tichy" style={{ fontSize: 11 }}>{id}</span>
@@ -222,7 +222,7 @@ export default function GoldenSetQuestion({
             {/* Ponuka ďalšej otázky sa objaví až po posúdení — dovtedy by
                 nabádala preskočiť prácu, kvôli ktorej sme tu. */}
             {reviewed && next && (
-              <Link href={`/sada/${next}`} className="tlacidlo" style={{ textDecoration: "none" }}>
+              <Link href={`/golden-set/${next}`} className="tlacidlo" style={{ textDecoration: "none" }}>
                 {t.nextQuestion}
               </Link>
             )}
