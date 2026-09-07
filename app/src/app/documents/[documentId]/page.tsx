@@ -69,15 +69,7 @@ export default async function DocumentPage({ params }: { params: Promise<{ docum
             Merač je pod textom, nie nad ním. Hore by z neho bola stopka nad
             hlavou; údaj nemá následok a nemá tak ani vyzerať.
           */}
-          <ReadingTimer
-            documentId={doc.documentId}
-            labels={{
-              elapsed: t.readingElapsed,
-              note: t.readingNote,
-              seconds: t.readingSeconds,
-              minutes: t.readingMinutes,
-            }}
-          />
+          <ReadingTimer documentId={doc.documentId} language={person.language} />
 
           <section className="karta" style={{ padding: 20, marginTop: 32 }}>
             <h2 style={{ fontSize: 17, margin: "0 0 10px" }}>{t.confirmHeading}</h2>

@@ -22,23 +22,36 @@
  */
 
 import { useEffect, useRef, useState } from "react"
+import { dictionary } from "@/lib/i18n"
+import type { UiLanguage } from "@/lib/i18n"
 
 /** Ako často sa priebežne posiela. Menej často = menej presné pri páde karty. */
 const SEND_EVERY_SECONDS = 30
 
+/**
+ * Prichádza **jazyk, nie hotové texty**.
+ *
+ * Pôvodne sa sem posielal objekt s funkciami (`seconds`, `minutes`,
+ * `elapsed`) zo serverového komponentu. To nefunguje: cez hranicu server →
+ * klient sa funkcie preniesť nedajú a React to odmietne až **za behu**
+ * („Functions cannot be passed directly to Client Components"). Build ani
+ * typy na to neupozornia — stránka sa jednoducho nenačíta.
+ *
+ * Tvary čísloviek sa navyše musia počítať z aktuálneho počtu sekúnd, ktorý
+ * beží až tu. Hotový reťazec zo servera by po pár sekundách klamal.
+ *
+ * Slovník si preto komponent načíta sám, rovnako ako `Rating.tsx`,
+ * `Search.tsx` a ďalších osem klientských komponentov — do balíka tým
+ * nepribúda nič, čo tam už nie je.
+ */
 export default function ReadingTimer({
   documentId,
-  labels,
+  language,
 }: {
   documentId: string
-  labels: {
-    /** „Čas čítania: {t}" */
-    elapsed: (formatted: string) => string
-    note: string
-    seconds: (n: number) => string
-    minutes: (n: number) => string
-  }
+  language: UiLanguage
 }) {
+  const t = dictionary(language).onboarding
   const [seconds, setSeconds] = useState(0)
   const sent = useRef(0)
   const current = useRef(0)
@@ -97,12 +110,12 @@ export default function ReadingTimer({
   }, [documentId])
 
   const formatted = seconds < 60
-    ? labels.seconds(seconds)
-    : labels.minutes(Math.round(seconds / 60))
+    ? t.readingSeconds(seconds)
+    : t.readingMinutes(Math.round(seconds / 60))
 
   return (
     <p className="tichy" style={{ fontSize: 13, margin: "12px 0 0" }}>
-      {labels.elapsed(formatted)} <span style={{ opacity: 0.8 }}>{labels.note}</span>
+      {t.readingElapsed(formatted)} <span style={{ opacity: 0.8 }}>{t.readingNote}</span>
     </p>
   )
 }
