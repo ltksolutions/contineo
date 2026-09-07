@@ -268,6 +268,39 @@ export default async function DocumentDetailPage({
               )}
               {v.changeNote && <div className="tichy audit-poznamka">{v.changeNote}</div>}
 
+              {/*
+                História opráv. Zapisuje sa od zavedenia `fixVersion()`,
+                ukazuje sa až odteraz — dôvod opravy je povinný práve preto,
+                aby sa o rok dalo prečítať, či išlo o preklep alebo o zmenu
+                povinnosti. Kým ho nemal kto ukázať, bola to polovica veci.
+              */}
+              {v.fixes && v.fixes.length > 0 && (
+                <details style={{ marginTop: 6 }}>
+                  <summary className="tichy" style={{ fontSize: 13, cursor: "pointer" }}>
+                    {t.fixHistory(v.fixes.length)}
+                  </summary>
+                  <ul style={{ listStyle: "none", padding: 0, margin: "8px 0 0", display: "grid", gap: 8 }}>
+                    {/* Najnovšia oprava hore — staršie sa dohľadávajú, novšia zaujíma. */}
+                    {[...v.fixes].reverse().map((fix, i) => (
+                      <li key={`${v.versionId}-fix-${i}`} style={{ fontSize: 13.5 }}>
+                        <div>{fix.reason}</div>
+                        <div className="tichy" style={{ fontSize: 12.5 }}>
+                          {t.fixLine(fix.by, formatDate(fix.at, language))}
+                          {" · "}
+                          {t.fixWas(
+                            fix.fromLabel,
+                            fix.fromEffectiveFrom
+                              ? formatDate(fix.fromEffectiveFrom, language)
+                              : t.fixNoDate,
+                          )}
+                          {fix.requiresReacknowledgement && ` · ${t.fixReacknowledged}`}
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                </details>
+              )}
+
               <details style={{ marginTop: 6 }}>
                 <summary className="tichy" style={{ fontSize: 13, cursor: "pointer" }}>{t.fix}</summary>
                 <form action={fixVersionAction} style={{ display: "grid", gap: 10, marginTop: 10 }}>

@@ -247,7 +247,7 @@
 - [x] **Polia v databáze** ✅ 2026-09-07 — `documents.versions[].opravy[]` → `fixes[]` s anglickými kľúčmi (`at`, `by`, `reason`, `requiresReacknowledgement`, `fromLabel`, `fromEffectiveFrom`).
       **Migrácia nebola potrebná: v Atlase nemá `opravy[]` ani jeden z 10 dokumentov.** Overené pred zmenou, nie predpokladané.
       Pole je odteraz aj v type `Version` — dovtedy sa zapisovalo, ale nikde nedeklarovalo.
-  - [ ] **`fixes[]` sa nikde nečíta.** Zapisuje ho `fixVersion()`, ukázať ho nemá kto. Poradie je zámerné (záznam sa spätne nedopíše), ale je to nedokončená polovica — chýba obrazovka „história opráv znenia" v detaile dokumentu.
+  - [x] **História opráv v detaile dokumentu** ✅ 2026-09-07 — rozbaľovacia položka pri každom znení, najnovšia oprava hore. Ukazuje dôvod, kto a kedy, a **stav pred opravou** — bez neho by sa dalo prečítať, že sa niečo zmenilo, ale nie na čo. 4 testy nad tvarom zápisu: `$push` ide cez reťazcovú cestu s `as never`, takže názvy polí TypeScript nekontroluje a práve tento tvar nás v projekte zradil trikrát.
 - [x] Premenné pre odosielateľa ✅ 2026-09-07 — `EMAIL_SENDER`, `EMAIL_SENDER_NAME`; kód číta najprv anglickú, pri prázdnej starú slovenskú. Pribudol pomocník `env()`, ktorý **prázdny reťazec nepovažuje za hodnotu** — `??` ho nechytí a `vercel env pull` zapisuje nenastavené premenné práve ako `X=`.
   - [ ] Nastaviť `EMAIL_SENDER` a `EMAIL_SENDER_NAME` vo Verceli, potom odstrániť slovenské
 - [x] `osoby/actions.ts` ✅ 2026-09-04 — spolu s i18n 3a (`confirmation`, kľúč `error`)

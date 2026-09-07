@@ -1099,6 +1099,15 @@ interface Dictionary {
       fixReason: string
       fixReasonPlaceholder: string
       fixReasonNote: string
+      /**
+       * História opráv znenia. Zapisuje sa od začiatku (`fixes[]`), ukazuje
+       * sa až odteraz — spätne sa nedopíše, preto zápis predbehol obrazovku.
+       */
+      fixHistory: (n: number) => string
+      fixLine: (who: string, when: string) => string
+      fixWas: (label: string, effectiveFrom: string) => string
+      fixReacknowledged: string
+      fixNoDate: string
       onDateChange: string
       onDateChangeAsk: string
       onDateChangeCorrection: string
@@ -2439,6 +2448,11 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       fixReason: "Dôvod opravy",
       fixReasonPlaceholder: "preklep v označení; dátum z uznesenia VV SFZ",
       fixReasonNote: "Povinný. Bez neho sa o rok nedá zistiť, či išlo o preklep alebo o zmenu povinnosti.",
+      fixHistory: n => (n === 1 ? "1 oprava" : n >= 2 && n <= 4 ? `${n} opravy` : `${n} opráv`),
+      fixLine: (who, when) => `${who} · ${when}`,
+      fixWas: (label, effectiveFrom) => `pôvodne ${label}, ${effectiveFrom}`,
+      fixReacknowledged: "vyžiadalo opätovné potvrdenie",
+      fixNoDate: "bez dátumu platnosti",
       onDateChange: "Ak sa mení dátum a znenie už niekto potvrdil",
       onDateChangeAsk: "— rozhodnem, až keď sa spýta —",
       onDateChangeCorrection: "oprava zápisu, potvrdenia zostávajú",
@@ -3770,6 +3784,11 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       fixReason: "Důvod opravy",
       fixReasonPlaceholder: "překlep v označení; datum z usnesení VV SFZ",
       fixReasonNote: "Povinný. Bez něj se za rok nedá zjistit, jestli šlo o překlep nebo o změnu povinnosti.",
+      fixHistory: n => (n === 1 ? "1 oprava" : n >= 2 && n <= 4 ? `${n} opravy` : `${n} oprav`),
+      fixLine: (who, when) => `${who} · ${when}`,
+      fixWas: (label, effectiveFrom) => `původně ${label}, ${effectiveFrom}`,
+      fixReacknowledged: "vyžádalo opětovné potvrzení",
+      fixNoDate: "bez data platnosti",
       onDateChange: "Pokud se mění datum a znění už někdo potvrdil",
       onDateChangeAsk: "— rozhodnu, až když se zeptá —",
       onDateChangeCorrection: "oprava zápisu, potvrzení zůstávají",
@@ -5097,6 +5116,11 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       fixReason: "Reason for the correction",
       fixReasonPlaceholder: "typo in the label; date from the SFZ Executive Committee resolution",
       fixReasonNote: "Required. Without it, a year from now there is no way to tell whether it was a typo or a change of obligation.",
+      fixHistory: n => (n === 1 ? "1 correction" : `${n} corrections`),
+      fixLine: (who, when) => `${who} · ${when}`,
+      fixWas: (label, effectiveFrom) => `was ${label}, ${effectiveFrom}`,
+      fixReacknowledged: "required a fresh acknowledgement",
+      fixNoDate: "no effective date",
       onDateChange: "If the date changes and someone has already acknowledged the version",
       onDateChangeAsk: "— I will decide when asked —",
       onDateChangeCorrection: "correction of the record, acknowledgements stand",
