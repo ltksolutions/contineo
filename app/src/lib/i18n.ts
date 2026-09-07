@@ -421,6 +421,23 @@ interface Dictionary {
     empty: string
     add: string
   }
+
+  /**
+   * Viacnásobný výber s hľadaním (`components/MultiSelect.tsx`).
+   *
+   * `nothingFound` a `nothingFoundNew` sú dve vety, nie jedna s podmienkou:
+   * keď sa nová hodnota pridať nedá, ponuka „stlačte Enter" je klamstvo.
+   */
+  multiSelect: {
+    searchHint: string
+    nothingFound: string
+    nothingFoundNew: string
+    empty: string
+    clearAll: string
+    done: string
+    remove: (value: string) => string
+    chosenOf: (chosen: number, total: number) => string
+  }
   /** Knižnica dokumentov (D53). */
   /** Výpis auditu — používa ho nastavenie organizácie aj `/admin`. */
   /** Správa tenantov — vidí ju len správca platformy (Fáza 5b). */
@@ -1532,6 +1549,16 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
   tags: {
     empty: "Zatiaľ tu žiadne nie sú. Prvú vytvoríš dole.",
     add: "Pridať",
+  },
+  multiSelect: {
+    searchHint: "hľadať…",
+    nothingFound: "Nič sa nenašlo.",
+    nothingFoundNew: "Nič sa nenašlo — píšte inak, alebo pridajte novú hodnotu klávesom Enter.",
+    empty: "Zatiaľ tu žiadne hodnoty nie sú.",
+    clearAll: "Zrušiť výber",
+    done: "Hotovo",
+    remove: (value) => `Odobrať ${value}`,
+    chosenOf: (chosen, total) => `Vybrané ${chosen} z ${total}`,
   },
   goldenSet: {
     heading: "Zlatá sada",
@@ -2869,6 +2896,16 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     empty: "Zatím tu žádné nejsou. První vytvoříš dole.",
     add: "Přidat",
   },
+  multiSelect: {
+    searchHint: "hledat…",
+    nothingFound: "Nic se nenašlo.",
+    nothingFoundNew: "Nic se nenašlo — pište jinak, nebo přidejte novou hodnotu klávesou Enter.",
+    empty: "Zatím tu žádné hodnoty nejsou.",
+    clearAll: "Zrušit výběr",
+    done: "Hotovo",
+    remove: (value) => `Odebrat ${value}`,
+    chosenOf: (chosen, total) => `Vybráno ${chosen} z ${total}`,
+  },
   goldenSet: {
     heading: "Zlatá sada",
     intro: "Otázky jsou návrhy. Pokud některá nedává smysl nebo zní nepřirozeně, upravte ji nebo vyřaďte — to je stejně cenná informace jako posudek odpovědi.",
@@ -4200,6 +4237,16 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
   tags: {
     empty: "There are none yet. Create the first one below.",
     add: "Add",
+  },
+  multiSelect: {
+    searchHint: "search…",
+    nothingFound: "Nothing found.",
+    nothingFoundNew: "Nothing found — try different wording, or press Enter to add a new value.",
+    empty: "There are no values here yet.",
+    clearAll: "Clear selection",
+    done: "Done",
+    remove: (value) => `Remove ${value}`,
+    chosenOf: (chosen, total) => `${chosen} of ${total} selected`,
   },
   goldenSet: {
     heading: "Golden set",
