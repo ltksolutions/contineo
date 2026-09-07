@@ -41,13 +41,41 @@ export interface TenantBrandingView {
  * ktoré k sebe nepatria.
  */
 function darken(hex: string, amount = 0.16): string {
-  const m = /^#?([0-9a-f]{6}|[0-9a-f]{3})$/i.exec(hex.trim())
-  if (!m) return hex
-  let h = m[1]
-  if (h.length === 3) h = h[0] + h[0] + h[1] + h[1] + h[2] + h[2]
-  const rgb = [0, 2, 4].map(i => parseInt(h.slice(i, i + 2), 16))
+  const rgb = channels(hex)
+  if (!rgb) return hex
   const out = rgb.map(v => Math.max(0, Math.round(v * (1 - amount))))
   return "#" + out.map(v => v.toString(16).padStart(2, "0")).join("")
+}
+
+/**
+ * Rozloží `#rrggbb` alebo `#rgb` na tri kanály. `null` pri čomkoľvek inom —
+ * farba tenanta je uložená v databáze, teda dáta, a tie môžu byť pokazené.
+ */
+export function channels(hex: string): [number, number, number] | null {
+  const m = /^#?([0-9a-f]{6}|[0-9a-f]{3})$/i.exec(hex.trim())
+  if (!m) return null
+  let h = m[1]
+  if (h.length === 3) h = h[0] + h[0] + h[1] + h[1] + h[2] + h[2]
+  const [r, g, b] = [0, 2, 4].map(i => parseInt(h.slice(i, i + 2), 16))
+  return [r, g, b]
+}
+
+/**
+ * Farba tenanta s nízkou alfou pre `--accent-soft`.
+ *
+ * Prečo priehľadnosť a nie predpočítaná svetlá farba: podklad pod chipom
+ * a označeným riadkom nie je vždy ten istý (`--surface` v karte, `--bg`
+ * v pätičke tabuľky) a v tmavej téme je opačný. Alfa sa prispôsobí sama,
+ * napevno namiešaný odtieň by na jednom z tých podkladov zmizol.
+ *
+ * `undefined` pri nečitateľnej hodnote: premenná sa vtedy vôbec nenastaví
+ * a platí predvolená z `globals.css`. Nastaviť ju na pokazený reťazec by
+ * znamenalo, že prehliadač zahodí aj tú predvolenú.
+ */
+export function soft(hex: string, alpha = 0.11): string | undefined {
+  const rgb = channels(hex)
+  if (!rgb) return undefined
+  return `rgba(${rgb[0]}, ${rgb[1]}, ${rgb[2]}, ${alpha})`
 }
 
 /**
@@ -60,10 +88,14 @@ function darken(hex: string, amount = 0.16): string {
  */
 export function tenantStyle(branding?: TenantBrandingView): CSSProperties {
   if (!branding?.accentColor) return {}
+  const soften = soft(branding.accentColor)
   return {
     ["--accent" as string]: branding.accentColor,
     ["--accent-strong" as string]: darken(branding.accentColor),
     ["--on-accent" as string]: "#ffffff",
+    // Bez tohto riadka by chip aktívneho filtra a označený riadok zostali
+    // v predvolenej sivej, kým zvyšok rozhrania má farbu organizácie.
+    ...(soften ? { ["--accent-soft" as string]: soften } : {}),
   } as CSSProperties
 }
 

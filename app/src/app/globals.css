@@ -38,6 +38,40 @@
   --radius-lg: 18px;
   --maxw: 940px;
   --shadow: 0 1px 2px rgba(20, 28, 42, 0.05), 0 10px 30px rgba(20, 28, 42, 0.07);
+
+  /*
+   * Accent s nízkou alfou — jediný nový farebný token.
+   *
+   * Používa sa tam, kde má byť hlavná farba len naznačená a nie krik: chip
+   * aktívneho filtra, aktívna položka navigácie, označený riadok tabuľky.
+   * Bez neho by tie miesta museli siahnuť po `--surface-2`, a potom sa nedá
+   * rozoznať „označené" od „len iné pozadie".
+   *
+   * Zámerne `rgba(…)` a nie `color-mix()`: tenantovi ju skladá `tenantStyle()`
+   * na serveri z jeho vlastnej farby, takže obe cesty musia dávať ten istý
+   * tvar hodnoty. Tu je predvolený `--accent` (#232a35) s 11 % alfou.
+   */
+  --accent-soft: rgba(35, 42, 53, 0.11);
+
+  /*
+   * Hustota rozhrania.
+   *
+   * Šesť premenných, nie dve sady tried: „vzdušne" je prepnutie hodnôt na
+   * `<html data-density="comfortable">` (blok nižšie), nie druhý stylesheet.
+   * Duplikované triedy by znamenali, že každý nový prvok treba napísať
+   * dvakrát — a raz sa na to zabudne.
+   *
+   * Kompaktné je predvolené: knižnica dokumentov je pracovný nástroj, kde
+   * rozhoduje, koľko riadkov je vidieť naraz bez rolovania.
+   *
+   * Od témy sú nezávislé, preto sa v tmavom bloku neopakujú.
+   */
+  --pad-main: 16px;
+  --card-pad: 16px;
+  --list-py: 9px;
+  --gap: 14px;
+  --row-py: 7px;
+  --font-row: 13px;
 }
 
 html[data-theme="dark"] {
@@ -67,6 +101,28 @@ html[data-theme="dark"] {
   --warn-fg: #fcd34d;
 
   --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 10px 30px rgba(0, 0, 0, 0.45);
+
+  /* Ten istý token z tmavého accentu (#eef1f5). Svetlá hodnota
+     `rgba(35, 42, 53, .11)` by na tmavom pozadí nebola vidieť vôbec —
+     označený riadok by vyzeral rovnako ako neoznačený. */
+  --accent-soft: rgba(238, 241, 245, 0.11);
+}
+
+/*
+ * Vzdušné rozostupy.
+ *
+ * Prepína sa atribútom na `<html>`, rovnako ako téma — takže sa dá uložiť
+ * na osobu alebo organizáciu a nastaviť už pri vykreslení na serveri, bez
+ * bliknutia. Farieb sa nedotýka, mení len rozostupy a veľkosť písma
+ * v riadkoch zoznamov.
+ */
+html[data-density="comfortable"] {
+  --pad-main: 28px;
+  --card-pad: 24px;
+  --list-py: 14px;
+  --gap: 20px;
+  --row-py: 12px;
+  --font-row: 14px;
 }
 
 * { box-sizing: border-box; }
