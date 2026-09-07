@@ -9,6 +9,7 @@
 import { describe, it, expect } from "vitest"
 import {
   readFilters, toggle, replace, setValue, clearFilters, isEmpty, toQuery, activeChips,
+  sortBy, currentSort, pageOf, withPage, sortRows, pageRows,
 } from "../src/lib/libraryFilters"
 import { queryParts, buildQuery } from "../src/lib/libraryRead"
 
@@ -146,5 +147,102 @@ describe("dotaz z filtrov", () => {
     expect(queryParts(filter)).toHaveLength(2)
     const q = buildQuery("sfz", filter, "category")
     expect(q.$and).toEqual([{ tags: "poriadok" }])
+  })
+})
+
+describe("triedenie", () => {
+  it("neznáme triedenie z adresy sa zahodí", () => {
+    // Hodnota ide z adresy, teda od kohokoľvek. Keby sa použila ako názov
+    // poľa, dala by sa ňou vypýtať vec, ktorá do zoznamu nepatrí.
+    expect(readFilters({ sort: "documents.drop" }).sort).toBeUndefined()
+    expect(readFilters({ sort: "title" }).sort).toBe("title")
+    expect(readFilters({ dir: "hore" }).dir).toBeUndefined()
+  })
+
+  it("ten istý stĺpec obráti smer, iný začne svojím predvoleným", () => {
+    const base = readFilters({})
+    const byTitle = sortBy(base, "title")
+    expect(currentSort(byTitle)).toEqual({ key: "title", dir: "asc" })
+    expect(currentSort(sortBy(byTitle, "title"))).toEqual({ key: "title", dir: "desc" })
+    // Prvý klik na dátum má ukázať najnovšie, nie najstaršie.
+    expect(currentSort(sortBy(byTitle, "updatedAt"))).toEqual({ key: "updatedAt", dir: "desc" })
+  })
+
+  it("predvolené triedenie sa do adresy nepíše", () => {
+    // Inak by odkaz na nefiltrovaný zoznam vyzeral zakaždým inak podľa toho,
+    // odkiaľ vznikol.
+    expect(toQuery(readFilters({}))).toBe("/library")
+    expect(toQuery(sortBy(readFilters({}), "title"))).toBe("/library?sort=title")
+    // Klik na stĺpec, podľa ktorého sa už triedi, obráti smer — aj keď to
+    // triedenie bolo predvolené. Ten obrátený smer už v adrese byť musí.
+    const flipped = sortBy(readFilters({}), "updatedAt")
+    expect(toQuery(flipped)).toBe("/library?dir=asc")
+    // A druhý klik sa vráti k predvolenému, takže adresa je opäť čistá.
+    expect(toQuery(sortBy(flipped, "updatedAt"))).toBe("/library")
+  })
+
+  it("texty sa triedia po slovensky", () => {
+    // Binárne porovnanie hodí „Čas" až za „Zima".
+    const rows = [
+      { title: "Zimná príprava", status: "published" },
+      { title: "Časový plán", status: "published" },
+      { title: "Cestovné náhrady", status: "published" },
+    ]
+    expect(sortRows(rows, "title", "asc").map(r => r.title))
+      .toEqual(["Cestovné náhrady", "Časový plán", "Zimná príprava"])
+  })
+
+  it("pri rovnosti rozhodne názov, nech je poradie stabilné", () => {
+    const day = new Date("2026-09-01")
+    const rows = [
+      { title: "B", status: "published", updatedAt: day },
+      { title: "A", status: "published", updatedAt: day },
+    ]
+    expect(sortRows(rows, "updatedAt", "desc").map(r => r.title)).toEqual(["A", "B"])
+  })
+
+  it("chýbajúci dátum zoznam nezhodí", () => {
+    const rows = [
+      { title: "Bez dátumu", status: "draft" },
+      { title: "S dátumom", status: "published", updatedAt: new Date("2026-09-01") },
+    ]
+    expect(sortRows(rows, "updatedAt", "desc").map(r => r.title)).toEqual(["S dátumom", "Bez dátumu"])
+  })
+})
+
+describe("stránkovanie", () => {
+  const rows = Array.from({ length: 60 }, (_, i) => ({ n: i + 1 }))
+
+  it("prvá strana je 1–25 a rozsah sa počíta od jednotky", () => {
+    const p = pageRows(rows, 1)
+    expect(p.rows).toHaveLength(25)
+    expect([p.from, p.to, p.pages]).toEqual([1, 25, 3])
+  })
+
+  it("posledná strana je kratšia", () => {
+    const p = pageRows(rows, 3)
+    expect(p.rows).toHaveLength(10)
+    expect([p.from, p.to]).toEqual([51, 60])
+  })
+
+  it("strana za koncom vráti poslednú, nie prázdno", () => {
+    // Prázdna obrazovka po zmazaní dokumentu vyzerá ako porucha.
+    expect(pageRows(rows, 99).page).toBe(3)
+    expect(pageRows(rows, 0).page).toBe(1)
+  })
+
+  it("prázdny zoznam má jednu stranu a rozsah od nuly", () => {
+    expect(pageRows([], 1)).toEqual({ rows: [], page: 1, pages: 1, from: 0, to: 0 })
+  })
+
+  it("zmena filtra vracia na prvú stranu, triedenie nie", () => {
+    // Po zúžení filtra by človek skončil na piatej strane zoznamu, ktorý má
+    // strany dve — teda na prázdnej obrazovke.
+    const onPage5 = withPage(readFilters({ category: "norma" }), 5)
+    expect(pageOf(toggle(onPage5, "status", "draft"))).toBe(1)
+    expect(pageOf(setValue(onPage5, "search", "prestup"))).toBe(1)
+    expect(pageOf(sortBy(onPage5, "title"))).toBe(1)
+    // Variant navigácie filtrom nie je.
+    expect(pageOf(setValue(onPage5, "layout", "sidebar"))).toBe(5)
   })
 })

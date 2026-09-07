@@ -984,6 +984,15 @@ interface Dictionary {
       tagSearch: string
       shown: (found: number, all: number) => string
       removeFilter: (value: string) => string
+      /** Tabuľka: hlavičky stĺpcov, triedenie a stránkovanie. */
+      colDocument: string
+      colVersion: string
+      colChanged: string
+      sortBy: (column: string) => string
+      pageRange: (from: number, to: number, total: number) => string
+      pageOf: (page: number, pages: number) => string
+      prevPage: string
+      nextPage: string
       statusPublished: string
       statusDrafts: string
       filter: string
@@ -2354,6 +2363,14 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       tagSearch: "hľadať značku…",
       shown: (found, all) => `${found} z ${all} dokumentov`,
       removeFilter: (value) => `Odobrať filter ${value}`,
+      colDocument: "Dokument",
+      colVersion: "Platné znenie",
+      colChanged: "Zmenené",
+      sortBy: (column) => `Zoradiť podľa ${column}`,
+      pageRange: (from, to, total) => `Zobrazené ${from}–${to} z ${total}`,
+      pageOf: (page, pages) => `Strana ${page} z ${pages}`,
+      prevPage: "Predchádzajúca",
+      nextPage: "Ďalšia",
       statusPublished: "publikované",
       statusDrafts: "koncepty",
       filter: "Filtrovať",
@@ -3707,6 +3724,14 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       tagSearch: "hledat značku…",
       shown: (found, all) => `${found} z ${all} dokumentů`,
       removeFilter: (value) => `Odebrat filtr ${value}`,
+      colDocument: "Dokument",
+      colVersion: "Platné znění",
+      colChanged: "Změněno",
+      sortBy: (column) => `Seřadit podle ${column}`,
+      pageRange: (from, to, total) => `Zobrazeno ${from}–${to} z ${total}`,
+      pageOf: (page, pages) => `Strana ${page} z ${pages}`,
+      prevPage: "Předchozí",
+      nextPage: "Další",
       statusPublished: "publikované",
       statusDrafts: "koncepty",
       filter: "Filtrovat",
@@ -5056,6 +5081,14 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       tagSearch: "search tags…",
       shown: (found, all) => `${found} of ${all} documents`,
       removeFilter: (value) => `Remove filter ${value}`,
+      colDocument: "Document",
+      colVersion: "Effective version",
+      colChanged: "Changed",
+      sortBy: (column) => `Sort by ${column}`,
+      pageRange: (from, to, total) => `Showing ${from}–${to} of ${total}`,
+      pageOf: (page, pages) => `Page ${page} of ${pages}`,
+      prevPage: "Previous",
+      nextPage: "Next",
       statusPublished: "published",
       statusDrafts: "drafts",
       filter: "Filter",

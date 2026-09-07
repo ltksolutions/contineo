@@ -28,7 +28,8 @@ import Notice from "@/components/Notice"
 import { normalizeQuery, type RawQuery } from "@/lib/urlParams"
 import {
   readFilters, toggle, setValue, clearFilters, isEmpty, toQuery, carryFields, activeChips,
-  type MultiKey,
+  sortBy, currentSort, pageOf, withPage, sortRows, pageRows,
+  type MultiKey, type SortKey,
 } from "@/lib/libraryFilters"
 import MultiSelect from "@/components/MultiSelect"
 
@@ -91,6 +92,12 @@ export default async function LibraryPage({
   // Variant navigácie a pohľad sa nesú spolu s nimi z toho istého dôvodu.
   const carried = carryFields(filters)
   const hasFilter = !isEmpty(filters)
+
+  // Poradie a strana sa počítajú tu, nad načítanými riadkami — dôvod je
+  // v `sortRows`: podľa cesty priečinkov ani platného znenia sa v databáze
+  // triediť nedá, lebo obe vznikajú až tu.
+  const sort = currentSort(filters)
+  const paged = pageRows(sortRows(rows, sort.key, sort.dir), pageOf(filters))
 
   /** Odkaz s vymeneným priečinkom; ostatné filtre zostávajú. */
   const withFolder = (folderId?: string) => toQuery(setValue(filters, "folder", folderId))
@@ -423,35 +430,108 @@ export default async function LibraryPage({
           {search ? t.nothingFound : t.empty}
         </p>
       ) : (
-        <ul className="audit">
-          {rows.map(r => (
-            <li key={r.documentId} className="karta audit-zaznam">
-              <div className="audit-hlavicka">
-                <Link href={`/library/${encodeURIComponent(r.documentId)}`} style={{ fontWeight: 600 }}>
-                  {r.title}
-                </Link>
-                <span className="stitok">{t.processing[r.processingState] ?? r.processingState}</span>
-                {r.hasDraft && r.status !== "published" && <span className="stitok">{t.draft}</span>}
-              </div>
+        <>
+          {/*
+            Tabuľka, nie karty: v knižnici sa dokumenty **porovnávajú** —
+            ktoré znenie platí, čo sa kedy zmenilo. Na to musia byť tie isté
+            údaje pod sebou v stĺpci, nie rozsypané v každej karte inak.
+            Kartový pohľad pribudne ako voľba (krok 4c).
 
-              <div className="tichy audit-kto">
-                {r.folderTrail?.length ? `${r.folderTrail.join(" / ")} · ` : ""}
-                {r.documentId}
-                {r.originalFile && ` · ${r.originalFile.name} (${formatSize(r.originalFile.bytes)})`}
-                {r.updatedAt && ` · ${formatDate(r.updatedAt, uiLanguage)}`}
-                {r.updatedBy && ` · ${r.updatedBy}`}
-              </div>
+            Obal roluje vodorovne a tabuľka má `min-width`: stĺpce sa nesmú
+            stlačiť tak, že sa dátum zalomí do troch riadkov. Na telefóne je
+            posun prstom čitateľnejší než rozbitá mriežka.
+          */}
+          <div className="doc-table-wrap">
+            <table className="doc-table">
+              <thead>
+                <tr>
+                  {([
+                    ["title", t.colDocument],
+                    ["category", t.category],
+                    ["status", t.status],
+                  ] as [SortKey, string][]).map(([key, label]) => (
+                    <th key={key} scope="col">
+                      <Link href={toQuery(sortBy(filters, key))} className="doc-sort"
+                            aria-label={t.sortBy(label)}>
+                        {label}
+                        <span className="doc-sort-mark" aria-hidden="true">
+                          {sort.key === key ? (sort.dir === "asc" ? "↑" : "↓") : ""}
+                        </span>
+                      </Link>
+                    </th>
+                  ))}
+                  <th scope="col">{t.colVersion}</th>
+                  <th scope="col" className="doc-col-right">
+                    <Link href={toQuery(sortBy(filters, "updatedAt"))} className="doc-sort"
+                          aria-label={t.sortBy(t.colChanged)}>
+                      {t.colChanged}
+                      <span className="doc-sort-mark" aria-hidden="true">
+                        {sort.key === "updatedAt" ? (sort.dir === "asc" ? "↑" : "↓") : ""}
+                      </span>
+                    </Link>
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {paged.rows.map(r => (
+                  <tr key={r.documentId}>
+                    <td>
+                      <Link href={`/library/${encodeURIComponent(r.documentId)}`} className="doc-title">
+                        {r.title}
+                      </Link>
+                      {/* Identifikátor a cesta pod názvom, nie vo vlastnom
+                          stĺpci: hľadá sa v nich len vtedy, keď názvy
+                          nestačia, a dva stĺpce navyše by zúžili ten,
+                          na ktorom záleží. */}
+                      <div className="tichy doc-meta">
+                        {r.folderTrail?.length ? `${r.folderTrail.join(" / ")} · ` : ""}
+                        {r.documentId}
+                        {r.originalFile && ` · ${r.originalFile.name} (${formatSize(r.originalFile.bytes)})`}
+                      </div>
+                    </td>
+                    <td className="doc-cell-quiet">{r.category ? categoryLabel(r.category) : "—"}</td>
+                    <td>
+                      <span className="stitok">{t.processing[r.processingState] ?? r.processingState}</span>
+                      {r.hasDraft && r.status !== "published" && <span className="stitok">{t.draft}</span>}
+                    </td>
+                    <td className="doc-cell-quiet">
+                      {r.effectiveLabel}
+                      {r.versionCount > 0 && <div className="tichy doc-meta">{t.versions(r.versionCount)}</div>}
+                    </td>
+                    <td className="doc-col-right doc-cell-quiet">
+                      {r.updatedAt ? formatDate(r.updatedAt, uiLanguage) : "—"}
+                      {r.updatedBy && <div className="tichy doc-meta">{r.updatedBy}</div>}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
 
-              <div className="audit-zmeny">
-                <div>
-                  <span className="audit-pole">{t.effectiveVersion}</span>
-                  <span>{r.effectiveLabel}</span>
-                  {r.versionCount > 0 && <span className="tichy"> · {t.versions(r.versionCount)}</span>}
-                </div>
-              </div>
-            </li>
-          ))}
-        </ul>
+          {/*
+            Pätička je aj tam, kde je strana jediná — číslo „koľko z koľkých"
+            je odpoveď na otázku, ktorú si človek kladie vždy, nielen keď sa
+            stránkuje.
+          */}
+          <div className="doc-foot">
+            <span className="tichy">{t.pageRange(paged.from, paged.to, rows.length)}</span>
+            {paged.pages > 1 && (
+              <span className="doc-pager">
+                {paged.page > 1 && (
+                  <Link className="doc-page" href={toQuery(withPage(filters, paged.page - 1))}>
+                    {t.prevPage}
+                  </Link>
+                )}
+                <span className="tichy">{t.pageOf(paged.page, paged.pages)}</span>
+                {paged.page < paged.pages && (
+                  <Link className="doc-page" href={toQuery(withPage(filters, paged.page + 1))}>
+                    {t.nextPage}
+                  </Link>
+                )}
+              </span>
+            )}
+          </div>
+        </>
       )}
         </div>
       </div>

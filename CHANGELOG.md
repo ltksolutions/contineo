@@ -4,6 +4,20 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Added (2026-09-07 — knižnica: kompaktná tabuľka, triedenie a stránkovanie)
+
+Krok 4b z handoffu `design_handoff_contineo_intranet`.
+
+- **Tabuľka namiesto kariet.** V knižnici sa dokumenty porovnávajú — ktoré znenie platí, čo sa kedy zmenilo — a na to musia byť tie isté údaje pod sebou v stĺpci, nie rozsypané v každej karte inak. Stĺpce: dokument (s cestou priečinkov a identifikátorom pod názvom), druh, stav, platné znenie, zmenené. Kartový pohľad pribudne ako voľba (krok 4c).
+- **Triedenie je v adrese** (`?sort=&dir=`), takže sa dá poslať odkazom aj zoradený pohľad. Kliknutie na stĺpec, podľa ktorého sa už triedi, obráti smer; iný stĺpec začne svojím predvoleným — pri texte A→Z, pri dátume najnovšie hore. Jednotný smer pre všetko by znamenal, že prvý klik na „Zmenené" ukáže najstaršie dokumenty. **Predvolené triedenie sa do adresy nepíše**, aby odkaz na ten istý pohľad vyzeral vždy rovnako.
+- **Texty sa triedia po slovensky** (`localeCompare(…, "sk")`) — binárne porovnanie hodí „Čas" až za „Zima". Triedi a stránkuje sa nad načítanými riadkami, nie v databáze: zoznam sa aj tak ťahá celý, lebo cesta priečinkov aj označenie platného znenia vznikajú až v Node a v Monge sa podľa nich triediť nedá. Pri knižnici jednej organizácie sú to stovky riadkov.
+- **Pri rovnosti rozhoduje názov, a vždy vzostupne.** Keby sa obrátil aj rozhodovač rovnosti, dva dokumenty s tým istým dátumom by si pri prepnutí smeru vymenili miesto bez zjavnej príčiny — test to odhalil.
+- **Zmena filtra vracia na prvú stranu, triedenie nie.** Po zúžení filtra by človek skončil na piatej strane zoznamu, ktorý má strany dve, teda na prázdnej obrazovke vyzerajúcej ako „nič sa nenašlo". Strana za koncom vráti poslednú, nie prázdno.
+- Pätička s **„Zobrazené X–Y z N"** je aj tam, kde je strana jediná — je to odpoveď na otázku, ktorú si človek kladie vždy, nielen keď sa stránkuje.
+- Neznáme triedenie z adresy sa **zahodí, nie použije**: hodnota ide od kohokoľvek a ako názov poľa by sa ňou dala vypýtať vec, ktorá do zoznamu nepatrí.
+- Tabuľka roluje vodorovne a prvý stĺpec má spodnú hranicu šírky — bez nej ho prehliadač na telefóne stlačí na tretinu a názov dokumentu spadne do štyroch riadkov.
+- Overené: `tsc --noEmit` čisto, `eslint` bez chýb, **939 testov prechádza** (11 nových), tabuľka prekreslená na 390 px aj na desktope, vo svetlej aj tmavej téme.
+
 ### Added (2026-09-07 — knižnica: faceted filtre s počtami)
 
 Krok 4a z handoffu `design_handoff_contineo_intranet`. Krok 4 je rozdelený na päť častí, lebo ako jeden diff je nerecenzovateľný: **4a filtre**, 4b tabuľka a triedenie, 4c kartový pohľad, 4d query builder, 4e hromadné akcie.
