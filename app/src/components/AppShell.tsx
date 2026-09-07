@@ -20,7 +20,8 @@
  */
 
 import type { ReactNode } from "react"
-import AppNav, { type NavLayout } from "./AppNav"
+import AppNav from "./AppNav"
+import type { NavLayout } from "@/lib/appNav"
 import { hrContext } from "@/lib/hr"
 import { peopleContext } from "@/lib/people"
 import { libraryContext } from "@/lib/library"

@@ -19,63 +19,18 @@
  * Správcovské odkazy (nastavenie organizácie, správa tenantov) tu zámerne
  * nie sú — zostávajú pod avatarom v hlavičke, ktorý sa v shelli neskrýva.
  * Sú to veci otvárané raz za mesiac a v dennej navigácii len zaberajú miesto.
+ *
+ * Zoznam položiek, `normalizeLayout()` a `isActive()` sú v `lib/appNav.ts`,
+ * nie tu: z modulu s `"use client"` sa funkcia na serveri volať nedá a
+ * `/library` si variant navigácie určuje práve na serveri.
  */
 
 import { useEffect, useRef } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
+import { navItems, isActive } from "@/lib/appNav"
+import type { NavLayout, NavFlags } from "@/lib/appNav"
 import { dictionary, type UiLanguage } from "@/lib/i18n"
-
-export type NavLayout = "sidebar" | "topbar"
-
-/** Kľúč do `dictionary().nav` — nie hotový text, aby zostal preložiteľný. */
-export type NavKey = "ask" | "toAcknowledge" | "goldenSet" | "library" | "assigned" | "people"
-
-export interface NavItem {
-  href: string
-  key: NavKey
-}
-
-/**
- * Role prichádzajú zo servera, kde už prešli všetkými podmienkami. Klient
- * o nich nič neodvodzuje — rovnaký dôvod ako v `Header.tsx`.
- */
-export interface NavFlags {
-  isHr?: boolean
-  isPeopleAdmin?: boolean
-  isContentManager?: boolean
-}
-
-export function navItems(flags: NavFlags): NavItem[] {
-  return [
-    { href: "/", key: "ask" },
-    // Odkaz vidí každý prihlásený; stránka si už poradí — kto nemá čo
-    // potvrdzovať, uvidí, že nemá nič.
-    { href: "/documents", key: "toAcknowledge" },
-    ...(flags.isContentManager ? [{ href: "/library", key: "library" as const }] : []),
-    ...(flags.isHr ? [{ href: "/hr", key: "assigned" as const }] : []),
-    ...(flags.isPeopleAdmin ? [{ href: "/people", key: "people" as const }] : []),
-    { href: "/golden-set", key: "goldenSet" },
-  ]
-}
-
-/**
- * Variant z adresy. Čokoľvek iné než `sidebar` je `topbar` — predvolený je
- * podľa návrhu a neznáma hodnota v adrese nemá zhodiť stránku.
- */
-export function normalizeLayout(value: unknown): NavLayout {
-  return value === "sidebar" ? "sidebar" : "topbar"
-}
-
-/**
- * Aktívna položka. Tu sa **na prefix pozerá** (na rozdiel od `isShellRoute`):
- * kto je na `/library/new`, je stále v knižnici a má to na navigácii vidieť.
- * Domov je výnimka — inak by svietil na každej stránke.
- */
-export function isActive(pathname: string, href: string): boolean {
-  if (href === "/") return pathname === "/"
-  return pathname === href || pathname.startsWith(href + "/")
-}
 
 export default function AppNav({
   layout: layout,

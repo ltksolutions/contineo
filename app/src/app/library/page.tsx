@@ -20,7 +20,7 @@ import {
 } from "./actions"
 import TreeWithOrder from "@/components/TreeWithOrder"
 import AppShell from "@/components/AppShell"
-import { normalizeLayout } from "@/components/AppNav"
+import { normalizeLayout } from "@/lib/appNav"
 import { brandingView } from "@/lib/tenants"
 import { tenantStyle } from "@/components/TenantHeader"
 import { formatDate, dictionary } from "@/lib/i18n"
