@@ -39,12 +39,43 @@ export interface Message {
 
 export class EcomailError extends Error {}
 
+/**
+ * Prvá neprázdna premenná z prostredia.
+ *
+ * **Prázdny reťazec nie je hodnota.** `process.env.X ?? "predvoľba"` na neho
+ * nesiahne, lebo `??` chytá len `undefined` a `null` — a `vercel env pull`
+ * zapisuje nenastavené premenné práve ako `X=`. Predvoľba by sa tak potichu
+ * prebila prázdnom a prejavilo by sa to až za behu.
+ */
+function env(...names: string[]): string | undefined {
+  for (const name of names) {
+    const value = (process.env[name] ?? "").trim()
+    if (value) return value
+  }
+  return undefined
+}
+
+/**
+ * Premenné pre odosielateľa sa **preložili, nie premenovali**: kód číta
+ * najprv anglickú, a keď nie je, starú slovenskú. Bez toho by nasadenie
+ * spadlo v okamihu medzi zmenou kódu a zmenou premennej vo Verceli.
+ */
 export function config() {
   return {
-    key: process.env.ECOMAIL_API_KEY,
-    sender: process.env.EMAIL_ODOSIELATEL,
-    senderName: process.env.EMAIL_MENO_ODOSIELATELA ?? "Contineo",
+    key: env("ECOMAIL_API_KEY"),
+    sender: env("EMAIL_SENDER", "EMAIL_ODOSIELATEL"),
+    senderName: env("EMAIL_SENDER_NAME", "EMAIL_MENO_ODOSIELATELA") ?? "Contineo",
   }
+}
+
+/**
+ * Adresa odosielateľa pre prihlasovacie e-maily.
+ *
+ * Rovnaká hodnota ako v `config()`, ale s vlastnou predvoľbou: prihlásenie
+ * musí odísť aj vtedy, keď premenná chýba, inak sa nikto nedostane dnu.
+ */
+export function emailSender(): string {
+  return config().sender ?? "noreply@contineo.app"
 }
 
 /**
@@ -58,7 +89,7 @@ export async function send(s: Message): Promise<void> {
 
   if (!key || !sender) {
     throw new EcomailError(
-      "Chýba ECOMAIL_API_KEY alebo EMAIL_ODOSIELATEL — e-mail sa neodoslal."
+      "Chýba ECOMAIL_API_KEY alebo EMAIL_SENDER — e-mail sa neodoslal."
     )
   }
 

@@ -42,6 +42,26 @@ export interface Version {
   isActive: boolean
   contentHash?: string
   changeNote?: string
+
+  /**
+   * História opráv znenia — kto, kedy a **prečo** siahol na označenie alebo
+   * platnosť už vydanej verzie.
+   *
+   * Zapisuje sa v `libraryWrite.fixVersion()` a **nikde sa zatiaľ nečíta**.
+   * Je to zámerné poradie: záznam musí vzniknúť skôr, než ho bude čo ukázať,
+   * lebo spätne sa nedopíše. Obrazovka je otvorená úloha (TODO N).
+   *
+   * `fromLabel` a `fromEffectiveFrom` nesú stav **pred** opravou — bez nich
+   * by sa z histórie dalo prečítať, že sa niečo zmenilo, ale nie na čo.
+   */
+  fixes?: {
+    at: Date
+    by: string
+    reason: string
+    requiresReacknowledgement: boolean
+    fromLabel: string
+    fromEffectiveFrom: Date | null
+  }[]
   /**
    * Text tohto znenia. Má prednosť pred `DocumentRecord.markdown`, ktorý nesie
    * len najnovšie znenie — človek musí čítať tú verziu, ktorú potvrdzuje,

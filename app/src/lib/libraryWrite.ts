@@ -650,11 +650,15 @@ export async function fixVersion(
     {
       $set: set,
       $push: {
-        "versions.$[v].opravy": {
-          kedy: new Date(), kto: actor, dovod: reason,
-          znovaPotvrdit: reacknowledge,
-          zLabel: v.label,
-          zEffectiveFrom: v.effectiveFrom ?? null,
+        // `fromLabel` a `fromEffectiveFrom` sú stav **pred** opravou. Bez nich
+        // by sa z histórie dalo prečítať, že sa niečo zmenilo, ale nie na čo.
+        "versions.$[v].fixes": {
+          at: new Date(),
+          by: actor,
+          reason,
+          requiresReacknowledgement: reacknowledge,
+          fromLabel: v.label,
+          fromEffectiveFrom: v.effectiveFrom ?? null,
         },
       },
     } as never,

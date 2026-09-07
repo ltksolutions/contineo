@@ -33,7 +33,7 @@ import type { EmailConfig } from "next-auth/providers/email"
 import AzureADProvider from "next-auth/providers/azure-ad"
 import GoogleProvider from "next-auth/providers/google"
 import { mongoAdapter } from "./authAdapter"
-import { send, signInEmail } from "./ecomail"
+import { send, signInEmail, emailSender } from "./ecomail"
 import {
   personMaySignIn, recordSignIn, recordExternalRef, personLanguage,
   syncFromAccount, createFromDomain, isDomainAllowed,
@@ -192,7 +192,7 @@ function emailProvider(): EmailConfig {
     // hodinová platnosť by znamenala, že polovica odkazov vyprší.
     maxAge: 24 * 60 * 60,
     // `from` a `server` sú v type povinné, ale nepoužijú sa.
-    from: process.env.EMAIL_ODOSIELATEL ?? "noreply@contineo.app",
+    from: emailSender(),
     server: { host: "unused", port: 25, auth: { user: "", pass: "" } },
     options: {},
     async sendVerificationRequest({ identifier, url }) {
