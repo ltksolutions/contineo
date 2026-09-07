@@ -1103,6 +1103,18 @@ interface Dictionary {
     detail: {
       back: string
       documentData: string
+      /** Pravý panel detailu: potvrdenia, prehľad metadát, odkazy. */
+      side: {
+        progressHeading: string
+        progressOf: (acknowledged: number, assigned: number) => string
+        progressNobody: string
+        progressWho: string
+        metaHeading: string
+        folder: string
+        unfiled: string
+        identifier: string
+        none: string
+      }
       title: string
       titleNote: string
       scope: string
@@ -1236,6 +1248,11 @@ interface Dictionary {
       failed: string
     }
     upload: {
+      /** Číslované sekcie formulára — nie kroky sprievodcu, viď komentár v `new/page.tsx`. */
+      sectionFile: string
+      sectionMeta: string
+      dropHint: string
+      pick: string
       back: string
       heading: string
       intro: string
@@ -2524,6 +2541,17 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     detail: {
       back: "← Späť do knižnice",
       documentData: "Údaje o dokumente",
+      side: {
+        progressHeading: "Potvrdenia",
+        progressOf: (acknowledged, assigned) => `${acknowledged} / ${assigned} osôb`,
+        progressNobody: "Toto znenie zatiaľ nie je nikomu pridelené.",
+        progressWho: "Kto nepotvrdil →",
+        metaHeading: "Metadáta",
+        folder: "Priečinok",
+        unfiled: "Nezaradené",
+        identifier: "Identifikátor",
+        none: "—",
+      },
       title: "Názov",
       titleNote: "Meniť sa dá. Objaví sa v ďalších potvrdeniach; staré záznamy si nesú kópiu názvu z času potvrdenia, takže sa spätne nezmenia.",
       scope: "Pôsobnosť",
@@ -2656,6 +2684,10 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       failed: "Nepodarilo sa to. Skús to znova.",
     },
     upload: {
+      sectionFile: "Súbor",
+      sectionMeta: "Metadáta",
+      dropHint: "Presuňte súbor sem, alebo ho vyberte.",
+      pick: "Vybrať súbor",
       back: "← Späť do knižnice",
       heading: "Nahrať dokument",
       intro: "Word, PDF, Excel, Markdown alebo text. Súbor sa uloží tak, ako prišiel — prevod je odvodenina a originál musí zostať, aby sa dalo overiť, z čoho text vznikol.",
@@ -3930,6 +3962,17 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     detail: {
       back: "← Zpět do knihovny",
       documentData: "Údaje o dokumentu",
+      side: {
+        progressHeading: "Potvrzení",
+        progressOf: (acknowledged, assigned) => `${acknowledged} / ${assigned} osob`,
+        progressNobody: "Toto znění zatím není nikomu přiděleno.",
+        progressWho: "Kdo nepotvrdil →",
+        metaHeading: "Metadata",
+        folder: "Složka",
+        unfiled: "Nezařazené",
+        identifier: "Identifikátor",
+        none: "—",
+      },
       title: "Název",
       titleNote: "Měnit se dá. Objeví se v dalších potvrzeních; staré záznamy si nesou kopii názvu z doby potvrzení, takže se zpětně nezmění.",
       scope: "Působnost",
@@ -4062,6 +4105,10 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       failed: "Nepodařilo se to. Zkus to znovu.",
     },
     upload: {
+      sectionFile: "Soubor",
+      sectionMeta: "Metadata",
+      dropHint: "Přesuňte soubor sem, nebo ho vyberte.",
+      pick: "Vybrat soubor",
       back: "← Zpět do knihovny",
       heading: "Nahrát dokument",
       intro: "Word, PDF, Excel, Markdown nebo text. Soubor se uloží tak, jak přišel — převod je odvozenina a originál musí zůstat, aby šlo ověřit, z čeho text vznikl.",
@@ -5332,6 +5379,17 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     detail: {
       back: "← Back to library",
       documentData: "Document details",
+      side: {
+        progressHeading: "Acknowledgements",
+        progressOf: (acknowledged, assigned) => `${acknowledged} / ${assigned} people`,
+        progressNobody: "This version has not been assigned to anyone yet.",
+        progressWho: "Who has not acknowledged →",
+        metaHeading: "Metadata",
+        folder: "Folder",
+        unfiled: "Unfiled",
+        identifier: "Identifier",
+        none: "—",
+      },
       title: "Title",
       titleNote: "Editable. It appears in future acknowledgements; existing records carry a copy of the title from the moment of acknowledgement, so they do not change retroactively.",
       scope: "Scope",
@@ -5463,6 +5521,10 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       failed: "That did not work. Try again.",
     },
     upload: {
+      sectionFile: "File",
+      sectionMeta: "Metadata",
+      dropHint: "Drop a file here, or choose one.",
+      pick: "Choose a file",
       back: "← Back to the library",
       heading: "Upload a document",
       intro: "Word, PDF, Excel, Markdown or plain text. The file is stored exactly as it arrived — the conversion is derived from it, and the original has to stay so it can be checked what the text came from.",

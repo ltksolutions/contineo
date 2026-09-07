@@ -1718,6 +1718,177 @@ html[data-theme="dark"] .editor-tui .CodeMirror {
 
 .doc-page:hover { background: var(--surface-2); }
 
+/* ── nahratie dokumentu: sekcie a zóna na súbor ─────────────────────────
+   Číslované sekcie, nie stepper: nahratie je jedno odoslanie formulára
+   a schvaľovací krok v systéme neexistuje. */
+.upload-form { display: grid; gap: 14px; }
+
+.upload-section { padding: 18px 20px; }
+
+.upload-step {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 14px;
+  font-size: 15px;
+}
+
+.upload-step-no {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: var(--on-accent);
+  font-size: 12.5px;
+  font-weight: 700;
+}
+
+/*
+ * Zóna na pretiahnutie je `<label>` okolo skutočného `<input type="file">` —
+ * prehliadač doň súbor pustí sám, takže drag & drop funguje bez skriptu.
+ * Pruhované pozadie hovorí „sem sa niečo dáva" bez toho, aby to bolo tlačidlo.
+ */
+.upload-drop {
+  display: grid;
+  justify-items: start;
+  gap: 8px;
+  padding: 18px;
+  border: 1px dashed var(--line);
+  border-radius: 11px;
+  background: repeating-linear-gradient(
+    135deg,
+    rgba(20, 28, 42, 0.03) 0 8px,
+    transparent 8px 16px
+  );
+  cursor: pointer;
+}
+
+.upload-drop:hover { border-color: var(--accent); }
+
+/* Rámček dostane celá zóna, nie samotné pole — pri prechode klávesnicou
+   je inak vidieť len tenký prúžok vnútri. */
+.upload-drop:focus-within {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+.upload-drop-title { font-size: 14.5px; font-weight: 600; }
+
+/* Popis formátov je monospace: sú to prípony, nie veta. */
+.upload-drop-note {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.upload-file { font: inherit; font-size: 14px; max-width: 100%; }
+
+.upload-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 16px;
+  align-items: start;
+}
+
+/* Názov, kľúč a značky idú cez celú šírku — sú to dlhé hodnoty a v polovici
+   stĺpca sa v nich zle číta. */
+.upload-wide { grid-column: 1 / -1; }
+
+.upload-grid .pole { margin: 0; min-width: 0; }
+
+/* ── detail dokumentu: pravý panel ──────────────────────────────────────
+   Dva stĺpce až od 900 px. Na telefóne patrí zhrnutie **pod** obsah: človek
+   prišiel čítať dokument, nie metadáta. */
+.detail-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 18px;
+  align-items: start;
+}
+
+.detail-main { min-width: 0; }
+.detail-side { display: grid; gap: 12px; min-width: 0; }
+
+@media (min-width: 900px) {
+  .detail-grid { grid-template-columns: minmax(0, 1fr) 280px; }
+}
+
+.detail-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.detail-card { padding: 14px 16px; }
+
+.detail-card-title {
+  margin: 0 0 10px;
+  font-size: 13px;
+  font-weight: 650;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.detail-progress-head {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.detail-percent {
+  font-size: 26px;
+  font-weight: 640;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+}
+
+.detail-progress-of { font-size: 13px; font-variant-numeric: tabular-nums; }
+
+.detail-bar {
+  margin-top: 10px;
+  height: 6px;
+  border-radius: 3px;
+  background: var(--surface-2);
+  overflow: hidden;
+}
+
+.detail-bar-fill {
+  display: block;
+  height: 100%;
+  background: var(--accent);
+}
+
+.detail-card-link { margin: 10px 0 0; font-size: 13px; font-weight: 600; }
+.detail-card-link a { color: var(--accent); }
+
+.detail-empty { margin: 0; font-size: 13.5px; line-height: 1.5; }
+
+.detail-meta { margin: 0; display: grid; gap: 8px; }
+
+.detail-meta-row { display: flex; gap: 10px; align-items: baseline; }
+
+/* 104 px, nie 92: „Jazyk dokumentu" sa do užšieho stĺpca zalomí do dvoch
+   riadkov a hodnota vedľa neho potom visí v prázdne. */
+.detail-meta-key {
+  flex: 0 0 104px;
+  font-size: 12.5px;
+}
+
+/* `dd` má v prehliadači vlastné odsadenie zľava — bez nuly by hodnota
+   nesedela pod sebou v stĺpci. */
+.detail-meta-value {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  font-size: 13.5px;
+  overflow-wrap: anywhere;
+}
+
 /* ── knižnica: hromadné akcie ───────────────────────────────────────────
    Panel je vidieť stále, nie až po označení: bez skriptu server nevie, či je
    niečo zaškrtnuté. Prázdny výber preto rieši akcia hlásením. */
