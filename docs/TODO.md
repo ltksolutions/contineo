@@ -82,7 +82,9 @@
 - [ ] **Zátvorky v query builderi** — dnes platí jeden režim pre celý dotaz (spĺňa všetky / ktorúkoľvek), lebo `A alebo B a C` nemá bez zátvoriek jednoznačný význam. Miešanie spojok má zmysel doplniť až so zátvorkami, inak by dotaz znamenal niečo iné, než človek napísal
 - [x] **4e. Hromadné akcie** — hromadný presun do priečinka (cyklus nad `assignDocument`, audit zostáva) a odovzdanie výberu na `/hr/assign`, ktoré prideľovanie už vie. **Prideľovanie sa nepísalo druhýkrát.** Výber platí pre viditeľnú stranu; dávka môže skončiť čiastočne a vypíše, čo neprešlo
 - [ ] Výber, ktorý prežije stránkovanie — dnes platí len pre viditeľnú stranu. Má zmysel až s klientskym stavom alebo s id v adrese; treba doriešiť, čo s označeným dokumentom, ktorý už filtru nevyhovuje
-- [ ] **5. Detail dokumentu, nahrávanie, vyhľadávanie** — layouty a pravý panel; znovupoužiť `Answer.tsx`, `AcknowledgeButton.tsx`, `Rating.tsx`
+- [x] **5a. Detail dokumentu — pravý panel** — potvrdenia platného znenia (percento z pridelených osôb), prehľad metadát, chips v hlavičke. Editora sa to nedotklo
+- [ ] **5b. Nahrávanie** (`/library/new`) — stepper, dropzone, formulár metadát
+- [ ] **5c. „Opýtať sa"** (`/`) — rozsah hľadania, karta odpovede, zdroje; znovupoužiť `Answer.tsx`, `Rating.tsx`. Je to najpoužívanejšia stránka systému, takže opatrne
 - [ ] **6. Nastavenia** — živý náhľad farby v `ColorSelect.tsx`, slot na logo na `saveBrand()`
 - [ ] **7. Dotiahnutie** — tmavá téma, `:focus-visible` všade, mobilná zásuvka filtrov, `<noscript>` cesty
 - [ ] Presunúť do shellu zvyšné stránky (`/documents`, `/hr`, `/people`, `/golden-set`, `/admin`), každú vlastným PR; potom zmizne menu v hlavičke

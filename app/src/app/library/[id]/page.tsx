@@ -22,6 +22,7 @@ import { tenantExtras } from "@/lib/codelistsTenant"
 import Select from "@/components/Select"
 import TagSelect from "@/components/TagSelect"
 import { normalizeQuery, type RawQuery } from "@/lib/urlParams"
+import { documentProgress } from "@/lib/libraryProgress"
 
 export const dynamic = "force-dynamic"
 
@@ -55,21 +56,49 @@ export default async function DocumentDetailPage({
   // porovnávať koncept s prázdnym `markdown` by tvrdilo, že je čo publikovať,
   // aj keď je text ten istý.
   const effective = d.versions.find(v => v.isActive && v.effectiveFrom)
+  /*
+   * Koľko ľudí platné znenie potvrdilo. Jeden dotaz navyše na stránku — je to
+   * jeden dokument, nie riadok v zozname, kde by to bol dotaz na každý riadok.
+   */
+  const progress = await documentProgress(ctx.tenant.companyCode, effective?.versionId)
+  const ts = t.side
+  const folderName = d.folderTrail?.length ? d.folderTrail.join(" / ") : ts.unfiled
   const published = ((d.markdown ?? effective?.markdown) ?? "").trim()
   // Koncept, ktorý sa líši od publikovaného znenia, je nedokončená práca —
   // a je to jediný stav, v ktorom má zmysel niečo publikovať.
   const hasChangesToPublish = Boolean(draft) && draft !== published
 
   return (
-    <div className="obal" style={{ padding: "28px 20px 80px", maxWidth: 760, ...tenantStyle(branding) }}>
+    <div className="obal" style={{ padding: "28px 20px 80px", maxWidth: 1180, ...tenantStyle(branding) }}>
       <Notice message={message} error={error === "1"} back={`/library/${encodeURIComponent(documentId)}`} />
 
       <p style={{ margin: "0 0 12px" }}>
         <Link className="tichy" href="/library" style={{ fontSize: 14 }}>{t.back}</Link>
       </p>
 
+      {/*
+        Hlavička dokumentu. Chips nesú to, čo o dokumente rozhoduje na prvý
+        pohľad — stav spracovania a druh; identifikátor a priečinok idú pod
+        názov, lebo sa čítajú až vtedy, keď názvy nestačia.
+      */}
+      <div className="detail-chips">
+        <span className="stitok">{dictionary(language).library.list.processing[d.processingState] ?? d.processingState}</span>
+        {d.category && <span className="stitok tichy">{d.category}</span>}
+      </div>
+
       <h1 style={{ fontSize: 25, letterSpacing: "-0.02em", margin: "0 0 4px" }}>{d.title}</h1>
-      <p className="tichy" style={{ fontSize: 14, margin: "0 0 18px" }}>{d.documentId}</p>
+      <p className="tichy" style={{ fontSize: 14, margin: "0 0 18px" }}>
+        {d.documentId}
+        {effective && ` · ${effective.label}`}
+        {effective?.effectiveFrom && ` · ${formatDate(effective.effectiveFrom, language)}`}
+      </p>
+
+      {/*
+        Dva stĺpce až od 900 px. Pravý panel je zhrnutie — na telefóne patrí
+        pod obsah, nie nad neho: človek prišiel čítať dokument, nie metadáta.
+      */}
+      <div className="detail-grid">
+        <div className="detail-main">
 
       <details className="karta" style={{ padding: 18, margin: "0 0 18px" }}>
         <summary style={{ cursor: "pointer", fontWeight: 600 }}>
@@ -358,6 +387,62 @@ export default async function DocumentDetailPage({
           ))}
         </ul>
       )}
+        </div>
+
+        {/*
+          Pravý panel — zhrnutie, nie ovládanie. Meniť sa dá všetko o kúsok
+          vyššie vo formulári „Údaje o dokumente"; tu je len to, na čo sa
+          človek pri otvorenom dokumente pýta: koľkí to už potvrdili a čo to
+          vlastne je.
+        */}
+        <aside className="detail-side">
+          <section className="karta detail-card">
+            <h2 className="detail-card-title">{ts.progressHeading}</h2>
+
+            {progress.percent === null ? (
+              <p className="tichy detail-empty">{ts.progressNobody}</p>
+            ) : (
+              <>
+                <div className="detail-progress-head">
+                  <span className="detail-percent">{progress.percent} %</span>
+                  <span className="tichy detail-progress-of">
+                    {ts.progressOf(progress.acknowledged, progress.assigned)}
+                  </span>
+                </div>
+                {/*
+                  Pásik je obrázok toho istého čísla, nie druhý údaj — preto
+                  `aria-hidden`: čítačka by inak prečítala percento dvakrát.
+                */}
+                <div className="detail-bar" aria-hidden="true">
+                  <span className="detail-bar-fill" style={{ width: `${progress.percent}%` }} />
+                </div>
+                <p className="detail-card-link">
+                  <Link href="/hr">{ts.progressWho}</Link>
+                </p>
+              </>
+            )}
+          </section>
+
+          <section className="karta detail-card">
+            <h2 className="detail-card-title">{ts.metaHeading}</h2>
+            <dl className="detail-meta">
+              {([
+                [t.category, d.category],
+                [t.tags, d.tags.length ? d.tags.join(", ") : ""],
+                [t.accessLevel, d.accessLevel],
+                [t.documentLanguage, d.language],
+                [ts.folder, folderName],
+                [ts.identifier, d.documentId],
+              ] as [string, string | undefined][]).map(([key, value]) => (
+                <div className="detail-meta-row" key={key}>
+                  <dt className="tichy detail-meta-key">{key}</dt>
+                  <dd className="detail-meta-value">{value || ts.none}</dd>
+                </div>
+              ))}
+            </dl>
+          </section>
+        </aside>
+      </div>
     </div>
   )
 }

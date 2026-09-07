@@ -1103,6 +1103,18 @@ interface Dictionary {
     detail: {
       back: string
       documentData: string
+      /** Pravý panel detailu: potvrdenia, prehľad metadát, odkazy. */
+      side: {
+        progressHeading: string
+        progressOf: (acknowledged: number, assigned: number) => string
+        progressNobody: string
+        progressWho: string
+        metaHeading: string
+        folder: string
+        unfiled: string
+        identifier: string
+        none: string
+      }
       title: string
       titleNote: string
       scope: string
@@ -2524,6 +2536,17 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     detail: {
       back: "← Späť do knižnice",
       documentData: "Údaje o dokumente",
+      side: {
+        progressHeading: "Potvrdenia",
+        progressOf: (acknowledged, assigned) => `${acknowledged} / ${assigned} osôb`,
+        progressNobody: "Toto znenie zatiaľ nie je nikomu pridelené.",
+        progressWho: "Kto nepotvrdil →",
+        metaHeading: "Metadáta",
+        folder: "Priečinok",
+        unfiled: "Nezaradené",
+        identifier: "Identifikátor",
+        none: "—",
+      },
       title: "Názov",
       titleNote: "Meniť sa dá. Objaví sa v ďalších potvrdeniach; staré záznamy si nesú kópiu názvu z času potvrdenia, takže sa spätne nezmenia.",
       scope: "Pôsobnosť",
@@ -3930,6 +3953,17 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     detail: {
       back: "← Zpět do knihovny",
       documentData: "Údaje o dokumentu",
+      side: {
+        progressHeading: "Potvrzení",
+        progressOf: (acknowledged, assigned) => `${acknowledged} / ${assigned} osob`,
+        progressNobody: "Toto znění zatím není nikomu přiděleno.",
+        progressWho: "Kdo nepotvrdil →",
+        metaHeading: "Metadata",
+        folder: "Složka",
+        unfiled: "Nezařazené",
+        identifier: "Identifikátor",
+        none: "—",
+      },
       title: "Název",
       titleNote: "Měnit se dá. Objeví se v dalších potvrzeních; staré záznamy si nesou kopii názvu z doby potvrzení, takže se zpětně nezmění.",
       scope: "Působnost",
@@ -5332,6 +5366,17 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     detail: {
       back: "← Back to library",
       documentData: "Document details",
+      side: {
+        progressHeading: "Acknowledgements",
+        progressOf: (acknowledged, assigned) => `${acknowledged} / ${assigned} people`,
+        progressNobody: "This version has not been assigned to anyone yet.",
+        progressWho: "Who has not acknowledged →",
+        metaHeading: "Metadata",
+        folder: "Folder",
+        unfiled: "Unfiled",
+        identifier: "Identifier",
+        none: "—",
+      },
       title: "Title",
       titleNote: "Editable. It appears in future acknowledgements; existing records carry a copy of the title from the moment of acknowledgement, so they do not change retroactively.",
       scope: "Scope",

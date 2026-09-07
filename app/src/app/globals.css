@@ -1718,6 +1718,97 @@ html[data-theme="dark"] .editor-tui .CodeMirror {
 
 .doc-page:hover { background: var(--surface-2); }
 
+/* ── detail dokumentu: pravý panel ──────────────────────────────────────
+   Dva stĺpce až od 900 px. Na telefóne patrí zhrnutie **pod** obsah: človek
+   prišiel čítať dokument, nie metadáta. */
+.detail-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 18px;
+  align-items: start;
+}
+
+.detail-main { min-width: 0; }
+.detail-side { display: grid; gap: 12px; min-width: 0; }
+
+@media (min-width: 900px) {
+  .detail-grid { grid-template-columns: minmax(0, 1fr) 280px; }
+}
+
+.detail-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.detail-card { padding: 14px 16px; }
+
+.detail-card-title {
+  margin: 0 0 10px;
+  font-size: 13px;
+  font-weight: 650;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.detail-progress-head {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.detail-percent {
+  font-size: 26px;
+  font-weight: 640;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+}
+
+.detail-progress-of { font-size: 13px; font-variant-numeric: tabular-nums; }
+
+.detail-bar {
+  margin-top: 10px;
+  height: 6px;
+  border-radius: 3px;
+  background: var(--surface-2);
+  overflow: hidden;
+}
+
+.detail-bar-fill {
+  display: block;
+  height: 100%;
+  background: var(--accent);
+}
+
+.detail-card-link { margin: 10px 0 0; font-size: 13px; font-weight: 600; }
+.detail-card-link a { color: var(--accent); }
+
+.detail-empty { margin: 0; font-size: 13.5px; line-height: 1.5; }
+
+.detail-meta { margin: 0; display: grid; gap: 8px; }
+
+.detail-meta-row { display: flex; gap: 10px; align-items: baseline; }
+
+/* 104 px, nie 92: „Jazyk dokumentu" sa do užšieho stĺpca zalomí do dvoch
+   riadkov a hodnota vedľa neho potom visí v prázdne. */
+.detail-meta-key {
+  flex: 0 0 104px;
+  font-size: 12.5px;
+}
+
+/* `dd` má v prehliadači vlastné odsadenie zľava — bez nuly by hodnota
+   nesedela pod sebou v stĺpci. */
+.detail-meta-value {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  font-size: 13.5px;
+  overflow-wrap: anywhere;
+}
+
 /* ── knižnica: hromadné akcie ───────────────────────────────────────────
    Panel je vidieť stále, nie až po označení: bez skriptu server nevie, či je
    niečo zaškrtnuté. Prázdny výber preto rieši akcia hlásením. */
