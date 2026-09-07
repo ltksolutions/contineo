@@ -40,7 +40,7 @@ export default async function NewDocumentPage({
   const { uploadAction: upload } = await import("../actions")
 
   return (
-    <div className="obal" style={{ padding: "28px 20px 80px", maxWidth: 680, ...tenantStyle(branding) }}>
+    <div className="obal" style={{ padding: "28px 20px 80px", maxWidth: 880, ...tenantStyle(branding) }}>
       <p style={{ margin: "0 0 16px" }}>
         <Link className="tichy" href="/library" style={{ fontSize: 14 }}>{t.back}</Link>
       </p>
@@ -56,22 +56,47 @@ export default async function NewDocumentPage({
         </p>
       )}
 
-      <form action={upload} className="karta" style={{ padding: 20, display: "grid", gap: 16 }} encType="multipart/form-data">
-        <label className="pole">
-          <span className="pole-popis">{t.file}</span>
-          <input
-            className="pole-vstup"
-            type="file"
-            name="file"
-            required
-            accept=".pdf,.docx,.xlsx,.md,.txt,.csv"
-          />
-          <span className="tichy pole-napoveda">
-            {t.oldFormatsBefore}<code>.doc</code>{t.oldFormatsMiddle}<code>.xls</code>{t.oldFormatsAfter}
-          </span>
-        </label>
+      {/*
+        Číslované sekcie, **nie stepper**.
 
-        <label className="pole">
+        Návrh má tri kroky (Súbor / Metadáta / Schválenie) a prepínanie medzi
+        nimi. Lenže nahratie je jedno odoslanie formulára a **schvaľovací
+        krok v systéme neexistuje** — sprievodca s tromi krokmi by sľuboval
+        priebeh, ktorý sa nekoná, a tretí krok by nikam neviedol. Číslo pri
+        nadpise dá tú istú orientáciu bez toho klamstva; súbor aj metadáta
+        vidno naraz, čo je pri jednom odoslaní správne.
+      */}
+      <form action={upload} className="upload-form" encType="multipart/form-data">
+        <section className="karta upload-section">
+          <h2 className="upload-step"><span className="upload-step-no">1</span>{t.sectionFile}</h2>
+
+          {/*
+            Zóna na pretiahnutie je `<label>` okolo `<input type="file">` —
+            prehliadač do neho súbor pustí sám, takže drag & drop funguje bez
+            jediného riadku skriptu. Vlastná zóna postavená na JavaScripte by
+            bez neho nefungovala vôbec.
+          */}
+          <label className="upload-drop">
+            <span className="upload-drop-title">{t.dropHint}</span>
+            <span className="tichy upload-drop-note">
+              {t.oldFormatsBefore}<code>.doc</code>{t.oldFormatsMiddle}<code>.xls</code>{t.oldFormatsAfter}
+            </span>
+            <input
+              className="upload-file"
+              type="file"
+              name="file"
+              required
+              accept=".pdf,.docx,.xlsx,.md,.txt,.csv"
+              aria-label={t.file}
+            />
+          </label>
+        </section>
+
+        <section className="karta upload-section">
+          <h2 className="upload-step"><span className="upload-step-no">2</span>{t.sectionMeta}</h2>
+          <div className="upload-grid">
+
+        <label className="pole upload-wide">
           <span className="pole-popis">{t.title}</span>
           <input className="pole-vstup" name="title" defaultValue={title ?? ""} required
                  placeholder={t.titlePlaceholder} />
@@ -80,7 +105,7 @@ export default async function NewDocumentPage({
           </span>
         </label>
 
-        <label className="pole">
+        <label className="pole upload-wide">
           <span className="pole-popis">{t.key}</span>
           <input className="pole-vstup" name="sectionKey" defaultValue={sectionKey ?? ""} required
                  placeholder="sutazny_poriadok" autoCapitalize="none" autoCorrect="off" />
@@ -117,7 +142,7 @@ export default async function NewDocumentPage({
           <Select name="category" options={[{ value: "", label: t.unset }, ...codelistOptions("category", extras)]} initial="" fieldLabel={dictionary(ctx.person.language).library.list.category} />
         </div>
 
-        <div className="pole">
+        <div className="pole upload-wide">
           <span className="pole-popis">{t.tags}</span>
           <TagSelect
             name="tags"
@@ -127,6 +152,9 @@ export default async function NewDocumentPage({
             language={ctx.person.language}
           />
         </div>
+
+          </div>
+        </section>
 
         <div><button className="tlacidlo" type="submit">{t.submit}</button></div>
       </form>

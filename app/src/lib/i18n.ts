@@ -1248,6 +1248,11 @@ interface Dictionary {
       failed: string
     }
     upload: {
+      /** Číslované sekcie formulára — nie kroky sprievodcu, viď komentár v `new/page.tsx`. */
+      sectionFile: string
+      sectionMeta: string
+      dropHint: string
+      pick: string
       back: string
       heading: string
       intro: string
@@ -2679,6 +2684,10 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       failed: "Nepodarilo sa to. Skús to znova.",
     },
     upload: {
+      sectionFile: "Súbor",
+      sectionMeta: "Metadáta",
+      dropHint: "Presuňte súbor sem, alebo ho vyberte.",
+      pick: "Vybrať súbor",
       back: "← Späť do knižnice",
       heading: "Nahrať dokument",
       intro: "Word, PDF, Excel, Markdown alebo text. Súbor sa uloží tak, ako prišiel — prevod je odvodenina a originál musí zostať, aby sa dalo overiť, z čoho text vznikol.",
@@ -4096,6 +4105,10 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       failed: "Nepodařilo se to. Zkus to znovu.",
     },
     upload: {
+      sectionFile: "Soubor",
+      sectionMeta: "Metadata",
+      dropHint: "Přesuňte soubor sem, nebo ho vyberte.",
+      pick: "Vybrat soubor",
       back: "← Zpět do knihovny",
       heading: "Nahrát dokument",
       intro: "Word, PDF, Excel, Markdown nebo text. Soubor se uloží tak, jak přišel — převod je odvozenina a originál musí zůstat, aby šlo ověřit, z čeho text vznikl.",
@@ -5508,6 +5521,10 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       failed: "That did not work. Try again.",
     },
     upload: {
+      sectionFile: "File",
+      sectionMeta: "Metadata",
+      dropHint: "Drop a file here, or choose one.",
+      pick: "Choose a file",
       back: "← Back to the library",
       heading: "Upload a document",
       intro: "Word, PDF, Excel, Markdown or plain text. The file is stored exactly as it arrived — the conversion is derived from it, and the original has to stay so it can be checked what the text came from.",

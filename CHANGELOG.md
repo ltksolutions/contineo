@@ -4,6 +4,16 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Changed (2026-09-08 — nahrávanie dokumentu)
+
+Druhá časť kroku 5.
+
+- **Číslované sekcie, nie stepper.** Návrh má tri kroky (Súbor / Metadáta / Schválenie) a prepínanie medzi nimi. Lenže nahratie je **jedno odoslanie formulára** a schvaľovací krok v systéme neexistuje — sprievodca by sľuboval priebeh, ktorý sa nekoná, a tretí krok by nikam neviedol. Číslo pri nadpise dá tú istú orientáciu bez toho klamstva.
+- **Zóna na pretiahnutie je `<label>` okolo skutočného `<input type="file">`.** Prehliadač doň súbor pustí sám, takže drag & drop funguje bez jediného riadku skriptu; vlastná zóna postavená na JavaScripte by bez neho nefungovala vôbec.
+- Metadáta idú do mriežky, ktorá sa sama zalomí podľa šírky. Názov, kľúč a značky sú cez celú šírku — sú to dlhé hodnoty a v polovici stĺpca sa v nich zle číta.
+- Polia, ich mená ani validácia sa nemenili; je to prekreslenie, nie zmena správania.
+- Overené: `tsc --noEmit` čisto, `eslint` bez chýb, 969 testov, obrazovka prekreslená na 390 px aj na desktope.
+
 ### Added (2026-09-08 — detail dokumentu: pravý panel a potvrdenia)
 
 Prvá časť kroku 5 z handoffu `design_handoff_contineo_intranet`. **Editora sa to nedotklo** — originál vedľa Markdownu je fungujúca vec, ktorú návrh nerieši, a miešať ju do prekresľovania by znamenalo riskovať niečo, čo dnes ľudia používajú.
