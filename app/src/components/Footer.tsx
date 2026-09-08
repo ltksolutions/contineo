@@ -27,7 +27,7 @@ export default function Footer({ language }: { language?: UiLanguage }) {
   const t = dictionary(language)
   return (
     <footer className="paticka">
-      <div className="obal paticka-obsah">
+      <div className="obal--shell paticka-obsah">
         <p className="paticka-blok">
           <span className="tichy">{t.footer.runsOn}</span>
           <a className="paticka-odkaz" href="https://contineo.app" {...EXTERNAL}>

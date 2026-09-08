@@ -21,6 +21,7 @@ import { dictionary } from "@/lib/i18n"
 import {
   renameTrackAction, addStepAction, removeStepAction, moveStepAction, setTrackActiveAction,
 } from "../actions"
+import AppShell from "@/components/AppShell"
 
 export const dynamic = "force-dynamic"
 
@@ -77,7 +78,8 @@ export default async function TrackDetailPage({
     .map(d => ({ value: d.documentId, label: d.title }))
 
   return (
-    <div className="obal" style={{ padding: "28px 20px 80px", maxWidth: 760, ...tenantStyle(branding) }}>
+    <AppShell language={ctx.person.language}>
+    <div style={{ maxWidth: 760, ...tenantStyle(branding) }}>
       <Notice message={message ?? error} error={Boolean(error)} back={here} />
 
       <p style={{ margin: "0 0 16px" }}>
@@ -199,5 +201,6 @@ export default async function TrackDetailPage({
         </p>
       </form>
     </div>
+    </AppShell>
   )
 }

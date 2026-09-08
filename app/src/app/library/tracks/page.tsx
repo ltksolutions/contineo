@@ -15,6 +15,7 @@ import Notice from "@/components/Notice"
 import { normalizeQuery, type RawQuery } from "@/lib/urlParams"
 import { dictionary } from "@/lib/i18n"
 import { createTrackAction } from "./actions"
+import AppShell from "@/components/AppShell"
 
 export const dynamic = "force-dynamic"
 
@@ -38,7 +39,8 @@ export default async function TracksPage({
   const tracks = await allTracks(ctx.tenant.companyCode)
 
   return (
-    <div className="obal" style={{ padding: "28px 20px 80px", maxWidth: 760, ...tenantStyle(branding) }}>
+    <AppShell language={ctx.person.language}>
+    <div style={{ maxWidth: 760, ...tenantStyle(branding) }}>
       <Notice message={message ?? error} error={Boolean(error)} back="/library/tracks" />
 
       <p style={{ margin: "0 0 16px" }}>
@@ -110,5 +112,6 @@ export default async function TracksPage({
         </p>
       </form>
     </div>
+    </AppShell>
   )
 }

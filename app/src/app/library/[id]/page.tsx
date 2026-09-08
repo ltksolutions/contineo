@@ -23,6 +23,7 @@ import Select from "@/components/Select"
 import TagSelect from "@/components/TagSelect"
 import { normalizeQuery, type RawQuery } from "@/lib/urlParams"
 import { documentProgress } from "@/lib/libraryProgress"
+import AppShell from "@/components/AppShell"
 
 export const dynamic = "force-dynamic"
 
@@ -69,7 +70,8 @@ export default async function DocumentDetailPage({
   const hasChangesToPublish = Boolean(draft) && draft !== published
 
   return (
-    <div className="obal" style={{ padding: "28px 20px 80px", maxWidth: 1180, ...tenantStyle(branding) }}>
+    <AppShell language={ctx.person.language}>
+    <div style={{ maxWidth: 1180, ...tenantStyle(branding) }}>
       <Notice message={message} error={error === "1"} back={`/library/${encodeURIComponent(documentId)}`} />
 
       <p style={{ margin: "0 0 12px" }}>
@@ -444,5 +446,6 @@ export default async function DocumentDetailPage({
         </aside>
       </div>
     </div>
+    </AppShell>
   )
 }

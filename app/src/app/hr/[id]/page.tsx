@@ -16,6 +16,7 @@ import { assignmentOverviews, notAcknowledged, audienceLabel } from "@/lib/assig
 import { brandingView } from "@/lib/tenants"
 import { tenantStyle } from "@/components/TenantHeader"
 import { dictionary, formatDate } from "@/lib/i18n"
+import AppShell from "@/components/AppShell"
 
 export const dynamic = "force-dynamic"
 
@@ -46,7 +47,8 @@ export default async function AssignmentDetailPage({
   const t = dictionary(language).hr.detail
 
   return (
-    <div className="obal" style={{ padding: "28px 20px 80px", maxWidth: 720, ...tenantStyle(branding) }}>
+    <AppShell language={ctx.person.language}>
+    <div style={{ maxWidth: 720, ...tenantStyle(branding) }}>
       <p style={{ margin: "0 0 16px" }}>
         <Link className="tichy" href="/hr" style={{ fontSize: 14 }}>{t.back}</Link>
       </p>
@@ -101,5 +103,6 @@ export default async function AssignmentDetailPage({
         {t.note}
       </p>
     </div>
+    </AppShell>
   )
 }

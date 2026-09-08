@@ -16,6 +16,7 @@ import Notice from "@/components/Notice"
 import { dictionary } from "@/lib/i18n"
 import { normalizeQuery, type RawQuery } from "@/lib/urlParams"
 import { sendRemindersAction } from "../actions"
+import AppShell from "@/components/AppShell"
 
 export const dynamic = "force-dynamic"
 
@@ -47,7 +48,8 @@ export default async function RemindersPage({
   const people = byPersonReminder(await overdue(ctx.person.companyCode, days))
 
   return (
-    <div className="obal" style={{ padding: "28px 20px 80px", maxWidth: 760, ...tenantStyle(branding) }}>
+    <AppShell language={ctx.person.language}>
+    <div style={{ maxWidth: 760, ...tenantStyle(branding) }}>
       <Notice message={q.msg} error={q.error === "1"} back="/hr/reminders" />
 
       <p style={{ margin: "0 0 16px" }}>
@@ -124,5 +126,6 @@ export default async function RemindersPage({
         </>
       )}
     </div>
+    </AppShell>
   )
 }

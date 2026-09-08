@@ -13,6 +13,7 @@ import { brandingView } from "@/lib/tenants"
 import { tenantStyle } from "@/components/TenantHeader"
 import PeopleImport from "@/components/PeopleImport"
 import { dictionary } from "@/lib/i18n"
+import AppShell from "@/components/AppShell"
 
 export const dynamic = "force-dynamic"
 
@@ -28,7 +29,8 @@ export default async function ImportPage() {
   const t = dictionary(language).people.import
 
   return (
-    <div className="obal" style={{ padding: "28px 20px 80px", maxWidth: 680, ...tenantStyle(branding) }}>
+    <AppShell language={ctx.person.language}>
+    <div style={{ maxWidth: 680, ...tenantStyle(branding) }}>
       <p style={{ margin: "0 0 16px" }}>
         <Link className="tichy" href="/people" style={{ fontSize: 14 }}>{t.back}</Link>
       </p>
@@ -41,5 +43,6 @@ export default async function ImportPage() {
 
       <PeopleImport language={language} />
     </div>
+    </AppShell>
   )
 }

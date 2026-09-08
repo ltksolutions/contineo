@@ -15,7 +15,6 @@ import { signOut } from "next-auth/react"
 import { ContineoMark } from "./ContineoMark"
 import type { TenantBrandingView } from "./TenantHeader"
 import { dictionary, type UiLanguage } from "@/lib/i18n"
-import { isShellRoute } from "@/lib/shellRoutes"
 
 /**
  * Voľba témy má **tri** stavy, nie dva.
@@ -113,9 +112,7 @@ export default function Header({
   name: name,
   photo: photo,
   isAdmin: isAdmin,
-  isHr: isHr,
   isPeopleAdmin: isPeopleAdmin,
-  isContentManager: isContentManager,
   language,
 }: {
   branding?: TenantBrandingView
@@ -126,44 +123,18 @@ export default function Header({
   photo?: string
   /** Vidí správu tenantov (D41 + D42 už overené na serveri). */
   isAdmin?: boolean
-  /** Má rolu `hr` vo vlastnej organizácii (D33 už overené na serveri). */
-  isHr?: boolean
   /** Má rolu `people-admin` vo vlastnej organizácii (D46). */
   isPeopleAdmin?: boolean
-  /** Má rolu `spravca-obsahu` vo vlastnej organizácii (D53). */
-  isContentManager?: boolean
   /** Jazyk prostredia prihlásenej osoby; bez nej slovenčina. */
   language?: UiLanguage
 }) {
   const t = dictionary(language)
   const [choice, setChoice] = useState<ThemeChoice>("system")
-  const [menuOpen, setMenuOpen] = useState(false)
   const [personalOpen, setPersonalOpen] = useState(false)
   const personalWrap = useRef<HTMLDivElement>(null)
   const pathname = usePathname()
 
-  /*
-   * Na stránke, ktorá beží v aplikačnom shelli, má navigáciu shell — tu by
-   * bola druhá nad ňou. Osobné menu pod avatarom zostáva: sú v ňom
-   * nastavenia, správa tenantov, téma a odhlásenie, a tie shell nemá.
-   */
-  const inShell = isShellRoute(pathname)
-
   const shade = avatarShade(email ?? "")
-
-  const ITEMS = [
-    { href: "/", label: t.nav.ask },
-    { href: "/golden-set", label: t.nav.goldenSet },
-    // Odkaz vidí každý prihlásený; samotná stránka si už poradí — kto nemá
-    // čo potvrdzovať, uvidí, že nemá nič. Podmieňovať odkaz by znamenalo
-    // ťahať stav trás do hlavičky, teda do každej stránky.
-    { href: "/documents", label: t.nav.toAcknowledge },
-    // Odkazy sa neukazujú podľa domnienky klienta — príznaky prichádzajú
-    // zo servera, kde už prešli všetky podmienky.
-    ...(isHr ? [{ href: "/hr", label: t.nav.assigned }] : []),
-    ...(isPeopleAdmin ? [{ href: "/people", label: t.nav.people }] : []),
-    ...(isContentManager ? [{ href: "/library", label: t.nav.library }] : []),
-  ]
 
   /**
    * Správcovské odkazy patria pod avatar, nie do lišty.
@@ -177,12 +148,11 @@ export default function Header({
     ...(isAdmin ? [{ href: "/admin", label: t.nav.tenants }] : []),
   ]
 
-  // Zmena stránky zatvorí panel. Bez toho zostane otvorený nad novým obsahom
-  // a vyzerá to, že sa nič nestalo. Je to práve to zosúladenie s vonkajším
-  // stavom (adresa v prehliadači), na ktoré efekt je.
+  // Zmena stránky zatvorí osobné menu. Bez toho zostane otvorené nad novým
+  // obsahom a vyzerá to, že sa nič nestalo. Je to práve to zosúladenie
+  // s vonkajším stavom (adresa v prehliadači), na ktoré efekt je.
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    setMenuOpen(false)
     setPersonalOpen(false)
   }, [pathname])
 
@@ -245,7 +215,7 @@ export default function Header({
         zIndex: 10,
       }}
     >
-      <div className="obal hlavicka-riadok">
+      <div className="obal--shell hlavicka-riadok">
         {/*
           Hlavička patrí organizácii, nie dodávateľovi. Človek, ktorý tu
           potvrdzuje smernicu svojho zväzu, nemá nad ňou vidieť cudziu značku
@@ -287,48 +257,13 @@ export default function Header({
         {email && (
           <>
             {/*
-              Pod 760 px sa položky schovajú za ikonu. Dovtedy sa lámali do
-              druhého riadka a hlavička rástla do výšky — a bude ich pribúdať,
-              takže „nejako sa to zmestí" prestane platiť čoraz skôr.
+              **Navigácia obsahu tu už nie je.** Presunula sa do `AppShell`,
+              ktorý ju vykresľuje pod hlavičkou na každej prihlásenej
+              obrazovke. Dva navigačné systémy vedľa seba znamenali dve
+              rôzne poradia položiek, dva vzhľady aktívnej položky a dve
+              zarovnania obsahu — a na tom, ktorá stránka ktorý systém má,
+              nezáležalo nikomu okrem toho, kto sa medzi nimi preklikával.
             */}
-            {!inShell && (
-              <>
-            <button
-              type="button"
-              className="tlacidlo tlacidlo--tiche hlavicka-hamburger"
-              aria-expanded={menuOpen}
-              aria-controls="hlavne-menu"
-              aria-label={menuOpen ? t.nav.closeMenu : t.nav.openMenu}
-              onClick={() => setMenuOpen(o => !o)}
-            >
-              <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"
-                fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round">
-                {menuOpen
-                  ? <path d="M4 4l10 10M14 4L4 14" />
-                  : <path d="M2.5 5h13M2.5 9h13M2.5 13h13" />}
-              </svg>
-            </button>
-
-            <nav
-              id="hlavne-menu"
-              className={`hlavicka-nav${menuOpen ? " je-otvorene" : ""}`}
-            >
-              {ITEMS.map(o => {
-                const active = o.href === "/" ? pathname === "/" : pathname.startsWith(o.href)
-                return (
-                  <Link
-                    key={o.href}
-                    href={o.href}
-                    className={`hlavicka-odkaz${active ? " je-aktivny" : ""}`}
-                    onClick={() => setMenuOpen(false)}
-                  >
-                    {o.label}
-                  </Link>
-                )
-              })}
-            </nav>
-              </>
-            )}
 
             {/*
               Osobné menu. Odhlásenie aj téma patria k človeku, nie k obsahu —

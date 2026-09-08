@@ -19,6 +19,7 @@ import { dictionary, formatDate } from "@/lib/i18n"
 import Notice from "@/components/Notice"
 import { revokeAction } from "./actions"
 import { normalizeQuery, type RawQuery } from "@/lib/urlParams"
+import AppShell from "@/components/AppShell"
 
 export const dynamic = "force-dynamic"
 
@@ -40,7 +41,8 @@ export default async function HrOverviewPage({
   const t = dictionary(language).hr.overview
 
   return (
-    <div className="obal" style={{ padding: "28px 20px 80px", maxWidth: 860, ...tenantStyle(branding) }}>
+    <AppShell language={language}>
+    <div style={{ maxWidth: 860, ...tenantStyle(branding) }}>
       <h1 style={{ fontSize: 26, letterSpacing: "-0.02em", margin: "0 0 6px" }}>
         {t.heading}
       </h1>
@@ -141,5 +143,6 @@ export default async function HrOverviewPage({
         </ul>
       )}
     </div>
+    </AppShell>
   )
 }

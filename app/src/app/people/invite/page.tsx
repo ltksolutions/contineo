@@ -19,6 +19,7 @@ import Notice from "@/components/Notice"
 import { dictionary } from "@/lib/i18n"
 import { normalizeQuery, type RawQuery } from "@/lib/urlParams"
 import { sendInvitationsAction } from "../actions"
+import AppShell from "@/components/AppShell"
 
 export const dynamic = "force-dynamic"
 
@@ -41,7 +42,8 @@ export default async function InviteAllPage({
   const people = await neverSignedIn(ctx.person.companyCode)
 
   return (
-    <div className="obal" style={{ padding: "28px 20px 80px", maxWidth: 720, ...tenantStyle(branding) }}>
+    <AppShell language={ctx.person.language}>
+    <div style={{ maxWidth: 720, ...tenantStyle(branding) }}>
       <Notice message={q.msg} error={q.error === "1"} back="/people/invite" />
 
       <p style={{ margin: "0 0 16px" }}>
@@ -76,5 +78,6 @@ export default async function InviteAllPage({
         </>
       )}
     </div>
+    </AppShell>
   )
 }

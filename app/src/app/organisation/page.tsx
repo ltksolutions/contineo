@@ -36,6 +36,7 @@ import { auditRecords } from "@/lib/audit"
 import AuditList from "@/components/AuditList"
 import type { OAuthProviderName } from "@/lib/oauth"
 import type { Tenant } from "@/lib/tenants"
+import AppShell from "@/components/AppShell"
 
 const TAB_KEYS = ["branding", "departments", "domains", "signin", "codelists", "chunking", "audit"]
 
@@ -208,7 +209,8 @@ export default async function OrganisationPage({
     : []
 
   return (
-    <div className="obal" style={{ padding: "28px 20px 80px", maxWidth: 720, ...tenantStyle(branding) }}>
+    <AppShell language={ctx.person.language}>
+    <div style={{ maxWidth: 720, ...tenantStyle(branding) }}>
       <Notice
         message={message}
         error={error === "1"}
@@ -759,5 +761,6 @@ export default async function OrganisationPage({
       </div>
       )}
     </div>
+    </AppShell>
   )
 }
