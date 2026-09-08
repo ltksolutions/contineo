@@ -22,14 +22,14 @@ export default async function NotFoundPage() {
   try { language = (await currentPerson())?.language } catch { language = undefined }
   const t = dictionary(language)
   return (
-    <div className="obal" style={{ padding: "72px 20px", maxWidth: 520 }}>
+    <div className="wrap" style={{ padding: "72px 20px", maxWidth: 520 }}>
       <h1 style={{ fontSize: 27, letterSpacing: "-0.02em", margin: "0 0 8px" }}>
         {t.notFound.heading}
       </h1>
-      <p className="tichy" style={{ margin: "0 0 22px", fontSize: 15.5 }}>
+      <p className="quiet" style={{ margin: "0 0 22px", fontSize: 15.5 }}>
         {t.notFound.intro}
       </p>
-      <Link className="tlacidlo tlacidlo--tiche" href="/">
+      <Link className="button button--quiet" href="/">
         {t.notFound.home}
       </Link>
     </div>

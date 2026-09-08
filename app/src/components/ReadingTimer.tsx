@@ -114,7 +114,7 @@ export default function ReadingTimer({
     : t.readingMinutes(Math.round(seconds / 60))
 
   return (
-    <p className="tichy" style={{ fontSize: 13, margin: "12px 0 0" }}>
+    <p className="quiet" style={{ fontSize: 13, margin: "12px 0 0" }}>
       {t.readingElapsed(formatted)} <span style={{ opacity: 0.8 }}>{t.readingNote}</span>
     </p>
   )

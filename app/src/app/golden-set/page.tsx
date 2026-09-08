@@ -28,7 +28,7 @@ function Badge({ text, color: color }: { text: string; color?: "ok" | "bad" | "w
     : { background: "var(--surface-2)", color: "var(--muted)" }
 
   return (
-    <span className="stitok" style={{ ...styles, fontSize: 11, fontWeight: 600 }}>
+    <span className="tag" style={{ ...styles, fontSize: 11, fontWeight: 600 }}>
       {text}
     </span>
   )
@@ -40,7 +40,7 @@ function Meter({ done, total, language }: { done: number; total: number; languag
   return (
     <div style={{ display: "grid", gap: 6 }}>
       <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13 }}>
-        <span className="tichy">{t.reviewedLabel}</span>
+        <span className="quiet">{t.reviewedLabel}</span>
         <span style={{ fontWeight: 700 }}>{t.doneOf(done, total)}</span>
       </div>
       <div style={{ height: 7, background: "var(--surface-2)", borderRadius: 999, overflow: "hidden" }}>
@@ -64,25 +64,25 @@ export default async function GoldenSetPage() {
     <div style={{ maxWidth: 1040 }}>
       <div style={{ marginBottom: 24 }}>
         <h1 style={{ fontSize: 25, letterSpacing: "-0.02em", margin: "0 0 8px" }}>{t.heading}</h1>
-        <p className="tichy" style={{ fontSize: 15, margin: 0, maxWidth: 680 }}>{t.intro}</p>
+        <p className="quiet" style={{ fontSize: 15, margin: 0, maxWidth: 680 }}>{t.intro}</p>
       </div>
 
-      <div className="karta" style={{ marginBottom: 26 }}>
+      <div className="card" style={{ marginBottom: 26 }}>
         <Meter done={s.posudene} total={s.total} language={language} />
         <div style={{ display: "flex", gap: 18, flexWrap: "wrap", marginTop: 14, fontSize: 13.5 }}>
-          <span><strong style={{ color: "var(--ok-fg)" }}>{s.spravne}</strong> <span className="tichy">{t.correct}</span></span>
-          <span><strong style={{ color: "var(--bad-fg)" }}>{s.nespravne}</strong> <span className="tichy">{t.incorrect}</span></span>
+          <span><strong style={{ color: "var(--ok-fg)" }}>{s.spravne}</strong> <span className="quiet">{t.correct}</span></span>
+          <span><strong style={{ color: "var(--bad-fg)" }}>{s.nespravne}</strong> <span className="quiet">{t.incorrect}</span></span>
           {s.hallucinations > 0 && (
-            <span><strong style={{ color: "var(--bad-fg)" }}>{s.hallucinations}</strong> <span className="tichy">{t.withHallucination}</span></span>
+            <span><strong style={{ color: "var(--bad-fg)" }}>{s.hallucinations}</strong> <span className="quiet">{t.withHallucination}</span></span>
           )}
           {s.vyradene > 0 && (
-            <span><strong>{s.vyradene}</strong> <span className="tichy">{t.excluded}</span></span>
+            <span><strong>{s.vyradene}</strong> <span className="quiet">{t.excluded}</span></span>
           )}
         </div>
 
         {/* Prekryv — otázky, ktoré majú posúdiť dvaja nezávisle. */}
         <div
-          className="tichy"
+          className="quiet"
           style={{ fontSize: 13, marginTop: 14, paddingTop: 14, borderTop: "1px solid var(--line)", lineHeight: 1.6 }}
         >
           <strong style={{ color: "var(--ink)" }}>{t.overlapCount(s.prekryvHotove, s.vPrekryve)}</strong>
@@ -115,7 +115,7 @@ export default async function GoldenSetPage() {
               }}
             >
               <span
-                className="tichy"
+                className="quiet"
                 style={{ fontSize: 12.5, fontVariantNumeric: "tabular-nums", minWidth: 58, paddingTop: 2 }}
               >
                 {o.id}
@@ -170,11 +170,11 @@ export default async function GoldenSetPage() {
                     )}
                   </>
                 ) : (counts[o.id] ?? 0) > 0 ? (
-                  <span className="tichy" style={{ fontSize: 12.5 }}>
+                  <span className="quiet" style={{ fontSize: 12.5 }}>
                     {o.overlap ? t.badges.waitingForYou : t.badges.reviewed}
                   </span>
                 ) : (
-                  <span className="tichy" style={{ fontSize: 12.5 }}>{t.badges.notReviewed}</span>
+                  <span className="quiet" style={{ fontSize: 12.5 }}>{t.badges.notReviewed}</span>
                 )}
               </span>
             </Link>

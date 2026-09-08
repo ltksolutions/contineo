@@ -211,7 +211,7 @@ export default async function LibraryPage({
         <h1 style={{ fontSize: 26, letterSpacing: "-0.02em", margin: 0 }}>{t.heading}</h1>
         {/* „N z M" hovorí, či je krátky zoznam výsledok filtra alebo stav
             knižnice. Bez toho čísla sa to nedá rozoznať. */}
-        <span className="tichy library-count">{t.shown(facets.total, facets.all)}</span>
+        <span className="quiet library-count">{t.shown(facets.total, facets.all)}</span>
 
         {/*
           Skok na filtre — **len na telefóne** (na širokej obrazovke ich má
@@ -222,7 +222,7 @@ export default async function LibraryPage({
           k nim ale človek dostane len rolovaním cez celý zoznam. Je to
           obyčajná kotva: funguje bez skriptu a dá sa poslať v adrese.
         */}
-        <a className="filters-jump" href="#filtre">{t.jumpToFilters}</a>
+        <a className="filters-jump" href="#filters">{t.jumpToFilters}</a>
 
         {/*
           Prepínač pohľadu. Sú to dva odkazy, nie tlačidlá s JavaScriptom:
@@ -242,12 +242,12 @@ export default async function LibraryPage({
             </Link>
           ))}
         </span>
-        <Link className="tlacidlo" href="/library/new">{t.upload}</Link>
-        <Link className="tlacidlo tlacidlo--tiche" href="/library/tracks">
+        <Link className="button" href="/library/new">{t.upload}</Link>
+        <Link className="button button--quiet" href="/library/tracks">
           {dictionary(uiLanguage).library.tracks.heading}
         </Link>
       </div>
-      <p className="tichy" style={{ fontSize: 15, margin: "0 0 20px", maxWidth: 640 }}>
+      <p className="quiet" style={{ fontSize: 15, margin: "0 0 20px", maxWidth: 640 }}>
         {t.introBefore}<strong>{t.introHighlight}</strong>{t.introAfter}
       </p>
 
@@ -257,14 +257,14 @@ export default async function LibraryPage({
         by odoslanie hľadania zrušilo facety, priečinok aj variant navigácie.
       */}
       <form className="library-search" method="get" action="/library">
-        <label className="pole" style={{ flex: "1 1 240px", margin: 0 }}>
-          <span className="pole-popis">{t.search}</span>
-          <input className="pole-vstup" name="search" defaultValue={search ?? ""} placeholder={t.searchPlaceholder} />
+        <label className="field" style={{ flex: "1 1 240px", margin: 0 }}>
+          <span className="field-label">{t.search}</span>
+          <input className="field-input" name="search" defaultValue={search ?? ""} placeholder={t.searchPlaceholder} />
         </label>
         {carried
           .filter(([k]) => k !== "search")
           .map(([k, v], i) => <input key={`${k}-${i}`} type="hidden" name={k} value={v} />)}
-        <button className="tlacidlo tlacidlo--tiche" type="submit">{t.filter}</button>
+        <button className="button button--quiet" type="submit">{t.filter}</button>
       </form>
 
       {/*
@@ -370,34 +370,34 @@ export default async function LibraryPage({
         )}
 
         <form className="builder-add" method="get" action="/library">
-          <div className="pole">
-            <span className="pole-popis">{tb.field}</span>
+          <div className="field">
+            <span className="field-label">{tb.field}</span>
             <Select name="add" options={fieldOps} initial={fieldOps[0]?.value} fieldLabel={tb.field} />
           </div>
-          <label className="pole builder-value">
-            <span className="pole-popis">{tb.value}</span>
-            <input className="pole-vstup" name="value" required />
+          <label className="field builder-value">
+            <span className="field-label">{tb.value}</span>
+            <input className="field-input" name="value" required />
           </label>
           {carried.map(([k, v], i) => <input key={`${k}-${i}`} type="hidden" name={k} value={v} />)}
           {/* Dve tlačidlá jedného formulára, nie prepínač vedľa neho: spojka
               je vlastnosť tohto pridania a takto sa vyberá tým istým klikom,
               ktorým sa podmienka pridáva. Pri prvej podmienke sa spojka nemá
               čoho chytiť, preto je vtedy len jedno. */}
-          <button className="tlacidlo tlacidlo--tiche" type="submit" name="join" value="and">
+          <button className="button button--quiet" type="submit" name="join" value="and">
             {conditions.length === 0 ? tb.add : tb.addAnd}
           </button>
           {conditions.length > 0 && (
-            <button className="tlacidlo tlacidlo--tiche" type="submit" name="join" value="or">
+            <button className="button button--quiet" type="submit" name="join" value="or">
               {tb.addOr}
             </button>
           )}
         </form>
 
-        <p className="tichy builder-hint">{tb.hint}</p>
+        <p className="quiet builder-hint">{tb.hint}</p>
       </details>
 
-      <div className="kniznica-mriezka">
-        <aside className="kniznica-priecinky" id="filtre">
+      <div className="library-grid">
+        <aside className="library-folders" id="filters">
           {/*
             Panel filtrov.
             
@@ -467,28 +467,28 @@ export default async function LibraryPage({
                 {carried
                   .filter(([k]) => k !== "tag")
                   .map(([k, v], i) => <input key={`${k}-${i}`} type="hidden" name={k} value={v} />)}
-                <button className="tlacidlo tlacidlo--tiche facet-apply" type="submit">{t.apply}</button>
+                <button className="button button--quiet facet-apply" type="submit">{t.apply}</button>
               </form>
             )}
           </div>
 
-          <h2 className="pole-popis" style={{ margin: "0 0 8px" }}>{tf.heading}</h2>
+          <h2 className="field-label" style={{ margin: "0 0 8px" }}>{tf.heading}</h2>
 
-          <ul className="strom">
-            <li className="strom-polozka">
+          <ul className="tree">
+            <li className="tree-item">
               <Link
                 href={withFolder(undefined)}
-                className={`strom-riadok${!folder ? " je-aktivny" : ""}`}
+                className={`tree-row${!folder ? " is-active" : ""}`}
               >
-                <span className="strom-nazov">{tf.allDocuments}</span>
+                <span className="tree-name">{tf.allDocuments}</span>
               </Link>
             </li>
-            <li className="strom-polozka">
+            <li className="tree-item">
               <Link
                 href={withFolder("nezaradene")}
-                className={`strom-riadok${folder === "nezaradene" ? " je-aktivny" : ""}`}
+                className={`tree-row${folder === "nezaradene" ? " is-active" : ""}`}
               >
-                <span className="tichy strom-nazov">{tf.unfiled}</span>
+                <span className="quiet tree-name">{tf.unfiled}</span>
               </Link>
             </li>
 
@@ -510,50 +510,50 @@ export default async function LibraryPage({
                 level: level,
                 content: (
                   <>
-                  <div className="strom-riadok" style={{ gap: 6 }}>
-                    <span className="strom-uchop" aria-hidden="true">⠿</span>
+                  <div className="tree-row" style={{ gap: 6 }}>
+                    <span className="tree-grip" aria-hidden="true">⠿</span>
                     <Link
                       href={withFolder(p.id)}
-                      className={`strom-nazov${folder === p.id ? " je-aktivny" : ""}`}
+                      className={`tree-name${folder === p.id ? " is-active" : ""}`}
                     >
                       {p.name}
                     </Link>
-                    <span className="tichy strom-pocet">{c.withDescendants}</span>
+                    <span className="quiet tree-count">{c.withDescendants}</span>
                   </div>
 
                   <details>
-                    <summary className="tichy" style={{ fontSize: 12.5, cursor: "pointer", padding: "0 12px 6px" }}>
+                    <summary className="quiet" style={{ fontSize: 12.5, cursor: "pointer", padding: "0 12px 6px" }}>
                       {tf.edit}
                     </summary>
-                    <div className="strom-uprava">
+                    <div className="tree-edit">
                       {/* Posun o jedno miesto. Ťahanie myšou robí to isté,
                           ale toto funguje aj bez JavaScriptu a klávesnicou. */}
-                      <div className="strom-sipky">
+                      <div className="tree-arrows">
                         <form action={shiftFolderAction}>
                           <input type="hidden" name="id" value={p.id} />
                           {carried.map(([k, v], i) => <input key={`${k}-${i}`} type="hidden" name={k} value={v} />)}
                           <input type="hidden" name="direction" value="up" />
-                          <button className="tlacidlo tlacidlo--tiche" type="submit"
+                          <button className="button button--quiet" type="submit"
                                   aria-label={tf.moveUp(p.name)}>{tf.up}</button>
                         </form>
                         <form action={shiftFolderAction}>
                           <input type="hidden" name="id" value={p.id} />
                           {carried.map(([k, v], i) => <input key={`${k}-${i}`} type="hidden" name={k} value={v} />)}
                           <input type="hidden" name="direction" value="down" />
-                          <button className="tlacidlo tlacidlo--tiche" type="submit"
+                          <button className="button button--quiet" type="submit"
                                   aria-label={tf.moveDown(p.name)}>{tf.down}</button>
                         </form>
                       </div>
 
-                      <form action={renameFolderAction} className="strom-forma">
+                      <form action={renameFolderAction} className="tree-form">
                         <input type="hidden" name="id" value={p.id} />
                         {carried.map(([k, v], i) => <input key={`${k}-${i}`} type="hidden" name={k} value={v} />)}
-                        <input className="pole-vstup" name="name" defaultValue={p.name}
+                        <input className="field-input" name="name" defaultValue={p.name}
                                aria-label={tf.nameOf(p.name)} required />
-                        <button className="tlacidlo tlacidlo--tiche" type="submit">{tf.rename}</button>
+                        <button className="button button--quiet" type="submit">{tf.rename}</button>
                       </form>
 
-                      <form action={moveFolderAction} className="strom-forma">
+                      <form action={moveFolderAction} className="tree-form">
                         <input type="hidden" name="id" value={p.id} />
                         {carried.map(([k, v], i) => <input key={`${k}-${i}`} type="hidden" name={k} value={v} />)}
                         <Select
@@ -570,17 +570,17 @@ export default async function LibraryPage({
                               })),
                           ]}
                         />
-                        <button className="tlacidlo tlacidlo--tiche" type="submit">{tf.move}</button>
+                        <button className="button button--quiet" type="submit">{tf.move}</button>
                       </form>
 
                       {c.withDescendants === 0 && inside.size === 1 ? (
                         <form action={deleteFolderAction}>
                           <input type="hidden" name="id" value={p.id} />
                           {carried.map(([k, v], i) => <input key={`${k}-${i}`} type="hidden" name={k} value={v} />)}
-                          <button className="tlacidlo tlacidlo--tiche" type="submit">{tf.remove}</button>
+                          <button className="button button--quiet" type="submit">{tf.remove}</button>
                         </form>
                       ) : (
-                        <p className="tichy" style={{ fontSize: 12.5, margin: 0 }}>
+                        <p className="quiet" style={{ fontSize: 12.5, margin: 0 }}>
                           {tf.removeHint}
                         </p>
                       )}
@@ -592,9 +592,9 @@ export default async function LibraryPage({
             })}
           />
 
-          <form action={createFolderAction} className="strom-forma" style={{ marginTop: 12 }}>
+          <form action={createFolderAction} className="tree-form" style={{ marginTop: 12 }}>
             {carried.map(([k, v], i) => <input key={`${k}-${i}`} type="hidden" name={k} value={v} />)}
-            <input className="pole-vstup" name="name" placeholder={tf.newFolder}
+            <input className="field-input" name="name" placeholder={tf.newFolder}
                    aria-label={tf.newFolderName} required />
             <Select
               name="parentId"
@@ -610,18 +610,18 @@ export default async function LibraryPage({
                   })),
               ]}
             />
-            <button className="tlacidlo tlacidlo--tiche" type="submit">{tf.create}</button>
+            <button className="button button--quiet" type="submit">{tf.create}</button>
           </form>
 
           {/* Cesta späť. Kto zíde dolu k filtrom, musí sa vedieť vrátiť
               k výsledkom bez rolovania cez celý panel. Tiež len na telefóne. */}
-          <a className="filters-jump filters-jump--back" href="#zoznam">{t.backToList}</a>
+          <a className="filters-jump filters-jump--back" href="#results">{t.backToList}</a>
         </aside>
 
-        <div className="kniznica-zoznam" id="zoznam">
+        <div className="library-list" id="results">
 
       {rows.length === 0 ? (
-        <p className="karta" style={{ padding: 20, fontSize: 15 }}>
+        <p className="card" style={{ padding: 20, fontSize: 15 }}>
           {search ? t.nothingFound : t.empty}
         </p>
       ) : (
@@ -653,7 +653,7 @@ export default async function LibraryPage({
             <p className="bulk-picked">
               <span>{tl.picked(filters.picked.length)}</span>
               {pickedOutside > 0 && (
-                <span className="tichy bulk-picked-outside">{tl.pickedOutside(pickedOutside)}</span>
+                <span className="quiet bulk-picked-outside">{tl.pickedOutside(pickedOutside)}</span>
               )}
               <Link className="bulk-picked-clear" href={toQuery(clearPicked(filters))}>
                 {tl.clearPicked}
@@ -689,21 +689,21 @@ export default async function LibraryPage({
                     <span className="bulk-pick-box" aria-hidden="true">{isPicked(r.documentId) ? "✓" : ""}</span>
                     <span className="bulk-pick-text">{tl.pick(r.title)}</span>
                   </Link>
-                  <span className="stitok">{t.processing[r.processingState] ?? r.processingState}</span>
-                  {r.hasDraft && r.status !== "published" && <span className="stitok">{t.draft}</span>}
-                  {r.category && <span className="tichy doc-card-kind">{categoryLabel(r.category)}</span>}
+                  <span className="tag">{t.processing[r.processingState] ?? r.processingState}</span>
+                  {r.hasDraft && r.status !== "published" && <span className="tag">{t.draft}</span>}
+                  {r.category && <span className="quiet doc-card-kind">{categoryLabel(r.category)}</span>}
                 </div>
 
                 <Link href={`/library/${encodeURIComponent(r.documentId)}`} className="doc-card-title">
                   {r.title}
                 </Link>
 
-                <div className="tichy doc-meta">
+                <div className="quiet doc-meta">
                   {r.folderTrail?.length ? `${r.folderTrail.join(" / ")} · ` : ""}
                   {r.documentId}
                 </div>
 
-                <div className="tichy doc-meta doc-card-foot">
+                <div className="quiet doc-meta doc-card-foot">
                   {r.effectiveLabel}
                   {r.updatedAt && ` · ${formatDate(r.updatedAt, uiLanguage)}`}
                 </div>
@@ -776,7 +776,7 @@ export default async function LibraryPage({
                           stĺpci: hľadá sa v nich len vtedy, keď názvy
                           nestačia, a dva stĺpce navyše by zúžili ten,
                           na ktorom záleží. */}
-                      <div className="tichy doc-meta">
+                      <div className="quiet doc-meta">
                         {r.folderTrail?.length ? `${r.folderTrail.join(" / ")} · ` : ""}
                         {r.documentId}
                         {r.originalFile && ` · ${r.originalFile.name} (${formatSize(r.originalFile.bytes)})`}
@@ -784,16 +784,16 @@ export default async function LibraryPage({
                     </td>
                     <td className="doc-cell-quiet">{r.category ? categoryLabel(r.category) : "—"}</td>
                     <td>
-                      <span className="stitok">{t.processing[r.processingState] ?? r.processingState}</span>
-                      {r.hasDraft && r.status !== "published" && <span className="stitok">{t.draft}</span>}
+                      <span className="tag">{t.processing[r.processingState] ?? r.processingState}</span>
+                      {r.hasDraft && r.status !== "published" && <span className="tag">{t.draft}</span>}
                     </td>
                     <td className="doc-cell-quiet">
                       {r.effectiveLabel}
-                      {r.versionCount > 0 && <div className="tichy doc-meta">{t.versions(r.versionCount)}</div>}
+                      {r.versionCount > 0 && <div className="quiet doc-meta">{t.versions(r.versionCount)}</div>}
                     </td>
                     <td className="doc-col-right doc-cell-quiet">
                       {r.updatedAt ? formatDate(r.updatedAt, uiLanguage) : "—"}
-                      {r.updatedBy && <div className="tichy doc-meta">{r.updatedBy}</div>}
+                      {r.updatedBy && <div className="quiet doc-meta">{r.updatedBy}</div>}
                     </td>
                   </tr>
                 ))}
@@ -818,8 +818,8 @@ export default async function LibraryPage({
           <div className="bulk-bar">
             <span className="bulk-title">{tl.heading}</span>
 
-            <div className="pole bulk-folder">
-              <span className="pole-popis">{tl.moveTo}</span>
+            <div className="field bulk-folder">
+              <span className="field-label">{tl.moveTo}</span>
               <Select
                 name="folderId"
                 fieldLabel={tl.moveTo}
@@ -833,10 +833,10 @@ export default async function LibraryPage({
               />
             </div>
 
-            <button className="tlacidlo tlacidlo--tiche" type="submit" formAction={moveManyAction}>
+            <button className="button button--quiet" type="submit" formAction={moveManyAction}>
               {tl.move}
             </button>
-            <button className="tlacidlo tlacidlo--tiche" type="submit" formAction={assignManyAction}>
+            <button className="button button--quiet" type="submit" formAction={assignManyAction}>
               {tl.assign}
             </button>
 
@@ -851,7 +851,7 @@ export default async function LibraryPage({
             stránkuje.
           */}
           <div className="doc-foot">
-            <span className="tichy">{t.pageRange(paged.from, paged.to, rows.length)}</span>
+            <span className="quiet">{t.pageRange(paged.from, paged.to, rows.length)}</span>
             {paged.pages > 1 && (
               <span className="doc-pager">
                 {paged.page > 1 && (
@@ -859,7 +859,7 @@ export default async function LibraryPage({
                     {t.prevPage}
                   </Link>
                 )}
-                <span className="tichy">{t.pageOf(paged.page, paged.pages)}</span>
+                <span className="quiet">{t.pageOf(paged.page, paged.pages)}</span>
                 {paged.page < paged.pages && (
                   <Link className="doc-page" href={toQuery(withPage(filters, paged.page + 1))}>
                     {t.nextPage}

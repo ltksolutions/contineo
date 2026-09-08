@@ -32,11 +32,11 @@ export default async function ImportPage() {
     <AppShell language={ctx.person.language}>
     <div style={{ maxWidth: 680, ...tenantStyle(branding) }}>
       <p style={{ margin: "0 0 16px" }}>
-        <Link className="tichy" href="/people" style={{ fontSize: 14 }}>{t.back}</Link>
+        <Link className="quiet" href="/people" style={{ fontSize: 14 }}>{t.back}</Link>
       </p>
 
       <h1 style={{ fontSize: 25, letterSpacing: "-0.02em", margin: "0 0 6px" }}>{t.heading}</h1>
-      <p className="tichy" style={{ fontSize: 15, margin: "0 0 20px", maxWidth: 600 }}>
+      <p className="quiet" style={{ fontSize: 15, margin: "0 0 20px", maxWidth: 600 }}>
         {t.introBefore}<strong>{t.introHighlight}</strong>{t.introMiddle}
         <strong>{ctx.tenant.companyCode}</strong>{t.introAfter}
       </p>

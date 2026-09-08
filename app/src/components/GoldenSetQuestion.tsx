@@ -63,31 +63,31 @@ export default function GoldenSetQuestion({
   return (
     <div style={{ display: "grid", gap: 20 }}>
       <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
-        <Link href="/golden-set" className="tichy" style={{ fontSize: 13.5, textDecoration: "none" }}>
+        <Link href="/golden-set" className="quiet" style={{ fontSize: 13.5, textDecoration: "none" }}>
           {t.back}
         </Link>
-        <span className="stitok tichy" style={{ fontSize: 11 }}>{id}</span>
-        <span className="stitok tichy" style={{ fontSize: 11 }}>{searchMode}</span>
+        <span className="tag quiet" style={{ fontSize: 11 }}>{id}</span>
+        <span className="tag quiet" style={{ fontSize: 11 }}>{searchMode}</span>
         {precedenceRule && (
-          <span className="stitok tichy" style={{ fontSize: 11 }}>{precedenceRule}</span>
+          <span className="tag quiet" style={{ fontSize: 11 }}>{precedenceRule}</span>
         )}
-        <span className="tichy" style={{ fontSize: 12, marginLeft: "auto" }}>
+        <span className="quiet" style={{ fontSize: 12, marginLeft: "auto" }}>
           {status === "saving" ? t.saving : status === "saved" ? t.saved : status === "failed" ? t.saveFailed : ""}
         </span>
       </div>
 
       {/* Otázka pre dvoch — hodnotiteľ má vedieť, prečo cudzí posudok nevidí. */}
       {overlap && foreign.length === 0 && (
-        <div className="karta" style={{ fontSize: 14, lineHeight: 1.6 }}>
+        <div className="card" style={{ fontSize: 14, lineHeight: 1.6 }}>
           <strong>{t.twoReviewersHeading}</strong>{" "}
-          <span className="tichy">{t.twoReviewersNote}</span>
+          <span className="quiet">{t.twoReviewersNote}</span>
         </div>
       )}
 
       {/* Po vlastnom posudku sa cudzie odkryjú. Nezhoda je nález, nie chyba. */}
       {foreign.length > 0 && (
         <div
-          className="karta"
+          className="card"
           style={{
             fontSize: 14, lineHeight: 1.6,
             borderColor: foreign.some(c => c.correct !== null) ? "var(--line)" : "var(--line)",
@@ -95,7 +95,7 @@ export default function GoldenSetQuestion({
         >
           <div style={{ fontWeight: 600, marginBottom: 8 }}>{t.othersHeading}</div>
           {foreign.map((c, i) => (
-            <div key={i} className="tichy" style={{ fontSize: 13.5 }}>
+            <div key={i} className="quiet" style={{ fontSize: 13.5 }}>
               {c.reviewer} — {c.correct === 1 ? t.verdict.correct : c.correct === 0 ? t.verdict.incorrect : t.verdict.none}
             </div>
           ))}
@@ -106,7 +106,7 @@ export default function GoldenSetQuestion({
           posúdi správne odmietnutie ako zlyhanie. */}
       {(trapType || expectedBehaviour !== "answer") && (
         <div
-          className="karta"
+          className="card"
           style={{
             background: "var(--warn-bg)", color: "var(--warn-fg)",
             borderColor: "var(--line)", display: "flex", gap: 10, alignItems: "flex-start",
@@ -124,14 +124,14 @@ export default function GoldenSetQuestion({
       )}
 
       {excludedNow ? (
-        <div className="karta">
+        <div className="card">
           <div style={{ fontSize: 15, marginBottom: 8 }}>
             <strong>{t.excludedHeading}</strong>
           </div>
-          {reason && <p className="tichy" style={{ fontSize: 14, margin: "0 0 12px" }}>{reason}</p>}
+          {reason && <p className="quiet" style={{ fontSize: 14, margin: "0 0 12px" }}>{reason}</p>}
           <button
             type="button"
-            className="tlacidlo tlacidlo--tiche"
+            className="button button--quiet"
             onClick={() => { setExcluded(false); save({ excluded: false }) }}
           >
             {t.returnToSet}
@@ -139,10 +139,10 @@ export default function GoldenSetQuestion({
         </div>
       ) : (
         <>
-          <div className="karta">
+          <div className="card">
             {editing ? (
               <div style={{ display: "grid", gap: 10 }}>
-                <label className="tichy" style={{ fontSize: 13 }}>
+                <label className="quiet" style={{ fontSize: 13 }}>
                   {t.editLabel}
                 </label>
                 <textarea
@@ -160,7 +160,7 @@ export default function GoldenSetQuestion({
                 <div style={{ display: "flex", gap: 9, flexWrap: "wrap" }}>
                   <button
                     type="button"
-                    className="tlacidlo"
+                    className="button"
                     style={{ padding: "7px 14px", fontSize: 14 }}
                     onClick={() => { setEditing(false); save({ editedText: text }) }}
                   >
@@ -168,7 +168,7 @@ export default function GoldenSetQuestion({
                   </button>
                   <button
                     type="button"
-                    className="tlacidlo tlacidlo--tiche"
+                    className="button button--quiet"
                     style={{ padding: "7px 14px", fontSize: 14 }}
                     onClick={() => { setText(questionText); setEditing(false) }}
                   >
@@ -177,7 +177,7 @@ export default function GoldenSetQuestion({
                   {edited && (
                     <button
                       type="button"
-                      className="tlacidlo tlacidlo--tiche"
+                      className="button button--quiet"
                       style={{ padding: "7px 14px", fontSize: 14 }}
                       onClick={() => { setText(original); setEditing(false); save({ editedText: "" }) }}
                     >
@@ -193,14 +193,14 @@ export default function GoldenSetQuestion({
                   {/* Pôvodné znenie zostáva viditeľné — je to podklad pre
                       regresné merania, nie len história. */}
                   {edited && (
-                    <div className="tichy" style={{ fontSize: 12.5, marginTop: 8 }}>
+                    <div className="quiet" style={{ fontSize: 12.5, marginTop: 8 }}>
                       {t.originally(original)}
                     </div>
                   )}
                 </div>
                 <button
                   type="button"
-                  className="tlacidlo tlacidlo--tiche"
+                  className="button button--quiet"
                   style={{ padding: "6px 12px", fontSize: 13.5, flexShrink: 0 }}
                   onClick={() => setEditing(true)}
                 >
@@ -222,13 +222,13 @@ export default function GoldenSetQuestion({
             {/* Ponuka ďalšej otázky sa objaví až po posúdení — dovtedy by
                 nabádala preskočiť prácu, kvôli ktorej sme tu. */}
             {reviewed && next && (
-              <Link href={`/golden-set/${next}`} className="tlacidlo" style={{ textDecoration: "none" }}>
+              <Link href={`/golden-set/${next}`} className="button" style={{ textDecoration: "none" }}>
                 {t.nextQuestion}
               </Link>
             )}
             <button
               type="button"
-              className="tlacidlo tlacidlo--tiche"
+              className="button button--quiet"
               onClick={() => {
                 const why = window.prompt(t.excludePrompt) ?? ""
                 if (why.trim()) {

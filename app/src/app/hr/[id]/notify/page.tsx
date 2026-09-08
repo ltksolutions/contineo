@@ -74,7 +74,7 @@ export default async function NotifyPage({
     <AppShell language={ctx.person.language}>
     <div style={{ maxWidth: 720, ...tenantStyle(branding) }}>
       <p style={{ margin: "0 0 16px" }}>
-        <Link className="tichy" href={`/hr/${encodeURIComponent(id)}`} style={{ fontSize: 14 }}>
+        <Link className="quiet" href={`/hr/${encodeURIComponent(id)}`} style={{ fontSize: 14 }}>
           {t.back}
         </Link>
       </p>
@@ -82,18 +82,18 @@ export default async function NotifyPage({
       <h1 style={{ fontSize: 25, letterSpacing: "-0.02em", margin: "0 0 6px" }}>
         {t.heading}
       </h1>
-      <p className="tichy" style={{ fontSize: 15, margin: "0 0 20px", maxWidth: 600 }}>
+      <p className="quiet" style={{ fontSize: 15, margin: "0 0 20px", maxWidth: 600 }}>
         {t.introBefore}<strong>{t.introHighlight}</strong>{t.introAfter}
       </p>
 
       {error && (
-        <p className="karta" style={{ padding: "12px 16px", margin: "0 0 18px", fontSize: 14.5, color: "var(--warn-fg)" }}>
+        <p className="card" style={{ padding: "12px 16px", margin: "0 0 18px", fontSize: 14.5, color: "var(--warn-fg)" }}>
           {error}
         </p>
       )}
 
       {assignment.notified?.length ? (
-        <p className="karta" style={{ padding: "12px 16px", margin: "0 0 18px", fontSize: 14.5 }}>
+        <p className="card" style={{ padding: "12px 16px", margin: "0 0 18px", fontSize: 14.5 }}>
           {t.lastSent(
             formatDate(assignment.notified[assignment.notified.length - 1].at, language),
             assignment.notified[assignment.notified.length - 1].count,
@@ -107,33 +107,33 @@ export default async function NotifyPage({
       </h2>
 
       {recipients.length === 0 ? (
-        <p className="karta" style={{ padding: 18, fontSize: 15 }}>
+        <p className="card" style={{ padding: 18, fontSize: 15 }}>
           {t.allAcknowledged(audienceLabel(assignment.audience))}
         </p>
       ) : (
         <>
           {former.length > 0 && (
-            <p className="tichy" style={{ fontSize: 14, margin: "0 0 12px" }}>
+            <p className="quiet" style={{ fontSize: 14, margin: "0 0 12px" }}>
               {t.formerMembers(former.length)}{" "}
               <Link href={`/hr/${encodeURIComponent(id)}`}>{t.formerMembersLink}</Link>.
             </p>
           )}
 
-          <ul className="admin-domeny" style={{ marginBottom: 26 }}>
+          <ul className="admin-domains" style={{ marginBottom: 26 }}>
             {recipients.map(o => (
-              <li key={o.id} className="karta" style={{ padding: "10px 14px" }}>
+              <li key={o.id} className="card" style={{ padding: "10px 14px" }}>
                 <span style={{ fontWeight: 600 }}>{o.fullName}</span>{" "}
-                <span className="tichy" style={{ fontSize: 13.5 }}>{o.email}</span>
+                <span className="quiet" style={{ fontSize: 13.5 }}>{o.email}</span>
               </li>
             ))}
           </ul>
 
           <h2 style={{ fontSize: 17, margin: "0 0 10px" }}>{t.preview}</h2>
-          <p className="tichy pole-napoveda" style={{ margin: "0 0 10px" }}>
+          <p className="quiet field-hint" style={{ margin: "0 0 10px" }}>
             {t.previewSubject(preview.subject)}
           </p>
           <pre
-            className="karta"
+            className="card"
             style={{
               padding: 18, margin: "0 0 26px", fontSize: 14, lineHeight: 1.6,
               whiteSpace: "pre-wrap", overflowWrap: "anywhere", fontFamily: "inherit",
@@ -144,7 +144,7 @@ export default async function NotifyPage({
 
           <form action={sendNotificationAction}>
             <input type="hidden" name="id" value={id} />
-            <button className="tlacidlo" type="submit">
+            <button className="button" type="submit">
               {t.send(recipients.length)}
             </button>
           </form>

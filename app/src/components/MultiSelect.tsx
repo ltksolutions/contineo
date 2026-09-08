@@ -293,7 +293,7 @@ export default function MultiSelect({
           a odošle sa rovnaký tvar, aký číta `splitList()`. */}
       <noscript>
         <input
-          className="pole-vstup"
+          className="field-input"
           name={name}
           defaultValue={serialize(selected.map(normalizeValue))}
           autoCapitalize="none"

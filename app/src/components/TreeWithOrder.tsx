@@ -95,12 +95,12 @@ export default function TreeWithOrder({
         <input type="hidden" name="order" value={order.map(p => p.id).join(",")} />
       </form>
 
-      <ul className="strom strom--ciary">
+      <ul className="tree tree--lines">
         {order.map(p => (
           <li
             key={p.id}
-            className={`strom-polozka${dragged === p.id ? " sa-taha" : ""}`}
-            style={{ "--uroven": p.level } as React.CSSProperties}
+            className={`tree-item${dragged === p.id ? " is-dragging" : ""}`}
+            style={{ "--level": p.level } as React.CSSProperties}
             draggable
             onDragStart={() => setDragged(p.id)}
             onDragEnd={() => setDragged(null)}
@@ -117,16 +117,16 @@ export default function TreeWithOrder({
       </ul>
 
       {changed && (
-        <div className="strom-ulozit">
-          <button className="tlacidlo" type="submit" form={FORM_ID}>{t.saveOrder}</button>
+        <div className="tree-save">
+          <button className="button" type="submit" form={FORM_ID}>{t.saveOrder}</button>
           <button
-            className="tlacidlo tlacidlo--tiche"
+            className="button button--quiet"
             type="button"
             onClick={() => { setOrder(items); setChanged(false) }}
           >
             {t.cancel}
           </button>
-          <span className="tichy" style={{ fontSize: 13 }}>
+          <span className="quiet" style={{ fontSize: 13 }}>
             {t.hint}
           </span>
         </div>

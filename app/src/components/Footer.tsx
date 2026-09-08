@@ -26,18 +26,18 @@ const EXTERNAL = { target: "_blank", rel: "noreferrer" } as const
 export default function Footer({ language }: { language?: UiLanguage }) {
   const t = dictionary(language)
   return (
-    <footer className="paticka">
-      <div className="obal--shell paticka-obsah">
-        <p className="paticka-blok">
-          <span className="tichy">{t.footer.runsOn}</span>
-          <a className="paticka-odkaz" href="https://contineo.app" {...EXTERNAL}>
+    <footer className="footer">
+      <div className="wrap--shell footer-inner">
+        <p className="footer-block">
+          <span className="quiet">{t.footer.runsOn}</span>
+          <a className="footer-link" href="https://contineo.app" {...EXTERNAL}>
             <ContineoMark size={16} />
             Contineo
           </a>
         </p>
 
         <a
-          className="paticka-odkaz"
+          className="footer-link"
           href="https://github.com/ltksolutions/contineo"
           {...EXTERNAL}
         >
@@ -45,7 +45,7 @@ export default function Footer({ language }: { language?: UiLanguage }) {
           {t.footer.sourceCode}
         </a>
 
-        <p className="tichy paticka-verzia">
+        <p className="quiet footer-version">
           verzia {VERSION}
           {REVISION && <> · {REVISION}</>}
         </p>

@@ -75,7 +75,7 @@ export default async function DocumentDetailPage({
       <Notice message={message} error={error === "1"} back={`/library/${encodeURIComponent(documentId)}`} />
 
       <p style={{ margin: "0 0 12px" }}>
-        <Link className="tichy" href="/library" style={{ fontSize: 14 }}>{t.back}</Link>
+        <Link className="quiet" href="/library" style={{ fontSize: 14 }}>{t.back}</Link>
       </p>
 
       {/*
@@ -84,12 +84,12 @@ export default async function DocumentDetailPage({
         názov, lebo sa čítajú až vtedy, keď názvy nestačia.
       */}
       <div className="detail-chips">
-        <span className="stitok">{dictionary(language).library.list.processing[d.processingState] ?? d.processingState}</span>
-        {d.category && <span className="stitok tichy">{d.category}</span>}
+        <span className="tag">{dictionary(language).library.list.processing[d.processingState] ?? d.processingState}</span>
+        {d.category && <span className="tag quiet">{d.category}</span>}
       </div>
 
       <h1 style={{ fontSize: 25, letterSpacing: "-0.02em", margin: "0 0 4px" }}>{d.title}</h1>
-      <p className="tichy" style={{ fontSize: 14, margin: "0 0 18px" }}>
+      <p className="quiet" style={{ fontSize: 14, margin: "0 0 18px" }}>
         {d.documentId}
         {effective && ` · ${effective.label}`}
         {effective?.effectiveFrom && ` · ${formatDate(effective.effectiveFrom, language)}`}
@@ -102,10 +102,10 @@ export default async function DocumentDetailPage({
       <div className="detail-grid">
         <div className="detail-main">
 
-      <details className="karta" style={{ padding: 18, margin: "0 0 18px" }}>
+      <details className="card" style={{ padding: 18, margin: "0 0 18px" }}>
         <summary style={{ cursor: "pointer", fontWeight: 600 }}>
           {t.documentData}
-          <span className="tichy" style={{ fontWeight: 400, fontSize: 13.5 }}>
+          <span className="quiet" style={{ fontWeight: 400, fontSize: 13.5 }}>
             {" "}· {d.language} · {d.accessLevel}
             {d.category && ` · ${d.category}`}
             {d.tags.length > 0 && ` · ${d.tags.join(", ")}`}
@@ -115,29 +115,29 @@ export default async function DocumentDetailPage({
         <form action={saveDocumentMetadataAction} style={{ display: "grid", gap: 14, marginTop: 14 }}>
           <input type="hidden" name="documentId" value={d.documentId} />
 
-          <label className="pole">
-            <span className="pole-popis">{t.title}</span>
-            <input className="pole-vstup" name="title" defaultValue={d.title} required />
-            <span className="tichy pole-napoveda">{t.titleNote}</span>
+          <label className="field">
+            <span className="field-label">{t.title}</span>
+            <input className="field-input" name="title" defaultValue={d.title} required />
+            <span className="quiet field-hint">{t.titleNote}</span>
           </label>
 
-          <div className="pole">
-            <span className="pole-popis">{t.scope}</span>
+          <div className="field">
+            <span className="field-label">{t.scope}</span>
             <Select name="scope" options={codelistOptions("scope")} initial={d.scope ?? "company"} fieldLabel={t.scope} />
           </div>
 
-          <div className="pole">
-            <span className="pole-popis">{t.accessLevel}</span>
+          <div className="field">
+            <span className="field-label">{t.accessLevel}</span>
             <Select name="accessLevel" options={codelistOptions("accessLevel")} initial={d.accessLevel ?? "internal"} fieldLabel={t.accessLevel} />
           </div>
 
-          <div className="pole">
-            <span className="pole-popis">{t.documentLanguage}</span>
+          <div className="field">
+            <span className="field-label">{t.documentLanguage}</span>
             <Select name="language" options={codelistOptions("language")} initial={d.language ?? "sk"} fieldLabel={t.documentLanguage} />
           </div>
 
-          <div className="pole">
-            <span className="pole-popis">{t.category}</span>
+          <div className="field">
+            <span className="field-label">{t.category}</span>
             <Select
               name="category"
               options={[{ value: "", label: t.unset }, ...codelistOptions("category", extras)]}
@@ -146,8 +146,8 @@ export default async function DocumentDetailPage({
             />
           </div>
 
-          <div className="pole">
-            <span className="pole-popis">{t.tags}</span>
+          <div className="field">
+            <span className="field-label">{t.tags}</span>
             <TagSelect
               name="tags"
               options={codelistOptions("tags", extras).map(v => ({ value: v.value }))}
@@ -157,18 +157,18 @@ export default async function DocumentDetailPage({
             />
           </div>
 
-          <p className="tichy" style={{ fontSize: 13.5, margin: 0 }}>
+          <p className="quiet" style={{ fontSize: 13.5, margin: 0 }}>
             {t.keyNoteBefore}<code>{d.documentId}</code>{t.keyNoteAfter}
           </p>
 
-          <div><button className="tlacidlo" type="submit">{t.save}</button></div>
+          <div><button className="button" type="submit">{t.save}</button></div>
         </form>
       </details>
 
-      <form action={assignToFolderAction} className="karta strom-forma" style={{ padding: 18, margin: "0 0 18px" }}>
+      <form action={assignToFolderAction} className="card tree-form" style={{ padding: 18, margin: "0 0 18px" }}>
         <input type="hidden" name="documentId" value={d.documentId} />
-        <div className="pole" style={{ flex: "1 1 260px", margin: 0 }}>
-          <span className="pole-popis">{t.folder}</span>
+        <div className="field" style={{ flex: "1 1 260px", margin: 0 }}>
+          <span className="field-label">{t.folder}</span>
           <Select
             name="folderId"
             initial={d.folderId ?? ""}
@@ -181,19 +181,19 @@ export default async function DocumentDetailPage({
               })),
             ]}
           />
-          <span className="tichy pole-napoveda">{t.folderNote}</span>
+          <span className="quiet field-hint">{t.folderNote}</span>
         </div>
-        <button className="tlacidlo tlacidlo--tiche" type="submit">{t.assign}</button>
+        <button className="button button--quiet" type="submit">{t.assign}</button>
       </form>
 
-      <section className="karta" style={{ padding: 18, display: "grid", gap: 10, margin: "0 0 18px" }}>
+      <section className="card" style={{ padding: 18, display: "grid", gap: 10, margin: "0 0 18px" }}>
         <div style={{ display: "flex", gap: 10, alignItems: "baseline", flexWrap: "wrap" }}>
           <h2 style={{ fontSize: 17, margin: 0 }}>{t.text}</h2>
           <Link href={`/library/${encodeURIComponent(documentId)}/text`}>{t.openEditor}</Link>
         </div>
 
         {d.originalFile ? (
-          <p className="tichy" style={{ fontSize: 14, margin: 0 }}>
+          <p className="quiet" style={{ fontSize: 14, margin: 0 }}>
             {t.originalFile}{" "}
             <a href={`/api/library/file/${encodeURIComponent(d.originalFile.id)}`} target="_blank" rel="noreferrer">
               {d.originalFile.name}
@@ -202,18 +202,18 @@ export default async function DocumentDetailPage({
             {d.conversion && ` · ${t.conversionMethod(d.conversion.method)}`}
           </p>
         ) : (
-          <p className="tichy" style={{ fontSize: 14, margin: 0 }}>
+          <p className="quiet" style={{ fontSize: 14, margin: 0 }}>
             {t.noOriginal}
           </p>
         )}
 
         {d.conversion?.warnings?.length ? (
-          <ul className="tichy" style={{ fontSize: 13.5, margin: 0, paddingLeft: 18 }}>
+          <ul className="quiet" style={{ fontSize: 13.5, margin: 0, paddingLeft: 18 }}>
             {d.conversion.warnings.map((u, i) => <li key={i}>{u}</li>)}
           </ul>
         ) : null}
 
-        <p className="tichy" style={{ fontSize: 13.5, margin: 0 }}>
+        <p className="quiet" style={{ fontSize: 13.5, margin: 0 }}>
           {hasChangesToPublish
             ? t.draftDiffers
             : draft || published
@@ -222,82 +222,82 @@ export default async function DocumentDetailPage({
         </p>
       </section>
 
-      <section className="karta" style={{ padding: 18, display: "grid", gap: 14, margin: "0 0 18px" }}>
+      <section className="card" style={{ padding: 18, display: "grid", gap: 14, margin: "0 0 18px" }}>
         <h2 style={{ fontSize: 17, margin: 0 }}>{t.publishHeading}</h2>
 
         {!hasChangesToPublish ? (
-          <p className="tichy" style={{ fontSize: 14, margin: 0 }}>
+          <p className="quiet" style={{ fontSize: 14, margin: 0 }}>
             {t.nothingToPublish}
           </p>
         ) : (
           <form action={publishVersionAction} style={{ display: "grid", gap: 14 }}>
             <input type="hidden" name="documentId" value={d.documentId} />
 
-            <label className="pole">
-              <span className="pole-popis">{t.versionLabel}</span>
-              <input className="pole-vstup" name="label" required
+            <label className="field">
+              <span className="field-label">{t.versionLabel}</span>
+              <input className="field-input" name="label" required
                      placeholder={t.versionLabelPlaceholder} />
-              <span className="tichy pole-napoveda">
+              <span className="quiet field-hint">
                 {t.labelNoteBefore}<strong>{t.labelNoteHighlight}</strong>{t.labelNoteAfter}
               </span>
             </label>
 
-            <label className="pole">
-              <span className="pole-popis">{t.effectiveFrom}</span>
-              <input className="pole-vstup" type="date" name="effectiveFrom" required />
-              <span className="tichy pole-napoveda">{t.effectiveFromNote}</span>
+            <label className="field">
+              <span className="field-label">{t.effectiveFrom}</span>
+              <input className="field-input" type="date" name="effectiveFrom" required />
+              <span className="quiet field-hint">{t.effectiveFromNote}</span>
             </label>
 
-            <label className="pole">
-              <span className="pole-popis">{t.effectiveFromSource}</span>
-              <input className="pole-vstup" name="effectiveFromSource"
+            <label className="field">
+              <span className="field-label">{t.effectiveFromSource}</span>
+              <input className="field-input" name="effectiveFromSource"
                      placeholder={t.effectiveFromSourcePlaceholder} />
-              <span className="tichy pole-napoveda">{t.effectiveFromSourceNote}</span>
+              <span className="quiet field-hint">{t.effectiveFromSourceNote}</span>
             </label>
 
-            <label className="pole">
-              <span className="pole-popis">{t.changeNote}</span>
-              <input className="pole-vstup" name="changeNote" placeholder={t.changeNotePlaceholder} />
+            <label className="field">
+              <span className="field-label">{t.changeNote}</span>
+              <input className="field-input" name="changeNote" placeholder={t.changeNotePlaceholder} />
             </label>
 
-            <div><button className="tlacidlo" type="submit">{t.publish}</button></div>
+            <div><button className="button" type="submit">{t.publish}</button></div>
           </form>
         )}
       </section>
 
-      <form action={reindexDocumentAction} className="karta" style={{ padding: 18, display: "grid", gap: 10, margin: "0 0 18px" }}>
+      <form action={reindexDocumentAction} className="card" style={{ padding: 18, display: "grid", gap: 10, margin: "0 0 18px" }}>
         <input type="hidden" name="documentId" value={d.documentId} />
         <h2 style={{ fontSize: 17, margin: 0 }}>{t.reindexHeading}</h2>
-        <p className="tichy" style={{ fontSize: 14, margin: 0 }}>
+        <p className="quiet" style={{ fontSize: 14, margin: 0 }}>
           {t.reindexNoteBefore}<strong>{t.reindexNoteHighlight}</strong>{t.reindexNoteAfter}
         </p>
-        <div><button className="tlacidlo tlacidlo--tiche" type="submit">{t.reindex}</button></div>
+        <div><button className="button button--quiet" type="submit">{t.reindex}</button></div>
       </form>
 
       <h2 style={{ fontSize: 17, margin: "0 0 10px" }}>{t.versionsHeading(d.versions.length)}</h2>
 
       {d.versions.length === 0 ? (
-        <p className="karta" style={{ padding: 18, fontSize: 15 }}>
+        <p className="card" style={{ padding: 18, fontSize: 15 }}>
           {t.nothingPublished}
         </p>
       ) : (
         <ul className="audit">
           {d.versions.map(v => (
-            <li key={v.versionId} className="karta audit-zaznam">
-              <div className="audit-hlavicka">
+            <li key={v.versionId} className="card audit-entry">
+              <div className="audit-head">
                 <strong>{v.label}</strong>
-                {v.isActive ? <span className="stitok">{t.active}</span> : <span className="stitok">{t.archived}</span>}
+                {v.isActive ? <span className="tag">{t.active}</span> : <span className="tag">{t.archived}</span>}
               </div>
-              <div className="tichy audit-kto">
+              <div className="quiet audit-who">
                 {v.effectiveFrom ? t.effectiveFromOn(formatDate(v.effectiveFrom, language)) : t.noEffectiveDate}
                 {v.effectiveTo && ` ${t.effectiveTo(formatDate(v.effectiveTo, language))}`}
                 {v.publishedBy && ` · ${v.publishedBy}`}
                 {v.publishedAt && ` · ${formatDate(v.publishedAt, language)}`}
               </div>
               {v.effectiveFromSource && (
-                <div className="tichy audit-poznamka">{t.dateSource(v.effectiveFromSource)}</div>
+                <div className="quiet audit-note">{t.dateSource(v.effectiveFromSource)}</div>
               )}
-              {v.changeNote && <div className="tichy audit-poznamka">{v.changeNote}</div>}
+              {v.changeNote && <div className="quiet audit-note">{v.changeNote}</div>}
 
               {/*
                 História opráv. Zapisuje sa od zavedenia `fixVersion()`,
@@ -307,7 +307,7 @@ export default async function DocumentDetailPage({
               */}
               {v.fixes && v.fixes.length > 0 && (
                 <details style={{ marginTop: 6 }}>
-                  <summary className="tichy" style={{ fontSize: 13, cursor: "pointer" }}>
+                  <summary className="quiet" style={{ fontSize: 13, cursor: "pointer" }}>
                     {t.fixHistory(v.fixes.length)}
                   </summary>
                   <ul style={{ listStyle: "none", padding: 0, margin: "8px 0 0", display: "grid", gap: 8 }}>
@@ -315,7 +315,7 @@ export default async function DocumentDetailPage({
                     {[...v.fixes].reverse().map((fix, i) => (
                       <li key={`${v.versionId}-fix-${i}`} style={{ fontSize: 13.5 }}>
                         <div>{fix.reason}</div>
-                        <div className="tichy" style={{ fontSize: 12.5 }}>
+                        <div className="quiet" style={{ fontSize: 12.5 }}>
                           {t.fixLine(fix.by, formatDate(fix.at, language))}
                           {" · "}
                           {t.fixWas(
@@ -333,43 +333,43 @@ export default async function DocumentDetailPage({
               )}
 
               <details style={{ marginTop: 6 }}>
-                <summary className="tichy" style={{ fontSize: 13, cursor: "pointer" }}>{t.fix}</summary>
+                <summary className="quiet" style={{ fontSize: 13, cursor: "pointer" }}>{t.fix}</summary>
                 <form action={fixVersionAction} style={{ display: "grid", gap: 10, marginTop: 10 }}>
                   <input type="hidden" name="documentId" value={d.documentId} />
                   <input type="hidden" name="versionId" value={v.versionId} />
 
-                  <label className="pole">
-                    <span className="pole-popis">{t.fixLabel}</span>
-                    <input className="pole-vstup" name="label" defaultValue={v.label} />
+                  <label className="field">
+                    <span className="field-label">{t.fixLabel}</span>
+                    <input className="field-input" name="label" defaultValue={v.label} />
                   </label>
 
-                  <label className="pole">
-                    <span className="pole-popis">{t.effectiveFrom}</span>
+                  <label className="field">
+                    <span className="field-label">{t.effectiveFrom}</span>
                     <input
-                      className="pole-vstup"
+                      className="field-input"
                       type="date"
                       name="effectiveFrom"
                       defaultValue={v.effectiveFrom ? new Date(v.effectiveFrom).toISOString().slice(0, 10) : ""}
                     />
-                    <span className="tichy pole-napoveda">
+                    <span className="quiet field-hint">
                       {t.fixEffectiveFromNoteBefore}<strong>{t.fixEffectiveFromNoteHighlight}</strong>{t.fixEffectiveFromNoteAfter}
                     </span>
                   </label>
 
-                  <label className="pole">
-                    <span className="pole-popis">{t.effectiveFromSource}</span>
-                    <input className="pole-vstup" name="effectiveFromSource" defaultValue={v.effectiveFromSource ?? ""} />
+                  <label className="field">
+                    <span className="field-label">{t.effectiveFromSource}</span>
+                    <input className="field-input" name="effectiveFromSource" defaultValue={v.effectiveFromSource ?? ""} />
                   </label>
 
-                  <label className="pole">
-                    <span className="pole-popis">{t.fixReason}</span>
-                    <input className="pole-vstup" name="reason" required
+                  <label className="field">
+                    <span className="field-label">{t.fixReason}</span>
+                    <input className="field-input" name="reason" required
                            placeholder={t.fixReasonPlaceholder} />
-                    <span className="tichy pole-napoveda">{t.fixReasonNote}</span>
+                    <span className="quiet field-hint">{t.fixReasonNote}</span>
                   </label>
 
-                  <div className="pole">
-                    <span className="pole-popis">{t.onDateChange}</span>
+                  <div className="field">
+                    <span className="field-label">{t.onDateChange}</span>
                     <Select
                       name="onDateChange"
                       initial=""
@@ -382,7 +382,7 @@ export default async function DocumentDetailPage({
                     />
                   </div>
 
-                  <div><button className="tlacidlo tlacidlo--tiche" type="submit">{t.fixSubmit}</button></div>
+                  <div><button className="button button--quiet" type="submit">{t.fixSubmit}</button></div>
                 </form>
               </details>
             </li>
@@ -398,16 +398,16 @@ export default async function DocumentDetailPage({
           vlastne je.
         */}
         <aside className="detail-side">
-          <section className="karta detail-card">
+          <section className="card detail-card">
             <h2 className="detail-card-title">{ts.progressHeading}</h2>
 
             {progress.percent === null ? (
-              <p className="tichy detail-empty">{ts.progressNobody}</p>
+              <p className="quiet detail-empty">{ts.progressNobody}</p>
             ) : (
               <>
                 <div className="detail-progress-head">
                   <span className="detail-percent">{progress.percent} %</span>
-                  <span className="tichy detail-progress-of">
+                  <span className="quiet detail-progress-of">
                     {ts.progressOf(progress.acknowledged, progress.assigned)}
                   </span>
                 </div>
@@ -425,7 +425,7 @@ export default async function DocumentDetailPage({
             )}
           </section>
 
-          <section className="karta detail-card">
+          <section className="card detail-card">
             <h2 className="detail-card-title">{ts.metaHeading}</h2>
             <dl className="detail-meta">
               {([
@@ -437,7 +437,7 @@ export default async function DocumentDetailPage({
                 [ts.identifier, d.documentId],
               ] as [string, string | undefined][]).map(([key, value]) => (
                 <div className="detail-meta-row" key={key}>
-                  <dt className="tichy detail-meta-key">{key}</dt>
+                  <dt className="quiet detail-meta-key">{key}</dt>
                   <dd className="detail-meta-value">{value || ts.none}</dd>
                 </div>
               ))}

@@ -33,14 +33,14 @@ export default function Notice({
   if (!message) return null
 
   return (
-    <div className="oznam-tienidlo">
+    <div className="notice-backdrop">
       <div
-        className={`oznam${error ? " oznam--chyba" : ""}`}
+        className={`notice${error ? " notice--error" : ""}`}
         role="alertdialog"
         aria-modal="true"
-        aria-labelledby="oznam-text"
+        aria-labelledby="notice-message"
       >
-        <span className="oznam-znak" aria-hidden="true">
+        <span className="notice-mark" aria-hidden="true">
           {error ? (
             <svg width="26" height="26" viewBox="0 0 18 18" fill="none" stroke="currentColor"
               strokeWidth="1.6" strokeLinecap="round">
@@ -56,11 +56,11 @@ export default function Notice({
           )}
         </span>
 
-        <p id="oznam-text" className="oznam-text">{message}</p>
+        <p id="notice-message" className="notice-text">{message}</p>
 
         {/* `autoFocus`: na klávesnici je potvrdenie prvé, kam sa dá stlačiť
             Enter, a nie je nutné hľadať ho tabulátorom cez celú stránku. */}
-        <Link href={back} className="tlacidlo oznam-potvrdit" autoFocus>
+        <Link href={back} className="button notice-confirm" autoFocus>
           Rozumiem
         </Link>
       </div>

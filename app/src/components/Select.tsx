@@ -96,12 +96,12 @@ export default function Select({
   }
 
   return (
-    <div className="vyber" ref={wrap}>
+    <div className="select" ref={wrap}>
       <input type="hidden" name={name} value={value} />
 
       <button
         type="button"
-        className="pole-vstup vyber-tlacidlo"
+        className="field-input select-button"
         aria-haspopup="listbox"
         aria-expanded={open}
         aria-label={fieldLabel}
@@ -109,26 +109,26 @@ export default function Select({
         onKeyDown={onKey}
       >
         <span>{selected?.label ?? "—"}</span>
-        <svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true" className="vyber-sipka">
+        <svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true" className="select-arrow">
           <path d="M2.5 4.5 6 8l3.5-3.5" fill="none" stroke="currentColor" strokeWidth="1.6"
             strokeLinecap="round" strokeLinejoin="round" />
         </svg>
       </button>
 
       {open && (
-        <ul className="vyber-zoznam" role="listbox" aria-labelledby={id} tabIndex={-1}>
+        <ul className="select-list" role="listbox" aria-labelledby={id} tabIndex={-1}>
           {options.map((v, i) => (
             <li
               key={v.value}
               role="option"
               aria-selected={v.value === value}
-              className={`vyber-polozka${i === highlighted ? " je-zvyraznena" : ""}`}
+              className={`select-item${i === highlighted ? " is-highlighted" : ""}`}
               onMouseEnter={() => setHighlighted(i)}
               // `onMouseDown` a nie `onClick`: klik by najprv spustil
               // poslucháča „mimo" a zoznam by sa zavrel skôr, než sa vyberie.
               onMouseDown={e => { e.preventDefault(); pick(v) }}
             >
-              <span className="vyber-znak" aria-hidden="true">
+              <span className="select-mark" aria-hidden="true">
                 {v.value === value ? "✓" : ""}
               </span>
               {v.label}
@@ -140,7 +140,7 @@ export default function Select({
       {/* Bez JavaScriptu sa odošle toto. Pri zapnutom JS to prehliadač
           neparsuje ako prvky, takže sa hodnota nikdy neodošle dvakrát. */}
       <noscript>
-        <select className="pole-vstup" name={name} defaultValue={initial}>
+        <select className="field-input" name={name} defaultValue={initial}>
           {options.map(v => <option key={v.value} value={v.value}>{v.label}</option>)}
         </select>
       </noscript>

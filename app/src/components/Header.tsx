@@ -215,7 +215,7 @@ export default function Header({
         zIndex: 10,
       }}
     >
-      <div className="obal--shell hlavicka-riadok">
+      <div className="wrap--shell header-row">
         {/*
           Hlavička patrí organizácii, nie dodávateľovi. Človek, ktorý tu
           potvrdzuje smernicu svojho zväzu, nemá nad ňou vidieť cudziu značku
@@ -227,7 +227,7 @@ export default function Header({
         <Link
           href="/"
           aria-label="Domov"
-          className="hlavicka-znacka"
+          className="header-brand"
         >
           {branding ? (
             <>
@@ -237,17 +237,17 @@ export default function Header({
               )}
               {/* Skratka, keď ju organizácia má. Celý názov zostáva v `title`
                   a na prihlasovacej obrazovke — tam je miesta dosť. */}
-              <span className="hlavicka-nazov" title={branding.displayName}>
+              <span className="header-name" title={branding.displayName}>
                 {branding.shortName || branding.displayName}
               </span>
             </>
           ) : (
             <>
               <ContineoMark />
-              <span className="hlavicka-nazov">Contineo</span>
+              <span className="header-name">Contineo</span>
               {/* Odznak sa na úzkej obrazovke schová — je to poznámka pre nás,
                   nie informácia, kvôli ktorej má názov organizácie zmiznúť. */}
-              <span className="stitok tichy hlavicka-odznak">Testovacie rozhranie</span>
+              <span className="tag quiet header-badge">Testovacie rozhranie</span>
             </>
           )}
         </Link>
@@ -270,10 +270,10 @@ export default function Header({
               v lište zaberali miesto navigácii a odhlásenie navyše stálo hneď
               vedľa odkazov, na ktoré sa klikne omylom.
             */}
-            <div className="osobne" ref={personalWrap}>
+            <div className="account" ref={personalWrap}>
               <button
                 type="button"
-                className="osobne-tlacidlo"
+                className="account-button"
                 aria-haspopup="menu"
                 aria-expanded={personalOpen}
                 aria-label={t.nav.account(email ?? "")}
@@ -285,7 +285,7 @@ export default function Header({
                   // a zostanú iniciály — prázdny štvorec je horší než písmená.
                   /* eslint-disable-next-line @next/next/no-img-element */
                   <img
-                    className="avatar avatar--fotka"
+                    className="avatar avatar--photo"
                     src={photo}
                     alt=""
                     aria-hidden="true"
@@ -308,10 +308,10 @@ export default function Header({
               </button>
 
               {personalOpen && (
-                <div className="osobne-panel" role="menu">
-                  <div className="osobne-hlava">
-                    {name && <div className="osobne-meno">{name}</div>}
-                    <div className="tichy osobne-email">{email}</div>
+                <div className="account-panel" role="menu">
+                  <div className="account-head">
+                    {name && <div className="account-name">{name}</div>}
+                    <div className="quiet account-email">{email}</div>
                   </div>
 
                   {ADMIN_ITEMS.map(o => (
@@ -319,7 +319,7 @@ export default function Header({
                       key={o.href}
                       href={o.href}
                       role="menuitem"
-                      className="osobne-polozka"
+                      className="account-item"
                       onClick={() => setPersonalOpen(false)}
                     >
                       <svg width="17" height="17" viewBox="0 0 18 18" aria-hidden="true"
@@ -332,12 +332,12 @@ export default function Header({
                     </Link>
                   ))}
 
-                  {ADMIN_ITEMS.length > 0 && <div className="osobne-ciara" />}
+                  {ADMIN_ITEMS.length > 0 && <div className="account-divider" />}
 
                   <button
                     type="button"
                     role="menuitem"
-                    className="osobne-polozka"
+                    className="account-item"
                     onClick={toggle}
                   >
                     <ThemeIcon choice={choice} />
@@ -347,7 +347,7 @@ export default function Header({
                   <button
                     type="button"
                     role="menuitem"
-                    className="osobne-polozka osobne-polozka--odhlasit"
+                    className="account-item account-item--signout"
                     onClick={() => signOut({ callbackUrl: "/sign-in" })}
                   >
                     <svg width="17" height="17" viewBox="0 0 18 18" aria-hidden="true"
@@ -367,7 +367,7 @@ export default function Header({
         {!email && (
           <button
             onClick={toggle}
-            className="tlacidlo tlacidlo--tiche"
+            className="button button--quiet"
             style={{ marginLeft: "auto", padding: "7px 9px", display: "inline-flex", alignItems: "center" }}
             aria-label={t.nav.themeToggle(t.nav.theme[choice], t.nav.theme[NEXT_THEME[choice]])}
             title={t.nav.themeState(t.nav.theme[choice])}

@@ -39,25 +39,25 @@ export default async function PeoplePage({
     <AppShell language={language}>
     <div style={{ maxWidth: 880, ...tenantStyle(branding) }}>
       <h1 style={{ fontSize: 26, letterSpacing: "-0.02em", margin: "0 0 6px" }}>{t.heading}</h1>
-      <p className="tichy" style={{ fontSize: 15, margin: "0 0 18px", maxWidth: 620 }}>
+      <p className="quiet" style={{ fontSize: 15, margin: "0 0 18px", maxWidth: 620 }}>
         {t.introBefore}<strong>{t.introHighlight}</strong>{t.introAfter}
       </p>
 
       <Notice message={message} error={error === "1"} back={q ? `/people?q=${encodeURIComponent(q)}` : "/people"} />
 
       <div style={{ display: "flex", gap: 10, flexWrap: "wrap", margin: "0 0 20px" }}>
-        <Link className="tlacidlo" href="/people/new">{t.invite}</Link>
-        <Link className="tlacidlo tlacidlo--tiche" href="/people/import">{t.importCsv}</Link>
-        <Link className="tlacidlo tlacidlo--tiche" href="/people/invite">
+        <Link className="button" href="/people/new">{t.invite}</Link>
+        <Link className="button button--quiet" href="/people/import">{t.importCsv}</Link>
+        <Link className="button button--quiet" href="/people/invite">
           {dictionary(language).people.inviteAll.open}
         </Link>
       </div>
 
       {/* Serverový formulár — hľadanie je v adrese, takže sa dá poslať odkazom
           a vrátiť sa naň z histórie prehliadača. */}
-      <form className="pole" style={{ margin: "0 0 20px" }}>
+      <form className="field" style={{ margin: "0 0 20px" }}>
         <input
-          className="pole-vstup"
+          className="field-input"
           name="q"
           defaultValue={q ?? ""}
           placeholder={t.searchPlaceholder}
@@ -66,7 +66,7 @@ export default async function PeoplePage({
         />
       </form>
 
-      <p className="tichy" style={{ fontSize: 13.5, margin: "0 0 10px" }}>
+      <p className="quiet" style={{ fontSize: 13.5, margin: "0 0 10px" }}>
         {people.length === 0
           ? t.nothingFound
           : `${t.count(people.length)}${q ? t.matchesSearch : ""}`}
@@ -76,7 +76,7 @@ export default async function PeoplePage({
       <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "grid", gap: 10 }}>
         {people.map(o => {
           return (
-            <li key={o.id} className="karta" style={{ padding: "14px 18px" }}>
+            <li key={o.id} className="card" style={{ padding: "14px 18px" }}>
               <div style={{ display: "flex", gap: 10, alignItems: "baseline", flexWrap: "wrap" }}>
                 <Link
                   href={`/people/${encodeURIComponent(o.id)}`}
@@ -85,7 +85,7 @@ export default async function PeoplePage({
                   {o.fullName}
                 </Link>
                 <span
-                  className="stitok"
+                  className="tag"
                   style={o.status === "inactive"
                     ? { background: "var(--warn-bg)", color: "var(--warn-fg)" }
                     : undefined}
@@ -93,14 +93,14 @@ export default async function PeoplePage({
                   {t.status[o.status] ?? o.status}
                 </span>
                 {o.roles.map(r => (
-                  <span key={r} className="stitok">{r}</span>
+                  <span key={r} className="tag">{r}</span>
                 ))}
-                <span className="tichy" style={{ fontSize: 13, marginLeft: "auto" }}>
+                <span className="quiet" style={{ fontSize: 13, marginLeft: "auto" }}>
                   {o.lastLoginAt ? formatDate(o.lastLoginAt, language) : t.neverSignedIn}
                 </span>
               </div>
 
-              <p className="tichy" style={{ fontSize: 13.5, margin: "5px 0 0", overflowWrap: "anywhere" }}>
+              <p className="quiet" style={{ fontSize: 13.5, margin: "5px 0 0", overflowWrap: "anywhere" }}>
                 {o.email}
                 {o.department && ` · ${o.department}`}
                 {o.groups.length > 0 && ` · ${o.groups.join(", ")}`}

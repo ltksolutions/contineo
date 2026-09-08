@@ -50,23 +50,23 @@ export default async function AssignmentDetailPage({
     <AppShell language={ctx.person.language}>
     <div style={{ maxWidth: 720, ...tenantStyle(branding) }}>
       <p style={{ margin: "0 0 16px" }}>
-        <Link className="tichy" href="/hr" style={{ fontSize: 14 }}>{t.back}</Link>
+        <Link className="quiet" href="/hr" style={{ fontSize: 14 }}>{t.back}</Link>
       </p>
 
       <h1 style={{ fontSize: 25, letterSpacing: "-0.02em", margin: "0 0 6px" }}>
         {assignment.subject.documentTitle}
       </h1>
-      <p className="tichy" style={{ fontSize: 14, margin: "0 0 4px" }}>
+      <p className="quiet" style={{ fontSize: 14, margin: "0 0 4px" }}>
         {t.version} {assignment.subject.versionLabel}
         {assignment.subject.effectiveFrom &&
           t.effectiveFrom(formatDate(assignment.subject.effectiveFrom, language))}
       </p>
-      <p className="tichy" style={{ fontSize: 14, margin: "0 0 18px" }}>
+      <p className="quiet" style={{ fontSize: 14, margin: "0 0 18px" }}>
         {audienceLabel(assignment.audience)} · {t.assignedBy} {assignment.assignedBy} ·{" "}
         {formatDate(assignment.assignedAt, language)}
       </p>
 
-      <p className="karta" style={{ padding: "14px 18px", margin: "0 0 24px", fontSize: 15, lineHeight: 1.6 }}>
+      <p className="card" style={{ padding: "14px 18px", margin: "0 0 24px", fontSize: 15, lineHeight: 1.6 }}>
         {assignment.reason}
       </p>
 
@@ -82,24 +82,24 @@ export default async function AssignmentDetailPage({
       </div>
 
       {missing.length === 0 ? (
-        <p className="karta" style={{ padding: 18, fontSize: 15 }}>
+        <p className="card" style={{ padding: 18, fontSize: 15 }}>
           {t.allAcknowledged}
         </p>
       ) : (
-        <ul className="admin-domeny">
+        <ul className="admin-domains">
           {missing.map(o => (
-            <li key={o.id} className="karta" style={{ padding: "12px 16px" }}>
+            <li key={o.id} className="card" style={{ padding: "12px 16px" }}>
               <div style={{ fontWeight: 600, display: "flex", gap: 8, alignItems: "baseline", flexWrap: "wrap" }}>
                 {o.fullName}
-                {o.former && <span className="stitok">{t.noLongerInDepartment}</span>}
+                {o.former && <span className="tag">{t.noLongerInDepartment}</span>}
               </div>
-              <div className="tichy" style={{ fontSize: 13.5 }}>{o.email}</div>
+              <div className="quiet" style={{ fontSize: 13.5 }}>{o.email}</div>
             </li>
           ))}
         </ul>
       )}
 
-      <p className="tichy" style={{ fontSize: 13, marginTop: 18, maxWidth: 560 }}>
+      <p className="quiet" style={{ fontSize: 13, marginTop: 18, maxWidth: 560 }}>
         {t.note}
       </p>
     </div>

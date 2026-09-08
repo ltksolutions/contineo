@@ -73,7 +73,7 @@ export default function TextEditor({
   }, [])
 
   return (
-    <div className="editor-obal">
+    <div className="editor-wrap">
       <input type="hidden" name={name} value={value} />
 
       {/* Kým sa editor nenačíta (alebo keď JavaScript nebeží), zostáva
@@ -82,7 +82,7 @@ export default function TextEditor({
       {!ready && (
         <noscript>
           <textarea
-            className="pole-vstup editor-text"
+            className="field-input editor-text"
             name={name}
             defaultValue={initial}
             spellCheck={false}

@@ -78,17 +78,17 @@ export default async function AssignPage({
     <AppShell language={ctx.person.language}>
     <div style={{ maxWidth: 680, ...tenantStyle(branding) }}>
       <p style={{ margin: "0 0 16px" }}>
-        <Link className="tichy" href="/hr" style={{ fontSize: 14 }}>{t.back}</Link>
+        <Link className="quiet" href="/hr" style={{ fontSize: 14 }}>{t.back}</Link>
       </p>
 
       <h1 style={{ fontSize: 25, letterSpacing: "-0.02em", margin: "0 0 6px" }}>{t.heading}</h1>
-      <p className="tichy" style={{ fontSize: 15, margin: "0 0 20px" }}>
+      <p className="quiet" style={{ fontSize: 15, margin: "0 0 20px" }}>
         {t.introBefore}<strong>{t.introHighlight}</strong>{t.introAfter}
       </p>
 
       {q.error && (
         <p
-          className="karta"
+          className="card"
           style={{ padding: "12px 16px", margin: "0 0 18px", fontSize: 14.5, color: "var(--warn-fg)" }}
         >
           {q.error}
@@ -96,17 +96,17 @@ export default async function AssignPage({
       )}
 
       {documents.length === 0 ? (
-        <p className="karta" style={{ padding: 20, fontSize: 15 }}>
+        <p className="card" style={{ padding: 20, fontSize: 15 }}>
           {t.noEffectiveVersion}
         </p>
       ) : (
         <form action={assignAction} style={{ display: "grid", gap: 22 }}>
-          <fieldset className="karta hr-skupina">
-            <legend className="pole-popis">{t.whichDocuments}</legend>
-            <ul className="hr-volby">
+          <fieldset className="card hr-group">
+            <legend className="field-label">{t.whichDocuments}</legend>
+            <ul className="hr-choices">
               {documents.map(d => (
                 <li key={d.documentId}>
-                  <label className="hr-volba">
+                  <label className="hr-choice">
                     <input
                       type="checkbox"
                       name="document"
@@ -115,7 +115,7 @@ export default async function AssignPage({
                     />
                     <span>
                       {d.title}
-                      <span className="tichy pole-napoveda">
+                      <span className="quiet field-hint">
                         {" "}{t.versionLine(d.versionLabel ?? "", formatDate(d.effectiveFrom, language))}
                       </span>
                     </span>
@@ -125,14 +125,14 @@ export default async function AssignPage({
             </ul>
           </fieldset>
 
-          <fieldset className="karta hr-skupina">
-            <legend className="pole-popis">{t.to}</legend>
+          <fieldset className="card hr-group">
+            <legend className="field-label">{t.to}</legend>
 
-            <label className="hr-volba" style={{ marginBottom: 10 }}>
+            <label className="hr-choice" style={{ marginBottom: 10 }}>
               <input type="checkbox" name="all" value="1" defaultChecked={q.all === "1"} />
               <span>
                 <strong>{t.everyone}</strong>
-                <span className="tichy pole-napoveda">
+                <span className="quiet field-hint">
                   {" "}{t.everyoneNote}
                 </span>
               </span>
@@ -140,17 +140,17 @@ export default async function AssignPage({
 
             {treeRows.length > 0 && (
               <>
-                <div className="hr-podnadpis">{t.departments}</div>
-                <p className="tichy pole-napoveda" style={{ margin: "0 0 8px" }}>
+                <div className="hr-subtitle">{t.departments}</div>
+                <p className="quiet field-hint" style={{ margin: "0 0 8px" }}>
                   {t.departmentNoteBefore}<strong>{t.departmentNoteHighlight}</strong>{t.departmentNoteAfter}
                 </p>
-                <div className="stitky-zoznam">
+                <div className="tags-list">
                   {treeRows.map(({ department: department, level: level }) => {
                     const p = departmentCounts.get(department.id) ?? { direct: 0, withDescendants: 0 }
                     return (
                       <label
                         key={`d-${department.id}`}
-                        className="stitok stitok--volba stitok--pole"
+                        className="tag tag--choice tag--field"
                         style={{ marginLeft: (level - 1) * 14 }}
                       >
                         <input
@@ -159,9 +159,9 @@ export default async function AssignPage({
                           value={`department:${department.id}`}
                           defaultChecked={selectedAudiences.has(`department:${department.id}`)}
                         />
-                        <span className="stitok-znak" aria-hidden="true" />
+                        <span className="tag-mark" aria-hidden="true" />
                         {department.name}
-                        <span className="stitok-pocet">{p.withDescendants}</span>
+                        <span className="tag-count">{p.withDescendants}</span>
                       </label>
                     )
                   })}
@@ -170,7 +170,7 @@ export default async function AssignPage({
             )}
 
             {audiences.groups.length === 0 && audiences.tracks.length === 0 ? (
-              <p className="tichy pole-napoveda" style={{ margin: "10px 0 0" }}>
+              <p className="quiet field-hint" style={{ margin: "10px 0 0" }}>
                 {t.noGroupsOrTracks}
                 <code> npm run person</code>.
               </p>
@@ -181,19 +181,19 @@ export default async function AssignPage({
                     lebo tento formulár funguje aj bez JavaScriptu. */}
                 {audiences.groups.length > 0 && (
                   <>
-                    <div className="hr-podnadpis">{t.groups}</div>
-                    <div className="stitky-zoznam">
+                    <div className="hr-subtitle">{t.groups}</div>
+                    <div className="tags-list">
                       {audiences.groups.map(s => (
-                        <label key={`g-${s.value}`} className="stitok stitok--volba stitok--pole">
+                        <label key={`g-${s.value}`} className="tag tag--choice tag--field">
                           <input
                             type="checkbox"
                             name="audience"
                             value={`group:${s.value}`}
                             defaultChecked={selectedAudiences.has(`group:${s.value}`)}
                           />
-                          <span className="stitok-znak" aria-hidden="true" />
+                          <span className="tag-mark" aria-hidden="true" />
                           {s.value}
-                          <span className="stitok-pocet">{s.count}</span>
+                          <span className="tag-count">{s.count}</span>
                         </label>
                       ))}
                     </div>
@@ -202,19 +202,19 @@ export default async function AssignPage({
 
                 {audiences.tracks.length > 0 && (
                   <>
-                    <div className="hr-podnadpis">{t.tracks}</div>
-                    <div className="stitky-zoznam">
+                    <div className="hr-subtitle">{t.tracks}</div>
+                    <div className="tags-list">
                       {audiences.tracks.map(t => (
-                        <label key={`t-${t.value}`} className="stitok stitok--volba stitok--pole">
+                        <label key={`t-${t.value}`} className="tag tag--choice tag--field">
                           <input
                             type="checkbox"
                             name="audience"
                             value={`track:${t.value}`}
                             defaultChecked={selectedAudiences.has(`track:${t.value}`)}
                           />
-                          <span className="stitok-znak" aria-hidden="true" />
+                          <span className="tag-mark" aria-hidden="true" />
                           {t.value}
-                          <span className="stitok-pocet">{t.count}</span>
+                          <span className="tag-count">{t.count}</span>
                         </label>
                       ))}
                     </div>
@@ -223,10 +223,10 @@ export default async function AssignPage({
               </>
             )}
 
-            <label className="pole" style={{ marginTop: 14 }}>
-              <span className="pole-popis">{t.addresses}</span>
+            <label className="field" style={{ marginTop: 14 }}>
+              <span className="field-label">{t.addresses}</span>
               <textarea
-                className="pole-vstup"
+                className="field-input"
                 name="addresses"
                 rows={2}
                 defaultValue={q.addresses ?? ""}
@@ -234,29 +234,29 @@ export default async function AssignPage({
                 autoCapitalize="none"
                 autoCorrect="off"
               />
-              <span className="tichy pole-napoveda">
+              <span className="quiet field-hint">
                 {t.addressesNote}
               </span>
             </label>
           </fieldset>
 
-          <label className="pole">
-            <span className="pole-popis">{t.reason}</span>
+          <label className="field">
+            <span className="field-label">{t.reason}</span>
             <textarea
               name="reason"
               defaultValue={q.reason ?? ""}
               required
               rows={3}
-              className="pole-vstup"
+              className="field-input"
               placeholder={t.reasonPlaceholder}
             />
-            <span className="tichy pole-napoveda">
+            <span className="quiet field-hint">
               {t.reasonNote}
             </span>
           </label>
 
           <div>
-            <button className="tlacidlo" type="submit">{t.submit}</button>
+            <button className="button" type="submit">{t.submit}</button>
           </div>
         </form>
       )}

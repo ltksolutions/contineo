@@ -56,7 +56,7 @@ export default async function SignInPage({
   const providers = availableProviders(tenant)
 
   return (
-    <div className="obal" style={{ padding: "64px 20px", maxWidth: 460, ...tenantStyle(branding) }}>
+    <div className="wrap" style={{ padding: "64px 20px", maxWidth: 460, ...tenantStyle(branding) }}>
       <SignIn
         sent={params.sent === "1"}
         error={params.error}

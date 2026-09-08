@@ -82,7 +82,7 @@ function AnswerText({ text }: { text: string }) {
 function Line({ label: label, value: value }: { label: string; value: string }) {
   return (
     <span style={{ display: "inline-flex", gap: 6 }}>
-      <span className="tichy">{label}</span>
+      <span className="quiet">{label}</span>
       <span style={{ fontWeight: 600 }}>{value}</span>
     </span>
   )
@@ -102,7 +102,7 @@ export default function Answer({ state: state, language }: { state: AnswerState;
 
   return (
     <div style={{ display: "grid", gap: 16 }}>
-      <div className="karta">
+      <div className="card">
         {/* Hlavička hovorí to, čo sa inak dá len tušiť: odpoveď je zostavená
             z dokumentov organizácie, nie z toho, čo model vie odinakiaľ.
             Pri chybe sa neukáže — nad hláškou „nepodarilo sa" by to bolo
@@ -120,7 +120,7 @@ export default function Answer({ state: state, language }: { state: AnswerState;
             <div style={{ marginTop: 6, fontSize: 14 }}>{error}</div>
           </div>
         ) : (
-          <div className={running ? "odpoved kurzor" : "odpoved"}>
+          <div className={running ? "answer caret" : "answer"}>
             {text ? <AnswerText text={text} /> : (running ? null : "—")}
           </div>
         )}
@@ -172,7 +172,7 @@ export default function Answer({ state: state, language }: { state: AnswerState;
                 }}
               >
                 <div style={{ fontSize: 14.5, lineHeight: 1.6 }}>„{cleanCitation(c.citedText)}“</div>
-                <div className="tichy" style={{ fontSize: 12.5, marginTop: 6 }}>
+                <div className="quiet" style={{ fontSize: 12.5, marginTop: 6 }}>
                   {[c.documentTitle, c.articleRef].filter(Boolean).join(" · ") || t.sourceMissing}
                 </div>
               </div>
@@ -196,7 +196,7 @@ export default function Answer({ state: state, language }: { state: AnswerState;
                   <span className="answer-source-body">
                     <span className="answer-source-title">{z.title}</span>
                     {(z.articleRef || z.heading) && (
-                      <span className="tichy answer-source-meta">
+                      <span className="quiet answer-source-meta">
                         {[z.articleRef, z.heading].filter(Boolean).join(" · ")}
                       </span>
                     )}
@@ -205,7 +205,7 @@ export default function Answer({ state: state, language }: { state: AnswerState;
                       preto to musí byť vidieť na prvý pohľad. */}
                   {z.accessLevel === "internal" && (
                     <span
-                      className="stitok"
+                      className="tag"
                       style={{ background: "var(--warn-bg)", color: "var(--warn-fg)", fontSize: 11 }}
                     >
                       {t.internal}
@@ -239,7 +239,7 @@ export default function Answer({ state: state, language }: { state: AnswerState;
       {/* Technická pätička — bez nej sa nedá porovnávať medzi konfiguráciami. */}
       {done && !error && (
         <div
-          className="tichy"
+          className="quiet"
           style={{
             display: "flex", flexWrap: "wrap", gap: 16,
             fontSize: 12.5, paddingTop: 4,
@@ -269,7 +269,7 @@ export default function Answer({ state: state, language }: { state: AnswerState;
           )}
           {done.cost && !done.cost.unknownModel && (
             <span
-              className="stitok"
+              className="tag"
               style={{ background: "var(--surface-2)", color: "var(--muted)" }}
               title={t.costNote(done.cost.pricelistVersion)}
             >
@@ -279,7 +279,7 @@ export default function Answer({ state: state, language }: { state: AnswerState;
           {/* Cenník, ktorý prestal platiť, radšej priznáme, než by sme ticho
               počítali starou sadzbou. */}
           {done.cost?.pricelistExpired && (
-            <span className="stitok" style={{ background: "var(--warn-bg)", color: "var(--warn-fg)" }}>
+            <span className="tag" style={{ background: "var(--warn-bg)", color: "var(--warn-fg)" }}>
               {t.pricelistStale}
             </span>
           )}
@@ -289,7 +289,7 @@ export default function Answer({ state: state, language }: { state: AnswerState;
             <Line key={f} label={f} value={`${(ms / 1000).toFixed(1)} s`} />
           ))}
           <span
-            className="stitok"
+            className="tag"
             style={
               done.verifiedCitations
                 ? { background: "var(--ok-bg)", color: "var(--ok-fg)" }
