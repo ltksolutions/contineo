@@ -18,6 +18,37 @@ import { duties, type Duty } from "./hrReport"
 /** Odkedy sa nepotvrdené považuje za meškajúce. Dva týždne (TODO I2). */
 export const DEFAULT_DAYS = 14
 
+/**
+ * Prah pre „dať vedieť všetkým, ktorí nepotvrdili".
+ *
+ * Nula nie je zvláštny režim výpočtu — je to ten istý výpočet s prahom nula,
+ * takže prejde aj povinnosť, ktorá vznikla dnes. Vďaka tomu má **konečne
+ * cestu k e-mailu aj povinnosť z trasy**: pridelenie pri nej neexistuje, a
+ * „dať vedieť" nad prideleniami ju preto nikdy neponúklo.
+ *
+ * Povinnosť **bez začiatku** sa nezahrnie ani tu. Bez `since` sa nedá
+ * povedať, odkedy o nej človek vie, a jediné, čo by e-mail dosiahol, je
+ * pripomenúť niečo, čo možno pripomenuté už bolo.
+ */
+export const NOTICE_DAYS = 0
+
+/**
+ * Prah z adresy alebo z formulára.
+ *
+ * Vlastná funkcia preto, že `Math.max(1, Number(raw) || DEFAULT_DAYS)` —
+ * tvar, ktorý tu bol — mal **dve zábrany naraz**: jednotku ako dolnú hranicu
+ * a `||`, cez ktoré nula prepadla na 14. Prah 0 sa tým nedal nastaviť vôbec
+ * a povinnosti z trás zostali bez cesty k e-mailu.
+ */
+export function thresholdDays(raw: string | undefined, fallback = DEFAULT_DAYS): number {
+  if (raw === undefined || raw.trim() === "") return fallback
+  const n = Number(raw)
+  // Nezmysel v adrese nemá tíško spadnúť na nulu — to by rozposlalo
+  // e-maily všetkým namiesto meškajúcim.
+  if (!Number.isFinite(n)) return fallback
+  return Math.max(0, Math.floor(n))
+}
+
 const DAY = 24 * 60 * 60 * 1000
 
 export interface Overdue {

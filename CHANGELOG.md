@@ -4,6 +4,20 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Added (2026-09-08 — dať vedieť e-mailom aj o povinnostiach z trasy)
+
+Nájdené pri skúške na skúšobnej smernici: **„Dať vedieť" existovalo len nad prideleniami.** Keď povinnosť vznikla krokom v trase, pridelenie neexistovalo a tlačidlo nebolo nikde — pritom presne tadiaľ chodí onboarding.
+
+- **Jedna obrazovka, dva režimy nad tým istým výpočtom.** `/hr/reminders` teraz vie „všetkým nepotvrdeným" (prah 0) aj „len meškajúcim" (prah 14 dní). Nie je to nový mechanizmus: `duties()` v `hrReport.ts` už spája pridelenia aj trasy a je to ten istý zdroj, z ktorého počítal výkaz. Druhá cesta k tomu istému zoznamu by sa raz rozišla s prvou.
+- **Prah 0 sa dovtedy nedal nastaviť.** `Math.max(1, Number(q.days) || DEFAULT_DAYS)` mal dve zábrany naraz — jednotku ako dolnú hranicu a `||`, cez ktoré nula prepadla na 14. Teraz to rieši `thresholdDays()` a **preklep v adrese padá na predvolený prah, nie na nulu**: nula by rozposlala e-maily všetkým namiesto meškajúcim, čo je presne ten druh chyby, ktorý sa prejaví až tým, že sa ozve sto ľudí.
+- **E-mail má dva tvary.** Pri prahu 0 sa neuvádzajú dni a predmet znie „Na potvrdenie", nie „Pripomienka". Dokument, ktorý pribudol dnes, „nečaká nula dní" — a veta o čakaní by z prvého oslovenia spravila výčitku za meškanie, ktoré človek nemal ako spôsobiť.
+- **Pri každej položke je vidieť, z ktorej trasy plynie.** Pri povinnosti z trasy je to jediné vysvetlenie, prečo je človek v zozname: pridelenie, ktoré by personalista hľadal, neexistuje.
+- **Povinnosť bez začiatku sa nezahrnie ani pri nule.** Bez `since` sa nedá povedať, odkedy o nej človek vie, a jediné, čo by e-mail dosiahol, je pripomenúť niečo, čo možno pripomenuté už bolo.
+- Prepínač režimu sú **dva odkazy, nie tlačidlá** — režim je súčasťou adresy, takže sa dá poslať aj s ním a funguje bez skriptu.
+- Nič sa neposiela automaticky ani teraz: náhľad, kto to dostane, a až potom tlačidlo. Zmena schémy nebola potrebná — pripomienky zapisovali audit, nie `notified[]` na pridelení, a oznámenie to robí rovnako.
+- Overené: `tsc --noEmit` čisto, `eslint` bez chýb, **987 testov** (8 nových nad prahom a režimom oznámenia).
+
+
 ### Fixed (2026-09-08 — potvrdenie dokumentu funguje aj bez JavaScriptu)
 
 Potvrdenie sa posielalo skriptom (`fetch` na `/api/acknowledgements`), takže bez JavaScriptu tlačidlo mlčalo. Pri **právne záväznom úkone** je to priveľa: prehliadač bez skriptu, firemná politika alebo výpadok pri načítaní balíka znamenali, že záväzok sa nedá splniť — a človek nevidel dôvod, len tlačidlo, ktoré nič nerobí.

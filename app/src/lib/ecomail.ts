@@ -283,8 +283,16 @@ export function reminderEmail(
   items: { title: string; versionLabel: string; days: number }[],
   language: UiLanguage = "sk",
   branding?: SignInBranding,
+  /**
+   * `notice` je **prvé oznámenie**, `reminder` pripomienka meškajúcemu.
+   * Rozdiel nie je kozmetický: v oznámení sa neuvádzajú dni, lebo dokument,
+   * ktorý pribudol dnes, „nečaká nula dní" — a veta o čakaní by z prvého
+   * oslovenia spravila výčitku za meškanie, ktoré človek nemal ako spôsobiť.
+   */
+  mode: "notice" | "reminder" = "reminder",
 ): Omit<Message, "to"> {
   const s = dictionary(language).reminderEmail
+  const notice = mode === "notice"
   const organisation = branding?.displayName ?? "Contineo"
   const accent = branding?.accentColor ?? "#232a35"
 
@@ -292,11 +300,16 @@ export function reminderEmail(
     ? `<img src="${branding.logoUrl}" alt="" width="34" height="34" style="display:inline-block;vertical-align:middle;margin-right:10px;border:0">`
     : ""
 
+  const itemText = (i: { versionLabel: string; days: number }) =>
+    notice ? s.noticeItemLine(i.versionLabel) : s.itemLine(i.versionLabel, i.days)
+  const introText = notice ? s.noticeIntro(items.length) : s.intro(items.length)
+  const subtitleText = notice ? s.noticeSubtitle : s.subtitle
+
   const line = (i: { title: string; versionLabel: string; days: number }) =>
-    `${i.title} — ${s.itemLine(i.versionLabel, i.days)}`
+    `${i.title} — ${itemText(i)}`
 
   const text = [
-    s.intro(items.length),
+    introText,
     "",
     ...items.map(line),
     "",
@@ -308,15 +321,15 @@ export function reminderEmail(
   const rows = items.map(i => `
     <div style="border-left:3px solid ${accent};padding:2px 0 2px 14px;margin:0 0 14px">
       <div style="font-size:16px;font-weight:700;line-height:1.4">${escapujHtml(i.title)}</div>
-      <div style="font-size:13.5px;color:#5c6675;margin-top:3px">${escapujHtml(s.itemLine(i.versionLabel, i.days))}</div>
+      <div style="font-size:13.5px;color:#5c6675;margin-top:3px">${escapujHtml(itemText(i))}</div>
     </div>`).join("")
 
   const html = `<!doctype html>
 <html lang="${language}"><body style="margin:0;padding:24px;background:#f5f6f8;font-family:ui-sans-serif,system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;color:#161b22">
   <div style="max-width:520px;margin:0 auto;background:#fff;border:1px solid rgba(20,28,42,.12);border-radius:12px;padding:28px">
     <div style="font-size:18px;font-weight:700;letter-spacing:-.02em;margin-bottom:6px">${logo}<span style="vertical-align:middle">${escapujHtml(organisation)}</span></div>
-    <div style="font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:#5c6675;margin-bottom:22px">${escapujHtml(s.subtitle)}</div>
-    <p style="font-size:15.5px;line-height:1.65;margin:0 0 18px">${escapujHtml(s.intro(items.length))}</p>
+    <div style="font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:#5c6675;margin-bottom:22px">${escapujHtml(subtitleText)}</div>
+    <p style="font-size:15.5px;line-height:1.65;margin:0 0 18px">${escapujHtml(introText)}</p>
     ${rows}
     <a href="${link}" style="display:inline-block;background:${accent};color:#fff;text-decoration:none;border-radius:10px;padding:12px 22px;font-size:15px;font-weight:600;margin-top:8px">
       ${escapujHtml(s.button)}
@@ -327,7 +340,11 @@ export function reminderEmail(
   </div>
 </body></html>`
 
-  return { subject: s.subject(organisation), text, html }
+  return {
+    subject: notice ? s.noticeSubject(organisation) : s.subject(organisation),
+    text,
+    html,
+  }
 }
 
 /**

@@ -175,6 +175,15 @@ interface Dictionary {
     itemLine: (versionLabel: string, days: number) => string
     button: string
     note: string
+    /**
+     * Prvé oznámenie, nie pripomienka. Dni sa v ňom neuvádzajú: dokument,
+     * ktorý pribudol dnes, „nečaká nula dní" — a veta o čakaní by z prvého
+     * oslovenia spravila výčitku.
+     */
+    noticeSubject: (organisation: string) => string
+    noticeSubtitle: string
+    noticeIntro: (count: number) => string
+    noticeItemLine: (versionLabel: string) => string
   }
 
   /** Hromadná pozvánka. Bez tokenu — človek si odkaz vyžiada sám. */
@@ -416,6 +425,24 @@ interface Dictionary {
       preview: string
       sent: (n: number) => string
       nobody: string
+      /**
+       * Prah 0 = „všetkým, ktorí nepotvrdili", vrátane povinností, ktoré
+       * vznikli dnes. Vtedy to nie je pripomienka, ale prvé oznámenie —
+       * a nesmie tak ani vyzerať, inak sa človeku vyčíta meškanie, ktoré
+       * nemal ako spôsobiť.
+       */
+      modeLabel: string
+      modeNotice: string
+      modeOverdue: (days: number) => string
+      noticeHeading: string
+      noticeIntro: string
+      noticeNone: string
+      noticePerson: (documents: number) => string
+      noticeSend: (people: number) => string
+      noticeSent: (n: number) => string
+      noticeNobody: string
+      /** Odkiaľ povinnosť plynie — pri trase nie je čo „prideliť". */
+      fromTrack: (title: string) => string
     }
   }
 
@@ -1395,6 +1422,14 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       itemLine: (label, days) => `verzia ${label}, čaká ${daysSk(days)}`,
       button: "Otvoriť zoznam",
       note: "Potvrdenie sa viaže na konkrétne znenie a zaberie pár minút. Ak si myslíte, že sa vás dokument netýka, ozvite sa personálnemu oddeleniu.",
+      noticeSubject: organisation => `Na potvrdenie: dokumenty — ${organisation}`,
+      noticeSubtitle: "Na potvrdenie",
+      noticeIntro: count => count === 1
+        ? "Jeden dokument čaká na vaše potvrdenie."
+        : count >= 2 && count <= 4
+          ? `${count} dokumenty čakajú na vaše potvrdenie.`
+          : `${count} dokumentov čaká na vaše potvrdenie.`,
+      noticeItemLine: label => `verzia ${label}`,
     },
 
     inviteEmail: {
@@ -1633,6 +1668,17 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       preview: "Toto pôjde na uvedené adresy. Odoslaný e-mail sa odvolať nedá.",
       sent: n => `Odoslané: ${n}.`,
       nobody: "Nie je komu pripomínať.",
+      modeLabel: "Komu poslať",
+      modeNotice: "Všetkým nepotvrdeným",
+      modeOverdue: days => `Len meškajúcim (${daysSk(days)}+)`,
+      noticeHeading: "Dať vedieť e-mailom",
+      noticeIntro: "Každý, kto má niečo nepotvrdené — aj to, čo pribudlo dnes. Sem patria aj povinnosti z trás, ku ktorým pridelenie neexistuje, a tie inak nemajú ako dať o sebe vedieť. Jeden e-mail na človeka.",
+      noticeNone: "Nikto nemá nič nepotvrdené.",
+      noticePerson: documents => documents === 1 ? "1 dokument" : documents >= 2 && documents <= 4 ? `${documents} dokumenty` : `${documents} dokumentov`,
+      noticeSend: people => people === 1 ? "Odoslať 1 e-mail" : people >= 2 && people <= 4 ? `Odoslať ${people} e-maily` : `Odoslať ${people} e-mailov`,
+      noticeSent: n => `Odoslané: ${n}.`,
+      noticeNobody: "Nie je komu posielať.",
+      fromTrack: title => `z trasy „${title}“`,
     },
   },
 
@@ -2829,6 +2875,14 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
           ? `${count} dokumenty stále čekají na vaše potvrzení.`
           : `${count} dokumentů stále čeká na vaše potvrzení.`,
       itemLine: (label, days) => `verze ${label}, čeká ${daysCs(days)}`,
+      noticeSubject: organisation => `K potvrzení: dokumenty — ${organisation}`,
+      noticeSubtitle: "K potvrzení",
+      noticeIntro: count => count === 1
+        ? "Jeden dokument čeká na vaše potvrzení."
+        : count >= 2 && count <= 4
+          ? `${count} dokumenty čekají na vaše potvrzení.`
+          : `${count} dokumentů čeká na vaše potvrzení.`,
+      noticeItemLine: label => `verze ${label}`,
       button: "Otevřít seznam",
       note: "Potvrzení se váže na konkrétní znění a zabere pár minut. Pokud si myslíte, že se vás dokument netýká, ozvěte se personálnímu oddělení.",
     },
@@ -3069,6 +3123,17 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       preview: "Toto půjde na uvedené adresy. Odeslaný e-mail se odvolat nedá.",
       sent: n => `Odesláno: ${n}.`,
       nobody: "Není komu připomínat.",
+      modeLabel: "Komu poslat",
+      modeNotice: "Všem nepotvrzeným",
+      modeOverdue: days => `Jen meškajícím (${daysCs(days)}+)`,
+      noticeHeading: "Dát vědět e-mailem",
+      noticeIntro: "Každý, kdo má něco nepotvrzené — i to, co přibylo dnes. Patří sem i povinnosti z tras, ke kterým přidělení neexistuje, a ty jinak nemají jak dát o sobě vědět. Jeden e-mail na člověka.",
+      noticeNone: "Nikdo nemá nic nepotvrzené.",
+      noticePerson: documents => documents === 1 ? "1 dokument" : documents >= 2 && documents <= 4 ? `${documents} dokumenty` : `${documents} dokumentů`,
+      noticeSend: people => people === 1 ? "Odeslat 1 e-mail" : people >= 2 && people <= 4 ? `Odeslat ${people} e-maily` : `Odeslat ${people} e-mailů`,
+      noticeSent: n => `Odesláno: ${n}.`,
+      noticeNobody: "Není komu posílat.",
+      fromTrack: title => `z trasy „${title}“`,
     },
   },
 
@@ -4262,6 +4327,12 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
         ? "One document is still waiting for your acknowledgement."
         : `${count} documents are still waiting for your acknowledgement.`,
       itemLine: (label, days) => `version ${label}, waiting ${daysEn(days)}`,
+      noticeSubject: organisation => `To acknowledge: documents — ${organisation}`,
+      noticeSubtitle: "To acknowledge",
+      noticeIntro: count => count === 1
+        ? "One document is waiting for your acknowledgement."
+        : `${count} documents are waiting for your acknowledgement.`,
+      noticeItemLine: label => `version ${label}`,
       button: "Open the list",
       note: "An acknowledgement is tied to one specific version and takes a couple of minutes. If you believe a document does not apply to you, contact HR.",
     },
@@ -4501,6 +4572,17 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       preview: "This goes to the addresses listed. A sent email cannot be taken back.",
       sent: n => `Sent: ${n}.`,
       nobody: "There is nobody to remind.",
+      modeLabel: "Who to send to",
+      modeNotice: "Everyone with something unacknowledged",
+      modeOverdue: days => `Only those behind (${daysEn(days)}+)`,
+      noticeHeading: "Notify by e-mail",
+      noticeIntro: "Everyone with something unacknowledged — including what arrived today. This covers duties from tracks, which have no assignment behind them and otherwise no way to announce themselves. One e-mail per person.",
+      noticeNone: "Nobody has anything unacknowledged.",
+      noticePerson: documents => documents === 1 ? "1 document" : `${documents} documents`,
+      noticeSend: people => people === 1 ? "Send 1 e-mail" : `Send ${people} e-mails`,
+      noticeSent: n => `Sent: ${n}.`,
+      noticeNobody: "There is nobody to send to.",
+      fromTrack: title => `from the “${title}” track`,
     },
   },
 
