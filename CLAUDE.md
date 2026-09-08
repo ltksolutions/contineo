@@ -14,6 +14,7 @@
 | polia a kolekcie v Mongu | angličtina | `departmentId`, `versions[]`, `document_chunks` |
 | názvy `npm run` príkazov | angličtina | `npm run check`, `npm run reindex` |
 | kľúče v adrese (`?tab=…`) | angličtina | `?tab=departments` |
+| názvy CSS tried, `id`, kotvy, `@keyframes`, vlastné premenné | angličtina | `.button`, `.field-input`, `.tree-row`, `.is-active`, `#results`, `--level` |
 | **komentáre** | **slovenčina** | `// Bez toho by sa audit dal spätne meniť.` |
 | **texty na obrazovke, hlásenia, e-maily** | **slovenčina** | `„Zmeny boli uložené."` |
 | **dokumentácia v `docs/`** | **slovenčina** | |
@@ -24,6 +25,10 @@ v každom druhom riadku — a hlavne prekladanie medzi kódom a databázou
 (`Oddelenie` verzus `departments`). Komentáre naopak vysvetľujú *prečo*,
 často právne alebo organizačné dôvody, a tie sa presnejšie povedia po
 slovensky.
+
+**Stav sa píše `is-*`, nie `je-*`** (`.is-active`, `.is-on`, `.is-dragging`) —
+prefix nesie, že ide o stav, nie o zložku názvu. Modifikátor je dvojitá
+spojka (`.button--quiet`, `.tag--new`), teda BEM bez blokového prefixu.
 
 **Historické kľúče sa neprepisujú, prekladajú.** Starý tvar (`?zalozka=utvary`)
 zostane fungovať cez prekladovú tabuľku a zmizne, keď prestane chodiť.
