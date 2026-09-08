@@ -20,11 +20,21 @@ import { buildStatement, hasAcknowledged } from "@/lib/acknowledgements"
 import { dictionary, formatDate } from "@/lib/i18n"
 import AcknowledgeButton from "@/components/AcknowledgeButton"
 import ReadingTimer from "@/components/ReadingTimer"
+import Notice from "@/components/Notice"
+import { acknowledgeAction } from "./actions"
 
 export const dynamic = "force-dynamic"
 
-// `params` je od Next 15 prísľub.
-export default async function DocumentPage({ params }: { params: Promise<{ documentId: string }> }) {
+// `params` aj `searchParams` sú od Next 15 prísľub.
+export default async function DocumentPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ documentId: string }>
+  // Výsledok potvrdenia sa nesie v adrese, nie v stave komponentu: bez
+  // skriptu iná cesta nie je a s dvomi cestami by sa hlásenia rozišli.
+  searchParams: Promise<Record<string, string | string[] | undefined>>
+}) {
   const ctx = await onboardingContext()
   if (ctx.state === "unknown-host") notFound()
   if (ctx.state === "not-signed-in") redirect("/sign-in")
@@ -41,8 +51,19 @@ export default async function DocumentPage({ params }: { params: Promise<{ docum
 
   const version = effectiveVersion(doc)
 
+  const q = await searchParams
+  const text = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v)
+  const message = text(q.msg)
+  const failed = text(q.error) === "1"
+
   return (
     <div className="obal" style={{ padding: "36px 20px 80px", maxWidth: 760, ...tenantStyle(branding) }}>
+      <Notice
+        message={message}
+        error={failed}
+        back={`/documents/${encodeURIComponent(documentId)}`}
+      />
+
       <p style={{ margin: "0 0 16px" }}>
         <Link className="tichy" href="/documents" style={{ fontSize: 14 }}>← {t.back}</Link>
       </p>
@@ -89,25 +110,11 @@ export default async function DocumentPage({ params }: { params: Promise<{ docum
                 {t.confirmed}
               </p>
             ) : (
-              <>
-                <AcknowledgeButton
-                  documentId={doc.documentId}
-                  labels={{
-                    button: t.confirmButton,
-                    pending: t.confirmPending,
-                    confirmed: t.confirmed,
-                    error: t.error,
-                  }}
-                />
-                {/* Potvrdenie ide cez `fetch` na `/api/acknowledgements`,
-                    takže bez JavaScriptu tlačidlo mlčí. Serverová cesta je
-                    otvorená úloha (`docs/TODO.md`); dovtedy nech človek aspoň
-                    vie, prečo sa nič nedeje — mlčiace tlačidlo pri právne
-                    záväznom úkone je horšie než jasná veta. */}
-                <noscript>
-                  <p className="noscript-notice" style={{ marginTop: 12 }}>{t.confirmNoScript}</p>
-                </noscript>
-              </>
+              <AcknowledgeButton
+                documentId={doc.documentId}
+                action={acknowledgeAction}
+                labels={{ button: t.confirmButton, pending: t.confirmPending }}
+              />
             )}
           </section>
         </>
