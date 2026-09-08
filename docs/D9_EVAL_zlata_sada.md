@@ -126,6 +126,35 @@ Výstupy idú do `eval/vysledky/`:
 Regenerovanie hárku po zmene otázok: `python3 build_sheet.py` (prepíše XLSX zo `seed/questions_seed.json`).
 Testy vyhodnocovacej logiky: `python3 test_scoring.py`.
 
+### Výsledok porovnania rerank modelov (2026-09-06)
+
+`scripts/rerank_compare.mjs`, tri behy nad 20 otázkami, rola `internal`, top-5.
+Čísla sú **prekryv, nie kvalita** — kvalitu merať nemožno, kým má zlatá sada
+prázdne `goldChunkIds`. Otázka bola jediná: *záleží vôbec na tom, ktorý model sa
+zvolí?*
+
+| dvojica | prekryv top-5 | zhoda na 1. mieste |
+|---|---|---|
+| bez reranku ⇄ rerank-2 | 56 % | 50 % |
+| bez reranku ⇄ rerank-2.5 | 58–59 % | 45 % |
+| bez reranku ⇄ rerank-3 | 60 % | 30–35 % |
+| rerank-2 ⇄ rerank-2.5 | 66 % | 40 % |
+| rerank-2 ⇄ rerank-3 | 70–71 % | 40–45 % |
+| **rerank-2.5 ⇄ rerank-3** | **83–84 %** | **80 %** |
+
+**Odpoveď: rerank áno, výber modelu skoro nie — ale rerank-2 do toho nepatrí.**
+Zapnúť rerank prehodí zoznam zásadne (prekryv 56–60 %, prvé miesto sa mení
+v polovici až dvoch tretinách otázok). Medzi rerank-2.5 a rerank-3 je rozdiel
+malý (83–84 % / 80 %), takže voľba medzi nimi sa dá spraviť podľa ceny a
+latencie. Rerank-2 je od oboch novších ďalej než oni od seba, teda nie je to
+„staršia verzia toho istého", ale iné poradie.
+
+Celé poradie top-5 sa zhoduje takmer nikdy (0 %, medzi 2.5 a 3 v 5 % otázok) —
+prekryv množiny teda vypovedá, zhoda poradia nie.
+
+Zdrojové `.json` behov sa nekomitujú (`eval/vysledky/` má v repozitári len
+`.gitkeep`); reprodukuje sa príkazom v hlavičke skriptu.
+
 ---
 
 ## 5. Ako sa sada používa pri rozhodovaní
