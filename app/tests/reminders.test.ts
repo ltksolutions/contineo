@@ -6,7 +6,7 @@
  * presne to, po čom si ľudia zapnú filter.
  */
 import { describe, it, expect } from "vitest"
-import { overdueFrom, byPersonReminder, DEFAULT_DAYS } from "../src/lib/reminders"
+import { overdueFrom, byPersonReminder, DEFAULT_DAYS, NOTICE_DAYS, thresholdDays } from "../src/lib/reminders"
 import type { Duty } from "../src/lib/hrReport"
 
 const NOW = new Date("2026-09-06T12:00:00Z")
@@ -84,5 +84,64 @@ describe("zoskupenie po ludoch", () => {
 
   it("prazdny vstup nevyrobi ziadneho prijemcu", () => {
     expect(byPersonReminder([])).toEqual([])
+  })
+})
+
+describe("prah z adresy", () => {
+  it("prazdna hodnota znamena predvoleny prah", () => {
+    expect(thresholdDays(undefined)).toBe(DEFAULT_DAYS)
+    expect(thresholdDays("")).toBe(DEFAULT_DAYS)
+    expect(thresholdDays("   ")).toBe(DEFAULT_DAYS)
+  })
+
+  it("nulu prijme ako nulu", () => {
+    // Tvar `Number(raw) || DEFAULT_DAYS`, ktory tu bol, cez `||` poslal nulu
+    // na 14 — prah 0 sa nedal nastavit vobec a povinnosti z tras zostali
+    // bez cesty k e-mailu.
+    expect(thresholdDays("0")).toBe(NOTICE_DAYS)
+    expect(thresholdDays("0")).toBe(0)
+  })
+
+  it("nezmysel padne na predvoleny prah, nie na nulu", () => {
+    // Nula by rozposlala e-maily vsetkym namiesto meskajucim. Preklep
+    // v adrese nesmie mat taky nasledok.
+    expect(thresholdDays("abc")).toBe(DEFAULT_DAYS)
+    expect(thresholdDays("NaN")).toBe(DEFAULT_DAYS)
+  })
+
+  it("zaporne cislo je nula, desatinne sa oreze nadol", () => {
+    expect(thresholdDays("-5")).toBe(0)
+    expect(thresholdDays("7.9")).toBe(7)
+  })
+})
+
+describe("prah nula — dat vediet vsetkym", () => {
+  it("zahrnie aj povinnost, ktora vznikla dnes", () => {
+    // Presne ten pripad, ktory doteraz nemal ako dat o sebe vediet:
+    // dokument pribudol dnes a `days=14` ho nezachyti.
+    const rows = overdueFrom([duty({ since: NOW })], NOTICE_DAYS, NOW)
+    expect(rows).toHaveLength(1)
+    expect(rows[0].days).toBe(0)
+  })
+
+  it("zahrnie povinnost z trasy, ku ktorej pridelenie neexistuje", () => {
+    const rows = overdueFrom(
+      [duty({ sources: ["track"], trackTitles: ["Nástup"], since: NOW })],
+      NOTICE_DAYS, NOW,
+    )
+    expect(rows).toHaveLength(1)
+    expect(rows[0].duty.trackTitles).toEqual(["Nástup"])
+  })
+
+  it("potvrdene nezahrnie ani pri nule", () => {
+    const rows = overdueFrom([duty({ since: NOW, acknowledgedAt: NOW })], NOTICE_DAYS, NOW)
+    expect(rows).toHaveLength(0)
+  })
+
+  it("povinnost bez zaciatku nezahrnie ani pri nule", () => {
+    // Bez `since` sa neda povedat, odkedy o nej clovek vie — jedine, co by
+    // e-mail dosiahol, je pripomenut nieco, co uz pripomenute bolo.
+    const rows = overdueFrom([duty({ since: null })], NOTICE_DAYS, NOW)
+    expect(rows).toHaveLength(0)
   })
 })

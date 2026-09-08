@@ -20,7 +20,7 @@ import {
 } from "@/lib/assignments"
 import { allDepartments } from "@/lib/departments"
 import { send, assignmentEmail, reminderEmail } from "@/lib/ecomail"
-import { overdue, byPersonReminder, DEFAULT_DAYS } from "@/lib/reminders"
+import { overdue, byPersonReminder, NOTICE_DAYS, thresholdDays } from "@/lib/reminders"
 import { writeAudit, diff } from "@/lib/audit"
 import { brandingView } from "@/lib/tenants"
 import { requestHostname } from "@/lib/session"
@@ -257,10 +257,13 @@ export async function sendRemindersAction(fd: FormData) {
   const code = ctx.person.companyCode
   const t = dictionary(ctx.person.language).hr.reminders
 
-  const days = Number(fieldText(fd, "days")) || DEFAULT_DAYS
+  // Ten istý výpočet prahu ako na obrazovke — inak by formulár poslal inému
+  // okruhu ľudí, než aký si personalista pred chvíľou prezrel.
+  const days = thresholdDays(fieldText(fd, "days"))
+  const notice = days === NOTICE_DAYS
   const people = byPersonReminder(await overdue(code, days))
   if (people.length === 0) {
-    redirect("/hr/reminders?error=1&msg=" + encodeURIComponent(t.nobody))
+    redirect("/hr/reminders?error=1&msg=" + encodeURIComponent(notice ? t.noticeNobody : t.nobody))
   }
   if (people.length > MAX_AT_ONCE) {
     redirect("/hr/reminders?error=1&msg=" + encodeURIComponent(
@@ -292,6 +295,7 @@ export async function sendRemindersAction(fd: FormData) {
             // pripomienka ide človeku, nie tomu, kto ju odosiela.
             normalizeLanguage(ctx.person.language),
             branding,
+            notice ? "notice" : "reminder",
           ),
         })
         sent++
@@ -312,7 +316,7 @@ export async function sendRemindersAction(fd: FormData) {
 
   revalidatePath("/hr/reminders")
   const message = failed.length === 0
-    ? t.sent(sent)
+    ? (notice ? t.noticeSent(sent) : t.sent(sent))
     : dictionary(ctx.person.language).hr.actions.sentWithFailures(
         sent, `(${failed.length}) ${failed.slice(0, 5).join(", ")}${failed.length > 5 ? "…" : ""}`,
       )
