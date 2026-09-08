@@ -4,6 +4,18 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Added (2026-09-08 — výber, ktorý prežije stránkovanie)
+
+**Označené dokumenty sú v adrese, nie v stave formulára.** Dovtedy to boli zaškrtávacie políčka jedného formulára, takže výber platil pre viditeľnú stranu a prechod na ďalšiu ho zabudol — políčko sa odošle až akciou, takže dovtedy o ňom server nevie a knižnica beží bez JavaScriptu zámerne.
+
+- **Políčko je odkaz, nie `<input type=checkbox>`.** Klik prepíše adresu a od tej chvíle sa `pick=<id>` nesie v **každom** ďalšom odkaze (`carryFields`) — teda cez stránkovanie, triedenie aj zmenu filtra. Štvorček je nakreslený (`.bulk-pick-box`), stav nesie `aria-pressed`.
+- **Do akcie ide výber skrytými poľami `document`.** `moveManyAction` ani `assignManyAction` sa nemenili — čítajú z formulára to isté, čo predtým posielali políčka, len sa tam teraz dostane aj to, čo je označené na inej strane.
+- **Označený dokument, ktorý filtru už nevyhovuje, sa nezahodí — prizná sa.** Nad zoznamom je „Označené: N“ a „z toho M mimo tohto zoznamu“ plus odkaz „zrušiť výber“. Tiché zahodenie by znamenalo, že sa presunie menej, než človek čaká; tichá pamäť, že sa presunie viac. Obe sú pri hromadnom presune drahé.
+- **„Označiť stranu“ označí stranu, nie výsledok.** Zvyšok výberu nechá nedotknutý: je to pomôcka na tejto strane, nie príkaz „chcem presne toto“. Označiť všetkých 148 je iná akcia s iným následkom a mýliť si ich pri hromadnom presune je drahé.
+- **Označenie riadka nevracia na prvú stranu**, na rozdiel od filtrov — tie stranu resetujú preto, že po zúžení môže byť strana 4 prázdna, ale označenie zoznam nezúži. Inak by sa na strane 3 nedalo označiť nič.
+- Po vykonanej hromadnej akcii je výber minutý — `back` sa vracia bez neho.
+- Overené: `tsc --noEmit` čisto, `eslint` bez chýb, 1010 testov (7 nových na výber v adrese), produkčný build prejde, prekreslené na 1000 px aj 390 px v svetlej aj tmavej téme.
+
 ### Fixed (2026-09-08 — jedno rozhranie namiesto dvoch)
 
 **Toto je oprava chyby v mojom rozhodnutí, nie nová funkcia.** Dohoda „shell je opt-in a stránky sa presúvajú po jednej" znamenala, že systém je po celý čas presunu v stave, ktorý je horší než oba jeho konce. Pri dvoch obrazovkách v shelli a ôsmich mimo bolo naraz vidieť:

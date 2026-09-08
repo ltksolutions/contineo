@@ -30,6 +30,7 @@ import {
   readFilters, toggle, setValue, clearFilters, isEmpty, toQuery, carryFields, activeChips,
   sortBy, currentSort, pageOf, withPage, sortRows, pageRows, setView, currentView,
   addCondition, removeCondition, splitConditions, mergeConditions,
+  togglePick, pickPage, clearPicked, pickedOutsideCount,
   type MultiKey, type SortKey,
 } from "@/lib/libraryFilters"
 import {
@@ -131,6 +132,16 @@ export default async function LibraryPage({
    * riadok by sa presunul do inej skupiny, než na akú človek klikol.
    */
   const condRows = normalizeGroups(conditions, filters.match)
+
+  /*
+   * Výber je v adrese, nie vo formulári, takže „označené na tejto strane“ sa
+   * musí dopočítať: `filters.picked` nesie aj to, čo je na inej strane alebo
+   * po zmene filtra už mimo zoznamu.
+   */
+  const pageIds = paged.rows.map(r => r.documentId)
+  const isPicked = (id: string) => filters.picked.includes(id)
+  const allPagePicked = pageIds.length > 0 && pageIds.every(isPicked)
+  const pickedOutside = pickedOutsideCount(filters.picked, pageIds)
 
   /*
    * Dvojice pole + operátor ako jedna ponuka. Vzniká z tabuľky povolených
@@ -615,14 +626,40 @@ export default async function LibraryPage({
         </p>
       ) : (
         /*
-          Výber riadkov je stav formulára, nie klienta — celá knižnica beží
-          bez JavaScriptu. Dôsledok, ktorý je lepšie povedať nahlas: **výber
-          platí pre viditeľnú stranu.** Prechod na inú stranu ho zabudne, lebo
-          formulár sa odošle až akciou. Pri 25 riadkoch na stranu to na bežnú
-          prácu stačí a je to čitateľnejšie než výber, ktorý sa neviditeľne
-          vlečie naprieč filtrami a človek netuší, čo v ňom ešte je.
+          Výber riadkov je **v adrese**, nie stav formulára. Zaškrtávacie
+          políčko bez JavaScriptu neprežije prechod na druhú stranu — odošle
+          sa až akciou, takže dovtedy o ňom server nevie. Odkaz áno: klik na
+          riadok prepíše adresu a označenie sa odvtedy nesie v každom ďalšom
+          odkaze (`carryFields`), teda aj cez stránkovanie a zmenu filtra.
+
+          Cena je viditeľnosť: označený dokument môže po zúžení filtra
+          z obrazovky zmiznúť a zostať vybraný. Preto sa nad zoznamom píše,
+          koľko z označených nie je vidieť, a vedľa je odkaz na zrušenie —
+          tichý výber, ktorý sa vlečie naprieč filtrami, je pri hromadnom
+          presune drahé prekvapenie.
         */
         <form className="bulk-form">
+          {/*
+            Výber ide do akcie skrytými poľami, nie políčkami v riadkoch:
+            `moveManyAction` a `assignManyAction` čítajú `document` z formulára
+            a bez tohto by po zrušení políčok dostali prázdny zoznam. Zároveň
+            sa tým do akcie dostane aj to, čo je označené na inej strane.
+          */}
+          {filters.picked.map(id => (
+            <input key={id} type="hidden" name="document" value={id} />
+          ))}
+
+          {filters.picked.length > 0 && (
+            <p className="bulk-picked">
+              <span>{tl.picked(filters.picked.length)}</span>
+              {pickedOutside > 0 && (
+                <span className="tichy bulk-picked-outside">{tl.pickedOutside(pickedOutside)}</span>
+              )}
+              <Link className="bulk-picked-clear" href={toQuery(clearPicked(filters))}>
+                {tl.clearPicked}
+              </Link>
+            </p>
+          )}
           {/*
             Tabuľka, nie karty: v knižnici sa dokumenty **porovnávajú** —
             ktoré znenie platí, čo sa kedy zmenilo. Na to musia byť tie isté
@@ -644,10 +681,14 @@ export default async function LibraryPage({
             {paged.rows.map(r => (
               <li key={r.documentId} className="doc-card">
                 <div className="doc-card-top">
-                  <label className="bulk-pick">
-                    <input type="checkbox" name="document" value={r.documentId} />
+                  <Link
+                    href={toQuery(togglePick(filters, r.documentId))}
+                    className={`bulk-pick${isPicked(r.documentId) ? " is-on" : ""}`}
+                    aria-pressed={isPicked(r.documentId)}
+                  >
+                    <span className="bulk-pick-box" aria-hidden="true">{isPicked(r.documentId) ? "✓" : ""}</span>
                     <span className="bulk-pick-text">{tl.pick(r.title)}</span>
-                  </label>
+                  </Link>
                   <span className="stitok">{t.processing[r.processingState] ?? r.processingState}</span>
                   {r.hasDraft && r.status !== "published" && <span className="stitok">{t.draft}</span>}
                   {r.category && <span className="tichy doc-card-kind">{categoryLabel(r.category)}</span>}
@@ -675,7 +716,17 @@ export default async function LibraryPage({
               <thead>
                 <tr>
                   <th scope="col" className="doc-col-pick">
-                    <span className="bulk-pick-text">{tl.pickColumn}</span>
+                    {/* Označí alebo odznačí **túto stranu**, nie celý výsledok:
+                        „označiť všetkých 148" je iná akcia s iným následkom
+                        a mýliť si ich pri hromadnom presune je drahé. */}
+                    <Link
+                      href={toQuery(pickPage(filters, pageIds, !allPagePicked))}
+                      className={`bulk-pick${allPagePicked ? " is-on" : ""}`}
+                      aria-pressed={allPagePicked}
+                    >
+                      <span className="bulk-pick-box" aria-hidden="true">{allPagePicked ? "✓" : ""}</span>
+                      <span className="bulk-pick-text">{tl.pickColumn}</span>
+                    </Link>
                   </th>
                   {([
                     ["title", t.colDocument],
@@ -708,10 +759,14 @@ export default async function LibraryPage({
                 {paged.rows.map(r => (
                   <tr key={r.documentId}>
                     <td className="doc-col-pick">
-                      <label className="bulk-pick">
-                        <input type="checkbox" name="document" value={r.documentId} />
+                      <Link
+                        href={toQuery(togglePick(filters, r.documentId))}
+                        className={`bulk-pick${isPicked(r.documentId) ? " is-on" : ""}`}
+                        aria-pressed={isPicked(r.documentId)}
+                      >
+                        <span className="bulk-pick-box" aria-hidden="true">{isPicked(r.documentId) ? "✓" : ""}</span>
                         <span className="bulk-pick-text">{tl.pick(r.title)}</span>
-                      </label>
+                      </Link>
                     </td>
                     <td className="doc-col-title">
                       <Link href={`/library/${encodeURIComponent(r.documentId)}`} className="doc-title">
@@ -786,7 +841,8 @@ export default async function LibraryPage({
             </button>
 
             {/* Kam sa vrátiť — s filtrom, triedením aj stranou. */}
-            <input type="hidden" name="back" value={toQuery(filters)} />
+            {/* Po vykonanej akcii je výber minutý — vraciame sa bez neho. */}
+            <input type="hidden" name="back" value={toQuery(clearPicked(filters))} />
           </div>
 
           {/*
