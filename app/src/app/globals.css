@@ -37,6 +37,21 @@
   --radius: 12px;
   --radius-lg: 18px;
   --maxw: 940px;
+
+  /*
+   * Šírka aplikačného rozhrania — **jedna pre hlavičku, navigáciu, obsah
+   * aj pätičku.**
+   *
+   * Bez nej mala každá z tých štyroch vrstiev vlastný ľavý okraj: logo
+   * centrované na 940 px, navigácia od kraja obrazovky, obsah na 1240 px.
+   * Na širokom monitore to bolo vidieť ako tri rôzne začiatky riadka nad
+   * sebou a nedalo sa povedať, ktorý je ten správny.
+   *
+   * Vyššia než `--maxw`, lebo v shelli sú aj obrazovky s panelom vedľa
+   * zoznamu — 940 px by tabuľku stlačilo do stĺpca. Stránka, ktorá potrebuje
+   * užší text (znenie normy), si vnútri určí vlastnú šírku.
+   */
+  --shell-maxw: 1240px;
   --shadow: 0 1px 2px rgba(20, 28, 42, 0.05), 0 10px 30px rgba(20, 28, 42, 0.07);
 
   /*
@@ -656,9 +671,25 @@ button:disabled { cursor: not-allowed; opacity: 0.55; }
 
 .app-nav-item:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
 
+/*
+ * Obsah v shelli.
+ *
+ * **Centrovaný a s hornou hranicou šírky**, rovnako ako `.obal` mimo shellu.
+ * Kým bol shell len na knižnici, obsah vľavo nikoho nebil do očí; keď v ňom
+ * začali byť aj ostatné obrazovky, bolo naraz vidieť, že polovica systému má
+ * text pri ľavom okraji a druhá v strede. Jednotné zarovnanie je preto
+ * dôležitejšie než pár desiatok pixelov šírky pre tabuľku.
+ *
+ * Hranica je vyššia než `--maxw` (940 px), lebo v shelli sú aj obrazovky
+ * s panelom vedľa zoznamu — tam by 940 px stlačilo tabuľku do stĺpca.
+ * Stránka, ktorá potrebuje užší text, si vnútri určí vlastnú šírku.
+ */
 .app-main {
   flex: 1;
   min-width: 0;
+  width: 100%;
+  max-width: var(--shell-maxw);
+  margin: 0 auto;
   padding: var(--pad-main) var(--pad-main) 56px;
 }
 
@@ -2580,4 +2611,32 @@ a.answer-source:focus-visible { outline: 2px solid var(--accent); outline-offset
   }
 
   .builder-row .builder-remove { margin-left: auto; }
+}
+
+/* ── jedna šírka pre hlavičku, navigáciu a obsah ─────────────────────────
+   Hlavička a pätička dovtedy používali `.obal` (940 px), navigácia bežala od
+   kraja obrazovky a obsah shellu mal 1240 px. Tri rôzne ľavé okraje nad
+   sebou — a na širokom monitore bolo vidieť všetky tri naraz. */
+.obal--shell {
+  max-width: var(--shell-maxw);
+  margin: 0 auto;
+  padding: 0 var(--pad-main);
+}
+
+/*
+ * Položky navigácie začínajú tam, kde obsah — ale pás ide cez celú šírku.
+ *
+ * Preto odsadenie, nie `max-width`: pozadie a spodná linka pásu sú hranica
+ * hlavičky, nie obsahu, a keď som pásu dala hornú hranicu šírky, biely
+ * pruh na širokom monitore uprostred obrazovky **skončil** a vyzeralo to
+ * ako nedokreslený prvok.
+ *
+ * `max()` drží odsadenie na `--pad-main`, kým je obrazovka užšia než obsah;
+ * nad tým pridá presne tú polovicu prebytku, ktorou je obsah centrovaný.
+ * Bez `max()` by odsadenie na telefóne vyšlo negatívne a prvá položka by
+ * začínala mimo obrazovky.
+ */
+.app-nav--topbar {
+  padding-left: max(var(--pad-main), calc((100% - var(--shell-maxw)) / 2 + var(--pad-main)));
+  padding-right: max(var(--pad-main), calc((100% - var(--shell-maxw)) / 2 + var(--pad-main)));
 }

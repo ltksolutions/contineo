@@ -20,6 +20,7 @@ import { tenantStyle } from "@/components/TenantHeader"
 import { formatDate, UI_LANGUAGES, dictionary } from "@/lib/i18n"
 import { savePersonAction, togglePersonStatusAction } from "../actions"
 import { normalizeQuery, type RawQuery } from "@/lib/urlParams"
+import AppShell from "@/components/AppShell"
 
 export const dynamic = "force-dynamic"
 
@@ -59,7 +60,8 @@ export default async function PersonDetailPage({
   const excluded = o.status === "inactive"
 
   return (
-    <div className="obal" style={{ padding: "28px 20px 80px", maxWidth: 680, ...tenantStyle(branding) }}>
+    <AppShell language={ctx.person.language}>
+    <div style={{ maxWidth: 680, ...tenantStyle(branding) }}>
       <p style={{ margin: "0 0 16px" }}>
         <Link className="tichy" href="/people" style={{ fontSize: 14 }}>{t.back}</Link>
       </p>
@@ -238,5 +240,6 @@ export default async function PersonDetailPage({
         )}
       </form>
     </div>
+    </AppShell>
   )
 }

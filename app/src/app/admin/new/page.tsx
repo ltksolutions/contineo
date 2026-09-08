@@ -12,6 +12,7 @@ import { platformContext } from "@/lib/admin"
 import { createTenantAction } from "../actions"
 import { normalizeQuery, type RawQuery } from "@/lib/urlParams"
 import { dictionary } from "@/lib/i18n"
+import AppShell from "@/components/AppShell"
 
 export const dynamic = "force-dynamic"
 
@@ -30,7 +31,8 @@ export default async function NewTenantPage({
   const t = dictionary(ctx.person.language).admin.create
 
   return (
-    <div className="obal" style={{ padding: "28px 20px 80px", maxWidth: 620 }}>
+    <AppShell language={ctx.person.language}>
+    <div style={{ maxWidth: 620 }}>
       <p style={{ margin: "0 0 12px" }}>
         <Link href="/admin" className="tichy" style={{ fontSize: 14 }}>
           {t.back}
@@ -78,5 +80,6 @@ export default async function NewTenantPage({
         <button className="tlacidlo" type="submit">{t.submit}</button>
       </form>
     </div>
+    </AppShell>
   )
 }

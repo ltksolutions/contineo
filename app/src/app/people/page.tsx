@@ -14,6 +14,7 @@ import { tenantStyle } from "@/components/TenantHeader"
 import { formatDate, dictionary } from "@/lib/i18n"
 import Notice from "@/components/Notice"
 import { normalizeQuery, type RawQuery } from "@/lib/urlParams"
+import AppShell from "@/components/AppShell"
 
 export const dynamic = "force-dynamic"
 
@@ -35,7 +36,8 @@ export default async function PeoplePage({
   const t = dictionary(language).people.list
 
   return (
-    <div className="obal" style={{ padding: "28px 20px 80px", maxWidth: 880, ...tenantStyle(branding) }}>
+    <AppShell language={language}>
+    <div style={{ maxWidth: 880, ...tenantStyle(branding) }}>
       <h1 style={{ fontSize: 26, letterSpacing: "-0.02em", margin: "0 0 6px" }}>{t.heading}</h1>
       <p className="tichy" style={{ fontSize: 15, margin: "0 0 18px", maxWidth: 620 }}>
         {t.introBefore}<strong>{t.introHighlight}</strong>{t.introAfter}
@@ -108,5 +110,6 @@ export default async function PeoplePage({
         })}
       </ul>
     </div>
+    </AppShell>
   )
 }

@@ -4,6 +4,26 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Fixed (2026-09-08 — jedno rozhranie namiesto dvoch)
+
+**Toto je oprava chyby v mojom rozhodnutí, nie nová funkcia.** Dohoda „shell je opt-in a stránky sa presúvajú po jednej" znamenala, že systém je po celý čas presunu v stave, ktorý je horší než oba jeho konce. Pri dvoch obrazovkách v shelli a ôsmich mimo bolo naraz vidieť:
+
+- dva navigačné systémy — menu v hlavičke a pás pod ňou — s **iným poradím položiek** (hlavička mala Zlatú sadu druhú a Knižnicu poslednú, shell naopak),
+- iný vzhľad aktívnej položky (sivá vs. farba organizácie),
+- iné zarovnanie obsahu (na stred vs. pri ľavom okraji).
+
+Čo sa zmenilo:
+
+- **Shell je na každej prihlásenej obrazovke.** Dvadsaťštyri stránok, vrátane podstránok knižnice, HR, osôb, zlatej sady, nastavenia organizácie a správy tenantov. Prihlasovacia obrazovka ho nemá zámerne — navigácia obsahu by na nej viedla na miesta, kam sa neprihlásený človek nedostane.
+- **Hlavička už navigáciu obsahu nevykresľuje.** Zostáva v nej značka organizácie a osobné menu pod avatarom (nastavenia, správa tenantov, téma, odhlásenie) — to shell nemá a je to správne, sú to veci otvárané raz za mesiac.
+- **`shellRoutes.ts` sa otočil.** Namiesto zoznamu obrazoviek, ktoré shell majú, je tam zoznam **výnimiek**, ktoré ho nemajú. Vymenovať výnimky je lacnejšie než vymenovať pravidlo — a nová obrazovka tým dostane navigáciu bez toho, aby si na to niekto musel vzpomenúť.
+- **Jedna šírka pre hlavičku, navigáciu, obsah aj pätičku** (`--shell-maxw`). Dovtedy mala každá z tých štyroch vrstiev vlastný ľavý okraj: logo centrované na 940 px, navigácia od kraja obrazovky, obsah shellu na 1240 px. Na širokom monitore boli všetky tri začiatky riadka vidieť naraz.
+- **Pás navigácie ide cez celú šírku, ale položky sú zarovnané s obsahom.** Riešené odsadením s `max()`, nie hornou hranicou šírky: keď pás hranicu dostal, biely pruh uprostred širokej obrazovky **skončil** a vyzeral ako nedokreslený prvok.
+- **Dvojitý padding je preč.** Stránky mali odsadenie z `.obal`, shell ho má v `.app-main` — na telefóne by dve vrstvy zjedli tretinu šírky.
+- **Layout prestal zisťovať dve role.** Rolu HR a správy obsahu si počíta `AppShell` sám; v `layout.tsx` to boli dva dotazy na každú stránku pre odkazy, ktoré hlavička už nevykresľuje.
+- Overené: `tsc --noEmit` čisto, `eslint` bez chýb, 1003 testov (hranica shellu prepísaná na nové pravidlo), produkčný build prejde, tri obrazovky prekreslené na 1600 px aj na 390 px.
+
+
 ### Added (2026-09-08 — zátvorky v query builderi ako skupiny podmienok)
 
 - **Zátvorky sú skupiny, nie znaky.** Vnútri skupiny platí „a", medzi skupinami „alebo" — teda `(A a B) alebo (C a D)`. Do tejto formy sa dá previesť každý booleovský výraz, takže sa nič nestráca, a rozhranie zostáva dvojúrovňové: opísateľné jednou vetou a **ovládateľné bez JavaScriptu**, na čom knižnica zámerne stojí. Strom ľubovoľnej hĺbky by si vyžiadal klientsky stav a s ním by prestala fungovať bez skriptu.

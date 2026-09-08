@@ -23,6 +23,7 @@ import { tenantStyle } from "@/components/TenantHeader"
 import { dictionary, formatDate } from "@/lib/i18n"
 import type { UiLanguage } from "@/lib/i18n"
 import { normalizeQuery, type RawQuery } from "@/lib/urlParams"
+import AppShell from "@/components/AppShell"
 
 export const dynamic = "force-dynamic"
 
@@ -84,7 +85,8 @@ export default async function HrReportPage({
   }
 
   return (
-    <div className="obal" style={{ padding: "28px 20px 80px", maxWidth: 900, ...tenantStyle(branding) }}>
+    <AppShell language={ctx.person.language}>
+    <div style={{ maxWidth: 900, ...tenantStyle(branding) }}>
       <p style={{ margin: "0 0 16px" }}>
         <Link className="tichy" href="/hr" style={{ fontSize: 14 }}>
           {dictionary(language).hr.detail.back}
@@ -182,5 +184,6 @@ export default async function HrReportPage({
         </p>
       )}
     </div>
+    </AppShell>
   )
 }

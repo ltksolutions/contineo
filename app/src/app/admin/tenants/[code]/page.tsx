@@ -25,6 +25,7 @@ import type { DomainStatus } from "@/lib/vercel"
 import type { OAuthProviderName } from "@/lib/oauth"
 import type { Tenant } from "@/lib/tenants"
 import { normalizeQuery, type RawQuery } from "@/lib/urlParams"
+import AppShell from "@/components/AppShell"
 
 
 /**
@@ -201,7 +202,8 @@ export default async function TenantDetailPage({
   const t = d.admin.detail
 
   return (
-    <div className="obal" style={{ padding: "28px 20px 80px", maxWidth: 760 }}>
+    <AppShell language={ctx.person.language}>
+    <div style={{ maxWidth: 760 }}>
       <p style={{ margin: "0 0 12px" }}>
         <Link href="/admin" className="tichy" style={{ fontSize: 14 }}>
           {t.back}
@@ -363,5 +365,6 @@ export default async function TenantDetailPage({
         <AuditList records={records} language={language} />
       </section>
     </div>
+    </AppShell>
   )
 }

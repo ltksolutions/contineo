@@ -10,6 +10,7 @@ import { notFound, redirect } from "next/navigation"
 import Link from "next/link"
 import { platformContext, tenantOverviews } from "@/lib/admin"
 import { formatDate, dictionary } from "@/lib/i18n"
+import AppShell from "@/components/AppShell"
 
 export const dynamic = "force-dynamic"
 
@@ -36,7 +37,8 @@ export default async function TenantAdminPage() {
   const t = dictionary(language).admin.list
 
   return (
-    <div className="obal" style={{ padding: "28px 20px 80px", maxWidth: 900 }}>
+    <AppShell language={ctx.person.language}>
+    <div style={{ maxWidth: 900 }}>
       <h1 style={{ fontSize: 27, letterSpacing: "-0.02em", margin: "0 0 6px" }}>{t.heading}</h1>
       <p className="tichy" style={{ fontSize: 15, margin: "0 0 16px", maxWidth: 640 }}>{t.intro}</p>
 
@@ -119,5 +121,6 @@ export default async function TenantAdminPage() {
         {t.domainsNoteBefore}<code>npm run domains</code>{t.domainsNoteAfter}
       </p>
     </div>
+    </AppShell>
   )
 }

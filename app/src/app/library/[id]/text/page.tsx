@@ -24,6 +24,7 @@ import Notice from "@/components/Notice"
 import TextEditor from "@/components/TextEditor"
 import { saveTextAction, sendToModelAction, decideOnDraftAction } from "../../actions"
 import { normalizeQuery, type RawQuery } from "@/lib/urlParams"
+import AppShell from "@/components/AppShell"
 
 export const dynamic = "force-dynamic"
 
@@ -64,7 +65,8 @@ export default async function EditorPage({
     : null
 
   return (
-    <div className="obal" style={{ padding: "24px 20px 80px", maxWidth: 1200, ...tenantStyle(branding) }}>
+    <AppShell language={ctx.person.language}>
+    <div style={{ maxWidth: 1200, ...tenantStyle(branding) }}>
       <Notice message={message} error={error === "1"} back={`/library/${encodeURIComponent(documentId)}/text`} />
 
       <p style={{ margin: "0 0 10px" }}>
@@ -167,5 +169,6 @@ export default async function EditorPage({
         )}
       </section>
     </div>
+    </AppShell>
   )
 }

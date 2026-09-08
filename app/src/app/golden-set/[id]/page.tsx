@@ -12,6 +12,7 @@ import { authOptions } from "@/lib/auth"
 import { loadGoldenSet, questionText } from "@/lib/goldenSet"
 import GoldenSetQuestion from "@/components/GoldenSetQuestion"
 import { currentPerson } from "@/lib/session"
+import AppShell from "@/components/AppShell"
 
 export const dynamic = "force-dynamic"
 
@@ -35,7 +36,8 @@ export default async function QuestionDetailPage({ params }: { params: Promise<{
     null
 
   return (
-    <div className="obal" style={{ padding: "28px 20px 80px" }}>
+    <AppShell language={language}>
+    <div>
       <GoldenSetQuestion
         id={question.id}
         text={questionText(question)}
@@ -53,5 +55,6 @@ export default async function QuestionDetailPage({ params }: { params: Promise<{
         language={language}
       />
     </div>
+    </AppShell>
   )
 }

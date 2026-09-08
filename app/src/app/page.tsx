@@ -18,6 +18,7 @@ import PendingWidget from "@/components/PendingWidget"
 import { onboardingContext } from "@/lib/session"
 import { pendingForPerson } from "@/lib/pending"
 import { dictionary } from "@/lib/i18n"
+import AppShell from "@/components/AppShell"
 
 // Stránka číta hlavičky požiadavky (hostiteľ → tenant) a reláciu, takže sa
 // nedá predgenerovať. Bez tohto by Next.js skúsil statický výstup a spadol.
@@ -37,7 +38,8 @@ export default async function HomePage() {
     person && person.tracks.length > 0 ? await pendingForPerson(person) : null
 
   return (
-    <div className="obal" style={{ padding: "28px 20px 80px" }}>
+    <AppShell language={person?.language}>
+    <div>
       {overview && person && (
         <div style={{ marginBottom: 32 }}>
           <PendingWidget overview={overview} language={person.language} />
@@ -55,5 +57,6 @@ export default async function HomePage() {
 
       <Search language={person?.language} />
     </div>
+    </AppShell>
   )
 }

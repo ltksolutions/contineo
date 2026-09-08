@@ -20,6 +20,7 @@ import { requestHostname } from "@/lib/session"
 import { formatDate, normalizeLanguage, dictionary } from "@/lib/i18n"
 import { sendNotificationAction } from "../../actions"
 import { normalizeQuery, type RawQuery } from "@/lib/urlParams"
+import AppShell from "@/components/AppShell"
 
 export const dynamic = "force-dynamic"
 
@@ -70,7 +71,8 @@ export default async function NotifyPage({
   )
 
   return (
-    <div className="obal" style={{ padding: "28px 20px 80px", maxWidth: 720, ...tenantStyle(branding) }}>
+    <AppShell language={ctx.person.language}>
+    <div style={{ maxWidth: 720, ...tenantStyle(branding) }}>
       <p style={{ margin: "0 0 16px" }}>
         <Link className="tichy" href={`/hr/${encodeURIComponent(id)}`} style={{ fontSize: 14 }}>
           {t.back}
@@ -149,5 +151,6 @@ export default async function NotifyPage({
         </>
       )}
     </div>
+    </AppShell>
   )
 }

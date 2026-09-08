@@ -16,6 +16,7 @@ import { authOptions } from "@/lib/auth"
 import { loadGoldenSet, goldenSetSummary, questionText, verdictCount } from "@/lib/goldenSet"
 import { dictionary, type UiLanguage } from "@/lib/i18n"
 import { currentPerson } from "@/lib/session"
+import AppShell from "@/components/AppShell"
 
 export const dynamic = "force-dynamic"
 
@@ -59,7 +60,8 @@ export default async function GoldenSetPage() {
   const t = dictionary(language).goldenSet
 
   return (
-    <div className="obal" style={{ padding: "32px 20px 80px", maxWidth: 1040 }}>
+    <AppShell language={language}>
+    <div style={{ maxWidth: 1040 }}>
       <div style={{ marginBottom: 24 }}>
         <h1 style={{ fontSize: 25, letterSpacing: "-0.02em", margin: "0 0 8px" }}>{t.heading}</h1>
         <p className="tichy" style={{ fontSize: 15, margin: 0, maxWidth: 680 }}>{t.intro}</p>
@@ -180,5 +182,6 @@ export default async function GoldenSetPage() {
         })}
       </div>
     </div>
+    </AppShell>
   )
 }

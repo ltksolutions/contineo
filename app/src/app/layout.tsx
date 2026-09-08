@@ -12,9 +12,7 @@ import Header from "@/components/Header"
 import Footer from "@/components/Footer"
 import SessionProvider from "@/components/SessionProvider"
 import { currentTenant, currentEmail, currentPerson } from "@/lib/session"
-import { libraryContext } from "@/lib/library"
 import { platformContext } from "@/lib/admin"
-import { hrContext } from "@/lib/hr"
 import { peopleContext } from "@/lib/people"
 import { brandingView } from "@/lib/tenants"
 import { tenantStyle } from "@/components/TenantHeader"
@@ -139,10 +137,11 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   // Odkaz na správu tenantov sa ukáže len tomu, kto ňou naozaj prejde —
   // rozhoduje o tom tá istá funkcia ako o samotnej stránke, nie druhá kópia
   // pravidla. Zlyhanie sa berie ako „neukazovať".
+  // Rolu HR a správy obsahu si tu už nezisťujeme: navigáciu obsahu prevzal
+  // `AppShell` a ten si ju počíta sám. Boli to dva dotazy na každú stránku
+  // pre odkazy, ktoré hlavička už nevykresľuje.
   let isAdmin = false
-  let isHr = false
   let isPeopleAdmin = false
-  let isContentManager = false
   if (email) {
     try {
       isAdmin = (await platformContext()).state === "ready"
@@ -150,19 +149,9 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       console.error("[layout] rolu správcu sa nepodarilo overiť:", e)
     }
     try {
-      isHr = (await hrContext()).state === "ready"
-    } catch (e) {
-      console.error("[layout] rolu HR sa nepodarilo overiť:", e)
-    }
-    try {
       isPeopleAdmin = (await peopleContext()).state === "ready"
     } catch (e) {
       console.error("[layout] rolu správy osôb sa nepodarilo overiť:", e)
-    }
-    try {
-      isContentManager = (await libraryContext()).state === "ready"
-    } catch (e) {
-      console.error("[layout] rolu správy obsahu sa nepodarilo overiť:", e)
     }
   }
 
@@ -178,9 +167,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             name={name}
             photo={photo}
             isAdmin={isAdmin}
-            isHr={isHr}
             isPeopleAdmin={isPeopleAdmin}
-            isContentManager={isContentManager}
             language={language}
           />
           <main style={{ flex: 1 }}>{children}</main>

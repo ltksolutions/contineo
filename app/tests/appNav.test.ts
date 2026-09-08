@@ -8,7 +8,7 @@
 
 import { describe, it, expect } from "vitest"
 import { navItems, normalizeLayout, isActive } from "../src/lib/appNav"
-import { isShellRoute, SHELL_ROUTES, SHELL_SECTIONS } from "../src/lib/shellRoutes"
+import { isShellRoute, WITHOUT_SHELL } from "../src/lib/shellRoutes"
 
 describe("položky navigácie", () => {
   it("bez rolí zostane to, čo vidí každý prihlásený", () => {
@@ -63,31 +63,31 @@ describe("aktívna položka", () => {
 })
 
 describe("hranica shellu", () => {
-  it("pri nepresunutej sekcii je zhoda presná, nie na prefix", () => {
-    // `/library/new` v shelli zatiaľ nie je. Keby ho `Header` považoval za
-    // shell route, skryl by mu menu a nedal by mu namiesto neho nič.
+  it("prihlásené obrazovky sú v shelli všetky", () => {
+    // Zoznam sa otočil: shell je pravidlo a vymenúvajú sa výnimky. Kým bol
+    // opt-in, mala polovica systému navigáciu v hlavičke a polovica pod ňou
+    // — s iným poradím položiek aj iným zarovnaním obsahu.
+    expect(isShellRoute("/")).toBe(true)
     expect(isShellRoute("/library")).toBe(true)
-    expect(isShellRoute("/library/new")).toBe(false)
-    expect(isShellRoute("/")).toBe(false)
-  })
-
-  it("presunutá sekcia platí aj pre podstránky", () => {
-    // `/documents` je presunuté celé. Detail dokumentu bez prefixu by
-    // zostal bez akejkoľvek navigácie — menu skryté, shell nedostal.
-    expect(isShellRoute("/documents")).toBe(true)
+    expect(isShellRoute("/library/new")).toBe(true)
     expect(isShellRoute("/documents/sfz:stanovy")).toBe(true)
+    expect(isShellRoute("/organisation")).toBe(true)
   })
 
-  it("hranicou sekcie je lomka, nie začiatok reťazca", () => {
-    // Inak by `/documentsomething` prešlo ako podstránka `/documents`.
-    expect(isShellRoute("/documentsomething")).toBe(false)
-    expect(isShellRoute("/documents-archiv")).toBe(false)
+  it("prihlasovacia obrazovka shell nemá", () => {
+    // Navigácia obsahu by na nej viedla na miesta, kam sa neprihlásený
+    // človek nedostane.
+    expect(isShellRoute("/sign-in")).toBe(false)
   })
 
-  it("každá cesta v oboch zoznamoch je absolútna a bez koncovej lomky", () => {
-    // Koncová lomka by v prefixe znamenala `//` a sekcia by neplatila
-    // nikdy — chyba, ktorú by nikto nehľadal v tomto súbore.
-    for (const route of [...SHELL_ROUTES, ...SHELL_SECTIONS]) {
+  it("hranicou výnimky je lomka, nie začiatok reťazca", () => {
+    // Inak by `/sign-inx` prepadlo medzi výnimky.
+    expect(isShellRoute("/sign-inx")).toBe(true)
+    expect(isShellRoute("/sign-in/callback")).toBe(false)
+  })
+
+  it("každá výnimka je absolútna a bez koncovej lomky", () => {
+    for (const route of WITHOUT_SHELL) {
       expect(route.startsWith("/")).toBe(true)
       expect(route.endsWith("/")).toBe(false)
     }
