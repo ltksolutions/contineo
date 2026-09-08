@@ -21,6 +21,8 @@ import { dictionary, formatDate } from "@/lib/i18n"
 import AcknowledgeButton from "@/components/AcknowledgeButton"
 import ReadingTimer from "@/components/ReadingTimer"
 import Notice from "@/components/Notice"
+import AppShell from "@/components/AppShell"
+import { normalizeLayout } from "@/lib/appNav"
 import { acknowledgeAction } from "./actions"
 
 export const dynamic = "force-dynamic"
@@ -57,7 +59,10 @@ export default async function DocumentPage({
   const failed = text(q.error) === "1"
 
   return (
-    <div className="obal" style={{ padding: "36px 20px 80px", maxWidth: 760, ...tenantStyle(branding) }}>
+    <AppShell layout={normalizeLayout(text(q.layout))} language={person.language}>
+    {/* 760 px zostáva — je to znenie normy na čítanie. Shell dáva navigáciu
+        a odsadenie, dĺžku riadka určuje obsah. */}
+    <div style={{ maxWidth: 760, ...tenantStyle(branding) }}>
       <Notice
         message={message}
         error={failed}
@@ -120,5 +125,6 @@ export default async function DocumentPage({
         </>
       )}
     </div>
+    </AppShell>
   )
 }

@@ -4,6 +4,17 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Changed (2026-09-08 — „Na potvrdenie" beží v aplikačnom shelli)
+
+Druhá sekcia v shelli, prvá presunutá **celá** aj s podstránkami. Presúva sa po jednej a každá vlastným PR — dohoda z kroku 2.
+
+- **`shellRoutes.ts` má dva zoznamy, nie jeden.** `SHELL_ROUTES` je presná zhoda pre sekcie, z ktorých je v shelli len úvodná stránka (`/library` áno, `/library/new` nie — prefix by mu zobral menu v hlavičke a nedal by mu namiesto neho nič). `SHELL_SECTIONS` je pre sekcie presunuté celé; tam prefix treba, inak by detail dokumentu zostal **bez akejkoľvek navigácie**.
+- **Hranicou sekcie je lomka, nie začiatok reťazca** — inak by `/documentsomething` prešlo ako podstránka `/documents`. Je na to test, rovnako ako na to, že cesta v zozname nesmie končiť lomkou (`//` v prefixe by sekciu vypol navždy a nikto by to nehľadal v tomto súbore).
+- **Šírka 760 px zostáva** na oboch stránkach. Shell dáva navigáciu a odsadenie; dĺžku riadka určuje obsah — je to znenie normy na čítanie, nie tabuľka.
+- **Vetva „nie ste v tejto organizácii" shell nedostala** zámerne: kto nie je medzi osobami tenanta, nemá kam navigovať a navigácia by mu ponúkla sekcie, do ktorých ho stránky nepustia.
+- Overené: `tsc --noEmit` čisto, `eslint` bez chýb, **989 testov** (2 nové nad hranicou sekcie), produkčný build prejde.
+
+
 ### Added (2026-09-08 — dať vedieť e-mailom aj o povinnostiach z trasy)
 
 Nájdené pri skúške na skúšobnej smernici: **„Dať vedieť" existovalo len nad prideleniami.** Keď povinnosť vznikla krokom v trase, pridelenie neexistovalo a tlačidlo nebolo nikde — pritom presne tadiaľ chodí onboarding.
