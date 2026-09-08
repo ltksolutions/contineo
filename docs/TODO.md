@@ -84,7 +84,7 @@
 - [ ] Výber, ktorý prežije stránkovanie — dnes platí len pre viditeľnú stranu. Má zmysel až s klientskym stavom alebo s id v adrese; treba doriešiť, čo s označeným dokumentom, ktorý už filtru nevyhovuje
 - [x] **5a. Detail dokumentu — pravý panel** — potvrdenia platného znenia (percento z pridelených osôb), prehľad metadát, chips v hlavičke. Editora sa to nedotklo
 - [x] **5b. Nahrávanie** (`/library/new`) — číslované sekcie (nie stepper, schvaľovací krok neexistuje), zóna na pretiahnutie bez JavaScriptu, mriežka metadát
-- [ ] **5c. „Opýtať sa"** (`/`) — rozsah hľadania, karta odpovede, zdroje; znovupoužiť `Answer.tsx`, `Rating.tsx`. Je to najpoužívanejšia stránka systému, takže opatrne
+- [x] **5c. „Opýtať sa"** (`/`) — hero karta okolo poľa na otázku, hlavička karty odpovede („Odpoveď z vašich dokumentov"), zdroje ako karty s odkazom na originál. `Answer.tsx` a `Rating.tsx` znovupoužité, streamovania sa to nedotklo. Rozsah hľadania a skóre zhody vynechané — viď nižšie
 - [ ] **6. Nastavenia** — živý náhľad farby v `ColorSelect.tsx`, slot na logo na `saveBrand()`
 - [ ] **7. Dotiahnutie** — tmavá téma, `:focus-visible` všade, mobilná zásuvka filtrov, `<noscript>` cesty
 - [ ] Presunúť do shellu zvyšné stránky (`/documents`, `/hr`, `/people`, `/golden-set`, `/admin`), každú vlastným PR; potom zmizne menu v hlavičke
@@ -98,6 +98,8 @@
 
 - [ ] **Facet a stĺpec „Oddelenie"** — dokument oddelenie **nenesie**. Pridelenie žije v `assignments` (`audience.kind` = `department` / `group` / `track`), takže filter aj stĺpec znamenajú spojenie naprieč kolekciami. Rozhodnúť: denormalizovať zoznam adresátov na dokument (rýchle čítanie, ale stav sa ukladá — proti D27), alebo počítať z `assignments` agregáciou pri každom zobrazení
 - [ ] **Stĺpec „Potvrdenia %"** — percento potvrdení pre každý riadok je agregácia nad `acknowledgements` a nad počtom adresátov. Rozhodnúť rozsah (kto je menovateľ: pridelení, alebo celá organizácia?) a či sa počíta pri zobrazení, alebo sa drží predpočítané
+- [ ] **Rozsah hľadania** („Hľadať len v: Knižnica / Intranet / Verejný web / Archív") — v systéme **nič také neexistuje**. Prehľadáva sa `document_chunks` jednej organizácie, jediné delenie je `accessLevel` (verejné / interné). Pilulky by teda predstierali voľbu, ktorá nič nemení. Doplniť znamená: rozhodnúť, čo tie rozsahy vlastne sú (typ zdroja? stav znenia? archív = `effectiveTo` v minulosti?), pridať ich ako filter do RAG dotazu (`SearchOptions`) a preniesť voľbu cez `/api/chat`
+- [ ] **Skóre zhody pri zdroji** (formát „0,94") — hodnotu `score` vracia vyhľadávanie (`ChunkResult.score`), ale `buildSources()` ju klientovi neposiela a `AnswerSource` pole na ňu nemá. Doplniť je pár riadkov, otázka je, **čo to číslo pre človeka znamená**: pri `$rankFusion` a reranku nie je v rozsahu 0–1 a medzi režimami hľadania (fulltext / vektor / hybrid) nie je porovnateľné. Ukázať neporovnateľné číslo ako „zhoda 94 %" je horšie než ho neukázať
 - [ ] **Stavy „Na schválenie" a „Expirovaný"** — v knižnici **neexistuje schvaľovací workflow**; dnes sú stavy len `draft` / `published` a platnosť sa odvodzuje z `effectiveFrom` / `effectiveTo` znenia. „Expirovaný" sa dá odvodiť (D27), „Na schválenie" je nový stav so schvaľovacou cestou — a tá je vlastná fáza, viď schvaľovatelia v kroku 5
 
 ### E. Source-adaptéry + provenance (Fáza 4/6)

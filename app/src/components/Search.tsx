@@ -143,72 +143,70 @@ export default function Search({
 
   return (
     <div style={{ display: "grid", gap: 22 }}>
-      <form
-        onSubmit={e => { e.preventDefault(); send(question) }}
-        style={{ display: "grid", gap: 10 }}
-      >
-        <textarea
-          value={question}
-          onChange={e => setQuestion(e.target.value)}
-          onKeyDown={e => {
-            // Enter odosiela, Shift+Enter robí nový riadok. Otázky bývajú
-            // jednoriadkové, takže by bolo otravné klikať na tlačidlo.
-            if (e.key === "Enter" && !e.shiftKey) {
-              e.preventDefault()
-              send(question)
-            }
-          }}
-          placeholder={t.placeholder}
-          rows={3}
-          maxLength={1000}
-          style={{
-            width: "100%", resize: "vertical",
-            background: "var(--surface)", color: "var(--ink)",
-            border: "1px solid var(--line)", borderRadius: 12,
-            padding: "14px 16px", fontSize: 16, lineHeight: 1.6,
-            fontFamily: "inherit",
-          }}
-        />
-        <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
-          <button type="submit" className="tlacidlo" disabled={!question.trim() || state.running}>
-            {state.running ? t.searching : t.submit}
-          </button>
-          {state.running && (
-            <button
-              type="button"
-              className="tlacidlo tlacidlo--tiche"
-              onClick={() => { abort.current?.abort(); setState(s => ({ ...s, running: false })) }}
-            >
-              {t.stop}
+      {/* Pole na otázku je jediná vec, ktorú tu od človeka chceme — preto
+          má vlastnú kartu. Odpoveď a hodnotenie zostávajú mimo nej: sú to
+          následky, nie súčasť zadávania. */}
+      <div className="ask-hero">
+        <form
+          className="ask-form"
+          onSubmit={e => { e.preventDefault(); send(question) }}
+        >
+          <textarea
+            className="ask-field"
+            value={question}
+            onChange={e => setQuestion(e.target.value)}
+            onKeyDown={e => {
+              // Enter odosiela, Shift+Enter robí nový riadok. Otázky bývajú
+              // jednoriadkové, takže by bolo otravné klikať na tlačidlo.
+              if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault()
+                send(question)
+              }
+            }}
+            placeholder={t.placeholder}
+            rows={3}
+            maxLength={1000}
+          />
+          <div className="ask-actions">
+            <button type="submit" className="tlacidlo" disabled={!question.trim() || state.running}>
+              {state.running ? t.searching : t.submit}
             </button>
-          )}
-          <span className="tichy" style={{ fontSize: 12.5, marginLeft: "auto" }}>
-            {question.length}/1000
-          </span>
-        </div>
-      </form>
-
-      {/* Príklady zmiznú, len čo je čo ukazovať. */}
-      {!state.text && !state.running && !state.done && (
-        <div>
-          <div className="tichy" style={{ fontSize: 12.5, marginBottom: 8 }}>
-            {t.examplesLabel}
-          </div>
-          <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-            {t.examples.map(p => (
+            {state.running && (
               <button
-                key={p}
                 type="button"
-                className="stitok"
-                style={{ background: "var(--surface)", fontWeight: 500 }}
-                onClick={() => { setQuestion(p); send(p) }}
+                className="tlacidlo tlacidlo--tiche"
+                onClick={() => { abort.current?.abort(); setState(s => ({ ...s, running: false })) }}
               >
-                {p}
+                {t.stop}
               </button>
-            ))}
+            )}
+            <span className="tichy ask-counter">
+              {question.length}/1000
+            </span>
           </div>
-        </div>
-      )}
+        </form>
+
+        {/* Príklady zmiznú, len čo je čo ukazovať. */}
+        {!state.text && !state.running && !state.done && (
+          <div className="ask-examples-wrap">
+            <div className="tichy ask-examples-label">
+              {t.examplesLabel}
+            </div>
+            <div className="ask-examples">
+              {t.examples.map(p => (
+                <button
+                  key={p}
+                  type="button"
+                  className="ask-example"
+                  onClick={() => { setQuestion(p); send(p) }}
+                >
+                  {p}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
 
       <Answer state={state} language={language} />
 

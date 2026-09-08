@@ -2245,3 +2245,127 @@ html[data-theme="dark"] .editor-tui .CodeMirror {
   .strom-uchop { display: none; }
   .strom--ciary .strom-polozka { cursor: default; }
 }
+
+/* ── opýtať sa: hero, karta odpovede a zdroje ────────────────────────────
+   Prvá obrazovka po prihlásení. Pole na otázku doteraz „plávalo" priamo na
+   pozadí stránky a nič nehovorilo, že práve toto je hlavná vec, ktorú tu
+   človek robí. Hero je karta okolo neho — nie nový prvok, len rám. */
+.ask-hero {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  padding: 18px;
+  max-width: 860px;
+}
+
+.ask-form { display: grid; gap: 10px; }
+
+.ask-field {
+  width: 100%;
+  resize: vertical;
+  background: var(--bg);
+  color: var(--ink);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 12px 14px;
+  /* 16 px, nie menej: pod 16 px iOS Safari pri fokuse priblíži celú stránku
+     a tlačidlo „Opýtať sa" skončí mimo obrazovky. */
+  font-size: 16px;
+  line-height: 1.6;
+  font-family: inherit;
+}
+
+.ask-field:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+  border-color: var(--accent);
+}
+
+.ask-actions { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+
+.ask-counter {
+  font-size: 12.5px;
+  margin-left: auto;
+  font-variant-numeric: tabular-nums;
+}
+
+.ask-examples-wrap { margin-top: 18px; }
+.ask-examples-label { font-size: 12.5px; margin-bottom: 8px; }
+.ask-examples { display: flex; flex-wrap: wrap; gap: 8px; }
+
+/* Príklad je pilulka, nie štítok. Štítok je stav (`publikované`), toto je
+   ponuka na kliknutie — a ten rozdiel musí byť vidieť skôr, než sa naň
+   ukáže myšou. Doteraz to bol `.stitok` s dvomi inline štýlmi. */
+.ask-example {
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--ink);
+  border-radius: 20px;
+  padding: 6px 12px;
+  font-size: 13px;
+  font-weight: 500;
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.ask-example:hover { border-color: var(--accent); background: var(--accent-soft); }
+.ask-example:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+/* Hlavička karty odpovede. Značka a jedna veta, ktorá hovorí to podstatné:
+   toto nie je odpoveď z internetu, ale z dokumentov organizácie. */
+.answer-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.answer-mark {
+  width: 20px;
+  height: 20px;
+  border-radius: 6px;
+  background: var(--accent);
+  flex: none;
+}
+
+.answer-kicker {
+  font-size: 11px;
+  font-weight: 650;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+}
+
+/* Zdroje. Karta namiesto holého riadku a — keď zdroj nesie adresu originálu —
+   je celá karta odkaz. Doteraz sa na zdroj nedalo kliknúť vôbec. */
+.answer-sources { display: grid; gap: 6px; margin-top: 10px; }
+
+.answer-source {
+  display: flex;
+  gap: 10px;
+  align-items: baseline;
+  padding: 9px 10px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: var(--bg);
+  color: inherit;
+  text-decoration: none;
+}
+
+a.answer-source:hover { border-color: var(--accent); }
+a.answer-source:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+.answer-source-index {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--accent);
+  font-variant-numeric: tabular-nums;
+}
+
+/* `min-width: 0` je nutné: bez neho flexová položka nezmenší pod šírku
+   svojho najdlhšieho slova a dlhý názov dokumentu roztiahne kartu. */
+.answer-source-body { flex: 1; min-width: 0; }
+
+.answer-source-title { font-size: 12.5px; font-weight: 600; }
+.answer-source-meta { display: block; font-size: 11.5px; margin-top: 2px; }
