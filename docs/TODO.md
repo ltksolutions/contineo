@@ -54,8 +54,8 @@
 - [ ] **`sfz:test_onboarding` nemá aktívne úseky** — seedovací skript zapisuje dokument, nie chunky. Pri testovacom dokumente to nevadí, ale kontrola to bude hlásiť
 - [x] **poradie oddelení** (D60) — ťahanie myšou v rámci úrovne, šípky ako bezJS cesta, čiary hierarchie
 - [x] **poradie aj pre priečinky knižnice** (D60) — ten istý komponent ako pri oddeleniach
-- [x] **`components/StromSPoradim.tsx`** — premenované z `StromOddeleni.tsx`, komponent slúži obom stromom
-- [ ] presun dokumentu do priečinka hromadne (zatiaľ po jednom v detaile)
+- [x] **`components/TreeWithOrder.tsx`** — premenované z `StromOddeleni.tsx` cez `StromSPoradim.tsx`, komponent slúži obom stromom
+- [x] **presun dokumentu do priečinka hromadne** ✅ hotové v 4e — `moveManyAction` v `app/src/app/library/actions.ts` (cyklus nad `assignDocument`, audit zostáva, dávka môže skončiť čiastočne a vypíše, čo neprešlo). Zápis „zatiaľ po jednom v detaile" bol zastaraný.
 - [x] **hromadné preindexovanie** — v záložke Členenie, po dávkach 25, s počtom neaktuálnych dokumentov
 - [x] **pôvodné PDF doplnené k deviatim normám** — `npm run files:attach` (2026-08-30)
 - [ ] archivácia dokumentu z obrazovky — mazanie zámerne nie je (viažu sa potvrdenia)
@@ -308,7 +308,7 @@
   - [ ] Odstrániť `POVOLENE_EMAILY` z Vercelu — až po overení prihlásením, nie výpisom (`vercel env pull` vracia hodnotu prázdnu)
   - [ ] `EMAIL_MENO_ODOSIELATELA` a `EMAIL_ODOSIELATEL` → `EMAIL_SENDER_NAME`, `EMAIL_SENDER` — rovnaký vzor: **preložiť, nie premenovať** (kód číta novú, pri prázdnej starú), aby nasadenie nespadlo medzi zmenou kódu a zmenou premennej
 - [ ] `chunker.mjs` a jeho `.d.mts` majú slovenské názvy **zámerne** — sú to jeho parametre a prekladajú sa v `chunkingProfile.ts`. Nechať tak.
-- [ ] `TagSelect.tsx` a spol. — po premenovaní zostali rozpísané skratky vlastností (`name: name,`); kozmetika, urobiť pri najbližšom dotyku súboru
+- [ ] **Rozpísané skratky v deštrukturalizácii** (`{ name: name, options: options }` namiesto `{ name, options }`) — **33 riadkov v 12 komponentoch** (`AppNav`, `AuditList`, `Header`, `MultiSelect`, `Notice`, `Search`, `Select`, `SignIn`, `TagSelect`, `TextEditor`, `TreeWithOrder`). Zostalo po dávnom premenovaní vlastností. Čistá kozmetika, `eslint` to nehlási — urobiť pri najbližšom dotyku daného súboru, nie ako samostatný prechod cez dvanásť súborov.
 - [x] **Názvy indexov v Mongo** ✅ 2026-09-06 — 18 premenovaní cez `npm run migrate:indexes` (náhľad, `--zapis` vykoná). `onboarding_init.mjs` má nové názvy a jeho polia po anglicky (`kluc`→`key`, `preco`→`why`, `kolekcia`→`collection`, `indexy`→`indexes`).
       **Bezpečné poradie neexistuje.** Mongo druhý index nad tým istým kľúčom neprijme („Index already exists with a different name"), takže „vytvoriť → zahodiť" nejde a premenovanie indexu ako operácia v Mongu nie je. Ostáva zahodiť → vytvoriť, teda krátke okno bez obmedzenia.
       Preto skript pri unikátnom indexe **najprv overí, že duplicity neexistujú** (rešpektuje `partialFilterExpression`) a zahodí len vtedy. Keby `createIndex` po zahodení zlyhal, kolekcia by zostala bez obmedzenia — a pri `acknowledgements` je to jediné, čo drží dvojité potvrdenie toho istého znenia (D24). Radšej sa nespraví nič než polovica.
