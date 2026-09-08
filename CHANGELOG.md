@@ -4,6 +4,19 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Fixed (2026-09-08 — dotiahnutie: fokus, tmavá téma, cesty bez JavaScriptu)
+
+Krok 7 handoffu. Tým je dizajnový balík prejdený celý.
+
+- **Viditeľný fokus na všetkom, čo sa dá chytiť klávesnicou.** Prstenec mala doteraz asi polovica prvkov a zvyšok sa spoliehal na predvolený obrys prehliadača — ten je v tmavej téme miestami sotva vidieť a **na primárnom tlačidle s farbou organizácie splynie úplne**. Pribudlo jedno pravidlo v `:where()`, teda so **nulovou špecificitou**: je to záchytná sieť, nie prepis — kde už prstenec s vlastným odsadením je (facety, triedenie v tabuľke, položky navigácie), platí ďalej. A pokryje aj prvky, ktoré pribudnú neskôr; na tie sa inak zabudne.
+- Tlačidlá majú prstenec **mimo** plochy (`outline-offset: 2px`) — vnútri by na pozadí `--accent` nebol vidieť.
+- **Pruhované pozadie zóny na súbor bolo v tmavej téme neviditeľné.** Bola namiešaná napevno z tmavej s 3 % alfou, teda tmavá na tmavom: zóna vyzerala ako prázdny rámček. Teraz je z `--surface-2`, ktorý sa v oboch témach otočí sám. Rovnaký prístup má aj nový slot na logo.
+- **Filtre sú na telefóne na jedno ťuknutie.** Panel zostáva pod výsledkami — nad prvým dokumentom nemá stáť obrazovka a pol filtrov — ale v hlavičke je kotva „Filtre ↓" a pod panelom „↑ Späť na zoznam". Sú to obyčajné odkazy: fungujú bez skriptu a dajú sa poslať v adrese. Zásuvka z návrhu zostáva otvorená (`docs/TODO.md`): `<details>` sa na širokej obrazovke nedá spoľahlivo držať otvorené cez CSS a druhá kópia panelu v DOM je horšia než kotva.
+- **Tri miesta teraz povedia, že bez JavaScriptu nefungujú** — otázka, prihlásenie a potvrdenie dokumentu. Doteraz mlčali: formulár, ktorý po odoslaní nič neurobí, vyzerá ako pokazená stránka a človek skúša znova a znova.
+- **Pri otázke je to zámer, pri ostatných dvoch dlh.** Odpoveď prichádza po častiach, ako ju model píše (SSE) — to sa serverovým formulárom nahradiť nedá, a hláška preto ponúka cestu k dokumentom, ktoré sa čítajú bez skriptu. Prihlásenie a potvrdenie ale serverovú cestu mať majú: potvrdenie je **právne záväzný úkon** a dnes stojí na `fetch`. Oboje je zapísané v `docs/TODO.md` aj s návrhom riešenia — hláška je náplasť, nie oprava.
+- Overené: `tsc --noEmit` čisto, `eslint` bez chýb, 973 testov, produkčný build prejde, prstence aj tmavá téma prekreslené na 390 px a na desktope.
+
+
 ### Added (2026-09-08 — nastavenie organizácie: živý náhľad farby a odstránenie loga)
 
 Krok 6 dizajnového handoffu.

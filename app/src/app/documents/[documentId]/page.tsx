@@ -89,15 +89,25 @@ export default async function DocumentPage({ params }: { params: Promise<{ docum
                 {t.confirmed}
               </p>
             ) : (
-              <AcknowledgeButton
-                documentId={doc.documentId}
-                labels={{
-                  button: t.confirmButton,
-                  pending: t.confirmPending,
-                  confirmed: t.confirmed,
-                  error: t.error,
-                }}
-              />
+              <>
+                <AcknowledgeButton
+                  documentId={doc.documentId}
+                  labels={{
+                    button: t.confirmButton,
+                    pending: t.confirmPending,
+                    confirmed: t.confirmed,
+                    error: t.error,
+                  }}
+                />
+                {/* Potvrdenie ide cez `fetch` na `/api/acknowledgements`,
+                    takže bez JavaScriptu tlačidlo mlčí. Serverová cesta je
+                    otvorená úloha (`docs/TODO.md`); dovtedy nech človek aspoň
+                    vie, prečo sa nič nedeje — mlčiace tlačidlo pri právne
+                    záväznom úkone je horšie než jasná veta. */}
+                <noscript>
+                  <p className="noscript-notice" style={{ marginTop: 12 }}>{t.confirmNoScript}</p>
+                </noscript>
+              </>
             )}
           </section>
         </>
