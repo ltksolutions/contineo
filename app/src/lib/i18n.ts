@@ -1049,6 +1049,10 @@ interface Dictionary {
         heading: string
         pickColumn: string
         pick: (title: string) => string
+        /** Koľko je označených, koľko z toho nie je vidieť, a ako to zrušiť. */
+        picked: (count: number) => string
+        pickedOutside: (count: number) => string
+        clearPicked: string
         moveTo: string
         move: string
         assign: string
@@ -2518,6 +2522,9 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
         heading: "S označenými",
         pickColumn: "Výber",
         pick: (title) => `Označiť ${title}`,
+        picked: (count) => `Označené: ${count}`,
+        pickedOutside: (count) => `z toho ${count} mimo tohto zoznamu`,
+        clearPicked: "zrušiť výber",
         moveTo: "Presunúť do",
         move: "Presunúť",
         assign: "Vyžiadať potvrdenie",
@@ -3977,6 +3984,9 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
         heading: "S označenými",
         pickColumn: "Výběr",
         pick: (title) => `Označit ${title}`,
+        picked: (count) => `Označeno: ${count}`,
+        pickedOutside: (count) => `z toho ${count} mimo tento seznam`,
+        clearPicked: "zrušit výběr",
         moveTo: "Přesunout do",
         move: "Přesunout",
         assign: "Vyžádat potvrzení",
@@ -5430,6 +5440,9 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
         heading: "With selected",
         pickColumn: "Select",
         pick: (title) => `Select ${title}`,
+        picked: (count) => `Selected: ${count}`,
+        pickedOutside: (count) => `${count} outside this list`,
+        clearPicked: "clear selection",
         moveTo: "Move to",
         move: "Move",
         assign: "Request acknowledgement",

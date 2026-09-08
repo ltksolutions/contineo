@@ -91,11 +91,25 @@ export interface ActiveFilters {
   /** Podmienky query buildera a režim ich spájania. */
   conditions: Condition[]
   match: MatchMode
+  /**
+   * Označené dokumenty — **v adrese, nie v stave formulára.**
+   *
+   * Dovtedy to boli zaškrtávacie políčka jedného formulára, takže výber
+   * platil pre viditeľnú stranu a prechod na ďalšiu ho zabudol. Knižnica
+   * beží bez JavaScriptu, takže inde než v adrese sa medzi dvomi
+   * požiadavkami nemá kde držať.
+   *
+   * Dôsledok, ktorý treba niesť: označený dokument môže po zmene filtra
+   * vypadnúť z viditeľného zoznamu a zostať vybraný. Preto sa nad zoznamom
+   * píše, koľko z označených nie je vidieť — tichý výber, ktorý sa vlečie
+   * naprieč filtrami, je zdroj prekvapení pri hromadnej akcii.
+   */
+  picked: string[]
 }
 
 const EMPTY: ActiveFilters = {
   category: [], status: [], tag: [], accessLevel: [], language: [],
-  conditions: [], match: "all",
+  conditions: [], match: "all", picked: [],
 }
 
 /** Jedna hodnota z adresy. Pole (opakovaný kľúč) → prvá hodnota. */
@@ -155,6 +169,7 @@ export function readFilters(q: RawQuery): ActiveFilters {
     page: normalizePage(q.page),
     conditions: readConditions(q),
     match: readMatch(q),
+    picked: list(q.pick),
   }
 }
 
@@ -288,8 +303,17 @@ export function withPage(filters: ActiveFilters, page: number): ActiveFilters {
  * Zruší filtre, **nie zobrazenie**. Variant navigácie a pohľad človek
  * nastavoval zvlášť a tlačidlom „Zrušiť" ich zrušiť nechcel.
  */
+/**
+ * Zruší filtre. **Výber zostáva** — sú to dve rôzne veci a človek, ktorý
+ * si označil dokumenty a potom rozšíril zoznam, o ne prísť nechcel. Zrušiť
+ * výber sa dá vedľa, vlastným odkazom.
+ */
 export function clearFilters(filters: ActiveFilters): ActiveFilters {
-  return { ...EMPTY, layout: filters.layout, view: filters.view, sort: filters.sort, dir: filters.dir }
+  return {
+    ...EMPTY,
+    layout: filters.layout, view: filters.view, sort: filters.sort, dir: filters.dir,
+    picked: filters.picked,
+  }
 }
 
 export function isEmpty(filters: ActiveFilters): boolean {
@@ -332,7 +356,61 @@ export function carryFields(filters: ActiveFilters): [string, string][] {
   }
   if (filters.page && filters.page > 1) out.push(["page", String(filters.page)])
   out.push(...conditionFields(filters.conditions, filters.match))
+  // Výber sa nesie **v každom odkaze**, aj v tom, ktorý mení filter alebo
+  // stranu. To je celý zmysel: prežije prechod, ktorý ho predtým zahodil.
+  for (const id of filters.picked) out.push(["pick", id])
   return out
+}
+
+/**
+ * Označenie a odznačenie jedného dokumentu.
+ *
+ * **Nemení stranu.** Zvyšok filtrov na prvú stranu vracia (po zúžení by
+ * strana 4 mohla byť prázdna), ale označenie riadka zoznam nezúži — vrátiť
+ * človeka na začiatok pri každom zaškrtnutí by znamenalo, že sa na strane 3
+ * nedá označiť nič.
+ */
+export function togglePick(filters: ActiveFilters, documentId: string): ActiveFilters {
+  const id = documentId.trim()
+  if (!id) return filters
+  const has = filters.picked.includes(id)
+  return {
+    ...filters,
+    picked: has ? filters.picked.filter(x => x !== id) : [...filters.picked, id],
+  }
+}
+
+/**
+ * Označí všetko na viditeľnej strane, alebo to z nej odznačí.
+ *
+ * Zvyšok výberu zostáva. „Označiť stranu" je pomôcka na tejto strane, nie
+ * príkaz „chcem presne toto" — kto chce začať odznova, má vedľa „zrušiť
+ * výber".
+ */
+export function pickPage(filters: ActiveFilters, ids: string[], on: boolean): ActiveFilters {
+  const page = ids.map(i => i.trim()).filter(Boolean)
+  if (on) {
+    const add = page.filter(i => !filters.picked.includes(i))
+    return { ...filters, picked: [...filters.picked, ...add] }
+  }
+  const drop = new Set(page)
+  return { ...filters, picked: filters.picked.filter(i => !drop.has(i)) }
+}
+
+/** Zruší celý výber. Filtre zostávajú — sú to dve rôzne veci. */
+export function clearPicked(filters: ActiveFilters): ActiveFilters {
+  return { ...filters, picked: [] }
+}
+
+/**
+ * Koľko z označených nie je vo viditeľnom zozname.
+ *
+ * Toto číslo je cena za výber, ktorý prežije zmenu filtra: bez neho by
+ * človek presunul dvanásť dokumentov, o ktorých už nevie, že sú vybrané.
+ */
+export function pickedOutsideCount(picked: string[], visible: string[]): number {
+  const shown = new Set(visible)
+  return picked.filter(id => !shown.has(id)).length
 }
 
 /** Aktívne filtre ako chips — v poradí, v akom sa zapisujú do adresy. */

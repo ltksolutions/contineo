@@ -10,6 +10,7 @@ import { describe, it, expect } from "vitest"
 import {
   readFilters, toggle, replace, setValue, clearFilters, isEmpty, toQuery, activeChips,
   sortBy, currentSort, pageOf, withPage, sortRows, pageRows, setView, currentView, normalizeView,
+  togglePick, pickPage, clearPicked, pickedOutsideCount, carryFields,
 } from "../src/lib/libraryFilters"
 import { queryParts, buildQuery } from "../src/lib/libraryRead"
 
@@ -274,5 +275,66 @@ describe("pohľad", () => {
 
   it("zrušenie filtrov pohľad nechá", () => {
     expect(currentView(clearFilters(setView(readFilters({ tag: "x" }), "cards")))).toBe("cards")
+  })
+})
+
+describe("výber prežívajúci stránkovanie", () => {
+  it("označené id sa čítajú z adresy — opakovaný kľúč aj čiarka", () => {
+    expect(readFilters({ pick: ["a", "b"] }).picked).toEqual(["a", "b"])
+    expect(readFilters({ pick: "a,b" }).picked).toEqual(["a", "b"])
+    expect(readFilters({}).picked).toEqual([])
+  })
+
+  it("prepnutie pridá a odoberie, nič iné nemení", () => {
+    const f = readFilters({ category: "norma" })
+    const one = togglePick(f, "d1")
+    expect(one.picked).toEqual(["d1"])
+    expect(one.category).toEqual(["norma"])
+    expect(togglePick(one, "d1").picked).toEqual([])
+    // Prázdne id nie je výber.
+    expect(togglePick(f, "  ").picked).toEqual([])
+  })
+
+  it("označenie riadka nevracia na prvú stranu", () => {
+    // Zúženie filtra na prvú stranu vracia (strana 4 by mohla byť prázdna),
+    // ale označenie riadka zoznam nezúži. Inak by sa na strane 3 nedalo
+    // označiť nič — každý klik by človeka odhodil na začiatok.
+    const onPage3 = withPage(readFilters({}), 3)
+    expect(pageOf(togglePick(onPage3, "d1"))).toBe(3)
+    expect(pageOf(pickPage(onPage3, ["d1", "d2"], true))).toBe(3)
+  })
+
+  it("výber sa nesie v každom odkaze, teda aj pri zmene strany a filtra", () => {
+    // Toto je celý zmysel: bez `pick` v adrese by prechod na druhú stranu
+    // výber zahodil, lebo formulár sa odošle až akciou.
+    const f = togglePick(togglePick(readFilters({}), "d1"), "d2")
+    expect(toQuery(withPage(f, 2))).toContain("pick=d1&pick=d2")
+    expect(toQuery(toggle(f, "category", "norma"))).toContain("pick=d1&pick=d2")
+    expect(carryFields(f).filter(([k]) => k === "pick")).toEqual([["pick", "d1"], ["pick", "d2"]])
+  })
+
+  it("označiť stranu pridá len chýbajúce, odznačiť vezme len tie z nej", () => {
+    const f = togglePick(readFilters({}), "mimo")
+    const on = pickPage(f, ["d1", "d2", "mimo"], true)
+    expect(on.picked).toEqual(["mimo", "d1", "d2"])
+    // Odznačenie strany nechá to, čo je označené inde — „označiť stranu" je
+    // pomôcka na tejto strane, nie príkaz „chcem presne toto".
+    expect(pickPage(on, ["d1", "d2"], false).picked).toEqual(["mimo"])
+  })
+
+  it("zrušenie filtrov výber nechá, zrušenie výberu filtre nechá", () => {
+    const f = togglePick(readFilters({ category: "norma", tag: "x" }), "d1")
+    expect(clearFilters(f).picked).toEqual(["d1"])
+    const cleared = clearPicked(f)
+    expect(cleared.picked).toEqual([])
+    expect(cleared.category).toEqual(["norma"])
+  })
+
+  it("počíta, koľko z označených nie je vidieť", () => {
+    // Cena za výber prežívajúci zmenu filtra: bez tohto čísla by človek
+    // presunul dokumenty, o ktorých už nevie, že sú vybrané.
+    expect(pickedOutsideCount(["d1", "d2", "d3"], ["d2"])).toBe(2)
+    expect(pickedOutsideCount(["d1"], ["d1", "d2"])).toBe(0)
+    expect(pickedOutsideCount([], ["d1"])).toBe(0)
   })
 })
