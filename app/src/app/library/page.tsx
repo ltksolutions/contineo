@@ -29,11 +29,12 @@ import { normalizeQuery, type RawQuery } from "@/lib/urlParams"
 import {
   readFilters, toggle, setValue, clearFilters, isEmpty, toQuery, carryFields, activeChips,
   sortBy, currentSort, pageOf, withPage, sortRows, pageRows, setView, currentView,
-  addCondition, removeCondition, setMatch,
+  addCondition, removeCondition, splitConditions, mergeConditions,
   type MultiKey, type SortKey,
 } from "@/lib/libraryFilters"
 import {
   OPS_FOR_FIELD, CONDITION_FIELDS, decodeCondition, describeConditions,
+  normalizeGroups, startsGroup,
   type ConditionField, type ConditionOp,
 } from "@/lib/libraryConditions"
 import MultiSelect from "@/components/MultiSelect"
@@ -61,7 +62,7 @@ export default async function LibraryPage({
     msg?: string; error?: string; search?: string; status?: string
     folder?: string; category?: string; language?: string; accessLevel?: string; tag?: string
     layout?: string
-    add?: string; value?: string
+    add?: string; value?: string; join?: string
   }>(await searchParams)
   const { msg: message, error } = q
   const filters = readFilters(q)
@@ -75,7 +76,10 @@ export default async function LibraryPage({
    * druhýkrát. `redirect()` je tu zámerne mimo `try` — vyhadzuje výnimku.
    */
   const pending = q.add && q.value ? decodeCondition(`${q.add}~${encodeURIComponent(q.value)}`) : null
-  if (pending) redirect(toQuery(addCondition(filters, pending)))
+  // `join=or` otvorí novú skupinu, čokoľvek iné pripojí podmienku k poslednej.
+  // Rozhoduje o tom **tlačidlo, ktorým sa formulár odoslal** — nie prepínač
+  // niekde inde na obrazovke: spojka je vlastnosť tohto pridania.
+  if (pending) redirect(toQuery(addCondition(filters, pending, q.join === "or" ? "or" : "and")))
   const branding = brandingView(ctx.tenant)
   const uiLanguage = ctx.person.language
   const t = dictionary(uiLanguage).library.list
@@ -120,6 +124,13 @@ export default async function LibraryPage({
   const tb = t.builder
   const tl = t.bulk
   const conditions = filters.conditions
+  /*
+   * Podmienky s doplnenými skupinami. Robí sa to raz tu, nie v každom
+   * odkaze: starý odkaz nesie podmienky bez skupiny a keby si ju každé
+   * miesto domýšľalo samo, na jednom z nich by sa raz domyslelo inak — a
+   * riadok by sa presunul do inej skupiny, než na akú človek klikol.
+   */
+  const condRows = normalizeGroups(conditions, filters.match)
 
   /*
    * Dvojice pole + operátor ako jedna ponuka. Vzniká z tabuľky povolených
@@ -271,12 +282,14 @@ export default async function LibraryPage({
 
       {/*
         Query builder.
-        
+
         Celý beží bez JavaScriptu: podmienky sú v adrese, pridanie je odoslanie
-        formulára a odobranie je odkaz. Preto sa tu nekombinuje „a" s „alebo" —
-        `A alebo B a C` nemá bez zátvoriek jednoznačný význam a builder, ktorý
-        si ho domyslí, vracia potichu iné výsledky, než človek čakal. Platí
-        jeden režim pre celý dotaz a je to na obrazovke napísané.
+        formulára, odobranie aj zmena spojky sú odkazy.
+
+        **Zátvorky sú skupiny, nie znaky.** Vnútri skupiny platí A, medzi
+        skupinami ALEBO — teda `(A a B) alebo (C a D)`. Písané zátvorky by
+        znamenali parser a klientsky stav; takto je logika vidieť z odsadenia
+        a zo spojky pred riadkom, a mení sa jedným kliknutím.
 
         Pole a operátor sú **jeden výber**, nie dva: „Názov obsahuje" je aj
         veta, ktorou to človek povie, a hlavne sa tak nedá zostaviť dvojica,
@@ -291,39 +304,43 @@ export default async function LibraryPage({
         {conditions.length > 0 && (
           <>
             <ul className="builder-rows">
-              {conditions.map((c, i) => (
-                <li key={`${c.field}-${c.op}-${c.value}-${i}`} className="builder-row">
-                  <span className="builder-join">
-                    {i === 0 ? tb.joinFirst : (filters.match === "any" ? tb.joinAny : tb.joinAll)}
-                  </span>
-                  <span className="builder-text">
-                    {tb.fields[c.field]} {tb.ops[c.op]} <strong>{c.value}</strong>
-                  </span>
-                  <Link
-                    className="builder-remove"
-                    href={toQuery(removeCondition(filters, i))}
-                    aria-label={tb.remove(`${tb.fields[c.field]} ${tb.ops[c.op]} ${c.value}`)}
+              {condRows.map((c, i) => {
+                const opens = startsGroup(condRows, i)
+                return (
+                  <li
+                    key={`${c.field}-${c.op}-${c.value}-${i}`}
+                    className={`builder-row${opens && i > 0 ? " builder-row--group" : ""}`}
                   >
-                    ×
-                  </Link>
-                </li>
-              ))}
+                    <span className="builder-join">
+                      {i === 0 ? tb.joinFirst : opens ? tb.joinAny : tb.joinAll}
+                    </span>
+                    <span className="builder-text">
+                      {tb.fields[c.field]} {tb.ops[c.op]} <strong>{c.value}</strong>
+                    </span>
+                    {/* Zmena spojky pred riadkom. Odkaz, nie prepínač: vedie
+                        na inú adresu a funguje bez skriptu. Pri prvom riadku
+                        nie je čo meniť — pred ním nič nie je. */}
+                    {i > 0 && (
+                      <Link
+                        className="builder-join-switch"
+                        href={toQuery(
+                          opens ? mergeConditions(filters, i) : splitConditions(filters, i),
+                        )}
+                      >
+                        {opens ? tb.makeAnd : tb.makeOr}
+                      </Link>
+                    )}
+                    <Link
+                      className="builder-remove"
+                      href={toQuery(removeCondition(filters, i))}
+                      aria-label={tb.remove(`${tb.fields[c.field]} ${tb.ops[c.op]} ${c.value}`)}
+                    >
+                      ×
+                    </Link>
+                  </li>
+                )
+              })}
             </ul>
-
-            {conditions.length > 1 && (
-              <div className="builder-match">
-                {([["all", tb.matchAll], ["any", tb.matchAny]] as const).map(([mode, label]) => (
-                  <Link
-                    key={mode}
-                    href={toQuery(setMatch(filters, mode))}
-                    className={`view-switch-item${filters.match === mode ? " is-on" : ""}`}
-                    aria-current={filters.match === mode ? "true" : undefined}
-                  >
-                    {label}
-                  </Link>
-                ))}
-              </div>
-            )}
 
             {/* Náhľad dotazu vetou — kontrola, že človek a systém rozumejú
                 tomu istému. Skladá sa z uložených podmienok, nie z toho,
@@ -351,7 +368,18 @@ export default async function LibraryPage({
             <input className="pole-vstup" name="value" required />
           </label>
           {carried.map(([k, v], i) => <input key={`${k}-${i}`} type="hidden" name={k} value={v} />)}
-          <button className="tlacidlo tlacidlo--tiche" type="submit">{tb.add}</button>
+          {/* Dve tlačidlá jedného formulára, nie prepínač vedľa neho: spojka
+              je vlastnosť tohto pridania a takto sa vyberá tým istým klikom,
+              ktorým sa podmienka pridáva. Pri prvej podmienke sa spojka nemá
+              čoho chytiť, preto je vtedy len jedno. */}
+          <button className="tlacidlo tlacidlo--tiche" type="submit" name="join" value="and">
+            {conditions.length === 0 ? tb.add : tb.addAnd}
+          </button>
+          {conditions.length > 0 && (
+            <button className="tlacidlo tlacidlo--tiche" type="submit" name="join" value="or">
+              {tb.addOr}
+            </button>
+          )}
         </form>
 
         <p className="tichy builder-hint">{tb.hint}</p>

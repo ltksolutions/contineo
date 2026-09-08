@@ -79,7 +79,9 @@
 - [x] **4b. Kompaktná tabuľka** — triedenie v adrese (`localeCompare` po slovensky), stránkovanie, pätička s počtami
 - [x] **4c. Kartový pohľad** + prepínač `?view=`
 - [x] **4d. Query builder** — podmienky v adrese, bez JavaScriptu, monospace náhľad dotazu. Pole a operátor sú jeden výber, takže nezmyselná dvojica sa nedá zostaviť
-- [ ] **Zátvorky v query builderi** — dnes platí jeden režim pre celý dotaz (spĺňa všetky / ktorúkoľvek), lebo `A alebo B a C` nemá bez zátvoriek jednoznačný význam. Miešanie spojok má zmysel doplniť až so zátvorkami, inak by dotaz znamenal niečo iné, než človek napísal
+- [x] **Zátvorky v query builderi** ✅ 2026-09-08 — nie znaky, ale **skupiny**: vnútri skupiny platí „a", medzi skupinami „alebo", teda `(A a B) alebo (C a D)`. Do disjunktnej normálnej formy sa dá previesť každý booleovský výraz, takže sa nič nestráca, a rozhranie zostáva dvojúrovňové — teda ovládateľné **bez JavaScriptu**, na čom knižnica stojí. Strom ľubovoľnej hĺbky by si vyžiadal klientsky stav.
+      Skupina je predpona v adrese (`g0~pole~op~hodnota`), nie štvrtá časť: hodnota môže obsahovať vlnovku a čokoľvek za ňou by sa od nej nedalo odlíšiť.
+      **Staré odkazy fungujú ďalej.** Podmienka bez skupiny sa vykladá podľa `match`: `all` = jedna skupina so všetkým, `any` = každá podmienka sama. Sú to presne tie dva krajné prípady, ktoré builder mal predtým. `match` sa už do adresy nezapisuje — skupinu nesie samotná podmienka a dva zdroje tej istej pravdy by si raz odporovali.
 - [x] **4e. Hromadné akcie** — hromadný presun do priečinka (cyklus nad `assignDocument`, audit zostáva) a odovzdanie výberu na `/hr/assign`, ktoré prideľovanie už vie. **Prideľovanie sa nepísalo druhýkrát.** Výber platí pre viditeľnú stranu; dávka môže skončiť čiastočne a vypíše, čo neprešlo
 - [ ] Výber, ktorý prežije stránkovanie — dnes platí len pre viditeľnú stranu. Má zmysel až s klientskym stavom alebo s id v adrese; treba doriešiť, čo s označeným dokumentom, ktorý už filtru nevyhovuje
 - [x] **5a. Detail dokumentu — pravý panel** — potvrdenia platného znenia (percento z pridelených osôb), prehľad metadát, chips v hlavičke. Editora sa to nedotklo

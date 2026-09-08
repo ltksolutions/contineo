@@ -1064,6 +1064,12 @@ interface Dictionary {
         remove: (description: string) => string
         matchAll: string
         matchAny: string
+        /** Zmena spojky pred riadkom — A namiesto ALEBO a naopak. */
+        makeAnd: string
+        makeOr: string
+        /** Pridanie podmienky do poslednej skupiny alebo ako novej. */
+        addAnd: string
+        addOr: string
         joinAll: string
         joinAny: string
         /** Spojka pred prvou podmienkou. Krátka, nech riadky sedia pod sebou. */
@@ -2518,7 +2524,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       },
       builder: {
         heading: "Podmienky",
-        hint: "Zátvorky zatiaľ nevieme, preto platí jeden režim pre celý dotaz — inak by výsledok znamenal niečo iné, než ste napísali.",
+        hint: "Vnútri skupiny platí „a“, medzi skupinami „alebo“ — teda (A a B) alebo (C a D). Spojku pred riadkom zmeníte odkazom vedľa neho.",
         field: "Pole",
         op: "Operátor",
         value: "Hodnota",
@@ -2526,6 +2532,10 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
         remove: (description) => `Odobrať podmienku ${description}`,
         matchAll: "spĺňa všetky",
         matchAny: "spĺňa ktorúkoľvek",
+        makeAnd: "zmeniť na „a“",
+        makeOr: "zmeniť na „alebo“",
+        addAnd: "Pridať s „a“",
+        addOr: "Pridať s „alebo“",
         joinAll: "a zároveň",
         joinAny: "alebo",
         joinFirst: "kde",
@@ -3973,7 +3983,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       },
       builder: {
         heading: "Podmínky",
-        hint: "Závorky zatím neumíme, proto platí jeden režim pro celý dotaz — jinak by výsledek znamenal něco jiného, než jste napsali.",
+        hint: "Uvnitř skupiny platí „a“, mezi skupinami „nebo“ — tedy (A a B) nebo (C a D). Spojku před řádkem změníte odkazem vedle něj.",
         field: "Pole",
         op: "Operátor",
         value: "Hodnota",
@@ -3981,6 +3991,10 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
         remove: (description) => `Odebrat podmínku ${description}`,
         matchAll: "splňuje všechny",
         matchAny: "splňuje kteroukoli",
+        makeAnd: "změnit na „a“",
+        makeOr: "změnit na „nebo“",
+        addAnd: "Přidat s „a“",
+        addOr: "Přidat s „nebo“",
         joinAll: "a zároveň",
         joinAny: "nebo",
         joinFirst: "kde",
@@ -5422,13 +5436,17 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       },
       builder: {
         heading: "Conditions",
-        hint: "Parentheses are not supported yet, so one mode applies to the whole query — otherwise the result would mean something other than what you wrote.",
+        hint: "Within a group “and” applies, between groups “or” — that is (A and B) or (C and D). Change the connector before a row with the link next to it.",
         field: "Field",
         op: "Operator",
         value: "Value",
         add: "Add condition",
         remove: (description) => `Remove condition ${description}`,
         matchAll: "match all",
+        makeAnd: "change to “and”",
+        makeOr: "change to “or”",
+        addAnd: "Add with “and”",
+        addOr: "Add with “or”",
         matchAny: "match any",
         joinAll: "and",
         joinAny: "or",

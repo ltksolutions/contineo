@@ -2534,3 +2534,50 @@ a.answer-source:focus-visible { outline: 2px solid var(--accent); outline-offset
 }
 
 .noscript-notice a { color: inherit; font-weight: 600; }
+
+/* ── query builder: skupiny podmienok ────────────────────────────────────
+   Vnútri skupiny platí „a", medzi skupinami „alebo". Hranicu skupiny nesie
+   linka a väčšia medzera — je to to isté, čo by povedali zátvorky, len bez
+   znakov, ktoré by človek musel písať a systém parsovať. */
+.builder-row--group {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--line);
+}
+
+/* Spojka pred riadkom sa mení odkazom, nie prepínačom: každý stav je iná
+   adresa, takže to funguje bez skriptu a dá sa poslať. Je tichý zámerne —
+   je to nástroj, nie hlavná akcia riadka. */
+.builder-join-switch {
+  font-size: 12px;
+  color: var(--muted);
+  white-space: nowrap;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.builder-join-switch:hover { color: var(--accent); }
+
+/*
+ * Na telefóne ide odkaz **pod** podmienku, nie vedľa nej.
+ *
+ * Vedľa nej to nefunguje: text podmienky sa na 390 px zalomí do dvoch–troch
+ * riadkov a odkaz mu potom leží priamo pri poslednom slove — na snímke sa
+ * „rozhodcovia" a „zmeniť na a" dotýkali a nedalo sa prečítať, kde končí
+ * jedno a začína druhé.
+ *
+ * Odsadenie zľava je šírka spojky, takže odkaz začína pod textom podmienky
+ * a je zjavné, ku ktorému riadku patrí.
+ */
+@media (max-width: 559px) {
+  .builder-join-switch {
+    /* Nie `100%`: pri celej šírke by sa krížik zalomil na tretí riadok
+       a ostal by odtrhnutý pod odkazom. Takto sa odkaz nezmestí vedľa
+       textu (a teda sa zalomí), ale krížik sa vedľa neho zmestí. */
+    flex: 1 1 60%;
+    margin-left: 84px;
+    margin-top: 2px;
+  }
+
+  .builder-row .builder-remove { margin-left: auto; }
+}
