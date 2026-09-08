@@ -196,7 +196,7 @@ export default function Answer({ state: state, language }: { state: AnswerState;
                   <span className="answer-source-body">
                     <span className="answer-source-title">{z.title}</span>
                     {(z.articleRef || z.heading) && (
-                      <span className="tichy answer-source-meta" style={{ display: "block" }}>
+                      <span className="tichy answer-source-meta">
                         {[z.articleRef, z.heading].filter(Boolean).join(" · ")}
                       </span>
                     )}

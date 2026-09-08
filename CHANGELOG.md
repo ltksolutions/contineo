@@ -4,6 +4,19 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Changed (2026-09-08 — „Opýtať sa": hero, karta odpovede, zdroje)
+
+Krok 5c, tretia a posledná časť kroku 5. Je to najpoužívanejšia obrazovka systému, preto sa zmenilo len to, čo je vidieť — SSE, odosielanie ani prerušenie otázky sa nedotklo ani jeden riadok.
+
+- **Pole na otázku má vlastnú kartu.** Doteraz „plávalo" priamo na pozadí stránky a nič nehovorilo, že práve toto je hlavná vec, ktorú tu človek robí. Odpoveď a hodnotenie zostávajú **mimo** karty: sú to následky, nie súčasť zadávania.
+- Inline štýly textového poľa a príkladov nahradili triedy (`.ask-field`, `.ask-example`). Pole zostáva na **16 px** — pod 16 px iOS Safari pri fokuse priblíži celú stránku a tlačidlo „Opýtať sa" skončí mimo obrazovky.
+- **Príklad je pilulka, nie `.stitok`.** Štítok je stav („publikované"), toto je ponuka na kliknutie — a ten rozdiel musí byť vidieť skôr, než sa naň ukáže myšou.
+- **Karta odpovede dostala hlavičku „Odpoveď z vašich dokumentov."** Hovorí to, čo sa inak dá len tušiť: odpoveď je zostavená z dokumentov organizácie, nie z toho, čo model vie odinakiaľ. Pri chybe sa neukazuje — nad hláškou „nepodarilo sa" by to bolo tvrdenie o niečom, čo neexistuje.
+- **Zdroje sú karty a keď zdroj nesie `sourceUrl`, je celá karta odkaz** (`target="_blank"`, `rel="noopener noreferrer"`). Doteraz sa na zdroj nedalo kliknúť vôbec. Karta bez adresy zostáva `div` — karta, ktorá vyzerá klikateľne a nič nerobí, je horšia než obyčajný riadok.
+- **Rozsah hľadania a skóre zhody z návrhu sa nerobili** a sú zapísané v `docs/TODO.md` s tým, čo by si vyžiadali. Rozsahy („Knižnica / Intranet / Verejný web / Archív") v systéme neexistujú — prehľadáva sa jedna kolekcia jednej organizácie a jediné delenie je úroveň prístupu; pilulky by predstierali voľbu, ktorá nič nemení. Skóre vyhľadávanie vracia, ale pri `$rankFusion` a reranku nie je v rozsahu 0–1 ani porovnateľné medzi režimami hľadania — „zhoda 94 %" by klamala presnosťou.
+- Overené: `tsc --noEmit` čisto, `eslint` bez chýb, 969 testov, obrazovka prekreslená na 390 px, na desktope aj v tmavej téme.
+
+
 ### Fixed (2026-09-08 — knižnica padala na 500)
 
 `/library` v produkcii nešla: SSR skončilo hláškou „Attempted to call
