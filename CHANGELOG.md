@@ -4,6 +4,20 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Added (2026-09-08 — zátvorky v query builderi ako skupiny podmienok)
+
+- **Zátvorky sú skupiny, nie znaky.** Vnútri skupiny platí „a", medzi skupinami „alebo" — teda `(A a B) alebo (C a D)`. Do tejto formy sa dá previesť každý booleovský výraz, takže sa nič nestráca, a rozhranie zostáva dvojúrovňové: opísateľné jednou vetou a **ovládateľné bez JavaScriptu**, na čom knižnica zámerne stojí. Strom ľubovoľnej hĺbky by si vyžiadal klientsky stav a s ním by prestala fungovať bez skriptu.
+- **Logika je vidieť, nie sa píše.** Spojka pred riadkom („a" / „alebo"), medzera a linka medzi skupinami — a zmena spojky je odkaz vedľa riadka. Žiadny parser, žiadne znaky, ktoré by človek musel trafiť.
+- **„Alebo odtiaľto" posunie aj riadky za sebou**, nie len ten, na ktorý sa klikne. Keby zostali v starej skupine, jedno kliknutie by zmenilo logiku na dvoch miestach naraz. Opačný smer („a namiesto alebo") presúva len ten riadok — spojka pred riadkom je vec toho riadka.
+- **Skupina je predpona v adrese** (`g0~pole~op~hodnota`), nie štvrtá časť. Hodnota môže obsahovať vlnovku (a `encodeURIComponent` ju nekóduje), takže čokoľvek za hodnotou by sa od nej nedalo odlíšiť.
+- **Staré odkazy fungujú ďalej.** Podmienka bez skupiny sa vykladá podľa `match`: `all` = jedna skupina so všetkým, `any` = každá podmienka sama. Sú to presne tie dva krajné prípady, ktoré builder mal predtým, takže odkaz spred zmeny vracia to isté. `match` sa už nezapisuje — skupinu nesie samotná podmienka a dva zdroje tej istej pravdy by si raz odporovali.
+- **Skupiny sa po odobraní prečíslujú bez dier.** Diera by z čísla skupiny prestala robiť jej poradie a odkazy „alebo odtiaľto" by presúvali riadok inam, než na čo človek klikol.
+- **Skupina, z ktorej všetko vypadlo, sa zahodí celá** (napríklad pri neplatnom dátume z adresy). Prázdny `$and` by dotaz zhodil a prázdny `$or` by nevrátil nič — knižnica by vyzerala prázdna.
+- Náhľad dotazu píše zátvorky **len pri dvoch a viac skupinách**; pri jedinej by boli ozdoba, ktorá vetu predlžuje a nič nerozlišuje.
+- **Na telefóne je odkaz na zmenu spojky pod podmienkou, nie vedľa nej.** Vedľa nej sa text na 390 px zalomí a odkaz mu leží pri poslednom slove — na snímke sa „rozhodcovia" a „zmeniť na a" dotýkali. Krížik zostáva na tom istom riadku ako odkaz, vpravo.
+- Overené: `tsc --noEmit` čisto, `eslint` bez chýb, **1003 testov** (16 nových), builder prekreslený na 390 px, na desktope aj v tmavej téme.
+
+
 ### Changed (2026-09-08 — „Na potvrdenie" beží v aplikačnom shelli)
 
 Druhá sekcia v shelli, prvá presunutá **celá** aj s podstránkami. Presúva sa po jednej a každá vlastným PR — dohoda z kroku 2.

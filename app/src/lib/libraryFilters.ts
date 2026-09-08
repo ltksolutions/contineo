@@ -19,7 +19,8 @@
 
 import type { RawQuery } from "./urlParams"
 import {
-  readConditions, readMatch, conditionFields, type Condition, type MatchMode,
+  readConditions, readMatch, conditionFields, normalizeGroups, splitAt, mergeUp,
+  type Condition, type MatchMode,
 } from "./libraryConditions"
 
 /** Facety, ktoré sa dajú vybrať viackrát. */
@@ -157,17 +158,57 @@ export function readFilters(q: RawQuery): ActiveFilters {
   }
 }
 
-/** Pridanie a odobranie podmienky. Obe vracajú na prvú stranu. */
-export function addCondition(filters: ActiveFilters, condition: Condition): ActiveFilters {
-  return firstPage({ ...filters, conditions: [...filters.conditions, condition] })
+/**
+ * Pridanie podmienky. Obe cesty vracajú na prvú stranu.
+ *
+ * `join` hovorí, ako sa nová podmienka pripája k tej pred ňou: `and` ju dá do
+ * poslednej skupiny, `or` otvorí novú. Predvolené je `and` — pri pridávaní
+ * druhej podmienky človek najčastejšie zužuje, nie rozširuje.
+ */
+export function addCondition(
+  filters: ActiveFilters,
+  condition: Condition,
+  join: "and" | "or" = "and",
+): ActiveFilters {
+  const rows = normalizeGroups(filters.conditions, filters.match)
+  const last = rows.length > 0 ? rows[rows.length - 1].group! : 0
+  const group = rows.length === 0 ? 0 : join === "or" ? last + 1 : last
+  return firstPage({
+    ...filters,
+    conditions: [...rows, { ...condition, group }],
+    // Od tejto chvíle nesú skupinu samotné podmienky; `match` zostáva len na
+    // čítanie starších odkazov a nemá už čo prepínať.
+    match: "all",
+  })
 }
 
 export function removeCondition(filters: ActiveFilters, index: number): ActiveFilters {
-  return firstPage({ ...filters, conditions: filters.conditions.filter((_, i) => i !== index) })
+  const rows = normalizeGroups(filters.conditions, filters.match)
+  return firstPage({
+    ...filters,
+    // `normalizeGroups` po odobraní prečísluje skupiny, takže po zmazaní
+    // celej skupiny nezostane diera v číslovaní.
+    conditions: normalizeGroups(rows.filter((_, i) => i !== index)),
+    match: "all",
+  })
 }
 
-export function setMatch(filters: ActiveFilters, match: MatchMode): ActiveFilters {
-  return firstPage({ ...filters, match })
+/** „ALEBO odtiaľto" — od tohto riadka začne nová skupina. */
+export function splitConditions(filters: ActiveFilters, index: number): ActiveFilters {
+  return firstPage({
+    ...filters,
+    conditions: splitAt(filters.conditions, index, filters.match),
+    match: "all",
+  })
+}
+
+/** „A namiesto ALEBO" — tento riadok patrí k predchádzajúcej skupine. */
+export function mergeConditions(filters: ActiveFilters, index: number): ActiveFilters {
+  return firstPage({
+    ...filters,
+    conditions: mergeUp(filters.conditions, index, filters.match),
+    match: "all",
+  })
 }
 
 /**
