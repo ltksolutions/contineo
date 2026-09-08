@@ -128,6 +128,14 @@ export default function SignIn({
         {t.intro}
       </p>
 
+      {/* Bez JavaScriptu nefunguje ani jedna z dvoch ciest dnu: odkaz na
+          e-mail sa odosiela cez `fetch` a prihlásenie kontom cez `signIn()`
+          z next-auth. Formulár, ktorý po odoslaní nič neurobí, vyzerá ako
+          pokazená stránka — a človek skúša znova a znova. */}
+      <noscript>
+        <p className="noscript-notice" style={{ marginBottom: 18 }}>{t.noScript}</p>
+      </noscript>
+
       {error && (
         <div
           style={{

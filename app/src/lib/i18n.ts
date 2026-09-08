@@ -108,6 +108,8 @@ interface Dictionary {
     readingMinutes: (n: number) => string
     confirmHeading: string
     confirmButton: string
+    /** Potvrdenie ide cez `fetch` — bez JavaScriptu tlačidlo nič neurobí. */
+    confirmNoScript: string
     confirmPending: string
     confirmed: string
     confirmedAt: (when: string) => string
@@ -253,6 +255,8 @@ interface Dictionary {
     /** Kľúče sú chybové kódy next-auth, nie naše — prichádzajú v adrese. */
     error: Record<string, string>
     genericError: string
+    /** Prihlásenie bez JavaScriptu nefunguje — treba to aspoň povedať. */
+    noScript: string
   }
 
   documents: {
@@ -270,6 +274,9 @@ interface Dictionary {
     examplesLabel: string
     examples: string[]
     unknownError: string
+    /** Bez JavaScriptu odpovedanie nefunguje — SSE sa formulárom nenahradí. */
+    noScript: string
+    noScriptLink: string
   }
 
   answer: {
@@ -1007,6 +1014,9 @@ interface Dictionary {
       nextPage: string
       /** Prepínač pohľadu: tabuľka verzus karty. */
       viewSwitch: string
+      /** Kotvy k panelu filtrov a späť — len na telefóne. */
+      jumpToFilters: string
+      backToList: string
       viewTable: string
       viewCards: string
       /** Hromadné akcie nad označenými dokumentmi. */
@@ -1336,6 +1346,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     readingMinutes: n => (n === 1 ? "1 minúta" : n >= 2 && n <= 4 ? `${n} minúty` : `${n} minút`),
     confirmHeading: "Potvrdenie oboznámenia",
     confirmButton: "Potvrdzujem",
+    confirmNoScript: "Potvrdenie potrebuje JavaScript. Zapnite ho, prosím, a stránku načítajte znova — dokument si medzitým môžete prečítať celý.",
     confirmPending: "Ukladá sa…",
     confirmed: "Potvrdené. Ďakujeme.",
     confirmedAt: (when) => `Potvrdili ste ${when}.`,
@@ -1448,6 +1459,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
   signIn: {
     heading: "Prihlásenie",
     intro: "Zadajte e-mail, na ktorý ste dostali pozvánku. Pošleme vám odkaz — heslo si pamätať nemusíte.",
+    noScript: "Prihlásenie potrebuje JavaScript — bez neho sa nedá odoslať ani odkaz na e-mail, ani prihlásenie firemným kontom. Zapnite ho, prosím, a stránku načítajte znova.",
     submit: "Poslať prihlasovací odkaz",
     sending: "Odosielam…",
     checkEmail: "Pozrite si e-mail",
@@ -1485,6 +1497,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       "Koľko žltých kariet znamená zastavenie činnosti?",
     ],
     unknownError: "Neznáma chyba",
+    noScript: "Odpovedanie potrebuje JavaScript — odpoveď prichádza po častiach, ako ju model píše. Dokumenty sa dajú čítať a potvrdzovať aj bez neho:",
+    noScriptLink: "prejsť na dokumenty",
   },
 
   answer: {
@@ -2447,6 +2461,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       prevPage: "Predchádzajúca",
       nextPage: "Ďalšia",
       viewSwitch: "Pohľad",
+      jumpToFilters: "Filtre ↓",
+      backToList: "↑ Späť na zoznam",
       viewTable: "Tabuľka",
       viewCards: "Karty",
       bulk: {
@@ -2767,6 +2783,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     readingMinutes: n => (n === 1 ? "1 minuta" : n >= 2 && n <= 4 ? `${n} minuty` : `${n} minut`),
     confirmHeading: "Potvrzení seznámení",
     confirmButton: "Potvrzuji",
+    confirmNoScript: "Potvrzení potřebuje JavaScript. Zapněte ho, prosím, a stránku načtěte znovu — dokument si mezitím můžete přečíst celý.",
     confirmPending: "Ukládá se…",
     confirmed: "Potvrzeno. Děkujeme.",
     confirmedAt: (when) => `Potvrdili jste ${when}.`,
@@ -2879,6 +2896,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
   signIn: {
     heading: "Přihlášení",
     intro: "Zadejte e-mail, na který jste dostali pozvánku. Pošleme vám odkaz — heslo si pamatovat nemusíte.",
+    noScript: "Přihlášení potřebuje JavaScript — bez něj se nedá odeslat ani odkaz na e-mail, ani přihlášení firemním kontem. Zapněte ho, prosím, a stránku načtěte znovu.",
     submit: "Poslat přihlašovací odkaz",
     sending: "Odesílám…",
     checkEmail: "Podívejte se do e-mailu",
@@ -2916,6 +2934,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       "Kolik žlutých karet znamená zastavení činnosti?",
     ],
     unknownError: "Neznámá chyba",
+    noScript: "Odpovídání potřebuje JavaScript — odpověď přichází po částech, jak ji model píše. Dokumenty se dají číst a potvrzovat i bez něj:",
+    noScriptLink: "přejít na dokumenty",
   },
 
   answer: {
@@ -3878,6 +3898,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       prevPage: "Předchozí",
       nextPage: "Další",
       viewSwitch: "Pohled",
+      jumpToFilters: "Filtry ↓",
+      backToList: "↑ Zpět na seznam",
       viewTable: "Tabulka",
       viewCards: "Karty",
       bulk: {
@@ -4198,6 +4220,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     readingMinutes: n => (n === 1 ? "1 minute" : `${n} minutes`),
     confirmHeading: "Acknowledgement",
     confirmButton: "I confirm",
+    confirmNoScript: "Acknowledging needs JavaScript. Please turn it on and reload the page — you can read the whole document in the meantime.",
     confirmPending: "Saving…",
     confirmed: "Acknowledged. Thank you.",
     confirmedAt: (when) => `You acknowledged this on ${when}.`,
@@ -4307,6 +4330,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
   signIn: {
     heading: "Sign in",
     intro: "Enter the e-mail address your invitation was sent to. We will send you a link — no password to remember.",
+    noScript: "Signing in needs JavaScript — without it neither the e-mail link nor the work-account sign-in can be sent. Please turn it on and reload the page.",
     submit: "Send sign-in link",
     sending: "Sending…",
     checkEmail: "Check your e-mail",
@@ -4344,6 +4368,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       "How many yellow cards lead to a suspension?",
     ],
     unknownError: "Unknown error",
+    noScript: "Answering needs JavaScript — the answer arrives in pieces, as the model writes it. Documents can be read and acknowledged without it:",
+    noScriptLink: "go to documents",
   },
 
   answer: {
@@ -5305,6 +5331,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       prevPage: "Previous",
       nextPage: "Next",
       viewSwitch: "View",
+      jumpToFilters: "Filters ↓",
+      backToList: "↑ Back to the list",
       viewTable: "Table",
       viewCards: "Cards",
       bulk: {

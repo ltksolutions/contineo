@@ -10,6 +10,7 @@
  */
 
 import { useRef, useState } from "react"
+import Link from "next/link"
 import { askQuestion } from "@/lib/sseClient"
 import type { AskResult } from "@/lib/sseClient"
 import Answer from "./Answer"
@@ -147,6 +148,19 @@ export default function Search({
           má vlastnú kartu. Odpoveď a hodnotenie zostávajú mimo nej: sú to
           následky, nie súčasť zadávania. */}
       <div className="ask-hero">
+        {/*
+          Jediné miesto v systéme, ktoré bez JavaScriptu naozaj nefunguje —
+          a je to zámer, nie opomenutie: odpoveď prichádza po častiach, ako ju
+          model píše (SSE), a to sa serverovým formulárom nahradiť nedá.
+          Namiesto poľa, ktoré mlčí, preto povieme prečo a kam ísť. Dokumenty
+          sa čítajú a potvrdzujú bez skriptu, takže tam sa dá pokračovať.
+        */}
+        <noscript>
+          <p className="noscript-notice">
+            {t.noScript} <Link href="/documents">{t.noScriptLink}</Link>
+          </p>
+        </noscript>
+
         <form
           className="ask-form"
           onSubmit={e => { e.preventDefault(); send(question) }}

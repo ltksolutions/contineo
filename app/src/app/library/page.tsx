@@ -192,6 +192,17 @@ export default async function LibraryPage({
         <span className="tichy library-count">{t.shown(facets.total, facets.all)}</span>
 
         {/*
+          Skok na filtre — **len na telefóne** (na širokej obrazovke ich má
+          človek vedľa zoznamu a odkaz CSS skryje).
+
+          V jednom stĺpci je panel filtrov pod výsledkami, aby nad prvým
+          dokumentom nestála obrazovka a pol filtrov. Bez tohto odkazu sa
+          k nim ale človek dostane len rolovaním cez celý zoznam. Je to
+          obyčajná kotva: funguje bez skriptu a dá sa poslať v adrese.
+        */}
+        <a className="filters-jump" href="#filtre">{t.jumpToFilters}</a>
+
+        {/*
           Prepínač pohľadu. Sú to dva odkazy, nie tlačidlá s JavaScriptom:
           pohľad je súčasť adresy, takže sa dá poslať aj s ním — a funguje bez
           skriptu. Aktívny odkaz zostáva odkazom (vedie sám na seba), lebo
@@ -347,7 +358,7 @@ export default async function LibraryPage({
       </details>
 
       <div className="kniznica-mriezka">
-        <aside className="kniznica-priecinky">
+        <aside className="kniznica-priecinky" id="filtre">
           {/*
             Panel filtrov.
             
@@ -562,9 +573,13 @@ export default async function LibraryPage({
             />
             <button className="tlacidlo tlacidlo--tiche" type="submit">{tf.create}</button>
           </form>
+
+          {/* Cesta späť. Kto zíde dolu k filtrom, musí sa vedieť vrátiť
+              k výsledkom bez rolovania cez celý panel. Tiež len na telefóne. */}
+          <a className="filters-jump filters-jump--back" href="#zoznam">{t.backToList}</a>
         </aside>
 
-        <div className="kniznica-zoznam">
+        <div className="kniznica-zoznam" id="zoznam">
 
       {rows.length === 0 ? (
         <p className="karta" style={{ padding: 20, fontSize: 15 }}>

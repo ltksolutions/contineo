@@ -484,6 +484,13 @@ button:disabled { cursor: not-allowed; opacity: 0.55; }
 
 .tlacidlo:hover:not(:disabled) { background: var(--accent-strong); }
 
+/*
+ * Prstenec je mimo tlačidla (`offset: 2px`), nie na jeho okraji: vnútri by
+ * splynul s pozadím `--accent`, teda práve na primárnom tlačidle by nebol
+ * vidieť. Vlastné pravidlo má prednosť pred spoločným nižšie.
+ */
+.tlacidlo:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
 .tlacidlo--tiche {
   background: transparent;
   color: var(--ink);
@@ -1765,9 +1772,12 @@ html[data-theme="dark"] .editor-tui .CodeMirror {
   padding: 18px;
   border: 1px dashed var(--line);
   border-radius: 11px;
+  /* Pruhy z `--surface-2`, nie z napevno namiešanej tmavej s 3 % alfou:
+     tá bola v tmavej téme tmavá na tmavom, teda neviditeľná, a zóna vyzerala
+     ako prázdny rámček. Token sa v oboch témach otočí sám. */
   background: repeating-linear-gradient(
     135deg,
-    rgba(20, 28, 42, 0.03) 0 8px,
+    var(--surface-2) 0 8px,
     transparent 8px 16px
   );
   cursor: pointer;
@@ -2452,3 +2462,75 @@ a.answer-source:focus-visible { outline: 2px solid var(--accent); outline-offset
   display: grid;
   gap: 10px;
 }
+
+/* ── viditeľný fokus na všetkom, čo sa dá chytiť klávesnicou ─────────────
+   Doteraz mala vlastný prstenec asi polovica prvkov a zvyšok sa spoliehal
+   na predvolený obrys prehliadača — ten je v tmavej téme miestami sotva
+   vidieť a na tlačidlách s farbou organizácie splynie úplne.
+
+   `:where()` má nulovú špecificitu, takže je to **záchytná sieť, nie
+   prepis**: kde už prstenec je (facety, triedenie v tabuľke, položky
+   navigácie), platí ten s vlastným odsadením. A pokryje aj prvky, ktoré
+   sem pribudnú neskôr — na tie sa inak zabudne. */
+:where(a, button, summary, input, select, textarea, [tabindex]):focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+/* Riadok stromu a záložka sú celé terčom, preto prstenec dovnútra — mimo
+   by prekryl susedný riadok. */
+.strom-riadok:focus-visible,
+.zalozka:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+
+/* Políčko vo výbere riadku je vizuálne malé, ale terčom je celé okolie.
+   Prstenec preto patrí okoliu, nie samotnému políčku. */
+.bulk-pick:has(input:focus-visible) {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+  border-radius: 6px;
+}
+
+/* ── knižnica: skok na filtre a späť (len na telefóne) ───────────────────
+   Panel filtrov je v jednom stĺpci pod výsledkami — inak by nad prvým
+   dokumentom stála obrazovka a pol filtrov. Tieto dve kotvy sú náhrada
+   zásuvky z návrhu: robia to isté (filtre na jedno ťuknutie, bez toho aby
+   zaberali miesto), ale bez JavaScriptu, na ktorom celá knižnica zámerne
+   nestojí. */
+.filters-jump {
+  font-size: 13px;
+  color: var(--accent);
+  white-space: nowrap;
+}
+
+.filters-jump--back {
+  display: block;
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+}
+
+/* Kotva nesmie skončiť tesne pod hlavičkou stránky — `scroll-margin` nechá
+   nad cieľom medzeru, aby bolo vidieť, kam človek doskočil. */
+.kniznica-priecinky, .kniznica-zoznam { scroll-margin-top: 12px; }
+
+@media (min-width: 860px) {
+  /* Na širokej obrazovke sú filtre vedľa zoznamu — odkaz na ne by bol odkaz
+     na to, čo je práve vidieť. */
+  .filters-jump { display: none; }
+}
+
+/* Hláška „toto bez JavaScriptu nejde". Vyzerá ako upozornenie, lebo to
+   upozornenie je — prvok pod ňou naozaj nič neurobí. Je na troch miestach
+   (otázka, prihlásenie, potvrdenie dokumentu), preto všeobecný názov. */
+.noscript-notice {
+  margin: 0 0 14px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: var(--warn-bg);
+  color: var(--warn-fg);
+  font-size: 13.5px;
+  line-height: 1.55;
+}
+
+.noscript-notice a { color: inherit; font-weight: 600; }
