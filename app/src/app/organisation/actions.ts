@@ -18,7 +18,7 @@ import { orgContext } from "@/lib/orgSettings"
 import { isRedirect } from "@/lib/redirects"
 import { tabValue } from "@/lib/urlParams"
 import { saveTenant, saveOAuth, deleteOAuth, normalizeDomains } from "@/lib/tenantAdmin"
-import { saveBrand } from "@/lib/branding"
+import { saveBrand, deleteBrand } from "@/lib/branding"
 import { splitList } from "@/lib/oauth"
 import { requestDomain, verifyRequest, cancelDomain } from "@/lib/customerDomains"
 import { addDomain, skipVercel } from "@/lib/vercel"
@@ -119,6 +119,38 @@ export async function saveBrandingAction(fd: FormData) {
 
   revalidatePath("/organisation")
   back(fd, say(self.language).saved)
+}
+
+/**
+ * Odstráni logo organizácie.
+ *
+ * Dve veci, nie jedna: zmaže sa **obrázok** z `tenant_assets` aj **odkaz naň**
+ * v zázname tenanta. Zmazať len odkaz by znamenalo, že v databáze zostávajú
+ * osirené binárky, ktoré nikto nepočíta ani neupratuje; zmazať len obrázok by
+ * nechalo v hlavičke adresu, ktorá vracia 404.
+ *
+ * **Bez písania kódu organizácie** — na rozdiel od odstránenia prihlasovania
+ * kontom. Tam je následok nezvratný a okamžitý (ľudia sa prestanú dostať dnu),
+ * tu stačí nahrať logo znova. Obradnosť neúmerná následku učí ľudí preklikávať
+ * potvrdenia bez čítania, a potom ju prehliadnu aj tam, kde na nej záleží.
+ *
+ * `saveTenant()` zapíše prázdny `logoUrl`, čo je vedomé „bez loga" — hlavička
+ * aj onboarding potom ukážu samotný názov, na čo sú pripravené.
+ */
+export async function deleteLogoAction(fd: FormData) {
+  const self = await actor()
+  if (!self) redirect("/")
+
+  try {
+    await deleteBrand(self.companyCode)
+    await saveTenant(self.companyCode, { logoUrl: "" }, self.email)
+  } catch (e) {
+    if (isRedirect(e)) throw e
+    back(fd, errorMessage(e, self.language), true)
+  }
+
+  revalidatePath("/organisation")
+  back(fd, say(self.language).logoRemoved)
 }
 
 // ── prihlasovanie kontom ─────────────────────────────────────────────────────

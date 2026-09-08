@@ -8,7 +8,7 @@
  */
 
 import { describe, it, expect } from "vitest"
-import { channels, soft, tenantStyle } from "../src/components/TenantHeader"
+import { channels, soft, tenantStyle, accentVars, ACCENT_VARS } from "../src/components/TenantHeader"
 
 describe("kanály farby", () => {
   it("prečíta dlhý aj krátky zápis", () => {
@@ -66,5 +66,34 @@ describe("tenantStyle()", () => {
       "--on-accent": "#ffffff",
     })
     expect(style).not.toHaveProperty("--accent-soft")
+  })
+})
+
+describe("accentVars()", () => {
+  it("dá tie isté hodnoty ako tenantStyle — je to jeden výpočet", () => {
+    // Živý náhľad v nastavení organizácie nastavuje premenné cez
+    // `setProperty()`, obal stránky ich sype do `style`. Keby to boli dva
+    // výpočty, náhľad by raz ukázal inú farbu, než sa uloží.
+    expect(accentVars("#1f4ed8")).toEqual(tenantStyle({ displayName: "SFZ", accentColor: "#1f4ed8" }))
+  })
+
+  it("prázdna hodnota aj biele znaky znamenajú „nenastavovať nič“", () => {
+    expect(accentVars(undefined)).toEqual({})
+    expect(accentVars("")).toEqual({})
+    expect(accentVars("   ")).toEqual({})
+  })
+
+  it("obstrihne biele znaky okolo hodnoty", () => {
+    // Vlastnú hodnotu píše človek do poľa a medzera na konci je bežná —
+    // `#1f4ed8 ` by prehliadač zahodil a farba by sa potichu nezmenila.
+    expect(accentVars("  #1f4ed8  ")["--accent"]).toBe("#1f4ed8")
+  })
+
+  it("zoznam premenných pokrýva všetko, čo accentVars nastavuje", () => {
+    // Podľa tohto zoznamu živý náhľad po sebe uklidí. Keby v ňom premenná
+    // chýbala, zostala by na stránke aj po odchode z nastavenia.
+    const keys = Object.keys(accentVars("#1f4ed8"))
+    for (const k of keys) expect(ACCENT_VARS).toContain(k as (typeof ACCENT_VARS)[number])
+    expect(keys).toHaveLength(ACCENT_VARS.length)
   })
 })

@@ -79,24 +79,42 @@ export function soft(hex: string, alpha = 0.11): string | undefined {
 }
 
 /**
- * CSS premenné tenanta pre obal stránky.
+ * Premenné, ktoré farba organizácie prepisuje. Vymenované zvlášť, aby ich
+ * živý náhľad v `ColorSelect.tsx` vedel po sebe uklidiť — bez zoznamu by sa
+ * po odchode z obrazovky nedalo povedať, čo nastavil on a čo tam bolo predtým.
+ */
+export const ACCENT_VARS = ["--accent", "--accent-strong", "--on-accent", "--accent-soft"] as const
+
+/**
+ * Farba organizácie rozložená na CSS premenné.
  *
  * Prepisuje sa aj `--on-accent`: v tmavej téme je predvolene tmavý text, ktorý
  * by na sýtej farbe tenanta nebolo vidieť. Kto mení pozadie tlačidla, musí
  * zmeniť aj popredie — inak vznikne tlačidlo, ktoré sa nedá prečítať práve
  * v tej téme, ktorú si človek zapol.
+ *
+ * Oddelené od `tenantStyle()`, lebo tie isté hodnoty potrebuje aj živý náhľad
+ * v nastavení organizácie — ten ich nesype do `style` atribútu, ale nastavuje
+ * cez `setProperty()`. Dva výpočty tej istej trojice by sa raz rozišli
+ * a náhľad by ukazoval inú farbu, než sa uloží.
  */
-export function tenantStyle(branding?: TenantBrandingView): CSSProperties {
-  if (!branding?.accentColor) return {}
-  const soften = soft(branding.accentColor)
+export function accentVars(accentColor?: string): Record<string, string> {
+  const hex = accentColor?.trim()
+  if (!hex) return {}
+  const soften = soft(hex)
   return {
-    ["--accent" as string]: branding.accentColor,
-    ["--accent-strong" as string]: darken(branding.accentColor),
-    ["--on-accent" as string]: "#ffffff",
+    "--accent": hex,
+    "--accent-strong": darken(hex),
+    "--on-accent": "#ffffff",
     // Bez tohto riadka by chip aktívneho filtra a označený riadok zostali
     // v predvolenej sivej, kým zvyšok rozhrania má farbu organizácie.
-    ...(soften ? { ["--accent-soft" as string]: soften } : {}),
-  } as CSSProperties
+    ...(soften ? { "--accent-soft": soften } : {}),
+  }
+}
+
+/** CSS premenné tenanta pre obal stránky. */
+export function tenantStyle(branding?: TenantBrandingView): CSSProperties {
+  return accentVars(branding?.accentColor) as CSSProperties
 }
 
 export default function TenantHeader({

@@ -656,6 +656,12 @@ interface Dictionary {
     palette: Record<string, string>
     showCustom: string
     hideCustom: string
+    /** Ukážka farby na troch prvkoch, na ktorých farba naozaj je. */
+    previewLabel: string
+    previewButton: string
+    previewChipKey: string
+    previewChip: string
+    previewLink: string
   }
   org: {
     heading: string
@@ -670,7 +676,10 @@ interface Dictionary {
       shortNameNote: string
       logo: string
       logoCurrent: string
+      logoEmpty: string
       logoNote: string
+      logoRemove: string
+      logoRemoveNote: string
       color: string
       colorNote: string
       supportEmail: string
@@ -806,6 +815,7 @@ interface Dictionary {
       failed: string
       confirmCode: (code: string) => string
       signInRemoved: string
+      logoRemoved: string
       domainRequested: string
       domainNotFound: string
       domainWaiting: (host: string) => string
@@ -2054,6 +2064,11 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       "#6d28d9": "fialová",
       "#334155": "bridlicová",
     },
+    previewLabel: "Takto to bude vyzerať",
+    previewButton: "Potvrdiť",
+    previewChipKey: "Druh:",
+    previewChip: "Norma",
+    previewLink: "odkaz v texte",
     showCustom: "Zadať vlastnú hodnotu",
     hideCustom: "Skryť vlastnú hodnotu",
   },
@@ -2077,8 +2092,11 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       shortName: "Skratka",
       shortNameNote: "Do hornej lišty, kde je vedľa nej ešte menu — „SFZ“ tam povie to isté čo celý názov a nechá miesto na zvyšok.",
       logo: "Logo",
-      logoCurrent: "súčasné",
-      logoNote: "PNG, JPEG alebo WebP, najviac 256 kB. Prázdne = nemeniť.",
+      logoCurrent: "súčasné logo",
+      logoEmpty: "logo 512×512",
+      logoNote: "PNG, JPEG alebo WebP, najviac 256 kB. Prázdne = nemeniť. V hlavičke má logo 26 px — väčší súbor nič nepridá.",
+      logoRemove: "Odstrániť logo",
+      logoRemoveNote: "Zmaže obrázok aj odkaz naň. V hlavičke zostane samotný názov organizácie. Dá sa vrátiť nahratím nového loga.",
       color: "Farba",
       colorNote: "Nesie ju tlačidlo s bielym textom, preto sú odtiene tmavšie, než by sa chcelo — svetlejší tón znamená nečitateľné tlačidlo.",
       supportEmail: "Kontaktná adresa",
@@ -2221,6 +2239,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       failed: "Zmenu sa nepodarilo uložiť. Skús to znova.",
       confirmCode: (code) => `Na odstránenie napíš kód organizácie (${code}).`,
       signInRemoved: "Prihlasovacie údaje odstránené.",
+      logoRemoved: "Logo odstránené.",
       domainRequested: "Zapísané. Teraz nastavte CNAME u svojho správcu DNS a dajte overiť.",
       domainNotFound: "Takú žiadosť tu nemáme.",
       domainWaiting: (host) =>
@@ -3476,6 +3495,11 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       "#6d28d9": "fialová",
       "#334155": "břidlicová",
     },
+    previewLabel: "Takhle to bude vypadat",
+    previewButton: "Potvrdit",
+    previewChipKey: "Druh:",
+    previewChip: "Norma",
+    previewLink: "odkaz v textu",
     showCustom: "Zadat vlastní hodnotu",
     hideCustom: "Skrýt vlastní hodnotu",
   },
@@ -3499,8 +3523,11 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       shortName: "Zkratka",
       shortNameNote: "Do horní lišty, kde je vedle ní ještě menu — „SFZ“ tam řekne totéž co celý název a nechá místo na zbytek.",
       logo: "Logo",
-      logoCurrent: "současné",
-      logoNote: "PNG, JPEG nebo WebP, nejvýše 256 kB. Prázdné = neměnit.",
+      logoCurrent: "současné logo",
+      logoEmpty: "logo 512×512",
+      logoNote: "PNG, JPEG nebo WebP, nejvýše 256 kB. Prázdné = neměnit. V hlavičce má logo 26 px — větší soubor nic nepřidá.",
+      logoRemove: "Odstranit logo",
+      logoRemoveNote: "Smaže obrázek i odkaz na něj. V hlavičce zůstane samotný název organizace. Dá se vrátit nahráním nového loga.",
       color: "Barva",
       colorNote: "Nese ji tlačítko s bílým textem, proto jsou odstíny tmavší, než by se chtělo — světlejší tón znamená nečitelné tlačítko.",
       supportEmail: "Kontaktní adresa",
@@ -3643,6 +3670,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       failed: "Změnu se nepodařilo uložit. Zkus to znovu.",
       confirmCode: (code) => `Pro odstranění napiš kód organizace (${code}).`,
       signInRemoved: "Přihlašovací údaje odstraněny.",
+      logoRemoved: "Logo odstraněno.",
       domainRequested: "Zapsáno. Teď nastavte CNAME u svého správce DNS a dejte ověřit.",
       domainNotFound: "Takovou žádost tu nemáme.",
       domainWaiting: (host) =>
@@ -4894,6 +4922,11 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       "#6d28d9": "violet",
       "#334155": "slate",
     },
+    previewLabel: "This is how it will look",
+    previewButton: "Acknowledge",
+    previewChipKey: "Kind:",
+    previewChip: "Norm",
+    previewLink: "a link in text",
     showCustom: "Enter a custom value",
     hideCustom: "Hide the custom value",
   },
@@ -4917,8 +4950,11 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       shortName: "Short name",
       shortNameNote: "For the top bar, where a menu sits next to it — “SFZ” says the same thing there as the full name and leaves room for the rest.",
       logo: "Logo",
-      logoCurrent: "current",
-      logoNote: "PNG, JPEG or WebP, at most 256 kB. Empty = leave unchanged.",
+      logoCurrent: "current logo",
+      logoEmpty: "logo 512×512",
+      logoNote: "PNG, JPEG or WebP, at most 256 kB. Empty = leave unchanged. In the header the logo is 26 px — a bigger file adds nothing.",
+      logoRemove: "Remove logo",
+      logoRemoveNote: "Deletes the image and the reference to it. The header keeps the organisation name alone. Reversible by uploading a new logo.",
       color: "Colour",
       colorNote: "Buttons carry it with white text on top, which is why the shades are darker than you might want — a lighter tone means an unreadable button.",
       supportEmail: "Contact address",
@@ -5061,6 +5097,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       failed: "The change could not be saved. Try again.",
       confirmCode: (code) => `To remove it, type the organisation code (${code}).`,
       signInRemoved: "Sign-in credentials removed.",
+      logoRemoved: "Logo removed.",
       domainRequested: "Recorded. Now set the CNAME with your DNS administrator and ask for verification.",
       domainNotFound: "We have no such request.",
       domainWaiting: (host) =>

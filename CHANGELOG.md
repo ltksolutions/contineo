@@ -4,6 +4,23 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Added (2026-09-08 — nastavenie organizácie: živý náhľad farby a odstránenie loga)
+
+Krok 6 dizajnového handoffu.
+
+- **Voľba farby prekresľuje celé rozhranie naživo.** Je to jediné nastavenie, ktorého dôsledok nie je z hodnoty vidieť — `#0e7490` nikomu nepovie, ako bude vyzerať hlavička, tlačidlo a odkaz naraz.
+- **Premenné sa nastavujú na `<html>` a na každý predok s vlastnými inline premennými.** Nastaviť len `:root` nestačí: `tenantStyle()` ich sype inline na `<body>` a na obal obrazovky, a inline štýl má vyššiu prioritu — náhľad by sa neprejavil práve v tom obale, v ktorom formulár býva.
+- **Neuložená voľba neprežije odchod z obrazovky.** Pri odídení sa vrátia pôvodné hodnoty; inak by človek videl farbu, ktorú v databáze nikto nemá, a hádal by, či je uložená.
+- **Farba je jeden výpočet, nie dva** (`accentVars()` v `TenantHeader.tsx`). Náhľad ju nastavuje cez `setProperty()`, obal stránky do `style` atribútu — dva výpočty tej istej trojice by sa raz rozišli a náhľad by ukázal inú farbu, než sa uloží.
+- **Ukážka na troch prvkoch**, na ktorých farba naozaj je: primárne tlačidlo (pozadie + biely text), chip filtra (`--accent-soft`) a odkaz v texte. Sú to `span`-y, nie tlačidlá — ukážka sa nesmie dať kliknúť ani chytiť klávesnicou. Premenné dostáva vlastným štýlom, takže ukazuje správne aj vtedy, keď živý náhľad nezaberie.
+- **Vybraná dlaždica má prstenec vo vlastnej farbe** namiesto čierneho obrysu. Obrys je vidieť, ale nepovie nič navyše; prstenec ukáže odtieň druhýkrát mimo plochy, takže sa dá porovnať so susednými.
+- **Slot na logo 96×96** s pruhovaným pozadím a monospace popisom. Je väčší, než logo v hlavičke (26 px), zámerne: na 26 px sa nedá posúdiť, či je obrázok orezaný alebo rozmazaný — a to je jediné, čo sa tu dá skontrolovať pred uložením. `alt` obrázka nie je prázdny na rozdiel od hlavičky: tam je logo ozdoba vedľa názvu, tu je to jediný spôsob, ako zistiť, aké logo je uložené.
+- **Logo sa dá odstrániť.** `deleteBrand()` v `lib/branding.ts` existoval od začiatku, ale nemal volajúceho — organizácia sa teda loga nezbavila bez nás. Rovnaká polovica funkcie ako `fixes[]` a `trackId` predtým.
+- **Maže sa obrázok aj odkaz naň.** Len odkaz by znamenal osirené binárky v `tenant_assets`, ktoré nikto nepočíta; len obrázok by nechal v hlavičke adresu vracajúcu 404.
+- **Bez písania kódu organizácie**, na rozdiel od odstránenia prihlasovania kontom. Tam je následok nezvratný a okamžitý (ľudia sa prestanú dostať dnu), tu stačí nahrať logo znova. Obradnosť neúmerná následku učí ľudí preklikávať potvrdenia bez čítania — a potom ju prehliadnu aj tam, kde na nej záleží. Tlačidlo je preto vo vlastnom formulári pod čiarou, nie vedľa „Uložiť".
+- Overené: `tsc --noEmit` čisto, `eslint` bez chýb, **973 testov** (4 nové nad `accentVars()`), obrazovka prekreslená na 390 px, na desktope aj v tmavej téme.
+
+
 ### Changed (2026-09-08 — „Opýtať sa": hero, karta odpovede, zdroje)
 
 Krok 5c, tretia a posledná časť kroku 5. Je to najpoužívanejšia obrazovka systému, preto sa zmenilo len to, čo je vidieť — SSE, odosielanie ani prerušenie otázky sa nedotklo ani jeden riadok.
