@@ -44,37 +44,37 @@ export default async function TracksPage({
       <Notice message={message ?? error} error={Boolean(error)} back="/library/tracks" />
 
       <p style={{ margin: "0 0 16px" }}>
-        <Link className="tichy" href="/library" style={{ fontSize: 14 }}>
+        <Link className="quiet" href="/library" style={{ fontSize: 14 }}>
           {dictionary(ctx.person.language).library.upload.back}
         </Link>
       </p>
 
       <h1 style={{ fontSize: 25, letterSpacing: "-0.02em", margin: "0 0 6px" }}>{t.heading}</h1>
-      <p className="tichy" style={{ fontSize: 15, margin: "0 0 24px" }}>{t.intro}</p>
+      <p className="quiet" style={{ fontSize: 15, margin: "0 0 24px" }}>{t.intro}</p>
 
       {tracks.length === 0 && (
-        <p className="karta" style={{ padding: 20, margin: "0 0 24px" }}>{t.empty}</p>
+        <p className="card" style={{ padding: 20, margin: "0 0 24px" }}>{t.empty}</p>
       )}
 
       <ul style={{ listStyle: "none", padding: 0, margin: "0 0 32px", display: "grid", gap: 12 }}>
         {tracks.map(tr => (
-          <li key={tr.key} className="karta" style={{ padding: "16px 18px" }}>
+          <li key={tr.key} className="card" style={{ padding: "16px 18px" }}>
             <div style={{ display: "flex", gap: 12, alignItems: "baseline", flexWrap: "wrap" }}>
               <Link href={`/library/tracks/${encodeURIComponent(tr.key)}`} style={{ fontSize: 16.5, fontWeight: 600, flex: "1 1 240px" }}>
                 {tr.title}
               </Link>
               <span
-                className="stitok"
+                className="tag"
                 style={tr.isActive ? { background: "var(--ok-bg)", color: "var(--ok-fg)" } : undefined}
               >
                 {tr.isActive ? t.active : t.inactive}
               </span>
             </div>
-            <p className="tichy" style={{ fontSize: 13.5, margin: "6px 0 0" }}>
+            <p className="quiet" style={{ fontSize: 13.5, margin: "6px 0 0" }}>
               <code>{tr.key}</code> · {t.stepCount(tr.steps.length)}
             </p>
             {tr.description && (
-              <p className="tichy" style={{ fontSize: 14, margin: "6px 0 0" }}>{tr.description}</p>
+              <p className="quiet" style={{ fontSize: 14, margin: "6px 0 0" }}>{tr.description}</p>
             )}
           </li>
         ))}
@@ -82,16 +82,16 @@ export default async function TracksPage({
 
       <h2 style={{ fontSize: 19, letterSpacing: "-0.01em", margin: "0 0 12px" }}>{t.newHeading}</h2>
 
-      <form action={createTrackAction} className="karta" style={{ padding: 20, display: "grid", gap: 16 }}>
-        <label className="pole">
-          <span className="pole-popis">{t.title}</span>
-          <input className="pole-vstup" name="title" defaultValue={title ?? ""} required />
+      <form action={createTrackAction} className="card" style={{ padding: 20, display: "grid", gap: 16 }}>
+        <label className="field">
+          <span className="field-label">{t.title}</span>
+          <input className="field-input" name="title" defaultValue={title ?? ""} required />
         </label>
 
-        <label className="pole">
-          <span className="pole-popis">{t.key}</span>
+        <label className="field">
+          <span className="field-label">{t.key}</span>
           <input
-            className="pole-vstup"
+            className="field-input"
             name="key"
             defaultValue={key ?? ""}
             required
@@ -99,16 +99,16 @@ export default async function TracksPage({
             autoCapitalize="none"
             autoCorrect="off"
           />
-          <span className="tichy pole-napoveda">{t.keyHint}</span>
+          <span className="quiet field-hint">{t.keyHint}</span>
         </label>
 
-        <label className="pole">
-          <span className="pole-popis">{t.description}</span>
-          <input className="pole-vstup" name="description" />
+        <label className="field">
+          <span className="field-label">{t.description}</span>
+          <input className="field-input" name="description" />
         </label>
 
         <p style={{ margin: 0 }}>
-          <button className="tlacidlo" type="submit">{t.create}</button>
+          <button className="button" type="submit">{t.create}</button>
         </p>
       </form>
     </div>

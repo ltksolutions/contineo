@@ -46,24 +46,24 @@ export default async function HrOverviewPage({
       <h1 style={{ fontSize: 26, letterSpacing: "-0.02em", margin: "0 0 6px" }}>
         {t.heading}
       </h1>
-      <p className="tichy" style={{ fontSize: 15, margin: "0 0 18px", maxWidth: 620 }}>
+      <p className="quiet" style={{ fontSize: 15, margin: "0 0 18px", maxWidth: 620 }}>
         {t.intro} <em>dnes</em>.
       </p>
 
       <Notice message={message} error={error === "1"} back="/hr" />
 
       <p style={{ margin: "0 0 24px", display: "flex", gap: 8, flexWrap: "wrap" }}>
-        <Link className="tlacidlo" href="/hr/assign">{t.assign}</Link>
-        <Link className="tlacidlo tlacidlo--tiche" href="/hr/overview">
+        <Link className="button" href="/hr/assign">{t.assign}</Link>
+        <Link className="button button--quiet" href="/hr/overview">
           {dictionary(language).hr.report.heading}
         </Link>
-        <Link className="tlacidlo tlacidlo--tiche" href="/hr/reminders">
+        <Link className="button button--quiet" href="/hr/reminders">
           {dictionary(language).hr.reminders.heading}
         </Link>
       </p>
 
       {overview.length === 0 ? (
-        <p className="karta" style={{ padding: 20, fontSize: 15 }}>
+        <p className="card" style={{ padding: 20, fontSize: 15 }}>
           {t.empty}
         </p>
       ) : (
@@ -71,7 +71,7 @@ export default async function HrOverviewPage({
           {overview.map(p => {
             const error = p.count - p.acknowledged
             return (
-              <li key={p.id} className="karta" style={{ padding: "18px 20px" }}>
+              <li key={p.id} className="card" style={{ padding: "18px 20px" }}>
                 <div style={{ display: "flex", gap: 10, alignItems: "baseline", flexWrap: "wrap" }}>
                   <Link
                     href={`/hr/${encodeURIComponent(p.id)}`}
@@ -79,10 +79,10 @@ export default async function HrOverviewPage({
                   >
                     {p.subject.documentTitle}
                   </Link>
-                  <span className="stitok">verzia {p.subject.versionLabel}</span>
+                  <span className="tag">verzia {p.subject.versionLabel}</span>
                 </div>
 
-                <p className="tichy" style={{ fontSize: 13.5, margin: "8px 0 0" }}>
+                <p className="quiet" style={{ fontSize: 13.5, margin: "8px 0 0" }}>
                   {audienceLabel(p.audience)} · pridelil {p.assignedBy} ·{" "}
                   {formatDate(p.assignedAt, language)}
                 </p>
@@ -93,15 +93,15 @@ export default async function HrOverviewPage({
                   {p.reason}
                 </p>
 
-                <div className="admin-udaje">
+                <div className="admin-data">
                   <div>
-                    <div className="tichy" style={{ fontSize: 12.5 }}>{t.acknowledged}</div>
+                    <div className="quiet" style={{ fontSize: 12.5 }}>{t.acknowledged}</div>
                     <div style={{ fontSize: 15.5, fontWeight: 600 }}>
                       {p.acknowledged} / {p.count}
                     </div>
                   </div>
                   <div>
-                    <div className="tichy" style={{ fontSize: 12.5 }}>{t.notified}</div>
+                    <div className="quiet" style={{ fontSize: 12.5 }}>{t.notified}</div>
                     <div style={{ fontSize: 15.5, fontWeight: 600, color: p.lastNotified ? undefined : "var(--muted)" }}>
                       {p.lastNotified
                         ? `${formatDate(p.lastNotified.at, language)}${p.notifiedTotal > 1 ? ` · ${p.notifiedTotal}×` : ""}`
@@ -109,7 +109,7 @@ export default async function HrOverviewPage({
                     </div>
                   </div>
                   <div>
-                    <div className="tichy" style={{ fontSize: 12.5 }}>{t.missing}</div>
+                    <div className="quiet" style={{ fontSize: 12.5 }}>{t.missing}</div>
                     <div
                       style={{
                         fontSize: 15.5,
@@ -126,13 +126,13 @@ export default async function HrOverviewPage({
                   {/* Dať vedieť je samostatné rozhodnutie, nie vedľajší účinok
                       pridelenia — preto odkaz na náhľad, nie tlačidlo „poslať". */}
                   {error > 0 && (
-                    <Link className="tlacidlo tlacidlo--tiche" href={`/hr/${encodeURIComponent(p.id)}/notify`}>
+                    <Link className="button button--quiet" href={`/hr/${encodeURIComponent(p.id)}/notify`}>
                       {t.notifyByEmail}
                     </Link>
                   )}
                   <form action={revokeAction}>
                     <input type="hidden" name="id" value={p.id} />
-                    <button className="tlacidlo tlacidlo--tiche" type="submit">
+                    <button className="button button--quiet" type="submit">
                       {t.revoke}
                     </button>
                   </form>

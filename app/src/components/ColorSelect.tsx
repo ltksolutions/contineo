@@ -91,10 +91,10 @@ export default function ColorSelect({
   }, [color])
 
   return (
-    <div className="farby" ref={box}>
+    <div className="colors" ref={box}>
       <input type="hidden" name={name} value={color} />
 
-      <div className="farby-zoznam">
+      <div className="colors-list">
         {PALETTE.map(p => {
           const isHex = color.toLowerCase() === p.toLowerCase()
           const label = t.palette[p] ?? p
@@ -102,7 +102,7 @@ export default function ColorSelect({
             <button
               key={p}
               type="button"
-              className={`farba${isHex ? " je-zvolena" : ""}`}
+              className={`color${isHex ? " is-selected" : ""}`}
               style={{ background: p, ["--tile" as string]: p }}
               aria-pressed={isHex}
               aria-label={label}
@@ -119,7 +119,7 @@ export default function ColorSelect({
 
       <button
         type="button"
-        className="tlacidlo tlacidlo--tiche farby-vlastna"
+        className="button button--quiet colors-custom"
         onClick={() => setCustom(v => !v)}
       >
         {custom ? t.hideCustom : t.showCustom}
@@ -127,7 +127,7 @@ export default function ColorSelect({
 
       {custom && (
         <input
-          className="pole-vstup"
+          className="field-input"
           value={color}
           onChange={e => setColor(e.target.value)}
           placeholder="#1f4ed8"
@@ -143,9 +143,9 @@ export default function ColorSelect({
         * takže ukazuje správne aj vtedy, keď živý náhľad vyššie nezaberie.
         */}
       <div className="brand-preview" style={accentVars(color)}>
-        <span className="tichy brand-preview-label">{t.previewLabel}</span>
+        <span className="quiet brand-preview-label">{t.previewLabel}</span>
         <div className="brand-preview-row">
-          <span className="tlacidlo brand-preview-button">{t.previewButton}</span>
+          <span className="button brand-preview-button">{t.previewButton}</span>
           <span className="library-chip">
             <span className="library-chip-key">{t.previewChipKey}</span>{t.previewChip}
           </span>
@@ -154,7 +154,7 @@ export default function ColorSelect({
       </div>
 
       <noscript>
-        <input className="pole-vstup" name={name} defaultValue={value ?? ""} placeholder="#1f4ed8" />
+        <input className="field-input" name={name} defaultValue={value ?? ""} placeholder="#1f4ed8" />
       </noscript>
     </div>
   )

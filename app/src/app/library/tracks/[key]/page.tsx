@@ -83,7 +83,7 @@ export default async function TrackDetailPage({
       <Notice message={message ?? error} error={Boolean(error)} back={here} />
 
       <p style={{ margin: "0 0 16px" }}>
-        <Link className="tichy" href="/library/tracks" style={{ fontSize: 14 }}>{t.back}</Link>
+        <Link className="quiet" href="/library/tracks" style={{ fontSize: 14 }}>{t.back}</Link>
       </p>
 
       <div style={{ display: "flex", gap: 12, alignItems: "baseline", flexWrap: "wrap", margin: "0 0 6px" }}>
@@ -91,13 +91,13 @@ export default async function TrackDetailPage({
           {track.title}
         </h1>
         <span
-          className="stitok"
+          className="tag"
           style={track.isActive ? { background: "var(--ok-bg)", color: "var(--ok-fg)" } : undefined}
         >
           {track.isActive ? t.active : t.inactive}
         </span>
       </div>
-      <p className="tichy" style={{ fontSize: 13.5, margin: "0 0 24px" }}>
+      <p className="quiet" style={{ fontSize: 13.5, margin: "0 0 24px" }}>
         <code>{track.key}</code> · {t.stepCount(steps.length)}
       </p>
 
@@ -106,18 +106,18 @@ export default async function TrackDetailPage({
       <h2 style={{ fontSize: 19, letterSpacing: "-0.01em", margin: "0 0 12px" }}>{t.steps}</h2>
 
       {steps.length === 0 && (
-        <p className="karta" style={{ padding: 20, margin: "0 0 20px" }}>{t.noSteps}</p>
+        <p className="card" style={{ padding: 20, margin: "0 0 20px" }}>{t.noSteps}</p>
       )}
 
       <ul style={{ listStyle: "none", padding: 0, margin: "0 0 20px", display: "grid", gap: 12 }}>
         {steps.map((s, i) => (
-          <li key={s.documentId} className="karta" style={{ padding: "14px 16px" }}>
+          <li key={s.documentId} className="card" style={{ padding: "14px 16px" }}>
             <div style={{ display: "flex", gap: 12, alignItems: "baseline", flexWrap: "wrap" }}>
-              <span className="tichy" style={{ fontSize: 13 }}>{i + 1}.</span>
+              <span className="quiet" style={{ fontSize: 13 }}>{i + 1}.</span>
               <strong style={{ fontSize: 15.5, flex: "1 1 240px" }}>
                 {titles.get(s.documentId!) ?? s.documentId}
               </strong>
-              <span className="stitok">{s.requiresAcknowledgement ? t.ackYes : t.ackNo}</span>
+              <span className="tag">{s.requiresAcknowledgement ? t.ackYes : t.ackNo}</span>
             </div>
 
             <div style={{ display: "flex", gap: 8, flexWrap: "wrap", margin: "10px 0 0" }}>
@@ -125,7 +125,7 @@ export default async function TrackDetailPage({
                 {carry}
                 <input type="hidden" name="documentId" value={s.documentId!} />
                 <input type="hidden" name="direction" value="up" />
-                <button className="tlacidlo tlacidlo--tiche" type="submit" disabled={i === 0}>
+                <button className="button button--quiet" type="submit" disabled={i === 0}>
                   {t.moveUp}
                 </button>
               </form>
@@ -133,14 +133,14 @@ export default async function TrackDetailPage({
                 {carry}
                 <input type="hidden" name="documentId" value={s.documentId!} />
                 <input type="hidden" name="direction" value="down" />
-                <button className="tlacidlo tlacidlo--tiche" type="submit" disabled={i === steps.length - 1}>
+                <button className="button button--quiet" type="submit" disabled={i === steps.length - 1}>
                   {t.moveDown}
                 </button>
               </form>
               <form action={removeStepAction}>
                 {carry}
                 <input type="hidden" name="documentId" value={s.documentId!} />
-                <button className="tlacidlo tlacidlo--tiche" type="submit">{t.remove}</button>
+                <button className="button button--quiet" type="submit">{t.remove}</button>
               </form>
             </div>
           </li>
@@ -148,10 +148,10 @@ export default async function TrackDetailPage({
       </ul>
 
       {available.length > 0 && (
-        <form action={addStepAction} className="karta" style={{ padding: 20, display: "grid", gap: 14, margin: "0 0 32px" }}>
+        <form action={addStepAction} className="card" style={{ padding: 20, display: "grid", gap: 14, margin: "0 0 32px" }}>
           {carry}
-          <div className="pole">
-            <span className="pole-popis">{t.addStep}</span>
+          <div className="field">
+            <span className="field-label">{t.addStep}</span>
             <Select
               name="documentId"
               options={[{ value: "", label: t.chooseDocument }, ...available]}
@@ -164,12 +164,12 @@ export default async function TrackDetailPage({
             <input type="checkbox" name="requiresAcknowledgement" defaultChecked style={{ marginTop: 3 }} />
             <span>
               {t.requiresAck}
-              <span className="tichy" style={{ display: "block", fontSize: 13 }}>{t.requiresAckHint}</span>
+              <span className="quiet" style={{ display: "block", fontSize: 13 }}>{t.requiresAckHint}</span>
             </span>
           </label>
 
           <p style={{ margin: 0 }}>
-            <button className="tlacidlo" type="submit">{t.addStep}</button>
+            <button className="button" type="submit">{t.addStep}</button>
           </p>
         </form>
       )}
@@ -179,25 +179,25 @@ export default async function TrackDetailPage({
       <form action={setTrackActiveAction} style={{ margin: "0 0 32px" }}>
         <input type="hidden" name="key" value={track.key} />
         <input type="hidden" name="isActive" value={track.isActive ? "0" : "1"} />
-        <button className="tlacidlo tlacidlo--tiche" type="submit">
+        <button className="button button--quiet" type="submit">
           {track.isActive ? t.disable : t.enable}
         </button>
       </form>
 
       {/* ── názov ── */}
 
-      <form action={renameTrackAction} className="karta" style={{ padding: 20, display: "grid", gap: 16 }}>
+      <form action={renameTrackAction} className="card" style={{ padding: 20, display: "grid", gap: 16 }}>
         <input type="hidden" name="key" value={track.key} />
-        <label className="pole">
-          <span className="pole-popis">{t.title}</span>
-          <input className="pole-vstup" name="title" defaultValue={track.title} required />
+        <label className="field">
+          <span className="field-label">{t.title}</span>
+          <input className="field-input" name="title" defaultValue={track.title} required />
         </label>
-        <label className="pole">
-          <span className="pole-popis">{t.description}</span>
-          <input className="pole-vstup" name="description" defaultValue={track.description ?? ""} />
+        <label className="field">
+          <span className="field-label">{t.description}</span>
+          <input className="field-input" name="description" defaultValue={track.description ?? ""} />
         </label>
         <p style={{ margin: 0 }}>
-          <button className="tlacidlo tlacidlo--tiche" type="submit">{t.rename}</button>
+          <button className="button button--quiet" type="submit">{t.rename}</button>
         </p>
       </form>
     </div>

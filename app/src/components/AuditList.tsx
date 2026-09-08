@@ -45,38 +45,38 @@ export default function AuditList({
   const t = dictionary(language).audit
 
   if (records.length === 0) {
-    return <p className="karta" style={{ padding: 18, fontSize: 15 }}>{t.empty}</p>
+    return <p className="card" style={{ padding: 18, fontSize: 15 }}>{t.empty}</p>
   }
 
   return (
     <ul className="audit">
       {records.map(z => (
-        <li key={String(z._id)} className="karta audit-zaznam">
-          <div className="audit-hlavicka">
-            <span className="stitok">{t.subjects[z.subject] ?? z.subject}</span>
+        <li key={String(z._id)} className="card audit-entry">
+          <div className="audit-head">
+            <span className="tag">{t.subjects[z.subject] ?? z.subject}</span>
             <strong>{t.actions[z.action] ?? z.action}</strong>
-            {z.targetLabel && <span className="audit-ciel">{z.targetLabel}</span>}
+            {z.targetLabel && <span className="audit-target">{z.targetLabel}</span>}
           </div>
 
-          <div className="tichy audit-kto">
+          <div className="quiet audit-who">
             {z.actor} · {formatDate(z.at, language)}
           </div>
 
           {z.changes && Object.keys(z.changes).length > 0 && (
-            <ul className="audit-zmeny">
+            <ul className="audit-changes">
               {Object.entries(z.changes).map(([field, v]) => {
                 const c = change(v)
                 return (
                   <li key={field}>
-                    <span className="audit-pole">{t.fields[field] ?? field}</span>
+                    <span className="audit-field">{t.fields[field] ?? field}</span>
                     {c.hasFrom ? (
                       <>
-                        <span className="audit-stara">{valueText(c.from, t.none)}</span>
+                        <span className="audit-old">{valueText(c.from, t.none)}</span>
                         <span aria-hidden="true"> → </span>
-                        <span className="audit-nova">{valueText(c.to, t.none)}</span>
+                        <span className="audit-new">{valueText(c.to, t.none)}</span>
                       </>
                     ) : (
-                      <span className="audit-nova">{valueText(c.to, t.none)}</span>
+                      <span className="audit-new">{valueText(c.to, t.none)}</span>
                     )}
                   </li>
                 )
@@ -84,7 +84,7 @@ export default function AuditList({
             </ul>
           )}
 
-          {z.note && <div className="tichy audit-poznamka">{z.note}</div>}
+          {z.note && <div className="quiet audit-note">{z.note}</div>}
         </li>
       ))}
     </ul>

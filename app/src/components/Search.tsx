@@ -119,7 +119,7 @@ export default function Search({
         <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
           <button
             type="button"
-            className="tlacidlo"
+            className="button"
             onClick={() => send(preset ?? "")}
             disabled={state.running}
           >
@@ -128,7 +128,7 @@ export default function Search({
           {state.running && (
             <button
               type="button"
-              className="tlacidlo tlacidlo--tiche"
+              className="button button--quiet"
               onClick={() => { abort.current?.abort(); setState(s => ({ ...s, running: false })) }}
             >
               {t.stop}
@@ -182,19 +182,19 @@ export default function Search({
             maxLength={1000}
           />
           <div className="ask-actions">
-            <button type="submit" className="tlacidlo" disabled={!question.trim() || state.running}>
+            <button type="submit" className="button" disabled={!question.trim() || state.running}>
               {state.running ? t.searching : t.submit}
             </button>
             {state.running && (
               <button
                 type="button"
-                className="tlacidlo tlacidlo--tiche"
+                className="button button--quiet"
                 onClick={() => { abort.current?.abort(); setState(s => ({ ...s, running: false })) }}
               >
                 {t.stop}
               </button>
             )}
-            <span className="tichy ask-counter">
+            <span className="quiet ask-counter">
               {question.length}/1000
             </span>
           </div>
@@ -203,7 +203,7 @@ export default function Search({
         {/* Príklady zmiznú, len čo je čo ukazovať. */}
         {!state.text && !state.running && !state.done && (
           <div className="ask-examples-wrap">
-            <div className="tichy ask-examples-label">
+            <div className="quiet ask-examples-label">
               {t.examplesLabel}
             </div>
             <div className="ask-examples">

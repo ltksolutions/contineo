@@ -47,33 +47,33 @@ export default async function InviteAllPage({
       <Notice message={q.msg} error={q.error === "1"} back="/people/invite" />
 
       <p style={{ margin: "0 0 16px" }}>
-        <Link className="tichy" href="/people" style={{ fontSize: 14 }}>{t.back}</Link>
+        <Link className="quiet" href="/people" style={{ fontSize: 14 }}>{t.back}</Link>
       </p>
 
       <h1 style={{ fontSize: 25, letterSpacing: "-0.02em", margin: "0 0 6px" }}>{t.heading}</h1>
-      <p className="tichy" style={{ fontSize: 15, margin: "0 0 24px", maxWidth: 620 }}>{t.intro}</p>
+      <p className="quiet" style={{ fontSize: 15, margin: "0 0 24px", maxWidth: 620 }}>{t.intro}</p>
 
       {people.length === 0 ? (
-        <p className="karta" style={{ padding: 20 }}>{t.none}</p>
+        <p className="card" style={{ padding: 20 }}>{t.none}</p>
       ) : (
         <>
           <ul style={{ listStyle: "none", padding: 0, margin: "0 0 24px", display: "grid", gap: 8 }}>
             {people.map(p => (
               <li
                 key={p.id}
-                className="karta"
+                className="card"
                 style={{ padding: "12px 16px", display: "flex", gap: 12, flexWrap: "wrap", alignItems: "baseline" }}
               >
                 <strong style={{ fontSize: 15, flex: "1 1 200px" }}>{p.fullName}</strong>
-                <span className="tichy" style={{ fontSize: 13.5 }}>{p.email}</span>
+                <span className="quiet" style={{ fontSize: 13.5 }}>{p.email}</span>
               </li>
             ))}
           </ul>
 
-          <p className="tichy" style={{ fontSize: 14, margin: "0 0 14px" }}>{t.preview}</p>
+          <p className="quiet" style={{ fontSize: 14, margin: "0 0 14px" }}>{t.preview}</p>
 
           <form action={sendInvitationsAction}>
-            <button className="tlacidlo" type="submit">{t.send(people.length)}</button>
+            <button className="button" type="submit">{t.send(people.length)}</button>
           </form>
         </>
       )}

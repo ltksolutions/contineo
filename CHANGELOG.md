@@ -4,6 +4,15 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Changed (2026-09-08 — anglické názvy CSS tried)
+
+**Mechanická zmena bez dopadu na vzhľad.** Rozhranie malo triedy po slovensky (`.tlacidlo`, `.karta`, `.pole-vstup`, `.strom-riadok`), čo pri čítaní kódu znamenalo prepínať jazyk vetu po vete a pri hľadaní `button` nenájsť tlačidlo.
+
+- **109 tried v 47 súboroch**, vrátane `je-*` → `is-*` (`je-aktivna`/`je-aktivny` splynuli do jedného `is-active`). Naviac: dva slovenské `@keyframes` (`oznam-prichod` → `notice-in`, `blik` → `blink`), štyri slovenské `id` a kotvy (`#zoznam` → `#results`, `#filtre` → `#filters`) a vlastná premenná `--uroven` → `--level`.
+- **Nahrádzalo sa cielene, nie slepo v texte.** `pole`, `karta`, `strom`, `farba` sú v tomto repozitári aj názvy premenných, polí formulárov a hlavne slov v komentároch — komentáre zostávajú po slovensky zámerne. Skript menil len token **za bodkou** v CSS a len vnútri `className=` v TSX; jediný výskyt názvu triedy v JavaScripte (`querySelector(".is-active")`) bol už predtým anglický.
+- **Overené obrázkom, nie dôverou.** Päť skúšobných strán × dve šírky (390 px, 1000 px) × dve témy = **20 renderov, všetkých 20 zhodných na pixel** so starým CSS a starým značkovaním. Prvý pokus tri rozdiely našiel — ukázali sa ako `transition` zachytený v polovici prepnutia témy, nie ako chyba premenovania.
+- Overené aj: `tsc --noEmit` čisto, `eslint` bez chýb, 1010 testov, produkčný build prejde.
+
 ### Added (2026-09-08 — výber, ktorý prežije stránkovanie)
 
 **Označené dokumenty sú v adrese, nie v stave formulára.** Dovtedy to boli zaškrtávacie políčka jedného formulára, takže výber platil pre viditeľnú stranu a prechod na ďalšiu ho zabudol — políčko sa odošle až akciou, takže dovtedy o ňom server nevie a knižnica beží bez JavaScriptu zámerne.

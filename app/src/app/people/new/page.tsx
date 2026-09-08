@@ -39,25 +39,25 @@ export default async function NewPersonPage({
     <AppShell language={ctx.person.language}>
     <div style={{ maxWidth: 560, ...tenantStyle(branding) }}>
       <p style={{ margin: "0 0 16px" }}>
-        <Link className="tichy" href="/people" style={{ fontSize: 14 }}>{t.back}</Link>
+        <Link className="quiet" href="/people" style={{ fontSize: 14 }}>{t.back}</Link>
       </p>
 
       <h1 style={{ fontSize: 25, letterSpacing: "-0.02em", margin: "0 0 6px" }}>{t.heading}</h1>
-      <p className="tichy" style={{ fontSize: 15, margin: "0 0 20px" }}>
+      <p className="quiet" style={{ fontSize: 15, margin: "0 0 20px" }}>
         {t.introBefore}<strong>{ctx.tenant.companyCode}</strong>{t.introAfter}
       </p>
 
       {q.error && (
-        <p className="karta" style={{ padding: "12px 16px", margin: "0 0 18px", fontSize: 14.5, color: "var(--warn-fg)" }}>
+        <p className="card" style={{ padding: "12px 16px", margin: "0 0 18px", fontSize: 14.5, color: "var(--warn-fg)" }}>
           {q.error}
         </p>
       )}
 
-      <form action={invitePersonAction} className="karta" style={{ padding: 20, display: "grid", gap: 16 }}>
-        <label className="pole">
-          <span className="pole-popis">{t.email}</span>
+      <form action={invitePersonAction} className="card" style={{ padding: 20, display: "grid", gap: 16 }}>
+        <label className="field">
+          <span className="field-label">{t.email}</span>
           <input
-            className="pole-vstup"
+            className="field-input"
             name="email"
             type="email"
             required
@@ -65,21 +65,21 @@ export default async function NewPersonPage({
             autoCapitalize="none"
             autoCorrect="off"
           />
-          <span className="tichy pole-napoveda">{t.emailNote}</span>
+          <span className="quiet field-hint">{t.emailNote}</span>
         </label>
 
-        <label className="pole">
-          <span className="pole-popis">{t.fullName}</span>
-          <input className="pole-vstup" name="fullName" required defaultValue={q.fullName ?? ""} />
+        <label className="field">
+          <span className="field-label">{t.fullName}</span>
+          <input className="field-input" name="fullName" required defaultValue={q.fullName ?? ""} />
         </label>
 
-        <label className="pole">
-          <span className="pole-popis">{t.department}</span>
-          <input className="pole-vstup" name="department" defaultValue={q.department ?? ""} />
+        <label className="field">
+          <span className="field-label">{t.department}</span>
+          <input className="field-input" name="department" defaultValue={q.department ?? ""} />
         </label>
 
-        <div className="pole">
-          <span className="pole-popis">{t.personType}</span>
+        <div className="field">
+          <span className="field-label">{t.personType}</span>
           <Select
             name="personType"
             options={Object.entries(d.types).map(([value, label]) => ({ value, label }))}
@@ -88,19 +88,19 @@ export default async function NewPersonPage({
           />
         </div>
 
-        <div className="pole">
-          <span className="pole-popis">{t.language}</span>
+        <div className="field">
+          <span className="field-label">{t.language}</span>
           <Select
             name="language"
             options={UI_LANGUAGES.map(l => ({ value: l, label: d.languages[l] ?? l }))}
             initial="sk"
             fieldLabel={t.language}
           />
-          <span className="tichy pole-napoveda">{t.languageNote}</span>
+          <span className="quiet field-hint">{t.languageNote}</span>
         </div>
 
         <div>
-          <button className="tlacidlo" type="submit">{t.submit}</button>
+          <button className="button" type="submit">{t.submit}</button>
         </div>
       </form>
     </div>

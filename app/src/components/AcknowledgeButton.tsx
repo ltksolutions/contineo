@@ -26,7 +26,7 @@ function Submit({ label, pending }: { label: string; pending: string }) {
   // v rodičovi by vracal stav nadradeného formulára, teda vždy `false`.
   const status = useFormStatus()
   return (
-    <button className="tlacidlo" type="submit" disabled={status.pending} style={{ minWidth: 180 }}>
+    <button className="button" type="submit" disabled={status.pending} style={{ minWidth: 180 }}>
       {status.pending ? pending : label}
     </button>
   )

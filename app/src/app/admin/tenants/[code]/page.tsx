@@ -51,11 +51,11 @@ function ProviderRow({
   const statusLabel = t.stateLong[s.state] ?? s.state
 
   return (
-    <section className="karta" style={{ padding: "18px 20px", display: "grid", gap: 14 }}>
+    <section className="card" style={{ padding: "18px 20px", display: "grid", gap: 14 }}>
       <div style={{ display: "flex", gap: 10, alignItems: "baseline", flexWrap: "wrap" }}>
         <h2 style={{ fontSize: 17, margin: 0 }}>{t.heading(name)}</h2>
         <span
-          className="stitok"
+          className="tag"
           style={s.state === "unreadable"
             ? { background: "var(--warn-bg)", color: "var(--warn-fg)" }
             : undefined}
@@ -64,11 +64,11 @@ function ProviderRow({
         </span>
       </div>
 
-      <p className="tichy" style={{ margin: 0, fontSize: 14 }}>{statusLabel}</p>
+      <p className="quiet" style={{ margin: 0, fontSize: 14 }}>{statusLabel}</p>
 
       {/* Najčastejšia príčina toho, prečo prihlásenie hneď na prvý raz nejde. */}
       <div>
-        <div className="tichy pole-napoveda">{t.callback}</div>
+        <div className="quiet field-hint">{t.callback}</div>
         <code style={{ fontSize: 13.5, overflowWrap: "anywhere" }}>{back}</code>
       </div>
 
@@ -104,7 +104,7 @@ function ProviderRow({
         )}
 
         <div>
-          <button className="tlacidlo" type="submit">{t.save}</button>
+          <button className="button" type="submit">{t.save}</button>
         </div>
       </form>
 
@@ -112,9 +112,9 @@ function ProviderRow({
         <form action={deleteSignInAction} style={{ display: "grid", gap: 10, borderTop: "1px solid var(--line)", paddingTop: 14 }}>
           <input type="hidden" name="companyCode" value={tenant.companyCode} />
           <input type="hidden" name="provider" value={provider} />
-          <p className="tichy" style={{ margin: 0, fontSize: 14 }}>{t.deleteNote}</p>
+          <p className="quiet" style={{ margin: 0, fontSize: 14 }}>{t.deleteNote}</p>
           <Field name="confirmation" label={t.confirmLabel(tenant.companyCode)} />
-          <button className="tlacidlo tlacidlo--tiche" type="submit">{t.deleteSubmit}</button>
+          <button className="button button--quiet" type="submit">{t.deleteSubmit}</button>
         </form>
       )}
     </section>
@@ -129,10 +129,10 @@ function Field({
   name: string; label: string; value?: string; hint?: string; type?: string
 }) {
   return (
-    <label className="pole">
-      <span className="pole-popis">{label}</span>
-      <input className="pole-vstup" type={type} name={name} defaultValue={value ?? ""} />
-      {hint && <span className="tichy pole-napoveda">{hint}</span>}
+    <label className="field">
+      <span className="field-label">{label}</span>
+      <input className="field-input" type={type} name={name} defaultValue={value ?? ""} />
+      {hint && <span className="quiet field-hint">{hint}</span>}
     </label>
   )
 }
@@ -140,7 +140,7 @@ function Field({
 function DomainRow({ s, language }: { s: DomainStatus; language?: UiLanguage }) {
   const t = dictionary(language).admin.detail
   if (s.skipped) {
-    return <li className="tichy">{t.nothingNeeded(s.host, s.skipped)}</li>
+    return <li className="quiet">{t.nothingNeeded(s.host, s.skipped)}</li>
   }
   if (!s.inProject) {
     return (
@@ -205,7 +205,7 @@ export default async function TenantDetailPage({
     <AppShell language={ctx.person.language}>
     <div style={{ maxWidth: 760 }}>
       <p style={{ margin: "0 0 12px" }}>
-        <Link href="/admin" className="tichy" style={{ fontSize: 14 }}>
+        <Link href="/admin" className="quiet" style={{ fontSize: 14 }}>
           {t.back}
         </Link>
       </p>
@@ -213,21 +213,21 @@ export default async function TenantDetailPage({
       <h1 style={{ fontSize: 26, letterSpacing: "-0.02em", margin: "0 0 4px" }}>
         {tenant.branding.displayName}
       </h1>
-      <p className="tichy" style={{ margin: "0 0 20px" }}>
+      <p className="quiet" style={{ margin: "0 0 20px" }}>
         {tenant.companyCode}
         {!enabled && t.disabled}
       </p>
 
       <Notice message={message} error={error === "1"} back={`/admin/tenants/${encodeURIComponent(code)}`} />
 
-      <section className="karta" style={{ padding: "18px 20px", marginBottom: 16 }}>
+      <section className="card" style={{ padding: "18px 20px", marginBottom: 16 }}>
         <h2 style={{ fontSize: 17, margin: "0 0 12px" }}>{t.domainsHeading}</h2>
-        <ul className="admin-domeny">
+        <ul className="admin-domains">
           {domains.map(x => <DomainRow key={x.host} s={x} language={language} />)}
         </ul>
 
         {pending.length > 0 && (
-          <form action={sendInstructionsAction} className="admin-podforma">
+          <form action={sendInstructionsAction} className="admin-subform">
             <input type="hidden" name="companyCode" value={tenant.companyCode} />
             <input type="hidden" name="hostnames" value={tenant.hostnames.join(" ")} />
             <Field
@@ -237,33 +237,33 @@ export default async function TenantDetailPage({
               type="email"
               hint={t.sendHint(pending.length)}
             />
-            <button className="tlacidlo" type="submit">{t.send}</button>
+            <button className="button" type="submit">{t.send}</button>
           </form>
         )}
       </section>
 
-      <form action={saveTenantAction} className="karta admin-forma" encType="multipart/form-data">
+      <form action={saveTenantAction} className="card admin-form" encType="multipart/form-data">
         <input type="hidden" name="companyCode" value={tenant.companyCode} />
         <h2 style={{ fontSize: 17, margin: 0 }}>{t.brandingHeading}</h2>
 
         <Field name="displayName" label={t.displayName} value={tenant.branding.displayName} />
         <Field name="shortName" label={t.shortName} value={tenant.branding.shortName} />
-        <div className="pole">
-          <span className="pole-popis">{t.logo}</span>
+        <div className="field">
+          <span className="field-label">{t.logo}</span>
           {tenant.branding.logoUrl && (
-            <span className="logo-nahlad">
+            <span className="logo-preview">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={tenant.branding.logoUrl} alt="" width={34} height={34} />
-              <span className="tichy pole-napoveda">{t.logoCurrent}</span>
+              <span className="quiet field-hint">{t.logoCurrent}</span>
             </span>
           )}
-          <input className="pole-vstup" type="file" name="logo" accept="image/png,image/jpeg,image/webp" />
-          <span className="tichy pole-napoveda">{t.logoNote}</span>
+          <input className="field-input" type="file" name="logo" accept="image/png,image/jpeg,image/webp" />
+          <span className="quiet field-hint">{t.logoNote}</span>
         </div>
-        <div className="pole">
-          <span className="pole-popis">{t.color}</span>
+        <div className="field">
+          <span className="field-label">{t.color}</span>
           <ColorSelect name="accentColor" value={tenant.branding.accentColor} language={language} />
-          <span className="tichy pole-napoveda">{t.colorNote}</span>
+          <span className="quiet field-hint">{t.colorNote}</span>
         </div>
         <Field
           name="supportEmail"
@@ -273,11 +273,11 @@ export default async function TenantDetailPage({
           hint={t.supportEmailNote}
         />
 
-        <fieldset className="pole" style={{ border: 0, padding: 0, margin: 0 }}>
-          <span className="pole-popis">{t.languages}</span>
-          <span className="admin-jazyky">
+        <fieldset className="field" style={{ border: 0, padding: 0, margin: 0 }}>
+          <span className="field-label">{t.languages}</span>
+          <span className="admin-languages">
             {UI_LANGUAGES.map(j => (
-              <label key={j} className="stitok" style={{ gap: 6, cursor: "pointer" }}>
+              <label key={j} className="tag" style={{ gap: 6, cursor: "pointer" }}>
                 <input
                   type="checkbox"
                   name="languages"
@@ -290,32 +290,32 @@ export default async function TenantDetailPage({
           </span>
         </fieldset>
 
-        <div className="pole">
-          <span className="pole-popis">{t.defaultLanguage}</span>
+        <div className="field">
+          <span className="field-label">{t.defaultLanguage}</span>
           <Select
             name="defaultLanguage"
             options={UI_LANGUAGES.map(j => ({ value: j, label: d.people.languages[j] ?? j }))}
             initial={tenant.defaultLanguage}
             fieldLabel={t.defaultLanguage}
           />
-          <span className="tichy pole-napoveda">{t.defaultLanguageNote}</span>
+          <span className="quiet field-hint">{t.defaultLanguageNote}</span>
         </div>
 
-        <label className="pole">
-          <span className="pole-popis">{t.domains}</span>
+        <label className="field">
+          <span className="field-label">{t.domains}</span>
           <textarea
-            className="pole-vstup"
+            className="field-input"
             name="hostnames"
             rows={3}
             defaultValue={tenant.hostnames.join("\n")}
           />
-          <span className="tichy pole-napoveda">{t.domainsNote}</span>
+          <span className="quiet field-hint">{t.domainsNote}</span>
         </label>
 
-        <label className="pole">
-          <span className="pole-popis">{t.autoProvision}</span>
+        <label className="field">
+          <span className="field-label">{t.autoProvision}</span>
           <textarea
-            className="pole-vstup"
+            className="field-input"
             name="autoProvisionDomains"
             rows={2}
             defaultValue={(tenant.autoProvisionDomains ?? []).join("\n")}
@@ -323,12 +323,12 @@ export default async function TenantDetailPage({
             autoCapitalize="none"
             autoCorrect="off"
           />
-          <span className="tichy pole-napoveda">
+          <span className="quiet field-hint">
             {t.autoProvisionBefore}<strong>{t.autoProvisionHighlight}</strong>{t.autoProvisionAfter}
           </span>
         </label>
 
-        <button className="tlacidlo" type="submit">{t.save}</button>
+        <button className="button" type="submit">{t.save}</button>
       </form>
 
       {/* Prihlasovacie údaje sú medzi úpravou a vypnutím zámerne: patria
@@ -338,7 +338,7 @@ export default async function TenantDetailPage({
         <ProviderRow tenant={tenant} provider="google" domain={tenant.hostnames[0]} language={language} />
       </div>
 
-      <form action={toggleTenantStatusAction} className="karta admin-forma" style={{ marginTop: 16 }}>
+      <form action={toggleTenantStatusAction} className="card admin-form" style={{ marginTop: 16 }}>
         <input type="hidden" name="companyCode" value={tenant.companyCode} />
         <input type="hidden" name="status" value={enabled ? "disabled" : "active"} />
         <h2 style={{ fontSize: 17, margin: 0 }}>
@@ -346,22 +346,22 @@ export default async function TenantDetailPage({
         </h2>
         {enabled ? (
           <>
-            <p className="tichy" style={{ margin: 0, fontSize: 14 }}>{t.disableNote}</p>
+            <p className="quiet" style={{ margin: 0, fontSize: 14 }}>{t.disableNote}</p>
             <Field
               name="confirmation"
               label={t.confirmLabel(tenant.companyCode)}
               hint={t.confirmHint}
             />
-            <button className="tlacidlo tlacidlo--tiche" type="submit">{t.disable}</button>
+            <button className="button button--quiet" type="submit">{t.disable}</button>
           </>
         ) : (
-          <button className="tlacidlo" type="submit">{t.enable}</button>
+          <button className="button" type="submit">{t.enable}</button>
         )}
       </form>
 
       <section style={{ marginTop: 28 }}>
         <h2 style={{ fontSize: 17, margin: "0 0 4px" }}>{t.auditHeading}</h2>
-        <p className="tichy" style={{ fontSize: 14, margin: "0 0 12px" }}>{t.auditNote}</p>
+        <p className="quiet" style={{ fontSize: 14, margin: "0 0 12px" }}>{t.auditNote}</p>
         <AuditList records={records} language={language} />
       </section>
     </div>

@@ -69,15 +69,15 @@ export default function TagSelect({
   }
 
   return (
-    <div className="stitky">
+    <div className="tags">
       <input type="hidden" name={name} value={chosen.join(", ")} />
 
       {all.length === 0 ? (
-        <p className="tichy pole-napoveda" style={{ margin: 0 }}>
+        <p className="quiet field-hint" style={{ margin: 0 }}>
           {t.empty}
         </p>
       ) : (
-        <div className="stitky-zoznam">
+        <div className="tags-list">
           {all.map(s => {
             const k = key(s.value)
             const has = chosen.includes(k)
@@ -85,22 +85,22 @@ export default function TagSelect({
               <button
                 key={k}
                 type="button"
-                className={`stitok stitok--volba${has ? " je-zvolena" : ""}`}
+                className={`tag tag--choice${has ? " is-selected" : ""}`}
                 aria-pressed={has}
                 onClick={() => toggle(k)}
               >
-                <span className="stitok-znak" aria-hidden="true">{has ? "✓" : "+"}</span>
+                <span className="tag-mark" aria-hidden="true">{has ? "✓" : "+"}</span>
                 {s.value}
-                {s.count !== undefined && <span className="stitok-pocet">{s.count}</span>}
+                {s.count !== undefined && <span className="tag-count">{s.count}</span>}
               </button>
             )
           })}
         </div>
       )}
 
-      <div className="stitky-nova">
+      <div className="tags-new">
         <input
-          className="pole-vstup"
+          className="field-input"
           value={draft}
           onChange={e => setDraft(e.target.value)}
           placeholder={newLabel}
@@ -109,7 +109,7 @@ export default function TagSelect({
           // Enter by inak odoslal celý formulár a nová skupina by sa stratila.
           onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); add() } }}
         />
-        <button type="button" className="tlacidlo tlacidlo--tiche" onClick={add} disabled={!draft.trim()}>
+        <button type="button" className="button button--quiet" onClick={add} disabled={!draft.trim()}>
           {t.add}
         </button>
       </div>
@@ -117,7 +117,7 @@ export default function TagSelect({
       <noscript>
         {/* Bez JavaScriptu zostáva pôvodné pole. Je horšie, ale funguje. */}
         <input
-          className="pole-vstup"
+          className="field-input"
           name={name}
           defaultValue={selected.join(", ")}
           autoCapitalize="none"

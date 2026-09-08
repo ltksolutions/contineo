@@ -83,14 +83,14 @@ export default function SignIn({
 
   if (done) {
     return (
-      <div className="karta" style={{ textAlign: "center" }}>
+      <div className="card" style={{ textAlign: "center" }}>
         <h1 style={{ fontSize: 20, margin: "0 0 12px" }}>{t.checkEmail}</h1>
-        <p className="tichy" style={{ fontSize: 15, lineHeight: 1.65, margin: 0 }}>
+        <p className="quiet" style={{ fontSize: 15, lineHeight: 1.65, margin: 0 }}>
           {t.sent}
         </p>
         <button
           type="button"
-          className="tlacidlo tlacidlo--tiche"
+          className="button button--quiet"
           style={{ marginTop: 20 }}
           onClick={() => setDone(false)}
         >
@@ -124,7 +124,7 @@ export default function SignIn({
       <h1 style={{ fontSize: 21, margin: "0 0 8px", letterSpacing: "-0.02em" }}>
         {t.heading}
       </h1>
-      <p className="tichy" style={{ fontSize: 14.5, lineHeight: 1.65, margin: "0 0 22px" }}>
+      <p className="quiet" style={{ fontSize: 14.5, lineHeight: 1.65, margin: "0 0 22px" }}>
         {t.intro}
       </p>
 
@@ -161,7 +161,7 @@ export default function SignIn({
                 <button
                   key={p}
                   type="button"
-                  className="tlacidlo tlacidlo--tiche"
+                  className="button button--quiet"
                   style={{ justifyContent: "center" }}
                   onClick={() => signIn(p === "microsoft" ? "azure-ad" : "google", { callbackUrl: "/" })}
                 >
@@ -201,7 +201,7 @@ export default function SignIn({
             padding: "12px 14px", fontSize: 15.5, fontFamily: "inherit",
           }}
         />
-        <button type="submit" className="tlacidlo" disabled={sending || !email.trim()}>
+        <button type="submit" className="button" disabled={sending || !email.trim()}>
           {sending ? t.sending : t.submit}
         </button>
       </form>

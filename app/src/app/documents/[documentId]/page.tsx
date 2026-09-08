@@ -70,24 +70,24 @@ export default async function DocumentPage({
       />
 
       <p style={{ margin: "0 0 16px" }}>
-        <Link className="tichy" href="/documents" style={{ fontSize: 14 }}>← {t.back}</Link>
+        <Link className="quiet" href="/documents" style={{ fontSize: 14 }}>← {t.back}</Link>
       </p>
 
       <h1 style={{ fontSize: 25, letterSpacing: "-0.02em", margin: "0 0 6px" }}>{doc.title}</h1>
 
       {version.ok ? (
-        <p className="tichy" style={{ fontSize: 14, margin: "0 0 28px" }}>
+        <p className="quiet" style={{ fontSize: 14, margin: "0 0 28px" }}>
           {t.version(version.version.label, formatDate(version.version.effectiveFrom!, person.language))}
         </p>
       ) : (
-        <p className="karta" style={{ padding: 16, margin: "16px 0 0" }}>
+        <p className="card" style={{ padding: 16, margin: "16px 0 0" }}>
           {t.blockedReason[version.reason] ?? version.reason}
         </p>
       )}
 
       {version.ok && (
         <>
-          <article className="odpoved" style={{ whiteSpace: "pre-wrap", lineHeight: 1.7 }}>
+          <article className="answer" style={{ whiteSpace: "pre-wrap", lineHeight: 1.7 }}>
             {version.version.markdown ?? doc.markdown ?? ""}
           </article>
 
@@ -97,7 +97,7 @@ export default async function DocumentPage({
           */}
           <ReadingTimer documentId={doc.documentId} language={person.language} />
 
-          <section className="karta" style={{ padding: 20, marginTop: 32 }}>
+          <section className="card" style={{ padding: 20, marginTop: 32 }}>
             <h2 style={{ fontSize: 17, margin: "0 0 10px" }}>{t.confirmHeading}</h2>
 
             {/* Presne to znenie, ktoré sa uloží do záznamu. */}
@@ -111,7 +111,7 @@ export default async function DocumentPage({
             </p>
 
             {(await hasAcknowledged(person.id, version.version.versionId)) ? (
-              <p className="stitok" style={{ background: "var(--ok-bg)", color: "var(--ok-fg)" }}>
+              <p className="tag" style={{ background: "var(--ok-bg)", color: "var(--ok-fg)" }}>
                 {t.confirmed}
               </p>
             ) : (

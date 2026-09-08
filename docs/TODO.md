@@ -98,7 +98,9 @@
 - [x] **Presunuté do shellu všetky prihlásené obrazovky** ✅ 2026-09-08 — nie po jednej, ale naraz: medzistav bol horší než oba konce. Dva navigačné systémy vedľa seba mali iné poradie položiek, iný vzhľad aktívnej položky a iné zarovnanie obsahu, a na tom, ktorá stránka ktorý systém má, nezáležalo nikomu okrem toho, kto sa medzi nimi preklikával.
       Menu z hlavičky zmizlo, `shellRoutes.ts` sa otočil na zoznam **výnimiek** (dnes len `/sign-in`), a hlavička, navigácia, obsah aj pätička majú jednu šírku (`--shell-maxw`).
 - [ ] Uložiť variant navigácie a hustotu na osobu alebo organizáciu — **zmena schémy**, zatiaľ len `?layout=` v adrese
-- [ ] Premenovať 125 slovenských CSS tried na anglické (a `je-*` → `is-*`) — samostatný PR
+- [x] **Premenované slovenské CSS triedy na anglické** ✅ 2026-09-08 — 109 tried, 47 súborov, plus `je-*` → `is-*`, dva slovenské `@keyframes`, štyri slovenské `id` a kotvy a vlastná premenná `--uroven` → `--level`. Súbežné `je-aktivna` aj `je-aktivny` splynuli do jedného `is-active`, preto je tried o tri menej než pred tým.
+      **Nahrádzalo sa cielene, nie slepo v texte.** Slová `pole`, `karta`, `strom`, `farba` sú v tomto repozitári aj názvy premenných, polí formulárov a hlavne slov v slovenských komentároch — tie sú zámerne po slovensky a mangľovať ich by bola škoda. Skript preto menil len token **za bodkou** v CSS a len vnútri `className=` v TSX.
+      Overené obrázkom, nie dôverou: päť skúšobných strán (shell, dotiahnutie, značka, skupiny podmienok, výber) × dve šírky × dve témy = **20 renderov, všetkých 20 zhodných na pixel** so starým CSS a starým značkovaním. Prvý pokus tri rozdiely našiel — boli to prechody `transition` zachytené v polovici, nie premenovanie.
 - [ ] Obaliť `platformContext()` / `hrContext()` / `peopleContext()` / `libraryContext()` do `cache()` z Reactu — `layout.tsx` aj `AppShell` ich volajú v tej istej požiadavke
 
 ##### Chýba to v dátach — návrh to žiada, model to zatiaľ nevie

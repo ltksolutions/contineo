@@ -165,7 +165,7 @@ button:disabled { cursor: not-allowed; opacity: 0.55; }
 
 /* ── stavebné kamene ──────────────────────────────────────────────────────── */
 
-.obal {
+.wrap {
   max-width: var(--maxw);
   margin: 0 auto;
   padding: 0 20px;
@@ -193,7 +193,7 @@ button:disabled { cursor: not-allowed; opacity: 0.55; }
  * normy", „Osoby", „Správa tenantov") sa lišta láme skôr, než by čakal
  * bežný breakpoint, a bude ich pribúdať.
  */
-.hlavicka-riadok {
+.header-row {
   display: flex;
   align-items: center;
   gap: 10px;
@@ -206,7 +206,7 @@ button:disabled { cursor: not-allowed; opacity: 0.55; }
  * roztiahol lištu a hamburger s avatarom by vypadli mimo obrazovku.
  * „Slovenský futbalový zväz" sa dovtedy lámal do druhého riadka.
  */
-.hlavicka-znacka {
+.header-brand {
   display: flex;
   align-items: center;
   gap: 11px;
@@ -215,7 +215,7 @@ button:disabled { cursor: not-allowed; opacity: 0.55; }
   color: inherit;
 }
 
-.hlavicka-nazov {
+.header-name {
   font-weight: 700;
   font-size: 16px;
   letter-spacing: -0.02em;
@@ -224,8 +224,8 @@ button:disabled { cursor: not-allowed; opacity: 0.55; }
   text-overflow: ellipsis;
 }
 
-/* Rovnaký prípad ako hamburger: odznak má aj `.stitok`, ktorý je nižšie. */
-.hlavicka-riadok .hlavicka-odznak {
+/* Rovnaký prípad ako hamburger: odznak má aj `.tag`, ktorý je nižšie. */
+.header-row .header-badge {
   display: none;
   font-weight: 600;
   letter-spacing: 0.04em;
@@ -233,18 +233,18 @@ button:disabled { cursor: not-allowed; opacity: 0.55; }
   font-size: 11px;
 }
 
-.hlavicka-hamburger {
+.header-hamburger {
   margin-left: auto;
   padding: 7px 9px;
   display: inline-flex;
   align-items: center;
 }
 
-.hlavicka-nav {
+.header-nav {
   display: none;
 }
 
-.hlavicka-nav.je-otvorene {
+.header-nav.is-open {
   display: flex;
   flex-direction: column;
   gap: 2px;
@@ -259,7 +259,7 @@ button:disabled { cursor: not-allowed; opacity: 0.55; }
   box-shadow: var(--shadow);
 }
 
-.hlavicka-odkaz {
+.header-link {
   text-decoration: none;
   font-size: 15px;
   border-radius: 8px;
@@ -268,26 +268,26 @@ button:disabled { cursor: not-allowed; opacity: 0.55; }
   color: var(--muted);
 }
 
-.hlavicka-odkaz.je-aktivny {
+.header-link.is-active {
   font-weight: 700;
   background: var(--surface-2);
   color: var(--ink);
 }
 
 @media (min-width: 760px) {
-  .hlavicka-riadok { height: 60px; gap: 16px; }
+  .header-row { height: 60px; gap: 16px; }
 
   /*
-   * `.hlavicka-riadok` v selektore nie je ozdoba: hamburger má aj triedu
-   * `.tlacidlo`, ktorá je v tomto súbore nižšie a nastavuje `display:
+   * `.header-row` v selektore nie je ozdoba: hamburger má aj triedu
+   * `.button`, ktorá je v tomto súbore nižšie a nastavuje `display:
    * inline-flex`. Pri rovnakej špecifickosti vyhráva neskorší zápis, takže
-   * samotné `.hlavicka-hamburger { display: none }` neplatilo a ikona sa
+   * samotné `.header-hamburger { display: none }` neplatilo a ikona sa
    * ukazovala aj na širokej obrazovke vedľa rozvinutého menu.
    */
-  .hlavicka-riadok .hlavicka-hamburger { display: none; }
+  .header-row .header-hamburger { display: none; }
 
-  .hlavicka-nav,
-  .hlavicka-nav.je-otvorene {
+  .header-nav,
+  .header-nav.is-open {
     display: flex;
     flex-direction: row;
     gap: 4px;
@@ -299,9 +299,9 @@ button:disabled { cursor: not-allowed; opacity: 0.55; }
     box-shadow: none;
   }
 
-  .hlavicka-odkaz { font-size: 14px; padding: 6px 12px; }
-  .hlavicka-nazov { font-size: 17px; }
-  .hlavicka-riadok .hlavicka-odznak { display: inline-flex; }
+  .header-link { font-size: 14px; padding: 6px 12px; }
+  .header-name { font-size: 17px; }
+  .header-row .header-badge { display: inline-flex; }
 }
 
 /*
@@ -311,7 +311,7 @@ button:disabled { cursor: not-allowed; opacity: 0.55; }
  * zmizne, sa na telefóne prehliadne — a pri chybe to znamená, že sa človeku
  * zmena neuložila a nedozvie sa o tom. Prerušenie je tu lacnejšie než mlčanie.
  */
-.oznam-tienidlo {
+.notice-backdrop {
   position: fixed;
   inset: 0;
   z-index: 200;
@@ -320,10 +320,10 @@ button:disabled { cursor: not-allowed; opacity: 0.55; }
   justify-content: center;
   padding: 20px;
   background: rgba(11, 15, 22, 0.45);
-  animation: oznam-prichod 0.14s ease-out;
+  animation: notice-in 0.14s ease-out;
 }
 
-.oznam {
+.notice {
   display: grid;
   justify-items: center;
   gap: 14px;
@@ -336,7 +336,7 @@ button:disabled { cursor: not-allowed; opacity: 0.55; }
   box-shadow: var(--shadow);
 }
 
-.oznam-znak {
+.notice-mark {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -347,24 +347,24 @@ button:disabled { cursor: not-allowed; opacity: 0.55; }
   color: var(--ok-fg);
 }
 
-.oznam--chyba .oznam-znak { background: var(--bad-bg); color: var(--bad-fg); }
+.notice--error .notice-mark { background: var(--bad-bg); color: var(--bad-fg); }
 
-.oznam-text {
+.notice-text {
   margin: 0;
   font-size: 15.5px;
   line-height: 1.55;
   overflow-wrap: anywhere;
 }
 
-.oznam-potvrdit { text-decoration: none; min-width: 140px; justify-content: center; }
+.notice-confirm { text-decoration: none; min-width: 140px; justify-content: center; }
 
-@keyframes oznam-prichod {
+@keyframes notice-in {
   from { opacity: 0; }
   to { opacity: 1; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .oznam-tienidlo { animation: none; }
+  .notice-backdrop { animation: none; }
 }
 
 /*
@@ -375,9 +375,9 @@ button:disabled { cursor: not-allowed; opacity: 0.55; }
  * omylom — pri systéme, kde sa potvrdzujú smernice, je „vypadol som" drahšie
  * než jeden klik navyše.
  */
-.osobne { position: relative; }
+.account { position: relative; }
 
-.osobne-tlacidlo {
+.account-button {
   background: none;
   border: none;
   padding: 2px;
@@ -386,7 +386,7 @@ button:disabled { cursor: not-allowed; opacity: 0.55; }
   display: inline-flex;
 }
 
-.osobne-tlacidlo:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.account-button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
 .avatar {
   width: 34px;
@@ -401,7 +401,7 @@ button:disabled { cursor: not-allowed; opacity: 0.55; }
   user-select: none;
 }
 
-.osobne-panel {
+.account-panel {
   position: absolute;
   top: calc(100% + 8px);
   right: 0;
@@ -414,16 +414,16 @@ button:disabled { cursor: not-allowed; opacity: 0.55; }
   box-shadow: var(--shadow);
 }
 
-.osobne-hlava {
+.account-head {
   padding: 8px 10px 10px;
   border-bottom: 1px solid var(--line);
   margin-bottom: 6px;
 }
 
-.osobne-meno { font-size: 14.5px; font-weight: 700; }
-.osobne-email { font-size: 12.5px; overflow-wrap: anywhere; }
+.account-name { font-size: 14.5px; font-weight: 700; }
+.account-email { font-size: 12.5px; overflow-wrap: anywhere; }
 
-.osobne-polozka {
+.account-item {
   display: flex;
   align-items: center;
   gap: 10px;
@@ -439,28 +439,28 @@ button:disabled { cursor: not-allowed; opacity: 0.55; }
   cursor: pointer;
 }
 
-.osobne-polozka:hover { background: var(--surface-2); }
-.osobne-polozka { text-decoration: none; }
+.account-item:hover { background: var(--surface-2); }
+.account-item { text-decoration: none; }
 
-.osobne-ciara {
+.account-divider {
   height: 1px;
   background: var(--line);
   margin: 6px 4px;
 }
-.osobne-polozka--odhlasit { color: var(--bad-fg); }
+.account-item--signout { color: var(--bad-fg); }
 
-.karta {
+.card {
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: var(--radius);
   padding: 18px 20px;
 }
 
-.tichy {
+.quiet {
   color: var(--muted);
 }
 
-.stitok {
+.tag {
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -474,7 +474,7 @@ button:disabled { cursor: not-allowed; opacity: 0.55; }
 
 /* Príznak „nové" pri položke widgetu. Malý a vedľa názvu, nie farebný pruh
    cez celý riadok — zvýrazňovať polovicu zoznamu znamená nezvýrazniť nič. */
-.stitok--nove {
+.tag--new {
   margin-left: 8px;
   padding: 1px 7px;
   font-size: 11.5px;
@@ -483,7 +483,7 @@ button:disabled { cursor: not-allowed; opacity: 0.55; }
   vertical-align: middle;
 }
 
-.tlacidlo {
+.button {
   display: inline-flex;
   align-items: center;
   gap: 8px;
@@ -497,22 +497,22 @@ button:disabled { cursor: not-allowed; opacity: 0.55; }
   transition: background 0.15s ease;
 }
 
-.tlacidlo:hover:not(:disabled) { background: var(--accent-strong); }
+.button:hover:not(:disabled) { background: var(--accent-strong); }
 
 /*
  * Prstenec je mimo tlačidla (`offset: 2px`), nie na jeho okraji: vnútri by
  * splynul s pozadím `--accent`, teda práve na primárnom tlačidle by nebol
  * vidieť. Vlastné pravidlo má prednosť pred spoločným nižšie.
  */
-.tlacidlo:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
-.tlacidlo--tiche {
+.button--quiet {
   background: transparent;
   color: var(--ink);
   border-color: var(--line);
 }
 
-.tlacidlo--tiche:hover:not(:disabled) { background: var(--surface-2); }
+.button--quiet:hover:not(:disabled) { background: var(--surface-2); }
 
 /*
  * Správcovské formuláre.
@@ -521,13 +521,13 @@ button:disabled { cursor: not-allowed; opacity: 0.55; }
  * má byť čitateľný, nie hustý. Vstupy sú `font-size: 16px` zámerne — pod touto
  * hodnotou Safari na iPhone pri kliknutí do poľa stránku priblíži.
  */
-.admin-forma {
+.admin-form {
   display: grid;
   gap: 16px;
   padding: 18px 20px;
 }
 
-.admin-podforma {
+.admin-subform {
   display: grid;
   gap: 12px;
   margin-top: 14px;
@@ -535,11 +535,11 @@ button:disabled { cursor: not-allowed; opacity: 0.55; }
   border-top: 1px solid var(--line);
 }
 
-.pole { display: grid; gap: 5px; }
-.pole-popis { font-size: 13.5px; font-weight: 600; }
-.pole-napoveda { font-size: 12.5px; }
+.field { display: grid; gap: 5px; }
+.field-label { font-size: 13.5px; font-weight: 600; }
+.field-hint { font-size: 12.5px; }
 
-.pole-vstup {
+.field-input {
   font: inherit;
   font-size: 16px;
   color: var(--ink);
@@ -550,18 +550,18 @@ button:disabled { cursor: not-allowed; opacity: 0.55; }
   width: 100%;
 }
 
-.pole-vstup:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.field-input:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
 
 /*
  * Rozbaľovací výber.
  *
  * Nahrádza `<select>`, ktorého rozbalený zoznam kreslí operačný systém —
  * a ten sa nedá zosúladiť so zvyškom, najmä v tmavej téme. Ovládací prvok
- * má **rovnaký tvar ako `.pole-vstup`**, aby v rade polí nevytŕčal.
+ * má **rovnaký tvar ako `.field-input`**, aby v rade polí nevytŕčal.
  */
-.vyber { position: relative; }
+.select { position: relative; }
 
-.vyber-tlacidlo {
+.select-button {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -570,9 +570,9 @@ button:disabled { cursor: not-allowed; opacity: 0.55; }
   cursor: pointer;
 }
 
-.vyber-sipka { flex: none; color: var(--muted); }
+.select-arrow { flex: none; color: var(--muted); }
 
-.vyber-zoznam {
+.select-list {
   position: absolute;
   top: calc(100% + 4px);
   left: 0;
@@ -589,7 +589,7 @@ button:disabled { cursor: not-allowed; opacity: 0.55; }
   box-shadow: var(--shadow);
 }
 
-.vyber-polozka {
+.select-item {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -601,9 +601,9 @@ button:disabled { cursor: not-allowed; opacity: 0.55; }
   cursor: pointer;
 }
 
-.vyber-polozka.je-zvyraznena { background: var(--surface-2); }
+.select-item.is-highlighted { background: var(--surface-2); }
 
-.vyber-znak {
+.select-mark {
   width: 14px;
   flex: none;
   color: var(--accent);
@@ -648,7 +648,7 @@ button:disabled { cursor: not-allowed; opacity: 0.55; }
 .app-nav-item {
   display: inline-flex;
   align-items: center;
-  /* 44 px terč, rovnako ako položky v `.vyber` — pás sa ovláda prstom. */
+  /* 44 px terč, rovnako ako položky v `.select` — pás sa ovláda prstom. */
   min-height: 44px;
   padding: 0 12px;
   border-radius: 8px;
@@ -674,7 +674,7 @@ button:disabled { cursor: not-allowed; opacity: 0.55; }
 /*
  * Obsah v shelli.
  *
- * **Centrovaný a s hornou hranicou šírky**, rovnako ako `.obal` mimo shellu.
+ * **Centrovaný a s hornou hranicou šírky**, rovnako ako `.wrap` mimo shellu.
  * Kým bol shell len na knižnici, obsah vľavo nikoho nebil do očí; keď v ňom
  * začali byť aj ostatné obrazovky, bolo naraz vidieť, že polovica systému má
  * text pri ľavom okraji a druhá v strede. Jednotné zarovnanie je preto
@@ -713,7 +713,7 @@ button:disabled { cursor: not-allowed; opacity: 0.55; }
 /*
  * Viacnásobný výber s hľadaním (`components/MultiSelect.tsx`).
  *
- * Rozmery sedia s `.vyber` a nie s prototypom z handoffu: obe polia stoja na
+ * Rozmery sedia s `.select` a nie s prototypom z handoffu: obe polia stoja na
  * tom istom formulári vedľa seba a menšie písmo v jednom z nich vyzerá ako
  * chyba. Kompaktný tvar z návrhu knižnice príde s premennými hustoty.
  *
@@ -793,7 +793,7 @@ button:disabled { cursor: not-allowed; opacity: 0.55; }
   outline: none;
   background: transparent;
   font: inherit;
-  /* 16 px zámerne, rovnako ako `.pole-vstup`: pod touto hodnotou Safari na
+  /* 16 px zámerne, rovnako ako `.field-input`: pod touto hodnotou Safari na
      iPhone pri kliknutí do poľa celú stránku priblíži. */
   font-size: 16px;
   color: var(--ink);
@@ -903,11 +903,11 @@ button:disabled { cursor: not-allowed; opacity: 0.55; }
  * ale `rozhodcovia` a `rozhodcova` vyzerajú v poli rovnako a v databáze sú to
  * dve skupiny, z ktorých jedna nedostane nikdy nič.
  */
-.stitky { display: grid; gap: 10px; }
+.tags { display: grid; gap: 10px; }
 
-.stitky-zoznam { display: flex; flex-wrap: wrap; gap: 8px; }
+.tags-list { display: flex; flex-wrap: wrap; gap: 8px; }
 
-.stitok--volba {
+.tag--choice {
   cursor: pointer;
   background: none;
   color: var(--muted);
@@ -918,19 +918,19 @@ button:disabled { cursor: not-allowed; opacity: 0.55; }
   min-height: 36px;
 }
 
-.stitok--volba:hover { background: var(--surface-2); }
+.tag--choice:hover { background: var(--surface-2); }
 
-.stitok--volba.je-zvolena {
+.tag--choice.is-selected {
   background: var(--surface-2);
   border-color: var(--accent);
   color: var(--ink);
 }
 
-.stitok-znak { color: var(--accent); font-weight: 700; }
-.stitok-pocet { color: var(--muted); font-weight: 500; }
+.tag-mark { color: var(--accent); font-weight: 700; }
+.tag-count { color: var(--muted); font-weight: 500; }
 
-.stitky-nova { display: flex; gap: 8px; align-items: center; }
-.stitky-nova .pole-vstup { flex: 1; min-width: 0; }
+.tags-new { display: flex; gap: 8px; align-items: center; }
+.tags-new .field-input { flex: 1; min-width: 0; }
 
 /*
  * Záložky.
@@ -942,7 +942,7 @@ button:disabled { cursor: not-allowed; opacity: 0.55; }
  * lámala do dvoch riadkov — pri troch až štyroch záložkách je posun lacnejší
  * než hlavička, ktorá zrazu rastie do výšky.
  */
-.zalozky {
+.tabs {
   display: flex;
   gap: 4px;
   margin: 0 0 20px;
@@ -952,9 +952,9 @@ button:disabled { cursor: not-allowed; opacity: 0.55; }
   scrollbar-width: none;
 }
 
-.zalozky::-webkit-scrollbar { display: none; }
+.tabs::-webkit-scrollbar { display: none; }
 
-.zalozka {
+.tab {
   flex: none;
   padding: 10px 14px;
   border-radius: 10px 10px 0 0;
@@ -967,16 +967,16 @@ button:disabled { cursor: not-allowed; opacity: 0.55; }
   margin-bottom: -3px;
 }
 
-.zalozka:hover { background: var(--surface-2); }
+.tab:hover { background: var(--surface-2); }
 
-.zalozka.je-aktivna {
+.tab.is-active {
   font-weight: 700;
   color: var(--ink);
   border-bottom-color: var(--accent);
 }
 
 /* Náhľad súčasného loga nad poľom na nahratie. */
-.logo-nahlad {
+.logo-preview {
   display: inline-flex;
   align-items: center;
   gap: 10px;
@@ -987,14 +987,14 @@ button:disabled { cursor: not-allowed; opacity: 0.55; }
   width: fit-content;
 }
 
-.logo-nahlad img { display: block; object-fit: contain; }
+.logo-preview img { display: block; object-fit: contain; }
 
 /* Paleta farieb organizácie. */
-.farby { display: grid; gap: 10px; justify-items: start; }
+.colors { display: grid; gap: 10px; justify-items: start; }
 
-.farby-zoznam { display: flex; flex-wrap: wrap; gap: 8px; }
+.colors-list { display: flex; flex-wrap: wrap; gap: 8px; }
 
-.farba {
+.color {
   width: 38px;
   height: 38px;
   border-radius: 10px;
@@ -1015,12 +1015,12 @@ button:disabled { cursor: not-allowed; opacity: 0.55; }
  * navyše. Prstenec ukáže odtieň druhýkrát, mimo plochy, takže sa dá porovnať
  * so susednými. Hodnotu nesie `--tile` z inline štýlu tlačidla.
  */
-.farba.je-zvolena {
+.color.is-selected {
   box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px var(--tile, var(--ink));
 }
-.farba:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.color:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
-.farby-vlastna { font-size: 13.5px; padding: 6px 12px; }
+.colors-custom { font-size: 13.5px; padding: 6px 12px; }
 
 /*
  * Ten istý štítok, ale postavený na zaškrtávacom políčku.
@@ -1030,8 +1030,8 @@ button:disabled { cursor: not-allowed; opacity: 0.55; }
  * tá istá vec vyzerala na dvoch obrazovkách inak a človek by hádal, či je to
  * naozaj to isté. Stav nesie `:has()` nad skrytým políčkom.
  */
-.stitok--pole { position: relative; }
-.stitok--pole input {
+.tag--field { position: relative; }
+.tag--field input {
   position: absolute;
   opacity: 0;
   width: 100%;
@@ -1040,18 +1040,18 @@ button:disabled { cursor: not-allowed; opacity: 0.55; }
   margin: 0;
   cursor: pointer;
 }
-.stitok--pole:has(input:checked) {
+.tag--field:has(input:checked) {
   background: var(--surface-2);
   border-color: var(--accent);
   color: var(--ink);
 }
-.stitok--pole:has(input:checked) .stitok-znak::before { content: "✓"; }
-.stitok--pole .stitok-znak::before { content: "+"; }
-.stitok--pole:has(input:focus-visible) { outline: 2px solid var(--accent); outline-offset: 2px; }
+.tag--field:has(input:checked) .tag-mark::before { content: "✓"; }
+.tag--field .tag-mark::before { content: "+"; }
+.tag--field:has(input:focus-visible) { outline: 2px solid var(--accent); outline-offset: 2px; }
 
-.admin-jazyky { display: flex; gap: 8px; flex-wrap: wrap; }
+.admin-languages { display: flex; gap: 8px; flex-wrap: wrap; }
 
-.admin-domeny {
+.admin-domains {
   list-style: none;
   margin: 0;
   padding: 0;
@@ -1068,17 +1068,17 @@ button:disabled { cursor: not-allowed; opacity: 0.55; }
  * palcom netrafí. Preto `padding` na celom `label`, nie len na `input` —
  * kliknuteľný je celý riadok vrátane textu.
  */
-.hr-skupina {
+.hr-group {
   border: 1px solid var(--line);
   padding: 16px 18px 18px;
   margin: 0;
 }
 
-.hr-skupina legend {
+.hr-group legend {
   padding: 0 6px;
 }
 
-.hr-podnadpis {
+.hr-subtitle {
   font-size: 12px;
   text-transform: uppercase;
   letter-spacing: 0.05em;
@@ -1086,13 +1086,13 @@ button:disabled { cursor: not-allowed; opacity: 0.55; }
   margin: 14px 0 4px;
 }
 
-.hr-volby {
+.hr-choices {
   list-style: none;
   margin: 0;
   padding: 0;
 }
 
-.hr-volba {
+.hr-choice {
   display: flex;
   align-items: flex-start;
   gap: 10px;
@@ -1103,7 +1103,7 @@ button:disabled { cursor: not-allowed; opacity: 0.55; }
   cursor: pointer;
 }
 
-.hr-volba input {
+.hr-choice input {
   width: 20px;
   height: 20px;
   margin: 1px 0 0;
@@ -1112,12 +1112,12 @@ button:disabled { cursor: not-allowed; opacity: 0.55; }
 }
 
 /* Nápoveda vedľa názvu sa na úzkom displeji zalomí pod neho, nie vedľa. */
-.hr-volba .pole-napoveda {
+.hr-choice .field-hint {
   display: block;
 }
 
 @media (min-width: 520px) {
-  .hr-volba .pole-napoveda { display: inline; }
+  .hr-choice .field-hint { display: inline; }
 }
 
 /*
@@ -1127,7 +1127,7 @@ button:disabled { cursor: not-allowed; opacity: 0.55; }
  * riadkov), od 560 px štyri vedľa seba. `minmax(0, 1fr)` je tu nutné — bez
  * neho by dlhé číslo mriežku roztiahlo mimo karty.
  */
-.admin-udaje {
+.admin-data {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px 16px;
@@ -1135,7 +1135,7 @@ button:disabled { cursor: not-allowed; opacity: 0.55; }
 }
 
 @media (min-width: 560px) {
-  .admin-udaje { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .admin-data { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 }
 
 /*
@@ -1144,20 +1144,20 @@ button:disabled { cursor: not-allowed; opacity: 0.55; }
  * Mobile first: na úzkom displeji je to stĺpec, od 560 px riadok. Verzia je
  * vždy posledná — je to údaj pre poruchu, nie pre bežné čítanie.
  */
-.paticka {
+.footer {
   border-top: 1px solid var(--line);
   margin-top: 48px;
   padding-block: 18px 26px;
   font-size: 13.5px;
 }
 
-.paticka-obsah {
+.footer-inner {
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
 
-.paticka-blok {
+.footer-block {
   display: flex;
   align-items: center;
   gap: 7px;
@@ -1165,7 +1165,7 @@ button:disabled { cursor: not-allowed; opacity: 0.55; }
   margin: 0;
 }
 
-.paticka-odkaz {
+.footer-link {
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -1176,9 +1176,9 @@ button:disabled { cursor: not-allowed; opacity: 0.55; }
   padding-block: 4px;
 }
 
-.paticka-odkaz:hover { text-decoration: underline; }
+.footer-link:hover { text-decoration: underline; }
 
-.paticka-verzia {
+.footer-version {
   margin: 0;
   font-size: 12.5px;
   /* Číslice v jednej šírke — inak sa revízia pri každom nasadení posúva. */
@@ -1186,12 +1186,12 @@ button:disabled { cursor: not-allowed; opacity: 0.55; }
 }
 
 @media (min-width: 560px) {
-  .paticka-obsah {
+  .footer-inner {
     flex-direction: row;
     align-items: center;
     gap: 20px;
   }
-  .paticka-verzia { margin-left: auto; }
+  .footer-version { margin-left: auto; }
 }
 
 /*
@@ -1202,22 +1202,22 @@ button:disabled { cursor: not-allowed; opacity: 0.55; }
  * až od 560 px — na 360 px by sa názov normy stlačil na dve slová a zvyšok
  * by zmizol do troch bodiek.
  */
-.widget-ziadosti { padding: 16px 18px; }
+.requests-widget { padding: 16px 18px; }
 
-.widget-ziadosti-hlavicka {
+.requests-widget-head {
   display: flex;
   align-items: center;
   gap: 10px;
   flex-wrap: wrap;
 }
 
-.ziadosti-zoznam {
+.requests-list {
   list-style: none;
   margin: 12px 0 0;
   padding: 0;
 }
 
-.ziadost {
+.request {
   display: flex;
   flex-direction: column;
   align-items: stretch;
@@ -1226,9 +1226,9 @@ button:disabled { cursor: not-allowed; opacity: 0.55; }
   border-top: 1px solid var(--line);
 }
 
-.ziadosti-zoznam > .ziadost:first-child { border-top: 0; padding-top: 2px; }
+.requests-list > .request:first-child { border-top: 0; padding-top: 2px; }
 
-.ziadost-nazov {
+.request-title {
   font-weight: 600;
   font-size: 15.5px;
   text-decoration: none;
@@ -1237,19 +1237,19 @@ button:disabled { cursor: not-allowed; opacity: 0.55; }
   overflow-wrap: anywhere;
 }
 
-.ziadost-nazov:hover { text-decoration: underline; }
+.request-title:hover { text-decoration: underline; }
 
-.ziadost-detail { margin: 2px 0 0; font-size: 13px; }
+.request-detail { margin: 2px 0 0; font-size: 13px; }
 
 /* Dotykový cieľ má mať aspoň ~40 px na výšku — to dáva padding. */
-.ziadost-akcia {
+.request-action {
   justify-content: center;
   padding: 9px 16px;
   font-size: 14.5px;
   text-decoration: none;
 }
 
-.widget-ziadosti-pata {
+.requests-widget-foot {
   display: flex;
   flex-wrap: wrap;
   gap: 4px 14px;
@@ -1261,13 +1261,13 @@ button:disabled { cursor: not-allowed; opacity: 0.55; }
 }
 
 @media (min-width: 560px) {
-  .ziadost {
+  .request {
     flex-direction: row;
     align-items: center;
     justify-content: space-between;
     gap: 16px;
   }
-  .ziadost-akcia { flex: 0 0 auto; }
+  .request-action { flex: 0 0 auto; }
 }
 
 /*
@@ -1277,35 +1277,35 @@ button:disabled { cursor: not-allowed; opacity: 0.55; }
  * a zoznamy. Preto tu NIE JE `white-space: pre-wrap` — s ním by sa
  * zalomenia počítali dvakrát a medzi odsekmi by vznikli diery.
  */
-.odpoved {
+.answer {
   font-size: 15.5px;
   line-height: 1.75;
 }
 
-.odpoved > *:last-child { margin-bottom: 0; }
-.odpoved li { margin-bottom: 4px; }
+.answer > *:last-child { margin-bottom: 0; }
+.answer li { margin-bottom: 4px; }
 
 /* Kurzor počas streamovania — bez neho nie je poznať, či sa ešte generuje. */
-.kurzor::after {
+.caret::after {
   content: "▍";
   margin-left: 1px;
   opacity: 0.5;
-  animation: blik 1.05s steps(2, start) infinite;
+  animation: blink 1.05s steps(2, start) infinite;
 }
 
-@keyframes blik { to { visibility: hidden; } }
+@keyframes blink { to { visibility: hidden; } }
 
 @media (prefers-reduced-motion: reduce) {
-  .kurzor::after { animation: none; }
+  .caret::after { animation: none; }
 }
 
 /* ── stromový zoznam (D49) ─────────────────────────────────────────────────
    Používajú ho oddelenia, priečinky knižnice aj číselníky — preto neutrálne
-   `.strom-*`, nie `.oddelenie-*`. Odsadenie sa počíta v komponente
+   `.tree-*`, nie `.department-*`. Odsadenie sa počíta v komponente
    (paddingLeft podľa úrovne), nie tu: hĺbka je údaj, nie vzhľad, a v CSS by
    sa dala zapísať len ako šesť tried, ktoré by sa museli držať v súlade
    s MAX_HLBKA. */
-.strom {
+.tree {
   list-style: none;
   margin: 0;
   padding: 0;
@@ -1313,14 +1313,14 @@ button:disabled { cursor: not-allowed; opacity: 0.55; }
   gap: 2px;
 }
 
-.strom-polozka > details > summary {
+.tree-item > details > summary {
   list-style: none;
   cursor: pointer;
 }
 
-.strom-polozka > details > summary::-webkit-details-marker { display: none; }
+.tree-item > details > summary::-webkit-details-marker { display: none; }
 
-.strom-riadok {
+.tree-row {
   display: flex;
   align-items: baseline;
   gap: 10px;
@@ -1332,15 +1332,15 @@ button:disabled { cursor: not-allowed; opacity: 0.55; }
   min-height: 44px;
 }
 
-.strom-riadok:hover { background: var(--surface-2); }
+.tree-row:hover { background: var(--surface-2); }
 
-.strom-polozka > details[open] > summary .strom-riadok { background: var(--surface-2); }
+.tree-item > details[open] > summary .tree-row { background: var(--surface-2); }
 
-.strom-nazov { font-weight: 600; }
+.tree-name { font-weight: 600; }
 
-.strom-pocet { font-size: 13px; }
+.tree-count { font-size: 13px; }
 
-.strom-uprava {
+.tree-edit {
   display: grid;
   gap: 10px;
   padding: 12px;
@@ -1348,7 +1348,7 @@ button:disabled { cursor: not-allowed; opacity: 0.55; }
   border-left: 2px solid var(--line);
 }
 
-.strom-forma {
+.tree-form {
   display: flex;
   gap: 8px;
   flex-wrap: wrap;
@@ -1357,11 +1357,11 @@ button:disabled { cursor: not-allowed; opacity: 0.55; }
 
 /* Na telefóne majú pole aj tlačidlo celú šírku — vedľa seba by na pole
    zostalo toľko miesta, že by v ňom nebolo vidieť názov. */
-.strom-forma > :first-child { flex: 1 1 220px; min-width: 0; }
+.tree-form > :first-child { flex: 1 1 220px; min-width: 0; }
 
 @media (max-width: 520px) {
-  .strom-forma { flex-direction: column; align-items: stretch; }
-  .strom-forma > * { width: 100%; }
+  .tree-form { flex-direction: column; align-items: stretch; }
+  .tree-form > * { width: 100%; }
 }
 
 /* ── audit (D51) ────────────────────────────────────────────────────────── */
@@ -1373,20 +1373,20 @@ button:disabled { cursor: not-allowed; opacity: 0.55; }
   gap: 8px;
 }
 
-.audit-zaznam { padding: 12px 16px; display: grid; gap: 6px; }
+.audit-entry { padding: 12px 16px; display: grid; gap: 6px; }
 
-.audit-hlavicka {
+.audit-head {
   display: flex;
   gap: 8px;
   align-items: baseline;
   flex-wrap: wrap;
 }
 
-.audit-ciel { font-size: 14.5px; }
+.audit-target { font-size: 14.5px; }
 
-.audit-kto { font-size: 13px; }
+.audit-who { font-size: 13px; }
 
-.audit-zmeny {
+.audit-changes {
   list-style: none;
   margin: 2px 0 0;
   padding: 0;
@@ -1395,15 +1395,15 @@ button:disabled { cursor: not-allowed; opacity: 0.55; }
   font-size: 13.5px;
 }
 
-.audit-pole { font-weight: 600; margin-right: 6px; }
+.audit-field { font-weight: 600; margin-right: 6px; }
 
 /* Stará hodnota je prečiarknutá, nie červená: nie je to chyba, len to, čo
    tam bolo. Farba by z každého záznamu robila varovanie. */
-.audit-stara { text-decoration: line-through; color: var(--muted); }
+.audit-old { text-decoration: line-through; color: var(--muted); }
 
-.audit-nova { color: var(--ink); }
+.audit-new { color: var(--ink); }
 
-.audit-poznamka { font-size: 13px; font-style: italic; }
+.audit-note { font-size: 13px; font-style: italic; }
 
 .audit-filter {
   display: flex;
@@ -1420,7 +1420,7 @@ button:disabled { cursor: not-allowed; opacity: 0.55; }
 
 /* Fotka v avatare (D52). Kruh a rovnaká veľkosť ako iniciály — inak by sa
    hlavička pri prvom prihlásení nenápadne poskočila. */
-.avatar--fotka {
+.avatar--photo {
   object-fit: cover;
   padding: 0;
   background: var(--surface-2);
@@ -1430,7 +1430,7 @@ button:disabled { cursor: not-allowed; opacity: 0.55; }
    Dva stĺpce vedľa seba len tam, kde sa oba naozaj zmestia. Pod 900 px sa
    poskladajú pod seba: rozdeliť telefón na dve polovice znamená, že sa
    nečíta ani jedna. */
-.editor-mriezka {
+.editor-grid {
   display: grid;
   gap: 16px;
   grid-template-columns: 1fr;
@@ -1438,12 +1438,12 @@ button:disabled { cursor: not-allowed; opacity: 0.55; }
 }
 
 @media (min-width: 900px) {
-  .editor-mriezka { grid-template-columns: 1fr 1fr; }
+  .editor-grid { grid-template-columns: 1fr 1fr; }
 }
 
-.editor-stlpec { min-width: 0; }
+.editor-column { min-width: 0; }
 
-.editor-nahlad {
+.editor-preview {
   width: 100%;
   height: 70vh;
   min-height: 420px;
@@ -1472,7 +1472,7 @@ button:disabled { cursor: not-allowed; opacity: 0.55; }
    Toast UI si nesie vlastné farby. Namiesto prepisovania celej jeho témy
    preberáme len to, čo inak v tmavom režime svieti: pozadie, text a rámček.
    Menej presné než ich tmavá téma, ale nerozíde sa s ňou pri aktualizácii. */
-.editor-obal { min-width: 0; }
+.editor-wrap { min-width: 0; }
 
 .editor-tui .toastui-editor-defaultUI {
   border-radius: 12px;
@@ -1504,7 +1504,7 @@ html[data-theme="dark"] .editor-tui .CodeMirror {
 /* ── knižnica: priečinky vedľa zoznamu (D56) ─────────────────────────────
    Bočný panel len tam, kde má zoznam ešte dosť miesta. Pod 860 px ide nad
    zoznam: na telefóne je strom priečinkov navigácia, nie stĺpec. */
-.kniznica-mriezka {
+.library-grid {
   display: grid;
   gap: 20px;
   grid-template-columns: 1fr;
@@ -1512,7 +1512,7 @@ html[data-theme="dark"] .editor-tui .CodeMirror {
 }
 
 @media (min-width: 860px) {
-  .kniznica-mriezka { grid-template-columns: 250px 1fr; }
+  .library-grid { grid-template-columns: 250px 1fr; }
 }
 
 /*
@@ -1526,8 +1526,8 @@ html[data-theme="dark"] .editor-tui .CodeMirror {
  * Zásuvka z návrhu (filtre schované za tlačidlom) je krok 7 a potrebuje
  * JavaScript; toto funguje aj bez neho a je to jeden riadok.
  */
-.kniznica-priecinky { min-width: 0; order: 2; }
-.kniznica-zoznam { min-width: 0; order: 1; }
+.library-folders { min-width: 0; order: 2; }
+.library-list { min-width: 0; order: 1; }
 
 /*
  * Reset poradia **musí byť až za** deklaráciami vyššie, nie v media bloku
@@ -1537,15 +1537,15 @@ html[data-theme="dark"] .editor-tui .CodeMirror {
  * stlačená v 250 px stĺpci vľavo.
  */
 @media (min-width: 860px) {
-  .kniznica-priecinky, .kniznica-zoznam { order: 0; }
+  .library-folders, .library-list { order: 0; }
 }
 
 /* Odkaz v strome sa nesmie správať ako odsek textu — celý riadok je cieľ. */
-.kniznica-priecinky .strom-riadok { text-decoration: none; color: inherit; }
-.kniznica-priecinky .strom-nazov { text-decoration: none; color: inherit; }
-.kniznica-priecinky .strom-nazov:hover { text-decoration: underline; }
+.library-folders .tree-row { text-decoration: none; color: inherit; }
+.library-folders .tree-name { text-decoration: none; color: inherit; }
+.library-folders .tree-name:hover { text-decoration: underline; }
 
-.kniznica-priecinky .je-aktivny {
+.library-folders .is-active {
   font-weight: 700;
   color: var(--accent, var(--ink));
 }
@@ -1845,7 +1845,7 @@ html[data-theme="dark"] .editor-tui .CodeMirror {
    stĺpca sa v nich zle číta. */
 .upload-wide { grid-column: 1 / -1; }
 
-.upload-grid .pole { margin: 0; min-width: 0; }
+.upload-grid .field { margin: 0; min-width: 0; }
 
 /* ── detail dokumentu: pravý panel ──────────────────────────────────────
    Dva stĺpce až od 900 px. Na telefóne patrí zhrnutie **pod** obsah: človek
@@ -1979,7 +1979,7 @@ html[data-theme="dark"] .editor-tui .CodeMirror {
   font-weight: 600;
 }
 
-.bulk-bar .pole { margin: 0; }
+.bulk-bar .field { margin: 0; }
 .bulk-folder { flex: 0 1 240px; }
 
 .doc-col-pick { width: 40px; }
@@ -2147,7 +2147,7 @@ html[data-theme="dark"] .editor-tui .CodeMirror {
   border-top: 1px solid var(--line);
 }
 
-.builder-add .pole { margin: 0; flex: 0 1 220px; }
+.builder-add .field { margin: 0; flex: 0 1 220px; }
 .builder-value { flex: 1 1 200px; }
 
 .builder-hint {
@@ -2275,35 +2275,35 @@ html[data-theme="dark"] .editor-tui .CodeMirror {
 .library-chips-clear { font-size: 13px; color: var(--accent); }
 
 /* ── strom s čiarami hierarchie (D60) ────────────────────────────────────
-   Čiary sa kreslia z odsadenia, ktoré nesie premenná `--uroven`. Bez nich
+   Čiary sa kreslia z odsadenia, ktoré nesie premenná `--level`. Bez nich
    je hlbší strom len zoznam s medzerami naľavo a človek musí odsadenie
    merať očami. */
-.strom--ciary { position: relative; }
+.tree--lines { position: relative; }
 
-.strom--ciary .strom-polozka {
+.tree--lines .tree-item {
   position: relative;
-  padding-left: calc((var(--uroven, 1) - 1) * 22px);
+  padding-left: calc((var(--level, 1) - 1) * 22px);
 }
 
 /* Zvislá čiara od rodiča nadol a vodorovná odbočka k položke. Kreslia sa
    len od druhej úrovne — koreňové oddelenia nemajú z čoho vychádzať. */
-.strom--ciary .strom-polozka[style*="--uroven"]:not([style*="--uroven: 1"])::before,
-.strom--ciary .strom-polozka[style*="--uroven"]:not([style*="--uroven: 1"])::after {
+.tree--lines .tree-item[style*="--level"]:not([style*="--level: 1"])::before,
+.tree--lines .tree-item[style*="--level"]:not([style*="--level: 1"])::after {
   content: "";
   position: absolute;
   border-color: var(--line);
   pointer-events: none;
 }
 
-.strom--ciary .strom-polozka:not([style*="--uroven: 1"])::before {
-  left: calc((var(--uroven, 1) - 1) * 22px - 12px);
+.tree--lines .tree-item:not([style*="--level: 1"])::before {
+  left: calc((var(--level, 1) - 1) * 22px - 12px);
   top: 0;
   bottom: 0;
   border-left: 1px solid var(--line);
 }
 
-.strom--ciary .strom-polozka:not([style*="--uroven: 1"])::after {
-  left: calc((var(--uroven, 1) - 1) * 22px - 12px);
+.tree--lines .tree-item:not([style*="--level: 1"])::after {
+  left: calc((var(--level, 1) - 1) * 22px - 12px);
   top: 21px;
   width: 10px;
   border-top: 1px solid var(--line);
@@ -2311,7 +2311,7 @@ html[data-theme="dark"] .editor-tui .CodeMirror {
 
 /* Úchop na ťahanie. Kurzor je jediné, čo napovie, že sa dá ťahať —
    samotný riadok to nijako neprezradí. */
-.strom-uchop {
+.tree-grip {
   color: var(--muted);
   cursor: grab;
   font-size: 13px;
@@ -2319,12 +2319,12 @@ html[data-theme="dark"] .editor-tui .CodeMirror {
   user-select: none;
 }
 
-.strom--ciary .strom-polozka { cursor: grab; }
-.strom--ciary .strom-polozka.sa-taha { opacity: 0.45; cursor: grabbing; }
+.tree--lines .tree-item { cursor: grab; }
+.tree--lines .tree-item.is-dragging { opacity: 0.45; cursor: grabbing; }
 
-.strom-sipky { display: flex; gap: 8px; flex-wrap: wrap; }
+.tree-arrows { display: flex; gap: 8px; flex-wrap: wrap; }
 
-.strom-ulozit {
+.tree-save {
   display: flex;
   gap: 10px;
   align-items: center;
@@ -2338,8 +2338,8 @@ html[data-theme="dark"] .editor-tui .CodeMirror {
    obrazovkách preto úchop nesľubuje niečo, čo tam nefunguje — šípky
    v rozbalenej položke zostávajú. */
 @media (hover: none) {
-  .strom-uchop { display: none; }
-  .strom--ciary .strom-polozka { cursor: default; }
+  .tree-grip { display: none; }
+  .tree--lines .tree-item { cursor: default; }
 }
 
 /* ── opýtať sa: hero, karta odpovede a zdroje ────────────────────────────
@@ -2391,7 +2391,7 @@ html[data-theme="dark"] .editor-tui .CodeMirror {
 
 /* Príklad je pilulka, nie štítok. Štítok je stav (`publikované`), toto je
    ponuka na kliknutie — a ten rozdiel musí byť vidieť skôr, než sa naň
-   ukáže myšou. Doteraz to bol `.stitok` s dvomi inline štýlmi. */
+   ukáže myšou. Doteraz to bol `.tag` s dvomi inline štýlmi. */
 .ask-example {
   border: 1px solid var(--line);
   background: var(--surface);
@@ -2489,7 +2489,7 @@ a.answer-source:focus-visible { outline: 2px solid var(--accent); outline-offset
 }
 
 /* Je to ukážka, nie ovládanie — `span`, nie `button`, takže sa nedá kliknúť
-   ani chytiť klávesnicou. Vzhľad si berie z `.tlacidlo`, aby sa nemohol
+   ani chytiť klávesnicou. Vzhľad si berie z `.button`, aby sa nemohol
    rozísť s tým, ako tlačidlá naozaj vyzerajú. */
 .brand-preview-button { cursor: default; }
 
@@ -2557,8 +2557,8 @@ a.answer-source:focus-visible { outline: 2px solid var(--accent); outline-offset
 
 /* Riadok stromu a záložka sú celé terčom, preto prstenec dovnútra — mimo
    by prekryl susedný riadok. */
-.strom-riadok:focus-visible,
-.zalozka:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+.tree-row:focus-visible,
+.tab:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
 
 /* Štvorček vo výbere riadku je vizuálne malý, ale terčom je celé okolie.
    Prstenec preto patrí okoliu, nie samotnému štvorčeku. */
@@ -2589,7 +2589,7 @@ a.answer-source:focus-visible { outline: 2px solid var(--accent); outline-offset
 
 /* Kotva nesmie skončiť tesne pod hlavičkou stránky — `scroll-margin` nechá
    nad cieľom medzeru, aby bolo vidieť, kam človek doskočil. */
-.kniznica-priecinky, .kniznica-zoznam { scroll-margin-top: 12px; }
+.library-folders, .library-list { scroll-margin-top: 12px; }
 
 @media (min-width: 860px) {
   /* Na širokej obrazovke sú filtre vedľa zoznamu — odkaz na ne by bol odkaz
@@ -2661,10 +2661,10 @@ a.answer-source:focus-visible { outline: 2px solid var(--accent); outline-offset
 }
 
 /* ── jedna šírka pre hlavičku, navigáciu a obsah ─────────────────────────
-   Hlavička a pätička dovtedy používali `.obal` (940 px), navigácia bežala od
+   Hlavička a pätička dovtedy používali `.wrap` (940 px), navigácia bežala od
    kraja obrazovky a obsah shellu mal 1240 px. Tri rôzne ľavé okraje nad
    sebou — a na širokom monitore bolo vidieť všetky tri naraz. */
-.obal--shell {
+.wrap--shell {
   max-width: var(--shell-maxw);
   margin: 0 auto;
   padding: 0 var(--pad-main);

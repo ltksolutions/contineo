@@ -17,7 +17,7 @@ export const dynamic = "force-dynamic"
 function Fact({ label, value, muted }: { label: string; value: string; muted?: boolean }) {
   return (
     <div>
-      <div className="tichy" style={{ fontSize: 12.5 }}>{label}</div>
+      <div className="quiet" style={{ fontSize: 12.5 }}>{label}</div>
       <div style={{ fontSize: 15.5, fontWeight: 600, color: muted ? "var(--muted)" : undefined }}>
         {value}
       </div>
@@ -40,15 +40,15 @@ export default async function TenantAdminPage() {
     <AppShell language={ctx.person.language}>
     <div style={{ maxWidth: 900 }}>
       <h1 style={{ fontSize: 27, letterSpacing: "-0.02em", margin: "0 0 6px" }}>{t.heading}</h1>
-      <p className="tichy" style={{ fontSize: 15, margin: "0 0 16px", maxWidth: 640 }}>{t.intro}</p>
+      <p className="quiet" style={{ fontSize: 15, margin: "0 0 16px", maxWidth: 640 }}>{t.intro}</p>
 
       <p style={{ margin: "0 0 24px" }}>
-        <Link className="tlacidlo" href="/admin/new">{t.newTenant}</Link>
+        <Link className="button" href="/admin/new">{t.newTenant}</Link>
       </p>
 
       <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "grid", gap: 14 }}>
         {overview.map(tenant => (
-          <li key={tenant.companyCode} className="karta" style={{ padding: "18px 20px" }}>
+          <li key={tenant.companyCode} className="card" style={{ padding: "18px 20px" }}>
             <div style={{ display: "flex", gap: 10, alignItems: "baseline", flexWrap: "wrap" }}>
               <Link
                 href={`/admin/tenants/${encodeURIComponent(tenant.companyCode)}`}
@@ -56,22 +56,22 @@ export default async function TenantAdminPage() {
               >
                 {tenant.displayName}
               </Link>
-              <span className="stitok">{tenant.companyCode}</span>
+              <span className="tag">{tenant.companyCode}</span>
               {tenant.status !== "active" && (
-                <span className="stitok" style={{ background: "var(--warn-bg)", color: "var(--warn-fg)" }}>
+                <span className="tag" style={{ background: "var(--warn-bg)", color: "var(--warn-fg)" }}>
                   {t.disabled}
                 </span>
               )}
-              <span className="tichy" style={{ fontSize: 13, marginLeft: "auto" }}>
+              <span className="quiet" style={{ fontSize: 13, marginLeft: "auto" }}>
                 {tenant.languages.join(" · ")}
               </span>
             </div>
 
-            <p className="tichy" style={{ fontSize: 13.5, margin: "8px 0 0", overflowWrap: "anywhere" }}>
+            <p className="quiet" style={{ fontSize: 13.5, margin: "8px 0 0", overflowWrap: "anywhere" }}>
               {tenant.hostnames.join(", ") || t.noDomain}
             </p>
 
-            <div className="admin-udaje">
+            <div className="admin-data">
               <Fact
                 label={t.people}
                 value={t.peopleValue(tenant.people.signedIn, tenant.people.total)}
@@ -98,15 +98,15 @@ export default async function TenantAdminPage() {
                 mena sa nedá povedať, ktorý z nich opraviť. */}
             {tenant.documents.withoutVersion.length > 0 && (
               <p style={{ margin: "12px 0 0", fontSize: 13.5 }}>
-                <span className="stitok" style={{ background: "var(--warn-bg)", color: "var(--warn-fg)" }}>
+                <span className="tag" style={{ background: "var(--warn-bg)", color: "var(--warn-fg)" }}>
                   {t.withoutVersion}
                 </span>{" "}
-                <span className="tichy">{tenant.documents.withoutVersion.join(", ")}</span>
+                <span className="quiet">{tenant.documents.withoutVersion.join(", ")}</span>
               </p>
             )}
 
             {tenant.pokynyPoslane && (
-              <p className="tichy" style={{ margin: "10px 0 0", fontSize: 13 }}>
+              <p className="quiet" style={{ margin: "10px 0 0", fontSize: 13 }}>
                 {t.instructionsSent(
                   formatDate(tenant.pokynyPoslane.at, language),
                   tenant.pokynyPoslane.to,
@@ -117,7 +117,7 @@ export default async function TenantAdminPage() {
         ))}
       </ul>
 
-      <p className="tichy" style={{ fontSize: 13, marginTop: 20 }}>
+      <p className="quiet" style={{ fontSize: 13, marginTop: 20 }}>
         {t.domainsNoteBefore}<code>npm run domains</code>{t.domainsNoteAfter}
       </p>
     </div>

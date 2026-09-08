@@ -70,100 +70,100 @@ export default async function EditorPage({
       <Notice message={message} error={error === "1"} back={`/library/${encodeURIComponent(documentId)}/text`} />
 
       <p style={{ margin: "0 0 10px" }}>
-        <Link className="tichy" href={`/library/${encodeURIComponent(documentId)}`} style={{ fontSize: 14 }}>
+        <Link className="quiet" href={`/library/${encodeURIComponent(documentId)}`} style={{ fontSize: 14 }}>
           {t.back}
         </Link>
       </p>
 
       <h1 style={{ fontSize: 22, letterSpacing: "-0.02em", margin: "0 0 4px" }}>{d.title}</h1>
-      <p className="tichy" style={{ fontSize: 14, margin: "0 0 16px" }}>
+      <p className="quiet" style={{ fontSize: 14, margin: "0 0 16px" }}>
         {t.intro}
       </p>
 
       {d.conversion?.warnings?.length ? (
-        <ul className="karta" style={{ padding: "12px 16px 12px 34px", margin: "0 0 16px", fontSize: 14 }}>
+        <ul className="card" style={{ padding: "12px 16px 12px 34px", margin: "0 0 16px", fontSize: 14 }}>
           {d.conversion.warnings.map((u, i) => <li key={i}>{u}</li>)}
         </ul>
       ) : null}
 
       {draft ? (
-        <section className="karta" style={{ padding: 18, display: "grid", gap: 12, margin: "0 0 18px" }}>
-          <div className="audit-hlavicka">
-            <span className="stitok">{t.modelDraft}</span>
+        <section className="card" style={{ padding: 18, display: "grid", gap: 12, margin: "0 0 18px" }}>
+          <div className="audit-head">
+            <span className="tag">{t.modelDraft}</span>
             <strong>{draft.mode === "rewrite-scan" ? t.modeRewriteScan : t.modeClean}</strong>
-            <span className="tichy" style={{ fontSize: 13 }}>
+            <span className="quiet" style={{ fontSize: 13 }}>
               {t.draftMeta(draft.model, formatDate(draft.at, language), draft.text.length)}
             </span>
           </div>
-          <p className="tichy" style={{ fontSize: 13.5, margin: 0 }}>
+          <p className="quiet" style={{ fontSize: 13.5, margin: 0 }}>
             {t.draftNoteBefore}<strong>{t.draftNoteHighlight}</strong>{t.draftNoteAfter}
           </p>
-          <textarea className="pole-vstup editor-text" readOnly rows={14} value={draft.text} />
+          <textarea className="field-input editor-text" readOnly rows={14} value={draft.text} />
           <form action={decideOnDraftAction} style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
             <input type="hidden" name="documentId" value={documentId} />
-            <button className="tlacidlo" type="submit" name="choice" value="accept">{t.useAsDraft}</button>
-            <button className="tlacidlo tlacidlo--tiche" type="submit" name="choice" value="discard">{t.discard}</button>
+            <button className="button" type="submit" name="choice" value="accept">{t.useAsDraft}</button>
+            <button className="button button--quiet" type="submit" name="choice" value="discard">{t.discard}</button>
           </form>
         </section>
       ) : null}
 
-      <div className="editor-mriezka">
-        <section className="editor-stlpec">
-          <h2 className="pole-popis" style={{ margin: "0 0 8px" }}>{t.original}</h2>
+      <div className="editor-grid">
+        <section className="editor-column">
+          <h2 className="field-label" style={{ margin: "0 0 8px" }}>{t.original}</h2>
           {fileUrl ? (
             isPdf ? (
-              <object className="editor-nahlad" data={fileUrl} type="application/pdf">
-                <p className="tichy" style={{ fontSize: 14, padding: 12 }}>
+              <object className="editor-preview" data={fileUrl} type="application/pdf">
+                <p className="quiet" style={{ fontSize: 14, padding: 12 }}>
                   {t.pdfNotShown}
                   <a href={fileUrl} target="_blank" rel="noreferrer">{t.openInNewWindow}</a>.
                 </p>
               </object>
             ) : (
-              <p className="karta" style={{ padding: 16, fontSize: 14 }}>
+              <p className="card" style={{ padding: 16, fontSize: 14 }}>
                 {t.fileNotShown(d.originalFile?.name ?? "")}
                 <a href={fileUrl} target="_blank" rel="noreferrer">{t.download}</a>{t.compareAfterDownload}
               </p>
             )
           ) : (
-            <p className="karta" style={{ padding: 16, fontSize: 14 }}>
+            <p className="card" style={{ padding: 16, fontSize: 14 }}>
               {t.noOriginal}
             </p>
           )}
         </section>
 
-        <section className="editor-stlpec">
-          <h2 className="pole-popis" style={{ margin: "0 0 8px" }}>
+        <section className="editor-column">
+          <h2 className="field-label" style={{ margin: "0 0 8px" }}>
             {t.text}
-            <span className="tichy" style={{ fontWeight: 400 }}>
+            <span className="quiet" style={{ fontWeight: 400 }}>
               {t.switchNoteBefore}<em>{t.switchNoteModes}</em>{t.switchNoteAfter}
             </span>
           </h2>
           <form action={saveTextAction} style={{ display: "grid", gap: 10 }}>
             <input type="hidden" name="documentId" value={documentId} />
             <TextEditor name="markdown" initial={d.editableText} />
-            <div><button className="tlacidlo" type="submit">{t.saveText}</button></div>
+            <div><button className="button" type="submit">{t.saveText}</button></div>
           </form>
         </section>
       </div>
 
-      <section className="karta" style={{ padding: 18, display: "grid", gap: 10, marginTop: 18 }}>
+      <section className="card" style={{ padding: 18, display: "grid", gap: 10, marginTop: 18 }}>
         <h2 style={{ fontSize: 17, margin: 0 }}>{t.llmHeading}</h2>
-        <p className="tichy" style={{ fontSize: 14, margin: 0 }}>
+        <p className="quiet" style={{ fontSize: 14, margin: 0 }}>
           {t.llmNoteBefore}<strong>{t.llmNoteHighlight}</strong>{t.llmNoteAfter}
         </p>
         <form action={sendToModelAction} style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
           <input type="hidden" name="documentId" value={documentId} />
-          <button className="tlacidlo tlacidlo--tiche" type="submit" name="mode" value="clean">
+          <button className="button button--quiet" type="submit" name="mode" value="clean">
             {t.clean}
           </button>
           {isPdf && (
-            <button className="tlacidlo tlacidlo--tiche" type="submit" name="mode" value="rewrite-scan">
+            <button className="button button--quiet" type="submit" name="mode" value="rewrite-scan">
               {t.rewriteScan}
             </button>
           )}
         </form>
         {isPdf && (
-          <p className="tichy" style={{ fontSize: 13.5, margin: 0 }}>
+          <p className="quiet" style={{ fontSize: 13.5, margin: 0 }}>
             {t.rewriteScanNote}
           </p>
         )}

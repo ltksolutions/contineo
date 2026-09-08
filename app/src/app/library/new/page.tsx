@@ -44,16 +44,16 @@ export default async function NewDocumentPage({
     <AppShell language={ctx.person.language}>
     <div style={{ maxWidth: 880, ...tenantStyle(branding) }}>
       <p style={{ margin: "0 0 16px" }}>
-        <Link className="tichy" href="/library" style={{ fontSize: 14 }}>{t.back}</Link>
+        <Link className="quiet" href="/library" style={{ fontSize: 14 }}>{t.back}</Link>
       </p>
 
       <h1 style={{ fontSize: 25, letterSpacing: "-0.02em", margin: "0 0 6px" }}>{t.heading}</h1>
-      <p className="tichy" style={{ fontSize: 15, margin: "0 0 20px" }}>
+      <p className="quiet" style={{ fontSize: 15, margin: "0 0 20px" }}>
         {t.intro}
       </p>
 
       {error && (
-        <p className="karta" style={{ padding: "12px 16px", margin: "0 0 18px", fontSize: 14.5, color: "var(--warn-fg)" }}>
+        <p className="card" style={{ padding: "12px 16px", margin: "0 0 18px", fontSize: 14.5, color: "var(--warn-fg)" }}>
           {error}
         </p>
       )}
@@ -69,7 +69,7 @@ export default async function NewDocumentPage({
         vidno naraz, čo je pri jednom odoslaní správne.
       */}
       <form action={upload} className="upload-form" encType="multipart/form-data">
-        <section className="karta upload-section">
+        <section className="card upload-section">
           <h2 className="upload-step"><span className="upload-step-no">1</span>{t.sectionFile}</h2>
 
           {/*
@@ -80,7 +80,7 @@ export default async function NewDocumentPage({
           */}
           <label className="upload-drop">
             <span className="upload-drop-title">{t.dropHint}</span>
-            <span className="tichy upload-drop-note">
+            <span className="quiet upload-drop-note">
               {t.oldFormatsBefore}<code>.doc</code>{t.oldFormatsMiddle}<code>.xls</code>{t.oldFormatsAfter}
             </span>
             <input
@@ -94,58 +94,58 @@ export default async function NewDocumentPage({
           </label>
         </section>
 
-        <section className="karta upload-section">
+        <section className="card upload-section">
           <h2 className="upload-step"><span className="upload-step-no">2</span>{t.sectionMeta}</h2>
           <div className="upload-grid">
 
-        <label className="pole upload-wide">
-          <span className="pole-popis">{t.title}</span>
-          <input className="pole-vstup" name="title" defaultValue={title ?? ""} required
+        <label className="field upload-wide">
+          <span className="field-label">{t.title}</span>
+          <input className="field-input" name="title" defaultValue={title ?? ""} required
                  placeholder={t.titlePlaceholder} />
-          <span className="tichy pole-napoveda">
+          <span className="quiet field-hint">
             {t.titleNote}
           </span>
         </label>
 
-        <label className="pole upload-wide">
-          <span className="pole-popis">{t.key}</span>
-          <input className="pole-vstup" name="sectionKey" defaultValue={sectionKey ?? ""} required
+        <label className="field upload-wide">
+          <span className="field-label">{t.key}</span>
+          <input className="field-input" name="sectionKey" defaultValue={sectionKey ?? ""} required
                  placeholder="sutazny_poriadok" autoCapitalize="none" autoCorrect="off" />
-          <span className="tichy pole-napoveda">
+          <span className="quiet field-hint">
             {t.keyNoteBefore}<code>{ctx.tenant.companyCode.toLowerCase()}:kluc</code>{t.keyNoteAfterCode}
             <strong>{t.keyNoteHighlight}</strong>{t.keyNoteAfter}
             {CODELISTS.sectionKey.items.slice(0, 8).map(p => p.key).join(", ")}.
           </span>
         </label>
 
-        <div className="pole">
-          <span className="pole-popis">{t.scope}</span>
+        <div className="field">
+          <span className="field-label">{t.scope}</span>
           <Select name="scope" options={codelistOptions("scope")} initial="company" fieldLabel={t.scope} />
         </div>
 
-        <div className="pole">
-          <span className="pole-popis">{t.accessLevel}</span>
+        <div className="field">
+          <span className="field-label">{t.accessLevel}</span>
           <Select name="accessLevel" options={codelistOptions("accessLevel")} initial="internal" fieldLabel={t.accessLevel} />
-          <span className="tichy pole-napoveda">
+          <span className="quiet field-hint">
             <code>internal</code>{t.accessInternalNote}<code>public</code>{t.accessPublicNote}
           </span>
         </div>
 
-        <div className="pole">
-          <span className="pole-popis">{t.documentLanguage}</span>
+        <div className="field">
+          <span className="field-label">{t.documentLanguage}</span>
           <Select name="language" options={codelistOptions("language")} initial={ctx.tenant.defaultLanguage ?? "sk"} fieldLabel={t.documentLanguage} />
-          <span className="tichy pole-napoveda">
+          <span className="quiet field-hint">
             {t.documentLanguageNote}
           </span>
         </div>
 
-        <div className="pole">
-          <span className="pole-popis">{dictionary(ctx.person.language).library.list.category}</span>
+        <div className="field">
+          <span className="field-label">{dictionary(ctx.person.language).library.list.category}</span>
           <Select name="category" options={[{ value: "", label: t.unset }, ...codelistOptions("category", extras)]} initial="" fieldLabel={dictionary(ctx.person.language).library.list.category} />
         </div>
 
-        <div className="pole upload-wide">
-          <span className="pole-popis">{t.tags}</span>
+        <div className="field upload-wide">
+          <span className="field-label">{t.tags}</span>
           <TagSelect
             name="tags"
             options={codelistOptions("tags", extras).map(v => ({ value: v.value }))}
@@ -158,7 +158,7 @@ export default async function NewDocumentPage({
           </div>
         </section>
 
-        <div><button className="tlacidlo" type="submit">{t.submit}</button></div>
+        <div><button className="button" type="submit">{t.submit}</button></div>
       </form>
     </div>
     </AppShell>

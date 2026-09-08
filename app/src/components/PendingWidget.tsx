@@ -35,37 +35,37 @@ export default function PendingWidget({
   const shown = items.slice(0, LIMIT)
 
   return (
-    <section className="karta widget-ziadosti" aria-labelledby="ziadosti-nadpis">
-      <div className="widget-ziadosti-hlavicka">
-        <h2 id="ziadosti-nadpis" style={{ fontSize: 17, margin: 0 }}>
+    <section className="card requests-widget" aria-labelledby="requests-heading">
+      <div className="requests-widget-head">
+        <h2 id="requests-heading" style={{ fontSize: 17, margin: 0 }}>
           {t.heading}
         </h2>
-        {total > 0 && <span className="stitok">{t.count(total)}</span>}
+        {total > 0 && <span className="tag">{t.count(total)}</span>}
       </div>
 
       {total === 0 ? (
-        <p className="tichy" style={{ margin: "10px 0 0", fontSize: 14.5 }}>
+        <p className="quiet" style={{ margin: "10px 0 0", fontSize: 14.5 }}>
           {t.empty}
         </p>
       ) : (
-        <ul className="ziadosti-zoznam">
+        <ul className="requests-list">
           {shown.map(item => (
-            <li key={`${item.source}:${item.id}`} className="ziadost">
+            <li key={`${item.source}:${item.id}`} className="request">
               <div style={{ minWidth: 0 }}>
                 {/* `min-width: 0` je tu nutné: bez neho flexbox nedovolí
                     dlhému názvu bez medzier zalomiť sa a riadok pretečie. */}
-                <Link href={item.href} className="ziadost-nazov">
+                <Link href={item.href} className="request-title">
                   {item.title}
                 </Link>
                 {/* Príznak zmizne pri ďalšom prihlásení, nie kliknutím (D39).
                     Je to cena za to, že sa nezakladá kolekcia so záznamami
                     o tom, čo si kto kedy prečítal. */}
-                {item.isNew && <span className="stitok stitok--nove">{t.isNew}</span>}
+                {item.isNew && <span className="tag tag--new">{t.isNew}</span>}
                 {/* Dva údaje, jeden riadok. „Čaká od" sa ukáže len tam, kde
                     pridelenie naozaj existuje (D37) — inak by to bol dátum
                     o niečom inom, než čo je pri ňom napísané. */}
                 {(item.detail || item.assignedAt) && (
-                  <p className="tichy ziadost-detail">
+                  <p className="quiet request-detail">
                     {[
                       item.detail,
                       item.assignedAt ? t.waitingSince(formatDate(item.assignedAt, language)) : null,
@@ -75,7 +75,7 @@ export default function PendingWidget({
               </div>
               <Link
                 href={item.href}
-                className="tlacidlo tlacidlo--tiche ziadost-akcia"
+                className="button button--quiet request-action"
               >
                 {t.open}
               </Link>
@@ -85,9 +85,9 @@ export default function PendingWidget({
       )}
 
       {(total > LIMIT || blockedCount > 0) && (
-        <p className="widget-ziadosti-pata">
+        <p className="requests-widget-foot">
           {total > LIMIT && (
-            <Link href="/documents" className="ziadost-nazov">
+            <Link href="/documents" className="request-title">
               {t.showAll(total)}
             </Link>
           )}
@@ -95,7 +95,7 @@ export default function PendingWidget({
               nemôže pohnúť, nie je úloha a v zozname by len visela. Zamlčať
               ich ale nemožno: na `/documents` ich uvidí aj s dôvodom. */}
           {blockedCount > 0 && (
-            <span className="tichy" style={{ fontSize: 13.5 }}>
+            <span className="quiet" style={{ fontSize: 13.5 }}>
               {t.blockedNote(blockedCount)}
             </span>
           )}

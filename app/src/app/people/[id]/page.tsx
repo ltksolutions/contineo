@@ -63,17 +63,17 @@ export default async function PersonDetailPage({
     <AppShell language={ctx.person.language}>
     <div style={{ maxWidth: 680, ...tenantStyle(branding) }}>
       <p style={{ margin: "0 0 16px" }}>
-        <Link className="tichy" href="/people" style={{ fontSize: 14 }}>{t.back}</Link>
+        <Link className="quiet" href="/people" style={{ fontSize: 14 }}>{t.back}</Link>
       </p>
 
       <h1 style={{ fontSize: 25, letterSpacing: "-0.02em", margin: "0 0 4px" }}>{o.fullName}</h1>
-      <p className="tichy" style={{ fontSize: 14.5, margin: "0 0 4px", overflowWrap: "anywhere" }}>
+      <p className="quiet" style={{ fontSize: 14.5, margin: "0 0 4px", overflowWrap: "anywhere" }}>
         {o.email}
         {o.emailHistory.length > 0 && (
           <> · {t.previously(o.emailHistory.map(h => h.email).join(", "))}</>
         )}
       </p>
-      <p className="tichy" style={{ fontSize: 13.5, margin: "0 0 20px" }}>
+      <p className="quiet" style={{ fontSize: 13.5, margin: "0 0 20px" }}>
         {o.status === "invited" ? t.invitedNotSignedIn
           : o.status === "inactive" ? t.excludedNoSignIn
           : t.lastSeen(o.lastLoginAt ? formatDate(o.lastLoginAt, language) : t.never)}
@@ -82,13 +82,13 @@ export default async function PersonDetailPage({
 
       <Notice message={message} error={error === "1"} back={`/people/${encodeURIComponent(id)}`} />
 
-      <form action={savePersonAction} className="karta" style={{ padding: 20, display: "grid", gap: 16 }}>
+      <form action={savePersonAction} className="card" style={{ padding: 20, display: "grid", gap: 16 }}>
         <input type="hidden" name="id" value={o.id} />
 
-        <label className="pole">
-          <span className="pole-popis">{t.email}</span>
+        <label className="field">
+          <span className="field-label">{t.email}</span>
           <input
-            className="pole-vstup"
+            className="field-input"
             name="email"
             type="email"
             defaultValue={o.email}
@@ -96,22 +96,22 @@ export default async function PersonDetailPage({
             autoCapitalize="none"
             autoCorrect="off"
           />
-          <span className="tichy pole-napoveda">{t.emailNote}</span>
+          <span className="quiet field-hint">{t.emailNote}</span>
         </label>
 
-        <label className="pole">
-          <span className="pole-popis">{t.fullName}</span>
-          <input className="pole-vstup" name="fullName" defaultValue={o.fullName} required />
+        <label className="field">
+          <span className="field-label">{t.fullName}</span>
+          <input className="field-input" name="fullName" defaultValue={o.fullName} required />
         </label>
 
-        <label className="pole">
-          <span className="pole-popis">{t.jobTitle}</span>
-          <input className="pole-vstup" name="jobTitle" defaultValue={o.jobTitle ?? ""} />
-          <span className="tichy pole-napoveda">{t.jobTitleNote}</span>
+        <label className="field">
+          <span className="field-label">{t.jobTitle}</span>
+          <input className="field-input" name="jobTitle" defaultValue={o.jobTitle ?? ""} />
+          <span className="quiet field-hint">{t.jobTitleNote}</span>
         </label>
 
-        <div className="pole">
-          <span className="pole-popis">{t.department}</span>
+        <div className="field">
+          <span className="field-label">{t.department}</span>
           <Select
             name="departmentId"
             fieldLabel={t.department}
@@ -124,7 +124,7 @@ export default async function PersonDetailPage({
               })),
             ]}
           />
-          <span className="tichy pole-napoveda">
+          <span className="quiet field-hint">
             {treeRows.length === 0 ? (
               <>
                 {t.noDepartmentsBefore}
@@ -141,35 +141,35 @@ export default async function PersonDetailPage({
         </div>
 
         {o.department && !o.departmentId ? (
-          <p className="tichy" style={{ fontSize: 13, margin: "-6px 0 0" }}>
+          <p className="quiet" style={{ fontSize: 13, margin: "-6px 0 0" }}>
             {t.legacyDepartmentBefore}<strong>{o.department}</strong>{t.legacyDepartmentAfter}
           </p>
         ) : null}
 
-        <div className="pole">
-          <span className="pole-popis">{t.personType}</span>
+        <div className="field">
+          <span className="field-label">{t.personType}</span>
           <Select
             name="personType"
             options={Object.entries(d.types).map(([value, label]) => ({ value, label }))}
             initial={o.personType}
             fieldLabel={t.personType}
           />
-          <span className="tichy pole-napoveda">{t.personTypeNote}</span>
+          <span className="quiet field-hint">{t.personTypeNote}</span>
         </div>
 
-        <div className="pole">
-          <span className="pole-popis">{t.language}</span>
+        <div className="field">
+          <span className="field-label">{t.language}</span>
           <Select
             name="language"
             options={UI_LANGUAGES.map(l => ({ value: l, label: d.languages[l] ?? l }))}
             initial={o.language}
             fieldLabel={t.language}
           />
-          <span className="tichy pole-napoveda">{t.languageNote}</span>
+          <span className="quiet field-hint">{t.languageNote}</span>
         </div>
 
-        <div className="pole">
-          <span className="pole-popis">{t.groups}</span>
+        <div className="field">
+          <span className="field-label">{t.groups}</span>
           <TagSelect
             name="groups"
             options={audiences.groups}
@@ -177,11 +177,11 @@ export default async function PersonDetailPage({
             newLabel={t.newGroup}
             language={language}
           />
-          <span className="tichy pole-napoveda">{t.groupsNote}</span>
+          <span className="quiet field-hint">{t.groupsNote}</span>
         </div>
 
-        <div className="pole">
-          <span className="pole-popis">{t.tracks}</span>
+        <div className="field">
+          <span className="field-label">{t.tracks}</span>
           <TagSelect
             name="tracks"
             options={audiences.tracks}
@@ -191,29 +191,29 @@ export default async function PersonDetailPage({
           />
         </div>
 
-        <fieldset className="hr-skupina" style={{ border: "1px solid var(--line)" }}>
-          <legend className="pole-popis">{t.roles}</legend>
-          <ul className="hr-volby">
+        <fieldset className="hr-group" style={{ border: "1px solid var(--line)" }}>
+          <legend className="field-label">{t.roles}</legend>
+          <ul className="hr-choices">
             {ASSIGNABLE_ROLES.map(r => (
               <li key={r}>
-                <label className="hr-volba">
+                <label className="hr-choice">
                   <input type="checkbox" name="roles" value={r} defaultChecked={o.roles.includes(r)} />
                   <span>{d.roles[r] ?? r}</span>
                 </label>
               </li>
             ))}
           </ul>
-          <p className="tichy pole-napoveda" style={{ margin: "6px 0 0" }}>
+          <p className="quiet field-hint" style={{ margin: "6px 0 0" }}>
             {t.rolesNote}
           </p>
         </fieldset>
 
         <div>
-          <button className="tlacidlo" type="submit">{t.save}</button>
+          <button className="button" type="submit">{t.save}</button>
         </div>
       </form>
 
-      <form action={togglePersonStatusAction} className="karta" style={{ padding: 20, marginTop: 16, display: "grid", gap: 12 }}>
+      <form action={togglePersonStatusAction} className="card" style={{ padding: 20, marginTop: 16, display: "grid", gap: 12 }}>
         <input type="hidden" name="id" value={o.id} />
         <input type="hidden" name="email" value={o.email} />
         <input type="hidden" name="status" value={excluded ? "invited" : "inactive"} />
@@ -222,20 +222,20 @@ export default async function PersonDetailPage({
 
         {excluded ? (
           <>
-            <p className="tichy" style={{ margin: 0, fontSize: 14 }}>
+            <p className="quiet" style={{ margin: 0, fontSize: 14 }}>
               {t.returnNoteBefore}<strong>{t.returnNoteHighlight}</strong>{t.returnNoteAfter}
             </p>
-            <div><button className="tlacidlo" type="submit">{t.returnSubmit}</button></div>
+            <div><button className="button" type="submit">{t.returnSubmit}</button></div>
           </>
         ) : (
           <>
-            <p className="tichy" style={{ margin: 0, fontSize: 14 }}>{t.excludeNote}</p>
-            <label className="pole">
-              <span className="pole-popis">{t.confirmLabel}</span>
-              <input className="pole-vstup" name="confirmation" autoCapitalize="none" autoCorrect="off" />
-              <span className="tichy pole-napoveda">{t.confirmNote}</span>
+            <p className="quiet" style={{ margin: 0, fontSize: 14 }}>{t.excludeNote}</p>
+            <label className="field">
+              <span className="field-label">{t.confirmLabel}</span>
+              <input className="field-input" name="confirmation" autoCapitalize="none" autoCorrect="off" />
+              <span className="quiet field-hint">{t.confirmNote}</span>
             </label>
-            <div><button className="tlacidlo tlacidlo--tiche" type="submit">{t.excludeSubmit}</button></div>
+            <div><button className="button button--quiet" type="submit">{t.excludeSubmit}</button></div>
           </>
         )}
       </form>

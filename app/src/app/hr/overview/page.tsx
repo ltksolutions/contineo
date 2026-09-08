@@ -88,7 +88,7 @@ export default async function HrReportPage({
     <AppShell language={ctx.person.language}>
     <div style={{ maxWidth: 900, ...tenantStyle(branding) }}>
       <p style={{ margin: "0 0 16px" }}>
-        <Link className="tichy" href="/hr" style={{ fontSize: 14 }}>
+        <Link className="quiet" href="/hr" style={{ fontSize: 14 }}>
           {dictionary(language).hr.detail.back}
         </Link>
       </p>
@@ -96,10 +96,10 @@ export default async function HrReportPage({
       <div style={{ display: "flex", gap: 12, alignItems: "baseline", flexWrap: "wrap", margin: "0 0 6px" }}>
         <h1 style={{ fontSize: 26, letterSpacing: "-0.02em", margin: 0, flex: "1 1 auto" }}>{t.heading}</h1>
         {rows.length > 0 && (
-          <a className="tlacidlo tlacidlo--tiche" href={`/hr/overview/csv?view=${view}`}>{t.export}</a>
+          <a className="button button--quiet" href={`/hr/overview/csv?view=${view}`}>{t.export}</a>
         )}
       </div>
-      <p className="tichy" style={{ fontSize: 15, margin: "0 0 20px", maxWidth: 660 }}>{t.intro}</p>
+      <p className="quiet" style={{ fontSize: 15, margin: "0 0 20px", maxWidth: 660 }}>{t.intro}</p>
 
       {/* Pohľady. Odkazy, nie tlačidlá — musia sa dať poslať aj otvoriť na novej karte. */}
       <nav style={{ display: "flex", gap: 8, flexWrap: "wrap", margin: "0 0 24px" }}>
@@ -107,28 +107,28 @@ export default async function HrReportPage({
           <Link
             key={v}
             href={link({ view: v, open: null })}
-            className={v === view ? "tlacidlo" : "tlacidlo tlacidlo--tiche"}
+            className={v === view ? "button" : "button button--quiet"}
           >
             {t.views[v]}
           </Link>
         ))}
       </nav>
 
-      {summaries.length === 0 && <p className="karta" style={{ padding: 20 }}>{t.empty}</p>}
+      {summaries.length === 0 && <p className="card" style={{ padding: 20 }}>{t.empty}</p>}
 
       <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "grid", gap: 12 }}>
         {summaries.map(s => {
           const missing = s.total - s.done
           const isOpen = opened === s.key
           return (
-            <li key={s.key} className="karta" style={{ padding: "16px 18px" }}>
+            <li key={s.key} className="card" style={{ padding: "16px 18px" }}>
               <div style={{ display: "flex", gap: 12, alignItems: "baseline", flexWrap: "wrap" }}>
                 <strong style={{ fontSize: 16, flex: "1 1 260px" }}>{s.label}</strong>
-                <span className="tichy" style={{ fontSize: 14, fontVariantNumeric: "tabular-nums" }}>
+                <span className="quiet" style={{ fontSize: 14, fontVariantNumeric: "tabular-nums" }}>
                   {t.done(s.done, s.total)}
                 </span>
                 <span
-                  className="stitok"
+                  className="tag"
                   style={missing === 0
                     ? { background: "var(--ok-bg)", color: "var(--ok-fg)" }
                     : { background: "var(--warn-bg)", color: "var(--warn-fg)" }}
@@ -137,13 +137,13 @@ export default async function HrReportPage({
                 </span>
               </div>
 
-              <p className="tichy" style={{ fontSize: 13.5, margin: "6px 0 0" }}>
+              <p className="quiet" style={{ fontSize: 13.5, margin: "6px 0 0" }}>
                 {s.detail && <>{s.detail} · </>}
                 {t.medianReading}: {readingLabel(s.medianSeconds, language)}
               </p>
 
               <p style={{ margin: "12px 0 0" }}>
-                <Link className="tlacidlo tlacidlo--tiche" href={link({ open: isOpen ? null : s.key })}>
+                <Link className="button button--quiet" href={link({ open: isOpen ? null : s.key })}>
                   {t.open}
                 </Link>
               </p>
@@ -161,12 +161,12 @@ export default async function HrReportPage({
                       <span style={{ flex: "1 1 200px" }}>
                         {view === "person" ? d.documentTitle : d.fullName}
                       </span>
-                      <span className="tichy" style={{ fontSize: 13 }}>
+                      <span className="quiet" style={{ fontSize: 13 }}>
                         {d.acknowledgedAt
                           ? `${t.acknowledgedAt} ${formatDate(d.acknowledgedAt, language)}`
                           : t.notAcknowledged}
                       </span>
-                      <span className="tichy" style={{ fontSize: 13, fontVariantNumeric: "tabular-nums" }}>
+                      <span className="quiet" style={{ fontSize: 13, fontVariantNumeric: "tabular-nums" }}>
                         {t.readingTime} {readingLabel(d.readingSeconds, language)}
                       </span>
                     </li>
@@ -179,7 +179,7 @@ export default async function HrReportPage({
       </ul>
 
       {rows.length > 0 && (
-        <p className="tichy" style={{ fontSize: 13, margin: "28px 0 0", maxWidth: 620 }}>
+        <p className="quiet" style={{ fontSize: 13, margin: "28px 0 0", maxWidth: 620 }}>
           {t.readingNote}
         </p>
       )}

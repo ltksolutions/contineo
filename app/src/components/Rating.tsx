@@ -122,7 +122,7 @@ export default function Rating({
 
   return (
     <div
-      className="karta"
+      className="card"
       style={{ borderColor: "var(--teal-100)", background: "var(--surface-2)" }}
     >
       <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14, flexWrap: "wrap" }}>
@@ -131,10 +131,10 @@ export default function Rating({
           {t.heading}
         </h3>
         {questionId && (
-          <span className="stitok tichy" style={{ fontSize: 11 }}>{questionId}</span>
+          <span className="tag quiet" style={{ fontSize: 11 }}>{questionId}</span>
         )}
         <span
-          className="tichy"
+          className="quiet"
           style={{ fontSize: 12, marginLeft: "auto", minWidth: 90, textAlign: "right" }}
           aria-live="polite"
         >
@@ -170,7 +170,7 @@ export default function Rating({
         <button
           type="button"
           onClick={() => setDetail(d => !d)}
-          className="tichy"
+          className="quiet"
           style={{
             background: "none", border: "none", padding: 0,
             fontSize: 13.5, textAlign: "left", textDecoration: "underline",
@@ -183,7 +183,7 @@ export default function Rating({
         {detail && (
           <div style={{ display: "grid", gap: 12 }}>
             <label style={{ display: "grid", gap: 6 }}>
-              <span className="tichy" style={{ fontSize: 13 }}>{t.expectedAnswer}</span>
+              <span className="quiet" style={{ fontSize: 13 }}>{t.expectedAnswer}</span>
               <textarea
                 value={fields.verifiedAnswer}
                 onChange={e => setFields(p => ({ ...p, verifiedAnswer: e.target.value }))}
@@ -195,7 +195,7 @@ export default function Rating({
             </label>
 
             <label style={{ display: "grid", gap: 6 }}>
-              <span className="tichy" style={{ fontSize: 13 }}>{t.sources}</span>
+              <span className="quiet" style={{ fontSize: 13 }}>{t.sources}</span>
               <input
                 value={fields.correctSources}
                 onChange={e => setFields(p => ({ ...p, correctSources: e.target.value }))}
@@ -206,7 +206,7 @@ export default function Rating({
             </label>
 
             <label style={{ display: "grid", gap: 6 }}>
-              <span className="tichy" style={{ fontSize: 13 }}>{t.note}</span>
+              <span className="quiet" style={{ fontSize: 13 }}>{t.note}</span>
               <textarea
                 value={fields.note}
                 onChange={e => setFields(p => ({ ...p, note: e.target.value }))}
