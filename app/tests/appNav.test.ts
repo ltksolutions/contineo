@@ -8,7 +8,7 @@
 
 import { describe, it, expect } from "vitest"
 import { navItems, normalizeLayout, isActive } from "../src/lib/appNav"
-import { isShellRoute, SHELL_ROUTES } from "../src/lib/shellRoutes"
+import { isShellRoute, SHELL_ROUTES, SHELL_SECTIONS } from "../src/lib/shellRoutes"
 
 describe("položky navigácie", () => {
   it("bez rolí zostane to, čo vidí každý prihlásený", () => {
@@ -63,7 +63,7 @@ describe("aktívna položka", () => {
 })
 
 describe("hranica shellu", () => {
-  it("zhoda je presná, nie na prefix", () => {
+  it("pri nepresunutej sekcii je zhoda presná, nie na prefix", () => {
     // `/library/new` v shelli zatiaľ nie je. Keby ho `Header` považoval za
     // shell route, skryl by mu menu a nedal by mu namiesto neho nič.
     expect(isShellRoute("/library")).toBe(true)
@@ -71,7 +71,25 @@ describe("hranica shellu", () => {
     expect(isShellRoute("/")).toBe(false)
   })
 
-  it("každá cesta v zozname je absolútna", () => {
-    for (const route of SHELL_ROUTES) expect(route.startsWith("/")).toBe(true)
+  it("presunutá sekcia platí aj pre podstránky", () => {
+    // `/documents` je presunuté celé. Detail dokumentu bez prefixu by
+    // zostal bez akejkoľvek navigácie — menu skryté, shell nedostal.
+    expect(isShellRoute("/documents")).toBe(true)
+    expect(isShellRoute("/documents/sfz:stanovy")).toBe(true)
+  })
+
+  it("hranicou sekcie je lomka, nie začiatok reťazca", () => {
+    // Inak by `/documentsomething` prešlo ako podstránka `/documents`.
+    expect(isShellRoute("/documentsomething")).toBe(false)
+    expect(isShellRoute("/documents-archiv")).toBe(false)
+  })
+
+  it("každá cesta v oboch zoznamoch je absolútna a bez koncovej lomky", () => {
+    // Koncová lomka by v prefixe znamenala `//` a sekcia by neplatila
+    // nikdy — chyba, ktorú by nikto nehľadal v tomto súbore.
+    for (const route of [...SHELL_ROUTES, ...SHELL_SECTIONS]) {
+      expect(route.startsWith("/")).toBe(true)
+      expect(route.endsWith("/")).toBe(false)
+    }
   })
 })

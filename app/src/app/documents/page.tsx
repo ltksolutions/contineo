@@ -12,11 +12,23 @@ import { onboardingContext } from "@/lib/session"
 import { brandingView } from "@/lib/tenants"
 import { tenantStyle } from "@/components/TenantHeader"
 import { trackProgress } from "@/lib/tracks"
+import AppShell from "@/components/AppShell"
+import { normalizeLayout } from "@/lib/appNav"
+import type { RawQuery } from "@/lib/urlParams"
+import { normalizeQuery } from "@/lib/urlParams"
 import { dictionary, formatDate } from "@/lib/i18n"
 
 export const dynamic = "force-dynamic"
 
-export default async function DocumentsPage() {
+export default async function DocumentsPage({
+  searchParams,
+}: {
+  // Variant navigácie je zatiaľ len z adresy (`?layout=sidebar`), rovnako
+  // ako v knižnici. Uložiť ho na osobu je zmena schémy a samostatné
+  // rozhodnutie.
+  searchParams: Promise<RawQuery>
+}) {
+  const q = normalizeQuery<{ layout?: string }>(await searchParams)
   const ctx = await onboardingContext()
 
   // Neznámy hostiteľ sa správa ako zakázaný (D29) — a to `notFound()`, nie
@@ -30,6 +42,9 @@ export default async function DocumentsPage() {
     // ktorý prešiel núdzovou brzdou `ALLOWED_EMAILS`, alebo človek inej
     // organizácie na cudzej doméne. Poslať ho späť na prihlásenie by vyzeralo
     // ako pokazená stránka: je predsa prihlásený.
+    // Zámerne **bez shellu**: kto nie je medzi osobami tenanta, nemá kam
+    // navigovať — navigácia by mu ponúkla sekcie, do ktorých ho stránky
+    // nepustia.
     return (
       <div className="obal" style={{ padding: "36px 20px 80px", maxWidth: 760 }}>
         <h1 style={{ fontSize: 27, letterSpacing: "-0.02em", margin: "0 0 8px" }}>
@@ -54,7 +69,10 @@ export default async function DocumentsPage() {
   const total = tracks.reduce((a, tr) => a + tr.totalCount, 0)
 
   return (
-    <div className="obal" style={{ padding: "36px 20px 80px", maxWidth: 760, ...tenantStyle(branding) }}>
+    <AppShell layout={normalizeLayout(q.layout)} language={person.language}>
+    {/* Šírka 760 px zostáva: je to text na čítanie, nie tabuľka. Shell dáva
+        odsadenie a navigáciu, obmedzenie riadka je vec obsahu. */}
+    <div style={{ maxWidth: 760, ...tenantStyle(branding) }}>
       <h1 style={{ fontSize: 27, letterSpacing: "-0.02em", margin: "0 0 8px" }}>
         {t.listHeading}
       </h1>
@@ -150,5 +168,6 @@ export default async function DocumentsPage() {
         </section>
       ))}
     </div>
+    </AppShell>
   )
 }

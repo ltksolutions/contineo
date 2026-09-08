@@ -91,7 +91,13 @@
 - [ ] **Overiť IP v zázname z produkcie** — v serverovej akcii nie je `Request`, hlavičky idú cez `headers()`. Na Verceli by `x-forwarded-for` mala prísť, ale náhľady sú za SSO, takže sa to dá potvrdiť len na ostro: potvrdiť jeden dokument a pozrieť `acknowledgements.ip` v Atlase. Prázdna IP nie je chyba zápisu, ale oslabenie dôkaznej hodnoty — a nikto si to nevšimne sám
 - [ ] **Prihlásenie bez JavaScriptu** — odkaz na e-mail sa odosiela cez `fetch` a konto cez `signIn()` z next-auth; bez skriptu sa človek nedostane dnu vôbec. Dnes to hláška povie. Serverová cesta znamená vlastný `<form action>` pre e-mailový odkaz a `<form method="post">` na `/api/auth/signin/<provider>` s CSRF tokenom — treba overiť, či to next-auth v tejto verzii podporuje
 - [ ] **Zásuvka filtrov ako v návrhu** (panel schovaný za tlačidlom, nie kotva) — `<details>` sa na širokej obrazovke nedá spoľahlivo držať otvorené cez CSS (`::details-content` je čerstvé) a druhá kópia panelu v DOM je horšia než kotva. Má zmysel až s klientskym stavom, teda spolu s rozhodnutím, že knižnica smie vyžadovať JavaScript
-- [ ] Presunúť do shellu zvyšné stránky (`/documents`, `/hr`, `/people`, `/golden-set`, `/admin`), každú vlastným PR; potom zmizne menu v hlavičke
+- [ ] Presunúť do shellu zvyšné stránky, každú vlastným PR; potom zmizne menu v hlavičke
+  - [x] `/documents` ✅ 2026-09-08 — presunuté celé vrátane detailu; `SHELL_SECTIONS` (prefix) popri `SHELL_ROUTES` (presná zhoda)
+  - [ ] `/hr` (vrátane `/hr/assign`, `/hr/overview`, `/hr/reminders`, `/hr/[id]`)
+  - [ ] `/people` (vrátane `/people/new`, `/people/import`, `/people/invite`, `/people/[id]`)
+  - [ ] `/golden-set` (vrátane `/golden-set/[id]`)
+  - [ ] `/library` podstránky (`/library/new`, `/library/[id]`, `/library/tracks`) — presunúť sekciu celú a preklopiť ju zo `SHELL_ROUTES` do `SHELL_SECTIONS`
+  - [ ] `/admin` a `/organisation` — rozhodnúť, či vôbec: sú to správcovské obrazovky otvárané raz za mesiac a v dennej navigácii by len zaberali miesto (odkazy na ne sú pod avatarom)
 - [ ] Uložiť variant navigácie a hustotu na osobu alebo organizáciu — **zmena schémy**, zatiaľ len `?layout=` v adrese
 - [ ] Premenovať 125 slovenských CSS tried na anglické (a `je-*` → `is-*`) — samostatný PR
 - [ ] Obaliť `platformContext()` / `hrContext()` / `peopleContext()` / `libraryContext()` do `cache()` z Reactu — `layout.tsx` aj `AppShell` ich volajú v tej istej požiadavke
