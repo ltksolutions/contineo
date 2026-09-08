@@ -85,7 +85,7 @@
 - [x] **5a. Detail dokumentu — pravý panel** — potvrdenia platného znenia (percento z pridelených osôb), prehľad metadát, chips v hlavičke. Editora sa to nedotklo
 - [x] **5b. Nahrávanie** (`/library/new`) — číslované sekcie (nie stepper, schvaľovací krok neexistuje), zóna na pretiahnutie bez JavaScriptu, mriežka metadát
 - [x] **5c. „Opýtať sa"** (`/`) — hero karta okolo poľa na otázku, hlavička karty odpovede („Odpoveď z vašich dokumentov"), zdroje ako karty s odkazom na originál. `Answer.tsx` a `Rating.tsx` znovupoužité, streamovania sa to nedotklo. Rozsah hľadania a skóre zhody vynechané — viď nižšie
-- [ ] **6. Nastavenia** — živý náhľad farby v `ColorSelect.tsx`, slot na logo na `saveBrand()`
+- [x] **6. Nastavenia organizácie** — živý náhľad farby (prepíše premenné v celom rozhraní, nie len v ukážke), ukážka na tlačidle, chipe a odkaze, prstenec vybranej dlaždice vo vlastnej farbe, slot na logo 96×96 a **odstránenie loga** (`deleteBrand()` mal dovtedy len zapisovateľa, nie volajúceho)
 - [ ] **7. Dotiahnutie** — tmavá téma, `:focus-visible` všade, mobilná zásuvka filtrov, `<noscript>` cesty
 - [ ] Presunúť do shellu zvyšné stránky (`/documents`, `/hr`, `/people`, `/golden-set`, `/admin`), každú vlastným PR; potom zmizne menu v hlavičke
 - [ ] Uložiť variant navigácie a hustotu na osobu alebo organizáciu — **zmena schémy**, zatiaľ len `?layout=` v adrese

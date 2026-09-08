@@ -13,7 +13,8 @@
  * to vedomý krok, nie prvé, na čo človek natrafí.
  */
 
-import { useState } from "react"
+import { useEffect, useRef, useState } from "react"
+import { accentVars, ACCENT_VARS } from "./TenantHeader"
 import { dictionary, type UiLanguage } from "@/lib/i18n"
 
 /**
@@ -40,9 +41,57 @@ export default function ColorSelect({
   const [custom, setCustom] = useState(
     Boolean(color) && !PALETTE.some(p => p.toLowerCase() === color.toLowerCase()),
   )
+  const box = useRef<HTMLDivElement>(null)
+
+  /*
+   * Živý náhľad: farba sa prepíše v celom rozhraní, nie len v ukážke nižšie.
+   * Voľba farby organizácie je jediné nastavenie, ktorého dôsledok nie je
+   * z hodnoty vidieť — `#0e7490` nikomu nepovie, ako bude vyzerať hlavička,
+   * tlačidlo a odkaz naraz.
+   *
+   * Kam sa premenné nastavujú: na `<html>` a na **každý predok, ktorý má
+   * vlastné inline premenné** — tam ich dáva `tenantStyle()` (`layout.tsx`
+   * na `<body>`, obrazovky na svoj obal). Nastaviť len `:root` nestačí:
+   * inline štýl na obale má vyššiu prioritu, takže náhľad by sa neprejavil
+   * práve v tom obale, v ktorom tento formulár býva.
+   */
+  useEffect(() => {
+    const node = box.current
+    if (!node) return
+
+    const targets = new Set<HTMLElement>([document.documentElement])
+    for (let el = node.parentElement; el; el = el.parentElement) {
+      if (el.style.getPropertyValue("--accent")) targets.add(el)
+    }
+
+    const list = [...targets]
+    const before = list.map(el =>
+      ACCENT_VARS.map(v => [v, el.style.getPropertyValue(v)] as const),
+    )
+
+    const next = accentVars(color)
+    for (const el of list) {
+      for (const v of ACCENT_VARS) {
+        const value = next[v]
+        if (value) el.style.setProperty(v, value)
+        else el.style.removeProperty(v)
+      }
+    }
+
+    // Neuložená voľba nesmie prežiť odchod z obrazovky — inak by človek
+    // videl farbu, ktorú v databáze nikto nemá, a hádal by, či je uložená.
+    return () => {
+      list.forEach((el, i) => {
+        for (const [v, previous] of before[i]) {
+          if (previous) el.style.setProperty(v, previous)
+          else el.style.removeProperty(v)
+        }
+      })
+    }
+  }, [color])
 
   return (
-    <div className="farby">
+    <div className="farby" ref={box}>
       <input type="hidden" name={name} value={color} />
 
       <div className="farby-zoznam">
@@ -54,7 +103,7 @@ export default function ColorSelect({
               key={p}
               type="button"
               className={`farba${isHex ? " je-zvolena" : ""}`}
-              style={{ background: p }}
+              style={{ background: p, ["--tile" as string]: p }}
               aria-pressed={isHex}
               aria-label={label}
               title={label}
@@ -86,6 +135,23 @@ export default function ColorSelect({
           autoCorrect="off"
         />
       )}
+
+      {/*
+        * Ukážka na troch prvkoch, na ktorých farba naozaj je: primárne
+        * tlačidlo (pozadie + biely text), chip filtra (`--accent-soft`)
+        * a odkaz (`--accent` ako text). Premenné dostáva vlastným štýlom,
+        * takže ukazuje správne aj vtedy, keď živý náhľad vyššie nezaberie.
+        */}
+      <div className="brand-preview" style={accentVars(color)}>
+        <span className="tichy brand-preview-label">{t.previewLabel}</span>
+        <div className="brand-preview-row">
+          <span className="tlacidlo brand-preview-button">{t.previewButton}</span>
+          <span className="library-chip">
+            <span className="library-chip-key">{t.previewChipKey}</span>{t.previewChip}
+          </span>
+          <span className="brand-preview-link">{t.previewLink}</span>
+        </div>
+      </div>
 
       <noscript>
         <input className="pole-vstup" name={name} defaultValue={value ?? ""} placeholder="#1f4ed8" />

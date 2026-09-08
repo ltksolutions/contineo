@@ -21,7 +21,7 @@ import type { UiLanguage } from "@/lib/i18n"
 import Select from "@/components/Select"
 import ColorSelect from "@/components/ColorSelect"
 import Notice from "@/components/Notice"
-import { saveBrandingAction, saveSignInAction, deleteSignInAction, requestDomainAction, verifyDomainAction, cancelDomainAction } from "./actions"
+import { saveBrandingAction, deleteLogoAction, saveSignInAction, deleteSignInAction, requestDomainAction, verifyDomainAction, cancelDomainAction } from "./actions"
 import { createDepartmentAction, renameDepartmentAction, moveDepartmentAction, deleteDepartmentAction } from "./actions"
 import { addCodelistItemAction, removeCodelistItemAction, saveChunkingProfileAction, reindexAllAction } from "./actions"
 import { shiftDepartmentAction, saveDepartmentOrderAction } from "./actions"
@@ -254,15 +254,26 @@ export default async function OrganisationPage({
 
         <div className="pole">
           <span className="pole-popis">{t.branding.logo}</span>
-          {tenant.branding.logoUrl && (
-            <span className="logo-nahlad">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={tenant.branding.logoUrl} alt="" width={34} height={34} />
-              <span className="tichy pole-napoveda">{t.branding.logoCurrent}</span>
-            </span>
-          )}
-          <input className="pole-vstup" type="file" name="logo" accept="image/png,image/jpeg,image/webp" />
-          <span className="tichy pole-napoveda">{t.branding.logoNote}</span>
+          {/* Slot je veľký 96 px, hoci v hlavičke má logo 26 — na 26 px sa
+              nedá posúdiť, či je obrázok orezaný alebo rozmazaný, a práve to
+              je jediné, čo sa tu dá skontrolovať pred uložením. */}
+          <div className="logo-row">
+            <div className="logo-slot">
+              {tenant.branding.logoUrl ? (
+                // `alt` nie je prázdny, na rozdiel od hlavičky: tam je logo
+                // ozdoba vedľa názvu, tu je to jediný spôsob, ako zistiť,
+                // aké logo je uložené — teda obsah, nie ozdoba.
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={tenant.branding.logoUrl} alt={t.branding.logoCurrent} />
+              ) : (
+                <span className="logo-slot-empty">{t.branding.logoEmpty}</span>
+              )}
+            </div>
+            <div className="logo-row-fields">
+              <input className="pole-vstup" type="file" name="logo" accept="image/png,image/jpeg,image/webp" />
+              <span className="tichy pole-napoveda">{t.branding.logoNote}</span>
+            </div>
+          </div>
         </div>
 
         <div className="pole">
@@ -318,6 +329,21 @@ export default async function OrganisationPage({
         </label>
 
         <div><button className="tlacidlo" type="submit">{t.branding.save}</button></div>
+      </form>
+      )}
+
+      {/* Vlastný formulár, nie tlačidlo v tom hornom: formuláre sa vnárať
+          nedajú a odstránenie loga navyše nemá ísť cez „Uložiť" — je to iná
+          akcia s iným následkom. */}
+      {now === "branding" && tenant.branding.logoUrl && (
+      <form action={deleteLogoAction} className="karta logo-remove" style={{ padding: 20, marginTop: 16 }}>
+        <input type="hidden" name="tab" value="branding" />
+        <p className="tichy" style={{ margin: 0, fontSize: 14, lineHeight: 1.6 }}>{t.branding.logoRemoveNote}</p>
+        <div>
+          <button className="tlacidlo tlacidlo--tiche" type="submit" style={{ color: "var(--bad-fg)" }}>
+            {t.branding.logoRemove}
+          </button>
+        </div>
       </form>
       )}
 
