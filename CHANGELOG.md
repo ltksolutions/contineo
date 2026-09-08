@@ -4,6 +4,22 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Fixed (2026-09-08 — potvrdenie dokumentu funguje aj bez JavaScriptu)
+
+Potvrdenie sa posielalo skriptom (`fetch` na `/api/acknowledgements`), takže bez JavaScriptu tlačidlo mlčalo. Pri **právne záväznom úkone** je to priveľa: prehliadač bez skriptu, firemná politika alebo výpadok pri načítaní balíka znamenali, že záväzok sa nedá splniť — a človek nevidel dôvod, len tlačidlo, ktoré nič nerobí.
+
+- **Je to formulár nad serverovou akciou** (`documents/[documentId]/actions.ts`), ktorá volá **tú istú `acknowledge()`** ako API. Žiadne pravidlo okolo dôkazného záznamu sa nepíše druhýkrát: verziu, znenie, jazyk aj odtlačok oddelenia určuje server (D24, D28) a dokument sa načítava pre osobu (D32).
+- **Nie formulár mierený na `/api/acknowledgements`** — a to je jadro veci, nie detail. To API chráni pred cudzou stránkou len to, že klient posiela `Content-Type: application/json`: taký `fetch` z iného pôvodu si vyžiada predletovú kontrolu a prehliadač ho zastaví. Obyčajný `<form method="post">` ale cudzí web odoslať **vie** a typ obsahu mu určí prehliadač. Pripojiť formulár priamo na to API by teda znamenalo vyrobiť CSRF na potvrdzovaní noriem: cudzia stránka by dokázala potvrdiť normu za prihláseného človeka. Serverová akcia si pôvod overuje sama.
+- **Tlačidlo zostalo klientske kvôli jednej veci** — `useFormStatus()` dá stav odosielania, takže počas zápisu povie „Potvrdzujem…". Bez toho človek klikne druhýkrát; druhý klik síce nič nepokazí (unikátny index, D24), ale ticho po prvom vyzerá ako pokazená stránka. `useFormStatus()` musí byť **vnútri** formulára, preto má vlastný podkomponent — v rodičovi by vracal stav nadradeného formulára, teda vždy `false`.
+- **Zmizol `fetch`, `router.refresh()` aj lokálny stav „hotovo".** Stav sa neukladá, odvodzuje sa (D27): po presmerovaní vráti `hasAcknowledged()` už `true` a namiesto tlačidla je štítok. Menej kódu a jedna pravda namiesto dvoch.
+- **Výsledok sa nesie v adrese** (`?msg=`) a zobrazuje ho `Notice` — rovnako pre človeka so skriptom aj bez neho. Dve cesty k tej istej hláške by sa raz rozišli. Vety zostali tie isté, aké používalo tlačidlo (`onboarding.error`), vrátane „Toto znenie už máte potvrdené" na 409.
+- **`clientIp()` je teraz v `lib/requestMeta.ts`** a čítajú ju obe cesty. Dve rôzne čítania tej istej hlavičky by znamenali dva tvary IP v jednej kolekcii a pri audite by sa nedalo povedať, ktorý je správny. Pribudlo 6 testov — vrátane toho, že pokazená hlavička `", 10.0.0.1"` vráti `null` a nie adresu proxy: zapísať adresu Vercelu ako adresu človeka je horšie než nezapísať nič.
+- **`/api/acknowledgements` zostáva** pre programový prístup; v hlavičke súboru je napísané, že obrazovka ho už nevolá.
+- Hláška „Potvrdenie potrebuje JavaScript" z kroku 7 aj s jej tromi i18n kľúčmi je odstránená — prestala byť pravdivá.
+- **Otvorené:** IP z `headers()` v serverovej akcii sa dá potvrdiť len v produkcii (náhľady sú za SSO). Zapísané v `docs/TODO.md`.
+- Overené: `tsc --noEmit` čisto, `eslint` bez chýb, **979 testov** (6 nových), produkčný build prejde.
+
+
 ### Fixed (2026-09-08 — dotiahnutie: fokus, tmavá téma, cesty bez JavaScriptu)
 
 Krok 7 handoffu. Tým je dizajnový balík prejdený celý.

@@ -3,80 +3,52 @@
 /**
  * Potvrdzovacie tlačidlo.
  *
- * Klientský komponent, lebo potrebuje stav odosielania — človek musí vidieť,
- * že sa niečo deje, inak klikne druhýkrát. Druhý klik síce nič nepokazí
- * (unikátny index, D24), ale ticho po prvom kliku vyzerá ako pokazená stránka.
+ * **Je to formulár, nie `fetch`.** Predtým posielalo `POST` na
+ * `/api/acknowledgements` skriptom — bez JavaScriptu teda tlačidlo mlčalo
+ * a človek nemal ako potvrdiť, že sa s normou oboznámil. Pri právne záväznom
+ * úkone (dôkazný záznam D24) je to priveľa: prehliadač bez skriptu, firemná
+ * politika, výpadok pri načítaní balíka — a záväzok sa nedá splniť.
  *
- * Do požiadavky ide **len `documentId`**. Verziu aj znenie určuje server.
+ * Klientský komponent zostáva kvôli jedinej veci: `useFormStatus()` dá stav
+ * odosielania, takže tlačidlo počas zápisu povie „Potvrdzujem…". Bez toho
+ * človek klikne druhýkrát. Druhý klik síce nič nepokazí (unikátny index,
+ * D24), ale ticho po prvom vyzerá ako pokazená stránka. Bez skriptu ten stav
+ * nie je — a to je v poriadku: formulár odošle prehliadač sám a odpovie
+ * presmerovanie s hlásením.
+ *
+ * Do akcie ide **len `documentId`**. Verziu aj znenie určuje server.
  */
 
-import { useState } from "react"
-import { useRouter } from "next/navigation"
+import { useFormStatus } from "react-dom"
 
-type Status = "ready" | "sending" | "done" | "error"
+function Submit({ label, pending }: { label: string; pending: string }) {
+  // `useFormStatus()` musí byť vnútri formulára, preto vlastný komponent —
+  // v rodičovi by vracal stav nadradeného formulára, teda vždy `false`.
+  const status = useFormStatus()
+  return (
+    <button className="tlacidlo" type="submit" disabled={status.pending} style={{ minWidth: 180 }}>
+      {status.pending ? pending : label}
+    </button>
+  )
+}
 
 export default function AcknowledgeButton({
   documentId,
+  action,
   labels,
 }: {
   documentId: string
+  /** Serverová akcia zo stránky dokumentu. */
+  action: (fd: FormData) => Promise<void>
   labels: {
     button: string
     pending: string
-    confirmed: string
-    error: Record<string, string>
   }
 }) {
-  const [status, setStatus] = useState<Status>("ready")
-  const [reason, setReason] = useState<string>("")
-  const router = useRouter()
-
-  async function submit() {
-    setStatus("sending")
-    try {
-      const r = await fetch("/api/acknowledgements", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ documentId }),
-      })
-      const data = await r.json().catch(() => ({}))
-      if (r.ok && data.ok) {
-        setStatus("done")
-        // Zoznam aj hlavička sa musia obnoviť zo servera — stav sa nikde
-        // neukladá, odvodzuje sa (D27), takže ho nemá zmysel dopočítavať tu.
-        router.refresh()
-        return
-      }
-      setReason(String(data.reason ?? "write-failed"))
-      setStatus("error")
-    } catch {
-      setReason("write-failed")
-      setStatus("error")
-    }
-  }
-
-  if (status === "done") {
-    return <p className="stitok" style={{ background: "var(--ok-bg)", color: "var(--ok-fg)" }}>
-      {labels.confirmed}
-    </p>
-  }
-
   return (
-    <div>
-      <button
-        className="tlacidlo"
-        onClick={submit}
-        disabled={status === "sending"}
-        style={{ minWidth: 180 }}
-      >
-        {status === "sending" ? labels.pending : labels.button}
-      </button>
-
-      {status === "error" && (
-        <p style={{ color: "var(--bad-fg)", fontSize: 14, marginTop: 12 }}>
-          {labels.error[reason] ?? labels.error["write-failed"]}
-        </p>
-      )}
-    </div>
+    <form action={action}>
+      <input type="hidden" name="documentId" value={documentId} />
+      <Submit label={labels.button} pending={labels.pending} />
+    </form>
   )
 }

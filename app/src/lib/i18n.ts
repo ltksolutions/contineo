@@ -108,8 +108,6 @@ interface Dictionary {
     readingMinutes: (n: number) => string
     confirmHeading: string
     confirmButton: string
-    /** Potvrdenie ide cez `fetch` — bez JavaScriptu tlačidlo nič neurobí. */
-    confirmNoScript: string
     confirmPending: string
     confirmed: string
     confirmedAt: (when: string) => string
@@ -1346,7 +1344,6 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     readingMinutes: n => (n === 1 ? "1 minúta" : n >= 2 && n <= 4 ? `${n} minúty` : `${n} minút`),
     confirmHeading: "Potvrdenie oboznámenia",
     confirmButton: "Potvrdzujem",
-    confirmNoScript: "Potvrdenie potrebuje JavaScript. Zapnite ho, prosím, a stránku načítajte znova — dokument si medzitým môžete prečítať celý.",
     confirmPending: "Ukladá sa…",
     confirmed: "Potvrdené. Ďakujeme.",
     confirmedAt: (when) => `Potvrdili ste ${when}.`,
@@ -2783,7 +2780,6 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     readingMinutes: n => (n === 1 ? "1 minuta" : n >= 2 && n <= 4 ? `${n} minuty` : `${n} minut`),
     confirmHeading: "Potvrzení seznámení",
     confirmButton: "Potvrzuji",
-    confirmNoScript: "Potvrzení potřebuje JavaScript. Zapněte ho, prosím, a stránku načtěte znovu — dokument si mezitím můžete přečíst celý.",
     confirmPending: "Ukládá se…",
     confirmed: "Potvrzeno. Děkujeme.",
     confirmedAt: (when) => `Potvrdili jste ${when}.`,
@@ -4220,7 +4216,6 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     readingMinutes: n => (n === 1 ? "1 minute" : `${n} minutes`),
     confirmHeading: "Acknowledgement",
     confirmButton: "I confirm",
-    confirmNoScript: "Acknowledging needs JavaScript. Please turn it on and reload the page — you can read the whole document in the meantime.",
     confirmPending: "Saving…",
     confirmed: "Acknowledged. Thank you.",
     confirmedAt: (when) => `You acknowledged this on ${when}.`,

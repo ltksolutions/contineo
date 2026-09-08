@@ -5,6 +5,11 @@
  * server (D24, D28): keby sa verzia brala z tela požiadavky, dal by sa poslať
  * `versionId` staršieho znenia a potvrdiť niečo iné, než bolo na obrazovke.
  *
+ * **Obrazovka dokumentu toto API už nevolá** — potvrdzuje serverovou akciou
+ * (`documents/[documentId]/actions.ts`), aby to fungovalo aj bez JavaScriptu.
+ * Route zostáva pre programový prístup a obe cesty volajú tú istú
+ * `acknowledge()`, takže pravidlá okolo záznamu sú na jednom mieste.
+ *
  * IP a `User-Agent` sa ukladajú do záznamu — bez nich má potvrdenie výrazne
  * slabšiu dôkaznú hodnotu. Sú to osobné údaje a patria do záznamu o spracúvaní
  * (`docs/GDPR_DATA_PROTECTION.md`, otvorené body O15 a O16).
@@ -13,18 +18,9 @@
 import { NextResponse } from "next/server"
 import { onboardingContext } from "@/lib/session"
 import { acknowledge } from "@/lib/acknowledgements"
+import { clientIp } from "@/lib/requestMeta"
 
 export const dynamic = "force-dynamic"
-
-/**
- * Adresa klienta spoza reverznej proxy. Prvá položka `x-forwarded-for` je
- * pôvodný klient; ďalšie sú proxy, ktorými prešiel.
- */
-function clientIp(request: Request): string | null {
-  const forwarded = request.headers.get("x-forwarded-for")
-  if (forwarded) return forwarded.split(",")[0].trim()
-  return request.headers.get("x-real-ip")
-}
 
 export async function POST(request: Request) {
   // Tenant sa overuje aj tu, nielen na stránke. Zápis potvrdenia je jediné
@@ -63,7 +59,7 @@ export async function POST(request: Request) {
     },
     documentId,
     {
-      ip: clientIp(request),
+      ip: clientIp(request.headers),
       userAgent: request.headers.get("user-agent"),
       trackId: null,
     }
