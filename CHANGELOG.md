@@ -4,6 +4,19 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Added (2026-09-09 — termín potvrdenia: model a kadencia pripomienok)
+
+Prvý krok z `docs/ADR-004-termin-potvrdenia.md`. Zámerne len model a čisté funkcie — prideľovací formulár, zobrazenie a e-maily idú ďalšími PR.
+
+- **`lib/due.ts`** — termín ako hodnota, bez závislosti na databáze aj na pridelení, takže sa dá otestovať bez Monga a nevzniká kruh v importoch.
+- **Dva tvary termínu (D62).** `{ kind: "date" }` je to, čo personalista obvykle chce („všetci do konferencie"), a `{ kind: "days" }` to, čo nemá jeho dieru: kto do oddelenia príde deň pred absolútnym termínom, dostal by na normu jeden deň. Relatívny tvar sedí na D50 a pri povinnosti z trasy je jediný možný — trasa pridelenie nemá, takže absolútny dátum nemá kam zapísať.
+- **`dueForPerson()`** počíta relatívny termín od okamihu, ktorý už vracia `dateForPerson()`. Žiadne nové pravidlo „odkedy povinnosť beží" nevzniklo.
+- **Stav je odvodený, nie uložený (D63).** `none` / `open` / `soon` / `over`, pričom **deň termínu patrí do `soon`** — kto potvrdí v ten deň, termín splnil. Je to presne to miesto, kde sa dá pomýliť o jeden deň a človek by dostal e-mail „ste po termíne" v deň, keď po ňom nie je.
+- **Kadencia je eskalácia, nie opakovanie** (`reminderPlan()`): D-5 … D-0 osobe denne, potom D+1, D+3, D+7 a od týždňa raz týždenne aj personalistovi. Zadanie znelo „po termíne každý deň"; namietol som a Ján Letko eskaláciu schválil. Test to drží číslom: **za tridsať dní po termíne odíde osobe najviac sedem e-mailov**, pri dennom režime by ich bolo tridsať.
+- **Nezmyselný termín sa neuloží.** Absolútny termín pred dňom platnosti znenia je povinnosť, ktorá sa nedá splniť skôr, než vznikne (D6); nula dní je pasca, nie termín. Termín ide do auditu spolu s dôvodom — je to sľub daný človeku, nie nastavenie (D51).
+- **Bez migrácie.** Pridelenia spred ADR-004 termín nemajú a nedopočítava sa im: dopísať ho spätne by znamenalo vymyslieť dátum, ktorý nikto nedal. Bez termínu sa automaticky nepripomína a ostáva dnešná cesta cez personalistu.
+- Overené: `tsc` čisto, `eslint` bez chýb, **1021 testov** (11 nových), produkčný build prejde.
+
 ### Changed (2026-09-09 — hlavička podľa návrhu a návrh do repozitára)
 
 **Ján postavil vedľa seba návrh a produkciu a mal pravdu**: hlavička nesedela. Zo siedmich obrazoviek návrhu je jedna blízko, štyri sú čiastkové a „Prehľad" neexistuje vôbec. Príčina nebola v tom, že by kroky neboli urobené, ale v tom, ako som ich overoval — skúšobné strany som napísal sám z toho, ako som si návrh prečítal, a potom porovnával snímky **tých** strán. To nedokazuje nič o vernosti návrhu.
