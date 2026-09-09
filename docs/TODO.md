@@ -438,7 +438,8 @@
 
 **Zostáva (mimo rozsahu B)**
 
-- [ ] pripomienky podľa času („nepotvrdené po 14 dňoch") — potrebujú naplánovanú úlohu, tú zatiaľ nemáme
+- [x] **pripomienky podľa času** — naplánovanú úlohu **máme**: `app/vercel.json` má cron `/api/cron/overdue` (dnes `0 6 * * 1`, teda týždenne). Tento zápis tvrdil opak a bol zastaraný — dokumentácia je indícia, kód je pravda.
+- [ ] **Termín potvrdenia `due` na pridelení + pripomienky pred a po ňom** — rozhodnuté 2026-09-09, spísané v `docs/ADR-004-termin-potvrdenia.md`. Otvorená je jediná vec: či po termíne pripomínať **denne** (zadanie), alebo eskalovať D+1/D+3/D+7 a potom týždenne aj personalistovi (môj návrh — denný režim po termíne je presne to, čo `api/cron/overdue` v komentári varuje, že prestane fungovať). Krok 5 mení `vercel.json`, teda produkčné nastavenie.
 - [x] **Skúšobný korpus označený značkou `test`** ✅ 2026-09-07 — všetkých 10 dokumentov SFZ, `npm run tag:test -- --company SFZ --zapis`. Rozhodnutie Jána Letka: tieto znenia sú len skúšobné, ostré sa nahrajú znova a von nikdy nepôjdu.
       **Značka nič nezakazuje** — je to štítok, nie brána. Dokument so značkou `test` sa dá stále prideliť aj potvrdiť; slúži na orientáciu pri nahradzovaní. Skutočnou hranicou je tenant a doména.
       Zápis šiel cez `saveMetadata()`, nie priamo do Mongo, takže vzniklo 11 auditných záznamov. Pozor: `saveMetadata()` prepisuje **všetky** metadáta naraz — skript preto posiela aj scope, accessLevel, language a category, inak by sa stratili.
