@@ -206,6 +206,42 @@ Poradie je podľa toho, čo človek vidí najskôr.
    (`status: draft`), takže dlaždica ukazuje skutočný stav a nie prázdne
    miesto — a keď workflow raz pribudne, pridá sa dlaždica, nie sa prepíše
    význam existujúcej.
+
+   **Čo z Prehľadu dnešné dáta unesú** (overené v kóde, nie odhadnuté):
+
+   | prvok návrhu | zdroj | stav |
+   |---|---|---|
+   | pole na otázku + tri príklady | `Search`, `t.ask` | ✅ existuje |
+   | dlaždica „Na potvrdenie" | `pendingForPerson()` → `total` | ✅ existuje, už sa volá na `/` |
+   | dlaždica „Koncepty" | `documents.status = draft` | ✅ dopočítateľné |
+   | dlaždica „Nové za 7 dní" | `documents.updatedAt` | ✅ dopočítateľné |
+   | dlaždica „Expiruje do 30 dní" | `versions.effectiveTo` | ✅ pole existuje (D6) |
+   | zoznam „Vyžaduje vašu pozornosť" | `pendingForPerson()` → `items` | ✅ existuje (názov, meta, „nové" podľa D39) |
+   | **termínový chip „do 12. 9."** | — | ❌ **v dátach nie je** |
+   | „Novinky v knižnici" so štítkom stavu | `documents` + `status` | ✅ dopočítateľné |
+
+### ❌ Blokuje Prehľad: termín potvrdenia v dátach neexistuje
+
+Návrh má pri každom riadku „Vyžaduje vašu pozornosť" termín (`do 12. 9.`) a
+farbí ho podľa toho, ako je blízko (do 7 dní `--bad-*`, do 30 dní `--warn-*`).
+**Také pole v systéme nie je.** Prehľadané: `PendingItem` nesie `assignedAt`,
+nie termín; `assignments` termín nemá; jediné číslo v okolí je prah pripomienok
+`DEFAULT_DAYS = 14`, a to je spúšťač e-mailu, nie termín daný človeku.
+
+Toto je presne ten druh veci, na ktorom som sa už raz sekol pri schvaľovacom
+workflowe — preto to nedomýšľam. Tri možnosti:
+
+1. **Zatiaľ bez termínu** (odporúčam pre teraz) — chip ukáže, ako dlho vec
+   čaká („čaká 5 dní"), čo je pravda, ktorú vieme dnes. Prehľad sa dá postaviť
+   hneď a nič sa netvári.
+2. **Termín = `assignedAt` + prah pripomienok** — lacné, ale znamená, že
+   z interného spúšťača e-mailu sa stane sľub daný človeku. Kto potvrdí na
+   15. deň, bol „po termíne", hoci mu nikto termín nedal.
+3. **`dueAt` na pridelení** (odporúčam ako cieľ) — HR určí termín pri
+   prideľovaní, teda tam, kde už dnes povinne zadáva dôvod (D30) a platnosť
+   (D6). Je to **zmena schémy**, takže podľa dohody až s tvojím súhlasom.
+   Pri trasách treba doriešiť, či termín plynie od príchodu osoby.
+
 5. **Knižnica**: stĺpce Verzia a Platnosť od (obe sú na verzii dokumentu),
    identifikátor pod názvom, hľadanie vo filtroch, Export CSV (`/hr/overview/csv`
    už vzor má).
