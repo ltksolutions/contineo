@@ -1,0 +1,113 @@
+/**
+ * due.test.ts — termín potvrdenia a kadencia pripomienok (ADR-004).
+ *
+ * Dve miesta, kde sa dá pomýliť o jeden deň a človek to pocíti:
+ *
+ *  1. **deň termínu** — kto potvrdí v ten deň, termín splnil, takže stav je
+ *     „blíži sa", nie „po termíne". Chyba by znamenala e-mail „ste po termíne"
+ *     v deň, keď po ňom nie je;
+ *  2. **relatívny termín pri neskoršom príchode** — celý dôvod, prečo tvar
+ *     `days` v modeli je (D50, D62).
+ */
+
+import { describe, it, expect } from "vitest"
+import {
+  dueFrom, dueState, daysLeft, addDays, reminderPlan, SOON_DAYS,
+} from "../src/lib/due"
+
+/** Poludnie, aby sa test nechytal na letný čas ani na hranicu dňa. */
+const at = (iso: string) => new Date(`${iso}T12:00:00`)
+
+describe("termín z dátumu vzniku povinnosti", () => {
+  it("absolútny termín platí pre všetkých rovnako", () => {
+    const due = { kind: "date", at: at("2026-09-30") } as const
+    expect(dueFrom(at("2026-09-01"), due)).toEqual(at("2026-09-30"))
+    // Neskorší príchod na absolútnom termíne nič nemení — to je jeho zmysel
+    // aj jeho diera, a preto existuje druhý tvar.
+    expect(dueFrom(at("2026-09-29"), due)).toEqual(at("2026-09-30"))
+  })
+
+  it("relatívny termín beží odkedy povinnosť vznikla pre danú osobu", () => {
+    const due = { kind: "days", days: 14 } as const
+    expect(daysLeft(dueFrom(at("2026-09-01"), due)!, at("2026-09-01"))).toBe(14)
+    // Kto prišiel 29. 9., dostane tiež 14 dní — nie termín v minulosti (D50).
+    expect(daysLeft(dueFrom(at("2026-09-29"), due)!, at("2026-09-29"))).toBe(14)
+  })
+
+  it("bez termínu je platný stav, nie chyba", () => {
+    expect(dueFrom(at("2026-09-01"), null)).toBeNull()
+    expect(dueFrom(at("2026-09-01"), undefined)).toBeNull()
+    expect(dueState(null, at("2026-09-01"))).toBe("none")
+    // Nezmysel v dňoch nesmie vyrobiť „Invalid Date" a s ním termín, ktorý
+    // sa v rozhraní zobrazí ako NaN.
+    expect(dueFrom(at("2026-09-01"), { kind: "days", days: Number.NaN })).toBeNull()
+  })
+})
+
+describe("stav voči termínu (D63)", () => {
+  const now = at("2026-09-09")
+
+  it("deň termínu je ešte blíži sa, nie po termíne", () => {
+    expect(dueState(at("2026-09-09"), now)).toBe("soon")
+    expect(dueState(at("2026-09-08"), now)).toBe("over")
+  })
+
+  it("hranica piatich dní", () => {
+    expect(dueState(addDays(now, SOON_DAYS), now)).toBe("soon")
+    expect(dueState(addDays(now, SOON_DAYS + 1), now)).toBe("open")
+  })
+
+  it("stav sa počas dňa nemení", () => {
+    const due = at("2026-09-14")
+    const rano = new Date("2026-09-09T06:00:00")
+    const vecer = new Date("2026-09-09T23:30:00")
+    expect(daysLeft(due, rano)).toBe(daysLeft(due, vecer))
+  })
+})
+
+describe("kadencia pripomienok — eskalácia, nie opakovanie", () => {
+  const due = at("2026-09-30")
+  const dayBefore = (n: number) => addDays(due, -n)
+  const dayAfter = (n: number) => addDays(due, n)
+
+  it("pred termínom šesť dní denne, predtým nič", () => {
+    for (const n of [5, 4, 3, 2, 1, 0]) {
+      const p = reminderPlan(due, dayBefore(n))
+      expect(p, `D-${n}`).toEqual({ person: true, hr: false, tone: "soon" })
+    }
+    // Šesť dní pred termínom sa ešte neozývame — inak to prestane byť
+    // upozornenie a stane sa pošta.
+    expect(reminderPlan(due, dayBefore(6)).person).toBe(false)
+    expect(reminderPlan(due, dayBefore(30)).person).toBe(false)
+  })
+
+  it("po termíne D+1, D+3, D+7 — nie každý deň", () => {
+    expect(reminderPlan(due, dayAfter(1))).toEqual({ person: true, hr: false, tone: "over" })
+    expect(reminderPlan(due, dayAfter(2)).person).toBe(false)
+    expect(reminderPlan(due, dayAfter(3))).toEqual({ person: true, hr: false, tone: "over" })
+    for (const n of [4, 5, 6]) expect(reminderPlan(due, dayAfter(n)).person, `D+${n}`).toBe(false)
+  })
+
+  it("od siedmeho dňa aj personalistovi a potom raz týždenne", () => {
+    expect(reminderPlan(due, dayAfter(7))).toEqual({ person: true, hr: true, tone: "over" })
+    expect(reminderPlan(due, dayAfter(14))).toEqual({ person: true, hr: true, tone: "over" })
+    expect(reminderPlan(due, dayAfter(21)).hr).toBe(true)
+    // Medzi týždňami ticho: mesiac neprítomnosti nemá znamenať tridsať
+    // e-mailov, ale štyri a jedného personalistu.
+    for (const n of [8, 10, 13, 15, 20]) {
+      expect(reminderPlan(due, dayAfter(n)).person, `D+${n}`).toBe(false)
+    }
+  })
+
+  it("za tridsať dní po termíne odíde najviac sedem e-mailov osobe", () => {
+    // Toto je to číslo, kvôli ktorému sme denný režim zamietli: pri dennom
+    // by ich bolo tridsať.
+    const sent = Array.from({ length: 31 }, (_, i) => reminderPlan(due, dayAfter(i)))
+      .filter(p => p.person).length
+    expect(sent).toBeLessThanOrEqual(7)
+  })
+
+  it("bez termínu sa automaticky nepripomína vôbec", () => {
+    expect(reminderPlan(null, at("2026-09-09"))).toEqual({ person: false, hr: false, tone: null })
+  })
+})

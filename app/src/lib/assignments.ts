@@ -23,6 +23,7 @@
 
 import { ObjectId } from "mongodb"
 import { getCollection } from "./mongodb"
+import { dueFrom, type Due } from "./due"
 import { PERSONS_COLLECTION, normalizeKeys, inDepartmentSince, inGroupSince } from "./persons"
 import { ACKNOWLEDGEMENTS_COLLECTION } from "./acknowledgements"
 import { writeAudit } from "./audit"
@@ -81,6 +82,13 @@ export interface Assignment {
   reason: string
   assignedBy: string
   assignedAt: Date
+  /**
+   * Termín potvrdenia (D61). **Voliteľný** — pridelenia spred ADR-004 ho
+   * nemajú a dopísať im ho spätne by znamenalo vymyslieť dátum, ktorý nikto
+   * nedal. Bez termínu sa automaticky nepripomína; ostáva cesta cez
+   * personalistu.
+   */
+  due?: Due | null
   /** `null`, kým platí. Odvolané pridelenie zostáva v histórii. */
   revokedAt: Date | null
   revokedBy?: string | null
@@ -232,6 +240,22 @@ export function dateForPerson(
   return since && since > a.assignedAt ? since : a.assignedAt
 }
 
+/**
+ * Termín pre konkrétnu osobu (D62).
+ *
+ * Absolútny termín platí pre všetkých rovnako; relatívny sa počíta **odkedy
+ * povinnosť beží pre túto osobu**, teda od toho istého okamihu, ktorý vracia
+ * `dateForPerson()`. Vďaka tomu človek, ktorý do oddelenia prišiel neskôr,
+ * nedostane termín, ktorý už bol v minulosti — to je celý dôvod, prečo je
+ * relatívny tvar v modeli (D50).
+ */
+export function dueForPerson(
+  a: Pick<Assignment, "audience" | "assignedAt" | "due">,
+  person: Pick<Person, "departmentHistory" | "groupHistory">,
+): Date | null {
+  return dueFrom(dateForPerson(a, person), a.due)
+}
+
 // ── zápis ────────────────────────────────────────────────────────────────────
 
 export interface NewAssignment {
@@ -240,6 +264,8 @@ export interface NewAssignment {
   audience: Audience
   reason: string
   assignedBy: string
+  /** Termín potvrdenia (D61). Vynechaný = bez termínu, čo je platný stav. */
+  due?: Due | null
 }
 
 export type AssignResult =
@@ -280,6 +306,29 @@ export async function assign(input: NewAssignment): Promise<AssignResult> {
     throw new AssignmentValidationError("assignment.missingAudience", "Chýba, komu sa prideľuje.")
   }
 
+  /*
+   * Termín je voliteľný, ale **nezmyselný termín sa neuloží**.
+   *
+   * Absolútny termín pred dňom platnosti znenia by znamenal povinnosť, ktorá
+   * sa nedá splniť skôr, než vôbec vznikne (D6) — presne to, čo `effectiveFrom`
+   * vyššie stráži. Nulový alebo negatívny počet dní by znamenal „do dneška",
+   * čo z termínu robí pascu, nie termín.
+   */
+  const due = input.due ?? null
+  if (due?.kind === "date") {
+    if (!(due.at instanceof Date) || Number.isNaN(due.at.getTime())) {
+      throw new AssignmentValidationError("assignment.badDue", "Termín nie je platný dátum.")
+    }
+    if (due.at.getTime() < input.subject.effectiveFrom.getTime()) {
+      throw new AssignmentValidationError("assignment.dueBeforeEffective",
+        "Termín je skôr, než znenie začne platiť — takú povinnosť by nikto nesplnil (D6).")
+    }
+  }
+  if (due?.kind === "days" && !(Number.isFinite(due.days) && due.days >= 1)) {
+    throw new AssignmentValidationError("assignment.badDueDays",
+      "Termín v dňoch musí byť aspoň jeden deň.")
+  }
+
   const audience: Audience = input.audience.kind === "all"
     ? { kind: "all" }
     : {
@@ -307,6 +356,9 @@ export async function assign(input: NewAssignment): Promise<AssignResult> {
     reason,
     assignedBy: input.assignedBy,
     assignedAt: new Date(),
+    // `null` sa zapíše zámerne, nie vynechá: rozdiel medzi „termín nie je"
+    // a „pole ešte neexistuje" sa o rok pri čítaní auditu nedá rozlíšiť.
+    due,
     revokedAt: null,
   }
   const r = await col.insertOne(record as never)
@@ -314,7 +366,13 @@ export async function assign(input: NewAssignment): Promise<AssignResult> {
     companyCode: record.companyCode, subject: "assignment", action: "assigned",
     actor: input.assignedBy, targetId: String(r.insertedId),
     targetLabel: `${input.subject.documentTitle} (${input.subject.versionLabel}) — ${audienceLabel(audience)}`,
-    note: reason,
+    // Termín ide do auditu spolu s dôvodom: je to sľub daný človeku, nie
+    // nastavenie. Kto ho určil a na kedy, musí byť dohľadateľné (D51).
+    note: due
+      ? `${reason} · termín: ${due.kind === "date"
+          ? due.at.toISOString().slice(0, 10)
+          : `${due.days} dní od vzniku povinnosti`}`
+      : reason,
   })
   return { status: "pridelene", id: String(r.insertedId) }
 }
