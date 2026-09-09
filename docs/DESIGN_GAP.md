@@ -69,9 +69,16 @@ nezmestilo.
 | **počty pri položkách** | žiadne |
 | ikony pri položkách | žiadne |
 
-Na telefóne je pás `overflow-x: auto` **bez akéhokoľvek náznaku, že sa dá
-posúvať** — posledná položka je odseknutá v polovici slova („Pridelené no…").
-To nie je „mobile first", to je chyba.
+Na telefóne je pás `overflow-x: auto` bez náznaku, že sa dá posúvať —
+posledná položka je odseknutá v polovici slova („Pridelené no…").
+
+**Oprava môjho tvrdenia:** nazval som to chybou implementácie. Nie je. Kanvas
+má v topbare presne to isté `overflow-x: auto` a odseknutú položku — overené
+vykreslením návrhu, nie čítaním. Návrh to rieši inde: krok 7 handoffu žiada
+**mobilnú zásuvku** („drawer + karty + 44 px hit targety"). Takže to je
+neurobená položka návrhu, nie odchýlka od neho. Na výsledku to nič nemení —
+odseknuté slovo na telefóne zostáva —, ale je rozdiel medzi „pokazili sme to"
+a „nedošli sme k tomu".
 
 Predvolený variant je **topbar** — to máme správne. Bočný panel je druhý
 variant a v ňom navyše pribúda sekcia „Uložené pohľady" a dole karta
@@ -157,12 +164,32 @@ najkrikľavejšie.
 
 Poradie je podľa toho, čo človek vidí najskôr.
 
-1. **Hlavička**: celý názov organizácie so skratkou ako záložným variantom,
-   globálne hľadanie s `⌘K` (mieri na existujúce `/library?search=`), indikátor
-   upozornení z počtu nevybavených. Prepínač témy zostáva — je náš a funguje.
-2. **Navigácia na telefóne**: počty pri položkách (`/documents`, `/library` ich
-   už počítajú), a hlavne **náznak posunu** — tienidlo na okraji alebo zabalenie
-   do dvoch riadkov. Rozhodnúť ktoré, na 390 px oboje odskúšať.
+1. ~~**Hlavička**~~ ✅ **hotové** (`feat/design-header`) — celý názov organizácie
+   (13.5 px/600, elipsa na 30 vw), globálne pole (`flex: 1 1 240px`, 32 px,
+   ikona, fokusový prstenec z `--accent-soft`), zalamovanie hlavičky namiesto
+   pevnej výšky, veľkosť položiek navigácie 13 px a aktívna záložka
+   **podčiarknutím** v páse / dlaždicou v bočnom paneli.
+   Merané, nie odhadnuté: názov 13.5 px/600 a šírka 189 px v návrhu aj u nás,
+   pole 13 px/32 px v oboch, hlavička 52 vs 53 px (rozdiel je obrys).
+   Vedomá odchýlka: položka navigácie má 44 px na výšku namiesto 35 px
+   z prototypu — krok 7 handoffu žiada 44 px terče na dotyk.
+   **Zámerne bez:** zvončeka upozornení a počtov pri položkách (obe potrebujú
+   ten istý dotaz, robia sa spolu v bode 2) a bez prepínača organizácie
+   (rozhodnutie nižšie). `⌘K` funguje ako skratka, ale nie je v placeholderi —
+   ukázať „⌘K" človeku na Windows by bola nepravda.
+2. **Počty pri položkách + zvonček + mobilná zásuvka** — jedno PR, lebo počet
+   nepotvrdených je ten istý dotaz pre badge aj pre bodku na zvončeku. Platiť sa
+   má raz: obaliť `hrContext()`/`libraryContext()`/`peopleContext()` do `cache()`
+   z Reactu (už zapísané v `TODO.md`) a pridať jeden `countDocuments`.
+   Zásuvka namiesto rolovacieho pásu na telefóne — krok 7 handoffu.
+
+**Otvorené rozhodnutie k hlavičke: prepínač organizácie.** Návrh z názvu
+organizácie robí tlačidlo s dropdownom (zoznam organizácií, doména, ✓) a
+prepnutie mení názov **aj hlavnú farbu**. Pre bežnú osobu SFZ je to dropdown
+s jedinou položkou — a to je horšie než obyčajný text. Zmysel má pre správcu
+platformy, ktorý organizácie skutočne prepína. Navrhujem ho ukázať **len
+vtedy, keď má človek prístup do viac než jednej organizácie**; dnes je zoznam
+organizácií na `/admin`. Kým sa to nerozhodne, názov je obyčajný odkaz domov.
 3. **Prehľad** ako nová obrazovka: dlaždice a zoznam „Vyžaduje vašu pozornosť"
    sa dajú spočítať z `duties()` v `hrReport.ts` a z `documents` — teda z toho
    istého zdroja ako výkaz, nie z druhej kópie pravidiel. „Čaká na schválenie"

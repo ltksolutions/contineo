@@ -222,6 +222,10 @@ interface Dictionary {
     tenants: string
     openMenu: string
     closeMenu: string
+    /** Globálne pole v hlavičke — otázka, nie filter zoznamu. */
+    searchPlaceholder: string
+    searchLabel: string
+    searchSubmit: string
     account: (email: string) => string
     signOut: string
     themeLabel: string
@@ -1472,6 +1476,9 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     tenants: "Správa tenantov",
     openMenu: "Otvoriť menu",
     closeMenu: "Zavrieť menu",
+    searchPlaceholder: "Opýtajte sa svojich dokumentov…",
+    searchLabel: "Opýtať sa svojich dokumentov",
+    searchSubmit: "Opýtať sa",
     account: (email) => `Účet ${email}`,
     signOut: "Odhlásiť",
     themeLabel: "Téma:",
@@ -2934,6 +2941,9 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     tenants: "Správa tenantů",
     openMenu: "Otevřít menu",
     closeMenu: "Zavřít menu",
+    searchPlaceholder: "Zeptejte se svých dokumentů…",
+    searchLabel: "Zeptat se svých dokumentů",
+    searchSubmit: "Zeptat se",
     account: (email) => `Účet ${email}`,
     signOut: "Odhlásit",
     themeLabel: "Motiv:",
@@ -4391,6 +4401,9 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     tenants: "Tenant administration",
     openMenu: "Open menu",
     closeMenu: "Close menu",
+    searchPlaceholder: "Ask your documents…",
+    searchLabel: "Ask your documents",
+    searchSubmit: "Ask",
     account: (email) => `Account ${email}`,
     signOut: "Sign out",
     themeLabel: "Theme:",

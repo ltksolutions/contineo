@@ -132,6 +132,7 @@ export default function Header({
   const [choice, setChoice] = useState<ThemeChoice>("system")
   const [personalOpen, setPersonalOpen] = useState(false)
   const personalWrap = useRef<HTMLDivElement>(null)
+  const search = useRef<HTMLInputElement>(null)
   const pathname = usePathname()
 
   const shade = avatarShade(email ?? "")
@@ -199,6 +200,26 @@ export default function Header({
     return () => media.removeEventListener("change", apply)
   }, [choice])
 
+  /*
+   * `⌘K` / `Ctrl+K` postaví kurzor do globálneho poľa.
+   *
+   * Je to **zrýchlenie, nie cesta**: pole je bežný formulár a bez skriptu sa
+   * do neho dá kliknúť aj dostať tabulátorom. Preto sa skratka pridáva tu
+   * a nie je nikde napísané, že bez nej sa hľadať nedá — v placeholderi je
+   * uvedená len ako nápoveda pre toho, kto klávesnicu používa.
+   */
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== "k" || !(e.metaKey || e.ctrlKey)) return
+      if (!search.current) return
+      e.preventDefault()
+      search.current.focus()
+      search.current.select()
+    }
+    document.addEventListener("keydown", onKey)
+    return () => document.removeEventListener("keydown", onKey)
+  }, [])
+
   function toggle() {
     const next = NEXT_THEME[choice]
     setChoice(next)
@@ -235,10 +256,16 @@ export default function Header({
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={branding.logoUrl} alt="" width={26} height={26} style={{ display: "block" }} />
               )}
-              {/* Skratka, keď ju organizácia má. Celý názov zostáva v `title`
-                  a na prihlasovacej obrazovke — tam je miesta dosť. */}
+              {/*
+                **Celý názov, nie skratka.** Hlavička patrí organizácii a „SFZ"
+                je z pohľadu človeka, ktorý potvrdzuje záväzný predpis, menej
+                než „Slovenský futbalový zväz". Na úzku obrazovku sa to rieši
+                elipsou (`max-width: 30vw` v CSS), nie skrátením textu — inak
+                by na mobile nebolo poznať, ktorej organizácii portál patrí.
+                Skratka zostáva ako záložná hodnota, keď názov chýba.
+              */}
               <span className="header-name" title={branding.displayName}>
-                {branding.shortName || branding.displayName}
+                {branding.displayName || branding.shortName}
               </span>
             </>
           ) : (
@@ -251,6 +278,44 @@ export default function Header({
             </>
           )}
         </Link>
+
+        {/*
+          Globálne pole je **otázka, nie filter zoznamu.**
+
+          Preto míri na obrazovku „Opýtať sa" (`/`) a nie na `?search=`
+          v knižnici: „Do kedy treba nahlásiť prestup?" nie je názov dokumentu
+          a fulltext nad názvami na ňu odpovedať nevie. Odovzdáva sa cez `?q=`,
+          ktoré si domovská stránka prečíta a predvyplní ním pole odpovede.
+
+          Je to obyčajný `<form method="get">`, takže **funguje bez
+          JavaScriptu** — odošle sa Enterom aj tlačidlom. `⌘K` je len
+          zrýchlenie navrch.
+        */}
+        {email && (
+          <form className="header-search" method="get" action="/" role="search">
+            <span className="header-search-icon" aria-hidden="true">
+              <svg width="13" height="13" viewBox="0 0 14 14" fill="none"
+                stroke="currentColor" strokeWidth="1.7" strokeLinecap="round">
+                <circle cx="6" cy="6" r="4.2" />
+                <path d="M9.2 9.2 12.5 12.5" />
+              </svg>
+            </span>
+            <input
+              ref={search}
+              type="search"
+              name="q"
+              className="header-search-input"
+              placeholder={t.nav.searchPlaceholder}
+              aria-label={t.nav.searchLabel}
+              autoComplete="off"
+            />
+            {/* Bez skriptu musí byť čím odoslať. Vidieť ho netreba — Enter
+                v poli robí to isté a tlačidlo by v 32 px lište len tlačilo. */}
+            <button type="submit" className="header-search-submit">
+              {t.nav.searchSubmit}
+            </button>
+          </form>
+        )}
 
         {/* Menu je pre prihlásených. Neprihlásený vidí značku a prepínač
             témy — nič, čím by aj tak nemohol pohnúť. */}

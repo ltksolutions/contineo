@@ -24,7 +24,19 @@ import AppShell from "@/components/AppShell"
 // nedá predgenerovať. Bez tohto by Next.js skúsil statický výstup a spadol.
 export const dynamic = "force-dynamic"
 
-export default async function HomePage() {
+export default async function HomePage({
+  searchParams,
+}: {
+  /*
+   * `?q=` prichádza z globálneho poľa v hlavičke. Je to **odovzdanie otázky,
+   * nie filter**: pole v hlavičke je na celom portáli a odpovedať sa dá len
+   * tu, takže otázka musí prejsť adresou. Vďaka tomu funguje aj bez
+   * JavaScriptu — hlavička odošle obyčajný `GET` a táto stránka ho prečíta.
+   */
+  searchParams?: Promise<Record<string, string | string[] | undefined>>
+}) {
+  const q = await searchParams
+  const asked = Array.isArray(q?.q) ? q?.q[0] : q?.q
   const ctx = await onboardingContext()
 
   // Neznámy hostiteľ je zakázaný, nie predvolený (D29). `notFound()`, nie
@@ -55,7 +67,14 @@ export default async function HomePage() {
         </p>
       </div>
 
-      <Search language={person?.language} />
+      {/* `key` mení identitu komponentu s otázkou. `preset` sa v `Search`
+          číta len pri pripojení, takže bez tohto by druhá otázka z hlavičky
+          pole neprepísala, keby Next navigáciu spracoval na klientovi. */}
+      <Search
+        key={asked ?? ""}
+        language={person?.language}
+        preset={asked?.trim() || undefined}
+      />
     </div>
     </AppShell>
   )
