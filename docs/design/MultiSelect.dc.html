@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<div ref="{{ wrapRef }}" style="position:relative;display:flex;flex-direction:column;gap:5px;min-width:0">
+  <span style="font-size:11px;font-weight:650;letter-spacing:.06em;text-transform:uppercase;color:var(--muted,#5c6675)">{{ label }}</span>
+
+  <div onClick="{{ openList }}" style="display:flex;flex-wrap:wrap;align-items:center;gap:4px;min-height:32px;padding:4px 6px;background:var(--surface,#fff);border:1px solid var(--line,rgba(20,28,42,.12));border-radius:8px;cursor:text" style-hover="border-color:var(--accent,#1f4ed8)">
+    <sc-for list="{{ chips }}" as="c" hint-placeholder-count="2">
+      <span style="display:inline-flex;align-items:center;gap:4px;height:22px;padding:0 4px 0 7px;font-size:12px;line-height:1;border-radius:5px;background:var(--surface-2,#eceef1);color:var(--ink,#161b22);white-space:nowrap">
+        {{ c.label }}
+        <button type="button" onClick="{{ c.remove }}" aria-label="Odobrať" style="all:unset;display:grid;place-items:center;width:15px;height:15px;border-radius:4px;font-size:13px;color:var(--muted,#5c6675);cursor:pointer" style-hover="background:rgba(20,28,42,.10);color:var(--ink,#161b22)">×</button>
+      </span>
+    </sc-for>
+    <input value="{{ query }}" onInput="{{ onQuery }}" onKeyDown="{{ onKey }}" onFocus="{{ openList }}" placeholder="{{ hint }}" style="flex:1 1 70px;min-width:60px;border:0;outline:none;background:transparent;font:inherit;font-size:13px;color:var(--ink,#161b22);padding:3px 2px" />
+    <span style="font-size:11px;color:var(--muted,#5c6675);padding:0 2px;font-variant-numeric:tabular-nums">{{ counter }}</span>
+  </div>
+
+  <sc-if value="{{ isOpen }}" hint-placeholder-val="{{ false }}">
+    <div style="position:absolute;z-index:40;top:100%;left:0;right:0;margin-top:4px;max-height:230px;overflow:auto;background:var(--surface,#fff);border:1px solid var(--line,rgba(20,28,42,.12));border-radius:10px;box-shadow:0 1px 2px rgba(20,28,42,.05),0 12px 28px rgba(20,28,42,.14)">
+      <sc-for list="{{ visible }}" as="o" hint-placeholder-count="4">
+        <div onMouseDown="{{ o.pick }}" style="display:flex;align-items:center;gap:8px;padding:6px 9px;font-size:13px;cursor:pointer;border-bottom:1px solid var(--line,rgba(20,28,42,.08))" style-hover="background:var(--surface-2,#eceef1)">
+          <span style="display:grid;place-items:center;flex:0 0 15px;width:15px;height:15px;border-radius:4px;border:1px solid var(--line,rgba(20,28,42,.25));color:var(--accent,#1f4ed8);font-size:10px;font-weight:800;line-height:1">{{ o.mark }}</span>
+          <span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ o.label }}</span>
+          <span style="font-size:11px;color:var(--muted,#5c6675);font-variant-numeric:tabular-nums">{{ o.count }}</span>
+        </div>
+      </sc-for>
+      <sc-if value="{{ isEmpty }}" hint-placeholder-val="{{ false }}">
+        <div style="padding:10px;font-size:12.5px;color:var(--muted,#5c6675)">Nič sa nenašlo — píšte inak, alebo pridajte nové stlačením Enter.</div>
+      </sc-if>
+      <div style="display:flex;justify-content:space-between;gap:8px;padding:6px 9px;position:sticky;bottom:0;background:var(--surface,#fff);border-top:1px solid var(--line,rgba(20,28,42,.12))">
+        <button type="button" onMouseDown="{{ clearAll }}" style="all:unset;font-size:12px;color:var(--muted,#5c6675);cursor:pointer" style-hover="color:var(--ink,#161b22)">Zrušiť výber</button>
+        <button type="button" onMouseDown="{{ close }}" style="all:unset;font-size:12px;font-weight:600;color:var(--accent,#1f4ed8);cursor:pointer">Hotovo</button>
+      </div>
+    </div>
+  </sc-if>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:320,&quot;height&quot;:260},&quot;label&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;Útvar&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;placeholder&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;hľadať útvar…&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;options&quot;:{&quot;editor&quot;:null,&quot;default&quot;:[{&quot;value&quot;:&quot;pravne&quot;,&quot;label&quot;:&quot;Právne a legislatíva&quot;,&quot;count&quot;:24},{&quot;value&quot;:&quot;hr&quot;,&quot;label&quot;:&quot;Ľudské zdroje&quot;,&quot;count&quot;:18},{&quot;value&quot;:&quot;ekonomika&quot;,&quot;label&quot;:&quot;Ekonomika&quot;,&quot;count&quot;:31}],&quot;tsType&quot;:&quot;{value:string;label:string;count?:number}[]&quot;},&quot;selected&quot;:{&quot;editor&quot;:null,&quot;default&quot;:[],&quot;tsType&quot;:&quot;string[]&quot;},&quot;onChange&quot;:{&quot;editor&quot;:null,&quot;default&quot;:null,&quot;tsType&quot;:&quot;(v:string[])=&gt;void&quot;},&quot;allowNew&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;}}">
+class Component extends DCLogic {
+  state = { open: false, query: "", chosen: null, extra: [] }
+
+  get chosen() {
+    return this.state.chosen ?? (this.props.selected ?? [])
+  }
+
+  all() {
+    const opts = this.props.options ?? []
+    const known = new Set(opts.map(o => o.value))
+    return [...opts, ...this.state.extra.filter(e => !known.has(e.value))]
+  }
+
+  set(next) {
+    this.setState({ chosen: next })
+    if (typeof this.props.onChange === "function") this.props.onChange(next)
+  }
+
+  toggle(v) {
+    const c = this.chosen
+    this.set(c.includes(v) ? c.filter(x => x !== v) : [...c, v])
+  }
+
+  componentDidMount() {
+    this.away = e => {
+      if (this.state.open && this.node && !this.node.contains(e.target)) this.setState({ open: false })
+    }
+    document.addEventListener("mousedown", this.away)
+  }
+  componentWillUnmount() { document.removeEventListener("mousedown", this.away) }
+
+  renderVals() {
+    const chosen = this.chosen
+    const all = this.all()
+    const q = this.state.query.trim().toLowerCase()
+    const visible = all
+      .filter(o => !q || o.label.toLowerCase().includes(q))
+      .map(o => ({
+        label: o.label,
+        count: o.count ?? "",
+        mark: chosen.includes(o.value) ? "✓" : "",
+        pick: e => { e.preventDefault(); this.toggle(o.value) },
+      }))
+    const byValue = Object.fromEntries(all.map(o => [o.value, o.label]))
+
+    return {
+      label: this.props.label ?? "Výber",
+      hint: chosen.length ? "" : (this.props.placeholder ?? "hľadať…"),
+      query: this.state.query,
+      isOpen: this.state.open,
+      isEmpty: visible.length === 0,
+      counter: chosen.length ? chosen.length + "/" + all.length : "",
+      visible,
+      chips: chosen.map(v => ({
+        label: byValue[v] ?? v,
+        remove: e => { e.stopPropagation(); this.toggle(v) },
+      })),
+      onQuery: e => this.setState({ query: e.target.value, open: true }),
+      onKey: e => {
+        if (e.key === "Escape") this.setState({ open: false })
+        if (e.key === "Backspace" && !this.state.query && chosen.length) this.set(chosen.slice(0, -1))
+        if (e.key === "Enter") {
+          e.preventDefault()
+          const q = this.state.query.trim()
+          if (!q) return
+          const hit = this.all().find(o => o.label.toLowerCase() === q.toLowerCase())
+          const value = hit ? hit.value : q.toLowerCase().replace(/\s+/g, "_")
+          if (!hit && this.props.allowNew !== false) {
+            this.setState(s => ({ extra: [...s.extra, { value, label: q }] }))
+          }
+          if (!chosen.includes(value)) this.set([...chosen, value])
+          this.setState({ query: "" })
+        }
+      },
+      openList: () => this.setState({ open: true }),
+      close: e => { e.preventDefault(); this.setState({ open: false, query: "" }) },
+      clearAll: e => { e.preventDefault(); this.set([]) },
+      wrapRef: n => { this.node = n },
+    }
+  }
+}
+
+</script>
+</body>
+</html>
