@@ -193,11 +193,21 @@ button:disabled { cursor: not-allowed; opacity: 0.55; }
  * normy", „Osoby", „Správa tenantov") sa lišta láme skôr, než by čakal
  * bežný breakpoint, a bude ich pribúdať.
  */
+/*
+ * Riadok hlavičky. **Zalamuje sa** (`flex-wrap`), nie tlačí.
+ *
+ * Dovtedy mal výšku 56 px napevno, takže sa zlomiť nemohol a globálne pole by
+ * sa doňho na telefóne nezmestilo — buď by vytlačilo názov organizácie, alebo
+ * avatar. Návrh to rieši zalomením do druhého riadka: `min-height: 52px`
+ * a `padding` namiesto pevnej výšky.
+ */
 .header-row {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 10px;
-  height: 56px;
+  min-height: 52px;
+  padding-block: 8px;
   position: relative;
 }
 
@@ -215,13 +225,129 @@ button:disabled { cursor: not-allowed; opacity: 0.55; }
   color: inherit;
 }
 
+/*
+ * Názov organizácie. `max-width: 30vw` je z návrhu: celý názov má byť vidieť,
+ * kým je miesto, a inak sa má **skrátiť elipsou**, nie zabrať celý riadok
+ * a vytlačiť pole na otázku. Na širokej obrazovke je 30 vw viac než dosť aj
+ * pre „Slovenský futbalový zväz".
+ */
 .header-name {
-  font-weight: 700;
-  font-size: 16px;
-  letter-spacing: -0.02em;
+  font-weight: 600;
+  font-size: 13.5px;
+  letter-spacing: -0.01em;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  max-width: 30vw;
+}
+
+/*
+ * Skratka na telefóne, celý názov na desktope.
+ *
+ * Elipsa z návrhu („Slovenský fut…") tu prehrala so skratkou: skratku človek
+ * prečíta, odseknuté slovo nie — a na 390 px zožral celý názov prvý riadok
+ * hlavičky, v ktorom má byť aj pole na otázku. Na desktope miesto je, tam
+ * patrí celý názov: hlavička je organizácie, nie dodávateľa.
+ *
+ * Prepína to `@media`, nie JavaScript — obe podoby sú v značkovaní, takže sa
+ * po pripojení nič nepreskočí. Hranica 760 px je tá istá, na ktorej sa hlavičke
+ * mení odsadenie.
+ */
+.header-name-full { display: none; }
+
+@media (min-width: 760px) {
+  .header-name-short { display: none; }
+  .header-name-full { display: inline; }
+}
+
+
+/* ── globálne pole v hlavičke ──────────────────────────────────────────────
+   `flex: 1 1 240px` s `min-width: 160px`: na širokej obrazovke vyplní stred
+   lišty, na úzkej sa **zlomí do druhého riadka** a zostane použiteľné. To je
+   dôvod, prečo je `.header-row` zalamovací — pole pod 160 px už nie je pole,
+   ale škvrna. */
+.header-search {
+  flex: 1 1 240px;
+  min-width: 160px;
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.header-search-icon {
+  position: absolute;
+  left: 10px;
+  display: grid;
+  place-items: center;
+  color: var(--muted);
+  pointer-events: none;
+}
+
+.header-search-input {
+  width: 100%;
+  height: 32px;
+  padding: 0 11px 0 30px;
+  font: inherit;
+  font-size: 13px;
+  color: var(--ink);
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  outline: none;
+}
+
+.header-search-input::placeholder { color: var(--muted); }
+
+/* Prstenec je vnútri poľa (`box-shadow`), nie `outline` — pole je v lište
+   natesno a prstenec mimo by prekryl susedné prvky. */
+.header-search-input:focus {
+  border-color: var(--accent);
+  background: var(--surface);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+/* Odoslať sa musí dať aj bez skriptu, ale v 32 px lište na tlačidlo miesto
+   nie je — Enter v poli robí to isté. Preto je skryté pre oko a nie pre
+   čítačku ani pre klávesnicu. */
+.header-search-submit {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+/*
+ * Na telefóne dostane pole **vlastný riadok**, nie zvyšok miesta.
+ *
+ * Prvý pokus bol zmenšiť mu základ tak, aby sa značka, pole aj avatar zmestili
+ * do jedného riadka. Pri 390 px to vyšlo, pri 320 px už nie — a hlavne to
+ * záviselo od **dĺžky skratky organizácie**: „SFZ" sa zmestí, osemznakovej
+ * skratke by avatar znova vypadol na druhý riadok sám a visel tam ako škvrna.
+ * Doháňať to ďalšou hodnotou základu by znamenalo hádať za každého tenanta.
+ *
+ * Takto je poradie na telefóne dané: prvý riadok značka a avatar, druhý celé
+ * pole. `order` mení len vykreslenie — v značkovaní zostáva pole pred
+ * avatarom, takže tabulátor ide zhora dolu tak, ako to človek vidí.
+ *
+ * **Musí stáť za `.header-search`**, nie pri `.header-name`: špecificita je
+ * rovnaká, takže rozhoduje poradie v súbore, a vyššie ho `flex: 1 1 240px`
+ * prepisovalo.
+ */
+@media (max-width: 759px) {
+  .header-search {
+    order: 1;
+    flex-basis: 100%;
+  }
+
+  /* Keď pole odíde do druhého riadka, v prvom nezostane nič, čo by miesto
+     vyplnilo — bez tohto by avatar sedel natesno pri skratke namiesto pri
+     pravom okraji, kde ho človek hľadá. */
+  .header-row .account { margin-left: auto; }
 }
 
 /* Rovnaký prípad ako hamburger: odznak má aj `.tag`, ktorý je nižšie. */
@@ -233,74 +359,19 @@ button:disabled { cursor: not-allowed; opacity: 0.55; }
   font-size: 11px;
 }
 
-.header-hamburger {
-  margin-left: auto;
-  padding: 7px 9px;
-  display: inline-flex;
-  align-items: center;
-}
-
-.header-nav {
-  display: none;
-}
-
-.header-nav.is-open {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  position: absolute;
-  top: 100%;
-  left: 0;
-  right: 0;
-  z-index: 20;
-  padding: 8px;
-  background: var(--surface);
-  border-bottom: 1px solid var(--line);
-  box-shadow: var(--shadow);
-}
-
-.header-link {
-  text-decoration: none;
-  font-size: 15px;
-  border-radius: 8px;
-  padding: 11px 12px;
-  font-weight: 500;
-  color: var(--muted);
-}
-
-.header-link.is-active {
-  font-weight: 700;
-  background: var(--surface-2);
-  color: var(--ink);
-}
-
+/*
+ * Mŕtve pravidlá hlavičky sú odtiaľto **odstránené**, nie zakomentované:
+ * `.header-hamburger`, `.header-nav` a `.header-link` prišli o značkovanie
+ * pri presune navigácie do shellu a zostali tu ležať. Jedno z nich —
+ * `.header-name { font-size: 17px }` — pritom prepisovalo veľkosť názvu
+ * organizácie z návrhu (13.5 px) a `.header-row { height: 60px }` bránilo
+ * zalomeniu hlavičky. Preto to nebolo len smetie: bola to príčina toho, že
+ * hlavička nesedela s návrhom ani po zmene základných pravidiel.
+ */
 @media (min-width: 760px) {
-  .header-row { height: 60px; gap: 16px; }
-
-  /*
-   * `.header-row` v selektore nie je ozdoba: hamburger má aj triedu
-   * `.button`, ktorá je v tomto súbore nižšie a nastavuje `display:
-   * inline-flex`. Pri rovnakej špecifickosti vyhráva neskorší zápis, takže
-   * samotné `.header-hamburger { display: none }` neplatilo a ikona sa
-   * ukazovala aj na širokej obrazovke vedľa rozvinutého menu.
-   */
-  .header-row .header-hamburger { display: none; }
-
-  .header-nav,
-  .header-nav.is-open {
-    display: flex;
-    flex-direction: row;
-    gap: 4px;
-    position: static;
-    margin-left: auto;
-    padding: 0;
-    background: none;
-    border: none;
-    box-shadow: none;
-  }
-
-  .header-link { font-size: 14px; padding: 6px 12px; }
-  .header-name { font-size: 17px; }
+  .header-row { gap: 16px; }
+  /* Odznak „testovacie rozhranie" má aj `.tag`, ktorý je nižšie — bez
+     `.header-row` v selektore by pri rovnakej špecifickosti vyhral on. */
   .header-row .header-badge { display: inline-flex; }
 }
 
@@ -645,29 +716,52 @@ button:disabled { cursor: not-allowed; opacity: 0.55; }
   border-bottom: 1px solid var(--line);
 }
 
+/*
+ * Veľkosť písma je 13 px z návrhu, nie 15 px ako predtým. Pás šiestich
+ * odkazov v 15 px vyzeral vedľa 13.5 px názvu organizácie ako druhá hlavička
+ * — v návrhu je navigácia potichšia než obsah, a to je zámer.
+ *
+ * `min-height: 44px` zostáva a je vedomá odchýlka od prototypu (ten má
+ * `padding: 9px 11px`, teda asi 35 px): krok 7 handoffu žiada 44 px terče na
+ * dotyk a pás sa na telefóne ovláda prstom.
+ */
 .app-nav-item {
   display: inline-flex;
   align-items: center;
-  /* 44 px terč, rovnako ako položky v `.select` — pás sa ovláda prstom. */
   min-height: 44px;
-  padding: 0 12px;
-  border-radius: 8px;
-  font-size: 15px;
+  padding: 0 11px;
+  font-size: 13px;
   font-weight: 500;
   color: var(--muted);
   text-decoration: none;
   white-space: nowrap;
 }
 
-.app-nav-item:hover { background: var(--surface-2); color: var(--ink); }
+.app-nav-item:hover { color: var(--ink); }
 
-/* Prvý skutočný odberateľ `--accent-soft`: aktívna položka nesie farbu
-   organizácie, ale len naznačenú — plná by v páse šiestich odkazov kričala. */
-.app-nav-item.is-active {
-  background: var(--accent-soft);
-  color: var(--accent);
-  font-weight: 650;
+/*
+ * Aktívna položka sa kreslí **inak v páse a inak v bočnom paneli** — presne
+ * ako v návrhu, a nie je to nedôslednosť:
+ *
+ *  - v páse je to podčiarknutie (`border-bottom`), lebo záložka patrí k obsahu
+ *    pod sebou a farebná dlaždica by v riadku šiestich odkazov kričala,
+ *  - v bočnom paneli je to dlaždica s `--accent-soft`, lebo tam nie je k čomu
+ *    sa podčiarknutím vzťahovať a položky stoja pod sebou.
+ *
+ * Predtým bola dlaždica v oboch a pás preto nevyzeral ako záložky.
+ */
+.app-nav-item.is-active { color: var(--accent); font-weight: 650; }
+
+.app-nav--topbar .app-nav-item {
+  border-bottom: 2px solid transparent;
+  border-radius: 0;
 }
+
+.app-nav--topbar .app-nav-item.is-active { border-bottom-color: var(--accent); }
+
+.app-nav--sidebar .app-nav-item { border-radius: 8px; }
+.app-nav--sidebar .app-nav-item:hover { background: var(--surface-2); }
+.app-nav--sidebar .app-nav-item.is-active { background: var(--accent-soft); }
 
 .app-nav-item:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
 

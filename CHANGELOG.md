@@ -4,6 +4,20 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Changed (2026-09-09 — hlavička podľa návrhu a návrh do repozitára)
+
+**Ján postavil vedľa seba návrh a produkciu a mal pravdu**: hlavička nesedela. Zo siedmich obrazoviek návrhu je jedna blízko, štyri sú čiastkové a „Prehľad" neexistuje vôbec. Príčina nebola v tom, že by kroky neboli urobené, ale v tom, ako som ich overoval — skúšobné strany som napísal sám z toho, ako som si návrh prečítal, a potom porovnával snímky **tých** strán. To nedokazuje nič o vernosti návrhu.
+
+- **Návrh je v repozitári** (`docs/design/`) — celý export z Claude Design vrátane zadania s rozmermi. Verzovaný vstup sa nedá stratiť ani prekrútiť spamäti.
+- **`docs/DESIGN_GAP.md`** — rozdiely po obrazovkách, príčina zlého overovania a plán rozdelený na to, čo dnešné dáta unesú, a čo potrebuje najprv rozhodnutie.
+- **Celý názov organizácie namiesto skratky** (13.5 px/600, elipsa na 30 vw). „SFZ" je z pohľadu človeka, ktorý potvrdzuje záväzný predpis, menej než „Slovenský futbalový zväz".
+- **Globálne pole v hlavičke** — `flex: 1 1 240px`, 32 px, ikona vľavo, fokusový prstenec z `--accent-soft`. Je to **otázka, nie filter zoznamu**: míri na `/` s `?q=`, ktoré si domovská stránka prečíta a predvyplní ním pole odpovede. Obyčajný `<form method="get">`, takže **funguje bez JavaScriptu**; `⌘K`/`Ctrl+K` je len zrýchlenie navrch.
+- **Hlavička sa zalamuje** (`flex-wrap`, `min-height: 52px`) namiesto pevných 56 px. Na telefóne sa zlomí do dvoch riadkov — presne ako návrh; s pevnou výškou by sa pole na otázku nezmestilo.
+- **Navigácia je potichšia**: 13 px z návrhu namiesto 15 px, a aktívna položka sa kreslí **podčiarknutím v páse** a dlaždicou v bočnom paneli. Dlaždica v oboch znamenala, že pás nevyzeral ako záložky.
+- **Odstránené mŕtve CSS hlavičky** po presune navigácie do shellu (`.header-link`, `.header-hamburger`, `.header-nav`). Nebolo to len smetie: `.header-name { font-size: 17px }` a `.header-row { height: 60px }` v ňom boli **príčinou** toho, že hlavička nesedela s návrhom ani po zmene základných pravidiel.
+- Overené **proti návrhu, nie proti sebe**: hlavička vyrezaná z kanvasu a vykreslená vedľa našej na 1000 px aj 390 px, a porovnané **namerané** hodnoty — názov 13.5 px/600 a šírka 189 px v oboch, pole 13 px/32 px v oboch, hlavička 52 vs 53 px. Vedomá odchýlka: položka navigácie 44 px namiesto 35 px (krok 7 handoffu žiada 44 px terče).
+- Zámerne bez zvončeka upozornení a počtov pri položkách — obe potrebujú ten istý dotaz a robia sa spolu.
+
 ### Changed (2026-09-08 — anglické názvy CSS tried)
 
 **Mechanická zmena bez dopadu na vzhľad.** Rozhranie malo triedy po slovensky (`.tlacidlo`, `.karta`, `.pole-vstup`, `.strom-riadok`), čo pri čítaní kódu znamenalo prepínať jazyk vetu po vete a pri hľadaní `button` nenájsť tlačidlo.
