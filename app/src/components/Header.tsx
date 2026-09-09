@@ -137,6 +137,15 @@ export default function Header({
 
   const shade = avatarShade(email ?? "")
 
+  /*
+   * Skratka sa použije len vtedy, keď existuje **a je naozaj kratšia**.
+   * Organizácia, ktorá si do skratky napíše celý názov, nemá na telefóne
+   * dostať dve rovnaké podoby a s nimi zbytočný prvok v značkovaní.
+   */
+  const short = branding?.shortName?.trim()
+  const shortName =
+    short && short !== branding?.displayName?.trim() ? short : undefined
+
   /**
    * Správcovské odkazy patria pod avatar, nie do lišty.
    *
@@ -257,15 +266,27 @@ export default function Header({
                 <img src={branding.logoUrl} alt="" width={26} height={26} style={{ display: "block" }} />
               )}
               {/*
-                **Celý názov, nie skratka.** Hlavička patrí organizácii a „SFZ"
-                je z pohľadu človeka, ktorý potvrdzuje záväzný predpis, menej
-                než „Slovenský futbalový zväz". Na úzku obrazovku sa to rieši
-                elipsou (`max-width: 30vw` v CSS), nie skrátením textu — inak
-                by na mobile nebolo poznať, ktorej organizácii portál patrí.
-                Skratka zostáva ako záložná hodnota, keď názov chýba.
+                **Celý názov na desktope, skratka na telefóne.** Rozhodnutie
+                Jána Letka: „SFZ" je z pohľadu človeka, ktorý potvrdzuje
+                záväzný predpis, menej než „Slovenský futbalový zväz", ale na
+                390 px zožerie celý prvý riadok hlavičky. Elipsa („Slovenský
+                fut…") je pritom horšia než skratka — skratku človek prečíta,
+                odseknuté slovo nie.
+
+                Prepína to **CSS, nie JavaScript**: obe podoby sú v značkovaní
+                a `@media` jednu z nich schová. Prepínanie v JavaScripte by
+                znamenalo, že sa pri prvom vykreslení objaví nesprávna a po
+                pripojení preskočí.
               */}
               <span className="header-name" title={branding.displayName}>
-                {branding.displayName || branding.shortName}
+                {shortName ? (
+                  <>
+                    <span className="header-name-short">{shortName}</span>
+                    <span className="header-name-full">{branding.displayName}</span>
+                  </>
+                ) : (
+                  branding.displayName
+                )}
               </span>
             </>
           ) : (

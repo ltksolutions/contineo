@@ -173,34 +173,46 @@ Poradie je podľa toho, čo človek vidí najskôr.
    pole 13 px/32 px v oboch, hlavička 52 vs 53 px (rozdiel je obrys).
    Vedomá odchýlka: položka navigácie má 44 px na výšku namiesto 35 px
    z prototypu — krok 7 handoffu žiada 44 px terče na dotyk.
+   **Skratka na telefóne, celý názov na desktope** — rozhodnutie Jána Letka
+   a odchýlka od návrhu (ten skracuje elipsou v oboch). Dôvod: elipsu
+   („Slovenský fut…") človek neprečíta, skratku áno, a na 390 px zožral názov
+   celý prvý riadok. Prepína to `@media`, nie JavaScript, takže sa po pripojení
+   nič nepreskočí.
+   Pole má na telefóne **vlastný riadok** (`order` + `flex-basis: 100%`).
+   Prvý pokus zmenšoval jeho základ tak, aby sa všetko zmestilo do jedného
+   riadka; pri 390 px to vyšlo, pri 320 px nie — a hlavne to záviselo od dĺžky
+   skratky tenanta. Overené na 320 / 360 / 390 / 759 px: hlavička 81 px,
+   avatar pri pravom okraji prvého riadka, pole celé v druhom.
    **Zámerne bez:** zvončeka upozornení a počtov pri položkách (obe potrebujú
-   ten istý dotaz, robia sa spolu v bode 2) a bez prepínača organizácie
-   (rozhodnutie nižšie). `⌘K` funguje ako skratka, ale nie je v placeholderi —
-   ukázať „⌘K" človeku na Windows by bola nepravda.
+   ten istý dotaz, robia sa spolu v bode 2). `⌘K` funguje ako skratka, ale nie
+   je v placeholderi — ukázať „⌘K" človeku na Windows by bola nepravda.
 2. **Počty pri položkách + zvonček + mobilná zásuvka** — jedno PR, lebo počet
    nepotvrdených je ten istý dotaz pre badge aj pre bodku na zvončeku. Platiť sa
    má raz: obaliť `hrContext()`/`libraryContext()`/`peopleContext()` do `cache()`
    z Reactu (už zapísané v `TODO.md`) a pridať jeden `countDocuments`.
    Zásuvka namiesto rolovacieho pásu na telefóne — krok 7 handoffu.
 
-**Otvorené rozhodnutie k hlavičke: prepínač organizácie.** Návrh z názvu
-organizácie robí tlačidlo s dropdownom (zoznam organizácií, doména, ✓) a
-prepnutie mení názov **aj hlavnú farbu**. Pre bežnú osobu SFZ je to dropdown
-s jedinou položkou — a to je horšie než obyčajný text. Zmysel má pre správcu
-platformy, ktorý organizácie skutočne prepína. Navrhujem ho ukázať **len
-vtedy, keď má človek prístup do viac než jednej organizácie**; dnes je zoznam
-organizácií na `/admin`. Kým sa to nerozhodne, názov je obyčajný odkaz domov.
-3. **Prehľad** ako nová obrazovka: dlaždice a zoznam „Vyžaduje vašu pozornosť"
+3. **Prepínač organizácie** — ✅ *rozhodnuté (Ján Letko)*: ukázať ho **len
+   tomu, kto má prístup do viac než jednej organizácie**. Pre bežnú osobu SFZ
+   je dropdown s jedinou položkou horší než obyčajný text. Znamená to spočítať
+   organizácie, do ktorých človek smie, takže to ide spolu s bodom 2 — je to
+   ten istý druh dotazu. Prepnutie mení názov **aj hlavnú farbu** (`--accent`
+   z `branding.accentColor`), presne ako to už robí `tenantStyle()`.
+4. **Prehľad** ako nová obrazovka: dlaždice a zoznam „Vyžaduje vašu pozornosť"
    sa dajú spočítať z `duties()` v `hrReport.ts` a z `documents` — teda z toho
-   istého zdroja ako výkaz, nie z druhej kópie pravidiel. „Čaká na schválenie"
-   vypadne (nie je čo schvaľovať) alebo sa nahradí „Koncepty".
-4. **Knižnica**: stĺpce Verzia a Platnosť od (obe sú na verzii dokumentu),
+   istého zdroja ako výkaz, nie z druhej kópie pravidiel.
+   ✅ *rozhodnuté (Ján Letko)*: dlaždica „Čaká na schválenie" sa nahradí
+   **„Koncepty"**. Schvaľovací workflow neexistuje, ale koncepty áno
+   (`status: draft`), takže dlaždica ukazuje skutočný stav a nie prázdne
+   miesto — a keď workflow raz pribudne, pridá sa dlaždica, nie sa prepíše
+   význam existujúcej.
+5. **Knižnica**: stĺpce Verzia a Platnosť od (obe sú na verzii dokumentu),
    identifikátor pod názvom, hľadanie vo filtroch, Export CSV (`/hr/overview/csv`
    už vzor má).
-5. **Detail**: záložky Obsah | Zmeny | Audit, „Kto nepotvrdil →" (výkaz to už
+6. **Detail**: záložky Obsah | Zmeny | Audit, „Kto nepotvrdil →" (výkaz to už
    vie), Súvisiace predpisy, zoznam verzií so stavom. „Citované časti" až keď
    bude čo citovať.
-6. **Nastavenia**: tabuľka organizácií s počtami.
+7. **Nastavenia**: tabuľka organizácií s počtami.
 
 ### B — najprv rozhodnutie, potom kód
 
