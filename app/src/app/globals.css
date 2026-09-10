@@ -2910,3 +2910,25 @@ a.answer-source:focus-visible { outline: 2px solid var(--accent); outline-offset
    prípad; zamietnutie je tiché tlačidlo, aby sa naň nekliklo omylom. */
 .approval-decide { display: flex; gap: 10px; flex-wrap: wrap; }
 .approval-decide > button { flex: 1 1 160px; }
+
+/* ── „čaká na schválenie" nad knižnicou (ADR-006) ───────────────────────────
+   Úloha, nie obsah knižnice — preto vlastná karta nad zoznamom a nie ďalší
+   riadok v ňom. Tichá: je to stav, nie poplach. */
+.waiting { padding: 16px 18px; margin: 0 0 18px; display: grid; gap: 10px; }
+
+.waiting-head { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+.waiting-title { font-size: 16px; letter-spacing: -0.01em; margin: 0; }
+
+.waiting-list { list-style: none; padding: 0; margin: 0; display: grid; gap: 10px; }
+
+/* Na telefóne meno pod názvom, na širšom vedľa neho. Meno človeka, na ktorého
+   sa čaká, sa nesmie odseknúť — je to jediný údaj, s ktorým sa dá niečo
+   urobiť. */
+.waiting-item { display: grid; gap: 2px; font-size: 14.5px; }
+.waiting-name { font-weight: 600; color: inherit; }
+.waiting-meta { font-size: 13px; overflow-wrap: anywhere; }
+
+@media (min-width: 760px) {
+  .waiting-item { grid-template-columns: minmax(0, 1fr) auto; align-items: baseline; gap: 12px; }
+  .waiting-meta { text-align: right; }
+}

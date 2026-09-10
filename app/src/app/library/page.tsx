@@ -20,6 +20,8 @@ import {
 } from "./actions"
 import TreeWithOrder from "@/components/TreeWithOrder"
 import AppShell from "@/components/AppShell"
+import WaitingForApproval from "@/components/WaitingForApproval"
+import { openRounds, documentTitles } from "@/lib/approvalsDb"
 import { normalizeLayout } from "@/lib/appNav"
 import { brandingView } from "@/lib/tenants"
 import { tenantStyle } from "@/components/TenantHeader"
@@ -102,13 +104,21 @@ export default async function LibraryPage({
     match: filters.match,
   }
 
-  const [rows, folders, folderCounts, facets] = await Promise.all([
+  const [rows, folders, folderCounts, facets, waiting] = await Promise.all([
     libraryList(ctx.tenant.companyCode, listFilter),
     allFolders(ctx.tenant.companyCode),
     counts(ctx.tenant.companyCode),
     libraryFacets(ctx.tenant.companyCode, listFilter),
+    // Bežiace kolá schvaľovania. **Nefiltrujú sa filtrami zoznamu**: čo čaká
+    // na rozhodnutie, čaká bez ohľadu na to, čo si človek práve odfiltroval —
+    // a schovať to za filter by znamenalo, že si toho nikto nevšimne.
+    openRounds(ctx.tenant.companyCode),
   ])
   const tree = flattenTree(folders)
+  const waitingTitles = await documentTitles(
+    ctx.tenant.companyCode,
+    waiting.map(r => r.documentId),
+  )
 
   // Filtre sa nesú ďalej v každom odkaze aj v každom formulári — inak by sa
   // človek po založení priečinka ocitol späť na nefiltrovanom zozname.
@@ -206,6 +216,13 @@ export default async function LibraryPage({
     <AppShell layout={normalizeLayout(q.layout)} language={uiLanguage}>
     <div style={tenantStyle(branding)}>
       <Notice message={message} error={error === "1"} back="/library" />
+
+      {/*
+        Nad zoznamom, nie v ňom: je to úloha, nie obsah knižnice. Názvy sa
+        načítavajú zvlášť, nie z riadkov zoznamu — tie sú prefiltrované, takže
+        dokument v kole medzi nimi byť nemusí a zostalo by po ňom `documentId`.
+      */}
+      <WaitingForApproval rounds={waiting} titles={waitingTitles} language={uiLanguage} />
 
       <div style={{ display: "flex", gap: 12, alignItems: "baseline", flexWrap: "wrap", margin: "0 0 6px" }}>
         <h1 style={{ fontSize: 26, letterSpacing: "-0.02em", margin: 0 }}>{t.heading}</h1>

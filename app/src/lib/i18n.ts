@@ -1089,6 +1089,15 @@ interface Dictionary {
       viewSwitch: string
       /** Kotvy k panelu filtrov a späť — len na telefóne. */
       jumpToFilters: string
+
+      /** „Čaká na schválenie“ nad knižnicou (ADR-006, krok 6). */
+      waiting: {
+        heading: string
+        count: (n: number) => string
+        since: (date: string) => string
+        waitingFor: (names: string) => string
+        nobodyPending: string
+      }
       backToList: string
       viewTable: string
       viewCards: string
@@ -2655,6 +2664,13 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       nextPage: "Ďalšia",
       viewSwitch: "Pohľad",
       jumpToFilters: "Filtre ↓",
+      waiting: {
+        heading: "Čaká na schválenie",
+        count: n => (n === 1 ? "1 znenie" : n >= 2 && n <= 4 ? `${n} znenia` : `${n} znení`),
+        since: date => `predložené ${date}`,
+        waitingFor: names => `čaká sa na: ${names}`,
+        nobodyPending: "všetci rozhodli",
+      },
       backToList: "↑ Späť na zoznam",
       viewTable: "Tabuľka",
       viewCards: "Karty",
@@ -4209,6 +4225,13 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       nextPage: "Další",
       viewSwitch: "Pohled",
       jumpToFilters: "Filtry ↓",
+      waiting: {
+        heading: "Čeká na schválení",
+        count: n => (n === 1 ? "1 znění" : n >= 2 && n <= 4 ? `${n} znění` : `${n} znění`),
+        since: date => `předloženo ${date}`,
+        waitingFor: names => `čeká se na: ${names}`,
+        nobodyPending: "všichni rozhodli",
+      },
       backToList: "↑ Zpět na seznam",
       viewTable: "Tabulka",
       viewCards: "Karty",
@@ -5757,6 +5780,13 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       nextPage: "Next",
       viewSwitch: "View",
       jumpToFilters: "Filters ↓",
+      waiting: {
+        heading: "Waiting for approval",
+        count: n => (n === 1 ? "1 version" : `${n} versions`),
+        since: date => `submitted ${date}`,
+        waitingFor: names => `waiting for: ${names}`,
+        nobodyPending: "everyone has decided",
+      },
       backToList: "↑ Back to the list",
       viewTable: "Table",
       viewCards: "Cards",
