@@ -24,6 +24,9 @@ import TagSelect from "@/components/TagSelect"
 import { normalizeQuery, type RawQuery } from "@/lib/urlParams"
 import { documentProgress } from "@/lib/libraryProgress"
 import AppShell from "@/components/AppShell"
+import ApprovalPanel from "@/components/ApprovalPanel"
+import { roundsByVersion, stateOf } from "@/lib/approvalsDb"
+import { listPeople } from "@/lib/people"
 
 export const dynamic = "force-dynamic"
 
@@ -57,6 +60,20 @@ export default async function DocumentDetailPage({
   // porovnávať koncept s prázdnym `markdown` by tvrdilo, že je čo publikovať,
   // aj keď je text ten istý.
   const effective = d.versions.find(v => v.isActive && v.effectiveFrom)
+
+  // Schvaľovanie (ADR-006). Kolá pre celý dokument jedným dotazom — pri
+  // desiatich zneniach je rozdiel medzi jedným a desiatimi dotazmi vidieť.
+  const rounds = await roundsByVersion(ctx.tenant.companyCode, documentId)
+  /*
+    Koho možno vybrať za schvaľovateľa. Predkladateľ zo zoznamu vypadáva už
+    tu, nie až pri odoslaní: pravidlo „kto text nahral, ho neschvaľuje" (D69)
+    stráži server, ale ponúkať voľbu, ktorú vzápätí odmietne, je zlé
+    rozhranie. Vyradení ľudia sa neponúkajú — kolo, ktoré na nich čaká, sa
+    neuzavrie nikdy.
+  */
+  const approverChoices = (await listPeople(ctx.tenant.companyCode))
+    .filter(p => p.status !== "inactive" && p.email !== ctx.person.email)
+    .map(p => ({ id: p.id, fullName: p.fullName, email: p.email, department: p.department }))
   /*
    * Koľko ľudí platné znenie potvrdilo. Jeden dotaz navyše na stránku — je to
    * jeden dokument, nie riadok v zozname, kde by to bol dotaz na každý riadok.
@@ -298,6 +315,15 @@ export default async function DocumentDetailPage({
                 <div className="quiet audit-note">{t.dateSource(v.effectiveFromSource)}</div>
               )}
               {v.changeNote && <div className="quiet audit-note">{v.changeNote}</div>}
+
+              <ApprovalPanel
+                documentId={d.documentId}
+                versionId={v.versionId}
+                state={stateOf(rounds.get(v.versionId), v.publishedBefore)}
+                rounds={rounds.get(v.versionId) ?? []}
+                people={approverChoices}
+                language={language}
+              />
 
               {/*
                 História opráv. Zapisuje sa od zavedenia `fixVersion()`,

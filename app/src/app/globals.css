@@ -2819,3 +2819,65 @@ a.answer-source:focus-visible { outline: 2px solid var(--accent); outline-offset
   padding-left: max(var(--pad-main), calc((100% - var(--shell-maxw)) / 2 + var(--pad-main)));
   padding-right: max(var(--pad-main), calc((100% - var(--shell-maxw)) / 2 + var(--pad-main)));
 }
+
+/* ── schvaľovanie znenia (ADR-006) ──────────────────────────────────────────
+   Stav znenia v zozname verzií. Farba nie je jediným nositeľom stavu — text
+   hovorí to isté slovami, takže to funguje pri farbosleposti aj v čiernobielej
+   tlači. Rovnaké pravidlo ako pri termínovom chipe. */
+
+.approval { display: grid; gap: 8px; margin-top: 10px; }
+
+.approval-head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+
+.approval-state--approved { background: var(--ok-bg); color: var(--ok-fg); }
+.approval-state--in-review { background: var(--warn-bg); color: var(--warn-fg); }
+/* Koncept a „zverejnené pred zavedením" zostávajú tiché: nie je to problém,
+   je to stav. Krikľavá farba by z bežnej veci robila poplach. */
+.approval-state--draft,
+.approval-state--published-before { background: var(--surface-2); color: var(--muted); }
+
+.approval-count { font-size: 13px; font-variant-numeric: tabular-nums; }
+
+.approval-note { font-size: 13px; margin: 0; }
+
+.approval-history > summary,
+.approval-submit > summary { font-size: 13px; cursor: pointer; }
+
+.approval-rounds { list-style: none; padding: 0; margin: 8px 0 0; display: grid; gap: 12px; }
+
+.approval-round-head { display: flex; gap: 8px; flex-wrap: wrap; align-items: baseline; font-size: 13.5px; }
+
+.approval-people-decided { list-style: none; padding: 0; margin: 6px 0 0; display: grid; gap: 4px; }
+.approval-people-decided > li { display: flex; gap: 8px; flex-wrap: wrap; font-size: 13.5px; }
+.approval-reason { flex-basis: 100%; color: var(--warn-fg); }
+
+.approval-form { display: grid; gap: 12px; margin-top: 10px; }
+
+/* Posuvný rámik: pri stovke ľudí by zoznam bez neho odtlačil tlačidlo mimo
+   obrazovku a na telefóne by sa k nemu nikto neprerolloval. */
+.approval-people {
+  display: grid;
+  gap: 2px;
+  max-height: 260px;
+  overflow-y: auto;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 6px;
+  background: var(--surface);
+}
+
+.approval-person {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 8px 6px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.approval-person:hover { background: var(--surface-2); }
+/* Cieľ na dotyk má mať aspoň 44 px — políčko samotné je menšie, preto sa
+   klikacou plochou stáva celý riadok. */
+.approval-person > input { margin-top: 3px; width: 18px; height: 18px; flex: none; }
+.approval-person > span { display: grid; gap: 1px; min-width: 0; }
+.approval-person-name { font-size: 14.5px; }
+.approval-person-meta { font-size: 12.5px; overflow-wrap: anywhere; }

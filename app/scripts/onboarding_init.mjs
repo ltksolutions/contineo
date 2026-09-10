@@ -148,6 +148,22 @@ const PLAN = [
         why: "HR prehľad, najnovšie hore" },
     ],
   },
+  {
+    collection: "approval_rounds",
+    indexes: [
+      // Jedinečnosť kola je jediná ochrana pred tým, aby dvaja ľudia, ktorí
+      // naraz stlačia „Predložiť", otvorili dve súbežné kolá nad tým istým
+      // znením. Číslo kola sa počíta z počtu kôl, takže by obe dostali rovnaké.
+      { key: { companyCode: 1, documentId: 1, versionId: 1, round: 1 },
+        opts: { unique: true, name: "approval_round_unique" },
+        why: "jedno číslo kola na znenie — chráni pred dvomi súbežnými predloženiami" },
+      { key: { companyCode: 1, "approvers.email": 1, outcome: 1 },
+        opts: { name: "approval_by_approver" },
+        why: "čo čaká na mňa — obrazovka schvaľovateľa a upozornenia" },
+      { key: { companyCode: 1, submittedAt: -1 }, opts: { name: "approval_by_time" },
+        why: "dlaždica so zneniami, ktoré čakajú na schválenie \u2014 najnovšie hore" },
+    ],
+  },
 ]
 
 const client = new MongoClient(URI, { serverSelectionTimeoutMS: 15000 })

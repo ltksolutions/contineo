@@ -102,6 +102,7 @@ export type SubmitProblem =
   | "approval.selfApproval"
   | "approval.alreadyRunning"
   | "approval.alreadyApproved"
+  | "approval.publishedBefore"
 
 /**
  * Prečo sa znenie nedá predložiť na schválenie — alebo `null`, keď sa dá.
@@ -113,8 +114,16 @@ export function submitProblem(input: {
   rounds: ApprovalRound[]
   approvers: string[]
   submittedBy: string
+  publishedBefore?: boolean
 }): SubmitProblem | null {
-  const state = versionState(input.rounds)
+  const state = versionState(input.rounds, { publishedBefore: input.publishedBefore })
+  // Znenia spred zavedenia schvaľovania sa **spätne neschvaľujú** (D74).
+  // Nie je to technická prekážka, je to to isté rozhodnutie: dopísať im
+  // súhlas by znamenalo vyrobiť ho. A keby sa predložiť dali, znenie by
+  // počas kola stratilo príznak, prepadlo by do „v schvaľovaní" a brána pri
+  // prideľovaní by ho zastavila — norma, ktorá sa dnes prideľuje, by sa
+  // prideľovať prestala. Nahrádzajú sa oficiálnymi zneniami (D75).
+  if (state === "published-before") return "approval.publishedBefore"
   if (state === "in-review") return "approval.alreadyRunning"
   if (state === "approved") return "approval.alreadyApproved"
 

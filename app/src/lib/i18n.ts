@@ -1264,6 +1264,35 @@ interface Dictionary {
       onDateChangeCorrection: string
       onDateChangeReacknowledge: string
       fixSubmit: string
+
+      /**
+       * Schvaľovanie znenia (ADR-006). Stav je odvodený z kôl, nie uložený —
+       * preto sú to štyri hodnoty a nie pole v databáze.
+       */
+      approvalHeading: string
+      stateDraft: string
+      stateInReview: string
+      stateApproved: string
+      statePublishedBefore: string
+      statePublishedBeforeNote: string
+      approvalSubmit: string
+      approvalApprovers: string
+      approvalApproversHint: string
+      approvalNoPeople: string
+      approvalNote: string
+      approvalNotePlaceholder: string
+      approvalNoteHint: string
+      approvalSubmitButton: string
+      approvalWaiting: string
+      approvalApproved: (when: string) => string
+      approvalRejected: (when: string) => string
+      approvalRoundHeading: (round: number) => string
+      approvalSubmittedBy: (who: string, when: string) => string
+      approvalHistory: (n: number) => string
+      approvalCancel: string
+      approvalCancelReason: string
+      approvalCancelHint: string
+      approvalCancelButton: string
     }
     editor: {
       back: string
@@ -1317,6 +1346,8 @@ interface Dictionary {
       reindexed: (chunks: number, archived: number) => string
       fixedNeedsReacknowledge: (people: number) => string
       fixed: string
+      submittedForApproval: (n: number) => string
+      approvalCancelled: string
       failed: string
     }
     upload: {
@@ -1957,6 +1988,16 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
   },
   errors: {
     unknown: "Nepodarilo sa to. Skús to znova.",
+
+    // schvalovanie znenia (ADR-006)
+    "approval.noApprovers": "Vyber aspoň jedného schvaľovateľa. Kolo bez nich by sa nedalo uzavrieť.",
+    "approval.selfApproval": "Seba vybrať nemôžeš. Kto text nahral, ho neschvaľuje \u2014 inak je schválenie podpis pod vlastnú prácu.",
+    "approval.alreadyRunning": "Pre toto znenie už kolo beží. Počkaj, kým sa uzavrie, alebo ho zruš.",
+    "approval.alreadyApproved": "Toto znenie je schválené. Iný text znamená nové znenie, nie nové kolo.",
+    "approval.publishedBefore": "Toto znenie bolo zverejnené pred zavedením schvaľovania a spätne sa neschvaľuje. Nahradí ho oficiálne znenie.",
+    "approval.unknownApprover": "Niektorý z vybraných schvaľovateľov tu nie je alebo je vyradený.",
+    "approval.reasonRequired": "Bez dôvodu sa kolo zrušiť nedá. O rok nikto nezistí, prečo skončilo.",
+    "approval.nothingRunning": "Pre toto znenie nebeží žiadne kolo.",
 
     // ── prevod súboru ──────────────────────────────────────────────────────
     "conversion.zipNotOffice": "Toto je ZIP-ový balík, ale ani docx, ani xlsx. Staré .doc a .xls sa prevádzať nedajú — ulož ich vo Worde alebo Exceli ako novší formát.",
@@ -2751,6 +2792,34 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       onDateChangeCorrection: "oprava zápisu, potvrdenia zostávajú",
       onDateChangeReacknowledge: "podstatná zmena, potvrdiť znova",
       fixSubmit: "Opraviť",
+
+      approvalHeading: "Schválenie",
+      stateDraft: "Koncept",
+      stateInReview: "V schvaľovaní",
+      stateApproved: "Schválené",
+      statePublishedBefore: "Zverejnené pred zavedením schvaľovania",
+      statePublishedBeforeNote:
+        "Toto znenie bolo v knižnici skôr, než sa začalo schvaľovať. Spätne sa neschvaľuje \u2014 nahradí ho oficiálne znenie, ktoré schvaľovaním prejde.",
+      approvalSubmit: "predložiť na schválenie",
+      approvalApprovers: "Schvaľovatelia",
+      approvalApproversHint:
+        "Vyber menovite ľudí, nie útvar. \u201ESchválil niekto z útvaru Právne\u201C sa o rok nedá overiť. Seba vybrať nemôžeš \u2014 kto text nahral, ho neschvaľuje.",
+      approvalNoPeople: "V organizácii nie je koho vybrať.",
+      approvalNote: "Čo sa v znení mení",
+      approvalNotePlaceholder: "Napríklad: upravený článok 4, zosúladenie s novelou zákona.",
+      approvalNoteHint: "Nepovinné. Číta to schvaľovateľ, nie archív.",
+      approvalSubmitButton: "Predložiť na schválenie",
+      approvalWaiting: "čaká",
+      approvalApproved: when => `schválil ${when}`,
+      approvalRejected: when => `zamietol ${when}`,
+      approvalRoundHeading: round => `${round}. kolo`,
+      approvalSubmittedBy: (who, when) => `predložil ${who} · ${when}`,
+      approvalHistory: n => (n === 1 ? "1 kolo" : n >= 2 && n <= 4 ? `${n} kolá` : `${n} kôl`),
+      approvalCancel: "zrušiť kolo",
+      approvalCancelReason: "Dôvod zrušenia",
+      approvalCancelHint:
+        "Kolo sa nezmaže \u2014 dostane dôvod a zostane v histórii. Je to jediná cesta, ako zo zoznamu odstrániť schvaľovateľa, ktorý tam byť nemá.",
+      approvalCancelButton: "Zrušiť kolo",
     },
     editor: {
       back: "← Späť na dokument",
@@ -2809,6 +2878,9 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
         "Opravené. Znenie je označené ako vyžadujúce nové potvrdenie —" +
         ` týka sa to ${people} ${people === 1 ? "človeka" : "ľudí"}.`,
       fixed: "Opravené. Potvrdenia zostávajú platné.",
+      submittedForApproval: n =>
+        `Predložené na schválenie ${n === 1 ? "jednému človeku" : `${n} ľuďom`}.`,
+      approvalCancelled: "Kolo zrušené. Zostáva v histórii aj s dôvodom.",
       failed: "Nepodarilo sa to. Skús to znova.",
     },
     upload: {
@@ -3434,6 +3506,16 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
   },
   errors: {
     unknown: "Nepodařilo se to. Zkus to znovu.",
+
+    // schvalovani zneni (ADR-006)
+    "approval.noApprovers": "Vyber alespoň jednoho schvalovatele. Kolo bez nich by nešlo uzavřít.",
+    "approval.selfApproval": "Sebe vybrat nemůžeš. Kdo text nahrál, ten ho neschvaluje \u2014 jinak je schválení podpis pod vlastní prací.",
+    "approval.alreadyRunning": "Pro toto znění už kolo běží. Počkej, až se uzavře, nebo ho zruš.",
+    "approval.alreadyApproved": "Toto znění je schválené. Jiný text znamená nové znění, ne nové kolo.",
+    "approval.publishedBefore": "Toto znění bylo zveřejněno před zavedením schvalování a zpětně se neschvaluje. Nahradí ho oficiální znění.",
+    "approval.unknownApprover": "Někdo z vybraných schvalovatelů tu není nebo je vyřazený.",
+    "approval.reasonRequired": "Bez důvodu kolo zrušit nelze. Za rok nikdo nezjistí, proč skončilo.",
+    "approval.nothingRunning": "Pro toto znění neběží žádné kolo.",
 
     // ── převod souboru ─────────────────────────────────────────────────────
     "conversion.zipNotOffice": "Toto je ZIP balík, ale ani docx, ani xlsx. Staré .doc a .xls převádět nelze — ulož je ve Wordu nebo Excelu jako novější formát.",
@@ -4228,6 +4310,34 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       onDateChangeCorrection: "oprava zápisu, potvrzení zůstávají",
       onDateChangeReacknowledge: "podstatná změna, potvrdit znovu",
       fixSubmit: "Opravit",
+
+      approvalHeading: "Schválení",
+      stateDraft: "Koncept",
+      stateInReview: "Ve schvalování",
+      stateApproved: "Schváleno",
+      statePublishedBefore: "Zveřejněno před zavedením schvalování",
+      statePublishedBeforeNote:
+        "Toto znění bylo v knihovně dřív, než se začalo schvalovat. Zpětně se neschvaluje \u2014 nahradí ho oficiální znění, které schvalováním projde.",
+      approvalSubmit: "předložit ke schválení",
+      approvalApprovers: "Schvalovatelé",
+      approvalApproversHint:
+        "Vyber jmenovitě lidi, ne útvar. \u201ESchválil někdo z útvaru Právní\u201C se za rok nedá ověřit. Sebe vybrat nemůžeš \u2014 kdo text nahrál, ten ho neschvaluje.",
+      approvalNoPeople: "V organizaci není koho vybrat.",
+      approvalNote: "Co se ve znění mění",
+      approvalNotePlaceholder: "Například: upravený článek 4, sladění s novelou zákona.",
+      approvalNoteHint: "Nepovinné. Čte to schvalovatel, ne archiv.",
+      approvalSubmitButton: "Předložit ke schválení",
+      approvalWaiting: "čeká",
+      approvalApproved: when => `schválil ${when}`,
+      approvalRejected: when => `zamítl ${when}`,
+      approvalRoundHeading: round => `${round}. kolo`,
+      approvalSubmittedBy: (who, when) => `předložil ${who} · ${when}`,
+      approvalHistory: n => (n === 1 ? "1 kolo" : n >= 2 && n <= 4 ? `${n} kola` : `${n} kol`),
+      approvalCancel: "zrušit kolo",
+      approvalCancelReason: "Důvod zrušení",
+      approvalCancelHint:
+        "Kolo se nesmaže \u2014 dostane důvod a zůstane v historii. Je to jediná cesta, jak ze seznamu odstranit schvalovatele, který tam být nemá.",
+      approvalCancelButton: "Zrušit kolo",
     },
     editor: {
       back: "← Zpět na dokument",
@@ -4286,6 +4396,9 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
         "Opraveno. Znění je označeno jako vyžadující nové potvrzení —" +
         ` týká se to ${people} ${people === 1 ? "člověka" : "lidí"}.`,
       fixed: "Opraveno. Potvrzení zůstávají platná.",
+      submittedForApproval: n =>
+        `Předloženo ke schválení ${n === 1 ? "jednomu člověku" : `${n} lidem`}.`,
+      approvalCancelled: "Kolo zrušeno. Zůstává v historii i s důvodem.",
       failed: "Nepodařilo se to. Zkus to znovu.",
     },
     upload: {
@@ -4905,6 +5018,16 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
   },
   errors: {
     unknown: "That did not work. Try again.",
+
+    // version approval (ADR-006)
+    "approval.noApprovers": "Pick at least one approver. A round without them could never be closed.",
+    "approval.selfApproval": "You cannot pick yourself. Whoever uploaded the text does not approve it \u2014 otherwise approval is a signature under your own work.",
+    "approval.alreadyRunning": "A round is already running for this version. Wait for it to close, or cancel it.",
+    "approval.alreadyApproved": "This version is approved. Different text means a new version, not a new round.",
+    "approval.publishedBefore": "This version was published before approvals existed and is not approved retroactively. An official version will replace it.",
+    "approval.unknownApprover": "One of the chosen approvers is not here or has been deactivated.",
+    "approval.reasonRequired": "A round cannot be cancelled without a reason. A year from now nobody would know why it ended.",
+    "approval.nothingRunning": "No round is running for this version.",
 
     // ── file conversion ────────────────────────────────────────────────────
     "conversion.zipNotOffice": "This is a ZIP archive, but neither docx nor xlsx. Legacy .doc and .xls cannot be converted — save them from Word or Excel in a newer format.",
@@ -5699,6 +5822,34 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       onDateChangeCorrection: "correction of the record, acknowledgements stand",
       onDateChangeReacknowledge: "substantive change, acknowledge again",
       fixSubmit: "Correct",
+
+      approvalHeading: "Approval",
+      stateDraft: "Draft",
+      stateInReview: "In review",
+      stateApproved: "Approved",
+      statePublishedBefore: "Published before approvals existed",
+      statePublishedBeforeNote:
+        "This version was in the library before approvals were introduced. It is not approved retroactively \u2014 an official version that goes through approval will replace it.",
+      approvalSubmit: "submit for approval",
+      approvalApprovers: "Approvers",
+      approvalApproversHint:
+        "Name people, not a department. \u201CSomeone in Legal approved it\u201D cannot be verified a year later. You cannot pick yourself \u2014 whoever uploaded the text does not approve it.",
+      approvalNoPeople: "There is nobody to pick in this organisation.",
+      approvalNote: "What changes in this version",
+      approvalNotePlaceholder: "For example: article 4 reworded to match the amended act.",
+      approvalNoteHint: "Optional. The approver reads it, not the archive.",
+      approvalSubmitButton: "Submit for approval",
+      approvalWaiting: "waiting",
+      approvalApproved: when => `approved ${when}`,
+      approvalRejected: when => `rejected ${when}`,
+      approvalRoundHeading: round => `Round ${round}`,
+      approvalSubmittedBy: (who, when) => `submitted by ${who} · ${when}`,
+      approvalHistory: n => (n === 1 ? "1 round" : `${n} rounds`),
+      approvalCancel: "cancel this round",
+      approvalCancelReason: "Reason for cancelling",
+      approvalCancelHint:
+        "The round is not deleted \u2014 it keeps the reason and stays in the history. It is the only way to remove an approver who should not be on the list.",
+      approvalCancelButton: "Cancel the round",
     },
     editor: {
       back: "← Back to the document",
@@ -5756,6 +5907,9 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
         "Corrected. The version is marked as requiring a new acknowledgement —" +
         ` this affects ${people} ${people === 1 ? "person" : "people"}.`,
       fixed: "Corrected. Acknowledgements stay valid.",
+      submittedForApproval: n =>
+        `Submitted for approval to ${n === 1 ? "one person" : `${n} people`}.`,
+      approvalCancelled: "Round cancelled. It stays in the history with its reason.",
       failed: "That did not work. Try again.",
     },
     upload: {
