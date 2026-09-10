@@ -13,6 +13,8 @@
 import Link from "next/link"
 import { notFound, redirect } from "next/navigation"
 import { onboardingContext } from "@/lib/session"
+import { recordOpen } from "@/lib/documentOpens"
+import { assignedAtByVersion } from "@/lib/assignments"
 import { brandingView } from "@/lib/tenants"
 import { tenantStyle } from "@/components/TenantHeader"
 import { loadDocumentFor, effectiveVersion } from "@/lib/documents"
@@ -52,6 +54,29 @@ export default async function DocumentPage({
   if (!doc) notFound()
 
   const version = effectiveVersion(doc)
+
+  /*
+    Prvé otvorenie znenia (ADR-005, D64). **Len tomu, kto povinnosť má** —
+    personalista, ktorý si znenie otvorí na kontrolu, sa nezapisuje. Je to
+    minimalizácia údajov (O14) a zároveň presne to, čo reťaz potrebuje:
+    otázka znie „vedel o tom a nepotvrdil?", nie „kto sa na to pozeral".
+
+    Zapisuje sa **až tu, po kontrole prístupu a po tom, čo je jasné, ktoré
+    znenie sa zobrazí** — inak by v zázname mohlo skončiť znenie, ktoré človek
+    nikdy nevidel. `recordOpen()` nikdy nevyhadzuje: keď zápis zlyhá, stránka
+    sa zobrazí aj tak. Meranie nesmie brániť plneniu povinnosti.
+  */
+  if (version.ok) {
+    const mine = await assignedAtByVersion(person)
+    if (mine.has(version.version.versionId)) {
+      await recordOpen({
+        companyCode: person.companyCode,
+        personId: person.id,
+        documentId: doc.documentId,
+        versionId: version.version.versionId,
+      })
+    }
+  }
 
   const q = await searchParams
   const text = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v)
