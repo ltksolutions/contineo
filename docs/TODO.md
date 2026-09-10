@@ -456,7 +456,10 @@
       **Poradie krokov opravené:** brána pri prideľovaní (krok 2) ide až **po** predložení a rozhodovaní (3, 4) — inak by sa nové znenie dalo nahrať, ale nie schváliť a ani prideliť.
       **Krok 1 hotový (2026-09-10):** `app/src/lib/approvals.ts` + 24 testov — model kola, `versionState()`, `roundOutcome()`, `submitProblem()`, `assignBlock()`. Čisté funkcie bez databázy, v behu systému zatiaľ nič nevolá.
       **Poradie D75:** najprv schvaľovanie funguje → potom sa cezeň nahrajú oficiálne znenia → až potom sa odstráni skúšobný korpus. Obrátené poradie by z oficiálnych noriem urobilo druhý prípad grandfatheringu.
-- [ ] **Termín potvrdenia `due` — dokončiť odosielanie.** Kroky 1 až 3 hotové (model, zadanie, zobrazenie), eskalácia odsúhlasená namiesto denného opakovania. Cron **beží naprázdno**: spočíta, komu by sa dnes ozval, vypíše to do logu s maskovanými adresami a **nepošle nič**.
+- [x] **Termín potvrdenia `due` a pripomienky** ✅ 2026-09-10 — kroky 1 až 5 z ADR-004 vrátane odosielania. `vercel.json` je denný (`0 6 * * *`), kolekcia `reminder_log` stráži jednu správu na človeka a deň.
+      **Kadencia overená na skutočných dátach pred zapnutím:** D-5 až D-0 každý deň, potom D+1, D+3, D+7 a odvtedy týždenne aj personalistovi. Jedenásť správ za mesiac, nie tridsať.
+      **Pri tom sa našlo, že cron nikdy nebežal** — `/api/cron/` bola za bránou prihlásenia. Opravené, viď `lib/publicRoutes.ts`.
+- [x] ~~**Termín potvrdenia `due` — dokončiť odosielanie.**~~ Kroky 1 až 3 hotové (model, zadanie, zobrazenie), eskalácia odsúhlasená namiesto denného opakovania. Cron **beží naprázdno**: spočíta, komu by sa dnes ozval, vypíše to do logu s maskovanými adresami a **nepošle nič**.
       **Zostáva:** pozrieť výstup behu naprázdno z produkcie, potom zapnúť odosielanie a zmeniť `app/vercel.json` z `0 6 * * 1` na `0 6 * * *`. Je to **produkčné nastavenie** — ide do PR a nemerguje sa bez súhlasu.
       **Dôsledok, ktorý treba povedať nahlas:** odvtedy chodia e-maily priamo ľuďom, nie personalistovi. Doteraz to systém nikdy nerobil.
 - [x] **Skúšobný korpus označený značkou `test`** ✅ 2026-09-07 — všetkých 10 dokumentov SFZ, `npm run tag:test -- --company SFZ --zapis`. Rozhodnutie Jána Letka: tieto znenia sú len skúšobné, ostré sa nahrajú znova a von nikdy nepôjdu.
