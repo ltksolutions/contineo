@@ -200,6 +200,23 @@ interface Dictionary {
     note: string
   }
 
+  /**
+   * Pripomienka termínu (ADR-004). Dva tóny jednej šablóny — text hovorí
+   * stav, nie len fakt.
+   */
+  dueReminderEmail: {
+    subjectSoon: (organisation: string) => string
+    subjectOver: (organisation: string) => string
+    subtitleSoon: string
+    subtitleOver: string
+    introSoon: string
+    introOver: string
+    soonLine: (due: string, daysLeft: number) => string
+    overLine: (due: string, daysOver: number) => string
+    button: string
+    note: string
+  }
+
   /** Prosba o schválenie znenia (ADR-006). Menovitá správa, nie hromadná pošta. */
   approvalEmail: {
     subject: (organisation: string) => string
@@ -1546,6 +1563,21 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       note: "Ak sa prihlásiť nedá, ozvite sa personálnemu oddeleniu — adresa musí byť v zozname osôb.",
     },
 
+    dueReminderEmail: {
+      subjectSoon: org => `Blíži sa termín potvrdenia \u2014 ${org}`,
+      subjectOver: org => `Ste po termíne potvrdenia \u2014 ${org}`,
+      subtitleSoon: "Blíži sa termín",
+      subtitleOver: "Po termíne",
+      introSoon: "Toto vás čaká a termín sa blíži:",
+      introOver: "Toto vás čaká a termín už uplynul:",
+      soonLine: (due, daysLeft) =>
+        daysLeft === 0 ? `termín je dnes, ${due}`
+        : `termín je ${due}, ${daysLeft === 1 ? "zostáva deň" : daysLeft <= 4 ? `zostávajú ${daysLeft} dni` : `zostáva ${daysLeft} dní`}`,
+      overLine: (due, daysOver) =>
+        `termín bol ${due}, ${daysOver === 1 ? "ste po ňom deň" : daysOver <= 4 ? `ste po ňom ${daysOver} dni` : `ste po ňom ${daysOver} dní`}`,
+      button: "Otvoriť a potvrdiť",
+      note: "Potvrdenie je krátke \u2014 dokument si prečítate a kliknete. Keď ste to už spravili, tento e-mail nabudúce nepríde.",
+    },
     approvalEmail: {
       subject: org => `Znenie na schválenie \u2014 ${org}`,
       subtitle: "Na schválenie",
@@ -3109,6 +3141,21 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       note: "Pokud se přihlásit nedá, ozvěte se personálnímu oddělení — adresa musí být v seznamu osob.",
     },
 
+    dueReminderEmail: {
+      subjectSoon: org => `Blíží se termín potvrzení \u2014 ${org}`,
+      subjectOver: org => `Jste po termínu potvrzení \u2014 ${org}`,
+      subtitleSoon: "Blíží se termín",
+      subtitleOver: "Po termínu",
+      introSoon: "Toto vás čeká a termín se blíží:",
+      introOver: "Toto vás čeká a termín už uplynul:",
+      soonLine: (due, daysLeft) =>
+        daysLeft === 0 ? `termín je dnes, ${due}`
+        : `termín je ${due}, ${daysLeft === 1 ? "zbývá den" : daysLeft <= 4 ? `zbývají ${daysLeft} dny` : `zbývá ${daysLeft} dní`}`,
+      overLine: (due, daysOver) =>
+        `termín byl ${due}, ${daysOver === 1 ? "jste po něm den" : daysOver <= 4 ? `jste po něm ${daysOver} dny` : `jste po něm ${daysOver} dní`}`,
+      button: "Otevřít a potvrdit",
+      note: "Potvrzení je krátké \u2014 dokument si přečtete a kliknete. Když jste to už udělali, tento e-mail příště nepřijde.",
+    },
     approvalEmail: {
       subject: org => `Znění ke schválení \u2014 ${org}`,
       subtitle: "Ke schválení",
@@ -4667,6 +4714,21 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       note: "If you cannot sign in, contact HR — your address has to be on the list of people.",
     },
 
+    dueReminderEmail: {
+      subjectSoon: org => `A deadline is approaching \u2014 ${org}`,
+      subjectOver: org => `You are past a deadline \u2014 ${org}`,
+      subtitleSoon: "Deadline approaching",
+      subtitleOver: "Past the deadline",
+      introSoon: "This is waiting for you and the deadline is close:",
+      introOver: "This is waiting for you and the deadline has passed:",
+      soonLine: (due, daysLeft) =>
+        daysLeft === 0 ? `the deadline is today, ${due}`
+        : `the deadline is ${due}, ${daysLeft === 1 ? "one day left" : `${daysLeft} days left`}`,
+      overLine: (due, daysOver) =>
+        `the deadline was ${due}, ${daysOver === 1 ? "one day ago" : `${daysOver} days ago`}`,
+      button: "Open it and acknowledge",
+      note: "Acknowledging is quick \u2014 read the document and click. If you have already done it, this email will not come again.",
+    },
     approvalEmail: {
       subject: org => `A version to approve \u2014 ${org}`,
       subtitle: "To approve",

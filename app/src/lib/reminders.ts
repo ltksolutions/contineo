@@ -15,6 +15,7 @@
 
 import { duties, type Duty } from "./hrReport"
 import { reminderPlan, daysLeft } from "./due"
+import { getCollection } from "./mongodb"
 
 /** Odkedy sa nepotvrdené považuje za meškajúce. Dva týždne (TODO I2). */
 export const DEFAULT_DAYS = 14
@@ -194,4 +195,57 @@ export async function dueRemindersFor(
   asOf = new Date(),
 ): Promise<DueReminder[]> {
   return dueRemindersFrom(await duties(companyCode), asOf)
+}
+
+// ── jedna správa na človeka a deň ────────────────────────────────────────────
+
+export const REMINDER_LOG_COLLECTION = "reminder_log"
+
+/**
+ * Deň v UTC ako `RRRR-MM-DD`. Kľúč, nie čas: dva behy crona v ten istý deň
+ * majú byť ten istý deň aj vtedy, keď medzi nimi prejde pol dňa.
+ */
+export function dayKey(at: Date): string {
+  return at.toISOString().slice(0, 10)
+}
+
+/**
+ * Pondelok toho týždňa, ako `RRRR-MM-DD`. Kľúč pre veci, ktoré majú chodiť
+ * **raz za týždeň**, aj keď beh je denný — súhrn pre personalistu.
+ */
+export function weekKey(at: Date): string {
+  const d = new Date(Date.UTC(at.getUTCFullYear(), at.getUTCMonth(), at.getUTCDate()))
+  // `getUTCDay()` je 0 pre nedeľu; posun na pondelok je preto 6, nie -1.
+  d.setUTCDate(d.getUTCDate() - (d.getUTCDay() === 0 ? 6 : d.getUTCDay() - 1))
+  return dayKey(d)
+}
+
+/**
+ * Zaberie právo ozvať sa tomuto človeku dnes. `true` znamená „choď", `false`
+ * „už sa mu dnes ozvalo".
+ *
+ * **Zapisuje sa pred odoslaním, nie po ňom.** Opačné poradie znie lákavo
+ * (nezapíš, čo neodišlo), ale pri páde medzi odoslaním a zápisom by človek
+ * dostal tú istú správu dvakrát. Takto v najhoršom prípade jedna správa
+ * v jeden deň nepríde — a príde nasledujúci deň, lebo kadencia beží ďalej.
+ * Dvakrát poslaná pripomienka je horšia než raz vynechaná.
+ *
+ * Jedinečnosť stráži index, nie kontrola pred zápisom: dva behy crona naraz
+ * by sa v kontrole minuli.
+ */
+export async function claimReminder(
+  companyCode: string,
+  key: string,
+  day: string,
+): Promise<boolean> {
+  const col = await getCollection(REMINDER_LOG_COLLECTION)
+  try {
+    await col.insertOne({ companyCode, key, day, at: new Date() } as never)
+    return true
+  } catch (e) {
+    if (typeof e === "object" && e !== null && (e as { code?: number }).code === 11000) return false
+    // Iná chyba než duplicita: radšej sa neozvať, než sa ozvať dvakrát.
+    console.error("[pripomienky] zápis o odoslaní zlyhal:", e)
+    return false
+  }
 }

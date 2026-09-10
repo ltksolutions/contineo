@@ -149,6 +149,20 @@ const PLAN = [
     ],
   },
   {
+    collection: "reminder_log",
+    indexes: [
+      // Jedinecnost je jedina ochrana pred tym, aby ten isty clovek dostal
+      // tu istu pripomienku dvakrat za den. Kontrola pred zapisom by sa pri
+      // dvoch behoch crona naraz minula.
+      { key: { companyCode: 1, key: 1, day: 1 }, opts: { unique: true, name: "reminder_once_a_day" },
+        why: "jedna sprava na cloveka a den \u2014 druhy beh crona v ten isty den neposle nic" },
+      // TTL 90 dni: je to prevadzkovy zaznam o odoslani, nie dokaz. Dokazom
+      // je `notified[]` na pridelenii a potvrdenie samo.
+      { key: { at: 1 }, opts: { name: "reminder_log_ttl", expireAfterSeconds: 90 * 24 * 60 * 60 },
+        why: "retencia 90 dni \u2014 prevadzkovy zaznam, nie dokaz" },
+    ],
+  },
+  {
     collection: "approval_rounds",
     indexes: [
       // Jedinečnosť kola je jediná ochrana pred tým, aby dvaja ľudia, ktorí

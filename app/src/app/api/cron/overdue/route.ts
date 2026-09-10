@@ -27,9 +27,9 @@ import type { Tenant } from "@/lib/tenants"
 import { PERSONS_COLLECTION } from "@/lib/persons"
 import type { Person } from "@/lib/persons"
 import { HR_ROLE } from "@/lib/hr"
-import { overdue, byPersonReminder, DEFAULT_DAYS, dueRemindersFor } from "@/lib/reminders"
-import { send, reminderEmail } from "@/lib/ecomail"
-import { normalizeLanguage } from "@/lib/i18n"
+import { overdue, byPersonReminder, DEFAULT_DAYS, dueRemindersFor, claimReminder, dayKey, weekKey } from "@/lib/reminders"
+import { send, reminderEmail, dueReminderEmail } from "@/lib/ecomail"
+import { normalizeLanguage, formatDate } from "@/lib/i18n"
 
 export const dynamic = "force-dynamic"
 /** Prehľad naprieč tenantmi trvá; predvolených 10 s by nestačilo. */
@@ -50,41 +50,127 @@ export async function GET(request: Request) {
   const report: { companyCode: string; behind: number; notified: number }[] = []
 
   /*
-   * Pripomienky podľa termínu (ADR-004) zatiaľ **len naprázdno**.
+   * Pripomienky podľa termínu (ADR-004, krok 4). **Odosielajú sa.**
    *
-   * Beh spočíta, komu by sa dnes ozval a v akom tóne, a vypíše to. **Nič
-   * neodošle.** Dôvod je ten istý, pre ktorý má náhľad aj prideľovanie: cron
-   * beží na Verceli, náhľady sú za SSO, a overiť sa to inak než na ostro nedá.
-   * Jedna chyba v kadencii by sa pri rovno zapnutom odosielaní prejavila až
-   * tým, že sa ozve sto ľudí — a pri termíne je to sľub, nie upozornenie.
+   * Kadencia je overená na skutočných dátach pred zapnutím: výpočet sa
+   * spustil k dvanástim dňom dopredu (D-5 až D+21) a prešiel deň po dni —
+   * šesť správ pred termínom, potom D+1, D+3, D+7 a odvtedy raz týždenne
+   * spolu s personalistom. Nie tridsať e-mailov za mesiac, ale jedenásť.
    *
-   * Odosielanie sa zapne samostatnou zmenou, keď sa na tomto výpise zhodneme.
+   * **Jedna správa na človeka a deň, nikdy dve.** Právo ozvať sa sa zaberá
+   * v `reminder_log` **pred odoslaním** — pri páde medzi odoslaním a zápisom
+   * by inak človek dostal to isté dvakrát. V najhoršom prípade jedna správa
+   * v jeden deň nepríde a príde nasledujúci; dvakrát poslaná pripomienka je
+   * horšia než raz vynechaná.
+   *
+   * Odkaz vedie na **zoznam** `/documents`, nie na jeden dokument: kto má
+   * pred sebou tri povinnosti, potrebuje jedno miesto.
    */
-  const dueDryRun: {
-    companyCode: string
-    person: string
-    tone: "soon" | "over"
-    alsoHr: boolean
-    items: { document: string; daysLeft: number }[]
-  }[] = []
+  const dueReport: { companyCode: string; sent: number; skipped: number; failed: number }[] = []
 
   for (const tenant of tenants) {
+    let sent = 0, skipped = 0, failed = 0
     try {
+      const host = tenant.hostnames[0]
+      const branding = brandingView(tenant)
+      const link = `https://${host}/documents`
+      const today = dayKey(new Date())
+      /*
+        Eskalácia od siedmeho dňa po termíne (ADR-004, časť 3.2). Po termíne
+        už problém nie je v tom, že človek zabudol — tam je problém
+        organizačný, a preto o ňom má vedieť aj personalista. Chodí **raz za
+        týždeň**, hoci beh je denný.
+      */
+      const escalate: { fullName: string; email: string; worstDays: number }[] = []
+
       for (const r of await dueRemindersFor(tenant.companyCode)) {
-        dueDryRun.push({
-          companyCode: tenant.companyCode,
-          // Adresa sa do výpisu nepíše celá — log si prečíta viac ľudí než
-          // výkaz a je to osobný údaj (O14).
-          person: r.email.replace(/^(.).*(@.*)$/, "$1***$2"),
-          tone: r.tone,
-          alsoHr: r.alsoHr,
-          items: r.items.map(i => ({ document: i.duty.documentTitle, daysLeft: i.daysLeft })),
-        })
+        if (r.alsoHr) {
+          escalate.push({
+            fullName: r.fullName,
+            email: r.email,
+            worstDays: Math.abs(Math.min(...r.items.map(i => i.daysLeft))),
+          })
+        }
+        if (!(await claimReminder(tenant.companyCode, `due:${r.personId}`, today))) {
+          skipped++
+          continue
+        }
+        const language = normalizeLanguage(
+          (await personCol.findOne({ companyCode: tenant.companyCode, id: r.personId } as never,
+            { projection: { language: 1 } }))?.language,
+        )
+        try {
+          await send({
+            to: r.email,
+            ...dueReminderEmail(
+              link,
+              host,
+              r.items.map(i => ({
+                title: i.duty.documentTitle,
+                versionLabel: i.duty.versionLabel,
+                due: formatDate(i.due, language),
+                daysLeft: i.daysLeft,
+              })),
+              r.tone,
+              language,
+              branding,
+            ),
+          })
+          sent++
+        } catch (e) {
+          // Adresa nie celá: log si prečíta viac ľudí než výkaz (O14).
+          console.error(`[cron] pripomienka na ${r.email.replace(/^(.).*(@.*)$/, "$1***$2")} zlyhala:`, e)
+          failed++
+        }
+      }
+
+      if (escalate.length > 0) {
+        const hr = await personCol
+          .find(
+            { companyCode: tenant.companyCode, roles: HR_ROLE, status: { $ne: "inactive" } } as never,
+            { projection: { email: 1, language: 1 } },
+          )
+          .toArray()
+        const week = weekKey(new Date())
+        for (const person of hr) {
+          if (!(await claimReminder(tenant.companyCode, `hr-due:${person.email}`, week))) continue
+          try {
+            await send({
+              to: person.email,
+              // Personalistovi ide **súhrn ľudí**, nie zoznam dokumentov:
+              // otázka, ktorú rieši, je „s kým sa treba porozprávať".
+              ...reminderEmail(
+                `https://${host}/hr`,
+                host,
+                escalate.map(e => ({ title: e.fullName, versionLabel: e.email, days: e.worstDays })),
+                normalizeLanguage(person.language),
+                branding,
+              ),
+            })
+          } catch (e) {
+            console.error(`[cron] súhrn termínov pre ${person.email} zlyhal:`, e)
+          }
+        }
       }
     } catch (e) {
+      // Jeden pokazený tenant nesmie zhodiť beh pre ostatných.
       console.error(`[cron] termíny pre ${tenant.companyCode} zlyhali:`, e)
     }
+    dueReport.push({ companyCode: tenant.companyCode, sent, skipped, failed })
+  }
 
+  /*
+   * Pôvodný týždenný prehľad pre personalistu podľa prahu 14 dní. **Zostáva**,
+   * a nie je to duplicita: týka sa pridelení **bez termínu**, ktoré termínová
+   * kadencia nevidí vôbec. Prah je spúšťač prehľadu, termín je sľub daný
+   * človeku — dve rôzne veci (D61).
+   *
+   * Odteraz beží denne, lebo denná je termínová kadencia. Prehľad pre
+   * personalistu si preto zaberá právo raz za deň tou istou cestou ako
+   * pripomienky — inak by mu ten istý zoznam chodil každé ráno a do troch dní
+   * by ho prestal otvárať.
+   */
+  for (const tenant of tenants) {
     let people
     try {
       people = byPersonReminder(await overdue(tenant.companyCode, DEFAULT_DAYS))
@@ -137,12 +223,5 @@ export async function GET(request: Request) {
     report.push({ companyCode: tenant.companyCode, behind: people.length, notified })
   }
 
-  if (dueDryRun.length > 0) {
-    console.warn(
-      `[cron] termíny — naprázdno, neodoslané: ${dueDryRun.length} ľuďom`,
-      JSON.stringify(dueDryRun),
-    )
-  }
-
-  return NextResponse.json({ ok: true, tenants: report, dueDryRun })
+  return NextResponse.json({ ok: true, tenants: report, due: dueReport })
 }
