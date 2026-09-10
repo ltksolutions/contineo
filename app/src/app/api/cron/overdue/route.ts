@@ -165,10 +165,10 @@ export async function GET(request: Request) {
    * kadencia nevidí vôbec. Prah je spúšťač prehľadu, termín je sľub daný
    * človeku — dve rôzne veci (D61).
    *
-   * Odteraz beží denne, lebo denná je termínová kadencia. Prehľad pre
-   * personalistu si preto zaberá právo raz za deň tou istou cestou ako
-   * pripomienky — inak by mu ten istý zoznam chodil každé ráno a do troch dní
-   * by ho prestal otvárať.
+   * **Zostáva týždenný, hoci beh je odteraz denný.** Prah je 14 dní a denný
+   * e-mail o tom istom zozname je do troch dní pošta, ktorú personalista
+   * prestane otvárať — čím prestane fungovať aj upozorňovanie. Právo ozvať sa
+   * si preto zaberá na týždeň, tou istou cestou ako pripomienky.
    */
   for (const tenant of tenants) {
     let people
@@ -208,8 +208,12 @@ export async function GET(request: Request) {
       days: p.worstDays,
     }))
 
+    const week = weekKey(new Date())
     let notified = 0
     for (const person of hr) {
+      // Týždenný kľúč pri dennom behu: bez neho by od zmeny `vercel.json`
+      // chodil ten istý zoznam každé ráno.
+      if (!(await claimReminder(tenant.companyCode, `hr-overdue:${person.email}`, week))) continue
       try {
         await send({
           to: person.email,

@@ -13,7 +13,7 @@ Druhá polovica kroku 4 z ADR-004. **Mení produkčné nastavenie a mení zvyk:*
 - **Retencia `reminder_log` je 90 dní.** Je to prevádzkový záznam o odoslaní, nie dôkaz — dôkazom je `notified[]` na pridelení a potvrdenie samo.
 - **Dva tóny jednej šablóny.** Text hovorí **stav**, nie len fakt: „termín je 20. 9., zostávajú 3 dni" verzus „termín bol 20. 9., ste po ňom 3 dni". V **deň termínu** sa o meškaní nehovorí — kto potvrdí v ten deň, termín splnil. Tvary čísloviek sú v `i18n`, nie v šablóne.
 - **Eskalácia od D+7 aj personalistovi**, ale **raz za týždeň**, hoci beh je denný. Po termíne už problém nie je v tom, že človek zabudol; tam je organizačný.
-- **Týždenný prehľad podľa prahu 14 dní zostáva** a nie je to duplicita: týka sa pridelení **bez termínu**, ktoré termínová kadencia nevidí vôbec. Aj on si zaberá právo raz za týždeň, aby personalistovi nechodil každé ráno ten istý zoznam.
+- **Týždenný prehľad podľa prahu 14 dní zostáva** a nie je to duplicita: týka sa pridelení **bez termínu**, ktoré termínová kadencia nevidí vôbec. Zostáva **týždenný**, hoci beh je odteraz denný — denný e-mail o tom istom zozname je do troch dní pošta, ktorú personalista prestane otvárať. Právo ozvať sa si preto zaberá na týždeň, tou istou cestou ako pripomienky.
 - **`vercel.json`: `0 6 * * 1` → `0 6 * * *`.** Denná kadencia potrebuje denný beh; týždenný by z nej minul takmer všetko.
 - Overené: `tsc` čisto, **1086 testov** (13 nových), lint bez chýb, build prejde.
 
