@@ -400,6 +400,13 @@ interface Dictionary {
       reason: string
       reasonPlaceholder: string
       reasonNote: string
+      /** Termín potvrdenia (D61). Nepovinný — bez neho sa nepripomína. */
+      due: string
+      dueNone: string
+      dueDate: string
+      dueDays: string
+      dueDaysUnit: string
+      dueNote: string
       submit: string
     }
     actions: {
@@ -1649,6 +1656,12 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       addresses: "Jednotlivé adresy",
       addressesNote: "Nepovinné. Oddeľ čiarkou alebo novým riadkom.",
       reason: "Dôvod",
+      due: "Termín potvrdenia",
+      dueNone: "bez termínu",
+      dueDate: "do dátumu",
+      dueDays: "do počtu dní od vzniku povinnosti",
+      dueDaysUnit: "dní",
+      dueNote: "Nepovinný. Dátum platí pre všetkých rovnako; počet dní beží každému odo dňa, keď mu povinnosť vznikla — to je rozdiel pre toho, kto do oddelenia príde neskôr. Bez termínu sa pripomienky neposielajú automaticky.",
       reasonPlaceholder: "napr. novela čl. 12 — mení sa lehota na podanie odvolania",
       reasonNote: "Povinný a spoločný pre celý výber. Je to jediné miesto, kde bude o rok napísané, prečo sa normy potvrdzovali znova — a príde aj v e-maile ľuďom.",
       submit: "Prideliť",
@@ -1990,6 +2003,9 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "assignment.missingSubject": "Chýba dokument alebo jeho znenie.",
     "assignment.versionNotEffective": "Znenie nemá dátum platnosti, a tak sa nedá ani potvrdiť (D6). Najprv mu doplň platnosť.",
     "assignment.missingAudience": "Chýba, komu sa prideľuje.",
+    "assignment.badDue": "Termín nie je platný dátum.",
+    "assignment.badDueDays": "Termín v dňoch musí byť aspoň jeden deň.",
+    "assignment.dueBeforeEffective": "Termín je skôr, než znenie začne platiť — takú povinnosť by nikto nesplnil (D6).",
 
     // ── trasy ──────────────────────────────────────────────────────────────
     "track.keyRequired": "Kľúč trasy je povinný.",
@@ -3114,6 +3130,12 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       addresses: "Jednotlivé adresy",
       addressesNote: "Nepovinné. Odděl čárkou nebo novým řádkem.",
       reason: "Důvod",
+      due: "Termín potvrzení",
+      dueNone: "bez termínu",
+      dueDate: "do data",
+      dueDays: "do počtu dnů od vzniku povinnosti",
+      dueDaysUnit: "dnů",
+      dueNote: "Nepovinný. Datum platí pro všechny stejně; počet dnů běží každému ode dne, kdy mu povinnost vznikla — to je rozdíl pro toho, kdo do útvaru přijde později. Bez termínu se připomínky neposílají automaticky.",
       reasonPlaceholder: "např. novela čl. 12 — mění se lhůta pro podání odvolání",
       reasonNote: "Povinný a společný pro celý výběr. Je to jediné místo, kde bude za rok napsáno, proč se předpisy potvrzovaly znovu — a přijde i v e-mailu lidem.",
       submit: "Přidělit",
@@ -3455,6 +3477,9 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "assignment.missingSubject": "Chybí dokument nebo jeho znění.",
     "assignment.versionNotEffective": "Znění nemá datum platnosti, a tak je nelze ani potvrdit (D6). Nejprve mu doplň platnost.",
     "assignment.missingAudience": "Chybí, komu se přiděluje.",
+    "assignment.badDue": "Termín není platné datum.",
+    "assignment.badDueDays": "Termín ve dnech musí být aspoň jeden den.",
+    "assignment.dueBeforeEffective": "Termín je dřív, než znění začne platit — takovou povinnost by nikdo nesplnil (D6).",
 
     // ── trasy ──────────────────────────────────────────────────────────────
     "track.keyRequired": "Klíč trasy je povinný.",
@@ -4574,6 +4599,12 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       addresses: "Individual addresses",
       addressesNote: "Optional. Separate with a comma or a new line.",
       reason: "Reason",
+      due: "Acknowledgement deadline",
+      dueNone: "no deadline",
+      dueDate: "by a date",
+      dueDays: "within N days of the duty arising",
+      dueDaysUnit: "days",
+      dueNote: "Optional. A date applies to everyone alike; a number of days runs for each person from the day their duty arose — which matters for someone who joins the department later. Without a deadline, reminders are not sent automatically.",
       reasonPlaceholder: "e.g. amendment to Article 12 — the deadline for an appeal changes",
       reasonNote: "Required, and shared by the whole selection. It is the only place where, a year from now, it will say why these documents had to be acknowledged again — and it goes out in the e-mail as well.",
       submit: "Assign",
@@ -4914,6 +4945,9 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "assignment.missingSubject": "The document or its version is missing.",
     "assignment.versionNotEffective": "The version has no effective date, so it cannot be acknowledged either (D6). Give it an effective date first.",
     "assignment.missingAudience": "It is missing who this is assigned to.",
+    "assignment.badDue": "The deadline is not a valid date.",
+    "assignment.badDueDays": "A deadline in days must be at least one day.",
+    "assignment.dueBeforeEffective": "The deadline falls before the version takes effect — nobody could meet such a duty (D6).",
 
     // ── tracks ─────────────────────────────────────────────────────────────
     "track.keyRequired": "The track key is required.",

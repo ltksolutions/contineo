@@ -26,6 +26,7 @@ import { brandingView } from "@/lib/tenants"
 import { requestHostname } from "@/lib/session"
 import { dictionary, errorText, formatDate, normalizeLanguage } from "@/lib/i18n"
 import { AppError } from "@/lib/appError"
+import { dueFromFields } from "@/lib/due"
 
 async function hr(): Promise<{ email: string; companyCode: string; language?: string } | null> {
   const ctx = await hrContext()
@@ -61,6 +62,22 @@ export async function assignAction(fd: FormData) {
   if (!actor) redirect("/hr")
 
   const reason = fieldText(fd, "reason")
+
+  /*
+   * Termín sa parsuje **pred** cyklom prideľovania, nie v ňom: je spoločný pre
+   * celý výber rovnako ako dôvod, a chyba v ňom má vrátiť človeka k formuláru
+   * skôr, než sa čokoľvek zapíše. Čiastočne prideliť a potom spadnúť na
+   * termíne by znamenalo pridelenia bez neho.
+   */
+  const parsed = dueFromFields({
+    mode: fd.get("dueMode"),
+    date: fieldText(fd, "dueDate"),
+    days: fieldText(fd, "dueDays"),
+  })
+  if ("error" in parsed) {
+    backWithError(dictionary(actor.language).errors[parsed.error] ?? parsed.error, fd)
+  }
+  const due = "due" in parsed ? parsed.due : null
   // Názvy oddelení sa do pridelenia zapisujú ako **kópia** (`audience.label`),
   // z rovnakého dôvodu ako názov dokumentu: oddelenie sa premenuje alebo zruší
   // a o rok musí byť čitateľné, komu sa vtedy prideľovalo.
@@ -108,6 +125,7 @@ export async function assignAction(fd: FormData) {
           audience,
           reason: reason,
           assignedBy: actor.email,
+          due,
         })
         v.status === "pridelene" ? assigned++ : already++
       } catch (e) {

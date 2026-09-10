@@ -4,6 +4,17 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Added (2026-09-10 — termín sa dá zadať pri prideľovaní)
+
+Krok 2 z ADR-004. Bez neho termín nikto nezadá a model z kroku 1 leží.
+
+- **Výslovná voľba, nie „čo je vyplnené, to platí"** — „bez termínu" / „do dátumu" / „do počtu dní od vzniku povinnosti". Prázdne pole je dvojznačné: personalista, ktorý dátum zadá a potom si to rozmyslí, ho prepíše na prázdno, a bez voľby by sa nedalo odlíšiť „termín nechcel" od „zabudol vyplniť". Pri sľube danom človeku sa to hádať nemá.
+- **Obe polia zostávajú vidieť**, aj keď k voľbe nepatria: formulár beží bez JavaScriptu, takže sa skryť nedajú — a kto sa prepne z dátumu na dni a späť, o svoj dátum nepríde.
+- **Dátum sa číta ako miestna polnoc, nie ako UTC.** `new Date("2026-09-30")` je polnoc v UTC: v našom pásme by z termínu vyšiel 30. 9. o druhej ráno a na západ od Greenwichu **29. 9.** — teda termín o deň skôr, než personalista zadal. Má vlastný test.
+- **Chyba vracia kód, nie výnimku** — volajúci ju ukáže pri formulári spolu s tým, čo už človek vyplnil, namiesto vyhodenia na chybovú stránku. Termín sa parsuje pred cyklom prideľovania: čiastočne prideliť a potom spadnúť na termíne by znamenalo pridelenia bez neho.
+- Rámik termínu je `hr-group`, teda ten istý ako pri výbere publika nad ním — druhý vzhľad pre druhý fieldset v jednom formulári je presne to, čo robí obrazovku nejednotnou.
+- Overené: `tsc` čisto, **1025 testov** (4 nové), build prejde, formulár prekreslený na 720 px aj 390 px.
+
 ### Added (2026-09-09 — termín potvrdenia: model a kadencia pripomienok)
 
 Prvý krok z `docs/ADR-004-termin-potvrdenia.md`. Zámerne len model a čisté funkcie — prideľovací formulár, zobrazenie a e-maily idú ďalšími PR.
