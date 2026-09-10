@@ -379,3 +379,28 @@ export async function documentTitles(
     .toArray()
   return new Map(rows.map(d => [String(d.documentId), String(d.title ?? d.documentId)]))
 }
+
+/**
+ * Stav jedného znenia — kolá plus príznak z D74, jedným dotazom naviac.
+ *
+ * Používa to brána pri prideľovaní (D73). Zámerne sa nič neukladá na
+ * dokument: uložený stav by sa raz rozišiel s kolami, z ktorých vznikol,
+ * a rozišiel by sa presne vtedy, keď na tom záleží.
+ */
+export async function versionStateFor(
+  companyCode: string,
+  documentId: string,
+  versionId: string,
+): Promise<VersionState> {
+  const [rounds, doc] = await Promise.all([
+    roundsForVersion(companyCode, documentId, versionId),
+    (await getCollection(DOCUMENTS_COLLECTION)).findOne(
+      { companyCode, documentId },
+      { projection: { "versions.versionId": 1, "versions.publishedBefore": 1 } },
+    ),
+  ])
+
+  const versions = (doc?.versions ?? []) as { versionId: string; publishedBefore?: boolean }[]
+  const publishedBefore = versions.find(v => v.versionId === versionId)?.publishedBefore === true
+  return versionState(rounds, { publishedBefore })
+}

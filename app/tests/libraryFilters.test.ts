@@ -126,6 +126,33 @@ describe("dotaz z filtrov", () => {
     expect(buildQuery("sfz", { status: ["published", "draft"] })).toEqual({ companyCode: "sfz" })
   })
 
+  it("na schválenie je iná os, nie tretia priehradka", () => {
+    // Dokument môže byť publikovaný a zároveň mať bežiace kolo nad novým
+    // znením, takže sa k rozdeleniu pridáva cez `$or`, nie doňho.
+    const q = buildQuery("sfz", { status: ["published", "in-review"] }, undefined, ["sfz:a"])
+    const and = q.$and as Record<string, unknown>[]
+    expect(and).toHaveLength(1)
+    expect(and[0]).toEqual({ $or: [{ status: "published" }, { documentId: { $in: ["sfz:a"] } }] })
+  })
+
+  it("samotné na schválenie filtruje podľa zoznamu kôl", () => {
+    const q = buildQuery("sfz", { status: "in-review" }, undefined, ["sfz:a", "sfz:b"])
+    expect(q.$and).toEqual([{ documentId: { $in: ["sfz:a", "sfz:b"] } }])
+  })
+
+  it("bez bežiaceho kola nenájde na schválenie nič", () => {
+    // Prázdny zoznam a nie „všetko": keby sa podmienka vynechala, filter by
+    // ukázal celú knižnicu a vyzeralo by to, že sa schvaľuje všetko.
+    const q = buildQuery("sfz", { status: "in-review" }, undefined, [])
+    expect(q.$and).toEqual([{ documentId: { $in: [] } }])
+  })
+
+  it("koncept aj publikované zostáva všetko aj s kolami", () => {
+    // „Všetko" pokrýva aj kolá, takže sa podmienka na ne nepridáva.
+    expect(buildQuery("sfz", { status: ["published", "draft", "in-review"] }, undefined, ["sfz:a"]))
+      .toEqual({ companyCode: "sfz" })
+  })
+
   it("fulltext a nezaradené sa nepobijú", () => {
     // Oboje používa `$or`; v jednom objekte by si ho prepísali a jeden
     // z filtrov by prestal platiť.

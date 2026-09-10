@@ -15,6 +15,7 @@ import { DOCUMENTS_COLLECTION, effectiveVersion } from "./documents"
 import type { Version } from "./documents"
 import type { OriginalFile, ProcessingState } from "./libraryWrite"
 import { conditionQuery, type Condition, type MatchMode } from "./libraryConditions"
+import { openRounds } from "./approvalsDb"
 
 export interface LibraryRow {
   documentId: string
@@ -144,7 +145,19 @@ function listOf(value: string | string[] | undefined): string[] {
  * Podmienky sa skladajú do `$and`, nie do jedného objektu: fulltext aj
  * „nezaradené" používajú `$or` a v jednom objekte by si ho navzájom prepísali.
  */
-export function queryParts(filter: LibraryFilter): { key: FilterKey; cond: Record<string, unknown> }[] {
+export function queryParts(
+  filter: LibraryFilter,
+  /**
+   * Dokumenty s bežiacim kolom schvaľovania (ADR-006).
+   *
+   * Chodia sem **zvonku, ako zoznam identifikátorov**, nie ako `$lookup`.
+   * Stav znenia je odvodený z inej kolekcie (D27) a spojiť ich v jednom dotaze
+   * by znamenalo agregáciu naprieč kolekciami pri každom otvorení knižnice.
+   * Kolá sú jednotky až desiatky, takže dva dotazy sú lacnejšie a hlavne sa
+   * dajú prečítať.
+   */
+  inReviewIds: string[] = [],
+): { key: FilterKey; cond: Record<string, unknown> }[] {
   const parts: { key: FilterKey; cond: Record<string, unknown> }[] = []
 
   // Staré slovenské hodnoty z odkazov spred premenovania sa prekladajú,
@@ -152,15 +165,30 @@ export function queryParts(filter: LibraryFilter): { key: FilterKey; cond: Recor
   const statuses = listOf(filter.status).map(v =>
     v === "koncept" ? "draft" : v === "publikovane" ? "published" : v,
   )
+
+  /*
+   * Tri hodnoty, ale **nie tri priehradky**. Koncept a publikované sú
+   * rozdelenie knižnice: buď — alebo. „Na schválenie" je iná os — dokument
+   * môže byť publikovaný a zároveň mať bežiace kolo nad novým znením, takže
+   * sa k tomu rozdeleniu pridáva cez `$or`, nie doňho.
+   *
+   * Zaškrtnúť koncept aj publikované je „všetko" a filter vtedy nevzniká —
+   * `$and` dvoch protikladov by nevrátil nič, hoci človek zaškrtol opak.
+   * A keďže „všetko" pokrýva aj kolá, nepridáva sa v tom prípade ani
+   * podmienka na kolá.
+   */
   const wantsPublished = statuses.includes("published")
   const wantsDraft = statuses.includes("draft")
-  // Oboje naraz nie je filter, je to „všetko" — a `$and` dvoch protikladov
-  // by nevrátil nič.
-  if (wantsPublished !== wantsDraft) {
-    parts.push({
-      key: "status",
-      cond: wantsPublished ? { status: "published" } : { status: { $ne: "published" } },
-    })
+  const wantsInReview = statuses.includes("in-review")
+
+  if (!(wantsPublished && wantsDraft)) {
+    const conds: Record<string, unknown>[] = []
+    if (wantsPublished) conds.push({ status: "published" })
+    if (wantsDraft) conds.push({ status: { $ne: "published" } })
+    if (wantsInReview) conds.push({ documentId: { $in: inReviewIds } })
+    if (conds.length > 0) {
+      parts.push({ key: "status", cond: conds.length === 1 ? conds[0] : { $or: conds } })
+    }
   }
 
   // Priečinok sa filtruje cez cestu, takže „oddelenie komunikácie" nájde aj
@@ -218,8 +246,9 @@ export function buildQuery(
   companyCode: string,
   filter: LibraryFilter = {},
   except?: FilterKey,
+  inReviewIds: string[] = [],
 ): Record<string, unknown> {
-  const conds = queryParts(filter)
+  const conds = queryParts(filter, inReviewIds)
     .filter(p => p.key !== except)
     .map(p => p.cond)
   return conds.length ? { companyCode, $and: conds } : { companyCode }
@@ -268,8 +297,15 @@ export async function libraryFacets(
 ): Promise<LibraryFacets> {
   const col = await getCollection(DOCUMENTS_COLLECTION)
 
+  /*
+   * Dokumenty s bežiacim kolom. Jeden malý dotaz do `approval_rounds` —
+   * kolá sú jednotky, takže je lacnejší než agregácia naprieč kolekciami
+   * pri každom otvorení knižnice.
+   */
+  const inReviewIds = [...new Set((await openRounds(companyCode)).map(r => r.documentId))]
+
   const without = (except?: FilterKey) => {
-    const conds = queryParts(filter).filter(p => p.key !== except).map(p => p.cond)
+    const conds = queryParts(filter, inReviewIds).filter(p => p.key !== except).map(p => p.cond)
     return conds.length ? { $and: conds } : {}
   }
 
@@ -292,6 +328,16 @@ export async function libraryFacets(
               },
             },
           ],
+          /*
+             Počet pre „na schválenie" sa nedá získať zoskupením nad
+             dokumentom — stav je v inej kolekcii. Preto vlastná vetva
+             s tým istým filtrom bez `status`, ako majú ostatné počty:
+             číslo má hovoriť, čo by človek dostal, keby prepol.
+          */
+          statusInReview: [
+            { $match: { $and: [without("status"), { documentId: { $in: inReviewIds } }] } },
+            { $count: "n" },
+          ],
           tag: [
             { $match: without("tag") },
             { $unwind: "$tags" },
@@ -310,7 +356,15 @@ export async function libraryFacets(
     total: count(out?.total as { n: number }[] | undefined),
     all: count(out?.all as { n: number }[] | undefined),
     category: sortCounts(out?.category ?? []),
-    status: sortCounts(out?.status ?? []),
+    status: [
+      ...sortCounts(out?.status ?? []),
+      // Až na koniec, nie podľa počtu: „na schválenie" je iná os než koncept
+      // verzus publikované a medzi ne nepatrí. Nula sa neukazuje — prázdny
+      // riadok filtra len zaberá miesto.
+      ...(count(out?.statusInReview as { n: number }[] | undefined) > 0
+        ? [{ value: "in-review", count: count(out?.statusInReview as { n: number }[] | undefined) }]
+        : []),
+    ],
     tag: sortCounts(out?.tag ?? []),
     accessLevel: sortCounts(out?.accessLevel ?? []),
     language: sortCounts(out?.language ?? []),
@@ -322,7 +376,16 @@ export async function libraryList(
   filter: LibraryFilter = {},
 ): Promise<LibraryRow[]> {
   const col = await getCollection(DOCUMENTS_COLLECTION)
-  const q = buildQuery(companyCode, filter)
+  /*
+   * Zoznam dokumentov s bežiacim kolom sa načíta len vtedy, keď sa naň
+   * filtruje. Bez tejto podmienky by každé otvorenie knižnice platilo dotaz
+   * navyše za filter, ktorý nikto nezapol.
+   */
+  const wantsInReview = listOf(filter.status).includes("in-review")
+  const inReviewIds = wantsInReview
+    ? [...new Set((await openRounds(companyCode)).map(r => r.documentId))]
+    : []
+  const q = buildQuery(companyCode, filter, undefined, inReviewIds)
 
   const records = await col
     .find(q as never, {
