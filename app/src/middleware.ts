@@ -15,25 +15,8 @@ import { NextResponse } from "next/server"
 import type { NextRequest } from "next/server"
 import { getToken } from "next-auth/jwt"
 import { legacyRoute } from "@/lib/legacyRoutes"
+import { isPublicPath } from "@/lib/publicRoutes"
 
-/**
- * Cesty prístupné bez prihlásenia. Držať krátke a vedieť o každej prečo.
- */
-const VEREJNE = [
-  "/sign-in",
-  "/api/auth",      // samotné prihlasovanie
-  // Logá tenantov. Prihlasovacia stránka nesie logo organizácie a načítava ho
-  // ako obrázok — teda ďalšou požiadavkou, ktorá v tej chvíli ešte nie je
-  // prihlásená. Bez tejto výnimky by sa presmerovala na `/sign-in` a
-  // z hlavičky by zostal holý text. Sú to verejné značkové súbory, nie obsah
-  // noriem; jediné, čo prezradia, je že tá organizácia tu má portál — a to
-  // prezradí už samotná doména.
-  "/tenants/",
-  // Nahraté logá (`/api/brand/…`). Ten istý dôvod ako o riadok vyššie: je to
-  // značkový obrázok, nie obsah noriem, a prihlasovacia stránka ho potrebuje
-  // ešte pred prihlásením.
-  "/api/brand/",
-]
 
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl
@@ -49,7 +32,7 @@ export async function middleware(req: NextRequest) {
     return NextResponse.redirect(to, 307)
   }
 
-  if (VEREJNE.some(c => pathname.startsWith(c))) return NextResponse.next()
+  if (isPublicPath(pathname)) return NextResponse.next()
 
   const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET })
   if (token) return NextResponse.next()

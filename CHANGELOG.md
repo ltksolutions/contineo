@@ -4,6 +4,16 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Fixed (2026-09-10 — naplánovaný beh sa nikdy nevykonal)
+
+Nájdené pri overovaní odosielania pripomienok, nie hlásené.
+
+- **`/api/cron/overdue` bola za bránou prihlásenia.** Vercel volá cron obyčajným HTTP dotazom s hlavičkou `Authorization: Bearer <CRON_SECRET>` a nemá — ani nemôže mať — sedenie prihláseného človeka. Middleware ho preto odmietol **skôr, než sa route vôbec spustila**, a vrátil `401 not-signed-in`.
+- **Bolo to takto od zavedenia crona (2026-08-29).** Týždenný prehľad pre personalistu teda nikdy neodišiel. Nebolo to vidieť nikde: Vercel neúspešný beh ticho zahodí a v aplikácii po ňom nezostane stopa.
+- **Nie je to diera, je to iná brána.** Route si autorizáciu robí sama a bez tajomstva vracia 401 — vrátane prípadu, keď premenná nie je nastavená vôbec. Prepustiť cestu cez middleware neznamená otvoriť ju; znamená to nechať rozhodnúť tú bránu, ktorá vie, o čo ide.
+- **Zoznam verejných ciest sa presunul do `lib/publicRoutes.ts` a dostal testy.** V `middleware.ts` sa otestovať nedal — modul ťahá `next-auth/jwt` a beží v edge prostredí. Presne preto sa chyba dala urobiť ticho. Test stráži aj opačný smer: že obsah noriem cez bránu neprejde.
+- Overené: `tsc` čisto, **1092 testov** (6 nových), lint bez chýb, build prejde.
+
 ### Added (2026-09-10 — pripomienky termínu sa naozaj odosielajú)
 
 Druhá polovica kroku 4 z ADR-004. **Mení produkčné nastavenie a mení zvyk:** doteraz systém e-maily ľuďom neposielal nikdy, len personalistovi.
