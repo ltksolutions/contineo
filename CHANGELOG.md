@@ -4,6 +4,21 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Added (2026-09-10 — reťaz dôkazov má obrazovku)
+
+Kroky 3 a 5 z ADR-005.
+
+- **`/hr/evidence`** — časová os každej povinnosti s filtrom cez osobu a stav, a s exportom CSV. Filtre sú **v adrese**, takže sa pohľad dá poslať kolegovi aj s filtrom a funguje bez JavaScriptu.
+- **Jeden komponent nad jednou funkciou** (D67). Karta osoby, ktorá pribudne, bude kresliť ten istý `EvidenceTimeline` nad tým istým `evidenceRows()`. Dva pohľady, ktoré si to isté počítajú každý po svojom, si raz budú odporovať — a pri dôkaze je to horšie než nemať druhý.
+- **Váha riadku je pri riadku, nie v legende.** Kto číta jeden riadok, musí z neho vedieť, čo unesie; legenda o dva odseky nižšie sa pri citovaní stratí. Chýbajúci riadok má namiesto dátumu vetu, **prečo** chýba, a prázdny krúžok namiesto plnej bodky — farba nie je jediným nositeľom stavu.
+- **V CSV je čas čítania označený ako informatívny priamo v názve stĺpca** (`readingSeconds_informative`), nie v poznámke pod tabuľkou. Kto si export otvorí v Exceli, poznámku nevidí — a práve tam sa z merania najľahšie stane „dôkaz".
+- **Export používa ten istý zoznam a tie isté filtre ako obrazovka.** Výkaz, ktorý sa nezhoduje s obrazovkou, je horší než žiadny.
+- **Prístup má personalista, nie správca obsahu** (D67, D32): je to údaj o ľuďoch, nie o dokumentoch.
+- **Chýbajúci riadok o upozorneniach je pomenovaný na obrazovke**, nie zamlčaný. `reminder_log` je prevádzkový a po 90 dňoch sa maže; `assignments.notified[]` hovorí „ozvalo sa N ľuďom", nie ktorým. Ani jedno neunesie vetu „ozvalo sa **jej**" — a vymyslieť ju z toho, čo máme, je presne to, čomu sa ADR-005 vyhýba.
+- Overené: `tsc` čisto, 1104 testov, lint bez chýb, build prejde.
+
+**Zostáva z ADR-005:** časová os na karte osoby a trvalý per-person záznam o upozorneniach.
+
 ### Added (2026-09-10 — prvé otvorenie znenia sa zaznamenáva, reťaz dôkazov má základ)
 
 Kroky 6, 1 a 2 z ADR-005 — **v tomto poradí**. GDPR dokumentácia išla prvá.
