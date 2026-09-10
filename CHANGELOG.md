@@ -4,6 +4,19 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Added (2026-09-10 — pripomienky termínu sa naozaj odosielajú)
+
+Druhá polovica kroku 4 z ADR-004. **Mení produkčné nastavenie a mení zvyk:** doteraz systém e-maily ľuďom neposielal nikdy, len personalistovi.
+
+- **Kadencia overená na skutočných dátach, nie na skúšobných.** Pred zapnutím sa výpočet spustil k dvanástim dňom dopredu a prešiel deň po dni: D-5 až D-0 každý deň (šesť správ), potom D+1, D+3, D+7 a odvtedy raz týždenne spolu s personalistom. **Jedenásť správ za mesiac, nie tridsať** — presne eskalácia, na ktorej sme sa dohodli.
+- **Jedna správa na človeka a deň, nikdy dve.** Právo ozvať sa sa zaberá v novej kolekcii `reminder_log` **pred odoslaním**. Opačné poradie znie lákavo (nezapíš, čo neodišlo), ale pri páde medzi odoslaním a zápisom by človek dostal to isté dvakrát. Takto v najhoršom prípade jedna správa v jeden deň nepríde a príde nasledujúci — dvakrát poslaná pripomienka je horšia než raz vynechaná. Jedinečnosť stráži index, nie kontrola pred zápisom: dva behy naraz by sa v kontrole minuli.
+- **Retencia `reminder_log` je 90 dní.** Je to prevádzkový záznam o odoslaní, nie dôkaz — dôkazom je `notified[]` na pridelení a potvrdenie samo.
+- **Dva tóny jednej šablóny.** Text hovorí **stav**, nie len fakt: „termín je 20. 9., zostávajú 3 dni" verzus „termín bol 20. 9., ste po ňom 3 dni". V **deň termínu** sa o meškaní nehovorí — kto potvrdí v ten deň, termín splnil. Tvary čísloviek sú v `i18n`, nie v šablóne.
+- **Eskalácia od D+7 aj personalistovi**, ale **raz za týždeň**, hoci beh je denný. Po termíne už problém nie je v tom, že človek zabudol; tam je organizačný.
+- **Týždenný prehľad podľa prahu 14 dní zostáva** a nie je to duplicita: týka sa pridelení **bez termínu**, ktoré termínová kadencia nevidí vôbec. Zostáva **týždenný**, hoci beh je odteraz denný — denný e-mail o tom istom zozname je do troch dní pošta, ktorú personalista prestane otvárať. Právo ozvať sa si preto zaberá na týždeň, tou istou cestou ako pripomienky.
+- **`vercel.json`: `0 6 * * 1` → `0 6 * * *`.** Denná kadencia potrebuje denný beh; týždenný by z nej minul takmer všetko.
+- Overené: `tsc` čisto, **1086 testov** (13 nových), lint bez chýb, build prejde.
+
 ### Added (2026-09-10 — prideliť sa dá len schválené znenie)
 
 Krok 2 z ADR-006, zámerne až posledný. Tým je ADR-006 hotové.

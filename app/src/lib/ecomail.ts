@@ -460,3 +460,63 @@ export function approvalEmail(
 
   return { subject: s.subject(organisation), text, html }
 }
+
+/**
+ * Pripomienka termínu (ADR-004, krok 4). **Jedna správa na človeka**, nie na
+ * povinnosť — rovnaké pravidlo ako pri `reminderEmail()`.
+ *
+ * Dva tóny jednej šablóny, nie dve šablóny: `soon` pred termínom, `over` po
+ * ňom. Text hovorí **stav**, nie len fakt — „zostávajú tri dni" verzus „ste
+ * po termíne o tri dni". Kto dostane oboje naraz, dostane `over`: horší tón
+ * vyhráva, lebo upokojujúca veta nad vecou po termíne je klamlivá.
+ */
+export function dueReminderEmail(
+  link: string,
+  host: string,
+  items: { title: string; versionLabel: string; due: string; daysLeft: number }[],
+  tone: "soon" | "over",
+  language: UiLanguage = "sk",
+  branding?: SignInBranding,
+): Omit<Message, "to"> {
+  const s = dictionary(language).dueReminderEmail
+  const organisation = branding?.displayName ?? "Contineo"
+  const accent = branding?.accentColor ?? "#232a35"
+
+  const logo = branding?.logoUrl
+    ? `<img src="${branding.logoUrl}" alt="" width="34" height="34" style="display:inline-block;vertical-align:middle;margin-right:10px;border:0">`
+    : ""
+
+  const line = (i: { title: string; versionLabel: string; due: string; daysLeft: number }) =>
+    tone === "over" ? s.overLine(i.due, Math.abs(i.daysLeft)) : s.soonLine(i.due, i.daysLeft)
+
+  const text = [
+    tone === "over" ? s.introOver : s.introSoon,
+    "",
+    ...items.map(i => `${i.title} (${i.versionLabel})\n  ${line(i)}`),
+    "",
+    link,
+    "",
+    s.note,
+  ].join("\n")
+
+  const html = `<!doctype html>
+<html lang="${language}"><body style="margin:0;padding:24px;background:#f5f6f8;font-family:ui-sans-serif,system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;color:#161b22">
+  <div style="max-width:520px;margin:0 auto;background:#fff;border:1px solid rgba(20,28,42,.12);border-radius:12px;padding:28px">
+    <div style="font-size:18px;font-weight:700;letter-spacing:-.02em;margin-bottom:6px">${logo}<span style="vertical-align:middle">${escapujHtml(organisation)}</span></div>
+    <div style="font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:#5c6675;margin-bottom:22px">${escapujHtml(tone === "over" ? s.subtitleOver : s.subtitleSoon)}</div>
+    <p style="font-size:15.5px;line-height:1.65;margin:0 0 16px">${escapujHtml(tone === "over" ? s.introOver : s.introSoon)}</p>
+    ${items.map(i => `<div style="border-left:3px solid ${accent};padding:2px 0 2px 14px;margin:0 0 14px">
+      <div style="font-size:16.5px;font-weight:700;line-height:1.4">${escapujHtml(i.title)}</div>
+      <div style="font-size:13.5px;color:#5c6675;margin-top:3px">${escapujHtml(`${i.versionLabel} · ${line(i)}`)}</div>
+    </div>`).join("")}
+    <a href="${link}" style="display:inline-block;background:${accent};color:#fff;text-decoration:none;border-radius:10px;padding:12px 22px;font-size:15px;font-weight:600;margin-top:8px">
+      ${escapujHtml(s.button)}
+    </a>
+    <p style="font-size:13px;line-height:1.6;color:#5c6675;margin:22px 0 0">${escapujHtml(s.note)}</p>
+    <hr style="border:none;border-top:1px solid rgba(20,28,42,.12);margin:22px 0 14px">
+    <div style="font-size:12px;color:#5c6675">${escapujHtml(host)} · LTK Solutions</div>
+  </div>
+</body></html>`
+
+  return { subject: tone === "over" ? s.subjectOver(organisation) : s.subjectSoon(organisation), text, html }
+}
