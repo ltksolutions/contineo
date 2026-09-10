@@ -16,6 +16,8 @@ import {
   dueFromFields, normalizeDueMode,
 } from "../src/lib/due"
 import { dueForPerson } from "../src/lib/assignments"
+import { dueRemindersFrom } from "../src/lib/reminders"
+import type { Duty } from "../src/lib/hrReport"
 
 /** Poludnie, aby sa test nechytal na letný čas ani na hranicu dňa. */
 const at = (iso: string) => new Date(`${iso}T12:00:00`)
@@ -199,5 +201,72 @@ describe("termín pre konkrétnu osobu (D62 + D50)", () => {
   it("bez termínu vráti null, nie dnešok", () => {
     expect(dueForPerson(forDepartment(null), person(null))).toBeNull()
     expect(dueForPerson(forDepartment(undefined), person(prisiel))).toBeNull()
+  })
+})
+
+describe("výber ľudí na dnešnú pripomienku", () => {
+  const due = at("2026-09-30")
+  const day = (n: number) => addDays(due, n)
+
+  const duty = (over: Partial<Duty> = {}): Duty => ({
+    personId: "p1",
+    fullName: "Ján Letko",
+    email: "j@example.sk",
+    documentId: "d1",
+    documentTitle: "Smernica",
+    versionId: "v1",
+    versionLabel: "1.0",
+    sources: ["assignment"],
+    trackTitles: [],
+    since: at("2026-09-01"),
+    due,
+    acknowledgedAt: null,
+    readingSeconds: null,
+    ...over,
+  })
+
+  it("jeden e-mail na človeka, nie na povinnosť", () => {
+    // Štyri samostatné e-maily v jednej minúte vyzerajú ako pokazený systém
+    // a človek ich prestane čítať — čím prestane fungovať pripomínanie samo.
+    const out = dueRemindersFrom(
+      [duty(), duty({ documentId: "d2", versionId: "v2" })],
+      day(-1),
+    )
+    expect(out).toHaveLength(1)
+    expect(out[0].items).toHaveLength(2)
+  })
+
+  it("potvrdené povinnosti vypadnú, nie sa filtrujú v šablóne", () => {
+    expect(dueRemindersFrom([duty({ acknowledgedAt: at("2026-09-20") })], day(-1))).toEqual([])
+  })
+
+  it("bez termínu sa neozývame vôbec", () => {
+    expect(dueRemindersFrom([duty({ due: null })], day(-1))).toEqual([])
+  })
+
+  it("horší tón vyhráva a personalista sa pridá až od týždňa", () => {
+    // Kto má jednu vec po termíne a druhú pred ním, dostane „ste po termíne",
+    // nie upokojujúce „blíži sa".
+    const pred = duty({ documentId: "d2", versionId: "v2", due: addDays(day(7), 3) })
+    const out = dueRemindersFrom([duty(), pred], day(7))
+    expect(out[0].tone).toBe("over")
+    expect(out[0].alsoHr).toBe(true)
+    // Deň po termíne ešte personalistovi nie.
+    expect(dueRemindersFrom([duty()], day(1))[0].alsoHr).toBe(false)
+  })
+
+  it("v deň, keď kadencia mlčí, nevyjde nikto", () => {
+    for (const n of [-30, -6, 2, 5, 10]) {
+      expect(dueRemindersFrom([duty()], day(n)), `D${n}`).toEqual([])
+    }
+  })
+
+  it("najsúrnejšie hore — po termíne pred tým, čo sa blíži", () => {
+    const other = duty({ personId: "p2", fullName: "Anna Nová", email: "a@example.sk" })
+    const out = dueRemindersFrom(
+      [duty({ due: addDays(day(1), 4) }), other],
+      day(1),
+    )
+    expect(out.map(r => r.personId)).toEqual(["p2", "p1"])
   })
 })

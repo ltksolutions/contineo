@@ -14,6 +14,7 @@
  */
 
 import { duties, type Duty } from "./hrReport"
+import { reminderPlan, daysLeft } from "./due"
 
 /** Odkedy sa nepotvrdené považuje za meškajúce. Dva týždne (TODO I2). */
 export const DEFAULT_DAYS = 14
@@ -111,4 +112,86 @@ export function byPersonReminder(rows: Overdue[]): PersonReminder[] {
   }
   return [...groups.values()]
     .sort((a, b) => b.worstDays - a.worstDays || a.fullName.localeCompare(b.fullName))
+}
+
+// ── pripomienky podľa termínu (ADR-004) ──────────────────────────────────────
+
+/**
+ * Komu sa dnes ozvať kvôli **termínu**, a v akom tóne.
+ *
+ * Toto je iná vec než `overdue()` nad ním. Ten počíta meškanie od začiatku
+ * povinnosti podľa prahu, ktorý si zvolí personalista, a slúži mu na prehľad.
+ * Tu ide o termín, ktorý **niekto konkrétny zadal** pri prideľovaní — a preto
+ * sa podľa neho smie písať priamo človeku.
+ *
+ * Kadencia je v `reminderPlan()` (D-5…D-0 denne, potom D+1, D+3, D+7 a ďalej
+ * týždenne, od týždňa aj personalistovi). Zámerne **nie je** tu: je to čistá
+ * funkcia nad dátumami a testuje sa bez databázy.
+ */
+export interface DueReminder {
+  personId: string
+  fullName: string
+  email: string
+  /** Povinnosti, na ktoré sa dnes ozývame. Jeden e-mail na človeka. */
+  items: { duty: Duty; due: Date; daysLeft: number }[]
+  /** Tón celej správy. Keď má človek oboje, rozhoduje to horšie. */
+  tone: "soon" | "over"
+  /** Má o tom dnes vedieť aj personalista? (Od siedmeho dňa po termíne.) */
+  alsoHr: boolean
+}
+
+/**
+ * Zoradí a zoskupí povinnosti s termínom, ktoré sa dnes majú pripomenúť.
+ *
+ * Čistá funkcia nad načítanými riadkami — `dueRemindersFor()` nižšie je jej
+ * jediný databázový obal. Rovnaké delenie ako `overdueFrom()` / `overdue()`.
+ */
+export function dueRemindersFrom(rows: Duty[], asOf = new Date()): DueReminder[] {
+  const groups = new Map<string, DueReminder>()
+
+  for (const duty of rows) {
+    // Potvrdené povinnosti vypadnú tu, nie až v šablóne: e-mail o niečom,
+    // čo je hotové, je horší než žiadny.
+    if (duty.acknowledgedAt) continue
+    if (!duty.due) continue
+
+    const plan = reminderPlan(duty.due, asOf)
+    if (!plan.person || !plan.tone) continue
+
+    const left = daysLeft(duty.due, asOf)
+    const existing = groups.get(duty.personId)
+    if (existing) {
+      existing.items.push({ duty, due: duty.due, daysLeft: left })
+      // Horší tón vyhráva: kto má jednu vec po termíne a druhú pred ním,
+      // dostane správu „ste po termíne" — nie upokojujúce „blíži sa".
+      if (plan.tone === "over") existing.tone = "over"
+      existing.alsoHr = existing.alsoHr || plan.hr
+      continue
+    }
+    groups.set(duty.personId, {
+      personId: duty.personId,
+      fullName: duty.fullName,
+      email: duty.email,
+      items: [{ duty, due: duty.due, daysLeft: left }],
+      tone: plan.tone,
+      alsoHr: plan.hr,
+    })
+  }
+
+  for (const g of groups.values()) {
+    // Najsúrnejšie hore — po termíne pred tým, čo sa blíži.
+    g.items.sort((a, b) => a.daysLeft - b.daysLeft)
+  }
+  // Ľudia rovnako: kto je najhlbšie po termíne, je v prehľade prvý.
+  return [...groups.values()].sort(
+    (a, b) => a.items[0].daysLeft - b.items[0].daysLeft ||
+      a.fullName.localeCompare(b.fullName),
+  )
+}
+
+export async function dueRemindersFor(
+  companyCode: string,
+  asOf = new Date(),
+): Promise<DueReminder[]> {
+  return dueRemindersFrom(await duties(companyCode), asOf)
 }
