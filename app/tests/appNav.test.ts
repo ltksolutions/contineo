@@ -21,6 +21,7 @@ describe("položky navigácie", () => {
   it("rola pridá práve svoju sekciu", () => {
     expect(navItems({ isContentManager: true }).map(o => o.href)).toContain("/library")
     expect(navItems({ isHr: true }).map(o => o.href)).toContain("/hr")
+    expect(navItems({ isHr: true }).map(o => o.href)).toContain("/hr/evidence")
     expect(navItems({ isPeopleAdmin: true }).map(o => o.href)).toContain("/people")
   })
 

@@ -245,6 +245,7 @@ interface Dictionary {
     ask: string
     goldenSet: string
     toApprove: string
+    evidence: string
     /** Popis navigačnej oblasti shellu pre čítačky obrazovky. */
     sections: string
     toAcknowledge: string
@@ -522,6 +523,26 @@ interface Dictionary {
   /** Výpis auditu — používa ho nastavenie organizácie aj `/admin`. */
   /** Správa tenantov — vidí ju len správca platformy (Fáza 5b). */
   /** Zlatá sada — overovanie kvality odpovedí (D9). */
+  /** Reťaz dôkazov o potvrdení (ADR-005). Os je pohľad, nie záznam. */
+  evidence: {
+    heading: string
+    intro: string
+    nothing: string
+    kind: Record<string, string>
+    gap: Record<string, string>
+    informative: string
+    seconds: (n: number) => string
+    times: (n: number) => string
+    states: Record<string, string>
+    filterPerson: string
+    filterState: string
+    filterAll: string
+    apply: string
+    exportCsv: string
+    shown: (n: number, all: number) => string
+    notifiedMissing: string
+  }
+
   approvals: {
     heading: string
     intro: string
@@ -1600,6 +1621,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     ask: "Voľné otázky",
     goldenSet: "Zlatá sada",
     toApprove: "Na schválenie",
+    evidence: "Reťaz dôkazov",
     sections: "Sekcie",
     toAcknowledge: "Na potvrdenie",
     assigned: "Pridelené normy",
@@ -1857,6 +1879,38 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     done: "Hotovo",
     remove: (value) => `Odobrať ${value}`,
     chosenOf: (chosen, total) => `Vybrané ${chosen} z ${total}`,
+  },
+  evidence: {
+    heading: "Reťaz dôkazov",
+    intro: "Čo sa dialo s každou uloženou povinnosťou \u2014 od pridelenia po potvrdenie. Skladá sa pri zobrazení; neukladá sa nič.",
+    nothing: "Zatiaľ tu nie je čo ukázať.",
+    kind: {
+      assigned: "Pridelené",
+      notified: "Ozvalo sa jej",
+      opened: "Prvýkrát otvorené",
+      read: "Čas nad znením",
+      acknowledged: "Potvrdené",
+    },
+    gap: {
+      "before-recording": "vtedy sa to ešte nezaznamenávalo",
+      expired: "meranie sa po roku zmazalo",
+      "not-yet": "zatiaľ nie",
+    },
+    informative: "informatívne",
+    seconds: n => (n < 60 ? `${n} s` : `${Math.round(n / 60)} min`),
+    times: n => (n === 1 ? "raz" : n >= 2 && n <= 4 ? `${n} razy` : `${n} ráz`),
+    states: {
+      acknowledged: "potvrdené",
+      "opened-not-acknowledged": "otvorené a nepotvrdené",
+      "not-opened": "ani neotvorené",
+    },
+    filterPerson: "Osoba",
+    filterState: "Stav",
+    filterAll: "všetky",
+    apply: "Použiť",
+    exportCsv: "Export CSV",
+    shown: (n, all) => `${n} z ${all} povinností`,
+    notifiedMissing: "Riadok o upozorneniach os zatiaľ nemá: log pripomienok je prevádzkový a po 90 dňoch sa maže, a zápis na pridelení hovorí „ozvalo sa N ľuďom\u201c, nie ktorým.",
   },
   approvals: {
     heading: "Na schválenie",
@@ -3178,6 +3232,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     ask: "Volné otázky",
     goldenSet: "Zlatá sada",
     toApprove: "Ke schválení",
+    evidence: "Řetěz důkazů",
     sections: "Sekce",
     toAcknowledge: "K potvrzení",
     assigned: "Přidělené předpisy",
@@ -3435,6 +3490,38 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     done: "Hotovo",
     remove: (value) => `Odebrat ${value}`,
     chosenOf: (chosen, total) => `Vybráno ${chosen} z ${total}`,
+  },
+  evidence: {
+    heading: "Řetěz důkazů",
+    intro: "Co se dělo s každou uloženou povinností \u2014 od přidělení po potvrzení. Skládá se při zobrazení; neukládá se nic.",
+    nothing: "Zatím tu není co ukázat.",
+    kind: {
+      assigned: "Přiděleno",
+      notified: "Ozvalo se jí",
+      opened: "Poprvé otevřeno",
+      read: "Čas nad zněním",
+      acknowledged: "Potvrzeno",
+    },
+    gap: {
+      "before-recording": "tehdy se to ještě nezaznamenávalo",
+      expired: "měření se po roce smazalo",
+      "not-yet": "zatím ne",
+    },
+    informative: "informativní",
+    seconds: n => (n < 60 ? `${n} s` : `${Math.round(n / 60)} min`),
+    times: n => (n === 1 ? "jednou" : n >= 2 && n <= 4 ? `${n}krát` : `${n}krát`),
+    states: {
+      acknowledged: "potvrzeno",
+      "opened-not-acknowledged": "otevřeno a nepotvrzeno",
+      "not-opened": "ani neotevřeno",
+    },
+    filterPerson: "Osoba",
+    filterState: "Stav",
+    filterAll: "všechny",
+    apply: "Použít",
+    exportCsv: "Export CSV",
+    shown: (n, all) => `${n} z ${all} povinností`,
+    notifiedMissing: "Řádek o upozorněních osa zatím nemá: log připomínek je provozní a po 90 dnech se maže, a zápis na přidělení říká „ozvalo se N lidem\u201c, ne kterým.",
   },
   approvals: {
     heading: "Ke schválení",
@@ -4751,6 +4838,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     ask: "Ask a question",
     goldenSet: "Golden set",
     toApprove: "To approve",
+    evidence: "Evidence",
     sections: "Sections",
     toAcknowledge: "To acknowledge",
     assigned: "Assigned documents",
@@ -5007,6 +5095,38 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     done: "Done",
     remove: (value) => `Remove ${value}`,
     chosenOf: (chosen, total) => `${chosen} of ${total} selected`,
+  },
+  evidence: {
+    heading: "Chain of evidence",
+    intro: "What happened with each obligation \u2014 from assignment to acknowledgement. Composed on display; nothing is stored.",
+    nothing: "Nothing to show here yet.",
+    kind: {
+      assigned: "Assigned",
+      notified: "Contacted",
+      opened: "First opened",
+      read: "Time on the text",
+      acknowledged: "Acknowledged",
+    },
+    gap: {
+      "before-recording": "this was not recorded back then",
+      expired: "the measurement was deleted after a year",
+      "not-yet": "not yet",
+    },
+    informative: "informative",
+    seconds: n => (n < 60 ? `${n} s` : `${Math.round(n / 60)} min`),
+    times: n => (n === 1 ? "once" : `${n} times`),
+    states: {
+      acknowledged: "acknowledged",
+      "opened-not-acknowledged": "opened, not acknowledged",
+      "not-opened": "not even opened",
+    },
+    filterPerson: "Person",
+    filterState: "State",
+    filterAll: "all",
+    apply: "Apply",
+    exportCsv: "Export CSV",
+    shown: (n, all) => `${n} of ${all} obligations`,
+    notifiedMissing: "The timeline has no notification row yet: the reminder log is operational and is deleted after 90 days, and the record on the assignment says how many people were contacted, not which ones.",
   },
   approvals: {
     heading: "To approve",
