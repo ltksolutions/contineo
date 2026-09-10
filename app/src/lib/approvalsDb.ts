@@ -16,6 +16,7 @@ import { getCollection } from "./mongodb"
 import { AppError } from "./appError"
 import { writeAudit } from "./audit"
 import { PERSONS_COLLECTION, type Person } from "./persons"
+import { DOCUMENTS_COLLECTION } from "./documents"
 import {
   APPROVALS_COLLECTION, submitProblem, versionState, decideProblem, roundOutcome,
   type ApprovalRound, type ApproverDecision, type VersionState,
@@ -344,4 +345,37 @@ export async function markNotified(input: {
     { $set: { "approvers.$[komu].notifiedAt": new Date() } },
     { arrayFilters: [{ "komu.email": { $in: emails } }] },
   )
+}
+
+/**
+ * Bežiace kolá v organizácii — „čaká na schválenie" (ADR-006, krok 6).
+ *
+ * Zoznam, nie počet: číslo bez mien hovorí, že sa niečo deje, ale nie, či sa
+ * čaká deň alebo mesiac a na koho. Práve to je jediné, čo s tým vie
+ * predkladateľ urobiť.
+ */
+export async function openRounds(companyCode: string): Promise<ApprovalRound[]> {
+  const col = await getCollection<ApprovalRound>(APPROVALS_COLLECTION)
+  return col.find({ companyCode, outcome: null }).sort({ submittedAt: 1 }).toArray()
+}
+
+/**
+ * Názvy dokumentov ku kolám.
+ *
+ * Kolo si názov **neukladá** zámerne: názov je vec dokumentu a mení sa, kým
+ * kolo je záznam o rozhodovaní. Odtlačok mena schvaľovateľa je iná vec — ten
+ * v zázname byť musí (D24), lebo bez neho sa nedá povedať, kto rozhodol.
+ */
+export async function documentTitles(
+  companyCode: string,
+  documentIds: string[],
+): Promise<Map<string, string>> {
+  const ids = [...new Set(documentIds)]
+  if (ids.length === 0) return new Map()
+
+  const col = await getCollection(DOCUMENTS_COLLECTION)
+  const rows = await col
+    .find({ companyCode, documentId: { $in: ids } }, { projection: { documentId: 1, title: 1 } })
+    .toArray()
+  return new Map(rows.map(d => [String(d.documentId), String(d.title ?? d.documentId)]))
 }

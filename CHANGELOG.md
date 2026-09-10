@@ -4,6 +4,18 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Added (2026-09-10 — vidieť, čo čaká na schválenie a na koho)
+
+Krok 6 z ADR-006, s dvomi odchýlkami.
+
+- **Zoznam, nie počet.** Návrh má na Prehľade dlaždicu s číslom. Číslo samo hovorí len to, že sa niečo deje; predkladateľ potrebuje vedieť, **na koho** sa čaká a **ako dlho** — to je jediné, s čím vie niečo urobiť. Preto zoznam s menami a dátumom predloženia.
+- **Zatiaľ nad knižnicou, nie na Prehľade** — Prehľad ešte neexistuje. Knižnica je obrazovka správcu obsahu, teda toho, kto znenia predkladá. Keď Prehľad vznikne, presunie sa tam **ten istý komponent nad tou istou funkciou**: dva pohľady, ktoré si to isté počítajú každý po svojom, sa raz rozídu.
+- **Nefiltruje sa filtrami zoznamu.** Čo čaká na rozhodnutie, čaká bez ohľadu na to, čo si človek práve odfiltroval — schovať to za filter by znamenalo, že si toho nikto nevšimne.
+- **Názvy sa načítavajú zvlášť**, nie z riadkov zoznamu: tie sú prefiltrované, takže dokument v kole medzi nimi byť nemusí a zostalo by po ňom holé `documentId`.
+- Overené: `tsc` čisto, 1073 testov, lint bez chýb, build prejde.
+
+**Čo z kroku 6 hotové nie je:** facet `Stav` v knižnici nedostal hodnoty schvaľovania. Stav znenia je odvodený z inej kolekcie, takže filter by potreboval spojenie dvoch dotazov — a to je vlastné rozhodnutie, nie prílepok. Zapísané v `docs/TODO.md`.
+
 ### Added (2026-09-10 — schvaľovateľ sa dozvie, že sa naňho čaká)
 
 Krok 5 z ADR-006.
