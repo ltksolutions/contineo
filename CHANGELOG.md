@@ -4,6 +4,20 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Added (2026-09-10 — znenie sa dá predložiť na schválenie)
+
+Krok 3 z ADR-006 — tretí krok nahrávania z návrhu. Rozhodovanie (krok 4) tu ešte nie je.
+
+- **`lib/approvalsDb.ts`** číta a zapisuje kolá; **čo sa smie, rozhoduje `approvals.ts`**, ktorý je bez databázy. Kolekcia je append-only ako `acknowledgements`: kolo sa nemaže a druhé kolo po zamietnutí je **nové kolo**, nie prepísané staré — inak by z histórie zmizlo, že prvý pokus neprešiel.
+- **Mená schvaľovateľov sa berú zo záznamu osoby, nie z formulára.** Odtlačok mena v kole je dôkazná vec (D24) a formulár je vstup od človeka: kto si ho prepíše, prepíše si aj to, kto podľa záznamu schvaľoval. Preto do akcie chodia `persons.id`.
+- **Znenie spred zavedenia schvaľovania sa predložiť nedá** (D74). Nie je to technická prekážka: keby sa dalo, znenie by počas kola stratilo príznak, prepadlo by do „v schvaľovaní" a brána pri prideľovaní by ho zastavila — norma, ktorá sa dnes prideľuje, by sa prideľovať prestala.
+- **Zrušenie kola nemaže, len uzavrie s povinným dôvodom.** Je to jediná cesta, ako zo zoznamu odstrániť schvaľovateľa, ktorý tam byť nemá; meniť zoznam za behu by znamenalo, že sa dá nepohodlný schvaľovateľ potichu vymeniť.
+- **Formulár nad serverovou akciou, nie API** — predloženie otvára ostatným povinnosť rozhodnúť a cudzia stránka to nemá vedieť spustiť za prihláseného človeka.
+- **Zaškrtávacie políčka namiesto `select multiple`:** na telefóne sa viacnásobný výber v rozbaľovacom zozname ovláda zle a bez JavaScriptu ho nemá čo nahradiť. Zoznam je v posuvnom rámiku a klikací je celý riadok, nie len políčko.
+- **Vyradení ľudia a predkladateľ sa neponúkajú.** Kolo, ktoré čaká na človeka, čo v zväze už nie je, sa neuzavrie nikdy; a ponúkať voľbu, ktorú server vzápätí odmietne, je zlé rozhranie.
+- Overené: `tsc` čisto, **1060 testov** (2 nové), lint bez chýb, build prejde. **Obrazovka na 390 px overená zatiaľ nie je** — vyžaduje prihlásenú reláciu.
+- **Otvorené:** unikátny index `{companyCode, documentId, versionId, round}` je doplnený do `onboarding_init.mjs`, ale **v Atlase ešte vytvorený nie je**. Bez neho môžu dvaja ľudia, ktorí naraz stlačia „Predložiť", otvoriť dve kolá nad tým istým znením.
+
 ### Changed (2026-09-10 — znenia z knižnice sú označené ako zverejnené pred schvaľovaním)
 
 Migrácia k ADR-006 (D74). **Nedopisuje sa žiadne schválenie** — to by znamenalo vyrobiť súhlas, ktorý nikto nedal.
