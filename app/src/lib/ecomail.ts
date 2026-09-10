@@ -393,3 +393,70 @@ export function inviteEmail(
 
   return { subject: s.subject(organisation), text, html }
 }
+
+/**
+ * Prosba o schválenie znenia (ADR-006, krok 5).
+ *
+ * **Menovitá správa, nie hromadná pošta.** Chodí len tým, koho predkladateľ
+ * menoval (D69), a chodí raz — pri predložení. Nie je to pripomienka a nemá
+ * kadenciu: kolo, ktoré leží, sa rieši rozhovorom alebo zrušením, nie tým,
+ * že sa to isté pošle piaty raz. Práve to je rozdiel oproti termínom (D62),
+ * kde pripomínanie zmysel má.
+ *
+ * Odkaz vedie na **zoznam** `/approvals`, nie na konkrétne kolo: kto má
+ * pred sebou tri znenia, potrebuje jedno miesto, nie tri odkazy.
+ */
+export function approvalEmail(
+  link: string,
+  host: string,
+  version: { title: string; versionLabel: string; effectiveFrom: string },
+  submittedBy: string,
+  note: string,
+  language: UiLanguage = "sk",
+  branding?: SignInBranding,
+): Omit<Message, "to"> {
+  const s = dictionary(language).approvalEmail
+  const organisation = branding?.displayName ?? "Contineo"
+  const accent = branding?.accentColor ?? "#232a35"
+
+  const logo = branding?.logoUrl
+    ? `<img src="${branding.logoUrl}" alt="" width="34" height="34" style="display:inline-block;vertical-align:middle;margin-right:10px;border:0">`
+    : ""
+
+  const versionLine = s.versionLine(version.versionLabel, version.effectiveFrom)
+
+  const text = [
+    s.intro(submittedBy),
+    "",
+    version.title,
+    versionLine,
+    ...(note ? ["", `${s.noteLabel}: ${note}`] : []),
+    "",
+    link,
+    "",
+    s.note,
+  ].join("\n")
+
+  const html = `<!doctype html>
+<html lang="${language}"><body style="margin:0;padding:24px;background:#f5f6f8;font-family:ui-sans-serif,system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;color:#161b22">
+  <div style="max-width:520px;margin:0 auto;background:#fff;border:1px solid rgba(20,28,42,.12);border-radius:12px;padding:28px">
+    <div style="font-size:18px;font-weight:700;letter-spacing:-.02em;margin-bottom:6px">${logo}<span style="vertical-align:middle">${escapujHtml(organisation)}</span></div>
+    <div style="font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:#5c6675;margin-bottom:22px">${escapujHtml(s.subtitle)}</div>
+    <p style="font-size:15.5px;line-height:1.65;margin:0 0 16px">${escapujHtml(s.intro(submittedBy))}</p>
+    <div style="border-left:3px solid ${accent};padding:2px 0 2px 14px;margin:0 0 20px">
+      <div style="font-size:16.5px;font-weight:700;line-height:1.4">${escapujHtml(version.title)}</div>
+      <div style="font-size:13.5px;color:#5c6675;margin-top:3px">${escapujHtml(versionLine)}</div>
+    </div>
+    ${note ? `<div style="font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:#5c6675;margin-bottom:5px">${escapujHtml(s.noteLabel)}</div>
+    <p style="font-size:15px;line-height:1.6;margin:0 0 24px">${escapujHtml(note)}</p>` : ""}
+    <a href="${link}" style="display:inline-block;background:${accent};color:#fff;text-decoration:none;border-radius:10px;padding:12px 22px;font-size:15px;font-weight:600">
+      ${escapujHtml(s.button)}
+    </a>
+    <p style="font-size:13px;line-height:1.6;color:#5c6675;margin:22px 0 0">${escapujHtml(s.note)}</p>
+    <hr style="border:none;border-top:1px solid rgba(20,28,42,.12);margin:22px 0 14px">
+    <div style="font-size:12px;color:#5c6675">${escapujHtml(host)} · LTK Solutions</div>
+  </div>
+</body></html>`
+
+  return { subject: s.subject(organisation), text, html }
+}

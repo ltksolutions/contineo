@@ -35,7 +35,13 @@ import { writeAudit } from "@/lib/audit"
 import { dictionary, errorText, type UiLanguage } from "@/lib/i18n"
 import { AppError } from "@/lib/appError"
 import { assignHref, summarize, type BulkOutcome } from "@/lib/libraryBulk"
-import { submitForApproval, cancelRound } from "@/lib/approvalsDb"
+import { submitForApproval, cancelRound, markNotified } from "@/lib/approvalsDb"
+import { approvalEmail, send } from "@/lib/ecomail"
+import { requestHostname, currentTenant } from "@/lib/session"
+import { brandingView } from "@/lib/tenants"
+import { personLanguage } from "@/lib/persons"
+import type { ApprovalRound } from "@/lib/approvals"
+import { formatDate } from "@/lib/i18n"
 
 async function actor(): Promise<
   {
@@ -572,7 +578,30 @@ export async function submitForApprovalAction(fd: FormData) {
       submittedBy: self.email,
       publishedBefore: fieldText(fd, "publishedBefore") === "1",
     })
+    /*
+      Ozvať sa menovaným ľuďom (krok 5). **Až po zápise kola** a mimo neho:
+      keby odoslanie zhodilo zápis, vzniklo by kolo, ktoré v databáze nie je,
+      a predkladateľ by ho otvoril druhý raz. Naopak zlyhané odoslanie kolo
+      nezruší — kolo beží ďalej a v zázname je vidieť, komu sa neozvalo.
+
+      Nie je to hromadná pošta: chodí len tým, koho predkladateľ menoval, a
+      chodí **raz**. Kolo, ktoré leží, sa rieši rozhovorom alebo zrušením, nie
+      piatym e-mailom o tom istom.
+    */
+    const notified = await notifyApprovers({
+      companyCode: self.companyCode,
+      documentId: id,
+      round,
+      versionLabel: fieldText(fd, "versionLabel"),
+      effectiveFrom: fieldText(fd, "effectiveFrom"),
+      title: fieldText(fd, "title"),
+      submittedBy: self.email,
+    })
+
     message = say(self.language).submittedForApproval(round.approvers.length)
+    if (notified < round.approvers.length) {
+      message += ` ${say(self.language).approvalNotAllNotified(round.approvers.length - notified)}`
+    }
   } catch (e) {
     message = errorMessage(e, self.language)
     error = true
@@ -612,4 +641,72 @@ export async function cancelApprovalAction(fd: FormData) {
 
   revalidatePath(`/library/${id}`)
   redirect(`/library/${encodeURIComponent(id)}?msg=${encodeURIComponent(message)}${error ? "&error=1" : ""}`)
+}
+
+/**
+ * Ozve sa schvaľovateľom kola. Vracia počet, ktorým správa naozaj odišla.
+ *
+ * **Nikdy nevyhadzuje.** Jeden neplatný e-mail nesmie zhodiť predloženie ani
+ * zastaviť ostatných — rovnaká úvaha ako pri rozposielaní z výkazu. Komu sa
+ * neozvalo, je vidieť v zázname (`notifiedAt` zostane `null`) aj v logu.
+ */
+async function notifyApprovers(input: {
+  companyCode: string
+  documentId: string
+  round: ApprovalRound
+  versionLabel: string
+  effectiveFrom: string
+  title: string
+  submittedBy: string
+}): Promise<number> {
+  let host = ""
+  let branding: ReturnType<typeof brandingView> | undefined
+  try {
+    host = await requestHostname()
+    const tenant = await currentTenant()
+    if (tenant) branding = brandingView(tenant)
+  } catch (e) {
+    console.error("[schvalovanie] vzhľad organizácie sa nepodarilo načítať:", e)
+  }
+
+  const link = `https://${host}/approvals`
+  const sent: string[] = []
+
+  await Promise.all(input.round.approvers.map(async a => {
+    try {
+      const language = await personLanguage(a.email)
+      await send({
+        to: a.email,
+        ...approvalEmail(
+          link,
+          host,
+          {
+            title: input.title || input.documentId,
+            versionLabel: input.versionLabel || input.round.versionId,
+            effectiveFrom: input.effectiveFrom
+              ? formatDate(new Date(input.effectiveFrom), language)
+              : "—",
+          },
+          input.submittedBy,
+          input.round.note ?? "",
+          language,
+          branding,
+        ),
+      })
+      sent.push(a.email)
+    } catch (e) {
+      console.error(`[schvalovanie] e-mail na ${a.email} zlyhal:`, e)
+    }
+  }))
+
+  if (sent.length > 0) {
+    await markNotified({
+      companyCode: input.companyCode,
+      documentId: input.documentId,
+      versionId: input.round.versionId,
+      round: input.round.round,
+      emails: sent,
+    })
+  }
+  return sent.length
 }
