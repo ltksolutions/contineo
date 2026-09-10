@@ -183,7 +183,10 @@ export default async function LibraryPage({
   const categoryLabel = labelFrom("category")
   const tagLabel = labelFrom("tags")
   const accessLabel = labelFrom("accessLevel")
-  const statusLabel = (value: string) => (value === "published" ? t.statusPublished : t.statusDrafts)
+  const statusLabel = (value: string) =>
+    value === "published" ? t.statusPublished
+    : value === "in-review" ? t.statusInReview
+    : t.statusDrafts
 
   const facetLabel: Record<MultiKey, { title: string; label: (v: string) => string }> = {
     category: { title: t.category, label: categoryLabel },

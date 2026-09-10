@@ -29,6 +29,8 @@ import { ACKNOWLEDGEMENTS_COLLECTION } from "./acknowledgements"
 import { writeAudit } from "./audit"
 import type { Person } from "./persons"
 import { AppError } from "./appError"
+import { assignBlock } from "./approvals"
+import { versionStateFor } from "./approvalsDb"
 
 export const ASSIGNMENTS_COLLECTION = "assignments"
 
@@ -298,7 +300,36 @@ export async function assign(input: NewAssignment): Promise<AssignResult> {
   if (!input.subject?.versionId || !input.subject?.documentId) {
     throw new AssignmentValidationError("assignment.missingSubject", "Chýba dokument alebo jeho znenie.")
   }
-  if (!(input.subject.effectiveFrom instanceof Date)) {
+  /*
+   * Brána pri prideľovaní (ADR-006, D73). **Dve nezávislé podmienky**, každá
+   * s vlastným hlásením: schválené znamená „ľudia sa zhodli, že text je
+   * správny", účinné znamená „odkedy zaväzuje" (D6). Znenie sa dá schváliť
+   * v septembri s účinnosťou od januára — a naopak mať dátum bez toho, aby ho
+   * ktokoľvek videl. Personalista musí vedieť, ktorá z nich mu chýba, inak
+   * hľadá naslepo.
+   *
+   * Pravidlo samo je v `approvals.ts` a je bez databázy; tu sa preň len
+   * načíta stav. Znenia zverejnené pred zavedením schvaľovania (D74) cez
+   * bránu prechádzajú, inak by sa zo dňa na deň prestalo dať prideliť
+   * čokoľvek, čo je dnes v knižnici.
+   */
+  const block = assignBlock({
+    state: await versionStateFor(
+      input.companyCode.trim(),
+      input.subject.documentId,
+      input.subject.versionId,
+    ),
+    effectiveFrom: input.subject.effectiveFrom ?? null,
+  })
+  if (block === "assignment.notApproved") {
+    throw new AssignmentValidationError("assignment.notApproved",
+      "Znenie nie je schválené. Prideliť sa dá až text, na ktorom sa niekto zhodol (ADR-006).")
+  }
+  // Druhá podmienka brány. `assignBlock()` ju vyhodnotil rovnako, ale zúženie
+  // typu z inej funkcie prekladač nevidí — a `subject.effectiveFrom` sa nižšie
+  // porovnáva s termínom. Nie je to druhá kontrola, je to to isté tvrdenie
+  // napísané tak, aby ho videl aj prekladač.
+  if (block === "assignment.versionNotEffective" || !(input.subject.effectiveFrom instanceof Date)) {
     throw new AssignmentValidationError("assignment.versionNotEffective",
       "Znenie nemá dátum platnosti, a tak sa nedá ani potvrdiť (D6). Najprv mu doplň platnosť.")
   }

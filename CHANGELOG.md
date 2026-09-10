@@ -4,6 +4,23 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Added (2026-09-10 — prideliť sa dá len schválené znenie)
+
+Krok 2 z ADR-006, zámerne až posledný. Tým je ADR-006 hotové.
+
+- **Brána pri prideľovaní** (D73) má **dve nezávislé podmienky a dve rôzne hlásenia**: schválené znamená „ľudia sa zhodli, že text je správny", účinné znamená „odkedy zaväzuje" (D6). Znenie sa dá schváliť v septembri s účinnosťou od januára — aj mať dátum bez toho, aby ho ktokoľvek videl. Personalista musí vedieť, ktorá z nich mu chýba, inak hľadá naslepo.
+- **Pravidlo je v `approvals.ts` a je bez databázy**; `assign()` si preň len načíta stav. Stav sa nikam neukladá (D27) — uložený by sa raz rozišiel s kolami, z ktorých vznikol, a rozišiel by sa presne vtedy, keď na tom záleží.
+- **Znenia zverejnené pred zavedením schvaľovania prechádzajú** (D74), takže sa zo dňa na deň neprestalo dať prideliť nič, čo je dnes v knižnici.
+- **Poradie bolo záväzné:** brána ide až po predložení, rozhodovaní a upozorneniach. Opačné poradie by znamenalo, že sa nové znenie dá nahrať, ale nie schváliť — a teda ani prideliť.
+
+### Added (2026-09-10 — facet Stav dostal „na schválenie")
+
+- **Tretia hodnota, ale nie tretia priehradka.** Koncept a publikované sú rozdelenie knižnice — buď alebo. „Na schválenie" je **iná os**: dokument môže byť publikovaný a zároveň mať bežiace kolo nad novým znením. Preto sa k rozdeleniu pridáva cez `$or`, nie doňho. Zaškrtnúť koncept aj publikované zostáva „všetko" a filter vtedy nevzniká.
+- **Dva dotazy namiesto spojenia kolekcií.** Stav je odvodený z `approval_rounds`; zoznam `documentId` z bežiacich kôl ide do `$in`. Kolá sú jednotky až desiatky, takže je to lacnejšie než agregácia naprieč kolekciami pri každom otvorení knižnice — a hlavne sa to dá prečítať.
+- **Zoznam kôl sa načíta len vtedy, keď sa naň filtruje.** Bez toho by každé otvorenie knižnice platilo dotaz navyše za filter, ktorý nikto nezapol.
+- **Nula sa neukazuje.** Prázdny riadok filtra len zaberá miesto a tvrdí, že sa dá na niečo prepnúť.
+- Overené: `tsc` čisto, **1077 testov** (4 nové na filter), lint bez chýb, build prejde.
+
 ### Added (2026-09-10 — vidieť, čo čaká na schválenie a na koho)
 
 Krok 6 z ADR-006, s dvomi odchýlkami.

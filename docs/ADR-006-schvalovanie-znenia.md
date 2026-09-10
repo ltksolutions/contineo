@@ -7,7 +7,8 @@
 > prijal ako celok.
 > **Nadväzuje na:** `docs/ADR-003-onboarding-a-potvrdzovanie.md` (D6, D24, D27, D28, D30, D51, D57), `docs/ADR-005-retaz-dokazov.md`
 > **Súvisiace:** `docs/design/README.md` časť 6 (nahrávanie má tretí krok „Schválenie"), `docs/DESIGN_GAP.md`
-> **Implementácia:** zatiaľ žiadna — toto rozhodnutie predchádza kódu.
+> **Implementácia:** hotová (2026-09-10), kroky 1–6 vrátane brány pri prideľovaní.
+> Odchýlky sú pomenované v `CHANGELOG.md` pri jednotlivých krokoch.
 
 ---
 
@@ -175,7 +176,7 @@ Stav znenia je **odvodený** z posledného kola (D27), nie uložený:
 | krok | súbory | poznámka |
 | --- | --- | --- |
 | 1. model a stav | `lib/approvals.ts` (nová), čistá funkcia `versionState()` | testovateľná bez Monga |
-| 2. brána pri prideľovaní | `lib/assignments.ts` | druhá podmienka vedľa `effectiveFrom` · **ide až po kroku 4**, viď riziká |
+| 2. brána pri prideľovaní | `lib/assignments.ts` | druhá podmienka vedľa `effectiveFrom` · hotové 2026-09-10, až po krokoch 3–5 |
 | 3. predloženie | `app/library/new`, `app/library/[id]` | tretí krok návrhu |
 | 4. rozhodnutie | `app/library/[id]` + serverová akcia | bez JavaScriptu, ako potvrdzovanie (formulár nad akciou, nie API — inak CSRF na úkone s následkom) |
 | 5. upozornenia | `lib/ecomail.ts` | menovaným ľuďom, nie hromadne — tu automatické odosielanie problém nie je |

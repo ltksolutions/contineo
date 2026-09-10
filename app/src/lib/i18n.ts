@@ -1141,6 +1141,8 @@ interface Dictionary {
       }
       statusPublished: string
       statusDrafts: string
+      /** Tretia hodnota facetu Stav (ADR-006) — dokument s bežiacim kolom. */
+      statusInReview: string
       filter: string
       clearFilters: string
       /** Stav spracovania súboru — kľúče sú hodnoty z databázy. */
@@ -2073,6 +2075,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "approval.unknownApprover": "Niektorý z vybraných schvaľovateľov tu nie je alebo je vyradený.",
     "approval.reasonRequired": "Bez dôvodu sa kolo zrušiť nedá. O rok nikto nezistí, prečo skončilo.",
     "approval.nothingRunning": "Pre toto znenie nebeží žiadne kolo.",
+    "assignment.notApproved": "Znenie nie je schválené. Prideliť sa dá až text, na ktorom sa niekto zhodol \u2014 predlož ho na schválenie v detaile dokumentu.",
     "approval.notApprover": "Toto kolo na teba nečaká \u2014 nie si medzi menovanými schvaľovateľmi.",
     "approval.roundClosed": "Kolo je uzavreté. Rozhodnutie doň už pribudnúť nemôže.",
     "approval.alreadyDecided": "Rozhodnutie je zapísané a nemení sa. Ak si to rozmyslíš, predkladateľ kolo zruší a otvorí nové \u2014 v histórii bude vidieť oboje.",
@@ -2721,6 +2724,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       },
       statusPublished: "publikované",
       statusDrafts: "koncepty",
+      statusInReview: "na schválenie",
       filter: "Filtrovať",
       clearFilters: "zrušiť filtre",
       processing: {
@@ -3634,6 +3638,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "approval.unknownApprover": "Někdo z vybraných schvalovatelů tu není nebo je vyřazený.",
     "approval.reasonRequired": "Bez důvodu kolo zrušit nelze. Za rok nikdo nezjistí, proč skončilo.",
     "approval.nothingRunning": "Pro toto znění neběží žádné kolo.",
+    "assignment.notApproved": "Znění není schválené. Přidělit lze až text, na kterém se někdo shodl \u2014 předlož ho ke schválení v detailu dokumentu.",
     "approval.notApprover": "Toto kolo na tebe nečeká \u2014 nejsi mezi jmenovanými schvalovateli.",
     "approval.roundClosed": "Kolo je uzavřené. Rozhodnutí do něj už přibýt nemůže.",
     "approval.alreadyDecided": "Rozhodnutí je zapsané a nemění se. Když si to rozmyslíš, předkladatel kolo zruší a otevře nové \u2014 v historii bude vidět obojí.",
@@ -4282,6 +4287,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       },
       statusPublished: "publikované",
       statusDrafts: "koncepty",
+      statusInReview: "ke schválení",
       filter: "Filtrovat",
       clearFilters: "zrušit filtry",
       processing: {
@@ -5189,6 +5195,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "approval.unknownApprover": "One of the chosen approvers is not here or has been deactivated.",
     "approval.reasonRequired": "A round cannot be cancelled without a reason. A year from now nobody would know why it ended.",
     "approval.nothingRunning": "No round is running for this version.",
+    "assignment.notApproved": "This version is not approved. Only text somebody has agreed on can be assigned \u2014 submit it for approval on the document page.",
     "approval.notApprover": "This round is not waiting for you \u2014 you are not one of its named approvers.",
     "approval.roundClosed": "The round is closed. No decision can be added to it now.",
     "approval.alreadyDecided": "Your decision is recorded and does not change. If you change your mind, the submitter cancels the round and opens a new one \u2014 the history shows both.",
@@ -5837,6 +5844,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       },
       statusPublished: "published",
       statusDrafts: "drafts",
+      statusInReview: "to approve",
       filter: "Filter",
       clearFilters: "clear filters",
       processing: {
