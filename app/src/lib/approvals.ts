@@ -160,3 +160,39 @@ export function assignBlock(input: {
   if (!(input.effectiveFrom instanceof Date)) return "assignment.versionNotEffective"
   return null
 }
+
+export type DecideProblem =
+  | "approval.notApprover"
+  | "approval.roundClosed"
+  | "approval.alreadyDecided"
+  | "approval.reasonRequired"
+
+/**
+ * Prečo tento človek nemôže o tomto kole rozhodnúť — alebo `null`, keď môže.
+ *
+ * **Rozhodnutie je nemenné** (rovnaká úvaha ako pri potvrdení, D24). Kto raz
+ * schválil, nemôže to prepísať na zamietnutie: záznam, ktorý sa dá zmeniť,
+ * nie je dôkaz o tom, čo si človek vtedy myslel. Ak si to rozmyslí,
+ * predkladateľ kolo zruší a otvorí nové — a v histórii je vidieť oboje.
+ */
+export function decideProblem(input: {
+  round: ApprovalRound
+  by: string
+  decision: "approved" | "rejected"
+  reason?: string
+}): DecideProblem | null {
+  if (input.round.outcome !== null) return "approval.roundClosed"
+
+  const me = input.by.trim().toLowerCase()
+  const mine = input.round.approvers.find(a => a.email.trim().toLowerCase() === me)
+  // Nie je medzi menovanými (D69). Nie je to len technická kontrola: kolo je
+  // zoznam konkrétnych ľudí a ktokoľvek iný doň nemá čo zapisovať, aj keby
+  // mal v systéme akúkoľvek rolu.
+  if (!mine) return "approval.notApprover"
+  if (mine.decision !== null) return "approval.alreadyDecided"
+
+  // Dôvod je povinný **len pri zamietnutí** (D71). Pri schválení by bol
+  // obradom navyše: kto súhlasí, nemá čo vysvetľovať.
+  if (input.decision === "rejected" && !input.reason?.trim()) return "approval.reasonRequired"
+  return null
+}

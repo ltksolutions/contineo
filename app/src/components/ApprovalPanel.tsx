@@ -88,7 +88,11 @@ export default function ApprovalPanel({
                           ? t.approvalApproved(formatDate(a.decidedAt, language))
                           : a.decision === "rejected" && a.decidedAt
                             ? t.approvalRejected(formatDate(a.decidedAt, language))
-                            : t.approvalWaiting}
+                            // V **uzavretom** kole už nikto nečaká: kolo
+                            // skončilo a rozhodnutie nepríde. „Čaká" by tam
+                            // tvrdilo, že sa na človeka stále čaká — a je to
+                            // text v histórii, ktorá má byť dôkazom.
+                            : r.outcome === null ? t.approvalWaiting : t.approvalNotDecided}
                       </span>
                       {/* Dôvod zamietnutia je spätná väzba na prácu človeka —
                           patrí k menu toho, kto ho napísal, nie pod anonymné

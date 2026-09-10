@@ -16,7 +16,7 @@
 export type NavLayout = "sidebar" | "topbar"
 
 /** Kľúč do `dictionary().nav` — nie hotový text, aby zostal preložiteľný. */
-export type NavKey = "ask" | "toAcknowledge" | "goldenSet" | "library" | "assigned" | "people"
+export type NavKey = "ask" | "toAcknowledge" | "toApprove" | "goldenSet" | "library" | "assigned" | "people"
 
 export interface NavItem {
   href: string
@@ -44,6 +44,12 @@ export function navItems(flags: NavFlags): NavItem[] {
     // Odkaz vidí každý prihlásený; stránka si už poradí — kto nemá čo
     // potvrdzovať, uvidí, že nemá nič.
     { href: "/documents", key: "toAcknowledge" },
+    // Ten istý dôvod ako o riadok vyššie: schvaľovatelia sú **menovaní ľudia**
+    // (D69), nie držitelia roly, takže sa to podľa roly podmieniť nedá — a
+    // dávať rolu `spravca-obsahu` niekomu len preto, aby smel schváliť text,
+    // by mu zároveň dovolilo normy nahrávať a publikovať. Kto nemá čo
+    // schvaľovať, uvidí, že nemá nič.
+    { href: "/approvals", key: "toApprove" },
     ...(flags.isContentManager ? [{ href: "/library", key: "library" as const }] : []),
     ...(flags.isHr ? [{ href: "/hr", key: "assigned" as const }] : []),
     ...(flags.isPeopleAdmin ? [{ href: "/people", key: "people" as const }] : []),

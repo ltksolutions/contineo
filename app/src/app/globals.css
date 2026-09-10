@@ -2881,3 +2881,9 @@ a.answer-source:focus-visible { outline: 2px solid var(--accent); outline-offset
 .approval-person > span { display: grid; gap: 1px; min-width: 0; }
 .approval-person-name { font-size: 14.5px; }
 .approval-person-meta { font-size: 12.5px; overflow-wrap: anywhere; }
+
+/* Dve rozhodnutia vedľa seba, na telefóne pod sebou. „Schváliť" je prvé
+   a plné — nie preto, že by bolo správnejšie, ale preto, že je to častejší
+   prípad; zamietnutie je tiché tlačidlo, aby sa naň nekliklo omylom. */
+.approval-decide { display: flex; gap: 10px; flex-wrap: wrap; }
+.approval-decide > button { flex: 1 1 160px; }
