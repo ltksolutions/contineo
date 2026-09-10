@@ -200,6 +200,17 @@ interface Dictionary {
     note: string
   }
 
+  /** Prosba o schválenie znenia (ADR-006). Menovitá správa, nie hromadná pošta. */
+  approvalEmail: {
+    subject: (organisation: string) => string
+    subtitle: string
+    intro: (submittedBy: string) => string
+    noteLabel: string
+    versionLine: (label: string, effectiveFrom: string) => string
+    button: string
+    note: string
+  }
+
   assignmentEmail: {
     subject: (organisation: string) => string
     subtitle: string
@@ -1370,6 +1381,7 @@ interface Dictionary {
       fixedNeedsReacknowledge: (people: number) => string
       fixed: string
       submittedForApproval: (n: number) => string
+      approvalNotAllNotified: (n: number) => string
       approvalCancelled: string
       failed: string
     }
@@ -1523,6 +1535,15 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       note: "Ak sa prihlásiť nedá, ozvite sa personálnemu oddeleniu — adresa musí byť v zozname osôb.",
     },
 
+    approvalEmail: {
+      subject: org => `Znenie na schválenie \u2014 ${org}`,
+      subtitle: "Na schválenie",
+      intro: who => `${who} predložil znenie a čaká na vaše rozhodnutie:`,
+      noteLabel: "Čo sa v znení mení",
+      versionLine: (label, effectiveFrom) => `znenie ${label} \u00b7 účinnosť od ${effectiveFrom}`,
+      button: "Prečítať a rozhodnúť",
+      note: "Rozhodujete sami za seba \u2014 ostatní schvaľovatelia rozhodujú nezávisle. Pri zamietnutí je dôvod povinný, aby predkladateľ vedel, čo opraviť.",
+    },
     assignmentEmail: {
       subject: org => `Nový dokument na potvrdenie — ${org}`,
       subtitle: "Na potvrdenie",
@@ -2929,6 +2950,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       fixed: "Opravené. Potvrdenia zostávajú platné.",
       submittedForApproval: n =>
         `Predložené na schválenie ${n === 1 ? "jednému človeku" : `${n} ľuďom`}.`,
+      approvalNotAllNotified: n => `Ale ${n === 1 ? "jednému človeku" : `${n} ľuďom`} sa e-mail odoslať nepodarilo \u2014 kolo beží, len o ňom nevedia.`,
       approvalCancelled: "Kolo zrušené. Zostáva v histórii aj s dôvodom.",
       failed: "Nepodarilo sa to. Skús to znova.",
     },
@@ -3067,6 +3089,15 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       note: "Pokud se přihlásit nedá, ozvěte se personálnímu oddělení — adresa musí být v seznamu osob.",
     },
 
+    approvalEmail: {
+      subject: org => `Znění ke schválení \u2014 ${org}`,
+      subtitle: "Ke schválení",
+      intro: who => `${who} předložil znění a čeká na vaše rozhodnutí:`,
+      noteLabel: "Co se ve znění mění",
+      versionLine: (label, effectiveFrom) => `znění ${label} \u00b7 účinnost od ${effectiveFrom}`,
+      button: "Přečíst a rozhodnout",
+      note: "Rozhodujete sami za sebe \u2014 ostatní schvalovatelé rozhodují nezávisle. Při zamítnutí je důvod povinný, aby předkladatel věděl, co opravit.",
+    },
     assignmentEmail: {
       subject: org => `Nový dokument k potvrzení — ${org}`,
       subtitle: "K potvrzení",
@@ -4473,6 +4504,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       fixed: "Opraveno. Potvrzení zůstávají platná.",
       submittedForApproval: n =>
         `Předloženo ke schválení ${n === 1 ? "jednomu člověku" : `${n} lidem`}.`,
+      approvalNotAllNotified: n => `Ale ${n === 1 ? "jednomu člověku" : `${n} lidem`} se e-mail odeslat nepodařilo \u2014 kolo běží, jen o něm nevědí.`,
       approvalCancelled: "Kolo zrušeno. Zůstává v historii i s důvodem.",
       failed: "Nepodařilo se to. Zkus to znovu.",
     },
@@ -4606,6 +4638,15 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       note: "If you cannot sign in, contact HR — your address has to be on the list of people.",
     },
 
+    approvalEmail: {
+      subject: org => `A version to approve \u2014 ${org}`,
+      subtitle: "To approve",
+      intro: who => `${who} submitted a version and is waiting for your decision:`,
+      noteLabel: "What changes in this version",
+      versionLine: (label, effectiveFrom) => `version ${label} \u00b7 effective from ${effectiveFrom}`,
+      button: "Read it and decide",
+      note: "You decide for yourself \u2014 the other approvers decide independently. A reason is required when rejecting, so the submitter knows what to fix.",
+    },
     assignmentEmail: {
       subject: org => `New document to acknowledge — ${org}`,
       subtitle: "To acknowledge",
@@ -6010,6 +6051,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       fixed: "Corrected. Acknowledgements stay valid.",
       submittedForApproval: n =>
         `Submitted for approval to ${n === 1 ? "one person" : `${n} people`}.`,
+      approvalNotAllNotified: n => `But the email could not be sent to ${n === 1 ? "one person" : `${n} people`} \u2014 the round is running, they just do not know about it.`,
       approvalCancelled: "Round cancelled. It stays in the history with its reason.",
       failed: "That did not work. Try again.",
     },

@@ -24,14 +24,26 @@ export interface ApproverChoice {
 
 export default function ApprovalPanel({
   documentId,
+  documentTitle,
   versionId,
+  versionLabel,
+  effectiveFrom,
   state,
   rounds,
   people,
   language,
 }: {
   documentId: string
+  /**
+   * Názov a označenie znenia idú do e-mailu schvaľovateľovi. Berú sa
+   * z formulára zámerne: sú to údaje **na zobrazenie**, nie na rozhodovanie
+   * — kto si ich prepíše, prepíše si text vo vlastnom e-maile a nič viac.
+   * Čo má následok (kto schvaľuje, ktoré znenie), server z formulára neberie.
+   */
+  documentTitle: string
   versionId: string
+  versionLabel: string
+  effectiveFrom: Date | null
   state: VersionState
   rounds: ApprovalRound[]
   /** Koho možno vybrať. Predkladateľ je zo zoznamu vynechaný už na serveri. */
@@ -115,6 +127,13 @@ export default function ApprovalPanel({
           <form action={submitForApprovalAction} className="approval-form">
             <input type="hidden" name="documentId" value={documentId} />
             <input type="hidden" name="versionId" value={versionId} />
+            <input type="hidden" name="title" value={documentTitle} />
+            <input type="hidden" name="versionLabel" value={versionLabel} />
+            <input
+              type="hidden"
+              name="effectiveFrom"
+              value={effectiveFrom ? new Date(effectiveFrom).toISOString() : ""}
+            />
 
             <fieldset className="hr-group">
               <legend className="field-label">{t.approvalApprovers}</legend>

@@ -315,3 +315,33 @@ export async function decide(input: {
 
   return { outcome }
 }
+
+/**
+ * Zapíše, komu sa o kole ozvalo (ADR-006, krok 5).
+ *
+ * Volá sa **po** odoslaní a len pre tých, ktorým správa naozaj odišla.
+ * Zapísať to dopredu by znamenalo tvrdiť, že sa človek dozvedel niečo, čo mu
+ * nikdy neprišlo — a práve na túto otázku má pole odpovedať.
+ */
+export async function markNotified(input: {
+  companyCode: string
+  documentId: string
+  versionId: string
+  round: number
+  emails: string[]
+}): Promise<void> {
+  const emails = input.emails.map(e => e.trim().toLowerCase()).filter(Boolean)
+  if (emails.length === 0) return
+
+  const col = await getCollection<ApprovalRound>(APPROVALS_COLLECTION)
+  await col.updateOne(
+    {
+      companyCode: input.companyCode,
+      documentId: input.documentId,
+      versionId: input.versionId,
+      round: input.round,
+    },
+    { $set: { "approvers.$[komu].notifiedAt": new Date() } },
+    { arrayFilters: [{ "komu.email": { $in: emails } }] },
+  )
+}

@@ -25,6 +25,14 @@ export interface ApproverDecision {
   decision: "approved" | "rejected" | null
   /** Povinný pri zamietnutí (D71). Bez neho predkladateľ nevie, čo opraviť. */
   reason?: string
+  /**
+   * Kedy sa tomuto človeku ozvalo, že sa na neho čaká. `null` znamená, že
+   * e-mail neodišiel — a to je **údaj, nie chyba**: kolo, ktoré leží, sa dá
+   * vysvetliť len vtedy, keď je vidieť, či sa o ňom schvaľovateľ vôbec
+   * dozvedel. Bez tohto poľa by „nerozhodla" a „nikto jej to nepovedal"
+   * vyzerali rovnako.
+   */
+  notifiedAt?: Date | null
 }
 
 /**

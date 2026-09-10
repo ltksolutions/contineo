@@ -4,6 +4,18 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Added (2026-09-10 — schvaľovateľ sa dozvie, že sa naňho čaká)
+
+Krok 5 z ADR-006.
+
+- **Menovitá správa, nie hromadná pošta.** Chodí len tým, koho predkladateľ menoval (D69), a chodí **raz** — pri predložení. Nemá kadenciu a nie je to pripomienka: kolo, ktoré leží, sa rieši rozhovorom alebo zrušením, nie tým, že sa to isté pošle piaty raz. Práve v tom je rozdiel oproti termínom (ADR-004), kde pripomínanie zmysel má.
+- **`ApproverDecision.notifiedAt`** — kedy sa tomu človeku ozvalo. `null` je **údaj, nie chyba**: bez neho by „nerozhodla" a „nikto jej to nepovedal" vyzerali v histórii rovnako, a to je presne tá otázka, ktorú si niekto o pol roka položí.
+- **Odosielanie je mimo zápisu kola.** Keby zhodilo zápis, vzniklo by kolo, ktoré v databáze nie je, a predkladateľ by ho otvoril druhý raz. Naopak zlyhané odoslanie kolo nezruší — kolo beží ďalej a hláška povie, koľkým ľuďom sa neozvalo.
+- **Zapisuje sa až po odoslaní** a len tým, ktorým správa naozaj odišla. Zapísať to dopredu by znamenalo tvrdiť, že sa človek dozvedel niečo, čo mu nikdy neprišlo.
+- **Odkaz vedie na zoznam `/approvals`**, nie na jedno kolo: kto má pred sebou tri znenia, potrebuje jedno miesto, nie tri odkazy. Rovnaké pravidlo ako pri pripomienke.
+- E-mail je v jazyku **príjemcu**, nie predkladateľa, a bez poznámky sa jej nadpis neukáže — prázdny nadpis nad prázdnym miestom vyzerá ako chyba šablóny.
+- Overené: `tsc` čisto, **1073 testov** (6 nových na šablónu), lint bez chýb, build prejde.
+
 ### Added (2026-09-10 — schvaľovateľ môže rozhodnúť)
 
 Krok 4 z ADR-006. Kolo sa tým dá po prvý raz uzavrieť.

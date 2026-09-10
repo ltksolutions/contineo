@@ -318,7 +318,10 @@ export default async function DocumentDetailPage({
 
               <ApprovalPanel
                 documentId={d.documentId}
+                documentTitle={d.title}
                 versionId={v.versionId}
+                versionLabel={v.label}
+                effectiveFrom={v.effectiveFrom ?? null}
                 state={stateOf(rounds.get(v.versionId), v.publishedBefore)}
                 rounds={rounds.get(v.versionId) ?? []}
                 people={approverChoices}
