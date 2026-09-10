@@ -358,6 +358,21 @@ button:disabled { cursor: not-allowed; opacity: 0.55; }
   .header-name { max-width: 34vw; }
 }
 
+/*
+ * Pod 420 px sa značke uberie ešte kúsok. Odmerané na produkcii: pri 320 px
+ * a pätnásťznakovej skratke zostávalo poľu 91 px, teda o jeden pixel pod jeho
+ * `min-width`, a riadok sa zlomil. Nie je to teoretická obava — je to presne
+ * ten prípad, na ktorom predchádzajúce riešenie stroskotalo, len o triedu
+ * ďalej: „SFZ" sa zmestí vždy, dlhá skratka nie.
+ *
+ * 26 vw je pri 320 px asi 83 px, teda miesto na osem až deväť znakov; zvyšok
+ * odreže elipsa. Kto má dlhšiu skratku, uvidí ju skrátenú — ale hlavičku
+ * v jednom riadku.
+ */
+@media (max-width: 419px) {
+  .header-name { max-width: 26vw; }
+}
+
 /* Rovnaký prípad ako hamburger: odznak má aj `.tag`, ktorý je nižšie. */
 .header-row .header-badge {
   display: none;
