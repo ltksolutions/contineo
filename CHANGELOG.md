@@ -4,6 +4,20 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Added (2026-09-10 — reťaz dôkazov aj na karte osoby)
+
+Krok 4 z ADR-005. Tým je ADR-005 hotové okrem jednej vedome otvorenej veci.
+
+- **Ten istý komponent nad tou istou funkciou** ako `/hr/evidence` (D67). Karta osoby nepočíta nič vlastné — dva pohľady, ktoré si to isté počítajú každý po svojom, si raz budú odporovať.
+- **Podmienené rolou `hr`, nie `people-admin`.** Kartu osoby spravuje `people-admin`, ale reťaz dôkazov je údaj o tom, ako si človek plní povinnosti. Kto smie meniť meno a oddelenie, nemá tým automaticky vidieť, čo kto otvoril a nepotvrdil. Väčšinou je to ten istý človek; keď nie je, rozhoduje rola, nie zvyk.
+- **Os je posledná, pod správou osoby.** Keby stála hore, karta by prestala byť obrazovkou na úpravu údajov a stala by sa výkazom.
+
+### Changed (2026-09-10 — upratovanie: zápisy proti kódu)
+
+- **O14 v `OPEN_DECISIONS.md`** už neznie, akoby sa nič nerozhodlo. Čas nad znením sa meria a je výslovne informatívny, prvé otvorenie sa zaznamenáva ako serverový fakt (D64) a oboje je v GDPR dokumentácii. Otvorené zostáva **„otvoril a nepotvrdil"** ako údaj o človeku a doskrolovanie na koniec, ktoré sa nemeria vôbec.
+- **`docs/TODO.md`** — odškrtnutá časová os na karte osoby aj s tým, ako sa vyriešila rola.
+- V kóde zostali **tri** poznámky typu TODO a všetky tri odkazujú na zápis v `docs/TODO.md`, ktorý stále platí. Žiadna nie je zabudnutý kus práce.
+
 ### Added (2026-09-10 — reťaz dôkazov má obrazovku)
 
 Kroky 3 a 5 z ADR-005.

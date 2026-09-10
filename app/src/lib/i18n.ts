@@ -541,6 +541,7 @@ interface Dictionary {
     exportCsv: string
     shown: (n: number, all: number) => string
     notifiedMissing: string
+    allPeople: string
   }
 
   approvals: {
@@ -1910,6 +1911,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     apply: "Použiť",
     exportCsv: "Export CSV",
     shown: (n, all) => `${n} z ${all} povinností`,
+    allPeople: "všetci ľudia →",
     notifiedMissing: "Riadok o upozorneniach os zatiaľ nemá: log pripomienok je prevádzkový a po 90 dňoch sa maže, a zápis na pridelení hovorí „ozvalo sa N ľuďom\u201c, nie ktorým.",
   },
   approvals: {
@@ -3521,6 +3523,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     apply: "Použít",
     exportCsv: "Export CSV",
     shown: (n, all) => `${n} z ${all} povinností`,
+    allPeople: "všichni lidé →",
     notifiedMissing: "Řádek o upozorněních osa zatím nemá: log připomínek je provozní a po 90 dnech se maže, a zápis na přidělení říká „ozvalo se N lidem\u201c, ne kterým.",
   },
   approvals: {
@@ -5126,6 +5129,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     apply: "Apply",
     exportCsv: "Export CSV",
     shown: (n, all) => `${n} of ${all} obligations`,
+    allPeople: "everyone →",
     notifiedMissing: "The timeline has no notification row yet: the reminder log is operational and is deleted after 90 days, and the record on the assignment says how many people were contacted, not which ones.",
   },
   approvals: {
