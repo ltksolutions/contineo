@@ -4,6 +4,18 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Added (2026-09-10 — termín je vidieť tam, kde človek povinnosť rieši)
+
+Krok 3 z ADR-004. Tým je termín kompletný od zadania po zobrazenie; zostávajú pripomienky.
+
+- **`PendingItem.due`** — termín pre **túto osobu**, počítaný `dueForPerson()` z toho istého pridelenia, z ktorého sa počíta aj „čaká od". Žiadny druhý výpočet: dve kópie pravidla „aký je termín" by sa raz rozišli presne vtedy, keď na tom záleží.
+- **Pri dvoch prideleniach tej istej verzie platí skorší termín.** Prísnejší zaväzuje — opačné poradie by znamenalo, že druhé pridelenie ticho predĺži termín z prvého, čo nikto nerozhodol.
+- **Povinnosť z trasy má termín len vtedy, keď ju kryje pridelenie s termínom.** Trasa vlastný termín zatiaľ niesť nevie; `null` je platný stav a widget vtedy nenapíše nič — rovnaké pravidlo ako pri `assignedAt`.
+- **Chip pri názve, nie medzi metadátami** (D63): je to jediný údaj v riadku, ktorý hovorí, čo sa stane, keď človek nič neurobí. Štyri podoby: `do 12. 9.` (ticho, keď je čas), `do 12. 9.` v jantárovej pri piatich a menej dňoch, `termín dnes`, `po termíne o 3 dni` v červenej.
+- **Farba nie je jediným nositeľom stavu** — text hovorí to isté slovami, takže chip funguje pri farbosleposti aj v čiernobielej tlači. Tvary čísloviek („o deň / o 2 dni / o 5 dní") sú v `i18n`, nie v komponente.
+- Jeden okamih pre celý zoznam: keby si ho každý riadok bral sám, dva riadky vykreslené o polnoci by mohli byť v inom stave.
+- Overené: `tsc` čisto, **1028 testov** (3 nové na `dueForPerson`, vrátane neskoršieho príchodu do oddelenia), build prejde, štyri stavy chipu prekreslené na 720 px aj 390 px v svetlej aj tmavej téme.
+
 ### Added (2026-09-10 — termín sa dá zadať pri prideľovaní)
 
 Krok 2 z ADR-004. Bez neho termín nikto nezadá a model z kroku 1 leží.

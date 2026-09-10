@@ -19,7 +19,7 @@
 import { trackProgress } from "./tracks"
 import { loadDocumentFor, effectiveVersion } from "./documents"
 import { acknowledgedVersionIds } from "./acknowledgements"
-import { assignmentsForPerson, dateForPerson } from "./assignments"
+import { assignmentsForPerson, dateForPerson, dueForPerson } from "./assignments"
 import { dictionary } from "./i18n"
 import type { Person } from "./persons"
 
@@ -49,6 +49,15 @@ export interface PendingItem {
   assignedAt: Date | null
   /** Pridelené až po predchádzajúcom prihlásení (D39). */
   isNew: boolean
+  /**
+   * Termín potvrdenia pre **túto osobu** (D61, D62), alebo `null`.
+   *
+   * `null` je platný stav, nie chýbajúci údaj: pridelenia spred ADR-004
+   * termín nemajú a povinnosť z trasy ho má len vtedy, keď ju kryje
+   * pridelenie s termínom. Widget vtedy nenapíše nič — rovnaké pravidlo ako
+   * pri `assignedAt`: radšej mlčať než ukázať dátum, ktorý znamená niečo iné.
+   */
+  due: Date | null
 }
 
 /** Čo zdroj vráti: položky **a** to, čo sa započítať nedá. */
@@ -113,10 +122,22 @@ export const acknowledgementSource: PendingSource = {
     // Pri pridelení oddelenia alebo skupiny platí neskorší z dvoch dátumov: kto
     // do nich pribudol až potom, dostal úlohu vtedy, keď prišiel (D50).
     const assigned = new Map<string, Date>()
+    /*
+     * Termíny podľa znenia. Pri dvoch prideleniach tej istej verzie platí
+     * **skorší termín** — prísnejší zaväzuje. Opačné poradie by znamenalo, že
+     * druhé pridelenie ticho predĺži termín z prvého, čo nikto nerozhodol.
+     */
+    const dueOf = new Map<string, Date>()
     for (const a of assignments) {
       const when = dateForPerson(a, person)
       const until = assigned.get(a.subject.versionId)
       if (!until || when < until) assigned.set(a.subject.versionId, when)
+
+      const due = dueForPerson(a, person)
+      if (due) {
+        const known = dueOf.get(a.subject.versionId)
+        if (!known || due < known) dueOf.set(a.subject.versionId, due)
+      }
     }
 
     const items = new Map<string, PendingItem>()
@@ -140,6 +161,9 @@ export const acknowledgementSource: PendingSource = {
           sortAt: assignedAt ?? step.effectiveFrom,
           assignedAt,
           isNew: isNewFor(person, assignedAt),
+          // Povinnosť z trasy má termín len vtedy, keď ju kryje pridelenie
+          // s termínom. Trasa vlastný termín zatiaľ niesť nevie (D62).
+          due: step.versionId ? dueOf.get(step.versionId) ?? null : null,
         })
       }
     }
@@ -176,6 +200,7 @@ export const acknowledgementSource: PendingSource = {
           sortAt: a.assignedAt,
           assignedAt: a.assignedAt,
           isNew: isNewFor(person, a.assignedAt),
+          due: dueForPerson(a, person),
         })
       }
     }

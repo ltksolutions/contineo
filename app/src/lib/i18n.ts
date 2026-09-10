@@ -141,6 +141,10 @@ interface Dictionary {
      * inak by dátum znamenal niečo iné, než čo je pri ňom napísané.
      */
     waitingSince: (date: string) => string
+    /** Termínový chip (D63). Tvary čísloviek patria sem, nie do komponentu. */
+    dueBy: (date: string) => string
+    dueToday: string
+    dueOver: (days: number) => string
     /** Pribudlo od predchádzajúceho prihlásenia (D39). */
     isNew: string
   }
@@ -1408,6 +1412,9 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       heading: "Nevybavené žiadosti",
       version: label => `verzia ${label}`,
       waitingSince: d => `čaká od ${d}`,
+      dueBy: d => `do ${d}`,
+      dueToday: "termín dnes",
+      dueOver: n => `po termíne ${n === 1 ? "o deň" : n < 5 ? `o ${n} dni` : `o ${n} dní`}`,
       isNew: "nové",
       empty: "Nič na vás nečaká.",
       open: "Otvoriť",
@@ -2882,6 +2889,9 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       heading: "Nevyřízené žádosti",
       version: label => `verze ${label}`,
       waitingSince: d => `čeká od ${d}`,
+      dueBy: d => `do ${d}`,
+      dueToday: "termín dnes",
+      dueOver: n => `po termínu ${n === 1 ? "o den" : n < 5 ? `o ${n} dny` : `o ${n} dnů`}`,
       isNew: "nové",
       empty: "Nic na vás nečeká.",
       open: "Otevřít",
@@ -4356,6 +4366,9 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       heading: "Pending items",
       version: label => `version ${label}`,
       waitingSince: d => `waiting since ${d}`,
+      dueBy: d => `by ${d}`,
+      dueToday: "due today",
+      dueOver: n => `${n} ${n === 1 ? "day" : "days"} overdue`,
       isNew: "new",
       empty: "Nothing is waiting for you.",
       open: "Open",
