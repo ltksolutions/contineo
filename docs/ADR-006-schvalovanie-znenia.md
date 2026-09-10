@@ -97,15 +97,39 @@ to, čo je **schválené aj účinné** — k dnešnej bráne (`effectiveFrom` m
 existovať) pribúda druhá. Obe hlásia inú vetu, aby personalista vedel, čo mu
 chýba.
 
-### D74 — Desať dnešných noriem sa **spätne neschvaľuje**
+### D74 — Desať dnešných noriem sa **spätne neschvaľuje** (a čoskoro zmiznú)
+
+> **Doplnené 2026-09-10 po informácii od Jána Letka:** dnešný korpus je
+> skúšobný a **bude nahradený oficiálnymi zneniami**. To mení povahu tohto
+> rozhodnutia — nie jeho obsah.
 
 Zverejnené znenia spred tohto ADR zostanú, ako sú, a v histórii budú označené
 ako *„zverejnené pred zavedením schvaľovania"*.
 
 Dopísať im schválenie by znamenalo vyrobiť súhlas, ktorý nikto nedal — to isté,
 čo sme odmietli pri termínoch (D61) a pri chýbajúcom čase čítania (D65).
-Prázdne miesto bez vysvetlenia vyzerá ako stratený záznam; pomenované miesto je
-poctivý stav.
+
+**Označenie je ale dočasné lešenie, nie vlastnosť modelu.** Keďže tie znenia
+budú nahradené, nemá vzniknúť trvalý pojem „schválené kedysi predtým", ktorý
+by prežil svoj dôvod a o rok mýlil toho, kto ho nájde. Príznak sa zavedie ako
+migračný a zmizne spolu so skúšobným korpusom.
+
+### D75 — Oficiálne znenia musia prejsť schvaľovaním, nie okolo neho
+
+Z toho istého dôvodu vzniká **poradie, ktoré sa nedá otočiť**:
+
+1. schvaľovanie musí **fungovať**,
+2. až potom sa nahrávajú oficiálne znenia — **cezeň**, nie mimo neho,
+3. až potom sa skúšobný korpus odstráni (rozhodnutie Jána Letka, nie skriptu).
+
+Keby sa oficiálne normy nahrali skôr, boli by druhým prípadom pre D74 — a to
+už by nebolo lešenie, ale ostrý korpus bez súhlasu. Práve preto, že sa korpus
+mení, je toto **jediná príležitosť mať úplnú reťaz dôkazov od prvého dňa**:
+každé oficiálne znenie by malo mať skutočný záznam o schválení, nie výnimku.
+
+Súvisí s tým dvoje už zapísané v `docs/TODO.md`, čo dozreje v tom istom
+okamihu: porovnať dátumy platnosti s webom SFZ a nahradiť vymyslené označenie
+znenia „1.0" skutočným.
 
 ---
 
@@ -159,7 +183,8 @@ Stav znenia je **odvodený** z posledného kola (D27), nie uložený:
 
 - **Brána pri prideľovaní zastaví doterajší priebeh.** Kým sa desať noriem
   neoznačí ako grandfathered (D74), personalista by nemohol prideliť nič.
-  Krok 2 preto **nesmie ísť pred** migráciou označenia.
+  Krok 2 preto **nesmie ísť pred** migráciou označenia. Po nahradení korpusu
+  (D75) riziko zaniká spolu s príznakom.
 - **Schvaľovateľ, ktorý odíde z organizácie**, kolo zablokuje. Prvá verzia to
   rieši tým, že predkladateľ môže kolo zrušiť a otvoriť nové; automatické
   preväzovanie na nástupcu je pasca (kto potom schválil?).
