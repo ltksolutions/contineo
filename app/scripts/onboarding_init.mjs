@@ -149,6 +149,20 @@ const PLAN = [
     ],
   },
   {
+    collection: "document_opens",
+    indexes: [
+      // Jeden riadok na dvojicu osoba x znenie za cely jej zivot. Bez tohto
+      // indexu by z faktu "prvykrat otvoril" bol zaznam o kazdom zobrazeni.
+      { key: { companyCode: 1, personId: 1, versionId: 1 },
+        opts: { unique: true, name: "open_person_version_unique" },
+        why: "prve otvorenie sa zapise raz a nikdy sa neprepise (D64)" },
+      { key: { companyCode: 1, documentId: 1 }, opts: { name: "opens_by_document" },
+        why: "kto si znenie otvoril \u2014 obrazovka /hr/evidence" },
+      // ZIADNE TTL. Otvorenie je sucastou retaze dokazov a ma zit ako
+      // potvrdenie; otvorenie bez potvrdenia je tiez udaj.
+    ],
+  },
+  {
     collection: "reminder_log",
     indexes: [
       // Jedinecnost je jedina ochrana pred tym, aby ten isty clovek dostal

@@ -4,6 +4,22 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Added (2026-09-10 — prvé otvorenie znenia sa zaznamenáva, reťaz dôkazov má základ)
+
+Kroky 6, 1 a 2 z ADR-005 — **v tomto poradí**. GDPR dokumentácia išla prvá.
+
+- **`document_opens` je fakt so serverovým časom, nie telemetria.** Zapisuje **server**, nie klient (beacon sa dá zablokovať a stratiť); zapíše sa **raz a nikdy sa neprepíše** (`$setOnInsert` na všetky polia, takže druhé otvorenie nezmení ani čas); a zapisuje sa **len tomu, kto povinnosť má** — personalista, ktorý si znenie otvorí na kontrolu, sa nezaznamená.
+- **Volá sa to „otvoril", nie „prečítal".** Server vie, že obsah odoslal. Že ho človek čítal, nevie a tvrdiť to nebude.
+- **Bez TTL, na rozdiel od času čítania.** Otvorenie je súčasťou reťaze a má žiť ako potvrdenie; otvorenie **bez** potvrdenia je tiež údaj — hovorí, že človek vedel a nepotvrdil.
+- **`lib/evidence.ts` skladá os a nič neukladá** (D65). Potvrdenie zostáva samonosné (D24).
+- **Pri každom riadku je vidieť jeho váhu:** `proof` pre pridelenie, otvorenie a potvrdenie; `informative` pre čas čítania, ktorý o sebe v `readingTime.ts` hovorí, že dôkaz nie je.
+- **Chýbajúci riadok sa pomenuje, nevynechá** — a rozlišuje **tri dôvody**: „vtedy sa to ešte nezaznamenávalo", „meranie sa po roku zmazalo" a „nestalo sa to". Zameniť prvé za tretie by znamenalo obviniť človeka z niečoho, čo sa nedá zistiť.
+- **Hranica `OPENS_RECORDED_SINCE` je konštanta, nie dopočet z dát.** „Najstaršie otvorenie v databáze" by sa menilo podľa toho, čo sa práve zmazalo, a os by po prvom výmaze začala tvrdiť niečo iné než včera.
+- **Upozornenia sú jeden riadok s počtom**, nie zoznam: „ozvalo sa jej trikrát, naposledy 20. 9." Tri riadky by z osi spravili log.
+- Overené: `tsc` čisto, **1104 testov** (12 nových), lint bez chýb, build prejde.
+
+**Zostáva z ADR-005:** komponent časovej osi, karta osoby a obrazovka `/hr/evidence` s filtrami a exportom. Kolekcia `document_opens` v Atlase ešte vytvorená nie je.
+
 ### Fixed (2026-09-10 — naplánovaný beh sa nikdy nevykonal)
 
 Nájdené pri overovaní odosielania pripomienok, nie hlásené.
