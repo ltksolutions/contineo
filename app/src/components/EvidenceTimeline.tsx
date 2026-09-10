@@ -41,9 +41,17 @@ export default function EvidenceTimeline({
                 )}
               </span>
 
+              {/*
+                Buď čas, alebo hodnota, alebo dôvod, prečo riadok chýba —
+                nikdy dvoje naraz. „Čas nad znením: zatiaľ nie · 30 s" si
+                protirečí v jednej vete a je to presne ten riadok, pri ktorom
+                si človek má vedieť povedať, čo unesie.
+              */}
               <span className="quiet evidence-when">
-                {when ?? t.gap[e.gap ?? "not-yet"]}
-                {e.detail?.seconds !== undefined && ` · ${t.seconds(e.detail.seconds)}`}
+                {when
+                  ?? (e.detail?.seconds !== undefined ? t.seconds(e.detail.seconds) : null)
+                  ?? t.gap[e.gap ?? "not-yet"]}
+                {when && e.detail?.seconds !== undefined && ` · ${t.seconds(e.detail.seconds)}`}
                 {e.detail?.count !== undefined && ` · ${t.times(e.detail.count)}`}
                 {e.detail?.by && ` · ${e.detail.by}`}
               </span>
