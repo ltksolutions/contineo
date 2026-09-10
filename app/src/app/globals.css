@@ -322,32 +322,40 @@ button:disabled { cursor: not-allowed; opacity: 0.55; }
 }
 
 /*
- * Na telefóne dostane pole **vlastný riadok**, nie zvyšok miesta.
+ * Na telefóne pole **zdieľa riadok** so značkou a avatarom a berie si to, čo
+ * medzi nimi zostane. Rozhodnutie Jána Letka (2026-09-10).
  *
- * Prvý pokus bol zmenšiť mu základ tak, aby sa značka, pole aj avatar zmestili
- * do jedného riadka. Pri 390 px to vyšlo, pri 320 px už nie — a hlavne to
- * záviselo od **dĺžky skratky organizácie**: „SFZ" sa zmestí, osemznakovej
- * skratke by avatar znova vypadol na druhý riadok sám a visel tam ako škvrna.
- * Doháňať to ďalšou hodnotou základu by znamenalo hádať za každého tenanta.
+ * Dovtedy malo vlastný druhý riadok. Bola to reakcia na starší pokus, ktorý
+ * poli nechal **pevný základ** `flex: 1 1 240px` a `min-width: 160px`: taký
+ * základ sa do 390 px nezmestí, riadok sa zlomí a avatar ostane visieť sám —
+ * a či sa zlomí, záviselo od dĺžky skratky organizácie. Chyba nebola v tom,
+ * že pole ten riadok zdieľa; chyba bola v tom, že si pýtalo šírku, ktorú
+ * nemalo odkiaľ dostať.
  *
- * Takto je poradie na telefóne dané: prvý riadok značka a avatar, druhý celé
- * pole. `order` mení len vykreslenie — v značkovaní zostáva pole pred
- * avatarom, takže tabulátor ide zhora dolu tak, ako to človek vidí.
+ * Preto `flex: 1 1 0` a malé `min-width`: pole nemá vlastnú predstavu o šírke
+ * a berie si zvyšok. Značka sa skracuje elipsou, ktorú už má, takže dlhá
+ * skratka pole stlačí, ale riadok nezlomí — a to je aj správne poradie
+ * dôležitosti: prvé je vidieť, v ktorej organizácii som.
  *
- * **Musí stáť za `.header-search`**, nie pri `.header-name`: špecificita je
- * rovnaká, takže rozhoduje poradie v súbore, a vyššie ho `flex: 1 1 240px`
- * prepisovalo.
+ * Dva riadky hlavičky boli navyše mrhanie zvislým miestom práve tam, kde ho
+ * je najmenej.
  */
 @media (max-width: 759px) {
   .header-search {
-    order: 1;
-    flex-basis: 100%;
+    /* Bez vlastného základu — inak si vypýta šírku, ktorú v riadku nemá,
+       a riadok sa zlomí. To bola príčina pôvodného problému, nie to, že
+       pole v riadku vôbec je. */
+    flex: 1 1 0;
+    /* Pod ~90 px už pole nie je pole, ale škvrna; radšej nech sa zlomí
+       riadok než aby zostalo neovládateľné. Pri „SFZ" na 320 px zostáva
+       zhruba dvojnásobok. */
+    min-width: 92px;
   }
 
-  /* Keď pole odíde do druhého riadka, v prvom nezostane nič, čo by miesto
-     vyplnilo — bez tohto by avatar sedel natesno pri skratke namiesto pri
-     pravom okraji, kde ho človek hľadá. */
-  .header-row .account { margin-left: auto; }
+  /* Značka smie ustúpiť poľu. Elipsu má z návrhu, takže dlhá skratka sa
+     skráti namiesto toho, aby vytlačila pole alebo zlomila riadok. */
+  .header-brand { flex: 0 1 auto; }
+  .header-name { max-width: 34vw; }
 }
 
 /* Rovnaký prípad ako hamburger: odznak má aj `.tag`, ktorý je nižšie. */
