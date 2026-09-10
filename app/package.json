@@ -30,7 +30,8 @@
     "migrate:fields": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/migrate_english_fields.mjs",
     "migrate:chunking": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/migrate_chunking_profile.mjs",
     "migrate:indexes": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/migrate_index_names.mjs",
-    "tag:test": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --disable-warning=DEP0205 --import ./scripts/lib/ts-hook.mjs scripts/tag_test_documents.mjs"
+    "tag:test": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --disable-warning=DEP0205 --import ./scripts/lib/ts-hook.mjs scripts/tag_test_documents.mjs",
+    "migrate:grandfather": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --disable-warning=DEP0205 --import ./scripts/lib/ts-hook.mjs scripts/migrate_published_before.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.122.0",

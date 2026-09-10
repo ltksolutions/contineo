@@ -1,7 +1,10 @@
 # ADR-006 — Schvaľovanie znenia pred jeho zverejnením
 
-> **Stav:** návrh na schválenie · **Dátum:** 2026-09-10
-> **Zadal:** Ján Letko („áno, ideme") · **Rozhodnutia nižšie sú môj návrh**, nie jeho pokyn
+> **Stav:** schválené · **Dátum:** 2026-09-10
+> **Zadal:** Ján Letko („áno, ideme")
+> **Odsúhlasil:** Ján Letko — D69 a D70 výslovne (2026-09-10), D74 a D75 pri
+> zadaní o nahradení skúšobného korpusu. Zvyšok rozhodnutí je môj návrh, ktorý
+> prijal ako celok.
 > **Nadväzuje na:** `docs/ADR-003-onboarding-a-potvrdzovanie.md` (D6, D24, D27, D28, D30, D51, D57), `docs/ADR-005-retaz-dokazov.md`
 > **Súvisiace:** `docs/design/README.md` časť 6 (nahrávanie má tretí krok „Schválenie"), `docs/DESIGN_GAP.md`
 > **Implementácia:** zatiaľ žiadna — toto rozhodnutie predchádza kódu.
@@ -172,7 +175,7 @@ Stav znenia je **odvodený** z posledného kola (D27), nie uložený:
 | krok | súbory | poznámka |
 | --- | --- | --- |
 | 1. model a stav | `lib/approvals.ts` (nová), čistá funkcia `versionState()` | testovateľná bez Monga |
-| 2. brána pri prideľovaní | `lib/assignments.ts` | druhá podmienka vedľa `effectiveFrom` |
+| 2. brána pri prideľovaní | `lib/assignments.ts` | druhá podmienka vedľa `effectiveFrom` · **ide až po kroku 4**, viď riziká |
 | 3. predloženie | `app/library/new`, `app/library/[id]` | tretí krok návrhu |
 | 4. rozhodnutie | `app/library/[id]` + serverová akcia | bez JavaScriptu, ako potvrdzovanie (formulár nad akciou, nie API — inak CSRF na úkone s následkom) |
 | 5. upozornenia | `lib/ecomail.ts` | menovaným ľuďom, nie hromadne — tu automatické odosielanie problém nie je |
@@ -181,10 +184,18 @@ Stav znenia je **odvodený** z posledného kola (D27), nie uložený:
 
 ### Riziká
 
-- **Brána pri prideľovaní zastaví doterajší priebeh.** Kým sa desať noriem
-  neoznačí ako grandfathered (D74), personalista by nemohol prideliť nič.
-  Krok 2 preto **nesmie ísť pred** migráciou označenia. Po nahradení korpusu
+- **Brána pri prideľovaní zastaví doterajší priebeh.** ~~Kým sa desať noriem
+  neoznačí ako grandfathered (D74), personalista by nemohol prideliť nič.~~
+  **Vybavené 2026-09-10:** `scripts/migrate_published_before.mjs` označil
+  11 znení v 10 dokumentoch SFZ; 10 auditných záznamov. Po nahradení korpusu
   (D75) riziko zaniká spolu s príznakom.
+- **Brána bez cesty cezeň je horšia než žiadna brána.** Pôvodné poradie krokov
+  (2 hneď po migrácii) má dieru: medzi krokom 2 a krokom 4 by sa nové znenie
+  dalo nahrať, ale nie schváliť — a teda ani prideliť, bez toho, aby s tým
+  vedel ktokoľvek čokoľvek urobiť. Migrácia to nekryje: príznak dostali len
+  znenia, ktoré v knižnici **už boli**, a nové ho zámerne nedostávajú nikdy.
+  **Poradie sa preto mení: 1 → migrácia → 3 (predloženie) → 4 (rozhodnutie)
+  → 2 (brána) → 5, 6, 7.** Brána ide až vtedy, keď cez ňu vedie cesta.
 - **Schvaľovateľ, ktorý odíde z organizácie**, kolo zablokuje. Prvá verzia to
   rieši tým, že predkladateľ môže kolo zrušiť a otvoriť nové; automatické
   preväzovanie na nástupcu je pasca (kto potom schválil?).

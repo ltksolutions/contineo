@@ -78,6 +78,24 @@ export interface Version {
 
   publishedAt?: Date
   publishedBy?: string
+
+  /**
+   * Znenie bolo zverejnené **pred zavedením schvaľovania** (ADR-006, D74).
+   *
+   * Nie je to „schválené kedysi predtým" — je to pomenované prázdne miesto.
+   * Dopísať týmto zneniam schválenie by znamenalo vyrobiť súhlas, ktorý nikto
+   * nedal; prázdne miesto bez vysvetlenia zas vyzerá ako stratený záznam.
+   *
+   * **Dočasné lešenie, nie vlastnosť modelu (D75).** Existuje len preto, aby
+   * brána pri prideľovaní nezastavila zo dňa na deň všetko, čo je v knižnici.
+   * Zmizne spolu so skúšobným korpusom, keď ho nahradia oficiálne znenia
+   * prevedené cez schvaľovanie — nie tým, že sa z neho stane trvalý pojem.
+   *
+   * Zapisuje jednorazovo `scripts/migrate_published_before.mjs`. Nové znenia
+   * ho nedostávajú **nikdy**: čo vznikne po zavedení schvaľovania, ním musí
+   * prejsť.
+   */
+  publishedBefore?: boolean
 }
 
 /** Len tá časť `documents`, ktorú potrebuje onboarding. */
