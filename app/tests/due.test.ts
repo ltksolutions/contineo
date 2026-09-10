@@ -15,6 +15,7 @@ import {
   dueFrom, dueState, daysLeft, addDays, reminderPlan, SOON_DAYS,
   dueFromFields, normalizeDueMode,
 } from "../src/lib/due"
+import { dueForPerson } from "../src/lib/assignments"
 
 /** Poludnie, aby sa test nechytal na letný čas ani na hranicu dňa. */
 const at = (iso: string) => new Date(`${iso}T12:00:00`)
@@ -157,5 +158,46 @@ describe("termín z formulára prideľovania", () => {
     expect(normalizeDueMode("nieco")).toBe("none")
     expect(normalizeDueMode(undefined)).toBe("none")
     expect(ok(dueFromFields({ mode: "nieco", date: "2026-09-30" }))).toBeNull()
+  })
+})
+
+describe("termín pre konkrétnu osobu (D62 + D50)", () => {
+  const assignedAt = new Date(2026, 8, 1)          // 1. 9.
+  const prisiel = new Date(2026, 8, 29)            // 29. 9., teda neskôr
+
+  /** Osoba, ktorá je v oddelení od `from`. */
+  const person = (from: Date | null) => ({
+    departmentHistory: from
+      ? [{ departmentId: "it", departmentPath: ["it"], from }]
+      : [],
+    groupHistory: [],
+  })
+
+  const forDepartment = (due: Parameters<typeof dueForPerson>[0]["due"]) => ({
+    audience: { kind: "department" as const, value: "it" },
+    assignedAt,
+    due,
+  })
+
+  it("absolútny termín platí pre všetkých rovnako — aj pre neskorší príchod", () => {
+    const a = forDepartment({ kind: "date", at: new Date(2026, 8, 30) })
+    expect(dueForPerson(a, person(null))).toEqual(new Date(2026, 8, 30))
+    // Kto prišiel 29. 9., má na normu jeden deň. To je vlastnosť absolútneho
+    // termínu, nie chyba — a presne preto existuje aj druhý tvar.
+    expect(dueForPerson(a, person(prisiel))).toEqual(new Date(2026, 8, 30))
+  })
+
+  it("relatívny termín beží odo dňa príchodu do oddelenia (D50)", () => {
+    const a = forDepartment({ kind: "days", days: 14 })
+    // Kto bol v oddelení od začiatku: 14 dní od pridelenia.
+    expect(dueForPerson(a, person(null))).toEqual(new Date(2026, 8, 15))
+    // Kto prišiel 29. 9.: 14 dní od príchodu, teda 13. 10. — nie termín
+    // v minulosti. Toto je celý dôvod, prečo tvar `days` v modeli je.
+    expect(dueForPerson(a, person(prisiel))).toEqual(new Date(2026, 9, 13))
+  })
+
+  it("bez termínu vráti null, nie dnešok", () => {
+    expect(dueForPerson(forDepartment(null), person(null))).toBeNull()
+    expect(dueForPerson(forDepartment(undefined), person(prisiel))).toBeNull()
   })
 })

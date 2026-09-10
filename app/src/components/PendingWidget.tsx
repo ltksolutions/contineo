@@ -12,6 +12,7 @@
 import Link from "next/link"
 import type { PendingOverview } from "@/lib/pending"
 import { dictionary, formatDate } from "@/lib/i18n"
+import { dueState, daysLeft } from "@/lib/due"
 import type { UiLanguage } from "@/lib/i18n"
 
 /**
@@ -31,6 +32,9 @@ export default function PendingWidget({
   language: UiLanguage
 }) {
   const t = dictionary(language).pending
+  /* Jeden okamih pre celý zoznam. Keby si ho každý riadok bral sám,
+     dva riadky vykreslené o polnoci by mohli byť v inom stave. */
+  const now = new Date()
   const { items, total, blockedCount } = overview
   const shown = items.slice(0, LIMIT)
 
@@ -61,6 +65,29 @@ export default function PendingWidget({
                     Je to cena za to, že sa nezakladá kolekcia so záznamami
                     o tom, čo si kto kedy prečítal. */}
                 {item.isNew && <span className="tag tag--new">{t.isNew}</span>}
+                {/*
+                  Termínový chip (D63). Je pri názve, nie v druhom riadku:
+                  je to jediný údaj v riadku, ktorý hovorí, čo sa stane, keď
+                  človek nič neurobí — a ten sa neschováva medzi metadáta.
+
+                  Farba nesie stav, ale **nie je jediným nositeľom**: text
+                  hovorí to isté slovami, takže to funguje aj pri farbosleposti
+                  a v čiernobielej tlači.
+                */}
+                {(() => {
+                  const state = dueState(item.due, now)
+                  if (state === "none") return null
+                  const left = daysLeft(item.due!, now)
+                  return (
+                    <span className={`due-chip due-chip--${state}`}>
+                      {left === 0
+                        ? t.dueToday
+                        : left < 0
+                          ? t.dueOver(-left)
+                          : t.dueBy(formatDate(item.due!, language))}
+                    </span>
+                  )
+                })()}
                 {/* Dva údaje, jeden riadok. „Čaká od" sa ukáže len tam, kde
                     pridelenie naozaj existuje (D37) — inak by to bol dátum
                     o niečom inom, než čo je pri ňom napísané. */}

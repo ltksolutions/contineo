@@ -92,6 +92,7 @@ function item(over: Partial<PendingItem> = {}): PendingItem {
     sortAt: new Date("2026-01-01"),
     assignedAt: null,
     isNew: false,
+    due: null,
     ...over,
   }
 }
