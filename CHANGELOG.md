@@ -4,6 +4,17 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Changed (2026-09-10 — znenia z knižnice sú označené ako zverejnené pred schvaľovaním)
+
+Migrácia k ADR-006 (D74). **Nedopisuje sa žiadne schválenie** — to by znamenalo vyrobiť súhlas, ktorý nikto nedal.
+
+- **`Version.publishedBefore`** — jediný príznak, ktorý hovorí: toto znenie tu bolo skôr, než sa začalo schvaľovať. Je to **pomenované prázdne miesto**, nie stav „schválené kedysi predtým". Dočasné lešenie (D75): zmizne spolu so skúšobným korpusom, keď ho nahradia oficiálne znenia prevedené cez schvaľovanie.
+- **`npm run migrate:grandfather -- --company SFZ [--zapis]`** — náhľad je predvolený, zápis treba pýtať. Označilo sa **11 znení v 10 dokumentoch SFZ**, vzniklo 10 auditných záznamov (`document` / `grandfathered`). Druhý beh neoznačí nič: zapisuje sa len tam, kde príznak ešte nie je.
+- **Koncepty sa zámerne neoznačujú.** Koncept nikto nezverejnil, takže označiť ho ako „zverejnený pred zavedením schvaľovania" by bola nepravda — a hlavne by mu to otvorilo bránu pri prideľovaní. V SFZ dnes koncept nie je ani jeden; podmienka je tam pre to, čo pribudne zajtra.
+- **Nové znenia príznak nedostávajú nikdy.** Čo vznikne po zavedení schvaľovania, ním musí prejsť; inak by grandfathering nebol prechodný stav, ale zadné dvierka.
+- **Poradie krokov ADR-006 sa mení:** brána pri prideľovaní (krok 2) ide **až po** predložení a rozhodovaní (kroky 3 a 4). Pôvodné poradie by medzi krokom 2 a 4 znamenalo, že nové znenie sa dá nahrať, ale nie schváliť — a teda ani prideliť.
+- Overené: `tsc` čisto, 1058 testov, lint bez chýb, build prejde; migrácia spustená naprázdno pred zápisom a druhý raz po ňom.
+
 ### Added (2026-09-10 — model schvaľovania znenia: stav sa odvodzuje, nie ukladá)
 
 Krok 1 z ADR-006. **Nič v behu systému sa nemení** — je to pravidlo bez cesty k nemu.
