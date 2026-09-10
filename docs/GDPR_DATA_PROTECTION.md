@@ -32,6 +32,30 @@
 | Audit prístupov | kto / čo / kedy videl | áno |
 | Obsah (normy, rozpisy) | predpisy, smernice | nie (verejné/interné dokumenty) |
 | `qa_pairs` (kurované) | schválené odpovede | spravidla nie |
+| **Pridelenia** (`assignments`) | komu bolo znenie uložené, kým, prečo, dokedy, komu sa o tom ozvalo | áno |
+| **Potvrdenia** (`acknowledgements`) | kto, kedy, ktoré znenie, formulka, hash, IP, odtlačok oddelenia | áno |
+| **Časy čítania** (`reading_times`) | koľko sekúnd mal človek znenie otvorené | áno |
+| **Otvorenia znenia** (`document_opens`) | kedy si osoba **prvýkrát** otvorila znenie, ktoré má potvrdiť | áno |
+| **Kolá schvaľovania** (`approval_rounds`) | kto predložil, kto schválil alebo zamietol, kedy a prečo | áno |
+| **Log pripomienok** (`reminder_log`) | komu sa v ktorý deň odoslala pripomienka | áno |
+
+> **Šesť riadkov vyššie pribudlo 2026-09-10 a päť z nich popisuje údaje, ktoré
+> sa už zbierali.** Tento dokument vznikol pre RAG časť systému a onboarding
+> s potvrdzovaním doňho nikdy nedopísali. Nie je to formalita: údaj, ktorý sa
+> zbiera a nie je v dokumentácii, je presne to, čo pri audite robí problém.
+> Šiesty riadok (`document_opens`) je nový a **zapísal sa skôr, než sa začal
+> zbierať** (ADR-005, D64).
+
+**Osobitná pozornosť pri `document_opens` a `reading_times`.** Oboje hovorí
+niečo o správaní konkrétneho človeka, nie o jeho povinnosti. Preto:
+
+- zapisuje sa **len tomu, kto povinnosť má** — personalista, ktorý si znenie
+  otvorí na kontrolu, sa nezapisuje;
+- `document_opens` je **jeden riadok na dvojicu osoba × znenie**, nie záznam
+  o každom zobrazení: nie je to sledovanie, je to fakt „server mu ten text
+  odoslal";
+- čas čítania **nie je dôkaz** a v rozhraní musí byť ako informatívny
+  označený. Kto nechá kartu otvorenú, „číta" hodinu.
 
 **Žiadne osobitné kategórie** (čl. 9) sa zámerne nespracúvajú. Pri rozsahu (130k+ osôb) odporúčame **DPIA** (posúdenie vplyvu) pred produkciou.
 
@@ -56,6 +80,12 @@
 | **`qa_pairs`** (kurované) | **kým platí podkladová norma** | expirujú s normou (D11); bez osobných údajov |
 | **Cache členstiev** (`person_memberships`) | **len aktuálny stav** | obnova login+webhook (D7); pri zrušení príslušnosti **bezodkladne** vymazať/deaktivovať |
 | **Identita** (kópia z CRM) | **počas aktívneho vzťahu** | zrkadlo zo Sportnet; pri ukončení vzťahu vymazať lokálnu kópiu |
+| **Potvrdenia** (`acknowledgements`) | **otvorené — patrí k O16** | je to doklad o oboznámení so záväzným predpisom. Lehota nie je technická otázka: odvíja sa od toho, ako dlho sa taký doklad môže hodiť, a to určí právnik |
+| **Pridelenia** (`assignments`) | **ako potvrdenia** | bez pridelenia sa nedá vysvetliť, prečo mal človek povinnosť; samotné potvrdenie by zostalo bez kontextu |
+| **Otvorenia znenia** (`document_opens`) | **ako potvrdenia** | je to súčasť tej istej reťaze (D64). Otvorenie **bez** potvrdenia je tiež údaj — hovorí, že človek vedel a nepotvrdil |
+| **Časy čítania** (`reading_times`) | **12 mesiacov** (rozhodnuté 2026-09-06) | nie je to dôkaz, je to meranie na klientovi. Preto kratšia lehota než pri zvyšku reťaze a TTL priamo v databáze |
+| **Kolá schvaľovania** (`approval_rounds`) | **ako potvrdenia** | schválenie je dôvod, prečo znenie vôbec smelo ísť ľuďom |
+| **Log pripomienok** (`reminder_log`) | **90 dní** (TTL) | prevádzkový záznam proti dvojitému odoslaniu, nie dôkaz. Dôkazom je `notified[]` na pridelení |
 
 > Lehoty sú **návrh** — finálne čísla potvrdí DPO/právnik podľa účelu a prípadných zákonných povinností.
 
@@ -79,6 +109,8 @@
 
 - **Prístup, oprava, výmaz, obmedzenie, namietanie.**
 - **Výmaz (right to erasure):** na žiadosť vymazať konverzácie, tickety a audit viazané na osobu cez `userId`; identitné údaje riešiť cez Sportnet (zdroj) + lokálne kópie. Pseudonymizácia umožní cielený výmaz podľa `userId`.
+- **Výmaz sa nevzťahuje na doklad o oboznámení.** Potvrdenie, pridelenie a otvorenie znenia sú záznamy o splnení povinnosti voči zamestnávateľovi, nie údaje spracúvané so súhlasom — na žiadosť sa nemažú, kým trvá dôvod, pre ktorý existujú. **Túto vetu musí potvrdiť právnik (O15):** je to tvrdenie o právnom základe, nie o technike, a systém sa podľa nej bude správať pri prvej žiadosti o výmaz.
+- **Čas čítania sa vymazať dá** a zmizne aj sám po roku — nie je to doklad, je to meranie.
 - **Prenosnosť** podľa relevancie (obsah zväzu nie je osobný údaj dotknutého).
 - Žiadosti smerované na prevádzkovateľa (zväz); Contineo ako sprostredkovateľ poskytuje súčinnosť.
 
@@ -101,5 +133,7 @@
 4. **DPIA** (posúdenie vplyvu) vzhľadom na rozsah (130k+ osôb).
 5. **Potvrdiť retenčné lehoty** (kap. 4) a postup výmazu.
 6. **Záznam o spracovateľských činnostiach** (čl. 30) pre rolu sprostredkovateľa.
+7. **Potvrdiť, že doklad o oboznámení sa na žiadosť nemaže** (kap. 6) — je to tvrdenie o právnom základe a systém sa podľa neho bude správať pri prvej žiadosti o výmaz.
+8. **Posúdiť „otvoril a nepotvrdil"** ako údaj. Reťaz dôkazov (ADR-005) vie ukázať, že si človek znenie otvoril a nepotvrdil ho. Je to legitímny údaj o plnení povinnosti, ale má bližšie k hodnoteniu človeka než čokoľvek, čo systém dovtedy držal — patrí do rozhovoru s DPO, nie do prvého nasadenia bez neho.
 
 > Po právnom posúdení sa tento dokument aktualizuje na záväznú politiku.
