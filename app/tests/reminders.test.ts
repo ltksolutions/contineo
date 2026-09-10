@@ -18,7 +18,7 @@ function duty(over: Partial<Duty> = {}): Duty {
     documentId: "d1", documentTitle: "Etický kódex",
     versionId: "v1", versionLabel: "1.0",
     sources: ["assignment"], trackTitles: [],
-    since: daysAgo(30), acknowledgedAt: null, readingSeconds: null,
+    since: daysAgo(30), due: null, acknowledgedAt: null, readingSeconds: null,
     ...over,
   }
 }

@@ -22,10 +22,11 @@
 
 import { getCollection } from "./mongodb"
 import { PERSONS_COLLECTION } from "./persons"
+import type { Person } from "./persons"
 import { DOCUMENTS_COLLECTION, effectiveVersion } from "./documents"
 import type { DocumentRecord } from "./documents"
 import { ACKNOWLEDGEMENTS_COLLECTION } from "./acknowledgements"
-import { ASSIGNMENTS_COLLECTION, matchesAudience } from "./assignments"
+import { ASSIGNMENTS_COLLECTION, matchesAudience, dueForPerson } from "./assignments"
 import type { Assignment } from "./assignments"
 import { TRACKS_COLLECTION } from "./tracks"
 import type { Track } from "./tracks"
@@ -54,6 +55,14 @@ export interface Duty {
    * (D37) je nová žiadosť o potvrdenie a hodiny sa ním vracajú na nulu.
    */
   since: Date | null
+  /**
+   * Termín potvrdenia pre túto osobu (D61, D62), alebo `null`.
+   *
+   * Počíta ho `dueForPerson()` — **ten istý výpočet ako vo widgete**, nie
+   * druhá kópia pravidla. Povinnosť z trasy termín nemá, kým ju nekryje
+   * pridelenie s termínom: trasa vlastný termín niesť nevie.
+   */
+  due: Date | null
   acknowledgedAt: Date | null
   /**
    * Viditeľný čas nad znením. `null` znamená „nevieme", nie „nula" —
@@ -69,6 +78,14 @@ interface PersonRow {
   groups?: string[]
   tracks?: string[]
   departmentPath?: string[]
+  /*
+   * História oddelení a skupín je tu kvôli **relatívnemu termínu** (D62):
+   * „do 14 dní" beží každému odo dňa, keď mu povinnosť vznikla, a to vie
+   * povedať len `dateForPerson()` z týchto dvoch polí. Bez nich by človek,
+   * ktorý do oddelenia prišiel neskôr, dostal termín v minulosti.
+   */
+  departmentHistory?: Person["departmentHistory"]
+  groupHistory?: Person["groupHistory"]
   firstLoginAt?: Date
   invitedAt?: Date
   createdAt?: Date
@@ -105,6 +122,7 @@ export async function duties(companyCode: string): Promise<Duty[]> {
         {
           projection: {
             id: 1, email: 1, fullName: 1, groups: 1, tracks: 1, departmentPath: 1,
+            departmentHistory: 1, groupHistory: 1,
             firstLoginAt: 1, invitedAt: 1, createdAt: 1,
           },
         },
@@ -126,6 +144,7 @@ export async function duties(companyCode: string): Promise<Duty[]> {
     subject: { documentId: string; documentTitle: string; versionId: string; versionLabel: string },
     source: DutySource,
     since: Date | null,
+    due: Date | null,
     trackTitle?: string,
   ) => {
     const key = `${person.id} ${subject.versionId}`
@@ -135,6 +154,10 @@ export async function duties(companyCode: string): Promise<Duty[]> {
       if (trackTitle && !existing.trackTitles.includes(trackTitle)) existing.trackTitles.push(trackTitle)
       // Neskorší začiatok vyhráva: nové pridelenie vracia hodiny na nulu.
       if (since && (!existing.since || since > existing.since)) existing.since = since
+      // Pri termíne naopak **skorší** vyhráva — prísnejší zaväzuje. Rovnaké
+      // pravidlo ako v `pending.ts`; keby tu bolo opačné, výkaz a widget by
+      // pri tej istej povinnosti ukázali iný termín.
+      if (due && (!existing.due || due < existing.due)) existing.due = due
       return
     }
     collected.set(key, {
@@ -148,6 +171,7 @@ export async function duties(companyCode: string): Promise<Duty[]> {
       sources: [source],
       trackTitles: trackTitle ? [trackTitle] : [],
       since,
+      due,
       acknowledgedAt: null,
       readingSeconds: null,
     })
@@ -161,7 +185,7 @@ export async function duties(companyCode: string): Promise<Duty[]> {
   for (const a of assignments) {
     for (const person of people) {
       if (!matchesAudience(person, a.audience)) continue
-      add(person, a.subject, "assignment", a.assignedAt ?? null)
+      add(person, a.subject, "assignment", a.assignedAt ?? null, dueForPerson(a, person))
     }
   }
 
@@ -190,7 +214,7 @@ export async function duties(companyCode: string): Promise<Duty[]> {
           documentTitle: doc.title,
           versionId: effective.version.versionId,
           versionLabel: effective.version.label,
-        }, "track", accessSince(person), track.title)
+        }, "track", accessSince(person), null, track.title)
       }
     }
   }

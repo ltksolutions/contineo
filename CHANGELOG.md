@@ -4,6 +4,18 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Added (2026-09-10 — kto by dnes dostal pripomienku: výpočet a beh naprázdno)
+
+Prvá polovica kroku 4 z ADR-004. **Zámerne nič neodosiela.**
+
+- **`dueRemindersFrom()`** — čistá funkcia nad povinnosťami: kto sa má dnes ozvať, v akom tóne a či o tom má vedieť aj personalista. Kadencia zostáva v `due.ts`, takže sa testuje bez databázy.
+- **Jeden e-mail na človeka, nie na povinnosť.** Štyri samostatné správy v jednej minúte vyzerajú ako pokazený systém a človek ich prestane čítať — čím prestane fungovať pripomínanie samo. Rovnaké pravidlo ako pri `byPersonReminder()`.
+- **Horší tón vyhráva.** Kto má jednu vec po termíne a druhú pred ním, dostane „ste po termíne", nie upokojujúce „blíži sa".
+- **Potvrdené povinnosti vypadnú pri výbere**, nie až v šablóne: e-mail o niečom, čo je hotové, je horší než žiadny.
+- **`Duty.due`** sa počíta `dueForPerson()` — ten istý výpočet ako vo widgete. Vo výkaze pribudla história oddelení a skupín do projekcie, lebo bez nej relatívny termín neviem počítať pre človeka, ktorý prišiel neskôr (D62). Pri dvoch prideleniach platí **skorší** termín, rovnako ako v `pending.ts` — inak by výkaz a widget pri tej istej povinnosti ukázali iné číslo.
+- **Cron beží naprázdno.** Spočíta, komu by sa dnes ozval, vypíše to do logu a vráti vo výstupe — a **nepošle nič**. Adresy sú vo výpise maskované (O14). Odosielanie sa zapne samostatnou zmenou, keď sa na výpise zhodneme; `vercel.json` zostáva týždenný.
+- Overené: `tsc` čisto, **1034 testov** (6 nových), build prejde.
+
 ### Added (2026-09-10 — termín je vidieť tam, kde človek povinnosť rieši)
 
 Krok 3 z ADR-004. Tým je termín kompletný od zadania po zobrazenie; zostávajú pripomienky.

@@ -27,7 +27,7 @@ import type { Tenant } from "@/lib/tenants"
 import { PERSONS_COLLECTION } from "@/lib/persons"
 import type { Person } from "@/lib/persons"
 import { HR_ROLE } from "@/lib/hr"
-import { overdue, byPersonReminder, DEFAULT_DAYS } from "@/lib/reminders"
+import { overdue, byPersonReminder, DEFAULT_DAYS, dueRemindersFor } from "@/lib/reminders"
 import { send, reminderEmail } from "@/lib/ecomail"
 import { normalizeLanguage } from "@/lib/i18n"
 
@@ -49,7 +49,42 @@ export async function GET(request: Request) {
 
   const report: { companyCode: string; behind: number; notified: number }[] = []
 
+  /*
+   * Pripomienky podľa termínu (ADR-004) zatiaľ **len naprázdno**.
+   *
+   * Beh spočíta, komu by sa dnes ozval a v akom tóne, a vypíše to. **Nič
+   * neodošle.** Dôvod je ten istý, pre ktorý má náhľad aj prideľovanie: cron
+   * beží na Verceli, náhľady sú za SSO, a overiť sa to inak než na ostro nedá.
+   * Jedna chyba v kadencii by sa pri rovno zapnutom odosielaní prejavila až
+   * tým, že sa ozve sto ľudí — a pri termíne je to sľub, nie upozornenie.
+   *
+   * Odosielanie sa zapne samostatnou zmenou, keď sa na tomto výpise zhodneme.
+   */
+  const dueDryRun: {
+    companyCode: string
+    person: string
+    tone: "soon" | "over"
+    alsoHr: boolean
+    items: { document: string; daysLeft: number }[]
+  }[] = []
+
   for (const tenant of tenants) {
+    try {
+      for (const r of await dueRemindersFor(tenant.companyCode)) {
+        dueDryRun.push({
+          companyCode: tenant.companyCode,
+          // Adresa sa do výpisu nepíše celá — log si prečíta viac ľudí než
+          // výkaz a je to osobný údaj (O14).
+          person: r.email.replace(/^(.).*(@.*)$/, "$1***$2"),
+          tone: r.tone,
+          alsoHr: r.alsoHr,
+          items: r.items.map(i => ({ document: i.duty.documentTitle, daysLeft: i.daysLeft })),
+        })
+      }
+    } catch (e) {
+      console.error(`[cron] termíny pre ${tenant.companyCode} zlyhali:`, e)
+    }
+
     let people
     try {
       people = byPersonReminder(await overdue(tenant.companyCode, DEFAULT_DAYS))
@@ -102,5 +137,12 @@ export async function GET(request: Request) {
     report.push({ companyCode: tenant.companyCode, behind: people.length, notified })
   }
 
-  return NextResponse.json({ ok: true, tenants: report })
+  if (dueDryRun.length > 0) {
+    console.warn(
+      `[cron] termíny — naprázdno, neodoslané: ${dueDryRun.length} ľuďom`,
+      JSON.stringify(dueDryRun),
+    )
+  }
+
+  return NextResponse.json({ ok: true, tenants: report, dueDryRun })
 }
