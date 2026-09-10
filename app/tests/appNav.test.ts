@@ -12,7 +12,10 @@ import { isShellRoute, WITHOUT_SHELL } from "../src/lib/shellRoutes"
 
 describe("položky navigácie", () => {
   it("bez rolí zostane to, čo vidí každý prihlásený", () => {
-    expect(navItems({}).map(o => o.href)).toEqual(["/", "/documents", "/golden-set"])
+    // `/approvals` je tu z toho istého dôvodu ako `/documents`: schvaľovateľ
+    // je menovaný človek (D69), nie držiteľ roly, takže sa to podľa roly
+    // podmieniť nedá.
+    expect(navItems({}).map(o => o.href)).toEqual(["/", "/documents", "/approvals", "/golden-set"])
   })
 
   it("rola pridá práve svoju sekciu", () => {

@@ -15,7 +15,7 @@
 
 import { describe, it, expect } from "vitest"
 import {
-  versionState, roundOutcome, pendingApprovers, submitProblem, assignBlock,
+  versionState, roundOutcome, pendingApprovers, submitProblem, assignBlock, decideProblem,
   type ApprovalRound, type ApproverDecision,
 } from "../src/lib/approvals"
 
@@ -221,5 +221,47 @@ describe("brána pri prideľovaní", () => {
   it("ani zverejnené pred zavedením schvaľovania neprejde bez účinnosti", () => {
     expect(assignBlock({ state: "published-before", effectiveFrom: null }))
       .toBe("assignment.versionNotEffective")
+  })
+})
+
+describe("rozhodnutie schvaľovateľa", () => {
+  const running = () => round(1, [waiting("a@x.test"), waiting("b@x.test")])
+
+  it("menovaný schvaľovateľ rozhodnúť môže", () => {
+    expect(decideProblem({ round: running(), by: "a@x.test", decision: "approved" })).toBe(null)
+  })
+
+  it("porovnáva sa bez ohľadu na veľkosť písmen", () => {
+    expect(decideProblem({ round: running(), by: "A@X.test", decision: "approved" })).toBe(null)
+  })
+
+  it("kto medzi menovanými nie je, nerozhoduje", () => {
+    // Ani s akoukoľvek rolou v systéme: kolo je zoznam konkrétnych ľudí.
+    expect(decideProblem({ round: running(), by: "sef@x.test", decision: "approved" }))
+      .toBe("approval.notApprover")
+  })
+
+  it("rozhodnutie sa neprepisuje", () => {
+    const r = round(1, [approved("a@x.test"), waiting("b@x.test")])
+    expect(decideProblem({ round: r, by: "a@x.test", decision: "rejected", reason: "predsa len nie" }))
+      .toBe("approval.alreadyDecided")
+  })
+
+  it("v uzavretom kole sa už nerozhoduje", () => {
+    const r = round(1, [approved("a@x.test")], "approved")
+    expect(decideProblem({ round: r, by: "a@x.test", decision: "approved" }))
+      .toBe("approval.roundClosed")
+  })
+
+  it("zamietnutie bez dôvodu neprejde", () => {
+    expect(decideProblem({ round: running(), by: "a@x.test", decision: "rejected" }))
+      .toBe("approval.reasonRequired")
+    expect(decideProblem({ round: running(), by: "a@x.test", decision: "rejected", reason: "   " }))
+      .toBe("approval.reasonRequired")
+  })
+
+  it("schválenie dôvod nepotrebuje", () => {
+    // Kto súhlasí, nemá čo vysvetľovať — povinný dôvod by bol obrad navyše.
+    expect(decideProblem({ round: running(), by: "a@x.test", decision: "approved" })).toBe(null)
   })
 })

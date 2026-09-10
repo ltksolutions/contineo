@@ -17,7 +17,7 @@ import { AppError } from "./appError"
 import { writeAudit } from "./audit"
 import { PERSONS_COLLECTION, type Person } from "./persons"
 import {
-  APPROVALS_COLLECTION, submitProblem, versionState,
+  APPROVALS_COLLECTION, submitProblem, versionState, decideProblem, roundOutcome,
   type ApprovalRound, type ApproverDecision, type VersionState,
 } from "./approvals"
 
@@ -217,4 +217,101 @@ export async function cancelRound(input: {
     targetLabel: input.documentId,
     note: `Znenie ${input.versionId}, kolo ${last.round}. Dôvod: ${reason}`,
   })
+}
+
+/** Kolá, v ktorých tento človek ešte nerozhodol. Obrazovka schvaľovateľa. */
+export async function roundsWaitingFor(
+  companyCode: string,
+  email: string,
+): Promise<ApprovalRound[]> {
+  const col = await getCollection<ApprovalRound>(APPROVALS_COLLECTION)
+  return col
+    .find({
+      companyCode,
+      outcome: null,
+      approvers: { $elemMatch: { email: email.trim().toLowerCase(), decision: null } },
+    })
+    .sort({ submittedAt: 1 })
+    .toArray()
+}
+
+/**
+ * Zapíše rozhodnutie jedného schvaľovateľa a — ak tým kolo skončilo — kolo
+ * uzavrie.
+ *
+ * **Rozhodnutie sa nemení** (D24): zapisuje sa len tomu, kto ešte nerozhodol,
+ * a podmienka je súčasťou dotazu, nie len kontrolou pred ním. Dvaja ľudia,
+ * ktorí kliknú naraz, tak nemôžu prepísať jeden druhého — a ten istý človek
+ * nemôže dvoma kartami zapísať dve rôzne veci.
+ */
+export async function decide(input: {
+  companyCode: string
+  documentId: string
+  versionId: string
+  round: number
+  by: string
+  decision: "approved" | "rejected"
+  reason?: string
+}): Promise<{ outcome: "approved" | "rejected" | null }> {
+  const col = await getCollection<ApprovalRound>(APPROVALS_COLLECTION)
+  const key = {
+    companyCode: input.companyCode,
+    documentId: input.documentId,
+    versionId: input.versionId,
+    round: input.round,
+  }
+
+  const current = await col.findOne(key)
+  if (!current) throw new ApprovalError("approval.nothingRunning", "Také kolo tu nie je.")
+
+  const problem = decideProblem({
+    round: current,
+    by: input.by,
+    decision: input.decision,
+    reason: input.reason,
+  })
+  if (problem) throw new ApprovalError(problem, `Rozhodnúť sa nedá: ${problem}`)
+
+  const me = input.by.trim().toLowerCase()
+  const now = new Date()
+  const written = await col.updateOne(
+    { ...key, outcome: null, approvers: { $elemMatch: { email: me, decision: null } } },
+    {
+      $set: {
+        "approvers.$[ja].decision": input.decision,
+        "approvers.$[ja].decidedAt": now,
+        ...(input.decision === "rejected" ? { "approvers.$[ja].reason": input.reason?.trim() } : {}),
+      },
+    },
+    { arrayFilters: [{ "ja.email": me, "ja.decision": null }] },
+  )
+  if (written.modifiedCount !== 1) {
+    // Medzi čítaním a zápisom sa niečo zmenilo — kolo sa uzavrelo alebo
+    // rozhodnutie už pribudlo. Nezapisujeme nasilu.
+    throw new ApprovalError("approval.alreadyDecided", "Toto rozhodnutie je už zapísané.")
+  }
+
+  // Výsledok kola sa počíta z rozhodnutí, ktoré sú **v databáze**, nie z tých,
+  // ktoré sme si domysleli — inak by súbežný zápis druhého schvaľovateľa
+  // vypadol z výpočtu.
+  const after = await col.findOne(key)
+  const outcome = after ? roundOutcome(after.approvers) : null
+  if (outcome) {
+    await col.updateOne({ ...key, outcome: null }, { $set: { outcome, closedAt: new Date() } })
+  }
+
+  await writeAudit({
+    companyCode: input.companyCode,
+    subject: "document",
+    action: input.decision === "approved" ? "approved" : "rejected",
+    actor: input.by,
+    targetId: input.documentId,
+    targetLabel: input.documentId,
+    note:
+      `Znenie ${input.versionId}, kolo ${input.round}.` +
+      (input.reason?.trim() ? ` Dôvod: ${input.reason.trim()}` : "") +
+      (outcome ? ` Kolo uzavreté: ${outcome}.` : ""),
+  })
+
+  return { outcome }
 }

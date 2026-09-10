@@ -4,6 +4,19 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Added (2026-09-10 — schvaľovateľ môže rozhodnúť)
+
+Krok 4 z ADR-006. Kolo sa tým dá po prvý raz uzavrieť.
+
+- **Vlastná obrazovka `/approvals`, nie detail dokumentu**, ako predpokladalo ADR. Dôvod je vecný: schvaľovatelia sú **menovaní ľudia** (D69), nie držitelia roly. Kolegyňa z právneho útvaru nemá rolu `spravca-obsahu`, takže sa do knižnice nedostane — a keby sme jej ju kvôli schvaľovaniu dali, mohla by odvtedy normy aj nahrávať a publikovať. Rozhodovanie preto býva tam, kam sa dostane každý prihlásený, a stránka ukáže len to, na čom je menovaný.
+- **Znenie sa číta priamo tam.** Schvaľuje sa text (D68), ktorý sa doslova ocitne v potvrdzovacej formulke (D28) — a schvaľované znenie **účinné ešte nie je a byť nemusí** (D73), takže odkázať schvaľovateľa na „platné znenie" inde by znamenalo, že schvaľuje niečo iné, než číta.
+- **Rozhodnutie je nemenné** (rovnaká úvaha ako pri potvrdení, D24). Kto raz schválil, neprepíše to na zamietnutie: záznam, ktorý sa dá zmeniť, nie je dôkazom o tom, čo si človek vtedy myslel. Kto si to rozmyslí, dá kolo zrušiť a otvoriť nové — v histórii je vidieť oboje.
+- **Podmienka „ešte nerozhodol" je súčasťou dotazu, nie len kontrolou pred ním.** Dvaja ľudia, ktorí kliknú naraz, tak nemôžu prepísať jeden druhého, a ten istý človek nezapíše dvoma kartami dve rôzne veci. Výsledok kola sa počíta z rozhodnutí, ktoré sú **v databáze** — nie z tých, ktoré sme si domysleli.
+- **Dôvod je povinný len pri zamietnutí** (D71). Pri schválení by bol obradom navyše: kto súhlasí, nemá čo vysvetľovať.
+- **Ostatní schvaľovatelia sú vidieť, ich rozhodnutie sa neukazuje.** Kolo je súbežné (D70) a každý rozhoduje sám; zoznam mien hovorí, kto ešte bude musieť rozhodnúť, nie ku komu sa pridať.
+- **Opravené z minulého overenia:** v uzavretom kole sa pri schvaľovateľovi, ktorý nerozhodol, už nepíše „čaká", ale „nerozhodol". V zrušenom kole sa na nikoho nečaká a je to text v histórii, ktorá má byť dôkazom.
+- Overené: `tsc` čisto, **1067 testov** (7 nových), lint bez chýb, build prejde.
+
 ### Added (2026-09-10 — znenie sa dá predložiť na schválenie)
 
 Krok 3 z ADR-006 — tretí krok nahrávania z návrhu. Rozhodovanie (krok 4) tu ešte nie je.

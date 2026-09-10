@@ -216,6 +216,7 @@ interface Dictionary {
   nav: {
     ask: string
     goldenSet: string
+    toApprove: string
     /** Popis navigačnej oblasti shellu pre čítačky obrazovky. */
     sections: string
     toAcknowledge: string
@@ -493,6 +494,27 @@ interface Dictionary {
   /** Výpis auditu — používa ho nastavenie organizácie aj `/admin`. */
   /** Správa tenantov — vidí ju len správca platformy (Fáza 5b). */
   /** Zlatá sada — overovanie kvality odpovedí (D9). */
+  approvals: {
+    heading: string
+    intro: string
+    nothing: string
+    versionLine: (label: string, round: string) => string
+    roundLine: (round: number) => string
+    submittedBy: (who: string, when: string) => string
+    effectiveFrom: (date: string) => string
+    noEffectiveFrom: string
+    alsoDeciding: (names: string) => string
+    readText: string
+    noText: string
+    reason: string
+    reasonPlaceholder: string
+    reasonHint: string
+    approve: string
+    reject: string
+    doneApproved: string
+    doneApprovedClosed: string
+    doneRejected: string
+  }
   goldenSet: {
     heading: string
     intro: string
@@ -1284,6 +1306,7 @@ interface Dictionary {
       approvalNoteHint: string
       approvalSubmitButton: string
       approvalWaiting: string
+      approvalNotDecided: string
       approvalApproved: (when: string) => string
       approvalRejected: (when: string) => string
       approvalRoundHeading: (round: number) => string
@@ -1512,6 +1535,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
   nav: {
     ask: "Voľné otázky",
     goldenSet: "Zlatá sada",
+    toApprove: "Na schválenie",
     sections: "Sekcie",
     toAcknowledge: "Na potvrdenie",
     assigned: "Pridelené normy",
@@ -1770,6 +1794,27 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     remove: (value) => `Odobrať ${value}`,
     chosenOf: (chosen, total) => `Vybrané ${chosen} z ${total}`,
   },
+  approvals: {
+    heading: "Na schválenie",
+    intro: "Znenia, ktoré niekto predložil a čaká na tvoje rozhodnutie. Rozhoduješ sám za seba \u2014 ostatní schvaľovatelia rozhodujú nezávisle.",
+    nothing: "Nič na teba nečaká.",
+    versionLine: (label, round) => `znenie ${label} \u00b7 ${round}`,
+    roundLine: round => `${round}. kolo`,
+    submittedBy: (who, when) => `predložil ${who} \u00b7 ${when}`,
+    effectiveFrom: date => `účinnosť od ${date}`,
+    noEffectiveFrom: "dátum účinnosti zatiaľ nie je \u2014 prideliť sa to bude dať až s ním",
+    alsoDeciding: names => `Rozhodujú aj: ${names}`,
+    readText: "prečítať znenie",
+    noText: "Znenie nemá text.",
+    reason: "Dôvod",
+    reasonPlaceholder: "Napríklad: článok 4 odporuje stanovám.",
+    reasonHint: "Pri zamietnutí povinný \u2014 bez neho predkladateľ nevie, čo opraviť. Pri schválení ho vypĺňať netreba.",
+    approve: "Schváliť",
+    reject: "Zamietnuť",
+    doneApproved: "Schválené. Čaká sa na ostatných schvaľovateľov.",
+    doneApprovedClosed: "Schválené. Znenie je schválené celé.",
+    doneRejected: "Zamietnuté. Znenie sa vrátilo do konceptu a dôvod zostáva v histórii.",
+  },
   goldenSet: {
     heading: "Zlatá sada",
     intro: "Otázky sú návrhy. Ak niektorá nedáva zmysel alebo znie neprirodzene, upravte ju alebo vyraďte — to je rovnako cenná informácia ako posudok odpovede.",
@@ -1998,6 +2043,9 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "approval.unknownApprover": "Niektorý z vybraných schvaľovateľov tu nie je alebo je vyradený.",
     "approval.reasonRequired": "Bez dôvodu sa kolo zrušiť nedá. O rok nikto nezistí, prečo skončilo.",
     "approval.nothingRunning": "Pre toto znenie nebeží žiadne kolo.",
+    "approval.notApprover": "Toto kolo na teba nečaká \u2014 nie si medzi menovanými schvaľovateľmi.",
+    "approval.roundClosed": "Kolo je uzavreté. Rozhodnutie doň už pribudnúť nemôže.",
+    "approval.alreadyDecided": "Rozhodnutie je zapísané a nemení sa. Ak si to rozmyslíš, predkladateľ kolo zruší a otvorí nové \u2014 v histórii bude vidieť oboje.",
 
     // ── prevod súboru ──────────────────────────────────────────────────────
     "conversion.zipNotOffice": "Toto je ZIP-ový balík, ale ani docx, ani xlsx. Staré .doc a .xls sa prevádzať nedajú — ulož ich vo Worde alebo Exceli ako novší formát.",
@@ -2810,6 +2858,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       approvalNoteHint: "Nepovinné. Číta to schvaľovateľ, nie archív.",
       approvalSubmitButton: "Predložiť na schválenie",
       approvalWaiting: "čaká",
+      approvalNotDecided: "nerozhodol",
       approvalApproved: when => `schválil ${when}`,
       approvalRejected: when => `zamietol ${when}`,
       approvalRoundHeading: round => `${round}. kolo`,
@@ -3030,6 +3079,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
   nav: {
     ask: "Volné otázky",
     goldenSet: "Zlatá sada",
+    toApprove: "Ke schválení",
     sections: "Sekce",
     toAcknowledge: "K potvrzení",
     assigned: "Přidělené předpisy",
@@ -3288,6 +3338,27 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     remove: (value) => `Odebrat ${value}`,
     chosenOf: (chosen, total) => `Vybráno ${chosen} z ${total}`,
   },
+  approvals: {
+    heading: "Ke schválení",
+    intro: "Znění, která někdo předložil a čekají na tvé rozhodnutí. Rozhoduješ sám za sebe \u2014 ostatní schvalovatelé rozhodují nezávisle.",
+    nothing: "Nic na tebe nečeká.",
+    versionLine: (label, round) => `znění ${label} \u00b7 ${round}`,
+    roundLine: round => `${round}. kolo`,
+    submittedBy: (who, when) => `předložil ${who} \u00b7 ${when}`,
+    effectiveFrom: date => `účinnost od ${date}`,
+    noEffectiveFrom: "datum účinnosti zatím není \u2014 přidělit to půjde až s ním",
+    alsoDeciding: names => `Rozhodují také: ${names}`,
+    readText: "přečíst znění",
+    noText: "Znění nemá text.",
+    reason: "Důvod",
+    reasonPlaceholder: "Například: článek 4 odporuje stanovám.",
+    reasonHint: "Při zamítnutí povinný \u2014 bez něj předkladatel neví, co opravit. Při schválení ho vyplňovat netřeba.",
+    approve: "Schválit",
+    reject: "Zamítnout",
+    doneApproved: "Schváleno. Čeká se na ostatní schvalovatele.",
+    doneApprovedClosed: "Schváleno. Znění je schválené celé.",
+    doneRejected: "Zamítnuto. Znění se vrátilo do konceptu a důvod zůstává v historii.",
+  },
   goldenSet: {
     heading: "Zlatá sada",
     intro: "Otázky jsou návrhy. Pokud některá nedává smysl nebo zní nepřirozeně, upravte ji nebo vyřaďte — to je stejně cenná informace jako posudek odpovědi.",
@@ -3516,6 +3587,9 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "approval.unknownApprover": "Někdo z vybraných schvalovatelů tu není nebo je vyřazený.",
     "approval.reasonRequired": "Bez důvodu kolo zrušit nelze. Za rok nikdo nezjistí, proč skončilo.",
     "approval.nothingRunning": "Pro toto znění neběží žádné kolo.",
+    "approval.notApprover": "Toto kolo na tebe nečeká \u2014 nejsi mezi jmenovanými schvalovateli.",
+    "approval.roundClosed": "Kolo je uzavřené. Rozhodnutí do něj už přibýt nemůže.",
+    "approval.alreadyDecided": "Rozhodnutí je zapsané a nemění se. Když si to rozmyslíš, předkladatel kolo zruší a otevře nové \u2014 v historii bude vidět obojí.",
 
     // ── převod souboru ─────────────────────────────────────────────────────
     "conversion.zipNotOffice": "Toto je ZIP balík, ale ani docx, ani xlsx. Staré .doc a .xls převádět nelze — ulož je ve Wordu nebo Excelu jako novější formát.",
@@ -4328,6 +4402,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       approvalNoteHint: "Nepovinné. Čte to schvalovatel, ne archiv.",
       approvalSubmitButton: "Předložit ke schválení",
       approvalWaiting: "čeká",
+      approvalNotDecided: "nerozhodl",
       approvalApproved: when => `schválil ${when}`,
       approvalRejected: when => `zamítl ${when}`,
       approvalRoundHeading: round => `${round}. kolo`,
@@ -4543,6 +4618,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
   nav: {
     ask: "Ask a question",
     goldenSet: "Golden set",
+    toApprove: "To approve",
     sections: "Sections",
     toAcknowledge: "To acknowledge",
     assigned: "Assigned documents",
@@ -4800,6 +4876,27 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     remove: (value) => `Remove ${value}`,
     chosenOf: (chosen, total) => `${chosen} of ${total} selected`,
   },
+  approvals: {
+    heading: "To approve",
+    intro: "Versions somebody submitted that are waiting for your decision. You decide for yourself \u2014 the other approvers decide independently.",
+    nothing: "Nothing is waiting for you.",
+    versionLine: (label, round) => `version ${label} \u00b7 ${round}`,
+    roundLine: round => `round ${round}`,
+    submittedBy: (who, when) => `submitted by ${who} \u00b7 ${when}`,
+    effectiveFrom: date => `effective from ${date}`,
+    noEffectiveFrom: "no effective date yet \u2014 it cannot be assigned until it has one",
+    alsoDeciding: names => `Also deciding: ${names}`,
+    readText: "read the text",
+    noText: "This version has no text.",
+    reason: "Reason",
+    reasonPlaceholder: "For example: article 4 conflicts with the statutes.",
+    reasonHint: "Required when rejecting \u2014 without it the submitter does not know what to fix. Not needed when approving.",
+    approve: "Approve",
+    reject: "Reject",
+    doneApproved: "Approved. Waiting for the other approvers.",
+    doneApprovedClosed: "Approved. The version is now fully approved.",
+    doneRejected: "Rejected. The version went back to draft and the reason stays in the history.",
+  },
   goldenSet: {
     heading: "Golden set",
     intro: "The questions are proposals. If one makes no sense or sounds unnatural, edit it or drop it — that is just as valuable as a verdict on the answer.",
@@ -5028,6 +5125,9 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "approval.unknownApprover": "One of the chosen approvers is not here or has been deactivated.",
     "approval.reasonRequired": "A round cannot be cancelled without a reason. A year from now nobody would know why it ended.",
     "approval.nothingRunning": "No round is running for this version.",
+    "approval.notApprover": "This round is not waiting for you \u2014 you are not one of its named approvers.",
+    "approval.roundClosed": "The round is closed. No decision can be added to it now.",
+    "approval.alreadyDecided": "Your decision is recorded and does not change. If you change your mind, the submitter cancels the round and opens a new one \u2014 the history shows both.",
 
     // ── file conversion ────────────────────────────────────────────────────
     "conversion.zipNotOffice": "This is a ZIP archive, but neither docx nor xlsx. Legacy .doc and .xls cannot be converted — save them from Word or Excel in a newer format.",
@@ -5840,6 +5940,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       approvalNoteHint: "Optional. The approver reads it, not the archive.",
       approvalSubmitButton: "Submit for approval",
       approvalWaiting: "waiting",
+      approvalNotDecided: "did not decide",
       approvalApproved: when => `approved ${when}`,
       approvalRejected: when => `rejected ${when}`,
       approvalRoundHeading: round => `Round ${round}`,
