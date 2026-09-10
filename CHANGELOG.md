@@ -4,6 +4,19 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Added (2026-09-10 — model schvaľovania znenia: stav sa odvodzuje, nie ukladá)
+
+Krok 1 z ADR-006. **Nič v behu systému sa nemení** — je to pravidlo bez cesty k nemu.
+
+- **`lib/approvals.ts` je zámerne bez databázy.** Pravidlo, na ktorom bude stáť brána pri prideľovaní, sa musí dať otestovať bez Monga a bez toho, aby si ho niekto domýšľal z dotazu. Rovnaké delenie ako pri `due.ts`.
+- **Stav znenia je odvodený z kôl** (D27), nie uložený, a rozhoduje **posledné kolo, nie súčet**: po zamietnutí a novom predložení platí nové kolo, staré zostáva v histórii. Uložený stav by sa raz rozišiel s kolami, z ktorých vznikol.
+- **Jedno zamietnutie zastaví celé kolo** (D71) — aj keď ostatní schválili a aj keď ešte nerozhodli všetci. Hlasy, ktoré prídu neskôr, už výsledok nezmenia; čakať na ne znamená držať znenie v limbe.
+- **Prázdne kolo nie je schválené kolo.** `every` na prázdnom poli vracia `true`, takže bez výslovnej podmienky by kolo bez schvaľovateľov prešlo ako schválené a znenie by sa dalo prideliť bez súhlasu. Má vlastný test.
+- **Predkladateľ nesmie byť medzi schvaľovateľmi** (D69) — porovnáva sa bez ohľadu na veľkosť písmen. Kto text nahral, ho neschvaľuje; inak je schválenie podpis pod vlastnú prácu.
+- **Brána pri prideľovaní hlási dva rôzne dôvody** (D73): `notApproved` a `versionNotEffective`. Schválené a účinné sú dve nezávislé osi — personalista musí vedieť, ktorá mu chýba, inak hľadá naslepo.
+- **`published-before` je dočasné lešenie, nie pojem** (D74, D75): znenia zverejnené pred zavedením schvaľovania cez bránu prejdú, aby personalista zo dňa na deň nemohol ostať bez ničoho. Zmizne spolu so skúšobným korpusom, keď ho nahradia oficiálne znenia prevedené cez schvaľovanie.
+- Overené: `tsc` čisto, **1058 testov** (24 nových), lint bez chýb, build prejde.
+
 ### Added (2026-09-10 — kto by dnes dostal pripomienku: výpočet a beh naprázdno)
 
 Prvá polovica kroku 4 z ADR-004. **Zámerne nič neodosiela.**
