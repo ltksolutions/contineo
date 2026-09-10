@@ -32,6 +32,16 @@ describe("váha riadkov", () => {
     expect(find(os, "acknowledged").weight).toBe("proof")
   })
 
+  it("čas čítania nemá čas — nesie hodnotu, nie okamih", () => {
+    // `reading_times` drží maximum, nie kedy sa meralo. Riadok preto nemá
+    // `at` a obrazovka musí ukázať hodnotu, nie vetu „zatiaľ nie".
+    const os = nova({ readingSeconds: 30 })
+    const r = find(os, "read")
+    expect(r.at).toBeNull()
+    expect(r.detail?.seconds).toBe(30)
+    expect(r.gap).toBeUndefined()
+  })
+
   it("čas čítania je len informatívny", () => {
     // `readingTime.ts` o sebe hovorí, že dôkaz nie je: kto nechá kartu
     // otvorenú, „číta" hodinu. Os to musí povedať tiež.
