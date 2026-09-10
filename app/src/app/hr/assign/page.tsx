@@ -29,6 +29,7 @@ import { tenantStyle } from "@/components/TenantHeader"
 import { formatDate, dictionary } from "@/lib/i18n"
 import { assignAction } from "../actions"
 import { normalizeQuery, type RawQuery } from "@/lib/urlParams"
+import Select from "@/components/Select"
 import AppShell from "@/components/AppShell"
 
 export const dynamic = "force-dynamic"
@@ -46,6 +47,9 @@ type Query = {
   all?: string
   addresses?: string
   reason?: string
+  dueMode?: string
+  dueDate?: string
+  dueDays?: string
 }
 
 export default async function AssignPage({
@@ -254,6 +258,60 @@ export default async function AssignPage({
               {t.reasonNote}
             </span>
           </label>
+
+          {/*
+            Termín (D61). **Výslovná voľba, nie „čo je vyplnené, to platí"** —
+            prázdne pole je dvojznačné a pri sľube danom človeku sa hádať nemá,
+            či termín nechcel, alebo ho zabudol vyplniť.
+
+            Obe polia zostávajú vidieť aj vtedy, keď k voľbe nepatria:
+            formulár beží bez JavaScriptu, takže sa skrývať nedajú — a kto sa
+            prepne z dátumu na dni a späť, o svoj dátum nepríde.
+          */}
+          <fieldset className="hr-group">
+            {/* `hr-group`, nie vlastný tvar: na tej istej stránke je nad tým
+                rovnaký rámik okolo výberu publika. Druhý vzhľad pre druhý
+                fieldset v jednom formulári je presne to, čo robí obrazovku
+                nejednotnou. */}
+            <legend className="field-label">{t.due}</legend>
+
+            <Select
+              name="dueMode"
+              fieldLabel={t.due}
+              initial={q.dueMode ?? "none"}
+              options={[
+                { value: "none", label: t.dueNone },
+                { value: "date", label: t.dueDate },
+                { value: "days", label: t.dueDays },
+              ]}
+            />
+
+            <div className="due-fields">
+              <label className="field">
+                <span className="quiet field-label">{t.dueDate}</span>
+                <input
+                  type="date"
+                  name="dueDate"
+                  defaultValue={q.dueDate ?? ""}
+                  className="field-input"
+                />
+              </label>
+              <label className="field">
+                <span className="quiet field-label">{t.dueDaysUnit}</span>
+                <input
+                  type="number"
+                  name="dueDays"
+                  min={1}
+                  step={1}
+                  defaultValue={q.dueDays ?? ""}
+                  className="field-input"
+                  inputMode="numeric"
+                />
+              </label>
+            </div>
+
+            <span className="quiet field-hint">{t.dueNote}</span>
+          </fieldset>
 
           <div>
             <button className="button" type="submit">{t.submit}</button>

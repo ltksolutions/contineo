@@ -131,3 +131,54 @@ export function reminderPlan(due: Date | null, now: Date): ReminderPlan {
   if (over > 7 && over % 7 === 0) return { person: true, hr: true, tone: "over" }
   return NONE
 }
+
+// ── z formulára ──────────────────────────────────────────────────────────────
+
+/**
+ * Tri voľby termínu vo formulári prideľovania.
+ *
+ * Prečo **výslovná voľba** a nie „čo je vyplnené, to platí": prázdne pole je
+ * dvojznačné. Personalista, ktorý zadá dátum a potom si to rozmyslí, ho
+ * prepíše na prázdno — a bez voľby by sa nedalo odlíšiť „bez termínu" od
+ * „zabudol som vyplniť". Pri sľube danom človeku je to rozdiel, ktorý sa
+ * hádať nemá.
+ */
+export type DueMode = "none" | "date" | "days"
+
+export function normalizeDueMode(value: unknown): DueMode {
+  return value === "date" || value === "days" ? value : "none"
+}
+
+/**
+ * Termín z polí formulára. Vracia buď hodnotu, alebo **kód chyby** — nie
+ * hodenú výnimku: volajúci ju musí vedieť ukázať pri formulári spolu s tým,
+ * čo už človek vyplnil, nie ho vyhodiť na chybovú stránku.
+ *
+ * Číta sa **len pole, ktoré patrí k zvolenému režimu.** Zvyšné môžu zostať
+ * vyplnené a je to zámer: kto sa prepne z dátumu na dni a späť, nemá o svoj
+ * dátum prísť. Formulár beží bez JavaScriptu, takže polia sa neskrývajú.
+ */
+export function dueFromFields(
+  input: { mode: unknown; date?: string; days?: string },
+): { due: Due | null } | { error: "assignment.badDue" | "assignment.badDueDays" } {
+  const mode = normalizeDueMode(input.mode)
+  if (mode === "none") return { due: null }
+
+  if (mode === "date") {
+    const raw = input.date?.trim()
+    if (!raw) return { error: "assignment.badDue" }
+    // `YYYY-MM-DD` z `<input type="date">` sa **musí** čítať ako miestna
+    // polnoc. `new Date("2026-09-30")` je polnoc v UTC, takže na východ od
+    // Greenwichu by termín padol na 30. 9. 02:00 a v západnom pásme dokonca
+    // na 29. 9. — termín o deň skôr, než personalista zadal.
+    const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(raw)
+    if (!m) return { error: "assignment.badDue" }
+    const at = new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]))
+    if (Number.isNaN(at.getTime())) return { error: "assignment.badDue" }
+    return { due: { kind: "date", at } }
+  }
+
+  const days = Number(input.days?.trim())
+  if (!Number.isFinite(days) || days < 1) return { error: "assignment.badDueDays" }
+  return { due: { kind: "days", days: Math.floor(days) } }
+}

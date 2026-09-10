@@ -13,6 +13,7 @@
 import { describe, it, expect } from "vitest"
 import {
   dueFrom, dueState, daysLeft, addDays, reminderPlan, SOON_DAYS,
+  dueFromFields, normalizeDueMode,
 } from "../src/lib/due"
 
 /** Poludnie, aby sa test nechytal na letný čas ani na hranicu dňa. */
@@ -109,5 +110,52 @@ describe("kadencia pripomienok — eskalácia, nie opakovanie", () => {
 
   it("bez termínu sa automaticky nepripomína vôbec", () => {
     expect(reminderPlan(null, at("2026-09-09"))).toEqual({ person: false, hr: false, tone: null })
+  })
+})
+
+describe("termín z formulára prideľovania", () => {
+  const ok = (r: ReturnType<typeof dueFromFields>) => {
+    if ("error" in r) throw new Error(`čakala sa hodnota, prišla chyba ${r.error}`)
+    return r.due
+  }
+
+  it("voľba rozhoduje, nie vyplnenosť poľa", () => {
+    // Prázdne pole je dvojznačné: „termín nechcem" verzus „zabudol som".
+    // Pri sľube danom človeku sa to hádať nemá.
+    expect(ok(dueFromFields({ mode: "none", date: "2026-09-30", days: "14" }))).toBeNull()
+    expect(ok(dueFromFields({ mode: "date", date: "2026-09-30", days: "14" })))
+      .toEqual({ kind: "date", at: new Date(2026, 8, 30) })
+    expect(ok(dueFromFields({ mode: "days", date: "2026-09-30", days: "14" })))
+      .toEqual({ kind: "days", days: 14 })
+  })
+
+  it("dátum sa číta ako miestna polnoc, nie ako UTC", () => {
+    // `new Date("2026-09-30")` je polnoc v UTC. V našom pásme by z termínu
+    // vyšiel 30. 9. o druhej ráno a na západ od Greenwichu dokonca 29. 9. —
+    // teda termín o deň skôr, než personalista zadal.
+    const due = ok(dueFromFields({ mode: "date", date: "2026-09-30" }))
+    if (due?.kind !== "date") throw new Error("čakal sa dátumový termín")
+    expect(due.at.getFullYear()).toBe(2026)
+    expect(due.at.getMonth()).toBe(8)
+    expect(due.at.getDate()).toBe(30)
+    expect(due.at.getHours()).toBe(0)
+  })
+
+  it("nezmysel vráti kód chyby, nie výnimku", () => {
+    // Volajúci ju musí vedieť ukázať pri formulári spolu s tým, čo už človek
+    // vyplnil — nie ho vyhodiť na chybovú stránku.
+    expect(dueFromFields({ mode: "date", date: "" })).toEqual({ error: "assignment.badDue" })
+    expect(dueFromFields({ mode: "date", date: "30.9.2026" })).toEqual({ error: "assignment.badDue" })
+    expect(dueFromFields({ mode: "days", days: "0" })).toEqual({ error: "assignment.badDueDays" })
+    expect(dueFromFields({ mode: "days", days: "-3" })).toEqual({ error: "assignment.badDueDays" })
+    expect(dueFromFields({ mode: "days", days: "" })).toEqual({ error: "assignment.badDueDays" })
+  })
+
+  it("neznáma voľba je bez termínu, nie chyba", () => {
+    // Hodnota ide z formulára, teda od kohokoľvek. Preklep nemá zhodiť
+    // prideľovanie ani ticho vyrobiť termín.
+    expect(normalizeDueMode("nieco")).toBe("none")
+    expect(normalizeDueMode(undefined)).toBe("none")
+    expect(ok(dueFromFields({ mode: "nieco", date: "2026-09-30" }))).toBeNull()
   })
 })

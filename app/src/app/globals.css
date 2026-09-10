@@ -2032,6 +2032,22 @@ html[data-theme="dark"] .editor-tui .CodeMirror {
   overflow-wrap: anywhere;
 }
 
+/* Dve polia termínu vedľa seba, na telefóne pod sebou. Nechávajú sa vidieť
+   obe: formulár beží bez JavaScriptu, takže sa skryť nedajú, a kto sa prepne
+   z dátumu na dni a späť, o svoj dátum nepríde. */
+.due-fields {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.due-fields .field { flex: 1 1 180px; margin: 0; }
+
+/* Rámik termínu je ten istý ako pri výbere publika nad ním; zvyšok formulára
+   ho nemá, takže bez tohto by mal každý fieldset iný odstup. */
+.hr-group .due-fields { margin-bottom: 4px; }
+
 /* ── knižnica: hromadné akcie ───────────────────────────────────────────
    Panel je vidieť stále, nie až po označení: bez skriptu server nevie, či je
    niečo zaškrtnuté. Prázdny výber preto rieši akcia hlásením. */
