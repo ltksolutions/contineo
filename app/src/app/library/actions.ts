@@ -35,6 +35,7 @@ import { writeAudit } from "@/lib/audit"
 import { dictionary, errorText, type UiLanguage } from "@/lib/i18n"
 import { AppError } from "@/lib/appError"
 import { assignHref, summarize, type BulkOutcome } from "@/lib/libraryBulk"
+import { submitForApproval, cancelRound } from "@/lib/approvalsDb"
 
 async function actor(): Promise<
   {
@@ -543,4 +544,72 @@ export async function saveFolderOrderAction(fd: FormData) {
     if (isRedirect(e)) throw e
     backToLibrary(fd, errorMessage(e, self.language), true)
   }
+}
+
+/**
+ * Predloženie znenia na schválenie (ADR-006, krok 3).
+ *
+ * Formulár nad serverovou akciou, nie volanie API: predloženie otvára úkon
+ * s následkom a cudzia stránka ho nemá vedieť spustiť za prihláseného človeka.
+ *
+ * Schvaľovatelia chodia ako `persons.id`, nie ako adresy — meno v kole je
+ * odtlačok (D24) a berie sa zo záznamu osoby na serveri, nie z formulára.
+ */
+export async function submitForApprovalAction(fd: FormData) {
+  const self = await actor()
+  if (!self) redirect("/")
+
+  const id = fieldText(fd, "documentId")
+  let message = ""
+  let error = false
+  try {
+    const round = await submitForApproval({
+      companyCode: self.companyCode,
+      documentId: id,
+      versionId: fieldText(fd, "versionId"),
+      approverIds: fd.getAll("approver").filter(v => typeof v === "string") as string[],
+      note: fieldText(fd, "note"),
+      submittedBy: self.email,
+      publishedBefore: fieldText(fd, "publishedBefore") === "1",
+    })
+    message = say(self.language).submittedForApproval(round.approvers.length)
+  } catch (e) {
+    message = errorMessage(e, self.language)
+    error = true
+  }
+
+  revalidatePath(`/library/${id}`)
+  redirect(`/library/${encodeURIComponent(id)}?msg=${encodeURIComponent(message)}${error ? "&error=1" : ""}`)
+}
+
+/**
+ * Zrušenie bežiaceho kola (ADR-006, časť 5).
+ *
+ * Kolo sa **nemaže** — dostane dôvod a zostane v histórii. Je to jediná cesta,
+ * ako zo zoznamu odstrániť schvaľovateľa, ktorý tam byť nemá; meniť zoznam za
+ * behu by znamenalo, že sa dá nepohodlný schvaľovateľ potichu vymeniť.
+ */
+export async function cancelApprovalAction(fd: FormData) {
+  const self = await actor()
+  if (!self) redirect("/")
+
+  const id = fieldText(fd, "documentId")
+  let message = ""
+  let error = false
+  try {
+    await cancelRound({
+      companyCode: self.companyCode,
+      documentId: id,
+      versionId: fieldText(fd, "versionId"),
+      reason: fieldText(fd, "reason"),
+      by: self.email,
+    })
+    message = say(self.language).approvalCancelled
+  } catch (e) {
+    message = errorMessage(e, self.language)
+    error = true
+  }
+
+  revalidatePath(`/library/${id}`)
+  redirect(`/library/${encodeURIComponent(id)}?msg=${encodeURIComponent(message)}${error ? "&error=1" : ""}`)
 }

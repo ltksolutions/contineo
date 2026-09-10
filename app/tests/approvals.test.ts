@@ -167,6 +167,22 @@ describe("predloženie na schválenie", () => {
       .toBe("approval.alreadyApproved")
   })
 
+  it("znenie spred zavedenia schvaľovania sa predložiť nedá", () => {
+    // D74: spätne sa neschvaľuje. A keby sa dalo, znenie by počas kola
+    // stratilo príznak, prepadlo by do „v schvaľovaní" a brána pri
+    // prideľovaní by ho zastavila — norma, ktorá sa dnes prideľuje, by sa
+    // prideľovať prestala.
+    expect(submitProblem({
+      rounds: [], approvers: ["a@x.test"], submittedBy, publishedBefore: true,
+    })).toBe("approval.publishedBefore")
+  })
+
+  it("bez príznaku sa to isté znenie predložiť dá", () => {
+    expect(submitProblem({
+      rounds: [], approvers: ["a@x.test"], submittedBy, publishedBefore: false,
+    })).toBe(null)
+  })
+
   it("po zamietnutí sa predložiť dá", () => {
     const no = round(1, [rejected("a@x.test", "chýba dátum účinnosti")], "rejected")
     expect(submitProblem({ rounds: [no], approvers: ["a@x.test"], submittedBy })).toBe(null)
