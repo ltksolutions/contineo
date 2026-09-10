@@ -10,6 +10,9 @@
 import { notFound, redirect } from "next/navigation"
 import Link from "next/link"
 import { peopleContext, loadPersonById, ASSIGNABLE_ROLES } from "@/lib/people"
+import { isHr } from "@/lib/hr"
+import { evidenceForPerson } from "@/lib/evidenceDb"
+import EvidenceTimeline from "@/components/EvidenceTimeline"
 import { audiencesInOrg } from "@/lib/persons"
 import { allDepartments, flattenTree, pathTo } from "@/lib/departments"
 import Select from "@/components/Select"
@@ -57,7 +60,22 @@ export default async function PersonDetailPage({
   const language = ctx.person.language
   const d = dictionary(language).people
   const t = d.detail
+  const te = dictionary(language).evidence
   const excluded = o.status === "inactive"
+
+  /*
+    Reťaz dôkazov na karte osoby (ADR-005, D67) — **ten istý komponent nad tou
+    istou funkciou** ako `/hr/evidence`.
+
+    Podmienená rolou `hr`, nie `people-admin`. Kartu osoby spravuje
+    `people-admin`, ale reťaz dôkazov je údaj o tom, ako si človek plní
+    povinnosti — a ten patrí personalistovi (D67). Kto smie meniť meno
+    a oddelenie, nemá tým automaticky vidieť, čo kto otvoril a nepotvrdil.
+    Väčšinou je to ten istý človek; keď nie je, rozhoduje rola, nie zvyk.
+  */
+  const evidence = isHr(ctx.person)
+    ? await evidenceForPerson(ctx.person.companyCode, o.id)
+    : []
 
   return (
     <AppShell language={ctx.person.language}>
@@ -239,6 +257,38 @@ export default async function PersonDetailPage({
           </>
         )}
       </form>
+
+      {/*
+        Os je posledná, pod správou osoby. Je to pohľad, nie ovládanie —
+        a keby stála hore, karta by prestala byť obrazovkou na úpravu údajov
+        a stala by sa výkazom.
+      */}
+      {evidence.length > 0 && (
+        <section className="card" style={{ padding: 20, marginTop: 24, display: "grid", gap: 10 }}>
+          <div className="evidence-head">
+            <h2 style={{ fontSize: 17, margin: 0 }}>{te.heading}</h2>
+            <Link className="quiet" style={{ fontSize: 13 }} href="/hr/evidence">
+              {te.allPeople}
+            </Link>
+          </div>
+          <p className="quiet" style={{ fontSize: 13, margin: 0 }}>{te.notifiedMissing}</p>
+
+          <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "grid", gap: 16 }}>
+            {evidence.map(r => (
+              <li key={r.duty.versionId}>
+                <div className="evidence-head">
+                  <strong style={{ fontSize: 14.5 }}>{r.duty.documentTitle}</strong>
+                  <span className={`tag evidence-state evidence-state--${r.state}`}>
+                    {te.states[r.state]}
+                  </span>
+                </div>
+                <div className="quiet" style={{ fontSize: 13 }}>{r.duty.versionLabel}</div>
+                <EvidenceTimeline timeline={r.timeline} language={language} />
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
     </div>
     </AppShell>
   )

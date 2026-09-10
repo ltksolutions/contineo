@@ -28,7 +28,7 @@
 - [x] **Všetkých 15 rozhodnutí (D1–D15) uzavretých** (2026-06-26)
 - [x] D5 rozpracované → `docs/PRECEDENCIA_NORIEM.md`; D10 → `docs/GDPR_DATA_PROTECTION.md`
 - [ ] **Trvalý záznam o tom, komu sa ozvalo** — reťaz dôkazov (ADR-005) riadok o upozorneniach nemá a je to zámerné: `reminder_log` je prevádzkový a po 90 dňoch sa maže, `assignments.notified[]` hovorí „ozvalo sa N ľuďom", nie ktorým. Doplniť znamená rozhodnúť, či sa odoslanie zapisuje na osobu natrvalo — a to je nový osobný údaj, teda najprv GDPR (O14).
-- [ ] **Časová os na karte osoby** — `/people/[id]` má kresliť ten istý `EvidenceTimeline` nad tým istým `evidenceRows()` (D67). Pozor na rolu: kartu osoby vidí `people-admin`, reťaz dôkazov je pre `hr`.
+- [x] **Časová os na karte osoby** ✅ 2026-09-10 — `/people/[id]` kreslí ten istý `EvidenceTimeline` nad tým istým `evidenceForPerson()`. Rola sa vyriešila podmienkou, nie zvykom: os vidí len ten, kto má **`hr`**. Kto smie meniť meno a oddelenie (`people-admin`), nemá tým automaticky vidieť, čo kto otvoril a nepotvrdil.
 - [ ] **Externé potvrdenie D5:** konkrétne § o záväznosti rozpisu + rozsah delegácie (legislatívec SFZ)
 - [ ] **Externé potvrdenie D10:** retenčné lehoty, DPA (zväz + Sportnet + sub-procesori), DPIA (právnik/DPO)
 
