@@ -85,6 +85,16 @@ Podrobne: `docs/AKO_TO_BEZI.md`.
   `isRedirect()` ako prvý riadok toho `catch`.
 - **Mobile first je povinnosť**, nie odporúčanie.
 
+## Kto smie commitovať priamo do `main`
+
+Ján Letko (a asistent, ktorý pracuje na jeho stroji pod jeho menom) smie commitovať
+priamo do `main`. **Ktokoľvek iný ide cez pull request.** Pravidlo nie je o dôvere,
+ale o tom, kto nesie zodpovednosť za to, čo sa nasadí: `main` je to, čo o pár minút
+beží na `intranet.futbalsfz.sk`.
+
+Nezmenené zostáva, že bez výslovného súhlasu sa nikdy nerobí `force push`, rebase
+zdieľanej vetvy ani mazanie vetvy.
+
 ## Overenie pred commitom
 
 ```
