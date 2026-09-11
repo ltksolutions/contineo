@@ -16,7 +16,7 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 - **„Čaká na schválenie“ počíta to, čo čaká na *mňa*,** nie na celú organizáciu (návrh píše „moje“ a odkazuje na `/approvals`). Číslo, ktoré po kliknutí nesedí s tým, čo vidím, je horšie než žiadne.
 - **Podtitul „2 súrne“ je z termínov, nie z počtu dní od pridelenia** (D61): prah pripomienok nie je termín daný človeku.
 - Farba nie je jediným nosičom stavu — pod každým zvýrazneným číslom stojí veta, ktorá to isté povie slovami.
-- Overené: `tsc` čisto, **1113 testov**, lint bez chýb, `build` prejde.
+- Overené: `tsc` čisto, **1113 testov**, lint bez chýb, `build` prejde; na produkcii pri 390 px bez vodorovného posunu (`scrollWidth` = `innerWidth` = 390), dlaždice v dvoch stĺpcoch a panely pod sebou.
 
 **Otvorené rozhodnutie:** adresa je `/prehlad`, nie `/`. Návrh dáva Prehľad na `/`, kde je dnes „Opýtať sa“. Presunúť prvú obrazovku, ktorú človek vidí po kliknutí na prihlasovací odkaz, je zmena prevádzky — patrí rozhodnutiu, nie tichému commitu. Kým sa nerozhodne, žijú vedľa seba a Prehľad je prvý v navigácii.
 
