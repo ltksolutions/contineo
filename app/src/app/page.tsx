@@ -1,81 +1,232 @@
 /**
- * Domovská strana.
+ * Prehľad — `docs/design/README.md`, časť 2.
  *
- * Poradie na nej nie je vecou vkusu. Odkaz na prihlásenie príde človeku
- * e-mailom a prvá obrazovka, ktorú po kliknutí uvidí, je táto — takže hore
- * patrí to, čo od neho chceme, a nie ukážka toho, čo systém vie. Hľadanie
- * zostáva pod tým: hodnotiteľ ho má stále na dosah (D9, otvorený bod E1).
+ * **Postavené proti návrhu, nie proti mojej predstave.** Zoznam prvkov,
+ * poradie aj obsah dlaždíc sú zo špecifikácie; kde sa odchyľujem, je to
+ * napísané pri tom mieste.
  *
- * Widget sa **neukazuje každému**. Kto nemá ani jednu trasu, nemá tam čo
- * dostať ani o rok — prázdna karta „Nevybavené žiadosti" by mu len zabrala
- * prvú obrazovku. Rovnako sa neukazuje správcovi, ktorý prešiel núdzovou
- * brzdou a v `persons` nie je vôbec.
+ * Jedna odchýlka, vecná:
+ *
+ * 1. **Dlaždica „Čaká na schválenie" počíta to, čo čaká na *mňa*.** Návrh
+ *    píše „moje" a odkazuje na `/approvals`; číslo z celej organizácie by na
+ *    obrazovke „čo odo mňa niekto čaká" nesedelo s tým, čo po kliknutí uvidím.
+ *
+ * Žiadna dlaždica si svoje číslo nepočíta po svojom: povinnosti sú
+ * z `pendingForPerson()`, kolá z `roundsWaitingFor()` — z tých istých funkcií,
+ * ktoré kreslia obrazovky, na ktoré dlaždice odkazujú.
  */
 
-import { notFound } from "next/navigation"
-import Search from "@/components/Search"
-import PendingWidget from "@/components/PendingWidget"
+import Link from "next/link"
+import { notFound, redirect } from "next/navigation"
 import { onboardingContext } from "@/lib/session"
-import { pendingForPerson } from "@/lib/pending"
-import { dictionary } from "@/lib/i18n"
+import { brandingView } from "@/lib/tenants"
+import { tenantStyle } from "@/components/TenantHeader"
 import AppShell from "@/components/AppShell"
+import { normalizeLayout } from "@/lib/appNav"
+import { normalizeQuery, type RawQuery } from "@/lib/urlParams"
+import { dictionary, formatDate } from "@/lib/i18n"
+import { pendingForPerson } from "@/lib/pending"
+import { roundsWaitingFor, documentTitles } from "@/lib/approvalsDb"
+import { libraryNews, expiringVersions, NEW_DAYS, EXPIRING_DAYS } from "@/lib/overview"
+import { dueState } from "@/lib/due"
 
-// Stránka číta hlavičky požiadavky (hostiteľ → tenant) a reláciu, takže sa
-// nedá predgenerovať. Bez tohto by Next.js skúsil statický výstup a spadol.
 export const dynamic = "force-dynamic"
 
-export default async function HomePage({
+/*
+ * Dlaždica KPI. Typ je napísaný, nie odvodený z `as const`: pri odvodení má
+ * každá dlaždica vlastný tvar a `tile.tone` neexistuje na tých, ktoré ho
+ * nemajú — TypeScript to hlási a mal by pravdu, lebo šablóna s ním počíta.
+ */
+interface Tile {
+  key: string
+  href: string
+  value: number
+  note?: string
+  tone?: "bad" | "warn"
+}
+
+export default async function OverviewPage({
   searchParams,
 }: {
-  /*
-   * `?q=` prichádza z globálneho poľa v hlavičke. Je to **odovzdanie otázky,
-   * nie filter**: pole v hlavičke je na celom portáli a odpovedať sa dá len
-   * tu, takže otázka musí prejsť adresou. Vďaka tomu funguje aj bez
-   * JavaScriptu — hlavička odošle obyčajný `GET` a táto stránka ho prečíta.
-   */
-  searchParams?: Promise<Record<string, string | string[] | undefined>>
+  searchParams: Promise<RawQuery>
 }) {
-  const q = await searchParams
-  const asked = Array.isArray(q?.q) ? q?.q[0] : q?.q
+  const q = normalizeQuery<{ layout?: string; q?: string }>(await searchParams)
+
+  /*
+    Otázka na domovskej adrese patrí obrazovke odpovede, nie sem.
+
+    Kým Prehľad žil na `/prehlad`, odpovedalo sa na `/?q=…`. Taký odkaz môže
+    byť uložený v záložke alebo v poslanom e-maile a **otázka sa z neho nesmie
+    stratiť** — preto sa prenáša ďalej, nie zahadzuje.
+  */
+  if (typeof q.q === "string" && q.q.trim() !== "") {
+    redirect(`/ask?q=${encodeURIComponent(q.q)}`)
+  }
+
   const ctx = await onboardingContext()
-
-  // Neznámy hostiteľ je zakázaný, nie predvolený (D29). `notFound()`, nie
-  // vysvetlenie: kto si nasmeruje vlastnú doménu na naše nasadenie, sa nemá
-  // dozvedieť ani to, že tu nejaká aplikácia beží.
   if (ctx.state === "unknown-host") notFound()
+  if (ctx.state === "not-signed-in") redirect("/sign-in")
+  if (ctx.state === "not-in-tenant") notFound()
 
-  const person = ctx.state === "ready" ? ctx.person : null
-  const t = dictionary(person?.language)
-  const overview =
-    person && person.tracks.length > 0 ? await pendingForPerson(person) : null
+  const person = ctx.person
+  const branding = brandingView(ctx.tenant)
+  const language = person.language
+  const t = dictionary(language).overview
+
+  const [pending, approvals, news, expiring] = await Promise.all([
+    pendingForPerson(person),
+    roundsWaitingFor(person.companyCode, person.email),
+    libraryNews(person.companyCode),
+    expiringVersions(person.companyCode),
+  ])
+
+  /*
+    Názvy dokumentov pre kolá až po ich načítaní: bez nich by v paneli stál
+    kľúč (`sfz:stanovy`), a to je názov pre stroj, nie pre človeka, ktorý má
+    o texte rozhodnúť. Jeden dotaz navyše, a len keď je čo rozhodovať.
+  */
+  const approvalTitles = await documentTitles(
+    person.companyCode,
+    approvals.map(r => r.documentId),
+  )
+
+  const now = new Date()
+  /*
+    Podtitul dlaždice „Na potvrdenie" je v návrhu „2 do piatku" — teda koľko
+    z toho horí. Počítame to z termínov, ktoré položky nesú, nie z počtu dní
+    od pridelenia: prah pripomienok nie je termín daný človeku (D61).
+  */
+  const soon = pending.items.filter(i => {
+    const s = dueState(i.due, now)
+    return s === "soon" || s === "over"
+  }).length
+
+  const tiles: Tile[] = [
+    {
+      key: "toAcknowledge",
+      href: "/documents",
+      value: pending.total,
+      note: soon > 0 ? t.soonNote(soon) : undefined,
+      tone: soon > 0 ? "bad" : undefined,
+    },
+    { key: "toApprove", href: "/approvals", value: approvals.length, note: t.mine },
+    { key: "new", href: "/library", value: news.length, note: t.newNote(NEW_DAYS) },
+    {
+      key: "expiring",
+      href: "/library",
+      value: expiring.length,
+      note: t.expiringNote(EXPIRING_DAYS),
+      tone: expiring.length > 0 ? "warn" : undefined,
+    },
+  ]
 
   return (
-    <AppShell language={person?.language}>
-    <div>
-      {overview && person && (
-        <div style={{ marginBottom: 32 }}>
-          <PendingWidget overview={overview} language={person.language} />
+    <AppShell layout={normalizeLayout(q.layout)} language={language}>
+      <div className="overview" style={tenantStyle(branding)}>
+        {/*
+          Hero. Otázka odchádza na obrazovku odpovedí — Prehľad je vstup do
+          hľadania, nie miesto, kde sa odpovedá. Obyčajný `GET`, teda funguje
+          bez JavaScriptu, rovnako ako pole v hlavičke.
+        */}
+        <section className="card overview-hero">
+          <h1 className="overview-hello">{t.hello(person.fullName)}</h1>
+          <p className="quiet overview-lede">{t.lede}</p>
+          <form className="overview-ask" method="get" action="/ask">
+            <input
+              className="field-input overview-ask-input"
+              type="search"
+              name="q"
+              placeholder={t.askPlaceholder}
+              aria-label={t.askPlaceholder}
+            />
+            <button className="button" type="submit">{t.ask}</button>
+          </form>
+          <div className="overview-suggestions">
+            {t.suggestions.map(s => (
+              <Link key={s} className="overview-suggestion" href={`/ask?q=${encodeURIComponent(s)}`}>
+                {s}
+              </Link>
+            ))}
+          </div>
+        </section>
+
+        {/* KPI pás. Každá dlaždica je odkaz na predfiltrovaný zoznam — číslo
+            bez cesty k nemu je ozdoba. */}
+        <div className="kpi">
+          {tiles.map(tile => (
+            <Link key={tile.key} className="card kpi-tile" href={tile.href}>
+              <span className="kpi-label">{t.tiles[tile.key]}</span>
+              <span className={`kpi-value${tile.tone ? ` kpi-value--${tile.tone}` : ""}`}>
+                {tile.value}
+              </span>
+              {tile.note && <span className="quiet kpi-note">{tile.note}</span>}
+            </Link>
+          ))}
         </div>
-      )}
 
-      <div style={{ marginBottom: 28 }}>
-        <h1 style={{ fontSize: 27, letterSpacing: "-0.02em", margin: "0 0 8px" }}>
-          {t.home.heading}
-        </h1>
-        <p className="quiet" style={{ fontSize: 15.5, margin: 0, maxWidth: 620 }}>
-          {t.home.intro}
-        </p>
+        <div className="overview-panels">
+          <section className="card panel">
+            <div className="panel-head">{t.attention}</div>
+            {pending.items.length === 0 && <p className="panel-empty quiet">{t.nothingPending}</p>}
+            {pending.items.slice(0, 6).map(i => (
+              <div key={`${i.source}-${i.id}`} className="panel-row">
+                <div className="panel-main">
+                  <Link className="panel-name" href={i.href}>{i.title}</Link>
+                  {i.detail && <div className="quiet panel-meta">{i.detail}</div>}
+                </div>
+                {i.due && (
+                  <span className={`due-chip due-chip--${dueState(i.due, now)}`}>
+                    {t.by(formatDate(i.due, language))}
+                  </span>
+                )}
+                <Link className="panel-action" href={i.href}>{t.open}</Link>
+              </div>
+            ))}
+            {approvals.slice(0, 3).map(r => (
+              <div key={`${r.documentId}-${r.round}`} className="panel-row">
+                <div className="panel-main">
+                  <Link className="panel-name" href="/approvals">{approvalTitles.get(r.documentId) ?? r.documentId}</Link>
+                  <div className="quiet panel-meta">{t.submittedBy(r.submittedBy)}</div>
+                </div>
+                <Link className="panel-action" href="/approvals">{t.decide}</Link>
+              </div>
+            ))}
+          </section>
+
+          <section className="card panel">
+            <div className="panel-head">{t.news}</div>
+            {news.length === 0 && <p className="panel-empty quiet">{t.nothingNew}</p>}
+            {news.slice(0, 6).map(n => (
+              <div key={`${n.documentId}-${n.versionLabel}`} className="panel-row">
+                <div className="panel-main">
+                  <Link className="panel-name" href={`/documents/${encodeURIComponent(n.documentId)}`}>
+                    {n.title}
+                  </Link>
+                  <div className="quiet panel-meta">
+                    {n.versionLabel} · {formatDate(n.publishedAt, language)}
+                  </div>
+                </div>
+              </div>
+            ))}
+            {/*
+              Expirujúce znenia sú v tom istom paneli, nie vo vlastnom: je to
+              tá istá otázka („čo sa v knižnici deje"), len z druhej strany.
+              Vlastný panel pre dva riadky by bol prázdny priestor.
+            */}
+            {expiring.slice(0, 4).map(e => (
+              <div key={`exp-${e.documentId}-${e.versionLabel}`} className="panel-row">
+                <div className="panel-main">
+                  <Link className="panel-name" href={`/documents/${encodeURIComponent(e.documentId)}`}>
+                    {e.title}
+                  </Link>
+                  <div className="quiet panel-meta">{t.until(formatDate(e.effectiveTo, language))}</div>
+                </div>
+                <span className="due-chip due-chip--soon">{t.expiringChip}</span>
+              </div>
+            ))}
+          </section>
+        </div>
       </div>
-
-      {/* `key` mení identitu komponentu s otázkou. `preset` sa v `Search`
-          číta len pri pripojení, takže bez tohto by druhá otázka z hlavičky
-          pole neprepísala, keby Next navigáciu spracoval na klientovi. */}
-      <Search
-        key={asked ?? ""}
-        language={person?.language}
-        preset={asked?.trim() || undefined}
-      />
-    </div>
     </AppShell>
   )
 }

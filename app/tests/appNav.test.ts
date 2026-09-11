@@ -15,7 +15,7 @@ describe("položky navigácie", () => {
     // `/approvals` je tu z toho istého dôvodu ako `/documents`: schvaľovateľ
     // je menovaný človek (D69), nie držiteľ roly, takže sa to podľa roly
     // podmieniť nedá.
-    expect(navItems({}).map(o => o.href)).toEqual(["/prehlad", "/", "/documents", "/approvals", "/golden-set"])
+    expect(navItems({}).map(o => o.href)).toEqual(["/", "/ask", "/documents", "/approvals", "/golden-set"])
   })
 
   it("rola pridá práve svoju sekciu", () => {
@@ -55,7 +55,7 @@ describe("aktívna položka", () => {
     expect(isActive("/library", "/library")).toBe(true)
   })
 
-  it("domov svieti len na domove", () => {
+  it("domov je Prehľad a svieti len na domove", () => {
     // Inak by `/` bolo aktívne na každej stránke.
     expect(isActive("/library", "/")).toBe(false)
     expect(isActive("/", "/")).toBe(true)

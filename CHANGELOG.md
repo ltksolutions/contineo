@@ -4,6 +4,21 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Changed (2026-09-11 — Prehľad je domov, otázky sa presťahovali na `/ask`)
+
+Rozhodnutie, ktoré včerajší zápis nechával otvorené: **prvá obrazovka po kliknutí na prihlasovací odkaz je Prehľad.**
+
+- **`/` je Prehľad.** Tak to má návrh (`docs/design/README.md`, časť 2) a tak to dáva zmysel: domov má byť to, čo od človeka niekto chce, nie ukážka toho, čo systém vie.
+- **Obrazovka otázok je na `/ask`.** Po anglicky, ako ostatné routy (`/documents`, `/approvals`, `/library`); zároveň tým zmizla jediná slovenská routa. Hľadanie zostáva v hlavičke na celom portáli, takže sa naň nemusí chodiť.
+- **`/prehlad` zostáva ako trvalé presmerovanie na `/`.** Odkaz, ktorý si niekto uložil za posledný deň, nemá spadnúť na 404 — a kto ho otvorí, má skončiť pri obsahu, nie pri vysvetlení.
+- **`/?q=…` prenesie otázku na `/ask?q=…`.** Kým Prehľad žil inde, odpovedalo sa na domovskej adrese; taký odkaz môže byť v záložke alebo v poslanom e-maile a otázka sa z neho nesmie stratiť.
+- Overené: `tsc` čisto, **1113 testov**, lint bez chýb, `build` prejde.
+
+### Changed (2026-09-11 — zapísané, kto smie commitovať priamo do `main`)
+
+- `CLAUDE.md`: Ján Letko priamo, ktokoľvek iný cez pull request. Nie je to o dôvere, ale o zodpovednosti za to, čo sa nasadí — `main` je to, čo o pár minút beží na `intranet.futbalsfz.sk`. `force push`, rebase zdieľanej vetvy a mazanie vetvy zostávajú bez výnimky na výslovný súhlas.
+
+
 ### Added (2026-09-10 — Prehľad má obrazovku)
 
 Časť 2 návrhu (`docs/design/README.md`). Prvá obrazovka, ktorá neodpovedá na otázku, ale hovorí, čo od človeka niekto chce.
@@ -18,7 +33,7 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 - Farba nie je jediným nosičom stavu — pod každým zvýrazneným číslom stojí veta, ktorá to isté povie slovami.
 - Overené: `tsc` čisto, **1113 testov**, lint bez chýb, `build` prejde; na produkcii pri 390 px bez vodorovného posunu (`scrollWidth` = `innerWidth` = 390), dlaždice v dvoch stĺpcoch a panely pod sebou.
 
-**Otvorené rozhodnutie:** adresa je `/prehlad`, nie `/`. Návrh dáva Prehľad na `/`, kde je dnes „Opýtať sa“. Presunúť prvú obrazovku, ktorú človek vidí po kliknutí na prihlasovací odkaz, je zmena prevádzky — patrí rozhodnutiu, nie tichému commitu. Kým sa nerozhodne, žijú vedľa seba a Prehľad je prvý v navigácii.
+**Adresa bola otvorená otázka a 2026-09-11 sa rozhodla:** Prehľad je `/`, otázky sú na `/ask`. Zápis vyššie.
 
 
 ### Added (2026-09-10 — reťaz dôkazov aj na karte osoby)
