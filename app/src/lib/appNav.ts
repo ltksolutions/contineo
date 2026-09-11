@@ -16,7 +16,7 @@
 export type NavLayout = "sidebar" | "topbar"
 
 /** Kľúč do `dictionary().nav` — nie hotový text, aby zostal preložiteľný. */
-export type NavKey = "ask" | "toAcknowledge" | "toApprove" | "goldenSet" | "library" | "assigned" | "evidence" | "people"
+export type NavKey = "overview" | "ask" | "toAcknowledge" | "toApprove" | "goldenSet" | "library" | "assigned" | "evidence" | "people"
 
 export interface NavItem {
   href: string
@@ -40,6 +40,12 @@ export interface NavFlags {
  */
 export function navItems(flags: NavFlags): NavItem[] {
   return [
+    /*
+     * Prehľad je prvý, lebo je to obrazovka, na ktorú sa človek vracia —
+     * nie tá, na ktorej začne. Adresa je `/prehlad`, nie `/`: presunúť
+     * front door je zmena prevádzky a patrí rozhodnutiu, nie commitu.
+     */
+    { href: "/prehlad", key: "overview" },
     { href: "/", key: "ask" },
     // Odkaz vidí každý prihlásený; stránka si už poradí — kto nemá čo
     // potvrdzovať, uvidí, že nemá nič.
