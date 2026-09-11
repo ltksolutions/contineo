@@ -313,7 +313,7 @@ export default function Header({
           zrýchlenie navrch.
         */}
         {email && (
-          <form className="header-search" method="get" action="/" role="search">
+          <form className="header-search" method="get" action="/ask" role="search">
             <span className="header-search-icon" aria-hidden="true">
               <svg width="13" height="13" viewBox="0 0 14 14" fill="none"
                 stroke="currentColor" strokeWidth="1.7" strokeLinecap="round">

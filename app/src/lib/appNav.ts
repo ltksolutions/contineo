@@ -41,12 +41,13 @@ export interface NavFlags {
 export function navItems(flags: NavFlags): NavItem[] {
   return [
     /*
-     * Prehľad je prvý, lebo je to obrazovka, na ktorú sa človek vracia —
-     * nie tá, na ktorej začne. Adresa je `/prehlad`, nie `/`: presunúť
-     * front door je zmena prevádzky a patrí rozhodnutiu, nie commitu.
+     * Prehľad je domov (`/`) — prvá obrazovka po kliknutí na prihlasovací
+     * odkaz. Hľadanie zostáva hneď pod ním a je dostupné z hlavičky na
+     * celom portáli; „domov" je to, čo od človeka chceme, nie ukážka toho,
+     * čo systém vie.
      */
-    { href: "/prehlad", key: "overview" },
-    { href: "/", key: "ask" },
+    { href: "/", key: "overview" },
+    { href: "/ask", key: "ask" },
     // Odkaz vidí každý prihlásený; stránka si už poradí — kto nemá čo
     // potvrdzovať, uvidí, že nemá nič.
     { href: "/documents", key: "toAcknowledge" },
