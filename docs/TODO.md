@@ -25,6 +25,7 @@
 - [x] Commitnúť + pushnúť ✅ **2026-08-27 je repozitár čistý a zosynchronizovaný s `origin/main`** — žiadne neverzované ani nezapísané zmeny. (Pozn.: `docs/O7_plan_overenia.md` z 28. 7. sa dovtedy povaľoval necommitnutý; doplnený.)
 
 ### B. Rozhodnutia pred implementáciou → `docs/OPEN_DECISIONS.md`
+- [ ] **Front door: `/` alebo `/prehlad`** — návrh (`docs/design/README.md`, časť 2) dáva Prehľad na `/`. Dnes je tam „Opýtať sa“ a Prehľad žije na `/prehlad`. Rozhodnúť treba, čo človek uvidí hneď po kliknutí na prihlasovací odkaz; kým sa nerozhodne, obe obrazovky existujú vedľa seba a nič sa nestráca.
 - [x] **Všetkých 15 rozhodnutí (D1–D15) uzavretých** (2026-06-26)
 - [x] D5 rozpracované → `docs/PRECEDENCIA_NORIEM.md`; D10 → `docs/GDPR_DATA_PROTECTION.md`
 - [ ] **Trvalý záznam o tom, komu sa ozvalo** — reťaz dôkazov (ADR-005) riadok o upozorneniach nemá a je to zámerné: `reminder_log` je prevádzkový a po 90 dňoch sa maže, `assignments.notified[]` hovorí „ozvalo sa N ľuďom", nie ktorým. Doplniť znamená rozhodnúť, či sa odoslanie zapisuje na osobu natrvalo — a to je nový osobný údaj, teda najprv GDPR (O14).

@@ -4,6 +4,23 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Added (2026-09-10 — Prehľad má obrazovku)
+
+Časť 2 návrhu (`docs/design/README.md`). Prvá obrazovka, ktorá neodpovedá na otázku, ale hovorí, čo od človeka niekto chce.
+
+- **`/prehlad`** — hero s otázkou (obyčajný `GET` na `/`, teda funguje bez JavaScriptu), KPI pás štyroch dlaždíc a dva panely: „Vyžaduje vašu pozornosť“ a „Novinky v knižnici“.
+- **Žiadna dlaždica si svoje číslo nepočíta po svojom.** Povinnosti sú z `pendingForPerson()`, kolá z `roundsWaitingFor()` — z tých istých funkcií, ktoré kreslia obrazovky, na ktoré dlaždice odkazujú. Dva pohľady, ktoré si to isté počítajú každý po svojom, si raz budú odporovať, a rozdiel uvidí človek skôr než my.
+- **Každá dlaždica je odkaz na predfiltrovaný zoznam.** Číslo bez cesty k nemu je ozdoba.
+- **„Nové“ počíta `publishedAt` znenia, nie `updatedAt` dokumentu.** Oprava preklepu v názve nie je novinka v knižnici.
+- **„Expiruje“ berie len účinné znenia s `effectiveTo` v okne 30 dní dopredu.** Čo už vypršalo, neexpiruje — to je iný stav a patrí inam.
+- **„Čaká na schválenie“ počíta to, čo čaká na *mňa*,** nie na celú organizáciu (návrh píše „moje“ a odkazuje na `/approvals`). Číslo, ktoré po kliknutí nesedí s tým, čo vidím, je horšie než žiadne.
+- **Podtitul „2 súrne“ je z termínov, nie z počtu dní od pridelenia** (D61): prah pripomienok nie je termín daný človeku.
+- Farba nie je jediným nosičom stavu — pod každým zvýrazneným číslom stojí veta, ktorá to isté povie slovami.
+- Overené: `tsc` čisto, **1113 testov**, lint bez chýb, `build` prejde.
+
+**Otvorené rozhodnutie:** adresa je `/prehlad`, nie `/`. Návrh dáva Prehľad na `/`, kde je dnes „Opýtať sa“. Presunúť prvú obrazovku, ktorú človek vidí po kliknutí na prihlasovací odkaz, je zmena prevádzky — patrí rozhodnutiu, nie tichému commitu. Kým sa nerozhodne, žijú vedľa seba a Prehľad je prvý v navigácii.
+
+
 ### Added (2026-09-10 — reťaz dôkazov aj na karte osoby)
 
 Krok 4 z ADR-005. Tým je ADR-005 hotové okrem jednej vedome otvorenej veci.

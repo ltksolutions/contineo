@@ -2986,3 +2986,176 @@ a.answer-source:focus-visible { outline: 2px solid var(--accent); outline-offset
 @media (min-width: 760px) {
   .evidence-filters { grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) auto; align-items: end; }
 }
+
+/* ── Prehľad (docs/design/README.md, časť 2) ─────────────────────────────────
+   Tri pásy pod sebou: hero s otázkou, KPI dlaždice, dva panely.
+
+   Žiadne media queries. `auto-fit` s `minmax()` zabalí dlaždice aj panely sám,
+   takže na telefóne je jeden stĺpec bez toho, aby o tom stylesheet vedel —
+   to isté pravidlo, aké drží panel filtrov nad knižnicou. */
+
+.overview {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap);
+}
+
+.overview-hello {
+  margin: 0 0 3px;
+  font-size: 19px;
+  letter-spacing: -0.02em;
+}
+
+.overview-lede {
+  margin: 0 0 12px;
+  font-size: 13px;
+  text-wrap: pretty;
+}
+
+/*
+ * Pole a tlačidlo v jednom riadku, na úzkom pod sebou.
+ *
+ * `flex: 1 1 220px`, nie 320 px z návrhu: pole si nesmie pýtať šírku, ktorú
+ * na telefóne nedostane. Presne táto chyba (`flex: 1 1 240px; min-width: 160px`)
+ * zalomila vyhľadávanie v hlavičke na 320 px — základ je želanie, nie nárok,
+ * a `min-width: 0` je to, čo dovolí zmenšiť sa pod šírku obsahu.
+ */
+.overview-ask {
+  display: flex;
+  align-items: stretch;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.overview-ask-input {
+  flex: 1 1 220px;
+  min-width: 0;
+  border-radius: 9px;
+}
+
+.overview-ask .button { border-radius: 9px; }
+
+/* Návrh otázky je pilulka, nie štítok: štítok je stav („publikované"),
+   toto je ponuka, na ktorú sa dá kliknúť. */
+.overview-suggestions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.overview-suggestion {
+  padding: 4px 9px;
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  font-size: 12px;
+  color: var(--muted);
+  text-decoration: none;
+}
+
+.overview-suggestion:hover { border-color: var(--accent); color: var(--accent); }
+
+/* ── Prehľad: KPI pás ───────────────────────────────────────────────────────
+   Každá dlaždica je odkaz na predfiltrovaný zoznam — číslo bez cesty k nemu
+   je ozdoba. Preto `a`, nie `div`, a terčom je celá dlaždica, nie číslo. */
+
+.kpi {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 10px;
+}
+
+.kpi-tile {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: var(--list-py) 13px;
+  border-radius: 11px;
+  color: inherit;
+  text-decoration: none;
+}
+
+.kpi-tile:hover { border-color: var(--accent); }
+
+.kpi-label {
+  font-size: 11px;
+  font-weight: 650;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.kpi-value {
+  font-size: 25px;
+  font-weight: 640;
+  line-height: 1.15;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Farba nie je jediným nosičom stavu: pod číslom stojí veta („2 súrne“),
+   ktorá to isté povie slovami — rovnaké pravidlo ako pri termínovom chipe. */
+.kpi-value--bad { color: var(--bad-fg); }
+.kpi-value--warn { color: var(--warn-fg); }
+
+.kpi-note { font-size: 11.5px; }
+
+/* ── Prehľad: dva panely ──────────────────────────────────────────────────── */
+
+.overview-panels {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 12px;
+  align-items: start;
+}
+
+/* Odsadenie si kreslí hlavička a riadok, nie karta: inak by deliaca linka
+   medzi riadkami končila 20 px pred okrajom panela a vyzerala nedokreslene. */
+.panel { padding: 0; overflow: hidden; }
+
+.panel-head {
+  padding: 11px 13px;
+  border-bottom: 1px solid var(--line);
+  font-size: 13.5px;
+  font-weight: 650;
+}
+
+.panel-empty { margin: 0; padding: 13px; font-size: 13px; }
+
+.panel-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: var(--list-py) 13px;
+  border-bottom: 1px solid var(--line);
+}
+
+.panel-row:last-child { border-bottom: 0; }
+
+/* `min-width: 0` je nutné: bez neho sa flexová položka nezmenší pod šírku
+   svojho najdlhšieho slova a názov predpisu odtlačí chip mimo panela. */
+.panel-main { flex: 1 1 160px; min-width: 0; }
+
+.panel-name {
+  font-size: 13px;
+  font-weight: 550;
+  color: inherit;
+  text-decoration: none;
+}
+
+.panel-name:hover { color: var(--accent); }
+
+.panel-meta { font-size: 11.5px; margin-top: 1px; }
+
+.panel-action {
+  padding: 4px 10px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  font-size: 12.5px;
+  color: inherit;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.panel-action:hover { border-color: var(--accent); color: var(--accent); }

@@ -246,6 +246,7 @@ interface Dictionary {
     goldenSet: string
     toApprove: string
     evidence: string
+    overview: string
     /** Popis navigačnej oblasti shellu pre čítačky obrazovky. */
     sections: string
     toAcknowledge: string
@@ -523,6 +524,30 @@ interface Dictionary {
   /** Výpis auditu — používa ho nastavenie organizácie aj `/admin`. */
   /** Správa tenantov — vidí ju len správca platformy (Fáza 5b). */
   /** Zlatá sada — overovanie kvality odpovedí (D9). */
+  /** Prehľad (`docs/design/README.md`, časť 2). */
+  overview: {
+    hello: (name: string) => string
+    lede: string
+    askPlaceholder: string
+    ask: string
+    suggestions: string[]
+    tiles: Record<string, string>
+    soonNote: (n: number) => string
+    mine: string
+    newNote: (days: number) => string
+    expiringNote: (days: number) => string
+    attention: string
+    news: string
+    nothingPending: string
+    nothingNew: string
+    by: (date: string) => string
+    until: (date: string) => string
+    expiringChip: string
+    open: string
+    decide: string
+    submittedBy: (who: string) => string
+  }
+
   /** Reťaz dôkazov o potvrdení (ADR-005). Os je pohľad, nie záznam. */
   evidence: {
     heading: string
@@ -1623,6 +1648,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     goldenSet: "Zlatá sada",
     toApprove: "Na schválenie",
     evidence: "Reťaz dôkazov",
+    overview: "Prehľad",
     sections: "Sekcie",
     toAcknowledge: "Na potvrdenie",
     assigned: "Pridelené normy",
@@ -1880,6 +1906,37 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     done: "Hotovo",
     remove: (value) => `Odobrať ${value}`,
     chosenOf: (chosen, total) => `Vybrané ${chosen} z ${total}`,
+  },
+  overview: {
+    hello: name => `Dobrý deň, ${name}`,
+    lede: "Opýtajte sa \u2014 odpoveď príde z predpisov vašej organizácie, s citáciou.",
+    askPlaceholder: "Napr. Do kedy treba nahlásiť prestup hráča?",
+    ask: "Opýtať sa",
+    suggestions: [
+      "Aká je lehota na podanie námietky?",
+      "Za akých podmienok môže prestúpiť maloletý hráč?",
+      "Koľko žltých kariet znamená zastavenie činnosti?",
+    ],
+    tiles: {
+      toAcknowledge: "Na potvrdenie",
+      toApprove: "Čaká na schválenie",
+      new: "Nové",
+      expiring: "Expiruje",
+    },
+    soonNote: n => (n === 1 ? "1 súrne" : n <= 4 ? `${n} súrne` : `${n} súrnych`),
+    mine: "na mňa",
+    newNote: days => `dokumentov za ${days} dní`,
+    expiringNote: days => `predpisov do ${days} dní`,
+    attention: "Vyžaduje vašu pozornosť",
+    news: "Novinky v knižnici",
+    nothingPending: "Nič na vás nečaká.",
+    nothingNew: "Za posledný týždeň nepribudlo nič.",
+    by: date => `do ${date}`,
+    until: date => `platí do ${date}`,
+    expiringChip: "expiruje",
+    open: "Otvoriť",
+    decide: "Rozhodnúť",
+    submittedBy: who => `predložil ${who}`,
   },
   evidence: {
     heading: "Reťaz dôkazov",
@@ -3235,6 +3292,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     goldenSet: "Zlatá sada",
     toApprove: "Ke schválení",
     evidence: "Řetěz důkazů",
+    overview: "Přehled",
     sections: "Sekce",
     toAcknowledge: "K potvrzení",
     assigned: "Přidělené předpisy",
@@ -3492,6 +3550,37 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     done: "Hotovo",
     remove: (value) => `Odebrat ${value}`,
     chosenOf: (chosen, total) => `Vybráno ${chosen} z ${total}`,
+  },
+  overview: {
+    hello: name => `Dobrý den, ${name}`,
+    lede: "Zeptejte se \u2014 odpověď přijde z předpisů vaší organizace, s citací.",
+    askPlaceholder: "Např. Do kdy je třeba nahlásit přestup hráče?",
+    ask: "Zeptat se",
+    suggestions: [
+      "Jaká je lhůta na podání námitky?",
+      "Za jakých podmínek může přestoupit nezletilý hráč?",
+      "Kolik žlutých karet znamená zastavení činnosti?",
+    ],
+    tiles: {
+      toAcknowledge: "K potvrzení",
+      toApprove: "Čeká na schválení",
+      new: "Nové",
+      expiring: "Expiruje",
+    },
+    soonNote: n => (n === 1 ? "1 spěchá" : `${n} spěchá`),
+    mine: "na mě",
+    newNote: days => `dokumentů za ${days} dní`,
+    expiringNote: days => `předpisů do ${days} dní`,
+    attention: "Vyžaduje vaši pozornost",
+    news: "Novinky v knihovně",
+    nothingPending: "Nic na vás nečeká.",
+    nothingNew: "Za poslední týden nepřibylo nic.",
+    by: date => `do ${date}`,
+    until: date => `platí do ${date}`,
+    expiringChip: "expiruje",
+    open: "Otevřít",
+    decide: "Rozhodnout",
+    submittedBy: who => `předložil ${who}`,
   },
   evidence: {
     heading: "Řetěz důkazů",
@@ -4842,6 +4931,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     goldenSet: "Golden set",
     toApprove: "To approve",
     evidence: "Evidence",
+    overview: "Overview",
     sections: "Sections",
     toAcknowledge: "To acknowledge",
     assigned: "Assigned documents",
@@ -5098,6 +5188,37 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     done: "Done",
     remove: (value) => `Remove ${value}`,
     chosenOf: (chosen, total) => `${chosen} of ${total} selected`,
+  },
+  overview: {
+    hello: name => `Hello, ${name}`,
+    lede: "Ask \u2014 the answer comes from your organisation's rules, with a citation.",
+    askPlaceholder: "E.g. What is the deadline for reporting a transfer?",
+    ask: "Ask",
+    suggestions: [
+      "What is the deadline for filing an objection?",
+      "When can a minor player transfer?",
+      "How many yellow cards mean a suspension?",
+    ],
+    tiles: {
+      toAcknowledge: "To acknowledge",
+      toApprove: "Waiting for approval",
+      new: "New",
+      expiring: "Expiring",
+    },
+    soonNote: n => (n === 1 ? "1 urgent" : `${n} urgent`),
+    mine: "for you",
+    newNote: days => `documents in ${days} days`,
+    expiringNote: days => `rules within ${days} days`,
+    attention: "Needs your attention",
+    news: "New in the library",
+    nothingPending: "Nothing is waiting for you.",
+    nothingNew: "Nothing new in the past week.",
+    by: date => `by ${date}`,
+    until: date => `valid until ${date}`,
+    expiringChip: "expiring",
+    open: "Open",
+    decide: "Decide",
+    submittedBy: who => `submitted by ${who}`,
   },
   evidence: {
     heading: "Chain of evidence",
