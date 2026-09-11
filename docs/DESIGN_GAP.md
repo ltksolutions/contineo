@@ -1,4 +1,8 @@
-# Rozdiel medzi návrhom a implementáciou (2026-09-08)
+# Rozdiel medzi návrhom a implementáciou
+
+> Prvý zápis 2026-09-08, prerátané proti kódu **2026-09-11**. Zoznam je indícia;
+> pravdou je kód a `git log`. Kde sa to od 8. 9. zmenilo, je to napísané pri tom
+> mieste — nie prepísané tak, aby to vyzeralo, že to tak bolo vždy.
 
 Zápis vznikol po tom, čo Ján Letko postavil vedľa seba návrh a produkciu a povedal,
 že „hlavička nie je ok, nič nie je ok". **Mal pravdu.** Tento súbor je zoznam
@@ -96,15 +100,22 @@ Dve veci na rozhodnutie, nie na slepé prevzatie:
    vyberie set (a to je rozhodnutie o závislosti), alebo navigácia zostane bez
    ikon. Kresliť šesť vlastných by bolo presne to, čo README zakazuje.
 
-### Prehľad (dashboard) — **obrazovka neexistuje**
+### Prehľad (dashboard) — ✅ **hotové 2026-09-11**
 
 Návrh má prvú obrazovku „Prehľad": oslovenie, pole na otázku s tromi príkladmi,
 **štyri dlaždice** (Na potvrdenie 6 · Čaká na schválenie 3 · Nové za 7 dní 12 ·
 Expiruje do 30 dní 2), zoznam **„Vyžaduje vašu pozornosť"** s termínom a
 tlačidlom na každom riadku, a **„Novinky v knižnici"** so štítkami stavu.
 
-Dnes je na `/` obrazovka „Opýtať sa" s widgetom nevybavených žiadostí nad ňou.
-Dlaždice, zoznam s termínmi ani novinky **nie sú nikde**.
+**Toto už neplatí.** Prehľad je od 2026-09-11 na `/` (obrazovka otázok sa presťahovala
+na `/ask`, `/prehlad` trvalo presmeruje na `/`). Má hero s otázkou a tromi príkladmi,
+štyri dlaždice, zoznam „Vyžaduje vašu pozornosť" s termínovým chipom a tlačidlom na
+riadku, a „Novinky v knižnici". Overené na produkcii pri 390 px.
+
+Dve vecné odchýlky od návrhu, obe napísané v kóde pri tom mieste:
+dlaždica „Čaká na schválenie" počíta kolá, ktoré čakajú na **prihláseného človeka**,
+nie na celú organizáciu; a „Nové" počíta `publishedAt` **znenia**, nie `updatedAt`
+dokumentu (oprava preklepu v názve nie je novinka v knižnici).
 
 ### Knižnica
 
@@ -133,10 +144,15 @@ Návrh má **tri kroky** (Súbor · Metadáta · **Schválenie**), v metadátach
 prečítania** a **Schvaľovaciu cestu**.
 
 Dnes sú **dva** číslované úseky (1 Súbor, 2 Metadáta). Tretí krok, schvaľovatelia
-ani schvaľovacia cesta nie sú — a to nie je nedbalosť: **schvaľovací workflow
-v systéme neexistuje**, stavy sú len `draft`/`published`. Nakresliť stepper
-s krokom, ktorý nič nerobí, by bola atrapa. Ale mlčať o tom v zápise „krok 5b
-hotový" bola chyba.
+ani schvaľovacia cesta nie sú.
+
+**Dôvod, ktorý tu stál 8. 9., už neplatí.** Vtedy tu bolo napísané, že schvaľovacie
+workflow v systéme neexistuje a stavy sú len `draft`/`published`, takže stepper
+s tretím krokom by bola atrapa. To bola pravda vtedy; ADR-006 (kolá, menovaní
+schvaľovatelia, brána pri prideľovaní) je odvtedy nasadené. **Tretí krok je teda
+odblokovaný a zostáva len neurobený** — čo je iný stav a patrí sem tak napísané.
+Ten istý komentár stojí aj v `app/src/app/library/new/page.tsx`; pri tej práci ho
+treba prepísať, lebo dnes tvrdí nepravdu.
 
 ### Detail dokumentu
 
@@ -198,14 +214,14 @@ Poradie je podľa toho, čo človek vidí najskôr.
    organizácie, do ktorých človek smie, takže to ide spolu s bodom 2 — je to
    ten istý druh dotazu. Prepnutie mení názov **aj hlavnú farbu** (`--accent`
    z `branding.accentColor`), presne ako to už robí `tenantStyle()`.
-4. **Prehľad** ako nová obrazovka: dlaždice a zoznam „Vyžaduje vašu pozornosť"
+4. ~~**Prehľad** ako nová obrazovka~~ ✅ **hotové** (`feat/prehlad`, `feat/front-door`): dlaždice a zoznam „Vyžaduje vašu pozornosť"
    sa dajú spočítať z `duties()` v `hrReport.ts` a z `documents` — teda z toho
    istého zdroja ako výkaz, nie z druhej kópie pravidiel.
-   ✅ *rozhodnuté (Ján Letko)*: dlaždica „Čaká na schválenie" sa nahradí
-   **„Koncepty"**. Schvaľovací workflow neexistuje, ale koncepty áno
-   (`status: draft`), takže dlaždica ukazuje skutočný stav a nie prázdne
-   miesto — a keď workflow raz pribudne, pridá sa dlaždica, nie sa prepíše
-   význam existujúcej.
+   ✅ *rozhodnuté (Ján Letko) 8. 9.*: dlaždica „Čaká na schválenie" sa nahradí
+   **„Koncepty"**, lebo workflow neexistuje. **Rozhodnutie sa medzitým stalo
+   bezpredmetným** — ADR-006 je nasadené, takže dlaždica ukazuje skutočné kolá
+   čakajúce na prihláseného človeka. Presne to, čo rozhodnutie predpokladalo:
+   význam existujúcej dlaždice sa neprepisoval, len prestal byť prázdny.
 
    **Čo z Prehľadu dnešné dáta unesú** (overené v kóde, nie odhadnuté):
 
@@ -220,7 +236,7 @@ Poradie je podľa toho, čo človek vidí najskôr.
    | **termínový chip „do 12. 9."** | — | ❌ **v dátach nie je** |
    | „Novinky v knižnici" so štítkom stavu | `documents` + `status` | ✅ dopočítateľné |
 
-### ❌ Blokuje Prehľad: termín potvrdenia v dátach neexistuje
+### ~~❌ Blokuje Prehľad: termín potvrdenia v dátach neexistuje~~ — ✅ vyriešené (ADR-004)
 
 Návrh má pri každom riadku „Vyžaduje vašu pozornosť" termín (`do 12. 9.`) a
 farbí ho podľa toho, ako je blízko (do 7 dní `--bad-*`, do 30 dní `--warn-*`).
@@ -242,6 +258,11 @@ workflowe — preto to nedomýšľam. Tri možnosti:
    (D6). Je to **zmena schémy**, takže podľa dohody až s tvojím súhlasom.
    Pri trasách treba doriešiť, či termín plynie od príchodu osoby.
 
+**Rozhodlo sa pre možnosť 3 a je nasadená** (ADR-004, D61–D63): `assignments.due`
+existuje, termín zadáva HR pri prideľovaní a Prehľad ním farbí chip na riadku.
+Prah pripomienok zostal tým, čím bol — spúšťačom e-mailu, nie termínom daným
+človeku.
+
 5. **Knižnica**: stĺpce Verzia a Platnosť od (obe sú na verzii dokumentu),
    identifikátor pod názvom, hľadanie vo filtroch, Export CSV (`/hr/overview/csv`
    už vzor má).
@@ -252,9 +273,11 @@ workflowe — preto to nedomýšľam. Tri možnosti:
 
 ### B — najprv rozhodnutie, potom kód
 
-- **Schvaľovací workflow** (krok 3 nahrávania, stav „Na schválenie",
-  schvaľovatelia, schvaľovacia cesta, dlaždica „Čaká na schválenie") — nová
-  dimenzia v modeli, nie prílepok k obrazovke.
+- ~~**Schvaľovací workflow**~~ ✅ **rozhodnuté a nasadené** (ADR-006): kolá,
+  menovaní schvaľovatelia (D69), jedno zamietnutie zastaví kolo (D71), brána pri
+  prideľovaní (D73), obrazovka `/approvals`, hodnoty schvaľovania vo facete Stav.
+  Bolo to naozaj nová dimenzia v modeli, nie prílepok. **Zostáva z toho grafika:**
+  krok 3 nahrávania a zoznam „Verzie a schválenie" v detaile dokumentu.
 - **Facet a stĺpec Útvar** — dokument útvar nenesie; už zapísané v `TODO.md`.
 - **Pilulky rozsahu a skóre zhody** — už zapísané; bez rozhodnutia, čo tie
   rozsahy sú, by predstierali voľbu.
