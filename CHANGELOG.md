@@ -4,6 +4,20 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Added (2026-09-12 — knižnica: stĺpec „Platnosť od" a Export CSV)
+
+Časť bodu 5 z `docs/DESIGN_GAP.md`. **Zvyšok toho bodu bol už dávno hotový a mapa to nevedela** — stĺpec s verziou aj identifikátor pod názvom v tabuľke sú; prerátané proti kódu, nie proti zápisu.
+
+- **Stĺpec „Platnosť od".** Dovtedy bolo v zozname vidieť, *ktoré* znenie platí, ale nie *odkedy* — a práve to je údaj, kvôli ktorému sa do knižnice chodí. `nowrap` a `tabular-nums`, aby dátumy stáli pod sebou.
+- **Pomlčka, nie prázdna bunka,** keď dokument nemá platné znenie. Prázdne miesto vyzerá ako chýbajúci údaj; dokument bez platného znenia je legitímny stav (koncept, znenie s budúcou účinnosťou), nie porucha.
+- **`effectiveFrom` je `Date`, nie text.** Vedľa `validityLabel()` pribudla `validityFrom()`: jedna vracia text pre človeka, druhá dátum pre stroj. Keby to bola jedna hodnota, do exportu by sa dostal dátum už naformátovaný podľa jazyka — a taký sa nedá zoradiť.
+- **`/library/csv` — export zoznamu.** Ide cez **tú istú cestu** ako obrazovka (`readFilters()` → `libraryList()` → `sortRows()`), takže výkaz sa nemôže rozísť s tým, čo človek vidí. Odkaz nesie aktuálne filtre: kto si vyfiltruje osem dokumentov, dostane osem.
+- **Bez stránkovania, zámerne.** Na obrazovke je strana, v exporte celý vyfiltrovaný výsledok.
+- **Prístup sa overuje aj v route.** To, že odkaz visí na chránenej stránke, nie je kontrola prístupu — adresu si vie napísať ktokoľvek.
+- Dátumy v CSV sú **ISO**, nie miestny tvar: „12. 9. 2026" sa v tabuľkovom procesore zoradí ako text.
+- Overené: `tsc` čisto, **1117 testov**, lint bez chýb, `build` prejde.
+
+
 ### Added (2026-09-12 — navigácia hovorí, koľko čaká, a na telefóne je zásuvkou)
 
 Bod 2 z `docs/DESIGN_GAP.md`.

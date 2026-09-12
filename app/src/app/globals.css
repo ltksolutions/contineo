@@ -3253,3 +3253,8 @@ a.answer-source:focus-visible { outline: 2px solid var(--accent); outline-offset
 @media (max-width: 939px) {
   .app-nav--topbar { display: none; }
 }
+
+
+/* Dátum účinnosti v zozname dokumentov: `nowrap` a `tabular-nums`, aby
+   sa stĺpec nezalomil a číslice stáli pod sebou (návrh, časť 3). */
+.doc-col-date { white-space: nowrap; font-variant-numeric: tabular-nums; }

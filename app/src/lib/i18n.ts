@@ -1145,7 +1145,10 @@ interface Dictionary {
       /** Tabuľka: hlavičky stĺpcov, triedenie a stránkovanie. */
       colDocument: string
       colVersion: string
+      /** Odkedy platí znenie, ktoré platí teraz. */
+      colEffectiveFrom: string
       colChanged: string
+      exportCsv: string
       sortBy: (column: string) => string
       pageRange: (from: number, to: number, total: number) => string
       pageOf: (page: number, pages: number) => string
@@ -2807,7 +2810,9 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       removeFilter: (value) => `Odobrať filter ${value}`,
       colDocument: "Dokument",
       colVersion: "Platné znenie",
+      colEffectiveFrom: "Platnosť od",
       colChanged: "Zmenené",
+      exportCsv: "Export CSV",
       sortBy: (column) => `Zoradiť podľa ${column}`,
       pageRange: (from, to, total) => `Zobrazené ${from}–${to} z ${total}`,
       pageOf: (page, pages) => `Strana ${page} z ${pages}`,
@@ -4452,7 +4457,9 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       removeFilter: (value) => `Odebrat filtr ${value}`,
       colDocument: "Dokument",
       colVersion: "Platné znění",
+      colEffectiveFrom: "Platnost od",
       colChanged: "Změněno",
+      exportCsv: "Export CSV",
       sortBy: (column) => `Seřadit podle ${column}`,
       pageRange: (from, to, total) => `Zobrazeno ${from}–${to} z ${total}`,
       pageOf: (page, pages) => `Strana ${page} z ${pages}`,
@@ -6091,7 +6098,9 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       removeFilter: (value) => `Remove filter ${value}`,
       colDocument: "Document",
       colVersion: "Effective version",
+      colEffectiveFrom: "Effective from",
       colChanged: "Changed",
+      exportCsv: "Export CSV",
       sortBy: (column) => `Sort by ${column}`,
       pageRange: (from, to, total) => `Showing ${from}–${to} of ${total}`,
       pageOf: (page, pages) => `Page ${page} of ${pages}`,
