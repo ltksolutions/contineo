@@ -21,7 +21,19 @@ export type NavKey = "overview" | "ask" | "toAcknowledge" | "toApprove" | "golde
 export interface NavItem {
   href: string
   key: NavKey
+  /**
+   * Koľko vecí pod týmto odkazom čaká na prihláseného človeka.
+   *
+   * `undefined` znamená **nepočítalo sa** (alebo sa to nepodarilo), `0`
+   * znamená nič nečaká — ani jedno sa nekreslí. Číslo, ktoré nič nežiada,
+   * je v navigácii ozdoba, takže ho dostanú len položky, pod ktorými naozaj
+   * niečo leží.
+   */
+  count?: number
 }
+
+/** Počty podľa kľúča položky. Zisťuje ich shell, nie táto funkcia. */
+export type NavCounts = Partial<Record<NavKey, number>>
 
 /**
  * Role prichádzajú zo servera, kde už prešli všetkými podmienkami. Klient
@@ -38,8 +50,8 @@ export interface NavFlags {
  * odkaz na obrazovku, ktorá ešte neexistuje, vedie na 404 a odkaz na sekciu,
  * do ktorej človek nesmie, mu prezrádza, čo v systéme je.
  */
-export function navItems(flags: NavFlags): NavItem[] {
-  return [
+export function navItems(flags: NavFlags, counts: NavCounts = {}): NavItem[] {
+  const items: NavItem[] = [
     /*
      * Prehľad je domov (`/`) — prvá obrazovka po kliknutí na prihlasovací
      * odkaz. Hľadanie zostáva hneď pod ním a je dostupné z hlavičky na
@@ -65,6 +77,13 @@ export function navItems(flags: NavFlags): NavItem[] {
     ...(flags.isPeopleAdmin ? [{ href: "/people", key: "people" as const }] : []),
     { href: "/golden-set", key: "goldenSet" },
   ]
+
+  /*
+   * Počty sa priraďujú až tu. Zoznam vyššie tak zostáva jediným miestom, kde
+   * sa rozhoduje **čo** človek vidí; počet je údaj navyše a nesmie sa doňho
+   * miešať.
+   */
+  return items.map(o => (counts[o.key] === undefined ? o : { ...o, count: counts[o.key] }))
 }
 
 /**
