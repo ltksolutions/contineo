@@ -168,7 +168,9 @@
         (b) **retencia 1 rok** — TTL index, samostatná kolekcia;
         (c) **nikdy dôkaz** — a preto **nie** `acknowledgements.readingSeconds`. Údaj s vlastnou retenciou nesmie bývať v zázname, ktorý musí prežiť: TTL maže celé dokumenty, nie polia, a čokoľvek v `acknowledgements` sa raz ocitne vo výkaze pre právnika.
   - [ ] Implementácia: samostatná kolekcia `reading_times` (companyCode, personId, documentId, versionId, seconds), TTL 365 dní, unikátny index nad (personId, versionId). Meria sa **viditeľný čas** (Page Visibility API) — karta na pozadí sa nepočíta. Server ukladá `max()`, takže hodnota je monotónna a druhé otvorenie ju nezníži.
-- [ ] **O15, O16 — právny základ a retencia** `acknowledgements` (DPO, právnik) — rozširuje D10
+- [ ] **O15, O16 — právny základ a retencia** `acknowledgements` (DPO, právnik) — rozširuje D10.
+  Otázky sú pripravené a čakajú na odpoveď: `docs/O15_O16_otazky_pre_DPO.md` (2026-09-12).
+  Odpovede sa dopisujú priamo doň, aby bolo v jednom súbore vidieť, čo sa pýtalo a čo prišlo späť.
 - [ ] Zoznam dokumentov prvej vlny + kto je ich kurátor
 
 **I1. Ultra-MVP `[1 týždeň]`** — cieľ: skutoční ľudia potvrdia skutočné smernice
