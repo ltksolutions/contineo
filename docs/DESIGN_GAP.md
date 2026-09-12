@@ -263,9 +263,11 @@ existuje, termín zadáva HR pri prideľovaní a Prehľad ním farbí chip na ri
 Prah pripomienok zostal tým, čím bol — spúšťačom e-mailu, nie termínom daným
 človeku.
 
-5. **Knižnica**: stĺpce Verzia a Platnosť od (obe sú na verzii dokumentu),
-   identifikátor pod názvom, hľadanie vo filtroch, Export CSV (`/hr/overview/csv`
-   už vzor má).
+5. **Knižnica** — ✅ *hotové 2026-09-12*: stĺpec **Platnosť od** a **Export CSV**
+   (`/library/csv`, tá istá cesta ako obrazovka). Stĺpec s verziou a identifikátor pod
+   názvom **boli hotové už predtým** a tento zápis o tom nevedel — overené v kóde
+   2026-09-12, nie prevzaté z pamäte.
+   ❌ *zostáva*: **hľadanie vo filtroch** a **Uložiť pohľad**.
 6. **Detail**: záložky Obsah | Zmeny | Audit, „Kto nepotvrdil →" (výkaz to už
    vie), Súvisiace predpisy, zoznam verzií so stavom. „Citované časti" až keď
    bude čo citovať.

@@ -15,7 +15,7 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 - **Bez stránkovania, zámerne.** Na obrazovke je strana, v exporte celý vyfiltrovaný výsledok.
 - **Prístup sa overuje aj v route.** To, že odkaz visí na chránenej stránke, nie je kontrola prístupu — adresu si vie napísať ktokoľvek.
 - Dátumy v CSV sú **ISO**, nie miestny tvar: „12. 9. 2026" sa v tabuľkovom procesore zoradí ako text.
-- Overené: `tsc` čisto, **1117 testov**, lint bez chýb, `build` prejde.
+- Overené: `tsc` čisto, **1117 testov**, lint bez chýb, `build` prejde; na produkcii sa export zhoduje s obrazovkou pri troch filtroch (bez filtra 10 = 10, `search=smernica` 1 = 1, `status=draft` 0 = 0). Tabuľka pri 390 px nerozbíja stránku — posúva sa vo vlastnom ráme, ako doteraz.
 
 
 ### Added (2026-09-12 — navigácia hovorí, koľko čaká, a na telefóne je zásuvkou)
