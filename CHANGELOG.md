@@ -4,6 +4,16 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Fixed (2026-09-12 — odkaz „Kto nepotvrdil→" viedol inam a videl ho aj ten, kto tam nesmie)
+
+Našlo sa to pri overovaní bodu 6 mapy. Zápis tvrdil, že odkaz **chýba**; v skutočnosti bol na mieste a robil dve veci zle.
+
+- **Viedol na ,** teda na celý výkaz, nie na to, čo štítok sľubuje. Teraz mieri na  — na zoznam pre **toto znenie**.
+- **Ukazoval sa každému, kto smie do knižnice** — vrátane správcu obsahu, ktorý do  nesmie (D67). Odkaz, ktorý skončí na 404, je horší než žiadny: prezradí, že v systéme niečo je, a zároveň nepustí. Teraz ho vidí len personalista.
+- Pri prezeraní sa overili aj ostatné odkazy na rolou chránené sekcie. Druhý taký odkaz ( → ) je v poriadku: obe strany chráni tá istá rola.
+- Overené:  čisto, 1117 testov, lint bez chýb,  prejde.
+
+
 ### Added (2026-09-12 — knižnica: stĺpec „Platnosť od" a Export CSV)
 
 Časť bodu 5 z `docs/DESIGN_GAP.md`. **Zvyšok toho bodu bol už dávno hotový a mapa to nevedela** — stĺpec s verziou aj identifikátor pod názvom v tabuľke sú; prerátané proti kódu, nie proti zápisu.

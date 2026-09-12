@@ -25,6 +25,7 @@ import { normalizeQuery, type RawQuery } from "@/lib/urlParams"
 import { documentProgress } from "@/lib/libraryProgress"
 import AppShell from "@/components/AppShell"
 import ApprovalPanel from "@/components/ApprovalPanel"
+import { isHr } from "@/lib/hr"
 import { roundsByVersion, stateOf } from "@/lib/approvalsDb"
 import { listPeople } from "@/lib/people"
 
@@ -79,6 +80,14 @@ export default async function DocumentDetailPage({
    * jeden dokument, nie riadok v zozname, kde by to bol dotaz na každý riadok.
    */
   const progress = await documentProgress(ctx.tenant.companyCode, effective?.versionId)
+
+  /*
+   * Kto smie do knižnice, nemusí smieť do výkazu personalistu (D67): kto
+   * spravuje obsah, nemá tým pádom právo vidieť, ako si ktorý človek plní
+   * povinnosti. Preto sa rola pýta tu a nie je odvodená z toho, že sa
+   * stránka vôbec otvorila.
+   */
+  const canSeeWho = isHr(ctx.person)
   const ts = t.side
   const folderName = d.folderTrail?.length ? d.folderTrail.join(" / ") : ts.unfiled
   const published = ((d.markdown ?? effective?.markdown) ?? "").trim()
@@ -447,9 +456,21 @@ export default async function DocumentDetailPage({
                 <div className="detail-bar" aria-hidden="true">
                   <span className="detail-bar-fill" style={{ width: `${progress.percent}%` }} />
                 </div>
-                <p className="detail-card-link">
-                  <Link href="/hr">{ts.progressWho}</Link>
-                </p>
+                {/*
+                  Odkaz vidí **len personalista** a mieri na **toto znenie**.
+                  Dovtedy robil obe veci zle: viedol na `/hr` (teda na celý
+                  výkaz, nie na to, čo štítok sľubuje) a ukazoval sa každému,
+                  kto smie do knižnice — vrátane správcu obsahu, ktorý do
+                  `/hr` nesmie. Odkaz, ktorý skončí na 404, je horší než
+                  žiadny: prezradí, že v systéme niečo je, a zároveň nepustí.
+                */}
+                {canSeeWho && effective && (
+                  <p className="detail-card-link">
+                    <Link href={`/hr/overview?view=document&open=${encodeURIComponent(effective.versionId)}`}>
+                      {ts.progressWho}
+                    </Link>
+                  </p>
+                )}
               </>
             )}
           </section>
