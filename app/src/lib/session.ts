@@ -15,6 +15,7 @@
  * ukázať. Nie je to chyba, je to legitímny stav.
  */
 
+import { cache } from "react"
 import { headers } from "next/headers"
 import { getServerSession } from "next-auth"
 import { authOptions } from "./auth"
@@ -23,8 +24,20 @@ import { resolveTenant, normalizeHostname, personBelongsToTenant } from "./tenan
 import type { Person } from "./persons"
 import type { Tenant } from "./tenants"
 
-export async function currentPerson(): Promise<Person | null> {
-  const session = await getServerSession(authOptions)
+/**
+ * Relácia raz za požiadavku.
+ *
+ * `cache()` z Reactu je pamäť **v rámci jednej požiadavky**, nie medzi nimi:
+ * shell si zisťuje tri roly, každá z nich potrebovala tenanta aj osobu, a
+ * s obrazovkou pod ním to bolo šesť tých istých dotazov na jedno načítanie.
+ *
+ * Zámerne je tu, a nie na `findPerson()`: tú volajú aj serverové akcie po
+ * tom, čo osobu zmenili, a pamäť by im vracala stav spred zápisu.
+ */
+const requestSession = cache(() => getServerSession(authOptions))
+
+export const currentPerson = cache(async (): Promise<Person | null> => {
+  const session = await requestSession()
   const email = session?.user?.email
   if (!email) return null
   try {
@@ -34,30 +47,30 @@ export async function currentPerson(): Promise<Person | null> {
     console.error("[session] osobu sa nepodarilo načítať:", e)
     return null
   }
-}
+})
 
 /**
  * Adresa z relácie, alebo `null`. Bez dotazu do `persons` — na otázku
  * „je vôbec niekto prihlásený" netreba osobu, a prihlasovacia stránka to
  * potrebuje vedieť pri každom zobrazení.
  */
-export async function currentEmail(): Promise<string | null> {
-  const session = await getServerSession(authOptions)
+export const currentEmail = cache(async (): Promise<string | null> => {
+  const session = await requestSession()
   return session?.user?.email ?? null
-}
+})
 
 /** Hostiteľ, na ktorý prišla táto požiadavka. */
-export async function requestHostname(): Promise<string> {
+export const requestHostname = cache(async (): Promise<string> => {
   const h = await headers()
   // Za proxy Vercelu je pôvodný hostiteľ v `x-forwarded-host`; `host` môže
   // byť interná adresa. Poradie je preto takéto a nie opačné.
   return normalizeHostname(h.get("x-forwarded-host") ?? h.get("host"))
-}
+})
 
 /** Tenant pre práve spracúvanú požiadavku. `null` = neznámy hostiteľ. */
-export async function currentTenant(): Promise<Tenant | null> {
+export const currentTenant = cache(async (): Promise<Tenant | null> => {
   return resolveTenant(await requestHostname())
-}
+})
 
 /**
  * Stav požiadavky ako jedna hodnota, nie ako tri nezávislé kontroly.
@@ -82,10 +95,10 @@ export type OnboardingContext =
 
 export async function onboardingContext(): Promise<OnboardingContext> {
   const hostname = await requestHostname()
-  const tenant = await resolveTenant(hostname)
+  const tenant = await currentTenant()
   if (!tenant) return { state: "unknown-host", hostname }
 
-  const session = await getServerSession(authOptions)
+  const session = await requestSession()
   const email = session?.user?.email
   if (!email) return { state: "not-signed-in", tenant }
 

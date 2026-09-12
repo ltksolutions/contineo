@@ -4,6 +4,20 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Added (2026-09-12 — navigácia hovorí, koľko čaká, a na telefóne je zásuvkou)
+
+Bod 2 z `docs/DESIGN_GAP.md`.
+
+- **Štítok s počtom pri „Na potvrdenie" a „Na schválenie".** Počty idú z `pendingForPerson()` a `roundsWaitingFor()` — z tých istých funkcií, ktoré kreslia obrazovky, na ktoré položky odkazujú. Číslo, ktoré po kliknutí nesedí s tým, čo tam človek uvidí, je horšie než žiadne.
+- **Nula sa nekreslí.** Štítok s nulou nie je informácia, je to šum; kto nemá čo potvrdzovať, dozvie sa to tým, že tam nič nesvieti. V dátach sa `0` a „nepočítalo sa" rozlišujú ďalej — zliať ich by znamenalo, že sa prázdny stav už nikdy neodlíši od pokazeného.
+- **Zásuvka namiesto rolovacieho pásu pod 940 px.** Deväť položiek bolo na telefóne dlhších než výrez a pás to nepriznával — posledná položka bola odseknutá v polovici slova. Prah je meraný, nie okrúhly: položky zaberajú ~855 px, s odsadením shellu potrebuje pás ~930 px.
+- **Zásuvka je `<details>`/`<summary>`,** takže funguje bez JavaScriptu, a jej prepínač má 44 px na výšku (krok 7 handoffu). Na prepínači stojí súčet — pri zavretej zásuvke by človek inak nevedel, že naňho niečo čaká.
+- **Pás aj zásuvka sú v DOM naraz** a prepína ich `@media`. Obsah `<details>` skrýva prehliadač sám a CSS ho nevie odkryť späť, takže jedna forma prepínaná štýlom nestačí. Čo je `display: none`, nie je ani v strome prístupnosti — čítačka vidí vždy len jednu navigáciu.
+- **`cache()` na reláciu, hostiteľa, tenanta a osobu** (`lib/session.ts`). Shell si zisťuje tri roly a každá z nich potrebovala tenanta aj osobu; s obrazovkou pod ním to bolo šesť tých istých dotazov na jedno načítanie. Zámerne nie na `findPerson()` — tú volajú aj serverové akcie po zápise a pamäť by im vracala stav spred neho. Bez tejto zmeny by počty znamenali ďalšie dotazy navyše; s ňou ich je menej než predtým.
+- **Zvonček upozornení sa nerobil** (rozhodnutie Jána Letka): systém zatiaľ nemá čo oznamovať, bodka by sa rozsvietila z toho istého čísla ako štítok a klik by viedol na Prehľad, ktorý je prvá položka navigácie. Tri cesty k jednému číslu. Zvonček sa postaví, keď bude mať obsah (`UDALOSTI_A_UPOZORNENIA_KONCEPCIA.md`).
+- Overené: `tsc` čisto, **1117 testov**, lint bez chýb, `build` prejde.
+
+
 ### Changed (2026-09-11 — Prehľad je domov, otázky sa presťahovali na `/ask`)
 
 Rozhodnutie, ktoré včerajší zápis nechával otvorené: **prvá obrazovka po kliknutí na prihlasovací odkaz je Prehľad.**

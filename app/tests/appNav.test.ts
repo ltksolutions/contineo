@@ -40,6 +40,31 @@ describe("položky navigácie", () => {
   })
 })
 
+describe("počty pri položkách", () => {
+  it("bez počtov nemá položka číslo", () => {
+    expect(navItems({}).every(o => o.count === undefined)).toBe(true)
+  })
+
+  it("počet sadne na svoju položku a nikam inam", () => {
+    const items = navItems({}, { toAcknowledge: 3 })
+    expect(items.find(o => o.key === "toAcknowledge")?.count).toBe(3)
+    expect(items.find(o => o.key === "toApprove")?.count).toBe(undefined)
+  })
+
+  it("nula je nula, nie nepočítalo sa", () => {
+    // Rozdiel je vecný: `0` hovorí nič nečaká, `undefined` hovorí nevie sa.
+    // Kresliť sa nekreslí ani jedno, ale keby sa zliali, už by sa to nedalo
+    // rozlíšiť — a práve to je rozdiel medzi prázdnym a pokazeným.
+    expect(navItems({}, { toAcknowledge: 0 }).find(o => o.key === "toAcknowledge")?.count).toBe(0)
+  })
+
+  it("počet pre sekciu, do ktorej človek nesmie, sa nikde neobjaví", () => {
+    // Inak by číslo prezradilo veľkosť knižnice tomu, kto ju nemá vidieť —
+    // ten istý dôvod, pre ktorý sa neukazuje ani samotný odkaz.
+    expect(navItems({}, { library: 148 }).some(o => o.key === "library")).toBe(false)
+  })
+})
+
 describe("variant navigácie", () => {
   it("predvolený je topbar a neznáma hodnota ho nezhodí", () => {
     expect(normalizeLayout(undefined)).toBe("topbar")

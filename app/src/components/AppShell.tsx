@@ -21,10 +21,13 @@
 
 import type { ReactNode } from "react"
 import AppNav from "./AppNav"
-import type { NavLayout } from "@/lib/appNav"
+import type { NavLayout, NavCounts } from "@/lib/appNav"
 import { hrContext } from "@/lib/hr"
 import { peopleContext } from "@/lib/people"
 import { libraryContext } from "@/lib/library"
+import { currentPerson } from "@/lib/session"
+import { pendingForPerson } from "@/lib/pending"
+import { roundsWaitingFor } from "@/lib/approvalsDb"
 import type { UiLanguage } from "@/lib/i18n"
 
 export default async function AppShell({
@@ -58,11 +61,36 @@ export default async function AppShell({
     console.error("[shell] rolu správy obsahu sa nepodarilo overiť:", e)
   }
 
+  /*
+   * Počty vedľa položiek.
+   *
+   * Idú z tých istých funkcií, ktoré kreslia obrazovky, na ktoré odkazujú —
+   * číslo, ktoré po kliknutí nesedí s tým, čo tam človek uvidí, je horšie
+   * než žiadne. Zlyhanie sa berie ako „bez čísla", nie ako chyba stránky:
+   * navigácia bez štítku je nepohodlie, navigácia, ktorá zhodila obrazovku,
+   * je výpadok — rovnaké pravidlo ako pri rolách vyššie.
+   */
+  const counts: NavCounts = {}
+  try {
+    const person = await currentPerson()
+    if (person) {
+      const [pending, rounds] = await Promise.all([
+        pendingForPerson(person),
+        roundsWaitingFor(person.companyCode, person.email),
+      ])
+      counts.toAcknowledge = pending.total
+      counts.toApprove = rounds.length
+    }
+  } catch (e) {
+    console.error("[shell] počty pre navigáciu sa nepodarilo zistiť:", e)
+  }
+
   return (
     <div className={`app-shell app-shell--${layout}`}>
       <AppNav
         layout={layout}
         flags={{ isHr: isHr, isPeopleAdmin: isPeopleAdmin, isContentManager: isContentManager }}
+        counts={counts}
         language={language}
       />
       {/* `div`, nie `main`: `layout.tsx` už jeden `main` má a druhý vnútri

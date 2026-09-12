@@ -249,6 +249,8 @@ interface Dictionary {
     overview: string
     /** Popis navigačnej oblasti shellu pre čítačky obrazovky. */
     sections: string
+    /** Čo znamená štítok s počtom — čítačka nesmie prečítať holé číslo. */
+    waiting: (n: number) => string
     toAcknowledge: string
     assigned: string
     people: string
@@ -1650,6 +1652,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     evidence: "Reťaz dôkazov",
     overview: "Prehľad",
     sections: "Sekcie",
+    waiting: n => (n === 1 ? "čaká 1" : n <= 4 ? `čakajú ${n}` : `čaká ${n}`),
     toAcknowledge: "Na potvrdenie",
     assigned: "Pridelené normy",
     people: "Osoby",
@@ -3294,6 +3297,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     evidence: "Řetěz důkazů",
     overview: "Přehled",
     sections: "Sekce",
+    waiting: n => (n === 1 ? "čeká 1" : n <= 4 ? `čekají ${n}` : `čeká ${n}`),
     toAcknowledge: "K potvrzení",
     assigned: "Přidělené předpisy",
     people: "Osoby",
@@ -4933,6 +4937,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     evidence: "Evidence",
     overview: "Overview",
     sections: "Sections",
+    waiting: n => `${n} waiting`,
     toAcknowledge: "To acknowledge",
     assigned: "Assigned documents",
     people: "People",

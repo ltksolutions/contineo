@@ -3159,3 +3159,97 @@ a.answer-source:focus-visible { outline: 2px solid var(--accent); outline-offset
 }
 
 .panel-action:hover { border-color: var(--accent); color: var(--accent); }
+
+/* ── navigácia: štítok s počtom a zásuvka na úzkej obrazovke ────────────────
+   Prah 940 px nie je okrúhle číslo, je meraný: pri všetkých rolách (HR +
+   správa osôb + správa obsahu) končí posledná položka pásu na 879 px pri
+   viewporte 390 px, teda samotné položky zaberajú ~855 px. K tomu dvakrát
+   `--pad-main` (28 px na širokom) a dvakrát 8 px vlastného odsadenia pásu —
+   pás potrebuje ~930 px. Pod prahom sa preto nahradí zásuvkou.
+
+   Obe formy sú v DOM naraz (viď komentár v `AppNav.tsx`); prepína ich toto
+   `@media`. Čo je `display: none`, nie je ani v strome prístupnosti, takže
+   čítačka vidí vždy len jednu navigáciu. */
+
+.app-nav-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  margin-left: 6px;
+  padding: 0 5px;
+  border-radius: 9px;
+  background: var(--accent-soft);
+  color: var(--ink);
+  font-size: 11px;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+}
+
+.app-nav-drawer {
+  background: var(--surface);
+  border-bottom: 1px solid var(--line);
+}
+
+/* Prepínač je celý terčom: 44 px na výšku, ako žiada krok 7 handoffu. */
+.app-nav-toggle {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  min-height: 44px;
+  padding: 0 var(--pad-main);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  list-style: none;
+}
+
+/* Safari kreslí trojuholník cez `::-webkit-details-marker`, nie cez
+   `list-style` — bez tohto by tam zostal aj po `list-style: none`. */
+.app-nav-toggle::-webkit-details-marker { display: none; }
+
+/* Šípka je `::after`, nie znak v texte: text patrí prekladu, otáčanie
+   patrí štýlu — inak by sa smer šípky prekladal do troch jazykov. */
+.app-nav-toggle::after {
+  content: "";
+  width: 7px;
+  height: 7px;
+  margin-left: auto;
+  border-right: 1.5px solid var(--muted);
+  border-bottom: 1.5px solid var(--muted);
+  transform: rotate(45deg) translate(-2px, -2px);
+  transition: transform 0.15s ease;
+}
+
+.app-nav-drawer details[open] .app-nav-toggle::after {
+  transform: rotate(-135deg) translate(-2px, -2px);
+}
+
+.app-nav-toggle:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+
+/* Zásuvka je zoznam pod sebou, nie pás — `overflow-x` a smer sa preto
+   prepisujú oproti spoločnému `.app-nav`. */
+.app-nav--drawer {
+  flex-direction: column;
+  gap: 0;
+  overflow-x: visible;
+  padding: 0 0 4px;
+  border-bottom: 0;
+}
+
+.app-nav--drawer .app-nav-item {
+  min-height: 44px;
+  padding: 0 var(--pad-main);
+  border-radius: 0;
+}
+
+.app-nav--drawer .app-nav-item.is-active { background: var(--accent-soft); }
+
+@media (min-width: 940px) {
+  .app-nav-drawer { display: none; }
+}
+
+@media (max-width: 939px) {
+  .app-nav--topbar { display: none; }
+}
