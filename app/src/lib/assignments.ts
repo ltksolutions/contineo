@@ -25,7 +25,7 @@ import { ObjectId } from "mongodb"
 import { getCollection } from "./mongodb"
 import { dueFrom, type Due } from "./due"
 import { PERSONS_COLLECTION, normalizeKeys, inDepartmentSince, inGroupSince } from "./persons"
-import { ACKNOWLEDGEMENTS_COLLECTION } from "./acknowledgements"
+import { validAcknowledgements } from "./acknowledgements"
 import { writeAudit } from "./audit"
 import type { Person } from "./persons"
 import { AppError } from "./appError"
@@ -588,17 +588,17 @@ export async function assignmentOverviews(companyCode: string): Promise<Assignme
     .sort({ assignedAt: -1 })
     .toArray()
 
-  const ackCol = await getCollection(ACKNOWLEDGEMENTS_COLLECTION)
   const out: AssignmentOverview[] = []
 
   for (const a of records) {
     const members = await audienceMembers(companyCode, a.audience)
     const ids = members.map(c => c.id)
-    const acknowledgedBy = ids.length === 0 ? 0 : await ackCol.countDocuments({
-      type: "acknowledgement",
+    // Platné potvrdenia, teda bez odvolaných (D24).
+    const acknowledgedBy = (await validAcknowledgements({
+      companyCode,
       versionId: a.subject.versionId,
-      personId: { $in: ids },
-    })
+      personId: ids,
+    })).length
 
     out.push({
       id: String(a._id),
@@ -630,17 +630,13 @@ export async function notAcknowledged(
     ...await audienceMembers(companyCode, a.audience),
     ...await formerMembers(companyCode, a),
   ]
-  const ackCol = await getCollection(ACKNOWLEDGEMENTS_COLLECTION)
-  const acknowledgedIds = await ackCol
-    .find({
-      type: "acknowledgement",
+  const done = new Set(
+    (await validAcknowledgements({
+      companyCode,
       versionId: a.subject.versionId,
-      personId: { $in: members.map(c => c.id) },
-    })
-    .project({ personId: 1 })
-    .toArray()
-
-  const done = new Set(acknowledgedIds.map(p => (p as { personId: string }).personId))
+      personId: members.map(c => c.id),
+    })).map(v => v.personId),
+  )
   return members.filter(c => !done.has(c.id))
 }
 

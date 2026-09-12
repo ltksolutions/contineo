@@ -13,7 +13,8 @@
 
 import { redirect } from "next/navigation"
 import { revalidatePath } from "next/cache"
-import { hrContext, assignableDocuments } from "@/lib/hr"
+import { hrContext, assignableDocuments, isHr } from "@/lib/hr"
+import { revoke as revokeAcknowledgement } from "@/lib/acknowledgements"
 import {
   assign, revoke, loadAssignment, notAcknowledged, recordNotification,
   audienceFromSelection,
@@ -161,6 +162,44 @@ export async function revokeAction(fd: FormData) {
   redirect("/hr?msg=" + encodeURIComponent(
     changed ? dictionary(actor.language).hr.actions.revoked : dictionary(actor.language).hr.actions.alreadyRevoked
   ))
+}
+
+/**
+ * Odvolanie potvrdenia (D24).
+ *
+ * **Odvoláva personalista, nie osoba sama** — doklad, ktorý si podpísaný môže
+ * kedykoľvek zobrať späť, nie je doklad. Rola sa pýta cez `isHr()`, nie sa
+ * odvodzuje z toho, že sa formulár vôbec zobrazil: to, že akcia visí na
+ * chránenej stránke, nie je kontrola prístupu.
+ *
+ * Povinnosť tým ožije s pôvodným termínom. Ak termín medzitým prešiel, osoba
+ * je hneď po termíne a pri najbližšom behu jej príde pripomienka — je to
+ * pravda, nie porucha, a rozhranie to hovorí dopredu.
+ */
+export async function revokeAcknowledgementAction(fd: FormData) {
+  const ctx = await hrContext()
+  if (ctx.state !== "ready") redirect("/hr")
+
+  const result = await revokeAcknowledgement({
+    by: {
+      personId: ctx.person.id,
+      email: ctx.person.email,
+      fullName: ctx.person.fullName,
+      companyCode: ctx.person.companyCode,
+    },
+    isHr: isHr(ctx.person),
+    personId: fieldText(fd, "personId"),
+    versionId: fieldText(fd, "versionId"),
+    reason: fieldText(fd, "reason"),
+  })
+
+  const t = dictionary(normalizeLanguage(ctx.person.language)).hr.report
+  // Späť presne tam, odkiaľ človek prišiel — vrátane rozpísanej položky.
+  const back = fieldText(fd, "back") || "/hr/overview"
+  const message = result.ok ? t.revokeDone : t.revokeFailed
+
+  revalidatePath("/hr/overview")
+  redirect(`${back}${back.includes("?") ? "&" : "?"}msg=${encodeURIComponent(message)}${result.ok ? "" : "&error=1"}`)
 }
 
 /**

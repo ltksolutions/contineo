@@ -25,7 +25,7 @@
  */
 
 import { getCollection } from "./mongodb"
-import { ACKNOWLEDGEMENTS_COLLECTION } from "./acknowledgements"
+import { validAcknowledgements } from "./acknowledgements"
 import { ASSIGNMENTS_COLLECTION, audienceMembers, type Assignment } from "./assignments"
 
 export interface DocumentProgress {
@@ -80,12 +80,8 @@ export async function documentProgress(
     return { assigned: 0, acknowledged: 0, percent: null, assignments: active.length }
   }
 
-  const ackCol = await getCollection(ACKNOWLEDGEMENTS_COLLECTION)
-  const acknowledged = await ackCol.countDocuments({
-    type: "acknowledgement",
-    versionId,
-    personId: { $in: [...ids] },
-  })
+  // Percento počíta len **platné** potvrdenia — odvolané už nesplnili nič.
+  const acknowledged = (await validAcknowledgements({ versionId, personId: [...ids] })).length
 
   return { assigned, acknowledged, percent: percentOf(acknowledged, assigned), assignments: active.length }
 }

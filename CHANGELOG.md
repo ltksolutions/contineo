@@ -4,6 +4,19 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Added (2026-09-12 — potvrdenie sa dá odvolať)
+
+Kto potvrdil omylom, to dovtedy **nevedel vziať späť** — vedel len potvrdiť znova. Kolekcia je zámerne append-only (D24), `supersedes` bolo v type aj v zázname, ale `acknowledge()` doň vždy dalo `null` a druhá cesta neexistovala. V pilote je to prvá vec, ktorá nastane.
+
+- **Odvoláva len personalista** (rozhodnuté 2026-09-12). Doklad, ktorý si podpísaný môže kedykoľvek zobrať späť, nie je doklad; osoba požiada, personalista odvolá a v zázname je vidieť, kto rozhodol. **Dôvod je povinný**, rovnako ako pri zamietnutí znenia (D71).
+- **Odvolanie je nový záznam**, nie úprava starého: nesie to isté, čo rušené potvrdenie — meno, dokument, znenie aj doslovnú formulku — plus dôvod a odtlačok toho, kto odvolal. Z histórie tým nezmizne, že potvrdenie raz existovalo.
+- **Povinnosť ožije s pôvodným termínom.** Nič sa neprepisuje ani nepresúva; stav sa odvodzuje pri každom čítaní (D27). Ak termín medzitým prešiel, osoba je hneď po termíne — je to pravda, nie chyba, a formulár to hovorí dopredu.
+- **Zmena schémy a indexu** (so súhlasom): pole `cycle` (poradie pokusu) a index `acknowledgement_cycle_unique` namiesto `acknowledgement_unique`. Bez neho by po odvolaní druhé potvrdenie toho istého znenia index odmietol. Ochrana proti dvom súbežným kliknutiam zostáva: obe vypočítajú to isté číslo. Migrácia `scripts/migrate_ack_cycle.mjs` najprv dopíše pole, overí duplicity, **vytvorí nový index a až potom zahodí starý** — aby nevzniklo okno bez ochrany.
+- **Jedno miesto na čítanie.** `validAcknowledgements()` (potvrdenia mínus odvolania) nahradilo sedem samostatných dotazov v `assignments`, `hrReport`, `libraryProgress`, `libraryWrite`, `admin` a v skripte výkazu. Každé z nich by inak muselo samo vedieť, že odvolanie existuje — a stačilo by, aby na to jedno zabudlo.
+- **Čas čítania a prvé otvorenie sa odvolaním nemenia.** Sú to merania, nie doklad: človek ten text naozaj otvoril.
+- Overené: `tsc` čisto, **1132 testov**, lint bez chýb, `build` prejde.
+
+
 ### Added (2026-09-12 — neschválené znenie sa už nedá zverejniť)
 
 Brána z D73 sa posúva o krok skôr. Dovtedy stála len pri prideľovaní: neschválené znenie sa **zverejniť dalo**, objavilo sa v knižnici a RAG z neho odpovedal — len sa nedalo prideliť na potvrdenie. Kto si predpis nájde sám, číta ho bez ohľadu na to, či ho niekto schválil.

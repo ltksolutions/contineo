@@ -88,14 +88,26 @@ const persons = await (await getCollection(PERSONS_COLLECTION))
 
 log(`${INFO} osôb v rozsahu: ${persons.length}${track ? ` (trasa ${track})` : ""}`)
 
-const acks = await (await getCollection(ACKNOWLEDGEMENTS_COLLECTION)).find({
+const records = await (await getCollection(ACKNOWLEDGEMENTS_COLLECTION)).find({
   companyCode: company,
-  type: "acknowledgement",
+  type: { $in: ["acknowledgement", "revocation"] },
   versionId: { $in: valid.map(p => p.version.versionId) },
-}).toArray()
+}).sort({ cycle: 1, createdAt: 1 }).toArray()
 
-// Kľúč osoba+verzia — potvrdenie je jedno na dvojicu (unikátny index, D24).
-const byKey = new Map(acks.map(a => [`${a.personId}|${a.versionId}`, a]))
+/*
+ * Kľúč osoba+verzia. Odvolanie potvrdenie **ruší** (D24), takže sa nedá zobrať
+ * posledný záznam typu `acknowledgement` a hotovo — treba prejsť oboje
+ * v poradí, v akom vznikli, a nechať to, čo na konci zostane platné.
+ *
+ * Triedi sa podľa `cycle` a potom `createdAt`: odvolanie vzniká vždy po
+ * potvrdení, ktoré ruší, a obe majú to isté poradie pokusu.
+ */
+const byKey = new Map()
+for (const r of records) {
+  const key = `${r.personId}|${r.versionId}`
+  if (r.type === "revocation") byKey.delete(key)
+  else byKey.set(key, r)
+}
 
 const rows = []
 for (const person of persons) {

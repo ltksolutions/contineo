@@ -22,7 +22,7 @@
 
 import { getCollection } from "./mongodb"
 import { DOCUMENTS_COLLECTION } from "./documents"
-import { ACKNOWLEDGEMENTS_COLLECTION } from "./acknowledgements"
+import { validAcknowledgements } from "./acknowledgements"
 import { chunkText, DEFAULT_PROFILE } from "./chunker.mjs"
 import { textFingerprint, chunkingFingerprint, needsReindex, CHUNKER_VERSION } from "./chunkIdentity"
 import { checkValue, checkList } from "./codelists"
@@ -649,10 +649,9 @@ export async function fixVersion(
   const v = versions.find(x => x.versionId === versionId)
   if (!v) throw new LibraryError("library.versionNotFound", "Také znenie tu nie je.")
 
-  const ackCol = await getCollection(ACKNOWLEDGEMENTS_COLLECTION)
-  const acknowledgementCount = await ackCol.countDocuments({
-    type: "acknowledgement", companyCode, versionId,
-  })
+  // Brána pri zmene dátumu sa pýta na **platné** potvrdenia: odvolané netreba
+  // chrániť, tie už neplatia.
+  const acknowledgementCount = (await validAcknowledgements({ companyCode, versionId })).length
 
   const changesDate = input.effectiveFrom instanceof Date &&
     (!v.effectiveFrom || new Date(v.effectiveFrom).getTime() !== input.effectiveFrom.getTime())

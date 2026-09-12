@@ -257,7 +257,7 @@ bez potvrdenia (`page`), doplní sa **ľahký** záznam o dokončení kroku, nie
 
 | Kolekcia | Index | Prečo |
 |---|---|---|
-| `acknowledgements` | `{ companyCode: 1, personId: 1, versionId: 1 }` **unique**, `partialFilterExpression: { type: "acknowledgement" }` | dvojité potvrdenie tej istej verzie nie je chyba používateľa, ale naša — nech ho odmietne databáza, nie kontrola v kóde |
+| `acknowledgements` | `{ companyCode: 1, personId: 1, versionId: 1, cycle: 1 }` **unique**, `partialFilterExpression: { type: "acknowledgement" }` | dvojité potvrdenie toho istého pokusu nie je chyba používateľa, ale naša — nech ho odmietne databáza, nie kontrola v kóde. `cycle` je poradie pokusu (2026-09-12): po odvolaní sa musí dať potvrdiť znova, a bez neho by index druhý zápis odmietol. Ochrana proti dvom súbežným kliknutiam zostáva — obe vypočítajú to isté číslo |
 | `acknowledgements` | `{ companyCode: 1, documentId: 1, versionId: 1, acknowledgedAt: -1 }` | dashboard „kto potvrdil túto smernicu" |
 | `acknowledgements` | `{ companyCode: 1, personId: 1, acknowledgedAt: -1 }` | história jednej osoby |
 | `persons` | `{ companyCode: 1, email: 1 }` **unique** | jedna osoba = jedna adresa v rámci tenanta |

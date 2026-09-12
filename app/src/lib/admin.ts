@@ -15,7 +15,7 @@ import { getCollection } from "./mongodb"
 import { effectiveVersion, DOCUMENTS_COLLECTION } from "./documents"
 import { PERSONS_COLLECTION } from "./persons"
 import { TRACKS_COLLECTION } from "./tracks"
-import { ACKNOWLEDGEMENTS_COLLECTION } from "./acknowledgements"
+import { validAcknowledgements } from "./acknowledgements"
 import { TENANTS_COLLECTION, normalizeTenant } from "./tenants"
 import { currentTenant, currentPerson } from "./session"
 import type { DocumentRecord } from "./documents"
@@ -95,7 +95,6 @@ export async function tenantOverviews(): Promise<TenantOverview[]> {
   const personCol = await getCollection<Person>(PERSONS_COLLECTION)
   const trackCol = await getCollection(TRACKS_COLLECTION)
   const docCol = await getCollection<DocumentRecord>(DOCUMENTS_COLLECTION)
-  const ackCol = await getCollection(ACKNOWLEDGEMENTS_COLLECTION)
 
   const asOf = new Date()
   const out: TenantOverview[] = []
@@ -108,7 +107,9 @@ export async function tenantOverviews(): Promise<TenantOverview[]> {
       personCol.countDocuments({ companyCode: code }),
       personCol.countDocuments({ companyCode: code, lastLoginAt: { $exists: true } }),
       trackCol.countDocuments({ companyCode: code }),
-      ackCol.countDocuments({ companyCode: code }),
+      // Dovtedy sa počítali **všetky** záznamy kolekcie vrátane odvolaní —
+      // číslo teda rástlo aj vtedy, keď potvrdení ubudlo.
+      validAcknowledgements({ companyCode: code }).then(v => v.length),
       docCol
         .find({ companyCode: code }, { projection: { documentId: 1, title: 1, versions: 1 } })
         .toArray(),

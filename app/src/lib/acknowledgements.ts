@@ -91,7 +91,95 @@ export interface Acknowledgement {
   origin: "portal" | "import"
   supersedes: ObjectId | null
 
+  /**
+   * Poradie pokusu (D24). Prvé potvrdenie 1, po odvolaní 2. Je súčasťou
+   * unikátneho indexu — bez neho by sa po odvolaní nedalo potvrdiť znova.
+   * Odvolanie nesie číslo toho pokusu, ktorý ruší.
+   */
+  cycle: number
+
+  /**
+   * Dôvod — **povinný pri odvolaní**, rovnako ako pri zamietnutí znenia (D71).
+   * Odvolanie mení stav povinnosti a o rok sa musí dať prečítať, prečo.
+   */
+  reason?: string
+
+  /**
+   * Kto úkon vykonal, keď to nie je sama osoba.
+   *
+   * Pri potvrdení je to vždy osoba, preto `null`. Pri odvolaní je to
+   * personalista — a keby v zázname nebol, ostalo by „potvrdenie bolo
+   * odvolané" bez toho, kto tak rozhodol. Meno sa **kopíruje**, nie odkazuje
+   * (D24): záznam musí byť čitateľný aj o tri roky.
+   */
+  actedBy?: { personId: string; email: string; fullName: string } | null
+
   createdAt: Date
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+ * Odvolanie potvrdenia (D24)
+ *
+ * Kolekcia je append-only: potvrdenie sa neprepisuje ani nemaže. Odvolanie je
+ * **nový záznam** typu `revocation`, ktorý cez `supersedes` ukazuje na pôvodný.
+ * Vďaka tomu z histórie nezmizne, že potvrdenie raz existovalo — a práve to je
+ * na nej to cenné.
+ *
+ * Pravidlá sú tu **bez databázy**, rovnako ako v `approvals.ts`: čo sa smie, sa
+ * musí dať otestovať bez Monga a bez toho, aby si to niekto domýšľal z dotazu.
+ * ───────────────────────────────────────────────────────────────────────── */
+
+export type RevokeProblem =
+  | "revocation.notHr"
+  | "revocation.nothingToRevoke"
+  | "revocation.reasonRequired"
+
+/**
+ * Prečo sa toto potvrdenie nedá odvolať — alebo `null`, keď sa dá.
+ *
+ * **Odvoláva len personalista** (rozhodnuté 2026-09-12). Keby to vedela osoba
+ * sama, potvrdenie by stratilo váhu: doklad, ktorý si podpísaný môže kedykoľvek
+ * zobrať späť, nie je doklad. Osoba požiada, personalista odvolá — a v zázname
+ * je vidieť, kto rozhodol.
+ *
+ * **Dôvod je povinný**, rovnako ako pri zamietnutí znenia (D71). Odvolanie mení
+ * stav povinnosti a o rok sa musí dať prečítať, prečo.
+ */
+export function revokeProblem(input: {
+  isHr: boolean
+  /** Koľko platných potvrdení na dvojicu osoba × znenie zostáva. */
+  valid: number
+  reason?: string
+}): RevokeProblem | null {
+  // Rola sa pýta prvá: kto nesmie konať, nemá sa dozvedieť ani to, či je čo
+  // odvolať. Poradie kontrol je tu súčasť pravidla, nie štýl.
+  if (!input.isHr) return "revocation.notHr"
+  if (input.valid <= 0) return "revocation.nothingToRevoke"
+  if (!input.reason?.trim()) return "revocation.reasonRequired"
+  return null
+}
+
+/**
+ * Platí potvrdenie? Potvrdenia mínus odvolania.
+ *
+ * Toto pravidlo musí byť na **jednom mieste**: potvrdenia sa dnes čítajú zo
+ * siedmich miest a každé z nich by inak muselo samo vedieť, že odvolanie
+ * existuje. Stačí, aby na to jedno zabudlo, a výkaz personalistu povie niečo
+ * iné než detail dokumentu.
+ */
+export function isAcknowledged(counts: { acknowledgements: number; revocations: number }): boolean {
+  return counts.acknowledgements > counts.revocations
+}
+
+/**
+ * Poradie pokusu pre nové potvrdenie.
+ *
+ * Prvé potvrdenie je 1, po odvolaní 2. Číslo je súčasťou unikátneho indexu,
+ * takže dve súbežné kliknutia vypočítajú to isté číslo a druhé databáza
+ * odmietne — ochrana proti dvojitému potvrdeniu (D24) tým zostáva.
+ */
+export function nextCycle(acknowledgements: number): number {
+  return acknowledgements + 1
 }
 
 /**
@@ -177,8 +265,22 @@ export async function acknowledge(
     console.error("[acknowledgements] oddelenie sa nepodarilo prečítať:", e)
   }
 
+  /*
+   * Poradie pokusu sa **číta pred zápisom**, nie odvodzuje z ničoho. Pri prvom
+   * potvrdení vyjde 1. Dve súbežné kliknutia vypočítajú to isté číslo a druhé
+   * odmietne unikátny index — presne tak, ako to bolo doteraz.
+   */
+  const col = await getCollection<Acknowledgement>(ACKNOWLEDGEMENTS_COLLECTION)
+  const previous = await col.countDocuments({
+    companyCode: actor.companyCode,
+    personId: actor.personId,
+    versionId: v.versionId,
+    type: "acknowledgement",
+  })
+
   const record: Acknowledgement = {
     type: "acknowledgement",
+    cycle: nextCycle(previous),
     companyCode: actor.companyCode,
     personId: actor.personId,
     email: actor.email,
@@ -204,7 +306,6 @@ export async function acknowledge(
   }
 
   try {
-    const col = await getCollection<Acknowledgement>(ACKNOWLEDGEMENTS_COLLECTION)
     const r = await col.insertOne(record)
     return { ok: true, id: String(r.insertedId), statement, version: v }
   } catch (e) {
@@ -217,17 +318,112 @@ export async function acknowledge(
   }
 }
 
-/** Má táto osoba potvrdenú túto verziu? */
-export async function hasAcknowledged(personId: string, versionId: string): Promise<boolean> {
-  const col = await getCollection<Acknowledgement>(ACKNOWLEDGEMENTS_COLLECTION)
-  const count = await col.countDocuments(
-    { personId, versionId, type: "acknowledgement" },
-    { limit: 1 }
-  )
-  return count > 0
+/** Jedno platné potvrdenie: dvojica osoba × znenie, ktorá platí teraz. */
+export interface ValidAcknowledgement {
+  personId: string
+  versionId: string
+  /** Čas posledného platného potvrdenia. */
+  acknowledgedAt: Date
+  cycle: number
 }
 
 /**
+ * Ktoré potvrdenia **platia** — potvrdenia mínus odvolania, jedným dotazom.
+ *
+ * Toto je jediné miesto, kde sa platnosť rozhoduje. Predtým sa potvrdenia
+ * čítali zo siedmich miest a každé si filtrovalo `type: "acknowledgement"` samo;
+ * po zavedení odvolania by každé z nich muselo vedieť, že odvolanie existuje, a
+ * stačilo by, aby na to jedno zabudlo — výkaz personalistu by povedal niečo iné
+ * než detail dokumentu. Preto sa počíta v databáze a na jednom mieste.
+ *
+ * Prázdne pole v `$in` sa nepýta vôbec: dotaz, o ktorom vopred vieme, že vráti
+ * nič, je zbytočná cesta do Atlasu.
+ */
+export async function validAcknowledgements(filter: {
+  companyCode?: string
+  personId?: string | string[]
+  versionId?: string | string[]
+}): Promise<ValidAcknowledgement[]> {
+  if (Array.isArray(filter.personId) && filter.personId.length === 0) return []
+  if (Array.isArray(filter.versionId) && filter.versionId.length === 0) return []
+
+  const where: Record<string, unknown> = { type: { $in: ["acknowledgement", "revocation"] } }
+  if (filter.companyCode) where.companyCode = filter.companyCode
+  if (filter.personId) {
+    where.personId = Array.isArray(filter.personId) ? { $in: filter.personId } : filter.personId
+  }
+  if (filter.versionId) {
+    where.versionId = Array.isArray(filter.versionId) ? { $in: filter.versionId } : filter.versionId
+  }
+
+  const col = await getCollection<Acknowledgement>(ACKNOWLEDGEMENTS_COLLECTION)
+  const rows = await col
+    .find(where, { projection: { personId: 1, versionId: 1, type: 1, cycle: 1, acknowledgedAt: 1 } })
+    .toArray()
+
+  /*
+   * Sčítava sa **v pamäti, nie agregáciou v databáze** — zámerne. Pravidlo je
+   * jedno (`isAcknowledged()`) a má byť napísané raz, v TypeScripte, kde sa dá
+   * otestovať bez Monga; to isté vyjadrené ešte raz cez `$expr` by bolo druhé
+   * miesto, kde sa dá pomýliť, a rozišlo by sa s tým prvým presne vtedy, keď na
+   * tom záleží. Dotaz je zúžený na konkrétne osoby alebo znenia a vracia päť
+   * polí — pri rozsahoch, aké má zväz, je rozdiel v cene nemerateľný.
+   */
+  const pairs = new Map<string, {
+    personId: string
+    versionId: string
+    acknowledgements: number
+    revocations: number
+    acknowledgedAt: Date | null
+    cycle: number
+  }>()
+
+  for (const r of rows) {
+    const key = `${r.personId}\u0000${r.versionId}`
+    const pair = pairs.get(key) ?? {
+      personId: r.personId,
+      versionId: r.versionId,
+      acknowledgements: 0,
+      revocations: 0,
+      acknowledgedAt: null,
+      cycle: 0,
+    }
+
+    if (r.type === "acknowledgement") {
+      pair.acknowledgements += 1
+      // Odvolanie do času ani do poradia nevstupuje — platí posledné potvrdenie.
+      const when = r.acknowledgedAt ? new Date(r.acknowledgedAt) : null
+      if (when && (!pair.acknowledgedAt || when > pair.acknowledgedAt)) pair.acknowledgedAt = when
+      if ((r.cycle ?? 0) > pair.cycle) pair.cycle = r.cycle ?? 0
+    } else if (r.type === "revocation") {
+      pair.revocations += 1
+    }
+
+    pairs.set(key, pair)
+  }
+
+  return [...pairs.values()]
+    .filter(isAcknowledged)
+    .map(p => ({
+      personId: p.personId,
+      versionId: p.versionId,
+      acknowledgedAt: p.acknowledgedAt as Date,
+      cycle: p.cycle,
+    }))
+}
+
+/** Má táto osoba **platne** potvrdenú túto verziu? */
+export async function hasAcknowledged(personId: string, versionId: string): Promise<boolean> {
+  return (await validAcknowledgements({ personId, versionId })).length > 0
+}
+
+/**
+ * **Celá** história jednej osoby, najnovšie prvé — vrátane odvolaní.
+ *
+ * Zámerne nefiltruje: je to výpis pre človeka, ktorý má vidieť aj to, že mu
+ * niekto potvrdenie odvolal. Kto potrebuje vedieť, čo **platí**, sa pýta
+ * `validAcknowledgements()`.
+ *
  * Potvrdenia jednej osoby, najnovšie prvé.
  *
  * Osoba musí vedieť zobraziť a stiahnuť, čo o nej systém eviduje, aj bez
@@ -249,12 +445,88 @@ export async function acknowledgedVersionIds(
   versionIds: string[]
 ): Promise<Set<string>> {
   if (versionIds.length === 0) return new Set()
+  const valid = await validAcknowledgements({ personId, versionId: versionIds })
+  return new Set(valid.map(a => a.versionId))
+}
+
+/** Kto odvoláva — personalista, nie osoba sama. */
+export interface Revoker {
+  personId: string
+  email: string
+  fullName: string
+  companyCode: string
+}
+
+export type RevokeResult =
+  | { ok: true; id: string }
+  | { ok: false; reason: RevokeProblem | "write-failed"; detail?: string }
+
+/**
+ * Odvolá potvrdenie: zapíše **nový záznam**, starý nechá na pokoji (D24).
+ *
+ * Povinnosť tým **ožije s pôvodným termínom** (rozhodnuté 2026-09-12) — nič sa
+ * neprepisuje ani nepresúva, stačí, že potvrdenie prestane platiť: `assignments`
+ * o potvrdeniach nič nedrží a stav sa odvodzuje pri každom čítaní (D27). Ak
+ * termín medzitým prešiel, osoba je hneď po termíne. Je to pravda, nie chyba.
+ *
+ * Čas čítania a prvé otvorenie sa **nemenia**. Sú to merania, nie doklad
+ * o splnení povinnosti — človek ten text naozaj otvoril a naozaj nad ním
+ * strávil ten čas.
+ */
+export async function revoke(input: {
+  by: Revoker
+  isHr: boolean
+  /** Čie potvrdenie sa odvoláva. */
+  personId: string
+  versionId: string
+  reason: string
+}): Promise<RevokeResult> {
   const col = await getCollection<Acknowledgement>(ACKNOWLEDGEMENTS_COLLECTION)
-  const found = await col
-    .find(
-      { personId, type: "acknowledgement", versionId: { $in: versionIds } },
-      { projection: { versionId: 1 } }
-    )
+  const where = { companyCode: input.by.companyCode, personId: input.personId, versionId: input.versionId }
+
+  const [acknowledgements, revocations] = await Promise.all([
+    col.countDocuments({ ...where, type: "acknowledgement" }),
+    col.countDocuments({ ...where, type: "revocation" }),
+  ])
+
+  const problem = revokeProblem({
+    isHr: input.isHr,
+    valid: isAcknowledged({ acknowledgements, revocations }) ? 1 : 0,
+    reason: input.reason,
+  })
+  if (problem) return { ok: false, reason: problem }
+
+  // Ruší sa **posledný** pokus. Staršie cykly už svoje odvolanie majú —
+  // odvolávať ich druhýkrát by vyrobilo záznam, ktorý nič neruší.
+  const [target] = await col
+    .find({ ...where, type: "acknowledgement" })
+    .sort({ cycle: -1 })
+    .limit(1)
     .toArray()
-  return new Set(found.map(a => a.versionId))
+  if (!target) return { ok: false, reason: "revocation.nothingToRevoke" }
+
+  const now = new Date()
+  const record: Acknowledgement = {
+    // Odvolanie si nesie **to isté, čo rušené potvrdenie**: meno, dokument,
+    // znenie aj doslovnú formulku. Záznam, ktorý na vysvetlenie potrebuje
+    // dohľadať iný záznam, nie je dôkaz — je to hypotéza (D24).
+    ...target,
+    _id: undefined,
+    type: "revocation",
+    supersedes: target._id ?? null,
+    reason: input.reason.trim(),
+    actedBy: { personId: input.by.personId, email: input.by.email, fullName: input.by.fullName },
+    // `acknowledgedAt` je pri odvolaní čas odvolania. Jeden tvar záznamu je
+    // menšie zlo než druhá kolekcia s vlastnou časovou osou.
+    acknowledgedAt: now,
+    createdAt: now,
+  }
+
+  try {
+    const r = await col.insertOne(record)
+    return { ok: true, id: String(r.insertedId) }
+  } catch (e) {
+    console.error("[acknowledgements] odvolanie sa nezapísalo:", e)
+    return { ok: false, reason: "write-failed", detail: String((e as Error).message ?? e) }
+  }
 }

@@ -370,6 +370,13 @@ interface Dictionary {
       acknowledgedAt: string
       notAcknowledged: string
       readingTime: string
+      /** Odvolanie potvrdenia (D24) — vidí to a robí len personalista. */
+      revoke: string
+      revokeReason: string
+      revokeHint: string
+      revokeButton: string
+      revokeDone: string
+      revokeFailed: string
       source: Record<"assignment" | "track" | "both", string>
     }
     overview: {
@@ -1778,6 +1785,12 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       open: "Rozpísať",
       acknowledgedAt: "potvrdené",
       notAcknowledged: "nepotvrdené",
+      revoke: "Odvolať potvrdenie",
+      revokeReason: "Dôvod odvolania",
+      revokeHint: "Povinnosť ožije s pôvodným termínom. Ak termín už prešiel, osoba bude hneď po termíne.",
+      revokeButton: "Odvolať",
+      revokeDone: "Potvrdenie je odvolané. Povinnosť ožila.",
+      revokeFailed: "Potvrdenie sa nepodarilo odvolať.",
       readingTime: "čítal",
       source: { assignment: "pridelenie", track: "trasa", both: "pridelenie aj trasa" },
     },
@@ -3430,6 +3443,12 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       open: "Rozepsat",
       acknowledgedAt: "potvrzeno",
       notAcknowledged: "nepotvrzeno",
+      revoke: "Odvolat potvrzení",
+      revokeReason: "Důvod odvolání",
+      revokeHint: "Povinnost ožije s původním termínem. Pokud termín už uplynul, osoba bude hned po termínu.",
+      revokeButton: "Odvolat",
+      revokeDone: "Potvrzení je odvoláno. Povinnost ožila.",
+      revokeFailed: "Potvrzení se nepodařilo odvolat.",
       readingTime: "četl",
       source: { assignment: "přidělení", track: "trasa", both: "přidělení i trasa" },
     },
@@ -5077,6 +5096,12 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       open: "Break down",
       acknowledgedAt: "acknowledged",
       notAcknowledged: "not acknowledged",
+      revoke: "Revoke acknowledgement",
+      revokeReason: "Reason for revoking",
+      revokeHint: "The duty comes back with its original deadline. If that deadline has passed, the person is overdue immediately.",
+      revokeButton: "Revoke",
+      revokeDone: "The acknowledgement is revoked. The duty is back.",
+      revokeFailed: "The acknowledgement could not be revoked.",
       readingTime: "read for",
       source: { assignment: "assignment", track: "track", both: "assignment and track" },
     },

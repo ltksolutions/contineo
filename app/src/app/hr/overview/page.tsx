@@ -24,6 +24,8 @@ import { dictionary, formatDate } from "@/lib/i18n"
 import type { UiLanguage } from "@/lib/i18n"
 import { normalizeQuery, type RawQuery } from "@/lib/urlParams"
 import AppShell from "@/components/AppShell"
+import Notice from "@/components/Notice"
+import { revokeAcknowledgementAction } from "../actions"
 
 export const dynamic = "force-dynamic"
 
@@ -53,7 +55,7 @@ export default async function HrReportPage({
     notFound()
   }
 
-  const q = normalizeQuery<{ view?: string; open?: string }>(await searchParams)
+  const q = normalizeQuery<{ view?: string; open?: string; msg?: string; error?: string }>(await searchParams)
   const view: View = isView(q.view) ? q.view : "document"
   const opened = q.open
 
@@ -87,6 +89,8 @@ export default async function HrReportPage({
   return (
     <AppShell language={ctx.person.language}>
     <div style={{ maxWidth: 900, ...tenantStyle(branding) }}>
+      <Notice message={q.msg} error={q.error === "1"} back={link({})} />
+
       <p style={{ margin: "0 0 16px" }}>
         <Link className="quiet" href="/hr" style={{ fontSize: 14 }}>
           {dictionary(language).hr.detail.back}
@@ -169,6 +173,35 @@ export default async function HrReportPage({
                       <span className="quiet" style={{ fontSize: 13, fontVariantNumeric: "tabular-nums" }}>
                         {t.readingTime} {readingLabel(d.readingSeconds, language)}
                       </span>
+
+                      {/*
+                        Odvolať sa dá len to, čo platí. Formulár je schovaný za
+                        `<details>`: je to úkon s následkom (povinnosť ožije),
+                        nie vec, ktorá má byť na dosah omylom.
+                      */}
+                      {d.acknowledgedAt && (
+                        <details style={{ flex: "1 1 100%" }}>
+                          <summary className="quiet" style={{ cursor: "pointer", fontSize: 13 }}>
+                            {t.revoke}
+                          </summary>
+                          <form
+                            action={revokeAcknowledgementAction}
+                            style={{ display: "grid", gap: 8, margin: "8px 0 4px", maxWidth: 520 }}
+                          >
+                            <input type="hidden" name="personId" value={d.personId} />
+                            <input type="hidden" name="versionId" value={d.versionId} />
+                            <input type="hidden" name="back" value={link({})} />
+                            <label className="field">
+                              <span className="field-label">{t.revokeReason}</span>
+                              <input className="field-input" name="reason" required />
+                              <span className="quiet field-hint">{t.revokeHint}</span>
+                            </label>
+                            <div>
+                              <button className="button button--quiet" type="submit">{t.revokeButton}</button>
+                            </div>
+                          </form>
+                        </details>
+                      )}
                     </li>
                   ))}
                 </ul>

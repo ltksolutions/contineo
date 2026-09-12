@@ -140,7 +140,7 @@ describe("potvrdenia a cas citania", () => {
 
   it("spari potvrdenie s osobou a znenim", async () => {
     const when = new Date("2026-09-01T10:00:00Z")
-    data[ACKNOWLEDGEMENTS_COLLECTION] = [{ personId: "a", versionId: "v1", acknowledgedAt: when }]
+    data[ACKNOWLEDGEMENTS_COLLECTION] = [{ type: "acknowledgement", cycle: 1, personId: "a", versionId: "v1", acknowledgedAt: when }]
 
     const rows = await duties(COMPANY)
     expect(rows.find(d => d.personId === "a")?.acknowledgedAt).toEqual(when)
@@ -173,7 +173,7 @@ describe("zhrnutia", () => {
         { order: 2, type: "document", documentId: "d2", requiresAcknowledgement: true },
       ],
     }]
-    data[ACKNOWLEDGEMENTS_COLLECTION] = [{ personId: "a", versionId: "v1", acknowledgedAt: YESTERDAY }]
+    data[ACKNOWLEDGEMENTS_COLLECTION] = [{ type: "acknowledgement", cycle: 1, personId: "a", versionId: "v1", acknowledgedAt: YESTERDAY }]
   })
 
   it("podla dokumentu — dva dokumenty, dvaja ludia", async () => {

@@ -25,7 +25,7 @@ import { PERSONS_COLLECTION } from "./persons"
 import type { Person } from "./persons"
 import { DOCUMENTS_COLLECTION, effectiveVersion } from "./documents"
 import type { DocumentRecord } from "./documents"
-import { ACKNOWLEDGEMENTS_COLLECTION } from "./acknowledgements"
+import { validAcknowledgements } from "./acknowledgements"
 import { ASSIGNMENTS_COLLECTION, matchesAudience, dueForPerson } from "./assignments"
 import type { Assignment } from "./assignments"
 import { TRACKS_COLLECTION } from "./tracks"
@@ -227,17 +227,10 @@ export async function duties(companyCode: string): Promise<Duty[]> {
   const personIds = [...new Set(all.map(d => d.personId))]
   const versionIds = [...new Set(all.map(d => d.versionId))]
 
-  const [ackCol, readCol] = await Promise.all([
-    getCollection(ACKNOWLEDGEMENTS_COLLECTION),
-    getCollection(READING_COLLECTION),
-  ])
+  const readCol = await getCollection(READING_COLLECTION)
   const [acks, reads] = await Promise.all([
-    ackCol
-      .find(
-        { type: "acknowledgement", personId: { $in: personIds }, versionId: { $in: versionIds } },
-        { projection: { personId: 1, versionId: 1, acknowledgedAt: 1 } },
-      )
-      .toArray(),
+    // Odvolané potvrdenie sa vo výkaze nesmie tváriť ako splnené (D24).
+    validAcknowledgements({ personId: personIds, versionId: versionIds }),
     readCol
       .find(
         { personId: { $in: personIds }, versionId: { $in: versionIds } },

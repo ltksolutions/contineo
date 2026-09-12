@@ -94,10 +94,14 @@ const PLAN = [
   {
     collection: "acknowledgements",
     indexes: [
-      { key: { companyCode: 1, personId: 1, versionId: 1 },
-        opts: { unique: true, name: "acknowledgement_unique",
+      // `cycle` v kľúči je poradie pokusu (odvolanie, D24): prvé potvrdenie 1,
+      // po odvolaní 2. Bez neho by sa po odvolaní nedalo potvrdiť znova —
+      // index by druhý zápis odmietol. Ochrana proti dvojitému kliknutiu
+      // zostáva: obe kliknutia vypočítajú to isté číslo.
+      { key: { companyCode: 1, personId: 1, versionId: 1, cycle: 1 },
+        opts: { unique: true, name: "acknowledgement_cycle_unique",
                 partialFilterExpression: { type: "acknowledgement" } },
-        why: "dvojité potvrdenie tej istej verzie nie je chyba používateľa, ale naša" },
+        why: "dvojité potvrdenie toho istého pokusu nie je chyba používateľa, ale naša" },
       { key: { companyCode: 1, documentId: 1, versionId: 1, acknowledgedAt: -1 },
         opts: { name: "by_document" },
         why: "dashboard „kto potvrdil túto smernicu“" },
