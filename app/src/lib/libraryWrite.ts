@@ -33,6 +33,8 @@ import { writeAudit, diff } from "./audit"
 import type { Chunk } from "./chunker.mjs"
 import { toChunkerProfile, type ChunkingProfile } from "./chunkingProfile"
 import { AppError } from "./appError"
+import { publishBlock } from "./approvals"
+import { versionStateFor } from "./approvalsDb"
 
 export const CHUNKS_COLLECTION = "document_chunks"
 
@@ -300,6 +302,43 @@ export async function publish(
   // Rovnaké znenie už publikované? Nič sa nedeje — publikovanie je idempotentné.
   const existing = (doc.versions as { versionId: string }[] | undefined)?.some(v => v.versionId === versionId)
   if (existing) return { versionId, chunks: chunks.length, archived: 0, alreadyDone: true }
+
+  /*
+   * ── Brána: neschválený text sa nezverejňuje (D73 posunuté o krok skôr) ──
+   *
+   * Dovtedy brána stála až pri prideľovaní. To znamenalo, že neschválené
+   * znenie sa zverejniť **dalo**: objavilo sa v knižnici, RAG z neho
+   * odpovedal, len sa nedalo prideliť na potvrdenie. Kto si predpis nájde
+   * sám, číta ho bez ohľadu na to, či ho niekto schválil.
+   *
+   * Stojí to tu, **v `publish()`, nie v serverovej akcii**: akcií môže raz
+   * pribudnúť viac, a brána, ktorú sa dá obísť iným vstupom, nie je brána.
+   *
+   * Stojí to **až za kontrolou idempotencie** a to je zámer, nie náhoda:
+   * opätovné zverejnenie rovnakého textu sa má naďalej ticho nič-nedeje, aj
+   * pri znení spred zavedenia schvaľovania (D74). Keby brána predchádzala,
+   * dnešný skúšobný korpus by sa prestal dať znovu zverejniť.
+   *
+   * Kolá sa vedú na `versionId`, teda na **odtlačku textu** (D57) — a keďže
+   * tento odtlačok ešte nie je medzi `doc.versions`, ide o odtlačok
+   * konceptu. Dôsledok: akákoľvek úprava textu po schválení odtlačok zmení
+   * a schválenie prestane platiť. Presne to žiada D28 — potvrdzuje sa text,
+   * ktorý ľudia videli.
+   */
+  const block = publishBlock({ state: await versionStateFor(companyCode, documentId, versionId) })
+  if (block === "publish.inReview") {
+    throw new LibraryError(
+      block,
+      "Schvaľovanie tohto znenia práve beží. Počkaj na rozhodnutie — zverejniť sa dá až schválené znenie.",
+    )
+  }
+  if (block) {
+    throw new LibraryError(
+      block,
+      "Znenie nie je schválené. Najprv ho predlož na schválenie; zverejniť sa dá, až keď schvaľovatelia rozhodnú (D73). " +
+      "Pozor: po schválení sa text už nesmie meniť — každá úprava zmení odtlačok a schválenie tým prestane platiť (D28).",
+    )
+  }
 
   const chunkCol = await getCollection(CHUNKS_COLLECTION)
   // Staré chunky sa **archivujú, nemažú** (D6): do vyhľadávania vstupujú len

@@ -169,6 +169,35 @@ export function assignBlock(input: {
   return null
 }
 
+/**
+ * Dá sa toto znenie zverejniť? (D73 posunuté o krok skôr)
+ *
+ * Dovtedy brána stála **až pri prideľovaní**: neschválené znenie sa dalo
+ * zverejniť, objavilo sa v knižnici a RAG z neho odpovedal — len sa nedalo
+ * prideliť na potvrdenie. To je brána na nesprávnom mieste: kto si predpis
+ * nájde sám, číta ho bez ohľadu na to, či ho niekto schválil, a systém, ktorý
+ * z neho odpovedá, za to ručí rovnako.
+ *
+ * Schvaľuje sa **koncept**, nie hotové znenie: `versionId` vzniká až vnútri
+ * `publish()` ako odtlačok textu (D57), takže pred zverejnením znenie ešte
+ * neexistuje. Kolá sa preto vedú na odtlačku `draftMarkdown` — a to znamená,
+ * že **akákoľvek úprava po schválení schválenie zruší**. Nie je to chyba, je
+ * to presne to, čo žiada D28: potvrdzuje sa text, ktorý ľudia videli.
+ *
+ * Dva kódy, nie jeden: „ešte si nepredložil" a „už to beží" vedú človeka
+ * k inému ďalšiemu kroku a zliať ich do jedného by ho poslalo hádať.
+ */
+export type PublishBlock = "publish.notApproved" | "publish.inReview"
+
+export function publishBlock(input: { state: VersionState }): PublishBlock | null {
+  // `published-before` prechádza z toho istého dôvodu ako pri prideľovaní
+  // (D74): taký text v knižnici **už je**. Zastaviť ho tu by nechránilo nič a
+  // rozbilo by opätovné zverejnenie skúšobného korpusu.
+  if (input.state === "approved" || input.state === "published-before") return null
+  if (input.state === "in-review") return "publish.inReview"
+  return "publish.notApproved"
+}
+
 export type DecideProblem =
   | "approval.notApprover"
   | "approval.roundClosed"

@@ -1328,6 +1328,12 @@ interface Dictionary {
       draftEmpty: string
       publishHeading: string
       nothingToPublish: string
+      /** Označenie konceptu v schvaľovacom paneli aj v e-maile schvaľovateľovi. */
+      approvalDraftLabel: string
+      draftApprovalHeading: string
+      publishNeedsApproval: string
+      publishWaitsForApproval: string
+      publishApprovedNote: string
       versionLabel: string
       versionLabelPlaceholder: string
       /** Veta okolo zvýrazneného „doslovne v každom zázname“. */
@@ -2990,6 +2996,11 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       draftEmpty: "Koncept je prázdny.",
       publishHeading: "Publikovať znenie",
       nothingToPublish: "Niet čo publikovať — koncept je prázdny alebo zhodný s tým, čo už platí.",
+      approvalDraftLabel: "koncept",
+      draftApprovalHeading: "Schválenie konceptu",
+      publishNeedsApproval: "Koncept ešte nie je schválený. Predlož ho na schválenie vyššie — publikovať sa dá až schválené znenie.",
+      publishWaitsForApproval: "Schvaľovanie beží. Publikovať sa dá, keď schvaľovatelia rozhodnú.",
+      publishApprovedNote: "Koncept je schválený. Text už nemeň — každá úprava zmení odtlačok a schválenie tým prestane platiť.",
       versionLabel: "Označenie znenia",
       versionLabelPlaceholder: "úplné znenie z 27. 2. 2026",
       labelNoteBefore: "Objaví sa ",
@@ -4637,6 +4648,11 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       draftEmpty: "Koncept je prázdný.",
       publishHeading: "Publikovat znění",
       nothingToPublish: "Není co publikovat — koncept je prázdný nebo shodný s tím, co už platí.",
+      approvalDraftLabel: "koncept",
+      draftApprovalHeading: "Schválení konceptu",
+      publishNeedsApproval: "Koncept ještě není schválený. Předlož ho ke schválení výše — publikovat lze až schválené znění.",
+      publishWaitsForApproval: "Schvalování běží. Publikovat lze, až schvalovatelé rozhodnou.",
+      publishApprovedNote: "Koncept je schválený. Text už neměň — každá úprava změní otisk a schválení tím přestane platit.",
       versionLabel: "Označení znění",
       versionLabelPlaceholder: "úplné znění z 27. 2. 2026",
       labelNoteBefore: "Objeví se ",
@@ -6278,6 +6294,11 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       draftEmpty: "The draft is empty.",
       publishHeading: "Publish a version",
       nothingToPublish: "Nothing to publish — the draft is empty or identical to what already applies.",
+      approvalDraftLabel: "draft",
+      draftApprovalHeading: "Draft approval",
+      publishNeedsApproval: "The draft is not approved yet. Submit it for approval above — only an approved version can be published.",
+      publishWaitsForApproval: "Approval is in progress. You can publish once the approvers decide.",
+      publishApprovedNote: "The draft is approved. Leave the text as it is — any edit changes the fingerprint and the approval stops being valid.",
       versionLabel: "Version label",
       versionLabelPlaceholder: "consolidated text of 27 February 2026",
       labelNoteBefore: "It appears ",

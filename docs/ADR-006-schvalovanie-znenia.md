@@ -101,6 +101,28 @@ to, čo je **schválené aj účinné** — k dnešnej bráne (`effectiveFrom` m
 existovať) pribúda druhá. Obe hlásia inú vetu, aby personalista vedel, čo mu
 chýba.
 
+**Doplnené 2026-09-12 — brána stojí aj pri publikovaní.** Dovtedy stála len pri
+prideľovaní, a to je brána na nesprávnom mieste: neschválené znenie sa
+zverejniť **dalo**, objavilo sa v knižnici a RAG z neho odpovedal — len sa
+nedalo prideliť na potvrdenie. Kto si predpis nájde sám, číta ho bez ohľadu na
+to, či ho niekto schválil, a systém, ktorý z neho odpovedá, za to ručí rovnako.
+
+Schvaľuje sa preto **koncept**, nie hotové znenie. `versionId` vzniká až vnútri
+`publish()` ako odtlačok textu (D57), takže pred publikovaním znenie ešte
+neexistuje a nie je na čom viesť kolo. Kolo sa vedie na odtlačku
+`draftMarkdown` a znenie, ktoré z neho vznikne, má ten istý `versionId` —
+schválenie a zverejnené znenie sa teda nemôžu rozísť. Cena za to je viditeľná
+a treba ju povedať nahlas: **každá úprava textu po schválení odtlačok zmení
+a schválenie prestane platiť.** Nie je to chyba, je to presne to, čo žiada D28
+aj D72; pre už zverejnené znenia zostáva východiskom `fixVersion()` s povinným
+dôvodom.
+
+Brána stojí **v `publish()`, nie v serverovej akcii** — akcií môže raz pribudnúť
+viac a brána, ktorú sa dá obísť iným vstupom, nie je brána. A stojí **až za
+kontrolou idempotencie**: opätovné zverejnenie rovnakého textu sa má naďalej
+ticho nič-nedeje, inak by sa dnešný korpus spred zavedenia schvaľovania (D74)
+prestal dať publikovať.
+
 ### D74 — Desať dnešných noriem sa **spätne neschvaľuje** (a čoskoro zmiznú)
 
 > **Doplnené 2026-09-10 po informácii od Jána Letka:** dnešný korpus je
@@ -177,6 +199,7 @@ Stav znenia je **odvodený** z posledného kola (D27), nie uložený:
 | --- | --- | --- |
 | 1. model a stav | `lib/approvals.ts` (nová), čistá funkcia `versionState()` | testovateľná bez Monga |
 | 2. brána pri prideľovaní | `lib/assignments.ts` | druhá podmienka vedľa `effectiveFrom` · hotové 2026-09-10, až po krokoch 3–5 |
+| 2b. brána pri publikovaní | `lib/libraryWrite.ts`, `lib/approvals.ts` | `publishBlock({ state })` **za** kontrolou idempotencie · schvaľuje sa koncept (odtlačok `draftMarkdown`) · hotové 2026-09-12 |
 | 3. predloženie | `app/library/new`, `app/library/[id]` | tretí krok návrhu |
 | 4. rozhodnutie | `app/library/[id]` + serverová akcia | bez JavaScriptu, ako potvrdzovanie (formulár nad akciou, nie API — inak CSRF na úkone s následkom) |
 | 5. upozornenia | `lib/ecomail.ts` | menovaným ľuďom, nie hromadne — tu automatické odosielanie problém nie je |

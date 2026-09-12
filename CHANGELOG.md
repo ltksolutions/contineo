@@ -4,6 +4,19 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Added (2026-09-12 — neschválené znenie sa už nedá zverejniť)
+
+Brána z D73 sa posúva o krok skôr. Dovtedy stála len pri prideľovaní: neschválené znenie sa **zverejniť dalo**, objavilo sa v knižnici a RAG z neho odpovedal — len sa nedalo prideliť na potvrdenie. Kto si predpis nájde sám, číta ho bez ohľadu na to, či ho niekto schválil.
+
+- **`publishBlock({ state })`** — pravidlo ako čistá funkcia vedľa `assignBlock()`, testovateľná bez Monga. Dva kódy, nie jeden: „ešte si nepredložil" a „už to beží" vedú človeka k inému ďalšiemu kroku.
+- **Brána vnútri `publish()`, nie v serverovej akcii.** Akcií môže raz pribudnúť viac a brána, ktorú sa dá obísť iným vstupom, nie je brána.
+- **Až za kontrolou idempotencie.** Opätovné zverejnenie rovnakého textu sa naďalej ticho nič-nedeje — inak by sa dnešný korpus spred zavedenia schvaľovania (D74) prestal dať publikovať.
+- **Schvaľuje sa koncept, nie hotové znenie.** `versionId` vzniká až vnútri `publish()` ako odtlačok textu (D57), takže pred publikovaním znenie neexistuje. Kolo sa vedie na odtlačku `draftMarkdown` a znenie, ktoré z neho vznikne, má ten istý `versionId`.
+- **Dôsledok, ktorý rozhranie hovorí nahlas:** po schválení sa text už nesmie meniť — každá úprava zmení odtlačok a schválenie prestane platiť (D28, D72).
+- **Panel nad formulárom, nie chybová hláška po odoslaní.** Kto vypĺňa označenie a dátum platnosti, vidí vopred, že bez schválenia to neprejde. Formulár, ktorý sa dá celý vyplniť a až potom odmietne, je stratený čas a vyzerá ako porucha.
+- Overené: `tsc` čisto, **1121 testov**, lint bez chýb, `build` prejde.
+
+
 ### Fixed (2026-09-12 — odkaz „Kto nepotvrdil→" viedol inam a videl ho aj ten, kto tam nesmie)
 
 Našlo sa to pri overovaní bodu 6 mapy. Zápis tvrdil, že odkaz **chýba**; v skutočnosti bol na mieste a robil dve veci zle.

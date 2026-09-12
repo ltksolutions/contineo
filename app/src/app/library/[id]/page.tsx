@@ -27,6 +27,7 @@ import AppShell from "@/components/AppShell"
 import ApprovalPanel from "@/components/ApprovalPanel"
 import { isHr } from "@/lib/hr"
 import { roundsByVersion, stateOf } from "@/lib/approvalsDb"
+import { textFingerprint } from "@/lib/chunkIdentity"
 import { listPeople } from "@/lib/people"
 
 export const dynamic = "force-dynamic"
@@ -94,6 +95,21 @@ export default async function DocumentDetailPage({
   // Koncept, ktorý sa líši od publikovaného znenia, je nedokončená práca —
   // a je to jediný stav, v ktorom má zmysel niečo publikovať.
   const hasChangesToPublish = Boolean(draft) && draft !== published
+
+  /*
+   * Schvaľuje sa **koncept**, nie hotové znenie. `versionId` vzniká až vnútri
+   * `publish()` ako odtlačok textu (D57), takže pred publikovaním znenie ešte
+   * neexistuje a nie je na čom viesť kolo. Odtlačok konceptu sa preto počíta
+   * tu — tou istou funkciou, akú použije `publish()`, aby sa kolo a znenie,
+   * ktoré z neho vznikne, nemohli rozísť.
+   *
+   * Dôsledok, ktorý treba povedať nahlas: **každá úprava textu po schválení
+   * odtlačok zmení a schválenie prestane platiť.** Presne to žiada D28 —
+   * potvrdzuje sa text, ktorý ľudia videli, nie dokument s tým istým názvom.
+   */
+  const draftVersionId = draft ? textFingerprint(draft) : null
+  const draftRounds = draftVersionId ? (rounds.get(draftVersionId) ?? []) : []
+  const draftState = stateOf(draftRounds)
 
   return (
     <AppShell language={ctx.person.language}>
@@ -256,38 +272,71 @@ export default async function DocumentDetailPage({
             {t.nothingToPublish}
           </p>
         ) : (
-          <form action={publishVersionAction} style={{ display: "grid", gap: 14 }}>
-            <input type="hidden" name="documentId" value={d.documentId} />
+          <>
+            {/*
+              Schvaľovací panel **nad** formulárom, nie chybová hláška po
+              odoslaní. Kto vypĺňa označenie a dátum platnosti, má vopred
+              vidieť, že bez schválenia to neprejde — formulár, ktorý sa dá
+              celý vyplniť a až potom odmietne, je stratený čas a vyzerá ako
+              porucha, hoci je to pravidlo.
+            */}
+            <div style={{ display: "grid", gap: 8 }}>
+              <h3 className="field-label" style={{ margin: 0 }}>{t.draftApprovalHeading}</h3>
+              <ApprovalPanel
+                documentId={d.documentId}
+                documentTitle={d.title}
+                versionId={draftVersionId ?? ""}
+                versionLabel={t.approvalDraftLabel}
+                effectiveFrom={null}
+                state={draftState}
+                rounds={draftRounds}
+                people={approverChoices}
+                language={language}
+              />
+            </div>
 
-            <label className="field">
-              <span className="field-label">{t.versionLabel}</span>
-              <input className="field-input" name="label" required
-                     placeholder={t.versionLabelPlaceholder} />
-              <span className="quiet field-hint">
-                {t.labelNoteBefore}<strong>{t.labelNoteHighlight}</strong>{t.labelNoteAfter}
-              </span>
-            </label>
+            {draftState !== "approved" ? (
+              <p className="quiet" style={{ fontSize: 14, margin: 0 }}>
+                {draftState === "in-review" ? t.publishWaitsForApproval : t.publishNeedsApproval}
+              </p>
+            ) : (
+              <>
+                <p className="quiet" style={{ fontSize: 14, margin: 0 }}>{t.publishApprovedNote}</p>
+              <form action={publishVersionAction} style={{ display: "grid", gap: 14 }}>
+                <input type="hidden" name="documentId" value={d.documentId} />
 
-            <label className="field">
-              <span className="field-label">{t.effectiveFrom}</span>
-              <input className="field-input" type="date" name="effectiveFrom" required />
-              <span className="quiet field-hint">{t.effectiveFromNote}</span>
-            </label>
+                <label className="field">
+                  <span className="field-label">{t.versionLabel}</span>
+                  <input className="field-input" name="label" required
+                         placeholder={t.versionLabelPlaceholder} />
+                  <span className="quiet field-hint">
+                    {t.labelNoteBefore}<strong>{t.labelNoteHighlight}</strong>{t.labelNoteAfter}
+                  </span>
+                </label>
 
-            <label className="field">
-              <span className="field-label">{t.effectiveFromSource}</span>
-              <input className="field-input" name="effectiveFromSource"
-                     placeholder={t.effectiveFromSourcePlaceholder} />
-              <span className="quiet field-hint">{t.effectiveFromSourceNote}</span>
-            </label>
+                <label className="field">
+                  <span className="field-label">{t.effectiveFrom}</span>
+                  <input className="field-input" type="date" name="effectiveFrom" required />
+                  <span className="quiet field-hint">{t.effectiveFromNote}</span>
+                </label>
 
-            <label className="field">
-              <span className="field-label">{t.changeNote}</span>
-              <input className="field-input" name="changeNote" placeholder={t.changeNotePlaceholder} />
-            </label>
+                <label className="field">
+                  <span className="field-label">{t.effectiveFromSource}</span>
+                  <input className="field-input" name="effectiveFromSource"
+                         placeholder={t.effectiveFromSourcePlaceholder} />
+                  <span className="quiet field-hint">{t.effectiveFromSourceNote}</span>
+                </label>
 
-            <div><button className="button" type="submit">{t.publish}</button></div>
-          </form>
+                <label className="field">
+                  <span className="field-label">{t.changeNote}</span>
+                  <input className="field-input" name="changeNote" placeholder={t.changeNotePlaceholder} />
+                </label>
+
+                <div><button className="button" type="submit">{t.publish}</button></div>
+              </form>
+              </>
+            )}
+          </>
         )}
       </section>
 

@@ -15,7 +15,7 @@
 
 import { describe, it, expect } from "vitest"
 import {
-  versionState, roundOutcome, pendingApprovers, submitProblem, assignBlock, decideProblem,
+  versionState, roundOutcome, pendingApprovers, submitProblem, assignBlock, publishBlock, decideProblem,
   type ApprovalRound, type ApproverDecision,
 } from "../src/lib/approvals"
 
@@ -263,5 +263,27 @@ describe("rozhodnutie schvaľovateľa", () => {
   it("schválenie dôvod nepotrebuje", () => {
     // Kto súhlasí, nemá čo vysvetľovať — povinný dôvod by bol obrad navyše.
     expect(decideProblem({ round: running(), by: "a@x.test", decision: "approved" })).toBe(null)
+  })
+})
+
+describe("brána pred zverejnením", () => {
+  it("schválené znenie sa zverejniť dá", () => {
+    expect(publishBlock({ state: "approved" })).toBe(null)
+  })
+
+  it("koncept sa zverejniť nedá", () => {
+    expect(publishBlock({ state: "draft" })).toBe("publish.notApproved")
+  })
+
+  it("znenie v schvaľovaní sa zverejniť nedá — a povie to inak než koncept", () => {
+    // Rozdiel nie je kozmetický: pri koncepte má správca obsahu predložiť,
+    // pri bežiacom kole má počkať. Jeden spoločný kód by ho poslal hádať.
+    expect(publishBlock({ state: "in-review" })).toBe("publish.inReview")
+  })
+
+  it("znenie spred zavedenia schvaľovania prechádza", () => {
+    // Taký text v knižnici **už je** (D74). Zastaviť ho tu nechráni nič —
+    // len by sa prestal dať znovu zverejniť dnešný skúšobný korpus.
+    expect(publishBlock({ state: "published-before" })).toBe(null)
   })
 })
