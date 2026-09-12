@@ -202,7 +202,7 @@ Poradie je podľa toho, čo človek vidí najskôr.
    **Zámerne bez:** zvončeka upozornení a počtov pri položkách (obe potrebujú
    ten istý dotaz, robia sa spolu v bode 2). `⌘K` funguje ako skratka, ale nie
    je v placeholderi — ukázať „⌘K" človeku na Windows by bola nepravda.
-2. **Počty pri položkách + zvonček + mobilná zásuvka** — jedno PR, lebo počet
+2. ~~**Počty pri položkách + zvonček + mobilná zásuvka**~~ ✅ **hotové 2026-09-12** (`feat/nav-counts-drawer`) — okrem zvončeka, ktorý sa vedome nerobil: systém nemá čo oznamovať a bodka by bola tretia cesta k tomu istému číslu. Pôvodný zámer — jedno PR, lebo počet
    nepotvrdených je ten istý dotaz pre badge aj pre bodku na zvončeku. Platiť sa
    má raz: obaliť `hrContext()`/`libraryContext()`/`peopleContext()` do `cache()`
    z Reactu (už zapísané v `TODO.md`) a pridať jeden `countDocuments`.

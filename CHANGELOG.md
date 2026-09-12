@@ -15,7 +15,7 @@ Bod 2 z `docs/DESIGN_GAP.md`.
 - **Pás aj zásuvka sú v DOM naraz** a prepína ich `@media`. Obsah `<details>` skrýva prehliadač sám a CSS ho nevie odkryť späť, takže jedna forma prepínaná štýlom nestačí. Čo je `display: none`, nie je ani v strome prístupnosti — čítačka vidí vždy len jednu navigáciu.
 - **`cache()` na reláciu, hostiteľa, tenanta a osobu** (`lib/session.ts`). Shell si zisťuje tri roly a každá z nich potrebovala tenanta aj osobu; s obrazovkou pod ním to bolo šesť tých istých dotazov na jedno načítanie. Zámerne nie na `findPerson()` — tú volajú aj serverové akcie po zápise a pamäť by im vracala stav spred neho. Bez tejto zmeny by počty znamenali ďalšie dotazy navyše; s ňou ich je menej než predtým.
 - **Zvonček upozornení sa nerobil** (rozhodnutie Jána Letka): systém zatiaľ nemá čo oznamovať, bodka by sa rozsvietila z toho istého čísla ako štítok a klik by viedol na Prehľad, ktorý je prvá položka navigácie. Tri cesty k jednému číslu. Zvonček sa postaví, keď bude mať obsah (`UDALOSTI_A_UPOZORNENIA_KONCEPCIA.md`).
-- Overené: `tsc` čisto, **1117 testov**, lint bez chýb, `build` prejde.
+- Overené: `tsc` čisto, **1117 testov**, lint bez chýb, `build` prejde; na produkcii pri 320 / 390 / 900 / 1000 / 1440 px. Pod prahom je zásuvka a pás je preč, nad prahom naopak a pás sa zmestí bez posunu (`scrollWidth` = `clientWidth` = 1000). Riadok aj prepínač majú 44 px. Štítok v navigácii ukazuje to isté číslo ako dlaždica Prehľadu.
 
 
 ### Changed (2026-09-11 — Prehľad je domov, otázky sa presťahovali na `/ask`)
