@@ -34,6 +34,12 @@ export interface LibraryRow {
   versionCount: number
   /** Označenie platného znenia, alebo dôvod, prečo žiadne neplatí. */
   effectiveLabel: string
+  /**
+   * Odkedy platí znenie z `effectiveLabel`. `null` znamená **neplatí žiadne**,
+   * nie „nevie sa" — dokument bez platného znenia je legitímny stav (koncept,
+   * znenie s budúcou účinnosťou) a v zozname sa má dať odlíšiť od dátumu.
+   */
+  effectiveFrom: Date | null
   hasDraft: boolean
   originalFile?: { name: string; type: string; bytes: number }
   updatedAt?: Date
@@ -74,6 +80,19 @@ function validityLabel(doc: { versions?: Version[] }): string {
   return v.ok ? v.version.label : (REASON[v.reason] ?? v.reason)
 }
 
+/**
+ * Odkedy platí znenie, ktoré platí teraz. `null` = neplatí žiadne.
+ *
+ * Samostatne vedľa `validityLabel()` zámerne: obe sa pýtajú tej istej
+ * `effectiveVersion()`, ale jedna vracia **text pre človeka** a druhá
+ * **dátum pre stroj**. Keby to bola jedna hodnota, do exportu by sa dostal
+ * dátum už naformátovaný podľa jazyka prehliadača — a taký sa nedá zoradiť.
+ */
+function validityFrom(doc: { versions?: Version[] }): Date | null {
+  const v = effectiveVersion(doc as never)
+  return v.ok && v.version.effectiveFrom ? new Date(v.version.effectiveFrom) : null
+}
+
 type RawRow = Record<string, unknown> & { versions?: Version[] }
 
 function toRow(d: RawRow): LibraryRow {
@@ -91,6 +110,7 @@ function toRow(d: RawRow): LibraryRow {
     folderId: (d.folderId as string | null | undefined) ?? null,
     versionCount: (d.versions ?? []).length,
     effectiveLabel: validityLabel(d),
+    effectiveFrom: validityFrom(d),
     hasDraft: Boolean(String(d.draftMarkdown ?? "").trim()),
     originalFile: original
       ? { name: original.name, type: original.type, bytes: original.bytes }

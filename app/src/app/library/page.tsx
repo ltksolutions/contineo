@@ -263,6 +263,14 @@ export default async function LibraryPage({
           ))}
         </span>
         <Link className="button" href="/library/new">{t.upload}</Link>
+        {/*
+          Export nesie **tie isté filtre**, aké sú na obrazovke — preto
+          `toQuery(filters, …)` a nie holá adresa. Kto si vyfiltruje osem
+          dokumentov, má dostať osem, nie stoštyridsaťosem.
+        */}
+        <Link className="button button--quiet" href={toQuery(filters, "/library/csv")}>
+          {t.exportCsv}
+        </Link>
         <Link className="button button--quiet" href="/library/tracks">
           {dictionary(uiLanguage).library.tracks.heading}
         </Link>
@@ -764,6 +772,7 @@ export default async function LibraryPage({
                     </th>
                   ))}
                   <th scope="col">{t.colVersion}</th>
+                  <th scope="col" className="doc-col-date">{t.colEffectiveFrom}</th>
                   <th scope="col" className="doc-col-right">
                     <Link href={toQuery(sortBy(filters, "updatedAt"))} className="doc-sort"
                           aria-label={t.sortBy(t.colChanged)}>
@@ -810,6 +819,14 @@ export default async function LibraryPage({
                     <td className="doc-cell-quiet">
                       {r.effectiveLabel}
                       {r.versionCount > 0 && <div className="quiet doc-meta">{t.versions(r.versionCount)}</div>}
+                    </td>
+                    {/*
+                      Pomlčka, nie prázdna bunka: prázdne miesto v tabuľke vyzerá
+                      ako chýbajúci údaj, pomlčka hovorí, že dokument práve
+                      **nemá platné znenie** — čo je stav, nie porucha.
+                    */}
+                    <td className="doc-cell-quiet doc-col-date">
+                      {r.effectiveFrom ? formatDate(r.effectiveFrom, uiLanguage) : "—"}
                     </td>
                     <td className="doc-col-right doc-cell-quiet">
                       {r.updatedAt ? formatDate(r.updatedAt, uiLanguage) : "—"}
