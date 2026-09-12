@@ -159,7 +159,7 @@ treba prepísať, lebo dnes tvrdí nepravdu.
 Hotové: percento potvrdení s pruhom, prehľad metadát, chips v hlavičke.
 
 Chýba: **záložky Obsah | Zmeny | Citované časti | Audit** (dnes žiadne),
-**rámik „Zmena oproti v4.1"**, odkaz **„Kto nepotvrdil →"**, **Súvisiace
+**rámik „Zmena oproti v4.1"**, ~~odkaz **„Kto nepotvrdil →"**~~ (bol tam cely cas — opraveny 2026-09-12: mieril na cely vykaz a videl ho aj ten, kto do neho nesmie), **Súvisiace
 predpisy**, zoznam **Verzie a schválenie** so stavom Aktuálna/Archív, a tlačidlá
 **Nová verzia** / **Stiahnuť PDF** v hlavičke detailu.
 
