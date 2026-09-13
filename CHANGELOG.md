@@ -33,7 +33,10 @@ Rozhodnutia sú v `docs/ADR-007-oprava-textu-znenia.md` (D76–D78).
 - **Opravuje sa len platné znenie.** Archivované je doklad o tom, čo platilo vtedy (D78).
 - **Cena, ktorá sa nezakrýva:** schválenie zostáva pri pôvodnom texte, takže brána z D73 sa tu obchádza. Je to vedomé a vyvážené tými štyrmi podmienkami; kto mení význam, publikuje nové znenie a to prejde schvaľovaním celé. Napísané je to v ADR aj priamo v rozhraní nad tlačidlom.
 - **Ukladá sa to, čoho rozdiel bol vidieť.** Cez formulár ide odtlačok konceptu, nie celý text; server ho overí a odmietne zápis, ak sa koncept medzitým zmenil pod rukami.
+- **Ponuka sa nezobrazí, keď sa text reálne nelíši.** Hláška „koncept sa líši“ porovnáva surové reťazce, kým odtlačok normalizuje konce riadkov (D57); editor vie text preuložiť tak, že reťazce sa líšia a odtlačok nie. Ponúkať v takom stave tlačidlo, ktoré zápis odmietne, je horšie než neponúknuť nič.
 - Overené: `tsc` čisto, **1147 testov**, lint bez chýb, `build` prejde.
+- **Overené na produkcii** (2026-09-13, skúšobná smernica, znenie 1.2 — oprava `Neni` → `Nie je`):
+  `versionId` `79427d4b…` **zostal**, `contentHash` sa zmenil na `9ab573e8…`; `textFixes[0]` nesie kto, kedy, dôvod, odtlačok pred aj po a celý predchádzajúci text (916 znakov); chunky vymenené **pri tom istom `versionId`** (starý archivovaný); potvrdenia bez zmeny; schválenie zostalo pri znení („Schválené · 3 kolá“) — presne tá cena, ktorú ADR-007 pomenúva. Rozdiel `+1 / −1` bol vidieť pred uložením.
 
 
 ### Added (2026-09-12 — potvrdenie sa dá odvolať)
