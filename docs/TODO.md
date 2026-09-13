@@ -482,3 +482,72 @@
 - [ ] kurácia (dokumenty čakajúce na kurátora, otvorený rozpor s D25)
 - [ ] helpdesk (Fáza 4b)
 - [ ] prípadné jednorazové hlásenia podľa D40
+
+---
+
+## O. Poradie prác po Fáze 8 (zaradené 2026-09-13)
+
+> **Prečo táto sekcia.** Tri otvorené veci žili každá inde — `correction`
+> v tejto TODO, medzery rozhrania v `DESIGN_GAP.md`, členenie a identita
+> dokumentu nikde. Toto je **poradie**, nie ďalší zoznam: podrobnosti
+> zostávajú v pôvodných súboroch a neduplikujú sa sem.
+
+**Brána:** nič z tejto sekcie sa nezačína pred dokončením Fázy 8. Výnimkou sú
+kroky označené 🔓 — sú malé a odstraňujú stav, ktorý sa spätne opravuje
+drahšie než teraz.
+
+### O1 🔓 — D80, kroky A: nový dokument vs. nové znenie → `docs/D80_plan_novy_dokument_vs_nove_znenie.md`
+
+- [ ] `documentKey` oddelený od `sectionKey`; `documentId` sa nemení nikomu (D80/A1, A2)
+- [ ] `uploadDocument()` dostane zámer a **odmietne kolíziu** namiesto tichého prepisu (D80/A3)
+
+Dnes nahratie na existujúci `sectionKey` **ticho prepíše** koncept, metadáta
+aj pôvodný nahraný súbor existujúceho dokumentu, rozhranie nevaruje a cesta
+„nahrať nové znenie" na detaile neexistuje. Preto 🔓 — každé ďalšie nahratie
+je príležitosť stratiť dáta.
+
+### O2 🔓 — D79, etapa 1: členenie per dokument → `docs/D79_plan_clenenie_per_dokument.md`
+
+- [x] A1 diagnostika — dnešný korpus problém nemá (9/10 rozpoznaných na 92–99 %)
+- [ ] B1–B3 dátový model pomenovaných profilov a migrácia
+
+Lacné, kým je knižnica malá. Nové obrazovky a druhá stratégia chunkovania
+(etapa 2) čakajú za Fázou 8.
+
+### O3 — D80, kroky B a C: obrazovky
+
+- [ ] `/library/new` s kontrolou kolízie pri písaní kľúča
+- [ ] detail dokumentu: **Nové znenie** — súbor, prevod, **porovnanie s platným znením**
+- [ ] upratanie `sectionKey.json` na kategórie
+
+### O4 — oprava záznamu o potvrdení (typ `correction`)
+
+- [ ] rozhodnúť, **ktoré polia** záznamu sa smú opravovať a **kto** to smie
+- [ ] implementovať cestu cez `supersedes` (dnes natvrdo `null`)
+- [ ] doplniť `correction` do čítania výkazu — `validAcknowledgements()` filtruje len `acknowledgement|revocation`, oprava by sa dnes **ani nezapočítala**
+
+Podrobnosti v sekcii I tejto TODO. Odvolanie (`revocation`) hotové 2026-09-12;
+oprava je jeho nedorobená polovica. Vzor rozhodnutia je pri odvolaní:
+koná personalista, dôvod povinný, nový záznam namiesto úpravy starého.
+
+### O5 — D79, etapa 2: analyzátor, dávka, stratégia „voľný text", obrazovky
+
+### O6 — medzery rozhrania → `docs/DESIGN_GAP.md`
+
+Zoznam sa sem neprepisuje. Poradie podľa toho, čo blokuje prevádzku:
+
+- [ ] **najprv rozhodnutia**, nie kreslenie: položky navigácie, ikonový set
+      (README zakazuje vlastné SVG), facet Útvar (dokument útvar nenesie),
+      pilulky rozsahu hľadania, skóre zhody pri zdroji
+- [ ] **potom to, čo chýba v už postavených obrazovkách:** tretí krok
+      nahrávania (schvaľovatelia), prepínač „vyžadovať potvrdenie",
+      priradenie útvarom, záložky Obsah/Zmeny/Audit na detaile, zoznam
+      „Verzie a schválenie", rámik „Zmena oproti …"
+- [ ] **nakoniec pohodlie:** hľadanie vo filtroch, uložiť pohľad, súvisiace
+      predpisy, „ďalšie zhody v knižnici", „nahlásiť nepresnosť",
+      prepínač organizácie, tabuľka organizácií
+- [ ] **jednoriadkové:** prepísať zastaraný komentár v `new/page.tsx`
+      (tvrdí, že schvaľovací krok neexistuje — dnes nepravda)
+
+Bod „tlačidlo **Nová verzia** na detaile" z `DESIGN_GAP.md` rieši **O3**,
+nie táto sekcia.
