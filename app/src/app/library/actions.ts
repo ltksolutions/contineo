@@ -27,7 +27,6 @@ import {
   assignDocument, shiftFolder, saveFolderOrder,
 } from "@/lib/folders"
 import type { CodelistExtras } from "@/lib/codelists"
-import type { ChunkingProfile } from "@/lib/chunkingProfile"
 import { cleanMarkdown, rewritePdf } from "@/lib/llmRewrite"
 import { getCollection } from "@/lib/mongodb"
 import { DOCUMENTS_COLLECTION } from "@/lib/documents"
@@ -50,7 +49,6 @@ async function actor(): Promise<
     /** Jazyk prostredia — hlásenia sa vracajú v ňom. */
     language: UiLanguage
     extras: CodelistExtras
-    profile?: Partial<ChunkingProfile>
     /**
      * Rola správcu obsahu. `libraryContext()` ju už overila — nesie sa ďalej
      * preto, aby pravidlá v `src/lib` nemuseli veriť tomu, že sa akcia volala
@@ -69,8 +67,10 @@ async function actor(): Promise<
         // Vlastné položky číselníkov organizácie (D55) — bez nich by
         // obrazovka ponúkala druh dokumentu, ktorý zápis vzápätí odmietne.
         extras: tenantExtras(ctx.tenant),
-        // Profil členenia organizácie (D58). Chýbajúci znamená predvolený.
-        profile: ctx.tenant.chunking,
+        // Profil členenia sa sem už nepodáva: od D79 si ho každý zápis
+        // rozlíši podľa **dokumentu**, nie podľa organizácie. Podávaný zvonku
+        // znamenal, že dávkové preindexovanie prerezalo aj dokumenty
+        // s vlastným profilom.
         canManageContent: isContentManager(ctx.person),
       }
     : null
@@ -241,7 +241,7 @@ export async function publishVersionAction(fd: FormData) {
       effectiveFrom: new Date(`${day}T00:00:00.000Z`),
       effectiveFromSource: fieldText(fd, "effectiveFromSource"),
       changeNote: fieldText(fd, "changeNote"),
-    }, self.email, self.profile)
+    }, self.email)
 
     message = v.alreadyDone
       ? say(self.language).alreadyPublished
@@ -551,7 +551,7 @@ export async function reindexDocumentAction(fd: FormData) {
   let message = ""
   let error = false
   try {
-    const v = await reindex(self.companyCode, id, self.email, self.profile)
+    const v = await reindex(self.companyCode, id, self.email)
     message = v.alreadyDone
       ? say(self.language).reindexUpToDate
       : say(self.language).reindexed(v.chunks, v.archived)
@@ -616,7 +616,7 @@ export async function fixTextAction(fd: FormData) {
       expectedFingerprint: fieldText(fd, "expectedFingerprint"),
       reason: fieldText(fd, "reason"),
       canManageContent: self.canManageContent,
-    }, self.email, self.profile)
+    }, self.email)
 
     message = say(self.language).textFixed(v.added, v.removed, v.chunks)
   } catch (e) {

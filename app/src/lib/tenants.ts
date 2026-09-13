@@ -25,7 +25,7 @@ import { normalizeLanguage, UI_LANGUAGES } from "./i18n"
 import type { UiLanguage } from "./i18n"
 import type { Person } from "./persons"
 import type { TenantOAuth } from "./oauth"
-import type { ChunkingProfile } from "./chunkingProfile"
+import type { ChunkingProfile, ChunkingProfileDef } from "./chunkingProfile"
 
 export const TENANTS_COLLECTION = "tenants"
 
@@ -102,6 +102,15 @@ export interface Tenant {
    * tak, ako sa rezalo doteraz (overené na deviatich normách).
    */
   chunking?: Partial<ChunkingProfile>
+
+  /**
+   * Pomenované profily členenia (D79). Dokument nesie **len kľúč** jedného
+   * z nich — vlastné hodnoty na dokumente zámerne neexistujú.
+   *
+   * `chunking` vyššie zostáva ako záchyt pre organizácie spred D79, ktoré
+   * profily ešte nemajú. Kým ich nemajú, správajú sa presne ako predtým.
+   */
+  chunkingProfiles?: ChunkingProfileDef[]
 
   /**
    * Domény, z ktorých sa človek **založí sám** pri prvom prihlásení

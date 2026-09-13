@@ -129,6 +129,11 @@ export interface DocumentRecord {
    * `documentId`. Dokumentom spred D80 chýba a vtedy platí `sectionKey`.
    */
   documentKey?: string
+  /**
+   * Kľúč pomenovaného profilu členenia (D79). Chýbajúci znamená základný
+   * profil organizácie — nie „bez členenia".
+   */
+  chunkingProfile?: string
   companyCode?: string
   accessLevel?: "public" | "internal"
   /**

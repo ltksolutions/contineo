@@ -32,12 +32,33 @@ import { saveFile, deleteFile } from "./fileStore"
 import { convert, FILE_TYPE_LABEL } from "./conversion"
 import { writeAudit, diff } from "./audit"
 import type { Chunk } from "./chunker.mjs"
-import { toChunkerProfile, type ChunkingProfile } from "./chunkingProfile"
+import { toChunkerProfile, chunkingFor, type ChunkingProfile, type ChunkingProfileDef } from "./chunkingProfile"
+import { TENANTS_COLLECTION } from "./tenants"
 import { AppError } from "./appError"
 import { publishBlock } from "./approvals"
 import { versionStateFor } from "./approvalsDb"
 
 export const CHUNKS_COLLECTION = "document_chunks"
+
+/** Organizácia len v tom rozsahu, v akom ju potrebuje členenie (D79). */
+type ChunkingTenant = {
+  chunkingProfiles?: ChunkingProfileDef[]
+  chunking?: Partial<ChunkingProfile>
+}
+
+/**
+ * Načíta profily členenia organizácie.
+ *
+ * **Číta sa tu, nie sa podáva zvonku.** Dovtedy profil prišiel ako parameter
+ * z obrazovky — a to znamenalo, že dávkové preindexovanie prerezalo **všetky**
+ * dokumenty profilom organizácie, aj tie, ktoré majú vlastný. Jedným kliknutím
+ * by sa tak zahodilo celé ladenie a zistilo by sa to až tým, že model odcituje
+ * nesprávny článok.
+ */
+async function chunkingTenant(companyCode: string): Promise<ChunkingTenant | null> {
+  const col = await getCollection(TENANTS_COLLECTION)
+  return await col.findOne({ companyCode }) as unknown as ChunkingTenant | null
+}
 
 /** Technický stav — čo s dokumentom urobili stroje. */
 export type ProcessingState = "uploaded" | "converted" | "indexed" | "failed"
@@ -303,7 +324,6 @@ export async function publish(
   documentId: string,
   input: { label: string; effectiveFrom: Date; effectiveFromSource?: string; changeNote?: string },
   actor: string,
-  profile?: Partial<ChunkingProfile>,
 ): Promise<PublishResult> {
   const label = (input.label ?? "").trim()
   if (!label) {
@@ -334,6 +354,7 @@ export async function publish(
   }
   const tags = Array.isArray(doc.tags) ? (doc.tags as string[]) : []
 
+  const profile = chunkingFor(await chunkingTenant(companyCode), doc.chunkingProfile as string | undefined)
   const forChunker = toChunkerProfile(profile)
   const { chunky: chunks } = chunkText(markdown, { nazovDokumentu: meta.title, profil: forChunker })
   if (!chunks.length) {
@@ -587,7 +608,6 @@ export async function reindex(
   companyCode: string,
   documentId: string,
   actor: string,
-  profile?: Partial<ChunkingProfile>,
 ): Promise<{ chunks: number; archived: number; alreadyDone: boolean; chunkingId: string }> {
   const col = await getCollection(DOCUMENTS_COLLECTION)
   const doc = await col.findOne({ documentId, companyCode }) as Record<string, unknown> | null
@@ -612,6 +632,8 @@ export async function reindex(
   }
   const tags = Array.isArray(doc.tags) ? (doc.tags as string[]) : []
 
+  // Profil **tohto dokumentu**, nie organizácie (D79).
+  const profile = chunkingFor(await chunkingTenant(companyCode), doc.chunkingProfile as string | undefined)
   const forChunker = toChunkerProfile(profile)
   const { chunky: chunks } = chunkText(markdown, { nazovDokumentu: meta.title, profil: forChunker })
   if (!chunks.length) {
@@ -844,7 +866,6 @@ export async function fixText(
   documentId: string,
   input: { expectedFingerprint: string; reason: string; canManageContent: boolean },
   actor: string,
-  profile?: Partial<ChunkingProfile>,
 ): Promise<{
   versionId: string
   label: string
@@ -923,7 +944,7 @@ export async function fixText(
   })
 
   // Až po zápise: `reindex()` číta text zo znenia, takže musí vidieť ten opravený.
-  const r = await reindex(companyCode, documentId, actor, profile)
+  const r = await reindex(companyCode, documentId, actor)
 
   return {
     versionId: effective.versionId,
@@ -953,8 +974,8 @@ export interface ReindexState {
  */
 export async function reindexState(
   companyCode: string,
-  profile?: Partial<ChunkingProfile>,
 ): Promise<ReindexState> {
+  const tenant = await chunkingTenant(companyCode)
   const col = await getCollection(DOCUMENTS_COLLECTION)
   const documents = await col
     .find(
@@ -963,10 +984,11 @@ export async function reindexState(
       // výber odmieta („Path collision at versions") — celá záložka Členenie
       // padala. Positional `$` sa navyše bez podmienky na to pole ani použiť
       // nedá; potrebujeme celé pole a platné znenie sa vyberá v kóde.
-      { projection: { documentId: 1, title: 1, chunkingId: 1, markdown: 1, versions: 1 } },
+      { projection: { documentId: 1, title: 1, chunkingId: 1, markdown: 1, versions: 1, chunkingProfile: 1 } },
     )
     .toArray() as unknown as {
       documentId: string; title?: string; chunkingId?: string; markdown?: string
+      chunkingProfile?: string
       versions?: { isActive?: boolean; markdown?: string }[]
     }[]
 
@@ -979,7 +1001,7 @@ export async function reindexState(
     if (!text) continue
     total++
 
-    const forChunker = toChunkerProfile(profile)
+    const forChunker = toChunkerProfile(chunkingFor(tenant, d.chunkingProfile))
     const { chunky: chunks } = chunkText(text, { nazovDokumentu: d.title ?? "", profil: forChunker })
     if (!chunks.length) { outdated++; continue }
     const chunkingId = chunkingFingerprint(chunks, { ...DEFAULT_PROFILE, ...forChunker })
@@ -1004,7 +1026,6 @@ export async function reindexState(
 export async function reindexAll(
   companyCode: string,
   actor: string,
-  profile?: Partial<ChunkingProfile>,
   limit = 25,
 ): Promise<{ preindexovanych: number; preskocenych: number; remaining: number; errors: string[] }> {
   const col = await getCollection(DOCUMENTS_COLLECTION)
@@ -1020,7 +1041,7 @@ export async function reindexAll(
   for (const d of documents) {
     if (reindexed >= limit) { remaining++; continue }
     try {
-      const v = await reindex(companyCode, d.documentId, actor, profile)
+      const v = await reindex(companyCode, d.documentId, actor)
       if (v.alreadyDone) skipped++
       else reindexed++
     } catch (e) {

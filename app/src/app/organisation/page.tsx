@@ -27,7 +27,7 @@ import { addCodelistItemAction, removeCodelistItemAction, saveChunkingProfileAct
 import { shiftDepartmentAction, saveDepartmentOrderAction } from "./actions"
 import TreeWithOrder from "@/components/TreeWithOrder"
 import { reindexState } from "@/lib/libraryWrite"
-import { DEFAULT_CHUNKING } from "@/lib/chunkingProfile"
+import { DEFAULT_CHUNKING, DEFAULT_PROFILE_KEY } from "@/lib/chunkingProfile"
 import { availableOptions, customItems, codelistUsage } from "@/lib/codelistsTenant"
 import { normalizeQuery, tabValue, type RawQuery } from "@/lib/urlParams"
 import { CUSTOM_CODELISTS } from "@/lib/codelists"
@@ -201,8 +201,14 @@ export default async function OrganisationPage({
   // narezaním — odhad by pri zmene parametra nevedel povedať, či na tomto
   // obsahu vôbec niečo spraví.
   const indexState = now === "chunking"
-    ? await reindexState(tenant.companyCode, tenant.chunking)
+    ? await reindexState(tenant.companyCode)
     : null
+
+  // Hodnoty v poliach idú zo **základného pomenovaného profilu** (D79).
+  // `tenant.chunking` je už len záchyt pre organizácie, ktoré profily ešte
+  // nemajú — čítať oba naraz by znamenalo ukazovať niečo iné, než sa použije.
+  const baseProfile = (tenant.chunkingProfiles ?? []).find(p => p.key === DEFAULT_PROFILE_KEY)
+  const chunkingValues = baseProfile ?? tenant.chunking ?? DEFAULT_CHUNKING
 
   const records = now === "audit"
     ? await auditRecords(tenant.companyCode, { search: search, limit: 200 })
@@ -653,7 +659,7 @@ export default async function OrganisationPage({
         <label className="field">
           <span className="field-label">{t.chunking.articleWord}</span>
           <input className="field-input" name="articleWord"
-                 defaultValue={tenant.chunking?.articleWord ?? DEFAULT_CHUNKING.articleWord} />
+                 defaultValue={chunkingValues.articleWord ?? DEFAULT_CHUNKING.articleWord} />
           <span className="quiet field-hint">
             {t.chunking.articleNote1}<code>Článok</code>{t.chunking.articleNote2}<code>§</code>
             {t.chunking.articleNote3}<code>Bod</code>{t.chunking.articleNote4}
@@ -664,27 +670,27 @@ export default async function OrganisationPage({
         <label className="field">
           <span className="field-label">{t.chunking.annexWord}</span>
           <input className="field-input" name="annexWord"
-                 defaultValue={tenant.chunking?.annexWord ?? DEFAULT_CHUNKING.annexWord} />
+                 defaultValue={chunkingValues.annexWord ?? DEFAULT_CHUNKING.annexWord} />
           <span className="quiet field-hint">{t.chunking.annexWordNote}</span>
         </label>
 
         <label className="field">
           <span className="field-label">{t.chunking.headerRepeats}</span>
           <input className="field-input" type="number" name="headerRepeats" min={2} max={50}
-                 defaultValue={tenant.chunking?.headerRepeats ?? DEFAULT_CHUNKING.headerRepeats} />
+                 defaultValue={chunkingValues.headerRepeats ?? DEFAULT_CHUNKING.headerRepeats} />
           <span className="quiet field-hint">{t.chunking.headerRepeatsNote}</span>
         </label>
 
         <label className="field">
           <span className="field-label">{t.chunking.minTokens}</span>
           <input className="field-input" type="number" name="minTokens" min={50} max={2000}
-                 defaultValue={tenant.chunking?.minTokens ?? DEFAULT_CHUNKING.minTokens} />
+                 defaultValue={chunkingValues.minTokens ?? DEFAULT_CHUNKING.minTokens} />
         </label>
 
         <label className="field">
           <span className="field-label">{t.chunking.maxTokens}</span>
           <input className="field-input" type="number" name="maxTokens" min={100} max={4000}
-                 defaultValue={tenant.chunking?.maxTokens ?? DEFAULT_CHUNKING.maxTokens} />
+                 defaultValue={chunkingValues.maxTokens ?? DEFAULT_CHUNKING.maxTokens} />
           <span className="quiet field-hint">
             {t.chunking.tokensNoteBefore}<code>300–800</code>{t.chunking.tokensNoteAfter}
           </span>

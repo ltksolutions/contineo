@@ -512,7 +512,9 @@ je príležitosť stratiť dáta.
 ### O2 🔓 — D79, etapa 1: členenie per dokument → `docs/D79_plan_clenenie_per_dokument.md`
 
 - [x] A1 diagnostika — dnešný korpus problém nemá (9/10 rozpoznaných na 92–99 %)
-- [ ] B1–B3 dátový model pomenovaných profilov a migrácia
+- [x] B1–B3 dátový model pomenovaných profilov a migrácia ✅ 2026-09-13
+      `npm run migrate:profiles` prebehla na ostrých dátach (3 organizácie, 10 dokumentov). Záložka Členenie zapisuje do základného profilu, nie do `tenant.chunking`.
+- [ ] **Zistiť, prečo deväť dokumentov hlási neaktuálne členenie.** `npm run chunking:status` ukazuje, že uložené `chunkingId` nesedí s dnešným výstupom chunkera — a nesedelo ani pred zavedením profilov, takže to D79 nespôsobilo. Pravdepodobne ich `scripts/import.mjs` narezal s iným breadcrumbom, než aký dnes skladá `reindex()`. Preindexovanie je bezpečné (`versionId` sa nemení), ale najprv nech je jasné, čo sa zmení.
 
 Lacné, kým je knižnica malá. Nové obrazovky a druhá stratégia chunkovania
 (etapa 2) čakajú za Fázou 8.

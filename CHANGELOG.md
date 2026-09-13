@@ -4,6 +4,24 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Changed (2026-09-13 — členenie sa rozlišuje podľa dokumentu, nie podľa organizácie, D79)
+
+Profil členenia bol **jeden na organizáciu** (D58) a do zápisu sa podával z obrazovky. Kým je knižnica zoznamom deviatich predpisov SFZ, sedí to. Vo chvíli, keď v nej stoja vedľa seba predpisy (`Článok`), zákony (`§`) a manuály bez formálneho členenia, je to garantovane zlé pre časť korpusu — a dávkové preindexovanie by navyše prerezalo **všetky** dokumenty profilom organizácie, aj tie s vlastným.
+
+Plán a rozhodnutia: `docs/D79_plan_clenenie_per_dokument.md`. Toto je etapa 1 — dátový model. Analyzátor, dávková analýza a druhá stratégia chunkovania sú etapa 2, za Fázou 8.
+
+- **Pomenované profily, žiadne výnimky na dokumente.** Dokument nesie **iba kľúč** profilu. Ad-hoc hodnoty na dokumente by znamenali, že o pol roka nikto nevie, prečo sú dva podobné predpisy narezané inak. Keď dokument nesadne ani jednému profilu, vzniká nový pomenovaný profil — odchýlka sa tým zapíše raz, s menom a viditeľne.
+- **Profil si rozlišuje zápis sám**, z dokumentu. `publish()`, `reindex()`, `fixText()`, `reindexState()` a `reindexAll()` prestali brať profil ako parameter. Podávaný zvonku bol presne tou cestou, ktorou by hromadné preindexovanie zahodilo ladenie jednotlivých dokumentov.
+- **Reťaz je štvorčlánková a každý článok má dôvod:** profil dokumentu → základný profil organizácie → `tenant.chunking` (organizácia spred D79) → `undefined`, teda predvoľby chunkera. Tretí článok tam nie je pre poriadok: bez neho by organizácii bez profilov začali dokumenty rezať predvolenými hodnotami namiesto jej vlastných a prejavilo by sa to až tým, že model odcituje nesprávny článok.
+- **Kľúč ani menovka profilu nevstupujú do odtlačku členenia.** Hashuje sa výhradne to, čo vráti `toChunkerProfile()`. Keby sa tam dostali, zmenil by sa `chunkingId` každého dokumentu a celá knižnica by naraz vyzerala ako nepreindexovaná, hoci by sa v texte nezmenilo nič. Je to riziko R1 z plánu a je napísané ako test.
+- **Záložka Členenie zapisuje do základného profilu**, nie do `tenant.chunking`. Keby zapisovala tam, obrazovka by od zavedenia profilov nemala žiadny účinok — tichá pasca presne toho druhu, pred ktorým D79 varuje.
+- **Migrácia** `npm run migrate:profiles` porovnáva vyriešený profil pred a po a pri prvom rozdiele nezapíše nič. Prebehla na ostrých dátach: 3 organizácie, 10 dokumentov opečiatkovaných.
+- **Nový skript** `npm run chunking:status` ukazuje pre každý dokument jeho profil a či uložené `chunkingId` sedí — a to zvlášť podľa profilu aj podľa organizácie, aby sa dalo rozlíšiť, či za prípadný rozdiel môže zavedenie profilov.
+- Overené: `tsc` čisto, **1162 testov**, lint bez chýb, `npm run check` po migrácii bez rozporov.
+
+**Nález, ktorý s D79 nesúvisí, ale vyšiel najavo pri jeho overovaní:** deväť z desiatich dokumentov má uložené `chunkingId`, ktoré nesedí s tým, čo by dnešný chunker vyrobil — a nesedelo ani pred zavedením profilov (`npm run chunking:status` to ukazuje v oboch stĺpcoch rovnako). Záložka Členenie teda ponúka „preindexovať 9 dokumentov" už dlhšie. Preindexovanie je bezpečné (`versionId` sa nemení, potvrdenia platia), ale príčinu treba nájsť — vedené v `docs/TODO.md`, sekcia O2.
+
+
 ### Changed (2026-09-13 — nový dokument a nové znenie sú dve rôzne veci, D80)
 
 `documentId` sa skladal z `companyCode:sectionKey`, takže `sectionKey` niesol dve rôzne veci naraz: **kam** dokument patrí a **ktorý** dokument to je. Kým je knižnica zoznamom deviatich predpisov, je to neviditeľné. Dôsledky boli dva a oba nepríjemné: nahratie súboru na existujúci kľúč **ticho prepísalo** koncept, metadáta aj pôvodný súbor existujúceho dokumentu (rozhranie nepovedalo nič a `isNew` z `uploadDocument()` nikto nečítal), a **dva rôzne dokumenty s tým istým zaradením sa nedali mať** — desať zápisníc výkonného výboru by potrebovalo desať zaradení.

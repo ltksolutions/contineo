@@ -10,6 +10,7 @@
 import { describe, it, expect } from "vitest"
 import { textFingerprint, chunkingFingerprint, needsReindex, CHUNKER_VERSION } from "../src/lib/chunkIdentity"
 import { chunkText, DEFAULT_PROFILE } from "../src/lib/chunker.mjs"
+import { chunkingFor, toChunkerProfile, DEFAULT_CHUNKING } from "../src/lib/chunkingProfile"
 
 const NORM = `Článok 1
 Základné ustanovenia
@@ -107,5 +108,85 @@ describe("profil clenenia", () => {
     // Bez profilu sa dokument zleje do jedného bloku a vyhľadávanie nemá
     // čoho chytiť — presne to, kvôli čomu profil existuje.
     expect(s.statistiky.clankov).toBeGreaterThan(without.statistiky.clankov)
+  })
+})
+
+/**
+ * Pomenované profily členenia (D79).
+ *
+ * Najpodstatnejšia veta tejto sekcie je tá posledná: kľúč ani menovka profilu
+ * nesmú doraziť do chunkera. Keby doleteli, zmenil by sa odtlačok každého
+ * dokumentu a celá knižnica by naraz vyzerala ako nepreindexovaná — hoci by sa
+ * v texte nezmenilo nič.
+ */
+describe("pomenovane profily clenenia", () => {
+  const profil = {
+    key: "zakon",
+    label: "Zákon (§)",
+    articleWord: "§",
+    annexWord: "PRÍLOHA č.",
+    headerRepeats: 5,
+    minTokens: 300,
+    maxTokens: 800,
+  }
+  const tenant = { chunkingProfiles: [{ ...profil }, { ...profil, key: "zakladny", label: "Základný", articleWord: "Článok" }] }
+
+  it("dokument dostane svoj profil, nie profil organizacie", () => {
+    expect(chunkingFor(tenant, "zakon")?.articleWord).toBe("§")
+  })
+
+  it("bez profilu na dokumente plati zakladny profil organizacie", () => {
+    expect(chunkingFor(tenant, null)?.articleWord).toBe("Článok")
+  })
+
+  it("neznamy kluc spadne na zakladny, nie na predvolbu chunkera", () => {
+    // Dokument, ktory ukazuje na zmazany profil, sa ma rezat ako ostatne --
+    // nie potichu inak.
+    expect(chunkingFor(tenant, "neexistuje")?.articleWord).toBe("Článok")
+  })
+
+  it("organizacia bez profilov pouzije svoje povodne nastavenie (D58)", () => {
+    // Bez tohto clanku by po nasadeni zacali vsetky jej dokumenty rezat
+    // predvolenymi hodnotami namiesto jej vlastnych.
+    const stary = { chunking: { articleWord: "Bod" } }
+    expect(chunkingFor(stary, null)?.articleWord).toBe("Bod")
+  })
+
+  it("organizacia bez nicoho vrati undefined, nie prazdny profil", () => {
+    // Prazdny profil ma iny odtlacok nez profil, ktory chyba uplne.
+    expect(chunkingFor({}, null)).toBeUndefined()
+    expect(chunkingFor(null, "hocico")).toBeUndefined()
+  })
+
+  it("kluc ani menovka sa do chunkera nedostanu", () => {
+    const forChunker = toChunkerProfile(chunkingFor(tenant, "zakon"))
+    expect(Object.keys(forChunker ?? {}).sort())
+      .toEqual(["cielMaxTokenov", "cielMinTokenov", "opakovaniHlavicky", "slovoClanok", "slovoPriloha"])
+  })
+
+  it("premenovanie profilu nezmeni odtlacok clenenia", () => {
+    // Toto je poistka R1 z plánu D79 napísaná ako test.
+    const pred = toChunkerProfile(chunkingFor(tenant, "zakon"))
+    const premenovany = { chunkingProfiles: [{ ...profil, label: "Zákony Zbierky" }] }
+    const po = toChunkerProfile(chunkingFor(premenovany, "zakon"))
+
+    const { chunky: a } = chunkText(NORM, { profil: pred })
+    const { chunky: b } = chunkText(NORM, { profil: po })
+    expect(chunkingFingerprint(b, { ...DEFAULT_PROFILE, ...po }))
+      .toBe(chunkingFingerprint(a, { ...DEFAULT_PROFILE, ...pred }))
+  })
+
+  it("profil s predvolenymi hodnotami reze rovnako ako ziadny profil", () => {
+    // Presne to robi migracia: dokument bez profilu dostane pomenovany profil
+    // s tymi istymi hodnotami. Keby to nebolo zhodne, cela kniznica by naraz
+    // vyzerala ako nepreindexovana.
+    const ziadny = toChunkerProfile(undefined)
+    const pomenovany = toChunkerProfile(chunkingFor(
+      { chunkingProfiles: [{ key: "zakladny", label: "Základný", ...DEFAULT_CHUNKING }] }, null,
+    ))
+    const { chunky: a } = chunkText(NORM, { profil: ziadny })
+    const { chunky: b } = chunkText(NORM, { profil: pomenovany })
+    expect(chunkingFingerprint(b, { ...DEFAULT_PROFILE, ...pomenovany }))
+      .toBe(chunkingFingerprint(a, { ...DEFAULT_PROFILE, ...ziadny }))
   })
 })

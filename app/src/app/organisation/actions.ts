@@ -30,6 +30,7 @@ import { addCodelistItem, removeCodelistItem } from "@/lib/codelistsTenant"
 import { reindexAll } from "@/lib/libraryWrite"
 import { dictionary, errorText, type UiLanguage } from "@/lib/i18n"
 import { AppError } from "@/lib/appError"
+import { DEFAULT_PROFILE_KEY } from "@/lib/chunkingProfile"
 
 async function actor(): Promise<{ email: string; companyCode: string; language: UiLanguage } | null> {
   const ctx = await orgContext()
@@ -385,8 +386,12 @@ export async function removeCodelistItemAction(fd: FormData) {
  * dokumentom (`Preindexovať` v jeho detaile).
  */
 export async function saveChunkingProfileAction(fd: FormData) {
-  const self = await actor()
-  if (!self) redirect("/")
+  // `orgContext()` namiesto `actor()`: potrebujeme aj organizáciu, lebo
+  // zoznam profilov sa prepisuje celý a bez pôvodného by sa ostatné profily
+  // stratili.
+  const ctx = await orgContext()
+  if (ctx.state !== "ready") redirect("/")
+  const self = { companyCode: ctx.person.companyCode, email: ctx.person.email, language: ctx.person.language }
 
   const number = (actorName: string) => {
     const v = Number(fieldText(fd, actorName))
@@ -394,15 +399,25 @@ export async function saveChunkingProfileAction(fd: FormData) {
   }
 
   try {
-    await saveTenant(self.companyCode, {
-      chunking: {
-        articleWord: fieldText(fd, "articleWord"),
-        annexWord: fieldText(fd, "annexWord"),
-        headerRepeats: number("headerRepeats"),
-        minTokens: number("minTokens"),
-        maxTokens: number("maxTokens"),
-      },
-    }, self.email)
+    // Zapisuje sa do **základného pomenovaného profilu** (D79), nie do
+    // `tenant.chunking`. Keby sa zapisovalo tam, obrazovka by od zavedenia
+    // profilov nemala žiadny účinok: dokumenty sa rozlišujú podľa profilu
+    // a `tenant.chunking` je už len záchyt pre organizácie bez profilov.
+    const profiles = [...(ctx.tenant.chunkingProfiles ?? [])]
+    const edited = {
+      key: DEFAULT_PROFILE_KEY,
+      label: profiles.find(p => p.key === DEFAULT_PROFILE_KEY)?.label ?? "Základný",
+      articleWord: fieldText(fd, "articleWord"),
+      annexWord: fieldText(fd, "annexWord"),
+      headerRepeats: number("headerRepeats"),
+      minTokens: number("minTokens"),
+      maxTokens: number("maxTokens"),
+    }
+    const at = profiles.findIndex(p => p.key === DEFAULT_PROFILE_KEY)
+    if (at >= 0) profiles[at] = edited as typeof profiles[number]
+    else profiles.push(edited as typeof profiles[number])
+
+    await saveTenant(self.companyCode, { chunkingProfiles: profiles }, self.email)
     revalidatePath("/organisation")
     back(fd, say(self.language).chunkingSaved)
   } catch (e) {
@@ -425,9 +440,8 @@ export async function reindexAllAction(fd: FormData) {
   const m = say(ctx.person.language)
 
   try {
-    const v = await reindexAll(
-      ctx.person.companyCode, ctx.person.email, ctx.tenant.chunking, 25,
-    )
+    // Bez profilu: každý dokument sa preindexuje **tým svojím** (D79).
+    const v = await reindexAll(ctx.person.companyCode, ctx.person.email, 25)
     const parts = [m.reindexedCount(v.preindexovanych)]
     if (v.preskocenych) parts.push(m.reindexSkipped(v.preskocenych))
     if (v.remaining) parts.push(m.reindexRemaining(v.remaining))

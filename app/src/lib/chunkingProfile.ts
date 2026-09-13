@@ -61,3 +61,86 @@ export function toChunkerProfile(
   if (profile.maxTokens !== undefined) out.cielMaxTokenov = profile.maxTokens
   return Object.keys(out).length > 0 ? out : undefined
 }
+
+/**
+ * Pomenovaný profil členenia (D79).
+ *
+ * **Prečo pomenovaný a nie vlastné hodnoty na každom dokumente.** Ad-hoc
+ * nastavenie na dokumente je opačný extrém než jeden profil na organizáciu:
+ * o pol roka nikto nevie povedať, prečo sú dva podobné predpisy narezané inak,
+ * a oprava chunkera sa musí premietnuť do N kópií. Pomenovaný profil sa opraví
+ * na jednom mieste a je vidieť, koľko dokumentov ho používa.
+ *
+ * Dôsledok, ktorý je vlastnosťou a nie obmedzením: keď dokument nesadne ani
+ * jednému profilu, **vzniká nový pomenovaný profil**. Odchýlka sa tým zapíše
+ * raz, s menom a viditeľne.
+ *
+ * `key` je identita (nemenná, `KEY_PATTERN`), `label` je menovka pre človeka
+ * a dá sa premenovať kedykoľvek. **Ani jedno nevstupuje do odtlačku členenia** —
+ * hashuje sa výhradne to, čo vráti `toChunkerProfile()`, takže premenovanie
+ * profilu nikdy nespôsobí preindexovanie.
+ */
+export interface ChunkingProfileDef extends ChunkingProfile {
+  key: string
+  label: string
+}
+
+/**
+ * Kľúč profilu, ktorý dostane dokument bez vlastného zaradenia.
+ *
+ * Je zámerne bez domény („základný", nie „predpis SFZ") — vzniká migráciou
+ * v každej organizácii a jej obsah nepozná. Premenovať sa dá `label`, kľúč nie:
+ * ukazujú naň dokumenty.
+ */
+export const DEFAULT_PROFILE_KEY = "zakladny"
+
+/**
+ * Ktorý profil platí pre dokument.
+ *
+ * Reťaz je zámerne štvorčlánková a každý článok má dôvod:
+ *
+ * 1. **profil dokumentu** — to, čo kurátor rozhodol;
+ * 2. **základný profil organizácie** — keď dokument nemá vlastný;
+ * 3. **`tenant.chunking`** — organizácia spred D79, ktorá ešte nemá profily.
+ *    Bez tohto článku by po nasadení začali všetky jej dokumenty rezať
+ *    predvolenými hodnotami namiesto jej vlastného nastavenia, a prejavilo by
+ *    sa to až tým, že model odcituje nesprávny článok;
+ * 4. **`undefined`** — chunker si doplní vlastné predvolené hodnoty. Vrátiť
+ *    tu `DEFAULT_CHUNKING` by nebolo to isté: prázdny profil má iný odtlačok
+ *    než profil, ktorý chýba úplne (viď `toChunkerProfile()`).
+ */
+export function chunkingFor(
+  tenant: {
+    chunkingProfiles?: ChunkingProfileDef[]
+    chunking?: Partial<ChunkingProfile>
+  } | null | undefined,
+  documentProfileKey?: string | null,
+): Partial<ChunkingProfile> | undefined {
+  const profiles = tenant?.chunkingProfiles ?? []
+  const wanted = (documentProfileKey ?? "").trim()
+
+  const found = wanted ? profiles.find(p => p.key === wanted) : undefined
+  const base = found ?? profiles.find(p => p.key === DEFAULT_PROFILE_KEY)
+  if (base) {
+    // Kľúč ani menovka do chunkera nepatria — a hlavne nesmú do odtlačku.
+    const { key: _key, label: _label, ...params } = base
+    return params
+  }
+
+  return tenant?.chunking
+}
+
+/**
+ * Profil, z ktorého sa dá spraviť menovka na obrazovku.
+ *
+ * Vracia aj vtedy, keď profil neexistuje — dokument, ktorý ukazuje na
+ * zmazaný kľúč, sa má dať nájsť, nie zmiznúť zo zoznamu.
+ */
+export function profileLabel(
+  profiles: ChunkingProfileDef[] | undefined,
+  key: string | null | undefined,
+): string | null {
+  const wanted = (key ?? "").trim()
+  if (!wanted) return null
+  return (profiles ?? []).find(p => p.key === wanted)?.label ?? wanted
+}
