@@ -4,6 +4,22 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Added (2026-09-13 — skript na mazanie dokumentov + plán členenia per dokument)
+
+Pred nahratím ostrých znení treba vedieť zmazať skúšobný korpus (D74). Skript na to dovtedy neexistoval — `delete_test_data.mjs` napriek názvu maže iba `evaluations` s `reviewer: "anonym"` a dokumentov sa nedotkne. Mazanie by teda bol ručný zásah do Mongo.
+
+- **`npm run docs:delete`** (`scripts/delete_documents.mjs`) — zmaže dokumenty, archivuje ich úseky a zapíše auditný záznam. **Predvolene beží nasucho**, mazať sa musí vypýtať cez `--naozaj`.
+- **Výber je vždy menovitý.** `--id`, `--tag` alebo `--grandfathered`, práve jedno z nich. Režim „zmaž všetko v organizácii" skript nemá — prepínač, ktorý zmaže knižnicu jedným slovom, sa raz použije omylom.
+- **Dokument s väzbami hromadný výber nikdy nezmaže.** Ak naň ukazuje potvrdenie, pridelenie, krok onboardingu alebo kolo schvaľovania, preskočí sa a skript vypíše, čo presne naň visí. Zmazať sa dá len menovite cez `--id` spolu s `--aj-s-vazbami`. Dôvod je ADR-005: potvrdenie bez dokumentu je dôkaz bez predmetu.
+- **Úseky sa archivujú, nemažú** (`isActive: false` + `effectiveTo`), zhodne s D6. `--useky zmazat` je vedomá výnimka, nie predvoľba.
+- Prvý beh nasucho hneď niečo našiel: okrem `sfz:test_onboarding` (6 potvrdení, 2 pridelenia, 1 krok, 3 kolá) má väzbu aj **`sfz:revizny_poriadok` — jedno pridelenie**. Bez poistky by hromadné mazanie po značke vzalo aj ten.
+
+Zároveň vznikol plán **D79 — členenie per dokument** (`docs/D79_plan_clenenie_per_dokument.md`). Jeden profil členenia na organizáciu (D58) nestačí, keď v jednej knižnici stoja predpisy SFZ (`Článok`), zákony (`§`) a manuály bez formálneho členenia. Rozhodnuté: len pomenované profily bez výnimiek na dokumente, analýza navrhuje a nerozhoduje, dátový model pred ostrou prevádzkou a nové obrazovky až po Fáze 8. Naprogramované zatiaľ nie je nič okrem diagnostiky.
+
+- **Diagnostika (krok A1) hotová:** `audit_chunks.mjs` ukazuje, že dnešný korpus problém s členením **nemá** — 9 z 10 dokumentov je rozpoznaných na 92–99 %, jediný nerozobraný je skúšobný jednoodsekový záznam. D79 sa teda pripravuje na prichádzajúci obsah, nerieši dnešnú chybu.
+- Overené: **1147 testov**, lint bez chýb, `npm run check` bez rozporov.
+
+
 ### Added (2026-09-13 — text publikovaného znenia sa dá opraviť bez novej verzie)
 
 Predpis je schválený, pridelený a v RAG, ľudia ho potvrdzujú — a príde pripomienka, že v článku 4 chýba čiarka. Dovtedy sa to dalo vyriešiť **jedine novým znením**: `versionId` je odtlačok textu (D57), takže jednoznaková zmena vyrobila novú verziu, novú povinnosť pre všetkých, ktorí už potvrdili, a v histórii záznam, o ktorom o rok nikto nevie, či bol novela alebo preklep. Cena za opravu preklepu bola vyššia než cena za to nechať ho tam.
