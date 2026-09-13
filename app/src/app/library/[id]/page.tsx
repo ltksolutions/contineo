@@ -124,6 +124,12 @@ export default async function DocumentDetailPage({
    *
    * Počíta sa len vtedy, keď je čo porovnávať — inak je to práca navyše pri
    * každom otvorení detailu.
+   *
+   * Rozdiel je aj **podmienkou ponuky**: hláška „koncept sa líši“ porovnáva surové
+   * reťazce, kým odtlačok (a teda aj oprava) normalizuje konce riadkov a biele
+   * miesta (D57). Editor vie text preuložiť tak, že reťazce sa líšia a odtlačok
+   * nie — a ponúkať v takom stave tlačidlo, ktoré zápis odmietne, je horšie než
+   * neponúknuť nič.
    */
   const effectiveText = ((effective?.markdown ?? d.markdown) ?? "").trim()
   const draftDiff = effective && hasChangesToPublish ? textDiff(effectiveText, draft) : null
@@ -375,7 +381,7 @@ export default async function DocumentDetailPage({
               schvaľovaním (D73). Preto musí mať rozdiel pred očami a napísať
               dôvod, a preto je to schované za jedným kliknutím navyše.
             */}
-            {effective && draftDiff && (
+            {effective && draftDiff && draftDiff.added + draftDiff.removed > 0 && (
               <details>
                 <summary className="quiet" style={{ fontSize: 13.5, cursor: "pointer" }}>
                   {t.textFixHeading}
