@@ -25,7 +25,7 @@ import { DOCUMENTS_COLLECTION } from "./documents"
 import { validAcknowledgements } from "./acknowledgements"
 import { chunkText, DEFAULT_PROFILE } from "./chunker.mjs"
 import { textFingerprint, chunkingFingerprint, needsReindex, CHUNKER_VERSION } from "./chunkIdentity"
-import { textFixProblem, textDiff, type TextFixProblem } from "./textFix"
+import { textFixProblem, textDiff, versionFixProblem, type TextFixProblem } from "./textFix"
 import { checkValue, checkList, KEY_PATTERN } from "./codelists"
 import type { CodelistExtras } from "./codelists"
 import { saveFile, deleteFile } from "./fileStore"
@@ -335,6 +335,24 @@ export async function publish(
   }
   if (!(input.effectiveFrom instanceof Date) || Number.isNaN(input.effectiveFrom.getTime())) {
     throw new LibraryError("library.effectiveFromRequired", "Dátum platnosti je povinný — bez neho sa znenie nedá potvrdiť (D6).")
+  }
+
+  /*
+   * Zdroj dátumu je **povinný pri publikovaní** (D82).
+   *
+   * Nie je to evidencia pre evidenciu. Odkedy sa dátum po prvom potvrdení
+   * zamyká, okno na bezbolestnú opravu je od publikovania po prvé potvrdenie —
+   * teda minúty. Obrana sa tým presúva dopredu: kto musí napísať „uznesenie
+   * VV SFZ č. … z …", ten sa doň pozrie. Útočí to na príčinu, nie na následok.
+   *
+   * Platí len pre **nové** publikovanie; existujúcich znení sa to nedotýka.
+   */
+  if (!input.effectiveFromSource?.trim()) {
+    throw new LibraryError(
+      "library.effectiveFromSourceRequired",
+      "Zdroj dátumu platnosti je povinný — napíš, odkiaľ dátum je (napríklad uznesenie VV SFZ č. … z …). " +
+      "Po prvom potvrdení sa dátum už meniť nedá.",
+    )
   }
 
   const col = await getCollection(DOCUMENTS_COLLECTION)
@@ -707,14 +725,17 @@ export async function reindex(
  * a ticho im ho opraviť pod už podpísaným záznamom by z auditu spravilo
  * niečo, čo sa dá spätne meniť.
  *
- * Rozhodnutie preto patrí človeku a obe možnosti sa zapisujú:
+ * **Od D82 sa preto po prvom platnom potvrdení zamykajú** — označenie aj
+ * dátum. Odomkne ich jedine hromadné odvolanie potvrdení toho znenia
+ * (`revokeVersion()`); potom sa údaj opraví a ľudia potvrdia opravenú
+ * formulku.
  *
- *   - `correction` — rozdiel je nepodstatný, potvrdenia zostávajú;
- *   - `reacknowledge` — nastaví `requiresReacknowledgement` (D30), takže
- *     znenie sa musí potvrdiť znova.
+ * Skoršia voľba „oprava zápisu, potvrdenia zostávajú" (ADR-007) je zrušená.
+ * Stála na predpoklade, že podľa zlého dátumu nikto nekonal — a ten sa nedá
+ * overiť. Druhá voľba, „podstatná zmena", nastavovala
+ * `requiresReacknowledgement`, ktorý **nikto nečíta**, takže nerobila nič.
  *
- * Systém to rozhodnúť nevie: nepozná, či medzi tými dvoma dátumami niekto
- * podľa normy konal.
+ * Poznámka o zmene a zdroj dátumu sa opravujú naďalej: vo formulke nie sú.
  */
 export async function fixVersion(
   companyCode: string,
@@ -726,7 +747,6 @@ export async function fixVersion(
     effectiveFromSource?: string
     changeNote?: string
     reason: string
-    onDateChange?: "correction" | "reacknowledge"
   },
   actor: string,
 ): Promise<{ acknowledgementCount: number; reacknowledged: boolean }> {
@@ -755,16 +775,27 @@ export async function fixVersion(
   const changesDate = input.effectiveFrom instanceof Date &&
     (!v.effectiveFrom || new Date(v.effectiveFrom).getTime() !== input.effectiveFrom.getTime())
 
-  if (changesDate && acknowledgementCount > 0 && !input.onDateChange) {
+  const changesLabel = Boolean(input.label?.trim()) && input.label!.trim() !== v.label
+
+  const problem = versionFixProblem({
+    acknowledgements: acknowledgementCount,
+    changesLabel,
+    changesEffectiveFrom: changesDate,
+    reason,
+  })
+  if (problem === "versionFix.locked") {
     throw new LibraryError(
-      "library.dateChangeNeedsDecision",
-      `Toto znenie už potvrdilo ${acknowledgementCount} ľudí a formulka, ktorú podpísali, obsahuje starý dátum. ` +
-      "Rozhodni, či je to oprava zápisu, alebo sa má znenie potvrdiť znova.",
+      problem,
+      `Označenie a dátum platnosti sa už meniť nedajú — toto znenie potvrdilo ${acknowledgementCount} ľudí ` +
+      "a oba údaje sú v podpísanej formulke. Najprv treba odvolať potvrdenia tohto znenia.",
       { count: acknowledgementCount },
     )
   }
 
-  const reacknowledge = Boolean(changesDate && acknowledgementCount > 0 && input.onDateChange === "reacknowledge")
+  // `requiresReacknowledgement` sa od D82 **nezapisuje**. Pole zostáva v type
+  // kvôli starým záznamom a histórii verzií; nikto ho nikdy nečítal ako
+  // povinnosť a nastavovať ho ďalej by znamenalo klamať aj naďalej.
+  const reacknowledge = false
 
   const set: Record<string, unknown> = { updatedAt: new Date(), updatedBy: actor }
   if (input.label?.trim()) set["versions.$[v].label"] = input.label.trim()
@@ -780,8 +811,6 @@ export async function fixVersion(
   if (input.changeNote !== undefined) {
     set["versions.$[v].changeNote"] = input.changeNote.trim() || undefined
   }
-  if (reacknowledge) set["versions.$[v].requiresReacknowledgement"] = true
-
   await col.updateOne(
     { documentId, companyCode },
     {

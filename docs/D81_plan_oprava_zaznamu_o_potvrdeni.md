@@ -1,6 +1,14 @@
 # D81 — oprava záznamu o potvrdení (návrh, na rozhodnutie)
 
-> **Stav:** ⬜ návrh. Nadväzuje na D24 (append-only kolekcia), D28 (znenie
+> **Stav:** ❌ **ZAMIETNUTÉ 2026-09-13**, nahradené `docs/D82_plan_zamknutie_udajov_znenia.md`.
+> Dokument zostáva ako zápis o zvažovanej ceste — D82 argumentuje proti nemu
+> a bez neho sa tá úvaha nedá prečítať.
+>
+> **Prečo padol:** stál na predpoklade, že sa dá rozlíšiť preklep, podľa
+> ktorého nikto nekonal, od zmeny s dopadom. Ten predpoklad sa nedá overiť.
+> D82 problém neodstraňuje vysvetlením, ale tým, že rozporu zabráni vzniknúť.
+>
+> Pôvodný stav: ⬜ návrh. Nadväzuje na D24 (append-only kolekcia), D28 (znenie
 > formulky), D71 (dôvod povinný), ADR-005 (reťaz dôkazov), ADR-007 (oprava
 > údajov a textu znenia).
 > **Založené:** 2026-09-13. Otvorený bod vedený v `docs/TODO.md`, sekcia **O4**.
@@ -98,10 +106,13 @@ dokumentu. Musí to byť pokryté testom, nie pozornosťou.
 
 ### 4.3 Kto a za akých podmienok
 
-Rovnako ako pri odvolaní: **koná personalista, dôvod je povinný.** Brána
-`correctionProblem()` bez databázy, vedľa `revokeProblem()`:
+**Koná personalista alebo správca obsahu** (rozhodnuté 2026-09-13), dôvod je
+povinný. Rozdiel oproti odvolaniu je vecný: odvolanie mení **povinnosť** osoby
+a to má ostať pri personalistovi, oprava mení **údaj o znení**, ktorý spravuje
+správca obsahu. Brána `correctionProblem()` bez databázy, vedľa
+`revokeProblem()`:
 
-- `correction.notHr` — rola sa pýta prvá;
+- `correction.notAllowed` — rola sa pýta prvá (`isHr || canManageContent`);
 - `correction.nothingToCorrect` — záznam neexistuje alebo už neplatí;
 - `correction.reasonRequired`;
 - `correction.nothingChanged` — opravené hodnoty sú zhodné s pôvodnými.
@@ -146,8 +157,13 @@ jediný dôvod, prečo sa tej kolekcii dá veriť.
 1. **Púšťame to vôbec?** Alternatíva „odvolať a potvrdiť znova" je zadarmo
    a už existuje. Za opravou stojí prípad (a) z §2 — opravený dátum znenia pod
    podpísanými záznamami. Ak sa to v praxi nestane, D81 nie je potrebné.
-2. **Smie opravu vykonať aj správca obsahu**, keď opravuje dôsledok vlastnej
-   opravy znenia (`fixVersion`)? Alebo výhradne personalista, ako pri odvolaní?
+2. ~~**Smie opravu vykonať aj správca obsahu**, keď opravuje dôsledok vlastnej
+   opravy znenia (`fixVersion`)?~~ **Rozhodnuté 2026-09-13 (Ján): áno, smie.**
+   Je to iný úkon než odvolanie: odvolanie mení **povinnosť** osoby, a to má
+   ostať pri personalistovi; oprava mení **údaj o znení**, ktorý spravuje
+   správca obsahu — a je to spravidla dôsledok jeho vlastnej opravy cez
+   `fixVersion()`. Brána sa teda pýta na `isHr || canManageContent`, nie na
+   `isHr`. `actedBy` v zázname naďalej hovorí, kto konkrétne konal.
 3. **Má `fixVersion()` s voľbou `correction` ponúknuť opravu záznamov hneď**,
    ako súčasť toho istého úkonu? Je to pohodlné a nebezpečné zároveň —
    hromadná oprava dôkazov jedným kliknutím.

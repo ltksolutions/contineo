@@ -457,6 +457,10 @@ export interface Revoker {
   companyCode: string
 }
 
+export type RevokeVersionResult =
+  | { ok: true; revoked: number }
+  | { ok: false; reason: RevokeProblem | "write-failed"; detail?: string }
+
 export type RevokeResult =
   | { ok: true; id: string }
   | { ok: false; reason: RevokeProblem | "write-failed"; detail?: string }
@@ -529,4 +533,63 @@ export async function revoke(input: {
     console.error("[acknowledgements] odvolanie sa nezapísalo:", e)
     return { ok: false, reason: "write-failed", detail: String((e as Error).message ?? e) }
   }
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+ * Hromadné odvolanie potvrdení jedného znenia (D82)
+ *
+ * Existuje preto, aby sa dal opraviť **zamknutý údaj** — označenie alebo dátum
+ * platnosti. Oba sú v podpísanej formulke (D28), takže ich zmena pod platnými
+ * potvrdeniami by vyrobila rozpor medzi tým, čo ľudia podpísali, a tým, čo
+ * systém tvrdí. Cesta je preto jediná: odvolať, opraviť, nechať potvrdiť znova.
+ *
+ * **Nie je to slučka nad `revoke()` kvôli pohodliu.** Kto by odvolával po
+ * jednom z výkazu, pri štyridsiatich ľuďoch to nedokončí a znenie zostane
+ * v polovičnom stave — časť potvrdená starou formulkou, časť nie. Jeden úkon,
+ * jeden dôvod, jeden auditný záznam.
+ *
+ * **Odvoláva personalista**, rovnako ako jednotlivé potvrdenie: mení to
+ * povinnosť ľudí, nie zápis o znení. Správca obsahu zamknutý údaj sám
+ * neopraví — a je to zámer, nie prekážka.
+ * ───────────────────────────────────────────────────────────────────────── */
+
+export async function revokeVersion(input: {
+  by: Revoker
+  isHr: boolean
+  versionId: string
+  reason: string
+}): Promise<RevokeVersionResult> {
+  // Rola a dôvod sa pýtajú **pred** čítaním: kto nesmie konať, nemá sa
+  // dozvedieť ani to, koľko ľudí znenie potvrdilo.
+  if (!input.isHr) return { ok: false, reason: "revocation.notHr" }
+  if (!input.reason?.trim()) return { ok: false, reason: "revocation.reasonRequired" }
+
+  const valid = await validAcknowledgements({
+    companyCode: input.by.companyCode,
+    versionId: input.versionId,
+  })
+  if (valid.length === 0) return { ok: false, reason: "revocation.nothingToRevoke" }
+
+  let revoked = 0
+  for (const v of valid) {
+    // Zámerne cez `revoke()`, nie vlastným zápisom: pravidlo „ruší sa posledný
+    // pokus" a tvar záznamu musia byť napísané raz. Druhá kópia by sa rozišla
+    // presne vtedy, keď na tom záleží.
+    const r = await revoke({
+      by: input.by,
+      isHr: true,
+      personId: v.personId,
+      versionId: input.versionId,
+      reason: input.reason,
+    })
+    if (r.ok) revoked++
+    else if (r.reason === "write-failed") {
+      // Zapísané odvolania zostávajú — sú to platné záznamy. Volajúci sa
+      // dozvie, koľko ich prešlo, a môže úkon zopakovať: odvolanie už
+      // odvolaného potvrdenia sa neprepíše, `revoke()` ho odmietne.
+      return { ok: false, reason: "write-failed", detail: `${r.detail ?? ""} (odvolaných ${revoked} z ${valid.length})` }
+    }
+  }
+
+  return { ok: true, revoked }
 }

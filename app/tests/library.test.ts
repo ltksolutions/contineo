@@ -11,6 +11,7 @@ import { readFileSync } from "node:fs"
 import { describe, it, expect } from "vitest"
 import { checkValue, checkList, CodelistError, KEY_PATTERN } from "../src/lib/codelists"
 import { makeDocumentId, checkMetadata, LibraryError } from "../src/lib/libraryWrite"
+import { versionFixProblem } from "../src/lib/textFix"
 
 describe("ciselniky", () => {
   it("uzavrety ciselnik neprijme nic navyse", () => {
@@ -159,5 +160,48 @@ describe("vyber poli pri stave preindexovania", () => {
       new URL("../src/lib/libraryWrite.ts", import.meta.url), "utf8",
     )
     expect(source).not.toContain('"versions.$": 1')
+  })
+})
+
+/**
+ * Zamknutie údajov znenia (D82).
+ *
+ * Označenie a dátum platnosti sú v podpísanej formulke (D28), takže po prvom
+ * platnom potvrdení sa zamykajú. Text vo formulke nie je — ten sa opravuje
+ * naďalej (ADR-007). Deliaca čiara nie je „malá vs. veľká zmena".
+ */
+describe("zamknutie udajov znenia", () => {
+  const base = { acknowledgements: 0, changesLabel: false, changesEffectiveFrom: false, reason: "preklep" }
+
+  it("bez potvrdeni sa da menit vsetko", () => {
+    expect(versionFixProblem({ ...base, changesLabel: true, changesEffectiveFrom: true })).toBeNull()
+  })
+
+  it("s potvrdeniami sa datum menit neda", () => {
+    expect(versionFixProblem({ ...base, acknowledgements: 40, changesEffectiveFrom: true }))
+      .toBe("versionFix.locked")
+  })
+
+  it("s potvrdeniami sa oznacenie menit neda", () => {
+    // Oznacenie je vo formulke rovnako ako datum -- preklep v nom je rovnaky
+    // problem, aj ked vyzera nevinnejsie.
+    expect(versionFixProblem({ ...base, acknowledgements: 1, changesLabel: true }))
+      .toBe("versionFix.locked")
+  })
+
+  it("poznamka a zdroj datumu sa daju menit aj s potvrdeniami", () => {
+    // Ani jedno nie je vo formulke, takze podpis nimi neprestane byt pravdivy.
+    expect(versionFixProblem({ ...base, acknowledgements: 40 })).toBeNull()
+  })
+
+  it("dovod je povinny vzdy, aj bez potvrdeni", () => {
+    expect(versionFixProblem({ ...base, reason: "   " })).toBe("versionFix.reasonRequired")
+  })
+
+  it("dovod sa pyta skor nez zamknutie", () => {
+    // Poradie kontrol je sucast pravidla: bez dovodu sa nema zapisat nic,
+    // takze sa netreba ani dozvediet, ci je zaznam zamknuty.
+    expect(versionFixProblem({ ...base, acknowledgements: 40, changesEffectiveFrom: true, reason: "" }))
+      .toBe("versionFix.reasonRequired")
   })
 })

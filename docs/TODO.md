@@ -528,13 +528,16 @@ Lacné, kým je knižnica malá. Nové obrazovky a druhá stratégia chunkovania
 - [ ] **Deväť konkrétnych predpisov v `sectionKey`** (`sutazny_poriadok`…) je pozostatok spred D80. Odobrať sa nedajú — sú to hodnoty existujúcich dokumentov. Skryť ich z ponuky by chcelo príznak `isActive`, ktorý číselníky **nepoznajú** (`category.json` ho má pri troch položkách, ale `codelists.ts` ho ignoruje). Rozhodnúť, či ten príznak zaviesť — pozor, zapol by sa aj na `zakon` a `manual` v `category.json` a tie zmiznú z ponuky
 - [ ] Zvážiť, či sa zaradenie smie meniť cez `saveMetadata()` — od D80 už identitu netvorí, takže technicky sa dá
 
-### O4 — oprava záznamu o potvrdení (typ `correction`) → `docs/D81_plan_oprava_zaznamu_o_potvrdeni.md`
+### O4 — ~~oprava záznamu o potvrdení (typ `correction`)~~ → **zamietnuté, nahradené D82**
 
-- [ ] **rozhodnúť podľa návrhu D81** — štyri otázky v §8, prvá je „púšťame to vôbec"
+- [x] **D82 — čo je vo formulke, sa po prvom potvrdení zamyká** ✅ 2026-09-13 → `docs/D82_plan_zamknutie_udajov_znenia.md`
+      `label` a `effectiveFrom` zamknuté po prvom platnom potvrdení; odomyká ich `revokeVersion()` (personalista, dôvod povinný); zdroj dátumu povinný pri publikovaní; `requiresReacknowledgement` sa prestal zapisovať.
+- [x] ~~rozhodnúť podľa návrhu D81~~ — **D81 zamietnuté**: rozpor medzi záznamom a znením už nevznikne. `docs/D81_plan_oprava_zaznamu_o_potvrdeni.md` zostáva ako zápis o zvažovanej ceste
+- [ ] **Doplniť dodatok do ADR-007** — voľba `onDateChange` bola vedomé rozhodnutie a jej zrušenie patrí do toho ADR, nielen do CHANGELOGu
 - [x] zmapované, čo je hotové a čo nie ✅ 2026-09-13
       Typ je v `RecordType`, `supersedes` v zázname, unikátny index korekciám nebráni (`partialFilterExpression` mieri len na `acknowledgement`). Chýba brána, zápis aj čítanie.
-- [ ] implementovať cestu cez `supersedes` (dnes natvrdo `null`)
-- [ ] doplniť `correction` do čítania výkazu — `validAcknowledgements()` filtruje len `acknowledgement|revocation`, oprava by sa dnes **ani nezapočítala**
+- [x] ~~implementovať cestu cez `supersedes`~~ — netreba, D81 zamietnuté
+- [x] ~~doplniť `correction` do čítania výkazu~~ — netreba; typ `correction` zostáva v `RecordType` nevyužitý
 
 Podrobnosti v sekcii I tejto TODO. Odvolanie (`revocation`) hotové 2026-09-12;
 oprava je jeho nedorobená polovica. Vzor rozhodnutia je pri odvolaní:

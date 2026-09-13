@@ -17,7 +17,7 @@ import { formatDate, dictionary } from "@/lib/i18n"
 import Notice from "@/components/Notice"
 import {
   publishVersionAction, saveDocumentMetadataAction, assignToFolderAction, reindexDocumentAction,
-  fixVersionAction, fixTextAction, uploadVersionAction,
+  fixVersionAction, fixTextAction, uploadVersionAction, revokeVersionAction,
 } from "../actions"
 import { allFolders, flattenTree } from "@/lib/folders"
 import { codelistOptions } from "@/lib/codelists"
@@ -29,6 +29,7 @@ import { documentProgress } from "@/lib/libraryProgress"
 import AppShell from "@/components/AppShell"
 import ApprovalPanel from "@/components/ApprovalPanel"
 import { isHr } from "@/lib/hr"
+import { validAcknowledgements } from "@/lib/acknowledgements"
 import { roundsByVersion, stateOf } from "@/lib/approvalsDb"
 import type { CSSProperties } from "react"
 import { textFingerprint } from "@/lib/chunkIdentity"
@@ -88,12 +89,28 @@ export default async function DocumentDetailPage({
   const progress = await documentProgress(ctx.tenant.companyCode, effective?.versionId)
 
   /*
+   * Koľko platných potvrdení má **každé** znenie, nielen platné (D82).
+   * Označenie a dátum sú v podpísanej formulke, takže sa po prvom potvrdení
+   * zamykajú — a obrazovka to musí vedieť pri každom znení v zozname, inak by
+   * ponúkala polia, ktoré zápis vzápätí odmietne.
+   */
+  const ackByVersion = new Map<string, number>()
+  for (const a of await validAcknowledgements({
+    companyCode: ctx.tenant.companyCode,
+    versionId: d.versions.map(v => v.versionId),
+  })) {
+    ackByVersion.set(a.versionId, (ackByVersion.get(a.versionId) ?? 0) + 1)
+  }
+
+  /*
    * Kto smie do knižnice, nemusí smieť do výkazu personalistu (D67): kto
    * spravuje obsah, nemá tým pádom právo vidieť, ako si ktorý človek plní
    * povinnosti. Preto sa rola pýta tu a nie je odvodená z toho, že sa
    * stránka vôbec otvorila.
    */
   const canSeeWho = isHr(ctx.person)
+  /** Odvolávať potvrdenia smie len personalista (D82, rovnako ako D24). */
+  const canRevoke = isHr(ctx.person)
   const ts = t.side
   const folderName = d.folderTrail?.length ? d.folderTrail.join(" / ") : ts.unfiled
   const published = ((d.markdown ?? effective?.markdown) ?? "").trim()
@@ -359,7 +376,7 @@ export default async function DocumentDetailPage({
 
                 <label className="field">
                   <span className="field-label">{t.effectiveFromSource}</span>
-                  <input className="field-input" name="effectiveFromSource"
+                  <input className="field-input" name="effectiveFromSource" required
                          placeholder={t.effectiveFromSourcePlaceholder} />
                   <span className="quiet field-hint">{t.effectiveFromSourceNote}</span>
                 </label>
@@ -579,23 +596,39 @@ export default async function DocumentDetailPage({
                   <input type="hidden" name="documentId" value={d.documentId} />
                   <input type="hidden" name="versionId" value={v.versionId} />
 
-                  <label className="field">
-                    <span className="field-label">{t.fixLabel}</span>
-                    <input className="field-input" name="label" defaultValue={v.label} />
-                  </label>
+                  {/*
+                    Zamknuté polia sa **neponúkajú**, nie sú len odmietnuté pri
+                    uložení (D82). Formulár, ktorý dá človeku vyplniť pole
+                    a potom mu povie, že sa nedá, je horší než formulár, ktorý
+                    ho nemá — a rovno povie prečo.
+                  */}
+                  {(ackByVersion.get(v.versionId) ?? 0) > 0 ? (
+                    <p className="quiet" style={{ fontSize: 13.5, margin: 0 }}>
+                      {t.versionLockedBefore}
+                      <strong>{t.versionLockedHighlight(ackByVersion.get(v.versionId) ?? 0)}</strong>
+                      {t.versionLockedAfter}
+                    </p>
+                  ) : (
+                    <>
+                      <label className="field">
+                        <span className="field-label">{t.fixLabel}</span>
+                        <input className="field-input" name="label" defaultValue={v.label} />
+                      </label>
 
-                  <label className="field">
-                    <span className="field-label">{t.effectiveFrom}</span>
-                    <input
-                      className="field-input"
-                      type="date"
-                      name="effectiveFrom"
-                      defaultValue={v.effectiveFrom ? new Date(v.effectiveFrom).toISOString().slice(0, 10) : ""}
-                    />
-                    <span className="quiet field-hint">
-                      {t.fixEffectiveFromNoteBefore}<strong>{t.fixEffectiveFromNoteHighlight}</strong>{t.fixEffectiveFromNoteAfter}
-                    </span>
-                  </label>
+                      <label className="field">
+                        <span className="field-label">{t.effectiveFrom}</span>
+                        <input
+                          className="field-input"
+                          type="date"
+                          name="effectiveFrom"
+                          defaultValue={v.effectiveFrom ? new Date(v.effectiveFrom).toISOString().slice(0, 10) : ""}
+                        />
+                        <span className="quiet field-hint">
+                          {t.fixEffectiveFromNoteBefore}<strong>{t.fixEffectiveFromNoteHighlight}</strong>{t.fixEffectiveFromNoteAfter}
+                        </span>
+                      </label>
+                    </>
+                  )}
 
                   <label className="field">
                     <span className="field-label">{t.effectiveFromSource}</span>
@@ -609,22 +642,32 @@ export default async function DocumentDetailPage({
                     <span className="quiet field-hint">{t.fixReasonNote}</span>
                   </label>
 
-                  <div className="field">
-                    <span className="field-label">{t.onDateChange}</span>
-                    <Select
-                      name="onDateChange"
-                      initial=""
-                      fieldLabel={t.onDateChange}
-                      options={[
-                        { value: "", label: t.onDateChangeAsk },
-                        { value: "correction", label: t.onDateChangeCorrection },
-                        { value: "reacknowledge", label: t.onDateChangeReacknowledge },
-                      ]}
-                    />
-                  </div>
-
                   <div><button className="button button--quiet" type="submit">{t.fixSubmit}</button></div>
                 </form>
+
+                {/*
+                  Odomknutie: hromadné odvolanie potvrdení. Vidí ho len
+                  personalista — správcovi obsahu by tlačidlo, ktoré nemá
+                  povolené stlačiť, len sľuboval cestu, ktorú nemá.
+                */}
+                {canRevoke && (ackByVersion.get(v.versionId) ?? 0) > 0 && (
+                  <form action={revokeVersionAction} style={{ display: "grid", gap: 10, marginTop: 14 }}>
+                    <input type="hidden" name="documentId" value={d.documentId} />
+                    <input type="hidden" name="versionId" value={v.versionId} />
+                    <h3 style={{ fontSize: 14.5, margin: 0 }}>{t.revokeVersionHeading}</h3>
+                    <p className="quiet" style={{ fontSize: 13.5, margin: 0 }}>
+                      {t.revokeVersionNote(ackByVersion.get(v.versionId) ?? 0)}
+                    </p>
+                    <label className="field">
+                      <span className="field-label">{t.revokeVersionReason}</span>
+                      <input className="field-input" name="reason" required
+                             placeholder={t.revokeVersionReasonPlaceholder} />
+                    </label>
+                    <div>
+                      <button className="button button--quiet" type="submit">{t.revokeVersionSubmit}</button>
+                    </div>
+                  </form>
+                )}
               </details>
             </li>
           ))}

@@ -1389,10 +1389,14 @@ interface Dictionary {
       fixWas: (label: string, effectiveFrom: string) => string
       fixReacknowledged: string
       fixNoDate: string
-      onDateChange: string
-      onDateChangeAsk: string
-      onDateChangeCorrection: string
-      onDateChangeReacknowledge: string
+      versionLockedBefore: string
+      versionLockedHighlight: (people: number) => string
+      versionLockedAfter: string
+      revokeVersionHeading: string
+      revokeVersionNote: (people: number) => string
+      revokeVersionReason: string
+      revokeVersionReasonPlaceholder: string
+      revokeVersionSubmit: string
       fixSubmit: string
 
       /**
@@ -1495,8 +1499,8 @@ interface Dictionary {
       bulkMovedPartly: (moved: number, total: number, failed: string) => string
       reindexUpToDate: string
       reindexed: (chunks: number, archived: number) => string
-      fixedNeedsReacknowledge: (people: number) => string
       fixed: string
+      versionRevoked: (people: number) => string
       textFixed: (added: number, removed: number, chunks: number) => string
       submittedForApproval: (n: number) => string
       approvalNotAllNotified: (n: number) => string
@@ -2394,6 +2398,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "library.emptyText": "Prázdny text sa uložiť nedá — dokument by nemal čo obsahovať.",
     "library.labelRequired": "Označenie znenia je povinné — objaví sa doslovne v každom zázname o potvrdení. Napíš to, čo je v dokumente (napríklad: úplné znenie z 27. 2. 2026), nie vymyslené číslo.",
     "library.effectiveFromRequired": "Dátum platnosti je povinný — bez neho sa znenie nedá potvrdiť (D6).",
+    "library.effectiveFromSourceRequired": "Zdroj dátumu platnosti je povinný — napíš, odkiaľ dátum je (napríklad uznesenie VV SFZ č. … z …). Po prvom potvrdení sa dátum už meniť nedá.",
     "library.documentHasNoText": "Dokument nemá text — najprv nahraj súbor alebo napíš znenie.",
     "library.noChunks": "Z textu nevznikol ani jeden úsek. Skontroluj, či má dokument členenie na články alebo nadpisy.",
     "library.noPublishedVersion": "Dokument nemá publikované znenie — preindexovať sa dá len to, čo už je vonku.",
@@ -2406,7 +2411,12 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "textFix.noChange": "Text sa od platného znenia nelíši. Nie je čo opravovať.",
     "textFix.reasonRequired": "Dôvod opravy je povinný — bez neho sa o rok nedá zistiť, čo sa v znení zmenilo a prečo pri tom potvrdenia zostali platné.",
     "library.versionNotFound": "Také znenie tu nie je.",
-    "library.dateChangeNeedsDecision": "Toto znenie už bolo potvrdené (počet potvrdení: {count}) a formulka, ktorú ľudia podpísali, obsahuje starý dátum. Rozhodni, či je to oprava zápisu, alebo sa má znenie potvrdiť znova.",
+    "versionFix.locked": "Označenie a dátum platnosti sa už meniť nedajú — toto znenie potvrdilo {count} ľudí a oba údaje sú v podpísanej formulke. Najprv treba odvolať potvrdenia tohto znenia, potom údaj opraviť a nechať ho potvrdiť znova.",
+    "versionFix.reasonRequired": "Dôvod opravy je povinný.",
+    "revocation.notHr": "Odvolať potvrdenie smie len personalista.",
+    "revocation.nothingToRevoke": "Nie je čo odvolávať — toto znenie nemá platné potvrdenia.",
+    "revocation.reasonRequired": "Dôvod odvolania je povinný — bez neho sa o rok nedá zistiť, prečo povinnosť ožila.",
+    "write-failed": "Zápis zlyhal. Skús to znova; čo sa už zapísalo, zostáva platné.",
 
     // ── prepis jazykovým modelom ───────────────────────────────────────────
     "rewrite.notConfigured": "Prepis modelom nie je nastavený — chýba ANTHROPIC_API_KEY. Prevod v aplikácii funguje ďalej.",
@@ -3094,10 +3104,14 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       fixWas: (label, effectiveFrom) => `pôvodne ${label}, ${effectiveFrom}`,
       fixReacknowledged: "vyžiadalo opätovné potvrdenie",
       fixNoDate: "bez dátumu platnosti",
-      onDateChange: "Ak sa mení dátum a znenie už niekto potvrdil",
-      onDateChangeAsk: "— rozhodnem, až keď sa spýta —",
-      onDateChangeCorrection: "oprava zápisu, potvrdenia zostávajú",
-      onDateChangeReacknowledge: "podstatná zmena, potvrdiť znova",
+      versionLockedBefore: "Označenie a dátum platnosti sa už meniť nedajú — znenie potvrdilo ",
+      versionLockedHighlight: (people) => `${people} ľudí`,
+      versionLockedAfter: " a oba údaje sú v podpísanej formulke. Opraviť sa dajú až po odvolaní potvrdení; to robí personalista.",
+      revokeVersionHeading: "Odvolať potvrdenia tohto znenia",
+      revokeVersionNote: (people) => `Odvolá ${people} platných potvrdení naraz. Povinnosť ožije s pôvodným termínom — kto ho má za sebou, bude hneď po termíne. Staré potvrdenia z evidencie nezmiznú, zostanú ako odvolané aj s dôvodom.`,
+      revokeVersionReason: "Dôvod odvolania",
+      revokeVersionReasonPlaceholder: "Zlý dátum platnosti — uznesenie VV SFZ určilo 1. 4. 2026",
+      revokeVersionSubmit: "Odvolať potvrdenia",
       fixSubmit: "Opraviť",
 
       textFixHeading: "Alebo: oprava textu bez novej verzie",
@@ -3202,10 +3216,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       reindexed: (chunks, archived) =>
         `Preindexované: ${chunks} ${chunks === 1 ? "úsek" : chunks < 5 ? "úseky" : "úsekov"},` +
         ` ${archived} starých archivovaných. Znenie ani potvrdenia sa nedotklo.`,
-      fixedNeedsReacknowledge: (people) =>
-        "Opravené. Znenie je označené ako vyžadujúce nové potvrdenie —" +
-        ` týka sa to ${people} ${people === 1 ? "človeka" : "ľudí"}.`,
       fixed: "Opravené. Potvrdenia zostávajú platné.",
+      versionRevoked: (people) => `Odvolaných potvrdení: ${people}. Povinnosť ožila s pôvodným termínom — teraz oprav údaj a nechaj znenie potvrdiť znova.`,
       textFixed: (added, removed, chunks) =>
         `Text opravený: +${added} / −${removed} riadkov. Znenie ani potvrdenia sa nemenia;` +
         ` do vyhľadávania išlo ${chunks} ${chunks === 1 ? "úsek" : chunks < 5 ? "úseky" : "úsekov"}.`,
@@ -4091,6 +4103,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "library.emptyText": "Prázdný text uložit nelze — dokument by neměl co obsahovat.",
     "library.labelRequired": "Označení znění je povinné — objeví se doslovně v každém záznamu o potvrzení. Napiš to, co je v dokumentu (například: úplné znění z 27. 2. 2026), ne vymyšlené číslo.",
     "library.effectiveFromRequired": "Datum platnosti je povinné — bez něj znění nelze potvrdit (D6).",
+    "library.effectiveFromSourceRequired": "Zdroj data platnosti je povinný — napiš, odkud datum je (například usnesení VV SFZ č. … z …). Po prvním potvrzení se datum už měnit nedá.",
     "library.documentHasNoText": "Dokument nemá text — nejprve nahraj soubor nebo napiš znění.",
     "library.noChunks": "Z textu nevznikl ani jeden úsek. Zkontroluj, jestli má dokument členění na články nebo nadpisy.",
     "library.noPublishedVersion": "Dokument nemá publikované znění — přeindexovat lze jen to, co už je venku.",
@@ -4103,7 +4116,12 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "textFix.noChange": "Text se od platného znění neliší. Není co opravovat.",
     "textFix.reasonRequired": "Důvod opravy je povinný — bez něj se za rok nedá zjistit, co se ve znění změnilo a proč přitom potvrzení zůstala platná.",
     "library.versionNotFound": "Takové znění tu není.",
-    "library.dateChangeNeedsDecision": "Toto znění už bylo potvrzeno (počet potvrzení: {count}) a formulka, kterou lidé podepsali, obsahuje staré datum. Rozhodni, jestli je to oprava zápisu, nebo se má znění potvrdit znovu.",
+    "versionFix.locked": "Označení a datum platnosti se už měnit nedají — toto znění potvrdilo {count} lidí a oba údaje jsou v podepsané formulce. Nejprve je třeba odvolat potvrzení tohoto znění, pak údaj opravit a nechat jej potvrdit znovu.",
+    "versionFix.reasonRequired": "Důvod opravy je povinný.",
+    "revocation.notHr": "Odvolat potvrzení smí jen personalista.",
+    "revocation.nothingToRevoke": "Není co odvolávat — toto znění nemá platná potvrzení.",
+    "revocation.reasonRequired": "Důvod odvolání je povinný — bez něj se za rok nedá zjistit, proč povinnost ožila.",
+    "write-failed": "Zápis selhal. Zkus to znovu; co se už zapsalo, zůstává platné.",
 
     // ── přepis jazykovým modelem ───────────────────────────────────────────
     "rewrite.notConfigured": "Přepis modelem není nastavený — chybí ANTHROPIC_API_KEY. Převod v aplikaci funguje dál.",
@@ -4791,10 +4809,14 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       fixWas: (label, effectiveFrom) => `původně ${label}, ${effectiveFrom}`,
       fixReacknowledged: "vyžádalo opětovné potvrzení",
       fixNoDate: "bez data platnosti",
-      onDateChange: "Pokud se mění datum a znění už někdo potvrdil",
-      onDateChangeAsk: "— rozhodnu, až když se zeptá —",
-      onDateChangeCorrection: "oprava zápisu, potvrzení zůstávají",
-      onDateChangeReacknowledge: "podstatná změna, potvrdit znovu",
+      versionLockedBefore: "Označení a datum platnosti se už měnit nedají — znění potvrdilo ",
+      versionLockedHighlight: (people) => `${people} lidí`,
+      versionLockedAfter: " a oba údaje jsou v podepsané formulce. Opravit se dají až po odvolání potvrzení; to dělá personalista.",
+      revokeVersionHeading: "Odvolat potvrzení tohoto znění",
+      revokeVersionNote: (people) => `Odvolá ${people} platných potvrzení najednou. Povinnost ožije s původním termínem — kdo jej má za sebou, bude hned po termínu. Stará potvrzení z evidence nezmizí, zůstanou jako odvolaná i s důvodem.`,
+      revokeVersionReason: "Důvod odvolání",
+      revokeVersionReasonPlaceholder: "Špatné datum platnosti — usnesení VV SFZ určilo 1. 4. 2026",
+      revokeVersionSubmit: "Odvolat potvrzení",
       fixSubmit: "Opravit",
 
       textFixHeading: "Nebo: oprava textu bez nové verze",
@@ -4899,10 +4921,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       reindexed: (chunks, archived) =>
         `Přeindexováno: ${chunks} ${chunks === 1 ? "úsek" : chunks < 5 ? "úseky" : "úseků"},` +
         ` ${archived} starých archivováno. Znění ani potvrzení se nedotklo.`,
-      fixedNeedsReacknowledge: (people) =>
-        "Opraveno. Znění je označeno jako vyžadující nové potvrzení —" +
-        ` týká se to ${people} ${people === 1 ? "člověka" : "lidí"}.`,
       fixed: "Opraveno. Potvrzení zůstávají platná.",
+      versionRevoked: (people) => `Odvolaných potvrzení: ${people}. Povinnost ožila s původním termínem — teď oprav údaj a nech znění potvrdit znovu.`,
       textFixed: (added, removed, chunks) =>
         `Text opraven: +${added} / −${removed} řádků. Znění ani potvrzení se nemění;` +
         ` do vyhledávání šlo ${chunks} ${chunks === 1 ? "úsek" : chunks < 5 ? "úseky" : "úseků"}.`,
@@ -5782,6 +5802,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "library.emptyText": "Empty text cannot be saved — the document would have no content.",
     "library.labelRequired": "The version label is required — it appears verbatim in every acknowledgement record. Write what the document says (for example: consolidated text of 27 February 2026), not an invented number.",
     "library.effectiveFromRequired": "The effective date is required — without it the version cannot be acknowledged (D6).",
+    "library.effectiveFromSourceRequired": "The source of the effective date is required — write down where the date comes from (for example board resolution no. … of …). After the first acknowledgement the date can no longer be changed.",
     "library.documentHasNoText": "The document has no text — upload a file or write the wording first.",
     "library.noChunks": "The text produced no chunks at all. Check whether the document is organised into articles or headings.",
     "library.noPublishedVersion": "The document has no published version — only what is already out can be reindexed.",
@@ -5794,7 +5815,12 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "textFix.noChange": "The text does not differ from the effective version. There is nothing to correct.",
     "textFix.reasonRequired": "The reason for the correction is required — without it, a year from now there is no way to tell what changed in the version and why the acknowledgements stayed valid.",
     "library.versionNotFound": "There is no such version here.",
-    "library.dateChangeNeedsDecision": "This version has already been acknowledged ({count} times), and the statement those people signed contains the old date. Decide whether this is a correction of the record or whether the version has to be acknowledged again.",
+    "versionFix.locked": "The label and effective date can no longer be changed — {count} people have acknowledged this version and both values are part of the signed statement. First revoke the acknowledgements of this version, then correct the value and have it acknowledged again.",
+    "versionFix.reasonRequired": "A reason for the correction is required.",
+    "revocation.notHr": "Only HR may revoke an acknowledgement.",
+    "revocation.nothingToRevoke": "There is nothing to revoke — this version has no valid acknowledgements.",
+    "revocation.reasonRequired": "A reason for the revocation is required — without it nobody can tell a year later why the duty came back.",
+    "write-failed": "The write failed. Try again; whatever was already written stays valid.",
 
     // ── language-model transcription ───────────────────────────────────────
     "rewrite.notConfigured": "Model transcription is not configured — ANTHROPIC_API_KEY is missing. Conversion in the application keeps working.",
@@ -6482,10 +6508,14 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       fixWas: (label, effectiveFrom) => `was ${label}, ${effectiveFrom}`,
       fixReacknowledged: "required a fresh acknowledgement",
       fixNoDate: "no effective date",
-      onDateChange: "If the date changes and someone has already acknowledged the version",
-      onDateChangeAsk: "— I will decide when asked —",
-      onDateChangeCorrection: "correction of the record, acknowledgements stand",
-      onDateChangeReacknowledge: "substantive change, acknowledge again",
+      versionLockedBefore: "The label and effective date can no longer be changed — the version has been acknowledged by ",
+      versionLockedHighlight: (people) => `${people} people`,
+      versionLockedAfter: " and both values are part of the signed statement. They can only be corrected after the acknowledgements are revoked, which is done by HR.",
+      revokeVersionHeading: "Revoke the acknowledgements of this version",
+      revokeVersionNote: (people) => `Revokes ${people} valid acknowledgements at once. The duty comes back with its original deadline — anyone past it will be overdue immediately. The old acknowledgements stay on record as revoked, with the reason.`,
+      revokeVersionReason: "Reason for revoking",
+      revokeVersionReasonPlaceholder: "Wrong effective date — the board resolution set 1 April 2026",
+      revokeVersionSubmit: "Revoke acknowledgements",
       fixSubmit: "Correct",
 
       textFixHeading: "Or: correct the text without a new version",
@@ -6590,10 +6620,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       reindexed: (chunks, archived) =>
         `Reindexed: ${chunks} ${chunks === 1 ? "chunk" : "chunks"}, ${archived} older archived.` +
         " Neither the wording nor the acknowledgements were touched.",
-      fixedNeedsReacknowledge: (people) =>
-        "Corrected. The version is marked as requiring a new acknowledgement —" +
-        ` this affects ${people} ${people === 1 ? "person" : "people"}.`,
       fixed: "Corrected. Acknowledgements stay valid.",
+      versionRevoked: (people) => `Acknowledgements revoked: ${people}. The duty is back with its original deadline — now correct the value and have the version acknowledged again.`,
       textFixed: (added, removed, chunks) =>
         `Text corrected: +${added} / −${removed} lines. The version and the acknowledgements are unchanged;` +
         ` ${chunks} ${chunks === 1 ? "chunk" : "chunks"} went into search.`,

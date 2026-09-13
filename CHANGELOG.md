@@ -4,6 +4,22 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Changed (2026-09-13 — čo je vo formulke, sa po prvom potvrdení zamyká, D82)
+
+Potvrdzovacia formulka obsahuje **názov, označenie znenia a dátum platnosti** (D28). Meniť tie údaje pod už podpísanými záznamami znamenalo vyrobiť rozpor medzi tým, čo ľudia podpísali, a tým, čo systém tvrdí. Dialóg pri zmene dátumu (ADR-007) na to ponúkal dve možnosti a **ani jedna nefungovala**: „oprava zápisu" ten rozpor vyrobila, „podstatná zmena" nastavila `versions[].requiresReacknowledgement` — príznak, ktorý **nikto nečíta**, takže nerobila nič.
+
+Rozhodnutia a odôvodnenie: `docs/D82_plan_zamknutie_udajov_znenia.md`.
+
+- **Deliaca čiara nie je „malá vs. veľká zmena", ale „je ten údaj vo vete, ktorú človek podpísal?"** Text znenia vo formulke nie je, takže jeho oprava zostáva ako bola (ADR-007). `label` a `effectiveFrom` v nej sú a po prvom platnom potvrdení sa **zamykajú**.
+- **Odomkne ich jedine hromadné odvolanie potvrdení** toho znenia — `revokeVersion()`, dôvod povinný, robí personalista. Potom sa údaj opraví a ľudia potvrdia opravenú formulku. Nie je to slučka nad `revoke()` kvôli pohodliu: kto by odvolával po jednom z výkazu, pri štyridsiatich ľuďoch to nedokončí a znenie zostane v polovičnom stave.
+- **Zamknuté polia sa v obrazovke neponúkajú**, nie sú len odmietnuté pri uložení. Formulár, ktorý dá pole vyplniť a potom povie, že sa nedá, je horší než formulár, ktorý ho nemá a rovno povie prečo.
+- **Zdroj dátumu je povinný pri publikovaní.** Okno na bezbolestnú opravu je odteraz od publikovania po prvé potvrdenie, teda minúty — obrana sa preto presúva dopredu. Kto musí napísať „uznesenie VV SFZ č. … z …", ten sa doň pozrie. Existujúcich znení sa to netýka.
+- **`requiresReacknowledgement` sa prestáva zapisovať.** V type zostáva kvôli starým záznamom a histórii verzií; pole, ktoré sľubuje povinnosť a nevyrába ju, je horšie než žiadne.
+- **Prečo nie „nová verzia a znovu schváliť":** `versionId` je odtlačok textu a `publish()` pri rovnakom texte vráti `alreadyDone` — novú verziu s nezmeneným textom vyrobiť nejde. Schvaľovanie sa navyše viaže na text, nie na dátum; dátum sa zadáva až pri publikovaní a schvaľovaním nikdy neprešiel. Kto dátum naozaj podpísal, sú tí, čo potvrdili — preto sa opakuje **potvrdenie**, nie schválenie.
+- **D81 (oprava záznamu o potvrdení, typ `correction`) zamietnuté.** Rozpor medzi záznamom a znením už nevznikne, takže netreba mechanizmus na jeho vysvetľovanie.
+- Overené: `tsc` čisto, **1168 testov**, lint bez chýb.
+
+
 ### Added (2026-09-13 — porovnanie nového znenia a obsadené kľúče, D80/O3)
 
 - **Nahratie nového znenia rovno povie, či sa text vôbec líši** od platného znenia — jednou vetou, s počtom pridaných a odobraných riadkov. Bez toho sa nedá odlíšiť novela od znovunahratia toho istého PDF, a to je chyba, ktorá sa zistí až vtedy, keď stovka ľudí potvrdí „nové" znenie s nezmeneným textom. Rozdiel po riadkoch je aj naďalej na detaile dokumentu, pred publikovaním.

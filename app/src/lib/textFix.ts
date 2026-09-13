@@ -220,3 +220,44 @@ function lcsDiff(a: string[], b: string[]): DiffLine[] {
   while (j < m) out.push({ kind: "added", text: b[j++] })
   return out
 }
+
+/* ─────────────────────────────────────────────────────────────────────────
+ * Oprava ÚDAJOV znenia — označenie a dátum platnosti (D82)
+ *
+ * Iné pravidlo než pri oprave textu, a z dobrého dôvodu: **text vo formulke
+ * nie je, označenie a dátum áno.** Formulka znie „…dokumentom „{názov}",
+ * verzia {označenie}, platná od {dátum}…" (D28), takže oprava čiarky v texte
+ * nechá podpis pravdivý, kým zmena dátumu pod už podpísaným záznamom vyrobí
+ * rozpor medzi tým, čo ľudia podpísali, a tým, čo systém tvrdí.
+ *
+ * Preto sa tie dva údaje po **prvom platnom potvrdení zamykajú**. Odomkne ich
+ * jedine hromadné odvolanie potvrdení toho znenia; potom sa údaj opraví
+ * a ľudia potvrdia opravenú formulku.
+ *
+ * **Prečo tak tvrdo.** Dátum platnosti je údaj, od ktorého sa počíta
+ * viazanosť. Skoršia voľba „oprava zápisu, potvrdenia zostávajú" stála na
+ * predpoklade, že podľa zlého dátumu nikto nekonal — a ten sa nedá overiť.
+ * ───────────────────────────────────────────────────────────────────────── */
+
+export type VersionFixProblem =
+  | "versionFix.reasonRequired"
+  | "versionFix.locked"
+
+/**
+ * Prečo sa údaje znenia nedajú opraviť — alebo `null`, keď sa dajú.
+ *
+ * Čisté pravidlo bez databázy, rovnako ako `textFixProblem()`: čo sa smie, sa
+ * musí dať otestovať bez Monga a bez toho, aby si to niekto domýšľal z dotazu.
+ */
+export function versionFixProblem(input: {
+  /** Koľko platných potvrdení toto znenie má. */
+  acknowledgements: number
+  changesLabel: boolean
+  changesEffectiveFrom: boolean
+  reason: string
+}): VersionFixProblem | null {
+  if (!input.reason?.trim()) return "versionFix.reasonRequired"
+  const touchesStatement = input.changesLabel || input.changesEffectiveFrom
+  if (touchesStatement && input.acknowledgements > 0) return "versionFix.locked"
+  return null
+}

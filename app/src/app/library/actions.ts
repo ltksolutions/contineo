@@ -22,6 +22,8 @@ import {
 } from "@/lib/libraryWrite"
 import { loadFile } from "@/lib/fileStore"
 import { textDiff } from "@/lib/textFix"
+import { revokeVersion } from "@/lib/acknowledgements"
+import { isHr } from "@/lib/hr"
 import { tenantExtras } from "@/lib/codelistsTenant"
 import {
   createFolder, renameFolder, moveFolder, deleteFolder,
@@ -587,21 +589,58 @@ export async function fixVersionAction(fd: FormData) {
   let error = false
   try {
     const day = fieldText(fd, "effectiveFrom")
-    const choice = fieldText(fd, "onDateChange")
-    const v = await fixVersion(self.companyCode, id, fieldText(fd, "versionId"), {
+    await fixVersion(self.companyCode, id, fieldText(fd, "versionId"), {
       label: fieldText(fd, "label") || undefined,
       effectiveFrom: day ? new Date(`${day}T00:00:00.000Z`) : undefined,
       effectiveFromSource: fieldText(fd, "effectiveFromSource"),
       changeNote: fieldText(fd, "changeNote"),
       reason: fieldText(fd, "reason"),
-      onDateChange: choice === "correction" || choice === "reacknowledge" ? choice : undefined,
     }, self.email)
 
-    message = v.reacknowledged
-      ? say(self.language).fixedNeedsReacknowledge(v.acknowledgementCount)
-      : say(self.language).fixed
+    message = say(self.language).fixed
   } catch (e) {
     message = errorMessage(e, self.language)
+    error = true
+  }
+
+  revalidatePath(`/library/${id}`)
+  redirect(`/library/${encodeURIComponent(id)}?msg=${encodeURIComponent(message)}${error ? "&error=1" : ""}`)
+}
+
+/**
+ * Hromadné odvolanie potvrdení jedného znenia (D82).
+ *
+ * Jediná cesta, ako odomknúť označenie a dátum platnosti. Nie je to pohodlie:
+ * kto by odvolával po jednom z výkazu, pri desiatkach ľudí to nedokončí
+ * a znenie zostane v polovičnom stave.
+ */
+export async function revokeVersionAction(fd: FormData) {
+  const ctx = await libraryContext()
+  if (ctx.state !== "ready") redirect("/")
+
+  const id = fieldText(fd, "documentId")
+  const language = ctx.person.language
+  let message = ""
+  let error = false
+  try {
+    const r = await revokeVersion({
+      by: {
+        personId: ctx.person.id,
+        email: ctx.person.email,
+        fullName: ctx.person.fullName,
+        companyCode: ctx.person.companyCode,
+      },
+      isHr: isHr(ctx.person),
+      versionId: fieldText(fd, "versionId"),
+      reason: fieldText(fd, "reason"),
+    })
+    if (r.ok) message = say(language).versionRevoked(r.revoked)
+    else {
+      message = errorText(new AppError(r.reason, r.reason), language)
+      error = true
+    }
+  } catch (e) {
+    message = errorMessage(e, language)
     error = true
   }
 
