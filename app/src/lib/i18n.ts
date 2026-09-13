@@ -3191,7 +3191,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       fixed: "Opravené. Potvrdenia zostávajú platné.",
       textFixed: (added, removed, chunks) =>
         `Text opravený: +${added} / −${removed} riadkov. Znenie ani potvrdenia sa nemenia;` +
-        ` do vyhľadávania išlo ${chunks} ${chunks === 1 ? "úsekov" : chunks < 5 ? "úseky" : "úsekov"}.`,
+        ` do vyhľadávania išlo ${chunks} ${chunks === 1 ? "úsek" : chunks < 5 ? "úseky" : "úsekov"}.`,
       submittedForApproval: n =>
         `Predložené na schválenie ${n === 1 ? "jednému človeku" : `${n} ľuďom`}.`,
       approvalNotAllNotified: n => `Ale ${n === 1 ? "jednému človeku" : `${n} ľuďom`} sa e-mail odoslať nepodarilo \u2014 kolo beží, len o ňom nevedia.`,
@@ -4877,7 +4877,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       fixed: "Opraveno. Potvrzení zůstávají platná.",
       textFixed: (added, removed, chunks) =>
         `Text opraven: +${added} / −${removed} řádků. Znění ani potvrzení se nemění;` +
-        ` do vyhledávání šlo ${chunks} ${chunks === 1 ? "úseků" : chunks < 5 ? "úseky" : "úseků"}.`,
+        ` do vyhledávání šlo ${chunks} ${chunks === 1 ? "úsek" : chunks < 5 ? "úseky" : "úseků"}.`,
       submittedForApproval: n =>
         `Předloženo ke schválení ${n === 1 ? "jednomu člověku" : `${n} lidem`}.`,
       approvalNotAllNotified: n => `Ale ${n === 1 ? "jednomu člověku" : `${n} lidem`} se e-mail odeslat nepodařilo \u2014 kolo běží, jen o něm nevědí.`,
