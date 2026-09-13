@@ -4,6 +4,24 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Changed (2026-09-13 — nový dokument a nové znenie sú dve rôzne veci, D80)
+
+`documentId` sa skladal z `companyCode:sectionKey`, takže `sectionKey` niesol dve rôzne veci naraz: **kam** dokument patrí a **ktorý** dokument to je. Kým je knižnica zoznamom deviatich predpisov, je to neviditeľné. Dôsledky boli dva a oba nepríjemné: nahratie súboru na existujúci kľúč **ticho prepísalo** koncept, metadáta aj pôvodný súbor existujúceho dokumentu (rozhranie nepovedalo nič a `isNew` z `uploadDocument()` nikto nečítal), a **dva rôzne dokumenty s tým istým zaradením sa nedali mať** — desať zápisníc výkonného výboru by potrebovalo desať zaradení.
+
+Plán a rozhodnutia: `docs/D80_plan_novy_dokument_vs_nove_znenie.md`.
+
+- **`documentKey` oddelený od `sectionKey`.** Identita je `documentKey`, zaradenie je `sectionKey`. `makeDocumentId()` berie kľúč a keď chýba, berie zaradenie — presne pôvodné správanie.
+- **Migrácia nezmenila identitu ani jednému dokumentu.** `documentId` je cudzí kľúč v `acknowledgements`, `document_chunks`, `assignments`, `approval_rounds`, `onboarding_tracks` aj v audite; skript to overuje pred zápisom aj po ňom a pri prvom rozdiele nezapíše nič.
+- **Kľúč sa odvodzuje z `documentId`, nie zo `sectionKey`** — a to prvý beh nasucho ukázal ako nutné: `sfz:test_onboarding` má `sectionKey: "smernice"`, takže odvodenie zo zaradenia by mu identitu zmenilo na `sfz:smernice`. `documentId` je jediná dnes pravdivá hodnota.
+- **Nahrávanie dostalo zámer** (`mode: "new" | "version"`), povinný a bez predvolenej hodnoty. Pri `"new"` a existujúcom kľúči sa zápis **odmietne** — a kontrola beží **pred** uložením súboru, aby po odmietnutí nezostal v úložisku súbor, ku ktorému nevedie záznam.
+- **Nové znenie zo súboru má vlastnú cestu** na detaile dokumentu. Metadáta sa preberajú z existujúceho záznamu, formulár ich neposiela: nové znenie mení text, nie pôsobnosť ani prístupnosť. Publikované znenie sa nemení — vzniká koncept a publikuje sa samostatným úkonom cez schvaľovanie (D75).
+- **Unikátny index `document_id_unique`** (so súhlasom). Dovtedy jedinečnosť `documentId` držal výhradne filter `upsert`u; odkedy sa kolízia odmieta, je medzi kontrolou a zápisom okno.
+- Obrazovka nahrávania má dve polia namiesto jedného: **Zaradenie** a **Kľúč dokumentu** (nepovinný, dopĺňa sa zo zaradenia).
+- Overené: `tsc` čisto, **1154 testov**, lint bez chýb, migrácia na ostrých dátach a `npm run check` bez rozporov.
+
+**Zostáva z D80:** porovnanie nového znenia s platným pred uložením (dnes sa text číta až v editore) a upratanie `sectionKey.json` na kategórie. Vedené v `docs/TODO.md`, sekcia O3.
+
+
 ### Added (2026-09-13 — skript na mazanie dokumentov + plán členenia per dokument)
 
 Pred nahratím ostrých znení treba vedieť zmazať skúšobný korpus (D74). Skript na to dovtedy neexistoval — `delete_test_data.mjs` napriek názvu maže iba `evaluations` s `reviewer: "anonym"` a dokumentov sa nedotkne. Mazanie by teda bol ručný zásah do Mongo.

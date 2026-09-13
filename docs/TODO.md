@@ -498,8 +498,11 @@ drahšie než teraz.
 
 ### O1 🔓 — D80, kroky A: nový dokument vs. nové znenie → `docs/D80_plan_novy_dokument_vs_nove_znenie.md`
 
-- [ ] `documentKey` oddelený od `sectionKey`; `documentId` sa nemení nikomu (D80/A1, A2)
-- [ ] `uploadDocument()` dostane zámer a **odmietne kolíziu** namiesto tichého prepisu (D80/A3)
+- [x] `documentKey` oddelený od `sectionKey`; `documentId` sa nemení nikomu (D80/A1, A2) ✅ 2026-09-13
+      Migrácia `npm run migrate:documentkey` prebehla na ostrých dátach, unikátny index `document_id_unique` vytvorený.
+      Kľúč sa odvodzuje z `documentId`, nie zo `sectionKey` — `sfz:test_onboarding` má zaradenie `smernice`, takže odvodenie zo zaradenia by mu zmenilo identitu. Našiel to prvý beh nasucho.
+- [x] `uploadDocument()` dostane zámer a **odmietne kolíziu** namiesto tichého prepisu (D80/A3) ✅ 2026-09-13
+      Kontrola beží pred uložením súboru. Pribudla cesta **Nové znenie zo súboru** na detaile dokumentu, inak by odmietnutie vzalo jedinú cestu k novému zneniu.
 
 Dnes nahratie na existujúci `sectionKey` **ticho prepíše** koncept, metadáta
 aj pôvodný nahraný súbor existujúceho dokumentu, rozhranie nevaruje a cesta
@@ -516,9 +519,10 @@ Lacné, kým je knižnica malá. Nové obrazovky a druhá stratégia chunkovania
 
 ### O3 — D80, kroky B a C: obrazovky
 
-- [ ] `/library/new` s kontrolou kolízie pri písaní kľúča
-- [ ] detail dokumentu: **Nové znenie** — súbor, prevod, **porovnanie s platným znením**
-- [ ] upratanie `sectionKey.json` na kategórie
+- [x] detail dokumentu: **Nové znenie** — súbor a prevod ✅ 2026-09-13
+- [ ] **porovnanie s platným znením pred uložením** — dnes sa text číta až v editore. Bez neho sa nedá odlíšiť novela od znovunahratia toho istého PDF (rovnaký princíp ako pri oprave textu, ADR-007)
+- [ ] `/library/new`: kontrola kolízie **pri písaní kľúča**, nie až po nahratí súboru
+- [ ] upratanie `sectionKey.json` na kategórie; potom zvážiť, či sa zaradenie smie meniť cez `saveMetadata()` — od D80 už identitu netvorí
 
 ### O4 — oprava záznamu o potvrdení (typ `correction`)
 

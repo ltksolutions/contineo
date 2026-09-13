@@ -107,6 +107,7 @@ export async function uploadAction(fd: FormData) {
     // Organizácia je z prihláseného človeka, nie z formulára.
     const meta = checkMetadata({
       title: fieldText(fd, "title"),
+      documentKey: fieldText(fd, "documentKey"),
       sectionKey: fieldText(fd, "sectionKey"),
       companyCode: self.companyCode,
       scope: fieldText(fd, "scope"),
@@ -116,8 +117,11 @@ export async function uploadAction(fd: FormData) {
       tags: fd.getAll("tags").filter((t): t is string => typeof t === "string"),
     }, self.extras)
 
+    // Táto obrazovka zakladá **nový** dokument. Keď kľúč už existuje, zápis
+    // sa odmietne — dovtedy ticho prepísal koncept, metadáta aj pôvodný
+    // súbor existujúceho dokumentu (D80).
     const v = await uploadDocument(
-      meta, file.name, Buffer.from(await file.arrayBuffer()), self.email,
+      meta, file.name, Buffer.from(await file.arrayBuffer()), self.email, "new",
     )
 
     revalidatePath("/library")
@@ -135,8 +139,71 @@ export async function uploadAction(fd: FormData) {
       error: errorMessage(e, self.language),
       title: fieldText(fd, "title"),
       sectionKey: fieldText(fd, "sectionKey"),
+      documentKey: fieldText(fd, "documentKey"),
     })
     redirect(`/library/new?${q.toString()}`)
+  }
+}
+
+/**
+ * Nahrá nový súbor ako **koncept existujúceho** dokumentu (D80).
+ *
+ * Oddelená cesta od `uploadAction()` zámerne. Dovtedy sa nové znenie
+ * dostávalo dnu tak, že človek prešiel znova cez obrazovku nového dokumentu
+ * a zopakoval kľúč — čo bola tá istá akcia ako založenie a nedalo sa
+ * rozlíšiť, čo z toho chcel. Teraz je zámer v adrese aj v kóde.
+ *
+ * **Metadáta sa preberajú z existujúceho záznamu**, formulár ich neposiela.
+ * Nové znenie mení text, nie pôsobnosť ani prístupnosť; keby ich formulár
+ * niesol, dal by sa nimi pri nahrávaní súboru nechtiac pohnúť.
+ *
+ * Publikované znenie sa tým **nemení** — vzniká koncept a publikuje sa
+ * samostatným úkonom, ktorý prechádza schvaľovaním (D75).
+ */
+export async function uploadVersionAction(fd: FormData) {
+  const self = await actor()
+  if (!self) redirect("/")
+
+  const id = fieldText(fd, "documentId")
+  try {
+    const file = fd.get("file")
+    if (!(file instanceof File) || file.size === 0) {
+      throw new LibraryError("library.noFileChosen", "Nevybral si súbor.")
+    }
+
+    const col = await getCollection(DOCUMENTS_COLLECTION)
+    const before = await col.findOne({ documentId: id, companyCode: self.companyCode })
+    if (!before) throw new LibraryError("library.documentNotFound", "Taký dokument tu nie je.")
+
+    const meta = checkMetadata({
+      title: String(before.title ?? ""),
+      // Kľúč dokumentu chýba záznamom spred D80 — vtedy platí zaradenie,
+      // presne ako v `makeDocumentId()`.
+      documentKey: String(before.documentKey ?? before.sectionKey ?? ""),
+      sectionKey: String(before.sectionKey ?? ""),
+      companyCode: self.companyCode,
+      scope: String(before.scope ?? ""),
+      accessLevel: String(before.accessLevel ?? ""),
+      language: String(before.language ?? ""),
+      category: (before.category as string | null) ?? undefined,
+      tags: Array.isArray(before.tags) ? (before.tags as string[]) : [],
+    }, self.extras)
+
+    const v = await uploadDocument(
+      meta, file.name, Buffer.from(await file.arrayBuffer()), self.email, "version",
+    )
+
+    revalidatePath(`/library/${id}`)
+    redirect(`/library/${encodeURIComponent(v.documentId)}/text?msg=${encodeURIComponent(
+      v.warnings.length
+        ? say(self.language).convertedWithWarnings(v.warnings.join(" "))
+        : say(self.language).converted,
+    )}`)
+  } catch (e) {
+    if (isRedirect(e)) throw e
+    redirect(`/library/${encodeURIComponent(id)}?msg=${encodeURIComponent(
+      errorMessage(e, self.language),
+    )}&error=1`)
   }
 }
 
@@ -190,8 +257,12 @@ export async function publishVersionAction(fd: FormData) {
 }
 
 /** Pomôcka pre obrazovku: aký `documentId` z týchto metadát vznikne. */
-export async function previewId(companyCode: string, sectionKey: string): Promise<string> {
-  return makeDocumentId({ companyCode, sectionKey })
+export async function previewId(
+  companyCode: string,
+  sectionKey: string,
+  documentKey?: string,
+): Promise<string> {
+  return makeDocumentId({ companyCode, sectionKey, documentKey })
 }
 
 /**

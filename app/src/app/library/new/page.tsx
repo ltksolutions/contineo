@@ -33,7 +33,9 @@ export default async function NewDocumentPage({
     notFound()
   }
 
-  const { error, title, sectionKey } = normalizeQuery<{ error?: string; title?: string; sectionKey?: string }>(await searchParams)
+  const { error, title, sectionKey, documentKey } = normalizeQuery<{
+    error?: string; title?: string; sectionKey?: string; documentKey?: string
+  }>(await searchParams)
   // Ponuka musí obsahovať aj to, čo si organizácia dopísala (D55).
   const t = dictionary(ctx.person.language).library.upload
   const extras = tenantExtras(ctx.tenant)
@@ -107,14 +109,28 @@ export default async function NewDocumentPage({
           </span>
         </label>
 
+        {/*
+          Zaradenie a kľúč sú od D80 dve polia, nie jedno. Dovtedy `sectionKey`
+          niesol oboje a dôsledok bol ten, že dva rôzne dokumenty s tým istým
+          zaradením sa nedali mať — desať zápisníc by potrebovalo desať zaradení.
+        */}
+        <label className="field upload-wide">
+          <span className="field-label">{t.section}</span>
+          <input className="field-input" name="sectionKey" defaultValue={sectionKey ?? ""} required
+                 placeholder="poriadky" autoCapitalize="none" autoCorrect="off" />
+          <span className="quiet field-hint">
+            {t.sectionNote}
+            {CODELISTS.sectionKey.items.slice(0, 8).map(p => p.key).join(", ")}.
+          </span>
+        </label>
+
         <label className="field upload-wide">
           <span className="field-label">{t.key}</span>
-          <input className="field-input" name="sectionKey" defaultValue={sectionKey ?? ""} required
+          <input className="field-input" name="documentKey" defaultValue={documentKey ?? ""}
                  placeholder="sutazny_poriadok" autoCapitalize="none" autoCorrect="off" />
           <span className="quiet field-hint">
             {t.keyNoteBefore}<code>{ctx.tenant.companyCode.toLowerCase()}:kluc</code>{t.keyNoteAfterCode}
             <strong>{t.keyNoteHighlight}</strong>{t.keyNoteAfter}
-            {CODELISTS.sectionKey.items.slice(0, 8).map(p => p.key).join(", ")}.
           </span>
         </label>
 

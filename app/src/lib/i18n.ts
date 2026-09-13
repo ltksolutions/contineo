@@ -1360,6 +1360,10 @@ interface Dictionary {
       reindexNoteHighlight: string
       reindexNoteAfter: string
       reindex: string
+      newVersionHeading: string
+      newVersionNote: string
+      newVersionFile: string
+      newVersionSubmit: string
       versionsHeading: (n: number) => string
       nothingPublished: string
       active: string
@@ -1519,6 +1523,8 @@ interface Dictionary {
       keyNoteAfterCode: string
       keyNoteHighlight: string
       keyNoteAfter: string
+      section: string
+      sectionNote: string
       scope: string
       accessLevel: string
       accessInternalNote: string
@@ -2375,6 +2381,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     // ── knižnica ───────────────────────────────────────────────────────────
     "library.noFileChosen": "Nevybral si súbor.",
     "library.documentNotFound": "Taký dokument tu nie je.",
+    "library.documentExists": "Dokument „{title}“ ({documentId}) už existuje. Nové znenie sa nahráva na jeho detaile, nie ako nový dokument — táto obrazovka zakladá nový dokument.",
+    "library.documentKeyShape": "Kľúč dokumentu „{key}“ nemá správny tvar — smie mať len malé písmená bez diakritiky, číslice a podčiarkovníky.",
     "library.noOriginalFile": "Dokument nemá pôvodný súbor, ktorý by sa dal prepísať.",
     "library.onlyPdfRewrite": "Prepisovať sa dá len PDF — ostatné formáty sa prevedú priamo.",
     "library.originalNotFound": "Pôvodný súbor sa nenašiel.",
@@ -3058,6 +3066,10 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       reindexNoteHighlight: "Nevytvorí novú verziu",
       reindexNoteAfter: " — text sa nemení, takže potvrdenia zostávajú platné a nikomu nenaskočí povinnosť potvrdzovať znova. Používa sa po vyladení profilu v nastavení organizácie.",
       reindex: "Preindexovať",
+      newVersionHeading: "Nové znenie zo súboru",
+      newVersionNote: "Nahrá nový súbor ako koncept tohto dokumentu. Publikované znenie sa tým nemení — text si najprv prečítaš a znenie publikuješ až potom. Metadáta zostávajú, mení sa len text a pôvodný súbor.",
+      newVersionFile: "Súbor s novým znením",
+      newVersionSubmit: "Nahrať nové znenie",
       versionsHeading: (n) => `Znenia (${n})`,
       nothingPublished: "Zatiaľ nič nebolo publikované, takže sa nedá ani prideliť na potvrdenie.",
       active: "aktívne",
@@ -3217,7 +3229,9 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       keyNoteBefore: "Malé písmená bez diakritiky a podčiarkovníky. Spolu s kódom organizácie tvorí identifikátor (",
       keyNoteAfterCode: ").",
       keyNoteHighlight: " Ten istý kľúč znamená ten istý dokument",
-      keyNoteAfter: " — nahratie naň založí nové znenie, nie druhý dokument. Existujúce: ",
+      keyNoteAfter: " — nahratie na existujúci kľúč sa preto odmietne; nové znenie sa nahráva na detaile dokumentu. Nevyplnený sa doplní zo zaradenia.",
+      section: "Zaradenie",
+      sectionNote: "Kam dokument patrí. Na rozdiel od kľúča ho môže mať viac dokumentov naraz. Existujúce: ",
       scope: "Pôsobnosť",
       accessLevel: "Prístupnosť",
       accessInternalNote: " vidia len ľudia organizácie, ",
@@ -4061,6 +4075,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     // ── knihovna ───────────────────────────────────────────────────────────
     "library.noFileChosen": "Nevybral jsi soubor.",
     "library.documentNotFound": "Takový dokument tu není.",
+    "library.documentExists": "Dokument „{title}“ ({documentId}) už existuje. Nové znění se nahrává na jeho detailu, ne jako nový dokument — tato obrazovka zakládá nový dokument.",
+    "library.documentKeyShape": "Klíč dokumentu „{key}“ nemá správný tvar — smí mít jen malá písmena bez diakritiky, číslice a podtržítka.",
     "library.noOriginalFile": "Dokument nemá původní soubor, který by šel přepsat.",
     "library.onlyPdfRewrite": "Přepisovat lze jen PDF — ostatní formáty se převedou přímo.",
     "library.originalNotFound": "Původní soubor se nenašel.",
@@ -4744,6 +4760,10 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       reindexNoteHighlight: "Nevytvoří novou verzi",
       reindexNoteAfter: " — text se nemění, takže potvrzení zůstávají platná a nikomu nenaskočí povinnost potvrzovat znovu. Používá se po vyladění profilu v nastavení organizace.",
       reindex: "Přeindexovat",
+      newVersionHeading: "Nové znění ze souboru",
+      newVersionNote: "Nahraje nový soubor jako koncept tohoto dokumentu. Publikované znění se tím nemění — text si nejprve přečteš a znění publikuješ až potom. Metadata zůstávají, mění se jen text a původní soubor.",
+      newVersionFile: "Soubor s novým zněním",
+      newVersionSubmit: "Nahrát nové znění",
       versionsHeading: (n) => `Znění (${n})`,
       nothingPublished: "Zatím nic nebylo publikováno, takže se nedá ani přidělit k potvrzení.",
       active: "aktivní",
@@ -4903,7 +4923,9 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       keyNoteBefore: "Malá písmena bez diakritiky a podtržítka. Spolu s kódem organizace tvoří identifikátor (",
       keyNoteAfterCode: ").",
       keyNoteHighlight: " Týž klíč znamená týž dokument",
-      keyNoteAfter: " — nahrání na něj založí nové znění, ne druhý dokument. Existující: ",
+      keyNoteAfter: " — nahrání na existující klíč se proto odmítne; nové znění se nahrává na detailu dokumentu. Nevyplněný se doplní ze zařazení.",
+      section: "Zařazení",
+      sectionNote: "Kam dokument patří. Na rozdíl od klíče ho může mít víc dokumentů najednou. Existující: ",
       scope: "Působnost",
       accessLevel: "Přístupnost",
       accessInternalNote: " vidí jen lidé organizace, ",
@@ -5741,6 +5763,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     // ── library ────────────────────────────────────────────────────────────
     "library.noFileChosen": "You did not choose a file.",
     "library.documentNotFound": "There is no such document here.",
+    "library.documentExists": "The document \u201C{title}\u201D ({documentId}) already exists. A new version is uploaded on its detail page, not as a new document — this screen creates a new document.",
+    "library.documentKeyShape": "The document key \u201C{key}\u201D has the wrong shape — only lowercase letters without diacritics, digits and underscores are allowed.",
     "library.noOriginalFile": "The document has no original file that could be transcribed.",
     "library.onlyPdfRewrite": "Only PDFs can be transcribed — other formats are converted directly.",
     "library.originalNotFound": "The original file was not found.",
@@ -6424,6 +6448,10 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       reindexNoteHighlight: "It does not create a new version",
       reindexNoteAfter: " — the text does not change, so acknowledgements stay valid and nobody is asked to acknowledge again. Use it after tuning the profile in the organisation settings.",
       reindex: "Reindex",
+      newVersionHeading: "New version from a file",
+      newVersionNote: "Uploads a new file as this document's draft. The published version is not affected — you read the text first and publish it afterwards. Metadata stays; only the text and the original file change.",
+      newVersionFile: "File with the new version",
+      newVersionSubmit: "Upload new version",
       versionsHeading: (n) => `Versions (${n})`,
       nothingPublished: "Nothing has been published yet, so it cannot be assigned for acknowledgement either.",
       active: "active",
@@ -6583,7 +6611,9 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       keyNoteBefore: "Lower-case letters without diacritics, and underscores. Together with the organisation code it forms the identifier (",
       keyNoteAfterCode: ").",
       keyNoteHighlight: " The same key means the same document",
-      keyNoteAfter: " — uploading to it creates a new version, not a second document. Existing: ",
+      keyNoteAfter: " — uploading to an existing key is therefore refused; a new version is uploaded on the document detail page. Left empty, it is filled in from the section.",
+      section: "Section",
+      sectionNote: "Where the document belongs. Unlike the key, several documents can share it. Existing: ",
       scope: "Scope",
       accessLevel: "Access level",
       accessInternalNote: " is visible only to people of the organisation, ",

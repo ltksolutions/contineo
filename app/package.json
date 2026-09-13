@@ -29,7 +29,8 @@
     "files:attach": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/attach_original_files.mjs",
     "migrate:fields": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/migrate_english_fields.mjs",
     "migrate:chunking": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/migrate_chunking_profile.mjs",
-    "migrate:indexes": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/migrate_index_names.mjs",
+    "migrate:documentkey": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/migrate_document_key.mjs",
+  "migrate:indexes": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/migrate_index_names.mjs",
     "docs:delete": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --disable-warning=DEP0205 --import ./scripts/lib/ts-hook.mjs scripts/delete_documents.mjs",
   "tag:test": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --disable-warning=DEP0205 --import ./scripts/lib/ts-hook.mjs scripts/tag_test_documents.mjs",
     "migrate:grandfather": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --disable-warning=DEP0205 --import ./scripts/lib/ts-hook.mjs scripts/migrate_published_before.mjs"

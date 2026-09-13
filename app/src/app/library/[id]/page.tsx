@@ -17,7 +17,7 @@ import { formatDate, dictionary } from "@/lib/i18n"
 import Notice from "@/components/Notice"
 import {
   publishVersionAction, saveDocumentMetadataAction, assignToFolderAction, reindexDocumentAction,
-  fixVersionAction, fixTextAction,
+  fixVersionAction, fixTextAction, uploadVersionAction,
 } from "../actions"
 import { allFolders, flattenTree } from "@/lib/folders"
 import { codelistOptions } from "@/lib/codelists"
@@ -450,6 +450,25 @@ export default async function DocumentDetailPage({
           </>
         )}
       </section>
+
+      {/*
+        Nové znenie zo súboru (D80). Dovtedy sa nový súbor dal dostať dnu
+        jedine opätovným prechodom cez obrazovku nového dokumentu s tým istým
+        kľúčom — a tá cesta ticho prepísala koncept aj metadáta. Tu je zámer
+        jasný a metadáta sa neberú z formulára.
+      */}
+      <form action={uploadVersionAction} encType="multipart/form-data"
+            className="card" style={{ padding: 18, display: "grid", gap: 10, margin: "0 0 18px" }}>
+        <input type="hidden" name="documentId" value={d.documentId} />
+        <h2 style={{ fontSize: 17, margin: 0 }}>{t.newVersionHeading}</h2>
+        <p className="quiet" style={{ fontSize: 14, margin: 0 }}>{t.newVersionNote}</p>
+        <label className="field">
+          <span className="field-label">{t.newVersionFile}</span>
+          <input className="field-input" type="file" name="file" required
+                 accept=".pdf,.docx,.doc,.md,.txt,.rtf,.odt" />
+        </label>
+        <div><button className="button button--quiet" type="submit">{t.newVersionSubmit}</button></div>
+      </form>
 
       <form action={reindexDocumentAction} className="card" style={{ padding: 18, display: "grid", gap: 10, margin: "0 0 18px" }}>
         <input type="hidden" name="documentId" value={d.documentId} />

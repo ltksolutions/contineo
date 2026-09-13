@@ -26,7 +26,7 @@ import { validAcknowledgements } from "./acknowledgements"
 import { chunkText, DEFAULT_PROFILE } from "./chunker.mjs"
 import { textFingerprint, chunkingFingerprint, needsReindex, CHUNKER_VERSION } from "./chunkIdentity"
 import { textFixProblem, textDiff, type TextFixProblem } from "./textFix"
-import { checkValue, checkList } from "./codelists"
+import { checkValue, checkList, KEY_PATTERN } from "./codelists"
 import type { CodelistExtras } from "./codelists"
 import { saveFile, deleteFile } from "./fileStore"
 import { convert, FILE_TYPE_LABEL } from "./conversion"
@@ -55,6 +55,20 @@ export interface OriginalFile {
 
 export interface DocumentMetadata {
   title: string
+  /**
+   * Identita dokumentu v rámci organizácie (D80).
+   *
+   * **Nie je to zaradenie.** `sectionKey` hovorí, kam dokument patrí;
+   * `documentKey` hovorí, ktorý dokument to je. Dovtedy to bolo jedno pole
+   * a dôsledok bol ten, že dva rôzne dokumenty s tým istým zaradením sa
+   * nedali mať — desať zápisníc by potrebovalo desať zaradení.
+   *
+   * Nevyplnené sa dopĺňa zo `sectionKey`. Vďaka tomu má každý dokument
+   * spred D80 rovnaký `documentId` ako predtým — a to je podstatné, lebo
+   * `documentId` je cudzí kľúč v `acknowledgements`, `document_chunks`,
+   * `assignments`, `approval_rounds`, `onboarding_tracks` aj v audite.
+   */
+  documentKey: string
   sectionKey: string
   companyCode: string
   scope: string
@@ -67,9 +81,20 @@ export interface DocumentMetadata {
 
 export class LibraryError extends AppError {}
 
-/** Identifikátor dokumentu — zhodne so skriptom, nezávisle od názvu súboru. */
-export function makeDocumentId(meta: { companyCode: string; sectionKey: string }): string {
-  return `${meta.companyCode}:${meta.sectionKey}`.toLowerCase()
+/**
+ * Identifikátor dokumentu — zhodne so skriptom, nezávisle od názvu súboru.
+ *
+ * Skladá sa z `documentKey`, nie zo `sectionKey` (D80). Keď `documentKey`
+ * chýba, berie sa `sectionKey` — presne to správanie, aké platilo predtým,
+ * takže sa žiadnemu existujúcemu dokumentu identita nemení.
+ */
+export function makeDocumentId(meta: {
+  companyCode: string
+  documentKey?: string
+  sectionKey?: string
+}): string {
+  const key = (meta.documentKey ?? "").trim() || (meta.sectionKey ?? "").trim()
+  return `${meta.companyCode}:${key}`.toLowerCase()
 }
 
 /** Overí metadáta z formulára proti číselníkom. Vyhadzuje `KniznicaError`. */
@@ -80,10 +105,24 @@ export function checkMetadata(
   const title = (input.title ?? "").trim()
   if (!title) throw new LibraryError("library.titleRequired", "Názov dokumentu je povinný — bez neho je v zozname len kľúč.")
 
+  // Kľúč dokumentu nie je položka číselníka — je to identita, ktorú si volí
+  // kurátor. Overuje sa teda tvarom (`KEY_PATTERN`), nie príslušnosťou do
+  // slovníka. Nevyplnený sa dopĺňa zo `sectionKey` (D80).
+  const sectionKey = checkValue("sectionKey", input.sectionKey ?? "")
+  const documentKey = ((input.documentKey ?? "").trim() || sectionKey).toLowerCase()
+  if (!KEY_PATTERN.test(documentKey)) {
+    throw new LibraryError(
+      "library.documentKeyShape",
+      "Kľúč dokumentu smie mať len malé písmená bez diakritiky, číslice a podčiarkovníky.",
+      { key: documentKey },
+    )
+  }
+
   try {
     return {
       title,
-      sectionKey: checkValue("sectionKey", input.sectionKey ?? ""),
+      documentKey,
+      sectionKey,
       companyCode: checkValue("companyCode", input.companyCode ?? ""),
       scope: checkValue("scope", input.scope ?? ""),
       accessLevel: checkValue("accessLevel", input.accessLevel ?? ""),
@@ -96,6 +135,16 @@ export function checkMetadata(
     throw e
   }
 }
+
+/**
+ * Zámer nahrávania (D80).
+ *
+ * **Povinný, bez predvolenej hodnoty.** Dovtedy sa zámer neuvádzal a zápis
+ * bol `upsert` — nahratie na existujúci kľúč teda ticho prepísalo koncept,
+ * metadáta aj pôvodný súbor existujúceho dokumentu a rozhranie o tom
+ * nepovedalo nič. Predvolená hodnota by tú istú pascu len schovala hlbšie.
+ */
+export type UploadMode = "new" | "version"
 
 export interface UploadResult {
   documentId: string
@@ -116,8 +165,29 @@ export async function uploadDocument(
   fileName: string,
   data: Buffer,
   actor: string,
+  mode: UploadMode,
 ): Promise<UploadResult> {
   const documentId = makeDocumentId(meta)
+  const col = await getCollection(DOCUMENTS_COLLECTION)
+  const existing = await col.findOne({ documentId })
+
+  // **Kontrola pred uložením súboru, nie po ňom.** Opačné poradie by pri
+  // odmietnutej kolízii nechalo v úložisku súbor, ku ktorému nevedie žiadny
+  // záznam — a nikto by ho tam nehľadal.
+  if (mode === "new" && existing) {
+    throw new LibraryError(
+      "library.documentExists",
+      `Dokument ${documentId} už existuje. Nové znenie sa nahráva na jeho detaile, nie ako nový dokument.`,
+      { documentId, title: String(existing.title ?? documentId) },
+    )
+  }
+  if (mode === "version" && !existing) {
+    throw new LibraryError(
+      "library.documentNotFound",
+      "Taký dokument tu nie je.",
+    )
+  }
+
   const file = await saveFile(meta.companyCode, fileName, "application/octet-stream", data, actor)
 
   let converted
@@ -128,8 +198,6 @@ export async function uploadDocument(
     throw e
   }
 
-  const col = await getCollection(DOCUMENTS_COLLECTION)
-  const existing = await col.findOne({ documentId })
   const now = new Date()
 
   const original: OriginalFile = {
@@ -149,6 +217,7 @@ export async function uploadDocument(
         documentId,
         title: meta.title,
         slug: documentId.replace(/:/g, "-"),
+        documentKey: meta.documentKey,
         sectionKey: meta.sectionKey,
         companyCode: meta.companyCode,
         scope: meta.scope,
@@ -422,11 +491,15 @@ export async function publish(
 /**
  * Upraví údaje o dokumente.
  *
- * **Kľúč (`sectionKey`) a organizácia sa meniť nedajú.** Tvoria `documentId`
- * a ten je v `document_chunks`, v prideleniach aj v záznamoch o potvrdení.
- * Zmeniť ho by neznamenalo premenovanie, ale vznik druhého dokumentu, ku
- * ktorému by sa história nedostala. Kto sa pomýlil v kľúči, nahrá dokument
- * znova pod správnym.
+ * **Kľúč dokumentu (`documentKey`) a organizácia sa meniť nedajú.** Tvoria
+ * `documentId` a ten je v `document_chunks`, v prideleniach aj v záznamoch
+ * o potvrdení. Zmeniť ho by neznamenalo premenovanie, ale vznik druhého
+ * dokumentu, ku ktorému by sa história nedostala. Kto sa pomýlil v kľúči,
+ * nahrá dokument znova pod správnym.
+ *
+ * `sectionKey` je od D80 len **zaradenie** a identitu netvorí — zmeniť sa
+ * teda technicky dá. Táto funkcia to zatiaľ neponúka; je to samostatné
+ * rozhodnutie (D80/C1), nie vedľajší účinok oddelenia kľúča.
  *
  * Názov sa meniť **dá** — a je to vedomé rozhodnutie: objaví sa v ďalších
  * potvrdeniach, ale staré záznamy si nesú kópiu názvu v čase potvrdenia,
@@ -443,9 +516,12 @@ export async function saveMetadata(
   const before = await col.findOne({ documentId, companyCode }) as Record<string, unknown> | null
   if (!before) throw new LibraryError("library.documentNotFound", "Taký dokument tu nie je.")
 
-  // Kľúč aj organizácia sa berú z existujúceho záznamu, nie z formulára.
+  // Kľúč, zaradenie aj organizácia sa berú z existujúceho záznamu, nie
+  // z formulára. `documentKey` chýba dokumentom spred D80 — vtedy platí
+  // `sectionKey`, presne ako pri `makeDocumentId()`.
   const meta = checkMetadata({
     ...input,
+    documentKey: String(before.documentKey ?? before.sectionKey ?? ""),
     sectionKey: String(before.sectionKey ?? ""),
     companyCode,
   }, extras)

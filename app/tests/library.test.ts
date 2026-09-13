@@ -56,6 +56,29 @@ describe("identifikator dokumentu", () => {
     expect(makeDocumentId({ companyCode: "sfz", sectionKey: "stanovy" }))
       .toBe(makeDocumentId({ companyCode: "SFZ", sectionKey: "stanovy" }))
   })
+
+  // D80 — identita je documentKey, zaradenie je sectionKey.
+  it("documentKey ma prednost pred sectionKey", () => {
+    expect(makeDocumentId({
+      companyCode: "SFZ", sectionKey: "smernice", documentKey: "smernica_gdpr",
+    })).toBe("sfz:smernica_gdpr")
+  })
+
+  it("bez documentKey plati sectionKey — dokumentom spred D80 sa identita nemeni", () => {
+    // Toto je ta najpodstatnejsia veta celej migracie: documentId je cudzi
+    // kluc v siestich kolekciach a zmenit sa nesmie ani jednemu dokumentu.
+    for (const key of ["stanovy", "sutazny_poriadok", "volebny_poriadok"]) {
+      expect(makeDocumentId({ companyCode: "SFZ", sectionKey: key }))
+        .toBe(makeDocumentId({ companyCode: "SFZ", sectionKey: key, documentKey: key }))
+    }
+  })
+
+  it("dva dokumenty v tom istom zaradeni maju roznu identitu", () => {
+    // Presne to, co sa pred D80 nedalo: desat zapisnic pod jednym zaradenim.
+    const a = makeDocumentId({ companyCode: "SFZ", sectionKey: "zapisnice", documentKey: "zapisnica_vv_2026_03" })
+    const b = makeDocumentId({ companyCode: "SFZ", sectionKey: "zapisnice", documentKey: "zapisnica_vv_2026_04" })
+    expect(a).not.toBe(b)
+  })
 })
 
 describe("metadata z formulara", () => {
@@ -72,6 +95,32 @@ describe("metadata z formulara", () => {
     const m = checkMetadata(base)
     expect(m.title).toBe("Stanovy")
     expect(m.tags).toEqual([])
+  })
+
+  it("documentKey sa doplni zo sectionKey, ked chyba (D80)", () => {
+    expect(checkMetadata(base).documentKey).toBe("stanovy")
+  })
+
+  it("documentKey sa da zadat vlastny a nemusi byt v ciselniku", () => {
+    // Kluc dokumentu je identita, ktoru voli kurator — nie polozka slovnika.
+    const m = checkMetadata({ ...base, sectionKey: "smernice", documentKey: "smernica_gdpr" })
+    expect(m.documentKey).toBe("smernica_gdpr")
+    expect(m.sectionKey).toBe("smernice")
+  })
+
+  it("documentKey sa normalizuje na male pismena", () => {
+    expect(checkMetadata({ ...base, documentKey: "STANOVY" }).documentKey).toBe("stanovy")
+  })
+
+  it("documentKey v zlom tvare je chyba s prelozitelnym kodom", () => {
+    for (const invalid of ["s pomlckou a medzerou", "diakritika_ľš", "s-pomlckou", "_zaciatok"]) {
+      try {
+        checkMetadata({ ...base, documentKey: invalid })
+        throw new Error("malo to zlyhat: " + invalid)
+      } catch (e) {
+        expect((e as AppError).code, invalid).toBe("library.documentKeyShape")
+      }
+    }
   })
 
   it("bez nazvu to neprejde", () => {

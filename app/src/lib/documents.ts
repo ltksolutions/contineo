@@ -124,6 +124,11 @@ export interface Version {
 export interface DocumentRecord {
   documentId: string
   title: string
+  /**
+   * Identita dokumentu v rámci organizácie (D80) — z nej sa skladá
+   * `documentId`. Dokumentom spred D80 chýba a vtedy platí `sectionKey`.
+   */
+  documentKey?: string
   companyCode?: string
   accessLevel?: "public" | "internal"
   /**
