@@ -528,9 +528,11 @@ Lacné, kým je knižnica malá. Nové obrazovky a druhá stratégia chunkovania
 - [ ] **Deväť konkrétnych predpisov v `sectionKey`** (`sutazny_poriadok`…) je pozostatok spred D80. Odobrať sa nedajú — sú to hodnoty existujúcich dokumentov. Skryť ich z ponuky by chcelo príznak `isActive`, ktorý číselníky **nepoznajú** (`category.json` ho má pri troch položkách, ale `codelists.ts` ho ignoruje). Rozhodnúť, či ten príznak zaviesť — pozor, zapol by sa aj na `zakon` a `manual` v `category.json` a tie zmiznú z ponuky
 - [ ] Zvážiť, či sa zaradenie smie meniť cez `saveMetadata()` — od D80 už identitu netvorí, takže technicky sa dá
 
-### O4 — oprava záznamu o potvrdení (typ `correction`)
+### O4 — oprava záznamu o potvrdení (typ `correction`) → `docs/D81_plan_oprava_zaznamu_o_potvrdeni.md`
 
-- [ ] rozhodnúť, **ktoré polia** záznamu sa smú opravovať a **kto** to smie
+- [ ] **rozhodnúť podľa návrhu D81** — štyri otázky v §8, prvá je „púšťame to vôbec"
+- [x] zmapované, čo je hotové a čo nie ✅ 2026-09-13
+      Typ je v `RecordType`, `supersedes` v zázname, unikátny index korekciám nebráni (`partialFilterExpression` mieri len na `acknowledgement`). Chýba brána, zápis aj čítanie.
 - [ ] implementovať cestu cez `supersedes` (dnes natvrdo `null`)
 - [ ] doplniť `correction` do čítania výkazu — `validAcknowledgements()` filtruje len `acknowledgement|revocation`, oprava by sa dnes **ani nezapočítala**
 
