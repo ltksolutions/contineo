@@ -522,9 +522,11 @@ Lacné, kým je knižnica malá. Nové obrazovky a druhá stratégia chunkovania
 ### O3 — D80, kroky B a C: obrazovky
 
 - [x] detail dokumentu: **Nové znenie** — súbor a prevod ✅ 2026-09-13
-- [ ] **porovnanie s platným znením pred uložením** — dnes sa text číta až v editore. Bez neho sa nedá odlíšiť novela od znovunahratia toho istého PDF (rovnaký princíp ako pri oprave textu, ADR-007)
-- [ ] `/library/new`: kontrola kolízie **pri písaní kľúča**, nie až po nahratí súboru
-- [ ] upratanie `sectionKey.json` na kategórie; potom zvážiť, či sa zaradenie smie meniť cez `saveMetadata()` — od D80 už identitu netvorí
+- [x] **porovnanie s platným znením** ✅ 2026-09-13 — hláška po nahratí povie, či sa text líši a o koľko riadkov; rozdiel po riadkoch je na detaile pred publikovaním
+- [x] `/library/new` ukazuje **obsadené kľúče** organizácie ✅ 2026-09-13 — serverovo, bez JavaScriptu
+- [x] `sectionKey.json`: popis hovorí, že je to zaradenie a nie identita; pribudli `zakony`, `zapisnice`, `zmluvy` ✅ 2026-09-13
+- [ ] **Deväť konkrétnych predpisov v `sectionKey`** (`sutazny_poriadok`…) je pozostatok spred D80. Odobrať sa nedajú — sú to hodnoty existujúcich dokumentov. Skryť ich z ponuky by chcelo príznak `isActive`, ktorý číselníky **nepoznajú** (`category.json` ho má pri troch položkách, ale `codelists.ts` ho ignoruje). Rozhodnúť, či ten príznak zaviesť — pozor, zapol by sa aj na `zakon` a `manual` v `category.json` a tie zmiznú z ponuky
+- [ ] Zvážiť, či sa zaradenie smie meniť cez `saveMetadata()` — od D80 už identitu netvorí, takže technicky sa dá
 
 ### O4 — oprava záznamu o potvrdení (typ `correction`)
 

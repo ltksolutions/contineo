@@ -4,6 +4,14 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Added (2026-09-13 — porovnanie nového znenia a obsadené kľúče, D80/O3)
+
+- **Nahratie nového znenia rovno povie, či sa text vôbec líši** od platného znenia — jednou vetou, s počtom pridaných a odobraných riadkov. Bez toho sa nedá odlíšiť novela od znovunahratia toho istého PDF, a to je chyba, ktorá sa zistí až vtedy, keď stovka ľudí potvrdí „nové" znenie s nezmeneným textom. Rozdiel po riadkoch je aj naďalej na detaile dokumentu, pred publikovaním.
+- **Obrazovka nového dokumentu ukazuje obsadené kľúče** organizácie. Nahratie na obsadený kľúč sa od D80 odmietne — dozvedieť sa to až po vyplnení formulára a nahratí súboru je zbytočne neskoro. Zoznam je serverový: obrazovka nevyžaduje JavaScript kvôli nápovede.
+- **`sectionKey` je popísaný ako zaradenie**, nie identita, a pribudli skupiny `zakony`, `zapisnice` a `zmluvy` — korpus, ktorý prichádza. Deväť konkrétnych predpisov medzi položkami (`sutazny_poriadok`…) sa **neodstraňuje**: sú to hodnoty, ktorými sú otagované existujúce dokumenty, a odobrať ich by z nich spravilo neplatné údaje. Nové dokumenty majú dostať skupinu a vlastný `documentKey`.
+- Overené: `tsc` čisto, 1162 testov, lint bez chýb.
+
+
 ### Changed (2026-09-13 — členenie sa rozlišuje podľa dokumentu, nie podľa organizácie, D79)
 
 Profil členenia bol **jeden na organizáciu** (D58) a do zápisu sa podával z obrazovky. Kým je knižnica zoznamom deviatich predpisov SFZ, sedí to. Vo chvíli, keď v nej stoja vedľa seba predpisy (`Článok`), zákony (`§`) a manuály bez formálneho členenia, je to garantovane zlé pre časť korpusu — a dávkové preindexovanie by navyše prerezalo **všetky** dokumenty profilom organizácie, aj tie s vlastným.

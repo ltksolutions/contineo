@@ -21,6 +21,7 @@ import {
   reindex, fixVersion, fixText, LibraryError,
 } from "@/lib/libraryWrite"
 import { loadFile } from "@/lib/fileStore"
+import { textDiff } from "@/lib/textFix"
 import { tenantExtras } from "@/lib/codelistsTenant"
 import {
   createFolder, renameFolder, moveFolder, deleteFolder,
@@ -193,12 +194,24 @@ export async function uploadVersionAction(fd: FormData) {
       meta, file.name, Buffer.from(await file.arrayBuffer()), self.email, "version",
     )
 
+    // **Porovnanie s platným znením hneď, nie až v editore.** Bez neho sa nedá
+    // odlíšiť novela od znovunahratia toho istého PDF — a to je presne tá
+    // chyba, ktorá sa zistí až vtedy, keď stovka ľudí potvrdí „nové" znenie
+    // s nezmeneným textom. Rozdiel po riadkoch je vidieť na detaile dokumentu;
+    // tu ide o jednu vetu, ktorá povie, či sa vôbec oplatí pozerať.
+    const versions = (before.versions ?? []) as { isActive?: boolean; markdown?: string }[]
+    const published = String(versions.find(x => x.isActive)?.markdown ?? "")
+    const m = say(self.language)
+    const parts = [v.warnings.length ? m.convertedWithWarnings(v.warnings.join(" ")) : m.converted]
+    if (published) {
+      const d = textDiff(published, v.markdown)
+      parts.push(d.added + d.removed === 0
+        ? m.versionSameAsPublished
+        : m.versionDiffers(d.added, d.removed))
+    }
+
     revalidatePath(`/library/${id}`)
-    redirect(`/library/${encodeURIComponent(v.documentId)}/text?msg=${encodeURIComponent(
-      v.warnings.length
-        ? say(self.language).convertedWithWarnings(v.warnings.join(" "))
-        : say(self.language).converted,
-    )}`)
+    redirect(`/library/${encodeURIComponent(v.documentId)}/text?msg=${encodeURIComponent(parts.join(" "))}`)
   } catch (e) {
     if (isRedirect(e)) throw e
     redirect(`/library/${encodeURIComponent(id)}?msg=${encodeURIComponent(

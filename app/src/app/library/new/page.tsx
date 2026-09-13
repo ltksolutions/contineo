@@ -18,6 +18,8 @@ import Select from "@/components/Select"
 import TagSelect from "@/components/TagSelect"
 import { normalizeQuery, type RawQuery } from "@/lib/urlParams"
 import { dictionary } from "@/lib/i18n"
+import { getCollection } from "@/lib/mongodb"
+import { DOCUMENTS_COLLECTION } from "@/lib/documents"
 import AppShell from "@/components/AppShell"
 
 export const dynamic = "force-dynamic"
@@ -41,6 +43,17 @@ export default async function NewDocumentPage({
   const extras = tenantExtras(ctx.tenant)
   const branding = brandingView(ctx.tenant)
   const { uploadAction: upload } = await import("../actions")
+
+  // **Kľúče, ktoré organizácia už má.** Nahratie na obsadený kľúč sa odmietne
+  // (D80) — a dozvedieť sa to až po tom, čo človek vyplní formulár a nahrá
+  // súbor, je zbytočne neskoro. Zoznam je serverový zámerne: obrazovka nemá
+  // vyžadovať JavaScript kvôli nápovede.
+  const usedKeys = (await (await getCollection(DOCUMENTS_COLLECTION))
+    .find({ companyCode: ctx.tenant.companyCode }, { projection: { documentKey: 1, sectionKey: 1 } })
+    .toArray() as unknown as { documentKey?: string; sectionKey?: string }[])
+    .map(d => d.documentKey ?? d.sectionKey ?? "")
+    .filter(Boolean)
+    .sort()
 
   return (
     <AppShell language={ctx.person.language}>
@@ -132,6 +145,11 @@ export default async function NewDocumentPage({
             {t.keyNoteBefore}<code>{ctx.tenant.companyCode.toLowerCase()}:kluc</code>{t.keyNoteAfterCode}
             <strong>{t.keyNoteHighlight}</strong>{t.keyNoteAfter}
           </span>
+          {usedKeys.length > 0 && (
+            <span className="quiet field-hint">
+              {t.keysTaken}{usedKeys.join(", ")}.
+            </span>
+          )}
         </label>
 
         <div className="field">

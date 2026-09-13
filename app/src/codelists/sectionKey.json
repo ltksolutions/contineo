@@ -2,13 +2,19 @@
   "codelist": "sectionKey",
   "closed": false,
   "hierarchical": true,
-  "description": "Sekcia obsahu — hlavný routing filter. Hierarchia: skupina (parent=null) → sekcia. Top-level skupiny zodpovedajú štruktúre Predpisov SFZ (futbalsfz.sk/legislativa-predpisy-sfz). Kľúče snake_case, ASCII, nemenné. Listy pod skupinami sa dopĺňajú z reálneho korpusu (Fáza 4).",
+  "description": "Zaradenie obsahu — kam dokument patrí. **Nie je to identita dokumentu**: tú od D80 nesie `documentKey` a z neho sa skladá `documentId`. Vďaka tomu môže mať jedno zaradenie viac dokumentov (desať zápisníc pod `zapisnice`), čo predtým možné nebolo. Deväť konkrétnych predpisov medzi položkami (`sutazny_poriadok`, `volebny_poriadok`…) sú pozostatok stavu pred D80 — sú to hodnoty, ktorými sú otagované existujúce dokumenty, takže sa **neodstraňujú**; nové dokumenty majú dostať skupinu (`poriadky`) a vlastný `documentKey`. Hierarchia: skupina (parent=null) → sekcia. Top-level skupiny zodpovedajú štruktúre Predpisov SFZ (futbalsfz.sk/legislativa-predpisy-sfz). Kľúče snake_case, ASCII, nemenné.",
   "items": [
     {
       "key": "stanovy",
       "label": "Stanovy",
       "parent": null,
       "sortOrder": 10
+    },
+    {
+      "key": "zakony",
+      "label": "Zákony a vyhlášky",
+      "parent": null,
+      "sortOrder": 15
     },
     {
       "key": "poriadky",
@@ -103,10 +109,22 @@
       "note": "jeden na zväz/ročník; riadiaci zväz určuje companyCode"
     },
     {
+      "key": "zapisnice",
+      "label": "Zápisnice a uznesenia",
+      "parent": null,
+      "sortOrder": 55
+    },
+    {
       "key": "tlaciva_formulare",
       "label": "Tlačivá, vzory a formuláre",
       "parent": null,
       "sortOrder": 60
+    },
+    {
+      "key": "zmluvy",
+      "label": "Zmluvy",
+      "parent": null,
+      "sortOrder": 65
     }
   ]
 }

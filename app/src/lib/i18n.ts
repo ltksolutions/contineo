@@ -1479,6 +1479,8 @@ interface Dictionary {
     actions: {
       converted: string
       convertedWithWarnings: (warnings: string) => string
+      versionSameAsPublished: string
+      versionDiffers: (added: number, removed: number) => string
       saved: string
       changesSaved: string
       alreadyPublished: string
@@ -1523,6 +1525,7 @@ interface Dictionary {
       keyNoteAfterCode: string
       keyNoteHighlight: string
       keyNoteAfter: string
+      keysTaken: string
       section: string
       sectionNote: string
       scope: string
@@ -3179,6 +3182,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     actions: {
       converted: "Prevedené. Prečítaj text a porovnaj ho s originálom.",
       convertedWithWarnings: (warnings) => `Prevedené. ${warnings}`,
+      versionSameAsPublished: "Pozor: prevedený text je zhodný s platným znením — nahratý súbor neprináša žiadnu zmenu.",
+      versionDiffers: (added, removed) => `Oproti platnému zneniu: ${added} pridaných, ${removed} odobraných riadkov.`,
       saved: "Uložené.",
       changesSaved: "Zmeny boli uložené.",
       alreadyPublished: "Toto znenie už publikované je — nič sa nezmenilo.",
@@ -3230,6 +3235,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       keyNoteAfterCode: ").",
       keyNoteHighlight: " Ten istý kľúč znamená ten istý dokument",
       keyNoteAfter: " — nahratie na existujúci kľúč sa preto odmietne; nové znenie sa nahráva na detaile dokumentu. Nevyplnený sa doplní zo zaradenia.",
+      keysTaken: "Obsadené kľúče v tejto organizácii: ",
       section: "Zaradenie",
       sectionNote: "Kam dokument patrí. Na rozdiel od kľúča ho môže mať viac dokumentov naraz. Existujúce: ",
       scope: "Pôsobnosť",
@@ -4873,6 +4879,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     actions: {
       converted: "Převedeno. Přečti text a porovnej ho s originálem.",
       convertedWithWarnings: (warnings) => `Převedeno. ${warnings}`,
+      versionSameAsPublished: "Pozor: převedený text je shodný s platným zněním — nahraný soubor nepřináší žádnou změnu.",
+      versionDiffers: (added, removed) => `Oproti platnému znění: ${added} přidaných, ${removed} odebraných řádků.`,
       saved: "Uloženo.",
       changesSaved: "Změny byly uloženy.",
       alreadyPublished: "Toto znění už publikované je — nic se nezměnilo.",
@@ -4924,6 +4932,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       keyNoteAfterCode: ").",
       keyNoteHighlight: " Týž klíč znamená týž dokument",
       keyNoteAfter: " — nahrání na existující klíč se proto odmítne; nové znění se nahrává na detailu dokumentu. Nevyplněný se doplní ze zařazení.",
+      keysTaken: "Obsazené klíče v této organizaci: ",
       section: "Zařazení",
       sectionNote: "Kam dokument patří. Na rozdíl od klíče ho může mít víc dokumentů najednou. Existující: ",
       scope: "Působnost",
@@ -6562,6 +6571,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     actions: {
       converted: "Converted. Read the text and compare it with the original.",
       convertedWithWarnings: (warnings) => `Converted. ${warnings}`,
+      versionSameAsPublished: "Note: the converted text is identical to the published version — the uploaded file brings no change.",
+      versionDiffers: (added, removed) => `Against the published version: ${added} lines added, ${removed} removed.`,
       saved: "Saved.",
       changesSaved: "Changes saved.",
       alreadyPublished: "This version is already published — nothing changed.",
@@ -6612,6 +6623,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       keyNoteAfterCode: ").",
       keyNoteHighlight: " The same key means the same document",
       keyNoteAfter: " — uploading to an existing key is therefore refused; a new version is uploaded on the document detail page. Left empty, it is filled in from the section.",
+      keysTaken: "Keys already taken in this organisation: ",
       section: "Section",
       sectionNote: "Where the document belongs. Unlike the key, several documents can share it. Existing: ",
       scope: "Scope",
