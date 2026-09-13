@@ -57,13 +57,21 @@ const hash = (s: string) => createHash("sha256").update(s).digest("hex").slice(0
  * Normalizuje sa len to, čo je neviditeľné: konce riadkov a biele miesta na
  * koncoch. Inak by ten istý text uložený z Windows a z Macu vyzeral ako dve
  * rôzne znenia — a tým aj ako dve rôzne povinnosti.
+ *
+ * Samotná normalizácia je vystavená ako `normalizeMarkdown()`, lebo ju
+ * potrebuje aj pravidlo „text sa nezmenil“ pri oprave znenia (`lib/textFix.ts`).
+ * Keby si ju napísalo samo, existoval by rozdiel, ktorý vidí pravidlo a odtlačok
+ * nie — alebo naopak.
  */
-export function textFingerprint(markdown: string): string {
-  const normalized = (markdown ?? "")
+export function normalizeMarkdown(markdown: string): string {
+  return (markdown ?? "")
     .replace(/\r\n?/g, "\n")
     .replace(/[ \t]+$/gm, "")
     .trim()
-  return hash(normalized)
+}
+
+export function textFingerprint(markdown: string): string {
+  return hash(normalizeMarkdown(markdown))
 }
 
 /**

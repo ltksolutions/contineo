@@ -14,11 +14,11 @@
 
 import { redirect } from "next/navigation"
 import { revalidatePath } from "next/cache"
-import { libraryContext } from "@/lib/library"
+import { libraryContext, isContentManager } from "@/lib/library"
 import { isRedirect } from "@/lib/redirects"
 import {
   uploadDocument, saveDraft, publish, checkMetadata, makeDocumentId, saveMetadata,
-  reindex, fixVersion, LibraryError,
+  reindex, fixVersion, fixText, LibraryError,
 } from "@/lib/libraryWrite"
 import { loadFile } from "@/lib/fileStore"
 import { tenantExtras } from "@/lib/codelistsTenant"
@@ -51,6 +51,13 @@ async function actor(): Promise<
     language: UiLanguage
     extras: CodelistExtras
     profile?: Partial<ChunkingProfile>
+    /**
+     * Rola správcu obsahu. `libraryContext()` ju už overila — nesie sa ďalej
+     * preto, aby pravidlá v `src/lib` nemuseli veriť tomu, že sa akcia volala
+     * z chránenej stránky. Kontrola, ktorá sa dá obísť iným vstupom, nie je
+     * kontrola.
+     */
+    canManageContent: boolean
   } | null
 > {
   const ctx = await libraryContext()
@@ -64,6 +71,7 @@ async function actor(): Promise<
         extras: tenantExtras(ctx.tenant),
         // Profil členenia organizácie (D58). Chýbajúci znamená predvolený.
         profile: ctx.tenant.chunking,
+        canManageContent: isContentManager(ctx.person),
       }
     : null
 }
@@ -513,6 +521,39 @@ export async function fixVersionAction(fd: FormData) {
     error = true
   }
 
+  revalidatePath(`/library/${id}`)
+  redirect(`/library/${encodeURIComponent(id)}?msg=${encodeURIComponent(message)}${error ? "&error=1" : ""}`)
+}
+
+/**
+ * Oprava **textu** platného znenia bez novej verzie (`fixText()`).
+ *
+ * Formulárom ide len `documentId`, **odtlačok** konceptu a dôvod. Text sa berie
+ * z konceptu na serveri: znenie predpisu má aj sto kilobajtov a posielať ho tam
+ * a späť len preto, aby sa vrátilo tam, odkiaľ prišlo, je zbytočná cesta.
+ * Odtlačok je poistka, že sa uloží to, čoho rozdiel mal človek pred očami.
+ */
+export async function fixTextAction(fd: FormData) {
+  const self = await actor()
+  if (!self) redirect("/")
+
+  const id = fieldText(fd, "documentId")
+  let message = ""
+  let error = false
+  try {
+    const v = await fixText(self.companyCode, id, {
+      expectedFingerprint: fieldText(fd, "expectedFingerprint"),
+      reason: fieldText(fd, "reason"),
+      canManageContent: self.canManageContent,
+    }, self.email, self.profile)
+
+    message = say(self.language).textFixed(v.added, v.removed, v.chunks)
+  } catch (e) {
+    message = errorMessage(e, self.language)
+    error = true
+  }
+
+  revalidatePath("/library")
   revalidatePath(`/library/${id}`)
   redirect(`/library/${encodeURIComponent(id)}?msg=${encodeURIComponent(message)}${error ? "&error=1" : ""}`)
 }

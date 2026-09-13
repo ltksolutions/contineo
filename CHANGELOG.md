@@ -4,6 +4,22 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Added (2026-09-13 — text publikovaného znenia sa dá opraviť bez novej verzie)
+
+Predpis je schválený, pridelený a v RAG, ľudia ho potvrdzujú — a príde pripomienka, že v článku 4 chýba čiarka. Dovtedy sa to dalo vyriešiť **jedine novým znením**: `versionId` je odtlačok textu (D57), takže jednoznaková zmena vyrobila novú verziu, novú povinnosť pre všetkých, ktorí už potvrdili, a v histórii záznam, o ktorom o rok nikto nevie, či bol novela alebo preklep. Cena za opravu preklepu bola vyššia než cena za to nechať ho tam.
+
+Rozhodnutia sú v `docs/ADR-007-oprava-textu-znenia.md` (D76–D78).
+
+- **`versionId` sa nemení, `contentHash` áno.** `versionId` je **identita** znenia — visia na ňom potvrdenia, pridelenia, trasy aj chunky. Odtlačok dnešného textu nesie `contentHash`; pole existovalo, pri publikovaní dostávalo tú istú hodnotu a odteraz sa po prvej oprave rozíde. Žiadne nové pole na to nebolo treba.
+- **Opravuje správca obsahu** a má štyri podmienky, z ktorých žiadna nie je ozdoba: rola, **povinný dôvod**, **rozdiel vidieť pred uložením** a **snímok celého predchádzajúceho textu** v `versions[].textFixes[]`. „Nemení to význam“ je tvrdenie toho, kto opravuje, a stojí na ňom platnosť cudzích podpisov — tvrdenie, ktoré si nikto nemohol overiť, nie je doklad.
+- **Potvrdenia zostávajú platné.** Formulka, ktorú ľudia podpísali, cituje názov, označenie a dátum platnosti (D28), nie text.
+- **Preindexovanie je súčasť úkonu, nie ďalšie tlačidlo.** `reindex()` vymení chunky **pri tom istom `versionId`** — presne to, čo zadanie žiadalo. Keby to bol samostatný krok, existoval by stav, v ktorom knižnica ukazuje opravený text a RAG odpovedá zo starého.
+- **Opravuje sa len platné znenie.** Archivované je doklad o tom, čo platilo vtedy (D78).
+- **Cena, ktorá sa nezakrýva:** schválenie zostáva pri pôvodnom texte, takže brána z D73 sa tu obchádza. Je to vedomé a vyvážené tými štyrmi podmienkami; kto mení význam, publikuje nové znenie a to prejde schvaľovaním celé. Napísané je to v ADR aj priamo v rozhraní nad tlačidlom.
+- **Ukladá sa to, čoho rozdiel bol vidieť.** Cez formulár ide odtlačok konceptu, nie celý text; server ho overí a odmietne zápis, ak sa koncept medzitým zmenil pod rukami.
+- Overené: `tsc` čisto, **1147 testov**, lint bez chýb, `build` prejde.
+
+
 ### Added (2026-09-12 — potvrdenie sa dá odvolať)
 
 Kto potvrdil omylom, to dovtedy **nevedel vziať späť** — vedel len potvrdiť znova. Kolekcia je zámerne append-only (D24), `supersedes` bolo v type aj v zázname, ale `acknowledge()` doň vždy dalo `null` a druhá cesta neexistovala. V pilote je to prvá vec, ktorá nastane.

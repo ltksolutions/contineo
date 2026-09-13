@@ -62,6 +62,28 @@ export interface Version {
     fromLabel: string
     fromEffectiveFrom: Date | null
   }[]
+
+  /**
+   * História opráv **textu** tohto znenia — bez novej verzie (`fixText()`).
+   *
+   * `fixes[]` sú opravy údajov *o* znení (označenie, dátum). Toto sú opravy
+   * samotného textu: preklep, čiarka, diakritika. `versionId` pri nich zostáva,
+   * lebo je to identita znenia, nie odtlačok jeho dnešného textu; rozchádza sa
+   * s ním `contentHash`, ktorý hovorí, ako text vyzerá teraz.
+   *
+   * `fromMarkdown` je **celé** predchádzajúce znenie, nie rozdiel. Rozdiel sa
+   * dá z dvoch textov dopočítať kedykoľvek; text z rozdielu nie. A pri otázke
+   * „čo presne stálo v tom, čo ľudia potvrdili“ je to jediná poctivá odpoveď.
+   */
+  textFixes?: {
+    at: Date
+    by: string
+    reason: string
+    /** Odtlačok textu pred opravou — pri prvej oprave zhodný s `versionId`. */
+    fromHash: string
+    toHash: string
+    fromMarkdown: string
+  }[]
   /**
    * Text tohto znenia. Má prednosť pred `DocumentRecord.markdown`, ktorý nesie
    * len najnovšie znenie — človek musí čítať tú verziu, ktorú potvrdzuje,

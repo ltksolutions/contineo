@@ -15,7 +15,10 @@ import { brandingView } from "@/lib/tenants"
 import { tenantStyle } from "@/components/TenantHeader"
 import { formatDate, dictionary } from "@/lib/i18n"
 import Notice from "@/components/Notice"
-import { publishVersionAction, saveDocumentMetadataAction, assignToFolderAction, reindexDocumentAction, fixVersionAction } from "../actions"
+import {
+  publishVersionAction, saveDocumentMetadataAction, assignToFolderAction, reindexDocumentAction,
+  fixVersionAction, fixTextAction,
+} from "../actions"
 import { allFolders, flattenTree } from "@/lib/folders"
 import { codelistOptions } from "@/lib/codelists"
 import { tenantExtras } from "@/lib/codelistsTenant"
@@ -27,7 +30,9 @@ import AppShell from "@/components/AppShell"
 import ApprovalPanel from "@/components/ApprovalPanel"
 import { isHr } from "@/lib/hr"
 import { roundsByVersion, stateOf } from "@/lib/approvalsDb"
+import type { CSSProperties } from "react"
 import { textFingerprint } from "@/lib/chunkIdentity"
+import { textDiff, type DiffKind } from "@/lib/textFix"
 import { listPeople } from "@/lib/people"
 
 export const dynamic = "force-dynamic"
@@ -110,6 +115,32 @@ export default async function DocumentDetailPage({
   const draftVersionId = draft ? textFingerprint(draft) : null
   const draftRounds = draftVersionId ? (rounds.get(draftVersionId) ?? []) : []
   const draftState = stateOf(draftRounds)
+
+  /*
+   * Rozdiel konceptu proti **textu platného znenia** — podklad pre opravu bez
+   * novej verzie. Text sa berie v tom istom poradí ako v `fixText()`
+   * (znenie, potom dokument); keby si ho obrazovka brala inak, ukázala by
+   * rozdiel, ktorý sa neuloží.
+   *
+   * Počíta sa len vtedy, keď je čo porovnávať — inak je to práca navyše pri
+   * každom otvorení detailu.
+   */
+  const effectiveText = ((effective?.markdown ?? d.markdown) ?? "").trim()
+  const draftDiff = effective && hasChangesToPublish ? textDiff(effectiveText, draft) : null
+
+  /*
+   * Farby rozdielu. Zelená a červená sú len zosilnenie — znamienko `+`/`−` na
+   * začiatku riadku nesie tú istú informáciu aj tomu, kto tie dve farby
+   * nerozlíši.
+   */
+  const diffStyle = (kind: DiffKind): CSSProperties =>
+    kind === "added"
+      ? { background: "rgba(46, 160, 67, 0.16)" }
+      : kind === "removed"
+        ? { background: "rgba(248, 81, 73, 0.16)" }
+        : kind === "gap"
+          ? { opacity: 0.55, fontStyle: "italic" }
+          : {}
 
   return (
     <AppShell language={ctx.person.language}>
@@ -336,6 +367,80 @@ export default async function DocumentDetailPage({
               </form>
               </>
             )}
+
+            {/*
+              Druhá cesta, zámerne **pod** publikovaním a schovaná: oprava textu
+              platného znenia bez novej verzie. Je to výnimka, nie rovnocenná
+              možnosť — kto sem klikne, pošle von text, ktorý neprešiel
+              schvaľovaním (D73). Preto musí mať rozdiel pred očami a napísať
+              dôvod, a preto je to schované za jedným kliknutím navyše.
+            */}
+            {effective && draftDiff && (
+              <details>
+                <summary className="quiet" style={{ fontSize: 13.5, cursor: "pointer" }}>
+                  {t.textFixHeading}
+                </summary>
+
+                <div style={{ display: "grid", gap: 12, marginTop: 12 }}>
+                  <p className="quiet" style={{ fontSize: 14, margin: 0 }}>{t.textFixIntro}</p>
+
+                  <div>
+                    <h4 className="field-label" style={{ margin: "0 0 6px" }}>
+                      {`${t.textFixDiffHeading} · ${t.textFixDiffStat(draftDiff.added, draftDiff.removed)}`}
+                    </h4>
+                    {draftDiff.coarse && (
+                      <p className="quiet" style={{ fontSize: 13, margin: "0 0 6px" }}>{t.textFixCoarse}</p>
+                    )}
+                    {/*
+                      Riadky sa zalamujú, nerolujú do strany: na telefóne je
+                      vodorovné rolovanie v texte predpisu neprečítateľné.
+                    */}
+                    <div
+                      className="card"
+                      style={{
+                        padding: 10,
+                        maxHeight: 320,
+                        overflowY: "auto",
+                        fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace",
+                        fontSize: 12.5,
+                        lineHeight: 1.55,
+                        whiteSpace: "pre-wrap",
+                        wordBreak: "break-word",
+                      }}
+                    >
+                      {draftDiff.lines.map((line, i) => (
+                        <div key={i} style={diffStyle(line.kind)}>
+                          {line.kind === "gap"
+                            ? t.textFixGap(Number(line.text))
+                            : `${line.kind === "added" ? "+" : line.kind === "removed" ? "−" : "\u00a0"} ${line.text}`}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <p className="quiet" style={{ fontSize: 13, margin: 0 }}>{t.textFixApprovalNote}</p>
+
+                  <form action={fixTextAction} style={{ display: "grid", gap: 12 }}>
+                    <input type="hidden" name="documentId" value={d.documentId} />
+                    {/*
+                      Odtlačok toho, čo je práve na obrazovke. Server overí, že sa
+                      koncept medzitým nezmenil — uložiť sa má ten text, ktorého
+                      rozdiel si človek pozrel.
+                    */}
+                    <input type="hidden" name="expectedFingerprint" value={draftVersionId ?? ""} />
+
+                    <label className="field">
+                      <span className="field-label">{t.textFixReason}</span>
+                      <input className="field-input" name="reason" required
+                             placeholder={t.textFixReasonPlaceholder} />
+                      <span className="quiet field-hint">{t.textFixReasonNote}</span>
+                    </label>
+
+                    <div><button className="button button--quiet" type="submit">{t.textFixSubmit}</button></div>
+                  </form>
+                </div>
+              </details>
+            )}
           </>
         )}
       </section>
@@ -412,6 +517,30 @@ export default async function DocumentDetailPage({
                               : t.fixNoDate,
                           )}
                           {fix.requiresReacknowledgement && ` · ${t.fixReacknowledged}`}
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                </details>
+              )}
+
+              {/*
+                História opráv **textu** — iná vec než `fixes` vyššie. Tie menili
+                údaje o znení, tieto samotný text. Celé predchádzajúce znenie je
+                v databáze (`textFixes[].fromMarkdown`); tu je vidieť, že sa to
+                stalo, kto to bol a prečo.
+              */}
+              {v.textFixes && v.textFixes.length > 0 && (
+                <details style={{ marginTop: 6 }}>
+                  <summary className="quiet" style={{ fontSize: 13, cursor: "pointer" }}>
+                    {t.textFixHistory(v.textFixes.length)}
+                  </summary>
+                  <ul style={{ listStyle: "none", padding: 0, margin: "8px 0 0", display: "grid", gap: 8 }}>
+                    {[...v.textFixes].reverse().map((fix, i) => (
+                      <li key={`${v.versionId}-text-${i}`} style={{ fontSize: 13.5 }}>
+                        <div>{fix.reason}</div>
+                        <div className="quiet" style={{ fontSize: 12.5 }}>
+                          {t.textFixLine(fix.by, formatDate(fix.at, language))}
                         </div>
                       </li>
                     ))}

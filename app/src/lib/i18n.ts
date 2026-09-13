@@ -1392,6 +1392,24 @@ interface Dictionary {
       fixSubmit: string
 
       /**
+       * Oprava **textu** znenia bez novej verzie. Iná vec než `fix*` vyššie: tie
+       * opravujú údaje *o* znení, toto samotný text.
+       */
+      textFixHeading: string
+      textFixIntro: string
+      textFixDiffHeading: string
+      textFixDiffStat: (added: number, removed: number) => string
+      textFixGap: (n: number) => string
+      textFixCoarse: string
+      textFixApprovalNote: string
+      textFixReason: string
+      textFixReasonPlaceholder: string
+      textFixReasonNote: string
+      textFixSubmit: string
+      textFixHistory: (n: number) => string
+      textFixLine: (who: string, when: string) => string
+
+      /**
        * Schvaľovanie znenia (ADR-006). Stav je odvodený z kôl, nie uložený —
        * preto sú to štyri hodnoty a nie pole v databáze.
        */
@@ -1473,6 +1491,7 @@ interface Dictionary {
       reindexed: (chunks: number, archived: number) => string
       fixedNeedsReacknowledge: (people: number) => string
       fixed: string
+      textFixed: (added: number, removed: number, chunks: number) => string
       submittedForApproval: (n: number) => string
       approvalNotAllNotified: (n: number) => string
       approvalCancelled: string
@@ -2369,6 +2388,12 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "library.noPublishedVersion": "Dokument nemá publikované znenie — preindexovať sa dá len to, čo už je vonku.",
     "library.noChunksProfile": "Z textu nevznikol ani jeden úsek — skontroluj profil členenia.",
     "library.reasonRequired": "Dôvod opravy je povinný — bez neho sa o rok nedá zistiť, či išlo o preklep alebo o zmenu povinnosti.",
+    "textFix.notContentManager": "Text znenia opravuje správca obsahu.",
+    "textFix.noEffectiveVersion": "Dokument nemá platné znenie. Opraviť sa dá len to, čo je vonku — archivované znenie je doklad o tom, čo platilo vtedy.",
+    "textFix.emptyText": "Koncept nemá text. Oprava, po ktorej nezostane nič, nie je oprava.",
+    "textFix.draftChanged": "Koncept sa medzitým zmenil. Pozri si rozdiel znova — uložiť sa má to, čo si videl.",
+    "textFix.noChange": "Text sa od platného znenia nelíši. Nie je čo opravovať.",
+    "textFix.reasonRequired": "Dôvod opravy je povinný — bez neho sa o rok nedá zistiť, čo sa v znení zmenilo a prečo pri tom potvrdenia zostali platné.",
     "library.versionNotFound": "Také znenie tu nie je.",
     "library.dateChangeNeedsDecision": "Toto znenie už bolo potvrdené (počet potvrdení: {count}) a formulka, ktorú ľudia podpísali, obsahuje starý dátum. Rozhodni, či je to oprava zápisu, alebo sa má znenie potvrdiť znova.",
 
@@ -2413,6 +2438,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       reordered: "preusporiadané",
       "model-draft": "návrh modelu",
       "version-fix": "oprava znenia",
+      "text-fix": "oprava textu znenia",
       "new-version": "nahraté nové znenie",
     },
     fields: {
@@ -3059,6 +3085,24 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       onDateChangeReacknowledge: "podstatná zmena, potvrdiť znova",
       fixSubmit: "Opraviť",
 
+      textFixHeading: "Alebo: oprava textu bez novej verzie",
+      textFixIntro:
+        "Preklep, čiarka, diakritika — niečo, čo nemení význam. Znenie zostane to isté, potvrdenia zostanú platné " +
+        "a do vyhľadávania sa pošle opravený text pri tom istom znení. Ak sa mení význam, toto nie je tá cesta: publikuj nové znenie.",
+      textFixDiffHeading: "Čo sa zmení",
+      textFixDiffStat: (added, removed) => `+${added} / −${removed} riadkov`,
+      textFixGap: n => `… ${n} nezmenených riadkov …`,
+      textFixCoarse:
+        "Zmena je priveľká na porovnanie po riadkoch. Toto už pravdepodobne nie je oprava preklepu — zváž nové znenie.",
+      textFixApprovalNote:
+        "Schválenie zostane pri pôvodnom texte — po oprave sa už nezhoduje so znením, ktoré je vonku. Práve preto sa takto opravuje len to, čo nemení význam.",
+      textFixReason: "Dôvod opravy",
+      textFixReasonPlaceholder: "chýbajúca čiarka v čl. 4 ods. 2",
+      textFixReasonNote: "Povinný. Zapíše sa k zneniu spolu s celým predchádzajúcim textom.",
+      textFixSubmit: "Opraviť text bez novej verzie",
+      textFixHistory: n => (n === 1 ? "1 oprava textu" : n >= 2 && n <= 4 ? `${n} opravy textu` : `${n} opráv textu`),
+      textFixLine: (who, when) => `${who} · ${when}`,
+
       approvalHeading: "Schválenie",
       stateDraft: "Koncept",
       stateInReview: "V schvaľovaní",
@@ -3145,6 +3189,9 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
         "Opravené. Znenie je označené ako vyžadujúce nové potvrdenie —" +
         ` týka sa to ${people} ${people === 1 ? "človeka" : "ľudí"}.`,
       fixed: "Opravené. Potvrdenia zostávajú platné.",
+      textFixed: (added, removed, chunks) =>
+        `Text opravený: +${added} / −${removed} riadkov. Znenie ani potvrdenia sa nemenia;` +
+        ` do vyhľadávania išlo ${chunks} ${chunks === 1 ? "úsekov" : chunks < 5 ? "úseky" : "úsekov"}.`,
       submittedForApproval: n =>
         `Predložené na schválenie ${n === 1 ? "jednému človeku" : `${n} ľuďom`}.`,
       approvalNotAllNotified: n => `Ale ${n === 1 ? "jednému človeku" : `${n} ľuďom`} sa e-mail odoslať nepodarilo \u2014 kolo beží, len o ňom nevedia.`,
@@ -4027,6 +4074,12 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "library.noPublishedVersion": "Dokument nemá publikované znění — přeindexovat lze jen to, co už je venku.",
     "library.noChunksProfile": "Z textu nevznikl ani jeden úsek — zkontroluj profil členění.",
     "library.reasonRequired": "Důvod opravy je povinný — bez něj se za rok nedá zjistit, jestli šlo o překlep nebo o změnu povinnosti.",
+    "textFix.notContentManager": "Text znění opravuje správce obsahu.",
+    "textFix.noEffectiveVersion": "Dokument nemá platné znění. Opravit se dá jen to, co je venku — archivované znění je doklad o tom, co platilo tehdy.",
+    "textFix.emptyText": "Koncept nemá text. Oprava, po které nezůstane nic, není oprava.",
+    "textFix.draftChanged": "Koncept se mezitím změnil. Podívej se na rozdíl znovu — uložit se má to, co jsi viděl.",
+    "textFix.noChange": "Text se od platného znění neliší. Není co opravovat.",
+    "textFix.reasonRequired": "Důvod opravy je povinný — bez něj se za rok nedá zjistit, co se ve znění změnilo a proč přitom potvrzení zůstala platná.",
     "library.versionNotFound": "Takové znění tu není.",
     "library.dateChangeNeedsDecision": "Toto znění už bylo potvrzeno (počet potvrzení: {count}) a formulka, kterou lidé podepsali, obsahuje staré datum. Rozhodni, jestli je to oprava zápisu, nebo se má znění potvrdit znovu.",
 
@@ -4071,6 +4124,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       reordered: "přeuspořádáno",
       "model-draft": "návrh modelu",
       "version-fix": "oprava znění",
+      "text-fix": "oprava textu znění",
       "new-version": "nahráno nové znění",
     },
     fields: {
@@ -4717,6 +4771,24 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       onDateChangeReacknowledge: "podstatná změna, potvrdit znovu",
       fixSubmit: "Opravit",
 
+      textFixHeading: "Nebo: oprava textu bez nové verze",
+      textFixIntro:
+        "Překlep, čárka, diakritika — něco, co nemění význam. Znění zůstane stejné, potvrzení zůstanou platná " +
+        "a do vyhledávání se pošle opravený text u téhož znění. Pokud se mění význam, tohle není ta cesta: publikuj nové znění.",
+      textFixDiffHeading: "Co se změní",
+      textFixDiffStat: (added, removed) => `+${added} / −${removed} řádků`,
+      textFixGap: n => `… ${n} nezměněných řádků …`,
+      textFixCoarse:
+        "Změna je příliš velká na porovnání po řádcích. Tohle už pravděpodobně není oprava překlepu — zvaž nové znění.",
+      textFixApprovalNote:
+        "Schválení zůstane u původního textu — po opravě se už neshoduje se zněním, které je venku. Právě proto se takto opravuje jen to, co nemění význam.",
+      textFixReason: "Důvod opravy",
+      textFixReasonPlaceholder: "chybějící čárka v čl. 4 odst. 2",
+      textFixReasonNote: "Povinný. Zapíše se ke znění spolu s celým předchozím textem.",
+      textFixSubmit: "Opravit text bez nové verze",
+      textFixHistory: n => (n === 1 ? "1 oprava textu" : n >= 2 && n <= 4 ? `${n} opravy textu` : `${n} oprav textu`),
+      textFixLine: (who, when) => `${who} · ${when}`,
+
       approvalHeading: "Schválení",
       stateDraft: "Koncept",
       stateInReview: "Ve schvalování",
@@ -4803,6 +4875,9 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
         "Opraveno. Znění je označeno jako vyžadující nové potvrzení —" +
         ` týká se to ${people} ${people === 1 ? "člověka" : "lidí"}.`,
       fixed: "Opraveno. Potvrzení zůstávají platná.",
+      textFixed: (added, removed, chunks) =>
+        `Text opraven: +${added} / −${removed} řádků. Znění ani potvrzení se nemění;` +
+        ` do vyhledávání šlo ${chunks} ${chunks === 1 ? "úseků" : chunks < 5 ? "úseky" : "úseků"}.`,
       submittedForApproval: n =>
         `Předloženo ke schválení ${n === 1 ? "jednomu člověku" : `${n} lidem`}.`,
       approvalNotAllNotified: n => `Ale ${n === 1 ? "jednomu člověku" : `${n} lidem`} se e-mail odeslat nepodařilo \u2014 kolo běží, jen o něm nevědí.`,
@@ -5679,6 +5754,12 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "library.noPublishedVersion": "The document has no published version — only what is already out can be reindexed.",
     "library.noChunksProfile": "The text produced no chunks at all — check the chunking profile.",
     "library.reasonRequired": "The reason for the correction is required — without it, a year from now there is no way to tell whether it was a typo or a change of obligation.",
+    "textFix.notContentManager": "Correcting the text of a version is the content manager's job.",
+    "textFix.noEffectiveVersion": "The document has no effective version. Only what is out there can be corrected — an archived version is the record of what applied at the time.",
+    "textFix.emptyText": "The draft has no text. A correction that leaves nothing behind is not a correction.",
+    "textFix.draftChanged": "The draft changed in the meantime. Look at the difference again — what you saw is what should be saved.",
+    "textFix.noChange": "The text does not differ from the effective version. There is nothing to correct.",
+    "textFix.reasonRequired": "The reason for the correction is required — without it, a year from now there is no way to tell what changed in the version and why the acknowledgements stayed valid.",
     "library.versionNotFound": "There is no such version here.",
     "library.dateChangeNeedsDecision": "This version has already been acknowledged ({count} times), and the statement those people signed contains the old date. Decide whether this is a correction of the record or whether the version has to be acknowledged again.",
 
@@ -5723,6 +5804,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       reordered: "reordered",
       "model-draft": "model draft",
       "version-fix": "version correction",
+      "text-fix": "text correction",
       "new-version": "new version uploaded",
     },
     fields: {
@@ -6369,6 +6451,25 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       onDateChangeReacknowledge: "substantive change, acknowledge again",
       fixSubmit: "Correct",
 
+      textFixHeading: "Or: correct the text without a new version",
+      textFixIntro:
+        "A typo, a comma, an accent — something that does not change the meaning. The version stays the same, " +
+        "acknowledgements stay valid, and the corrected text goes into search under that same version. " +
+        "If the meaning changes, this is not the way: publish a new version.",
+      textFixDiffHeading: "What changes",
+      textFixDiffStat: (added, removed) => `+${added} / −${removed} lines`,
+      textFixGap: n => `… ${n} unchanged lines …`,
+      textFixCoarse:
+        "The change is too large to compare line by line. This is probably no longer a typo fix — consider a new version.",
+      textFixApprovalNote:
+        "The approval stays with the original text — after the correction it no longer matches the version that is out there. That is exactly why only meaning-preserving corrections go this way.",
+      textFixReason: "Reason for the correction",
+      textFixReasonPlaceholder: "missing comma in Art. 4(2)",
+      textFixReasonNote: "Required. It is stored with the version together with the entire previous text.",
+      textFixSubmit: "Correct the text without a new version",
+      textFixHistory: n => (n === 1 ? "1 text correction" : `${n} text corrections`),
+      textFixLine: (who, when) => `${who} · ${when}`,
+
       approvalHeading: "Approval",
       stateDraft: "Draft",
       stateInReview: "In review",
@@ -6454,6 +6555,9 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
         "Corrected. The version is marked as requiring a new acknowledgement —" +
         ` this affects ${people} ${people === 1 ? "person" : "people"}.`,
       fixed: "Corrected. Acknowledgements stay valid.",
+      textFixed: (added, removed, chunks) =>
+        `Text corrected: +${added} / −${removed} lines. The version and the acknowledgements are unchanged;` +
+        ` ${chunks} ${chunks === 1 ? "chunk" : "chunks"} went into search.`,
       submittedForApproval: n =>
         `Submitted for approval to ${n === 1 ? "one person" : `${n} people`}.`,
       approvalNotAllNotified: n => `But the email could not be sent to ${n === 1 ? "one person" : `${n} people`} \u2014 the round is running, they just do not know about it.`,

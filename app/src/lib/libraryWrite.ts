@@ -25,6 +25,7 @@ import { DOCUMENTS_COLLECTION } from "./documents"
 import { validAcknowledgements } from "./acknowledgements"
 import { chunkText, DEFAULT_PROFILE } from "./chunker.mjs"
 import { textFingerprint, chunkingFingerprint, needsReindex, CHUNKER_VERSION } from "./chunkIdentity"
+import { textFixProblem, textDiff, type TextFixProblem } from "./textFix"
 import { checkValue, checkList } from "./codelists"
 import type { CodelistExtras } from "./codelists"
 import { saveFile, deleteFile } from "./fileStore"
@@ -715,6 +716,148 @@ export async function fixVersion(
   })
 
   return { acknowledgementCount, reacknowledged: reacknowledge }
+}
+
+/** Prečo oprava textu neprešla — hlásenia sú tu, pravidlo v `lib/textFix.ts`. */
+const TEXT_FIX_MESSAGE: Record<TextFixProblem, string> = {
+  "textFix.notContentManager": "Text znenia opravuje správca obsahu.",
+  "textFix.noEffectiveVersion":
+    "Dokument nemá platné znenie. Opraviť sa dá len to, čo je vonku — archivované znenie je doklad o tom, čo platilo vtedy.",
+  "textFix.emptyText": "Koncept nemá text. Oprava, po ktorej nezostane nič, nie je oprava.",
+  "textFix.draftChanged":
+    "Koncept sa medzitým zmenil. Pozri si rozdiel znova — uložiť sa má to, čo si videl.",
+  "textFix.noChange": "Text sa od platného znenia nelíši. Nie je čo opravovať.",
+  "textFix.reasonRequired":
+    "Dôvod opravy je povinný — bez neho sa o rok nedá zistiť, čo sa v znení zmenilo a prečo pri tom potvrdenia zostali platné.",
+}
+
+/**
+ * Opraví **text** platného znenia — bez novej verzie a bez straty potvrdení.
+ *
+ * Dokument je schválený, pridelený ľuďom a v RAG. Príde pripomienka, že je v ňom
+ * preklep, ktorý nemení význam. Dovtedy sa to dalo vyriešiť jedine novým znením:
+ * nový `versionId`, nová povinnosť pre každého, kto už potvrdil. Za jednu čiarku.
+ *
+ * **`versionId` sa nemení.** Je to identita znenia, nie odtlačok jeho dnešného
+ * textu — visia na ňom potvrdenia, pridelenia, trasy aj chunky. Mení sa
+ * `contentHash`, ktorý odteraz hovorí „takto ten text vyzerá teraz“; dovtedy
+ * boli obe čísla zhodné, lebo sa nemali ako rozísť.
+ *
+ * **Potvrdenia zostávajú platné.** Formulka, ktorú ľudia podpísali, cituje názov,
+ * označenie a dátum platnosti (D28), nie text — oprava čiarky z nej nerobí
+ * nepravdivé tvrdenie. Keby sa menil význam, nie je to oprava, ale nové znenie;
+ * rozhodnúť to musí človek, systém ten rozdiel nepozná (D30).
+ *
+ * **Text sa berie z konceptu, nie z formulára.** Znenie predpisu má aj sto
+ * kilobajtov a posielať ho cez formulár len preto, aby sa vrátilo tam, odkiaľ
+ * prišlo, je zbytočná cesta, na ktorej sa dá pomýliť. Formulárom ide **odtlačok**
+ * toho, čo mal človek pred očami, a ten sa overí.
+ *
+ * **Schválenie zostáva pri znení, hoci text sa zmenil — a treba to povedať
+ * nahlas.** Kolá visia na `versionId` a ten sa nemení, takže po oprave je
+ * schválený text T a vonku text T'. Je to vedomá cena tejto cesty a presne
+ * dôvod, prečo je dôvod povinný, rozdiel musí byť vidieť a celý predchádzajúci
+ * text sa odkladá: opravovať sa smie len to, čo význam nemení. Kto mení význam,
+ * publikuje nové znenie a to prejde schvaľovaním celé (D73).
+ *
+ * Preindexovanie beží hneď za zápisom — `reindex()` vymení chunky **pri tom istom
+ * `versionId`**, takže RAG odpovedá z opraveného textu a potvrdení sa to nedotkne.
+ */
+export async function fixText(
+  companyCode: string,
+  documentId: string,
+  input: { expectedFingerprint: string; reason: string; canManageContent: boolean },
+  actor: string,
+  profile?: Partial<ChunkingProfile>,
+): Promise<{
+  versionId: string
+  label: string
+  contentHash: string
+  added: number
+  removed: number
+  chunks: number
+  archived: number
+}> {
+  const col = await getCollection(DOCUMENTS_COLLECTION)
+  const doc = await col.findOne({ documentId, companyCode }) as Record<string, unknown> | null
+  if (!doc) throw new LibraryError("library.documentNotFound", "Taký dokument tu nie je.")
+
+  const versions = (doc.versions ?? []) as {
+    versionId: string; label: string; isActive?: boolean; markdown?: string
+  }[]
+  const effective = versions.find(v => v.isActive)
+  const before = String(effective?.markdown ?? doc.markdown ?? "")
+  const after = String(doc.draftMarkdown ?? "").trim()
+
+  const problem = textFixProblem({
+    canManageContent: input.canManageContent,
+    hasEffectiveVersion: Boolean(effective),
+    before,
+    after,
+    expectedFingerprint: input.expectedFingerprint,
+    reason: input.reason,
+  })
+  if (problem) throw new LibraryError(problem, TEXT_FIX_MESSAGE[problem])
+  // Pravidlo to už zachytilo; toto je pre prekladač, nie druhá kontrola.
+  if (!effective) throw new LibraryError("textFix.noEffectiveVersion", TEXT_FIX_MESSAGE["textFix.noEffectiveVersion"])
+
+  const contentHash = textFingerprint(after)
+  const stat = textDiff(before, after)
+  const now = new Date()
+
+  const set: Record<string, unknown> = {
+    "versions.$[v].markdown": after,
+    "versions.$[v].contentHash": contentHash,
+    updatedAt: now,
+    updatedBy: actor,
+  }
+  /*
+   * Dokument nesie kópiu platného textu kvôli čítaniu (`documents.markdown`).
+   * Bez tejto vety by sa rozišla so znením a knižnica by ukazovala starý text.
+   * Píše sa len vtedy, keď dokument na toto znenie naozaj ukazuje — pri starších
+   * importoch môže `versionId` na dokumente chýbať alebo mieriť inam.
+   */
+  if (String(doc.versionId ?? "") === effective.versionId) set.markdown = after
+
+  await col.updateOne(
+    { documentId, companyCode },
+    {
+      $set: set,
+      $push: {
+        "versions.$[v].textFixes": {
+          at: now,
+          by: actor,
+          reason: input.reason.trim(),
+          fromHash: textFingerprint(before),
+          toHash: contentHash,
+          // Celé predchádzajúce znenie, nie rozdiel: rozdiel sa dá z dvoch textov
+          // dopočítať, text z rozdielu nie.
+          fromMarkdown: before,
+        },
+      },
+    } as never,
+    { arrayFilters: [{ "v.versionId": effective.versionId }] },
+  )
+
+  await writeAudit({
+    companyCode, subject: "document", action: "text-fix", actor: actor,
+    targetId: documentId, targetLabel: `${String(doc.title ?? documentId)} — ${effective.label}`,
+    note: `${input.reason.trim()} · +${stat.added} / −${stat.removed} riadkov · ` +
+      "znenie ani potvrdenia sa nemenia",
+  })
+
+  // Až po zápise: `reindex()` číta text zo znenia, takže musí vidieť ten opravený.
+  const r = await reindex(companyCode, documentId, actor, profile)
+
+  return {
+    versionId: effective.versionId,
+    label: effective.label,
+    contentHash,
+    added: stat.added,
+    removed: stat.removed,
+    chunks: r.chunks,
+    archived: r.archived,
+  }
 }
 
 export interface ReindexState {
