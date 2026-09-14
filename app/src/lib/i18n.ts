@@ -1523,6 +1523,8 @@ interface Dictionary {
       llmNoteHighlight: string
       llmNoteAfter: string
       clean: string
+      /** Že prečistenie beží na pravidlách, nie na modeli. */
+      cleanNote: string
       rewriteScan: string
       rewriteScanNote: string
     }
@@ -2345,6 +2347,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     // ── prevod súboru ──────────────────────────────────────────────────────
     "conversion.zipNotOffice": "Toto je ZIP-ový balík, ale ani docx, ani xlsx. Staré .doc a .xls sa prevádzať nedajú — ulož ich vo Worde alebo Exceli ako novší formát.",
     "conversion.unsupportedFormat": "Formát {format} zatiaľ nevieme previesť. Podporujeme .docx, .pdf, .xlsx, .md, .txt a .csv.",
+    "rewrite.answerTruncated": "Model nestihol dopísať celý dokument — odpoveď je useknutá. Polovica predpisu sa použiť nedá; rozdeľ dokument a prepíš ho po častiach.",
+    "library.noStructureFound": "V texte sa nenašla ani jedna úroveň členenia (ČASŤ, hlava, Článok, príloha). Buď je text členený inak, alebo ide o sken a treba ho prepísať jazykovým modelom.",
     "conversion.pdfEngineFailed": "Toto PDF sa nepodarilo otvoriť. Buď je poškodené alebo zaheslované, alebo je chyba na našej strane — skúsenie znova nepomôže. Ozvi sa správcovi systému, podrobnosti sú v zázname.",
     "conversion.pdfNoText": "V tomto PDF nie je žiadny text — je to obrázok (sken). Prevod ho neprečíta. V editore ho môžeš dať prepísať jazykovým modelom, alebo si vypýtaj od autora pôvodný súbor.",
     "conversion.noText": "Súbor neobsahuje žiadny text.",
@@ -3272,11 +3276,12 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       switchNoteModes: "Markdown / WYSIWYG",
       switchNoteAfter: " je dole v editore",
       saveText: "Uložiť text",
-      llmHeading: "Pomoc jazykového modelu",
+      llmHeading: "Pomoc pri texte",
       llmNoteBefore: "Volá sa len takto — kliknutím. Výsledok sa uloží ako ",
       llmNoteHighlight: "návrh vedľa textu",
       llmNoteAfter: ", nie doňho: model má zakázané meniť znenie, ale tichú zmenu v predpise by nikto nezachytil, keby sa zapisovala rovno.",
       clean: "Prečistiť členenie",
+      cleanNote: "„Prečistiť členenie“ jazykový model nepoužíva. Text sa označkuje podľa pravidiel — ČASŤ, hlava, diel, Článok, príloha — a odstráni sa opakovaná pätička strany. Nemá to limit na dĺžku a nemení sa ani jedno slovo normy.",
       rewriteScan: "Prepísať zo skenu",
       rewriteScanNote: "„Prepísať zo skenu“ pošle celé pôvodné PDF modelu. Má zmysel vtedy, keď PDF nemá textovú vrstvu alebo je prevod rozsypaný.",
     },
@@ -4090,6 +4095,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     // ── převod souboru ─────────────────────────────────────────────────────
     "conversion.zipNotOffice": "Toto je ZIP balík, ale ani docx, ani xlsx. Staré .doc a .xls převádět nelze — ulož je ve Wordu nebo Excelu jako novější formát.",
     "conversion.unsupportedFormat": "Formát {format} zatím neumíme převést. Podporujeme .docx, .pdf, .xlsx, .md, .txt a .csv.",
+    "rewrite.answerTruncated": "Model nestihl dopsat celý dokument — odpověď je useknutá. Polovina předpisu se použít nedá; rozděl dokument a přepiš ho po částech.",
+    "library.noStructureFound": "V textu se nenašla ani jedna úroveň členění (ČÁST, hlava, Článek, příloha). Buď je text členěn jinak, nebo jde o sken a je třeba ho přepsat jazykovým modelem.",
     "conversion.pdfEngineFailed": "Toto PDF se nepodařilo otevřít. Buď je poškozené nebo zaheslované, nebo je chyba na naší straně — zkoušet znovu nepomůže. Ozvi se správci systému, podrobnosti jsou v záznamu.",
     "conversion.pdfNoText": "V tomto PDF není žádný text — je to obrázek (sken). Převod ho nepřečte. V editoru ho můžeš nechat přepsat jazykovým modelem, nebo si vyžádej od autora původní soubor.",
     "conversion.noText": "Soubor neobsahuje žádný text.",
@@ -5017,11 +5024,12 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       switchNoteModes: "Markdown / WYSIWYG",
       switchNoteAfter: " je dole v editoru",
       saveText: "Uložit text",
-      llmHeading: "Pomoc jazykového modelu",
+      llmHeading: "Pomoc při textu",
       llmNoteBefore: "Volá se jen takto — kliknutím. Výsledek se uloží jako ",
       llmNoteHighlight: "návrh vedle textu",
       llmNoteAfter: ", ne do něj: model má zakázáno měnit znění, ale tichou změnu v předpisu by nikdo nezachytil, kdyby se zapisovala rovnou.",
       clean: "Pročistit členění",
+      cleanNote: "„Pročistit členění“ jazykový model nepoužívá. Text se označkuje podle pravidel — ČÁST, hlava, díl, Článek, příloha — a odstraní se opakovaná patička stránky. Nemá to limit na délku a nemění se ani jedno slovo předpisu.",
       rewriteScan: "Přepsat ze skenu",
       rewriteScanNote: "„Přepsat ze skenu“ pošle celé původní PDF modelu. Má smysl tehdy, když PDF nemá textovou vrstvu nebo je převod rozsypaný.",
     },
@@ -5829,6 +5837,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     // ── file conversion ────────────────────────────────────────────────────
     "conversion.zipNotOffice": "This is a ZIP archive, but neither docx nor xlsx. Legacy .doc and .xls cannot be converted — save them from Word or Excel in a newer format.",
     "conversion.unsupportedFormat": "We cannot convert {format} yet. Supported: .docx, .pdf, .xlsx, .md, .txt and .csv.",
+    "rewrite.answerTruncated": "The model did not finish the document — the answer is truncated. Half a regulation is unusable; split the document and rewrite it in parts.",
+    "library.noStructureFound": "No structural level was found in the text (PART, chapter, Article, annex). Either the text is structured differently, or it is a scan and needs the language model to transcribe it.",
     "conversion.pdfEngineFailed": "This PDF could not be opened. It is either damaged or password-protected, or the fault is on our side — retrying will not help. Contact the system administrator; details are in the log.",
     "conversion.pdfNoText": "This PDF contains no text — it is an image (a scan). The conversion cannot read it. In the editor you can have the language model transcribe it, or ask the author for the original file.",
     "conversion.noText": "The file contains no text.",
@@ -6757,11 +6767,12 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       switchNoteModes: "Markdown / WYSIWYG",
       switchNoteAfter: " switch is at the bottom of the editor",
       saveText: "Save text",
-      llmHeading: "Language-model assistance",
+      llmHeading: "Text helpers",
       llmNoteBefore: "It runs only like this — on a click. The result is saved as a ",
       llmNoteHighlight: "draft beside the text",
       llmNoteAfter: ", not into it: the model is forbidden to change the wording, but a silent change in a regulation would go unnoticed if it were written straight in.",
       clean: "Clean up the structure",
+      cleanNote: "“Clean up the structure” does not use the language model. The text is marked up by rules — PART, chapter, section, Article, annex — and the repeated page footer is removed. There is no length limit and not a single word of the regulation changes.",
       rewriteScan: "Transcribe from the scan",
       rewriteScanNote: "“Transcribe from the scan” sends the whole original PDF to the model. It makes sense when the PDF has no text layer or the conversion fell apart.",
     },

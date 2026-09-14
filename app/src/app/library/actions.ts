@@ -30,7 +30,8 @@ import {
   assignDocument, shiftFolder, saveFolderOrder,
 } from "@/lib/folders"
 import type { CodelistExtras } from "@/lib/codelists"
-import { cleanMarkdown, rewritePdf } from "@/lib/llmRewrite"
+import { rewritePdf } from "@/lib/llmRewrite"
+import { tidyStructure } from "@/lib/tidyStructure"
 import { getCollection } from "@/lib/mongodb"
 import { DOCUMENTS_COLLECTION } from "@/lib/documents"
 import { writeAudit } from "@/lib/audit"
@@ -281,11 +282,20 @@ export async function previewId(
 }
 
 /**
- * Pošle text alebo pôvodný sken jazykovému modelu (D53).
+ * Pripraví návrh textu — **pravidlami, alebo modelom pri skene** (D53).
  *
- * Výsledok sa **neuloží do konceptu**, len vedľa neho ako návrh. Prepísať
+ * Dve cesty, a rozdiel medzi nimi je podstatný:
+ *
+ * - `clean` — prečistenie členenia **bez modelu** (`tidyStructure`). Členenie
+ *   sa v prevedenom PDF nestratilo, len nemá značky, takže na jeho obnovenie
+ *   netreba stroj, ktorý prepisuje slová normy. Nemá limit na dĺžku a nemôže
+ *   vrátiť polovicu dokumentu. Prečo sa to zmenilo, je v `tidyStructure.ts`.
+ * - `rewrite-scan` — sken bez textovej vrstvy. Tam model nahradiť nevieme.
+ *
+ * Výsledok sa **neuloží do konceptu**, len vedľa neho ako návrh. Zmeniť
  * znenie normy strojom bez toho, aby to niekto videl, je presne ten druh
  * tichej zmeny, po ktorej sa o rok nedá povedať, čo v predpise vlastne stálo.
+ * Platí to aj pre pravidlá — nie sú neomylnejšie než model, len sú verejné.
  */
 export async function sendToModelAction(fd: FormData) {
   const self = await actor()
@@ -312,7 +322,28 @@ export async function sendToModelAction(fd: FormData) {
           if (!s) throw new LibraryError("library.originalNotFound", "Pôvodný súbor sa nenašiel.")
           return rewritePdf(s.data)
         })()
-      : await cleanMarkdown(String(doc.draftMarkdown ?? ""))
+      : await (async () => {
+          const text = String(doc.draftMarkdown ?? "").trim()
+          if (!text) throw new LibraryError("rewrite.emptyInput", "Niet čo prečisťovať — text je prázdny.")
+          const tidy = tidyStructure(text)
+          if (tidy.headings === 0) {
+            throw new LibraryError(
+              "library.noStructureFound",
+              "V texte sa nenašla ani jedna úroveň členenia (ČASŤ, hlava, Článok, príloha). " +
+              "Buď je text inak členený, alebo ho treba prepísať zo skenu.",
+            )
+          }
+          return {
+            text: tidy.markdown,
+            // Do záznamu sa píše, čím text vznikol. „Bez modelu" tu nie je
+            // ozdoba — o rok to je rozdiel medzi „stroj to prepísal"
+            // a „pravidlá to označkovali".
+            model: `bez modelu · pravidlá · nadpisov ${tidy.headings}, ` +
+                   `pätička ${tidy.removedFurniture} riadkov`,
+            mode: "clean" as const,
+            at: new Date(),
+          }
+        })()
 
     await col.updateOne(
       { documentId: id, companyCode: self.companyCode },

@@ -120,7 +120,29 @@ async function ask(message: { content: unknown }) {
     system: INSTRUCTION,
     messages: [{ role: "user", content: message.content as never }],
   })
-  return await stream.finalMessage()
+  const answer = await stream.finalMessage()
+
+  /*
+   * **Useknutá odpoveď sa nesmie vydávať za dokument.**
+   *
+   * `max_tokens` je strop výstupu. Dlhá norma sa doň nezmestí a model
+   * jednoducho prestane písať — odpoveď príde bez chyby, len je kratšia.
+   * Dovtedy to nikto nekontroloval a stalo sa presne to, čoho sa to týka:
+   * prepis Disciplinárneho poriadku vrátil 51 z 97 článkov a bol zapísaný
+   * ako úspech, lebo 51 je viac než nula (zistené nácvikom 2026-09-14).
+   *
+   * Preto sa tu padá. Polovica predpisu je horšia než žiadny predpis: pri
+   * žiadnom je zjavné, že chýba.
+   */
+  if (answer.stop_reason === "max_tokens") {
+    throw new RewriteError(
+      "rewrite.answerTruncated",
+      "Model nestihol dopísať celý dokument — odpoveď je useknutá. " +
+      "Polovica predpisu sa použiť nedá; rozdeľ dokument a prepíš ho po častiach.",
+    )
+  }
+
+  return answer
 }
 
 /** Zloží odpoveď z textových blokov a odreže obal ```markdown, keď ho pridá. */
@@ -135,7 +157,17 @@ function answerText(blocks: { type: string; text?: string }[]): string {
   return (wrapper.exec(text)?.[1] ?? text).trim()
 }
 
-/** Prečistí členenie už prevedeného Markdownu. */
+/**
+ * Prečistí členenie už prevedeného Markdownu **modelom**.
+ *
+ * **Z rozhrania sa už nevolá** (2026-09-14). Tlačidlo „Prečistiť členenie"
+ * beží na `tidyStructure()` — pravidlách bez modelu, bez limitu na dĺžku
+ * a bez rizika, že sa zmenia slová normy. Dôvody sú v `tidyStructure.ts`.
+ *
+ * Funkcia zostáva, lebo na text, ktorý sa pravidlám vzpiera, môže byť raz
+ * potrebná — ale nech je jasné, že dnes nie je zapojená a že jej limit
+ * 120 tisíc znakov je aj tak vyšší, než čo sa zmestí do odpovede.
+ */
 export async function cleanMarkdown(markdown: string): Promise<ModelDraft> {
   const input = (markdown ?? "").trim()
   if (!input) throw new RewriteError("rewrite.emptyInput", "Niet čo prečisťovať — text je prázdny.")

@@ -162,6 +162,15 @@ export default async function EditorPage({
             </button>
           )}
         </form>
+        {/*
+          Ktoré tlačidlo volá model a ktoré nie, musí byť vidieť **pri nich**,
+          nie v návode. Prečistenie beží na pravidlách a nemení slová; prepis
+          zo skenu posiela dokument modelu. Pre toho, kto rozhoduje o znení
+          predpisu, je to rozdiel, ktorý má poznať pred kliknutím.
+        */}
+        <p className="quiet" style={{ fontSize: 13.5, margin: 0 }}>
+          {t.cleanNote}
+        </p>
         {isPdf && (
           <p className="quiet" style={{ fontSize: 13.5, margin: 0 }}>
             {t.rewriteScanNote}
