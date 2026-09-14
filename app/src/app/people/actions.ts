@@ -23,7 +23,10 @@ import { normalizeLanguage } from "@/lib/i18n"
 
 /** Koľko e-mailov naraz. Rovnaká hodnota ako pri oznámeniach v `/hr`. */
 const INVITE_CONCURRENCY = 5
-import { csvToPersons } from "@/lib/personsImport"
+import { csvToPersons, emptyNotes } from "@/lib/personsImport"
+import type { ImportSettings } from "@/lib/personsImport"
+import { tenantByCompanyCode } from "@/lib/tenants"
+import { availableOptions } from "@/lib/codelistsTenant"
 import { previewImport, upsertPersons } from "@/lib/persons"
 import type { PersonType } from "@/lib/persons"
 import { dictionary, errorText, type UiLanguage } from "@/lib/i18n"
@@ -70,7 +73,15 @@ export async function savePersonAction(fd: FormData) {
   try {
     await savePerson(actor.companyCode, id, {
       email: fieldText(fd, "email"),
-      fullName: fieldText(fd, "fullName"),
+      // Celé meno sa **neposiela** — skladá ho server z týchto dvoch polí (D83).
+      givenName: fieldText(fd, "givenName"),
+      surname: fieldText(fd, "surname"),
+      titleBefore: fieldText(fd, "titleBefore"),
+      titleAfter: fieldText(fd, "titleAfter"),
+      mobilePhone: fieldText(fd, "mobilePhone"),
+      // Prázdna voľba znamená „bez pracoviska", nie „nemeniť" — rovnako ako
+      // pri oddelení.
+      workplace: fieldText(fd, "workplace"),
       // Voľba „— bez oddelenia —" má prázdnu hodnotu a znamená vyradiť zo
       // štruktúry, nie „nemeniť". Preto `|| null`, nie `|| undefined`.
       departmentId: fieldText(fd, "departmentId") || null,
@@ -99,7 +110,13 @@ export async function invitePersonAction(fd: FormData) {
   try {
     const person = await invitePerson(actor.companyCode, {
       email: fieldText(fd, "email"),
-      fullName: fieldText(fd, "fullName"),
+      givenName: fieldText(fd, "givenName"),
+      surname: fieldText(fd, "surname"),
+      titleBefore: fieldText(fd, "titleBefore"),
+      titleAfter: fieldText(fd, "titleAfter"),
+      jobTitle: fieldText(fd, "jobTitle"),
+      mobilePhone: fieldText(fd, "mobilePhone"),
+      workplace: fieldText(fd, "workplace"),
       department: fieldText(fd, "department"),
       personType: (fieldText(fd, "personType") || undefined) as PersonType | undefined,
       language: fieldText(fd, "language") || undefined,
@@ -114,10 +131,18 @@ export async function invitePersonAction(fd: FormData) {
   } catch (e) {
     // `redirect()` vyhadzuje výnimku — nesmie sa chytiť ako chyba zápisu.
     if (isRedirect(e)) throw e
+    // Späť do formulára ide **všetko, čo človek napísal**. Vrátiť len adresu
+    // by znamenalo, že po preklepe v telefónnom čísle prepisuje aj meno.
     const q = new URLSearchParams({
       error: errorMessage(e, actor.language),
       email: fieldText(fd, "email"),
-      fullName: fieldText(fd, "fullName"),
+      givenName: fieldText(fd, "givenName"),
+      surname: fieldText(fd, "surname"),
+      titleBefore: fieldText(fd, "titleBefore"),
+      titleAfter: fieldText(fd, "titleAfter"),
+      jobTitle: fieldText(fd, "jobTitle"),
+      mobilePhone: fieldText(fd, "mobilePhone"),
+      workplace: fieldText(fd, "workplace"),
       department: fieldText(fd, "department"),
     })
     redirect(`/people/new?${q.toString()}`)
@@ -173,6 +198,9 @@ export async function previewImportAction(text: string): Promise<{
   created?: string[]
   existing?: string[]
   errors?: string[]
+  /** Hodnoty, ktoré riadok neodmietli, ale pole nevyplnili (D85, D86). */
+  unknownWorkplaces?: string[]
+  badPhones?: string[]
   total?: number
 }> {
   const actor = await peopleAdmin()
@@ -181,7 +209,8 @@ export async function previewImportAction(text: string): Promise<{
 
   // Organizácia sa doplní z prihláseného, nie zo súboru: personalista zväzu
   // nesmie importom založiť človeka do cudzej organizácie (D32).
-  const people = csvToPersons(text, actor.companyCode)
+  const notes = emptyNotes()
+  const people = csvToPersons(text, actor.companyCode, await importSettings(actor.companyCode), notes)
   if (people.length === 0) {
     return { ok: false, message: say(actor.language).noRows }
   }
@@ -195,9 +224,29 @@ export async function previewImportAction(text: string): Promise<{
       existing: n.existing,
       errors: n.errors.map(e =>
         `${e.email || "—"} — ${dictionary(actor.language).people.import.reasons[e.reason] ?? e.reason}`),
+      // Náhľad musí povedať aj to, čo sa **ticho nevyplní**. Inak personalista
+      // uvidí „100 osôb pribudne", import prejde bez jedinej chyby a pracoviská
+      // budú prázdne — a hľadať sa to bude až o mesiac.
+      unknownWorkplaces: [...new Set(notes.unknownWorkplaces)],
+      badPhones: [...new Set(notes.badPhones)],
     }
   } catch (e) {
     return { ok: false, message: errorMessage(e, actor.language) }
+  }
+}
+
+/**
+ * Nastavenia organizácie pre import — predvoľba telefónu a číselník pracovísk.
+ *
+ * Keď organizácia chýba, import beží ďalej a tie dve polia sa len nevyplnia.
+ * Zastaviť import kvôli číselníku by znamenalo, že sa nedá naimportovať ani
+ * meno a adresa.
+ */
+async function importSettings(companyCode: string): Promise<ImportSettings> {
+  const tenant = await tenantByCompanyCode(companyCode)
+  return {
+    phonePrefix: tenant?.phonePrefix,
+    workplaces: availableOptions(tenant ?? { codelists: {} }, "workplace"),
   }
 }
 
@@ -207,7 +256,9 @@ export async function runImportAction(text: string): Promise<{ ok: boolean; mess
   if (!actor) return { ok: false, message: NO_RIGHT }
 
   try {
-    const people = csvToPersons(text, actor.companyCode)
+    // Ten istý súbor a tie isté nastavenia ako v náhľade — inak by zápis
+    // spravil niečo iné, než čo si personalista pred chvíľou odsúhlasil.
+    const people = csvToPersons(text, actor.companyCode, await importSettings(actor.companyCode))
     const v = await upsertPersons(people, actor.email)
     revalidatePath("/people")
     return {

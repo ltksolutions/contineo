@@ -20,6 +20,7 @@ import scope from "@/codelists/scope.json"
 import sectionKey from "@/codelists/sectionKey.json"
 import sourceType from "@/codelists/sourceType.json"
 import tags from "@/codelists/tags.json"
+import workplace from "@/codelists/workplace.json"
 import { AppError } from "./appError"
 
 export interface CodelistItem {
@@ -51,6 +52,7 @@ export const CODELISTS: Record<string, Codelist> = {
   sectionKey: prepare(sectionKey),
   sourceType: prepare(sourceType),
   tags: prepare(tags),
+  workplace: prepare(workplace),
 }
 
 /** Povinné metadáta dokumentu — zhodné s `scripts/lib/meta.mjs`. */
@@ -70,13 +72,18 @@ export class CodelistError extends AppError {}
 /**
  * Číselníky, ktoré si organizácia spravuje sama (D55).
  *
- * Len tie, ktoré popisujú **jej obsah**: aké druhy dokumentov má a akými
- * značkami ich triedi. `scope`, `accessLevel` a `language` zostávajú
- * globálne a uzavreté — sú to filtre, na ktorých stojí prístup k obsahu,
- * a keby si ich zákazník rozšíril, vznikla by hodnota, ktorej nikde inde
- * v systéme nikto nerozumie.
+ * Sú to tie, ktoré popisujú **jej vlastné pomery**: aké druhy dokumentov má,
+ * akými značkami ich triedi a kde jej ľudia pracujú. `scope`, `accessLevel`
+ * a `language` zostávajú globálne a uzavreté — sú to filtre, na ktorých stojí
+ * prístup k obsahu, a keby si ich zákazník rozšíril, vznikla by hodnota,
+ * ktorej nikde inde v systéme nikto nerozumie.
+ *
+ * `workplace` (D85) je prvý z nich, ktorý popisuje **ľudí, nie obsah**.
+ * Preto `codelistUsage()` musí vedieť, nad ktorou kolekciou daný číselník
+ * žije — počítať pracoviská nad `documents` by vždy vrátilo nulu a personalista
+ * by odoberal položku, o ktorej mu systém tvrdí, že ju nikto nemá.
  */
-export const CUSTOM_CODELISTS = ["category", "tags"] as const
+export const CUSTOM_CODELISTS = ["category", "tags", "workplace"] as const
 export type CustomCodelist = (typeof CUSTOM_CODELISTS)[number]
 
 /** Položky, ktoré si k číselníku dopísala organizácia. */

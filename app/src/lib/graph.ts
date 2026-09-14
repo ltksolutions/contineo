@@ -24,7 +24,7 @@
  */
 
 /** Aké polia pýtame. Menej než celý profil — zvyšok nepotrebujeme. */
-const FIELDS = "givenName,surname,displayName,department,jobTitle,preferredLanguage"
+const FIELDS = "givenName,surname,displayName,department,jobTitle,preferredLanguage,mobilePhone,officeLocation,city"
 
 /** Fotka do hlavičky. 96 px kvôli obrazovkám s dvojnásobnou hustotou. */
 export const PHOTO_SIZE = 96
@@ -38,6 +38,11 @@ export interface GraphData {
   displayName?: string
   department?: string
   jobTitle?: string
+  /** Číslo v akomkoľvek tvare — do E.164 ho prevedie `normalizePhone()`. */
+  mobilePhone?: string
+  /** Kancelária podľa adresára; `city` je záloha, keď ju nemá vyplnenú. */
+  officeLocation?: string
+  city?: string
   /** Napr. `sk-SK`. Prevádza sa až v `persons.ts`. */
   preferredLanguage?: string
   photo?: { contentType: string; data: Buffer }
@@ -100,6 +105,9 @@ export async function graphData(
     displayName: text("displayName"),
     department: text("department"),
     jobTitle: text("jobTitle"),
+    mobilePhone: text("mobilePhone"),
+    officeLocation: text("officeLocation"),
+    city: text("city"),
     preferredLanguage: text("preferredLanguage"),
   }
 
@@ -137,4 +145,16 @@ export async function graphData(
 export function fullName(u: GraphData): string | undefined {
   const joined = [u.givenName, u.surname].filter(Boolean).join(" ").trim()
   return joined || u.displayName
+}
+
+/**
+ * Pracovisko podľa adresára — `officeLocation`, inak `city`.
+ *
+ * Dve polia, lebo adresáre ich vypĺňajú rôzne: niekde je v `officeLocation`
+ * budova („Tower 115"), inde mesto. Prednosť má `officeLocation` — je to
+ * konkrétnejší údaj a ak sa na číselník nespáruje, `matchWorkplace()` ho
+ * zahodí a pole ostane prázdne. To je správne: nespárované sa nedopĺňa.
+ */
+export function workplaceHint(u: GraphData): string | undefined {
+  return u.officeLocation || u.city
 }

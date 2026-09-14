@@ -23,6 +23,7 @@
  */
 
 import { ObjectId } from "mongodb"
+import { composeFullName, splitFullName } from "./personFields"
 import { getCollection } from "./mongodb"
 import { normalizeLanguage } from "./i18n"
 import type { UiLanguage } from "./i18n"
@@ -129,11 +130,55 @@ export interface Person {
    */
   groupHistory?: { group: string; from: Date; to?: Date }[]
 
-  /** Meno a priezvisko zvlášť, keď ich adresár vie (D52). Zobrazuje sa `fullName`. */
+  /**
+   * Meno a priezvisko — **zadávané polia** (D83). `fullName` sa z nich skladá
+   * (`composeFullName`), nie naopak.
+   *
+   * Prázdne zostávajú u osôb spred D83, ktorým sa `fullName` rozdeliť nedalo,
+   * a u tých, ktoré sa založili samy z adresy (D47). Karta osoby to označí.
+   */
   givenName?: string
   surname?: string
+
+  /**
+   * Tituly — **len na zobrazenie** (D84). V `fullName` zámerne nie sú.
+   *
+   * Titul počas života pribudne. Keby bol vo `fullName`, ten istý človek by
+   * v starých potvrdeniach vystupoval pod iným menom než v nových — a rozdiel
+   * by nebol zmenou osoby, ale zmenou kvalifikácie.
+   */
+  titleBefore?: string
+  titleAfter?: string
+
   /** Pracovná pozícia z adresára. Evidenčný údaj, o prístupe nerozhoduje. */
   jobTitle?: string
+
+  /**
+   * Mobil v tvare E.164 — `+421905123456` (D86).
+   *
+   * Jeden tvar je podmienka toho, aby sa dve čísla dali porovnať a aby odkaz
+   * `tel:` fungoval. Skladá ho `normalizePhone()` podľa predvoľby organizácie.
+   */
+  mobilePhone?: string
+
+  /**
+   * Pracovisko — **kľúč z číselníka** `workplace` organizácie (D85).
+   *
+   * Nie voľný text: „BA", „Bratislava" a „bratislava" by boli tri pracoviská
+   * a filter by nesadol ani na jedno.
+   */
+  workplace?: string
+
+  /**
+   * Kedy sa naposledy podarilo doplniť údaje z adresára (D88).
+   *
+   * Známka musí byť samostatná. `missingFromDirectory()` sa pôvodne pýtala
+   * „má prázdny `givenName`?" a fungovalo to len dovtedy, kým ho plnil výhradne
+   * Graph. Od D83 ho vypĺňa aj personalista — a systém by potom usúdil, že
+   * osoba je vybavená, a **nikdy by si nevypýtal pozíciu, mobil ani
+   * pracovisko**.
+   */
+  directorySyncedAt?: Date
   /** Verzia uloženej fotky (`person_photos`). Chýba = nemá fotku. */
   photoVersion?: string
 
@@ -178,7 +223,20 @@ export interface Person {
 /** Údaje pre založenie alebo aktualizáciu osoby — napr. z CSV importu. */
 export interface NewPerson {
   email: string
+  /**
+   * Celé meno. Pri importe sa **odvodzuje** z mena a priezviska (D83);
+   * ostáva kvôli starým súborom, ktoré majú len stĺpec „Meno".
+   */
   fullName: string
+  givenName?: string
+  surname?: string
+  titleBefore?: string
+  titleAfter?: string
+  jobTitle?: string
+  /** Už znormalizovaný do E.164, alebo prázdny, keď sa prečítať nedal. */
+  mobilePhone?: string
+  /** Už spárovaný kľúč z číselníka, alebo prázdny, keď sa spárovať nedal. */
+  workplace?: string
   companyCode: string
   department?: string
   personType?: PersonType
@@ -362,11 +420,32 @@ export type ValidatedRow =
  * pomýliť, a zároveň jediné, ktoré sa dajú otestovať bez clustera. Zvyšok
  * `upsertPersons()` je už len zápis.
  */
+/**
+ * Meno riadku importu — **jedno pravidlo pre obe podoby súboru** (D83).
+ *
+ * Nové súbory majú stĺpce Meno a Priezvisko a `fullName` sa z nich skladá.
+ * Staré majú jeden stĺpec „Meno" a ten sa rozdelí. Keby si to každý volajúci
+ * riešil sám, ten istý súbor by cez obrazovku a cez skript založil dve rôzne
+ * mená — a nikto by nevedel, ktoré platí.
+ */
+export function resolveName(r: NewPerson): { fullName: string; givenName?: string; surname?: string } {
+  const givenName = r.givenName?.trim()
+  const surname = r.surname?.trim()
+  if (givenName || surname) {
+    return { fullName: composeFullName(givenName, surname), givenName, surname }
+  }
+  const fullName = r.fullName?.trim() ?? ""
+  // Rozdelenie sa **nevynucuje**. Jednoslovné meno je platné meno; uhádnuté
+  // priezvisko by sa od zadaného nedalo odlíšiť a to je horšie než prázdno.
+  const split = splitFullName(fullName)
+  return { fullName, givenName: split?.givenName, surname: split?.surname }
+}
+
 export function validateRow(r: NewPerson): ValidatedRow {
   const email = normalizeEmail(r?.email ?? "")
   if (!email.includes("@")) return { ok: false, email: r?.email ?? "", reason: "invalid-email" }
   if (!r.companyCode?.trim()) return { ok: false, email, reason: "missing-companyCode" }
-  if (!r.fullName?.trim()) return { ok: false, email, reason: "missing-name" }
+  if (!resolveName(r).fullName) return { ok: false, email, reason: "missing-name" }
   return { ok: true, email, companyCode: r.companyCode.trim() }
 }
 
@@ -411,8 +490,9 @@ export async function upsertPersons(
     // je otázka „kto v skupine bol vtedy" najťažšia (D50).
     const until = await col.findOne(key, { projection: { groupHistory: 1 } })
     const groups = normalizeKeys(r.groups)
+    const name = resolveName(r)
     const changes: Record<string, unknown> = {
-      fullName: r.fullName.trim(),
+      fullName: name.fullName,
       department: r.department?.trim() || undefined,
       personType: r.personType ?? "employee",
       startDate: r.startDate,
@@ -427,6 +507,18 @@ export async function upsertPersons(
     // slovenčinu — rovnaká pasca ako pri `status`, len horšie viditeľná,
     // lebo sa prejaví až v e-maile, ktorý už niekomu odišiel.
     if (r.language !== undefined) changes.language = normalizeLanguage(r.language)
+
+    // Tá istá pasca pri každom novom poli (D83–D86): súbor spred tejto zmeny
+    // stĺpce Priezvisko, Pozícia, Mobil ani Pracovisko nemá, a keby sa zapísali
+    // vždy, opakovaný import by ich ticho vymazal celej organizácii. Zapisuje
+    // sa preto **len to, čo v riadku naozaj je**.
+    if (name.givenName) changes.givenName = name.givenName
+    if (name.surname) changes.surname = name.surname
+    if (r.titleBefore?.trim()) changes.titleBefore = r.titleBefore.trim()
+    if (r.titleAfter?.trim()) changes.titleAfter = r.titleAfter.trim()
+    if (r.jobTitle?.trim()) changes.jobTitle = r.jobTitle.trim()
+    if (r.mobilePhone?.trim()) changes.mobilePhone = r.mobilePhone.trim()
+    if (r.workplace?.trim()) changes.workplace = r.workplace.trim()
 
     try {
       const result = await col.updateOne(key, {
@@ -750,6 +842,10 @@ export async function fillMissing(
     surname?: string
     department?: string
     jobTitle?: string
+    /** Už znormalizovaný do E.164 — adresár vracia čokoľvek. */
+    mobilePhone?: string
+    /** Už spárovaný kľúč z číselníka; nespárované sa nedopĺňa. */
+    workplace?: string
     language?: string
     photoVersion?: string
   },
@@ -770,6 +866,8 @@ export async function fillMissing(
     if (data.surname && missing(person.surname)) set.surname = data.surname
     if (data.department && missing(person.department)) set.department = data.department
     if (data.jobTitle && missing(person.jobTitle)) set.jobTitle = data.jobTitle
+    if (data.mobilePhone && missing(person.mobilePhone)) set.mobilePhone = data.mobilePhone
+    if (data.workplace && missing(person.workplace)) set.workplace = data.workplace
     // Jazyk má vždy hodnotu (predvolená slovenčina), takže „chýba" sa pri ňom
     // nedá zistiť. Prepíše sa len pri osobe založenej automaticky a len raz —
     // pri prvom prihlásení, keď ešte nemá fotku ani meno.
@@ -779,9 +877,14 @@ export async function fillMissing(
     }
     if (data.photoVersion && missing(person.photoVersion)) set.photoVersion = data.photoVersion
 
-    if (Object.keys(set).length === 0) return []
+    // Známka sa zapíše aj vtedy, keď adresár nič nového nepriniesol (D88).
+    // Práve to je tá informácia, ktorú `missingFromDirectory()` potrebuje:
+    // „už sme sa pýtali". Bez nej by sa pri osobe, ktorú adresár nepozná,
+    // platili dve požiadavky do Graphu pri každom jednom prihlásení.
+    const filled = Object.keys(set)
+    set.directorySyncedAt = new Date()
     await col.updateOne({ companyCode, email: address }, { $set: set } as never)
-    return Object.keys(set)
+    return filled
   } catch (e) {
     console.error("[persons] doplnenie údajov z adresára zlyhalo:", e)
     return []
@@ -797,10 +900,12 @@ export async function fillMissing(
 export function missingFromDirectory(person: Person | null): boolean {
   if (!person) return true
   const empty = (v: unknown) => v === undefined || v === null || String(v).trim() === ""
+  // Rozhoduje **známka, že sme sa už pýtali** (D88), nie prázdny `givenName`.
+  // Ten dnes vypĺňa aj personalista, takže ako otázka „bol tu už adresár?"
+  // prestal platiť: prvá ručne doplnená osoba by sa z adresára nedozvedela
+  // nič — ani pozíciu, ani mobil, ani pracovisko.
+  if (empty(person.directorySyncedAt)) return true
   return (
-    empty(person.givenName) ||
-    empty(person.department) ||
-    empty(person.photoVersion) ||
     empty(person.fullName) ||
     person.fullName.trim().toLowerCase() === person.email
   )

@@ -38,11 +38,40 @@
 | **Otvorenia znenia** (`document_opens`) | kedy si osoba **prvýkrát** otvorila znenie, ktoré má potvrdiť | áno |
 | **Kolá schvaľovania** (`approval_rounds`) | kto predložil, kto schválil alebo zamietol, kedy a prečo | áno |
 | **Log pripomienok** (`reminder_log`) | komu sa v ktorý deň odoslala pripomienka | áno |
+| **Evidenčné údaje osoby** (`persons`) | meno a priezvisko zvlášť, tituly, pracovná pozícia, oddelenie, **mobilný telefón**, pracovisko (mesto/obec) | áno |
 
 > **Šesť riadkov vyššie pribudlo 2026-09-10 a päť z nich popisuje údaje, ktoré
 > sa už zbierali.** Tento dokument vznikol pre RAG časť systému a onboarding
 > s potvrdzovaním doňho nikdy nedopísali. Nie je to formalita: údaj, ktorý sa
 > zbiera a nie je v dokumentácii, je presne to, čo pri audite robí problém.
+
+### 2.1 Interný adresár — nové sprístupnenie (D87, 2026-09-14)
+
+**Mobilný telefón a pracovisko sú od D87 viditeľné každému prihlásenému
+človeku vo vlastnej organizácii** (obrazovka `/adresar`). Je to **zmena
+okruhu príjemcov**, nie len nové pole: doteraz boli evidenčné údaje osoby
+prístupné personalistovi (`people-admin`), teraz ich vidia kolegovia.
+
+| Otázka | Stav |
+|---|---|
+| Právny základ | oprávnený záujem zamestnávateľa na vnútornej komunikácii (čl. 6 ods. 1 písm. f) — **posúdenie je na zákazníkovi**, nie na nás |
+| Okruh príjemcov | prihlásené **aktívne** osoby tej istej organizácie; nie verejné, nie naprieč tenantmi (D32) |
+| Povinnosť vyplniť | **žiadna** — mobil je nepovinný a kto ho nevyplní, v adresári ho nemá |
+| Vyradené osoby | v adresári **nie sú** (`status: "inactive"`), hoci záznam v `persons` zostáva kvôli potvrdeniam |
+| Zdroje údaja | ručný zápis, CSV import, Entra adresár (`mobilePhone`, `officeLocation`/`city`) — z adresára **len keď je pole prázdne** |
+
+**Čo z toho vyplýva pre zákazníka (nie pre kód):**
+
+1. Doplniť mobilný telefón a pracovisko do **záznamu o spracovateľských
+   činnostiach** a do informačnej povinnosti voči zamestnancom.
+2. Rozhodnúť, či sa pri mobile uplatní oprávnený záujem alebo súhlas. Ak súhlas,
+   pole sa jednoducho nechá prázdne — systém ho nevyžaduje.
+3. Pri rozsahu 130k+ osôb naďalej platí odporúčanie **DPIA** pred ostrou
+   prevádzkou (kap. 1).
+
+**Čo je vyriešené v kóde:** izolácia organizácie v dotaze (`lib/directory.ts`,
+overené testom), vylúčenie vyradených, fotka osoby sa aj naďalej vydáva len
+prihlásenému a len z jeho organizácie (`/api/photo`).
 > Šiesty riadok (`document_opens`) je nový a **zapísal sa skôr, než sa začal
 > zbierať** (ADR-005, D64).
 

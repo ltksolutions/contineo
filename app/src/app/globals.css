@@ -633,6 +633,16 @@ button:disabled { cursor: not-allowed; opacity: 0.55; }
 .field-label { font-size: 13.5px; font-weight: 600; }
 .field-hint { font-size: 12.5px; }
 
+/*
+  Dve krátke polia vedľa seba (meno a priezvisko, tituly). Na telefóne pod
+  sebou — `minmax(0, …)` je tu podstatné: bez neho by pole s dlhou hodnotou
+  roztiahlo stĺpec a riadok by pretiekol cez okraj obrazovky.
+*/
+.field-row { display: grid; gap: 12px; grid-template-columns: minmax(0, 1fr); }
+@media (min-width: 520px) {
+  .field-row { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+}
+
 .field-input {
   font: inherit;
   font-size: 16px;
@@ -3258,3 +3268,51 @@ a.answer-source:focus-visible { outline: 2px solid var(--accent); outline-offset
 /* Dátum účinnosti v zozname dokumentov: `nowrap` a `tabular-nums`, aby
    sa stĺpec nezalomil a číslice stáli pod sebou (návrh, časť 3). */
 .doc-col-date { white-space: nowrap; font-variant-numeric: tabular-nums; }
+
+/* ── Interný adresár (D87) ─────────────────────────────────────────────────
+   Karty, nie tabuľka: tabuľka so šiestimi stĺpcami sa na telefóne číta dvoma
+   prstami. `minmax(0, 1fr)` drží dlhú adresu vnútri karty namiesto toho, aby
+   roztiahla stĺpec cez okraj obrazovky. */
+.directory-grid {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 10px;
+  grid-template-columns: minmax(0, 1fr);
+}
+@media (min-width: 640px) {
+  .directory-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+.directory-card {
+  padding: 14px 16px;
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.directory-avatar {
+  flex: 0 0 44px;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+  background: var(--line);
+  color: var(--muted);
+  font-size: 14.5px;
+  font-weight: 700;
+}
+.directory-avatar img { width: 100%; height: 100%; object-fit: cover; }
+
+.directory-contact {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  margin-top: 6px;
+  font-size: 13.5px;
+}
+/* Zalomenie v adrese: bez neho pretečie karta, nie text. */
+.directory-contact a { overflow-wrap: anywhere; }

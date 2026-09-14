@@ -7,7 +7,7 @@
  */
 
 import { describe, it, expect } from "vitest"
-import { rowToPerson, csvToPersons, fieldValue, REASONS } from "../src/lib/personsImport"
+import { rowToPerson, csvToPersons, fieldValue, REASONS, emptyNotes } from "../src/lib/personsImport"
 
 describe("mapovanie hlaviciek", () => {
   it("rozpozná slovenské aj anglické názvy stĺpcov", () => {
@@ -80,5 +80,76 @@ describe("dovody odmietnutia", () => {
       // Veta, nie kľúč: `missing-companyCode` sa nedá opraviť v Exceli.
       expect(REASONS[key]).toMatch(/\s/)
     }
+  })
+})
+
+describe("meno vs. meno a priezvisko (D83)", () => {
+  it("stlpec Priezvisko znamena, ze Meno je krstne meno", () => {
+    const o = rowToPerson({ meno: "Ján", priezvisko: "Letko", email: "a@b.sk" })
+    expect(o).toMatchObject({ givenName: "Ján", surname: "Letko", fullName: "Ján Letko" })
+  })
+
+  it("bez stlpca Priezvisko je Meno cele meno a casti sa nehadzu", () => {
+    // Starý súbor s jediným stĺpcom „Meno". Keby sa hodnota zapísala ako krstné
+    // meno, organizácia by po importe mala všetky priezviská prázdne.
+    const o = rowToPerson({ meno: "Anna Bieliková", email: "a@b.sk" })
+    expect(o.fullName).toBe("Anna Bieliková")
+    expect(o.givenName).toBeUndefined()
+    expect(o.surname).toBeUndefined()
+  })
+
+  it("tituly su samostatne stlpce a do mena nevstupuju (D84)", () => {
+    const o = rowToPerson({
+      meno: "Ján", priezvisko: "Letko", titul: "Ing.", titulzamenom: "PhD.", email: "a@b.sk",
+    })
+    expect(o.fullName).toBe("Ján Letko")
+    expect(o).toMatchObject({ titleBefore: "Ing.", titleAfter: "PhD." })
+  })
+})
+
+describe("telefon a pracovisko v importe (D85, D86)", () => {
+  const settings = {
+    phonePrefix: "+421",
+    workplaces: [{ key: "senec", label: "Senec" }],
+  }
+
+  it("cislo sa znormalizuje predvolbou organizacie", () => {
+    const o = rowToPerson({ email: "a@b.sk", meno: "Ján", priezvisko: "Letko", mobil: "0905 123 456" }, settings)
+    expect(o.mobilePhone).toBe("+421905123456")
+  })
+
+  it("neznáme pracovisko nevyplni pole, ale riadok nezahodi", () => {
+    const notes = emptyNotes()
+    const o = rowToPerson(
+      { email: "a@b.sk", meno: "Ján", priezvisko: "Letko", pracovisko: "Trnava" },
+      settings, notes,
+    )
+    // Meno, adresa a oddelenie su platne aj bez pracoviska.
+    expect(o.email).toBe("a@b.sk")
+    expect(o.fullName).toBe("Ján Letko")
+    expect(o.workplace).toBeUndefined()
+    expect(notes.unknownWorkplaces).toEqual(["Trnava"])
+  })
+
+  it("necitatelne cislo sa sprava rovnako", () => {
+    const notes = emptyNotes()
+    const o = rowToPerson(
+      { email: "a@b.sk", meno: "Ján", priezvisko: "Letko", mobil: "kľúče od auta" },
+      settings, notes,
+    )
+    expect(o.fullName).toBe("Ján Letko")
+    expect(o.mobilePhone).toBeUndefined()
+    expect(notes.badPhones).toEqual(["kľúče od auta"])
+  })
+
+  it("spárované pracovisko sa ulozi ako kluc, nie ako popiska", () => {
+    const o = rowToPerson({ email: "a@b.sk", meno: "Ján", priezvisko: "Letko", pracovisko: "Senec" }, settings)
+    expect(o.workplace).toBe("senec")
+  })
+
+  it("bez nastaveni organizacie sa tie dve polia len nevyplnia", () => {
+    const o = rowToPerson({ email: "a@b.sk", meno: "Ján", priezvisko: "Letko", pracovisko: "Senec", mobil: "0905123456" })
+    expect(o.workplace).toBeUndefined()
+    expect(o.mobilePhone).toBe("+421905123456")
   })
 })

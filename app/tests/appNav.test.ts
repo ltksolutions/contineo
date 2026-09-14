@@ -14,8 +14,9 @@ describe("položky navigácie", () => {
   it("bez rolí zostane to, čo vidí každý prihlásený", () => {
     // `/approvals` je tu z toho istého dôvodu ako `/documents`: schvaľovateľ
     // je menovaný človek (D69), nie držiteľ roly, takže sa to podľa roly
-    // podmieniť nedá.
-    expect(navItems({}).map(o => o.href)).toEqual(["/", "/ask", "/documents", "/approvals", "/golden-set"])
+    // podmieniť nedá. `/adresar` je zoznam kolegov, nie správa prístupov (D87).
+    expect(navItems({}).map(o => o.href))
+      .toEqual(["/", "/ask", "/documents", "/approvals", "/adresar", "/golden-set"])
   })
 
   it("rola pridá práve svoju sekciu", () => {

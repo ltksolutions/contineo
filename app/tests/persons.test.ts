@@ -8,7 +8,8 @@
  * Adresa je tu tá istá vec ako v `auth.test.ts`: rozhoduje o tom, kto sa
  * dostane k interným smerniciam. Preto sa overuje aj to, čo vyzerá triviálne.
  */
-import { normalizeEmail, validateRow } from "../src/lib/persons"
+import { describe, it, expect } from "vitest"
+import { normalizeEmail, validateRow, resolveName } from "../src/lib/persons"
 import type { NewPerson } from "../src/lib/persons"
 
 import { t } from "./helper"
@@ -66,3 +67,42 @@ t("chýbajúce polia nespadnú na výnimke", (() => {
   return !v.ok
 })())
 
+
+/*
+  Nové pravidlá sa píšu idiomaticky (`expect`), staré tvrdenia hore ostávajú —
+  prepisovať 2 200 riadkov znamená 2 200 príležitostí na preklep, ktorý sa
+  v testoch neprejaví zlyhaním, ale falošným pokojom.
+*/
+describe("meno riadku importu (D83)", () => {
+  const row = (z: Partial<NewPerson>): NewPerson =>
+    ({ email: "a@b.sk", companyCode: "SFZ", fullName: "", ...z }) as NewPerson
+
+  it("ked su casti, meno sa z nich sklada", () => {
+    expect(resolveName(row({ givenName: "Ján", surname: "Letko" })))
+      .toEqual({ fullName: "Ján Letko", givenName: "Ján", surname: "Letko" })
+  })
+
+  it("ked je len cele meno, rozdeli sa aj na casti", () => {
+    expect(resolveName(row({ fullName: "Anna Nováková" })))
+      .toEqual({ fullName: "Anna Nováková", givenName: "Anna", surname: "Nováková" })
+  })
+
+  it("casti maju prednost pred celym menom", () => {
+    // Inak by ten istý súbor cez obrazovku a cez skript založil dve rôzne mená.
+    const r = resolveName(row({ givenName: "Ján", surname: "Letko", fullName: "Kto Inak" }))
+    expect(r.fullName).toBe("Ján Letko")
+  })
+
+  it("jednoslovne meno je platne, len sa nerozdeli", () => {
+    expect(resolveName(row({ fullName: "Cher" })))
+      .toEqual({ fullName: "Cher", givenName: undefined, surname: undefined })
+  })
+
+  it("riadok bez akehokolvek mena neprejde", () => {
+    expect(validateRow(row({}))).toMatchObject({ ok: false, reason: "missing-name" })
+  })
+
+  it("riadok s menom a priezviskom prejde aj bez stlpca Meno a priezvisko", () => {
+    expect(validateRow(row({ givenName: "Ján", surname: "Letko" }))).toMatchObject({ ok: true })
+  })
+})

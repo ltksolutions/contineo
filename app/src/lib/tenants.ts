@@ -91,6 +91,18 @@ export interface Tenant {
   codelists?: Partial<Record<string, { key: string; label?: string }[]>>
 
   /**
+   * Medzinárodná predvoľba pre telefónne čísla bez nej (D86).
+   *
+   * Číslo zadané ako „0905 123 456" sa ňou doplní na `+421905123456`. Chýbajúca
+   * hodnota znamená `+421`, nie „bez predvoľby": väčšina zákazníkov je
+   * slovenská a bezdôvodne odmietnuté číslo by bola horšia predvoľba než
+   * odhad, ktorý sa dá jedným poľom prepísať.
+   *
+   * Číslo zadané s `+` sa ňou **nedopĺňa** — to je už medzinárodný zápis.
+   */
+  phonePrefix?: string
+
+  /**
    * Profil členenia dokumentov na úseky (D58).
    *
    * Jeden algoritmus, parametre navonok. Vlastný chunker per zákazník by
@@ -219,6 +231,19 @@ export async function resolveTenant(rawHost: string | null | undefined): Promise
 }
 
 /** Ako `resolveTenant`, ale neznámy hostiteľ je chyba. */
+/**
+ * Organizácia podľa kódu — pre zápisy, ktoré nemajú po ruke hostiteľa.
+ *
+ * `resolveTenant()` vychádza z domény, lebo tá rozhoduje, koho obrazovku
+ * človek vidí. Pri zápise je otázka opačná: organizáciu už poznáme z prihlásenej
+ * osoby a potrebujeme jej nastavenia (predvoľba telefónu, číselníky).
+ */
+export async function tenantByCompanyCode(companyCode: string): Promise<Tenant | null> {
+  const col = await getCollection<Tenant>(TENANTS_COLLECTION)
+  const doc = await col.findOne({ companyCode })
+  return doc ? normalizeTenant(doc) : null
+}
+
 export async function requireTenant(rawHost: string | null | undefined): Promise<Tenant> {
   const tenant = await resolveTenant(rawHost)
   if (!tenant) throw new UnknownHostError(normalizeHostname(rawHost))

@@ -4,6 +4,23 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Added (2026-09-14 — evidencia osoby: meno a priezvisko zvlášť, tituly, mobil, pracovisko, interný adresár)
+
+Pri osobe sa evidovalo **jedno pole na meno**. Personalista potreboval Meno, Priezvisko, Pozíciu, Oddelenie, Mobil a Pracovisko. Plán a odôvodnenia: `docs/D83_plan_osobne_udaje.md`.
+
+Východisko po prečítaní kódu (nie dokumentácie): `givenName`, `surname` a `jobTitle` v schéme **už boli** (D52), ale prvé dve plnil výhradne Entra adresár a nikde sa nedali zadať; mobil a pracovisko neexistovali vôbec.
+
+- **`fullName` sa skladá, nezadáva sa (D83).** Formulár má Meno a Priezvisko, celé meno dopočíta server. Žiadny existujúci záznam sa nemení — potvrdenia a audit si `fullName` nesú ako kópiu v čase a nevedia, že vznikol inak. Migrácia `npm run migrate:personname` dopĺňa len časti a `fullName` neprepisuje nikdy; čo sa rozdeliť nedá, nechá prázdne a vypíše — uhádnuté priezvisko sa od zadaného nedá odlíšiť.
+- **Tituly `titleBefore`/`titleAfter` sú mimo `fullName` (D84).** Titul počas života pribudne; keby bol v mene, ten istý človek by v starých potvrdeniach vystupoval pod iným menom než v nových.
+- **Pracovisko je číselník na tenanta (D85)**, nie voľný text — „BA", „Bratislava" a „bratislava" by boli tri pracoviská a filter by nesadol ani na jedno. Využitý existujúci mechanizmus `CUSTOM_CODELISTS`; je to prvý číselník o **ľuďoch**, nie o obsahu, takže `codelistUsage()` vie, nad ktorou kolekciou počítať.
+- **Mobil sa ukladá v E.164 (D86)**, predvoľba je `Tenant.phonePrefix` (chýbajúca = `+421`). Zadrôtovaná slovenská predvoľba by českému zákazníkovi ticho vyrobila neplatné čísla. Holé číslice bez nuly aj bez `+` sa odmietnu — krajina sa nehádže.
+- **Interný adresár `/adresar` (D87)** — vidí ho každý prihlásený vo vlastnej organizácii, nie len personalista. Vyradení, roly, trasy ani skupiny v ňom nie sú. `companyCode` je v podmienke dotazu, nie v kontrole nad ňou (D32), a je to overené testom.
+- **`directorySyncedAt` nahrádza `givenName` ako známka doplnenia z adresára (D88).** Bez toho by prvá ručne doplnená osoba prestala z Graphu dostávať čokoľvek — stará otázka „má prázdny `givenName`?" platila len dovtedy, kým ho plnil výhradne Graph.
+- **CSV import** pozná nové stĺpce. O tom, či je „Meno" krstné meno alebo celé meno, rozhoduje **prítomnosť stĺpca „Priezvisko"**; bez toho by starý súbor zapísal celé meno ako krstné a organizácia by mala priezviská prázdne. Nové polia sa zapisujú **len keď v riadku sú** — inak by opakovaný import bez tých stĺpcov ticho vymazal mobily celej organizácii. Neznáme pracovisko a nečitateľné číslo **pole nevyplnia a riadok nezahodia**; náhľad ich vypíše, aby import neprešiel „bez chyby" a s prázdnymi poliami.
+- **Entra adresár** dopĺňa `mobilePhone` a `officeLocation`/`city` — naďalej len do prázdneho poľa, takže ručná oprava vydrží. Nespárované pracovisko a neprečítateľné číslo sa nedopĺňajú.
+- **GDPR:** mobil je nová kategória osobného údaja a jeho sprístupnenie celej organizácii je **zmena okruhu príjemcov** — `docs/GDPR_DATA_PROTECTION.md` kap. 2.1 hovorí, čo z toho ostáva na zákazníka (záznam o spracovateľských činnostiach, informačná povinnosť).
+- Overené: `tsc` čisto, lint 0 chýb, **1253 testov** zelených, `next build` prejde. Migrácia zatiaľ spustená **len nasucho**.
+
 ### Fixed (2026-09-14 — znenie predpisu sa vykresľuje ako text, nie ako Markdown)
 
 Na obrazovke schvaľovania a v detaile dokumentu sa znenie vypisovalo surové: čitateľ videl `## Článok 1 — Účel` aj s mriežkami a hviezdičky okolo zvýraznení. Je to presne ten text, ktorý má pred potvrdením prečítať — a ktorý svojím potvrdením zaväzuje sám seba.

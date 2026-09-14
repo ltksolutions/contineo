@@ -145,6 +145,29 @@ export default function PeopleImport({ language }: { language?: UiLanguage }) {
             </div>
           )}
 
+          {/*
+            Hodnoty, ktoré riadok neodmietli, ale pole nevyplnili (D85, D86).
+            Bez tohto výpisu by import prešiel bez jedinej chyby a pracoviská
+            by zostali prázdne — a zistilo by sa to až o mesiac.
+          */}
+          {(preview.unknownWorkplaces?.length ?? 0) > 0 && (
+            <div>
+              <div className="quiet field-hint">{t.unknownWorkplaces}</div>
+              <p style={{ margin: "4px 0 0", fontSize: 14, lineHeight: 1.6 }}>
+                {preview.unknownWorkplaces!.join(", ")}
+              </p>
+            </div>
+          )}
+
+          {(preview.badPhones?.length ?? 0) > 0 && (
+            <div>
+              <div className="quiet field-hint">{t.badPhones}</div>
+              <p style={{ margin: "4px 0 0", fontSize: 14, lineHeight: 1.6 }}>
+                {preview.badPhones!.join(", ")}
+              </p>
+            </div>
+          )}
+
           <p className="quiet" style={{ fontSize: 13.5, margin: 0 }}>
             {t.statusNoteBefore}<strong>{t.statusNoteHighlight}</strong>{t.statusNoteAfter}
           </p>

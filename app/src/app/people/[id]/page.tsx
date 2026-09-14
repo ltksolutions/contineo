@@ -14,6 +14,8 @@ import { isHr } from "@/lib/hr"
 import { evidenceForPerson } from "@/lib/evidenceDb"
 import EvidenceTimeline from "@/components/EvidenceTimeline"
 import { audiencesInOrg } from "@/lib/persons"
+import { availableOptions } from "@/lib/codelistsTenant"
+import { displayName } from "@/lib/personFields"
 import { allDepartments, flattenTree, pathTo } from "@/lib/departments"
 import Select from "@/components/Select"
 import TagSelect from "@/components/TagSelect"
@@ -49,6 +51,9 @@ export default async function PersonDetailPage({
   // Zoznam sa odvodzuje z ľudí, nie z číselníka (D38) — a je to ten istý
   // zoznam, aký vidí prideľovanie noriem.
   const audiences = await audiencesInOrg(ctx.person.companyCode)
+  // Ponuka pracovísk je číselník organizácie (D85) — ten istý zoznam, aký
+  // sa spravuje v Organizácia → Číselníky.
+  const workplaces = availableOptions(ctx.tenant, "workplace")
   const tree = await allDepartments(ctx.person.companyCode)
   const treeRows = flattenTree(tree)
   // Celá cesta, nie len vlastné oddelenie: „Oddelenie sociálnych sietí" samo
@@ -84,7 +89,8 @@ export default async function PersonDetailPage({
         <Link className="quiet" href="/people" style={{ fontSize: 14 }}>{t.back}</Link>
       </p>
 
-      <h1 style={{ fontSize: 25, letterSpacing: "-0.02em", margin: "0 0 4px" }}>{o.fullName}</h1>
+      {/* V nadpise meno **s titulmi** (D84) — je to zobrazenie, nie záznam. */}
+      <h1 style={{ fontSize: 25, letterSpacing: "-0.02em", margin: "0 0 4px" }}>{displayName(o)}</h1>
       <p className="quiet" style={{ fontSize: 14.5, margin: "0 0 4px", overflowWrap: "anywhere" }}>
         {o.email}
         {o.emailHistory.length > 0 && (
@@ -117,16 +123,80 @@ export default async function PersonDetailPage({
           <span className="quiet field-hint">{t.emailNote}</span>
         </label>
 
-        <label className="field">
-          <span className="field-label">{t.fullName}</span>
-          <input className="field-input" name="fullName" defaultValue={o.fullName} required />
-        </label>
+        {/*
+          Dve polia, nie jedno (D83). `fullName` sa z nich skladá na serveri —
+          skrytým poľom by sa dalo podvrhnúť niečo iné, než čo je v poliach,
+          a v zozname osôb by potom bolo iné meno než v potvrdení.
+
+          Na telefóne pod sebou, na širšom vedľa seba: sú to dve krátke polia
+          a samostatný riadok na každé z nich znamená zbytočné posúvanie.
+        */}
+        <div className="field-row">
+          <label className="field">
+            <span className="field-label">{t.givenName}</span>
+            <input className="field-input" name="givenName" defaultValue={o.givenName ?? ""} required />
+          </label>
+          <label className="field">
+            <span className="field-label">{t.surname}</span>
+            <input className="field-input" name="surname" defaultValue={o.surname ?? ""} required />
+          </label>
+        </div>
+        <span className="quiet field-hint" style={{ marginTop: -8 }}>
+          {(!o.givenName || !o.surname) ? t.nameMissing : t.nameNote}
+        </span>
+
+        <div className="field-row">
+          <label className="field">
+            <span className="field-label">{t.titleBefore}</span>
+            <input className="field-input" name="titleBefore" defaultValue={o.titleBefore ?? ""} />
+          </label>
+          <label className="field">
+            <span className="field-label">{t.titleAfter}</span>
+            <input className="field-input" name="titleAfter" defaultValue={o.titleAfter ?? ""} />
+          </label>
+        </div>
+        <span className="quiet field-hint" style={{ marginTop: -8 }}>{t.titlesNote}</span>
 
         <label className="field">
           <span className="field-label">{t.jobTitle}</span>
           <input className="field-input" name="jobTitle" defaultValue={o.jobTitle ?? ""} />
           <span className="quiet field-hint">{t.jobTitleNote}</span>
         </label>
+
+        <label className="field">
+          <span className="field-label">{t.mobilePhone}</span>
+          <input
+            className="field-input"
+            name="mobilePhone"
+            type="tel"
+            inputMode="tel"
+            autoComplete="tel"
+            defaultValue={o.mobilePhone ?? ""}
+          />
+          <span className="quiet field-hint">{t.mobilePhoneNote}</span>
+        </label>
+
+        <div className="field">
+          <span className="field-label">{t.workplace}</span>
+          <Select
+            name="workplace"
+            fieldLabel={t.workplace}
+            initial={o.workplace ?? ""}
+            options={[
+              { value: "", label: t.workplaceNone },
+              ...workplaces.map(w => ({ value: w.key, label: w.label ?? w.key })),
+            ]}
+          />
+          <span className="quiet field-hint">
+            {workplaces.length === 0 ? (
+              <>
+                {t.noWorkplacesBefore}
+                <Link href="/organisation?tab=codelists">{t.noWorkplacesLink}</Link>
+                {t.noWorkplacesAfter}
+              </>
+            ) : t.workplaceNote}
+          </span>
+        </div>
 
         <div className="field">
           <span className="field-label">{t.department}</span>

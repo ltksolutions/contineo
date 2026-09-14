@@ -9,6 +9,7 @@
 import { notFound, redirect } from "next/navigation"
 import Link from "next/link"
 import { peopleContext } from "@/lib/people"
+import { availableOptions } from "@/lib/codelistsTenant"
 import { brandingView } from "@/lib/tenants"
 import { tenantStyle } from "@/components/TenantHeader"
 import { UI_LANGUAGES, dictionary } from "@/lib/i18n"
@@ -30,10 +31,25 @@ export default async function NewPersonPage({
     notFound()
   }
 
-  const q = normalizeQuery<{ error?: string; email?: string; fullName?: string; department?: string }>(await searchParams)
+  const q = normalizeQuery<{
+    error?: string
+    email?: string
+    givenName?: string
+    surname?: string
+    titleBefore?: string
+    titleAfter?: string
+    jobTitle?: string
+    mobilePhone?: string
+    workplace?: string
+    department?: string
+  }>(await searchParams)
   const branding = brandingView(ctx.tenant)
+  const workplaces = availableOptions(ctx.tenant, "workplace")
   const d = dictionary(ctx.person.language).people
   const t = d.invite
+  // Popisky polí sú tie isté ako na karte osoby — dva rôzne názvy toho istého
+  // poľa by znamenali, že personalista hľadá „Pozíciu" tam, kde je „Funkcia".
+  const td = d.detail
 
   return (
     <AppShell language={ctx.person.language}>
@@ -68,10 +84,58 @@ export default async function NewPersonPage({
           <span className="quiet field-hint">{t.emailNote}</span>
         </label>
 
+        <div className="field-row">
+          <label className="field">
+            <span className="field-label">{td.givenName}</span>
+            <input className="field-input" name="givenName" required defaultValue={q.givenName ?? ""} />
+          </label>
+          <label className="field">
+            <span className="field-label">{td.surname}</span>
+            <input className="field-input" name="surname" required defaultValue={q.surname ?? ""} />
+          </label>
+        </div>
+
+        <div className="field-row">
+          <label className="field">
+            <span className="field-label">{td.titleBefore}</span>
+            <input className="field-input" name="titleBefore" defaultValue={q.titleBefore ?? ""} />
+          </label>
+          <label className="field">
+            <span className="field-label">{td.titleAfter}</span>
+            <input className="field-input" name="titleAfter" defaultValue={q.titleAfter ?? ""} />
+          </label>
+        </div>
+
         <label className="field">
-          <span className="field-label">{t.fullName}</span>
-          <input className="field-input" name="fullName" required defaultValue={q.fullName ?? ""} />
+          <span className="field-label">{td.jobTitle}</span>
+          <input className="field-input" name="jobTitle" defaultValue={q.jobTitle ?? ""} />
         </label>
+
+        <label className="field">
+          <span className="field-label">{td.mobilePhone}</span>
+          <input
+            className="field-input"
+            name="mobilePhone"
+            type="tel"
+            inputMode="tel"
+            autoComplete="tel"
+            defaultValue={q.mobilePhone ?? ""}
+          />
+          <span className="quiet field-hint">{td.mobilePhoneNote}</span>
+        </label>
+
+        <div className="field">
+          <span className="field-label">{td.workplace}</span>
+          <Select
+            name="workplace"
+            fieldLabel={td.workplace}
+            initial={q.workplace ?? ""}
+            options={[
+              { value: "", label: td.workplaceNone },
+              ...workplaces.map(w => ({ value: w.key, label: w.label ?? w.key })),
+            ]}
+          />
+        </div>
 
         <label className="field">
           <span className="field-label">{t.department}</span>

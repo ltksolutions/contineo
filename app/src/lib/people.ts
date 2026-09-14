@@ -25,7 +25,10 @@ import { PERSONS_COLLECTION, normalizeEmail, normalizeKeys, newDepartmentHistory
 import { normalizeLanguage } from "./i18n"
 import { HR_ROLE } from "./hr"
 import type { Person, PersonStatus, PersonType } from "./persons"
+import { tenantByCompanyCode } from "./tenants"
 import type { Tenant } from "./tenants"
+import { composeFullName, splitFullName, normalizePhone, matchWorkplace } from "./personFields"
+import { availableOptions } from "./codelistsTenant"
 import { allDepartments, pathIdsTo, pathTo } from "./departments"
 import { AppError } from "./appError"
 
@@ -70,7 +73,16 @@ export class PersonValidationError extends AppError {}
 export interface PersonRow {
   id: string
   email: string
+  /** Zložené z mena a priezviska (D83). Bez titulov — tie sú zvlášť (D84). */
   fullName: string
+  givenName?: string
+  surname?: string
+  titleBefore?: string
+  titleAfter?: string
+  /** E.164, napr. `+421905123456` (D86). */
+  mobilePhone?: string
+  /** Kľúč z číselníka `workplace` organizácie (D85). */
+  workplace?: string
   /** Pôvodný textový zápis oddelenia. Ostáva ako stopa, z čoho oddelenie vznikol. */
   department?: string
   /** Zaradenie v štruktúre (D49). `undefined`/`null` = nezaradená. */
@@ -99,6 +111,12 @@ function toRow(p: Person): PersonRow {
     id: p.id,
     email: p.email,
     fullName: p.fullName,
+    givenName: p.givenName,
+    surname: p.surname,
+    titleBefore: p.titleBefore,
+    titleAfter: p.titleAfter,
+    mobilePhone: p.mobilePhone,
+    workplace: p.workplace,
     department: p.department,
     departmentId: p.departmentId ?? null,
     jobTitle: p.jobTitle,
@@ -143,6 +161,10 @@ export async function listPeople(
       { fullName: { $regex: safe, $options: "i" } },
       { email: { $regex: safe, $options: "i" } },
       { department: { $regex: safe, $options: "i" } },
+      // Pozícia a pracovisko sú rovnako platné vodidlá ako meno: personalista
+      // často hľadá „kto je u nás v Senci" alebo „kto robí správcu ihriska".
+      { jobTitle: { $regex: safe, $options: "i" } },
+      { workplace: { $regex: safe, $options: "i" } },
     ]
   }
 
@@ -163,7 +185,23 @@ export async function loadPersonById(companyCode: string, id: string): Promise<P
 export interface PersonChange {
   /** Nová adresa. Mení sa vedome — nie je to identita, ale je to prihlásenie. */
   email?: string
+  /**
+   * Meno a priezvisko. Keď príde čo i len jedno z nich, `fullName` sa **skladá
+   * z nich** (D83) a prípadné `fullName` nižšie sa ignoruje.
+   */
+  givenName?: string
+  surname?: string
+  /**
+   * Celé meno priamo — len pre volajúcich spred D83 (napr. import starého
+   * súboru s jediným stĺpcom „Meno"). Rozdelí sa a uloží aj po častiach.
+   */
   fullName?: string
+  titleBefore?: string
+  titleAfter?: string
+  /** Surový zápis; do E.164 ho prevedie `normalizePhone()` podľa organizácie. */
+  mobilePhone?: string
+  /** Kľúč z číselníka. Prázdny reťazec = vyprázdniť pole. */
+  workplace?: string
   department?: string
   /** `null` = vyradiť zo štruktúry. `undefined` = nemeniť. */
   departmentId?: string | null
@@ -173,6 +211,61 @@ export interface PersonChange {
   tracks?: string[]
   groups?: string[]
   roles?: string[]
+}
+
+/**
+ * Telefón a pracovisko — polia, ktoré sa nedajú overiť bez organizácie (D85, D86).
+ *
+ * Predvoľba aj zoznam pracovísk sú vlastnosťou tenanta, takže pravidlo musí
+ * vedieť, o ktorú organizáciu ide. Je to jedno miesto pre kartu osoby aj pre
+ * pozvanie — dve kópie by znamenali, že to, čo prejde jedným formulárom,
+ * druhý odmietne.
+ *
+ * Vracia **len polia, ktoré prišli**. Prázdny reťazec znamená vyprázdniť;
+ * na rozdiel od mena tu prázdno niečo znamená.
+ */
+async function tenantFields(
+  companyCode: string,
+  input: { mobilePhone?: string; workplace?: string },
+): Promise<{ mobilePhone?: string; workplace?: string }> {
+  const out: { mobilePhone?: string; workplace?: string } = {}
+  if (input.mobilePhone === undefined && input.workplace === undefined) return out
+
+  const tenant = await tenantByCompanyCode(companyCode)
+
+  if (input.mobilePhone !== undefined) {
+    const phone = normalizePhone(input.mobilePhone, tenant?.phonePrefix)
+    if (!phone.ok) {
+      throw new PersonValidationError(
+        phone.reason,
+        phone.reason === "phone.noPrefix"
+          ? "Číslu chýba predvoľba — napíšte ho s nulou (0905…) alebo medzinárodne (+421…)."
+          : "To nevyzerá ako telefónne číslo.",
+        { value: input.mobilePhone },
+      )
+    }
+    out.mobilePhone = phone.value
+  }
+
+  if (input.workplace !== undefined) {
+    const wanted = input.workplace.trim()
+    if (!wanted) {
+      out.workplace = ""
+    } else {
+      // Páruje sa aj na popisku, nielen na kľúč — do formulára môže prísť
+      // „Banská Bystrica" z importu rovnako ako `banska_bystrica` z ponuky.
+      const key = matchWorkplace(wanted, availableOptions(tenant ?? { codelists: {} }, "workplace"))
+      if (!key) {
+        throw new PersonValidationError(
+          "person.unknownWorkplace",
+          `Pracovisko „${wanted}" v číselníku organizácie nie je. Doplňte ho v Organizácia → Číselníky.`,
+          { value: wanted },
+        )
+      }
+      out.workplace = key
+    }
+  }
+  return out
 }
 
 const TYPES: PersonType[] = ["employee", "external", "referee", "official"]
@@ -231,11 +324,35 @@ export async function savePerson(
     }
   }
 
-  if (change.fullName !== undefined) {
-    const actorName = change.fullName.trim()
-    if (!actorName) throw new PersonValidationError("person.nameRequired", "Meno je povinné — bez neho je v zozname len adresa.")
-    set.fullName = actorName
+  // Meno sa **skladá**, nezadáva sa celé (D83). Keď príde čo i len jedna z častí,
+  // druhá sa doplní z uloženej hodnoty — inak by uloženie opravy priezviska
+  // vymazalo meno.
+  if (change.givenName !== undefined || change.surname !== undefined) {
+    const givenName = (change.givenName ?? existing.givenName ?? "").trim()
+    const surname = (change.surname ?? existing.surname ?? "").trim()
+    if (!givenName) throw new PersonValidationError("person.givenNameRequired", "Meno je povinné.")
+    if (!surname) throw new PersonValidationError("person.surnameRequired", "Priezvisko je povinné.")
+    set.givenName = givenName
+    set.surname = surname
+    set.fullName = composeFullName(givenName, surname)
+  } else if (change.fullName !== undefined) {
+    // Cesta pre volajúcich spred D83. Meno sa uloží aj po častiach, aby sa
+    // osoba nedostala do stavu, v ktorom má celé meno, ale karta ho nevie
+    // ukázať v poliach.
+    const whole = change.fullName.trim()
+    if (!whole) throw new PersonValidationError("person.nameRequired", "Meno je povinné — bez neho je v zozname len adresa.")
+    set.fullName = whole
+    const split = splitFullName(whole)
+    if (split) { set.givenName = split.givenName; set.surname = split.surname }
   }
+
+  // Tituly sú evidenčné a **do `fullName` nevstupujú** (D84).
+  if (change.titleBefore !== undefined) set.titleBefore = change.titleBefore.trim() || undefined
+  if (change.titleAfter !== undefined) set.titleAfter = change.titleAfter.trim() || undefined
+
+  const fromTenant = await tenantFields(companyCode, change)
+  if (fromTenant.mobilePhone !== undefined) set.mobilePhone = fromTenant.mobilePhone || undefined
+  if (fromTenant.workplace !== undefined) set.workplace = fromTenant.workplace || undefined
   // Oddelenie sa **dá vyprázdniť** zámerne: je to údaj, ktorý sa mení, a človek
   // ho môže naozaj nemať. Na rozdiel od mena tu prázdno niečo znamená.
   if (change.department !== undefined) set.department = change.department.trim() || undefined
@@ -308,12 +425,37 @@ export async function savePerson(
  */
 export async function invitePerson(
   companyCode: string,
-  input: { email: string; fullName: string; department?: string; personType?: PersonType; language?: string },
+  input: {
+    email: string
+    givenName?: string
+    surname?: string
+    /** Len pre volajúcich spred D83; keď sú meno a priezvisko, ignoruje sa. */
+    fullName?: string
+    titleBefore?: string
+    titleAfter?: string
+    jobTitle?: string
+    mobilePhone?: string
+    workplace?: string
+    department?: string
+    personType?: PersonType
+    language?: string
+  },
   actor: string,
 ): Promise<PersonRow> {
   const email = normalizeEmail(input.email ?? "")
   if (!email.includes("@")) throw new PersonValidationError("person.badEmail", "To nie je e-mailová adresa.")
-  if (!input.fullName?.trim()) throw new PersonValidationError("person.nameRequiredShort", "Meno je povinné.")
+
+  const givenName = input.givenName?.trim()
+  const surname = input.surname?.trim()
+  // Tá istá deliaca čiara ako v `savePerson`: keď prídu časti, meno sa skladá
+  // z nich; celé meno je cesta pre starý import.
+  const fullName = (givenName || surname)
+    ? composeFullName(givenName, surname)
+    : (input.fullName?.trim() ?? "")
+  if (!fullName) throw new PersonValidationError("person.nameRequiredShort", "Meno je povinné.")
+  const split = (givenName || surname) ? null : splitFullName(fullName)
+
+  const fromTenant = await tenantFields(companyCode, input)
 
   const col = await getCollection<Person>(PERSONS_COLLECTION)
   // Kľúč je organizácia + adresa. Tá istá adresa môže patriť do viacerých
@@ -327,7 +469,14 @@ export async function invitePerson(
     id: crypto.randomUUID(),
     companyCode,
     email,
-    fullName: input.fullName.trim(),
+    fullName,
+    givenName: givenName || split?.givenName,
+    surname: surname || split?.surname,
+    titleBefore: input.titleBefore?.trim() || undefined,
+    titleAfter: input.titleAfter?.trim() || undefined,
+    jobTitle: input.jobTitle?.trim() || undefined,
+    mobilePhone: fromTenant.mobilePhone || undefined,
+    workplace: fromTenant.workplace || undefined,
     department: input.department?.trim() || undefined,
     personType: (input.personType && TYPES.includes(input.personType)) ? input.personType : "employee",
     status: "invited",

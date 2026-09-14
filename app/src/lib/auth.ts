@@ -39,9 +39,11 @@ import {
   syncFromAccount, createFromDomain, isDomainAllowed,
   fillMissing, missingFromDirectory, findPerson,
 } from "./persons"
-import { resolveTenant, normalizeHostname } from "./tenants"
+import { resolveTenant, normalizeHostname, tenantByCompanyCode } from "./tenants"
 import { resolveCredentials, PROVIDER_ID } from "./oauth"
-import { graphData, fullName, PHOTO_SIZE } from "./graph"
+import { graphData, fullName, workplaceHint, PHOTO_SIZE } from "./graph"
+import { normalizePhone, matchWorkplace } from "./personFields"
+import { availableOptions } from "./codelistsTenant"
 import { savePhoto } from "./photo"
 import type { OAuthProviderName, ResolvedCredentials } from "./oauth"
 import type { Tenant } from "./tenants"
@@ -600,12 +602,28 @@ async function fillFromDirectory(
       )) ?? undefined
     }
 
+    /*
+      Telefón a pracovisko sa **overia proti nastaveniam organizácie** ešte
+      pred zápisom (D85, D86). Adresár vracia, čo mu kto vyplnil: číslo
+      v ľubovoľnom tvare a kanceláriu, ktorá v číselníku byť nemusí.
+      Nespárované pracovisko a neprečítateľné číslo sa **nedopĺňajú** — inak
+      by sa cudzí údaj stal našou hodnotou bez toho, aby ho niekto videl.
+    */
+    const tenant = await tenantByCompanyCode(companyCode)
+    const phone = normalizePhone(u.mobilePhone, tenant?.phonePrefix)
+    const workplace = matchWorkplace(
+      workplaceHint(u),
+      availableOptions(tenant ?? { codelists: {} }, "workplace"),
+    )
+
     const filled = await fillMissing(companyCode, email, {
       fullName: fullName(u),
       givenName: u.givenName,
       surname: u.surname,
       department: u.department,
       jobTitle: u.jobTitle,
+      mobilePhone: phone.ok ? (phone.value || undefined) : undefined,
+      workplace: workplace ?? undefined,
       language: u.preferredLanguage,
       photoVersion,
     })

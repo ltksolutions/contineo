@@ -9,6 +9,8 @@
 import { notFound, redirect } from "next/navigation"
 import Link from "next/link"
 import { peopleContext, listPeople } from "@/lib/people"
+import { availableOptions } from "@/lib/codelistsTenant"
+import { displayName, workplaceLabel } from "@/lib/personFields"
 import { brandingView } from "@/lib/tenants"
 import { tenantStyle } from "@/components/TenantHeader"
 import { formatDate, dictionary } from "@/lib/i18n"
@@ -31,6 +33,7 @@ export default async function PeoplePage({
 
   const { q, msg: message, error } = normalizeQuery<{ q?: string; msg?: string; error?: string }>(await searchParams)
   const people = await listPeople(ctx.person.companyCode, q)
+  const workplaces = availableOptions(ctx.tenant, "workplace")
   const branding = brandingView(ctx.tenant)
   const language = ctx.person.language
   const t = dictionary(language).people.list
@@ -82,7 +85,7 @@ export default async function PeoplePage({
                   href={`/people/${encodeURIComponent(o.id)}`}
                   style={{ fontSize: 16, fontWeight: 700, textDecoration: "none" }}
                 >
-                  {o.fullName}
+                  {displayName(o)}
                 </Link>
                 <span
                   className="tag"
@@ -100,7 +103,18 @@ export default async function PeoplePage({
                 </span>
               </div>
 
-              <p className="quiet" style={{ fontSize: 13.5, margin: "5px 0 0", overflowWrap: "anywhere" }}>
+              {/*
+                Pozícia a pracovisko patria do prvého riadku pod meno: keď
+                personalista hľadá „správcu ihriska v Senci", je to presne to,
+                podľa čoho v zozname rozhoduje. Adresa a skupiny sú až potom.
+              */}
+              {(o.jobTitle || o.workplace) && (
+                <p className="quiet" style={{ fontSize: 13.5, margin: "5px 0 0" }}>
+                  {[o.jobTitle, workplaceLabel(o.workplace, workplaces)].filter(Boolean).join(" · ")}
+                </p>
+              )}
+
+              <p className="quiet" style={{ fontSize: 13.5, margin: "3px 0 0", overflowWrap: "anywhere" }}>
                 {o.email}
                 {o.department && ` · ${o.department}`}
                 {o.groups.length > 0 && ` · ${o.groups.join(", ")}`}

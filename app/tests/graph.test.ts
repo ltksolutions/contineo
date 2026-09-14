@@ -24,8 +24,10 @@ function person(z: Partial<Person> = {}): Person {
     groups: [],
     roles: [],
     givenName: "Jan",
+    surname: "Letko",
     department: "Legislativa",
     photoVersion: "abc",
+    directorySyncedAt: new Date("2026-09-01"),
     ...z,
   } as Person
 }
@@ -49,14 +51,28 @@ describe("cele meno z Graphu", () => {
 })
 
 describe("oplati sa ist do Graphu", () => {
-  it("kompletna osoba uz nic nepotrebuje", () => {
+  it("uz raz doplnena osoba nic nepotrebuje", () => {
     expect(missingFromDirectory(person())).toBe(false)
   })
 
-  it("chybajuce meno, utvar alebo fotka staci na jedno volanie", () => {
-    expect(missingFromDirectory(person({ givenName: undefined }))).toBe(true)
-    expect(missingFromDirectory(person({ department: undefined }))).toBe(true)
-    expect(missingFromDirectory(person({ photoVersion: undefined }))).toBe(true)
+  it("bez znamky sa ide do Graphu, aj ked je vsetko vyplnene (D88)", () => {
+    expect(missingFromDirectory(person({ directorySyncedAt: undefined }))).toBe(true)
+  })
+
+  it("rucne doplnene meno uz nezastavi doplnenie z adresara (D88)", () => {
+    // Pred D83 plnil givenName vyhradne Graph, takze "ma prazdny givenName"
+    // fungovalo ako otazka "bol tu uz adresar?". Odkedy ho vyplna aj
+    // personalista, ta otazka prestala platit: prva rucne zalozena osoba by sa
+    // z adresara nedozvedela ani poziciu, ani mobil, ani pracovisko.
+    const rucne = person({ givenName: "Jan", surname: "Letko", directorySyncedAt: undefined })
+    expect(missingFromDirectory(rucne)).toBe(true)
+  })
+
+  it("chybajuci utvar ani fotka uz na volanie nestacia", () => {
+    // Znamka hovori, ze adresar sme sa uz pytali. Ked utvar aj tak nedal,
+    // dalsie volanie ho nedodá — len zaplati dve poziadavky za nic.
+    expect(missingFromDirectory(person({ department: undefined }))).toBe(false)
+    expect(missingFromDirectory(person({ photoVersion: undefined }))).toBe(false)
   })
 
   it("meno rovne adrese sa berie ako chybajuce", () => {

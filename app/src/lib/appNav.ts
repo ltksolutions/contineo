@@ -16,7 +16,7 @@
 export type NavLayout = "sidebar" | "topbar"
 
 /** Kľúč do `dictionary().nav` — nie hotový text, aby zostal preložiteľný. */
-export type NavKey = "overview" | "ask" | "toAcknowledge" | "toApprove" | "goldenSet" | "library" | "assigned" | "evidence" | "people"
+export type NavKey = "overview" | "ask" | "toAcknowledge" | "toApprove" | "goldenSet" | "library" | "assigned" | "evidence" | "people" | "directory"
 
 export interface NavItem {
   href: string
@@ -69,6 +69,10 @@ export function navItems(flags: NavFlags, counts: NavCounts = {}): NavItem[] {
     // by mu zároveň dovolilo normy nahrávať a publikovať. Kto nemá čo
     // schvaľovať, uvidí, že nemá nič.
     { href: "/approvals", key: "toApprove" },
+    // Adresár vidí **každý prihlásený** (D87) — je to zoznam kolegov, nie
+    // správa prístupov. Podmieniť ho rolou by znamenalo mať adresár, do
+    // ktorého sa nepozrie ten, kto v tej organizácii pracuje.
+    { href: "/adresar", key: "directory" },
     ...(flags.isContentManager ? [{ href: "/library", key: "library" as const }] : []),
     ...(flags.isHr ? [{ href: "/hr", key: "assigned" as const }] : []),
     // Reťaz dôkazov je údaj o **ľuďoch**, nie o dokumentoch — vidí ju

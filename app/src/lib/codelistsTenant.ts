@@ -30,6 +30,23 @@ export const CODELIST_LABEL: Record<CustomCodelist, { name: string; hint: string
     name: "Značky",
     hint: "Voľné triedenie naprieč druhmi — napríklad mládež, rozhodcovia, financie.",
   },
+  workplace: {
+    name: "Pracoviská",
+    hint: "Mestá a obce, kde ľudia štandardne vykonávajú prácu — napríklad Bratislava, Senec.",
+  },
+}
+
+/**
+ * Kde ktorý číselník „býva" — teda čo sa počíta, keď sa pýtame na použitie.
+ *
+ * `workplace` popisuje ľudí, ostatné obsah (D85). Bez tohto rozlíšenia by
+ * počítadlo pri pracovisku vždy vrátilo nulu a personalista by z ponuky
+ * odoberal položku v domnení, že ju nikto nemá.
+ */
+const CODELIST_COLLECTION: Record<CustomCodelist, "documents" | "persons"> = {
+  category: "documents",
+  tags: "documents",
+  workplace: "persons",
 }
 
 export function isCustom(name: string): name is CustomCodelist {
@@ -109,12 +126,13 @@ export async function removeCodelistItem(
   })
 }
 
-/** Koľko dokumentov danú hodnotu používa — aby bolo vidieť, čo sa odoberá. */
+/** Koľko záznamov danú hodnotu používa — aby bolo vidieť, čo sa odoberá. */
 export async function codelistUsage(
   companyCode: string,
   codelist: string,
   key: string,
 ): Promise<number> {
-  const col = await getCollection("documents")
+  const where = isCustom(codelist) ? CODELIST_COLLECTION[codelist] : "documents"
+  const col = await getCollection(where)
   return col.countDocuments({ companyCode, [codelist]: key })
 }

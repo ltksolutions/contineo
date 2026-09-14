@@ -241,6 +241,14 @@ interface Dictionary {
   }
 
   /** Hlavička: navigácia, téma, účet. */
+  directory: {
+    heading: string
+    intro: string
+    searchPlaceholder: string
+    nothingFound: string
+    /** Tvar čísla je v každom jazyku iný, preto sa skladá tu. */
+    count: (n: number) => string
+  }
   nav: {
     ask: string
     goldenSet: string
@@ -254,6 +262,7 @@ interface Dictionary {
     toAcknowledge: string
     assigned: string
     people: string
+    directory: string
     library: string
     organisation: string
     tenants: string
@@ -1061,6 +1070,8 @@ interface Dictionary {
       added: string
       andMore: (n: number) => string
       skippedRows: string
+      unknownWorkplaces: string
+      badPhones: string
       statusNoteBefore: string
       statusNoteHighlight: string
       statusNoteAfter: string
@@ -1080,8 +1091,23 @@ interface Dictionary {
       email: string
       emailNote: string
       fullName: string
+      givenName: string
+      surname: string
+      nameNote: string
+      nameMissing: string
+      titleBefore: string
+      titleAfter: string
+      titlesNote: string
       jobTitle: string
       jobTitleNote: string
+      mobilePhone: string
+      mobilePhoneNote: string
+      workplace: string
+      workplaceNone: string
+      workplaceNote: string
+      noWorkplacesBefore: string
+      noWorkplacesLink: string
+      noWorkplacesAfter: string
       department: string
       departmentNone: string
       /** Veta s odkazom do nastavenia organizácie. */
@@ -1693,6 +1719,13 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       button: "Otvoriť a potvrdiť",
       note: "Dokument nájdete aj po prihlásení v zozname na úvodnej strane. Kým ho nepotvrdíte, zostane vám tam.",
     },
+  directory: {
+    heading: "Adresár",
+    intro: "Kolegovia vo vašej organizácii — pozícia, pracovisko a kontakt. Vyradení ľudia tu nie sú.",
+    searchPlaceholder: "Meno, pozícia, oddelenie alebo pracovisko…",
+    nothingFound: "Nikto nezodpovedá hľadaniu.",
+    count: n => (n === 1 ? "1 osoba" : n <= 4 ? `${n} osoby` : `${n} osôb`),
+  },
   nav: {
     ask: "Voľné otázky",
     goldenSet: "Zlatá sada",
@@ -1704,6 +1737,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     toAcknowledge: "Na potvrdenie",
     assigned: "Pridelené normy",
     people: "Osoby",
+    directory: "Adresár",
     library: "Knižnica",
     organisation: "Nastavenie organizácie",
     tenants: "Správa tenantov",
@@ -2325,6 +2359,11 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "person.alreadyInvited": "{email} je v organizácii už zapísaná.",
     "person.nameRequired": "Meno je povinné — bez neho je v zozname len adresa.",
     "person.nameRequiredShort": "Meno je povinné.",
+    "person.givenNameRequired": "Meno je povinné.",
+    "person.surnameRequired": "Priezvisko je povinné.",
+    "person.unknownWorkplace": "Pracovisko „{value}“ v číselníku organizácie nie je. Doplňte ho v Organizácia → Číselníky.",
+    "phone.noPrefix": "Číslu „{value}“ chýba predvoľba — napíšte ho s nulou (0905…) alebo medzinárodne (+421…).",
+    "phone.shape": "„{value}“ nevyzerá ako telefónne číslo.",
     "person.departmentNotFound": "Také oddelenie neexistuje.",
     "person.unknownType": "Neznámy typ osoby.",
 
@@ -2783,6 +2822,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       added: "Pribudnú",
       andMore: (n) => ` … a ďalších ${n}`,
       skippedRows: "Tieto riadky sa preskočia",
+      unknownWorkplaces: "Pracoviská, ktoré v číselníku nie sú — tieto riadky prejdú, len bez pracoviska:",
+      badPhones: "Čísla, ktoré sa nedali prečítať — tieto riadky prejdú, len bez telefónu:",
       statusNoteBefore: "Existujúcim osobám sa ",
       statusNoteHighlight: "nemení stav",
       statusNoteAfter: " — kto sa už prihlásil, zostáva prihlásený. Nevyplnený jazyk sa neprepíše.",
@@ -2806,8 +2847,23 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       email: "E-mailová adresa",
       emailNote: "Zmeniť sa dá — identita človeka na nej nestojí. Potvrdenia sa viažu na jeho záznam, nie na adresu, takže história zostáva celá a stará adresa sa uloží do jeho histórie. Zmení sa tým to, kam chodí prihlasovací odkaz; prihlásenie pracovným kontom funguje ďalej.",
       fullName: "Meno",
+      givenName: "Meno",
+      surname: "Priezvisko",
+      nameNote: "Z mena a priezviska sa skladá celé meno. Práve to sa zapíše do potvrdenia, ktoré človek podpíše — preto tituly do neho nevstupujú.",
+      nameMissing: "Meno a priezvisko tu ešte nie sú rozdelené. Doplňte ich — celé meno sa potom poskladá z nich.",
+      titleBefore: "Titul pred menom",
+      titleAfter: "Titul za menom",
+      titlesNote: "Evidenčné údaje. V potvrdeniach a v audite nie sú zámerne: titul pribudne počas života a ten istý človek by potom v starých záznamoch vystupoval pod iným menom.",
       jobTitle: "Pozícia",
       jobTitleNote: "Evidenčný údaj. Dopĺňa sa z pracovného konta, keď ho tam adresár má — ale len keď je tu prázdny, takže ručná oprava vydrží.",
+      mobilePhone: "Mobilný telefón",
+      mobilePhoneNote: "Vidí ho každý prihlásený v organizácii. Stačí zapísať s nulou (0905 123 456); uloží sa medzinárodne. Zahraničné číslo napíšte s predvoľbou (+420…).",
+      workplace: "Pracovisko",
+      workplaceNone: "— bez pracoviska —",
+      workplaceNote: "Mesto alebo obec, kde človek štandardne vykonáva prácu. Vyberá sa zo zoznamu, aby sa podľa neho dalo filtrovať.",
+      noWorkplacesBefore: "Zoznam pracovísk je zatiaľ prázdny — ",
+      noWorkplacesLink: "doplňte ich v číselníkoch",
+      noWorkplacesAfter: ".",
       department: "Oddelenie",
       departmentNone: "— bez oddelenia —",
       noDepartmentsBefore: "Štruktúra je zatiaľ prázdna. Oddelenia sa zakladajú v ",
@@ -3399,6 +3455,13 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       button: "Otevřít a potvrdit",
       note: "Dokument najdete i po přihlášení v seznamu na úvodní straně. Dokud jej nepotvrdíte, zůstane vám tam.",
     },
+  directory: {
+    heading: "Adresář",
+    intro: "Kolegové ve vaší organizaci — pozice, pracoviště a kontakt. Vyřazení lidé zde nejsou.",
+    searchPlaceholder: "Jméno, pozice, oddělení nebo pracoviště…",
+    nothingFound: "Nikdo neodpovídá hledání.",
+    count: n => (n === 1 ? "1 osoba" : n <= 4 ? `${n} osoby` : `${n} osob`),
+  },
   nav: {
     ask: "Volné otázky",
     goldenSet: "Zlatá sada",
@@ -3410,6 +3473,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     toAcknowledge: "K potvrzení",
     assigned: "Přidělené předpisy",
     people: "Osoby",
+    directory: "Adresář",
     library: "Knihovna",
     organisation: "Nastavení organizace",
     tenants: "Správa tenantů",
@@ -4031,6 +4095,11 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "person.alreadyInvited": "{email} je v organizaci už zapsaná.",
     "person.nameRequired": "Jméno je povinné — bez něj je v seznamu jen adresa.",
     "person.nameRequiredShort": "Jméno je povinné.",
+    "person.givenNameRequired": "Jméno je povinné.",
+    "person.surnameRequired": "Příjmení je povinné.",
+    "person.unknownWorkplace": "Pracoviště „{value}“ v číselníku organizace není. Doplňte ho v Organizace → Číselníky.",
+    "phone.noPrefix": "Číslu „{value}“ chybí předvolba — napište ho s nulou (0905…) nebo mezinárodně (+420…).",
+    "phone.shape": "„{value}“ nevypadá jako telefonní číslo.",
     "person.departmentNotFound": "Takové oddělení neexistuje.",
     "person.unknownType": "Neznámý typ osoby.",
 
@@ -4489,6 +4558,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       added: "Přibudou",
       andMore: (n) => ` … a dalších ${n}`,
       skippedRows: "Tyto řádky se přeskočí",
+      unknownWorkplaces: "Pracoviště, která v číselníku nejsou — tyto řádky projdou, jen bez pracoviště:",
+      badPhones: "Čísla, která se nedala přečíst — tyto řádky projdou, jen bez telefonu:",
       statusNoteBefore: "Existujícím osobám se ",
       statusNoteHighlight: "nemění stav",
       statusNoteAfter: " — kdo se už přihlásil, zůstává přihlášený. Nevyplněný jazyk se nepřepíše.",
@@ -4512,8 +4583,23 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       email: "E-mailová adresa",
       emailNote: "Změnit se dá — identita člověka na ní nestojí. Potvrzení se vážou na jeho záznam, ne na adresu, takže historie zůstává celá a stará adresa se uloží do jeho historie. Změní se tím to, kam chodí přihlašovací odkaz; přihlášení pracovním účtem funguje dál.",
       fullName: "Jméno",
+      givenName: "Jméno",
+      surname: "Příjmení",
+      nameNote: "Ze jména a příjmení se skládá celé jméno. Právě to se zapíše do potvrzení, které člověk podepíše — proto do něj tituly nevstupují.",
+      nameMissing: "Jméno a příjmení tu ještě nejsou rozdělené. Doplňte je — celé jméno se pak poskládá z nich.",
+      titleBefore: "Titul před jménem",
+      titleAfter: "Titul za jménem",
+      titlesNote: "Evidenční údaje. V potvrzeních a v auditu záměrně nejsou: titul přibude během života a tentýž člověk by pak ve starých záznamech vystupoval pod jiným jménem.",
       jobTitle: "Pozice",
       jobTitleNote: "Evidenční údaj. Doplňuje se z pracovního účtu, když ho tam adresář má — ale jen když je tu prázdný, takže ruční oprava vydrží.",
+      mobilePhone: "Mobilní telefon",
+      mobilePhoneNote: "Vidí ho každý přihlášený v organizaci. Stačí zapsat s nulou (0905 123 456); uloží se mezinárodně. Zahraniční číslo napište s předvolbou (+421…).",
+      workplace: "Pracoviště",
+      workplaceNone: "— bez pracoviště —",
+      workplaceNote: "Město nebo obec, kde člověk standardně vykonává práci. Vybírá se ze seznamu, aby se podle něj dalo filtrovat.",
+      noWorkplacesBefore: "Seznam pracovišť je zatím prázdný — ",
+      noWorkplacesLink: "doplňte je v číselnících",
+      noWorkplacesAfter: ".",
       department: "Oddělení",
       departmentNone: "— bez oddělení —",
       noDepartmentsBefore: "Struktura je zatím prázdná. Oddělení se zakládají v ",
@@ -5100,6 +5186,13 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       button: "Open and acknowledge",
       note: "You will also find the document in the list on the home page after signing in. It stays there until you acknowledge it.",
     },
+  directory: {
+    heading: "Directory",
+    intro: "Colleagues in your organisation — job title, workplace and contact details. People who have left are not listed.",
+    searchPlaceholder: "Name, job title, department or workplace…",
+    nothingFound: "Nobody matches that search.",
+    count: n => (n === 1 ? "1 person" : `${n} people`),
+  },
   nav: {
     ask: "Ask a question",
     goldenSet: "Golden set",
@@ -5111,6 +5204,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     toAcknowledge: "To acknowledge",
     assigned: "Assigned documents",
     people: "People",
+    directory: "Directory",
     library: "Library",
     organisation: "Organisation settings",
     tenants: "Tenant administration",
@@ -5731,6 +5825,11 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "person.alreadyInvited": "{email} is already recorded in the organisation.",
     "person.nameRequired": "The name is required — without it the list shows only the address.",
     "person.nameRequiredShort": "The name is required.",
+    "person.givenNameRequired": "The first name is required.",
+    "person.surnameRequired": "The surname is required.",
+    "person.unknownWorkplace": "The workplace “{value}” is not in the organisation's code list. Add it under Organisation → Code lists.",
+    "phone.noPrefix": "“{value}” has no dialling code — write it with a leading zero (0905…) or internationally (+421…).",
+    "phone.shape": "“{value}” does not look like a phone number.",
     "person.departmentNotFound": "There is no such department.",
     "person.unknownType": "Unknown person type.",
 
@@ -6189,6 +6288,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       added: "Will be added",
       andMore: (n) => ` … and ${n} more`,
       skippedRows: "These rows will be skipped",
+      unknownWorkplaces: "Workplaces not in the code list — these rows go through, just without a workplace:",
+      badPhones: "Numbers that could not be read — these rows go through, just without a phone:",
       statusNoteBefore: "Existing people ",
       statusNoteHighlight: "keep their status",
       statusNoteAfter: " — whoever has signed in stays signed in. An empty language field does not overwrite anything.",
@@ -6212,8 +6313,23 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       email: "Email address",
       emailNote: "It can be changed — a person's identity does not rest on it. Acknowledgements are tied to their record, not to the address, so the history stays whole and the old address is kept in their history. What changes is where the sign-in link goes; signing in with a work account keeps working.",
       fullName: "Name",
+      givenName: "First name",
+      surname: "Surname",
+      nameNote: "The full name is composed from the first name and the surname. That is what goes into the acknowledgement a person signs — which is why titles stay out of it.",
+      nameMissing: "The first name and surname have not been separated yet. Fill them in — the full name is then composed from them.",
+      titleBefore: "Title before the name",
+      titleAfter: "Title after the name",
+      titlesNote: "Record-keeping fields. They are deliberately absent from acknowledgements and the audit trail: a title is gained during a career, and the same person would then appear under a different name in older records.",
       jobTitle: "Job title",
       jobTitleNote: "A record-keeping field. It is filled in from the work account when the directory has it — but only while it is empty here, so a manual correction survives.",
+      mobilePhone: "Mobile phone",
+      mobilePhoneNote: "Visible to everyone signed in to the organisation. A local form (0905 123 456) is enough; it is stored internationally. Write a foreign number with its dialling code (+420…).",
+      workplace: "Workplace",
+      workplaceNone: "— no workplace —",
+      workplaceNote: "The town or city where the person normally works. Picked from a list so it can be filtered on.",
+      noWorkplacesBefore: "The list of workplaces is still empty — ",
+      noWorkplacesLink: "add them under code lists",
+      noWorkplacesAfter: ".",
       department: "Department",
       departmentNone: "— no department —",
       noDepartmentsBefore: "The structure is still empty. Departments are created in the ",
