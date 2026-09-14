@@ -240,6 +240,37 @@ interface Dictionary {
     note: string
   }
 
+  /** Moje potvrdenia — čo o mne systém eviduje (právo na prístup). */
+  myAcknowledgements: {
+    heading: string
+    intro: string
+    nothing: string
+    download: string
+    count: (n: number) => string
+    acknowledged: string
+    revoked: string
+    versionLine: (label: string, effectiveFrom: string) => string
+    whenLine: (when: string) => string
+    viaTrack: (track: string) => string
+    reason: (text: string) => string
+    footnoteBefore: string
+    footnoteGuide: string
+    footnoteAfter: string
+    /** Hlavičky stĺpcov v stiahnutom súbore. */
+    csv: {
+      type: string
+      document: string
+      version: string
+      effectiveFrom: string
+      acknowledgedAt: string
+      track: string
+      statement: string
+      reason: string
+      ip: string
+      browser: string
+    }
+  }
+
   /**
    * Návod. Obal obrazovky — samotný text je v `content/guide.ts`, aby sa
    * súvislý text na dve obrazovky nemiešal so zoznamom krátkych reťazcov.
@@ -1747,6 +1778,27 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       button: "Otvoriť a potvrdiť",
       note: "Dokument nájdete aj po prihlásení v zozname na úvodnej strane. Kým ho nepotvrdíte, zostane vám tam.",
     },
+  myAcknowledgements: {
+    heading: "Moje potvrdenia",
+    intro: "Čo o vás systém eviduje: ktoré znenia ste potvrdili, kedy a pod akým textom. Vidíte len seba a môžete si to stiahnuť.",
+    nothing: "Zatiaľ nemáte žiadne potvrdenie.",
+    download: "Stiahnuť ako CSV",
+    count: n => (n === 1 ? "1 záznam" : n <= 4 ? `${n} záznamy` : `${n} záznamov`),
+    acknowledged: "potvrdené",
+    revoked: "odvolané",
+    versionLine: (label, effectiveFrom) => `verzia ${label}, platná od ${effectiveFrom}`,
+    whenLine: when => `potvrdené ${when}`,
+    viaTrack: track => `z trasy ${track}`,
+    reason: text => `Dôvod: ${text}`,
+    footnoteBefore: "Ako celý postup funguje, je v ",
+    footnoteGuide: "Návode",
+    footnoteAfter: ". Ak vám tu niečo nesedí, ozvite sa personalistovi — záznam sa neupravuje, odvoláva sa a potvrdzuje nanovo.",
+    csv: {
+      type: "Typ", document: "Dokument", version: "Verzia", effectiveFrom: "Platná od",
+      acknowledgedAt: "Potvrdené", track: "Trasa", statement: "Znenie formulky",
+      reason: "Dôvod", ip: "IP adresa", browser: "Prehliadač",
+    },
+  },
   guide: {
     heading: "Návod",
     intro: "Ako sa dokument dostane do systému a čo sa s ním po ceste stane — od nahratia po inteligentné vyhľadávanie.",
@@ -3498,6 +3550,27 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       button: "Otevřít a potvrdit",
       note: "Dokument najdete i po přihlášení v seznamu na úvodní straně. Dokud jej nepotvrdíte, zůstane vám tam.",
     },
+  myAcknowledgements: {
+    heading: "Moje potvrzení",
+    intro: "Co o vás systém eviduje: která znění jste potvrdili, kdy a pod jakým textem. Vidíte jen sebe a můžete si to stáhnout.",
+    nothing: "Zatím nemáte žádné potvrzení.",
+    download: "Stáhnout jako CSV",
+    count: n => (n === 1 ? "1 záznam" : n <= 4 ? `${n} záznamy` : `${n} záznamů`),
+    acknowledged: "potvrzeno",
+    revoked: "odvoláno",
+    versionLine: (label, effectiveFrom) => `verze ${label}, platná od ${effectiveFrom}`,
+    whenLine: when => `potvrzeno ${when}`,
+    viaTrack: track => `z trasy ${track}`,
+    reason: text => `Důvod: ${text}`,
+    footnoteBefore: "Jak celý postup funguje, je v ",
+    footnoteGuide: "Návodu",
+    footnoteAfter: ". Pokud vám tu něco nesedí, ozvěte se personalistovi — záznam se neupravuje, odvolává se a potvrzuje znovu.",
+    csv: {
+      type: "Typ", document: "Dokument", version: "Verze", effectiveFrom: "Platná od",
+      acknowledgedAt: "Potvrzeno", track: "Trasa", statement: "Znění formulky",
+      reason: "Důvod", ip: "IP adresa", browser: "Prohlížeč",
+    },
+  },
   guide: {
     heading: "Návod",
     intro: "Jak se dokument dostane do systému a co se s ním cestou stane — od nahrání po inteligentní vyhledávání.",
@@ -5244,6 +5317,27 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       button: "Open and acknowledge",
       note: "You will also find the document in the list on the home page after signing in. It stays there until you acknowledge it.",
     },
+  myAcknowledgements: {
+    heading: "My acknowledgements",
+    intro: "What the system records about you: which versions you acknowledged, when, and under what wording. You see only your own records and can download them.",
+    nothing: "You have no acknowledgements yet.",
+    download: "Download as CSV",
+    count: n => (n === 1 ? "1 record" : `${n} records`),
+    acknowledged: "acknowledged",
+    revoked: "revoked",
+    versionLine: (label, effectiveFrom) => `version ${label}, effective from ${effectiveFrom}`,
+    whenLine: when => `acknowledged ${when}`,
+    viaTrack: track => `from track ${track}`,
+    reason: text => `Reason: ${text}`,
+    footnoteBefore: "How the whole process works is in the ",
+    footnoteGuide: "Guide",
+    footnoteAfter: ". If something here looks wrong, contact HR — a record is never edited; it is revoked and acknowledged again.",
+    csv: {
+      type: "Type", document: "Document", version: "Version", effectiveFrom: "Effective from",
+      acknowledgedAt: "Acknowledged", track: "Track", statement: "Statement",
+      reason: "Reason", ip: "IP address", browser: "Browser",
+    },
+  },
   guide: {
     heading: "Guide",
     intro: "How a document gets into the system and what happens to it along the way — from upload to smart search.",

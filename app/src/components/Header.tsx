@@ -420,6 +420,26 @@ export default function Header({
                     {t.guide.heading}
                   </Link>
 
+                  {/*
+                    Vlastné potvrdenia sú vedľa Návodu a vidí ich každý:
+                    doklad o tom, čo človek potvrdil, je jeho, nie výkaz
+                    personalistu.
+                  */}
+                  <Link
+                    href="/acknowledgements"
+                    role="menuitem"
+                    className="account-item"
+                    onClick={() => setPersonalOpen(false)}
+                  >
+                    <svg width="17" height="17" viewBox="0 0 18 18" aria-hidden="true"
+                      fill="none" stroke="currentColor" strokeWidth="1.6"
+                      strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M4.5 2.5h7l2.5 2.5v10.5h-9.5z" />
+                      <path d="M6.6 9.4l1.6 1.6 3.2-3.4" />
+                    </svg>
+                    {t.myAcknowledgements.heading}
+                  </Link>
+
                   <div className="account-divider" />
 
                   {ADMIN_ITEMS.map(o => (
