@@ -560,6 +560,13 @@ koná personalista, dôvod povinný, nový záznam namiesto úpravy starého.
 
 ### O5 — D79, etapa 2: analyzátor, dávka, stratégia „voľný text", obrazovky
 
+### O17 — vykresľovanie znenia predpisu
+
+- [x] **Znenie sa vykresľuje ako text, nie ako Markdown** ✅ 2026-09-14
+      Vydelený `FormattedText` (bez `"use client"`, použiteľný zo serverového aj klientskeho komponentu); prepnuté `/documents/[documentId]` a `/approvals`. Odsek normy `(N)` je samostatný blok — číslo zostáva v texte, `<ol>` by `(4a)` a preskočené číslovanie po novele prečíslovalo.
+- [ ] **Tabuľky** — renderer ich nepozná. Počkať, v akom tvare ich prepis vracia na ostrých predpisoch; kresliť to naslepo znamená hádať tvar vstupu
+- [ ] Poznámky pod čiarou a odkazy medzi predpismi — až keď bude vidieť ostrý text
+
 ### O6 — medzery rozhrania → `docs/DESIGN_GAP.md`
 
 Zoznam sa sem neprepisuje. Poradie podľa toho, čo blokuje prevádzku:

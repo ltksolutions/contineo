@@ -306,3 +306,55 @@ t("odkaz funguje aj v odrazke",
   vZozname[0].druh === "zoznam" &&
   vZozname[0].items[0].some(u => u.druh === "odkaz"),
   JSON.stringify(vZozname))
+
+// ── odseky normy `(N)` ───────────────────────────────────────────────────────
+//
+// Ten istý rozklad vykresľuje aj znenie predpisu (detail dokumentu,
+// schvaľovanie), nielen odpoveď modelu. V norme stoja odseky na susedných
+// riadkoch bez prázdneho riadku medzi nimi — bez vlastného pravidla by sa
+// zliali do jedného odstavca a z dvoch povinností by bola jedna veta.
+
+const norma = toBlocks(
+  "(1) Súťaže riadi riadiaci orgán.\n" +
+  "(2) Riadiaci orgán vydáva rozpis súťaže.\n" +
+  "(3) Rozpis súťaže je záväzný."
+)
+t("susedne odseky normy sa nezlejú",
+  norma.length === 3 && norma.every(b => b.druh === "odsek"),
+  JSON.stringify(norma.map(b => b.druh)))
+t("číslo odseku zostáva v texte",
+  norma[0].druh === "odsek" && text(norma[0].segments).startsWith("(1) "),
+  JSON.stringify(norma[0]))
+
+const poNovele = toBlocks("(4) Prvá.\n(4a) Vložená novelou.\n(6) Po vypustení piateho.")
+t("odsek s písmenom aj preskočené číslovanie sú samostatné bloky",
+  poNovele.length === 3,
+  JSON.stringify(poNovele.map(b => b.druh)))
+t("číslovanie sa neprepisuje na poradie",
+  poNovele[2].druh === "odsek" && text(poNovele[2].segments).startsWith("(6) "),
+  JSON.stringify(poNovele[2]))
+
+const podNadpisom = toBlocks(
+  "## Článok 3 — Rozpis súťaže\n" +
+  "(1) Riadiaci orgán vydáva rozpis.\n" +
+  "(2) Rozpis je záväzný."
+)
+t("nadpis článku a odseky pod ním",
+  podNadpisom.length === 3 &&
+  podNadpisom[0].druh === "nadpis" &&
+  podNadpisom[1].druh === "odsek" && podNadpisom[2].druh === "odsek",
+  JSON.stringify(podNadpisom.map(b => b.druh)))
+
+const viacriadkovy = toBlocks(
+  "(1) Prvá veta odseku\n" +
+  "pokračuje na ďalšom riadku.\n" +
+  "(2) Druhý odsek."
+)
+t("zalomenie vnútri odseku sa spojí medzerou",
+  viacriadkovy.length === 2 &&
+  viacriadkovy[0].druh === "odsek" &&
+  text(viacriadkovy[0].segments) === "(1) Prvá veta odseku pokračuje na ďalšom riadku.",
+  JSON.stringify(viacriadkovy))
+
+t("odkaz na poznámku v texte nie je odsek",
+  toBlocks("Podľa (1) a (2) písmena a) platí lehota.").length === 1)

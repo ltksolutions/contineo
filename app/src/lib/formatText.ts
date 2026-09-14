@@ -27,6 +27,23 @@ const BULLET = /^\s*[-*•]\s+(.*)$/
 const NUMBERED = /^\s*(\d+)[.)]\s+(.*)$/
 
 /**
+ * Odsek normy — `(1)`, `(2)`, `(3)` na začiatku riadku.
+ *
+ * **Prečo vlastné pravidlo.** Ten istý rozklad vykresľuje aj text predpisu
+ * (obrazovky potvrdenia, schvaľovania a detailu dokumentu). V norme stoja
+ * odseky na susedných riadkoch **bez prázdneho riadku medzi nimi** — a bez
+ * tohto pravidla by sa zliali do jedného odstavca, lebo riadky v odseku sa
+ * spájajú medzerou. Pri právnom texte je to neprijateľné: „(1)" a „(2)" sú
+ * dve samostatné povinnosti, nie jedna veta.
+ *
+ * Číslo **zostáva v texte**, nerobí sa z neho číslovaný zoznam. Odsek `(4a)`
+ * aj preskočené číslovanie po novele sú v normách bežné a `<ol>` by ich
+ * prečíslovalo — citácia by potom ukazovala na iný odsek, než na aký sa
+ * odvoláva človek.
+ */
+const NORM_PARAGRAPH = /^\(\d+[a-z]?\)\s/
+
+/**
  * Riadok, ktorý je celý tučný, je medzititulok — model ho oddeľuje iba
  * zalomením, nie prázdnym riadkom. Keby sme sa držali prázdnych riadkov,
  * zlial by sa s odsekom pod sebou a odpoveď by stratila členenie práve tam,
@@ -137,6 +154,15 @@ export function toBlocks(text: string): Block[] {
     if (!trimmed) {
       closeParagraph()
       closeList()
+      continue
+    }
+
+    // Nový odsek normy uzavrie predchádzajúci, aj keď medzi nimi nie je
+    // prázdny riadok. Text sa nemení — číslo zostáva jeho súčasťou.
+    if (NORM_PARAGRAPH.test(trimmed)) {
+      closeParagraph()
+      closeList()
+      paragraph.push(trimmed)
       continue
     }
 

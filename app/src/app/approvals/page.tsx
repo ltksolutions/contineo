@@ -20,6 +20,7 @@ import { brandingView } from "@/lib/tenants"
 import { tenantStyle } from "@/components/TenantHeader"
 import AppShell from "@/components/AppShell"
 import Notice from "@/components/Notice"
+import FormattedText from "@/components/FormattedText"
 import { normalizeLayout } from "@/lib/appNav"
 import { normalizeQuery, type RawQuery } from "@/lib/urlParams"
 import { dictionary, formatDate } from "@/lib/i18n"
@@ -116,8 +117,8 @@ export default async function ApprovalsPage({
                   <summary className="quiet" style={{ fontSize: 13.5, cursor: "pointer" }}>
                     {t.readText}
                   </summary>
-                  <article className="answer" style={{ whiteSpace: "pre-wrap", lineHeight: 1.7, marginTop: 10 }}>
-                    {text || t.noText}
+                  <article className="answer" style={{ lineHeight: 1.7, marginTop: 10 }}>
+                    {text ? <FormattedText text={text} /> : t.noText}
                   </article>
                 </details>
 

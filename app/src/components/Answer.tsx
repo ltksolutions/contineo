@@ -10,10 +10,9 @@
  */
 
 import type { Citation, AskResult } from "@/lib/sseClient"
-import Link from "next/link"
-import { toBlocks, cleanCitation, mergeCitations } from "@/lib/formatText"
+import FormattedText from "@/components/FormattedText"
+import { cleanCitation, mergeCitations } from "@/lib/formatText"
 import { formatUsd, formatEur, toEur } from "@/lib/pricing"
-import type { Segment } from "@/lib/formatText"
 import { dictionary, type UiLanguage } from "@/lib/i18n"
 
 /** Stav odpovede počas streamovania — kým nepríde `done`, máme len text. */
@@ -28,61 +27,11 @@ export interface AnswerState {
 /**
  * Vykreslenie textu modelu.
  *
- * Nikde tu nie je `dangerouslySetInnerHTML` — text prechádza cez
- * `naBloky()` a stáva sa obyčajnými React uzlami. Výstup modelu nad cudzími
- * dokumentmi sa nesmie dostať do DOM ako HTML.
+ * Rozklad aj vykreslenie sú v `FormattedText` — ten istý komponent zobrazuje
+ * aj znenie predpisu (detail dokumentu, schvaľovanie). Nikde v ňom nie je
+ * `dangerouslySetInnerHTML`: výstup modelu nad cudzími dokumentmi sa nesmie
+ * dostať do DOM ako HTML.
  */
-function Segments({ segments: segments }: { segments: Segment[] }) {
-  return (
-    <>
-      {segments.map((u, i) =>
-        u.druh === "tucne"
-          ? <strong key={i}>{u.text}</strong>
-          // Odkaz smeruje len dovnútra aplikácie — vzor v `formatText.ts`
-          // cudziu adresu neprepustí, takže `<Link>` je bezpečný.
-          : u.druh === "odkaz"
-            ? <Link key={i} href={u.href}>{u.text}</Link>
-            : <span key={i}>{u.text}</span>
-      )}
-    </>
-  )
-}
-
-function AnswerText({ text }: { text: string }) {
-  const blocks = toBlocks(text)
-  return (
-    <>
-      {blocks.map((b, i) =>
-        b.druh === "nadpis" ? (
-          <div
-            key={i}
-            style={{
-              // Úrovne sa líšia len jemne — odpoveď má mať jeden hlas,
-              // nie hierarchiu ako dokumentácia.
-              fontSize: b.level <= 2 ? 16.5 : 15.5,
-              fontWeight: 700,
-              margin: i === 0 ? "0 0 8px" : "18px 0 8px",
-            }}
-          >
-            <Segments segments={b.segments} />
-          </div>
-        ) : b.druh === "odsek" ? (
-          <p key={i} style={{ margin: "0 0 12px" }}>
-            <Segments segments={b.segments} />
-          </p>
-        ) : b.numbered ? (
-          <ol key={i} style={{ margin: "0 0 12px", paddingLeft: 22 }}>
-            {b.items.map((p, j) => <li key={j}><Segments segments={p} /></li>)}
-          </ol>
-        ) : (
-          <ul key={i} style={{ margin: "0 0 12px", paddingLeft: 22 }}>
-            {b.items.map((p, j) => <li key={j}><Segments segments={p} /></li>)}
-          </ul>
-        )
-      )}
-    </>
-  )
-}
 
 function Line({ label: label, value: value }: { label: string; value: string }) {
   return (
@@ -126,7 +75,7 @@ export default function Answer({ state: state, language }: { state: AnswerState;
           </div>
         ) : (
           <div className={running ? "answer caret" : "answer"}>
-            {text ? <AnswerText text={text} /> : (running ? null : "—")}
+            {text ? <FormattedText text={text} /> : (running ? null : "—")}
           </div>
         )}
 

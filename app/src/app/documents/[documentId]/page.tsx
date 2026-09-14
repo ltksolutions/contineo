@@ -21,6 +21,7 @@ import { loadDocumentFor, effectiveVersion } from "@/lib/documents"
 import { buildStatement, hasAcknowledged } from "@/lib/acknowledgements"
 import { dictionary, formatDate } from "@/lib/i18n"
 import AcknowledgeButton from "@/components/AcknowledgeButton"
+import FormattedText from "@/components/FormattedText"
 import ReadingTimer from "@/components/ReadingTimer"
 import Notice from "@/components/Notice"
 import AppShell from "@/components/AppShell"
@@ -112,8 +113,14 @@ export default async function DocumentPage({
 
       {version.ok && (
         <>
-          <article className="answer" style={{ whiteSpace: "pre-wrap", lineHeight: 1.7 }}>
-            {version.version.markdown ?? doc.markdown ?? ""}
+          {/*
+            Znenie prešlo prepisom cez model, takže je v markdowne. Vypísať ho
+            surovo znamená ukázať človeku „## Článok 3" a hviezdičky — a práve
+            tento text má pred potvrdením prečítať. Vykresľuje ho ten istý
+            komponent ako odpoveď vyhľadávania.
+          */}
+          <article className="answer" style={{ lineHeight: 1.7 }}>
+            <FormattedText text={version.version.markdown ?? doc.markdown ?? ""} />
           </article>
 
           {/*

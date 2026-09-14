@@ -4,6 +4,19 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Fixed (2026-09-14 — znenie predpisu sa vykresľuje ako text, nie ako Markdown)
+
+Na obrazovke schvaľovania a v detaile dokumentu sa znenie vypisovalo surové: čitateľ videl `## Článok 1 — Účel` aj s mriežkami a hviezdičky okolo zvýraznení. Je to presne ten text, ktorý má pred potvrdením prečítať — a ktorý svojím potvrdením zaväzuje sám seba.
+
+Príčina nie je chýbajúca knižnica, ale to, že rozklad Markdownu existoval **len pre odpoveď vyhľadávania**. Znenie predpisu ide cez prepis jazykovým modelom, takže je v Markdowne rovnako ako odpoveď — len sa vykresľovalo cez `white-space: pre-wrap`.
+
+- **Nový `FormattedText`** — vykresľovanie z `Answer.tsx` vydelené do komponentu bez `"use client"` a bez stavu, takže ho použije aj serverový komponent (detail dokumentu) aj klientsky (odpoveď). Naďalej nikde žiadne `dangerouslySetInnerHTML`: text sa mení na dátovú štruktúru a React ju vykreslí ako uzly.
+- **Odsek normy `(N)` je samostatný blok.** V norme stoja odseky na susedných riadkoch bez prázdneho riadku medzi nimi — bez vlastného pravidla by sa zliali do jedného odstavca a z dvoch povinností by bola jedna veta. Číslo **zostáva v texte**, nerobí sa `<ol>`: odsek `(4a)` aj preskočené číslovanie po novele sú v normách bežné a zoznam by ich prečísloval, takže by citácia ukazovala na iný odsek, než na aký sa odvoláva človek.
+- Prepnuté dve obrazovky: `/documents/[documentId]` a `/approvals`. Rozdielový náhľad v knižnici zostáva neproporcionálnym písmom — tam je surový text zámer.
+- Tabuľky renderer zatiaľ nepozná. Doplnia sa, až keď bude vidieť, v akom tvare ich prepis vracia na ostrých predpisoch.
+- Overené: `tsc` čisto, **1246 testov**, lint bez chýb.
+
+
 ### Fixed (2026-09-14 — prepis cez model bol pokazený a zahadzoval úroveň ČASŤ)
 
 Tri nálezy, všetky zo **skúšobného prepisu skutočného PDF**, nie z čítania kódu.
