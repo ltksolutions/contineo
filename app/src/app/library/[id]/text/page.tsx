@@ -88,15 +88,22 @@ export default async function EditorPage({
 
       {draft ? (
         <section className="card" style={{ padding: 18, display: "grid", gap: 12, margin: "0 0 18px" }}>
+          {/*
+            Štítok aj poznámka sa riadia tým, čo návrh naozaj vyrobilo.
+            Prečistenie členenia beží na pravidlách; povedať nad ním „návrh
+            modelu" by bolo tvrdenie o pôvode textu normy, a to je presne
+            ten údaj, ktorý musí sedieť.
+          */}
           <div className="audit-head">
-            <span className="tag">{t.modelDraft}</span>
+            <span className="tag">{draft.mode === "rewrite-scan" ? t.modelDraft : t.ruleDraft}</span>
             <strong>{draft.mode === "rewrite-scan" ? t.modeRewriteScan : t.modeClean}</strong>
             <span className="quiet" style={{ fontSize: 13 }}>
               {t.draftMeta(draft.model, formatDate(draft.at, language), draft.text.length)}
             </span>
           </div>
           <p className="quiet" style={{ fontSize: 13.5, margin: 0 }}>
-            {t.draftNoteBefore}<strong>{t.draftNoteHighlight}</strong>{t.draftNoteAfter}
+            {draft.mode === "rewrite-scan" ? t.draftNoteBefore : t.ruleNoteBefore}
+            <strong>{t.draftNoteHighlight}</strong>{t.draftNoteAfter}
           </p>
           <textarea className="field-input editor-text" readOnly rows={14} value={draft.text} />
           <form action={decideOnDraftAction} style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>

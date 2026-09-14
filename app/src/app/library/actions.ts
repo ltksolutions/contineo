@@ -355,7 +355,9 @@ export async function sendToModelAction(fd: FormData) {
       note: `${draft.mode} · ${draft.model} · ${draft.text.length} znakov`,
     })
 
-    message = say(self.language).modelReturnedDraft
+    message = mode === "rewrite-scan"
+      ? say(self.language).modelReturnedDraft
+      : say(self.language).rulesReturnedDraft
   } catch (e) {
     message = errorMessage(e, self.language)
     error = true

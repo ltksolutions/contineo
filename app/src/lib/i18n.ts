@@ -1498,10 +1498,14 @@ interface Dictionary {
       back: string
       intro: string
       modelDraft: string
+      /** Ten istý štítok, keď návrh nevyrobil model, ale pravidlá. */
+      ruleDraft: string
       modeRewriteScan: string
       modeClean: string
       draftMeta: (model: string, when: string, chars: number) => string
       draftNoteBefore: string
+      /** Ten istý riadok pre návrh z pravidiel — o modeli sa tam nehovorí. */
+      ruleNoteBefore: string
       draftNoteHighlight: string
       draftNoteAfter: string
       useAsDraft: string
@@ -1539,6 +1543,7 @@ interface Dictionary {
       alreadyPublished: string
       published: (chunks: number, archived: number) => string
       modelReturnedDraft: string
+      rulesReturnedDraft: string
       draftAccepted: string
       draftDiscarded: string
       assigned: string
@@ -3256,10 +3261,12 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       back: "← Späť na dokument",
       intro: "Porovnaj text s originálom. Publikovanie je samostatný krok — tu sa nič nepúšťa von.",
       modelDraft: "návrh modelu",
+      ruleDraft: "návrh podľa pravidiel",
       modeRewriteScan: "prepis skenu",
       modeClean: "prečistenie členenia",
       draftMeta: (model, when, chars) => `${model} · ${when} · ${chars} znakov`,
       draftNoteBefore: "Model mal zakázané meniť znenie — ",
+      ruleNoteBefore: "Pravidlá menia len značky členenia a odstraňujú pätičku strany, nie slová — ",
       draftNoteHighlight: "over to",
       draftNoteAfter: ". Prijatím sa návrh stane konceptom; pôvodný text sa tým prepíše.",
       useAsDraft: "Použiť ako koncept",
@@ -3297,6 +3304,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
         `Publikované: ${chunks} ${chunks === 1 ? "úsek" : chunks < 5 ? "úseky" : "úsekov"},` +
         ` ${archived} starých archivovaných.`,
       modelReturnedDraft: "Model vrátil návrh. Porovnaj ho s doterajším textom a rozhodni sa.",
+      rulesReturnedDraft: "Členenie je prečistené. Porovnaj návrh s doterajším textom a rozhodni sa.",
       draftAccepted: "Návrh je teraz konceptom. Publikovanie je stále samostatný krok.",
       draftDiscarded: "Návrh zahodený.",
       assigned: "Zaradené.",
@@ -5004,10 +5012,12 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       back: "← Zpět na dokument",
       intro: "Porovnej text s originálem. Publikování je samostatný krok — tady se nic nepouští ven.",
       modelDraft: "návrh modelu",
+      ruleDraft: "návrh podle pravidel",
       modeRewriteScan: "přepis skenu",
       modeClean: "pročištění členění",
       draftMeta: (model, when, chars) => `${model} · ${when} · ${chars} znaků`,
       draftNoteBefore: "Model měl zakázáno měnit znění — ",
+      ruleNoteBefore: "Pravidla mění jen značky členění a odstraňují patičku stránky, ne slova — ",
       draftNoteHighlight: "ověř to",
       draftNoteAfter: ". Přijetím se návrh stane konceptem; původní text se tím přepíše.",
       useAsDraft: "Použít jako koncept",
@@ -5045,6 +5055,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
         `Publikováno: ${chunks} ${chunks === 1 ? "úsek" : chunks < 5 ? "úseky" : "úseků"},` +
         ` ${archived} starých archivováno.`,
       modelReturnedDraft: "Model vrátil návrh. Porovnej ho s dosavadním textem a rozhodni se.",
+      rulesReturnedDraft: "Členění je pročištěné. Porovnej návrh s dosavadním textem a rozhodni se.",
       draftAccepted: "Návrh je teď konceptem. Publikování je stále samostatný krok.",
       draftDiscarded: "Návrh zahozen.",
       assigned: "Zařazeno.",
@@ -6747,10 +6758,12 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       back: "← Back to the document",
       intro: "Compare the text with the original. Publishing is a separate step — nothing goes out from here.",
       modelDraft: "model draft",
+      ruleDraft: "rule-based draft",
       modeRewriteScan: "scan transcription",
       modeClean: "structure cleanup",
       draftMeta: (model, when, chars) => `${model} · ${when} · ${chars} characters`,
       draftNoteBefore: "The model was forbidden to change the wording — ",
+      ruleNoteBefore: "The rules change only structure markers and remove the page footer, not words — ",
       draftNoteHighlight: "verify that",
       draftNoteAfter: ". Accepting turns the draft into the working text; the previous text is overwritten.",
       useAsDraft: "Use as draft",
@@ -6787,6 +6800,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       published: (chunks, archived) =>
         `Published: ${chunks} ${chunks === 1 ? "chunk" : "chunks"}, ${archived} older archived.`,
       modelReturnedDraft: "The model returned a draft. Compare it with the current text and decide.",
+      rulesReturnedDraft: "The structure has been cleaned up. Compare the draft with the current text and decide.",
       draftAccepted: "The draft is now the working text. Publishing is still a separate step.",
       draftDiscarded: "Draft discarded.",
       assigned: "Filed.",
