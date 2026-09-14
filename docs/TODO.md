@@ -249,7 +249,9 @@
 - [x] Tenant podľa hostiteľa; neznámy hostiteľ = zakázaný ✅ 2026-08-28 — **D29**. `app/src/lib/tenants.ts` (kolekcia `tenants`, cache kladných aj záporných výsledkov), `onboardingContext()` v `session.ts` skladá „tenant + osoba + patria k sebe" na jednom mieste — keby si to každá stránka robila sama, jedna z nich raz niektorú časť vynechá a vyzerá to ako fungujúca stránka. `scripts/tenant_set.mjs` + unikátny index `hostname_unique` (doména patrí najviac jednému tenantovi — databáza to drží aj vtedy, keď to skript prehliadne). 25 testov.
   - [ ] **Kontrola nie je v middleware**, ale v serverových komponentoch a route handleroch. Staršie plochy (`/`, `/sada`, `/api/chat`) sú chránené prihlásením, nie tenantom. Doplniť pri Fáze 5.
 - [x] **DNS pre `intranet.futbalsfz.sk`** ✅ 2026-08-28 — `CNAME intranet → 75b9ff58792d32ba.vercel-dns-016.com` (Websupport), doména vo Verceli overená, v kolekcii `tenants` priradená tenantovi `SFZ`. **Nie `internal.futbalsfz.sk`** — tá je obsadená (`CNAME` na `sportnet.online`) a prepnutie by odstavilo to, čo tam beží.
-- [ ] Vzhľad pre `intranet.futbalsfz.sk` — `tenants.branding` (logo, farba, kontakt) je pripravené, hodnoty chýbajú
+- [x] ~~Vzhľad pre `intranet.futbalsfz.sk`~~ — **hodnoty sú nastavené** ✅ overené 2026-09-14
+      Názov „Slovenský futbalový zväz", skratka „SFZ", akcentová farba `#1450DF`, logo PNG 127 kB, kontakt `intranet@futbalsfz.sk`. Zápis „hodnoty chýbajú" bol zastaraný.
+- [ ] **`branding.logoUrl` ukazuje na `/api/znacka/sfz`** — cesta sa medzitým premenovala na `/api/brand/<code>`. Funguje to cez presmerovanie (`lib/legacyRoutes.ts`), takže logo sa zobrazuje, ale každé načítanie hlavičky stojí jedno presmerovanie navyše. Prepísať uloženú hodnotu
 - [ ] Osoba vidí a stiahne si **svoje** potvrdenia
 
 **I3. Brána pred ostrou prevádzkou**
@@ -568,6 +570,8 @@ koná personalista, dôvod povinný, nový záznam namiesto úpravy starého.
 - [ ] Obrázky alebo snímky obrazovky — zatiaľ zámerne nie: rozhranie sa mení a snímka, ktorá prestane platiť, klame viac než veta
 
 ### O19 — nácvik nanečisto pred ostrými dokumentmi
+
+- [ ] **`delete_documents.mjs` nechá osirené väzby** — `--aj-s-vazbami` znamená „viem, že má väzby, zmaž dokument aj tak", nie „zmaž aj tie väzby". Po zmazaní `sfz:nacvik_dp` zostalo potvrdenie, pridelenie a kolo schvaľovania ukazujúce na neexistujúci dokument a `npm run check` to nahlásil ako rozpor. **Dôležité pred zmazaním skúšobného korpusu.** Upratané ručne 2026-09-14; skript treba opraviť alebo prepínač premenovať
 
 - [x] **Prechod celej cesty na ostrom PDF** ✅ 2026-09-14 — šesť nálezov, podrobne v `CHANGELOG.md`. Cesta cez rozhranie sa dovtedy nikdy neprešla: dnešných desať noriem sa nahrávalo skriptom.
 - [x] **Nácvik dobehol celú cestu** ✅ 2026-09-14 — schválila A. G. (nahrávateľ schvaľovať nesmie, D69), zverejnené ako `nácvik 1`, index 115 úsekov / 114 s článkom, vyhľadávanie odpovedalo správne z čl. 12 ods. 6, pridelené sebe, potvrdené. Dôkazný záznam úplný vrátane cesty oddelení.

@@ -16,25 +16,44 @@ by výsledok tvrdil niečo, čo nie je pravda.
 
 ## 1. Ikonový set
 
-**Otázka:** Zavedieme ikonový set ako závislosť, alebo zostane navigácia bez ikon?
+**Otázka:** Zavedieme ikonový set ako závislosť, alebo zostanú ručne kreslené ikony?
 
-**Čo systém dnes vie.** Ikony v navigácii nie sú. V `Header.tsx` je päť ručne
-kreslených SVG (téma, nastavenia, odhlásenie, návod, potvrdenia). `docs/design/README.md`
-hovorí doslova: *„nahradiť ikonovým setom projektu (SVG, `currentColor`, 16 px).
-**Nekresliť nové SVG od ruky.**"* Set projekt nemá.
+> **Oprava z 2026-09-14.** Prvá verzia tohto bodu tvrdila, že „README zakazuje
+> kresliť vlastné SVG". To bolo **zavádzajúce** a Ján Letko to správne
+> spochybnil. V projekte sú **dve rôzne pravidlá o SVG** a majú spolu len
+> meno:
+>
+> 1. **`lib/branding.ts` — bezpečnosť.** SVG je zakázané ako **nahrané logo
+>    tenanta**, doslova: *„je to spustiteľný dokument, môže obsahovať skript,
+>    a servírovať ho z našej domény by znamenalo pustiť cudzí kód na doménu,
+>    na ktorej sa potvrdzujú smernice."* Toto platí a nemení sa.
+> 2. **`docs/design/README.md` — vzhľad, nie bezpečnosť.** *„Ikony sú
+>    v prototype textové znaky — v produkcii ich nahradiť ikonovým setom
+>    projektu (SVG, `currentColor`, 16 px). Nekresliť nové SVG od ruky."*
+>    Je to pravidlo o jednotnosti ikon, nie o riziku. Naše vlastné SVG
+>    v komponentoch je náš kód, nie cudzí obsah.
+>
+> Rozhodnutie je teda **estetické a údržbové**, nie bezpečnostné.
 
-**Návrh.** Zaviesť jeden set (Lucide alebo Heroicons — oba MIT, oba majú
-`currentColor` a 16/24 px varianty) a prekresliť naň aj tých päť existujúcich.
-Kresliť šesť vlastných ikon do navigácie je presne to, čo README zakazuje, a má
-to dôvod: ručne kreslené ikony sa rozídu vo váhe ťahu a v optickej veľkosti,
-čo je vidieť až vedľa seba.
+**Čo systém dnes vie.** Navigácia je bez ikon. V `Header.tsx` je **sedem
+ručne kreslených SVG** (téma v troch stavoch, nastavenia, odhlásenie, návod,
+moje potvrdenia) — dve z nich pribudli 14. 9. 2026. Projekt teda to pravidlo
+z README **už dnes nedodržiava**.
 
-**Čo to stojí.** Nová závislosť (~50 kB, tree-shakeable), pol dňa práce vrátane
-prekreslenia existujúcich.
+**Návrh.** Zaviesť jeden set (Lucide alebo Heroicons, oba MIT, oba
+`currentColor` a 16/24 px) a prekresliť naň aj tých sedem. Dôvod je ten, ktorý
+mal README na mysli: ručne kreslené ikony sa rozchádzajú vo váhe ťahu
+a v optickej veľkosti, a je to vidieť až vtedy, keď stoja vedľa seba
+v jednom menu.
+
+**Protiargument, ktorý stojí za zváženie:** sedem ikon je málo a závislosť je
+navždy. Ak povieš „ručne kreslené sú náš vzhľad", je to legitímna odpoveď —
+len potom treba zladiť tie existujúce a prestať sa odvolávať na README.
+
+**Čo to stojí.** Set: nová závislosť (~50 kB, tree-shakeable), pol dňa
+vrátane prekreslenia. Zladiť ručné: pár hodín, žiadna závislosť.
 
 **Rozhodnutie:** ______________________________________________
-
----
 
 ## 2. Položky navigácie
 
@@ -256,4 +275,4 @@ filtroch, 3. Uložiť pohľad, 4. súvisiace predpisy, 5. ďalšie zhody.
 - **Krok 3 nahrávania (schvaľovatelia)** a zoznam **„Verzie a schválenie"** na
   detaile — to je grafika k hotovému rozhodnutiu (ADR-006), netreba k tomu ďalšie.
 - **Tlačidlo „Nová verzia" na detaile** — rieši O3.
-- **Branding** (logo, akcentová farba) — čaká na hodnoty od teba, nie na rozhodnutie.
+- **Branding** — **už je nastavený** (overené v databáze 2026-09-14): názov, skratka „SFZ", akcentová farba `#1450DF`, logo PNG 127 kB, kontaktná adresa. Nečaká sa na nič. Zápis v `TODO.md`, že „hodnoty chýbajú", bol zastaraný a je opravený.
