@@ -1255,6 +1255,17 @@ interface Dictionary {
       colVersion: string
       /** Odkedy platí znenie, ktoré platí teraz. */
       colEffectiveFrom: string
+      /**
+       * Dokedy platí. Vlastný stĺpec, **nie štvrtá hodnota facetu Stav** (O6/10):
+       * stav hovorí, kde je dokument v procese, platnosť je iná os.
+       */
+      colEffectiveTo: string
+      /**
+       * Koľko pridelených ľudí platné znenie potvrdilo. Percento sa nikdy
+       * nepíše samo — menovateľ je pri ňom (O6/7).
+       */
+      colAcknowledged: string
+      acknowledgedOf: (acknowledged: number, assigned: number) => string
       colChanged: string
       exportCsv: string
       sortBy: (column: string) => string
@@ -3061,6 +3072,9 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       colDocument: "Dokument",
       colVersion: "Platné znenie",
       colEffectiveFrom: "Platnosť od",
+      colEffectiveTo: "Platnosť do",
+      colAcknowledged: "Potvrdenia",
+      acknowledgedOf: (acknowledged, assigned) => `${acknowledged} z ${assigned} pridelených`,
       colChanged: "Zmenené",
       exportCsv: "Export CSV",
       sortBy: (column) => `Zoradiť podľa ${column}`,
@@ -4846,6 +4860,9 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       colDocument: "Dokument",
       colVersion: "Platné znění",
       colEffectiveFrom: "Platnost od",
+      colEffectiveTo: "Platnost do",
+      colAcknowledged: "Potvrzení",
+      acknowledgedOf: (acknowledged, assigned) => `${acknowledged} z ${assigned} přidělených`,
       colChanged: "Změněno",
       exportCsv: "Export CSV",
       sortBy: (column) => `Seřadit podle ${column}`,
@@ -6625,6 +6642,9 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       colDocument: "Document",
       colVersion: "Effective version",
       colEffectiveFrom: "Effective from",
+      colEffectiveTo: "Effective to",
+      colAcknowledged: "Acknowledged",
+      acknowledgedOf: (acknowledged, assigned) => `${acknowledged} of ${assigned} assigned`,
       colChanged: "Changed",
       exportCsv: "Export CSV",
       sortBy: (column) => `Sort by ${column}`,

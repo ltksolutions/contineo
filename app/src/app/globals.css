@@ -1795,7 +1795,10 @@ html[data-theme="dark"] .editor-tui .CodeMirror {
 
 .doc-table {
   width: 100%;
-  min-width: 720px;
+  /* Deväť stĺpcov, nie sedem: pribudlo „Platnosť do" a „Potvrdenia" (O6/7,
+     O6/10). Bez zvýšenia spodnej hranice by sa o tú šírku stlačili ostatné
+     a dátumy by sa zalomili — čo je presne to, čomu `min-width` bráni. */
+  min-width: 880px;
   border-collapse: collapse;
   font-size: var(--font-row);
 }

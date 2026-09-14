@@ -40,6 +40,13 @@ export interface LibraryRow {
    * znenie s budúcou účinnosťou) a v zozname sa má dať odlíšiť od dátumu.
    */
   effectiveFrom: Date | null
+  /** Dokedy platí. `null` = do odvolania, alebo neplatí nič. */
+  effectiveTo: Date | null
+  /**
+   * Znenie, ktoré platí teraz. Potvrdenia sa viažu naň, nie na dokument (D28),
+   * takže bez neho sa stĺpec s potvrdeniami nedá naplniť.
+   */
+  effectiveVersionId?: string
   hasDraft: boolean
   originalFile?: { name: string; type: string; bytes: number }
   updatedAt?: Date
@@ -103,6 +110,23 @@ function validityFrom(doc: { versions?: Version[] }): Date | null {
   return v.ok && v.version.effectiveFrom ? new Date(v.version.effectiveFrom) : null
 }
 
+/**
+ * Dokedy platí znenie, ktoré platí teraz. `null` = bez konca alebo bez znenia.
+ *
+ * Prázdna hodnota je **bežný stav**, nie chýbajúci údaj: väčšina predpisov
+ * platí do odvolania a dátum konca dostane až novela, ktorá ich nahradí.
+ */
+function validityTo(doc: { versions?: Version[] }): Date | null {
+  const v = effectiveVersion(doc as never)
+  return v.ok && v.version.effectiveTo ? new Date(v.version.effectiveTo) : null
+}
+
+/** Identita znenia, ktoré platí teraz — kľúč k potvrdeniam (D57). */
+function effectiveVersionId(doc: { versions?: Version[] }): string | undefined {
+  const v = effectiveVersion(doc as never)
+  return v.ok ? v.version.versionId : undefined
+}
+
 type RawRow = Record<string, unknown> & { versions?: Version[] }
 
 function toRow(d: RawRow): LibraryRow {
@@ -121,6 +145,8 @@ function toRow(d: RawRow): LibraryRow {
     versionCount: (d.versions ?? []).length,
     effectiveLabel: validityLabel(d),
     effectiveFrom: validityFrom(d),
+    effectiveTo: validityTo(d),
+    effectiveVersionId: effectiveVersionId(d),
     hasDraft: Boolean(String(d.draftMarkdown ?? "").trim()),
     originalFile: original
       ? { name: original.name, type: original.type, bytes: original.bytes }

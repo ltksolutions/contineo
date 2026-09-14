@@ -12,6 +12,7 @@ import { libraryContext } from "@/lib/library"
 import { libraryList, libraryFacets } from "@/lib/libraryRead"
 import { allFolders, flattenTree, subtree, counts, depth, MAX_DEPTH } from "@/lib/folders"
 import { allDepartments } from "@/lib/departments"
+import { documentsProgress } from "@/lib/libraryProgress"
 import { codelistOptions } from "@/lib/codelists"
 import { tenantExtras } from "@/lib/codelistsTenant"
 import Select from "@/components/Select"
@@ -139,6 +140,16 @@ export default async function LibraryPage({
   const sort = currentSort(filters)
   const paged = pageRows(sortRows(rows, sort.key, sort.dir), pageOf(filters))
   const view = currentView(filters)
+  /*
+   * Potvrdenia len pre **viditeľnú stranu**, teda až po stránkovaní a nie
+   * v `Promise.all` vyššie. Počítať ich pre celý zoznam by znamenalo počítať
+   * publiká aj pre riadky, ktoré nikto neuvidí; takto sú to tri dotazy na
+   * najviac dvadsaťpäť riadkov, nech má knižnica dokumentov koľkokoľvek.
+   */
+  const progress = await documentsProgress(
+    ctx.tenant.companyCode,
+    paged.rows.map(r => r.effectiveVersionId).filter((v): v is string => Boolean(v)),
+  )
   const tb = t.builder
   const tl = t.bulk
   const conditions = filters.conditions
@@ -752,6 +763,13 @@ export default async function LibraryPage({
 
                 <div className="quiet doc-meta doc-card-foot">
                   {r.effectiveLabel}
+                  {r.effectiveTo && ` · ${t.colEffectiveTo} ${formatDate(r.effectiveTo, uiLanguage)}`}
+                  {(() => {
+                    const p = r.effectiveVersionId ? progress.get(r.effectiveVersionId) : undefined
+                    return p && p.percent !== null
+                      ? ` · ${p.percent} % (${t.acknowledgedOf(p.acknowledged, p.assigned)})`
+                      : ""
+                  })()}
                   {r.updatedAt && ` · ${formatDate(r.updatedAt, uiLanguage)}`}
                 </div>
               </li>
@@ -792,6 +810,8 @@ export default async function LibraryPage({
                   ))}
                   <th scope="col">{t.colVersion}</th>
                   <th scope="col" className="doc-col-date">{t.colEffectiveFrom}</th>
+                  <th scope="col" className="doc-col-date">{t.colEffectiveTo}</th>
+                  <th scope="col">{t.colAcknowledged}</th>
                   <th scope="col" className="doc-col-right">
                     <Link href={toQuery(sortBy(filters, "updatedAt"))} className="doc-sort"
                           aria-label={t.sortBy(t.colChanged)}>
@@ -854,6 +874,38 @@ export default async function LibraryPage({
                     */}
                     <td className="doc-cell-quiet doc-col-date">
                       {r.effectiveFrom ? formatDate(r.effectiveFrom, uiLanguage) : "—"}
+                    </td>
+                    {/*
+                      Prázdne „platné do" znamená **do odvolania**, nie chýbajúci
+                      údaj — preto tá istá pomlčka ako pri „platná od" a nie
+                      prázdna bunka.
+                    */}
+                    <td className="doc-cell-quiet doc-col-date">
+                      {r.effectiveTo ? formatDate(r.effectiveTo, uiLanguage) : "—"}
+                    </td>
+                    {/*
+                      Percento **nikdy samo** (O6/7): pod ním je menovateľ.
+                      „100 %" pri dokumente pridelenom trom ľuďom a „100 %" pri
+                      dokumente pridelenom štyristo ľuďom sú dve rôzne správy
+                      a bez menovateľa vyzerajú rovnako.
+
+                      Pomlčka znamená „nikomu nepridelené", nie „nikto
+                      nepotvrdil" — to sú dve rôzne veci a nula by z prvého
+                      spravila druhé.
+                    */}
+                    <td className="doc-cell-quiet">
+                      {(() => {
+                        const p = r.effectiveVersionId ? progress.get(r.effectiveVersionId) : undefined
+                        if (!p || p.percent === null) return "—"
+                        return (
+                          <>
+                            {p.percent} %
+                            <div className="quiet doc-meta">
+                              {t.acknowledgedOf(p.acknowledged, p.assigned)}
+                            </div>
+                          </>
+                        )
+                      })()}
                     </td>
                     <td className="doc-col-right doc-cell-quiet">
                       {r.updatedAt ? formatDate(r.updatedAt, uiLanguage) : "—"}
