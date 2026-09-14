@@ -119,6 +119,8 @@ export async function uploadAction(fd: FormData) {
       language: fieldText(fd, "language"),
       category: fieldText(fd, "category") || undefined,
       tags: fd.getAll("tags").filter((t): t is string => typeof t === "string"),
+      ownerDepartmentId: fieldText(fd, "ownerDepartmentId") || undefined,
+      internalNumber: fieldText(fd, "internalNumber") || undefined,
     }, self.extras)
 
     // Táto obrazovka zakladá **nový** dokument. Keď kľúč už existuje, zápis
@@ -191,6 +193,11 @@ export async function uploadVersionAction(fd: FormData) {
       language: String(before.language ?? ""),
       category: (before.category as string | null) ?? undefined,
       tags: Array.isArray(before.tags) ? (before.tags as string[]) : [],
+      // Aj tieto dve sa berú z existujúceho záznamu, nie z formulára —
+      // z rovnakého dôvodu ako všetko ostatné vyššie: nové znenie mení text,
+      // nie to, kto dokument spravuje ani pod akým číslom je vedený.
+      ownerDepartmentId: (before.ownerDepartmentId as string | null) ?? undefined,
+      internalNumber: (before.internalNumber as string | null) ?? undefined,
     }, self.extras)
 
     const v = await uploadDocument(
@@ -417,6 +424,8 @@ export async function saveDocumentMetadataAction(fd: FormData) {
       language: fieldText(fd, "language"),
       category: fieldText(fd, "category") || undefined,
       tags: fd.getAll("tags").filter((t): t is string => typeof t === "string"),
+      ownerDepartmentId: fieldText(fd, "ownerDepartmentId") || undefined,
+      internalNumber: fieldText(fd, "internalNumber") || undefined,
     }, self.email, self.extras)
   } catch (e) {
     message = errorMessage(e, self.language)

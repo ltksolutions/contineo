@@ -10,7 +10,7 @@ import { AppError } from "../src/lib/appError"
 import { readFileSync } from "node:fs"
 import { describe, it, expect } from "vitest"
 import { checkValue, checkList, CodelistError, KEY_PATTERN } from "../src/lib/codelists"
-import { makeDocumentId, checkMetadata, LibraryError } from "../src/lib/libraryWrite"
+import { makeDocumentId, checkMetadata, LibraryError, MAX_INTERNAL_NUMBER } from "../src/lib/libraryWrite"
 import { versionFixProblem } from "../src/lib/textFix"
 
 describe("ciselniky", () => {
@@ -122,6 +122,38 @@ describe("metadata z formulara", () => {
         expect((e as AppError).code, invalid).toBe("library.documentKeyShape")
       }
     }
+  })
+
+  it("nepovinne polia chybaju, ked ich nikto nevyplnil", () => {
+    // Nevyplnene nepovinne pole nesmie vzniknut ako prazdny retazec: v zozname
+    // by potom bola prazdna bunka, ktora vyzera ako chybajuci udaj, a nie ako
+    // udaj, ktory dokument nema.
+    const m = checkMetadata(base)
+    expect(m.ownerDepartmentId).toBeUndefined()
+    expect(m.internalNumber).toBeUndefined()
+  })
+
+  it("interne cislo sa oreze a prazdne zmizne", () => {
+    expect(checkMetadata({ ...base, internalNumber: "  12/2024  " }).internalNumber).toBe("12/2024")
+    expect(checkMetadata({ ...base, internalNumber: "   " }).internalNumber).toBeUndefined()
+  })
+
+  it("interne cislo dlhsie nez limit je chyba s prelozitelnym kodom", () => {
+    // Do stlpca v zozname patri oznacenie, nie veta.
+    try {
+      checkMetadata({ ...base, internalNumber: "x".repeat(MAX_INTERNAL_NUMBER + 1) })
+      throw new Error("malo to zlyhat")
+    } catch (e) {
+      expect((e as AppError).code).toBe("library.internalNumberTooLong")
+    }
+  })
+
+  it("oddelenie sa tu neoveruje proti ciselniku, len oreze", () => {
+    // Oddelenia su strom v databaze, iny pre kazdu organizaciu. Ze existuje,
+    // overuje `checkOwnerDepartment()` v zapise — `checkMetadata()` je cista
+    // funkcia a ma nou zostat.
+    expect(checkMetadata({ ...base, ownerDepartmentId: " abc " }).ownerDepartmentId).toBe("abc")
+    expect(checkMetadata({ ...base, ownerDepartmentId: "" }).ownerDepartmentId).toBeUndefined()
   })
 
   it("bez nazvu to neprejde", () => {

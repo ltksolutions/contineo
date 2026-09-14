@@ -44,6 +44,16 @@ export interface LibraryRow {
   originalFile?: { name: string; type: string; bytes: number }
   updatedAt?: Date
   updatedBy?: string
+  /**
+   * Oddelenie, ktoré dokument spravuje (D49). `null` = nevyplnené.
+   *
+   * V riadku je len identifikátor, nie názov: názvy oddelení sú v inej
+   * kolekcii a ťahať ich pri každom riadku by znamenalo dotaz na dokument.
+   * Strom sa načíta raz na obrazovke a názov sa doplní tam.
+   */
+  ownerDepartmentId?: string | null
+  /** Interné číslo predpisu. Nie každý ho má. */
+  internalNumber?: string
 }
 
 export interface LibraryDetail extends LibraryRow {
@@ -117,6 +127,8 @@ function toRow(d: RawRow): LibraryRow {
       : undefined,
     updatedAt: d.updatedAt as Date | undefined,
     updatedBy: d.updatedBy ? String(d.updatedBy) : undefined,
+    ownerDepartmentId: (d.ownerDepartmentId as string | null | undefined) ?? null,
+    internalNumber: d.internalNumber ? String(d.internalNumber) : undefined,
   }
 }
 
@@ -248,6 +260,9 @@ export function queryParts(
           { title: { $regex: safe, $options: "i" } },
           { documentId: { $regex: safe, $options: "i" } },
           { sectionKey: { $regex: safe, $options: "i" } },
+          // Interné číslo je to, čím predpis volá polovica domu („12/2024").
+          // Keby sa podľa neho nedalo hľadať, bolo by to pole na pozeranie.
+          { internalNumber: { $regex: safe, $options: "i" } },
         ],
       },
     })
@@ -413,6 +428,7 @@ export async function libraryList(
         documentId: 1, title: 1, sectionKey: 1, category: 1, language: 1, accessLevel: 1,
         tags: 1, status: 1, processingStatus: 1, draftMarkdown: 1, originalFile: 1,
         folderId: 1, folderPath: 1, updatedAt: 1, updatedBy: 1,
+        ownerDepartmentId: 1, internalNumber: 1,
         // Z verzií len to, čo treba na „ktoré znenie platí" — samotné texty
         // znení sú veľké a v zozname by sa ťahali zbytočne.
         "versions.versionId": 1, "versions.label": 1, "versions.isActive": 1,

@@ -151,6 +151,14 @@ export interface DocumentRecord {
   versionId?: string
   effectiveFrom?: Date | null
   effectiveTo?: Date | null
+  /**
+   * Oddelenie, ktoré dokument spravuje (D49). Nepovinné.
+   *
+   * Vlastníctvo, nie adresát: kto ho má potvrdiť, hovoria `assignments`.
+   */
+  ownerDepartmentId?: string | null
+  /** Interné číslo predpisu. Nie každý ho má, preto nepovinné. */
+  internalNumber?: string | null
 }
 
 /** Prečo dokument nemá platné znenie — aby sa dalo povedať niečo konkrétne. */

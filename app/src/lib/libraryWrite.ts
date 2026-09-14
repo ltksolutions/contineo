@@ -36,6 +36,7 @@ import { toChunkerProfile, chunkingFor, type ChunkingProfile, type ChunkingProfi
 import { TENANTS_COLLECTION } from "./tenants"
 import { AppError } from "./appError"
 import { publishBlock } from "./approvals"
+import { allDepartments } from "./departments"
 import { versionStateFor } from "./approvalsDb"
 
 export const CHUNKS_COLLECTION = "document_chunks"
@@ -98,9 +99,80 @@ export interface DocumentMetadata {
   category?: string
   sourceType?: string
   tags?: string[]
+  /**
+   * Oddelenie, ktoré dokument spravuje. Nepovinné.
+   *
+   * **Je to vlastníctvo, nie adresát.** Kto má dokument potvrdiť, vyplýva
+   * z pridelení (`assignments`) a mení sa pri každom nástupe; kto ho
+   * udržiava, je vlastnosť dokumentu a mení sa zriedka. Jedno pole pre oboje
+   * by znamenalo, že smernicu o cestovných náhradách nemožno zveriť
+   * ekonomickému oddeleniu bez toho, aby ju potvrdzovalo len ono.
+   *
+   * Odkazuje do stromu oddelení (D49) nemenným `id`, nie názvom: názov sa
+   * mení, väzba nie. Voľný text by vrátil presne to, čo D49 odstránilo —
+   * „Legislatíva", „legislatíva" a „Legislat." ako tri oddelenia.
+   */
+  ownerDepartmentId?: string
+  /**
+   * Interné číslo predpisu. Nepovinné.
+   *
+   * **Nie je to identita dokumentu** — tou je `documentKey` — a nie každý
+   * predpis ho má. Preto nepovinné a preto **nikdy nevstupuje do formulky
+   * potvrdenia**: medzera vo vete, pod ktorú sa človek podpisuje, vyzerá ako
+   * chyba systému, nie ako to, že číslo neexistuje.
+   */
+  internalNumber?: string
 }
 
 export class LibraryError extends AppError {}
+
+/**
+ * Najväčšia dĺžka interného čísla.
+ *
+ * Nie je to technický limit, je to hranica medzi číslom a poznámkou. Do
+ * stĺpca v zozname sa zmestí krátke označenie („12/2024"), nie veta.
+ */
+export const MAX_INTERNAL_NUMBER = 40
+
+/** Interné číslo: orezané; prázdne znamená nevyplnené. */
+function tidyInternalNumber(value: string | undefined): string | undefined {
+  const v = (value ?? "").trim()
+  if (!v) return undefined
+  if (v.length > MAX_INTERNAL_NUMBER) {
+    throw new LibraryError(
+      "library.internalNumberTooLong",
+      `Interné číslo je dlhšie než ${MAX_INTERNAL_NUMBER} znakov — do zoznamu patrí označenie, nie veta.`,
+      { max: String(MAX_INTERNAL_NUMBER) },
+    )
+  }
+  return v
+}
+
+/**
+ * Overí, že oddelenie existuje v strome organizácie. Vráti `null`, keď nie je
+ * vyplnené — pole je nepovinné a prázdna hodnota je platná odpoveď.
+ *
+ * **Prečo to nerobí `checkMetadata()`.** Oddelenia nie sú číselník v repozitári,
+ * ale strom v databáze, iný pre každú organizáciu. `checkMetadata()` je čistá
+ * funkcia bez databázy a práve to je jej hodnota — testuje sa bez clustera.
+ * Kontrola sa preto robí v zápise, ktorý do databázy siaha tak či tak.
+ */
+export async function checkOwnerDepartment(
+  companyCode: string,
+  id: string | undefined | null,
+): Promise<string | null> {
+  const v = (id ?? "").trim()
+  if (!v) return null
+  const all = await allDepartments(companyCode)
+  if (!all.some(o => o.id === v)) {
+    throw new LibraryError(
+      "library.unknownDepartment",
+      "Také oddelenie v organizačnej štruktúre nie je.",
+      { id: v },
+    )
+  }
+  return v
+}
 
 /**
  * Identifikátor dokumentu — zhodne so skriptom, nezávisle od názvu súboru.
@@ -151,6 +223,10 @@ export function checkMetadata(
       category: input.category ? checkValue("category", input.category, extras) : undefined,
       sourceType: input.sourceType ? checkValue("sourceType", input.sourceType) : undefined,
       tags: checkList("tags", input.tags ?? [], extras),
+      // Oddelenie sa tu len oreže; že naozaj existuje, overí
+      // `checkOwnerDepartment()` až v zápise — strom je v databáze.
+      ownerDepartmentId: (input.ownerDepartmentId ?? "").trim() || undefined,
+      internalNumber: tidyInternalNumber(input.internalNumber),
     }
   } catch (e) {
     throw e
@@ -209,6 +285,11 @@ export async function uploadDocument(
     )
   }
 
+  // Pred uložením súboru, nie po ňom — z rovnakého dôvodu ako kontrola
+  // kolízie kľúča vyššie: odmietnutý zápis nemá nechať v úložisku súbor,
+  // ku ktorému nevedie žiadny záznam.
+  const ownerDepartmentId = await checkOwnerDepartment(meta.companyCode, meta.ownerDepartmentId)
+
   const file = await saveFile(meta.companyCode, fileName, "application/octet-stream", data, actor)
 
   let converted
@@ -247,6 +328,8 @@ export async function uploadDocument(
         category: meta.category ?? null,
         sourceType: meta.sourceType ?? converted.type,
         tags: meta.tags ?? [],
+        ownerDepartmentId: ownerDepartmentId,
+        internalNumber: meta.internalNumber ?? null,
         // Koncept: text existuje, ale nikto ho ešte neprečítal a nepustil von.
         draftMarkdown: converted.markdown,
         processingStatus: "converted" as ProcessingState,
@@ -565,6 +648,8 @@ export async function saveMetadata(
     companyCode,
   }, extras)
 
+  const ownerDepartmentId = await checkOwnerDepartment(companyCode, meta.ownerDepartmentId)
+
   const set: Record<string, unknown> = {
     title: meta.title,
     scope: meta.scope,
@@ -572,6 +657,10 @@ export async function saveMetadata(
     language: meta.language,
     category: meta.category ?? null,
     tags: meta.tags ?? [],
+    // Obe nepovinné polia sa zapisujú vždy, aj keď sú prázdne: formulár je
+    // úplný, takže nevyplnené pole znamená „zmaž to", nie „nechaj, ako bolo".
+    ownerDepartmentId: ownerDepartmentId,
+    internalNumber: meta.internalNumber ?? null,
     updatedAt: new Date(),
     updatedBy: actor,
   }
@@ -598,10 +687,14 @@ export async function saveMetadata(
   const beforeMeta = {
     title: before.title, scope: before.scope, accessLevel: before.accessLevel,
     language: before.language, category: before.category ?? null, tags: before.tags ?? [],
+    ownerDepartmentId: before.ownerDepartmentId ?? null,
+    internalNumber: before.internalNumber ?? null,
   }
   const afterMeta = {
     title: meta.title, scope: meta.scope, accessLevel: meta.accessLevel,
     language: meta.language, category: meta.category ?? null, tags: meta.tags ?? [],
+    ownerDepartmentId: ownerDepartmentId,
+    internalNumber: meta.internalNumber ?? null,
   }
   await writeAudit({
     companyCode, subject: "document", action: "changed", actor: actor,

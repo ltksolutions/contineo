@@ -1213,6 +1213,21 @@ interface Dictionary {
     }
   },
   library: {
+    /**
+     * Popisky polí, ktoré sú na dvoch obrazovkách naraz — pri nahratí
+     * dokumentu aj pri úprave jeho údajov. Zdvojiť ich v `upload` aj
+     * v `detail` by znamenalo, že sa raz rozídu a to isté pole sa bude
+     * na dvoch miestach volať inak.
+     */
+    fields: {
+      ownerDepartment: string
+      ownerDepartmentNote: string
+      ownerDepartmentNone: string
+      ownerDepartmentEmpty: string
+      internalNumber: string
+      internalNumberNote: string
+      internalNumberPlaceholder: string
+    }
     list: {
       heading: string
       upload: string
@@ -3012,6 +3027,15 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     },
   },
   library: {
+    fields: {
+      ownerDepartment: "Oddelenie, ktoré dokument spravuje",
+      ownerDepartmentNote: "Nepovinné. Kto predpis udržiava — nie komu sa prideľuje na potvrdenie.",
+      ownerDepartmentNone: "Neurčené",
+      ownerDepartmentEmpty: "Organizačná štruktúra je zatiaľ prázdna. Oddelenia sa zakladajú v Nastavení organizácie.",
+      internalNumber: "Interné číslo",
+      internalNumberNote: "Nepovinné. Nie každý predpis ho má a do formulky potvrdenia nevstupuje.",
+      internalNumberPlaceholder: "12/2024",
+    },
     list: {
       heading: "Knižnica",
       upload: "Nahrať dokument",
@@ -4787,6 +4811,15 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     },
   },
   library: {
+    fields: {
+      ownerDepartment: "Oddělení, které dokument spravuje",
+      ownerDepartmentNote: "Nepovinné. Kdo předpis udržuje — ne komu se přiděluje k potvrzení.",
+      ownerDepartmentNone: "Neurčeno",
+      ownerDepartmentEmpty: "Organizační struktura je zatím prázdná. Oddělení se zakládají v Nastavení organizace.",
+      internalNumber: "Interní číslo",
+      internalNumberNote: "Nepovinné. Ne každý předpis ho má a do formulky potvrzení nevstupuje.",
+      internalNumberPlaceholder: "12/2024",
+    },
     list: {
       heading: "Knihovna",
       upload: "Nahrát dokument",
@@ -6556,6 +6589,15 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     },
   },
   library: {
+    fields: {
+      ownerDepartment: "Department that maintains the document",
+      ownerDepartmentNote: "Optional. Who keeps the document current — not who is asked to acknowledge it.",
+      ownerDepartmentNone: "Not set",
+      ownerDepartmentEmpty: "The organisation chart is still empty. Departments are created in Organisation settings.",
+      internalNumber: "Internal number",
+      internalNumberNote: "Optional. Not every document has one, and it never appears in the acknowledgement statement.",
+      internalNumberPlaceholder: "12/2024",
+    },
     list: {
       heading: "Library",
       upload: "Upload a document",

@@ -11,6 +11,8 @@ import { notFound, redirect } from "next/navigation"
 import Link from "next/link"
 import { libraryContext } from "@/lib/library"
 import { codelistOptions, CODELISTS } from "@/lib/codelists"
+import { allDepartments, flattenTree } from "@/lib/departments"
+import { MAX_INTERNAL_NUMBER } from "@/lib/libraryWrite"
 import { tenantExtras } from "@/lib/codelistsTenant"
 import { brandingView } from "@/lib/tenants"
 import { tenantStyle } from "@/components/TenantHeader"
@@ -42,6 +44,10 @@ export default async function NewDocumentPage({
   const t = dictionary(ctx.person.language).library.upload
   const extras = tenantExtras(ctx.tenant)
   const branding = brandingView(ctx.tenant)
+  // Oddelenia nie sú číselník v repozitári, ale strom v databáze — iný pre
+  // každú organizáciu. Preto sa načítavajú, nie importujú.
+  const tf = dictionary(ctx.person.language).library.fields
+  const departmentRows = flattenTree(await allDepartments(ctx.tenant.companyCode))
   const { uploadAction: upload } = await import("../actions")
 
   // **Kľúče, ktoré organizácia už má.** Nahratie na obsadený kľúč sa odmietne
@@ -177,6 +183,34 @@ export default async function NewDocumentPage({
           <span className="field-label">{dictionary(ctx.person.language).library.list.category}</span>
           <Select name="category" options={[{ value: "", label: t.unset }, ...codelistOptions("category", extras)]} initial="" fieldLabel={dictionary(ctx.person.language).library.list.category} />
         </div>
+
+        <div className="field">
+          <span className="field-label">{tf.ownerDepartment}</span>
+          <Select
+            name="ownerDepartmentId"
+            initial=""
+            fieldLabel={tf.ownerDepartment}
+            options={[
+              { value: "", label: tf.ownerDepartmentNone },
+              ...departmentRows.map(r => ({
+                value: r.department.id,
+                label: `${"— ".repeat(r.level - 1)}${r.department.name}`,
+              })),
+            ]}
+          />
+          <span className="quiet field-hint">
+            {departmentRows.length === 0 ? tf.ownerDepartmentEmpty : tf.ownerDepartmentNote}
+          </span>
+        </div>
+
+        <label className="field">
+          <span className="field-label">{tf.internalNumber}</span>
+          <input className="field-input" name="internalNumber" defaultValue=""
+                 maxLength={MAX_INTERNAL_NUMBER}
+                 placeholder={tf.internalNumberPlaceholder}
+                 autoCapitalize="none" autoCorrect="off" />
+          <span className="quiet field-hint">{tf.internalNumberNote}</span>
+        </label>
 
         <div className="field upload-wide">
           <span className="field-label">{t.tags}</span>

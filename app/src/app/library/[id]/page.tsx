@@ -20,6 +20,11 @@ import {
   fixVersionAction, fixTextAction, uploadVersionAction, revokeVersionAction,
 } from "../actions"
 import { allFolders, flattenTree } from "@/lib/folders"
+// Strom oddelení a strom priečinkov majú rovnaké pomenovanie funkcií —
+// preto alias. Sú to dve rôzne štruktúry: priečinok je kam dokument
+// odložím, oddelenie je kto ho udržiava.
+import { allDepartments, flattenTree as flattenDepartments } from "@/lib/departments"
+import { MAX_INTERNAL_NUMBER } from "@/lib/libraryWrite"
 import { codelistOptions } from "@/lib/codelists"
 import { tenantExtras } from "@/lib/codelistsTenant"
 import Select from "@/components/Select"
@@ -63,6 +68,10 @@ export default async function DocumentDetailPage({
   const extras = tenantExtras(ctx.tenant)
   const folders = await allFolders(ctx.tenant.companyCode)
   const folderTree = flattenTree(folders)
+  const tf = dictionary(language).library.fields
+  const departments = await allDepartments(ctx.tenant.companyCode)
+  const departmentRows = flattenDepartments(departments)
+  const ownerDepartment = departments.find(o => o.id === d.ownerDepartmentId)
   const draft = (d.draftMarkdown ?? "").trim()
   // Publikované znenie je pri dokumentoch z importu len vo `versions[]` —
   // porovnávať koncept s prázdnym `markdown` by tvrdilo, že je čo publikovať,
@@ -204,6 +213,8 @@ export default async function DocumentDetailPage({
           <span className="quiet" style={{ fontWeight: 400, fontSize: 13.5 }}>
             {" "}· {d.language} · {d.accessLevel}
             {d.category && ` · ${d.category}`}
+            {d.internalNumber && ` · ${d.internalNumber}`}
+            {ownerDepartment && ` · ${ownerDepartment.name}`}
             {d.tags.length > 0 && ` · ${d.tags.join(", ")}`}
           </span>
         </summary>
@@ -241,6 +252,35 @@ export default async function DocumentDetailPage({
               fieldLabel={t.category}
             />
           </div>
+
+          <div className="field">
+            <span className="field-label">{tf.ownerDepartment}</span>
+            <Select
+              name="ownerDepartmentId"
+              initial={d.ownerDepartmentId ?? ""}
+              fieldLabel={tf.ownerDepartment}
+              options={[
+                { value: "", label: tf.ownerDepartmentNone },
+                ...departmentRows.map(r => ({
+                  value: r.department.id,
+                  label: `${"— ".repeat(r.level - 1)}${r.department.name}`,
+                })),
+              ]}
+            />
+            <span className="quiet field-hint">
+              {departmentRows.length === 0 ? tf.ownerDepartmentEmpty : tf.ownerDepartmentNote}
+            </span>
+          </div>
+
+          <label className="field">
+            <span className="field-label">{tf.internalNumber}</span>
+            <input className="field-input" name="internalNumber"
+                   defaultValue={d.internalNumber ?? ""}
+                   maxLength={MAX_INTERNAL_NUMBER}
+                   placeholder={tf.internalNumberPlaceholder}
+                   autoCapitalize="none" autoCorrect="off" />
+            <span className="quiet field-hint">{tf.internalNumberNote}</span>
+          </label>
 
           <div className="field">
             <span className="field-label">{t.tags}</span>
