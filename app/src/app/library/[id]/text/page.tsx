@@ -21,12 +21,23 @@ import { brandingView } from "@/lib/tenants"
 import { tenantStyle } from "@/components/TenantHeader"
 import { formatDate, dictionary } from "@/lib/i18n"
 import Notice from "@/components/Notice"
+import { createHash } from "node:crypto"
 import TextEditor from "@/components/TextEditor"
 import { saveTextAction, sendToModelAction, decideOnDraftAction } from "../../actions"
 import { normalizeQuery, type RawQuery } from "@/lib/urlParams"
 import AppShell from "@/components/AppShell"
 
 export const dynamic = "force-dynamic"
+
+/**
+ * Krátky odtlačok textu — len na rozlíšenie, či sa zmenil.
+ *
+ * Nie je to bezpečnostná funkcia a nemusí ňou byť: rozhoduje o tom, či sa
+ * má znovu postaviť editor, nie o obsahu dokumentu.
+ */
+function textKey(text: string): string {
+  return `${text.length}:${createHash("sha256").update(text).digest("hex").slice(0, 12)}`
+}
 
 export default async function EditorPage({
   params,
@@ -147,7 +158,25 @@ export default async function EditorPage({
           </h2>
           <form action={saveTextAction} style={{ display: "grid", gap: 10 }}>
             <input type="hidden" name="documentId" value={documentId} />
-            <TextEditor name="markdown" initial={d.editableText} />
+            {/*
+              `key` je odtlačok textu zo servera, nie ozdoba.
+
+              Editor sa vytvára **raz** a ďalšie vykreslenia doň zámerne
+              nesiahajú — inak by prepísal text, ktorý medzitým niekto
+              napísal. Lenže po prijatí návrhu sa text na serveri zmení
+              a obrazovka zostala na starom: ukazovala predošlé znenie
+              a skryté pole formulára ho nieslo tiež, takže „Uložiť text"
+              by **prijatý návrh ticho vrátil späť**. Nájdené nácvikom
+              2026-09-14 hneď po prijatí prečisteného členenia.
+
+              S odtlačkom v `key` sa editor znovu postaví práve vtedy, keď
+              sa zmenil text na serveri — a pri obyčajnom prekreslení nie.
+            */}
+            <TextEditor
+              key={textKey(d.editableText)}
+              name="markdown"
+              initial={d.editableText}
+            />
             <div><button className="button" type="submit">{t.saveText}</button></div>
           </form>
         </section>
