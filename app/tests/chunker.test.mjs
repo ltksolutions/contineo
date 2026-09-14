@@ -299,3 +299,54 @@ t("neviditeľné: BOM sa preskočí rovnako",
 t("neviditeľné: nezlomiteľná medzera sama osebe nie je nadpis",
   chunkText(["Predpis", "Článok 2", "", "\u00A0", "Pôsobnosť", "(1) Text."].join("\n"),
     { nazovDokumentu: "Predpis" }).chunky.some(c => c.heading === "Pôsobnosť"))
+
+
+/**
+ * Hlavičky v tvare Markdownu (2026-09-14).
+ *
+ * Prepis cez jazykový model vyrába nadpisy Markdownu a časť dokumentov má
+ * skrátené „čl.". Chunker musí zvládnuť oba svety naraz — v knižnici ležia
+ * dokumenty z oboch období.
+ */
+const PREPISANY = `## PRVÁ ČASŤ - Všeobecné ustanovenia
+
+### Článok 1 - Predmet úpravy
+
+(1) Prvý odsek s dostatočným množstvom textu na to, aby z neho vznikol úsek.
+(2) Druhý odsek, ktorý tiež nesie obsah a nie je len nadpisom.
+
+### čl. 2 ods. 1–6 - Aktívne volebné právo
+
+(1) Delegáti konferencie volia funkcionárov podľa Stanov.
+
+## PRÍLOHA č. 1 - Vzor návrhu
+
+(1) Text prílohy.
+`
+
+const mdChunks = chunkText(PREPISANY, { nazovDokumentu: "Volebný poriadok" }).chunky
+const mdRefs = mdChunks.map(c => c.articleRef).filter(Boolean)
+
+t(
+  "cast v tvare Markdownu sa dostane do breadcrumbu",
+  mdChunks.some(c => /PRVÁ ČASŤ/.test(c.text)),
+  `breadcrumb prisiel o uroven CAST: ${JSON.stringify(mdChunks.map(c => c.text.split("\n")[0]))}`,
+)
+
+t(
+  "skratka cl. aj plne slovo Clanok su ten isty tvar",
+  mdRefs.some(r => r.startsWith("čl. 1")) && mdRefs.some(r => r.startsWith("čl. 2")),
+  `chybaju clanky v ${JSON.stringify(mdRefs)}`,
+)
+
+t(
+  "ods. N-N zostava sucastou cisla, citacia ma byt presna",
+  mdRefs.includes("čl. 2 ods. 1–6"),
+  `ods. sa stratilo: ${JSON.stringify(mdRefs)}`,
+)
+
+t(
+  "priloha v tvare Markdownu stoji mimo cislovania clankov",
+  mdChunks.some(c => c.typ === "priloha"),
+  `priloha sa nerozpoznala: ${JSON.stringify(mdChunks.map(c => c.typ))}`,
+)

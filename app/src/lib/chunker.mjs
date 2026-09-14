@@ -18,7 +18,18 @@
 
 // ── Vzory ────────────────────────────────────────────────────────────────────
 
-const PART = /^(PRVÁ|DRUHÁ|TRETIA|ŠTVRTÁ|PIATA|ŠIESTA|SIEDMA|ÔSMA|DEVIATA|DESIATA|JEDENÁSTA|DVANÁSTA)\s+ČASŤ\s*[-–—]?\s*(.*)$/
+const MD = "(?:#{1,6}\\s*)?"
+const ART_WORD = "(?:Článok|čl\\.)"
+const ODS = "(?:\\s+ods\\.\\s*\\d+(?:\\s*[–—-]\\s*\\d+)?)?"
+const NUM = `(\\d+[a-z]?${ODS})`
+
+// Aj časť sa v prepísanom texte objaví ako nadpis Markdownu (`## PRVÁ ČASŤ - …`).
+// Bez markdownového prefixu ju chunker nerozpoznal a breadcrumb prišiel
+// o úroveň — „Disciplinárny poriadok › Článok 5" namiesto
+// „Disciplinárny poriadok › PRVÁ ČASŤ › Článok 5".
+const PART = new RegExp(
+  `^${MD}(PRVÁ|DRUHÁ|TRETIA|ŠTVRTÁ|PIATA|ŠIESTA|SIEDMA|ÔSMA|DEVIATA|DESIATA|JEDENÁSTA|DVANÁSTA)\\s+ČASŤ\\s*[-–—]?\\s*(.*)$`,
+)
 // Pozor na pomlčky: dokumenty miešajú "-" (U+002D) a "–" (U+2013).
 //
 // ── Hlavičky v tvare Markdownu (2026-09-14) ──────────────────────────────────
@@ -52,11 +63,21 @@ const PART = /^(PRVÁ|DRUHÁ|TRETIA|ŠTVRTÁ|PIATA|ŠIESTA|SIEDMA|ÔSMA|DEVIATA|
 // Názov musí začínať **nečíslicou**. Bez toho by sa pri `ods. 1–6 — Názov`
 // dala pomlčka v rozsahu zameniť za oddeľovač názvu a z „6 — Aktívne volebné
 // právo" by vznikol nadpis.
-const MD = "(?:#{1,6}\\s*)?"
-const ART_WORD = "(?:Článok|čl\\.)"
-const ODS = "(?:\\s+ods\\.\\s*\\d+(?:\\s*[–—-]\\s*\\d+)?)?"
-const NUM = `(\\d+[a-z]?${ODS})`
 const ARTICLE = new RegExp(`^${MD}${ART_WORD}\\s+${NUM}\\s*[-–—]\\s*(\\D.*)$`)
+
+/*
+ * V nadpise Markdownu je pomlčka **nepovinná**.
+ *
+ * Model píše raz `## Článok 1 - Predmet úpravy`, inokedy `## Článok 1 Predmet
+ * úpravy` — zmerané na skutočnom prepise Volebného poriadku, kde nebola ani
+ * raz. Spoliehať sa na to, že model dodrží interpunkciu z príkladu, je krehké.
+ *
+ * Mimo nadpisu pomlčku vyžadujeme ďalej, a to je podstatný rozdiel: `#` na
+ * začiatku hovorí „celý tento riadok je nadpis", takže všetko za číslom je
+ * názov. Bez neho by veta „Článok 5 sa mení takto" vyrobila článok 5 s názvom
+ * „sa mení takto".
+ */
+const ARTICLE_MD = new RegExp(`^#{1,6}\\s*${ART_WORD}\\s+${NUM}\\s*[-–—]?\\s*(\\D.*)$`)
 // Druhý zápis, ktorý sa v normách SFZ vyskytuje častejšie: číslo článku
 // stojí samo na riadku a názov je až na nasledujúcom.
 //
@@ -122,6 +143,9 @@ export function patternsForProfile(profile = {}) {
     CLANOK: customArticle
       ? new RegExp(`^${MD}${article}\\s+${NUM}\\s*[-–—]\\s*(\\D.*)$`)
       : ARTICLE,
+    CLANOK_MD: customArticle
+      ? new RegExp(`^#{1,6}\\s*${article}\\s+${NUM}\\s*[-–—]?\\s*(\\D.*)$`)
+      : ARTICLE_MD,
     CLANOK_SAM: customArticle
       ? new RegExp(`^${MD}${article}\\s+${NUM}\\s*$`)
       : ARTICLE_ALONE,
@@ -237,7 +261,7 @@ export function clean(text, { nazovDokumentu, vzory } = {}) {
     // na ďalšom riadku. Vypadnú, kým nenarazíme na štruktúrny prvok.
     if (FOOTNOTE.test(r)) { inFootnote = true; removed.poznamka++; continue }
     if (inFootnote) {
-      if (v.CLANOK.test(r) || v.CLANOK_SAM.test(r) || v.CAST.test(r) || v.ODSEK.test(r)) {
+      if (v.CLANOK.test(r) || v.CLANOK_MD.test(r) || v.CLANOK_SAM.test(r) || v.CAST.test(r) || v.ODSEK.test(r)) {
         inFootnote = false
       } else {
         removed.poznamka++
@@ -293,7 +317,7 @@ export function parseStructure(lines, vzory) {
     for (let j = i + 1; j < lines.length && j <= i + 2; j++) {
       const d = lines[j]
       if (!d) continue
-      if (v.CLANOK.test(d) || v.CLANOK_SAM.test(d) || v.CAST.test(d) ||
+      if (v.CLANOK.test(d) || v.CLANOK_MD.test(d) || v.CLANOK_SAM.test(d) || v.CAST.test(d) ||
           v.PRILOHA.test(d) || v.ODSEK.test(d) || v.TABULKA_START.test(d)) return null
       if (d.length > 120 || /[.:;]$/.test(d)) return null
       // Poistka: prázdny alebo neviditeľný text nie je názov článku.
@@ -322,7 +346,8 @@ export function parseStructure(lines, vzory) {
     const mPart = v.CAST.exec(r)
     if (mPart && !inAnnexes) { inTable = false; part = r; continue }
 
-    const mArticle = v.CLANOK.exec(r)
+    // Dva tvary, jedno rozhodnutie: nadpis Markdownu smie byť bez pomlčky.
+    const mArticle = v.CLANOK.exec(r) ?? v.CLANOK_MD.exec(r)
     if (mArticle && !inAnnexes) { inTable = false; startArticle(mArticle[1], mArticle[2].trim()); continue }
 
     // „Článok N“ samostatne — názov hľadáme na nasledujúcom riadku.

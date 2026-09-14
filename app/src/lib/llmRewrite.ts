@@ -39,6 +39,21 @@ export interface ModelDraft {
 
 export class RewriteError extends AppError {}
 
+/*
+ * **Pozor na štruktúrne úrovne.** Prvá verzia zadania hovorila len „obnov
+ * členenie" a model si to vyložil po svojom: skrátil „Článok 5" na „čl. 5",
+ * dlhé články rozsekal na „čl. 2 ods. 1–6" a „čl. 2 ods. 7–12", a **úroveň
+ * ČASŤ zahodil úplne**. V Disciplinárnom poriadku ani v Stanovách nezostal
+ * po nej v prepísanom texte ani jeden výskyt, hoci v origináli je.
+ *
+ * Nebola to len kozmetika: prepísaný text je to, čo ľudia čítajú a potvrdzujú,
+ * a čo ide do vyhľadávania. Chýbajúca ČASŤ znamená chudobnejší breadcrumb
+ * a menší doménový kontext pre embedding. A skratka „čl." znamenala, že ju
+ * chunker nerozpoznal vôbec (opravené 2026-09-14, `CHUNKER_VERSION` 2).
+ *
+ * Zadanie je preto pri úrovniach doslovné a s príkladmi. Model, ktorý dostane
+ * „obnov členenie", si členenie vymyslí; model, ktorý dostane vzor, ho dodrží.
+ */
 const INSTRUCTION = `Si prepisovač právnych a interných predpisov do Markdownu.
 
 ZÁKAZ, ktorý je dôležitejší než výsledok:
@@ -52,6 +67,17 @@ ZÁKAZ, ktorý je dôležitejší než výsledok:
 - Spoj riadky, ktoré patria do jednej vety a rozdelilo ich zalomenie strany.
 - Odstráň hlavičky, päty a čísla strán, ktoré sa opakujú.
 - Zachovaj číslovanie článkov a odsekov presne tak, ako je v pôvodine.
+
+ŠTRUKTÚRNE ÚROVNE — toto je najdôležitejšia časť zadania:
+- Zachovaj VŠETKY úrovne členenia, ktoré v pôvodine sú: ČASŤ, HLAVA, DIEL, Článok, §, PRÍLOHA.
+  Žiadnu nevynechaj, ani keď sa ti zdá, že je len organizačná.
+- Označenie píš DOSLOVNE tak, ako je v pôvodine. Neskracuj: „Článok 5", nie „čl. 5".
+  „PRVÁ ČASŤ", nie „Časť 1" ani „1. časť".
+- Každú úroveň daj ako nadpis Markdownu a zachovaj ich poradie:
+    ## PRVÁ ČASŤ - Všeobecné ustanovenia
+    ### Článok 5 - Zavinenie
+    ## PRÍLOHA č. 2 - Tabuľka poplatkov
+- Dlhý článok nerozdeľuj na viac nadpisov. Patrí pod jeden nadpis celý.
 
 Odpovedz LEN samotným Markdownom, bez akéhokoľvek komentára pred ním či za ním.`
 
@@ -68,6 +94,33 @@ function client(): Anthropic {
 
 function model(): string {
   return process.env.CMS_PREPIS_MODEL ?? "claude-sonnet-4-5"
+}
+
+/**
+ * Jedno volanie modelu — **prúdom, nie naraz**.
+ *
+ * Nájdené 2026-09-14 skúšobným prepisom skutočného PDF: SDK nestreamované
+ * volanie s `max_tokens: 32 000` **odmieta**:
+ *
+ *     AnthropicError: Streaming is required for operations that may take
+ *     longer than 10 minutes.
+ *
+ * Prepis teda v aplikácii nefungoval vôbec — ani „prečistiť text", ani
+ * „prepísať sken". Pravdepodobne od aktualizácie SDK pri prechode na Next 16
+ * (2026-08-28); dovtedy tá istá požiadavka prešla.
+ *
+ * Rozpočet tokenov sa **neznižuje**: dlhé normy ho potrebujú a orezať ho by
+ * znamenalo, že sa prepis ticho zastaví v polovici predpisu. Streamuje sa
+ * a čaká sa na celú odpoveď — volajúci dostane to isté, čo dostával predtým.
+ */
+async function ask(message: { content: unknown }) {
+  const stream = client().messages.stream({
+    model: model(),
+    max_tokens: 32_000,
+    system: INSTRUCTION,
+    messages: [{ role: "user", content: message.content as never }],
+  })
+  return await stream.finalMessage()
 }
 
 /** Zloží odpoveď z textových blokov a odreže obal ```markdown, keď ho pridá. */
@@ -95,14 +148,8 @@ export async function cleanMarkdown(markdown: string): Promise<ModelDraft> {
     )
   }
 
-  const answer = await client().messages.create({
-    model: model(),
-    max_tokens: 32_000,
-    system: INSTRUCTION,
-    messages: [{
-      role: "user",
-      content: [{ type: "text", text: `Uprav členenie tohto textu:\n\n${input}` }],
-    }],
+  const answer = await ask({
+    content: [{ type: "text", text: `Uprav členenie tohto textu:\n\n${input}` }],
   })
 
   const text = answerText(answer.content as { type: string; text?: string }[])
@@ -122,23 +169,17 @@ export async function rewritePdf(pdf: Buffer): Promise<ModelDraft> {
     )
   }
 
-  const answer = await client().messages.create({
-    model: model(),
-    max_tokens: 32_000,
-    system: INSTRUCTION,
-    messages: [{
-      role: "user",
-      content: [
-        {
-          type: "document",
-          source: { type: "base64", media_type: "application/pdf", data: pdf.toString("base64") },
-        },
-        {
-          type: "text",
-          text: "Prepíš obsah tohto dokumentu do Markdownu. Je to sken — prepíš presne to, čo na stranách vidíš.",
-        },
-      ],
-    }],
+  const answer = await ask({
+    content: [
+      {
+        type: "document",
+        source: { type: "base64", media_type: "application/pdf", data: pdf.toString("base64") },
+      },
+      {
+        type: "text",
+        text: "Prepíš obsah tohto dokumentu do Markdownu. Je to sken — prepíš presne to, čo na stranách vidíš.",
+      },
+    ],
   })
 
   const text = answerText(answer.content as { type: string; text?: string }[])
