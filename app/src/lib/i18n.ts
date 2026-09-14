@@ -240,6 +240,25 @@ interface Dictionary {
     note: string
   }
 
+  /**
+   * Návod. Obal obrazovky — samotný text je v `content/guide.ts`, aby sa
+   * súvislý text na dve obrazovky nemiešal so zoznamom krátkych reťazcov.
+   */
+  guide: {
+    heading: string
+    intro: string
+    /**
+     * Poznámka, že text Návodu je zatiaľ len po slovensky.
+     *
+     * Preložená je vo všetkých troch jazykoch, ale ukáže sa len na
+     * neslovenskej obrazovke — na slovenskej by hovorila, že text je
+     * v jazyku, v ktorom ho čitateľ práve číta. Prázdny reťazec tu byť
+     * nesmie: `tests/i18n.test.ts` ho odmieta, a právom — prázdna hodnota
+     * v slovníku vyzerá rovnako ako nedokončený preklad.
+     */
+    onlySlovak: string
+  }
+
   /** Hlavička: navigácia, téma, účet. */
   directory: {
     heading: string
@@ -846,6 +865,8 @@ interface Dictionary {
       colorNote: string
       supportEmail: string
       supportEmailNote: string
+      phonePrefix: string
+      phonePrefixNote: string
       languages: string
       defaultLanguage: string
       defaultLanguageNote: string
@@ -1719,6 +1740,11 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       button: "Otvoriť a potvrdiť",
       note: "Dokument nájdete aj po prihlásení v zozname na úvodnej strane. Kým ho nepotvrdíte, zostane vám tam.",
     },
+  guide: {
+    heading: "Návod",
+    intro: "Ako sa dokument dostane do systému a čo sa s ním po ceste stane — od nahratia po inteligentné vyhľadávanie.",
+    onlySlovak: "Text návodu je zatiaľ len po slovensky.",
+  },
   directory: {
     heading: "Adresár",
     intro: "Kolegovia vo vašej organizácii — pozícia, pracovisko a kontakt. Vyradení ľudia tu nie sú.",
@@ -2359,6 +2385,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "person.alreadyInvited": "{email} je v organizácii už zapísaná.",
     "person.nameRequired": "Meno je povinné — bez neho je v zozname len adresa.",
     "person.nameRequiredShort": "Meno je povinné.",
+    "tenant.phonePrefixShape": "Predvoľba „{value}“ nemá správny tvar — očakáva sa napríklad +421.",
     "person.givenNameRequired": "Meno je povinné.",
     "person.surnameRequired": "Priezvisko je povinné.",
     "person.unknownWorkplace": "Pracovisko „{value}“ v číselníku organizácie nie je. Doplňte ho v Organizácia → Číselníky.",
@@ -2577,6 +2604,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       colorNote: "Nesie ju tlačidlo s bielym textom, preto sú odtiene tmavšie, než by sa chcelo — svetlejší tón znamená nečitateľné tlačidlo.",
       supportEmail: "Kontaktná adresa",
       supportEmailNote: "Kam sa má obrátiť človek, ktorému niečo nesedí.",
+      phonePrefix: "Predvoľba telefónu",
+      phonePrefixNote: "Doplní sa k číslam zadaným s nulou (0905 123 456). Prázdne znamená +421. Čísla zapísané s +  sa ňou nedopĺňajú.",
       languages: "Jazyky",
       defaultLanguage: "Predvolený jazyk",
       defaultLanguageNote: "Platí pre človeka, ktorý ešte nie je prihlásený.",
@@ -3455,6 +3484,11 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       button: "Otevřít a potvrdit",
       note: "Dokument najdete i po přihlášení v seznamu na úvodní straně. Dokud jej nepotvrdíte, zůstane vám tam.",
     },
+  guide: {
+    heading: "Návod",
+    intro: "Jak se dokument dostane do systému a co se s ním cestou stane — od nahrání po inteligentní vyhledávání.",
+    onlySlovak: "Text návodu je zatím pouze ve slovenštině. Přeloží se celý najednou, až se rozhraní začne v češtině opravdu používat.",
+  },
   directory: {
     heading: "Adresář",
     intro: "Kolegové ve vaší organizaci — pozice, pracoviště a kontakt. Vyřazení lidé zde nejsou.",
@@ -4095,6 +4129,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "person.alreadyInvited": "{email} je v organizaci už zapsaná.",
     "person.nameRequired": "Jméno je povinné — bez něj je v seznamu jen adresa.",
     "person.nameRequiredShort": "Jméno je povinné.",
+    "tenant.phonePrefixShape": "Předvolba „{value}“ nemá správný tvar — očekává se například +420.",
     "person.givenNameRequired": "Jméno je povinné.",
     "person.surnameRequired": "Příjmení je povinné.",
     "person.unknownWorkplace": "Pracoviště „{value}“ v číselníku organizace není. Doplňte ho v Organizace → Číselníky.",
@@ -4313,6 +4348,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       colorNote: "Nese ji tlačítko s bílým textem, proto jsou odstíny tmavší, než by se chtělo — světlejší tón znamená nečitelné tlačítko.",
       supportEmail: "Kontaktní adresa",
       supportEmailNote: "Kam se má obrátit člověk, kterému něco nesedí.",
+      phonePrefix: "Předvolba telefonu",
+      phonePrefixNote: "Doplní se k číslům zadaným s nulou (0905 123 456). Prázdné znamená +421. Čísla zapsaná s + se jí nedoplňují.",
       languages: "Jazyky",
       defaultLanguage: "Výchozí jazyk",
       defaultLanguageNote: "Platí pro člověka, který ještě není přihlášený.",
@@ -5186,6 +5223,11 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       button: "Open and acknowledge",
       note: "You will also find the document in the list on the home page after signing in. It stays there until you acknowledge it.",
     },
+  guide: {
+    heading: "Guide",
+    intro: "How a document gets into the system and what happens to it along the way — from upload to smart search.",
+    onlySlovak: "The guide is currently available in Slovak only. It will be translated as a whole once the interface is actually used in English.",
+  },
   directory: {
     heading: "Directory",
     intro: "Colleagues in your organisation — job title, workplace and contact details. People who have left are not listed.",
@@ -5825,6 +5867,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "person.alreadyInvited": "{email} is already recorded in the organisation.",
     "person.nameRequired": "The name is required — without it the list shows only the address.",
     "person.nameRequiredShort": "The name is required.",
+    "tenant.phonePrefixShape": "The dialling code “{value}” has the wrong shape — something like +421 is expected.",
     "person.givenNameRequired": "The first name is required.",
     "person.surnameRequired": "The surname is required.",
     "person.unknownWorkplace": "The workplace “{value}” is not in the organisation's code list. Add it under Organisation → Code lists.",
@@ -6043,6 +6086,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       colorNote: "Buttons carry it with white text on top, which is why the shades are darker than you might want — a lighter tone means an unreadable button.",
       supportEmail: "Contact address",
       supportEmailNote: "Where someone should turn when something does not add up.",
+      phonePrefix: "Phone dialling code",
+      phonePrefixNote: "Added to numbers entered with a leading zero (0905 123 456). Empty means +421. Numbers written with a + are left alone.",
       languages: "Languages",
       defaultLanguage: "Default language",
       defaultLanguageNote: "Applies to anyone who is not signed in yet.",

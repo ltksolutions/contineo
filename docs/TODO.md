@@ -560,6 +560,12 @@ koná personalista, dôvod povinný, nový záznam namiesto úpravy starého.
 
 ### O5 — D79, etapa 2: analyzátor, dávka, stratégia „voľný text", obrazovky
 
+### O18 — Návod (`/guide`)
+
+- [x] **Návod v osobnom menu** ✅ 2026-09-14 — štyri časti: postup od nahratia, možnosti schvaľovania, čo je trasa (s príkladom), členenie a inteligentné vyhľadávanie. Vidí ho každý prihlásený. Text v `src/content/guide.ts`, obal v `i18n.ts`, odkazy stráži `tests/guide.test.ts`
+- [ ] **Preklad do CS a EN** — až keď sa rozhranie v tých jazykoch naozaj začne používať. Tri rozchádzajúce sa návody sú horšie než jeden presný
+- [ ] Obrázky alebo snímky obrazovky — zatiaľ zámerne nie: rozhranie sa mení a snímka, ktorá prestane platiť, klame viac než veta
+
 ### O17 — vykresľovanie znenia predpisu
 
 - [x] **Znenie sa vykresľuje ako text, nie ako Markdown** ✅ 2026-09-14

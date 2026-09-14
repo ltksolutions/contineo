@@ -400,6 +400,28 @@ export default function Header({
                     <div className="quiet account-email">{email}</div>
                   </div>
 
+                  {/*
+                    Návod je **nad** správcovskými položkami a vidí ho každý,
+                    nie len správca. Kto potvrdzuje predpis, má právo vedieť,
+                    odkiaľ sa tam vzal — návod pre obsluhu by to nepovedal.
+                  */}
+                  <Link
+                    href="/guide"
+                    role="menuitem"
+                    className="account-item"
+                    onClick={() => setPersonalOpen(false)}
+                  >
+                    <svg width="17" height="17" viewBox="0 0 18 18" aria-hidden="true"
+                      fill="none" stroke="currentColor" strokeWidth="1.6"
+                      strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M2.5 4.2c1.9-.9 4.1-.9 6 0v9.6c-1.9-.9-4.1-.9-6 0z" />
+                      <path d="M15.5 4.2c-1.9-.9-4.1-.9-6 0v9.6c1.9-.9 4.1-.9 6 0z" />
+                    </svg>
+                    {t.guide.heading}
+                  </Link>
+
+                  <div className="account-divider" />
+
                   {ADMIN_ITEMS.map(o => (
                     <Link
                       key={o.href}

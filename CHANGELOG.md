@@ -4,6 +4,18 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Added (2026-09-14 — Návod v osobnom menu)
+
+Systém dovtedy nikde nehovoril, ako sa v ňom pracuje. Návod je na `/guide`, v osobnom menu pod avatarom, a **vidí ho každý prihlásený** — nie len správca obsahu. Kto potvrdzuje záväzný predpis, má právo vedieť, odkiaľ sa tam vzal a čo sa s ním dialo; návod pre obsluhu by to nepovedal.
+
+Štyri časti podľa zadania: **postup od nahratia dokumentu**, **možnosti schvaľovania**, **čo je trasa** (s príkladom štvorkrokovej trasy pri nástupe) a **členenie, index a inteligentné vyhľadávanie**.
+
+- **Text je v `src/content/guide.ts` ako Markdown, nie v `i18n.ts`.** Slovník má 6 800 riadkov krátkych reťazcov pre rozhranie; súvislý text na dve obrazovky by v ňom nikto nenašiel a pri troch jazykoch by ho strojnásobil. V slovníku zostal len obal obrazovky. Vykresľuje ho `FormattedText` — ten istý komponent ako znenie predpisu, takže úprava textu nesiaha do komponentu.
+- **Zatiaľ len po slovensky** (rozhodnutie Jána Letka). Česká a anglická obrazovka to povedia nahlas namiesto toho, aby ticho ukázali cudzí jazyk. Poznámka je preložená vo všetkých troch jazykoch, ale ukáže sa len na neslovenskej obrazovke — prázdna hodnota v slovníku vyzerá rovnako ako nedokončený preklad a `tests/i18n.test.ts` ju právom odmieta.
+- **`tests/guide.test.ts` porovnáva odkazy v texte so skutočným adresárom `src/app`.** Návod je jediný text v systéme, ktorý hovorí „kliknite sem" — keď sa obrazovka presunie, odkaz stíchne mlčky: nikto nedostane chybu, len prázdnu stránku. Zoznam ciest udržiavaný vedľa toho prvého by sa rozišiel rovnako.
+- Overené: `tsc` čisto, **1267 testov**, lint bez chýb.
+
+
 ### Added (2026-09-14 — evidencia osoby: meno a priezvisko zvlášť, tituly, mobil, pracovisko, interný adresár)
 
 Pri osobe sa evidovalo **jedno pole na meno**. Personalista potreboval Meno, Priezvisko, Pozíciu, Oddelenie, Mobil a Pracovisko. Plán a odôvodnenia: `docs/D83_plan_osobne_udaje.md`.
