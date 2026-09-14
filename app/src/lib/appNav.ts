@@ -72,7 +72,7 @@ export function navItems(flags: NavFlags, counts: NavCounts = {}): NavItem[] {
     // Adresár vidí **každý prihlásený** (D87) — je to zoznam kolegov, nie
     // správa prístupov. Podmieniť ho rolou by znamenalo mať adresár, do
     // ktorého sa nepozrie ten, kto v tej organizácii pracuje.
-    { href: "/adresar", key: "directory" },
+    { href: "/directory", key: "directory" },
     ...(flags.isContentManager ? [{ href: "/library", key: "library" as const }] : []),
     ...(flags.isHr ? [{ href: "/hr", key: "assigned" as const }] : []),
     // Reťaz dôkazov je údaj o **ľuďoch**, nie o dokumentoch — vidí ju

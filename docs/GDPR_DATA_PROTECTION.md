@@ -48,7 +48,7 @@
 ### 2.1 Interný adresár — nové sprístupnenie (D87, 2026-09-14)
 
 **Mobilný telefón a pracovisko sú od D87 viditeľné každému prihlásenému
-človeku vo vlastnej organizácii** (obrazovka `/adresar`). Je to **zmena
+človeku vo vlastnej organizácii** (obrazovka `/directory`). Je to **zmena
 okruhu príjemcov**, nie len nové pole: doteraz boli evidenčné údaje osoby
 prístupné personalistovi (`people-admin`), teraz ich vidia kolegovia.
 
