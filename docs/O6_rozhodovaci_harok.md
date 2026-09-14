@@ -253,7 +253,12 @@ horšie než žiadne.
 **Čo to stojí.** Pole v `documents` + formulár + zobrazenie: pol dňa. Bez
 migrácie, staré dokumenty ho jednoducho nemajú.
 
-**Rozhodnutie:** ______________________________________________
+**Rozhodnutie: ✅ ÁNO, ale nepovinné** (Ján Letko, 2026-09-14). Normy SFZ číslo
+majú, ale je **interné, nie úradné, a nie všetky ho majú**. Pole teda bude
+nepovinné a nikde sa nevynucuje. Dôsledok, ktorý z toho plynie: **nesmie sa
+dostať do potvrdzovacej formulky** — tá je v niektorých dokumentoch prázdna
+a veta „…, číslo …" s dierou by vyzerala ako chyba systému. Je to údaj do
+zoznamu a na detail, nie do dôkazu.
 
 ---
 

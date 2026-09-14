@@ -571,11 +571,13 @@ koná personalista, dôvod povinný, nový záznam namiesto úpravy starého.
 
 ### O19 — nácvik nanečisto pred ostrými dokumentmi
 
-- [ ] **`delete_documents.mjs` nechá osirené väzby** — `--aj-s-vazbami` znamená „viem, že má väzby, zmaž dokument aj tak", nie „zmaž aj tie väzby". Po zmazaní `sfz:nacvik_dp` zostalo potvrdenie, pridelenie a kolo schvaľovania ukazujúce na neexistujúci dokument a `npm run check` to nahlásil ako rozpor. **Dôležité pred zmazaním skúšobného korpusu.** Upratané ručne 2026-09-14; skript treba opraviť alebo prepínač premenovať
+- [x] **`delete_documents.mjs` nechával osirené väzby** ✅ opravené a otestované 2026-09-14
+      `--aj-s-vazbami` teraz tie väzby aj zmaže (potvrdenia, pridelenia, kolá) a krok vyberie z trasy **aj s prečíslovaním** zvyšku — bez neho by v poradí zostala diera a obrazovka by písala „Krok 3 z 2". Náhľad to povie červeným riadkom pred potvrdením. Overené na syntetickom dokumente so všetkými štyrmi väzbami; `npm run check` po zmazaní čistý.
+- [ ] **Nepovinné interné číslo predpisu** (rozhodnuté 2026-09-14) — pole v `documents`, formulár, zobrazenie v zozname a na detaile. **Nie do potvrdzovacej formulky**: nemajú ho všetky dokumenty a diera vo vete by vyzerala ako chyba
 
 - [x] **Prechod celej cesty na ostrom PDF** ✅ 2026-09-14 — šesť nálezov, podrobne v `CHANGELOG.md`. Cesta cez rozhranie sa dovtedy nikdy neprešla: dnešných desať noriem sa nahrávalo skriptom.
 - [x] **Nácvik dobehol celú cestu** ✅ 2026-09-14 — schválila A. G. (nahrávateľ schvaľovať nesmie, D69), zverejnené ako `nácvik 1`, index 115 úsekov / 114 s článkom, vyhľadávanie odpovedalo správne z čl. 12 ods. 6, pridelené sebe, potvrdené. Dôkazný záznam úplný vrátane cesty oddelení.
-- [ ] **Zmazať `sfz:nacvik_dp`** po skončení (`delete_documents.mjs`, súhlas daný vopred 2026-09-14)
+- [x] **`sfz:nacvik_dp` zmazaný** ✅ 2026-09-14 — so súhlasom, po prezretí. Práve to mazanie odhalilo chybu v skripte vyššie.
 - [ ] Zvážiť, či nemá vzniknúť **stála kontrolná cesta** pred každým väčším nasadením — pomer „šesť chýb z kliku, nula z testov" je príliš výrazný na náhodu
 
 ### O17 — vykresľovanie znenia predpisu

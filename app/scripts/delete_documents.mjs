@@ -23,6 +23,14 @@
  * spolu s `--aj-s-vazbami` — teda vtedy, keď človek napísal jeho identifikátor
  * rukou. Dôvod je ADR-005: potvrdenie bez dokumentu je dôkaz bez predmetu.
  *
+ * **A práve preto `--aj-s-vazbami` tie väzby aj zmaže.** Do 2026-09-14 ich
+ * len **počítal** a nechal ležať: po zmazaní dokumentu zostalo potvrdenie,
+ * pridelenie a kolo schvaľovania ukazujúce na dokument, ktorý už neexistuje,
+ * a `npm run check` to hlásil ako rozpor. Nájdené nácvikom — pri mazaní
+ * skúšobného dokumentu, teda presne tým úkonom, ktorý čaká celý skúšobný
+ * korpus. Ponechať ich nie je opatrnosť: dôkaz bez predmetu je bezcenný **aj
+ * tak**, len k tomu pribudne nekonzistentná databáza.
+ *
  * **3. Úseky sa archivujú, nemažú.** Predvolené správanie je zhodné s D6 —
  * `isActive: false` a `effectiveTo`. Otázka „ako to bolo narezané vlani" musí
  * mať odpoveď aj po zmazaní dokumentu. Kto chce naozaj zmazať, povie
@@ -72,7 +80,8 @@ function usage(message) {
   console.error("  --naozaj          vykoná zmazanie (bez neho len náhľad)")
   console.error("  --useky zmazat    úseky zmazať namiesto archivácie (predvolene archivovat)")
   console.error("  --aj-subory       zmazať aj pôvodné nahrané súbory")
-  console.error("  --aj-s-vazbami    povolí zmazať dokument s potvrdeniami — len spolu s --id")
+  console.error("  --aj-s-vazbami    zmaže dokument aj jeho potvrdenia, pridelenia, kroky trás")
+  console.error("                    a kolá schvaľovania — len spolu s --id")
   process.exit(1)
 }
 
@@ -137,7 +146,12 @@ for (const d of rows) {
 
 const pad = (s, n) => String(s).padEnd(n)
 console.log(`\nOrganizácia: ${company} · režim: ${confirmed ? "\x1b[31mMAŽEM\x1b[0m" : "náhľad (bez --naozaj sa nič nezmení)"}`)
-console.log(`Úseky: ${chunkMode === "zmazat" ? "\x1b[31mzmazať\x1b[0m" : "archivovať"} · pôvodné súbory: ${withFiles ? "zmazať" : "nechať"}\n`)
+console.log(`Úseky: ${chunkMode === "zmazat" ? "\x1b[31mzmazať\x1b[0m" : "archivovať"} · pôvodné súbory: ${withFiles ? "zmazať" : "nechať"}`)
+// Že sa zmažú aj väzby, musí byť vidieť **pred** potvrdením, nie až z výpisu.
+if (withLinks) {
+  console.log(`\x1b[31mVäzby: potvrdenia, pridelenia, kolá schvaľovania a kroky trás sa zmažú spolu s dokumentom.\x1b[0m`)
+}
+console.log("")
 console.log([pad("documentId", 38), pad("úseky a/c", 12), pad("potvrd.", 8), pad("prid.", 6), pad("kroky", 6), pad("kolá", 5), "stav"].join(" "))
 console.log("─".repeat(100))
 for (const p of plan) {
@@ -206,6 +220,41 @@ for (const p of toDelete) {
 
     await documents.deleteOne({ documentId: id, companyCode: company })
 
+    /*
+      Väzby idú s dokumentom. Nechať ich znamená dôkaz bez predmetu (ADR-005)
+      **a** rozpor, ktorý nahlási `npm run check` — teda to najhoršie z oboch.
+      Beží to až po zmazaní dokumentu: keby to padlo uprostred, zostane
+      dokument bez väzieb, čo je stav, z ktorého sa dá pokračovať, nie väzby
+      bez dokumentu.
+    */
+    const cleaned = []
+    if (p.blocking > 0) {
+      const [a1, a2, a3] = await Promise.all([
+        acks.deleteMany({ documentId: id }),
+        assignments.deleteMany({ "subject.documentId": id }),
+        approvals.deleteMany({ documentId: id }),
+      ])
+      if (a1.deletedCount) cleaned.push(`potvrdení: ${a1.deletedCount}`)
+      if (a2.deletedCount) cleaned.push(`pridelení: ${a2.deletedCount}`)
+      if (a3.deletedCount) cleaned.push(`kôl: ${a3.deletedCount}`)
+
+      /*
+        Krok sa z trasy **vyberie a zvyšok sa prečísluje**. Bez prečíslovania
+        zostane v poradí diera (1, 3, 4) a obrazovka, ktorá píše „Krok N z M",
+        by ukázala „Krok 3 z 2" — číslo, ktoré nedáva zmysel.
+      */
+      let steps = 0
+      for (const t of await tracks.find({ "steps.documentId": id }).toArray()) {
+        const zostalo = (t.steps ?? [])
+          .filter(k => k.documentId !== id)
+          .sort((x, y) => x.order - y.order)
+          .map((k, i) => ({ ...k, order: i + 1 }))
+        steps += (t.steps ?? []).length - zostalo.length
+        await tracks.updateOne({ _id: t._id }, { $set: { steps: zostalo } })
+      }
+      if (steps) cleaned.push(`krokov trás: ${steps}`)
+    }
+
     // Audit až po úspešnej zmene (tak to robí `writeAudit()` všade inde).
     await writeAudit({
       companyCode: company,
@@ -217,12 +266,12 @@ for (const p of toDelete) {
       note: [
         chunkNote,
         `verzií: ${(p.doc.versions ?? []).length}`,
-        p.blocking > 0 ? `POZOR: malo väzby (potvrdenia ${p.links.ack}, pridelenia ${p.links.assigned}, kroky ${p.links.inTracks}, kolá ${p.links.rounds})` : null,
+        p.blocking > 0 ? `zmazané väzby: ${cleaned.join(", ") || "žiadne"}` : null,
         withFiles ? "aj pôvodný súbor" : null,
       ].filter(Boolean).join(" · "),
     })
 
-    console.log(`${OK} ${pad(id, 38)} ${chunkNote}`)
+    console.log(`${OK} ${pad(id, 38)} ${[chunkNote, ...cleaned].join(" · ")}`)
   } catch (e) {
     failures++
     console.error(`${FAIL} ${id} — ${e?.message ?? e}`)
