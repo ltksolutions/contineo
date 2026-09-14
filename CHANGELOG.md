@@ -4,6 +4,20 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Nácvik nanečisto na ostrom PDF (2026-09-14) — šesť nálezov, ani jeden z čítania kódu
+
+Pred nahratím oficiálnych znení sme prešli celú cestu na skutočnom Disciplinárnom poriadku SFZ (49 strán, 97 článkov): nahratie → prevod → prečistenie členenia → prijatie do konceptu. **Cesta cez rozhranie sa dovtedy nikdy neprešla** — dnešných desať noriem sa nahrávalo skriptom `import.mjs`. To je jediný dôvod, prečo prvý nález mohol tak dlho prežiť.
+
+1. **Prevod PDF v produkcii nefungoval vôbec.** `pdfjs-dist` si za behu doťahuje `pdf.worker.mjs` a ten v serverless zväzku nebol. Oprava mala dve časti a **prvá nestačila** — `serverExternalPackages` chybu len presunul z `.next/server/chunks/` do `node_modules/`; súbor bolo treba priložiť cez `outputFileTracingIncludes`. Keby sa po prvej oprave neoverovalo v produkcii, hlásili by sme „opravené" a nefungovalo by to.
+2. **Hláška „Nepodarilo sa to. Skús to znova."** pri chybe, ktorá sa opakovaním nespraví. Zlyhanie knižnice dostalo vlastný kód a vetu, ktorá povie, čo sa stalo.
+3. **Prečistenie členenia modelom vracalo polovicu dokumentu.** `max_tokens: 32 000` je strop výstupu a `stop_reason` nikto nečítal. **Včerajší zápis „51 článkov a `PRVÁ ČASŤ` zachovaná" bol chybný záver** — dokument má 97 článkov a štyri časti; 51 bolo prijaté ako úspech len preto, že je to viac než nula. Odteraz sa na useknutej odpovedi padá.
+4. **Rozhranie tvrdilo, že text prepísal model, keď nie.** Po prechode na pravidlá zostali štítok „návrh modelu" aj hláška „Model vrátil návrh." Je to tvrdenie o pôvode textu normy — musí sedieť v oboch smeroch.
+5. **Po prijatí návrhu sa dal prijatý text ticho prepísať späť.** Editor sa vytvára raz a obrazovka zostala na starom texte; skryté pole formulára ho nieslo tiež, takže „Uložiť text" by prijatý návrh vrátil. Najvážnejší nález dňa — bez chyby, bez varovania.
+6. **Pri odvolanom potvrdení stálo „potvrdené" a veta „Potvrdzujem, že…".** Pravdivé v dátach, opačné na obrazovke.
+
+**Poznatok, ktorý stojí za zapamätanie:** šesť z týchto šiestich nálezov našlo **spustenie a klik**, nie čítanie kódu ani testy. Testy pritom prechádzali po celý čas (1 279 → 1 285). Nie sú zlé — kontrolujú to, na čo boli napísané. Ale cesta, ktorou pôjdu ostré dokumenty, sa nedá overiť inak než tým, že sa ňou naozaj prejde.
+
+
 ### Added (2026-09-14 — Návod v osobnom menu)
 
 Systém dovtedy nikde nehovoril, ako sa v ňom pracuje. Návod je na `/guide`, v osobnom menu pod avatarom, a **vidí ho každý prihlásený** — nie len správca obsahu. Kto potvrdzuje záväzný predpis, má právo vedieť, odkiaľ sa tam vzal a čo sa s ním dialo; návod pre obsluhu by to nepovedal.
