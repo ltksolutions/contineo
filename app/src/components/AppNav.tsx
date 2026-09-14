@@ -11,10 +11,13 @@
  * odkaz na obrazovku, ktorá ešte neexistuje, vedie na 404 a odkaz na sekciu,
  * do ktorej človek nesmie, mu prezrádza, čo v systéme je.
  *
- * Ikony zatiaľ nie sú. Prototyp má na ich mieste textové znaky (▦ ▤ ⌕) a tie
- * do produkcie nepatria; projekt vlastný ikonový set nemá a kresliť šesť
- * nových od ruky handoff výslovne zakazuje. Bez ikon je navigácia čitateľná,
- * s vymyslenými by bola len ozdobnejšia.
+ * Ikony zatiaľ nie sú a **doplnia sa vlastné** (rozhodnutie Jána Letka
+ * 2026-09-14, `docs/O6_rozhodovaci_harok.md` bod 1). Handoff žiada ikonový
+ * set projektu a zakazuje kresliť od ruky — to pravidlo je o jednotnosti,
+ * nie o bezpečnosti, a rozhodlo sa proti nemu vedome: za sedem ikon nestojí
+ * trvalá závislosť. Podmienkou je, že budú kreslené v **jednom rukopise**
+ * s tými v `Header.tsx` — rovnaká hrúbka ťahu, rovnaký `viewBox`, rovnaká
+ * optická veľkosť. Práve ich rozchádzanie je to, pred čím handoff varoval.
  *
  * Správcovské odkazy (nastavenie organizácie, správa tenantov) tu zámerne
  * nie sú — zostávajú pod avatarom v hlavičke, ktorý sa v shelli neskrýva.

@@ -594,7 +594,9 @@ len práca, ktorá z nich plynie.
 
 **Postaviť:**
 
-- [ ] **Zásuvka navigácie na telefóne** (bod 3) — dnes je pás s odseknutou položkou („Pridelené no…"). Mobile-first je povinnosť. Musí fungovať aj bez JavaScriptu, pás zostáva ako záloha. Deň
+- [x] ~~**Zásuvka navigácie na telefóne** (bod 3)~~ — **už je hotová**, zistené pri jej otváraní 2026-09-14
+      Pribudla v `cf1ec91` (`feat(nav): pocty pri polozkach a zasuvka na uzkej obrazovke`). `<details>`/`<summary>`, teda beží **bez JavaScriptu**; pás a zásuvka sú v DOM oba a prepína ich `@media (min-width: 940px)`, lebo obsah `<details>` sa cez CSS odkryť nedá. Terče 44 px na prepínači aj na položkách, ako žiada krok 7 handoffu.
+      **Zápis „dnes je pás s odseknutou položkou" bol nepravdivý a napísal som ho ja** — prevzal som ho z `DESIGN_GAP.md` bez pozretia do kódu, a ešte som ho navrhol ako prvý krok. Dokumentácia je indícia, kód je pravda; toto je pripomienka, že to platí aj pre plány, ktoré píšem sám.
 - [ ] **Nepovinné pole „oddelenie, ktoré dokument spravuje"** (bod 6) + filter v knižnici. Je to **vlastníctvo**, nie adresáti — tí sa naďalej počítajú z `assignments`. Pol dňa
 - [ ] **Nepovinné interné číslo predpisu** (bod 11) — do zoznamu a na detail, **nie do potvrdzovacej formulky**: nemajú ho všetky dokumenty a diera vo vete by vyzerala ako chyba. Pol dňa
 - [ ] **Stĺpec „Potvrdenia %"** (bod 7) — menovateľom sú **pridelení** ľudia a píše sa pri čísle („12 zo 14 pridelených"). Pol dňa

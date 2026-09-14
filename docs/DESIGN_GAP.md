@@ -73,8 +73,11 @@ nezmestilo.
 | **počty pri položkách** | žiadne |
 | ikony pri položkách | žiadne |
 
-Na telefóne je pás `overflow-x: auto` bez náznaku, že sa dá posúvať —
-posledná položka je odseknutá v polovici slova („Pridelené no…").
+~~Na telefóne je pás `overflow-x: auto` bez náznaku, že sa dá posúvať —
+posledná položka je odseknutá v polovici slova („Pridelené no…").~~
+**✅ Vyriešené v `cf1ec91`** — pod 940 px je zásuvka (`<details>`/`<summary>`,
+teda bez JavaScriptu), terče 44 px. Pás zostáva nad prahom. Tento odstavec
+zostáva, lebo nasledujúca oprava sa naň odvoláva.
 
 **Oprava môjho tvrdenia:** nazval som to chybou implementácie. Nie je. Kanvas
 má v topbare presne to isté `overflow-x: auto` a odseknutú položku — overené
