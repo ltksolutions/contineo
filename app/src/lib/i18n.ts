@@ -2345,6 +2345,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     // ── prevod súboru ──────────────────────────────────────────────────────
     "conversion.zipNotOffice": "Toto je ZIP-ový balík, ale ani docx, ani xlsx. Staré .doc a .xls sa prevádzať nedajú — ulož ich vo Worde alebo Exceli ako novší formát.",
     "conversion.unsupportedFormat": "Formát {format} zatiaľ nevieme previesť. Podporujeme .docx, .pdf, .xlsx, .md, .txt a .csv.",
+    "conversion.pdfEngineFailed": "Toto PDF sa nepodarilo otvoriť. Buď je poškodené alebo zaheslované, alebo je chyba na našej strane — skúsenie znova nepomôže. Ozvi sa správcovi systému, podrobnosti sú v zázname.",
     "conversion.pdfNoText": "V tomto PDF nie je žiadny text — je to obrázok (sken). Prevod ho neprečíta. V editore ho môžeš dať prepísať jazykovým modelom, alebo si vypýtaj od autora pôvodný súbor.",
     "conversion.noText": "Súbor neobsahuje žiadny text.",
 
@@ -4089,6 +4090,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     // ── převod souboru ─────────────────────────────────────────────────────
     "conversion.zipNotOffice": "Toto je ZIP balík, ale ani docx, ani xlsx. Staré .doc a .xls převádět nelze — ulož je ve Wordu nebo Excelu jako novější formát.",
     "conversion.unsupportedFormat": "Formát {format} zatím neumíme převést. Podporujeme .docx, .pdf, .xlsx, .md, .txt a .csv.",
+    "conversion.pdfEngineFailed": "Toto PDF se nepodařilo otevřít. Buď je poškozené nebo zaheslované, nebo je chyba na naší straně — zkoušet znovu nepomůže. Ozvi se správci systému, podrobnosti jsou v záznamu.",
     "conversion.pdfNoText": "V tomto PDF není žádný text — je to obrázek (sken). Převod ho nepřečte. V editoru ho můžeš nechat přepsat jazykovým modelem, nebo si vyžádej od autora původní soubor.",
     "conversion.noText": "Soubor neobsahuje žádný text.",
 
@@ -5827,6 +5829,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     // ── file conversion ────────────────────────────────────────────────────
     "conversion.zipNotOffice": "This is a ZIP archive, but neither docx nor xlsx. Legacy .doc and .xls cannot be converted — save them from Word or Excel in a newer format.",
     "conversion.unsupportedFormat": "We cannot convert {format} yet. Supported: .docx, .pdf, .xlsx, .md, .txt and .csv.",
+    "conversion.pdfEngineFailed": "This PDF could not be opened. It is either damaged or password-protected, or the fault is on our side — retrying will not help. Contact the system administrator; details are in the log.",
     "conversion.pdfNoText": "This PDF contains no text — it is an image (a scan). The conversion cannot read it. In the editor you can have the language model transcribe it, or ask the author for the original file.",
     "conversion.noText": "The file contains no text.",
 

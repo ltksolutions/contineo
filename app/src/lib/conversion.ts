@@ -107,15 +107,49 @@ async function fromDocx(data: Buffer): Promise<ConversionResult> {
 }
 
 async function fromPdf(data: Buffer): Promise<ConversionResult> {
-  // Legacy zostava beží v Node bez prehliadačových API.
-  const pdfjs = await import("pdfjs-dist/legacy/build/pdf.mjs")
-  const pdfDoc = await pdfjs.getDocument({
-    data: new Uint8Array(data),
-    // Bez pracovného vlákna: vo funkcii je to jeden proces a vlastný worker
-    // by sa aj tak nemal odkiaľ načítať.
-    useWorkerFetch: false,
-    useSystemFonts: false,
-  }).promise
+  /*
+   * Zlyhanie **samotnej knižnice** dostane vlastný kód.
+   *
+   * Bez neho spadne cudzia výnimka do `errorMessage()` v serverovej akcii,
+   * tá ju do obrazovky nepustí (a je to správne — text výnimky človeku nič
+   * nehovorí) a zostane hláška „Nepodarilo sa to. Skús to znova." Lenže
+   * pokazená knižnica zlyhá vždy rovnako, takže tá veta pozýva na úkon,
+   * ktorý nemôže prejsť.
+   *
+   * Stalo sa to naozaj: `pdf.worker.mjs` nebol v serverless zväzku a prevod
+   * PDF v produkcii nefungoval vôbec (2026-09-14, nájdené nácvikom na
+   * ostrom PDF). Príčina je opravená v `next.config.mjs`; toto je poistka
+   * na nabudúce — aby sa ďalšie takéto zlyhanie prejavilo vetou, ktorá
+   * povie, čo sa stalo, a nie mlčaním.
+   */
+  let pdfjs
+  try {
+    // Legacy zostava beží v Node bez prehliadačových API.
+    pdfjs = await import("pdfjs-dist/legacy/build/pdf.mjs")
+  } catch (e) {
+    console.error("[prevod] pdfjs-dist sa nepodarilo načítať:", e)
+    throw new ConversionError(
+      "conversion.pdfEngineFailed",
+      "Prevod PDF je nedostupný — knižnica na čítanie PDF sa nespustila.",
+    )
+  }
+
+  let pdfDoc
+  try {
+    pdfDoc = await pdfjs.getDocument({
+      data: new Uint8Array(data),
+      // Bez pracovného vlákna: vo funkcii je to jeden proces a vlastný worker
+      // by sa aj tak nemal odkiaľ načítať.
+      useWorkerFetch: false,
+      useSystemFonts: false,
+    }).promise
+  } catch (e) {
+    console.error("[prevod] PDF sa nepodarilo otvoriť:", e)
+    throw new ConversionError(
+      "conversion.pdfEngineFailed",
+      "PDF sa nepodarilo otvoriť.",
+    )
+  }
 
   const pageCount: string[] = []
   for (let i = 1; i <= pdfDoc.numPages; i++) {
