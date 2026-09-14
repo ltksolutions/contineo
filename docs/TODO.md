@@ -570,7 +570,7 @@ koná personalista, dôvod povinný, nový záznam namiesto úpravy starého.
 ### O19 — nácvik nanečisto pred ostrými dokumentmi
 
 - [x] **Prechod celej cesty na ostrom PDF** ✅ 2026-09-14 — šesť nálezov, podrobne v `CHANGELOG.md`. Cesta cez rozhranie sa dovtedy nikdy neprešla: dnešných desať noriem sa nahrávalo skriptom.
-- [ ] **Dokončiť nácvik:** schválenie → zverejnenie → pridelenie → potvrdenie → výkaz pre HR → otázka do vyhľadávania. Zastavené na schválení — nahrávateľ nesmie schvaľovať (D69), takže to vyžaduje druhého človeka
+- [x] **Nácvik dobehol celú cestu** ✅ 2026-09-14 — schválila A. G. (nahrávateľ schvaľovať nesmie, D69), zverejnené ako `nácvik 1`, index 115 úsekov / 114 s článkom, vyhľadávanie odpovedalo správne z čl. 12 ods. 6, pridelené sebe, potvrdené. Dôkazný záznam úplný vrátane cesty oddelení.
 - [ ] **Zmazať `sfz:nacvik_dp`** po skončení (`delete_documents.mjs`, súhlas daný vopred 2026-09-14)
 - [ ] Zvážiť, či nemá vzniknúť **stála kontrolná cesta** pred každým väčším nasadením — pomer „šesť chýb z kliku, nula z testov" je príliš výrazný na náhodu
 

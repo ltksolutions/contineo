@@ -4,6 +4,17 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Nácvik dobehol celú cestu (2026-09-14)
+
+Nahratie → prevod → prečistenie členenia → schválenie → zverejnenie → index → vyhľadávanie → pridelenie → potvrdenie. Na skutočnom Disciplinárnom poriadku SFZ.
+
+- **Index: 115 úsekov, 114 s rozpoznaným článkom (99 %).** Breadcrumb nesie úroveň `ČASŤ` (`… › PRVÁ ČASŤ — Všeobecná časť › čl. 1`) — presne tú, ktorú prepis modelom zahadzoval. Dlhé články narezané po odsekoch: `čl. 50 ods. 1`, `čl. 50 ods. 2–6`, `čl. 50 ods. 7–8`.
+- **Vyhľadávanie odpovedalo správne** na „Aká je najvyššia pokuta pre právnickú osobu?" — čl. 12 ods. 6, 50 000 eur, a samo odlíšilo poriadkovú pokutu podľa čl. 75. Citácie overené.
+- **Znenie sa na obrazovke vykresľuje ako text**: 110 skutočných nadpisov, žiadne `##`, žiadna pätička strany.
+- **Dôkazný záznam je úplný:** typ, osoba, čas, označenie znenia, platnosť, cyklus, pôvod, IP, prehliadač, odtlačok formulky a celá cesta oddelení v čase potvrdenia.
+
+Siedmy nález dňa prišiel až tu: **štítok „Na potvrdenie" počítal z trás aj pridelení, obrazovka kreslila len trasy** — kto mal dokument pridelený mimo trasy, nemal ako splniť povinnosť, ktorú mu systém pripomínal číslom. Opravené jedným výpočtom pre obe strany.
+
 ### Nácvik nanečisto na ostrom PDF (2026-09-14) — šesť nálezov, ani jeden z čítania kódu
 
 Pred nahratím oficiálnych znení sme prešli celú cestu na skutočnom Disciplinárnom poriadku SFZ (49 strán, 97 článkov): nahratie → prevod → prečistenie členenia → prijatie do konceptu. **Cesta cez rozhranie sa dovtedy nikdy neprešla** — dnešných desať noriem sa nahrávalo skriptom `import.mjs`. To je jediný dôvod, prečo prvý nález mohol tak dlho prežiť.
