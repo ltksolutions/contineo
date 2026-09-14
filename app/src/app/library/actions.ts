@@ -23,6 +23,8 @@ import {
 import { loadFile } from "@/lib/fileStore"
 import { textDiff } from "@/lib/textFix"
 import { revokeVersion } from "@/lib/acknowledgements"
+import { assign, carryOverCandidates, audienceRef } from "@/lib/assignments"
+import { dueFromFields } from "@/lib/due"
 import { isHr } from "@/lib/hr"
 import { tenantExtras } from "@/lib/codelistsTenant"
 import {
@@ -33,7 +35,7 @@ import type { CodelistExtras } from "@/lib/codelists"
 import { rewritePdf } from "@/lib/llmRewrite"
 import { tidyStructure } from "@/lib/tidyStructure"
 import { getCollection } from "@/lib/mongodb"
-import { DOCUMENTS_COLLECTION } from "@/lib/documents"
+import { DOCUMENTS_COLLECTION, effectiveVersion } from "@/lib/documents"
 import { writeAudit } from "@/lib/audit"
 import { dictionary, errorText, type UiLanguage } from "@/lib/i18n"
 import { AppError } from "@/lib/appError"
@@ -406,6 +408,115 @@ export async function decideOnDraftAction(fd: FormData) {
 
   revalidatePath(`/library/${id}`)
   redirect(`/library/${encodeURIComponent(id)}/text?msg=${encodeURIComponent(message)}${error ? "&error=1" : ""}`)
+}
+
+
+/**
+ * Zopakuje pridelenia predošlého znenia na to, ktoré platí teraz.
+ *
+ * **Prečo to vôbec existuje.** `subject.versionId` pripína pridelenie na
+ * konkrétne znenie (D28), takže po zverejnení novely nie je na nové znenie
+ * pridelený nikto, kým sa nepridelí znova. Dovtedy to nebolo z ničoho vidieť.
+ *
+ * **Prečo na detaile a nie hneď po zverejnení.** Znenie sa bežne zverejní
+ * v septembri s účinnosťou od januára a `assign()` neúčinné znenie odmietne
+ * (D73/D6). Ponuka viazaná na okamih zverejnenia by teda v polovici prípadov
+ * skončila hláškou „zatiaľ to nejde" — a kto ju vtedy preklikne, už sa k nej
+ * nevráti. Táto je viazaná na **stav**, takže sa dá doriešiť aj o týždeň.
+ *
+ * **Prideľuje personalista, nie správca obsahu.** Je to zápis povinnosti
+ * človeku, nie úprava metadát dokumentu; rola sa preto overuje tu, nie sa
+ * predpokladá z toho, že karta bola na obrazovke vidieť.
+ *
+ * **Dôvod je nový a povinný** (D30): pôvodný („nástup do zamestnania") sa
+ * novely netýka a prevziať ho by znamenalo zapísať do záznamu nepravdu.
+ * **Termín sa neprenáša** — pôvodný býva v minulosti a hneď by vyrobil
+ * omeškanie u všetkých. **E-maily sa neposielajú**, rozposlanie zostáva
+ * samostatným krokom: jeden klik nemá poslať mail stovke ľudí.
+ */
+export async function carryOverAssignmentsAction(fd: FormData) {
+  const ctx = await libraryContext()
+  if (ctx.state !== "ready") redirect("/")
+
+  const id = fieldText(fd, "documentId")
+  const language = ctx.person.language
+  let message = ""
+  let error = false
+
+  try {
+    if (!isHr(ctx.person)) {
+      throw new AppError("assignment.forbidden", "Prideľovať smie personalista.")
+    }
+
+    const reason = fieldText(fd, "reason")
+    /*
+     * Termín sa parsuje **pred** cyklom, rovnako ako v `/hr/assign`: je
+     * spoločný pre celý výber a chyba v ňom má vrátiť človeka k formuláru
+     * skôr, než sa čokoľvek zapíše.
+     */
+    const parsed = dueFromFields({
+      mode: fd.get("dueMode"),
+      date: fieldText(fd, "dueDate"),
+      days: fieldText(fd, "dueDays"),
+    })
+    if ("error" in parsed) throw new AppError(parsed.error, parsed.error)
+    const due = parsed.due
+
+    // Znenie sa berie zo servera, nie z formulára — keby `versionId` prišlo
+    // z prehliadača, dalo by sa prideliť ľubovoľné, aj cudzie.
+    const col = await getCollection(DOCUMENTS_COLLECTION)
+    const doc = await col.findOne({ documentId: id, companyCode: ctx.person.companyCode })
+    if (!doc) throw new LibraryError("library.documentNotFound", "Taký dokument tu nie je.")
+    const effective = effectiveVersion(doc as never)
+    if (!effective.ok) {
+      throw new LibraryError(
+        "library.noPublishedVersion",
+        "Dokument nemá platné znenie — prideliť sa dá len to, čo už platí.",
+      )
+    }
+    const version = effective.version
+
+    // Publiká tiež zo servera: formulár hovorí **ktoré** z ponúknutých, nie
+    // aké. Inak by sa dalo prideliť publiku, ktoré tento dokument nikdy nemalo.
+    const candidates = await carryOverCandidates(ctx.person.companyCode, id, version.versionId)
+    const picked = new Set(
+      fd.getAll("audience").filter((v): v is string => typeof v === "string"),
+    )
+    const chosen = candidates.filter(c => picked.has(audienceRef(c.audience)))
+    if (chosen.length === 0) {
+      throw new AppError("assignment.noAudience", "Nevybral si žiadne publikum.")
+    }
+
+    let created = 0
+    let already = 0
+    for (const c of chosen) {
+      const r = await assign({
+        companyCode: ctx.person.companyCode,
+        subject: {
+          documentId: id,
+          versionId: version.versionId,
+          documentTitle: String(doc.title ?? id),
+          versionLabel: version.label,
+          effectiveFrom: version.effectiveFrom ? new Date(version.effectiveFrom) : null,
+        },
+        audience: c.audience,
+        reason: reason,
+        assignedBy: ctx.person.email,
+        due: due,
+      })
+      if (r.status === "pridelene") created += 1
+      else already += 1
+    }
+    message = say(language).carriedOver(created, already)
+  } catch (e) {
+    if (isRedirect(e)) throw e
+    message = errorMessage(e, language)
+    error = true
+  }
+
+  revalidatePath("/library")
+  revalidatePath(`/library/${id}`)
+  redirect(`/library/${encodeURIComponent(id)}?msg=${encodeURIComponent(message)}${error ? "&error=1" : ""}`)
 }
 
 /** Uloží údaje o dokumente z detailu. */

@@ -1214,6 +1214,30 @@ interface Dictionary {
   },
   library: {
     /**
+     * Zopakovanie pridelenia na nové znenie.
+     *
+     * Vlastná skupina, nie súčasť `detail`: je to jediná karta na tej
+     * obrazovke, ktorá **zapisuje mimo knižnice** — vytvára pridelenia, teda
+     * povinnosti ľuďom. Oddelené texty sú pripomienka, že to nie je úprava
+     * metadát.
+     */
+    carryOver: {
+      heading: string
+      intro: (label: string) => string
+      audiences: string
+      previously: (label: string, reason: string) => string
+      reason: string
+      reasonNote: string
+      due: string
+      dueNone: string
+      dueDate: string
+      dueDays: string
+      dueDaysUnit: string
+      dueNote: string
+      submit: string
+      noEmailNote: string
+    }
+    /**
      * Popisky polí, ktoré sú na dvoch obrazovkách naraz — pri nahratí
      * dokumentu aj pri úprave jeho údajov. Zdvojiť ich v `upload` aj
      * v `detail` by znamenalo, že sa raz rozídu a to isté pole sa bude
@@ -1620,6 +1644,8 @@ interface Dictionary {
       reindexed: (chunks: number, archived: number) => string
       fixed: string
       versionRevoked: (people: number) => string
+      /** Koľko publík sa prenieslo a koľko ich znenie už malo. */
+      carriedOver: (created: number, already: number) => string
       textFixed: (added: number, removed: number, chunks: number) => string
       submittedForApproval: (n: number) => string
       approvalNotAllNotified: (n: number) => string
@@ -3040,6 +3066,22 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     },
   },
   library: {
+    carryOver: {
+      heading: "Prideliť aj nové znenie",
+      intro: (label) => `Znenie „${label}" nemá zatiaľ pridelené nikoho. Predošlé znenia pridelené boli — potvrdenie sa viaže na konkrétne znenie, takže novelu treba prideliť znova.`,
+      audiences: "Publiká z predošlých znení",
+      previously: (label, reason) => `${label} · pôvodný dôvod: ${reason}`,
+      reason: "Dôvod pridelenia",
+      reasonNote: "Povinný. Napíš, prečo sa má norma potvrdiť znova — pôvodný dôvod pri každom publiku je len nápoveda a pri novele spravidla neplatí.",
+      due: "Termín potvrdenia",
+      dueNone: "bez termínu",
+      dueDate: "do dátumu",
+      dueDays: "do počtu dní",
+      dueDaysUnit: "dní od pridelenia",
+      dueNote: "Bez termínu sa pripomienky neposielajú samy. Pôvodný termín sa neprenáša — býva v minulosti a hneď by vyrobil omeškanie.",
+      submit: "Prideliť vybraným",
+      noEmailNote: "E-maily sa tým neposielajú. Rozposlanie je samostatný krok v Pridelených normách.",
+    },
     fields: {
       ownerDepartment: "Oddelenie, ktoré dokument spravuje",
       ownerDepartmentShort: "Oddelenie",
@@ -3420,6 +3462,9 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
         ` ${archived} starých archivovaných. Znenie ani potvrdenia sa nedotklo.`,
       fixed: "Opravené. Potvrdenia zostávajú platné.",
       versionRevoked: (people) => `Odvolaných potvrdení: ${people}. Povinnosť ožila s pôvodným termínom — teraz oprav údaj a nechaj znenie potvrdiť znova.`,
+      carriedOver: (created, already) =>
+        `Pridelené: ${created}${already > 0 ? `, už bolo pridelených: ${already}` : ""}.` +
+        " E-maily sa neposlali — rozposlanie je samostatný krok.",
       textFixed: (added, removed, chunks) =>
         `Text opravený: +${added} / −${removed} riadkov. Znenie ani potvrdenia sa nemenia;` +
         ` do vyhľadávania išlo ${chunks} ${chunks === 1 ? "úsek" : chunks < 5 ? "úseky" : "úsekov"}.`,
@@ -4828,6 +4873,22 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     },
   },
   library: {
+    carryOver: {
+      heading: "Přidělit i nové znění",
+      intro: (label) => `Znění „${label}" zatím nemá přiděleného nikoho. Předchozí znění přidělená byla — potvrzení se váže na konkrétní znění, takže novelu je třeba přidělit znovu.`,
+      audiences: "Publika z předchozích znění",
+      previously: (label, reason) => `${label} · původní důvod: ${reason}`,
+      reason: "Důvod přidělení",
+      reasonNote: "Povinný. Napiš, proč se má norma potvrdit znovu — původní důvod u každého publika je jen nápověda a u novely zpravidla neplatí.",
+      due: "Termín potvrzení",
+      dueNone: "bez termínu",
+      dueDate: "do data",
+      dueDays: "do počtu dnů",
+      dueDaysUnit: "dnů od přidělení",
+      dueNote: "Bez termínu se připomínky neposílají samy. Původní termín se nepřenáší — bývá v minulosti a hned by vyrobil zpoždění.",
+      submit: "Přidělit vybraným",
+      noEmailNote: "E-maily se tím neposílají. Rozeslání je samostatný krok v Přidělených normách.",
+    },
     fields: {
       ownerDepartment: "Oddělení, které dokument spravuje",
       ownerDepartmentShort: "Oddělení",
@@ -5208,6 +5269,9 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
         ` ${archived} starých archivováno. Znění ani potvrzení se nedotklo.`,
       fixed: "Opraveno. Potvrzení zůstávají platná.",
       versionRevoked: (people) => `Odvolaných potvrzení: ${people}. Povinnost ožila s původním termínem — teď oprav údaj a nech znění potvrdit znovu.`,
+      carriedOver: (created, already) =>
+        `Přiděleno: ${created}${already > 0 ? `, už bylo přiděleno: ${already}` : ""}.` +
+        " E-maily se neposlaly — rozeslání je samostatný krok.",
       textFixed: (added, removed, chunks) =>
         `Text opraven: +${added} / −${removed} řádků. Znění ani potvrzení se nemění;` +
         ` do vyhledávání šlo ${chunks} ${chunks === 1 ? "úsek" : chunks < 5 ? "úseky" : "úseků"}.`,
@@ -6610,6 +6674,22 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     },
   },
   library: {
+    carryOver: {
+      heading: "Assign the new version too",
+      intro: (label) => `Version “${label}” has nobody assigned yet. Earlier versions did — an acknowledgement is tied to one specific version, so an amendment has to be assigned again.`,
+      audiences: "Audiences from earlier versions",
+      previously: (label, reason) => `${label} · original reason: ${reason}`,
+      reason: "Reason for assigning",
+      reasonNote: "Required. Say why the document has to be acknowledged again — the original reason shown by each audience is only a hint and rarely holds for an amendment.",
+      due: "Acknowledgement deadline",
+      dueNone: "no deadline",
+      dueDate: "by date",
+      dueDays: "within days",
+      dueDaysUnit: "days from assignment",
+      dueNote: "Without a deadline no reminders are sent automatically. The original deadline is not carried over — it is usually in the past and would create an overdue duty at once.",
+      submit: "Assign to the selected",
+      noEmailNote: "This sends no e-mails. Notifying people is a separate step under assigned documents.",
+    },
     fields: {
       ownerDepartment: "Department that maintains the document",
       ownerDepartmentShort: "Department",
@@ -6990,6 +7070,9 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
         " Neither the wording nor the acknowledgements were touched.",
       fixed: "Corrected. Acknowledgements stay valid.",
       versionRevoked: (people) => `Acknowledgements revoked: ${people}. The duty is back with its original deadline — now correct the value and have the version acknowledged again.`,
+      carriedOver: (created, already) =>
+        `Assigned: ${created}${already > 0 ? `, already assigned: ${already}` : ""}.` +
+        " No e-mails were sent — notifying people is a separate step.",
       textFixed: (added, removed, chunks) =>
         `Text corrected: +${added} / −${removed} lines. The version and the acknowledgements are unchanged;` +
         ` ${chunks} ${chunks === 1 ? "chunk" : "chunks"} went into search.`,

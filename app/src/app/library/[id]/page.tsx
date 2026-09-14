@@ -18,6 +18,7 @@ import Notice from "@/components/Notice"
 import {
   publishVersionAction, saveDocumentMetadataAction, assignToFolderAction, reindexDocumentAction,
   fixVersionAction, fixTextAction, uploadVersionAction, revokeVersionAction,
+  carryOverAssignmentsAction,
 } from "../actions"
 import { allFolders, flattenTree } from "@/lib/folders"
 // Strom oddelení a strom priečinkov majú rovnaké pomenovanie funkcií —
@@ -25,6 +26,7 @@ import { allFolders, flattenTree } from "@/lib/folders"
 // odložím, oddelenie je kto ho udržiava.
 import { allDepartments, flattenTree as flattenDepartments } from "@/lib/departments"
 import { MAX_INTERNAL_NUMBER } from "@/lib/libraryWrite"
+import { carryOverCandidates, audienceRef, audienceLabel } from "@/lib/assignments"
 import { codelistOptions } from "@/lib/codelists"
 import { tenantExtras } from "@/lib/codelistsTenant"
 import Select from "@/components/Select"
@@ -77,6 +79,36 @@ export default async function DocumentDetailPage({
   // porovnávať koncept s prázdnym `markdown` by tvrdilo, že je čo publikovať,
   // aj keď je text ten istý.
   const effective = d.versions.find(v => v.isActive && v.effectiveFrom)
+
+  const tc = dictionary(language).library.carryOver
+  /*
+   * Publiká, ktoré platné znenie „zdedí" po predošlých (D28). Prázdny zoznam
+   * je bežný stav — vtedy sa karta nevykreslí vôbec a obrazovka o nej mlčí.
+   */
+  const canAssign = isHr(ctx.person)
+  /*
+   * Znenie sa berie z `effectiveVersionId`, **nie z `effective` vyššie**.
+   * Tamto je „aktívne a s dátumom", toto je „platí dnes" (`effectiveVersion()`)
+   * — a presne to isté pravidlo použije serverová akcia. Keby sa tie dve
+   * rozišli, ponuka by sa počítala nad jedným znením a zápis by prebehol nad
+   * druhým: zaškrtnuté publikum by sa ticho nepridelilo.
+   */
+  const carryOver = canAssign
+    ? await carryOverCandidates(ctx.tenant.companyCode, documentId, d.effectiveVersionId)
+    : []
+  const carryOverVersion = d.versions.find(v => v.versionId === d.effectiveVersionId)
+  /*
+   * Predvyplnený dôvod. Keď všetky publiká prišli z toho istého dôvodu, ponúkne
+   * sa aj on — inak len veta o novom znení. Skladať dokopy tri rôzne dôvody by
+   * vyrobilo vetu, ktorú nikto nenapísal.
+   */
+  const sharedReason = carryOver.length > 0 &&
+    carryOver.every(c => c.previousReason === carryOver[0].previousReason)
+    ? carryOver[0].previousReason
+    : ""
+  const carryOverReason = carryOverVersion
+    ? `Nové znenie „${carryOverVersion.label}"${sharedReason ? `, pôvodne: ${sharedReason}` : ""}`
+    : sharedReason
 
   // Schvaľovanie (ADR-006). Kolá pre celý dokument jedným dotazom — pri
   // desiatich zneniach je rozdiel medzi jedným a desiatimi dotazmi vidieť.
@@ -300,6 +332,79 @@ export default async function DocumentDetailPage({
           <div><button className="button" type="submit">{t.save}</button></div>
         </form>
       </details>
+
+      {/*
+        Zopakovanie pridelenia na nové znenie.
+
+        **Ukáže sa podľa stavu, nie po udalosti.** Znenie sa bežne zverejní
+        v septembri s účinnosťou od januára a prideliť sa dá až účinné (D73/D6),
+        takže ponuka viazaná na okamih zverejnenia by polovicu prípadov minula.
+        Táto visí dovtedy, kým platné znenie nemá pridelenia, ktoré predošlé
+        malo — teda presne nad tou pomlčkou, ktorú v knižnici ukazuje stĺpec
+        s potvrdeniami.
+
+        Vidí ju personalista, nie správca obsahu: je to zápis povinnosti
+        človeku. Rolu overuje aj samotná akcia — karta, ktorá nie je vidieť,
+        nie je kontrola prístupu.
+      */}
+      {canAssign && carryOver.length > 0 && (
+      <form action={carryOverAssignmentsAction} className="card" style={{ padding: 18, margin: "0 0 18px" }}>
+        <input type="hidden" name="documentId" value={d.documentId} />
+        <h2 style={{ fontSize: 16.5, margin: "0 0 6px" }}>{tc.heading}</h2>
+        <p className="quiet" style={{ fontSize: 13.5, margin: "0 0 14px" }}>
+          {tc.intro(carryOverVersion?.label ?? d.effectiveLabel)}
+        </p>
+
+        <fieldset className="hr-group" style={{ border: "1px solid var(--line)", margin: "0 0 14px" }}>
+          <legend className="field-label">{tc.audiences}</legend>
+          {carryOver.map(c => (
+            <label key={audienceRef(c.audience)} className="check-row" style={{ display: "block", padding: "6px 0" }}>
+              <input type="checkbox" name="audience" value={audienceRef(c.audience)} defaultChecked />
+              {" "}
+              <span>{tc.previously(audienceLabel(c.audience), c.previousReason)}</span>
+            </label>
+          ))}
+        </fieldset>
+
+        <label className="field">
+          <span className="field-label">{tc.reason}</span>
+          <input className="field-input" name="reason" required
+                 defaultValue={carryOverReason} />
+          <span className="quiet field-hint">{tc.reasonNote}</span>
+        </label>
+
+        <fieldset className="hr-group" style={{ border: "1px solid var(--line)", margin: "14px 0" }}>
+          <legend className="field-label">{tc.due}</legend>
+          <Select
+            name="dueMode"
+            fieldLabel={tc.due}
+            initial="none"
+            options={[
+              { value: "none", label: tc.dueNone },
+              { value: "date", label: tc.dueDate },
+              { value: "days", label: tc.dueDays },
+            ]}
+          />
+          {/* Obe polia sú v DOM stále — formulár beží bez JavaScriptu, takže
+              sa skryť nedajú, a `dueFromFields()` číta len to, ktoré patrí
+              k zvolenému režimu. */}
+          <div className="due-fields">
+            <label className="field">
+              <span className="quiet field-label">{tc.dueDate}</span>
+              <input className="field-input" type="date" name="dueDate" defaultValue="" />
+            </label>
+            <label className="field">
+              <span className="quiet field-label">{tc.dueDaysUnit}</span>
+              <input className="field-input" type="number" min={1} name="dueDays" defaultValue="" />
+            </label>
+          </div>
+          <span className="quiet field-hint">{tc.dueNote}</span>
+        </fieldset>
+
+        <div><button className="button" type="submit">{tc.submit}</button></div>
+        <p className="quiet" style={{ fontSize: 13.5, margin: "10px 0 0" }}>{tc.noEmailNote}</p>
+      </form>
+      )}
 
       <form action={assignToFolderAction} className="card tree-form" style={{ padding: 18, margin: "0 0 18px" }}>
         <input type="hidden" name="documentId" value={d.documentId} />

@@ -414,6 +414,101 @@ export async function assign(input: NewAssignment): Promise<AssignResult> {
  * Odvolanie **nemaže potvrdenia**, ktoré medzitým vznikli — človek ten
  * dokument naozaj prečítal a záznam o tom je jeho, nie náš.
  */
+/**
+ * Pridelenie predošlého znenia, ktoré sa dá zopakovať na súčasnom.
+ *
+ * Nesie aj **pôvodný dôvod** — nie preto, aby sa prevzal (to by pri novele
+ * bola nepravda: „nástup do zamestnania" sa nového znenia netýka), ale preto,
+ * aby ho personalista videl, kým píše nový.
+ */
+export interface CarryOver {
+  audience: Audience
+  previousReason: string
+  previousVersionId: string
+  previousVersionLabel: string
+  previousAssignedAt: Date
+}
+
+/**
+ * Publikum ako jeden reťazec.
+ *
+ * Používa sa na dvoch miestach naraz: ako kľúč pri zlučovaní a ako **hodnota
+ * zaškrtávacieho políčka** vo formulári. Preto je exportovaný — keby si ho
+ * formulár skladal sám, rozišiel by sa s tým, podľa čoho server vyberá,
+ * a zaškrtnuté publikum by sa ticho nepridelilo.
+ *
+ * Hodnota sa normalizuje rovnako ako v `matchesAudience()`.
+ */
+export function audienceRef(a: Audience | undefined): string {
+  return `${a?.kind ?? ""}\u0000${(a?.value ?? "").trim().toLowerCase()}`
+}
+
+/**
+ * Ktoré publiká „zdedí" súčasné znenie po predošlých — **čisté pravidlo**.
+ *
+ * ## Prečo to vôbec treba
+ *
+ * `subject.versionId` pripína pridelenie na konkrétne znenie (D28), takže po
+ * zverejnení novely nie je na nové znenie pridelený **nikto**, kým sa
+ * nepridelí znova. Dovtedy to nebolo z ničoho vidieť; odkedy je v knižnici
+ * stĺpec s potvrdeniami, je to vidieť ako pomlčka — a toto je odpoveď na ňu.
+ *
+ * ## Tri pravidlá
+ *
+ * 1. **Publikum, ktoré súčasné znenie už má, sa neponúka.** Nie je to len
+ *    kozmetika: `assign()` je síce idempotentné, ale ponuka, ktorá po kliknutí
+ *    nič neurobí, učí človeka neveriť tlačidlám.
+ * 2. **Pri tom istom publiku rozhoduje najnovšie pridelenie.** Staršie znenia
+ *    nesú staršie dôvody a tie už nikto ponúkať nechce.
+ * 3. **Odvolané pridelenia sa neprenášajú** — odvolanie je rozhodnutie, že to
+ *    publikum normu potvrdzovať nemá, a novela ho neruší. Filtruje ich
+ *    volajúci dotazom (`revokedAt: null`), aby pravidlo zostalo bez databázy.
+ */
+export function carryOverFrom(rows: Assignment[], currentVersionId: string): CarryOver[] {
+  const versionId = (currentVersionId ?? "").trim()
+  if (!versionId) return []
+
+  const already = new Set(
+    rows.filter(r => r.subject?.versionId === versionId).map(r => audienceRef(r.audience)),
+  )
+
+  const best = new Map<string, CarryOver>()
+  for (const r of rows) {
+    if (!r.subject?.versionId || r.subject.versionId === versionId) continue
+    const key = audienceRef(r.audience)
+    if (already.has(key)) continue
+    const at = new Date(r.assignedAt)
+    if (Number.isNaN(at.getTime())) continue
+    const kept = best.get(key)
+    if (kept && kept.previousAssignedAt.getTime() >= at.getTime()) continue
+    best.set(key, {
+      audience: r.audience,
+      previousReason: r.reason,
+      previousVersionId: r.subject.versionId,
+      previousVersionLabel: r.subject.versionLabel,
+      previousAssignedAt: at,
+    })
+  }
+
+  return [...best.values()].sort((a, b) =>
+    audienceLabel(a.audience).localeCompare(audienceLabel(b.audience), "sk"))
+}
+
+/** Kandidáti na zopakovanie pridelenia pre jeden dokument. */
+export async function carryOverCandidates(
+  companyCode: string,
+  documentId: string,
+  currentVersionId: string | null | undefined,
+): Promise<CarryOver[]> {
+  const versionId = (currentVersionId ?? "").trim()
+  if (!versionId) return []
+  const col = await getCollection<Assignment>(ASSIGNMENTS_COLLECTION)
+  const rows = await col
+    .find({ companyCode, "subject.documentId": documentId, revokedAt: null } as never)
+    .toArray()
+  return carryOverFrom(rows, versionId)
+}
+
 export async function revoke(companyCode: string, id: string, actor: string): Promise<boolean> {
   if (!ObjectId.isValid(id)) return false
   const col = await getCollection<Assignment>(ASSIGNMENTS_COLLECTION)

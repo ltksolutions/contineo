@@ -7,7 +7,10 @@
  */
 
 import { describe, it, expect } from "vitest"
-import { matchesAudience, audienceLabel, audienceFromSelection } from "../src/lib/assignments"
+import {
+  matchesAudience, audienceLabel, audienceFromSelection, carryOverFrom, audienceRef,
+  type Assignment,
+} from "../src/lib/assignments"
 import { normalizeKeys } from "../src/lib/persons"
 
 const person = {
@@ -142,5 +145,76 @@ describe("publika z vyberu na obrazovke", () => {
     expect(audienceFromSelection({})).toEqual([])
     expect(audienceFromSelection({ selected: [], addresses: "" })).toEqual([])
     expect(audienceFromSelection({ all: false })).toEqual([])
+  })
+})
+
+
+describe("zdedenie pridelenia novym znenim (D28)", () => {
+  /** Minimalne pridelenie — pravidlo cita len tieto polia. */
+  const a = (versionId: string, kind: string, value: string, reason: string, day: number) => ({
+    subject: {
+      documentId: "sfz:stanovy",
+      versionId: versionId,
+      documentTitle: "Stanovy",
+      versionLabel: `znenie ${versionId}`,
+      effectiveFrom: null,
+    },
+    audience: { kind: kind, value: value },
+    reason: reason,
+    assignedAt: new Date(2026, 0, day),
+  }) as unknown as Assignment
+
+  it("bez platneho znenia sa neponuka nic", () => {
+    // Nie je na co pridelovat. Prazdny zoznam, nie pokus o hadanie.
+    expect(carryOverFrom([a("v1", "group", "rozhodcovia", "nastup", 1)], "")).toEqual([])
+  })
+
+  it("publikum, ktore nove znenie uz ma, sa neponuka znova", () => {
+    // `assign()` je idempotentne, takze kliknutie by nic nepokazilo — ale
+    // tlacidlo, ktore nic neurobi, uci cloveka neverit tlacidlam.
+    const rows = [
+      a("v1", "group", "rozhodcovia", "nastup", 1),
+      a("v2", "group", "rozhodcovia", "novela", 2),
+    ]
+    expect(carryOverFrom(rows, "v2")).toEqual([])
+  })
+
+  it("pri tom istom publiku vyhra najnovsie pridelenie aj jeho dovod", () => {
+    // Starsie znenia nesu starsie dovody a tie uz nikto ponukat nechce.
+    const rows = [
+      a("v1", "group", "rozhodcovia", "stary dovod", 1),
+      a("v2", "group", "rozhodcovia", "novsi dovod", 5),
+    ]
+    const out = carryOverFrom(rows, "v3")
+    expect(out).toHaveLength(1)
+    expect(out[0].previousReason).toBe("novsi dovod")
+    expect(out[0].previousVersionId).toBe("v2")
+  })
+
+  it("rozne publika sa vratia vsetky", () => {
+    const rows = [
+      a("v1", "group", "rozhodcovia", "d1", 1),
+      a("v1", "department", "usek-it", "d2", 1),
+      a("v1", "person", "jan@futbalsfz.sk", "d3", 1),
+    ]
+    const out = carryOverFrom(rows, "v2")
+    expect(out).toHaveLength(3)
+    expect(new Set(out.map(c => c.audience.kind))).toEqual(new Set(["group", "department", "person"]))
+  })
+
+  it("velke a male pismena su to iste publikum", () => {
+    // Inak by sa „Rozhodcovia" ponukli este raz vedla „rozhodcovia" a niekto
+    // by tu istu skupinu pridelil dvakrat.
+    const rows = [
+      a("v1", "group", "Rozhodcovia", "stary", 1),
+      a("v2", "group", "rozhodcovia", "novy", 2),
+    ]
+    expect(carryOverFrom(rows, "v2")).toEqual([])
+  })
+
+  it("odkaz na publikum sedi s tym, podla coho server vybera", () => {
+    // Hodnota zaskrtavacieho policka aj kluc zlucovania su ta ista funkcia.
+    const out = carryOverFrom([a("v1", "group", "Rozhodcovia", "d", 1)], "v2")
+    expect(audienceRef(out[0].audience)).toBe(audienceRef({ kind: "group", value: "rozhodcovia" }))
   })
 })
