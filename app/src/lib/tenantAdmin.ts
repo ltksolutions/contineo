@@ -92,6 +92,8 @@ export interface TenantChange {
   hostnames?: string[]
   /** Domény, z ktorých sa človek založí sám pri prihlásení kontom (D47). */
   autoProvisionDomains?: string[]
+  /** Medzinárodná predvoľba pre čísla bez nej (D86). Prázdne = späť na `+421`. */
+  phonePrefix?: string
   chunking?: Partial<ChunkingProfile>
   /** Pomenované profily členenia (D79). */
   chunkingProfiles?: ChunkingProfileDef[]
@@ -167,6 +169,27 @@ function toSet(change: TenantChange): Record<string, unknown> {
   // v ňom je, takže prázdny zoznam je vedomé „nikoho nezakladať".
   if (change.autoProvisionDomains !== undefined) {
     set.autoProvisionDomains = normalizeDomains(change.autoProvisionDomains)
+  }
+  /*
+    Predvoľba telefónu (D86).
+
+    Uloží sa len tvar `+` a číslice — hodnota sa lepí pred zvyšok čísla, takže
+    medzera alebo písmeno v nej by vyrobili neplatné číslo pri každej osobe,
+    a prejavilo by sa to až vtedy, keď by niekomu niekto skúsil zavolať.
+
+    Prázdne pole sa **zapíše prázdne** a `normalizePhone()` potom padne na
+    `+421`. Nie je to „nemeniť": organizácia musí vedieť predvoľbu zrušiť.
+  */
+  if (change.phonePrefix !== undefined) {
+    const prefix = change.phonePrefix.trim().replace(/[\s.\-/()]/g, "")
+    if (prefix && !/^\+[1-9]\d{0,3}$/.test(prefix)) {
+      throw new TenantValidationError(
+        "tenant.phonePrefixShape",
+        `Predvoľba „${prefix}" nemá správny tvar — očakáva sa napríklad +421.`,
+        { value: prefix },
+      )
+    }
+    set.phonePrefix = prefix
   }
   if (change.chunking !== undefined) {
     // Pole sa volá `chunking`, nie `chunkovanie`: po migrácii na anglické

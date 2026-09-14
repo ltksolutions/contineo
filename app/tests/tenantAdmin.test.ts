@@ -173,3 +173,33 @@ describe("založenie", () => {
     expect(insertOne).not.toHaveBeenCalled()
   })
 })
+
+describe("predvoľba telefónu (D86)", () => {
+  it("uloží sa aj bez medzier a oddeľovačov", async () => {
+    findOne.mockResolvedValue(SFZ)
+    await saveTenant("SFZ", { phonePrefix: " +4 21 " }, "kto@ltk.solutions")
+    expect(updateOne.mock.calls[0][1].$set.phonePrefix).toBe("+421")
+  })
+
+  it("prázdna hodnota sa zapíše prázdna — je to zrušenie, nie „nemeniť“", async () => {
+    // Bez toho by sa raz nastavená predvoľba nedala odstrániť.
+    findOne.mockResolvedValue(SFZ)
+    await saveTenant("SFZ", { phonePrefix: "" }, "kto@ltk.solutions")
+    expect(updateOne.mock.calls[0][1].$set.phonePrefix).toBe("")
+  })
+
+  it("čo nie je predvoľba, sa neuloží", async () => {
+    // Hodnota sa lepí pred zvyšok čísla — písmeno v nej by vyrobilo neplatné
+    // číslo pri každej osobe a prejavilo by sa to až pri volaní.
+    findOne.mockResolvedValue(SFZ)
+    await expect(saveTenant("SFZ", { phonePrefix: "421" }, "kto@ltk.solutions")).rejects.toThrow()
+    await expect(saveTenant("SFZ", { phonePrefix: "+4x1" }, "kto@ltk.solutions")).rejects.toThrow()
+    await expect(saveTenant("SFZ", { phonePrefix: "+0421" }, "kto@ltk.solutions")).rejects.toThrow()
+  })
+
+  it("nevyplnené pole sa nedotkne uloženej predvoľby", async () => {
+    findOne.mockResolvedValue(SFZ)
+    await saveTenant("SFZ", { displayName: "X" }, "kto@ltk.solutions")
+    expect(updateOne.mock.calls[0][1].$set).not.toHaveProperty("phonePrefix")
+  })
+})

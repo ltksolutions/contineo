@@ -111,6 +111,7 @@ export async function saveBrandingAction(fd: FormData) {
       languages: fd.getAll("languages").filter(v => typeof v === "string") as string[],
       defaultLanguage: fieldText(fd, "defaultLanguage"),
       autoProvisionDomains: normalizeDomains(fieldText(fd, "autoProvisionDomains")),
+      phonePrefix: fieldText(fd, "phonePrefix"),
       ...(logoUrl ? { logoUrl } : {}),
     }, self.email)
   } catch (e) {

@@ -16,6 +16,7 @@ import { domainRequests, domainInstruction } from "@/lib/customerDomains"
 import { providerStatus, PROVIDER_LABEL, PROVIDER_ID } from "@/lib/oauth"
 import { brandingView } from "@/lib/tenants"
 import { tenantStyle } from "@/components/TenantHeader"
+import { DEFAULT_PHONE_PREFIX } from "@/lib/personFields"
 import { UI_LANGUAGES, formatDate, dictionary } from "@/lib/i18n"
 import type { UiLanguage } from "@/lib/i18n"
 import Select from "@/components/Select"
@@ -294,6 +295,23 @@ export default async function OrganisationPage({
           <span className="field-label">{t.branding.supportEmail}</span>
           <input className="field-input" name="supportEmail" type="email" defaultValue={tenant.branding.supportEmail ?? ""} />
           <span className="quiet field-hint">{t.branding.supportEmailNote}</span>
+        </label>
+
+        {/*
+          Predvoľba telefónu (D86). Je to nastavenie organizácie, nie značka —
+          ale patrí sem, lebo je to jediné pole vo svojej skupine a vlastná
+          záložka pre jeden riadok by znamenala, že ho nikto nenájde.
+        */}
+        <label className="field">
+          <span className="field-label">{t.branding.phonePrefix}</span>
+          <input
+            className="field-input"
+            name="phonePrefix"
+            inputMode="tel"
+            placeholder={DEFAULT_PHONE_PREFIX}
+            defaultValue={tenant.phonePrefix ?? ""}
+          />
+          <span className="quiet field-hint">{t.branding.phonePrefixNote}</span>
         </label>
 
         <fieldset className="hr-group" style={{ border: "1px solid var(--line)" }}>
