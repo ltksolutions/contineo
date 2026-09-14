@@ -78,14 +78,27 @@ export default async function MyAcknowledgementsPage() {
                   <p className="quiet" style={{ fontSize: 13.5, margin: "6px 0 0" }}>
                     {t.versionLine(r.versionLabel, formatDate(r.effectiveFrom, language))}
                     {" · "}
-                    {t.whenLine(formatDate(r.acknowledgedAt, language))}
+                    {r.type === "revocation"
+                      ? t.revokedWhenLine(formatDate(r.acknowledgedAt, language))
+                      : t.whenLine(formatDate(r.acknowledgedAt, language))}
                     {r.trackId && <> · {t.viaTrack(r.trackId)}</>}
                   </p>
 
-                  {/* Doslovné znenie formulky — obsah dokladu, nie jeho popis. */}
+                  {/*
+                    Doslovné znenie formulky — obsah dokladu, nie jeho popis.
+                    Pri odvolaní nesie záznam to isté znenie (odvolanie je nový
+                    záznam, nie úprava starého, D24), takže sa musí povedať,
+                    že je to znenie **zrušeného** potvrdenia. Bez toho nad
+                    štítkom „odvolané" stojí veta „Potvrdzujem, že…".
+                  */}
+                  {r.type === "revocation" && (
+                    <p className="quiet" style={{ fontSize: 13, margin: "12px 0 0" }}>
+                      {t.revokedStatement}
+                    </p>
+                  )}
                   <blockquote
                     style={{
-                      margin: "12px 0 0", padding: "10px 14px",
+                      margin: "6px 0 0", padding: "10px 14px",
                       borderLeft: "3px solid var(--line)",
                       fontSize: 14.5, lineHeight: 1.6,
                     }}

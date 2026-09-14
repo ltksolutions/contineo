@@ -251,6 +251,10 @@ interface Dictionary {
     revoked: string
     versionLine: (label: string, effectiveFrom: string) => string
     whenLine: (when: string) => string
+    /** Ten istý riadok pri odvolaní — „potvrdené" by tam klamalo. */
+    revokedWhenLine: (when: string) => string
+    /** Nadpis nad znením pri odvolanom zázname. */
+    revokedStatement: string
     viaTrack: (track: string) => string
     reason: (text: string) => string
     footnoteBefore: string
@@ -1788,6 +1792,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     revoked: "odvolané",
     versionLine: (label, effectiveFrom) => `verzia ${label}, platná od ${effectiveFrom}`,
     whenLine: when => `potvrdené ${when}`,
+    revokedWhenLine: when => `odvolané ${when}`,
+    revokedStatement: "Znenie, pod ktorým bolo potvrdenie pôvodne dané:",
     viaTrack: track => `z trasy ${track}`,
     reason: text => `Dôvod: ${text}`,
     footnoteBefore: "Ako celý postup funguje, je v ",
@@ -3560,6 +3566,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     revoked: "odvoláno",
     versionLine: (label, effectiveFrom) => `verze ${label}, platná od ${effectiveFrom}`,
     whenLine: when => `potvrzeno ${when}`,
+    revokedWhenLine: when => `odvoláno ${when}`,
+    revokedStatement: "Znění, pod kterým bylo potvrzení původně dáno:",
     viaTrack: track => `z trasy ${track}`,
     reason: text => `Důvod: ${text}`,
     footnoteBefore: "Jak celý postup funguje, je v ",
@@ -5327,6 +5335,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     revoked: "revoked",
     versionLine: (label, effectiveFrom) => `version ${label}, effective from ${effectiveFrom}`,
     whenLine: when => `acknowledged ${when}`,
+    revokedWhenLine: when => `revoked ${when}`,
+    revokedStatement: "The statement under which it was originally acknowledged:",
     viaTrack: track => `from track ${track}`,
     reason: text => `Reason: ${text}`,
     footnoteBefore: "How the whole process works is in the ",
