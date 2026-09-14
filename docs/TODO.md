@@ -616,8 +616,16 @@ zneniach** (`6c26…`, `1abc…`), kým platné znenie je `7942…`. Overené v 
 2026-09-14, nie odhadnuté. `Assignment.subject.versionId` pripína pridelenie na
 konkrétne znenie (D28), takže po zverejnení novely **nikto nie je pridelený na
 nové znenie, kým sa nepridelí znova** — a knižnica to odteraz vidno povie
-pomlčkou. Otvorená otázka pre Jána: má sa pri zverejnení novely ponúknuť
-„prideliť rovnakým publikám ako predošlé znenie"? Zatiaľ sa nič nerobí.
+pomlčkou. **Doriešené** (Ján Letko, 2026-09-14), `b52ad63`: na detaile
+dokumentu je karta „Prideliť aj nové znenie", ktorá sa ukáže vždy, keď platné
+znenie nemá pridelenia, ktoré predošlé malo.
+
+Ponuka je viazaná na **stav, nie na okamih zverejnenia** — a to je celý trik:
+znenie sa bežne zverejní v septembri s účinnosťou od januára a `assign()`
+neúčinné znenie odmietne (D73/D6), takže tlačidlo hneď po publikovaní by
+polovicu prípadov minulo. Dôvod je nový a povinný (D30) s predvyplneným
+návrhom, termín sa neprenáša (pôvodný býva v minulosti) a e-maily sa
+neposielajú — rozposlanie zostáva samostatným krokom.
 
 **Nerobí sa:**
 

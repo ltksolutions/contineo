@@ -4,6 +4,46 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Nové znenie sa dá prideliť rovnakým publikám ako predošlé (2026-09-14)
+
+Odpoveď na pomlčku, ktorú v knižnici ukázal nový stĺpec „Potvrdenia".
+`subject.versionId` pripína pridelenie na konkrétne znenie (D28), takže po
+zverejnení novely **nie je na nové znenie pridelený nikto**, kým sa nepridelí
+znova. Dovtedy to nebolo z ničoho vidieť.
+
+Na detaile dokumentu je preto karta „Prideliť aj nové znenie" so zoznamom
+publík z predošlých znení, zaškrtnutých vopred.
+
+**Viazaná je na stav, nie na okamih zverejnenia**, a to je podstata návrhu:
+znenie sa bežne zverejní v septembri s účinnosťou od januára a `assign()`
+neúčinné znenie odmietne (D73/D6). Ponuka po publikovaní by teda polovicu
+prípadov skončila hláškou „zatiaľ to nejde" — a kto ju vtedy preklikne, už sa
+k nej nevráti. Takto sa to dá doriešiť aj o týždeň.
+
+Štyri rozhodnutia Jána Letka:
+
+- **Dôvod je nový a povinný** (D30), s predvyplneným návrhom. Pôvodný („nástup
+  do zamestnania") sa novely netýka a prevziať ho doslovne by znamenalo
+  zapísať do dôkazného záznamu nepravdu.
+- **Termín sa neprenáša** — pôvodný býva v minulosti a hneď by vyrobil
+  omeškanie u všetkých.
+- **E-maily sa neposielajú.** Jeden klik nemá poslať mail stovke ľudí.
+- **Prideľuje personalista**, nie správca obsahu: je to zápis povinnosti
+  človeku. Rolu overuje akcia, nie to, že karta bola vidieť.
+
+Pravidlo je čistá funkcia `carryOverFrom()` — bez databázy, šesť testov bez
+mocku. Publikum, ktoré nové znenie už má, sa neponúka; pri tom istom publiku
+vyhráva najnovšie pridelenie aj jeho dôvod; odvolané pridelenia sa neprenášajú,
+lebo odvolanie je rozhodnutie a novela ho neruší.
+
+**Chyba nájdená pred spustením, nie po ňom:** obrazovka počítala ponuku nad
+znením `isActive`, akcia by zapisovala nad `effectiveVersion()`. Sú to dve
+rôzne pravidlá a keby sa rozišli, zaškrtnuté publikum by sa ticho nepridelilo
+a nikto by nevedel prečo.
+
+Overené na produkcii na Skúšobnej smernici: dve staré pridelenia na dvoch
+zneniach sa zliali do jedného publika s **najnovším** dôvodom, presne ako má.
+
 ### Knižnica: oddelenie správcu, interné číslo, platnosť do a potvrdenia (2026-09-14)
 
 Štyri body O6 naraz — všetky sú o tom, že v zozname noriem chýbali údaje,
