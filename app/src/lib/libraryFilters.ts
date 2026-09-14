@@ -23,8 +23,15 @@ import {
   type Condition, type MatchMode,
 } from "./libraryConditions"
 
-/** Facety, ktoré sa dajú vybrať viackrát. */
-export const MULTI_KEYS = ["category", "status", "tag", "accessLevel", "language"] as const
+/**
+ * Facety, ktoré sa dajú vybrať viackrát.
+ *
+ * `ownerDepartment` je medzi nimi zámerne: „ktoré z troch oddelení to
+ * spravuje" je rovnako bežná otázka ako „norma alebo smernica". Je to
+ * **vlastníctvo dokumentu**, nie jeho adresáti — tí sú v `assignments`
+ * a počítajú sa, keď na ne raz príde rad.
+ */
+export const MULTI_KEYS = ["category", "status", "tag", "accessLevel", "language", "ownerDepartment"] as const
 export type MultiKey = (typeof MULTI_KEYS)[number]
 
 /**
@@ -78,6 +85,8 @@ export interface ActiveFilters {
   tag: string[]
   accessLevel: string[]
   language: string[]
+  /** Oddelenia, ktoré dokumenty spravujú — identifikátory zo stromu (D49). */
+  ownerDepartment: string[]
   /**
    * Nie filtre, ale nesú sa spolu s nimi — inak by prvý klik na facet
    * prepol navigáciu späť na predvolený variant a pohľad na predvolený.
@@ -108,7 +117,7 @@ export interface ActiveFilters {
 }
 
 const EMPTY: ActiveFilters = {
-  category: [], status: [], tag: [], accessLevel: [], language: [],
+  category: [], status: [], tag: [], accessLevel: [], language: [], ownerDepartment: [],
   conditions: [], match: "all", picked: [],
 }
 
@@ -160,6 +169,7 @@ export function readFilters(q: RawQuery): ActiveFilters {
     tag: list(q.tag),
     accessLevel: list(q.accessLevel),
     language: list(q.language),
+    ownerDepartment: list(q.ownerDepartment),
     layout: one(q.layout),
     // Predvolený pohľad sa nedrží ako hodnota — `undefined` znamená tabuľka
     // a do adresy sa nezapíše. Inak by každý odkaz niesol `view=table`.

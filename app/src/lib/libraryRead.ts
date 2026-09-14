@@ -152,6 +152,14 @@ export interface LibraryFilter {
   language?: string | string[]
   accessLevel?: string | string[]
   tag?: string | string[]
+  /**
+   * Oddelenie, ktoré dokument spravuje — identifikátor zo stromu (D49).
+   *
+   * Nie je to filter „komu bol pridelený": to je iná otázka, býva na ňu iná
+   * odpoveď a žije v `assignments`. Zliať ich do jedného filtra by znamenalo,
+   * že sa nedá opýtať ani na jedno.
+   */
+  ownerDepartment?: string | string[]
   /** Podmienky z query buildera. Sú nad facetmi, nie namiesto nich. */
   conditions?: Condition[]
   match?: MatchMode
@@ -160,6 +168,7 @@ export interface LibraryFilter {
 /** Filter, ktorý podmienku vyrobil. Podľa neho sa dá jedna vynechať. */
 export type FilterKey =
   | "status" | "folder" | "category" | "language" | "accessLevel" | "tag" | "search" | "conditions"
+  | "ownerDepartment"
 
 function listOf(value: string | string[] | undefined): string[] {
   const raw = Array.isArray(value) ? value : value === undefined ? [] : [value]
@@ -239,6 +248,7 @@ export function queryParts(
     // Štítky sú na dokumente pole; rovnosť aj `$in` na ňom fungujú ako
     // „obsahuje", takže netreba `$elemMatch`.
     ["tag", "tags"],
+    ["ownerDepartment", "ownerDepartmentId"],
   ]
   for (const [key, field] of fields) {
     const values = listOf(filter[key])
@@ -309,6 +319,12 @@ export interface LibraryFacets {
   tag: FacetCount[]
   accessLevel: FacetCount[]
   language: FacetCount[]
+  /**
+   * Oddelenia správcov. Hodnoty sú identifikátory zo stromu; názov k nim
+   * doplní obrazovka, ktorá strom načíta raz — nie táto agregácia pre každý
+   * riadok zvlášť.
+   */
+  ownerDepartment: FacetCount[]
 }
 
 /** Zoradenie počtov: najprv najčetnejšie, pri rovnosti podľa hodnoty. */
@@ -380,6 +396,17 @@ export async function libraryFacets(
           ],
           accessLevel: [{ $match: without("accessLevel") }, { $group: { _id: "$accessLevel", n: { $sum: 1 } } }],
           language: [{ $match: without("language") }, { $group: { _id: "$language", n: { $sum: 1 } } }],
+          /*
+             Dokumenty bez oddelenia sa do facetu nedostanú — `sortCounts()`
+             zahodí `null` aj prázdny reťazec. Je to zámer: „bez oddelenia"
+             ako voľba by v paneli sľubovala filter na neprítomnosť údaja,
+             ktorý väčšina dokumentov nemá vyplnený, a panel by ju ukazoval
+             ako najpočetnejšiu položku.
+          */
+          ownerDepartment: [
+            { $match: without("ownerDepartment") },
+            { $group: { _id: "$ownerDepartmentId", n: { $sum: 1 } } },
+          ],
         },
       },
     ])
@@ -403,6 +430,7 @@ export async function libraryFacets(
     tag: sortCounts(out?.tag ?? []),
     accessLevel: sortCounts(out?.accessLevel ?? []),
     language: sortCounts(out?.language ?? []),
+    ownerDepartment: sortCounts(out?.ownerDepartment ?? []),
   }
 }
 

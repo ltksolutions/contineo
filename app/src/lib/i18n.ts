@@ -1221,6 +1221,8 @@ interface Dictionary {
      */
     fields: {
       ownerDepartment: string
+      /** Krátky tvar do panela filtrov a do hlavičky stĺpca. */
+      ownerDepartmentShort: string
       ownerDepartmentNote: string
       ownerDepartmentNone: string
       ownerDepartmentEmpty: string
@@ -3029,6 +3031,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
   library: {
     fields: {
       ownerDepartment: "Oddelenie, ktoré dokument spravuje",
+      ownerDepartmentShort: "Oddelenie",
       ownerDepartmentNote: "Nepovinné. Kto predpis udržiava — nie komu sa prideľuje na potvrdenie.",
       ownerDepartmentNone: "Neurčené",
       ownerDepartmentEmpty: "Organizačná štruktúra je zatiaľ prázdna. Oddelenia sa zakladajú v Nastavení organizácie.",
@@ -4813,6 +4816,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
   library: {
     fields: {
       ownerDepartment: "Oddělení, které dokument spravuje",
+      ownerDepartmentShort: "Oddělení",
       ownerDepartmentNote: "Nepovinné. Kdo předpis udržuje — ne komu se přiděluje k potvrzení.",
       ownerDepartmentNone: "Neurčeno",
       ownerDepartmentEmpty: "Organizační struktura je zatím prázdná. Oddělení se zakládají v Nastavení organizace.",
@@ -6591,6 +6595,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
   library: {
     fields: {
       ownerDepartment: "Department that maintains the document",
+      ownerDepartmentShort: "Department",
       ownerDepartmentNote: "Optional. Who keeps the document current — not who is asked to acknowledge it.",
       ownerDepartmentNone: "Not set",
       ownerDepartmentEmpty: "The organisation chart is still empty. Departments are created in Organisation settings.",

@@ -11,6 +11,7 @@ import Link from "next/link"
 import { libraryContext } from "@/lib/library"
 import { libraryList, libraryFacets } from "@/lib/libraryRead"
 import { allFolders, flattenTree, subtree, counts, depth, MAX_DEPTH } from "@/lib/folders"
+import { allDepartments } from "@/lib/departments"
 import { codelistOptions } from "@/lib/codelists"
 import { tenantExtras } from "@/lib/codelistsTenant"
 import Select from "@/components/Select"
@@ -87,6 +88,7 @@ export default async function LibraryPage({
   const uiLanguage = ctx.person.language
   const t = dictionary(uiLanguage).library.list
   const tf = dictionary(uiLanguage).library.folders
+  const tfd = dictionary(uiLanguage).library.fields
   const extras = tenantExtras(ctx.tenant)
 
   // Filtre z adresy v tvare, aký čaká dotazová vrstva. Ten istý objekt ide
@@ -100,11 +102,12 @@ export default async function LibraryPage({
     language: filters.language,
     accessLevel: filters.accessLevel,
     tag: filters.tag,
+    ownerDepartment: filters.ownerDepartment,
     conditions: filters.conditions,
     match: filters.match,
   }
 
-  const [rows, folders, folderCounts, facets, waiting] = await Promise.all([
+  const [rows, folders, folderCounts, facets, waiting, departments] = await Promise.all([
     libraryList(ctx.tenant.companyCode, listFilter),
     allFolders(ctx.tenant.companyCode),
     counts(ctx.tenant.companyCode),
@@ -113,6 +116,10 @@ export default async function LibraryPage({
     // na rozhodnutie, čaká bez ohľadu na to, čo si človek práve odfiltroval —
     // a schovať to za filter by znamenalo, že si toho nikto nevšimne.
     openRounds(ctx.tenant.companyCode),
+    // Strom oddelení sa načíta **raz**, kvôli názvom vo facete. V riadkoch
+    // zoznamu je len identifikátor (D49) — dotaz na názov pri každom riadku
+    // by bol sto dotazov na jedno vykreslenie.
+    allDepartments(ctx.tenant.companyCode),
   ])
   const tree = flattenTree(folders)
   const waitingTitles = await documentTitles(
@@ -180,6 +187,13 @@ export default async function LibraryPage({
     const map = new Map(codelistOptions(codelist, extras).map(o => [o.value, o.label]))
     return (value: string) => map.get(value) ?? value
   }
+  const departmentNames = new Map(departments.map(o => [o.id, o.name]))
+  /*
+    Zmazané oddelenie ukáže identifikátor, nie prázdno. Dokument, ktorý naň
+    ešte odkazuje, sa tak dá nájsť a opraviť — prázdny riadok vo filtri by
+    znamenal, že o ňom nikto nevie.
+  */
+  const departmentLabel = (value: string) => departmentNames.get(value) ?? value
   const categoryLabel = labelFrom("category")
   const tagLabel = labelFrom("tags")
   const accessLabel = labelFrom("accessLevel")
@@ -194,6 +208,7 @@ export default async function LibraryPage({
     tag: { title: t.tag, label: tagLabel },
     accessLevel: { title: t.accessLevel, label: accessLabel },
     language: { title: t.status, label: (v) => v },
+    ownerDepartment: { title: tfd.ownerDepartmentShort, label: departmentLabel },
   }
 
   /** Skupiny, ktoré sa v paneli vykresľujú ako zoznam s počtami. */
@@ -201,6 +216,9 @@ export default async function LibraryPage({
     { key: "category", rows: facets.category },
     { key: "status", rows: facets.status },
     { key: "accessLevel", rows: facets.accessLevel },
+    // Až za prístupom: je to nepovinné pole, takže pri väčšine organizácií
+    // bude skupina prázdna a `facetGroups` ju vtedy nevykreslí vôbec.
+    { key: "ownerDepartment", rows: facets.ownerDepartment },
   ]
 
 
@@ -727,6 +745,7 @@ export default async function LibraryPage({
                 </Link>
 
                 <div className="quiet doc-meta">
+                  {r.internalNumber && `${r.internalNumber} · `}
                   {r.folderTrail?.length ? `${r.folderTrail.join(" / ")} · ` : ""}
                   {r.documentId}
                 </div>
@@ -805,7 +824,15 @@ export default async function LibraryPage({
                           stĺpci: hľadá sa v nich len vtedy, keď názvy
                           nestačia, a dva stĺpce navyše by zúžili ten,
                           na ktorom záleží. */}
+                      {/*
+                          Interné číslo je **prvé** v riadku pod názvom, nie
+                          vo vlastnom stĺpci: je to označenie dokumentu, patrí
+                          teda k identifikátoru, a ôsmy stĺpec by tabuľku na
+                          telefóne rozšíril kvôli údaju, ktorý väčšina
+                          dokumentov nemá.
+                      */}
                       <div className="quiet doc-meta">
+                        {r.internalNumber && `${r.internalNumber} · `}
                         {r.folderTrail?.length ? `${r.folderTrail.join(" / ")} · ` : ""}
                         {r.documentId}
                         {r.originalFile && ` · ${r.originalFile.name} (${formatSize(r.originalFile.bytes)})`}
