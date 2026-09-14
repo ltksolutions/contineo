@@ -155,7 +155,13 @@ export default async function DocumentsPage({
                     <p style={{ margin: "12px 0 0" }}>
                       <Link
                         className={isNext ? "button" : "button button--quiet"}
-                        href={`/documents/${encodeURIComponent(s.documentId)}`}
+                        /*
+                          Kľúč trasy ide so sebou, aby sa do dôkazného
+                          záznamu dostalo, **ako** sa človek k dokumentu
+                          dostal. Server si ho aj tak overí — z adresy je to
+                          tvrdenie prehliadača, nie fakt.
+                        */
+                        href={`/documents/${encodeURIComponent(s.documentId)}?track=${encodeURIComponent(tr.key)}`}
                       >
                         {t.open}
                       </Link>

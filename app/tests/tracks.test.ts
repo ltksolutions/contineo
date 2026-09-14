@@ -51,6 +51,7 @@ import {
   setTrackSteps,
   setTrackActive,
   allTracks,
+  trackForDocument,
   TrackError,
   TRACKS_COLLECTION,
   type Track,
@@ -230,5 +231,65 @@ describe("premenovanie a zoznam", () => {
     const query = collection(TRACKS_COLLECTION).find.mock.calls[0][0]
     expect(query).toEqual({ companyCode: COMPANY })
     expect("isActive" in query).toBe(false)
+  })
+})
+
+
+/**
+ * `trackForDocument()` — údaj o tom, AKO sa človek k dokumentu dostal.
+ *
+ * Kľúč trasy prichádza z adresy, teda od klienta. Ide do dôkazného záznamu,
+ * takže sa nesmie zapísať na slovo prehliadača: inak by sa dalo potvrdiť
+ * dokument „ako krok trasy", ktorú človek nemá, alebo trasy, ktorá ten
+ * dokument neobsahuje.
+ */
+describe("trasa v zázname o potvrdení", () => {
+  const clovek = { companyCode: COMPANY, tracks: ["nastup"] }
+
+  function trasaVDb(steps: { documentId: string }[]) {
+    collection(TRACKS_COLLECTION).find = vi.fn().mockReturnValue({
+      toArray: async () => [{
+        companyCode: COMPANY, key: "nastup", title: "Nástup", isActive: true,
+        steps: steps.map((s, i) => ({
+          order: i + 1, type: "document", documentId: s.documentId,
+          requiresAcknowledgement: true,
+        })),
+      }],
+    })
+  }
+
+  beforeEach(() => { for (const k of Object.keys(collections)) delete collections[k] })
+
+  it("platný kľúč sa zapíše", async () => {
+    trasaVDb([{ documentId: "sfz:pracovny_poriadok" }])
+    expect(await trackForDocument(clovek, "nastup", "sfz:pracovny_poriadok")).toBe("nastup")
+  })
+
+  it("trasa, ktorú človek nemá, sa zahodí", async () => {
+    trasaVDb([{ documentId: "sfz:pracovny_poriadok" }])
+    expect(await trackForDocument(clovek, "vedenie", "sfz:pracovny_poriadok")).toBe(null)
+  })
+
+  it("trasa, ktorá dokument neobsahuje, sa zahodí", async () => {
+    trasaVDb([{ documentId: "sfz:iny_dokument" }])
+    expect(await trackForDocument(clovek, "nastup", "sfz:pracovny_poriadok")).toBe(null)
+  })
+
+  it("bez kľúča sa nič nezapíše a nič sa nehľadá", async () => {
+    expect(await trackForDocument(clovek, null, "sfz:x")).toBe(null)
+    expect(await trackForDocument(clovek, "", "sfz:x")).toBe(null)
+    expect(await trackForDocument(clovek, "   ", "sfz:x")).toBe(null)
+  })
+
+  it("človek bez trás dostane null", async () => {
+    trasaVDb([{ documentId: "sfz:pracovny_poriadok" }])
+    expect(await trackForDocument({ companyCode: COMPANY }, "nastup", "sfz:pracovny_poriadok")).toBe(null)
+  })
+
+  it("neaktívna trasa sa nenačíta, teda sa ani nezapíše", async () => {
+    // `loadTracks()` filtruje `isActive: true` v dotaze; tu to znamená,
+    // že sa nevráti nič.
+    collection(TRACKS_COLLECTION).find = vi.fn().mockReturnValue({ toArray: async () => [] })
+    expect(await trackForDocument(clovek, "nastup", "sfz:pracovny_poriadok")).toBe(null)
   })
 })

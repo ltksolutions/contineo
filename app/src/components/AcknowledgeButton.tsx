@@ -16,7 +16,8 @@
  * nie je — a to je v poriadku: formulár odošle prehliadač sám a odpovie
  * presmerovanie s hlásením.
  *
- * Do akcie ide **len `documentId`**. Verziu aj znenie určuje server.
+ * Do akcie ide `documentId` a — keď človek prišiel z trasy — jej kľúč.
+ * Verziu, znenie aj platnosť kľúča trasy určuje server.
  */
 
 import { useFormStatus } from "react-dom"
@@ -34,10 +35,13 @@ function Submit({ label, pending }: { label: string; pending: string }) {
 
 export default function AcknowledgeButton({
   documentId,
+  trackKey,
   action,
   labels,
 }: {
   documentId: string
+  /** Kľúč trasy, ak sa človek dostal na dokument z nej. Server ho overí. */
+  trackKey?: string
   /** Serverová akcia zo stránky dokumentu. */
   action: (fd: FormData) => Promise<void>
   labels: {
@@ -48,6 +52,7 @@ export default function AcknowledgeButton({
   return (
     <form action={action}>
       <input type="hidden" name="documentId" value={documentId} />
+      {trackKey && <input type="hidden" name="track" value={trackKey} />}
       <Submit label={labels.button} pending={labels.pending} />
     </form>
   )

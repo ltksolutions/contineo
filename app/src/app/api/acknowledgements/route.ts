@@ -10,6 +10,10 @@
  * Route zostáva pre programový prístup a obe cesty volajú tú istú
  * `acknowledge()`, takže pravidlá okolo záznamu sú na jednom mieste.
  *
+ * Z tela sa navyše prijíma nepovinný `track` — kľúč trasy, z ktorej človek
+ * dokument otvoril. Overuje sa (`trackForDocument()`), lebo je to tvrdenie
+ * klienta; neplatný sa ticho zahodí.
+ *
  * IP a `User-Agent` sa ukladajú do záznamu — bez nich má potvrdenie výrazne
  * slabšiu dôkaznú hodnotu. Sú to osobné údaje a patria do záznamu o spracúvaní
  * (`docs/GDPR_DATA_PROTECTION.md`, otvorené body O15 a O16).
@@ -18,6 +22,7 @@
 import { NextResponse } from "next/server"
 import { onboardingContext } from "@/lib/session"
 import { acknowledge } from "@/lib/acknowledgements"
+import { trackForDocument } from "@/lib/tracks"
 import { clientIp } from "@/lib/requestMeta"
 
 export const dynamic = "force-dynamic"
@@ -39,8 +44,11 @@ export async function POST(request: Request) {
   const person = ctx.person
 
   let documentId: unknown
+  let track: unknown
   try {
-    documentId = (await request.json())?.documentId
+    const body = await request.json()
+    documentId = body?.documentId
+    track = body?.track
   } catch {
     documentId = undefined
   }
@@ -61,7 +69,9 @@ export async function POST(request: Request) {
     {
       ip: clientIp(request.headers),
       userAgent: request.headers.get("user-agent"),
-      trackId: null,
+      // Rovnako ako v serverovej akcii: kľúč trasy je tvrdenie klienta,
+      // takže sa overuje. Obe cesty musia zapisovať ten istý údaj rovnako.
+      trackId: await trackForDocument(person, typeof track === "string" ? track : null, documentId),
     }
   )
 

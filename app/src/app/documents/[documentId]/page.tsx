@@ -149,6 +149,7 @@ export default async function DocumentPage({
             ) : (
               <AcknowledgeButton
                 documentId={doc.documentId}
+                trackKey={typeof q.track === "string" ? q.track : undefined}
                 action={acknowledgeAction}
                 labels={{ button: t.confirmButton, pending: t.confirmPending }}
               />

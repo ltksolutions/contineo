@@ -67,6 +67,36 @@ export interface TrackProgress {
   totalCount: number
 }
 
+/**
+ * Overí, že človek má tú trasu a že dokument je naozaj jej krokom.
+ *
+ * **Prečo sa to overuje.** Kľúč trasy prichádza z adresy — teda od klienta.
+ * Do dôkazného záznamu ide údaj o tom, ako sa človek k dokumentu dostal,
+ * a taký údaj nesmie byť len tvrdením prehliadača: inak by sa dalo potvrdiť
+ * dokument „ako krok trasy", ktorú človek nemá, alebo trasy, ktorá ten
+ * dokument neobsahuje. Neplatný kľúč sa **ticho zahodí** (vráti sa `null`) —
+ * potvrdenie je platný úkon aj bez trasy a odmietnuť ho kvôli zlému
+ * parametru v adrese by bolo horšie než zapísať ho bez nej.
+ *
+ * Vracia kľúč trasy, nie jej `_id`: kľúč je to, čím sa na trasu odkazuje
+ * všade inde (`assignments.audience`), a je čitateľný aj bez druhého dotazu.
+ */
+export async function trackForDocument(
+  person: { companyCode: string; tracks?: string[] },
+  trackKey: string | null | undefined,
+  documentId: string,
+): Promise<string | null> {
+  const key = (trackKey ?? "").trim()
+  if (!key) return null
+  if (!(person.tracks ?? []).includes(key)) return null
+
+  const [track] = await loadTracks(person.companyCode, [key])
+  if (!track) return null
+
+  const has = track.steps.some(s => s.type === "document" && s.documentId === documentId)
+  return has ? key : null
+}
+
 /** Trasy tenanta podľa kľúčov. Neaktívne sa nevracajú. */
 export async function loadTracks(companyCode: string, keys: string[]): Promise<Track[]> {
   if (keys.length === 0) return []

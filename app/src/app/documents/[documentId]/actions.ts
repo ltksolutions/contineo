@@ -23,6 +23,7 @@ import { revalidatePath } from "next/cache"
 import { headers } from "next/headers"
 import { onboardingContext } from "@/lib/session"
 import { acknowledge } from "@/lib/acknowledgements"
+import { trackForDocument } from "@/lib/tracks"
 import { clientIp } from "@/lib/requestMeta"
 import { isRedirect } from "@/lib/redirects"
 import { dictionary } from "@/lib/i18n"
@@ -41,6 +42,8 @@ function back(documentId: string, message: string, error = false): never {
 export async function acknowledgeAction(fd: FormData) {
   const raw = fd.get("documentId")
   const documentId = typeof raw === "string" ? raw.trim() : ""
+  const rawTrack = fd.get("track")
+  const trackKey = typeof rawTrack === "string" ? rawTrack.trim() : ""
 
   const ctx = await onboardingContext()
   // Rovnaké štyri stavy ako v API. Neprihlásený človek nemá dostať hlásenie
@@ -69,10 +72,18 @@ export async function acknowledgeAction(fd: FormData) {
       {
         ip: clientIp(h),
         userAgent: h.get("user-agent"),
-        // Trasa sa do záznamu zatiaľ nedostáva ani cez API — je to otvorená
-        // úloha (`docs/TODO.md`), nie niečo, čo by táto cesta mala riešiť
-        // inak než tá druhá.
-        trackId: null,
+        /*
+          Trasa v zázname hovorí, **ako** sa človek k dokumentu dostal —
+          či ako krok trasy, alebo z pridelenia. Dovtedy sa to dalo len
+          odvodiť z dnešného stavu povinností, a odvodenie o rok povie, čo
+          platí o rok, nie čo platilo pri podpise.
+
+          Kľúč prichádza z adresy, teda od klienta, preto ho
+          `trackForDocument()` overí: človek tú trasu musí mať a dokument
+          musí byť naozaj jej krokom. Neplatný kľúč sa ticho zahodí —
+          potvrdenie je platný úkon aj bez trasy.
+        */
+        trackId: await trackForDocument(person, trackKey, documentId),
       },
     )
   } catch (e) {
