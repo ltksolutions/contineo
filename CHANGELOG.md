@@ -4,6 +4,54 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Knižnica: oddelenie správcu, interné číslo, platnosť do a potvrdenia (2026-09-14)
+
+Štyri body O6 naraz — všetky sú o tom, že v zozname noriem chýbali údaje,
+podľa ktorých sa v ňom hľadá.
+
+- **Nepovinné „oddelenie, ktoré dokument spravuje"** + filter. Je to
+  **vlastníctvo, nie adresáti**: kto má dokument potvrdiť, hovoria naďalej
+  `assignments`. Odkaz do stromu oddelení (D49) nemenným `id`, nie voľný
+  text — ten by vrátil „Legislatíva", „legislatíva" a „Legislat." ako tri
+  oddelenia. Existenciu overuje `checkOwnerDepartment()` v zápise, **pred**
+  uložením súboru; `checkMetadata()` zostáva čistá funkcia bez databázy.
+- **Nepovinné interné číslo predpisu.** V riadku pod názvom vedľa
+  identifikátora, nie vo vlastnom stĺpci, a vo fulltexte — podľa čísla, ktorým
+  predpis volá polovica domu, sa musí dať hľadať. **Do formulky potvrdenia
+  nevstupuje**: nemá ho každý predpis a diera vo vete, pod ktorú sa človek
+  podpisuje, vyzerá ako chyba systému.
+- **Stĺpec „Platnosť do".** Nie štvrtá hodnota facetu Stav: stav hovorí, kde je
+  dokument v procese, platnosť je iná os. Prázdna hodnota znamená „do
+  odvolania", nie chýbajúci údaj — preto pomlčka.
+- **Stĺpec „Potvrdenia" s menovateľom pri čísle** („0 %", pod tým „0 z 2
+  pridelených"). Percento bez menovateľa si každý vyloží po svojom.
+
+**Číslo, ktoré bolo označené za nedostupné, dostupné je.** Komentár
+v `libraryProgress.ts` sám hovoril, že to isté číslo v zozname je samostatná
+úloha, lebo by to bol dotaz na každý riadok. `documentsProgress()` má **tri
+dotazy, nech je riadkov koľkokoľvek**: pridelenia, osoby (raz, nie raz na každé
+publikum) a potvrdenia. Príslušnosť k publiku rozhoduje v pamäti
+`matchesAudience()` — **to isté pravidlo**, aké používa `audienceMembers()`.
+Počíta sa až po stránkovaní, teda pre najviac 25 viditeľných riadkov.
+
+**Pomlčka nie je nula.** Znenie, ktoré nikomu pridelené nie je, sa do výsledku
+vôbec nedostane: „nikomu nepridelené" a „nikto nepotvrdil" sú dve rôzne vety
+a stĺpec ich nesmie nakresliť rovnako.
+
+Overené na produkcii pri 420 px: deväť stĺpcov, tabuľka roluje vodorovne
+(`min-width` 720 → 880 px), oba údaje sú aj v kartovom pohľade a obe nové polia
+sú na detaile dokumentu na celú šírku. Čísla porovnané s databázou, nie
+odhadnuté: „0 z 2" sedí s dvomi aktívnymi ľuďmi v Oddelení IT a nulou
+potvrdení k tomu zneniu.
+
+### Predvoľba telefónu sa dá nastaviť (2026-09-14)
+
+Dokončenie D86. Normalizácia do E.164 v repozitári už bola, ale predvoľbu
+**nebolo kde zadať** — každá organizácia teda ticho používala `+421`, aj česká.
+Pribudol zápis v `saveTenant()` (ukladá len tvar `+` a číslice; prázdna hodnota
+sa zapíše prázdna, lebo inak by sa raz nastavená predvoľba nedala zrušiť)
+a pole v Nastavení organizácie.
+
 ### Nácvik dobehol celú cestu (2026-09-14)
 
 Nahratie → prevod → prečistenie členenia → schválenie → zverejnenie → index → vyhľadávanie → pridelenie → potvrdenie. Na skutočnom Disciplinárnom poriadku SFZ.

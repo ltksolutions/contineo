@@ -597,14 +597,27 @@ len práca, ktorá z nich plynie.
 - [x] ~~**Zásuvka navigácie na telefóne** (bod 3)~~ — **už je hotová**, zistené pri jej otváraní 2026-09-14
       Pribudla v `cf1ec91` (`feat(nav): pocty pri polozkach a zasuvka na uzkej obrazovke`). `<details>`/`<summary>`, teda beží **bez JavaScriptu**; pás a zásuvka sú v DOM oba a prepína ich `@media (min-width: 940px)`, lebo obsah `<details>` sa cez CSS odkryť nedá. Terče 44 px na prepínači aj na položkách, ako žiada krok 7 handoffu.
       **Zápis „dnes je pás s odseknutou položkou" bol nepravdivý a napísal som ho ja** — prevzal som ho z `DESIGN_GAP.md` bez pozretia do kódu, a ešte som ho navrhol ako prvý krok. Dokumentácia je indícia, kód je pravda; toto je pripomienka, že to platí aj pre plány, ktoré píšem sám.
-- [ ] **Nepovinné pole „oddelenie, ktoré dokument spravuje"** (bod 6) + filter v knižnici. Je to **vlastníctvo**, nie adresáti — tí sa naďalej počítajú z `assignments`. Pol dňa
-- [ ] **Nepovinné interné číslo predpisu** (bod 11) — do zoznamu a na detail, **nie do potvrdzovacej formulky**: nemajú ho všetky dokumenty a diera vo vete by vyzerala ako chyba. Pol dňa
-- [ ] **Stĺpec „Potvrdenia %"** (bod 7) — menovateľom sú **pridelení** ľudia a píše sa pri čísle („12 zo 14 pridelených"). Pol dňa
-- [ ] **Stĺpec „Platné do"** (bod 10) — nie štvrtá hodnota facetu Stav; platnosť je iná os než stav v procese. Hodiny
+- [x] ~~**Nepovinné pole „oddelenie, ktoré dokument spravuje"** (bod 6) + filter v knižnici~~ — `755a5dc`, `b6b446c`
+      Nie voľný text: odkaz do stromu oddelení (D49) nemenným `id`. Voľný text by vrátil presne to, čo D49 odstránilo. Overuje sa v zápise (`checkOwnerDepartment()`), nie v `checkMetadata()` — tá je čistá funkcia bez databázy a má ňou zostať. Filter je šiesty facet; „bez oddelenia" **nie je voľba**, inak by panel ukazoval ako najpočetnejšiu položku filter na neprítomnosť nepovinného údaja.
+- [x] ~~**Nepovinné interné číslo predpisu** (bod 11)~~ — `755a5dc`, `b6b446c`
+      V riadku pod názvom, nie vo vlastnom stĺpci: je to označenie dokumentu, patrí k identifikátoru, a ôsmy stĺpec by tabuľku na telefóne rozšíril kvôli údaju, ktorý väčšina dokumentov nemá. Je aj vo fulltexte. **Do formulky potvrdenia nevstupuje** — tá sa skladá z `documentTitle` a `versionLabel` (`acknowledgements.ts`), takže to platí konštrukciou, nie sľubom.
+- [x] ~~**Stĺpec „Potvrdenia %"** (bod 7)~~ — `02280b2`
+      Nová `documentsProgress()` má **tri dotazy, nech je riadkov koľkokoľvek** (pridelenia, osoby raz, potvrdenia) a počíta sa až po stránkovaní. Pomlčka znamená „nikomu nepridelené", nie „nikto nepotvrdil" — nepridelené znenie sa do mapy vôbec nedostane.
+- [x] ~~**Stĺpec „Platné do"** (bod 10)~~ — `02280b2`
 - [ ] **Zvonček upozornení** (bod 5) — **udalosti systému**, nie zdvojené počty povinností: doindexovanie, dokončený prepis, odoslané pripomienky. Kolekcia so stavom prečítania (zmena schémy), zdroj udalostí, obrazovka. Deň až dva. Retencia patrí k O16
 - [ ] **Vlastné ikony** (bod 1) — set sa nezavádza. Zladiť sedem existujúcich v `Header.tsx` (hrúbka ťahu, optická veľkosť, `viewBox`) a dokresliť navigáciu v tom istom rukopise. **Vedomá odchýlka od README**, nie nedopatrenie
 - [ ] **Pohodlie v poradí** (bod 12): Nahlásiť nepresnosť → hľadanie vo filtroch → Uložiť pohľad → súvisiace predpisy → ďalšie zhody
 - [ ] **jednoriadkové:** prepísať zastaraný komentár v `new/page.tsx` (tvrdí, že schvaľovací krok neexistuje — dnes nepravda)
+
+**Čo stĺpec „Potvrdenia" ukázal hneď v prvý deň.** Z desiatich noriem má
+číslo **jedna** — Revízny poriadok („0 %, 0 z 2 pridelených"). Skúšobná
+smernica má pomlčku napriek tomu, že pridelenia má: sú na **starších
+zneniach** (`6c26…`, `1abc…`), kým platné znenie je `7942…`. Overené v databáze
+2026-09-14, nie odhadnuté. `Assignment.subject.versionId` pripína pridelenie na
+konkrétne znenie (D28), takže po zverejnení novely **nikto nie je pridelený na
+nové znenie, kým sa nepridelí znova** — a knižnica to odteraz vidno povie
+pomlčkou. Otvorená otázka pre Jána: má sa pri zverejnení novely ponúknuť
+„prideliť rovnakým publikám ako predošlé znenie"? Zatiaľ sa nič nerobí.
 
 **Nerobí sa:**
 
