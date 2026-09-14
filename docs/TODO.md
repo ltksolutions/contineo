@@ -576,6 +576,8 @@ koná personalista, dôvod povinný, nový záznam namiesto úpravy starého.
 
 ### O6 — medzery rozhrania → `docs/DESIGN_GAP.md`
 
+→ **Rozhodovací hárok: `docs/O6_rozhodovaci_harok.md`** (2026-09-14) — dvanásť otázok s návrhom a cenou pri každej, na jedno prejdenie. Pri troch je návrh **nerobiť to**: prepínač organizácie, pilulky rozsahu hľadania a skóre zhody.
+
 Zoznam sa sem neprepisuje. Poradie podľa toho, čo blokuje prevádzku:
 
 - [ ] **najprv rozhodnutia**, nie kreslenie: položky navigácie, ikonový set
