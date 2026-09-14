@@ -30,6 +30,22 @@ const nextConfig = {
    * prejdená.
    */
   serverExternalPackages: ["pdfjs-dist"],
+
+  /*
+   * …a jeho pracovný modul sa **musí priložiť do funkcie ručne**.
+   *
+   * `serverExternalPackages` vyššie zabezpečí, že sa `pdfjs-dist` načíta
+   * z `node_modules`. Nestačí to: Vercel do funkcie zabalí len súbory, na
+   * ktoré vedie statický import, a `pdf.worker.mjs` sa importuje **reťazcom
+   * za behu**. Sledovanie závislostí ho tak nevidí a vo funkcii chýba —
+   * chyba sa len presunie z `.next/server/chunks/` do `node_modules/`.
+   *
+   * Overené v produkcii, nie odhadnuté: prvá oprava cestu v hláške zmenila
+   * a prevod aj tak spadol.
+   */
+  outputFileTracingIncludes: {
+    "/**": ["./node_modules/pdfjs-dist/legacy/build/pdf.worker.mjs"],
+  },
   env: {
     APP_VERZIA: pkg.version,
     // Lokálne prázdne — lokálny beh nie je nasadenie, o ktorom sa niekto pýta.
