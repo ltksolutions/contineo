@@ -99,9 +99,31 @@ export function isNewFor(person: Pick<Person, "previousLoginAt">, assignedAt: Da
  *      uložil (D37). Norma sa tak dá poslať aj mimo trasy, bez toho, aby
  *      musela vzniknúť umelá trasa pre jednu smernicu.
  */
-export const acknowledgementSource: PendingSource = {
-  key: "acknowledgement",
-  async collect(person) {
+/**
+ * Nepotvrdené normy **rozdelené podľa pôvodu** — trasy a pridelenia mimo nich.
+ *
+ * **Prečo to vracia oboje a prečo je to jedna funkcia.** Štítok v navigácii
+ * počíta z oboch pôvodov, ale obrazovka `/documents` dlho kreslila len trasy.
+ * Kto mal dokument pridelený mimo trasy, videl v navigácii „Na potvrdenie 1"
+ * a na obrazovke „Momentálne nemáte nič na potvrdenie" — povinnosť dostal
+ * a cestu k jej splneniu nie. Nájdené nácvikom 2026-09-14 na kolegyni, ktorá
+ * má tri pridelenia cez oddelenie a **žiadnu trasu**.
+ *
+ * Preto je výpočet **jeden** a používajú ho obe strany: štítok si z toho
+ * spraví počet, obrazovka zoznam. Dva výpočty toho istého sa raz rozídu —
+ * a rozišli sa presne takto.
+ */
+export interface AcknowledgementDuties {
+  /** Trasy s krokmi a poradím — obrazovka z nich kreslí sekcie. */
+  tracks: Awaited<ReturnType<typeof trackProgress>>
+  /** Nepotvrdené kroky trás ako položky. */
+  fromTracks: PendingItem[]
+  /** Pridelené mimo trás, teda to, čo trasy nepokrývajú. */
+  outsideTracks: PendingItem[]
+  blockedCount: number
+}
+
+export async function acknowledgementDuties(person: Person): Promise<AcknowledgementDuties> {
     const t = dictionary(person.language).pending
 
     const [tracks, assignments] = await Promise.all([
@@ -141,6 +163,9 @@ export const acknowledgementSource: PendingSource = {
     }
 
     const items = new Map<string, PendingItem>()
+    // Ktoré položky pochádzajú z trasy. Podľa toho sa na konci rozdelia —
+    // obrazovka ich kreslí inak (poradie, „pokračujte tu"), než pridelenia.
+    const fromTrack = new Set<string>()
     let blockedCount = 0
 
     for (const track of tracks) {
@@ -148,6 +173,7 @@ export const acknowledgementSource: PendingSource = {
         if (step.blocked) { blockedCount += 1; continue }
         if (step.done) continue
         const assignedAt = step.versionId ? assigned.get(step.versionId) ?? null : null
+        fromTrack.add(step.documentId)
         items.set(step.documentId, {
           source: "acknowledgement",
           // Kľúčom je dokument, nie krok: ten istý dokument môže byť krokom
@@ -205,7 +231,21 @@ export const acknowledgementSource: PendingSource = {
       }
     }
 
-    return { items: [...items.values()], blockedCount }
+    return {
+      tracks,
+      fromTracks: [...items.values()].filter(i => fromTrack.has(i.id)),
+      outsideTracks: [...items.values()].filter(i => !fromTrack.has(i.id)),
+      blockedCount,
+    }
+}
+
+export const acknowledgementSource: PendingSource = {
+  key: "acknowledgement",
+  async collect(person) {
+    const d = await acknowledgementDuties(person)
+    // Poradie zostáva: najprv kroky trás, potom pridelenia mimo nich —
+    // widget si ich aj tak zoradí podľa `sortAt`.
+    return { items: [...d.fromTracks, ...d.outsideTracks], blockedCount: d.blockedCount }
   },
 }
 

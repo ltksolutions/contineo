@@ -82,6 +82,8 @@ interface Dictionary {
     listHeading: string
     listIntro: string
     nothingToDo: string
+    /** Nadpis sekcie pre dokumenty pridelené mimo trasy. */
+    assignedHeading: string
     progress: (done: number, total: number) => string
     /**
      * Kroky sa zobrazujú po trasách, nie ako jedna kopa. Trasa je poradie
@@ -1653,6 +1655,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     listHeading: "Dokumenty na potvrdenie",
     listIntro: "Prečítajte si každý dokument a potvrďte, že ste sa s ním oboznámili. Potvrdenie sa viaže na konkrétne znenie — pri novej verzii vás systém požiada znova.",
     nothingToDo: "Momentálne nemáte nič na potvrdenie.",
+    assignedHeading: "Pridelené dokumenty",
     progress: (done, total) => `Hotové ${done} z ${total}`,
     step: (order, total) => `Krok ${order} z ${total}`,
     continueHere: "pokračujte tu",
@@ -3427,6 +3430,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     listHeading: "Dokumenty k potvrzení",
     listIntro: "Přečtěte si každý dokument a potvrďte, že jste se s ním seznámili. Potvrzení se váže na konkrétní znění — u nové verze vás systém požádá znovu.",
     nothingToDo: "Momentálně nemáte nic k potvrzení.",
+    assignedHeading: "Přidělené dokumenty",
     progress: (done, total) => `Hotovo ${done} z ${total}`,
     step: (order, total) => `Krok ${order} z ${total}`,
     continueHere: "pokračujte tu",
@@ -5201,6 +5205,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     listHeading: "Documents to acknowledge",
     listIntro: "Read each document and confirm that you have familiarised yourself with it. An acknowledgement is tied to a specific version — when a new one is issued, you will be asked again.",
     nothingToDo: "You have nothing to acknowledge at the moment.",
+    assignedHeading: "Assigned documents",
     progress: (done, total) => `${done} of ${total} done`,
     step: (order, total) => `Step ${order} of ${total}`,
     continueHere: "continue here",

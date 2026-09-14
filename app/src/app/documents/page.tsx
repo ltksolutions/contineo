@@ -11,7 +11,7 @@ import { notFound, redirect } from "next/navigation"
 import { onboardingContext } from "@/lib/session"
 import { brandingView } from "@/lib/tenants"
 import { tenantStyle } from "@/components/TenantHeader"
-import { trackProgress } from "@/lib/tracks"
+import { acknowledgementDuties } from "@/lib/pending"
 import AppShell from "@/components/AppShell"
 import { normalizeLayout } from "@/lib/appNav"
 import type { RawQuery } from "@/lib/urlParams"
@@ -64,7 +64,18 @@ export default async function DocumentsPage({
   const branding = brandingView(ctx.tenant)
 
   const t = dictionary(person.language).onboarding
-  const tracks = await trackProgress(person)
+
+  /*
+    Jeden výpočet pre štítok aj pre túto obrazovku.
+
+    Dovtedy tu stálo len `trackProgress()`, teda **iba trasy**. Kto mal
+    dokument pridelený mimo trasy, videl v navigácii „Na potvrdenie 1"
+    a tu „Momentálne nemáte nič na potvrdenie" — povinnosť dostal a cestu
+    k jej splneniu nie. Nájdené nácvikom 2026-09-14.
+  */
+  const duties = await acknowledgementDuties(person)
+  const tracks = duties.tracks
+  const outside = duties.outsideTracks
   const done = tracks.reduce((a, tr) => a + tr.doneCount, 0)
   const total = tracks.reduce((a, tr) => a + tr.totalCount, 0)
 
@@ -88,7 +99,7 @@ export default async function DocumentsPage({
         </p>
       )}
 
-      {total === 0 && (
+      {total === 0 && outside.length === 0 && (
         <p className="card" style={{ padding: 20 }}>{t.nothingToDo}</p>
       )}
 
@@ -173,6 +184,35 @@ export default async function DocumentsPage({
           </ul>
         </section>
       ))}
+
+      {/*
+        Pridelené mimo trasy. Vlastná sekcia, nie prilepenie k trasám: trasa
+        hovorí „a v tomto poradí", pridelenie hovorí len „toto je vaša
+        povinnosť". Zmiešať ich by predstieralo poradie, ktoré nikto neurčil.
+      */}
+      {outside.length > 0 && (
+        <section style={{ margin: "0 0 32px" }}>
+          <h2 style={{ fontSize: 19, letterSpacing: "-0.01em", margin: "0 0 12px" }}>
+            {t.assignedHeading}
+          </h2>
+          <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "grid", gap: 12 }}>
+            {outside.map(item => (
+              <li key={item.id} className="card" style={{ padding: "16px 18px" }}>
+                <div style={{ display: "flex", gap: 16, alignItems: "baseline", flexWrap: "wrap" }}>
+                  <strong style={{ fontSize: 16, flex: "1 1 260px" }}>{item.title}</strong>
+                  <span className="tag">{t.todo}</span>
+                </div>
+                {item.detail && (
+                  <p className="quiet" style={{ fontSize: 13.5, margin: "8px 0 0" }}>{item.detail}</p>
+                )}
+                <p style={{ margin: "12px 0 0" }}>
+                  <Link className="button" href={item.href}>{t.open}</Link>
+                </p>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
     </div>
     </AppShell>
   )

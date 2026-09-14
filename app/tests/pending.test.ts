@@ -33,6 +33,7 @@ vi.mock("../src/lib/documents", async orig => ({
 }))
 
 import {
+  acknowledgementDuties,
   acknowledgementSource,
   dedupe,
   sortItems,
@@ -425,5 +426,82 @@ describe("pridelenie (rozsah B)", () => {
     const o = await pendingForPerson(person({ previousLoginAt: new Date("2026-05-01") }))
 
     expect(o.newCount).toBe(1)
+  })
+})
+
+
+/**
+ * Štítok a obrazovka musia kresliť z jedného výpočtu.
+ *
+ * Kolegyňa mala tri dokumenty pridelené cez oddelenie a **žiadnu trasu**.
+ * V navigácii jej svietilo „Na potvrdenie 1", na obrazovke stálo „Momentálne
+ * nemáte nič na potvrdenie" — povinnosť dostala a cestu k jej splneniu nie.
+ * Štítok totiž počítal z trás **aj** z pridelení, kým `/documents` kreslila
+ * len trasy. Nájdené nácvikom 2026-09-14.
+ */
+describe("pridelenia mimo trás", () => {
+  beforeEach(() => {
+    trackProgress.mockReset()
+    assignmentsForPerson.mockReset()
+    loadDocumentFor.mockReset()
+    acknowledgedVersionIds.mockReset()
+  })
+
+  const doc = {
+    documentId: "smernica-1",
+    title: "Smernica",
+    versions: [{
+      versionId: "v1", label: "1.0",
+      effectiveFrom: new Date("2026-01-01"), effectiveTo: null, isActive: true,
+    }],
+  }
+
+  it("človek bez trasy s prideleným dokumentom ho DOSTANE na obrazovku", async () => {
+    trackProgress.mockResolvedValue([])
+    assignmentsForPerson.mockResolvedValue([assignment()])
+    acknowledgedVersionIds.mockResolvedValue(new Set())
+    loadDocumentFor.mockResolvedValue(doc)
+
+    const d = await acknowledgementDuties(person({ tracks: [] }))
+    expect(d.tracks).toEqual([])
+    expect(d.fromTracks).toEqual([])
+    expect(d.outsideTracks.map(i => i.id)).toEqual(["smernica-1"])
+  })
+
+  it("počet pre štítok sa rovná tomu, čo obrazovka vie vykresliť", async () => {
+    trackProgress.mockResolvedValue([])
+    assignmentsForPerson.mockResolvedValue([assignment()])
+    acknowledgedVersionIds.mockResolvedValue(new Set())
+    loadDocumentFor.mockResolvedValue(doc)
+
+    const osoba = person({ tracks: [] })
+    const d = await acknowledgementDuties(osoba)
+    const zo_stitku = await acknowledgementSource.collect(osoba)
+
+    // Toto je to tvrdenie, ktoré sa rozišlo: čo sa počíta, sa musí dať aj
+    // ukázať. Nie „približne toľko" — presne tie isté položky.
+    expect(zo_stitku.items.map(i => i.id).sort())
+      .toEqual([...d.fromTracks, ...d.outsideTracks].map(i => i.id).sort())
+  })
+
+  it("dokument, ktorý je krokom trasy, sa medzi pridelené nezdvojí", async () => {
+    trackProgress.mockResolvedValue([track([step()])])
+    assignmentsForPerson.mockResolvedValue([assignment()])
+    acknowledgedVersionIds.mockResolvedValue(new Set())
+    loadDocumentFor.mockResolvedValue(doc)
+
+    const d = await acknowledgementDuties(person())
+    expect(d.fromTracks.map(i => i.id)).toEqual(["smernica-1"])
+    expect(d.outsideTracks).toEqual([])
+  })
+
+  it("už potvrdené pridelenie sa medzi úlohy nedostane", async () => {
+    trackProgress.mockResolvedValue([])
+    assignmentsForPerson.mockResolvedValue([assignment()])
+    acknowledgedVersionIds.mockResolvedValue(new Set(["v1"]))
+    loadDocumentFor.mockResolvedValue(doc)
+
+    const d = await acknowledgementDuties(person({ tracks: [] }))
+    expect(d.outsideTracks).toEqual([])
   })
 })
