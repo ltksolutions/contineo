@@ -587,24 +587,32 @@ koná personalista, dôvod povinný, nový záznam namiesto úpravy starého.
 - [ ] **Tabuľky** — renderer ich nepozná. Počkať, v akom tvare ich prepis vracia na ostrých predpisoch; kresliť to naslepo znamená hádať tvar vstupu
 - [ ] Poznámky pod čiarou a odkazy medzi predpismi — až keď bude vidieť ostrý text
 
-### O6 — medzery rozhrania → `docs/DESIGN_GAP.md`
+### O6 — medzery rozhrania → **rozhodnuté** `docs/O6_rozhodovaci_harok.md`
 
-→ **Rozhodovací hárok: `docs/O6_rozhodovaci_harok.md`** (2026-09-14) — dvanásť otázok s návrhom a cenou pri každej, na jedno prejdenie. Pri troch je návrh **nerobiť to**: prepínač organizácie, pilulky rozsahu hľadania a skóre zhody.
+Všetkých dvanásť otázok má odpoveď (2026-09-14). Dôvody sú v hárku; tu je už
+len práca, ktorá z nich plynie.
 
-Zoznam sa sem neprepisuje. Poradie podľa toho, čo blokuje prevádzku:
+**Postaviť:**
 
-- [ ] **najprv rozhodnutia**, nie kreslenie: položky navigácie, ikonový set
-      (README zakazuje vlastné SVG), facet Útvar (dokument útvar nenesie),
-      pilulky rozsahu hľadania, skóre zhody pri zdroji
-- [ ] **potom to, čo chýba v už postavených obrazovkách:** tretí krok
-      nahrávania (schvaľovatelia), prepínač „vyžadovať potvrdenie",
-      priradenie útvarom, záložky Obsah/Zmeny/Audit na detaile, zoznam
-      „Verzie a schválenie", rámik „Zmena oproti …"
-- [ ] **nakoniec pohodlie:** hľadanie vo filtroch, uložiť pohľad, súvisiace
-      predpisy, „ďalšie zhody v knižnici", „nahlásiť nepresnosť",
-      prepínač organizácie, tabuľka organizácií
-- [ ] **jednoriadkové:** prepísať zastaraný komentár v `new/page.tsx`
-      (tvrdí, že schvaľovací krok neexistuje — dnes nepravda)
+- [ ] **Zásuvka navigácie na telefóne** (bod 3) — dnes je pás s odseknutou položkou („Pridelené no…"). Mobile-first je povinnosť. Musí fungovať aj bez JavaScriptu, pás zostáva ako záloha. Deň
+- [ ] **Nepovinné pole „oddelenie, ktoré dokument spravuje"** (bod 6) + filter v knižnici. Je to **vlastníctvo**, nie adresáti — tí sa naďalej počítajú z `assignments`. Pol dňa
+- [ ] **Nepovinné interné číslo predpisu** (bod 11) — do zoznamu a na detail, **nie do potvrdzovacej formulky**: nemajú ho všetky dokumenty a diera vo vete by vyzerala ako chyba. Pol dňa
+- [ ] **Stĺpec „Potvrdenia %"** (bod 7) — menovateľom sú **pridelení** ľudia a píše sa pri čísle („12 zo 14 pridelených"). Pol dňa
+- [ ] **Stĺpec „Platné do"** (bod 10) — nie štvrtá hodnota facetu Stav; platnosť je iná os než stav v procese. Hodiny
+- [ ] **Zvonček upozornení** (bod 5) — **udalosti systému**, nie zdvojené počty povinností: doindexovanie, dokončený prepis, odoslané pripomienky. Kolekcia so stavom prečítania (zmena schémy), zdroj udalostí, obrazovka. Deň až dva. Retencia patrí k O16
+- [ ] **Vlastné ikony** (bod 1) — set sa nezavádza. Zladiť sedem existujúcich v `Header.tsx` (hrúbka ťahu, optická veľkosť, `viewBox`) a dokresliť navigáciu v tom istom rukopise. **Vedomá odchýlka od README**, nie nedopatrenie
+- [ ] **Pohodlie v poradí** (bod 12): Nahlásiť nepresnosť → hľadanie vo filtroch → Uložiť pohľad → súvisiace predpisy → ďalšie zhody
+- [ ] **jednoriadkové:** prepísať zastaraný komentár v `new/page.tsx` (tvrdí, že schvaľovací krok neexistuje — dnes nepravda)
+
+**Nerobí sa:**
+
+- [x] ~~prepínač organizácie~~ (bod 4) — človek patrí do jednej, určuje sa z domény
+- [x] ~~skóre zhody pri zdroji~~ (bod 9) — nie je porovnateľné medzi režimami hľadania
+
+**Čaká na iné:**
+
+- [ ] **Pilulky rozsahu hľadania** (bod 8) — **zostávajú v pláne**. Filter sa oprie o provenienciu z etapy ingescie a pilulky sa zobrazia **až keď je zdrojov viac než jeden**; dovtedy niet z čoho vyberať
+- [x] Zoznam položiek navigácie zostáva náš (bod 2) — „Posledný dokument" sa nezavádza
 
 Bod „tlačidlo **Nová verzia** na detaile" z `DESIGN_GAP.md` rieši **O3**,
 nie táto sekcia.

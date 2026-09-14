@@ -1,16 +1,15 @@
-# O6 — rozhodovací hárok k medzeram rozhrania
+# O6 — rozhodnutia o medzerách rozhrania
 
-> **Na čo to je:** aby sa desať otázok o rozhraní dalo prejsť naraz a odklikať,
-> nie riešiť po jednej pri každej obrazovke.
-> **Ako to čítať:** pri každej otázke je **čo systém dnes vie** (overené v kóde,
-> nie z pamäte), **návrh** a **čo to stojí**. Stačí napísať „áno", „nie" alebo
-> vlastnú odpoveď do riadku *Rozhodnutie*.
+> **Stav: ✅ ROZHODNUTÉ 2026-09-14.** Všetkých dvanásť otázok má odpoveď od
+> Jána Letka. Hárok zostáva ako **zápis rozhodnutí a ich dôvodov**, nie ako
+> formulár — pri každej otázke je, čo systém vtedy vedel, čo som navrhoval
+> a ako sa rozhodlo.
 > **Zdroj:** `docs/DESIGN_GAP.md`, `docs/design/README.md`, `docs/TODO.md` O6.
-> **Dátum:** 2026-09-14
-
-Pri troch otázkach je podľa mňa správna odpoveď **nerobiť to**. Sú označené ⛔
-a je pri nich napísané prečo — nie preto, že je to práca navyše, ale preto, že
-by výsledok tvrdil niečo, čo nie je pravda.
+>
+> **Dvakrát ma rozhodnutie prehlasilo a v oboch prípadoch právom** — pri
+> zvončeku (bod 5) a pri rozsahoch hľadania (bod 8). Obe moje odmietnutia
+> stáli na tom, čo systém vie **dnes**; Ján odpovedal z toho, kam smeruje.
+> Je to zapísané pri tých bodoch, nie zahladené.
 
 ---
 
@@ -53,7 +52,7 @@ len potom treba zladiť tie existujúce a prestať sa odvolávať na README.
 **Čo to stojí.** Set: nová závislosť (~50 kB, tree-shakeable), pol dňa
 vrátane prekreslenia. Zladiť ručné: pár hodín, žiadna závislosť.
 
-**Rozhodnutie:** ______________________________________________
+**Rozhodnutie: ❌ NIE, ikony budú vlastné** (Ján Letko, 2026-09-14) — *„za tých pár ikon to nestojí, aspoň budeme originálnejší.“* Žiadna závislosť. Z toho plynie úloha: **zladiť tých sedem existujúcich** (hrúbka ťahu, optická veľkosť, `viewBox`) a dokresliť ikony hlavnej navigácie v tom istom rukopise. A prestať sa pri tom odvolávať na README — je to odteraz vedomá odchýlka, nie nedopatrenie.
 
 ## 2. Položky navigácie
 
@@ -74,7 +73,7 @@ si človek otvorí z Prehľadu, a v navigácii by zaberala miesto trvalej polož
 **Čo to stojí.** Nič, ak sa prijme návrh. „Posledný dokument" by znamenal nový
 stav na osobu, teda zmenu schémy.
 
-**Rozhodnutie:** ______________________________________________
+**Rozhodnutie: ✅ ÁNO** (2026-09-14) — zoznam zostáva náš, „Posledný dokument“ sa nezavádza.
 
 ---
 
@@ -94,7 +93,7 @@ odseknuté slovo v navigácii je prvá vec, ktorú človek na telefóne uvidí.
 JavaScript na obrazovke, ktorá dnes funguje aj bez neho — treba ju nechať
 funkčnú aj bez skriptu (pás zostane ako záloha).
 
-**Rozhodnutie:** ______________________________________________
+**Rozhodnutie: ✅ ÁNO** (2026-09-14) — spraviť zásuvku.
 
 ---
 
@@ -112,7 +111,7 @@ organizácií. Dovtedy by to bola ponuka s jednou položkou.
 **Čo to stojí.** Nerobiť: nič. Urobiť: hlavička + model členstva vo viacerých
 organizáciách, čo je zmena schémy a prístupových pravidiel.
 
-**Rozhodnutie:** ______________________________________________
+**Rozhodnutie: ❌ NIE** (2026-09-14).
 
 ---
 
@@ -131,7 +130,13 @@ by k tomu pridal druhé miesto s tou istou informáciou a nový stav na osobu.
 **Čo to stojí.** Nerobiť: nič. Urobiť: nová kolekcia upozornení so stavom
 prečítania, teda zmena schémy a nový zdroj pravdy vedľa odvodeného stavu (D27).
 
-**Rozhodnutie:** ______________________________________________
+**Rozhodnutie: ✅ ÁNO** (Ján Letko, 2026-09-14) — a **môj návrh stál na zlom predpoklade**.
+
+Odmietol som zvonček s tým, že počty pri položkách navigácie hovoria to isté. Hovoria to isté **len o povinnostiach**. Ján mieri inam: *„prídu notifikácie o indexovaní dokumentu a podobne“* — teda na **udalosti systému o rozrobenej práci**, ktoré žiadny počet nepokrýva: dokument sa doindexoval, prepis dobehol, dávka skončila, pripomienky odišli.
+
+Je to vlastná kategória a vlastný dôvod existencie. Rozsah teda: zvonček **nezdvojuje počty povinností**, ukazuje udalosti, o ktorých sa človek inak nedozvie.
+
+**Čo to stojí.** Kolekcia upozornení so stavom prečítania (zmena schémy), zdroj udalostí tam, kde dnes beží indexovanie a prepis, a obrazovka. Deň až dva. Retencia patrí k O16.
 
 ---
 
@@ -151,7 +156,20 @@ teda keď na správnosti záleží (to je to isté pravidlo ako pri progrese tra
 **Čo to stojí.** Deň práce. Agregácia pri každom zobrazení knižnice; pri dnešnej
 veľkosti (148 dokumentov) bez problémov, pri desaťnásobku treba zmerať.
 
-**Rozhodnutie:** ______________________________________________
+**Rozhodnutie: ✅ ÁNO, ale inak — a s opravou názvoslovia** (Ján Letko, 2026-09-14).
+
+**„Útvar“ už neexistuje, používame „Oddelenie“.** Pojem zostal v návrhu aj v tomto hárku ako pozostatok; opravený je aj v `i18n.ts`, kde bol vo viditeľnom texte („Vyber menovite ľudí, nie útvar“).
+
+**A je to iná otázka, než akú som položil.** Ja som navrhoval počítať z `assignments`, teda **komu bol dokument pridelený**. Ján navrhuje **nepovinné pole na dokumente: ktoré oddelenie ho má na starosti.** To nie je to isté:
+
+| | otázka | zdroj |
+|---|---|---|
+| vlastníctvo | *kto ten predpis spravuje* | nové nepovinné pole na dokumente |
+| adresáti | *komu bol uložený* | `assignments`, počíta sa |
+
+Vlastníctvo je to, čo v knižnici chýba, a je **výrazne lacnejšie** — pole a filter, žiadna agregácia naprieč kolekciami. Adresáti sa dajú doplniť neskôr ako druhý filter, ak sa ukáže, že treba.
+
+**Čo to stojí.** Pole + formulár + filter: pol dňa.
 
 ---
 
@@ -171,7 +189,7 @@ menovateľa je číslo, ktoré si každý vyloží po svojom.
 **Čo to stojí.** Pol dňa, ak sa počíta pri zobrazení. Predpočítavať zatiaľ
 netreba.
 
-**Rozhodnutie:** ______________________________________________
+**Rozhodnutie: ✅ ÁNO** (2026-09-14) — menovateľom sú pridelení ľudia a píše sa pri čísle.
 
 ---
 
@@ -193,7 +211,15 @@ pridať do `SearchOptions` a preniesť cez `/api/chat`.
 **Čo to stojí.** Nerobiť: nič. Urobiť naslepo: pol dňa práce a klamlivé
 rozhranie.
 
-**Rozhodnutie:** ______________________________________________
+**Rozhodnutie: ✅ PONECHAŤ V PLÁNE** (Ján Letko, 2026-09-14) — **a moje odmietnutie bolo krátkozraké.**
+
+Napísal som, že „nič také v systéme nie je“. To je pravda o dnešku a nepravda o zámere. Architektúra na `contineo.app/sk/technologia` má **vrstvu obsahu a integrácií**: PDF dokumenty a predpisy, FAQ, weby (RSS), interné smernice, e-mail (IMAP) a MCP konektory (Drive, SharePoint, Confluence, Notion, Slack). Všetko sa **zjednocuje do jedného indexu**. Knižnica už existuje, web a ISSF prídu.
+
+Práve preto rozsahy zmysel dávajú: keď je všetko v jednom indexe, filter podľa **pôvodu** je jediný spôsob, ako povedať „hľadaj len v predpisoch“ alebo „len na webe“. Nie je to predstieraná voľba — je to voľba, ktorá **zatiaľ nemá na čom stáť**.
+
+**Ako to teda spraviť.** Filter sa oprie o provenienciu (`source.{type,connector,…}`), ktorá je už naplánovaná v etape ingescie. A **pilulky sa zobrazia až vtedy, keď je zdrojov viac než jeden** — dovtedy by človek klikal na voľbu, ktorá nič nemení. Objavia sa teda samy, keď pribudne druhý zdroj.
+
+**Čo to stojí.** Teraz nič navyše, je to súčasť ingescie. Samotné pilulky pol dňa, keď bude čo filtrovať.
 
 ---
 
@@ -215,7 +241,7 @@ slovom, nie desatinné číslo.
 **Čo to stojí.** Nerobiť: nič. Urobiť správne (kalibrovať skóre naprieč
 režimami): to je samostatná úloha na dni, nie na hodiny.
 
-**Rozhodnutie:** ______________________________________________
+**Rozhodnutie: ❌ NIE** (2026-09-14) — číslo, ktoré nie je porovnateľné medzi režimami hľadania, sa neukazuje.
 
 ---
 
@@ -233,7 +259,7 @@ expirované naraz".
 
 **Čo to stojí.** Hodiny. Údaj v dátach je.
 
-**Rozhodnutie:** ______________________________________________
+**Rozhodnutie: ✅ STĹPEC „Platné do“** (2026-09-14), nie facet.
 
 ---
 
@@ -271,7 +297,7 @@ súvisiace predpisy, „Ďalšie zhody v knižnici" a „Nahlásiť nepresnosť"
 teda jediný spôsob, ako sa dozvieme, že systém odpovedá zle), 2. hľadanie vo
 filtroch, 3. Uložiť pohľad, 4. súvisiace predpisy, 5. ďalšie zhody.
 
-**Rozhodnutie:** ______________________________________________
+**Rozhodnutie: ✅ ÁNO** (2026-09-14) — poradie podľa návrhu.
 
 ---
 

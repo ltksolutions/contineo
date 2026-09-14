@@ -3299,7 +3299,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       approvalSubmit: "predložiť na schválenie",
       approvalApprovers: "Schvaľovatelia",
       approvalApproversHint:
-        "Vyber menovite ľudí, nie útvar. \u201ESchválil niekto z útvaru Právne\u201C sa o rok nedá overiť. Seba vybrať nemôžeš \u2014 kto text nahral, ho neschvaľuje.",
+        "Vyber menovite ľudí, nie oddelenie. \u201ESchválil niekto z oddelenia Právne\u201C sa o rok nedá overiť. Seba vybrať nemôžeš \u2014 kto text nahral, ho neschvaľuje.",
       approvalNoPeople: "V organizácii nie je koho vybrať.",
       approvalNote: "Čo sa v znení mení",
       approvalNotePlaceholder: "Napríklad: upravený článok 4, zosúladenie s novelou zákona.",
@@ -3796,7 +3796,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       dueDate: "do data",
       dueDays: "do počtu dnů od vzniku povinnosti",
       dueDaysUnit: "dnů",
-      dueNote: "Nepovinný. Datum platí pro všechny stejně; počet dnů běží každému ode dne, kdy mu povinnost vznikla — to je rozdíl pro toho, kdo do útvaru přijde později. Bez termínu se připomínky neposílají automaticky.",
+      dueNote: "Nepovinný. Datum platí pro všechny stejně; počet dnů běží každému ode dne, kdy mu povinnost vznikla — to je rozdíl pro toho, kdo do oddělení přijde později. Bez termínu se připomínky neposílají automaticky.",
       reasonPlaceholder: "např. novela čl. 12 — mění se lhůta pro podání odvolání",
       reasonNote: "Povinný a společný pro celý výběr. Je to jediné místo, kde bude za rok napsáno, proč se předpisy potvrzovaly znovu — a přijde i v e-mailu lidem.",
       submit: "Přidělit",
@@ -5074,7 +5074,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       approvalSubmit: "předložit ke schválení",
       approvalApprovers: "Schvalovatelé",
       approvalApproversHint:
-        "Vyber jmenovitě lidi, ne útvar. \u201ESchválil někdo z útvaru Právní\u201C se za rok nedá ověřit. Sebe vybrat nemůžeš \u2014 kdo text nahrál, ten ho neschvaluje.",
+        "Vyber jmenovitě lidi, ne oddělení. \u201ESchválil někdo z oddělení Právní\u201C se za rok nedá ověřit. Sebe vybrat nemůžeš \u2014 kdo text nahrál, ten ho neschvaluje.",
       approvalNoPeople: "V organizaci není koho vybrat.",
       approvalNote: "Co se ve znění mění",
       approvalNotePlaceholder: "Například: upravený článek 4, sladění s novelou zákona.",
