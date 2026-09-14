@@ -4,6 +4,36 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Fixed (2026-09-14 — preindexovanie by pokazilo deväť predpisov, poistka)
+
+Záložka Členenie hlásila, že deväť z desiatich dokumentov je narezaných inak, než by vyšlo dnes, a ponúkala tlačidlo „Preindexovať". **To tlačidlo by knižnicu pokazilo.**
+
+Príčina: uložený `versions[].markdown` prešiel prepisom cez jazykový model a hlavičky v ňom nie sú `Článok 5`, ale `## čl. 5 — Názov`. Chunker taký tvar nepozná (D1). Merané na ostrých dátach: `volebny_poriadok` má uložených 12 z 13 úsekov s rozpoznaným článkom a po narezaní by mal **0 z 8**; `disciplinarny_poriadok` 113 zo 114 → **0 z 65**. Citácie by prišli o odkaz na článok a zistilo by sa to až tým, že model prestane citovať presne.
+
+- **Poistka v `reindex()`:** zápis sa odmietne, keď rozpoznanie článkov spadne z väčšiny na menšinu (`library.reindexWouldLoseArticles`). Nie je to prepínač na obídenie — je to tvrdenie, že takto narezaný dokument je horší než ten, čo tam je. Keď sa chunker naučí nový tvar hlavičiek, poistka prejde sama.
+- **Skutočná príčina zostáva otvorená** (`docs/TODO.md`, O2): chunker sa musí naučiť hlavičky v tvare Markdownu, a treba rozhodnúť, či ich má prepis cez jazykový model vôbec vyrábať. Sú to dva kroky tej istej linky, ktoré si dnes nerozumejú.
+
+### Added (2026-09-14 — analyzátor členenia a dávková analýza, D79/C1, C3)
+
+- **`chunkingAnalysis.ts`** — čistá funkcia nad textom, bez databázy a bez jazykového modelu. Signály sú spočítateľné riadky; vracia poradie profilov so skóre a vetu, prečo. **Navrhuje, nerozhoduje** (rovnaká zásada ako D58 a D59).
+- **Dokument bez členenia sa prizná**, nedostane najlepší zo zlých: prah je **podiel** riadkov, nie počet, a „voľný text" je vždy posledná možnosť v zozname. Tri hlavičky v krátkom predpise sú členenie, tri v trojstovkovom texte nie.
+- **`npm run chunking:analyze`** prejde celú knižnicu a povie, kde sa návrh líši od dnes priradeného profilu (`--rozdiely` vypíše len tie). Číta, nemení. Upozorní aj na profily, ktoré návrh potrebuje a organizácia ich nemá — bez nich sa návrh nedá potvrdiť, len prečítať.
+- Prvý beh tejto dávky bol práve to, čo odhalilo chybu vyššie.
+
+### Added (2026-09-14 — zálohovacia a retenčná politika)
+
+`docs/ZALOHOVANIE_A_RETENCIA.md` — čo sa zálohuje, ako sa obnovuje a ako dlho sa čo drží, po kolekciách.
+
+- **Pôvodné PDF sú v zálohe tiež** — sú v GridFS v tom istom clusteri, nie v cudzej službe (ADR-002). Tajomstvá v zálohe nie sú a to je správne: obnova databázy preto nie je obnova prevádzky.
+- **Dva nálezy, ktoré zápis dovtedy zakrýval:** politika snímok Atlasu nie je overená (vieme, že Cloud Backup je zapnutý, nie akú má politiku — takže **RPO a RTO sú neznáme**), a **skúšobná obnova sa nikdy nerobila**. Záloha, ktorá sa neobnovila, je domnienka.
+- **Pri `persons` nestačí jedno číslo:** doklady na ňu ukazujú cez `personId` a majú prežiť odchod. Tri cesty (nechať / anonymizovať / zmazať oboje) sú pomenované, vyberá právnik (O16).
+- **Záloha vs. právo na výmaz** má vlastnú kapitolu — zmazané v prevádzkovej databáze zostáva v starších snímkach do ich expirácie a po obnove sa výmaz musí zopakovať.
+
+### Changed (2026-09-14 — dodatok do ADR-007)
+
+Zrušenie voľby `onDateChange` (D82) je zapísané tam, kde to rozhodnutie vzniklo — `docs/ADR-007-oprava-textu-znenia.md`, Dodatok 1 — nielen v CHANGELOGu. Inak by si ho o pol roka niekto prečítal a riadil sa niečím, čo už neplatí.
+
+
 ### Changed (2026-09-13 — čo je vo formulke, sa po prvom potvrdení zamyká, D82)
 
 Potvrdzovacia formulka obsahuje **názov, označenie znenia a dátum platnosti** (D28). Meniť tie údaje pod už podpísanými záznamami znamenalo vyrobiť rozpor medzi tým, čo ľudia podpísali, a tým, čo systém tvrdí. Dialóg pri zmene dátumu (ADR-007) na to ponúkal dve možnosti a **ani jedna nefungovala**: „oprava zápisu" ten rozpor vyrobila, „podstatná zmena" nastavila `versions[].requiresReacknowledgement` — príznak, ktorý **nikto nečíta**, takže nerobila nič.

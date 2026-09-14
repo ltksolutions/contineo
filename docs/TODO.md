@@ -268,7 +268,8 @@
   - `postcss` ≤ 8.5.22 — XSS cez neescapovaný `</style>` ([GHSA-qx2v-qp2m-jg93](https://github.com/advisories/GHSA-qx2v-qp2m-jg93)), ťahá sa cez Next
   - `npm audit fix --force` by zdvihol Next o hlavnú verziu — **nerobiť pod termínom**; naplánovať ako samostatný krok s prebehnutím testov a buildu. Aplikácia, ktorá má držať osobné údaje, na tomto pri audite dostane otázku.
   </details>
-- [ ] Doplniť `acknowledgements` a `persons` do zálohovacej a retenčnej politiky
+- [x] **Zálohovacia a retenčná politika** ✅ 2026-09-14 → `docs/ZALOHOVANIE_A_RETENCIA.md`
+      Zapísané po kolekciách vrátane `acknowledgements` a `persons`. Dva nálezy: **politika snímok Atlasu nie je overená** (zápis hovorí „Cloud Backup zapnutý", nie akú má politiku — takže RPO a RTO sú neznáme) a **skúšobná obnova sa nikdy nerobila**. Pri `persons` nestačí jedno číslo: doklady na ňu ukazujú cez `personId` a majú prežiť odchod — tri cesty sú pomenované, vyberá právnik (O16).
 
 ---
 
@@ -514,7 +515,12 @@ je príležitosť stratiť dáta.
 - [x] A1 diagnostika — dnešný korpus problém nemá (9/10 rozpoznaných na 92–99 %)
 - [x] B1–B3 dátový model pomenovaných profilov a migrácia ✅ 2026-09-13
       `npm run migrate:profiles` prebehla na ostrých dátach (3 organizácie, 10 dokumentov). Záložka Členenie zapisuje do základného profilu, nie do `tenant.chunking`.
-- [ ] **Zistiť, prečo deväť dokumentov hlási neaktuálne členenie.** `npm run chunking:status` ukazuje, že uložené `chunkingId` nesedí s dnešným výstupom chunkera — a nesedelo ani pred zavedením profilov, takže to D79 nespôsobilo. Pravdepodobne ich `scripts/import.mjs` narezal s iným breadcrumbom, než aký dnes skladá `reindex()`. Preindexovanie je bezpečné (`versionId` sa nemení), ale najprv nech je jasné, čo sa zmení.
+- [x] **Zistené, prečo deväť dokumentov hlási neaktuálne členenie** ✅ 2026-09-14 — **a je to horšie, než to vyzeralo.**
+      Uložený `versions[].markdown` prešiel prepisom cez jazykový model a hlavičky v ňom nie sú `Článok 5`, ale `## čl. 5 — Názov`. Chunker taký tvar nepozná (D1), takže by dnes narezal **0 %** článkov tam, kde uložené úseky majú 99 %. Merané: `volebny_poriadok` uložené 12/13 → dnes by vzniklo 0/8; `disciplinarny_poriadok` 113/114 → 0/65.
+      Tlačidlo „Preindexovať" by teda knižnicu **pokazilo**. Dočasná poistka je v `reindex()` (`library.reindexWouldLoseArticles`) a zápis odmietne, kým rozpoznanie článkov spadne z väčšiny na menšinu.
+- [ ] 🔴 **Naučiť chunker hlavičky v tvare Markdownu** (`## čl. 5 — Názov`, `## Článok 5`). Je to skutočná príčina; poistka len bráni škode. Pozor: mení výstup, takže treba zdvihnúť `CHUNKER_VERSION` a preindexovať zámerne. Overiť proti uloženým úsekom, či nové členenie nie je horšie.
+- [ ] Zvážiť, či má prepis cez jazykový model vôbec meniť tvar hlavičiek — `llmRewrite.ts` vyrába text, ktorý vlastný chunker nerozpozná. Je to rozpor medzi dvoma krokmi tej istej linky.
+- [ ] ~~Zistiť, prečo deväť dokumentov hlási neaktuálne členenie.~~
 
 Lacné, kým je knižnica malá. Nové obrazovky a druhá stratégia chunkovania
 (etapa 2) čakajú za Fázou 8.
@@ -533,7 +539,7 @@ Lacné, kým je knižnica malá. Nové obrazovky a druhá stratégia chunkovania
 - [x] **D82 — čo je vo formulke, sa po prvom potvrdení zamyká** ✅ 2026-09-13 → `docs/D82_plan_zamknutie_udajov_znenia.md`
       `label` a `effectiveFrom` zamknuté po prvom platnom potvrdení; odomyká ich `revokeVersion()` (personalista, dôvod povinný); zdroj dátumu povinný pri publikovaní; `requiresReacknowledgement` sa prestal zapisovať.
 - [x] ~~rozhodnúť podľa návrhu D81~~ — **D81 zamietnuté**: rozpor medzi záznamom a znením už nevznikne. `docs/D81_plan_oprava_zaznamu_o_potvrdeni.md` zostáva ako zápis o zvažovanej ceste
-- [ ] **Doplniť dodatok do ADR-007** — voľba `onDateChange` bola vedomé rozhodnutie a jej zrušenie patrí do toho ADR, nielen do CHANGELOGu
+- [x] **Dodatok do ADR-007** ✅ 2026-09-14 — „Dodatok 1 — voľba pri zmene dátumu je zrušená (D82)"; v sekcii 4 je aj poznámka, že `correction` je zamietnuté
 - [x] zmapované, čo je hotové a čo nie ✅ 2026-09-13
       Typ je v `RecordType`, `supersedes` v zázname, unikátny index korekciám nebráni (`partialFilterExpression` mieri len na `acknowledgement`). Chýba brána, zápis aj čítanie.
 - [x] ~~implementovať cestu cez `supersedes`~~ — netreba, D81 zamietnuté

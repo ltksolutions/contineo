@@ -663,8 +663,47 @@ export async function reindex(
     return { chunks: chunks.length, archived: 0, alreadyDone: true, chunkingId }
   }
 
-  const now = new Date()
+  /*
+   * ── Poistka: preindexovanie nesmie stratiť rozpoznané články ──
+   *
+   * Nájdené 2026-09-14. Uložené úseky deviatich predpisov majú 99 % článkov
+   * rozpoznaných, ale keď sa dnešný `versions[].markdown` nareže znova,
+   * vyjde **0 %** — text v databáze medzitým prešiel prepisom cez jazykový
+   * model a hlavičky v ňom nie sú `Článok 5`, ale `## čl. 5 — Názov`.
+   * Chunker taký tvar nepozná (D1).
+   *
+   * Tlačidlo „Preindexovať" by teda knižnicu **pokazilo**: citácie by prišli
+   * o odkaz na článok a vyhľadávanie o to, čoho sa chytiť. A zistilo by sa to
+   * až tým, že model prestane citovať presne.
+   *
+   * Preto sa zápis odmietne, keď rozpoznanie článkov spadne z väčšiny na
+   * menšinu. Nie je to prepínač na obídenie — je to tvrdenie, že takto
+   * narezaný dokument je horší než ten, čo tam je. Keď sa chunker naučí nový
+   * tvar hlavičiek, poistka prejde sama.
+   */
   const chunkCol = await getCollection(CHUNKS_COLLECTION)
+  const before = await chunkCol.countDocuments({ documentId, isActive: true })
+  const beforeWithArticle = await chunkCol.countDocuments({
+    documentId, isActive: true, articleRef: { $ne: null },
+  })
+  const afterWithArticle = chunks.filter(ch => ch.articleRef).length
+  const share = (withArticle: number, total: number) => (total > 0 ? withArticle / total : 0)
+  const wouldLose =
+    before > 0 &&
+    share(beforeWithArticle, before) >= 0.5 &&
+    share(afterWithArticle, chunks.length) < 0.5
+
+  if (wouldLose) {
+    throw new LibraryError(
+      "library.reindexWouldLoseArticles",
+      `Preindexovanie by tento dokument pokazilo: dnes má ${beforeWithArticle} zo ${before} úsekov ` +
+      `s rozpoznaným článkom, po narezaní by ich malo ${afterWithArticle} z ${chunks.length}. ` +
+      "Text v databáze má hlavičky v inom tvare, než aký chunker pozná.",
+      { before: beforeWithArticle, beforeTotal: before, after: afterWithArticle, afterTotal: chunks.length },
+    )
+  }
+
+  const now = new Date()
   const archive = await chunkCol.updateMany(
     { documentId, isActive: true },
     { $set: { isActive: false, effectiveTo: now } },

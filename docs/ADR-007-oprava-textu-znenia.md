@@ -113,9 +113,77 @@ Toto je cena a nemá zmysel ju obchádzať:
 
 ## 4. Čo tento dokument nerieši
 
-- **Oprava záznamu o potvrdení** (typ `correction` v `acknowledgements`) — stále otvorená
-  v `docs/TODO.md`. Tento scenár ju nepotreboval.
+- **Oprava záznamu o potvrdení** (typ `correction` v `acknowledgements`) — ~~stále otvorená
+  v `docs/TODO.md`~~. **Zamietnutá 2026-09-13**, viď dodatok nižšie. Tento scenár ju
+  nepotreboval.
 - **Zvýraznenie rozdielu po slovách.** Rozdiel je po riadkoch; pri oprave čiarky to
   znamená jeden riadok dole a jeden hore. Stačí to a je to poctivé.
 - **Oprava textu v archivovanom znení** (D78) a **hromadná oprava naprieč dokumentmi** —
   ani jedno nie je potrebné a obe by otvorili cesty, ktoré sa ťažko zatvárajú.
+
+
+---
+
+## Dodatok 1 (2026-09-13) — voľba pri zmene dátumu je zrušená (D82)
+
+> **Stav:** schválené · **Odsúhlasil:** Ján Letko (2026-09-13)
+> **Súvisiace:** `docs/D82_plan_zamknutie_udajov_znenia.md`, `docs/D81_plan_oprava_zaznamu_o_potvrdeni.md` (zamietnuté)
+
+### Čo sa ruší
+
+`fixVersion()` mal pri zmene dátumu platnosti nad potvrdeným znením pýtať
+rozhodnutie: **`correction`** (rozdiel je nepodstatný, potvrdenia zostávajú) alebo
+**`reacknowledge`** (nastaví `requiresReacknowledgement`). Parameter `onDateChange`
+**zaniká** a s ním obe vetvy.
+
+### Prečo
+
+Bolo to vedomé rozhodnutie a rušíme ho z dvoch dôvodov, z ktorých druhý je vecný
+a prvý je porucha:
+
+**Vetva `reacknowledge` nerobila nič.** Nastavovala
+`versions[].requiresReacknowledgement` a **ten príznak nikto nečíta** — overené
+grepom cez celý `src`; jediný výskyt mimo zápisu je štítok v histórii verzií.
+Povinnosť sa počíta ako *pridelenie × platná verzia − potvrdenia*, takže kto raz
+potvrdil dané `versionId`, je hotový, a nové pridelenie toho istého znenia mu novú
+povinnosť nevyrobí. Pole sa preto prestáva zapisovať; v type zostáva kvôli starým
+záznamom.
+
+**Vetva `correction` stála na predpoklade, ktorý sa nedá overiť.** Znela „rozdiel
+je nepodstatný, podľa zlého dátumu nikto nekonal". To sa nedá vedieť. A pokiaľ to
+nevieme, nechať platiť podpisy pod vetou s iným dátumom, než aký systém odvtedy
+tvrdí, znamená vyrobiť rozpor, ktorý sa o rok nedá vysvetliť bez lovenia v audite.
+
+### Čo platí namiesto toho
+
+Deliaca čiara **nie je „malá vs. veľká zmena", ale „je ten údaj vo vete, ktorú
+človek podpísal?"** Formulka (D28) cituje názov, označenie znenia a dátum platnosti.
+
+- **Text vo formulke nie je** → jeho oprava zostáva presne taká, akú popisuje D77.
+  Toto ADR sa tým nemení.
+- **`label` a `effectiveFrom` vo formulke sú** → po prvom platnom potvrdení sa
+  **zamykajú**. Odomkne ich jedine hromadné odvolanie potvrdení toho znenia
+  (`revokeVersion()`, personalista, dôvod povinný); potom sa údaj opraví a ľudia
+  potvrdia opravenú formulku.
+- **Zdroj dátumu je povinný pri publikovaní.** Okno na bezbolestnú opravu je odteraz
+  od publikovania po prvé potvrdenie, teda minúty — obrana sa preto presúva dopredu.
+
+### Prečo nie „nová verzia a znovu schváliť"
+
+Pôvodná formulácia zadania znela tak. Nejde to a nedáva to zmysel:
+
+- `versionId = textFingerprint(markdown)` a `publish()` pri už existujúcom odtlačku
+  vráti `alreadyDone` — **novú verziu s nezmeneným textom vyrobiť nejde**, a dve
+  verzie s identickým textom by znamenali nejednoznačnú odpoveď na otázku „ktoré
+  znenie platí" a zdvojené úseky vo vyhľadávaní;
+- schvaľovanie sa viaže na **text**, nie na dátum. Dátum sa zadáva až pri
+  publikovaní a schvaľovaním nikdy neprešiel. Kto dátum naozaj podpísal, sú tí, čo
+  **potvrdili** — preto sa opakuje potvrdenie, nie schválenie.
+
+Nová verzia a nové schvaľovanie zostávajú tam, kam patria: pri zmene textu.
+
+### Cena, ktorá sa nezakrýva
+
+Preklep v dátume alebo v označení stojí kolo potvrdení pre všetkých, ktorí znenie
+už potvrdili. Je to vedomé: dátum platnosti nie je preklep v čiarke, je to údaj,
+od ktorého sa počíta viazanosť.

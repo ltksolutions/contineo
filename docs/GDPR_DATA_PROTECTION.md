@@ -87,7 +87,12 @@ niečo o správaní konkrétneho človeka, nie o jeho povinnosti. Preto:
 | **Kolá schvaľovania** (`approval_rounds`) | **ako potvrdenia** | schválenie je dôvod, prečo znenie vôbec smelo ísť ľuďom |
 | **Log pripomienok** (`reminder_log`) | **90 dní** (TTL) | prevádzkový záznam proti dvojitému odoslaniu, nie dôkaz. Dôkazom je `notified[]` na pridelení |
 
+| **Osoby** (`persons`) | **otvorené — patrí k O16** | doklady na ňu ukazujú cez `personId` a majú prežiť odchod. Nestačí jedno číslo: `docs/ZALOHOVANIE_A_RETENCIA.md` kap. 3 pomenúva tri cesty (nechať / anonymizovať / zmazať oboje) |
+| **Fotky osôb** (`person_photos`) | **s osobou** | nemá vlastný dôvod existovať dlhšie než osoba |
+| **Audit** (`audit`) | 24 mesiacov | dnes sa **nemaže** — TTL nie je zavedený |
+
 > Lehoty sú **návrh** — finálne čísla potvrdí DPO/právnik podľa účelu a prípadných zákonných povinností.
+> **Ako sa to reálne maže a čo s tým robia zálohy** je v `docs/ZALOHOVANIE_A_RETENCIA.md`.
 
 ---
 
