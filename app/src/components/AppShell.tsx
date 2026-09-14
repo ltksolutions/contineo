@@ -12,11 +12,16 @@
  * takže sa pri načítaní neobjaví o zlomok sekundy neskôr než obsah.
  *
  * Role si zisťuje sám cez tie isté funkcie, ktoré rozhodujú aj o samotných
- * stránkach. Je to štvrtý dotaz navyše — ale druhá kópia pravidla „kto smie
- * kam" je horšia než štyri dotazy: raz by sa rozišli a v navigácii by svietil
- * odkaz do sekcie, do ktorej stránka nepustí. (Ušetriť sa dá inde: obaliť
- * `*Context()` do `cache()` z Reactu, aby sa v rámci jednej požiadavky
- * nepočítali dvakrát. To je samostatná zmena a týka sa aj `layout.tsx`.)
+ * stránkach. Druhá kópia pravidla „kto smie kam" by bola horšia: raz by sa
+ * rozišli a v navigácii by svietil odkaz do sekcie, do ktorej stránka
+ * nepustí.
+ *
+ * **Dotazy navyše to nestojí.** Pôvodne tu stálo, že je to „štvrtý dotaz
+ * navyše" a že sa dá ušetriť obalením `*Context()` do `cache()`. Overené
+ * 2026-09-14: nie je čo ušetriť. `currentTenant()`, `currentPerson()`,
+ * `requestSession()` aj `requestHostname()` **už v `cache()` sú**
+ * (`lib/session.ts`) a kontexty nad nimi robia len porovnania. Štvrté
+ * zavolanie kontextu teda databázu nevidí.
  */
 
 import type { ReactNode } from "react"

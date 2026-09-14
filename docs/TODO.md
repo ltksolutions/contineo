@@ -108,7 +108,8 @@
 - [x] **Premenované slovenské CSS triedy na anglické** ✅ 2026-09-08 — 109 tried, 47 súborov, plus `je-*` → `is-*`, dva slovenské `@keyframes`, štyri slovenské `id` a kotvy a vlastná premenná `--uroven` → `--level`. Súbežné `je-aktivna` aj `je-aktivny` splynuli do jedného `is-active`, preto je tried o tri menej než pred tým.
       **Nahrádzalo sa cielene, nie slepo v texte.** Slová `pole`, `karta`, `strom`, `farba` sú v tomto repozitári aj názvy premenných, polí formulárov a hlavne slov v slovenských komentároch — tie sú zámerne po slovensky a mangľovať ich by bola škoda. Skript preto menil len token **za bodkou** v CSS a len vnútri `className=` v TSX.
       Overené obrázkom, nie dôverou: päť skúšobných strán (shell, dotiahnutie, značka, skupiny podmienok, výber) × dve šírky × dve témy = **20 renderov, všetkých 20 zhodných na pixel** so starým CSS a starým značkovaním. Prvý pokus tri rozdiely našiel — boli to prechody `transition` zachytené v polovici, nie premenovanie.
-- [ ] Obaliť `platformContext()` / `hrContext()` / `peopleContext()` / `libraryContext()` do `cache()` z Reactu — `layout.tsx` aj `AppShell` ich volajú v tej istej požiadavke
+- [x] ~~Obaliť `platformContext()` / `hrContext()` / `peopleContext()` / `libraryContext()` do `cache()`~~ — **netreba, premisa bola nepravdivá** ✅ 2026-09-14
+      Bod tvrdil, že opakované volanie kontextov stojí dotazy navyše. Nestojí: `currentTenant()`, `currentPerson()`, `requestSession()` aj `requestHostname()` sú v `lib/session.ts` **už obalené v `cache()`** a kontexty nad nimi robia len porovnania rolí a kódu organizácie. Obaliť ich by ušetrilo niekoľko porovnaní, nie dotaz. Zavádzajúci komentár v `AppShell.tsx` („štvrtý dotaz navyše") je opravený.
 
 ##### Chýba to v dátach — návrh to žiada, model to zatiaľ nevie
 
