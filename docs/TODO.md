@@ -518,8 +518,13 @@ je príležitosť stratiť dáta.
 - [x] **Zistené, prečo deväť dokumentov hlási neaktuálne členenie** ✅ 2026-09-14 — **a je to horšie, než to vyzeralo.**
       Uložený `versions[].markdown` prešiel prepisom cez jazykový model a hlavičky v ňom nie sú `Článok 5`, ale `## čl. 5 — Názov`. Chunker taký tvar nepozná (D1), takže by dnes narezal **0 %** článkov tam, kde uložené úseky majú 99 %. Merané: `volebny_poriadok` uložené 12/13 → dnes by vzniklo 0/8; `disciplinarny_poriadok` 113/114 → 0/65.
       Tlačidlo „Preindexovať" by teda knižnicu **pokazilo**. Dočasná poistka je v `reindex()` (`library.reindexWouldLoseArticles`) a zápis odmietne, kým rozpoznanie článkov spadne z väčšiny na menšinu.
-- [ ] 🔴 **Naučiť chunker hlavičky v tvare Markdownu** (`## čl. 5 — Názov`, `## Článok 5`). Je to skutočná príčina; poistka len bráni škode. Pozor: mení výstup, takže treba zdvihnúť `CHUNKER_VERSION` a preindexovať zámerne. Overiť proti uloženým úsekom, či nové členenie nie je horšie.
-- [ ] Zvážiť, či má prepis cez jazykový model vôbec meniť tvar hlavičiek — `llmRewrite.ts` vyrába text, ktorý vlastný chunker nerozpozná. Je to rozpor medzi dvoma krokmi tej istej linky.
+- [x] **Chunker sa naučil hlavičky v tvare Markdownu** ✅ 2026-09-14 — `CHUNKER_VERSION` 1 → 2
+      `## čl. N — Názov`, `## čl. N ods. N–N — Názov`, `## čl. Na`, `## príloha č. N`, aj `## Článok N`. Rozšírené vzory, **nie nová vetva v parsovaní** — slučka je odladená na deviatich predpisoch. Rozpoznanie článkov je späť na 92–99 % (bolo 0 %). Poistka z rána tým prejde sama.
+      `ods. N–N` zostáva **súčasťou čísla**: prvá verzia opravy ho zahadzovala a citácia „čl. 2 ods. 1–6" by sa scvrkla na „čl. 2". Odhalilo sa to porovnaním **textu** úsekov — počty aj podiel článkov sedeli dokonale.
+- [ ] 🔴 **Prepis cez jazykový model zahodil úroveň ČASŤ.** V pôvodnom texte bolo `PRVÁ ČASŤ – Všeobecné ustanovenia`; v dnešnom `versions[].markdown` **nie je ani raz** (Disciplinárny poriadok: 0 výskytov, Stanovy: 0). Uložené úseky ju v breadcrumbe majú, lebo vznikli z pôvodného textu.
+      Dôsledok: **preindexovaním by sa tá úroveň stratila aj z indexu.** Nie je to chyba chunkera — je to strata v publikovanom texte, teda v tom, čo ľudia čítajú a potvrdzujú.
+      Pôvodné PDF sú v GridFS, takže opraviť sa to dá. Rozhodnúť: (a) prepis má `ČASŤ` zachovať a dokumenty sa nahrajú znova, (b) `ČASŤ` sa vedome opúšťa a preindexuje sa tak, ako to je.
+- [ ] **Nepreindexovávať, kým nie je rozhodnuté vyššie.** Chunker je opravený a poistka prejde, ale index by prebral stratu `ČASŤ`. Overené `chunking_status` + porovnaním textu úsekov.
 - [ ] ~~Zistiť, prečo deväť dokumentov hlási neaktuálne členenie.~~
 
 Lacné, kým je knižnica malá. Nové obrazovky a druhá stratégia chunkovania

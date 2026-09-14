@@ -4,6 +4,19 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Fixed (2026-09-14 — chunker sa naučil hlavičky v tvare Markdownu, `CHUNKER_VERSION` 2)
+
+Ranná poistka bránila škode; toto je príčina. Chunker poznal len tvar `Článok 5 - Názov`, kým text v databáze má `## čl. 5 — Názov` — zmerané na korpuse: **547 hlavičiek, 14 rôznych tvarov**, z toho 349× `## čl. N — …` a 126× `## čl. N ods. N–N — …`.
+
+- **Rozšírené vzory, nie nová vetva v parsovaní.** Slučka v `parseStructure()` je odladená na deviatich predpisoch; druhé miesto, kde sa rozhoduje, čo je článok, by sa s prvým rozišlo. Pokryté: `## čl. N`, `## čl. N ods. N–N`, `## čl. Na`, `## Článok N`, `## príloha č. N` — aj pôvodné tvary bez `##`.
+- **Rozpoznanie článkov je späť na 92–99 %** (bolo 0 %). Poistka `library.reindexWouldLoseArticles` tým prejde sama, presne ako bola navrhnutá.
+- **`ods. N–N` zostáva súčasťou čísla.** Prvá verzia opravy ho zahadzovala — počty úsekov aj podiel rozpoznaných článkov sedeli **dokonale**, a napriek tomu bola horšia: citácia „čl. 2 ods. 1–6" by sa scvrkla na „čl. 2". Odhalilo sa to až porovnaním textu úsekov, nie počtov. Stojí za zapamätanie, že zhodné čísla nie sú dôkaz zhodného výsledku.
+- Analyzátor členenia dostal tie isté vzory. **Analyzátor a chunker musia poznať ten istý tvar** — keď sa jeden naučí nový, druhý sa musí naučiť tiež.
+- Overené: `tsc` čisto, **1186 testov**, lint bez chýb.
+
+**Preindexovanie napriek tomu ešte nespúšťať** — a to je druhý nález dňa: prepis cez jazykový model **zahodil úroveň `ČASŤ`**. V dnešnom `versions[].markdown` nie je ani raz (Disciplinárny poriadok: 0 výskytov, Stanovy: 0), hoci uložené úseky ju v breadcrumbe majú, lebo vznikli z pôvodného textu. Preindexovaním by sa tá úroveň stratila aj z indexu. Nie je to chyba chunkera — je to strata v publikovanom texte, teda v tom, čo ľudia čítajú a potvrdzujú. Pôvodné PDF sú v GridFS, takže sa to dá opraviť; rozhodnutie je v `docs/TODO.md`, O2.
+
+
 ### Fixed (2026-09-14 — preindexovanie by pokazilo deväť predpisov, poistka)
 
 Záložka Členenie hlásila, že deväť z desiatich dokumentov je narezaných inak, než by vyšlo dnes, a ponúkala tlačidlo „Preindexovať". **To tlačidlo by knižnicu pokazilo.**

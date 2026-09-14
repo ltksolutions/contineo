@@ -141,3 +141,60 @@ describe("veta pre cloveka", () => {
     expect(analysisReason(analyseChunking(MANUAL))).toContain("nemá čoho chytiť")
   })
 })
+
+/**
+ * Hlavičky v tvare Markdownu (2026-09-14).
+ *
+ * Text v databáze prešiel prepisom cez jazykový model a hlavičky v ňom nie sú
+ * `Článok 5`, ale `## čl. 5 — Názov`. Prvá verzia analyzátora to nevedela
+ * a nad ostrým korpusom vyhlásila, že žiadny predpis nemá členenie.
+ */
+const PREPISANY = `## Úvodné ustanovenia
+
+VOLEBNÝ PORIADOK Slovenského futbalového zväzu.
+
+## čl. 1 — Predmet úpravy
+
+(1) Volebný poriadok upravuje najmä požiadavky na navrhovanie kandidátov.
+
+## čl. 2 ods. 1–6 — Aktívne volebné právo
+
+(1) Delegáti konferencie volia funkcionárov.
+
+## čl. 2 ods. 7–12 — Aktívne volebné právo
+
+(7) Návrh kandidáta podpísaný členom SFZ.
+
+## čl. 4a — Doplnený článok
+
+(1) Text doplneného článku.
+
+## príloha č. 1 — Vzor návrhu
+`
+
+describe("hlavicky v tvare Markdownu", () => {
+  it("prepisany predpis sa rozpozna ako clankovy", () => {
+    const a = analyseChunking(PREPISANY)
+    expect(a.confident).toBe(true)
+    expect(a.suggestions[0].key).toBe("sfz_predpis")
+  })
+
+  it("rata sa aj skratka cl. a cislo s pismenom", () => {
+    // 4 hlavicky: cl. 1, cl. 2 ods. 1-6, cl. 2 ods. 7-12, cl. 4a
+    expect(structureSignals(PREPISANY).articleWord).toBe(4)
+  })
+
+  it("prilohy sa pocitaju zvlast — stoja mimo cislovania clankov", () => {
+    expect(structureSignals(PREPISANY).annexes).toBe(1)
+  })
+
+  it("nadpis bez cisla nie je clanok", () => {
+    // "## Úvodné ustanovenia" je preambula, nie hlavicka clanku.
+    expect(structureSignals("## Úvodné ustanovenia").articleWord).toBe(0)
+  })
+
+  it("stary aj novy tvar naraz — chunker musi zvladnut oba", () => {
+    const zmiesany = "Článok 1 - Starý tvar\n## čl. 2 — Nový tvar\n## Článok 3 — Nový so starým slovom"
+    expect(structureSignals(zmiesany).articleWord).toBe(3)
+  })
+})

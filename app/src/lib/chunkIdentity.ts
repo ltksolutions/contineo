@@ -46,8 +46,13 @@ import type { Chunk } from "./chunker.mjs"
  * **Zvyšuje ju človek**, keď zmení `chunker.mjs` tak, že to zmení výsledok.
  * Odvodiť sa to nedá — hash zdrojáku by sa menil aj po oprave komentára
  * a preindexoval by celý systém pre nič.
+ *
+ * | verzia | zmena |
+ * |---|---|
+ * | 1 | pôvodný štruktúrny chunker (D1) |
+ * | 2 | 2026-09-14: hlavičky v tvare Markdownu (`## čl. 5 — Názov`). Bez toho chunker nerozpoznal **ani jeden** článok v texte, ktorý prešiel prepisom cez jazykový model — a uložené úseky pritom mali 99 %. |
  */
-export const CHUNKER_VERSION = 1
+export const CHUNKER_VERSION = 2
 
 const hash = (s: string) => createHash("sha256").update(s).digest("hex").slice(0, 16)
 

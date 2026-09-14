@@ -20,7 +20,43 @@
 
 const PART = /^(PRVÁ|DRUHÁ|TRETIA|ŠTVRTÁ|PIATA|ŠIESTA|SIEDMA|ÔSMA|DEVIATA|DESIATA|JEDENÁSTA|DVANÁSTA)\s+ČASŤ\s*[-–—]?\s*(.*)$/
 // Pozor na pomlčky: dokumenty miešajú "-" (U+002D) a "–" (U+2013).
-const ARTICLE = /^Článok\s+(\d+[a-z]?)\s*[-–—]\s*(.+)$/
+//
+// ── Hlavičky v tvare Markdownu (2026-09-14) ──────────────────────────────────
+//
+// Text v databáze **nie je surový výstup z markitdown**: prechádza prepisom
+// cez jazykový model (`llmRewrite.ts`), a ten hlavičky prepisuje do Markdownu
+// a skracuje „Článok" na „čl.":
+//
+//     ## čl. 1 — Predmet úpravy
+//     ## čl. 2 ods. 1–6 — Aktívne volebné právo      ← dlhý článok rozdelený
+//     ## čl. 4a — Doplnený článok                    ← číslo s písmenom
+//     ## príloha č. 2 — Tabuľka poplatkov
+//
+// Zmerané na ostrom korpuse: 547 hlavičiek, 14 rôznych tvarov, z toho 349×
+// `## čl. N — …` a 126× `## čl. N ods. N–N — …`.
+//
+// Dovtedy chunker poznal len tvar `Článok 5 - Názov`, takže z toho istého
+// uloženého textu nerozpoznal **ani jeden** článok tam, kde uložené úseky mali
+// 99 %. Preindexovanie by knižnicu pokazilo — dočasná poistka je v `reindex()`.
+//
+// **Rieši sa to rozšírením vzorov, nie novou vetvou v parsovaní.** Slučka
+// v `parseStructure()` je odladená na deviatich predpisoch; nová vetva by
+// znamenala druhé miesto, kde sa rozhoduje, čo je článok.
+//
+// `ods. N–N` je **súčasťou čísla**, nie šum na zahodenie. Prvá verzia tejto
+// opravy ho zahadzovala a citácia z „čl. 2 ods. 1–6" by sa scvrkla na „čl. 2" —
+// teda menej presná než tá, ktorá je v databáze dnes. Zistilo sa to porovnaním
+// textu úsekov, nie počtov: počty aj podiel rozpoznaných článkov sedeli
+// dokonale, a rozdiel bol až v `articleRef`.
+//
+// Názov musí začínať **nečíslicou**. Bez toho by sa pri `ods. 1–6 — Názov`
+// dala pomlčka v rozsahu zameniť za oddeľovač názvu a z „6 — Aktívne volebné
+// právo" by vznikol nadpis.
+const MD = "(?:#{1,6}\\s*)?"
+const ART_WORD = "(?:Článok|čl\\.)"
+const ODS = "(?:\\s+ods\\.\\s*\\d+(?:\\s*[–—-]\\s*\\d+)?)?"
+const NUM = `(\\d+[a-z]?${ODS})`
+const ARTICLE = new RegExp(`^${MD}${ART_WORD}\\s+${NUM}\\s*[-–—]\\s*(\\D.*)$`)
 // Druhý zápis, ktorý sa v normách SFZ vyskytuje častejšie: číslo článku
 // stojí samo na riadku a názov je až na nasledujúcom.
 //
@@ -30,10 +66,10 @@ const ARTICLE = /^Článok\s+(\d+[a-z]?)\s*[-–—]\s*(.+)$/
 // Bez tohto vzoru sa celý dokument zlial do jedného bloku „Úvodné
 // ustanovenia“ a vyhľadávanie nemalo čoho chytiť. Osem z deviatich
 // vzorových dokumentov používa práve tento tvar.
-const ARTICLE_ALONE = /^Článok\s+(\d+[a-z]?)\s*$/
+const ARTICLE_ALONE = new RegExp(`^${MD}${ART_WORD}\\s+${NUM}\\s*$`)
 // Prílohy stoja MIMO číslovania článkov — vzory zmlúv, tabuľky poplatkov.
 // Bez tohto vzoru by spadli pod posledný článok a citácia by klamala.
-const ANNEX = /^PR[ÍI]LOHA\s+č\.\s*(\d+[a-z]?)\s*[-–—]?\s*(.*)$/i
+const ANNEX = new RegExp(`^${MD}PR[ÍI]LOHA\\s+č\\.\\s*(\\d+[a-z]?)\\s*[-–—]?\\s*(.*)$`, "i")
 // Písmená v odsekoch — záchytný bod na delenie dlhých výpočtov (napr. definície).
 const LETTER = /^[a-záäčďéíĺľňóôŕšťúýž]\)\s/
 
@@ -81,14 +117,16 @@ export function patternsForProfile(profile = {}) {
 
   return {
     profil: p,
+    // Aj vlastné slovo organizácie sa smie objaviť ako nadpis Markdownu —
+    // prepis cez jazykový model sa nepýta, aké slovo má zákazník v profile.
     CLANOK: customArticle
-      ? new RegExp(`^${article}\\s+(\\d+[a-z]?)\\s*[-–—]\\s*(.+)$`)
+      ? new RegExp(`^${MD}${article}\\s+${NUM}\\s*[-–—]\\s*(\\D.*)$`)
       : ARTICLE,
     CLANOK_SAM: customArticle
-      ? new RegExp(`^${article}\\s+(\\d+[a-z]?)\\s*$`)
+      ? new RegExp(`^${MD}${article}\\s+${NUM}\\s*$`)
       : ARTICLE_ALONE,
     PRILOHA: customAnnex
-      ? new RegExp(`^${annex}\\s*(\\d+[a-z]?)\\s*[-–—]?\\s*(.*)$`, "i")
+      ? new RegExp(`^${MD}${annex}\\s*(\\d+[a-z]?)\\s*[-–—]?\\s*(.*)$`, "i")
       : ANNEX,
     CAST: PART,
     ODSEK: PARAGRAPH,

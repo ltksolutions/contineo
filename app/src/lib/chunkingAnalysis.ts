@@ -34,8 +34,10 @@ export interface StructureSignals {
   pointWord: number
   /** Riadkov v tvare `(3) …` — odseky vnútri článkov. */
   numberedParagraphs: number
-  /** Nadpisy Markdownu (`#`, `##`, …). */
+  /** Nadpisy Markdownu (`#`, `##`, …) spolu, vrátane tých rozpoznaných. */
   markdownHeadings: number
+  /** Hlavičky príloh — stoja mimo číslovania článkov. */
+  annexes: number
   /** Riadkov, ktoré sa opakujú viac než dvakrát — hlavičky a päty z PDF. */
   repeatedLines: number
 }
@@ -73,11 +75,24 @@ export const STRUCTURE_THRESHOLD = 0.005
 /** Kľúč profilu pre dokument, na ktorý štruktúrny chunker nestačí. */
 export const PLAIN_PROFILE_KEY = "volny_text"
 
-const ARTICLE = /^Článok\s+\d+[a-z]?\b/
-const PARAGRAPH_SIGN = /^§\s*\d+[a-z]?\b/
-const POINT = /^Bod\s+\d+[a-z]?\b/
+/*
+ * Vzory musia poznať **oba tvary hlavičiek**, rovnako ako chunker: surový
+ * `Článok 5` aj ten, ktorý vyrobí prepis cez jazykový model
+ * (`## čl. 5 — Názov`, `## čl. 2 ods. 1–6 — Názov`).
+ *
+ * Prvá verzia analyzátora to nevedela a nad ostrým korpusom vyhlásila, že
+ * žiadny z desiatich predpisov nemá členenie — hoci uložené úseky mali 99 %
+ * článkov. Bola to chyba analyzátora, ale odhalila skutočnú chybu chunkera,
+ * takže nech to tu zostane napísané: **analyzátor a chunker musia poznať ten
+ * istý tvar.** Keď sa jeden naučí nový, druhý sa musí naučiť tiež.
+ */
+const MD = "(?:#{1,6}\\s*)?"
+const ARTICLE = new RegExp(`^${MD}(?:Článok|čl\\.)\\s+\\d+[a-z]?\\b`)
+const PARAGRAPH_SIGN = new RegExp(`^${MD}§\\s*\\d+[a-z]?\\b`)
+const POINT = new RegExp(`^${MD}Bod\\s+\\d+[a-z]?\\b`)
 const NUMBERED = /^\(\d+\)\s/
 const HEADING = /^#{1,6}\s+\S/
+const ANNEX = new RegExp(`^${MD}pr[íi]loha\\s+č\\.\\s*\\d+[a-z]?\\b`, "i")
 
 /**
  * Spočíta, čo v texte je. Čistá funkcia — žiadny vstup okrem textu.
@@ -99,6 +114,7 @@ export function structureSignals(markdown: string): StructureSignals {
     pointWord: lines.filter(l => POINT.test(l)).length,
     numberedParagraphs: lines.filter(l => NUMBERED.test(l)).length,
     markdownHeadings: lines.filter(l => HEADING.test(l)).length,
+    annexes: lines.filter(l => ANNEX.test(l)).length,
     repeatedLines: [...seen.values()].filter(n => n > 2).reduce((a, b) => a + b, 0),
   }
 }
