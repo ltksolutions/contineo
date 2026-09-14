@@ -16,6 +16,7 @@
 export type Segment =
   | { druh: "text"; text: string }
   | { druh: "tucne"; text: string }
+  | { druh: "odkaz"; text: string; href: string }
 
 export type Block =
   | { druh: "odsek"; segments: Segment[] }
@@ -41,6 +42,24 @@ const SUBHEADING = /^\*\*(?!\s)(.+?)\*\*[:：]?$/
 const HEADING = /^(#{1,4})\s+(.+?)\s*#*$/
 
 /**
+ * Odkaz v tvare `[text](/cesta)`.
+ *
+ * **Len vnútorné cesty.** Vzor vyžaduje `/` hneď na začiatku a druhý `/`
+ * zakazuje (`(?!\/)`) — bez toho by prešlo `//cudzi.web`, čo prehliadač číta
+ * ako adresu s dedeným protokolom, teda ako cestu von. Prvá verzia vzoru to
+ * pustila a odhalil to až test;
+ * takže `https://…`, `javascript:` ani `//cudzi.web` sem neprejdú. Nie je to
+ * opatrnosť navyše: tým istým rozoberaním prechádza **výstup jazykového modelu
+ * nad cudzími dokumentmi** (`Answer.tsx`). Keby vzor pustil ľubovoľnú adresu,
+ * model by vedel vyrobiť klikací odkaz kamkoľvek a človek by ho videl
+ * v rozhraní zväzu ako jeho vlastný.
+ *
+ * Kto raz bude chcieť odkazovať von, nech to spraví samostatným druhom
+ * segmentu s viditeľným označením, nie rozšírením tohto vzoru.
+ */
+const LINK = /\[([^\]\n]+)\]\((\/(?!\/)[^)\s]*)\)/
+
+/**
  * Rozdelí riadok na bežné a tučné úseky.
  *
  * Nepárny počet oddeľovačov nechávame tak, ako prišiel — useknutá odpoveď
@@ -52,7 +71,18 @@ export function splitInline(line: string): Segment[] {
   let rest = line
 
   for (;;) {
+    // Odkaz sa hľadá pred zvýraznením: `[**takto**](/x)` má byť odkaz
+    // s tučným textom, nie tučný text s hranatými zátvorkami okolo.
+    const link = LINK.exec(rest)
     const start = rest.indexOf("**")
+
+    if (link && (start === -1 || link.index < start)) {
+      if (link.index > 0) segments.push({ druh: "text", text: rest.slice(0, link.index) })
+      segments.push({ druh: "odkaz", text: link[1], href: link[2] })
+      rest = rest.slice(link.index + link[0].length)
+      continue
+    }
+
     if (start === -1) break
 
     const end = rest.indexOf("**", start + 2)

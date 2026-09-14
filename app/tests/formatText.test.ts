@@ -259,3 +259,50 @@ t("rôzne odseky s podobným začiatkom zostanú oddelené",
     c("(3) Transfer maloletého hráča, ktorý nedovŕšil 15 rokov, je zakázaný."),
   ]).length === 2)
 
+
+
+// ── odkazy `[text](/cesta)` — pribudli 2026-09-14 kvôli návodu ───────────────
+//
+// Najpodstatnejšie sú tie zamietavé: tým istým rozoberaním prechádza výstup
+// jazykového modelu nad cudzími dokumentmi. Keby vzor pustil ľubovoľnú adresu,
+// model by vedel vyrobiť klikací odkaz kamkoľvek a človek by ho videl
+// v rozhraní zväzu ako jeho vlastný.
+
+const odkaz = splitInline("Otvor [Knižnicu](/library) a nahraj súbor.")
+t("vnutorna cesta sa stane odkazom",
+  odkaz.length === 3 && odkaz[1].druh === "odkaz",
+  JSON.stringify(odkaz))
+t("odkaz nesie text aj cestu",
+  odkaz[1].druh === "odkaz" && odkaz[1].text === "Knižnicu" && odkaz[1].href === "/library",
+  JSON.stringify(odkaz[1]))
+t("text okolo odkazu sa zachova", text(odkaz) === "Otvor Knižnicu a nahraj súbor.", text(odkaz))
+
+for (const zly of [
+  "[web](https://example.com)",
+  "[web](http://example.com)",
+  "[web](//example.com)",
+  "[klik](javascript:alert(1))",
+  "[mail](mailto:a@b.sk)",
+]) {
+  t(`cudzia adresa odkazom nie je: ${zly}`,
+    !splitInline(zly).some(u => u.druh === "odkaz"),
+    JSON.stringify(splitInline(zly)))
+}
+
+const zmiesane = splitInline("**Pozor:** pozri [Členenie](/organisation?tab=chunking).")
+t("odkaz a tucne vedla seba",
+  zmiesane.filter(u => u.druh === "tucne").length === 1 &&
+  zmiesane.filter(u => u.druh === "odkaz").length === 1,
+  JSON.stringify(zmiesane))
+t("cesta smie mat parameter",
+  zmiesane.some(u => u.druh === "odkaz" && u.href === "/organisation?tab=chunking"),
+  JSON.stringify(zmiesane))
+
+t("hranate zatvorky bez cesty zostavaju textom",
+  !splitInline("Výraz [1] je poznámka.").some(u => u.druh === "odkaz"))
+
+const vZozname = toBlocks("- Otvor [Knižnicu](/library)")
+t("odkaz funguje aj v odrazke",
+  vZozname[0].druh === "zoznam" &&
+  vZozname[0].items[0].some(u => u.druh === "odkaz"),
+  JSON.stringify(vZozname))

@@ -10,6 +10,7 @@
  */
 
 import type { Citation, AskResult } from "@/lib/sseClient"
+import Link from "next/link"
 import { toBlocks, cleanCitation, mergeCitations } from "@/lib/formatText"
 import { formatUsd, formatEur, toEur } from "@/lib/pricing"
 import type { Segment } from "@/lib/formatText"
@@ -37,7 +38,11 @@ function Segments({ segments: segments }: { segments: Segment[] }) {
       {segments.map((u, i) =>
         u.druh === "tucne"
           ? <strong key={i}>{u.text}</strong>
-          : <span key={i}>{u.text}</span>
+          // Odkaz smeruje len dovnútra aplikácie — vzor v `formatText.ts`
+          // cudziu adresu neprepustí, takže `<Link>` je bezpečný.
+          : u.druh === "odkaz"
+            ? <Link key={i} href={u.href}>{u.text}</Link>
+            : <span key={i}>{u.text}</span>
       )}
     </>
   )
