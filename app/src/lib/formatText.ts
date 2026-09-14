@@ -128,7 +128,13 @@ export function splitInline(line: string): Segment[] {
  */
 export function toBlocks(text: string): Block[] {
   const blocks: Block[] = []
-  const lines = text.split("\n")
+  // Delenie na všetky tvary konca riadku, nielen `\n`. Uložené znenie
+  // predpisu má `\r\n` (prišlo z Wordu a PDF) a osamotené `\r` na konci
+  // riadku by vzory odrážok a číslovaných bodov **nerozpoznali**: `.` v nich
+  // nezahŕňa znak konca riadku a `\r` ním je. Číslovaný zoznam sa tak zlial
+  // do jedného odseku. Nadpisy fungovali, lebo tie sa hľadajú v orezanom
+  // riadku — a práve preto to z kódu nebolo vidieť, len z obrazovky.
+  const lines = text.split(/\r\n|\r|\n/)
 
   let paragraph: string[] = []
   let list: { items: string[]; numbered: boolean } | null = null

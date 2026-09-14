@@ -31,7 +31,8 @@ Príčina nie je chýbajúca knižnica, ale to, že rozklad Markdownu existoval 
 - **Odsek normy `(N)` je samostatný blok.** V norme stoja odseky na susedných riadkoch bez prázdneho riadku medzi nimi — bez vlastného pravidla by sa zliali do jedného odstavca a z dvoch povinností by bola jedna veta. Číslo **zostáva v texte**, nerobí sa `<ol>`: odsek `(4a)` aj preskočené číslovanie po novele sú v normách bežné a zoznam by ich prečísloval, takže by citácia ukazovala na iný odsek, než na aký sa odvoláva človek.
 - Prepnuté dve obrazovky: `/documents/[documentId]` a `/approvals`. Rozdielový náhľad v knižnici zostáva neproporcionálnym písmom — tam je surový text zámer.
 - Tabuľky renderer zatiaľ nepozná. Doplnia sa, až keď bude vidieť, v akom tvare ich prepis vracia na ostrých predpisoch.
-- Overené: `tsc` čisto, **1246 testov**, lint bez chýb.
+- **Konce riadkov `\r\n`.** Uložené znenie prišlo z Wordu a PDF, takže má `\r\n`. Vzory odrážok a číslovaných bodov osamotené `\r` na konci riadku **nerozpoznajú** — `.` v nich nezahŕňa znak konca riadku — a číslovaný zoznam sa zlial do jedného odseku. Nadpisy fungovali, lebo tie sa hľadajú v orezanom riadku, a preto to z kódu nebolo vidieť: odhalila to až obrazovka na telefóne, na skutočnom dokumente.
+- Overené: `tsc` čisto, **1251 testov**, lint bez chýb; vykreslenie overené na ostrom dokumente v `intranet.futbalsfz.sk` pri šírke 420 px.
 
 
 ### Fixed (2026-09-14 — prepis cez model bol pokazený a zahadzoval úroveň ČASŤ)

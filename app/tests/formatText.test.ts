@@ -358,3 +358,37 @@ t("zalomenie vnútri odseku sa spojí medzerou",
 
 t("odkaz na poznámku v texte nie je odsek",
   toBlocks("Podľa (1) a (2) písmena a) platí lehota.").length === 1)
+
+// ── konce riadkov `\r\n` ─────────────────────────────────────────────────────
+//
+// Uložené znenie predpisu prišlo z Wordu a PDF, takže má `\r\n`. Osamotené
+// `\r` na konci riadku vzory odrážok a číslovaných bodov nerozpoznajú (`.`
+// v nich nezahŕňa znak konca riadku) a zoznam sa zlial do jedného odseku.
+// Nadpisy fungovali, lebo tie sa hľadajú v orezanom riadku — z kódu to
+// preto nebolo vidieť, len z obrazovky.
+
+const crlf = toBlocks("1. Prvý bod.\r\n2. Druhý bod.\r\n3. Tretí bod.")
+t("číslovaný zoznam sa rozpozná aj pri \\r\\n",
+  crlf.length === 1 && crlf[0].druh === "zoznam" && crlf[0].items.length === 3,
+  JSON.stringify(crlf))
+
+const crlfOdrazky = toBlocks("- prvá\r\n- druhá")
+t("odrážky sa rozpoznajú aj pri \\r\\n",
+  crlfOdrazky.length === 1 && crlfOdrazky[0].druh === "zoznam" &&
+  crlfOdrazky[0].numbered === false,
+  JSON.stringify(crlfOdrazky))
+
+const crlfOdsek = toBlocks("## Článok 2 — Názov\r\n\r\n(1) Prvý odsek.\r\n(2) Druhý odsek.")
+t("nadpis aj odseky normy pri \\r\\n",
+  crlfOdsek.length === 3 && crlfOdsek[0].druh === "nadpis" &&
+  crlfOdsek[1].druh === "odsek" && crlfOdsek[2].druh === "odsek",
+  JSON.stringify(crlfOdsek.map(b => b.druh)))
+
+t("v texte nezostane znak \\r",
+  !JSON.stringify(toBlocks("Veta jedna.\r\nVeta dva.")).includes("\\r"),
+  JSON.stringify(toBlocks("Veta jedna.\r\nVeta dva.")))
+
+const staryMac = toBlocks("1. Prvý\r2. Druhý")
+t("osamotené \\r je tiež koniec riadku",
+  staryMac.length === 1 && staryMac[0].druh === "zoznam" && staryMac[0].items.length === 2,
+  JSON.stringify(staryMac))
