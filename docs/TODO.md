@@ -521,10 +521,14 @@ je príležitosť stratiť dáta.
 - [x] **Chunker sa naučil hlavičky v tvare Markdownu** ✅ 2026-09-14 — `CHUNKER_VERSION` 1 → 2
       `## čl. N — Názov`, `## čl. N ods. N–N — Názov`, `## čl. Na`, `## príloha č. N`, aj `## Článok N`. Rozšírené vzory, **nie nová vetva v parsovaní** — slučka je odladená na deviatich predpisoch. Rozpoznanie článkov je späť na 92–99 % (bolo 0 %). Poistka z rána tým prejde sama.
       `ods. N–N` zostáva **súčasťou čísla**: prvá verzia opravy ho zahadzovala a citácia „čl. 2 ods. 1–6" by sa scvrkla na „čl. 2". Odhalilo sa to porovnaním **textu** úsekov — počty aj podiel článkov sedeli dokonale.
-- [ ] 🔴 **Prepis cez jazykový model zahodil úroveň ČASŤ.** V pôvodnom texte bolo `PRVÁ ČASŤ – Všeobecné ustanovenia`; v dnešnom `versions[].markdown` **nie je ani raz** (Disciplinárny poriadok: 0 výskytov, Stanovy: 0). Uložené úseky ju v breadcrumbe majú, lebo vznikli z pôvodného textu.
-      Dôsledok: **preindexovaním by sa tá úroveň stratila aj z indexu.** Nie je to chyba chunkera — je to strata v publikovanom texte, teda v tom, čo ľudia čítajú a potvrdzujú.
-      Pôvodné PDF sú v GridFS, takže opraviť sa to dá. Rozhodnúť: (a) prepis má `ČASŤ` zachovať a dokumenty sa nahrajú znova, (b) `ČASŤ` sa vedome opúšťa a preindexuje sa tak, ako to je.
-- [ ] **Nepreindexovávať, kým nie je rozhodnuté vyššie.** Chunker je opravený a poistka prejde, ale index by prebral stratu `ČASŤ`. Overené `chunking_status` + porovnaním textu úsekov.
+- [x] **Prepis cez jazykový model opravený** ✅ 2026-09-14 — tri nálezy, všetky zo skúšobného prepisu skutočného PDF, nie z čítania kódu:
+      1. **Prepis nefungoval vôbec** — SDK odmieta nestreamované volanie s `max_tokens: 32 000`. Týkalo sa to aj „prečistiť text", aj „prepísať sken". Opravené streamovaním.
+      2. **Zadanie hovorilo len „obnov členenie"** a model si to vyložil po svojom: `Článok` → `čl.`, dlhé články rozsekal na `ods. 1–6`, `ČASŤ` zahodil. Zadanie je teraz pri úrovniach doslovné a s príkladmi.
+      3. **V nadpise Markdownu je pomlčka nepovinná** — model ju raz píše a raz nie.
+      Overené na dvoch ostrých PDF: Volebný poriadok 10/10 nadpisov `## Článok N` (žiadne `čl.`), Disciplinárny poriadok **51 článkov a `PRVÁ ČASŤ` zachovaná** (predtým 0 výskytov).
+- [ ] **Nahrať dokumenty znova z originálov** a až potom preindexovať. Pipeline je opravená, ale dnešný `versions[].markdown` je stále ten starý — bez `ČASŤ` a so skratkami. Originálne PDF sú v GridFS.
+      Pozor: nový prepis = nový text = **nový `versionId`**, teda nové schvaľovanie aj potvrdzovanie. Pri skúšobnom korpuse to nevadí (aj tak ide preč), ale je to dôvod spraviť to **pred** nahratím ostrých znení, nie po ňom.
+- [ ] Model raz prehodil poradie v nadpise (`## Konanie a rozhodovanie volebnej komisie Článok 4`) — chunker to správne neprijme a spadne to do textu. Jeden nadpis z desiatich; sledovať, či sa to opakuje.
 - [ ] ~~Zistiť, prečo deväť dokumentov hlási neaktuálne členenie.~~
 
 Lacné, kým je knižnica malá. Nové obrazovky a druhá stratégia chunkovania

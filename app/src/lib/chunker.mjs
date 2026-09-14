@@ -344,7 +344,14 @@ export function parseStructure(lines, vzory) {
     }
 
     const mPart = v.CAST.exec(r)
-    if (mPart && !inAnnexes) { inTable = false; part = r; continue }
+    if (mPart && !inAnnexes) {
+      inTable = false
+      // Mriežky preč: `part` ide do breadcrumbu, teda do textu chunku, a ten
+      // číta embedding. „Disciplinárny poriadok › # PRVÁ ČASŤ › Článok 5" je
+      // nadpis s kusom značkovania, nie kontext.
+      part = r.replace(/^#{1,6}\s*/, "")
+      continue
+    }
 
     // Dva tvary, jedno rozhodnutie: nadpis Markdownu smie byť bez pomlčky.
     const mArticle = v.CLANOK.exec(r) ?? v.CLANOK_MD.exec(r)

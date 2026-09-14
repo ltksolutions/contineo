@@ -4,6 +4,20 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Fixed (2026-09-14 — prepis cez model bol pokazený a zahadzoval úroveň ČASŤ)
+
+Tri nálezy, všetky zo **skúšobného prepisu skutočného PDF**, nie z čítania kódu.
+
+- **Prepis nefungoval vôbec.** SDK odmieta nestreamované volanie s `max_tokens: 32 000` — *„Streaming is required for operations that may take longer than 10 minutes."* Týkalo sa to oboch ciest: „prečistiť text" aj „prepísať sken". Pravdepodobne od aktualizácie SDK pri prechode na Next 16 (28. 8.). Opravené streamovaním; rozpočet tokenov zostáva, orezať ho by znamenalo prepis ticho zastavený v polovici predpisu.
+- **Zadanie pre model bolo priveľmi voľné.** Hovorilo len „obnov členenie" a model si to vyložil po svojom: skrátil `Článok` na `čl.`, dlhé články rozsekal na `ods. 1–6` a `ods. 7–12`, a **úroveň `ČASŤ` zahodil úplne**. Zadanie je teraz pri štruktúrnych úrovniach doslovné a s príkladmi — model, ktorý dostane „obnov členenie", si členenie vymyslí; model, ktorý dostane vzor, ho dodrží.
+- **V nadpise Markdownu je pomlčka nepovinná.** Model píše raz `## Článok 1 - Predmet`, inokedy `## Článok 1 Predmet`. Mimo nadpisu sa pomlčka vyžaduje ďalej: bez nej by veta „Článok 5 sa mení takto" vyrobila článok s názvom „sa mení takto".
+- Chunker sa naučil aj **časť v tvare nadpisu** (`## PRVÁ ČASŤ - …`) a mriežky sa do breadcrumbu nedostanú — breadcrumb ide do textu chunku, teda do embeddingu.
+
+**Overené na dvoch ostrých PDF:** Volebný poriadok — 10 z 10 nadpisov `## Článok N`, žiadne `čl.`; Disciplinárny poriadok — **51 článkov a `PRVÁ ČASŤ` zachovaná** (predtým 0 výskytov v celom dokumente).
+
+Overené: `tsc` čisto, **1191 testov**, lint bez chýb.
+
+
 ### Fixed (2026-09-14 — chunker sa naučil hlavičky v tvare Markdownu, `CHUNKER_VERSION` 2)
 
 Ranná poistka bránila škode; toto je príčina. Chunker poznal len tvar `Článok 5 - Názov`, kým text v databáze má `## čl. 5 — Názov` — zmerané na korpuse: **547 hlavičiek, 14 rôznych tvarov**, z toho 349× `## čl. N — …` a 126× `## čl. N ods. N–N — …`.

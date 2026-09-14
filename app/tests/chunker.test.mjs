@@ -350,3 +350,9 @@ t(
   mdChunks.some(c => c.typ === "priloha"),
   `priloha sa nerozpoznala: ${JSON.stringify(mdChunks.map(c => c.typ))}`,
 )
+
+t(
+  "breadcrumb nenesie mriezky z nadpisu casti",
+  !mdChunks.some(c => /›\s*#/.test(c.text)),
+  `v breadcrumbe zostalo znackovanie: ${JSON.stringify(mdChunks.map(c => c.text.split("\n")[0]))}`,
+)
