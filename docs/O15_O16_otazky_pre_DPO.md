@@ -186,6 +186,34 @@ alebo to patrí pod ten istý základ ako zvyšok onboardingu?
 
 ---
 
+### B-nové 2. Hlásenia nepresností (`answer_reports`) — pribudlo 2026-09-15
+
+Pod každou odpoveďou systému je „Nahlásiť nepresnosť". Kto ho použije, pošle
+**popis chyby** a spolu s ním sa uloží **jeho otázka a odpoveď systému
+doslovne** plus zoznam zdrojov, ktoré systém použil.
+
+**Prečo aj otázka a odpoveď:** hlásenie bez nich je veta „niečo bolo zle" —
+nedá sa z nej nič opraviť. A bez zdrojov sa nedá rozlíšiť „našlo zlý predpis"
+od „našlo správny a zle ho prečítalo"; sú to dve rôzne chyby s dvomi rôznymi
+opravami.
+
+**Čo z toho je osobný údaj:** otázka je text, ktorý napísal človek, takže
+môže obsahovať čokoľvek vrátane údaja o ňom samom alebo o inom. Nedá sa to
+vopred vyfiltrovať bez toho, aby hlásenie stratilo zmysel.
+
+**Náš návrh:** 24 mesiacov. Dlhšie než pri upozorneniach, lebo je to podklad
+na zlepšovanie vyhľadávania — pri polročnej lehote by pohľad „čo sa nám
+opakovane vyčíta" zostal prázdny práve vtedy, keď sa naň niekto pozrie.
+
+**Otázka na DPO:** je oprávnený záujem (zlepšovanie vlastnej služby) správny
+právny základ?
+
+**Odpoveď k lehote:** ☐ 24 mesiacov súhlasí · ☐ inak: ____________
+
+**Odpoveď k základu:** ☐ oprávnený záujem · ☐ inak: ____________
+
+---
+
 ## Časť C — Čo k tomu patrí
 
 ### C1. Informovanie zamestnancov (čl. 13)
@@ -229,6 +257,7 @@ DPA medzi zväzom a Contineom a doložka pokrývajúca tok údajov Sportnet → 
 | `approval_rounds` | kto predložil, menovaní schvaľovatelia (meno a adresa ako odtlačok), rozhodnutie, dôvod zamietnutia, kedy sa komu ozvalo |
 | `reminder_log` | komu a v ktorý deň sa odoslala pripomienka |
 | `notifications` | personId, druh udalosti, ktorého dokumentu sa týkala, počet, čas vzniku a čas prečítania — **nie text správy** |
+| `answer_reports` | personId, meno a e-mail (kópia), **otázka človeka a odpoveď systému doslovne**, zoznam zdrojov, popis chyby, čas |
 | audit prístupov | kto, čo a kedy videl |
 
 Dve veci, ktoré sa zámerne **nezbierajú**: doskrolovanie na koniec dokumentu a záznam o každom jednotlivom zobrazení. A personalista, ktorý si znenie otvorí na kontrolu, sa nezapisuje — zapisuje sa len ten, kto povinnosť má.

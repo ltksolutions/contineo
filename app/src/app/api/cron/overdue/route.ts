@@ -29,6 +29,7 @@ import type { Person } from "@/lib/persons"
 import { HR_ROLE } from "@/lib/hr"
 import { overdue, byPersonReminder, DEFAULT_DAYS, dueRemindersFor, claimReminder, dayKey, weekKey } from "@/lib/reminders"
 import { notifyPeople, purgeExpired } from "@/lib/notifications"
+import { purgeExpired as purgeExpiredReports } from "@/lib/answerReports"
 import { send, reminderEmail, dueReminderEmail } from "@/lib/ecomail"
 import { normalizeLanguage, formatDate } from "@/lib/i18n"
 
@@ -263,5 +264,17 @@ export async function GET(request: Request) {
     console.error("[cron] mazanie starych upozorneni zlyhalo:", e)
   }
 
-  return NextResponse.json({ ok: true, tenants: report, due: dueReport, purged })
+  // Hlásenia nepresností majú vlastnú, dlhšiu lehotu (24 mesiacov) — sú to
+  // podklady na zlepšenie vyhľadávania, nie prevádzková stopa. Vozia sa
+  // v tom istom behu z rovnakého dôvodu ako upozornenia.
+  let purgedReports = 0
+  try {
+    purgedReports = await purgeExpiredReports()
+  } catch (e) {
+    console.error("[cron] mazanie starych hlaseni zlyhalo:", e)
+  }
+
+  return NextResponse.json({
+    ok: true, tenants: report, due: dueReport, purged, purgedReports,
+  })
 }

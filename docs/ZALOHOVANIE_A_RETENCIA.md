@@ -60,6 +60,7 @@ kým existuje predmet (dokument, organizácia)
 | `reading_times` | 12 mesiacov | **TTL** `reading_ttl` | ✅ rozhodnuté 2026-09-06 |
 | `reminder_log` | 90 dní | **TTL** `reminder_log_ttl` | ✅ rozhodnuté |
 | `notifications` | 90 dní | dávkou v dennom crone `/api/cron/overdue` | ✅ rozhodnuté 2026-09-15 |
+| `answer_reports` | 24 mesiacov | dávkou v dennom crone `/api/cron/overdue` | ✅ rozhodnuté 2026-09-15 |
 | `audit` | 24 mesiacov | zatiaľ **nemaže sa** | ⬜ TTL nie je zavedený |
 | `evaluations` | 12 mesiacov | zatiaľ nemaže sa | ⬜ |
 | `documents`, `document_chunks`, `cms_folders`, `cms_files` | kým je dokument v knižnici | s dokumentom (`npm run docs:delete`) | ✅ |

@@ -1234,6 +1234,22 @@ interface Dictionary {
    * viď `notifications.ts`. Vďaka tomu sa starý oznam po prepnutí jazyka
    * prečíta v novom jazyku.
    */
+  /**
+   * „Nahlásiť nepresnosť" pod odpoveďou (O6/12).
+   *
+   * Vlastná skupina, nie súčasť `answer`: je to jediná časť tej obrazovky,
+   * ktorá **zapisuje**, a texty majú byť pohromade s tým rozhodnutím.
+   */
+  report: {
+    open: string
+    whatIsWrong: string
+    placeholder: string
+    note: string
+    submit: string
+    sending: string
+    thanks: string
+    failed: string
+  }
   notifications: {
     title: string
     /** Popisok zvončeka pre čítačku obrazovky; nesie aj počet. */
@@ -3103,6 +3119,16 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
         (invalid ? `, chybných ${invalid}` : "") + ".",
     },
   },
+  report: {
+    open: "Nahlásiť nepresnosť",
+    whatIsWrong: "Čo je na odpovedi zle?",
+    placeholder: "Napríklad: odvoláva sa na zrušený článok; vynechala výnimku v ods. 3; našla iný predpis.",
+    note: "Uloží sa aj tvoja otázka, odpoveď a zdroje, ktoré systém použil — bez nich sa nedá rozlíšiť, či našiel zlý predpis, alebo správny a zle ho prečítal.",
+    submit: "Odoslať hlásenie",
+    sending: "Odosielam…",
+    thanks: "Ďakujeme. Hlásenie sme zapísali aj s otázkou a zdrojmi.",
+    failed: "Hlásenie sa nepodarilo odoslať. Skús to prosím znova.",
+  },
   notifications: {
     title: "Upozornenia",
     // Tri tvary, nie jeden: „1 neprečítaných" je chyba, ktorú vidno na prvý
@@ -4929,6 +4955,16 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
         (invalid ? `, chybných ${invalid}` : "") + ".",
     },
   },
+  report: {
+    open: "Nahlásit nepřesnost",
+    whatIsWrong: "Co je na odpovědi špatně?",
+    placeholder: "Například: odvolává se na zrušený článek; vynechala výjimku v odst. 3; našla jiný předpis.",
+    note: "Uloží se i tvoje otázka, odpověď a zdroje, které systém použil — bez nich nelze rozlišit, jestli našel špatný předpis, nebo správný a špatně ho přečetl.",
+    submit: "Odeslat hlášení",
+    sending: "Odesílám…",
+    thanks: "Děkujeme. Hlášení jsme zapsali i s otázkou a zdroji.",
+    failed: "Hlášení se nepodařilo odeslat. Zkus to prosím znovu.",
+  },
   notifications: {
     title: "Upozornění",
     bellLabel: (unread) => unread > 0 ? `Upozornění — ${unreadWord(unread, "cs")}` : "Upozornění",
@@ -6746,6 +6782,16 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
         `Added ${created}, updated ${updated}, unchanged ${unchanged}` +
         (invalid ? `, invalid ${invalid}` : "") + ".",
     },
+  },
+  report: {
+    open: "Report an inaccuracy",
+    whatIsWrong: "What is wrong with the answer?",
+    placeholder: "For example: it cites a repealed article; it missed the exception in paragraph 3; it found a different document.",
+    note: "Your question, the answer and the sources the system used are stored as well — without them there is no way to tell whether it found the wrong document or read the right one badly.",
+    submit: "Send the report",
+    sending: "Sending…",
+    thanks: "Thank you. The report was saved together with the question and the sources.",
+    failed: "The report could not be sent. Please try again.",
   },
   notifications: {
     title: "Notifications",

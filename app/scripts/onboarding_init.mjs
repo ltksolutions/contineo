@@ -81,6 +81,15 @@ const PLAN = [
     ],
   },
   {
+    collection: "answer_reports",
+    indexes: [
+      { key: { companyCode: 1, createdAt: -1 }, opts: { name: "tenant_time" },
+        why: "hlásenia organizácie, najnovšie hore" },
+      { key: { createdAt: 1 }, opts: { name: "by_age" },
+        why: "retencia 24 mesiacov maže naprieč organizáciami" },
+    ],
+  },
+  {
     collection: "notifications",
     indexes: [
       { key: { companyCode: 1, personId: 1, readAt: 1 }, opts: { name: "tenant_person_unread" },

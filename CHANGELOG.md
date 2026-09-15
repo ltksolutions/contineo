@@ -4,6 +4,36 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### „Nahlásiť nepresnosť" — systém sa konečne dozvie, že odpovedal zle (2026-09-15)
+
+Prvé z piatich „pohodlí" (O6, bod 12) a jediné, ktoré rieši skutočnú dieru:
+dovtedy sme vedeli, koľko otázok padlo, ale nie **ktoré odpovede boli mimo**.
+Zlatá sada testuje to, na čo sme sa dopredu spýtali; toto zachytáva to, na čo
+sme sa nespýtali.
+
+Pod každou dokončenou odpoveďou je zabalený riadok „Nahlásiť nepresnosť".
+Neukazuje sa počas streamovania ani pri chybe — tam ešte nie je čo hodnotiť.
+
+- **Popis chyby je povinný.** Palec dole nie je hlásenie: bez vety „čo je zle"
+  sa nedá nič opraviť.
+- **Ukladá sa aj otázka, aj odpoveď doslovne, aj zdroje.** Bez nich sa nedá
+  rozlíšiť „našlo zlý predpis" od „našlo správny a zle ho prečítalo" — dve
+  rôzne chyby s dvomi rôznymi opravami.
+- **Odpoveď sa po odoslaní nestratí.** Nič sa nepresmeruje; vymení sa len
+  obsah bloku za poďakovanie. Kto hlási nepresnosť, má ju stále pred očami.
+- **Identita nikdy z tela požiadavky** (D32): organizácia aj osoba idú
+  z prihlásenia. Otázka, odpoveď a zdroje naopak prichádzajú z prehliadača —
+  inak sa získať nedajú, lebo odpoveď sa streamuje a nikde sa neukladá.
+  Berie sa to preto ako **tvrdenie nahlasovateľa, nie ako záznam systému**,
+  dĺžky sa orezávajú a nezmysel namiesto zdrojov zápis nezhodí.
+- **Retencia 24 mesiacov** — dlhšie než pri upozorneniach zámerne: je to
+  podklad na zlepšovanie vyhľadávania, nie prevádzková stopa. Otázka je text
+  od človeka a **môže obsahovať osobný údaj**; zapísané v GDPR, v retenčnej
+  tabuľke aj ako otázka na DPO.
+
+Osem testov nad `tidyReport()` — jediným miestom, kde sa rozhoduje, čo
+z hlásenia zostane, a robí to nad vstupom, ktorému sa neverí.
+
 ### Zvonček upozornení (2026-09-15) — a dve rozhodnutia, ktoré tým padli
 
 Systém po prvýkrát hovorí, **čo sa stalo, keď sa človek nepozeral**: keď dobehne

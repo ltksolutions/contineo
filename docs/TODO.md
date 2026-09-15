@@ -610,7 +610,14 @@ len práca, ktorá z nich plynie.
       **Tri zo štyroch udalostí sú dnes synchrónne** — zvonček im dáva históriu, nie novinku. Hodnota narastie, keď sa presunú na pozadie.
       Retencia je rozhodnutá (90 dní, ako `reminder_log`) a zapísaná v GDPR aj v retenčnej tabuľke; **právny základ je otázka na DPO** a je v `docs/O15_O16_otazky_pre_DPO.md`, časť B.
 - [ ] **Vlastné ikony** (bod 1) — set sa nezavádza. Zladiť sedem existujúcich v `Header.tsx` (hrúbka ťahu, optická veľkosť, `viewBox`) a dokresliť navigáciu v tom istom rukopise. **Vedomá odchýlka od README**, nie nedopatrenie. *Ôsma ikona pribudla 2026-09-15 — zvonček, kreslený rovno v tom rukopise (18×18, `currentColor`, ťah 1,6).*
-- [ ] **Pohodlie v poradí** (bod 12): Nahlásiť nepresnosť → hľadanie vo filtroch → Uložiť pohľad → súvisiace predpisy → ďalšie zhody
+- [~] **Pohodlie v poradí** (bod 12) — prvé z piatich hotové
+      - [x] ~~**Nahlásiť nepresnosť**~~ — `answer_reports`, retencia 24 mesiacov
+            Pod každou dokončenou odpoveďou (nie pri chybe, nie počas streamovania). Ukladá sa **otázka aj odpoveď doslovne a zdroje**: bez nich sa nedá rozlíšiť „našlo zlý predpis" od „našlo správny a zle ho prečítalo". Popis chyby je povinný — palec dole nie je hlásenie.
+            Otázka je text od človeka, takže **môže obsahovať osobný údaj**; zapísané v GDPR aj v retenčnej tabuľke, právny základ je otázka na DPO (O15/O16, časť B).
+      - [ ] hľadanie vo filtroch
+      - [ ] Uložiť pohľad
+      - [ ] súvisiace predpisy
+      - [ ] ďalšie zhody v knižnici
 - [ ] **jednoriadkové:** prepísať zastaraný komentár v `new/page.tsx` (tvrdí, že schvaľovací krok neexistuje — dnes nepravda)
 
 **Čo stĺpec „Potvrdenia" ukázal hneď v prvý deň.** Z desiatich noriem má
