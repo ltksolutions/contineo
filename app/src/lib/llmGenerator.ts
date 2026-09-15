@@ -54,6 +54,13 @@ ${supportsCitations
 export function buildSources(chunks: ChunkResult[]) {
   return chunks.map((c, i) => ({
     index:       i + 1,
+    /**
+     * Identifikátor úseku. Bez neho sa z uloženej odpovede nedá spätne
+     * povedať, **ktoré** úseky ju živili — a kurácia z nich odvodzuje
+     * prístupovú úroveň. Je to nepriehľadné id úseku, ktorý človek aj tak
+     * práve videl; pri zverejnení sa aj tak načíta z databázy nanovo.
+     */
+    chunkId:     c._id,
     title:       c.document?.title ?? "Neznámy zdroj",
     slug:        c.document?.slug,
     url:         c.document?.sourceUrl,

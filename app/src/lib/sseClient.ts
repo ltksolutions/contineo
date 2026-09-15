@@ -17,6 +17,8 @@ import type { TokenCounts, Cost } from "./pricing"
 
 export interface AnswerSource {
   index: number
+  /** Úsek, z ktorého zdroj pochádza. Chýba pri odpovediach spred 2026-09-15. */
+  chunkId?: string
   title: string
   slug?: string
   url?: string

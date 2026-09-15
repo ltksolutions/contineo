@@ -303,6 +303,10 @@ export default async function LibraryPage({
         <Link className="button button--quiet" href="/library/tracks">
           {dictionary(uiLanguage).library.tracks.heading}
         </Link>
+        {/* Kurácia: overené odpovede pripravené hodnotiteľom (D11). */}
+        <Link className="button button--quiet" href="/library/curation">
+          {dictionary(uiLanguage).curation.open}
+        </Link>
       </div>
       <p className="quiet" style={{ fontSize: 15, margin: "0 0 20px", maxWidth: 640 }}>
         {t.introBefore}<strong>{t.introHighlight}</strong>{t.introAfter}

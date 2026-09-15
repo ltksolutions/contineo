@@ -4,6 +4,49 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Kurácia — overená odpoveď späť do znalostí (2026-09-15, D11 revidované)
+
+Posledný článok reťaze, ktorá dnes vznikla: bežný človek povie „nesedí",
+hodnotiteľ posúdi a napíše, ako to malo znieť, a **z toho znenia sa stane
+overená odpoveď v znalostiach**.
+
+**Žiadna kolekcia `qa_pairs`.** D11 ju pomenúvala, ale pravda o páre už je na
+zázname v `evaluations`. Úsek v `document_chunks` so `sourceType: "qa"` nie je
+druhá pravda, ale premietnutie do indexu — ten istý vzťah, aký má dokument
+a jeho úseky. Rozhodnutie Jána Letka; D11 je tým revidovaná.
+
+**Dvaja ľudia, dva kroky.** Hodnotiteľ pripraví znenie a vyberie úseky
+predpisu, z ktorých odpoveď vznikla (`/evaluation`). Zverejňuje **správca
+obsahu** (`/library/curation`) — a zverejňuje presne to, čo hodnotiteľ
+napísal: text sa berie zo záznamu, nie z formulára, takže ho cestou nemôže
+zmeniť.
+
+**„Únik cez `accessLevel` nikdy nesmie nastať"** (požiadavka Jána Letka) drží
+päť vrstiev, nie jedna kontrola:
+
+- `strictestAccessLevel()` je jediné miesto, kde sa o prístupe rozhoduje.
+  `public` vyjde len vtedy, keď je verejný **každý** zdroj. Prázdny zoznam,
+  `null` aj neznáma hodnota sú `internal` — nevedieť znamená zavrieť.
+- Zdrojové úseky sa načítajú **z databázy**; z klienta prichádzajú len
+  identifikátory.
+- Chýbajúci alebo cudzí úsek zverejnenie **zastaví**. Žiadne „zvyšok stačí".
+- Náhľad úrovne na obrazovke nesľubuje viac než zápis: pri chýbajúcom úseku
+  spadne na `internal` rovnako, ako ho zverejnenie odmietne.
+- `npm run check` má invariant: pár nesmie byť prístupnejší než jeho zdroje.
+
+Ďalej: **žiadny úsek predpisu sa pri zverejnení nemení ani nearchivuje** — to
+je mechanizmus za vetou „nový pár nikdy potichu neprepíše schválený predpis".
+Opačný smer platí tiež: nové znenie normy páry z nej odvodené archivuje.
+
+**Znenie otázky je upraviteľné, a je to zámer.** Pôvodná otázka je voľný text
+od človeka a môže obsahovať aj to, čo do zdieľaného indexu nepatrí.
+
+**Embedding sa nikde nepočíta** — `$vectorSearch` beží nad textovým poľom
+(Atlas Automated Embedding), takže vložením úseku je pár vyhľadateľný.
+`buildSources()` po novom nesie `chunkId`; bez neho sa spätne nedá povedať,
+z ktorých úsekov odpoveď vznikla. Odpovede spred dneška ho nemajú, takže sa
+z nich pár pripraviť nedá — radšej nič než pár, ktorého úroveň je odhad.
+
 ### Rola `evaluator` — posudok už nie je vec každého (2026-09-15)
 
 Do dnešného dňa videl hodnotiaci panel pod odpoveďou **každý prihlásený**

@@ -681,6 +681,35 @@ interface Dictionary {
     doneRejected: string
   }
   /**
+   * Kurácia — z potvrdeného posudku sa stáva overená odpoveď v znalostiach.
+   * Dve obrazovky, dvaja ľudia: hodnotiteľ pripraví, správca obsahu zverejní.
+   */
+  curation: {
+    prepareHeading: string
+    prepareIntro: string
+    prepareEmpty: string
+    questionLabel: string
+    questionHint: string
+    answerLabel: string
+    sourcesLabel: string
+    sourcesHint: string
+    noSources: string
+    save: string
+    draftBadge: string
+    publishHeading: string
+    publishIntro: string
+    publishEmpty: string
+    publishEmptyNote: string
+    preparedBy: string
+    access: string
+    accessPublic: string
+    accessInternal: string
+    accessNote: string
+    publish: string
+    open: string
+    waiting: (n: number) => string
+  }
+  /**
    * Fronta hodnotiteľa. Vlastná skupina, nie súčasť `rating`: `rating` je
    * panel pod odpoveďou, toto je obrazovka s cudzími odpoveďami.
    */
@@ -2256,6 +2285,31 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     doneApproved: "Schválené. Čaká sa na ostatných schvaľovateľov.",
     doneApprovedClosed: "Schválené. Znenie je schválené celé.",
     doneRejected: "Zamietnuté. Znenie sa vrátilo do konceptu a dôvod zostáva v histórii.",
+  },
+  curation: {
+    prepareHeading: "Pripraviť ako overenú odpoveď",
+    prepareIntro: "Posúdené odpovede, pri ktorých ste napísali, ako mala odpoveď znieť. Pripravený pár zverejní správca obsahu — do znalostí sa zatiaľ nedostane.",
+    prepareEmpty: "Zatiaľ nie je z čoho pripraviť pár. Vzniká z posudku, pri ktorom je vyplnené „Ako mala odpoveď znieť“.",
+    questionLabel: "Otázka",
+    questionHint: "Znenie môžete upraviť — pôvodná otázka je voľný text a môže obsahovať aj to, čo do znalostí nepatrí.",
+    answerLabel: "Overená odpoveď",
+    sourcesLabel: "Z ktorých úsekov predpisu odpoveď vznikla",
+    sourcesHint: "Podľa nich sa určí, kto smie pár vidieť, a podľa nich sa archivuje, keď sa norma zmení. Stačí jeden interný úsek a pár je interný.",
+    noSources: "Táto odpoveď nemá pri zdrojoch identifikátory úsekov, takže sa z nej pár pripraviť nedá. Týka sa to odpovedí spred 15. 9. 2026.",
+    save: "Pripraviť pár",
+    draftBadge: "pripravené",
+    publishHeading: "Overené odpovede na zverejnenie",
+    publishIntro: "Páry pripravené hodnotiteľom. Zverejnením sa dostanú do znalostí ako overená odpoveď — žiadny predpis sa tým nemení ani neprepisuje.",
+    publishEmpty: "Momentálne nie je čo zverejniť.",
+    publishEmptyNote: "Pár sem pridá hodnotiteľ z obrazovky „Na posúdenie“.",
+    preparedBy: "pripravil",
+    access: "Prístup",
+    accessPublic: "verejný",
+    accessInternal: "interný",
+    accessNote: "Úroveň sa odvodzuje zo zdrojov, nezadáva sa. Pri zverejnení sa počíta znova.",
+    publish: "Zverejniť do znalostí",
+    open: "Overené odpovede",
+    waiting: n => (n === 1 ? "1 na zverejnenie" : `${n} na zverejnenie`),
   },
   evaluation: {
     heading: "Na posúdenie",
@@ -4042,6 +4096,31 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     doneApprovedClosed: "Schváleno. Znění je schválené celé.",
     doneRejected: "Zamítnuto. Znění se vrátilo do konceptu a důvod zůstává v historii.",
   },
+  curation: {
+    prepareHeading: "Připravit jako ověřenou odpověď",
+    prepareIntro: "Posouzené odpovědi, u kterých jste napsali, jak měla odpověď znít. Připravený pár zveřejní správce obsahu — do znalostí se zatím nedostane.",
+    prepareEmpty: "Zatím není z čeho připravit pár. Vzniká z posudku, kde je vyplněno „Jak měla odpověď znít“.",
+    questionLabel: "Otázka",
+    questionHint: "Znění můžete upravit — původní otázka je volný text a může obsahovat i to, co do znalostí nepatří.",
+    answerLabel: "Ověřená odpověď",
+    sourcesLabel: "Ze kterých úseků předpisu odpověď vznikla",
+    sourcesHint: "Podle nich se určí, kdo smí pár vidět, a podle nich se archivuje, když se norma změní. Stačí jeden interní úsek a pár je interní.",
+    noSources: "Tato odpověď nemá u zdrojů identifikátory úseků, takže z ní pár připravit nelze. Týká se to odpovědí před 15. 9. 2026.",
+    save: "Připravit pár",
+    draftBadge: "připraveno",
+    publishHeading: "Ověřené odpovědi ke zveřejnění",
+    publishIntro: "Páry připravené hodnotitelem. Zveřejněním se dostanou do znalostí jako ověřená odpověď — žádný předpis se tím nemění ani nepřepisuje.",
+    publishEmpty: "Momentálně není co zveřejnit.",
+    publishEmptyNote: "Pár sem přidá hodnotitel z obrazovky „K posouzení“.",
+    preparedBy: "připravil",
+    access: "Přístup",
+    accessPublic: "veřejný",
+    accessInternal: "interní",
+    accessNote: "Úroveň se odvozuje ze zdrojů, nezadává se. Při zveřejnění se počítá znovu.",
+    publish: "Zveřejnit do znalostí",
+    open: "Ověřené odpovědi",
+    waiting: n => `${n} ke zveřejnění`,
+  },
   evaluation: {
     heading: "K posouzení",
     intro: "Odpovědi, u kterých někdo řekl, že nesedí. Potvrďte nebo opravte jeho posudek a doplňte, jak měla odpověď znít — z toho se později dělá kurace.",
@@ -5818,6 +5897,31 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     doneApproved: "Approved. Waiting for the other approvers.",
     doneApprovedClosed: "Approved. The version is now fully approved.",
     doneRejected: "Rejected. The version went back to draft and the reason stays in the history.",
+  },
+  curation: {
+    prepareHeading: "Prepare as a verified answer",
+    prepareIntro: "Evaluated answers where you wrote how the answer should have read. A prepared pair is published by the content manager — it does not reach the knowledge base yet.",
+    prepareEmpty: "Nothing to prepare yet. A pair comes from a verdict that has „How should the answer have read“ filled in.",
+    questionLabel: "Question",
+    questionHint: "You may edit the wording — the original question is free text and may contain things that do not belong in the knowledge base.",
+    answerLabel: "Verified answer",
+    sourcesLabel: "Which passages the answer came from",
+    sourcesHint: "They decide who may see the pair, and they decide when it is archived as the document changes. One internal passage makes the whole pair internal.",
+    noSources: "This answer has no passage identifiers on its sources, so no pair can be prepared from it. This applies to answers from before 15 September 2026.",
+    save: "Prepare the pair",
+    draftBadge: "prepared",
+    publishHeading: "Verified answers to publish",
+    publishIntro: "Pairs prepared by an evaluator. Publishing puts them into the knowledge base as a verified answer — no document is changed or overwritten.",
+    publishEmpty: "Nothing to publish right now.",
+    publishEmptyNote: "An evaluator adds pairs here from the „To evaluate“ screen.",
+    preparedBy: "prepared by",
+    access: "Access",
+    accessPublic: "public",
+    accessInternal: "internal",
+    accessNote: "The level is derived from the sources, never entered. It is computed again at publish time.",
+    publish: "Publish to the knowledge base",
+    open: "Verified answers",
+    waiting: n => `${n} to publish`,
   },
   evaluation: {
     heading: "To evaluate",

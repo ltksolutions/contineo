@@ -627,7 +627,13 @@ len práca, ktorá z nich plynie.
 - [x] ~~**Rola `evaluator`**~~ — panel pod odpoveďou v dvoch režimoch, fronta `/evaluation`, rolová brána v API
       Bežný človek: „Sedí / Nesedí" a pri „Nesedí" popis. Hodnotiteľ: celé štyri polia. Do fronty ide **len to, kde niečo nesedí** — potvrdzovať správne odpovede by bola tá istá chyba ako zlatá sada.
       Nové polia na zázname: `readerVerdict`, `evaluatedAt`, `evaluatedBy` a `companyCode` (bez neho by fronta prekročila organizáciu).
-- [ ] **Kurácia** (D11, `qa_pairs`) — potvrdené znenie hodnotiteľa sa uloží ako overená odpoveď a **embeduje späť** do indexu ako `sourceType: "qa"`. Platí pravidlo z popisu projektu: **nový pár nikdy potichu neprepíše schválený predpis.** Patria k tomu aj expirácia pri zmene podkladovej normy a reconciliation — je to vlastná fáza, nie sekcia v knižnici.
+- [x] ~~**Kurácia** (D11, revidované)~~ — overená odpoveď ide do indexu ako úsek so `sourceType: "qa"`; **žiadna kolekcia `qa_pairs`**, stav je na zázname v `evaluations`.
+      Hodnotiteľ pripraví (`/evaluation`), správca obsahu zverejní (`/library/curation`) — a zverejní presne to, čo hodnotiteľ napísal: text ide zo záznamu, nie z formulára.
+      Prístupová úroveň sa **odvodzuje** najprísnejšou stranou a nikdy nezadáva; chýbajúci zdroj zverejnenie zastaví; `npm run check` má na to invariant.
+      Nové znenie normy páry z nej odvodené archivuje. Žiadny úsek predpisu sa pri zverejnení nemení.
+- [ ] **Pár môže prebiť normu v poradí** — kurovaná odpoveď je krátka a presná, takže vo vyhľadávaní často vyhrá nad článkom predpisu. Rozhodnúť až podľa prvých desiatich párov, či ju v ranku tlmiť.
+- [ ] **Pár je v odpovedi zatiaľ nerozlíšiteľný od predpisu** — v zozname zdrojov mu chýba vlastný štítok „overená odpoveď". Dokončiť pri ďalšom zásahu do `Answer.tsx`.
+- [ ] **Zmena normy inou cestou než knižnicou** (RSS, e-mail, ISSF) páry neexpiruje — tam bude pár visieť ďalej.
 - [ ] **`spravca-obsahu` je jediný slovenský identifikátor roly** — ostatné sú `hr`, `people-admin`, `evaluator`. Premenovanie je zásah do `persons` v databáze, takže čaká na samostatný súhlas.
 - [ ] **`evaluations` bez `companyCode`** — 15 záznamov spred 2026-09-15. Do fronty sa nedostanú. Doplniť sa dajú dávkovo podľa toho, kto sa pýtal; je to migrácia dát a čaká na súhlas.
 

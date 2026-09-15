@@ -57,7 +57,14 @@ export function strictestAccessLevel(levels: readonly (string | null | undefined
 }
 
 export interface CurationInput {
-  /** Znenie otázky. Hodnotiteľ ho smie upraviť — viď komentár nižšie. */
+  /**
+   * Znenie otázky.
+   *
+   * Hodnotiteľ ho smie **upraviť**, a je to zámer, nie pohodlie: pôvodná
+   * otázka je voľný text, ktorý napísal človek, a môže obsahovať čokoľvek
+   * vrátane údaja o ňom samom alebo o inom. Zverejnením páru sa dostane do
+   * indexu, ktorý vidí celá organizácia.
+   */
   question: string
   /** Overené znenie odpovede. */
   answer: string
@@ -80,22 +87,13 @@ interface SourceChunk {
 }
 
 /**
- * Zverejní overenú odpoveď ako úsek v indexe.
+ * Hodnotiteľ pripraví pár — znenie a zdroje. **Nezverejňuje.**
  *
- * Postupnosť je zámerná a nedá sa preskočiť:
- *
- *   1. záznam musí byť **posúdený** — kurovať neposúdenú odpoveď znamená
- *      vpustiť do znalostí niečo, čo nikto neoveril;
- *   2. zdrojové úseky sa načítajú **z databázy**, nie z toho, čo poslal
- *      prehliadač — z klienta prichádzajú len identifikátory;
- *   3. **každý** zdroj musí existovať a patriť tej istej organizácii; ak čo
- *      i len jeden chýba, zverejnenie zlyhá. Žiadne „zvyšok stačí";
- *   4. prístupová úroveň sa **odvodí** tou najprísnejšou stranou.
- *
- * Bod 3 je prísny naschvál: chýbajúci zdroj je jediný spôsob, ako by sa dala
- * úroveň odvodiť z menšej množiny, než z akej odpoveď naozaj vznikla.
+ * Do indexu sa nedostane nič; zapíše sa len návrh na záznam. Zverejnenie je
+ * samostatný krok a robí ho správca obsahu (`publishCuration()`), ktorý text
+ * berie odtiaľto a nemôže ho cestou zmeniť.
  */
-export async function publishCuration(
+export async function saveCurationDraft(
   recordId: string,
   input: CurationInput,
   person: string,
@@ -113,8 +111,8 @@ export async function publishCuration(
     )
   }
 
-  const ids = [...new Set(input.chunkIds)].filter(id => ObjectId.isValid(id))
-  if (ids.length !== new Set(input.chunkIds).size || !ids.length) {
+  const chunkIds = [...new Set(input.chunkIds)].filter(id => ObjectId.isValid(id))
+  if (!chunkIds.length) {
     throw new CurationError(
       "curation.noSources",
       "Vyber aspoň jeden úsek predpisu, z ktorého odpoveď vznikla. Bez zdrojov sa nedá určiť, kto ju smie vidieť.",
@@ -132,6 +130,73 @@ export async function publishCuration(
       "Odpoveď zatiaľ nikto neposúdil. Kurovať sa dá až potvrdené znenie.",
     )
   }
+  if (record.curation?.state === "published") {
+    throw new CurationError(
+      "curation.alreadyPublished",
+      "Táto odpoveď už v znalostiach je. Zmena znenia by znamenala nový pár, nie úpravu starého.",
+    )
+  }
+
+  const curation: CurationState = {
+    state: "draft",
+    question,
+    answer,
+    chunkIds,
+    preparedAt: new Date(),
+    preparedBy: person,
+  }
+  await records.updateOne({ _id: new ObjectId(recordId) }, { $set: { curation } } as never)
+  return curation
+}
+
+/**
+ * Zverejní pripravený pár ako úsek v indexe.
+ *
+ * Postupnosť je zámerná a nedá sa preskočiť:
+ *
+ *   1. na zázname musí byť **pripravený návrh** — text sa berie z neho, nie
+ *      z požiadavky, takže kto zverejňuje, schvaľuje presne to, čo napísal
+ *      hodnotiteľ;
+ *   2. zdrojové úseky sa načítajú **z databázy**, nie z toho, čo poslal
+ *      prehliadač;
+ *   3. **každý** zdroj musí existovať a patriť tej istej organizácii; ak čo
+ *      i len jeden chýba, zverejnenie zlyhá. Žiadne „zvyšok stačí";
+ *   4. prístupová úroveň sa **odvodí** tou najprísnejšou stranou.
+ *
+ * Bod 3 je prísny naschvál: chýbajúci zdroj je jediný spôsob, ako by sa dala
+ * úroveň odvodiť z menšej množiny, než z akej odpoveď naozaj vznikla.
+ */
+export async function publishCuration(
+  recordId: string,
+  person: string,
+): Promise<CurationState> {
+  if (!ObjectId.isValid(recordId)) {
+    throw new CurationError("curation.unknownRecord", "Taký záznam o odpovedi neexistuje.")
+  }
+
+  const records = await getCollection<RatingRecord>(RATINGS_COLLECTION)
+  const record = await records.findOne({ _id: new ObjectId(recordId) })
+  if (!record) {
+    throw new CurationError("curation.unknownRecord", "Taký záznam o odpovedi neexistuje.")
+  }
+  const draft = record.curation
+  if (!draft || draft.state !== "draft") {
+    throw new CurationError(
+      "curation.noDraft",
+      "Pre túto odpoveď nie je pripravený žiadny pár. Najprv ho musí pripraviť hodnotiteľ.",
+    )
+  }
+
+  const question = draft.question
+  const answer = draft.answer
+  const ids = draft.chunkIds.filter(id => ObjectId.isValid(id))
+  if (!question || !answer || !ids.length) {
+    throw new CurationError(
+      "curation.empty",
+      "Pripravený pár je neúplný — chýba znenie alebo zdroje.",
+    )
+  }
+
   const companyCode = record.companyCode
   if (!companyCode) {
     throw new CurationError(
@@ -212,9 +277,8 @@ export async function publishCuration(
   const inserted = await chunkCol.insertOne(chunk as never)
 
   const curation: CurationState = {
+    ...draft,
     state: "published",
-    question,
-    answer,
     derivedFrom,
     chunkId: String(inserted.insertedId),
     accessLevel,
@@ -260,3 +324,123 @@ export async function expireCurationFor(
   )
   return r.modifiedCount
 }
+
+// ── čo komu leží na stole ───────────────────────────────────────────────────
+
+/** Zdroj odpovede tak, ako ho potrebuje príprava páru. */
+export interface CurationSource {
+  chunkId: string
+  title: string
+  articleRef?: string
+}
+
+/** Odpoveď, z ktorej sa dá pripraviť pár. */
+export interface PreparableAnswer {
+  id: string
+  question: string
+  /** Overené znenie od hodnotiteľa — predvyplní sa do formulára. */
+  verifiedAnswer: string
+  correctSources: string
+  evaluatedAt: Date
+  sources: CurationSource[]
+  /** Už rozpracovaný návrh, ak existuje. */
+  draft?: CurationState
+}
+
+const MAX_LIST = 100
+
+/**
+ * Posúdené odpovede, z ktorých hodnotiteľ **napísal, ako mala odpoveď znieť**
+ * — a ešte z nich nie je pár.
+ *
+ * Bez `verifiedAnswer` sa v zozname neobjaví nič: kurovať sa dá overené
+ * znenie, nie konštatovanie, že odpoveď bola zlá.
+ *
+ * Odpovede spred 2026-09-15 nemajú pri zdrojoch identifikátory úsekov
+ * (`chunkId` pribudol až vtedy). Bez nich sa nedá odvodiť prístup, takže sa
+ * do prípravy nedostanú — radšej nič než pár, ktorého úroveň je odhad.
+ */
+export async function preparableAnswers(companyCode: string): Promise<PreparableAnswer[]> {
+  const records = await getCollection<RatingRecord>(RATINGS_COLLECTION)
+  const rows = await records
+    .find({
+      companyCode,
+      evaluatedAt: { $exists: true },
+      verifiedAnswer: { $nin: ["", null] },
+      $or: [{ curation: { $exists: false } }, { "curation.state": "draft" }],
+    } as never)
+    .sort({ evaluatedAt: -1 })
+    .limit(MAX_LIST)
+    .toArray()
+
+  return rows.map(z => ({
+    id: String(z._id),
+    question: z.question ?? "",
+    verifiedAnswer: z.verifiedAnswer ?? "",
+    correctSources: z.correctSources ?? "",
+    evaluatedAt: z.evaluatedAt ?? new Date(0),
+    sources: (z.sources ?? [])
+      .filter(s => Boolean(s.chunkId))
+      .map(s => ({ chunkId: String(s.chunkId), title: s.title, articleRef: s.articleRef })),
+    draft: z.curation?.state === "draft" ? z.curation : undefined,
+  }))
+}
+
+/** Pár pripravený hodnotiteľom, ktorý čaká na zverejnenie. */
+export interface PendingCuration {
+  id: string
+  question: string
+  answer: string
+  chunkIds: string[]
+  preparedBy: string
+  preparedAt: Date
+  /** Názvy predpisov, z ktorých pár vznikol — na obrazovke, nie v rozhodovaní. */
+  sources: CurationSource[]
+  /**
+   * Úroveň, ktorá zo zdrojov vyjde. Ukazuje sa **len ako náhľad**; záväzne
+   * sa počíta znova pri zverejnení, z úsekov načítaných v tej chvíli.
+   */
+  accessLevelPreview: AccessLevel
+}
+
+export async function pendingCurations(companyCode: string): Promise<PendingCuration[]> {
+  const records = await getCollection<RatingRecord>(RATINGS_COLLECTION)
+  const rows = await records
+    .find({ companyCode, "curation.state": "draft" } as never)
+    .sort({ "curation.preparedAt": -1 })
+    .limit(MAX_LIST)
+    .toArray()
+  if (!rows.length) return []
+
+  const ids = [...new Set(rows.flatMap(z => z.curation?.chunkIds ?? []))]
+    .filter(id => ObjectId.isValid(id))
+  const chunkCol = await getCollection<SourceChunk & { heading?: string; articleRef?: string | null }>(CHUNKS_COLLECTION)
+  const chunks = await chunkCol
+    .find({ _id: { $in: ids.map(id => new ObjectId(id)) } })
+    .toArray()
+  const byId = new Map(chunks.map(c => [String(c._id), c]))
+
+  return rows.map(z => {
+    const chunkIds = z.curation?.chunkIds ?? []
+    const mine = chunkIds.map(id => byId.get(id)).filter(Boolean) as (typeof chunks)
+    return {
+      id: String(z._id),
+      question: z.curation?.question ?? "",
+      answer: z.curation?.answer ?? "",
+      chunkIds,
+      preparedBy: z.curation?.preparedBy ?? "",
+      preparedAt: z.curation?.preparedAt ?? new Date(0),
+      sources: mine.map(c => ({
+        chunkId: String(c._id),
+        title: c.heading ?? c.documentId ?? "",
+        articleRef: c.articleRef ?? undefined,
+      })),
+      // Chýbajúci úsek stiahne náhľad na `internal` — rovnako, ako ho
+      // zverejnenie odmietne. Náhľad nesmie sľubovať viac než zápis.
+      accessLevelPreview: mine.length === chunkIds.length
+        ? strictestAccessLevel(mine.map(c => c.accessLevel))
+        : "internal",
+    }
+  })
+}
+

@@ -26,18 +26,34 @@ export type Verdict = 0 | 1 | null
 /** Kam smie overená odpoveď — odvodzuje sa, nikdy sa nezadáva (`curation.ts`). */
 export type AccessLevel = "public" | "internal"
 
-/** Stav kurácie na zázname o odpovedi. Zapisuje ho `lib/curation.ts`. */
+/**
+ * Stav kurácie na zázname o odpovedi. Zapisuje ho `lib/curation.ts`.
+ *
+ * Tri stavy, dvaja ľudia: **hodnotiteľ pripraví** znenie a vyberie úseky
+ * predpisu (`draft`), **správca obsahu zverejní** (`published`), a keď
+ * podkladová norma dostane nové znenie, pár sa archivuje (`expired`).
+ *
+ * Zverejnenie berie text **z tohto záznamu, nie z požiadavky**: kto
+ * zverejňuje, schvaľuje to, čo napísal hodnotiteľ, a nemôže to cestou zmeniť.
+ */
 export interface CurationState {
-  state: "published" | "expired"
+  state: "draft" | "published" | "expired"
   /** Znenie otázky tak, ako ho pripravil hodnotiteľ — nie nutne doslovne to, čo niekto napísal. */
   question: string
   answer: string
+  /** Úseky predpisu, z ktorých odpoveď vznikla. Pri zverejnení sa overia proti databáze. */
+  chunkIds: string[]
+  preparedAt: Date
+  preparedBy: string
+
+  // ── až po zverejnení ──────────────────────────────────────────────────
   /** Dokumenty, z ktorých pár vznikol. Podľa nich sa archivuje, keď sa zmenia. */
-  derivedFrom: string[]
-  chunkId: string
-  accessLevel: AccessLevel
-  publishedAt: Date
-  publishedBy: string
+  derivedFrom?: string[]
+  chunkId?: string
+  /** Odvodená úroveň — nikdy zadaná. Viď `strictestAccessLevel()`. */
+  accessLevel?: AccessLevel
+  publishedAt?: Date
+  publishedBy?: string
   expiredAt?: Date
   expiredBecause?: string
 }
