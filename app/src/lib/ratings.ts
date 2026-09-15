@@ -23,6 +23,25 @@ import type { TokenCounts, Cost } from "./pricing"
 /** Ľudský úsudok. `null` = zatiaľ neposúdené, čo je iný stav než 0. */
 export type Verdict = 0 | 1 | null
 
+/** Kam smie overená odpoveď — odvodzuje sa, nikdy sa nezadáva (`curation.ts`). */
+export type AccessLevel = "public" | "internal"
+
+/** Stav kurácie na zázname o odpovedi. Zapisuje ho `lib/curation.ts`. */
+export interface CurationState {
+  state: "published" | "expired"
+  /** Znenie otázky tak, ako ho pripravil hodnotiteľ — nie nutne doslovne to, čo niekto napísal. */
+  question: string
+  answer: string
+  /** Dokumenty, z ktorých pár vznikol. Podľa nich sa archivuje, keď sa zmenia. */
+  derivedFrom: string[]
+  chunkId: string
+  accessLevel: AccessLevel
+  publishedAt: Date
+  publishedBy: string
+  expiredAt?: Date
+  expiredBecause?: string
+}
+
 export interface RatingRecord {
   _id?: ObjectId
 
@@ -93,6 +112,14 @@ export interface RatingRecord {
    * táto rola opravuje.
    */
   readerVerdict?: Verdict
+
+  /**
+   * Kurácia — či sa z potvrdeného posudku stala overená odpoveď v indexe.
+   *
+   * Typ je tu, a nie v `curation.ts`, aby si obe strany nemuseli importovať
+   * navzájom: pole patrí záznamu, logika patrí kurácii.
+   */
+  curation?: CurationState
 
   /**
    * Kedy a kto posudok **potvrdil alebo opravil**. Prítomnosť `evaluatedAt`

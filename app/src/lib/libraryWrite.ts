@@ -540,6 +540,24 @@ export async function publish(
     { $set: { isActive: false, effectiveTo: now } },
   )
 
+  /*
+   * S novým znením strácajú platnosť aj **overené odpovede z neho odvodené**
+   * (D11). Zastaraný pár je horší než žiadny: znie autoritatívne a odvoláva
+   * sa na text, ktorý už neplatí.
+   *
+   * Import je zámerne až tu, vnútri funkcie: `curation.ts` si odtiaľto berie
+   * `CHUNKS_COLLECTION`, takže pevný import navrchu by z oboch súborov
+   * spravil kruh. Zlyhanie sa nezapočíta — zverejnenie znenia je dôležitejšie
+   * než upratanie párov a to sa dá dobehnúť (`npm run check` to vypíše).
+   */
+  try {
+    const { expireCurationFor } = await import("./curation")
+    const expired = await expireCurationFor(companyCode, documentId, now)
+    if (expired) console.log(`[kuracia] archivovanych overenych odpovedi: ${expired}`)
+  } catch (e) {
+    console.error("[kuracia] archivacia overenych odpovedi zlyhala:", e)
+  }
+
   await chunkCol.insertMany(
     chunks.map(ch => ({
       ...toDb(ch),

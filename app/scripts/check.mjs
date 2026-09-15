@@ -139,6 +139,45 @@ for (const d of documents) {
   )
 }
 
+/*
+ * N. Overená odpoveď nesmie byť prístupnejšia než predpis, z ktorého vznikla.
+ *
+ * Toto je **tvrdá kontrola, nie odporúčanie**. Úroveň sa pri zverejnení
+ * odvodzuje najprísnejšou stranou (`lib/curation.ts`), takže tu by nemalo
+ * nikdy nič byť — a práve preto sa to kontroluje: chyba, ktorá sa nemá stať,
+ * sa inak zistí až tým, že interný text zaznie vo verejnej odpovedi.
+ */
+const qaChunks = chunks.filter(c => c.sourceType === "qa")
+const byDocumentAccess = new Map()
+for (const ch of chunks.filter(c => c.sourceType !== "qa")) {
+  const z = byDocumentAccess.get(ch.documentId) ?? new Set()
+  z.add(ch.accessLevel ?? "(chýba)")
+  byDocumentAccess.set(ch.documentId, z)
+}
+for (const qa of qaChunks) {
+  const zdroje = qa.derivedFrom ?? (qa.documentId ? [qa.documentId] : [])
+  const urovne = zdroje.flatMap(d => [...(byDocumentAccess.get(d) ?? ["(chýba)"])])
+  const maByt = urovne.length && urovne.every(u => u === "public") ? "public" : "internal"
+  check(
+    qa.accessLevel !== maByt,
+    `overená odpoveď ${qa._id} má prístup „${qa.accessLevel ?? "(chýba)"}", ale zo zdrojov vychádza „${maByt}"`,
+    "pár by sa ukázal tam, kde sa ukázať nesmie — alebo naopak nikde; oboje je chyba, prvé je únik",
+  )
+  check(
+    !zdroje.length,
+    `overená odpoveď ${qa._id} nemá ani jeden zdrojový dokument`,
+    "nedá sa z nej odvodiť prístup ani ju archivovať, keď sa norma zmení",
+  )
+  check(
+    Boolean(qa.isActive) && zdroje.some(d => !chunks.some(c => c.documentId === d && c.isActive && c.sourceType !== "qa")),
+    `overená odpoveď ${qa._id} je aktívna, ale predpis, z ktorého vznikla, aktívne úseky nemá`,
+    "odpoveď prežila normu — archivuj ju alebo predpis preindexuj",
+  )
+}
+if (qaChunks.length) {
+  console.log(`${INFO} overených odpovedí v indexe: ${qaChunks.filter(c => c.isActive).length} aktívnych z ${qaChunks.length}\n`)
+}
+
 if (withoutValidity > 0) {
   console.log(`${INFO} ${withoutValidity} aktívnych znení nemá dátum platnosti — nedajú sa potvrdiť (D6)\n`)
 }
