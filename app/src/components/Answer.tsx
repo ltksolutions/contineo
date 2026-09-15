@@ -160,7 +160,25 @@ export default function Answer({
                         {[z.articleRef, z.heading].filter(Boolean).join(" · ")}
                       </span>
                     )}
+                    {/*
+                      Overená odpoveď nie je znenie predpisu — je to text,
+                      ktorý niekto napísal nad predpisom. Kurovaná odpoveď je
+                      krátka a presná, takže vo vyhľadávaní často vyhrá nad
+                      článkom normy; bez tejto vety by ju čitateľ čítal ako
+                      normu samu. Preto sa hovorí aj to, z čoho vznikla.
+                    */}
+                    {z.sourceType === "qa" && (
+                      <span className="quiet answer-source-meta">{t.verifiedNote}</span>
+                    )}
                   </span>
+                  {z.sourceType === "qa" && (
+                    <span
+                      className="tag"
+                      style={{ background: "var(--ok-bg)", color: "var(--ok-fg)", fontSize: 11, fontWeight: 600 }}
+                    >
+                      {t.verified}
+                    </span>
+                  )}
                   {/* Interný obsah vo verejnej odpovedi je tvrdá brána D9,
                       preto to musí byť vidieť na prvý pohľad. */}
                   {z.accessLevel === "internal" && (

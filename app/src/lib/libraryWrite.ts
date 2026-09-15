@@ -690,8 +690,16 @@ export async function saveMetadata(
   // ďalej filtrovalo podľa starých hodnôt. Tichý rozpor presne toho druhu,
   // ktorý sa hľadá týždne.
   const chunkCol = await getCollection(CHUNKS_COLLECTION)
+  /*
+   * **Overené odpovede sa z tejto hromadnej zmeny vynímajú** (D11).
+   *
+   * Pár vzniká nad viacerými predpismi a jeho úroveň je najprísnejšia z nich.
+   * Keby sa mu tu prepísala úrovňou jedného dokumentu, prepnutie toho jedného
+   * na verejný by zverejnilo aj to, čo v páre zaznelo z interného. Preto sa
+   * párom počíta znova, nižšie.
+   */
   await chunkCol.updateMany(
-    { documentId },
+    { documentId, sourceType: { $ne: "qa" } },
     {
       $set: {
         scope: meta.scope,
@@ -701,6 +709,34 @@ export async function saveMetadata(
       },
     },
   )
+
+  /*
+   * Prepočet úrovne párom. Import až tu — `curation.ts` si odtiaľto berie
+   * `CHUNKS_COLLECTION`, takže pevný import navrchu by spravil kruh.
+   *
+   * **Zlyhanie sa tu neprehliada.** Pri archivácii párov sa dá zhovievavosť
+   * obhájiť — nezarchivovaný pár je zastaraný, nie nebezpečný. Tu ide
+   * o prístup: pár, ktorému sa úroveň neprepočítala, môže zostať verejný nad
+   * obsahom, ktorý sa medzitým stal interným. Preto sa pri zlyhaní **všetky
+   * páry z tohto dokumentu stiahnu na `internal`** — a keď zlyhá aj to,
+   * chyba ide von. Radšej pár, ktorý nikto nenájde, než pár, ktorý uvidí
+   * niekto, kto nemá.
+   */
+  try {
+    const { reconcileCurationAccess } = await import("./curation")
+    const changed = await reconcileCurationAccess(companyCode, documentId)
+    if (changed) console.log(`[kuracia] prepocitany pristup parom: ${changed}`)
+  } catch (e) {
+    console.error("[kuracia] prepocet pristupu parom zlyhal, stahujem na internal:", e)
+    await chunkCol.updateMany(
+      { companyCode, documentId, sourceType: "qa" },
+      { $set: { accessLevel: "internal" } },
+    )
+    await chunkCol.updateMany(
+      { companyCode, derivedFrom: documentId, sourceType: "qa" },
+      { $set: { accessLevel: "internal" } },
+    )
+  }
 
   const beforeMeta = {
     title: before.title, scope: before.scope, accessLevel: before.accessLevel,

@@ -20,6 +20,24 @@
  *
  * **Embedding sa nikde nepočíta.** `$vectorSearch` beží nad textovým poľom
  * (Atlas Automated Embedding), takže vložením úseku je pár vyhľadateľný.
+ *
+ * ## Čo sa stane, keď sa dotkneme predpisu
+ *
+ * Do knižnice sa dnes zapisuje troma cestami a každá znamená pre pár niečo
+ * iné. Je to tu napísané, lebo to nie je zrejmé a pri štvrtej ceste (RSS,
+ * e-mail, ISSF) sa na to bude treba pozrieť znova:
+ *
+ *   • **nové znenie** (`publish()`) — význam predpisu sa zmenil, takže pár
+ *     z neho odvodený **expiruje** (`expireCurationFor()`);
+ *   • **zmena metadát** (`saveMetadata()`) — mení sa okrem iného prístupová
+ *     úroveň, takže sa párom **prepočíta** (`reconcileCurationAccess()`),
+ *     a keď to zlyhá, stiahnu sa na `internal`;
+ *   • **preindexovanie a oprava textu** (`reindex()`, `fixText()`) — znenie
+ *     zostáva to isté a mení sa len členenie alebo preklep, takže pár platí
+ *     ďalej. Rozpracovaný **návrh** však ukazuje na úseky, ktoré prestali
+ *     existovať; zverejnenie ho vtedy odmietne („niektorý úsek v knižnici
+ *     nie je") a hodnotiteľ ho pripraví znova. Zlyhať zavreto je tu správne:
+ *     úroveň sa nemá z čoho odvodiť.
  */
 
 import { ObjectId } from "mongodb"
@@ -323,6 +341,67 @@ export async function expireCurationFor(
     } as never,
   )
   return r.modifiedCount
+}
+
+/**
+ * Prepočíta prístup párom odvodeným z dokumentu, ktorému sa zmenila úroveň.
+ *
+ * **Toto je diera, ktorá by inak zostala otvorená.** `saveMetadata()` mení
+ * `accessLevel` na všetkých úsekoch dokumentu naraz. Keby sa to týkalo aj
+ * úsekov s overenou odpoveďou, stalo by sa jedno z dvoch, a obe sú zle:
+ *
+ *   • pár odvodený z troch predpisov by prevzal úroveň jedného z nich —
+ *     takže keby ten jeden prešiel na verejný, pár by sa zverejnil aj
+ *     s tým, čo zaznelo z interného;
+ *   • a naopak, sprísnenie iného zdroja by pár nechalo, ako bol.
+ *
+ * Preto sa páry z hromadnej zmeny **vynímajú** a úroveň sa im počíta znova,
+ * z aktuálnych úsekov **všetkých** ich zdrojov — tým istým pravidlom, aké
+ * platilo pri zverejnení.
+ *
+ * Vracia, koľkým párom sa úroveň zmenila.
+ */
+export async function reconcileCurationAccess(
+  companyCode: string,
+  documentId: string,
+): Promise<number> {
+  const chunkCol = await getCollection<SourceChunk & { derivedFrom?: string[]; sourceType?: string }>(CHUNKS_COLLECTION)
+  const pairs = await chunkCol
+    .find({ companyCode, sourceType: QA_SOURCE_TYPE, derivedFrom: documentId } as never)
+    .toArray()
+  if (!pairs.length) return 0
+
+  // Úroveň zdrojových dokumentov sa číta z ich **vlastných** úsekov, nie
+  // z párov — inak by sa pár odvodzoval sám zo seba.
+  const documents = [...new Set(pairs.flatMap(p => p.derivedFrom ?? []))]
+  const sourceChunks = await chunkCol
+    .find(
+      { companyCode, documentId: { $in: documents }, sourceType: { $ne: QA_SOURCE_TYPE } } as never,
+      { projection: { documentId: 1, accessLevel: 1 } },
+    )
+    .toArray()
+
+  const byDocument = new Map<string, string[]>()
+  for (const c of sourceChunks) {
+    const key = c.documentId ?? ""
+    byDocument.set(key, [...(byDocument.get(key) ?? []), c.accessLevel ?? ""])
+  }
+
+  let changed = 0
+  const records = await getCollection<RatingRecord>(RATINGS_COLLECTION)
+  for (const pair of pairs) {
+    const levels = (pair.derivedFrom ?? []).flatMap(d => byDocument.get(d) ?? [""])
+    const level = strictestAccessLevel(levels)
+    if (level === pair.accessLevel) continue
+
+    await chunkCol.updateOne({ _id: pair._id }, { $set: { accessLevel: level } } as never)
+    await records.updateOne(
+      { companyCode, "curation.chunkId": String(pair._id) } as never,
+      { $set: { "curation.accessLevel": level } } as never,
+    )
+    changed += 1
+  }
+  return changed
 }
 
 // ── čo komu leží na stole ───────────────────────────────────────────────────

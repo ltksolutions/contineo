@@ -420,6 +420,9 @@ interface Dictionary {
     sourceMissing: string
     sources: (n: number) => string
     internal: string
+    /** Štítok pri zdroji, ktorý je overenou odpoveďou, nie článkom normy (D11). */
+    verified: string
+    verifiedNote: string
     adapter: string
     firstToken: string
     costNote: (pricelistVersion: string) => string
@@ -2031,6 +2034,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     sourceMissing: "zdroj neuvedený",
     sources: (n) => `Prehľadané zdroje (${n})`,
     internal: "interné",
+    verified: "overená odpoveď",
+    verifiedNote: "znenie, ktoré niekto overil nad predpisom — nie samotné znenie predpisu",
     adapter: "adaptér",
     firstToken: "prvý token",
     costNote: (pricelistVersion) => `Orientačne. Nezahŕňa pomocný model ani vyhľadávanie. Cenník ${pricelistVersion}.`,
@@ -3841,6 +3846,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     sourceMissing: "zdroj neuveden",
     sources: (n) => `Prohledané zdroje (${n})`,
     internal: "interní",
+    verified: "ověřená odpověď",
+    verifiedNote: "znění, které někdo ověřil nad předpisem — nikoli samotné znění předpisu",
     adapter: "adaptér",
     firstToken: "první token",
     costNote: (pricelistVersion) => `Orientačně. Nezahrnuje pomocný model ani vyhledávání. Ceník ${pricelistVersion}.`,
@@ -5644,6 +5651,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     sourceMissing: "source not given",
     sources: (n) => `Sources searched (${n})`,
     internal: "internal",
+    verified: "verified answer",
+    verifiedNote: "wording someone verified against the document — not the document itself",
     adapter: "adapter",
     firstToken: "first token",
     costNote: (pricelistVersion) => `Approximate. Excludes the helper model and retrieval. Price list ${pricelistVersion}.`,

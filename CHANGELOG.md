@@ -4,6 +4,39 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Štítok „overená odpoveď" — a diera, ktorú pri tom našiel (2026-09-15)
+
+Kurovaná odpoveď je krátka a presne formulovaná, takže vo vyhľadávaní často
+vyhrá nad článkom normy. Odteraz je v zozname zdrojov **označená** a je pri
+nej napísané, čo to znamená: *znenie, ktoré niekto overil nad predpisom — nie
+samotné znenie predpisu*. `sourceType` prechádza z indexu cez `buildSources()`
+až na obrazovku; dovtedy sa v projekcii vyhľadávania vôbec nevracal.
+
+**Pri tom sa našla skutočná diera v prístupe.** `saveMetadata()` mení
+`accessLevel` na všetkých úsekoch dokumentu naraz — **a párov sa to týkalo
+tiež**. Pár odvodený z troch predpisov by tak prevzal úroveň jedného z nich:
+stačilo prepnúť ten jeden na verejný a zverejnilo by sa aj to, čo v páre
+zaznelo z interného. Opačný smer platil rovnako — sprísnenie iného zdroja by
+pár nechalo, ako bol.
+
+- Páry sa z hromadnej zmeny **vynímajú** a úroveň sa im počíta znova, zo
+  všetkých ich zdrojov, tým istým pravidlom ako pri zverejnení.
+- **Zlyhanie sa tu neprehliada.** Pri archivácii párov sa zhovievavosť dá
+  obhájiť — nezarchivovaný pár je zastaraný, nie nebezpečný. Tu ide
+  o prístup, takže pri chybe sa všetky páry z dokumentu **stiahnu na
+  `internal`**. Radšej pár, ktorý nikto nenájde, než pár, ktorý uvidí niekto,
+  kto nemá.
+
+**Ranku sme sa nedotkli, a je to rozhodnutie, nie odklad.** Pri nule
+zverejnených párov by bolo tlmenie odhad. Spúšťač je zapísaný v TODO: po
+prvých desiatich pároch pozrieť, v koľkých odpovediach je pár medzi top 3
+zdrojmi.
+
+**Napísané aj to, čo sa s párom deje pri každej ceste zápisu do knižnice** —
+nové znenie ho expiruje, zmena metadát mu prepočíta prístup, preindexovanie
+a oprava textu ho nechávajú platiť. Je to v hlavičke `lib/curation.ts`, aby
+sa to pri štvrtej ceste (RSS, e-mail, ISSF) nemuselo objavovať znova.
+
 ### Kurácia — overená odpoveď späť do znalostí (2026-09-15, D11 revidované)
 
 Posledný článok reťaze, ktorá dnes vznikla: bežný človek povie „nesedí",

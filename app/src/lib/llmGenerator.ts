@@ -61,6 +61,8 @@ export function buildSources(chunks: ChunkResult[]) {
      * práve videl; pri zverejnení sa aj tak načíta z databázy nanovo.
      */
     chunkId:     c._id,
+    /** `"qa"` = overená odpoveď, nie článok normy. Viď `ChunkResult`. */
+    sourceType:  c.sourceType,
     title:       c.document?.title ?? "Neznámy zdroj",
     slug:        c.document?.slug,
     url:         c.document?.sourceUrl,

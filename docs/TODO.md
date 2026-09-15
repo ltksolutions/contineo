@@ -631,10 +631,11 @@ len práca, ktorá z nich plynie.
       Hodnotiteľ pripraví (`/evaluation`), správca obsahu zverejní (`/library/curation`) — a zverejní presne to, čo hodnotiteľ napísal: text ide zo záznamu, nie z formulára.
       Prístupová úroveň sa **odvodzuje** najprísnejšou stranou a nikdy nezadáva; chýbajúci zdroj zverejnenie zastaví; `npm run check` má na to invariant.
       Nové znenie normy páry z nej odvodené archivuje. Žiadny úsek predpisu sa pri zverejnení nemení.
-- [ ] **Pár môže prebiť normu v poradí** — kurovaná odpoveď je krátka a presná, takže vo vyhľadávaní často vyhrá nad článkom predpisu. Rozhodnúť až podľa prvých desiatich párov, či ju v ranku tlmiť.
-- [ ] **Pár je v odpovedi zatiaľ nerozlíšiteľný od predpisu** — v zozname zdrojov mu chýba vlastný štítok „overená odpoveď". Dokončiť pri ďalšom zásahu do `Answer.tsx`.
-- [ ] **Zmena normy inou cestou než knižnicou** (RSS, e-mail, ISSF) páry neexpiruje — tam bude pár visieť ďalej.
-- [ ] **`spravca-obsahu` je jediný slovenský identifikátor roly** — ostatné sú `hr`, `people-admin`, `evaluator`. Premenovanie je zásah do `persons` v databáze, takže čaká na samostatný súhlas.
+- [x] ~~**Štítok „overená odpoveď"**~~ — pár je v zozname zdrojov označený a je pri ňom napísané, čo to znamená: *znenie, ktoré niekto overil nad predpisom — nie samotné znenie predpisu*. `sourceType` prechádza z indexu cez `buildSources()` až na obrazovku.
+- [x] ~~**Zmena úrovne predpisu párom nepretečie**~~ — `saveMetadata()` menila `accessLevel` na všetkých úsekoch dokumentu naraz, **vrátane párov**. Pár odvodený z troch predpisov by tak prevzal úroveň jedného z nich a zverejnenie toho jedného by odkrylo aj to, čo v ňom zaznelo z interného. Páry sa z hromadnej zmeny vynímajú a úroveň sa im počíta znova zo všetkých zdrojov; pri zlyhaní sa sťahujú na `internal`.
+- [ ] **Pár môže prebiť normu v poradí** — kurovaná odpoveď je krátka a presná, takže vo vyhľadávaní často vyhrá nad článkom predpisu. **Ranku sme sa nedotkli zámerne:** pri nule párov by to bol odhad, nie rozhodnutie. Štítok problém zviditeľňuje, nerieši. **Spúšťač:** po prvých desiatich zverejnených pároch pozrieť, v koľkých odpovediach je pár medzi top 3 zdrojmi — a podľa toho rozhodnúť.
+- [ ] **Štvrtá cesta zápisu do knižnice** (RSS, e-mail, ISSF) zatiaľ neexistuje. Až vznikne, musí sa rozhodnúť, či mení význam predpisu — a podľa toho zavolať `expireCurationFor()` alebo `reconcileCurationAccess()`. Tri dnešné cesty a ich dôsledky sú popísané v hlavičke `lib/curation.ts`.
+- [ ] **`spravca-obsahu` je jediný slovenský identifikátor roly.** Premenovanie je zásah do `persons`, takže čaká na samostatný súhlas.
 - [ ] **`evaluations` bez `companyCode`** — 15 záznamov spred 2026-09-15. Do fronty sa nedostanú. Doplniť sa dajú dávkovo podľa toho, kto sa pýtal; je to migrácia dát a čaká na súhlas.
 
 ### Zlatá sada zrušená (2026-09-15) — ADR-008

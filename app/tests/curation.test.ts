@@ -46,3 +46,27 @@ describe("strictestAccessLevel", () => {
     expect(QA_SOURCE_TYPE).toBe("qa")
   })
 })
+
+describe("co sa deje, ked sa zmeni uroven zdroja", () => {
+  /*
+   * Toto nie je test funkcie, ale zapisane pravidlo. `saveMetadata()` meni
+   * `accessLevel` na vsetkych usekoch dokumentu naraz; keby to zasiahlo aj
+   * pary, par odvodeny z troch predpisov by prevzal uroven jedneho z nich.
+   * Scenar nizsie je presne ten, ktory sa tym zavrel.
+   */
+  it("par z verejneho a interneho zdroja zostava interny aj po zverejneni jedneho z nich", () => {
+    // Pred zmenou: jeden zdroj verejny, druhy interny -> par je interny.
+    expect(strictestAccessLevel(["public", "internal"])).toBe("internal")
+    // Druhy zdroj sa medzitym stal verejnym -> az teraz je par verejny.
+    expect(strictestAccessLevel(["public", "public"])).toBe("public")
+    // A naopak: sprisnenie ktorehokolvek zdroja par zavrie.
+    expect(strictestAccessLevel(["public", "public", "internal"])).toBe("internal")
+  })
+
+  it("zdroj bez uskov sa pocita ako interny", () => {
+    // Ked sa dokument prestane indexovat, jeho uroven sa neda zistit.
+    // Prepocet vtedy dosadi prazdny retazec — a ten nie je „public".
+    expect(strictestAccessLevel(["public", ""])).toBe("internal")
+  })
+})
+

@@ -19,6 +19,14 @@ export interface AnswerSource {
   index: number
   /** Úsek, z ktorého zdroj pochádza. Chýba pri odpovediach spred 2026-09-15. */
   chunkId?: string
+  /**
+   * `"qa"` = **overená odpoveď**, nie článok normy (D11).
+   *
+   * Zobrazuje sa štítkom pri zdroji. Kurovaná odpoveď je krátka a presná,
+   * takže vo vyhľadávaní často vyhrá nad článkom predpisu — a čitateľ musí
+   * vedieť, že číta, čo niekto overil, nie čo je v norme napísané.
+   */
+  sourceType?: string
   title: string
   slug?: string
   url?: string

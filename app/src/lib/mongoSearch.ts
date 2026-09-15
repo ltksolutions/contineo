@@ -73,6 +73,14 @@ export interface ChunkResult {
   heading?: string
   chunkIndex?: number
   tags?: string[]
+  /**
+   * `"qa"` = úsek nevznikol z dokumentu, ale z **overenej odpovede** (D11).
+   * Bez tohto poľa by sa v zozname zdrojov nedal odlíšiť od článku normy —
+   * a čitateľ by kurovanú odpoveď považoval za znenie predpisu.
+   */
+  sourceType?: string
+  /** Dokumenty, z ktorých overená odpoveď vznikla. */
+  derivedFrom?: string[]
   // vector — identita vektorového priestoru (ADR-001, sekcia 4)
   embeddingModel?: string       // ktorý model vektor vyrobil — POVINNÉ na nových chunkoch
   embeddingDim?: number         // kontrola pri zápise aj čítaní
@@ -131,6 +139,7 @@ function lookupDocument(scoreMeta: ScoreMeta): Document[] { return [
       text: 1, documentId: 1, versionId: 1,
       sectionKey: 1, companyCode: 1, scope: 1, accessLevel: 1, language: 1,
       articleRef: 1, heading: 1, chunkIndex: 1, tags: 1, chunkType: 1,
+      sourceType: 1, derivedFrom: 1,
       embeddingModel: 1, isActive: 1, effectiveFrom: 1, effectiveTo: 1,
       document: 1,
       score: { $meta: scoreMeta }
