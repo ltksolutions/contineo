@@ -186,31 +186,42 @@ alebo to patrí pod ten istý základ ako zvyšok onboardingu?
 
 ---
 
-### B-nové 2. Hlásenia nepresností (`answer_reports`) — pribudlo 2026-09-15
+### B-nové 2. Záznamy odpovedí (`evaluations`) — dopísané 2026-09-15
 
-Pod každou odpoveďou systému je „Nahlásiť nepresnosť". Kto ho použije, pošle
-**popis chyby** a spolu s ním sa uloží **jeho otázka a odpoveď systému
-doslovne** plus zoznam zdrojov, ktoré systém použil.
+**Toto nie je nová funkcia, je to prehliadnutý údaj.** Kolekcia vznikla
+s hodnotením kvality odpovedí (D9) a od začiatku ukladá **otázku človeka
+a odpoveď systému doslovne — pri každej odpovedi**, nie len pri tej, ktorú
+niekto posúdi. Spolu s nimi zdroje, citácie, model, časy, cenu a **e-mail
+toho, kto sa pýtal**. Od 2026-09-15 pribudlo pole „nahlásená nepresnosť":
+keď niekto pod odpoveďou napíše, čo na nej nesedelo, pripíše sa to k tomu
+istému záznamu.
 
-**Prečo aj otázka a odpoveď:** hlásenie bez nich je veta „niečo bolo zle" —
-nedá sa z nej nič opraviť. A bez zdrojov sa nedá rozlíšiť „našlo zlý predpis"
-od „našlo správny a zle ho prečítalo"; sú to dve rôzne chyby s dvomi rôznymi
-opravami.
+**Prečo sa to ukladá celé:** po zmene modelu alebo chunkovania sa tá istá
+odpoveď už nedá zopakovať. Bez uloženého znenia by sa spätne nedalo posúdiť
+nič — ani to, či sa systém odvtedy zlepšil, ani prečo konkrétna odpoveď bola
+zlá.
 
-**Čo z toho je osobný údaj:** otázka je text, ktorý napísal človek, takže
-môže obsahovať čokoľvek vrátane údaja o ňom samom alebo o inom. Nedá sa to
-vopred vyfiltrovať bez toho, aby hlásenie stratilo zmysel.
+**Čo z toho je osobný údaj:** otázka je voľný text, ktorý napísal človek,
+takže môže obsahovať čokoľvek vrátane údaja o ňom samom alebo o inom.
+Vyfiltrovať sa to vopred nedá bez toho, aby záznam stratil zmysel. Navyše je
+pri ňom **e-mail**, takže záznam nie je anonymný ani pseudonymný.
 
-**Náš návrh:** 24 mesiacov. Dlhšie než pri upozorneniach, lebo je to podklad
-na zlepšovanie vyhľadávania — pri polročnej lehote by pohľad „čo sa nám
-opakovane vyčíta" zostal prázdny práve vtedy, keď sa naň niekto pozrie.
+**Ako je to dnes:** ukladá sa všetko a **nemaže sa nič** — lehota nie je
+zavedená. Hovoríme to takto rovno, lebo to je práve tá otázka.
+
+**Náš návrh:** 12 mesiacov. Dosť na ladenie kvality a na pohľad „čo sa nám
+opakovane vyčíta", málo na to, aby sa z toho stal archív otázok zamestnancov.
+Alternatíva, ktorú vieme spraviť: po kratšej lehote **odpojiť e-mail**
+a nechať len otázku a odpoveď.
 
 **Otázka na DPO:** je oprávnený záujem (zlepšovanie vlastnej služby) správny
-právny základ?
+právny základ — a stačí lehota, alebo má po nej nasledovať pseudonymizácia?
 
-**Odpoveď k lehote:** ☐ 24 mesiacov súhlasí · ☐ inak: ____________
+**Odpoveď k lehote:** ☐ 12 mesiacov súhlasí · ☐ inak: ____________
 
 **Odpoveď k základu:** ☐ oprávnený záujem · ☐ inak: ____________
+
+**Po lehote:** ☐ zmazať celé · ☐ odpojiť e-mail a otázku nechať · ☐ inak: ______
 
 ---
 
@@ -257,7 +268,7 @@ DPA medzi zväzom a Contineom a doložka pokrývajúca tok údajov Sportnet → 
 | `approval_rounds` | kto predložil, menovaní schvaľovatelia (meno a adresa ako odtlačok), rozhodnutie, dôvod zamietnutia, kedy sa komu ozvalo |
 | `reminder_log` | komu a v ktorý deň sa odoslala pripomienka |
 | `notifications` | personId, druh udalosti, ktorého dokumentu sa týkala, počet, čas vzniku a čas prečítania — **nie text správy** |
-| `answer_reports` | personId, meno a e-mail (kópia), **otázka človeka a odpoveď systému doslovne**, zoznam zdrojov, popis chyby, čas |
+| `evaluations` | e-mail toho, kto sa pýtal, **otázka a odpoveď systému doslovne pri každej odpovedi**, zdroje a citácie, model, časy a cena; nepovinne posudok hodnotiteľa a nahlásená nepresnosť |
 | audit prístupov | kto, čo a kedy videl |
 
 Dve veci, ktoré sa zámerne **nezbierajú**: doskrolovanie na koniec dokumentu a záznam o každom jednotlivom zobrazení. A personalista, ktorý si znenie otvorí na kontrolu, sa nezapisuje — zapisuje sa len ten, kto povinnosť má.

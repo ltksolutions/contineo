@@ -39,13 +39,19 @@
 | **Kolá schvaľovania** (`approval_rounds`) | kto predložil, kto schválil alebo zamietol, kedy a prečo | áno |
 | **Log pripomienok** (`reminder_log`) | komu sa v ktorý deň odoslala pripomienka | áno |
 | **Upozornenia** (`notifications`) | ktorej osobe sa ukázala ktorá udalosť a kedy si ju prečítala | áno |
-| **Hlásenia nepresností** (`answer_reports`) | kto nahlásil zlú odpoveď, **jeho otázka a odpoveď systému doslovne**, zdroje a popis chyby | áno |
+| **Záznamy odpovedí** (`evaluations`) | pri **každej** odpovedi: otázka človeka a odpoveď systému **doslovne**, zdroje a citácie, model, časy a cena, e-mail toho, kto sa pýtal; nepovinne posudok hodnotiteľa a **nahlásená nepresnosť** | áno |
 | **Evidenčné údaje osoby** (`persons`) | meno a priezvisko zvlášť, tituly, pracovná pozícia, oddelenie, **mobilný telefón**, pracovisko (mesto/obec) | áno |
 
 > **Šesť riadkov vyššie pribudlo 2026-09-10 a päť z nich popisuje údaje, ktoré
 > sa už zbierali.** Tento dokument vznikol pre RAG časť systému a onboarding
 > s potvrdzovaním doňho nikdy nedopísali. Nie je to formalita: údaj, ktorý sa
 > zbiera a nie je v dokumentácii, je presne to, čo pri audite robí problém.
+
+> **`evaluations` je to isté prehliadnutie, len staršie (dopísané 2026-09-15).**
+> Kolekcia vznikla s hodnotením odpovedí (D9) a od začiatku ukladá **otázku aj
+> odpoveď doslovne pri každej odpovedi**, nie len pri tej, ktorú niekto posúdi.
+> Riadok „Konverzácie" vyššie to popisoval všeobecne a kolekciu nepomenoval,
+> takže sa dalo čítať tak, že ide o niečo iné. Nejde.
 
 ### 2.1 Interný adresár — nové sprístupnenie (D87, 2026-09-14)
 
@@ -118,7 +124,7 @@ niečo o správaní konkrétneho človeka, nie o jeho povinnosti. Preto:
 | **Kolá schvaľovania** (`approval_rounds`) | **ako potvrdenia** | schválenie je dôvod, prečo znenie vôbec smelo ísť ľuďom |
 | **Log pripomienok** (`reminder_log`) | **90 dní** (TTL) | prevádzkový záznam proti dvojitému odoslaniu, nie dôkaz. Dôkazom je `notified[]` na pridelení |
 | **Upozornenia** (`notifications`) | **90 dní** (rozhodnuté 2026-09-15) | prevádzková správa o dobehnutej operácii, nie dôkaz. Je to údaj o **správaní** — čo kto kedy videl — takže lehota je krátka a zhodná s `reminder_log`: jedno pravidlo namiesto dvoch |
-| **Hlásenia nepresností** (`answer_reports`) | **24 mesiacov** (rozhodnuté 2026-09-15) | dlhšie než upozornenia zámerne: je to podklad na zlepšenie vyhľadávania, nie prevádzková stopa. Otázka je text, ktorý napísal človek, takže môže obsahovať osobný údaj — bez nej je ale hlásenie bezcenné |
+| **Záznamy odpovedí** (`evaluations`) | **12 mesiacov** (návrh, nie rozhodnutie) | **dnes sa nemažú — lehota nie je zavedená.** Je to najstaršia diera v tejto tabuľke: kolekcia zbiera od D9 a doteraz tu nebola. Otázka je text, ktorý napísal človek, takže môže obsahovať osobný údaj; bez nej sa ale odpoveď nedá spätne posúdiť |
 
 | **Osoby** (`persons`) | **otvorené — patrí k O16** | doklady na ňu ukazujú cez `personId` a majú prežiť odchod. Nestačí jedno číslo: `docs/ZALOHOVANIE_A_RETENCIA.md` kap. 3 pomenúva tri cesty (nechať / anonymizovať / zmazať oboje) |
 | **Fotky osôb** (`person_photos`) | **s osobou** | nemá vlastný dôvod existovať dlhšie než osoba |

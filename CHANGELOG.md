@@ -4,7 +4,7 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
-### „Nahlásiť nepresnosť" — systém sa konečne dozvie, že odpovedal zle (2026-09-15)
+### „Nahlásiť nepresnosť" — a oprava vlastnej chyby v ten istý deň (2026-09-15)
 
 Prvé z piatich „pohodlí" (O6, bod 12) a jediné, ktoré rieši skutočnú dieru:
 dovtedy sme vedeli, koľko otázok padlo, ale nie **ktoré odpovede boli mimo**.
@@ -16,23 +16,31 @@ Neukazuje sa počas streamovania ani pri chybe — tam ešte nie je čo hodnoti�
 
 - **Popis chyby je povinný.** Palec dole nie je hlásenie: bez vety „čo je zle"
   sa nedá nič opraviť.
-- **Ukladá sa aj otázka, aj odpoveď doslovne, aj zdroje.** Bez nich sa nedá
-  rozlíšiť „našlo zlý predpis" od „našlo správny a zle ho prečítalo" — dve
-  rôzne chyby s dvomi rôznymi opravami.
+- **Hlásenie sa pripisuje k záznamu, ktorý už existuje.** Každá dobehnutá
+  odpoveď sa ukladá do `evaluations` — otázka, odpoveď, zdroje aj citácie —
+  ešte predtým, než ju niekto posúdi. Z prehliadača preto odchádza len popis
+  chyby a identifikátor záznamu; ostatné server dávno má.
+- **Vlastné pole, nie `note`.** `note` patrí hodnotiteľovi a ukladá sa pri
+  každom opustení poľa. Keby doň písali obaja, neskorší zápis by prepísal
+  skorší — a prepísaná by bola práve veta, kvôli ktorej sa niekto namáhal
+  niečo napísať.
+- **Hlásenie nie je posudok.** Nepodpisuje sa ako `reviewer` a nehýbe časom
+  poslednej zmeny: podľa neho sa radí, ktorý posudok tej istej otázky platí.
 - **Odpoveď sa po odoslaní nestratí.** Nič sa nepresmeruje; vymení sa len
   obsah bloku za poďakovanie. Kto hlási nepresnosť, má ju stále pred očami.
-- **Identita nikdy z tela požiadavky** (D32): organizácia aj osoba idú
-  z prihlásenia. Otázka, odpoveď a zdroje naopak prichádzajú z prehliadača —
-  inak sa získať nedajú, lebo odpoveď sa streamuje a nikde sa neukladá.
-  Berie sa to preto ako **tvrdenie nahlasovateľa, nie ako záznam systému**,
-  dĺžky sa orezávajú a nezmysel namiesto zdrojov zápis nezhodí.
-- **Retencia 24 mesiacov** — dlhšie než pri upozorneniach zámerne: je to
-  podklad na zlepšovanie vyhľadávania, nie prevádzková stopa. Otázka je text
-  od človeka a **môže obsahovať osobný údaj**; zapísané v GDPR, v retenčnej
-  tabuľke aj ako otázka na DPO.
 
-Osem testov nad `tidyReport()` — jediným miestom, kde sa rozhoduje, čo
-z hlásenia zostane, a robí to nad vstupom, ktorému sa neverí.
+**Postavené dvakrát a je to tu napísané zámerne.** Prvá verzia mala vlastnú
+kolekciu `answer_reports`, ktorá znovu ukladala otázku, odpoveď a zdroje —
+teda presne to, čo `evaluations` ukladá pri každej odpovedi. Bola to druhá
+kópia tej istej pravdy, práve to, proti čomu je zvyšok systému postavený.
+Vzniklo to tak, že sa `lib/ratings.ts` pred stavbou neprečítal. Zahodené
+v ten istý deň: kolekcia, jej indexy, mazanie v crone aj tri súbory.
+
+**Zbočná, ale podstatnejšia oprava dokumentácie.** Pri tom sa ukázalo, že
+`evaluations` nikdy neboli v GDPR tabuľke ani menovite v retenčnej — pritom
+od D9 držia **otázku aj odpoveď doslovne pri každej odpovedi** a e-mail toho,
+kto sa pýtal, a **nemažú sa vôbec**. Dopísané do oboch dokumentov a otázka
+na DPO je prepísaná na ne, nie na zrušenú kolekciu.
 
 ### Zvonček upozornení (2026-09-15) — a dve rozhodnutia, ktoré tým padli
 

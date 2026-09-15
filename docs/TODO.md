@@ -611,9 +611,11 @@ len práca, ktorá z nich plynie.
       Retencia je rozhodnutá (90 dní, ako `reminder_log`) a zapísaná v GDPR aj v retenčnej tabuľke; **právny základ je otázka na DPO** a je v `docs/O15_O16_otazky_pre_DPO.md`, časť B.
 - [ ] **Vlastné ikony** (bod 1) — set sa nezavádza. Zladiť sedem existujúcich v `Header.tsx` (hrúbka ťahu, optická veľkosť, `viewBox`) a dokresliť navigáciu v tom istom rukopise. **Vedomá odchýlka od README**, nie nedopatrenie. *Ôsma ikona pribudla 2026-09-15 — zvonček, kreslený rovno v tom rukopise (18×18, `currentColor`, ťah 1,6).*
 - [~] **Pohodlie v poradí** (bod 12) — prvé z piatich hotové
-      - [x] ~~**Nahlásiť nepresnosť**~~ — `answer_reports`, retencia 24 mesiacov
-            Pod každou dokončenou odpoveďou (nie pri chybe, nie počas streamovania). Ukladá sa **otázka aj odpoveď doslovne a zdroje**: bez nich sa nedá rozlíšiť „našlo zlý predpis" od „našlo správny a zle ho prečítalo". Popis chyby je povinný — palec dole nie je hlásenie.
-            Otázka je text od človeka, takže **môže obsahovať osobný údaj**; zapísané v GDPR aj v retenčnej tabuľke, právny základ je otázka na DPO (O15/O16, časť B).
+      - [x] ~~**Nahlásiť nepresnosť**~~ — pole `readerNote` na zázname v `evaluations`
+            Pod každou dokončenou odpoveďou (nie pri chybe, nie počas streamovania). Popis chyby je povinný — palec dole nie je hlásenie.
+            **Postavené dvakrát.** Najprv ako vlastná kolekcia `answer_reports`, ktorá znovu ukladala otázku, odpoveď a zdroje — teda presne to, čo `evaluations` ukladá pri **každej** odpovedi. Druhá kópia tej istej pravdy, ktorá by sa raz s prvou rozišla. Zahodené v ten istý deň aj s kolekciou; hlásenie je odvtedy pole na zázname, ktorý už existuje.
+            Otázka aj odpoveď sa ukladajú doslovne — a ukladali sa tak aj predtým, len to nikde nebolo napísané. **Môžu obsahovať osobný údaj**; `evaluations` sú odvtedy v GDPR aj v retenčnej tabuľke a právny základ je otázka na DPO (O15/O16, časť B).
+            **Otvorené:** `evaluations` sa dnes nemažú vôbec — lehota nie je zavedená.
       - [ ] hľadanie vo filtroch
       - [ ] Uložiť pohľad
       - [ ] súvisiace predpisy

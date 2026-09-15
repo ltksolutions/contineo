@@ -2,7 +2,7 @@
  * route.ts → /api/rating
  *
  * POST  — založí záznam o odpovedi (volá sa hneď po dobehnutí generovania)
- * PATCH — doplní ľudské posúdenie
+ * PATCH — doplní ľudské posúdenie **alebo** hlásenie nepresnosti
  *
  * Rozdelenie na dva kroky je zámerné: automatické metriky D9 sa dajú
  * počítať aj z odpovedí, ktoré nikto neposúdil. Keby sa záznam zakladal až
@@ -12,7 +12,7 @@
 
 import { NextRequest, NextResponse } from "next/server"
 import { getToken } from "next-auth/jwt"
-import { recordAnswer, saveVerdict } from "@/lib/ratings"
+import { recordAnswer, saveVerdict, reportInaccuracy } from "@/lib/ratings"
 import type { NewRating, RatingEdit, Verdict } from "@/lib/ratings"
 
 /**
@@ -92,6 +92,29 @@ export async function PATCH(req: NextRequest) {
 
   if (!body.id) {
     return NextResponse.json({ error: "missing-id" }, { status: 400 })
+  }
+
+  /*
+   * Hlásenie nepresnosti od toho, kto sa pýtal, je **iná operácia** než
+   * posudok hodnotiteľa: píše do iného poľa, nepodpisuje sa ako hodnotiteľ
+   * a nehýbe časom poslednej zmeny. Preto vlastná vetva, nie ďalší kľúč
+   * v `edit` — tam by ju `saveVerdict()` zliala s posudkom a záznam by
+   * tvrdil, že odpoveď posúdil ten, kto ju len nahlásil.
+   */
+  if (typeof body.readerNote === "string") {
+    if (!body.readerNote.trim()) {
+      return NextResponse.json({ error: "nothing-to-save" }, { status: 400 })
+    }
+    try {
+      const saved = await reportInaccuracy(body.id, body.readerNote, await reviewer(req))
+      if (!saved) {
+        return NextResponse.json({ error: "record-not-found" }, { status: 404 })
+      }
+      return NextResponse.json({ ok: true })
+    } catch (e) {
+      console.error("Uloženie hlásenia zlyhalo:", e)
+      return NextResponse.json({ error: "save-failed" }, { status: 500 })
+    }
   }
 
   const edit: RatingEdit = {}

@@ -3,6 +3,13 @@
 /**
  * „Nahlásiť nepresnosť" pod odpoveďou.
  *
+ * **Nezakladá vlastný záznam — dopisuje sa k tomu, ktorý už existuje.**
+ * Každá dobehnutá odpoveď sa ukladá do `evaluations` (`recordAnswer()`), aj
+ * keď ju nikto neposúdi: je tam otázka, odpoveď, zdroje aj citácie. Vlastná
+ * kolekcia hlásení by tie isté údaje uložila druhýkrát a obe kópie by sa raz
+ * rozišli. Preto sa posiela **len popis chyby** a identifikátor záznamu;
+ * otázku a odpoveď netreba posielať z prehliadača, server ich už má.
+ *
  * **Zabalené v `<details>`, nie vždy otvorené.** Formulár pod každou
  * odpoveďou by tvrdil, že odpovede sú spravidla zlé; zavretý riadok hovorí
  * „keď je niečo mimo, povedz to" a nezaberá miesto tomu, kvôli čomu sa sem
@@ -19,17 +26,21 @@
 
 import { useState } from "react"
 import { dictionary, type UiLanguage } from "@/lib/i18n"
-import type { AnswerSource } from "@/lib/sseClient"
+
+/**
+ * Rovnaké číslo ako `MAX_READER_NOTE` v `lib/ratings.ts`, napísané druhýkrát
+ * zámerne: `lib/ratings.ts` siaha na databázu a do klientskeho balíka sa
+ * dostať nesmie. Autorita je server, toto je len zábrana v poli — rovnako
+ * ako pri hodnotiacom paneli.
+ */
+const MAX_NOTE = 2000
 
 export default function ReportInaccuracy({
-  question: question,
-  answer: answer,
-  sources: sources,
+  recordId: recordId,
   language,
 }: {
-  question: string
-  answer: string
-  sources: AnswerSource[]
+  /** Záznam o odpovedi, ku ktorému sa hlásenie pripíše. */
+  recordId: string
   language?: UiLanguage
 }) {
   const t = dictionary(language).report
@@ -43,18 +54,10 @@ export default function ReportInaccuracy({
     setState("sending")
     setError("")
     try {
-      const r = await fetch("/api/answer-report", {
-        method: "POST",
+      const r = await fetch("/api/rating", {
+        method: "PATCH",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({
-          question: question,
-          answer: answer,
-          note: note,
-          // Zdroje sa posielajú **orezané na to podstatné**: názov, článok
-          // a odkaz. Celý objekt zo streamu by niesol aj polia, ktoré
-          // s hlásením nesúvisia.
-          sources: sources.map(s => ({ title: s.title, articleRef: s.articleRef, url: s.url })),
-        }),
+        body: JSON.stringify({ id: recordId, readerNote: note }),
       })
       const data = await r.json() as { ok?: boolean; error?: string }
       if (!r.ok || !data.ok) {
@@ -87,6 +90,7 @@ export default function ReportInaccuracy({
             value={note}
             onChange={e => setNote(e.target.value)}
             placeholder={t.placeholder}
+            maxLength={MAX_NOTE}
             required
           />
           <span className="quiet field-hint">{t.note}</span>

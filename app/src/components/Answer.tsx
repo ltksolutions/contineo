@@ -43,7 +43,20 @@ function Line({ label: label, value: value }: { label: string; value: string }) 
   )
 }
 
-export default function Answer({ state: state, language }: { state: AnswerState; language?: UiLanguage }) {
+export default function Answer({
+  state: state,
+  recordId: recordId,
+  language,
+}: {
+  state: AnswerState
+  /**
+   * Záznam o tejto odpovedi (`evaluations`), ktorý vznikol hneď po jej
+   * dobehnutí. Bez neho niet k čomu hlásenie pripísať, takže sa formulár
+   * nevykreslí — je to čestnejšie než tlačidlo, ktoré nemá kam zapísať.
+   */
+  recordId?: string | null
+  language?: UiLanguage
+}) {
   const t = dictionary(language).answer
   const { text, citations: citations, done: done, running: running } = state
   if (!text && !running && !done) return null
@@ -144,13 +157,8 @@ export default function Answer({ state: state, language }: { state: AnswerState;
         Stojí **nad zoznamom zdrojov**, teda hneď pod tým, čo sa číta. Pod
         rozbalenými zdrojmi by ho našiel len ten, kto ich otvoril.
       */}
-      {done && !error && text && (
-        <ReportInaccuracy
-          question={state.question}
-          answer={text}
-          sources={done.sources}
-          language={language}
-        />
+      {done && !error && text && recordId && (
+        <ReportInaccuracy recordId={recordId} language={language} />
       )}
 
       {/* Zdroje — čo sa dostalo do kontextu, aj keď z toho model necitoval. */}

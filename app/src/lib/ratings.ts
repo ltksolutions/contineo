@@ -61,6 +61,24 @@ export interface RatingRecord {
   correctSources?: string
   note?: string
 
+  /**
+   * „Nahlásiť nepresnosť" — čo na odpovedi nesedelo, slovami toho, kto sa
+   * pýtal.
+   *
+   * **Vlastné pole, nie `note`.** `note` patrí hodnotiteľovi a ukladá sa pri
+   * každom opustení poľa; keby doň písali obaja, neskorší zápis by prepísal
+   * skorší — a prepísané by bolo práve hlásenie, teda jediná veta, kvôli
+   * ktorej sa vôbec niekto namáhal niečo napísať.
+   *
+   * **Záznam sa nezakladá, dopisuje sa.** Otázka, odpoveď aj zdroje v ňom už
+   * sú z `recordAnswer()`; vlastná kolekcia hlásení by bola druhá kópia toho
+   * istého, ktorá sa raz s prvou rozíde.
+   */
+  readerNote?: string
+  readerNoteAt?: Date
+  /** Kto hlásil. Nepodpisuje sa ako `reviewer` — neposudzoval, oznámil. */
+  readerNoteBy?: string
+
   reviewer: string
   createdAt: Date
   updatedAt: Date
@@ -145,6 +163,39 @@ export async function saveVerdict(
 
   const col = await getCollection<RatingRecord>(RATINGS_COLLECTION)
   const r = await col.updateOne({ _id: new ObjectId(id) }, { $set: changes })
+  return r.matchedCount === 1
+}
+
+/** Najdlhšie hlásenie, ktoré sa uloží. Popis chyby, nie príloha. */
+export const MAX_READER_NOTE = 2000
+
+/**
+ * Pripíše hlásenie nepresnosti k **už existujúcemu** záznamu o odpovedi.
+ *
+ * Zámerne nemení `updatedAt` ani `reviewer`. `setProgress()` radí záznamy tej
+ * istej otázky podľa `updatedAt` a berie posledný — hlásenie čitateľa nie je
+ * posudok a nesmie prehodiť, ktorý posudok platí. A `reviewer` hovorí, kto
+ * odpoveď posúdil; ten, kto nahlásil chybu, ju neposúdil.
+ *
+ * Druhé hlásenie k tej istej odpovedi prepíše prvé. Je to tá istá odpoveď
+ * a spravidla ten istý človek, ktorý sa opravuje — nie dvaja svedkovia.
+ *
+ * Vracia `false`, keď záznam neexistuje alebo je hlásenie prázdne.
+ */
+export async function reportInaccuracy(
+  id: string,
+  note: string,
+  person: string
+): Promise<boolean> {
+  if (!ObjectId.isValid(id)) return false
+  const text = note.trim().slice(0, MAX_READER_NOTE)
+  if (!text) return false
+
+  const col = await getCollection<RatingRecord>(RATINGS_COLLECTION)
+  const r = await col.updateOne(
+    { _id: new ObjectId(id) },
+    { $set: { readerNote: text, readerNoteAt: new Date(), readerNoteBy: person } }
+  )
   return r.matchedCount === 1
 }
 
