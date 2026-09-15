@@ -127,6 +127,10 @@
 **Odporúčanie:** `qa_pairs` tagovať rovnako ako obsah (vrátane prístupu) a zahrnúť do reconciliation; SLA a smerovanie ticketov per zväz; kurované odpovede expirovať, keď sa zmení podkladová norma.
 **✅ Rozhodnuté (2026-06-26):** `qa_pairs` tagované ako obsah (accessLevel/companyCode), súčasť reconciliation, expirácia pri zmene normy; SLA a smerovanie ticketov per zväz.
 
+**♻️ Revidované (2026-09-15) — kurácia áno, kolekcia `qa_pairs` nie.** Pravda o páre je na zázname v `evaluations`; úsek v `document_chunks` so `sourceType: "qa"` je jeho premietnutie do indexu, nie druhá kolekcia. Samotné rozhodnutia z D11 platia ďalej, len inde: prístup sa páru **odvodzuje** z najprísnejšieho zo zdrojových úsekov (`strictestAccessLevel()`), `companyCode` nesie záznam aj úsek, a nové znenie normy pár **expiruje** (`expireCurationFor()`). Implementácia: `lib/curation.ts`, obrazovky `/evaluation` a `/library/curation`.
+
+**Zostáva otvorené:** helpdesk — `tickets`, SLA a smerovanie per zväz. Kurácia dnes beží nad odpoveďami z vyhľadávania, nie nad ticketmi.
+
 ### D12 — Email politika 🟡
 **Otázka:** smie bot auto-odoslať odpoveď, alebo vždy cez človeka?
 **Odporúčanie:** **nikdy auto-odoslať** bez schválenia človekom; bot len pripraví návrh do ticketu (bezpečnostné pravidlo).

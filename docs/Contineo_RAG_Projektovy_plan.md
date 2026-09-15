@@ -382,7 +382,7 @@ KROK 5 – ULOŽENIE + CHUNKING + AUTO-EMBED
 
 ### Fáza 4b – Kuračný cyklus + Helpdesk `[plán]`
 
-- [ ] `qa_pairs`: schválené odpovede správcu späť do znalostí (kontrola kvality a kurácia)
+- [x] **Kurácia hotová 2026-09-15** — overená odpoveď späť do znalostí. Bez kolekcie `qa_pairs` (D11 revidované): stav je na zázname v `evaluations`, do indexu ide úsek so `sourceType: "qa"`.
 - [ ] `tickets`: eskalácia z bota/e-mailu, prepojenie na `conversations`, SLA, životný cyklus
 
 ### Fáza 6 – Scheduler & monitoring `[1 týždeň]`

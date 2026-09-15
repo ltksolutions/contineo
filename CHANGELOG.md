@@ -4,6 +4,30 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Upratovanie po dni — dokumenty dobehli kód (2026-09-15)
+
+`git log` je pravda, dokumentácia indícia — a po dnešnom dni indícia zaostávala
+na štyroch miestach. Kurácia beží **bez kolekcie `qa_pairs`**, ale
+`OPEN_DECISIONS.md` (D11), `GDPR_DATA_PROTECTION.md` (tabuľky údajov a retencie),
+`DATA_MODEL_konzistencia.md` a projektový plán ju stále menovali ako kolekciu,
+ktorá ešte len vznikne. D11 má odteraz revíznu poznámku v rovnakom tvare ako
+D9: pôvodné rozhodnutia platia ďalej, len sa napĺňajú inde — a helpdesk
+(`tickets`, SLA, smerovanie per zväz) z D11 zostáva otvorený.
+
+- **`docs/DEVLOG.md` (nový)** — denník práce. Changelog hovorí, čo sa zmenilo;
+  devlog, ako to šlo: rozhodnutia dňa, čo nevyšlo a prečo, čo stálo čas.
+  Prvý zápis je dnešný — vrátane zbytočnej kolekcie `answer_reports`,
+  86 minút čakania na Vercel kvôli stratenému webhooku a dvoch pascí
+  (slovenské úvodzovky v TSX, koniec skupiny v `i18n.ts` bez čiarky).
+- **Mŕtve zmienky o zlatej sade v kóde** — `rerank_compare.mjs` už neposiela
+  človeka dotláčať vyplnenie `goldChunkIds`, ale porovnávať na hodnoteniach
+  z prevádzky (ADR-008); osirelý docstring po skupine `goldenSet` v `i18n.ts`
+  odstránený. Tri ďalšie osirelé docstringy tam zostali — sú staršie než
+  dnešok a sú **zapísané v TODO**, nie ticho opravené pri inej práci.
+- **Historické zmienky `spravca-obsahu`** v TODO dostali poznámku
+  `(dnes content-admin)`. Zápis z augusta sa neprepísal — vtedy sa rola tak
+  naozaj volala.
+
 ### Štítok „overená odpoveď" — a diera, ktorú pri tom našiel (2026-09-15)
 
 Kurovaná odpoveď je krátka a presne formulovaná, takže vo vyhľadávaní často

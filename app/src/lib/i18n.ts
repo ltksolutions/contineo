@@ -616,7 +616,6 @@ interface Dictionary {
   /** Knižnica dokumentov (D53). */
   /** Výpis auditu — používa ho nastavenie organizácie aj `/admin`. */
   /** Správa tenantov — vidí ju len správca platformy (Fáza 5b). */
-  /** Zlatá sada — overovanie kvality odpovedí (D9). */
   /** Prehľad (`docs/design/README.md`, časť 2). */
   overview: {
     hello: (name: string) => string

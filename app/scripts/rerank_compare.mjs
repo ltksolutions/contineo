@@ -197,10 +197,10 @@ try {
       console.log(`   Výber modelu je bezpredmetný — zostať na rerank-2, tému zavrieť.`)
     } else if (najnizsi >= 0.7) {
       console.log(`${INFO} Modely sa čiastočne rozchádzajú (najnižší prekryv ${pct(najnizsi)}).`)
-      console.log(`   Rozdiel je merateľný, ale bez zlatej sady sa nedá povedať, ktorým smerom je lepší.`)
+      console.log(`   Rozdiel je merateľný, ale ktorým smerom je lepší, povie až prevádzka — hodnotenia ľudí (ADR-008), nie tento skript.`)
     } else {
       console.log(`${INFO} Modely sa výrazne rozchádzajú (najnižší prekryv ${pct(najnizsi)}).`)
-      console.log(`   Výber modelu má reálny dopad → dotlačiť vyplnenie goldChunkIds (D9).`)
+      console.log(`   Výber modelu má reálny dopad → porovnať na hodnoteniach z prevádzky (ADR-008).`)
     }
     if (najvyssiBez >= 0.9) {
       console.log(`\n${INFO} Pozor: rerank mení poradie len málo (prekryv s „${BEZ}" až ${pct(najvyssiBez)}).`)

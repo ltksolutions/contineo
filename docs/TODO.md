@@ -44,7 +44,7 @@
 - [ ] Review UI — dropdowny z `codelists`, predvyplnené návrhom LLM, kurátor potvrdí
 
 ### D2. CMS — knižnica, web obsah, kanály (Fáza 4 / nová CMS-Web / 6) → `docs/CMS_KONCEPCIA.md`, `docs/KNIZNICA_DOKUMENTOV.md`
-- [x] **Media manager (D53, 2026-08-30):** `/kniznica` — zoznam, filtre, detail, história znení, nahratie docx/pdf/xlsx/md s prevodom do Markdownu, editor s originálom vedľa, publikovanie so `label` + `effectiveFrom` + citáciou zdroja. Rola `spravca-obsahu`
+- [x] **Media manager (D53, 2026-08-30):** `/kniznica` — zoznam, filtre, detail, história znení, nahratie docx/pdf/xlsx/md s prevodom do Markdownu, editor s originálom vedľa, publikovanie so `label` + `effectiveFrom` + citáciou zdroja. Rola `spravca-obsahu` (od 2026-09-15 `content-admin`)
 - [x] pôvodné súbory v GridFS, neverejná cesta; chunker a číselníky spoločné pre obrazovku aj skript
 - [x] **WYSIWYG editor** (D54) — prepínač Markdown / vizuálny režim, uložený tvar zostáva Markdown
 - [x] **virtuálne priečinky + filtre** (D56) — strom, dokument v práve jednom, filter vrátane podpriečinkov
@@ -66,7 +66,7 @@
 - [ ] Rozšíriť `documents` o `contentType` (`document`|`web`) a `webPublish` (slug, seo, navParent, publishAt) — **D-CMS-1**
 - [ ] **Web obsah (nová fáza CMS-Web):** KB články, FAQ, kategórie, navigácia, statické stránky; publikačný workflow + SSG/ISR generovanie; i18n SK/EN (AI preklad → review, **D-CMS-5**)
 - [ ] Editor: Markdown + náhľad, neskôr WYSIWYG vrstva — **D-CMS-2**
-- [ ] qa_pairs → publikovaný FAQ (zatváranie slučky); norma na webe len ako kanonický odkaz — **D-CMS-4**
+- [ ] **Overené odpovede → publikovaný FAQ** (zatváranie slučky); norma na webe len ako kanonický odkaz — **D-CMS-4**. Pár už existuje (úsek so `sourceType: "qa"`, 2026-09-15), otvorené je len jeho zverejnenie na verejnom webe. Kolekcia `qa_pairs` nevznikne (D11 revidované)
 - [ ] **Kanály:** kolekcie `channels` + `channel_runs`, admin CRUD, test `discover`, review fronta, monitoring behov; bez auto-publish (**D-CMS-6**)
 - [ ] Helpdesk: štart **web widget** (`tickets`), e-mailový kanál ako druhý krok — **D-CMS-3**
 - [ ] Preniesť D-CMS-1..6 do `OPEN_DECISIONS.md` (D16+) pri revízii backlogu
@@ -323,6 +323,7 @@
   - [ ] `EMAIL_MENO_ODOSIELATELA` a `EMAIL_ODOSIELATEL` → `EMAIL_SENDER_NAME`, `EMAIL_SENDER` — rovnaký vzor: **preložiť, nie premenovať** (kód číta novú, pri prázdnej starú), aby nasadenie nespadlo medzi zmenou kódu a zmenou premennej
 - [ ] `chunker.mjs` a jeho `.d.mts` majú slovenské názvy **zámerne** — sú to jeho parametre a prekladajú sa v `chunkingProfile.ts`. Nechať tak.
 - [ ] **Rozpísané skratky v deštrukturalizácii** (`{ name: name, options: options }` namiesto `{ name, options }`) — **33 riadkov v 12 komponentoch** (`AppNav`, `AuditList`, `Header`, `MultiSelect`, `Notice`, `Search`, `Select`, `SignIn`, `TagSelect`, `TextEditor`, `TreeWithOrder`). Zostalo po dávnom premenovaní vlastností. Čistá kozmetika, `eslint` to nehlási — urobiť pri najbližšom dotyku daného súboru, nie ako samostatný prechod cez dvanásť súborov.
+- [ ] **Osirelé docstringy v `lib/i18n.ts`** — tri komentáre nad `overview` (`Knižnica dokumentov (D53)`, `Výpis auditu`, `Správa tenantov`) nepatria k žiadnemu členu; skupiny sa kedysi presunuli inšie a komenty zostali. Štvrtý (zlatá sada) odstránený 2026-09-15 spolu so skupinou. Zvyšné tri presunúť k svojim skupinám pri najbližšom dotyku súboru
 - [x] **Názvy indexov v Mongo** ✅ 2026-09-06 — 18 premenovaní cez `npm run migrate:indexes` (náhľad, `--zapis` vykoná). `onboarding_init.mjs` má nové názvy a jeho polia po anglicky (`kluc`→`key`, `preco`→`why`, `kolekcia`→`collection`, `indexy`→`indexes`).
       **Bezpečné poradie neexistuje.** Mongo druhý index nad tým istým kľúčom neprijme („Index already exists with a different name"), takže „vytvoriť → zahodiť" nejde a premenovanie indexu ako operácia v Mongu nie je. Ostáva zahodiť → vytvoriť, teda krátke okno bez obmedzenia.
       Preto skript pri unikátnom indexe **najprv overí, že duplicity neexistujú** (rešpektuje `partialFilterExpression`) a zahodí len vtedy. Keby `createIndex` po zahodení zlyhal, kolekcia by zostala bez obmedzenia — a pri `acknowledgements` je to jediné, čo drží dvojité potvrdenie toho istého znenia (D24). Radšej sa nespraví nič než polovica.
@@ -457,7 +458,7 @@
       **Facet `Stav` hotový (2026-09-10):** tretia hodnota „na schválenie", dva dotazy namiesto spojenia kolekcií. Nie je to tretia priehradka — dokument môže byť publikovaný a zároveň mať bežiace kolo, takže sa pridáva cez `$or`.
       **Krok 5 hotový (2026-09-10):** e-mail menovaným schvaľovateľom pri predložení, `notifiedAt` na schvaľovateľovi. Jednorazová menovitá správa, nie kadencia.
       **Pozor:** kolo 2 na `sfz:test_onboarding` vzniklo **pred** krokom 5, takže Agáte Galkovej sa o ňom neozvalo (`notifiedAt` je `null`). Rozposielanie sa spúšťa pri predložení; ak má e-mail dostať, treba kolo zrušiť a predložiť znova.
-      **Krok 4 hotový (2026-09-10):** `/approvals` — obrazovka schvaľovateľa, `decide()` a `decideProblem()`. Odchýlka od ADR: rozhodovanie **nie je** v detaile dokumentu, lebo schvaľovateľ nemusí mať rolu `spravca-obsahu` (D69) a dať mu ju kvôli schvaľovaniu by mu dovolilo aj nahrávať normy.
+      **Krok 4 hotový (2026-09-10):** `/approvals` — obrazovka schvaľovateľa, `decide()` a `decideProblem()`. Odchýlka od ADR: rozhodovanie **nie je** v detaile dokumentu, lebo schvaľovateľ nemusí mať rolu `spravca-obsahu` (dnes `content-admin`; D69) a dať mu ju kvôli schvaľovaniu by mu dovolilo aj nahrávať normy.
       **Krok 3 overený na produkcii (2026-09-10)** pri 390 px: predloženie, história kôl, zrušenie kola s povinným dôvodom, druhé kolo po zrušení. Bez vodorovného posunu, riadok schvaľovateľa 60 px vysoký.
       **Nájdené pri overovaní:** v **uzavretom** kole sa pri schvaľovateľovi, ktorý nerozhodol, píše „čaká". Pri zrušenom kole už nečaká na nič — malo by tam byť „nerozhodla". Drobnosť, ale je to text v histórii, ktorá má byť dôkazom.
       **Nájdené pri overovaní:** schvaľovanie sa nedá použiť, kým je v organizácii jedna osoba — predkladateľ sa vybrať nemôže (D69). Je to vecná podmienka pre D75: skôr než sa cez schvaľovanie nahrajú oficiálne znenia, musí existovať niekto, kto ich schváli.

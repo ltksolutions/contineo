@@ -31,7 +31,7 @@
 | Tickety | kontakt žiadateľa, obsah, priebeh | áno |
 | Audit prístupov | kto / čo / kedy videl | áno |
 | Obsah (normy, rozpisy) | predpisy, smernice | nie (verejné/interné dokumenty) |
-| `qa_pairs` (kurované) | schválené odpovede | spravidla nie |
+| **Overené odpovede** (kurácia) | znenie, ktoré hodnotiteľ overil; žije ako úsek v `document_chunks` so `sourceType: "qa"`, vlastnú kolekciu nemá | spravidla nie — otázka sa pred zverejnením prepíše |
 | **Pridelenia** (`assignments`) | komu bolo znenie uložené, kým, prečo, dokedy, komu sa o tom ozvalo | áno |
 | **Potvrdenia** (`acknowledgements`) | kto, kedy, ktoré znenie, formulka, hash, IP, odtlačok oddelenia | áno |
 | **Časy čítania** (`reading_times`) | koľko sekúnd mal človek znenie otvorené | áno |
@@ -114,7 +114,7 @@ niečo o správaní konkrétneho človeka, nie o jeho povinnosti. Preto:
 | **Konverzácie** (logy otázok/odpovedí) | **12 mesiacov** (pseudonymizované) | dosť na ladenie kvality, eval a spätnú väzbu; po roku nízka hodnota → minimalizácia |
 | **Audit prístupov** | **24 mesiacov** | bezpečnostné vyšetrovanie a preukázanie compliance si vyžaduje dlhší horizont než konverzácie |
 | **Tickety** | **24 mesiacov po uzavretí** | história podpory; predĺžiť len ak existuje právny/účtovný dôvod |
-| **`qa_pairs`** (kurované) | **kým platí podkladová norma** | expirujú s normou (D11); bez osobných údajov |
+| **Overené odpovede** (kurácia) | **kým platí podkladová norma** | expirujú s ňou (`expireCurationFor()`, D11 revidované); bez osobných údajov |
 | **Cache členstiev** (`person_memberships`) | **len aktuálny stav** | obnova login+webhook (D7); pri zrušení príslušnosti **bezodkladne** vymazať/deaktivovať |
 | **Identita** (kópia z CRM) | **počas aktívneho vzťahu** | zrkadlo zo Sportnet; pri ukončení vzťahu vymazať lokálnu kópiu |
 | **Potvrdenia** (`acknowledgements`) | **otvorené — patrí k O16** | je to doklad o oboznámení so záväzným predpisom. Lehota nie je technická otázka: odvíja sa od toho, ako dlho sa taký doklad môže hodiť, a to určí právnik |

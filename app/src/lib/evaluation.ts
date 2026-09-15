@@ -6,7 +6,8 @@
  * boli v databáze nerozoznateľné. Rozhodnutie Jána Letka (2026-09-15): bežný
  * človek povie len **„sedí / nesedí"** a čo mu na odpovedi vadilo; či mal
  * pravdu, potvrdí alebo opraví **hodnotiteľ**. Až potvrdený posudok je
- * podklad pre kuráciu (D11, `qa_pairs`).
+ * podklad pre kuráciu — D11 revidované, bez kolekcie `qa_pairs`; stav páru
+ * je na tom istom zázname (`lib/curation.ts`).
  *
  * Rovnaký vzor ako `hr.ts` a `people.ts`: rola platí **vo vlastnej
  * organizácii** a nikde inde. Obe podmienky musia sedieť naraz — rola aj

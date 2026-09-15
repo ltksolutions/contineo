@@ -14,7 +14,7 @@ Doména Contineo = SFZ a podriadené zväzy, normy s paragrafmi, helpdesk. Ploch
 | Chunky | `rag_chunks` | **`document_chunks`** |
 | Dokumenty (CMS) | `rag_documents` | **`documents`** |
 | Konverzácie | `rag_chat_history` | **`conversations`** |
-| Kurácia | — | **`qa_pairs`** (nová) |
+| Kurácia | — | ~~**`qa_pairs`** (nová)~~ → úsek v `document_chunks` so `sourceType: "qa"` (revidované 2026-09-15) |
 | Helpdesk | — | **`tickets`** (nová) |
 | Crawl log | `rag_crawl_log` | `crawl_log` (interná, nemení sa prioritne) |
 | Osoby v organizácii | — | **`persons`** (nová, Fáza 8) |
@@ -55,7 +55,7 @@ Doména Contineo = SFZ a podriadené zväzy, normy s paragrafmi, helpdesk. Ploch
    Malá, mechanická zmena kódu + preindexovanie Atlas. *Samostatný krok, nízke riziko.*
 2. **Doménové polia + verzovanie** (`sectionKey`, `companyCode`, `scope`, `articleRef`, `isActive`, `effectiveFrom/To`).
    Naviazať na **Fázu 4 (Import & CMS)** a **Fázu 5 (Prístupové úrovne)** — značkovanie z číselníka pri importe.
-3. **Kuračný cyklus** (`qa_pairs`) — schválené odpovede späť do znalostí. Nová mini-fáza po Fáze 4.
+3. **Kuračný cyklus** ✅ 2026-09-15 — overená odpoveď späť do znalostí. Bez kolekcie `qa_pairs`: stav je na zázname v `evaluations`, do indexu ide úsek so `sourceType: "qa"` (D11 revidované).
 4. **Helpdesk** (`tickets`, prepojenie na `conversations`, SLA, životný cyklus). Samostatná feature-fáza.
 
 ## Čo sa NEmení teraz
