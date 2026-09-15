@@ -32,6 +32,29 @@ type Theme = "light" | "dark"
 const NEXT_THEME: Record<ThemeChoice, ThemeChoice> = { system: "light", light: "dark", dark: "system" }
 
 
+
+/**
+ * Zvonček. Kreslený v tom istom rukopise ako ikony témy vedľa neho:
+ * 18×18, `currentColor`, ťah 1,6, guľaté konce. Je to vedomá odchýlka od
+ * `docs/design/README.md` („nekresliť nové SVG od ruky") — rozhodnutie Jána
+ * Letka z 2026-09-14 znie, že ikonový set sa nezavádza a ikony budú vlastné.
+ * Odchýlka je zapísaná v `docs/O6_rozhodovaci_harok.md`, bod 1.
+ */
+function BellIcon() {
+  return (
+    <svg
+      width={17} height={17} viewBox="0 0 18 18"
+      fill="none" stroke="currentColor" strokeWidth={1.6}
+      strokeLinecap="round" strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M9 2.4v1.1" />
+      <path d="M9 3.5c-2.1 0-3.5 1.6-3.5 3.6 0 2.9-1.1 3.5-1.1 4.3h9.2c0-.8-1.1-1.4-1.1-4.3 0-2-1.4-3.6-3.5-3.6Z" />
+      <path d="M7.4 13.4a1.7 1.7 0 0 0 3.2 0" />
+    </svg>
+  )
+}
+
 /**
  * Ikona stavu. Tri rôzne tvary, nie jeden meniaci sa — človek má poznať
  * súčasný stav pohľadom, nie odvodením z toho, čo sa stane po kliknutí.
@@ -113,6 +136,7 @@ export default function Header({
   photo: photo,
   isAdmin: isAdmin,
   isPeopleAdmin: isPeopleAdmin,
+  notifications: notifications,
   language,
 }: {
   branding?: TenantBrandingView
@@ -125,6 +149,8 @@ export default function Header({
   isAdmin?: boolean
   /** Má rolu `people-admin` vo vlastnej organizácii (D46). */
   isPeopleAdmin?: boolean
+  /** Počet neprečítaných upozornení. Nula = zvonček bez odznaku. */
+  notifications?: number
   /** Jazyk prostredia prihlásenej osoby; bez nej slovenčina. */
   language?: UiLanguage
 }) {
@@ -356,6 +382,27 @@ export default function Header({
               v lište zaberali miesto navigácii a odhlásenie navyše stálo hneď
               vedľa odkazov, na ktoré sa klikne omylom.
             */}
+            {/*
+              Zvonček vedľa avatara. **Obyčajný odkaz, nie panel** — zoznam
+              je vlastná obrazovka a rozbaľovacie okno by znamenalo druhé
+              miesto s tým istým obsahom, ktoré treba držať v zhode. Na
+              telefóne je navyše panel v hlavičke vždy tesný.
+
+              Odznak je len keď je čo čítať: zvonček s nulou je ozdoba,
+              ktorá učí oko prehliadať aj to, keď tam číslo naozaj je.
+            */}
+            <Link
+              href="/notifications"
+              className="account-button"
+              aria-label={t.notifications.bellLabel(notifications ?? 0)}
+              style={{ alignItems: "center", padding: "6px 8px", color: "var(--ink)" }}
+            >
+              <BellIcon />
+              {(notifications ?? 0) > 0 && (
+                <span className="app-nav-count" aria-hidden="true">{notifications}</span>
+              )}
+            </Link>
+
             <div className="account" ref={personalWrap}>
               <button
                 type="button"

@@ -22,6 +22,7 @@ import {
 import { allDepartments } from "@/lib/departments"
 import { send, assignmentEmail, reminderEmail } from "@/lib/ecomail"
 import { overdue, byPersonReminder, NOTICE_DAYS, thresholdDays } from "@/lib/reminders"
+import { notify } from "@/lib/notifications"
 import { writeAudit, diff } from "@/lib/audit"
 import { brandingView } from "@/lib/tenants"
 import { requestHostname } from "@/lib/session"
@@ -370,6 +371,17 @@ export async function sendRemindersAction(fd: FormData) {
     targetLabel: t.heading,
     changes: diff({ sent: 0 }, { sent }),
   })
+
+  // Do zvončeka tomu, kto rozposlal. Audit hovorí „stalo sa to", zvonček
+  // hovorí „stalo sa to tebe" — a dá sa k tomu vrátiť bez otvárania auditu.
+  if (sent > 0) {
+    await notify({
+      companyCode: code,
+      personId: ctx.person.id,
+      kind: "remindersSent",
+      params: { count: sent },
+    })
+  }
 
   revalidatePath("/hr/reminders")
   const message = failed.length === 0

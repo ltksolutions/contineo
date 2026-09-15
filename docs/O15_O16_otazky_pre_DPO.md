@@ -159,6 +159,33 @@ Dnes **90 dní** (TTL v databáze). Je to prevádzkový záznam proti dvojitému
 
 ---
 
+### B-nové. Upozornenia v systéme (`notifications`) — pribudlo 2026-09-15
+
+Od 15. 9. 2026 má systém **zvonček**: keď dobehne dlhá operácia (preindexovanie
+dokumentu, prepis naskenovaného PDF, rozposlanie pripomienok, zverejnenie
+znenia), vznikne o tom záznam pre konkrétnu osobu a ona ho môže označiť za
+prečítaný.
+
+**Čo sa presne ukladá:** `personId`, druh udalosti, ktorého dokumentu sa týkala
+(identifikátor a názov), počet (úsekov alebo odoslaných správ), čas vzniku
+a čas prečítania. **Nie je tam text správy** — veta sa skladá až pri zobrazení,
+takže v databáze nie sú vety o človeku, len druh a parametre.
+
+Je to **údaj o správaní**: hovorí, čo kto kedy videl. Nie je to dôkaz o plnení
+povinnosti — tým zostávajú `acknowledgements`.
+
+**Náš návrh:** 90 dní, rovnako ako `reminder_log`, ktoré je rovnakej povahy.
+Jedno pravidlo pre obe prevádzkové kolekcie namiesto dvoch rôznych.
+
+**Otázka na DPO:** je oprávnený záujem (prevádzka systému) správny právny základ,
+alebo to patrí pod ten istý základ ako zvyšok onboardingu?
+
+**Odpoveď k lehote:** ☐ 90 dní súhlasí · ☐ inak: ____________
+
+**Odpoveď k základu:** ☐ oprávnený záujem · ☐ inak: ____________
+
+---
+
 ## Časť C — Čo k tomu patrí
 
 ### C1. Informovanie zamestnancov (čl. 13)
@@ -201,6 +228,7 @@ DPA medzi zväzom a Contineom a doložka pokrývajúca tok údajov Sportnet → 
 | `reading_times` | personId, znenie, počet sekúnd, prvé a posledné videnie |
 | `approval_rounds` | kto predložil, menovaní schvaľovatelia (meno a adresa ako odtlačok), rozhodnutie, dôvod zamietnutia, kedy sa komu ozvalo |
 | `reminder_log` | komu a v ktorý deň sa odoslala pripomienka |
+| `notifications` | personId, druh udalosti, ktorého dokumentu sa týkala, počet, čas vzniku a čas prečítania — **nie text správy** |
 | audit prístupov | kto, čo a kedy videl |
 
 Dve veci, ktoré sa zámerne **nezbierajú**: doskrolovanie na koniec dokumentu a záznam o každom jednotlivom zobrazení. A personalista, ktorý si znenie otvorí na kontrolu, sa nezapisuje — zapisuje sa len ten, kto povinnosť má.

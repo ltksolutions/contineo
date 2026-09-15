@@ -1212,6 +1212,29 @@ interface Dictionary {
       importResult: (created: number, updated: number, unchanged: number, invalid: number) => string
     }
   },
+  /**
+   * Zvonček: udalosti, ktoré sa stali, keď sa človek nepozeral.
+   *
+   * Vety sa skladajú **pri čítaní** z druhu a parametrov, nie sa ukladajú —
+   * viď `notifications.ts`. Vďaka tomu sa starý oznam po prepnutí jazyka
+   * prečíta v novom jazyku.
+   */
+  notifications: {
+    title: string
+    /** Popisok zvončeka pre čítačku obrazovky; nesie aj počet. */
+    bellLabel: (unread: number) => string
+    unread: (n: number) => string
+    empty: string
+    markAllRead: string
+    allRead: (n: number) => string
+    retentionNote: (days: number) => string
+    kinds: {
+      reindexed: (title: string, chunks: number) => string
+      rewritten: (title: string) => string
+      remindersSent: (count: number) => string
+      versionPublished: (title: string, label: string) => string
+    }
+  }
   library: {
     /**
      * Zopakovanie pridelenia na nové znenie.
@@ -3065,6 +3088,23 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
         (invalid ? `, chybných ${invalid}` : "") + ".",
     },
   },
+  notifications: {
+    title: "Upozornenia",
+    bellLabel: (unread) => unread > 0 ? `Upozornenia — ${unread} neprečítaných` : "Upozornenia",
+    unread: (n) => `${n} neprečítaných`,
+    empty: "Zatiaľ nič. Objavia sa tu dlhé operácie, keď dobehnú — preindexovanie, prepis a rozposlané pripomienky.",
+    markAllRead: "Označiť všetko ako prečítané",
+    allRead: (n) => `Označené ako prečítané: ${n}.`,
+    retentionNote: (days) => `Upozornenia sa po ${days} dňoch mažú.`,
+    kinds: {
+      reindexed: (title, chunks) =>
+        `Dokument „${title}" je preindexovaný — ${chunks} ${chunks === 1 ? "úsek" : chunks < 5 ? "úseky" : "úsekov"}.`,
+      rewritten: (title) => `Prepis dokumentu „${title}" modelom dobehol. Text si prečítaj, než ho prijmeš.`,
+      remindersSent: (count) =>
+        `Rozposlané pripomienky: ${count} ${count === 1 ? "správa" : count < 5 ? "správy" : "správ"}.`,
+      versionPublished: (title, label) => `Zverejnené znenie „${label}" dokumentu „${title}".`,
+    },
+  },
   library: {
     carryOver: {
       heading: "Prideliť aj nové znenie",
@@ -4872,6 +4912,23 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
         (invalid ? `, chybných ${invalid}` : "") + ".",
     },
   },
+  notifications: {
+    title: "Upozornění",
+    bellLabel: (unread) => unread > 0 ? `Upozornění — ${unread} nepřečtených` : "Upozornění",
+    unread: (n) => `${n} nepřečtených`,
+    empty: "Zatím nic. Objeví se tu dlouhé operace, až doběhnou — přeindexování, přepis a rozeslané připomínky.",
+    markAllRead: "Označit vše jako přečtené",
+    allRead: (n) => `Označeno jako přečtené: ${n}.`,
+    retentionNote: (days) => `Upozornění se po ${days} dnech mažou.`,
+    kinds: {
+      reindexed: (title, chunks) =>
+        `Dokument „${title}" je přeindexovaný — ${chunks} ${chunks === 1 ? "úsek" : chunks < 5 ? "úseky" : "úseků"}.`,
+      rewritten: (title) => `Přepis dokumentu „${title}" modelem doběhl. Text si přečti, než ho přijmeš.`,
+      remindersSent: (count) =>
+        `Rozeslané připomínky: ${count} ${count === 1 ? "zpráva" : count < 5 ? "zprávy" : "zpráv"}.`,
+      versionPublished: (title, label) => `Zveřejněné znění „${label}" dokumentu „${title}".`,
+    },
+  },
   library: {
     carryOver: {
       heading: "Přidělit i nové znění",
@@ -6671,6 +6728,23 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       importResult: (created, updated, unchanged, invalid) =>
         `Added ${created}, updated ${updated}, unchanged ${unchanged}` +
         (invalid ? `, invalid ${invalid}` : "") + ".",
+    },
+  },
+  notifications: {
+    title: "Notifications",
+    bellLabel: (unread) => unread > 0 ? `Notifications — ${unread} unread` : "Notifications",
+    unread: (n) => `${n} unread`,
+    empty: "Nothing yet. Long-running work shows up here when it finishes — reindexing, rewriting and reminders that went out.",
+    markAllRead: "Mark everything as read",
+    allRead: (n) => `Marked as read: ${n}.`,
+    retentionNote: (days) => `Notifications are deleted after ${days} days.`,
+    kinds: {
+      reindexed: (title, chunks) =>
+        `“${title}” has been reindexed — ${chunks} ${chunks === 1 ? "chunk" : "chunks"}.`,
+      rewritten: (title) => `The model finished rewriting “${title}”. Read the text before you accept it.`,
+      remindersSent: (count) =>
+        `Reminders sent: ${count} ${count === 1 ? "message" : "messages"}.`,
+      versionPublished: (title, label) => `Published version “${label}” of “${title}”.`,
     },
   },
   library: {

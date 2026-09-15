@@ -198,8 +198,39 @@ ktoré tam nebudú. Widget sa preto volá tak, ako znelo zadanie —
 | **D36** | Widget ukazuje „čo čaká na mňa", nie prehľad organizácie | ✅ rozhodnuté 2026-08-28 |
 | **D37** | Úloha sa odvodzuje, pridelenie sa zaznamenáva ako udalosť | ✅ rozhodnuté a postavené 2026-08-29 |
 | **D38** | `persons.groups` ako tretia dimenzia vedľa trás a oddelení | ✅ rozhodnuté a postavené 2026-08-29 |
-| **D39** | „Nové" sa počíta voči `lastLoginAt`, bez stavu prečítané | ✅ rozhodnuté 2026-08-28 |
-| **D40** | Jednorazové systémové hlásenia sa v rozsahu A nerobia | ✅ rozhodnuté 2026-08-28 — možnosť (a) |
+| **D39** | „Nové" sa počíta voči `lastLoginAt`, bez stavu prečítané | ⚠️ **prekonané 2026-09-15 (D89)** |
+| **D40** | Jednorazové systémové hlásenia sa v rozsahu A nerobia | ⚠️ **prekonané 2026-09-15 (D89)** — podmienka splnená |
+| **D89** | Zvonček: kolekcia `notifications` so stavom prečítania, retencia 90 dní | ✅ rozhodnuté 2026-09-15 |
+
+### D89 — zvonček upozornení (2026-09-15)
+
+**D40 si sama stanovila podmienku** a tá je splnená: *„kolekcia `notifications`
+vznikne až vtedy, keď bude existovať prvý skutočný odosielateľ takých správ."*
+Odosielatelia dnes existujú — preindexovanie, prepis modelom, rozposielanie
+pripomienok aj zverejnenie znenia sú v kóde a bežia. **D39 a D40 sú tým
+prekonané, nie obídené.**
+
+**Čo zvonček nesie a čo nie.** Nesie **udalosti** — veci, ktoré sa stali raz
+a nezanechali stav, z ktorého by sa dali dopočítať. Nenesie **počty
+povinností**: „Na potvrdenie 3" hovorí štítok v navigácii a je tam, kde sa naň
+klikne; druhé miesto s tou istou pravdou sa raz rozíde (rozhodnutie Jána Letka,
+O6 bod 5).
+
+**Komu udalosť príde.** Tomu, kto akciu spustil. Jediná výnimka je cron
+`/api/cron/overdue`, ktorý rozposiela pripomienky sám — tam iniciátor
+neexistuje, a preto ide ľuďom s rolou `hr`: je to ich agenda a dnes o odoslaní
+nevie nikto okrem `reminder_log`.
+
+**Poznámka k hodnote, aby nebola prekvapením:** tri zo štyroch udalostí sú dnes
+**synchrónne** — človek na ne čaká a výsledok vidí hneď. Zvonček im dnes dáva
+históriu, nie novinku. Hodnota narastie, keď sa tie operácie presunú na pozadie;
+infraštruktúra už bude stáť.
+
+**Cena, ktorú koncepcia predpovedala, platí:** je to kolekcia s údajmi
+o správaní. Preto retencia **90 dní**, zhodná s `reminder_log`, zapísaná
+v `GDPR_DATA_PROTECTION.md` aj v `ZALOHOVANIE_A_RETENCIA.md`, a mazanie jazdí
+v tom istom dennom crone. Právny základ je otázka na DPO — je v
+`docs/O15_O16_otazky_pre_DPO.md`.
 
 **Súvisiace:** D27 (progres sa odvodzuje), D30/O13 (čo je podstatná zmena —
 rozsah B ho uzatvára), D32 (viditeľnosť per `companyCode`), D25 (kurácia),

@@ -28,6 +28,7 @@ import { PERSONS_COLLECTION } from "@/lib/persons"
 import type { Person } from "@/lib/persons"
 import { HR_ROLE } from "@/lib/hr"
 import { overdue, byPersonReminder, DEFAULT_DAYS, dueRemindersFor, claimReminder, dayKey, weekKey } from "@/lib/reminders"
+import { notifyPeople, purgeExpired } from "@/lib/notifications"
 import { send, reminderEmail, dueReminderEmail } from "@/lib/ecomail"
 import { normalizeLanguage, formatDate } from "@/lib/i18n"
 
@@ -152,6 +153,27 @@ export async function GET(request: Request) {
           }
         }
       }
+      /*
+       * Jediná udalosť v systéme, ktorú **nikto nespustil**. Ostatné oznamy
+       * idú tomu, kto akciu vyvolal; tu iniciátor neexistuje, a tak idú
+       * ľuďom s rolou `hr` — pripomienky sú ich agenda a dnes o odoslaní
+       * nevie nikto okrem `reminder_log` (rozhodnutie Jána Letka,
+       * 2026-09-15).
+       */
+      if (sent > 0) {
+        const hrPeople = await personCol
+          .find(
+            { companyCode: tenant.companyCode, roles: HR_ROLE, status: { $ne: "inactive" } } as never,
+            { projection: { id: 1 } },
+          )
+          .toArray()
+        await notifyPeople({
+          companyCode: tenant.companyCode,
+          personIds: hrPeople.map(p => String(p.id)),
+          kind: "remindersSent",
+          params: { count: sent },
+        })
+      }
     } catch (e) {
       // Jeden pokazený tenant nesmie zhodiť beh pre ostatných.
       console.error(`[cron] termíny pre ${tenant.companyCode} zlyhali:`, e)
@@ -227,5 +249,19 @@ export async function GET(request: Request) {
     report.push({ companyCode: tenant.companyCode, behind: people.length, notified })
   }
 
-  return NextResponse.json({ ok: true, tenants: report, due: dueReport })
+  /*
+   * Retencia upozornení (90 dní) sa vozí s týmto behom, nie vlastným cronom.
+   * Beží raz denne, mazanie je jeden dotaz a ďalší záznam vo `vercel.json`
+   * by bol druhé miesto, ktoré treba pri zmene rozvrhu nezabudnúť.
+   * Zlyhanie sa nezapočíta do výsledku behu — nie je to dôvod hlásiť, že
+   * pripomienky neodišli.
+   */
+  let purged = 0
+  try {
+    purged = await purgeExpired()
+  } catch (e) {
+    console.error("[cron] mazanie starych upozorneni zlyhalo:", e)
+  }
+
+  return NextResponse.json({ ok: true, tenants: report, due: dueReport, purged })
 }

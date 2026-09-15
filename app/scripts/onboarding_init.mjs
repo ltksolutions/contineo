@@ -81,6 +81,17 @@ const PLAN = [
     ],
   },
   {
+    collection: "notifications",
+    indexes: [
+      { key: { companyCode: 1, personId: 1, readAt: 1 }, opts: { name: "tenant_person_unread" },
+        why: "počet neprečítaných pri zvončeku sa ráta pri každom vykreslení hlavičky" },
+      { key: { companyCode: 1, personId: 1, createdAt: -1 }, opts: { name: "tenant_person_time" },
+        why: "zoznam upozornení osoby, najnovšie hore" },
+      { key: { createdAt: 1 }, opts: { name: "by_age" },
+        why: "retencia 90 dní maže naprieč organizáciami" },
+    ],
+  },
+  {
     collection: "audit",
     indexes: [
       { key: { companyCode: 1, at: -1 }, opts: { name: "by_time" },

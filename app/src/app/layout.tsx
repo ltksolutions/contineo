@@ -17,6 +17,7 @@ import { peopleContext } from "@/lib/people"
 import { brandingView } from "@/lib/tenants"
 import { tenantStyle } from "@/components/TenantHeader"
 import { normalizeLanguage, dictionary, type UiLanguage } from "@/lib/i18n"
+import { unreadCount } from "@/lib/notifications"
 
 /**
  * Názov v záložke prehliadača je tiež informácia.
@@ -111,6 +112,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   // Jazyk prostredia (D…): riadi sa osobou, nie hostiteľom. Kto prihlásený
   // nie je, dostane predvolený jazyk organizácie.
   let language: UiLanguage | undefined
+  /** Počet neprečítaných upozornení pri zvončeku. Nula aj pre neprihláseného. */
+  let unread = 0
   try {
     email = (await currentEmail()) ?? undefined
   } catch (e) {
@@ -129,6 +132,14 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       if (self?.photoVersion) {
         photo = `/api/photo/${encodeURIComponent(self.id)}?v=${encodeURIComponent(self.photoVersion)}`
       }
+      /*
+       * Počet neprečítaných upozornení. Ráta sa **tu**, kde je osoba už
+       * načítaná — `currentPerson()` je v `cache()`, takže to nie je dotaz
+       * navyše na osobu, len jeden `countDocuments` nad zloženým indexom.
+       * `unreadCount()` nikdy nevyhodí výnimku a pri zlyhaní vráti nulu:
+       * hlavička sa nemá rozbiť pre ozdobu.
+       */
+      if (self?.id) unread = await unreadCount(self.companyCode, self.id)
     } catch (e) {
       console.error("[layout] meno osoby sa nepodarilo načítať:", e)
     }
@@ -168,6 +179,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             photo={photo}
             isAdmin={isAdmin}
             isPeopleAdmin={isPeopleAdmin}
+            notifications={unread}
             language={language}
           />
           <main style={{ flex: 1 }}>{children}</main>

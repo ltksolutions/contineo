@@ -604,8 +604,12 @@ len práca, ktorá z nich plynie.
 - [x] ~~**Stĺpec „Potvrdenia %"** (bod 7)~~ — `02280b2`
       Nová `documentsProgress()` má **tri dotazy, nech je riadkov koľkokoľvek** (pridelenia, osoby raz, potvrdenia) a počíta sa až po stránkovaní. Pomlčka znamená „nikomu nepridelené", nie „nikto nepotvrdil" — nepridelené znenie sa do mapy vôbec nedostane.
 - [x] ~~**Stĺpec „Platné do"** (bod 10)~~ — `02280b2`
-- [ ] **Zvonček upozornení** (bod 5) — **udalosti systému**, nie zdvojené počty povinností: doindexovanie, dokončený prepis, odoslané pripomienky. Kolekcia so stavom prečítania (zmena schémy), zdroj udalostí, obrazovka. Deň až dva. Retencia patrí k O16
-- [ ] **Vlastné ikony** (bod 1) — set sa nezavádza. Zladiť sedem existujúcich v `Header.tsx` (hrúbka ťahu, optická veľkosť, `viewBox`) a dokresliť navigáciu v tom istom rukopise. **Vedomá odchýlka od README**, nie nedopatrenie
+- [x] ~~**Zvonček upozornení** (bod 5)~~ — `notifications`, retencia 90 dní, D89
+      Štyri druhy udalostí: preindexovanie, prepis modelom, rozposlané pripomienky, zverejnené znenie. Idú **tomu, kto akciu spustil**; jedinou výnimkou je cron, ktorý pripomienky rozposiela sám — tam iniciátor neexistuje a oznam ide ľuďom s rolou `hr`.
+      **D39 a D40 sú tým prekonané** a je to zapísané v koncepcii, nie zamlčané. D40 si sama stanovila podmienku („až keď existuje prvý skutočný odosielateľ") a tá je splnená.
+      **Tri zo štyroch udalostí sú dnes synchrónne** — zvonček im dáva históriu, nie novinku. Hodnota narastie, keď sa presunú na pozadie.
+      Retencia je rozhodnutá (90 dní, ako `reminder_log`) a zapísaná v GDPR aj v retenčnej tabuľke; **právny základ je otázka na DPO** a je v `docs/O15_O16_otazky_pre_DPO.md`, časť B.
+- [ ] **Vlastné ikony** (bod 1) — set sa nezavádza. Zladiť sedem existujúcich v `Header.tsx` (hrúbka ťahu, optická veľkosť, `viewBox`) a dokresliť navigáciu v tom istom rukopise. **Vedomá odchýlka od README**, nie nedopatrenie. *Ôsma ikona pribudla 2026-09-15 — zvonček, kreslený rovno v tom rukopise (18×18, `currentColor`, ťah 1,6).*
 - [ ] **Pohodlie v poradí** (bod 12): Nahlásiť nepresnosť → hľadanie vo filtroch → Uložiť pohľad → súvisiace predpisy → ďalšie zhody
 - [ ] **jednoriadkové:** prepísať zastaraný komentár v `new/page.tsx` (tvrdí, že schvaľovací krok neexistuje — dnes nepravda)
 

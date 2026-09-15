@@ -25,6 +25,7 @@ import { textDiff } from "@/lib/textFix"
 import { revokeVersion } from "@/lib/acknowledgements"
 import { assign, carryOverCandidates, audienceRef } from "@/lib/assignments"
 import { dueFromFields } from "@/lib/due"
+import { notify } from "@/lib/notifications"
 import { isHr } from "@/lib/hr"
 import { tenantExtras } from "@/lib/codelistsTenant"
 import {
@@ -52,6 +53,8 @@ async function actor(): Promise<
   {
     email: string
     companyCode: string
+    /** Identita osoby. Upozornenie ide osobe, nie adrese — adresa sa mení. */
+    personId: string
     /** Jazyk prostredia — hlásenia sa vracajú v ňom. */
     language: UiLanguage
     extras: CodelistExtras
@@ -69,6 +72,7 @@ async function actor(): Promise<
     ? {
         email: ctx.person.email,
         companyCode: ctx.person.companyCode,
+        personId: ctx.person.id,
         language: ctx.person.language,
         // Vlastné položky číselníkov organizácie (D55) — bez nich by
         // obrazovka ponúkala druh dokumentu, ktorý zápis vzápätí odmietne.
@@ -80,6 +84,24 @@ async function actor(): Promise<
         canManageContent: isContentManager(ctx.person),
       }
     : null
+}
+
+/**
+ * Názov dokumentu do upozornenia — **kópia v čase udalosti**.
+ *
+ * Z rovnakého dôvodu ako v `assignments` a `acknowledgements`: dokument sa
+ * môže premenovať alebo zmiznúť a o mesiac musí byť čitateľné, čoho sa oznam
+ * týkal. Zlyhanie dotazu nie je dôvod nezapísať upozornenie — vtedy sa
+ * použije identifikátor.
+ */
+async function documentTitleFor(companyCode: string, documentId: string): Promise<string> {
+  try {
+    const col = await getCollection(DOCUMENTS_COLLECTION)
+    const d = await col.findOne({ documentId, companyCode }, { projection: { title: 1 } })
+    return d?.title ? String(d.title) : documentId
+  } catch {
+    return documentId
+  }
 }
 
 function fieldText(fd: FormData, actorName: string): string {
@@ -271,6 +293,18 @@ export async function publishVersionAction(fd: FormData) {
     message = v.alreadyDone
       ? say(self.language).alreadyPublished
       : say(self.language).published(v.chunks, v.archived)
+    if (!v.alreadyDone) {
+      await notify({
+        companyCode: self.companyCode,
+        personId: self.personId,
+        kind: "versionPublished",
+        params: {
+          documentId: id,
+          documentTitle: await documentTitleFor(self.companyCode, id),
+          versionLabel: fieldText(fd, "label"),
+        },
+      })
+    }
   } catch (e) {
     message = errorMessage(e, self.language)
     error = true
@@ -367,6 +401,24 @@ export async function sendToModelAction(fd: FormData) {
     message = mode === "rewrite-scan"
       ? say(self.language).modelReturnedDraft
       : say(self.language).rulesReturnedDraft
+
+    /*
+     * Upozornenie **len pri prepise modelom**, nie pri pravidlách.
+     * Prepis skenu trvá minúty a človek medzitým odchádza inam; prečistenie
+     * pravidlami je hotové skôr, než sa stránka prekreslí, a oznam o ňom by
+     * bol len riadok navyše v zozname.
+     */
+    if (mode === "rewrite-scan") {
+      await notify({
+        companyCode: self.companyCode,
+        personId: self.personId,
+        kind: "rewritten",
+        params: {
+          documentId: id,
+          documentTitle: String(doc.title ?? id),
+        },
+      })
+    }
   } catch (e) {
     message = errorMessage(e, self.language)
     error = true
@@ -723,6 +775,20 @@ export async function reindexDocumentAction(fd: FormData) {
     message = v.alreadyDone
       ? say(self.language).reindexUpToDate
       : say(self.language).reindexed(v.chunks, v.archived)
+    // Upozornenie len keď sa naozaj niečo stalo. „Už bolo hotové" nie je
+    // udalosť, je to zistenie — a zvonček plný zistení sa prestane čítať.
+    if (!v.alreadyDone) {
+      await notify({
+        companyCode: self.companyCode,
+        personId: self.personId,
+        kind: "reindexed",
+        params: {
+          documentId: id,
+          documentTitle: await documentTitleFor(self.companyCode, id),
+          count: v.chunks,
+        },
+      })
+    }
   } catch (e) {
     message = errorMessage(e, self.language)
     error = true

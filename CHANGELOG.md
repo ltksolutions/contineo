@@ -4,6 +4,52 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Zvonček upozornení (2026-09-15) — a dve rozhodnutia, ktoré tým padli
+
+Systém po prvýkrát hovorí, **čo sa stalo, keď sa človek nepozeral**: keď dobehne
+preindexovanie, prepis naskenovaného PDF, rozposlanie pripomienok alebo
+zverejnenie znenia, pribudne záznam v zvončeku vedľa avatara.
+
+**D39 a D40 sú tým prekonané — a nie obídené.** Koncepcia z 28. 8. kolekciu
+`notifications` zámerne nezaložila a stanovila si podmienku: *„vznikne až
+vtedy, keď bude existovať prvý skutočný odosielateľ takých správ."* Tá
+podmienka je dnes splnená; odosielatelia sú v kóde a bežia. Zapísané je to
+v `UDALOSTI_A_UPOZORNENIA_KONCEPCIA.md` ako D89, nie nechané tak, aby dokument
+klamal.
+
+- **Zvonček nesie udalosti, nie počty povinností.** „Na potvrdenie 3" hovorí
+  štítok v navigácii a je tam, kde sa naň klikne. Druhé miesto s tou istou
+  pravdou sa raz rozíde.
+- **Oznam ide tomu, kto akciu spustil.** Jediná výnimka je cron
+  `/api/cron/overdue`: pripomienky rozposiela sám, iniciátor neexistuje, takže
+  oznam ide ľuďom s rolou `hr` — je to ich agenda a dnes o odoslaní nevie nikto
+  okrem `reminder_log`.
+- **Neukladá sa hotový text, ale druh a parametre.** Opak toho, čo platí pri
+  potvrdeniach, a je to zámer: formulka potvrdenia je **dôkaz** a musí zostať
+  presne tá, pod ktorú sa človek podpísal; upozornenie dôkaz nie je. Zamrznutý
+  text by len znamenal, že kto si prepne jazyk, číta staré oznamy po starom.
+  Z rovnakého dôvodu sa neukladá ani odkaz — cesty sa menia a uložená adresa
+  zostarne ticho.
+- **Zápis upozornenia nikdy nevyhodí výnimku.** Keby zlyhaný zápis zhodil
+  preindexovanie, pokazili by sme operáciu preto, že sa nepodarilo povedať, že
+  dobehla.
+- **Retencia 90 dní**, zhodná s `reminder_log`, lebo je to údaj rovnakej
+  povahy — o správaní, nie o plnení povinnosti. Mazanie jazdí v tom istom
+  dennom crone; ďalší záznam vo `vercel.json` by bol druhé miesto, ktoré
+  treba pri zmene rozvrhu nezabudnúť. Zapísané v GDPR aj v retenčnej tabuľke,
+  **právny základ je otázka na DPO** a je v O15/O16.
+
+**Čo nech nie je prekvapenie:** tri zo štyroch udalostí sú dnes synchrónne —
+človek na ne čaká a výsledok vidí hneď na obrazovke. Zvonček im dáva
+**históriu, nie novinku**; hodnota narastie, keď sa tie operácie presunú na
+pozadie. Jediná dnes naozaj nepozorovaná operácia je cronové rozposielanie
+pripomienok a práve tá doteraz nemala kde byť vidieť.
+
+Ikona zvončeka je **kreslená ručne** v rukopise tých siedmich v hlavičke
+(18×18, `currentColor`, ťah 1,6). Je to vedomá odchýlka od `design/README.md`
+podľa rozhodnutia z O6 bodu 1, nie nedopatrenie — a zároveň prvý krok tej
+úlohy.
+
 ### Nové znenie sa dá prideliť rovnakým publikám ako predošlé (2026-09-14)
 
 Odpoveď na pomlčku, ktorú v knižnici ukázal nový stĺpec „Potvrdenia".
