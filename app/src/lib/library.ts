@@ -1,7 +1,7 @@
 /**
  * kniznica.ts — brána k správe obsahu (D53).
  *
- * **Vlastná rola `spravca-obsahu`, nie `hr`.** Kto normy prideľuje, nie je
+ * **Vlastná rola `content-admin`, nie `hr`.** Kto normy prideľuje, nie je
  * nutne ten istý človek, ktorý ich píše a nahráva — v zväze je to spravidla
  * legislatívec proti personalistovi. Je to ten istý dôvod, pre ktorý je
  * `hr` oddelené od `people-admin` (D46): rola má zodpovedať práci, nie tomu,
@@ -15,7 +15,18 @@ import { currentTenant, currentPerson } from "./session"
 import type { Person } from "./persons"
 import type { Tenant } from "./tenants"
 
-export const CONTENT_ROLE = "spravca-obsahu"
+export const CONTENT_ROLE = "content-admin"
+
+/**
+ * Pôvodné, slovenské označenie tej istej roly.
+ *
+ * Bolo to jediné slovenské `roles` v systéme — ostatné sú `hr`,
+ * `people-admin` a `evaluator`. Premenované 2026-09-15 a **prechodne sa
+ * uznáva aj staré**: keby sa uznávalo len nové, každý, komu sa rola
+ * v databáze ešte nepremenovala, by o prístup do knižnice prišiel v okamihu
+ * nasadenia. Odstrániť po migrácii (`npm run migrate:role-content`).
+ */
+export const LEGACY_CONTENT_ROLE = "spravca-obsahu"
 
 export type LibraryContext =
   | { state: "unknown-host" }
@@ -24,7 +35,8 @@ export type LibraryContext =
   | { state: "ready"; person: Person; tenant: Tenant }
 
 export function isContentManager(person: Person | null): boolean {
-  return Boolean(person?.roles?.includes(CONTENT_ROLE))
+  const roles = person?.roles ?? []
+  return roles.includes(CONTENT_ROLE) || roles.includes(LEGACY_CONTENT_ROLE)
 }
 
 export async function libraryContext(): Promise<LibraryContext> {

@@ -62,7 +62,7 @@ nie na dnešný. Preto sa každá oprava zapisuje aj s celým predchádzajúcim 
 
 Podmienky sú štyri a žiadna nie je ozdoba:
 
-1. **Rola.** Opravuje správca obsahu (`spravca-obsahu`), nie ktokoľvek, kto sa dostane
+1. **Rola.** Opravuje správca obsahu (`content-admin`), nie ktokoľvek, kto sa dostane
    do knižnice. Pravidlo je v `textFixProblem()` a pýta sa prvé — kto nesmie konať, nemá
    sa dozvedieť ani to, či je čo opravovať.
 2. **Dôvod je povinný.** Rovnako ako pri zamietnutí znenia (D71) a pri oprave údajov

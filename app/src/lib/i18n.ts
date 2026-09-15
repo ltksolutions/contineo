@@ -2944,7 +2944,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     roles: {
       hr: "hr — prideľuje normy a vidí, kto ich nepotvrdil",
       "people-admin": "people-admin — spravuje osoby (táto obrazovka)",
-      "spravca-obsahu": "spravca-obsahu — nahráva a upravuje normy v knižnici",
+      "content-admin": "content-admin — nahráva a upravuje normy v knižnici",
       evaluator: "evaluator — posudzuje odpovede systému, keď niekto povie, že nesedia",
     },
     list: {
@@ -4756,7 +4756,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     roles: {
       hr: "hr — přiděluje normy a vidí, kdo je nepotvrdil",
       "people-admin": "people-admin — spravuje osoby (tato obrazovka)",
-      "spravca-obsahu": "spravca-obsahu — nahrává a upravuje normy v knihovně",
+      "content-admin": "content-admin — nahrává a upravuje normy v knihovně",
       evaluator: "evaluator — posuzuje odpovědi systému, když někdo řekne, že nesedí",
     },
     list: {
@@ -6560,7 +6560,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     roles: {
       hr: "hr — assigns documents and sees who has not acknowledged them",
       "people-admin": "people-admin — manages people (this screen)",
-      "spravca-obsahu": "spravca-obsahu — uploads and edits documents in the library",
+      "content-admin": "content-admin — uploads and edits documents in the library",
       evaluator: "evaluator — reviews the system's answers when someone says they are wrong",
     },
     list: {

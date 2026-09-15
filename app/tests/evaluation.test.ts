@@ -105,7 +105,7 @@ describe("evaluationContext", () => {
 
   it("ina rola sem nestaci", async () => {
     currentTenant.mockResolvedValue(tenant())
-    currentPerson.mockResolvedValue(inTenant(["hr", "spravca-obsahu"]))
+    currentPerson.mockResolvedValue(inTenant(["hr", "content-admin"]))
     expect((await evaluationContext()).state).toBe("forbidden")
   })
 

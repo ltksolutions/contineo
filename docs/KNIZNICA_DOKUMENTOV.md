@@ -14,7 +14,7 @@ zväze a deviatich normách to bolo zvládnuteľné; ako produkt to nie je použ
 
 ## D53 — knižnica, prevod a editor
 
-### Vlastná rola `spravca-obsahu`
+### Vlastná rola `content-admin`
 
 Kto normy prideľuje (`hr`), nie je nutne ten istý človek, ktorý ich píše
 a nahráva — v zväze je to spravidla legislatívec proti personalistovi. Je to

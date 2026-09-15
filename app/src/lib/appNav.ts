@@ -66,7 +66,7 @@ export function navItems(flags: NavFlags, counts: NavCounts = {}): NavItem[] {
     { href: "/documents", key: "toAcknowledge" },
     // Ten istý dôvod ako o riadok vyššie: schvaľovatelia sú **menovaní ľudia**
     // (D69), nie držitelia roly, takže sa to podľa roly podmieniť nedá — a
-    // dávať rolu `spravca-obsahu` niekomu len preto, aby smel schváliť text,
+    // dávať rolu `content-admin` niekomu len preto, aby smel schváliť text,
     // by mu zároveň dovolilo normy nahrávať a publikovať. Kto nemá čo
     // schvaľovať, uvidí, že nemá nič.
     { href: "/approvals", key: "toApprove" },

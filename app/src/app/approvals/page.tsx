@@ -3,7 +3,7 @@
  *
  * **Prečo vlastná obrazovka a nie detail dokumentu**, ako predpokladalo ADR:
  * schvaľovatelia sú **menovaní ľudia** (D69), nie držitelia roly. Kolegyňa
- * z právneho útvaru nemá rolu `spravca-obsahu`, takže sa do knižnice
+ * z právneho útvaru nemá rolu `content-admin`, takže sa do knižnice
  * nedostane — a keby sme jej ju kvôli schvaľovaniu dali, mohla by odvtedy
  * nahrávať a publikovať normy. Rozhodovanie preto býva tam, kam sa dostane
  * každý prihlásený, a stránka sama ukáže len to, na čom je menovaný.

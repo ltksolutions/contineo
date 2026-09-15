@@ -39,13 +39,15 @@ const documents = await db.collection("documents").find(tenantFilter).toArray()
 const chunks = await db.collection("document_chunks").find(tenantFilter).toArray()
 const acknowledgements = await db.collection("acknowledgements")
   .find({ ...tenantFilter, type: "acknowledgement" }).toArray()
+const persons = await db.collection("persons")
+  .find(tenantFilter, { projection: { email: 1, roles: 1 } }).toArray()
 
 const findings = []
 const check = (condition, message, why) => { if (condition) findings.push({ sprava: message, preco: why }) }
 
 console.log(
   `\nKontrola${TENANT ? ` · ${TENANT}` : ""}: ` +
-  `${documents.length} dokumentov, ${chunks.length} úsekov, ${acknowledgements.length} potvrdení\n`,
+  `${documents.length} dokumentov, ${chunks.length} úsekov, ${acknowledgements.length} potvrdení, ${persons.length} osôb\n`,
 )
 
 // 1. Aktívny úsek musí ukazovať na existujúce znenie.
@@ -137,6 +139,31 @@ for (const d of documents) {
     `${d.documentId} má nesúhlasnú cestu priečinkov`,
     "filter na priečinok vrátane podpriečinkov by dokument nenašiel",
   )
+}
+
+/*
+ * N. Rola, ktorú kód nepozná, je tichý odobratý prístup.
+ *
+ * Roly sú obyčajné reťazce v poli — preklep ani staré označenie nikde
+ * nevyhodí chybu, len prestane platiť. `spravca-obsahu` je tu zámerne:
+ * je to staré meno `content-admin` (premenované 2026-09-15) a kým sa
+ * osoby nedomigrujú, je to nález, nie chyba.
+ */
+const ZNAME_ROLE = new Set(["hr", "people-admin", "content-admin", "evaluator", "platform-admin"])
+const STARE_ROLE = new Set(["spravca-obsahu"])
+for (const o of persons) {
+  for (const r of o.roles ?? []) {
+    check(
+      STARE_ROLE.has(r),
+      `${o.email} má staré označenie roly „${r}"`,
+      "kód ho zatiaľ uznáva, ale po odstránení prechodu človek o prístup príde — spusti `npm run migrate:role-content -- --zapisat`",
+    )
+    check(
+      !ZNAME_ROLE.has(r) && !STARE_ROLE.has(r),
+      `${o.email} má rolu „${r}", ktorú kód nepozná`,
+      "rola je obyčajný reťazec — preklep nikde nevyhodí chybu, len ticho neplatí",
+    )
+  }
 }
 
 /*
