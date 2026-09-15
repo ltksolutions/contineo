@@ -58,6 +58,21 @@ const MONTHS_EN = [
  * slovný mesiac (`1 September 2026`), aby nevznikla nejednoznačnosť medzi
  * britským a americkým poradím čísel — v právnom texte je to podstatné.
  */
+/**
+ * „N neprečítaných" v slovenčine a češtine — **tri tvary, nie jeden**.
+ *
+ * `1 neprečítaných` je chyba, ktorú vidno na prvý pohľad a ktorú test na
+ * paritu kľúčov nechytí: kľúč existuje, hodnota nie je prázdna, veta je zlá.
+ * Preto jedna funkcia vedľa slovníka a nie tri kópie tej istej podmienky
+ * v ňom.
+ */
+function unreadWord(n: number, language: "sk" | "cs"): string {
+  const word = language === "cs"
+    ? (n === 1 ? "nepřečtené" : n < 5 ? "nepřečtené" : "nepřečtených")
+    : (n === 1 ? "neprečítané" : n < 5 ? "neprečítané" : "neprečítaných")
+  return `${n} ${word}`
+}
+
 export function formatDate(d: Date, language: UiLanguage = DEFAULT_LANGUAGE): string {
   const day = d.getUTCDate(), month = d.getUTCMonth(), year = d.getUTCFullYear()
   if (language === "en") return `${day} ${MONTHS_EN[month]} ${year}`
@@ -3090,8 +3105,10 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
   },
   notifications: {
     title: "Upozornenia",
-    bellLabel: (unread) => unread > 0 ? `Upozornenia — ${unread} neprečítaných` : "Upozornenia",
-    unread: (n) => `${n} neprečítaných`,
+    // Tri tvary, nie jeden: „1 neprečítaných" je chyba, ktorú vidno na prvý
+    // pohľad a ktorú test na paritu kľúčov nechytí.
+    bellLabel: (unread) => unread > 0 ? `Upozornenia — ${unreadWord(unread, "sk")}` : "Upozornenia",
+    unread: (n) => unreadWord(n, "sk"),
     empty: "Zatiaľ nič. Objavia sa tu dlhé operácie, keď dobehnú — preindexovanie, prepis a rozposlané pripomienky.",
     markAllRead: "Označiť všetko ako prečítané",
     allRead: (n) => `Označené ako prečítané: ${n}.`,
@@ -4914,8 +4931,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
   },
   notifications: {
     title: "Upozornění",
-    bellLabel: (unread) => unread > 0 ? `Upozornění — ${unread} nepřečtených` : "Upozornění",
-    unread: (n) => `${n} nepřečtených`,
+    bellLabel: (unread) => unread > 0 ? `Upozornění — ${unreadWord(unread, "cs")}` : "Upozornění",
+    unread: (n) => unreadWord(n, "cs"),
     empty: "Zatím nic. Objeví se tu dlouhé operace, až doběhnou — přeindexování, přepis a rozeslané připomínky.",
     markAllRead: "Označit vše jako přečtené",
     allRead: (n) => `Označeno jako přečtené: ${n}.`,

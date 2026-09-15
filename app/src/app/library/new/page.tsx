@@ -83,11 +83,15 @@ export default async function NewDocumentPage({
         Číslované sekcie, **nie stepper**.
 
         Návrh má tri kroky (Súbor / Metadáta / Schválenie) a prepínanie medzi
-        nimi. Lenže nahratie je jedno odoslanie formulára a **schvaľovací
-        krok v systéme neexistuje** — sprievodca s tromi krokmi by sľuboval
-        priebeh, ktorý sa nekoná, a tretí krok by nikam neviedol. Číslo pri
-        nadpise dá tú istú orientáciu bez toho klamstva; súbor aj metadáta
-        vidno naraz, čo je pri jednom odoslaní správne.
+        nimi. Nahratie je ale **jedno odoslanie formulára**: súbor aj metadáta
+        idú naraz a sprievodca by sľuboval priebeh, ktorý sa nekoná.
+
+        **Schvaľovanie medzitým vzniklo** (ADR-006) — pôvodné znenie tohto
+        komentára tvrdilo, že „schvaľovací krok v systéme neexistuje", a to
+        už nie je pravda. Do tohto formulára ale nepatrí ani tak: schvaľuje
+        sa **znenie**, nie nahratý súbor, a deje sa to na detaile dokumentu
+        po prečítaní prevedeného textu. Tretí krok by tu stále nikam neviedol,
+        len z iného dôvodu než vtedy.
       */}
       <form action={upload} className="upload-form" encType="multipart/form-data">
         <section className="card upload-section">

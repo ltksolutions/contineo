@@ -13,6 +13,7 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { signOut } from "next-auth/react"
 import { ContineoMark } from "./ContineoMark"
+import { iconProps } from "./Icon"
 import type { TenantBrandingView } from "./TenantHeader"
 import { dictionary, type UiLanguage } from "@/lib/i18n"
 
@@ -42,12 +43,7 @@ const NEXT_THEME: Record<ThemeChoice, ThemeChoice> = { system: "light", light: "
  */
 function BellIcon() {
   return (
-    <svg
-      width={17} height={17} viewBox="0 0 18 18"
-      fill="none" stroke="currentColor" strokeWidth={1.6}
-      strokeLinecap="round" strokeLinejoin="round"
-      aria-hidden="true"
-    >
+    <svg {...iconProps()}>
       <path d="M9 2.4v1.1" />
       <path d="M9 3.5c-2.1 0-3.5 1.6-3.5 3.6 0 2.9-1.1 3.5-1.1 4.3h9.2c0-.8-1.1-1.4-1.1-4.3 0-2-1.4-3.6-3.5-3.6Z" />
       <path d="M7.4 13.4a1.7 1.7 0 0 0 3.2 0" />
@@ -60,12 +56,9 @@ function BellIcon() {
  * súčasný stav pohľadom, nie odvodením z toho, čo sa stane po kliknutí.
  */
 function ThemeIcon({ choice: choice }: { choice: ThemeChoice }) {
-  const shared = {
-    width: 17, height: 17, viewBox: "0 0 18 18",
-    fill: "none", stroke: "currentColor", strokeWidth: 1.6,
-    strokeLinecap: "round" as const, strokeLinejoin: "round" as const,
-    "aria-hidden": true,
-  }
+  // Spoločná mriežka celého setu (`Icon.tsx`): hrúbka ťahu sa dopočíta
+  // z veľkosti, takže ikona v menu a ikona v páse vážia rovnako.
+  const shared = iconProps()
   if (choice === "dark") {
     return (
       <svg {...shared}>
@@ -341,10 +334,15 @@ export default function Header({
         {email && (
           <form className="header-search" method="get" action="/ask" role="search">
             <span className="header-search-icon" aria-hidden="true">
-              <svg width="13" height="13" viewBox="0 0 14 14" fill="none"
-                stroke="currentColor" strokeWidth="1.7" strokeLinecap="round">
-                <circle cx="6" cy="6" r="4.2" />
-                <path d="M9.2 9.2 12.5 12.5" />
+              {/*
+                Lupa bola jediná ikona mimo mriežky: vlastný `viewBox` 14
+                a `strokeWidth` 1,7. Pri 13 px z toho vyšiel iný ťah než
+                všade inde — presne ten rozchod, ktorý O6 pomenovalo.
+                Teraz je na `0 0 18 18` a hrúbku dopočíta `iconProps()`.
+              */}
+              <svg {...iconProps(14)}>
+                <circle cx="7.7" cy="7.7" r="5.4" />
+                <path d="m11.8 11.8 4.2 4.2" />
               </svg>
             </span>
             <input
@@ -458,9 +456,7 @@ export default function Header({
                     className="account-item"
                     onClick={() => setPersonalOpen(false)}
                   >
-                    <svg width="17" height="17" viewBox="0 0 18 18" aria-hidden="true"
-                      fill="none" stroke="currentColor" strokeWidth="1.6"
-                      strokeLinecap="round" strokeLinejoin="round">
+                    <svg {...iconProps()}>
                       <path d="M2.5 4.2c1.9-.9 4.1-.9 6 0v9.6c-1.9-.9-4.1-.9-6 0z" />
                       <path d="M15.5 4.2c-1.9-.9-4.1-.9-6 0v9.6c1.9-.9 4.1-.9 6 0z" />
                     </svg>
@@ -478,9 +474,7 @@ export default function Header({
                     className="account-item"
                     onClick={() => setPersonalOpen(false)}
                   >
-                    <svg width="17" height="17" viewBox="0 0 18 18" aria-hidden="true"
-                      fill="none" stroke="currentColor" strokeWidth="1.6"
-                      strokeLinecap="round" strokeLinejoin="round">
+                    <svg {...iconProps()}>
                       <path d="M4.5 2.5h7l2.5 2.5v10.5h-9.5z" />
                       <path d="M6.6 9.4l1.6 1.6 3.2-3.4" />
                     </svg>
@@ -497,11 +491,17 @@ export default function Header({
                       className="account-item"
                       onClick={() => setPersonalOpen(false)}
                     >
-                      <svg width="17" height="17" viewBox="0 0 18 18" aria-hidden="true"
-                        fill="none" stroke="currentColor" strokeWidth="1.6"
-                        strokeLinecap="round" strokeLinejoin="round">
-                        <circle cx="9" cy="9" r="2.6" />
-                        <path d="M9 1.8v1.9M9 14.3v1.9M2.9 9H1M17 9h-1.9M4.7 4.7 3.4 3.4M14.6 14.6l-1.3-1.3M13.3 4.7l1.3-1.3M3.4 14.6l1.3-1.3" />
+                      {/*
+                        **Posuvníky, nie ozubené koleso a už vôbec nie slnko.**
+                        Pôvodná ikona nastavení bola kruh s ôsmimi lúčmi —
+                        teda ten istý tvar ako ikona svetlej témy o dva riadky
+                        vyššie v tom istom menu. Dve položky s tou istou
+                        kresbou sú horšie než dve položky bez ikon.
+                      */}
+                      <svg {...iconProps()}>
+                        <path d="M3 5.2h12M3 12.8h12" />
+                        <circle cx="7" cy="5.2" r="1.9" />
+                        <circle cx="11.6" cy="12.8" r="1.9" />
                       </svg>
                       {o.label}
                     </Link>
@@ -525,9 +525,7 @@ export default function Header({
                     className="account-item account-item--signout"
                     onClick={() => signOut({ callbackUrl: "/sign-in" })}
                   >
-                    <svg width="17" height="17" viewBox="0 0 18 18" aria-hidden="true"
-                      fill="none" stroke="currentColor" strokeWidth="1.6"
-                      strokeLinecap="round" strokeLinejoin="round">
+                    <svg {...iconProps()}>
                       <path d="M7 15H4a1.5 1.5 0 0 1-1.5-1.5v-9A1.5 1.5 0 0 1 4 3h3M11.5 12 15 9l-3.5-3M15 9H7" />
                     </svg>
                     {t.nav.signOut}

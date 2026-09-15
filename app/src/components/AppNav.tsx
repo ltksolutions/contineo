@@ -45,6 +45,7 @@
 
 import { useEffect, useRef } from "react"
 import Link from "next/link"
+import Icon from "./Icon"
 import { usePathname } from "next/navigation"
 import { navItems, isActive } from "@/lib/appNav"
 import type { NavLayout, NavFlags, NavCounts, NavItem } from "@/lib/appNav"
@@ -91,6 +92,13 @@ export default function AppNav({
         className={`app-nav-item${active ? " is-active" : ""}`}
         aria-current={active ? "page" : undefined}
       >
+        {/*
+          Ikona je **ozdoba, nie náhrada popisku**: `aria-hidden`, text zostáva.
+          Ikonová navigácia bez slov je hádanka, ktorú sa človek musí naučiť —
+          a pri položkách ako „Na potvrdenie" verzus „Na schválenie" by ju
+          neuhádol ani po týždni.
+        */}
+        <Icon name={o.key} size={16} />
         {t[o.key]}
         {/*
           Nula sa nekreslí vôbec. Štítok s nulou nie je informácia, je to šum —
