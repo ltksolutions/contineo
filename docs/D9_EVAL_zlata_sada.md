@@ -1,6 +1,17 @@
 # D9 — Zlatá sada a meranie kvality
 
-> **Stav:** kostra pripravená 2026-07-25, čaká na overené odpovede od legislatívca SFZ
+> # ⛔ PREKONANÉ 2026-09-15 — zlatá sada bola zrušená
+>
+> Rozhodnutie a jeho dôsledky: **`docs/ADR-008-zrusenie-zlatej-sady.md`**.
+> Obrazovky, knižnica, kolekcia `eval_questions` aj materiály v `eval/` sú
+> preč. Kvalita sa meria z prevádzky.
+>
+> **Tento dokument sa nemaže zámerne** — je to záznam, čo sada mala merať
+> a s akými prahmi. Všetko nižšie čítaj ako **história, nie stav**, s jedinou
+> výnimkou: *únik interného obsahu = 0* je naďalej tvrdá brána a ráta sa
+> z prevádzky (`scripts/ratings_overview.mjs`).
+
+> **Stav (pôvodný):** kostra pripravená 2026-07-25, čaká na overené odpovede od legislatívca SFZ
 > **Uzatvára:** rozhodnutie D9 z `docs/OPEN_DECISIONS.md` (zlatá sada 50–100 otázok + akceptačný prah ako brána pred go-live)
 > **Súvisiace:** `docs/PRECEDENCIA_NORIEM.md` (R1–R4), `docs/CISELNIKY_governance.md` (`sectionKey`, `companyCode`), `docs/PRISTUPOVE_PRAVA.md` (`accessLevel`), `docs/ADR-001-provider-adaptery.md` (porovnanie adaptérov)
 > **Materiály:** `eval/`

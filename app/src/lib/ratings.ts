@@ -26,9 +26,6 @@ export type Verdict = 0 | 1 | null
 export interface RatingRecord {
   _id?: ObjectId
 
-  /** Väzba na zlatú sadu, napr. „D9-001". Chýba pri voľnom dotaze. */
-  questionId?: string
-
   question: string
   answer: string
   sources: AnswerSource[]
@@ -55,9 +52,9 @@ export interface RatingRecord {
   correct: Verdict
   hallucination: Verdict
 
-  /** Overené znenie odpovede — napĺňa `goldAnswer` v zlatej sade. */
+  /** Ako mala odpoveď znieť — podklad pre kuráciu. */
   verifiedAnswer?: string
-  /** Správne predpisy a §, napr. „SP čl. 78". Napĺňa `goldSources`. */
+  /** Správne predpisy a §, napr. „SP čl. 78". */
   correctSources?: string
   note?: string
 
@@ -86,7 +83,6 @@ export interface RatingRecord {
 
 /** Údaje, ktoré prídu z prehliadača po dobehnutí odpovede. */
 export interface NewRating {
-  questionId?: string
   question: string
   answer: string
   sources: AnswerSource[]
@@ -197,21 +193,4 @@ export async function reportInaccuracy(
     { $set: { readerNote: text, readerNoteAt: new Date(), readerNoteBy: person } }
   )
   return r.matchedCount === 1
-}
-
-/** Koľko otázok zo zlatej sady je už posúdených — na ukazovateľ postupu. */
-export async function setProgress(): Promise<Record<string, Verdict>> {
-  const col = await getCollection<RatingRecord>(RATINGS_COLLECTION)
-  const records = await col
-    .find(
-      { questionId: { $exists: true } },
-      { projection: { questionId: 1, correct: 1, updatedAt: 1 } }
-    )
-    .sort({ updatedAt: 1 })
-    .toArray()
-
-  // Pri opakovanom hodnotení tej istej otázky platí posledné.
-  const state: Record<string, Verdict> = {}
-  for (const z of records) if (z.questionId) state[z.questionId] = z.correct
-  return state
 }

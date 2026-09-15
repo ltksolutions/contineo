@@ -632,7 +632,7 @@ Variant navigácie a hustotu prepnete v paneli Tweaks (`layout`, `density`,
    premenných hustoty (svetlá aj tmavá téma). Nič nemazať.
 2. **App shell — NEMENIŤ `layout.tsx` globálne.** `layout.tsx` obaľuje `.obal`
    (max 900 px) všetky stránky — `/documents`, `/hr`, `/people`, `/admin`,
-   `/golden-set`, `/library` — a tie sú na tú šírku stavané. Globálna zmena ich
+   `/library` — a tie sú na tú šírku stavané. Globálna zmena ich
    rozbije všetky naraz.
 
    Namiesto toho: pridať `components/AppShell.tsx` (header s prepínačom organizácie +

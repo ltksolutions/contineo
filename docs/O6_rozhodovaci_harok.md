@@ -59,8 +59,9 @@ vrátane prekreslenia. Zladiť ručné: pár hodín, žiadna závislosť.
 **Otázka:** Ktoré položky má mať hlavná navigácia a v akom poradí?
 
 **Čo systém dnes vie.** Dnes: Prehľad · Voľné otázky · Na potvrdenie · Na
-schválenie · Adresár · Knižnica · Pridelené normy · Reťaz dôkazov · Osoby ·
-Zlatá sada. Položky sú **podmienené rolami** (D32) — to je zámer a nemení sa.
+schválenie · Adresár · Knižnica · Pridelené normy · Reťaz dôkazov · Osoby.
+*(Zlatá sada tu bola do 2026-09-15, viď ADR-008.)* Položky sú **podmienené
+rolami** (D32) — to je zámer a nemení sa.
 Návrh v README má: Prehľad · Knižnica · Opýtať sa · Nahrávanie · **Posledný
 dokument** · Nastavenia. „Posledný dokument" ako obrazovka **neexistuje** a nie
 je to preklep prototypu — je to riadok v tabuľke položiek s kľúčom `doc`.

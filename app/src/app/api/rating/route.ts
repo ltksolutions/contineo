@@ -59,7 +59,6 @@ export async function POST(req: NextRequest) {
   try {
     const id = await recordAnswer(
       {
-        questionId: body.questionId,
         question: body.question,
         answer: body.answer,
         sources: body.sources ?? [],

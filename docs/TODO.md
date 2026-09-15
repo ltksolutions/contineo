@@ -622,6 +622,15 @@ len práca, ktorá z nich plynie.
       - [ ] ďalšie zhody v knižnici
 - [ ] **jednoriadkové:** prepísať zastaraný komentár v `new/page.tsx` (tvrdí, že schvaľovací krok neexistuje — dnes nepravda)
 
+### Zlatá sada zrušená (2026-09-15) — ADR-008
+
+- [x] ~~**Zlatá sada preč celá**~~ — obrazovky, `lib/goldenSet.ts`, `/api/golden-set`, položka v navigácii, skupina v i18n, materiály v `eval/` (okrem `o1/`, ktoré patrí k O1 z ADR-001) aj kolekcia `eval_questions` (74 otázok).
+      Dôvod: za dva mesiace **ani jeden posudok**. Sada stojí 4–8 hodín práce doménového experta na človeka a ten čas nikto nemá. Rozhodnutie Jána Letka, zapísané aj s tým, čo tým padá.
+      `docs/D9_EVAL_zlata_sada.md` sa **nemazal** — je označený ako prekonaný a zostáva ako záznam, čo sa malo merať a s akými prahmi.
+- [ ] **Čo je brána pred go-live** — dnes platí len **tvrdá brána na únik interného obsahu** (prah 0), ktorá sadu nikdy nepotrebovala: ráta sa zo zdrojov použitých pri odpovedi. Ostatné prahy z D9 sa merajú, ale bránou nie sú. **Rozhodnúť pred pilotom** (zapísané aj v `OPEN_DECISIONS.md`).
+- [ ] **Bez meradla na porovnanie konfigurácií** — ADR-001 (voľba modelu, on-prem vs cloud) a ADR-002 sa opierali o sadu. Dnes sa dve konfigurácie nedajú porovnať na tých istých otázkach. Otvorená diera, nie vyriešená vec.
+- [ ] **Verejný web spomína „eval sadu D9"** — `contineo.app/sk/technologia`, v odseku o porovnateľnosti režimov. Opraviť mimo tohto repozitára.
+
 **Čo stĺpec „Potvrdenia" ukázal hneď v prvý deň.** Z desiatich noriem má
 číslo **jedna** — Revízny poriadok („0 %, 0 z 2 pridelených"). Skúšobná
 smernica má pomlčku napriek tomu, že pridelenia má: sú na **starších

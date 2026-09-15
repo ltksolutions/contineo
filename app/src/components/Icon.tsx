@@ -128,12 +128,6 @@ const PATHS: Record<string, React.ReactNode> = {
       <path d="M12.4 4.2a2.6 2.6 0 0 1 0 5M13.4 10.8a4.8 4.8 0 0 1 2.4 4.2" />
     </>
   ),
-  // Zlatá sada — hviezda.
-  goldenSet: (
-    <>
-      <path d="m9 2.4 2 4.2 4.6.6-3.3 3.2.8 4.6L9 12.8l-4.1 2.2.8-4.6L2.4 7.2l4.6-.6z" />
-    </>
-  ),
 }
 
 /**

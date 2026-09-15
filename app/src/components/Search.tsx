@@ -4,9 +4,9 @@
  * Vyhľadávacie okno.
  *
  * Jedna otázka, jedna odpoveď — zámerne bez konverzačnej histórie. Systémový
- * prompt je stavaný na jednorazové dotazy („odpovedáš výlučne z kontextu")
- * a konverzačný režim by podľa D9 zhoršil metriku správne „neviem". Kým to
- * nie je zmerané, nechávame to tak, ako sa to bude merať.
+ * prompt je stavaný na jednorazové dotazy („odpovedáš výlučne z kontextu");
+ * konverzačný režim by zhoršil to, čo je na tomto systéme podstatné —
+ * schopnosť povedať „v dokumentoch to nie je".
  */
 
 import { useRef, useState } from "react"
@@ -16,7 +16,6 @@ import type { AskResult } from "@/lib/sseClient"
 import Answer from "./Answer"
 import type { AnswerState } from "./Answer"
 import Rating from "./Rating"
-import type { Verdict } from "@/lib/ratings"
 import { dictionary, type UiLanguage } from "@/lib/i18n"
 
 const EMPTY: AnswerState = {
@@ -25,17 +24,14 @@ const EMPTY: AnswerState = {
 
 /** Návrhy na začiatok — aby prvá obrazovka nebola prázdna. */
 export default function Search({
-  questionId: questionId,
   preset: preset,
-  onReviewed: onReviewed,
   language,
 }: {
-  /** Označenie otázky zo zlatej sady — v režime sady. */
-  questionId?: string
-  /** Predvyplnené znenie otázky (režim sady). */
+  /**
+   * Predvyplnené znenie otázky — otázka položená z hľadania v hlavičke.
+   * Číta sa len pri pripojení komponentu; `/ask` preto mení jeho `key`.
+   */
   preset?: string
-  /** Zavolá sa po posúdení správnosti; režim sady na to nadväzuje. */
-  onReviewed?: (correct: Verdict) => void
   /** Jazyk prostredia. Bez neho slovenčina. */
   language?: UiLanguage
 } = {}) {
@@ -58,7 +54,7 @@ export default function Search({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          questionId, question: q, answer: v.text,
+          question: q, answer: v.text,
           sources: v.sources, citations: v.citations,
           model: v.model, provider: v.provider,
           verifiedCitations: v.verifiedCitations,
@@ -106,40 +102,6 @@ export default function Search({
         },
       }))
     }
-  }
-
-  // V režime sady je otázka zobrazená nad komponentom a upravuje sa tam.
-  // Textové pole aj príklady by tu boli duplicita, ktorá zvádza pýtať sa
-  // na niečo iné, než čo sa má posúdiť.
-  const inGoldenSet = Boolean(questionId)
-
-  if (inGoldenSet) {
-    return (
-      <div style={{ display: "grid", gap: 22 }}>
-        <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
-          <button
-            type="button"
-            className="button"
-            onClick={() => send(preset ?? "")}
-            disabled={state.running}
-          >
-            {state.running ? t.searching : state.done ? t.askAgain : t.askThis}
-          </button>
-          {state.running && (
-            <button
-              type="button"
-              className="button button--quiet"
-              onClick={() => { abort.current?.abort(); setState(s => ({ ...s, running: false })) }}
-            >
-              {t.stop}
-            </button>
-          )}
-        </div>
-
-        <Answer state={state} recordId={recordId} language={language} />
-        <Rating recordId={recordId} questionId={questionId} onDone={onReviewed} language={language} />
-      </div>
-    )
   }
 
   return (
@@ -224,7 +186,7 @@ export default function Search({
 
       <Answer state={state} recordId={recordId} language={language} />
 
-      <Rating recordId={recordId} questionId={questionId} onDone={onReviewed} language={language} />
+      <Rating recordId={recordId} language={language} />
     </div>
   )
 }

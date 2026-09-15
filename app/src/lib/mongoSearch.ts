@@ -198,7 +198,7 @@ export async function fulltextSearch(
     // Rerank tu zámerne NIE JE: fulltext slúži na presné výrazy, §
     // a kódy noriem, kde je poradie podľa BM25 to, čo chceme. Počet
     // výsledkov sa ale musí zhodovať s ostatnými módmi, inak sa výsledky
-    // nedajú porovnať. Či to fulltextu stačí, ukáže zlatá sada — má naň
+    // nedajú porovnať. Či to fulltextu stačí, ukážu hodnotenia — majú naň
     // desať otázok.
     { $limit: Math.min(limit, rerankLimit) },
     ...lookupDocument("searchScore"),

@@ -16,7 +16,7 @@
 export type NavLayout = "sidebar" | "topbar"
 
 /** Kľúč do `dictionary().nav` — nie hotový text, aby zostal preložiteľný. */
-export type NavKey = "overview" | "ask" | "toAcknowledge" | "toApprove" | "goldenSet" | "library" | "assigned" | "evidence" | "people" | "directory"
+export type NavKey = "overview" | "ask" | "toAcknowledge" | "toApprove" | "library" | "assigned" | "evidence" | "people" | "directory"
 
 export interface NavItem {
   href: string
@@ -79,7 +79,6 @@ export function navItems(flags: NavFlags, counts: NavCounts = {}): NavItem[] {
     // personalista, nie správca obsahu (D67).
     ...(flags.isHr ? [{ href: "/hr/evidence", key: "evidence" as const }] : []),
     ...(flags.isPeopleAdmin ? [{ href: "/people", key: "people" as const }] : []),
-    { href: "/golden-set", key: "goldenSet" },
   ]
 
   /*

@@ -15,7 +15,6 @@ describe("stare cesty", () => {
     expect(legacyRoute("/osoby")).toBe("/people")
     expect(legacyRoute("/organizacia")).toBe("/organisation")
     expect(legacyRoute("/prihlasenie")).toBe("/sign-in")
-    expect(legacyRoute("/sada")).toBe("/golden-set")
   })
 
   it("dlhsia cesta vyhrava nad kratsou", () => {
@@ -32,7 +31,6 @@ describe("stare cesty", () => {
     expect(legacyRoute("/dokumenty/sfz:eticky_kodex")).toBe("/documents/sfz:eticky_kodex")
     expect(legacyRoute("/kniznica/abc/text")).toBe("/library/abc/text")
     expect(legacyRoute("/osoby/123")).toBe("/people/123")
-    expect(legacyRoute("/sada/42")).toBe("/golden-set/42")
   })
 
   it("segment v strede — /hr/{id}/oznamit", () => {
@@ -43,7 +41,6 @@ describe("stare cesty", () => {
 
   it("prelozi aj API", () => {
     expect(legacyRoute("/api/kniznica/subor/x")).toBe("/api/library/file/x")
-    expect(legacyRoute("/api/sada")).toBe("/api/golden-set")
     expect(legacyRoute("/api/znacka/sfz")).toBe("/api/brand/sfz")
     expect(legacyRoute("/api/fotka/1")).toBe("/api/photo/1")
     expect(legacyRoute("/api/hodnotenie")).toBe("/api/rating")
@@ -52,7 +49,7 @@ describe("stare cesty", () => {
   it("nove cesty necha na pokoji", () => {
     for (const path of [
       "/", "/documents", "/library", "/library/tracks", "/people", "/people/invite",
-      "/organisation", "/sign-in", "/golden-set", "/hr", "/hr/overview", "/hr/reminders",
+      "/organisation", "/sign-in", "/hr", "/hr/overview", "/hr/reminders",
       "/hr/assign", "/api/auth/session", "/api/chat", "/api/reading", "/api/cron/overdue",
       "/admin", "/admin/tenants",
     ]) {
@@ -72,9 +69,9 @@ describe("stare cesty", () => {
     // presmerovaval donekonecna.
     const olds = [
       "/dokumenty", "/kniznica", "/kniznica/trasy", "/kniznica/nova", "/osoby",
-      "/osoby/pozvat", "/osoby/nova", "/organizacia", "/prihlasenie", "/sada",
+      "/osoby/pozvat", "/osoby/nova", "/organizacia", "/prihlasenie",
       "/hr/pridelit", "/admin/tenanti", "/admin/novy", "/api/kniznica",
-      "/api/sada", "/api/znacka", "/api/fotka", "/api/hodnotenie",
+      "/api/znacka", "/api/fotka", "/api/hodnotenie",
       "/hr/x/oznamit",
     ]
     for (const path of olds) {

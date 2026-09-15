@@ -69,7 +69,7 @@ nezmestilo.
 
 | návrh | dnes |
 |---|---|
-| Prehľad **6** · Knižnica **148** · Opýtať sa · Nahrávanie **3** · Posledný dokument · Nastavenia | Voľné otázky · Na potvrdenie · Knižnica · Pridelené normy · Osoby · Zlatá sada |
+| Prehľad **6** · Knižnica **148** · Opýtať sa · Nahrávanie **3** · Posledný dokument · Nastavenia | Voľné otázky · Na potvrdenie · Knižnica · Pridelené normy · Osoby |
 | **počty pri položkách** | žiadne |
 | ikony pri položkách | žiadne |
 

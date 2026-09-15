@@ -1,14 +1,19 @@
 /**
- * ratings_overview.mjs — stav zberu zlatej sady (D9).
+ * ratings_overview.mjs — stav hodnotení odpovedí.
  *
  *     node --env-file=.env.local scripts/ratings_overview.mjs
  *     node --env-file=.env.local scripts/ratings_overview.mjs --posledny
  *
- * Hodnotenia sa zbierajú priamo v testovacom rozhraní namiesto Excelu.
- * Tento skript ukáže, ako ďaleko je zber a čo z metrík D9 už vieme
- * spočítať bez človeka.
+ * Skript nič nemení — iba číta kolekciu `evaluations`.
  *
- * Skript nič nemení — iba číta.
+ * **Pripravená sada otázok bola zrušená 2026-09-15** a s ňou aj tá časť
+ * tohto výpisu, ktorá merala, ako ďaleko je jej vypĺňanie. Čo zostáva, sú
+ * metriky nad **skutočnou prevádzkou** — a jedna z nich je dôležitejšia než
+ * všetky ostatné dohromady:
+ *
+ *   **Únik interného obsahu je tvrdá brána.** Ráta sa zo zdrojov, ktoré
+ *   systém použil pri odpovedi, takže sadu nikdy nepotreboval. Jediný
+ *   výskyt znamená neúspech bez ohľadu na ostatné čísla.
  */
 import { MongoClient } from "mongodb"
 
@@ -40,7 +45,7 @@ try {
   const records = await col.find({}).sort({ createdAt: 1 }).toArray()
 
   if (!records.length) {
-    console.log(`${WARN} Kolekcia evaluations je prázdna — zatiaľ nikto nič nehodnotil.`)
+    console.log(`${WARN} Kolekcia evaluations je prázdna — zatiaľ sa nikto na nič nespýtal.`)
     process.exit(0)
   }
 
@@ -48,48 +53,41 @@ try {
     const z = records[records.length - 1]
     console.log("── posledný záznam ────────────────────────────────────")
     console.log("otázka:      ", z.question)
-    console.log("otázkaId:    ", z.questionId ?? "(voľný dotaz)")
     console.log("odpoveď:     ", (z.answer ?? "").slice(0, 120) + "…")
     console.log("zdroje:      ", z.sources?.length ?? 0, "· citácie:", z.citations?.length ?? 0)
     console.log("správna:     ", z.correct, "· halucinácia:", z.hallucination)
     console.log("§ od človeka:", z.correctSources ?? "—")
     console.log("overená odp.:", z.verifiedAnswer ? z.verifiedAnswer.slice(0, 80) + "…" : "—")
     console.log("poznámka:    ", z.note ?? "—")
+    console.log("nahlásené:   ", z.readerNote ? z.readerNote.slice(0, 80) + "…" : "—")
     console.log("hodnotiteľ:  ", z.reviewer, "· model:", z.model)
     console.log("TTFT:        ", z.ttftMs, "ms · celkovo:", z.celkovoMs, "ms")
     console.log("fázy:        ", JSON.stringify(z.casy ?? {}))
     console.log()
   }
 
-  const fromSet = records.filter(z => z.questionId)
-  const free = records.filter(z => !z.questionId)
-
-  // Pri opakovanom hodnotení tej istej otázky platí posledné.
-  const byQuestion = new Map()
-  for (const z of fromSet) byQuestion.set(z.questionId, z)
-
-  const reviewed = records.filter(z => z.correct !== null)
+  const reviewed = records.filter(z => z.correct !== null && z.correct !== undefined)
   const correct = reviewed.filter(z => z.correct === 1)
   const hallucinations = records.filter(z => z.hallucination === 1)
   const withVerified = records.filter(z => z.verifiedAnswer?.trim())
   const withParagraphs = records.filter(z => z.correctSources?.trim())
+  const reported = records.filter(z => z.readerNote?.trim())
 
   console.log("── zber ───────────────────────────────────────────────")
   console.log(`odpovedí spolu:        ${records.length}`)
-  console.log(`  z toho zo sady:      ${fromSet.length}  (${byQuestion.size} rôznych otázok zo 74)`)
-  console.log(`  voľných dotazov:     ${free.length}`)
   console.log(`posúdených človekom:   ${reviewed.length}  (${pct(reviewed.length, records.length)} %)`)
+  console.log(`nahlásených ako zlé:   ${reported.length}`)
   console.log(`s overenou odpoveďou:  ${withVerified.length}`)
   console.log(`s doplnenými §:        ${withParagraphs.length}`)
   console.log()
 
-  console.log("── metriky D9, ktoré už vieme ─────────────────────────")
+  console.log("── metriky ────────────────────────────────────────────")
 
   if (reviewed.length) {
     const ratio = pct(correct.length, reviewed.length)
-    console.log(`${ratio >= 90 ? OK : BAD} správnosť odpovede    ${ratio} %  (prah ≥ 90 %, z ${reviewed.length} posúdených)`)
+    console.log(`${ratio >= 90 ? OK : BAD} správnosť odpovede    ${ratio} %  (orientačne ≥ 90 %, z ${reviewed.length} posúdených)`)
     const ratioH = pct(hallucinations.length, reviewed.length)
-    console.log(`${ratioH <= 2 ? OK : BAD} halucinácie           ${ratioH} %  (prah ≤ 2 %)`)
+    console.log(`${ratioH <= 2 ? OK : BAD} halucinácie           ${ratioH} %  (orientačne ≤ 2 %)`)
   } else {
     console.log(`${WARN} správnosť a halucinácie — zatiaľ nikto neposúdil`)
   }
@@ -99,7 +97,7 @@ try {
     console.log(`${ttft < 2000 ? OK : BAD} latencia p95 (TTFT)   ${(ttft / 1000).toFixed(1)} s  (prah < 2 s)`)
   }
 
-  // Únik dát je tvrdá brána: interný obsah medzi zdrojmi verejnej odpovede.
+  // Tvrdá brána: interný obsah medzi zdrojmi verejnej odpovede.
   const leaks = records.filter(z => z.sources?.some(s => s.accessLevel === "internal"))
   console.log(`${leaks.length === 0 ? OK : BAD} únik interného obsahu ${leaks.length}  (prah 0 — tvrdá brána)`)
 
@@ -123,53 +121,15 @@ try {
     console.log()
   }
 
-  // ── zhoda medzi hodnotiteľmi (D9, otvorený bod E5) ──────────────────────
-  //
-  // Otázky na precedenciu a pasce majú posúdiť dvaja nezávisle. Nezhoda nie
-  // je chyba merania — je to nález: ukazuje, kde je doména neurčitá, a teda
-  // kde systém nemá odpovedať autoritatívne.
-  const questionRounds = db.collection("eval_questions")
-  const onTwo = new Set(
-    (await questionRounds
-      .find({ $or: [{ precedenceRule: { $ne: null } }, { trapType: { $ne: null } }] },
-            { projection: { id: 1 } })
-      .toArray()).map(o => o.id)
-  )
-
-  // Posudok každého človeka zvlášť; pri opakovaní platí posledný.
-  const byPerson = new Map()
-  for (const z of records) {
-    if (!z.questionId || z.correct === null || z.correct === undefined) continue
-    if (!byPerson.has(z.questionId)) byPerson.set(z.questionId, new Map())
-    byPerson.get(z.questionId).set(z.reviewer ?? "anonym", z.correct)
-  }
-
-  const doubled = [...byPerson].filter(([, people]) => people.size >= 2)
-  const disputed = doubled.filter(([, people]) => new Set(people.values()).size > 1)
-
-  console.log("── zhoda hodnotiteľov ─────────────────────────────────")
-  console.log(`otázok pre dvoch:       ${onTwo.size}`)
-  console.log(`z toho posúdili dvaja:  ${doubled.length}`)
-  if (doubled.length) {
-    const ratio = pct(doubled.length - disputed.length, doubled.length)
-    console.log(`${disputed.length === 0 ? OK : WARN} zhoda:                 ${ratio} %`)
-    if (disputed.length) {
-      console.log(`\n${WARN} Rozišli sa na ${disputed.length} otázkach:`)
-      for (const [id, people] of disputed) {
-        const who = [...people].map(([k, v]) => `${k}=${v === 1 ? "správna" : "nesprávna"}`).join(", ")
-        console.log(`   ${id}  ${who}`)
-      }
-      console.log("\n   Nezhoda nie je chyba — sú to otázky, kde je výklad sporný.")
-      console.log("   Zvážiť, či nepatria medzi pasce typu ambiguous_conflict:")
-      console.log("   tam systém nemá rozhodnúť, ale ponúknuť eskaláciu.")
+  // Nahlásené nepresnosti vypisujeme celé — je to jediné miesto, kde človek
+  // vlastnými slovami povedal, čo bolo zle, a zhrnúť sa to nedá.
+  if (reported.length) {
+    console.log("── nahlásené nepresnosti ──────────────────────────────")
+    for (const z of reported.slice(-10)) {
+      console.log(`  „${String(z.question).slice(0, 70)}"`)
+      console.log(`    → ${String(z.readerNote).slice(0, 160)}`)
     }
-  } else {
-    console.log(`${WARN} zatiaľ žiadnu otázku neposúdili dvaja`)
-  }
-  console.log()
-
-  if (byQuestion.size < 74) {
-    console.log(`${WARN} Zo zlatej sady zostáva ${74 - byQuestion.size} otázok.`)
+    console.log()
   }
 } finally {
   await client.close()

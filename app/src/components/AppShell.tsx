@@ -2,7 +2,7 @@
  * AppShell — aplikačný obal, ktorý si stránka vyžiada sama.
  *
  * **`layout.tsx` sa zámerne nemení.** Obaľuje `.obal` s max. 900 px všetky
- * stránky — `/documents`, `/hr`, `/people`, `/admin`, `/golden-set` — a tie sú
+ * stránky — `/documents`, `/hr`, `/people`, `/admin` — a tie sú
  * na tú šírku postavené. Globálna zmena by ich rozbila všetky naraz, a to za
  * jediný deň práce na knižnici. Preto je shell opt-in: prvá a zatiaľ jediná
  * stránka v ňom je `/library`, kde sa overí na skutočnom obsahu. Ostatné sa

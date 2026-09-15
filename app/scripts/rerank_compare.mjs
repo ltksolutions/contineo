@@ -6,18 +6,17 @@
  *     node --env-file=.env.local scripts/rerank_compare.mjs --modely rerank-2,rerank-3,rerank-3-lite
  *     node --env-file=.env.local scripts/rerank_compare.mjs --ulozit
  *
- * ČO TENTO SKRIPT NEMERIA: kvalitu. Zlatá sada D9 má zatiaľ prázdne
- * `goldChunkIds` (stav 2026-09-06), takže neexistuje pravda, voči ktorej by
- * sa dalo povedať „model X je lepší". Skóre z rôznych rerankerov sa navyše
- * nedajú porovnávať — každý má vlastnú kalibráciu.
+ * ČO TENTO SKRIPT NEMERIA: kvalitu. Neexistuje pravda, voči ktorej by sa
+ * dalo povedať „model X je lepší" — a skóre z rôznych rerankerov sa navyše
+ * porovnávať nedajú, každý má vlastnú kalibráciu.
  *
  * ČO MERIA: nakoľko sa modely zhodnú na tom, čo patrí do top-K. To je
  * rozhodnutie o tom, či sa výberom modelu vôbec oplatí zaoberať:
  *
  *   vysoký prekryv  → modely vracajú prakticky to isté, výber je jedno,
  *                     zostávame na rerank-2 a téma sa zatvára
- *   nízky prekryv   → modely sa reálne rozchádzajú, oplatí sa dotlačiť
- *                     vyplnenie zlatej sady a rozhodnúť meraním
+ *   nízky prekryv   → modely sa reálne rozchádzajú, oplatí sa rozdiel
+ *                     zmerať na posúdených odpovediach
  *
  * Navyše porovnáva každý model proti poradiu BEZ reranku (čisté $rankFusion).
  * Ak ani rerank samotný poradím veľmi nehýbe, je to dôležitejšie zistenie
@@ -28,14 +27,13 @@
  * (natívne odstránenie typov, od v22.18), preto tu NIE JE esbuild —
  * ten bol z projektu odstránený 28. 8. 2026.
  */
-import { mkdirSync, readFileSync, writeFileSync } from "node:fs"
+import { mkdirSync, writeFileSync } from "node:fs"
 import { dirname, resolve } from "node:path"
 import { fileURLToPath, pathToFileURL } from "node:url"
 import { MongoClient } from "mongodb"
 
 const HERE = dirname(fileURLToPath(import.meta.url))
 const SRC = resolve(HERE, "../src")
-const SEED = resolve(HERE, "../../eval/seed/questions_seed.json")
 const VYSLEDKY = resolve(HERE, "../../eval/vysledky")
 
 const OK = "\x1b[32m✔\x1b[0m", FAIL = "\x1b[31m✘\x1b[0m", INFO = "\x1b[33m·\x1b[0m"
@@ -56,17 +54,11 @@ if (!process.env.MONGODB_URI) {
 }
 
 // ── otázky ───────────────────────────────────────────────────────────────────
-// Pasce (trapType) vynechávame — sú stavané na to, aby systém NEodpovedal,
-// takže o zhode rerankerov na relevantnom obsahu nepovedia nič.
-let otazky
-try {
-  const seed = JSON.parse(readFileSync(SEED, "utf8"))
-  otazky = seed.filter(q => q.question && !q.trapType).slice(0, POCET)
-} catch (e) {
-  console.error(`${FAIL} Nedá sa načítať zlatá sada: ${SEED}\n   ${e.message}`)
-  process.exit(1)
-}
-if (!otazky.length) { console.error(`${FAIL} Žiadne použiteľné otázky.`); process.exit(1) }
+// Berú sa **skutočné otázky ľudí** zo záznamov odpovedí (`evaluations`).
+// Pripravená sada bola zrušená 2026-09-15 a je to tak lepšie aj vecne:
+// rerank sa má merať na tom, na čo sa ľudia naozaj pýtajú, nie na tom, čo
+// niekto dopredu vymyslel. Načítava sa až po pripojení k databáze.
+let otazky = []
 
 // ── skutočný kód aplikácie ───────────────────────────────────────────────────
 let hybridSearch
@@ -103,6 +95,26 @@ try {
   await client.connect()
   const db = client.db(process.env.MONGODB_DB ?? "contineo")
   const col = db.collection("document_chunks")
+
+  // Rôzne otázky, najnovšie najskôr. Tá istá otázka položená päťkrát by
+  // inak výsledok prevážila, hoci o zhode rerankerov povie to isté raz.
+  const zaznamy = await db.collection("evaluations")
+    .find({ question: { $exists: true, $ne: "" } }, { projection: { question: 1 } })
+    .sort({ _id: -1 })
+    .limit(POCET * 5)
+    .toArray()
+  const videne = new Set()
+  for (const z of zaznamy) {
+    const q = String(z.question).trim()
+    if (!q || videne.has(q)) continue
+    videne.add(q)
+    otazky.push({ question: q })
+    if (otazky.length >= POCET) break
+  }
+  if (!otazky.length) {
+    console.error(`${FAIL} V \`evaluations\` nie je ani jedna otázka — nie je čo merať.`)
+    process.exit(1)
+  }
 
   const varianty = [BEZ, ...MODELY]
   console.log(`\n${INFO} ${otazky.length} otázok × ${MODELY.length} modelov · top-${TOPK} · rola "${ROLA}" · vectorPath "${vectorPath}"`)

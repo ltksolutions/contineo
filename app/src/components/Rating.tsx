@@ -64,19 +64,13 @@ function Choice({
 
 export default function Rating({
   recordId,
-  questionId,
-  onDone,
   language,
 }: {
   /** Id záznamu z `/api/rating`. Kým je null, panel čaká. */
   recordId: string | null
-  /** Označenie otázky zo zlatej sady, ak ide o režim sady. */
-  questionId?: string
-  /** Zavolá sa po posúdení správnosti — režim sady na to nadväzuje. */
-  onDone?: (correct: Verdict) => void
   language?: UiLanguage
 }) {
-  const t = dictionary(language).goldenSet.rating
+  const t = dictionary(language).rating
   const [fields, setFields] = useState<RatingFields>(EMPTY)
   const [status, setStatus] = useState<SaveState>("idle")
   const [detail, setDetail] = useState(false)
@@ -112,7 +106,6 @@ export default function Rating({
         body: JSON.stringify({ id: recordId, ...change }),
       })
       setStatus(r.ok ? "saved" : "failed")
-      if (r.ok && change.correct !== undefined) onDone?.(change.correct)
     } catch {
       setStatus("failed")
     }
@@ -130,9 +123,6 @@ export default function Rating({
                      color: "var(--muted)", margin: 0 }}>
           {t.heading}
         </h3>
-        {questionId && (
-          <span className="tag quiet" style={{ fontSize: 11 }}>{questionId}</span>
-        )}
         <span
           className="quiet"
           style={{ fontSize: 12, marginLeft: "auto", minWidth: 90, textAlign: "right" }}

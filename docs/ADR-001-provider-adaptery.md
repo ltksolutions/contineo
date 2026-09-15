@@ -1,3 +1,7 @@
+> **Poznámka 2026-09-15:** zmienky o *eval sade D9* nižšie sú **historické** —
+> zlatá sada bola zrušená (`docs/ADR-008-zrusenie-zlatej-sady.md`). Meradlo,
+> o ktoré sa porovnanie adaptérov opiera, dnes neexistuje.
+
 # ADR-001 — Tri provider adaptéry vyberané konfiguráciou tenanta
 
 > **Stav:** ✅ prijaté · **Dátum:** 2026-07-25 · **Revízia:** 2026-07-26 (overenie voyage-4-nano + **O1 zmerané a uzavreté**, sekcia 3) · **Revízia:** 2026-08-27 (**TEI × `voyage-4-nano` neplatí** — dodatok 10) · **Nahrádza:** stack rozhodnutia v `docs/rag-architecture.md` (sekcia „Stack rozhodnutia")

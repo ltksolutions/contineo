@@ -4,6 +4,43 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Zlatá sada zrušená (2026-09-15) — a povedané, čo tým padá
+
+Rozhodnutie Jána Letka: **kvalitu meriame z prevádzky, nie z pripravenej sady.**
+Zdôvodnenie a dôsledky sú v `docs/ADR-008-zrusenie-zlatej-sady.md`.
+
+Sada mala 74 otázok, vlastné obrazovky so zoznamom, detailom, prekryvom dvoch
+hodnotiteľov aj úpravou znenia otázok. **Za dva mesiace ju neposúdil nikto** —
+v databáze bolo štrnásť odpovedí zo sady a nula posudkov. Dôvod nie je záhada:
+stojí 4–8 hodín práce doménového experta na človeka a ten čas nikto nemá.
+
+Preč je celá: `/golden-set`, `/api/golden-set`, `lib/goldenSet.ts`,
+`GoldenSetQuestion.tsx`, položka v navigácii aj s ikonou, skupina v i18n,
+staré cesty `/sada`, materiály v `eval/` (okrem `o1/`, ktoré patrí k O1
+z ADR-001) a kolekcia `eval_questions`.
+
+- **`docs/D9_EVAL_zlata_sada.md` sa nemazal.** Je označený ako prekonaný
+  a zostáva ako záznam, čo sa malo merať a s akými prahmi. Zmazať ho by
+  znamenalo, že o rok nikto nezistí, čo sa zrušilo a prečo. Rovnako sme to
+  spravili s D39/D40.
+- **Hodnotiaci panel prežil, len sa presťahoval.** Jeho texty boli
+  podskupinou `goldenSet.rating` — teraz je to vlastná skupina `rating`.
+  Panel pod odpoveďou zostáva, sada bola len jeden z jeho dvoch režimov.
+- **Tvrdá brána na únik interného obsahu zostáva v platnosti.** Pri
+  odstraňovaní sa ukázalo, že ju `ratings_overview.mjs` **nikdy nerátal zo
+  sady**, ale zo zdrojov, ktoré systém pri odpovedi použil — teda z reálnej
+  prevádzky. Prah je naďalej nula.
+- **`rerank_compare.mjs` berie otázky z `evaluations`** namiesto zo seedu.
+  Vecne je to lepšie: rerank sa meria na tom, na čo sa ľudia naozaj pýtajú.
+
+**Čo tým padá, a je to napísané, nie zamlčané:** regresia sa nedá merať (voľné
+otázky sú zakaždým iné); 32 otázok na pasce a precedenciu R1–R4 sa netestuje
+vôbec, lebo na otázku, kde systém *nemá* odpovedať, sa nikto nespýta sám;
+ADR-001 a ADR-002 strácajú meradlo pre voľbu modelu a on-prem verzus cloud;
+a `run_eval.py` bola jediná automatická metrika hit@5 a presnosti citácie.
+**Čo je odteraz brána pred go-live, nie je rozhodnuté** — zapísané ako otvorený
+bod v `OPEN_DECISIONS.md`.
+
 ### „Nahlásiť nepresnosť" — a oprava vlastnej chyby v ten istý deň (2026-09-15)
 
 Prvé z piatich „pohodlí" (O6, bod 12) a jediné, ktoré rieši skutočnú dieru:

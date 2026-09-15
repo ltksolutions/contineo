@@ -1,3 +1,7 @@
+> **Poznámka 2026-09-15:** zmienky o *zlatej sade* nižšie sú **historické** —
+> sada bola zrušená (`docs/ADR-008-zrusenie-zlatej-sady.md`). Rozhodnutia,
+> ktoré tento dokument „odkladá za zlatú sadu", tým zostali bez meradla.
+
 # ADR-002 — Dátová rezidencia ako vlastnosť tenanta
 
 > **Stav:** ✅ prijaté · **Dátum:** 2026-07-26 · **Revízia:** 2026-07-26 (**O5 a O6 uzavreté** z verejných dokumentov, sekcia 8)

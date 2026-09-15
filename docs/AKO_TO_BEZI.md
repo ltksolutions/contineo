@@ -92,7 +92,8 @@ nie na hlavnom modeli — desaťnásobne lacnejšie a na túto úlohu to stačí
 
 > **Otvorená otázka (E6).** Tento krok stojí ~1,5 s a beží **pred**
 > vyhľadávaním, takže sa zaň platí priamo v čase po prvý token. Či prepis
-> zlepší nájdené dosť na to, aby sa to oplatilo, ukáže až zlatá sada.
+> zlepší nájdené dosť na to, aby sa to oplatilo, ukážu až namerané časy
+> a hodnotenia z prevádzky (zlatá sada zrušená, ADR-008).
 > Dá sa vypnúť: `PREPROCESSING_DEFAULT=false`.
 
 ## 5. Vyhľadanie — MongoDB Atlas
@@ -204,8 +205,9 @@ to dorazilo k človeku.
 ## 11. Uloženie
 
 `src/lib/hodnotenia.ts` zapíše záznam do kolekcie `evaluations` **hneď, ešte
-pred hodnotením**: automatické metriky D9 (hit@5, latencia, únik interného
-obsahu) sa dajú spočítať aj z odpovedí, ktoré nikto neposúdil.
+pred hodnotením**: automatické metriky (latencia, únik interného obsahu,
+odpovede bez citácie) sa dajú spočítať aj z odpovedí, ktoré nikto neposúdil.
+Vypisuje ich `scripts/ratings_overview.mjs`.
 
 Ukladá sa aj **cena aj tokeny**. Cena je historický fakt — čo to stálo v deň
 otázky — a spätne sa nedopočíta, lebo cenníky sa menia. Tokeny sú nemenné a
@@ -274,9 +276,10 @@ v architektúre je (ADR-001).
 
 **4. Kvalita sa zmení a nevieme ako.**
 `voyage-4` je pre slovenčinu iný model než Titan alebo Cohere Embed. To isté
-platí pre rerank. **Portabilita volania nie je portabilita kvality** — presne
-na toto slúži zlatá sada: zmerať obe konfigurácie tou istou sadou a porovnať
-hit@5 a presnosť citácií.
+platí pre rerank. **Portabilita volania nie je portabilita kvality** — a od
+zrušenia zlatej sady (ADR-008) **nemáme meradlo, ktorým by sa dve
+konfigurácie porovnali na tých istých otázkach**. Je to otvorená diera, nie
+vyriešená vec.
 
 **5. Citations cez Bedrock sú netestované.**
 Adaptér `bedrock.ts` je hotový a jednotkovo overený (podpis SigV4 proti

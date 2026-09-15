@@ -322,7 +322,6 @@ interface Dictionary {
   }
   nav: {
     ask: string
-    goldenSet: string
     toApprove: string
     evidence: string
     overview: string
@@ -679,79 +678,22 @@ interface Dictionary {
     doneApprovedClosed: string
     doneRejected: string
   }
-  goldenSet: {
+  rating: {
     heading: string
-    intro: string
-    reviewedLabel: string
-    doneOf: (done: number, total: number) => string
-    correct: string
-    incorrect: string
-    withHallucination: string
-    excluded: string
-    overlapCount: (done: number, total: number) => string
-    overlapNote: string
-    /** Oblasť otázky — kľúče sú hodnoty z `goldenSet.ts`. */
-    areas: Record<string, string>
-    badges: {
-      trap: (type: string) => string
-      edited: string
-      reviewedByTwo: string
-      waitingForSecond: string
-      forTwo: string
-      hallucination: string
-      excluded: string
-      correct: string
-      incorrect: string
-      disagreement: string
-      waitingForYou: string
-      reviewed: string
-      notReviewed: string
-    }
-    detail: {
-      back: string
-      saving: string
-      saved: string
-      saveFailed: string
-      twoReviewersHeading: string
-      twoReviewersNote: string
-      othersHeading: string
-      verdict: Record<string, string>
-      trapHeading: string
-      trapBeforeBehaviour: string
-      trapAfterBehaviour: string
-      /** Druh pasce — kľúče sú hodnoty z databázy. */
-      traps: Record<string, string>
-      /** Očakávané správanie systému. */
-      behaviours: Record<string, string>
-      excludedHeading: string
-      returnToSet: string
-      editLabel: string
-      saveText: string
-      cancel: string
-      restoreOriginal: string
-      originally: (text: string) => string
-      edit: string
-      nextQuestion: string
-      excludeQuestion: string
-      excludePrompt: string
-    }
-    rating: {
-      heading: string
-      saving: string
-      saved: string
-      saveFailed: string
-      correctQuestion: string
-      yes: string
-      no: string
-      hallucinationQuestion: string
-      yesInvented: string
-      noGrounded: string
-      showDetail: string
-      hideDetail: string
-      expectedAnswer: string
-      sources: string
-      note: string
-    }
+    saving: string
+    saved: string
+    saveFailed: string
+    correctQuestion: string
+    yes: string
+    no: string
+    hallucinationQuestion: string
+    yesInvented: string
+    noGrounded: string
+    showDetail: string
+    hideDetail: string
+    expectedAnswer: string
+    sources: string
+    note: string
   }
   admin: {
     list: {
@@ -1930,7 +1872,6 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
   },
   nav: {
     ask: "Voľné otázky",
-    goldenSet: "Zlatá sada",
     toApprove: "Na schválenie",
     evidence: "Reťaz dôkazov",
     overview: "Prehľad",
@@ -2285,93 +2226,22 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     doneApprovedClosed: "Schválené. Znenie je schválené celé.",
     doneRejected: "Zamietnuté. Znenie sa vrátilo do konceptu a dôvod zostáva v histórii.",
   },
-  goldenSet: {
-    heading: "Zlatá sada",
-    intro: "Otázky sú návrhy. Ak niektorá nedáva zmysel alebo znie neprirodzene, upravte ju alebo vyraďte — to je rovnako cenná informácia ako posudok odpovede.",
-    reviewedLabel: "Posúdených",
-    doneOf: (done, total) => `${done} zo ${total}`,
-    correct: "správnych",
-    incorrect: "nesprávnych",
-    withHallucination: "s halucináciou",
-    excluded: "vyradených",
-    overlapCount: (done, total) => `${done} z ${total}`,
-    overlapNote: " otázok na precedenciu a pasce má posudok od dvoch ľudí. Pri nich sa cudzí posudok ukáže až potom, ako ich posúdite sami — inak by miera zhody merala len to, či ste prvému uverili.",
-    areas: {
-      pravo: "právo",
-      prevadzka: "prevádzka",
-      oboje: "ktokoľvek",
-    },
-    badges: {
-      trap: (type) => `pasca · ${type}`,
-      edited: "upravená",
-      reviewedByTwo: "posúdili dvaja",
-      waitingForSecond: "čaká na druhého",
-      forTwo: "pre dvoch",
-      hallucination: "halucinácia",
-      excluded: "vyradená",
-      correct: "správna",
-      incorrect: "nesprávna",
-      disagreement: "nezhoda",
-      waitingForYou: "čaká na vás",
-      reviewed: "posúdená",
-      notReviewed: "neposúdená",
-    },
-    detail: {
-      back: "← Späť na zoznam",
-      saving: "ukladám…",
-      saved: "uložené",
-      saveFailed: "neuložilo sa",
-      twoReviewersHeading: "Túto otázku posudzujú dvaja nezávisle.",
-      twoReviewersNote: "Ak ju už niekto posúdil, jeho záver uvidíte až po tom, ako sa vyjadríte sami. Nejde o tajnostkárstvo — keby ste ho videli vopred, merali by sme, či ste mu uverili, nie či sa zhodnete.",
-      othersHeading: "Ako to posúdili ostatní",
-      verdict: {
-        correct: "správna",
-        incorrect: "nesprávna",
-        none: "neposúdené",
-      },
-      trapHeading: "Toto je zámerná skúška.",
-      trapBeforeBehaviour: " Systém tu ",
-      trapAfterBehaviour: " — posudzujte, či sa zachoval takto, nie či odpovedal vyčerpávajúco.",
-      traps: {
-        out_of_domain: "Otázka je mimo nahraných dokumentov. Systém má odmietnuť, nie odpovedať.",
-        ambiguous_conflict: "Predpisy si tu odporujú. Systém nemá rozhodnúť autoritatívne — má na rozpor upozorniť a ponúknuť eskaláciu, lebo výklad patrí človeku.",
-        access_control: "Pýta sa verejný používateľ na interný obsah. Systém ho nesmie prezradiť.",
-        historical_version: "Otázka mieri na staršie znenie. Systém má citovať verziu platnú v danom čase, nie dnešnú.",
-      },
-      behaviours: {
-        answer: "má odpovedať vecne",
-        refuse: "má odmietnuť",
-        escalate: "má ponúknuť eskaláciu",
-      },
-      excludedHeading: "Otázka je vyradená.",
-      returnToSet: "Vrátiť do sady",
-      editLabel: "Znenie otázky — napíšte ju tak, ako by sa spýtal skutočný človek.",
-      saveText: "Uložiť znenie",
-      cancel: "Zrušiť",
-      restoreOriginal: "Vrátiť pôvodné",
-      originally: (text) => `pôvodne: „${text}“`,
-      edit: "Upraviť",
-      nextQuestion: "Ďalšia otázka →",
-      excludeQuestion: "Vyradiť otázku",
-      excludePrompt: "Prečo otázka nedáva zmysel?",
-    },
-    rating: {
-      heading: "Ako hodnotíte túto odpoveď?",
-      saving: "ukladám…",
-      saved: "uložené",
-      saveFailed: "neuložilo sa",
-      correctQuestion: "Je odpoveď vecne správna?",
-      yes: "Áno",
-      no: "Nie",
-      hallucinationQuestion: "Tvrdí niečo, čo v zdrojoch nie je?",
-      yesInvented: "Áno, vymyslel si",
-      noGrounded: "Nie, všetko má oporu",
-      showDetail: "Doplniť správnu odpoveď a §",
-      hideDetail: "Skryť doplnenie",
-      expectedAnswer: "Ako mala odpoveď znieť?",
-      sources: "Ktoré predpisy a § to upravujú? Napríklad „SP čl. 78, DP čl. 37“.",
-      note: "Poznámka — čo bolo na odpovedi zavádzajúce alebo neúplné?",
-    },
+  rating: {
+    heading: "Ako hodnotíte túto odpoveď?",
+    saving: "ukladám…",
+    saved: "uložené",
+    saveFailed: "neuložilo sa",
+    correctQuestion: "Je odpoveď vecne správna?",
+    yes: "Áno",
+    no: "Nie",
+    hallucinationQuestion: "Tvrdí niečo, čo v zdrojoch nie je?",
+    yesInvented: "Áno, vymyslel si",
+    noGrounded: "Nie, všetko má oporu",
+    showDetail: "Doplniť správnu odpoveď a §",
+    hideDetail: "Skryť doplnenie",
+    expectedAnswer: "Ako mala odpoveď znieť?",
+    sources: "Ktoré predpisy a § to upravujú? Napríklad „SP čl. 78, DP čl. 37“.",
+    note: "Poznámka — čo bolo na odpovedi zavádzajúce alebo neúplné?",
   },
   admin: {
     list: {
@@ -3766,7 +3636,6 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
   },
   nav: {
     ask: "Volné otázky",
-    goldenSet: "Zlatá sada",
     toApprove: "Ke schválení",
     evidence: "Řetěz důkazů",
     overview: "Přehled",
@@ -4121,93 +3990,22 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     doneApprovedClosed: "Schváleno. Znění je schválené celé.",
     doneRejected: "Zamítnuto. Znění se vrátilo do konceptu a důvod zůstává v historii.",
   },
-  goldenSet: {
-    heading: "Zlatá sada",
-    intro: "Otázky jsou návrhy. Pokud některá nedává smysl nebo zní nepřirozeně, upravte ji nebo vyřaďte — to je stejně cenná informace jako posudek odpovědi.",
-    reviewedLabel: "Posouzených",
-    doneOf: (done, total) => `${done} z ${total}`,
-    correct: "správných",
-    incorrect: "nesprávných",
-    withHallucination: "s halucinací",
-    excluded: "vyřazených",
-    overlapCount: (done, total) => `${done} z ${total}`,
-    overlapNote: " otázek na precedenci a pasti má posudek od dvou lidí. U nich se cizí posudek ukáže až poté, co je posoudíte sami — jinak by míra shody měřila jen to, jestli jste prvnímu uvěřili.",
-    areas: {
-      pravo: "právo",
-      prevadzka: "provoz",
-      oboje: "kdokoli",
-    },
-    badges: {
-      trap: (type) => `past · ${type}`,
-      edited: "upravená",
-      reviewedByTwo: "posoudili dva",
-      waitingForSecond: "čeká na druhého",
-      forTwo: "pro dva",
-      hallucination: "halucinace",
-      excluded: "vyřazená",
-      correct: "správná",
-      incorrect: "nesprávná",
-      disagreement: "neshoda",
-      waitingForYou: "čeká na vás",
-      reviewed: "posouzená",
-      notReviewed: "neposouzená",
-    },
-    detail: {
-      back: "← Zpět na seznam",
-      saving: "ukládám…",
-      saved: "uloženo",
-      saveFailed: "neuložilo se",
-      twoReviewersHeading: "Tuto otázku posuzují dva nezávisle.",
-      twoReviewersNote: "Pokud ji už někdo posoudil, jeho závěr uvidíte až poté, co se vyjádříte sami. Nejde o tajnůstkářství — kdybyste ho viděli předem, měřili bychom, jestli jste mu uvěřili, ne jestli se shodnete.",
-      othersHeading: "Jak to posoudili ostatní",
-      verdict: {
-        correct: "správná",
-        incorrect: "nesprávná",
-        none: "neposouzeno",
-      },
-      trapHeading: "Toto je záměrná zkouška.",
-      trapBeforeBehaviour: " Systém tu ",
-      trapAfterBehaviour: " — posuzujte, jestli se zachoval takto, ne jestli odpověděl vyčerpávajícím způsobem.",
-      traps: {
-        out_of_domain: "Otázka je mimo nahrané dokumenty. Systém má odmítnout, ne odpovídat.",
-        ambiguous_conflict: "Předpisy si tu odporují. Systém nemá rozhodnout autoritativně — má na rozpor upozornit a nabídnout eskalaci, protože výklad patří člověku.",
-        access_control: "Ptá se veřejný uživatel na interní obsah. Systém ho nesmí prozradit.",
-        historical_version: "Otázka míří na starší znění. Systém má citovat verzi platnou v daném čase, ne dnešní.",
-      },
-      behaviours: {
-        answer: "má odpovědět věcně",
-        refuse: "má odmítnout",
-        escalate: "má nabídnout eskalaci",
-      },
-      excludedHeading: "Otázka je vyřazená.",
-      returnToSet: "Vrátit do sady",
-      editLabel: "Znění otázky — napište ji tak, jak by se zeptal skutečný člověk.",
-      saveText: "Uložit znění",
-      cancel: "Zrušit",
-      restoreOriginal: "Vrátit původní",
-      originally: (text) => `původně: „${text}“`,
-      edit: "Upravit",
-      nextQuestion: "Další otázka →",
-      excludeQuestion: "Vyřadit otázku",
-      excludePrompt: "Proč otázka nedává smysl?",
-    },
-    rating: {
-      heading: "Jak hodnotíte tuto odpověď?",
-      saving: "ukládám…",
-      saved: "uloženo",
-      saveFailed: "neuložilo se",
-      correctQuestion: "Je odpověď věcně správná?",
-      yes: "Ano",
-      no: "Ne",
-      hallucinationQuestion: "Tvrdí něco, co ve zdrojích není?",
-      yesInvented: "Ano, vymyslel si",
-      noGrounded: "Ne, všechno má oporu",
-      showDetail: "Doplnit správnou odpověď a §",
-      hideDetail: "Skrýt doplnění",
-      expectedAnswer: "Jak měla odpověď znít?",
-      sources: "Které předpisy a § to upravují? Například „SP čl. 78, DP čl. 37“.",
-      note: "Poznámka — co bylo na odpovědi zavádějící nebo neúplné?",
-    },
+  rating: {
+    heading: "Jak hodnotíte tuto odpověď?",
+    saving: "ukládám…",
+    saved: "uloženo",
+    saveFailed: "neuložilo se",
+    correctQuestion: "Je odpověď věcně správná?",
+    yes: "Ano",
+    no: "Ne",
+    hallucinationQuestion: "Tvrdí něco, co ve zdrojích není?",
+    yesInvented: "Ano, vymyslel si",
+    noGrounded: "Ne, všechno má oporu",
+    showDetail: "Doplnit správnou odpověď a §",
+    hideDetail: "Skrýt doplnění",
+    expectedAnswer: "Jak měla odpověď znít?",
+    sources: "Které předpisy a § to upravují? Například „SP čl. 78, DP čl. 37“.",
+    note: "Poznámka — co bylo na odpovědi zavádějící nebo neúplné?",
   },
   admin: {
     list: {
@@ -5595,7 +5393,6 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
   },
   nav: {
     ask: "Ask a question",
-    goldenSet: "Golden set",
     toApprove: "To approve",
     evidence: "Evidence",
     overview: "Overview",
@@ -5949,93 +5746,22 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     doneApprovedClosed: "Approved. The version is now fully approved.",
     doneRejected: "Rejected. The version went back to draft and the reason stays in the history.",
   },
-  goldenSet: {
-    heading: "Golden set",
-    intro: "The questions are proposals. If one makes no sense or sounds unnatural, edit it or drop it — that is just as valuable as a verdict on the answer.",
-    reviewedLabel: "Reviewed",
-    doneOf: (done, total) => `${done} of ${total}`,
-    correct: "correct",
-    incorrect: "incorrect",
-    withHallucination: "with a hallucination",
-    excluded: "excluded",
-    overlapCount: (done, total) => `${done} of ${total}`,
-    overlapNote: " precedence questions and traps have a verdict from two people. For those, the other verdict appears only after you have given yours — otherwise the agreement rate would measure whether you believed the first reviewer, nothing more.",
-    areas: {
-      pravo: "legal",
-      prevadzka: "operations",
-      oboje: "anyone",
-    },
-    badges: {
-      trap: (type) => `trap · ${type}`,
-      edited: "edited",
-      reviewedByTwo: "reviewed by two",
-      waitingForSecond: "waiting for the second",
-      forTwo: "for two",
-      hallucination: "hallucination",
-      excluded: "excluded",
-      correct: "correct",
-      incorrect: "incorrect",
-      disagreement: "disagreement",
-      waitingForYou: "waiting for you",
-      reviewed: "reviewed",
-      notReviewed: "not reviewed",
-    },
-    detail: {
-      back: "← Back to the list",
-      saving: "saving…",
-      saved: "saved",
-      saveFailed: "not saved",
-      twoReviewersHeading: "Two people review this question independently.",
-      twoReviewersNote: "If someone has already reviewed it, you will see their verdict only after you have given yours. This is not secrecy — if you saw it beforehand, we would be measuring whether you believed them, not whether you agree.",
-      othersHeading: "How the others judged it",
-      verdict: {
-        correct: "correct",
-        incorrect: "incorrect",
-        none: "not reviewed",
-      },
-      trapHeading: "This is a deliberate test.",
-      trapBeforeBehaviour: " Here the system ",
-      trapAfterBehaviour: " — judge whether it behaved that way, not whether it answered exhaustively.",
-      traps: {
-        out_of_domain: "The question is outside the uploaded documents. The system should refuse, not answer.",
-        ambiguous_conflict: "The regulations contradict each other here. The system should not rule authoritatively — it should flag the conflict and offer escalation, because interpretation belongs to a person.",
-        access_control: "A public user is asking about internal content. The system must not reveal it.",
-        historical_version: "The question targets an older version. The system should cite the version effective at that time, not today's.",
-      },
-      behaviours: {
-        answer: "should answer on the merits",
-        refuse: "should refuse",
-        escalate: "should offer escalation",
-      },
-      excludedHeading: "This question is excluded.",
-      returnToSet: "Return it to the set",
-      editLabel: "The wording of the question — write it the way a real person would ask.",
-      saveText: "Save the wording",
-      cancel: "Cancel",
-      restoreOriginal: "Restore the original",
-      originally: (text) => `originally: “${text}”`,
-      edit: "Edit",
-      nextQuestion: "Next question →",
-      excludeQuestion: "Exclude the question",
-      excludePrompt: "Why does the question make no sense?",
-    },
-    rating: {
-      heading: "How do you rate this answer?",
-      saving: "saving…",
-      saved: "saved",
-      saveFailed: "not saved",
-      correctQuestion: "Is the answer factually correct?",
-      yes: "Yes",
-      no: "No",
-      hallucinationQuestion: "Does it claim something the sources do not contain?",
-      yesInvented: "Yes, it made something up",
-      noGrounded: "No, everything is grounded",
-      showDetail: "Add the correct answer and the provisions",
-      hideDetail: "Hide the additions",
-      expectedAnswer: "How should the answer have read?",
-      sources: "Which regulations and provisions govern this? For example “SP Art. 78, DP Art. 37”.",
-      note: "A note — what was misleading or incomplete about the answer?",
-    },
+  rating: {
+    heading: "How do you rate this answer?",
+    saving: "saving…",
+    saved: "saved",
+    saveFailed: "not saved",
+    correctQuestion: "Is the answer factually correct?",
+    yes: "Yes",
+    no: "No",
+    hallucinationQuestion: "Does it claim something the sources do not contain?",
+    yesInvented: "Yes, it made something up",
+    noGrounded: "No, everything is grounded",
+    showDetail: "Add the correct answer and the provisions",
+    hideDetail: "Hide the additions",
+    expectedAnswer: "How should the answer have read?",
+    sources: "Which regulations and provisions govern this? For example “SP Art. 78, DP Art. 37”.",
+    note: "A note — what was misleading or incomplete about the answer?",
   },
   admin: {
     list: {

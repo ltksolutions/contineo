@@ -51,9 +51,9 @@ export async function POST(req: NextRequest) {
   }
 
   // Preprocessing stojí ~2,5 s PRED vyhľadávaním a platí sa zaň priamo
-  // v čase po prvý token (D9: p95 < 2 s). Či za to stojí, ukáže až zlatá
-  // sada — preto sa predvoľba dá prepnúť envom a obe konfigurácie zmerať
-  // tou istou sadou. Predvolene zapnuté: meníme až podľa čísel, nie dojmu.
+  // v čase po prvý token (prah p95 < 2 s). Či za to stojí, ukážu namerané
+  // časy — preto sa predvoľba dá prepnúť envom a obe konfigurácie zmerať.
+  // Predvolene zapnuté: meníme až podľa čísel, nie dojmu.
   const preprocessingDefault = process.env.PREPROCESSING_DEFAULT !== "false"
   const { query, language, useLLMClassifier = false, usePreprocessing = preprocessingDefault } = body
 
