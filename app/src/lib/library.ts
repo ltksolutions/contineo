@@ -17,17 +17,6 @@ import type { Tenant } from "./tenants"
 
 export const CONTENT_ROLE = "content-admin"
 
-/**
- * Pôvodné, slovenské označenie tej istej roly.
- *
- * Bolo to jediné slovenské `roles` v systéme — ostatné sú `hr`,
- * `people-admin` a `evaluator`. Premenované 2026-09-15 a **prechodne sa
- * uznáva aj staré**: keby sa uznávalo len nové, každý, komu sa rola
- * v databáze ešte nepremenovala, by o prístup do knižnice prišiel v okamihu
- * nasadenia. Odstrániť po migrácii (`npm run migrate:role-content`).
- */
-export const LEGACY_CONTENT_ROLE = "spravca-obsahu"
-
 export type LibraryContext =
   | { state: "unknown-host" }
   | { state: "not-signed-in" }
@@ -35,8 +24,13 @@ export type LibraryContext =
   | { state: "ready"; person: Person; tenant: Tenant }
 
 export function isContentManager(person: Person | null): boolean {
-  const roles = person?.roles ?? []
-  return roles.includes(CONTENT_ROLE) || roles.includes(LEGACY_CONTENT_ROLE)
+  /*
+   * Do 2026-09-15 sa rola volala `spravca-obsahu` a chvíľu sa uznávali obe
+   * naraz, kým sa osoby nezmigrovali (`npm run migrate:role-content`).
+   * Migrácia prebehla, prechod je preč — a `npm run check` staré označenie
+   * ohlási, keby sa niekde znova objavilo (napríklad zo zálohy).
+   */
+  return Boolean(person?.roles?.includes(CONTENT_ROLE))
 }
 
 export async function libraryContext(): Promise<LibraryContext> {

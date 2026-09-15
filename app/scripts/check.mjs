@@ -146,8 +146,9 @@ for (const d of documents) {
  *
  * Roly sú obyčajné reťazce v poli — preklep ani staré označenie nikde
  * nevyhodí chybu, len prestane platiť. `spravca-obsahu` je tu zámerne:
- * je to staré meno `content-admin` (premenované 2026-09-15) a kým sa
- * osoby nedomigrujú, je to nález, nie chyba.
+ * je to staré meno `content-admin` (premenované 2026-09-15). Kód ho už
+ * neuznáva, takže keby sa znova objavilo — napríklad zo zálohy — človek
+ * o prístup ticho príde. Preto sa naň pýtame aj po migrácii.
  */
 const ZNAME_ROLE = new Set(["hr", "people-admin", "content-admin", "evaluator", "platform-admin"])
 const STARE_ROLE = new Set(["spravca-obsahu"])
@@ -156,7 +157,7 @@ for (const o of persons) {
     check(
       STARE_ROLE.has(r),
       `${o.email} má staré označenie roly „${r}"`,
-      "kód ho zatiaľ uznáva, ale po odstránení prechodu človek o prístup príde — spusti `npm run migrate:role-content -- --zapisat`",
+      "kód ho už neuznáva, takže človek o prístup do knižnice prišiel — spusti `npm run migrate:role-content -- --zapisat`",
     )
     check(
       !ZNAME_ROLE.has(r) && !STARE_ROLE.has(r),

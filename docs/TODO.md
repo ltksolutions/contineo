@@ -635,7 +635,9 @@ len práca, ktorá z nich plynie.
 - [x] ~~**Zmena úrovne predpisu párom nepretečie**~~ — `saveMetadata()` menila `accessLevel` na všetkých úsekoch dokumentu naraz, **vrátane párov**. Pár odvodený z troch predpisov by tak prevzal úroveň jedného z nich a zverejnenie toho jedného by odkrylo aj to, čo v ňom zaznelo z interného. Páry sa z hromadnej zmeny vynímajú a úroveň sa im počíta znova zo všetkých zdrojov; pri zlyhaní sa sťahujú na `internal`.
 - [ ] **Pár môže prebiť normu v poradí** — kurovaná odpoveď je krátka a presná, takže vo vyhľadávaní často vyhrá nad článkom predpisu. **Ranku sme sa nedotkli zámerne:** pri nule párov by to bol odhad, nie rozhodnutie. Štítok problém zviditeľňuje, nerieši. **Spúšťač:** po prvých desiatich zverejnených pároch pozrieť, v koľkých odpovediach je pár medzi top 3 zdrojmi — a podľa toho rozhodnúť.
 - [ ] **Štvrtá cesta zápisu do knižnice** (RSS, e-mail, ISSF) zatiaľ neexistuje. Až vznikne, musí sa rozhodnúť, či mení význam predpisu — a podľa toho zavolať `expireCurationFor()` alebo `reconcileCurationAccess()`. Tri dnešné cesty a ich dôsledky sú popísané v hlavičke `lib/curation.ts`.
-- [ ] **`spravca-obsahu` je jediný slovenský identifikátor roly.** Premenovanie je zásah do `persons`, takže čaká na samostatný súhlas.
+- [x] ~~**`spravca-obsahu` → `content-admin`**~~ — posledné slovenské označenie roly je preč; identifikátory sú `hr`, `people-admin`, `content-admin`, `evaluator`.
+      Dva kroky zámerne: najprv kód, ktorý uznával obe naraz, potom migrácia osôb, až potom odstránenie prechodu. Opačné poradie by každého nezmigrovaného pripravilo o prístup v okamihu nasadenia.
+      `npm run check` odteraz ohlási aj rolu, ktorú kód nepozná — rola je obyčajný reťazec, takže preklep nikde nevyhodí chybu, len ticho neplatí.
 - [ ] **`evaluations` bez `companyCode`** — 15 záznamov spred 2026-09-15. Do fronty sa nedostanú. Doplniť sa dajú dávkovo podľa toho, kto sa pýtal; je to migrácia dát a čaká na súhlas.
 
 ### Zlatá sada zrušená (2026-09-15) — ADR-008
