@@ -30,6 +30,7 @@ import type { NavLayout, NavCounts } from "@/lib/appNav"
 import { hrContext } from "@/lib/hr"
 import { peopleContext } from "@/lib/people"
 import { libraryContext } from "@/lib/library"
+import { evaluationContext, queueCount } from "@/lib/evaluation"
 import { currentPerson } from "@/lib/session"
 import { pendingForPerson } from "@/lib/pending"
 import { roundsWaitingFor } from "@/lib/approvalsDb"
@@ -50,6 +51,7 @@ export default async function AppShell({
   let isHr = false
   let isPeopleAdmin = false
   let isContentManager = false
+  let isEvaluator = false
   try {
     isHr = (await hrContext()).state === "ready"
   } catch (e) {
@@ -64,6 +66,11 @@ export default async function AppShell({
     isContentManager = (await libraryContext()).state === "ready"
   } catch (e) {
     console.error("[shell] rolu správy obsahu sa nepodarilo overiť:", e)
+  }
+  try {
+    isEvaluator = (await evaluationContext()).state === "ready"
+  } catch (e) {
+    console.error("[shell] rolu hodnotiteľa sa nepodarilo overiť:", e)
   }
 
   /*
@@ -85,6 +92,9 @@ export default async function AppShell({
       ])
       counts.toAcknowledge = pending.total
       counts.toApprove = rounds.length
+      // Počíta sa len tomu, kto frontu vôbec vidí — cudzie čakajúce
+      // odpovede nikomu inému nič nehovoria a je to dotaz navyše.
+      if (isEvaluator) counts.evaluation = await queueCount(person.companyCode)
     }
   } catch (e) {
     console.error("[shell] počty pre navigáciu sa nepodarilo zistiť:", e)
@@ -94,7 +104,12 @@ export default async function AppShell({
     <div className={`app-shell app-shell--${layout}`}>
       <AppNav
         layout={layout}
-        flags={{ isHr: isHr, isPeopleAdmin: isPeopleAdmin, isContentManager: isContentManager }}
+        flags={{
+          isHr: isHr,
+          isPeopleAdmin: isPeopleAdmin,
+          isContentManager: isContentManager,
+          isEvaluator: isEvaluator,
+        }}
         counts={counts}
         language={language}
       />

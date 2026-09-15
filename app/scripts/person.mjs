@@ -26,7 +26,9 @@ const OK = "\x1b[32m✔\x1b[0m", FAIL = "\x1b[31m✘\x1b[0m", INFO = "\x1b[33m·
  * `platform-admin` medzi nimi nie je zámerne — patrí tenantovi dodávateľa
  * a má vlastný skript (`npm run admin`), ktorý o tom vie.
  */
-const KNOWN_ROLES = ["hr", "people-admin"]
+// Zhodné s `ASSIGNABLE_ROLES` v `lib/people.ts`. Do 2026-09-15 tu chýbal
+// `spravca-obsahu`, takže skript odmietal rolu, ktorú systém bežne používa.
+const KNOWN_ROLES = ["hr", "people-admin", "spravca-obsahu", "evaluator"]
 
 function arg(name) {
   const i = process.argv.indexOf(name)

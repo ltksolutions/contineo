@@ -39,7 +39,7 @@
 | **Kolá schvaľovania** (`approval_rounds`) | kto predložil, kto schválil alebo zamietol, kedy a prečo | áno |
 | **Log pripomienok** (`reminder_log`) | komu sa v ktorý deň odoslala pripomienka | áno |
 | **Upozornenia** (`notifications`) | ktorej osobe sa ukázala ktorá udalosť a kedy si ju prečítala | áno |
-| **Záznamy odpovedí** (`evaluations`) | pri **každej** odpovedi: otázka človeka a odpoveď systému **doslovne**, zdroje a citácie, model, časy a cena, e-mail toho, kto sa pýtal; nepovinne posudok hodnotiteľa a **nahlásená nepresnosť** | áno |
+| **Záznamy odpovedí** (`evaluations`) | pri **každej** odpovedi: otázka človeka a odpoveď systému **doslovne**, zdroje a citácie, model, časy a cena, e-mail toho, kto sa pýtal a jeho organizácia; nepovinne „sedí/nesedí" a popis chyby od čitateľa, posudok hodnotiteľa a **e-mail hodnotiteľa** (`evaluatedBy`) | áno |
 | **Evidenčné údaje osoby** (`persons`) | meno a priezvisko zvlášť, tituly, pracovná pozícia, oddelenie, **mobilný telefón**, pracovisko (mesto/obec) | áno |
 
 > **Šesť riadkov vyššie pribudlo 2026-09-10 a päť z nich popisuje údaje, ktoré

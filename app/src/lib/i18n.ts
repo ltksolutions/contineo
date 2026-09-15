@@ -331,6 +331,8 @@ interface Dictionary {
     waiting: (n: number) => string
     toAcknowledge: string
     assigned: string
+    /** Fronta hodnotiteľa — odpovede, pri ktorých niekto povedal, že nesedia. */
+    evaluation: string
     people: string
     directory: string
     library: string
@@ -678,7 +680,35 @@ interface Dictionary {
     doneApprovedClosed: string
     doneRejected: string
   }
+  /**
+   * Fronta hodnotiteľa. Vlastná skupina, nie súčasť `rating`: `rating` je
+   * panel pod odpoveďou, toto je obrazovka s cudzími odpoveďami.
+   */
+  evaluation: {
+    heading: string
+    intro: string
+    empty: string
+    emptyNote: string
+    /** Čo povedal čitateľ — odznak nad kartou. */
+    saidDoesNotFit: string
+    reported: string
+    reader: string
+    answerLabel: string
+    showAnswer: string
+    hideAnswer: string
+    sources: (n: number) => string
+    askedAt: string
+    waiting: (n: number) => string
+  }
   rating: {
+    /**
+     * Dva režimy toho istého panela (2026-09-15). Bežný človek povie „sedí /
+     * nesedí" a prípadne čo je zle; celé štyri polia vidí len hodnotiteľ.
+     */
+    readerQuestion: string
+    fits: string
+    doesNotFit: string
+    readerThanks: string
     heading: string
     saving: string
     saved: string
@@ -1879,6 +1909,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     waiting: n => (n === 1 ? "čaká 1" : n <= 4 ? `čakajú ${n}` : `čaká ${n}`),
     toAcknowledge: "Na potvrdenie",
     assigned: "Pridelené normy",
+    evaluation: "Na posúdenie",
     people: "Osoby",
     directory: "Adresár",
     library: "Knižnica",
@@ -2226,7 +2257,26 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     doneApprovedClosed: "Schválené. Znenie je schválené celé.",
     doneRejected: "Zamietnuté. Znenie sa vrátilo do konceptu a dôvod zostáva v histórii.",
   },
+  evaluation: {
+    heading: "Na posúdenie",
+    intro: "Odpovede, pri ktorých niekto povedal, že nesedia. Potvrďte alebo opravte jeho posudok a doplňte, ako mala odpoveď znieť — z toho sa neskôr robí kurácia.",
+    empty: "Momentálne nie je čo posudzovať.",
+    emptyNote: "Sem sa dostane odpoveď až vtedy, keď na ňu niekto klikne „Nesedí“ alebo napíše, čo je na nej zle. Správne odpovede vás nezdržujú.",
+    saidDoesNotFit: "nesedí",
+    reported: "nahlásené",
+    reader: "od čitateľa",
+    answerLabel: "Odpoveď systému",
+    showAnswer: "Zobraziť odpoveď",
+    hideAnswer: "Skryť odpoveď",
+    sources: n => (n === 1 ? "1 zdroj" : n <= 4 ? `${n} zdroje` : `${n} zdrojov`),
+    askedAt: "opýtané",
+    waiting: n => (n === 1 ? "1 na posúdenie" : n <= 4 ? `${n} na posúdenie` : `${n} na posúdenie`),
+  },
   rating: {
+    readerQuestion: "Sedí táto odpoveď?",
+    fits: "Sedí",
+    doesNotFit: "Nesedí",
+    readerThanks: "Ďakujeme. Odpoveď si pozrie hodnotiteľ.",
     heading: "Ako hodnotíte túto odpoveď?",
     saving: "ukladám…",
     saved: "uložené",
@@ -2836,6 +2886,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       hr: "hr — prideľuje normy a vidí, kto ich nepotvrdil",
       "people-admin": "people-admin — spravuje osoby (táto obrazovka)",
       "spravca-obsahu": "spravca-obsahu — nahráva a upravuje normy v knižnici",
+      evaluator: "evaluator — posudzuje odpovede systému, keď niekto povie, že nesedia",
     },
     list: {
       heading: "Osoby",
@@ -3643,6 +3694,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     waiting: n => (n === 1 ? "čeká 1" : n <= 4 ? `čekají ${n}` : `čeká ${n}`),
     toAcknowledge: "K potvrzení",
     assigned: "Přidělené předpisy",
+    evaluation: "K posouzení",
     people: "Osoby",
     directory: "Adresář",
     library: "Knihovna",
@@ -3990,7 +4042,26 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     doneApprovedClosed: "Schváleno. Znění je schválené celé.",
     doneRejected: "Zamítnuto. Znění se vrátilo do konceptu a důvod zůstává v historii.",
   },
+  evaluation: {
+    heading: "K posouzení",
+    intro: "Odpovědi, u kterých někdo řekl, že nesedí. Potvrďte nebo opravte jeho posudek a doplňte, jak měla odpověď znít — z toho se později dělá kurace.",
+    empty: "Momentálně není co posuzovat.",
+    emptyNote: "Sem se odpověď dostane až tehdy, když na ni někdo klikne „Nesedí“ nebo napíše, co je na ní špatně. Správné odpovědi vás nezdržují.",
+    saidDoesNotFit: "nesedí",
+    reported: "nahlášeno",
+    reader: "od čtenáře",
+    answerLabel: "Odpověď systému",
+    showAnswer: "Zobrazit odpověď",
+    hideAnswer: "Skrýt odpověď",
+    sources: n => (n === 1 ? "1 zdroj" : n <= 4 ? `${n} zdroje` : `${n} zdrojů`),
+    askedAt: "dotázáno",
+    waiting: n => `${n} k posouzení`,
+  },
   rating: {
+    readerQuestion: "Sedí tato odpověď?",
+    fits: "Sedí",
+    doesNotFit: "Nesedí",
+    readerThanks: "Děkujeme. Odpověď si prohlédne hodnotitel.",
     heading: "Jak hodnotíte tuto odpověď?",
     saving: "ukládám…",
     saved: "uloženo",
@@ -4600,6 +4671,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       hr: "hr — přiděluje normy a vidí, kdo je nepotvrdil",
       "people-admin": "people-admin — spravuje osoby (tato obrazovka)",
       "spravca-obsahu": "spravca-obsahu — nahrává a upravuje normy v knihovně",
+      evaluator: "evaluator — posuzuje odpovědi systému, když někdo řekne, že nesedí",
     },
     list: {
       heading: "Osoby",
@@ -5400,6 +5472,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     waiting: n => `${n} waiting`,
     toAcknowledge: "To acknowledge",
     assigned: "Assigned documents",
+    evaluation: "To evaluate",
     people: "People",
     directory: "Directory",
     library: "Library",
@@ -5746,7 +5819,26 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     doneApprovedClosed: "Approved. The version is now fully approved.",
     doneRejected: "Rejected. The version went back to draft and the reason stays in the history.",
   },
+  evaluation: {
+    heading: "To evaluate",
+    intro: "Answers someone said were wrong. Confirm or correct their verdict and add how the answer should have read — curation builds on that later.",
+    empty: "Nothing to evaluate right now.",
+    emptyNote: "An answer lands here only when somebody clicks „It is not“ or writes what was wrong with it. Correct answers do not take your time.",
+    saidDoesNotFit: "wrong",
+    reported: "reported",
+    reader: "from the reader",
+    answerLabel: "The system's answer",
+    showAnswer: "Show the answer",
+    hideAnswer: "Hide the answer",
+    sources: n => (n === 1 ? "1 source" : `${n} sources`),
+    askedAt: "asked",
+    waiting: n => `${n} to evaluate`,
+  },
   rating: {
+    readerQuestion: "Is this answer right?",
+    fits: "It is",
+    doesNotFit: "It is not",
+    readerThanks: "Thank you. An evaluator will look at it.",
     heading: "How do you rate this answer?",
     saving: "saving…",
     saved: "saved",
@@ -6356,6 +6448,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       hr: "hr — assigns documents and sees who has not acknowledged them",
       "people-admin": "people-admin — manages people (this screen)",
       "spravca-obsahu": "spravca-obsahu — uploads and edits documents in the library",
+      evaluator: "evaluator — reviews the system's answers when someone says they are wrong",
     },
     list: {
       heading: "People",

@@ -25,6 +25,7 @@ const EMPTY: AnswerState = {
 /** Návrhy na začiatok — aby prvá obrazovka nebola prázdna. */
 export default function Search({
   preset: preset,
+  canEvaluate: canEvaluate,
   language,
 }: {
   /**
@@ -32,6 +33,11 @@ export default function Search({
    * Číta sa len pri pripojení komponentu; `/ask` preto mení jeho `key`.
    */
   preset?: string
+  /**
+   * Má prihlásený človek rolu `evaluator`? Rozhoduje o tom, či pod odpoveďou
+   * uvidí celý hodnotiaci panel, alebo len „sedí / nesedí". Ide zo servera.
+   */
+  canEvaluate?: boolean
   /** Jazyk prostredia. Bez neho slovenčina. */
   language?: UiLanguage
 } = {}) {
@@ -184,9 +190,9 @@ export default function Search({
         )}
       </div>
 
-      <Answer state={state} recordId={recordId} language={language} />
+      <Answer state={state} language={language} />
 
-      <Rating recordId={recordId} language={language} />
+      <Rating recordId={recordId} canEvaluate={canEvaluate} language={language} />
     </div>
   )
 }

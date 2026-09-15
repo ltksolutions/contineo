@@ -81,6 +81,15 @@ const PLAN = [
     ],
   },
   {
+    collection: "evaluations",
+    indexes: [
+      { key: { companyCode: 1, createdAt: -1 }, opts: { name: "tenant_time" },
+        why: "zaznamy odpovedi organizacie, najnovsie hore" },
+      { key: { companyCode: 1, evaluatedAt: 1, createdAt: -1 }, opts: { name: "tenant_queue" },
+        why: "fronta hodnotitela: co v organizacii este nikto neposudil" },
+    ],
+  },
+  {
     collection: "notifications",
     indexes: [
       { key: { companyCode: 1, personId: 1, readAt: 1 }, opts: { name: "tenant_person_unread" },

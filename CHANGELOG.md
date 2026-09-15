@@ -4,6 +4,46 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Rola `evaluator` — posudok už nie je vec každého (2026-09-15)
+
+Do dnešného dňa videl hodnotiaci panel pod odpoveďou **každý prihlásený**
+a zapisoval priamo do záznamu. V databáze sa preto nedalo rozlíšiť, či
+odpoveď posúdil legislatívec alebo niekto, kto na tlačidlo klikol zo
+zvedavosti. Rozhodnutie Jána Letka: **bežný človek povie len „sedí /
+nesedí" a čo mu vadilo; či mal pravdu, potvrdí alebo opraví hodnotiteľ.**
+
+- **Nová rola `evaluator`.** Identifikátor je anglický, ako `hr`
+  a `people-admin`; popis má preklad do sk, cs aj en. Prideľuje sa na
+  `/people/{id}` alebo cez `npm run person`. **Nie `reviewer`** — to je na
+  zázname pole s iným významom (kto bol prihlásený, keď odpoveď vznikla)
+  a dve rôzne veci s jedným menom sa raz zamenia.
+- **Panel pod odpoveďou má dva režimy.** „Očakávaná odpoveď" a „správne
+  predpisy" sú expertné polia; vyplnené od oka robia hodnotiteľovi viac
+  práce, než keď zostanú prázdne. Bývalý riadok „Nahlásiť nepresnosť" je
+  odteraz vetvou „Nesedí" — dve voľné textové polia pod jednou odpoveďou
+  boli šum.
+- **Rolová brána je v API, nie v databázovej funkcii.** Je to rozhodnutie
+  o prístupe a to patrí na hranicu systému, kde je známa prihlásená osoba.
+  Skladá sa zo session, nikdy z tela požiadavky (D32) — príznak podstrčený
+  z prehliadača posudok neuloží.
+- **Fronta `/evaluation`** ukazuje **len to, kde niečo nesedí**. Potvrdzovať
+  správne odpovede by znamenalo minúť najdrahší čas v celom cykle na
+  klikanie „áno, bolo to dobré" — a fronta, do ktorej sa nikto nepozrie, je
+  presne to, na čom stroskotala zlatá sada. Prvý posudok nastaví
+  `evaluatedAt` a záznam z fronty odchádza.
+- **Tri nové polia na zázname** (`readerVerdict`, `evaluatedAt`,
+  `evaluatedBy`) a **`companyCode`**, bez ktorého by fronta prekročila
+  organizáciu: hodnotiteľ SFZ by videl otázky z SsFZ. Zapisuje sa
+  z prihlásenej osoby, nikdy z tela požiadavky. Staršie záznamy ho nemajú,
+  takže sa do žiadnej fronty nedostanú — a je to tak správne.
+- **Vedľajší nález opravený:** `scripts/person.mjs` poznal len roly `hr`
+  a `people-admin` a `spravca-obsahu` odmietal ako neznámu.
+
+Trinásť testov nad `isEvaluator()`, `needsEvaluation()` a bránou kontextu.
+**Ďalší krok je kurácia** (D11, `qa_pairs`): potvrdené znenie sa uloží ako
+overená odpoveď a embeduje späť do znalostí. Bez hodnotiteľa nebolo čo
+kurovať — to je dôvod, prečo ide táto vrstva prvá.
+
 ### Zlatá sada zrušená (2026-09-15) — a povedané, čo tým padá
 
 Rozhodnutie Jána Letka: **kvalitu meriame z prevádzky, nie z pripravenej sady.**

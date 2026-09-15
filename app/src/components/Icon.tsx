@@ -121,6 +121,17 @@ const PATHS: Record<string, React.ReactNode> = {
     </>
   ),
   // Osoby — dvaja ľudia.
+  /*
+    Hodnotenie — pečiatka: kruh s odškrtnutím vnútri.
+    Nie lupa (tú má hľadanie), nie štvorček s háčikom (to je „na potvrdenie") —
+    dve položky s tou istou kresbou sú horšie než dve položky bez ikon.
+  */
+  evaluation: (
+    <>
+      <circle cx="9" cy="9" r="6.4" />
+      <path d="m6.3 9.1 1.9 1.9 3.5-3.9" />
+    </>
+  ),
   people: (
     <>
       <circle cx="7" cy="6.4" r="2.6" />

@@ -11,7 +11,6 @@
 
 import type { Citation, AskResult } from "@/lib/sseClient"
 import FormattedText from "@/components/FormattedText"
-import ReportInaccuracy from "@/components/ReportInaccuracy"
 import { cleanCitation, mergeCitations } from "@/lib/formatText"
 import { formatUsd, formatEur, toEur } from "@/lib/pricing"
 import { dictionary, type UiLanguage } from "@/lib/i18n"
@@ -45,16 +44,9 @@ function Line({ label: label, value: value }: { label: string; value: string }) 
 
 export default function Answer({
   state: state,
-  recordId: recordId,
   language,
 }: {
   state: AnswerState
-  /**
-   * Záznam o tejto odpovedi (`evaluations`), ktorý vznikol hneď po jej
-   * dobehnutí. Bez neho niet k čomu hlásenie pripísať, takže sa formulár
-   * nevykreslí — je to čestnejšie než tlačidlo, ktoré nemá kam zapísať.
-   */
-  recordId?: string | null
   language?: UiLanguage
 }) {
   const t = dictionary(language).answer
@@ -147,18 +139,6 @@ export default function Answer({
             ))}
           </div>
         </div>
-      )}
-
-      {/*
-        Nahlásenie nepresnosti. **Až po dokončení odpovede a nie pri chybe**:
-        počas streamovania človek ešte nevie, čo mu príde, a pri zlyhaní nie
-        je čo hodnotiť — tam je chybová hláška, nie odpoveď.
-
-        Stojí **nad zoznamom zdrojov**, teda hneď pod tým, čo sa číta. Pod
-        rozbalenými zdrojmi by ho našiel len ten, kto ich otvoril.
-      */}
-      {done && !error && text && recordId && (
-        <ReportInaccuracy recordId={recordId} language={language} />
       )}
 
       {/* Zdroje — čo sa dostalo do kontextu, aj keď z toho model necitoval. */}

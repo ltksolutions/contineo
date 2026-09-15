@@ -2,30 +2,42 @@
  * route.ts → /api/rating
  *
  * POST  — založí záznam o odpovedi (volá sa hneď po dobehnutí generovania)
- * PATCH — doplní ľudské posúdenie **alebo** hlásenie nepresnosti
+ * PATCH — doplní, čo povedal čitateľ, **alebo** posudok hodnotiteľa
  *
- * Rozdelenie na dva kroky je zámerné: automatické metriky D9 sa dajú
- * počítať aj z odpovedí, ktoré nikto neposúdil. Keby sa záznam zakladal až
- * pri kliknutí na hodnotenie, prišli by sme o dáta o latencii a retrievale
- * z každej otázky, ktorú hodnotiteľ preskočil.
+ * Rozdelenie na dva kroky je zámerné: automatické metriky sa dajú počítať aj
+ * z odpovedí, ktoré nikto neposúdil. Keby sa záznam zakladal až pri kliknutí
+ * na hodnotenie, prišli by sme o dáta o latencii a retrievale z každej
+ * otázky, ktorú nikto nehodnotil.
+ *
+ * **PATCH má dve vetvy a nie je to kozmetika.** Čitateľ píše do vlastných
+ * polí a smie to každý prihlásený; posudok píše **len držiteľ roly
+ * `evaluator`**. Do 2026-09-15 mohol posudok zapísať ktokoľvek a v databáze
+ * sa nedalo rozlíšiť, čí je — presne to tu končí.
  */
 
 import { NextRequest, NextResponse } from "next/server"
 import { getToken } from "next-auth/jwt"
-import { recordAnswer, saveVerdict, reportInaccuracy } from "@/lib/ratings"
-import type { NewRating, RatingEdit, Verdict } from "@/lib/ratings"
+import { recordAnswer, saveVerdict, saveReaderFeedback } from "@/lib/ratings"
+import type { NewRating, RatingEdit, ReaderFeedback, Verdict } from "@/lib/ratings"
+import { isEvaluator } from "@/lib/evaluation"
+import { currentPerson } from "@/lib/session"
 
 /**
- * Kto hodnotí. Kým nie je prihlasovanie, ide o „anonym" — dôležité je, aby
- * sa dalo neskôr rozlíšiť, čo hodnotil kto (D9, otvorený bod E5: jeden
- * hodnotiteľ je pri 0/1 posudzovaní jediný bod zlyhania).
+ * Kto je na druhej strane. Kým nie je prihlasovanie, ide o „anonym".
+ *
+ * Token je záložná cesta pre prípad, že sa osoba v `persons` nenájde —
+ * e-mail vtedy vieme, organizáciu nie. Záznam bez `companyCode` sa do
+ * žiadnej fronty nedostane, čo je bezpečnejšie než ho pripísať naslepo.
  */
-async function reviewer(req: NextRequest): Promise<string> {
+async function caller(req: NextRequest) {
+  const person = await currentPerson().catch(() => null)
+  if (person) return { email: person.email, companyCode: person.companyCode, person }
+
   try {
     const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET })
-    return (token?.email as string) ?? "anonym"
+    return { email: (token?.email as string) ?? "anonym", companyCode: undefined, person: null }
   } catch {
-    return "anonym"
+    return { email: "anonym", companyCode: undefined, person: null }
   }
 }
 
@@ -56,6 +68,7 @@ export async function POST(req: NextRequest) {
     )
   }
 
+  const who = await caller(req)
   try {
     const id = await recordAnswer(
       {
@@ -72,7 +85,8 @@ export async function POST(req: NextRequest) {
         tokens: body.tokens,
         cost: body.cost,
       },
-      await reviewer(req)
+      who.email,
+      who.companyCode
     )
     return NextResponse.json({ id })
   } catch (e) {
@@ -93,27 +107,42 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json({ error: "missing-id" }, { status: 400 })
   }
 
+  const who = await caller(req)
+
   /*
-   * Hlásenie nepresnosti od toho, kto sa pýtal, je **iná operácia** než
-   * posudok hodnotiteľa: píše do iného poľa, nepodpisuje sa ako hodnotiteľ
-   * a nehýbe časom poslednej zmeny. Preto vlastná vetva, nie ďalší kľúč
-   * v `edit` — tam by ju `saveVerdict()` zliala s posudkom a záznam by
-   * tvrdil, že odpoveď posúdil ten, kto ju len nahlásil.
+   * Vetva čitateľa: „sedí / nesedí" a čo bolo zle.
+   *
+   * Píše do vlastných polí, nepodpisuje sa ako hodnotiteľ a nehýbe časom
+   * poslednej zmeny. Keby to bol ďalší kľúč v `edit`, `saveVerdict()` by to
+   * zliala s posudkom a záznam by tvrdil, že odpoveď posúdil ten, kto ju len
+   * nahlásil.
    */
-  if (typeof body.readerNote === "string") {
-    if (!body.readerNote.trim()) {
-      return NextResponse.json({ error: "nothing-to-save" }, { status: 400 })
-    }
+  const readerVerdict = verdict(body.readerVerdict)
+  const readerNote = typeof body.readerNote === "string" ? body.readerNote : undefined
+  if (readerVerdict !== undefined || readerNote !== undefined) {
+    const feedback: ReaderFeedback = {}
+    if (readerVerdict !== undefined) feedback.verdict = readerVerdict
+    if (readerNote !== undefined) feedback.note = readerNote
+
     try {
-      const saved = await reportInaccuracy(body.id, body.readerNote, await reviewer(req))
+      const saved = await saveReaderFeedback(body.id, feedback, who.email)
       if (!saved) {
-        return NextResponse.json({ error: "record-not-found" }, { status: 404 })
+        return NextResponse.json({ error: "nothing-to-save" }, { status: 400 })
       }
       return NextResponse.json({ ok: true })
     } catch (e) {
-      console.error("Uloženie hlásenia zlyhalo:", e)
+      console.error("Uloženie spätnej väzby zlyhalo:", e)
       return NextResponse.json({ error: "save-failed" }, { status: 500 })
     }
+  }
+
+  /*
+   * Vetva hodnotiteľa. **Rolová brána je tu, nie v `saveVerdict()`** — je to
+   * rozhodnutie o prístupe a to patrí na hranicu systému, kde je známa
+   * prihlásená osoba. Skladá sa zo session, nikdy z tela požiadavky (D32).
+   */
+  if (!isEvaluator(who.person)) {
+    return NextResponse.json({ error: "forbidden" }, { status: 403 })
   }
 
   const edit: RatingEdit = {}
@@ -134,7 +163,7 @@ export async function PATCH(req: NextRequest) {
   }
 
   try {
-    const ok = await saveVerdict(body.id, edit, await reviewer(req))
+    const ok = await saveVerdict(body.id, edit, who.email)
     if (!ok) {
       return NextResponse.json({ error: "record-not-found" }, { status: 404 })
     }

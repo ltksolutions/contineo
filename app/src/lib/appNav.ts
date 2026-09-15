@@ -16,7 +16,7 @@
 export type NavLayout = "sidebar" | "topbar"
 
 /** Kľúč do `dictionary().nav` — nie hotový text, aby zostal preložiteľný. */
-export type NavKey = "overview" | "ask" | "toAcknowledge" | "toApprove" | "library" | "assigned" | "evidence" | "people" | "directory"
+export type NavKey = "overview" | "ask" | "toAcknowledge" | "toApprove" | "library" | "assigned" | "evidence" | "people" | "directory" | "evaluation"
 
 export interface NavItem {
   href: string
@@ -43,6 +43,7 @@ export interface NavFlags {
   isHr?: boolean
   isPeopleAdmin?: boolean
   isContentManager?: boolean
+  isEvaluator?: boolean
 }
 
 /**
@@ -79,6 +80,9 @@ export function navItems(flags: NavFlags, counts: NavCounts = {}): NavItem[] {
     // personalista, nie správca obsahu (D67).
     ...(flags.isHr ? [{ href: "/hr/evidence", key: "evidence" as const }] : []),
     ...(flags.isPeopleAdmin ? [{ href: "/people", key: "people" as const }] : []),
+    // Fronta hodnotiteľa. Podmienená rolou zámerne: nie je to zoznam vecí
+    // na prečítanie, ale pracovný stôl s cudzími otázkami a odpoveďami.
+    ...(flags.isEvaluator ? [{ href: "/evaluation", key: "evaluation" as const }] : []),
   ]
 
   /*

@@ -1,21 +1,28 @@
 "use client"
 
 /**
- * Hodnotiaci panel.
+ * Panel pod odpoveďou — v dvoch režimoch.
  *
- * Zbiera presne tie dve veci, ktoré skript D9 spočítať nevie — *správnosť*
- * a *halucinácie* — a k tomu voliteľne overené znenie a §, čím sa napĺňa
- * zlatá sada. Tým odpadá Excel: sada vzniká používaním.
+ * **Bežný človek** povie len „sedí / nesedí" a pri „nesedí" napíše, čo bolo
+ * zle. **Hodnotiteľ** (rola `evaluator`) vidí celé štyri polia: správnosť,
+ * halucináciu, overené znenie a správne §.
  *
- * Návrhové rozhodnutie: **žiadne tlačidlo Uložiť.** Hodnotiteľ prejde 74
- * otázok a pri každom kroku navyše by to bolo 74 kliknutí naviac. Posudok
- * sa ukladá hneď po kliknutí, textové polia po opustení. Stav uloženia je
- * vidieť, aby človek nemusel dôverovať.
+ * Prečo to rozdelenie (rozhodnutie Jána Letka 2026-09-15): do dnešného dňa
+ * videl celý panel každý prihlásený a zapisoval priamo do záznamu, takže
+ * posudok kolegu z matriky a posudok legislatívca boli v databáze
+ * nerozoznateľné. „Očakávaná odpoveď" a „správne predpisy" sú expertné polia
+ * — vyplnené od oka robia hodnotiteľovi viac práce, než keď zostanú prázdne.
+ *
+ * **Žiadne tlačidlo Uložiť** v režime hodnotiteľa: posudok sa ukladá hneď po
+ * kliknutí, textové polia po opustení. Stav uloženia je vidieť, aby človek
+ * nemusel dôverovať. Režim čitateľa tlačidlo má — je to jeden krátky text
+ * a odoslanie musí byť jeho rozhodnutie, nie vedľajší účinok kliknutia inam.
  */
 
 import { useEffect, useRef, useState } from "react"
 import type { Verdict } from "@/lib/ratings"
 import { dictionary, type UiLanguage } from "@/lib/i18n"
+import ReportInaccuracy from "@/components/ReportInaccuracy"
 
 type SaveState = "idle" | "saving" | "saved" | "failed"
 
@@ -62,12 +69,69 @@ function Choice({
   )
 }
 
+/**
+ * Režim čitateľa: „Sedí / Nesedí" a pri „Nesedí" popis.
+ *
+ * „Sedí" sa uloží hneď a tým to preňho končí — potvrdzovať správnu odpoveď
+ * dvoma krokmi by znamenalo, že to nikto nespraví. Pri „Nesedí" sa posudok
+ * uloží tiež hneď, ale formulár zostáva otvorený: veta, čo je zle, je to
+ * jediné, z čoho sa dá niečo opraviť.
+ */
+function ReaderPanel({
+  recordId, language,
+}: {
+  recordId: string
+  language?: UiLanguage
+}) {
+  const t = dictionary(language).rating
+  const [verdict, setVerdict] = useState<Verdict>(null)
+  const [done, setDone] = useState(false)
+
+  async function say(value: 0 | 1) {
+    setVerdict(value)
+    if (value === 1) setDone(true)
+    try {
+      await fetch("/api/rating", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: recordId, readerVerdict: value }),
+      })
+    } catch {
+      // Ticho: povedať „nepodarilo sa uložiť, že odpoveď sedí" je pre
+      // čitateľa šum. Keď nesedí, na zlyhanie upozorní formulár nižšie.
+    }
+  }
+
+  if (done) {
+    return <p className="quiet" style={{ fontSize: 13.5, margin: "12px 0 0" }}>{t.readerThanks}</p>
+  }
+
+  return (
+    <div style={{ marginTop: 12, display: "grid", gap: 10 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+        <span className="quiet" style={{ fontSize: 13.5 }}>{t.readerQuestion}</span>
+        <Choice active={verdict === 1} color="ok" onClick={() => say(1)}>{t.fits}</Choice>
+        <Choice active={verdict === 0} color="bad" onClick={() => say(0)}>{t.doesNotFit}</Choice>
+      </div>
+      {verdict === 0 && (
+        <ReportInaccuracy recordId={recordId} language={language} onSent={() => setDone(true)} />
+      )}
+    </div>
+  )
+}
+
 export default function Rating({
   recordId,
+  canEvaluate: canEvaluate,
   language,
 }: {
   /** Id záznamu z `/api/rating`. Kým je null, panel čaká. */
   recordId: string | null
+  /**
+   * Má prihlásený človek rolu `evaluator`? Ide **zo servera** — klient si to
+   * neodvodzuje a ani keby si to podstrčil, API posudok bez roly odmietne.
+   */
+  canEvaluate?: boolean
   language?: UiLanguage
 }) {
   const t = dictionary(language).rating
@@ -113,6 +177,8 @@ export default function Rating({
 
   if (!recordId) return null
 
+  if (!canEvaluate) return <ReaderPanel recordId={recordId} language={language} />
+
   return (
     <div
       className="card"
@@ -155,8 +221,8 @@ export default function Rating({
           </Choice>
         </div>
 
-        {/* Doplnenie zlatej sady. Skryté, lebo pri väčšine otázok stačia
-            dve kliknutia a otvorený formulár by zbytočne zdržiaval. */}
+        {/* Podklad pre kuráciu. Skryté, lebo pri väčšine odpovedí stačia dve
+            kliknutia a otvorený formulár by zbytočne zdržiaval. */}
         <button
           type="button"
           onClick={() => setDetail(d => !d)}
@@ -219,9 +285,7 @@ const fieldStyle: React.CSSProperties = {
   color: "var(--ink)",
   border: "1px solid var(--line)",
   borderRadius: 9,
-  padding: "9px 12px",
-  fontSize: 14.5,
+  padding: "8px 10px",
+  fontSize: 14,
   fontFamily: "inherit",
-  lineHeight: 1.6,
-  resize: "vertical",
 }

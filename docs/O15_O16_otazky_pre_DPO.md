@@ -268,7 +268,7 @@ DPA medzi zväzom a Contineom a doložka pokrývajúca tok údajov Sportnet → 
 | `approval_rounds` | kto predložil, menovaní schvaľovatelia (meno a adresa ako odtlačok), rozhodnutie, dôvod zamietnutia, kedy sa komu ozvalo |
 | `reminder_log` | komu a v ktorý deň sa odoslala pripomienka |
 | `notifications` | personId, druh udalosti, ktorého dokumentu sa týkala, počet, čas vzniku a čas prečítania — **nie text správy** |
-| `evaluations` | e-mail toho, kto sa pýtal, **otázka a odpoveď systému doslovne pri každej odpovedi**, zdroje a citácie, model, časy a cena; nepovinne posudok hodnotiteľa a nahlásená nepresnosť |
+| `evaluations` | e-mail toho, kto sa pýtal, a jeho organizácia, **otázka a odpoveď systému doslovne pri každej odpovedi**, zdroje a citácie, model, časy a cena; nepovinne „sedí/nesedí" a popis chyby od čitateľa, posudok hodnotiteľa a **jeho e-mail** |
 | audit prístupov | kto, čo a kedy videl |
 
 Dve veci, ktoré sa zámerne **nezbierajú**: doskrolovanie na koniec dokumentu a záznam o každom jednotlivom zobrazení. A personalista, ktorý si znenie otvorí na kontrolu, sa nezapisuje — zapisuje sa len ten, kto povinnosť má.

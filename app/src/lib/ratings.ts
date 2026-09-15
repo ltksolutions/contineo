@@ -26,6 +26,15 @@ export type Verdict = 0 | 1 | null
 export interface RatingRecord {
   _id?: ObjectId
 
+  /**
+   * Organizácia, v ktorej otázka vznikla.
+   *
+   * Zapisuje sa **z prihlásenej osoby, nikdy z tela požiadavky** (D32).
+   * Záznamy spred 2026-09-15 ho nemajú — do žiadnej fronty sa preto
+   * nedostanú, a je to tak správne: bez neho sa nedá povedať, komu patria.
+   */
+  companyCode?: string
+
   question: string
   answer: string
   sources: AnswerSource[]
@@ -75,6 +84,22 @@ export interface RatingRecord {
   readerNoteAt?: Date
   /** Kto hlásil. Nepodpisuje sa ako `reviewer` — neposudzoval, oznámil. */
   readerNoteBy?: string
+  /**
+   * „Sedí / nesedí" od toho, kto sa pýtal. `null` = nepovedal nič.
+   *
+   * Je to **iná vec než `correct`**: `correct` je posudok hodnotiteľa, teda
+   * človeka, ktorý predpisu rozumie. Zliať ich do jedného poľa by znamenalo,
+   * že sa spätne nedá povedať, čí je ktorý — a presne to bola chyba, ktorú
+   * táto rola opravuje.
+   */
+  readerVerdict?: Verdict
+
+  /**
+   * Kedy a kto posudok **potvrdil alebo opravil**. Prítomnosť `evaluatedAt`
+   * je zároveň príznak „vybavené" — podľa nej sa záznam odstráni z fronty.
+   */
+  evaluatedAt?: Date
+  evaluatedBy?: string
 
   reviewer: string
   createdAt: Date
@@ -106,7 +131,7 @@ export interface RatingEdit {
   note?: string
 }
 
-const RATINGS_COLLECTION = "evaluations"
+export const RATINGS_COLLECTION = "evaluations"
 
 /**
  * Založí záznam o odpovedi. Hodnotenie zatiaľ prázdne.
@@ -117,13 +142,16 @@ const RATINGS_COLLECTION = "evaluations"
  */
 export async function recordAnswer(
   z: NewRating,
-  reviewer: string
+  reviewer: string,
+  companyCode?: string
 ): Promise<string> {
   const col = await getCollection<RatingRecord>(RATINGS_COLLECTION)
   const now = new Date()
 
   const record: RatingRecord = {
     ...z,
+    // Organizácia aj e-mail idú z prihlásenia, nie z tela požiadavky (D32).
+    ...(companyCode ? { companyCode } : {}),
     correct: null,
     hallucination: null,
     reviewer: reviewer,
@@ -144,13 +172,25 @@ export async function recordAnswer(
 export async function saveVerdict(
   id: string,
   edit: RatingEdit,
-  reviewer: string
+  evaluator: string
 ): Promise<boolean> {
   if (!ObjectId.isValid(id)) return false
 
+  /*
+   * Posudok smie písať **len držiteľ roly `evaluator`** — bránu drží API,
+   * nie táto funkcia; tu sa zapisuje, kto ho napísal a kedy.
+   *
+   * `evaluatedAt` je zároveň príznak „vybavené": podľa neho sa záznam
+   * odstráni z fronty. Preto sa nastavuje **pri každom** posudku, aj keď
+   * hodnotiteľ len potvrdí, že odpoveď bola v poriadku.
+   */
+  const now = new Date()
+
   // Prepisujeme len to, čo naozaj prišlo. Bez tejto kontroly by kliknutie
   // na „správna" zmazalo predtým vyplnené overené znenie.
-  const changes: Record<string, unknown> = { updatedAt: new Date(), reviewer }
+  const changes: Record<string, unknown> = {
+    updatedAt: now, reviewer: evaluator, evaluatedAt: now, evaluatedBy: evaluator,
+  }
   for (const key of [
     "correct", "hallucination", "verifiedAnswer", "correctSources", "note",
   ] as const) {
@@ -166,7 +206,8 @@ export async function saveVerdict(
 export const MAX_READER_NOTE = 2000
 
 /**
- * Pripíše hlásenie nepresnosti k **už existujúcemu** záznamu o odpovedi.
+ * Pripíše k **už existujúcemu** záznamu to, čo povedal čitateľ — „sedí /
+ * nesedí" a prípadne, čo bolo zle.
  *
  * Zámerne nemení `updatedAt` ani `reviewer`. `setProgress()` radí záznamy tej
  * istej otázky podľa `updatedAt` a berie posledný — hlásenie čitateľa nie je
@@ -178,19 +219,33 @@ export const MAX_READER_NOTE = 2000
  *
  * Vracia `false`, keď záznam neexistuje alebo je hlásenie prázdne.
  */
-export async function reportInaccuracy(
+export interface ReaderFeedback {
+  /** „Sedí / nesedí". `undefined` = človek sa k tomu nevyjadril. */
+  verdict?: Verdict
+  /** Čo bolo zle. Povinné pri „nesedí", inak nepovinné. */
+  note?: string
+}
+
+export async function saveReaderFeedback(
   id: string,
-  note: string,
+  feedback: ReaderFeedback,
   person: string
 ): Promise<boolean> {
   if (!ObjectId.isValid(id)) return false
-  const text = note.trim().slice(0, MAX_READER_NOTE)
-  if (!text) return false
+
+  const changes: Record<string, unknown> = {}
+  if (feedback.verdict !== undefined) changes.readerVerdict = feedback.verdict
+  if (feedback.note !== undefined) {
+    const text = feedback.note.trim().slice(0, MAX_READER_NOTE)
+    if (text) {
+      changes.readerNote = text
+      changes.readerNoteAt = new Date()
+      changes.readerNoteBy = person
+    }
+  }
+  if (!Object.keys(changes).length) return false
 
   const col = await getCollection<RatingRecord>(RATINGS_COLLECTION)
-  const r = await col.updateOne(
-    { _id: new ObjectId(id) },
-    { $set: { readerNote: text, readerNoteAt: new Date(), readerNoteBy: person } }
-  )
+  const r = await col.updateOne({ _id: new ObjectId(id) }, { $set: changes })
   return r.matchedCount === 1
 }

@@ -622,6 +622,15 @@ len práca, ktorá z nich plynie.
       - [ ] ďalšie zhody v knižnici
 - [ ] **jednoriadkové:** prepísať zastaraný komentár v `new/page.tsx` (tvrdí, že schvaľovací krok neexistuje — dnes nepravda)
 
+### Kontrola kvality: hodnotiteľ a kurácia (2026-09-15)
+
+- [x] ~~**Rola `evaluator`**~~ — panel pod odpoveďou v dvoch režimoch, fronta `/evaluation`, rolová brána v API
+      Bežný človek: „Sedí / Nesedí" a pri „Nesedí" popis. Hodnotiteľ: celé štyri polia. Do fronty ide **len to, kde niečo nesedí** — potvrdzovať správne odpovede by bola tá istá chyba ako zlatá sada.
+      Nové polia na zázname: `readerVerdict`, `evaluatedAt`, `evaluatedBy` a `companyCode` (bez neho by fronta prekročila organizáciu).
+- [ ] **Kurácia** (D11, `qa_pairs`) — potvrdené znenie hodnotiteľa sa uloží ako overená odpoveď a **embeduje späť** do indexu ako `sourceType: "qa"`. Platí pravidlo z popisu projektu: **nový pár nikdy potichu neprepíše schválený predpis.** Patria k tomu aj expirácia pri zmene podkladovej normy a reconciliation — je to vlastná fáza, nie sekcia v knižnici.
+- [ ] **`spravca-obsahu` je jediný slovenský identifikátor roly** — ostatné sú `hr`, `people-admin`, `evaluator`. Premenovanie je zásah do `persons` v databáze, takže čaká na samostatný súhlas.
+- [ ] **`evaluations` bez `companyCode`** — 15 záznamov spred 2026-09-15. Do fronty sa nedostanú. Doplniť sa dajú dávkovo podľa toho, kto sa pýtal; je to migrácia dát a čaká na súhlas.
+
 ### Zlatá sada zrušená (2026-09-15) — ADR-008
 
 - [x] ~~**Zlatá sada preč celá**~~ — obrazovky, `lib/goldenSet.ts`, `/api/golden-set`, položka v navigácii, skupina v i18n, materiály v `eval/` (okrem `o1/`, ktoré patrí k O1 z ADR-001) aj kolekcia `eval_questions` (74 otázok).

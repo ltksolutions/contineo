@@ -1,7 +1,7 @@
 "use client"
 
 /**
- * „Nahlásiť nepresnosť" pod odpoveďou.
+ * „Čo je na odpovedi zle" — vetva „Nesedí" v paneli pod odpoveďou.
  *
  * **Nezakladá vlastný záznam — dopisuje sa k tomu, ktorý už existuje.**
  * Každá dobehnutá odpoveď sa ukladá do `evaluations` (`recordAnswer()`), aj
@@ -10,10 +10,11 @@
  * rozišli. Preto sa posiela **len popis chyby** a identifikátor záznamu;
  * otázku a odpoveď netreba posielať z prehliadača, server ich už má.
  *
- * **Zabalené v `<details>`, nie vždy otvorené.** Formulár pod každou
- * odpoveďou by tvrdil, že odpovede sú spravidla zlé; zavretý riadok hovorí
- * „keď je niečo mimo, povedz to" a nezaberá miesto tomu, kvôli čomu sa sem
- * človek prišiel pozrieť.
+ * **Nie je zabalený vo `<details>`.** Do 2026-09-15 to bol samostatný
+ * rozbaľovací riadok pod každou odpoveďou; odvtedy sa ukáže až vtedy, keď
+ * človek klikne „Nesedí". Rozbaľovačka pod každou odpoveďou tvrdila, že
+ * odpovede sú spravidla zlé; takto sa formulár objaví práve vtedy, keď má
+ * čo zachytiť.
  *
  * **Vyžaduje JavaScript a je to v poriadku** — na rozdiel od knižnice, ktorá
  * beží aj bez neho. Obrazovka s odpoveďou ho vyžaduje tak či tak: odpoveď sa
@@ -37,10 +38,13 @@ const MAX_NOTE = 2000
 
 export default function ReportInaccuracy({
   recordId: recordId,
+  onSent: onSent,
   language,
 }: {
   /** Záznam o odpovedi, ku ktorému sa hlásenie pripíše. */
   recordId: string
+  /** Zavolá sa po úspešnom odoslaní — panel nad ním na to nadväzuje. */
+  onSent?: () => void
   language?: UiLanguage
 }) {
   const t = dictionary(language).report
@@ -66,6 +70,7 @@ export default function ReportInaccuracy({
         return
       }
       setState("sent")
+      onSent?.()
     } catch {
       setError(t.failed)
       setState("idle")
@@ -77,31 +82,26 @@ export default function ReportInaccuracy({
   }
 
   return (
-    <details style={{ marginTop: 10 }}>
-      <summary className="quiet" style={{ cursor: "pointer", fontSize: 13.5 }}>
-        {t.open}
-      </summary>
-      <form onSubmit={send} style={{ display: "grid", gap: 8, marginTop: 10, maxWidth: 560 }}>
-        <label className="field" style={{ margin: 0 }}>
-          <span className="field-label">{t.whatIsWrong}</span>
-          <textarea
-            className="field-input"
-            rows={3}
-            value={note}
-            onChange={e => setNote(e.target.value)}
-            placeholder={t.placeholder}
-            maxLength={MAX_NOTE}
-            required
-          />
-          <span className="quiet field-hint">{t.note}</span>
-        </label>
-        {error && <p style={{ color: "var(--bad-fg)", fontSize: 13.5, margin: 0 }}>{error}</p>}
-        <div>
-          <button className="button" type="submit" disabled={state === "sending" || !note.trim()}>
-            {state === "sending" ? t.sending : t.submit}
-          </button>
-        </div>
-      </form>
-    </details>
+    <form onSubmit={send} style={{ display: "grid", gap: 8, maxWidth: 560 }}>
+      <label className="field" style={{ margin: 0 }}>
+        <span className="field-label">{t.whatIsWrong}</span>
+        <textarea
+          className="field-input"
+          rows={3}
+          value={note}
+          onChange={e => setNote(e.target.value)}
+          placeholder={t.placeholder}
+          maxLength={MAX_NOTE}
+          required
+        />
+        <span className="quiet field-hint">{t.note}</span>
+      </label>
+      {error && <p style={{ color: "var(--bad-fg)", fontSize: 13.5, margin: 0 }}>{error}</p>}
+      <div>
+        <button className="button" type="submit" disabled={state === "sending" || !note.trim()}>
+          {state === "sending" ? t.sending : t.submit}
+        </button>
+      </div>
+    </form>
   )
 }

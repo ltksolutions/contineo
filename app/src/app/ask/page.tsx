@@ -19,6 +19,7 @@ import { onboardingContext } from "@/lib/session"
 import { pendingForPerson } from "@/lib/pending"
 import { dictionary } from "@/lib/i18n"
 import AppShell from "@/components/AppShell"
+import { evaluationContext } from "@/lib/evaluation"
 
 // Stránka číta hlavičky požiadavky (hostiteľ → tenant) a reláciu, takže sa
 // nedá predgenerovať. Bez tohto by Next.js skúsil statický výstup a spadol.
@@ -49,6 +50,14 @@ export default async function HomePage({
   const overview =
     person && person.tracks.length > 0 ? await pendingForPerson(person) : null
 
+  /*
+   * Či človek uvidí pod odpoveďou celý hodnotiaci panel, alebo len
+   * „sedí / nesedí". Rozhoduje sa **na serveri**; klient si rolu
+   * neodvodzuje a ani keby si príznak podstrčil, API posudok bez roly
+   * odmietne (D32).
+   */
+  const canEvaluate = (await evaluationContext()).state === "ready"
+
   return (
     <AppShell language={person?.language}>
     <div>
@@ -74,6 +83,7 @@ export default async function HomePage({
         key={asked ?? ""}
         language={person?.language}
         preset={asked?.trim() || undefined}
+        canEvaluate={canEvaluate}
       />
     </div>
     </AppShell>
