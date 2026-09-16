@@ -181,10 +181,19 @@ niečo o správaní konkrétneho človeka, nie o jeho povinnosti. Preto:
 - **Audit prístupov** „kto / čo / kedy videl" (najmä interný obsah) — na preukázanie compliance.
 - **Šifrovanie** at-rest aj in-transit; **RBAC/ABAC** a **default-deny** (PRISTUPOVE_PRAVA).
 - **EU rezidencia** dát (Atlas EU).
-  > Presnejšie: **úložisko** je v EÚ. Text však opúšťa našu infraštruktúru na **dvoch**
-  > miestach, a obe sú zámerné: pri vektoroch a preradení (Voyage cez Atlas) a pri
-  > **generovaní odpovede**, kam ide otázka aj nájdené úseky (Anthropic). Oboje je
-  > režim (b) — enterprise API so zero-retention a bez trénovania.
+  > Presnejšie: **úložisko** je v EÚ. Text však opúšťa EÚ pri **štyroch krokoch**
+  > jednej odpovede, a všetky sú zámerné — viď tabuľku v `docs/AKO_TO_BEZI.md`:
+  >
+  > | Krok | Kam | Čo tam ide |
+  > |---|---|---|
+  > | Prepis dotazu (pomocný model) | Anthropic | otázka |
+  > | Embedding otázky | Voyage cez Atlas | otázka |
+  > | Preradenie | Voyage cez Atlas | otázka + nájdené úseky |
+  > | Generovanie odpovede | Anthropic | otázka + nájdené úseky |
+  >
+  > Prepis dotazu sa dá vypnúť (`PREPROCESSING_DEFAULT=false`); dnes nastavený nie je,
+  > takže beží. Anthropic má zero-retention a bez trénovania; pri Voyage to
+  > potvrdené zatiaľ nie je.
   >
   > **Z pohľadu GDPR je podstatná len otázka človeka**, lebo tá môže obsahovať osobný
   > údaj. Znenie predpisu ani zmluvy osobný údaj nie je (pokiaľ v ňom niekto nie je

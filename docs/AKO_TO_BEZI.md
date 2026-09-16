@@ -221,7 +221,9 @@ použitého cenníka.
 
 ## Čo z toho vyplýva pre rezidenciu
 
-Pri dnešnej konfigurácii (`eu-data`) **text otázky opustí EÚ trikrát**:
+Pri dnešnej konfigurácii (`eu-data`) **text opustí EÚ štyrikrát na jednu odpoveď**
+(oprava 2026-09-16: veta tu hovorila „trikrát", ale tabuľka pod ňou má štyri riadky —
+prepis dotazu sa nepočítal):
 
 | Krok | Kam | Prečo |
 |---|---|---|

@@ -10,6 +10,37 @@
 
 ---
 
+## 2026-09-16 (neskoro večer) — audit webu a moja druhá chyba v O18
+
+Ján dal skontrolovať marketingový web proti skutočnosti. Rovnaká metóda ako pri
+dokumentácii, iný kľúč triedenia: web **smie** hovoriť o vízii, nesmie ju vydávať
+za dnešok. Výsledok: **48 tvrdení, ktoré opísujú ako hotové niečo, čo nie je** —
+a každé tri razy, lebo slovník má SK, CZ aj EN.
+
+### Chyba, ktorú našiel audit webu u mňa
+
+Pri O18 som dvakrát napísal, že text opúšťa infraštruktúru „na dvoch miestach".
+Je to **štyrikrát**: prepis dotazu (Anthropic Haiku), embedding, preradenie
+a generovanie. Prepis dotazu som vynechal úplne — beží pred vyhľadávaním
+a predvolene je zapnutý.
+
+Najčastejšie by som povedal, že som to prehliadol. Ale stalo sa niečo konkrétnejšie:
+`AKO_TO_BEZI.md` má nad tabuľkou vetu „text otázky opustí EÚ **trikrát**" a pod ňou
+tabuľku so **štyrmi riadkami**. Prevzal som číslo z vety namiesto toho, aby som
+spočítal riadky. **Keď dokument uvádza číslo aj zoznam, platí zoznam** — presne
+ako pri kóde a dokumentácii. Opravené na oboch miestach vrátane samotného
+`AKO_TO_BEZI.md`, ktorý si protirečil od júla.
+
+### Čo to znamená pre web
+
+Tri najzavažnejšie veci nie sú štýlové. Web sľubuje **on-prem a „data ostanú
+u vás"** (segment, ktorý si podľa toho vyberá dodáváteľa), **helpdesk a ticketing**
+(v názve produktu, v pilieroch aj v deme) a **prihlásenie cez sportnet.online**
+v prípadovej štúdii. Ani jedno neexistuje. Text sa nepíše sám — predložené Jánovi
+ako plán, nie opravé potichu: je to jeho pozicioning, nie moja vec.
+
+---
+
 ## 2026-09-16 (večer) — O17: z auditu vyšla prvá zmena kódu
 
 Audit skôr dnes našiel zásadu o pseudonymizácii a kolekciu, ktorá ju nespĺňa.
