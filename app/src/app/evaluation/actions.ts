@@ -41,7 +41,7 @@ export async function prepareCurationAction(fd: FormData) {
         answer: fieldText(fd, "answer"),
         chunkIds,
       },
-      ctx.person.email,
+      ctx.person.id,
     )
   } catch (e) {
     if (isRedirect(e)) throw e

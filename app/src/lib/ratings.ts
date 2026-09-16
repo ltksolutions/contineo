@@ -44,6 +44,7 @@ export interface CurationState {
   /** Úseky predpisu, z ktorých odpoveď vznikla. Pri zverejnení sa overia proti databáze. */
   chunkIds: string[]
   preparedAt: Date
+  /** `persons.id` hodnotiteľa. Nie e-mail — viď poznámku pri `reviewer`. */
   preparedBy: string
 
   // ── až po zverejnení ──────────────────────────────────────────────────
@@ -53,6 +54,7 @@ export interface CurationState {
   /** Odvodená úroveň — nikdy zadaná. Viď `strictestAccessLevel()`. */
   accessLevel?: AccessLevel
   publishedAt?: Date
+  /** `persons.id` správcu obsahu. */
   publishedBy?: string
   expiredAt?: Date
   expiredBecause?: string
@@ -117,7 +119,7 @@ export interface RatingRecord {
    */
   readerNote?: string
   readerNoteAt?: Date
-  /** Kto hlásil. Nepodpisuje sa ako `reviewer` — neposudzoval, oznámil. */
+  /** Kto hlásil — `persons.id`. Nepodpisuje sa ako `reviewer`: neposudzoval, oznámil. */
   readerNoteBy?: string
   /**
    * „Sedí / nesedí" od toho, kto sa pýtal. `null` = nepovedal nič.
@@ -142,9 +144,27 @@ export interface RatingRecord {
    * je zároveň príznak „vybavené" — podľa nej sa záznam odstráni z fronty.
    */
   evaluatedAt?: Date
+  /** `persons.id` hodnotiteľa. */
   evaluatedBy?: string
 
-  reviewer: string
+  /**
+   * Kto je za záznamom — **`persons.id`, nie e-mail** (O17, 2026-09-16).
+   *
+   * **Prečo tu odkaz stačí, a v `acknowledgements` nie.** Potvrdenie je dôkaz
+   * o oboznámení so zäväzným predpisom a platí pri ňom „kópia, nie odkaz"
+   * (D24): o rok musí byť čitateľné bez dohľadávania v kolekcii, ktorá sa
+   * medzitým zmenila. **Tento záznam dôkaz nie je** — je to meranie kvality
+   * odpovedí. Odkaz preto stačí a má vlastnosť, ktorú kópia nemá: keď osobu
+   * z `persons` zmažeme, väzba zmizne s ňou. Presne to sa pri žiadosti
+   * o výmaz očakáva (`GDPR_DATA_PROTECTION.md` kap. 3).
+   *
+   * **Chýbajúce pole znamená „nikto nebol prihlásený"** — verejný widget.
+   * Externé identifikátory (Sportnet, Entra, Google) sem **nepatria**: sú na
+   * `persons.externalRef` a osoba prihlásená cez cudzí systém sa zakladá
+   * automaticky (D47), takže `personId` má. Dve miesta pre tú istú identitu
+   * by sa raz rozšli.
+   */
+  reviewer?: string
   createdAt: Date
   updatedAt: Date
 }
@@ -185,7 +205,7 @@ export const RATINGS_COLLECTION = "evaluations"
  */
 export async function recordAnswer(
   z: NewRating,
-  reviewer: string,
+  personId: string | null,
   companyCode?: string
 ): Promise<string> {
   const col = await getCollection<RatingRecord>(RATINGS_COLLECTION)
@@ -193,11 +213,12 @@ export async function recordAnswer(
 
   const record: RatingRecord = {
     ...z,
-    // Organizácia aj e-mail idú z prihlásenia, nie z tela požiadavky (D32).
+    // Organizácia aj osoba idú z prihlásenia, nie z tela požiadavky (D32).
     ...(companyCode ? { companyCode } : {}),
     correct: null,
     hallucination: null,
-    reviewer: reviewer,
+    // Chýbajúce pole = nikto prihlásený. Prázdny reťazec by bol tretí stav.
+    ...(personId ? { reviewer: personId } : {}),
     createdAt: now,
     updatedAt: now,
   }
@@ -272,7 +293,8 @@ export interface ReaderFeedback {
 export async function saveReaderFeedback(
   id: string,
   feedback: ReaderFeedback,
-  person: string
+  /** `persons.id`, alebo `null` pri neprihlásenom — vtedy sa podpis nezapisuje. */
+  personId: string | null
 ): Promise<boolean> {
   if (!ObjectId.isValid(id)) return false
 
@@ -283,7 +305,7 @@ export async function saveReaderFeedback(
     if (text) {
       changes.readerNote = text
       changes.readerNoteAt = new Date()
-      changes.readerNoteBy = person
+      if (personId) changes.readerNoteBy = personId
     }
   }
   if (!Object.keys(changes).length) return false

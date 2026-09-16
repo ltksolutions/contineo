@@ -1,6 +1,6 @@
 # O17 — v `evaluations` je e-mail, stačí `personId` (plán realizácie)
 
-> **Stav:** ⬜ návrh na schválenie. **Založené:** 2026-09-16 (podnet Ján Letko:
+> **Stav:** ✅ **realizované 2026-09-16.** **Založené:** 2026-09-16 (podnet Ján Letko:
 > „pri O17 potrebujeme e-mail? nestačí nejaké internal/external ID?").
 > **Nadväzuje na:** D10 a `docs/GDPR_DATA_PROTECTION.md` kap. 3 (minimalizácia),
 > D24 (dôkazné záznamy), D32 (izolácia organizácie), O15/O16 (otázky pre DPO).
@@ -76,12 +76,38 @@ teraz práve preto, že je lacná.
 - **Vetva bez osoby.** `caller()` v `api/rating/route.ts` má fallback na token
   bez záznamu v `persons`; vtedy `personId` neexistuje. Viď otvorenú otázku.
 
-## 6. Otvorené — na rozhodnutie pred realizáciou
+## 6. Rozhodnuté (Ján Letko, 2026-09-16)
 
-1. **Čo do poľa, keď volajúci nemá záznam v `persons`?** Dnes tam ide e-mail
-   z tokenu, prípadne `"anonym"`. Návrh: `null` a zachovať literál `"anonym"`
-   pre testovacie dáta, aby `delete_test_data.mjs` fungoval ďalej.
-2. **Migrovať aj `curation.preparedBy` a `publishedBy`?** Návrh: áno — je to tá
-   istá kolekcia a dve pravidlá v jednom zázname sa raz zamenia.
-3. **Zahodiť e-mail pri migrácii úplne?** Návrh: áno. Ponechať ho „pre istotu"
-   znamená, že sa nič nevyriešilo.
+1. **Čo do poľa, keď volajúci nemá záznam v `persons`?** → **Chýbajúce pole.**
+   Jedno pole, dva stavy. Externé ID sa sem **nezapísuje** — a nemusí:
+   `persons.externalRef` už nesie `sportnetId`, `entraObjectId` a `googleSub`,
+   a osoba prihlásená cez cudzí systém sa zakladá automaticky (D47), takže
+   `personId` má. Dve miesta pre tú istú identitu by sa raz rozšli.
+   Literál `"anonym"` sa neponechal — v produkcii nebol ani jeden taký záznam,
+   takže `delete_test_data.mjs` už nemá čo robiť.
+2. **Migrovať aj `curation.preparedBy` a `publishedBy`?** → **Áno.**
+3. **Zahodiť e-mail pri migrácii úplne?** → **Áno.**
+
+> **Poznámka k GDPR, ktorá pri rozhodovaní padla a patrí sem:** externé ID nie je
+> „menej osobný údaj" než `personId`. Oba sú pseudonymné identifikátory a oba sú
+> osobný údaj. Zisk nie je v tvare identifikátora, ale v tom, že je to **väzba,
+> ktorá zomrie s osobou** — a to platí pre `personId` v našej vlastnej databáze.
+
+## 7. Čo sa naozaj spravilo (2026-09-16)
+
+- **Päť polí** v `lib/ratings.ts` a `lib/curation.ts` nesie `persons.id`; názvy
+  polí sa nemenili (popisujú rolu, nie formát) a JSDoc hovorí prečo.
+- **`caller()`** v `api/rating/route.ts` vracia `personId`, nie e-mail. E-mail
+  z tokenu sa už nezapísuje vôbec.
+- **Meno sa dohľadáva**, neukladá: `pendingCurations()` robí jeden dotaz do
+  `persons` na celý zoznam a obrazovka `/library/curation` ukáže meno, alebo
+  „osoba už nie je v adresári", keď osoba zanikla. Rovnako `ratings_overview.mjs`.
+- **Migrácia** `npm run migrate:eval-personid` — náhľad predvolený, zápis cez
+  `--zapisat`. Prebehla na produkcii: **7 záznamov, 12 polí, 0 nenamapovaných**.
+  Opakovaný beh hlási, že niet čo migrovať — skript je idempotentný.
+- **Invariant v `npm run check`**: v ktoromkoľvek z tých piatich polí nesmie byť
+  znak `@`. Bez neho by sa e-mail vrátil prvým zabudnutým volajúcim a nikto by si
+  to nevšimol — je to pole, ktoré sa bežne nečíta.
+
+**Nedotknuté zostalo `acknowledgements`** a je to zásadné: tým e-mail zostáva,
+lebo sú dôkaz (D24). Kto by to raz chcel „zjednotiť", nájde dôvod v JSDoc oboch.

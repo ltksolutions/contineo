@@ -83,7 +83,7 @@ export default async function CurationPage({
                 {t.access}: {item.accessLevelPreview === "public" ? t.accessPublic : t.accessInternal}
               </span>
               <span className="quiet" style={{ fontSize: 12.5, marginLeft: "auto" }}>
-                {t.preparedBy} {item.preparedBy} · {formatDate(item.preparedAt, language)}
+                {t.preparedBy} {item.preparedByName || t.preparedByUnknown} · {formatDate(item.preparedAt, language)}
               </span>
             </div>
 

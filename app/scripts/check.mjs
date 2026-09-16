@@ -206,6 +206,28 @@ if (qaChunks.length) {
   console.log(`${INFO} overených odpovedí v indexe: ${qaChunks.filter(c => c.isActive).length} aktívnych z ${qaChunks.length}\n`)
 }
 
+/*
+ * N. V zázname o hodnotení nesmie byť e-mail (O17).
+ *
+ * Podpisy sú `persons.id`, nie adresy — dôvod je v `RatingRecord.reviewer`.
+ * Bez tejto kontroly by sa e-mail vrátil pri prvom volajúcom, ktorý na to
+ * zabudne, a nikto by si to nevšimol: je to pole, ktoré sa bežne nečíta.
+ */
+const POLIA_PODPISU = ["reviewer", "readerNoteBy", "evaluatedBy", "curation.preparedBy", "curation.publishedBy"]
+const hodnotenia = await db.collection("evaluations")
+  .find(tenantFilter, { projection: { reviewer: 1, readerNoteBy: 1, evaluatedBy: 1, curation: 1 } })
+  .toArray()
+for (const z of hodnotenia) {
+  for (const pole of POLIA_PODPISU) {
+    const hodnota = pole.startsWith("curation.") ? z.curation?.[pole.slice(9)] : z[pole]
+    check(
+      typeof hodnota === "string" && hodnota.includes("@"),
+      `hodnotenie ${z._id} má v poli „${pole}" e-mail, nie „persons.id"`,
+      "záznam o hodnotení nie je dôkaz a nemá držať osobný údaj doslovne — spusti `npm run migrate:eval-personid -- --zapisat`",
+    )
+  }
+}
+
 if (withoutValidity > 0) {
   console.log(`${INFO} ${withoutValidity} aktívnych znení nemá dátum platnosti — nedajú sa potvrdiť (D6)\n`)
 }

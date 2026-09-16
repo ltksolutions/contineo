@@ -39,7 +39,7 @@
 | **Kolá schvaľovania** (`approval_rounds`) | kto predložil, kto schválil alebo zamietol, kedy a prečo | áno |
 | **Log pripomienok** (`reminder_log`) | komu sa v ktorý deň odoslala pripomienka | áno |
 | **Upozornenia** (`notifications`) | ktorej osobe sa ukázala ktorá udalosť a kedy si ju prečítala | áno |
-| **Záznamy odpovedí** (`evaluations`) | pri **každej** odpovedi: otázka človeka a odpoveď systému **doslovne**, zdroje a citácie, model, časy a cena, e-mail toho, kto sa pýtal a jeho organizácia; nepovinne „sedí/nesedí" a popis chyby od čitateľa, posudok hodnotiteľa a **e-mail hodnotiteľa** (`evaluatedBy`) | áno |
+| **Záznamy odpovedí** (`evaluations`) | pri **každej** odpovedi: otázka človeka a odpoveď systému **doslovne**, zdroje a citácie, model, časy a cena, organizácia a **`persons.id`** toho, kto sa pýtal (od O17, 2026-09-16 — predtým e-mail); nepovinne „sedí/nesedí" a popis chyby od čitateľa, posudok hodnotiteľa a `persons.id` hodnotiteľa | áno — otázka je voľný text, podpisy sú pseudonymné odkazy |
 | **Evidenčné údaje osoby** (`persons`) | meno a priezvisko zvlášť, tituly, pracovná pozícia, oddelenie, **mobilný telefón**, pracovisko (mesto/obec) | áno |
 | **Fotka osoby** (`person_photos`) | fotografia ako uložený súbor | áno |
 | **Prihlasovacie kontá** (`auth_users`) | e-mail, meno, `emailVerified` — technická vrstva NextAuth pod `persons` (`lib/authAdapter.ts`) | áno |
@@ -104,10 +104,11 @@ niečo o správaní konkrétneho človeka, nie o jeho povinnosti. Preto:
 ## 3. Minimalizácia údajov (zásady)
 
 - `userId`/`sessionId` **pseudonymizovať**; neukladať zbytočné PII do logov konverzácií.
-  > ⚠️ **Dnes nesplnené.** `evaluations` ukladá e-mail toho, kto sa pýtal, aj
-  > e-mail hodnotiteľa **doslovne** (`lib/ratings.ts`, kap. 2 a 4). Buď sa to
-  > pseudonymizuje, alebo sa zásada prepíše tak, aby zodpovedala skutočnosti —
-  > **rozhodnutie čaká na Jána a DPO** (patrí k O15/O16).
+  > ✅ **Splnené v `evaluations` (O17, 2026-09-16).** Päť podpisových polí nesie
+  > `persons.id`, nie adresu. Meno sa dohľadáva pri zobrazení; keď osoba
+  > z `persons` zmizne, väzba zmizne s ňou. **`acknowledgements` e-mail držia
+  > ďalej a zámerne** — sú dôkaz a platí pri nich „kópia, nie odkaz" (D24).
+  > Stráži to invariant v `npm run check`: v podpise nesmie byť znak `@`.
 - Osobné údaje **nikdy** do URL/query parametrov (už platné bezpečnostné pravidlo).
 - Identitu držať len v nevyhnutnom rozsahu; zdroj pravdy je Sportnet — Contineo drží minimálnu kópiu potrebnú pre prístup a maže ju pri odobratí príslušnosti.
 - Obsah odpovedí filtrovaný prístupovými právami (PRISTUPOVE_PRAVA) — používateľ nikdy nedostane údaje, ktoré nesmie vidieť.
@@ -131,7 +132,7 @@ niečo o správaní konkrétneho človeka, nie o jeho povinnosti. Preto:
 | **Kolá schvaľovania** (`approval_rounds`) | **ako potvrdenia** | schválenie je dôvod, prečo znenie vôbec smelo ísť ľuďom |
 | **Log pripomienok** (`reminder_log`) | **90 dní** (TTL) | prevádzkový záznam proti dvojitému odoslaniu, nie dôkaz. Dôkazom je `notified[]` na pridelení |
 | **Upozornenia** (`notifications`) | **90 dní** (rozhodnuté 2026-09-15) | prevádzková správa o dobehnutej operácii, nie dôkaz. Je to údaj o **správaní** — čo kto kedy videl — takže lehota je krátka a zhodná s `reminder_log`: jedno pravidlo namiesto dvoch |
-| **Záznamy odpovedí** (`evaluations`) | **12 mesiacov** (návrh, nie rozhodnutie) | **dnes sa nemažú — lehota nie je zavedená.** Je to najstaršia diera v tejto tabuľke: kolekcia zbiera od D9 a doteraz tu nebola. Otázka je text, ktorý napísal človek, takže môže obsahovať osobný údaj; bez nej sa ale odpoveď nedá spätne posúdiť |
+| **Záznamy odpovedí** (`evaluations`) | **12 mesiacov** (návrh, nie rozhodnutie) | **dnes sa nemažú — lehota nie je zavedená.** Otázka je text, ktorý napísal človek, takže môže obsahovať osobný údaj; bez nej sa ale odpoveď nedá spätne posúdiť. Podpisy sú od O17 pseudonymné (`persons.id`), takže pri výmaze osoby väzba zanikne aj bez lehoty |
 
 | **Osoby** (`persons`) | **otvorené — patrí k O16** | doklady na ňu ukazujú cez `personId` a majú prežiť odchod. Nestačí jedno číslo: `docs/ZALOHOVANIE_A_RETENCIA.md` kap. 3 pomenúva tri cesty (nechať / anonymizovať / zmazať oboje) |
 | **Prihlasovacie kontá** (`auth_users`) | **s osobou** | technická vrstva pod `persons`; sama o sebe drží len e-mail a meno, ale bez nej sa osoba neprihlási — maže sa spolu s ňou |

@@ -44,6 +44,7 @@ import { ObjectId } from "mongodb"
 import { getCollection } from "./mongodb"
 import { CHUNKS_COLLECTION } from "./libraryWrite"
 import { RATINGS_COLLECTION } from "./ratings"
+import { PERSONS_COLLECTION } from "./persons"
 import type { RatingRecord, CurationState, AccessLevel } from "./ratings"
 import { AppError } from "./appError"
 
@@ -471,7 +472,10 @@ export interface PendingCuration {
   question: string
   answer: string
   chunkIds: string[]
+  /** `persons.id` hodnotiteľa — na obrazovku sa dáva `preparedByName`. */
   preparedBy: string
+  /** Meno dohľadané z `persons`. Prázdne, keď osoba už neexistuje (O17). */
+  preparedByName: string
   preparedAt: Date
   /** Názvy predpisov, z ktorých pár vznikol — na obrazovke, nie v rozhodovaní. */
   sources: CurationSource[]
@@ -499,6 +503,20 @@ export async function pendingCurations(companyCode: string): Promise<PendingCura
     .toArray()
   const byId = new Map(chunks.map(c => [String(c._id), c]))
 
+  /*
+   * Mená sa dohľadávajú, nie ukladávajú (O17). Záznam nesie `persons.id`;
+   * keď osoba medzitým zanikla, meno je prázdne a je to správne — väzba má
+   * zomrieť s ňou. Jeden dotaz na celý zoznam, nie na riadok.
+   */
+  const osoby = await getCollection<{ id: string; fullName?: string }>(PERSONS_COLLECTION)
+  const idOsob = [...new Set(rows.map(z => z.curation?.preparedBy).filter(Boolean))] as string[]
+  const menaOsob = new Map(
+    idOsob.length
+      ? (await osoby.find({ companyCode, id: { $in: idOsob } } as never).toArray())
+          .map(o => [o.id, o.fullName ?? ""] as const)
+      : []
+  )
+
   return rows.map(z => {
     const chunkIds = z.curation?.chunkIds ?? []
     const mine = chunkIds.map(id => byId.get(id)).filter(Boolean) as (typeof chunks)
@@ -508,6 +526,7 @@ export async function pendingCurations(companyCode: string): Promise<PendingCura
       answer: z.curation?.answer ?? "",
       chunkIds,
       preparedBy: z.curation?.preparedBy ?? "",
+      preparedByName: menaOsob.get(z.curation?.preparedBy ?? "") ?? "",
       preparedAt: z.curation?.preparedAt ?? new Date(0),
       sources: mine.map(c => ({
         chunkId: String(c._id),

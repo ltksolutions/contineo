@@ -23,21 +23,26 @@ import { isEvaluator } from "@/lib/evaluation"
 import { currentPerson } from "@/lib/session"
 
 /**
- * Kto je na druhej strane. Kým nie je prihlasovanie, ide o „anonym".
+ * Kto je na druhej strane — **`persons.id`, alebo nič** (O17).
  *
- * Token je záložná cesta pre prípad, že sa osoba v `persons` nenájde —
- * e-mail vtedy vieme, organizáciu nie. Záznam bez `companyCode` sa do
- * žiadnej fronty nedostane, čo je bezpečnejšie než ho pripísať naslepo.
+ * `personId: null` znamená „nikto prihlásený": buď verejný widget, alebo
+ * platný token bez záznamu v `persons`. E-mail z tokenu sa **nezapisuje** —
+ * záznam o hodnotení nie je dôkaz a nemá preto držať osobný údaj doslovne
+ * (pozri `RatingRecord.reviewer`). Token sa číta už len preto, aby sa
+ * rozlíšilo prihlásené volanie od úplne cudzieho.
+ *
+ * Záznam bez `companyCode` sa do žiadnej fronty nedostane, čo je
+ * bezpečnejšie než ho pripísať naslepo.
  */
 async function caller(req: NextRequest) {
   const person = await currentPerson().catch(() => null)
-  if (person) return { email: person.email, companyCode: person.companyCode, person }
+  if (person) return { personId: person.id, companyCode: person.companyCode, person }
 
   try {
     const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET })
-    return { email: (token?.email as string) ?? "anonym", companyCode: undefined, person: null }
+    return { personId: null, signedIn: Boolean(token), companyCode: undefined, person: null }
   } catch {
-    return { email: "anonym", companyCode: undefined, person: null }
+    return { personId: null, signedIn: false, companyCode: undefined, person: null }
   }
 }
 
@@ -85,7 +90,7 @@ export async function POST(req: NextRequest) {
         tokens: body.tokens,
         cost: body.cost,
       },
-      who.email,
+      who.personId,
       who.companyCode
     )
     return NextResponse.json({ id })
@@ -125,7 +130,7 @@ export async function PATCH(req: NextRequest) {
     if (readerNote !== undefined) feedback.note = readerNote
 
     try {
-      const saved = await saveReaderFeedback(body.id, feedback, who.email)
+      const saved = await saveReaderFeedback(body.id, feedback, who.personId)
       if (!saved) {
         return NextResponse.json({ error: "nothing-to-save" }, { status: 400 })
       }
@@ -141,7 +146,7 @@ export async function PATCH(req: NextRequest) {
    * rozhodnutie o prístupe a to patrí na hranicu systému, kde je známa
    * prihlásená osoba. Skladá sa zo session, nikdy z tela požiadavky (D32).
    */
-  if (!isEvaluator(who.person)) {
+  if (!isEvaluator(who.person) || !who.person) {
     return NextResponse.json({ error: "forbidden" }, { status: 403 })
   }
 
@@ -163,7 +168,7 @@ export async function PATCH(req: NextRequest) {
   }
 
   try {
-    const ok = await saveVerdict(body.id, edit, who.email)
+    const ok = await saveVerdict(body.id, edit, who.person.id)
     if (!ok) {
       return NextResponse.json({ error: "record-not-found" }, { status: 404 })
     }

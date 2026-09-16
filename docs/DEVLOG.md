@@ -10,6 +10,39 @@
 
 ---
 
+## 2026-09-16 (večer) — O17: z auditu vyšla prvá zmena kódu
+
+Audit skôr dnes našiel zásadu o pseudonymizácii a kolekciu, ktorá ju nespĺňa.
+Ján sa spýtal to správne: **„potrebujeme e-mail? nestačí nejaké internal/external
+ID?"** — a tá otázka rozhodla celý návrh.
+
+### Čo ma na tom prekvapilo
+
+**Tretí prípad neexistoval.** Ján váhal medzi `personId` a externým ID, lebo si
+predstavil človeka prihláseného cez cudzí systém. Keď som sa pozrel do kódu,
+`persons` už nesie `externalRef { sportnetId, entraObjectId, googleSub }`
+a D47 osobu pri prihlásení zakladá automaticky — takže taký človek **má
+`personId`**. Otázka sa tým zmenšila z troch možností na dve. Poučenie:
+keď sa návrh láme na „čo keď nastane X", najprv over, či X vôbec môže nastať.
+
+**Argument, ktorý som skoro nepovedal.** Chcel som porovnávať `personId`
+a externé ID podľa toho, ktoré je „bezpečnejšie". Nie je to tak: **oba sú
+pseudonymné identifikátory a oba sú osobný údaj.** Zisk nie je v tvare
+identifikátora, ale v tom, že väzba zomrie s osobou. Bez tejto vety by sa
+rozhodovalo o nesprávnej veci.
+
+**Skoro som zachoval literál, ktorý už nič neznamená.** Plán rátal s tým, že
+`"anonym"` treba nechať kvôli `delete_test_data.mjs`. Spočítal som to a v produkcii
+je **0 takých záznamov** — skript už nemá čo robiť a obmedzenie zmizlo.
+
+### Detail, ktorý sa oplatí držať
+
+Invariant v `npm run check` (žiadne `@` v podpisových poliach) nie je opatrnosť navyše.
+Sú to polia, ktoré sa bežne nečítajú — keby ich jeden zabudnutý volajúci začal
+plniť e-mailom, nezistilo by sa to málokedy, ale **nikdy**.
+
+---
+
 ## 2026-09-16 — audit dokumentácie proti kódu
 
 **Zadanie Jána:** „Doplnme správne dokumentáciu nech je to v súlade so

@@ -44,6 +44,15 @@ try {
 
   const records = await col.find({}).sort({ createdAt: 1 }).toArray()
 
+  /*
+   * Podpisy su od O17 `persons.id`, nie e-maily — meno sa dohladava. Ked
+   * osoba medzitym zanikla, ostane holy identifikator a je to spravne:
+   * vazba ma zomriet s nou.
+   */
+  const osoby = await db.collection("persons").find({}, { projection: { id: 1, fullName: 1 } }).toArray()
+  const menaOsob = new Map(osoby.map(o => [o.id, o.fullName ?? ""]))
+  const meno = id => (id ? menaOsob.get(id) || `${id} (nie je v adresari)` : "neprihlaseny")
+
   if (!records.length) {
     console.log(`${WARN} Kolekcia evaluations je prázdna — zatiaľ sa nikto na nič nespýtal.`)
     process.exit(0)
@@ -60,7 +69,7 @@ try {
     console.log("overená odp.:", z.verifiedAnswer ? z.verifiedAnswer.slice(0, 80) + "…" : "—")
     console.log("poznámka:    ", z.note ?? "—")
     console.log("nahlásené:   ", z.readerNote ? z.readerNote.slice(0, 80) + "…" : "—")
-    console.log("hodnotiteľ:  ", z.reviewer, "· model:", z.model)
+    console.log("hodnotiteľ:  ", meno(z.reviewer), "· model:", z.model)
     console.log("TTFT:        ", z.ttftMs, "ms · celkovo:", z.celkovoMs, "ms")
     console.log("fázy:        ", JSON.stringify(z.casy ?? {}))
     console.log()

@@ -700,6 +700,8 @@ interface Dictionary {
     publishEmpty: string
     publishEmptyNote: string
     preparedBy: string
+    /** Keď osoba, ktorá pár pripravila, už v `persons` nie je (O17). */
+    preparedByUnknown: string
     access: string
     accessPublic: string
     accessInternal: string
@@ -2307,6 +2309,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     publishEmpty: "Momentálne nie je čo zverejniť.",
     publishEmptyNote: "Pár sem pridá hodnotiteľ z obrazovky „Na posúdenie“.",
     preparedBy: "pripravil",
+    preparedByUnknown: "osoba už nie je v adresári",
     access: "Prístup",
     accessPublic: "verejný",
     accessInternal: "interný",
@@ -4119,6 +4122,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     publishEmpty: "Momentálně není co zveřejnit.",
     publishEmptyNote: "Pár sem přidá hodnotitel z obrazovky „K posouzení“.",
     preparedBy: "připravil",
+    preparedByUnknown: "osoba už není v adresáři",
     access: "Přístup",
     accessPublic: "veřejný",
     accessInternal: "interní",
@@ -5923,6 +5927,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     publishEmpty: "Nothing to publish right now.",
     publishEmptyNote: "An evaluator adds pairs here from the „To evaluate“ screen.",
     preparedBy: "prepared by",
+    preparedByUnknown: "person no longer in the directory",
     access: "Access",
     accessPublic: "public",
     accessInternal: "internal",

@@ -268,7 +268,7 @@ DPA medzi zväzom a Contineom a doložka pokrývajúca tok údajov Sportnet → 
 | `approval_rounds` | kto predložil, menovaní schvaľovatelia (meno a adresa ako odtlačok), rozhodnutie, dôvod zamietnutia, kedy sa komu ozvalo |
 | `reminder_log` | komu a v ktorý deň sa odoslala pripomienka |
 | `notifications` | personId, druh udalosti, ktorého dokumentu sa týkala, počet, čas vzniku a čas prečítania — **nie text správy** |
-| `evaluations` | e-mail toho, kto sa pýtal, a jeho organizácia, **otázka a odpoveď systému doslovne pri každej odpovedi**, zdroje a citácie, model, časy a cena; nepovinne „sedí/nesedí" a popis chyby od čitateľa, posudok hodnotiteľa a **jeho e-mail** |
+| `evaluations` | `persons.id` toho, kto sa pýtal, a jeho organizácia (**nie e-mail** — od O17, 2026-09-16), **otázka a odpoveď systému doslovne pri každej odpovedi**, zdroje a citácie, model, časy a cena; nepovinne „sedí/nesedí" a popis chyby od čitateľa, posudok hodnotiteľa a jeho `persons.id` |
 | `persons` | meno a priezvisko zvlášť, tituly, pracovná pozícia, oddelenie a jeho história, **mobilný telefón**, pracovisko, e-mail, stav — **od D87 viditeľné celej organizácii** v adresári |
 | `person_photos` | fotografia osoby |
 | `auth_users` | e-mail, meno, `emailVerified` — prihlasovacie konto pod `persons` |

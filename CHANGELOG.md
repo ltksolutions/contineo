@@ -4,6 +4,42 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### V zázname o hodnotení už nie je e-mail (O17, 2026-09-16)
+
+Audit dokumentácie našiel v `GDPR_DATA_PROTECTION.md` zásadu „`userId`/`sessionId`
+pseudonymizovať" a hneď vedľa kolekciu, ktorá ju nespĺňa. **Päť polí
+v `evaluations` — `reviewer`, `readerNoteBy`, `evaluatedBy`,
+`curation.preparedBy` a `curation.publishedBy` — držalo e-mailovú adresu
+doslovne.** Odteraz drží `persons.id`.
+
+**Prečo tu odkaz stačí, a v potvrdení nie.** `acknowledgements` e-mail držia
+zámerne: sú dôkaz o oboznámení so zäväzným predpisom a platí pri nich „kópia,
+nie odkaz" (D24) — o rok musia byť čitateľné bez dohľadávania. Záznam
+o hodnotení dôkaz nie je, je to meranie kvality. Odkaz preto stačí a má
+vlastnosť, ktorú kópia nemá: **keď osobu zmažeme, väzba zmizne s ňou.**
+
+**Externé ID sa sem nezapísuje** — a nemusí. `persons.externalRef` už nesie
+`sportnetId`, `entraObjectId` aj `googleSub`, a osoba prihlásená cez cudzí
+systém sa zakladá automaticky (D47), takže `personId` má. Dve miesta pre tú istú
+identitu by sa raz rozšli. Pri rozhodovaní padla aj poznámka, ktorá stojí za
+zapamätanie: **externé ID nie je „menej osobný údaj" než `personId`** — oba sú
+pseudonymné identifikátory. Zisk nie je v tvare, ale v tom, že väzba zomrie
+s osobou.
+
+**Chýbajúce pole znamená „nikto prihlásený"** — verejný widget. E-mail z tokenu
+sa už nezapísuje vôbec.
+
+- **Meno sa dohľadáva, neukladá.** `/library/curation` ukáže meno z `persons`,
+  alebo „osoba už nie je v adresári", keď zanikla — jeden dotaz na celý zoznam.
+- **Migrácia** `npm run migrate:eval-personid` s náhľadom ako predvolbou.
+  Na produkcii: 7 záznamov, 12 polí, 0 nenamapovaných; opakovaný beh už nemá čo
+  robiť.
+- **Invariant v `npm run check`:** v tých piatich poliach nesmie byť znak `@`.
+  Bez neho by sa e-mail vrátil prvým zabudnutým volajúcim a nikto by si to
+  nevšimol — je to pole, ktoré sa bežne nečíta.
+
+Rozhodnutie a plán: **`docs/O17_plan_personid_v_hodnoteniach.md`**.
+
 ### Dokumentácia dobehla kód — audit 30 dokumentov (2026-09-16)
 
 „Dokumentácia je indícia, kód a `git log` sú pravda." Po dni, ktorý zrušil
