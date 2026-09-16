@@ -35,7 +35,7 @@ CMS je **jediné miesto pravdy pre obsah**. Všetok obsah doň vstupuje cez kan�
 | | **Dokument (norma/predpis/manuál)** | **Web obsah (článok/FAQ/stránka)** |
 |---|---|---|
 | Primárny účel | zdroj pre RAG vyhľadávanie | čítanie ľuďmi na verejnom webe |
-| Pôvod | upload, MCP, web, API | ručne napísaný kurátorom / odvodený z `qa_pairs` |
+| Pôvod | upload, MCP, web, API | ručne napísaný kurátorom / odvodený z overenej odpovede |
 | Štruktúra | originálny súbor + Markdown + § citácie | Markdown + SEO meta + zaradenie do navigácie |
 | Verzovanie | `effectiveFrom/To`, `isActive` (právna platnosť) | draft/publish, plánované publikovanie |
 | Môže ísť do RAG? | **áno** (primárne) | **voliteľne** (článok ako zdroj odpovede) |
@@ -115,7 +115,7 @@ Plne nadväzuje na `CISELNIKY_governance.md` a per-dokument tok z `INGESTION`:
 | Typ | Popis | Príklad |
 |---|---|---|
 | **KB článok** | kurátorský návod/vysvetlenie, Markdown, zaradený do kategórie | „Ako zaregistrovať hráča" |
-| **FAQ** | otázka + odpoveď; často odvodené zo schválených `qa_pairs` | „Dokedy platí registrácia?" |
+| **FAQ** | otázka + odpoveď; často odvodené zo zverejnených overených odpovedí | „Dokedy platí registrácia?" |
 | **Kategória / rozcestník** | zoskupenie článkov, landing pre tému | „Registrácie", „Súťaže" |
 | **Statická stránka** | O projekte, Kontakt, GDPR, Podmienky | `/o-nas`, `/gdpr` |
 | **Navigácia** | menu, breadcrumb, poradie sekcií | hlavné menu KB |
@@ -125,7 +125,7 @@ Plne nadväzuje na `CISELNIKY_governance.md` a per-dokument tok z `INGESTION`:
 
 Toto je najsilnejšia synergia a treba ju rozhodnúť explicitne:
 
-- **RAG → web:** schválená dvojica `qa_pairs` (D11 — kurovaná odpoveď) sa môže **publikovať ako FAQ článok**. Z reálnych otázok používateľov tak rastie verejná KB.
+- **RAG → web:** zverejnená overená odpoveď (D11, revidované 2026-09-15) sa môže **publikovať ako FAQ článok**. Z reálnych otázok používateľov tak rastie verejná KB. **Na verejný web smie ísť len pár s `accessLevel: public`** — a tú úroveň mu nikto nezadáva ručne, odvodzuje sa z najprísnejšieho zo zdrojových úsekov (`strictestAccessLevel()`).
 - **Web → RAG:** KB článok môže byť zároveň **zdroj pre RAG** (`accessLevel: public`), aby chatbot odpovedal aj z kurátorských článkov, nielen z noriem.
 - **Norma → web:** norma sa na webe nezobrazuje celá ako „článok", ale ako **kanonický odkaz/náhľad** (názov, sekcia, platnosť, link na originál) — kurátorský výklad ostáva v KB článku.
 
@@ -218,7 +218,7 @@ draft  →  in_review  →  scheduled (voliteľné)  →  published  →  unpubl
 |---|---|---|
 | `documents` | **rozšíriť** | + `processingStatus`, `contentType` (`document`/`web`), `webPublish` (slug, seo, navParent, publishAt), `versions[]`. **Web obsah žije tu (D-CMS-1)** — žiadna samostatná kolekcia. |
 | `document_chunks` | bez zmeny | RAG chunky (Model B) |
-| `qa_pairs` | existuje (Fáza 4b) | kurované odpovede; zdroj pre FAQ na webe |
+| ~~`qa_pairs`~~ | **nevznikne** (revidované 2026-09-15) | kurovaná odpoveď žije ako stav `curation` na zázname v `evaluations` + úsek v `document_chunks` so `sourceType: "qa"`; zdroj pre FAQ na webe |
 | `tickets` | existuje (plán) | helpdesk; väzba na konverzácie a na KB |
 | ~~`web_pages`~~ | **zamietnuté** | web obsah nie je samostatná kolekcia — žije v `documents` cez `contentType` (D-CMS-1) |
 | `navigation` | **nová** | menu/štruktúra verejnej KB (poradie, hierarchia, jazyk) |
@@ -238,7 +238,7 @@ Nadväzuje na `PRISTUPOVE_PRAVA.md` — **práva v CMS sa neodvodzujú z rolí s
 | Rola | Môže |
 |---|---|
 | **Admin** | správa kanálov, číselníkov, používateľov CMS, reconciliation execute |
-| **Kurátor** | upload/import, tagovanie a review, publish do RAG aj na web, qa_pairs→FAQ |
+| **Kurátor** | upload/import, tagovanie a review, publish do RAG aj na web, overená odpoveď→FAQ |
 | **Redaktor (web)** | tvorba a publikovanie web obsahu (KB/FAQ/stránky), bez správy číselníkov |
 | **Legislatívec** *(konzultačná)* | potvrdenie precedencie noriem (D5), platnosti `effectiveFrom/To` |
 | **Čitateľ (interný)** | prístup k internej KB cez SSO (nie editácia) |
@@ -249,7 +249,7 @@ Nadväzuje na `PRISTUPOVE_PRAVA.md` — **práva v CMS sa neodvodzujú z rolí s
 
 1. **Norma do RAG**: kurátor nahrá PDF → `converting`→`indexed`; LLM navrhne tagy → kurátor potvrdí (validačná brána) → `published` → vstupuje do dotazu.
 2. **KB článok na web**: redaktor napíše Markdown → zaradí do kategórie/navigácie → preview → `published`; voliteľne `accessLevel:public` aj do RAG.
-3. **FAQ z reálnej otázky**: schválený `qa_pair` → kurátor jedným krokom publikuje ako FAQ na web.
+3. **FAQ z reálnej otázky**: zverejnená overená odpoveď → kurátor jedným krokom publikuje ako FAQ na web.
 4. **Nový kanál**: admin vytvorí MCP kanál (Notion) → test `discover` → naplánuje sync → stiahnuté položky padnú do review fronty → kurátor potvrdí.
 5. **Zmena číselníka**: admin spustí change-request → preview dotknutých dokumentov → approve → batch remap (bez re-embed) → rollback 1 level k dispozícii.
 
@@ -262,7 +262,7 @@ Nadväzuje na `PRISTUPOVE_PRAVA.md` — **práva v CMS sa neodvodzujú z rolí s
 | Knižnica dokumentov, processing stavy, review UI | **Fáza 4 (Import & CMS)** | jadro media managera |
 | Verzovanie noriem (`effectiveFrom/To`, `isActive`) | **Fáza 4 / 5** | D6 |
 | Reconciliation UI (`codelist_change_requests`) | **Fáza 4b** | preview/approve/execute |
-| qa_pairs kurácia → FAQ | **Fáza 4b** | zatváranie slučky |
+| overená odpoveď → FAQ | **Fáza 4b** | zatváranie slučky; sám pár už existuje (2026-09-15) |
 | Web obsah (KB/FAQ/stránky), generovanie, i18n | **nová Fáza (CMS-Web)** | doteraz neplánované — pridať do roadmapy |
 | Správa kanálov (`channels`, `channel_runs`, monitoring) | **Fáza 6 (Scheduler & monitoring)** | adaptéry MCP/API tu |
 | Helpdesk (`tickets`, widget, e-mail) | **samostatná feature-fáza** | D12, D14 |

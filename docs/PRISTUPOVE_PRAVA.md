@@ -142,6 +142,15 @@ sharedWithCompanyCodes: [],           // explicitný zoznam CompanyID, čo smú 
 isActive: true
 ```
 
+> **Úsek nemusí pochádzať z dokumentu.** Overené odpovede (`sourceType: "qa"`,
+> od 2026-09-15) nesú `derivedFrom` — zoznam úsekov predpisu, z ktorých odpoveď
+> vznikla — a ich `accessLevel` sa **nikdy nezadáva ručne**. Odvodzuje ho
+> `strictestAccessLevel()` (`lib/curation.ts`): `public` vyjde len vtedy, keď sú
+> verejné **všetky** zdroje; prázdny zoznam, `null` aj neznáma hodnota sú
+> `internal` — nevedieť znamená zavrieť. Zmena metadát dokumentu páru úroveň
+> prepočíta a pri chybe prepočtu ho stiahne na `internal`. `npm run check` má
+> invariant, že pár nesmie byť prístupnejší než jeho zdroje.
+
 > „Zdieľanie nahor/nadol" v hierarchii je v UI len pohodlie — pri uložení sa rozbalí na **explicitný** `sharedWithCompanyCodes[]` (cez `companyCode.parent`), aby filter ostal jednoduchý a jednoznačný.
 
 ### 6.2 Logika prístupu k chunku

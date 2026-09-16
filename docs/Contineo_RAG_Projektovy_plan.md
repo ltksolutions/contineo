@@ -496,7 +496,7 @@ dôvodom, prehľad pre rolu `hr`. **Uzatvára D30.**
 ## 8. MongoDB schémata
 
 > **Kanonický dátový model = Model B** (rozhodnuté 2026-06-25). Schémy nižšie sú **stav Fázy 3 (Model A)**.
-> Cieľové názvy: `rag_chunks` → `document_chunks`, `rag_chat_history` → `conversations`, `rag_documents` → `documents`, + nové `qa_pairs`, `tickets` a doménové polia (`sectionKey`, `companyCode`, `scope`, `articleRef`, verzovanie `isActive`/`effectiveFrom/To`).
+> Cieľové názvy: `rag_chunks` → `document_chunks`, `rag_chat_history` → `conversations`, `rag_documents` → `documents`, + nové `tickets` (kurácia vlastnú kolekciu nemá — viď Fázu 4b) a doménové polia (`sectionKey`, `companyCode`, `scope`, `articleRef`, verzovanie `isActive`/`effectiveFrom/To`).
 > Úplné mapovanie a fázová migrácia: **`docs/DATA_MODEL_konzistencia.md`**.
 > Kolekcie onboardingu (`acknowledgements`, `persons`, `onboarding_tracks`) a rozšírenie `documents.versions[]`: **`docs/ONBOARDING_KONCEPCIA.md`** kap. 3.
 

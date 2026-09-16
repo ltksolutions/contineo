@@ -197,7 +197,7 @@ do originálu, najmä keď ho číta vytlačený alebo v prehliadači PDF.
 chunkovanie — len sa pridá pole. Do citácie sa zapojí až vtedy, ak sa ukáže, že to používatelia
 chcú.
 
-**Kedy rozhodnúť:** po prvom kole D9, podľa toho, či hodnotitelia budú citácie dohľadávať v PDF.
+**Kedy rozhodnúť:** podľa prevádzky — keď sa v nahlásených nepresnostiach alebo v posudkoch hodnotiteľov objaví, že ľudia citácie dohľadávajú v PDF. *(Pôvodný spúšťač „po prvom kole D9" padol so zrušením zlatej sady — ADR-008.)*
 Import je idempotentný (verzia = hash obsahu), takže doplnenie znamená len opakovaný beh.
 
 ### D17 — Tabuľky pri extrakcii z PDF 🟡
@@ -228,8 +228,10 @@ presiahne cieľový limit. Tabuľku otvára popis (`Tabuľka č. N`) alebo markd
 zatvára ju až štruktúrny prvok (článok, časť, príloha, nový odsek). Chunk s tabuľkou nesie
 príznak `obsahujeTabulku`. Implementácia: `app/scripts/lib/chunker.mjs`, pokryté testami.
 
-**Zostáva otvorené:** či siahnuť po extrakcii s rozložením (možnosť 3). Rozhodnúť **až keď D9
-ukáže, že tabuľkové otázky zlyhávajú** — bez dôkazu by to bola predčasná optimalizácia.
+**Zostáva otvorené:** či siahnuť po extrakcii s rozložením (možnosť 3). Rozhodnúť **až keď
+prevádzka ukáže, že tabuľkové otázky zlyhávajú** (nahlásené nepresnosti v `evaluations`) — bez
+dôkazu by to bola predčasná optimalizácia. *(Pôvodným zdrojom dôkazu bola zlatá sada D9;
+zrušená — ADR-008.)*
 
 **Súvisiace:** `app/scripts/lib/chunker.mjs`, `docs/INGESTION_zdroje_reconciliation.md`
 

@@ -240,7 +240,12 @@ nechcel. Návratový kód 1 pri rozpore, takže sa dá zavesiť za preindexovani
 3. potvrdené znenie má uložený text (dôkaz bez textu je bezcenný),
 4. publikované znenie má aktívne úseky (inak o norme vyhľadávanie nevie),
 5. model vektorov sedí s nastavením (miešanie modelov nič nezhodí, len ticho zhorší výsledky),
-6. cesta priečinkov sedí so zaradením.
+6. znenie bez dátumu platnosti sa nedá potvrdiť (D6) — upozornenie, nie chyba,
+7. cesta priečinkov sedí so zaradením,
+8. nikto nemá rolu, ktorú kód nepozná — vrátane starého `spravca-obsahu`, ktoré
+   by sa mohlo vrátiť zo zálohy a ticho odobrať prístup,
+9. overená odpoveď (`sourceType: "qa"`) nie je prístupnejšia než predpis,
+   z ktorého vznikla, má aspoň jeden zdroj a neprežije jeho zneaktívnenie.
 
 Prvý beh hneď našiel skutočný nález: `sfz:test_onboarding` má publikované
 znenie a ani jeden úsek — seedovací skript zapisuje dokument, nie chunky.

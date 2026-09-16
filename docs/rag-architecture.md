@@ -200,7 +200,9 @@ Dotaz
 > **Kanonické názvy = Model B** (zladené vo Fáze 4). Polia v camelCase. Doménové polia
 > (`sectionKey`, `companyCode`, `scope`, `articleRef`, verzovanie) sú súčasťou schémy; ich
 > napĺňanie pri importe rieši Fáza 4/5. Plné mapovanie a migrácia: `docs/DATA_MODEL_konzistencia.md`.
-> Nové kolekcie `qa_pairs` (kurácia) a `tickets` (helpdesk) — Fáza 4b.
+> Kurácia **nemá vlastnú kolekciu** (D11, revidované 2026-09-15): stav páru je na zázname
+> v `evaluations`, do indexu ide úsek so `sourceType: "qa"` a poľom `derivedFrom`.
+> Nová kolekcia `tickets` (helpdesk) — Fáza 4b.
 > Nové kolekcie `persons`, `acknowledgements`, `onboarding_tracks` a rozšírenie `documents.versions[]` — Fáza 8,
 > viď `docs/ONBOARDING_KONCEPCIA.md` a `docs/ADR-003-onboarding-a-potvrdzovanie.md`. Onboarding **nevolá žiadny model** —
 > reťaz z `docs/AKO_TO_BEZI.md` pri ňom nebeží.
