@@ -38,6 +38,12 @@ sa už nezapísuje vôbec.
   Bez neho by sa e-mail vrátil prvým zabudnutým volajúcim a nikto by si to
   nevšimol — je to pole, ktoré sa bežne nečíta.
 
+- **`scripts/delete_test_data.mjs` odstránený** (so súhlasom Jána). Mazal
+  hodnotenia s `reviewer: "anonym"` — záznamy z čias pred prihlasovaním.
+  V produkcii nebol ani jeden a po O17 sa už žiadny taký nemôže objaviť:
+  neprihlásené volanie nezapíše podpis vôbec. Skript, ktorý nikdy nič
+  nenájde, je horší než žiadny — vyzerá, že niečo stráži.
+
 Rozhodnutie a plán: **`docs/O17_plan_personid_v_hodnoteniach.md`**.
 
 ### Dokumentácia dobehla kód — audit 30 dokumentov (2026-09-16)

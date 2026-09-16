@@ -6,10 +6,8 @@
  *     npm run docs:delete -- --company SFZ --grandfathered             náhľad
  *     npm run docs:delete -- --company SFZ --tag test --naozaj         vykoná
  *
- * **Predvolene beží nasucho.** Mazať sa musí vypýtať — rovnako ako
- * `delete_test_data.mjs`. Rozdiel oproti nemu je vecný: ten maže hodnotenia,
- * tento dokumenty. Do jedného skriptu to nepatrí, lebo sa spúšťajú v úplne
- * iných situáciách a s inou mierou opatrnosti.
+ * **Predvolene beží nasucho.** Mazať sa musí vypýtať — rovnako ako každý
+ * skript, ktorý sa dotýka ostrých dát.
  *
  * ## Tri poistky, ktoré tu sú zámerne
  *

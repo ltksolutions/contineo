@@ -83,8 +83,11 @@ teraz práve preto, že je lacná.
    `persons.externalRef` už nesie `sportnetId`, `entraObjectId` a `googleSub`,
    a osoba prihlásená cez cudzí systém sa zakladá automaticky (D47), takže
    `personId` má. Dve miesta pre tú istú identitu by sa raz rozšli.
-   Literál `"anonym"` sa neponechal — v produkcii nebol ani jeden taký záznam,
-   takže `delete_test_data.mjs` už nemá čo robiť.
+   Literál `"anonym"` sa neponechal — v produkcii nebol ani jeden taký záznam.
+   `scripts/delete_test_data.mjs` tým stratil zmysel a bol **odstránený**
+   (so súhlasom Jána, 2026-09-16): po O17 sa záznam bez podpisu už ani
+   nemôže objaviť, takže by nikdy nič nenašiel — a skript, ktorý nikdy nič
+   nenájde, vyzerá, že niečo stráži.
 2. **Migrovať aj `curation.preparedBy` a `publishedBy`?** → **Áno.**
 3. **Zahodiť e-mail pri migrácii úplne?** → **Áno.**
 
