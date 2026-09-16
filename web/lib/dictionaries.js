@@ -389,7 +389,7 @@ export const dictionaries = {
       nextTag: "Pripravujeme",
       nextIntro: "Zatiaľ nie je súčasťou nasadenia.",
       next: [
-        "Čalšie pravidlá prednosti — vyššia norma pred nižšou, osobitná pred všeobecnou.",
+        "Ďalšie pravidlá prednosti — vyššia norma pred nižšou, osobitná pred všeobecnou.",
         "Dotaz na historické znenie — archivované verzie sú uložené aj s dátumami platnosti, sprístupnenie vo vyhľadávaní pripravujeme.",
         "Automatické sledovanie externých zdrojov — zbierka zákonov a vestníky sa aktualizujú samy.",
         "Upozornenie na rozpor: interná smernica hovorí niečo iné než platný zákon alebo vykonávací predpis.",
@@ -547,7 +547,7 @@ export const dictionaries = {
         { icon: "layers", title: "Vymeniteľné AI adaptéry", text: "Embedding, rerank a generovanie sú tri nezávislé adaptéry vyberané konfiguráciou tenanta, nie kódom. Cloud: Voyage a Claude. On-prem: Infinity alebo TEI a vLLM s modelom podľa vášho výberu (Qwen3, EuroLLM, Gemma)." },
         { icon: "quote", title: "Citácie a verzie", text: "Každá odpoveď uvádza zdroj a verziu. Import novej verzie nestratí starú — cituje sa vždy platné znenie." },
         { icon: "shield", title: "Multi-tenant a bezpečnosť", text: "Hierarchia organizácií (centrála → regionálne → lokálne jednotky) ako samostatní tenanti. Verejný obsah vidia všetci; interný obsah len príslušníci danej jednotky. Audit pri každej zmene znalostí." },
-        { icon: "layers", title: "Vstupné kanály (obsah aj integrácie)", text: "Jedna vrstva, ktorou tečie obsah. Dnes cez ňu ide nahratý súbor — DOCX, PDF, XLSX, Markdown, TXT, CSV — prevod beží u nás a všetko končí v jednom indexe. Čalšie kanály (weby a RSS, MCP konektory, e-mail) pripravujeme. Zdroj identity poskytuje identitu, nie obsah." },
+        { icon: "layers", title: "Vstupné kanály (obsah aj integrácie)", text: "Jedna vrstva, ktorou tečie obsah. Dnes cez ňu ide nahratý súbor — DOCX, PDF, XLSX, Markdown, TXT, CSV — prevod beží u nás a všetko končí v jednom indexe. Ďalšie kanály (weby a RSS, MCP konektory, e-mail) pripravujeme. Zdroj identity poskytuje identitu, nie obsah." },
         { icon: "ticket", title: "Helpdesk a e-mail (pripravujeme)", text: "Sledovanie e-mailových schránok, ticketing a predpripravené odpovede s eskaláciou z vyhľadávania. Zatiaľ nie je súčasťou nasadenia — dnes beží nahlásenie nepresnosti a fronta hodnotiteľa." },
         { icon: "brain", title: "Kontrola kvality a kurácia", text: "Nejde o strojové učenie modelu, ale o ľudskú kuráciu: správca ohodnotí a schváli odpoveď, tá sa uloží ako overená odpoveď a embeduje späť. Nová overená odpoveď nikdy potichu neprepíše schválený predpis." },
       ],
