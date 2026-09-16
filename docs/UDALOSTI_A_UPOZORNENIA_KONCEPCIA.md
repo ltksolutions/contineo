@@ -12,7 +12,7 @@
 
 ## 1. Prečo to nie je len widget
 
-Dnes je „čo mám urobiť" roztrúsené: normy na potvrdenie sú na `/dokumenty`,
+Dnes je „čo mám urobiť" roztrúsené: normy na potvrdenie sú na `/documents`,
 helpdesk zatiaľ neexistuje, systémové hlásenia nikde. Kto sa prihlási, nevie
 bez preklikania, či naňho niečo čaká.
 

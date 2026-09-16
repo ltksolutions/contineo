@@ -328,7 +328,7 @@ vpravo chip Aktuálna / Archív / Návrh.
 
 ---
 
-### 5. Opýtať sa / globálne vyhľadávanie (`/search`)
+### 5. Opýtať sa / globálne vyhľadávanie (`/ask`)
 
 **Layout:** `max-width: 860px; margin: 0 auto`.
 - Pole `height: 40px`, `14px`, `border-radius: 10px`, placeholder „Opýtajte sa celou
@@ -437,7 +437,7 @@ monospace hex `11.5px` `--muted`.
 ## Interactions & Behavior
 
 - **Navigácia:** prepínanie obrazoviek; v produkcii to sú routy
-  (`/`, `/library`, `/library/[id]`, `/search`, `/library/new`, `/organisation`,
+  (`/`, `/library`, `/library/[id]`, `/ask`, `/library/new`, `/organisation`,
   `/sign-in`) — nie klientský state.
 - **Prepínač organizácie:** mení názov, iniciálu a hlavnú farbu. Zatvára sa klikom mimo.
 - **Facety a chips:** každý klik prepína hodnotu, zoznam sa filtruje okamžite, chip sa

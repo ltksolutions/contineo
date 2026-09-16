@@ -99,7 +99,7 @@ príčina, prečo sa človeku v zozname nič neobjaví, a dnes ju odhalí len sk
 **Rozsah A — vidieť** `[1–2 dni]`
 - rola `platform-admin`, `requirePlatformAdmin()` (rola **a** hostiteľ)
 - `/admin` — zoznam tenantov s prehľadom vyššie
-- `/admin/tenanti/[kod]` — detail vrátane menovitého zoznamu problémov
+- `/admin/tenants/[code]` — detail vrátane menovitého zoznamu problémov
 - mobile first, testy na to, čo môže ukázať nepravdu
 
 **Rozsah B — meniť, čo je bezpečné** `[2–3 dni]`
@@ -127,7 +127,8 @@ obyčajné „naozaj?".
   dokumenty a nie potvrdenia. Keby to raz bolo treba (podpora), je to
   samostatné rozhodnutie so záznamom o každom nahliadnutí — nie vlastnosť
   tejto roly.
-- **Správa osôb zákazníka.** Na to je import a HR obrazovka (Fáza 9 rozsah B).
+- **Správa osôb zákazníka.** Na to je `/people` s rolou `people-admin` (D46)
+  a import zo súboru.
 - **Fakturácia a zmluvy.** Iný systém, iný životný cyklus.
 
 ---

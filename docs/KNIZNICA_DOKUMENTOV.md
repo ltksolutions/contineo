@@ -75,19 +75,19 @@ celkom bežná. Súbory sú v **GridFS** v tej istej databáze: ďalšie úloži
 znamenalo ďalší token, ďalšiu vec, ktorá vypadne, a ďalšie miesto, kde žijú
 údaje zákazníka — dátová rezidencia je vyriešená raz, pri Atlase (ADR-002).
 
-Neverejná cesta `/api/kniznica/subor/<id>` vyžaduje prihlásenie, rolu a zhodu
+Neverejná cesta `/api/library/file/<id>` vyžaduje prihlásenie, rolu a zhodu
 organizácie: identifikátor v GridFS sa dá uhádnuť (D32).
 
 ### Chunker sa presunul, nie prepísal
 
 `chunker.mjs` je v `src/lib/` **bez jediného zásahu do kódu**; typy sú vedľa
-v `chunker.d.ts` a skripty ho berú cez preberací bod. Prepis do TypeScriptu by
+v `chunker.d.mts` a skripty ho berú cez preberací bod. Prepis do TypeScriptu by
 znamenal stovky mechanických zmien v algoritme, ktorý sa meniť nemá — a tichá
 zmena členenia sa prejaví až tým, že model odcituje nesprávny článok.
 Obrazovka aj `import.mjs` teda režú rovnako; dve kópie by sa rozišli presne
 pri novele.
 
-Rovnako sú spoločné číselníky (`ciselniky.ts`): to, čo prejde importom,
+Rovnako sú spoločné číselníky (`lib/codelists.ts`): to, čo prejde importom,
 nesmie obrazovka odmietnuť ani naopak.
 
 ## Čo zostáva
@@ -137,16 +137,16 @@ Robí štyri veci:
 Krátka odpoveď: **nie je to potrebné a prepis by bol drahší než jeho prínos.**
 
 Typy na hraniciach — čo do funkcie vchádza a čo vychádza — sú v
-`chunker.d.ts`, takže volajúci kód je kontrolovaný. Chýba len kontrola *vnútri*
-tých 439 riadkov, a to je kód, ktorý sa skladá z regulárnych výrazov nad
+`chunker.d.mts`, takže volajúci kód je kontrolovaný. Chýba len kontrola *vnútri*
+tých vyše päťsto riadkov, a to je kód, ktorý sa skladá z regulárnych výrazov nad
 reťazcami; typový systém tam veľa neuchráni. Naopak, prepis znamená stovky
 mechanických zmien v algoritme, ktorý je odladený na deviatich skutočných
 predpisoch a ktorého chyby sú **tiché** — neprejavia sa pádom, ale tým, že
 model raz odcituje nesprávny článok.
 
-Jedno riziko tá dvojica má a treba ho vedieť: `.d.ts` sa môže rozísť
+Jedno riziko tá dvojica má a treba ho vedieť: `.d.mts` sa môže rozísť
 s implementáciou a nikto si to nevšimne. Kryje ho `tests/chunker.test.mjs`
-(53 testov, volá skutočné funkcie so skutočnými reťazcami) — pokiaľ testy
+(volá skutočné funkcie so skutočnými reťazcami) — pokiaľ testy
 bežia, typy sedia s tým, čo sa naozaj deje.
 
 Ak sa chunker bude niekedy podstatne meniť, prepis dáva zmysel — ale
@@ -197,7 +197,7 @@ Preto pri zmene dátumu na znení, ktoré už niekto potvrdil, obrazovka **odmie
 uložiť bez rozhodnutia**: buď oprava zápisu (potvrdenia zostávajú), alebo
 podstatná zmena (`requiresReacknowledgement`, D30). Systém to rozhodnúť nevie —
 nepozná, či medzi tými dvoma dátumami niekto podľa normy konal. Obe možnosti
-sa zapisujú do `versions[].opravy[]` aj do auditu.
+sa zapisujú do `versions[].fixes[]` aj do auditu.
 
 ## D58 — profil členenia per organizácia
 
@@ -205,7 +205,7 @@ Chunker sa bude ladiť často. Vlastný **kód** per zákazník by ale znamenal 
 kópií jedného pravidla, ktoré sa rozídu — a chyba v jednej sa neprejaví pádom,
 ale tým, že model odcituje nesprávny článok u jedného zákazníka o pol roka.
 
-Preto: **jeden algoritmus, parametre navonok.** V `/organizacia`, záložka
+Preto: **jeden algoritmus, parametre navonok.** V `/organisation`, záložka
 Členenie: slovo, ktorým začína článok a príloha, prah na hlavičky a cieľová
 veľkosť úseku.
 
@@ -273,7 +273,7 @@ text a nový prevod toho istého súboru líšia.
 
 ### Hromadné preindexovanie
 
-V `/organizacia`, záložka Členenie, pod profilom. Ukazuje, **koľko dokumentov
+V `/organisation`, záložka Členenie, pod profilom. Ukazuje, **koľko dokumentov
 by nový profil narezal inak** — a počíta to naozajstným narezaním každého
 dokumentu, nie odhadom: to je jediný spôsob, ako povedať, či zmena parametra
 na tomto konkrétnom obsahu vôbec niečo spraví.

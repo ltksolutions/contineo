@@ -56,7 +56,8 @@ z nej nedá zistiť, kto to vlastne bol. Je to ten istý dôvod, pre ktorý je
 `reason` pri pridelení povinný (D30) a pre ktorý potvrdenie nesie odtlačok mena
 (D24). Návrh to má tak isto: *„Schvaľovatelia · Marek Horák · Právne · 1/6"*.
 
-Kto smie **predložiť** na schválenie: `content-manager`, teda tá istá rola, čo
+Kto smie **predložiť** na schválenie: `content-admin` (v čase rozhodnutia
+`spravca-obsahu`), teda tá istá rola, čo
 dnes nahráva. Kto smie schvaľovať: ktokoľvek, koho predkladateľ menoval —
 **okrem seba**. Kto text nahral, ho neschvaľuje; inak je schválenie podpis pod
 vlastnú prácu.

@@ -47,7 +47,7 @@ Rozhoduje druhý a tretí riadok. Zväz, ktorý dá do systému vlastné predpis
 má vedieť sám odvolať prístup a sám vidieť, kto sa prihlasoval — a nemá sa
 o to prosiť dodávateľa. Cena je jednorazová, tá výhoda trvá.
 
-**Údaje zadávame my** (`/admin/tenanti/[kod]`), nie zákazník: sú to tri polia,
+**Údaje zadávame my** (`/admin/tenants/[code]`), nie zákazník: sú to tri polia,
 ktoré IT správca pošle raz pri zavedení. Samoobslužná obrazovka pre zákazníka
 je ďalší krok, nie tento.
 
@@ -182,7 +182,7 @@ platformy sem prístup nemá.
 
 **Etapa 1 — prihlásenie** ✅ hotové 2026-08-29
 - [x] šifrovanie tajomstiev (`lib/tajomstva.ts`)
-- [x] `tenants.oauth` + polia v `/admin/tenanti/[kod]` vrátane vypísanej adresy návratu
+- [x] `tenants.oauth` + polia v `/admin/tenants/[code]` vrátane vypísanej adresy návratu
 - [x] poskytovatelia podľa hostiteľa, brána, tlačidlá na prihlasovacej obrazovke
 - [x] testy na bránu: cudzí Entra tenant, neoverená adresa, chýbajúce `tid`, cudzia doména Workspace
 
@@ -225,7 +225,7 @@ systém funguje vnútri — IT správca zväzu potrebuje vedieť štyri veci a n
 
 **Adresa návratu je najčastejšia príčina toho, prečo prihlásenie hneď na prvý
 raz nejde.** Musí sedieť na znak vrátane `https://` a bez lomky na konci;
-obrazovka `/admin/tenanti/[kod]` ju preto vypisuje v hotovom tvare.
+obrazovka `/admin/tenants/[code]` ju preto vypisuje v hotovom tvare.
 
 **Google Workspace** je analogický: Google Cloud Console → *APIs & Services* →
 *Credentials* → *OAuth client ID* → typ **Web application**, redirect URI
@@ -268,7 +268,7 @@ Porovnáva sa **celá doména**, nie koncovka: `endsWith` by pustilo aj
 ### D48 — organizácia si spravuje nastavenie sama
 
 Vzhľad, jazyky, vlastné prihlasovacie údaje a domény si mení zákazník na
-**svojej** doméne (`/organizacia`), rolou `people-admin`. Kód organizácie
+**svojej** doméne (`/organisation`), rolou `people-admin`. Kód organizácie
 a vypnutie portálu tam nie sú — to sú veci medzi ním a nami.
 
 **Správca platformy si ponecháva plnú správu všetkých organizácií** cez
@@ -329,7 +329,7 @@ vznikla druhá kópia pravidla v podobe agregácie — a tá by sa s prvou rozi�
 presne pri reorganizácii.
 
 Cena je jasná a je zapísaná v kóde: **pri presune oddelenia sa cesty prepočítajú**
-všetkým v podstrome (`prepocitajCesty()`), a zaradenie osoby sa zapisuje spolu
+všetkým v podstrome (`recomputePaths()`), a zaradenie osoby sa zapisuje spolu
 s cestou v jednom zápise. Keby sa cesta dopĺňala neskôr, existoval by okamih,
 v ktorom človek do oddelenia patrí, ale pridelenie sa ho netýka — a nikto by
 neuhádol prečo.
@@ -352,7 +352,7 @@ neuhádol prečo.
 `npm run departments -- --tenant SFZ` ukáže, čo by vzniklo; s `--zapis` to založí.
 Strom je po prevode **plochý**: zo zápisu „Odbor médií" sa nedá vyčítať, pod
 koho patrí, a hádať to podľa podreťazcov by vyrobilo štruktúru, ktorá vyzerá
-hotovo a nesedí. Hierarchiu doklikne človek v `/organizacia`, záložka Oddelenia.
+hotovo a nesedí. Hierarchiu doklikne človek v `/organisation`, záložka Oddelenia.
 
 ### D50 — čo robí reorganizácia s už pridelenými normami
 
@@ -368,7 +368,7 @@ deň v práci úlohu spred roka, teda hneď po termíne, a **bez príznaku „no
 lebo pridelenie je staršie než jeho predošlé prihlásenie (D39). To je presne
 ten stav, ktorý nikto nevie vysvetliť.
 
-Preto osoba nesie `departmentHistory` a `datumPreOsobu()` vracia neskorší
+Preto osoba nesie `departmentHistory` a `dateForPerson()` vracia neskorší
 z dvoch dátumov. Platí to **len pre publikum druhu oddelenie**: skupina ani trasa
 históriu nemajú a predstierať ju by znamenalo tvrdiť niečo, čo nevieme.
 
@@ -489,7 +489,7 @@ heslá, je sám o sebe únik**, a to s dlhšou retenciou než to, čo chráni.
 
 #### Zápis nikdy nezhodí zmenu
 
-`zapisAudit()` nevyhadzuje výnimku. Keby zlyhanie zápisu zhodilo samotnú
+`writeAudit()` nevyhadzuje výnimku. Keby zlyhanie zápisu zhodilo samotnú
 zmenu, jeden pokazený index v audite by zablokoval správu osôb celej
 organizácii. Zlyhanie sa loguje — chýbajúci záznam je zlý stav, nefunkčný
 portál horší.
@@ -499,9 +499,9 @@ nestali.
 
 #### Kto ho vidí
 
-`people-admin` vidí audit **svojej** organizácie (`/organizacia`, záložka
+`people-admin` vidí audit **svojej** organizácie (`/organisation`, záložka
 Audit, s hľadaním a stropom 200 záznamov). Správca platformy vidí posledných
-50 záznamov každej organizácie v `/admin/tenanti/<KOD>` — kvôli podpore.
+50 záznamov každej organizácie v `/admin/tenants/<KOD>` — kvôli podpore.
 `companyCode` je vždy v podmienke dotazu, nie v kontrole nad ňou: audit cudzej
 organizácie je presne ten druh údaja, ktorý sa nesmie dať vytiahnuť uhádnutím
 identifikátora (D32).
@@ -535,7 +535,7 @@ celý čas.
 #### Dopĺňa sa, neprepisuje
 
 **Adresár nie je nadriadený personalistovi.** Keď niekto meno alebo oddelenie
-v `/osoby` opraví, ďalšie prihlásenie mu opravu neprepíše — inak by ručná
+v `/people` opraví, ďalšie prihlásenie mu opravu neprepíše — inak by ručná
 oprava vydržala len dovtedy, kým sa ten človek znova neprihlási, a nikto by
 nepochopil, prečo sa zmena „neuložila".
 
@@ -565,7 +565,7 @@ a všetko ostatné funguje ďalej.
 #### Fotka je neverejná — na rozdiel od loga
 
 Logo visí na prihlasovacej stránke a prezradí len to, že organizácia tu má
-portál. Fotka je osobný údaj zamestnanca, takže `/api/fotka/<id>` vyžaduje
+portál. Fotka je osobný údaj zamestnanca, takže `/api/photo/<id>` vyžaduje
 prihlásenie a zhodu organizácie (D32) — inak by sa dal z cudzej domény
 vyťahať fotoalbum firmy skúšaním identifikátorov. Pamäť je dlhá, ale
 `private`, aby si ju neodložila spoločná medzipamäť po ceste.

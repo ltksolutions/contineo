@@ -12,7 +12,7 @@
 | názvy súborov | angličtina | `departments.ts`, `folders.ts`, `TreeWithOrder.tsx` |
 | funkcie, typy, premenné, komponenty | angličtina | `allDepartments()`, `interface Department` |
 | polia a kolekcie v Mongu | angličtina | `departmentId`, `versions[]`, `document_chunks` |
-| názvy `npm run` príkazov | angličtina | `npm run check`, `npm run reindex` |
+| názvy `npm run` príkazov | angličtina | `npm run check`, `npm run chunking:status` |
 | kľúče v adrese (`?tab=…`) | angličtina | `?tab=departments` |
 | názvy CSS tried, `id`, kotvy, `@keyframes`, vlastné premenné | angličtina | `.button`, `.field-input`, `.tree-row`, `.is-active`, `#results`, `--level` |
 | **komentáre** | **slovenčina** | `// Bez toho by sa audit dal spätne meniť.` |
@@ -59,10 +59,12 @@ Rozhoduje, kto sa na cestu odkazuje — nie to, či sa niečo maže.
 - **Vnútorné odkazy (importy) sa premenovať dajú.** Riešia sa pri preklade;
   zabudnutý odkaz zhodí `tsc` aj build menovite, takže nemôže vzniknúť stav,
   kde to prejde a rozbije sa až u zákazníka. `git mv` zachová históriu.
-- **Verejné cesty sú zmluva:** `app/**/page.tsx` a `app/api/**/route.ts`
-  (cesta k súboru **je** adresa) a kľúče a hodnoty v adrese. Pri tých sa
-  neprejmenúva, ale **prekladá** — starý tvar zostane fungovať cez tabuľku
-  v `lib/urlParams.ts` a zmizne, keď prestane chodiť.
+- **Verejné cesty sú zmluva:** `app/src/app/**/page.tsx` a
+  `app/src/app/**/route.ts` (cesta k súboru **je** adresa) a kľúče a hodnoty
+  v adrese. Pri tých sa neprejmenúva, ale **prekladá** — starý tvar zostane
+  fungovať a zmizne, keď prestane chodiť. Sú to dve tabuľky: celé cesty
+  prekladá `lib/legacyRoutes.ts` (presmerovanie v middlewari), kľúče
+  a hodnoty v adrese `lib/urlParams.ts`.
 - **Názvy `npm run` príkazov a súborov v `scripts/` sú vnútorné.** Premenovať
   sa dajú naraz s dokumentáciou; nikto zvonku sa na ne neodkazuje.
 - **Názvy polí v MongoDB a v uloženom profile tenanta sú dáta, nie kód.**
@@ -72,8 +74,9 @@ Podrobne: `docs/AKO_TO_BEZI.md`.
 
 ## Zásady, ktoré sa v tomto projekte opakujú
 
-- **Stav sa odvodzuje, neukladá** (D27). Výnimky sú dve a obe majú dôvod
-  zapísaný priamo v kóde: `departmentPath` a `groupHistory` na osobe.
+- **Stav sa odvodzuje, neukladá** (D27). Výnimky sú tri a všetky majú dôvod
+  zapísaný priamo v kóde: `departmentPath`, `departmentHistory` a
+  `groupHistory` na osobe.
 - **Dôkazné záznamy sa nemenia ani nemažú** (D24). Oprava je nový záznam,
   odvolanie je `revokedAt`, nie `deleteOne`.
 - **Kópia, nie odkaz**, všade, kde má byť o rok čitateľné, čo sa vtedy stalo:
@@ -81,8 +84,8 @@ Podrobne: `docs/AKO_TO_BEZI.md`.
 - **`companyCode` patrí do podmienky dotazu**, nie do kontroly nad ním (D32).
   Identifikátory sa dajú uhádnuť.
 - **`redirect()` vyhadzuje výnimku.** Nikdy ho nevolaj vnútri `try`, ktorého
-  `catch` hlási chybu zápisu — alebo použi `jePresmerovanie()` /
-  `isRedirect()` ako prvý riadok toho `catch`.
+  `catch` hlási chybu zápisu — alebo použi `isRedirect()` (`lib/redirects.ts`)
+  ako prvý riadok toho `catch`.
 - **Mobile first je povinnosť**, nie odporúčanie.
 
 ## Kto smie commitovať priamo do `main`

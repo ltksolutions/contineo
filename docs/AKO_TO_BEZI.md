@@ -22,9 +22,9 @@
 | 6 | Preradenie | `$rerank` v pipeline | **rerank-2** | USA | (v kroku 5) | **Cohere Rerank 3.5** cez Bedrock, v aplikačnej vrstve → Frankfurt |
 | 7 | Strážca vektorov | `embeddingGuard.ts` | — | Vercel | < 1 ms | bez zmeny (a bude potrebný viac než dnes) |
 | 8 | Generovanie | `anthropic.ts` | **Sonnet 5** | USA | ~3 s po prvý token | `bedrock.ts` → Claude Sonnet, **Frankfurt** |
-| 9 | Prenos k prehliadaču | SSE → `sseKlient.ts` | — | — | priebežne | bez zmeny |
+| 9 | Prenos k prehliadaču | SSE → `sseClient.ts` | — | — | priebežne | bez zmeny |
 | 10 | Zobrazenie | `formatText.ts` | — | prehliadač | < 1 ms | bez zmeny |
-| 11 | Uloženie | `hodnotenia.ts` | — | Frankfurt | ~50 ms | bez zmeny |
+| 11 | Uloženie | `ratings.ts` | — | Frankfurt | ~50 ms | bez zmeny |
 
 **Tri rôzne modely v jednej odpovedi.** Nie je to prepych: Haiku je desaťkrát
 lacnejší než Sonnet a na prepis dotazu stačí; embedding a rerank sú
@@ -35,8 +35,11 @@ lacnejší než Sonnet a na prepis dotazu stačí; embedding a rerank sú
 ## 0. Prihlásenie
 
 `src/middleware.ts` beží **pred každou stránkou aj API volaním**. Chránené je
-všetko okrem `/prihlasenie` a `/api/auth` — definované ako „všetko okrem", nie
-výpočtom chránených, aby nová stránka bola chránená automaticky.
+všetko okrem `/sign-in`, `/api/auth`, `/tenants/`, `/api/brand/` a `/api/cron/`
+— definované ako „všetko okrem", nie výpočtom chránených, aby nová stránka
+bola chránená automaticky. Zoznam aj s dôvodom ku každej ceste je
+v `lib/publicRoutes.ts` — samostatne preto, že sa dá pokaziť ticho: keď v ňom
+raz `/api/cron/` chýbala, cron sa nevykonával a nebolo to vidieť nikde.
 
 Bez platného tokenu vracia API `401` (nie presmerovanie — HTML stránku by
 klient skúsil čítať ako dátový prúd).
@@ -183,7 +186,7 @@ Zo streamu sa zbierajú aj:
 
 ## 9. Prenos k prehliadaču
 
-Server posiela udalosti ako Server-Sent Events. `src/lib/sseKlient.ts` ich
+Server posiela udalosti ako Server-Sent Events. `src/lib/sseClient.ts` ich
 číta a **drží buffer**: jedna udalosť sa môže rozdeliť medzi dve čítania a
 naivné spracovanie by ju stratilo. Na localhoste sa to neprejaví, v produkcii
 áno.
@@ -204,7 +207,7 @@ to dorazilo k človeku.
 
 ## 11. Uloženie
 
-`src/lib/hodnotenia.ts` zapíše záznam do kolekcie `evaluations` **hneď, ešte
+`src/lib/ratings.ts` zapíše záznam do kolekcie `evaluations` **hneď, ešte
 pred hodnotením**: automatické metriky (latencia, únik interného obsahu,
 odpovede bez citácie) sa dajú spočítať aj z odpovedí, ktoré nikto neposúdil.
 Vypisuje ich `scripts/ratings_overview.mjs`.

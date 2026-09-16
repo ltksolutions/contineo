@@ -193,7 +193,7 @@ To je pre nás dôležitejšie, než sa zdá: **generovanie sa dá dostať do `e
 
 | Súbor | Zmena |
 |---|---|
-| `src/lib/residency.ts` | **nový** — tabuľky lokalít, `skontrolujRezidenciu()`, `prehladLokalit()` |
+| `src/lib/residency.ts` | **nový** — tabuľky lokalít, `checkResidency()`, `locationOverview()` |
 | `src/lib/providers/types.ts` | `DataResidency` rozšírený na päť hodnôt |
 | `src/lib/tenantProfile.ts` | dve podmienky na air-gap nahradené všeobecnou kontrolou |
 | `tests/residency.test.ts` | **nový** — 25 testov vrátane odvodenia lokality z URL |
@@ -262,7 +262,7 @@ Toto je vec, ktorú sa štátny aj bankový zákazník spýta skôr než na kraj
 
 | Súbor | Zmena |
 |---|---|
-| `src/lib/residency.ts` | `Izolacia`, tabuľky izolácie, `skontrolujIzolaciu()`, `prehladIzolacie()`; spoločná pomôcka `jeVlastnaAdresa()` pre obe osi |
+| `src/lib/residency.ts` | `Isolation`, tabuľky izolácie, `checkIsolation()`, `isolationOverview()` — nad tými istými tabuľkami ako rezidencia |
 | `src/lib/providers/types.ts` | `Tier` konečne zdokumentovaný |
 | `src/lib/tenantProfile.ts` | `validateProfile()` kontroluje aj izoláciu |
 | `tests/residency.test.ts` | 22 nových testov (21 → 43) vrátane nezávislosti oboch osí |

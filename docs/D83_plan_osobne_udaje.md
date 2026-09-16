@@ -126,7 +126,7 @@ vydrží. Pracovisko z adresára sa páruje na číselník podľa normalizované
 | 3 | Plnenie z okolia | CSV import, Graph, `auth.ts`, `directorySyncedAt` |
 | 4 | Migrácia | skript najprv nasucho, s výpisom |
 | 5 | Interný adresár | nová obrazovka + GDPR dokumentácia |
-| 6 | Poupratuj | `NEXT.md`, `CHANGELOG.md`, devlog, commit |
+| 6 | Poupratuj | `docs/TODO.md`, `CHANGELOG.md`, `docs/DEVLOG.md`, commit |
 
 ## 6. Migrácia existujúcich osôb
 
