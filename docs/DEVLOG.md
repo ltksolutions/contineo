@@ -10,6 +10,32 @@
 
 ---
 
+## 2026-09-16 (noc) — web dobehnutý, a jedno rozhodnutie navyše
+
+Druhá dávka opráv webu. Ján pritom povedal vetu, ktorá zmenila tón celého
+balíka: **„v prvom kole musíme rozbehať Anthropic a MongoDB riešenie, až keď
+príde hardware, pojdeme na onpremise"**.
+
+To nie je detail, to je roadmapa. Namiesto vágneho „pripravujeme" je odteraz na
+webe pri každom on-prem tvrdení napísané, že **prvé nasadenie príde
+s hardvérom**. Je to poctivejšie a zároveň silší predajný príbeh než sľub bez
+dátumu — a v obstarávaní sa to dá obhájiť.
+
+### Čo ma pri opravách prekvapilo
+
+**Ukážka kódu na stránke Technológia si protirečila sama so sebou.** Mala
+`embedding: [0.0123, …]` v dokumente a zároveň `embeddingProvider: "atlas-auto"`.
+Pri Automated Embedding sa vektor v dokumente **neukladá** — drží ho Atlas,
+a `tenantProfile.ts` dokonca vyhodí chybu, keď `vectorPath` ukazuje na
+`embedding`. Stránku Technológia číta práve ten čitateľ, ktorý si toho všimne.
+
+**Slovenské úvodzovky ma dobehli tretíkrát.** `„sedí / nesedí"` — zatvárací
+znak musí byť `“`, nie `"`. Tentoraz to zhodilo `require()` na slovníku, nie
+`tsc`. **Začína to byť vzor, nie náhoda:** keď generíš kód so slovenským textom,
+skontroluj úvodzovky ešte pred spustením.
+
+---
+
 ## 2026-09-16 (neskoro večer) — audit webu a moja druhá chyba v O18
 
 Ján dal skontrolovať marketingový web proti skutočnosti. Rovnaká metóda ako pri
