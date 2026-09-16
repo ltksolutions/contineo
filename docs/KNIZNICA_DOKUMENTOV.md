@@ -46,6 +46,44 @@ Skenované PDF bez textovej vrstvy sa **neprevádza ticho**: prevod povie, že
 v súbore nie je text, a ponúkne prepis modelom. Text, ktorý vyzerá správne
 a nie je, je pri norme horší než chýbajúci dokument.
 
+### Čo nahrať, aby to dopadlo dobre
+
+> Toto je jediná vec, ktorou správca obsahu ovplyvní kvalitu odpovedí viac
+> než čokoľvek v nastaveniach. Patrí do návodu pre zákazníka.
+
+**Poradie od najlepšieho:**
+
+1. **`.docx` so štýlmi nadpisov** (Nadpis 1, Nadpis 2…) — ideál.
+2. **`.md`** — rovnako dobré, ak ho niekto má.
+3. **`.docx` bez štýlov** — text je čistý, členenie treba doklikať v editore.
+4. **`.pdf` s textovou vrstvou** — funguje, členenie sa dopĺňa ručne alebo prepisom.
+5. **Skenované `.pdf`** — prevod odmietne a povie to.
+
+**Prečo na tom tak záleží.** Chunker je štruktúrny (D1): nedelí po počte
+tokenov, ale po hranici článku, a každý úsek nesie breadcrumb *dokument › časť
+› článok*. Bez neho embedding stráca kontext — veta „(3) Profesionál je hráč,
+ktorý…“ sama o sebe nepovie, z ktorého predpisu je. Pri markdownovom nadpise
+má chunker **voľnejšie pravidlo** (`ARTICLE_MD`): pri `## čl. 5 Základné
+ustanovenia` je pomlčka nepovinná, lebo `#` už hovorí „celý tento riadok je
+nadpis“. Bez nadpisu musí trafiť presný vzor aj s pomlčkou.
+
+**Nadpisy musia byť štýly, nie tučný text.** Mammoth mapuje **štýly**, nie
+vzhľad: `Nadpis 1` sa stane `<h1>` a z neho `#`, ale tučný odsek zostane
+odsekom. Dokument, ktorý *vyzerá* dokonale a je celý v štýle „Normálny“,
+dopadne rovnako zle ako PDF. Toto je najčastejšia príčina zlého členenia.
+
+**Z PDF nadpisy nevzniknú vôbec.** `pdfjs` skladá riadky podľa zvislej
+súradnice — v kóde je to napísané doslova: *PDF nemá riadky, má polohy*.
+Preto prevod PDF **vždy** pridá upozornenie, že členenie treba doplniť.
+
+**Dve veci navyše k `.docx`:**
+
+- **Obrázky sa neprepisujú** a aplikácia to ohlási. Schéma alebo tabuľka
+  vložená ako obrázok sa stratí — tabuľka patrí do tabuľky (tú chunker nikdy
+  nerozdelí, D17).
+- **Obsah (ToC) na začiatku netreba.** V Markdowne z neho vznikne len zoznam
+  riadkov, ktorý pridá šum do indexu; navigáciu robí breadcrumb.
+
 ### Editor: originál vedľa Markdownu
 
 Prevod z PDF je odhad. Rozdiel medzi „vyzerá to dobre" a „je to naozaj to, čo
