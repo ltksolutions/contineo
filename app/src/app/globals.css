@@ -1419,6 +1419,29 @@ button:disabled { cursor: not-allowed; opacity: 0.55; }
 .answer > *:last-child { margin-bottom: 0; }
 .answer li { margin-bottom: 4px; }
 
+/*
+ * Znenie predpisu ako samostatný list papiera.
+ *
+ * Pred tým malo znenie rovnaké pozadie ako stránka a splývalo s ňou —
+ * človek pod ním klikal „potvrdzujem, že som sa oboznámil" a nebolo vidieť,
+ * kde predpis začína a kde končí. Pri právne záväznom úkone je to podstatné:
+ * z obrazovky má byť zrejmé, **čo presne** sa potvrdzuje.
+ *
+ * Preto vlastný blok, nie `.card`: karta je v tomto rozhraní prvok rozhrania
+ * (potvrdenie, upozornenie), toto je obsah dokumentu a znesie viac priestoru.
+ * Mobile first — na telefóne je odsadenie menšie, aby riadok nezostal úzky.
+ */
+.document-sheet {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  padding: 20px 16px;
+}
+
+@media (min-width: 560px) {
+  .document-sheet { padding: 28px 32px; }
+}
+
 /* Kurzor počas streamovania — bez neho nie je poznať, či sa ešte generuje. */
 .caret::after {
   content: "▍";

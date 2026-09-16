@@ -119,7 +119,7 @@ export default async function DocumentPage({
             tento text má pred potvrdením prečítať. Vykresľuje ho ten istý
             komponent ako odpoveď vyhľadávania.
           */}
-          <article className="answer" style={{ lineHeight: 1.7 }}>
+          <article className="answer document-sheet" style={{ lineHeight: 1.7 }}>
             <FormattedText text={version.version.markdown ?? doc.markdown ?? ""} />
           </article>
 
