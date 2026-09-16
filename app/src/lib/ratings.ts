@@ -1,5 +1,5 @@
 /**
- * hodnotenia.ts — ukladanie odpovedí a ľudského posúdenia (D9).
+ * ratings.ts — ukladanie odpovedí a ľudského posúdenia (D9).
  *
  * Prečo to vôbec je: z metrík D9 vie skript spočítať všetko okrem dvoch
  * vecí — *správnosti odpovede* a *halucinácií*. Tie vyžadujú úsudok. Pôvodný

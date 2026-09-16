@@ -1,5 +1,5 @@
 /**
- * ulozisko.ts — pôvodné nahraté súbory (D53).
+ * fileStore.ts — pôvodné nahraté súbory (D53).
  *
  * **Prečo v databáze a nie v cudzom úložisku:** ďalšia služba znamená ďalší
  * token, ďalšiu vec, ktorá môže vypadnúť, a — čo je pri normách podstatnejšie

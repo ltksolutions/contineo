@@ -3,7 +3,7 @@
  *
  * Toto je obrazovková obdoba `scripts/import.mjs`. Čo sa **nezdvojuje**:
  * členenie na chunky (`chunker.mjs`) ani validácia číselníkov
- * (`ciselniky.ts`) — obe sú spoločné. Zdvojený je len postup, lebo skript
+ * (`codelists.ts`) — obe sú spoločné. Zdvojený je len postup, lebo skript
  * berie hotový `.md` z disku a obrazovka nahratý súbor od človeka.
  *
  * ## Dva stavy, ktoré sa nemiešajú

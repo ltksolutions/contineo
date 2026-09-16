@@ -1,5 +1,5 @@
 /**
- * chunkovanie.ts — identita textu a identita členenia (D57).
+ * chunkIdentity.ts — identita textu a identita členenia (D57).
  *
  * ## Prečo to bolo treba rozdeliť
  *

@@ -1,5 +1,5 @@
 /**
- * verzia.ts — čo presne beží.
+ * appVersion.ts — čo presne beží.
  *
  * Obe hodnoty sa vpisujú pri builde cez `next.config.mjs`, nie sa čítajú za
  * behu. Dôvod: `package.json` na serveri Vercelu v runtime nie je a

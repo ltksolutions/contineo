@@ -1,5 +1,5 @@
 /**
- * kniznica.ts — brána k správe obsahu (D53).
+ * library.ts — brána k správe obsahu (D53).
  *
  * **Vlastná rola `content-admin`, nie `hr`.** Kto normy prideľuje, nie je
  * nutne ten istý človek, ktorý ich píše a nahráva — v zväze je to spravidla

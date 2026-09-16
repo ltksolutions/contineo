@@ -1,5 +1,5 @@
 /**
- * konverzia.ts — z nahratého súboru Markdown (D53).
+ * conversion.ts — z nahratého súboru Markdown (D53).
  *
  * **Prevod beží u nás, nie v modeli.** Norma je text, ktorý ľudia potvrdzujú
  * a podľa ktorého konajú; jazykový model ho vie potichu preštylizovať a nikto
@@ -12,7 +12,7 @@
  * Keď sa prevod nepodarí, povie sa to — menovite a s návodom.
  *
  * Čo sem **nepatrí**: rozsekanie na chunky (to je `chunker`), metadáta
- * a číselníky (to je `metadata.ts`), ukladanie (to je `ulozisko.ts`).
+ * a číselníky (to je `metadata.ts`), ukladanie (to je `fileStore.ts`).
  */
 
 import { AppError } from "./appError"

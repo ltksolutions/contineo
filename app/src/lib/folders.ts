@@ -1,5 +1,5 @@
 /**
- * priecinky.ts — virtuálne priečinky knižnice (D56).
+ * folders.ts — virtuálne priečinky knižnice (D56).
  *
  * Pri desiatich normách stačil zoznam. Pri stovke dokumentov je zoznam
  * zoradený podľa dátumu miesto, kde sa nič nenájde — a `sectionKey` je

@@ -1,5 +1,5 @@
 /**
- * cennik.ts — približná cena jednej odpovede.
+ * pricing.ts — približná cena jednej odpovede.
  *
  * Slúži na orientáciu a na štatistiky, nie na fakturáciu. Skutočnú sumu
  * povie výpis od dodávateľa; toto je odhad z počtu tokenov, ktoré model

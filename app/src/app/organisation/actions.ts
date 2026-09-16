@@ -282,7 +282,7 @@ export async function cancelDomainAction(fd: FormData) {
  *
  * Všetky štyri idú cez `organizaciaContext()`, ktorý stráži rolu aj kód
  * organizácie. Identifikátory prichádzajú z formulára, a preto sa v každej
- * funkcii v `oddelenia.ts` overuje, že patria tejto organizácii — cudzí
+ * funkcii v `departments.ts` overuje, že patria tejto organizácii — cudzí
  * identifikátor sa dá uhádnuť (D32).
  */
 export async function createDepartmentAction(fd: FormData) {

@@ -1,5 +1,5 @@
 /**
- * tajomstva.ts — šifrovanie údajov, ktoré musíme uložiť, ale nesmieme prezradiť.
+ * secrets.ts — šifrovanie údajov, ktoré musíme uložiť, ale nesmieme prezradiť.
  *
  * Dnes je to jediná vec: `clientSecret` k Entra alebo Google aplikácii
  * zákazníka. Nie je to náš údaj — je to prístup do cudzieho systému, ktorý nám

@@ -1,5 +1,5 @@
 /**
- * znacka.ts — logo organizácie ako nahratý súbor, nie odkaz.
+ * branding.ts — logo organizácie ako nahratý súbor, nie odkaz.
  *
  * Dovtedy sa zadávala cesta k súboru v aplikácii (`/tenants/sfz.svg`). To
  * znamenalo, že logo nového zákazníka musel nahrať vývojár do repozitára

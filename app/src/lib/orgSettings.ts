@@ -1,5 +1,5 @@
 /**
- * organizacia.ts — brána k vlastnému nastaveniu organizácie (D48).
+ * orgSettings.ts — brána k vlastnému nastaveniu organizácie (D48).
  *
  * Rovnaký vzor ako `hrContext()` a `peopleContext()`: rola **a** príslušnosť
  * k tenantovi hostiteľa, obe naraz.

@@ -1,5 +1,5 @@
 /**
- * presmerovanie.ts — rozoznanie `redirect()` od skutočnej chyby.
+ * redirects.ts — rozoznanie `redirect()` od skutočnej chyby.
  *
  * `redirect()` v Nexte **vyhadzuje výnimku**; tak sa presmerovanie dostane
  * von zo serverovej akcie. Keď je volanie na ceste úspechu vnútri `try`, jeho

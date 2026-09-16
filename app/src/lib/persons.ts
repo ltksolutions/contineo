@@ -15,7 +15,7 @@
  * nedotknutá — sú to dve rôzne otázky a miešať ich by znamenalo, že sa nedá
  * pozvať človek, ktorý sa ešte nikdy neprihlásil.
  *
- * **Názvy polí sú anglické**, na rozdiel od `hodnotenia.ts`. Nie je to
+ * **Názvy polí sú anglické**, na rozdiel od `ratings.ts`. Nie je to
  * nedôslednosť: `persons` je kolekcia Modelu B rovnako ako `documents`
  * a `document_chunks`, a schéma je takto zapísaná v `docs/ONBOARDING_KONCEPCIA.md`
  * kap. 3.3. Keby sa kód a dokument rozišli v názvoch polí, jeden z nich by

@@ -1,5 +1,5 @@
 /**
- * ciselniky.ts — číselníky pre obrazovku, nie len pre skript (D53).
+ * codelists.ts — číselníky pre obrazovku, nie len pre skript (D53).
  *
  * Doteraz ich čítal `scripts/lib/meta.mjs` zo súborového systému. Vo funkcii
  * na Verceli sa na súborový systém spoliehať nedá, a hlavne — obrazovka

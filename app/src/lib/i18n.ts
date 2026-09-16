@@ -613,9 +613,6 @@ interface Dictionary {
     remove: (value: string) => string
     chosenOf: (chosen: number, total: number) => string
   }
-  /** Knižnica dokumentov (D53). */
-  /** Výpis auditu — používa ho nastavenie organizácie aj `/admin`. */
-  /** Správa tenantov — vidí ju len správca platformy (Fáza 5b). */
   /** Prehľad (`docs/design/README.md`, časť 2). */
   overview: {
     hello: (name: string) => string
@@ -756,6 +753,7 @@ interface Dictionary {
     sources: string
     note: string
   }
+  /** Správa tenantov — vidí ju len správca platformy (Fáza 5b). */
   admin: {
     list: {
       heading: string
@@ -880,6 +878,7 @@ interface Dictionary {
    * `errorText()`, nie volajúci: poradie slov je v každom jazyku iné.
    */
   errors: Record<string, string>
+  /** Výpis auditu — používa ho nastavenie organizácie aj `/admin`. */
   audit: {
     empty: string
     subjects: Record<string, string>
@@ -1269,6 +1268,7 @@ interface Dictionary {
       versionPublished: (title: string, label: string) => string
     }
   }
+  /** Knižnica dokumentov (D53). */
   library: {
     /**
      * Zopakovanie pridelenia na nové znenie.

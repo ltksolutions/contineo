@@ -1,7 +1,7 @@
 /**
- * fotka.ts — fotografia osoby ako uložený súbor, nie odkaz.
+ * photo.ts — fotografia osoby ako uložený súbor, nie odkaz.
  *
- * Rovnaký vzor a rovnaké dôvody ako `znacka.ts`: vo **vlastnej kolekcii**, nie
+ * Rovnaký vzor a rovnaké dôvody ako `branding.ts`: vo **vlastnej kolekcii**, nie
  * v zázname osoby. Záznam osoby sa číta pri každej požiadavke
  * (`currentPerson()`) a nosiť v ňom desiatky kilobajtov obrázka by znamenalo
  * platiť ich pri každom načítaní stránky.

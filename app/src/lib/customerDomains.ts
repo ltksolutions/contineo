@@ -1,5 +1,5 @@
 /**
- * domenyZakaznika.ts — vlastná doména, o ktorú si zákazník požiada sám (D48).
+ * customerDomains.ts — vlastná doména, o ktorú si zákazník požiada sám (D48).
  *
  * Zadanie znelo „nech si domény nastavuje pod sebou, ak to nie je nebezpečné".
  * **Voľný zápis nebezpečný je**, a to dvomi spôsobmi, ktoré na prvý pohľad

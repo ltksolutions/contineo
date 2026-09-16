@@ -1,5 +1,5 @@
 /**
- * ciselnikyTenanta.ts — číselníky, ktoré si organizácia spravuje sama (D55).
+ * codelistsTenant.ts — číselníky, ktoré si organizácia spravuje sama (D55).
  *
  * Doteraz boli všetky číselníky JSON súbory v repozitári. Pri jednom zväze to
  * stačilo; ako produkt to znamená, že druh dokumentu „metodický pokyn" alebo
@@ -53,7 +53,7 @@ export function isCustom(name: string): name is CustomCodelist {
   return (CUSTOM_CODELISTS as readonly string[]).includes(name)
 }
 
-/** Doplnky organizácie v tvare, aký čaká `ciselniky.ts`. */
+/** Doplnky organizácie v tvare, aký čaká `codelists.ts`. */
 export function tenantExtras(tenant: Pick<Tenant, "codelists">): CodelistExtras {
   return (tenant.codelists ?? {}) as CodelistExtras
 }

@@ -1,5 +1,5 @@
 /**
- * oddelenia.ts — organizačná štruktúra ako strom (D49).
+ * departments.ts — organizačná štruktúra ako strom (D49).
  *
  * Oddelenie bol dovtedy **voľný text** na osobe. Pri desiatich ľuďoch to stačilo;
  * pri stovke znamená, že „Legislatíva", „legislatíva" a „Legislat." sú tri

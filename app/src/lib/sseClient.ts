@@ -1,5 +1,5 @@
 /**
- * sseKlient.ts — čítanie odpovede z `/api/chat`.
+ * sseClient.ts — čítanie odpovede z `/api/chat`.
  *
  * Server posiela Server-Sent Events v tvare `data: {…}\n\n`. Vyzerá to
  * jednoducho, ale je tu rovnaká pasca ako pri binárnom streame z Bedrocku:

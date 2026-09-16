@@ -1,5 +1,5 @@
 /**
- * prepisLlm.ts — model ako **druhý krok, ktorý vyvolá človek** (D53).
+ * llmRewrite.ts — model ako **druhý krok, ktorý vyvolá človek** (D53).
  *
  * Prevod v aplikácii je prvý a je doslovný. Model sa volá len vtedy, keď sa
  * naň človek v editore pozrie a klikne — a jeho výsledok sa **nikdy neuloží
