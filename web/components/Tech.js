@@ -3,7 +3,7 @@ import Icon from "./Icon";
 
 const DOC_CHUNKS = `{
   _id, documentId, versionId,
-  sourceType: "pdf",            // pdf | faq | rss | qa | email
+  sourceType: "pdf",            // pdf | md | web | scan | qa
 
   // tagging (used for filtering at search time)
   sectionKey: "smernice",
@@ -16,8 +16,8 @@ const DOC_CHUNKS = `{
   heading: "Práca z domu (home office)",
   text: "Zamestnanec má nárok na home office...",
 
-  // vector + identita vektorového priestoru
-  embedding: [0.0123, -0.044, ...],   // 1024 dims
+  // identita vektorového priestoru
+  // vektor sa v dokumente NEUKLADÁ — pri Automated Embedding ho drží Atlas
   embeddingModel: "voyage-4",         // POVINNÉ — ktorý model vektor vyrobil
   embeddingDim: 1024,                 // kontrola pri zápise aj čítaní
   embeddingProvider: "atlas-auto",    // atlas-auto | infinity | tei
@@ -76,16 +76,20 @@ const VECTOR_QUERY = `db.document_chunks.aggregate([
         pipelines: {
           vector: [{ $vectorSearch: {
             index: "rag_vector_index",   // index viazaný na embeddingModel
-            path: "embedding",
-            queryVector: queryEmbedding, // z adaptéra podľa profilu
+            path: "text",                // Automated Embedding — vektor počíta databáza
+            query: queryText,            // posiela sa TEXT otázky, nie vektor
             numCandidates: 200, limit: 20,
             filter: { sectionKey: { $eq: "smernice" },
                       companyCode: { $in: ["ACME-BA","ACME"] },
+                      accessLevel: { $in: ["public","internal"] },
                       isActive: { $eq: true } }
           }}],
           fulltext: [{ $search: {
             index: "rag_text_index",
-            text: { query: queryText, path: "text" }
+            compound: {                  // filter je na OBOCH vetvách, nie len na vektorovej
+              must: [{ text: { query: queryText, path: "text" } }],
+              filter: [ /* companyCode, accessLevel, isActive */ ]
+            }
           }}]
         }
       },

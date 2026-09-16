@@ -25,10 +25,10 @@ export const dictionaries = {
       title: "Opýtajte sa. Nehľadajte.",
       claim: "Odpovede z vášho sveta, nie z internetu.",
       subtitle:
-        "Contineo nájde odpoveď vo vašom vlastnom obsahu — weby, projekty, normy aj interné predpisy. Žiadne listovanie v zložkách, žiadne dohady z internetu. Len overená odpoveď odtiaľ, kde naozaj žije.",
+        "Contineo nájde odpoveď vo vašom vlastnom obsahu — v normách, smerniciach a interných predpisoch, ktoré do neho nahráte. Žiadne listovanie v zložkách, žiadne dohady z internetu. Len overená odpoveď odtiaľ, kde naozaj žije.",
       ctaPrimary: "Vyskúšať vyhľadávanie",
       ctaSecondary: "Ako to funguje",
-      note: "Vložiteľné do webu aj aplikácií jedným riadkom.",
+      note: "Firemný portál na vašej subdoméne, prístupný po prihlásení cez SSO.",
     },
     manifesto: {
       eyebrow: "Prečo Contineo",
@@ -47,7 +47,7 @@ export const dictionaries = {
         {
           icon: "layers",
           title: "Všetky zdroje pohromade",
-          text: "Weby, projekty, normy, interné predpisy a FAQ na jednom mieste. Žiadne prepínanie medzi systémami.",
+          text: "Normy, smernice, interné predpisy a návody na jednom mieste. Žiadne prepínanie medzi systémami.",
         },
         {
           icon: "quote",
@@ -78,12 +78,12 @@ export const dictionaries = {
         {
           n: "01",
           title: "Pripojíte zdroje",
-          text: "Weby, projekty, PDF normy, interné predpisy či FAQ. Obsah sa rozdelí a označí podľa témy a platnosti.",
+          text: "Nahráte DOCX, PDF, XLSX alebo Markdown. Obsah sa prevedie, rozdelí a označí podľa témy a platnosti. Weby a ďalšie kanály pripravujeme.",
         },
         {
           n: "02",
           title: "Používateľ sa pýta",
-          text: "Položí otázku prirodzeným jazykom priamo vo vašom webe alebo aplikácii.",
+          text: "Položí otázku prirodzeným jazykom v portáli Contineo, po prihlásení cez firemné SSO.",
         },
         {
           n: "03",
@@ -121,8 +121,8 @@ export const dictionaries = {
     },
     modes: {
       eyebrow: "Spôsoby nasadenia",
-      title: "Dva spôsoby, ako Contineo nasadiť",
-      subtitle: "Použite Contineo ako uzamknutý firemný portál, alebo ako vložené inteligentné vyhľadávanie priamo vo vašej stránke.",
+      title: "Ako sa Contineo nasadzuje",
+      subtitle: "Dnes ako uzamknutý firemný portál na vašej subdoméne. Vložené vyhľadávanie do existujúcej stránky pripravujeme.",
       intranet: {
         tag: "Intranet",
         title: "Samostatný portál na subdoméne",
@@ -134,9 +134,9 @@ export const dictionaries = {
         ],
       },
       embed: {
-        tag: "Vložené vyhľadávanie",
+        tag: "Vložené vyhľadávanie — pripravujeme",
         title: "Ikona vyhľadávania priamo vo vašej stránke",
-        text: "Do existujúcej stránky pridáte ikonu Contineo. Po kliknutí sa rozbalí ako vrchná vrstva (overlay) a nahradí bežné vyhľadávanie na stránke.",
+        text: "Do existujúcej stránky pridáte ikonu Contineo. Po kliknutí sa rozbalí ako vrchná vrstva (overlay) a nahradí bežné vyhľadávanie na stránke. Zatiaľ neexistuje — dnes je Contineo portál za prihlásením.",
         points: [
           "Jeden riadok kódu, žiadne zásahy do obsahu stránky",
           "Overlay v dizajne Contineo, sadne do svetlej aj tmavej stránky",
@@ -159,11 +159,11 @@ export const dictionaries = {
       eyebrow: "Prevádzkové režimy",
       title: "Rovnaká aplikácia v cloude aj za zamknutými dverami",
       subtitle:
-        "Jadro vyhľadávania je v oboch režimoch identické — hybridný dotaz $rankFusion beží rovnako v MongoDB Atlas aj v self-hosted Community edícii. Líšia sa len tri vymeniteľné adaptéry, ktoré sa vyberajú konfiguráciou tenanta, nie zásahom do kódu.",
+        "Jadro vyhľadávania je prenositeľné: $rankFusion je od verzie 8.2 aj v Community edícii, takže ten istý dotaz má bežať v oboch režimoch. Líšia sa tri vymeniteľné adaptéry, ktoré sa vyberajú konfiguráciou tenanta, nie zásahom do kódu. Dnes beží cloudová vetva; self-hosted zatiaľ overujeme a rerank v nej rieši aplikačná vrstva, nie databáza.",
       cloud: {
         tag: "Cloud",
         title: "Riadená prevádzka v EÚ",
-        text: "MongoDB Atlas v európskom regióne, embedding aj rerank priamo v databáze, generovanie cez Claude API. Žiadny nákup hardvéru, nasadenie v dňoch.",
+        text: "MongoDB Atlas v európskom regióne, embedding aj rerank priamo v databáze, generovanie cez Claude API. Toto beží dnes. Žiadny nákup hardvéru — portál na vašej subdoméne spúšťame rádovo v dňoch, obsah plníte priebežne.",
         points: [
           "Automated Embedding — vektory vznikajú priamo v databáze",
           "Overiteľné citácie cez Citations API",
@@ -173,7 +173,7 @@ export const dictionaries = {
       onprem: {
         tag: "On-prem — pripravujeme",
         title: "Uzavreté riešenie na vašom železe",
-        text: "MongoDB Community 8.2 na vlastnom stroji, embedding a rerank cez Infinity alebo TEI, generovanie cez vLLM. Obsah ani dotazy by neopustili váš perimeter. Pripravujeme — adaptéry sú v kóde hotové, prvé nasadenie nás ešte čaká.",
+        text: "MongoDB Community 8.2 na vlastnom stroji, embedding a rerank cez Infinity alebo TEI, generovanie cez vLLM. Obsah ani dotazy by neopustili váš perimeter. Pripravujeme — adaptéry sú v kóde hotové; prvé nasadenie príde s hardvérom.",
         points: [
           "Navrhnuté pre citlivé interné predpisy — pre utajované skutočnosti treba samostatné posúdenie",
           "Voľba modelu — Qwen3, EuroLLM, Gemma a ďalšie",
@@ -182,7 +182,7 @@ export const dictionaries = {
       },
       adaptersTitle: "Tri vymeniteľné adaptéry",
       cloudLabel: "Cloud",
-      onpremLabel: "On-prem",
+      onpremLabel: "On-prem (pripravujeme)",
       adapters: [
         {
           name: "Embedding",
@@ -209,7 +209,7 @@ export const dictionaries = {
           onprem: "vLLM (Qwen3, EuroLLM, Gemma)",
         },
       ],
-      note: "Voľba je na úrovni tenanta — jedna inštalácia obslúži cloudových aj on-prem zákazníkov súčasne.",
+      note: "Voľba je na úrovni tenanta — jedna inštalácia je navrhnutá tak, aby obslúžila cloudových aj on-prem zákazníkov súčasne.",
     },
     security: {
       eyebrow: "Bezpečnosť dát",
@@ -253,7 +253,7 @@ export const dictionaries = {
 
       modesTitle: "Režimy, ktoré vieme nasadiť",
       modesIntro:
-        "Režim je vlastnosť vašej organizácie, nie našej verzie. Rovnaká aplikácia, iná konfigurácia — a nepovolenú kombináciu systém odmietne spustiť.",
+        "Režim je vlastnosť vašej organizácie, nie našej verzie. Rovnaká aplikácia, iná konfigurácia — a nepovolenú kombináciu systém odmietne spustiť. Dnes beží režim eu-data; ostatné tri sú pripravené v kóde a prvé nasadenie príde s hardvérom.",
       modesHead: {
         mode: "Režim",
         meaning: "Čo znamená",
@@ -329,7 +329,7 @@ export const dictionaries = {
 
       honestyTitle: "Prečo to vypisujeme takto podrobne.",
       honestyText:
-        "Pretože sa na to pri obstarávaní niekto spýta. Väčšina dodávateľov uvedie „dáta v EÚ“ a mlčí o tom, kde beží model — pritom práve tam ide text otázky aj nájdených pasáží. Každý riadok vyššie vieme doložiť dokumentom dodávateľa a ak sa stav zmení, zmeníme aj túto tabuľku.",
+        "Pretože sa na to pri obstarávaní niekto spýta. Väčšina dodávateľov uvedie „dáta v EÚ“ a mlčí o tom, kde beží model — pritom práve tam ide text otázky aj nájdených pasáží. Každý riadok vyššie vieme doložiť dokumentom dodávateľa a ak sa stav zmení, zmeníme aj túto tabuľku. A rovno aj otvorený bod, ktorý nezakrývame: pri Voyage (embedding a rerank cez Atlas) zatiaľ nemáme písomne potvrdené neuchovávanie ani presný región spracovania.",
       legalNote:
         "Táto stránka je technický popis dátových tokov, nie právne posúdenie. Pri konkrétnom nasadení odporúčame posúdenie odborníkom na ochranu osobných údajov.",
     },
@@ -343,8 +343,8 @@ export const dictionaries = {
         { title: "Školy a inštitúcie", text: "Školský zákon, vyhlášky, vnútorné poriadky a smernice zriaďovateľa. Nový učiteľ alebo administratívny pracovník sa zorientuje za hodinu, nie za mesiace." },
         { title: "Zväzy a komory", text: "Vlastné predpisy nadväzujúce na zákon, ktorý sa mení. Členovia sa pýtajú stále to isté — a odpoveď musí sedieť s platným znením." },
         { title: "Banky a veľké spoločnosti", text: "Skupinové politiky, lokálne smernice a regulácia nad tým. Jedna odpoveď naprieč pobočkami, doložená pre audit." },
-        { title: "Verejná správa", text: "Zákony, vykonávacie predpisy a interné akty riadenia. On-prem alebo v uzavretej sieti, ak to vyžadujú pravidlá." },
-        { title: "Podpora a helpdesk", text: "Návody a FAQ k aplikáciám — menej opakovaných ticketov, viac vyriešeného samoobslužne." },
+        { title: "Verejná správa", text: "Zákony, vykonávacie predpisy a interné akty riadenia. Dáta a hosting v EÚ; on-prem a uzavretú sieť pripravujeme." },
+        { title: "Podpora a interné návody", text: "Návody a časté otázky k aplikáciám na jednom mieste — ľudia nájdu odpoveď sami a menej vecí skončí na kolegoch." },
         { title: "Noví aj skúsení zamestnanci", text: "Odpoveď s odkazom na konkrétny článok. Nový sa zaučí rýchlejšie, skúsený nemusí odpovedať na to isté po piaty raz." },
       ],
       more: "Pozrieť konkrétne situácie a otázky",
@@ -382,14 +382,15 @@ export const dictionaries = {
       now: [
         "Každý dokument má verzie. Staršie sa archivujú, ale nezmažú — vyhľadávanie ich predvolene preskočí.",
         "Odpoveď vždy vychádza z platného znenia a uvádza konkrétny predpis aj článok, z ktorého čerpá.",
-        "Pravidlá prednosti: vyššia norma pred nižšou, osobitná pred všeobecnou, novšia pred staršou.",
-        "Historické znenie sa dá vyžiadať zvlášť — na otázku „ako to bolo v roku 2019“.",
+        "Novšie znenie má prednosť pred starším — odpoveď vychádza z verzie platnej k dnešku.",
       ],
 
       nextTitle: "Na čom pracujeme",
       nextTag: "Pripravujeme",
       nextIntro: "Zatiaľ nie je súčasťou nasadenia.",
       next: [
+        "Čalšie pravidlá prednosti — vyššia norma pred nižšou, osobitná pred všeobecnou.",
+        "Dotaz na historické znenie — archivované verzie sú uložené aj s dátumami platnosti, sprístupnenie vo vyhľadávaní pripravujeme.",
         "Automatické sledovanie externých zdrojov — zbierka zákonov a vestníky sa aktualizujú samy.",
         "Upozornenie na rozpor: interná smernica hovorí niečo iné než platný zákon alebo vykonávací predpis.",
         "Prehľad, ktoré vlastné predpisy sa novelou dotkli a treba ich prejsť.",
@@ -422,7 +423,7 @@ export const dictionaries = {
           benefits: [
             "Odpoveď za sekundy namiesto hľadania v zložkách alebo čakania na kolegu.",
             "Vedomosť prestane byť viazaná na jedného človeka.",
-            "Vidíte, ktoré vaše smernice sa odvolávajú na predpis, ktorý sa medzitým zmenil.",
+            "Každá odpoveď uvádza, z ktorej smernice a z ktorého článku pochádza — dá sa overiť aj spochybniť.",
           ],
         },
         {
@@ -477,7 +478,7 @@ export const dictionaries = {
             "Otázka po slovensky, zdroj po anglicky. Model významu aj jazykový model sú viacjazyčné a každý dokument nesie svoj jazyk ako údaj, takže sa dá filtrovať aj miešať.",
             "Každá odpoveď je doložená dokumentom, článkom a verziou, takže obstojí pri internom audite.",
             "Zaškolenie stoviek ľudí na novú politiku bez toho, aby ju všetci museli prečítať celú.",
-            "Nasadenie v EÚ alebo priamo vo vašej infraštruktúre, ak to vyžaduje bezpečnostná politika.",
+            "Nasadenie v EÚ; plne on-prem režim pripravujeme — prvé príde s hardvérom.",
           ],
         },
         {
@@ -490,9 +491,9 @@ export const dictionaries = {
             "Zmenilo sa niečo v metodike po poslednej novele?",
             "Čo hovorí interný akt riadenia oproti zákonu?",
           ],
-          answerNote: "Dostupné aj v režime, kde žiadny text neopustí vašu infraštruktúru.",
+          answerNote: "Dnes v EÚ; režim, kde žiadny text neopustí vašu infraštruktúru, pripravujeme.",
           benefits: [
-            "Nasadenie on-prem alebo v uzavretej sieti bez pripojenia na internet.",
+            "On-prem a uzavretá sieť bez pripojenia na internet — pripravujeme, prvé nasadenie príde s hardvérom.",
             "Doložiteľné, kde sa každá časť spracovania vykonáva — pre audit aj pre obstarávanie.",
             "Prístupové práva podľa existujúceho prihlásenia, bez zakladania nových účtov.",
           ],
@@ -539,7 +540,7 @@ export const dictionaries = {
       back: "Späť na hlavnú stránku",
       architectureTitle: "Architektúra a dátový tok",
       architectureCaption:
-        "Vstupné kanály → spracovanie (chunking + značkovanie) → MongoDB (jadro: hybridné vyhľadávanie) → AI adaptéry (embedding, rerank, generovanie) → rozhrania. Jadro je v cloude aj on-prem identické — $rankFusion beží rovnako v Atlase aj v self-hosted Community 8.2. Líšia sa len tri adaptéry, ktoré sa vyberajú konfiguráciou tenanta. AI dostane vždy len relevantné pasáže; dáta zostávajú vo vašej databáze. Súčasťou sú dva spätné cykly: kurácia (kontrola kvality) a eskalácia na ticket.",
+        "Vstupné kanály → spracovanie (chunking + značkovanie) → MongoDB (jadro: hybridné vyhľadávanie) → AI adaptéry (embedding, rerank, generovanie) → rozhrania. Jadro je prenositeľné — $rankFusion je aj v Community 8.2, takže ten istý dotaz má bežať v oboch režimoch; dnes beží cloudová vetva. Líšia sa len tri adaptéry, ktoré sa vyberajú konfiguráciou tenanta. AI dostane vždy len relevantné pasáže; dáta zostávajú vo vašej databáze. Spätný cyklus je jeden: ľudská kurácia — overená odpoveď sa vracia do indexu. Eskaláciu na ticket pripravujeme.",
       pillarsTitle: "Kľúčové piliere",
       pillars: [
         { icon: "search", title: "RAG + Hybrid Search", text: "Hybridné vyhľadávanie $rankFusion (vektor 60 % + fulltext 40 %) je jadro systému a beží identicky v MongoDB Atlas aj v self-hosted Community 8.2. Odpoveď vzniká výhradne z nájdených pasáží." },
@@ -554,11 +555,11 @@ export const dictionaries = {
       stack: [
         "MongoDB — jadro: $rankFusion (Atlas EU alebo Community 8.2)",
         "Cloud · Voyage AI voyage-4 — Automated Embedding",
-        "Cloud · Voyage AI rerank-2.5 — $rerank v databáze",
+        "Cloud · Voyage AI rerank-2 — $rerank v databáze",
         "Cloud · Claude API — Citations, prompt caching",
-        "On-prem · Infinity / TEI — embedding + rerank",
-        "On-prem · vLLM — Qwen3, EuroLLM, Gemma",
-        "Next.js 14 (App Router) · Node.js worker",
+        "Pripravené, nenasadené · Infinity / TEI — embedding + rerank",
+        "Pripravené, nenasadené · vLLM — Qwen3, EuroLLM, Gemma",
+        "Next.js 16 (App Router) · Vercel cron",
         "Pripravujeme: e-mail (IMAP), zdroj členstiev/CRM, MCP konektory",
       ],
       flowsTitle: "Kľúčové dátové toky",
@@ -757,10 +758,10 @@ export const dictionaries = {
       title: "Zeptejte se. Nehledejte.",
       claim: "Odpovědi z vašeho světa, ne z internetu.",
       subtitle:
-        "Contineo najde odpověď ve vašem vlastním obsahu — weby, projekty, normy i interní předpisy. Žádné listování ve složkách, žádné dohady z internetu. Jen ověřená odpověď odtud, kde skutečně žije.",
+        "Contineo najde odpověď ve vašem vlastním obsahu — v normách, směrnicích a interních předpisech, které do něj nahrajete. Žádné listování ve složkách, žádné dohady z internetu. Jen ověřená odpověď odtud, kde skutečně žije.",
       ctaPrimary: "Vyzkoušet vyhledávání",
       ctaSecondary: "Jak to funguje",
-      note: "Vložitelné do webu i aplikací jedním řádkem.",
+      note: "Firemní portál na vaší subdoméně, přístupný po přihlášení přes SSO.",
     },
     manifesto: {
       eyebrow: "Proč Contineo",
@@ -779,7 +780,7 @@ export const dictionaries = {
         {
           icon: "layers",
           title: "Všechny zdroje pohromadě",
-          text: "Weby, projekty, normy, interní předpisy a FAQ na jednom místě. Žádné přepínání mezi systémy.",
+          text: "Normy, směrnice, interní předpisy a návody na jednom místě. Žádné přepínání mezi systémy.",
         },
         {
           icon: "quote",
@@ -810,12 +811,12 @@ export const dictionaries = {
         {
           n: "01",
           title: "Připojíte zdroje",
-          text: "Weby, projekty, PDF normy, interní předpisy či FAQ. Obsah se rozdělí a označí podle tématu a platnosti.",
+          text: "Nahrajete DOCX, PDF, XLSX nebo Markdown. Obsah se převede, rozdělí a označí podle tématu a platnosti. Weby a další kanály připravujeme.",
         },
         {
           n: "02",
           title: "Uživatel se ptá",
-          text: "Položí otázku přirozeným jazykem přímo ve vašem webu nebo aplikaci.",
+          text: "Položí otázku přirozeným jazykem v portálu Contineo, po přihlášení přes firemní SSO.",
         },
         {
           n: "03",
@@ -853,8 +854,8 @@ export const dictionaries = {
     },
     modes: {
       eyebrow: "Způsoby nasazení",
-      title: "Dva způsoby, jak Contineo nasadit",
-      subtitle: "Použijte Contineo jako uzamčený firemní portál, nebo jako vložené inteligentní vyhledávání přímo ve vaší stránce.",
+      title: "Jak se Contineo nasazuje",
+      subtitle: "Dnes jako uzamčený firemní portál na vaší subdoméně. Vložené vyhledávání do existující stránky připravujeme.",
       intranet: {
         tag: "Intranet",
         title: "Samostatný portál na subdoméně",
@@ -866,9 +867,9 @@ export const dictionaries = {
         ],
       },
       embed: {
-        tag: "Vložené vyhledávání",
+        tag: "Vložené vyhledávání — připravujeme",
         title: "Ikona vyhledávání přímo ve vaší stránce",
-        text: "Do existující stránky přidáte ikonu Contineo. Po kliknutí se rozbalí jako vrchní vrstva (overlay) a nahradí běžné vyhledávání na stránce.",
+        text: "Do existující stránky přidáte ikonu Contineo. Po kliknutí se rozbalí jako vrchní vrstva (overlay) a nahradí běžné vyhledávání na stránce. Zatím neexistuje — dnes je Contineo portál za přihlášením.",
         points: [
           "Jeden řádek kódu, žádné zásahy do obsahu stránky",
           "Overlay v designu Contineo, sedne do světlé i tmavé stránky",
@@ -891,11 +892,11 @@ export const dictionaries = {
       eyebrow: "Provozní režimy",
       title: "Stejná aplikace v cloudu i za zamčenými dveřmi",
       subtitle:
-        "Jádro vyhledávání je v obou režimech identické — hybridní dotaz $rankFusion běží stejně v MongoDB Atlas i v self-hosted Community edici. Liší se jen tři vyměnitelné adaptéry, které se vybírají konfigurací tenanta, ne zásahem do kódu.",
+        "Jádro vyhledávání je přenositelné: $rankFusion je od verze 8.2 i v Community edici, takže týž dotaz má běžet v obou režimech. Liší se tři vyměnitelné adaptéry, které se vybírají konfigurací tenanta, ne zásahem do kódu. Dnes běží cloudová větev; self-hosted zatím ověřujeme a rerank v ní řeší aplikační vrstva, ne databáze.",
       cloud: {
         tag: "Cloud",
         title: "Řízený provoz v EU",
-        text: "MongoDB Atlas v evropském regionu, embedding i rerank přímo v databázi, generování přes Claude API. Žádný nákup hardwaru, nasazení v řádu dnů.",
+        text: "MongoDB Atlas v evropském regionu, embedding i rerank přímo v databázi, generování přes Claude API. Toto běží dnes. Žádný nákup hardwaru — portál na vaší subdoméně spouštíme řádově v dnech, obsah plníte průběžně.",
         points: [
           "Automated Embedding — vektory vznikají přímo v databázi",
           "Ověřitelné citace přes Citations API",
@@ -905,7 +906,7 @@ export const dictionaries = {
       onprem: {
         tag: "On-prem — připravujeme",
         title: "Uzavřené řešení na vašem železe",
-        text: "MongoDB Community 8.2 na vlastním stroji, embedding a rerank přes Infinity nebo TEI, generování přes vLLM. Obsah ani dotazy by neopustily váš perimetr. Připravujeme — adaptéry jsou v kódu hotové, první nasazení nás ještě čeká.",
+        text: "MongoDB Community 8.2 na vlastním stroji, embedding a rerank přes Infinity nebo TEI, generování přes vLLM. Obsah ani dotazy by neopustily váš perimetr. Připravujeme — adaptéry jsou v kódu hotové; první nasazení přijde s hardwarem.",
         points: [
           "Navrženo pro citlivé interní předpisy — pro utajované skutečnosti je třeba samostatné posouzení",
           "Volba modelu — Qwen3, EuroLLM, Gemma a další",
@@ -914,7 +915,7 @@ export const dictionaries = {
       },
       adaptersTitle: "Tři vyměnitelné adaptéry",
       cloudLabel: "Cloud",
-      onpremLabel: "On-prem",
+      onpremLabel: "On-prem (připravujeme)",
       adapters: [
         {
           name: "Embedding",
@@ -985,7 +986,7 @@ export const dictionaries = {
 
       modesTitle: "Režimy, které umíme nasadit",
       modesIntro:
-        "Režim je vlastnost vaší organizace, ne naší verze. Stejná aplikace, jiná konfigurace — a nepovolenou kombinaci systém odmítne spustit.",
+        "Režim je vlastnost vaší organizace, ne naší verze. Stejná aplikace, jiná konfigurace — a nepovolenou kombinaci systém odmítne spustit. Dnes běží režim eu-data; ostatní tři jsou připravené v kódu a první nasazení přijde s hardwarem.",
       modesHead: {
         mode: "Režim",
         meaning: "Co znamená",
@@ -1075,7 +1076,7 @@ export const dictionaries = {
         { title: "Školy a instituce", text: "Školský zákon, vyhlášky, vnitřní řády a směrnice zřizovatele. Nový učitel nebo administrativní pracovník se zorientuje za hodinu, ne za měsíce." },
         { title: "Svazy a komory", text: "Vlastní předpisy navazující na zákon, který se mění. Členové se ptají stále na totéž — a odpověď musí sedět s platným zněním." },
         { title: "Banky a velké společnosti", text: "Skupinové politiky, lokální směrnice a regulace nad tím. Jedna odpověď napříč pobočkami, doložená pro audit." },
-        { title: "Veřejná správa", text: "Zákony, prováděcí předpisy a interní akty řízení. On-prem nebo v uzavřené síti, pokud to vyžadují pravidla." },
+        { title: "Veřejná správa", text: "Zákony, prováděcí předpisy a interní akty řízení. Data a hosting v EU; on-prem a uzavřenou síť připravujeme." },
         { title: "Podpora a helpdesk", text: "Návody a FAQ k aplikacím — méně opakovaných ticketů, více vyřešeného samoobslužně." },
         { title: "Noví i zkušení zaměstnanci", text: "Odpověď s odkazem na konkrétní článek. Nový se zaučí rychleji, zkušený nemusí odpovídat na totéž popáté." },
       ],
@@ -1114,14 +1115,15 @@ export const dictionaries = {
       now: [
         "Každý dokument má verze. Starší se archivují, ale nemažou — vyhledávání je ve výchozím stavu přeskočí.",
         "Odpověď vždy vychází z platného znění a uvádí konkrétní předpis i článek, ze kterého čerpá.",
-        "Pravidla přednosti: vyšší norma před nižší, zvláštní před obecnou, novější před starší.",
-        "Historické znění lze vyžádat zvlášť — na otázku „jak to bylo v roce 2019“.",
+        "Novější znění má přednost před starším — odpověď vychází z verze platné k dnešku.",
       ],
 
       nextTitle: "Na čem pracujeme",
       nextTag: "Připravujeme",
       nextIntro: "Zatím není součástí nasazení.",
       next: [
+        "Další pravidla přednosti — vyšší norma před nižší, zvláštní před obecnou.",
+        "Dotaz na historické znění — archivované verze jsou uložené i s daty platnosti, zpřístupnění ve vyhledávání připravujeme.",
         "Automatické sledování externích zdrojů — Sbírka zákonů a věstníky se aktualizují samy.",
         "Upozornění na rozpor: interní směrnice říká něco jiného než platný zákon nebo prováděcí předpis.",
         "Přehled, kterých vlastních předpisů se novela dotkla a je třeba je projít.",
@@ -1154,7 +1156,7 @@ export const dictionaries = {
           benefits: [
             "Odpověď během sekund místo hledání ve složkách nebo čekání na kolegu.",
             "Znalost přestane být vázaná na jednoho člověka.",
-            "Vidíte, které vaše směrnice se odvolávají na předpis, jenž se mezitím změnil.",
+            "Každá odpověď uvádí, ze které směrnice a z kterého článku pochází — dá se ověřit i zpochybnit.",
           ],
         },
         {
@@ -1209,7 +1211,7 @@ export const dictionaries = {
             "Otázka česky, zdroj anglicky. Model významu i jazykový model jsou vícejazyčné a každý dokument nese svůj jazyk jako údaj, takže se dá filtrovat i míchat.",
             "Každá odpověď je doložena dokumentem, článkem a verzí, takže obstojí při interním auditu.",
             "Zaškolení stovek lidí na novou politiku, aniž by ji všichni museli přečíst celou.",
-            "Nasazení v EU nebo přímo ve vaší infrastruktuře, pokud to vyžaduje bezpečnostní politika.",
+            "Nasazení v EU; plně on-prem režim připravujeme — první přijde s hardwarem.",
           ],
         },
         {
@@ -1222,9 +1224,9 @@ export const dictionaries = {
             "Změnilo se něco v metodice po poslední novele?",
             "Co říká interní akt řízení oproti zákonu?",
           ],
-          answerNote: "Dostupné i v režimu, kde žádný text neopustí vaši infrastrukturu.",
+          answerNote: "Dnes v EU; režim, kde žádný text neopustí vaši infrastrukturu, připravujeme.",
           benefits: [
-            "Nasazení on-prem nebo v uzavřené síti bez připojení k internetu.",
+            "On-prem a uzavřená síť bez připojení k internetu — připravujeme, první nasazení přijde s hardwarem.",
             "Doložitelné, kde se každá část zpracování provádí — pro audit i pro zadávací řízení.",
             "Přístupová práva podle existujícího přihlášení, bez zakládání nových účtů.",
           ],
@@ -1271,7 +1273,7 @@ export const dictionaries = {
       back: "Zpět na hlavní stránku",
       architectureTitle: "Architektura a datový tok",
       architectureCaption:
-        "Vstupní kanály → zpracování (chunking + značkování) → MongoDB (jádro: hybridní vyhledávání) → AI adaptéry (embedding, rerank, generování) → rozhraní. Jádro je v cloudu i on-prem identické — $rankFusion běží stejně v Atlasu i v self-hosted Community 8.2. Liší se jen tři adaptéry, které se vybírají konfigurací tenanta. AI dostane vždy jen relevantní pasáže; data zůstávají ve vaší databázi. Součástí jsou dva zpětné cykly: kurace (kontrola kvality) a eskalace na ticket.",
+        "Vstupní kanály → zpracování (chunking + značkování) → MongoDB (jádro: hybridní vyhledávání) → AI adaptéry (embedding, rerank, generování) → rozhraní. Jádro je přenositelné — $rankFusion je i v Community 8.2, takže týž dotaz má běžet v obou režimech; dnes běží cloudová větev. Liší se jen tři adaptéry, které se vybírají konfigurací tenanta. AI dostane vždy jen relevantní pasáže; data zůstávají ve vaší databázi. Zpětný cyklus je jeden: lidská kurace — ověřená odpověď se vrací do indexu. Eskalaci na ticket připravujeme.",
       pillarsTitle: "Klíčové pilíře",
       pillars: [
         { icon: "search", title: "RAG + Hybrid Search", text: "Hybridní vyhledávání $rankFusion (vektor 60 % + fulltext 40 %) je jádro systému a běží identicky v MongoDB Atlas i v self-hosted Community 8.2. Odpověď vzniká výhradně z nalezených pasáží." },
@@ -1286,11 +1288,11 @@ export const dictionaries = {
       stack: [
         "MongoDB — jádro: $rankFusion (Atlas EU nebo Community 8.2)",
         "Cloud · Voyage AI voyage-4 — Automated Embedding",
-        "Cloud · Voyage AI rerank-2.5 — $rerank v databázi",
+        "Cloud · Voyage AI rerank-2 — $rerank v databázi",
         "Cloud · Claude API — Citations, prompt caching",
-        "On-prem · Infinity / TEI — embedding + rerank",
-        "On-prem · vLLM — Qwen3, EuroLLM, Gemma",
-        "Next.js 14 (App Router) · Node.js worker",
+        "Připraveno, nenasazeno · Infinity / TEI — embedding + rerank",
+        "Připraveno, nenasazeno · vLLM — Qwen3, EuroLLM, Gemma",
+        "Next.js 16 (App Router) · Vercel cron",
         "Připravujeme: e-mail (IMAP), zdroj členství/CRM, MCP konektory",
       ],
       flowsTitle: "Klíčové datové toky",
@@ -1490,10 +1492,10 @@ export const dictionaries = {
       title: "Ask. Don't search.",
       claim: "Answers from your world, not the internet.",
       subtitle:
-        "Contineo finds the answer in your own content — websites, projects, regulations and internal guidelines. No digging through folders, no guessing from the internet. Just a verified answer from where it actually lives.",
+        "Contineo finds the answer in your own content — in the regulations, policies and internal guidelines you upload into it. No digging through folders, no guessing from the internet. Just a verified answer from where it actually lives.",
       ctaPrimary: "Try the search",
       ctaSecondary: "How it works",
-      note: "Embeddable into any website or app in one line.",
+      note: "A company portal on your own subdomain, reachable after SSO sign-in.",
     },
     manifesto: {
       eyebrow: "Why Contineo",
@@ -1512,7 +1514,7 @@ export const dictionaries = {
         {
           icon: "layers",
           title: "All sources together",
-          text: "Websites, projects, regulations, internal guidelines and FAQs in one place. No switching between systems.",
+          text: "Regulations, policies, internal guidelines and how-tos in one place. No switching between systems.",
         },
         {
           icon: "quote",
@@ -1543,12 +1545,12 @@ export const dictionaries = {
         {
           n: "01",
           title: "You connect sources",
-          text: "Websites, projects, PDF regulations, internal guidelines or FAQs. Content is chunked and tagged by topic and validity.",
+          text: "You upload DOCX, PDF, XLSX or Markdown. Content is converted, chunked and tagged by topic and validity. Websites and further channels are in preparation.",
         },
         {
           n: "02",
           title: "A user asks",
-          text: "They ask a question in natural language, right inside your website or app.",
+          text: "They ask a question in natural language in the Contineo portal, after signing in with company SSO.",
         },
         {
           n: "03",
@@ -1586,8 +1588,8 @@ export const dictionaries = {
     },
     modes: {
       eyebrow: "Deployment options",
-      title: "Two ways to deploy Contineo",
-      subtitle: "Use Contineo as a locked-down company portal, or as embedded intelligent search right inside your website.",
+      title: "How Contineo is deployed",
+      subtitle: "Today as a locked-down company portal on your own subdomain. Embedded search inside an existing website is in preparation.",
       intranet: {
         tag: "Intranet",
         title: "Standalone portal on a subdomain",
@@ -1599,9 +1601,9 @@ export const dictionaries = {
         ],
       },
       embed: {
-        tag: "Embedded search",
+        tag: "Embedded search — in preparation",
         title: "A search icon right inside your website",
-        text: "Add the Contineo icon to your existing site. On click it expands as an overlay layer and replaces the site's regular search.",
+        text: "Add the Contineo icon to your existing site. On click it expands as an overlay layer and replaces the site's regular search. It does not exist yet — today Contineo is a portal behind sign-in.",
         points: [
           "One line of code, no changes to your page content",
           "Overlay in Contineo's design, fits light and dark sites",
@@ -1624,11 +1626,11 @@ export const dictionaries = {
       eyebrow: "Runtime modes",
       title: "The same application in the cloud or behind locked doors",
       subtitle:
-        "The search core is identical in both modes — the $rankFusion hybrid query runs the same way in MongoDB Atlas and in the self-hosted Community edition. Only three swappable adapters differ, and they are chosen by tenant configuration, not by changing code.",
+        "The search core is portable: $rankFusion has been in the Community edition since 8.2, so the same query should run in both modes. Three swappable adapters differ, chosen by tenant configuration rather than by changing code. The cloud branch is what runs today; the self-hosted one is still being verified, and reranking there is handled by the application layer, not the database.",
       cloud: {
         tag: "Cloud",
         title: "Managed operation in the EU",
-        text: "MongoDB Atlas in a European region, embedding and reranking directly in the database, generation via the Claude API. No hardware to buy, deployed in days.",
+        text: "MongoDB Atlas in a European region, embedding and reranking directly in the database, generation via the Claude API. This is what runs today. No hardware to buy — we launch the portal on your subdomain within days; you fill the content as you go.",
         points: [
           "Automated Embedding — vectors are created inside the database",
           "Verifiable citations via the Citations API",
@@ -1638,7 +1640,7 @@ export const dictionaries = {
       onprem: {
         tag: "On-prem — in preparation",
         title: "A closed solution on your own hardware",
-        text: "MongoDB Community 8.2 on your own machine, embedding and reranking via Infinity or TEI, generation via vLLM. Neither content nor queries would leave your perimeter. In preparation — the adapters are written, the first deployment is still ahead of us.",
+        text: "MongoDB Community 8.2 on your own machine, embedding and reranking via Infinity or TEI, generation via vLLM. Neither content nor queries would leave your perimeter. In preparation — the adapters are written; the first deployment comes with the hardware.",
         points: [
           "Designed for sensitive internal policies — classified information requires a separate assessment",
           "Your choice of model — Qwen3, EuroLLM, Gemma and others",
@@ -1647,7 +1649,7 @@ export const dictionaries = {
       },
       adaptersTitle: "Three swappable adapters",
       cloudLabel: "Cloud",
-      onpremLabel: "On-prem",
+      onpremLabel: "On-prem (in preparation)",
       adapters: [
         {
           name: "Embedding",
@@ -1718,7 +1720,7 @@ export const dictionaries = {
 
       modesTitle: "Modes we can deploy",
       modesIntro:
-        "The mode is a property of your organisation, not of our edition. Same application, different configuration — and a disallowed combination simply refuses to start.",
+        "The mode is a property of your organisation, not of our edition. Same application, different configuration — and a disallowed combination simply refuses to start. The mode running today is eu-data; the other three are written in code and the first deployment comes with the hardware.",
       modesHead: {
         mode: "Mode",
         meaning: "What it means",
@@ -1794,7 +1796,7 @@ export const dictionaries = {
 
       honestyTitle: "Why we spell this out in such detail.",
       honestyText:
-        "Because someone in procurement will ask. Most vendors state “data in the EU” and stay silent about where the model runs — yet that is exactly where the question and the retrieved passages go. Every row above is backed by the vendor's own documentation, and if the situation changes, so does this table.",
+        "Because someone in procurement will ask. Most vendors state “data in the EU” and stay silent about where the model runs — yet that is exactly where the question and the retrieved passages go. Every row above is backed by the vendor's own documentation, and if the situation changes, so does this table. And here is the open point we don't hide: with Voyage (embedding and reranking via Atlas) we do not yet have zero-retention or the exact processing region confirmed in writing.",
       legalNote:
         "This page is a technical description of data flows, not a legal assessment. For a specific deployment we recommend review by a data protection specialist.",
     },
@@ -1808,7 +1810,7 @@ export const dictionaries = {
         { title: "Schools and institutions", text: "Education law, decrees, internal rules and the founder's directives. A new teacher or administrator gets oriented in an hour, not in months." },
         { title: "Associations and chambers", text: "Your own rules built on top of a statute that keeps changing. Members keep asking the same questions — and the answer has to match the text in force." },
         { title: "Banks and large enterprises", text: "Group policies, local directives and regulation on top. One answer across branches, evidenced for audit." },
-        { title: "Public administration", text: "Acts, implementing decrees and internal management acts. On-premise or in a closed network where the rules require it." },
+        { title: "Public administration", text: "Acts, implementing decrees and internal management acts. Data and hosting in the EU; on-premise and closed networks are in preparation." },
         { title: "Support and helpdesk", text: "Guides and FAQs for your applications — fewer repeat tickets, more resolved self-service." },
         { title: "New and experienced staff alike", text: "An answer with a link to the specific article. Newcomers ramp up faster; veterans stop answering the same thing for the fifth time." },
       ],
@@ -1847,14 +1849,15 @@ export const dictionaries = {
       now: [
         "Every document is versioned. Older versions are archived, not deleted — and search skips them by default.",
         "Answers always come from the text in force and name the exact regulation and article behind them.",
-        "Precedence rules: higher law over lower, specific over general, newer over older.",
-        "Historical wording can be requested explicitly — for “how did this work back in 2019”.",
+        "Newer wording takes precedence over older — answers come from the version in force today.",
       ],
 
       nextTitle: "What we are working on",
       nextTag: "In progress",
       nextIntro: "Not part of the deployment yet.",
       next: [
+        "Further precedence rules — higher law over lower, specific over general.",
+        "Querying historical wording — archived versions are stored with their validity dates; exposing them in search is in preparation.",
         "Automatic tracking of external sources — the statute book and official bulletins update themselves.",
         "Conflict alerts: an internal directive says something different from the law or implementing decree in force.",
         "An overview of which of your own rules an amendment touched and need reviewing.",
@@ -1942,7 +1945,7 @@ export const dictionaries = {
             "Ask in one language, get an answer from a source in another. Both the meaning model and the language model are multilingual, and every document carries its language as a field, so you can filter or mix.",
             "Every answer is backed by a document, an article and a version, so it holds up in internal audit.",
             "Roll a new policy out to hundreds of people without all of them having to read it end to end.",
-            "Deployment in the EU or inside your own infrastructure where security policy demands it.",
+            "Deployment in the EU; a fully on-prem mode is in preparation — the first one comes with the hardware.",
           ],
         },
         {
@@ -1955,9 +1958,9 @@ export const dictionaries = {
             "Did anything change in the methodology after the latest amendment?",
             "What does the internal management act say compared to the statute?",
           ],
-          answerNote: "Also available in a mode where no text leaves your infrastructure.",
+          answerNote: "In the EU today; a mode where no text leaves your infrastructure is in preparation.",
           benefits: [
-            "On-premise deployment or a closed network with no internet connection.",
+            "On-premise and a closed network with no internet connection — in preparation; the first deployment comes with the hardware.",
             "Documented processing location for every component — for audit and for procurement.",
             "Access rights follow your existing sign-in, with no new accounts to create.",
           ],
@@ -2004,7 +2007,7 @@ export const dictionaries = {
       back: "Back to home",
       architectureTitle: "Architecture and data flow",
       architectureCaption:
-        "Input channels → processing (chunking + tagging) → MongoDB (the core: hybrid search) → AI adapters (embedding, rerank, generation) → interfaces. The core is identical in cloud and on-prem — $rankFusion runs the same way in Atlas and in self-hosted Community 8.2. Only three adapters differ, and they are selected by tenant configuration. The AI always receives just the relevant passages; your data stays in your database. Including two feedback loops: curation (quality control) and ticket escalation.",
+        "Input channels → processing (chunking + tagging) → MongoDB (the core: hybrid search) → AI adapters (embedding, rerank, generation) → interfaces. The core is portable — $rankFusion is in Community 8.2 too, so the same query should run in both modes; the cloud branch is what runs today. Only three adapters differ, and they are selected by tenant configuration. The AI always receives just the relevant passages; your data stays in your database. There is one feedback loop: human curation — a verified answer goes back into the index. Ticket escalation is in preparation.",
       pillarsTitle: "Key pillars",
       pillars: [
         { icon: "search", title: "RAG + Hybrid Search", text: "The $rankFusion hybrid query (vector 60 % + fulltext 40 %) is the core of the system and runs identically in MongoDB Atlas and in self-hosted Community 8.2. Answers are produced only from the retrieved passages." },
@@ -2019,11 +2022,11 @@ export const dictionaries = {
       stack: [
         "MongoDB — the core: $rankFusion (Atlas EU or Community 8.2)",
         "Cloud · Voyage AI voyage-4 — Automated Embedding",
-        "Cloud · Voyage AI rerank-2.5 — $rerank in the database",
+        "Cloud · Voyage AI rerank-2 — $rerank in the database",
         "Cloud · Claude API — Citations, prompt caching",
-        "On-prem · Infinity / TEI — embedding + rerank",
-        "On-prem · vLLM — Qwen3, EuroLLM, Gemma",
-        "Next.js 14 (App Router) · Node.js worker",
+        "Ready, not deployed · Infinity / TEI — embedding + rerank",
+        "Ready, not deployed · vLLM — Qwen3, EuroLLM, Gemma",
+        "Next.js 16 (App Router) · Vercel cron",
         "In preparation: e-mail (IMAP), membership/CRM source, MCP connectors",
       ],
       flowsTitle: "Key data flows",
