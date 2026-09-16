@@ -20,7 +20,7 @@ v tom PDF, ktoré nám poslali" má preto odpoveď aj po obnove.
 
 | Čo | Kde | V zálohe |
 |---|---|---|
-| Všetkých 17 kolekcií (`documents`, `acknowledgements`, `persons`, …) | Atlas M10 | áno |
+| **Všetky kolekcie databázy** (dnes 21: `documents`, `document_chunks`, `assignments`, `acknowledgements`, `approval_rounds`, `departments`, `persons`, `person_photos`, `reminder_log`, `notifications`, `evaluations`, `audit`, `reading_times`, `document_opens`, `cms_folders`, `tenants`, `tenant_profiles`, `tenant_assets`, `onboarding_tracks`, `auth_users`, `auth_tokens`) | Atlas M10 | áno |
 | Pôvodné nahraté súbory | GridFS `cms_files`, ten istý cluster | áno |
 | Fotky osôb | `person_photos` | áno |
 | Značka organizácie (logo) | `tenant_assets` | áno |
@@ -63,7 +63,9 @@ kým existuje predmet (dokument, organizácia)
 | `audit` | 24 mesiacov | zatiaľ **nemaže sa** | ⬜ TTL nie je zavedený |
 | `evaluations` | 12 mesiacov | zatiaľ **nemaže sa** | ⬜ — pozor, drží **otázku aj odpoveď doslovne** pri každej odpovedi (a od 2026-09-15 aj nahlásenú nepresnosť); nie je to len tabuľka známok |
 | `documents`, `document_chunks`, `cms_folders`, `cms_files` | kým je dokument v knižnici | s dokumentom (`npm run docs:delete`) | ✅ |
-| `tenants`, `tenant_assets`, `departments`, `onboarding_tracks` | kým existuje organizácia | ručne | ✅ |
+| `tenants`, `tenant_profiles`, `tenant_assets`, `departments`, `onboarding_tracks` | kým existuje organizácia | ručne | ✅ |
+| `auth_users` | s osobou (`persons`) | ručne, spolu s osobou | **O16** |
+| `auth_tokens` | jednorazový token — **maže sa pri použití** | `findOneAndDelete()` v `lib/authAdapter.ts` | ⬜ nepoužitý token TTL nemá |
 
 ### `persons` je zložitejšie než „zmazať po odchode"
 

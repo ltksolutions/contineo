@@ -375,7 +375,7 @@
 - [x] nová organizácia z obrazovky vrátane domén
 - [x] Vercel API zo servera (`lib/vercel.ts`), doména sa priradí projektu sama
 - [x] odoslanie pokynov zákazníkovi tlačidlom; zaznamená sa `domainSetup`
-- [ ] **zostáva: `VERCEL_TOKEN` medzi premennými nasadenia.** Bez neho obrazovka doménu do Vercelu nepridá a povie to; všetko ostatné funguje. Token z `vercel login` na to nestačí — CLI si ho priebežne obnovuje, takže prevzatá hodnota po čase prestane platiť (overené 2026-08-28).
+- [x] **`VERCEL_TOKEN` medzi premennými nasadenia** ✅ overené 2026-09-16 (`vercel env ls production`). Pôvodný zápis: Bez neho obrazovka doménu do Vercelu nepridá a povie to; všetko ostatné funguje. Token z `vercel login` na to nestačí — CLI si ho priebežne obnovuje, takže prevzatá hodnota po čase prestane platiť (overené 2026-08-28).
 
 ### L. Udalosti a upozornenia — **Fáza 9** 🟡 → `docs/UDALOSTI_A_UPOZORNENIA_KONCEPCIA.md`
 
@@ -435,7 +435,7 @@
 - [x] **konto overuje adresu, vstup povoľuje `persons`** (D45) — `tid` z povoleného Entra tenanta, `email_verified` u Googlu
 - [x] rola `people-admin` a obrazovky `/osoby` (D46), import CSV s náhľadom
 - [x] čítanie CSV a mapovanie hlavičiek presunuté do `lib/` — skript aj obrazovka volajú to isté
-- [ ] **zostáva: `OAUTH_SECRET_ENCRYPTION_KEY` medzi premennými nasadenia** (`openssl rand -hex 32`). Bez neho sa tajomstvo nedá uložiť; obrazovka to povie a všetko ostatné funguje.
+- [x] **`OAUTH_SECRET_ENCRYPTION_KEY` medzi premennými nasadenia** ✅ overené 2026-09-16 (`vercel env ls production`). Pôvodný zápis: (`openssl rand -hex 32`). Bez neho sa tajomstvo nedá uložiť; obrazovka to povie a všetko ostatné funguje.
 - [x] údaje Entra aplikácie SFZ zadané a overené (2026-08-29)
 - [x] **`AADSTS50011` pri prihlásení kontom** — `NEXTAUTH_URL` je jedna adresa na celé nasadenie a NextAuth z nej staval `redirect_uri`. V produkcii odstránená; origin sa odvodzuje z hostiteľa požiadavky. Zapísané v `NASADENIE_app.md`, lebo chýbajúca premenná vyzerá ako chyba
 - [x] **`/organizacia`** — zákazník si sám spravuje vzhľad, prihlasovanie aj domény (D48). Domény cez žiadosť + dôkaz DNS, nie voľným zápisom

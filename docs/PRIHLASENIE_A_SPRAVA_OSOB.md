@@ -196,7 +196,7 @@ platformy sem prístup nemá.
 > `/people` a `/people/[id]`.
 
 **Zostáva**
-- [ ] **`OAUTH_SECRET_ENCRYPTION_KEY` v premenných nasadenia.** Bez neho sa tajomstvo nedá uložiť a obrazovka to povie. Vygeneruje sa: `openssl rand -hex 32`
+- [x] **`OAUTH_SECRET_ENCRYPTION_KEY` v premenných nasadenia** ✅ nastavené, overené 2026-09-16 (`vercel env ls production`).
 - [ ] zadať údaje Entra aplikácie SFZ, keď ich pošle ich IT
 - [ ] samoobslužná obrazovka pre zákazníka (dnes údaje zadávame my)
 

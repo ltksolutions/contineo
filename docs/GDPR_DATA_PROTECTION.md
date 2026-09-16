@@ -28,7 +28,7 @@
 | Identita (z CRM/Sportnet) | meno, e-mail, CompanyID, profily (tréner/hráč/rozhodca/delegát/funkcionár) | áno |
 | Členstvá (cache) | osoba → [{companyCode, profil}] | áno |
 | Konverzácie | otázka, odpoveď, `userId`/`sessionId`, čas, model | áno (otázka môže obsahovať PII) |
-| Tickety | kontakt žiadateľa, obsah, priebeh | áno |
+| Tickety | kontakt žiadateľa, obsah, priebeh | áno — **plánované, dnes sa nespracúvajú** (kolekcia `tickets` neexistuje) |
 | Audit prístupov | kto / čo / kedy videl | áno |
 | Obsah (normy, rozpisy) | predpisy, smernice | nie (verejné/interné dokumenty) |
 | **Overené odpovede** (kurácia) | znenie, ktoré hodnotiteľ overil; žije ako úsek v `document_chunks` so `sourceType: "qa"`, vlastnú kolekciu nemá | spravidla nie — otázka sa pred zverejnením prepíše |
@@ -41,6 +41,9 @@
 | **Upozornenia** (`notifications`) | ktorej osobe sa ukázala ktorá udalosť a kedy si ju prečítala | áno |
 | **Záznamy odpovedí** (`evaluations`) | pri **každej** odpovedi: otázka človeka a odpoveď systému **doslovne**, zdroje a citácie, model, časy a cena, e-mail toho, kto sa pýtal a jeho organizácia; nepovinne „sedí/nesedí" a popis chyby od čitateľa, posudok hodnotiteľa a **e-mail hodnotiteľa** (`evaluatedBy`) | áno |
 | **Evidenčné údaje osoby** (`persons`) | meno a priezvisko zvlášť, tituly, pracovná pozícia, oddelenie, **mobilný telefón**, pracovisko (mesto/obec) | áno |
+| **Fotka osoby** (`person_photos`) | fotografia ako uložený súbor | áno |
+| **Prihlasovacie kontá** (`auth_users`) | e-mail, meno, `emailVerified` — technická vrstva NextAuth pod `persons` (`lib/authAdapter.ts`) | áno |
+| **Jednorazové tokeny** (`auth_tokens`) | e-mail + token prihlasovacieho odkazu, platnosť; **maže sa pri použití** | áno |
 
 > **Šesť riadkov vyššie pribudlo 2026-09-10 a päť z nich popisuje údaje, ktoré
 > sa už zbierali.** Tento dokument vznikol pre RAG časť systému a onboarding
@@ -101,6 +104,10 @@ niečo o správaní konkrétneho človeka, nie o jeho povinnosti. Preto:
 ## 3. Minimalizácia údajov (zásady)
 
 - `userId`/`sessionId` **pseudonymizovať**; neukladať zbytočné PII do logov konverzácií.
+  > ⚠️ **Dnes nesplnené.** `evaluations` ukladá e-mail toho, kto sa pýtal, aj
+  > e-mail hodnotiteľa **doslovne** (`lib/ratings.ts`, kap. 2 a 4). Buď sa to
+  > pseudonymizuje, alebo sa zásada prepíše tak, aby zodpovedala skutočnosti —
+  > **rozhodnutie čaká na Jána a DPO** (patrí k O15/O16).
 - Osobné údaje **nikdy** do URL/query parametrov (už platné bezpečnostné pravidlo).
 - Identitu držať len v nevyhnutnom rozsahu; zdroj pravdy je Sportnet — Contineo drží minimálnu kópiu potrebnú pre prístup a maže ju pri odobratí príslušnosti.
 - Obsah odpovedí filtrovaný prístupovými právami (PRISTUPOVE_PRAVA) — používateľ nikdy nedostane údaje, ktoré nesmie vidieť.
@@ -115,7 +122,7 @@ niečo o správaní konkrétneho človeka, nie o jeho povinnosti. Preto:
 | **Audit prístupov** | **24 mesiacov** | bezpečnostné vyšetrovanie a preukázanie compliance si vyžaduje dlhší horizont než konverzácie |
 | **Tickety** | **24 mesiacov po uzavretí** | história podpory; predĺžiť len ak existuje právny/účtovný dôvod |
 | **Overené odpovede** (kurácia) | **kým platí podkladová norma** | expirujú s ňou (`expireCurationFor()`, D11 revidované); bez osobných údajov |
-| **Cache členstiev** (`person_memberships`) | **len aktuálny stav** | obnova login+webhook (D7); pri zrušení príslušnosti **bezodkladne** vymazať/deaktivovať |
+| **Členstvá osoby** (pole na zázname v `persons`) | **len aktuálny stav** | samostatná kolekcia `person_memberships` **neexistuje** — je to plán D7; obnova login+webhook; pri zrušení príslušnosti **bezodkladne** vymazať/deaktivovať |
 | **Identita** (kópia z CRM) | **počas aktívneho vzťahu** | zrkadlo zo Sportnet; pri ukončení vzťahu vymazať lokálnu kópiu |
 | **Potvrdenia** (`acknowledgements`) | **otvorené — patrí k O16** | je to doklad o oboznámení so záväzným predpisom. Lehota nie je technická otázka: odvíja sa od toho, ako dlho sa taký doklad môže hodiť, a to určí právnik |
 | **Pridelenia** (`assignments`) | **ako potvrdenia** | bez pridelenia sa nedá vysvetliť, prečo mal človek povinnosť; samotné potvrdenie by zostalo bez kontextu |
@@ -127,6 +134,8 @@ niečo o správaní konkrétneho človeka, nie o jeho povinnosti. Preto:
 | **Záznamy odpovedí** (`evaluations`) | **12 mesiacov** (návrh, nie rozhodnutie) | **dnes sa nemažú — lehota nie je zavedená.** Je to najstaršia diera v tejto tabuľke: kolekcia zbiera od D9 a doteraz tu nebola. Otázka je text, ktorý napísal človek, takže môže obsahovať osobný údaj; bez nej sa ale odpoveď nedá spätne posúdiť |
 
 | **Osoby** (`persons`) | **otvorené — patrí k O16** | doklady na ňu ukazujú cez `personId` a majú prežiť odchod. Nestačí jedno číslo: `docs/ZALOHOVANIE_A_RETENCIA.md` kap. 3 pomenúva tri cesty (nechať / anonymizovať / zmazať oboje) |
+| **Prihlasovacie kontá** (`auth_users`) | **s osobou** | technická vrstva pod `persons`; sama o sebe drží len e-mail a meno, ale bez nej sa osoba neprihlási — maže sa spolu s ňou |
+| **Jednorazové tokeny** (`auth_tokens`) | **po použití** | `useVerificationToken()` ho zmazá hneď pri výmene. **Nepoužitý token však TTL nemá** — zostane v kolekcii aj po expirácii; drobná, ale zbytočná stopa |
 | **Fotky osôb** (`person_photos`) | **s osobou** | nemá vlastný dôvod existovať dlhšie než osoba |
 | **Audit** (`audit`) | 24 mesiacov | dnes sa **nemaže** — TTL nie je zavedený |
 
@@ -171,6 +180,10 @@ niečo o správaní konkrétneho človeka, nie o jeho povinnosti. Preto:
 - **Audit prístupov** „kto / čo / kedy videl" (najmä interný obsah) — na preukázanie compliance.
 - **Šifrovanie** at-rest aj in-transit; **RBAC/ABAC** a **default-deny** (PRISTUPOVE_PRAVA).
 - **EU rezidencia** dát (Atlas EU).
+  > Presnejšie: **úložisko** je v EÚ. Vektory a preradení sa volá cez Atlas
+  > (Automated Embedding + `$rerank`), takže text otázky a úsekov ide poskytovateľovi
+  > modelu — kde presne beží, rieši `docs/O7_plan_overenia.md`. Je to jediné miesto
+  > v reťazi, kde text opúšťa našu infraštruktúru, a **patrí to do rozhovoru s DPO**.
 - Logy bez zbytočného PII; prístup k logom obmedzený.
 
 ---

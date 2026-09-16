@@ -133,7 +133,10 @@ obyčajné „naozaj?".
 
 ---
 
-## 6. `VERCEL_TOKEN` — jediné, čo ešte treba nastaviť ručne
+## 6. `VERCEL_TOKEN`
+
+> ✅ **Nastavený** — overené 2026-09-16 (`vercel env ls production`). Kapitola
+> zostáva ako návod pre ďalšie nasadenie a pre prípad, že token príde nahradiť.
 
 Keď správcovská obrazovka zakladá organizáciu, priradí jej doménu projektu vo
 Verceli sama. Na to potrebuje token. Bez neho sa organizácia **založí** a

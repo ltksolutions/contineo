@@ -549,12 +549,21 @@ podľa neho sa riadiť nedá. Rozhodujúce je, čo napíše beh:
 ## Nastavené premenné
 
 `MONGODB_URI` · `MONGODB_DB` · `ANTHROPIC_API_KEY` · `EMBEDDING_MODEL` ·
-`VECTOR_INDEX` · `VECTOR_PATH` · `NEXTAUTH_SECRET` · `NEXTAUTH_URL` ·
-`ALLOWED_EMAILS` (predtým `POVOLENE_EMAILY`) · `EMAIL_ODOSIELATEL` ·
-`EMAIL_MENO_ODOSIELATELA` ·
-`GENERATION_KIND` · `GENERATION_MODEL` · `DATA_RESIDENCY`
+`VECTOR_INDEX` · `VECTOR_PATH` · `NEXTAUTH_SECRET` ·
+`ALLOWED_EMAILS` (predtým `POVOLENE_EMAILY`) ·
+`EMAIL_SENDER` (predtým `EMAIL_ODOSIELATEL`) ·
+`EMAIL_SENDER_NAME` (predtým `EMAIL_MENO_ODOSIELATELA`) · `ECOMAIL_API_KEY` ·
+`GENERATION_KIND` · `GENERATION_MODEL` · `DATA_RESIDENCY` ·
+`CRON_SECRET` · `OAUTH_SECRET_ENCRYPTION_KEY` · `VERCEL_TOKEN`
 
-**Overené 2026-08-28:** nastavené sú všetky vrátane `ECOMAIL_API_KEY`. (Skorší text tvrdil, že chýba — už neplatí.)
+**`NEXTAUTH_URL` v tomto zozname nie je a nesmie byť** — viď kapitolu vyššie.
+Do 2026-09-16 tu uvedená bola, čo je presne to nedorozumenie, pred ktorým tá
+kapitola varuje.
+
+**Overené 2026-09-16** (`vercel env ls production`): nastavených je
+sedemnásť premenných práve v tomto zložení — `NEXTAUTH_URL` medzi nimi nie je,
+`OAUTH_SECRET_ENCRYPTION_KEY` aj `VERCEL_TOKEN` už áno. Hodnoty sa nečítali,
+len názvy.
 
 ---
 
