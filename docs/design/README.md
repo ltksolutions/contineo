@@ -106,6 +106,9 @@ alebo osoby; default `topbar`)**
 Ikony sú v prototype textové znaky — v produkcii ich **nahradiť ikonovým setom
 projektu** (SVG, `currentColor`, 16px). Nekresliť nové SVG od ruky.
 
+> **Prekonané 2026-09-14** (`docs/O6_rozhodovaci_harok.md`, bod 1): hotový set sa
+> nezavádza, ikony sú vlastné na jednej mriežke — `components/Icon.tsx`.
+
 ---
 
 ### 2. Prehľad (`/`)

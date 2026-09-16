@@ -6,6 +6,12 @@
 > a ako sa rozhodlo.
 > **Zdroj:** `docs/DESIGN_GAP.md`, `docs/design/README.md`, `docs/TODO.md` O6.
 >
+> **Stav realizácie (2026-09-16):** body 1, 3, 5, 6, 7 a 10 sú postavené —
+> vlastný ikonový set (`components/Icon.tsx`), zásuvka navigácie, zvonček
+> a `/notifications`, `Document.ownerDepartmentId`, stĺpec „Platné do"
+> v knižnici. Body 2, 4, 8 a 9 sú rozhodnuté ako „nerobiť" alebo „v pláne".
+> Popisy „čo systém dnes vie" pri jednotlivých otázkach sú stav k 2026-09-14.
+>
 > **Dvakrát ma rozhodnutie prehlasilo a v oboch prípadoch právom** — pri
 > zvončeku (bod 5) a pri rozsahoch hľadania (bod 8). Obe moje odmietnutia
 > stáli na tom, čo systém vie **dnes**; Ján odpovedal z toho, kam smeruje.

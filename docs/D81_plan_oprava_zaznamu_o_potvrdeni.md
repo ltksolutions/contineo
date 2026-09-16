@@ -49,6 +49,9 @@ nespravíme nič. To isté platí pre opravené označenie znenia a názov dokum
 **(b) Chybný odtlačok osoby.** Meno alebo oddelenie boli v `persons` zle už
 v čase potvrdenia (preklep pri importe) a záznam si tú chybu skopíroval.
 
+> *(Poznámka: `trackId` sa medzitým dopĺňa — `/api/acknowledgements` volá
+> `trackForDocument()`. Odsek nižšie je stav k 2026-09-13.)*
+
 Prípad, ktorý sem **nepatrí**: `acknowledgements.trackId` sa nikdy nevyplní,
 lebo `/api/acknowledgements` posiela natvrdo `null`. To nie je oprava záznamu,
 to je nedorobená cesta — vedené zvlášť v sekcii I.

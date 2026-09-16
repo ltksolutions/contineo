@@ -10,6 +10,55 @@
 
 ---
 
+## 2026-09-16 — audit dokumentácie proti kódu
+
+**Zadanie Jána:** „Doplnme správne dokumentáciu nech je to v súlade so
+skutočnosťou, oprav aj tie docstringy."
+
+### Ako sa to robilo
+
+Nie čítaním od začiatku. Najprv som z kódu vytiahol **pravdu**: zoznam ciest
+(`find src/app -name page.tsx`), `npm run` príkazov z `package.json`, kolekcií
+(konštanty `*_COLLECTION` + `getCollection()`) a rolí. Až potom sa proti tomuto
+zoznamu merali dokumenty — v štyroch paralelných dávkach, každá s tým istým
+zadaním a tým istým kľúčom triedenia: **A** nepravdivý opis súčasnosti,
+**B** datovaný zápis, **C** plán. Bez toho kľúča by audit skončil návrhom
+prepísať históriu — a to je horšie než zastaralý zápis.
+
+Výsledok: **93 nezrovnalostí typu A**, 31 typu B. Nič z toho nebolo vidieť
+„pri bežnom čítaní"; väčšina vyzerá správne, kým si nečítate kód.
+
+### Čo ma prekvapilo
+
+**Dokument o prístupových právach mlčal o polovici mechanizmu prístupu.**
+`PRISTUPOVE_PRAVA.md` popisuje polia na obsahu, ale o tom, že `accessLevel`
+kurovaných odpovedí sa **odvodzuje**, nemal ani vetu. Nie je to nepravdivé
+tvrdenie — je to diera, a diery audit nájde ťažšie než omyly.
+
+**Najhorší nález bol pravdivý opak.** `INGESTION` tvrdilo, že prevod skenov
+robí model s automatickým ústupom. D53 pritom zakázala práve ten tichý ústup
+a hlavička `conversion.ts` to vysvetľuje na desiatich riadkoch. Dokument
+a kód si protirečili v zásade, nie v detaile.
+
+**Hlavičky modulov klamali plošne.** Devätnásť súborov v `lib/` sa
+predstavovalo slovenským menom z čias pred premenovaním. Našlo sa to jedným
+cyklom — porovnaj prvý riadok hlavičky s `basename`. Taký test by mohol byť
+v `npm run check`.
+
+### Čo sa nerobilo
+
+Dva balíky som **nechal na schválenie**, a je to zámer, nie nedokončenosť:
+prepis stavových sekcií (tam sa nemení meno, ale obsah kapitoly) a GDPR
+(podklad pre DPO — tam sa nemá nič meniť potichu).
+
+### Poznámka bokom
+
+`docs/SPRAVA_TENANTOV.md` má v hlavičke e-mail správcovského konta. Podľa
+pravidla „žiadne prístupové údaje v dokumentácii" tam nepatrí, ale je to
+staršie než táto úloha — zapísané, nie ticho zmenené.
+
+---
+
 ## 2026-09-15 — meranie kvality: von so zlatou sadou, dnu s prevádzkou
 
 **Commity:** `75a494d`, `98af0a8`, `e38eec8`, `b556a00`, `29285f5`, `0533101`,

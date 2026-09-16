@@ -490,6 +490,10 @@ Oba modely sú malé — 340M a 568M parametrov. To nie je generatívny model
 s desiatkami miliárd; **jedna menšia karta stačí** a nepotrebujeme cluster.
 Presné požiadavky treba overiť meraním, nie odhadom z tabuliek.
 
+> **Poznámka (2026-08-27):** toto odporúčanie už neplatí — TEI `voyage-4-nano`
+> nepodporuje, viď `docs/ADR-001-provider-adaptery.md` dodatok 10. Cesta A ide
+> cez vLLM/Infinity (`kind: "infinity"`).
+
 Pozn.: pre `voyage-4-nano` odporúčame **TEI, nie Infinity** — karta modelu
 má explicitný štítok `text-embeddings-inference`, podpora v Infinity potvrdená
 nie je a model vyžaduje `trust_remote_code`, ktorý nie každý server prepúšťa.

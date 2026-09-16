@@ -191,6 +191,10 @@ platformy sem prístup nemá.
 - [x] `/osoby` (zoznam + hľadanie), `/osoby/[id]` (detail a úprava), pozvanie, vyradenie
 - [x] import CSV z obrazovky s náhľadom — tou istou knižnicou ako skript
 
+> Zoznam vyššie je zápis k 2026-08-29 a neprepísava sa. Dnešné názvy:
+> `lib/tajomstva.ts` je `lib/secrets.ts`, `/osoby` a `/osoby/[id]` sú
+> `/people` a `/people/[id]`.
+
 **Zostáva**
 - [ ] **`OAUTH_SECRET_ENCRYPTION_KEY` v premenných nasadenia.** Bez neho sa tajomstvo nedá uložiť a obrazovka to povie. Vygeneruje sa: `openssl rand -hex 32`
 - [ ] zadať údaje Entra aplikácie SFZ, keď ich pošle ich IT

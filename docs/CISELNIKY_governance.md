@@ -277,3 +277,6 @@ Premenovanie poľa sa musí premietnuť konzistentne. **V dokumentoch hotové; v
 | Dokumentácia endpointu | `app/src/app/api/chat/README.md` | migrácia (kód) |
 | Diagramy | `docs/contineo_diagram.svg`, `web/public/contineo_diagram.svg` | migrácia |
 | Historické chunky (hodnoty) | `rag_chunks`/`document_chunks` | migrácia (preznačkovať) |
+
+> *(Premenovanie kolekcií medzitým prebehlo — dnes existuje len `document_chunks`;
+> `rag_chunks`, `rag_documents` a `rag_chat_history` už nie sú.)*

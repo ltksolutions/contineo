@@ -20,7 +20,7 @@
 | D8 | Onboarding tenanta | Identita | 🟡 | 5 | ✅ |
 | D9 | Eval & kvalita pred go-live | Compliance | 🔴 | 7 (pripraviť skoro) | ⛔ **prekonané 2026-09-15** → `ADR-008-zrusenie-zlatej-sady.md` |
 | D10 | GDPR / audit / retencia | Compliance | 🔴 | prierezové | ✅ |
-| D11 | Helpdesk + qa_pairs governance | Prevádzka | 🟡 | 4b | ✅ |
+| D11 | Helpdesk + governance kurácie | Prevádzka | 🟡 | 4b | ✅ / ♻️ revidované 2026-09-15 |
 | D12 | Email politika (auto-reply) | Prevádzka | 🟡 | 4b/6 | ✅ |
 | D13 | Scheduler / freshness | Prevádzka | 🟡 | 6 | ✅ |
 | D14 | Widget / embedding | Prevádzka | 🟢 | 5/6 | ✅ |
@@ -44,7 +44,7 @@
 | D37 | Úloha sa odvodzuje, pridelenie sa zaznamenáva | Onboarding | 🔴 | 9 | 🟡 návrh |
 | D38 | `persons.groups` ako tretia dimenzia | Identita | 🟡 | 9 | 🟡 návrh |
 | D39 | „Nové" sa počíta voči `lastLoginAt` | Onboarding | 🟢 | 9 | ✅ |
-| D40 | Jednorazové systémové hlásenia v rozsahu A | Onboarding | 🔴 | 9 | ✅ |
+| D40 | Jednorazové systémové hlásenia v rozsahu A | Onboarding | 🔴 | 9 | ✅ / ♻️ prekonané 2026-09-15 (zvonček) |
 | D41 | `platform-admin` vidí naprieč tenantmi (výnimka z D32) | Identita | 🔴 | 5b | ✅ |
 | D42 | Správa tenantov beží len na doméne dodávateľa | Identita | 🔴 | 5b | ✅ |
 
@@ -72,7 +72,7 @@
 ### D4 — Ladenie rankingu 🟡
 **Otázka:** váhy `$rankFusion` (teraz 60/40), `numCandidates`, prah rerank, kedy fulltext vs vektor.
 **Odporúčanie:** ponechať default 60/40, ladiť až podľa eval setu (D9); zafixovať až po meraní.
-**✅ Rozhodnuté (2026-06-26):** default 60/40 + rerank; ladiť až podľa zlatej sady (D9).
+**✅ Rozhodnuté (2026-06-26):** default 60/40 + rerank; ladiť až podľa zlatej sady (D9). *(Zlatá sada zrušená 2026-09-15 — ADR-008; ladí sa z prevádzky.)*
 
 ---
 
@@ -171,7 +171,7 @@
 
 **Sprint 2 — kvalita a právny rámec:** D3 odpovedacia politika · D9 eval set (začať zbierať) · D10 GDPR baseline.
 
-**Sprint 3 — identita a helpdesk (po CRM connectore):** D7 sync · D8 onboarding · D11 helpdesk/qa_pairs · D12 email politika.
+**Sprint 3 — identita a helpdesk (po CRM connectore):** D7 sync · D8 onboarding · D11 helpdesk · D12 email politika. *(D11 revidované 2026-09-15 — kurácia beží, kolekcia `qa_pairs` nevznikne; otvorený zostáva helpdesk.)*
 
 **Priebežne / neskôr:** D4 ranking · D13 scheduler · D14 widget · D15 modely/náklady.
 
@@ -215,7 +215,7 @@ aj s hlavičkou — ale je to zhoda okolností, nie vlastnosť návrhu.
 
 **Možnosti:**
 
-1. **Nechať tak** — sledovať cez D9, či otázky na tabuľky zlyhávajú.
+1. **Nechať tak** — sledovať z prevádzky, či otázky na tabuľky zlyhávajú. *(Pôvodne „cez D9" — zlatá sada zrušená, ADR-008.)*
 2. **Chunker nikdy nerozdelí tabuľku** — lacná poistka, drží tabuľku pohromade aj za cenu
    väčšieho chunku.
 3. **Extrakcia s rozložením** (`pdfplumber` / `PyMuPDF`) — zachová skutočnú štruktúru tabuliek
@@ -672,6 +672,12 @@ widget ukazuje výhradne úlohy. Kolekcia `notifications` vznikne až vtedy, ke�
 bude existovať prvý skutočný odosielateľ takých správ (kurácia alebo helpdesk)
 — inak by vznikla kolekcia bez odosielateľa a s ňou aj povinnosť odôvodniť ju
 v O15/O16.
+
+**♻️ Podmienka sa naplnila (2026-09-15).** Odosielatelia sú štyria —
+preindexovanie, prepis modelom, rozposlané pripomienky a zverejnené znenie —
+takže dnes platí možnosť **(b)**: kolekcia `notifications` so stavom prečítania,
+zvonček v hlavičke a obrazovka `/notifications`, retencia 90 dní.
+Implementácia: `lib/notifications.ts`. **D39 a D40 sú tým prekonané.**
 
 **Dôsledok pre pomenovanie v rozhraní:** to, čo v rozsahu A vzniká, je zoznam
 úloh, nie „systém notifikácií". Widget sa preto volá **„Nevybavené žiadosti"**

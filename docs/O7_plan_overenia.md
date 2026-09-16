@@ -20,7 +20,7 @@ T3 príklad prepísaný na `kind: "infinity"`.
 
 **Nález B dostal poistku, nie opravu.** `HttpEmbeddingProvider.embed()` tvrdo zlyhá s odkazom na
 fázu 0; drôtový tvar volania zostal v `embedRaw()`, takže testy tvaru požiadavky a parsovania
-odpovede platia ďalej (13 suít prechádza). Pasca je tým zneškodnená — kto prepne tenanta na
+odpovede platia ďalej (13 suít prechádzalo k 2026-08-27). Pasca je tým zneškodnená — kto prepne tenanta na
 on-prem, dostane jasnú chybu namiesto ticho horšieho hľadania. **Fáza 0 tým nie je hotová**,
 len prestala byť tichá.
 

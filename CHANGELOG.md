@@ -4,6 +4,51 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Dokumentácia dobehla kód — audit 30 dokumentov (2026-09-16)
+
+„Dokumentácia je indícia, kód a `git log` sú pravda." Po dni, ktorý zrušil
+zlatú sadu a postavil kuráciu, sme tú indíciu prvýkrát systémovo zmerali proti
+pravde: všetkých 30 dokumentov proti cestám, kolekciám, rolám, názvom súborov
+a `npm run` príkazom, ktoré v repozitári naozaj sú. **93 miest nesedelo.**
+
+Nálezy sa delili na tri druhy a každý sa riešil inak:
+
+- **Nepravdivý opis súčasnosti** — opraví sa.
+- **Datovaný zápis** („hotové 2026-08-30: … rola `spravca-obsahu`") —
+  **neprepísava sa**, dostane poznámku. Prepísať ho by znamenalo tvrdiť, že sa
+  vtedy volalo inak, než sa volalo.
+- **Plán do budúcna** — v poriadku, pokiaľ už nie je hotový.
+
+Štyri nálezy stoja za mení:
+
+**`PRISTUPOVE_PRAVA.md` malo dieru presne tam, kam patrí.** Kapitola o poľiach
+na obsahu mlčala o tom, že v indexe žijú aj úseky, ktoré nepochádzajú
+z dokumentu, a že ich `accessLevel` sa **nikdy nezadáva ručne**. Doplnené.
+
+**`INGESTION_zdroje_reconciliation.md` tvrdilo presný opak zásady z D53** —
+že prevod PDF a skenov robí model s automatickým ústupom na `llama3.2-vision`.
+Prevod beží u nás a model je druhý krok, ktorý vyvolá človek. Kto by podľa
+toho dokumentu stavil štvrtý adaptér, porušil by práve to pravidlo, kvôli
+ktorému vzniklo.
+
+**`AKO_TO_BEZI.md` menovalo ako jedinú verejnú cestu `/prihlasenie`.** Verejný
+je `/sign-in`, `/api/auth`, `/tenants/`, `/api/brand/` a `/api/cron/` —
+a práve neúplnosť tohto zoznamu raz spôsobila, že sa cron ticho nevykonával.
+
+**Tri ADR tvrdili „Implementácia: zatiaľ žiadna".** Onboarding, termíny
+potvrdenia aj reťaz dôkazov bežia v produkcii. Je to najrýchlejší spôsob, ako
+niekoho presvedčiť, že má ešte len postaviť to, čo už stojí.
+
+**Aj hlavičky modulov klamali.** Devätnásť súborov v `lib/` sa v prvom riadku
+predstavovalo slovenským menom, ktoré už neexistuje (`konverzia.ts`
+v `conversion.ts`, `hodnotenia.ts` v `ratings.ts`). Opravené spolu s odkazmi
+medzi modulmi a s tromi osirelými docstringmi v `lib/i18n.ts`.
+
+**Dva balíky zostávajú na schválenie:** prepis stavových sekcií
+(`DATA_MODEL_konzistencia.md`, `rag-architecture.md`, projektový plán,
+`DESIGN_GAP.md`) a GDPR (chýbajúce `auth_users`/`auth_tokens`/`persons`
+v troch zoznamoch osobných údajov, neexistujúca `person_memberships`).
+
 ### Upratovanie po dni — dokumenty dobehli kód (2026-09-15)
 
 `git log` je pravda, dokumentácia indícia — a po dnešnom dni indícia zaostávala

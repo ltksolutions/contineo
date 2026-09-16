@@ -267,7 +267,8 @@ totiž tichá chyba, pri ktorej vyhľadávanie nespadne, len nikdy nič nenájde
 
 **2. Celý korpus sa musí preindexovať.**
 Vektory z rôznych modelov sa nedajú porovnávať. Prechod z `voyage-4` na Titan
-alebo Cohere znamená prepočítať všetkých 581 chunkov a prebudovať index.
+alebo Cohere znamená prepočítať všetky chunky a prebudovať index (581 k 2026-07-27;
+aktuálny počet vypíše `npm run status`).
 Presne pred týmto stráži `embeddingGuard` — pri nezhode radšej chyba než
 ticho zlé výsledky.
 

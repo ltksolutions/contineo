@@ -1,6 +1,12 @@
 # TODO — Contineo
 
-> Pracovný zoznam krokov. Aktualizované 2026-08-27.
+> Pracovný zoznam krokov. Aktualizované 2026-09-16.
+>
+> **Hotové položky sú datované zápisy a neprepísavajú sa.** Menujú cesty,
+> súbory a roly tak, ako sa volali v ten deň — časť z nich sa medzitým
+> premenovala (slovenské cesty do angličtiny 2026-09-07, `spravca-obsahu` na
+> `content-admin` 2026-09-15). Staré cesty ďalej fungujú cez presmerovanie
+> (`lib/legacyRoutes.ts`). Ak hľadáš dnešný tvar, platí `CLAUDE.md` a kód.
 
 ## ✅ Hotové (2026-06-26)
 
@@ -19,7 +25,7 @@
 
 > **Priorita od 2026-08-27: sekcia I (Fáza 8 — onboarding).** Má termín a beží pred sekciami C–H. Zvyšok tohto zoznamu platí, len čaká.
 >
-> **Backlog rozhodnutí:** `docs/OPEN_DECISIONS.md` (15 rozhodnutí D1–D15 s prioritou a odporúčaním). **Sprint 1 = D1 chunking · D5 precedencia noriem · D2 query→filtre · D6 verzovanie.**
+> **Backlog rozhodnutí:** `docs/OPEN_DECISIONS.md` — dnes D1–D46, otvorené sú už len **D16** (odkaz na originál pri citácii) a **D17** (tabuľky z PDF) plus otvorené body radu `O…`. Čiastkové rozhodnutia D47–D89 sú vo vlastných ADR a plánoch. *(Pôvodný zápis hovoril o 15 rozhodnutiach a Sprinte 1 — stav z júna 2026.)*
 
 ### A. Git (na Macu používateľa)
 - [x] Commitnúť + pushnúť ✅ **2026-08-27 je repozitár čistý a zosynchronizovaný s `origin/main`** — žiadne neverzované ani nezapísané zmeny. (Pozn.: `docs/O7_plan_overenia.md` z 28. 7. sa dovtedy povaľoval necommitnutý; doplnený.)
@@ -170,7 +176,7 @@
         (a) **transparentnosť** — človek vidí svoj čas aj vetu, že je informatívny a nie je súčasťou potvrdenia. Meranie, o ktorom sa dozvie až zo zásad ochrany údajov, je presne to, čo pri audite robí problém;
         (b) **retencia 1 rok** — TTL index, samostatná kolekcia;
         (c) **nikdy dôkaz** — a preto **nie** `acknowledgements.readingSeconds`. Údaj s vlastnou retenciou nesmie bývať v zázname, ktorý musí prežiť: TTL maže celé dokumenty, nie polia, a čokoľvek v `acknowledgements` sa raz ocitne vo výkaze pre právnika.
-  - [ ] Implementácia: samostatná kolekcia `reading_times` (companyCode, personId, documentId, versionId, seconds), TTL 365 dní, unikátny index nad (personId, versionId). Meria sa **viditeľný čas** (Page Visibility API) — karta na pozadí sa nepočíta. Server ukladá `max()`, takže hodnota je monotónna a druhé otvorenie ju nezníži.
+  - [x] Implementácia ✅ 2026-09-06 (`df4d879`), `lib/readingTime.ts`: samostatná kolekcia `reading_times` (companyCode, personId, documentId, versionId, seconds), TTL 365 dní, unikátny index nad (personId, versionId). Meria sa **viditeľný čas** (Page Visibility API) — karta na pozadí sa nepočíta. Server ukladá `max()`, takže hodnota je monotónna a druhé otvorenie ju nezníži.
 - [ ] **O15, O16 — právny základ a retencia** `acknowledgements` (DPO, právnik) — rozširuje D10.
   Otázky sú pripravené a čakajú na odpoveď: `docs/O15_O16_otazky_pre_DPO.md` (2026-09-12).
   Odpovede sa dopisujú priamo doň, aby bolo v jednom súbore vidieť, čo sa pýtalo a čo prišlo späť.
@@ -380,8 +386,8 @@
 **Rozhodnutia pred implementáciou**
 
 - [x] **D36** — widget je osobná schránka („čo čaká na mňa"), nie prehľad organizácie
-- [ ] **D37** — úloha sa odvodzuje, pridelenie sa zaznamenáva ako udalosť `assignments`
-- [ ] **D38** — `persons.groups` ako tretia dimenzia vedľa `tracks` a `department`
+- [x] **D37** ✅ 2026-08-29 — úloha sa odvodzuje, pridelenie sa zaznamenáva ako udalosť `assignments` (`lib/assignments.ts`)
+- [x] **D38** ✅ 2026-08-29 — `persons.groups` ako tretia dimenzia vedľa `tracks` a `department`
 - [x] **D39** — „nové" sa počíta voči `lastLoginAt`, bez stavu prečítané
 - [x] **D40** ✅ 2026-08-28 — **(a)**: rozsah A jednorazové hlásenia nemá, widget ukazuje len úlohy
 
