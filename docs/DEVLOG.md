@@ -45,11 +45,24 @@ predstavovalo slovenským menom z čias pred premenovaním. Našlo sa to jedným
 cyklom — porovnaj prvý riadok hlavičky s `basename`. Taký test by mohol byť
 v `npm run check`.
 
-### Čo sa nerobilo
+### Druhá polovica (po schválení)
 
-Dva balíky som **nechal na schválenie**, a je to zámer, nie nedokončenosť:
-prepis stavových sekcií (tam sa nemení meno, ale obsah kapitoly) a GDPR
-(podklad pre DPO — tam sa nemá nič meniť potichu).
+Dva balíky som najprv **nechal na schválenie** — prepis stavových sekcií (tam sa
+nemení meno, ale obsah kapitoly) a GDPR (podklad pre DPO). Ján ich schválil
+a dobehli v ten istý deň.
+
+**Najužitočnejší krok celého dňa bol jeden príkaz:** `vercel env ls production`.
+Dokument tvrdil, že nastavená je `NEXTAUTH_URL` (ktorá nastavená byť **nesmie**)
+a že chýbajú `VERCEL_TOKEN` a `OAUTH_SECRET_ENCRYPTION_KEY`. Skutočnosť bola
+presne opačná v oboch smeroch. Tri otvorené položky v troch dokumentoch tým
+padli. **Poučenie:** keď sa dokument odvoláva na stav vonkajšieho systému,
+overiť sa dá priamo — a spravidla to trvá kratšie než prečítať odsek o ňom.
+
+**Čo som odmietol prepísať.** Dve zásady v GDPR sú napísané ako splnené
+a splnené nie sú: `evaluations` drží e-maily doslovne, a hoci úložisko je v EÚ,
+embedding a rerank idú cez Atlas. Opraviť ich „formuláciou" by znamenalo
+zamiesť problém pod dokument, ktorý ide DPO. Sú označené ako **O17** a **O18**
+a čakajú na rozhodnutie.
 
 ### Poznámka bokom
 

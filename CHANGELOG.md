@@ -44,10 +44,33 @@ predstavovalo slovenským menom, ktoré už neexistuje (`konverzia.ts`
 v `conversion.ts`, `hodnotenia.ts` v `ratings.ts`). Opravené spolu s odkazmi
 medzi modulmi a s tromi osirelými docstringmi v `lib/i18n.ts`.
 
-**Dva balíky zostávajú na schválenie:** prepis stavových sekcií
-(`DATA_MODEL_konzistencia.md`, `rag-architecture.md`, projektový plán,
-`DESIGN_GAP.md`) a GDPR (chýbajúce `auth_users`/`auth_tokens`/`persons`
-v troch zoznamoch osobných údajov, neexistujúca `person_memberships`).
+**Prepisané boli aj štyri stavové dokumenty**, kde sa nemenilo meno veci, ale
+obsah kapitoly. `DATA_MODEL_konzistencia.md` sa vyhlasuje za jediný zdroj pravdy
+pre názvy polí a predpisoval `access_level` a `chunk_index` — v kóde je
+`accessLevel` a `chunkIndex`. `rag-architecture.md` malo tri hotové fázy ako
+„plánované" a súbory vo Vercel Blobe (sú v GridFS). Projektový plán menoval
+Crawlee, LangChain.js a Vercel Blob — ani jeden v projekte nie je. `DESIGN_GAP.md`
+mal zoznam „Chýba" nepravdivý na šiestich miestach.
+
+**GDPR: tri zoznamy pre DPO neobsahovali `auth_users` a `auth_tokens`** —
+kolekcie, ktoré držia e-mail a jednorazový prihlasovací token každého
+používateľa. V prílohe chýbala aj `persons` (kam D87 pridal mobil a pracovisko)
+a uvedená bola neexistujúca `person_memberships`. Retencia „17 kolekcií"
+nahradená menovitým zoznamom dvadsiatich jednej.
+
+**Dve zásady sú napísané ako splnené a splnené nie sú** — označené, nie
+prepísané, lebo sú to rozhodnutia: `evaluations` ukladá e-maily doslovne
+(zásada hovorí pseudonymizovať), a hoci úložisko je v EÚ, vektory a preradení
+sa volajú cez Atlas, takže text otázky ide poskytovateľovi modelu. Vedie sa to
+ako **O17** a **O18**.
+
+**`NEXTAUTH_URL` bola medzi „nastavenými premennými"**, hoci ten istý dokument
+o 110 riadkov vyššie vysvetľuje, že v produkcii existovať **nesmie** — a varuje,
+že kto ju uvidí chýbať, „opraví" ju doplnením. Zoznam presne tú chybu vyvolával.
+Overené proti Vercelu (len názvy, hodnoty sa nečítali): premenných je
+sedemnásť, `NEXTAUTH_URL` medzi nimi nie je — a naopak
+`OAUTH_SECRET_ENCRYPTION_KEY` aj `VERCEL_TOKEN` už nastavené sú, takže tri
+otvorené položky v TODO sú vybavené.
 
 ### Upratovanie po dni — dokumenty dobehli kód (2026-09-15)
 

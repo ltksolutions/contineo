@@ -178,6 +178,8 @@
         (c) **nikdy dôkaz** — a preto **nie** `acknowledgements.readingSeconds`. Údaj s vlastnou retenciou nesmie bývať v zázname, ktorý musí prežiť: TTL maže celé dokumenty, nie polia, a čokoľvek v `acknowledgements` sa raz ocitne vo výkaze pre právnika.
   - [x] Implementácia ✅ 2026-09-06 (`df4d879`), `lib/readingTime.ts`: samostatná kolekcia `reading_times` (companyCode, personId, documentId, versionId, seconds), TTL 365 dní, unikátny index nad (personId, versionId). Meria sa **viditeľný čas** (Page Visibility API) — karta na pozadí sa nepočíta. Server ukladá `max()`, takže hodnota je monotónna a druhé otvorenie ju nezníži.
 - [ ] **O15, O16 — právny základ a retencia** `acknowledgements` (DPO, právnik) — rozširuje D10.
+- [ ] **O17 — pseudonymizácia v `evaluations`** (audit 2026-09-16). `GDPR_DATA_PROTECTION.md` kap. 3 má zásadu „`userId`/`sessionId` pseudonymizovať", ale kolekcia ukladá e-mail pýtajúceho aj hodnotiteľa **doslovne**. Buď sa to pseudonymizuje, alebo sa zásada prepíše — **rozhodnutie, nie implementácia**.
+- [ ] **O18 — text otázky opúšťa našu infraštruktúru** (audit 2026-09-16). Úložisko je v EÚ, ale vektory a preradení sa volajú cez Atlas (Automated Embedding + `$rerank`), takže text otázky a úsekov ide poskytovateľovi modelu. Je to **jediné miesto v reťazi**, kde text opúšťa našu infraštruktúru. Patrí do rozhovoru s DPO a do `O7_plan_overenia.md` (on-prem vetva je odpoveď, ak sa rozhodne, že to prekáža).
   Otázky sú pripravené a čakajú na odpoveď: `docs/O15_O16_otazky_pre_DPO.md` (2026-09-12).
   Odpovede sa dopisujú priamo doň, aby bolo v jednom súbore vidieť, čo sa pýtalo a čo prišlo späť.
 - [ ] Zoznam dokumentov prvej vlny + kto je ich kurátor
