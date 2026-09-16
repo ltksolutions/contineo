@@ -106,7 +106,7 @@ const VECTOR_QUERY = `db.document_chunks.aggregate([
 //   on-prem -> POST /rerank na Infinity/TEI nad výsledkom vyššie
 //
 // Počet kandidátov na vstupe rerankera drž rovnaký (20),
-// aby boli oba režimy porovnateľné na eval sade D9.`;
+// aby boli oba režimy porovnateľné na hodnoteniach z prevádzky.`;
 
 const TAG_EXAMPLES = `// company-wide policy (applies to all units)
 { sourceType: "pdf", sectionKey: "smernice",
