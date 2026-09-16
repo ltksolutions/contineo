@@ -180,10 +180,17 @@ niečo o správaní konkrétneho človeka, nie o jeho povinnosti. Preto:
 - **Audit prístupov** „kto / čo / kedy videl" (najmä interný obsah) — na preukázanie compliance.
 - **Šifrovanie** at-rest aj in-transit; **RBAC/ABAC** a **default-deny** (PRISTUPOVE_PRAVA).
 - **EU rezidencia** dát (Atlas EU).
-  > Presnejšie: **úložisko** je v EÚ. Vektory a preradení sa volá cez Atlas
-  > (Automated Embedding + `$rerank`), takže text otázky a úsekov ide poskytovateľovi
-  > modelu — kde presne beží, rieši `docs/O7_plan_overenia.md`. Je to jediné miesto
-  > v reťazi, kde text opúšťa našu infraštruktúru, a **patrí to do rozhovoru s DPO**.
+  > Presnejšie: **úložisko** je v EÚ. Text však opúšťa našu infraštruktúru na **dvoch**
+  > miestach, a obe sú zámerné: pri vektoroch a preradení (Voyage cez Atlas) a pri
+  > **generovaní odpovede**, kam ide otázka aj nájdené úseky (Anthropic). Oboje je
+  > režim (b) — enterprise API so zero-retention a bez trénovania.
+  >
+  > **Z pohľadu GDPR je podstatná len otázka človeka**, lebo tá môže obsahovať osobný
+  > údaj. Znenie predpisu ani zmluvy osobný údaj nie je (pokiaľ v ňom niekto nie je
+  > menovaný) — to je otázka **dôvernosti**, nie ochrany osobných údajov, a rieši ju
+  > zmluva so sub-procesorom, nie retenčná tabuľka. Otvorené zostáva to, čo má riadok
+  > **Voyage AI** v tabuľke vyššie: potvrdiť zero-retention a región. On-prem vetva
+  > (`docs/O7_plan_overenia.md`) je odpoveď, ak sa raz rozhodne, že ani to nestačí.
 - Logy bez zbytočného PII; prístup k logom obmedzený.
 
 ---

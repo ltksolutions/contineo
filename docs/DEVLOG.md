@@ -66,9 +66,9 @@ a čakajú na rozhodnutie.
 
 ### Poznámka bokom
 
-`docs/SPRAVA_TENANTOV.md` má v hlavičke e-mail správcovského konta. Podľa
-pravidla „žiadne prístupové údaje v dokumentácii" tam nepatrí, ale je to
-staršie než táto úloha — zapísané, nie ticho zmenené.
+`docs/SPRAVA_TENANTOV.md` má v hlavičke e-mail správcovského konta. Oznámené
+Jánovi; **rozhodol nechať** — je to všeobecné firemné konto, nie osobný ani
+prístupový údaj. Pravidlo o tajomstvách sa naň nevzťahuje.
 
 ---
 
