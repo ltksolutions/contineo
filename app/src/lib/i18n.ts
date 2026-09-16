@@ -326,6 +326,8 @@ interface Dictionary {
     evidence: string
     overview: string
     /** Popis navigačnej oblasti shellu pre čítačky obrazovky. */
+    /** Kostra na čas čakania — jediné, čo o nej čítačka obrazovky povie. */
+    loading: string
     sections: string
     /** Čo znamená štítok s počtom — čítačka nesmie prečítať holé číslo. */
     waiting: (n: number) => string
@@ -398,6 +400,14 @@ interface Dictionary {
     submit: string
     stop: string
     searching: string
+    /**
+     * Čo sa práve deje, kým odpoveď ešte nezačala.
+     *
+     * Fázy chodia zo servera udalosťou `phase`, takže to nie je animovaný
+     * odhad — každá sa ozýva práve vtedy, keď tá práca začína. `ranking`
+     * sa v cloude neozýva vôbec: rerank tam robí agregačná pipeline.
+     */
+    phases: Record<"reading" | "searching" | "ranking" | "writing", string>
     askAgain: string
     askThis: string
     examplesLabel: string
@@ -1938,6 +1948,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     toApprove: "Na schválenie",
     evidence: "Reťaz dôkazov",
     overview: "Prehľad",
+    loading: "Načítava sa…",
     sections: "Sekcie",
     waiting: n => (n === 1 ? "čaká 1" : n <= 4 ? `čakajú ${n}` : `čaká ${n}`),
     toAcknowledge: "Na potvrdenie",
@@ -2010,6 +2021,12 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     submit: "Opýtať sa",
     stop: "Zastaviť",
     searching: "Hľadám…",
+    phases: {
+      reading: "Čítam otázku…",
+      searching: "Hľadám v predpisoch…",
+      ranking: "Zoraďujem nájdené…",
+      writing: "Skladám odpoveď…",
+    },
     askAgain: "Spýtať sa znova",
     askThis: "Položiť túto otázku",
     examplesLabel: "Alebo skúste:",
@@ -3751,6 +3768,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     toApprove: "Ke schválení",
     evidence: "Řetěz důkazů",
     overview: "Přehled",
+    loading: "Načítá se…",
     sections: "Sekce",
     waiting: n => (n === 1 ? "čeká 1" : n <= 4 ? `čekají ${n}` : `čeká ${n}`),
     toAcknowledge: "K potvrzení",
@@ -3823,6 +3841,12 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     submit: "Zeptat se",
     stop: "Zastavit",
     searching: "Hledám…",
+    phases: {
+      reading: "Čtu otázku…",
+      searching: "Hledám v předpisech…",
+      ranking: "Řadím nalezené…",
+      writing: "Skládám odpověď…",
+    },
     askAgain: "Zeptat se znovu",
     askThis: "Položit tuto otázku",
     examplesLabel: "Nebo zkuste:",
@@ -5557,6 +5581,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     toApprove: "To approve",
     evidence: "Evidence",
     overview: "Overview",
+    loading: "Loading…",
     sections: "Sections",
     waiting: n => `${n} waiting`,
     toAcknowledge: "To acknowledge",
@@ -5629,6 +5654,12 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     submit: "Ask",
     stop: "Stop",
     searching: "Searching…",
+    phases: {
+      reading: "Reading the question…",
+      searching: "Searching the rules…",
+      ranking: "Ranking what was found…",
+      writing: "Composing the answer…",
+    },
     askAgain: "Ask again",
     askThis: "Ask this question",
     examplesLabel: "Or try:",

@@ -11,6 +11,7 @@ import "./globals.css"
 import Header from "@/components/Header"
 import Footer from "@/components/Footer"
 import SessionProvider from "@/components/SessionProvider"
+import RouteProgress from "@/components/RouteProgress"
 import { currentTenant, currentEmail, currentPerson } from "@/lib/session"
 import { platformContext } from "@/lib/admin"
 import { peopleContext } from "@/lib/people"
@@ -172,6 +173,9 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           a nie hneď pod obsahom uprostred prázdnej obrazovky. */}
       <body style={{ ...tenantStyle(branding), minHeight: "100dvh", display: "flex", flexDirection: "column" }}>
         <SessionProvider>
+          {/* Nad hlavičkou a pred ňou: prúžok má byť vidieť od chvíle kliknutia,
+              teda skôr, než sa vymení obsah pod ním. */}
+          <RouteProgress />
           <Header
             branding={branding}
             email={email}

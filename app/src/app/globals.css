@@ -3349,3 +3349,147 @@ a.answer-source:focus-visible { outline: 2px solid var(--accent); outline-offset
 }
 /* Zalomenie v adrese: bez neho pretečie karta, nie text. */
 .directory-contact a { overflow-wrap: anywhere; }
+
+/* ── kostry počas čakania (O20) ─────────────────────────────────────────────
+   Kostra hovorí *čo* príde, koliesko len *že* sa čaká. Preto sa tu nekreslí
+   nič okrúhle a točiace sa, ale obdĺžniky v tvare obsahu, ktorý o chvíľu
+   nabehne.
+
+   Shimmer je `background-position`, nie `opacity`: prebliknutie celej plochy
+   vyzerá ako chyba vykreslenia, prechod svetla po nej ako práca. Pohyb je
+   3 s a jemný — kostra má byť pokojná, veď človek na ňu pozerá práve vtedy,
+   keď už čaká.
+
+   `--surface-2` je tá istá plocha, akú má prázdny stav; kostra tak nikdy
+   nevyzerá tmavšie než panel, do ktorého patrí, a v tmavom režime sa mení
+   s ním. */
+
+.skeleton {
+  display: block;
+  border-radius: 6px;
+  background-color: var(--surface-2);
+  background-image: linear-gradient(
+    90deg,
+    transparent 0%,
+    var(--skeleton-sheen) 50%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  background-repeat: no-repeat;
+  animation: skeleton-sheen 3s ease-in-out infinite;
+}
+
+/* Tmavý režim sa v tomto projekte prepína `html[data-theme]`, nie
+   `prefers-color-scheme` — kostra sa drží toho istého mechanizmu, inak by
+   na tmavom pozadí svietila bielym pruhom. */
+:root { --skeleton-sheen: rgba(255, 255, 255, 0.72); }
+html[data-theme="dark"] { --skeleton-sheen: rgba(255, 255, 255, 0.07); }
+
+@keyframes skeleton-sheen {
+  0%   { background-position: 150% 0; }
+  100% { background-position: -50% 0; }
+}
+
+/* Vypnutý pohyb neznamená vypnutú kostru — plocha zostane, len prestane
+   svietiť. Kto má `prefers-reduced-motion`, má vidieť to isté rozloženie,
+   nie prázdno. */
+@media (prefers-reduced-motion: reduce) {
+  .skeleton { animation: none; background-image: none; }
+}
+
+/* Riadok textu. Posledný býva kratší — odsek sa málokedy končí presne na
+   okraji a kostra s rovnako dlhými riadkami vyzerá ako tabuľka, nie ako text. */
+.skeleton-line { height: 12px; }
+.skeleton-line--last { width: 62%; }
+.skeleton-text { display: grid; gap: 8px; }
+
+/* Nadpis stránky. 22 px je výška `h1` v tejto aplikácii; keby bola kostra
+   nižšia, obsah by po načítaní poskočil. */
+.skeleton-title { height: 22px; width: min(280px, 70%); border-radius: 7px; }
+.skeleton-sub { height: 13px; width: min(420px, 90%); margin-top: 9px; }
+
+/* Riadok panela kopíruje `.panel-row`: rovnaké odsadenie aj rovnaká deliaca
+   čiara, takže po načítaní sa nič neposunie. */
+.skeleton-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: var(--list-py) 13px;
+  border-bottom: 1px solid var(--line);
+  min-height: 38px;
+}
+.skeleton-row:last-child { border-bottom: 0; }
+.skeleton-row-main { flex: 1 1 160px; min-width: 0; display: grid; gap: 6px; }
+.skeleton-chip { height: 18px; width: 64px; border-radius: 999px; flex: 0 0 auto; }
+
+/* Obrys navigácie. `AppShell` je v stránke, nie v `layout.tsx`, takže počas
+   čakania zmizne aj pás odkazov — bez tohto obrysu by obsah poskočil o jeho
+   výšku hore a po načítaní späť dole. Prah 940 px je ten istý ako pri
+   `.app-nav--topbar`; drží sa zámerne v páre s ním. */
+/* Veta pre čítačku obrazovky. Skrytá pre oko, nie pre čítačku — rovnaký
+   postup ako pri `.header-search-submit`. Kostra sama je pre čítačku nič
+   (`aria-hidden`), informácia je táto jedna veta. */
+.skeleton-label {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* `min-height: 44px` je to isté číslo, aké má `.app-nav-item` — bez neho by
+   bol obrys pásu o 30 px nižší než pás a obsah by po načítaní poskočil. */
+.skeleton-nav { display: flex; gap: 14px; align-items: center; min-height: 44px; }
+.skeleton-nav-item { height: 14px; width: 84px; flex: 0 0 auto; }
+
+
+/* ── prúžok priebehu navigácie (O20) ────────────────────────────────────────
+   Nad hlavičkou, nie pod ňou: hlavička je `sticky` so `z-index: 10`, takže
+   prúžok potrebuje viac. Dvesto má `.notice-backdrop` — oznam o uložení musí
+   ostať navrchu aj počas prechodu, lebo nesie výsledok, nie stav.
+
+   Šírka nikdy nedôjde na 100 %. Koľko z načítania je hotové, nikto nevie;
+   pruh, ktorý dobehne a potom stojí, tvrdí, že je hotovo. Krivka preto
+   spomaľuje a zastaví sa na 88 % — koniec dopíše až skutočná zmena adresy,
+   ktorá prúžok odstráni. */
+
+.route-progress {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 2px;
+  width: 0;
+  z-index: 30;
+  background: var(--accent);
+  border-radius: 0 2px 2px 0;
+  animation: route-progress 12s cubic-bezier(0.1, 0.75, 0.2, 1) forwards;
+}
+
+@keyframes route-progress {
+  0%   { width: 0; }
+  12%  { width: 34%; }
+  40%  { width: 68%; }
+  100% { width: 88%; }
+}
+
+/* Pri vypnutom pohybe zostane tenký pás cez celú šírku: povie to isté („niečo
+   beží"), len sa nehýbe. Prúžok, ktorý by sa pri `reduce` nezobrazil vôbec,
+   by z tej informácie nenechal nič. */
+@media (prefers-reduced-motion: reduce) {
+  .route-progress {
+    width: 100%;
+    animation: none;
+    opacity: 0.45;
+  }
+}
+
+/* Veta nad kostrou odpovede — čo sa práve robí. Tichšia než odpoveď: je to
+   stav, nie obsah, a o chvíľu zmizne. */
+.answer-phase {
+  font-size: 12.5px;
+  margin-bottom: 10px;
+}

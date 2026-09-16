@@ -57,9 +57,21 @@ export interface Completion {
   cost?: Cost
 }
 
+/**
+ * Fáza práce pred prvým slovom odpovede.
+ *
+ * Nie je to odhad ani animácia — server posiela každú z nich práve vtedy, keď
+ * tá práca začína, a `ranking` neposiela vôbec, keď rerank rieši agregačná
+ * pipeline (cloud). Vďaka tomu sa dá to, čo sa ukáže človeku, brať doslovne.
+ */
+export type AnswerPhase = "reading" | "searching" | "ranking" | "writing"
+
 export type SseEvent =
   | { type: "token"; token: string }
   | { type: "citation"; citation: Citation }
+  | { type: "phase"; phase: AnswerPhase }
+  /** Ladiace údaje, ktoré boli do 2026-09-16 hlavičkami odpovede. */
+  | { type: "meta"; searchMode?: string; preprocessed?: boolean; chunks?: number }
   | ({ type: "done" } & Partial<Completion>)
   | { type: "error"; message: string }
 
@@ -136,6 +148,12 @@ export interface AskProgress {
   /** Postupne rastúci text odpovede. */
   text: string
   citations: Citation[]
+  /**
+   * Čo sa deje teraz. `undefined` znamená „ešte nič nepovedal" — pri starom
+   * serveri, ktorý fázy neposiela, tak rozhranie len nemá čo ukázať a zvyšok
+   * funguje ako predtým.
+   */
+  phase?: AnswerPhase
 }
 
 export interface AskResult extends AskProgress {
@@ -181,6 +199,7 @@ export async function askQuestion(
   const start = Date.now()
   let ttftMs: number | null = null
   let text = ""
+  let phase: AnswerPhase | undefined
   const citations: Citation[] = []
 
   const done = (extra: Partial<AskResult> = {}): AskResult => ({
@@ -207,10 +226,13 @@ export async function askQuestion(
     if (u.type === "token") {
       if (ttftMs === null) ttftMs = Date.now() - start
       text += u.token
-      onChange({ text, citations: citations })
+      onChange({ text, citations: citations, phase: phase })
     } else if (u.type === "citation") {
       citations.push(u.citation)
-      onChange({ text, citations: citations })
+      onChange({ text, citations: citations, phase: phase })
+    } else if (u.type === "phase") {
+      phase = u.phase
+      onChange({ text, citations: citations, phase: phase })
     } else if (u.type === "error") {
       return done({ error: u.message })
     } else if (u.type === "done") {

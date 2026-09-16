@@ -10,6 +10,48 @@
 
 ---
 
+## 2026-09-17 (skoro ráno) — kostry, a jedna prestavba v horúcej ceste
+
+Ján: „chýbajú mi inteligentné pekné preloadery na stránkach … ideálne v štýle
+Skeleton Loaders.“ Prvé, čo som urobil, bolo, že som to šiel zmerať v kóde,
+a výsledok bol jednoznačný: **nula `loading.tsx`, nula `Suspense`** na 34
+routách. Nebolo teda čo vylepšovať — nebolo tam nič.
+
+**Kde som skoro urobil kostru zle.** Prvý návrh mal `SkeletonPanel` všade.
+Potom som sa pozrel, z čoho sú zoznamy naozaj postavené: `/documents`,
+`/people`, `/hr` aj `/library` sú stĺpce `.card`, nie panel s riadkami. Kostra
+z panela by mala o medzery medzi kartami menej a po načítaní by sa zoznam
+roztiahol. Poučenie je to isté ako pri dokumentácii: **tvar sa berie z kódu,
+nie z predstavy.**
+
+**`AppShell` nie je v `layout.tsx`** — vyžiada si ho každá stránka sama. To som
+zistil až pri prvom `loading.tsx` a je to pre kostru určujúce: `loading.tsx`
+nahrádza stránku, takže počas čakania zmizne aj pás odkazov. Preto
+`SkeletonShell` s obrysom navigácie a `min-height: 44px` — to isté číslo, aké
+majú skutočné položky pásu.
+
+**Prestavba `/api/chat` bola jediné možné čestné riešenie.** Jánovi som
+dopredu napísal, že hlášky typu „hľadám v predpisoch…“ sa dajú urobiť buď
+pravdivo (práca dovnútra streamu a udalosti `phase`), alebo ako animácia bez
+vzťahu k skutočnosti. Vybral pravdivú cestu. Stálo to dve zmeny správania,
+ktoré sú zapísané v hlavičke route aj v changelogu: hlavičky `X-Search-Mode`
+a spol. nahradila udalosť `meta` (hlavičky sa nastavujú pred prácou, teda
+by boli prázdne) a nezhoda vektorového priestoru už nie je HTTP 500, ale
+`error` v streame. Ani jedno nikto v repozitári nečítal — overené grepom,
+nie odhadom.
+
+**Čo som nedokázal overiť sám.** Ako to vyzerá. `tsc`, lint (0 chýb),
+1318 testov aj `npm run build` prešli, ale kostra je vec oka a na to
+potrebujem prehliadač. Zostáva to na vizuálnu kontrolu po nasadení —
+a skôr než ju niekto urobí, platí, že počty riadkov v kostrách sú odhad,
+nie meranie. Zapísané ako otvorený bod v TODO, nie zamlčané.
+
+**Lint ma chytil na `setBusy(false)` priamo v efekte.** Reťazové vykreslenie.
+Oprava je `requestAnimationFrame` — pre oko to isté, pre React obyčajná zmena
+stavu. Dobré pravidlo bolo v nástroji skôr než v mojej hlave.
+
+---
+
 ## 2026-09-16 (neskorá noc) — Vercel nedostal webhook druhýkrát
 
 Včera som si do tohto denníka napísal, že stratený webhook bol **jednorazový

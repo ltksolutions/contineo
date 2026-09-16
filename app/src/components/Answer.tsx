@@ -9,11 +9,12 @@
  * model niečo nedomyslel.
  */
 
-import type { Citation, AskResult } from "@/lib/sseClient"
+import type { Citation, AskResult, AnswerPhase } from "@/lib/sseClient"
 import FormattedText from "@/components/FormattedText"
 import { cleanCitation, mergeCitations } from "@/lib/formatText"
 import { formatUsd, formatEur, toEur } from "@/lib/pricing"
 import { dictionary, type UiLanguage } from "@/lib/i18n"
+import { SkeletonText } from "./Skeleton"
 
 /** Stav odpovede počas streamovania — kým nepríde `done`, máme len text. */
 export interface AnswerState {
@@ -22,6 +23,11 @@ export interface AnswerState {
   citations: Citation[]
   done: AskResult | null
   running: boolean
+  /**
+   * Fáza zo servera — čo sa robí, kým odpoveď ešte nezačala. `undefined`
+   * znamená, že server zatiaľ nič nepovedal; vtedy sa ukáže len kostra.
+   */
+  phase?: AnswerPhase
 }
 
 /**
@@ -50,7 +56,8 @@ export default function Answer({
   language?: UiLanguage
 }) {
   const t = dictionary(language).answer
-  const { text, citations: citations, done: done, running: running } = state
+  const tAsk = dictionary(language).ask
+  const { text, citations: citations, done: done, running: running, phase } = state
   if (!text && !running && !done) return null
 
   const error = done?.error
@@ -81,7 +88,27 @@ export default function Answer({
           </div>
         ) : (
           <div className={running ? "answer caret" : "answer"}>
-            {text ? <FormattedText text={text} /> : (running ? null : "—")}
+            {/*
+              Kým nepríde prvé slovo, tu bývalo `null` — prázdna karta na tri
+              až päť sekúnd (klasifikácia, prepis dotazu, vyhľadanie, rerank).
+              Odteraz je tu kostra odseku a nad ňou veta o tom, čo sa práve
+              robí. Veta ide zo servera, takže netvrdí nič, čo sa nedeje;
+              keď ju server nepošle, zostane len kostra.
+            */}
+            {text ? (
+              <FormattedText text={text} />
+            ) : running ? (
+              <div role="status" aria-live="polite">
+                {phase && (
+                  <div className="quiet answer-phase">{tAsk.phases[phase]}</div>
+                )}
+                <div aria-hidden="true">
+                  <SkeletonText lines={4} />
+                </div>
+              </div>
+            ) : (
+              "—"
+            )}
           </div>
         )}
 

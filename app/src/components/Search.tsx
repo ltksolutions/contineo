@@ -85,22 +85,22 @@ export default function Search({
     const ctrl = new AbortController()
     abort.current = ctrl
 
-    setState({ question: q, text: "", citations: [], done: null, running: true })
+    setState({ question: q, text: "", citations: [], done: null, running: true, phase: undefined })
     setRecordId(null)
 
     try {
       const v = await askQuestion(
         q,
-        p => setState(s => ({ ...s, text: p.text, citations: p.citations })),
+        p => setState(s => ({ ...s, text: p.text, citations: p.citations, phase: p.phase })),
         { signal: ctrl.signal, language }
       )
-      setState({ question: q, text: v.text, citations: v.citations, done: v, running: false })
+      setState({ question: q, text: v.text, citations: v.citations, done: v, running: false, phase: undefined })
       if (!v.error && v.text) void record(q, v)
     } catch (e) {
       // Prerušenie používateľom nie je chyba — len sme prestali čakať.
       if ((e as Error)?.name === "AbortError") return
       setState(s => ({
-        ...s, running: false,
+        ...s, running: false, phase: undefined,
         done: {
           text: s.text, citations: s.citations, sources: [], model: "", provider: "",
           verifiedCitations: false, ttftMs: null, totalMs: 0,
@@ -157,7 +157,7 @@ export default function Search({
               <button
                 type="button"
                 className="button button--quiet"
-                onClick={() => { abort.current?.abort(); setState(s => ({ ...s, running: false })) }}
+                onClick={() => { abort.current?.abort(); setState(s => ({ ...s, running: false, phase: undefined })) }}
               >
                 {t.stop}
               </button>

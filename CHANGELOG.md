@@ -4,6 +4,40 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Kostry namiesto prázdnej obrazovky (O20, 2026-09-16)
+
+Aplikácia nemala **ani jeden** `loading.tsx` a ani jednu `Suspense` hranicu.
+Po kliknutí na odkaz sa teda nestalo nič, kým serverový komponent nedobehol
+celý — a na obrazovke `/ask` bola karta odpovede prázdna tri až päť sekúnd,
+lebo klasifikácia, prepis dotazu, vyhľadanie aj rerank bežali **pred** otvorením
+streamu.
+
+**Čo pribudlo.** Kostra (`components/Skeleton.tsx`) s tvarmi podľa skutočných
+tried stránky a `loading.tsx` na všetkých 34 routách. Kostra nie je koliesko:
+hovorí, *čo* príde, nie len *že* sa čaká. Tvar sa berie z hotovej stránky,
+lebo kostra, po ktorej obsah poskočí, je horšia než prázdne miesto.
+
+**`SkeletonShell`.** `AppShell` si vyžiada každá stránka sama a v `layout.tsx`
+zámerne nie je; `loading.tsx` ho teda nahrádza aj s navigáciou. Obrys pásu
+odkazov drží tú istú geometriu — vrátane prahu 940 px, kde sa pás mení na
+zásuvku — takže obsah neposkočí.
+
+**`/api/chat` posiela fázy.** Práca pred generovaním sa presunula **dovnútra**
+streamu a každá fáza sa ohlási udalosťou `phase` (`reading`, `searching`,
+`ranking`, `writing`). Sú to skutočné fázy, nie animácia: `ranking` sa
+v cloude neposiela vôbec, lebo rerank tam robí agregačná pipeline. Dva
+dôsledky, ktoré treba vedieť: hlavičky `X-Search-Mode`, `X-Preprocessed`
+a `X-Chunks-Count` nahradila udalosť `meta` (nastaviť sa dajú len pred
+vyhľadávaním), a nezhoda vektorového priestoru už nie je HTTP 500, ale
+udalosť `error` v streame.
+
+**Prúžok priebehu.** 2 px nad hlavičkou od kliknutia po zmenu adresy. Nikdy
+nedôjde na 100 % — koľko z načítania je hotové, nikto nevie, a pruh, ktorý
+dobehne a potom stojí, tvrdí, že je hotovo.
+
+Kostry aj prúžok rešpektujú `prefers-reduced-motion`: plocha zostáva, prestane
+sa hýbať.
+
 ### V zázname o hodnotení už nie je e-mail (O17, 2026-09-16)
 
 Audit dokumentácie našiel v `GDPR_DATA_PROTECTION.md` zásadu „`userId`/`sessionId`

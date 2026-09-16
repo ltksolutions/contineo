@@ -598,6 +598,18 @@ koná personalista, dôvod povinný, nový záznam namiesto úpravy starého.
 - [ ] **Tabuľky** — renderer ich nepozná. Počkať, v akom tvare ich prepis vracia na ostrých predpisoch; kresliť to naslepo znamená hádať tvar vstupu
 - [ ] Poznámky pod čiarou a odkazy medzi predpismi — až keď bude vidieť ostrý text
 
+### O20 — kostry počas čakania ✅ (2026-09-16) → `docs/O20_plan_skeleton_loadery.md`
+
+- [x] Primitív `.skeleton` + `components/Skeleton.tsx` (kostra, nie koliesko; `prefers-reduced-motion`)
+- [x] `loading.tsx` na všetkých 34 routách, tvar podľa skutočných tried stránky
+- [x] `SkeletonShell` — obrys `AppShell`-u, aby počas čakania nezmizla navigácia
+- [x] `/api/chat`: práca dovnútra streamu, skutočné fázy udalosťou `phase`
+- [x] Prúžok priebehu navigácie (`components/RouteProgress.tsx`)
+- [ ] **Doladiť tvary podľa skutočnosti.** Tvary zoznamových a formulárových kostier sú odhadnuté z tried, nie odmerané na bežiacej stránke. Kde kostra po načítaní poskočí, oprav iť počet riadkov alebo políčok — práve skok je to, čo na čakaní vadí najviac.
+- [ ] **`prehlad` kostru nedostal zámerne** — je to `permanentRedirect`, kostra by tam blikla a zmizla.
+- [ ] Zvážiť `loading.tsx` aj pre stránky, ktoré sa načítajú do ~100 ms. Tam je kostra blik navyše a patrí preč.
+
+
 ### O6 — medzery rozhrania → **rozhodnuté** `docs/O6_rozhodovaci_harok.md`
 
 Všetkých dvanásť otázok má odpoveď (2026-09-14). Dôvody sú v hárku; tu je už
