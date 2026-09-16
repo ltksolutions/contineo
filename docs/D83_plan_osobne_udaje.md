@@ -1,6 +1,8 @@
 # D83–D88 — evidencia osoby: meno, priezvisko, pozícia, mobil, pracovisko
 
-> **Stav:** ✅ rozhodnuté 2026-09-14 (Ján), realizuje sa.
+> **Stav:** ✅ rozhodnuté 2026-09-14 (Ján), **realizované** vrátane interného
+> adresára (D87) — polia v `lib/persons.ts`, číselník `workplace`,
+> `tenant.phonePrefix`, obrazovka `/directory`, migrácia `npm run migrate:personname`.
 > Nadväzuje na D46 (karta osoby), D47 (automatické založenie), D49 (oddelenia),
 > D52 (meno a pozícia z adresára), D55 (číselníky na tenanta), D32 (izolácia
 > organizácie). Dotýka sa `docs/PRIHLASENIE_A_SPRAVA_OSOB.md`,

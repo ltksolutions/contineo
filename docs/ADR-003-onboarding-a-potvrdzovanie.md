@@ -1,9 +1,9 @@
 # ADR-003 — Onboarding a potvrdzovanie noriem ako schopnosť Continea
 
-> **Stav:** návrh na schválenie · **Dátum:** 2026-08-27
+> **Stav:** schválené · **Dátum:** 2026-08-27
 > **Nadväzuje na:** `docs/ADR-001-provider-adaptery.md` (adaptéry), `docs/ADR-002-datova-rezidencia.md` (rezidencia a izolácia)
 > **Súvisiace:** `docs/ONBOARDING_KONCEPCIA.md`, `docs/PRISTUPOVE_PRAVA.md`, `docs/CMS_KONCEPCIA.md`, `docs/GDPR_DATA_PROTECTION.md`, `docs/DATA_MODEL_konzistencia.md`
-> **Implementácia:** zatiaľ žiadna — toto rozhodnutie predchádza kódu.
+> **Implementácia:** hotová — `lib/acknowledgements.ts`, `lib/persons.ts`, `lib/assignments.ts`, obrazovky `/documents`, `/hr`, `/people`.
 
 > ⚠️ Tento dokument nie je právne posúdenie. Dôkazná hodnota potvrdenia a retencia
 > záznamov patria právnikovi a DPO (otvorené body O15, O16).

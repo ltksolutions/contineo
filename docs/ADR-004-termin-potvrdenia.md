@@ -1,10 +1,10 @@
 # ADR-004 — Termín potvrdenia (`due`) a pripomienky pred ním aj po ňom
 
-> **Stav:** návrh na schválenie · **Dátum:** 2026-09-09
+> **Stav:** schválené · **Dátum:** 2026-09-09
 > **Rozhodol:** Ján Letko (termín na pridelení + denné pripomienky), zvyšok je návrh
 > **Nadväzuje na:** `docs/ADR-003-onboarding-a-potvrdzovanie.md` (D6, D24, D27, D30, D50)
 > **Súvisiace:** `docs/DESIGN_GAP.md` (obrazovka Prehľad si termín vyžiada), `app/src/lib/reminders.ts`, `app/src/app/api/cron/overdue/route.ts`
-> **Implementácia:** zatiaľ žiadna — toto rozhodnutie predchádza kódu.
+> **Implementácia:** hotová — `lib/due.ts`, `Assignment.due` a `dueForPerson()` v `lib/assignments.ts`, `reminderPlan()` v `lib/reminders.ts`, `api/cron/overdue`.
 
 ---
 
@@ -165,7 +165,7 @@ omylom.
 | 2. prideľovanie | `app/hr/assign/page.tsx`, `app/hr/actions.ts`, `lib/i18n.ts` | dve polia: dátum alebo počet dní, žiadne z nich povinné |
 | 3. zobrazenie | `lib/pending.ts` (`PendingItem.due`), Prehľad, `/documents`, HR výkaz | chip podľa D63 |
 | 4. pripomienky | `lib/reminders.ts`, `lib/ecomail.ts`, `api/cron/overdue` | až po rozhodnutí o 3.2 |
-| 5. plán behu | `app/vercel.json` | **zmena produkčného nastavenia** — dnes `0 6 * * 1` (týždenne), pre denný režim treba `0 6 * * *`. Ide do PR, nemerguje sa bez súhlasu. |
+| 5. plán behu | `app/vercel.json` | ✅ **nasadené** — denný beh `0 6 * * *` (zmenené z týždenného `0 6 * * 1`). |
 
 ### Riziká
 

@@ -1,6 +1,6 @@
 # Centrálne číselníky pre indexovanie obsahu — návrh a governance
 
-> **Stav:** návrh na schválenie (aktualizované 2026-06-26). Žiadne zmeny v živom kóde; vzory číselníkov publikované v `app/src/codelists/`.
+> **Stav:** návrh governance. **JSON číselníky sú od D53 v živom kóde** — `app/src/codelists/*.json` číta `lib/codelists.ts` a používajú ich obrazovky knižnice, osôb a organizácie aj import. Nerealizovaná zostáva runtime kolekcia `codelists` v Mongu, admin UI a reconciliation.
 > **Cieľ:** každý obsah pridaný do RAG je už na vstupe správne „popísaný" — povinné parametre sa priraďujú **výhradne z centrálnych číselníkov**, nie voľným textom.
 > **Naviazanie:** Fáza 4 (Import & CMS) a Fáza 5 (Prístupové úrovne) v `docs/Contineo_RAG_Projektovy_plan.md`.
 > **Súvisiace:** `docs/DATA_MODEL_konzistencia.md` (Model B), `docs/rag-architecture.md` (indexy, tok dotazu), `docs/INGESTION_zdroje_reconciliation.md` (multi-zdrojová ingescia + reconciliation pri zmene číselníka), `docs/PRISTUPOVE_PRAVA.md` (RBAC/ABAC + tenant izolácia).

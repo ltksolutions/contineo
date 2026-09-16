@@ -1,6 +1,9 @@
 # D79 — členenie per dokument (plán realizácie)
 
-> **Stav:** 🔄 rozhodnuté, nerealizované. Nadväzuje na **D58** (profil členenia
+> **Stav:** 🔄 Etapa 1 (A, B) hotová; z Etapy 2 hotové C1 (`lib/chunkingAnalysis.ts`)
+> a C3 (`npm run chunking:analyze`), migrácia `npm run migrate:profiles`. Otvorené
+> zostávajú C2, D1 (`chunkerPlain.mjs` neexistuje), E1, E2 a F1.
+> Nadväzuje na **D58** (profil členenia
 > per organizácia), **D57** (oddelenie `versionId` od `chunkingId`), **D1**
 > (štruktúrne chunkovanie).
 > **Založené:** 2026-09-13. **Rozhodnuté:** 2026-09-13 (Ján).

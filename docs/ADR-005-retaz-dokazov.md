@@ -1,10 +1,10 @@
 # ADR-005 — Reťaz dôkazov o potvrdení: od pridelenia po potvrdenie
 
-> **Stav:** návrh na schválenie · **Dátum:** 2026-09-10
+> **Stav:** schválené · **Dátum:** 2026-09-10
 > **Rozhodol:** Ján Letko (trvalý záznam o prvom otvorení; časová os na karte osoby **aj** ako samostatná obrazovka)
 > **Nadväzuje na:** `docs/ADR-003-onboarding-a-potvrdzovanie.md` (D24, D27, D28, D51), `docs/ADR-004-termin-potvrdenia.md` (D61–D63)
 > **Súvisiace:** `app/src/lib/readingTime.ts`, `app/src/lib/acknowledgements.ts`, `app/src/lib/audit.ts`, otvorené body O14, O15, O16
-> **Implementácia:** zatiaľ žiadna — toto rozhodnutie predchádza kódu.
+> **Implementácia:** hotová — `lib/documentOpens.ts`, `lib/evidence.ts`, `components/EvidenceTimeline.tsx`, obrazovka `/hr/evidence`.
 
 > ⚠️ Nie je to právne posúdenie. Akú váhu má ktorý článok reťaze pred súdom,
 > patrí právnikovi a DPO (O15). Tento dokument hovorí len o tom, **čo systém
@@ -148,6 +148,10 @@ je v dokumentácii, je presne to, čo pri audite robí problém.
 ---
 
 ## 4. Čo tento dokument **nerieši**
+
+> **Poznámka (doplôňané neskôr):** schvaľovanie medzitým vzniklo —
+> `docs/ADR-006-schvalovanie-znenia.md`, obrazovka `/approvals`, kolekcia
+> `approval_rounds`. Odsek nižšie je stav k 2026-09-10.
 
 **Schvaľovanie nových dokumentov do knižnice neexistuje.** Stavy sú koncept a
 publikované; schvaľovatelia ani schvaľovacia cesta v modeli nie sú, a preto

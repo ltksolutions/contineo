@@ -1,6 +1,8 @@
 # D82 — čo je vo formulke, sa po prvom potvrdení zamyká
 
-> **Stav:** ✅ rozhodnuté 2026-09-13 (Ján), realizuje sa. Ruší voľbu
+> **Stav:** ✅ rozhodnuté 2026-09-13 (Ján), **realizované** — `versionFixProblem()`
+> v `lib/textFix.ts`, `revokeVersion()` v `lib/acknowledgements.ts`,
+> `effectiveFromSource` povinný pri publikovaní. Ruší voľbu
 > `onDateChange` z ADR-007 a **zamieta D81**.
 > Nadväzuje na D28 (znenie formulky), D24 (append-only), D57/D76 (`versionId`
 > je identita znenia), ADR-006 (schvaľovanie), ADR-007 (opravy).

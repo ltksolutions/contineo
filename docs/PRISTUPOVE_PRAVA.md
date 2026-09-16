@@ -1,6 +1,6 @@
 # Prístupové práva (ABAC + multitenant hierarchia) — návrh
 
-> **Stav:** návrh na schválenie (aktualizované 2026-06-26). Žiadne zmeny v živom kóde (systém nie je nasadený).
+> **Stav:** návrh ABAC — skupiny, `sharedWithCompanyCodes[]` a `securityFilter()` v kóde zatiaľ **nie sú**. Samotná aplikácia beží a dnes filtruje `accessLevel` + `isActive` (`lib/mongoSearch.ts`); izoláciu organizácie drží podmienka dotazu (D29, D32).
 > **Cieľ:** nie každý má prístup k všetkému — riadiť, čo používateľ smie vidieť vo vyhľadávaní aj v odpovediach bota.
 > **Naviazanie:** Fáza 5 (Prístupové úrovne) v `docs/Contineo_RAG_Projektovy_plan.md`.
 > **Súvisiace:** `docs/CISELNIKY_governance.md`, `docs/INGESTION_zdroje_reconciliation.md`, `docs/rag-architecture.md`, `docs/PRECEDENCIA_NORIEM.md` (D5), `docs/GDPR_DATA_PROTECTION.md` (D10).
@@ -202,7 +202,7 @@ securityFilter(session) → {
 ### 7.2 Atlas indexy (doplniť filtrovacie polia)
 - `rag_vector_index`: + `accessGroups`, `sharedWithCompanyCodes` (filter); `accessLevel`, `companyCode` už sú.
 - `rag_text_index`: + `accessGroups`, `sharedWithCompanyCodes` (token).
-- (Systém nie je nasadený — len súčasť návrhu indexov.)
+- (Súčasť návrhu — tieto polia v indexoch zatiaľ nie sú.)
 
 ---
 

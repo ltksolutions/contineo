@@ -1,6 +1,6 @@
 # Plán: univerzálny pozicioning webu (futbal = len ukážka)
 
-> **Stav:** plán na schválenie (2026-06-29). **Žiadne zmeny zatiaľ nevykonané** v `web/`.
+> **Stav:** Tier 1 a Tier 2 **vykonané** v `web/lib/dictionaries.js` (vrátane českej vetvy — slovník má dnes tri jazyky SK/CS/EN, nie dva, s ktorými plán rátal). Tier 3 a Tier 4 zostávajú otvorené.
 > **Cieľ:** aby contineo.app pôsobil ako univerzálna aplikácia pre ľubovoľnú organizáciu; futbal/SFZ má ostať len ako **konkrétna ukážka nasadenia do veľkej organizácie**, nie ako doména produktu.
 > **Princíp:** nemazať názorné príklady (predávajú konkrétnosťou), ale jasne ich **označiť ako ukážku** a opraviť miesta, kde sa všeobecná schopnosť produktu omylom popisuje futbalovým slovníkom.
 

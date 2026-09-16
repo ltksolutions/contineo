@@ -1,6 +1,6 @@
 # Správa tenantov — koncepcia
 
-> **Stav: plán, rozsah A sa implementuje.** Zadanie (2026-08-28): obrazovka so
+> **Stav: rozsahy A–C postavené** (`/admin` zoznam, `/admin/tenants/[code]` detail, `/admin/new` zakladanie vrátane pridania domény cez Vercel API). Zostáva samoobslužná správa pre zákazníka. Zadanie (2026-08-28): obrazovka so
 > správou tenantov so všetkými potrebnými údajmi. Správcovský účet je
 > `office@ltk.solutions`.
 >

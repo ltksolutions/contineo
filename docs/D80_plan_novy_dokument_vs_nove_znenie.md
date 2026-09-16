@@ -1,6 +1,10 @@
 # D80 — nový dokument vs. nové znenie (plán, na schválenie)
 
-> **Stav:** ⬜ návrh. Nadväzuje na D6 (verzovanie), D53 (číselníky), D75
+> **Stav:** ✅ realizované (A1–A3, B1, B2) — `documentKey` v `lib/documents.ts`,
+> `makeDocumentId()` a `UploadMode = "new" | "version"` v `lib/libraryWrite.ts`,
+> pole v `/library/new` a sekcia „Nové znenie" na detaile. Otvorené zostáva C1
+> (upratanie `sectionKey.json`) a unikátny index na `documents.documentId`.
+> Nadväzuje na D6 (verzovanie), D53 (číselníky), D75
 > (oficiálne znenia cez schvaľovanie), ADR-006, ADR-007.
 > **Založené:** 2026-09-13 (podnet Ján).
 

@@ -1,6 +1,6 @@
 # CMS — Koncepčný návrh (Contineo)
 
-> **Stav:** návrh na diskusiu (2026-06-29). Žiadne zmeny v živom kóde.
+> **Stav:** návrh. **Časť A (media manager) je postavená** — D53, 2026-08-30, viď `docs/KNIZNICA_DOKUMENTOV.md`. Časti B (verejný web) a C (kanály) zostávajú návrhom.
 > **Cieľ:** zadefinovať CMS ako jadro obsahovej vrstvy Continea. CMS má **tri zodpovednosti**:
 > 1. **media manager** — správa dokumentov, ktoré workre spracujú do RAG,
 > 2. **content engine** — zdroj obsahu pre generovanie **verejného webu (knowledge base / helpdesk)**,

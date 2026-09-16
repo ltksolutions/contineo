@@ -1,6 +1,6 @@
 # Multi-zdrojová ingescia + reconciliation číselníkov — návrh
 
-> **Stav:** návrh na schválenie (2026-06-26). Žiadne zmeny v živom kóde.
+> **Stav:** návrh. **Súborový adaptér (2.1) je hotový a v prevádzke od 2026-08-30** (D53). V živom kóde nie sú adaptéry MCP, web a API/DB, provenance `source.*` v plnom rozsahu ani reconciliation.
 > **Cieľ:** pridávať obsah do RAG z viacerých zdrojov (PDF/MD, **MCP konektory**, **web linky**, **API/DB**) tak, že tagovanie z číselníkov a filtre fungujú **rovnako pre každý zdroj**; a keď sa číselník zmení, vedieť **požiadať o úpravu už uložených dát** v RAG.
 > **Súvisiace:** `docs/CISELNIKY_governance.md` (číselníky, validácia), `docs/rag-architecture.md` (indexy, tok), `docs/DATA_MODEL_konzistencia.md` (Model B).
 > **Rozhodnutia (2026-06-26):** zdroje = MCP + web linky + API/DB; tagovanie = **vždy per-dokument (LLM návrh → kurátor)**; sync pri zmene číselníka = **change-request + dávka s náhľadom**.
@@ -53,7 +53,7 @@ interface SourceAdapter {
 ```
 
 ### 2.1 Adaptér: súbory (existujúce)
-PDF / MD upload. `toMarkdown` = AI konverzia (Claude, fallback llama3.2-vision) pre PDF/sken, MD priamo. `sourceType: "pdf" | "scan" | "md"`.
+Upload docx/pdf/xlsx/md/txt/csv. `toMarkdown` = **prevod u nás**, nie v modeli: docx cez mammoth→turndown, pdf cez pdfjs, xlsx cez SheetJS, md/txt/csv priamo (`lib/conversion.ts`). Model je samostatný **druhý krok, ktorý vyvolá človek** v editore, nikdy nie tichý ústup po zlyhaní — to je zásada z D53 a platí aj pre každý ďalší adaptér.
 
 ### 2.2 Adaptér: MCP konektory
 Číta obsah cez pripojené MCP nástroje (napr. Notion, Atlassian/Confluence, Google Drive, SharePoint).
