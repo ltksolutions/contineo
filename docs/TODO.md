@@ -29,6 +29,7 @@
 
 ### A. Git (na Macu používateľa)
 - [x] Commitnúť + pushnúť ✅ **2026-08-27 je repozitár čistý a zosynchronizovaný s `origin/main`** — žiadne neverzované ani nezapísané zmeny. (Pozn.: `docs/O7_plan_overenia.md` z 28. 7. sa dovtedy povaľoval necommitnutý; doplnený.)
+- [ ] **Vercel občas nedostane webhook o pushi** — 2× rovnako: `98af0a8` (15. 9.) a `621b014` (16. 9.). Príznak sa pozná na GitHube, nie vo Verceli: commit má `state: pending` a **0 commit statuses**, kým inak sú štyri. Nasadenie vôbec nevznikne — nie je to pomalý build, je to nedoručená správa. Záchrana (zabrala oba razy): `POST https://api.vercel.com/v13/deployments` s `gitSource { type: "github", repoId, ref: "main", sha }`. **Pri treťom výskyte** preveriť doručovanie webhookov GitHub App (Recent Deliveries) — ručné nasadzovanie rieši príznak, nie príčinu.
 
 ### B. Rozhodnutia pred implementáciou → `docs/OPEN_DECISIONS.md`
 - [x] **Front door** — rozhodnuté 2026-09-11: `/` je Prehľad, otázky sú na `/ask`, `/prehlad` trvalo presmeruje na `/`.

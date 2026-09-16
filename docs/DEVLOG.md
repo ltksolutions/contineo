@@ -10,6 +10,26 @@
 
 ---
 
+## 2026-09-16 (neskorá noc) — Vercel nedostal webhook druhýkrát
+
+Včera som si do tohto denníka napísal, že stratený webhook bol **jednorazový
+výpadok**. Nebol. Dnešný `621b014` má na GitHube `state: pending` a **0 commit
+statuses** — presne ten istý obraz ako vtedy. Vercel sa o pushi nedozvedel.
+
+Dva rovnaké príznaky nie sú náhoda, sú jav. Záver „jednorazový“ som postavil na
+tom, že dva nasledujúce pushe prešli — teda na tom, že sa chyba neopakovala
+hneď. To nie je dôkaz, to je krátke okno. Rovnaká chyba ako pri O18: vzal som
+záver namiesto toho, aby som ho odvodil z toho, čo naozaj viem.
+
+Záchranná cesta zabrala oba razy rovnako: `POST /v13/deployments` s `gitSource`
+(`repoId`, `ref: main`, `sha`). Zapísaná je v TODO, aby sa nemusela vymýšľať
+tretíkrát.
+
+**Nabudúce:** ručné nasadenie je liečenie príznaku. Pri treťom výskyte ísť na
+doručovanie webhookov GitHub App (Recent Deliveries), nie znova na API.
+
+---
+
 ## 2026-09-16 (noc) — web dobehnutý, a jedno rozhodnutie navyše
 
 Druhá dávka opráv webu. Ján pritom povedal vetu, ktorá zmenila tón celého
@@ -197,8 +217,10 @@ SHA, ale **0 commit statuses** oproti štyrom pri predchádzajúcom commite —
 teda Vercel sa o pushi nikdy nedozvedel. Stratené doručenie webhooku GitHub
 App. Riešené vytvorením nasadenia cez API (`POST /v13/deployments` s
 `gitSource`). Ďalšie dva pushe sa nasadili samy, takže to bol jednorazový
-výpadok. **Nabudúce:** ak nasadenie nenabehne do pár minút, ísť rovno na
-commit statuses v GitHube; to je najkratšia cesta k rozlíšeniu „Vercel to
+výpadok. [**Oprava 2026-09-16:** nebol jednorazový — o deň neskôr to
+isté; pozri zápis zo 16. 9. (neskorá noc).] **Nabudúce:** ak nasadenie
+nenabehne do pár minút, ísť rovno na commit statuses v GitHube; to je
+najkratšia cesta k rozlíšeniu „Vercel to
 nevzal" od „Vercel to nedostal".
 
 **Skript na úpravu `i18n.ts` prestrelil koniec skupiny.** Typový blok sa
