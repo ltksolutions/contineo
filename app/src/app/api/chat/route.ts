@@ -7,7 +7,7 @@
  *   2. Klasifikácia dotazu (heuristika / LLM)
  *   3. [Voliteľne] LLM preprocessing (rewriting, decomposition)
  *   4. Vyhľadávanie: fulltext | vector | hybrid (podľa klasifikátora)
- *   5. LLM generovanie odpovede (Ollama → Claude fallback, streaming SSE)
+ *   5. LLM generovanie odpovede (predvolene Anthropic, streaming SSE)
  *
  * Použitie:
  *   POST /api/chat

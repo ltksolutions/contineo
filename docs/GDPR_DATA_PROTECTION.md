@@ -142,10 +142,16 @@ niečo o správaní konkrétneho človeka, nie o jeho povinnosti. Preto:
 | MongoDB Atlas | DB, vektory, fulltext | **EU región** |
 | Hosting (Vercel) | beh aplikácie | EU región (podľa konfigurácie) |
 | Voyage AI | embedding + rerank | overiť zero-retention + región |
-| Anthropic Claude (fallback LLM) | generovanie pri fallbacku | **zero-retention, no-training**, EU |
-| Ollama (lokálne) | primárny LLM | **self-hosted** — dáta neopúšťajú infraštruktúru |
+| Anthropic Claude | **primárny** generujúci model (`claude-sonnet-5`) | **zero-retention, no-training**, EU |
+| vLLM / SGLang / Ollama | voliteľný self-hosted generátor (`kind: "openai"`) | **dnes nenasadené** — adaptér existuje, prevádzka nie |
 
-**Voľba režimu AI (brand):** (a) plne self-hosted (Ollama) — dáta neopustia infra; (b) enterprise API so zero-retention + EU. Verejná spotrebiteľská AI sa nepoužíva; na dátach sa **netrénuje**.
+**Voľba režimu AI (brand):** (a) plne self-hosted — dáta neopustia infra; (b) enterprise API so zero-retention + EU. Verejná spotrebiteľská AI sa nepoužíva; na dátach sa **netrénuje**.
+
+> **Dnes beží režim (b).** Predvolený generujúci model je `claude-sonnet-5` cez
+> Anthropic (`lib/tenantProfile.ts`: `GENERATION_KIND ?? "anthropic"`).
+> Režim (a) je pripravený ako adaptér, nie ako prevádzka. D15 pôvodne
+> rozhodla „Ollama primárny + Claude fallback" — **to sa nepostavilo**
+> a treba to buď postaviť, alebo rozhodnutie zmeniť.
 
 ---
 
