@@ -56,10 +56,11 @@ funkcií, parametrov aj lokálnych premenných sú anglické; vysvetlenia — a 
 v tomto projekte veľa, lebo zachytávajú *prečo* — zostávajú slovenské. Rovnako
 popisy testov: majú sa dať prečítať ako veta, nie ako zoznam matcherov.
 
-Staršie moduly (`hodnotenia.ts`, `cennik.ts`, `sada.ts`) majú ešte slovenské
-mená z čias, keď konvencia nebola vyslovená. Neprepisujú sa naraz — premenujú sa
-vtedy, keď sa ich aj tak niekto dotkne. Rovnako `povoleneEmaily()`/`jePovoleny()`
-v `auth.ts`.
+**Premenovanie je dokončené** (2026-09-04/06): `hodnotenia.ts` je `ratings.ts`,
+`cennik.ts` je `pricing.ts`, `sada.ts` zanikla so zlatou sadou (ADR-008)
+a `auth.ts` má `allowedEmails()` a `isAllowed()`. Slovenské zostávajú **zámerne**
+už len parametre `chunker.mjs` — sú to jeho vlastné názvy a prekladajú sa
+v `chunkingProfile.ts`.
 
 **Hodnoty, ktoré vracia API, sú anglické a strojové** — `"no-effective-version"`,
 `"already-acknowledged"`, `"invalid-email"`. Sú to kľúče pre volajúceho, nie text
@@ -232,17 +233,27 @@ Dotaz
 ### `documents` — CMS (celý dokument)
 ```js
 {
-  _id, title, slug, category,
-  accessLevel: "public" | "internal",
-  tags: [], summary: "", markdown: "",
-  originalFile: { blobUrl, filename, sizeBytes, mime },
+  _id, documentId, documentKey,     // documentKey = identita dokumentu (D80)
+  title, slug, category,
+  companyCode, accessLevel: "public" | "internal",
+  language, tags: [], summary: "", markdown: "",
+  chunkingProfile,                  // pomenovaný profil členenia (D79)
+  folderId, folderPath: [],         // virtuálne priečinky (D56)
+  ownerDepartmentId, internalNumber,
+  sharedWithCompanyCodes: [],
+  versions: [{ versionId, label, effectiveFrom, effectiveTo, isActive,
+               contentHash, markdown, originalFile, fixes: [], textFixes: [],
+               publishedAt, publishedBy }],
   sourceType: "pdf" | "web" | "scan",
   sourceUrl: "",
   status: "draft" | "published",
-  contentHash: "sha256...",
   createdBy, createdAt, publishedAt
 }
 ```
+
+> **Pôvodné súbory sú v GridFS, nie vo Vercel Blobe** (`lib/fileStore.ts`,
+> `/api/library/file/[id]`) — neverejná cesta s kontrolou role a organizácie.
+> Plný tvar `versions[]` a jeho pravidlá: `docs/DATA_MODEL_konzistencia.md`.
 
 ### `conversations` — logy konverzácií
 ```js
@@ -262,12 +273,12 @@ Dotaz
 | Fáza | Obsah | Stav |
 |---|---|---|
 | **Fáza 1** | Infraštruktúra (Atlas, Ollama, Next.js) | ✅ dokončená |
-| **Fáza 2** | Ingestion pipeline (crawler, PDF→MD, chunking) | 🔲 plánovaná |
+| **Fáza 2** | Ingestion pipeline (crawler, PDF→MD, chunking) | 🟡 čiastočne — prevod a členenie bežia (`lib/conversion.ts`, `lib/chunker.mjs`); crawler sa nerobí (D13: re-import je manuálny) |
 | **Fáza 3** | RAG API vrstva (`/api/chat`) | ✅ dokončená |
-| **Fáza 4** | Import & CMS pipeline | 🔲 plánovaná |
-| **Fáza 5** | Prístupové úrovne (NextAuth, RBAC) | 🔲 plánovaná |
+| **Fáza 4** | Import & CMS pipeline | 🟡 z veľkej časti hotová — knižnica, nahrávanie, editor, publikovanie, členenie (D53–D60). Otvorené: kanály, reconciliation, číselníky v DB |
+| **Fáza 5** | Prístupové úrovne (NextAuth, RBAC) | 🟡 čiastočne — prihlásenie a roly bežia, izolácia organizácie je v podmienke dotazu (D29/D32). Otvorené: `securityFilter()` vo vyhľadávaní, skupiny, Sportnet OAuth |
 | **Fáza 6** | Scheduler & monitoring | 🔲 plánovaná |
 | **Fáza 7** | Produkcia & optimalizácia | 🔲 priebežná |
-| **Fáza 8** | Onboarding a potvrdzovanie noriem | 🔲 **beží teraz** (pred 4 a 5) |
+| **Fáza 8** | Onboarding a potvrdzovanie noriem | ✅ postavená — potvrdenia, termíny, pripomienky, reťaz dôkazov, schvaľovanie |
 
 Podrobný popis fáz: `docs/Contineo_RAG_Projektovy_plan.md`

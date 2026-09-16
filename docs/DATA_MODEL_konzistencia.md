@@ -1,25 +1,30 @@
 # Dátový model — rozhodnutie a migračný plán (A → B)
 
 > **Rozhodnutie (2026-06-25): kanonický je Model B** (model z verejnej stránky `/technologia`).
-> Implementácia (Model A) k nemu dorastie po fázach. Tento dokument je jediný zdroj pravdy pre názvy kolekcií a polí.
+> Tento dokument je jediný zdroj pravdy pre názvy kolekcií a polí.
+>
+> **Prechod je hotový (stav 2026-09-16).** Kód aj Atlas bežia na Modeli B:
+> `documents`, `document_chunks`, polia v camelCase. Model A je história — tabuľky
+> nižšie ho držia preto, aby bolo pri staršom zázname alebo zálohe vidieť, čo sa na
+> čo premenovalo. Z cieľových kolekcií ešte nevznikli `conversations` a `tickets`.
 
 ## Východisko: prečo Model B
 
 Doména Contineo = SFZ a podriadené zväzy, normy s paragrafmi, helpdesk. Plochý prístup `access_level: public|internal` (Model A) na to nestačí — potrebujeme doménovú štruktúru (Zväz/oblasť), verzovanie noriem, citácie § a helpdesk. To presne pokrýva Model B.
 
-## Dva modely (stav pred zladením)
+## Dva modely (Model A je história)
 
-| | Model A — implementované (Fáza 3) | Model B — kanonický cieľ |
-|---|---|---|
-| Chunky | `rag_chunks` | **`document_chunks`** |
-| Dokumenty (CMS) | `rag_documents` | **`documents`** |
-| Konverzácie | `rag_chat_history` | **`conversations`** |
-| Kurácia | — | ~~**`qa_pairs`** (nová)~~ → úsek v `document_chunks` so `sourceType: "qa"` (revidované 2026-09-15) |
-| Helpdesk | — | **`tickets`** (nová) |
-| Crawl log | `rag_crawl_log` | `crawl_log` (interná, nemení sa prioritne) |
-| Osoby v organizácii | — | **`persons`** (nová, Fáza 8) |
-| Potvrdenia oboznámenia | — | **`acknowledgements`** (nová, Fáza 8) |
-| Trasy onboardingu | — | **`onboarding_tracks`** (nová, Fáza 8) |
+| | Model A — pôvodné (Fáza 3) | Model B — kanonický | Stav |
+|---|---|---|---|
+| Chunky | `rag_chunks` | **`document_chunks`** | ✅ |
+| Dokumenty (CMS) | `rag_documents` | **`documents`** | ✅ |
+| Konverzácie | `rag_chat_history` | **`conversations`** | ⬜ nevznikla — nemá zapisovateľa |
+| Kurácia | — | ~~**`qa_pairs`**~~ → úsek v `document_chunks` so `sourceType: "qa"` | ✅ 2026-09-15 (bez vlastnej kolekcie) |
+| Helpdesk | — | **`tickets`** (nová) | ⬜ plán (Fáza 4b) |
+| Crawl log | `rag_crawl_log` | `crawl_log` | ⬜ crawler neexistuje (D13: re-import je manuálny) |
+| Osoby v organizácii | — | **`persons`** | ✅ Fáza 8 |
+| Potvrdenia oboznámenia | — | **`acknowledgements`** | ✅ Fáza 8 |
+| Trasy onboardingu | — | **`onboarding_tracks`** | ✅ Fáza 8 |
 
 ## Mapovanie polí na chunku (`rag_chunks` → `document_chunks`)
 
@@ -28,14 +33,18 @@ Doména Contineo = SFZ a podriadené zväzy, normy s paragrafmi, helpdesk. Ploch
 | `text` | `text` | bez zmeny |
 | `embedding` | `embedding` | + `embeddingModel: "voyage-4"` |
 | `document_id` | `documentId` | + `versionId` |
-| `access_level` (public/internal) | **ostáva** `access_level` | viditeľnosť/RBAC — **ortogonálne** k scope |
+| `access_level` (public/internal) | `accessLevel` | viditeľnosť/RBAC — **ortogonálne** k scope; do camelCase ako všetko ostatné |
 | `tags` (voľný text) | `sectionKey` (z číselníka) | + `tags` voliteľne ostávajú |
-| `chunk_index` | `chunk_index` | bez zmeny |
+| `chunk_index` | `chunkIndex` | premenované do camelCase |
 | — | `companyCode` (SFZ/SsFZ) | **nové** — pre koho platí |
 | — | `scope` (global/company/region) | **nové** — úroveň platnosti (celoštátne / Zväz / oblasť) |
 | — | `articleRef` (§ 12 ods. 3) | **nové** — pre citáciu |
 | — | `heading` | **nové** |
 | — | `isActive` + `effectiveFrom/To` | **nové** — verzovanie noriem |
+| — | `chunkingId` | **nové** (D57) — identita členenia, oddelená od identity textu |
+| — | `sourceType` | **nové** — `"qa"` značí úsek z overenej odpovede, nie z dokumentu |
+| — | `derivedFrom[]` | **nové** — dokumenty, z ktorých overená odpoveď vznikla |
+| — | `embeddingModel` / `embeddingDim` / `embeddingProvider` / `embeddedAt` | **nové** (ADR-001) — identita vektorového priestoru |
 
 > **Dôležité:** `access_level` a `scope`/`companyCode` **nie sú to isté** a nevylučujú sa.
 > `access_level` = KTO to smie vidieť (public vs internal, RBAC).
@@ -51,18 +60,22 @@ Doména Contineo = SFZ a podriadené zväzy, normy s paragrafmi, helpdesk. Ploch
 
 ## Fázová migrácia (mapované na existujúci plán fáz)
 
-1. **Premenovanie kolekcií** (`rag_chunks`→`document_chunks`, `rag_chat_history`→`conversations`, `rag_documents`→`documents`).
-   Malá, mechanická zmena kódu + preindexovanie Atlas. *Samostatný krok, nízke riziko.*
-2. **Doménové polia + verzovanie** (`sectionKey`, `companyCode`, `scope`, `articleRef`, `isActive`, `effectiveFrom/To`).
-   Naviazať na **Fázu 4 (Import & CMS)** a **Fázu 5 (Prístupové úrovne)** — značkovanie z číselníka pri importe.
+1. **Premenovanie kolekcií** ✅ hotové — `rag_chunks`→`document_chunks`,
+   `rag_documents`→`documents`. `rag_chat_history`→`conversations` **nie**: tá
+   kolekcia zatiaľ nevznikla, lebo do nej nemá kto písať.
+2. **Doménové polia + verzovanie** ✅ hotové (`sectionKey`, `companyCode`, `scope`,
+   `articleRef`, `isActive`, `effectiveFrom/To`) — značkovanie z číselníka beží pri
+   nahratí aj pri importe.
 3. **Kuračný cyklus** ✅ 2026-09-15 — overená odpoveď späť do znalostí. Bez kolekcie `qa_pairs`: stav je na zázname v `evaluations`, do indexu ide úsek so `sourceType: "qa"` (D11 revidované).
 4. **Helpdesk** (`tickets`, prepojenie na `conversations`, SLA, životný cyklus). Samostatná feature-fáza.
 
-## Čo sa NEmení teraz
-Živý RAG kód (`app/src/`) a MongoDB Atlas ostávajú na Modeli A a bežia ďalej. Tento dokument je zámer; samotný refaktor + migrácia DB príde po fázach. Verejný web (Model B) sa nemení.
+## Čo zostáva
+Živý kód (`app/src/`) aj Atlas **už sú na Modeli B**. Otvorené sú len kolekcie, ktoré
+nemajú zapisovateľa: `conversations` (história rozhovorov) a `tickets` (helpdesk,
+Fáza 4b). Verejný web (Model B) sa nemení.
 
 ## Otvorené (na potvrdenie pri implementácii)
-- `rag_documents` → `documents`, alebo ponechať prefix `rag_`? (návrh: bez prefixu, jednotne s `document_chunks`).
+- ~~`rag_documents` → `documents`, alebo ponechať prefix `rag_`?~~ ✅ bez prefixu — potvrdené implementáciou.
 - Ponechať `tags` popri `sectionKey`, alebo úplne nahradiť? (návrh: ponechať voliteľne pre voľné štítky).
 
 ---
@@ -81,9 +94,9 @@ Doména Contineo = SFZ a podriadené zväzy, normy s paragrafmi, helpdesk. Ploch
 
 ### Rozšírenie `documents` o `versions[]`
 
-`documents` je dnes plochý (`status: draft|published`, `contentHash`) a **verzovanie
-v ňom chýba** — `versionId` existuje len na `document_chunks`, teda v RAG vrstve.
-`CMS_KONCEPCIA.md` (A.3) ho plánuje, ale zatiaľ len ako zámer.
+`documents` bol pôvodne plochý (`status: draft|published`, `contentHash`) a verzovanie
+v ňom chýbalo — `versionId` existoval len na `document_chunks`, teda v RAG vrstve.
+**`versions[]` zaviedla Fáza 8 (D25, 2026-08-27)** a je v `lib/documents.ts`.
 
 **Fáza 8 ho zavádza skôr než CMS** (D25), pretože bez neho sa potvrdenie nedá naviazať na
 konkrétne znenie a je právne bezcenné. **Nie je to však potreba onboardingu** — verzovanie je

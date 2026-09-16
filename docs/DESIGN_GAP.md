@@ -56,7 +56,7 @@ Overené proti `docs/design/README.md` a `docs/design/Contineo Intranet.dc.html`
 | **celý názov organizácie** `13.5px/600`, elipsa pri `max-width: 30vw` | skratka „SFZ" |
 | **prepínač organizácie** — názov je tlačidlo, dropdown 280 px so zoznamom organizácií (dlaždica, názov, doména, ✓) a odkazom „Nastavenia organizácie…" | nie je |
 | **globálne hľadanie** `flex: 1 1 240px`, výška 32, ikona `⌕`, placeholder „Opýtajte sa svojich dokumentov…  ⌘K", fokus `0 0 0 3px var(--accent-soft)`, **fokus naviguje na „Opýtať sa"** | nie je |
-| **zvonček upozornení** 30×30 + bodka `6×6` v `--bad-fg` | nie je |
+| **zvonček upozornení** 30×30 + bodka `6×6` v `--bad-fg` | ✓ doplnený 2026-09-15 — `Header.tsx` → `/notifications` |
 | avatar 28×28 s iniciálami | ✓ |
 | hlavička `min-height: 52px`, `padding: 8px 14px`, **`flex-wrap: wrap`** | `height: 56px` **napevno, bez zalamovania** |
 | (v návrhu avatar = odhlásenie) | avatar = osobné menu s témou, nastaveniami a odhlásením — **naše je lepšie, nechávam** |
@@ -69,9 +69,9 @@ nezmestilo.
 
 | návrh | dnes |
 |---|---|
-| Prehľad **6** · Knižnica **148** · Opýtať sa · Nahrávanie **3** · Posledný dokument · Nastavenia | Voľné otázky · Na potvrdenie · Knižnica · Pridelené normy · Osoby |
+| Prehľad **6** · Knižnica **148** · Opýtať sa · Nahrávanie **3** · Posledný dokument · Nastavenia | Prehľad · Opýtať sa · Na potvrdenie · Schvaľovanie · Adresár · Knižnica · HR · Evidencia · Osoby · Hodnotenie (`lib/appNav.ts`) |
 | **počty pri položkách** | žiadne |
-| ikony pri položkách | žiadne |
+| ikony pri položkách | ✓ vlastný set `components/Icon.tsx` (O6 bod 1, 2026-09-14) |
 
 ~~Na telefóne je pás `overflow-x: auto` bez náznaku, že sa dá posúvať —
 posledná položka je odseknutá v polovici slova („Pridelené no…").~~
@@ -97,10 +97,11 @@ Dve veci na rozhodnutie, nie na slepé prevzatie:
    Posledný dokument · Nastavenia. Naša navigácia je podmienená rolami zámerne
    (D32) a „Posledný dokument" ako route neexistuje. Prevziať treba **počty,
    ikony a chovanie na telefóne**; pri zozname sa treba dohodnúť.
-2. **Ikony.** README výslovne: „nahradiť ikonovým setom projektu (SVG,
-   `currentColor`, 16 px). **Nekresliť nové SVG od ruky.**" Projekt ikonový set
-   **nemá** — máme len jednotlivé ručne kreslené ikony v `Header.tsx`. Buď sa
-   vyberie set (a to je rozhodnutie o závislosti), alebo navigácia zostane bez
+2. **Ikony.** ✅ **Vyriešené 2026-09-14** (O6 bod 1): set sa nezavádza, ikony sú
+   vlastné na jednej mriežke — `components/Icon.tsx`, navigácia ich má. Je to
+   vedomá odchýlka od README a README už nesie poznámku. Pôvodné znenie otázky:
+   README žiadalo „nahradiť ikonovým setom projektu", projekt žiadny nemal, a bola
+   to buď voľba setu (rozhodnutie o závislosti), alebo navigácia bez
    ikon. Kresliť šesť vlastných by bolo presne to, čo README zakazuje.
 
 ### Prehľad (dashboard) — ✅ **hotové 2026-09-11**
@@ -125,18 +126,21 @@ dokumentu (oprava preklepu v názve nie je novinka v knižnici).
 Hotové: facety s počtami, prepínač Tabuľka/Karty, query builder, stránkovanie,
 výber prežívajúci stránkovanie.
 
-Chýba: **hľadanie vo filtroch**, facet **Útvar/Stredisko**, facet
-**Autor/Schvaľovateľ**, **Export CSV**, **Uložiť pohľad**, a v tabuľke stĺpce
-**Verzia**, **Platnosť od** a **Útvar** (dnes sú Dokument · Druh · Stav ·
-Zmenené). Podnadpis s identifikátorom predpisu (`RPP-2026-04`) pod názvom tiež nie.
+Chýba: **hľadanie vo filtroch**, facet **Autor/Schvaľovateľ**, **Uložiť pohľad**
+a v tabuľke stĺpec **Útvar**.
+
+> *(Zoznam sa 2026-09-16 skrátil proti kódu. Export CSV (`/library/csv`), stĺpce
+> Verzia, Platnosť od a Platnosť do, facet Útvar (`ownerDepartment`) aj podnadpis
+> s interným číslom predpisu už existujú.)*
 
 ### Opýtať sa
 
 Hotové: odpoveď, zdroje ako karty, hodnotenie.
 
 Chýba: **pilulky rozsahu** (Knižnica/Intranet/Verejný web/Archív), **skóre zhody**
-pri zdroji (`0,94`), **„Ďalšie zhody v knižnici"** s úryvkami, **„Nahlásiť
-nepresnosť"**. Prvé dve sú v `TODO.md` už zapísané ako veci, ktoré by dnes
+pri zdroji (`0,94`) a **„Ďalšie zhody v knižnici"** s úryvkami. *(„Nahlásiť
+nepresnosť" už existuje — `components/ReportInaccuracy.tsx`; od 2026-09-15 je to
+vetva „Nesedí" pod odpoveďou a ADR-008 na nej stavia meranie kvality.)* Prvé dve sú v `TODO.md` už zapísané ako veci, ktoré by dnes
 **predstierali** voľbu a hodnotu, ktorá v systéme nie je — to platí ďalej a
 nezmenilo sa to na chybu implementácie. Druhé dve sú skutočne len neurobené.
 
@@ -154,8 +158,9 @@ workflow v systéme neexistuje a stavy sú len `draft`/`published`, takže stepp
 s tretím krokom by bola atrapa. To bola pravda vtedy; ADR-006 (kolá, menovaní
 schvaľovatelia, brána pri prideľovaní) je odvtedy nasadené. **Tretí krok je teda
 odblokovaný a zostáva len neurobený** — čo je iný stav a patrí sem tak napísané.
-Ten istý komentár stojí aj v `app/src/app/library/new/page.tsx`; pri tej práci ho
-treba prepísať, lebo dnes tvrdí nepravdu.
+Komentár v `app/src/app/library/new/page.tsx` je už opravený — hovorí, že
+schvaľovanie medzitým vzniklo (ADR-006) a že tretí krok tam nepatrí, lebo sa
+schvaľuje znenie na detaile dokumentu, nie nahratý súbor.
 
 ### Detail dokumentu
 
@@ -283,7 +288,8 @@ Prah pripomienok zostal tým, čím bol — spúšťačom e-mailu, nie termínom
   prideľovaní (D73), obrazovka `/approvals`, hodnoty schvaľovania vo facete Stav.
   Bolo to naozaj nová dimenzia v modeli, nie prílepok. **Zostáva z toho grafika:**
   krok 3 nahrávania a zoznam „Verzie a schválenie" v detaile dokumentu.
-- **Facet a stĺpec Útvar** — dokument útvar nenesie; už zapísané v `TODO.md`.
+- **Stĺpec Útvar** — pole `ownerDepartmentId` (D49) aj facet `ownerDepartment` už
+  existujú; chýba len stĺpec v tabuľke.
 - **Pilulky rozsahu a skóre zhody** — už zapísané; bez rozhodnutia, čo tie
   rozsahy sú, by predstierali voľbu.
 

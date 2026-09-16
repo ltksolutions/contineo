@@ -303,12 +303,16 @@ KROK 5 – ULOŽENIE + CHUNKING + AUTO-EMBED
 
 ## 6. Výber nástrojov
 
+> **Poznámka (2026-09-16):** tabuľka je pôvodný výber z júna 2026. Tri riadky
+> sa v praxi rozhodli inak a sú nižšie opravené — crawler, chunking a úložisko
+> súborov. Zvyšok platí.
+
 | Vrstva | Nástroj | Dôvod výberu |
 |---|---|---|
-| **Crawler** | Crawlee (Node.js) | Natívny JS/TS, Playwright podpora, rate-limiting, robots.txt |
+| **Crawler** | — **nie je** | D13 rozhodla manuálny re-import; Crawlee zostáva ako možnosť pre Fázu 6 |
 | **PDF parsing** | Claude API (multimodal) | PDF→Markdown, tabuľky, OCR, popis obrázkov v jednom |
-| **Konverzia fallback** | llama3.2-vision (Ollama) | Lokálny vision model pre citlivé dok. a úspory |
-| **Chunking** | LangChain.js | Sémantický chunking, overlap, rekurzívny split, metadata |
+| **Konverzia fallback** | — **žiadny** | D53: tichý ústup na model je zakázaný. Model je druhý krok, ktorý vyvolá človek v editore |
+| **Chunking** | vlastný `chunker.mjs` | Štruktúrne po hraniciach normy (D1), breadcrumb v každom úseku, tabuľka sa nikdy nedelí (D17) |
 | **Databáza + vektory** | MongoDB Atlas EU | Jedna DB pre dáta, vektory aj metadata, EU host, GDPR |
 | **Embedding** | Voyage AI voyage-4 (Automated) | Auto-embed v MongoDB, žiadny ručný pipeline, top kvalita SK |
 | **Embedding pre kód** | voyage-code-3 (voliteľne) | Pre technické / štruktúrované dokumenty a normy |
@@ -317,7 +321,7 @@ KROK 5 – ULOŽENIE + CHUNKING + AUTO-EMBED
 | **LLM primárny** | Ollama (llama3, mistral) | Lokálny, bez poplatkov, EU, privátne dáta |
 | **LLM fallback** | Claude API / GPT-4o | Komplexné otázky, kde lokálny model nestačí |
 | **LLM preprocessing** | Ollama (rýchly model) | Query rewriting, decomposition, extrakcia pojmov |
-| **Úložisko súborov** | Vercel Blob (EU) | Originál PDF + extrahované obrázky, natívne v Next.js |
+| **Úložisko súborov** | MongoDB GridFS | Originály za neverejnou cestou s kontrolou role a organizácie (`lib/fileStore.ts`) |
 | **CMS** | Next.js + MongoDB | Markdown články, slug routing, zobrazenie originálu |
 | **Orchestrácia** | LangChain.js / Mastra.ai | Natívny pre Next.js, podpora MongoDB auto-embed |
 | **Scheduler** | Vercel Cron Jobs | Jednoduché, v existujúcom stacku, bez extra infraštr. |
@@ -328,6 +332,9 @@ KROK 5 – ULOŽENIE + CHUNKING + AUTO-EMBED
 ## 7. Fázový plán implementácie
 
 ### Fáza 1 – Základ infraštruktúry `[1 týždeň]`
+
+> ✅ **Dokončená.** Atlas M10 vo Frankfurte, Next.js, Vercel. Položky nižšie sú
+> pôvodný zoznam a nezaklikli sa jednotlivo.
 
 - [ ] Registrácia MongoDB Atlas (EU región) + vytvorenie clustera
 - [ ] Vytvorenie Voyage AI model API key v Atlas (menu AI Models)
@@ -343,11 +350,14 @@ KROK 5 – ULOŽENIE + CHUNKING + AUTO-EMBED
 - [ ] Detekcia zmenených stránok pomocou SHA-256 hash comparison
 - [ ] AI konverzia noriem STN, EN a zákonov (Claude API)
 - [ ] Upload interface pre manuálne pridávanie PDF dokumentov
-- [ ] Chunking stratégia: 512 tokenov, 50 token overlap, zachovanie metadát
+- [x] Chunking stratégia podľa **D1**: štruktúrne po hraniciach normy, ~300–800 tokenov, prekryv len tam, kde odsek prečnieva, breadcrumb v každom úseku
 - [ ] Vloženie chunkov (text + metadata) do MongoDB — vektory sa generujú AUTOMATICKY
 - [ ] Overenie health indexu a token usage v Atlas UI
 
 ### Fáza 3 – RAG API vrstva `[1–2 týždne]`
+
+> ✅ **Dokončená.** `/api/chat` beží vrátane hybridného vyhľadávania, reranku
+> a streamovania.
 
 - [ ] Next.js Route Handler: `/api/chat` (POST, streaming SSE)
 - [ ] [Voliteľné] LLM preprocessing: query rewriting, decomposition, pojmy
@@ -367,7 +377,7 @@ KROK 5 – ULOŽENIE + CHUNKING + AUTO-EMBED
 - [ ] Review UI: Markdown editor + live náhľad + formulár metadát
 - [ ] Uloženie: originál → Blob, Markdown → `documents`, chunky → `document_chunks`
 - [ ] CMS zobrazenie článku + možnosť náhľadu originálneho PDF
-- [ ] **Migrácia na Model B:** premenovať kolekcie (`rag_chunks`→`document_chunks`, `rag_chat_history`→`conversations`, `rag_documents`→`documents`) + preindexovať Atlas — viď `docs/DATA_MODEL_konzistencia.md`
+- [x] **Migrácia na Model B** ✅ — `rag_chunks`→`document_chunks`, `rag_documents`→`documents`, Atlas preindexovaný. `rag_chat_history`→`conversations` **nie**: kolekcia zatiaľ nevznikla, lebo do nej nemá kto písať — viď `docs/DATA_MODEL_konzistencia.md`
 - [ ] **Doménové značkovanie pri importe z číselníka:** `sectionKey`, `companyCode`, `scope`, `articleRef` + verzovanie `isActive`/`effectiveFrom/To`
 
 ### Fáza 5 – Prístupové úrovne `[1 týždeň]`
@@ -404,6 +414,10 @@ KROK 5 – ULOŽENIE + CHUNKING + AUTO-EMBED
 
 ### Fáza 8 – Onboarding a potvrdzovanie noriem `[3–4,5 týždňa]`
 
+> ✅ **Postavená.** Potvrdenia, termíny, pripomienky, reťaz dôkazov, schvaľovanie
+> aj HR výkaz bežia v produkcii (ADR-003 až ADR-007). Otvorené zostáva už len
+> „osoba vidí a stiahne si svoje potvrdenia" — vedie sa v `docs/TODO.md`.
+
 > **Zaradenie:** `docs/ADR-003-onboarding-a-potvrdzovanie.md` · **Koncepcia:** `docs/ONBOARDING_KONCEPCIA.md`
 > **Prvé nasadenie:** SFZ, doména `intranet.futbalsfz.sk`, vyše 100 osôb vrátane ľudí bez licencie M365.
 
@@ -431,7 +445,7 @@ prvá časť Continea, ktorá spĺňa `eu-full` bez toho, aby sa čokoľvek muse
 - [ ] Guided reading: poradie krokov, návrat na rozpracované
 - [ ] HR dashboard: podľa dokumentu / osoby / trasy + export
 - [ ] Hromadné pozvánky a pripomienky z UI (automatické pripomienky sa zapínajú vedome)
-- [ ] Opätovné potvrdenie pri novej verzii (`requiresReacknowledgement`) — **D30**
+- [x] Opätovné potvrdenie pri novej verzii — cez **pridelenie s povinným dôvodom (D37)**, nie D30; D30 bola 2026-08-29 zrušená. `requiresReacknowledgement` zostáva v type nevyužité (D82).
 - [ ] Profil tenanta podľa hostiteľa; neznámy hostiteľ = zakázaný — **D29**
 - [ ] Vlastný vzhľad pre `intranet.futbalsfz.sk`
 - [ ] Rola HR nad `acknowledgements`; osoba vidí a stiahne si **svoje** potvrdenia
@@ -628,6 +642,10 @@ dôvodom, prehľad pre rolu `hr`. **Uzatvára D30.**
 ---
 
 ## 10. Ďalší postup
+
+> **História (jún 2026).** Sekcia popísuje štart projektu a je splnená — systém
+> beží na `intranet.futbalsfz.sk`. **Aktuálny ďalší krok je v `docs/TODO.md`**
+> a otvorené rozhodnutia v `docs/OPEN_DECISIONS.md`.
 
 Odporúčame začať s **Fázou 1** — do 2–3 dní môžete mať funkčný proof-of-concept s jedným zdrojom (napr. futbalsfz.sk) a overiť celý pipeline od crawlingu až po RAG odpoveď.
 
