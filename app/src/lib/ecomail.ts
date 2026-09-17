@@ -141,6 +141,26 @@ export interface SignInBranding {
   accentColor?: string
 }
 
+/**
+ * Obrázok loga do hlavičky e-mailu — **vždy s absolútnou adresou**.
+ *
+ * Značka nesie logo ako `/api/brand/<kód>?v=…`, lebo v prehliadači je to cesta
+ * na tej istej doméne. V schránke nemá byť k čomu relatívna: do 2026-09-17
+ * ju absolútnou robil len prihlasovací e-mail a v upozorneniach z cronu,
+ * schvaľovania či pozvánok sa logo nezobrazilo. Preto je to tu, na jedinom
+ * mieste, ktoré tú značku vykresľuje — nie v každom volajúcom zvlášť.
+ *
+ * Obrázky v e-mailoch sú navyše štandardne blokované, takže logo nesmie niesť
+ * informáciu — názov organizácie je vedľa neho ako text a `alt` je prázdny,
+ * aby sa pri zablokovanom obrázku nezobrazil dvakrát.
+ */
+function logoTag(branding: SignInBranding | undefined, host: string): string {
+  const url = branding?.logoUrl
+  if (!url) return ""
+  const absolute = url.startsWith("/") ? `https://${host}${url}` : url
+  return `<img src="${absolute}" alt="" width="34" height="34" style="display:inline-block;vertical-align:middle;margin-right:10px;border:0">`
+}
+
 export function signInEmail(
   link: string,
   host: string,
@@ -154,12 +174,7 @@ export function signInEmail(
   const organisation = branding?.displayName ?? "Contineo"
   const accent = branding?.accentColor ?? "#232a35"
 
-  // Obrázky v e-mailoch sú štandardne blokované, takže logo nesmie niesť
-  // informáciu — názov organizácie je vedľa neho ako text a `alt` je prázdny,
-  // aby sa pri zablokovanom obrázku nezobrazil dvakrát.
-  const logo = branding?.logoUrl
-    ? `<img src="${branding.logoUrl}" alt="" width="34" height="34" style="display:inline-block;vertical-align:middle;margin-right:10px;border:0">`
-    : ""
+  const logo = logoTag(branding, host)
 
   const text = [
     s.heading(organisation),
@@ -223,9 +238,7 @@ export function assignmentEmail(
   const organisation = branding?.displayName ?? "Contineo"
   const accent = branding?.accentColor ?? "#232a35"
 
-  const logo = branding?.logoUrl
-    ? `<img src="${branding.logoUrl}" alt="" width="34" height="34" style="display:inline-block;vertical-align:middle;margin-right:10px;border:0">`
-    : ""
+  const logo = logoTag(branding, host)
 
   const verzia = s.versionLine(dokument.versionLabel, dokument.effectiveFrom)
 
@@ -296,9 +309,7 @@ export function reminderEmail(
   const organisation = branding?.displayName ?? "Contineo"
   const accent = branding?.accentColor ?? "#232a35"
 
-  const logo = branding?.logoUrl
-    ? `<img src="${branding.logoUrl}" alt="" width="34" height="34" style="display:inline-block;vertical-align:middle;margin-right:10px;border:0">`
-    : ""
+  const logo = logoTag(branding, host)
 
   const itemText = (i: { versionLabel: string; days: number }) =>
     notice ? s.noticeItemLine(i.versionLabel) : s.itemLine(i.versionLabel, i.days)
@@ -369,9 +380,7 @@ export function inviteEmail(
   const organisation = branding?.displayName ?? "Contineo"
   const accent = branding?.accentColor ?? "#232a35"
 
-  const logo = branding?.logoUrl
-    ? `<img src="${branding.logoUrl}" alt="" width="34" height="34" style="display:inline-block;vertical-align:middle;margin-right:10px;border:0">`
-    : ""
+  const logo = logoTag(branding, host)
 
   const text = [s.intro(organisation), "", s.how, signInUrl, "", s.note].join("\n")
 
@@ -419,9 +428,7 @@ export function approvalEmail(
   const organisation = branding?.displayName ?? "Contineo"
   const accent = branding?.accentColor ?? "#232a35"
 
-  const logo = branding?.logoUrl
-    ? `<img src="${branding.logoUrl}" alt="" width="34" height="34" style="display:inline-block;vertical-align:middle;margin-right:10px;border:0">`
-    : ""
+  const logo = logoTag(branding, host)
 
   const versionLine = s.versionLine(version.versionLabel, version.effectiveFrom)
 
@@ -482,9 +489,7 @@ export function dueReminderEmail(
   const organisation = branding?.displayName ?? "Contineo"
   const accent = branding?.accentColor ?? "#232a35"
 
-  const logo = branding?.logoUrl
-    ? `<img src="${branding.logoUrl}" alt="" width="34" height="34" style="display:inline-block;vertical-align:middle;margin-right:10px;border:0">`
-    : ""
+  const logo = logoTag(branding, host)
 
   const line = (i: { title: string; versionLabel: string; due: string; daysLeft: number }) =>
     tone === "over" ? s.overLine(i.due, Math.abs(i.daysLeft)) : s.soonLine(i.due, i.daysLeft)

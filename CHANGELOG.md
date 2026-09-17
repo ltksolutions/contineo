@@ -4,6 +4,24 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Logo v e-mailoch a funkcie vo Frankfurte (2026-09-17)
+
+**Logo v upozorneniach chýbalo.** Značka nesie logo ako `/api/brand/<kód>?v=…`
+a absolútnou adresu robil len prihlasovací e-mail. E-maily z cronu, zo
+schvaľovania, pozvánky, pripomienky aj oznámenia o pridelení posielali cestu
+tak, ako je — v schránke nemá byť k čomu relatívna. Opravené na jedinom mieste,
+ktoré hlavičku vykresľuje: `logoTag()` v `ecomail.ts`. Adresa, ktorá už je
+absolútna, sa neprepisuje; bez loga sa `<img>` nevykreslí vôbec. `auth.ts` svoju
+kópiu pravidla stratil. Stráži to `tests/emailLogo.test.ts` — naraz pre všetkých
+šesť e-mailov, nie pre ten jeden opravený.
+
+**Funkcie bežia vo `fra1` (Frankfurt).** Dovtedy `iad1` (Washington), zatiaľ čo
+Atlas je vo Frankfurte — každý dotaz do databázy išiel cez Atlantik a späť.
+`"regions": ["fra1"]` vo `vercel.json` (rozhodol Ján Letko). Súvisí s ADR-002
+(rezidencia údajov) aj s O12: **Static IPs sa zapínajú pre región**, takže sa
+zapnú pre `fra1`. Sieť Vercelu doručuje statické súbory naďalej z najbližšieho
+miesta — mení sa, kde beží kód, nie odkiaľ sa sťahujú obrázky.
+
 ### Audit D90 opravený — organizácia v podmienke každého dotazu (2026-09-17)
 
 Všetky nálezy z `docs/D90_audit_dotazov.md`. Spoločné pravidlo je

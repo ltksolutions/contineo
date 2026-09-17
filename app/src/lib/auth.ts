@@ -39,7 +39,7 @@ import {
   syncFromAccount, createFromDomain, isDomainAllowed,
   fillMissing, missingFromDirectory, findPerson,
 } from "./persons"
-import { resolveTenant, normalizeHostname, tenantByCompanyCode } from "./tenants"
+import { brandingView, resolveTenant, normalizeHostname, tenantByCompanyCode } from "./tenants"
 import { resolveCredentials, PROVIDER_ID } from "./oauth"
 import { graphData, fullName, workplaceHint, PHOTO_SIZE } from "./graph"
 import { normalizePhone, matchWorkplace } from "./personFields"
@@ -222,15 +222,9 @@ function emailProvider(): EmailConfig {
       try {
         const tenant = mailTenant
         if (tenant) {
-          branding = {
-            displayName: tenant.branding.displayName,
-            // V e-maile musí byť adresa loga absolútna — relatívna cesta
-            // nemá v schránke k čomu byť relatívna.
-            logoUrl: tenant.branding.logoUrl?.startsWith("/")
-              ? `${new URL(link).origin}${tenant.branding.logoUrl}`
-              : tenant.branding.logoUrl,
-            accentColor: tenant.branding.accentColor,
-          }
+          // Absolútnu adresu loga rieši `ecomail.ts` (`logoTag()`) pre všetky
+          // e-maily naraz — tu sa značka len odovzdá tak, ako je uložená.
+          branding = brandingView(tenant)
         }
       } catch (e) {
         console.error("[auth] vzhľad tenanta pre e-mail sa nepodarilo načítať:", e)

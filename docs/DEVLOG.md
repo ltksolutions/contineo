@@ -44,6 +44,13 @@ nesúvisí a neoveril som, ako to vyzerá v pošte; je to v TODO. A región `iad
 Vercel vie bežať vo Frankfurte (`regions: ["fra1"]`), ale je to produkčné
 nastavenie — čaká na Jánovo áno.
 
+**Dodatok (neskôr večer):** Ján povedal oboje áno. Logo som neopravil v piatich
+volajúcich, ale v `ecomail.ts` — tam, kde sa hlavička vykresľuje. Päť kópií toho
+istého pravidla je presne to, čo sa raz rozíde; `auth.ts` svoju kópiu stratil.
+Test kontroluje všetkých šesť e-mailov naraz, nie ten, ktorý som práve menil.
+Región je `fra1` — a rovno to zapíšme aj k O12: **Static IPs sa zapínajú pre
+región**, takže sa musia zapnúť pre Frankfurt, nie pre Washington.
+
 ---
 
 ## 2026-09-17 (poobede) — drobnosti Fázy 8, z ktorých jedna nebola drobnosť
