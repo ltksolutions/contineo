@@ -16,34 +16,34 @@
  */
 
 import { NextRequest, NextResponse } from "next/server"
-import { getToken } from "next-auth/jwt"
 import { recordAnswer, saveVerdict, saveReaderFeedback } from "@/lib/ratings"
 import type { NewRating, RatingEdit, ReaderFeedback, Verdict } from "@/lib/ratings"
 import { isEvaluator } from "@/lib/evaluation"
-import { currentPerson } from "@/lib/session"
+import { onboardingContext } from "@/lib/session"
 
 /**
- * Kto je na druhej strane — **`persons.id`, alebo nič** (O17).
+ * Kto je na druhej strane — **osoba organizácie domény, alebo odmietnutie**
+ * (D29, D90).
  *
- * `personId: null` znamená „nikto prihlásený": buď verejný widget, alebo
- * platný token bez záznamu v `persons`. E-mail z tokenu sa **nezapisuje** —
- * záznam o hodnotení nie je dôkaz a nemá preto držať osobný údaj doslovne
- * (pozri `RatingRecord.reviewer`). Token sa číta už len preto, aby sa
- * rozlíšilo prihlásené volanie od úplne cudzieho.
+ * Do 2026-09-17 sa osoba skladala z relácie bez ohľadu na doménu a záznam bez
+ * osoby dostal `companyCode: undefined`. Posudok a spätná väzba sa potom
+ * zapisovali podľa `_id` bez organizácie, takže sa dalo písať do záznamu inej
+ * organizácie. Teraz platí to isté ako v `/api/chat`: organizácia je daná
+ * doménou a prihlásenou osobou, a každý zápis ju má v podmienke.
  *
- * Záznam bez `companyCode` sa do žiadnej fronty nedostane, čo je
- * bezpečnejšie než ho pripísať naslepo.
+ * Neprihlásený sem nepríde vôbec — proxy `/api/rating` bez prihlásenia nepustí.
+ * Verejný widget, keď vznikne, bude mať vlastnú cestu s tou istou organizáciou.
  */
-async function caller(req: NextRequest) {
-  const person = await currentPerson().catch(() => null)
-  if (person) return { personId: person.id, companyCode: person.companyCode, person }
-
-  try {
-    const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET })
-    return { personId: null, signedIn: Boolean(token), companyCode: undefined, person: null }
-  } catch {
-    return { personId: null, signedIn: false, companyCode: undefined, person: null }
+async function caller() {
+  const ctx = await onboardingContext()
+  if (ctx.state === "unknown-host") return { error: new Response(null, { status: 404 }) } as const
+  if (ctx.state === "not-signed-in") {
+    return { error: NextResponse.json({ error: "not-signed-in" }, { status: 401 }) } as const
   }
+  if (ctx.state !== "ready") {
+    return { error: NextResponse.json({ error: "not-in-tenant" }, { status: 403 }) } as const
+  }
+  return { person: ctx.person, companyCode: ctx.tenant.companyCode } as const
 }
 
 /** Posudok smie byť len 0, 1 alebo null — nič iné sa do DB nedostane. */
@@ -59,6 +59,9 @@ function text(v: unknown, max: number): string | undefined {
 }
 
 export async function POST(req: NextRequest) {
+  const who = await caller()
+  if ("error" in who) return who.error
+
   let body: Partial<NewRating>
   try {
     body = await req.json()
@@ -73,7 +76,6 @@ export async function POST(req: NextRequest) {
     )
   }
 
-  const who = await caller(req)
   try {
     const id = await recordAnswer(
       {
@@ -90,7 +92,7 @@ export async function POST(req: NextRequest) {
         tokens: body.tokens,
         cost: body.cost,
       },
-      who.personId,
+      who.person.id,
       who.companyCode
     )
     return NextResponse.json({ id })
@@ -101,6 +103,9 @@ export async function POST(req: NextRequest) {
 }
 
 export async function PATCH(req: NextRequest) {
+  const who = await caller()
+  if ("error" in who) return who.error
+
   let body: { id?: string } & Record<string, unknown>
   try {
     body = await req.json()
@@ -111,8 +116,6 @@ export async function PATCH(req: NextRequest) {
   if (!body.id) {
     return NextResponse.json({ error: "missing-id" }, { status: 400 })
   }
-
-  const who = await caller(req)
 
   /*
    * Vetva čitateľa: „sedí / nesedí" a čo bolo zle.
@@ -130,7 +133,7 @@ export async function PATCH(req: NextRequest) {
     if (readerNote !== undefined) feedback.note = readerNote
 
     try {
-      const saved = await saveReaderFeedback(body.id, feedback, who.personId)
+      const saved = await saveReaderFeedback(body.id, feedback, who.person.id, who.companyCode)
       if (!saved) {
         return NextResponse.json({ error: "nothing-to-save" }, { status: 400 })
       }
@@ -146,7 +149,7 @@ export async function PATCH(req: NextRequest) {
    * rozhodnutie o prístupe a to patrí na hranicu systému, kde je známa
    * prihlásená osoba. Skladá sa zo session, nikdy z tela požiadavky (D32).
    */
-  if (!isEvaluator(who.person) || !who.person) {
+  if (!isEvaluator(who.person)) {
     return NextResponse.json({ error: "forbidden" }, { status: 403 })
   }
 
@@ -168,7 +171,7 @@ export async function PATCH(req: NextRequest) {
   }
 
   try {
-    const ok = await saveVerdict(body.id, edit, who.person.id)
+    const ok = await saveVerdict(body.id, edit, who.person.id, who.companyCode)
     if (!ok) {
       return NextResponse.json({ error: "record-not-found" }, { status: 404 })
     }

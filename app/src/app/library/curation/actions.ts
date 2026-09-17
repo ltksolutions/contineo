@@ -23,7 +23,7 @@ export async function publishCurationAction(fd: FormData) {
 
   let message = ""
   try {
-    const curation = await publishCuration(id, ctx.person.id)
+    const curation = await publishCuration(id, ctx.person.id, ctx.tenant.companyCode)
     message = curation.accessLevel === "public"
       ? "Overená odpoveď je v znalostiach. Prístup: verejný — vyšiel zo zdrojov, z ktorých vznikla."
       : "Overená odpoveď je v znalostiach. Prístup: interný — aspoň jeden zdroj je interný."

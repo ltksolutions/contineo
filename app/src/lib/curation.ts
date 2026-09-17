@@ -47,6 +47,7 @@ import { RATINGS_COLLECTION } from "./ratings"
 import { PERSONS_COLLECTION } from "./persons"
 import type { RatingRecord, CurationState, AccessLevel } from "./ratings"
 import { AppError } from "./appError"
+import { requireCompanyCode } from "./tenantScope"
 
 export class CurationError extends AppError {}
 
@@ -116,7 +117,10 @@ export async function saveCurationDraft(
   recordId: string,
   input: CurationInput,
   person: string,
+  /** Organizácia hodnotiteľa — z relácie (D90). */
+  companyCode: string,
 ): Promise<CurationState> {
+  const code = requireCompanyCode(companyCode, "saveCurationDraft")
   if (!ObjectId.isValid(recordId)) {
     throw new CurationError("curation.unknownRecord", "Taký záznam o odpovedi neexistuje.")
   }
@@ -139,7 +143,8 @@ export async function saveCurationDraft(
   }
 
   const records = await getCollection<RatingRecord>(RATINGS_COLLECTION)
-  const record = await records.findOne({ _id: new ObjectId(recordId) })
+  // Organizácia v podmienke (D90): záznam inej organizácie „neexistuje".
+  const record = await records.findOne({ _id: new ObjectId(recordId), companyCode: code } as never)
   if (!record) {
     throw new CurationError("curation.unknownRecord", "Taký záznam o odpovedi neexistuje.")
   }
@@ -164,7 +169,7 @@ export async function saveCurationDraft(
     preparedAt: new Date(),
     preparedBy: person,
   }
-  await records.updateOne({ _id: new ObjectId(recordId) }, { $set: { curation } } as never)
+  await records.updateOne({ _id: new ObjectId(recordId), companyCode: code } as never, { $set: { curation } } as never)
   return curation
 }
 
@@ -188,13 +193,19 @@ export async function saveCurationDraft(
 export async function publishCuration(
   recordId: string,
   person: string,
+  /** Organizácia správcu obsahu — z relácie (D90). */
+  tenantCode: string,
 ): Promise<CurationState> {
+  const code = requireCompanyCode(tenantCode, "publishCuration")
   if (!ObjectId.isValid(recordId)) {
     throw new CurationError("curation.unknownRecord", "Taký záznam o odpovedi neexistuje.")
   }
 
   const records = await getCollection<RatingRecord>(RATINGS_COLLECTION)
-  const record = await records.findOne({ _id: new ObjectId(recordId) })
+  // Organizácia v podmienke (D90). Do 2026-09-17 sa záznam hľadal len podľa
+  // `_id` a organizácia sa brala **zo záznamu** — správca obsahu jednej
+  // organizácie tak vedel zverejniť pripravený pár do znalostí inej.
+  const record = await records.findOne({ _id: new ObjectId(recordId), companyCode: code } as never)
   if (!record) {
     throw new CurationError("curation.unknownRecord", "Taký záznam o odpovedi neexistuje.")
   }
@@ -304,7 +315,7 @@ export async function publishCuration(
     publishedAt: now,
     publishedBy: person,
   }
-  await records.updateOne({ _id: new ObjectId(recordId) }, { $set: { curation } } as never)
+  await records.updateOne({ _id: new ObjectId(recordId), companyCode: code } as never, { $set: { curation } } as never)
   return curation
 }
 
@@ -395,7 +406,7 @@ export async function reconcileCurationAccess(
     const level = strictestAccessLevel(levels)
     if (level === pair.accessLevel) continue
 
-    await chunkCol.updateOne({ _id: pair._id }, { $set: { accessLevel: level } } as never)
+    await chunkCol.updateOne({ _id: pair._id, companyCode } as never, { $set: { accessLevel: level } } as never)
     await records.updateOne(
       { companyCode, "curation.chunkId": String(pair._id) } as never,
       { $set: { "curation.accessLevel": level } } as never,

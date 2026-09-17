@@ -9,6 +9,7 @@
  */
 
 import type { Collection, Document } from "mongodb"
+import { MissingTenantError, requireCompanyCode } from "./tenantScope"
 
 export interface SearchOptions {
   query: string
@@ -158,27 +159,14 @@ function lookupDocument(scoreMeta: ScoreMeta): Document[] { return [
 
 // ── Filters ──────────────────────────────────────────────────────────────────
 
-/** Vyhľadávanie bez organizácie — programátorská chyba, nie stav pre človeka. */
-export class MissingTenantError extends Error {
-  constructor() {
-    super("mongoSearch: chýba companyCode — bez organizácie sa nehľadá (D90)")
-    this.name = "MissingTenantError"
-  }
-}
+export { MissingTenantError }
 
 /**
- * Organizácia pre filter. Vyhodí výnimku, keď chýba alebo je prázdna.
- *
- * Kontroluje sa aj za behu, nielen typom: skripty v `scripts/` sú `.mjs`
- * a typovú kontrolu neprejdú. Prázdny reťazec je rovnaká chyba ako
- * `undefined` — filter `companyCode: ""` by síce nič nevrátil, ale
- * podmienka `if (opts.companyCode)` by ho pri budúcej úprave ľahko
- * ticho vynechala.
+ * Organizácia pre filter vyhľadávania. Vyhodí `MissingTenantError`, keď chýba
+ * alebo je prázdna — pravidlo je v `tenantScope.ts` (D90).
  */
 export function tenantFilter(opts: Pick<SearchOptions, "companyCode">): string {
-  const code = typeof opts?.companyCode === "string" ? opts.companyCode.trim() : ""
-  if (!code) throw new MissingTenantError()
-  return code
+  return requireCompanyCode(opts?.companyCode, "mongoSearch")
 }
 
 /** MQL-style filter for $vectorSearch. */

@@ -17,6 +17,7 @@
 
 import { ObjectId } from "mongodb"
 import { getCollection } from "./mongodb"
+import { requireCompanyCode } from "./tenantScope"
 import type { AnswerSource, Citation } from "./sseClient"
 import type { TokenCounts, Cost } from "./pricing"
 
@@ -206,15 +207,18 @@ export const RATINGS_COLLECTION = "evaluations"
 export async function recordAnswer(
   z: NewRating,
   personId: string | null,
-  companyCode?: string
+  companyCode: string
 ): Promise<string> {
+  // Povinná (D90). Kým bola nepovinná, vznikali záznamy bez organizácie, ktoré
+  // nepatrili do žiadnej fronty — a teda ich nikto nikdy neposúdil.
+  const code = requireCompanyCode(companyCode, "recordAnswer")
   const col = await getCollection<RatingRecord>(RATINGS_COLLECTION)
   const now = new Date()
 
   const record: RatingRecord = {
     ...z,
     // Organizácia aj osoba idú z prihlásenia, nie z tela požiadavky (D32).
-    ...(companyCode ? { companyCode } : {}),
+    companyCode: code,
     correct: null,
     hallucination: null,
     // Chýbajúce pole = nikto prihlásený. Prázdny reťazec by bol tretí stav.
@@ -236,8 +240,11 @@ export async function recordAnswer(
 export async function saveVerdict(
   id: string,
   edit: RatingEdit,
-  evaluator: string
+  evaluator: string,
+  /** Organizácia hodnotiteľa — z relácie, nikdy z požiadavky (D90). */
+  companyCode: string,
 ): Promise<boolean> {
+  const code = requireCompanyCode(companyCode, "saveVerdict")
   if (!ObjectId.isValid(id)) return false
 
   /*
@@ -262,7 +269,10 @@ export async function saveVerdict(
   }
 
   const col = await getCollection<RatingRecord>(RATINGS_COLLECTION)
-  const r = await col.updateOne({ _id: new ObjectId(id) }, { $set: changes })
+  // Organizácia v podmienke (D90): záznam inej organizácie sa tvári ako
+  // neexistujúci. Do 2026-09-17 tu bolo len `_id` — hodnotiteľ ktorejkoľvek
+  // organizácie zapísal posudok do cudzieho záznamu, keď poznal jeho ObjectId.
+  const r = await col.updateOne({ _id: new ObjectId(id), companyCode: code }, { $set: changes })
   return r.matchedCount === 1
 }
 
@@ -294,8 +304,11 @@ export async function saveReaderFeedback(
   id: string,
   feedback: ReaderFeedback,
   /** `persons.id`, alebo `null` pri neprihlásenom — vtedy sa podpis nezapisuje. */
-  personId: string | null
+  personId: string | null,
+  /** Organizácia čitateľa — z relácie, nikdy z požiadavky (D90). */
+  companyCode: string,
 ): Promise<boolean> {
+  const code = requireCompanyCode(companyCode, "saveReaderFeedback")
   if (!ObjectId.isValid(id)) return false
 
   const changes: Record<string, unknown> = {}
@@ -311,6 +324,7 @@ export async function saveReaderFeedback(
   if (!Object.keys(changes).length) return false
 
   const col = await getCollection<RatingRecord>(RATINGS_COLLECTION)
-  const r = await col.updateOne({ _id: new ObjectId(id) }, { $set: changes })
+  // Organizácia v podmienke (D90) — rovnaký dôvod ako pri `saveVerdict()`.
+  const r = await col.updateOne({ _id: new ObjectId(id), companyCode: code }, { $set: changes })
   return r.matchedCount === 1
 }

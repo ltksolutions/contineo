@@ -42,6 +42,7 @@ export async function prepareCurationAction(fd: FormData) {
         chunkIds,
       },
       ctx.person.id,
+      ctx.tenant.companyCode,
     )
   } catch (e) {
     if (isRedirect(e)) throw e
