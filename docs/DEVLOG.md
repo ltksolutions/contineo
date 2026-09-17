@@ -10,6 +10,59 @@
 
 ---
 
+## 2026-09-17 (poobede) — drobnosti Fázy 8, z ktorých jedna nebola drobnosť
+
+Ján: „dorobme D. Drobnosti v kóde". Štyri body z `TODO.md`: `/api/chat` na
+predvolenom profile, neznámy hostiteľ s `307` pred `404`, logo cez presmerovanie,
+import mimo schvaľovania. Pred plánom som každý prešiel v kóde a pozrel sa do
+ostrej databázy dotazom, ktorý nič nezapisuje — a plán sa tým zmenil.
+
+**„Chat na predvolenom profile" bol v skutočnosti únik.** Route nielenže nemal
+profil tenanta — hľadal **bez `companyCode`**, lebo filter bol v `mongoSearch.ts`
+nepovinný. Zápis v TODO to opisoval ako kozmetiku. Dnes je všetok obsah SFZ, takže
+reálny dosah bol jeden interný úsek pre jedinú osobu LTK; o zákazníka neskôr by
+to bola plná knižnica. Poučenie: **nepovinný bezpečnostný filter je chýbajúci
+filter** — nikto ho nevyplní a výsledok nevyzerá ako chyba, len ako lepšia odpoveď.
+
+**Ján to rozhodol jednou vetou:** „filter musí byť VŽDY, tenanti galvanicky
+oddelení" — a k `sharedWithCompanyCodes`: „zdieľanie radšej nie". Pri hľadaní som
+našiel ďalšie dve cesty cez hranicu, obe podľa D32: `canSeeDocument()` pustil verejný
+dokument ktorejkoľvek organizácie a `assignableDocuments()` ho ponúkol na pridelenie.
+Vzniklo D90. Filter som dal do najnižšej vrstvy (`tenantFilter()` vyhodí výnimku),
+nie do route — kontrola v route je presne to, čo tu raz chýbalo. Overené aj živo:
+`smoke --organizacia LTK` nájde nula úsekov.
+
+**Súhlas na zmenu indexov som nevyužil.** Ján ho dal pre prípad zdieľania; bez
+zdieľania stačí `companyCode`, ktorý je filtrovacím poľom v oboch indexoch od začiatku.
+
+**Poznámka v TODO bola zastaraná o dve verzie Nextu.** „Middleware beží na edge
+a do Atlasu nevidí" platilo pre Next 14. Next 16 ho premenoval na `proxy.ts`
+a beží na Node.js — overené v `node_modules/next/dist/docs`, nie z pamäti. Kontrola
+tenanta tak je jeden `resolveTenant()` bez verejného endpointu, ktorý TODO navrhovalo.
+Výnimku má len `/api/cron/`, lebo z akej domény Vercel volá cron, neviem — a raz už
+cron ticho nebežal práve kvôli bráne v middlewari. Po nasadení: `contineo-app.vercel.app`
+→ `404`, cron `401`, `intranet.futbalsfz.sk` bez zmeny, v logoch žiadna chyba.
+
+**Import bol horší, než hovoril zápis.** Okrem zverejňovania mimo schvaľovania
+skladal `documentId` zo `sectionKey`, teda identitou spred D80. Prepísal som ho na
+volanie tej istej `uploadDocument()` ako obrazovka — dve cesty s dvomi sadami
+pravidiel sa rozídu presne pri novele. `--actor` je povinný a musí to byť osoba
+s rolou; do auditu nemá ísť „import.mjs". Prvá verzia padla na tom, že `library.ts`
+ťahá `next/headers`; druhá hlásila „Nepodarilo sa to" pri každej vlastnej kontrole,
+lebo `errorText()` maskuje obyčajné `Error`. Oboje chytil beh nasucho, nie testy.
+
+**Logo** vyriešil Ján tým, že ho nahral znova — zapísal ho existujúci kód, bez skriptu.
+
+**D5 — audit dotazov** je len výpis (`docs/D90_audit_dotazov.md`). Najväčšie nálezy:
+posudok, spätná väzba a kurácia sa zapisujú podľa `_id` bez organizácie, a osoba
+sa hľadá len podľa e-mailu. Mimochodom: funkcie produkcie bežia v `iad1` (USA) —
+nikde v dokumentácii to nie je, pýtam sa.
+
+**Čo by som nabudúce urobil inak:** v predmete prvého commitu je preklep („naprec")
+a je už na `main`. Správu commitu si pred pushom prečítať celú, nie len kód.
+
+---
+
 ## 2026-09-17 (skoro ráno) — kostry, a jedna prestavba v horúcej ceste
 
 Ján: „chýbajú mi inteligentné pekné preloadery na stránkach … ideálne v štýle

@@ -209,6 +209,7 @@
 - [x] ✅ **2026-08-28 — odkaz z e-mailu vedie na úvodnú stranu.** Callback `302` → `GET /` (predtým `→ /prihlasenie`). Widget „Nevybavené žiadosti" sa zobrazil na živých dátach.
 - [ ] **Odkaz sa raz zavolal dvakrát sekundu po sebe** (2026-08-28 17:07), čím sa jednorazový token spotreboval a používateľ videl „odkaz už neplatí". Pri opakovanom pokuse sa to **nezopakovalo**, takže príčina nie je potvrdená a nič sa zatiaľ nemenilo. **Pred hromadným rozposlaním preveriť**, či poštové brány adresátov (najmä Microsoft 365 Safe Links) odkazy nepredberajú — tie to robia systematicky. Ak áno, riešenie je krátke okno na opätovné použitie tokenu (rozhodnuté 2026-08-28, čaká na potvrdenie príčiny).
 - [x] ✅ **2026-09-17 vyriešené** — `middleware.ts` → `proxy.ts` (Next 16 beží na Node.js, do Atlasu vidí); doména tenanta sa overuje ako prvá, neznámy hostiteľ dostane hneď `404`, výnimka len `/api/cron/`. Pôvodný zápis: **Neznámy hostiteľ dostane najprv `307` na `/prihlasenie` a až potom `404`.** Middleware beží pred kontrolou tenanta a presmeruje neprihláseného skôr, než sa zistí, že doména nikomu nepatrí. Obsah neuniká a koniec je správne `404`, ale D29 hovorí, že cudzia doména sa nemá dozvedieť nič — a takto sa dozvie, že existuje cesta `/prihlasenie`. Opraviť sa to dá len overením tenanta priamo v middlewari; ten beží na edge a do Atlasu nevidí, takže by to chcelo verejný endpoint s krátkou pamäťou (rovnako to rieši `inventario`). Nízka priorita, ale zapísané, nech to nezapadne.
+- [ ] **D90 — audit dotazov bez `companyCode`** (2026-09-17) → `docs/D90_audit_dotazov.md`. Výpis hotový, **opravy čakajú na schválenie**: A1–A3 zápis do záznamu inej organizácie podľa `_id` (hodnotenia, kurácia), A5 logo na cudzej doméne, B1–B3 osoba len podľa e-mailu, C1 `validAcknowledgements()` bez povinnej organizácie.
 - [x] ~~Chybová stránka prihlásenia končí na `app.contineo.app`~~ — **vyriešené 2026-08-29 odstránením `NEXTAUTH_URL` z produkcie.** Nebolo to kozmetické: z tej istej premennej si NextAuth staval aj `redirect_uri` pre prihlásenie kontom, takže Entra odmietala prihlásenie s `AADSTS50011`. Bez premennej si origin odvodí z hostiteľa požiadavky.
 
 **I1b. Viacjazyčné prostredie (D35)** — SK · CS · EN
@@ -247,7 +248,7 @@
       Meškanie sa počíta od `Duty.since`: pri pridelení jeho dátum, pri trase odkedy má človek prístup. Oba pôvody → platí **neskorší** (D37: nové pridelenie vracia hodiny na nulu). Povinnosť bez začiatku sa za meškajúcu nepovažuje.
 - [x] **Naplánovaná úloha** ✅ 2026-09-06 — `/api/cron/overdue` + `vercel.json`, **týždenne v pondelok 06:00 UTC**. Prah je 14 dní; denný e-mail o tom istom zozname personalista do troch dní prestane otvárať.
       **Cron nerozposiela ľuďom, upozorňuje personalistu** (rozhodnuté 2026-09-06). Jedna chyba v podmienke by sa pri automatickom rozposielaní prejavila až tým, že sa ozve sto nahnevaných ľudí; takto sa prejaví tým, že personalista otvorí zoznam a povie „toto nesedí".
-  - [ ] **Nastaviť `CRON_SECRET` vo Verceli.** Bez nej sa beh odmietne (401) — zámerne: chýbajúca premenná by inak spravila z odkazu verejný výpis toho, koľko ľudí mešká.
+  - [x] ✅ **2026-09-17 overené Jánom** — týždenné upozornenia prišli. Pôvodný zápis: **Nastaviť `CRON_SECRET` vo Verceli.** Bez nej sa beh odmietne (401) — zámerne: chýbajúca premenná by inak spravila z odkazu verejný výpis toho, koľko ľudí mešká.
 - [x] **Povinnosti z trasy sa dá dať vedieť e-mailom** ✅ 2026-09-08 — `/hr/reminders` má dva režimy nad tým istým výpočtom: **prah 0** („všetkým nepotvrdeným", vrátane povinností z trás a toho, čo pribudlo dnes) a **prah 14 dní** (pripomienka meškajúcim). Nie je to nový mechanizmus, je to ten istý `duties()`, ktorý už spája pridelenia aj trasy.
       Prah 0 sa dovtedy nedal nastaviť: `Math.max(1, Number(q.days) || DEFAULT_DAYS)` mal dve zábrany naraz — jednotku ako dolnú hranicu a `||`, cez ktoré nula prepadla na 14. Teraz to rieši `thresholdDays()` a preklep v adrese padá na predvolený prah, **nie na nulu**: nula by rozposlala e-maily všetkým namiesto meškajúcim.
       **E-mail má dva tvary.** Pri prahu 0 sa neuvádzajú dni a predmet znie „Na potvrdenie", nie „Pripomienka" — dokument, ktorý pribudol dnes, „nečaká nula dní" a veta o čakaní by z prvého oslovenia spravila výčitku.
@@ -262,7 +263,7 @@
 - [x] ~~Vzhľad pre `intranet.futbalsfz.sk`~~ — **hodnoty sú nastavené** ✅ overené 2026-09-14
       Názov „Slovenský futbalový zväz", skratka „SFZ", akcentová farba `#1450DF`, logo PNG 127 kB, kontakt `intranet@futbalsfz.sk`. Zápis „hodnoty chýbajú" bol zastaraný.
 - [ ] **`branding.logoUrl` ukazuje na `/api/znacka/sfz`** — cesta sa medzitým premenovala na `/api/brand/<code>`. Funguje to cez presmerovanie (`lib/legacyRoutes.ts`), takže logo sa zobrazuje, ale každé načítanie hlavičky stojí jedno presmerovanie navyše. Prepísať uloženú hodnotu
-- [ ] Osoba vidí a stiahne si **svoje** potvrdenia
+- [x] ✅ Osoba vidí a stiahne si **svoje** potvrdenia — hotové v `5247a26` (`/acknowledgements`, `/api/acknowledgements/export`); v TODO zostalo neodškrtnuté, zistené 2026-09-17
 
 **I3. Brána pred ostrou prevádzkou**
 
