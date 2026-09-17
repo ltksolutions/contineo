@@ -1,11 +1,16 @@
 /**
  * person.mjs — role a skupiny jednej osoby (D38, D33).
  *
- *     npm run person                                          # vypíše všetkých
- *     npm run person -- --email jan.letko@futbalsfz.sk        # jednu
- *     npm run person -- --email … --rola hr
- *     npm run person -- --email … --rola hr --odobrat
- *     npm run person -- --email … --skupiny "rozhodcovia, delegati"
+ *     npm run person                                                    # vypíše všetkých
+ *     npm run person -- --company SFZ                                   # všetkých v organizácii
+ *     npm run person -- --company SFZ --email jan.letko@futbalsfz.sk    # jednu
+ *     npm run person -- --company SFZ --email … --rola hr
+ *     npm run person -- --company SFZ --email … --rola hr --odobrat
+ *     npm run person -- --company SFZ --email … --skupiny "rozhodcovia, delegati"
+ *
+ * **Pri `--email` je `--company` povinné** (D90). Osoba je dvojica (organizácia,
+ * adresa): tá istá adresa môže byť v dvoch organizáciách a skript by bez
+ * organizácie zmenil rolu v náhodnej z nich.
  *
  * **Osobu nezakladá.** Na to je import (`npm run persons:import`), ktorý má
  * náhľad — nahratie človeka naslepo je operácia, po ktorej sa hľadá, ako to
@@ -34,12 +39,17 @@ function arg(name) {
   return i === -1 ? null : process.argv[i + 1] ?? null
 }
 const EMAIL = arg("--email")?.trim().toLowerCase() ?? null
+const COMPANY = arg("--company")?.trim() ?? null
 const ROLE = arg("--rola")
 const GROUPS = arg("--skupiny")
 const REMOVE = process.argv.includes("--odobrat")
 
 if (!URI) {
   console.error(`${FAIL} Chýba MONGODB_URI (app/.env.local alebo export).`)
+  process.exit(1)
+}
+if (EMAIL && !COMPANY) {
+  console.error(`${FAIL} Pri --email chýba --company — tá istá adresa môže byť v dvoch organizáciách (D90).`)
   process.exit(1)
 }
 if (ROLE && !KNOWN_ROLES.includes(ROLE)) {
@@ -58,7 +68,7 @@ try {
 
   if (!EMAIL) {
     const all = await col
-      .find({}, { projection: { email: 1, companyCode: 1, fullName: 1, roles: 1, groups: 1 } })
+      .find(COMPANY ? { companyCode: COMPANY } : {}, { projection: { email: 1, companyCode: 1, fullName: 1, roles: 1, groups: 1 } })
       .sort({ companyCode: 1, email: 1 })
       .toArray()
     for (const o of all) {
@@ -69,9 +79,10 @@ try {
     process.exit(0)
   }
 
-  const person = await col.findOne({ email: EMAIL })
+  const key = { companyCode: COMPANY, email: EMAIL }
+  const person = await col.findOne(key)
   if (!person) {
-    console.error(`${FAIL} ${EMAIL} v persons nie je. Založ ju importom: npm run persons:import`)
+    console.error(`${FAIL} ${EMAIL} v organizácii ${COMPANY} nie je. Založ ju importom: npm run persons:import`)
     process.exit(1)
   }
 
@@ -102,8 +113,8 @@ try {
     process.exit(0)
   }
 
-  await col.updateOne({ email: EMAIL }, { $set: changes })
-  const po = await col.findOne({ email: EMAIL })
+  await col.updateOne(key, { $set: changes })
+  const po = await col.findOne(key)
   console.log(`${OK} ${EMAIL} | ${po.companyCode}`)
   console.log(`   role=[${(po.roles ?? []).join(", ")}] skupiny=[${(po.groups ?? []).join(", ")}]`)
 } catch (e) {

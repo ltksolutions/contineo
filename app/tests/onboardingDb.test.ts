@@ -54,60 +54,78 @@ beforeEach(() => {
 // ── brána prihlásenia ────────────────────────────────────────────────────────
 
 describe("osobaSmiePrihlasenie — jediné miesto medzi smernicami a internetom", () => {
-  it("pustí osobu, ktorá v persons je a nie je vyradená", async () => {
+  it("pustí osobu, ktorá v organizácii domény je a nie je vyradená", async () => {
     collection("persons").countDocuments.mockResolvedValue(1)
-    await expect(personMaySignIn("novak@futbalsfz.sk")).resolves.toBe(true)
+    await expect(personMaySignIn("novak@futbalsfz.sk", "SFZ")).resolves.toBe(true)
   })
 
   it("nepustí adresu, ktorá v persons nie je", async () => {
     collection("persons").countDocuments.mockResolvedValue(0)
-    await expect(personMaySignIn("cudzi@inde.sk")).resolves.toBe(false)
+    await expect(personMaySignIn("cudzi@inde.sk", "SFZ")).resolves.toBe(false)
   })
 
-  it("vyradenú osobu odfiltruje už v dotaze, nie až v kóde", async () => {
+  it("vyradenú osobu aj cudziu organizáciu odfiltruje už v dotaze, nie až v kóde", async () => {
     const col = collection("persons")
     col.countDocuments.mockResolvedValue(0)
-    await personMaySignIn("novak@futbalsfz.sk")
+    await personMaySignIn("novak@futbalsfz.sk", "SFZ")
     expect(col.countDocuments.mock.calls[0][0]).toEqual({
+      companyCode: "SFZ",
       email: "novak@futbalsfz.sk",
       status: { $ne: "inactive" },
     })
   })
 
+  // D90: relácia platí pre doménu, takže rozhoduje organizácia domény.
+  it("BEZ ORGANIZÁCIE DOMÉNY NEPUSTÍ — ani dotazom", async () => {
+    const col = collection("persons")
+    col.countDocuments.mockResolvedValue(1)
+    await expect(personMaySignIn("novak@futbalsfz.sk", "")).resolves.toBe(false)
+    await expect(personMaySignIn("novak@futbalsfz.sk", undefined as never)).resolves.toBe(false)
+    expect(col.countDocuments).not.toHaveBeenCalled()
+  })
+
   // Toto je to najdôležitejšie tvrdenie v celom súbore.
   it("PRI CHYBE DATABÁZY NEOTVORÍ PRÍSTUP", async () => {
     collection("persons").countDocuments.mockRejectedValue(new Error("cluster nedostupný"))
-    await expect(personMaySignIn("novak@futbalsfz.sk")).resolves.toBe(false)
+    await expect(personMaySignIn("novak@futbalsfz.sk", "SFZ")).resolves.toBe(false)
   })
 
   it("adresu bez zavináča nerieši ani dotazom", async () => {
     const col = collection("persons")
-    await expect(personMaySignIn("nezmysel")).resolves.toBe(false)
+    await expect(personMaySignIn("nezmysel", "SFZ")).resolves.toBe(false)
     expect(col.countDocuments).not.toHaveBeenCalled()
   })
 
   it("porovnáva bez ohľadu na veľkosť písmen", async () => {
     const col = collection("persons")
     col.countDocuments.mockResolvedValue(1)
-    await personMaySignIn("  Novak@FutbalSFZ.sk ")
+    await personMaySignIn("  Novak@FutbalSFZ.sk ", "SFZ")
     expect(col.countDocuments.mock.calls[0][0].email).toBe("novak@futbalsfz.sk")
   })
 })
 
 describe("jazykOsoby — beží pred prihlásením, nesmie nikdy hodiť", () => {
-  it("vráti jazyk z profilu", async () => {
-    collection("persons").findOne.mockResolvedValue({ language: "cs" })
-    await expect(personLanguage("a@b.sk")).resolves.toBe("cs")
+  it("vráti jazyk z profilu osoby v organizácii", async () => {
+    const col = collection("persons")
+    col.findOne.mockResolvedValue({ language: "cs" })
+    await expect(personLanguage("a@b.sk", "SFZ")).resolves.toBe("cs")
+    expect(col.findOne.mock.calls[0][0]).toEqual({ companyCode: "SFZ", email: "a@b.sk" })
   })
 
   it("neznámu osobu vybaví slovenčinou", async () => {
     collection("persons").findOne.mockResolvedValue(null)
-    await expect(personLanguage("a@b.sk")).resolves.toBe("sk")
+    await expect(personLanguage("a@b.sk", "SFZ")).resolves.toBe("sk")
+  })
+
+  it("bez organizácie slovenčina, bez dotazu", async () => {
+    const col = collection("persons")
+    await expect(personLanguage("a@b.sk", undefined)).resolves.toBe("sk")
+    expect(col.findOne).not.toHaveBeenCalled()
   })
 
   it("pri chybe databázy padne na slovenčinu, nie na výnimku", async () => {
     collection("persons").findOne.mockRejectedValue(new Error("nedostupné"))
-    await expect(personLanguage("a@b.sk")).resolves.toBe("sk")
+    await expect(personLanguage("a@b.sk", "SFZ")).resolves.toBe("sk")
   })
 })
 

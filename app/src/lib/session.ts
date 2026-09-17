@@ -41,7 +41,11 @@ export const currentPerson = cache(async (): Promise<Person | null> => {
   const email = session?.user?.email
   if (!email) return null
   try {
-    return await findPerson(email)
+    // Osoba = (organizácia domény, adresa) — D90, B1. Na neznámej doméne nie
+    // je nikto; kontexty to aj tak odmietnu ako `unknown-host`.
+    const tenant = await currentTenant()
+    if (!tenant) return null
+    return await findPerson(tenant.companyCode, email)
   } catch (e) {
     // Nahlas — inak by výpadok databázy vyzeral ako „nie si nikto".
     console.error("[session] osobu sa nepodarilo načítať:", e)

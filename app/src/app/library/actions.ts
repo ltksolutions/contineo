@@ -1057,7 +1057,7 @@ async function notifyApprovers(input: {
 
   await Promise.all(input.round.approvers.map(async a => {
     try {
-      const language = await personLanguage(a.email)
+      const language = await personLanguage(a.email, input.companyCode)
       await send({
         to: a.email,
         ...approvalEmail(

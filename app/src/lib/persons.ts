@@ -27,6 +27,7 @@ import { composeFullName, splitFullName } from "./personFields"
 import { getCollection } from "./mongodb"
 import { normalizeLanguage } from "./i18n"
 import type { UiLanguage } from "./i18n"
+import { requireCompanyCode } from "./tenantScope"
 
 export const PERSONS_COLLECTION = "persons"
 
@@ -264,12 +265,20 @@ export function normalizeKeys(values: string[] | undefined): string[] {
 }
 
 
-/** Nájde osobu podľa adresy. `null`, keď taká v organizácii nie je. */
-export async function findPerson(email: string): Promise<Person | null> {
+/**
+ * Nájde osobu **v organizácii** podľa adresy. `null`, keď taká v nej nie je.
+ *
+ * Osoba je dvojica (organizácia, adresa) — tak je postavený aj unikátny index
+ * `tenant_email_unique`. Do 2026-09-17 sa hľadala len podľa adresy: kto bol
+ * v dvoch organizáciách s tou istou adresou, dostal náhodne jeden záznam
+ * a na portáli druhej videl „nemáte prístup" (audit D90, B1).
+ */
+export async function findPerson(companyCode: string, email: string): Promise<Person | null> {
+  const code = requireCompanyCode(companyCode, "findPerson")
   const address = normalizeEmail(email)
   if (!address.includes("@")) return null
   const col = await getCollection<Person>(PERSONS_COLLECTION)
-  return col.findOne({ email: address })
+  return col.findOne({ companyCode: code, email: address })
 }
 
 /**
@@ -287,16 +296,20 @@ export async function findPerson(email: string): Promise<Person | null> {
  * Núdzová brzda v `auth.ts` zostáva funkčná aj pri výpadku, takže sa správca
  * dnu dostane vždy.
  */
-export async function personMaySignIn(email: string): Promise<boolean> {
+export async function personMaySignIn(email: string, companyCode: string): Promise<boolean> {
   const address = normalizeEmail(email)
   if (!address.includes("@")) return false
+  // Bez organizácie sa nerozhoduje — a nerozhodnuté znamená nepustiť.
+  const code = typeof companyCode === "string" ? companyCode.trim() : ""
+  if (!code) return false
   try {
-    // Hľadáme existenciu, nie konkrétny záznam: tá istá adresa môže patriť
-    // do viacerých jednotiek (`person_memberships` je pole, D32) a na
-    // prihlásenie stačí, aby ju aspoň jedna z nich nemala vyradenú.
+    // **Organizácia domény, nie „ktorákoľvek"** (D90). Do 2026-09-17 stačilo,
+    // aby adresa bola nevyradená v akejkoľvek organizácii — človek zo SFZ sa
+    // tak prihlásil aj na portál LTK a až stránka mu povedala, že tam nepatrí.
+    // Relácia platí pre doménu, takže o vstupe rozhoduje organizácia domény.
     const col = await getCollection<Person>(PERSONS_COLLECTION)
     const count = await col.countDocuments(
-      { email: address, status: { $ne: "inactive" } },
+      { companyCode: code, email: address, status: { $ne: "inactive" } },
       { limit: 1 }
     )
     return count > 0
@@ -315,10 +328,13 @@ export async function personMaySignIn(email: string): Promise<boolean> {
  * správcu, ktorý prešiel núdzovou brzdou. Zlyhanie tu nesmie zhodiť
  * prihlásenie samotné: je to evidencia, nie brána.
  */
-export async function recordSignIn(email: string): Promise<void> {
+export async function recordSignIn(email: string, companyCode: string): Promise<void> {
   const address = normalizeEmail(email)
   const now = new Date()
   try {
+    // Evidencia patrí osobe **v organizácii domény** (D90, B2). Len podľa
+    // adresy by sa pri osobe v dvoch organizáciách zapísala do náhodnej.
+    const code = requireCompanyCode(companyCode, "recordSignIn")
     const col = await getCollection<Person>(PERSONS_COLLECTION)
 
     // Bez `upsert` — prihlásenie nesmie založiť osobu. Kto sa dostal dnu
@@ -329,21 +345,21 @@ export async function recordSignIn(email: string): Promise<void> {
     // prihláseniach z dvoch zariadení skončili tak, že si oba prečítajú tú
     // istú starú hodnotu a jedno prihlásenie z histórie zmizne.
     await col.updateOne(
-      { email: address },
+      { companyCode: code, email: address },
       [{ $set: { previousLoginAt: "$lastLoginAt", lastLoginAt: now } }],
     )
 
     // Prvé prihlásenie sa zapíše len raz — podmienka je v dotaze, nie v kóde,
     // takže dva súbežné requesty nezapíšu dva rôzne časy.
     await col.updateOne(
-      { email: address, firstLoginAt: { $exists: false } },
+      { companyCode: code, email: address, firstLoginAt: { $exists: false } },
       { $set: { firstLoginAt: now } }
     )
 
     // `invited` → `active` len z pozvaného stavu. Vyradenú osobu (`inactive`)
     // by prihlásenie nesmelo oživiť ani vtedy, keby sa cez bránu dostala inak.
     await col.updateOne(
-      { email: address, status: "invited" },
+      { companyCode: code, email: address, status: "invited" },
       { $set: { status: "active" as PersonStatus } }
     )
   } catch (e) {
@@ -362,12 +378,14 @@ export async function recordExternalRef(
   email: string,
   provider: "microsoft" | "google",
   externalId: string,
+  companyCode: string,
 ): Promise<void> {
   const address = normalizeEmail(email)
   const field = provider === "microsoft" ? "externalRef.entraObjectId" : "externalRef.googleSub"
   try {
+    const code = requireCompanyCode(companyCode, "recordExternalRef")
     const col = await getCollection<Person>(PERSONS_COLLECTION)
-    await col.updateOne({ email: address }, { $set: { [field]: externalId } })
+    await col.updateOne({ companyCode: code, email: address }, { $set: { [field]: externalId } })
   } catch (e) {
     console.error("[persons] zápis identifikátora konta zlyhal:", e)
   }
@@ -589,9 +607,11 @@ export async function previewImport(rows: NewPerson[]): Promise<{
  * núdzovou brzdou) alebo je databáza nedostupná, platí slovenčina. Zlý jazyk
  * e-mailu je nepríjemnosť; neodoslaný e-mail je zavreté dvere.
  */
-export async function personLanguage(email: string): Promise<UiLanguage> {
+export async function personLanguage(email: string, companyCode: string | undefined): Promise<UiLanguage> {
   try {
-    const person = await findPerson(email)
+    // Bez organizácie osobu nepoznáme — a neznámej osobe platí slovenčina.
+    if (!companyCode) return normalizeLanguage(undefined)
+    const person = await findPerson(companyCode, email)
     return normalizeLanguage(person?.language)
   } catch {
     return normalizeLanguage(undefined)

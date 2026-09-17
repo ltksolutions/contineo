@@ -212,13 +212,15 @@ function emailProvider(): EmailConfig {
       // Jazyk prostredia z `persons`. Nikdy nehádže — pri neznámej osobe
       // alebo nedostupnej databáze padá na slovenčinu, aby sa e-mail odoslal
       // vždy. Zlý jazyk je nepríjemnosť, neodoslaný odkaz sú zavreté dvere.
-      const language = await personLanguage(identifier)
+      // Organizácia domény — jazyk aj vzhľad patria osobe v nej (D90).
+      const mailTenant = await tenantForHost(host)
+      const language = await personLanguage(identifier, mailTenant?.companyCode)
 
       // Vzhľad organizácie. Zlyhanie tu nesmie zabrániť odoslaniu — bez
       // vzhľadu je e-mail škaredší, bez e-mailu sa človek neprihlási.
       let branding
       try {
-        const tenant = await resolveTenant(normalizeHostname(host))
+        const tenant = mailTenant
         if (tenant) {
           branding = {
             displayName: tenant.branding.displayName,
@@ -326,7 +328,7 @@ export const authOptions: NextAuthOptions = {
 
           // 2. Ešte tu nie je a je z domény, ktorú organizácia povolila?
           //    Adresár zákazníka už raz rozhodol, že tam patrí (D47).
-          if (!(await personMaySignIn(user.email)) &&
+          if (!(await personMaySignIn(user.email, tenant.companyCode)) &&
               isDomainAllowed(user.email, tenant.autoProvisionDomains)) {
             await createFromDomain(
               tenant.companyCode,
@@ -373,9 +375,11 @@ export const authOptions: NextAuthOptions = {
         // evidencia je pekná vec, prihlásenie správcu v poruche je dôležitejšia.
         await Promise.race([
           (async () => {
-            await recordSignIn(user.email!)
+            const brakeTenant = await tenantForHost(await requestHost())
+            if (!brakeTenant) return
+            await recordSignIn(user.email!, brakeTenant.companyCode)
             if (signInProvider && externalId) {
-              await recordExternalRef(user.email!, signInProvider, externalId)
+              await recordExternalRef(user.email!, signInProvider, externalId, brakeTenant.companyCode)
             }
           })(),
           new Promise(resolve => setTimeout(resolve, RECORD_DEADLINE_MS)),
@@ -383,8 +387,12 @@ export const authOptions: NextAuthOptions = {
         return true
       }
 
-      const allowed = await personMaySignIn(user.email)
-      console.log(`[auth] ${phase}: ${user.email} — persons ${allowed ? "povolil" : "ODMIETOL"}`)
+      // Organizácia domény (D90). Neznáma doména alebo výpadok databázy
+      // (`tenantForHost` vtedy vráti `null`) znamená nepustiť — núdzová brzda
+      // vyššie už prebehla a tá databázu nepotrebuje.
+      const signInTenant = await tenantForHost(await requestHost())
+      const allowed = signInTenant ? await personMaySignIn(user.email, signInTenant.companyCode) : false
+      console.log(`[auth] ${phase}: ${user.email} — persons ${allowed ? "povolil" : "ODMIETOL"}${signInTenant ? "" : " (neznáma organizácia domény)"}`)
       // Evidencia až po povolení. `recordSignIn` si chyby prehĺta sám, takže
       // `await` nemôže zhodiť prihlásenie človeka, ktorý naň má nárok —
       // pôvodný dôvod pre `void` tým odpadá.
@@ -397,12 +405,12 @@ export const authOptions: NextAuthOptions = {
       // evidenciu. Na `lastLoginAt` má stáť príznak „nové" (D39), takže
       // ticho stratený zápis by sa neskôr prejavil ako nefunkčná funkcia
       // niekde úplne inde.
-      if (allowed) {
-        await recordSignIn(user.email)
+      if (allowed && signInTenant) {
+        await recordSignIn(user.email, signInTenant.companyCode)
         // Až po povolení. Odvtedy vieme, že je to to isté konto, aj keď
         // organizácia zmení človeku adresu — tá sa mení, `oid` nie.
         if (signInProvider && externalId) {
-          await recordExternalRef(user.email, signInProvider, externalId)
+          await recordExternalRef(user.email, signInProvider, externalId, signInTenant.companyCode)
         }
       }
       return allowed
@@ -589,7 +597,7 @@ async function fillFromDirectory(
 ): Promise<void> {
   try {
     if (!accessToken) return
-    const person = await findPerson(email)
+    const person = await findPerson(companyCode, email)
     if (!missingFromDirectory(person)) return
 
     const u = await graphData(accessToken, !person?.photoVersion)

@@ -73,7 +73,10 @@ try {
     process.exit(0)
   }
 
-  const existing = await col.findOne({ email: args.email })
+  // Osoba = (organizácia, adresa) — D90. Rola patrí osobe v tenante dodávateľa;
+  // tá istá adresa v organizácii zákazníka je iná osoba a rolu nedostane.
+  const existing = await col.findOne({ companyCode: TENANT, email: args.email })
+  const elsewhere = existing ? null : await col.findOne({ companyCode: { $ne: TENANT }, email: args.email })
 
   if (args.odobrat) {
     if (!existing) {
@@ -82,19 +85,19 @@ try {
     }
     // Odoberá sa **rola**, nie osoba. Zmazať človeka, ktorý niečo potvrdil,
     // by znamenalo osirotené auditné záznamy (D24).
-    await col.updateOne({ email: args.email }, { $pull: { roles: ROLE } })
+    await col.updateOne({ companyCode: TENANT, email: args.email }, { $pull: { roles: ROLE } })
     console.log(`${OK} ${args.email} — rola ${ROLE} odobraná (osoba zostáva)`)
     process.exit(0)
   }
 
+  if (!existing && elsewhere) {
+    console.error(`${FAIL} ${args.email} patrí organizácii ${elsewhere.companyCode}, nie ${TENANT}.`)
+    console.error(`     Rolu ${ROLE} dostáva len človek dodávateľa — inak by správca`)
+    console.error(`     zákazníka videl prehľad ostatných organizácií (D41).`)
+    process.exit(1)
+  }
   if (existing) {
-    if (existing.companyCode !== TENANT) {
-      console.error(`${FAIL} ${args.email} patrí organizácii ${existing.companyCode}, nie ${TENANT}.`)
-      console.error(`     Rolu ${ROLE} dostáva len človek dodávateľa — inak by správca`)
-      console.error(`     zákazníka videl prehľad ostatných organizácií (D41).`)
-      process.exit(1)
-    }
-    await col.updateOne({ email: args.email }, { $addToSet: { roles: ROLE } })
+    await col.updateOne({ companyCode: TENANT, email: args.email }, { $addToSet: { roles: ROLE } })
     console.log(`${OK} ${args.email} — rola ${ROLE} pridaná k existujúcej osobe`)
     process.exit(0)
   }

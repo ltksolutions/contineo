@@ -14,10 +14,10 @@ const { personMaySignIn, recordSignIn, hotovo: done } = vi.hoisted(() => {
   const done = { zapisane: false }
   return {
     hotovo: done,
-    personMaySignIn: vi.fn(async () => true),
+    personMaySignIn: vi.fn(async (..._args: unknown[]) => true),
     // Atrapa dokončí zápis až na ďalšom kole slučky — presne ako skutočný
     // dotaz do databázy. Bez `await` sa `signIn` vráti skôr než sa to stane.
-    recordSignIn: vi.fn(async () => {
+    recordSignIn: vi.fn(async (..._args: unknown[]) => {
       await new Promise(r => setTimeout(r, 0))
       done.zapisane = true
     }),
@@ -25,6 +25,12 @@ const { personMaySignIn, recordSignIn, hotovo: done } = vi.hoisted(() => {
 })
 
 vi.mock("../src/lib/persons", () => ({ personMaySignIn, recordSignIn }))
+// Organizácia domény (D90). Mimo požiadavky nie je hostiteľ, takže sa podstrčí
+// tenant priamo — test overuje evidenciu, nie rozlíšenie domény.
+vi.mock("../src/lib/tenants", async importOriginal => ({
+  ...(await importOriginal<typeof import("../src/lib/tenants")>()),
+  resolveTenant: vi.fn(async () => ({ companyCode: "SFZ" })),
+}))
 
 import { authOptions } from "../src/lib/auth"
 
@@ -45,6 +51,8 @@ describe("evidencia prihlásenia", () => {
     const ok = await signIn("jan.letko@futbalsfz.sk")
 
     expect(ok).toBe(true)
+    // Evidencia patrí osobe v organizácii domény (D90).
+    expect(recordSignIn).toHaveBeenCalledWith("jan.letko@futbalsfz.sk", "SFZ")
     // Toto je celý zmysel súboru: `true` bez dokončeného zápisu je práve tá
     // chyba, ktorá sa na Verceli prejaví a lokálne nie.
     expect(done.zapisane).toBe(true)
