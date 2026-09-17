@@ -1,5 +1,11 @@
 # Prístupové práva (ABAC + multitenant hierarchia) — návrh
 
+> ♻️ **2026-09-17 — D90: tenanti sú oddelení galvanicky.** Časti tohto návrhu o zdieľaní medzi
+> organizáciami (`sharedWithCompanyCodes[]`, „zdieľanie nahor/nadol", `accessLevel: public` ako
+> „vidí každý", zjednotenie `memberCompanyCodes`) **neplatia**. Jediný zdroj viditeľnosti je zhoda
+> `companyCode`; `public` je verejný v kanáloch vlastnej organizácie. Pôvodný text zostáva ako zápis
+> návrhu, rozhodnutie je v `OPEN_DECISIONS.md` D90.
+
 > **Stav:** návrh ABAC — skupiny, `sharedWithCompanyCodes[]` a `securityFilter()` v kóde zatiaľ **nie sú**. Samotná aplikácia beží a dnes filtruje `accessLevel` + `isActive` (`lib/mongoSearch.ts`); izoláciu organizácie drží podmienka dotazu (D29, D32).
 > **Cieľ:** nie každý má prístup k všetkému — riadiť, čo používateľ smie vidieť vo vyhľadávaní aj v odpovediach bota.
 > **Naviazanie:** Fáza 5 (Prístupové úrovne) v `docs/Contineo_RAG_Projektovy_plan.md`.
@@ -130,6 +136,9 @@ sportnet.online pozná profily ako `tréner`, `hráč`, `rozhodca`, `delegát`, 
 ---
 
 ## 6. Model na obsahu + vyhodnotenie prístupu
+
+> ♻️ **D90 (2026-09-17):** v kap. 6–9 platí pred každou podmienkou nižšie `companyCode = organizácia
+> domény` — vždy a ako prvá. `sharedWithCompanyCodes` sa nezavádza.
 
 ### 6.1 Polia na obsahu (`document_chunks` / `documents`)
 ```js

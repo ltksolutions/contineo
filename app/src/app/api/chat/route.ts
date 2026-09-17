@@ -30,11 +30,14 @@
  * Použitie:
  *   POST /api/chat
  *   Body: { query: string, useLLMClassifier?: boolean, usePreprocessing?: boolean }
- *   Headers: Authorization: Bearer <nextauth-token>  (pre internal prístup)
+ *
+ * **Organizácia je daná doménou a prihlásenou osobou, nikdy telom požiadavky**
+ * (D29, D90). Kým to tak nebolo, route bežal na predvolenom profile a hľadal
+ * bez `companyCode` — prihlásený človek z ktorejkoľvek organizácie dostával
+ * odpovede z interných úsekov všetkých.
  */
 
 import { NextRequest } from "next/server"
-import { getToken }    from "next-auth/jwt"
 
 import { classifyQuery }      from "@/lib/queryClassifier"
 import { preprocessQuery }    from "@/lib/queryPreprocessor"
@@ -42,7 +45,8 @@ import { getCollection }      from "@/lib/mongodb"
 import { fulltextSearch, vectorSearch, hybridSearch } from "@/lib/mongoSearch"
 import type { SearchOptions } from "@/lib/mongoSearch"
 import { generateAnswer }     from "@/lib/llmGenerator"
-import { defaultProfile }     from "@/lib/tenantProfile"
+import { getTenantProfile }   from "@/lib/tenantProfile"
+import { onboardingContext }  from "@/lib/session"
 import { getProviders }       from "@/lib/providers/factory"
 import { assertEmbeddingSpace, EmbeddingSpaceMismatchError } from "@/lib/embeddingGuard"
 import { dictionary } from "@/lib/i18n"
@@ -60,7 +64,22 @@ interface ChatRequest {
 // ── Handler ──────────────────────────────────────────────────────────────────
 
 export async function POST(req: NextRequest) {
-  // 1. Parsovanie a validácia
+  // 1. Organizácia a osoba (D29, D90). Rozhoduje doména a prihlásenie,
+  //    nie nič, čo pošle klient. Ide to prvé, ešte pred čítaním tela: cudzia
+  //    doména nemá z odpovede 400 zistiť, že tu endpoint je.
+  const ctx = await onboardingContext()
+  if (ctx.state === "unknown-host") return new Response(null, { status: 404 })
+  if (ctx.state === "not-signed-in") return new Response("not-signed-in", { status: 401 })
+  if (ctx.state !== "ready") return new Response("not-in-tenant", { status: 403 })
+
+  const companyCode = ctx.tenant.companyCode
+  // Verejný režim (widget pre neprihlásených) zatiaľ neexistuje — middleware
+  // `/api/chat` bez prihlásenia ani nepustí. Keď vznikne, bude mať vlastnú
+  // cestu s tou istou organizáciou, nie vetvu podľa toho, či prišiel token.
+  const userRole = "internal" as const
+  const accessLevel: SearchOptions["accessLevel"] = userRole
+
+  // 2. Parsovanie a validácia
   let body: ChatRequest
   try {
     body = await req.json()
@@ -79,16 +98,11 @@ export async function POST(req: NextRequest) {
     return new Response("invalid-query", { status: 400 })
   }
 
-  // 2. Autentifikácia – zistenie roly používateľa
-  const token     = await getToken({ req, secret: process.env.NEXTAUTH_SECRET })
-  const userRole: "public" | "internal" = token ? "internal" : "public"
-  const accessLevel: SearchOptions["accessLevel"] = userRole
-
   /*
    * Od tejto chvíle sa už nič nevracia ako HTTP stav — stream sa otvára
    * hneď, aby prehliadač vedel, že sa pracuje. Chyby preto idú udalosťou
-   * `error`; jediné, čo zostalo pred streamom, je validácia a autentifikácia,
-   * teda to, čo sa dá rozhodnúť bez jediného dotazu.
+   * `error`; pred streamom zostalo len to, čo rozhoduje o prístupe
+   * (organizácia, osoba) a o platnosti otázky.
    */
   const enc = new TextEncoder()
 
@@ -127,8 +141,9 @@ export async function POST(req: NextRequest) {
 
       try {
         // 3. Profil tenanta — určuje všetky tri adaptéry aj pomocný model.
-        //    Zatiaľ predvolený; per-tenant sa načíta až s identitou.
-        const profile = defaultProfile()
+        //    Bez vlastného záznamu v `tenant_profiles` je to predvolený profil
+        //    tej istej organizácie.
+        const profile = await getTenantProfile(companyCode)
         const providers = getProviders(profile)
 
         // 4. Klasifikácia dotazu (predvolene heuristika, bez volania modelu)
@@ -154,7 +169,7 @@ export async function POST(req: NextRequest) {
         // Anotacia je nutna: bez nej TypeScript rozsiri accessLevel na `string`
         // (widening literal type v menitelnej vlastnosti objektu) a typ prestane sedet.
         const searchOpts: SearchOptions = {
-          query: searchQuery, accessLevel, limit: 20, rerankLimit: 5,
+          query: searchQuery, accessLevel, companyCode, limit: 20, rerankLimit: 5,
           useStageRerank: providers.rerank.isPipelineStage,
           rerankModel: profile.providers.rerank.model,
           vectorPath: profile.providers.embedding.vectorPath,

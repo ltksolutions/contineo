@@ -39,9 +39,18 @@ export interface SearchOptions {
   accessLevel: "public" | "internal" | "all"
   limit?: number
   rerankLimit?: number
-  // Optional domain filtering (Model B) — activated together with identity (ISSF).
-  // When omitted, search behaves exactly as before.
-  companyCodes?: string[]   // e.g. ["SsFZ", "SFZ"]
+  /**
+   * Organizácia, v ktorej obsahu sa hľadá. **Povinné a vždy práve jedna** (D90).
+   *
+   * Tenanti sú oddelení galvanicky: vyhľadávanie nikdy nesiahne za hranicu
+   * organizácie — ani na verejný obsah inej, ani na „zdieľaný". Predtým tu
+   * bolo nepovinné `companyCodes?: string[]` a `/api/chat` ho nevyplnil,
+   * takže prihlásený človek z ktorejkoľvek organizácie dostával odpovede
+   * z interných úsekov všetkých. Chýbajúci filter nevyzerá ako chyba —
+   * odpoveď je len „lepšia". Preto sa to nekontroluje v route, ale tu:
+   * bez organizácie sa nehľadá vôbec (`tenantFilter()` vyhodí výnimku).
+   */
+  companyCode: string
   sectionKey?: string
   /**
    * Zahrnúť aj archivované verzie (isActive: false).
@@ -149,21 +158,44 @@ function lookupDocument(scoreMeta: ScoreMeta): Document[] { return [
 
 // ── Filters ──────────────────────────────────────────────────────────────────
 
+/** Vyhľadávanie bez organizácie — programátorská chyba, nie stav pre človeka. */
+export class MissingTenantError extends Error {
+  constructor() {
+    super("mongoSearch: chýba companyCode — bez organizácie sa nehľadá (D90)")
+    this.name = "MissingTenantError"
+  }
+}
+
+/**
+ * Organizácia pre filter. Vyhodí výnimku, keď chýba alebo je prázdna.
+ *
+ * Kontroluje sa aj za behu, nielen typom: skripty v `scripts/` sú `.mjs`
+ * a typovú kontrolu neprejdú. Prázdny reťazec je rovnaká chyba ako
+ * `undefined` — filter `companyCode: ""` by síce nič nevrátil, ale
+ * podmienka `if (opts.companyCode)` by ho pri budúcej úprave ľahko
+ * ticho vynechala.
+ */
+export function tenantFilter(opts: Pick<SearchOptions, "companyCode">): string {
+  const code = typeof opts?.companyCode === "string" ? opts.companyCode.trim() : ""
+  if (!code) throw new MissingTenantError()
+  return code
+}
+
 /** MQL-style filter for $vectorSearch. */
-function vectorFilter(opts: SearchOptions): Document {
-  const filter: Document = {}
+export function vectorFilter(opts: SearchOptions): Document {
+  // Organizácia ide do filtra ako prvá a bez podmienky (D90).
+  const filter: Document = { companyCode: tenantFilter(opts) }
   if (opts.accessLevel === "public") filter.accessLevel = "public"
-  if (opts.companyCodes?.length) filter.companyCode = { $in: opts.companyCodes }
   if (opts.sectionKey) filter.sectionKey = opts.sectionKey
   if (!opts.includeArchived) filter.isActive = true
   return filter
 }
 
 /** compound.filter clauses for $search. */
-function searchFilterClauses(opts: SearchOptions): Document[] {
-  const clauses: Document[] = []
+export function searchFilterClauses(opts: SearchOptions): Document[] {
+  // Organizácia ide do filtra ako prvá a bez podmienky (D90).
+  const clauses: Document[] = [{ equals: { path: "companyCode", value: tenantFilter(opts) } }]
   if (opts.accessLevel === "public") clauses.push({ equals: { path: "accessLevel", value: "public" } })
-  if (opts.companyCodes?.length) clauses.push({ in: { path: "companyCode", value: opts.companyCodes } })
   if (opts.sectionKey) clauses.push({ equals: { path: "sectionKey", value: opts.sectionKey } })
   if (!opts.includeArchived) clauses.push({ equals: { path: "isActive", value: true } })
   return clauses
@@ -199,7 +231,7 @@ export async function fulltextSearch(
             }
           ],
           // Filter via compound.filter (faster than $match after $search)
-          ...(clauses.length > 0 && { filter: clauses })
+          filter: clauses,
         }
       }
     },
@@ -272,7 +304,7 @@ export async function vectorSearch(
         query,                        // text → MongoDB auto-embed (Voyage AI)
         numCandidates: limit * 10,
         limit,
-        ...(Object.keys(filter).length > 0 && { filter }),
+        filter,
       }
     },
     // Voyage reranker. Pri on-prem režime stage vynechávame — rerank
@@ -309,7 +341,7 @@ export async function hybridSearch(
                   query,
                   numCandidates: limit * 10,
                   limit: limit * 2,
-                  ...(Object.keys(filter).length > 0 && { filter }),
+                  filter,
                 }
               }
             ],
@@ -328,7 +360,7 @@ export async function hybridSearch(
                         }
                       }
                     ],
-                    ...(clauses.length > 0 && { filter: clauses })
+                    filter: clauses,
                   }
                 }
               },

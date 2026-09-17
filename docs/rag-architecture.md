@@ -240,7 +240,6 @@ Dotaz
   chunkingProfile,                  // pomenovaný profil členenia (D79)
   folderId, folderPath: [],         // virtuálne priečinky (D56)
   ownerDepartmentId, internalNumber,
-  sharedWithCompanyCodes: [],
   versions: [{ versionId, label, effectiveFrom, effectiveTo, isActive,
                contentHash, markdown, originalFile, fixes: [], textFixes: [],
                publishedAt, publishedBy }],

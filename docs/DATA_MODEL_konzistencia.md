@@ -57,6 +57,10 @@ Doména Contineo = SFZ a podriadené zväzy, normy s paragrafmi, helpdesk. Ploch
 > neudeľuje nič** — hierarchia je štruktúra pre relevanciu a precedenciu (`PRECEDENCIA_NORIEM.md`
 > R4), nie kľúč k obsahu. Zámena týchto dvoch osí je presne tá tichá chyba, pred ktorou
 > odsek vyššie varuje.
+>
+> ♻️ **Doplnené 2026-09-17 (D90):** viditeľnosť má už len **jeden** zdroj — zhodu `companyCode`.
+> `sharedWithCompanyCodes[]` je zrušené a `accessLevel: public` znamená verejný v kanáloch vlastnej
+> organizácie, nie pre iného tenanta.
 
 ## Fázová migrácia (mapované na existujúci plán fáz)
 

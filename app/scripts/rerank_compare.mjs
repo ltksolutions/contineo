@@ -5,6 +5,9 @@
  *     node --env-file=.env.local scripts/rerank_compare.mjs --pocet 40
  *     node --env-file=.env.local scripts/rerank_compare.mjs --modely rerank-2,rerank-3,rerank-3-lite
  *     node --env-file=.env.local scripts/rerank_compare.mjs --ulozit
+ *     node --env-file=.env.local scripts/rerank_compare.mjs --organizacia LTK   (predvolene SFZ)
+ *
+ * Hľadá sa vždy v obsahu **jednej** organizácie (D90), rovnako ako v aplikácii.
  *
  * ČO TENTO SKRIPT NEMERIA: kvalitu. Neexistuje pravda, voči ktorej by sa
  * dalo povedať „model X je lepší" — a skóre z rôznych rerankerov sa navyše
@@ -45,6 +48,7 @@ const TOPK   = Number(flag("--topk", 5))
 const MODELY = flag("--modely", "rerank-2,rerank-2.5,rerank-3").split(",").map(s => s.trim()).filter(Boolean)
 const ROLA   = args.includes("--verejne") ? "public" : "internal"
 const ULOZIT = args.includes("--ulozit")
+const ORGANIZACIA = flag("--organizacia", "SFZ")
 
 const BEZ = "bez reranku"
 
@@ -99,7 +103,8 @@ try {
   // Rôzne otázky, najnovšie najskôr. Tá istá otázka položená päťkrát by
   // inak výsledok prevážila, hoci o zhode rerankerov povie to isté raz.
   const zaznamy = await db.collection("evaluations")
-    .find({ question: { $exists: true, $ne: "" } }, { projection: { question: 1 } })
+    // Otázky len z vlastnej organizácie (D90) — otázka je obsah tenanta.
+    .find({ companyCode: ORGANIZACIA, question: { $exists: true, $ne: "" } }, { projection: { question: 1 } })
     .sort({ _id: -1 })
     .limit(POCET * 5)
     .toArray()
@@ -117,7 +122,7 @@ try {
   }
 
   const varianty = [BEZ, ...MODELY]
-  console.log(`\n${INFO} ${otazky.length} otázok × ${MODELY.length} modelov · top-${TOPK} · rola "${ROLA}" · vectorPath "${vectorPath}"`)
+  console.log(`\n${INFO} ${otazky.length} otázok × ${MODELY.length} modelov · top-${TOPK} · rola "${ROLA}" · organizácia ${ORGANIZACIA} · vectorPath "${vectorPath}"`)
   console.log(`${INFO} volaní reranku: ${otazky.length * MODELY.length}\n`)
 
   const kluc = (a, b) => `${a} ⇄ ${b}`
@@ -130,7 +135,7 @@ try {
   const detail = []
 
   for (const [n, q] of otazky.entries()) {
-    const base = { query: q.question, accessLevel: ROLA, limit: 20, rerankLimit: TOPK, vectorPath }
+    const base = { query: q.question, accessLevel: ROLA, companyCode: ORGANIZACIA, limit: 20, rerankLimit: TOPK, vectorPath }
     const poradia = {}
 
     try {

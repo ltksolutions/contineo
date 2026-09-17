@@ -36,7 +36,7 @@
 | D29 | Rozlíšenie tenanta podľa hostiteľa | Nasadenie | 🟡 | 8 | ✅ |
 | D30 | Čo je „podstatná zmena" (opätovné potvrdenie) | Onboarding | 🟢 | 9 | ✅ zrušené — nahradil `reason` pri pridelení |
 | D31 | Produkčný Atlas tier a zálohy (M0 → M10+) | Prevádzka | 🔴 | 8 | ✅ |
-| D32 | Viditeľnosť obsahu v hierarchii tenantov | Identita | 🔴 | 5/8 | ✅ |
+| D32 | Viditeľnosť obsahu v hierarchii tenantov | Identita | 🔴 | 5/8 | ✅ / ♻️ zdroje 2 a 3 zrušené 2026-09-17 (D90) |
 | D33 | Rozsah HR dashboardu naprieč hierarchiou | Onboarding | 🟡 | 8 | ✅ |
 | D34 | Model dodávky: SaaS vs. vlastné nasadenie | Produkt | 🟡 | prierezové | ✅ |
 | D35 | Viacjazyčnosť: prostredie áno, obsah nie | Produkt | 🔴 | 8 | ✅ |
@@ -47,6 +47,7 @@
 | D40 | Jednorazové systémové hlásenia v rozsahu A | Onboarding | 🔴 | 9 | ✅ / ♻️ prekonané 2026-09-15 (zvonček) |
 | D41 | `platform-admin` vidí naprieč tenantmi (výnimka z D32) | Identita | 🔴 | 5b | ✅ |
 | D42 | Správa tenantov beží len na doméne dodávateľa | Identita | 🔴 | 5b | ✅ |
+| D90 | Tenanti sú oddelení galvanicky — jediný zdroj viditeľnosti je vlastný `companyCode` | Identita | 🔴 | 8 | ✅ |
 
 ---
 
@@ -427,6 +428,10 @@ do úvahy cesty založené na privátnom endpointe.
 
 ### D32 — Viditeľnosť obsahu v hierarchii tenantov 🔴
 
+> ♻️ **2026-09-17 — zdroje 2 a 3 z tabuľky nižšie sú zrušené (D90).** Platí ďalej, že
+> `parent` neudeľuje nič; neplatí, že obsah inej organizácie otvorí `accessLevel: public`
+> alebo menovité zdieľanie. Text nižšie zostáva ako zápis vtedajšieho rozhodnutia.
+
 **Otázka:** vidí dcérska spoločnosť interný obsah materskej, keď je jej potomkom
 v `companyCode.parent`?
 
@@ -731,6 +736,55 @@ Takto musia zlyhať **dve nezávislé podmienky naraz** — a preto sa kontroluj
 oboje, rola aj hostiteľ.
 
 **Súvisiace:** D29, D41.
+
+### D90 — Tenanti sú oddelení galvanicky 🔴
+
+**Otázka:** smie obsah jednej organizácie vidieť niekto z inej — cez `accessLevel: public`
+alebo cez menovité zdieľanie (`sharedWithCompanyCodes[]`), ako to pripúšťala D32?
+
+**✅ Rozhodnuté (2026-09-17, Ján Letko): nie. Viditeľnosť má jediný zdroj — zhodu
+`companyCode`.** Filter organizácie je v každom dotaze **vždy**, nie podľa situácie.
+
+| Pojem | Význam po D90 |
+|---|---|
+| `companyCode` | jediný kľúč k obsahu; bez neho sa nehľadá a nič sa nezobrazí |
+| `accessLevel: public` | verejný **v kanáloch vlastnej organizácie** (jej verejný web, widget) — nikdy pre iného tenanta |
+| `sharedWithCompanyCodes[]` | **zrušené** — nikdy sa nepoužilo (0 dokumentov), z kódu odstránené |
+| `companyCode.parent` | naďalej neudeľuje nič (D32) |
+
+**Prečo:** zistené pri drobnostiach Fázy 8 (bod D1). `/api/chat` hľadal bez `companyCode`,
+lebo filter bol v `mongoSearch.ts` nepovinný a nikto ho nevyplnil — prihlásená osoba
+z ktorejkoľvek organizácie dostávala odpovede z interných úsekov všetkých. K tomu
+`canSeeDocument()` pustil verejný dokument **ktorejkoľvek** organizácie a
+`assignableDocuments()` ho ponúkol personalistovi inej organizácie na pridelenie.
+Chýbajúci filter nevyzerá ako chyba, odpoveď je len „lepšia" — presne tá tichá chyba,
+pred ktorou chránila D32. Každá cesta cez hranicu tenanta je miesto, kde sa raz zabudne.
+
+**Ako je to vynútené:**
+- `mongoSearch.ts` — `companyCode` je povinný parameter; `tenantFilter()` bez neho vyhodí
+  `MissingTenantError`. Kontrola beží aj za behu, lebo skripty `.mjs` typovú kontrolu nemajú.
+  Organizácia je prvá klauzula v `$vectorSearch.filter` aj v `compound.filter`.
+- `/api/chat` — organizácia z `onboardingContext()` (doména + osoba), profil z
+  `getTenantProfile()`; neznáma doména `404`, neprihlásený `401`, osoba mimo organizácie `403`.
+- `canSeeDocument()` a `assignableDocuments()` — len vlastný `companyCode`.
+- Testy: `tests/visibility.test.ts`, `tests/searchTenant.test.ts`. Overené aj na živých dátach:
+  `npm run smoke -- --organizacia LTK` nájde 0 úsekov, SFZ nájde svoje.
+
+**Dôsledky:**
+- Obsah, ktorý má mať iná organizácia (napr. normy SFZ pre regionálny zväz, keby bol samostatným
+  tenantom), dostane ako **vlastnú kópiu** — rovnaký princíp „kópia, nie odkaz" ako názov
+  dokumentu v potvrdení. Alebo je taká jednotka oddelením v tenante SFZ. Rozhodne sa, keď to
+  bude treba; mechanizmus kopírovania dnes neexistuje.
+- Osoba vo viacerých organizáciách (`memberCompanyCodes` v návrhu `PRISTUPOVE_PRAVA.md`)
+  vidí na portáli vždy len organizáciu, ktorej patrí doména — nie zjednotenie.
+- **D41 sa nemení:** `platform-admin` číta prehľadové údaje (počty), nie obsah.
+- Zmena indexov ani dopĺňanie úsekov netreba — `companyCode` je filtrovacím poľom v oboch
+  indexoch od začiatku.
+
+**Otvorené (D5 drobností Fázy 8):** výpis všetkých dotazov do databázy, či majú `companyCode`
+v podmienke — grep na to nestačí (viacriadkové dotazy, dotazy len podľa `documentId`).
+
+**Súvisiace:** D29, D32, D33, D41, `PRISTUPOVE_PRAVA.md`, `DATA_MODEL_konzistencia.md`.
 
 ---
 

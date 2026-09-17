@@ -4,6 +4,10 @@
  *     npm run smoke
  *     npm run smoke -- --odpoved     (aj generovanie cez Claude)
  *     npm run smoke -- --dotaz "Aká je lehota na námietku?"
+ *     npm run smoke -- --organizacia LTK   (predvolene SFZ)
+ *
+ * Hľadá sa vždy v obsahu **jednej** organizácie (D90) — rovnako ako
+ * v aplikácii. Predvolené SFZ sa vypíše, nech nie je tiché.
  *
  * Zámerne používa SKUTOČNÝ kód z src/lib, nie jeho kópiu — inak by test
  * overoval niečo iné, než čo beží v aplikácii. TypeScript spúšťa priamo Node
@@ -30,6 +34,8 @@ const asPublic = args.includes("--verejne")
 const role = asPublic ? "public" : "internal"
 const i = args.indexOf("--dotaz")
 const customQuery = i >= 0 ? args[i + 1] : null
+const o = args.indexOf("--organizacia")
+const companyCode = o >= 0 ? args[o + 1] : "SFZ"
 
 const OK = "\x1b[32m✔\x1b[0m", FAIL = "\x1b[31m✘\x1b[0m", INFO = "\x1b[33m·\x1b[0m"
 
@@ -81,7 +87,8 @@ try {
     process.exit(1)
   }
 
-  const profile = defaultProfile()
+  const profile = defaultProfile(companyCode)
+  console.log(`${INFO} organizácia ${companyCode}`)
   const providers = getProviders(profile)
   console.log(`Profil: embedding=${profile.providers.embedding.kind}/${profile.providers.embedding.model}` +
               ` · rerank=${profile.providers.rerank.kind}` +
@@ -96,7 +103,7 @@ try {
 
     const mod = await classifyQuery(query, false)
     const opts = {
-      query: query, accessLevel: role, limit: 20, rerankLimit: 5,
+      query: query, accessLevel: role, companyCode, limit: 20, rerankLimit: 5,
       useStageRerank: providers.rerank.isPipelineStage,
       rerankModel: profile.providers.rerank.model,
       vectorPath: profile.providers.embedding.vectorPath,

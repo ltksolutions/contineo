@@ -73,20 +73,15 @@ export interface AssignableDocument {
 export async function assignableDocuments(companyCode: string): Promise<AssignableDocument[]> {
   const col = await getCollection<DocumentRecord>(DOCUMENTS_COLLECTION)
   const raw = await col
-    .find({
-      $or: [
-        { companyCode },
-        { accessLevel: "public" },
-        { sharedWithCompanyCodes: companyCode },
-      ],
-    })
+    // Len vlastné dokumenty organizácie (D90) — ani cudzie verejné.
+    .find({ companyCode })
     .toArray()
 
   const asOf = new Date()
   const out: AssignableDocument[] = []
   for (const d of raw) {
     // Dotaz je len predvýber; o viditeľnosti rozhoduje `canSeeDocument`,
-    // aby pravidlo D32 zostalo na jednom mieste.
+    // aby pravidlo D90 zostalo na jednom mieste.
     if (!canSeeDocument({ companyCode }, d)) continue
     const v = effectiveVersion(d, asOf)
     if (!v.ok || !v.version.effectiveFrom) continue

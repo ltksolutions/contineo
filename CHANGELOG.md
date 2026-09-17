@@ -4,6 +4,40 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Tenanti oddelení galvanicky (D90, 2026-09-17)
+
+**Bezpečnostná oprava.** `/api/chat` bežal na predvolenom profile a hľadal
+**bez `companyCode`** — filter organizácie bol v `mongoSearch.ts` nepovinný
+a route ho nevyplnil. Prihlásená osoba z ktorejkoľvek organizácie teda dostávala
+odpovede z interných úsekov všetkých. Dnes je všetok obsah SFZ, takže reálne
+išlo o jeden interný úsek viditeľný jedinej osobe LTK; s prvým ďalším zákazníkom
+by to bol plný únik.
+
+Pri oprave vyšli najavo ďalšie dve cesty cez hranicu tenanta, obe podľa D32:
+`canSeeDocument()` pustil verejný dokument **ktorejkoľvek** organizácie
+a `assignableDocuments()` ho ponúkol personalistovi inej organizácie na pridelenie.
+Rozhodnutie D90 ich ruší — jediný zdroj viditeľnosti je zhoda `companyCode`.
+
+- **`mongoSearch.ts`:** `companyCode` je povinný (`companyCodes?: string[]` preč).
+  `tenantFilter()` bez neho vyhodí `MissingTenantError` aj za behu, lebo skripty
+  `.mjs` typovú kontrolu neprejdú. Organizácia je prvá klauzula v oboch filtroch,
+  ako rovnosť, nie zoznam; podmienené rozbalenie filtra zmizlo, filter je vždy.
+- **`/api/chat`:** organizácia z `onboardingContext()` ešte pred čítaním tela —
+  neznáma doména `404` bez tela, neprihlásený `401`, osoba mimo organizácie `403`.
+  Profil z `getTenantProfile(companyCode)` (kolekcia `tenant_profiles` je prázdna,
+  správanie sa nemení). Vetva „bez tokenu = public" odstránená — middleware
+  `/api/chat` bez prihlásenia nepustí, bola to mŕtva cesta.
+- **`canSeeDocument()`, `assignableDocuments()`:** len vlastný `companyCode`.
+- **`sharedWithCompanyCodes`** odstránené z kódu aj z modelu v dokumentácii;
+  nemal ho ani jeden dokument, migrácia netreba.
+- **Skripty** `smoke.mjs` a `rerank_compare.mjs` majú `--organizacia` (predvolene
+  SFZ, vypíše sa); `rerank_compare` berie otázky z `evaluations` len tej organizácie.
+- **Testy:** `tests/visibility.test.ts` otočený (cudzí verejný dokument nevidno),
+  nový `tests/searchTenant.test.ts`. Na živých dátach `npm run smoke` nájde pre SFZ
+  5 úsekov, s `--organizacia LTK` nula.
+
+Indexy sa nemenili — `companyCode` je filtrovacím poľom v oboch od začiatku.
+
 ### Kostry namiesto prázdnej obrazovky (O20, 2026-09-16)
 
 Aplikácia nemala **ani jeden** `loading.tsx` a ani jednu `Suspense` hranicu.

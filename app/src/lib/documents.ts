@@ -143,8 +143,6 @@ export interface DocumentRecord {
    */
   language?: string
   versions?: Version[]
-  /** Menovité zdieľanie mimo vlastnej vetvy (D32). */
-  sharedWithCompanyCodes?: string[]
   /** Text dokumentu pre zobrazenie človeku. Na verzii má prednosť. */
   markdown?: string
   /** Ponechané kvôli dokumentom naimportovaným pred zavedením `versions[]`. */
@@ -257,32 +255,37 @@ export async function addVersion(documentId: string, v: Version): Promise<void> 
   await col.updateOne({ documentId }, { $push: { versions: v } })
 }
 
-// ── Viditeľnosť (D32) ────────────────────────────────────────────────────────
+// ── Viditeľnosť (D90, nahrádza zdroje 2 a 3 z D32) ───────────────────────────
 
 /**
  * Smie táto osoba vidieť tento dokument?
  *
- * Viditeľnosť má **tri zdroje a žiadny ďalší** (D32):
+ * **Jediný zdroj viditeľnosti je zhoda `companyCode`** (D90). Tenanti sú
+ * oddelení galvanicky — cudzí dokument sa nedá vidieť žiadnou cestou:
  *
- *   1. `accessLevel: "public"` — zverejnené pre všetkých,
- *   2. zhoda `companyCode` — vlastný obsah tenanta,
- *   3. `sharedWithCompanyCodes[]` obsahuje kód osoby — niekto ho **menovite** zdieľal.
+ *   - `accessLevel: "public"` znamená verejný **v kanáloch vlastnej
+ *     organizácie** (jej verejný web, widget), nie „pre všetkých tenantov".
+ *     Do D90 tu bolo `if (public) return true` pred kontrolou organizácie,
+ *     takže osoba z inej organizácie otvorila verejnú normu SFZ, keď poznala
+ *     jej identifikátor, a personalista ju mohol prideliť vlastným ľuďom.
+ *   - Menovité zdieľanie (`sharedWithCompanyCodes[]`) bolo zrušené skôr, než
+ *     ho niekto použil. Obsah, ktorý má mať iná organizácia, dostane ako
+ *     **vlastnú kópiu** — rovnako ako názov dokumentu v potvrdení.
  *
- * **`companyCode.parent` neudeľuje nič.** Hierarchia je kontext pre relevanciu
- * a pre precedenciu noriem, nie kľúč k obsahu. Dcéra nevidí interný obsah
- * matky preto, že je dcéra.
+ * **`companyCode.parent` neudeľuje nič** (D32 platí ďalej). Hierarchia je
+ * kontext pre relevanciu a precedenciu noriem, nie kľúč k obsahu.
  *
  * Čistá funkcia — pravidlo, ktoré rozhoduje o prístupe, sa musí dať otestovať
  * bez databázy a prečítať bez behu.
  */
 export function canSeeDocument(
   person: { companyCode: string },
-  doc: Pick<DocumentRecord, "accessLevel" | "companyCode" | "sharedWithCompanyCodes">
+  // `accessLevel` je v type zámerne: volajúci ho posielajú a čitateľ má vidieť,
+  // že o prístupe **nerozhoduje** (D90).
+  doc: Pick<DocumentRecord, "accessLevel" | "companyCode">
 ): boolean {
-  if (doc.accessLevel === "public") return true
-  if (!person?.companyCode) return false
-  if (doc.companyCode === person.companyCode) return true
-  return (doc.sharedWithCompanyCodes ?? []).includes(person.companyCode)
+  if (!person?.companyCode || !doc?.companyCode) return false
+  return doc.companyCode === person.companyCode
 }
 
 /**

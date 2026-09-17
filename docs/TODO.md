@@ -150,12 +150,12 @@
 - [ ] NextAuth providers: **sportnet.online OAuth** (primárny), Entra ID, Google Workspace, vlastná DB → kanonická session (ISSF sa neintegruje)
 - [ ] **mcp.sportnet.online** (vo vývoji) + **api.sportnet.online/v1** (CRM Company & People, `…/v1/docs/`) — zmapovať polia na `companyCode`, `person_memberships`, `sportnet_role_map`; cache + re-sync **login + webhook**
 - [ ] `cms_uploaders` allowlist — ručné povolenie, kto smie nahrávať obsah (práva v CMS sa neodvodzujú z rolí sportnet)
-- [ ] `securityFilter()` v `mongoSearch.ts` — public (bez izolácie) + internal (per CompanyID, `sharedWithCompanyCodes`, content-skupiny), do `$vectorSearch` aj `$search`, default-deny
-- [ ] Schéma: `accessGroups[]` + `sharedWithCompanyCodes[]` na `document_chunks`/`documents` + tagovanie pri importe
+- [ ] `securityFilter()` v `mongoSearch.ts` — **vždy v rámci `companyCode`** (D90, filter organizácie je od 2026-09-17 povinný); nad tým public/internal a content-skupiny, do `$vectorSearch` aj `$search`, default-deny. *(Pôvodne „public bez izolácie" a `sharedWithCompanyCodes` — zrušené D90.)*
+- [ ] Schéma: `accessGroups[]` na `document_chunks`/`documents` + tagovanie pri importe *(`sharedWithCompanyCodes[]` zrušené D90)*
 - [ ] `companyCode.parent` — viacúrovňová hierarchia SFZ→regionálny→oblastný (plný zoznam zo sportnet.online)
 - [ ] Kolekcie `tenant_groups` (členské + content-skupiny) + `identity_group_map` + admin UI (ručné content-skupiny)
 - [ ] Dva režimy nasadenia: verejný anonymný widget (len `public`) vs. interný portál zväzu (SSO, public+internal)
-- [ ] Doplniť `accessGroups`, `sharedWithCompanyCodes` do Atlas indexov
+- [ ] Doplniť `accessGroups` do Atlas indexov *(`sharedWithCompanyCodes` zrušené D90)*
 - [ ] **Potvrdiť otvorené otázky** v `PRISTUPOVE_PRAVA.md` (roly nad skupinami, sportnet.online claims, re-sync, relevancia rozpisov, rozsah widgetu, legislatíva→sectionKey)
 
 ---
