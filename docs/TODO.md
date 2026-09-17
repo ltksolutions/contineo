@@ -605,6 +605,7 @@ koná personalista, dôvod povinný, nový záznam namiesto úpravy starého.
 - [x] `SkeletonShell` — obrys `AppShell`-u, aby počas čakania nezmizla navigácia
 - [x] `/api/chat`: práca dovnútra streamu, skutočné fázy udalosťou `phase`
 - [x] Prúžok priebehu navigácie (`components/RouteProgress.tsx`)
+- [x] **Vizuálna kontrola na 375 px a 1280 px, svetlý aj tmavý režim** ✅ 2026-09-17 — našla chybu: `.skeleton-nav` mala `display: flex` a prebila `@media (max-width: 939px)`, takže na telefóne bol vidno pás odkazov aj zásuvku naraz. Opravené.
 - [ ] **Doladiť tvary podľa skutočnosti.** Tvary zoznamových a formulárových kostier sú odhadnuté z tried, nie odmerané na bežiacej stránke. Kde kostra po načítaní poskočí, oprav iť počet riadkov alebo políčok — práve skok je to, čo na čakaní vadí najviac.
 - [ ] **`prehlad` kostru nedostal zámerne** — je to `permanentRedirect`, kostra by tam blikla a zmizla.
 - [ ] Zvážiť `loading.tsx` aj pre stránky, ktoré sa načítajú do ~100 ms. Tam je kostra blik navyše a patrí preč.

@@ -46,6 +46,16 @@ potrebujem prehliadač. Zostáva to na vizuálnu kontrolu po nasadení —
 a skôr než ju niekto urobí, platí, že počty riadkov v kostrách sú odhad,
 nie meranie. Zapísané ako otvorený bod v TODO, nie zamlčané.
 
+**A vizuálna kontrola našla chybu, ktorú by `tsc` nikdy nenašiel.** Zostavil
+som statickú ukážku kostier s **ostrým `globals.css` z nasadeného buildu**
+(nie s približnou kópiou) a otvoril ju na 375 px. Na telefóne bol vidno pás
+odkazov **aj** zásuvku naraz. Príčina: `.skeleton-nav` mala `display: flex`
+a je v súbore nižšie než `@media (max-width: 939px) { .app-nav--topbar {
+display: none } }` — rovnaká špecifickosť, neskôr vyhráva. Oprava je nič
+nedeklarovať: `display` si dodá `.app-nav`. Poučenie na kostry ako celok:
+**trieda, ktorá sa pridáva k existujúcej, nesmie prepisovať to, čo tá
+existujúca rieši cez `@media`.**
+
 **Lint ma chytil na `setBusy(false)` priamo v efekte.** Reťazové vykreslenie.
 Oprava je `requestAnimationFrame` — pre oko to isté, pre React obyčajná zmena
 stavu. Dobré pravidlo bolo v nástroji skôr než v mojej hlave.

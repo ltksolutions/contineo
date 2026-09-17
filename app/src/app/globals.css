@@ -3443,7 +3443,11 @@ html[data-theme="dark"] { --skeleton-sheen: rgba(255, 255, 255, 0.07); }
 
 /* `min-height: 44px` je to isté číslo, aké má `.app-nav-item` — bez neho by
    bol obrys pásu o 30 px nižší než pás a obsah by po načítaní poskočil. */
-.skeleton-nav { display: flex; gap: 14px; align-items: center; min-height: 44px; }
+/* **Žiadne `display` tu nie je, a je to zámer.** `.app-nav--topbar` sa pod 940 px
+   skrýva cez `display: none` v `@media`; keby si táto trieda display nastavila,
+   prebila by ho (rovnaká špecifickosť, neskôr v súbore) a na telefóne by bol
+   vidno pás aj zásuvku naraz. Chytila to až vizuálna kontrola na 375 px. */
+.skeleton-nav { gap: 14px; align-items: center; min-height: 44px; }
 .skeleton-nav-item { height: 14px; width: 84px; flex: 0 0 auto; }
 
 
