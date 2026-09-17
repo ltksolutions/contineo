@@ -10,6 +10,42 @@
 
 ---
 
+## 2026-09-17 (večer) — audit D90 opravený celý
+
+Ján: „oprav všetko, čo si našla". Štyri commity po skupinách nálezov, nie jeden
+veľký — každá skupina mení iný druh správania a pri probléme sa má dať vrátiť
+samostatne.
+
+**Pred zmenou som sa pozrel do dát, nie len do kódu.** Povinná organizácia vo
+`validAcknowledgements()` by pri zázname bez `companyCode` ticho „stratila"
+potvrdenie — a výkaz by tvrdil, že človek nič nepotvrdil. Dotaz nad ostrou
+databázou: všetkých 7 potvrdení, 6 časov čítania a 10 hodnotení má organizáciu
+zhodnú s osobou. Jedna vec vyzerala zle: 115 úsekov s inou organizáciou než
+dokument. Druhý dotaz ukázal, že dokument k nim neexistuje — sú to archivované
+úseky zmazaného nácviku. Keby som skončil pri prvom čísle, písal by som o úniku,
+ktorý nie je.
+
+**Najcitlivejšia bola brána prihlásenia.** Po zmene rozhoduje organizácia domény,
+nie „ktorákoľvek". Testy to overia len s atrapou, tak som pustil `next start`
+a poslal skutočnú žiadosť o odkaz — s prázdnym `ECOMAIL_API_KEY` v prostredí,
+aby e-mail naozaj neodišiel (Next hodnotu z `.env.local` neprepíše, ak už
+v prostredí je, aj prázdna; log to potvrdil vetou „e-mail sa neodoslal"). Ján na
+SFZ: povolil. Ján na LTK: odmietol. Presne to D90 chce, ale pre Jána to znamená,
+že na `app.contineo.app` sa dostane len cez núdzovú brzdu alebo ako osoba LTK.
+
+**Pri logu hrozila nová diera cez CDN.** Výnimka pre správcu platformy vracia
+logo inej organizácie — a odpoveď mala `public, immutable`. Vercel by ju uložil
+a vydal ďalšiemu, neprihlásenému návštevníkovi tej istej adresy. Preto
+`private, no-store` práve pre tú vetvu.
+
+**Čo zostalo mimo:** e-maily z cronu, schvaľovania a pozvánok posielajú logo ako
+relatívnu adresu — v schránke nemá k čomu byť relatívna. S oddelením tenantov to
+nesúvisí a neoveril som, ako to vyzerá v pošte; je to v TODO. A región `iad1`:
+Vercel vie bežať vo Frankfurte (`regions: ["fra1"]`), ale je to produkčné
+nastavenie — čaká na Jánovo áno.
+
+---
+
 ## 2026-09-17 (poobede) — drobnosti Fázy 8, z ktorých jedna nebola drobnosť
 
 Ján: „dorobme D. Drobnosti v kóde". Štyri body z `TODO.md`: `/api/chat` na

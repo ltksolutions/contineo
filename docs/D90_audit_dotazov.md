@@ -1,6 +1,10 @@
 # D90 — audit dotazov: má každý `companyCode` v podmienke?
 
-> **Stav:** výpis nálezov, **bez opráv** (zadanie Jána Letka 2026-09-17: opravy až po schválení).
+> **Stav:** ✅ **všetky nálezy A, B a C opravené 2026-09-17** (Ján: „oprav všetko, čo si našla") —
+> commity `5aa9608` (A1–A4), `1125fe4` (A5), `4e83bf3` (B1–B3), `8c6a386` (C1–C5). Pôvodný výpis
+> nižšie zostáva ako zápis stavu pred opravou.
+>
+> **Pôvodný stav:** výpis nálezov, bez opráv (zadanie Jána Letka 2026-09-17: opravy až po schválení).
 > **Nadväzuje na:** `OPEN_DECISIONS.md` D90 (tenanti oddelení galvanicky), D32 („`companyCode`
 > patrí do podmienky dotazu, nie do kontroly nad ním").
 > **Metóda:** skript prešiel všetky volania `find/findOne/aggregate/countDocuments/update*/delete*/
@@ -66,8 +70,33 @@ Migračné a diagnostické skripty (`migrate_*`, `reembed`, `audit_chunks`, `atl
 `check` bez `--company`, `ratings_overview`) bežia naprieč zámerne — spúšťa ich správca a nič
 nezobrazujú človeku organizácie. `smoke` a `rerank_compare` po D90 hľadajú v jednej organizácii.
 
+## Ako sa opravilo
+
+- **Spoločné pravidlo** je v `src/lib/tenantScope.ts`: `requireCompanyCode()` vyhodí
+  `MissingTenantError`, keď organizácia chýba. Používa ho vyhľadávanie aj všetky opravené miesta.
+- **A1–A4:** posudok, spätná väzba aj kurácia hľadajú záznam podľa `_id` **a** organizácie konajúceho;
+  `recordAnswer()` organizáciu vyžaduje; `/api/rating` berie organizáciu z `onboardingContext()`.
+- **A5:** logo sa vydá len na doméne svojej organizácie; výnimka pre `platform-admin` na doméne
+  dodávateľa, s `Cache-Control: private, no-store`.
+- **B1–B3:** osoba = (organizácia domény, adresa) v `currentPerson()`, pri prihlásení, v evidencii
+  prihlásení aj v skriptoch `person.mjs` a `admin_set.mjs`. **Prihlásenie na doméne organizácie, kde
+  človek nie je, sa odmietne už pri žiadosti o odkaz** (predtým až stránkou). Núdzová brzda
+  `ALLOWED_EMAILS` sa nemenila.
+- **C1–C5:** povinná organizácia vo `validAcknowledgements()`, v časoch čítania, pri načítaní dokumentu
+  a pri práci s úsekmi podľa `documentId`.
+
+Pred zmenou overené na ostrých dátach: potvrdenia (7), časy čítania (6) aj hodnotenia (10) majú
+organizáciu zhodnú s osobou; žiadna adresa nie je v dvoch organizáciách; dokumenty majú predponu
+`documentId` zhodnú s organizáciou. 115 úsekov bez dokumentu sú archivované úseky zmazaného
+`sfz:nacvik_dp` (O19), nie iná organizácia.
+
 ## Mimo auditu, ale zistené pri ňom
 
 - **Funkcie produkcie bežia v regióne `iad1` (USA, Washington)** — `get_deployment` pre `contineo-app`.
   Atlas je vo Frankfurte. Či je to v súlade s ADR-002 (rezidencia) a O18, **neviem** — v dokumentácii
   som `iad1` ani `fra1` nenašiel. Otázka pre Jána, nie zmena.
+- **Logo v upozorňovacích e-mailoch je relatívna adresa.** Prihlasovací e-mail ju robí absolútnou
+  (`auth.ts`), ale e-maily z cronu (`/api/cron/overdue`), schvaľovania (`notifyApprovers`) a pozvánok
+  posielajú `brandingView(tenant).logoUrl` tak, ako je — `/api/brand/sfz?v=…`. V schránke nemá byť
+  k čomu relatívna. Či to poštoví klienti zobrazia, **neoverené**; nesúvisí s oddelením tenantov,
+  preto neopravené — zapísané v `TODO.md`.

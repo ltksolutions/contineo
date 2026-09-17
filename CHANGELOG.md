@@ -4,6 +4,31 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Audit D90 opravený — organizácia v podmienke každého dotazu (2026-09-17)
+
+Všetky nálezy z `docs/D90_audit_dotazov.md`. Spoločné pravidlo je
+`src/lib/tenantScope.ts` — `requireCompanyCode()` bez organizácie vyhodí výnimku.
+
+- **Zápis do záznamu inej organizácie podľa `_id` (A1–A4).** Posudok, spätná väzba
+  čitateľa aj kurácia teraz hľadajú záznam podľa `_id` a organizácie konajúceho.
+  Predtým vedel správca obsahu zverejniť pripravený pár do znalostí inej organizácie,
+  lebo organizácia sa brala zo záznamu. `/api/rating` berie organizáciu z domény
+  a osoby ako `/api/chat`; `recordAnswer()` ju vyžaduje.
+- **Logo (A5)** sa vydá len na doméne svojej organizácie, výnimka pre správcu platformy
+  s pamäťou `private, no-store`.
+- **Osoba = organizácia domény + e-mail (B1–B3).** `currentPerson()`, brána prihlásenia,
+  evidencia prihlásení, jazyk e-mailu aj skripty `person.mjs` (pri `--email` povinné
+  `--company`) a `admin_set.mjs`. **Zmena správania:** kto nie je v organizácii domény,
+  neprihlási sa tam — odmietne sa už žiadosť o odkaz, nie až stránka. Núdzová brzda
+  `ALLOWED_EMAILS` bez zmeny.
+- **Obrana do hĺbky (C1–C5).** `validAcknowledgements()`, `personAcknowledgements()`,
+  časy čítania, `loadDocument()`, `addVersion()` a práca s úsekmi v `libraryWrite`
+  majú organizáciu v podmienke vždy.
+
+Overené na lokálnom `next start`: logo SFZ na `sfz.localhost` 200, na `localhost` 404;
+`/api/rating` bez prihlásenia 401; `jan.letko@` na `sfz.localhost` „persons povolil",
+na `localhost` (LTK) „ODMIETOL". Testy 1355/1355.
+
 ### Neznáma doména dostane hneď 404 — `middleware.ts` → `proxy.ts` (D29, 2026-09-17)
 
 Neznámy hostiteľ dostal najprv `307` na `/sign-in` a až stránka povedala `404`.

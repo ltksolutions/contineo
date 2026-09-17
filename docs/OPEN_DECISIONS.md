@@ -781,8 +781,10 @@ pred ktorou chránila D32. Každá cesta cez hranicu tenanta je miesto, kde sa r
 - Zmena indexov ani dopĺňanie úsekov netreba — `companyCode` je filtrovacím poľom v oboch
   indexoch od začiatku.
 
-**Otvorené (D5 drobností Fázy 8):** výpis všetkých dotazov do databázy, či majú `companyCode`
-v podmienke — grep na to nestačí (viacriadkové dotazy, dotazy len podľa `documentId`).
+**Audit dotazov (2026-09-17):** `docs/D90_audit_dotazov.md` — všetky nálezy opravené v ten istý deň.
+Pravidlo je odvtedy v kóde, nie len v dokumentácii: `src/lib/tenantScope.ts` (`requireCompanyCode()`).
+Osoba je dvojica (organizácia domény, e-mail) aj pri prihlásení — kto nie je v organizácii domény,
+tam sa neprihlási.
 
 **Súvisiace:** D29, D32, D33, D41, `PRISTUPOVE_PRAVA.md`, `DATA_MODEL_konzistencia.md`.
 
