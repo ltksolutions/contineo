@@ -51,6 +51,17 @@ Test kontroluje všetkých šesť e-mailov naraz, nie ten, ktorý som práve men
 Región je `fra1` — a rovno to zapíšme aj k O12: **Static IPs sa zapínajú pre
 región**, takže sa musia zapnúť pre Frankfurt, nie pre Washington.
 
+**Upratovanie na koniec dňa.** `npm run check` nad ostrými dátami: 10 dokumentov,
+1991 úsekov, 5 potvrdení, 3 osoby, **bez rozporov** — po dni, v ktorom sa menila
+podmienka skoro každého dotazu, je to to jediné číslo, ktoré ma zaujímalo.
+V kóde nezostal ani jeden `TODO`/`FIXME` okrem odkazov do `docs/TODO.md`. Osem
+commitov, všetko na `main` a nasadené.
+
+Drobnosť na inokedy: `npm run check` a `npm run status` nemajú v `package.json`
+`--env-file=.env.local` (na rozdiel od `smoke` a dnešného `docs:import`), takže
+bez exportovanej premennej skončia na „Chýba MONGODB_URI". Nie je to chyba
+kontroly, len jej spustenia — zapísané do TODO.
+
 ---
 
 ## 2026-09-17 (poobede) — drobnosti Fázy 8, z ktorých jedna nebola drobnosť

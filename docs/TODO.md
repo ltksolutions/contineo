@@ -213,6 +213,7 @@
 - [x] ✅ **2026-09-17 opravené** — `logoTag()` v `ecomail.ts` robí adresu absolútnou pre **všetky** e-maily (`https://<host><cesta>`), `auth.ts` vlastnú kópiu už nemá; stráži to `tests/emailLogo.test.ts`. Pôvodný zápis: **Logo v upozorňovacích e-mailoch je relatívna adresa** — cron, schvaľovanie a pozvánky posielali `/api/brand/…` bez domény.
   - [ ] Overiť v skutočnej schránke, že sa logo naozaj zobrazí (blokovanie obrázkov v pošte je normálne — `alt` je zámerne prázdny).
 - [x] ✅ **2026-09-17 presunuté** (rozhodol Ján) — `"regions": ["fra1"]` vo `vercel.json`, funkcie bežia vo Frankfurte, kde je aj Atlas. Súvisí s ADR-002 (rezidencia) a O12: **Static IPs sa zapínajú pre región**, takže sa zapnú pre `fra1`.
+- [ ] **`npm run check` a `npm run status` nemajú `--env-file=.env.local`** (zistené 2026-09-17 pri upratovaní) — bez exportovanej premennej skončia na „Chýba MONGODB_URI", hoci `smoke` aj `docs:import` ju majú. Drobnosť v `package.json`.
 - [x] ~~Chybová stránka prihlásenia končí na `app.contineo.app`~~ — **vyriešené 2026-08-29 odstránením `NEXTAUTH_URL` z produkcie.** Nebolo to kozmetické: z tej istej premennej si NextAuth staval aj `redirect_uri` pre prihlásenie kontom, takže Entra odmietala prihlásenie s `AADSTS50011`. Bez premennej si origin odvodí z hostiteľa požiadavky.
 
 **I1b. Viacjazyčné prostredie (D35)** — SK · CS · EN
