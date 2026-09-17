@@ -125,6 +125,10 @@ zmena členenia sa prejaví až tým, že model odcituje nesprávny článok.
 Obrazovka aj `import.mjs` teda režú rovnako; dve kópie by sa rozišli presne
 pri novele.
 
+> ♻️ **2026-09-17:** `import.mjs` už nereže vôbec. Zakladá koncepty cez tú istú
+> `uploadDocument()` ako obrazovka a na úseky sa znenie delí až pri zverejnení
+> po schválení (D75). Chunker má teda jedného volajúceho v aplikácii, nie dvoch.
+
 Rovnako sú spoločné číselníky (`lib/codelists.ts`): to, čo prejde importom,
 nesmie obrazovka odmietnuť ani naopak.
 

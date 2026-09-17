@@ -1,323 +1,227 @@
 /**
- * import.mjs — naimportuje dokument(y) do MongoDB.
+ * import.mjs — nahrá dokumenty do knižnice ako **koncepty** (D75, ADR-006).
  *
- *     node --env-file=.env.local scripts/import.mjs data/vzorky/revizny_poriadok.md
- *     node --env-file=.env.local scripts/import.mjs data/vzorky/*.md
- *     node --env-file=.env.local scripts/import.mjs data/vzorky/*.md --nasucho
+ *     npm run docs:import -- data/vzorky/revizny_poriadok.md --actor jan.letko@futbalsfz.sk
+ *     npm run docs:import -- data/originaly/*.pdf --actor jan.letko@futbalsfz.sk --zapis
+ *     npm run docs:import -- stanovy.pdf --actor jan.letko@futbalsfz.sk --nove-znenie --zapis
  *
- * Čo robí:
- *   1. načíta .md + .meta.json (metadáta NIKDY z názvu súboru)
- *   2. zvaliduje tagy proti číselníkom — čo tam nie je, neprejde
- *   3. rozseká na chunky (D1: štruktúrne po článkoch, breadcrumb v texte)
- *   4. zapíše `documents` + `document_chunks`
+ * **Predvolene beží nasucho.** Zápis sa musí vypýtať (`--zapis`) — rovnako ako
+ * každý skript, ktorý sa dotýka ostrých dát.
  *
- * Verzovanie (D6): pri opakovanom importe sa staré chunky NEMAŽÚ, len
- * dostanú `isActive: false`. Do RAG dotazu vstupujú len aktívne.
+ * ## Prečo skript nič nezverejňuje
  *
- * Vektory pri cloudovom režime NEZAPISUJEME — Automated Embedding si ich
- * Atlas vyrobí sám z poľa `text` a drží ich v oddelenej internej kolekcii.
- * Zapisujeme len metadáta o modeli, aby fungoval embeddingGuard.
+ * Do 2026-09-17 skript zapisoval `status: "published"` a rovno aktívne úseky —
+ * dokument bol po behu okamžite vo vyhľadávaní a dal sa prideliť. Dôvod v jeho
+ * hlavičke znel „kurátorské rozhranie zatiaľ neexistuje". Odvtedy existuje aj
+ * schvaľovanie (ADR-006) a D75 hovorí, že oficiálne znenia musia prejsť
+ * schvaľovaním, **nie okolo neho**. Skript bol jediná cesta okolo.
+ *
+ * Teraz robí presne to, čo obrazovka **Nový dokument**: volá tú istú
+ * `uploadDocument()`, s tými istými kontrolami metadát (`checkMetadata()`
+ * vrátane rozšírení číselníkov tenanta) a tou istou ochranou pred kolíziou
+ * kľúča (D80). Výsledok je koncept. Prečítanie textu, schválenie a zverejnenie
+ * — a s ním členenie na úseky — idú cez knižnicu. Dve cesty s dvomi sadami
+ * pravidiel sa raz rozídu; jedna nie.
+ *
+ * ## Kto nahráva
+ *
+ * `--actor` je povinný a musí to byť **osoba danej organizácie s rolou
+ * `content-admin`**, ktorá nie je vyradená. Zapisuje sa do auditu a do
+ * `createdBy`; schvaľovať ten istý človek nesmie (D69). Reťazec typu
+ * „import.mjs" by v audite o rok nepovedal, kto za znenie zodpovedá.
+ *
+ * Organizácia sa berie z metadát a osoba do nej musí patriť (D90) — skript
+ * nevie zapísať dokument do cudzej organizácie ani omylom.
+ *
+ * ## Metadáta
+ *
+ * Z `<súbor bez prípony>.meta.json` — názov súboru **nie je** dátový vstup.
+ * Povinné: `title`, `sectionKey`, `companyCode`, `scope`, `accessLevel`,
+ * `language`; nepovinné `documentKey` (inak sa berie `sectionKey`), `category`,
+ * `tags`, `ownerDepartmentId`, `internalNumber`.
+ *
+ * Pri `--nove-znenie` sa z metadát použije len identita (`companyCode`,
+ * `documentKey`/`sectionKey`). Ostatné sa berie z existujúceho záznamu —
+ * rovnako ako na obrazovke: nové znenie mení text, nie prístupnosť ani pôsobnosť.
+ *
+ * **Všetko alebo nič:** keď čo i len jeden súbor neprejde kontrolou, nezapíše
+ * sa nič.
  */
-import { readFileSync } from "node:fs"
-import { createHash } from "node:crypto"
-import { MongoClient } from "mongodb"
-import { chunkText, estimateTokens } from "./lib/chunker.mjs"
-import { loadMeta, loadCodelist } from "./lib/meta.mjs"
+import { readFileSync, existsSync } from "node:fs"
+import { basename, extname } from "node:path"
 
-const URI = process.env.MONGODB_URI
-const DB = process.env.MONGODB_DB ?? "contineo"
-const EMBEDDING_MODEL = process.env.EMBEDDING_MODEL ?? "voyage-4"
-const EMBEDDING_DIM = Number(process.env.EMBEDDING_DIM ?? 1024)
-const EMBEDDING_KIND = process.env.EMBEDDING_KIND ?? "atlas-auto"
+import { getClient, getCollection } from "../src/lib/mongodb.ts"
+import { DOCUMENTS_COLLECTION } from "../src/lib/documents.ts"
+import { checkMetadata, makeDocumentId, uploadDocument } from "../src/lib/libraryWrite.ts"
+import { PERSONS_COLLECTION } from "../src/lib/persons.ts"
+import { tenantByCompanyCode } from "../src/lib/tenants.ts"
+import { tenantExtras } from "../src/lib/codelistsTenant.ts"
+import { errorText } from "../src/lib/i18n.ts"
+import { AppError } from "../src/lib/appError.ts"
+
+/**
+ * Rola nahrávateľa. Zhodná s `CONTENT_ROLE` v `src/lib/library.ts`, ktorý sa
+ * odtiaľ importovať nedá — ťahá `next/headers` cez `session.ts` a mimo Nextu
+ * padne. Keby sa rola premenovala, skript odmietne každého a povie to menovite.
+ */
+const CONTENT_ROLE = "content-admin"
 
 const OK = "\x1b[32m✔\x1b[0m", FAIL = "\x1b[31m✘\x1b[0m", INFO = "\x1b[33m·\x1b[0m"
 
 const args = process.argv.slice(2)
-const dryRun = args.includes("--nasucho")
-const files = args.filter(a => !a.startsWith("--"))
+const val = (name) => { const i = args.indexOf(name); return i >= 0 ? args[i + 1] : undefined }
+const has = (name) => args.includes(name)
 
-if (!files.length) {
-  console.error("Použitie: node --env-file=.env.local scripts/import.mjs <subor.md…> [--nasucho]")
-  process.exit(1)
-}
-if (!URI && !dryRun) {
-  console.error(`${FAIL} Chýba MONGODB_URI (alebo použi --nasucho).`)
-  process.exit(1)
-}
-
-const hash = (s) => createHash("sha256").update(s).digest("hex").slice(0, 16)
-
-/** Stabilný identifikátor dokumentu — nezávislý od názvu súboru. */
-const documentIdOf = (meta) => `${meta.companyCode}:${meta.sectionKey}`.toLowerCase()
-
-function prepareDocument(file) {
-  const meta = loadMeta(file)
-
-  // Tagy sa validujú zvlášť — je to pole, nie skalár.
-  const tagCodelist = loadCodelist("tags")
-  const tags = Array.isArray(meta.tags) ? meta.tags : []
-  const badTags = tagCodelist ? tags.filter(t => !tagCodelist.kluce.has(t)) : []
-  if (badTags.length) {
-    throw new Error(`${file}: tagy mimo číselníka: ${badTags.join(", ")}`)
-  }
-
-  const text = readFileSync(file, "utf8")
-  const { chunky: chunks, statistiky: stats } = chunkText(text, { nazovDokumentu: meta.title })
-  if (!chunks.length) throw new Error(`${file}: nevznikol ani jeden chunk`)
-
-  const documentId = documentIdOf(meta)
-  /**
-   * Verzia sa počíta z VÝSLEDNÝCH CHUNKOV, nie zo zdrojového textu.
-   *
-   * Pôvodne to bol hash zdroja — a to bola chyba: keď sme opravili chunker
-   * tak, aby rozpoznal dvojriadkový nadpis článku, obsah súborov sa nezmenil,
-   * takže import všetko preskočil a v databáze ostalo staré zlé členenie.
-   * Zmena chunkovacieho algoritmu je pritom rovnako podstatná zmena ako
-   * zmena textu normy.
-   *
-   * Hashuje sa PRESNE TO, čo sa zapíše do databázy (viď `chunkDoDb`),
-   * takže každé nové pole sa do verzie premietne samo.
-   */
-  const provisional = { meta, tags }
-  const fingerprint = JSON.stringify(chunks.map(ch => chunkToDb(ch, provisional)))
-  const versionId = hash(fingerprint)
-
-  return { subor: file, meta, tags, chunky: chunks, statistiky: stats, documentId, versionId, markdown: text }
-}
+const actorEmail = (val("--actor") ?? "").trim().toLowerCase()
+const write = has("--zapis")
+const mode = has("--nove-znenie") ? "version" : "new"
+const flagsWithValue = new Set(["--actor"])
+const files = args.filter((a, i) => !a.startsWith("--") && !flagsWithValue.has(args[i - 1]))
 
 /**
- * Prevedie chunk na dokument tak, ako sa uloží do `document_chunks` —
- * bez polí, ktoré sa menia pri každom behu (časy, versionId).
- *
- * Otlačok pre `versionId` sa počíta PRÁVE Z TOHTO. Dvakrát nás totiž
- * doplatilo, že sa hashovalo niečo iné, než sa ukladá:
- *
- *   1× hash zo zdrojového textu → oprava chunkera sa neprejavila
- *   1× hash z vybraných polí   → pridanie chunkType sa neprejavilo
- *
- * Takto sa každé nové pole premietne do verzie samo a nedá sa naň zabudnúť.
+ * Veta pre človeka. Chyby knižnice (`AppError`) majú preklad; vlastné kontroly
+ * skriptu sú obyčajné `Error` so slovenskou vetou. `errorText()` by ich
+ * zamaskoval všeobecným „Nepodarilo sa to" — pri skripte, ktorý beží v termináli
+ * a má povedať presne, ktorý súbor a prečo neprešiel, je to na nič.
  */
-function chunkToDb(ch, d) {
-  return {
-    chunkIndex: ch.chunkIndex,
-    text: ch.text,                    // <- Atlas z tohto poľa robí vektor
-    heading: ch.heading,
-    articleRef: ch.articleRef ?? null,
-    /**
-     * "clanok" | "priloha" | "preambula"
-     *
-     * Preambula je titulná strana, zoznam novelizácií a osnova. Necháme ju
-     * v databáze — obsahuje dátumy schválenia, ktoré sú potrebné pri
-     * posudzovaní platného znenia (R3) — ale vyhľadávanie ju preskakuje.
-     * Sémanticky sa totiž podobá na hocijakú otázku o danej doméne a
-     * vytláčala z výsledkov skutočné články.
-     */
-    chunkType: ch.typ ?? "clanok",
-    // tagovanie / filtre
-    sectionKey: d.meta.sectionKey, companyCode: d.meta.companyCode,
-    scope: d.meta.scope, accessLevel: d.meta.accessLevel,
-    language: d.meta.language, tags: d.tags,
-    embeddingModel: EMBEDDING_MODEL,
-    embeddingDim: EMBEDDING_DIM,
-    embeddingProvider: EMBEDDING_KIND,
-  }
+const say = (e) => (e instanceof AppError ? errorText(e, "sk") : e?.message ?? String(e))
+
+function usage(message) {
+  console.error(`${FAIL} ${message}\n`)
+  console.error("Použitie:")
+  console.error("  npm run docs:import -- <súbor…> --actor <e-mail> [--nove-znenie] [--zapis]")
+  console.error("")
+  console.error("Prepínače:")
+  console.error("  --actor <e-mail>  osoba organizácie s rolou content-admin (povinné)")
+  console.error("  --nove-znenie     koncept nového znenia existujúceho dokumentu")
+  console.error("  --zapis           zapíše (bez neho len kontrola a náhľad)")
+  process.exit(1)
 }
 
-/**
- * Doplní záznam do `documents.versions[]` (D25).
- *
- * **Zmena obsahu = nová položka, nikdy prepis.** Predchádzajúcej otvorenej
- * verzii sa doplní `effectiveTo` — ale len vtedy, keď nová verzia platnosť
- * vôbec má; inak by dokument ostal bez platného znenia kvôli niečomu, čo ešte
- * nikto neschválil.
- *
- * Idempotentné podľa `versionId`: opakovaný beh históriu nezdvojí.
- *
- * > **Známy rozpor s D25, pravidlo 2.** Rozhodnutie hovorí, že kanál nikdy
- * > nezneplatní platnú verziu sám — nová má prísť `isActive:false` a platnosť
- * > jej má určiť kurátor. Tento import ale publikuje priamo (`status:
- * > "published"`), lebo kurátorské rozhranie zatiaľ neexistuje (Fáza 4).
- * > Zapisujeme preto stav taký, aký naozaj je, a nepredstierame schválenie.
- * > Zosúladiť pri review UI — vedené v `docs/TODO.md` sekcii I.
- */
-async function appendVersion(docCol, d, now) {
-  const ma = await docCol.findOne({
-    documentId: d.documentId, "versions.versionId": d.versionId,
-  })
-  if (ma) return
+if (!files.length) usage("Chýbajú súbory.")
+if (!actorEmail.includes("@")) usage("Chýba --actor s e-mailom osoby, ktorá dokumenty nahráva.")
+if (!process.env.MONGODB_URI) usage("Chýba MONGODB_URI — spúšťa sa cez `npm run docs:import`.")
 
-  const effectiveFrom = d.meta.effectiveFrom ?? null
-
-  if (effectiveFrom) {
-    await docCol.updateOne(
-      { documentId: d.documentId },
-      { $set: { "versions.$[stara].effectiveTo": effectiveFrom, "versions.$[stara].isActive": false } },
-      { arrayFilters: [{ "stara.effectiveTo": null, "stara.versionId": { $ne: d.versionId } }] }
-    )
-  }
-
-  await docCol.updateOne(
-    { documentId: d.documentId },
-    {
-      $push: {
-        versions: {
-          versionId: d.versionId,
-          // Ľudské označenie zatiaľ nemáme — meta ho nenesie. Otlačok obsahu
-          // je aspoň jednoznačný; kurátor ho premenuje, keď bude čím.
-          label: d.meta.version ?? d.versionId,
-          effectiveFrom: effectiveFrom,
-          effectiveTo: d.meta.effectiveTo ?? null,
-          isActive: true,
-          contentHash: d.versionId,
-          // Text znenia patrí k verzii, nie len na dokument: človek musí
-          // čítať tú verziu, ktorú potvrdzuje, nie tú najnovšiu.
-          markdown: d.markdown,
-          // `requiresReacknowledgement` sa zámerne NEnastavuje: vypĺňa ho
-          // človek (D30) a `false` by bolo tiché rozhodnutie, že zmena nie je
-          // podstatná. Chýbajúce pole znamená „nikto zatiaľ nerozhodol".
-          publishedAt: now,
-          publishedBy: "import.mjs",
-        },
-      },
-    },
-    { upsert: false }
-  )
+/** `stanovy.pdf` → `stanovy.meta.json`. Prípona sa odrezáva len posledná. */
+function metaPathFor(file) {
+  const ext = extname(file)
+  return (ext ? file.slice(0, -ext.length) : file) + ".meta.json"
 }
 
-async function write(db, d) {
-  const docCol = db.collection("documents")
-  const chunkCol = db.collection("document_chunks")
-  const now = new Date()
-
-  // Rovnaký obsah už naimportovaný? Chunky sa nedotýkame — import je idempotentný.
-  const existing = await docCol.findOne({ documentId: d.documentId, versionId: d.versionId })
-  if (existing) {
-    // Dokumentu, ktorý vznikol pred zavedením `versions[]` (D25), sa záznam
-    // o verzii doplní aj tak. Bez neho sa nedá potvrdiť oboznámenie, lebo
-    // potvrdenie sa viaže na verziu, nie na dokument.
-    await appendVersion(docCol, d, now)
-    return { preskocene: true, deaktivovane: 0, vlozene: 0 }
+function readMeta(file) {
+  const path = metaPathFor(file)
+  if (!existsSync(path)) {
+    throw new Error(`chýbajú metadáta ${path} — názov súboru sa ako zdroj metadát nepoužíva`)
   }
-
-  // Nová verzia — staré chunky archivujeme, NEMAŽEME (D6).
-  const deactivated = await chunkCol.updateMany(
-    { documentId: d.documentId, isActive: true },
-    { $set: { isActive: false, effectiveTo: now } }
-  )
-
-  await docCol.updateOne(
-    { documentId: d.documentId },
-    {
-      $set: {
-        documentId: d.documentId, versionId: d.versionId,
-        title: d.meta.title, slug: d.documentId.replace(/[:]/g, "-"),
-        sectionKey: d.meta.sectionKey, companyCode: d.meta.companyCode,
-        scope: d.meta.scope, accessLevel: d.meta.accessLevel,
-        language: d.meta.language, category: d.meta.category,
-        sourceType: d.meta.sourceType, sourceUrl: d.meta.sourceUrl ?? null,
-        tags: d.tags,
-        effectiveFrom: d.meta.effectiveFrom ?? null,
-        effectiveTo: d.meta.effectiveTo ?? null,
-        status: "published", processingStatus: "indexed",
-        updatedAt: now,
-      },
-      $setOnInsert: { createdAt: now },
-    },
-    { upsert: true }
-  )
-
-  await appendVersion(docCol, d, now)
-
-  const documents = d.chunky.map(ch => ({
-    ...chunkToDb(ch, d),
-    // Premenlivé polia — zámerne MIMO chunkDoDb, aby nekazili otlačok.
-    documentId: d.documentId, versionId: d.versionId,
-    embeddedAt: now,
-    // stav
-    isActive: true,
-    effectiveFrom: d.meta.effectiveFrom ?? null,
-    effectiveTo: null,
-    createdAt: now,
-  }))
-
-  await chunkCol.insertMany(documents, { ordered: false })
-  return { preskocene: false, deaktivovane: deactivated.modifiedCount, vlozene: documents.length }
-}
-
-// ── beh ──────────────────────────────────────────────────────────────────────
-const prepared = []
-let errorCount = 0
-const skipped = []
-const batch = files.length > 1
-
-for (const s of files) {
   try {
-    const d = prepareDocument(s)
-    prepared.push(d)
-    const t = d.chunky.map(c => estimateTokens(c.text))
-    console.log(`${OK} ${d.meta.title}`)
-    console.log(`    ${d.chunky.length} chunkov · ${Math.min(...t)}–${Math.max(...t)} tokenov · ` +
-                `${d.statistiky.priloh} príloh · verzia ${d.versionId}`)
+    return JSON.parse(readFileSync(path, "utf8"))
   } catch (e) {
-    // V dávke je súbor bez metadát skoro vždy cudzí (README a pod.) —
-    // preskočíme ho. Pri jednom výslovne zadanom súbore je to chyba.
-    const missingMeta = e.message.startsWith("Chýba súbor s metadátami")
-    if (batch && missingMeta) {
-      skipped.push(s)
-      console.log(`${INFO} ${s} — bez .meta.json, preskakujem`)
-    } else {
-      errorCount++
-      console.error(`${FAIL} ${e.message}`)
-    }
+    throw new Error(`${path} nie je platný JSON: ${e.message}`)
   }
 }
 
-if (errorCount) {
-  console.error(`\n${FAIL} ${errorCount} dokument(ov) neprešlo — nič sa nezapísalo.`)
+// ── Kontrola (nič sa nezapisuje) ─────────────────────────────────────────────
+
+const actorsByCompany = new Map()
+async function checkActor(companyCode) {
+  if (actorsByCompany.has(companyCode)) return actorsByCompany.get(companyCode)
+  const persons = await getCollection(PERSONS_COLLECTION)
+  const person = await persons.findOne({ companyCode, email: actorEmail })
+  let problem = null
+  if (!person) problem = `${actorEmail} nie je osoba organizácie ${companyCode}`
+  else if (person.status === "inactive") problem = `${actorEmail} je v ${companyCode} vyradená`
+  else if (!(person.roles ?? []).includes(CONTENT_ROLE)) problem = `${actorEmail} nemá v ${companyCode} rolu ${CONTENT_ROLE}`
+  actorsByCompany.set(companyCode, problem)
+  return problem
+}
+
+const documents = await getCollection(DOCUMENTS_COLLECTION)
+const prepared = []
+const problems = []
+const seenIds = new Set()
+
+for (const file of files) {
+  try {
+    if (!existsSync(file)) throw new Error("súbor neexistuje")
+    const raw = readMeta(file)
+    const companyCode = String(raw.companyCode ?? "").trim()
+    if (!companyCode) throw new Error("v metadátach chýba companyCode")
+
+    const tenant = await tenantByCompanyCode(companyCode)
+    if (!tenant) throw new Error(`organizácia ${companyCode} neexistuje`)
+
+    const actorProblem = await checkActor(companyCode)
+    if (actorProblem) throw new Error(actorProblem)
+
+    const documentId = makeDocumentId(raw)
+    if (seenIds.has(documentId)) throw new Error(`${documentId} je v dávke dvakrát`)
+    seenIds.add(documentId)
+
+    // Organizácia ide do podmienky dotazu, nie do kontroly nad ním (D32, D90).
+    const existing = await documents.findOne({ documentId, companyCode })
+    if (mode === "new" && existing) {
+      throw new Error(`${documentId} už existuje — nové znenie sa nahráva s --nove-znenie`)
+    }
+    if (mode === "version" && !existing) {
+      throw new Error(`${documentId} neexistuje — nový dokument sa nahráva bez --nove-znenie`)
+    }
+
+    const source = mode === "version"
+      ? {
+          title: String(existing.title ?? ""),
+          documentKey: String(existing.documentKey ?? existing.sectionKey ?? ""),
+          sectionKey: String(existing.sectionKey ?? ""),
+          scope: String(existing.scope ?? ""),
+          accessLevel: String(existing.accessLevel ?? ""),
+          language: String(existing.language ?? ""),
+          category: existing.category ?? undefined,
+          tags: Array.isArray(existing.tags) ? existing.tags : [],
+          ownerDepartmentId: existing.ownerDepartmentId ?? undefined,
+          internalNumber: existing.internalNumber ?? undefined,
+        }
+      : raw
+    const meta = checkMetadata({ ...source, companyCode }, tenantExtras(tenant))
+
+    prepared.push({ file, meta, documentId, isVersion: mode === "version" })
+    console.log(`${OK} ${meta.title}`)
+    console.log(`    ${documentId} · ${mode === "version" ? "nové znenie" : "nový dokument"} · ${basename(file)}`)
+  } catch (e) {
+    problems.push(file)
+    console.error(`${FAIL} ${file}: ${say(e)}`)
+  }
+}
+
+if (problems.length) {
+  console.error(`\n${FAIL} ${problems.length} súbor(ov) neprešlo kontrolou — nič sa nezapísalo.`)
+  await (await getClient()).close()
   process.exit(1)
 }
 
-const total = prepared.reduce((n, d) => n + d.chunky.length, 0)
-console.log(`\nSpolu: ${prepared.length} dokumentov, ${total} chunkov`)
-
-if (skipped.length) {
-  // Vypisujeme menovite — pri väčšej dávke sa jednotlivé riadky odrolujú
-  // a zabudnuté .meta.json pri skutočnom dokumente by tak prešlo bez povšimnutia.
-  console.log(`\n${INFO} Preskočené (${skipped.length}) — bez .meta.json:`)
-  for (const s of skipped) console.log(`    ${s}`)
-  console.log(`    Ak niektorý z nich MÁ byť v korpuse, vytvor mu metadáta:`)
-  console.log(`    node scripts/chunk_preview.mjs <subor.md> --vytvor-meta`)
-}
-
-if (dryRun) {
-  console.log(`${INFO} --nasucho: do databázy sa nezapisovalo.`)
+if (!write) {
+  console.log(`\n${INFO} Náhľad: ${prepared.length} súbor(ov) prešlo kontrolou. Zapíše sa s --zapis.`)
+  await (await getClient()).close()
   process.exit(0)
 }
 
-const client = new MongoClient(URI, { serverSelectionTimeoutMS: 15000 })
-try {
-  await client.connect()
-  const db = client.db(DB)
-  console.log()
-  let insertedTotal = 0
-  for (const d of prepared) {
-    const r = await write(db, d)
-    if (r.preskocene) {
-      console.log(`${INFO} ${d.meta.title} — rovnaká verzia už je v DB, preskakujem`)
-    } else {
-      insertedTotal += r.vlozene
-      const archived = r.deaktivovane ? `, ${r.deaktivovane} starých archivovaných` : ""
-      console.log(`${OK} ${d.meta.title} — ${r.vlozene} chunkov${archived}`)
-    }
+// ── Zápis ────────────────────────────────────────────────────────────────────
+
+let failures = 0
+console.log()
+for (const p of prepared) {
+  try {
+    const r = await uploadDocument(p.meta, basename(p.file), readFileSync(p.file), actorEmail, mode)
+    console.log(`${OK} ${p.meta.title} — koncept ${r.documentId}`)
+    for (const w of r.warnings) console.log(`    ${INFO} ${w}`)
+  } catch (e) {
+    failures++
+    console.error(`${FAIL} ${p.file}: ${say(e)}`)
   }
-  console.log(`\n${OK} Zapísaných ${insertedTotal} chunkov.`)
-  if (insertedTotal) {
-    console.log(`${INFO} Automated Embedding generuje vektory asynchrónne —`)
-    console.log(`    kým nedobehne, vyhľadávanie ich ešte nenájde.`)
-  }
-} catch (e) {
-  console.error(`\n${FAIL} ${e.message}`)
-  process.exitCode = 1
-} finally {
-  await client.close()
 }
+
+if (prepared.length > failures) {
+  console.log(`\n${INFO} Koncepty nie sú vo vyhľadávaní ani sa nedajú prideliť.`)
+  console.log(`    Ďalší krok je v knižnici: prečítať text, poslať na schválenie, zverejniť.`)
+}
+
+await (await getClient()).close()
+process.exit(failures > 0 ? 1 : 0)

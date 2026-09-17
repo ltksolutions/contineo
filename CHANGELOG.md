@@ -4,6 +4,35 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### `import.mjs` zakladá koncepty, nezverejňuje (D75, 2026-09-17)
+
+Skript zapisoval `status: "published"` a rovno aktívne úseky — dokument bol po
+behu okamžite vo vyhľadávaní a dal sa prideliť. Bola to jediná cesta **okolo**
+schvaľovania (ADR-006), hoci D75 hovorí, že oficiálne znenia musia prejsť cezeň.
+Zdôvodnenie v hlavičke („kurátorské rozhranie neexistuje") od septembra neplatilo.
+Navyše skladal `documentId` zo `sectionKey`, teda identitou spred D80.
+
+Skript je prepísaný a robí to isté ako obrazovka **Nový dokument**:
+
+- volá `uploadDocument()` s `checkMetadata()` vrátane rozšírení číselníkov tenanta
+  a s ochranou pred kolíziou kľúča (D80); výsledok je **koncept**, úseky vznikajú
+  až pri zverejnení,
+- **`--actor` je povinný** a musí to byť nevyradená osoba organizácie z metadát
+  s rolou `content-admin` — do auditu ide človek, nie „import.mjs"; do cudzej
+  organizácie sa zapísať nedá (D90),
+- `--nove-znenie` nahrá koncept nového znenia existujúceho dokumentu a metadáta
+  berie zo záznamu, nie zo súboru — ako obrazovka,
+- **predvolene nasucho**, zápis s `--zapis` (predtým opačne, `--nasucho`),
+- všetko alebo nič: pri jedinom chybnom súbore sa nezapíše nič,
+- prijíma každý formát, ktorý vie prevod (Markdown, PDF, …); metadáta sú
+  v `<súbor bez prípony>.meta.json`,
+- nový príkaz `npm run docs:import`.
+
+Overené nasucho na ostrých dátach: existujúci dokument bez `--nove-znenie`
+odmietne, s ním prejde; neznámu osobu a chýbajúce metadáta odmietne menovite.
+Zápis (`--zapis`) sa na ostrých dátach neskúšal — vytvoril by koncept; zapisuje
+tá istá `uploadDocument()`, ktorú používa obrazovka.
+
 ### Tenanti oddelení galvanicky (D90, 2026-09-17)
 
 **Bezpečnostná oprava.** `/api/chat` bežal na predvolenom profile a hľadal

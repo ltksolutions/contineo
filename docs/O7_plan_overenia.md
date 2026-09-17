@@ -225,6 +225,10 @@ Tu sa mení najviac oproti cloudu.
 3. Index nad `embedding` (vektorové pole), **nie** nad textom — `vectorPath`
    sa medzi režimami mení a zámena je tichá chyba (viď komentár v `types.ts`).
 4. Naimportovať korpus s vlastnými vektormi cez `import.mjs`.
+   > ♻️ **2026-09-17:** `import.mjs` už úseky nezapisuje — zakladá koncepty a na úseky
+   > sa delí až zverejnenie v knižnici (D75). Vlastné vektory teda musí vedieť zapísať
+   > **zverejnenie** (`publish()` v `libraryWrite.ts`), nie import. To isté platí pre
+   > bod 4 fázy 0 vyššie: volajúcim, ktorý odovzdáva typ „dokument", je zverejnenie.
 5. Vyhľadávanie bez stupňa `$rerank` — rerank až v aplikačnej vrstve.
 
 **Hotovo, keď:** rovnaká otázka vráti v cloude aj lokálne porovnateľné poradie.
