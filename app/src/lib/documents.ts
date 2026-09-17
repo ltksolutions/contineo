@@ -16,6 +16,7 @@
  */
 
 import { getCollection } from "./mongodb"
+import { requireCompanyCode } from "./tenantScope"
 
 export const DOCUMENTS_COLLECTION = "documents"
 
@@ -216,10 +217,11 @@ export function effectiveVersion(doc: DocumentRecord, asOf: Date = new Date()): 
   return { ok: true, version: latest }
 }
 
-/** Načíta dokument. `null`, keď taký nie je. */
-export async function loadDocument(documentId: string): Promise<DocumentRecord | null> {
+/** Načíta dokument organizácie. `null`, keď taký v nej nie je (D90). */
+export async function loadDocument(companyCode: string, documentId: string): Promise<DocumentRecord | null> {
+  const code = requireCompanyCode(companyCode, "loadDocument")
   const col = await getCollection<DocumentRecord>(DOCUMENTS_COLLECTION)
-  return col.findOne({ documentId })
+  return col.findOne({ companyCode: code, documentId })
 }
 
 /**
@@ -230,10 +232,11 @@ export async function loadDocument(documentId: string): Promise<DocumentRecord |
  * keď nová verzia platnosť má — inak by sa dokument ocitol bez platného
  * znenia kvôli niečomu, čo ešte nikto neschválil.
  */
-export async function addVersion(documentId: string, v: Version): Promise<void> {
+export async function addVersion(companyCode: string, documentId: string, v: Version): Promise<void> {
+  const code = requireCompanyCode(companyCode, "addVersion")
   const col = await getCollection<DocumentRecord>(DOCUMENTS_COLLECTION)
 
-  const exists = await col.findOne({ documentId, "versions.versionId": v.versionId })
+  const exists = await col.findOne({ companyCode: code, documentId, "versions.versionId": v.versionId })
   if (exists) return
 
   if (v.effectiveFrom instanceof Date) {
@@ -241,7 +244,7 @@ export async function addVersion(documentId: string, v: Version): Promise<void> 
     // Mongo `arrayFilters` odmietne („The path 'versions' must exist") a padla
     // by aj prvá verzia dokumentu — teda presne prípad, keď niet čo uzatvárať.
     await col.updateOne(
-      { documentId, "versions.0": { $exists: true } },
+      { companyCode: code, documentId, "versions.0": { $exists: true } },
       { $set: { "versions.$[stara].effectiveTo": v.effectiveFrom } },
       {
         arrayFilters: [{
@@ -252,7 +255,7 @@ export async function addVersion(documentId: string, v: Version): Promise<void> 
     )
   }
 
-  await col.updateOne({ documentId }, { $push: { versions: v } })
+  await col.updateOne({ companyCode: code, documentId }, { $push: { versions: v } })
 }
 
 // ── Viditeľnosť (D90, nahrádza zdroje 2 a 3 z D32) ───────────────────────────
@@ -298,7 +301,10 @@ export async function loadDocumentFor(
   person: { companyCode: string },
   documentId: string
 ): Promise<DocumentRecord | null> {
-  const doc = await loadDocument(documentId)
+  if (!person?.companyCode) return null
+  // Organizácia v podmienke dotazu (D90); `canSeeDocument()` ostáva ako druhá
+  // poistka, nie ako jediná.
+  const doc = await loadDocument(person.companyCode, documentId)
   if (!doc) return null
   return canSeeDocument(person, doc) ? doc : null
 }

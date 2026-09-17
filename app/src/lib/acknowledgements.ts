@@ -37,6 +37,7 @@ import type { Version } from "./documents"
 import { allDepartments, pathTo } from "./departments"
 import { formatDate, dictionary, normalizeLanguage } from "./i18n"
 import type { UiLanguage } from "./i18n"
+import { requireCompanyCode } from "./tenantScope"
 
 export const ACKNOWLEDGEMENTS_COLLECTION = "acknowledgements"
 
@@ -340,15 +341,19 @@ export interface ValidAcknowledgement {
  * nič, je zbytočná cesta do Atlasu.
  */
 export async function validAcknowledgements(filter: {
-  companyCode?: string
+  /** Povinná (D90). Bez nej by sa platnosť počítala naprieč organizáciami. */
+  companyCode: string
   personId?: string | string[]
   versionId?: string | string[]
 }): Promise<ValidAcknowledgement[]> {
   if (Array.isArray(filter.personId) && filter.personId.length === 0) return []
   if (Array.isArray(filter.versionId) && filter.versionId.length === 0) return []
 
-  const where: Record<string, unknown> = { type: { $in: ["acknowledgement", "revocation"] } }
-  if (filter.companyCode) where.companyCode = filter.companyCode
+  // Organizácia je v podmienke vždy (D90). Do 2026-09-17 bola nepovinná a päť
+  // volajúcich ju neposielalo — bezpečné to bolo len preto, že identifikátory
+  // osôb a znení prišli z dotazu už obmedzeného na organizáciu.
+  const code = requireCompanyCode(filter.companyCode, "validAcknowledgements")
+  const where: Record<string, unknown> = { companyCode: code, type: { $in: ["acknowledgement", "revocation"] } }
   if (filter.personId) {
     where.personId = Array.isArray(filter.personId) ? { $in: filter.personId } : filter.personId
   }
@@ -413,8 +418,8 @@ export async function validAcknowledgements(filter: {
 }
 
 /** Má táto osoba **platne** potvrdenú túto verziu? */
-export async function hasAcknowledged(personId: string, versionId: string): Promise<boolean> {
-  return (await validAcknowledgements({ personId, versionId })).length > 0
+export async function hasAcknowledged(companyCode: string, personId: string, versionId: string): Promise<boolean> {
+  return (await validAcknowledgements({ companyCode, personId, versionId })).length > 0
 }
 
 /**
@@ -429,9 +434,10 @@ export async function hasAcknowledged(personId: string, versionId: string): Prom
  * Osoba musí vedieť zobraziť a stiahnuť, čo o nej systém eviduje, aj bez
  * žiadosti na HR (`docs/ONBOARDING_KONCEPCIA.md` kap. 6).
  */
-export async function personAcknowledgements(personId: string): Promise<Acknowledgement[]> {
+export async function personAcknowledgements(companyCode: string, personId: string): Promise<Acknowledgement[]> {
+  const code = requireCompanyCode(companyCode, "personAcknowledgements")
   const col = await getCollection<Acknowledgement>(ACKNOWLEDGEMENTS_COLLECTION)
-  return col.find({ personId }).sort({ acknowledgedAt: -1 }).toArray()
+  return col.find({ companyCode: code, personId }).sort({ acknowledgedAt: -1 }).toArray()
 }
 
 /**
@@ -441,11 +447,12 @@ export async function personAcknowledgements(personId: string): Promise<Acknowle
  * pri každom otvorení zoznamu (D27: progres sa neukladá).
  */
 export async function acknowledgedVersionIds(
+  companyCode: string,
   personId: string,
   versionIds: string[]
 ): Promise<Set<string>> {
   if (versionIds.length === 0) return new Set()
-  const valid = await validAcknowledgements({ personId, versionId: versionIds })
+  const valid = await validAcknowledgements({ companyCode, personId, versionId: versionIds })
   return new Set(valid.map(a => a.versionId))
 }
 

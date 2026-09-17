@@ -61,7 +61,7 @@ if (!process.env.MONGODB_URI) {
 
 const valid = []
 for (const documentId of documents) {
-  const doc = await loadDocument(documentId)
+  const doc = await loadDocument(company, documentId)
   if (!doc) { log(`${ERR} dokument ${documentId} neexistuje — preskakujem`); continue }
 
   const v = effectiveVersion(doc)

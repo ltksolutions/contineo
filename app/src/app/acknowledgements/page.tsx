@@ -39,7 +39,7 @@ export default async function MyAcknowledgementsPage() {
 
   // Vlastné záznamy, nikdy nie cudzie: identifikátor ide z prihlásenej osoby,
   // nie z adresy (D32).
-  const records = await personAcknowledgements(ctx.person.id)
+  const records = await personAcknowledgements(ctx.person.companyCode, ctx.person.id)
 
   return (
     <AppShell language={language}>

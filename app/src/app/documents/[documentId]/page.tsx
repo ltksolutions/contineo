@@ -142,7 +142,7 @@ export default async function DocumentPage({
               )}
             </p>
 
-            {(await hasAcknowledged(person.id, version.version.versionId)) ? (
+            {(await hasAcknowledged(person.companyCode, person.id, version.version.versionId)) ? (
               <p className="tag" style={{ background: "var(--ok-bg)", color: "var(--ok-fg)" }}>
                 {t.confirmed}
               </p>

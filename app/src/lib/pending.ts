@@ -199,6 +199,7 @@ export async function acknowledgementDuties(person: Person): Promise<Acknowledge
     const uncovered = assignments.filter(a => !items.has(a.subject.documentId))
     if (uncovered.length > 0) {
       const acknowledged = await acknowledgedVersionIds(
+        person.companyCode,
         person.id,
         uncovered.map(a => a.subject.versionId),
       )

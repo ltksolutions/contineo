@@ -26,7 +26,7 @@ export async function GET() {
   const language = person.language
   const mine = dictionary(language).myAcknowledgements
   const t = mine.csv
-  const records = await personAcknowledgements(person.id)
+  const records = await personAcknowledgements(person.companyCode, person.id)
 
   const csv = toCsv(records, [
     { label: t.type, value: r => (r.type === "revocation" ? mine.revoked : mine.acknowledged) },

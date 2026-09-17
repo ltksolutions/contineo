@@ -164,7 +164,7 @@ export async function trackProgress(person: {
   }
 
   // Jeden dotaz na všetky verzie naraz, nie po jednej pre každý krok.
-  const acknowledged = await acknowledgedVersionIds(person.id, versionIds)
+  const acknowledged = await acknowledgedVersionIds(person.companyCode, person.id, versionIds)
 
   return pending.map(({ track, steps }) => {
     for (const s of steps) {

@@ -109,7 +109,7 @@ for (const d of documents) {
 
   if (!WRITE) { done++; continue }
 
-  await addVersion(d.documentId, {
+  await addVersion(d.companyCode, d.documentId, {
     versionId: d.versionId,
     label: LABEL,
     effectiveFrom: date,
@@ -121,7 +121,7 @@ for (const d of documents) {
     publishedBy: "verzie_z_chunkov.mjs",
   })
 
-  const po = await loadDocument(d.documentId)
+  const po = await loadDocument(d.companyCode, d.documentId)
   const n = (po?.versions ?? []).length
   console.log(n === 1 ? `   ${OK} zapísané` : `   ${FAIL} po zápise má ${n} verzií — pozri sa na to`)
   done++

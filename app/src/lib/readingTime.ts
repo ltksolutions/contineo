@@ -23,6 +23,7 @@
  */
 
 import { getCollection } from "./mongodb"
+import { requireCompanyCode } from "./tenantScope"
 
 export const READING_COLLECTION = "reading_times"
 
@@ -97,21 +98,24 @@ export async function recordReading(input: {
 }
 
 /** Čas, ktorý má osoba nad daným znením. `null`, keď sa ešte nič nezaznamenalo. */
-export async function readingFor(personId: string, versionId: string): Promise<number | null> {
+export async function readingFor(companyCode: string, personId: string, versionId: string): Promise<number | null> {
+  const code = requireCompanyCode(companyCode, "readingFor")
   const col = await getCollection<ReadingTime>(READING_COLLECTION)
-  const found = await col.findOne({ personId, versionId })
+  const found = await col.findOne({ companyCode: code, personId, versionId })
   return found?.seconds ?? null
 }
 
 /** Časy osoby nad viacerými zneniami naraz — pre zoznam, nie po jednom. */
 export async function readingTimes(
+  companyCode: string,
   personId: string,
   versionIds: string[],
 ): Promise<Map<string, number>> {
+  const code = requireCompanyCode(companyCode, "readingTimes")
   if (versionIds.length === 0) return new Map()
   const col = await getCollection<ReadingTime>(READING_COLLECTION)
   const rows = await col
-    .find({ personId, versionId: { $in: versionIds } }, { projection: { versionId: 1, seconds: 1 } })
+    .find({ companyCode: code, personId, versionId: { $in: versionIds } }, { projection: { versionId: 1, seconds: 1 } })
     .toArray()
   return new Map(rows.map(r => [r.versionId, r.seconds]))
 }

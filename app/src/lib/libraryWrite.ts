@@ -266,7 +266,8 @@ export async function uploadDocument(
 ): Promise<UploadResult> {
   const documentId = makeDocumentId(meta)
   const col = await getCollection(DOCUMENTS_COLLECTION)
-  const existing = await col.findOne({ documentId })
+  // Organizácia v podmienke (D90) — nie len predpona v `documentId`.
+  const existing = await col.findOne({ documentId, companyCode: meta.companyCode })
 
   // **Kontrola pred uložením súboru, nie po ňom.** Opačné poradie by pri
   // odmietnutej kolízii nechalo v úložisku súbor, ku ktorému nevedie žiadny
@@ -313,7 +314,7 @@ export async function uploadDocument(
   }
 
   await col.updateOne(
-    { documentId },
+    { documentId, companyCode: meta.companyCode },
     {
       $set: {
         documentId,
@@ -536,7 +537,7 @@ export async function publish(
   // Staré chunky sa **archivujú, nemažú** (D6): do vyhľadávania vstupujú len
   // aktívne, ale otázka „čo tam stálo vlani" musí mať odpoveď.
   const archive = await chunkCol.updateMany(
-    { documentId, isActive: true },
+    { companyCode, documentId, isActive: true },
     { $set: { isActive: false, effectiveTo: now } },
   )
 
@@ -699,7 +700,7 @@ export async function saveMetadata(
    * párom počíta znova, nižšie.
    */
   await chunkCol.updateMany(
-    { documentId, sourceType: { $ne: "qa" } },
+    { companyCode, documentId, sourceType: { $ne: "qa" } },
     {
       $set: {
         scope: meta.scope,
@@ -829,9 +830,9 @@ export async function reindex(
    * tvar hlavičiek, poistka prejde sama.
    */
   const chunkCol = await getCollection(CHUNKS_COLLECTION)
-  const before = await chunkCol.countDocuments({ documentId, isActive: true })
+  const before = await chunkCol.countDocuments({ companyCode, documentId, isActive: true })
   const beforeWithArticle = await chunkCol.countDocuments({
-    documentId, isActive: true, articleRef: { $ne: null },
+    companyCode, documentId, isActive: true, articleRef: { $ne: null },
   })
   const afterWithArticle = chunks.filter(ch => ch.articleRef).length
   const share = (withArticle: number, total: number) => (total > 0 ? withArticle / total : 0)
@@ -852,7 +853,7 @@ export async function reindex(
 
   const now = new Date()
   const archive = await chunkCol.updateMany(
-    { documentId, isActive: true },
+    { companyCode, documentId, isActive: true },
     { $set: { isActive: false, effectiveTo: now } },
   )
 

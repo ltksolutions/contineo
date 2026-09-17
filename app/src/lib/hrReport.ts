@@ -230,10 +230,10 @@ export async function duties(companyCode: string): Promise<Duty[]> {
   const readCol = await getCollection(READING_COLLECTION)
   const [acks, reads] = await Promise.all([
     // Odvolané potvrdenie sa vo výkaze nesmie tváriť ako splnené (D24).
-    validAcknowledgements({ personId: personIds, versionId: versionIds }),
+    validAcknowledgements({ companyCode, personId: personIds, versionId: versionIds }),
     readCol
       .find(
-        { personId: { $in: personIds }, versionId: { $in: versionIds } },
+        { companyCode, personId: { $in: personIds }, versionId: { $in: versionIds } },
         { projection: { personId: 1, versionId: 1, seconds: 1 } },
       )
       .toArray(),

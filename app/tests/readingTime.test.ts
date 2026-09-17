@@ -93,11 +93,11 @@ describe("zapis casu citania", () => {
 describe("citanie casov", () => {
   it("bez zaznamu vracia null, nie nulu", async () => {
     // Nula znamena „otvoril a hned zavrel"; null znamena „nevieme".
-    expect(await readingFor("p1", "v-abc")).toBeNull()
+    expect(await readingFor("SFZ", "p1", "v-abc")).toBeNull()
   })
 
   it("prazdny zoznam zneni sa databazy vobec nepyta", async () => {
-    expect((await readingTimes("p1", [])).size).toBe(0)
+    expect((await readingTimes("SFZ", "p1", [])).size).toBe(0)
     expect(collection(READING_COLLECTION).find).not.toHaveBeenCalled()
   })
 
@@ -108,7 +108,7 @@ describe("citanie casov", () => {
         { versionId: "v-b", seconds: 30 },
       ],
     })
-    const times = await readingTimes("p1", ["v-a", "v-b", "v-c"])
+    const times = await readingTimes("SFZ", "p1", ["v-a", "v-b", "v-c"])
     expect(times.get("v-a")).toBe(120)
     expect(times.has("v-c")).toBe(false)
     expect(collection(READING_COLLECTION).find).toHaveBeenCalledTimes(1)

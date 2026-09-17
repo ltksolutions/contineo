@@ -84,7 +84,7 @@ export async function documentProgress(
   }
 
   // Percento počíta len **platné** potvrdenia — odvolané už nesplnili nič.
-  const acknowledged = (await validAcknowledgements({ versionId, personId: [...ids] })).length
+  const acknowledged = (await validAcknowledgements({ companyCode, versionId, personId: [...ids] })).length
 
   return { assigned, acknowledged, percent: percentOf(acknowledged, assigned), assignments: active.length }
 }
