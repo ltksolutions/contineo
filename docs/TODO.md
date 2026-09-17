@@ -708,3 +708,14 @@ neposielajú — rozposlanie zostáva samostatným krokom.
 
 Bod „tlačidlo **Nová verzia** na detaile" z `DESIGN_GAP.md` rieši **O3**,
 nie táto sekcia.
+
+### Bezpečnostná kontrola 2026-09-17 → `docs/BEZPECNOSTNA_KONTROLA_2026-09.md`
+
+- [ ] **N3 — CSV formula injection**: v `toCsv()` (`app/src/lib/csv.ts`) predradiť `'` bunkám začínajúcim `=`, `+`, `-`, `@`, tab + test. Malá zmena, spraviť pred ostrou prevádzkou.
+- [ ] **N2 — `xlsx` 0.18.5 (high, bez opravy v npm)**: prejsť na oficiálnu distribúciu SheetJS (cdn.sheetjs.com, ≥ 0.20.x) alebo `exceljs`. Zmierňuje ho, že nahráva len `content-admin`.
+- [ ] **N2 — `dompurify` cez `@toast-ui/editor` (moderate)**: skúsiť `overrides` v `package.json` na novší dompurify a overiť editor.
+- [ ] **N4 — bezpečnostné hlavičky**: `headers()` v `next.config.mjs` — `frame-ancestors 'none'`, `Referrer-Policy`, CSP najprv report-only; overiť HSTS na zákazníckych doménach.
+- [ ] **N6 — `generateAnswer()` posiela surové `err.message` do streamu**: zjednotiť so všeobecnou hláškou ako v `/api/chat`.
+- [ ] **Web vs D90**: sekcie `scope: global` / hierarchia / prípadová štúdia SFZ na `/technologia` sľubujú krížovú viditeľnosť, ktorú D90 zrušil; + Vertex AI, TEI×voyage-4-nano, EN „zero-retention with Anthropic". Úpravy `web/lib/dictionaries.js` po schválení.
+- [ ] **N8 — `.env.local.example` zastaraný**: zosúladiť so skutočnými premennými (bez Ollama/Blob; doplniť CRON_SECRET, ALLOWED_EMAILS, OAUTH_SECRET_ENCRYPTION_KEY, PLATFORM_TENANT, VERCEL_TOKEN, ECOMAIL_*).
+- [ ] **N5/N7 — rate limiting a timingSafeEqual pre CRON_SECRET**: až s verejným widgetom, nie skôr.

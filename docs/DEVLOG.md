@@ -10,6 +10,34 @@
 
 ---
 
+## 2026-09-17 (noc) — bezpečnostná kontrola pred prvou ostrou verziou
+
+Ján si vyžiadal komplexnú kontrolu: kód, závislosti, infra a súlad webu
+s repozitárom, plus zápis on-prem cesty. Výsledok je v
+`docs/BEZPECNOSTNA_KONTROLA_2026-09.md` a `docs/ADR-009-on-prem-referencna-architektura.md`.
+
+**V kóde sa kritická diera nenašla** — D90 drží, brány sú konzistentné,
+tajomstvá v repozitári nie sú. Tri veci s prioritou: O12 (Atlas allowlist),
+zraniteľné `xlsx` a `dompurify` (cez toast-ui), a CSV exporty bez ochrany
+pred formula injection (`=` na začiatku bunky sa v Exceli vyhodnotí ako
+vzorec aj v úvodzovkách — `toCsv()` to nefiltruje).
+
+**Web je poctivejší, než som čakal** — on-prem označuje „pripravujeme",
+režim `eu-data` sedí, čísla (60/40, voyage-4/1024, rerank-2) sedia s kódom.
+Najvážnejší nesúlad: sekcie o `scope: global` a hierarchii centrála →
+jednotky opisujú krížovú viditeľnosť, ktorú D90 včera zrušil. Ďalej Vertex AI
+(adaptér neexistuje), TEI + voyage-4-nano (TEI ho nepodporuje, O7 nález A)
+a anglické „we have a zero-retention agreement with Anthropic" v prítomnom
+čase. Úpravy webu sa nerobili — čakajú na schválenie.
+
+**ADR-009 vzalo číslo, s ktorým počítal ClubUp** — plán ClubUp ADR sa písal
+skôr, ale dokument nevznikol; ClubUp dostane ADR-010. Zapísané v ADR-009.
+
+Čo by som nabudúce spravil inak: `npm audit` spúšťať pravidelne, nie až pri
+kontrole pred vydaním — `xlsx` je zraniteľné mesiace a nikto to nevidel.
+
+---
+
 ## 2026-09-17 (večer) — audit D90 opravený celý
 
 Ján: „oprav všetko, čo si našla". Štyri commity po skupinách nálezov, nie jeden
