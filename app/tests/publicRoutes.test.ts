@@ -12,7 +12,7 @@
  */
 
 import { describe, it, expect } from "vitest"
-import { isPublicPath, PUBLIC_PATHS } from "../src/lib/publicRoutes"
+import { HOST_CHECK_EXEMPT, isHostCheckExempt, isPublicPath, PUBLIC_PATHS } from "../src/lib/publicRoutes"
 
 describe("brána prihlásenia", () => {
   it("naplánovaný beh prejde", () => {
@@ -59,5 +59,34 @@ describe("brána prihlásenia", () => {
     // prihlásenie, a musí mať v súbore napísaný dôvod. Keď ich pribúda,
     // treba sa pýtať prečo.
     expect(PUBLIC_PATHS.length).toBeLessThanOrEqual(6)
+  })
+})
+
+describe("brána domény tenanta (proxy.ts, D29, D90)", () => {
+  it("naplánovaný beh sa doménou neoveruje", () => {
+    // Chráni ho CRON_SECRET; doménu, z ktorej ho Vercel volá, nemáme overenú.
+    expect(isHostCheckExempt("/api/cron/overdue")).toBe(true)
+  })
+
+  it("prihlasovanie ani logá výnimku nemajú — na cudzej doméne nemajú čo hľadať", () => {
+    expect(isHostCheckExempt("/sign-in")).toBe(false)
+    expect(isHostCheckExempt("/api/auth/session")).toBe(false)
+    expect(isHostCheckExempt("/api/brand/sfz")).toBe(false)
+    expect(isHostCheckExempt("/tenants/sfz/logo.svg")).toBe(false)
+  })
+
+  it("obsah ani chat výnimku nemajú", () => {
+    expect(isHostCheckExempt("/api/chat")).toBe(false)
+    expect(isHostCheckExempt("/documents/sfz:stanovy")).toBe(false)
+    expect(isHostCheckExempt("/")).toBe(false)
+  })
+
+  it("lomka na konci: podobná cesta sa nezamení", () => {
+    expect(isHostCheckExempt("/api/cronjobs-admin")).toBe(false)
+  })
+
+  it("výnimka je jediná", () => {
+    // Každá ďalšia je cesta, ktorú môže zavolať ktorákoľvek doména.
+    expect(HOST_CHECK_EXEMPT).toEqual(["/api/cron/"])
   })
 })

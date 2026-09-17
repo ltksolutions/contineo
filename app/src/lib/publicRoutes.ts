@@ -7,8 +7,8 @@
  * spustil, a **cron sa nikdy nevykonal**. Vercel neúspešný beh ticho zahodí,
  * takže to nebolo vidieť nikde: ani v aplikácii, ani v audite.
  *
- * V `middleware.ts` sa to otestovať nedá — modul ťahá `next-auth/jwt`
- * a beží v edge prostredí. Tu je to čistá funkcia a má testy.
+ * V `proxy.ts` (do 2026-09-17 `middleware.ts`) sa to otestovať nedá — modul
+ * ťahá `next-auth/jwt` a databázu. Tu je to čistá funkcia a má testy.
  *
  * Zoznam je zámerne krátky a ku každej ceste patrí dôvod. Pravidlo je
  * „všetko okrem…", nie výpočet chráneného: nová stránka je tak chránená
@@ -44,4 +44,23 @@ export const PUBLIC_PATHS = [
 /** Je táto cesta prístupná bez prihlásenia? */
 export function isPublicPath(pathname: string): boolean {
   return PUBLIC_PATHS.some(p => pathname.startsWith(p))
+}
+
+/**
+ * Cesty, pri ktorých `proxy.ts` **neoveruje doménu** tenanta.
+ *
+ * Jediná je naplánovaný beh. Beží naprieč organizáciami (prehľad meškajúcich
+ * pre všetkých tenantov) a z akej domény ho Vercel volá, nemáme overené —
+ * keby to bola doména nasadenia (`*.vercel.app`), kontrola tenanta by ho
+ * odmietla rovnako ticho, ako ho kedysi odmietala brána prihlásenia (viď
+ * `/api/cron/` vyššie). Chránený je `CRON_SECRET`, nie doménou.
+ *
+ * Zoznam je zámerne samostatný, nie odvodený z `PUBLIC_PATHS`: prihlasovacia
+ * stránka ani logá výnimku z kontroly domény nedostávajú — na cudzej doméne
+ * nemajú čo hľadať.
+ */
+export const HOST_CHECK_EXEMPT = ["/api/cron/"] as const
+
+export function isHostCheckExempt(pathname: string): boolean {
+  return HOST_CHECK_EXEMPT.some(p => pathname.startsWith(p))
 }

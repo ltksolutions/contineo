@@ -73,7 +73,7 @@ export async function POST(req: NextRequest) {
   if (ctx.state !== "ready") return new Response("not-in-tenant", { status: 403 })
 
   const companyCode = ctx.tenant.companyCode
-  // Verejný režim (widget pre neprihlásených) zatiaľ neexistuje — middleware
+  // Verejný režim (widget pre neprihlásených) zatiaľ neexistuje — proxy
   // `/api/chat` bez prihlásenia ani nepustí. Keď vznikne, bude mať vlastnú
   // cestu s tou istou organizáciou, nie vetvu podľa toho, či prišiel token.
   const userRole = "internal" as const

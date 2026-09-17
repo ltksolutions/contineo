@@ -4,6 +4,29 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Neznáma doména dostane hneď 404 — `middleware.ts` → `proxy.ts` (D29, 2026-09-17)
+
+Neznámy hostiteľ dostal najprv `307` na `/sign-in` a až stránka povedala `404`.
+Obsah neunikal, ale cudzia doména sa dozvedela, že tu nejaká prihlasovacia cesta
+je — D29 hovorí, že sa nemá dozvedieť nič. TODO to odkladalo s tým, že middleware
+beží na edge a do Atlasu nevidí; to platilo pre Next 14.
+
+- **`git mv src/middleware.ts src/proxy.ts`**, funkcia `proxy`. Next 16 názov
+  `middleware` označil za zastaraný (build to hlásil) a proxy beží na Node.js.
+- **Doména tenanta sa overuje ako prvá bránka** — pred prekladom starých adries
+  aj pred prihlásením. `resolveTenant()` s jeho pamäťou (5 min známe, 30 s neznáme).
+- **Výnimka jediná: `/api/cron/`** (`HOST_CHECK_EXEMPT` v `publicRoutes.ts`).
+  Z akej domény ho Vercel volá, nie je overené; chráni ho `CRON_SECRET`.
+- **Výpadok databázy nerozhoduje v proxy** — pokračuje sa ako doteraz a tenanta
+  si overí brána prihlásenia aj stránka. `404` pri výpadku by ľuďom tvrdilo, že ich
+  organizácia neexistuje.
+- **Dôsledok:** náhľady Vercelu (`*.vercel.app`) dostanú `404`, lebo nie sú
+  v `tenants`. Rozhodnuté vedome — výnimka sa dá doplniť, keď bude treba.
+
+Overené na lokálnom `next start` s hlavičkou `Host`: cudzia doména → `404` na `/`,
+`/sign-in`, `/prihlasenie`, `/api/chat` aj `/api/brand/…`, cron → `401` (tajomstvo);
+`sfz.localhost` a `localhost` → `307` na prihlásenie, `/sign-in` `200`.
+
 ### `import.mjs` zakladá koncepty, nezverejňuje (D75, 2026-09-17)
 
 Skript zapisoval `status: "published"` a rovno aktívne úseky — dokument bol po
