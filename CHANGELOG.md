@@ -4,6 +4,16 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Editor textu sa už nepokúša načítať na serveri (2026-09-18)
+
+`@toast-ui/editor` siaha na DOM (`Element`) už pri vyhodnotení modulu, takže
+SSR stránky `/library/[id]/text` zapisoval do logov
+`ReferenceError: Element is not defined` pri každom otvorení editora
+(od 30. 8. — vidieť to bolo len v logoch, stránka fungovala z klienta).
+Import sa presunul do `useEffect`, ktorý beží výhradne v prehliadači; na
+vrchu súboru zostal len `import type`. Záloha bez JavaScriptu (skryté pole
+s pôvodným textom + `noscript` textarea) sa nemení.
+
 ### Bezpečnostné hlavičky a chybová hláška generovania (2026-09-18)
 
 **Každá odpoveď nesie bezpečnostné hlavičky** (`headers()` v

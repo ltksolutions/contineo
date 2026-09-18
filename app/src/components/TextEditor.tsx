@@ -20,7 +20,7 @@
  */
 
 import { useEffect, useRef, useState } from "react"
-import Editor from "@toast-ui/editor"
+import type Editor from "@toast-ui/editor"
 import "@toast-ui/editor/dist/toastui-editor.css"
 
 export default function TextEditor({
@@ -38,33 +38,48 @@ export default function TextEditor({
   useEffect(() => {
     if (!wrap.current || editor.current) return
 
-    const e = new Editor({
-      el: wrap.current,
-      initialValue: initial,
-      initialEditType: "wysiwyg",
-      previewStyle: "vertical",
-      height: "70vh",
-      usageStatistics: false,
-      hideModeSwitch: false,
-      language: "en-US",
-      toolbarItems: [
-        ["heading", "bold", "italic"],
-        ["ul", "ol"],
-        ["table", "link"],
-        ["quote", "code"],
-      ],
-    })
+    /*
+     * Knižnica sa importuje až tu, nie na vrchu súboru. `@toast-ui/editor`
+     * siaha na DOM (`Element`) už pri vyhodnotení modulu, takže statický
+     * import padal pri SSR tejto vetvy na serveri — v logoch ako
+     * `ReferenceError: Element is not defined` pri každom otvorení editora
+     * (od 30. 8.). Efekt beží výhradne v prehliadači; hore zostal len
+     * `import type`, ktorý sa do behu nedostane.
+     */
+    let cancelled = false
+    void (async () => {
+      const { default: ToastEditor } = await import("@toast-ui/editor")
+      if (cancelled || !wrap.current || editor.current) return
 
-    // Zmena sa prepisuje do skrytého poľa priebežne, nie až pri odoslaní:
-    // formulár sa dá odoslať aj klávesnicou a `onSubmit` v Reacte pri
-    // serverovej akcii nie je miesto, na ktoré sa dá spoľahnúť.
-    e.on("change", () => setValue(e.getMarkdown()))
+      const e = new ToastEditor({
+        el: wrap.current,
+        initialValue: initial,
+        initialEditType: "wysiwyg",
+        previewStyle: "vertical",
+        height: "70vh",
+        usageStatistics: false,
+        hideModeSwitch: false,
+        language: "en-US",
+        toolbarItems: [
+          ["heading", "bold", "italic"],
+          ["ul", "ol"],
+          ["table", "link"],
+          ["quote", "code"],
+        ],
+      })
 
-    editor.current = e
-    setReady(true)
+      // Zmena sa prepisuje do skrytého poľa priebežne, nie až pri odoslaní:
+      // formulár sa dá odoslať aj klávesnicou a `onSubmit` v Reacte pri
+      // serverovej akcii nie je miesto, na ktoré sa dá spoľahnúť.
+      e.on("change", () => setValue(e.getMarkdown()))
+
+      editor.current = e
+      setReady(true)
+    })()
 
     return () => {
-      e.destroy()
+      cancelled = true
+      editor.current?.destroy()
       editor.current = null
     }
     // Zámerne prázdne pole závislostí: editor sa vytvára raz. Pri zmene

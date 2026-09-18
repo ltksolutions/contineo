@@ -10,6 +10,17 @@
 
 ---
 
+## 2026-09-18 (dodatok) — TextEditor bez SSR chyby
+
+Drobnosť z logov opravená hneď: toast-ui sa v `TextEditor.tsx` importuje
+dynamicky až v `useEffect`, statický import nahradil `import type` (typ sa
+z behu vymaže, takže server modul knižnice už vôbec nevyhodnocuje). Efekt
+má zrušenie (`cancelled`) pre prípad odmontovania počas načítavania a
+cleanup ničí editor cez `editor.current`. CSS import zostal statický —
+štýl DOM nepotrebuje. tsc, eslint, 1364 testov aj build prešli.
+
+---
+
 ## 2026-09-18 (poobede) — produkcia už nebeží na správcovskom účte DB
 
 Ján založil aplikačného používateľa `contineoapp` (readWriteAnyDatabase,

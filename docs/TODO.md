@@ -716,7 +716,7 @@ nie táto sekcia.
 
 ### Drobnosti z prevádzkových logov (2026-09-18)
 
-- [ ] **`ReferenceError: Element is not defined` na `/library/[id]/text`** — SSR vyhodnotenie modulu `TextEditor.tsx` (toast-ui siaha na DOM pri importe). V logoch od 30. 8., raz pri otvorení editora, stránku nezhodí. Oprava: `next/dynamic` s `ssr: false` pre TextEditor.
+- [x] **`ReferenceError: Element is not defined` na `/library/[id]/text`** ✅ 2026-09-18 — toast-ui sa importuje až v `useEffect` (beží len v prehliadači), hore zostal `import type`. SSR modul editora už na DOM nesiaha; bez-JS záloha (skryté pole + `noscript` textarea) nezmenená.
 
 ### Bezpečnostná kontrola 2026-09-17 → `docs/BEZPECNOSTNA_KONTROLA_2026-09.md`
 
