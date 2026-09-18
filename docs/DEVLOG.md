@@ -10,6 +10,35 @@
 
 ---
 
+## 2026-09-18 (poobede) — produkcia už nebeží na správcovskom účte DB
+
+Ján založil aplikačného používateľa `contineoapp` (readWriteAnyDatabase,
+bez atlasAdmin), vymenil URI vo Verceli aj lokálne a redeployol. Overenie:
+
+- `connectionStatus` cez nové URI: jediná rola `readWriteAnyDatabase` —
+  správa clustra a používateľov už z aplikačného pripojenia nejde.
+- Knižnica na intranete načítala všetkých 10 dokumentov z produkčnej DB.
+- `/ask` prešiel celou reťazou: $rankFusion → $rerank → generovanie —
+  odpoveď o predčasnom ukončení stretnutia so 7 doslovnými citáciami
+  z čl. 70 Súťažného poriadku. Čítanie aj zápis (záznam o odpovedi) teda
+  fungujú pod novým používateľom.
+- Logy nového nasadenia: nula chýb.
+
+Bonus z Jánovho screenshotu: **logo v e-mailoch sa v schránke naozaj
+zobrazuje** — denná pripomienka termínu niesla hlavičku SFZ. Posledná
+neoverená vec z opravy `logoTag()` odškrtnutá.
+
+Do TODO pribudli dve drobnosti: voliteľné zúženie `contineoapp` na
+`readWrite@contineo` (Specific Privileges v Atlase) a rotácia hesla
+starého správcovského účtu, ktorého URI dosiaľ ležalo vo Verceli.
+
+A jeden starý známy v logoch: `ReferenceError: Element is not defined`
+pri SSR module TextEditora na `/library/[id]/text` — existuje od 30. 8.
+(dávno pred dompurify 3.4.15), stránke nebráni, spustí sa raz pri otvorení
+editora. Zapísané nižšie ako drobnosť na opravu (dynamický import bez SSR).
+
+---
+
 ## 2026-09-18 (noc) — O12 revidované: Static IPs odložené, allowlist kryjú lacnejšie opatrenia
 
 Ján: „pri jednom tenantovi toto celé považujem za zbytočný náklad". Cena

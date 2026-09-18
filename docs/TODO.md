@@ -211,7 +211,7 @@
 - [x] ✅ **2026-09-17 vyriešené** — `middleware.ts` → `proxy.ts` (Next 16 beží na Node.js, do Atlasu vidí); doména tenanta sa overuje ako prvá, neznámy hostiteľ dostane hneď `404`, výnimka len `/api/cron/`. Pôvodný zápis: **Neznámy hostiteľ dostane najprv `307` na `/prihlasenie` a až potom `404`.** Middleware beží pred kontrolou tenanta a presmeruje neprihláseného skôr, než sa zistí, že doména nikomu nepatrí. Obsah neuniká a koniec je správne `404`, ale D29 hovorí, že cudzia doména sa nemá dozvedieť nič — a takto sa dozvie, že existuje cesta `/prihlasenie`. Opraviť sa to dá len overením tenanta priamo v middlewari; ten beží na edge a do Atlasu nevidí, takže by to chcelo verejný endpoint s krátkou pamäťou (rovnako to rieši `inventario`). Nízka priorita, ale zapísané, nech to nezapadne.
 - [x] ✅ **2026-09-17 opravené všetko** (`5aa9608`, `1125fe4`, `4e83bf3`, `8c6a386`). **D90 — audit dotazov bez `companyCode`** → `docs/D90_audit_dotazov.md`. Pôvodne: A1–A3 zápis do záznamu inej organizácie podľa `_id` (hodnotenia, kurácia), A5 logo na cudzej doméne, B1–B3 osoba len podľa e-mailu, C1 `validAcknowledgements()` bez povinnej organizácie.
 - [x] ✅ **2026-09-17 opravené** — `logoTag()` v `ecomail.ts` robí adresu absolútnou pre **všetky** e-maily (`https://<host><cesta>`), `auth.ts` vlastnú kópiu už nemá; stráži to `tests/emailLogo.test.ts`. Pôvodný zápis: **Logo v upozorňovacích e-mailoch je relatívna adresa** — cron, schvaľovanie a pozvánky posielali `/api/brand/…` bez domény.
-  - [ ] Overiť v skutočnej schránke, že sa logo naozaj zobrazí (blokovanie obrázkov v pošte je normálne — `alt` je zámerne prázdny).
+  - [x] ✅ 2026-09-18 — logo sa v schránke zobrazuje: Ján poslal screenshot dennej pripomienky (Revízny poriadok, termín 20. 9.) s vykresleným logom SFZ v hlavičke.
 - [x] ✅ **2026-09-17 presunuté** (rozhodol Ján) — `"regions": ["fra1"]` vo `vercel.json`, funkcie bežia vo Frankfurte, kde je aj Atlas. Súvisí s ADR-002 (rezidencia) a O12: **Static IPs sa zapínajú pre región**, takže sa zapnú pre `fra1`.
 - [ ] **`npm run check` a `npm run status` nemajú `--env-file=.env.local`** (zistené 2026-09-17 pri upratovaní) — bez exportovanej premennej skončia na „Chýba MONGODB_URI", hoci `smoke` aj `docs:import` ju majú. Drobnosť v `package.json`.
 - [x] ~~Chybová stránka prihlásenia končí na `app.contineo.app`~~ — **vyriešené 2026-08-29 odstránením `NEXTAUTH_URL` z produkcie.** Nebolo to kozmetické: z tej istej premennej si NextAuth staval aj `redirect_uri` pre prihlásenie kontom, takže Entra odmietala prihlásenie s `AADSTS50011`. Bez premennej si origin odvodí z hostiteľa požiadavky.
@@ -274,7 +274,9 @@
 - [x] **Automatické nasadzovanie z GitHubu** ✅ 2026-08-28 — projekt `contineo-app` napojený na `ltksolutions/contineo`, root directory `app`, produkčná vetva `main`. Dovtedy napojený nebol: posledné nasadenie bolo staré 31 dní napriek desiatim commitom, takže `/dokumenty` na `app.contineo.app` neexistovalo. Postup a dôvod v `NASADENIE_app.md` kap. 0.
 
 - [x] ♻️ **O12 — `0.0.0.0/0` v Atlase: Static IPs ODLOŽENÉ** (rozhodol Ján, 2026-09-18). 100 $/mes. na projekt + Private Data Transfer je pri jednom tenantovi neúmerný náklad; allowlist zatiaľ zostáva a riziko kryjú kompenzačné kroky nižšie. Spúšťače návratu: druhý platiaci tenant, verejný widget, tender/bezpečnostný dotazník. **Prestáva blokovať prvé ostré potvrdenie.** Analýza Static IPs zostáva v ADR-003 kap. 6.1; revízia zapísaná pri O12 v `OPEN_DECISIONS.md`.
-  - [ ] **Samostatný aplikačný DB používateľ** len s `readWrite` na databázu `contineo` a jeho URI do Vercel env. Overené 2026-09-18 (`connectionStatus`): aplikácia sa dnes pripája ako `janletko_db_user` s `atlasAdmin`, `readWriteAnyDatabase` a `dbAdminAnyDatabase` — produkcia beží na správcovskom účte clustra. Po výmene otočiť heslo správcovského účtu.
+  - [x] **Samostatný aplikačný DB používateľ** ✅ 2026-09-18 — Ján založil `contineoapp` (rola `readWriteAnyDatabase`, bez `atlasAdmin`), vymenil URI vo Verceli aj v `.env.local` a redeploy prešiel. Overené: `connectionStatus` (roly), knižnica z produkčnej DB, kompletná RAG odpoveď s citáciami na `/ask`, logy nasadenia bez jedinej chyby. Pôvodný nález (aplikácia bežala ako `janletko_db_user` s `atlasAdmin`) je tým vyriešený.
+  - [ ] Voliteľné dotiahnutie: v Atlase zúžiť `contineoapp` z „read and write any database" na `readWrite` len na `contineo` (Specific Privileges) — jeden klik, nič sa nenasadzuje.
+  - [ ] **Otočiť heslo správcovského účtu `janletko_db_user`** — jeho URI bolo doteraz vo Verceli aj v lokálnych `.env`, po výmene už nemá kde chýbať.
   - [ ] **Atlas Project Alerts** na neúspešné prihlásenia a nezvyčajný prístup.
   - [ ] **Rotácia hesla aplikačného používateľa** — občasná, aspoň štvrťročne.
   - [x] **Rozhodnuté 2026-08-27: Vercel Static IPs** (100 $/mes., plán Pro). Preverené aj Render, Railway, vlastný stroj v EÚ, SOCKS5 proxy — ADR-003 kap. 6.1. Presun z Vercelu zostáva dlhodobým smerom.
@@ -711,6 +713,10 @@ neposielajú — rozposlanie zostáva samostatným krokom.
 
 Bod „tlačidlo **Nová verzia** na detaile" z `DESIGN_GAP.md` rieši **O3**,
 nie táto sekcia.
+
+### Drobnosti z prevádzkových logov (2026-09-18)
+
+- [ ] **`ReferenceError: Element is not defined` na `/library/[id]/text`** — SSR vyhodnotenie modulu `TextEditor.tsx` (toast-ui siaha na DOM pri importe). V logoch od 30. 8., raz pri otvorení editora, stránku nezhodí. Oprava: `next/dynamic` s `ssr: false` pre TextEditor.
 
 ### Bezpečnostná kontrola 2026-09-17 → `docs/BEZPECNOSTNA_KONTROLA_2026-09.md`
 
