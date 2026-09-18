@@ -676,7 +676,7 @@ len práca, ktorá z nich plynie.
       `docs/D9_EVAL_zlata_sada.md` sa **nemazal** — je označený ako prekonaný a zostáva ako záznam, čo sa malo merať a s akými prahmi.
 - [ ] **Čo je brána pred go-live** — dnes platí len **tvrdá brána na únik interného obsahu** (prah 0), ktorá sadu nikdy nepotrebovala: ráta sa zo zdrojov použitých pri odpovedi. Ostatné prahy z D9 sa merajú, ale bránou nie sú. **Rozhodnúť pred pilotom** (zapísané aj v `OPEN_DECISIONS.md`).
 - [ ] **Bez meradla na porovnanie konfigurácií** — ADR-001 (voľba modelu, on-prem vs cloud) a ADR-002 sa opierali o sadu. Dnes sa dve konfigurácie nedajú porovnať na tých istých otázkach. Otvorená diera, nie vyriešená vec.
-- [ ] **Verejný web spomína „eval sadu D9"** — `contineo.app/sk/technologia`, v odseku o porovnateľnosti režimov. Opraviť mimo tohto repozitára.
+- [x] ~~**Verejný web spomína „eval sadu D9"**~~ ✅ 2026-09-18 overené — zmienka na webe už nie je (text kvality hovorí „kvalita sa meria z prevádzky, nie z testovacej sady"); položka bola zastaraná.
 
 **Čo stĺpec „Potvrdenia" ukázal hneď v prvý deň.** Z desiatich noriem má
 číslo **jedna** — Revízny poriadok („0 %, 0 z 2 pridelených"). Skúšobná
@@ -716,6 +716,6 @@ nie táto sekcia.
 - [ ] **N2 — `dompurify` cez `@toast-ui/editor` (moderate)**: skúsiť `overrides` v `package.json` na novší dompurify a overiť editor.
 - [ ] **N4 — bezpečnostné hlavičky**: `headers()` v `next.config.mjs` — `frame-ancestors 'none'`, `Referrer-Policy`, CSP najprv report-only; overiť HSTS na zákazníckych doménach.
 - [ ] **N6 — `generateAnswer()` posiela surové `err.message` do streamu**: zjednotiť so všeobecnou hláškou ako v `/api/chat`.
-- [ ] **Web vs D90**: sekcie `scope: global` / hierarchia / prípadová štúdia SFZ na `/technologia` sľubujú krížovú viditeľnosť, ktorú D90 zrušil; + Vertex AI, TEI×voyage-4-nano, EN „zero-retention with Anthropic". Úpravy `web/lib/dictionaries.js` po schválení.
+- [x] **Web vs D90** ✅ 2026-09-18 — `web/lib/dictionaries.js` (SK/CS/EN): hierarchia a `scope: global` preformulované na „zdieľanie pripravujeme" (viditeľnosť = vlastná organizácia, D90); Vertex AI odstránený (Bedrock zostáva — jediná cesta k eu-full generovaniu); „Infinity (voyage-4-nano) / TEI (BGE-M3)" (O7 nález A); zero-retention pri Anthropic zmiernené na „potvrdzujeme zmluvne", kým nepríde odpoveď zo sales supportu (žiadosť odoslaná 2026-09-18) — potom vrátiť silné znenie. Build webu prešiel.
 - [ ] **N8 — `.env.local.example` zastaraný**: zosúladiť so skutočnými premennými (bez Ollama/Blob; doplniť CRON_SECRET, ALLOWED_EMAILS, OAUTH_SECRET_ENCRYPTION_KEY, PLATFORM_TENANT, VERCEL_TOKEN, ECOMAIL_*).
 - [ ] **N5/N7 — rate limiting a timingSafeEqual pre CRON_SECRET**: až s verejným widgetom, nie skôr.

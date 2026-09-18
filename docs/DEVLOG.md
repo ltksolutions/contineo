@@ -10,6 +10,32 @@
 
 ---
 
+## 2026-09-18 — web zosúladený s D90 (a s tým, čo máme na papieri)
+
+Ján schválil opravy nesúladov z včerajšej kontroly. `web/lib/dictionaries.js`,
+všetky tri jazyky naraz (i18n test webu neexistuje, tak aspoň disciplína):
+
+- **Hierarchia a `scope: global`** už nesľubujú krížovú viditeľnosť — všade
+  „zdieľanie v hierarchii pripravujeme", viditeľnosť je vlastná organizácia
+  (D90). Prípadová štúdia SFZ hovorí „samostatné organizácie s vlastným
+  obsahom". Pravidlo značkovania „nekopírovať pre každú jednotku" muselo
+  preč tiež — po D90 by bolo návodom na neviditeľný obsah.
+- **Vertex AI von, Bedrock zostáva** — rozhodnutie Jána: tabuľka tvrdí len
+  to, čo v kóde je; Bedrock je jediná cesta k eu-full generovaniu bez GPU.
+- **„Infinity (voyage-4-nano) / TEI (BGE-M3)"** — TEI voyage-4-nano
+  nepodporuje (O7 nález A); zátvorky teraz sedia s realitou serverov.
+- **Zero-retention pri Anthropic zmiernené na „potvrdzujeme zmluvne"** —
+  Ján 2026-09-18 poslal žiadosť na Anthropic sales support; keď príde
+  písomné potvrdenie, silné znenie sa vráti (SK 220, CS 953, EN 1687 +
+  sekcia Bezpečnosť a „otvorený bod" v rezidencii).
+- Zmienka o „eval sade D9" sa na webe už nenachádza — položka v TODO bola
+  zastaraná, odškrtnutá bez zmeny kódu.
+
+`npm run build` webu prešiel (statický export). Lint vo `web/` nie je
+nakonfigurovaný — nechávam tak, nie je súčasť rozsahu.
+
+---
+
 ## 2026-09-17 (noc) — bezpečnostná kontrola pred prvou ostrou verziou
 
 Ján si vyžiadal komplexnú kontrolu: kód, závislosti, infra a súlad webu

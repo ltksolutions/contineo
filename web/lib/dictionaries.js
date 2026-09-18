@@ -190,7 +190,7 @@ export const dictionaries = {
           popis:
             "Prevedie každý odsek na číselný odtlačok významu. Vďaka tomu nájde správnu pasáž, aj keď ste použili iné slová než predpis — na otázku „koľko sa platí za prestup“ vráti článok o odstupnom.",
           cloud: "Atlas Automated Embedding (voyage-4)",
-          onprem: "Infinity / TEI (voyage-4-nano, BGE-M3)",
+          onprem: "Infinity (voyage-4-nano) / TEI (BGE-M3)",
         },
         {
           name: "Rerank",
@@ -217,7 +217,7 @@ export const dictionaries = {
       subtitle: "Obsah beží v databáze v EÚ, oddelene pre každú organizáciu. Von ide len otázka a nájdené pasáže — do modelov, s ktorými máme zmluvu. Presný rozpis nájdete v sekcii Dátová rezidencia; nezakrývame ho.",
       points: [
         { icon: "lock", title: "Obsah v databáze v EÚ", text: "Dokumenty, indexy aj zálohy sú v MongoDB Atlas vo Frankfurte, oddelené pre každú organizáciu podmienkou v každom dotaze. Nie sú verejné a neindexuje ich internet." },
-        { icon: "shield", title: "Žiadna verejná AI", text: "Nepoužívame verejnú spotrebiteľskú AI. Pri generovaní odpovede máme s Anthropic dohodnuté neuchovávanie a žiadne trénovanie na vašich dátach; pri embeddingu a preradení (Voyage cez Atlas) to ešte potvrdzujeme." },
+        { icon: "shield", title: "Žiadna verejná AI", text: "Nepoužívame verejnú spotrebiteľskú AI. Neuchovávanie a žiadne trénovanie na vašich dátach potvrdzujeme zmluvne u oboch poskytovateľov — Anthropic (generovanie) aj Voyage cez Atlas (embedding a preradenie)." },
         { icon: "search", title: "AI je len pomocník", text: "Jazykový model odpovedá výhradne z nájdených pasáží vášho obsahu (RAG) a pripája citáciu zdroja." },
         { icon: "layers", title: "Dnes cloud, on-prem pripravujeme", text: "Dnes beží cloud s databázou v EÚ. Plne on-prem režim, kde dáta neopustia váš perimeter, máme navrhnutý a adaptéry v kóde — nasadený zatiaľ nebol. Podrobný rozpis dátových tokov je v sekcii Dátová rezidencia." },
       ],
@@ -319,7 +319,7 @@ export const dictionaries = {
         { component: "Generovanie odpovede", provider: "Anthropic Claude (priame API)",
           location: "mimo EÚ (USA)", stav: "mimo",
           evidence: "spracovanie v americkej infraštruktúre" },
-        { component: "Generovanie odpovede", provider: "Claude cez AWS Bedrock / Vertex AI",
+        { component: "Generovanie odpovede", provider: "Claude cez AWS Bedrock (EU regióny)",
           location: "EÚ (Frankfurt, Írsko, Paríž)", stav: "ok",
           evidence: "voľba regiónu pri nasadení" },
         { component: "Embedding, rerank, generovanie", provider: "vlastné služby (on-prem)",
@@ -329,7 +329,7 @@ export const dictionaries = {
 
       honestyTitle: "Prečo to vypisujeme takto podrobne.",
       honestyText:
-        "Pretože sa na to pri obstarávaní niekto spýta. Väčšina dodávateľov uvedie „dáta v EÚ“ a mlčí o tom, kde beží model — pritom práve tam ide text otázky aj nájdených pasáží. Každý riadok vyššie vieme doložiť dokumentom dodávateľa a ak sa stav zmení, zmeníme aj túto tabuľku. A rovno aj otvorený bod, ktorý nezakrývame: pri Voyage (embedding a rerank cez Atlas) zatiaľ nemáme písomne potvrdené neuchovávanie ani presný región spracovania.",
+        "Pretože sa na to pri obstarávaní niekto spýta. Väčšina dodávateľov uvedie „dáta v EÚ“ a mlčí o tom, kde beží model — pritom práve tam ide text otázky aj nájdených pasáží. Každý riadok vyššie vieme doložiť dokumentom dodávateľa a ak sa stav zmení, zmeníme aj túto tabuľku. A rovno aj otvorený bod, ktorý nezakrývame: písomné potvrdenie neuchovávania dolaďujeme s Anthropic (generovanie) aj s Voyage (embedding a rerank cez Atlas), kde zatiaľ nie je potvrdený ani presný región spracovania.",
       legalNote:
         "Táto stránka je technický popis dátových tokov, nie právne posúdenie. Pri konkrétnom nasadení odporúčame posúdenie odborníkom na ochranu osobných údajov.",
     },
@@ -546,7 +546,7 @@ export const dictionaries = {
         { icon: "search", title: "RAG + Hybrid Search", text: "Hybridné vyhľadávanie $rankFusion (vektor 60 % + fulltext 40 %) je jadro systému a beží identicky v MongoDB Atlas aj v self-hosted Community 8.2. Odpoveď vzniká výhradne z nájdených pasáží." },
         { icon: "layers", title: "Vymeniteľné AI adaptéry", text: "Embedding, rerank a generovanie sú tri nezávislé adaptéry vyberané konfiguráciou tenanta, nie kódom. Cloud: Voyage a Claude. On-prem: Infinity alebo TEI a vLLM s modelom podľa vášho výberu (Qwen3, EuroLLM, Gemma)." },
         { icon: "quote", title: "Citácie a verzie", text: "Každá odpoveď uvádza zdroj a verziu. Import novej verzie nestratí starú — cituje sa vždy platné znenie." },
-        { icon: "shield", title: "Multi-tenant a bezpečnosť", text: "Hierarchia organizácií (centrála → regionálne → lokálne jednotky) ako samostatní tenanti. Verejný obsah vidia všetci; interný obsah len príslušníci danej jednotky. Audit pri každej zmene znalostí." },
+        { icon: "shield", title: "Multi-tenant a bezpečnosť", text: "Každá organizácia je samostatný tenant na vlastnej doméne a vidí výhradne vlastný obsah — verejný vidia všetci jej prihlásení, interný len jej príslušníci. Zdieľanie v hierarchii (centrála → regionálne → lokálne jednotky) pripravujeme. Audit pri každej zmene znalostí." },
         { icon: "layers", title: "Vstupné kanály (obsah aj integrácie)", text: "Jedna vrstva, ktorou tečie obsah. Dnes cez ňu ide nahratý súbor — DOCX, PDF, XLSX, Markdown, TXT, CSV — prevod beží u nás a všetko končí v jednom indexe. Ďalšie kanály (weby a RSS, MCP konektory, e-mail) pripravujeme. Zdroj identity poskytuje identitu, nie obsah." },
         { icon: "ticket", title: "Helpdesk a e-mail (pripravujeme)", text: "Sledovanie e-mailových schránok, ticketing a predpripravené odpovede s eskaláciou z vyhľadávania. Zatiaľ nie je súčasťou nasadenia — dnes beží nahlásenie nepresnosti a fronta hodnotiteľa." },
         { icon: "brain", title: "Kontrola kvality a kurácia", text: "Nejde o strojové učenie modelu, ale o ľudskú kuráciu: správca ohodnotí a schváli odpoveď, tá sa uloží ako overená odpoveď a embeduje späť. Nová overená odpoveď nikdy potichu neprepíše schválený predpis." },
@@ -603,7 +603,7 @@ export const dictionaries = {
       ],
       scopeTitle: "Rozsah platnosti",
       scopes: [
-        "scope: global + centrála (napr. ACME) → platí pre celú firmu",
+        "scope: global + centrála (napr. ACME) → celofiremná platnosť; viditeľnosť jednotkám pripravujeme",
         "scope: company + kód jednotky → platí len pre danú jednotku",
         "scope: region → platí pre regionálnu úroveň",
       ],
@@ -611,7 +611,7 @@ export const dictionaries = {
       rulesTitle: "Pravidlá pre konzistentné značkovanie",
       rules: [
         "sectionKey a companyCode vždy z číselníka, nikdy voľný text.",
-        "Celofiremné predpisy: centrála + scope global — nekopírovať pre každú jednotku.",
+        "Celofiremné predpisy: centrála + scope global. Značka nesie rozsah platnosti; obsah dnes vidí len organizácia, ktorá ho vlastní.",
         "articleRef vypĺňať pri predpisoch — používa sa v citácii odpovede.",
         "Pri novej verzii staré chunky nemazať — isActive: false + effectiveTo.",
       ],
@@ -637,16 +637,16 @@ export const dictionaries = {
         "Prihlásenie e-mailovým odkazom alebo cez SSO: Microsoft Entra ID a Google Workspace. Bez prihlásenia sa dnes k obsahu nedostanete — verejný anonymný režim pripravujeme.",
         "Citácia verzie v každej odpovedi a archivácia starých verzií predpisov.",
         "Monitoring kvality: skóre vyhľadávania, hodnotenia „sedí / nesedí“ a nahlásené nepresnosti — kvalita sa meria z prevádzky, nie z testovacej sady.",
-        "Multi-tenant hierarchia (centrála → regionálne → lokálne jednotky): verejný obsah vidia všetci, interný obsah je oddelený per organizácia.",
+        "Multi-tenant: každá organizácia je oddelený priestor a vidí len vlastný obsah — aj ten verejný. Zdieľanie v hierarchii (centrála → regionálne → lokálne jednotky) pripravujeme.",
         "Súkromie dát: obsah ostáva vo vašej databáze a úložisku; AI odpovedá výhradne z vášho obsahu (RAG), verejná spotrebiteľská AI sa nepoužíva.",
-        "Voľba prevádzkového režimu na úrovni tenanta: cloud (EU rezidencia, zero-retention zmluva) alebo plne on-prem — obsah ani dotazy neopustia vašu infraštruktúru. Jedna inštalácia obslúži oba typy zákazníkov súčasne.",
+        "Voľba prevádzkového režimu na úrovni tenanta: cloud (EU rezidencia dát; neuchovávanie u poskytovateľov AI potvrdzujeme zmluvne) alebo plne on-prem — obsah ani dotazy neopustia vašu infraštruktúru. Jedna inštalácia obslúži oba typy zákazníkov súčasne.",
       ],
       caseStudy: {
         eyebrow: "Prípadová štúdia",
         title: "Nasadenie vo veľkej organizácii — športový zväz (SFZ)",
         intro: "Contineo je doménovo univerzálne. Takto vyzerá jedno reálne nasadenie do veľkej organizácie — Slovenského futbalového zväzu a jeho podriadených zväzov.",
         points: [
-          "Tenant hierarchia: SFZ → regionálne → oblastné zväzy ako samostatné organizácie.",
+          "Tenant model: SFZ, regionálne a oblastné zväzy ako samostatné organizácie s vlastným obsahom; zdieľanie noriem zhora nadol pripravujeme.",
           "Obsah: súťažné a prestupové poriadky, rozpisy súťaží, smernice, IT FAQ (aplikácia ISSF).",
           "Identita: prihlásenie e-mailovým odkazom, cez Microsoft Entra ID alebo Google Workspace; roly sa prideľujú v aplikácii. Napojenie na sportnet.online ako zdroj členstiev je ďalší krok.",
           "Príklad otázky: „Môže hráč nastúpiť v dvoch stretnutiach za jeden deň?“ → odpoveď s citáciou § a verzie.",
@@ -923,7 +923,7 @@ export const dictionaries = {
           popis:
             "Převede každý odstavec na číselný otisk významu. Díky tomu najde správnou pasáž, i když jste použili jiná slova než předpis — na otázku „kolik se platí za přestup“ vrátí článek o odstupném.",
           cloud: "Atlas Automated Embedding (voyage-4)",
-          onprem: "Infinity / TEI (voyage-4-nano, BGE-M3)",
+          onprem: "Infinity (voyage-4-nano) / TEI (BGE-M3)",
         },
         {
           name: "Rerank",
@@ -950,7 +950,7 @@ export const dictionaries = {
       subtitle: "Obsah běží v databázi v EU, odděleně pro každou organizaci. Ven jde jen dotaz a nalezené pasáže — do modelů, se kterými máme smlouvu. Přesný rozpis najdete v sekci Datová rezidence; nezakrýváme ho.",
       points: [
         { icon: "lock", title: "Obsah v databázi v EU", text: "Dokumenty, indexy i zálohy jsou v MongoDB Atlas ve Frankfurtu, oddělené pro každou organizaci podmínkou v každém dotazu. Nejsou veřejné a neindexuje je internet." },
-        { icon: "shield", title: "Žádná veřejná AI", text: "Nepoužíváme veřejnou spotřebitelskou AI. Při generování odpovědi máme s Anthropic dohodnuté neuchovávání a žádné trénování na vašich datech; u embeddingu a přeřazení (Voyage přes Atlas) to ještě potvrzujeme." },
+        { icon: "shield", title: "Žádná veřejná AI", text: "Nepoužíváme veřejnou spotřebitelskou AI. Neuchovávání a žádné trénování na vašich datech potvrzujeme smluvně u obou poskytovatelů — Anthropic (generování) i Voyage přes Atlas (embedding a přeřazení)." },
         { icon: "search", title: "AI je jen pomocník", text: "Jazykový model odpovídá výhradně z nalezených pasáží vašeho obsahu (RAG) a připojuje citaci zdroje." },
         { icon: "layers", title: "Dnes cloud, on-prem připravujeme", text: "Dnes běží cloud s databází v EU. Plně on-prem režim, kde data neopustí váš perimetr, máme navržený a adaptéry v kódu — nasazený zatím nebyl. Podrobný rozpis datových toků je v sekci Datová rezidence." },
       ],
@@ -1052,7 +1052,7 @@ export const dictionaries = {
         { component: "Generování odpovědi", provider: "Anthropic Claude (přímé API)",
           location: "mimo EU (USA)", stav: "mimo",
           evidence: "zpracování v americké infrastruktuře" },
-        { component: "Generování odpovědi", provider: "Claude přes AWS Bedrock / Vertex AI",
+        { component: "Generování odpovědi", provider: "Claude přes AWS Bedrock (EU regiony)",
           location: "EU (Frankfurt, Irsko, Paříž)", stav: "ok",
           evidence: "volba regionu při nasazení" },
         { component: "Embedding, rerank, generování", provider: "vlastní služby (on-prem)",
@@ -1279,7 +1279,7 @@ export const dictionaries = {
         { icon: "search", title: "RAG + Hybrid Search", text: "Hybridní vyhledávání $rankFusion (vektor 60 % + fulltext 40 %) je jádro systému a běží identicky v MongoDB Atlas i v self-hosted Community 8.2. Odpověď vzniká výhradně z nalezených pasáží." },
         { icon: "layers", title: "Vyměnitelné AI adaptéry", text: "Embedding, rerank a generování jsou tři nezávislé adaptéry vybírané konfigurací tenanta, ne kódem. Cloud: Voyage a Claude. On-prem: Infinity nebo TEI a vLLM s modelem podle vašeho výběru (Qwen3, EuroLLM, Gemma)." },
         { icon: "quote", title: "Citace a verze", text: "Každá odpověď uvádí zdroj a verzi. Import nové verze neztratí starou — cituje se vždy platné znění." },
-        { icon: "shield", title: "Multi-tenant a bezpečnost", text: "Hierarchie organizací (centrála → regionální → lokální jednotky) jako samostatní tenanti. Veřejný obsah vidí všichni; interní obsah jen příslušníci dané jednotky. Audit při každé změně znalostí." },
+        { icon: "shield", title: "Multi-tenant a bezpečnost", text: "Každá organizace je samostatný tenant na vlastní doméně a vidí výhradně vlastní obsah — veřejný vidí všichni její přihlášení, interní jen její příslušníci. Sdílení v hierarchii (centrála → regionální → lokální jednotky) připravujeme. Audit při každé změně znalostí." },
         { icon: "layers", title: "Vstupní kanály (obsah i integrace)", text: "Jedna vrstva, kterou teče obsah. Dnes jí jde nahraný soubor — DOCX, PDF, XLSX, Markdown, TXT, CSV — převod běží u nás a všechno končí v jednom indexu. Další kanály (weby a RSS, MCP konektory, e-mail) připravujeme. Zdroj identity poskytuje identitu, ne obsah." },
         { icon: "ticket", title: "Helpdesk a e-mail (připravujeme)", text: "Sledování e-mailových schránek, ticketing a předpřipravené odpovědi s eskalací z vyhledávání. Zatím není součástí nasazení — dnes běží nahlášení nepřesnosti a fronta hodnotitele." },
         { icon: "brain", title: "Kontrola kvality a kurace", text: "Nejde o strojové učení modelu, ale o lidskou kuraci: správce ohodnotí a schválí odpověď, ta se uloží jako ověřená odpověď a naembeduje zpět. Nová ověřená odpověď nikdy potichu nepřepíše schválený předpis." },
@@ -1336,7 +1336,7 @@ export const dictionaries = {
       ],
       scopeTitle: "Rozsah platnosti",
       scopes: [
-        "scope: global + centrála (např. ACME) → platí pro celou firmu",
+        "scope: global + centrála (např. ACME) → celofiremní platnost; viditelnost jednotkám připravujeme",
         "scope: company + kód jednotky → platí jen pro danou jednotku",
         "scope: region → platí pro regionální úroveň",
       ],
@@ -1344,7 +1344,7 @@ export const dictionaries = {
       rulesTitle: "Pravidla pro konzistentní značkování",
       rules: [
         "sectionKey a companyCode vždy z číselníku, nikdy volný text.",
-        "Celofiremní předpisy: centrála + scope global — nekopírovat pro každou jednotku.",
+        "Celofiremní předpisy: centrála + scope global. Značka nese rozsah platnosti; obsah dnes vidí jen organizace, která ho vlastní.",
         "articleRef vyplňovat u předpisů — používá se v citaci odpovědi.",
         "Při nové verzi staré chunky nemazat — isActive: false + effectiveTo.",
       ],
@@ -1370,7 +1370,7 @@ export const dictionaries = {
         "Přihlášení e-mailovým odkazem nebo přes SSO: Microsoft Entra ID a Google Workspace. Bez přihlášení se dnes k obsahu nedostanete — veřejný anonymní režim připravujeme.",
         "Citace verze v každé odpovědi a archivace starých verzí předpisů.",
         "Monitoring kvality: skóre vyhledávání, hodnocení „sedí / nesedí“ a nahlášené nepřesnosti — kvalita se měří z provozu, ne z testovací sady.",
-        "Multi-tenant hierarchie (centrála → regionální → lokální jednotky): veřejný obsah vidí všichni, interní obsah je oddělen per organizace.",
+        "Multi-tenant: každá organizace je oddělený prostor a vidí jen vlastní obsah — i ten veřejný. Sdílení v hierarchii (centrála → regionální → lokální jednotky) připravujeme.",
         "Soukromí dat: obsah zůstává ve vaší databázi a úložišti; AI odpovídá výhradně z vašeho obsahu (RAG), veřejná spotřebitelská AI se nepoužívá.",
         "Volba provozního režimu na úrovni tenanta: cloud (databáze v EU) nebo plně on-prem — obsah ani dotazy neopustí vaši infrastrukturu. Jedna instalace obslouží oba typy zákazníků současně.",
       ],
@@ -1379,7 +1379,7 @@ export const dictionaries = {
         title: "Nasazení ve velké organizaci — sportovní svaz (SFZ)",
         intro: "Contineo je doménově univerzální. Takto vypadá jedno reálné nasazení do velké organizace — Slovenského fotbalového svazu a jeho podřízených svazů.",
         points: [
-          "Tenant hierarchie: SFZ → regionální → oblastní svazy jako samostatné organizace.",
+          "Tenant model: SFZ, regionální a oblastní svazy jako samostatné organizace s vlastním obsahem; sdílení norem shora dolů připravujeme.",
           "Obsah: soutěžní a přestupní řády, rozpisy soutěží, směrnice, IT FAQ (aplikace ISSF).",
           "Identita: přihlášení e-mailovým odkazem, přes Microsoft Entra ID nebo Google Workspace; role se přidělují v aplikaci. Napojení na sportnet.online jako zdroj členství je další krok.",
           "Příklad otázky: „Může hráč nastoupit ve dvou utkáních za jeden den?“ → odpověď s citací § a verze.",
@@ -1657,7 +1657,7 @@ export const dictionaries = {
           popis:
             "Turns every paragraph into a numeric fingerprint of its meaning. That is how it finds the right passage even when you phrased things differently from the regulation — ask about “what you pay for a transfer” and it returns the article on transfer fees.",
           cloud: "Atlas Automated Embedding (voyage-4)",
-          onprem: "Infinity / TEI (voyage-4-nano, BGE-M3)",
+          onprem: "Infinity (voyage-4-nano) / TEI (BGE-M3)",
         },
         {
           name: "Rerank",
@@ -1684,7 +1684,7 @@ export const dictionaries = {
       subtitle: "Content lives in a database in the EU, isolated per organisation. What leaves is the question and the retrieved passages — to models we hold contracts with. The exact breakdown is in the Data residency section; we don't hide it.",
       points: [
         { icon: "lock", title: "Content in an EU database", text: "Documents, indexes and backups sit in MongoDB Atlas in Frankfurt, isolated per organisation by a condition on every query. They aren't public and aren't indexed by the internet." },
-        { icon: "shield", title: "No public AI", text: "We never use public consumer AI. For answer generation we have a zero-retention, no-training agreement with Anthropic; for embedding and reranking (Voyage via Atlas) we are still confirming it." },
+        { icon: "shield", title: "No public AI", text: "We never use public consumer AI. Zero retention and no training on your data is being confirmed contractually with both providers — Anthropic (generation) and Voyage via Atlas (embedding and reranking)." },
         { icon: "search", title: "AI is only a helper", text: "The language model answers strictly from retrieved passages of your content (RAG) and attaches a source citation." },
         { icon: "layers", title: "Cloud today, on-prem in preparation", text: "Today we run cloud with the database in the EU. A fully on-prem mode, where data never leaves your perimeter, is designed and the adapters are written — it has not been deployed yet. The full data-flow breakdown is in the Data residency section." },
       ],
@@ -1786,7 +1786,7 @@ export const dictionaries = {
         { component: "Answer generation", provider: "Anthropic Claude (direct API)",
           location: "outside the EU (US)", stav: "mimo",
           evidence: "processed in US infrastructure" },
-        { component: "Answer generation", provider: "Claude via AWS Bedrock / Vertex AI",
+        { component: "Answer generation", provider: "Claude via AWS Bedrock (EU regions)",
           location: "EU (Frankfurt, Ireland, Paris)", stav: "ok",
           evidence: "region chosen at deployment" },
         { component: "Embedding, rerank, generation", provider: "own services (on-prem)",
@@ -1796,7 +1796,7 @@ export const dictionaries = {
 
       honestyTitle: "Why we spell this out in such detail.",
       honestyText:
-        "Because someone in procurement will ask. Most vendors state “data in the EU” and stay silent about where the model runs — yet that is exactly where the question and the retrieved passages go. Every row above is backed by the vendor's own documentation, and if the situation changes, so does this table. And here is the open point we don't hide: with Voyage (embedding and reranking via Atlas) we do not yet have zero-retention or the exact processing region confirmed in writing.",
+        "Because someone in procurement will ask. Most vendors state “data in the EU” and stay silent about where the model runs — yet that is exactly where the question and the retrieved passages go. Every row above is backed by the vendor's own documentation, and if the situation changes, so does this table. And here is the open point we don't hide: written zero-retention confirmations are still being finalised with Anthropic (generation) and with Voyage (embedding and reranking via Atlas), where the exact processing region is not yet confirmed either.",
       legalNote:
         "This page is a technical description of data flows, not a legal assessment. For a specific deployment we recommend review by a data protection specialist.",
     },
@@ -2013,7 +2013,7 @@ export const dictionaries = {
         { icon: "search", title: "RAG + Hybrid Search", text: "The $rankFusion hybrid query (vector 60 % + fulltext 40 %) is the core of the system and runs identically in MongoDB Atlas and in self-hosted Community 8.2. Answers are produced only from the retrieved passages." },
         { icon: "layers", title: "Swappable AI adapters", text: "Embedding, rerank and generation are three independent adapters selected by tenant configuration, not by code. Cloud: Voyage and Claude. On-prem: Infinity or TEI and vLLM with the model of your choice (Qwen3, EuroLLM, Gemma)." },
         { icon: "quote", title: "Citations and versions", text: "Every answer states the source and version. A new import never loses the old one — always citing the valid wording." },
-        { icon: "shield", title: "Multi-tenant and security", text: "A hierarchy of organisations (headquarters → regional → local units) as separate tenants. Public content is visible to everyone; internal content only to members of that unit. Audit trail on every knowledge change." },
+        { icon: "shield", title: "Multi-tenant and security", text: "Each organisation is its own tenant on its own domain and sees strictly its own content — public content is visible to all of its signed-in people, internal only to its members. Sharing across a hierarchy (headquarters → regional → local units) is in preparation. Audit trail on every knowledge change." },
         { icon: "layers", title: "Input channels (content & integrations)", text: "One layer through which content flows. Today that means an uploaded file — DOCX, PDF, XLSX, Markdown, TXT, CSV — converted on our side and landing in a single index. Further channels (websites and RSS, MCP connectors, e-mail) are in preparation. A connected identity source provides identity here, not content." },
         { icon: "ticket", title: "Helpdesk and e-mail (in preparation)", text: "Mailbox monitoring, ticketing and prepared replies with escalation from search. Not part of the deployment yet — today we run inaccuracy flagging and an evaluator queue." },
         { icon: "brain", title: "Quality control & curation", text: "Not machine learning of the model, but human curation: an admin rates and approves an answer, it is stored as a verified answer and embedded back. A new verified answer never silently overrides an approved document." },
@@ -2070,7 +2070,7 @@ export const dictionaries = {
       ],
       scopeTitle: "Scope of validity",
       scopes: [
-        "scope: global + HQ (e.g. ACME) → applies company-wide",
+        "scope: global + HQ (e.g. ACME) → company-wide validity; visibility to units is in preparation",
         "scope: company + unit code → applies to that unit only",
         "scope: region → applies to a regional level",
       ],
@@ -2078,7 +2078,7 @@ export const dictionaries = {
       rulesTitle: "Rules for consistent tagging",
       rules: [
         "sectionKey and companyCode always from the list, never free text.",
-        "Company-wide policies: HQ + scope global — don't copy per unit.",
+        "Company-wide policies: HQ + scope global. The tag carries the scope of validity; content today is visible only to the organisation that owns it.",
         "Fill articleRef for policies — it's used in the citation.",
         "On a new version don't delete old chunks — set isActive: false + effectiveTo.",
       ],
@@ -2104,16 +2104,16 @@ export const dictionaries = {
         "Sign-in with an e-mail link or via SSO: Microsoft Entra ID and Google Workspace. Without signing in you reach no content today — a public anonymous mode is in preparation.",
         "A version citation in every answer and archiving of old document versions.",
         "Quality monitoring: search score, “held up / didn't” ratings and flagged inaccuracies — quality is measured from production, not from a test set.",
-        "Multi-tenant hierarchy (headquarters → regional → local units): public content visible to all, internal content isolated per organisation.",
+        "Multi-tenant: each organisation is an isolated space and sees only its own content — the public part included. Sharing across a hierarchy (headquarters → regional → local units) is in preparation.",
         "Data privacy: content stays in your database and storage; the AI answers strictly from your content (RAG), no public consumer AI is used.",
-        "Runtime mode chosen per tenant: cloud (EU residency, zero-retention agreement) or fully on-prem — neither content nor queries leave your infrastructure. A single installation serves both kinds of customer at once.",
+        "Runtime mode chosen per tenant: cloud (EU data residency; zero retention with the AI providers being confirmed contractually) or fully on-prem — neither content nor queries leave your infrastructure. A single installation serves both kinds of customer at once.",
       ],
       caseStudy: {
         eyebrow: "Case study",
         title: "Deployment in a large organisation — a sports association (SFZ)",
         intro: "Contineo is domain-agnostic. This is what one real deployment into a large organisation looks like — the Slovak Football Association and its subordinate associations.",
         points: [
-          "Tenant hierarchy: SFZ → regional → district associations as separate organisations.",
+          "Tenant model: SFZ, regional and district associations as separate organisations, each with its own content; top-down sharing of rules is in preparation.",
           "Content: competition and transfer rules, fixtures, guidelines, IT FAQ (the ISSF app).",
           "Identity: sign-in with an e-mail link, via Microsoft Entra ID or Google Workspace; roles are assigned in the app. Connecting sportnet.online as the source of memberships is the next step.",
           "Example question: “Can a player play in two matches in a single day?” → an answer citing the article and version.",
