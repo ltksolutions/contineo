@@ -10,6 +10,27 @@
 
 ---
 
+## 2026-09-18 (dokončenie) — editor s dompurify 3.4.15 overený v produkcii
+
+Posledný otvorený kúsok N2. Najprv staticky: toast-ui volá na dompurify len
+API, ktoré v 3.4.x existuje (`sanitize`, `addHook`, `setConfig`,
+`isValidAttribute`…) — skok 2.x → 3.x teda nemal čo rozbiť. Potom naživo,
+v Chrome na intranete (build `5a6a747` podľa pätičky), na skúšobnej smernici
+`sfz:test_onboarding` a bez uloženia:
+
+- WYSIWYG vykreslil nadpisy, tučné, zoznamy aj kódový span; prepínanie
+  Markdown ↔ WYSIWYG tam a späť bez chyby v konzole.
+- Payload `<img src=x onerror=…>` + `<script>…</script>` v Markdown režime:
+  náhľad `onerror` odstránil, `<script>` zahodil celý, nič sa nespustilo.
+  Po prepnutí do WYSIWYG to isté — obsah skriptu skončil ako neškodný text.
+- Testovací riadok som z editora zmazal a odišiel bez uloženia; buffer končí
+  pôvodnou vetou.
+
+N2 je tým uzavreté celé. Z bezpečnostnej kontroly zostáva O12, hlavičky (N4)
+a hláška v `generateAnswer()` (N6).
+
+---
+
 ## 2026-09-18 (pokračovanie) — N2 a N3 z bezpečnostnej kontroly vyriešené
 
 Ján: „toto vyriešme prosím — CSV formula injection a xlsx/dompurify".
