@@ -10,6 +10,19 @@
 
 ---
 
+## 2026-09-18 (dodatok 2) — contineoapp obmedzený na cluster Contineo
+
+Ján dotiahol prístup aplikačného používateľa: v Atlase zapol „Restrict
+Access to Specific Clusters" a nechal len cluster Contineo. Rola v rámci
+clustra zostáva readWriteAnyDatabase — pri jednom clustri s jedinou
+databázou je to prakticky to isté ako readWrite@contineo, takže položku
+zatváram bez ďalšieho zužovania. Overil som po zmene: connectionStatus
+prejde, číta 1991 úsekov, skúšobný zápis do `_ping_test` prešiel a hneď
+sa zmazal, sign-in vracia 200. Z kompenzačných krokov O12 zostáva rotácia
+hesla starého správcovského účtu a Atlas alerty.
+
+---
+
 ## 2026-09-18 (dodatok) — TextEditor bez SSR chyby
 
 Drobnosť z logov opravená hneď: toast-ui sa v `TextEditor.tsx` importuje
