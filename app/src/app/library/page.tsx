@@ -142,6 +142,13 @@ export default async function LibraryPage({
   const paged = pageRows(sortRows(rows, sort.key, sort.dir), pageOf(filters))
   const view = currentView(filters)
   /*
+    V automatickom pohľade nie je zvýraznená voľba človeka, ale to, čo je
+    práve vidieť — a to vie až prehliadač. Preto trieda, ktorú prepne tá istá
+    medza ako zoznam; `aria-current` sa nedáva, lebo nikto nič nevybral.
+  */
+  const viewSwitchClass = (key: "table" | "cards") =>
+    view === key ? " is-on" : view === "auto" ? ` view-switch-item--auto-${key}` : ""
+  /*
    * Potvrdenia len pre **viditeľnú stranu**, teda až po stránkovaní a nie
    * v `Promise.all` vyššie. Počítať ich pre celý zoznam by znamenalo počítať
    * publiká aj pre riadky, ktoré nikto neuvidí; takto sú to tri dotazy na
@@ -285,7 +292,7 @@ export default async function LibraryPage({
             <Link
               key={key}
               href={toQuery(setView(filters, key))}
-              className={`view-switch-item${view === key ? " is-on" : ""}`}
+              className={`view-switch-item${viewSwitchClass(key)}`}
               aria-current={view === key ? "true" : undefined}
             >
               {label}
@@ -726,20 +733,25 @@ export default async function LibraryPage({
             Tabuľka, nie karty: v knižnici sa dokumenty **porovnávajú** —
             ktoré znenie platí, čo sa kedy zmenilo. Na to musia byť tie isté
             údaje pod sebou v stĺpci, nie rozsypané v každej karte inak.
-            Kartový pohľad je vedľa nej ako voľba, nie namiesto nej.
+            Na telefóne to ale neplatí: tabuľka je široká 1160 px a v 340 px
+            obale z nej vidno názov dokumentu a nič viac — stav, platnosť ani
+            potvrdenia už nie. Preto sa v automatickom pohľade vykreslia oba
+            zoznamy a vyberá medzi nimi CSS. Vykresliť oba je lacnejšie než
+            hádať šírku na serveri alebo ju dopĺňať skriptom, a `display: none`
+            ten druhý skryje aj pred čítačkou, takže sa neprečíta dvakrát.
 
             Obal roluje vodorovne a tabuľka má `min-width`: stĺpce sa nesmú
             stlačiť tak, že sa dátum zalomí do troch riadkov. Na telefóne je
             posun prstom čitateľnejší než rozbitá mriežka.
           */}
-          {view === "cards" ? (
+          {view !== "table" && (
           /*
             Karty sú na prezeranie, nie na porovnávanie: názov má miesto na tri
             riadky a údaje sú pod ním, nie v stĺpci. Preto tu nie sú hlavičky
             na triedenie — poradie sa nastavilo v tabuľke a nesie sa ďalej
             v adrese, len sa tu nedá meniť klikom na stĺpec, ktorý neexistuje.
           */
-          <ul className="doc-cards">
+          <ul className={`doc-cards${view === "auto" ? " doc-view-auto" : ""}`}>
             {paged.rows.map(r => (
               <li key={r.documentId} className="doc-card">
                 <div className="doc-card-top">
@@ -780,8 +792,10 @@ export default async function LibraryPage({
               </li>
             ))}
           </ul>
-          ) : (
-          <div className="doc-table-wrap">
+          )}
+
+          {view !== "cards" && (
+          <div className={`doc-table-wrap${view === "auto" ? " doc-view-auto" : ""}`}>
             <table className="doc-table">
               <thead>
                 <tr>

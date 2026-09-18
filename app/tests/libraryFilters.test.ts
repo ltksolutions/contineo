@@ -276,19 +276,23 @@ describe("stránkovanie", () => {
 })
 
 describe("pohľad", () => {
-  it("predvolený je tabuľka a čokoľvek neznáme tiež", () => {
-    expect(currentView(readFilters({}))).toBe("table")
-    expect(normalizeView("mriezka")).toBe("table")
+  it("predvolený je automatický a čokoľvek neznáme tiež", () => {
+    // `auto` znamená „podľa šírky obrazovky" — vyberá CSS, nie server.
+    expect(currentView(readFilters({}))).toBe("auto")
+    expect(normalizeView("mriezka")).toBe("auto")
     expect(normalizeView("cards")).toBe("cards")
+    expect(normalizeView("table")).toBe("table")
   })
 
-  it("do adresy sa píšu len karty", () => {
-    // Inak by každý odkaz niesol `view=table` a dva odkazy na ten istý
-    // pohľad by vyzerali ako dva rôzne.
+  it("výslovná voľba ide do adresy, automatický pohľad nie", () => {
+    // Tabuľka musí byť v adrese zapísaná, inak by sa na telefóne nedala
+    // vybrať — prázdna adresa tam znamená karty.
     const cards = setView(readFilters({}), "cards")
     expect(toQuery(cards)).toBe("/library?view=cards")
-    expect(toQuery(setView(cards, "table"))).toBe("/library")
-    expect(toQuery(readFilters({ view: "table" }))).toBe("/library")
+    expect(toQuery(setView(cards, "table"))).toBe("/library?view=table")
+    expect(toQuery(readFilters({ view: "table" }))).toBe("/library?view=table")
+    expect(toQuery(setView(cards, "auto"))).toBe("/library")
+    expect(toQuery(readFilters({}))).toBe("/library")
   })
 
   it("prepnutie pohľadu nemení filtre, stranu ani triedenie", () => {

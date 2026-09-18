@@ -24,7 +24,7 @@ import {
   DomainOwnedError,
   TenantValidationError,
 } from "../src/lib/tenantAdmin.ts"
-import { pridajDomenu } from "../src/lib/vercel.ts"
+import { addDomain } from "../src/lib/vercel.ts"
 import { addVercelAuth } from "./lib/vercel-auth.mjs"
 
 // `lib/vercel.ts` číta výhradne premenné prostredia — na serveri iná možnosť
@@ -123,19 +123,19 @@ try {
     if (hostnames.length) console.log(`${INFO} --no-vercel: domény pridaj do Vercelu ručne`)
   } else {
     for (const h of after.hostnames) {
-      const v = await pridajDomenu(h)
-      if (v.stav === "preskocena") console.log(`${INFO} ${h} — vo Verceli netreba (${v.dovod})`)
-      else if (v.stav === "pridana") {
+      const v = await addDomain(h)
+      if (v.state === "skipped") console.log(`${INFO} ${h} — vo Verceli netreba (${v.reason})`)
+      else if (v.state === "added") {
         console.log(`${OK} ${h} pridaná do projektu vo Verceli`)
         console.log(`   Zákazník nech nastaví: CNAME ${h.split(".")[0]} → cname.vercel-dns.com`)
-      } else if (v.stav === "uz-je") console.log(`${OK} ${h} už v projekte je`)
-      else if (v.stav === "bez-nastavenia") {
+      } else if (v.state === "already-there") console.log(`${OK} ${h} už v projekte je`)
+      else if (v.state === "not-configured") {
         console.error(`${FAIL} ${h}: chýba VERCEL_TOKEN — doménu pridaj ručne (tenant je uložený)`)
-      } else if (v.stav === "neplatny-token") {
+      } else if (v.state === "invalid-token") {
         console.error(`${FAIL} ${h}: Vercel token neprijal (tenant je uložený).`)
         console.error(`     Hodnota z \`vercel login\` vyprší; na stálu prevádzku si vytvor`)
         console.error(`     vlastný token vo Verceli a daj ho do app/.env.local ako VERCEL_TOKEN.`)
-      } else console.error(`${FAIL} ${h}: ${v.sprava} (tenant je uložený)`)
+      } else console.error(`${FAIL} ${h}: ${v.message} (tenant je uložený)`)
     }
   }
   process.exit(0)

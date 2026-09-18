@@ -1935,6 +1935,21 @@ html[data-theme="dark"] .editor-tui .CodeMirror {
   background: var(--surface);
 }
 
+/*
+  Automatický pohľad knižnice. Základ je telefón — tam sú karty, lebo tabuľka
+  má deväť stĺpcov a v 340 px obale z nej vidno názov dokumentu a nič viac.
+  Od 760 px tabuľka, lebo dokumenty sa porovnávajú a na to musia byť tie isté
+  údaje pod sebou. Vykreslené sú oba zoznamy a vyberá medza — server šírku
+  obrazovky nepozná. `display: none` schová ten druhý aj pred čítačkou, takže
+  sa zoznam neprečíta dvakrát.
+*/
+.doc-table-wrap.doc-view-auto { display: none; }
+
+@media (min-width: 760px) {
+  .doc-table-wrap.doc-view-auto { display: block; }
+  .doc-cards.doc-view-auto { display: none; }
+}
+
 .doc-table {
   width: 100%;
   /* Deväť stĺpcov, nie sedem: pribudlo „Platnosť do" a „Potvrdenia" (O6/7,
@@ -2542,6 +2557,17 @@ html[data-theme="dark"] .editor-tui .CodeMirror {
 }
 
 .view-switch-item:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+/*
+  V automatickom pohľade nie je zvýraznená voľba človeka — nikto nič nevybral —
+  ale to, čo je práve vidieť. Preto tá istá medza ako pri zozname.
+*/
+.view-switch-item--auto-cards { background: var(--surface); color: var(--ink); }
+
+@media (min-width: 760px) {
+  .view-switch-item--auto-cards { background: none; color: var(--muted); }
+  .view-switch-item--auto-table { background: var(--surface); color: var(--ink); }
+}
 
 /* ── knižnica: hľadanie a chips aktívnych filtrov ───────────────────────── */
 .library-search {

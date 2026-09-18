@@ -10,6 +10,51 @@
 
 ---
 
+## 2026-09-18 (noc) — mobilná knižnica, zhnité skripty a Voyage
+
+**Rozhodnutie, ktoré si Ján nechal na mne: karty na telefóne.** Najprv som to
+chcel nechať tak — kartový pohľad tam je a v kóde stálo, že „na telefóne je
+posun prstom čitateľnejší než rozbitá mriežka". Potom som to zmeral: tabuľka
+1160 px v 340 px obale, deväť stĺpcov, a z prvej obrazovky vidno `Výber`
+a `Dokument`. Stav, platnosť od, platnosť do, potvrdenia — všetko za hranou.
+To nie je „posun prstom", to je skrytý obsah. Rozhodol som teda za karty.
+
+**Ako sa to dá spraviť bez toho, aby jedna adresa vyzerala inde inak.** Server
+šírku obrazovky nepozná a hádať ju z `User-Agent` by znamenalo, že ten istý
+odkaz ukáže dvom ľuďom dve rôzne veci. Preto sa v automatickom pohľade
+vykreslia **oba** zoznamy a vyberá medza v CSS. Stránka je stránkovaná po 25
+riadkoch, takže druhá kópia stojí pár kilobajtov, a `display: none` ju skryje
+aj pred čítačkou. Vedľajší dôsledok, ktorý bolo treba domyslieť: `view=table`
+musí byť v adrese zapísateľné. Dovtedy „prázdno" znamenalo tabuľku, takže
+výslovná voľba tabuľky by na telefóne vyrobila prázdnu adresu — a tá tam
+odteraz znamená karty. Voľba, ktorú sa nedá vybrať, nie je voľba.
+
+**Drobnosti z TODO: dve z troch boli už dávno hotové.** `branding.logoUrl`
+v databáze je `/api/brand/sfz?v=…`, nie stará cesta; docstringy v `i18n.ts`
+sedia nad svojimi skupinami. Poznámky v TODO boli zastarané. Pravidlo „kód
+a databáza sú pravda, dokumentácia je indícia" sa vyplatilo doslova — keby som
+obe „opravil", zmenil by som funkčný stav na základe starého zápisu.
+
+**Tretia drobnosť odkryla dve väčšie.** Chýbajúci `--env-file` v `check`
+a `status` bol skutočný. Keď som to opravoval, skúsil som aj `npm run tenant` —
+a ten spadol na importe: `pridajDomenu` sa po premenovaní volá `addDomain`.
+Pod tým čakala druhá vrstva toho istého: vetvy výsledku testovali `v.stav ===
+"pridana"`, kým typ dnes vracia `state: "added"`. Skript teda buď nebežal, alebo
+by o doménach klamal. Poučenie: veľké premenovanie treba overiť aj tam, kde
+TypeScript nedosiahne — `.mjs` skripty importujúce `.ts` cez hook sú presne to
+miesto, kde tsc mlčí.
+
+**O18 sa posunulo z „treba sa opýtať" na „vieme tri veci".** Najdôležitejšia:
+zber dát na trénovanie Voyage modelov je v Atlase **predvolene zapnutý**
+a vypína ho prepínač v Organization Settings. To nie je otázka na support, to je
+prepínač, ktorý má niekto prepnúť. Europe Geography existuje od 1. 9. 2026, ale
+kryje priame API, nie automated embedding — presne tú cestu, ktorou ideme.
+A doba uchovania logov nikde napísaná nie je; to zostáva otázkou na MongoDB.
+
+tsc čistý, eslint 0 chýb, vitest 1367/1367, build prešiel.
+
+---
+
 ## 2026-09-18 (neskoro večer) — dizajnová stupnica, živé filtre, widgety
 
 Ján po preklikaní: „zjednoť veľkosti tlačidiel, písma, polí a pills,

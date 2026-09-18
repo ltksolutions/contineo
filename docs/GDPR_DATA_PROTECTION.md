@@ -151,7 +151,7 @@ niečo o správaní konkrétneho človeka, nie o jeho povinnosti. Preto:
 |---|---|---|
 | MongoDB Atlas | DB, vektory, fulltext | **EU región** |
 | Hosting (Vercel) | beh aplikácie | EU región (podľa konfigurácie) |
-| Voyage AI | embedding + rerank | overiť zero-retention + región |
+| Voyage AI (cez MongoDB) | embedding + rerank | trénovanie sa dá vypnúť v Atlase (predvolene **zapnuté**); Europe Geography je od 9/2026 v preview, ale zatiaľ len pre priame API, nie pre automated embedding; doba uchovania logov nezverejnená — O18 |
 | Anthropic Claude | **primárny** generujúci model (`claude-sonnet-5`) | **zero-retention, no-training**, EU |
 | vLLM / SGLang / Ollama | voliteľný self-hosted generátor (`kind: "openai"`) | **dnes nenasadené** — adaptér existuje, prevádzka nie |
 

@@ -66,13 +66,17 @@ export const PAGE_SIZE = 25
 /**
  * Pohľad na zoznam.
  *
- * Tabuľka je predvolená, lebo v knižnici sa dokumenty porovnávajú. Karty sú
- * pre prezeranie — na telefóne a vtedy, keď človek nevie, čo hľadá, a listuje.
+ * `auto` je predvolený stav: na širokej obrazovke tabuľka, lebo v knižnici sa
+ * dokumenty porovnávajú, na telefóne karty — tabuľka má deväť stĺpcov a na
+ * 375 px je z nej vidieť názov dokumentu a nič viac. Vyberá CSS, nie server:
+ * šírku obrazovky server nepozná a tá istá adresa má vyzerať rovnako všade.
+ * `table` a `cards` sú výslovná voľba človeka a šírku prebijú.
  */
-export type View = "table" | "cards"
+export type View = "auto" | "table" | "cards"
 
 export function normalizeView(value: string | string[] | undefined): View {
-  return one(value) === "cards" ? "cards" : "table"
+  const value_ = one(value)
+  return value_ === "cards" ? "cards" : value_ === "table" ? "table" : "auto"
 }
 
 export interface ActiveFilters {
@@ -171,9 +175,9 @@ export function readFilters(q: RawQuery): ActiveFilters {
     language: list(q.language),
     ownerDepartment: list(q.ownerDepartment),
     layout: one(q.layout),
-    // Predvolený pohľad sa nedrží ako hodnota — `undefined` znamená tabuľka
-    // a do adresy sa nezapíše. Inak by každý odkaz niesol `view=table`.
-    view: normalizeView(q.view) === "cards" ? "cards" : undefined,
+    // Automatický pohľad sa nedrží ako hodnota — `undefined` znamená „podľa
+    // šírky" a do adresy sa nezapíše. Inak by ho niesol každý odkaz.
+    view: normalizeView(q.view) === "auto" ? undefined : normalizeView(q.view),
     sort: normalizeSort(q.sort),
     dir: normalizeDir(q.dir),
     page: normalizePage(q.page),
@@ -276,11 +280,11 @@ export function setValue(
  * dokumentov, len inak nakreslená.
  */
 export function setView(filters: ActiveFilters, view: View): ActiveFilters {
-  return { ...filters, view: view === "cards" ? "cards" : undefined }
+  return { ...filters, view: view === "auto" ? undefined : view }
 }
 
 export function currentView(filters: ActiveFilters): View {
-  return filters.view === "cards" ? "cards" : "table"
+  return filters.view ?? "auto"
 }
 
 /**

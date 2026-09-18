@@ -4,6 +4,38 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Knižnica na telefóne, opravené skripty a čo je doložené o Voyage (2026-09-18)
+
+**Knižnica mala na telefóne predvolenú tabuľku, z ktorej nebolo vidieť nič
+podstatné.** Tabuľka má deväť stĺpcov a je široká 1160 px; v 340 px obale z nej
+bolo vidieť názov dokumentu a nič viac — stav, platnosť ani potvrdenia už nie,
+a dopátrať sa k nim znamenalo tri a pol obrazovky posunu prstom.
+
+- Predvolený pohľad je odteraz **automatický**: od 760 px tabuľka (dokumenty sa
+  porovnávajú a na to musia byť tie isté údaje pod sebou), pod ňou karty.
+  Vykreslia sa oba zoznamy a vyberá medzi nimi CSS — server šírku obrazovky
+  nepozná a jedna adresa má vyzerať rovnako na každom zariadení.
+  `display: none` ten druhý skryje aj pred čítačkou, takže sa zoznam neprečíta
+  dvakrát.
+- **Výslovná voľba v prepínači šírku prebije** a zapíše sa do adresy. `view=table`
+  je preto odteraz skutočná hodnota, nie „prázdno znamená tabuľka" — inak by sa
+  tabuľka na telefóne nedala vybrať vôbec. V automatickom pohľade nie je
+  zvýraznená voľba človeka (nikto nič nevybral), ale to, čo je práve vidieť.
+
+**`npm run tenant` vôbec nebežal.** Importoval `pridajDomenu` z `lib/vercel.ts`,
+kde sa funkcia po premenovaní volá `addDomain`, a všetky vetvy výsledku testoval
+na staré slovenské hodnoty (`v.stav === "pridana"`), kým typ vracia
+`state: "added"` — takže aj keby sa import podaril, správy o doménach by boli
+nesprávne. Opravené a overené naživo. `check`, `status` aj `tenant` dostali
+`--env-file=.env.local`, bez ktorej končili na „Chýba MONGODB_URI".
+
+**O18 — čo je o Voyage doložiteľné.** Trénovanie na odoslaných dátach je
+predvolene **zapnuté** a vypína sa prepínačom *Help Improve Voyage AI Models*
+v Atlase. Europe Geography je od 1. 9. 2026 v public preview, ale kryje priame
+Embedding and Reranking API, nie automated embedding, ktorý používame. Doba
+uchovania logovaných payloadov zverejnená nie je. Zapísané v `docs/TODO.md`
+a v tabuľke sub-procesorov v `docs/GDPR_DATA_PROTECTION.md`.
+
 ### Jedna stupnica veľkostí, živé filtre a rozbaľovacie widgety (2026-09-18)
 
 **Rozhranie vyzeralo poskladané z viacerých období** a bolo to merateľné:
