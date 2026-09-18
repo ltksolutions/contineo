@@ -317,10 +317,14 @@ button:disabled { cursor: not-allowed; opacity: 0.55; }
 
 .header-search-input {
   width: 100%;
-  height: 32px;
-  padding: 0 11px 0 30px;
+  /* Rovnaká výška a veľkosť písma ako ostatné polia — lišta na to miesto
+     má (zvonček je tiež 40 px) a pod 16 px by iOS pri kliknutí do poľa
+     stránku priblížil. */
+  height: var(--control-h);
+  padding: 0 11px 0 32px;
   font: inherit;
-  font-size: 13px;
+  font-size: var(--fs-control);
+  line-height: 1.2;
   color: var(--ink);
   background: var(--bg);
   border: 1px solid var(--line);
@@ -3248,10 +3252,16 @@ a.answer-source:focus-visible { outline: 2px solid var(--accent); outline-offset
 }
 
 .overview-suggestion {
-  padding: 4px 9px;
+  /* Návrhy sú terčom na dotyk, nie ozdoba — preto majú výšku pilulky
+     z tej istej stupnice ako ostatné ovládacie prvky, nie 12 px text. */
+  display: inline-flex;
+  align-items: center;
+  min-height: 32px;
+  padding: 4px 12px;
   border: 1px solid var(--line);
   border-radius: 20px;
-  font-size: 12px;
+  font-size: var(--fs-small);
+  line-height: 1.3;
   color: var(--muted);
   text-decoration: none;
 }
