@@ -711,9 +711,9 @@ nie táto sekcia.
 
 ### Bezpečnostná kontrola 2026-09-17 → `docs/BEZPECNOSTNA_KONTROLA_2026-09.md`
 
-- [ ] **N3 — CSV formula injection**: v `toCsv()` (`app/src/lib/csv.ts`) predradiť `'` bunkám začínajúcim `=`, `+`, `-`, `@`, tab + test. Malá zmena, spraviť pred ostrou prevádzkou.
-- [ ] **N2 — `xlsx` 0.18.5 (high, bez opravy v npm)**: prejsť na oficiálnu distribúciu SheetJS (cdn.sheetjs.com, ≥ 0.20.x) alebo `exceljs`. Zmierňuje ho, že nahráva len `content-admin`.
-- [ ] **N2 — `dompurify` cez `@toast-ui/editor` (moderate)**: skúsiť `overrides` v `package.json` na novší dompurify a overiť editor.
+- [x] **N3 — CSV formula injection** ✅ 2026-09-18 — `toCsv()` neutralizuje `=`, `+`, `-`, `@`, tab, CR apostrofom; testy v `tests/csv.test.ts`.
+- [x] **N2 — `xlsx`** ✅ 2026-09-18 — 0.20.3 z oficiálnej distribúcie SheetJS (tarball v package.json, pinovaný lockfile-om); `npm audit` čistý.
+- [x] **N2 — `dompurify`** ✅ 2026-09-18 — `overrides` na ^3.4.15 (z 2.5.9); tsc/testy/build prešli. **Zostáva raz preklikať WYSIWYG editor v knižnici** (dompurify je závislosť náhľadu toast-ui).
 - [ ] **N4 — bezpečnostné hlavičky**: `headers()` v `next.config.mjs` — `frame-ancestors 'none'`, `Referrer-Policy`, CSP najprv report-only; overiť HSTS na zákazníckych doménach.
 - [ ] **N6 — `generateAnswer()` posiela surové `err.message` do streamu**: zjednotiť so všeobecnou hláškou ako v `/api/chat`.
 - [x] **Web vs D90** ✅ 2026-09-18 — `web/lib/dictionaries.js` (SK/CS/EN): hierarchia a `scope: global` preformulované na „zdieľanie pripravujeme" (viditeľnosť = vlastná organizácia, D90); Vertex AI odstránený (Bedrock zostáva — jediná cesta k eu-full generovaniu); „Infinity (voyage-4-nano) / TEI (BGE-M3)" (O7 nález A); zero-retention pri Anthropic zmiernené na „potvrdzujeme zmluvne", kým nepríde odpoveď zo sales supportu (žiadosť odoslaná 2026-09-18) — potom vrátiť silné znenie. Build webu prešiel.

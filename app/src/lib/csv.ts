@@ -77,7 +77,17 @@ export interface CsvColumn<T> {
 /** Pole objektov → CSV. Oddeľovač bodkočiarka, aby sa Excel v SK locale nepomýlil. */
 export function toCsv<T>(rows: T[], columns: CsvColumn<T>[], sep = ";"): string {
   const escape = (v: unknown) => {
-    const s = v == null ? "" : String(v)
+    let s = v == null ? "" : String(v)
+    /*
+     * Ochrana pred formula injection: bunku začínajúcu `=`, `+`, `-`, `@`,
+     * tabulátorom alebo CR vyhodnotí Excel ako vzorec — úvodzovky okolo poľa
+     * tomu nezabránia. Do exportov pritom vstupujú hodnoty, ktoré píše človek
+     * alebo prehliadač (meno, názov dokumentu, poznámka, User-Agent).
+     * Apostrof na začiatku z bunky spraví text; vidieť ho je len pri
+     * hodnotách, ktoré by sa inak spustili ako vzorec — a tie do výkazu
+     * ako vzorec nepatria nikdy.
+     */
+    if (/^[=+\-@\t\r]/.test(s)) s = "'" + s
     return /["\n\r]|[;,]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s
   }
   const head = columns.map(c => escape(c.label)).join(sep)

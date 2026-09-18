@@ -4,6 +4,26 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Bezpečnosť: CSV exporty a zraniteľné závislosti (2026-09-18)
+
+**CSV exporty sú chránené pred formula injection.** Bunku začínajúcu `=`,
+`+`, `-`, `@`, tabulátorom alebo CR vyhodnotí Excel ako vzorec — úvodzovky
+okolo poľa tomu nezabránia. Do exportov (reťaz dôkazov, prehľad, knižnica,
+moje potvrdenia) pritom vstupujú hodnoty, ktoré píše človek alebo prehliadač.
+`toCsv()` v `lib/csv.ts` teraz takéto bunky neutralizuje apostrofom;
+`tests/csv.test.ts` to stráži. Nález N3 z `docs/BEZPECNOSTNA_KONTROLA_2026-09.md`.
+
+**`npm audit` je čistý — 0 zraniteľností** (bolo 1 high, 2 moderate; nález N2):
+
+- **`xlsx` 0.18.5 → 0.20.3 z oficiálnej distribúcie SheetJS**
+  (`cdn.sheetjs.com`) — verzia v npm registri je opustená na 0.18.5 so známym
+  prototype pollution a ReDoS a oprava tam nikdy nepríde. API je rovnaké,
+  `conversion.ts` sa nemenil; lockfile tarball pinuje aj s integritou.
+- **`dompurify` 2.5.9 → 3.4.15 cez `overrides`** — `@toast-ui/editor` si žiada
+  zraniteľný rad 2.x a vlastnú opravu nevydal. Override drží aktuálnu verziu,
+  kým ju editor nezačne žiadať sám. WYSIWYG náhľad v knižnici treba po
+  nasadení raz preklikať — API je kompatibilné, ale je to jeho závislosť.
+
 ### Logo v e-mailoch a funkcie vo Frankfurte (2026-09-17)
 
 **Logo v upozorneniach chýbalo.** Značka nesie logo ako `/api/brand/<kód>?v=…`

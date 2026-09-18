@@ -10,6 +10,36 @@
 
 ---
 
+## 2026-09-18 (pokračovanie) — N2 a N3 z bezpečnostnej kontroly vyriešené
+
+Ján: „toto vyriešme prosím — CSV formula injection a xlsx/dompurify".
+
+**CSV (N3):** apostrof pred bunky začínajúce `=`, `+`, `-`, `@`, tab, CR
+v `toCsv()`. Jedna vec stojí za zápis: escapoval som aj `-`, hoci to raz môže
+dať apostrof zápornému číslu — Excel totiž `-2+3+cmd|...` spustí ako vzorec
+rovnako ochotne ako `=`. Dnes žiadny export záporné čísla nevypisuje, takže
+kompromis nič nestojí.
+
+**xlsx (N2):** npm registri zostane 0.18.5 navždy — SheetJS z npm odišiel.
+Rozhodnutie Jána: oficiálna distribúcia. `package.json` ukazuje na pinovaný
+tarball `cdn.sheetjs.com/xlsx-0.20.3/...` (0.20.4+ neexistuje, overené HEAD
+dotazmi), lockfile drží integritu. API sedí, `conversion.ts` bez zmeny.
+
+**dompurify (N2):** toast-ui si žiada ^2.3.3; `overrides` vynútil 3.4.15.
+Skok 2.x → 3.x pod cudzou knižnicou je jediné riziko dňa — tsc, 1361 testov
+aj build prešli, ale náhľad editora testy nepokrývajú. Nechal som v TODO
+„raz preklikať editor v knižnici".
+
+`npm audit`: **0 zraniteľností** (z 1 high + 2 moderate). Pozor pre budúce
+inštalácie: `npm install` teraz ťahá tarball z cdn.sheetjs.com — offline
+inštalácia bez cache zlyhá na tomto balíku.
+
+Pri zápise `package.json` cez python v heredoc-u mi ušiel doslovný `\n` na
+konci súboru a npm ho odmietol parsovať — quoted heredoc neexpanduje escape
+sekvencie ani v reťazcoch, ktoré vyzerajú ako python. Opravené, zapamätať si.
+
+---
+
 ## 2026-09-18 — web zosúladený s D90 (a s tým, čo máme na papieri)
 
 Ján schválil opravy nesúladov z včerajšej kontroly. `web/lib/dictionaries.js`,

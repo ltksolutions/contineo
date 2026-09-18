@@ -86,4 +86,19 @@ describe("toCsv", () => {
   it("null a undefined sú prázdne, nie „null“", () => {
     expect(toCsv([{ meno: null }], columns)).not.toContain("null")
   })
+
+  it("bunka začínajúca = dostane apostrof — Excel by ju spustil ako vzorec", () => {
+    expect(toCsv([{ meno: '=HYPERLINK("http://utok.example")' }], columns))
+      .toContain("'=HYPERLINK")
+  })
+
+  it("neutralizujú sa aj +, -, @ a tabulátor na začiatku", () => {
+    for (const zly of ["+1+2", "-2+3+cmd", "@SUM(A1)", "\tskryte"]) {
+      expect(toCsv([{ meno: zly }], columns)).toContain("'" + zly)
+    }
+  })
+
+  it("bežný text zostáva bez apostrofu", () => {
+    expect(toCsv([{ meno: "Ján Novák" }], columns)).not.toContain("'Ján")
+  })
 })

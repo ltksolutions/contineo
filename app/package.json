@@ -32,14 +32,14 @@
     "migrate:eval-personid": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/migrate_eval_personid.mjs",
     "migrate:chunking": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/migrate_chunking_profile.mjs",
     "chunking:analyze": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --disable-warning=DEP0205 --import ./scripts/lib/ts-hook.mjs scripts/analyze_library.mjs",
-  "chunking:status": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --disable-warning=DEP0205 --import ./scripts/lib/ts-hook.mjs scripts/chunking_status.mjs",
-  "migrate:profiles": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --disable-warning=DEP0205 --import ./scripts/lib/ts-hook.mjs scripts/migrate_chunking_profiles.mjs",
-  "migrate:documentkey": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/migrate_document_key.mjs",
+    "chunking:status": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --disable-warning=DEP0205 --import ./scripts/lib/ts-hook.mjs scripts/chunking_status.mjs",
+    "migrate:profiles": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --disable-warning=DEP0205 --import ./scripts/lib/ts-hook.mjs scripts/migrate_chunking_profiles.mjs",
+    "migrate:documentkey": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/migrate_document_key.mjs",
     "migrate:personname": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --disable-warning=DEP0205 --import ./scripts/lib/ts-hook.mjs scripts/migrate_person_name.mjs",
-  "migrate:indexes": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/migrate_index_names.mjs",
+    "migrate:indexes": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/migrate_index_names.mjs",
     "docs:import": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --disable-warning=DEP0205 --env-file=.env.local --import ./scripts/lib/ts-hook.mjs scripts/import.mjs",
     "docs:delete": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --disable-warning=DEP0205 --import ./scripts/lib/ts-hook.mjs scripts/delete_documents.mjs",
-  "tag:test": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --disable-warning=DEP0205 --import ./scripts/lib/ts-hook.mjs scripts/tag_test_documents.mjs",
+    "tag:test": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --disable-warning=DEP0205 --import ./scripts/lib/ts-hook.mjs scripts/tag_test_documents.mjs",
     "migrate:grandfather": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --disable-warning=DEP0205 --import ./scripts/lib/ts-hook.mjs scripts/migrate_published_before.mjs"
   },
   "dependencies": {
@@ -53,7 +53,7 @@
     "react": "18.3.1",
     "react-dom": "18.3.1",
     "turndown": "^7.2.4",
-    "xlsx": "^0.18.5"
+    "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.6",
@@ -65,5 +65,8 @@
     "eslint-config-next": "^16.3.3",
     "typescript": "^5.0.0",
     "vitest": "^4.1.11"
+  },
+  "overrides": {
+    "dompurify": "^3.4.15"
   }
 }
