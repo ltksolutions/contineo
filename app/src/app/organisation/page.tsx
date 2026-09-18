@@ -60,7 +60,7 @@ function ProviderRow({
   return (
     <section className="card" style={{ padding: "18px 20px", display: "grid", gap: 14 }}>
       <div style={{ display: "flex", gap: 10, alignItems: "baseline", flexWrap: "wrap" }}>
-        <h2 style={{ fontSize: 17, margin: 0 }}>{t.heading(name)}</h2>
+        <h2 style={{ fontSize: "var(--fs-section)", margin: 0 }}>{t.heading(name)}</h2>
         <span
           className="tag"
           style={s.state === "unreadable" ? { background: "var(--warn-bg)", color: "var(--warn-fg)" } : undefined}
@@ -71,7 +71,7 @@ function ProviderRow({
         </span>
       </div>
 
-      <p className="quiet" style={{ margin: 0, fontSize: 14, lineHeight: 1.6 }}>
+      <p className="quiet" style={{ margin: 0, fontSize: "var(--fs-body)", lineHeight: 1.6 }}>
         {t.introBefore}<strong>{t.introHighlight(name)}</strong>{t.introAfter}
       </p>
 
@@ -79,7 +79,7 @@ function ProviderRow({
         <div className="quiet field-hint">
           {t.callback}
         </div>
-        <code style={{ fontSize: 13.5, overflowWrap: "anywhere" }}>{back}</code>
+        <code style={{ fontSize: "var(--fs-small)", overflowWrap: "anywhere" }}>{back}</code>
       </div>
 
       <form action={saveSignInAction} style={{ display: "grid", gap: 14 }}>
@@ -138,7 +138,7 @@ function ProviderRow({
         <form action={deleteSignInAction} style={{ display: "grid", gap: 10, borderTop: "1px solid var(--line)", paddingTop: 14 }}>
           <input type="hidden" name="provider" value={provider} />
           <input type="hidden" name="tab" value="signin" />
-          <p className="quiet" style={{ margin: 0, fontSize: 14 }}>{t.deleteNote}</p>
+          <p className="quiet" style={{ margin: 0, fontSize: "var(--fs-body)" }}>{t.deleteNote}</p>
           <label className="field">
             <span className="field-label">{t.confirmLabel(tenant.companyCode)}</span>
             <input className="field-input" name="confirmation" autoCapitalize="characters" autoCorrect="off" />
@@ -365,7 +365,7 @@ export default async function OrganisationPage({
       {now === "branding" && tenant.branding.logoUrl && (
       <form action={deleteLogoAction} className="card logo-remove" style={{ padding: 20, marginTop: 16 }}>
         <input type="hidden" name="tab" value="branding" />
-        <p className="quiet" style={{ margin: 0, fontSize: 14, lineHeight: 1.6 }}>{t.branding.logoRemoveNote}</p>
+        <p className="quiet" style={{ margin: 0, fontSize: "var(--fs-body)", lineHeight: 1.6 }}>{t.branding.logoRemoveNote}</p>
         <div>
           <button className="button button--quiet" type="submit" style={{ color: "var(--bad-fg)" }}>
             {t.branding.logoRemove}
@@ -378,8 +378,8 @@ export default async function OrganisationPage({
       <div style={{ display: "grid", gap: 16 }}>
         <section className="card" style={{ padding: 20, display: "grid", gap: 12 }}>
           <div>
-            <h2 style={{ fontSize: 17, margin: "0 0 4px" }}>{t.departments.heading}</h2>
-            <p className="quiet" style={{ fontSize: 14, margin: 0 }}>
+            <h2 style={{ fontSize: "var(--fs-section)", margin: "0 0 4px" }}>{t.departments.heading}</h2>
+            <p className="quiet" style={{ fontSize: "var(--fs-body)", margin: 0 }}>
               {t.departments.introBefore}<strong>{t.departments.introHighlight}</strong>
               {t.departments.introMiddle}
               <Link href="/people">{t.departments.groupsLink}</Link>
@@ -388,7 +388,7 @@ export default async function OrganisationPage({
           </div>
 
           {rows.length === 0 ? (
-            <p className="quiet" style={{ fontSize: 14, margin: 0 }}>{t.departments.empty}</p>
+            <p className="quiet" style={{ fontSize: "var(--fs-body)", margin: 0 }}>{t.departments.empty}</p>
           ) : (
             <TreeWithOrder
               hidden={{ tab: "departments" }}
@@ -476,7 +476,7 @@ export default async function OrganisationPage({
                             <button className="button button--quiet" type="submit">{t.departments.remove}</button>
                           </form>
                         ) : (
-                          <p className="quiet" style={{ fontSize: 13, margin: 0 }}>{t.departments.removeHint}</p>
+                          <p className="quiet" style={{ fontSize: "var(--fs-small)", margin: 0 }}>{t.departments.removeHint}</p>
                         )}
                       </div>
                     </details>
@@ -489,7 +489,7 @@ export default async function OrganisationPage({
 
         <form action={createDepartmentAction} className="card" style={{ padding: 20, display: "grid", gap: 14 }}>
           <input type="hidden" name="tab" value="departments" />
-          <h2 style={{ fontSize: 17, margin: 0 }}>{t.departments.newHeading}</h2>
+          <h2 style={{ fontSize: "var(--fs-section)", margin: 0 }}>{t.departments.newHeading}</h2>
 
           <label className="field">
             <span className="field-label">{t.departments.name}</span>
@@ -532,7 +532,7 @@ export default async function OrganisationPage({
                 <form action={cancelDomainAction} style={{ marginLeft: "auto" }}>
                   <input type="hidden" name="host" value={h} />
                   <input type="hidden" name="tab" value="domains" />
-                  <button className="button button--quiet" type="submit" style={{ padding: "5px 10px", fontSize: 13 }}>
+                  <button className="button button--quiet" type="submit" style={{ padding: "5px 10px", fontSize: "var(--fs-small)" }}>
                     {t.domains.remove}
                   </button>
                 </form>
@@ -552,13 +552,13 @@ export default async function OrganisationPage({
                     <span className="tag" style={{ background: "var(--warn-bg)", color: "var(--warn-fg)" }}>
                       {t.domains.waitingDns}
                     </span>
-                    <span className="quiet" style={{ fontSize: 13, marginLeft: "auto" }}>
+                    <span className="quiet" style={{ fontSize: "var(--fs-small)", marginLeft: "auto" }}>
                       {t.domains.since(formatDate(z.requestedAt, language))}
                     </span>
                   </div>
 
                   {p && (
-                    <p className="quiet" style={{ margin: 0, fontSize: 13.5, overflowWrap: "anywhere" }}>
+                    <p className="quiet" style={{ margin: 0, fontSize: "var(--fs-small)", overflowWrap: "anywhere" }}>
                       {t.domains.dnsBefore}<strong>{p.type}</strong>{t.domains.dnsMiddle}
                       <code>{p.name}</code> → <code>{p.value}</code>
                     </p>
@@ -568,14 +568,14 @@ export default async function OrganisationPage({
                     <form action={verifyDomainAction}>
                       <input type="hidden" name="host" value={z.host} />
                       <input type="hidden" name="tab" value="domains" />
-                      <button className="button" type="submit" style={{ padding: "6px 14px", fontSize: 13.5 }}>
+                      <button className="button" type="submit" style={{ padding: "6px 14px", fontSize: "var(--fs-small)" }}>
                         {t.domains.verify}
                       </button>
                     </form>
                     <form action={cancelDomainAction}>
                       <input type="hidden" name="host" value={z.host} />
                       <input type="hidden" name="tab" value="domains" />
-                      <button className="button button--quiet" type="submit" style={{ padding: "6px 14px", fontSize: 13.5 }}>
+                      <button className="button button--quiet" type="submit" style={{ padding: "6px 14px", fontSize: "var(--fs-small)" }}>
                         {t.domains.cancelRequest}
                       </button>
                     </form>
@@ -607,15 +607,15 @@ export default async function OrganisationPage({
 
       {now === "codelists" && (
       <div style={{ display: "grid", gap: 16 }}>
-        <p className="quiet" style={{ fontSize: 14.5, margin: 0, maxWidth: 620 }}>
+        <p className="quiet" style={{ fontSize: "var(--fs-body)", margin: 0, maxWidth: 620 }}>
           {t.codelists.introBefore}<strong>{t.codelists.introHighlight}</strong>{t.codelists.introAfter}
         </p>
 
         {codelists.map(c => (
           <section key={c.name} className="card" style={{ padding: 20, display: "grid", gap: 12 }}>
             <div>
-              <h2 style={{ fontSize: 17, margin: "0 0 4px" }}>{t.codelists.labels[c.name].name}</h2>
-              <p className="quiet" style={{ fontSize: 14, margin: 0 }}>
+              <h2 style={{ fontSize: "var(--fs-section)", margin: "0 0 4px" }}>{t.codelists.labels[c.name].name}</h2>
+              <p className="quiet" style={{ fontSize: "var(--fs-body)", margin: 0 }}>
                 {t.codelists.labels[c.name].hint}
               </p>
             </div>
@@ -657,7 +657,7 @@ export default async function OrganisationPage({
               <button className="button button--quiet" type="submit">{t.codelists.add}</button>
             </form>
 
-            <p className="quiet" style={{ fontSize: 13, margin: 0 }}>{t.codelists.keyNote}</p>
+            <p className="quiet" style={{ fontSize: "var(--fs-small)", margin: 0 }}>{t.codelists.keyNote}</p>
           </section>
         ))}
       </div>
@@ -668,8 +668,8 @@ export default async function OrganisationPage({
         <input type="hidden" name="tab" value="chunking" />
 
         <div>
-          <h2 style={{ fontSize: 17, margin: "0 0 4px" }}>{t.chunking.heading}</h2>
-          <p className="quiet" style={{ fontSize: 14, margin: 0 }}>
+          <h2 style={{ fontSize: "var(--fs-section)", margin: "0 0 4px" }}>{t.chunking.heading}</h2>
+          <p className="quiet" style={{ fontSize: "var(--fs-body)", margin: 0 }}>
             {t.chunking.introBefore}
             <strong>{t.chunking.introHighlight}</strong>{t.chunking.introAfter}
           </p>
@@ -715,7 +715,7 @@ export default async function OrganisationPage({
           </span>
         </label>
 
-        <p className="quiet" style={{ fontSize: 13.5, margin: 0 }}>
+        <p className="quiet" style={{ fontSize: "var(--fs-small)", margin: 0 }}>
           {t.chunking.saveNoteBefore}<strong>{t.chunking.saveNoteHighlight}</strong>
           {t.chunking.saveNoteMiddle}<em>{t.chunking.saveNoteButton}</em>{t.chunking.saveNoteAfter}
         </p>
@@ -727,19 +727,19 @@ export default async function OrganisationPage({
       {now === "chunking" && indexState && (
       <form action={reindexAllAction} className="card" style={{ padding: 20, display: "grid", gap: 12, marginTop: 16 }}>
         <input type="hidden" name="tab" value="chunking" />
-        <h2 style={{ fontSize: 17, margin: 0 }}>{t.chunking.reindexAllHeading}</h2>
+        <h2 style={{ fontSize: "var(--fs-section)", margin: 0 }}>{t.chunking.reindexAllHeading}</h2>
 
         {indexState.neaktualnych === 0 ? (
-          <p className="quiet" style={{ fontSize: 14, margin: 0 }}>
+          <p className="quiet" style={{ fontSize: "var(--fs-body)", margin: 0 }}>
             {t.chunking.allUpToDate(indexState.celkom)}
           </p>
         ) : (
           <>
-            <p className="quiet" style={{ fontSize: 14, margin: 0 }}>
+            <p className="quiet" style={{ fontSize: "var(--fs-body)", margin: 0 }}>
               <strong>{indexState.neaktualnych}</strong>{t.chunking.outdatedOf(indexState.celkom)}
               <strong>{t.chunking.outdatedHighlight}</strong>{t.chunking.outdatedAfter}
             </p>
-            <p className="quiet" style={{ fontSize: 13, margin: 0 }}>{t.chunking.batchNote}</p>
+            <p className="quiet" style={{ fontSize: "var(--fs-small)", margin: 0 }}>{t.chunking.batchNote}</p>
             <div>
               <button className="button" type="submit">
                 {t.chunking.reindexAll(indexState.neaktualnych)}
@@ -752,7 +752,7 @@ export default async function OrganisationPage({
 
       {now === "audit" && (
       <div>
-        <p className="quiet" style={{ fontSize: 14.5, margin: "0 0 16px", maxWidth: 620 }}>
+        <p className="quiet" style={{ fontSize: "var(--fs-body)", margin: "0 0 16px", maxWidth: 620 }}>
           {t.auditTab.introBefore}<strong>{t.auditTab.introHighlight}</strong>{t.auditTab.introAfter}
         </p>
 
@@ -772,7 +772,7 @@ export default async function OrganisationPage({
           </label>
           <button className="button button--quiet" type="submit">{t.auditTab.searchSubmit}</button>
           {search ? (
-            <Link className="quiet" href="/organisation?tab=audit" style={{ fontSize: 14 }}>
+            <Link className="quiet" href="/organisation?tab=audit" style={{ fontSize: "var(--fs-body)" }}>
               {t.auditTab.clearFilter}
             </Link>
           ) : null}
@@ -781,7 +781,7 @@ export default async function OrganisationPage({
         <AuditList records={records} language={language} />
 
         {records.length >= 200 && (
-          <p className="quiet" style={{ fontSize: 13, marginTop: 14 }}>{t.auditTab.capped}</p>
+          <p className="quiet" style={{ fontSize: "var(--fs-small)", marginTop: 14 }}>{t.auditTab.capped}</p>
         )}
       </div>
       )}

@@ -126,7 +126,7 @@ export default function TreeWithOrder({
           >
             {t.cancel}
           </button>
-          <span className="quiet" style={{ fontSize: 13 }}>
+          <span className="quiet" style={{ fontSize: "var(--fs-small)" }}>
             {t.hint}
           </span>
         </div>

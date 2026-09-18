@@ -140,7 +140,7 @@ export default function TenantHeader({
           style={{ display: "block", flex: "0 0 auto" }}
         />
       )}
-      <span style={{ fontWeight: 700, fontSize: 16.5, letterSpacing: "-0.01em" }}>
+      <span style={{ fontWeight: 700, fontSize: "var(--fs-section)", letterSpacing: "-0.01em" }}>
         {branding.displayName}
       </span>
     </div>

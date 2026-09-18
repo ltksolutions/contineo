@@ -4,6 +4,36 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Jedna stupnica veľkostí, živé filtre a rozbaľovacie widgety (2026-09-18)
+
+**Rozhranie vyzeralo poskladané z viacerých období** a bolo to merateľné:
+18 rôznych veľkostí písma v ~370 inline štýloch a nadpis obrazovky v troch
+veľkostiach (25, 26, 27 px) podľa toho, kedy obrazovka vznikla. Tlačidlo,
+textové pole a `<select>` mali každý inú výšku, takže vo filtri stáli
+v rade a nesedeli — najviditeľnejšie v Reťazi dôkazov.
+
+- **Tokeny v `:root`**: `--fs-title|section|lead|body|small|micro|label`,
+  `--fs-control` (16 px na telefóne kvôli priblíženiu v Safari, 15 px od
+  760 px) a `--control-h: 40px`. Tlačidlo, `.field-input`,
+  `select.field-input` aj `.select-button` majú odteraz rovnakú výšku aj
+  písmo; pole má vlastný `line-height`, lebo zdedených 1.6 z `body` ho
+  robilo o dva pixely vyšším než tlačidlo vedľa.
+- `.page-title`, `.page-lead` a `.page-head` nahradili inline nadpisy
+  a úvodné odstavce na 34 miestach; štítky (`.tag`) majú jednu veľkosť
+  a výšku 24 px. Zvyšných 307 inline veľkostí sa prepísalo na tokeny, takže
+  zmena stupnice je odteraz zmena na jednom mieste.
+- **Zvonček** v hlavičke: ikona 17 → 21 px, terč 40 px ako avatar vedľa
+  neho, väčší odznak s počtom.
+- **Živé filtrovanie** (`components/LiveFilter.tsx`) na piatich zoznamoch —
+  knižnica, osoby, adresár, reťaz dôkazov, audit. Píše sa do poľa a zoznam
+  sa obnoví sám (250 ms po poslednom údere; výber v `<select>` hneď).
+  Filtruje **server**, mení sa adresa (`router.replace`, nie `push`, aby sa
+  Späť neprehrýzalo písmenami), takže odkaz zostáva zdieľateľný a výsledok
+  je ten istý ako po odoslaní. Bez JavaScriptu zostáva formulár aj tlačidlo.
+- **Reťaz dôkazov ako rozbaľovacie karty** na natívnom `<details>`: zložené
+  je vidieť kto, stav a znenie, os sa otvorí až keď ju niekto chce čítať.
+  Sedem povinností dovtedy znamenalo takmer tridsať riadkov osí pod sebou.
+
 ### Číselníky opäť fungujú, Návod hovorí pravdu, krajší zvonček a selecty (2026-09-18)
 
 **Obrazovka číselníkov padala na 500.** `CUSTOM_CODELISTS` má tri druhy

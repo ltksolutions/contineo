@@ -44,7 +44,7 @@ export default async function TracksPage({
       <Notice message={message ?? error} error={Boolean(error)} back="/library/tracks" />
 
       <p style={{ margin: "0 0 16px" }}>
-        <Link className="quiet" href="/library" style={{ fontSize: 14 }}>
+        <Link className="quiet" href="/library" style={{ fontSize: "var(--fs-body)" }}>
           {dictionary(ctx.person.language).library.upload.back}
         </Link>
       </p>
@@ -60,7 +60,7 @@ export default async function TracksPage({
         {tracks.map(tr => (
           <li key={tr.key} className="card" style={{ padding: "16px 18px" }}>
             <div style={{ display: "flex", gap: 12, alignItems: "baseline", flexWrap: "wrap" }}>
-              <Link href={`/library/tracks/${encodeURIComponent(tr.key)}`} style={{ fontSize: 16.5, fontWeight: 600, flex: "1 1 240px" }}>
+              <Link href={`/library/tracks/${encodeURIComponent(tr.key)}`} style={{ fontSize: "var(--fs-section)", fontWeight: 600, flex: "1 1 240px" }}>
                 {tr.title}
               </Link>
               <span
@@ -70,17 +70,17 @@ export default async function TracksPage({
                 {tr.isActive ? t.active : t.inactive}
               </span>
             </div>
-            <p className="quiet" style={{ fontSize: 13.5, margin: "6px 0 0" }}>
+            <p className="quiet" style={{ fontSize: "var(--fs-small)", margin: "6px 0 0" }}>
               <code>{tr.key}</code> · {t.stepCount(tr.steps.length)}
             </p>
             {tr.description && (
-              <p className="quiet" style={{ fontSize: 14, margin: "6px 0 0" }}>{tr.description}</p>
+              <p className="quiet" style={{ fontSize: "var(--fs-body)", margin: "6px 0 0" }}>{tr.description}</p>
             )}
           </li>
         ))}
       </ul>
 
-      <h2 style={{ fontSize: 19, letterSpacing: "-0.01em", margin: "0 0 12px" }}>{t.newHeading}</h2>
+      <h2 style={{ fontSize: "var(--fs-section)", letterSpacing: "-0.01em", margin: "0 0 12px" }}>{t.newHeading}</h2>
 
       <form action={createTrackAction} className="card" style={{ padding: 20, display: "grid", gap: 16 }}>
         <label className="field">

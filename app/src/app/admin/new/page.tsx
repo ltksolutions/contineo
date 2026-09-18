@@ -34,7 +34,7 @@ export default async function NewTenantPage({
     <AppShell language={ctx.person.language}>
     <div style={{ maxWidth: 620 }}>
       <p style={{ margin: "0 0 12px" }}>
-        <Link href="/admin" className="quiet" style={{ fontSize: 14 }}>
+        <Link href="/admin" className="quiet" style={{ fontSize: "var(--fs-body)" }}>
           {t.back}
         </Link>
       </p>
@@ -45,7 +45,7 @@ export default async function NewTenantPage({
       </p>
 
       {message && (
-        <p className="card" style={{ padding: "12px 16px", margin: "0 0 20px", fontSize: 14.5 }}>
+        <p className="card" style={{ padding: "12px 16px", margin: "0 0 20px", fontSize: "var(--fs-body)" }}>
           {message}
         </p>
       )}

@@ -53,7 +53,7 @@ export default async function RemindersPage({
       <Notice message={q.msg} error={q.error === "1"} back="/hr/reminders" />
 
       <p style={{ margin: "0 0 16px" }}>
-        <Link className="quiet" href="/hr" style={{ fontSize: 14 }}>{t.back}</Link>
+        <Link className="quiet" href="/hr" style={{ fontSize: "var(--fs-body)" }}>{t.back}</Link>
       </p>
 
       <h1 className="page-title">
@@ -67,7 +67,7 @@ export default async function RemindersPage({
           takže sa dá poslať aj s ním a funguje bez skriptu — rovnako ako
           prepínač pohľadu v knižnici. */}
       <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap", margin: "0 0 24px" }}>
-        <span className="quiet" style={{ fontSize: 12.5 }}>{t.modeLabel}</span>
+        <span className="quiet" style={{ fontSize: "var(--fs-micro)" }}>{t.modeLabel}</span>
         <span className="view-switch" role="group" aria-label={t.modeLabel}>
           <Link
             className={`view-switch-item${notice ? " is-on" : ""}`}
@@ -94,13 +94,13 @@ export default async function RemindersPage({
             {people.map(p => (
               <li key={p.personId} className="card" style={{ padding: "14px 16px" }}>
                 <div style={{ display: "flex", gap: 12, alignItems: "baseline", flexWrap: "wrap" }}>
-                  <strong style={{ fontSize: 15.5, flex: "1 1 200px" }}>{p.fullName}</strong>
-                  <span className="quiet" style={{ fontSize: 13.5 }}>{p.email}</span>
+                  <strong style={{ fontSize: "var(--fs-lead)", flex: "1 1 200px" }}>{p.fullName}</strong>
+                  <span className="quiet" style={{ fontSize: "var(--fs-small)" }}>{p.email}</span>
                 </div>
-                <p className="quiet" style={{ fontSize: 13.5, margin: "6px 0 0" }}>
+                <p className="quiet" style={{ fontSize: "var(--fs-small)", margin: "6px 0 0" }}>
                   {notice ? t.noticePerson(p.items.length) : t.person(p.items.length, p.worstDays)}
                 </p>
-                <ul style={{ listStyle: "none", padding: 0, margin: "8px 0 0", fontSize: 13.5 }}>
+                <ul style={{ listStyle: "none", padding: 0, margin: "8px 0 0", fontSize: "var(--fs-small)" }}>
                   {p.items.map(o => (
                     <li key={o.duty.versionId} className="quiet">
                       · {o.duty.documentTitle} ({o.duty.versionLabel})
@@ -115,7 +115,7 @@ export default async function RemindersPage({
             ))}
           </ul>
 
-          <p className="quiet" style={{ fontSize: 14, margin: "0 0 14px" }}>{t.preview}</p>
+          <p className="quiet" style={{ fontSize: "var(--fs-body)", margin: "0 0 14px" }}>{t.preview}</p>
 
           <form action={sendRemindersAction}>
             <input type="hidden" name="days" value={String(days)} />

@@ -26,7 +26,7 @@ export default async function NotFoundPage() {
       <h1 className="page-title" style={{ margin: "0 0 8px" }}>
         {t.notFound.heading}
       </h1>
-      <p className="quiet" style={{ margin: "0 0 22px", fontSize: 15.5 }}>
+      <p className="quiet" style={{ margin: "0 0 22px", fontSize: "var(--fs-lead)" }}>
         {t.notFound.intro}
       </p>
       <Link className="button button--quiet" href="/">

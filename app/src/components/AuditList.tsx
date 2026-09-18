@@ -45,7 +45,7 @@ export default function AuditList({
   const t = dictionary(language).audit
 
   if (records.length === 0) {
-    return <p className="card" style={{ padding: 18, fontSize: 15 }}>{t.empty}</p>
+    return <p className="card" style={{ padding: 18, fontSize: "var(--fs-lead)" }}>{t.empty}</p>
   }
 
   return (

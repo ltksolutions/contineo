@@ -57,14 +57,14 @@ export default async function MyAcknowledgementsPage() {
                 serverová cesta, takže sťahovanie funguje aj bez JavaScriptu.
               */}
               <a className="button" href="/api/acknowledgements/export">{t.download}</a>
-              <span className="quiet" style={{ fontSize: 13, marginLeft: 12 }}>{t.count(records.length)}</span>
+              <span className="quiet" style={{ fontSize: "var(--fs-small)", marginLeft: 12 }}>{t.count(records.length)}</span>
             </p>
 
             <div style={{ display: "grid", gap: 12 }}>
               {records.map(r => (
                 <article key={String(r._id)} className="card" style={{ padding: "16px 18px" }}>
                   <div style={{ display: "flex", gap: 12, alignItems: "baseline", flexWrap: "wrap" }}>
-                    <strong style={{ fontSize: 16, flex: "1 1 240px" }}>{r.documentTitle}</strong>
+                    <strong style={{ fontSize: "var(--fs-lead)", flex: "1 1 240px" }}>{r.documentTitle}</strong>
                     <span
                       className="tag"
                       style={r.type === "revocation"
@@ -75,7 +75,7 @@ export default async function MyAcknowledgementsPage() {
                     </span>
                   </div>
 
-                  <p className="quiet" style={{ fontSize: 13.5, margin: "6px 0 0" }}>
+                  <p className="quiet" style={{ fontSize: "var(--fs-small)", margin: "6px 0 0" }}>
                     {t.versionLine(r.versionLabel, formatDate(r.effectiveFrom, language))}
                     {" · "}
                     {r.type === "revocation"
@@ -92,7 +92,7 @@ export default async function MyAcknowledgementsPage() {
                     štítkom „odvolané" stojí veta „Potvrdzujem, že…".
                   */}
                   {r.type === "revocation" && (
-                    <p className="quiet" style={{ fontSize: 13, margin: "12px 0 0" }}>
+                    <p className="quiet" style={{ fontSize: "var(--fs-small)", margin: "12px 0 0" }}>
                       {t.revokedStatement}
                     </p>
                   )}
@@ -100,14 +100,14 @@ export default async function MyAcknowledgementsPage() {
                     style={{
                       margin: "6px 0 0", padding: "10px 14px",
                       borderLeft: "3px solid var(--line)",
-                      fontSize: 14.5, lineHeight: 1.6,
+                      fontSize: "var(--fs-body)", lineHeight: 1.6,
                     }}
                   >
                     {r.statementText}
                   </blockquote>
 
                   {r.reason && (
-                    <p className="quiet" style={{ fontSize: 13.5, margin: "10px 0 0" }}>
+                    <p className="quiet" style={{ fontSize: "var(--fs-small)", margin: "10px 0 0" }}>
                       {t.reason(r.reason)}
                     </p>
                   )}
@@ -117,7 +117,7 @@ export default async function MyAcknowledgementsPage() {
           </>
         )}
 
-        <p className="quiet" style={{ fontSize: 13.5, margin: "22px 0 0" }}>
+        <p className="quiet" style={{ fontSize: "var(--fs-small)", margin: "22px 0 0" }}>
           {t.footnoteBefore}<Link href="/guide">{t.footnoteGuide}</Link>{t.footnoteAfter}
         </p>
       </div>

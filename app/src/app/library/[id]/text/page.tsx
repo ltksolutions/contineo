@@ -81,18 +81,18 @@ export default async function EditorPage({
       <Notice message={message} error={error === "1"} back={`/library/${encodeURIComponent(documentId)}/text`} />
 
       <p style={{ margin: "0 0 10px" }}>
-        <Link className="quiet" href={`/library/${encodeURIComponent(documentId)}`} style={{ fontSize: 14 }}>
+        <Link className="quiet" href={`/library/${encodeURIComponent(documentId)}`} style={{ fontSize: "var(--fs-body)" }}>
           {t.back}
         </Link>
       </p>
 
       <h1 className="page-title" style={{ margin: "0 0 4px" }}>{d.title}</h1>
-      <p className="quiet" style={{ fontSize: 14, margin: "0 0 16px" }}>
+      <p className="quiet" style={{ fontSize: "var(--fs-body)", margin: "0 0 16px" }}>
         {t.intro}
       </p>
 
       {d.conversion?.warnings?.length ? (
-        <ul className="card" style={{ padding: "12px 16px 12px 34px", margin: "0 0 16px", fontSize: 14 }}>
+        <ul className="card" style={{ padding: "12px 16px 12px 34px", margin: "0 0 16px", fontSize: "var(--fs-body)" }}>
           {d.conversion.warnings.map((u, i) => <li key={i}>{u}</li>)}
         </ul>
       ) : null}
@@ -108,11 +108,11 @@ export default async function EditorPage({
           <div className="audit-head">
             <span className="tag">{draft.mode === "rewrite-scan" ? t.modelDraft : t.ruleDraft}</span>
             <strong>{draft.mode === "rewrite-scan" ? t.modeRewriteScan : t.modeClean}</strong>
-            <span className="quiet" style={{ fontSize: 13 }}>
+            <span className="quiet" style={{ fontSize: "var(--fs-small)" }}>
               {t.draftMeta(draft.model, formatDate(draft.at, language), draft.text.length)}
             </span>
           </div>
-          <p className="quiet" style={{ fontSize: 13.5, margin: 0 }}>
+          <p className="quiet" style={{ fontSize: "var(--fs-small)", margin: 0 }}>
             {draft.mode === "rewrite-scan" ? t.draftNoteBefore : t.ruleNoteBefore}
             <strong>{t.draftNoteHighlight}</strong>{t.draftNoteAfter}
           </p>
@@ -131,19 +131,19 @@ export default async function EditorPage({
           {fileUrl ? (
             isPdf ? (
               <object className="editor-preview" data={fileUrl} type="application/pdf">
-                <p className="quiet" style={{ fontSize: 14, padding: 12 }}>
+                <p className="quiet" style={{ fontSize: "var(--fs-body)", padding: 12 }}>
                   {t.pdfNotShown}
                   <a href={fileUrl} target="_blank" rel="noreferrer">{t.openInNewWindow}</a>.
                 </p>
               </object>
             ) : (
-              <p className="card" style={{ padding: 16, fontSize: 14 }}>
+              <p className="card" style={{ padding: 16, fontSize: "var(--fs-body)" }}>
                 {t.fileNotShown(d.originalFile?.name ?? "")}
                 <a href={fileUrl} target="_blank" rel="noreferrer">{t.download}</a>{t.compareAfterDownload}
               </p>
             )
           ) : (
-            <p className="card" style={{ padding: 16, fontSize: 14 }}>
+            <p className="card" style={{ padding: 16, fontSize: "var(--fs-body)" }}>
               {t.noOriginal}
             </p>
           )}
@@ -183,8 +183,8 @@ export default async function EditorPage({
       </div>
 
       <section className="card" style={{ padding: 18, display: "grid", gap: 10, marginTop: 18 }}>
-        <h2 style={{ fontSize: 17, margin: 0 }}>{t.llmHeading}</h2>
-        <p className="quiet" style={{ fontSize: 14, margin: 0 }}>
+        <h2 style={{ fontSize: "var(--fs-section)", margin: 0 }}>{t.llmHeading}</h2>
+        <p className="quiet" style={{ fontSize: "var(--fs-body)", margin: 0 }}>
           {t.llmNoteBefore}<strong>{t.llmNoteHighlight}</strong>{t.llmNoteAfter}
         </p>
         <form action={sendToModelAction} style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
@@ -204,11 +204,11 @@ export default async function EditorPage({
           zo skenu posiela dokument modelu. Pre toho, kto rozhoduje o znení
           predpisu, je to rozdiel, ktorý má poznať pred kliknutím.
         */}
-        <p className="quiet" style={{ fontSize: 13.5, margin: 0 }}>
+        <p className="quiet" style={{ fontSize: "var(--fs-small)", margin: 0 }}>
           {t.cleanNote}
         </p>
         {isPdf && (
-          <p className="quiet" style={{ fontSize: 13.5, margin: 0 }}>
+          <p className="quiet" style={{ fontSize: "var(--fs-small)", margin: 0 }}>
             {t.rewriteScanNote}
           </p>
         )}

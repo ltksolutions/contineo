@@ -584,7 +584,7 @@ export default async function LibraryPage({
                   </div>
 
                   <details>
-                    <summary className="quiet" style={{ fontSize: 12.5, cursor: "pointer", padding: "0 12px 6px" }}>
+                    <summary className="quiet" style={{ fontSize: "var(--fs-micro)", cursor: "pointer", padding: "0 12px 6px" }}>
                       {tf.edit}
                     </summary>
                     <div className="tree-edit">
@@ -642,7 +642,7 @@ export default async function LibraryPage({
                           <button className="button button--quiet" type="submit">{tf.remove}</button>
                         </form>
                       ) : (
-                        <p className="quiet" style={{ fontSize: 12.5, margin: 0 }}>
+                        <p className="quiet" style={{ fontSize: "var(--fs-micro)", margin: 0 }}>
                           {tf.removeHint}
                         </p>
                       )}
@@ -683,7 +683,7 @@ export default async function LibraryPage({
         <div className="library-list" id="results">
 
       {rows.length === 0 ? (
-        <p className="card" style={{ padding: 20, fontSize: 15 }}>
+        <p className="card" style={{ padding: 20, fontSize: "var(--fs-lead)" }}>
           {search ? t.nothingFound : t.empty}
         </p>
       ) : (

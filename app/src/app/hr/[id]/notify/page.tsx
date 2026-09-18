@@ -74,7 +74,7 @@ export default async function NotifyPage({
     <AppShell language={ctx.person.language}>
     <div style={{ maxWidth: 720, ...tenantStyle(branding) }}>
       <p style={{ margin: "0 0 16px" }}>
-        <Link className="quiet" href={`/hr/${encodeURIComponent(id)}`} style={{ fontSize: 14 }}>
+        <Link className="quiet" href={`/hr/${encodeURIComponent(id)}`} style={{ fontSize: "var(--fs-body)" }}>
           {t.back}
         </Link>
       </p>
@@ -87,13 +87,13 @@ export default async function NotifyPage({
       </p>
 
       {error && (
-        <p className="card" style={{ padding: "12px 16px", margin: "0 0 18px", fontSize: 14.5, color: "var(--warn-fg)" }}>
+        <p className="card" style={{ padding: "12px 16px", margin: "0 0 18px", fontSize: "var(--fs-body)", color: "var(--warn-fg)" }}>
           {error}
         </p>
       )}
 
       {assignment.notified?.length ? (
-        <p className="card" style={{ padding: "12px 16px", margin: "0 0 18px", fontSize: 14.5 }}>
+        <p className="card" style={{ padding: "12px 16px", margin: "0 0 18px", fontSize: "var(--fs-body)" }}>
           {t.lastSent(
             formatDate(assignment.notified[assignment.notified.length - 1].at, language),
             assignment.notified[assignment.notified.length - 1].count,
@@ -102,18 +102,18 @@ export default async function NotifyPage({
         </p>
       ) : null}
 
-      <h2 style={{ fontSize: 17, margin: "0 0 10px" }}>
+      <h2 style={{ fontSize: "var(--fs-section)", margin: "0 0 10px" }}>
         {t.to(recipients.length)}
       </h2>
 
       {recipients.length === 0 ? (
-        <p className="card" style={{ padding: 18, fontSize: 15 }}>
+        <p className="card" style={{ padding: 18, fontSize: "var(--fs-lead)" }}>
           {t.allAcknowledged(audienceLabel(assignment.audience))}
         </p>
       ) : (
         <>
           {former.length > 0 && (
-            <p className="quiet" style={{ fontSize: 14, margin: "0 0 12px" }}>
+            <p className="quiet" style={{ fontSize: "var(--fs-body)", margin: "0 0 12px" }}>
               {t.formerMembers(former.length)}{" "}
               <Link href={`/hr/${encodeURIComponent(id)}`}>{t.formerMembersLink}</Link>.
             </p>
@@ -123,19 +123,19 @@ export default async function NotifyPage({
             {recipients.map(o => (
               <li key={o.id} className="card" style={{ padding: "10px 14px" }}>
                 <span style={{ fontWeight: 600 }}>{o.fullName}</span>{" "}
-                <span className="quiet" style={{ fontSize: 13.5 }}>{o.email}</span>
+                <span className="quiet" style={{ fontSize: "var(--fs-small)" }}>{o.email}</span>
               </li>
             ))}
           </ul>
 
-          <h2 style={{ fontSize: 17, margin: "0 0 10px" }}>{t.preview}</h2>
+          <h2 style={{ fontSize: "var(--fs-section)", margin: "0 0 10px" }}>{t.preview}</h2>
           <p className="quiet field-hint" style={{ margin: "0 0 10px" }}>
             {t.previewSubject(preview.subject)}
           </p>
           <pre
             className="card"
             style={{
-              padding: 18, margin: "0 0 26px", fontSize: 14, lineHeight: 1.6,
+              padding: 18, margin: "0 0 26px", fontSize: "var(--fs-body)", lineHeight: 1.6,
               whiteSpace: "pre-wrap", overflowWrap: "anywhere", fontFamily: "inherit",
             }}
           >

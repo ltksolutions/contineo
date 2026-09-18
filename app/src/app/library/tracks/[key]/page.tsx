@@ -83,7 +83,7 @@ export default async function TrackDetailPage({
       <Notice message={message ?? error} error={Boolean(error)} back={here} />
 
       <p style={{ margin: "0 0 16px" }}>
-        <Link className="quiet" href="/library/tracks" style={{ fontSize: 14 }}>{t.back}</Link>
+        <Link className="quiet" href="/library/tracks" style={{ fontSize: "var(--fs-body)" }}>{t.back}</Link>
       </p>
 
       <div style={{ display: "flex", gap: 12, alignItems: "baseline", flexWrap: "wrap", margin: "0 0 6px" }}>
@@ -97,13 +97,13 @@ export default async function TrackDetailPage({
           {track.isActive ? t.active : t.inactive}
         </span>
       </div>
-      <p className="quiet" style={{ fontSize: 13.5, margin: "0 0 24px" }}>
+      <p className="quiet" style={{ fontSize: "var(--fs-small)", margin: "0 0 24px" }}>
         <code>{track.key}</code> · {t.stepCount(steps.length)}
       </p>
 
       {/* ── kroky ── */}
 
-      <h2 style={{ fontSize: 19, letterSpacing: "-0.01em", margin: "0 0 12px" }}>{t.steps}</h2>
+      <h2 style={{ fontSize: "var(--fs-section)", letterSpacing: "-0.01em", margin: "0 0 12px" }}>{t.steps}</h2>
 
       {steps.length === 0 && (
         <p className="card" style={{ padding: 20, margin: "0 0 20px" }}>{t.noSteps}</p>
@@ -113,8 +113,8 @@ export default async function TrackDetailPage({
         {steps.map((s, i) => (
           <li key={s.documentId} className="card" style={{ padding: "14px 16px" }}>
             <div style={{ display: "flex", gap: 12, alignItems: "baseline", flexWrap: "wrap" }}>
-              <span className="quiet" style={{ fontSize: 13 }}>{i + 1}.</span>
-              <strong style={{ fontSize: 15.5, flex: "1 1 240px" }}>
+              <span className="quiet" style={{ fontSize: "var(--fs-small)" }}>{i + 1}.</span>
+              <strong style={{ fontSize: "var(--fs-lead)", flex: "1 1 240px" }}>
                 {titles.get(s.documentId!) ?? s.documentId}
               </strong>
               <span className="tag">{s.requiresAcknowledgement ? t.ackYes : t.ackNo}</span>
@@ -160,11 +160,11 @@ export default async function TrackDetailPage({
             />
           </div>
 
-          <label style={{ display: "flex", gap: 10, alignItems: "flex-start", fontSize: 14.5 }}>
+          <label style={{ display: "flex", gap: 10, alignItems: "flex-start", fontSize: "var(--fs-body)" }}>
             <input type="checkbox" name="requiresAcknowledgement" defaultChecked style={{ marginTop: 3 }} />
             <span>
               {t.requiresAck}
-              <span className="quiet" style={{ display: "block", fontSize: 13 }}>{t.requiresAckHint}</span>
+              <span className="quiet" style={{ display: "block", fontSize: "var(--fs-small)" }}>{t.requiresAckHint}</span>
             </span>
           </label>
 

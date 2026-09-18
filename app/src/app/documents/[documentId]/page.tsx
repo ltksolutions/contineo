@@ -96,13 +96,13 @@ export default async function DocumentPage({
       />
 
       <p style={{ margin: "0 0 16px" }}>
-        <Link className="quiet" href="/documents" style={{ fontSize: 14 }}>← {t.back}</Link>
+        <Link className="quiet" href="/documents" style={{ fontSize: "var(--fs-body)" }}>← {t.back}</Link>
       </p>
 
       <h1 className="page-title">{doc.title}</h1>
 
       {version.ok ? (
-        <p className="quiet" style={{ fontSize: 14, margin: "0 0 28px" }}>
+        <p className="quiet" style={{ fontSize: "var(--fs-body)", margin: "0 0 28px" }}>
           {t.version(version.version.label, formatDate(version.version.effectiveFrom!, person.language))}
         </p>
       ) : (
@@ -130,10 +130,10 @@ export default async function DocumentPage({
           <ReadingTimer documentId={doc.documentId} language={person.language} />
 
           <section className="card" style={{ padding: 20, marginTop: 32 }}>
-            <h2 style={{ fontSize: 17, margin: "0 0 10px" }}>{t.confirmHeading}</h2>
+            <h2 style={{ fontSize: "var(--fs-section)", margin: "0 0 10px" }}>{t.confirmHeading}</h2>
 
             {/* Presne to znenie, ktoré sa uloží do záznamu. */}
-            <p style={{ fontSize: 15.5, lineHeight: 1.65, margin: "0 0 18px" }}>
+            <p style={{ fontSize: "var(--fs-lead)", lineHeight: 1.65, margin: "0 0 18px" }}>
               {buildStatement(
                 doc.title,
                 version.version.label,

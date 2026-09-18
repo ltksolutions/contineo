@@ -61,7 +61,7 @@ export default async function EvaluationPage({
         <h1 className="page-title" style={{ margin: "0 0 8px" }}>
           {t.heading}
           {queue.length > 0 && (
-            <span className="tag" style={{ fontSize: 12, marginLeft: 10, verticalAlign: "middle" }}>
+            <span className="tag" style={{ fontSize: "var(--fs-micro)", marginLeft: 10, verticalAlign: "middle" }}>
               {t.waiting(queue.length)}
             </span>
           )}
@@ -73,8 +73,8 @@ export default async function EvaluationPage({
 
       {queue.length === 0 && (
         <div className="card">
-          <p style={{ margin: "0 0 6px", fontSize: 15.5 }}>{t.empty}</p>
-          <p className="quiet" style={{ margin: 0, fontSize: 14 }}>{t.emptyNote}</p>
+          <p style={{ margin: "0 0 6px", fontSize: "var(--fs-lead)" }}>{t.empty}</p>
+          <p className="quiet" style={{ margin: 0, fontSize: "var(--fs-body)" }}>{t.emptyNote}</p>
         </div>
       )}
 
@@ -83,19 +83,19 @@ export default async function EvaluationPage({
           <div key={item.id} className="card">
             <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center", marginBottom: 10 }}>
               {item.readerVerdict === 0 && (
-                <span className="tag" style={{ background: "var(--bad-bg)", color: "var(--bad-fg)", fontSize: 11, fontWeight: 600 }}>
+                <span className="tag" style={{ background: "var(--bad-bg)", color: "var(--bad-fg)", fontSize: "var(--fs-micro)", fontWeight: 600 }}>
                   {t.saidDoesNotFit}
                 </span>
               )}
               {item.readerNote && (
-                <span className="tag" style={{ fontSize: 11, fontWeight: 600 }}>{t.reported}</span>
+                <span className="tag" style={{ fontSize: "var(--fs-micro)", fontWeight: 600 }}>{t.reported}</span>
               )}
-              <span className="quiet" style={{ fontSize: 12.5, marginLeft: "auto" }}>
+              <span className="quiet" style={{ fontSize: "var(--fs-micro)", marginLeft: "auto" }}>
                 {t.askedAt} {formatDate(item.askedAt, language)}
               </span>
             </div>
 
-            <p style={{ margin: "0 0 12px", fontSize: 16.5, fontWeight: 600, lineHeight: 1.45 }}>
+            <p style={{ margin: "0 0 12px", fontSize: "var(--fs-section)", fontWeight: 600, lineHeight: 1.45 }}>
               {item.question}
             </p>
 
@@ -114,10 +114,10 @@ export default async function EvaluationPage({
                   marginBottom: 14,
                 }}
               >
-                <div className="quiet" style={{ fontSize: 12, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 4 }}>
+                <div className="quiet" style={{ fontSize: "var(--fs-micro)", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 4 }}>
                   {t.reader}
                 </div>
-                <div style={{ fontSize: 14.5, lineHeight: 1.6, whiteSpace: "pre-wrap" }}>
+                <div style={{ fontSize: "var(--fs-body)", lineHeight: 1.6, whiteSpace: "pre-wrap" }}>
                   {item.readerNote}
                 </div>
               </div>
@@ -126,15 +126,15 @@ export default async function EvaluationPage({
             {/* Odpoveď je zabalená: hodnotiteľ často vie z otázky a poznámky,
                 o čo ide, a rozbalená odpoveď by z karty spravila stranu. */}
             <details style={{ marginBottom: 14 }}>
-              <summary className="quiet" style={{ cursor: "pointer", fontSize: 13.5 }}>
+              <summary className="quiet" style={{ cursor: "pointer", fontSize: "var(--fs-small)" }}>
                 {t.showAnswer}
                 {item.sources.length > 0 && ` · ${t.sources(item.sources.length)}`}
               </summary>
-              <div style={{ marginTop: 10, fontSize: 14.5, lineHeight: 1.65, whiteSpace: "pre-wrap" }}>
+              <div style={{ marginTop: 10, fontSize: "var(--fs-body)", lineHeight: 1.65, whiteSpace: "pre-wrap" }}>
                 {item.answer}
               </div>
               {item.sources.length > 0 && (
-                <ul className="quiet" style={{ margin: "10px 0 0", paddingLeft: 18, fontSize: 13 }}>
+                <ul className="quiet" style={{ margin: "10px 0 0", paddingLeft: 18, fontSize: "var(--fs-small)" }}>
                   {item.sources.map((s, i) => (
                     <li key={i}>{[s.title, s.articleRef].filter(Boolean).join(" · ")}</li>
                   ))}
@@ -157,15 +157,15 @@ export default async function EvaluationPage({
         „Pripraviť pár", nie „Zverejniť".
       */}
       <div style={{ marginTop: 44 }}>
-        <h2 style={{ fontSize: 19, letterSpacing: "-0.01em", margin: "0 0 6px" }}>
+        <h2 style={{ fontSize: "var(--fs-section)", letterSpacing: "-0.01em", margin: "0 0 6px" }}>
           {tc.prepareHeading}
         </h2>
-        <p className="quiet" style={{ fontSize: 14.5, margin: "0 0 18px", maxWidth: 660 }}>
+        <p className="quiet" style={{ fontSize: "var(--fs-body)", margin: "0 0 18px", maxWidth: 660 }}>
           {tc.prepareIntro}
         </p>
 
         {toPrepare.length === 0 && (
-          <p className="quiet" style={{ fontSize: 14.5, margin: 0 }}>{tc.prepareEmpty}</p>
+          <p className="quiet" style={{ fontSize: "var(--fs-body)", margin: 0 }}>{tc.prepareEmpty}</p>
         )}
 
         <div style={{ display: "grid", gap: 18 }}>
@@ -175,9 +175,9 @@ export default async function EvaluationPage({
 
               <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center", marginBottom: 10 }}>
                 {item.draft && (
-                  <span className="tag" style={{ fontSize: 11, fontWeight: 600 }}>{tc.draftBadge}</span>
+                  <span className="tag" style={{ fontSize: "var(--fs-micro)", fontWeight: 600 }}>{tc.draftBadge}</span>
                 )}
-                <span className="quiet" style={{ fontSize: 12.5, marginLeft: "auto" }}>
+                <span className="quiet" style={{ fontSize: "var(--fs-micro)", marginLeft: "auto" }}>
                   {formatDate(item.evaluatedAt, language)}
                 </span>
               </div>
@@ -198,7 +198,7 @@ export default async function EvaluationPage({
               <fieldset className="hr-group" style={{ border: "1px solid var(--line)" }}>
                 <legend className="field-label">{tc.sourcesLabel}</legend>
                 {item.sources.length === 0 ? (
-                  <p className="quiet" style={{ margin: 0, fontSize: 13.5 }}>{tc.noSources}</p>
+                  <p className="quiet" style={{ margin: 0, fontSize: "var(--fs-small)" }}>{tc.noSources}</p>
                 ) : (
                   <ul className="hr-choices">
                     {item.sources.map(src => (
@@ -216,7 +216,7 @@ export default async function EvaluationPage({
               </fieldset>
 
               {item.correctSources && (
-                <p className="quiet" style={{ fontSize: 13, margin: "10px 0 0" }}>
+                <p className="quiet" style={{ fontSize: "var(--fs-small)", margin: "10px 0 0" }}>
                   § {item.correctSources}
                 </p>
               )}
@@ -230,7 +230,7 @@ export default async function EvaluationPage({
           ))}
         </div>
 
-        <p className="quiet" style={{ fontSize: 13.5, marginTop: 18 }}>
+        <p className="quiet" style={{ fontSize: "var(--fs-small)", marginTop: 18 }}>
           <Link href="/library/curation">{tc.open} →</Link>
         </p>
       </div>

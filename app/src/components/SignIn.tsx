@@ -85,7 +85,7 @@ export default function SignIn({
     return (
       <div className="card" style={{ textAlign: "center" }}>
         <h1 style={{ fontSize: 20, margin: "0 0 12px" }}>{t.checkEmail}</h1>
-        <p className="quiet" style={{ fontSize: 15, lineHeight: 1.65, margin: 0 }}>
+        <p className="quiet" style={{ fontSize: "var(--fs-lead)", lineHeight: 1.65, margin: 0 }}>
           {t.sent}
         </p>
         <button
@@ -124,7 +124,7 @@ export default function SignIn({
       <h1 style={{ fontSize: 21, margin: "0 0 8px", letterSpacing: "-0.02em" }}>
         {t.heading}
       </h1>
-      <p className="quiet" style={{ fontSize: 14.5, lineHeight: 1.65, margin: "0 0 22px" }}>
+      <p className="quiet" style={{ fontSize: "var(--fs-body)", lineHeight: 1.65, margin: "0 0 22px" }}>
         {t.intro}
       </p>
 
@@ -141,7 +141,7 @@ export default function SignIn({
           style={{
             background: "var(--bad-bg)", color: "var(--bad-fg)",
             border: "1px solid var(--line)", borderRadius: 9,
-            padding: "11px 14px", fontSize: 14, lineHeight: 1.55,
+            padding: "11px 14px", fontSize: "var(--fs-body)", lineHeight: 1.55,
             marginBottom: 18,
           }}
         >
@@ -176,7 +176,7 @@ export default function SignIn({
             aria-hidden="true"
             style={{
               display: "flex", alignItems: "center", gap: 12,
-              margin: "0 0 18px", color: "var(--muted)", fontSize: 13,
+              margin: "0 0 18px", color: "var(--muted)", fontSize: "var(--fs-small)",
             }}
           >
             <span style={{ flex: 1, height: 1, background: "var(--line)" }} />
@@ -198,7 +198,7 @@ export default function SignIn({
           style={{
             width: "100%", background: "var(--surface)", color: "var(--ink)",
             border: "1px solid var(--line)", borderRadius: 10,
-            padding: "12px 14px", fontSize: 15.5, fontFamily: "inherit",
+            padding: "12px 14px", fontSize: "var(--fs-lead)", fontFamily: "inherit",
           }}
         />
         <button type="submit" className="button" disabled={sending || !email.trim()}>

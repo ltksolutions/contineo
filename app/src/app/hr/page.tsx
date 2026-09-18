@@ -63,7 +63,7 @@ export default async function HrOverviewPage({
       </p>
 
       {overview.length === 0 ? (
-        <p className="card" style={{ padding: 20, fontSize: 15 }}>
+        <p className="card" style={{ padding: 20, fontSize: "var(--fs-lead)" }}>
           {t.empty}
         </p>
       ) : (
@@ -75,44 +75,44 @@ export default async function HrOverviewPage({
                 <div style={{ display: "flex", gap: 10, alignItems: "baseline", flexWrap: "wrap" }}>
                   <Link
                     href={`/hr/${encodeURIComponent(p.id)}`}
-                    style={{ fontSize: 16.5, fontWeight: 700, textDecoration: "none" }}
+                    style={{ fontSize: "var(--fs-section)", fontWeight: 700, textDecoration: "none" }}
                   >
                     {p.subject.documentTitle}
                   </Link>
                   <span className="tag">verzia {p.subject.versionLabel}</span>
                 </div>
 
-                <p className="quiet" style={{ fontSize: 13.5, margin: "8px 0 0" }}>
+                <p className="quiet" style={{ fontSize: "var(--fs-small)", margin: "8px 0 0" }}>
                   {audienceLabel(p.audience)} · pridelil {p.assignedBy} ·{" "}
                   {formatDate(p.assignedAt, language)}
                 </p>
 
                 {/* Dôvod je to, čím sa uzatvára D30 — nie ozdoba, ale jediné
                     miesto, kde je napísané, prečo sa norma potvrdzuje znova. */}
-                <p style={{ fontSize: 14.5, margin: "10px 0 0", lineHeight: 1.55 }}>
+                <p style={{ fontSize: "var(--fs-body)", margin: "10px 0 0", lineHeight: 1.55 }}>
                   {p.reason}
                 </p>
 
                 <div className="admin-data">
                   <div>
-                    <div className="quiet" style={{ fontSize: 12.5 }}>{t.acknowledged}</div>
-                    <div style={{ fontSize: 15.5, fontWeight: 600 }}>
+                    <div className="quiet" style={{ fontSize: "var(--fs-micro)" }}>{t.acknowledged}</div>
+                    <div style={{ fontSize: "var(--fs-lead)", fontWeight: 600 }}>
                       {p.acknowledged} / {p.count}
                     </div>
                   </div>
                   <div>
-                    <div className="quiet" style={{ fontSize: 12.5 }}>{t.notified}</div>
-                    <div style={{ fontSize: 15.5, fontWeight: 600, color: p.lastNotified ? undefined : "var(--muted)" }}>
+                    <div className="quiet" style={{ fontSize: "var(--fs-micro)" }}>{t.notified}</div>
+                    <div style={{ fontSize: "var(--fs-lead)", fontWeight: 600, color: p.lastNotified ? undefined : "var(--muted)" }}>
                       {p.lastNotified
                         ? `${formatDate(p.lastNotified.at, language)}${p.notifiedTotal > 1 ? ` · ${p.notifiedTotal}×` : ""}`
                         : t.no}
                     </div>
                   </div>
                   <div>
-                    <div className="quiet" style={{ fontSize: 12.5 }}>{t.missing}</div>
+                    <div className="quiet" style={{ fontSize: "var(--fs-micro)" }}>{t.missing}</div>
                     <div
                       style={{
-                        fontSize: 15.5,
+                        fontSize: "var(--fs-lead)",
                         fontWeight: 600,
                         color: error > 0 ? "var(--warn-fg)" : "var(--muted)",
                       }}

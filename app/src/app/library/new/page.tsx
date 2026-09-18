@@ -65,7 +65,7 @@ export default async function NewDocumentPage({
     <AppShell language={ctx.person.language}>
     <div style={{ maxWidth: 880, ...tenantStyle(branding) }}>
       <p style={{ margin: "0 0 16px" }}>
-        <Link className="quiet" href="/library" style={{ fontSize: 14 }}>{t.back}</Link>
+        <Link className="quiet" href="/library" style={{ fontSize: "var(--fs-body)" }}>{t.back}</Link>
       </p>
 
       <h1 className="page-title">{t.heading}</h1>
@@ -74,7 +74,7 @@ export default async function NewDocumentPage({
       </p>
 
       {error && (
-        <p className="card" style={{ padding: "12px 16px", margin: "0 0 18px", fontSize: 14.5, color: "var(--warn-fg)" }}>
+        <p className="card" style={{ padding: "12px 16px", margin: "0 0 18px", fontSize: "var(--fs-body)", color: "var(--warn-fg)" }}>
           {error}
         </p>
       )}

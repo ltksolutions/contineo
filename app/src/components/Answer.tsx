@@ -82,9 +82,9 @@ export default function Answer({
         )}
 
         {error ? (
-          <div style={{ color: "var(--bad-fg)", fontSize: 15 }}>
+          <div style={{ color: "var(--bad-fg)", fontSize: "var(--fs-lead)" }}>
             <strong>{t.failed}</strong>
-            <div style={{ marginTop: 6, fontSize: 14 }}>{error}</div>
+            <div style={{ marginTop: 6, fontSize: "var(--fs-body)" }}>{error}</div>
           </div>
         ) : (
           <div className={running ? "answer caret" : "answer"}>
@@ -122,7 +122,7 @@ export default function Answer({
               marginTop: 14, padding: "10px 13px",
               background: "var(--warn-bg)", color: "var(--warn-fg)",
               border: "1px solid var(--line)", borderRadius: 9,
-              fontSize: 13.5, lineHeight: 1.55,
+              fontSize: "var(--fs-small)", lineHeight: 1.55,
             }}
           >
             <span aria-hidden="true" style={{ fontWeight: 700 }}>▲</span>
@@ -137,7 +137,7 @@ export default function Answer({
       {/* Citácie — doslovné úryvky, o ktoré sa odpoveď opiera. */}
       {unique.length > 0 && (
         <div>
-          <h3 style={{ fontSize: 13, textTransform: "uppercase", letterSpacing: "0.05em",
+          <h3 style={{ fontSize: "var(--fs-small)", textTransform: "uppercase", letterSpacing: "0.05em",
                        color: "var(--muted)", marginBottom: 10 }}>
             {t.citations(unique.length)}
             {unique.length < citations.length && (
@@ -158,8 +158,8 @@ export default function Answer({
                   padding: "11px 14px",
                 }}
               >
-                <div style={{ fontSize: 14.5, lineHeight: 1.6 }}>„{cleanCitation(c.citedText)}“</div>
-                <div className="quiet" style={{ fontSize: 12.5, marginTop: 6 }}>
+                <div style={{ fontSize: "var(--fs-body)", lineHeight: 1.6 }}>„{cleanCitation(c.citedText)}“</div>
+                <div className="quiet" style={{ fontSize: "var(--fs-micro)", marginTop: 6 }}>
                   {[c.documentTitle, c.articleRef].filter(Boolean).join(" · ") || t.sourceMissing}
                 </div>
               </div>
@@ -171,7 +171,7 @@ export default function Answer({
       {/* Zdroje — čo sa dostalo do kontextu, aj keď z toho model necitoval. */}
       {done && done.sources.length > 0 && (
         <details>
-          <summary style={{ cursor: "pointer", fontSize: 13, textTransform: "uppercase",
+          <summary style={{ cursor: "pointer", fontSize: "var(--fs-small)", textTransform: "uppercase",
                             letterSpacing: "0.05em", color: "var(--muted)", fontWeight: 700 }}>
             {t.sources(done.sources.length)}
           </summary>
@@ -201,7 +201,7 @@ export default function Answer({
                   {z.sourceType === "qa" && (
                     <span
                       className="tag"
-                      style={{ background: "var(--ok-bg)", color: "var(--ok-fg)", fontSize: 11, fontWeight: 600 }}
+                      style={{ background: "var(--ok-bg)", color: "var(--ok-fg)", fontSize: "var(--fs-micro)", fontWeight: 600 }}
                     >
                       {t.verified}
                     </span>
@@ -211,7 +211,7 @@ export default function Answer({
                   {z.accessLevel === "internal" && (
                     <span
                       className="tag"
-                      style={{ background: "var(--warn-bg)", color: "var(--warn-fg)", fontSize: 11 }}
+                      style={{ background: "var(--warn-bg)", color: "var(--warn-fg)", fontSize: "var(--fs-micro)" }}
                     >
                       {t.internal}
                     </span>
@@ -247,7 +247,7 @@ export default function Answer({
           className="quiet"
           style={{
             display: "flex", flexWrap: "wrap", gap: 16,
-            fontSize: 12.5, paddingTop: 4,
+            fontSize: "var(--fs-micro)", paddingTop: 4,
           }}
         >
           {done.model && <Line label="model" value={done.model} />}

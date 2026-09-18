@@ -86,18 +86,18 @@ export default async function PersonDetailPage({
     <AppShell language={ctx.person.language}>
     <div style={{ maxWidth: 680, ...tenantStyle(branding) }}>
       <p style={{ margin: "0 0 16px" }}>
-        <Link className="quiet" href="/people" style={{ fontSize: 14 }}>{t.back}</Link>
+        <Link className="quiet" href="/people" style={{ fontSize: "var(--fs-body)" }}>{t.back}</Link>
       </p>
 
       {/* V nadpise meno **s titulmi** (D84) — je to zobrazenie, nie záznam. */}
       <h1 className="page-title" style={{ margin: "0 0 4px" }}>{displayName(o)}</h1>
-      <p className="quiet" style={{ fontSize: 14.5, margin: "0 0 4px", overflowWrap: "anywhere" }}>
+      <p className="quiet" style={{ fontSize: "var(--fs-body)", margin: "0 0 4px", overflowWrap: "anywhere" }}>
         {o.email}
         {o.emailHistory.length > 0 && (
           <> · {t.previously(o.emailHistory.map(h => h.email).join(", "))}</>
         )}
       </p>
-      <p className="quiet" style={{ fontSize: 13.5, margin: "0 0 20px" }}>
+      <p className="quiet" style={{ fontSize: "var(--fs-small)", margin: "0 0 20px" }}>
         {o.status === "invited" ? t.invitedNotSignedIn
           : o.status === "inactive" ? t.excludedNoSignIn
           : t.lastSeen(o.lastLoginAt ? formatDate(o.lastLoginAt, language) : t.never)}
@@ -229,7 +229,7 @@ export default async function PersonDetailPage({
         </div>
 
         {o.department && !o.departmentId ? (
-          <p className="quiet" style={{ fontSize: 13, margin: "-6px 0 0" }}>
+          <p className="quiet" style={{ fontSize: "var(--fs-small)", margin: "-6px 0 0" }}>
             {t.legacyDepartmentBefore}<strong>{o.department}</strong>{t.legacyDepartmentAfter}
           </p>
         ) : null}
@@ -306,18 +306,18 @@ export default async function PersonDetailPage({
         <input type="hidden" name="email" value={o.email} />
         <input type="hidden" name="status" value={excluded ? "invited" : "inactive"} />
 
-        <h2 style={{ fontSize: 17, margin: 0 }}>{excluded ? t.returnHeading : t.excludeHeading}</h2>
+        <h2 style={{ fontSize: "var(--fs-section)", margin: 0 }}>{excluded ? t.returnHeading : t.excludeHeading}</h2>
 
         {excluded ? (
           <>
-            <p className="quiet" style={{ margin: 0, fontSize: 14 }}>
+            <p className="quiet" style={{ margin: 0, fontSize: "var(--fs-body)" }}>
               {t.returnNoteBefore}<strong>{t.returnNoteHighlight}</strong>{t.returnNoteAfter}
             </p>
             <div><button className="button" type="submit">{t.returnSubmit}</button></div>
           </>
         ) : (
           <>
-            <p className="quiet" style={{ margin: 0, fontSize: 14 }}>{t.excludeNote}</p>
+            <p className="quiet" style={{ margin: 0, fontSize: "var(--fs-body)" }}>{t.excludeNote}</p>
             <label className="field">
               <span className="field-label">{t.confirmLabel}</span>
               <input className="field-input" name="confirmation" autoCapitalize="none" autoCorrect="off" />
@@ -336,23 +336,23 @@ export default async function PersonDetailPage({
       {evidence.length > 0 && (
         <section className="card" style={{ padding: 20, marginTop: 24, display: "grid", gap: 10 }}>
           <div className="evidence-head">
-            <h2 style={{ fontSize: 17, margin: 0 }}>{te.heading}</h2>
-            <Link className="quiet" style={{ fontSize: 13 }} href="/hr/evidence">
+            <h2 style={{ fontSize: "var(--fs-section)", margin: 0 }}>{te.heading}</h2>
+            <Link className="quiet" style={{ fontSize: "var(--fs-small)" }} href="/hr/evidence">
               {te.allPeople}
             </Link>
           </div>
-          <p className="quiet" style={{ fontSize: 13, margin: 0 }}>{te.notifiedMissing}</p>
+          <p className="quiet" style={{ fontSize: "var(--fs-small)", margin: 0 }}>{te.notifiedMissing}</p>
 
           <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "grid", gap: 16 }}>
             {evidence.map(r => (
               <li key={r.duty.versionId}>
                 <div className="evidence-head">
-                  <strong style={{ fontSize: 14.5 }}>{r.duty.documentTitle}</strong>
+                  <strong style={{ fontSize: "var(--fs-body)" }}>{r.duty.documentTitle}</strong>
                   <span className={`tag evidence-state evidence-state--${r.state}`}>
                     {te.states[r.state]}
                   </span>
                 </div>
-                <div className="quiet" style={{ fontSize: 13 }}>{r.duty.versionLabel}</div>
+                <div className="quiet" style={{ fontSize: "var(--fs-small)" }}>{r.duty.versionLabel}</div>
                 <EvidenceTimeline timeline={r.timeline} language={language} />
               </li>
             ))}

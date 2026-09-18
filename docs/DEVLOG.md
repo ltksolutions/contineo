@@ -10,6 +10,38 @@
 
 ---
 
+## 2026-09-18 (neskoro večer) — dizajnová stupnica, živé filtre, widgety
+
+Ján po preklikaní: „zjednoť veľkosti tlačidiel, písma, polí a pills,
+dorob aktívne filtrovanie, Reťaz dôkazov ako rozbaľovacie widgety,
+zvonček väčší". Najprv som si to zmeral, nie odhadol: `grep` našiel **370
+inline `fontSize` v 18 hodnotách** a h1 v troch veľkostiach naprieč 25
+obrazovkami. To nie je vec vkusu, to je chýbajúca stupnica.
+
+**Čo sa ukázalo pri výške ovládačov.** Tlačidlo, pole a select si výšku
+odvodzovali z písma a odsadenia, každý inak — a natívny select si k tomu
+pridal svoje. Token `--control-h` to zrovnal, ale prvé meranie v prehliadači
+ukázalo 42 vs 40 px: pole dedilo `line-height: 1.6` z `body`, takže obsah
+mal 24 px a pretlačil `min-height`. Merať v prehliadači, nie veriť CSS —
+to je poučenie dňa.
+
+**Živý filter je serverový, nie prehliadačový.** Filtrovať to, čo je práve
+vykreslené, by dávalo iné výsledky než odoslaný formulár (zoznam môže mať
+viac strán a filtre sa skladajú) — dve pravdy o tom istom zozname. Preto sa
+mení adresa a zoznam skladá server; `router.replace` a nie `push`, inak by
+tlačidlo Späť prechádzalo písmeno po písmene. Pozor na React: `onChange`
+na formulári vyskočí aj pri písaní, takže „výber hneď, písanie s odkladom"
+sa musí rozlíšiť podľa prvku (`HTMLSelectElement`), nie podľa udalosti.
+
+**Widgety sú natívne `<details>`.** Žiadny stav, žiadny klient — rozbalenie
+funguje bez JavaScriptu, ovláda sa klávesnicou a prehliadač nájde text aj
+v zloženej karte. Overené naživo: filter „galk" zúžil 7 povinností na 3,
+fokus zostal v poli a otvorená karta zostala otvorená.
+
+tsc čistý, eslint 0 chýb, vitest 1367/1367, build prešiel.
+
+---
+
 ## 2026-09-18 (večer 2) — spätná väzba z preklikania: číselníky, Návod, zvonček, selecty
 
 Ján poslal štyri nálezy zo živého klikania. Najvážnejší: **číselníky

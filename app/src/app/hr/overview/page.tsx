@@ -92,7 +92,7 @@ export default async function HrReportPage({
       <Notice message={q.msg} error={q.error === "1"} back={link({})} />
 
       <p style={{ margin: "0 0 16px" }}>
-        <Link className="quiet" href="/hr" style={{ fontSize: 14 }}>
+        <Link className="quiet" href="/hr" style={{ fontSize: "var(--fs-body)" }}>
           {dictionary(language).hr.detail.back}
         </Link>
       </p>
@@ -127,8 +127,8 @@ export default async function HrReportPage({
           return (
             <li key={s.key} className="card" style={{ padding: "16px 18px" }}>
               <div style={{ display: "flex", gap: 12, alignItems: "baseline", flexWrap: "wrap" }}>
-                <strong style={{ fontSize: 16, flex: "1 1 260px" }}>{s.label}</strong>
-                <span className="quiet" style={{ fontSize: 14, fontVariantNumeric: "tabular-nums" }}>
+                <strong style={{ fontSize: "var(--fs-lead)", flex: "1 1 260px" }}>{s.label}</strong>
+                <span className="quiet" style={{ fontSize: "var(--fs-body)", fontVariantNumeric: "tabular-nums" }}>
                   {t.done(s.done, s.total)}
                 </span>
                 <span
@@ -141,7 +141,7 @@ export default async function HrReportPage({
                 </span>
               </div>
 
-              <p className="quiet" style={{ fontSize: 13.5, margin: "6px 0 0" }}>
+              <p className="quiet" style={{ fontSize: "var(--fs-small)", margin: "6px 0 0" }}>
                 {s.detail && <>{s.detail} · </>}
                 {t.medianReading}: {readingLabel(s.medianSeconds, language)}
               </p>
@@ -159,18 +159,18 @@ export default async function HrReportPage({
                       key={`${d.personId}-${d.versionId}`}
                       style={{
                         display: "flex", gap: 12, flexWrap: "wrap", alignItems: "baseline",
-                        paddingTop: 8, borderTop: "1px solid var(--line)", fontSize: 14,
+                        paddingTop: 8, borderTop: "1px solid var(--line)", fontSize: "var(--fs-body)",
                       }}
                     >
                       <span style={{ flex: "1 1 200px" }}>
                         {view === "person" ? d.documentTitle : d.fullName}
                       </span>
-                      <span className="quiet" style={{ fontSize: 13 }}>
+                      <span className="quiet" style={{ fontSize: "var(--fs-small)" }}>
                         {d.acknowledgedAt
                           ? `${t.acknowledgedAt} ${formatDate(d.acknowledgedAt, language)}`
                           : t.notAcknowledged}
                       </span>
-                      <span className="quiet" style={{ fontSize: 13, fontVariantNumeric: "tabular-nums" }}>
+                      <span className="quiet" style={{ fontSize: "var(--fs-small)", fontVariantNumeric: "tabular-nums" }}>
                         {t.readingTime} {readingLabel(d.readingSeconds, language)}
                       </span>
 
@@ -181,7 +181,7 @@ export default async function HrReportPage({
                       */}
                       {d.acknowledgedAt && (
                         <details style={{ flex: "1 1 100%" }}>
-                          <summary className="quiet" style={{ cursor: "pointer", fontSize: 13 }}>
+                          <summary className="quiet" style={{ cursor: "pointer", fontSize: "var(--fs-small)" }}>
                             {t.revoke}
                           </summary>
                           <form
@@ -212,7 +212,7 @@ export default async function HrReportPage({
       </ul>
 
       {rows.length > 0 && (
-        <p className="quiet" style={{ fontSize: 13, margin: "28px 0 0", maxWidth: 620 }}>
+        <p className="quiet" style={{ fontSize: "var(--fs-small)", margin: "28px 0 0", maxWidth: 620 }}>
           {t.readingNote}
         </p>
       )}

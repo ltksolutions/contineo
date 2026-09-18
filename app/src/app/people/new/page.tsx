@@ -55,7 +55,7 @@ export default async function NewPersonPage({
     <AppShell language={ctx.person.language}>
     <div style={{ maxWidth: 560, ...tenantStyle(branding) }}>
       <p style={{ margin: "0 0 16px" }}>
-        <Link className="quiet" href="/people" style={{ fontSize: 14 }}>{t.back}</Link>
+        <Link className="quiet" href="/people" style={{ fontSize: "var(--fs-body)" }}>{t.back}</Link>
       </p>
 
       <h1 className="page-title">{t.heading}</h1>
@@ -64,7 +64,7 @@ export default async function NewPersonPage({
       </p>
 
       {q.error && (
-        <p className="card" style={{ padding: "12px 16px", margin: "0 0 18px", fontSize: 14.5, color: "var(--warn-fg)" }}>
+        <p className="card" style={{ padding: "12px 16px", margin: "0 0 18px", fontSize: "var(--fs-body)", color: "var(--warn-fg)" }}>
           {q.error}
         </p>
       )}

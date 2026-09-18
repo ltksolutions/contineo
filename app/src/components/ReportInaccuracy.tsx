@@ -78,7 +78,7 @@ export default function ReportInaccuracy({
   }
 
   if (state === "sent") {
-    return <p className="quiet" style={{ fontSize: 13.5, margin: "10px 0 0" }}>{t.thanks}</p>
+    return <p className="quiet" style={{ fontSize: "var(--fs-small)", margin: "10px 0 0" }}>{t.thanks}</p>
   }
 
   return (
@@ -96,7 +96,7 @@ export default function ReportInaccuracy({
         />
         <span className="quiet field-hint">{t.note}</span>
       </label>
-      {error && <p style={{ color: "var(--bad-fg)", fontSize: 13.5, margin: 0 }}>{error}</p>}
+      {error && <p style={{ color: "var(--bad-fg)", fontSize: "var(--fs-small)", margin: 0 }}>{error}</p>}
       <div>
         <button className="button" type="submit" disabled={state === "sending" || !note.trim()}>
           {state === "sending" ? t.sending : t.submit}

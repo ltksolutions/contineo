@@ -81,39 +81,39 @@ export default function PeopleImport({ language }: { language?: UiLanguage }) {
       {busy && <p className="quiet">{t.reading}</p>}
 
       {result && (
-        <p className="card" style={{ padding: "12px 16px", fontSize: 14.5, margin: 0 }}>
+        <p className="card" style={{ padding: "12px 16px", fontSize: "var(--fs-body)", margin: 0 }}>
           {result}
         </p>
       )}
 
       {preview && !preview.ok && (
-        <p className="card" style={{ padding: "12px 16px", fontSize: 14.5, margin: 0, color: "var(--warn-fg)" }}>
+        <p className="card" style={{ padding: "12px 16px", fontSize: "var(--fs-body)", margin: 0, color: "var(--warn-fg)" }}>
           {preview.message}
         </p>
       )}
 
       {preview?.ok && (
         <section className="card" style={{ padding: "18px 20px", display: "grid", gap: 14 }}>
-          <h2 style={{ fontSize: 17, margin: 0 }}>{t.whatHappens(name)}</h2>
+          <h2 style={{ fontSize: "var(--fs-section)", margin: 0 }}>{t.whatHappens(name)}</h2>
 
           <div className="admin-data" style={{ marginTop: 0 }}>
             <div>
-              <div className="quiet" style={{ fontSize: 12.5 }}>{t.rows}</div>
-              <div style={{ fontSize: 15.5, fontWeight: 600 }}>{preview.total}</div>
+              <div className="quiet" style={{ fontSize: "var(--fs-micro)" }}>{t.rows}</div>
+              <div style={{ fontSize: "var(--fs-lead)", fontWeight: 600 }}>{preview.total}</div>
             </div>
             <div>
-              <div className="quiet" style={{ fontSize: 12.5 }}>{t.willAdd}</div>
-              <div style={{ fontSize: 15.5, fontWeight: 600 }}>{preview.created?.length ?? 0}</div>
+              <div className="quiet" style={{ fontSize: "var(--fs-micro)" }}>{t.willAdd}</div>
+              <div style={{ fontSize: "var(--fs-lead)", fontWeight: 600 }}>{preview.created?.length ?? 0}</div>
             </div>
             <div>
-              <div className="quiet" style={{ fontSize: 12.5 }}>{t.willUpdate}</div>
-              <div style={{ fontSize: 15.5, fontWeight: 600 }}>{preview.existing?.length ?? 0}</div>
+              <div className="quiet" style={{ fontSize: "var(--fs-micro)" }}>{t.willUpdate}</div>
+              <div style={{ fontSize: "var(--fs-lead)", fontWeight: 600 }}>{preview.existing?.length ?? 0}</div>
             </div>
             <div>
-              <div className="quiet" style={{ fontSize: 12.5 }}>{t.invalid}</div>
+              <div className="quiet" style={{ fontSize: "var(--fs-micro)" }}>{t.invalid}</div>
               <div
                 style={{
-                  fontSize: 15.5, fontWeight: 600,
+                  fontSize: "var(--fs-lead)", fontWeight: 600,
                   color: (preview.errors?.length ?? 0) > 0 ? "var(--warn-fg)" : "var(--muted)",
                 }}
               >
@@ -125,7 +125,7 @@ export default function PeopleImport({ language }: { language?: UiLanguage }) {
           {(preview.created?.length ?? 0) > 0 && (
             <div>
               <div className="quiet field-hint">{t.added}</div>
-              <p style={{ fontSize: 14, margin: "2px 0 0", overflowWrap: "anywhere" }}>
+              <p style={{ fontSize: "var(--fs-body)", margin: "2px 0 0", overflowWrap: "anywhere" }}>
                 {preview.created!.slice(0, 25).join(", ")}
                 {preview.created!.length > 25 && t.andMore(preview.created!.length - 25)}
               </p>
@@ -136,7 +136,7 @@ export default function PeopleImport({ language }: { language?: UiLanguage }) {
             <div>
               {/* Chybné riadky sa vypíšu menovite. „5 chybných" sa nedá opraviť. */}
               <div className="quiet field-hint">{t.skippedRows}</div>
-              <ul style={{ margin: "4px 0 0", paddingLeft: 20, fontSize: 14, lineHeight: 1.6 }}>
+              <ul style={{ margin: "4px 0 0", paddingLeft: 20, fontSize: "var(--fs-body)", lineHeight: 1.6 }}>
                 {preview.errors!.slice(0, 15).map((c, i) => <li key={i}>{c}</li>)}
               </ul>
               {preview.errors!.length > 15 && (
@@ -153,7 +153,7 @@ export default function PeopleImport({ language }: { language?: UiLanguage }) {
           {(preview.unknownWorkplaces?.length ?? 0) > 0 && (
             <div>
               <div className="quiet field-hint">{t.unknownWorkplaces}</div>
-              <p style={{ margin: "4px 0 0", fontSize: 14, lineHeight: 1.6 }}>
+              <p style={{ margin: "4px 0 0", fontSize: "var(--fs-body)", lineHeight: 1.6 }}>
                 {preview.unknownWorkplaces!.join(", ")}
               </p>
             </div>
@@ -162,13 +162,13 @@ export default function PeopleImport({ language }: { language?: UiLanguage }) {
           {(preview.badPhones?.length ?? 0) > 0 && (
             <div>
               <div className="quiet field-hint">{t.badPhones}</div>
-              <p style={{ margin: "4px 0 0", fontSize: 14, lineHeight: 1.6 }}>
+              <p style={{ margin: "4px 0 0", fontSize: "var(--fs-body)", lineHeight: 1.6 }}>
                 {preview.badPhones!.join(", ")}
               </p>
             </div>
           )}
 
-          <p className="quiet" style={{ fontSize: 13.5, margin: 0 }}>
+          <p className="quiet" style={{ fontSize: "var(--fs-small)", margin: 0 }}>
             {t.statusNoteBefore}<strong>{t.statusNoteHighlight}</strong>{t.statusNoteAfter}
           </p>
 

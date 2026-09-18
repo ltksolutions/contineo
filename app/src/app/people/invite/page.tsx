@@ -47,7 +47,7 @@ export default async function InviteAllPage({
       <Notice message={q.msg} error={q.error === "1"} back="/people/invite" />
 
       <p style={{ margin: "0 0 16px" }}>
-        <Link className="quiet" href="/people" style={{ fontSize: 14 }}>{t.back}</Link>
+        <Link className="quiet" href="/people" style={{ fontSize: "var(--fs-body)" }}>{t.back}</Link>
       </p>
 
       <h1 className="page-title">{t.heading}</h1>
@@ -64,13 +64,13 @@ export default async function InviteAllPage({
                 className="card"
                 style={{ padding: "12px 16px", display: "flex", gap: 12, flexWrap: "wrap", alignItems: "baseline" }}
               >
-                <strong style={{ fontSize: 15, flex: "1 1 200px" }}>{p.fullName}</strong>
-                <span className="quiet" style={{ fontSize: 13.5 }}>{p.email}</span>
+                <strong style={{ fontSize: "var(--fs-lead)", flex: "1 1 200px" }}>{p.fullName}</strong>
+                <span className="quiet" style={{ fontSize: "var(--fs-small)" }}>{p.email}</span>
               </li>
             ))}
           </ul>
 
-          <p className="quiet" style={{ fontSize: 14, margin: "0 0 14px" }}>{t.preview}</p>
+          <p className="quiet" style={{ fontSize: "var(--fs-body)", margin: "0 0 14px" }}>{t.preview}</p>
 
           <form action={sendInvitationsAction}>
             <button className="button" type="submit">{t.send(people.length)}</button>

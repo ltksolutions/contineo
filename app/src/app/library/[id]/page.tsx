@@ -212,7 +212,7 @@ export default async function DocumentDetailPage({
       <Notice message={message} error={error === "1"} back={`/library/${encodeURIComponent(documentId)}`} />
 
       <p style={{ margin: "0 0 12px" }}>
-        <Link className="quiet" href="/library" style={{ fontSize: 14 }}>{t.back}</Link>
+        <Link className="quiet" href="/library" style={{ fontSize: "var(--fs-body)" }}>{t.back}</Link>
       </p>
 
       {/*
@@ -226,7 +226,7 @@ export default async function DocumentDetailPage({
       </div>
 
       <h1 className="page-title" style={{ margin: "0 0 4px" }}>{d.title}</h1>
-      <p className="quiet" style={{ fontSize: 14, margin: "0 0 18px" }}>
+      <p className="quiet" style={{ fontSize: "var(--fs-body)", margin: "0 0 18px" }}>
         {d.documentId}
         {effective && ` · ${effective.label}`}
         {effective?.effectiveFrom && ` · ${formatDate(effective.effectiveFrom, language)}`}
@@ -242,7 +242,7 @@ export default async function DocumentDetailPage({
       <details className="card" style={{ padding: 18, margin: "0 0 18px" }}>
         <summary style={{ cursor: "pointer", fontWeight: 600 }}>
           {t.documentData}
-          <span className="quiet" style={{ fontWeight: 400, fontSize: 13.5 }}>
+          <span className="quiet" style={{ fontWeight: 400, fontSize: "var(--fs-small)" }}>
             {" "}· {d.language} · {d.accessLevel}
             {d.category && ` · ${d.category}`}
             {d.internalNumber && ` · ${d.internalNumber}`}
@@ -325,7 +325,7 @@ export default async function DocumentDetailPage({
             />
           </div>
 
-          <p className="quiet" style={{ fontSize: 13.5, margin: 0 }}>
+          <p className="quiet" style={{ fontSize: "var(--fs-small)", margin: 0 }}>
             {t.keyNoteBefore}<code>{d.documentId}</code>{t.keyNoteAfter}
           </p>
 
@@ -350,8 +350,8 @@ export default async function DocumentDetailPage({
       {canAssign && carryOver.length > 0 && (
       <form action={carryOverAssignmentsAction} className="card" style={{ padding: 18, margin: "0 0 18px" }}>
         <input type="hidden" name="documentId" value={d.documentId} />
-        <h2 style={{ fontSize: 16.5, margin: "0 0 6px" }}>{tc.heading}</h2>
-        <p className="quiet" style={{ fontSize: 13.5, margin: "0 0 14px" }}>
+        <h2 style={{ fontSize: "var(--fs-section)", margin: "0 0 6px" }}>{tc.heading}</h2>
+        <p className="quiet" style={{ fontSize: "var(--fs-small)", margin: "0 0 14px" }}>
           {tc.intro(carryOverVersion?.label ?? d.effectiveLabel)}
         </p>
 
@@ -402,7 +402,7 @@ export default async function DocumentDetailPage({
         </fieldset>
 
         <div><button className="button" type="submit">{tc.submit}</button></div>
-        <p className="quiet" style={{ fontSize: 13.5, margin: "10px 0 0" }}>{tc.noEmailNote}</p>
+        <p className="quiet" style={{ fontSize: "var(--fs-small)", margin: "10px 0 0" }}>{tc.noEmailNote}</p>
       </form>
       )}
 
@@ -429,12 +429,12 @@ export default async function DocumentDetailPage({
 
       <section className="card" style={{ padding: 18, display: "grid", gap: 10, margin: "0 0 18px" }}>
         <div style={{ display: "flex", gap: 10, alignItems: "baseline", flexWrap: "wrap" }}>
-          <h2 style={{ fontSize: 17, margin: 0 }}>{t.text}</h2>
+          <h2 style={{ fontSize: "var(--fs-section)", margin: 0 }}>{t.text}</h2>
           <Link href={`/library/${encodeURIComponent(documentId)}/text`}>{t.openEditor}</Link>
         </div>
 
         {d.originalFile ? (
-          <p className="quiet" style={{ fontSize: 14, margin: 0 }}>
+          <p className="quiet" style={{ fontSize: "var(--fs-body)", margin: 0 }}>
             {t.originalFile}{" "}
             <a href={`/api/library/file/${encodeURIComponent(d.originalFile.id)}`} target="_blank" rel="noreferrer">
               {d.originalFile.name}
@@ -443,18 +443,18 @@ export default async function DocumentDetailPage({
             {d.conversion && ` · ${t.conversionMethod(d.conversion.method)}`}
           </p>
         ) : (
-          <p className="quiet" style={{ fontSize: 14, margin: 0 }}>
+          <p className="quiet" style={{ fontSize: "var(--fs-body)", margin: 0 }}>
             {t.noOriginal}
           </p>
         )}
 
         {d.conversion?.warnings?.length ? (
-          <ul className="quiet" style={{ fontSize: 13.5, margin: 0, paddingLeft: 18 }}>
+          <ul className="quiet" style={{ fontSize: "var(--fs-small)", margin: 0, paddingLeft: 18 }}>
             {d.conversion.warnings.map((u, i) => <li key={i}>{u}</li>)}
           </ul>
         ) : null}
 
-        <p className="quiet" style={{ fontSize: 13.5, margin: 0 }}>
+        <p className="quiet" style={{ fontSize: "var(--fs-small)", margin: 0 }}>
           {hasChangesToPublish
             ? t.draftDiffers
             : draft || published
@@ -464,10 +464,10 @@ export default async function DocumentDetailPage({
       </section>
 
       <section className="card" style={{ padding: 18, display: "grid", gap: 14, margin: "0 0 18px" }}>
-        <h2 style={{ fontSize: 17, margin: 0 }}>{t.publishHeading}</h2>
+        <h2 style={{ fontSize: "var(--fs-section)", margin: 0 }}>{t.publishHeading}</h2>
 
         {!hasChangesToPublish ? (
-          <p className="quiet" style={{ fontSize: 14, margin: 0 }}>
+          <p className="quiet" style={{ fontSize: "var(--fs-body)", margin: 0 }}>
             {t.nothingToPublish}
           </p>
         ) : (
@@ -495,12 +495,12 @@ export default async function DocumentDetailPage({
             </div>
 
             {draftState !== "approved" ? (
-              <p className="quiet" style={{ fontSize: 14, margin: 0 }}>
+              <p className="quiet" style={{ fontSize: "var(--fs-body)", margin: 0 }}>
                 {draftState === "in-review" ? t.publishWaitsForApproval : t.publishNeedsApproval}
               </p>
             ) : (
               <>
-                <p className="quiet" style={{ fontSize: 14, margin: 0 }}>{t.publishApprovedNote}</p>
+                <p className="quiet" style={{ fontSize: "var(--fs-body)", margin: 0 }}>{t.publishApprovedNote}</p>
               <form action={publishVersionAction} style={{ display: "grid", gap: 14 }}>
                 <input type="hidden" name="documentId" value={d.documentId} />
 
@@ -545,19 +545,19 @@ export default async function DocumentDetailPage({
             */}
             {effective && draftDiff && draftDiff.added + draftDiff.removed > 0 && (
               <details>
-                <summary className="quiet" style={{ fontSize: 13.5, cursor: "pointer" }}>
+                <summary className="quiet" style={{ fontSize: "var(--fs-small)", cursor: "pointer" }}>
                   {t.textFixHeading}
                 </summary>
 
                 <div style={{ display: "grid", gap: 12, marginTop: 12 }}>
-                  <p className="quiet" style={{ fontSize: 14, margin: 0 }}>{t.textFixIntro}</p>
+                  <p className="quiet" style={{ fontSize: "var(--fs-body)", margin: 0 }}>{t.textFixIntro}</p>
 
                   <div>
                     <h4 className="field-label" style={{ margin: "0 0 6px" }}>
                       {`${t.textFixDiffHeading} · ${t.textFixDiffStat(draftDiff.added, draftDiff.removed)}`}
                     </h4>
                     {draftDiff.coarse && (
-                      <p className="quiet" style={{ fontSize: 13, margin: "0 0 6px" }}>{t.textFixCoarse}</p>
+                      <p className="quiet" style={{ fontSize: "var(--fs-small)", margin: "0 0 6px" }}>{t.textFixCoarse}</p>
                     )}
                     {/*
                       Riadky sa zalamujú, nerolujú do strany: na telefóne je
@@ -570,7 +570,7 @@ export default async function DocumentDetailPage({
                         maxHeight: 320,
                         overflowY: "auto",
                         fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace",
-                        fontSize: 12.5,
+                        fontSize: "var(--fs-micro)",
                         lineHeight: 1.55,
                         whiteSpace: "pre-wrap",
                         wordBreak: "break-word",
@@ -586,7 +586,7 @@ export default async function DocumentDetailPage({
                     </div>
                   </div>
 
-                  <p className="quiet" style={{ fontSize: 13, margin: 0 }}>{t.textFixApprovalNote}</p>
+                  <p className="quiet" style={{ fontSize: "var(--fs-small)", margin: 0 }}>{t.textFixApprovalNote}</p>
 
                   <form action={fixTextAction} style={{ display: "grid", gap: 12 }}>
                     <input type="hidden" name="documentId" value={d.documentId} />
@@ -622,8 +622,8 @@ export default async function DocumentDetailPage({
       <form action={uploadVersionAction} encType="multipart/form-data"
             className="card" style={{ padding: 18, display: "grid", gap: 10, margin: "0 0 18px" }}>
         <input type="hidden" name="documentId" value={d.documentId} />
-        <h2 style={{ fontSize: 17, margin: 0 }}>{t.newVersionHeading}</h2>
-        <p className="quiet" style={{ fontSize: 14, margin: 0 }}>{t.newVersionNote}</p>
+        <h2 style={{ fontSize: "var(--fs-section)", margin: 0 }}>{t.newVersionHeading}</h2>
+        <p className="quiet" style={{ fontSize: "var(--fs-body)", margin: 0 }}>{t.newVersionNote}</p>
         <label className="field">
           <span className="field-label">{t.newVersionFile}</span>
           <input className="field-input" type="file" name="file" required
@@ -634,17 +634,17 @@ export default async function DocumentDetailPage({
 
       <form action={reindexDocumentAction} className="card" style={{ padding: 18, display: "grid", gap: 10, margin: "0 0 18px" }}>
         <input type="hidden" name="documentId" value={d.documentId} />
-        <h2 style={{ fontSize: 17, margin: 0 }}>{t.reindexHeading}</h2>
-        <p className="quiet" style={{ fontSize: 14, margin: 0 }}>
+        <h2 style={{ fontSize: "var(--fs-section)", margin: 0 }}>{t.reindexHeading}</h2>
+        <p className="quiet" style={{ fontSize: "var(--fs-body)", margin: 0 }}>
           {t.reindexNoteBefore}<strong>{t.reindexNoteHighlight}</strong>{t.reindexNoteAfter}
         </p>
         <div><button className="button button--quiet" type="submit">{t.reindex}</button></div>
       </form>
 
-      <h2 style={{ fontSize: 17, margin: "0 0 10px" }}>{t.versionsHeading(d.versions.length)}</h2>
+      <h2 style={{ fontSize: "var(--fs-section)", margin: "0 0 10px" }}>{t.versionsHeading(d.versions.length)}</h2>
 
       {d.versions.length === 0 ? (
-        <p className="card" style={{ padding: 18, fontSize: 15 }}>
+        <p className="card" style={{ padding: 18, fontSize: "var(--fs-lead)" }}>
           {t.nothingPublished}
         </p>
       ) : (
@@ -686,15 +686,15 @@ export default async function DocumentDetailPage({
               */}
               {v.fixes && v.fixes.length > 0 && (
                 <details style={{ marginTop: 6 }}>
-                  <summary className="quiet" style={{ fontSize: 13, cursor: "pointer" }}>
+                  <summary className="quiet" style={{ fontSize: "var(--fs-small)", cursor: "pointer" }}>
                     {t.fixHistory(v.fixes.length)}
                   </summary>
                   <ul style={{ listStyle: "none", padding: 0, margin: "8px 0 0", display: "grid", gap: 8 }}>
                     {/* Najnovšia oprava hore — staršie sa dohľadávajú, novšia zaujíma. */}
                     {[...v.fixes].reverse().map((fix, i) => (
-                      <li key={`${v.versionId}-fix-${i}`} style={{ fontSize: 13.5 }}>
+                      <li key={`${v.versionId}-fix-${i}`} style={{ fontSize: "var(--fs-small)" }}>
                         <div>{fix.reason}</div>
-                        <div className="quiet" style={{ fontSize: 12.5 }}>
+                        <div className="quiet" style={{ fontSize: "var(--fs-micro)" }}>
                           {t.fixLine(fix.by, formatDate(fix.at, language))}
                           {" · "}
                           {t.fixWas(
@@ -719,14 +719,14 @@ export default async function DocumentDetailPage({
               */}
               {v.textFixes && v.textFixes.length > 0 && (
                 <details style={{ marginTop: 6 }}>
-                  <summary className="quiet" style={{ fontSize: 13, cursor: "pointer" }}>
+                  <summary className="quiet" style={{ fontSize: "var(--fs-small)", cursor: "pointer" }}>
                     {t.textFixHistory(v.textFixes.length)}
                   </summary>
                   <ul style={{ listStyle: "none", padding: 0, margin: "8px 0 0", display: "grid", gap: 8 }}>
                     {[...v.textFixes].reverse().map((fix, i) => (
-                      <li key={`${v.versionId}-text-${i}`} style={{ fontSize: 13.5 }}>
+                      <li key={`${v.versionId}-text-${i}`} style={{ fontSize: "var(--fs-small)" }}>
                         <div>{fix.reason}</div>
-                        <div className="quiet" style={{ fontSize: 12.5 }}>
+                        <div className="quiet" style={{ fontSize: "var(--fs-micro)" }}>
                           {t.textFixLine(fix.by, formatDate(fix.at, language))}
                         </div>
                       </li>
@@ -736,7 +736,7 @@ export default async function DocumentDetailPage({
               )}
 
               <details style={{ marginTop: 6 }}>
-                <summary className="quiet" style={{ fontSize: 13, cursor: "pointer" }}>{t.fix}</summary>
+                <summary className="quiet" style={{ fontSize: "var(--fs-small)", cursor: "pointer" }}>{t.fix}</summary>
                 <form action={fixVersionAction} style={{ display: "grid", gap: 10, marginTop: 10 }}>
                   <input type="hidden" name="documentId" value={d.documentId} />
                   <input type="hidden" name="versionId" value={v.versionId} />
@@ -748,7 +748,7 @@ export default async function DocumentDetailPage({
                     ho nemá — a rovno povie prečo.
                   */}
                   {(ackByVersion.get(v.versionId) ?? 0) > 0 ? (
-                    <p className="quiet" style={{ fontSize: 13.5, margin: 0 }}>
+                    <p className="quiet" style={{ fontSize: "var(--fs-small)", margin: 0 }}>
                       {t.versionLockedBefore}
                       <strong>{t.versionLockedHighlight(ackByVersion.get(v.versionId) ?? 0)}</strong>
                       {t.versionLockedAfter}
@@ -799,8 +799,8 @@ export default async function DocumentDetailPage({
                   <form action={revokeVersionAction} style={{ display: "grid", gap: 10, marginTop: 14 }}>
                     <input type="hidden" name="documentId" value={d.documentId} />
                     <input type="hidden" name="versionId" value={v.versionId} />
-                    <h3 style={{ fontSize: 14.5, margin: 0 }}>{t.revokeVersionHeading}</h3>
-                    <p className="quiet" style={{ fontSize: 13.5, margin: 0 }}>
+                    <h3 style={{ fontSize: "var(--fs-body)", margin: 0 }}>{t.revokeVersionHeading}</h3>
+                    <p className="quiet" style={{ fontSize: "var(--fs-small)", margin: 0 }}>
                       {t.revokeVersionNote(ackByVersion.get(v.versionId) ?? 0)}
                     </p>
                     <label className="field">

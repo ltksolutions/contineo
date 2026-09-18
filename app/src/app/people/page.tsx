@@ -70,7 +70,7 @@ export default async function PeoplePage({
         />
       </LiveFilter>
 
-      <p className="quiet" style={{ fontSize: 13.5, margin: "0 0 10px" }}>
+      <p className="quiet" style={{ fontSize: "var(--fs-small)", margin: "0 0 10px" }}>
         {people.length === 0
           ? t.nothingFound
           : `${t.count(people.length)}${q ? t.matchesSearch : ""}`}
@@ -84,7 +84,7 @@ export default async function PeoplePage({
               <div style={{ display: "flex", gap: 10, alignItems: "baseline", flexWrap: "wrap" }}>
                 <Link
                   href={`/people/${encodeURIComponent(o.id)}`}
-                  style={{ fontSize: 16, fontWeight: 700, textDecoration: "none" }}
+                  style={{ fontSize: "var(--fs-lead)", fontWeight: 700, textDecoration: "none" }}
                 >
                   {displayName(o)}
                 </Link>
@@ -99,7 +99,7 @@ export default async function PeoplePage({
                 {o.roles.map(r => (
                   <span key={r} className="tag">{r}</span>
                 ))}
-                <span className="quiet" style={{ fontSize: 13, marginLeft: "auto" }}>
+                <span className="quiet" style={{ fontSize: "var(--fs-small)", marginLeft: "auto" }}>
                   {o.lastLoginAt ? formatDate(o.lastLoginAt, language) : t.neverSignedIn}
                 </span>
               </div>
@@ -110,12 +110,12 @@ export default async function PeoplePage({
                 podľa čoho v zozname rozhoduje. Adresa a skupiny sú až potom.
               */}
               {(o.jobTitle || o.workplace) && (
-                <p className="quiet" style={{ fontSize: 13.5, margin: "5px 0 0" }}>
+                <p className="quiet" style={{ fontSize: "var(--fs-small)", margin: "5px 0 0" }}>
                   {[o.jobTitle, workplaceLabel(o.workplace, workplaces)].filter(Boolean).join(" · ")}
                 </p>
               )}
 
-              <p className="quiet" style={{ fontSize: 13.5, margin: "3px 0 0", overflowWrap: "anywhere" }}>
+              <p className="quiet" style={{ fontSize: "var(--fs-small)", margin: "3px 0 0", overflowWrap: "anywhere" }}>
                 {o.email}
                 {o.department && ` · ${o.department}`}
                 {o.groups.length > 0 && ` · ${o.groups.join(", ")}`}

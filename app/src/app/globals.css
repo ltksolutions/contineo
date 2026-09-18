@@ -724,8 +724,12 @@ button:disabled { cursor: not-allowed; opacity: 0.55; }
   background: var(--bg);
   border: 1px solid var(--line);
   border-radius: 10px;
-  /* Tá istá výška ako tlačidlo a rozbaľovací výber (`--control-h`). */
+  /* Tá istá výška ako tlačidlo a rozbaľovací výber (`--control-h`).
+     `line-height` musí byť pri tom vlastný: zdedených 1.6 z `body` urobí
+     z riadku 24 px a pole je zrazu o dva pixely vyššie než tlačidlo vedľa
+     neho — presne ten rozdiel, ktorý je vidieť, keď stoja v rade. */
   min-height: var(--control-h);
+  line-height: 1.2;
   padding: 8px 12px;
   width: 100%;
 }

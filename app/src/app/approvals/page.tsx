@@ -82,10 +82,10 @@ export default async function ApprovalsPage({
 
             return (
               <li key={`${r.documentId}-${r.versionId}-${r.round}`} className="card" style={{ padding: 18 }}>
-                <h2 style={{ fontSize: 19, letterSpacing: "-0.01em", margin: "0 0 4px" }}>
+                <h2 style={{ fontSize: "var(--fs-section)", letterSpacing: "-0.01em", margin: "0 0 4px" }}>
                   {String(doc?.title ?? r.documentId)}
                 </h2>
-                <div className="quiet" style={{ fontSize: 13.5 }}>
+                <div className="quiet" style={{ fontSize: "var(--fs-small)" }}>
                   {t.versionLine(version?.label ?? r.versionId, t.roundLine(r.round))}
                   {" · "}
                   {t.submittedBy(r.submittedBy, formatDate(r.submittedAt, person.language))}
@@ -93,13 +93,13 @@ export default async function ApprovalsPage({
 
                 {version?.effectiveFrom
                   ? (
-                    <div className="quiet" style={{ fontSize: 13.5 }}>
+                    <div className="quiet" style={{ fontSize: "var(--fs-small)" }}>
                       {t.effectiveFrom(formatDate(version.effectiveFrom, person.language))}
                     </div>
                   )
-                  : <div className="quiet" style={{ fontSize: 13.5 }}>{t.noEffectiveFrom}</div>}
+                  : <div className="quiet" style={{ fontSize: "var(--fs-small)" }}>{t.noEffectiveFrom}</div>}
 
-                {r.note && <p style={{ fontSize: 14.5, margin: "10px 0 0" }}>{r.note}</p>}
+                {r.note && <p style={{ fontSize: "var(--fs-body)", margin: "10px 0 0" }}>{r.note}</p>}
 
                 {/*
                   Ostatní schvaľovatelia sú vidieť, ale ich rozhodnutie sa
@@ -108,13 +108,13 @@ export default async function ApprovalsPage({
                   bude musieť rozhodnúť, nie aby sa človek pridal k väčšine.
                 */}
                 {others.length > 0 && (
-                  <div className="quiet" style={{ fontSize: 13, marginTop: 6 }}>
+                  <div className="quiet" style={{ fontSize: "var(--fs-small)", marginTop: 6 }}>
                     {t.alsoDeciding(others.map(a => a.fullName).join(", "))}
                   </div>
                 )}
 
                 <details style={{ marginTop: 12 }}>
-                  <summary className="quiet" style={{ fontSize: 13.5, cursor: "pointer" }}>
+                  <summary className="quiet" style={{ fontSize: "var(--fs-small)", cursor: "pointer" }}>
                     {t.readText}
                   </summary>
                   <article className="answer" style={{ lineHeight: 1.7, marginTop: 10 }}>

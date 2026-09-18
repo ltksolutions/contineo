@@ -53,7 +53,7 @@ export default async function GuidePage() {
         {language !== "sk" && (
           <p
             className="card"
-            style={{ padding: "12px 15px", margin: "0 0 22px", fontSize: 14, lineHeight: 1.6 }}
+            style={{ padding: "12px 15px", margin: "0 0 22px", fontSize: "var(--fs-body)", lineHeight: 1.6 }}
           >
             {t.onlySlovak}
           </p>

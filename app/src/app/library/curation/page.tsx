@@ -49,7 +49,7 @@ export default async function CurationPage({
         <h1 className="page-title" style={{ margin: "0 0 8px" }}>
           {t.publishHeading}
           {pending.length > 0 && (
-            <span className="tag" style={{ fontSize: 12, marginLeft: 10, verticalAlign: "middle" }}>
+            <span className="tag" style={{ fontSize: "var(--fs-micro)", marginLeft: 10, verticalAlign: "middle" }}>
               {t.waiting(pending.length)}
             </span>
           )}
@@ -65,8 +65,8 @@ export default async function CurationPage({
 
       {pending.length === 0 && (
         <div className="card">
-          <p style={{ margin: "0 0 6px", fontSize: 15.5 }}>{t.publishEmpty}</p>
-          <p className="quiet" style={{ margin: 0, fontSize: 14 }}>{t.publishEmptyNote}</p>
+          <p style={{ margin: "0 0 6px", fontSize: "var(--fs-lead)" }}>{t.publishEmpty}</p>
+          <p className="quiet" style={{ margin: 0, fontSize: "var(--fs-body)" }}>{t.publishEmptyNote}</p>
         </div>
       )}
 
@@ -77,29 +77,29 @@ export default async function CurationPage({
               <span
                 className="tag"
                 style={item.accessLevelPreview === "public"
-                  ? { fontSize: 11, fontWeight: 600 }
-                  : { background: "var(--warn-bg)", color: "var(--warn-fg)", fontSize: 11, fontWeight: 600 }}
+                  ? { fontSize: "var(--fs-micro)", fontWeight: 600 }
+                  : { background: "var(--warn-bg)", color: "var(--warn-fg)", fontSize: "var(--fs-micro)", fontWeight: 600 }}
               >
                 {t.access}: {item.accessLevelPreview === "public" ? t.accessPublic : t.accessInternal}
               </span>
-              <span className="quiet" style={{ fontSize: 12.5, marginLeft: "auto" }}>
+              <span className="quiet" style={{ fontSize: "var(--fs-micro)", marginLeft: "auto" }}>
                 {t.preparedBy} {item.preparedByName || t.preparedByUnknown} · {formatDate(item.preparedAt, language)}
               </span>
             </div>
 
-            <p style={{ margin: "0 0 10px", fontSize: 16.5, fontWeight: 600, lineHeight: 1.45 }}>
+            <p style={{ margin: "0 0 10px", fontSize: "var(--fs-section)", fontWeight: 600, lineHeight: 1.45 }}>
               {item.question}
             </p>
-            <div style={{ fontSize: 14.5, lineHeight: 1.65, whiteSpace: "pre-wrap", marginBottom: 12 }}>
+            <div style={{ fontSize: "var(--fs-body)", lineHeight: 1.65, whiteSpace: "pre-wrap", marginBottom: 12 }}>
               {item.answer}
             </div>
 
-            <ul className="quiet" style={{ margin: "0 0 6px", paddingLeft: 18, fontSize: 13 }}>
+            <ul className="quiet" style={{ margin: "0 0 6px", paddingLeft: 18, fontSize: "var(--fs-small)" }}>
               {item.sources.map(src => (
                 <li key={src.chunkId}>{[src.title, src.articleRef].filter(Boolean).join(" · ")}</li>
               ))}
             </ul>
-            <p className="quiet" style={{ fontSize: 12.5, margin: "0 0 14px" }}>{t.accessNote}</p>
+            <p className="quiet" style={{ fontSize: "var(--fs-micro)", margin: "0 0 14px" }}>{t.accessNote}</p>
 
             <form action={publishCurationAction}>
               <input type="hidden" name="id" value={item.id} />

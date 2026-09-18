@@ -81,7 +81,7 @@ export default async function EvidencePage({
           len v komentári v kóde. Kto os číta ako dôkaz, musí vedieť, čo v nej
           nie je — a prečo.
         */}
-        <p className="quiet" style={{ fontSize: 13, margin: "0 0 20px", maxWidth: 640 }}>
+        <p className="quiet" style={{ fontSize: "var(--fs-small)", margin: "0 0 20px", maxWidth: 640 }}>
           {t.notifiedMissing}
         </p>
 

@@ -50,39 +50,39 @@ export default async function AssignmentDetailPage({
     <AppShell language={ctx.person.language}>
     <div style={{ maxWidth: 720, ...tenantStyle(branding) }}>
       <p style={{ margin: "0 0 16px" }}>
-        <Link className="quiet" href="/hr" style={{ fontSize: 14 }}>{t.back}</Link>
+        <Link className="quiet" href="/hr" style={{ fontSize: "var(--fs-body)" }}>{t.back}</Link>
       </p>
 
       <h1 className="page-title">
         {assignment.subject.documentTitle}
       </h1>
-      <p className="quiet" style={{ fontSize: 14, margin: "0 0 4px" }}>
+      <p className="quiet" style={{ fontSize: "var(--fs-body)", margin: "0 0 4px" }}>
         {t.version} {assignment.subject.versionLabel}
         {assignment.subject.effectiveFrom &&
           t.effectiveFrom(formatDate(assignment.subject.effectiveFrom, language))}
       </p>
-      <p className="quiet" style={{ fontSize: 14, margin: "0 0 18px" }}>
+      <p className="quiet" style={{ fontSize: "var(--fs-body)", margin: "0 0 18px" }}>
         {audienceLabel(assignment.audience)} · {t.assignedBy} {assignment.assignedBy} ·{" "}
         {formatDate(assignment.assignedAt, language)}
       </p>
 
-      <p className="card" style={{ padding: "14px 18px", margin: "0 0 24px", fontSize: 15, lineHeight: 1.6 }}>
+      <p className="card" style={{ padding: "14px 18px", margin: "0 0 24px", fontSize: "var(--fs-lead)", lineHeight: 1.6 }}>
         {assignment.reason}
       </p>
 
       <div style={{ display: "flex", gap: 10, alignItems: "baseline", flexWrap: "wrap", margin: "0 0 10px" }}>
-        <h2 style={{ fontSize: 18, margin: 0 }}>
+        <h2 style={{ fontSize: "var(--fs-section)", margin: 0 }}>
           {t.notAcknowledged(missing.length, assignment.count)}
         </h2>
         {missing.length > 0 && (
-          <Link href={`/hr/${encodeURIComponent(id)}/notify`} style={{ fontSize: 14 }}>
+          <Link href={`/hr/${encodeURIComponent(id)}/notify`} style={{ fontSize: "var(--fs-body)" }}>
             {t.notifyLink}
           </Link>
         )}
       </div>
 
       {missing.length === 0 ? (
-        <p className="card" style={{ padding: 18, fontSize: 15 }}>
+        <p className="card" style={{ padding: 18, fontSize: "var(--fs-lead)" }}>
           {t.allAcknowledged}
         </p>
       ) : (
@@ -93,13 +93,13 @@ export default async function AssignmentDetailPage({
                 {o.fullName}
                 {o.former && <span className="tag">{t.noLongerInDepartment}</span>}
               </div>
-              <div className="quiet" style={{ fontSize: 13.5 }}>{o.email}</div>
+              <div className="quiet" style={{ fontSize: "var(--fs-small)" }}>{o.email}</div>
             </li>
           ))}
         </ul>
       )}
 
-      <p className="quiet" style={{ fontSize: 13, marginTop: 18, maxWidth: 560 }}>
+      <p className="quiet" style={{ fontSize: "var(--fs-small)", marginTop: 18, maxWidth: 560 }}>
         {t.note}
       </p>
     </div>

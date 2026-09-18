@@ -53,7 +53,7 @@ function ProviderRow({
   return (
     <section className="card" style={{ padding: "18px 20px", display: "grid", gap: 14 }}>
       <div style={{ display: "flex", gap: 10, alignItems: "baseline", flexWrap: "wrap" }}>
-        <h2 style={{ fontSize: 17, margin: 0 }}>{t.heading(name)}</h2>
+        <h2 style={{ fontSize: "var(--fs-section)", margin: 0 }}>{t.heading(name)}</h2>
         <span
           className="tag"
           style={s.state === "unreadable"
@@ -64,12 +64,12 @@ function ProviderRow({
         </span>
       </div>
 
-      <p className="quiet" style={{ margin: 0, fontSize: 14 }}>{statusLabel}</p>
+      <p className="quiet" style={{ margin: 0, fontSize: "var(--fs-body)" }}>{statusLabel}</p>
 
       {/* Najčastejšia príčina toho, prečo prihlásenie hneď na prvý raz nejde. */}
       <div>
         <div className="quiet field-hint">{t.callback}</div>
-        <code style={{ fontSize: 13.5, overflowWrap: "anywhere" }}>{back}</code>
+        <code style={{ fontSize: "var(--fs-small)", overflowWrap: "anywhere" }}>{back}</code>
       </div>
 
       <form action={saveSignInAction} style={{ display: "grid", gap: 14 }}>
@@ -112,7 +112,7 @@ function ProviderRow({
         <form action={deleteSignInAction} style={{ display: "grid", gap: 10, borderTop: "1px solid var(--line)", paddingTop: 14 }}>
           <input type="hidden" name="companyCode" value={tenant.companyCode} />
           <input type="hidden" name="provider" value={provider} />
-          <p className="quiet" style={{ margin: 0, fontSize: 14 }}>{t.deleteNote}</p>
+          <p className="quiet" style={{ margin: 0, fontSize: "var(--fs-body)" }}>{t.deleteNote}</p>
           <Field name="confirmation" label={t.confirmLabel(tenant.companyCode)} />
           <button className="button button--quiet" type="submit">{t.deleteSubmit}</button>
         </form>
@@ -155,7 +155,7 @@ function DomainRow({ s, language }: { s: DomainStatus; language?: UiLanguage }) 
         <strong>{s.host}</strong> — {t.waitingForCustomer}{" "}
         <code>{cnameInstruction(s.host, s.cname)}</code>
         {s.conflicts.length > 0 && (
-          <div style={{ color: "var(--bad-fg)", fontSize: 13 }}>
+          <div style={{ color: "var(--bad-fg)", fontSize: "var(--fs-small)" }}>
             {t.conflicts(s.conflicts.join(", "))}
           </div>
         )}
@@ -205,7 +205,7 @@ export default async function TenantDetailPage({
     <AppShell language={ctx.person.language}>
     <div style={{ maxWidth: 760 }}>
       <p style={{ margin: "0 0 12px" }}>
-        <Link href="/admin" className="quiet" style={{ fontSize: 14 }}>
+        <Link href="/admin" className="quiet" style={{ fontSize: "var(--fs-body)" }}>
           {t.back}
         </Link>
       </p>
@@ -221,7 +221,7 @@ export default async function TenantDetailPage({
       <Notice message={message} error={error === "1"} back={`/admin/tenants/${encodeURIComponent(code)}`} />
 
       <section className="card" style={{ padding: "18px 20px", marginBottom: 16 }}>
-        <h2 style={{ fontSize: 17, margin: "0 0 12px" }}>{t.domainsHeading}</h2>
+        <h2 style={{ fontSize: "var(--fs-section)", margin: "0 0 12px" }}>{t.domainsHeading}</h2>
         <ul className="admin-domains">
           {domains.map(x => <DomainRow key={x.host} s={x} language={language} />)}
         </ul>
@@ -244,7 +244,7 @@ export default async function TenantDetailPage({
 
       <form action={saveTenantAction} className="card admin-form" encType="multipart/form-data">
         <input type="hidden" name="companyCode" value={tenant.companyCode} />
-        <h2 style={{ fontSize: 17, margin: 0 }}>{t.brandingHeading}</h2>
+        <h2 style={{ fontSize: "var(--fs-section)", margin: 0 }}>{t.brandingHeading}</h2>
 
         <Field name="displayName" label={t.displayName} value={tenant.branding.displayName} />
         <Field name="shortName" label={t.shortName} value={tenant.branding.shortName} />
@@ -341,12 +341,12 @@ export default async function TenantDetailPage({
       <form action={toggleTenantStatusAction} className="card admin-form" style={{ marginTop: 16 }}>
         <input type="hidden" name="companyCode" value={tenant.companyCode} />
         <input type="hidden" name="status" value={enabled ? "disabled" : "active"} />
-        <h2 style={{ fontSize: 17, margin: 0 }}>
+        <h2 style={{ fontSize: "var(--fs-section)", margin: 0 }}>
           {enabled ? t.disableHeading : t.enableHeading}
         </h2>
         {enabled ? (
           <>
-            <p className="quiet" style={{ margin: 0, fontSize: 14 }}>{t.disableNote}</p>
+            <p className="quiet" style={{ margin: 0, fontSize: "var(--fs-body)" }}>{t.disableNote}</p>
             <Field
               name="confirmation"
               label={t.confirmLabel(tenant.companyCode)}
@@ -360,8 +360,8 @@ export default async function TenantDetailPage({
       </form>
 
       <section style={{ marginTop: 28 }}>
-        <h2 style={{ fontSize: 17, margin: "0 0 4px" }}>{t.auditHeading}</h2>
-        <p className="quiet" style={{ fontSize: 14, margin: "0 0 12px" }}>{t.auditNote}</p>
+        <h2 style={{ fontSize: "var(--fs-section)", margin: "0 0 4px" }}>{t.auditHeading}</h2>
+        <p className="quiet" style={{ fontSize: "var(--fs-body)", margin: "0 0 12px" }}>{t.auditNote}</p>
         <AuditList records={records} language={language} />
       </section>
     </div>

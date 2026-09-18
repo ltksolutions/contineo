@@ -41,14 +41,14 @@ export default function PendingWidget({
   return (
     <section className="card requests-widget" aria-labelledby="requests-heading">
       <div className="requests-widget-head">
-        <h2 id="requests-heading" style={{ fontSize: 17, margin: 0 }}>
+        <h2 id="requests-heading" style={{ fontSize: "var(--fs-section)", margin: 0 }}>
           {t.heading}
         </h2>
         {total > 0 && <span className="tag">{t.count(total)}</span>}
       </div>
 
       {total === 0 ? (
-        <p className="quiet" style={{ margin: "10px 0 0", fontSize: 14.5 }}>
+        <p className="quiet" style={{ margin: "10px 0 0", fontSize: "var(--fs-body)" }}>
           {t.empty}
         </p>
       ) : (
@@ -122,7 +122,7 @@ export default function PendingWidget({
               nemôže pohnúť, nie je úloha a v zozname by len visela. Zamlčať
               ich ale nemožno: na `/documents` ich uvidí aj s dôvodom. */}
           {blockedCount > 0 && (
-            <span className="quiet" style={{ fontSize: 13.5 }}>
+            <span className="quiet" style={{ fontSize: "var(--fs-small)" }}>
               {t.blockedNote(blockedCount)}
             </span>
           )}

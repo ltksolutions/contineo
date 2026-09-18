@@ -68,7 +68,7 @@ export default async function DirectoryPage({
         />
       </LiveFilter>
 
-      <p className="quiet" style={{ fontSize: 13.5, margin: "0 0 10px" }}>
+      <p className="quiet" style={{ fontSize: "var(--fs-small)", margin: "0 0 10px" }}>
         {people.length === 0 ? t.nothingFound : t.count(people.length)}
       </p>
 
@@ -91,9 +91,9 @@ export default async function DirectoryPage({
               </div>
 
               <div style={{ minWidth: 0 }}>
-                <div style={{ fontSize: 15.5, fontWeight: 700 }}>{displayName(o)}</div>
+                <div style={{ fontSize: "var(--fs-lead)", fontWeight: 700 }}>{displayName(o)}</div>
                 {where && (
-                  <div className="quiet" style={{ fontSize: 13.5, marginTop: 2 }}>{where}</div>
+                  <div className="quiet" style={{ fontSize: "var(--fs-small)", marginTop: 2 }}>{where}</div>
                 )}
 
                 {/*

@@ -72,7 +72,7 @@ export default async function NotificationsPage({
         {message && <Notice message={message} back="/notifications" />}
 
         <h1 className="page-title">{t.title}</h1>
-        <p className="quiet" style={{ fontSize: 13.5, margin: "0 0 18px" }}>
+        <p className="quiet" style={{ fontSize: "var(--fs-small)", margin: "0 0 18px" }}>
           {t.retentionNote(RETENTION_DAYS)}
         </p>
 
@@ -83,7 +83,7 @@ export default async function NotificationsPage({
             {unread > 0 && (
               <form action={markAllReadAction} style={{ margin: "0 0 18px" }}>
                 <button className="button" type="submit">{t.markAllRead}</button>
-                <span className="quiet" style={{ fontSize: 13, marginLeft: 12 }}>{t.unread(unread)}</span>
+                <span className="quiet" style={{ fontSize: "var(--fs-small)", marginLeft: 12 }}>{t.unread(unread)}</span>
               </form>
             )}
 
@@ -103,7 +103,7 @@ export default async function NotificationsPage({
                     }}
                   >
                     {href ? <Link href={href}>{text}</Link> : <span>{text}</span>}
-                    <div className="quiet" style={{ fontSize: 13, fontWeight: 400, marginTop: 4 }}>
+                    <div className="quiet" style={{ fontSize: "var(--fs-small)", fontWeight: 400, marginTop: 4 }}>
                       {formatDate(r.createdAt, language)}
                     </div>
                   </li>

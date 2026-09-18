@@ -17,8 +17,8 @@ export const dynamic = "force-dynamic"
 function Fact({ label, value, muted }: { label: string; value: string; muted?: boolean }) {
   return (
     <div>
-      <div className="quiet" style={{ fontSize: 12.5 }}>{label}</div>
-      <div style={{ fontSize: 15.5, fontWeight: 600, color: muted ? "var(--muted)" : undefined }}>
+      <div className="quiet" style={{ fontSize: "var(--fs-micro)" }}>{label}</div>
+      <div style={{ fontSize: "var(--fs-lead)", fontWeight: 600, color: muted ? "var(--muted)" : undefined }}>
         {value}
       </div>
     </div>
@@ -52,7 +52,7 @@ export default async function TenantAdminPage() {
             <div style={{ display: "flex", gap: 10, alignItems: "baseline", flexWrap: "wrap" }}>
               <Link
                 href={`/admin/tenants/${encodeURIComponent(tenant.companyCode)}`}
-                style={{ fontSize: 17, fontWeight: 700, textDecoration: "none" }}
+                style={{ fontSize: "var(--fs-section)", fontWeight: 700, textDecoration: "none" }}
               >
                 {tenant.displayName}
               </Link>
@@ -62,12 +62,12 @@ export default async function TenantAdminPage() {
                   {t.disabled}
                 </span>
               )}
-              <span className="quiet" style={{ fontSize: 13, marginLeft: "auto" }}>
+              <span className="quiet" style={{ fontSize: "var(--fs-small)", marginLeft: "auto" }}>
                 {tenant.languages.join(" · ")}
               </span>
             </div>
 
-            <p className="quiet" style={{ fontSize: 13.5, margin: "8px 0 0", overflowWrap: "anywhere" }}>
+            <p className="quiet" style={{ fontSize: "var(--fs-small)", margin: "8px 0 0", overflowWrap: "anywhere" }}>
               {tenant.hostnames.join(", ") || t.noDomain}
             </p>
 
@@ -97,7 +97,7 @@ export default async function TenantAdminPage() {
                 tichá príčina, prečo človek v zozname nič nevidí (D6) — a bez
                 mena sa nedá povedať, ktorý z nich opraviť. */}
             {tenant.documents.withoutVersion.length > 0 && (
-              <p style={{ margin: "12px 0 0", fontSize: 13.5 }}>
+              <p style={{ margin: "12px 0 0", fontSize: "var(--fs-small)" }}>
                 <span className="tag" style={{ background: "var(--warn-bg)", color: "var(--warn-fg)" }}>
                   {t.withoutVersion}
                 </span>{" "}
@@ -106,7 +106,7 @@ export default async function TenantAdminPage() {
             )}
 
             {tenant.pokynyPoslane && (
-              <p className="quiet" style={{ margin: "10px 0 0", fontSize: 13 }}>
+              <p className="quiet" style={{ margin: "10px 0 0", fontSize: "var(--fs-small)" }}>
                 {t.instructionsSent(
                   formatDate(tenant.pokynyPoslane.at, language),
                   tenant.pokynyPoslane.to,
@@ -117,7 +117,7 @@ export default async function TenantAdminPage() {
         ))}
       </ul>
 
-      <p className="quiet" style={{ fontSize: 13, marginTop: 20 }}>
+      <p className="quiet" style={{ fontSize: "var(--fs-small)", marginTop: 20 }}>
         {t.domainsNoteBefore}<code>npm run domains</code>{t.domainsNoteAfter}
       </p>
     </div>

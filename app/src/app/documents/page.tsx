@@ -94,7 +94,7 @@ export default async function DocumentsPage({
         stálo dvakrát to isté číslo — raz ako súčet, raz pri trase.
       */}
       {total > 0 && tracks.length > 1 && (
-        <p className="quiet" style={{ fontSize: 14, margin: "0 0 24px" }}>
+        <p className="quiet" style={{ fontSize: "var(--fs-body)", margin: "0 0 24px" }}>
           {t.progress(done, total)}
         </p>
       )}
@@ -111,16 +111,16 @@ export default async function DocumentsPage({
       {tracks.map(tr => (
         <section key={tr.key} style={{ margin: "0 0 32px" }}>
           <div style={{ display: "flex", gap: 12, alignItems: "baseline", flexWrap: "wrap", margin: "0 0 4px" }}>
-            <h2 style={{ fontSize: 19, letterSpacing: "-0.01em", margin: 0, flex: "1 1 auto" }}>
+            <h2 style={{ fontSize: "var(--fs-section)", letterSpacing: "-0.01em", margin: 0, flex: "1 1 auto" }}>
               {tr.title}
             </h2>
-            <span className="quiet" style={{ fontSize: 13.5 }}>
+            <span className="quiet" style={{ fontSize: "var(--fs-small)" }}>
               {tr.nextOrder === null ? t.trackComplete : t.progress(tr.doneCount, tr.totalCount)}
             </span>
           </div>
 
           {tr.description && (
-            <p className="quiet" style={{ fontSize: 14, margin: "0 0 12px" }}>{tr.description}</p>
+            <p className="quiet" style={{ fontSize: "var(--fs-body)", margin: "0 0 12px" }}>{tr.description}</p>
           )}
 
           <ul style={{ listStyle: "none", padding: 0, margin: "12px 0 0", display: "grid", gap: 12 }}>
@@ -138,10 +138,10 @@ export default async function DocumentsPage({
                   }}
                 >
                   <div style={{ display: "flex", gap: 16, alignItems: "baseline", flexWrap: "wrap" }}>
-                    <span className="quiet" style={{ fontSize: 13, flex: "0 0 auto" }}>
+                    <span className="quiet" style={{ fontSize: "var(--fs-small)", flex: "0 0 auto" }}>
                       {t.step(s.order, tr.totalCount)}
                     </span>
-                    <strong style={{ fontSize: 16, flex: "1 1 260px" }}>{s.title}</strong>
+                    <strong style={{ fontSize: "var(--fs-lead)", flex: "1 1 260px" }}>{s.title}</strong>
 
                     {s.blocked ? (
                       <span className="tag" style={{ background: "var(--warn-bg)", color: "var(--warn-fg)" }}>
@@ -156,7 +156,7 @@ export default async function DocumentsPage({
                     )}
                   </div>
 
-                  <p className="quiet" style={{ fontSize: 13.5, margin: "8px 0 0" }}>
+                  <p className="quiet" style={{ fontSize: "var(--fs-small)", margin: "8px 0 0" }}>
                     {s.blocked
                       ? t.blockedReason[s.blocked] ?? s.blocked
                       : t.version(s.versionLabel ?? "", formatDate(s.effectiveFrom!, person.language))}
@@ -192,18 +192,18 @@ export default async function DocumentsPage({
       */}
       {outside.length > 0 && (
         <section style={{ margin: "0 0 32px" }}>
-          <h2 style={{ fontSize: 19, letterSpacing: "-0.01em", margin: "0 0 12px" }}>
+          <h2 style={{ fontSize: "var(--fs-section)", letterSpacing: "-0.01em", margin: "0 0 12px" }}>
             {t.assignedHeading}
           </h2>
           <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "grid", gap: 12 }}>
             {outside.map(item => (
               <li key={item.id} className="card" style={{ padding: "16px 18px" }}>
                 <div style={{ display: "flex", gap: 16, alignItems: "baseline", flexWrap: "wrap" }}>
-                  <strong style={{ fontSize: 16, flex: "1 1 260px" }}>{item.title}</strong>
+                  <strong style={{ fontSize: "var(--fs-lead)", flex: "1 1 260px" }}>{item.title}</strong>
                   <span className="tag">{t.todo}</span>
                 </div>
                 {item.detail && (
-                  <p className="quiet" style={{ fontSize: 13.5, margin: "8px 0 0" }}>{item.detail}</p>
+                  <p className="quiet" style={{ fontSize: "var(--fs-small)", margin: "8px 0 0" }}>{item.detail}</p>
                 )}
                 <p style={{ margin: "12px 0 0" }}>
                   <Link className="button" href={item.href}>{t.open}</Link>

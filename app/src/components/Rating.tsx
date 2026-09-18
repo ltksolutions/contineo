@@ -60,7 +60,7 @@ function Choice({
         fontWeight: active ? 700 : 500,
         borderRadius: 9,
         padding: "7px 14px",
-        fontSize: 14,
+        fontSize: "var(--fs-body)",
       }}
       aria-pressed={active}
     >
@@ -103,13 +103,13 @@ function ReaderPanel({
   }
 
   if (done) {
-    return <p className="quiet" style={{ fontSize: 13.5, margin: "12px 0 0" }}>{t.readerThanks}</p>
+    return <p className="quiet" style={{ fontSize: "var(--fs-small)", margin: "12px 0 0" }}>{t.readerThanks}</p>
   }
 
   return (
     <div style={{ marginTop: 12, display: "grid", gap: 10 }}>
       <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
-        <span className="quiet" style={{ fontSize: 13.5 }}>{t.readerQuestion}</span>
+        <span className="quiet" style={{ fontSize: "var(--fs-small)" }}>{t.readerQuestion}</span>
         <Choice active={verdict === 1} color="ok" onClick={() => say(1)}>{t.fits}</Choice>
         <Choice active={verdict === 0} color="bad" onClick={() => say(0)}>{t.doesNotFit}</Choice>
       </div>
@@ -185,13 +185,13 @@ export default function Rating({
       style={{ borderColor: "var(--teal-100)", background: "var(--surface-2)" }}
     >
       <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14, flexWrap: "wrap" }}>
-        <h3 style={{ fontSize: 13, textTransform: "uppercase", letterSpacing: "0.05em",
+        <h3 style={{ fontSize: "var(--fs-small)", textTransform: "uppercase", letterSpacing: "0.05em",
                      color: "var(--muted)", margin: 0 }}>
           {t.heading}
         </h3>
         <span
           className="quiet"
-          style={{ fontSize: 12, marginLeft: "auto", minWidth: 90, textAlign: "right" }}
+          style={{ fontSize: "var(--fs-micro)", marginLeft: "auto", minWidth: 90, textAlign: "right" }}
           aria-live="polite"
         >
           {status === "saving" ? t.saving
@@ -202,7 +202,7 @@ export default function Rating({
 
       <div style={{ display: "grid", gap: 14 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
-          <span style={{ fontSize: 14.5, minWidth: 190 }}>{t.correctQuestion}</span>
+          <span style={{ fontSize: "var(--fs-body)", minWidth: 190 }}>{t.correctQuestion}</span>
           <Choice active={fields.correct === 1} color="ok" onClick={() => save({ correct: 1 })}>
             {t.yes}
           </Choice>
@@ -212,7 +212,7 @@ export default function Rating({
         </div>
 
         <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
-          <span style={{ fontSize: 14.5, minWidth: 190 }}>{t.hallucinationQuestion}</span>
+          <span style={{ fontSize: "var(--fs-body)", minWidth: 190 }}>{t.hallucinationQuestion}</span>
           <Choice active={fields.hallucination === 1} color="bad" onClick={() => save({ hallucination: 1 })}>
             {t.yesInvented}
           </Choice>
@@ -229,7 +229,7 @@ export default function Rating({
           className="quiet"
           style={{
             background: "none", border: "none", padding: 0,
-            fontSize: 13.5, textAlign: "left", textDecoration: "underline",
+            fontSize: "var(--fs-small)", textAlign: "left", textDecoration: "underline",
             textUnderlineOffset: 3, width: "fit-content",
           }}
         >
@@ -239,7 +239,7 @@ export default function Rating({
         {detail && (
           <div style={{ display: "grid", gap: 12 }}>
             <label style={{ display: "grid", gap: 6 }}>
-              <span className="quiet" style={{ fontSize: 13 }}>{t.expectedAnswer}</span>
+              <span className="quiet" style={{ fontSize: "var(--fs-small)" }}>{t.expectedAnswer}</span>
               <textarea
                 value={fields.verifiedAnswer}
                 onChange={e => setFields(p => ({ ...p, verifiedAnswer: e.target.value }))}
@@ -251,7 +251,7 @@ export default function Rating({
             </label>
 
             <label style={{ display: "grid", gap: 6 }}>
-              <span className="quiet" style={{ fontSize: 13 }}>{t.sources}</span>
+              <span className="quiet" style={{ fontSize: "var(--fs-small)" }}>{t.sources}</span>
               <input
                 value={fields.correctSources}
                 onChange={e => setFields(p => ({ ...p, correctSources: e.target.value }))}
@@ -262,7 +262,7 @@ export default function Rating({
             </label>
 
             <label style={{ display: "grid", gap: 6 }}>
-              <span className="quiet" style={{ fontSize: 13 }}>{t.note}</span>
+              <span className="quiet" style={{ fontSize: "var(--fs-small)" }}>{t.note}</span>
               <textarea
                 value={fields.note}
                 onChange={e => setFields(p => ({ ...p, note: e.target.value }))}
@@ -286,6 +286,6 @@ const fieldStyle: React.CSSProperties = {
   border: "1px solid var(--line)",
   borderRadius: 9,
   padding: "8px 10px",
-  fontSize: 14,
+  fontSize: "var(--fs-body)",
   fontFamily: "inherit",
 }
