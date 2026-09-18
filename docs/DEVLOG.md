@@ -40,6 +40,28 @@ fokus zostal v poli a otvorená karta zostala otvorená.
 
 tsc čistý, eslint 0 chýb, vitest 1367/1367, build prešiel.
 
+**Overenie na 375 px stálo viac než samotná oprava.** `resize_window`
+v rozšírení ani zmena rozmerov okna cez AppleScript layout viewport
+nepohli — `innerWidth` zostal 1011 bez ohľadu na okno. Použiteľná bola až
+emulácia v zabudovanom prehliadači (375 × 812). Poučenie: merať mobil sa
+dá len tam, kde sa dá vynútiť viewport, nie zmenšením okna.
+
+Meranie potom našlo dve miesta, ktoré stupnicu obchádzali, a ani jedno
+nebolo vidieť na stolnom monitore: pole hľadania v hlavičke (32 px / 13 px)
+a návrhy otázok na úvodnej stránke (29 px / 12 px). Prvé je skutočná chyba
+— Safari na iOS pri kliknutí do poľa s písmom pod 16 px stránku priblíži
+a sám ju nevráti späť; druhé je terč, do ktorého sa palcom trafí ťažko.
+
+Falošný poplach na `/library`: živý filter tam „nefungoval", ale chyba bola
+v teste — klik padol na popisku, nie do políčka, takže sa nikam nepísalo.
+Po správnom teste sa 10 dokumentov zúžilo na 1 a adresa sa zmenila. Overené
+sú všetky zoznamy: knižnica, osoby, adresár, reťaz dôkazov aj audit —
+vrátane toho, že audit si pri filtrovaní ponechá `tab=audit`.
+
+Otvorené (pre Jána): knižnica má na úzkej obrazovke prepínač Tabuľka/Karty
+a predvolená je tabuľka, ktorá sa posúva do strany. Karty už existujú —
+je to rozhodnutie, nie chyba.
+
 ---
 
 ## 2026-09-18 (večer 2) — spätná väzba z preklikania: číselníky, Návod, zvonček, selecty

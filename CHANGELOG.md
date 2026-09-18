@@ -33,6 +33,11 @@ v rade a nesedeli — najviditeľnejšie v Reťazi dôkazov.
 - **Reťaz dôkazov ako rozbaľovacie karty** na natívnom `<details>`: zložené
   je vidieť kto, stav a znenie, os sa otvorí až keď ju niekto chce čítať.
   Sedem povinností dovtedy znamenalo takmer tridsať riadkov osí pod sebou.
+- **Dve výnimky z tej istej stupnice** našlo až meranie na 375 px:
+  hľadanie v hlavičke malo 32 px a 13 px písmo — pod 16 px Safari na iOS
+  pri kliknutí do poľa stránku priblíži a už sa nevráti — a návrhy otázok
+  na úvodnej stránke mali 29 px, čo je na dotykový terč málo. Obe sú
+  odteraz na `--control-h` a `--fs-control`, respektíve 32 px a `--fs-small`.
 
 ### Číselníky opäť fungujú, Návod hovorí pravdu, krajší zvonček a selecty (2026-09-18)
 
