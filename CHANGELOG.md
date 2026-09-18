@@ -4,6 +4,31 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Číselníky opäť fungujú, Návod hovorí pravdu, krajší zvonček a selecty (2026-09-18)
+
+**Obrazovka číselníkov padala na 500.** `CUSTOM_CODELISTS` má tri druhy
+(`category`, `tags`, `workplace`), ale slovník mal popisky len pre prvé dva —
+`workplace` pribudol s osobnými údajmi (D85) a `/organisation?tab=codelists`
+padal na `labels["workplace"].name`. Popisky „Pracoviská" doplnené v SK/CS/EN
+a `tests/codelistLabels.test.ts` odteraz stráži, že každý číselník má popisky
+vo všetkých jazykoch — typová kontrola to pri `Record<string, …>` nevidí.
+
+**Návod:** text je na bielej karte ako ostatné obrazovky; k typom súborov
+pribudli TXT a CSV; veta o skenovanom PDF opravená podľa skutočnosti (prevod
+ho odmietne — prepis jazykovým modelom je ručný krok z editora a výsledok je
+návrh na prevzatie); sekcia „Členenie, index a inteligentné vyhľadávanie"
+prepísaná: kedy index vzniká, že členenie robia pravidlá **bez LLM**,
+odtlačky počíta databáza automaticky a jazykový model prichádza na rad až
+pri odpovedi. Formulár nového znenia na detaile dokumentu mal navyše zlý
+zoznam prípon (`.doc/.rtf/.odt`, ktoré prevod nevie, chýbali `.xlsx/.csv`) —
+zjednotený s nahratím nového dokumentu.
+
+**Zvonček v hlavičke** má namiesto pilulky vedľa ikony červený krúžok
+s počtom cez pravý horný roh (`.bell-badge`); pri nule sa nekreslí.
+**Natívne selecty** (`select.field-input` — filter v Reťazi dôkazov,
+`noscript` zálohy) vyzerajú ako ostatné polia: bez systémových šípok,
+vlastný chevron, svetlá aj tmavá téma.
+
 ### Editor textu sa už nepokúša načítať na serveri (2026-09-18)
 
 `@toast-ui/editor` siaha na DOM (`Element`) už pri vyhodnotení modulu, takže

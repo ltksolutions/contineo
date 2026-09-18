@@ -59,7 +59,9 @@ export default async function GuidePage() {
           </p>
         )}
 
-        <article className="answer" style={{ lineHeight: 1.75 }}>
+        {/* Biela karta ako všade inde — text priamo na podklade stránky
+            vyzeral ako nedokončená obrazovka, nie ako obsah. */}
+        <article className="answer card" style={{ lineHeight: 1.75, padding: "24px 26px" }}>
           <FormattedText text={GUIDE_SK} />
         </article>
       </div>

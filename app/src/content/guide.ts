@@ -28,9 +28,9 @@ Tento návod hovorí, ako sa dokument dostane do systému a čo sa s ním po ces
 
 **Nový dokument a nové znenie sú dve rôzne veci.** Nový Súťažný poriadok sa nestane novou verziou existujúceho Súťažného poriadku tým, že sa nahrá — musíte povedať, čo z toho robíte. Systém preto nahratie na obsadený kľúč odmietne a ukáže, ktorý dokument ten kľúč už má.
 
-1. **Nový dokument** sa zakladá v [Knižnici](/library) tlačidlom Nahrať dokument. Vyplní sa názov, zaradenie a kľúč dokumentu; súbor môže byť DOCX, PDF, XLSX alebo Markdown.
+1. **Nový dokument** sa zakladá v [Knižnici](/library) tlačidlom Nahrať dokument. Vyplní sa názov, zaradenie a kľúč dokumentu; súbor môže byť DOCX, PDF, XLSX, Markdown, TXT alebo CSV.
 2. **Nové znenie už existujúceho dokumentu** sa nahráva na detaile toho dokumentu, nie cez nahratie nového. Systém vám hneď povie, či sa text líši od platného znenia a o koľko riadkov, a rozdiel po riadkoch si viete pozrieť ešte pred zverejnením.
-3. **Prevod do textu.** Zo súboru sa urobí čistý text. Pri skenovanom PDF ho prepisuje jazykový model, a preto **prevedený text vždy prečítajte** — model číta dobre, ale nie bezchybne. Originálny súbor zostáva uložený a dá sa stiahnuť.
+3. **Prevod do textu.** Zo súboru sa urobí čistý text — knižnicou, doslovne, **bez jazykového modelu**. Skenované PDF bez textovej vrstvy prevod odmietne; vtedy ho viete dať v editore prepísať jazykovému modelu a výsledok príde ako **návrh vedľa textu**, ktorý si prečítate a prevezmete — sám sa nezapíše nikdy. Prevedený text vždy prečítajte; originálny súbor zostáva uložený a dá sa stiahnuť.
 4. **Metadáta.** Označenie znenia (napríklad „účinné od 1. 1. 2027“), dátum účinnosti a **zdroj toho dátumu** — odkiaľ viete, že platí práve odvtedy. Zdroj je povinný, lebo bez neho sa o rok nedá povedať, či dátum niekto opísal z dokumentu alebo odhadol.
 5. **Schválenie.** Predloží sa menovaným schvaľovateľom. Až po schválení sa dá znenie zverejniť.
 6. **Zverejnenie.** Znenie sa objaví v knižnici, systém z neho odpovedá a dá sa prideliť ľuďom na potvrdenie.
@@ -76,15 +76,17 @@ Nový zamestnanec uvidí zoznam a v ňom, kde skončil: „Krok 2 zo 4“. Syst�
 
 Toto je časť, ktorú nikto nevypĺňa ručne, ale oplatí sa jej rozumieť — rozhoduje o tom, či systém na otázku odpovie presne, alebo od veci.
 
-**Text sa nareže na úseky.** Nie po odsekoch a nie po znakoch, ale **podľa členenia predpisu**: časť, hlava, diel, článok, paragraf, príloha. Úsek tak zodpovedá tomu, na čo sa človek odvoláva, keď hovorí „podľa článku 78“.
+**Kedy index vzniká.** Do vyhľadávania ide **zverejnené znenie**: pri zverejnení sa jeho text nareže na úseky a tie sa uložia do indexu. Keď sa neskôr zmení nastavenie členenia, dokumenty sa preindexujú ručne v [Nastavení organizácie](/organisation?tab=chunking) — záložka Členenie ukáže, ktoré dokumenty by nové nastavenie narezalo inak, a preindexuje ich po dávkach.
 
-**Každý úsek si nesie, odkiaľ je.** Na jeho začiatku je cestička — dokument, časť, článok. Bez nej by úsek vytrhnutý z prostriedku predpisu neniesol informáciu o tom, čoho je súčasťou, a odpoveď by sa oň oprela naslepo.
+**Ako prakticky vzniká členenie: pravidlá, nie jazykový model.** Text reže program podľa vzorov členenia predpisu — ČASŤ, hlava, diel, článok, paragraf, príloha. **Žiadne LLM v tom nie je.** Rovnaký text dá vždy rovnaké úseky, výsledok sa dá skontrolovať a pri rezaní sa nezmení ani slovo. Úsek tak zodpovedá tomu, na čo sa človek odvoláva, keď hovorí „podľa článku 78“. Spôsob narezania sa nastavuje **profilom pre každý dokument zvlášť** — norma s článkami a zápisnica zo zasadnutia sa nemajú rezať rovnako; dokument bez vlastného profilu používa základný.
 
-**Úseky sa prevedú na čísla (index).** Vďaka tomu vie systém nájsť úsek, ktorý odpovedá na otázku, aj keď v ňom nie je ani jedno slovo z otázky. Preto „Do kedy treba nahlásiť prestup?“ nájde článok, ktorý hovorí o lehote na podanie žiadosti.
+**Každý úsek si nesie, odkiaľ je.** Na jeho začiatku je cestička — dokument, časť, článok. Bez nej by úsek vytrhnutý z prostriedku predpisu nevedel povedať, čoho je súčasťou, a odpoveď by sa oň oprela naslepo.
+
+**Úseky sa prevedú na čísla (index).** Číselný odtlačok významu počíta pri uložení úseku databáza automaticky — ani tu sa text nemení. Vďaka odtlačku systém nájde úsek, ktorý na otázku odpovedá, aj keď v ňom nie je ani jedno slovo z otázky: „Do kedy treba nahlásiť prestup?“ nájde článok o lehote na podanie žiadosti. Hľadá sa dvojmo — podľa významu aj podľa slov — a oba výsledky sa zlúčia a zoradia.
+
+**Jazykový model prichádza na rad až pri odpovedi.** Dostane otázku a nájdené úseky a z nich skladá odpoveď; do textov predpisov nesiaha. Jediná ďalšia chvíľa, keď sa model textu dotkne, je ručný prepis skenovaného PDF v editore — a aj tam je výsledok návrh, ktorý si človek prečíta a prevezme.
 
 **Odpoveď sa skladá len z nájdených úsekov a cituje ich doslova.** Pri každej odpovedi vidíte citácie — presné vety, o ktoré sa opiera — a zoznam úsekov, ktoré systém prehľadal. Keď citácia chýba, tvrdenie nemá oporu a treba to tak brať.
 
-**Spôsob narezania sa nastavuje pre každý dokument zvlášť**, nie pre celú organizáciu. Norma s článkami a zápisnica zo zasadnutia sa nemajú rezať rovnako. Profily sú v [Nastavení organizácie](/organisation?tab=chunking); dokument, ktorý nemá vlastný, používa základný.
-
-**Potvrdenie sa viaže na text, členenie nie.** Preindexovanie dokumentu teda nikoho nenúti potvrdzovať znova — mení sa len to, ako systém v texte hľadá, nie čo je v ňom napísané.
+**Potvrdenie sa viaže na text, členenie nie.** Preindexovanie dokumentu teda nikoho nenúti potvrdzovať znova — mení sa len to, ako systém v texte hľadá, nie čo je v ňom napísané. Úseky starého znenia sa pri novom nemažú, len sa označia ako neaktívne; vyhľadáva sa v platných.
 `.trim()

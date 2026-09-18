@@ -10,6 +10,35 @@
 
 ---
 
+## 2026-09-18 (večer 2) — spätná väzba z preklikania: číselníky, Návod, zvonček, selecty
+
+Ján poslal štyri nálezy zo živého klikania. Najvážnejší: **číselníky
+padali na 500** — `CUSTOM_CODELISTS` dostal s D85 tretí druh `workplace`,
+ale popisky v slovníku nikto nedoplnil a `labels[name].name` na `undefined`
+zhodil celú obrazovku. Ponaučenie na zapamätanie: `Record<string, …>`
+v slovníku znamená, že typová kontrola mlčí — každý zoznam kľúčov, cez
+ktorý sa mapuje do slovníka, potrebuje test. `codelistLabels.test.ts`
+odteraz beží za všetky tri jazyky.
+
+Návod dostal bielu kartu a hlavne pravdu: pôvodný text tvrdil, že skenované
+PDF „prepisuje jazykový model" — v skutočnosti ho prevod odmietne a prepis
+je ručný krok z editora s návrhom na prevzatie. Sekcia 4 teraz hovorí presne
+to, na čo sa Ján pýtal: členenie robia pravidlá (žiadne LLM), odtlačky
+počíta databáza pri uložení, model prichádza až pri odpovedi. Pri kontrole
+vypadol aj bonus: accept nového znenia na detaile ponúkal `.doc/.rtf/.odt`,
+ktoré prevod nepozná, a nevedel `.xlsx/.csv`.
+
+Zvonček: pilulka `.app-nav-count` vedľa ikony pôsobila ako podčiarknuté
+číslo — nahradená `.bell-badge`, červený krúžok cez roh ikony s lemom vo
+farbe podkladu. Selecty: jediný natívny `<select>` je filter v Reťazi
+dôkazov (+ `noscript` zálohy) — namiesto prepisovania na komponent stačilo
+`appearance: none` a vlastný chevron v CSS, s tmavým variantom (dátová
+adresa premennú nevie, chevron je preto dvakrát).
+
+tsc čistý, eslint 0 chýb, vitest 1367/1367, build prešiel.
+
+---
+
 ## 2026-09-18 (dodatok 2) — contineoapp obmedzený na cluster Contineo
 
 Ján dotiahol prístup aplikačného používateľa: v Atlase zapol „Restrict

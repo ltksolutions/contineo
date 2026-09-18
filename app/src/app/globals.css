@@ -657,6 +657,30 @@ button:disabled { cursor: not-allowed; opacity: 0.55; }
 .field-input:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
 
 /*
+ * Natívny `<select>` s triedou `.field-input` — filter v Reťazi dôkazov
+ * a `<noscript>` zálohy komponentu Select. Operačný systém mu inak kreslí
+ * vlastný ovládač (na macOS šípky hore-dole), ktorý s ostatnými poľami
+ * nemá nič spoločné. `appearance: none` ho vypne a šípku dokreslí rovnaký
+ * chevron, aký má `.select-arrow`. Rozbalený ZOZNAM zostáva systémový —
+ * ten sa ostylovať nedá; pri filtri s pár hodnotami to nevadí a plný
+ * náhradný zoznam už má komponent Select.
+ */
+select.field-input {
+  appearance: none;
+  -webkit-appearance: none;
+  padding-right: 36px;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12' fill='none'><path d='M2.5 4.5L6 8l3.5-3.5' stroke='%235c6675' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  cursor: pointer;
+}
+
+/* Chevron v tmavej téme svetlejší — dátová adresa premennú nevie. */
+html[data-theme="dark"] select.field-input {
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12' fill='none'><path d='M2.5 4.5L6 8l3.5-3.5' stroke='%239aa4b2' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/></svg>");
+}
+
+/*
  * Rozbaľovací výber.
  *
  * Nahrádza `<select>`, ktorého rozbalený zoznam kreslí operačný systém —
@@ -3213,6 +3237,32 @@ a.answer-source:focus-visible { outline: 2px solid var(--accent); outline-offset
    Obe formy sú v DOM naraz (viď komentár v `AppNav.tsx`); prepína ich toto
    `@media`. Čo je `display: none`, nie je ani v strome prístupnosti, takže
    čítačka vidí vždy len jednu navigáciu. */
+
+/*
+ * Odznak na zvončeku v hlavičke. Nie pilulka vedľa ikony (to je
+ * `.app-nav-count` v navigácii), ale červený krúžok cez pravý horný roh
+ * zvončeka — signál „máš nové" na jeden pohľad. Pri nule sa nekreslí
+ * vôbec (kreslenie rieši Header). Lem vo farbe podkladu ho oddelí od
+ * ikony aj v tmavej téme.
+ */
+.bell-badge {
+  position: absolute;
+  top: 1px;
+  right: 0;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  background: #d92d20;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1;
+  border: 2px solid var(--surface);
+}
 
 .app-nav-count {
   display: inline-flex;

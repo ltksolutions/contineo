@@ -627,7 +627,7 @@ export default async function DocumentDetailPage({
         <label className="field">
           <span className="field-label">{t.newVersionFile}</span>
           <input className="field-input" type="file" name="file" required
-                 accept=".pdf,.docx,.doc,.md,.txt,.rtf,.odt" />
+                 accept=".pdf,.docx,.xlsx,.md,.txt,.csv" />
         </label>
         <div><button className="button button--quiet" type="submit">{t.newVersionSubmit}</button></div>
       </form>

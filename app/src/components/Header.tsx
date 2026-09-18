@@ -393,11 +393,13 @@ export default function Header({
               href="/notifications"
               className="account-button"
               aria-label={t.notifications.bellLabel(notifications ?? 0)}
-              style={{ alignItems: "center", padding: "6px 8px", color: "var(--ink)" }}
+              style={{ position: "relative", alignItems: "center", padding: "6px 8px", color: "var(--ink)" }}
             >
               <BellIcon />
+              {/* Červený krúžok cez roh zvončeka, nie pilulka vedľa neho —
+                  počet má byť signál na jeden pohľad. Pri nule nič. */}
               {(notifications ?? 0) > 0 && (
-                <span className="app-nav-count" aria-hidden="true">{notifications}</span>
+                <span className="bell-badge" aria-hidden="true">{notifications}</span>
               )}
             </Link>
 

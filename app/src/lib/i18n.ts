@@ -2871,6 +2871,10 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
           name: "Značky",
           hint: "Voľné triedenie naprieč druhmi — napríklad mládež, rozhodcovia, financie.",
         },
+        workplace: {
+          name: "Pracoviská",
+          hint: "Mestá a obce, kde ľudia štandardne vykonávajú prácu — vyberá sa z nich na karte osoby.",
+        },
       },
       base: " · základná",
       used: (n) => ` · použitá ${n}×`,
@@ -4691,6 +4695,10 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
           name: "Značky",
           hint: "Volné třídění napříč druhy — například mládež, rozhodčí, finance.",
         },
+        workplace: {
+          name: "Pracoviště",
+          hint: "Města a obce, kde lidé standardně vykonávají práci — vybírá se z nich na kartě osoby.",
+        },
       },
       base: " · základní",
       used: (n) => ` · použita ${n}×`,
@@ -6502,6 +6510,10 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
         tags: {
           name: "Tags",
           hint: "Free classification across types — youth, referees, finance, for example.",
+        },
+        workplace: {
+          name: "Workplaces",
+          hint: "Towns and municipalities where people usually work — picked from on the person's card.",
         },
       },
       base: " · base",

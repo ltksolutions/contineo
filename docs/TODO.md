@@ -714,6 +714,13 @@ neposielajú — rozposlanie zostáva samostatným krokom.
 Bod „tlačidlo **Nová verzia** na detaile" z `DESIGN_GAP.md` rieši **O3**,
 nie táto sekcia.
 
+### Spätná väzba Jána z preklikania (2026-09-18)
+
+- [x] **`/organisation?tab=codelists` padal na 500** ✅ — chýbali popisky číselníka `workplace` v i18n (pribudol s D85); doplnené SK/CS/EN + `tests/codelistLabels.test.ts`.
+- [x] **Natívne selecty vytŕčali z dizajnu** ✅ — `select.field-input` má vlastný chevron a vzhľad polí (svetlá aj tmavá téma); rozbalený zoznam zostáva systémový.
+- [x] **Návod** ✅ — biela karta za textom; +TXT/CSV; skenované PDF: prevod odmietne, prepis modelom je ručný krok s návrhom; sekcia 4 prepísaná (členenie = pravidlá bez LLM, odtlačky počíta databáza, LLM až pri odpovedi); opravený accept nového znenia (.doc/.rtf/.odt → .xlsx/.csv).
+- [x] **Zvonček** ✅ — červený krúžok s počtom cez roh zvončeka (`.bell-badge`), pri nule nič.
+
 ### Drobnosti z prevádzkových logov (2026-09-18)
 
 - [x] **`ReferenceError: Element is not defined` na `/library/[id]/text`** ✅ 2026-09-18 — toast-ui sa importuje až v `useEffect` (beží len v prehliadači), hore zostal `import type`. SSR modul editora už na DOM nesiaha; bez-JS záloha (skryté pole + `noscript` textarea) nezmenená.
