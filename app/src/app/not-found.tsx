@@ -23,7 +23,7 @@ export default async function NotFoundPage() {
   const t = dictionary(language)
   return (
     <div className="wrap" style={{ padding: "72px 20px", maxWidth: 520 }}>
-      <h1 style={{ fontSize: 27, letterSpacing: "-0.02em", margin: "0 0 8px" }}>
+      <h1 className="page-title" style={{ margin: "0 0 8px" }}>
         {t.notFound.heading}
       </h1>
       <p className="quiet" style={{ margin: "0 0 22px", fontSize: 15.5 }}>

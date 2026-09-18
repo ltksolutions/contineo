@@ -43,8 +43,8 @@ export default async function GuidePage() {
         ďalšieho riadku.
       */}
       <div style={{ maxWidth: 720, ...tenantStyle(branding) }}>
-        <h1 style={{ fontSize: 26, letterSpacing: "-0.02em", margin: "0 0 6px" }}>{t.heading}</h1>
-        <p className="quiet" style={{ fontSize: 15, margin: "0 0 20px" }}>{t.intro}</p>
+        <h1 className="page-title">{t.heading}</h1>
+        <p className="quiet page-lead" style={{ margin: "0 0 20px" }}>{t.intro}</p>
 
         {/*
           Poznámka o jazyku patrí len na neslovenskú obrazovku. Na slovenskej

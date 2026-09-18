@@ -49,8 +49,8 @@ export default async function TracksPage({
         </Link>
       </p>
 
-      <h1 style={{ fontSize: 25, letterSpacing: "-0.02em", margin: "0 0 6px" }}>{t.heading}</h1>
-      <p className="quiet" style={{ fontSize: 15, margin: "0 0 24px" }}>{t.intro}</p>
+      <h1 className="page-title">{t.heading}</h1>
+      <p className="quiet page-lead" style={{ margin: "0 0 24px" }}>{t.intro}</p>
 
       {tracks.length === 0 && (
         <p className="card" style={{ padding: 20, margin: "0 0 24px" }}>{t.empty}</p>

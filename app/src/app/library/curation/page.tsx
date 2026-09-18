@@ -46,7 +46,7 @@ export default async function CurationPage({
     <AppShell language={language}>
     <div style={{ maxWidth: 860, ...tenantStyle(branding) }}>
       <div style={{ marginBottom: 20 }}>
-        <h1 style={{ fontSize: 25, letterSpacing: "-0.02em", margin: "0 0 8px" }}>
+        <h1 className="page-title" style={{ margin: "0 0 8px" }}>
           {t.publishHeading}
           {pending.length > 0 && (
             <span className="tag" style={{ fontSize: 12, marginLeft: 10, verticalAlign: "middle" }}>
@@ -54,7 +54,7 @@ export default async function CurationPage({
             </span>
           )}
         </h1>
-        <p className="quiet" style={{ fontSize: 15, margin: 0, maxWidth: 660 }}>{t.publishIntro}</p>
+        <p className="quiet page-lead" style={{ margin: 0, maxWidth: 660 }}>{t.publishIntro}</p>
       </div>
 
       <Notice message={message} error={error === "1"} back="/library/curation" />

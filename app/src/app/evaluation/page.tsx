@@ -58,7 +58,7 @@ export default async function EvaluationPage({
     <AppShell language={language}>
     <div style={{ maxWidth: 860, ...tenantStyle(branding) }}>
       <div style={{ marginBottom: 24 }}>
-        <h1 style={{ fontSize: 25, letterSpacing: "-0.02em", margin: "0 0 8px" }}>
+        <h1 className="page-title" style={{ margin: "0 0 8px" }}>
           {t.heading}
           {queue.length > 0 && (
             <span className="tag" style={{ fontSize: 12, marginLeft: 10, verticalAlign: "middle" }}>
@@ -66,7 +66,7 @@ export default async function EvaluationPage({
             </span>
           )}
         </h1>
-        <p className="quiet" style={{ fontSize: 15, margin: 0, maxWidth: 660 }}>{t.intro}</p>
+        <p className="quiet page-lead" style={{ margin: 0, maxWidth: 660 }}>{t.intro}</p>
       </div>
 
       <Notice message={message} error={error === "1"} back="/evaluation" />

@@ -86,7 +86,7 @@ export default async function EditorPage({
         </Link>
       </p>
 
-      <h1 style={{ fontSize: 22, letterSpacing: "-0.02em", margin: "0 0 4px" }}>{d.title}</h1>
+      <h1 className="page-title" style={{ margin: "0 0 4px" }}>{d.title}</h1>
       <p className="quiet" style={{ fontSize: 14, margin: "0 0 16px" }}>
         {t.intro}
       </p>

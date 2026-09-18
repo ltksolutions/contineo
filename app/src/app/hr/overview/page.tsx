@@ -98,12 +98,12 @@ export default async function HrReportPage({
       </p>
 
       <div style={{ display: "flex", gap: 12, alignItems: "baseline", flexWrap: "wrap", margin: "0 0 6px" }}>
-        <h1 style={{ fontSize: 26, letterSpacing: "-0.02em", margin: 0, flex: "1 1 auto" }}>{t.heading}</h1>
+        <h1 className="page-title" style={{ margin: 0, flex: "1 1 auto" }}>{t.heading}</h1>
         {rows.length > 0 && (
           <a className="button button--quiet" href={`/hr/overview/csv?view=${view}`}>{t.export}</a>
         )}
       </div>
-      <p className="quiet" style={{ fontSize: 15, margin: "0 0 20px", maxWidth: 660 }}>{t.intro}</p>
+      <p className="quiet page-lead" style={{ margin: "0 0 20px", maxWidth: 660 }}>{t.intro}</p>
 
       {/* Pohľady. Odkazy, nie tlačidlá — musia sa dať poslať aj otvoriť na novej karte. */}
       <nav style={{ display: "flex", gap: 8, flexWrap: "wrap", margin: "0 0 24px" }}>

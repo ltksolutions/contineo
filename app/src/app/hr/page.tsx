@@ -43,10 +43,10 @@ export default async function HrOverviewPage({
   return (
     <AppShell language={language}>
     <div style={{ maxWidth: 860, ...tenantStyle(branding) }}>
-      <h1 style={{ fontSize: 26, letterSpacing: "-0.02em", margin: "0 0 6px" }}>
+      <h1 className="page-title">
         {t.heading}
       </h1>
-      <p className="quiet" style={{ fontSize: 15, margin: "0 0 18px", maxWidth: 620 }}>
+      <p className="quiet page-lead" style={{ maxWidth: 620 }}>
         {t.intro} <em>dnes</em>.
       </p>
 

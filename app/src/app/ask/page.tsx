@@ -68,10 +68,10 @@ export default async function HomePage({
       )}
 
       <div style={{ marginBottom: 28 }}>
-        <h1 style={{ fontSize: 27, letterSpacing: "-0.02em", margin: "0 0 8px" }}>
+        <h1 className="page-title" style={{ margin: "0 0 8px" }}>
           {t.home.heading}
         </h1>
-        <p className="quiet" style={{ fontSize: 15.5, margin: 0, maxWidth: 620 }}>
+        <p className="quiet page-lead" style={{ margin: 0, maxWidth: 620 }}>
           {t.home.intro}
         </p>
       </div>

@@ -19,6 +19,7 @@ import { brandingView } from "@/lib/tenants"
 import { tenantStyle } from "@/components/TenantHeader"
 import AppShell from "@/components/AppShell"
 import EvidenceTimeline from "@/components/EvidenceTimeline"
+import LiveFilter from "@/components/LiveFilter"
 import { normalizeLayout } from "@/lib/appNav"
 import { normalizeQuery, type RawQuery } from "@/lib/urlParams"
 import { dictionary, formatDate } from "@/lib/i18n"
@@ -67,14 +68,14 @@ export default async function EvidencePage({
   return (
     <AppShell layout={normalizeLayout(q.layout)} language={language}>
       <div style={{ maxWidth: 900, ...tenantStyle(branding) }}>
-        <div style={{ display: "flex", gap: 12, alignItems: "baseline", flexWrap: "wrap", margin: "0 0 6px" }}>
-          <h1 style={{ fontSize: 26, letterSpacing: "-0.02em", margin: 0 }}>{t.heading}</h1>
+        <div className="page-head">
+          <h1 className="page-title" style={{ margin: 0 }}>{t.heading}</h1>
           <span className="quiet library-count">{t.shown(rows.length, all.length)}</span>
           <Link className="button button--quiet" href={`/hr/evidence/csv?${csv.toString()}`}>
             {t.exportCsv}
           </Link>
         </div>
-        <p className="quiet" style={{ fontSize: 15, margin: "0 0 6px", maxWidth: 640 }}>{t.intro}</p>
+        <p className="quiet page-lead" style={{ margin: "0 0 6px" }}>{t.intro}</p>
         {/*
           Chýbajúci riadok o upozorneniach sa **pomenuje na obrazovke**, nie
           len v komentári v kóde. Kto os číta ako dôkaz, musí vedieť, čo v nej
@@ -84,7 +85,12 @@ export default async function EvidencePage({
           {t.notifiedMissing}
         </p>
 
-        <form className="evidence-filters card" method="get">
+        {/*
+          Filter zaberie sám, hneď ako človek prestane písať (`LiveFilter`).
+          Formulár, `action` aj tlačidlo zostávajú — bez JavaScriptu funguje
+          pôvodná cesta. Výber stavu sa neodkladá, ten je jedno rozhodnutie.
+        */}
+        <LiveFilter className="evidence-filters card" action="/hr/evidence" label={t.heading}>
           <label className="field">
             <span className="field-label">{t.filterPerson}</span>
             <input className="field-input" name="person" defaultValue={q.person ?? ""} />
@@ -94,6 +100,8 @@ export default async function EvidencePage({
             {/*
               Obyčajný `<select>`, nie vlastný komponent: formulár musí bežať
               bez JavaScriptu a tri hodnoty sa doňho zmestia bez pomoci.
+              Výšku aj šípku mu dáva `select.field-input` v `globals.css`,
+              takže vedľa poľa a tlačidla nevytŕča.
             */}
             <select className="field-input" name="state" defaultValue={wantedState ?? ""}>
               <option value="">{t.filterAll}</option>
@@ -101,24 +109,46 @@ export default async function EvidencePage({
             </select>
           </label>
           <div><button className="button" type="submit">{t.apply}</button></div>
-        </form>
+        </LiveFilter>
 
         {rows.length === 0 && <p className="card" style={{ padding: 20 }}>{t.nothing}</p>}
 
-        <ul style={{ listStyle: "none", padding: 0, margin: "18px 0 0", display: "grid", gap: 16 }}>
+        {/*
+          Rozbaľovacie karty, nie rozvinuté osi pod sebou.
+          Sedem povinností znamenalo sedem osí po štyroch krokoch — takmer
+          tridsať riadkov, z ktorých človek hľadá jeden. Zložené je vidieť
+          práve to, čo pri prehľade rozhoduje (kto, stav, ktoré znenie);
+          os sa otvorí tam, kde ju niekto chce čítať.
+
+          Natívne `<details>` zámerne: rozbalenie funguje bez JavaScriptu,
+          ovláda sa klávesnicou a prehliadač ho vie nájsť vyhľadávaním
+          v stránke aj v zloženom stave.
+        */}
+        <ul className="widget-list">
           {rows.map(r => (
-            <li key={`${r.duty.personId}-${r.duty.versionId}`} className="card" style={{ padding: 18 }}>
-              <div className="evidence-head">
-                <strong>{r.duty.fullName}</strong>
-                <span className={`tag evidence-state evidence-state--${r.state}`}>
-                  {t.states[r.state]}
-                </span>
-              </div>
-              <div className="quiet" style={{ fontSize: 13.5 }}>
-                {r.duty.documentTitle} · {r.duty.versionLabel}
-                {r.duty.due && ` · ${formatDate(r.duty.due, language)}`}
-              </div>
-              <EvidenceTimeline timeline={r.timeline} language={language} />
+            <li key={`${r.duty.personId}-${r.duty.versionId}`}>
+              <details className="widget card">
+                <summary className="widget-summary">
+                  <span className="widget-main">
+                    <span className="widget-title">{r.duty.fullName}</span>
+                    <span className={`tag evidence-state evidence-state--${r.state}`}>
+                      {t.states[r.state]}
+                    </span>
+                  </span>
+                  <span className="quiet widget-meta">
+                    {r.duty.documentTitle} · {r.duty.versionLabel}
+                    {r.duty.due && ` · ${formatDate(r.duty.due, language)}`}
+                  </span>
+                  <svg className="widget-chevron" width="14" height="14" viewBox="0 0 12 12"
+                       fill="none" stroke="currentColor" strokeWidth="1.6"
+                       strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <path d="M2.5 4.5L6 8l3.5-3.5" />
+                  </svg>
+                </summary>
+                <div className="widget-body">
+                  <EvidenceTimeline timeline={r.timeline} language={language} />
+                </div>
+              </details>
             </li>
           ))}
         </ul>

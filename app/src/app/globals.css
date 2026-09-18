@@ -87,6 +87,38 @@
   --gap: 14px;
   --row-py: 7px;
   --font-row: 13px;
+
+  /*
+   * Typografia a ovládače — jedna stupnica pre celé rozhranie.
+   *
+   * Dovtedy si každá obrazovka písala veľkosti do `style={{ fontSize: … }}`:
+   * 18 rôznych hodnôt naprieč aplikáciou a nadpis h1 v troch veľkostiach
+   * (25, 26, 27 px) podľa toho, kedy obrazovka vznikla. Na jednej stránke to
+   * nikto nevidí; pri prechádzaní medzi nimi vyzerá rozhranie poskladané.
+   *
+   * `--control-h` je to podstatné: tlačidlo, textové pole aj rozbaľovací
+   * výber majú **presne rovnakú výšku**, takže vedľa seba v riadku filtra
+   * nevytŕčajú. Bez nej sa výška odvodzovala z písma a odsadenia zvlášť pri
+   * každom prvku a natívny `<select>` si k tomu pridal svoje.
+   */
+  --fs-title: 26px;
+  --fs-section: 17px;
+  --fs-lead: 15px;
+  --fs-body: 14px;
+  --fs-small: 13px;
+  --fs-micro: 12px;
+  --fs-label: 13px;
+  /*
+   * Text v ovládačoch. Na telefóne 16 px zámerne: pod touto hodnotou Safari
+   * na iPhone pri kliknutí do poľa stránku priblíži a rozhranie odskočí.
+   * Na širokej obrazovke ten dôvod neplatí a 15 px sadne k zvyšku.
+   */
+  --fs-control: 16px;
+  --control-h: 40px;
+}
+
+@media (min-width: 760px) {
+  :root { --fs-control: 15px; }
 }
 
 html[data-theme="dark"] {
@@ -557,12 +589,17 @@ button:disabled { cursor: not-allowed; opacity: 0.55; }
 .tag {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 6px;
   border: 1px solid var(--line);
   border-radius: 999px;
-  padding: 3px 10px;
-  font-size: 12.5px;
+  /* Výška z tokenu: štítky v zozname majú stáť v jednej linke bez ohľadu
+     na to, či v nich je jedno slovo alebo tri. */
+  min-height: 24px;
+  padding: 0 10px;
+  font-size: var(--fs-micro);
   font-weight: 600;
+  line-height: 1.2;
   white-space: nowrap;
 }
 
@@ -577,17 +614,54 @@ button:disabled { cursor: not-allowed; opacity: 0.55; }
   vertical-align: middle;
 }
 
+/*
+ * Hlavička obrazovky.
+ *
+ * `page-title` a `page-lead` nahrádzajú `style={{ fontSize: 25|26|27 }}`,
+ * ktoré si písala každá obrazovka sama. Jedna trieda znamená, že sa nadpis
+ * dá raz zmeniť pre celé rozhranie — a hlavne, že sa pri prechode medzi
+ * obrazovkami neposúva.
+ */
+.page-title {
+  font-size: var(--fs-title);
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+  margin: 0 0 6px;
+}
+
+.page-lead {
+  font-size: var(--fs-lead);
+  line-height: 1.55;
+  margin: 0 0 18px;
+  max-width: 640px;
+}
+
+/* Nadpis a čo stojí vedľa neho (počet, tlačidlo exportu) v jednom riadku. */
+.page-head {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin: 0 0 6px;
+}
+
+.page-head .page-title { margin: 0; }
+
 .button {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 8px;
   background: var(--accent);
   color: var(--on-accent);
   border: 1px solid var(--accent);
   border-radius: 10px;
-  padding: 10px 18px;
-  font-size: 15px;
+  /* Výška z tokenu, nie z odsadenia — tlačidlo musí sedieť s poľom vedľa. */
+  min-height: var(--control-h);
+  padding: 0 18px;
+  font-size: var(--fs-control);
   font-weight: 600;
+  line-height: 1.2;
   transition: background 0.15s ease;
 }
 
@@ -630,8 +704,8 @@ button:disabled { cursor: not-allowed; opacity: 0.55; }
 }
 
 .field { display: grid; gap: 5px; }
-.field-label { font-size: 13.5px; font-weight: 600; }
-.field-hint { font-size: 12.5px; }
+.field-label { font-size: var(--fs-label); font-weight: 600; }
+.field-hint { font-size: var(--fs-micro); }
 
 /*
   Dve krátke polia vedľa seba (meno a priezvisko, tituly). Na telefóne pod
@@ -645,14 +719,19 @@ button:disabled { cursor: not-allowed; opacity: 0.55; }
 
 .field-input {
   font: inherit;
-  font-size: 16px;
+  font-size: var(--fs-control);
   color: var(--ink);
   background: var(--bg);
   border: 1px solid var(--line);
   border-radius: 10px;
-  padding: 9px 12px;
+  /* Tá istá výška ako tlačidlo a rozbaľovací výber (`--control-h`). */
+  min-height: var(--control-h);
+  padding: 8px 12px;
   width: 100%;
 }
+
+/* Viacriadkové pole výšku ovládača nedrží — tam je zmyslom priestor. */
+textarea.field-input { min-height: 96px; padding: 10px 12px; line-height: 1.55; }
 
 .field-input:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
 
@@ -694,6 +773,7 @@ html[data-theme="dark"] select.field-input {
   align-items: center;
   justify-content: space-between;
   gap: 10px;
+  min-height: var(--control-h);
   text-align: left;
   cursor: pointer;
 }
@@ -3048,6 +3128,58 @@ a.answer-source:focus-visible { outline: 2px solid var(--accent); outline-offset
 .evidence-state--opened-not-acknowledged { background: var(--warn-bg); color: var(--warn-fg); }
 .evidence-state--not-opened { background: var(--surface-2); color: var(--muted); }
 
+/*
+ * Rozbaľovacia karta („widget").
+ *
+ * Postavená na natívnom `<details>`: rozbalenie funguje bez JavaScriptu,
+ * ovláda sa klávesnicou a prehliadač ho nájde aj vyhľadávaním v stránke.
+ * Trojuholník operačného systému sa skrýva (`::-webkit-details-marker`
+ * kvôli Safari) a nahrádza ho šípka, ktorá sa pri otvorení otočí.
+ */
+.widget-list { list-style: none; padding: 0; margin: 18px 0 0; display: grid; gap: 10px; }
+
+.widget { padding: 0; overflow: hidden; }
+
+.widget-summary {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 4px 12px;
+  align-items: center;
+  /* 44 px terč — na telefóne sa do menšieho palcom netrafí. */
+  min-height: 44px;
+  padding: 12px 16px;
+  cursor: pointer;
+  list-style: none;
+}
+
+.widget-summary::-webkit-details-marker { display: none; }
+.widget-summary:hover { background: var(--surface-2); }
+.widget-summary:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+
+.widget-main { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; min-width: 0; }
+.widget-title { font-weight: 650; font-size: var(--fs-body); }
+
+.widget-meta {
+  grid-column: 1;
+  font-size: var(--fs-small);
+  line-height: 1.45;
+}
+
+.widget-chevron {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  color: var(--muted);
+  transition: transform 0.15s ease;
+}
+
+.widget[open] .widget-chevron { transform: rotate(180deg); }
+
+.widget-body {
+  padding: 2px 16px 14px;
+  border-top: 1px solid var(--line);
+  margin-top: 2px;
+}
+
 /* Filtre: na telefóne pod sebou, na širšom vedľa seba. */
 .evidence-filters { padding: 16px 18px; display: grid; gap: 12px; }
 @media (min-width: 760px) {
@@ -3245,20 +3377,40 @@ a.answer-source:focus-visible { outline: 2px solid var(--accent); outline-offset
  * vôbec (kreslenie rieši Header). Lem vo farbe podkladu ho oddelí od
  * ikony aj v tmavej téme.
  */
-.bell-badge {
-  position: absolute;
-  top: 1px;
-  right: 0;
-  min-width: 16px;
-  height: 16px;
-  padding: 0 4px;
+/*
+ * Zvonček v hlavičke. Vlastný terč 40 px — kruh ako avatar vedľa neho, nie
+ * ikona nalepená na okraj. Priestor v lište na to je a na telefóne sa do
+ * menšieho palcom netrafí.
+ */
+.bell {
+  position: relative;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border-radius: 8px;
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  color: var(--ink);
+  transition: background 0.15s ease;
+}
+
+.bell:hover { background: var(--surface-2); }
+.bell:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.bell-badge {
+  position: absolute;
+  top: 2px;
+  right: 1px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9px;
   background: #d92d20;
   color: #fff;
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 700;
   line-height: 1;
   border: 2px solid var(--surface);

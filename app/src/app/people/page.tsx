@@ -13,6 +13,7 @@ import { availableOptions } from "@/lib/codelistsTenant"
 import { displayName, workplaceLabel } from "@/lib/personFields"
 import { brandingView } from "@/lib/tenants"
 import { tenantStyle } from "@/components/TenantHeader"
+import LiveFilter from "@/components/LiveFilter"
 import { formatDate, dictionary } from "@/lib/i18n"
 import Notice from "@/components/Notice"
 import { normalizeQuery, type RawQuery } from "@/lib/urlParams"
@@ -41,8 +42,8 @@ export default async function PeoplePage({
   return (
     <AppShell language={language}>
     <div style={{ maxWidth: 880, ...tenantStyle(branding) }}>
-      <h1 style={{ fontSize: 26, letterSpacing: "-0.02em", margin: "0 0 6px" }}>{t.heading}</h1>
-      <p className="quiet" style={{ fontSize: 15, margin: "0 0 18px", maxWidth: 620 }}>
+      <h1 className="page-title">{t.heading}</h1>
+      <p className="quiet page-lead" style={{ maxWidth: 620 }}>
         {t.introBefore}<strong>{t.introHighlight}</strong>{t.introAfter}
       </p>
 
@@ -58,7 +59,7 @@ export default async function PeoplePage({
 
       {/* Serverový formulár — hľadanie je v adrese, takže sa dá poslať odkazom
           a vrátiť sa naň z histórie prehliadača. */}
-      <form className="field" style={{ margin: "0 0 20px" }}>
+      <LiveFilter className="field" action="/people" label={t.searchPlaceholder}>
         <input
           className="field-input"
           name="q"
@@ -67,7 +68,7 @@ export default async function PeoplePage({
           autoCapitalize="none"
           autoCorrect="off"
         />
-      </form>
+      </LiveFilter>
 
       <p className="quiet" style={{ fontSize: 13.5, margin: "0 0 10px" }}>
         {people.length === 0

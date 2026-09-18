@@ -47,7 +47,7 @@ export default async function DocumentsPage({
     // nepustia.
     return (
       <div className="wrap" style={{ padding: "36px 20px 80px", maxWidth: 760 }}>
-        <h1 style={{ fontSize: 27, letterSpacing: "-0.02em", margin: "0 0 8px" }}>
+        <h1 className="page-title" style={{ margin: "0 0 8px" }}>
           {dictionary(ctx.tenant.defaultLanguage).onboarding.listHeading}
         </h1>
         <p className="card" style={{ padding: 20 }}>
@@ -84,10 +84,10 @@ export default async function DocumentsPage({
     {/* Šírka 760 px zostáva: je to text na čítanie, nie tabuľka. Shell dáva
         odsadenie a navigáciu, obmedzenie riadka je vec obsahu. */}
     <div style={{ maxWidth: 760, ...tenantStyle(branding) }}>
-      <h1 style={{ fontSize: 27, letterSpacing: "-0.02em", margin: "0 0 8px" }}>
+      <h1 className="page-title" style={{ margin: "0 0 8px" }}>
         {t.listHeading}
       </h1>
-      <p className="quiet" style={{ fontSize: 15.5, margin: "0 0 8px" }}>{t.listIntro}</p>
+      <p className="quiet page-lead" style={{ margin: "0 0 8px" }}>{t.listIntro}</p>
 
       {/*
         Celkový súčet len pri viacerých trasách. Pri jednej by pod sebou

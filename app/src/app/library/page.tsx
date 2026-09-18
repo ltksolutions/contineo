@@ -16,6 +16,7 @@ import { documentsProgress } from "@/lib/libraryProgress"
 import { codelistOptions } from "@/lib/codelists"
 import { tenantExtras } from "@/lib/codelistsTenant"
 import Select from "@/components/Select"
+import LiveFilter from "@/components/LiveFilter"
 import {
   createFolderAction, renameFolderAction, moveFolderAction, deleteFolderAction,
   shiftFolderAction, saveFolderOrderAction, moveManyAction, assignManyAction,
@@ -257,7 +258,7 @@ export default async function LibraryPage({
       <WaitingForApproval rounds={waiting} titles={waitingTitles} language={uiLanguage} />
 
       <div style={{ display: "flex", gap: 12, alignItems: "baseline", flexWrap: "wrap", margin: "0 0 6px" }}>
-        <h1 style={{ fontSize: 26, letterSpacing: "-0.02em", margin: 0 }}>{t.heading}</h1>
+        <h1 className="page-title" style={{ margin: 0 }}>{t.heading}</h1>
         {/* „N z M" hovorí, či je krátky zoznam výsledok filtra alebo stav
             knižnice. Bez toho čísla sa to nedá rozoznať. */}
         <span className="quiet library-count">{t.shown(facets.total, facets.all)}</span>
@@ -308,7 +309,7 @@ export default async function LibraryPage({
           {dictionary(uiLanguage).curation.open}
         </Link>
       </div>
-      <p className="quiet" style={{ fontSize: 15, margin: "0 0 20px", maxWidth: 640 }}>
+      <p className="quiet page-lead" style={{ margin: "0 0 20px" }}>
         {t.introBefore}<strong>{t.introHighlight}</strong>{t.introAfter}
       </p>
 
@@ -317,7 +318,7 @@ export default async function LibraryPage({
         píše a odošle, nie vyberá. Skryté polia nesú zvyšok pohľadu — bez nich
         by odoslanie hľadania zrušilo facety, priečinok aj variant navigácie.
       */}
-      <form className="library-search" method="get" action="/library">
+      <LiveFilter className="library-search" action="/library" label={t.search}>
         <label className="field" style={{ flex: "1 1 240px", margin: 0 }}>
           <span className="field-label">{t.search}</span>
           <input className="field-input" name="search" defaultValue={search ?? ""} placeholder={t.searchPlaceholder} />
@@ -326,7 +327,7 @@ export default async function LibraryPage({
           .filter(([k]) => k !== "search")
           .map(([k, v], i) => <input key={`${k}-${i}`} type="hidden" name={k} value={v} />)}
         <button className="button button--quiet" type="submit">{t.filter}</button>
-      </form>
+      </LiveFilter>
 
       {/*
         Chips aktívnych filtrov. Sú tu preto, že panel filtrov sa na úzkej

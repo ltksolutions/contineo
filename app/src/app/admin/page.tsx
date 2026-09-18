@@ -39,8 +39,8 @@ export default async function TenantAdminPage() {
   return (
     <AppShell language={ctx.person.language}>
     <div style={{ maxWidth: 900 }}>
-      <h1 style={{ fontSize: 27, letterSpacing: "-0.02em", margin: "0 0 6px" }}>{t.heading}</h1>
-      <p className="quiet" style={{ fontSize: 15, margin: "0 0 16px", maxWidth: 640 }}>{t.intro}</p>
+      <h1 className="page-title">{t.heading}</h1>
+      <p className="quiet page-lead" style={{ margin: "0 0 16px" }}>{t.intro}</p>
 
       <p style={{ margin: "0 0 24px" }}>
         <Link className="button" href="/admin/new">{t.newTenant}</Link>

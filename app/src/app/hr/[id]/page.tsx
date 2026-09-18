@@ -53,7 +53,7 @@ export default async function AssignmentDetailPage({
         <Link className="quiet" href="/hr" style={{ fontSize: 14 }}>{t.back}</Link>
       </p>
 
-      <h1 style={{ fontSize: 25, letterSpacing: "-0.02em", margin: "0 0 6px" }}>
+      <h1 className="page-title">
         {assignment.subject.documentTitle}
       </h1>
       <p className="quiet" style={{ fontSize: 14, margin: "0 0 4px" }}>

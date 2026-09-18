@@ -87,7 +87,7 @@ export default async function TrackDetailPage({
       </p>
 
       <div style={{ display: "flex", gap: 12, alignItems: "baseline", flexWrap: "wrap", margin: "0 0 6px" }}>
-        <h1 style={{ fontSize: 25, letterSpacing: "-0.02em", margin: 0, flex: "1 1 auto" }}>
+        <h1 className="page-title" style={{ margin: 0, flex: "1 1 auto" }}>
           {track.title}
         </h1>
         <span

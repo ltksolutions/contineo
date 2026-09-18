@@ -68,8 +68,8 @@ export default async function ApprovalsPage({
       <div style={{ maxWidth: 760, ...tenantStyle(branding) }}>
         <Notice message={q.msg} error={q.error === "1"} back="/approvals" />
 
-        <h1 style={{ fontSize: 27, letterSpacing: "-0.02em", margin: "0 0 8px" }}>{t.heading}</h1>
-        <p className="quiet" style={{ fontSize: 15.5, margin: "0 0 24px" }}>{t.intro}</p>
+        <h1 className="page-title" style={{ margin: "0 0 8px" }}>{t.heading}</h1>
+        <p className="quiet page-lead" style={{ margin: "0 0 24px" }}>{t.intro}</p>
 
         {rounds.length === 0 && <p className="card" style={{ padding: 20 }}>{t.nothing}</p>}
 

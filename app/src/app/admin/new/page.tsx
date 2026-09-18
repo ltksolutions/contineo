@@ -39,8 +39,8 @@ export default async function NewTenantPage({
         </Link>
       </p>
 
-      <h1 style={{ fontSize: 26, letterSpacing: "-0.02em", margin: "0 0 6px" }}>{t.heading}</h1>
-      <p className="quiet" style={{ fontSize: 15, margin: "0 0 20px" }}>
+      <h1 className="page-title">{t.heading}</h1>
+      <p className="quiet page-lead" style={{ margin: "0 0 20px" }}>
         {t.introBefore}<code>contineo.app</code>{t.introMiddle}<code>CNAME</code>{t.introAfter}
       </p>
 

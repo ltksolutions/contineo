@@ -50,8 +50,8 @@ export default async function InviteAllPage({
         <Link className="quiet" href="/people" style={{ fontSize: 14 }}>{t.back}</Link>
       </p>
 
-      <h1 style={{ fontSize: 25, letterSpacing: "-0.02em", margin: "0 0 6px" }}>{t.heading}</h1>
-      <p className="quiet" style={{ fontSize: 15, margin: "0 0 24px", maxWidth: 620 }}>{t.intro}</p>
+      <h1 className="page-title">{t.heading}</h1>
+      <p className="quiet page-lead" style={{ margin: "0 0 24px", maxWidth: 620 }}>{t.intro}</p>
 
       {people.length === 0 ? (
         <p className="card" style={{ padding: 20 }}>{t.none}</p>

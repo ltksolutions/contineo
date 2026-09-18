@@ -99,7 +99,7 @@ export default async function DocumentPage({
         <Link className="quiet" href="/documents" style={{ fontSize: 14 }}>← {t.back}</Link>
       </p>
 
-      <h1 style={{ fontSize: 25, letterSpacing: "-0.02em", margin: "0 0 6px" }}>{doc.title}</h1>
+      <h1 className="page-title">{doc.title}</h1>
 
       {version.ok ? (
         <p className="quiet" style={{ fontSize: 14, margin: "0 0 28px" }}>

@@ -16,6 +16,7 @@ import { notFound, redirect } from "next/navigation"
 import { onboardingContext } from "@/lib/session"
 import { brandingView } from "@/lib/tenants"
 import { tenantStyle } from "@/components/TenantHeader"
+import LiveFilter from "@/components/LiveFilter"
 import AppShell from "@/components/AppShell"
 import { listDirectory } from "@/lib/directory"
 import { availableOptions } from "@/lib/codelistsTenant"
@@ -52,11 +53,11 @@ export default async function DirectoryPage({
   return (
     <AppShell language={language}>
     <div style={{ maxWidth: 880, ...tenantStyle(branding) }}>
-      <h1 style={{ fontSize: 26, letterSpacing: "-0.02em", margin: "0 0 6px" }}>{t.heading}</h1>
-      <p className="quiet" style={{ fontSize: 15, margin: "0 0 18px", maxWidth: 620 }}>{t.intro}</p>
+      <h1 className="page-title">{t.heading}</h1>
+      <p className="quiet page-lead" style={{ maxWidth: 620 }}>{t.intro}</p>
 
       {/* Hľadanie je v adrese — dá sa poslať odkazom a vrátiť sa naň z histórie. */}
-      <form className="field" style={{ margin: "0 0 20px" }}>
+      <LiveFilter className="field" action="/directory" label={t.searchPlaceholder}>
         <input
           className="field-input"
           name="q"
@@ -65,7 +66,7 @@ export default async function DirectoryPage({
           autoCapitalize="none"
           autoCorrect="off"
         />
-      </form>
+      </LiveFilter>
 
       <p className="quiet" style={{ fontSize: 13.5, margin: "0 0 10px" }}>
         {people.length === 0 ? t.nothingFound : t.count(people.length)}

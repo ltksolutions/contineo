@@ -16,6 +16,7 @@ import { domainRequests, domainInstruction } from "@/lib/customerDomains"
 import { providerStatus, PROVIDER_LABEL, PROVIDER_ID } from "@/lib/oauth"
 import { brandingView } from "@/lib/tenants"
 import { tenantStyle } from "@/components/TenantHeader"
+import LiveFilter from "@/components/LiveFilter"
 import { DEFAULT_PHONE_PREFIX } from "@/lib/personFields"
 import { UI_LANGUAGES, formatDate, dictionary } from "@/lib/i18n"
 import type { UiLanguage } from "@/lib/i18n"
@@ -224,8 +225,8 @@ export default async function OrganisationPage({
         back={`/organisation?tab=${now}`}
       />
 
-      <h1 style={{ fontSize: 26, letterSpacing: "-0.02em", margin: "0 0 6px" }}>{t.heading}</h1>
-      <p className="quiet" style={{ fontSize: 15, margin: "0 0 22px", maxWidth: 620 }}>
+      <h1 className="page-title">{t.heading}</h1>
+      <p className="quiet page-lead" style={{ margin: "0 0 22px", maxWidth: 620 }}>
         {t.introBefore}<strong>{tenant.companyCode}</strong>{t.introAfter}
       </p>
 
@@ -757,7 +758,7 @@ export default async function OrganisationPage({
 
         {/* Formulár metódou GET: filter je v adrese, dá sa poslať odkazom
             a funguje bez jediného riadku JavaScriptu. */}
-        <form className="audit-filter" method="get">
+        <LiveFilter className="audit-filter" action="/organisation" label={t.auditTab.search}>
           <input type="hidden" name="tab" value="audit" />
           <label className="field" style={{ flex: "1 1 260px", margin: 0 }}>
             <span className="field-label">{t.auditTab.search}</span>
@@ -775,7 +776,7 @@ export default async function OrganisationPage({
               {t.auditTab.clearFilter}
             </Link>
           ) : null}
-        </form>
+        </LiveFilter>
 
         <AuditList records={records} language={language} />
 

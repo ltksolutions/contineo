@@ -79,10 +79,10 @@ export default async function NotifyPage({
         </Link>
       </p>
 
-      <h1 style={{ fontSize: 25, letterSpacing: "-0.02em", margin: "0 0 6px" }}>
+      <h1 className="page-title">
         {t.heading}
       </h1>
-      <p className="quiet" style={{ fontSize: 15, margin: "0 0 20px", maxWidth: 600 }}>
+      <p className="quiet page-lead" style={{ margin: "0 0 20px", maxWidth: 600 }}>
         {t.introBefore}<strong>{t.introHighlight}</strong>{t.introAfter}
       </p>
 

@@ -42,8 +42,10 @@ const NEXT_THEME: Record<ThemeChoice, ThemeChoice> = { system: "light", light: "
  * Odchýlka je zapísaná v `docs/O6_rozhodovaci_harok.md`, bod 1.
  */
 function BellIcon() {
+  // 21 px, nie predvolených 17: zvonček stojí vedľa 34 px avatara a v tej
+  // spoločnosti sa menšia ikona stráca. Terč okolo neho má 40 px (`.bell`).
   return (
-    <svg {...iconProps()}>
+    <svg {...iconProps(21)}>
       <path d="M9 2.4v1.1" />
       <path d="M9 3.5c-2.1 0-3.5 1.6-3.5 3.6 0 2.9-1.1 3.5-1.1 4.3h9.2c0-.8-1.1-1.4-1.1-4.3 0-2-1.4-3.6-3.5-3.6Z" />
       <path d="M7.4 13.4a1.7 1.7 0 0 0 3.2 0" />
@@ -391,9 +393,8 @@ export default function Header({
             */}
             <Link
               href="/notifications"
-              className="account-button"
+              className="bell"
               aria-label={t.notifications.bellLabel(notifications ?? 0)}
-              style={{ position: "relative", alignItems: "center", padding: "6px 8px", color: "var(--ink)" }}
             >
               <BellIcon />
               {/* Červený krúžok cez roh zvončeka, nie pilulka vedľa neho —

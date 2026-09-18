@@ -71,7 +71,7 @@ export default async function NotificationsPage({
       <div style={{ maxWidth: 820, ...tenantStyle(branding) }}>
         {message && <Notice message={message} back="/notifications" />}
 
-        <h1 style={{ fontSize: 26, letterSpacing: "-0.02em", margin: "0 0 6px" }}>{t.title}</h1>
+        <h1 className="page-title">{t.title}</h1>
         <p className="quiet" style={{ fontSize: 13.5, margin: "0 0 18px" }}>
           {t.retentionNote(RETENTION_DAYS)}
         </p>

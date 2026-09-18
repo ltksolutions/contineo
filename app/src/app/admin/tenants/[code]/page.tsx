@@ -210,7 +210,7 @@ export default async function TenantDetailPage({
         </Link>
       </p>
 
-      <h1 style={{ fontSize: 26, letterSpacing: "-0.02em", margin: "0 0 4px" }}>
+      <h1 className="page-title" style={{ margin: "0 0 4px" }}>
         {tenant.branding.displayName}
       </h1>
       <p className="quiet" style={{ margin: "0 0 20px" }}>
