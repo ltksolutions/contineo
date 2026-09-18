@@ -259,7 +259,7 @@ export async function POST(req: NextRequest) {
 
         // 7. Generovanie odpovede (streaming SSE)
         phase("writing")
-        const inner = generateAnswer({ query, chunks, userRole, profile, timings })
+        const inner = generateAnswer({ query, chunks, userRole, profile, timings, language })
         const reader = inner.getReader()
         for (;;) {
           const { done, value } = await reader.read()

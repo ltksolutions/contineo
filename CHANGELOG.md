@@ -4,6 +4,23 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Bezpečnostné hlavičky a chybová hláška generovania (2026-09-18)
+
+**Každá odpoveď nesie bezpečnostné hlavičky** (`headers()` v
+`next.config.mjs`, nález N4): `frame-ancestors 'none'` + `X-Frame-Options:
+DENY` (portál sa nedá vložiť do cudzieho rámu — clickjacking na tlačidlo
+potvrdenia by bol pri norme obzvlášť zlý), `X-Content-Type-Options: nosniff`,
+`Referrer-Policy: strict-origin-when-cross-origin` a vypnuté senzory cez
+`Permissions-Policy`. Plná CSP zámerne nie je — inline skripty Nextu by
+vyžadovali nonce cez middleware, to je samostatný krok.
+
+**Zlyhanie generovania už nevynáša text výnimky** (nález N6):
+`generateAnswer()` posielal do udalosti `error` surové `err.message` z SDK
+poskytovateľa. Teraz ide človeku všeobecná veta v jeho jazyku
+(`answer.failed`, jazyk sa odovzdáva z `/api/chat`) a príčina do logu —
+rovnaké pravidlo, aké `/api/chat` uplatňoval na chyby pred generovaním.
+Stráži `tests/llmGeneratorError.test.ts`.
+
 ### Bezpečnosť: CSV exporty a zraniteľné závislosti (2026-09-18)
 
 **CSV exporty sú chránené pred formula injection.** Bunku začínajúcu `=`,

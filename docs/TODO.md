@@ -714,8 +714,8 @@ nie táto sekcia.
 - [x] **N3 — CSV formula injection** ✅ 2026-09-18 — `toCsv()` neutralizuje `=`, `+`, `-`, `@`, tab, CR apostrofom; testy v `tests/csv.test.ts`.
 - [x] **N2 — `xlsx`** ✅ 2026-09-18 — 0.20.3 z oficiálnej distribúcie SheetJS (tarball v package.json, pinovaný lockfile-om); `npm audit` čistý.
 - [x] **N2 — `dompurify`** ✅ 2026-09-18 — `overrides` na ^3.4.15 (z 2.5.9); tsc/testy/build prešli. Editor preklikaný v produkcii (build `5a6a747`, skúšobná smernica, bez uloženia): Markdown ↔ WYSIWYG funguje, `onerror` sa odstráni, `<script>` zmizne, payload sa nespustí — v oboch režimoch. Hotové celé.
-- [ ] **N4 — bezpečnostné hlavičky**: `headers()` v `next.config.mjs` — `frame-ancestors 'none'`, `Referrer-Policy`, CSP najprv report-only; overiť HSTS na zákazníckych doménach.
-- [ ] **N6 — `generateAnswer()` posiela surové `err.message` do streamu**: zjednotiť so všeobecnou hláškou ako v `/api/chat`.
+- [x] **N4 — bezpečnostné hlavičky** ✅ 2026-09-18 — `headers()` v `next.config.mjs`: frame-ancestors 'none' + X-Frame-Options, nosniff, Referrer-Policy, Permissions-Policy. Plná CSP s nonce = samostatný krok (nižšia priorita). HSTS overiť na doméne po nasadení.
+- [x] **N6** ✅ 2026-09-18 — `generateAnswer()` posiela `answer.failed` v jazyku prostredia, príčina ide do logu; test `tests/llmGeneratorError.test.ts`.
 - [x] **Web vs D90** ✅ 2026-09-18 — `web/lib/dictionaries.js` (SK/CS/EN): hierarchia a `scope: global` preformulované na „zdieľanie pripravujeme" (viditeľnosť = vlastná organizácia, D90); Vertex AI odstránený (Bedrock zostáva — jediná cesta k eu-full generovaniu); „Infinity (voyage-4-nano) / TEI (BGE-M3)" (O7 nález A); zero-retention pri Anthropic zmiernené na „potvrdzujeme zmluvne", kým nepríde odpoveď zo sales supportu (žiadosť odoslaná 2026-09-18) — potom vrátiť silné znenie. Build webu prešiel.
 - [ ] **N8 — `.env.local.example` zastaraný**: zosúladiť so skutočnými premennými (bez Ollama/Blob; doplniť CRON_SECRET, ALLOWED_EMAILS, OAUTH_SECRET_ENCRYPTION_KEY, PLATFORM_TENANT, VERCEL_TOKEN, ECOMAIL_*).
 - [ ] **N5/N7 — rate limiting a timingSafeEqual pre CRON_SECRET**: až s verejným widgetom, nie skôr.

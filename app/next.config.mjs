@@ -46,6 +46,32 @@ const nextConfig = {
   outputFileTracingIncludes: {
     "/**": ["./node_modules/pdfjs-dist/legacy/build/pdf.worker.mjs"],
   },
+  /*
+   * Bezpečnostné hlavičky (N4, `docs/BEZPECNOSTNA_KONTROLA_2026-09.md`).
+   *
+   * Plná CSP tu zámerne NIE JE: Next vkladá inline skripty a štýly, takže
+   * poctivá CSP potrebuje nonce cez middleware — to je samostatný krok,
+   * nie prílepok. Tu je to, čo nič nerozbije a rieši konkrétne veci:
+   * stránka sa nedá vložiť do cudzieho rámu (clickjacking na tlačidlo
+   * potvrdenia by bol pri norme obzvlášť zlý), prehliadač neháda typy,
+   * do cudzích služieb neodchádza plná adresa a senzory sú vypnuté.
+   * `/api/brand` a `/api/photo` si `nosniff` nastavujú aj samy — dvakrát
+   * tá istá hodnota nevadí, chýbajúca by vadila.
+   */
+  async headers() {
+    return [
+      {
+        source: "/:path*",
+        headers: [
+          { key: "Content-Security-Policy", value: "frame-ancestors 'none'" },
+          { key: "X-Frame-Options", value: "DENY" },
+          { key: "X-Content-Type-Options", value: "nosniff" },
+          { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+          { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=()" },
+        ],
+      },
+    ]
+  },
   env: {
     APP_VERZIA: pkg.version,
     // Lokálne prázdne — lokálny beh nie je nasadenie, o ktorom sa niekto pýta.

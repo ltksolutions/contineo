@@ -10,6 +10,27 @@
 
 ---
 
+## 2026-09-18 (večer) — N4 a N6, z kontroly zostáva už len O12
+
+**Hlavičky (N4):** `headers()` v `next.config.mjs` — frame-ancestors,
+X-Frame-Options, nosniff, Referrer-Policy, Permissions-Policy. Vedome BEZ
+plnej CSP: Next vkladá inline skripty, poctivá CSP znamená nonce cez
+middleware a testovanie všetkých obrazoviek — prílepok k dnešku by skončil
+buď deravou politikou, alebo rozbitou stránkou. Zapísané ako samostatný
+krok s nižšou prioritou.
+
+**Hláška (N6):** `generateAnswer()` má vlastný catch vnútri streamu a ten
+posielal `err.message` doslovne — route svoju všeobecnú vetu uplatňoval len
+na chyby PRED generovaním. Jazyk sa do `GenerateOptions` odovzdáva z route;
+`smoke.mjs` ho nedáva a padá na slovenčinu, čo je preň správne. Test vyvolá
+chybu profilom s neznámym druhom generovania — žiadna sieť, žiadne mocky
+SDK — a overí, že von ide `answer.failed` a nie text výnimky.
+
+tsc čistý, eslint 0 chýb, vitest 1364/1364 (3 nové), build prešiel, dev
+server nebežal (overené pred buildom).
+
+---
+
 ## 2026-09-18 (dokončenie) — editor s dompurify 3.4.15 overený v produkcii
 
 Posledný otvorený kúsok N2. Najprv staticky: toast-ui volá na dompurify len

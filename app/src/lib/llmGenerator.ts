@@ -17,6 +17,7 @@ import type { ChunkResult } from "./mongoSearch"
 import { getTenantProfile, defaultProfile } from "./tenantProfile"
 import { getProviders } from "./providers/factory"
 import { cost, EMPTY_TOKENS } from "./pricing"
+import { dictionary } from "./i18n"
 import type { TokenCounts } from "./pricing"
 import type { GeneratedCitation, TenantProfile } from "./providers/types"
 
@@ -34,6 +35,11 @@ export interface GenerateOptions {
    * p95 po prvý token a bez rozpadu je to len jedno číslo bez príčiny.
    */
   timings?: Record<string, number>
+  /**
+   * Jazyk prostredia. Hláška o zlyhaní je text pre človeka a má prísť
+   * v jeho reči; chýbajúci jazyk padá na slovenčinu (`dictionary()`).
+   */
+  language?: string
 }
 
 // ── Zostavenie systémového promptu ──────────────────────────────────────────
@@ -138,7 +144,15 @@ export function generateAnswer(opts: GenerateOptions): ReadableStream {
           naklad: cost(generation.model, tokens),
         })
       } catch (err) {
-        encode({ type: "error", message: err instanceof Error ? err.message : String(err) })
+        /*
+         * Podrobnosti výnimky na obrazovku nepatria (N6): text z SDK
+         * poskytovateľa vie niesť interné detaily — názvy modelov, adresy,
+         * tvar požiadavky. Človeku ide všeobecná veta v jeho jazyku, príčina
+         * do logu. To isté pravidlo, ktoré `/api/chat` dovtedy uplatňoval
+         * len na chyby vzniknuté PRED generovaním.
+         */
+        console.error("[generovanie] odpoveď sa nepodarilo dokončiť:", err)
+        encode({ type: "error", message: dictionary(opts.language).answer.failed })
       } finally {
         controller.close()
       }
