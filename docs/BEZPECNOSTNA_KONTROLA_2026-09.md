@@ -56,6 +56,16 @@ Prístup do clustra dnes chráni len meno/heslo a TLS. Postup zostáva podľa
 O12: zapnúť Static IPs pre región `fra1` vo Verceli a zúžiť allowlist na
 tieto adresy (+ adresa správcu na údržbu).
 
+> ♻️ **Revízia 2026-09-18 (Ján Letko):** Static IPs sa pri jednom tenantovi
+> nezapínajú — 100 $/mes. na projekt + metrovaný Private Data Transfer je
+> neúmerný náklad. Riziko (únik prihlasovacích údajov = plný prístup
+> odkiaľkoľvek) kryjú kompenzačné opatrenia v `docs/TODO.md`: samostatný
+> aplikačný DB používateľ len s `readWrite` na `contineo` (kontrola pri
+> zápise ukázala, že aplikácia sa pripája správcovským účtom s `atlasAdmin`),
+> Atlas alerty a rotácia hesla. Spúšťače návratu: druhý platiaci tenant,
+> verejný widget, tender/bezpečnostný dotazník. Revízia je pri O12
+> v `OPEN_DECISIONS.md`; N1 tým prestáva byť blokátor ostrej prevádzky.
+
 ### N2 — Zraniteľné závislosti (stredná priorita)
 
 `npm audit` (2026-09-17): 3 zraniteľnosti — 1 high, 2 moderate.

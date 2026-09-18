@@ -10,6 +10,33 @@
 
 ---
 
+## 2026-09-18 (noc) — O12 revidované: Static IPs odložené, allowlist kryjú lacnejšie opatrenia
+
+Ján: „pri jednom tenantovi toto celé považujem za zbytočný náklad". Cena
+overená v oficiálnej dokumentácii Vercelu: **100 $/mes. na projekt** plus
+metrovaný Private Data Transfer — cez statické IP tečie každý dotaz do
+Atlasu. Pri jednom tenantovi ročne 1 200+ USD za druhý faktor k databáze,
+ktorého hrozbový model (únik connection stringu) sa dá z väčšej časti pokryť
+zadarmo. Súhlasil som s odkladom — s podmienkou, že sa nezapíše ako
+„zbytočné", ale ako **odložené so spúšťačmi**: druhý platiaci tenant,
+verejný widget, tender/bezpečnostný dotazník. Vtedy sa to prestane platiť
+z nákladov a začne predávať.
+
+**Nález pri zápise, ktorý celé rozhodnutie robí naliehavejším:**
+`connectionStatus` z produkčného URI ukázal, že aplikácia sa pripája ako
+`janletko_db_user` s rolami `atlasAdmin`, `readWriteAnyDatabase`,
+`dbAdminAnyDatabase`. Produkcia teda beží na plnom správcovskom účte
+clustra — uniknutý URI by nedal útočníkovi len dáta, ale celý cluster
+vrátane správy používateľov. Prvý kompenzačný krok je preto samostatný
+aplikačný používateľ len s `readWrite` na `contineo` a potom rotácia hesla
+správcovského účtu. Zapísané v TODO pod revidovaným O12.
+
+Papierovačky: revízia v `OPEN_DECISIONS.md` (riadok O12), dodatok k N1
+v bezpečnostnej kontrole, TODO preklopené z blokátora na tri kompenzačné
+kroky. **Prvé ostré potvrdenie tým prestalo mať blokátor v O12.**
+
+---
+
 ## 2026-09-18 (večer) — N4 a N6, z kontroly zostáva už len O12
 
 **Hlavičky (N4):** `headers()` v `next.config.mjs` — frame-ancestors,

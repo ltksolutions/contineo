@@ -273,7 +273,10 @@
 
 - [x] **Automatické nasadzovanie z GitHubu** ✅ 2026-08-28 — projekt `contineo-app` napojený na `ltksolutions/contineo`, root directory `app`, produkčná vetva `main`. Dovtedy napojený nebol: posledné nasadenie bolo staré 31 dní napriek desiatim commitom, takže `/dokumenty` na `app.contineo.app` neexistovalo. Postup a dôvod v `NASADENIE_app.md` kap. 0.
 
-- [ ] **O12 — `0.0.0.0/0` v Atlase.** **Blokujúce** — onboarding prináša interné smernice aj osobné údaje naraz (`NASADENIE_app.md` kap. 2). Analýza: **ADR-003 kap. 6.1**.
+- [x] ♻️ **O12 — `0.0.0.0/0` v Atlase: Static IPs ODLOŽENÉ** (rozhodol Ján, 2026-09-18). 100 $/mes. na projekt + Private Data Transfer je pri jednom tenantovi neúmerný náklad; allowlist zatiaľ zostáva a riziko kryjú kompenzačné kroky nižšie. Spúšťače návratu: druhý platiaci tenant, verejný widget, tender/bezpečnostný dotazník. **Prestáva blokovať prvé ostré potvrdenie.** Analýza Static IPs zostáva v ADR-003 kap. 6.1; revízia zapísaná pri O12 v `OPEN_DECISIONS.md`.
+  - [ ] **Samostatný aplikačný DB používateľ** len s `readWrite` na databázu `contineo` a jeho URI do Vercel env. Overené 2026-09-18 (`connectionStatus`): aplikácia sa dnes pripája ako `janletko_db_user` s `atlasAdmin`, `readWriteAnyDatabase` a `dbAdminAnyDatabase` — produkcia beží na správcovskom účte clustra. Po výmene otočiť heslo správcovského účtu.
+  - [ ] **Atlas Project Alerts** na neúspešné prihlásenia a nezvyčajný prístup.
+  - [ ] **Rotácia hesla aplikačného používateľa** — občasná, aspoň štvrťročne.
   - [x] **Rozhodnuté 2026-08-27: Vercel Static IPs** (100 $/mes., plán Pro). Preverené aj Render, Railway, vlastný stroj v EÚ, SOCKS5 proxy — ADR-003 kap. 6.1. Presun z Vercelu zostáva dlhodobým smerom.
   - [ ] Zapnúť Static IPs pre projekt `contineo-app` (Settings → Networking) a zúžiť Atlas Network Access na tie dve IP
   - [ ] Súbežne (lacné, dáva zmysel aj za pevnou IP): samostatný produkčný Atlas projekt + cluster, DB používateľ s minimálnymi právami, audit log a upozornenia na neúspešné prihlásenia
