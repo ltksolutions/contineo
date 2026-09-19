@@ -31,9 +31,9 @@ nesprávne. Opravené a overené naživo. `check`, `status` aj `tenant` dostali
 
 **O18 — čo je o Voyage doložiteľné.** Trénovanie na odoslaných dátach je
 predvolene **zapnuté** a vypína sa prepínačom *Help Improve Voyage AI Models*
-v Atlase. Europe Geography je od 1. 9. 2026 v public preview, ale kryje priame
-Embedding and Reranking API, nie automated embedding, ktorý používame. Doba
-uchovania logovaných payloadov zverejnená nie je. Zapísané v `docs/TODO.md`
+v Atlase — **a ten je od 2026-09-18 vypnutý**. Europe Geography je od 1. 9. 2026
+v public preview, ale kryje priame Embedding and Reranking API, nie automated
+embedding, ktorý používame. Doba uchovania logovaných payloadov zverejnená nie je. Zapísané v `docs/TODO.md`
 a v tabuľke sub-procesorov v `docs/GDPR_DATA_PROTECTION.md`.
 
 ### Jedna stupnica veľkostí, živé filtre a rozbaľovacie widgety (2026-09-18)
