@@ -129,7 +129,7 @@ export default async function DocumentPage({
           */}
           <ReadingTimer documentId={doc.documentId} language={person.language} />
 
-          <section className="card" style={{ padding: 20, marginTop: 32 }}>
+          <section className="card acknowledge-card" style={{ padding: 20, marginTop: 32 }}>
             <h2 style={{ fontSize: "var(--fs-section)", margin: "0 0 10px" }}>{t.confirmHeading}</h2>
 
             {/* Presne to znenie, ktoré sa uloží do záznamu. */}
@@ -147,12 +147,16 @@ export default async function DocumentPage({
                 {t.confirmed}
               </p>
             ) : (
-              <AcknowledgeButton
-                documentId={doc.documentId}
-                trackKey={typeof q.track === "string" ? q.track : undefined}
-                action={acknowledgeAction}
-                labels={{ button: t.confirmButton, pending: t.confirmPending }}
-              />
+              // Pod 640 px pláva ako pás nad spodnou lištou (CSS
+              // `.acknowledge-dock`) — potvrdenie je dôvod tejto stránky.
+              <div className="acknowledge-dock">
+                <AcknowledgeButton
+                  documentId={doc.documentId}
+                  trackKey={typeof q.track === "string" ? q.track : undefined}
+                  action={acknowledgeAction}
+                  labels={{ button: t.confirmButton, pending: t.confirmPending }}
+                />
+              </div>
             )}
           </section>
         </>

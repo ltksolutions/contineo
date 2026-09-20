@@ -97,6 +97,17 @@ Tretia: akcie priečinkov sa nedotkli — len `backToLibrary()` dostal biely
 zoznam `return=folders`, aby formuláre zo správy vracali na správu.
 Open redirect tu nehrozí: porovnáva sa konštanta, nie hodnota.
 
+**PR 5 — detail a Prehľad.** Najmenej kódu zo všetkých, dve poznámky.
+Prehľad z NASADENIA („KPI, úlohy s chipom, Novinky") už celý existoval —
+jediné, čo z toho zostalo, bola mriežka dlaždíc: `auto-fit` vyzeral
+šikovne, ale na stredných šírkach dával tri stĺpce a štvrtú dlaždicu
+osamelú; výslovné 2×2 / 4×1 je hlúpejšie a správnejšie. A obrátil som
+vlastné staré rozhodnutie: panel detailu bol na telefóne pod textom
+s peknym dôvodom („človek prišiel čítať"), návrh ho dáva nad text.
+Ani jedno sa nedá zmerať bez používateľov — v takom spore vyhráva návrh,
+lebo je novší a Jánov. Starý dôvod som nechal v komentári v zátvorke,
+nech tretie kolo nezačne od nuly.
+
 ---
 
 ## 2026-09-18 (noc) — mobilná knižnica, zhnité skripty a Voyage
