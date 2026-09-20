@@ -611,7 +611,11 @@ function backToLibrary(fd: FormData, message: string, error = false): never {
     const v = fieldText(fd, field)
     if (v) q.set(field, v)
   }
-  redirect(`/library?${q.toString()}`)
+  // Správa priečinkov má vlastnú stránku (NASADENIE, PR 4): jej formuláre
+  // nesú `return=folders` a človek sa vracia tam, kde robil. Porovnáva sa
+  // s bielym zoznamom, nie s hodnotou z formulára — inak open redirect.
+  const target = fieldText(fd, "return") === "folders" ? "/library/folders" : "/library"
+  redirect(`${target}?${q.toString()}`)
 }
 
 export async function createFolderAction(fd: FormData) {

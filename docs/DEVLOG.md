@@ -76,6 +76,27 @@ nachvíľu oklamal — dvojité overenie cez `getComputedStyle` potvrdilo, že
 `--accent`/`--on-accent` sa obracajú správne a dlaždica značky je v tmavej
 svetlá. Oko na 28 px klame, vypočítaný štýl nie.
 
+**PR 4 — knižnica, najväčší kus dňa.** Tri veci stoja za zápis.
+
+Prvá: TODO malo zapísané, že zásuvka filtrov „má zmysel až s klientskym
+stavom", a NASADENIE ju aj tak žiadalo. Rozpor je zdanlivý — starý zápis
+predpokladal, že zásuvka sa musí dať držať otvorená na desktope. Nemusí:
+na desktope zásuvka vôbec nie je (panel je stĺpec) a pod 1024 px sa
+`<details>` zaviera sám tým, že každý facet je odkaz a stránka sa načíta
+znova. Jedna definícia panela, dva tvary v DOM, `@media` vyberá — presne
+vzor tabuľka↔karty, ktorý v repozitári už bol. Zapísal som prekonanie
+starého bodu priamo k nemu.
+
+Druhá: komentár pri `.bulk-bar` tvrdil, že panel musí byť vidieť stále,
+lebo „server sa bez JavaScriptu nedozvie, čo je zaškrtnuté". To prestalo
+platiť vo chvíli, keď sa výber presunul do adresy — komentár prežil svoj
+dôvod o dva týždne. Kód je pravda, ale komentár je pamäť: keby som ho
+nečítal, panel by som nechal tak.
+
+Tretia: akcie priečinkov sa nedotkli — len `backToLibrary()` dostal biely
+zoznam `return=folders`, aby formuláre zo správy vracali na správu.
+Open redirect tu nehrozí: porovnáva sa konštanta, nie hodnota.
+
 ---
 
 ## 2026-09-18 (noc) — mobilná knižnica, zhnité skripty a Voyage
