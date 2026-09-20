@@ -152,7 +152,7 @@ export function SkeletonForm({ fields = 4 }: { fields?: number }) {
  *
  * Obe formy navigácie sú v strome naraz, rovnako ako v `AppNav`: pás pre
  * širokú obrazovku a 44 px prepínač zásuvky pre úzku. Prepína ich to isté
- * `@media` na 940 px, takže sa geometria nemôže rozísť s hotovou stránkou.
+ * `@media` na 1024 px, takže sa geometria nemôže rozísť s hotovou stránkou.
  *
  * Šesť položiek nie je náhoda — toľko ich vidí človek so všetkými rolami.
  * Kto má menej, uvidí kostru o kúsok širšiu než skutočnosť; opačná chyba

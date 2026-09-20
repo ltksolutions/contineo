@@ -4,6 +4,24 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Dva breakpointy namiesto ôsmich (2026-09-20)
+
+**Rozhranie malo osem šírok zlomu (419–940 px), takže sa layout medzi telefónom
+a notebookom preskupoval osemkrát.** Podľa plánu nasadenia návrhu
+(`docs/design/NASADENIE.md`, PR 1) sú odteraz dva: **640 a 1024**.
+
+- Všetkých 28 `@media` v `globals.css` presunutých na najbližší z dvoch;
+  `max-width` tvary používajú 639/1023, takže sa s `min-width` neprekrývajú
+  (zmizol aj presný prekryv na 640 px pri lište editora).
+- Prepínač tabuľka↔karty v knižnici prepína na **1024 px**, nie na mechanicky
+  najbližších 640: tabuľka je široká ~1160 px a plán pri knižnici hovorí
+  „od 1024 px tabuľka". Na tablete sú teda karty, nie oškrtaná tabuľka.
+- **Dotykové ciele 44 px pod 640 px**: facety, chips filtrov, riadky stromu
+  priečinkov, × v chipoch výberu a „Upraviť" v strome (inline štýl nahradila
+  trieda `tree-edit-toggle`).
+- Tokeny z PR 1 (`--accent-soft`, šestica hustoty) už v kóde boli — doplnené
+  len komentáre pri zmenených hraniciach (`globals.css`, `Skeleton.tsx`).
+
 ### Knižnica na telefóne, opravené skripty a čo je doložené o Voyage (2026-09-18)
 
 **Knižnica mala na telefóne predvolenú tabuľku, z ktorej nebolo vidieť nič

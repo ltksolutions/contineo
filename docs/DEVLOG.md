@@ -10,6 +10,37 @@
 
 ---
 
+## 2026-09-20 — nový balík handoffu a PR 1 (dva breakpointy)
+
+**Commit balíka nebol slepé kopírovanie.** Nový export
+`design_handoff_contineo_intranet/` mal štyri nové súbory (Obrazovky, Mobile,
+NASADENIE, ios-frame) — tie šli do `docs/design/`. Ale README v exporte bolo
+**staršie než repo**: nemalo `/ask` (malo `/search`), malo ešte `/golden-set`
+a chýbala mu poznámka o vlastných ikonách. Export z dizajnového projektu nevie
+o živote repa; keby sa prevzal celý, vrátil by tri opravené veci. README ostalo
+repové a v commite je to zapísané.
+
+**NASADENIE vs. kód: prvý krok PR 1 už bol hotový.** Tokeny, `--accent-soft`
+v oboch témach aj `tenantStyle()` v kóde boli („jedna stupnica veľkostí",
+6389a2d). NASADENIE chcelo hustotu „do oboch blokov", kód ju má len v `:root`
+so zdôvodnením (od témy nezávislá, prepína ju `data-density`) — kód je pravda,
+NASADENIE písané pred tými commitmi. Neprepisoval som fungujúce.
+
+**Dve vedomé odchýlky od „najbližšieho breakpointu".** Prepínač
+tabuľka↔karty (760) nešiel na 640, ale na 1024 — PR 4 hovorí výslovne
+„od 1024 px tabuľka" a tabuľka má ~1160 px; na tablete by z nej bol vodorovný
+posun. A `max-width: 419px` pre skratku názvu v hlavičke sa roztiahol na 639 —
+príde o zmysel aj tak až so `shortName` v PR 3.
+
+**Čo stálo čas:** komentáre. `globals.css` vysvetľuje hranice v ôsmich
+komentároch („Hranica je 760 px, nie 640: …") a po premapovaní by klamali.
+Mechanická zmena hodnôt je sed na minútu; nájsť a prepísať prózu, ktorá tie
+hodnoty zdôvodňuje, trvalo dlhšie než samotný kód. Presne preto je zvyk písať
+*prečo* do komentárov dobrý — donútil ma pri každej hranici overiť, či dôvod
+platí aj po zmene.
+
+---
+
 ## 2026-09-18 (noc) — mobilná knižnica, zhnité skripty a Voyage
 
 **Rozhodnutie, ktoré si Ján nechal na mne: karty na telefóne.** Najprv som to

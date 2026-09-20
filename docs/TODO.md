@@ -82,6 +82,19 @@
 
 > Návrh aplikačného shellu, knižnice s inteligentnými zoznamami a nastavení. Balík je **dizajnová referencia, nie kód na skopírovanie**. Shell je **opt-in** — `layout.tsx` sa nemení a stránky sa doň presúvajú po jednej.
 
+##### Responzívne nasadenie (`docs/design/NASADENIE.md`, od 2026-09-20)
+
+> Druhá vlna handoffu: mobil. Zdroj pravdy sú `Contineo Obrazovky.dc.html`
+> a `Contineo Mobile.dc.html`, plán po PR je `docs/design/NASADENIE.md`.
+> Jeden PR = jedno zadanie, PR 4 (knižnica) samostatne.
+
+- [x] **PR 1 — Tokeny a breakpointy** ✅ 2026-09-20 — tokeny, `--accent-soft` aj `tenantStyle()` už v kóde boli (bod 1 vyššie; hustota sa prepína `data-density` a v tmavom bloku sa zámerne neopakuje — kód tu bol pred NASADENIE a má to zdôvodnené). Zvyšok: 28 `@media` z ôsmich šírok (419–940) zjednotených na **640/1024** (`max-width` tvary 639/1023), dotykové ciele 44 px pod 640 (`.facet`, `.library-chip`, `.tree-row`, × v chipoch, „Upraviť" v strome — inline štýl nahradila trieda `tree-edit-toggle`). Odchýlka od „najbližšieho": prepínač tabuľka↔karty a farby prepínača pohľadu idú na **1024** — PR 4 výslovne hovorí „od 1024 px tabuľka".
+- [ ] **PR 2 — Navigácia** — spodná lišta pod 640 px, pás s prepadom do „Viac" od 640, nová routa `/more`
+- [ ] **PR 3 — Hlavička** — jedna hlavička 56 px (zlúčiť s `AppShell`), `ContineoMark` ako predvolené logo, `shortName` pod 640, ikona `notifications` do `Icon.tsx`
+- [ ] **PR 4 — Knižnica** — `/library/folders` (správa priečinkov von z filtrov), filtre stĺpec↔sheet, `.bulk-bar` len pri výbere, akcie hlavičky do „⋯" — najväčší, neskladať s ničím
+- [ ] **PR 5 — Detail a Prehľad** — sticky potvrdenie pod 640, panel ako karta nad textom, Prehľad do shellu (KPI 2×2 / 4×1)
+- [ ] **PR 6 — Adresár a zvyšok** — karty na všetkých šírkach (3/2/1), e-mail a telefón ako akcie
+
 - [x] **1. Tokeny** — `--accent-soft` a šestica premenných hustoty v `globals.css`, `soft()` v `TenantHeader.tsx`
 - [x] **3. `MultiSelect`** — viacnásobný výber s hľadaním bez diakritiky, `<noscript>` cesta, prepínač `emit` (`csv` pre formuláre, `repeat` pre adresu)
 - [x] **2. `AppShell` + `AppNav`** — varianty `sidebar`/`topbar`, `lib/shellRoutes.ts`, `Header` skrýva menu na shell routach; v shelli je zatiaľ len `/library`

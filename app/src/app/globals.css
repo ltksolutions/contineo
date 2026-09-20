@@ -117,7 +117,7 @@
   --control-h: 40px;
 }
 
-@media (min-width: 760px) {
+@media (min-width: 640px) {
   :root { --fs-control: 15px; }
 }
 
@@ -217,13 +217,14 @@ button:disabled { cursor: not-allowed; opacity: 0.55; }
 /*
  * Hlavička.
  *
- * Mobile first a doslova: pod 760 px je v riadku len značka, hamburger
+ * Mobile first a doslova: pod 640 px je v riadku len značka, hamburger
  * a avatar — nič iné sa tam nezmestí bez toho, aby sa to zalomilo do druhého
  * riadka. Menu sa vysunie pod lištu cez celú šírku.
  *
- * Hranica je 760 px, nie 640: pri troch správcovských odkazoch („Pridelené
- * normy", „Osoby", „Správa tenantov") sa lišta láme skôr, než by čakal
- * bežný breakpoint, a bude ich pribúdať.
+ * Hranica je 640 px: rozhranie má už len dva breakpointy (640 a 1024,
+ * viď docs/design/NASADENIE.md), takže hlavička sa mení na tej istej
+ * hranici ako zvyšok. Lámanie pri pribúdajúcich odkazoch rieši navigácia
+ * (prepad do „Viac"), nie posúvanie hranice.
  */
 /*
  * Riadok hlavičky. **Zalamuje sa** (`flex-wrap`), nie tlačí.
@@ -282,12 +283,12 @@ button:disabled { cursor: not-allowed; opacity: 0.55; }
  * patrí celý názov: hlavička je organizácie, nie dodávateľa.
  *
  * Prepína to `@media`, nie JavaScript — obe podoby sú v značkovaní, takže sa
- * po pripojení nič nepreskočí. Hranica 760 px je tá istá, na ktorej sa hlavičke
+ * po pripojení nič nepreskočí. Hranica 640 px je tá istá, na ktorej sa hlavičke
  * mení odsadenie.
  */
 .header-name-full { display: none; }
 
-@media (min-width: 760px) {
+@media (min-width: 640px) {
   .header-name-short { display: none; }
   .header-name-full { display: inline; }
 }
@@ -376,7 +377,7 @@ button:disabled { cursor: not-allowed; opacity: 0.55; }
  * Dva riadky hlavičky boli navyše mrhanie zvislým miestom práve tam, kde ho
  * je najmenej.
  */
-@media (max-width: 759px) {
+@media (max-width: 639px) {
   .header-search {
     /* Bez vlastného základu — inak si vypýta šírku, ktorú v riadku nemá,
        a riadok sa zlomí. To bola príčina pôvodného problému, nie to, že
@@ -405,7 +406,7 @@ button:disabled { cursor: not-allowed; opacity: 0.55; }
  * odreže elipsa. Kto má dlhšiu skratku, uvidí ju skrátenú — ale hlavičku
  * v jednom riadku.
  */
-@media (max-width: 419px) {
+@media (max-width: 639px) {
   .header-name { max-width: 26vw; }
 }
 
@@ -427,7 +428,7 @@ button:disabled { cursor: not-allowed; opacity: 0.55; }
  * zalomeniu hlavičky. Preto to nebolo len smetie: bola to príčina toho, že
  * hlavička nesedela s návrhom ani po zmene základných pravidiel.
  */
-@media (min-width: 760px) {
+@media (min-width: 640px) {
   .header-row { gap: 16px; }
   /* Odznak „testovacie rozhranie" má aj `.tag`, ktorý je nižšie — bez
      `.header-row` v selektore by pri rovnakej špecifickosti vyhral on. */
@@ -717,7 +718,7 @@ button:disabled { cursor: not-allowed; opacity: 0.55; }
   roztiahlo stĺpec a riadok by pretiekol cez okraj obrazovky.
 */
 .field-row { display: grid; gap: 12px; grid-template-columns: minmax(0, 1fr); }
-@media (min-width: 520px) {
+@media (min-width: 640px) {
   .field-row { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
 }
 
@@ -836,7 +837,7 @@ html[data-theme="dark"] select.field-input {
  * Mobile first doslova: **oba varianty sú na úzkej obrazovke vodorovný pás**,
  * ktorý sa dá posunúť prstom. Bočný panel by na 360 px zabral tretinu šírky
  * a obsahu by nechal stĺpec, do ktorého sa nezmestí ani názov dokumentu.
- * Bočným panelom sa `sidebar` stáva až od 760 px — rovnaká hranica, na ktorej
+ * Bočným panelom sa `sidebar` stáva až od 640 px — rovnaká hranica, na ktorej
  * sa rozbaľuje menu v hlavičke.
  *
  * Navigácia zámerne **nie je `sticky`**. Hlavička nad ňou je a na úzkej
@@ -939,7 +940,7 @@ html[data-theme="dark"] select.field-input {
   padding: var(--pad-main) var(--pad-main) 56px;
 }
 
-@media (min-width: 760px) {
+@media (min-width: 640px) {
   .app-shell--sidebar { flex-direction: row; }
 
   .app-shell--sidebar .app-nav--sidebar {
@@ -1362,7 +1363,7 @@ html[data-theme="dark"] select.field-input {
   display: block;
 }
 
-@media (min-width: 520px) {
+@media (min-width: 640px) {
   .hr-choice .field-hint { display: inline; }
 }
 
@@ -1370,7 +1371,7 @@ html[data-theme="dark"] select.field-input {
  * Prehľad tenantov.
  *
  * Mobile first: na úzkom displeji dva stĺpce (štyri údaje sa zmestia do dvoch
- * riadkov), od 560 px štyri vedľa seba. `minmax(0, 1fr)` je tu nutné — bez
+ * riadkov), od 640 px štyri vedľa seba. `minmax(0, 1fr)` je tu nutné — bez
  * neho by dlhé číslo mriežku roztiahlo mimo karty.
  */
 .admin-data {
@@ -1380,14 +1381,14 @@ html[data-theme="dark"] select.field-input {
   margin-top: 14px;
 }
 
-@media (min-width: 560px) {
+@media (min-width: 640px) {
   .admin-data { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 }
 
 /*
  * Pätička.
  *
- * Mobile first: na úzkom displeji je to stĺpec, od 560 px riadok. Verzia je
+ * Mobile first: na úzkom displeji je to stĺpec, od 640 px riadok. Verzia je
  * vždy posledná — je to údaj pre poruchu, nie pre bežné čítanie.
  */
 .footer {
@@ -1431,7 +1432,7 @@ html[data-theme="dark"] select.field-input {
   font-variant-numeric: tabular-nums;
 }
 
-@media (min-width: 560px) {
+@media (min-width: 640px) {
   .footer-inner {
     flex-direction: row;
     align-items: center;
@@ -1445,7 +1446,7 @@ html[data-theme="dark"] select.field-input {
  *
  * **Mobile first.** Na úzkom displeji je položka stĺpec: názov, pod ním
  * tlačidlo na celú šírku, ktoré sa dá trafiť palcom. Vedľa seba sa postavia
- * až od 560 px — na 360 px by sa názov normy stlačil na dve slová a zvyšok
+ * až od 640 px — na 360 px by sa názov normy stlačil na dve slová a zvyšok
  * by zmizol do troch bodiek.
  */
 .requests-widget { padding: 16px 18px; }
@@ -1506,7 +1507,7 @@ html[data-theme="dark"] select.field-input {
   font-size: 14px;
 }
 
-@media (min-width: 560px) {
+@media (min-width: 640px) {
   .request {
     flex-direction: row;
     align-items: center;
@@ -1550,7 +1551,7 @@ html[data-theme="dark"] select.field-input {
   padding: 20px 16px;
 }
 
-@media (min-width: 560px) {
+@media (min-width: 640px) {
   .document-sheet { padding: 28px 32px; }
 }
 
@@ -1617,6 +1618,16 @@ html[data-theme="dark"] select.field-input {
   border-left: 2px solid var(--line);
 }
 
+/* Prepínač „Upraviť" pod riadkom stromu. Trieda namiesto inline štýlu,
+   aby pod 640 px mohol narásť na dotykový cieľ (blok na konci súboru). */
+.tree-edit-toggle {
+  display: inline-flex;
+  align-items: center;
+  padding: 0 12px 6px;
+  font-size: var(--fs-micro);
+  cursor: pointer;
+}
+
 .tree-form {
   display: flex;
   gap: 8px;
@@ -1628,7 +1639,7 @@ html[data-theme="dark"] select.field-input {
    zostalo toľko miesta, že by v ňom nebolo vidieť názov. */
 .tree-form > :first-child { flex: 1 1 220px; min-width: 0; }
 
-@media (max-width: 520px) {
+@media (max-width: 639px) {
   .tree-form { flex-direction: column; align-items: stretch; }
   .tree-form > * { width: 100%; }
 }
@@ -1682,7 +1693,7 @@ html[data-theme="dark"] select.field-input {
   margin: 0 0 14px;
 }
 
-@media (max-width: 520px) {
+@media (max-width: 639px) {
   .audit-filter { flex-direction: column; align-items: stretch; }
   .audit-filter > * { width: 100%; }
 }
@@ -1696,7 +1707,7 @@ html[data-theme="dark"] select.field-input {
 }
 
 /* ── editor knižnice (D53) ───────────────────────────────────────────────
-   Dva stĺpce vedľa seba len tam, kde sa oba naozaj zmestia. Pod 900 px sa
+   Dva stĺpce vedľa seba len tam, kde sa oba naozaj zmestia. Pod 1024 px sa
    poskladajú pod seba: rozdeliť telefón na dve polovice znamená, že sa
    nečíta ani jedna. */
 .editor-grid {
@@ -1706,7 +1717,7 @@ html[data-theme="dark"] select.field-input {
   align-items: start;
 }
 
-@media (min-width: 900px) {
+@media (min-width: 1024px) {
   .editor-grid { grid-template-columns: 1fr 1fr; }
 }
 
@@ -1766,12 +1777,12 @@ html[data-theme="dark"] .editor-tui .CodeMirror {
 
 /* Panel nástrojov sa na telefóne láme do viacerých riadkov — nechať ho
    preto rásť do výšky, nie orezať tlačidlá, ktoré sa nezmestili. */
-@media (max-width: 640px) {
+@media (max-width: 639px) {
   .editor-tui .toastui-editor-defaultUI-toolbar { flex-wrap: wrap; height: auto; }
 }
 
 /* ── knižnica: priečinky vedľa zoznamu (D56) ─────────────────────────────
-   Bočný panel len tam, kde má zoznam ešte dosť miesta. Pod 860 px ide nad
+   Bočný panel len tam, kde má zoznam ešte dosť miesta. Pod 1024 px ide nad
    zoznam: na telefóne je strom priečinkov navigácia, nie stĺpec. */
 .library-grid {
   display: grid;
@@ -1780,7 +1791,7 @@ html[data-theme="dark"] .editor-tui .CodeMirror {
   align-items: start;
 }
 
-@media (min-width: 860px) {
+@media (min-width: 1024px) {
   .library-grid { grid-template-columns: 250px 1fr; }
 }
 
@@ -1805,7 +1816,7 @@ html[data-theme="dark"] .editor-tui .CodeMirror {
  * a na širokej obrazovke sa stĺpce vymenili: panel filtrov vpravo, tabuľka
  * stlačená v 250 px stĺpci vľavo.
  */
-@media (min-width: 860px) {
+@media (min-width: 1024px) {
   .library-folders, .library-list { order: 0; }
 }
 
@@ -1938,14 +1949,14 @@ html[data-theme="dark"] .editor-tui .CodeMirror {
 /*
   Automatický pohľad knižnice. Základ je telefón — tam sú karty, lebo tabuľka
   má deväť stĺpcov a v 340 px obale z nej vidno názov dokumentu a nič viac.
-  Od 760 px tabuľka, lebo dokumenty sa porovnávajú a na to musia byť tie isté
+  Od 1024 px tabuľka, lebo dokumenty sa porovnávajú a na to musia byť tie isté
   údaje pod sebou. Vykreslené sú oba zoznamy a vyberá medza — server šírku
   obrazovky nepozná. `display: none` schová ten druhý aj pred čítačkou, takže
   sa zoznam neprečíta dvakrát.
 */
 .doc-table-wrap.doc-view-auto { display: none; }
 
-@media (min-width: 760px) {
+@media (min-width: 1024px) {
   .doc-table-wrap.doc-view-auto { display: block; }
   .doc-cards.doc-view-auto { display: none; }
 }
@@ -2147,7 +2158,7 @@ html[data-theme="dark"] .editor-tui .CodeMirror {
 .detail-main { min-width: 0; }
 .detail-side { display: grid; gap: 12px; min-width: 0; }
 
-@media (min-width: 900px) {
+@media (min-width: 1024px) {
   .detail-grid { grid-template-columns: minmax(0, 1fr) 280px; }
 }
 
@@ -2564,7 +2575,7 @@ html[data-theme="dark"] .editor-tui .CodeMirror {
 */
 .view-switch-item--auto-cards { background: var(--surface); color: var(--ink); }
 
-@media (min-width: 760px) {
+@media (min-width: 1024px) {
   .view-switch-item--auto-cards { background: none; color: var(--muted); }
   .view-switch-item--auto-table { background: var(--surface); color: var(--ink); }
 }
@@ -2927,7 +2938,7 @@ a.answer-source:focus-visible { outline: 2px solid var(--accent); outline-offset
    nad cieľom medzeru, aby bolo vidieť, kam človek doskočil. */
 .library-folders, .library-list { scroll-margin-top: 12px; }
 
-@media (min-width: 860px) {
+@media (min-width: 1024px) {
   /* Na širokej obrazovke sú filtre vedľa zoznamu — odkaz na ne by bol odkaz
      na to, čo je práve vidieť. */
   .filters-jump { display: none; }
@@ -2983,7 +2994,7 @@ a.answer-source:focus-visible { outline: 2px solid var(--accent); outline-offset
  * Odsadenie zľava je šírka spojky, takže odkaz začína pod textom podmienky
  * a je zjavné, ku ktorému riadku patrí.
  */
-@media (max-width: 559px) {
+@media (max-width: 639px) {
   .builder-join-switch {
     /* Nie `100%`: pri celej šírke by sa krížik zalomil na tretí riadok
        a ostal by odtrhnutý pod odkazom. Takto sa odkaz nezmestí vedľa
@@ -3109,7 +3120,7 @@ a.answer-source:focus-visible { outline: 2px solid var(--accent); outline-offset
 .waiting-name { font-weight: 600; color: inherit; }
 .waiting-meta { font-size: 13px; overflow-wrap: anywhere; }
 
-@media (min-width: 760px) {
+@media (min-width: 640px) {
   .waiting-item { grid-template-columns: minmax(0, 1fr) auto; align-items: baseline; gap: 12px; }
   .waiting-meta { text-align: right; }
 }
@@ -3216,7 +3227,7 @@ a.answer-source:focus-visible { outline: 2px solid var(--accent); outline-offset
 
 /* Filtre: na telefóne pod sebou, na širšom vedľa seba. */
 .evidence-filters { padding: 16px 18px; display: grid; gap: 12px; }
-@media (min-width: 760px) {
+@media (min-width: 640px) {
   .evidence-filters { grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) auto; align-items: end; }
 }
 
@@ -3531,11 +3542,11 @@ a.answer-source:focus-visible { outline: 2px solid var(--accent); outline-offset
 
 .app-nav--drawer .app-nav-item.is-active { background: var(--accent-soft); }
 
-@media (min-width: 940px) {
+@media (min-width: 1024px) {
   .app-nav-drawer { display: none; }
 }
 
-@media (max-width: 939px) {
+@media (max-width: 1023px) {
   .app-nav--topbar { display: none; }
 }
 
@@ -3738,4 +3749,16 @@ html[data-theme="dark"] { --skeleton-sheen: rgba(255, 255, 255, 0.07); }
 .answer-phase {
   font-size: 12.5px;
   margin-bottom: 10px;
+}
+
+/* ── Dotykové ciele pod 640 px (NASADENIE, PR 1) ─────────────────────────
+   Prst potrebuje ~44 px. Na širokej obrazovke ostávajú kompaktné rozmery —
+   myš mieri presnejšie a tam rozhoduje hustota. Blok je na konci súboru
+   zámerne: `@media` patrí za deklarácie, ktoré prepisuje. */
+@media (max-width: 639px) {
+  .facet { min-height: 44px; }
+  .library-chip { min-height: 44px; }
+  .tree-row { min-height: 44px; align-items: center; }
+  .multiselect-chip-remove { width: 44px; height: 44px; }
+  .tree-edit-toggle { min-height: 44px; padding-block: 0; }
 }
