@@ -13,7 +13,7 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { signOut } from "next-auth/react"
 import { ContineoMark } from "./ContineoMark"
-import { iconProps } from "./Icon"
+import Icon, { iconProps } from "./Icon"
 import type { TenantBrandingView } from "./TenantHeader"
 import { dictionary, type UiLanguage } from "@/lib/i18n"
 
@@ -33,25 +33,6 @@ type Theme = "light" | "dark"
 const NEXT_THEME: Record<ThemeChoice, ThemeChoice> = { system: "light", light: "dark", dark: "system" }
 
 
-
-/**
- * Zvonček. Kreslený v tom istom rukopise ako ikony témy vedľa neho:
- * 18×18, `currentColor`, ťah 1,6, guľaté konce. Je to vedomá odchýlka od
- * `docs/design/README.md` („nekresliť nové SVG od ruky") — rozhodnutie Jána
- * Letka z 2026-09-14 znie, že ikonový set sa nezavádza a ikony budú vlastné.
- * Odchýlka je zapísaná v `docs/O6_rozhodovaci_harok.md`, bod 1.
- */
-function BellIcon() {
-  // 21 px, nie predvolených 17: zvonček stojí vedľa 34 px avatara a v tej
-  // spoločnosti sa menšia ikona stráca. Terč okolo neho má 40 px (`.bell`).
-  return (
-    <svg {...iconProps(21)}>
-      <path d="M9 2.4v1.1" />
-      <path d="M9 3.5c-2.1 0-3.5 1.6-3.5 3.6 0 2.9-1.1 3.5-1.1 4.3h9.2c0-.8-1.1-1.4-1.1-4.3 0-2-1.4-3.6-3.5-3.6Z" />
-      <path d="M7.4 13.4a1.7 1.7 0 0 0 3.2 0" />
-    </svg>
-  )
-}
 
 /**
  * Ikona stavu. Tri rôzne tvary, nie jeden meniaci sa — človek má poznať
@@ -151,6 +132,13 @@ export default function Header({
 }) {
   const t = dictionary(language)
   const [choice, setChoice] = useState<ThemeChoice>("system")
+  /*
+   * Nápoveda `⌘K` v poli. Windows a Linux majú `Ctrl K` — zisťuje sa až po
+   * pripojení, lebo server platformu nepozná a hádať ju znamená hydratačný
+   * rozdiel. Do efektu patrí aj preto, že je to čisto ozdoba: bez skriptu
+   * skratka aj tak nefunguje, takže nech bez skriptu ani neradí.
+   */
+  const [kbdHint, setKbdHint] = useState("⌘K")
   const [personalOpen, setPersonalOpen] = useState(false)
   const personalWrap = useRef<HTMLDivElement>(null)
   const search = useRef<HTMLInputElement>(null)
@@ -202,6 +190,11 @@ export default function Header({
       document.removeEventListener("keydown", escape)
     }
   }, [personalOpen])
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    if (!/Mac|iPhone|iPad/.test(navigator.platform)) setKbdHint("Ctrl K")
+  }, [])
 
   // Uložená voľba sa načíta raz po pripojení. Neznámu hodnotu (staršie
   // uloženie, ručná úprava) ticho prehliadneme — pri téme nemá zmysel padať.
@@ -282,9 +275,18 @@ export default function Header({
         >
           {branding ? (
             <>
-              {branding.logoUrl && (
+              {/*
+                Logo 28 px (r8) na všetkých šírkach. Kto logo nenahral, dostane
+                **značku Continea v bielej na `--accent`** — nie iniciálu
+                z názvu: iniciála vyzerá ako rozbité logo (NASADENIE, PR 3).
+              */}
+              {branding.logoUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={branding.logoUrl} alt="" width={26} height={26} style={{ display: "block" }} />
+                <img src={branding.logoUrl} alt="" width={28} height={28} className="header-logo" />
+              ) : (
+                <span className="header-mark" aria-hidden="true">
+                  <ContineoMark size={16} />
+                </span>
               )}
               {/*
                 **Celý názov na desktope, skratka na telefóne.** Rozhodnutie
@@ -337,15 +339,10 @@ export default function Header({
           <form className="header-search" method="get" action="/ask" role="search">
             <span className="header-search-icon" aria-hidden="true">
               {/*
-                Lupa bola jediná ikona mimo mriežky: vlastný `viewBox` 14
-                a `strokeWidth` 1,7. Pri 13 px z toho vyšiel iný ťah než
-                všade inde — presne ten rozchod, ktorý O6 pomenovalo.
-                Teraz je na `0 0 18 18` a hrúbku dopočíta `iconProps()`.
+                Značka Continea, nie lupa: nie je to hľadanie, je to otázka —
+                lupa by sľubovala filter zoznamu (NASADENIE, PR 3).
               */}
-              <svg {...iconProps(14)}>
-                <circle cx="7.7" cy="7.7" r="5.4" />
-                <path d="m11.8 11.8 4.2 4.2" />
-              </svg>
+              <ContineoMark size={16} />
             </span>
             <input
               ref={search}
@@ -361,6 +358,9 @@ export default function Header({
             <button type="submit" className="header-search-submit">
               {t.nav.searchSubmit}
             </button>
+            {/* Nápoveda skratky. Ozdoba pre oko s klávesnicou — čítačke ju
+                netreba čítať a pod 640 px sa skrýva, dotyk skratky nemá. */}
+            <kbd className="header-search-kbd" aria-hidden="true">{kbdHint}</kbd>
           </form>
         )}
 
@@ -396,11 +396,14 @@ export default function Header({
               className="bell"
               aria-label={t.notifications.bellLabel(notifications ?? 0)}
             >
-              <BellIcon />
-              {/* Červený krúžok cez roh zvončeka, nie pilulka vedľa neho —
-                  počet má byť signál na jeden pohľad. Pri nule nič. */}
+              {/* 21 px, nie predvolených 17: zvonček stojí vedľa avatara
+                  a v tej spoločnosti sa menšia ikona stráca. */}
+              <Icon name="notifications" size={21} />
+              {/* Bodka, nie číslo (NASADENIE, PR 3): signál „máš nové" na
+                  jeden pohľad. Počet povie `aria-label` a samotná stránka
+                  upozornení. Pri nule nič. */}
               {(notifications ?? 0) > 0 && (
-                <span className="bell-badge" aria-hidden="true">{notifications}</span>
+                <span className="bell-dot" aria-hidden="true" />
               )}
             </Link>
 

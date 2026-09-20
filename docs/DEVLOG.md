@@ -62,6 +62,20 @@ Overené screenshotmi (390/800/1280, svetlá aj tmavá) cez Playwright nad
 statickou kostrou — stačilo raz vidieť, že odznak na ikone „Úloh" sedí
 a ponuka „Viac" kotví vpravo.
 
+**PR 3 — hlavička.** Menej kódu, viac archeológie. Riadok hlavičky prešiel
+za mesiac cestou pevná výška → zalamovanie → pole v riadku bez vlastnej
+šírky — a NASADENIE ho vracia k pevným 56 px. Tentoraz to sedí, lebo dôvod
+zalamovania medzičasom zmizol: pole si šírku nepýta a značka má elipsu.
+Komentáre v CSS, ktoré tú históriu rozprávali, bolo treba prepísať, nie
+zmazať — ten príbeh je presne to, čo zabráni štvrtému kolu.
+
+Bodka namiesto čísla na zvončeku vyzerá ako ochudobnenie, ale nie je:
+číslo tam bolo na jeden pohľad aj tak nečitateľné (18 px krúžok) a počet
+hovorí `aria-label` aj stránka upozornení. V tmavej téme ma screenshot
+nachvíľu oklamal — dvojité overenie cez `getComputedStyle` potvrdilo, že
+`--accent`/`--on-accent` sa obracajú správne a dlaždica značky je v tmavej
+svetlá. Oko na 28 px klame, vypočítaný štýl nie.
+
 ---
 
 ## 2026-09-18 (noc) — mobilná knižnica, zhnité skripty a Voyage

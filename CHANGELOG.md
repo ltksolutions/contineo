@@ -4,6 +4,22 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Hlavička: jeden riadok 56 px, značka namiesto lupy, bodka namiesto čísla (2026-09-20)
+
+Podľa plánu nasadenia (`docs/design/NASADENIE.md`, PR 3):
+
+- **Riadok hlavičky je pevných 56 px na všetkých šírkach.** Zalamovanie bolo
+  poistkou z čias, keď si pole pýtalo pevnú šírku; odkedy si berie zvyšok
+  riadka, druhý riadok hlavičky bol len mrhaním zvislým miestom.
+- **Logo tenanta 28 px (r8); kto logo nenahral, má značku Continea v bielej
+  na `--accent`** — nie iniciálu z názvu, tá vyzerá ako rozbité logo.
+- **Pole „opýtať sa" má 36 px, r9 a značku Continea vľavo** — nie lupu:
+  nie je to hľadanie, je to otázka. Vpravo nápoveda `⌘K` (`Ctrl K` mimo
+  Macu), pod 640 px sa skrýva.
+- **Zvonček je v `Icon.tsx`** (`notifications`, tá istá mriežka 18×18) a
+  číslo na ňom nahradila **bodka 7 px** `--bad-fg` s lemom `--surface` —
+  signál na jeden pohľad; počet povie `aria-label` a stránka upozornení.
+
 ### Navigácia v troch tvaroch: spodná lišta, pás s prepadom, plný pás (2026-09-20)
 
 **Na telefóne bola navigácia zásuvka `<details>`, ktorú bolo treba najprv

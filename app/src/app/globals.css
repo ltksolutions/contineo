@@ -227,21 +227,36 @@ button:disabled { cursor: not-allowed; opacity: 0.55; }
  * (prepad do „Viac"), nie posúvanie hranice.
  */
 /*
- * Riadok hlavičky. **Zalamuje sa** (`flex-wrap`), nie tlačí.
+ * Riadok hlavičky. **56 px pevne, na všetkých šírkach** (NASADENIE, PR 3).
  *
- * Dovtedy mal výšku 56 px napevno, takže sa zlomiť nemohol a globálne pole by
- * sa doňho na telefóne nezmestilo — buď by vytlačilo názov organizácie, alebo
- * avatar. Návrh to rieši zalomením do druhého riadka: `min-height: 52px`
- * a `padding` namiesto pevnej výšky.
+ * Zalamovanie (`flex-wrap`) tu bývalo ako poistka z čias, keď si pole
+ * pýtalo pevný základ šírky a na telefóne riadok lámalo. Odkedy si pole
+ * šírku nepýta (`flex: 1 1 0` nižšie) a značka sa skracuje elipsou, nemá
+ * sa riadok prečo lámať — a druhý riadok hlavičky je mrhanie zvislým
+ * miestom presne tam, kde ho je najmenej.
  */
 .header-row {
   display: flex;
   align-items: center;
-  flex-wrap: wrap;
   gap: 10px;
-  min-height: 52px;
-  padding-block: 8px;
+  height: 56px;
   position: relative;
+}
+
+/* Logo tenanta — 28 px, r8, rovnaké na všetkých šírkach. */
+.header-logo { display: block; border-radius: 8px; }
+
+/* Predvolená značka, keď tenant logo nenahral: Contineo v bielej na
+   `--accent`. Iniciála z názvu vyzerá ako rozbité logo. */
+.header-mark {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background: var(--accent);
+  color: var(--on-accent);
 }
 
 /*
@@ -295,10 +310,9 @@ button:disabled { cursor: not-allowed; opacity: 0.55; }
 
 
 /* ── globálne pole v hlavičke ──────────────────────────────────────────────
-   `flex: 1 1 240px` s `min-width: 160px`: na širokej obrazovke vyplní stred
-   lišty, na úzkej sa **zlomí do druhého riadka** a zostane použiteľné. To je
-   dôvod, prečo je `.header-row` zalamovací — pole pod 160 px už nie je pole,
-   ale škvrna. */
+   `flex: 1 1 240px` s `min-width: 160px` na širokej obrazovke vyplní stred
+   lišty; pod 640 px si pole šírku nepýta vôbec (blok nižšie) — riadok je
+   pevných 56 px a lámať sa nemá čo. */
 .header-search {
   flex: 1 1 240px;
   min-width: 160px;
@@ -318,18 +332,19 @@ button:disabled { cursor: not-allowed; opacity: 0.55; }
 
 .header-search-input {
   width: 100%;
-  /* Rovnaká výška a veľkosť písma ako ostatné polia — lišta na to miesto
-     má (zvonček je tiež 40 px) a pod 16 px by iOS pri kliknutí do poľa
-     stránku priblížil. */
-  height: var(--control-h);
-  padding: 0 11px 0 32px;
+  /* 36 px a r9 z návrhu (NASADENIE, PR 3), rovnaké na každej šírke — pole
+     v hlavičke je tichšie než polia formulárov (`--control-h`). Písmo
+     zostáva `--fs-control`: pod 16 px by iOS pri kliknutí do poľa stránku
+     priblížil, a to nezávisí od výšky poľa. */
+  height: 36px;
+  padding: 0 11px 0 34px;
   font: inherit;
   font-size: var(--fs-control);
   line-height: 1.2;
   color: var(--ink);
   background: var(--bg);
   border: 1px solid var(--line);
-  border-radius: 8px;
+  border-radius: 9px;
   outline: none;
 }
 
@@ -383,9 +398,8 @@ button:disabled { cursor: not-allowed; opacity: 0.55; }
        a riadok sa zlomí. To bola príčina pôvodného problému, nie to, že
        pole v riadku vôbec je. */
     flex: 1 1 0;
-    /* Pod ~90 px už pole nie je pole, ale škvrna; radšej nech sa zlomí
-       riadok než aby zostalo neovládateľné. Pri „SFZ" na 320 px zostáva
-       zhruba dvojnásobok. */
+    /* Pod ~90 px už pole nie je pole, ale škvrna. Pri „SFZ" na 320 px
+       zostáva zhruba dvojnásobok. */
     min-width: 92px;
   }
 
@@ -428,11 +442,30 @@ button:disabled { cursor: not-allowed; opacity: 0.55; }
  * zalomeniu hlavičky. Preto to nebolo len smetie: bola to príčina toho, že
  * hlavička nesedela s návrhom ani po zmene základných pravidiel.
  */
+/* Nápoveda `⌘K` v poli. Pod 640 px sa skrýva — dotyk skratku nemá. */
+.header-search-kbd {
+  position: absolute;
+  right: 9px;
+  display: none;
+  padding: 2px 6px;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 550;
+  color: var(--muted);
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  pointer-events: none;
+}
+
 @media (min-width: 640px) {
   .header-row { gap: 16px; }
   /* Odznak „testovacie rozhranie" má aj `.tag`, ktorý je nižšie — bez
      `.header-row` v selektore by pri rovnakej špecifickosti vyhral on. */
   .header-row .header-badge { display: inline-flex; }
+  .header-search-kbd { display: inline-flex; }
+  /* Miesto pre nápovedu, aby ju dlhý text nepodliezol. */
+  .header-search-input { padding-right: 52px; }
 }
 
 /*
@@ -3422,11 +3455,12 @@ a.answer-source:focus-visible { outline: 2px solid var(--accent); outline-offset
    takže čítačka vidí vždy len jednu navigáciu. */
 
 /*
- * Odznak na zvončeku v hlavičke. Nie pilulka vedľa ikony (to je
- * `.app-nav-count` v navigácii), ale červený krúžok cez pravý horný roh
- * zvončeka — signál „máš nové" na jeden pohľad. Pri nule sa nekreslí
- * vôbec (kreslenie rieši Header). Lem vo farbe podkladu ho oddelí od
- * ikony aj v tmavej téme.
+ * Bodka na zvončeku v hlavičke (NASADENIE, PR 3). Nie pilulka s číslom
+ * (to je `.app-nav-count` v navigácii), ale 7 px bodka `--bad-fg` cez
+ * pravý horný roh zvončeka — signál „máš nové" na jeden pohľad; počet
+ * povie `aria-label` a stránka upozornení. Pri nule sa nekreslí vôbec
+ * (kreslenie rieši Header). Lem vo farbe podkladu ju oddelí od ikony
+ * aj v tmavej téme.
  */
 /*
  * Zvonček v hlavičke. Vlastný terč 40 px — kruh ako avatar vedľa neho, nie
@@ -3448,22 +3482,14 @@ a.answer-source:focus-visible { outline: 2px solid var(--accent); outline-offset
 .bell:hover { background: var(--surface-2); }
 .bell:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
-.bell-badge {
+.bell-dot {
   position: absolute;
-  top: 2px;
-  right: 1px;
-  min-width: 18px;
-  height: 18px;
-  padding: 0 5px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 9px;
-  background: #d92d20;
-  color: #fff;
-  font-size: 11px;
-  font-weight: 700;
-  line-height: 1;
+  top: 7px;
+  right: 8px;
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: var(--bad-fg);
   border: 2px solid var(--surface);
 }
 
