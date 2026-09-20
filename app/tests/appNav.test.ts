@@ -7,7 +7,7 @@
  */
 
 import { describe, it, expect } from "vitest"
-import { navItems, normalizeLayout, isActive } from "../src/lib/appNav"
+import { navItems, normalizeLayout, isActive, tabbarItems, moreGroups, isTabActive } from "../src/lib/appNav"
 import { isShellRoute, WITHOUT_SHELL } from "../src/lib/shellRoutes"
 
 describe("položky navigácie", () => {
@@ -121,5 +121,80 @@ describe("hranica shellu", () => {
       expect(route.startsWith("/")).toBe(true)
       expect(route.endsWith("/")).toBe(false)
     }
+  })
+})
+
+describe("spodná lišta (NASADENIE, PR 2)", () => {
+  const ALL = { isHr: true, isPeopleAdmin: true, isContentManager: true, isEvaluator: true }
+
+  it("poradie z návrhu: Prehľad · Opýtať sa · Knižnica · Úlohy · Viac", () => {
+    expect(tabbarItems(navItems(ALL)).map(o => o.key))
+      .toEqual(["overview", "ask", "library", "tasks", "more"])
+  })
+
+  it("bez roly správy obsahu má lišta štyri položky, nie náhradnú piatu", () => {
+    // Dopĺňať do počtu inou sekciou by znamenalo, že tá istá pozícia palca
+    // vedie u dvoch ľudí inam.
+    expect(tabbarItems(navItems({})).map(o => o.key))
+      .toEqual(["overview", "ask", "tasks", "more"])
+  })
+
+  it("Úlohy zlučujú počty a svietia na oboch cestách", () => {
+    const tasks = tabbarItems(navItems({}, { toAcknowledge: 2, toApprove: 1 })).find(o => o.key === "tasks")
+    expect(tasks?.count).toBe(3)
+    expect(tasks?.activeFor).toEqual(["/documents", "/approvals"])
+    expect(isTabActive("/approvals", tasks!)).toBe(true)
+    expect(isTabActive("/documents/sfz:stanovy", tasks!)).toBe(true)
+  })
+
+  it("nepočítané zostáva nepočítané, nie nula", () => {
+    // Súčet dvoch `undefined` nesmie byť `0`: nula tvrdí „nič nečaká",
+    // a to sa nezisťovalo.
+    expect(tabbarItems(navItems({})).find(o => o.key === "tasks")?.count).toBe(undefined)
+    expect(tabbarItems(navItems({}, { toApprove: 0 })).find(o => o.key === "tasks")?.count).toBe(0)
+  })
+
+  it("Viac svieti na sekciách pod ním, na schvaľovaní nie", () => {
+    const more = tabbarItems(navItems(ALL)).find(o => o.key === "more")
+    expect(isTabActive("/more", more!)).toBe(true)
+    expect(isTabActive("/hr/evidence", more!)).toBe(true)
+    expect(isTabActive("/approvals", more!)).toBe(false)
+  })
+})
+
+describe("zoznam na /more (NASADENIE, PR 2)", () => {
+  const ALL = { isHr: true, isPeopleAdmin: true, isContentManager: true, isEvaluator: true }
+
+  it("skupiny: Organizácia (adresár, osoby) a Správa (zvyšok povinností a rolí)", () => {
+    const groups = moreGroups(navItems(ALL))
+    expect(groups.map(g => g.key)).toEqual(["organisation", "management"])
+    expect(groups[0].items.map(o => o.key)).toEqual(["directory", "people"])
+    expect(groups[1].items.map(o => o.key)).toEqual(["toApprove", "assigned", "evidence", "evaluation"])
+  })
+
+  it("prázdna skupina sa nevracia", () => {
+    // Bez roly správy osôb je v Organizácii len adresár; bez oboch by
+    // nadpis skupiny visel nad ničím.
+    const groups = moreGroups(navItems({}))
+    expect(groups.map(g => g.key)).toEqual(["organisation", "management"])
+    expect(groups[0].items.map(o => o.key)).toEqual(["directory"])
+  })
+
+  it("lišta a /more spolu pokryjú každú položku navigácie", () => {
+    // Stratený odkaz je výpadok sekcie: čo nie je v lište, musí byť na /more.
+    const items = navItems(ALL)
+    const bar = tabbarItems(items)
+    const covered = new Set([
+      ...bar.flatMap(o => o.activeFor),
+      ...moreGroups(items).flatMap(g => g.items.map(o => o.href)),
+    ])
+    for (const o of items) expect(covered.has(o.href)).toBe(true)
+  })
+
+  it("knižnica je v lište, na /more sa neopakuje", () => {
+    const hrefs = moreGroups(navItems(ALL)).flatMap(g => g.items.map(o => o.href))
+    expect(hrefs).not.toContain("/library")
+    expect(hrefs).not.toContain("/")
+    expect(hrefs).not.toContain("/ask")
   })
 })

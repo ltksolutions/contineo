@@ -329,6 +329,13 @@ interface Dictionary {
     /** Kostra na čas čakania — jediné, čo o nej čítačka obrazovky povie. */
     loading: string
     sections: string
+    /** Spodná lišta na telefóne — zlúčené „Na potvrdenie" + „Na schválenie". */
+    tasks: string
+    /** Piata položka lišty aj prepad pásu „Viac N" — vedie na `/more`. */
+    more: string
+    /** Nadpisy skupín na `/more`. */
+    groupOrganisation: string
+    groupManagement: string
     /** Čo znamená štítok s počtom — čítačka nesmie prečítať holé číslo. */
     waiting: (n: number) => string
     toAcknowledge: string
@@ -1950,6 +1957,10 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     overview: "Prehľad",
     loading: "Načítava sa…",
     sections: "Sekcie",
+    tasks: "Úlohy",
+    more: "Viac",
+    groupOrganisation: "Organizácia",
+    groupManagement: "Správa",
     waiting: n => (n === 1 ? "čaká 1" : n <= 4 ? `čakajú ${n}` : `čaká ${n}`),
     toAcknowledge: "Na potvrdenie",
     assigned: "Pridelené normy",
@@ -3774,6 +3785,10 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     overview: "Přehled",
     loading: "Načítá se…",
     sections: "Sekce",
+    tasks: "Úkoly",
+    more: "Více",
+    groupOrganisation: "Organizace",
+    groupManagement: "Správa",
     waiting: n => (n === 1 ? "čeká 1" : n <= 4 ? `čekají ${n}` : `čeká ${n}`),
     toAcknowledge: "K potvrzení",
     assigned: "Přidělené předpisy",
@@ -5591,6 +5606,10 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     overview: "Overview",
     loading: "Loading…",
     sections: "Sections",
+    tasks: "Tasks",
+    more: "More",
+    groupOrganisation: "Organisation",
+    groupManagement: "Management",
     waiting: n => `${n} waiting`,
     toAcknowledge: "To acknowledge",
     assigned: "Assigned documents",

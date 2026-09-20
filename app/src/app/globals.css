@@ -905,6 +905,10 @@ html[data-theme="dark"] select.field-input {
  */
 .app-nav-item.is-active { color: var(--accent); font-weight: 650; }
 
+/* Pás sa nikdy neroluje vodorovne (NASADENIE, PR 2) a nesie v sebe
+   ukotvenú ponuku „Viac" — orezanie by ju odseklo. */
+.app-nav--topbar { position: relative; overflow: visible; }
+
 .app-nav--topbar .app-nav-item {
   border-bottom: 2px solid transparent;
   border-radius: 0;
@@ -3410,16 +3414,12 @@ a.answer-source:focus-visible { outline: 2px solid var(--accent); outline-offset
 
 .panel-action:hover { border-color: var(--accent); color: var(--accent); }
 
-/* ── navigácia: štítok s počtom a zásuvka na úzkej obrazovke ────────────────
-   Prah 940 px nie je okrúhle číslo, je meraný: pri všetkých rolách (HR +
-   správa osôb + správa obsahu) končí posledná položka pásu na 879 px pri
-   viewporte 390 px, teda samotné položky zaberajú ~855 px. K tomu dvakrát
-   `--pad-main` (28 px na širokom) a dvakrát 8 px vlastného odsadenia pásu —
-   pás potrebuje ~930 px. Pod prahom sa preto nahradí zásuvkou.
-
-   Obe formy sú v DOM naraz (viď komentár v `AppNav.tsx`); prepína ich toto
-   `@media`. Čo je `display: none`, nie je ani v strome prístupnosti, takže
-   čítačka vidí vždy len jednu navigáciu. */
+/* ── navigácia: štítok s počtom, spodná lišta a prepad „Viac" ───────────────
+   Tri tvary jednej navigácie (NASADENIE, PR 2): pod 640 px pevná spodná
+   lišta, od 640 px pás pod hlavičkou s prepadom „Viac N", od 1024 px ten
+   istý pás, len nižší. Tvary sú v DOM naraz (viď `AppNav.tsx`); prepína
+   ich `@media`. Čo je `display: none`, nie je ani v strome prístupnosti,
+   takže čítačka vidí vždy len jednu navigáciu. */
 
 /*
  * Odznak na zvončeku v hlavičke. Nie pilulka vedľa ikony (to je
@@ -3483,72 +3483,172 @@ a.answer-source:focus-visible { outline: 2px solid var(--accent); outline-offset
   font-variant-numeric: tabular-nums;
 }
 
-.app-nav-drawer {
-  background: var(--surface);
-  border-bottom: 1px solid var(--line);
-}
+/*
+ * Prepad pásu — „Viac N".
+ *
+ * Čo sa do pásu nezmestí, spadne do `<details>` na jeho konci; bez
+ * JavaScriptu je to prvých 6 položiek + „Viac" so zvyškom, skript počet
+ * len spresní meraním (`AppNav.tsx`).
+ */
+.app-nav-more { position: relative; margin-left: auto; }
 
-/* Prepínač je celý terčom: 44 px na výšku, ako žiada krok 7 handoffu. */
-.app-nav-toggle {
-  display: flex;
-  align-items: center;
-  gap: 2px;
-  min-height: 44px;
-  padding: 0 var(--pad-main);
-  font-size: 13px;
-  font-weight: 600;
+.app-nav-more > .app-nav-more-toggle {
+  gap: 5px;
   cursor: pointer;
   list-style: none;
+  font-variant-numeric: tabular-nums;
 }
 
 /* Safari kreslí trojuholník cez `::-webkit-details-marker`, nie cez
    `list-style` — bez tohto by tam zostal aj po `list-style: none`. */
-.app-nav-toggle::-webkit-details-marker { display: none; }
+.app-nav-more > .app-nav-more-toggle::-webkit-details-marker { display: none; }
 
-/* Šípka je `::after`, nie znak v texte: text patrí prekladu, otáčanie
-   patrí štýlu — inak by sa smer šípky prekladal do troch jazykov. */
-.app-nav-toggle::after {
-  content: "";
-  width: 7px;
-  height: 7px;
-  margin-left: auto;
-  border-right: 1.5px solid var(--muted);
-  border-bottom: 1.5px solid var(--muted);
-  transform: rotate(45deg) translate(-2px, -2px);
-  transition: transform 0.15s ease;
+/* Ponuka ukotvená vpravo — ľavé ukotvenie by na konci pásu pretieklo
+   z obrazovky. */
+.app-nav-more-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 24;
+  display: grid;
+  min-width: 230px;
+  padding: 6px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  box-shadow: var(--shadow);
 }
 
-.app-nav-drawer details[open] .app-nav-toggle::after {
-  transform: rotate(-135deg) translate(-2px, -2px);
+/* V ponuke je aktívna položka dlaždica ako v bočnom paneli — podčiarknutie
+   sa nemá k čomu vzťahovať. */
+.app-nav-more-menu .app-nav-item { border-bottom: 0; border-radius: 8px; }
+.app-nav-more-menu .app-nav-item:hover { background: var(--surface-2); }
+.app-nav-more-menu .app-nav-item.is-active { background: var(--accent-soft); }
+
+/* Skrytý dvojník pásu so všetkými položkami — dáva skriptu šírky.
+   `visibility: hidden`, nie `display: none`: meranie potrebuje rozloženie;
+   takto skrytý nie je v strome prístupnosti a nedá sa naň dostať klávesnicou. */
+.app-nav--measure {
+  position: absolute;
+  top: 0;
+  left: -9999px;
+  width: max-content;
+  visibility: hidden;
+  pointer-events: none;
 }
 
-.app-nav-toggle:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+/*
+ * Spodná lišta na telefóne (pod 640 px, NASADENIE PR 2).
+ *
+ * Výška 56 px + `env(safe-area-inset-bottom)` (domáci indikátor iPhonu),
+ * ikona 21 px nad popiskom 10,5 px, aktívna položka v `--accent`.
+ * Nahrádza zásuvku `<details>`: lišta je vždy na obrazovke a palec na ňu
+ * dosiahne bez hľadania.
+ */
+.app-nav-tabbar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 25;
+  display: flex;
+  align-items: stretch;
+  height: calc(56px + env(safe-area-inset-bottom));
+  padding: 0 4px env(safe-area-inset-bottom);
+  background: var(--surface);
+  border-top: 1px solid var(--line);
+}
 
-/* Zásuvka je zoznam pod sebou, nie pás — `overflow-x` a smer sa preto
-   prepisujú oproti spoločnému `.app-nav`. */
-.app-nav--drawer {
+.app-nav-tab {
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
   flex-direction: column;
-  gap: 0;
-  overflow-x: visible;
-  padding: 0 0 4px;
-  border-bottom: 0;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  font-size: 10.5px;
+  font-weight: 550;
+  color: var(--muted);
+  text-decoration: none;
+  white-space: nowrap;
 }
 
-.app-nav--drawer .app-nav-item {
-  min-height: 44px;
-  padding: 0 var(--pad-main);
-  border-radius: 0;
+.app-nav-tab.is-active { color: var(--accent); font-weight: 650; }
+.app-nav-tab:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+
+/* Odznak sedí na ikone, nie v riadku textu — v stĺpci by roztiahol položku. */
+.app-nav-tab-icon { position: relative; display: inline-flex; }
+
+.app-nav-tab-icon .app-nav-count {
+  position: absolute;
+  top: -7px;
+  left: calc(100% - 8px);
+  margin-left: 0;
+  border: 2px solid var(--surface);
 }
 
-.app-nav--drawer .app-nav-item.is-active { background: var(--accent-soft); }
+/*
+ * Ktorý tvar je vidieť. Pod 640 px nesie navigáciu spodná lišta — pás aj
+ * bočný panel sa skryjú; od 640 px naopak. Od 1024 px sa pás zníži na
+ * 42 px: všetky položky sa zmestia a dotyk už nie je hlavný vstup.
+ */
+@media (max-width: 639px) {
+  .app-nav--topbar, .app-nav--sidebar { display: none; }
+
+  /* Obsah nesmie skončiť pod pevnou lištou. */
+  .app-main { padding-bottom: calc(72px + env(safe-area-inset-bottom)); }
+}
+
+@media (min-width: 640px) {
+  .app-nav-tabbar { display: none; }
+}
 
 @media (min-width: 1024px) {
-  .app-nav-drawer { display: none; }
+  .app-nav--topbar .app-nav-item { min-height: 42px; }
 }
 
-@media (max-width: 1023px) {
-  .app-nav--topbar { display: none; }
+/*
+ * /more — zvyšok navigácie na telefóne. Riadky 52 px z návrhu; nadpisy
+ * skupín sú tiché ako `.facet-group-title`.
+ */
+.more-group { margin: 0 0 18px; }
+
+.more-group-title {
+  margin: 0 0 6px;
+  font-size: 12px;
+  font-weight: 650;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--muted);
 }
+
+.more-list {
+  display: grid;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.more-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 52px;
+  padding: 0 14px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.more-row + .more-row { border-top: 1px solid var(--line); }
+.more-row:hover { background: var(--surface-2); }
+.more-row:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+.more-row > svg { flex: none; color: var(--muted); }
+.more-row-label { flex: 1 1 auto; min-width: 0; }
+.more-row-chevron { color: var(--muted); font-size: 18px; line-height: 1; }
 
 
 /* Dátum účinnosti v zozname dokumentov: `nowrap` a `tabular-nums`, aby
@@ -3702,6 +3802,9 @@ html[data-theme="dark"] { --skeleton-sheen: rgba(255, 255, 255, 0.07); }
    vidno pás aj zásuvku naraz. Chytila to až vizuálna kontrola na 375 px. */
 .skeleton-nav { gap: 14px; align-items: center; min-height: 44px; }
 .skeleton-nav-item { height: 14px; width: 84px; flex: 0 0 auto; }
+
+/* Terč v kostre spodnej lišty — štvorec na mieste 21 px ikony. */
+.skeleton-tab-icon { height: 21px; border-radius: 6px; }
 
 
 /* ── prúžok priebehu navigácie (O20) ────────────────────────────────────────
