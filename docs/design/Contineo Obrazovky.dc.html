@@ -1,0 +1,1306 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas" />
+<style>
+:root{--bg:#f5f6f8;--surface:#fff;--surface-2:#eceef1;--ink:#161b22;--muted:#5c6675;--line:rgba(20,28,42,.12);--accent:#1f4ed8;--accent-strong:#173aa1;--accent-soft:rgba(31,78,216,.11);--ok-bg:#ecfdf5;--ok-fg:#047857;--bad-bg:#fef2f2;--bad-fg:#b91c1c;--warn-bg:#fffbeb;--warn-fg:#b45309}
+*{box-sizing:border-box}
+body{margin:0;background:#e6e8ec;color:var(--ink);font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;-webkit-font-smoothing:antialiased}
+a{color:var(--accent);text-decoration:none}a:hover{color:var(--accent-strong)}
+button{font-family:inherit}
+</style>
+</helmet>
+
+<section style="padding:40px;display:flex;flex-direction:column;gap:24px">
+
+  <div style="max-width:1240px;padding:18px 22px;border-radius:14px;background:var(--surface);border:1px solid var(--line)">
+    <div style="font-size:11px;font-weight:650;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:8px">Obrazovky · skratky</div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;font-size:13px">
+      <a href="#s-prehlad" style="padding:5px 11px;border-radius:8px;background:var(--surface-2);font-weight:550">Prehľad</a>
+      <a href="#s-ask" style="padding:5px 11px;border-radius:8px;background:var(--surface-2);font-weight:550">Opýtať sa</a>
+      <a href="#s-potvrdenie" style="padding:5px 11px;border-radius:8px;background:var(--surface-2);font-weight:550">Na potvrdenie</a>
+      <a href="#s-schvalenie" style="padding:5px 11px;border-radius:8px;background:var(--surface-2);font-weight:550">Na schválenie</a>
+      <a href="#s-adresar" style="padding:5px 11px;border-radius:8px;background:var(--surface-2);font-weight:550">Adresár</a>
+      <a href="#s-kniznica" style="padding:5px 11px;border-radius:8px;background:var(--surface-2);font-weight:550">Knižnica</a>
+      <a href="#s-detail" style="padding:5px 11px;border-radius:8px;background:var(--surface-2);font-weight:550">Detail dokumentu</a>
+    </div>
+  </div>
+
+  <div style="max-width:1240px;padding:22px 26px;border-radius:14px;background:var(--ink);color:#fff">
+    <div style="font-size:11px;font-weight:650;letter-spacing:.07em;text-transform:uppercase;color:rgba(255,255,255,.55);margin-bottom:8px">Turn 5 · Zjednotená sada prvkov</div>
+    <h1 style="font-size:21px;letter-spacing:-.02em;margin:0 0 8px">Jeden prvok, tri šírky — nie tri prvky</h1>
+    <p style="font-size:13.5px;line-height:1.6;margin:0;max-width:86ch;color:rgba(255,255,255,.8);text-wrap:pretty">Každý prvok nižšie má jednu definíciu a mení sa len tam, kde to šírka vynúti. Hlavička, navigácia, pätička, pilulky, tlačidlá, polia, karty a riadky tabuľky sú spoločné pre všetky obrazovky — obrazovka z nich už len skladá. Rozmery zodpovedajú tokenom v <code style="font-size:12.5px;background:rgba(255,255,255,.12);padding:1px 5px;border-radius:4px">globals.css</code>; ikony sú zo <code style="font-size:12.5px;background:rgba(255,255,255,.12);padding:1px 5px;border-radius:4px">Icon.tsx</code> (mriežka 18×18, vykreslený ťah vždy 1,5 px), značka je <code style="font-size:12.5px;background:rgba(255,255,255,.12);padding:1px 5px;border-radius:4px">ContineoMark</code>.</p>
+  </div>
+
+  <div style="max-width:1240px;display:flex;flex-direction:column;gap:16px">
+
+    <div style="padding:18px 20px;border-radius:14px;background:var(--surface);border:1px solid var(--line)">
+      <div style="font-size:11px;font-weight:650;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:4px">01 · Hlavička</div>
+      <p style="font-size:13px;color:var(--muted);margin:0 0 12px;max-width:80ch">Vždy: logo · názov organizácie · pole „opýtať sa“ cez celú voľnú šírku · zvonček · avatár. Výška 56 px na všetkých šírkach. Pole nesie značku Continea, nie lupu — nie je to hľadanie, je to otázka.</p>
+      <div style="display:flex;gap:14px;flex-wrap:wrap;align-items:flex-start;padding:12px 14px;margin-bottom:14px;border-radius:10px;background:var(--bg);border:1px solid var(--line)">
+        <div style="flex:1 1 300px;min-width:260px">
+          <div style="font-size:11.5px;font-weight:600;margin-bottom:6px">Logo organizácie — dva stavy</div>
+          <div style="display:flex;gap:16px;align-items:center;margin-bottom:8px">
+            <span style="display:flex;align-items:center;gap:8px"><span style="display:grid;place-items:center;width:28px;height:28px;border-radius:8px;background:var(--accent);color:#fff">{{ mark17 }}</span><span style="font-size:12px;color:var(--muted)">predvolené</span></span>
+            <span style="display:flex;align-items:center;gap:8px"><span style="display:grid;place-items:center;width:28px;height:28px;border-radius:8px;overflow:hidden;background:var(--surface-2);border:1px dashed var(--line)"><span style="font-size:8px;color:var(--muted);font-family:ui-monospace,Menlo,monospace">logo</span></span><span style="font-size:12px;color:var(--muted)">nahraté tenantom</span></span>
+          </div>
+          <p style="font-size:12.5px;color:var(--muted);margin:0;line-height:1.5">Kým organizácia logo nenahrá, v hlavičke je značka Continea — nie iniciála z názvu. Iniciála vyzerá ako rozbité logo; značka vyzerá ako zámer. Logo sa servíruje z <code style="font-size:12px;background:var(--surface-2);padding:1px 4px;border-radius:4px">/api/brand/&lt;code&gt;</code>, v hlavičke má 28 px.</p>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <div style="font-size:11.5px;font-weight:600;color:var(--muted)">Desktop ≥ 1024</div>
+        <div style="display:flex;align-items:center;gap:14px;height:56px;padding:0 24px;background:var(--surface);border:1px solid var(--line);border-radius:10px">
+          <span style="display:grid;place-items:center;width:28px;height:28px;border-radius:8px;background:var(--accent);color:#fff">{{ mark17 }}</span>
+          <span style="font-size:14px;font-weight:650;letter-spacing:-.01em;white-space:nowrap">Slovenský futbalový zväz</span>
+          <div style="flex:1;min-width:0;display:flex;align-items:center;gap:9px;height:36px;padding:0 12px;border-radius:9px;background:var(--bg);border:1px solid var(--line)"><span style="color:var(--muted);display:grid;place-items:center">{{ mark16 }}</span><span style="flex:1;font-size:13px;color:var(--muted)">Opýtajte sa svojich dokumentov…</span><span style="font-size:11.5px;color:var(--muted);padding:2px 6px;border-radius:5px;background:var(--surface-2);font-family:ui-monospace,Menlo,monospace">⌘K</span></div>
+          <span style="position:relative;display:grid;place-items:center;width:36px;height:36px;color:var(--muted)">{{ bell18 }}<span style="position:absolute;top:7px;right:7px;width:7px;height:7px;border-radius:50%;background:var(--bad-fg);box-shadow:0 0 0 2px var(--surface)"></span></span>
+          <span style="display:grid;place-items:center;width:30px;height:30px;border-radius:50%;background:var(--surface-2);font-size:11px;font-weight:650">JL</span>
+        </div>
+        <div style="font-size:11.5px;font-weight:600;color:var(--muted);margin-top:4px">Telefón &lt; 640 — názov sa skracuje, ⌘K mizne, ciele 44 px</div>
+        <div style="width:390px;display:flex;align-items:center;gap:10px;height:56px;padding:0 12px;background:var(--surface);border:1px solid var(--line);border-radius:10px">
+          <span style="display:grid;place-items:center;width:30px;height:30px;border-radius:8px;background:var(--accent);color:#fff">{{ mark18 }}</span>
+          <span style="font-size:15px;font-weight:650;white-space:nowrap">SFZ</span>
+            <div style="flex:1;min-width:0;display:flex;align-items:center;gap:9px;height:36px;padding:0 12px;border-radius:9px;background:var(--bg);border:1px solid var(--line)"><span style="color:var(--muted);display:grid;place-items:center">{{ mark16 }}</span><span style="flex:1;min-width:0;font-size:13px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Opýtajte sa…</span></div>
+          <span style="position:relative;display:grid;place-items:center;width:44px;height:44px;color:var(--muted)">{{ bell21 }}<span style="position:absolute;top:9px;right:9px;width:8px;height:8px;border-radius:50%;background:var(--bad-fg);box-shadow:0 0 0 2px var(--surface)"></span></span>
+          <span style="display:grid;place-items:center;width:34px;height:34px;border-radius:50%;background:var(--surface-2);font-size:12px;font-weight:650">JL</span>
+        </div>
+      </div>
+    </div>
+
+    <div style="padding:18px 20px;border-radius:14px;background:var(--surface);border:1px solid var(--line)">
+      <div style="font-size:11px;font-weight:650;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:4px">02 · Navigácia</div>
+      <p style="font-size:13px;color:var(--muted);margin:0 0 14px;max-width:80ch">Jedno pole položiek z <code style="font-size:12.5px;background:var(--surface-2);padding:1px 5px;border-radius:4px">navItems()</code>, tri tvary. Počet sa kreslí len keď je &gt; 0 — číslo, ktoré nič nežiada, je ozdoba. Ikony sú z <code style="font-size:12.5px;background:var(--surface-2);padding:1px 5px;border-radius:4px">Icon.tsx</code> a kľúčujú sa tými istými <code style="font-size:12.5px;background:var(--surface-2);padding:1px 5px;border-radius:4px">NavKey</code> hodnotami; <strong style="color:var(--ink)">zvonček je návrh na doplnenie</strong> (<code style="font-size:12.5px;background:var(--surface-2);padding:1px 5px;border-radius:4px">notifications</code>) — nakreslený na tej istej mriežke, nie prevzatý odinakiaľ.</p>
+      <div style="display:flex;gap:16px;flex-wrap:wrap;padding:12px 14px;margin-bottom:14px;border-radius:10px;background:var(--bg);border:1px solid var(--line)">
+        <sc-for list="{{ iconSet }}" as="i" hint-placeholder-count="12">
+          <span style="display:flex;flex-direction:column;align-items:center;gap:5px;width:78px;text-align:center"><span style="color:var(--ink)">{{ i.el }}</span><span style="font-size:10.5px;color:var(--muted);font-family:ui-monospace,Menlo,monospace;line-height:1.3">{{ i.name }}</span></span>
+        </sc-for>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:14px">
+        <div>
+          <div style="font-size:11.5px;font-weight:600;color:var(--muted);margin-bottom:6px">Desktop ≥ 1024 — pás pod hlavičkou, 42 px, všetko sa zmestí</div>
+          <div style="display:flex;gap:2px;padding:0 20px;background:var(--surface);border:1px solid var(--line);border-radius:10px;flex-wrap:nowrap;min-width:1024px">
+            <sc-for list="{{ nav }}" as="n" hint-placeholder-count="9">
+              <span style="display:flex;align-items:center;gap:6px;height:42px;padding:0 12px;font-size:13.5px;font-weight:{{ n.weight }};color:{{ n.fg }};border-bottom:2px solid {{ n.line }};white-space:nowrap">{{ n.label }}<sc-if value="{{ n.count }}" hint-placeholder-val="{{ false }}"><span style="font-size:11px;font-weight:600;padding:1px 6px;border-radius:10px;background:var(--surface-2);color:var(--muted)">{{ n.count }}</span></sc-if></span>
+            </sc-for>
+          </div>
+        </div>
+        <div>
+          <div style="font-size:11.5px;font-weight:600;color:var(--muted);margin-bottom:6px">Keď sa pás nezmestí — posledná položka je „Viac“ s ponukou zvyšku. Pás sa nikdy neroluje vodorovne: skrytá položka, na ktorú sa nedá kliknúť bez hľadania, je stratená položka.</div>
+          <div style="position:relative;display:flex;align-items:stretch;padding:0 20px;background:var(--surface);border:1px solid var(--line);border-radius:10px">
+            <div style="flex:1;min-width:0;display:flex;gap:2px;overflow:hidden">
+              <sc-for list="{{ navFit }}" as="n" hint-placeholder-count="6">
+                <span style="display:flex;align-items:center;gap:6px;height:42px;padding:0 12px;font-size:13.5px;font-weight:{{ n.weight }};color:{{ n.fg }};border-bottom:2px solid {{ n.line }};white-space:nowrap">{{ n.label }}<sc-if value="{{ n.count }}" hint-placeholder-val="{{ false }}"><span style="font-size:11px;font-weight:600;padding:1px 6px;border-radius:10px;background:var(--surface-2);color:var(--muted)">{{ n.count }}</span></sc-if></span>
+              </sc-for>
+            </div>
+            <button onClick="{{ toggleNavMore }}" style="all:unset;flex:0 0 auto;display:flex;align-items:center;gap:6px;height:42px;padding:0 12px;margin-left:4px;font-size:13.5px;font-weight:550;color:{{ navMoreFg }};border-bottom:2px solid {{ navMoreLine }};cursor:pointer;white-space:nowrap">{{ moreIcon }}Viac<span style="font-size:11px;font-weight:600;padding:1px 6px;border-radius:10px;background:var(--surface-2);color:var(--muted)">{{ navRestCount }}</span></button>
+            <sc-if value="{{ navMoreOpen }}" hint-placeholder-val="{{ true }}">
+              <div style="position:absolute;top:calc(100% + 4px);right:12px;z-index:20;min-width:220px;padding:6px;border-radius:11px;background:var(--surface);border:1px solid var(--line);box-shadow:0 12px 30px rgba(20,28,42,.16)">
+                <sc-for list="{{ navRest }}" as="n" hint-placeholder-count="4">
+                  <span style="display:flex;align-items:center;gap:8px;height:38px;padding:0 10px;border-radius:8px;font-size:13.5px;color:var(--ink)"><span style="flex:1">{{ n.label }}</span><sc-if value="{{ n.count }}" hint-placeholder-val="{{ false }}"><span style="font-size:11px;font-weight:600;padding:1px 6px;border-radius:10px;background:var(--surface-2);color:var(--muted)">{{ n.count }}</span></sc-if></span>
+                </sc-for>
+              </div>
+            </sc-if>
+          </div>
+        </div>
+        <div>
+          <div style="font-size:11.5px;font-weight:600;color:var(--muted);margin-bottom:6px">Telefón — spodná lišta, 5 položiek, zvyšok do „Viac“</div>
+          <div style="width:390px;display:flex;padding:6px;background:var(--surface);border:1px solid var(--line);border-radius:10px">
+            <sc-for list="{{ tabs }}" as="t" hint-placeholder-count="5">
+              <span style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;height:56px;justify-content:center;position:relative;color:{{ t.fg }}">
+                <span style="height:21px;display:grid;place-items:center">{{ t.icon }}</span>
+                <span style="font-size:10.5px;font-weight:{{ t.weight }}">{{ t.label }}</span>
+                <sc-if value="{{ t.badge }}" hint-placeholder-val="{{ false }}"><span style="position:absolute;top:4px;left:calc(50% + 6px);min-width:17px;height:17px;padding:0 5px;border-radius:9px;background:var(--bad-fg);color:#fff;font-size:10.5px;font-weight:700;display:grid;place-items:center">{{ t.badge }}</span></sc-if>
+              </span>
+            </sc-for>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(360px,1fr));gap:16px">
+      <div style="padding:18px 20px;border-radius:14px;background:var(--surface);border:1px solid var(--line)">
+        <div style="font-size:11px;font-weight:650;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:4px">03 · Pilulky a značky</div>
+        <p style="font-size:13px;color:var(--muted);margin:0 0 14px">Tri druhy, nezamieňať: <strong style="color:var(--ink)">stav</strong> (farebný, needitovateľný), <strong style="color:var(--ink)">filter</strong> (v tenant farbe, s ×), <strong style="color:var(--ink)">voľba</strong> (v sheete, s rámikom).</p>
+        <div style="display:flex;flex-direction:column;gap:12px">
+          <div>
+            <div style="font-size:11px;font-weight:600;color:var(--muted);margin-bottom:6px">Stav · 11.5px/600 · 2 × 7 px · r5</div>
+            <div style="display:flex;gap:6px;flex-wrap:wrap">
+              <sc-for list="{{ statusPills }}" as="p" hint-placeholder-count="4">
+                <span style="padding:2px 7px;border-radius:5px;font-size:11.5px;font-weight:600;background:{{ p.bg }};color:{{ p.fg }}">{{ p.label }}</span>
+              </sc-for>
+            </div>
+          </div>
+          <div>
+            <div style="font-size:11px;font-weight:600;color:var(--muted);margin-bottom:6px">Filter · 12px · h28 · r6 · accent-soft</div>
+            <div style="display:flex;gap:6px;flex-wrap:wrap">
+              <span style="display:inline-flex;align-items:center;gap:5px;height:28px;padding:0 5px 0 9px;border-radius:6px;background:var(--accent-soft);color:var(--accent-strong);font-size:12px">Kategória: Norma<span style="width:16px;text-align:center;font-size:13px">×</span></span>
+              <span style="display:inline-flex;align-items:center;gap:5px;height:28px;padding:0 5px 0 9px;border-radius:6px;background:var(--accent-soft);color:var(--accent-strong);font-size:12px">Štítok: Registrácia<span style="width:16px;text-align:center;font-size:13px">×</span></span>
+            </div>
+          </div>
+          <div>
+            <div style="font-size:11px;font-weight:600;color:var(--muted);margin-bottom:6px">Voľba · 14px · h36 · r9 · rámik (sheet)</div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <span style="display:inline-flex;align-items:center;gap:6px;height:36px;padding:0 10px;border-radius:9px;border:1px solid var(--accent);background:var(--accent-soft);color:var(--accent-strong);font-size:14px;font-weight:600">Norma<span style="font-size:12px;opacity:.65">41</span></span>
+              <span style="display:inline-flex;align-items:center;gap:6px;height:36px;padding:0 10px;border-radius:9px;border:1px solid var(--line);background:var(--surface);font-size:14px">Smernica<span style="font-size:12px;opacity:.65">62</span></span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div style="padding:18px 20px;border-radius:14px;background:var(--surface);border:1px solid var(--line)">
+        <div style="font-size:11px;font-weight:650;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:4px">04 · Tlačidlá</div>
+        <p style="font-size:13px;color:var(--muted);margin:0 0 14px">Na obrazovke je <strong style="color:var(--ink)">jedno</strong> primárne. Desktop h36, tablet h40–44, telefón h48–50 a celá šírka dole pri palci.</p>
+        <div style="display:flex;flex-direction:column;gap:12px">
+          <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+            <button style="height:36px;padding:0 14px;border:0;border-radius:9px;background:var(--accent);color:#fff;font-size:13px;font-weight:600;cursor:pointer">Primárne</button>
+            <button style="height:36px;padding:0 12px;border:1px solid var(--line);border-radius:9px;background:var(--surface);font-size:13px;font-weight:550;cursor:pointer">Sekundárne</button>
+            <button style="height:36px;padding:0 12px;border:0;border-radius:9px;background:transparent;color:var(--muted);font-size:13px;cursor:pointer">Tiché</button>
+            <button style="all:unset;display:grid;place-items:center;width:36px;height:36px;border-radius:9px;background:var(--surface-2);font-size:16px;cursor:pointer">⋯</button>
+            <button style="height:36px;padding:0 12px;border:1px solid var(--line);border-radius:9px;background:var(--surface);color:var(--bad-fg);font-size:13px;font-weight:550;cursor:pointer">Zmazať</button>
+          </div>
+          <div style="width:320px"><button style="width:100%;height:50px;border:0;border-radius:12px;background:var(--accent);color:#fff;font-size:16px;font-weight:600;cursor:pointer">Potvrdiť prečítanie</button></div>
+          <div style="width:320px"><button style="width:100%;height:50px;border:0;border-radius:12px;background:var(--ok-bg);color:var(--ok-fg);font-size:16px;font-weight:600;cursor:pointer">✓ Potvrdené 20. 9. 2026</button></div>
+        </div>
+      </div>
+
+      <div style="padding:18px 20px;border-radius:14px;background:var(--surface);border:1px solid var(--line)">
+        <div style="font-size:11px;font-weight:650;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:4px">05 · Polia a multiselect</div>
+        <p style="font-size:13px;color:var(--muted);margin:0 0 14px">Desktop h34–36 · r8–9, telefón h48 · r12. Focus vždy <code style="font-size:12px;background:var(--surface-2);padding:1px 4px;border-radius:4px">accent + 3px accent-soft</code>.</p>
+        <div style="display:flex;flex-direction:column;gap:11px;max-width:330px">
+          <label style="display:block"><span style="display:block;font-size:11px;font-weight:650;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:5px">Názov</span><input value="Registračný a prestupový poriadok" style="width:100%;height:36px;padding:0 10px;font-size:13px;background:var(--bg);border:1px solid var(--line);border-radius:9px;outline:none;color:var(--ink)" style-focus="border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)" /></label>
+          <div><span style="display:block;font-size:11px;font-weight:650;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:5px">Štítky · multiselect s vyhľadávaním</span>
+            <div style="display:flex;flex-wrap:wrap;align-items:center;gap:4px;min-height:36px;padding:4px 6px;border-radius:9px;border:1px solid var(--accent);box-shadow:0 0 0 3px var(--accent-soft);background:var(--surface)">
+              <span style="display:inline-flex;align-items:center;gap:4px;height:24px;padding:0 4px 0 8px;border-radius:6px;background:var(--surface-2);font-size:12px">Poriadok<span style="width:18px;text-align:center;color:var(--muted)">×</span></span>
+              <span style="display:inline-flex;align-items:center;gap:4px;height:24px;padding:0 4px 0 8px;border-radius:6px;background:var(--surface-2);font-size:12px">Registrácia<span style="width:18px;text-align:center;color:var(--muted)">×</span></span>
+              <span style="flex:1;font-size:12.5px;color:var(--muted);padding:0 4px">hľadať…</span><span style="font-size:11px;color:var(--muted)">2/7</span>
+            </div>
+          </div>
+          <div style="padding:6px;border-radius:9px;border:1px solid var(--line);background:var(--surface);box-shadow:0 8px 20px rgba(20,28,42,.1)">
+            <sc-for list="{{ msOptions }}" as="o" hint-placeholder-count="3">
+              <span style="display:flex;align-items:center;gap:8px;height:30px;padding:0 6px;border-radius:6px;background:{{ o.bg }};font-size:13px"><span style="width:14px;color:var(--accent);font-weight:800;font-size:10px">{{ o.mark }}</span><span style="flex:1">{{ o.label }}</span><span style="font-size:11px;color:var(--muted)">{{ o.count }}</span></span>
+            </sc-for>
+          </div>
+        </div>
+      </div>
+
+      <div style="grid-column:1/-1;padding:18px 20px;border-radius:14px;background:var(--surface);border:1px solid var(--line)">
+        <div style="font-size:11px;font-weight:650;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:4px">06 · Riadok a karta</div>
+        <p style="font-size:13px;color:var(--muted);margin:0 0 14px">Ten istý záznam. Desktop = riadok tabuľky, telefón a tablet = karta. Nič sa nestráca, len sa preskladá.</p>
+        <div style="display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap">
+          <div style="flex:1 1 560px;min-width:520px;border-radius:10px;border:1px solid var(--line);overflow:hidden">
+            <div style="display:flex;align-items:center;gap:10px;padding:7px 10px;background:var(--bg);font-size:10.5px;font-weight:650;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)"><span style="width:15px"></span><span style="flex:1">Dokument</span><span style="width:60px">Verzia</span><span style="width:74px">Stav</span><span style="width:96px">Potvrdenia</span></div>
+            <div style="display:flex;align-items:flex-start;gap:10px;padding:8px 10px;background:var(--accent-soft)">
+              <span style="display:grid;place-items:center;width:15px;height:15px;margin-top:2px;border-radius:4px;border:1px solid var(--accent);background:var(--accent);color:#fff;font-size:9px;font-weight:800">✓</span>
+              <span style="flex:1;min-width:0"><span style="display:block;font-size:13px;font-weight:600">Registračný a prestupový poriadok</span><span style="display:block;font-size:11px;color:var(--muted)">RPP-2026-04 · Právne</span></span>
+              <span style="width:60px;font-size:12.5px;font-variant-numeric:tabular-nums">v4.2</span>
+              <span style="width:74px"><span style="padding:2px 7px;border-radius:5px;font-size:11.5px;font-weight:600;background:var(--ok-bg);color:var(--ok-fg)">Platný</span></span>
+              <span style="width:96px;display:flex;align-items:center;gap:6px"><span style="flex:1;height:5px;border-radius:3px;background:var(--surface-2);overflow:hidden;display:block"><span style="display:block;height:100%;width:68%;background:var(--accent)"></span></span><span style="font-size:11px;color:var(--muted)">68 %</span></span>
+            </div>
+          </div>
+          <div style="width:330px;display:flex;gap:12px;padding:12px 12px 12px 10px;border-radius:12px;background:var(--accent-soft);border:1px solid var(--accent)">
+            <span style="flex:0 0 22px;width:22px;height:22px;margin-top:2px;border-radius:6px;border:1.5px solid var(--accent);background:var(--accent);color:#fff;display:grid;place-items:center;font-size:12px;font-weight:800">✓</span>
+            <span style="flex:1;min-width:0">
+              <span style="display:flex;align-items:center;gap:6px;margin-bottom:4px"><span style="font-size:11px;font-weight:600;padding:2px 7px;border-radius:5px;background:var(--ok-bg);color:var(--ok-fg)">Platný</span><span style="font-size:12px;color:var(--muted)">Norma</span><span style="flex:1"></span><span style="font-size:12px;color:var(--muted)">v4.2</span></span>
+              <span style="display:block;font-size:15px;font-weight:600;line-height:1.3">Registračný a prestupový poriadok</span>
+              <span style="display:block;font-size:12px;color:var(--muted);margin-top:3px">RPP-2026-04 · Právne</span>
+              <span style="display:flex;align-items:center;gap:8px;margin-top:9px"><span style="flex:1;height:5px;border-radius:3px;background:var(--surface-2);overflow:hidden;display:block"><span style="display:block;height:100%;width:68%;background:var(--accent)"></span></span><span style="font-size:11.5px;color:var(--muted)">68 %</span></span>
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <div style="padding:18px 20px;border-radius:14px;background:var(--surface);border:1px solid var(--line)">
+        <div style="font-size:11px;font-weight:650;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:4px">07 · Prázdny stav a hlásenie</div>
+        <p style="font-size:13px;color:var(--muted);margin:0 0 14px">Prázdno nie je chyba — povie, prečo je prázdno a čo s tým. Hlásenia používajú <code style="font-size:12px;background:var(--surface-2);padding:1px 4px;border-radius:4px">Notice</code>.</p>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <div style="padding:22px 18px;border-radius:11px;border:1px dashed var(--line);text-align:center">
+            <div style="font-size:14px;font-weight:600;margin-bottom:4px">Nemáte nič na potvrdenie</div>
+            <div style="font-size:12.5px;color:var(--muted);line-height:1.5;margin-bottom:12px">Keď vám niekto pridelí normu, objaví sa tu aj s termínom.</div>
+            <button style="height:36px;padding:0 14px;border:1px solid var(--line);border-radius:9px;background:var(--surface);font-size:13px;font-weight:600;cursor:pointer">Prejsť do knižnice</button>
+          </div>
+          <div style="display:flex;gap:9px;padding:10px 12px;border-radius:9px;background:var(--ok-bg);border:1px solid rgba(4,120,87,.2)"><span style="color:var(--ok-fg);font-weight:800;font-size:12px">✓</span><span style="font-size:13px;color:var(--ok-fg);line-height:1.45">Dokument bol poslaný na schválenie Marekovi Horákovi.</span></div>
+          <div style="display:flex;gap:9px;padding:10px 12px;border-radius:9px;background:var(--bad-bg);border:1px solid rgba(185,28,28,.2)"><span style="color:var(--bad-fg);font-weight:800;font-size:12px">!</span><span style="font-size:13px;color:var(--bad-fg);line-height:1.45">Súbor má 62 MB — najviac 40 MB. Skúste PDF bez skenovaných príloh.</span></div>
+        </div>
+      </div>
+
+      <div style="padding:18px 20px;border-radius:14px;background:var(--surface);border:1px solid var(--line)">
+        <div style="font-size:11px;font-weight:650;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:4px">08 · Pätička</div>
+        <p style="font-size:13px;color:var(--muted);margin:0 0 14px">Jedna na celý portál. Na telefóne je nad spodnou lištou a odkazy sa lámu do stĺpca.</p>
+        <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:14px 20px;border-radius:10px;background:var(--bg);border:1px solid var(--line)">
+          <span style="display:flex;align-items:center;gap:8px;color:var(--muted)">{{ mark16 }}<span style="font-size:12.5px;font-weight:600;color:var(--ink)">Contineo</span></span>
+          <span style="font-size:12px;color:var(--muted)">Opýtajte sa. Nehľadajte.</span>
+          <span style="flex:1"></span>
+          <span style="display:flex;gap:14px;font-size:12.5px"><a href="#5">Príručka</a><a href="#5">Ochrana údajov</a><a href="#5">Stav systému</a></span>
+          <span style="font-size:11.5px;color:var(--muted);font-family:ui-monospace,Menlo,monospace">v2026.9.3</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="s-prehlad" style="display:flex;flex-direction:column;gap:12px;padding-top:16px">
+    <div style="display:flex;align-items:baseline;gap:10px"><h2 style="font-size:17px;letter-spacing:-.02em;margin:0">Prehľad</h2><span style="font-size:12.5px;color:var(--muted)">/ · domov po prihlásení · čo odo mňa niekto čaká</span></div>
+    <div style="display:flex;gap:20px;align-items:flex-start;flex-wrap:wrap">
+
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <span style="font-size:11.5px;font-weight:600;color:var(--muted)">Desktop 1440</span>
+        <div style="width:1440px;height:760px;border-radius:14px;background:var(--bg);border:1px solid rgba(20,28,42,.18);box-shadow:0 24px 50px rgba(0,0,0,.12);overflow:hidden;display:flex;flex-direction:column">
+          <div style="display:flex;align-items:center;gap:14px;height:56px;padding:0 24px;background:var(--surface);border-bottom:1px solid var(--line);flex:0 0 auto">
+            <span style="display:grid;place-items:center;width:28px;height:28px;border-radius:8px;background:var(--accent);color:#fff">{{ mark17 }}</span>
+            <span style="font-size:14px;font-weight:650;letter-spacing:-.01em;white-space:nowrap">Slovenský futbalový zväz</span>
+            <div style="flex:1;min-width:0;display:flex;align-items:center;gap:9px;height:36px;padding:0 12px;border-radius:9px;background:var(--bg);border:1px solid var(--line)"><span style="color:var(--muted);display:grid;place-items:center">{{ mark16 }}</span><span style="flex:1;font-size:13px;color:var(--muted)">Opýtajte sa svojich dokumentov…</span><span style="font-size:11.5px;color:var(--muted);padding:2px 6px;border-radius:5px;background:var(--surface-2);font-family:ui-monospace,Menlo,monospace">⌘K</span></div>
+            <span style="position:relative;display:grid;place-items:center;width:36px;height:36px;color:var(--muted)">{{ bell18 }}<span style="position:absolute;top:7px;right:7px;width:7px;height:7px;border-radius:50%;background:var(--bad-fg);box-shadow:0 0 0 2px var(--surface)"></span></span>
+            <span style="display:grid;place-items:center;width:30px;height:30px;border-radius:50%;background:var(--surface-2);font-size:11px;font-weight:650">JL</span>
+          </div>
+          <div style="display:flex;gap:2px;padding:0 24px;background:var(--surface);border-bottom:1px solid var(--line);flex:0 0 auto">
+            <sc-for list="{{ navD }}" as="n" hint-placeholder-count="10"><span style="display:flex;align-items:center;gap:6px;height:42px;padding:0 12px;font-size:13.5px;font-weight:{{ n.weight }};color:{{ n.fg }};border-bottom:2px solid {{ n.line }};white-space:nowrap">{{ n.label }}<sc-if value="{{ n.count }}" hint-placeholder-val="{{ false }}"><span style="font-size:11px;font-weight:600;padding:1px 6px;border-radius:10px;background:var(--surface-2);color:var(--muted)">{{ n.count }}</span></sc-if></span></sc-for>
+          </div>
+          <div style="flex:1;min-height:0;overflow:auto;padding:24px 28px">
+            <div style="max-width:1120px;margin:0 auto;display:flex;flex-direction:column;gap:16px">
+              <div style="padding:20px 22px;border-radius:12px;background:var(--surface);border:1px solid var(--line)">
+                <h1 style="font-size:22px;letter-spacing:-.02em;margin:0 0 3px">Dobrý deň, Ján</h1>
+                <p style="font-size:13.5px;color:var(--muted);margin:0 0 14px">Nedeľa 20. 9. · šesť vecí čaká na vás. Odpoveď príde z predpisov vašej organizácie, s citáciou.</p>
+                <div style="display:flex;gap:8px">
+                  <div style="flex:1;display:flex;align-items:center;gap:10px;height:42px;padding:0 14px;border-radius:10px;background:var(--bg);border:1px solid var(--line)"><span style="color:var(--muted);display:grid;place-items:center">{{ mark18 }}</span><span style="font-size:14px;color:var(--muted)">Napr. Do kedy treba nahlásiť prestup hráča?</span></div>
+                  <button style="height:42px;padding:0 18px;border:0;border-radius:10px;background:var(--accent);color:#fff;font-size:14px;font-weight:600;cursor:pointer">Opýtať sa</button>
+                </div>
+                <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:10px">
+                  <sc-for list="{{ prompts }}" as="p" hint-placeholder-count="3"><span style="padding:5px 11px;border:1px solid var(--line);border-radius:20px;font-size:12.5px;color:var(--muted)">{{ p.label }}</span></sc-for>
+                </div>
+              </div>
+              <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px">
+                <sc-for list="{{ kpis }}" as="k" hint-placeholder-count="4">
+                  <div style="padding:14px 15px;border-radius:11px;background:var(--surface);border:1px solid var(--line)">
+                    <div style="font-size:11px;font-weight:650;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);margin-bottom:6px">{{ k.label }}</div>
+                    <div style="display:flex;align-items:baseline;gap:8px"><span style="font-size:27px;font-weight:640;letter-spacing:-.03em;font-variant-numeric:tabular-nums;color:{{ k.fg }}">{{ k.value }}</span><span style="font-size:12px;color:var(--muted)">{{ k.note }}</span></div>
+                  </div>
+                </sc-for>
+              </div>
+              <div style="display:grid;grid-template-columns:1.2fr 1fr;gap:14px;align-items:start">
+                <div style="border-radius:12px;background:var(--surface);border:1px solid var(--line);overflow:hidden">
+                  <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 15px;border-bottom:1px solid var(--line)"><span style="font-size:14px;font-weight:650">Vyžaduje vašu pozornosť</span><span style="font-size:12px;color:var(--muted)">termín</span></div>
+                  <sc-for list="{{ todo }}" as="d" hint-placeholder-count="4">
+                    <div style="display:flex;align-items:center;gap:12px;padding:11px 15px;border-bottom:1px solid var(--line)">
+                      <span style="flex:1;min-width:0"><span style="display:block;font-size:13.5px;font-weight:550;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ d.title }}</span><span style="display:block;font-size:12px;color:var(--muted);margin-top:1px">{{ d.meta }}</span></span>
+                      <span style="font-size:12px;font-weight:600;padding:3px 8px;border-radius:6px;background:{{ d.dueBg }};color:{{ d.dueFg }};white-space:nowrap">{{ d.due }}</span>
+                      <button style="height:32px;padding:0 12px;border:1px solid var(--line);border-radius:8px;background:var(--surface);font-size:12.5px;font-weight:600;cursor:pointer;white-space:nowrap">{{ d.action }}</button>
+                    </div>
+                  </sc-for>
+                </div>
+                <div style="border-radius:12px;background:var(--surface);border:1px solid var(--line);overflow:hidden">
+                  <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 15px;border-bottom:1px solid var(--line)"><span style="font-size:14px;font-weight:650">Novinky v knižnici</span><a href="#s-detail" style="font-size:12px;font-weight:600">Celá knižnica →</a></div>
+                  <sc-for list="{{ news }}" as="n" hint-placeholder-count="3">
+                    <div style="display:flex;gap:10px;padding:11px 15px;border-bottom:1px solid var(--line);align-items:flex-start">
+                      <span style="margin-top:2px;font-size:10.5px;font-weight:650;padding:2px 6px;border-radius:5px;background:{{ n.chipBg }};color:{{ n.chipFg }};white-space:nowrap">{{ n.chip }}</span>
+                      <span style="flex:1;min-width:0"><span style="display:block;font-size:13px">{{ n.title }}</span><span style="display:block;font-size:12px;color:var(--muted);margin-top:1px">{{ n.meta }}</span></span>
+                    </div>
+                  </sc-for>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <span style="font-size:11.5px;font-weight:600;color:var(--muted)">Tablet 834</span>
+        <div style="width:834px;height:760px;border-radius:18px;background:var(--bg);border:1px solid rgba(20,28,42,.18);box-shadow:0 24px 50px rgba(0,0,0,.12);overflow:hidden;display:flex;flex-direction:column">
+          <div style="display:flex;align-items:center;gap:12px;height:56px;padding:0 18px;background:var(--surface);border-bottom:1px solid var(--line);flex:0 0 auto">
+            <span style="display:grid;place-items:center;width:28px;height:28px;border-radius:8px;background:var(--accent);color:#fff">{{ mark17 }}</span>
+            <span style="font-size:14px;font-weight:650;white-space:nowrap">SFZ</span>
+            <div style="flex:1;min-width:0;display:flex;align-items:center;gap:9px;height:36px;padding:0 12px;border-radius:9px;background:var(--bg);border:1px solid var(--line)"><span style="color:var(--muted);display:grid;place-items:center">{{ mark16 }}</span><span style="flex:1;font-size:13px;color:var(--muted)">Opýtajte sa svojich dokumentov…</span></div>
+            <span style="position:relative;display:grid;place-items:center;width:40px;height:40px;color:var(--muted)">{{ bell19 }}<span style="position:absolute;top:8px;right:8px;width:7px;height:7px;border-radius:50%;background:var(--bad-fg);box-shadow:0 0 0 2px var(--surface)"></span></span>
+            <span style="display:grid;place-items:center;width:32px;height:32px;border-radius:50%;background:var(--surface-2);font-size:11.5px;font-weight:650">JL</span>
+          </div>
+          <div style="position:relative;display:flex;align-items:stretch;padding:0 12px;background:var(--surface);border-bottom:1px solid var(--line);flex:0 0 auto">
+            <div style="flex:1;min-width:0;display:flex;gap:2px;overflow:hidden">
+              <sc-for list="{{ navHomeFit }}" as="n" hint-placeholder-count="6"><span style="display:flex;align-items:center;gap:6px;height:44px;padding:0 12px;font-size:13.5px;font-weight:{{ n.weight }};color:{{ n.fg }};border-bottom:2px solid {{ n.line }};white-space:nowrap">{{ n.label }}<sc-if value="{{ n.count }}" hint-placeholder-val="{{ false }}"><span style="font-size:11px;font-weight:600;padding:1px 6px;border-radius:10px;background:var(--surface-2);color:var(--muted)">{{ n.count }}</span></sc-if></span></sc-for>
+            </div>
+            <span style="flex:0 0 auto;display:flex;align-items:center;gap:6px;height:44px;padding:0 12px;margin-left:4px;font-size:13.5px;font-weight:550;color:var(--muted);white-space:nowrap">{{ moreIcon }}Viac<span style="font-size:11px;font-weight:600;padding:1px 6px;border-radius:10px;background:var(--surface-2);color:var(--muted)">{{ navRestCount }}</span></span>
+          </div>
+          <div style="flex:1;min-height:0;overflow:auto;padding:18px;display:flex;flex-direction:column;gap:14px">
+            <div style="padding:18px;border-radius:12px;background:var(--surface);border:1px solid var(--line)">
+              <h1 style="font-size:21px;letter-spacing:-.02em;margin:0 0 3px">Dobrý deň, Ján</h1>
+              <p style="font-size:13.5px;color:var(--muted);margin:0 0 13px">Nedeľa 20. 9. · šesť vecí čaká na vás.</p>
+              <div style="display:flex;gap:8px">
+                <div style="flex:1;display:flex;align-items:center;gap:10px;height:44px;padding:0 14px;border-radius:11px;background:var(--bg);border:1px solid var(--line)"><span style="color:var(--muted);display:grid;place-items:center">{{ mark18 }}</span><span style="font-size:14px;color:var(--muted)">Napr. Do kedy treba nahlásiť prestup?</span></div>
+                <button style="height:44px;padding:0 16px;border:0;border-radius:11px;background:var(--accent);color:#fff;font-size:14px;font-weight:600;cursor:pointer">Opýtať sa</button>
+              </div>
+            </div>
+            <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px">
+              <sc-for list="{{ kpis }}" as="k" hint-placeholder-count="4">
+                <div style="padding:14px 15px;border-radius:11px;background:var(--surface);border:1px solid var(--line)">
+                  <div style="font-size:11px;font-weight:650;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);margin-bottom:6px">{{ k.label }}</div>
+                  <div style="display:flex;align-items:baseline;gap:8px"><span style="font-size:26px;font-weight:640;letter-spacing:-.03em;font-variant-numeric:tabular-nums;color:{{ k.fg }}">{{ k.value }}</span><span style="font-size:12px;color:var(--muted)">{{ k.note }}</span></div>
+                </div>
+              </sc-for>
+            </div>
+            <div style="border-radius:12px;background:var(--surface);border:1px solid var(--line);overflow:hidden">
+              <div style="padding:12px 15px;border-bottom:1px solid var(--line);font-size:14px;font-weight:650">Vyžaduje vašu pozornosť</div>
+              <sc-for list="{{ todo }}" as="d" hint-placeholder-count="4">
+                <div style="display:flex;align-items:center;gap:12px;padding:11px 15px;border-bottom:1px solid var(--line)">
+                  <span style="flex:1;min-width:0"><span style="display:block;font-size:13.5px;font-weight:550;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ d.title }}</span><span style="display:block;font-size:12px;color:var(--muted)">{{ d.meta }}</span></span>
+                  <span style="font-size:12px;font-weight:600;padding:3px 8px;border-radius:6px;background:{{ d.dueBg }};color:{{ d.dueFg }};white-space:nowrap">{{ d.due }}</span>
+                  <button style="height:34px;padding:0 12px;border:1px solid var(--line);border-radius:8px;background:var(--surface);font-size:12.5px;font-weight:600;cursor:pointer">{{ d.action }}</button>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <span style="font-size:11.5px;font-weight:600;color:var(--muted)">Telefón 390</span>
+        <div style="width:390px;height:760px;border-radius:26px;background:var(--bg);border:1px solid rgba(20,28,42,.18);box-shadow:0 24px 50px rgba(0,0,0,.12);overflow:hidden;display:flex;flex-direction:column;position:relative">
+          <div style="display:flex;align-items:center;gap:10px;height:56px;padding:0 12px;background:var(--surface);border-bottom:1px solid var(--line);flex:0 0 auto">
+            <span style="display:grid;place-items:center;width:30px;height:30px;border-radius:8px;background:var(--accent);color:#fff">{{ mark18 }}</span>
+            <span style="font-size:15px;font-weight:650;white-space:nowrap">SFZ</span>
+            <div style="flex:1;min-width:0;display:flex;align-items:center;gap:9px;height:36px;padding:0 12px;border-radius:9px;background:var(--bg);border:1px solid var(--line)"><span style="color:var(--muted);display:grid;place-items:center">{{ mark16 }}</span><span style="flex:1;min-width:0;font-size:13px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Opýtajte sa…</span></div>
+            <span style="position:relative;display:grid;place-items:center;width:44px;height:44px;color:var(--muted)">{{ bell21 }}<span style="position:absolute;top:9px;right:9px;width:8px;height:8px;border-radius:50%;background:var(--bad-fg);box-shadow:0 0 0 2px var(--surface)"></span></span>
+            <span style="display:grid;place-items:center;width:34px;height:34px;border-radius:50%;background:var(--surface-2);font-size:12px;font-weight:650">JL</span>
+          </div>
+          <div style="flex:1;min-height:0;overflow:auto;padding:16px 14px 90px;display:flex;flex-direction:column;gap:14px">
+            <div style="flex:0 0 auto"><h1 style="font-size:24px;letter-spacing:-.02em;margin:0 0 2px">Dobrý deň, Ján</h1><p style="font-size:14px;color:var(--muted);margin:0">Nedeľa 20. 9. · 6 vecí čaká na vás</p></div>
+            <div style="flex:0 0 auto;display:flex;align-items:center;gap:10px;height:48px;padding:0 14px;border-radius:12px;background:var(--surface);border:1px solid var(--line)"><span style="color:var(--muted);display:grid;place-items:center">{{ mark19 }}</span><span style="font-size:15px;color:var(--muted)">Opýtajte sa…</span></div>
+            <div style="flex:0 0 auto;display:grid;grid-template-columns:1fr 1fr;gap:10px">
+              <sc-for list="{{ kpis }}" as="k" hint-placeholder-count="4">
+                <div style="padding:14px;border-radius:12px;background:var(--surface);border:1px solid var(--line)">
+                  <div style="font-size:11px;font-weight:650;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);margin-bottom:6px">{{ k.label }}</div>
+                  <div style="font-size:26px;font-weight:640;letter-spacing:-.03em;font-variant-numeric:tabular-nums;color:{{ k.fg }}">{{ k.value }}</div>
+                  <div style="font-size:12px;color:var(--muted)">{{ k.note }}</div>
+                </div>
+              </sc-for>
+            </div>
+            <div style="flex:0 0 auto;border-radius:12px;background:var(--surface);border:1px solid var(--line);overflow:hidden">
+              <div style="padding:12px 14px;border-bottom:1px solid var(--line);font-size:14px;font-weight:650">Vyžaduje vašu pozornosť</div>
+              <sc-for list="{{ todo }}" as="d" hint-placeholder-count="4">
+                <div style="display:flex;align-items:center;gap:12px;min-height:60px;padding:10px 14px;border-bottom:1px solid var(--line)">
+                  <span style="flex:1;min-width:0"><span style="display:block;font-size:14px;font-weight:550;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ d.title }}</span><span style="display:block;font-size:12px;color:var(--muted);margin-top:2px">{{ d.meta }}</span></span>
+                  <span style="font-size:12px;font-weight:600;padding:4px 8px;border-radius:6px;background:{{ d.dueBg }};color:{{ d.dueFg }};white-space:nowrap">{{ d.due }}</span>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+          <div style="position:absolute;left:0;right:0;bottom:0;display:flex;padding:6px 6px 14px;background:rgba(255,255,255,.94);backdrop-filter:blur(14px);border-top:1px solid var(--line)">
+            <sc-for list="{{ tabsHome }}" as="t" hint-placeholder-count="5">
+              <span style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;height:56px;justify-content:center;position:relative;color:{{ t.fg }}"><span style="height:21px;display:grid;place-items:center">{{ t.icon }}</span><span style="font-size:10.5px;font-weight:{{ t.weight }}">{{ t.label }}</span><sc-if value="{{ t.badge }}" hint-placeholder-val="{{ false }}"><span style="position:absolute;top:4px;left:calc(50% + 6px);min-width:17px;height:17px;padding:0 5px;border-radius:9px;background:var(--bad-fg);color:#fff;font-size:10.5px;font-weight:700;display:grid;place-items:center">{{ t.badge }}</span></sc-if></span>
+            </sc-for>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="s-ask" style="display:flex;flex-direction:column;gap:12px;padding-top:16px">
+    <div style="display:flex;align-items:baseline;gap:10px"><h2 style="font-size:17px;letter-spacing:-.02em;margin:0">Opýtať sa</h2><span style="font-size:12.5px;color:var(--muted)">/ask · odpoveď s citáciou · hodnotenie pod ňou</span></div>
+    <div style="display:flex;gap:20px;align-items:flex-start;flex-wrap:wrap">
+
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <span style="font-size:11.5px;font-weight:600;color:var(--muted)">Desktop 1440</span>
+        <div style="width:1440px;height:760px;border-radius:14px;background:var(--bg);border:1px solid rgba(20,28,42,.18);box-shadow:0 24px 50px rgba(0,0,0,.12);overflow:hidden;display:flex;flex-direction:column">
+          <div style="display:flex;align-items:center;gap:14px;height:56px;padding:0 24px;background:var(--surface);border-bottom:1px solid var(--line);flex:0 0 auto">
+            <span style="display:grid;place-items:center;width:28px;height:28px;border-radius:8px;background:var(--accent);color:#fff">{{ mark17 }}</span>
+            <span style="font-size:14px;font-weight:650;white-space:nowrap">Slovenský futbalový zväz</span>
+            <div style="flex:1;min-width:0;display:flex;align-items:center;gap:9px;height:36px;padding:0 12px;border-radius:9px;background:var(--surface);border:1px solid var(--accent);box-shadow:0 0 0 3px var(--accent-soft)"><span style="color:var(--accent);display:grid;place-items:center">{{ mark16 }}</span><span style="flex:1;font-size:13px;color:var(--ink)">Do kedy treba nahlásiť prestup hráča?</span></div>
+            <span style="position:relative;display:grid;place-items:center;width:36px;height:36px;color:var(--muted)">{{ bell18 }}<span style="position:absolute;top:7px;right:7px;width:7px;height:7px;border-radius:50%;background:var(--bad-fg);box-shadow:0 0 0 2px var(--surface)"></span></span>
+            <span style="display:grid;place-items:center;width:30px;height:30px;border-radius:50%;background:var(--surface-2);font-size:11px;font-weight:650">JL</span>
+          </div>
+          <div style="display:flex;gap:2px;padding:0 24px;background:var(--surface);border-bottom:1px solid var(--line);flex:0 0 auto">
+            <sc-for list="{{ navAsk }}" as="n" hint-placeholder-count="10"><span style="display:flex;align-items:center;gap:6px;height:42px;padding:0 12px;font-size:13.5px;font-weight:{{ n.weight }};color:{{ n.fg }};border-bottom:2px solid {{ n.line }};white-space:nowrap">{{ n.label }}<sc-if value="{{ n.count }}" hint-placeholder-val="{{ false }}"><span style="font-size:11px;font-weight:600;padding:1px 6px;border-radius:10px;background:var(--surface-2);color:var(--muted)">{{ n.count }}</span></sc-if></span></sc-for>
+          </div>
+          <div style="flex:1;min-height:0;overflow:auto;padding:24px 28px">
+            <div style="max-width:820px;margin:0 auto;display:flex;flex-direction:column;gap:14px">
+              <div style="display:flex;gap:7px;align-items:center;flex-wrap:wrap"><span style="font-size:12px;color:var(--muted)">Hľadať len v:</span>
+                <span style="padding:5px 11px;border:1px solid var(--accent);border-radius:20px;font-size:12.5px;font-weight:600;color:var(--accent-strong);background:var(--accent-soft)">Knižnica</span>
+                <span style="padding:5px 11px;border:1px solid var(--line);border-radius:20px;font-size:12.5px;color:var(--muted)">Intranet</span>
+                <span style="padding:5px 11px;border:1px solid var(--line);border-radius:20px;font-size:12.5px;color:var(--muted)">Verejný web</span>
+                <span style="padding:5px 11px;border:1px solid var(--line);border-radius:20px;font-size:12.5px;color:var(--muted)">Archív</span>
+              </div>
+              <div style="padding:20px 22px;border-radius:12px;background:var(--surface);border:1px solid var(--line)">
+                <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px"><span style="color:var(--accent);display:grid;place-items:center">{{ mark18 }}</span><span style="font-size:11px;font-weight:650;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)">Odpoveď z vašich dokumentov</span></div>
+                <p style="font-size:15px;line-height:1.7;margin:0 0 14px;text-wrap:pretty">Prestup treba nahlásiť <strong>najneskôr 15 dní pred začiatkom súťažného obdobia</strong><sup style="font-size:10px;color:var(--accent);font-weight:700">[1]</sup>. Materský klub sa vyjadruje do 7 dní; ak sa nevyjadrí, považuje sa to za súhlas<sup style="font-size:10px;color:var(--accent);font-weight:700">[2]</sup>. Pre hráčov do 15 rokov platí navyše súhlas zákonného zástupcu<sup style="font-size:10px;color:var(--accent);font-weight:700">[3]</sup>.</p>
+                <div style="display:flex;flex-direction:column;gap:8px">
+                  <sc-for list="{{ citations }}" as="c" hint-placeholder-count="3">
+                    <div style="display:flex;gap:10px;padding:10px 12px;border-radius:9px;background:var(--bg);border:1px solid var(--line)">
+                      <span style="flex:0 0 20px;font-size:11.5px;font-weight:700;color:var(--accent)">{{ c.n }}</span>
+                      <span style="flex:1;min-width:0"><span style="display:block;font-size:13px;font-weight:600">{{ c.title }}</span><span style="display:block;font-size:12px;color:var(--muted);margin-top:1px">{{ c.meta }}</span></span>
+                      <span style="font-size:11.5px;color:var(--muted);font-variant-numeric:tabular-nums">{{ c.score }}</span>
+                    </div>
+                  </sc-for>
+                </div>
+                <div style="display:flex;align-items:center;gap:10px;margin-top:14px;padding-top:12px;border-top:1px solid var(--line)">
+                  <span style="font-size:12.5px;color:var(--muted)">Bola odpoveď užitočná?</span>
+                  <button style="height:30px;padding:0 12px;border:1px solid var(--line);border-radius:7px;background:var(--surface);font-size:12.5px;cursor:pointer">Áno</button>
+                  <button style="height:30px;padding:0 12px;border:1px solid var(--line);border-radius:7px;background:var(--surface);font-size:12.5px;cursor:pointer">Nesedí</button>
+                  <span style="flex:1"></span>
+                  <a href="#s-ask" style="font-size:12.5px;font-weight:600">Napísať, čo je zle</a>
+                </div>
+              </div>
+              <div style="font-size:11px;font-weight:650;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)">Ďalšie zhody v knižnici</div>
+              <div style="display:flex;flex-direction:column;gap:8px">
+                <div style="padding:13px 14px;border-radius:10px;background:var(--surface);border:1px solid var(--line)"><div style="display:flex;gap:8px;align-items:baseline;margin-bottom:3px"><span style="font-size:13.5px;font-weight:600">Súťažný poriadok v6.1</span><span style="font-size:11.5px;color:var(--muted)">Norma · Súťaže</span></div><div style="font-size:13px;line-height:1.55;color:var(--muted)">…prihlášku do súťaže podáva klub najneskôr 30 dní pred jej začiatkom; k prihláške priloží zoznam registrovaných hráčov…</div></div>
+                <div style="padding:13px 14px;border-radius:10px;background:var(--surface);border:1px solid var(--line)"><div style="display:flex;gap:8px;align-items:baseline;margin-bottom:3px"><span style="font-size:13.5px;font-weight:600">Disciplinárny poriadok v5.0</span><span style="font-size:11.5px;color:var(--muted)">Norma · Právne</span></div><div style="font-size:13px;line-height:1.55;color:var(--muted)">…neoprávnený štart hráča bez platnej registrácie sa posudzuje ako previnenie podľa článku 12…</div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <span style="font-size:11.5px;font-weight:600;color:var(--muted)">Telefón 390 — odpoveď je celá obrazovka, zdroje pod ňou</span>
+        <div style="width:390px;height:760px;border-radius:26px;background:var(--bg);border:1px solid rgba(20,28,42,.18);box-shadow:0 24px 50px rgba(0,0,0,.12);overflow:hidden;display:flex;flex-direction:column;position:relative">
+          <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--surface);border-bottom:1px solid var(--line);flex:0 0 auto">
+            <div style="flex:1;display:flex;align-items:center;gap:10px;height:44px;padding:0 12px;border-radius:11px;background:var(--bg);border:1px solid var(--line)"><span style="color:var(--accent);display:grid;place-items:center">{{ mark18 }}</span><span style="flex:1;min-width:0;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Do kedy nahlásiť prestup?</span></div>
+          </div>
+          <div style="flex:1;min-height:0;overflow:auto;padding:14px;display:flex;flex-direction:column;gap:12px;padding-bottom:90px">
+            <div style="display:flex;gap:6px;overflow-x:auto;margin:0 -14px;padding:0 14px 2px">
+              <span style="padding:7px 12px;border:1px solid var(--accent);border-radius:20px;font-size:13px;font-weight:600;color:var(--accent-strong);background:var(--accent-soft);white-space:nowrap">Knižnica</span>
+              <span style="padding:7px 12px;border:1px solid var(--line);border-radius:20px;font-size:13px;color:var(--muted);white-space:nowrap">Intranet</span>
+              <span style="padding:7px 12px;border:1px solid var(--line);border-radius:20px;font-size:13px;color:var(--muted);white-space:nowrap">Verejný web</span>
+            </div>
+            <div style="padding:16px;border-radius:12px;background:var(--surface);border:1px solid var(--line)">
+              <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px"><span style="color:var(--accent);display:grid;place-items:center">{{ mark18 }}</span><span style="font-size:11px;font-weight:650;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)">Odpoveď</span></div>
+              <p style="font-size:16px;line-height:1.65;margin:0;text-wrap:pretty">Prestup treba nahlásiť <strong>najneskôr 15 dní pred začiatkom súťažného obdobia</strong><sup style="font-size:10px;color:var(--accent);font-weight:700">[1]</sup>. Materský klub sa vyjadruje do 7 dní; ak sa nevyjadrí, považuje sa to za súhlas<sup style="font-size:10px;color:var(--accent);font-weight:700">[2]</sup>.</p>
+            </div>
+            <div style="font-size:11px;font-weight:650;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-left:2px">Zdroje</div>
+            <sc-for list="{{ citations }}" as="c" hint-placeholder-count="3">
+              <div style="display:flex;gap:10px;padding:12px;border-radius:11px;background:var(--surface);border:1px solid var(--line)">
+                <span style="flex:0 0 20px;font-size:12px;font-weight:700;color:var(--accent)">{{ c.n }}</span>
+                <span style="flex:1;min-width:0"><span style="display:block;font-size:14px;font-weight:600;line-height:1.3">{{ c.title }}</span><span style="display:block;font-size:12px;color:var(--muted);margin-top:3px">{{ c.meta }}</span></span>
+              </div>
+            </sc-for>
+            <div style="display:flex;align-items:center;gap:8px;padding:12px;border-radius:11px;background:var(--surface);border:1px solid var(--line)">
+              <span style="flex:1;font-size:13px;color:var(--muted)">Bola odpoveď užitočná?</span>
+              <button style="height:38px;padding:0 14px;border:1px solid var(--line);border-radius:9px;background:var(--surface);font-size:13.5px;font-weight:600;cursor:pointer">Áno</button>
+              <button style="height:38px;padding:0 14px;border:1px solid var(--line);border-radius:9px;background:var(--surface);font-size:13.5px;font-weight:600;cursor:pointer">Nesedí</button>
+            </div>
+          </div>
+          <div style="position:absolute;left:0;right:0;bottom:0;display:flex;padding:6px 6px 14px;background:rgba(255,255,255,.94);backdrop-filter:blur(14px);border-top:1px solid var(--line)">
+            <sc-for list="{{ tabsAsk }}" as="t" hint-placeholder-count="5">
+              <span style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;height:56px;justify-content:center;position:relative;color:{{ t.fg }}"><span style="height:21px;display:grid;place-items:center">{{ t.icon }}</span><span style="font-size:10.5px;font-weight:{{ t.weight }}">{{ t.label }}</span><sc-if value="{{ t.badge }}" hint-placeholder-val="{{ false }}"><span style="position:absolute;top:4px;left:calc(50% + 6px);min-width:17px;height:17px;padding:0 5px;border-radius:9px;background:var(--bad-fg);color:#fff;font-size:10.5px;font-weight:700;display:grid;place-items:center">{{ t.badge }}</span></sc-if></span>
+            </sc-for>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="s-potvrdenie" style="display:flex;flex-direction:column;gap:12px;padding-top:16px">
+    <div style="display:flex;align-items:baseline;gap:10px"><h2 style="font-size:17px;letter-spacing:-.02em;margin:0">Na potvrdenie</h2><span style="font-size:12.5px;color:var(--muted)">/documents · moje pridelené normy · termín je hlavný údaj</span></div>
+    <div style="display:flex;gap:20px;align-items:flex-start;flex-wrap:wrap">
+
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <span style="font-size:11.5px;font-weight:600;color:var(--muted)">Desktop 1440</span>
+        <div style="width:1440px;height:620px;border-radius:14px;background:var(--bg);border:1px solid rgba(20,28,42,.18);box-shadow:0 24px 50px rgba(0,0,0,.12);overflow:hidden;display:flex;flex-direction:column">
+          <div style="display:flex;align-items:center;gap:14px;height:56px;padding:0 24px;background:var(--surface);border-bottom:1px solid var(--line);flex:0 0 auto">
+            <span style="display:grid;place-items:center;width:28px;height:28px;border-radius:8px;background:var(--accent);color:#fff">{{ mark17 }}</span>
+            <span style="font-size:14px;font-weight:650;white-space:nowrap">Slovenský futbalový zväz</span>
+            <div style="flex:1;min-width:0;display:flex;align-items:center;gap:9px;height:36px;padding:0 12px;border-radius:9px;background:var(--bg);border:1px solid var(--line)"><span style="color:var(--muted);display:grid;place-items:center">{{ mark16 }}</span><span style="flex:1;font-size:13px;color:var(--muted)">Opýtajte sa svojich dokumentov…</span><span style="font-size:11.5px;color:var(--muted);padding:2px 6px;border-radius:5px;background:var(--surface-2);font-family:ui-monospace,Menlo,monospace">⌘K</span></div>
+            <span style="position:relative;display:grid;place-items:center;width:36px;height:36px;color:var(--muted)">{{ bell18 }}<span style="position:absolute;top:7px;right:7px;width:7px;height:7px;border-radius:50%;background:var(--bad-fg);box-shadow:0 0 0 2px var(--surface)"></span></span>
+            <span style="display:grid;place-items:center;width:30px;height:30px;border-radius:50%;background:var(--surface-2);font-size:11px;font-weight:650">JL</span>
+          </div>
+          <div style="display:flex;gap:2px;padding:0 24px;background:var(--surface);border-bottom:1px solid var(--line);flex:0 0 auto">
+            <sc-for list="{{ navP }}" as="n" hint-placeholder-count="10"><span style="display:flex;align-items:center;gap:6px;height:42px;padding:0 12px;font-size:13.5px;font-weight:{{ n.weight }};color:{{ n.fg }};border-bottom:2px solid {{ n.line }};white-space:nowrap">{{ n.label }}<sc-if value="{{ n.count }}" hint-placeholder-val="{{ false }}"><span style="font-size:11px;font-weight:600;padding:1px 6px;border-radius:10px;background:var(--surface-2);color:var(--muted)">{{ n.count }}</span></sc-if></span></sc-for>
+          </div>
+          <div style="flex:1;min-height:0;overflow:auto;padding:24px 28px">
+            <div style="max-width:940px;margin:0 auto">
+              <h1 style="font-size:22px;letter-spacing:-.02em;margin:0 0 3px">Na potvrdenie</h1>
+              <p style="font-size:13.5px;color:var(--muted);margin:0 0 16px;max-width:70ch">Normy, ktoré vám boli pridelené. Potvrdenie znamená, že ste text prečítali — nie že s ním súhlasíte.</p>
+              <div style="border-radius:12px;background:var(--surface);border:1px solid var(--line);overflow:hidden">
+                <div style="display:flex;align-items:center;gap:12px;padding:8px 15px;background:var(--bg);border-bottom:1px solid var(--line);font-size:10.5px;font-weight:650;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)"><span style="flex:1">Dokument</span><span style="width:110px">Stav čítania</span><span style="width:110px">Termín</span><span style="width:110px"></span></div>
+                <sc-for list="{{ ackRows }}" as="r" hint-placeholder-count="4">
+                  <div style="display:flex;align-items:center;gap:12px;padding:11px 15px;border-bottom:1px solid var(--line)">
+                    <span style="flex:1;min-width:0"><span style="display:block;font-size:13.5px;font-weight:600">{{ r.title }}</span><span style="display:block;font-size:12px;color:var(--muted);margin-top:1px">{{ r.meta }}</span></span>
+                    <span style="width:110px"><span style="padding:2px 7px;border-radius:5px;font-size:11.5px;font-weight:600;background:{{ r.sBg }};color:{{ r.sFg }}">{{ r.state }}</span></span>
+                    <span style="width:110px;font-size:12px;font-weight:600"><span style="padding:3px 8px;border-radius:6px;background:{{ r.dueBg }};color:{{ r.dueFg }}">{{ r.due }}</span></span>
+                    <span style="width:110px;text-align:right"><button style="height:32px;padding:0 13px;border:1px solid var(--line);border-radius:8px;background:var(--surface);font-size:12.5px;font-weight:600;cursor:pointer">Otvoriť</button></span>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <span style="font-size:11.5px;font-weight:600;color:var(--muted)">Telefón 390</span>
+        <div style="width:390px;height:620px;border-radius:26px;background:var(--bg);border:1px solid rgba(20,28,42,.18);box-shadow:0 24px 50px rgba(0,0,0,.12);overflow:hidden;display:flex;flex-direction:column;position:relative">
+          <div style="padding:14px 14px 12px;background:var(--surface);border-bottom:1px solid var(--line);flex:0 0 auto">
+            <h1 style="font-size:20px;letter-spacing:-.02em;margin:0 0 2px">Na potvrdenie</h1>
+            <p style="font-size:13px;color:var(--muted);margin:0">3 čakajú · 1 potvrdené</p>
+          </div>
+          <div style="flex:1;min-height:0;overflow:auto;padding:12px 14px 90px;display:flex;flex-direction:column;gap:8px">
+            <sc-for list="{{ ackRows }}" as="r" hint-placeholder-count="4">
+              <div style="padding:13px;border-radius:12px;background:var(--surface);border:1px solid var(--line)">
+                <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px"><span style="font-size:11px;font-weight:600;padding:2px 7px;border-radius:5px;background:{{ r.sBg }};color:{{ r.sFg }}">{{ r.state }}</span><span style="flex:1"></span><span style="font-size:12px;font-weight:600;padding:3px 8px;border-radius:6px;background:{{ r.dueBg }};color:{{ r.dueFg }}">{{ r.due }}</span></div>
+                <div style="font-size:15px;font-weight:600;line-height:1.3;text-wrap:pretty">{{ r.title }}</div>
+                <div style="font-size:12px;color:var(--muted);margin-top:3px">{{ r.meta }}</div>
+              </div>
+            </sc-for>
+          </div>
+          <div style="position:absolute;left:0;right:0;bottom:0;display:flex;padding:6px 6px 14px;background:rgba(255,255,255,.94);backdrop-filter:blur(14px);border-top:1px solid var(--line)">
+            <sc-for list="{{ tabsTasks }}" as="t" hint-placeholder-count="5">
+              <span style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;height:56px;justify-content:center;position:relative;color:{{ t.fg }}"><span style="height:21px;display:grid;place-items:center">{{ t.icon }}</span><span style="font-size:10.5px;font-weight:{{ t.weight }}">{{ t.label }}</span><sc-if value="{{ t.badge }}" hint-placeholder-val="{{ false }}"><span style="position:absolute;top:4px;left:calc(50% + 6px);min-width:17px;height:17px;padding:0 5px;border-radius:9px;background:var(--bad-fg);color:#fff;font-size:10.5px;font-weight:700;display:grid;place-items:center">{{ t.badge }}</span></sc-if></span>
+            </sc-for>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="s-schvalenie" style="display:flex;flex-direction:column;gap:12px;padding-top:16px">
+    <div style="display:flex;align-items:baseline;gap:10px"><h2 style="font-size:17px;letter-spacing:-.02em;margin:0">Na schválenie</h2><span style="font-size:12.5px;color:var(--muted)">/approvals · menovaní schvaľovatelia · krok v ceste je hlavný údaj</span></div>
+    <div style="display:flex;gap:20px;align-items:flex-start;flex-wrap:wrap">
+
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <span style="font-size:11.5px;font-weight:600;color:var(--muted)">Desktop 1440</span>
+        <div style="width:1440px;height:600px;border-radius:14px;background:var(--bg);border:1px solid rgba(20,28,42,.18);box-shadow:0 24px 50px rgba(0,0,0,.12);overflow:hidden;display:flex;flex-direction:column">
+          <div style="display:flex;align-items:center;gap:14px;height:56px;padding:0 24px;background:var(--surface);border-bottom:1px solid var(--line);flex:0 0 auto">
+            <span style="display:grid;place-items:center;width:28px;height:28px;border-radius:8px;background:var(--accent);color:#fff">{{ mark17 }}</span>
+            <span style="font-size:14px;font-weight:650;white-space:nowrap">Slovenský futbalový zväz</span>
+            <div style="flex:1;min-width:0;display:flex;align-items:center;gap:9px;height:36px;padding:0 12px;border-radius:9px;background:var(--bg);border:1px solid var(--line)"><span style="color:var(--muted);display:grid;place-items:center">{{ mark16 }}</span><span style="flex:1;font-size:13px;color:var(--muted)">Opýtajte sa svojich dokumentov…</span><span style="font-size:11.5px;color:var(--muted);padding:2px 6px;border-radius:5px;background:var(--surface-2);font-family:ui-monospace,Menlo,monospace">⌘K</span></div>
+            <span style="position:relative;display:grid;place-items:center;width:36px;height:36px;color:var(--muted)">{{ bell18 }}<span style="position:absolute;top:7px;right:7px;width:7px;height:7px;border-radius:50%;background:var(--bad-fg);box-shadow:0 0 0 2px var(--surface)"></span></span>
+            <span style="display:grid;place-items:center;width:30px;height:30px;border-radius:50%;background:var(--surface-2);font-size:11px;font-weight:650">JL</span>
+          </div>
+          <div style="display:flex;gap:2px;padding:0 24px;background:var(--surface);border-bottom:1px solid var(--line);flex:0 0 auto">
+            <sc-for list="{{ navS }}" as="n" hint-placeholder-count="10"><span style="display:flex;align-items:center;gap:6px;height:42px;padding:0 12px;font-size:13.5px;font-weight:{{ n.weight }};color:{{ n.fg }};border-bottom:2px solid {{ n.line }};white-space:nowrap">{{ n.label }}<sc-if value="{{ n.count }}" hint-placeholder-val="{{ false }}"><span style="font-size:11px;font-weight:600;padding:1px 6px;border-radius:10px;background:var(--surface-2);color:var(--muted)">{{ n.count }}</span></sc-if></span></sc-for>
+          </div>
+          <div style="flex:1;min-height:0;overflow:auto;padding:24px 28px">
+            <div style="max-width:940px;margin:0 auto">
+              <h1 style="font-size:22px;letter-spacing:-.02em;margin:0 0 3px">Na schválenie</h1>
+              <p style="font-size:13.5px;color:var(--muted);margin:0 0 16px;max-width:70ch">Dokumenty, kde ste menovaný schvaľovateľ. Kým neschválite, text nikto v organizácii nevidí.</p>
+              <div style="display:flex;flex-direction:column;gap:10px">
+                <sc-for list="{{ approveRows }}" as="r" hint-placeholder-count="3">
+                  <div style="display:flex;align-items:center;gap:14px;padding:14px 16px;border-radius:12px;background:var(--surface);border:1px solid var(--line)">
+                    <span style="flex:1;min-width:0">
+                      <span style="display:block;font-size:14.5px;font-weight:600;margin-bottom:3px">{{ r.title }}</span>
+                      <span style="display:block;font-size:12.5px;color:var(--muted)">{{ r.meta }}</span>
+                      <span style="display:inline-block;margin-top:7px;font-size:11.5px;font-weight:600;padding:2px 8px;border-radius:5px;background:var(--accent-soft);color:var(--accent-strong)">{{ r.step }}</span>
+                    </span>
+                    <span style="font-size:12px;font-weight:600;padding:3px 9px;border-radius:6px;background:{{ r.dueBg }};color:{{ r.dueFg }};white-space:nowrap">{{ r.due }}</span>
+                    <span style="display:flex;gap:7px">
+                      <button style="height:36px;padding:0 14px;border:0;border-radius:9px;background:var(--accent);color:#fff;font-size:13px;font-weight:600;cursor:pointer">Schváliť</button>
+                      <button style="height:36px;padding:0 13px;border:1px solid var(--line);border-radius:9px;background:var(--surface);font-size:13px;font-weight:550;cursor:pointer">Vrátiť s pripomienkou</button>
+                    </span>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <span style="font-size:11.5px;font-weight:600;color:var(--muted)">Telefón 390 — dve akcie pod sebou, obe 44 px</span>
+        <div style="width:390px;height:600px;border-radius:26px;background:var(--bg);border:1px solid rgba(20,28,42,.18);box-shadow:0 24px 50px rgba(0,0,0,.12);overflow:hidden;display:flex;flex-direction:column;position:relative">
+          <div style="padding:14px 14px 12px;background:var(--surface);border-bottom:1px solid var(--line);flex:0 0 auto">
+            <h1 style="font-size:20px;letter-spacing:-.02em;margin:0 0 2px">Na schválenie</h1>
+            <p style="font-size:13px;color:var(--muted);margin:0">3 dokumenty čakajú na vás</p>
+          </div>
+          <div style="flex:1;min-height:0;overflow:auto;padding:12px 14px 90px;display:flex;flex-direction:column;gap:10px">
+            <sc-for list="{{ approveRows }}" as="r" hint-placeholder-count="3">
+              <div style="padding:14px;border-radius:12px;background:var(--surface);border:1px solid var(--line)">
+                <div style="display:flex;align-items:center;gap:6px;margin-bottom:7px"><span style="font-size:11.5px;font-weight:600;padding:2px 8px;border-radius:5px;background:var(--accent-soft);color:var(--accent-strong)">{{ r.step }}</span><span style="flex:1"></span><span style="font-size:12px;font-weight:600;padding:3px 8px;border-radius:6px;background:{{ r.dueBg }};color:{{ r.dueFg }}">{{ r.due }}</span></div>
+                <div style="font-size:15px;font-weight:600;line-height:1.3;text-wrap:pretty">{{ r.title }}</div>
+                <div style="font-size:12px;color:var(--muted);margin-top:4px;line-height:1.45">{{ r.meta }}</div>
+                <div style="display:flex;flex-direction:column;gap:7px;margin-top:12px">
+                  <button style="width:100%;height:44px;border:0;border-radius:10px;background:var(--accent);color:#fff;font-size:15px;font-weight:600;cursor:pointer">Schváliť</button>
+                  <button style="width:100%;height:44px;border:1px solid var(--line);border-radius:10px;background:var(--surface);font-size:15px;font-weight:550;cursor:pointer">Vrátiť s pripomienkou</button>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+          <div style="position:absolute;left:0;right:0;bottom:0;display:flex;padding:6px 6px 14px;background:rgba(255,255,255,.94);backdrop-filter:blur(14px);border-top:1px solid var(--line)">
+            <sc-for list="{{ tabsTasks }}" as="t" hint-placeholder-count="5">
+              <span style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;height:56px;justify-content:center;position:relative;color:{{ t.fg }}"><span style="height:21px;display:grid;place-items:center">{{ t.icon }}</span><span style="font-size:10.5px;font-weight:{{ t.weight }}">{{ t.label }}</span><sc-if value="{{ t.badge }}" hint-placeholder-val="{{ false }}"><span style="position:absolute;top:4px;left:calc(50% + 6px);min-width:17px;height:17px;padding:0 5px;border-radius:9px;background:var(--bad-fg);color:#fff;font-size:10.5px;font-weight:700;display:grid;place-items:center">{{ t.badge }}</span></sc-if></span>
+            </sc-for>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="s-adresar" style="display:flex;flex-direction:column;gap:12px;padding-top:16px">
+    <div style="display:flex;align-items:baseline;gap:10px"><h2 style="font-size:17px;letter-spacing:-.02em;margin:0">Adresár</h2><span style="font-size:12.5px;color:var(--muted)">/directory · karty na všetkých šírkach — tabuľka so 6 stĺpcami sa na telefóne nečíta</span></div>
+    <div style="display:flex;gap:20px;align-items:flex-start;flex-wrap:wrap">
+
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <span style="font-size:11.5px;font-weight:600;color:var(--muted)">Desktop 1440 — 3 stĺpce</span>
+        <div style="width:1440px;height:600px;border-radius:14px;background:var(--bg);border:1px solid rgba(20,28,42,.18);box-shadow:0 24px 50px rgba(0,0,0,.12);overflow:hidden;display:flex;flex-direction:column">
+          <div style="display:flex;align-items:center;gap:14px;height:56px;padding:0 24px;background:var(--surface);border-bottom:1px solid var(--line);flex:0 0 auto">
+            <span style="display:grid;place-items:center;width:28px;height:28px;border-radius:8px;background:var(--accent);color:#fff">{{ mark17 }}</span>
+            <span style="font-size:14px;font-weight:650;white-space:nowrap">Slovenský futbalový zväz</span>
+            <div style="flex:1;min-width:0;display:flex;align-items:center;gap:9px;height:36px;padding:0 12px;border-radius:9px;background:var(--bg);border:1px solid var(--line)"><span style="color:var(--muted);display:grid;place-items:center">{{ mark16 }}</span><span style="flex:1;font-size:13px;color:var(--muted)">Opýtajte sa svojich dokumentov…</span><span style="font-size:11.5px;color:var(--muted);padding:2px 6px;border-radius:5px;background:var(--surface-2);font-family:ui-monospace,Menlo,monospace">⌘K</span></div>
+            <span style="position:relative;display:grid;place-items:center;width:36px;height:36px;color:var(--muted)">{{ bell18 }}<span style="position:absolute;top:7px;right:7px;width:7px;height:7px;border-radius:50%;background:var(--bad-fg);box-shadow:0 0 0 2px var(--surface)"></span></span>
+            <span style="display:grid;place-items:center;width:30px;height:30px;border-radius:50%;background:var(--surface-2);font-size:11px;font-weight:650">JL</span>
+          </div>
+          <div style="display:flex;gap:2px;padding:0 24px;background:var(--surface);border-bottom:1px solid var(--line);flex:0 0 auto">
+            <sc-for list="{{ navA }}" as="n" hint-placeholder-count="10"><span style="display:flex;align-items:center;gap:6px;height:42px;padding:0 12px;font-size:13.5px;font-weight:{{ n.weight }};color:{{ n.fg }};border-bottom:2px solid {{ n.line }};white-space:nowrap">{{ n.label }}<sc-if value="{{ n.count }}" hint-placeholder-val="{{ false }}"><span style="font-size:11px;font-weight:600;padding:1px 6px;border-radius:10px;background:var(--surface-2);color:var(--muted)">{{ n.count }}</span></sc-if></span></sc-for>
+          </div>
+          <div style="flex:1;min-height:0;overflow:auto;padding:24px 28px">
+            <div style="max-width:1080px;margin:0 auto">
+              <h1 style="font-size:22px;letter-spacing:-.02em;margin:0 0 3px">Adresár</h1>
+              <p style="font-size:13.5px;color:var(--muted);margin:0 0 14px;max-width:66ch">Kolegovia vo vašej organizácii. Mobilné číslo je nepovinné — kto ho neuviedol, nemá ho tu.</p>
+              <div style="display:flex;gap:8px;margin-bottom:8px">
+                <div style="flex:1;max-width:420px;display:flex;align-items:center;gap:9px;height:36px;padding:0 12px;border-radius:9px;background:var(--surface);border:1px solid var(--line)"><span style="color:var(--muted);display:grid;place-items:center">{{ mark16 }}</span><span style="font-size:13px;color:var(--muted)">Meno, útvar, e-mail…</span></div>
+                <span style="display:inline-flex;align-items:center;gap:5px;height:36px;padding:0 6px 0 11px;border-radius:9px;background:var(--accent-soft);color:var(--accent-strong);font-size:13px;font-weight:550">Bratislava<span style="width:18px;text-align:center;font-size:14px">×</span></span>
+              </div>
+              <p style="font-size:12.5px;color:var(--muted);margin:0 0 12px">6 osôb</p>
+              <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px">
+                <sc-for list="{{ people }}" as="p" hint-placeholder-count="6">
+                  <div style="display:flex;gap:12px;padding:14px;border-radius:12px;background:var(--surface);border:1px solid var(--line)">
+                    <span style="flex:0 0 42px;display:grid;place-items:center;width:42px;height:42px;border-radius:50%;background:var(--surface-2);font-size:14px;font-weight:650">{{ p.initials }}</span>
+                    <span style="flex:1;min-width:0">
+                      <span style="display:block;font-size:14px;font-weight:600">{{ p.name }}</span>
+                      <span style="display:block;font-size:12px;color:var(--muted);margin-top:2px;line-height:1.4">{{ p.where }}</span>
+                      <span style="display:block;font-size:12.5px;margin-top:7px;color:var(--accent);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ p.mail }}</span>
+                      <sc-if value="{{ p.tel }}" hint-placeholder-val="{{ true }}"><span style="display:block;font-size:12.5px;color:var(--muted);font-variant-numeric:tabular-nums;margin-top:2px">{{ p.tel }}</span></sc-if>
+                    </span>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <span style="font-size:11.5px;font-weight:600;color:var(--muted)">Tablet 834 — 2 stĺpce</span>
+        <div style="width:834px;height:600px;border-radius:18px;background:var(--bg);border:1px solid rgba(20,28,42,.18);box-shadow:0 24px 50px rgba(0,0,0,.12);overflow:hidden;display:flex;flex-direction:column">
+          <div style="display:flex;align-items:center;gap:12px;height:56px;padding:0 18px;background:var(--surface);border-bottom:1px solid var(--line);flex:0 0 auto">
+            <span style="display:grid;place-items:center;width:28px;height:28px;border-radius:8px;background:var(--accent);color:#fff">{{ mark17 }}</span>
+            <span style="font-size:14px;font-weight:650">SFZ</span>
+            <div style="flex:1;min-width:0;display:flex;align-items:center;gap:9px;height:36px;padding:0 12px;border-radius:9px;background:var(--bg);border:1px solid var(--line)"><span style="color:var(--muted);display:grid;place-items:center">{{ mark16 }}</span><span style="flex:1;font-size:13px;color:var(--muted)">Opýtajte sa svojich dokumentov…</span></div>
+            <span style="position:relative;display:grid;place-items:center;width:40px;height:40px;color:var(--muted)">{{ bell19 }}<span style="position:absolute;top:8px;right:8px;width:7px;height:7px;border-radius:50%;background:var(--bad-fg);box-shadow:0 0 0 2px var(--surface)"></span></span>
+            <span style="display:grid;place-items:center;width:32px;height:32px;border-radius:50%;background:var(--surface-2);font-size:11.5px;font-weight:650">JL</span>
+          </div>
+          <div style="position:relative;display:flex;align-items:stretch;padding:0 12px;background:var(--surface);border-bottom:1px solid var(--line);flex:0 0 auto">
+            <div style="flex:1;min-width:0;display:flex;gap:2px;overflow:hidden">
+              <sc-for list="{{ navFit }}" as="n" hint-placeholder-count="6"><span style="display:flex;align-items:center;gap:6px;height:44px;padding:0 12px;font-size:13.5px;font-weight:{{ n.weight }};color:{{ n.fg }};border-bottom:2px solid {{ n.line }};white-space:nowrap">{{ n.label }}<sc-if value="{{ n.count }}" hint-placeholder-val="{{ false }}"><span style="font-size:11px;font-weight:600;padding:1px 6px;border-radius:10px;background:var(--surface-2);color:var(--muted)">{{ n.count }}</span></sc-if></span></sc-for>
+            </div>
+            <span style="flex:0 0 auto;display:flex;align-items:center;gap:6px;height:44px;padding:0 12px;margin-left:4px;font-size:13.5px;font-weight:550;color:var(--muted);white-space:nowrap">{{ moreIcon }}Viac<span style="font-size:11px;font-weight:600;padding:1px 6px;border-radius:10px;background:var(--surface-2);color:var(--muted)">{{ navRestCount }}</span></span>
+          </div>
+          <div style="flex:1;min-height:0;overflow:auto;padding:18px">
+            <h1 style="font-size:21px;letter-spacing:-.02em;margin:0 0 10px">Adresár</h1>
+            <div style="display:flex;align-items:center;gap:10px;height:44px;padding:0 14px;border-radius:11px;background:var(--surface);border:1px solid var(--line);margin-bottom:12px"><span style="color:var(--muted);display:grid;place-items:center">{{ mark17 }}</span><span style="font-size:14px;color:var(--muted)">Meno, útvar, e-mail…</span></div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+              <sc-for list="{{ people }}" as="p" hint-placeholder-count="6">
+                <div style="display:flex;gap:12px;padding:14px;border-radius:12px;background:var(--surface);border:1px solid var(--line)">
+                  <span style="flex:0 0 42px;display:grid;place-items:center;width:42px;height:42px;border-radius:50%;background:var(--surface-2);font-size:14px;font-weight:650">{{ p.initials }}</span>
+                  <span style="flex:1;min-width:0">
+                    <span style="display:block;font-size:14px;font-weight:600">{{ p.name }}</span>
+                    <span style="display:block;font-size:12px;color:var(--muted);margin-top:2px;line-height:1.4">{{ p.where }}</span>
+                    <span style="display:block;font-size:12.5px;margin-top:7px;color:var(--accent);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ p.mail }}</span>
+                  </span>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <span style="font-size:11.5px;font-weight:600;color:var(--muted)">Telefón 390 — e-mail a telefón sú akcie</span>
+        <div style="width:390px;height:600px;border-radius:26px;background:var(--bg);border:1px solid rgba(20,28,42,.18);box-shadow:0 24px 50px rgba(0,0,0,.12);overflow:hidden;display:flex;flex-direction:column;position:relative">
+          <div style="padding:14px 14px 12px;background:var(--surface);border-bottom:1px solid var(--line);flex:0 0 auto">
+            <h1 style="font-size:20px;letter-spacing:-.02em;margin:0 0 10px">Adresár</h1>
+            <div style="display:flex;align-items:center;gap:10px;height:48px;padding:0 14px;border-radius:12px;background:var(--bg);border:1px solid var(--line)"><span style="color:var(--muted);display:grid;place-items:center">{{ mark19 }}</span><span style="font-size:15px;color:var(--muted)">Meno, útvar, e-mail…</span></div>
+          </div>
+          <div style="flex:1;min-height:0;overflow:auto;padding:12px 14px 90px;display:flex;flex-direction:column;gap:8px">
+            <sc-for list="{{ people }}" as="p" hint-placeholder-count="6">
+              <div style="display:flex;gap:12px;padding:13px;border-radius:12px;background:var(--surface);border:1px solid var(--line)">
+                <span style="flex:0 0 44px;display:grid;place-items:center;width:44px;height:44px;border-radius:50%;background:var(--surface-2);font-size:15px;font-weight:650">{{ p.initials }}</span>
+                <span style="flex:1;min-width:0">
+                  <span style="display:block;font-size:15px;font-weight:600">{{ p.name }}</span>
+                  <span style="display:block;font-size:12.5px;color:var(--muted);margin-top:2px;line-height:1.4">{{ p.where }}</span>
+                  <span style="display:flex;gap:7px;margin-top:9px">
+                    <span style="display:inline-flex;align-items:center;height:36px;padding:0 12px;border-radius:9px;border:1px solid var(--line);font-size:13px;font-weight:600;color:var(--accent)">E-mail</span>
+                    <sc-if value="{{ p.tel }}" hint-placeholder-val="{{ true }}"><span style="display:inline-flex;align-items:center;height:36px;padding:0 12px;border-radius:9px;border:1px solid var(--line);font-size:13px;font-weight:600;color:var(--accent)">Zavolať</span></sc-if>
+                  </span>
+                </span>
+              </div>
+            </sc-for>
+          </div>
+          <div style="position:absolute;left:0;right:0;bottom:0;display:flex;padding:6px 6px 14px;background:rgba(255,255,255,.94);backdrop-filter:blur(14px);border-top:1px solid var(--line)">
+            <sc-for list="{{ tabsMore }}" as="t" hint-placeholder-count="5">
+              <span style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;height:56px;justify-content:center;position:relative;color:{{ t.fg }}"><span style="height:21px;display:grid;place-items:center">{{ t.icon }}</span><span style="font-size:10.5px;font-weight:{{ t.weight }}">{{ t.label }}</span><sc-if value="{{ t.badge }}" hint-placeholder-val="{{ false }}"><span style="position:absolute;top:4px;left:calc(50% + 6px);min-width:17px;height:17px;padding:0 5px;border-radius:9px;background:var(--bad-fg);color:#fff;font-size:10.5px;font-weight:700;display:grid;place-items:center">{{ t.badge }}</span></sc-if></span>
+            </sc-for>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="s-detail" style="display:flex;flex-direction:column;gap:12px;padding-top:16px">
+    <div style="display:flex;align-items:baseline;gap:10px"><h2 style="font-size:17px;letter-spacing:-.02em;margin:0">Detail dokumentu</h2><span style="font-size:12.5px;color:var(--muted)">/library/[id] · potvrdenie je primárna akcia — na telefóne pri palci</span></div>
+    <div style="display:flex;gap:20px;align-items:flex-start;flex-wrap:wrap">
+
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <span style="font-size:11.5px;font-weight:600;color:var(--muted)">Desktop 1440 — text 70ch, pravý panel 260</span>
+        <div style="width:1440px;height:820px;border-radius:14px;background:var(--bg);border:1px solid rgba(20,28,42,.18);box-shadow:0 24px 50px rgba(0,0,0,.12);overflow:hidden;display:flex;flex-direction:column">
+          <div style="display:flex;align-items:center;gap:14px;height:56px;padding:0 24px;background:var(--surface);border-bottom:1px solid var(--line);flex:0 0 auto">
+            <span style="display:grid;place-items:center;width:28px;height:28px;border-radius:8px;background:var(--accent);color:#fff">{{ mark17 }}</span>
+            <span style="font-size:14px;font-weight:650;white-space:nowrap">Slovenský futbalový zväz</span>
+            <div style="flex:1;min-width:0;display:flex;align-items:center;gap:9px;height:36px;padding:0 12px;border-radius:9px;background:var(--bg);border:1px solid var(--line)"><span style="color:var(--muted);display:grid;place-items:center">{{ mark16 }}</span><span style="flex:1;font-size:13px;color:var(--muted)">Opýtajte sa svojich dokumentov…</span><span style="font-size:11.5px;color:var(--muted);padding:2px 6px;border-radius:5px;background:var(--surface-2);font-family:ui-monospace,Menlo,monospace">⌘K</span></div>
+            <span style="position:relative;display:grid;place-items:center;width:36px;height:36px;color:var(--muted)">{{ bell18 }}<span style="position:absolute;top:7px;right:7px;width:7px;height:7px;border-radius:50%;background:var(--bad-fg);box-shadow:0 0 0 2px var(--surface)"></span></span>
+            <span style="display:grid;place-items:center;width:30px;height:30px;border-radius:50%;background:var(--surface-2);font-size:11px;font-weight:650">JL</span>
+          </div>
+          <div style="display:flex;gap:2px;padding:0 24px;background:var(--surface);border-bottom:1px solid var(--line);flex:0 0 auto">
+            <sc-for list="{{ navL }}" as="n" hint-placeholder-count="10"><span style="display:flex;align-items:center;gap:6px;height:42px;padding:0 12px;font-size:13.5px;font-weight:{{ n.weight }};color:{{ n.fg }};border-bottom:2px solid {{ n.line }};white-space:nowrap">{{ n.label }}<sc-if value="{{ n.count }}" hint-placeholder-val="{{ false }}"><span style="font-size:11px;font-weight:600;padding:1px 6px;border-radius:10px;background:var(--surface-2);color:var(--muted)">{{ n.count }}</span></sc-if></span></sc-for>
+          </div>
+          <div style="flex:1;min-height:0;overflow:auto;padding:22px 28px">
+            <div style="max-width:1120px;margin:0 auto">
+              <div style="display:flex;align-items:center;gap:7px;font-size:12.5px;color:var(--muted);margin-bottom:12px"><a href="#s-detail">Knižnica</a><span>/</span><span>Právne a legislatíva</span><span>/</span><span style="color:var(--ink)">Registračný a prestupový poriadok</span></div>
+              <div style="display:grid;grid-template-columns:minmax(0,1fr) 260px;gap:16px;align-items:start">
+                <div style="display:flex;flex-direction:column;gap:14px;min-width:0">
+                  <div style="padding:20px 22px;border-radius:12px;background:var(--surface);border:1px solid var(--line)">
+                    <div style="display:flex;gap:7px;flex-wrap:wrap;margin-bottom:10px">
+                      <span style="padding:2px 8px;border-radius:5px;font-size:11.5px;font-weight:600;background:var(--ok-bg);color:var(--ok-fg)">Platný</span>
+                      <span style="padding:2px 8px;border-radius:5px;font-size:11.5px;font-weight:600;background:var(--surface-2);color:var(--muted)">Norma</span>
+                      <span style="padding:2px 8px;border-radius:5px;font-size:11.5px;font-weight:600;background:var(--warn-bg);color:var(--warn-fg)">Potvrdenie do 12. 9.</span>
+                    </div>
+                    <h1 style="font-size:24px;line-height:1.25;letter-spacing:-.02em;margin:0 0 6px">Registračný a prestupový poriadok</h1>
+                    <p style="font-size:13px;color:var(--muted);margin:0 0 15px">RPP-2026-04 · verzia 4.2 · účinné od 1. 1. 2026 · nahradzuje v4.1</p>
+                    <div style="display:flex;gap:8px;flex-wrap:wrap">
+                      <button style="height:36px;padding:0 16px;border:0;border-radius:9px;background:var(--accent);color:#fff;font-size:13.5px;font-weight:600;cursor:pointer">Potvrdiť prečítanie</button>
+                      <button style="height:36px;padding:0 13px;border:1px solid var(--line);border-radius:9px;background:var(--surface);font-size:13.5px;font-weight:550;cursor:pointer">Nová verzia</button>
+                      <button style="height:36px;padding:0 13px;border:1px solid var(--line);border-radius:9px;background:var(--surface);font-size:13.5px;font-weight:550;cursor:pointer">Stiahnuť PDF</button>
+                      <button style="all:unset;display:grid;place-items:center;width:36px;height:36px;border-radius:9px;background:var(--surface-2);font-size:16px;cursor:pointer">⋯</button>
+                    </div>
+                  </div>
+                  <div style="border-radius:12px;background:var(--surface);border:1px solid var(--line);overflow:hidden">
+                    <div style="display:flex;gap:2px;padding:0 10px;background:var(--bg);border-bottom:1px solid var(--line)">
+                      <sc-for list="{{ docTabs }}" as="t" hint-placeholder-count="4"><span style="padding:10px 12px;font-size:13px;font-weight:{{ t.weight }};color:{{ t.fg }};border-bottom:2px solid {{ t.line }};white-space:nowrap">{{ t.label }}</span></sc-for>
+                    </div>
+                    <div style="padding:20px 22px;max-width:70ch">
+                      <h2 style="font-size:15px;font-weight:650;margin:0 0 8px">Článok 4 — Termíny podania</h2>
+                      <p style="font-size:14px;line-height:1.7;margin:0 0 13px;text-wrap:pretty">Žiadosť o prestup sa podáva elektronicky prostredníctvom informačného systému najneskôr <strong>15 dní pred začiatkom súťažného obdobia</strong>. Žiadosť podaná po tomto termíne sa posudzuje v nasledujúcom registračnom období.</p>
+                      <p style="font-size:14px;line-height:1.7;margin:0 0 13px;text-wrap:pretty">Materský klub sa k žiadosti vyjadrí do 7 dní. Ak sa nevyjadrí, považuje sa to za súhlas — o tejto skutočnosti systém vyhotoví záznam v audite.</p>
+                      <div style="padding:12px 14px;border-radius:9px;background:var(--bg);border:1px solid var(--line);border-left:3px solid var(--accent)">
+                        <div style="font-size:11px;font-weight:650;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);margin-bottom:4px">Zmena oproti v4.1</div>
+                        <div style="font-size:13px;line-height:1.55">Termín sa skrátil z 21 na 15 dní. Vyjadrenie materského klubu bolo predĺžené z 5 na 7 dní.</div>
+                      </div>
+                    </div>
+                  </div>
+                  <div style="border-radius:12px;background:var(--surface);border:1px solid var(--line);overflow:hidden">
+                    <div style="padding:12px 15px;border-bottom:1px solid var(--line);font-size:14px;font-weight:650">Verzie a schválenie</div>
+                    <sc-for list="{{ versions }}" as="v" hint-placeholder-count="3">
+                      <div style="display:flex;align-items:center;gap:12px;padding:11px 15px;border-bottom:1px solid var(--line)">
+                        <span style="width:8px;height:8px;border-radius:50%;background:{{ v.dot }}"></span>
+                        <span style="flex:1;min-width:0"><span style="display:block;font-size:13.5px;font-weight:550">{{ v.label }}</span><span style="display:block;font-size:12px;color:var(--muted);margin-top:1px">{{ v.meta }}</span></span>
+                        <span style="font-size:11.5px;font-weight:600;padding:2px 8px;border-radius:5px;background:{{ v.chipBg }};color:{{ v.chipFg }}">{{ v.chip }}</span>
+                      </div>
+                    </sc-for>
+                  </div>
+                </div>
+                <aside style="display:flex;flex-direction:column;gap:12px">
+                  <div style="padding:14px;border-radius:12px;background:var(--surface);border:1px solid var(--line)">
+                    <div style="font-size:11px;font-weight:650;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:9px">Potvrdenia</div>
+                    <div style="display:flex;align-items:baseline;gap:7px;margin-bottom:8px"><span style="font-size:25px;font-weight:640;letter-spacing:-.03em;font-variant-numeric:tabular-nums">68 %</span><span style="font-size:12px;color:var(--muted)">142 / 210</span></div>
+                    <span style="display:block;height:6px;border-radius:3px;background:var(--surface-2);overflow:hidden;margin-bottom:10px"><span style="display:block;height:100%;width:68%;background:var(--accent)"></span></span>
+                    <a href="#s-detail" style="font-size:12.5px;font-weight:600">Kto nepotvrdil →</a>
+                  </div>
+                  <div style="padding:14px;border-radius:12px;background:var(--surface);border:1px solid var(--line);display:flex;flex-direction:column;gap:9px">
+                    <div style="font-size:11px;font-weight:650;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)">Metadáta</div>
+                    <sc-for list="{{ meta }}" as="m" hint-placeholder-count="6">
+                      <div style="display:flex;gap:10px;align-items:baseline"><span style="flex:0 0 84px;font-size:12px;color:var(--muted)">{{ m.k }}</span><span style="flex:1;font-size:12.5px;text-wrap:pretty">{{ m.v }}</span></div>
+                    </sc-for>
+                  </div>
+                  <div style="padding:14px;border-radius:12px;background:var(--surface);border:1px solid var(--line)">
+                    <div style="font-size:11px;font-weight:650;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:9px">Súvisiace predpisy</div>
+                    <div style="display:flex;flex-direction:column;gap:8px;font-size:12.5px"><a href="#s-detail">Súťažný poriadok v6.1</a><a href="#s-detail">Disciplinárny poriadok v5.0</a><a href="#s-detail">Metodický pokyn k licenciám v2.3</a></div>
+                  </div>
+                </aside>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <span style="font-size:11.5px;font-weight:600;color:var(--muted)">Telefón 390 — pravý panel sa stáva kartou nad textom</span>
+        <div style="width:390px;height:820px;border-radius:26px;background:var(--bg);border:1px solid rgba(20,28,42,.18);box-shadow:0 24px 50px rgba(0,0,0,.12);overflow:hidden;display:flex;flex-direction:column;position:relative">
+          <div style="display:flex;align-items:center;padding:8px 8px 6px 4px;background:var(--surface);border-bottom:1px solid var(--line);flex:0 0 auto">
+            <span style="display:flex;align-items:center;gap:4px;height:44px;padding:0 10px;font-size:15px;color:var(--accent)"><span style="font-size:20px;line-height:1">‹</span>Knižnica</span>
+            <span style="flex:1"></span>
+            <span style="display:grid;place-items:center;width:44px;height:44px;font-size:17px">↓</span>
+            <span style="display:grid;place-items:center;width:44px;height:44px;font-size:17px">⋯</span>
+          </div>
+          <div style="flex:1;min-height:0;overflow:auto;padding:16px 14px 120px;display:flex;flex-direction:column;gap:14px">
+            <div>
+              <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px">
+                <span style="padding:3px 9px;border-radius:6px;font-size:12px;font-weight:600;background:var(--ok-bg);color:var(--ok-fg)">Platný</span>
+                <span style="padding:3px 9px;border-radius:6px;font-size:12px;font-weight:600;background:var(--surface-2);color:var(--muted)">Norma</span>
+                <span style="padding:3px 9px;border-radius:6px;font-size:12px;font-weight:600;background:var(--warn-bg);color:var(--warn-fg)">Potvrdiť do 12. 9.</span>
+              </div>
+              <h1 style="font-size:22px;line-height:1.25;letter-spacing:-.02em;margin:0 0 6px;text-wrap:pretty">Registračný a prestupový poriadok</h1>
+              <p style="font-size:13px;color:var(--muted);margin:0;line-height:1.5">RPP-2026-04 · v4.2 · účinné od 1. 1. 2026<br />Právne a legislatíva</p>
+            </div>
+            <div style="flex:0 0 auto;padding:14px;border-radius:12px;background:var(--surface);border:1px solid var(--line)">
+              <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:8px"><span style="font-size:24px;font-weight:640;letter-spacing:-.03em;font-variant-numeric:tabular-nums">68 %</span><span style="font-size:13px;color:var(--muted)">potvrdilo 142 z 210 osôb</span></div>
+              <span style="display:block;height:6px;border-radius:3px;background:var(--surface-2);overflow:hidden"><span style="display:block;height:100%;width:68%;background:var(--accent)"></span></span>
+            </div>
+            <div style="flex:0 0 auto;display:flex;padding:3px;gap:2px;background:var(--surface-2);border-radius:11px">
+              <sc-for list="{{ docTabs }}" as="t" hint-placeholder-count="4"><span style="flex:1;display:grid;place-items:center;height:38px;border-radius:9px;font-size:12.5px;font-weight:{{ t.weight }};color:{{ t.fg }};background:{{ t.bg }};white-space:nowrap">{{ t.label }}</span></sc-for>
+            </div>
+            <div style="flex:0 0 auto;padding:16px;border-radius:12px;background:var(--surface);border:1px solid var(--line)">
+              <h2 style="font-size:15px;font-weight:650;margin:0 0 8px">Článok 4 — Termíny podania</h2>
+              <p style="font-size:15px;line-height:1.65;margin:0 0 12px;text-wrap:pretty">Žiadosť o prestup sa podáva elektronicky najneskôr <strong>15 dní pred začiatkom súťažného obdobia</strong>. Žiadosť podaná po termíne sa posudzuje v nasledujúcom registračnom období.</p>
+              <div style="padding:11px 13px;border-radius:9px;background:var(--bg);border:1px solid var(--line);border-left:3px solid var(--accent)">
+                <div style="font-size:11px;font-weight:650;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);margin-bottom:4px">Zmena oproti v4.1</div>
+                <div style="font-size:13.5px;line-height:1.55">Termín sa skrátil z 21 na 15 dní.</div>
+              </div>
+            </div>
+            <div style="flex:0 0 auto;border-radius:12px;background:var(--surface);border:1px solid var(--line);overflow:hidden">
+              <div style="padding:12px 14px;border-bottom:1px solid var(--line);font-size:14px;font-weight:650">Verzie</div>
+              <sc-for list="{{ versions }}" as="v" hint-placeholder-count="3">
+                <div style="display:flex;align-items:center;gap:11px;min-height:56px;padding:10px 14px;border-bottom:1px solid var(--line)">
+                  <span style="width:8px;height:8px;border-radius:50%;background:{{ v.dot }}"></span>
+                  <span style="flex:1;min-width:0"><span style="display:block;font-size:14px;font-weight:550">{{ v.label }}</span><span style="display:block;font-size:12px;color:var(--muted)">{{ v.meta }}</span></span>
+                  <span style="font-size:12px;font-weight:600;padding:3px 8px;border-radius:6px;background:{{ v.chipBg }};color:{{ v.chipFg }}">{{ v.chip }}</span>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+          <div style="position:absolute;left:0;right:0;bottom:0;padding:10px 14px 18px;background:rgba(255,255,255,.95);backdrop-filter:blur(14px);border-top:1px solid var(--line)">
+            <button style="width:100%;height:50px;border:0;border-radius:12px;background:var(--accent);color:#fff;font-size:16px;font-weight:600;cursor:pointer">Potvrdiť prečítanie</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="s-kniznica" style="display:flex;flex-direction:column;gap:12px;padding-top:16px">
+    <div style="display:flex;align-items:baseline;gap:10px"><h2 style="font-size:17px;letter-spacing:-.02em;margin:0">Knižnica</h2><span style="font-size:12.5px;color:var(--muted)">/library · filtre ako stĺpec → sheet · tabuľka → karty · správa priečinkov má vlastnú routu</span></div>
+    <div style="display:flex;gap:20px;align-items:flex-start;flex-wrap:wrap">
+
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <span style="font-size:11.5px;font-weight:600;color:var(--muted)">Desktop 1440 — stĺpec filtrov 250, tabuľka, akcie v hlavičke</span>
+        <div style="width:1440px;height:820px;border-radius:14px;background:var(--bg);border:1px solid rgba(20,28,42,.18);box-shadow:0 24px 50px rgba(0,0,0,.12);overflow:hidden;display:flex;flex-direction:column">
+          <div style="display:flex;align-items:center;gap:14px;height:56px;padding:0 24px;background:var(--surface);border-bottom:1px solid var(--line);flex:0 0 auto">
+            <span style="display:grid;place-items:center;width:28px;height:28px;border-radius:8px;background:var(--accent);color:#fff">{{ mark17 }}</span>
+            <span style="font-size:14px;font-weight:650;white-space:nowrap">Slovenský futbalový zväz</span>
+            <div style="flex:1;min-width:0;display:flex;align-items:center;gap:9px;height:36px;padding:0 12px;border-radius:9px;background:var(--bg);border:1px solid var(--line)"><span style="color:var(--muted);display:grid;place-items:center">{{ mark16 }}</span><span style="flex:1;font-size:13px;color:var(--muted)">Opýtajte sa svojich dokumentov…</span><span style="font-size:11.5px;color:var(--muted);padding:2px 6px;border-radius:5px;background:var(--surface-2);font-family:ui-monospace,Menlo,monospace">⌘K</span></div>
+            <span style="position:relative;display:grid;place-items:center;width:36px;height:36px;color:var(--muted)">{{ bell18 }}<span style="position:absolute;top:7px;right:7px;width:7px;height:7px;border-radius:50%;background:var(--bad-fg);box-shadow:0 0 0 2px var(--surface)"></span></span>
+            <span style="display:grid;place-items:center;width:30px;height:30px;border-radius:50%;background:var(--surface-2);font-size:11px;font-weight:650">JL</span>
+          </div>
+          <div style="display:flex;gap:2px;padding:0 24px;background:var(--surface);border-bottom:1px solid var(--line);flex:0 0 auto">
+            <sc-for list="{{ navL }}" as="n" hint-placeholder-count="10"><span style="display:flex;align-items:center;gap:6px;height:42px;padding:0 12px;font-size:13.5px;font-weight:{{ n.weight }};color:{{ n.fg }};border-bottom:2px solid {{ n.line }};white-space:nowrap">{{ n.label }}<sc-if value="{{ n.count }}" hint-placeholder-val="{{ false }}"><span style="font-size:11px;font-weight:600;padding:1px 6px;border-radius:10px;background:var(--surface-2);color:var(--muted)">{{ n.count }}</span></sc-if></span></sc-for>
+          </div>
+          <div style="flex:1;min-height:0;overflow:auto;padding:22px 28px">
+            <div style="max-width:1200px;margin:0 auto">
+              <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
+                <h1 style="font-size:22px;letter-spacing:-.02em;margin:0">Knižnica dokumentov</h1>
+                <span style="font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums">24 z 148</span>
+                <span style="flex:1"></span>
+                <button style="height:36px;padding:0 14px;border:0;border-radius:9px;background:var(--accent);color:#fff;font-size:13px;font-weight:600;cursor:pointer">Nahrať dokument</button>
+                <button style="height:36px;padding:0 12px;border:1px solid var(--line);border-radius:9px;background:var(--surface);font-size:13px;font-weight:550;cursor:pointer">Export CSV</button>
+                <button style="all:unset;display:grid;place-items:center;width:36px;height:36px;border-radius:9px;background:var(--surface-2);font-size:16px;cursor:pointer">⋯</button>
+                <span style="display:flex;padding:3px;gap:2px;background:var(--surface-2);border-radius:9px"><span style="display:grid;place-items:center;height:30px;padding:0 11px;border-radius:7px;font-size:12.5px;font-weight:600;background:var(--surface)">Tabuľka</span><span style="display:grid;place-items:center;height:30px;padding:0 11px;border-radius:7px;font-size:12.5px;color:var(--muted)">Karty</span></span>
+              </div>
+              <div style="display:grid;grid-template-columns:250px minmax(0,1fr);gap:16px;align-items:start">
+                <aside style="padding:14px;border-radius:12px;background:var(--surface);border:1px solid var(--line);display:flex;flex-direction:column;gap:16px">
+                  <div style="display:flex;align-items:center;justify-content:space-between"><span style="font-size:11px;font-weight:650;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)">Filtre</span><a href="#s-kniznica" style="font-size:12px;font-weight:600">Zrušiť</a></div>
+                  <sc-for list="{{ libFacets }}" as="g" hint-placeholder-count="3">
+                    <div>
+                      <div style="font-size:12px;font-weight:650;margin-bottom:6px">{{ g.label }}</div>
+                      <sc-for list="{{ g.items }}" as="f" hint-placeholder-count="4">
+                        <span style="display:flex;align-items:center;gap:8px;height:34px;padding:0 6px;border-radius:7px;background:{{ f.rowBg }}"><span style="display:grid;place-items:center;width:15px;height:15px;border-radius:4px;border:1px solid {{ f.boxLine }};background:{{ f.boxBg }};color:#fff;font-size:9px;font-weight:800">{{ f.mark }}</span><span style="flex:1;font-size:13px;font-weight:{{ f.weight }}">{{ f.label }}</span><span style="font-size:11.5px;color:var(--muted);font-variant-numeric:tabular-nums">{{ f.count }}</span></span>
+                      </sc-for>
+                    </div>
+                  </sc-for>
+                  <div>
+                    <div style="font-size:12px;font-weight:650;margin-bottom:6px">Štítky</div>
+                    <div style="display:flex;flex-wrap:wrap;align-items:center;gap:4px;min-height:36px;padding:4px 6px;border-radius:9px;border:1px solid var(--line)"><span style="display:inline-flex;align-items:center;gap:4px;height:24px;padding:0 4px 0 8px;border-radius:6px;background:var(--surface-2);font-size:12px">Registrácia<span style="width:18px;text-align:center;color:var(--muted)">×</span></span><span style="flex:1;font-size:12.5px;color:var(--muted);padding:0 4px">hľadať…</span></div>
+                  </div>
+                  <div>
+                    <div style="font-size:12px;font-weight:650;margin-bottom:6px">Priečinok</div>
+                    <sc-for list="{{ libFolders }}" as="p" hint-placeholder-count="6">
+                      <span style="display:flex;align-items:center;height:32px;padding:0 6px;border-radius:7px;font-size:13px;color:{{ p.fg }};font-weight:{{ p.weight }};background:{{ p.bg }}"><span style="flex:1">{{ p.label }}</span><span style="font-size:11.5px;color:var(--muted);font-variant-numeric:tabular-nums">{{ p.count }}</span></span>
+                    </sc-for>
+                    <a href="#s-kniznica" style="display:block;margin-top:6px;font-size:12px;font-weight:600">Správa priečinkov →</a>
+                  </div>
+                </aside>
+                <div style="display:flex;flex-direction:column;gap:10px;min-width:0">
+                  <div style="display:flex;align-items:center;gap:8px;padding:10px;border-radius:11px;background:var(--surface);border:1px solid var(--line);flex-wrap:wrap">
+                    <div style="flex:1 1 260px;display:flex;align-items:center;gap:8px;height:34px;padding:0 10px;border-radius:8px;background:var(--bg);border:1px solid var(--line)"><span style="color:var(--muted);display:grid;place-items:center">{{ mark16 }}</span><span style="font-size:13px;color:var(--muted)">Hľadať v názve, obsahu, čísle predpisu…</span></div>
+                    <sc-for list="{{ libChips }}" as="c" hint-placeholder-count="2">
+                      <span style="display:inline-flex;align-items:center;gap:5px;height:28px;padding:0 5px 0 9px;border-radius:6px;background:var(--accent-soft);color:var(--accent-strong);font-size:12px;white-space:nowrap">{{ c.key }} {{ c.value }}<span style="width:16px;text-align:center;font-size:13px">×</span></span>
+                    </sc-for>
+                    <span style="height:28px;display:inline-flex;align-items:center;padding:0 9px;border:1px dashed var(--line);border-radius:6px;font-size:12px;font-weight:600;color:var(--muted)">+ Podmienka</span>
+                    <span style="flex:1"></span>
+                    <a href="#s-kniznica" style="font-size:12px;font-weight:600">Uložiť pohľad</a>
+                  </div>
+                  <div style="display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:9px;background:var(--accent);color:#fff">
+                    <span style="font-size:12.5px;font-weight:600">Označené: 2</span><span style="flex:1"></span>
+                    <span style="padding:5px 10px;border-radius:7px;font-size:12px;font-weight:600;background:rgba(255,255,255,.16)">Presunúť</span>
+                    <span style="padding:5px 10px;border-radius:7px;font-size:12px;font-weight:600;background:rgba(255,255,255,.16)">Vyžiadať potvrdenie</span>
+                    <span style="padding:5px 8px;font-size:12px">Zrušiť</span>
+                  </div>
+                  <div style="border-radius:12px;background:var(--surface);border:1px solid var(--line);overflow:hidden">
+                    <table style="width:100%;border-collapse:collapse">
+                      <thead><tr style="background:var(--bg)">
+                        <th style="width:36px;padding:8px 0 8px 12px;border-bottom:1px solid var(--line)"><span style="display:grid;place-items:center;width:15px;height:15px;border-radius:4px;border:1px solid var(--accent);background:var(--accent);color:#fff;font-size:10px;font-weight:800">–</span></th>
+                        <sc-for list="{{ libColumns }}" as="c" hint-placeholder-count="7">
+                          <th style="padding:8px 10px;text-align:{{ c.align }};font-size:10.5px;font-weight:650;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);white-space:nowrap;border-bottom:1px solid var(--line)">{{ c.label }}</th>
+                        </sc-for>
+                      </tr></thead>
+                      <tbody>
+                        <sc-for list="{{ libDocs }}" as="d" hint-placeholder-count="8">
+                          <tr style="border-bottom:1px solid var(--line);background:{{ d.rowBg }}">
+                            <td style="padding:8px 0 8px 12px;vertical-align:top"><span style="display:grid;place-items:center;width:15px;height:15px;margin-top:2px;border-radius:4px;border:1px solid {{ d.boxLine }};background:{{ d.boxBg }};color:#fff;font-size:9px;font-weight:800">{{ d.mark }}</span></td>
+                            <td style="padding:8px 10px;max-width:360px"><span style="display:block;font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ d.title }}</span><span style="display:block;font-size:11px;color:var(--muted);margin-top:1px">{{ d.sub }}</span></td>
+                            <td style="padding:8px 10px;font-size:12.5px;white-space:nowrap">{{ d.category }}</td>
+                            <td style="padding:8px 10px;font-size:12.5px;font-variant-numeric:tabular-nums">{{ d.version }}</td>
+                            <td style="padding:8px 10px;font-size:12.5px;color:var(--muted);white-space:nowrap">{{ d.validFrom }}</td>
+                            <td style="padding:8px 10px;white-space:nowrap"><span style="display:inline-block;padding:2px 7px;border-radius:5px;font-size:11.5px;font-weight:600;background:{{ d.sBg }};color:{{ d.sFg }}">{{ d.status }}</span></td>
+                            <td style="padding:8px 10px;min-width:120px"><span style="display:flex;align-items:center;gap:6px"><span style="flex:1;height:5px;border-radius:3px;background:var(--surface-2);overflow:hidden;display:block"><span style="display:block;height:100%;width:{{ d.pct }};background:{{ d.pctFg }}"></span></span><span style="font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums">{{ d.ack }}</span></span></td>
+                            <td style="padding:8px 12px 8px 10px;text-align:right;font-size:12px;color:var(--muted);white-space:nowrap">{{ d.updated }}</td>
+                          </tr>
+                        </sc-for>
+                      </tbody>
+                    </table>
+                    <div style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--bg);border-top:1px solid var(--line);font-size:12px;color:var(--muted)"><span>Zobrazené 1–8 z 24</span><span style="flex:1"></span><span style="height:28px;padding:0 10px;display:inline-flex;align-items:center;border:1px solid var(--line);border-radius:7px;background:var(--surface)">Predchádzajúca</span><span style="height:28px;padding:0 10px;display:inline-flex;align-items:center;border:1px solid var(--line);border-radius:7px;background:var(--surface);font-weight:600;color:var(--ink)">Ďalšia</span></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <span style="font-size:11.5px;font-weight:600;color:var(--muted)">Tablet 834 — karty v 2 stĺpcoch, filtre cez tlačidlo, akcie dole</span>
+        <div style="width:834px;height:820px;border-radius:18px;background:var(--bg);border:1px solid rgba(20,28,42,.18);box-shadow:0 24px 50px rgba(0,0,0,.12);overflow:hidden;display:flex;flex-direction:column;position:relative">
+          <div style="display:flex;align-items:center;gap:12px;height:56px;padding:0 18px;background:var(--surface);border-bottom:1px solid var(--line);flex:0 0 auto">
+            <span style="display:grid;place-items:center;width:28px;height:28px;border-radius:8px;background:var(--accent);color:#fff">{{ mark17 }}</span>
+            <span style="font-size:14px;font-weight:650">SFZ</span>
+            <div style="flex:1;min-width:0;display:flex;align-items:center;gap:9px;height:36px;padding:0 12px;border-radius:9px;background:var(--bg);border:1px solid var(--line)"><span style="color:var(--muted);display:grid;place-items:center">{{ mark16 }}</span><span style="flex:1;font-size:13px;color:var(--muted)">Opýtajte sa svojich dokumentov…</span></div>
+            <span style="position:relative;display:grid;place-items:center;width:40px;height:40px;color:var(--muted)">{{ bell19 }}<span style="position:absolute;top:8px;right:8px;width:7px;height:7px;border-radius:50%;background:var(--bad-fg);box-shadow:0 0 0 2px var(--surface)"></span></span>
+            <span style="display:grid;place-items:center;width:32px;height:32px;border-radius:50%;background:var(--surface-2);font-size:11.5px;font-weight:650">JL</span>
+          </div>
+          <div style="position:relative;display:flex;align-items:stretch;padding:0 12px;background:var(--surface);border-bottom:1px solid var(--line);flex:0 0 auto">
+            <div style="flex:1;min-width:0;display:flex;gap:2px;overflow:hidden">
+              <sc-for list="{{ navLibFit }}" as="n" hint-placeholder-count="6"><span style="display:flex;align-items:center;gap:6px;height:44px;padding:0 12px;font-size:13.5px;font-weight:{{ n.weight }};color:{{ n.fg }};border-bottom:2px solid {{ n.line }};white-space:nowrap">{{ n.label }}<sc-if value="{{ n.count }}" hint-placeholder-val="{{ false }}"><span style="font-size:11px;font-weight:600;padding:1px 6px;border-radius:10px;background:var(--surface-2);color:var(--muted)">{{ n.count }}</span></sc-if></span></sc-for>
+            </div>
+            <span style="flex:0 0 auto;display:flex;align-items:center;gap:6px;height:44px;padding:0 12px;margin-left:4px;font-size:13.5px;font-weight:550;color:var(--muted);white-space:nowrap">{{ moreIcon }}Viac<span style="font-size:11px;font-weight:600;padding:1px 6px;border-radius:10px;background:var(--surface-2);color:var(--muted)">{{ navRestCount }}</span></span>
+          </div>
+          <div style="flex:1;min-height:0;overflow:auto;padding:18px 18px 76px">
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+              <h1 style="font-size:21px;letter-spacing:-.02em;margin:0">Knižnica</h1>
+              <span style="font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums">24 z 148</span>
+              <span style="flex:1"></span>
+              <button style="height:40px;padding:0 14px;border:0;border-radius:10px;background:var(--accent);color:#fff;font-size:13.5px;font-weight:600;cursor:pointer">Nahrať</button>
+              <button style="all:unset;display:grid;place-items:center;width:40px;height:40px;border-radius:10px;background:var(--surface-2);font-size:17px;cursor:pointer">⋯</button>
+            </div>
+            <div style="display:flex;gap:8px;margin-bottom:10px">
+              <div style="flex:1;display:flex;align-items:center;gap:10px;height:44px;padding:0 14px;border-radius:11px;background:var(--surface);border:1px solid var(--line)"><span style="color:var(--muted);display:grid;place-items:center">{{ mark18 }}</span><span style="font-size:14px;color:var(--muted)">Názov, číslo, obsah…</span></div>
+              <span style="display:flex;align-items:center;gap:6px;height:44px;padding:0 14px;border-radius:11px;background:var(--accent-soft);color:var(--accent-strong);font-size:13.5px;font-weight:600">Filtre<span style="display:grid;place-items:center;min-width:20px;height:20px;border-radius:10px;background:var(--accent);color:#fff;font-size:11.5px;font-weight:700">2</span></span>
+              <span style="display:flex;padding:3px;gap:2px;background:var(--surface-2);border-radius:11px"><span style="display:grid;place-items:center;height:38px;padding:0 12px;border-radius:8px;font-size:13px;font-weight:600;background:var(--surface)">Karty</span><span style="display:grid;place-items:center;height:38px;padding:0 12px;border-radius:8px;font-size:13px;color:var(--muted)">Tabuľka</span></span>
+            </div>
+            <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px">
+              <sc-for list="{{ libChips }}" as="c" hint-placeholder-count="2">
+                <span style="display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 6px 0 11px;border-radius:8px;background:var(--accent-soft);color:var(--accent-strong);font-size:13px">{{ c.key }} {{ c.value }}<span style="display:grid;place-items:center;width:24px;height:24px;font-size:15px">×</span></span>
+              </sc-for>
+              <span style="display:inline-flex;align-items:center;height:32px;padding:0 10px;font-size:13px;color:var(--accent);font-weight:600">Zrušiť</span>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+              <sc-for list="{{ libDocs }}" as="d" hint-placeholder-count="8">
+                <div style="display:flex;gap:12px;padding:12px 12px 12px 10px;border-radius:12px;background:{{ d.cardBg }};border:1px solid {{ d.cardLine }}">
+                  <span style="flex:0 0 20px;width:20px;height:20px;margin-top:2px;border-radius:6px;border:1.5px solid {{ d.boxLine }};background:{{ d.boxBg }};color:#fff;display:grid;place-items:center;font-size:11px;font-weight:800">{{ d.mark }}</span>
+                  <span style="flex:1;min-width:0">
+                    <span style="display:flex;align-items:center;gap:6px;margin-bottom:4px"><span style="font-size:11px;font-weight:600;padding:2px 7px;border-radius:5px;background:{{ d.sBg }};color:{{ d.sFg }}">{{ d.status }}</span><span style="font-size:12px;color:var(--muted)">{{ d.category }}</span><span style="flex:1"></span><span style="font-size:12px;color:var(--muted)">{{ d.version }}</span></span>
+                    <span style="display:block;font-size:14.5px;font-weight:600;line-height:1.3;text-wrap:pretty">{{ d.title }}</span>
+                    <span style="display:block;font-size:12px;color:var(--muted);margin-top:3px">{{ d.sub }}</span>
+                    <span style="display:flex;align-items:center;gap:8px;margin-top:9px"><span style="flex:1;height:5px;border-radius:3px;background:var(--surface-2);overflow:hidden;display:block"><span style="display:block;height:100%;width:{{ d.pct }};background:{{ d.pctFg }}"></span></span><span style="font-size:11.5px;color:var(--muted);white-space:nowrap">{{ d.ack }}</span></span>
+                  </span>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+          <div style="position:absolute;left:0;right:0;bottom:0;display:flex;align-items:center;gap:8px;padding:10px 16px;background:var(--accent);color:#fff">
+            <span style="font-size:14px;font-weight:600">2 označené</span><span style="flex:1"></span>
+            <span style="display:inline-flex;align-items:center;height:38px;padding:0 14px;border-radius:9px;background:rgba(255,255,255,.18);font-size:13.5px;font-weight:600">Presunúť</span>
+            <span style="display:inline-flex;align-items:center;height:38px;padding:0 14px;border-radius:9px;background:rgba(255,255,255,.18);font-size:13.5px;font-weight:600">Vyžiadať potvrdenie</span>
+            <span style="display:grid;place-items:center;width:38px;height:38px;border-radius:9px;font-size:18px">×</span>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <span style="font-size:11.5px;font-weight:600;color:var(--muted)">Telefón 390 — karty, filtre ako tlačidlo</span>
+        <div style="width:390px;height:820px;border-radius:26px;background:var(--bg);border:1px solid rgba(20,28,42,.18);box-shadow:0 24px 50px rgba(0,0,0,.12);overflow:hidden;display:flex;flex-direction:column;position:relative">
+          <div style="padding:12px 14px;background:var(--surface);border-bottom:1px solid var(--line);flex:0 0 auto">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+              <h1 style="flex:1;font-size:20px;letter-spacing:-.02em;margin:0">Knižnica</h1>
+              <span style="font-size:12.5px;color:var(--muted);font-variant-numeric:tabular-nums">24 z 148</span>
+              <span style="display:grid;place-items:center;width:44px;height:44px;border-radius:10px;background:var(--surface-2);font-size:18px">⋯</span>
+            </div>
+            <div style="display:flex;gap:8px">
+              <div style="flex:1;display:flex;align-items:center;gap:10px;height:48px;padding:0 14px;border-radius:12px;background:var(--bg);border:1px solid var(--line)"><span style="color:var(--muted);display:grid;place-items:center">{{ mark18 }}</span><span style="font-size:15px;color:var(--muted)">Názov, číslo…</span></div>
+              <span style="display:flex;align-items:center;gap:6px;height:48px;padding:0 13px;border-radius:12px;background:var(--accent-soft);color:var(--accent-strong);font-size:14px;font-weight:600">Filtre<span style="display:grid;place-items:center;min-width:20px;height:20px;border-radius:10px;background:var(--accent);color:#fff;font-size:11.5px;font-weight:700">2</span></span>
+            </div>
+            <div style="display:flex;gap:6px;overflow-x:auto;margin:10px -14px 0;padding:0 14px 2px">
+              <sc-for list="{{ libChips }}" as="c" hint-placeholder-count="2">
+                <span style="display:inline-flex;align-items:center;gap:6px;height:34px;padding:0 6px 0 11px;border-radius:9px;background:var(--surface-2);font-size:13px;white-space:nowrap"><span style="color:var(--muted)">{{ c.key }}</span>{{ c.value }}<span style="display:grid;place-items:center;width:26px;height:26px;border-radius:6px;font-size:15px;color:var(--muted)">×</span></span>
+              </sc-for>
+              <span style="display:inline-flex;align-items:center;height:34px;padding:0 11px;font-size:13px;color:var(--accent);font-weight:600;white-space:nowrap">Zrušiť</span>
+            </div>
+          </div>
+          <div style="flex:1;min-height:0;overflow:auto;padding:12px 14px 110px;display:flex;flex-direction:column;gap:8px">
+            <sc-for list="{{ libDocs }}" as="d" hint-placeholder-count="8">
+              <div style="flex:0 0 auto;display:flex;gap:12px;padding:12px 12px 12px 10px;border-radius:12px;background:{{ d.cardBg }};border:1px solid {{ d.cardLine }}">
+                <span style="flex:0 0 22px;width:22px;height:22px;margin-top:2px;border-radius:6px;border:1.5px solid {{ d.boxLine }};background:{{ d.boxBg }};color:#fff;display:grid;place-items:center;font-size:12px;font-weight:800">{{ d.mark }}</span>
+                <span style="flex:1;min-width:0">
+                  <span style="display:flex;align-items:center;gap:6px;margin-bottom:4px"><span style="font-size:11px;font-weight:600;padding:2px 7px;border-radius:5px;background:{{ d.sBg }};color:{{ d.sFg }}">{{ d.status }}</span><span style="font-size:12px;color:var(--muted)">{{ d.category }}</span><span style="flex:1"></span><span style="font-size:12px;color:var(--muted)">{{ d.version }}</span></span>
+                  <span style="display:block;font-size:15px;font-weight:600;line-height:1.3;text-wrap:pretty">{{ d.title }}</span>
+                  <span style="display:block;font-size:12px;color:var(--muted);margin-top:3px">{{ d.sub }}</span>
+                  <span style="display:flex;align-items:center;gap:8px;margin-top:9px"><span style="flex:1;height:5px;border-radius:3px;background:var(--surface-2);overflow:hidden;display:block"><span style="display:block;height:100%;width:{{ d.pct }};background:{{ d.pctFg }}"></span></span><span style="font-size:11.5px;color:var(--muted);white-space:nowrap">{{ d.ack }}</span></span>
+                </span>
+              </div>
+            </sc-for>
+          </div>
+          <div style="position:absolute;left:0;right:0;bottom:0;display:flex;align-items:center;gap:8px;padding:10px 12px 18px;background:var(--accent);color:#fff">
+            <span style="font-size:14px;font-weight:600;padding:0 4px">2 označené</span>
+            <span style="flex:1"></span>
+            <span style="display:inline-flex;align-items:center;height:40px;padding:0 13px;border-radius:9px;background:rgba(255,255,255,.18);font-size:13.5px;font-weight:600">Presunúť</span>
+            <span style="display:inline-flex;align-items:center;height:40px;padding:0 13px;border-radius:9px;background:rgba(255,255,255,.18);font-size:13.5px;font-weight:600">Potvrdenie</span>
+            <span style="display:grid;place-items:center;width:40px;height:40px;border-radius:9px;font-size:18px">×</span>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <span style="font-size:11.5px;font-weight:600;color:var(--muted)">Telefón 390 — filtre ako spodný sheet</span>
+        <div style="width:390px;height:820px;border-radius:26px;background:var(--bg);border:1px solid rgba(20,28,42,.18);box-shadow:0 24px 50px rgba(0,0,0,.12);overflow:hidden;position:relative">
+          <div style="position:absolute;inset:0;background:rgba(20,28,42,.45)"></div>
+          <div style="position:absolute;left:0;right:0;bottom:0;top:96px;display:flex;flex-direction:column;background:var(--surface);border-radius:22px 22px 0 0">
+            <div style="display:grid;place-items:center;padding:8px 0 2px"><span style="width:38px;height:5px;border-radius:3px;background:var(--line)"></span></div>
+            <div style="display:flex;align-items:center;padding:6px 16px 12px;border-bottom:1px solid var(--line)"><span style="flex:1;font-size:17px;font-weight:650">Filtre</span><span style="font-size:14px;font-weight:600;color:var(--accent);padding:8px 4px">Zrušiť všetky</span></div>
+            <div style="flex:1;min-height:0;overflow:auto;padding:14px 16px 20px;display:flex;flex-direction:column;gap:18px">
+              <sc-for list="{{ libFacets }}" as="g" hint-placeholder-count="3">
+                <div style="flex:0 0 auto">
+                  <div style="font-size:12px;font-weight:650;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);margin-bottom:8px">{{ g.label }}</div>
+                  <div style="display:flex;flex-wrap:wrap;gap:8px">
+                    <sc-for list="{{ g.items }}" as="f" hint-placeholder-count="4">
+                      <span style="display:inline-flex;align-items:center;gap:6px;height:36px;padding:0 10px;border-radius:9px;border:1px solid {{ f.pillLine }};background:{{ f.pillBg }};color:{{ f.pillFg }};font-size:14px;font-weight:{{ f.weight }}">{{ f.label }}<span style="font-size:12px;opacity:.65;font-variant-numeric:tabular-nums">{{ f.count }}</span></span>
+                    </sc-for>
+                  </div>
+                </div>
+              </sc-for>
+              <div style="flex:0 0 auto">
+                <div style="font-size:12px;font-weight:650;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);margin-bottom:8px">Štítky</div>
+                <div style="display:flex;flex-wrap:wrap;align-items:center;gap:6px;min-height:48px;padding:5px 8px;border-radius:12px;border:1px solid var(--line)"><span style="display:inline-flex;align-items:center;gap:4px;height:32px;padding:0 4px 0 10px;border-radius:8px;background:var(--surface-2);font-size:13.5px">Registrácia<span style="display:grid;place-items:center;width:26px;height:26px;font-size:15px;color:var(--muted)">×</span></span><span style="flex:1;font-size:15px;color:var(--muted);padding:0 4px">hľadať štítok…</span><span style="font-size:12px;color:var(--muted)">1/7</span></div>
+              </div>
+              <div style="flex:0 0 auto">
+                <div style="font-size:12px;font-weight:650;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);margin-bottom:8px">Priečinok</div>
+                <div style="display:flex;align-items:center;height:48px;padding:0 14px;border-radius:12px;border:1px solid var(--line)"><span style="flex:1;font-size:15px">Právne a legislatíva</span><span style="font-size:12px;color:var(--muted);margin-right:10px">24</span><span style="color:var(--muted)">›</span></div>
+                <div style="font-size:12px;color:var(--muted);margin-top:8px;line-height:1.5">Premenovať alebo presúvať priečinky viete v <span style="color:var(--accent);font-weight:600">Správe priečinkov</span> — nie tu.</div>
+              </div>
+              <div style="flex:0 0 auto">
+                <div style="font-size:12px;font-weight:650;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);margin-bottom:8px">Podmienky</div>
+                <div style="display:flex;align-items:center;gap:10px;height:48px;padding:0 14px;border-radius:12px;border:1px dashed var(--line);font-size:14px;color:var(--muted)"><span style="font-size:16px">+</span>Pridať podmienku (názov obsahuje, platné od…)</div>
+              </div>
+            </div>
+            <div style="padding:12px 16px 20px;border-top:1px solid var(--line);background:var(--surface)">
+              <button style="width:100%;height:50px;border:0;border-radius:12px;background:var(--accent);color:#fff;font-size:16px;font-weight:600;cursor:pointer">Zobraziť 24 dokumentov</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;accent&quot;:{&quot;editor&quot;:&quot;color&quot;,&quot;options&quot;:[&quot;#1f4ed8&quot;,&quot;#0e7490&quot;,&quot;#047857&quot;,&quot;#b45309&quot;,&quot;#232a35&quot;],&quot;default&quot;:&quot;#1f4ed8&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Tenant&quot;}}">
+const R = React.createElement
+function svg(size, children, opts) {
+  return R("svg", Object.assign({ width: size, height: size, viewBox: opts.box, fill: "none", "aria-hidden": "true", style: { flex: "0 0 auto" } }, opts.attrs || {}), children)
+}
+function markEl(size) {
+  return svg(size, [
+    R("circle", { key: "a", cx: 18, cy: 18, r: 13, stroke: "currentColor", strokeWidth: 4 }),
+    R("circle", { key: "b", cx: 13, cy: 18, r: 2.3, fill: "currentColor" }),
+    R("circle", { key: "c", cx: 23, cy: 18, r: 2.3, fill: "currentColor" }),
+    R("path", { key: "d", d: "M28 27 L41 41 L29 38 Z", fill: "currentColor" }),
+  ], { box: "0 0 48 48" })
+}
+/* Icon.tsx — mriežka 18×18, vykreslený ťah vždy 1,5 px (strokeWidth sa dopočíta). */
+const STROKE_PX = 1.5, VIEW_BOX = 18
+const ICON_PATHS = {
+  overview: ["rect:2.6,2.6,5.6,5.6,1.2", "rect:9.8,2.6,5.6,5.6,1.2", "rect:2.6,9.8,5.6,5.6,1.2", "rect:9.8,9.8,5.6,5.6,1.2"],
+  ask: ["M15.2 10.4a2 2 0 0 1-2 2H7.4L3.6 15.2v-2.8h-.2a2 2 0 0 1-2-2V4.6a2 2 0 0 1 2-2h9.8a2 2 0 0 1 2 2z"],
+  toAcknowledge: ["rect:2.6,2.6,12.8,12.8,2.2", "M5.8 9.2 8 11.4l4.2-4.4"],
+  toApprove: ["circle:9,9,6.4", "M6 9.1 8.1 11.2 12 7.1"],
+  directory: ["circle:9,6.2,2.9", "M3.4 15.4a5.6 5.6 0 0 1 11.2 0"],
+  library: ["M3.4 3.2h2.8v11.6H3.4zM7.6 3.2h2.8v11.6H7.6z", "m11.9 4.1 2.6.7-2.8 10.2-2.1-.6"],
+  assigned: ["M6.6 3.4H4.8a1.4 1.4 0 0 0-1.4 1.4v9.6a1.4 1.4 0 0 0 1.4 1.4h8.4a1.4 1.4 0 0 0 1.4-1.4V4.8a1.4 1.4 0 0 0-1.4-1.4h-1.8", "rect:6.6,1.9,4.8,2.9,1", "M6.4 9.4h5.2M6.4 12.1h3.4"],
+  evidence: ["M7.5 10.5a3 3 0 0 1 0-4.2l1.8-1.8a3 3 0 0 1 4.2 4.2l-.9.9", "M10.5 7.5a3 3 0 0 1 0 4.2l-1.8 1.8a3 3 0 0 1-4.2-4.2l.9-.9"],
+  evaluation: ["circle:9,9,6.4", "m6.3 9.1 1.9 1.9 3.5-3.9"],
+  people: ["circle:7,6.4,2.6", "M2.2 15a4.8 4.8 0 0 1 9.6 0", "M12.4 4.2a2.6 2.6 0 0 1 0 5M13.4 10.8a4.8 4.8 0 0 1 2.4 4.2"],
+  /* Návrh na doplnenie do Icon.tsx — kreslené na tej istej mriežke. */
+  notifications: ["M13.9 11.6c0-5.2-1.6-7-4.9-7s-4.9 1.8-4.9 7l-1.3 2.1h12.4z", "M10.6 15.4a1.7 1.7 0 0 1-3.2 0"],
+  more: ["M3.2 5.4h11.6M3.2 9h11.6M3.2 12.6h11.6"],
+  search: ["circle:8.1,8.1,5.1", "m11.9 11.9 3 3"],
+}
+function iconEl(name, size) {
+  const shape = ICON_PATHS[name]
+  if (!shape) return null
+  const kids = shape.map((d, i) => {
+    if (d.startsWith("rect:")) { const p = d.slice(5).split(","); return R("rect", { key: i, x: +p[0], y: +p[1], width: +p[2], height: +p[3], rx: +p[4] }) }
+    if (d.startsWith("circle:")) { const p = d.slice(7).split(","); return R("circle", { key: i, cx: +p[0], cy: +p[1], r: +p[2] }) }
+    return R("path", { key: i, d })
+  })
+  return R("svg", {
+    width: size, height: size, viewBox: "0 0 " + VIEW_BOX + " " + VIEW_BOX, fill: "none",
+    stroke: "currentColor", strokeWidth: Number(((STROKE_PX * VIEW_BOX) / size).toFixed(2)),
+    strokeLinecap: "round", strokeLinejoin: "round", "aria-hidden": "true", style: { flex: "0 0 auto" },
+  }, kids)
+}
+function bellEl(size) { return iconEl("notifications", size) }
+
+const NAV = [["Prehľad", "", true], ["Opýtať sa", "", false], ["Na potvrdenie", "6", false], ["Na schválenie", "3", false], ["Adresár", "", false], ["Knižnica", "", false], ["Pridelené normy", "", false], ["Reťaz dôkazov", "", false], ["Osoby", "", false], ["Na posúdenie", "4", false]]
+const TABS = [["overview", "Prehľad", true, ""], ["mark", "Opýtať sa", false, ""], ["library", "Knižnica", false, ""], ["toAcknowledge", "Úlohy", false, "6"], ["more", "Viac", false, ""]]
+
+function darken(hex) { const m = /^#?([0-9a-f]{6})$/i.exec((hex || "").trim()); if (!m) return hex; const n = parseInt(m[1], 16); const f = c => Math.round(c * .84); return "#" + [f(n >> 16 & 255), f(n >> 8 & 255), f(n & 255)].map(v => v.toString(16).padStart(2, "0")).join("") }
+function soft(hex) { const m = /^#?([0-9a-f]{6})$/i.exec((hex || "").trim()); if (!m) return "rgba(31,78,216,.11)"; const n = parseInt(m[1], 16); return "rgba(" + [n >> 16 & 255, n >> 8 & 255, n & 255].join(",") + ",.11)" }
+
+class Component extends DCLogic {
+  state = { navMoreOpen: true }
+  componentDidMount() { this.theme() }
+  componentDidUpdate() { this.theme() }
+  theme() {
+    const a = this.props.accent ?? "#1f4ed8", r = document.documentElement.style
+    r.setProperty("--accent", a); r.setProperty("--accent-strong", darken(a)); r.setProperty("--accent-soft", soft(a))
+  }
+  renderVals() {
+    return {
+      mark16: markEl(16), mark17: markEl(17), mark18: markEl(18), mark19: markEl(19), mark21: markEl(21),
+      bell18: bellEl(18), bell19: bellEl(19), bell21: bellEl(21),
+      navMoreOpen: this.state.navMoreOpen,
+      toggleNavMore: () => this.setState(s => ({ navMoreOpen: !s.navMoreOpen })),
+      navMoreFg: this.state.navMoreOpen ? "var(--ink)" : "var(--muted)",
+      navMoreLine: this.state.navMoreOpen ? "var(--line)" : "transparent",
+      navHomeFit: NAV.slice(0, 6).map(([label, count]) => ({ label, count, weight: label === "Prehľad" ? "650" : "500", fg: label === "Prehľad" ? "var(--accent)" : "var(--muted)", line: label === "Prehľad" ? "var(--accent)" : "transparent" })),
+      navFit: NAV.slice(0, 6).map(([label, count]) => ({ label, count, weight: label === "Adresár" ? "650" : "500", fg: label === "Adresár" ? "var(--accent)" : "var(--muted)", line: label === "Adresár" ? "var(--accent)" : "transparent" })),
+      navRest: NAV.slice(6).map(([label, count]) => ({ label, count })),
+      navRestCount: NAV.length - 6,
+      moreIcon: iconEl("more", 16),
+      navLibFit: NAV.slice(0, 6).map(([label, count]) => ({ label, count, weight: label === "Knižnica" ? "650" : "500", fg: label === "Knižnica" ? "var(--accent)" : "var(--muted)", line: label === "Knižnica" ? "var(--accent)" : "transparent" })),
+      libChips: [{ key: "Kategória:", value: "Norma" }, { key: "Štítok:", value: "Registrácia" }],
+      libFacets: [
+        { label: "Kategória", items: [["Norma", 41, true], ["Smernica", 62, false], ["Metodický pokyn", 23, false], ["Manuál", 22, false]] },
+        { label: "Stav", items: [["Platný", 118, false], ["Návrh", 14, false], ["Na schválenie", 9, false], ["Expirovaný", 7, false]] },
+        { label: "Prístup", items: [["Interný", 131, false], ["Verejný", 17, false]] },
+      ].map(g => ({ label: g.label, items: g.items.map(([label, count, on]) => ({ label, count, mark: on ? "✓" : "", boxBg: on ? "var(--accent)" : "transparent", boxLine: on ? "var(--accent)" : "var(--line)", rowBg: on ? "var(--accent-soft)" : "transparent", weight: on ? "600" : "500", pillBg: on ? "var(--accent-soft)" : "var(--surface)", pillLine: on ? "var(--accent)" : "var(--line)", pillFg: on ? "var(--accent-strong)" : "var(--ink)" })) })),
+      libFolders: [["Všetky dokumenty", 148, false], ["Právne a legislatíva", 24, true], ["Súťaže", 27, false], ["Compliance", 12, false], ["Ekonomika", 31, false], ["Nezaradené", 4, false]].map(([label, count, on]) => ({ label, count, fg: on ? "var(--accent-strong)" : "var(--ink)", weight: on ? "600" : "500", bg: on ? "var(--accent-soft)" : "transparent" })),
+      libDocs: [
+        ["Registračný a prestupový poriadok", "RPP-2026-04 · Právne", "Norma", "v4.2", "1. 1. 2026", "Platný", "var(--ok-bg)", "var(--ok-fg)", 68, "dnes 09:12", true],
+        ["Smernica o ochrane osobných údajov", "SM-GDPR-03 · Compliance", "Smernica", "v3.0", "1. 3. 2026", "Platný", "var(--ok-bg)", "var(--ok-fg)", 94, "včera", false],
+        ["Súťažný poriadok", "SP-2026-01 · Súťaže", "Norma", "v6.1", "1. 7. 2026", "Na schválenie", "var(--accent-soft)", "var(--accent-strong)", 0, "2 dni", true],
+        ["Pracovný poriadok", "HR-PP-11 · Ľudské zdroje", "Smernica", "v11.0", "1. 1. 2025", "Platný", "var(--ok-bg)", "var(--ok-fg)", 97, "3 dni", false],
+        ["Metodický pokyn k licenciám trénerov", "MP-TR-07 · Vzdelávanie", "Metodický pokyn", "v2.3", "15. 8. 2026", "Návrh", "var(--warn-bg)", "var(--warn-fg)", 0, "4 dni", false],
+        ["Cestovné náhrady 2026", "EK-CN-26 · Ekonomika", "Smernica", "v1.4", "1. 2. 2026", "Platný", "var(--ok-bg)", "var(--ok-fg)", 84, "6 dní", false],
+        ["Disciplinárny poriadok", "DP-2025-02 · Právne", "Norma", "v5.0", "1. 9. 2025", "Platný", "var(--ok-bg)", "var(--ok-fg)", 90, "2 týž.", false],
+        ["Bezpečnosť na štadiónoch", "PR-BEZ-04 · Prevádzka", "Manuál", "v4.1", "1. 6. 2024", "Expirovaný", "var(--bad-bg)", "var(--bad-fg)", 57, "3 týž.", false],
+      ].map(d => ({
+        title: d[0], sub: d[1], category: d[2], version: d[3], validFrom: d[4], status: d[5], sBg: d[6], sFg: d[7],
+        ack: d[8] ? d[8] + " %" : "—", pct: d[8] + "%", pctFg: d[8] >= 90 ? "var(--ok-fg)" : d[8] >= 50 ? "var(--accent)" : "var(--warn-fg)",
+        updated: d[9], mark: d[10] ? "✓" : "", boxBg: d[10] ? "var(--accent)" : "transparent", boxLine: d[10] ? "var(--accent)" : "rgba(20,28,42,.28)",
+        rowBg: d[10] ? "var(--accent-soft)" : "transparent", cardBg: d[10] ? "var(--accent-soft)" : "var(--surface)", cardLine: d[10] ? "var(--accent)" : "var(--line)",
+      })),
+      libColumns: [["Dokument", "left"], ["Kategória", "left"], ["Verzia", "left"], ["Platnosť od", "left"], ["Stav", "left"], ["Potvrdenia", "left"], ["Zmenené", "right"]].map(([label, align]) => ({ label, align })),
+      iconSet: ["overview", "ask", "toAcknowledge", "toApprove", "directory", "library", "assigned", "evidence", "people", "evaluation", "notifications", "more"].map(name => ({ name, el: iconEl(name, 22) })),
+      nav: NAV.map(([label, count, on]) => ({ label, count, weight: on ? "650" : "500", fg: on ? "var(--accent)" : "var(--muted)", line: on ? "var(--accent)" : "transparent" })),
+      tabs: TABS.map(([name, label, , badge]) => ({ icon: name === "mark" ? markEl(21) : iconEl(name, 21), label, badge, fg: label === "Prehľad" ? "var(--accent)" : "var(--muted)", weight: label === "Prehľad" ? "650" : "500" })),
+      statusPills: [
+        { label: "Platný", bg: "var(--ok-bg)", fg: "var(--ok-fg)" },
+        { label: "Návrh", bg: "var(--warn-bg)", fg: "var(--warn-fg)" },
+        { label: "Na schválenie", bg: "var(--accent-soft)", fg: "var(--accent-strong)" },
+        { label: "Expirovaný", bg: "var(--bad-bg)", fg: "var(--bad-fg)" },
+        { label: "Archív", bg: "var(--surface-2)", fg: "var(--muted)" },
+      ],
+      navD: NAV.map(([label, count, on]) => ({ label, count, weight: on ? "650" : "500", fg: on ? "var(--accent)" : "var(--muted)", line: on ? "var(--accent)" : "transparent" })),
+      navL: NAV.map(([label, count]) => ({ label, count, weight: label === "Knižnica" ? "650" : "500", fg: label === "Knižnica" ? "var(--accent)" : "var(--muted)", line: label === "Knižnica" ? "var(--accent)" : "transparent" })),
+      navA: NAV.map(([label, count]) => ({ label, count, weight: label === "Adresár" ? "650" : "500", fg: label === "Adresár" ? "var(--accent)" : "var(--muted)", line: label === "Adresár" ? "var(--accent)" : "transparent" })),
+      navP: NAV.map(([label, count]) => ({ label, count, weight: label === "Na potvrdenie" ? "650" : "500", fg: label === "Na potvrdenie" ? "var(--accent)" : "var(--muted)", line: label === "Na potvrdenie" ? "var(--accent)" : "transparent" })),
+      navS: NAV.map(([label, count]) => ({ label, count, weight: label === "Na schválenie" ? "650" : "500", fg: label === "Na schválenie" ? "var(--accent)" : "var(--muted)", line: label === "Na schválenie" ? "var(--accent)" : "transparent" })),
+      navAsk: NAV.map(([label, count]) => ({ label, count, weight: label === "Opýtať sa" ? "650" : "500", fg: label === "Opýtať sa" ? "var(--accent)" : "var(--muted)", line: label === "Opýtať sa" ? "var(--accent)" : "transparent" })),
+      tabsHome: TABS.map(([name, label, , badge]) => ({ icon: name === "mark" ? markEl(21) : iconEl(name, 21), label, badge, fg: label === "Prehľad" ? "var(--accent)" : "var(--muted)", weight: label === "Prehľad" ? "650" : "500" })),
+      tabsAsk: TABS.map(([name, label, , badge]) => ({ icon: name === "mark" ? markEl(21) : iconEl(name, 21), label, badge, fg: label === "Opýtať sa" ? "var(--accent)" : "var(--muted)", weight: label === "Opýtať sa" ? "650" : "500" })),
+      tabsTasks: TABS.map(([name, label, , badge]) => ({ icon: name === "mark" ? markEl(21) : iconEl(name, 21), label, badge, fg: label === "Úlohy" ? "var(--accent)" : "var(--muted)", weight: label === "Úlohy" ? "650" : "500" })),
+      tabsMore: TABS.map(([name, label, , badge]) => ({ icon: name === "mark" ? markEl(21) : iconEl(name, 21), label, badge, fg: label === "Viac" ? "var(--accent)" : "var(--muted)", weight: label === "Viac" ? "650" : "500" })),
+      kpis: [
+        { label: "Na potvrdenie", value: "6", note: "2 do piatku", fg: "var(--bad-fg)" },
+        { label: "Na schválenie", value: "3", note: "moje", fg: "var(--ink)" },
+        { label: "Nové za 7 dní", value: "12", note: "dokumentov", fg: "var(--ink)" },
+        { label: "Expiruje", value: "2", note: "do 30 dní", fg: "var(--warn-fg)" },
+      ],
+      todo: [
+        { title: "Registračný a prestupový poriadok v4.2", meta: "Norma · Právne a legislatíva", due: "do 12. 9.", dueBg: "var(--bad-bg)", dueFg: "var(--bad-fg)", action: "Potvrdiť" },
+        { title: "Súťažný poriadok v6.1", meta: "Norma · Súťaže · čaká na vaše schválenie", due: "do 15. 9.", dueBg: "var(--warn-bg)", dueFg: "var(--warn-fg)", action: "Schváliť" },
+        { title: "Smernica o ochrane osobných údajov v3.0", meta: "Smernica · Compliance", due: "do 20. 9.", dueBg: "var(--warn-bg)", dueFg: "var(--warn-fg)", action: "Potvrdiť" },
+        { title: "Cestovné náhrady 2026 v1.4", meta: "Smernica · Ekonomika", due: "do 30. 9.", dueBg: "var(--surface-2)", dueFg: "var(--muted)", action: "Potvrdiť" },
+      ],
+      news: [
+        { title: "Registračný a prestupový poriadok v4.2", meta: "Norma · Právne · dnes 09:12", chip: "Platný", chipBg: "var(--ok-bg)", chipFg: "var(--ok-fg)" },
+        { title: "Smernica o ochrane osobných údajov v3.0", meta: "Smernica · Compliance · včera", chip: "Platný", chipBg: "var(--ok-bg)", chipFg: "var(--ok-fg)" },
+        { title: "Súťažný poriadok v6.1", meta: "Norma · Súťaže · 2 dni", chip: "Na schválenie", chipBg: "var(--accent-soft)", chipFg: "var(--accent-strong)" },
+      ],
+      prompts: ["Do kedy treba nahlásiť prestup?", "Cestovné náhrady 2026?", "Kto schvaľuje licenciu trénera?"].map(label => ({ label })),
+      citations: [
+        { n: "[1]", title: "Registračný a prestupový poriadok v4.2", meta: "Článok 4, odsek 1 · účinné od 1. 1. 2026", score: "0,94" },
+        { n: "[2]", title: "Registračný a prestupový poriadok v4.2", meta: "Článok 4, odsek 3 · účinné od 1. 1. 2026", score: "0,91" },
+        { n: "[3]", title: "Metodický pokyn k mládeži v2.1", meta: "Bod 7 · účinné od 1. 3. 2025", score: "0,83" },
+      ],
+      ackRows: [
+        { title: "Registračný a prestupový poriadok", meta: "v4.2 · Norma · Právne", due: "do 12. 9.", dueBg: "var(--bad-bg)", dueFg: "var(--bad-fg)", state: "Neotvorené", sBg: "var(--surface-2)", sFg: "var(--muted)" },
+        { title: "Smernica o ochrane osobných údajov", meta: "v3.0 · Smernica · Compliance", due: "do 20. 9.", dueBg: "var(--warn-bg)", dueFg: "var(--warn-fg)", state: "Otvorené", sBg: "var(--accent-soft)", sFg: "var(--accent-strong)" },
+        { title: "Cestovné náhrady 2026", meta: "v1.4 · Smernica · Ekonomika", due: "do 30. 9.", dueBg: "var(--surface-2)", dueFg: "var(--muted)", state: "Neotvorené", sBg: "var(--surface-2)", sFg: "var(--muted)" },
+        { title: "Etický kódex", meta: "v2.0 · Smernica · Compliance", due: "potvrdené 4. 9.", dueBg: "var(--ok-bg)", dueFg: "var(--ok-fg)", state: "Potvrdené", sBg: "var(--ok-bg)", sFg: "var(--ok-fg)" },
+      ],
+      approveRows: [
+        { title: "Súťažný poriadok v6.1", meta: "Norma · Súťaže · nahral Tomáš Sedlák · 2 dni", step: "1 z 3 · vecné posúdenie", due: "do 15. 9.", dueBg: "var(--warn-bg)", dueFg: "var(--warn-fg)" },
+        { title: "Metodický pokyn k licenciám trénerov v2.3", meta: "Metodický pokyn · Vzdelávanie · Zuzana Kováčová · 4 dni", step: "2 z 3 · kontrola súladu", due: "do 22. 9.", dueBg: "var(--surface-2)", dueFg: "var(--muted)" },
+        { title: "Bezpečnosť na štadiónoch v5.0", meta: "Manuál · Prevádzka · Peter Novák · 6 dní", step: "1 z 2 · vecné posúdenie", due: "do 28. 9.", dueBg: "var(--surface-2)", dueFg: "var(--muted)" },
+      ],
+      people: [
+        { name: "Marek Horák", initials: "MH", where: "Riaditeľ · Právne a legislatíva · Bratislava", mail: "marek.horak@futbalsfz.sk", tel: "+421 905 111 222" },
+        { name: "Zuzana Kováčová", initials: "ZK", where: "Personalistka · Ľudské zdroje · Bratislava", mail: "zuzana.kovacova@futbalsfz.sk", tel: "+421 905 333 444" },
+        { name: "Peter Novák", initials: "PN", where: "Ekonóm · Ekonomika · Bratislava", mail: "peter.novak@futbalsfz.sk", tel: "" },
+        { name: "Lucia Bieliková", initials: "LB", where: "Compliance · Bratislava", mail: "lucia.bielikova@futbalsfz.sk", tel: "+421 905 555 666" },
+        { name: "Tomáš Sedlák", initials: "TS", where: "Manažér súťaží · Súťaže · Žilina", mail: "tomas.sedlak@futbalsfz.sk", tel: "" },
+        { name: "Ján Letko", initials: "JL", where: "IT a digitalizácia · Bratislava", mail: "jan.letko@futbalsfz.sk", tel: "+421 905 777 888" },
+      ],
+      versions: [
+        { label: "v4.2 — účinné od 1. 1. 2026", meta: "Schválil Marek Horák · 18. 12. 2025", chip: "Aktuálna", chipBg: "var(--ok-bg)", chipFg: "var(--ok-fg)", dot: "var(--ok-fg)" },
+        { label: "v4.1 — účinné od 1. 7. 2025", meta: "Schválil Marek Horák · 20. 6. 2025", chip: "Archív", chipBg: "var(--surface-2)", chipFg: "var(--muted)", dot: "var(--muted)" },
+        { label: "v5.0 — návrh", meta: "Pripravuje Lucia Bieliková · dnes", chip: "Návrh", chipBg: "var(--warn-bg)", chipFg: "var(--warn-fg)", dot: "var(--warn-fg)" },
+      ],
+      meta: [
+        { k: "Kategória", v: "Norma" }, { k: "Útvar", v: "Právne a legislatíva" },
+        { k: "Štítky", v: "Poriadok, Registrácia, Štart hráča" },
+        { k: "Prístup", v: "Interný (len prihlásení)" },
+        { k: "Zdroj", v: "PDF · 68 strán" },
+        { k: "Schválil", v: "Marek Horák, 18. 12. 2025" },
+      ],
+      docTabs: [["Obsah", true], ["Zmeny", false], ["Citované časti", false], ["Audit", false]].map(([label, on]) => ({ label, weight: on ? "650" : "500", fg: on ? "var(--ink)" : "var(--muted)", line: on ? "var(--accent)" : "transparent", bg: on ? "var(--surface)" : "transparent" })),
+      msOptions: [
+        { label: "Poriadok", count: 14, mark: "✓", bg: "var(--accent-soft)" },
+        { label: "Registrácia", count: 8, mark: "✓", bg: "var(--accent-soft)" },
+        { label: "Štart hráča", count: 6, mark: "", bg: "transparent" },
+      ],
+    }
+  }
+}
+
+</script>
+</body>
+</html>
