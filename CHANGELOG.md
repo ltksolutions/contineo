@@ -4,6 +4,27 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Navigácia v troch tvaroch: spodná lišta, pás s prepadom, plný pás (2026-09-20)
+
+**Na telefóne bola navigácia zásuvka `<details>`, ktorú bolo treba najprv
+nájsť a otvoriť.** Podľa plánu nasadenia (`docs/design/NASADENIE.md`, PR 2)
+ju nahrádza pevná spodná lišta: Prehľad · Opýtať sa · Knižnica · Úlohy ·
+Viac — vždy na obrazovke, na dosah palca.
+
+- **„Úlohy" zlučujú** „Na potvrdenie" a „Na schválenie": súčet v odznaku,
+  položka svieti na oboch cestách. „Na schválenie" je aj v zozname „Viac",
+  inak by sa naň z telefónu nedalo dostať.
+- **Nová routa `/more`**: zvyšok navigácie v skupinách Organizácia / Správa,
+  riadky 52 px. Osobné veci ostávajú pod avatarom v hlavičke — bez duplicít.
+- **Pás (640–1023 px) sa už nikdy neroluje vodorovne** — čo sa nezmestí,
+  spadne do ponuky „Viac N" na konci pásu. Šírky meria `ResizeObserver` nad
+  skrytým dvojníkom pásu; bez JavaScriptu sa vykreslí prvých 6 položiek
+  + „Viac" so zvyškom. Od 1024 px je pás 42 px a zmestí sa celý.
+- Role a počty pre navigáciu sa presunuli z `AppShell` do `lib/navData.ts`
+  (`cache()`), takže `/more` kreslí presne to, čo lišta, bez dotazov navyše.
+- Kostra (`Skeleton.tsx`) dostala spodnú lištu namiesto zásuvky; ikona „Viac"
+  (tri bodky) pribudla do `Icon.tsx`.
+
 ### Dva breakpointy namiesto ôsmich (2026-09-20)
 
 **Rozhranie malo osem šírok zlomu (419–940 px), takže sa layout medzi telefónom

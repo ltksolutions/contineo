@@ -151,12 +151,13 @@ export function SkeletonForm({ fields = 4 }: { fields?: number }) {
  * to, čo na čakaní najviac vadí.
  *
  * Obe formy navigácie sú v strome naraz, rovnako ako v `AppNav`: pás pre
- * širokú obrazovku a 44 px prepínač zásuvky pre úzku. Prepína ich to isté
- * `@media` na 1024 px, takže sa geometria nemôže rozísť s hotovou stránkou.
+ * širokú obrazovku a spodná lišta pre telefón. Prepína ich to isté
+ * `@media` na 640 px, takže sa geometria nemôže rozísť s hotovou stránkou.
  *
- * Šesť položiek nie je náhoda — toľko ich vidí človek so všetkými rolami.
- * Kto má menej, uvidí kostru o kúsok širšiu než skutočnosť; opačná chyba
- * (kostra kratšia než pás) by vyzerala ako chýbajúci odkaz.
+ * Šesť položiek v páse nie je náhoda — presne toľko ich pás ukáže bez
+ * JavaScriptu (`STRIP_DEFAULT_VISIBLE`), zvyšok býva v „Viac". Lišta má
+ * päť terčov ako skutočná — kto nemá rolu knižnice, uvidí kostru o terč
+ * širšiu; opačná chyba by vyzerala ako chýbajúci odkaz.
  */
 export function SkeletonShell({
   language,
@@ -181,14 +182,16 @@ export function SkeletonShell({
         ))}
       </div>
 
-      {/* Úzka obrazovka: na mieste prepínača zásuvky. `div` s triedou
-          `app-nav-toggle` drží presne tých 44 px, ktoré tam bude mať
-          `summary` — kliknúť sa naň nedá a ani nemá, kostra nie je ovládací
-          prvok. */}
-      <div className="app-nav-drawer" aria-hidden="true">
-        <div className="app-nav-toggle">
-          <Skeleton className="skeleton-line" width={70} />
-        </div>
+      {/* Telefón: na mieste spodnej lišty. Triedy skutočnej lišty držia
+          presne jej geometriu — kliknúť sa na kostru nedá a ani nemá,
+          kostra nie je ovládací prvok. */}
+      <div className="app-nav-tabbar" aria-hidden="true">
+        {Array.from({ length: 5 }, (_, i) => (
+          <div className="app-nav-tab" key={i}>
+            <Skeleton className="skeleton-tab-icon" width={21} />
+            <Skeleton className="skeleton-line" width={34} />
+          </div>
+        ))}
       </div>
 
       <div className="app-main" aria-hidden="true">

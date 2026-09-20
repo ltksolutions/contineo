@@ -1,53 +1,46 @@
 "use client"
 
 /**
- * AppNav — navigácia aplikačného shellu v dvoch variantoch.
+ * AppNav — navigácia aplikačného shellu v troch tvaroch (NASADENIE, PR 2).
  *
- * `sidebar` je bočný panel, `topbar` vodorovné záložky. Nie sú to dva
- * komponenty: rozdiel je v smere a rozostupoch, teda v CSS, a dve kópie by
- * znamenali, že sa jedna z nich raz začne správať inak.
+ * Jedno pole položiek z `navItems()`, tri podoby:
  *
- * Položky sú **skutočné routy podmienené rolami**, nie zoznam z prototypu:
- * odkaz na obrazovku, ktorá ešte neexistuje, vedie na 404 a odkaz na sekciu,
- * do ktorej človek nesmie, mu prezrádza, čo v systéme je.
+ *  - **pod 640 px** pevná spodná lišta: Prehľad · Opýtať sa · Knižnica ·
+ *    Úlohy · Viac. „Úlohy" zlučujú „Na potvrdenie" a „Na schválenie"
+ *    (súčet v odznaku), „Viac" vedie na `/more` so zvyškom položiek.
+ *    Nahradila `<details>` zásuvku: lišta je vždy na obrazovke a palec na
+ *    ňu dosiahne, zásuvku bolo treba najprv nájsť a otvoriť.
+ *  - **640–1023 px** vodorovný pás pod hlavičkou. Pás sa **nikdy neroluje
+ *    vodorovne** — skrytá položka, ktorú treba najprv nájsť posunutím, je
+ *    pre väčšinu ľudí stratená položka. Čo sa nezmestí, spadne do „Viac N"
+ *    na konci pásu (`<details>` s ponukou ukotvenou vpravo).
+ *  - **≥ 1024 px** ten istý pás, o dva pixely nižší; všetkých desať
+ *    položiek sa zmestí a „Viac" sa nekreslí.
  *
- * Ikony zatiaľ nie sú a **doplnia sa vlastné** (rozhodnutie Jána Letka
- * 2026-09-14, `docs/O6_rozhodovaci_harok.md` bod 1). Handoff žiada ikonový
- * set projektu a zakazuje kresliť od ruky — to pravidlo je o jednotnosti,
- * nie o bezpečnosti, a rozhodlo sa proti nemu vedome: za sedem ikon nestojí
- * trvalá závislosť. Podmienkou je, že budú kreslené v **jednom rukopise**
- * s tými v `Header.tsx` — rovnaká hrúbka ťahu, rovnaký `viewBox`, rovnaká
- * optická veľkosť. Práve ich rozchádzanie je to, pred čím handoff varoval.
+ * Meranie prepadu: skrytý dvojník pásu so všetkými položkami
+ * (`.app-nav--measure`) dá šírky a `ResizeObserver` na páse ich pri každej
+ * zmene šírky prepočíta. **Bez JavaScriptu** sa vykreslí prvých
+ * `STRIP_DEFAULT_VISIBLE` položiek + „Viac" so zvyškom — serverové HTML je
+ * presne tento stav a skript ho len spresňuje. Dvojník meria položky
+ * v aktívnom reze (650, nie 500) — aktívna položka je širšia a merať tenšiu
+ * by znamenalo, že pás pretečie práve na stránke, ktorá je otvorená.
  *
- * Správcovské odkazy (nastavenie organizácie, správa tenantov) tu zámerne
- * nie sú — zostávajú pod avatarom v hlavičke, ktorý sa v shelli neskrýva.
- * Sú to veci otvárané raz za mesiac a v dennej navigácii len zaberajú miesto.
+ * Variant `sidebar` zostáva: bočný panel od 640 px, pod 640 px aj on
+ * ustupuje spodnej lište.
  *
- * Zoznam položiek, `normalizeLayout()` a `isActive()` sú v `lib/appNav.ts`,
- * nie tu: z modulu s `"use client"` sa funkcia na serveri volať nedá a
- * `/library` si variant navigácie určuje práve na serveri.
+ * Ikony sú vlastné (rozhodnutie Jána Letka 2026-09-14,
+ * `docs/O6_rozhodovaci_harok.md` bod 1) — pravidlá v `Icon.tsx`.
  *
- * ── Prečo je pás v DOM dvakrát ────────────────────────────────────────────
- *
- * Na úzkej obrazovke je deväť položiek dlhších než výrez a rolovací pás to
- * nepriznáva — posledná položka je odseknutá v polovici slova. Handoff (krok
- * 7) preto žiada **zásuvku**, nie pás.
- *
- * Zásuvka je `<details>`/`<summary>`, aby fungovala bez JavaScriptu. Lenže
- * obsah `<details>` skrýva prehliadač sám a CSS ho **nevie odkryť** späť
- * (je v tieňovom strome; `::details-content` je príliš nové). Preto sú tu
- * oba tvary naraz a prepína ich `@media`: nad prahom je vidieť pás a zásuvka
- * je `display: none`, pod prahom naopak. Čo je `display: none`, nie je ani
- * v strome prístupnosti, takže čítačka vidí vždy len jednu navigáciu.
- *
- * Odkazy sa píšu raz (`list()`), duplikuje sa len ich vykreslenie.
+ * Zoznam položiek a čisté funkcie sú v `lib/appNav.ts`, nie tu: z modulu
+ * s `"use client"` sa funkcia na serveri volať nedá a `/more` aj `/library`
+ * ich potrebujú na serveri.
  */
 
-import { useEffect, useRef } from "react"
+import { useEffect, useRef, useState } from "react"
 import Link from "next/link"
 import Icon from "./Icon"
 import { usePathname } from "next/navigation"
-import { navItems, isActive } from "@/lib/appNav"
+import { navItems, isActive, tabbarItems, isTabActive, STRIP_DEFAULT_VISIBLE } from "@/lib/appNav"
 import type { NavLayout, NavFlags, NavCounts, NavItem } from "@/lib/appNav"
 import { dictionary, type UiLanguage } from "@/lib/i18n"
 
@@ -65,23 +58,66 @@ export default function AppNav({
   const t = dictionary(language).nav
   const pathname = usePathname()
   const items = navItems(flags, counts)
-  const bar = useRef<HTMLElement>(null)
+
+  /** Koľko položiek je v páse; zvyšok je v ponuke „Viac". */
+  const [visible, setVisible] = useState(STRIP_DEFAULT_VISIBLE)
+  const strip = useRef<HTMLElement>(null)
+  const measure = useRef<HTMLDivElement>(null)
+  const morePopup = useRef<HTMLDetailsElement>(null)
+
+  // Zmena stránky zatvorí ponuku „Viac" — inak zostane otvorená nad novým
+  // obsahom. Rovnaké pravidlo ako osobné menu v hlavičke.
+  useEffect(() => {
+    if (morePopup.current) morePopup.current.open = false
+  }, [pathname])
 
   /*
-   * Na úzkej obrazovke je navigácia vodorovný pás a aktívna položka môže byť
-   * mimo výrezu — človek potom nevidí, kde je, a pás vyzerá ako by sa začínal
-   * inde. Posúva sa **vlastný `scrollLeft` pásu**, nie `scrollIntoView()`:
-   * ten hýbe aj stránkou a pri načítaní by ju stiahol pod hlavičku.
+   * Šírky sa čítajú z dvojníka, nie z pásu samotného: pás má položky, ktoré
+   * práve mení, a meranie počas prekresľovania by sa naháňalo s výsledkom.
+   * Závislosť je odtlačok obsahu — šírka položky sa mení s jazykom aj
+   * s číslom v odznaku, nie len s počtom položiek.
    */
+  const fingerprint = items.map(o => `${o.key}:${o.count ?? ""}`).join("|") + "|" + (language ?? "")
   useEffect(() => {
-    const node = bar.current
-    if (!node) return
-    // Nič neprečnieva (široká obrazovka alebo bočný panel) — netreba nič robiť.
-    if (node.scrollWidth <= node.clientWidth) return
-    const active = node.querySelector<HTMLElement>(".is-active")
-    if (!active) return
-    node.scrollLeft = active.offsetLeft - (node.clientWidth - active.offsetWidth) / 2
-  }, [pathname, layout])
+    const bar = strip.current
+    const twin = measure.current
+    if (!bar || !twin) return
+
+    const fit = () => {
+      const style = getComputedStyle(bar)
+      const gap = parseFloat(style.columnGap) || 0
+      const avail = bar.clientWidth - (parseFloat(style.paddingLeft) || 0) - (parseFloat(style.paddingRight) || 0)
+      if (avail <= 0) return // pás je skrytý (telefón) — nie je čo merať
+      const nodes = Array.from(twin.children) as HTMLElement[]
+      const toggle = nodes[nodes.length - 1]
+      const widths = nodes.slice(0, -1).map(n => n.offsetWidth)
+
+      const all = widths.reduce((a, w) => a + w, 0) + gap * Math.max(0, widths.length - 1)
+      if (all <= avail) {
+        setVisible(widths.length)
+        return
+      }
+
+      // „Viac" bude potrebné — jeho šírka sa rezervuje vopred, inak by
+      // posledná položka preblikávala medzi pásom a ponukou.
+      const reserve = toggle.offsetWidth + gap
+      let used = 0
+      let n = 0
+      for (const w of widths) {
+        const next = used + (n > 0 ? gap : 0) + w
+        if (next + reserve > avail) break
+        used = next
+        n += 1
+      }
+      setVisible(n)
+    }
+
+    fit()
+    const watcher = new ResizeObserver(fit)
+    watcher.observe(bar)
+    watcher.observe(twin)
+    return () => watcher.disconnect()
+  }, [fingerprint, layout])
 
   const link = (o: NavItem) => {
     const active = isActive(pathname, o.href)
@@ -114,39 +150,85 @@ export default function AppNav({
     )
   }
 
-  const bocny = (
-    <nav ref={bar} className={`app-nav app-nav--${layout}`} aria-label={t.sections}>
-      {items.map(link)}
+  /*
+   * Spodná lišta. Ikona „Úloh" je zaškrtávacie políčko z „Na potvrdenie" —
+   * v lište nie sú obe naraz, takže sa kresba nebije; na `/more` má
+   * schvaľovanie svoju pečať.
+   */
+  const tabs = tabbarItems(items)
+  const tabbar = (
+    <nav className="app-nav-tabbar" aria-label={t.sections}>
+      {tabs.map(tab => {
+        const active = isTabActive(pathname, tab)
+        return (
+          <Link
+            key={tab.key}
+            href={tab.href}
+            className={`app-nav-tab${active ? " is-active" : ""}`}
+            aria-current={active ? "page" : undefined}
+          >
+            <span className="app-nav-tab-icon">
+              <Icon name={tab.key === "tasks" ? "toAcknowledge" : tab.key} size={21} />
+              {typeof tab.count === "number" && tab.count > 0 && (
+                <span className="app-nav-count" aria-label={t.waiting(tab.count)}>
+                  {tab.count}
+                </span>
+              )}
+            </span>
+            {t[tab.key]}
+          </Link>
+        )
+      })}
     </nav>
   )
 
-  if (layout === "sidebar") return bocny
+  if (layout === "sidebar") {
+    // Bočný panel je zvislý — miesto má, prepad nepotrebuje.
+    return (
+      <>
+        <nav className={`app-nav app-nav--${layout}`} aria-label={t.sections}>
+          {items.map(link)}
+        </nav>
+        {tabbar}
+      </>
+    )
+  }
 
-  /*
-   * Súčet na prepínači zásuvky. Keď je zásuvka zavretá, jednotlivé štítky
-   * vidieť nie je — bez súčtu by človek na telefóne nevedel, že naňho niečo
-   * čaká, kým ju neotvorí.
-   */
-  const spolu = items.reduce((a, o) => a + (o.count ?? 0), 0)
+  const shown = items.slice(0, visible)
+  const overflow = items.slice(visible)
 
   return (
     <>
-      {bocny}
-      <div className="app-nav-drawer">
-        <details>
-          <summary className="app-nav-toggle">
-            {t.sections}
-            {spolu > 0 && (
-              <span className="app-nav-count" aria-label={t.waiting(spolu)}>
-                {spolu}
-              </span>
-            )}
+      <nav ref={strip} className="app-nav app-nav--topbar" aria-label={t.sections}>
+        {shown.map(link)}
+        <details ref={morePopup} className="app-nav-more" hidden={overflow.length === 0}>
+          <summary className="app-nav-item app-nav-more-toggle">
+            {t.more} {overflow.length}
           </summary>
-          <nav className="app-nav app-nav--drawer" aria-label={t.sections}>
-            {items.map(link)}
-          </nav>
+          <div className="app-nav-more-menu">{overflow.map(link)}</div>
         </details>
+      </nav>
+
+      {/*
+        Dvojník na meranie. `visibility: hidden` (v CSS), nie `display: none`:
+        meranie potrebuje rozloženie — a takto skrytý nie je v strome
+        prístupnosti ani sa naň nedá dostať klávesnicou, preto `<span>`,
+        nie druhá kópia odkazov.
+      */}
+      <div ref={measure} className="app-nav app-nav--topbar app-nav--measure" aria-hidden="true">
+        {items.map(o => (
+          <span key={o.href} className="app-nav-item is-active">
+            <Icon name={o.key} size={16} />
+            {t[o.key]}
+            {typeof o.count === "number" && o.count > 0 && <span className="app-nav-count">{o.count}</span>}
+          </span>
+        ))}
+        <span className="app-nav-item app-nav-more-toggle">
+          {t.more} {items.length}
+        </span>
       </div>
+
+      {tabbar}
     </>
   )
 }

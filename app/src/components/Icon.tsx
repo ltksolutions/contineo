@@ -139,6 +139,15 @@ const PATHS: Record<string, React.ReactNode> = {
       <path d="M12.4 4.2a2.6 2.6 0 0 1 0 5M13.4 10.8a4.8 4.8 0 0 1 2.4 4.2" />
     </>
   ),
+  // Viac — tri bodky. Jediná plná kresba v sete: bodka z ťahu by na 18 px
+  // bola krúžok a krúžky tu znamenajú schválenie a posúdenie.
+  more: (
+    <>
+      <circle cx="3.4" cy="9" r="1.5" fill="currentColor" stroke="none" />
+      <circle cx="9" cy="9" r="1.5" fill="currentColor" stroke="none" />
+      <circle cx="14.6" cy="9" r="1.5" fill="currentColor" stroke="none" />
+    </>
+  ),
 }
 
 /**

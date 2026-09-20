@@ -39,6 +39,29 @@ hodnoty zdôvodňuje, trvalo dlhšie než samotný kód. Presne preto je zvyk p�
 *prečo* do komentárov dobrý — donútil ma pri každej hranici overiť, či dôvod
 platí aj po zmene.
 
+**PR 2 — navigácia.** Tri tvary z jedného poľa. Najťažšie rozhodnutie nebolo
+v CSS, ale v tom, kam vedie zlúčená položka „Úlohy": jedna položka, dve
+obrazovky. Vedie na „Na potvrdenie" (častejšia povinnosť) a „Na schválenie"
+som pridal do zoznamu na `/more` — návrh ho tam nemá, ale bez toho by sa
+schvaľovanie z telefónu nedalo otvoriť vôbec. Skupina „Účet" z návrhu sa
+nerobí: hlavička s avatarom na telefóne zostáva a druhá kópia tých istých
+položiek je presne to, pred čím varuje komentár v `Header.tsx`.
+
+Meranie prepadu „Viac N": šírky sa čítajú zo skrytého dvojníka pásu
+(`visibility: hidden`, takže je mimo stromu prístupnosti aj klávesnice),
+nie z pásu samotného — ten sa práve mení a meranie by sa naháňalo
+s výsledkom. Dvojník meria položky v aktívnom reze (650): merať 500 by
+znamenalo, že pás pretečie práve na otvorenej stránke. Bez JavaScriptu
+sa vykreslí prvých 6 + „Viac" — serverové HTML je presne tento stav.
+
+Drobnosť s dosahom: `env(safe-area-inset-bottom)` je v CSS, ale ožije až
+s `viewport-fit=cover` — a to je `export const viewport` v `layout.tsx`,
+ktorý sa bez Jánovho súhlasu nemení. Zapísané v TODO k PR 3.
+
+Overené screenshotmi (390/800/1280, svetlá aj tmavá) cez Playwright nad
+statickou kostrou — stačilo raz vidieť, že odznak na ikone „Úloh" sedí
+a ponuka „Viac" kotví vpravo.
+
 ---
 
 ## 2026-09-18 (noc) — mobilná knižnica, zhnité skripty a Voyage
