@@ -4,6 +4,22 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Detail a Prehľad na telefóne: potvrdenie pod palcom (2026-09-20)
+
+Plán nasadenia (`docs/design/NASADENIE.md`, PR 5):
+
+- **Potvrdzovacie tlačidlo pod 640 px pláva nad spodnou lištou** ako pás
+  50 px na celú šírku — potvrdenie je dôvod, prečo je človek na stránke,
+  a tlačidlo na konci dlhého textu bolo treba hľadať. Formulka zostáva
+  v karte a ukladá sa doslovne (D28), pás na nej nič nemení.
+- **Bočný panel detailu je na telefóne kartou nad textom**, nie pod ním —
+  potvrdenia, platnosť a súvisiace sa kontrolujú na pár sekúnd; kto prišiel
+  čítať, preskočí ich jedným potiahnutím. (Obrat pôvodného rozhodnutia.)
+- **KPI dlaždice Prehľadu: 2×2 na telefóne, 4×1 od 1024 px** — `auto-fit`
+  robil medzistav s tromi stĺpcami a štvrtou dlaždicou osamelou.
+- **Akcie schvaľovania sú na telefóne pod sebou, každá 44 px** — „Schváliť"
+  a „Vrátiť s pripomienkou" vedľa seba sa na 390 px preklikávali omylom.
+
 ### Knižnica: správa priečinkov na vlastnej stránke, zásuvka filtrov, akcie pod palcom (2026-09-20)
 
 Najväčší krok plánu nasadenia (`docs/design/NASADENIE.md`, PR 4):

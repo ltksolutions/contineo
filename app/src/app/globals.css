@@ -2189,9 +2189,13 @@ html[data-theme="dark"] .editor-tui .CodeMirror {
 
 .upload-grid .field { margin: 0; min-width: 0; }
 
-/* ── detail dokumentu: pravý panel ──────────────────────────────────────
-   Dva stĺpce až od 900 px. Na telefóne patrí zhrnutie **pod** obsah: človek
-   prišiel čítať dokument, nie metadáta. */
+/* ── detail dokumentu: obsah + bočný panel ───────────────────────────────
+   Dva stĺpce až od 1024 px. Na telefóne je zhrnutie **kartou nad textom**
+   (NASADENIE, PR 5): potvrdenia, platnosť a súvisiace sú to, čo sa
+   kontroluje na pár sekúnd — kto prišiel čítať, preskočí ich jedným
+   potiahnutím; pod textom ich nenašiel nikto. (Pôvodne to bolo naopak
+   a dôvod „človek prišiel čítať dokument" znel dobre — merať sa nedal,
+   návrh rozhodol.) */
 .detail-grid {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
@@ -2201,6 +2205,10 @@ html[data-theme="dark"] .editor-tui .CodeMirror {
 
 .detail-main { min-width: 0; }
 .detail-side { display: grid; gap: 12px; min-width: 0; }
+
+@media (max-width: 639px) {
+  .detail-side { order: -1; }
+}
 
 @media (min-width: 1024px) {
   .detail-grid { grid-template-columns: minmax(0, 1fr) 280px; }
@@ -3266,6 +3274,40 @@ a.answer-source:focus-visible { outline: 2px solid var(--accent); outline-offset
 .approval-decide { display: flex; gap: 10px; flex-wrap: wrap; }
 .approval-decide > button { flex: 1 1 160px; }
 
+/* Na telefóne obe akcie pod sebou, každá 44 px (NASADENIE, PR 5):
+   „Schváliť" a „Vrátiť s pripomienkou" vedľa seba sa na 390 px
+   preklikávajú omylom — a toto rozhodnutie je dôkazný záznam. */
+@media (max-width: 639px) {
+  .approval-decide { flex-direction: column; }
+  .approval-decide > button { width: 100%; min-height: 44px; }
+}
+
+/* ── potvrdenie na telefóne: pás pod palcom (NASADENIE, PR 5) ──────────────
+   Potvrdenie je dôvod, prečo je človek na stránke — tlačidlo na konci
+   dlhého textu treba hľadať. Pod 640 px preto pláva nad spodnou lištou
+   ako pás 50 px (r12, celá šírka). Formulka zostáva v karte a ukladá sa
+   doslovne (D28); pás na nej nič nemení. Na širokej obrazovke je tlačidlo
+   v karte ako doteraz. */
+@media (max-width: 639px) {
+  .acknowledge-dock {
+    position: fixed;
+    left: 10px;
+    right: 10px;
+    bottom: calc(66px + env(safe-area-inset-bottom));
+    z-index: 24;
+  }
+
+  .acknowledge-dock .button {
+    width: 100%;
+    min-height: 50px;
+    border-radius: 12px;
+    box-shadow: var(--shadow);
+  }
+
+  /* Miesto pre plávajúci pás, aby neprekryl koniec karty s formulkou. */
+  .acknowledge-card { margin-bottom: 64px; }
+}
+
 /* ── „čaká na schválenie" nad knižnicou (ADR-006) ───────────────────────────
    Úloha, nie obsah knižnice — preto vlastná karta nad zoznamom a nie ďalší
    riadok v ňom. Tichá: je to stav, nie poplach. */
@@ -3474,8 +3516,15 @@ a.answer-source:focus-visible { outline: 2px solid var(--accent); outline-offset
 
 .kpi {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  /* 2×2 na telefóne aj tablete, 4×1 od 1024 px (NASADENIE, PR 5) —
+     `auto-fit` tu robil medzistav: tri stĺpce a štvrtá dlaždica osamelá
+     v druhom riadku. */
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px;
+}
+
+@media (min-width: 1024px) {
+  .kpi { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 }
 
 .kpi-tile {
