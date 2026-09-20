@@ -96,7 +96,7 @@
       Pozn.: zápis „Zásuvka filtrov … má zmysel až s klientskym stavom" nižšie je týmto prekonaný — zásuvka funguje bez JS vďaka tomu, že každý facet je odkaz (stránka sa načíta znova a zásuvka sa tým zavrie) a obe podoby panela sú v DOM naraz, ako pri tabuľke↔kartám.
 - [x] **PR 5 — Detail a Prehľad** ✅ 2026-09-20 — potvrdzovacie tlačidlo pod 640 px pláva ako **pás 50 px (r12)** nad spodnou lištou (`.acknowledge-dock`; formulka ostáva v karte, D28 nedotknuté); bočný panel detailu je na telefóne **karta nad textom** (obrat proti pôvodnému rozhodnutiu — návrh rozhodol); KPI mriežka výslovne **2×2 / od 1024 px 4×1** (auto-fit robil medzistav s osamelou dlaždicou); akcie schvaľovania na telefóne **pod sebou, 44 px**. Prehľad (hero, KPI, úlohy s termínovým chipom, Novinky) bol v shelli hotový už predtým.
       Odchýlka: „Na potvrdenie"/„Na schválenie" **ostávajú karty na všetkých šírkach**, tabuľková podoba sa nerobila — karta nesie pole dôvodu a rozbaľovacie znenie, riadok tabuľky to neunesie a porovnávať sa tu nič neporovnáva.
-- [ ] **PR 6 — Adresár a zvyšok** — karty na všetkých šírkach (3/2/1), e-mail a telefón ako akcie
+- [x] **PR 6 — Adresár** ✅ 2026-09-20 — karty na všetkých šírkach: 1 / 2 / od 1024 px **3 stĺpce**; e-mail a telefón sú pod 640 px **36 px akčné tlačidlá** (`mailto:`/`tel:` odkazy boli, zmenil sa tvar). „Zvyšok" (Pridelené normy, Reťaz dôkazov, Osoby, Na posúdenie rovnakým vzorom) NASADENIE výslovne odkladá — „návrh dorobím na požiadanie" — takže čaká na návrh.
 
 - [x] **1. Tokeny** — `--accent-soft` a šestica premenných hustoty v `globals.css`, `soft()` v `TenantHeader.tsx`
 - [x] **3. `MultiSelect`** — viacnásobný výber s hľadaním bez diakritiky, `<noscript>` cesta, prepínač `emit` (`csv` pre formuláre, `repeat` pre adresu)
