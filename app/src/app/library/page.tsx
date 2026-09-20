@@ -10,18 +10,14 @@ import { notFound, redirect } from "next/navigation"
 import Link from "next/link"
 import { libraryContext } from "@/lib/library"
 import { libraryList, libraryFacets } from "@/lib/libraryRead"
-import { allFolders, flattenTree, subtree, counts, depth, MAX_DEPTH } from "@/lib/folders"
+import { allFolders, flattenTree, counts } from "@/lib/folders"
 import { allDepartments } from "@/lib/departments"
 import { documentsProgress } from "@/lib/libraryProgress"
 import { codelistOptions } from "@/lib/codelists"
 import { tenantExtras } from "@/lib/codelistsTenant"
 import Select from "@/components/Select"
 import LiveFilter from "@/components/LiveFilter"
-import {
-  createFolderAction, renameFolderAction, moveFolderAction, deleteFolderAction,
-  shiftFolderAction, saveFolderOrderAction, moveManyAction, assignManyAction,
-} from "./actions"
-import TreeWithOrder from "@/components/TreeWithOrder"
+import { moveManyAction, assignManyAction } from "./actions"
 import AppShell from "@/components/AppShell"
 import WaitingForApproval from "@/components/WaitingForApproval"
 import { openRounds, documentTitles } from "@/lib/approvalsDb"
@@ -241,6 +237,135 @@ export default async function LibraryPage({
   ]
 
 
+  /*
+   * Obsah panela filtrov (NASADENIE, PR 4) — **jedna definícia, dva tvary**:
+   * na širokej obrazovke stĺpec vedľa zoznamu (`.library-folders`), pod
+   * 1024 px zásuvka `<details class="filter-sheet">` pri poli hľadania.
+   * Oba tvary sú v DOM naraz a prepína ich `@media` — rovnaký vzor ako
+   * tabuľka ↔ karty nižšie: `display: none` skryje druhý aj pred čítačkou.
+   *
+   * Správa priečinkov tu už nie je — filtrovanie a správa sú dve úlohy.
+   * Panel priečinok len **vyberá**; premenovanie, presun, poradie aj
+   * zakladanie sú na `/library/folders` (odkaz pod stromom).
+   */
+  const filterPanel = (
+    <>
+      {/*
+        Počty pri hodnotách sú tu preto, že bez nich je facet hádanie:
+        človek klikne a dozvie sa, že tam nič nie je. A počítajú sa **bez
+        vlastného filtra** (`libraryFacets`), takže po výbere „Norma"
+        ostatné druhy stále hovoria, koľko by ich bolo — to je informácia,
+        ktorá o prepnutí rozhoduje.
+
+        Hodnoty s nulou sa nezobrazujú: agregácia ich nevráti, lebo
+        v tejto organizácii taký dokument neexistuje. Ponúkať filtre,
+        ktoré nikdy nič nenájdu, je len dlhší panel.
+      */}
+      <div className="facets">
+        <div className="facets-head">
+          <h2 className="facets-title">{t.filtersTitle}</h2>
+          {hasFilter && (
+            <Link className="facets-clear" href={toQuery(clearFilters(filters))}>{t.clearFilters}</Link>
+          )}
+        </div>
+
+        {facetGroups.map(group => group.rows.length === 0 ? null : (
+          <div className="facet-group" key={group.key}>
+            <h3 className="facet-group-title">{facetLabel[group.key].title}</h3>
+            {group.rows.map(row => {
+              const on = filters[group.key].includes(row.value)
+              return (
+                <Link
+                  key={row.value}
+                  href={facetHref(group.key, row.value)}
+                  className={`facet${on ? " is-on" : ""}`}
+                >
+                  <span className="facet-box" aria-hidden="true">{on ? "✓" : ""}</span>
+                  <span className="facet-name">{facetLabel[group.key].label(row.value)}</span>
+                  <span className="facet-count">{row.count}</span>
+                </Link>
+              )
+            })}
+          </div>
+        ))}
+
+        {/*
+          Značky nie sú zoznam, ale viacnásobný výber s hľadaním: je ich
+          rádovo viac než druhov a tridsať riadkov v paneli sa nedá
+          prečítať. `emit="repeat"` preto, že tu ide o adresu
+          (`?tag=a&tag=b`), nie o uloženie záznamu.
+
+          Vlastná hodnota sa tu pridať nedá (`allowNew` je vypnuté) —
+          filtrovať podľa značky, ktorú nikto nemá, znamená prázdny zoznam
+          a človek by hľadal chybu v dátach.
+        */}
+        {facets.tag.length > 0 && (
+          <form className="facet-group" method="get" action="/library">
+            <MultiSelect
+              name="tag"
+              label={t.tag}
+              emit="repeat"
+              placeholder={t.tagSearch}
+              language={uiLanguage}
+              selected={filters.tag}
+              options={facets.tag.map(r => ({
+                value: r.value,
+                label: tagLabel(r.value),
+                count: r.count,
+              }))}
+            />
+            {carried
+              .filter(([k]) => k !== "tag")
+              .map(([k, v], i) => <input key={`${k}-${i}`} type="hidden" name={k} value={v} />)}
+            <button className="button button--quiet facet-apply" type="submit">{t.apply}</button>
+          </form>
+        )}
+      </div>
+
+      <h2 className="field-label" style={{ margin: "0 0 8px" }}>{tf.heading}</h2>
+
+      <ul className="tree">
+        <li className="tree-item">
+          <Link
+            href={withFolder(undefined)}
+            className={`tree-row${!folder ? " is-active" : ""}`}
+          >
+            <span className="tree-name">{tf.allDocuments}</span>
+          </Link>
+        </li>
+        <li className="tree-item">
+          <Link
+            href={withFolder("nezaradene")}
+            className={`tree-row${folder === "nezaradene" ? " is-active" : ""}`}
+          >
+            <span className="quiet tree-name">{tf.unfiled}</span>
+          </Link>
+        </li>
+      </ul>
+
+      {/* Fixné položky vyššie nie sú priečinky, ale pohľady na celý zoznam —
+          preto stoja mimo stromu s čiarami. */}
+      <ul className="tree tree--lines">
+        {tree.map(({ folder: p, level: level }) => {
+          const c = folderCounts.get(p.id) ?? { direct: 0, withDescendants: 0 }
+          return (
+            <li key={p.id} className="tree-item" style={{ "--level": level } as React.CSSProperties}>
+              <Link
+                href={withFolder(p.id)}
+                className={`tree-row${folder === p.id ? " is-active" : ""}`}
+              >
+                <span className="tree-name">{p.name}</span>
+                <span className="quiet tree-count">{c.withDescendants}</span>
+              </Link>
+            </li>
+          )
+        })}
+      </ul>
+
+      <Link className="folders-manage" href="/library/folders">{tf.manage} →</Link>
+    </>
+  )
+
   return (
     /*
      * Prvá stránka v aplikačnom shelli (viď `components/AppShell.tsx`).
@@ -271,17 +396,6 @@ export default async function LibraryPage({
         <span className="quiet library-count">{t.shown(facets.total, facets.all)}</span>
 
         {/*
-          Skok na filtre — **len na telefóne** (na širokej obrazovke ich má
-          človek vedľa zoznamu a odkaz CSS skryje).
-
-          V jednom stĺpci je panel filtrov pod výsledkami, aby nad prvým
-          dokumentom nestála obrazovka a pol filtrov. Bez tohto odkazu sa
-          k nim ale človek dostane len rolovaním cez celý zoznam. Je to
-          obyčajná kotva: funguje bez skriptu a dá sa poslať v adrese.
-        */}
-        <a className="filters-jump" href="#filters">{t.jumpToFilters}</a>
-
-        {/*
           Prepínač pohľadu. Sú to dva odkazy, nie tlačidlá s JavaScriptom:
           pohľad je súčasť adresy, takže sa dá poslať aj s ním — a funguje bez
           skriptu. Aktívny odkaz zostáva odkazom (vedie sám na seba), lebo
@@ -308,13 +422,24 @@ export default async function LibraryPage({
         <Link className="button button--quiet" href={toQuery(filters, "/library/csv")}>
           {t.exportCsv}
         </Link>
-        <Link className="button button--quiet" href="/library/tracks">
-          {dictionary(uiLanguage).library.tracks.heading}
-        </Link>
-        {/* Kurácia: overené odpovede pripravené hodnotiteľom (D11). */}
-        <Link className="button button--quiet" href="/library/curation">
-          {dictionary(uiLanguage).curation.open}
-        </Link>
+        {/*
+          Zvyšné akcie v ponuke „⋯" (NASADENIE, PR 4). Primárna akcia je
+          jedna — nahrať dokument; šesť tlačidiel vedľa seba sa na telefóne
+          lámalo do troch riadkov a všetky vyzerali rovnako dôležité.
+          `<details>`, takže bez JavaScriptu; vzor ako „Viac" v navigácii.
+        */}
+        <details className="page-more">
+          <summary className="button button--quiet page-more-toggle" aria-label={t.moreActions}>⋯</summary>
+          <div className="page-more-menu">
+            <Link className="page-more-item" href="/library/tracks">
+              {dictionary(uiLanguage).library.tracks.heading}
+            </Link>
+            {/* Kurácia: overené odpovede pripravené hodnotiteľom (D11). */}
+            <Link className="page-more-item" href="/library/curation">
+              {dictionary(uiLanguage).curation.open}
+            </Link>
+          </div>
+        </details>
       </div>
       <p className="quiet page-lead" style={{ margin: "0 0 20px" }}>
         {t.introBefore}<strong>{t.introHighlight}</strong>{t.introAfter}
@@ -325,16 +450,41 @@ export default async function LibraryPage({
         píše a odošle, nie vyberá. Skryté polia nesú zvyšok pohľadu — bez nich
         by odoslanie hľadania zrušilo facety, priečinok aj variant navigácie.
       */}
-      <LiveFilter className="library-search" action="/library" label={t.search}>
-        <label className="field" style={{ flex: "1 1 240px", margin: 0 }}>
-          <span className="field-label">{t.search}</span>
-          <input className="field-input" name="search" defaultValue={search ?? ""} placeholder={t.searchPlaceholder} />
-        </label>
-        {carried
-          .filter(([k]) => k !== "search")
-          .map(([k, v], i) => <input key={`${k}-${i}`} type="hidden" name={k} value={v} />)}
-        <button className="button button--quiet" type="submit">{t.filter}</button>
-      </LiveFilter>
+      <div className="library-search-row">
+        <LiveFilter className="library-search" action="/library" label={t.search}>
+          <label className="field" style={{ flex: "1 1 240px", margin: 0 }}>
+            <span className="field-label">{t.search}</span>
+            <input className="field-input" name="search" defaultValue={search ?? ""} placeholder={t.searchPlaceholder} />
+          </label>
+          {carried
+            .filter(([k]) => k !== "search")
+            .map(([k, v], i) => <input key={`${k}-${i}`} type="hidden" name={k} value={v} />)}
+          <button className="button button--quiet" type="submit">{t.filter}</button>
+        </LiveFilter>
+
+        {/*
+          Zásuvka filtrov pod 1024 px (NASADENIE, PR 4): ten istý obsah ako
+          stĺpec, iný tvar — facety ako pilulky, dole „Zobraziť N dokumentov".
+          `<details>`, takže bez JavaScriptu: každý facet je odkaz, stránka
+          sa ním načíta znova a zásuvka sa tým zavrie; hlavné tlačidlo je
+          odkaz na výsledky. Na širokej obrazovke ju CSS skryje — tam je
+          panel stĺpec vedľa zoznamu.
+        */}
+        <details className="filter-sheet">
+          <summary className="button button--quiet filter-sheet-toggle">
+            {t.filters}
+            {activeChips(filters).length > 0 && (
+              <span className="builder-count">{activeChips(filters).length}</span>
+            )}
+          </summary>
+          <div className="filter-sheet-body">
+            {filterPanel}
+            <Link className="button filter-sheet-apply" href={toQuery(filters) + "#results"}>
+              {t.showResults(facets.total)}
+            </Link>
+          </div>
+        </details>
+      </div>
 
       {/*
         Chips aktívnych filtrov. Sú tu preto, že panel filtrov sa na úzkej
@@ -466,225 +616,8 @@ export default async function LibraryPage({
       </details>
 
       <div className="library-grid">
-        <aside className="library-folders" id="filters">
-          {/*
-            Panel filtrov.
-            
-            Počty pri hodnotách sú tu preto, že bez nich je facet hádanie:
-            človek klikne a dozvie sa, že tam nič nie je. A počítajú sa **bez
-            vlastného filtra** (`libraryFacets`), takže po výbere „Norma"
-            ostatné druhy stále hovoria, koľko by ich bolo — to je informácia,
-            ktorá o prepnutí rozhoduje.
-
-            Hodnoty s nulou sa nezobrazujú: agregácia ich nevráti, lebo
-            v tejto organizácii taký dokument neexistuje. Ponúkať filtre,
-            ktoré nikdy nič nenájdu, je len dlhší panel.
-          */}
-          <div className="facets">
-            <div className="facets-head">
-              <h2 className="facets-title">{t.filtersTitle}</h2>
-              {hasFilter && (
-                <Link className="facets-clear" href={toQuery(clearFilters(filters))}>{t.clearFilters}</Link>
-              )}
-            </div>
-
-            {facetGroups.map(group => group.rows.length === 0 ? null : (
-              <div className="facet-group" key={group.key}>
-                <h3 className="facet-group-title">{facetLabel[group.key].title}</h3>
-                {group.rows.map(row => {
-                  const on = filters[group.key].includes(row.value)
-                  return (
-                    <Link
-                      key={row.value}
-                      href={facetHref(group.key, row.value)}
-                      className={`facet${on ? " is-on" : ""}`}
-                    >
-                      <span className="facet-box" aria-hidden="true">{on ? "✓" : ""}</span>
-                      <span className="facet-name">{facetLabel[group.key].label(row.value)}</span>
-                      <span className="facet-count">{row.count}</span>
-                    </Link>
-                  )
-                })}
-              </div>
-            ))}
-
-            {/*
-              Značky nie sú zoznam, ale viacnásobný výber s hľadaním: je ich
-              rádovo viac než druhov a tridsať riadkov v paneli sa nedá
-              prečítať. `emit="repeat"` preto, že tu ide o adresu
-              (`?tag=a&tag=b`), nie o uloženie záznamu.
-
-              Vlastná hodnota sa tu pridať nedá (`allowNew` je vypnuté) —
-              filtrovať podľa značky, ktorú nikto nemá, znamená prázdny zoznam
-              a človek by hľadal chybu v dátach.
-            */}
-            {facets.tag.length > 0 && (
-              <form className="facet-group" method="get" action="/library">
-                <MultiSelect
-                  name="tag"
-                  label={t.tag}
-                  emit="repeat"
-                  placeholder={t.tagSearch}
-                  language={uiLanguage}
-                  selected={filters.tag}
-                  options={facets.tag.map(r => ({
-                    value: r.value,
-                    label: tagLabel(r.value),
-                    count: r.count,
-                  }))}
-                />
-                {carried
-                  .filter(([k]) => k !== "tag")
-                  .map(([k, v], i) => <input key={`${k}-${i}`} type="hidden" name={k} value={v} />)}
-                <button className="button button--quiet facet-apply" type="submit">{t.apply}</button>
-              </form>
-            )}
-          </div>
-
-          <h2 className="field-label" style={{ margin: "0 0 8px" }}>{tf.heading}</h2>
-
-          <ul className="tree">
-            <li className="tree-item">
-              <Link
-                href={withFolder(undefined)}
-                className={`tree-row${!folder ? " is-active" : ""}`}
-              >
-                <span className="tree-name">{tf.allDocuments}</span>
-              </Link>
-            </li>
-            <li className="tree-item">
-              <Link
-                href={withFolder("nezaradene")}
-                className={`tree-row${folder === "nezaradene" ? " is-active" : ""}`}
-              >
-                <span className="quiet tree-name">{tf.unfiled}</span>
-              </Link>
-            </li>
-
-          </ul>
-
-          {/* Fixné položky vyššie do preusporadúvania nepatria — nie sú to
-              priečinky, ale pohľady na celý zoznam. */}
-          <TreeWithOrder
-            language={uiLanguage}
-            hidden={carried}
-            action={saveFolderOrderAction}
-            items={tree.map(({ folder: p, level: level }) => {
-              const c = folderCounts.get(p.id) ?? { direct: 0, withDescendants: 0 }
-              const inside = subtree(folders, p.id)
-              return {
-                id: p.id,
-                name: p.name,
-                parentId: p.parentId ?? null,
-                level: level,
-                content: (
-                  <>
-                  <div className="tree-row" style={{ gap: 6 }}>
-                    <span className="tree-grip" aria-hidden="true">⠿</span>
-                    <Link
-                      href={withFolder(p.id)}
-                      className={`tree-name${folder === p.id ? " is-active" : ""}`}
-                    >
-                      {p.name}
-                    </Link>
-                    <span className="quiet tree-count">{c.withDescendants}</span>
-                  </div>
-
-                  <details>
-                    <summary className="quiet tree-edit-toggle">
-                      {tf.edit}
-                    </summary>
-                    <div className="tree-edit">
-                      {/* Posun o jedno miesto. Ťahanie myšou robí to isté,
-                          ale toto funguje aj bez JavaScriptu a klávesnicou. */}
-                      <div className="tree-arrows">
-                        <form action={shiftFolderAction}>
-                          <input type="hidden" name="id" value={p.id} />
-                          {carried.map(([k, v], i) => <input key={`${k}-${i}`} type="hidden" name={k} value={v} />)}
-                          <input type="hidden" name="direction" value="up" />
-                          <button className="button button--quiet" type="submit"
-                                  aria-label={tf.moveUp(p.name)}>{tf.up}</button>
-                        </form>
-                        <form action={shiftFolderAction}>
-                          <input type="hidden" name="id" value={p.id} />
-                          {carried.map(([k, v], i) => <input key={`${k}-${i}`} type="hidden" name={k} value={v} />)}
-                          <input type="hidden" name="direction" value="down" />
-                          <button className="button button--quiet" type="submit"
-                                  aria-label={tf.moveDown(p.name)}>{tf.down}</button>
-                        </form>
-                      </div>
-
-                      <form action={renameFolderAction} className="tree-form">
-                        <input type="hidden" name="id" value={p.id} />
-                        {carried.map(([k, v], i) => <input key={`${k}-${i}`} type="hidden" name={k} value={v} />)}
-                        <input className="field-input" name="name" defaultValue={p.name}
-                               aria-label={tf.nameOf(p.name)} required />
-                        <button className="button button--quiet" type="submit">{tf.rename}</button>
-                      </form>
-
-                      <form action={moveFolderAction} className="tree-form">
-                        <input type="hidden" name="id" value={p.id} />
-                        {carried.map(([k, v], i) => <input key={`${k}-${i}`} type="hidden" name={k} value={v} />)}
-                        <Select
-                          name="parentId"
-                          initial={p.parentId ?? ""}
-                          fieldLabel={tf.parentOf(p.name)}
-                          options={[
-                            { value: "", label: tf.topLevel },
-                            ...tree
-                              .filter(r => !inside.has(r.folder.id))
-                              .map(r => ({
-                                value: r.folder.id,
-                                label: `${"— ".repeat(r.level - 1)}${r.folder.name}`,
-                              })),
-                          ]}
-                        />
-                        <button className="button button--quiet" type="submit">{tf.move}</button>
-                      </form>
-
-                      {c.withDescendants === 0 && inside.size === 1 ? (
-                        <form action={deleteFolderAction}>
-                          <input type="hidden" name="id" value={p.id} />
-                          {carried.map(([k, v], i) => <input key={`${k}-${i}`} type="hidden" name={k} value={v} />)}
-                          <button className="button button--quiet" type="submit">{tf.remove}</button>
-                        </form>
-                      ) : (
-                        <p className="quiet" style={{ fontSize: "var(--fs-micro)", margin: 0 }}>
-                          {tf.removeHint}
-                        </p>
-                      )}
-                    </div>
-                  </details>
-                  </>
-                ),
-              }
-            })}
-          />
-
-          <form action={createFolderAction} className="tree-form" style={{ marginTop: 12 }}>
-            {carried.map(([k, v], i) => <input key={`${k}-${i}`} type="hidden" name={k} value={v} />)}
-            <input className="field-input" name="name" placeholder={tf.newFolder}
-                   aria-label={tf.newFolderName} required />
-            <Select
-              name="parentId"
-              initial={folder && folder !== "nezaradene" ? folder : ""}
-              fieldLabel={tf.parentFolder}
-              options={[
-                { value: "", label: tf.topLevel },
-                ...tree
-                  .filter(r => depth(folders, r.folder.id) < MAX_DEPTH)
-                  .map(r => ({
-                    value: r.folder.id,
-                    label: `${"— ".repeat(r.level - 1)}${r.folder.name}`,
-                  })),
-              ]}
-            />
-            <button className="button button--quiet" type="submit">{tf.create}</button>
-          </form>
-
-          {/* Cesta späť. Kto zíde dolu k filtrom, musí sa vedieť vrátiť
-              k výsledkom bez rolovania cez celý panel. Tiež len na telefóne. */}
-          <a className="filters-jump filters-jump--back" href="#results">{t.backToList}</a>
+        <aside className="library-folders">
+          {filterPanel}
         </aside>
 
         <div className="library-list" id="results">
@@ -938,18 +871,21 @@ export default async function LibraryPage({
           )}
 
           {/*
-            Panel hromadných akcií.
+            Panel hromadných akcií — **až po označení** (NASADENIE, PR 4).
 
-            Je vidieť stále, nie až po označení: bez JavaScriptu sa server
-            nedozvie, či je niečo zaškrtnuté, a panel, ktorý sa zjaví „až
-            keď", by tu nefungoval. Prázdny výber preto rieši akcia hlásením,
-            nie skrytým tlačidlom.
+            Kedysi tu stálo, že bez JavaScriptu sa server nedozvie, čo je
+            zaškrtnuté, a panel preto musí byť vidieť stále. Odvtedy je výber
+            v adrese (`filters.picked`), takže server to vie presne — panel
+            bez výberu je len pruh ovládačov, ktoré nemajú na čom pracovať.
+            Na telefóne vykreslený panel prekryje spodnú lištu navigácie:
+            kto vyberá dokumenty, je uprostred úlohy, nie na ceste inam.
 
             „Vyžiadať potvrdenie" nič nezapisuje — odovzdá výber obrazovke
             `/hr/assign`, ktorá prideľovanie už vie: N noriem × M publík
             s jedným dôvodom, povinným (D30), a znenie bez platnosti odmietne
             (D6). Druhá kópia tých pravidiel tu by sa raz rozišla s prvou.
           */}
+          {filters.picked.length > 0 && (
           <div className="bulk-bar">
             <span className="bulk-title">{tl.heading}</span>
 
@@ -979,6 +915,7 @@ export default async function LibraryPage({
             {/* Po vykonanej akcii je výber minutý — vraciame sa bez neho. */}
             <input type="hidden" name="back" value={toQuery(clearPicked(filters))} />
           </div>
+          )}
 
           {/*
             Pätička je aj tam, kde je strana jediná — číslo „koľko z koľkých"

@@ -1375,8 +1375,12 @@ interface Dictionary {
       nextPage: string
       /** Prepínač pohľadu: tabuľka verzus karty. */
       viewSwitch: string
-      /** Kotvy k panelu filtrov a späť — len na telefóne. */
-      jumpToFilters: string
+      /** Tlačidlo, ktoré pod 1024 px otvorí zásuvku filtrov. */
+      filters: string
+      /** Hlavné tlačidlo zásuvky filtrov — zavrie ju návratom k výsledkom. */
+      showResults: (n: number) => string
+      /** Popis ponuky „⋯" so zvyšnými akciami hlavičky. */
+      moreActions: string
 
       /** „Čaká na schválenie“ nad knižnicou (ADR-006, krok 6). */
       waiting: {
@@ -1386,7 +1390,6 @@ interface Dictionary {
         waitingFor: (names: string) => string
         nobodyPending: string
       }
-      backToList: string
       viewTable: string
       viewCards: string
       /** Hromadné akcie nad označenými dokumentmi. */
@@ -1485,6 +1488,8 @@ interface Dictionary {
 
     folders: {
       heading: string
+      /** Odkaz z panela a nadpis stránky správy priečinkov (`/library/folders`). */
+      manage: string
       allDocuments: string
       unfiled: string
       edit: string
@@ -3222,7 +3227,9 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       prevPage: "Predchádzajúca",
       nextPage: "Ďalšia",
       viewSwitch: "Pohľad",
-      jumpToFilters: "Filtre ↓",
+      filters: "Filtre",
+      showResults: n => (n === 1 ? "Zobraziť 1 dokument" : n >= 2 && n <= 4 ? `Zobraziť ${n} dokumenty` : `Zobraziť ${n} dokumentov`),
+      moreActions: "Ďalšie akcie",
       waiting: {
         heading: "Čaká na schválenie",
         count: n => (n === 1 ? "1 znenie" : n >= 2 && n <= 4 ? `${n} znenia` : `${n} znení`),
@@ -3230,7 +3237,6 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
         waitingFor: names => `čaká sa na: ${names}`,
         nobodyPending: "všetci rozhodli",
       },
-      backToList: "↑ Späť na zoznam",
       viewTable: "Tabuľka",
       viewCards: "Karty",
       bulk: {
@@ -3333,6 +3339,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
 
     folders: {
       heading: "Priečinky",
+      manage: "Správa priečinkov",
       allDocuments: "Všetky dokumenty",
       unfiled: "Nezaradené",
       edit: "upraviť",
@@ -5048,7 +5055,9 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       prevPage: "Předchozí",
       nextPage: "Další",
       viewSwitch: "Pohled",
-      jumpToFilters: "Filtry ↓",
+      filters: "Filtry",
+      showResults: n => (n === 1 ? "Zobrazit 1 dokument" : n >= 2 && n <= 4 ? `Zobrazit ${n} dokumenty` : `Zobrazit ${n} dokumentů`),
+      moreActions: "Další akce",
       waiting: {
         heading: "Čeká na schválení",
         count: n => (n === 1 ? "1 znění" : n >= 2 && n <= 4 ? `${n} znění` : `${n} znění`),
@@ -5056,7 +5065,6 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
         waitingFor: names => `čeká se na: ${names}`,
         nobodyPending: "všichni rozhodli",
       },
-      backToList: "↑ Zpět na seznam",
       viewTable: "Tabulka",
       viewCards: "Karty",
       bulk: {
@@ -5159,6 +5167,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
 
     folders: {
       heading: "Složky",
+      manage: "Správa složek",
       allDocuments: "Všechny dokumenty",
       unfiled: "Nezařazené",
       edit: "upravit",
@@ -6868,7 +6877,9 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       prevPage: "Previous",
       nextPage: "Next",
       viewSwitch: "View",
-      jumpToFilters: "Filters ↓",
+      filters: "Filters",
+      showResults: n => (n === 1 ? "Show 1 document" : `Show ${n} documents`),
+      moreActions: "More actions",
       waiting: {
         heading: "Waiting for approval",
         count: n => (n === 1 ? "1 version" : `${n} versions`),
@@ -6876,7 +6887,6 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
         waitingFor: names => `waiting for: ${names}`,
         nobodyPending: "everyone has decided",
       },
-      backToList: "↑ Back to the list",
       viewTable: "Table",
       viewCards: "Cards",
       bulk: {
@@ -6979,6 +6989,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
 
     folders: {
       heading: "Folders",
+      manage: "Manage folders",
       allDocuments: "All documents",
       unfiled: "Unfiled",
       edit: "edit",

@@ -1833,39 +1833,46 @@ html[data-theme="dark"] .editor-tui .CodeMirror {
 }
 
 /*
- * Na telefóne **najprv výsledky, potom panel na ich zmenu.**
- *
- * V jednom stĺpci by inak nad prvým dokumentom stál celý panel filtrov aj
- * strom priečinkov — skoro obrazovka a pol rolovania k tomu, po čo človek
- * prišiel. Čo je práve zapnuté, vidno aj tak: chips sú nad zoznamom
- * a „zrušiť filtre" je v nich.
- *
- * Zásuvka z návrhu (filtre schované za tlačidlom) je krok 7 a potrebuje
- * JavaScript; toto funguje aj bez neho a je to jeden riadok.
+ * Pod 1024 px stĺpec filtrov nie je — ten istý obsah má zásuvka
+ * `.filter-sheet` pri poli hľadania (NASADENIE, PR 4). Obe podoby sú
+ * v DOM naraz a prepína ich toto `@media`; `display: none` skryje druhú
+ * aj pred čítačkou, takže sa panel neprečíta dvakrát.
  */
-.library-folders { min-width: 0; order: 2; }
-.library-list { min-width: 0; order: 1; }
+.library-folders { min-width: 0; }
+.library-list { min-width: 0; }
 
-/*
- * Reset poradia **musí byť až za** deklaráciami vyššie, nie v media bloku
- * pri `grid-template-columns`. Špecifickosť je rovnaká, takže pri rovnosti
- * vyhráva neskorší zápis — v opačnom poradí základ prebil media blok
- * a na širokej obrazovke sa stĺpce vymenili: panel filtrov vpravo, tabuľka
- * stlačená v 250 px stĺpci vľavo.
- */
-@media (min-width: 1024px) {
-  .library-folders, .library-list { order: 0; }
+@media (max-width: 1023px) {
+  .library-folders { display: none; }
 }
 
-/* Odkaz v strome sa nesmie správať ako odsek textu — celý riadok je cieľ. */
-.library-folders .tree-row { text-decoration: none; color: inherit; }
-.library-folders .tree-name { text-decoration: none; color: inherit; }
-.library-folders .tree-name:hover { text-decoration: underline; }
+/* Odkaz v strome sa nesmie správať ako odsek textu — celý riadok je cieľ.
+   Platí pre obe podoby panela: stĺpec aj zásuvku. */
+.library-folders .tree-row,
+.filter-sheet-body .tree-row { text-decoration: none; color: inherit; }
+.library-folders .tree-name,
+.filter-sheet-body .tree-name { text-decoration: none; color: inherit; }
+.library-folders .tree-name:hover,
+.filter-sheet-body .tree-name:hover { text-decoration: underline; }
 
-.library-folders .is-active {
+.library-folders .is-active,
+.filter-sheet-body .is-active {
   font-weight: 700;
   color: var(--accent, var(--ink));
 }
+
+/* Odkaz na správu priečinkov — pod stromom, oddelený, tichý. Správa má
+   vlastnú stránku (`/library/folders`): filtrovanie a správa sú dve úlohy. */
+.folders-manage {
+  display: block;
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+  font-size: 13px;
+  color: var(--accent);
+  text-decoration: none;
+}
+
+.folders-manage:hover { text-decoration: underline; }
 
 /* ── knižnica: panel filtrov s počtami ──────────────────────────────────
    Počty sú súčasť ovládacieho prvku, nie ozdoba: bez nich je facet hádanie.
@@ -2353,6 +2360,26 @@ html[data-theme="dark"] .editor-tui .CodeMirror {
 }
 
 .bulk-bar .field { margin: 0; }
+
+/* Na telefóne panel prekryje spodnú lištu navigácie (z-index nad ňou):
+   kto vyberá dokumenty, je uprostred úlohy — akcie majú byť pod palcom,
+   nie kdesi na konci zoznamu. Kreslí sa len pri výbere, takže navigáciu
+   zakrýva presne dovtedy, kým je čo robiť. */
+@media (max-width: 639px) {
+  .bulk-bar {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 26;
+    margin: 0;
+    border: 0;
+    border-top: 1px solid var(--line);
+    border-radius: 16px 16px 0 0;
+    box-shadow: var(--shadow);
+    padding-bottom: calc(10px + env(safe-area-inset-bottom));
+  }
+}
 .bulk-folder { flex: 0 1 240px; }
 
 .doc-col-pick { width: 40px; }
@@ -2575,6 +2602,49 @@ html[data-theme="dark"] .editor-tui .CodeMirror {
 
 .doc-card-foot { margin-top: 2px; }
 
+/* Ponuka „⋯" so zvyšnými akciami hlavičky (NASADENIE, PR 4). `<details>`
+   ako prepad navigácie: primárna akcia je jedna, zvyšok sa neroztláča
+   do riadkov tlačidiel. */
+.page-more { position: relative; display: inline-flex; }
+
+.page-more-toggle {
+  cursor: pointer;
+  list-style: none;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
+.page-more-toggle::-webkit-details-marker { display: none; }
+
+.page-more-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 24;
+  display: grid;
+  min-width: 210px;
+  padding: 6px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  box-shadow: var(--shadow);
+}
+
+.page-more-item {
+  display: flex;
+  align-items: center;
+  min-height: 40px;
+  padding: 0 11px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.page-more-item:hover { background: var(--surface-2); }
+.page-more-item:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+
 /* Prepínač pohľadu. Dva odkazy v jednom rámiku — vyzerá to ako prepínač,
    ale je to navigácia, takže funguje aj bez skriptu. */
 .view-switch {
@@ -2612,18 +2682,98 @@ html[data-theme="dark"] .editor-tui .CodeMirror {
 */
 .view-switch-item--auto-cards { background: var(--surface); color: var(--ink); }
 
+/* Pod 640 px sú len karty a prepínač sa skrýva (NASADENIE, PR 4): tabuľka
+   má min-width ~1160 px a na 390 px z nej ostane názov. Výslovná voľba
+   `view=table` v adrese sa ctí ďalej — odkaz je odkaz. */
+@media (max-width: 639px) {
+  .view-switch { display: none; }
+}
+
 @media (min-width: 1024px) {
   .view-switch-item--auto-cards { background: none; color: var(--muted); }
   .view-switch-item--auto-table { background: var(--surface); color: var(--ink); }
 }
 
 /* ── knižnica: hľadanie a chips aktívnych filtrov ───────────────────────── */
+.library-search-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
 .library-search {
+  flex: 1 1 auto;
+  min-width: 0;
   display: flex;
   flex-wrap: wrap;
   align-items: flex-end;
   gap: 10px;
-  margin-bottom: 12px;
+}
+
+/*
+ * Zásuvka filtrov pod 1024 px (NASADENIE, PR 4). `<details>`: tlačidlo
+ * „Filtre N" pri poli hľadania, obsah ukotvený dole ako sheet. Facety sú
+ * tu pilulky, nie riadky so štvorčekom — ten istý obsah, iný tvar.
+ * Na širokej obrazovke je celá zásuvka skrytá; obsah má stĺpec vedľa
+ * zoznamu (`.library-folders`).
+ */
+.filter-sheet { position: relative; flex: none; }
+
+.filter-sheet-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  list-style: none;
+}
+
+.filter-sheet-toggle::-webkit-details-marker { display: none; }
+
+.filter-sheet-body {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 30;
+  max-height: 78dvh;
+  overflow-y: auto;
+  padding: 14px var(--pad-main) calc(10px + env(safe-area-inset-bottom));
+  background: var(--surface);
+  border-top: 1px solid var(--line);
+  border-radius: 16px 16px 0 0;
+  box-shadow: var(--shadow);
+}
+
+/* Facety v zásuvke: pilulky 36 px (r9, rámik) vedľa seba — palec triafa
+   plochu, nie štvorček. Štvorček sa nekreslí, zapnutie nesie pozadie. */
+.filter-sheet .facets { border: 0; border-radius: 0; }
+.filter-sheet .facet-group { display: flex; flex-wrap: wrap; gap: 8px; }
+.filter-sheet .facet-group-title { flex: 1 0 100%; }
+
+.filter-sheet .facet {
+  min-height: 36px;
+  padding: 0 12px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+}
+
+.filter-sheet .facet-box { display: none; }
+.filter-sheet .facet.is-on { border-color: var(--accent); background: var(--accent-soft); }
+
+/* Hlavné tlačidlo dole, na celú šírku a `sticky` — nech je po ruke aj
+   uprostred dlhého zoznamu facetov. */
+.filter-sheet-apply {
+  position: sticky;
+  bottom: 0;
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  margin-top: 14px;
+}
+
+@media (min-width: 1024px) {
+  .filter-sheet { display: none; }
 }
 
 .library-count { font-size: 14px; font-variant-numeric: tabular-nums; }
@@ -2952,34 +3102,10 @@ a.answer-source:focus-visible { outline: 2px solid var(--accent); outline-offset
   border-radius: 6px;
 }
 
-/* ── knižnica: skok na filtre a späť (len na telefóne) ───────────────────
-   Panel filtrov je v jednom stĺpci pod výsledkami — inak by nad prvým
-   dokumentom stála obrazovka a pol filtrov. Tieto dve kotvy sú náhrada
-   zásuvky z návrhu: robia to isté (filtre na jedno ťuknutie, bez toho aby
-   zaberali miesto), ale bez JavaScriptu, na ktorom celá knižnica zámerne
-   nestojí. */
-.filters-jump {
-  font-size: 13px;
-  color: var(--accent);
-  white-space: nowrap;
-}
-
-.filters-jump--back {
-  display: block;
-  margin-top: 14px;
-  padding-top: 12px;
-  border-top: 1px solid var(--line);
-}
-
-/* Kotva nesmie skončiť tesne pod hlavičkou stránky — `scroll-margin` nechá
-   nad cieľom medzeru, aby bolo vidieť, kam človek doskočil. */
-.library-folders, .library-list { scroll-margin-top: 12px; }
-
-@media (min-width: 1024px) {
-  /* Na širokej obrazovke sú filtre vedľa zoznamu — odkaz na ne by bol odkaz
-     na to, čo je práve vidieť. */
-  .filters-jump { display: none; }
-}
+/* Kotva `#results` (odkaz „Zobraziť N dokumentov" zo zásuvky filtrov)
+   nesmie skončiť tesne pod hlavičkou stránky — `scroll-margin` nechá nad
+   cieľom medzeru, aby bolo vidieť, kam človek doskočil. */
+.library-list { scroll-margin-top: 12px; }
 
 /* Hláška „toto bez JavaScriptu nejde". Vyzerá ako upozornenie, lebo to
    upozornenie je — prvok pod ňou naozaj nič neurobí. Je na troch miestach

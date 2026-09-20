@@ -4,6 +4,28 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Knižnica: správa priečinkov na vlastnej stránke, zásuvka filtrov, akcie pod palcom (2026-09-20)
+
+Najväčší krok plánu nasadenia (`docs/design/NASADENIE.md`, PR 4):
+
+- **`/library/folders`** — premenovanie, presun, poradie ťahaním aj
+  zakladanie priečinkov odišli z panela filtrov na vlastnú stránku.
+  Filtrovanie a správa sú dve úlohy; na telefóne bol panel stĺpec dlhý
+  stovky riadkov. Panel priečinok len vyberá a odkazuje na správu.
+- **Filtre: stĺpec ↔ zásuvka.** Od 1024 px stĺpec vedľa zoznamu; pod ňou
+  tlačidlo „Filtre N" pri poli hľadania otvorí zásuvku ukotvenú dole —
+  ten istý obsah, facety ako pilulky 36 px, dole „Zobraziť N dokumentov".
+  Bez JavaScriptu: `<details>`, každý facet je odkaz. Kotvy „Filtre ↓"
+  a „↑ Späť na zoznam" tým skončili.
+- **Hromadné akcie až po označení.** Výber je v adrese, takže server vie,
+  či niečo označené je — pruh ovládačov bez výberu nemal na čom pracovať.
+  Na telefóne panel prekryje spodnú lištu navigácie.
+- **Prepínač pohľadu sa pod 640 px skrýva** — sú tam len karty. Výslovné
+  `view=table` v adrese platí ďalej.
+- **Akcie hlavičky:** primárna jedna (Nahrať dokument), Export CSV
+  sekundárny, Kolá a Kurácia v ponuke „⋯". Šesť tlačidiel sa na telefóne
+  lámalo do troch riadkov.
+
 ### Hlavička: jeden riadok 56 px, značka namiesto lupy, bodka namiesto čísla (2026-09-20)
 
 Podľa plánu nasadenia (`docs/design/NASADENIE.md`, PR 3):
