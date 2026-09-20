@@ -139,6 +139,16 @@ const PATHS: Record<string, React.ReactNode> = {
       <path d="M12.4 4.2a2.6 2.6 0 0 1 0 5M13.4 10.8a4.8 4.8 0 0 1 2.4 4.2" />
     </>
   ),
+  // Zvonček — upozornenia. Presunutý z `Header.tsx`, kde býval lokálny:
+  // ikona v hlavičke a ikona v sete musia vážiť rovnako, a to sa dá len
+  // z jedného miesta (NASADENIE, PR 3).
+  notifications: (
+    <>
+      <path d="M9 2.4v1.1" />
+      <path d="M9 3.5c-2.1 0-3.5 1.6-3.5 3.6 0 2.9-1.1 3.5-1.1 4.3h9.2c0-.8-1.1-1.4-1.1-4.3 0-2-1.4-3.6-3.5-3.6Z" />
+      <path d="M7.4 13.4a1.7 1.7 0 0 0 3.2 0" />
+    </>
+  ),
   // Viac — tri bodky. Jediná plná kresba v sete: bodka z ťahu by na 18 px
   // bola krúžok a krúžky tu znamenajú schválenie a posúdenie.
   more: (
