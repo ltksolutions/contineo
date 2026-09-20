@@ -591,7 +591,7 @@ export default async function LibraryPage({
                   </div>
 
                   <details>
-                    <summary className="quiet" style={{ fontSize: "var(--fs-micro)", cursor: "pointer", padding: "0 12px 6px" }}>
+                    <summary className="quiet tree-edit-toggle">
                       {tf.edit}
                     </summary>
                     <div className="tree-edit">
