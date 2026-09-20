@@ -4,6 +4,15 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Adresár: tri stĺpce a kontakty pod palcom (2026-09-20)
+
+Posledný krok dnešnej vlny plánu nasadenia (`docs/design/NASADENIE.md`, PR 6):
+
+- **Karty na všetkých šírkach: 1 / 2 / 3 stĺpce** (3 od 1024 px).
+- **E-mail a telefón sú na telefóne akčné tlačidlá 36 px**, nie text —
+  adresár existuje preto, aby sa niekomu dalo ozvať. Na desktope ostávajú
+  textové odkazy: tam sa kontakt aj kopíruje.
+
 ### Detail a Prehľad na telefóne: potvrdenie pod palcom (2026-09-20)
 
 Plán nasadenia (`docs/design/NASADENIE.md`, PR 5):

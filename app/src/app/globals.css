@@ -3868,8 +3868,13 @@ a.answer-source:focus-visible { outline: 2px solid var(--accent); outline-offset
   gap: 10px;
   grid-template-columns: minmax(0, 1fr);
 }
+/* Karty na všetkých šírkach: 1 / 2 / 3 stĺpce (NASADENIE, PR 6). */
 @media (min-width: 640px) {
   .directory-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (min-width: 1024px) {
+  .directory-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
 
 .directory-card {
@@ -3903,6 +3908,29 @@ a.answer-source:focus-visible { outline: 2px solid var(--accent); outline-offset
 }
 /* Zalomenie v adrese: bez neho pretečie karta, nie text. */
 .directory-contact a { overflow-wrap: anywhere; }
+
+/* Na telefóne sú e-mail a číslo **akcie**, nie text na prečítanie
+   (NASADENIE, PR 6): 36 px tlačidlá, ktoré sa dajú trafiť palcom —
+   adresár existuje preto, aby sa niekomu dalo ozvať. Na desktope ostáva
+   textový odkaz: tam sa kontakt aj kopíruje. */
+@media (max-width: 639px) {
+  .directory-contact { gap: 8px; }
+
+  .directory-contact a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 36px;
+    padding: 0 12px;
+    border: 1px solid var(--line);
+    border-radius: 9px;
+    font-size: 13px;
+    font-weight: 550;
+    color: var(--accent);
+    text-decoration: none;
+  }
+
+  .directory-contact a:active { background: var(--accent-soft); }
+}
 
 /* ── kostry počas čakania (O20) ─────────────────────────────────────────────
    Kostra hovorí *čo* príde, koliesko len *že* sa čaká. Preto sa tu nekreslí

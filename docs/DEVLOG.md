@@ -108,6 +108,19 @@ Ani jedno sa nedá zmerať bez používateľov — v takom spore vyhráva návrh
 lebo je novší a Jánov. Starý dôvod som nechal v komentári v zátvorke,
 nech tretie kolo nezačne od nuly.
 
+**PR 6 — adresár, bodka za dňom.** Skoro všetko už bolo: karty existovali,
+`mailto:`/`tel:` boli odkazy. Zostal tretí stĺpec od 1024 px a tvar
+kontaktov na telefóne — z textového odkazu tlačidlo 36 px. Zvyšné obrazovky
+(Pridelené normy, Reťaz dôkazov, Osoby, Na posúdenie) NASADENIE výslovne
+odkladá na návrh, tak sa nerobili.
+
+**Bilancia dňa: šesť PR (#37–#42), celé NASADENIE okrem odloženého.**
+Vzor dňa: polovica „novej" práce už v repozitári bola — najcennejšie nebolo
+písať kód, ale zistiť, čo z plánu už neplatí, a zapísať prekonané body tam,
+kde ležia. Dve systémové resty: `viewport-fit=cover` čaká na rozhodnutie
+o `layout.tsx` a tmavú tému som overoval len bodovo — celý prechod po
+všetkých PR by si zaslúžil vlastnú kontrolu (krok 7 pôvodného plánu).
+
 ---
 
 ## 2026-09-18 (noc) — mobilná knižnica, zhnité skripty a Voyage
