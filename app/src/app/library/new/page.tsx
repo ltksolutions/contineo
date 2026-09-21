@@ -9,6 +9,7 @@
 
 import { notFound, redirect } from "next/navigation"
 import Link from "next/link"
+import Notice from "@/components/Notice"
 import { libraryContext } from "@/lib/library"
 import { codelistOptions, CODELISTS } from "@/lib/codelists"
 import { allDepartments, flattenTree } from "@/lib/departments"
@@ -49,6 +50,8 @@ export default async function NewDocumentPage({
   const tf = dictionary(ctx.person.language).library.fields
   const departmentRows = flattenTree(await allDepartments(ctx.tenant.companyCode))
   const { uploadAction: upload } = await import("../actions")
+  // Formulár predvyplnený po chybe = súbor treba vybrať znova.
+  const retry = Boolean(error || title)
 
   // **Kľúče, ktoré organizácia už má.** Nahratie na obsadený kľúč sa odmietne
   // (D80) — a dozvedieť sa to až po tom, čo človek vyplní formulár a nahrá
@@ -73,11 +76,21 @@ export default async function NewDocumentPage({
         {t.intro}
       </p>
 
-      {error && (
-        <p className="card" style={{ padding: "12px 16px", margin: "0 0 18px", fontSize: "var(--fs-body)", color: "var(--warn-fg)" }}>
-          {error}
-        </p>
-      )}
+      {/*
+        Chyba sa musí dať prežiť (NAHRAVANIE, úloha 1): hláška povie, čo
+        presne treba opraviť, a že súbor treba vybrať znova — prehliadač ho
+        z bezpečnostných dôvodov neuchová. Ten istý `<Notice>` ako inde
+        (červená je chyba, jantárová upozornenie); po zavretí ostane
+        formulár predvyplnený z adresy a zóna na súbor zvýraznená.
+      */}
+      <Notice
+        message={error ? `${t.errorBefore}${error} ${t.errorFileAgain}` : undefined}
+        error
+        back={`/library/new?${new URLSearchParams({
+          ...(title ? { title } : {}),
+          ...(documentKey ? { documentKey } : {}),
+        }).toString()}`}
+      />
 
       {/*
         Číslované sekcie, **nie stepper**.
@@ -103,7 +116,7 @@ export default async function NewDocumentPage({
             jediného riadku skriptu. Vlastná zóna postavená na JavaScripte by
             bez neho nefungovala vôbec.
           */}
-          <label className="upload-drop">
+          <label className={`upload-drop${retry ? " is-required" : ""}`}>
             <span className="upload-drop-title">{t.dropHint}</span>
             <span className="quiet upload-drop-note">
               {t.oldFormatsBefore}<code>.doc</code>{t.oldFormatsMiddle}<code>.xls</code>{t.oldFormatsAfter}

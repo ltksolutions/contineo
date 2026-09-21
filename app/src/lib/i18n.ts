@@ -1787,6 +1787,9 @@ interface Dictionary {
       heading: string
       intro: string
       file: string
+      /** Chyba pri nahrávaní (NAHRAVANIE, úloha 1): čo opraviť a že súbor treba vybrať znova. */
+      errorBefore: string
+      errorFileAgain: string
       /** Veta okolo `.doc` a `.xls` — značky zostávajú v JSX. */
       oldFormatsBefore: string
       oldFormatsMiddle: string
@@ -3664,6 +3667,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       heading: "Nahrať dokument",
       intro: "Word, PDF, Excel, Markdown alebo text. Súbor sa uloží tak, ako prišiel — prevod je odvodenina a originál musí zostať, aby sa dalo overiť, z čoho text vznikol.",
       file: "Súbor",
+      errorBefore: "Dokument sa nenahral: ",
+      errorFileAgain: "Vyberte súbor znova — prehliadač ho z bezpečnostných dôvodov neuchová.",
       oldFormatsBefore: "Staré ",
       oldFormatsMiddle: " a ",
       oldFormatsAfter: " sa previesť nedajú — ulož ich vo Worde alebo Exceli ako novší formát. Skenované PDF bez textu sa dá dať prepísať jazykovým modelom až v editore.",
@@ -5525,6 +5530,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       heading: "Nahrát dokument",
       intro: "Word, PDF, Excel, Markdown nebo text. Soubor se uloží tak, jak přišel — převod je odvozenina a originál musí zůstat, aby šlo ověřit, z čeho text vznikl.",
       file: "Soubor",
+      errorBefore: "Dokument se nenahrál: ",
+      errorFileAgain: "Vyberte soubor znovu — prohlížeč ho z bezpečnostních důvodů neuchová.",
       oldFormatsBefore: "Staré ",
       oldFormatsMiddle: " a ",
       oldFormatsAfter: " převést nelze — ulož je ve Wordu nebo Excelu jako novější formát. Skenované PDF bez textu lze nechat přepsat jazykovým modelem až v editoru.",
@@ -7380,6 +7387,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       heading: "Upload a document",
       intro: "Word, PDF, Excel, Markdown or plain text. The file is stored exactly as it arrived — the conversion is derived from it, and the original has to stay so it can be checked what the text came from.",
       file: "File",
+      errorBefore: "The document was not uploaded: ",
+      errorFileAgain: "Choose the file again — the browser does not keep it for security reasons.",
       oldFormatsBefore: "Legacy ",
       oldFormatsMiddle: " and ",
       oldFormatsAfter: " cannot be converted — save them from Word or Excel in a newer format. A scanned PDF with no text layer can be transcribed by the language model later, in the editor.",

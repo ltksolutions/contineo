@@ -2255,6 +2255,10 @@ html[data-theme="dark"] .editor-tui .CodeMirror {
 
 .upload-drop:hover { border-color: var(--accent); }
 
+/* Po chybe treba súbor vybrať znova (NAHRAVANIE, úloha 1) — zóna to povie
+   farbou, nielen hláška. */
+.upload-drop.is-required { border-color: var(--bad-fg); }
+
 /* Rámček dostane celá zóna, nie samotné pole — pri prechode klávesnicou
    je inak vidieť len tenký prúžok vnútri. */
 .upload-drop:focus-within {
