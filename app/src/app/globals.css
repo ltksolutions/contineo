@@ -2275,7 +2275,9 @@ html[data-theme="dark"] .editor-tui .CodeMirror {
   line-height: 1.5;
 }
 
-.upload-file { font: inherit; font-size: 14px; max-width: 100%; }
+/* Viditeľný, nie sr-only (NAHRAVANIE, úloha 2): prehliadač sám vypíše
+   „vybrané: rpp-4-2.pdf" — natívne chovanie, ktoré funguje všade. */
+.upload-file { font: inherit; font-size: var(--fs-small); max-width: 100%; margin-top: 10px; }
 
 .upload-grid {
   display: grid;
