@@ -4311,7 +4311,9 @@ a.answer-source:focus-visible { outline: 2px solid var(--accent); outline-offset
 .more-row:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
 .more-row > svg { flex: none; color: var(--muted); }
 .more-row-label { flex: 1 1 auto; min-width: 0; }
-.more-row-chevron { color: var(--muted); font-size: 18px; line-height: 1; }
+/* Chevron je ikona, nie znak (SPRAVA, úloha 4.1): kreslí sa `currentColor`,
+   tak v tmavej téme zosvetlie sám. Otočený doprava — do riadku sa vchádza. */
+.more-row-chevron { flex: none; color: var(--muted); transform: rotate(-90deg); }
 
 /* ── Upozornenia (SPRAVA, úloha 3.1) ─────────────────────────────────────
    Neprečítaná položka nesie ten istý znak ako označený riadok tabuľky
