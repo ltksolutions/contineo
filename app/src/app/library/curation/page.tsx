@@ -63,10 +63,12 @@ export default async function CurationPage({
         <Link className="button button--quiet" href="/library">← {dictionary(language).nav.library}</Link>
       </p>
 
+      {/* `.empty` zo ZAKLADU (SPRAVA, úloha 2.1). Bez akcie: správca si
+          prácu nevie nájsť sám — pár mu pripraví hodnotiteľ. */}
       {pending.length === 0 && (
-        <div className="card">
-          <p style={{ margin: "0 0 6px", fontSize: "var(--fs-lead)" }}>{t.publishEmpty}</p>
-          <p className="quiet" style={{ margin: 0, fontSize: "var(--fs-body)" }}>{t.publishEmptyNote}</p>
+        <div className="empty">
+          <div className="empty-title">{t.publishEmpty}</div>
+          <div className="empty-text">{t.publishEmptyNote}</div>
         </div>
       )}
 
