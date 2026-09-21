@@ -77,7 +77,12 @@ export default async function NotificationsPage({
         </p>
 
         {rows.length === 0 ? (
-          <p className="card" style={{ padding: 18 }}>{t.empty}</p>
+          /* `.empty` zo ZAKLADU (SPRAVA, úloha 3.2). Bez akcie: upozornenie
+             si človek nevie „založiť" — príde samo, keď sa niečo stane. */
+          <div className="empty">
+            <div className="empty-title">{t.emptyTitle}</div>
+            <div className="empty-text">{t.emptyText}</div>
+          </div>
         ) : (
           <>
             {unread > 0 && (

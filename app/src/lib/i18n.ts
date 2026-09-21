@@ -1316,7 +1316,8 @@ interface Dictionary {
     /** Popisok zvončeka pre čítačku obrazovky; nesie aj počet. */
     bellLabel: (unread: number) => string
     unread: (n: number) => string
-    empty: string
+    emptyTitle: string
+    emptyText: string
     markAllRead: string
     allRead: (n: number) => string
     retentionNote: (days: number) => string
@@ -3243,7 +3244,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     // pohľad a ktorú test na paritu kľúčov nechytí.
     bellLabel: (unread) => unread > 0 ? `Upozornenia — ${unreadWord(unread, "sk")}` : "Upozornenia",
     unread: (n) => unreadWord(n, "sk"),
-    empty: "Zatiaľ nič. Objavia sa tu dlhé operácie, keď dobehnú — preindexovanie, prepis a rozposlané pripomienky.",
+    emptyTitle: "Žiadne upozornenia",
+    emptyText: "Objaví sa tu, keď sa zverejní znenie, rozpošlú pripomienky alebo dobehne preindexovanie.",
     markAllRead: "Označiť všetko ako prečítané",
     allRead: (n) => `Označené ako prečítané: ${n}.`,
     retentionNote: (days) => `Upozornenia sa po ${days} dňoch mažú.`,
@@ -5115,7 +5117,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     title: "Upozornění",
     bellLabel: (unread) => unread > 0 ? `Upozornění — ${unreadWord(unread, "cs")}` : "Upozornění",
     unread: (n) => unreadWord(n, "cs"),
-    empty: "Zatím nic. Objeví se tu dlouhé operace, až doběhnou — přeindexování, přepis a rozeslané připomínky.",
+    emptyTitle: "Žádná upozornění",
+    emptyText: "Objeví se tu, když se zveřejní znění, rozešlou připomínky nebo doběhne přeindexování.",
     markAllRead: "Označit vše jako přečtené",
     allRead: (n) => `Označeno jako přečtené: ${n}.`,
     retentionNote: (days) => `Upozornění se po ${days} dnech mažou.`,
@@ -6981,7 +6984,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     title: "Notifications",
     bellLabel: (unread) => unread > 0 ? `Notifications — ${unread} unread` : "Notifications",
     unread: (n) => `${n} unread`,
-    empty: "Nothing yet. Long-running work shows up here when it finishes — reindexing, rewriting and reminders that went out.",
+    emptyTitle: "No notifications",
+    emptyText: "They show up here when a version is published, reminders go out or reindexing finishes.",
     markAllRead: "Mark everything as read",
     allRead: (n) => `Marked as read: ${n}.`,
     retentionNote: (days) => `Notifications are deleted after ${days} days.`,
