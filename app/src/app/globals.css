@@ -2314,6 +2314,22 @@ html[data-theme="dark"] .editor-tui .CodeMirror {
 
 .detail-card { padding: 14px 16px; }
 
+/* Ostatné akcie detailu za jedným súhrnným nadpisom (DETAIL, úloha 1).
+   Zatvorené je správny predvolený stav — kto prišiel dokument zverejniť,
+   nechce vidieť formulár na preindexovanie. Funguje bez JavaScriptu. */
+.detail-tools { margin: 0 0 18px; }
+.detail-tools > summary {
+  font-size: var(--fs-section);
+  font-weight: 650;
+  padding: 14px 18px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  cursor: pointer;
+}
+.detail-tools[open] > summary { border-radius: var(--radius) var(--radius) 0 0; }
+.detail-tools-body { display: grid; gap: 14px; padding: 14px 0 0; }
+
 .detail-card-title {
   margin: 0 0 10px;
   font-size: 13px;

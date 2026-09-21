@@ -1588,7 +1588,11 @@ interface Dictionary {
       draftSame: string
       draftEmpty: string
       publishHeading: string
-      nothingToPublish: string
+      /** Karta „čo treba teraz" (DETAIL, úloha 1): nové znenie s údajom, ktoré platí; bežiace kolo. */
+      nowPublishNew: (current: string) => string
+      nowInReview: string
+      /** Súhrnný nadpis rozbaľovacej skupiny s ostatnými akciami. */
+      toolsSummary: string
       /** Označenie konceptu v schvaľovacom paneli aj v e-maile schvaľovateľovi. */
       approvalDraftLabel: string
       draftApprovalHeading: string
@@ -3459,7 +3463,9 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       draftSame: "Koncept je zhodný s publikovaným znením.",
       draftEmpty: "Koncept je prázdny.",
       publishHeading: "Publikovať znenie",
-      nothingToPublish: "Niet čo publikovať — koncept je prázdny alebo zhodný s tým, čo už platí.",
+      nowPublishNew: current => `Publikovať nové znenie — teraz platí ${current}`,
+      nowInReview: "Znenie je v schvaľovaní",
+      toolsSummary: "Úpravy a správa dokumentu",
       approvalDraftLabel: "koncept",
       draftApprovalHeading: "Schválenie konceptu",
       publishNeedsApproval: "Koncept ešte nie je schválený. Predlož ho na schválenie vyššie — publikovať sa dá až schválené znenie.",
@@ -5310,7 +5316,9 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       draftSame: "Koncept je shodný s publikovaným zněním.",
       draftEmpty: "Koncept je prázdný.",
       publishHeading: "Publikovat znění",
-      nothingToPublish: "Není co publikovat — koncept je prázdný nebo shodný s tím, co už platí.",
+      nowPublishNew: current => `Publikovat nové znění — nyní platí ${current}`,
+      nowInReview: "Znění je ve schvalování",
+      toolsSummary: "Úpravy a správa dokumentu",
       approvalDraftLabel: "koncept",
       draftApprovalHeading: "Schválení konceptu",
       publishNeedsApproval: "Koncept ještě není schválený. Předlož ho ke schválení výše — publikovat lze až schválené znění.",
@@ -7155,7 +7163,9 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       draftSame: "The draft matches the published version.",
       draftEmpty: "The draft is empty.",
       publishHeading: "Publish a version",
-      nothingToPublish: "Nothing to publish — the draft is empty or identical to what already applies.",
+      nowPublishNew: current => `Publish a new version — ${current} is currently in force`,
+      nowInReview: "The version is under review",
+      toolsSummary: "Edits and document management",
       approvalDraftLabel: "draft",
       draftApprovalHeading: "Draft approval",
       publishNeedsApproval: "The draft is not approved yet. Submit it for approval above — only an approved version can be published.",
