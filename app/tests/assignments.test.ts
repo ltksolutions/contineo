@@ -8,7 +8,7 @@
 
 import { describe, it, expect } from "vitest"
 import {
-  matchesAudience, audienceLabel, audienceFromSelection, carryOverFrom, audienceRef,
+  matchesAudience, audienceLabel, audienceFromSelection, carryOverFrom, audienceRef, impactFrom,
   type Assignment,
 } from "../src/lib/assignments"
 import { normalizeKeys } from "../src/lib/persons"
@@ -216,5 +216,33 @@ describe("zdedenie pridelenia novym znenim (D28)", () => {
     // Hodnota zaskrtavacieho policka aj kluc zlucovania su ta ista funkcia.
     const out = carryOverFrom([a("v1", "group", "Rozhodcovia", "d", 1)], "v2")
     expect(audienceRef(out[0].audience)).toBe(audienceRef({ kind: "group", value: "rozhodcovia" }))
+  })
+})
+
+describe("dopad vyberu publik pred pridelenim (HR.md, uloha 3)", () => {
+  const people = [
+    { id: "a", email: "a@x.sk", groups: ["rozhodcovia"], tracks: [], departmentPath: ["pravne"] },
+    { id: "b", email: "b@x.sk", groups: ["rozhodcovia"], tracks: [], departmentPath: ["hr"] },
+    { id: "c", email: "c@x.sk", groups: [], tracks: ["zaklad"], departmentPath: ["pravne", "pravne-sub"] },
+  ]
+
+  it("clovek v dvoch publikach sa pocita raz — povinnost mu vznikne raz", () => {
+    const out = impactFrom(people, [
+      { kind: "department", value: "pravne", label: "Právne" },
+      { kind: "group", value: "rozhodcovia" },
+    ])
+    // Oddelenie: a, c (podstrom). Skupina: a, b. Zjednotenie: a, b, c.
+    expect(out.people).toBe(3)
+    expect(out.perAudience.map(p => p.count)).toEqual([2, 2])
+  })
+
+  it("rozpis drzi poradie vyberu a pouziva to iste pravidlo ako pridelenie", () => {
+    const out = impactFrom(people, [{ kind: "person", value: "c@x.sk" }, { kind: "all" }])
+    expect(out.perAudience.map(p => p.count)).toEqual([1, 3])
+    expect(out.people).toBe(3)
+  })
+
+  it("bez publika nevznikne povinnost nikomu", () => {
+    expect(impactFrom(people, [])).toEqual({ people: 0, perAudience: [] })
   })
 })

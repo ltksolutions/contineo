@@ -665,12 +665,13 @@ export interface AssignmentOverview {
  * boli desaťtisíce, nahradí to agregácia — ale potom sa `matchesAudience`
  * musí stať jej vstupom, nie jej dvojníkom.
  */
-export async function audienceMembers(
-  companyCode: string,
-  audience: Audience,
-): Promise<AudienceMember[]> {
+/** Osoba, ako ju vidí publikum: pre `matchesAudience()` aj pre e-mail. */
+type PoolMember = AudienceMember & Pick<Person, "groups" | "tracks" | "departmentPath">
+
+/** Aktívne osoby organizácie s tým, čo `matchesAudience()` potrebuje. */
+async function audiencePool(companyCode: string): Promise<PoolMember[]> {
   const col = await getCollection<Person>(PERSONS_COLLECTION)
-  const people = await col
+  return col
     .find(
       { companyCode, status: { $ne: "inactive" } },
       {
@@ -683,7 +684,48 @@ export async function audienceMembers(
       },
     )
     .toArray()
-  return people.filter(o => matchesAudience(o, audience))
+}
+
+export async function audienceMembers(
+  companyCode: string,
+  audience: Audience,
+): Promise<AudienceMember[]> {
+  return (await audiencePool(companyCode)).filter(o => matchesAudience(o, audience))
+}
+
+/**
+ * Dopad výberu publík **pred** pridelením (HR.md, úloha 3): koľkým ľuďom
+ * vznikne povinnosť a z ktorého publika koľko.
+ *
+ * Číta sa cez `audienceMembers()`, teda cez `matchesAudience()` — jediné
+ * miesto s pravidlom príslušnosti. Vlastný dotaz by bol druhá kópia pravidla
+ * a rozišla by sa s prvou. `people` je zjednotenie: kto je v dvoch publikách,
+ * počíta sa raz, lebo povinnosť mu vznikne raz (osoba × znenie).
+ */
+export interface AudienceImpact {
+  /** Koľkým ľuďom vznikne povinnosť — bez duplicít. */
+  people: number
+  /** To isté po publikách, v poradí výberu. Súčet môže byť väčší než `people`. */
+  perAudience: { audience: Audience; count: number }[]
+}
+
+export function impactFrom(
+  people: Pick<Person, "id" | "email" | "groups" | "tracks" | "departmentPath">[],
+  audiences: Audience[],
+): AudienceImpact {
+  const ids = new Set<string>()
+  const perAudience: AudienceImpact["perAudience"] = []
+  for (const audience of audiences) {
+    const members = people.filter(o => matchesAudience(o, audience))
+    for (const m of members) ids.add(m.id)
+    perAudience.push({ audience, count: members.length })
+  }
+  return { people: ids.size, perAudience }
+}
+
+/** Databázový obal — osoby sa načítajú raz, nie raz na publikum. */
+export async function audienceImpact(companyCode: string, audiences: Audience[]): Promise<AudienceImpact> {
+  return impactFrom(await audiencePool(companyCode), audiences)
 }
 
 /** Prehľad pridelení organizácie, najnovšie hore. */

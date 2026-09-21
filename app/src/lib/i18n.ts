@@ -576,6 +576,10 @@ interface Dictionary {
       dueDaysUnit: string
       dueNote: string
       submit: string
+      /** Krok pred pridelením (HR.md, úloha 3): tlačidlo a súhrn dopadu. */
+      checkImpact: string
+      impactPeople: (n: number) => string
+      impactNote: string
     }
     actions: {
       noAudience: string
@@ -2259,6 +2263,12 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       reasonPlaceholder: "napr. novela čl. 12 — mení sa lehota na podanie odvolania",
       reasonNote: "Povinný a spoločný pre celý výber. Je to jediné miesto, kde bude o rok napísané, prečo sa normy potvrdzovali znova — a príde aj v e-maile ľuďom.",
       submit: "Prideliť",
+      checkImpact: "Skontrolovať dopad",
+      impactPeople: (n) =>
+        n === 0 ? "Povinnosť nevznikne nikomu"
+        : n === 1 ? "Povinnosť vznikne 1 človeku"
+        : `Povinnosť vznikne ${n} ľuďom`,
+      impactNote: "Kto do oddelenia pribudne neskôr, dostane ju odo dňa príchodu (D50).",
     },
     actions: {
       noAudience: "Nevybral si, komu sa prideľuje.",
@@ -4140,6 +4150,12 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       reasonPlaceholder: "např. novela čl. 12 — mění se lhůta pro podání odvolání",
       reasonNote: "Povinný a společný pro celý výběr. Je to jediné místo, kde bude za rok napsáno, proč se předpisy potvrzovaly znovu — a přijde i v e-mailu lidem.",
       submit: "Přidělit",
+      checkImpact: "Zkontrolovat dopad",
+      impactPeople: (n) =>
+        n === 0 ? "Povinnost nevznikne nikomu"
+        : n === 1 ? "Povinnost vznikne 1 člověku"
+        : `Povinnost vznikne ${n} lidem`,
+      impactNote: "Kdo do oddělení přibude později, dostane ji ode dne příchodu (D50).",
     },
     actions: {
       noAudience: "Nevybral jsi, komu se přiděluje.",
@@ -6014,6 +6030,12 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       reasonPlaceholder: "e.g. amendment to Article 12 — the deadline for an appeal changes",
       reasonNote: "Required, and shared by the whole selection. It is the only place where, a year from now, it will say why these documents had to be acknowledged again — and it goes out in the e-mail as well.",
       submit: "Assign",
+      checkImpact: "Check the impact",
+      impactPeople: (n) =>
+        n === 0 ? "Nobody will get the obligation"
+        : n === 1 ? "1 person will get the obligation"
+        : `${n} people will get the obligation`,
+      impactNote: "Whoever joins the department later gets it from the day they arrive (D50).",
     },
     actions: {
       noAudience: "You did not choose who to assign to.",

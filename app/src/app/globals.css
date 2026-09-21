@@ -2535,6 +2535,19 @@ html[data-theme="dark"] .editor-tui .CodeMirror {
 
 .due-fields .field { flex: 1 1 180px; margin: 0; }
 
+/* Súhrn dopadu pred pridelením a pred pripomienkami (HR.md, úlohy 3–4):
+   číslo pred odoslaním je jediná poistka proti prekliku. Jemné pozadie
+   v akcente, nie výstraha — nie je to chyba, je to fakt na prečítanie. */
+.assign-impact {
+  display: grid;
+  gap: 4px;
+  padding: 12px 14px;
+  border-radius: var(--radius);
+  background: var(--accent-soft);
+  margin: 0 0 14px;
+}
+.assign-impact-count { font-size: var(--fs-lead); font-weight: 650; }
+
 /* Rámik termínu je ten istý ako pri výbere publika nad ním; zvyšok formulára
    ho nemá, takže bez tohto by mal každý fieldset iný odstup. */
 .hr-group .due-fields { margin-bottom: 4px; }

@@ -22,12 +22,13 @@
 import { notFound, redirect } from "next/navigation"
 import Link from "next/link"
 import { hrContext, assignableDocuments } from "@/lib/hr"
+import { audienceFromSelection, audienceImpact, type Audience } from "@/lib/assignments"
 import { audiencesInOrg } from "@/lib/persons"
 import { allDepartments, flattenTree, counts } from "@/lib/departments"
 import { brandingView } from "@/lib/tenants"
 import { tenantStyle } from "@/components/TenantHeader"
 import { formatDate, dictionary } from "@/lib/i18n"
-import { assignAction } from "../actions"
+import { assignAction, previewAssignAction } from "../actions"
 import { normalizeQuery, type RawQuery } from "@/lib/urlParams"
 import Select from "@/components/Select"
 import AppShell from "@/components/AppShell"
@@ -50,6 +51,8 @@ type Query = {
   dueMode?: string
   dueDate?: string
   dueDays?: string
+  /** `1` po kroku „Skontrolovať dopad" — súhrn sa počíta z výberu v adrese. */
+  preview?: string
 }
 
 export default async function AssignPage({
@@ -77,6 +80,34 @@ export default async function AssignPage({
 
   const selectedDocuments = new Set(asArray(q.document))
   const selectedAudiences = new Set(asArray(q.audience))
+
+  /*
+   * Súhrn dopadu (HR.md, úloha 3) — až po kroku „Skontrolovať dopad":
+   * formulár beží bez skriptu, takže výber je na serveri až po odoslaní.
+   * Číslo ide cez `audienceImpact()` → `matchesAudience()`, jediné miesto
+   * s pravidlom príslušnosti; tu sa nič nepočíta druhýkrát. Číslo pred
+   * odoslaním je jediná poistka proti prekliku: prideliť je nevratné v tom,
+   * že ľuďom sa objaví povinnosť a chodia im pripomienky.
+   */
+  const departmentNames = Object.fromEntries(tree.map(o => [o.id, o.name]))
+  const previewAudiences = q.preview === "1"
+    ? audienceFromSelection({
+        all: q.all === "1",
+        selected: [...selectedAudiences],
+        addresses: q.addresses,
+        departmentNames,
+      })
+    : []
+  const impact = previewAudiences.length > 0
+    ? await audienceImpact(ctx.person.companyCode, previewAudiences)
+    : null
+  const audienceName = (a: Audience): string => {
+    switch (a.kind) {
+      case "all": return t.everyone
+      case "department": return a.label ?? a.value ?? ""
+      default: return a.value ?? ""
+    }
+  }
 
   return (
     <AppShell language={ctx.person.language}>
@@ -314,7 +345,26 @@ export default async function AssignPage({
           </fieldset>
 
           <div>
-            <button className="button" type="submit">{t.submit}</button>
+            {impact && (
+              <div className="assign-impact" role="status">
+                <div className="assign-impact-count">{t.impactPeople(impact.people)}</div>
+                <div className="quiet" style={{ fontSize: "var(--fs-small)" }}>
+                  {impact.perAudience.map(p => `${audienceName(p.audience)} (${p.count})`).join(", ")}
+                  {". "}
+                  {t.impactNote}
+                </div>
+              </div>
+            )}
+
+            {/* Dve tlačidlá, jeden formulár: „Skontrolovať dopad" je serverová
+                akcia, ktorá nič nezapíše — vráti výber v adrese a súhrn hore.
+                Funguje bez skriptu rovnako ako návrat s chybou. */}
+            <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+              <button className="button" type="submit">{t.submit}</button>
+              <button className="button button--quiet" type="submit" formAction={previewAssignAction}>
+                {t.checkImpact}
+              </button>
+            </div>
           </div>
         </form>
       )}
