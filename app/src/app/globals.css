@@ -1750,7 +1750,11 @@ html[data-theme="dark"] select.field-input {
 
 @media (max-width: 639px) {
   .tree-form { flex-direction: column; align-items: stretch; }
+  /* `flex-basis: auto` je nutné: základ 220/260 px z riadkovej podoby by sa
+     v stĺpci stal VÝŠKOU poľa (hlavná os sa otočila) — nájdené pri DETAIL
+     úlohe 3 renderom na 390 px, platí pre každý `.tree-form`. */
   .tree-form > * { width: 100%; }
+  .tree-form > :first-child { flex-basis: auto; }
 }
 
 /* ── audit (D51) ────────────────────────────────────────────────────────── */
@@ -2327,6 +2331,11 @@ html[data-theme="dark"] .editor-tui .CodeMirror {
 .detail-tools-body > .detail-block { margin: 0; }
 /* Formulár priečinka je riadok, nie mriežka (`.tree-form`). */
 .detail-block.tree-form { display: flex; }
+.detail-block.tree-form > .field { flex: 1 1 260px; margin: 0; }
+/* Za deklaráciou, ktorú prepisuje — inak by 260 px bolo v stĺpci výškou. */
+@media (max-width: 639px) {
+  .detail-block.tree-form > .field { flex-basis: auto; }
+}
 .detail-block > summary { cursor: pointer; font-weight: 600; }
 .detail-block-title { font-size: var(--fs-section); margin: 0; }
 .detail-block-note { font-size: var(--fs-body); color: var(--muted); margin: 0; }

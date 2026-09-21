@@ -480,7 +480,7 @@ export default async function DocumentDetailPage({
       </section>
       <form action={assignToFolderAction} className="card detail-block tree-form">
         <input type="hidden" name="documentId" value={d.documentId} />
-        <div className="field" style={{ flex: "1 1 260px", margin: 0 }}>
+        <div className="field">
           <span className="field-label">{t.folder}</span>
           <Select
             name="folderId"
