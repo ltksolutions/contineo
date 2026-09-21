@@ -68,10 +68,8 @@ export default async function TracksPage({
               <Link href={`/library/tracks/${encodeURIComponent(tr.key)}`} style={{ fontSize: "var(--fs-section)", fontWeight: 600, flex: "1 1 240px" }}>
                 {tr.title}
               </Link>
-              <span
-                className="tag"
-                style={tr.isActive ? { background: "var(--ok-bg)", color: "var(--ok-fg)" } : undefined}
-              >
+              {/* Stav cez variant zo ZAKLADU, nie inline farbu (SPRAVA, úloha 1.2). */}
+              <span className={tr.isActive ? "tag tag--published" : "tag tag--archived"}>
                 {tr.isActive ? t.active : t.inactive}
               </span>
             </div>
