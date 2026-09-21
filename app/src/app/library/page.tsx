@@ -966,22 +966,32 @@ export default async function LibraryPage({
             je odpoveď na otázku, ktorú si človek kladie vždy, nielen keď sa
             stránkuje.
           */}
-          <div className="doc-foot">
-            <span className="quiet">{t.pageRange(paged.from, paged.to, rows.length)}</span>
+          {/*
+            Komponent `.pager` (ZAKLAD, úloha 2). Neaktívny smer zostáva
+            odkazom s `aria-disabled`, nie tlačidlom — stránkovanie sú odkazy
+            a beží bez JavaScriptu. „Strana X z Y" odišla: rozsah vľavo
+            hovorí to isté a navyše koľko toho je.
+          */}
+          <div className="pager">
+            <span className="pager-count">{t.pageRange(paged.from, paged.to, rows.length)}</span>
+            <span className="pager-spacer" aria-hidden="true" />
             {paged.pages > 1 && (
-              <span className="doc-pager">
-                {paged.page > 1 && (
-                  <Link className="doc-page" href={toQuery(withPage(filters, paged.page - 1))}>
+              <>
+                {paged.page > 1 ? (
+                  <Link className="button button--quiet pager-link" href={toQuery(withPage(filters, paged.page - 1))}>
                     {t.prevPage}
                   </Link>
+                ) : (
+                  <a className="button button--quiet pager-link" aria-disabled="true">{t.prevPage}</a>
                 )}
-                <span className="quiet">{t.pageOf(paged.page, paged.pages)}</span>
-                {paged.page < paged.pages && (
-                  <Link className="doc-page" href={toQuery(withPage(filters, paged.page + 1))}>
+                {paged.page < paged.pages ? (
+                  <Link className="button button--quiet pager-link" href={toQuery(withPage(filters, paged.page + 1))}>
                     {t.nextPage}
                   </Link>
+                ) : (
+                  <a className="button button--quiet pager-link" aria-disabled="true">{t.nextPage}</a>
                 )}
-              </span>
+              </>
             )}
           </div>
         </form>

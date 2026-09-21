@@ -2119,32 +2119,32 @@ html[data-theme="dark"] .editor-tui .CodeMirror {
    type-qualified pravidlo nemá, `<th>` áno (ZAKLAD, úloha 5). */
 .doc-table th.doc-col-right { text-align: right; }
 
-.doc-foot {
+/*
+ * Stránkovanie ako komponent (ZAKLAD, úloha 2) — jedna trieda, použiteľná
+ * pod tabuľkou aj pod kartami. Text vľavo je rozsah („Zobrazené 1–8 z 24"),
+ * nie číslo strany: číslo strany nehovorí nič o tom, koľko toho je.
+ * Neaktívny odkaz zostáva odkazom s `aria-disabled`, nie `<button disabled>`
+ * — stránkovanie musí fungovať bez JavaScriptu. Nahrádza niekdajšie
+ * `.doc-foot`/`.doc-page`, ktoré žili len v knižnici.
+ */
+.pager {
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
-  justify-content: space-between;
   gap: 10px;
-  padding: 10px 2px;
-  font-size: 13px;
-  font-variant-numeric: tabular-nums;
+  flex-wrap: wrap;
+  padding: 8px 12px;
+  background: var(--bg);
+  border-top: 1px solid var(--line);
+  font-size: var(--fs-micro);
+  color: var(--muted);
 }
 
-.doc-pager { display: inline-flex; align-items: center; gap: 10px; }
+.pager-count { font-variant-numeric: tabular-nums; }
+.pager-spacer { flex: 1; }
 
-.doc-page {
-  display: inline-flex;
-  align-items: center;
-  min-height: 36px;
-  padding: 0 12px;
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  color: var(--accent);
-  text-decoration: none;
-  font-weight: 600;
-}
-
-.doc-page:hover { background: var(--surface-2); }
+/* Rozmer k `.button--quiet` — odkaz nesie obe triedy. */
+.pager-link { min-height: 28px; padding: 0 10px; }
+.pager-link[aria-disabled="true"] { opacity: 0.45; pointer-events: none; }
 
 /* ── nahratie dokumentu: sekcie a zóna na súbor ─────────────────────────
    Číslované sekcie, nie stepper: nahratie je jedno odoslanie formulára
@@ -4248,4 +4248,5 @@ html[data-theme="dark"] { --skeleton-sheen: rgba(255, 255, 255, 0.07); }
   .tree-row { min-height: 44px; align-items: center; }
   .multiselect-chip-remove { width: 44px; height: 44px; }
   .tree-edit-toggle { min-height: 44px; padding-block: 0; }
+  .pager-link { min-height: 44px; }
 }
