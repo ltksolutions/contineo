@@ -3706,6 +3706,14 @@ a.answer-source:focus-visible { outline: 2px solid var(--accent); outline-offset
 
 .overview-suggestion:hover { border-color: var(--accent); color: var(--accent); }
 
+/* Pod 640 px sa návrhy otázok neukazujú (PREHLAD, rámy): tri dlhé vety
+   zaberú na telefóne viac miesta než samotné pole. Kto sa chce spýtať,
+   klikne do poľa; návrhy sú pomôcka pre toho, kto nevie, čo systém vie —
+   a to sa zisťuje na väčšej obrazovke. */
+@media (max-width: 639px) {
+  .overview-suggestions { display: none; }
+}
+
 /* ── Prehľad: KPI pás ───────────────────────────────────────────────────────
    Každá dlaždica je odkaz na predfiltrovaný zoznam — číslo bez cesty k nemu
    je ozdoba. Preto `a`, nie `div`, a terčom je celá dlaždica, nie číslo. */
@@ -3765,11 +3773,17 @@ a.answer-source:focus-visible { outline: 2px solid var(--accent); outline-offset
 
 /* ── Prehľad: dva panely ──────────────────────────────────────────────────── */
 
+/* Panely pod sebou až do 1024 px (PREHLAD, rámy): na tablete sú dva panely
+   po 400 px užšie než ich obsah. Od 1024 px vedľa seba, pozornosť širšia. */
 .overview-panels {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  grid-template-columns: minmax(0, 1fr);
   gap: 12px;
   align-items: start;
+}
+
+@media (min-width: 1024px) {
+  .overview-panels { grid-template-columns: 1.2fr 1fr; }
 }
 
 /* Odsadenie si kreslí hlavička a riadok, nie karta: inak by deliaca linka
