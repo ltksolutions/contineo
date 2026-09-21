@@ -1544,6 +1544,9 @@ interface Dictionary {
       move: string
       remove: string
       removeHint: string
+      /** Prázdny strom (PRIECINKY, úloha 1). */
+      emptyTitle: string
+      emptyText: string
       newFolder: string
       newFolderName: string
       parentFolder: string
@@ -3437,6 +3440,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       move: "Presunúť",
       remove: "Zrušiť priečinok",
       removeHint: "Zrušiť sa dá až prázdny priečinok bez podpriečinkov.",
+      emptyTitle: "Knižnica nemá priečinky",
+      emptyText: "Dokumenty sú zatiaľ nezaradené. Priečinok založíte formulárom nižšie — a potom ich doň presuniete hromadne z knižnice.",
       newFolder: "Nový priečinok",
       newFolderName: "Názov nového priečinka",
       parentFolder: "Nadriadený priečinok",
@@ -5301,6 +5306,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       move: "Přesunout",
       remove: "Zrušit složku",
       removeHint: "Zrušit lze jen prázdnou složku bez podsložek.",
+      emptyTitle: "Knihovna nemá složky",
+      emptyText: "Dokumenty jsou zatím nezařazené. Složku založíte formulářem níže — a pak je do ní přesunete hromadně z knihovny.",
       newFolder: "Nová složka",
       newFolderName: "Název nové složky",
       parentFolder: "Nadřazená složka",
@@ -7159,6 +7166,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       move: "Move",
       remove: "Delete folder",
       removeHint: "Only an empty folder with no subfolders can be deleted.",
+      emptyTitle: "The library has no folders",
+      emptyText: "Documents are not filed yet. Create a folder with the form below — then move them into it in bulk from the library.",
       newFolder: "New folder",
       newFolderName: "Name of the new folder",
       parentFolder: "Parent folder",

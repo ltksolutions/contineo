@@ -66,6 +66,18 @@ export default async function FoldersPage({
           </Link>
         </div>
 
+        {/*
+          Prázdny strom (PRIECINKY, úloha 1): `.empty` zo ZAKLADU nad
+          formulárom, bez tlačidla — formulár je hneď pod tým a dve výzvy
+          k tomu istému sú šum.
+        */}
+        {folders.length === 0 && (
+          <div className="empty">
+            <div className="empty-title">{tf.emptyTitle}</div>
+            <div className="empty-text">{tf.emptyText}</div>
+          </div>
+        )}
+
         <TreeWithOrder
           language={uiLanguage}
           hidden={carried}
