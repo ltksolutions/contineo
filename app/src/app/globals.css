@@ -3537,10 +3537,17 @@ a.answer-source:focus-visible { outline: 2px solid var(--accent); outline-offset
 
 /* Na telefóne obe akcie pod sebou, každá 44 px (NASADENIE, PR 5):
    „Schváliť" a „Vrátiť s pripomienkou" vedľa seba sa na 390 px
-   preklikávajú omylom — a toto rozhodnutie je dôkazný záznam. */
+   preklikávajú omylom — a toto rozhodnutie je dôkazný záznam.
+   `column-reverse` (APPROVALS, úloha 5): „Zamietnuť" hore, „Schváliť"
+   dole pri palci — nevratné rozhodnutie nemá byť to, na ktoré padne palec
+   bez pozerania. Mení sa len vizuálne poradie; v DOM aj v tabulátore
+   zostáva „Schváliť" prvé, čo je správne pre čítačku. */
 @media (max-width: 639px) {
-  .approval-decide { flex-direction: column; }
-  .approval-decide > button { width: 100%; min-height: 44px; }
+  .approval-decide { flex-direction: column-reverse; }
+  /* `flex-basis: auto` je nutné: základ 160 px z riadkovej podoby by sa
+     v stĺpci stal VÝŠKOU tlačidla (hlavná os sa otočila) — 160 px vysoké
+     tlačidlá namiesto 44. */
+  .approval-decide > button { flex: 0 0 auto; width: 100%; min-height: 44px; }
 }
 
 /* ── potvrdenie na telefóne: pás pod palcom (NASADENIE, PR 5) ──────────────
