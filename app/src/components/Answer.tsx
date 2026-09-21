@@ -9,6 +9,7 @@
  * model niečo nedomyslel.
  */
 
+import Link from "next/link"
 import type { Citation, AskResult, AnswerPhase } from "@/lib/sseClient"
 import FormattedText from "@/components/FormattedText"
 import { cleanCitation, mergeCitations } from "@/lib/formatText"
@@ -61,6 +62,27 @@ export default function Answer({
   if (!text && !running && !done) return null
 
   const error = done?.error
+
+  /*
+    Tretí stav (ASK, úloha 1): vyhľadávanie nenašlo nič, čo by otázku krylo.
+    Server vtedy model nevolá a pošle prázdny zoznam zdrojov bez textu.
+    Tvarom ako karta odpovede, ale bez odpovede — a s cestou do knižnice,
+    lebo nie všetko je v predpisoch.
+  */
+  if (done && !error && !text && done.sources.length === 0) {
+    return (
+      <div className="card answer--none">
+        <div className="answer-head">
+          <span className="answer-mark" aria-hidden="true" />
+          <span className="answer-kicker">{tAsk.none.kicker}</span>
+        </div>
+        <p className="answer-none-text">
+          {tAsk.none.text}{" "}
+          <Link href={`/library?search=${encodeURIComponent(state.question)}`}>{tAsk.none.link}</Link>
+        </p>
+      </div>
+    )
+  }
   const truncated = done?.stopReason === "max_tokens"
 
   // Model cituje ten istý úryvok pri každom tvrdení, ktoré sa oň opiera.

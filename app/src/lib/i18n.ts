@@ -438,13 +438,16 @@ interface Dictionary {
     /** Bez JavaScriptu odpovedanie nefunguje — SSE sa formulárom nenahradí. */
     noScript: string
     noScriptLink: string
+    /** Tretí stav obrazovky (ASK, úloha 1): na otázku sa z dokumentov nedá odpovedať. */
+    none: { kicker: string; text: string; link: string }
+    /** Chyba nad hero kartou (ASK, úloha 2) — vždy s cestou von. */
+    error: { unavailable: string; link: string }
   }
 
   answer: {
     /** Hlavička karty odpovede — hovorí, odkiaľ odpoveď je. */
     fromDocuments: string
     failed: string
-    noResults: string
     incompleteHeading: string
     incompleteNote: string
     citations: (shown: number) => string
@@ -2104,12 +2107,20 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     unknownError: "Neznáma chyba",
     noScript: "Odpovedanie potrebuje JavaScript — odpoveď prichádza po častiach, ako ju model píše. Dokumenty sa dajú čítať a potvrdzovať aj bez neho:",
     noScriptLink: "prejsť na dokumenty",
+    none: {
+      kicker: "V dokumentoch organizácie sa k tomu nič nenašlo",
+      text: "Skúste otázku inak, alebo hľadajte v knižnici — nie všetko je v predpisoch.",
+      link: "Hľadať v knižnici →",
+    },
+    error: {
+      unavailable: "Odpoveď sa teraz nedá zložiť. Skúste to o chvíľu — vyhľadávanie v knižnici funguje.",
+      link: "Otvoriť knižnicu →",
+    },
   },
 
   answer: {
     fromDocuments: "Odpoveď z vašich dokumentov",
     failed: "Odpoveď sa nepodarilo získať.",
-    noResults: "Nenašiel som relevantné informácie k vašej otázke v dostupných dokumentoch.",
     incompleteHeading: "Odpoveď je neúplná.",
     incompleteNote: "Model dosiahol limit dĺžky a zastavil sa uprostred — chýba jej záver. Skúste sa opýtať na užšiu časť problému.",
     citations: (shown) => `Doslovné citácie (${shown})`,
@@ -3959,12 +3970,20 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     unknownError: "Neznámá chyba",
     noScript: "Odpovídání potřebuje JavaScript — odpověď přichází po částech, jak ji model píše. Dokumenty se dají číst a potvrzovat i bez něj:",
     noScriptLink: "přejít na dokumenty",
+    none: {
+      kicker: "V dokumentech organizace se k tomu nic nenašlo",
+      text: "Zkuste otázku jinak, nebo hledejte v knihovně — ne všechno je v předpisech.",
+      link: "Hledat v knihovně →",
+    },
+    error: {
+      unavailable: "Odpověď se teď nedá sestavit. Zkuste to za chvíli — vyhledávání v knihovně funguje.",
+      link: "Otevřít knihovnu →",
+    },
   },
 
   answer: {
     fromDocuments: "Odpověď z vašich dokumentů",
     failed: "Odpověď se nepodařilo získat.",
-    noResults: "Nenašel jsem relevantní informace k vaší otázce v dostupných dokumentech.",
     incompleteHeading: "Odpověď je neúplná.",
     incompleteNote: "Model dosáhl limitu délky a zastavil se uprostřed — chybí jí závěr. Zkuste se zeptat na užší část problému.",
     citations: (shown) => `Doslovné citace (${shown})`,
@@ -5807,12 +5826,20 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     unknownError: "Unknown error",
     noScript: "Answering needs JavaScript — the answer arrives in pieces, as the model writes it. Documents can be read and acknowledged without it:",
     noScriptLink: "go to documents",
+    none: {
+      kicker: "Nothing on this was found in the organisation's documents",
+      text: "Try rephrasing the question, or search the library — not everything is in the regulations.",
+      link: "Search the library →",
+    },
+    error: {
+      unavailable: "The answer cannot be composed right now. Try again in a moment — the library search works.",
+      link: "Open the library →",
+    },
   },
 
   answer: {
     fromDocuments: "Answer from your documents",
     failed: "The answer could not be retrieved.",
-    noResults: "I found no information relevant to your question in the available documents.",
     incompleteHeading: "The answer is incomplete.",
     incompleteNote: "The model hit its length limit and stopped mid-sentence — the conclusion is missing. Try asking about a narrower part of the problem.",
     citations: (shown) => `Verbatim citations (${shown})`,
