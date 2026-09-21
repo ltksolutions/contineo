@@ -14,12 +14,55 @@
 import { redirect } from "next/navigation"
 import { isRedirect } from "@/lib/redirects"
 import { revalidatePath } from "next/cache"
-import { peopleContext, savePerson, invitePerson, setPersonStatus, neverSignedIn } from "@/lib/people"
+import { peopleContext, savePerson, invitePerson, setPersonStatus, neverSignedIn, loadPersonById } from "@/lib/people"
+import { needsInvitation } from "@/lib/personFields"
 import { send, inviteEmail } from "@/lib/ecomail"
 import { brandingView } from "@/lib/tenants"
 import { requestHostname } from "@/lib/session"
 import { writeAudit, diff } from "@/lib/audit"
 import { normalizeLanguage } from "@/lib/i18n"
+
+/**
+ * Poslať pozvánku znovu — jednej osobe, z jej detailu.
+ *
+ * Ponúka sa len tomu, kto **ešte nikdy nebol dnu** (`firstLoginAt` chýba);
+ * kto sa už prihlásil, pozvánku nepotrebuje a e-mail by ho len mýlil.
+ * Kritérium je to isté ako v `neverSignedIn()` — nie `status`, lebo osoby
+ * z importu a zo samozaloženia (D47) majú `active` od začiatku.
+ *
+ * Nie je tu žiadne obmedzenie frekvencie: posiela to personalista vlastnej
+ * organizácie vlastnému kolegovi a rozhoduje sa podľa toho, čo mu ten človek
+ * povedal do telefónu. Stroj, ktorý mu v tom bráni, rieši problém, ktorý nemá.
+ */
+export async function resendInviteAction(fd: FormData) {
+  const ctx = await peopleContext()
+  if (ctx.state !== "ready") redirect("/people")
+  const language = ctx.person.language
+
+  const id = fieldText(fd, "id")
+  const person = await loadPersonById(ctx.person.companyCode, id)
+  if (!person) redirect("/people")
+
+  const back = `/people/${encodeURIComponent(id)}`
+  // Prihlásená ani vyradená osoba pozvánku nedostane ani cez priamo odoslaný
+  // formulár: tlačidlo sa jej nekreslí, ale kontrola patrí na server.
+  if (!needsInvitation(person)) {
+    redirect(`${back}?error=1&msg=${encodeURIComponent(say(language).inviteNotNeeded)}`)
+  }
+
+  const ok = await sendInviteTo(person, ctx.tenant)
+
+  await writeAudit({
+    companyCode: ctx.person.companyCode, subject: "person", action: "changed",
+    actor: ctx.person.email, targetId: person.id, targetLabel: person.fullName,
+    changes: diff({ invitation: "" }, { invitation: ok ? "sent" : "failed" }),
+  })
+
+  revalidatePath(back)
+  redirect(`${back}?msg=${encodeURIComponent(
+    ok ? say(language).inviteResent(person.email) : say(language).inviteFailed,
+  )}${ok ? "" : "&error=1"}`)
+}
 
 /** Koľko e-mailov naraz. Rovnaká hodnota ako pri oznámeniach v `/hr`. */
 const INVITE_CONCURRENCY = 5
@@ -103,9 +146,43 @@ export async function savePersonAction(fd: FormData) {
   redirect(`/people/${encodeURIComponent(id)}?msg=${encodeURIComponent(message)}${error ? "&error=1" : ""}`)
 }
 
+/**
+ * Odoslanie jednej pozvánky.
+ *
+ * Jedno miesto pre formulár „Pozvať osobu" aj pre „Poslať pozvánku znovu" —
+ * dve kópie skladania e-mailu by sa raz rozišli a jedna z nich by posielala
+ * pozvánku bez loga organizácie.
+ *
+ * E-mail nesie **odkaz na portál, nie prihlasovací odkaz** (rovnako ako
+ * hromadné rozosielanie): prihlasovací odkaz platí 24 hodín a raz, takže ho
+ * poštové brány spotrebujú skôr než človek (zaznamenané 2026-08-28).
+ *
+ * Vracia `true`/`false` namiesto výnimky: volajúci vie, či sa podarilo, ale
+ * zlyhanie pošty nesmie zhodiť zápis osoby — tá je v evidencii tak či tak
+ * a pozvánku možno poslať znovu.
+ */
+async function sendInviteTo(
+  person: { email: string; language: string },
+  tenant: Parameters<typeof brandingView>[0],
+): Promise<boolean> {
+  try {
+    const host = await requestHostname()
+    await send({
+      to: person.email,
+      ...inviteEmail(`https://${host}/sign-in`, host, normalizeLanguage(person.language), brandingView(tenant)),
+    })
+    return true
+  } catch (e) {
+    // Menovite do logu — inak sa nedá zistiť, komu správa nedošla.
+    console.error(`[osoby] pozvánka na ${person.email} zlyhala:`, e)
+    return false
+  }
+}
+
 export async function invitePersonAction(fd: FormData) {
-  const actor = await peopleAdmin()
-  if (!actor) redirect("/people")
+  const ctx = await peopleContext()
+  if (ctx.state !== "ready") redirect("/people")
+  const actor = { email: ctx.person.email, companyCode: ctx.person.companyCode, language: ctx.person.language }
 
   try {
     const person = await invitePerson(actor.companyCode, {
@@ -122,12 +199,23 @@ export async function invitePersonAction(fd: FormData) {
       language: fieldText(fd, "language") || undefined,
     }, actor.email)
 
+    /*
+     * **Pozvánka sa aj odošle** (rozhodnutie Jána 2026-09-21). Dovtedy
+     * formulár osobu len zapísal a hlásil „Pozvaná" — hlásil teda zápis do
+     * evidencie, nie odoslanie, a e-mail odchádzal až hromadnou akciou na
+     * `/people/invite`. Človek, ktorý niekoho pozve, čaká, že pozvánka odišla.
+     *
+     * Zlyhanie pošty osobu nezruší: je zapísaná a hláška povie, že pozvánku
+     * treba poslať znovu — tlačidlo je na jej detaile.
+     */
+    const ok = await sendInviteTo(person, ctx.tenant)
+
     revalidatePath("/people")
     // Rovno na detail: po pozvaní nasleduje priradenie trás a skupín,
     // a hľadať toho človeka znova v zozname je zbytočný krok.
     redirect(`/people/${encodeURIComponent(person.id)}?msg=${encodeURIComponent(
-      say(actor.language).invited,
-    )}`)
+      ok ? say(actor.language).invited : say(actor.language).invitedNoEmail,
+    )}${ok ? "" : "&error=1"}`)
   } catch (e) {
     // `redirect()` vyhadzuje výnimku — nesmie sa chytiť ako chyba zápisu.
     if (isRedirect(e)) throw e
@@ -293,27 +381,16 @@ export async function sendInvitationsAction() {
     redirect("/people/invite?error=1&msg=" + encodeURIComponent(t.nobody))
   }
 
-  const host = await requestHostname()
-  const branding = brandingView(ctx.tenant)
-  const signInUrl = `https://${host}/sign-in`
-
   let sent = 0
   const failed: string[] = []
 
   for (let i = 0; i < people.length; i += INVITE_CONCURRENCY) {
+    // Tá istá `sendInviteTo` ako pri jednej osobe — jedno miesto, kde sa
+    // pozvánka skladá. Jedna neplatná adresa nesmie zastaviť zvyšok, preto
+    // funkcia vracia `false` namiesto výnimky.
     await Promise.all(people.slice(i, i + INVITE_CONCURRENCY).map(async person => {
-      try {
-        await send({
-          to: person.email,
-          ...inviteEmail(signInUrl, host, normalizeLanguage(person.language), branding),
-        })
-        sent++
-      } catch (e) {
-        // Jedna neplatná adresa nesmie zastaviť zvyšok. Menovite do logu,
-        // aby sa dalo zistiť, komu správa nedošla.
-        console.error(`[osoby] pozvánka na ${person.email} zlyhala:`, e)
-        failed.push(person.email)
-      }
+      if (await sendInviteTo(person, ctx.tenant)) sent++
+      else failed.push(person.email)
     }))
   }
 

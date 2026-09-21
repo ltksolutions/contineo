@@ -1226,6 +1226,11 @@ interface Dictionary {
       save: string
       returnHeading: string
       excludeHeading: string
+      /** Karta „Pozvánka" na detaile — len kým sa osoba ani raz neprihlásila. */
+      inviteHeading: string
+      inviteNote: string
+      inviteNoteSince: (date: string) => string
+      inviteSubmit: string
       returnNoteBefore: string
       returnNoteHighlight: string
       returnNoteAfter: string
@@ -1238,6 +1243,13 @@ interface Dictionary {
     actions: {
       saved: string
       invited: string
+      /** Osoba je zapísaná, ale e-mail neodišiel — pozvánku treba poslať znovu. */
+      invitedNoEmail: string
+      /** Pozvánka odoslaná znovu, z detailu osoby. */
+      inviteResent: (email: string) => string
+      inviteFailed: string
+      /** Pozvánku si vypýtal niekto pre osobu, ktorá už bola dnu. */
+      inviteNotNeeded: string
       excluded: string
       returned: string
       confirmAddress: (email: string) => string
@@ -3114,6 +3126,10 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       save: "Uložiť",
       returnHeading: "Vrátiť osobu",
       excludeHeading: "Vyradiť osobu",
+      inviteHeading: "Pozvánka",
+      inviteNote: "Táto osoba sa ešte ani raz neprihlásila. Pozvánka nesie odkaz na portál — prihlási sa ním cez pracovné konto alebo si vyžiada odkaz na e-mail.",
+      inviteNoteSince: (date) => `Zapísaná ${date}.`,
+      inviteSubmit: "Poslať pozvánku znovu",
       returnNoteBefore: "Vráti sa ako ",
       returnNoteHighlight: "pozvaná",
       returnNoteAfter: ", nie aktívna — aktívna znamená „už sa prihlásila“ a to sa vrátením nestalo. Prepne ju prvé prihlásenie.",
@@ -3125,7 +3141,11 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     },
     actions: {
       saved: "Uložené.",
-      invited: "Pozvaná. Prihlási sa, keď si sama vyžiada odkaz alebo použije pracovné konto.",
+      invited: "Pozvaná — pozvánka jej odišla na e-mail.",
+      invitedNoEmail: "Osoba je zapísaná, ale pozvánka jej neodišla. Skús ju poslať znovu z jej karty.",
+      inviteResent: (email) => `Pozvánka odoslaná na ${email}.`,
+      inviteFailed: "Pozvánku sa nepodarilo odoslať. Skús to o chvíľu znova.",
+      inviteNotNeeded: "Táto osoba už bola prihlásená — pozvánku nepotrebuje.",
       excluded: "Vyradená. Záznam a jej potvrdenia zostávajú.",
       returned: "Vrátená. Prihlási sa a stav sa prepne sám.",
       confirmAddress: (email) => `Na vyradenie napíš adresu (${email}).`,
@@ -4944,6 +4964,10 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       save: "Uložit",
       returnHeading: "Vrátit osobu",
       excludeHeading: "Vyřadit osobu",
+      inviteHeading: "Pozvánka",
+      inviteNote: "Tato osoba se ještě ani jednou nepřihlásila. Pozvánka nese odkaz na portál — přihlásí se jím přes pracovní účet nebo si vyžádá odkaz na e-mail.",
+      inviteNoteSince: (date) => `Zapsaná ${date}.`,
+      inviteSubmit: "Poslat pozvánku znovu",
       returnNoteBefore: "Vrátí se jako ",
       returnNoteHighlight: "pozvaná",
       returnNoteAfter: ", ne aktivní — aktivní znamená „už se přihlásila“ a to se vrácením nestalo. Přepne ji první přihlášení.",
@@ -4955,7 +4979,11 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     },
     actions: {
       saved: "Uloženo.",
-      invited: "Pozvaná. Přihlásí se, až si sama vyžádá odkaz nebo použije pracovní účet.",
+      invited: "Pozvaná — pozvánka jí odešla na e-mail.",
+      invitedNoEmail: "Osoba je zapsaná, ale pozvánka jí neodešla. Zkus ji poslat znovu z její karty.",
+      inviteResent: (email) => `Pozvánka odeslána na ${email}.`,
+      inviteFailed: "Pozvánku se nepodařilo odeslat. Zkus to za chvíli znovu.",
+      inviteNotNeeded: "Tato osoba už byla přihlášená — pozvánku nepotřebuje.",
       excluded: "Vyřazená. Záznam a její potvrzení zůstávají.",
       returned: "Vrácená. Přihlásí se a stav se přepne sám.",
       confirmAddress: (email) => `Pro vyřazení napiš adresu (${email}).`,
@@ -6766,6 +6794,10 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       save: "Save",
       returnHeading: "Reinstate the person",
       excludeHeading: "Exclude the person",
+      inviteHeading: "Invitation",
+      inviteNote: "This person has never signed in. The invitation carries a link to the portal — they sign in with their work account or request a link by email.",
+      inviteNoteSince: (date) => `On record since ${date}.`,
+      inviteSubmit: "Send the invitation again",
       returnNoteBefore: "They come back as ",
       returnNoteHighlight: "invited",
       returnNoteAfter: ", not active — active means “has already signed in”, and reinstating did not make that happen. Their first sign-in switches it.",
@@ -6777,7 +6809,11 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     },
     actions: {
       saved: "Saved.",
-      invited: "Invited. They will sign in once they request a link themselves or use their work account.",
+      invited: "Invited — the invitation has been emailed to them.",
+      invitedNoEmail: "The person is on record, but the invitation did not go out. Try sending it again from their card.",
+      inviteResent: (email) => `Invitation sent to ${email}.`,
+      inviteFailed: "The invitation could not be sent. Try again in a moment.",
+      inviteNotNeeded: "This person has already signed in — they do not need an invitation.",
       excluded: "Excluded. The record and their acknowledgements remain.",
       returned: "Reinstated. They sign in and the status switches by itself.",
       confirmAddress: (email) => `To exclude, type the address (${email}).`,

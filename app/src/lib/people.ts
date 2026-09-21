@@ -99,6 +99,16 @@ export interface PersonRow {
   groups: string[]
   roles: string[]
   lastLoginAt?: Date
+  /**
+   * Kedy bola prvý raz dnu. Chýba = **nikdy sa neprihlásila**, a to je to
+   * kritérium, podľa ktorého sa ponúka pozvánka — nie `status`. Stav
+   * `invited` sa pri prvom prihlásení prepíše na `active`, ale osoby
+   * z importu alebo zo samozaloženia (D47) majú `active` od začiatku
+   * a pozvánku nikdy nedostali. Rovnaké pravidlo ako `neverSignedIn()`.
+   */
+  firstLoginAt?: Date
+  /** Kedy ju niekto zapísal ako pozvanú. Chýba u osôb z importu (D47). */
+  invitedAt?: Date
   /** Akými kontami sa prihlasuje. Neudeľujú prístup, len ho uľahčujú (D45). */
   accounts: ("microsoft" | "google")[]
   /** Predchádzajúce adresy — aby sa staré potvrdenie dalo spojiť s človekom. */
@@ -129,6 +139,8 @@ function toRow(p: Person): PersonRow {
     groups: p.groups ?? [],
     roles: p.roles ?? [],
     lastLoginAt: p.lastLoginAt,
+    firstLoginAt: p.firstLoginAt,
+    invitedAt: p.invitedAt,
     emailHistory: (p.emailHistory ?? []).map(h => ({ email: h.email, until: h.until })),
     createdBy: p.createdBy,
     accounts: [

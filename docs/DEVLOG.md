@@ -40,6 +40,27 @@ ktorý sa mení nahlas.
 projekte): „Uložiť pohľad", presné stĺpce tabuľky (Zmenené, Potvrdenia %
 — to druhé čaká aj na dáta), správanie chips pri podmienkach.
 
+**Pozvánka, ktorá nikdy neodišla.** Ján hlásil, že pozvaná kolegyňa nedostala
+e-mail. V databáze bola v poriadku — `status: invited`, `firstLoginAt` chýba.
+Chyba bola v kóde a bola to tá najnepríjemnejšia trieda chýb: `grep 'send('`
+v `people/actions.ts` vrátil **jediný** výskyt, a ten bol v hromadnej akcii.
+Formulár „Pozvať osobu" osobu len zapísal a ohlásil „Pozvaná" — hláška hovorila
+o evidencii, používateľ ju čítal ako o pošte. Nikde nespadla výnimka, nikde
+nebol červený log; systém robil presne to, čo mal napísané, len to nikto
+nechcel.
+
+Poučenie do ďalšieho čítania kódu: **hláška po akcii je tvrdenie o tom, čo sa
+stalo.** „Pozvaná" pri akcii, ktorá neposiela, je nepravdivé tvrdenie a nedá
+sa naň prísť testom — treba ho prečítať očami niekoho, kto na to tlačidlo
+klikol.
+
+Vedľajší nález, ktorý stojí za zapamätanie: `needsInvitation()` som najprv
+napísal do `people.ts` — a test ho odtiaľ nevedel importovať, lebo `people.ts`
+ťahá `session.ts` s Reactovým `cache()`. To nie je nepríjemnosť testu, to je
+signál: pravidlo, ktoré potrebuje obrazovka aj server aj test, patrí do
+čistého modulu. Repo naň už jeden má (`personFields.ts`) a docstring v ňom
+presne tento dôvod menuje. Stačilo ho poslúchnuť.
+
 **PR 8 — solo handoff prišiel a bol radosť čítať.** KNIZNICA.md malo tabuľku
 „čo je hotové — nerob znova" s číslami riadkov: polovica práce pri handoffe
 je zvyčajne zistiť, čo neplatí, a tu to autor spravil za mňa. Päť úloh,
