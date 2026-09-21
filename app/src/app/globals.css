@@ -4313,6 +4313,23 @@ a.answer-source:focus-visible { outline: 2px solid var(--accent); outline-offset
 .more-row-label { flex: 1 1 auto; min-width: 0; }
 .more-row-chevron { color: var(--muted); font-size: 18px; line-height: 1; }
 
+/* ── Upozornenia (SPRAVA, úloha 3.1) ─────────────────────────────────────
+   Neprečítaná položka nesie ten istý znak ako označený riadok tabuľky
+   (ZAKLAD, úloha 4): pruh 3 px v akcente vľavo a mierne pozadie. Hrúbka
+   písma zostáva ako druhý kanál — pruh je farba, a farba sama pri slabom
+   zraku nestačí. Zoznam je `.card`, preto pruh ide inset a nie cez rám. */
+/* Zoznam je karta bez vlastného odsadenia; `overflow: hidden` ostrihá
+   pozadie prvej a poslednej položky do zaoblených rohov karty. */
+.notif-list { list-style: none; margin: 0; padding: 0; overflow: hidden; }
+.notif-row { padding: 14px 18px; }
+.notif-row + .notif-row { border-top: 1px solid var(--line); }
+.notif-row.is-unread {
+  background: var(--accent-soft);
+  box-shadow: inset 3px 0 0 var(--accent);
+  font-weight: 600;
+}
+.notif-row-date { font-weight: 400; margin-top: 4px; }
+
 
 /* Dátum účinnosti v zozname dokumentov: `nowrap` a `tabular-nums`, aby
    sa stĺpec nezalomil a číslice stáli pod sebou (návrh, časť 3). */

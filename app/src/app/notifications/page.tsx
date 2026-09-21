@@ -87,23 +87,17 @@ export default async function NotificationsPage({
               </form>
             )}
 
-            <ul className="card" style={{ listStyle: "none", margin: 0, padding: 0 }}>
+            <ul className="card notif-list">
               {rows.map((r, i) => {
                 const href = notificationHref(r.kind, r.params)
                 const text = sentence(language, r.kind, r.params)
                 return (
                   <li
                     key={String(r._id ?? i)}
-                    style={{
-                      padding: "14px 18px",
-                      borderBottom: i === rows.length - 1 ? 0 : "1px solid var(--line)",
-                      // Neprečítané sa líši **hrúbkou písma, nie farbou**:
-                      // farba by sa v tmavej téme aj pri slabom zraku stratila.
-                      fontWeight: r.readAt ? 400 : 600,
-                    }}
+                    className={r.readAt ? "notif-row" : "notif-row is-unread"}
                   >
                     {href ? <Link href={href}>{text}</Link> : <span>{text}</span>}
-                    <div className="quiet" style={{ fontSize: "var(--fs-small)", fontWeight: 400, marginTop: 4 }}>
+                    <div className="quiet notif-row-date" style={{ fontSize: "var(--fs-small)" }}>
                       {formatDate(r.createdAt, language)}
                     </div>
                   </li>
