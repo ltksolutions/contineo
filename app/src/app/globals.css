@@ -3855,7 +3855,11 @@ a.answer-source:focus-visible { outline: 2px solid var(--accent); outline-offset
   justify-content: center;
   border-radius: 9px;
   background: var(--bad-fg);
-  color: #fff;
+  /* `--bad-fg` je foreground token — v tmavej téme svetlý odtieň (#fca5a5).
+     S natvrdo bielym písmom malo číslo kontrast 1,9 : 1 a nebolo ho vidieť.
+     `--on-accent` sa s témou otočí (ZAKLAD, odchýlka B1); na farebnom
+     podklade nikdy #fff natvrdo. */
+  color: var(--on-accent);
   font-size: 11px;
   font-weight: 700;
   line-height: 1;
