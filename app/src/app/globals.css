@@ -755,6 +755,25 @@ button:disabled { cursor: not-allowed; opacity: 0.55; }
 .button--quiet:hover:not(:disabled) { background: var(--surface-2); }
 
 /*
+ * Vypnutý stav ovládačov (ZAKLAD, úloha 3). `opacity`, nie vlastná sivá
+ * farba: tlačidlo si drží tenant farbu, takže vypnuté „Schváliť" je
+ * rozoznateľné od vypnutého „Zmazať" — sivá by z oboch urobila to isté
+ * tlačidlo. `aria-disabled` je tu preto, že odkaz sa `disabled` atribútom
+ * vypnúť nedá a stránkovanie aj nepovolené akcie sú odkazy.
+ */
+.button:disabled,
+.button[aria-disabled="true"] {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.field-input:disabled {
+  background: var(--surface-2);
+  color: var(--muted);
+  cursor: not-allowed;
+}
+
+/*
  * Správcovské formuláre.
  *
  * Jeden stĺpec aj na širokom displeji: formulár, ktorý sa vypĺňa raz za mesiac,
