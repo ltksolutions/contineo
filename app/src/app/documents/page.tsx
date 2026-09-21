@@ -94,20 +94,16 @@ export default async function DocumentsPage({
     <AppShell layout={normalizeLayout(q.layout)} language={person.language}>
     {/* Šírka 760 px zostáva: je to text na čítanie, nie tabuľka. Shell dáva
         odsadenie a navigáciu, obmedzenie riadka je vec obsahu. */}
-    <div style={{ maxWidth: 760, ...tenantStyle(branding) }}>
-      <h1 className="page-title" style={{ margin: "0 0 8px" }}>
-        {t.listHeading}
-      </h1>
-      <p className="quiet page-lead" style={{ margin: "0 0 8px" }}>{t.listIntro}</p>
+    <div className="duty-page" style={tenantStyle(branding)}>
+      <h1 className="page-title">{t.listHeading}</h1>
+      <p className="quiet page-lead">{t.listIntro}</p>
 
       {/*
         Celkový súčet len pri viacerých trasách. Pri jednej by pod sebou
         stálo dvakrát to isté číslo — raz ako súčet, raz pri trase.
       */}
       {total > 0 && tracks.length > 1 && (
-        <p className="quiet" style={{ fontSize: "var(--fs-body)", margin: "0 0 24px" }}>
-          {t.progress(done, total)}
-        </p>
+        <p className="quiet duty-summary">{t.progress(done, total)}</p>
       )}
 
       {total === 0 && outside.length === 0 && (
@@ -120,21 +116,17 @@ export default async function DocumentsPage({
         trasa navyše hovorí.
       */}
       {tracks.map(tr => (
-        <section key={tr.key} style={{ margin: "0 0 32px" }}>
-          <div style={{ display: "flex", gap: 12, alignItems: "baseline", flexWrap: "wrap", margin: "0 0 4px" }}>
-            <h2 style={{ fontSize: "var(--fs-section)", letterSpacing: "-0.01em", margin: 0, flex: "1 1 auto" }}>
-              {tr.title}
-            </h2>
-            <span className="quiet" style={{ fontSize: "var(--fs-small)" }}>
+        <section key={tr.key} className="duty-track">
+          <div className="duty-track-head">
+            <h2 className="duty-track-title">{tr.title}</h2>
+            <span className="quiet duty-track-progress">
               {tr.nextOrder === null ? t.trackComplete : t.progress(tr.doneCount, tr.totalCount)}
             </span>
           </div>
 
-          {tr.description && (
-            <p className="quiet" style={{ fontSize: "var(--fs-body)", margin: "0 0 12px" }}>{tr.description}</p>
-          )}
+          {tr.description && <p className="quiet duty-track-desc">{tr.description}</p>}
 
-          <ul style={{ listStyle: "none", padding: 0, margin: "12px 0 0", display: "grid", gap: 12 }}>
+          <ul className="duty-list">
             {tr.steps.map(s => {
               const isNext = s.order === tr.nextOrder
               // Bez termínu bez chipu — absencia termínu je bežný stav, nie šum.
@@ -142,19 +134,13 @@ export default async function DocumentsPage({
               return (
                 <li
                   key={`${tr.key}-${s.order}`}
-                  className="card"
-                  style={{
-                    padding: "16px 18px",
-                    // Miesto, kde človek skončil, musí byť vidieť na prvý
-                    // pohľad — nie až po prečítaní všetkých štítkov.
-                    borderColor: isNext ? "var(--accent)" : undefined,
-                  }}
+                  // Miesto, kde človek skončil, musí byť vidieť na prvý
+                  // pohľad — nie až po prečítaní všetkých štítkov.
+                  className={`card duty-card${isNext ? " is-next" : ""}`}
                 >
-                  <div style={{ display: "flex", gap: 16, alignItems: "baseline", flexWrap: "wrap" }}>
-                    <span className="quiet" style={{ fontSize: "var(--fs-small)", flex: "0 0 auto" }}>
-                      {t.step(s.order, tr.totalCount)}
-                    </span>
-                    <strong style={{ fontSize: "var(--fs-lead)", flex: "1 1 260px" }}>{s.title}</strong>
+                  <div className="duty-head">
+                    <span className="duty-order">{t.step(s.order, tr.totalCount)}</span>
+                    <span className="duty-title">{s.title}</span>
 
                     {due && (
                       <span className={`due-chip duty-due due-chip--${dueState(due, now)}`}>
@@ -179,14 +165,14 @@ export default async function DocumentsPage({
                     )}
                   </div>
 
-                  <p className="quiet" style={{ fontSize: "var(--fs-small)", margin: "8px 0 0" }}>
+                  <p className="duty-meta">
                     {s.blocked
                       ? t.blockedReason[s.blocked] ?? s.blocked
                       : t.version(s.versionLabel ?? "", formatDate(s.effectiveFrom!, person.language))}
                   </p>
 
                   {!s.blocked && (
-                    <p style={{ margin: "12px 0 0" }}>
+                    <p className="duty-action">
                       <Link
                         className={isNext ? "button" : "button button--quiet"}
                         /*
@@ -214,15 +200,16 @@ export default async function DocumentsPage({
         povinnosť". Zmiešať ich by predstieralo poradie, ktoré nikto neurčil.
       */}
       {outside.length > 0 && (
-        <section style={{ margin: "0 0 32px" }}>
-          <h2 style={{ fontSize: "var(--fs-section)", letterSpacing: "-0.01em", margin: "0 0 12px" }}>
-            {t.assignedHeading}
-          </h2>
-          <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "grid", gap: 12 }}>
+        <section className="duty-track">
+          <div className="duty-track-head">
+            <h2 className="duty-track-title">{t.assignedHeading}</h2>
+          </div>
+          <ul className="duty-list">
             {outside.map(item => (
-              <li key={item.id} className="card" style={{ padding: "16px 18px" }}>
-                <div style={{ display: "flex", gap: 16, alignItems: "baseline", flexWrap: "wrap" }}>
-                  <strong style={{ fontSize: "var(--fs-lead)", flex: "1 1 260px" }}>{item.title}</strong>
+              <li key={item.id} className="card duty-card">
+                {/* Bez `.duty-order`: pridelenie mimo trasy poradie nemá. */}
+                <div className="duty-head">
+                  <span className="duty-title">{item.title}</span>
                   {item.due && (
                     <span className={`due-chip duty-due due-chip--${dueState(item.due, now)}`}>
                       {tOverview.by(formatDate(item.due, person.language))}
@@ -230,10 +217,8 @@ export default async function DocumentsPage({
                   )}
                   <span className="tag">{t.todo}</span>
                 </div>
-                {item.detail && (
-                  <p className="quiet" style={{ fontSize: "var(--fs-small)", margin: "8px 0 0" }}>{item.detail}</p>
-                )}
-                <p style={{ margin: "12px 0 0" }}>
+                {item.detail && <p className="duty-meta">{item.detail}</p>}
+                <p className="duty-action">
                   <Link className="button" href={item.href}>{t.open}</Link>
                 </p>
               </li>

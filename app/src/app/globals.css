@@ -2394,6 +2394,34 @@ html[data-theme="dark"] .editor-tui .CodeMirror {
    človek tam vidí, že mu niečo horí, a tu to má vybaviť. */
 .duty-due { margin-left: auto; }
 
+/* Karty povinností (DOCUMENTS, úloha 3) — inline štýly do tried, presne to,
+   čo `.page-title` a `.page-lead` urobili na iných obrazovkách. Karty
+   zostávajú na všetkých šírkach: nesú poradie kroku, stav aj dôvod
+   blokovania, riadok tabuľky to neunesie (PR 5). Šírka 760 px je vec
+   obsahu (text na čítanie), preto trieda stránky, nie shellu. */
+.duty-page { max-width: 760px; }
+.duty-summary { font-size: var(--fs-body); margin: 0 0 24px; }
+.duty-track { margin: 0 0 32px; }
+.duty-track-head {
+  display: flex;
+  gap: 12px;
+  align-items: baseline;
+  flex-wrap: wrap;
+  margin: 0 0 4px;
+}
+.duty-track-title { flex: 1 1 auto; margin: 0; font-size: var(--fs-section); letter-spacing: -0.01em; }
+.duty-track-progress { font-size: var(--fs-small); }
+.duty-track-desc { margin: 0 0 12px; font-size: var(--fs-body); }
+.duty-list { list-style: none; padding: 0; margin: 12px 0 0; display: grid; gap: 12px; }
+.duty-card { padding: 16px 18px; }
+/* Miesto, kde človek skončil, musí byť vidieť na prvý pohľad. */
+.duty-card.is-next { border-color: var(--accent); }
+.duty-head { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+.duty-order { flex: 0 0 auto; font-size: var(--fs-small); color: var(--muted); }
+.duty-title { flex: 1 1 260px; font-size: var(--fs-lead); font-weight: 600; text-wrap: pretty; }
+.duty-meta { margin: 8px 0 0; font-size: var(--fs-small); color: var(--muted); }
+.duty-action { margin: 12px 0 0; }
+
 /* Dve polia termínu vedľa seba, na telefóne pod sebou. Nechávajú sa vidieť
    obe: formulár beží bez JavaScriptu, takže sa skryť nedajú, a kto sa prepne
    z dátumu na dni a späť, o svoj dátum nepríde. */
