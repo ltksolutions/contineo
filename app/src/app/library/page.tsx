@@ -17,6 +17,7 @@ import { codelistOptions } from "@/lib/codelists"
 import { tenantExtras } from "@/lib/codelistsTenant"
 import Select from "@/components/Select"
 import LiveFilter from "@/components/LiveFilter"
+import { ContineoMark } from "@/components/ContineoMark"
 import { moveManyAction, assignManyAction } from "./actions"
 import AppShell from "@/components/AppShell"
 import WaitingForApproval from "@/components/WaitingForApproval"
@@ -494,6 +495,12 @@ export default async function LibraryPage({
       */}
       <div className="library-toolbar">
         <LiveFilter className="library-search" action="/library" label={t.search}>
+          {/* Značka, nie lupa (KNIZNICA.md, úloha 3): v celom portáli nesie
+              každé vstupné pole značku — nie je to hľadanie v tabuľke, je to
+              otázka položená obsahu. Nie je interaktívna, prstenec nemá. */}
+          <span className="library-search-mark" aria-hidden="true">
+            <ContineoMark size={16} />
+          </span>
           {/* Bez viditeľného labelu (vzor) — meno poľa nesie `aria-label`
               a placeholder; lišta má byť jeden riadok. */}
           <input

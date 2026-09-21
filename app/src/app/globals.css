@@ -2774,10 +2774,23 @@ html[data-theme="dark"] .editor-tui .CodeMirror {
   min-width: 0;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 9px;
 }
 
-.library-search-input { flex: 1 1 160px; min-width: 140px; }
+.library-search-mark {
+  flex: 0 0 auto;
+  display: inline-flex;
+  color: var(--muted);
+}
+
+/* 36 px a r9 — rovnaká výška ako pole v hlavičke: dve polia na jednej
+   obrazovke v dvoch výškach vyzerajú ako nedorobok (KNIZNICA.md). */
+.library-search-input {
+  flex: 1 1 160px;
+  min-width: 140px;
+  height: 36px;
+  border-radius: 9px;
+}
 
 /* Chips žijú v lište — vlastný spodný odstup tam nemajú. */
 .library-toolbar .library-chips { margin-bottom: 0; }
