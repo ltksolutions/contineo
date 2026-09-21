@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>ZAKLAD — komponenty Continea</title>
+<style>
+:root{color-scheme:light;--bg:#f5f6f8;--surface:#fff;--surface-2:#eceef1;--ink:#161b22;--muted:#5c6675;--line:rgba(20,28,42,.12);--accent:#232a35;--accent-strong:#11151c;--on-accent:#fff;--accent-soft:rgba(35,42,53,.11);--ok-bg:#ecfdf5;--ok-fg:#047857;--bad-bg:#fef2f2;--bad-fg:#b91c1c;--warn-bg:#fffbeb;--warn-fg:#b45309;--radius:12px;--shadow:0 1px 2px rgba(20,28,42,.05),0 10px 30px rgba(20,28,42,.07);--pad-main:16px;--card-pad:16px;--list-py:9px;--gap:14px;--row-py:7px;--font-row:13px;--fs-title:26px;--fs-section:17px;--fs-lead:15px;--fs-body:14px;--fs-small:13px;--fs-micro:12px;--fs-label:13px;--fs-control:15px;--control-h:40px;--control-h-sm:36px}
+.dark{color-scheme:dark;--bg:#0d1016;--surface:#161b22;--surface-2:#1d232c;--ink:#eef1f5;--muted:#9aa4b2;--line:rgba(255,255,255,.12);--accent:#eef1f5;--accent-strong:#fff;--on-accent:#11151c;--accent-soft:rgba(238,241,245,.11);--ok-bg:rgba(4,120,87,.16);--ok-fg:#6ee7b7;--bad-bg:rgba(185,28,28,.16);--bad-fg:#fca5a5;--warn-bg:rgba(180,83,9,.16);--warn-fg:#fcd34d;--shadow:0 1px 2px rgba(0,0,0,.4),0 10px 30px rgba(0,0,0,.45)}
+*{box-sizing:border-box}
+body{margin:0;background:#e6e8ec;font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;-webkit-font-smoothing:antialiased;line-height:1.6}
+.sheet{background:var(--bg);color:var(--ink);padding:28px 32px 40px}
+h1.doc{font-size:22px;letter-spacing:-.02em;margin:0 0 4px}
+p.doc{font-size:14px;color:var(--muted);margin:0 0 24px;max-width:80ch}
+.sec{margin:0 0 30px}
+.sec-h{font-size:11px;font-weight:650;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin:0 0 4px}
+.sec-n{font-size:var(--fs-section);font-weight:650;margin:0 0 3px}
+.sec-w{font-size:13px;color:var(--muted);margin:0 0 12px;max-width:78ch;line-height:1.55}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:0 0 10px}
+.lbl{font-size:11px;color:var(--muted);font-family:ui-monospace,Menlo,monospace;width:100%;margin:6px 0 2px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:var(--card-pad)}
+.quiet{color:var(--muted)}
+.tag{display:inline-flex;align-items:center;justify-content:center;gap:6px;border:1px solid var(--line);border-radius:999px;min-height:24px;padding:0 10px;font-size:var(--fs-micro);font-weight:600;line-height:1.2;white-space:nowrap}
+.tag--published{background:var(--ok-bg);color:var(--ok-fg);border-color:transparent}
+.tag--draft{background:var(--warn-bg);color:var(--warn-fg);border-color:transparent}
+.tag--review{background:var(--accent-soft);color:var(--accent-strong);border-color:transparent}
+.tag--expired{background:var(--bad-bg);color:var(--bad-fg);border-color:transparent}
+.tag--archived{background:var(--surface-2);color:var(--muted);border-color:transparent}
+.button{display:inline-flex;align-items:center;justify-content:center;gap:8px;background:var(--accent);color:var(--on-accent);border:1px solid var(--accent);border-radius:10px;min-height:var(--control-h);padding:0 18px;font-size:var(--fs-control);font-weight:600;line-height:1.2;font-family:inherit;text-decoration:none;cursor:pointer}
+.button--quiet{background:transparent;color:var(--ink);border-color:var(--line)}
+.is-hover.button{background:var(--accent-strong)}
+.is-hover.button--quiet{background:var(--surface-2)}
+.is-focus{outline:2px solid var(--accent);outline-offset:2px}
+.button:disabled,.button[aria-disabled=true]{opacity:.5;cursor:not-allowed}
+.field{display:grid;gap:5px}
+.field-label{font-size:var(--fs-label);font-weight:600}
+.field-hint{font-size:var(--fs-micro);color:var(--muted)}
+.field-input{font:inherit;font-size:var(--fs-control);color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:10px;min-height:var(--control-h);line-height:1.2;padding:8px 12px;width:100%}
+.field-input:disabled{background:var(--surface-2);color:var(--muted);cursor:not-allowed}
+.is-focus.field-input{outline:2px solid var(--accent);outline-offset:1px}
+.ask{display:flex;align-items:center;gap:9px;min-height:var(--control-h-sm);padding:0 12px;border-radius:9px;background:var(--bg);border:1px solid var(--line);color:var(--muted);font-size:13px}
+.kbd{font-size:11.5px;color:var(--muted);padding:2px 6px;border-radius:5px;background:var(--surface-2);font-family:ui-monospace,Menlo,monospace}
+.bulk-pick{display:inline-flex;align-items:center;gap:8px;text-decoration:none;color:inherit}
+.bulk-pick-box{display:grid;place-items:center;width:15px;height:15px;border-radius:4px;border:1px solid var(--line);background:transparent;color:var(--on-accent);font-size:9px;font-weight:800}
+.bulk-pick.is-on .bulk-pick-box{background:var(--accent);border-color:var(--accent)}
+.box22{width:22px;height:22px;border-radius:6px;font-size:12px}
+.library-chip{display:inline-flex;align-items:center;gap:5px;min-height:28px;padding:0 5px 0 9px;border-radius:6px;background:var(--accent-soft);color:var(--accent-strong);font-size:12px;text-decoration:none}
+.library-chip-key{color:var(--muted)}
+.library-chip-x{font-size:15px;line-height:1;color:var(--muted);width:16px;text-align:center}
+.facet{display:flex;align-items:center;gap:8px;min-height:34px;padding:0 6px;border-radius:7px;text-decoration:none;color:inherit;font-size:13px}
+.facet.is-on{background:var(--accent-soft);font-weight:600}
+.facet-box{display:grid;place-items:center;width:15px;height:15px;border-radius:4px;border:1px solid var(--line);color:var(--on-accent);font-size:9px;font-weight:800}
+.facet.is-on .facet-box{background:var(--accent);border-color:var(--accent)}
+.facet-name{flex:1}
+.facet-count{font-size:11.5px;color:var(--muted);font-variant-numeric:tabular-nums}
+.pill{display:inline-flex;align-items:center;gap:6px;min-height:36px;padding:0 10px;border-radius:9px;border:1px solid var(--line);background:var(--surface);font-size:14px;text-decoration:none;color:var(--ink)}
+.pill.is-on{border-color:var(--accent);background:var(--accent-soft);color:var(--accent-strong);font-weight:600}
+.pill-count{font-size:12px;opacity:.65;font-variant-numeric:tabular-nums}
+.ack-bar{display:inline-flex;align-items:center;gap:6px;min-width:104px}
+.ack-track{flex:1;height:5px;border-radius:3px;background:var(--surface-2);overflow:hidden}
+.ack-fill{display:block;height:100%}
+.ack-fill--high{background:var(--ok-fg)}
+.ack-fill--mid{background:var(--accent)}
+.ack-fill--low{background:var(--warn-fg)}
+.ack-value{font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums}
+.doc-table-wrap{border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;background:var(--surface)}
+.doc-table{width:100%;border-collapse:collapse}
+.doc-table th{padding:8px 10px;text-align:left;font-size:10.5px;font-weight:650;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);white-space:nowrap;background:var(--bg);border-bottom:1px solid var(--line)}
+.doc-table td{padding:var(--row-py) 10px;font-size:var(--font-row);border-bottom:1px solid var(--line);vertical-align:top}
+.doc-table tbody tr:last-child td{border-bottom:0}
+.doc-table tbody tr.is-hover{background:var(--bg)}
+.doc-table tbody tr.is-picked{background:var(--accent-soft)}
+.doc-table tbody tr.is-picked td:first-child{box-shadow:inset 3px 0 0 var(--accent)}
+.doc-title{color:var(--ink);font-weight:600;text-decoration:none}
+.doc-meta{font-size:11px;color:var(--muted);margin-top:1px}
+.doc-col-right{text-align:right}
+.doc-card{display:flex;gap:12px;padding:12px 12px 12px 10px;border:1px solid var(--line);border-radius:var(--radius);background:var(--surface)}
+.doc-card.is-picked{background:var(--accent-soft);border-color:var(--accent)}
+.doc-card-top{display:flex;align-items:center;gap:6px;margin-bottom:4px}
+.doc-card-title{display:block;font-size:15px;font-weight:600;line-height:1.3;color:var(--ink);text-decoration:none;text-wrap:pretty}
+.empty{display:grid;justify-items:center;gap:4px;padding:32px 20px;border:1px dashed var(--line);border-radius:var(--radius);text-align:center}
+.empty-title{font-size:var(--fs-lead);font-weight:600}
+.empty-text{font-size:var(--fs-small);color:var(--muted);line-height:1.55;max-width:46ch}
+.empty-action{margin-top:10px}
+.notice{display:flex;gap:9px;align-items:flex-start;padding:10px 12px;border-radius:9px;background:var(--ok-bg);border:1px solid rgba(4,120,87,.2)}
+.notice-mark{display:grid;place-items:center;width:20px;height:20px;border-radius:50%;background:var(--ok-bg);color:var(--ok-fg);font-weight:800;font-size:12px;flex:0 0 auto}
+.notice-text{font-size:13px;color:var(--ok-fg);line-height:1.45}
+.notice--error{background:var(--bad-bg);border-color:rgba(185,28,28,.2)}
+.notice--error .notice-mark{background:var(--bad-bg);color:var(--bad-fg)}
+.notice--error .notice-text{color:var(--bad-fg)}
+.pager{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:8px 12px;background:var(--bg);border-top:1px solid var(--line);font-size:var(--fs-micro);color:var(--muted)}
+.pager-count{font-variant-numeric:tabular-nums}
+.pager-spacer{flex:1}
+.pager-link{min-height:28px;padding:0 10px;font-size:12px}
+.pager-link[aria-disabled=true]{opacity:.45;pointer-events:none}
+.page-title{font-size:var(--fs-title);letter-spacing:-.02em;line-height:1.2;margin:0 0 6px}
+.page-lead{font-size:var(--fs-lead);line-height:1.55;margin:0 0 18px;max-width:640px;color:var(--muted)}
+.view-switch{display:inline-flex;padding:3px;gap:2px;background:var(--surface-2);border-radius:9px}
+.view-switch-item{display:grid;place-items:center;min-height:30px;padding:0 11px;border-radius:7px;font-size:12.5px;color:var(--muted);text-decoration:none}
+.view-switch-item.is-on{background:var(--surface);color:var(--ink);font-weight:600}
+table.spec{width:100%;border-collapse:collapse;font-size:12.5px;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden}
+table.spec th{text-align:left;padding:7px 10px;font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);background:var(--bg);border-bottom:1px solid var(--line)}
+table.spec td{padding:6px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+table.spec tr:last-child td{border-bottom:0}
+code{font-family:ui-monospace,Menlo,monospace;font-size:12px;background:var(--surface-2);padding:1px 5px;border-radius:4px}
+/* Ukážka tabuľky dostane vlastnú šírku, nie orezanie: deväť nowrap stĺpcov má
+   vnútornú šírku ~940 px a v 858 px karty by sa 9. stĺpec („Zmenené", ktorý
+   špecifikácia zdôrazňuje) odstrihol bez možnosti posunu. Ten istý postup ako
+   pri ukážke navigačného pásu (min-width 1024 px). */
+.sec .doc-table-wrap{min-width:960px}
+/* Hlavička pravého stĺpca musí prebiť `.doc-table th{text-align:left}` —
+   holá trieda (0,1,0) proti class+type (0,1,1) prehrá, takže sa hlavička
+   rozíde s vlastnými dátami. Rovnaká chyba je v globals.css:2089. */
+.doc-table th.doc-col-right{text-align:right}
+</style>
+</head>
+<body>
+
+<div class="sheet">
+  <h1 class="doc">ZAKLAD — komponenty · svetlá téma</h1>
+  <p class="doc">Statická referencia k <code>ZAKLAD.md</code>. Žiadne šablóny, žiadne skripty — čo vidíš, to je výsledok. Stavy <code>hover</code> a <code>focus</code> sú vykreslené natrvalo triedami <code>.is-hover</code> / <code>.is-focus</code>, aby sa dali porovnať bez myši.</p>
+
+  <div class="sec">
+    <div class="sec-h">00 · hotové (PR 3) + odchýlka A a B</div>
+    <div class="sec-n">Hlavička</div>
+    <p class="sec-w"><strong>Vždy a na všetkých šírkach 56 px:</strong> logo · názov organizácie · pole „opýtať sa“ cez celú voľnú šírku · zvonček · avatár. Pod 640 px sa mení len dvoje — názov je <strong>skratka z dát</strong> (<code>shortName</code>, napr. „SFZ“, nie skrátený reťazec) a <strong><code>⌘K</code> mizne</strong>. Pole nezmizne nikdy: je to jediná cesta k otázke z ktorejkoľvek obrazovky. Logo je pri chýbajúcom logu organizácie <strong>značka Continea</strong> na <code>--accent</code>, nie iniciála z názvu — iniciála vyzerá ako rozbité logo.</p>
+    <div class="lbl">Desktop ≥ 1024 — pole 36 px r9, ⌘K vpravo</div>
+    <div style="display:flex;align-items:center;height:56px;background:var(--surface);border:1px solid var(--line);border-radius:10px;gap:14px;padding:0 24px;max-width:1100px">
+      <span style="display:grid;place-items:center;width:28px;height:28px;border-radius:8px;background:var(--accent);color:var(--on-accent);flex:0 0 auto"><svg width="17" height="17" viewBox="0 0 48 48" fill="none" aria-hidden="true" style="flex:0 0 auto"><circle cx="18" cy="18" r="13" stroke="currentColor" stroke-width="4"></circle><circle cx="13" cy="18" r="2.3" fill="currentColor"></circle><circle cx="23" cy="18" r="2.3" fill="currentColor"></circle><path d="M28 27 L41 41 L29 38 Z" fill="currentColor"></path></svg></span>
+      <span style="font-size:14px;font-weight:650;letter-spacing:-.01em;white-space:nowrap">Slovenský futbalový zväz</span>
+      <div class="ask" style="flex:1;min-width:0"><svg width="16" height="16" viewBox="0 0 48 48" fill="none" aria-hidden="true" style="flex:0 0 auto"><circle cx="18" cy="18" r="13" stroke="currentColor" stroke-width="4"></circle><circle cx="13" cy="18" r="2.3" fill="currentColor"></circle><circle cx="23" cy="18" r="2.3" fill="currentColor"></circle><path d="M28 27 L41 41 L29 38 Z" fill="currentColor"></path></svg><span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Opýtajte sa svojich dokumentov…</span><span class="kbd">⌘K</span></div>
+      <span style="position:relative;display:grid;place-items:center;width:36px;height:36px;color:var(--muted);flex:0 0 auto"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13.9 11.6c0-5.2-1.6-7-4.9-7s-4.9 1.8-4.9 7l-1.3 2.1h12.4z"></path><path d="M10.6 15.4a1.7 1.7 0 0 1-3.2 0"></path></svg><b style="position:absolute;top:5px;right:4px;min-width:16px;height:16px;padding:0 4px;border-radius:8px;background:var(--bad-fg);color:var(--on-accent);font-size:10px;font-weight:700;display:grid;place-items:center;box-shadow:0 0 0 2px var(--surface)">3</b></span>
+      <span style="display:grid;place-items:center;width:30px;height:30px;border-radius:50%;background:var(--surface-2);font-size:11px;font-weight:650;flex:0 0 auto">JL</span>
+    </div>
+    <div class="lbl">Telefón &lt; 640 — skratka „SFZ“ z dát, pole zostáva, ⌘K mizne, ciele 40–44 px</div>
+    <div style="display:flex;align-items:center;height:56px;background:var(--surface);border:1px solid var(--line);border-radius:10px;gap:8px;padding:0 10px;width:390px">
+      <span style="display:grid;place-items:center;width:30px;height:30px;border-radius:8px;background:var(--accent);color:var(--on-accent);flex:0 0 auto"><svg width="18" height="18" viewBox="0 0 48 48" fill="none" aria-hidden="true" style="flex:0 0 auto"><circle cx="18" cy="18" r="13" stroke="currentColor" stroke-width="4"></circle><circle cx="13" cy="18" r="2.3" fill="currentColor"></circle><circle cx="23" cy="18" r="2.3" fill="currentColor"></circle><path d="M28 27 L41 41 L29 38 Z" fill="currentColor"></path></svg></span>
+      <span style="flex:0 0 auto;font-size:15px;font-weight:650">SFZ</span>
+      <div class="ask" style="flex:1;min-width:0"><svg width="16" height="16" viewBox="0 0 48 48" fill="none" aria-hidden="true" style="flex:0 0 auto"><circle cx="18" cy="18" r="13" stroke="currentColor" stroke-width="4"></circle><circle cx="13" cy="18" r="2.3" fill="currentColor"></circle><circle cx="23" cy="18" r="2.3" fill="currentColor"></circle><path d="M28 27 L41 41 L29 38 Z" fill="currentColor"></path></svg><span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Opýtajte sa…</span></div>
+      <span style="position:relative;display:grid;place-items:center;width:40px;height:40px;color:var(--muted);flex:0 0 auto"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13.9 11.6c0-5.2-1.6-7-4.9-7s-4.9 1.8-4.9 7l-1.3 2.1h12.4z"></path><path d="M10.6 15.4a1.7 1.7 0 0 1-3.2 0"></path></svg><b style="position:absolute;top:7px;right:6px;min-width:16px;height:16px;padding:0 4px;border-radius:8px;background:var(--bad-fg);color:var(--on-accent);font-size:10px;font-weight:700;display:grid;place-items:center;box-shadow:0 0 0 2px var(--surface)">3</b></span>
+      <span style="display:grid;place-items:center;width:32px;height:32px;border-radius:50%;background:var(--surface-2);font-size:11.5px;font-weight:650;flex:0 0 auto">JL</span>
+    </div>
+    <div class="lbl">logo organizácie — predvolené (značka) · nahraté tenantom</div>
+    <div class="row">
+      <span style="display:flex;align-items:center;gap:8px"><span style="display:grid;place-items:center;width:28px;height:28px;border-radius:8px;background:var(--accent);color:var(--on-accent)"><svg width="17" height="17" viewBox="0 0 48 48" fill="none" aria-hidden="true" style="flex:0 0 auto"><circle cx="18" cy="18" r="13" stroke="currentColor" stroke-width="4"></circle><circle cx="13" cy="18" r="2.3" fill="currentColor"></circle><circle cx="23" cy="18" r="2.3" fill="currentColor"></circle><path d="M28 27 L41 41 L29 38 Z" fill="currentColor"></path></svg></span><span class="quiet" style="font-size:12px">predvolené</span></span>
+      <span style="display:flex;align-items:center;gap:8px"><span style="display:grid;place-items:center;width:28px;height:28px;border-radius:8px;background:var(--surface-2);border:1px dashed var(--line)"><span style="font-size:8px;color:var(--muted);font-family:ui-monospace,Menlo,monospace">logo</span></span><span class="quiet" style="font-size:12px">z <code>/api/brand/&lt;code&gt;</code></span></span>
+    </div>
+  </div>
+
+  <div class="sec">
+    <div class="sec-h">01 · hotové</div>
+    <div class="sec-n">Tlačidlá</div>
+    <p class="sec-w">Výška <code>--control-h</code> 40 px, r10. Na obrazovke je <strong>jedno</strong> primárne. Prstenec focusu je mimo tlačidla (<code>offset: 2px</code>) — vnútri by na primárnom splynul s pozadím.</p>
+    <div class="lbl">default · hover · focus · disabled</div>
+    <div class="row">
+      <button class="button">Nahrať dokument</button>
+      <button class="button is-hover">Nahrať dokument</button>
+      <button class="button is-focus">Nahrať dokument</button>
+      <button class="button" disabled>Nahrať dokument</button>
+    </div>
+    <div class="row">
+      <button class="button button--quiet">Export CSV</button>
+      <button class="button button--quiet is-hover">Export CSV</button>
+      <button class="button button--quiet is-focus">Export CSV</button>
+      <button class="button button--quiet" disabled>Export CSV</button>
+    </div>
+    <div class="lbl">odkaz vypnutý cez aria-disabled (stránkovanie)</div>
+    <div class="row"><a class="button button--quiet pager-link" aria-disabled="true" href="#">Predchádzajúca</a></div>
+  </div>
+
+  <div class="sec">
+    <div class="sec-h">02 · hotové + odchýlka A</div>
+    <div class="sec-n">Polia</div>
+    <p class="sec-w"><strong>40 px vo formulári, 36 px v páse.</strong> Formulár sa vypĺňa, pás sa používa. Tretia výška nesmie vzniknúť. Pole v páse nesie značku Continea — nie lupu, lebo to nie je hľadanie v tabuľke, je to otázka položená obsahu.</p>
+    <div class="lbl">formulár 40 px — default · focus · disabled</div>
+    <div class="row" style="display:grid;grid-template-columns:repeat(3,minmax(0,260px));gap:12px">
+      <label class="field"><span class="field-label">Názov</span><input class="field-input" value="Registračný a prestupový poriadok" /><span class="field-hint">Ako sa dokument volá v zozname.</span></label>
+      <label class="field"><span class="field-label">Názov</span><input class="field-input is-focus" value="Registračný a prestupový" /><span class="field-hint">Ako sa dokument volá v zozname.</span></label>
+      <label class="field"><span class="field-label">Názov</span><input class="field-input" value="Nedá sa upraviť" disabled /><span class="field-hint">Publikované znenie sa neprepisuje.</span></label>
+    </div>
+    <div class="lbl">pás 36 px so značkou — hlavička · lišta zoznamu</div>
+    <div class="row" style="flex-direction:column;align-items:stretch;max-width:560px;gap:8px">
+      <div class="ask"><svg width="16" height="16" viewBox="0 0 48 48" fill="none" aria-hidden="true" style="flex:0 0 auto"><circle cx="18" cy="18" r="13" stroke="currentColor" stroke-width="4"></circle><circle cx="13" cy="18" r="2.3" fill="currentColor"></circle><circle cx="23" cy="18" r="2.3" fill="currentColor"></circle><path d="M28 27 L41 41 L29 38 Z" fill="currentColor"></path></svg><span style="flex:1">Opýtajte sa svojich dokumentov…</span><span class="kbd">⌘K</span></div>
+      <div class="ask"><svg width="16" height="16" viewBox="0 0 48 48" fill="none" aria-hidden="true" style="flex:0 0 auto"><circle cx="18" cy="18" r="13" stroke="currentColor" stroke-width="4"></circle><circle cx="13" cy="18" r="2.3" fill="currentColor"></circle><circle cx="23" cy="18" r="2.3" fill="currentColor"></circle><path d="M28 27 L41 41 L29 38 Z" fill="currentColor"></path></svg><span style="flex:1">Hľadať v názve, obsahu, čísle predpisu…</span></div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <div class="sec-h">03 · hotové</div>
+    <div class="sec-n">Stavové pilulky</div>
+    <p class="sec-w">Farba nesie význam, preto bez rámika. <strong>Expirovaný nie je hodnota facetu</strong> — je to odvodený príznak z <code>effectiveTo</code> v minulosti. Facet „Stav“ má tri hodnoty; <code>.tag--archived</code> zostáva nepoužitý.</p>
+    <div class="row">
+      <span class="tag tag--published">Platný</span>
+      <span class="tag tag--draft">Návrh</span>
+      <span class="tag tag--review">Na schválenie</span>
+      <span class="tag tag--expired">Expirovaný</span>
+      <span class="tag tag--archived">Archív</span>
+      <span class="tag">Neutrálna</span>
+    </div>
+  </div>
+
+  <div class="sec">
+    <div class="sec-h">04 · hotové</div>
+    <div class="sec-n">Pásik potvrdení</div>
+    <p class="sec-w">Prahy ≥ 90 % zelená, ≥ 50 % accent, pod tým jantárová. <strong>Pomlčka ≠ nula:</strong> prázdny pásik znamená „nikto nepotvrdil“, pomlčka „nie je čo potvrdzovať“ (dokument nikomu nepridelený). Menovateľ nesie <code>title</code> a <code>.sr-only</code>.</p>
+    <table class="spec">
+      <thead><tr><th>Stav</th><th style="width:150px">Pásik</th><th>Kedy</th></tr></thead>
+      <tbody>
+        <tr><td>97 %</td><td><span class="ack-bar"><span class="ack-track"><span class="ack-fill ack-fill--high" style="width:97%"></span></span><span class="ack-value">97 %</span></span></td><td>≥ 90 % — <code>--ok-fg</code></td></tr>
+        <tr><td>68 %</td><td><span class="ack-bar"><span class="ack-track"><span class="ack-fill ack-fill--mid" style="width:68%"></span></span><span class="ack-value">68 %</span></span></td><td>≥ 50 % — <code>--accent</code></td></tr>
+        <tr><td>12 %</td><td><span class="ack-bar"><span class="ack-track"><span class="ack-fill ack-fill--low" style="width:12%"></span></span><span class="ack-value">12 %</span></span></td><td>&lt; 50 % — <code>--warn-fg</code></td></tr>
+        <tr><td>0 %</td><td><span class="ack-bar"><span class="ack-track"><span class="ack-fill ack-fill--low" style="width:0%"></span></span><span class="ack-value">0 %</span></span></td><td>pridelené, nikto nepotvrdil</td></tr>
+        <tr><td>—</td><td><span class="quiet">—</span></td><td>nikomu nepridelené</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="sec">
+    <div class="sec-h">05 · hotové</div>
+    <div class="sec-n">Výber, chip filtra, facet</div>
+    <p class="sec-w">Výber je <strong>odkaz</strong>, nie <code>&lt;input type=checkbox&gt;</code> — zaškrtávacie políčko bez JavaScriptu prechod na druhú stranu neprežije, odkaz áno (<code>pick=&lt;id&gt;</code> v adrese). V tabuľke 15 px, na karte 22 px.</p>
+    <div class="lbl">výber — prázdny · zaškrtnutý · na karte 22 px</div>
+    <div class="row">
+      <a class="bulk-pick" href="#"><span class="bulk-pick-box"></span></a>
+      <a class="bulk-pick is-on" href="#"><span class="bulk-pick-box">✓</span></a>
+      <a class="bulk-pick is-on" href="#"><span class="bulk-pick-box box22">✓</span></a>
+      <a class="bulk-pick" href="#"><span class="bulk-pick-box box22"></span></a>
+    </div>
+    <div class="lbl">chip aktívneho filtra — × odoberá jeden, nie všetky</div>
+    <div class="row">
+      <a class="library-chip" href="#"><span class="library-chip-key">Druh:</span>Norma<span class="library-chip-x">×</span></a>
+      <a class="library-chip" href="#"><span class="library-chip-key">Značka:</span>Registrácia<span class="library-chip-x">×</span></a>
+      <a class="library-chip" href="#"><span class="library-chip-key">Oddelenie:</span>Právne a legislatíva<span class="library-chip-x">×</span></a>
+    </div>
+    <div class="lbl">facet ako riadok (stĺpec od 1024) · ako pilulka (zásuvka pod 1024)</div>
+    <div class="row" style="align-items:flex-start;gap:24px">
+      <div style="width:230px;display:grid;gap:2px">
+        <a class="facet is-on" href="#"><span class="facet-box">✓</span><span class="facet-name">Norma</span><span class="facet-count">41</span></a>
+        <a class="facet" href="#"><span class="facet-box"></span><span class="facet-name">Smernica</span><span class="facet-count">62</span></a>
+        <a class="facet" href="#"><span class="facet-box"></span><span class="facet-name">Metodický pokyn</span><span class="facet-count">23</span></a>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:8px;max-width:330px">
+        <a class="pill is-on" href="#">Norma<span class="pill-count">41</span></a>
+        <a class="pill" href="#">Smernica<span class="pill-count">62</span></a>
+        <a class="pill" href="#">Metodický pokyn<span class="pill-count">23</span></a>
+        <a class="pill" href="#">Manuál<span class="pill-count">22</span></a>
+      </div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <div class="sec-h">06 · hotové + úloha 4</div>
+    <div class="sec-n">Tabuľka — presné poradie stĺpcov</div>
+    <p class="sec-w">Deväť stĺpcov, „Zmenené“ vpravo. <strong>„Platné do“ ostáva</strong> — nesie expiráciu, keďže Expirovaný nie je facet. <strong>„Zmenené“ je absolútny dátum</strong>, nie „2 dni“: relatívny čas sa pri serverovom vykreslení a hydratácii rozíde a nedá sa porovnať medzi riadkami. Označený riadok má k pozadiu <strong>ľavý pruh 3 px</strong> (<code>box-shadow: inset</code>, nie <code>border</code> — okraj by stĺpce posunul).</p>
+    <div class="doc-table-wrap">
+      <table class="doc-table">
+        <thead><tr>
+          <th style="width:36px"><a class="bulk-pick" href="#"><span class="bulk-pick-box">–</span></a></th>
+          <th style="min-width:260px">Dokument</th><th>Druh</th><th>Stav</th><th>Verzia</th><th>Platné od</th><th>Platné do</th><th>Potvrdenia</th><th class="doc-col-right">Zmenené</th>
+        </tr></thead>
+        <tbody>
+          <tr class="is-picked">
+            <td><a class="bulk-pick is-on" href="#"><span class="bulk-pick-box">✓</span></a></td>
+            <td><a class="doc-title" href="#">Registračný a prestupový poriadok</a><div class="doc-meta">RPP-2026-04 · Právne a legislatíva · reg-prestup-poriadok</div></td>
+            <td>Norma</td><td><span class="tag tag--published">Platný</span></td><td style="font-variant-numeric:tabular-nums">4.2</td><td class="quiet">1. 1. 2026</td><td class="quiet">—</td>
+            <td><span class="ack-bar"><span class="ack-track"><span class="ack-fill ack-fill--mid" style="width:68%"></span></span><span class="ack-value">68 %</span></span></td>
+            <td class="doc-col-right quiet">21. 9. 2026</td>
+          </tr>
+          <tr class="is-hover">
+            <td><a class="bulk-pick" href="#"><span class="bulk-pick-box"></span></a></td>
+            <td><a class="doc-title" href="#">Smernica o ochrane osobných údajov</a><div class="doc-meta">SM-GDPR-03 · Compliance · smernica-gdpr</div></td>
+            <td>Smernica</td><td><span class="tag tag--published">Platný</span></td><td style="font-variant-numeric:tabular-nums">3.0</td><td class="quiet">1. 3. 2026</td><td class="quiet">—</td>
+            <td><span class="ack-bar"><span class="ack-track"><span class="ack-fill ack-fill--high" style="width:94%"></span></span><span class="ack-value">94 %</span></span></td>
+            <td class="doc-col-right quiet">20. 9. 2026</td>
+          </tr>
+          <tr>
+            <td><a class="bulk-pick" href="#"><span class="bulk-pick-box"></span></a></td>
+            <td><a class="doc-title" href="#">Súťažný poriadok</a><div class="doc-meta">SP-2026-01 · Súťaže · sutazny-poriadok</div></td>
+            <td>Norma</td><td><span class="tag tag--review">Na schválenie</span></td><td style="font-variant-numeric:tabular-nums">6.1</td><td class="quiet">1. 7. 2026</td><td class="quiet">—</td>
+            <td class="quiet">—</td>
+            <td class="doc-col-right quiet">19. 9. 2026</td>
+          </tr>
+          <tr>
+            <td><a class="bulk-pick" href="#"><span class="bulk-pick-box"></span></a></td>
+            <td><a class="doc-title" href="#">Metodický pokyn k licenciám trénerov mládeže a dospelých</a><div class="doc-meta">MP-TR-07 · Vzdelávanie · metodicky-pokyn-licencie</div></td>
+            <td>Metodický pokyn</td><td><span class="tag tag--draft">Návrh</span></td><td style="font-variant-numeric:tabular-nums">2.3</td><td class="quiet">15. 8. 2026</td><td class="quiet">—</td>
+            <td class="quiet">—</td>
+            <td class="doc-col-right quiet">17. 9. 2026</td>
+          </tr>
+          <tr>
+            <td><a class="bulk-pick" href="#"><span class="bulk-pick-box"></span></a></td>
+            <td><a class="doc-title" href="#">Bezpečnosť na štadiónoch</a><div class="doc-meta">PR-BEZ-04 · Prevádzka · bezpecnost-stadiony</div></td>
+            <td>Manuál</td><td><span class="tag tag--expired">Expirovaný</span></td><td style="font-variant-numeric:tabular-nums">4.1</td><td class="quiet">1. 6. 2024</td><td class="quiet">31. 5. 2026</td>
+            <td><span class="ack-bar"><span class="ack-track"><span class="ack-fill ack-fill--low" style="width:57%"></span></span><span class="ack-value">57 %</span></span></td>
+            <td class="doc-col-right quiet">30. 8. 2026</td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="pager">
+        <span class="pager-count">Zobrazené 1–5 z 24</span>
+        <span class="pager-spacer"></span>
+        <a class="button button--quiet pager-link" aria-disabled="true" href="#">Predchádzajúca</a>
+        <a class="button button--quiet pager-link" href="#">Ďalšia</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <div class="sec-h">07 · hotové</div>
+    <div class="sec-n">Karta dokumentu</div>
+    <p class="sec-w">Ten istý záznam ako riadok tabuľky. Pod 640 px len karty — tabuľka má <code>min-width</code> ~1160 px a na 390 px z nej ostane názov. Výber 22 px vľavo mimo obsahu; označená karta má celý rám (karty stoja v mriežke, rám nič neposúva).</p>
+    <div class="row" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(310px,1fr));gap:10px;max-width:980px">
+      <div class="doc-card is-picked">
+        <a class="bulk-pick is-on" href="#" style="margin-top:2px"><span class="bulk-pick-box box22">✓</span></a>
+        <div style="flex:1;min-width:0">
+          <div class="doc-card-top"><span class="tag tag--published">Platný</span><span class="quiet" style="font-size:12.5px;flex:1">Norma</span><span class="quiet" style="font-size:12px">4.2</span></div>
+          <a class="doc-card-title" href="#">Registračný a prestupový poriadok</a>
+          <div class="doc-meta" style="font-size:12px;margin-top:3px">RPP-2026-04 · Právne a legislatíva</div>
+          <div style="margin-top:9px"><span class="ack-bar" style="width:100%"><span class="ack-track"><span class="ack-fill ack-fill--mid" style="width:68%"></span></span><span class="ack-value">68 %</span></span></div>
+        </div>
+      </div>
+      <div class="doc-card">
+        <a class="bulk-pick" href="#" style="margin-top:2px"><span class="bulk-pick-box box22"></span></a>
+        <div style="flex:1;min-width:0">
+          <div class="doc-card-top"><span class="tag tag--draft">Návrh</span><span class="quiet" style="font-size:12.5px;flex:1">Metodický pokyn</span><span class="quiet" style="font-size:12px">2.3</span></div>
+          <a class="doc-card-title" href="#">Metodický pokyn k licenciám trénerov mládeže a dospelých</a>
+          <div class="doc-meta" style="font-size:12px;margin-top:3px">MP-TR-07 · Vzdelávanie</div>
+          <div style="margin-top:9px"><span class="quiet" style="font-size:11.5px">Nikomu nepridelené</span></div>
+        </div>
+      </div>
+      <div class="doc-card">
+        <a class="bulk-pick" href="#" style="margin-top:2px"><span class="bulk-pick-box box22"></span></a>
+        <div style="flex:1;min-width:0">
+          <div class="doc-card-top"><span class="tag tag--expired">Expirovaný</span><span class="quiet" style="font-size:12.5px;flex:1">Manuál</span><span class="quiet" style="font-size:12px">4.1</span></div>
+          <a class="doc-card-title" href="#">Bezpečnosť na štadiónoch</a>
+          <div class="doc-meta" style="font-size:12px;margin-top:3px">PR-BEZ-04 · Prevádzka</div>
+          <div style="margin-top:9px"><span class="ack-bar" style="width:100%"><span class="ack-track"><span class="ack-fill ack-fill--low" style="width:57%"></span></span><span class="ack-value">57 %</span></span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <div class="sec-h">08 · ÚLOHA 1 — chýba</div>
+    <div class="sec-n">Prázdny stav</div>
+    <p class="sec-w"><strong>Dva texty, nie jeden.</strong> Rozhoduje, či je nasadený filter — „filtru nič nevyhovuje“ a „v knižnici nič nie je“ sú dve rôzne situácie a dnes sa nedajú rozoznať. Bez ikony a ilustrácie: prázdny zoznam je bežný stav pracovného nástroja, nie udalosť.</p>
+    <div class="row" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(330px,1fr));gap:12px;max-width:980px">
+      <div class="empty">
+        <div class="empty-title">Filtru nič nevyhovuje</div>
+        <div class="empty-text">Máte nasadené dva filtre: <strong>Druh: Norma</strong> a <strong>Značka: Registrácia</strong>. Skúste niektorý zrušiť.</div>
+        <div class="empty-action"><a class="button button--quiet" href="#">Zrušiť filtre</a></div>
+      </div>
+      <div class="empty">
+        <div class="empty-title">V knižnici zatiaľ nič nie je</div>
+        <div class="empty-text">Keď nahráte prvý dokument, objaví sa tu aj s tým, kto ho má potvrdiť.</div>
+        <div class="empty-action"><a class="button" href="#">Nahrať dokument</a></div>
+      </div>
+      <div class="empty">
+        <div class="empty-title">Nemáte nič na potvrdenie</div>
+        <div class="empty-text">Keď vám niekto pridelí normu, objaví sa tu aj s termínom. Nič od vás teraz nikto nečaká.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <div class="sec-h">09 · hotové</div>
+    <div class="sec-n">Hlásenia</div>
+    <p class="sec-w">Hláška povie, <strong>čo sa stalo a čo z toho vyplýva</strong> — nie „Chyba“. Pri chybe vždy aj cesta von.</p>
+    <div class="row" style="flex-direction:column;align-items:stretch;max-width:620px;gap:8px">
+      <div class="notice"><span class="notice-mark">✓</span><span class="notice-text">Dokument bol poslaný na schválenie Marekovi Horákovi. Ozveme sa, keď rozhodne.</span></div>
+      <div class="notice notice--error"><span class="notice-mark">!</span><span class="notice-text">Súbor má 62 MB, najviac 40 MB. Skúste PDF bez skenovaných príloh, alebo ho rozdeľte na dve normy.</span></div>
+      <div class="notice notice--error"><span class="notice-mark">!</span><span class="notice-text">Presunuli sa 3 dokumenty z 5. Pri dvoch chýba oprávnenie na cieľový priečinok: <strong>Súťažný poriadok</strong>, <strong>Etický kódex</strong>.</span></div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <div class="sec-h">10 · hotové</div>
+    <div class="sec-n">Nadpis obrazovky, prepínač pohľadu</div>
+    <p class="sec-w">Jedna trieda na nadpis znamená, že sa pri prechode medzi obrazovkami neposúva. Prepínač je dvojica <strong>odkazov</strong> — pohľad je súčasť adresy, takže sa dá poslať; pod 640 px je skrytý, lebo tabuľka sa tam nekreslí.</p>
+    <div style="max-width:760px">
+      <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin:0 0 6px">
+        <h2 class="page-title" style="margin:0">Knižnica dokumentov</h2>
+        <span class="quiet" style="font-size:14px;font-variant-numeric:tabular-nums">24 z 148</span>
+        <span class="view-switch"><a class="view-switch-item is-on" href="#">Tabuľka</a><a class="view-switch-item" href="#">Karty</a></span>
+      </div>
+      <p class="page-lead">Znenia predpisov organizácie. Kto má normu potvrdiť, vidí ju aj v <strong>Na potvrdenie</strong> — tu je celá knižnica vrátane starších znení.</p>
+    </div>
+  </div>
+</div>
+
+<div class="sheet dark">
+  <h1 class="doc">ZAKLAD — komponenty · tmavá téma</h1>
+  <p class="doc">Statická referencia k <code>ZAKLAD.md</code>. Žiadne šablóny, žiadne skripty — čo vidíš, to je výsledok. Stavy <code>hover</code> a <code>focus</code> sú vykreslené natrvalo triedami <code>.is-hover</code> / <code>.is-focus</code>, aby sa dali porovnať bez myši.</p>
+
+  <div class="sec">
+    <div class="sec-h">00 · hotové (PR 3) + odchýlka A a B</div>
+    <div class="sec-n">Hlavička</div>
+    <p class="sec-w"><strong>Vždy a na všetkých šírkach 56 px:</strong> logo · názov organizácie · pole „opýtať sa“ cez celú voľnú šírku · zvonček · avatár. Pod 640 px sa mení len dvoje — názov je <strong>skratka z dát</strong> (<code>shortName</code>, napr. „SFZ“, nie skrátený reťazec) a <strong><code>⌘K</code> mizne</strong>. Pole nezmizne nikdy: je to jediná cesta k otázke z ktorejkoľvek obrazovky. Logo je pri chýbajúcom logu organizácie <strong>značka Continea</strong> na <code>--accent</code>, nie iniciála z názvu — iniciála vyzerá ako rozbité logo.</p>
+    <div class="lbl">Desktop ≥ 1024 — pole 36 px r9, ⌘K vpravo</div>
+    <div style="display:flex;align-items:center;height:56px;background:var(--surface);border:1px solid var(--line);border-radius:10px;gap:14px;padding:0 24px;max-width:1100px">
+      <span style="display:grid;place-items:center;width:28px;height:28px;border-radius:8px;background:var(--accent);color:var(--on-accent);flex:0 0 auto"><svg width="17" height="17" viewBox="0 0 48 48" fill="none" aria-hidden="true" style="flex:0 0 auto"><circle cx="18" cy="18" r="13" stroke="currentColor" stroke-width="4"></circle><circle cx="13" cy="18" r="2.3" fill="currentColor"></circle><circle cx="23" cy="18" r="2.3" fill="currentColor"></circle><path d="M28 27 L41 41 L29 38 Z" fill="currentColor"></path></svg></span>
+      <span style="font-size:14px;font-weight:650;letter-spacing:-.01em;white-space:nowrap">Slovenský futbalový zväz</span>
+      <div class="ask" style="flex:1;min-width:0"><svg width="16" height="16" viewBox="0 0 48 48" fill="none" aria-hidden="true" style="flex:0 0 auto"><circle cx="18" cy="18" r="13" stroke="currentColor" stroke-width="4"></circle><circle cx="13" cy="18" r="2.3" fill="currentColor"></circle><circle cx="23" cy="18" r="2.3" fill="currentColor"></circle><path d="M28 27 L41 41 L29 38 Z" fill="currentColor"></path></svg><span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Opýtajte sa svojich dokumentov…</span><span class="kbd">⌘K</span></div>
+      <span style="position:relative;display:grid;place-items:center;width:36px;height:36px;color:var(--muted);flex:0 0 auto"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13.9 11.6c0-5.2-1.6-7-4.9-7s-4.9 1.8-4.9 7l-1.3 2.1h12.4z"></path><path d="M10.6 15.4a1.7 1.7 0 0 1-3.2 0"></path></svg><b style="position:absolute;top:5px;right:4px;min-width:16px;height:16px;padding:0 4px;border-radius:8px;background:var(--bad-fg);color:var(--on-accent);font-size:10px;font-weight:700;display:grid;place-items:center;box-shadow:0 0 0 2px var(--surface)">3</b></span>
+      <span style="display:grid;place-items:center;width:30px;height:30px;border-radius:50%;background:var(--surface-2);font-size:11px;font-weight:650;flex:0 0 auto">JL</span>
+    </div>
+    <div class="lbl">Telefón &lt; 640 — skratka „SFZ“ z dát, pole zostáva, ⌘K mizne, ciele 40–44 px</div>
+    <div style="display:flex;align-items:center;height:56px;background:var(--surface);border:1px solid var(--line);border-radius:10px;gap:8px;padding:0 10px;width:390px">
+      <span style="display:grid;place-items:center;width:30px;height:30px;border-radius:8px;background:var(--accent);color:var(--on-accent);flex:0 0 auto"><svg width="18" height="18" viewBox="0 0 48 48" fill="none" aria-hidden="true" style="flex:0 0 auto"><circle cx="18" cy="18" r="13" stroke="currentColor" stroke-width="4"></circle><circle cx="13" cy="18" r="2.3" fill="currentColor"></circle><circle cx="23" cy="18" r="2.3" fill="currentColor"></circle><path d="M28 27 L41 41 L29 38 Z" fill="currentColor"></path></svg></span>
+      <span style="flex:0 0 auto;font-size:15px;font-weight:650">SFZ</span>
+      <div class="ask" style="flex:1;min-width:0"><svg width="16" height="16" viewBox="0 0 48 48" fill="none" aria-hidden="true" style="flex:0 0 auto"><circle cx="18" cy="18" r="13" stroke="currentColor" stroke-width="4"></circle><circle cx="13" cy="18" r="2.3" fill="currentColor"></circle><circle cx="23" cy="18" r="2.3" fill="currentColor"></circle><path d="M28 27 L41 41 L29 38 Z" fill="currentColor"></path></svg><span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Opýtajte sa…</span></div>
+      <span style="position:relative;display:grid;place-items:center;width:40px;height:40px;color:var(--muted);flex:0 0 auto"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13.9 11.6c0-5.2-1.6-7-4.9-7s-4.9 1.8-4.9 7l-1.3 2.1h12.4z"></path><path d="M10.6 15.4a1.7 1.7 0 0 1-3.2 0"></path></svg><b style="position:absolute;top:7px;right:6px;min-width:16px;height:16px;padding:0 4px;border-radius:8px;background:var(--bad-fg);color:var(--on-accent);font-size:10px;font-weight:700;display:grid;place-items:center;box-shadow:0 0 0 2px var(--surface)">3</b></span>
+      <span style="display:grid;place-items:center;width:32px;height:32px;border-radius:50%;background:var(--surface-2);font-size:11.5px;font-weight:650;flex:0 0 auto">JL</span>
+    </div>
+    <div class="lbl">logo organizácie — predvolené (značka) · nahraté tenantom</div>
+    <div class="row">
+      <span style="display:flex;align-items:center;gap:8px"><span style="display:grid;place-items:center;width:28px;height:28px;border-radius:8px;background:var(--accent);color:var(--on-accent)"><svg width="17" height="17" viewBox="0 0 48 48" fill="none" aria-hidden="true" style="flex:0 0 auto"><circle cx="18" cy="18" r="13" stroke="currentColor" stroke-width="4"></circle><circle cx="13" cy="18" r="2.3" fill="currentColor"></circle><circle cx="23" cy="18" r="2.3" fill="currentColor"></circle><path d="M28 27 L41 41 L29 38 Z" fill="currentColor"></path></svg></span><span class="quiet" style="font-size:12px">predvolené</span></span>
+      <span style="display:flex;align-items:center;gap:8px"><span style="display:grid;place-items:center;width:28px;height:28px;border-radius:8px;background:var(--surface-2);border:1px dashed var(--line)"><span style="font-size:8px;color:var(--muted);font-family:ui-monospace,Menlo,monospace">logo</span></span><span class="quiet" style="font-size:12px">z <code>/api/brand/&lt;code&gt;</code></span></span>
+    </div>
+  </div>
+
+  <div class="sec">
+    <div class="sec-h">01 · hotové</div>
+    <div class="sec-n">Tlačidlá</div>
+    <p class="sec-w">Výška <code>--control-h</code> 40 px, r10. Na obrazovke je <strong>jedno</strong> primárne. Prstenec focusu je mimo tlačidla (<code>offset: 2px</code>) — vnútri by na primárnom splynul s pozadím.</p>
+    <div class="lbl">default · hover · focus · disabled</div>
+    <div class="row">
+      <button class="button">Nahrať dokument</button>
+      <button class="button is-hover">Nahrať dokument</button>
+      <button class="button is-focus">Nahrať dokument</button>
+      <button class="button" disabled>Nahrať dokument</button>
+    </div>
+    <div class="row">
+      <button class="button button--quiet">Export CSV</button>
+      <button class="button button--quiet is-hover">Export CSV</button>
+      <button class="button button--quiet is-focus">Export CSV</button>
+      <button class="button button--quiet" disabled>Export CSV</button>
+    </div>
+    <div class="lbl">odkaz vypnutý cez aria-disabled (stránkovanie)</div>
+    <div class="row"><a class="button button--quiet pager-link" aria-disabled="true" href="#">Predchádzajúca</a></div>
+  </div>
+
+  <div class="sec">
+    <div class="sec-h">02 · hotové + odchýlka A</div>
+    <div class="sec-n">Polia</div>
+    <p class="sec-w"><strong>40 px vo formulári, 36 px v páse.</strong> Formulár sa vypĺňa, pás sa používa. Tretia výška nesmie vzniknúť. Pole v páse nesie značku Continea — nie lupu, lebo to nie je hľadanie v tabuľke, je to otázka položená obsahu.</p>
+    <div class="lbl">formulár 40 px — default · focus · disabled</div>
+    <div class="row" style="display:grid;grid-template-columns:repeat(3,minmax(0,260px));gap:12px">
+      <label class="field"><span class="field-label">Názov</span><input class="field-input" value="Registračný a prestupový poriadok" /><span class="field-hint">Ako sa dokument volá v zozname.</span></label>
+      <label class="field"><span class="field-label">Názov</span><input class="field-input is-focus" value="Registračný a prestupový" /><span class="field-hint">Ako sa dokument volá v zozname.</span></label>
+      <label class="field"><span class="field-label">Názov</span><input class="field-input" value="Nedá sa upraviť" disabled /><span class="field-hint">Publikované znenie sa neprepisuje.</span></label>
+    </div>
+    <div class="lbl">pás 36 px so značkou — hlavička · lišta zoznamu</div>
+    <div class="row" style="flex-direction:column;align-items:stretch;max-width:560px;gap:8px">
+      <div class="ask"><svg width="16" height="16" viewBox="0 0 48 48" fill="none" aria-hidden="true" style="flex:0 0 auto"><circle cx="18" cy="18" r="13" stroke="currentColor" stroke-width="4"></circle><circle cx="13" cy="18" r="2.3" fill="currentColor"></circle><circle cx="23" cy="18" r="2.3" fill="currentColor"></circle><path d="M28 27 L41 41 L29 38 Z" fill="currentColor"></path></svg><span style="flex:1">Opýtajte sa svojich dokumentov…</span><span class="kbd">⌘K</span></div>
+      <div class="ask"><svg width="16" height="16" viewBox="0 0 48 48" fill="none" aria-hidden="true" style="flex:0 0 auto"><circle cx="18" cy="18" r="13" stroke="currentColor" stroke-width="4"></circle><circle cx="13" cy="18" r="2.3" fill="currentColor"></circle><circle cx="23" cy="18" r="2.3" fill="currentColor"></circle><path d="M28 27 L41 41 L29 38 Z" fill="currentColor"></path></svg><span style="flex:1">Hľadať v názve, obsahu, čísle predpisu…</span></div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <div class="sec-h">03 · hotové</div>
+    <div class="sec-n">Stavové pilulky</div>
+    <p class="sec-w">Farba nesie význam, preto bez rámika. <strong>Expirovaný nie je hodnota facetu</strong> — je to odvodený príznak z <code>effectiveTo</code> v minulosti. Facet „Stav“ má tri hodnoty; <code>.tag--archived</code> zostáva nepoužitý.</p>
+    <div class="row">
+      <span class="tag tag--published">Platný</span>
+      <span class="tag tag--draft">Návrh</span>
+      <span class="tag tag--review">Na schválenie</span>
+      <span class="tag tag--expired">Expirovaný</span>
+      <span class="tag tag--archived">Archív</span>
+      <span class="tag">Neutrálna</span>
+    </div>
+  </div>
+
+  <div class="sec">
+    <div class="sec-h">04 · hotové</div>
+    <div class="sec-n">Pásik potvrdení</div>
+    <p class="sec-w">Prahy ≥ 90 % zelená, ≥ 50 % accent, pod tým jantárová. <strong>Pomlčka ≠ nula:</strong> prázdny pásik znamená „nikto nepotvrdil“, pomlčka „nie je čo potvrdzovať“ (dokument nikomu nepridelený). Menovateľ nesie <code>title</code> a <code>.sr-only</code>.</p>
+    <table class="spec">
+      <thead><tr><th>Stav</th><th style="width:150px">Pásik</th><th>Kedy</th></tr></thead>
+      <tbody>
+        <tr><td>97 %</td><td><span class="ack-bar"><span class="ack-track"><span class="ack-fill ack-fill--high" style="width:97%"></span></span><span class="ack-value">97 %</span></span></td><td>≥ 90 % — <code>--ok-fg</code></td></tr>
+        <tr><td>68 %</td><td><span class="ack-bar"><span class="ack-track"><span class="ack-fill ack-fill--mid" style="width:68%"></span></span><span class="ack-value">68 %</span></span></td><td>≥ 50 % — <code>--accent</code></td></tr>
+        <tr><td>12 %</td><td><span class="ack-bar"><span class="ack-track"><span class="ack-fill ack-fill--low" style="width:12%"></span></span><span class="ack-value">12 %</span></span></td><td>&lt; 50 % — <code>--warn-fg</code></td></tr>
+        <tr><td>0 %</td><td><span class="ack-bar"><span class="ack-track"><span class="ack-fill ack-fill--low" style="width:0%"></span></span><span class="ack-value">0 %</span></span></td><td>pridelené, nikto nepotvrdil</td></tr>
+        <tr><td>—</td><td><span class="quiet">—</span></td><td>nikomu nepridelené</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="sec">
+    <div class="sec-h">05 · hotové</div>
+    <div class="sec-n">Výber, chip filtra, facet</div>
+    <p class="sec-w">Výber je <strong>odkaz</strong>, nie <code>&lt;input type=checkbox&gt;</code> — zaškrtávacie políčko bez JavaScriptu prechod na druhú stranu neprežije, odkaz áno (<code>pick=&lt;id&gt;</code> v adrese). V tabuľke 15 px, na karte 22 px.</p>
+    <div class="lbl">výber — prázdny · zaškrtnutý · na karte 22 px</div>
+    <div class="row">
+      <a class="bulk-pick" href="#"><span class="bulk-pick-box"></span></a>
+      <a class="bulk-pick is-on" href="#"><span class="bulk-pick-box">✓</span></a>
+      <a class="bulk-pick is-on" href="#"><span class="bulk-pick-box box22">✓</span></a>
+      <a class="bulk-pick" href="#"><span class="bulk-pick-box box22"></span></a>
+    </div>
+    <div class="lbl">chip aktívneho filtra — × odoberá jeden, nie všetky</div>
+    <div class="row">
+      <a class="library-chip" href="#"><span class="library-chip-key">Druh:</span>Norma<span class="library-chip-x">×</span></a>
+      <a class="library-chip" href="#"><span class="library-chip-key">Značka:</span>Registrácia<span class="library-chip-x">×</span></a>
+      <a class="library-chip" href="#"><span class="library-chip-key">Oddelenie:</span>Právne a legislatíva<span class="library-chip-x">×</span></a>
+    </div>
+    <div class="lbl">facet ako riadok (stĺpec od 1024) · ako pilulka (zásuvka pod 1024)</div>
+    <div class="row" style="align-items:flex-start;gap:24px">
+      <div style="width:230px;display:grid;gap:2px">
+        <a class="facet is-on" href="#"><span class="facet-box">✓</span><span class="facet-name">Norma</span><span class="facet-count">41</span></a>
+        <a class="facet" href="#"><span class="facet-box"></span><span class="facet-name">Smernica</span><span class="facet-count">62</span></a>
+        <a class="facet" href="#"><span class="facet-box"></span><span class="facet-name">Metodický pokyn</span><span class="facet-count">23</span></a>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:8px;max-width:330px">
+        <a class="pill is-on" href="#">Norma<span class="pill-count">41</span></a>
+        <a class="pill" href="#">Smernica<span class="pill-count">62</span></a>
+        <a class="pill" href="#">Metodický pokyn<span class="pill-count">23</span></a>
+        <a class="pill" href="#">Manuál<span class="pill-count">22</span></a>
+      </div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <div class="sec-h">06 · hotové + úloha 4</div>
+    <div class="sec-n">Tabuľka — presné poradie stĺpcov</div>
+    <p class="sec-w">Deväť stĺpcov, „Zmenené“ vpravo. <strong>„Platné do“ ostáva</strong> — nesie expiráciu, keďže Expirovaný nie je facet. <strong>„Zmenené“ je absolútny dátum</strong>, nie „2 dni“: relatívny čas sa pri serverovom vykreslení a hydratácii rozíde a nedá sa porovnať medzi riadkami. Označený riadok má k pozadiu <strong>ľavý pruh 3 px</strong> (<code>box-shadow: inset</code>, nie <code>border</code> — okraj by stĺpce posunul).</p>
+    <div class="doc-table-wrap">
+      <table class="doc-table">
+        <thead><tr>
+          <th style="width:36px"><a class="bulk-pick" href="#"><span class="bulk-pick-box">–</span></a></th>
+          <th style="min-width:260px">Dokument</th><th>Druh</th><th>Stav</th><th>Verzia</th><th>Platné od</th><th>Platné do</th><th>Potvrdenia</th><th class="doc-col-right">Zmenené</th>
+        </tr></thead>
+        <tbody>
+          <tr class="is-picked">
+            <td><a class="bulk-pick is-on" href="#"><span class="bulk-pick-box">✓</span></a></td>
+            <td><a class="doc-title" href="#">Registračný a prestupový poriadok</a><div class="doc-meta">RPP-2026-04 · Právne a legislatíva · reg-prestup-poriadok</div></td>
+            <td>Norma</td><td><span class="tag tag--published">Platný</span></td><td style="font-variant-numeric:tabular-nums">4.2</td><td class="quiet">1. 1. 2026</td><td class="quiet">—</td>
+            <td><span class="ack-bar"><span class="ack-track"><span class="ack-fill ack-fill--mid" style="width:68%"></span></span><span class="ack-value">68 %</span></span></td>
+            <td class="doc-col-right quiet">21. 9. 2026</td>
+          </tr>
+          <tr class="is-hover">
+            <td><a class="bulk-pick" href="#"><span class="bulk-pick-box"></span></a></td>
+            <td><a class="doc-title" href="#">Smernica o ochrane osobných údajov</a><div class="doc-meta">SM-GDPR-03 · Compliance · smernica-gdpr</div></td>
+            <td>Smernica</td><td><span class="tag tag--published">Platný</span></td><td style="font-variant-numeric:tabular-nums">3.0</td><td class="quiet">1. 3. 2026</td><td class="quiet">—</td>
+            <td><span class="ack-bar"><span class="ack-track"><span class="ack-fill ack-fill--high" style="width:94%"></span></span><span class="ack-value">94 %</span></span></td>
+            <td class="doc-col-right quiet">20. 9. 2026</td>
+          </tr>
+          <tr>
+            <td><a class="bulk-pick" href="#"><span class="bulk-pick-box"></span></a></td>
+            <td><a class="doc-title" href="#">Súťažný poriadok</a><div class="doc-meta">SP-2026-01 · Súťaže · sutazny-poriadok</div></td>
+            <td>Norma</td><td><span class="tag tag--review">Na schválenie</span></td><td style="font-variant-numeric:tabular-nums">6.1</td><td class="quiet">1. 7. 2026</td><td class="quiet">—</td>
+            <td class="quiet">—</td>
+            <td class="doc-col-right quiet">19. 9. 2026</td>
+          </tr>
+          <tr>
+            <td><a class="bulk-pick" href="#"><span class="bulk-pick-box"></span></a></td>
+            <td><a class="doc-title" href="#">Metodický pokyn k licenciám trénerov mládeže a dospelých</a><div class="doc-meta">MP-TR-07 · Vzdelávanie · metodicky-pokyn-licencie</div></td>
+            <td>Metodický pokyn</td><td><span class="tag tag--draft">Návrh</span></td><td style="font-variant-numeric:tabular-nums">2.3</td><td class="quiet">15. 8. 2026</td><td class="quiet">—</td>
+            <td class="quiet">—</td>
+            <td class="doc-col-right quiet">17. 9. 2026</td>
+          </tr>
+          <tr>
+            <td><a class="bulk-pick" href="#"><span class="bulk-pick-box"></span></a></td>
+            <td><a class="doc-title" href="#">Bezpečnosť na štadiónoch</a><div class="doc-meta">PR-BEZ-04 · Prevádzka · bezpecnost-stadiony</div></td>
+            <td>Manuál</td><td><span class="tag tag--expired">Expirovaný</span></td><td style="font-variant-numeric:tabular-nums">4.1</td><td class="quiet">1. 6. 2024</td><td class="quiet">31. 5. 2026</td>
+            <td><span class="ack-bar"><span class="ack-track"><span class="ack-fill ack-fill--low" style="width:57%"></span></span><span class="ack-value">57 %</span></span></td>
+            <td class="doc-col-right quiet">30. 8. 2026</td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="pager">
+        <span class="pager-count">Zobrazené 1–5 z 24</span>
+        <span class="pager-spacer"></span>
+        <a class="button button--quiet pager-link" aria-disabled="true" href="#">Predchádzajúca</a>
+        <a class="button button--quiet pager-link" href="#">Ďalšia</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <div class="sec-h">07 · hotové</div>
+    <div class="sec-n">Karta dokumentu</div>
+    <p class="sec-w">Ten istý záznam ako riadok tabuľky. Pod 640 px len karty — tabuľka má <code>min-width</code> ~1160 px a na 390 px z nej ostane názov. Výber 22 px vľavo mimo obsahu; označená karta má celý rám (karty stoja v mriežke, rám nič neposúva).</p>
+    <div class="row" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(310px,1fr));gap:10px;max-width:980px">
+      <div class="doc-card is-picked">
+        <a class="bulk-pick is-on" href="#" style="margin-top:2px"><span class="bulk-pick-box box22">✓</span></a>
+        <div style="flex:1;min-width:0">
+          <div class="doc-card-top"><span class="tag tag--published">Platný</span><span class="quiet" style="font-size:12.5px;flex:1">Norma</span><span class="quiet" style="font-size:12px">4.2</span></div>
+          <a class="doc-card-title" href="#">Registračný a prestupový poriadok</a>
+          <div class="doc-meta" style="font-size:12px;margin-top:3px">RPP-2026-04 · Právne a legislatíva</div>
+          <div style="margin-top:9px"><span class="ack-bar" style="width:100%"><span class="ack-track"><span class="ack-fill ack-fill--mid" style="width:68%"></span></span><span class="ack-value">68 %</span></span></div>
+        </div>
+      </div>
+      <div class="doc-card">
+        <a class="bulk-pick" href="#" style="margin-top:2px"><span class="bulk-pick-box box22"></span></a>
+        <div style="flex:1;min-width:0">
+          <div class="doc-card-top"><span class="tag tag--draft">Návrh</span><span class="quiet" style="font-size:12.5px;flex:1">Metodický pokyn</span><span class="quiet" style="font-size:12px">2.3</span></div>
+          <a class="doc-card-title" href="#">Metodický pokyn k licenciám trénerov mládeže a dospelých</a>
+          <div class="doc-meta" style="font-size:12px;margin-top:3px">MP-TR-07 · Vzdelávanie</div>
+          <div style="margin-top:9px"><span class="quiet" style="font-size:11.5px">Nikomu nepridelené</span></div>
+        </div>
+      </div>
+      <div class="doc-card">
+        <a class="bulk-pick" href="#" style="margin-top:2px"><span class="bulk-pick-box box22"></span></a>
+        <div style="flex:1;min-width:0">
+          <div class="doc-card-top"><span class="tag tag--expired">Expirovaný</span><span class="quiet" style="font-size:12.5px;flex:1">Manuál</span><span class="quiet" style="font-size:12px">4.1</span></div>
+          <a class="doc-card-title" href="#">Bezpečnosť na štadiónoch</a>
+          <div class="doc-meta" style="font-size:12px;margin-top:3px">PR-BEZ-04 · Prevádzka</div>
+          <div style="margin-top:9px"><span class="ack-bar" style="width:100%"><span class="ack-track"><span class="ack-fill ack-fill--low" style="width:57%"></span></span><span class="ack-value">57 %</span></span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <div class="sec-h">08 · ÚLOHA 1 — chýba</div>
+    <div class="sec-n">Prázdny stav</div>
+    <p class="sec-w"><strong>Dva texty, nie jeden.</strong> Rozhoduje, či je nasadený filter — „filtru nič nevyhovuje“ a „v knižnici nič nie je“ sú dve rôzne situácie a dnes sa nedajú rozoznať. Bez ikony a ilustrácie: prázdny zoznam je bežný stav pracovného nástroja, nie udalosť.</p>
+    <div class="row" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(330px,1fr));gap:12px;max-width:980px">
+      <div class="empty">
+        <div class="empty-title">Filtru nič nevyhovuje</div>
+        <div class="empty-text">Máte nasadené dva filtre: <strong>Druh: Norma</strong> a <strong>Značka: Registrácia</strong>. Skúste niektorý zrušiť.</div>
+        <div class="empty-action"><a class="button button--quiet" href="#">Zrušiť filtre</a></div>
+      </div>
+      <div class="empty">
+        <div class="empty-title">V knižnici zatiaľ nič nie je</div>
+        <div class="empty-text">Keď nahráte prvý dokument, objaví sa tu aj s tým, kto ho má potvrdiť.</div>
+        <div class="empty-action"><a class="button" href="#">Nahrať dokument</a></div>
+      </div>
+      <div class="empty">
+        <div class="empty-title">Nemáte nič na potvrdenie</div>
+        <div class="empty-text">Keď vám niekto pridelí normu, objaví sa tu aj s termínom. Nič od vás teraz nikto nečaká.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <div class="sec-h">09 · hotové</div>
+    <div class="sec-n">Hlásenia</div>
+    <p class="sec-w">Hláška povie, <strong>čo sa stalo a čo z toho vyplýva</strong> — nie „Chyba“. Pri chybe vždy aj cesta von.</p>
+    <div class="row" style="flex-direction:column;align-items:stretch;max-width:620px;gap:8px">
+      <div class="notice"><span class="notice-mark">✓</span><span class="notice-text">Dokument bol poslaný na schválenie Marekovi Horákovi. Ozveme sa, keď rozhodne.</span></div>
+      <div class="notice notice--error"><span class="notice-mark">!</span><span class="notice-text">Súbor má 62 MB, najviac 40 MB. Skúste PDF bez skenovaných príloh, alebo ho rozdeľte na dve normy.</span></div>
+      <div class="notice notice--error"><span class="notice-mark">!</span><span class="notice-text">Presunuli sa 3 dokumenty z 5. Pri dvoch chýba oprávnenie na cieľový priečinok: <strong>Súťažný poriadok</strong>, <strong>Etický kódex</strong>.</span></div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <div class="sec-h">10 · hotové</div>
+    <div class="sec-n">Nadpis obrazovky, prepínač pohľadu</div>
+    <p class="sec-w">Jedna trieda na nadpis znamená, že sa pri prechode medzi obrazovkami neposúva. Prepínač je dvojica <strong>odkazov</strong> — pohľad je súčasť adresy, takže sa dá poslať; pod 640 px je skrytý, lebo tabuľka sa tam nekreslí.</p>
+    <div style="max-width:760px">
+      <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin:0 0 6px">
+        <h2 class="page-title" style="margin:0">Knižnica dokumentov</h2>
+        <span class="quiet" style="font-size:14px;font-variant-numeric:tabular-nums">24 z 148</span>
+        <span class="view-switch"><a class="view-switch-item is-on" href="#">Tabuľka</a><a class="view-switch-item" href="#">Karty</a></span>
+      </div>
+      <p class="page-lead">Znenia predpisov organizácie. Kto má normu potvrdiť, vidí ju aj v <strong>Na potvrdenie</strong> — tu je celá knižnica vrátane starších znení.</p>
+    </div>
+  </div>
+</div>
+</body>
+</html>
