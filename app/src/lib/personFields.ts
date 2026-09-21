@@ -135,3 +135,33 @@ export function workplaceLabel(key: string | undefined, items: CodelistItem[]): 
   if (!key) return ""
   return items.find(i => i.key === key)?.label ?? key
 }
+
+// ── Pozvánka ─────────────────────────────────────────────────────────────────
+
+/**
+ * Potrebuje táto osoba pozvánku?
+ *
+ * Jedno pravidlo na jednom mieste: podľa neho sa kreslí tlačidlo „Poslať
+ * pozvánku znovu" na detaile osoby aj sa rozhoduje serverová akcia, a je to
+ * tá istá podmienka, akú kladie `neverSignedIn()` do databázy. Keby si ju
+ * každé miesto písalo samo, raz by sa rozišli a tlačidlo by ponúkalo akciu,
+ * ktorú server odmietne.
+ *
+ * Rozhoduje **`firstLoginAt`, nie `status`.** Stav `invited` sa pri prvom
+ * prihlásení prepíše na `active`, takže by stačil — až na osoby, ktoré
+ * vznikli inak než pozvaním (import, samozaloženie cez pracovné konto, D47).
+ * Tie majú stav rovno `active` a pozvánku nikdy nedostali, hoci sú presne tí,
+ * ktorých treba osloviť.
+ *
+ * Vyradená osoba pozvánku nedostane: pozvánka niekomu, kto v organizácii už
+ * nie je, je horšia než žiadna.
+ *
+ * Je to tu, a nie v `people.ts`, z toho istého dôvodu ako zvyšok tohto
+ * súboru: `people.ts` ťahá `session.ts` s Reactovým `cache()`, takže sa
+ * z neho nedá importovať mimo požiadavky — ani v teste.
+ */
+export function needsInvitation(
+  person: { status: string; firstLoginAt?: Date },
+): boolean {
+  return person.status !== "inactive" && !person.firstLoginAt
+}

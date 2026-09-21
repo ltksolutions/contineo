@@ -15,7 +15,7 @@ import { evidenceForPerson } from "@/lib/evidenceDb"
 import EvidenceTimeline from "@/components/EvidenceTimeline"
 import { audiencesInOrg } from "@/lib/persons"
 import { availableOptions } from "@/lib/codelistsTenant"
-import { displayName } from "@/lib/personFields"
+import { displayName, needsInvitation } from "@/lib/personFields"
 import { allDepartments, flattenTree, pathTo } from "@/lib/departments"
 import Select from "@/components/Select"
 import TagSelect from "@/components/TagSelect"
@@ -23,7 +23,7 @@ import Notice from "@/components/Notice"
 import { brandingView } from "@/lib/tenants"
 import { tenantStyle } from "@/components/TenantHeader"
 import { formatDate, UI_LANGUAGES, dictionary } from "@/lib/i18n"
-import { savePersonAction, togglePersonStatusAction } from "../actions"
+import { savePersonAction, togglePersonStatusAction, resendInviteAction } from "../actions"
 import { normalizeQuery, type RawQuery } from "@/lib/urlParams"
 import AppShell from "@/components/AppShell"
 
@@ -300,6 +300,30 @@ export default async function PersonDetailPage({
           <button className="button" type="submit">{t.save}</button>
         </div>
       </form>
+
+      {/*
+        Pozvánka — **len kým osoba ani raz nebola dnu** (`firstLoginAt`, nie
+        `status`: osoby z importu a zo samozaloženia majú `active` od začiatku
+        a pozvánku nikdy nedostali, D47). Kto sa už prihlásil, kartu nevidí —
+        tlačidlo, ktoré nič nerieši, len pridáva otázku, na čo je.
+
+        Vyradenej osobe sa tiež nekreslí: pozvánka niekomu, kto v organizácii
+        už nie je, je horšia než žiadna — rovnaké pravidlo ako v `neverSignedIn()`.
+      */}
+      {needsInvitation(o) && (
+        <form action={resendInviteAction} className="card" style={{ padding: 20, marginTop: 16, display: "grid", gap: 12 }}>
+          <input type="hidden" name="id" value={o.id} />
+
+          <h2 style={{ fontSize: "var(--fs-section)", margin: 0 }}>{t.inviteHeading}</h2>
+
+          <p className="quiet" style={{ margin: 0, fontSize: "var(--fs-body)" }}>
+            {t.inviteNote}
+            {o.invitedAt && ` ${t.inviteNoteSince(formatDate(o.invitedAt, language))}`}
+          </p>
+
+          <div><button className="button button--quiet" type="submit">{t.inviteSubmit}</button></div>
+        </form>
+      )}
 
       <form action={togglePersonStatusAction} className="card" style={{ padding: 20, marginTop: 16, display: "grid", gap: 12 }}>
         <input type="hidden" name="id" value={o.id} />

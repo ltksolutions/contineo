@@ -4,6 +4,26 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Pozvánka sa naozaj odosiela — a dá sa poslať znovu (2026-09-21)
+
+**Formulár „Pozvať osobu" e-mail neposielal vôbec.** Osobu zapísal, nastavil
+jej stav `invited` a ohlásil „Pozvaná" — hlásil teda zápis do evidencie, nie
+odoslanie. E-mail odchádzal až hromadnou akciou na `/people/invite`, o ktorej
+ten, kto niekoho pozval, nemusel vedieť. Nájdené na skutočnom prípade:
+pozvaná osoba čakala na e-mail, ktorý nikdy nikto neposlal.
+
+- **Pozvanie osoby teraz pozvánku aj odošle.** Zlyhanie pošty osobu nezruší:
+  zostáva zapísaná a hláška povie, že pozvánku treba poslať znovu.
+- **Nové tlačidlo „Poslať pozvánku znovu"** na detaile osoby. Ponúka sa len
+  tomu, kto ešte ani raz nebol dnu a nie je vyradený.
+- **Jedno kritérium na jednom mieste** — `needsInvitation()` v
+  `lib/personFields.ts` rozhoduje o tlačidle aj o serverovej akcii a je to tá
+  istá podmienka, akú kladie `neverSignedIn()` do databázy. Rozhoduje
+  `firstLoginAt`, nie `status`: osoby z importu a zo samozaloženia (D47) majú
+  `active` od začiatku a pozvánku nikdy nedostali.
+- Skladanie pozvánky je v jednej funkcii (`sendInviteTo`) pre formulár,
+  tlačidlo aj hromadné rozosielanie — dve kópie by sa raz rozišli.
+
 ### Knižnica podľa solo handoffu: farebné stavy, pásiky potvrdení, karta pre palec (2026-09-21)
 
 Implementácia `docs/design/KNIZNICA.md` (vizuál `Contineo Obrazovky.dc.html`,
