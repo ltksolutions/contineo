@@ -10,7 +10,7 @@
 import { notFound, redirect } from "next/navigation"
 import Link from "next/link"
 import { libraryContext } from "@/lib/library"
-import { libraryDetail } from "@/lib/libraryRead"
+import { libraryDetail, statusTagClass } from "@/lib/libraryRead"
 import { brandingView } from "@/lib/tenants"
 import { tenantStyle } from "@/components/TenantHeader"
 import { formatDate, dictionary } from "@/lib/i18n"
@@ -174,6 +174,15 @@ export default async function DocumentDetailPage({
   const draftRounds = draftVersionId ? (rounds.get(draftVersionId) ?? []) : []
   const draftState = stateOf(draftRounds)
 
+  /* Stav do hlavičky — ten istý slovník a tá istá trieda ako pilulka
+     v zozname (`statusTagClass`, PR 8). */
+  const tl = dictionary(language).library.list
+  const headerStatus = draftState === "in-review" ? "in-review" : d.status
+  const statusPill = (value: string) =>
+    value === "published" ? tl.statusPublished
+    : value === "in-review" ? tl.statusInReview
+    : tl.draft
+
   /*
    * Rozdiel konceptu proti **textu platného znenia** — podklad pre opravu bez
    * novej verzie. Text sa berie v tom istom poradí ako v `fixText()`
@@ -220,8 +229,20 @@ export default async function DocumentDetailPage({
         pohľad — stav spracovania a druh; identifikátor a priečinok idú pod
         názov, lebo sa čítajú až vtedy, keď názvy nestačia.
       */}
+      {/*
+        Stav dokumentu farebne, tou istou funkciou ako v zozname (DETAIL,
+        úloha 2) — človek príde z farebného zoznamu a nemá stratiť istotu,
+        že je to ten istý stav. Bežiace kolo nad konceptom je „na schválenie"
+        (MASTER). Technické spracovanie sa ukazuje len keď niečo hovorí:
+        hotový stav sa nekreslí, zlyhanie je červené (rovnako ako v zozname).
+      */}
       <div className="detail-chips">
-        <span className="tag">{dictionary(language).library.list.processing[d.processingState] ?? d.processingState}</span>
+        <span className={statusTagClass(headerStatus)}>{statusPill(headerStatus)}</span>
+        {d.processingState !== "indexed" && (
+          <span className={d.processingState === "failed" ? "tag tag--expired" : "tag"}>
+            {tl.processing[d.processingState] ?? d.processingState}
+          </span>
+        )}
         {d.category && <span className="tag quiet">{d.category}</span>}
       </div>
 
@@ -634,7 +655,9 @@ export default async function DocumentDetailPage({
             <li key={v.versionId} className="card audit-entry">
               <div className="audit-head">
                 <strong>{v.label}</strong>
-                {v.isActive ? <span className="tag">{t.active}</span> : <span className="tag">{t.archived}</span>}
+                {v.isActive
+                  ? <span className="tag tag--published">{t.active}</span>
+                  : <span className="tag tag--archived">{t.archived}</span>}
               </div>
               <div className="quiet audit-who">
                 {v.effectiveFrom ? t.effectiveFromOn(formatDate(v.effectiveFrom, language)) : t.noEffectiveDate}
