@@ -87,6 +87,9 @@ Podrobne: `docs/AKO_TO_BEZI.md`.
   `catch` hlási chybu zápisu — alebo použi `isRedirect()` (`lib/redirects.ts`)
   ako prvý riadok toho `catch`.
 - **Mobile first je povinnosť**, nie odporúčanie.
+- **Flex, ktorý pod 640 px ide do stĺpca, má deti so `flex-basis: auto`** —
+  v spoločnom bloku na konci `globals.css`, nie pri komponente. Základ
+  z riadku (`flex: 1 1 160px`) sa inak v stĺpci stane výškou.
 
 ## Kto smie commitovať priamo do `main`
 

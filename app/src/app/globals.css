@@ -1750,11 +1750,7 @@ html[data-theme="dark"] select.field-input {
 
 @media (max-width: 639px) {
   .tree-form { flex-direction: column; align-items: stretch; }
-  /* `flex-basis: auto` je nutné: základ 220/260 px z riadkovej podoby by sa
-     v stĺpci stal VÝŠKOU poľa (hlavná os sa otočila) — nájdené pri DETAIL
-     úlohe 3 renderom na 390 px, platí pre každý `.tree-form`. */
   .tree-form > * { width: 100%; }
-  .tree-form > :first-child { flex-basis: auto; }
 }
 
 /* ── audit (D51) ────────────────────────────────────────────────────────── */
@@ -1805,6 +1801,8 @@ html[data-theme="dark"] select.field-input {
   align-items: flex-end;
   margin: 0 0 14px;
 }
+
+.audit-filter > .field { flex: 1 1 260px; margin: 0; }
 
 @media (max-width: 639px) {
   .audit-filter { flex-direction: column; align-items: stretch; }
@@ -2332,10 +2330,6 @@ html[data-theme="dark"] .editor-tui .CodeMirror {
 /* Formulár priečinka je riadok, nie mriežka (`.tree-form`). */
 .detail-block.tree-form { display: flex; }
 .detail-block.tree-form > .field { flex: 1 1 260px; margin: 0; }
-/* Za deklaráciou, ktorú prepisuje — inak by 260 px bolo v stĺpci výškou. */
-@media (max-width: 639px) {
-  .detail-block.tree-form > .field { flex-basis: auto; }
-}
 .detail-block > summary { cursor: pointer; font-weight: 600; }
 .detail-block-title { font-size: var(--fs-section); margin: 0; }
 .detail-block-note { font-size: var(--fs-body); color: var(--muted); margin: 0; }
@@ -3601,10 +3595,7 @@ a.answer-source:focus-visible { outline: 2px solid var(--accent); outline-offset
    zostáva „Schváliť" prvé, čo je správne pre čítačku. */
 @media (max-width: 639px) {
   .approval-decide { flex-direction: column-reverse; }
-  /* `flex-basis: auto` je nutné: základ 160 px z riadkovej podoby by sa
-     v stĺpci stal VÝŠKOU tlačidla (hlavná os sa otočila) — 160 px vysoké
-     tlačidlá namiesto 44. */
-  .approval-decide > button { flex: 0 0 auto; width: 100%; min-height: 44px; }
+  .approval-decide > button { width: 100%; min-height: 44px; }
 }
 
 /* ── potvrdenie na telefóne: pás pod palcom (NASADENIE, PR 5) ──────────────
@@ -4488,4 +4479,20 @@ html[data-theme="dark"] { --skeleton-sheen: rgba(255, 255, 255, 0.07); }
   .multiselect-chip-remove { width: 44px; height: 44px; }
   .tree-edit-toggle { min-height: 44px; padding-block: 0; }
   .pager-link { min-height: 44px; }
+}
+
+/* ── Stĺpec pod 640 px: základ z riadku nesmie byť výška ──────────────────
+   Pravidlo pre celý stylesheet (CLAUDE.md): každý flex kontajner, ktorý pod
+   640 px otočí `flex-direction` na stĺpec, má deti v TOMTO bloku
+   s `flex-basis: auto`. `flex: 1 1 160px` z riadkovej podoby sa inak
+   v stĺpci stane výškou — hlavná os sa otočila — a z tlačidiel je 160 px,
+   z polí 260 px (nájdené trikrát v troch PR). Blok je na konci súboru
+   zámerne a selektory majú tú istú špecificitu ako riadkové pravidlá:
+   neskorší vyhráva, nič tu nepotrebuje `!important`. Nový stĺpec sem
+   pribudne — nie ad hoc k svojmu komponentu. */
+@media (max-width: 639px) {
+  .tree-form > :first-child,
+  .detail-block.tree-form > .field,
+  .audit-filter > .field,
+  .approval-decide > button { flex-basis: auto; }
 }
