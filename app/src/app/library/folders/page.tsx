@@ -13,7 +13,7 @@
 import Link from "next/link"
 import { notFound, redirect } from "next/navigation"
 import { libraryContext } from "@/lib/library"
-import { allFolders, flattenTree, subtree, counts, depth, MAX_DEPTH } from "@/lib/folders"
+import { allFolders, flattenTree, subtree, counts, depth, canMove, MAX_DEPTH } from "@/lib/folders"
 import {
   createFolderAction, renameFolderAction, moveFolderAction, deleteFolderAction,
   shiftFolderAction, saveFolderOrderAction,
@@ -141,10 +141,15 @@ export default async function FoldersPage({
                         name="parentId"
                         initial={p.parentId ?? ""}
                         fieldLabel={tf.parentOf(p.name)}
+                        // Ponuka neobsahuje voľby, ktoré server odmietne
+                        // (PRIECINKY, úloha 3): sám seba, vlastný podstrom ani
+                        // rodiča, pod ktorým by podstrom prekročil hĺbku. Tou
+                        // istou funkciou ako server (`canMove`), nie vlastnou
+                        // kópiou pravidla — druhá kópia sa s prvou raz rozíde.
                         options={[
                           { value: "", label: tf.topLevel },
                           ...tree
-                            .filter(r => !inside.has(r.folder.id))
+                            .filter(r => canMove(folders, p.id, r.folder.id) === null)
                             .map(r => ({
                               value: r.folder.id,
                               label: `${"— ".repeat(r.level - 1)}${r.folder.name}`,
