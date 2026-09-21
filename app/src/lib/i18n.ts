@@ -605,7 +605,9 @@ interface Dictionary {
       none: (days: number) => string
       person: (documents: number, days: number) => string
       send: (people: number) => string
-      preview: string
+      /** Súhrn pred odoslaním (HR.md, úloha 4): koľko e-mailov odíde a komu nič nepríde. */
+      impactEmails: (n: number) => string
+      impactNote: string
       sent: (n: number) => string
       nobody: string
       /**
@@ -2299,7 +2301,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       none: days => `Nikto nemešká viac než ${daysSk(days)}.`,
       person: (documents, days) => `${documents === 1 ? "1 dokument" : documents >= 2 && documents <= 4 ? `${documents} dokumenty` : `${documents} dokumentov`} · najdlhšie ${daysSk(days)}`,
       send: people => people === 1 ? "Odoslať 1 pripomienku" : people >= 2 && people <= 4 ? `Odoslať ${people} pripomienky` : `Odoslať ${people} pripomienok`,
-      preview: "Toto pôjde na uvedené adresy. Odoslaný e-mail sa odvolať nedá.",
+      impactEmails: n => n === 1 ? "Odíde 1 e-mail" : n >= 2 && n <= 4 ? `Odídu ${n} e-maily` : `Odíde ${n} e-mailov`,
+      impactNote: "Ľudia, ktorí už potvrdili, nedostanú nič (D61). Odoslaný e-mail sa odvolať nedá.",
       sent: n => `Odoslané: ${n}.`,
       nobody: "Nie je komu pripomínať.",
       modeLabel: "Komu poslať",
@@ -4186,7 +4189,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       none: days => `Nikdo nemešká více než ${daysCs(days)}.`,
       person: (documents, days) => `${documents === 1 ? "1 dokument" : documents >= 2 && documents <= 4 ? `${documents} dokumenty` : `${documents} dokumentů`} · nejdéle ${daysCs(days)}`,
       send: people => people === 1 ? "Odeslat 1 připomínku" : people >= 2 && people <= 4 ? `Odeslat ${people} připomínky` : `Odeslat ${people} připomínek`,
-      preview: "Toto půjde na uvedené adresy. Odeslaný e-mail se odvolat nedá.",
+      impactEmails: n => n === 1 ? "Odejde 1 e-mail" : n >= 2 && n <= 4 ? `Odejdou ${n} e-maily` : `Odejde ${n} e-mailů`,
+      impactNote: "Lidé, kteří už potvrdili, nedostanou nic (D61). Odeslaný e-mail se odvolat nedá.",
       sent: n => `Odesláno: ${n}.`,
       nobody: "Není komu připomínat.",
       modeLabel: "Komu poslat",
@@ -6065,7 +6069,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       none: days => `Nobody is more than ${daysEn(days)} behind.`,
       person: (documents, days) => `${documents === 1 ? "1 document" : `${documents} documents`} · longest ${daysEn(days)}`,
       send: people => people === 1 ? "Send 1 reminder" : `Send ${people} reminders`,
-      preview: "This goes to the addresses listed. A sent email cannot be taken back.",
+      impactEmails: n => n === 1 ? "1 e-mail will go out" : `${n} e-mails will go out`,
+      impactNote: "People who have already acknowledged get nothing (D61). A sent e-mail cannot be recalled.",
       sent: n => `Sent: ${n}.`,
       nobody: "There is nobody to remind.",
       modeLabel: "Who to send to",

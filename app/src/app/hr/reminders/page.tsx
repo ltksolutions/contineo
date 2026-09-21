@@ -122,7 +122,14 @@ export default async function RemindersPage({
             ))}
           </ul>
 
-          <p className="quiet" style={{ fontSize: "var(--fs-body)", margin: "0 0 14px" }}>{t.preview}</p>
+          {/* Súhrn pred odoslaním (HR.md, úloha 4) — ten istý blok ako pred
+              pridelením, len s iným slovesom: povie, čo sa stane, nie čo sa
+              poslalo. Jeden e-mail na človeka, preto počet ľudí = počet
+              e-mailov; kto už potvrdil, v zozname nie je (D61). */}
+          <div className="assign-impact" role="status">
+            <div className="assign-impact-count">{t.impactEmails(people.length)}</div>
+            <div className="quiet" style={{ fontSize: "var(--fs-small)" }}>{t.impactNote}</div>
+          </div>
 
           <form action={sendRemindersAction}>
             <input type="hidden" name="days" value={String(days)} />
