@@ -154,17 +154,32 @@ export default async function FoldersPage({
                       <button className="button button--quiet" type="submit">{tf.move}</button>
                     </form>
 
-                    {c.withDescendants === 0 && inside.size === 1 ? (
-                      <form action={deleteFolderAction}>
-                        <input type="hidden" name="id" value={p.id} />
-                        {carried.map(([k, v], i) => <input key={`${k}-${i}`} type="hidden" name={k} value={v} />)}
-                        <button className="button button--quiet" type="submit">{tf.remove}</button>
-                      </form>
-                    ) : (
-                      <p className="quiet" style={{ fontSize: "var(--fs-micro)", margin: 0 }}>
-                        {tf.removeHint}
-                      </p>
-                    )}
+                    {/*
+                      Zrušenie povie, prečo sa nedá (PRIECINKY, úloha 2):
+                      pri priečinku s obsahom je tlačidlo vypnuté a veta
+                      hovorí konkrétne čísla, ktoré už na obrazovke sú
+                      (`.tree-count`). `disabled`, nie `aria-disabled`: je to
+                      `<button>` vo formulári a bez skriptu ho vypne len
+                      atribút — `aria-disabled` zo ZAKLADU je pre odkazy.
+                      Server zrušenie neprázdneho priečinka odmieta ďalej.
+                    */}
+                    {(() => {
+                      const canDelete = c.withDescendants === 0 && inside.size === 1
+                      return (
+                        <form action={deleteFolderAction} className="tree-delete">
+                          <input type="hidden" name="id" value={p.id} />
+                          {carried.map(([k, v], i) => <input key={`${k}-${i}`} type="hidden" name={k} value={v} />)}
+                          <button className="button button--quiet" type="submit" disabled={!canDelete}>
+                            {tf.remove}
+                          </button>
+                          {!canDelete && (
+                            <span className="quiet tree-delete-hint">
+                              {tf.removeBlocked(c.withDescendants, inside.size - 1)}
+                            </span>
+                          )}
+                        </form>
+                      )
+                    })()}
                   </div>
                 </details>
                 </>

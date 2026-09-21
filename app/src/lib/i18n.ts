@@ -1543,7 +1543,8 @@ interface Dictionary {
       topLevel: string
       move: string
       remove: string
-      removeHint: string
+      /** Prečo sa nedá zrušiť — s číslami, ktoré už na obrazovke sú (PRIECINKY, úloha 2). */
+      removeBlocked: (documents: number, subfolders: number) => string
       /** Prázdny strom (PRIECINKY, úloha 1). */
       emptyTitle: string
       emptyText: string
@@ -3439,7 +3440,12 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       topLevel: "— najvyššia úroveň —",
       move: "Presunúť",
       remove: "Zrušiť priečinok",
-      removeHint: "Zrušiť sa dá až prázdny priečinok bez podpriečinkov.",
+      removeBlocked: (documents, subfolders) => {
+        const d = documents === 1 ? "1 dokument" : documents >= 2 && documents <= 4 ? `${documents} dokumenty` : `${documents} dokumentov`
+        const f = subfolders === 1 ? "1 podpriečinok" : subfolders >= 2 && subfolders <= 4 ? `${subfolders} podpriečinky` : `${subfolders} podpriečinkov`
+        const what = subfolders > 0 && documents > 0 ? `${d} a ${f}` : subfolders > 0 ? f : d
+        return `Zrušiť sa dá len prázdny priečinok. V tomto je ${what} — najprv ich presuňte.`
+      },
       emptyTitle: "Knižnica nemá priečinky",
       emptyText: "Dokumenty sú zatiaľ nezaradené. Priečinok založíte formulárom nižšie — a potom ich doň presuniete hromadne z knižnice.",
       newFolder: "Nový priečinok",
@@ -5305,7 +5311,12 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       topLevel: "— nejvyšší úroveň —",
       move: "Přesunout",
       remove: "Zrušit složku",
-      removeHint: "Zrušit lze jen prázdnou složku bez podsložek.",
+      removeBlocked: (documents, subfolders) => {
+        const d = documents === 1 ? "1 dokument" : documents >= 2 && documents <= 4 ? `${documents} dokumenty` : `${documents} dokumentů`
+        const f = subfolders === 1 ? "1 podsložka" : subfolders >= 2 && subfolders <= 4 ? `${subfolders} podsložky` : `${subfolders} podsložek`
+        const what = subfolders > 0 && documents > 0 ? `${d} a ${f}` : subfolders > 0 ? f : d
+        return `Zrušit lze jen prázdnou složku. V této je ${what} — nejprve je přesuňte.`
+      },
       emptyTitle: "Knihovna nemá složky",
       emptyText: "Dokumenty jsou zatím nezařazené. Složku založíte formulářem níže — a pak je do ní přesunete hromadně z knihovny.",
       newFolder: "Nová složka",
@@ -7165,7 +7176,12 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       topLevel: "— top level —",
       move: "Move",
       remove: "Delete folder",
-      removeHint: "Only an empty folder with no subfolders can be deleted.",
+      removeBlocked: (documents, subfolders) => {
+        const d = documents === 1 ? "1 document" : `${documents} documents`
+        const f = subfolders === 1 ? "1 subfolder" : `${subfolders} subfolders`
+        const what = subfolders > 0 && documents > 0 ? `${d} and ${f}` : subfolders > 0 ? f : d
+        return `Only an empty folder can be deleted. This one holds ${what} — move them first.`
+      },
       emptyTitle: "The library has no folders",
       emptyText: "Documents are not filed yet. Create a folder with the form below — then move them into it in bulk from the library.",
       newFolder: "New folder",
