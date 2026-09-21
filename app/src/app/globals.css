@@ -4321,13 +4321,23 @@ a.answer-source:focus-visible { outline: 2px solid var(--accent); outline-offset
 /* Zoznam je karta bez vlastného odsadenia; `overflow: hidden` ostrihá
    pozadie prvej a poslednej položky do zaoblených rohov karty. */
 .notif-list { list-style: none; margin: 0; padding: 0; overflow: hidden; }
-.notif-row { padding: 14px 18px; }
 .notif-row + .notif-row { border-top: 1px solid var(--line); }
 .notif-row.is-unread {
   background: var(--accent-soft);
   box-shadow: inset 3px 0 0 var(--accent);
   font-weight: 600;
 }
+/* Celý riadok je odkaz (SPRAVA, úloha 3.3): odsadenie nesie odkaz, nie
+   položka, aby sa dalo trafiť kdekoľvek v riadku — aj na dátum. Bez cieľa
+   (neznámy druh) je to ten istý blok, len nie `<a>`. */
+.notif-row-link {
+  display: block;
+  padding: 14px 18px;
+  color: var(--ink);
+  text-decoration: none;
+}
+a.notif-row-link:hover { background: var(--surface-2); }
+a.notif-row-link:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
 .notif-row-date { font-weight: 400; margin-top: 4px; }
 
 

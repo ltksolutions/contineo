@@ -101,10 +101,24 @@ export default async function NotificationsPage({
                     key={String(r._id ?? i)}
                     className={r.readAt ? "notif-row" : "notif-row is-unread"}
                   >
-                    {href ? <Link href={href}>{text}</Link> : <span>{text}</span>}
-                    <div className="quiet notif-row-date" style={{ fontSize: "var(--fs-small)" }}>
-                      {formatDate(r.createdAt, language)}
-                    </div>
+                    {/* Celý riadok vedie na vec, o ktorej hovorí (SPRAVA, úloha 3.3).
+                        Bez cieľa ostane len neznámy druh — `notificationHref()`
+                        vracia null a nič nevymýšľa. */}
+                    {href ? (
+                      <Link href={href} className="notif-row-link">
+                        {text}
+                        <div className="quiet notif-row-date" style={{ fontSize: "var(--fs-small)" }}>
+                          {formatDate(r.createdAt, language)}
+                        </div>
+                      </Link>
+                    ) : (
+                      <div className="notif-row-link">
+                        {text}
+                        <div className="quiet notif-row-date" style={{ fontSize: "var(--fs-small)" }}>
+                          {formatDate(r.createdAt, language)}
+                        </div>
+                      </div>
+                    )}
                   </li>
                 )
               })}
