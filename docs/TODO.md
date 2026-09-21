@@ -1,6 +1,6 @@
 # TODO — Contineo
 
-> Pracovný zoznam krokov. Aktualizované 2026-09-16.
+> Pracovný zoznam krokov. Aktualizované 2026-09-21.
 >
 > **Hotové položky sú datované zápisy a neprepísavajú sa.** Menujú cesty,
 > súbory a roly tak, ako sa volali v ten deň — časť z nich sa medzitým
@@ -602,6 +602,8 @@ Lacné, kým je knižnica malá. Nové obrazovky a druhá stratégia chunkovania
 
 ### O3 — D80, kroky B a C: obrazovky
 
+> ♻️ **2026-09-21:** oba otvorené body nižšie preberá **O21** (ADR-010 — Zaradenie sa zlučuje do Druhu); tu zostávajú, kým sa O21 nezrealizuje.
+
 - [x] detail dokumentu: **Nové znenie** — súbor a prevod ✅ 2026-09-13
 - [x] **porovnanie s platným znením** ✅ 2026-09-13 — hláška po nahratí povie, či sa text líši a o koľko riadkov; rozdiel po riadkoch je na detaile pred publikovaním
 - [x] `/library/new` ukazuje **obsadené kľúče** organizácie ✅ 2026-09-13 — serverovo, bez JavaScriptu
@@ -661,6 +663,31 @@ koná personalista, dôvod povinný, nový záznam namiesto úpravy starého.
 - [ ] **Doladiť tvary podľa skutočnosti.** Tvary zoznamových a formulárových kostier sú odhadnuté z tried, nie odmerané na bežiacej stránke. Kde kostra po načítaní poskočí, oprav iť počet riadkov alebo políčok — práve skok je to, čo na čakaní vadí najviac.
 - [ ] **`prehlad` kostru nedostal zámerne** — je to `permanentRedirect`, kostra by tam blikla a zmizla.
 - [ ] Zvážiť `loading.tsx` aj pre stránky, ktoré sa načítajú do ~100 ms. Tam je kostra blik navyše a patrí preč.
+
+
+### O21 — metadáta bez ručných kľúčov → `docs/ADR-010-metadata-bez-rucnych-klucov.md` (prijaté 2026-09-21)
+
+Tri rozhodnutia z nahrávania Pracovného poriadku SFZ: kľúč dokumentu sa
+generuje ako slug z názvu (formulár ukáže len náhľad, prepísateľný, po vzniku
+nemenný), **Zaradenie sa zlučuje do Druhu** a `companyCode` pri zakladaní
+tenanta systém navrhne (iniciály + kolízna kontrola), admin potvrdí alebo
+prepíše. Dôvody v ADR; tu len práca.
+
+**Krok 1 — náhľad kľúča (malé, samostatné):**
+- [ ] slugify z názvu (malé písmená bez diakritiky, `_`), živý náhľad `sfz:kluc` vo formulári, pole prepísateľné — `app/src/app/library/new/page.tsx`, pomocník v `lib/libraryWrite.ts`, texty cez `i18n.ts` (sk/cs/en)
+- [ ] varovanie na kolíziu s obsadeným kľúčom pred odoslaním (serverová brána z D80/A3 zostáva)
+- [ ] zrušiť doplnenie kľúča zo zaradenia
+
+**Krok 2 — zlúčenie Zaradenia do Druhu (migrácia, až po Fáze 8):**
+- [ ] preniesť chýbajúce hodnoty `sectionKey.json` → `category.json`; migračný skript dopíše `category` dokumentom, ktoré ho nemajú (nasucho + `--zapis`, vzor `migrate_document_key.mjs`)
+- [ ] pole Zaradenie preč z `/library/new`; filter zoznamu a vyhľadávania zo `sectionKey` na `category` (`libraryRead.ts`, `mongoSearch.ts`); starý parameter adresy prekladať cez `lib/urlParams.ts`
+- [ ] `sectionKey` vyradiť z `REQUIRED_CODELISTS`; **v dátach zostáva** — je záložnou identitou dokumentov spred D80 (`makeDocumentId()` naň padá, keď `documentKey` chýba) a to sa nemení
+- [ ] tým padajú dva otvorené body z O3 (skrývanie deviatich predpisov v ponuke, zmena zaradenia cez `saveMetadata()`) — pri realizácii ich tam odškrtnúť s odkazom sem
+- **Riziká:** migrácia na ostrých dátach; Atlas indexy a projekcie so `sectionKey`; dokumenty spred D80 nesmú zmeniť `documentId`
+
+**Krok 3 — návrh `companyCode` (malé, samostatné):**
+- [ ] `suggestCompanyCode()` v `tenantAdmin.ts` (iniciály bez diakritiky, kolízia → variant) + predvyplnenie na obrazovke zakladania tenanta; kód zostáva prepísateľný a po založení nemenný
+- [ ] poznámka z ADR: tenant má kód veľkými, `makeDocumentId()` znižuje na malé — dať pozor pri nových dotazoch
 
 
 ### O6 — medzery rozhrania → **rozhodnuté** `docs/O6_rozhodovaci_harok.md`
