@@ -167,7 +167,17 @@ export default async function OverviewPage({
         <div className="overview-panels">
           <section className="card panel">
             <div className="panel-head">{t.attention}</div>
-            {pending.items.length === 0 && <p className="panel-empty quiet">{t.nothingPending}</p>}
+            {/*
+              Prázdno až vtedy, keď je prázdny celý panel — dovtedy sa veta
+              „nič nečaká" kreslila aj nad riadkom schválenia. Dva riadky
+              (PREHLAD, úloha 1): čo tu nie je a čo z toho vyplýva.
+            */}
+            {pending.items.length === 0 && approvals.length === 0 && (
+              <div className="panel-empty">
+                <span className="panel-empty-title">{t.empty.attentionTitle}</span>
+                <span className="panel-empty-text">{t.empty.attentionText}</span>
+              </div>
+            )}
             {pending.items.slice(0, 6).map(i => (
               <div key={`${i.source}-${i.id}`} className="panel-row">
                 <div className="panel-main">
@@ -195,7 +205,12 @@ export default async function OverviewPage({
 
           <section className="card panel">
             <div className="panel-head">{t.news}</div>
-            {news.length === 0 && <p className="panel-empty quiet">{t.nothingNew}</p>}
+            {news.length === 0 && expiring.length === 0 && (
+              <div className="panel-empty">
+                <span className="panel-empty-title">{t.empty.newsTitle(NEW_DAYS)}</span>
+                <span className="panel-empty-text">{t.empty.newsText}</span>
+              </div>
+            )}
             {news.slice(0, 6).map(n => (
               <div key={`${n.documentId}-${n.versionLabel}`} className="panel-row">
                 <div className="panel-main">

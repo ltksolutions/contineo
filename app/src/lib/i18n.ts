@@ -657,8 +657,13 @@ interface Dictionary {
     expiringNote: (days: number) => string
     attention: string
     news: string
-    nothingPending: string
-    nothingNew: string
+    /** Prázdny panel — dva riadky: čo tu nie je a čo z toho vyplýva (PREHLAD, úloha 1). */
+    empty: {
+      attentionTitle: string
+      attentionText: string
+      newsTitle: (days: number) => string
+      newsText: string
+    }
     by: (date: string) => string
     until: (date: string) => string
     expiringChip: string
@@ -2294,8 +2299,12 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     expiringNote: days => `predpisov do ${days} dní`,
     attention: "Vyžaduje vašu pozornosť",
     news: "Novinky v knižnici",
-    nothingPending: "Nič na vás nečaká.",
-    nothingNew: "Za posledný týždeň nepribudlo nič.",
+    empty: {
+      attentionTitle: "Nič od vás nikto nečaká",
+      attentionText: "Keď vám niekto pridelí normu alebo vás určí schvaľovateľom, objaví sa to tu aj s termínom.",
+      newsTitle: days => `Za posledných ${days} dní nič nové`,
+      newsText: "Nové znenia a tie, ktorým sa blíži koniec platnosti, sa ukážu tu.",
+    },
     by: date => `do ${date}`,
     until: date => `platí do ${date}`,
     expiringChip: "expiruje",
@@ -4139,8 +4148,12 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     expiringNote: days => `předpisů do ${days} dní`,
     attention: "Vyžaduje vaši pozornost",
     news: "Novinky v knihovně",
-    nothingPending: "Nic na vás nečeká.",
-    nothingNew: "Za poslední týden nepřibylo nic.",
+    empty: {
+      attentionTitle: "Nikdo od vás nic nečeká",
+      attentionText: "Když vám někdo přidělí normu nebo vás určí schvalovatelem, objeví se to tady i s termínem.",
+      newsTitle: days => `Za posledních ${days} dní nic nového`,
+      newsText: "Nová znění a ta, kterým se blíží konec platnosti, se ukážou tady.",
+    },
     by: date => `do ${date}`,
     until: date => `platí do ${date}`,
     expiringChip: "expiruje",
@@ -5976,8 +5989,12 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     expiringNote: days => `rules within ${days} days`,
     attention: "Needs your attention",
     news: "New in the library",
-    nothingPending: "Nothing is waiting for you.",
-    nothingNew: "Nothing new in the past week.",
+    empty: {
+      attentionTitle: "Nobody is waiting on you",
+      attentionText: "When someone assigns you a document or names you an approver, it will appear here with its deadline.",
+      newsTitle: days => `Nothing new in the last ${days} days`,
+      newsText: "New versions and those approaching the end of their validity will show up here.",
+    },
     by: date => `by ${date}`,
     until: date => `valid until ${date}`,
     expiringChip: "expiring",

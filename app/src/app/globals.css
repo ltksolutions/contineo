@@ -3778,7 +3778,16 @@ a.answer-source:focus-visible { outline: 2px solid var(--accent); outline-offset
   font-weight: 650;
 }
 
-.panel-empty { margin: 0; padding: 13px; font-size: 13px; }
+/* Prázdny panel (PREHLAD, úloha 1) — dva riadky: čo tu nie je a čo z toho
+   vyplýva. Nie `.empty` zo ZAKLADU: ten je pre celú obrazovku a vnútri
+   panela by dashed rám vytvoril rám v ráme. */
+.panel-empty {
+  display: grid;
+  gap: 3px;
+  padding: 18px 15px;
+}
+.panel-empty-title { font-size: var(--fs-small); font-weight: 600; color: var(--ink); }
+.panel-empty-text { font-size: var(--fs-micro); color: var(--muted); line-height: 1.5; }
 
 .panel-row {
   display: flex;
