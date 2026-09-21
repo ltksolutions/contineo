@@ -3476,6 +3476,10 @@ a.answer-source:focus-visible { outline: 2px solid var(--accent); outline-offset
 
 .approval-form { display: grid; gap: 12px; margin-top: 10px; }
 
+/* Pole dôvodu má dva riadky (APPROVALS, úloha 2): jednoriadkové pole na
+   vetu-dve nestačilo, plných 96 px z `textarea.field-input` je zas priveľa. */
+.approval-form textarea.field-input { min-height: 64px; }
+
 /* Posuvný rámik: pri stovke ľudí by zoznam bez neho odtlačil tlačidlo mimo
    obrazovku a na telefóne by sa k nemu nikto neprerolloval. */
 .approval-people {

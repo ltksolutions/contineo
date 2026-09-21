@@ -144,7 +144,9 @@ export default async function ApprovalsPage({
 
                   <label className="field">
                     <span className="field-label">{t.reason}</span>
-                    <input className="field-input" name="reason" placeholder={t.reasonPlaceholder} />
+                    {/* Dva riadky, nie jeden (APPROVALS, úloha 2): pri zamietnutí
+                        sem človek píše vetu-dve a musí si ich vedieť prečítať. */}
+                    <textarea className="field-input" name="reason" rows={2} placeholder={t.reasonPlaceholder} />
                     <span className="quiet field-hint">{t.reasonHint}</span>
                   </label>
 
