@@ -115,6 +115,13 @@
    */
   --fs-control: 16px;
   --control-h: 40px;
+  /*
+   * Nižšie pole v páse — hlavička a lišta zoznamu (ZAKLAD, odchýlka A).
+   * 36 px je zámer, nie náhoda: pás sa používa, formulár sa vypĺňa
+   * (`--control-h`). Tretia výška poľa nesmie vzniknúť. Od témy nezávislé,
+   * preto sa v tmavom bloku neopakuje.
+   */
+  --control-h-sm: 36px;
 }
 
 @media (min-width: 640px) {
@@ -336,7 +343,7 @@ button:disabled { cursor: not-allowed; opacity: 0.55; }
      v hlavičke je tichšie než polia formulárov (`--control-h`). Písmo
      zostáva `--fs-control`: pod 16 px by iOS pri kliknutí do poľa stránku
      priblížil, a to nezávisí od výšky poľa. */
-  height: 36px;
+  height: var(--control-h-sm);
   padding: 0 11px 0 34px;
   font: inherit;
   font-size: var(--fs-control);
@@ -2892,7 +2899,7 @@ html[data-theme="dark"] .editor-tui .CodeMirror {
 .library-search-input {
   flex: 1 1 160px;
   min-width: 140px;
-  height: 36px;
+  height: var(--control-h-sm);
   border-radius: 9px;
 }
 
