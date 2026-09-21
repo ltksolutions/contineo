@@ -3188,6 +3188,19 @@ html[data-theme="dark"] .editor-tui .CodeMirror {
 
 .ask-form { display: grid; gap: 10px; }
 
+/* Chyba nad hero kartou (ASK, úloha 2). Inline hláška, nie `.notice`:
+   `.notice` je modálne okno s pozadím a pole s otázkou pod ním musí
+   zostať vidieť a použiteľné. Červená = chyba; jantárová je upozornenie. */
+.ask-error {
+  padding: 12px 14px;
+  border-radius: var(--radius);
+  background: var(--bad-bg);
+  color: var(--bad-fg);
+  font-size: var(--fs-body);
+  line-height: 1.5;
+}
+.ask-error a { color: inherit; font-weight: 600; }
+
 .ask-field {
   width: 100%;
   resize: vertical;

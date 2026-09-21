@@ -112,6 +112,15 @@ export default function Search({
 
   return (
     <div style={{ display: "grid", gap: 22 }}>
+      {/* Chyba NAD hero kartou, nie namiesto nej (ASK, úloha 2): pole
+          s otázkou musí zostať, aby sa dala skúsiť znova — a vždy s cestou
+          von (knižnica funguje aj keď model nie), nie len s oznámením. */}
+      {state.done?.error && !state.running && (
+        <div className="ask-error" role="alert">
+          <strong>{t.error.unavailable}</strong>{" "}
+          <Link href="/library">{t.error.link}</Link>
+        </div>
+      )}
       {/* Pole na otázku je jediná vec, ktorú tu od človeka chceme — preto
           má vlastnú kartu. Odpoveď a hodnotenie zostávajú mimo nej: sú to
           následky, nie súčasť zadávania. */}

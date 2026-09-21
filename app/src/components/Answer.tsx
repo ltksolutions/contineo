@@ -69,6 +69,9 @@ export default function Answer({
     Tvarom ako karta odpovede, ale bez odpovede — a s cestou do knižnice,
     lebo nie všetko je v predpisoch.
   */
+  // Chyba bez textu: karta by nemala čo ukázať — hlášku nesie `Search`.
+  if (error && !text) return null
+
   if (done && !error && !text && done.sources.length === 0) {
     return (
       <div className="card answer--none">
@@ -103,12 +106,9 @@ export default function Answer({
           </div>
         )}
 
-        {error ? (
-          <div style={{ color: "var(--bad-fg)", fontSize: "var(--fs-lead)" }}>
-            <strong>{t.failed}</strong>
-            <div style={{ marginTop: 6, fontSize: "var(--fs-body)" }}>{error}</div>
-          </div>
-        ) : (
+        {/* Chybu hlási hláška nad hero kartou (`Search`), nie táto karta;
+            čo sa stihlo napísať, zostáva čitateľné. */}
+        {(
           <div className={running ? "answer caret" : "answer"}>
             {/*
               Kým nepríde prvé slovo, tu bývalo `null` — prázdna karta na tri
