@@ -167,9 +167,10 @@ export default async function DocumentPage({
             </p>
 
             {(await hasAcknowledged(person.companyCode, person.id, version.version.versionId)) ? (
-              <p className="tag" style={{ background: "var(--ok-bg)", color: "var(--ok-fg)" }}>
-                {t.confirmed}
-              </p>
+              // Variant zo ZAKLADU, nie inline prepis; a `span`, nie `p` —
+              // odstavec s display: inline-flex by čítačka ohlásila ako
+              // odstavec, hoci je to štítok (ZNENIE, úloha 2).
+              <span className="tag tag--published">{t.confirmed}</span>
             ) : (
               // Pod 640 px pláva ako pás nad spodnou lištou (CSS
               // `.acknowledge-dock`) — potvrdenie je dôvod tejto stránky.
