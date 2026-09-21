@@ -162,16 +162,20 @@ export default async function DocumentsPage({
                       </span>
                     )}
 
+                    {/*
+                      Varianty zo ZAKLADU, nie inline prepis (DOCUMENTS,
+                      úloha 2): keď sa paleta pilulky zmení, zmení sa aj tu.
+                      Hotové zelená, zablokované jantárová, „pokračujte tu"
+                      accent-soft, nezačaté neutrálna.
+                    */}
                     {s.blocked ? (
-                      <span className="tag" style={{ background: "var(--warn-bg)", color: "var(--warn-fg)" }}>
-                        {t.blocked}
-                      </span>
+                      <span className="tag tag--draft">{t.blocked}</span>
                     ) : s.done ? (
-                      <span className="tag" style={{ background: "var(--ok-bg)", color: "var(--ok-fg)" }}>
-                        {t.done}
-                      </span>
+                      <span className="tag tag--published">{t.done}</span>
+                    ) : isNext ? (
+                      <span className="tag tag--review">{t.continueHere}</span>
                     ) : (
-                      <span className="tag">{isNext ? t.continueHere : t.todo}</span>
+                      <span className="tag">{t.todo}</span>
                     )}
                   </div>
 
