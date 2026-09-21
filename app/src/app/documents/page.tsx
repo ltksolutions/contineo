@@ -106,8 +106,16 @@ export default async function DocumentsPage({
         <p className="quiet duty-summary">{t.progress(done, total)}</p>
       )}
 
+      {/*
+        `.empty` zo ZAKLADU, bez akcie (DOCUMENTS, úloha 4): človek tu nemá
+        čo urobiť a tlačidlo „Prejsť do knižnice" by mu podsúvalo prácu,
+        ktorú nemá. Filtre tu nie sú, takže je to jeden text.
+      */}
       {total === 0 && outside.length === 0 && (
-        <p className="card" style={{ padding: 20 }}>{t.nothingToDo}</p>
+        <div className="empty">
+          <div className="empty-title">{t.emptyTitle}</div>
+          <div className="empty-text">{t.emptyText}</div>
+        </div>
       )}
 
       {/*

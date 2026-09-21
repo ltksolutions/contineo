@@ -109,7 +109,9 @@ interface Dictionary {
   onboarding: {
     listHeading: string
     listIntro: string
-    nothingToDo: string
+    /** Prázdny stav (`.empty`, DOCUMENTS úloha 4) — bez akcie: človek tu nemá čo urobiť. */
+    emptyTitle: string
+    emptyText: string
     /** Nadpis sekcie pre dokumenty pridelené mimo trasy. */
     assignedHeading: string
     progress: (done: number, total: number) => string
@@ -1829,7 +1831,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
   onboarding: {
     listHeading: "Dokumenty na potvrdenie",
     listIntro: "Prečítajte si každý dokument a potvrďte, že ste sa s ním oboznámili. Potvrdenie sa viaže na konkrétne znenie — pri novej verzii vás systém požiada znova.",
-    nothingToDo: "Momentálne nemáte nič na potvrdenie.",
+    emptyTitle: "Nemáte nič na potvrdenie",
+    emptyText: "Keď vám niekto pridelí normu alebo vás zaradí do trasy, objaví sa tu aj s termínom. Nič od vás teraz nikto nečaká.",
     assignedHeading: "Pridelené dokumenty",
     progress: (done, total) => `Hotové ${done} z ${total}`,
     step: (order, total) => `Krok ${order} z ${total}`,
@@ -3680,7 +3683,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
   onboarding: {
     listHeading: "Dokumenty k potvrzení",
     listIntro: "Přečtěte si každý dokument a potvrďte, že jste se s ním seznámili. Potvrzení se váže na konkrétní znění — u nové verze vás systém požádá znovu.",
-    nothingToDo: "Momentálně nemáte nic k potvrzení.",
+    emptyTitle: "Nemáte nic k potvrzení",
+    emptyText: "Když vám někdo přidělí normu nebo vás zařadí do trasy, objeví se tady i s termínem. Nikdo od vás teď nic nečeká.",
     assignedHeading: "Přidělené dokumenty",
     progress: (done, total) => `Hotovo ${done} z ${total}`,
     step: (order, total) => `Krok ${order} z ${total}`,
@@ -5529,7 +5533,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
   onboarding: {
     listHeading: "Documents to acknowledge",
     listIntro: "Read each document and confirm that you have familiarised yourself with it. An acknowledgement is tied to a specific version — when a new one is issued, you will be asked again.",
-    nothingToDo: "You have nothing to acknowledge at the moment.",
+    emptyTitle: "Nothing to acknowledge",
+    emptyText: "When someone assigns you a document or adds you to a track, it will appear here with its deadline. Nobody is waiting on you right now.",
     assignedHeading: "Assigned documents",
     progress: (done, total) => `${done} of ${total} done`,
     step: (order, total) => `Step ${order} of ${total}`,
