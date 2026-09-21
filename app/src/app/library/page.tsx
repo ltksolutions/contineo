@@ -9,7 +9,7 @@
 import { notFound, redirect } from "next/navigation"
 import Link from "next/link"
 import { libraryContext } from "@/lib/library"
-import { libraryList, libraryFacets } from "@/lib/libraryRead"
+import { libraryList, libraryFacets, statusTagClass } from "@/lib/libraryRead"
 import { allFolders, flattenTree, counts } from "@/lib/folders"
 import { allDepartments } from "@/lib/departments"
 import { documentsProgress } from "@/lib/libraryProgress"
@@ -216,6 +216,13 @@ export default async function LibraryPage({
     value === "published" ? t.statusPublished
     : value === "in-review" ? t.statusInReview
     : t.statusDrafts
+
+  /* Text pilulky pri jednom dokumente — facetové „koncepty" je množné
+     číslo a na riadku by klamalo počtom. */
+  const statusPill = (value: string) =>
+    value === "published" ? t.statusPublished
+    : value === "in-review" ? t.statusInReview
+    : t.draft
 
   const facetLabel: Record<MultiKey, { title: string; label: (v: string) => string }> = {
     category: { title: t.category, label: categoryLabel },
@@ -745,8 +752,16 @@ export default async function LibraryPage({
                     <span className="bulk-pick-box" aria-hidden="true">{isPicked(r.documentId) ? "✓" : ""}</span>
                     <span className="bulk-pick-text">{tl.pick(r.title)}</span>
                   </Link>
-                  <span className="tag">{t.processing[r.processingState] ?? r.processingState}</span>
-                  {r.hasDraft && r.status !== "published" && <span className="tag">{t.draft}</span>}
+                  <span className={statusTagClass(r.status)}>{statusPill(r.status)}</span>
+                      {/* Technický stav spracovania len keď niečo hovorí —
+                          „vo vyhľadávaní" je normálny koniec a pri každom
+                          riadku by bol šum; zlyhanie je jediné červené.
+                          Pilulka „koncept" splynula so stavovou. */}
+                      {r.processingState !== "indexed" && (
+                        <span className={r.processingState === "failed" ? "tag tag--expired" : "tag"}>
+                          {t.processing[r.processingState] ?? r.processingState}
+                        </span>
+                      )}
                   {r.category && <span className="quiet doc-card-kind">{categoryLabel(r.category)}</span>}
                 </div>
 
@@ -861,8 +876,17 @@ export default async function LibraryPage({
                     </td>
                     <td className="doc-cell-quiet">{r.category ? categoryLabel(r.category) : "—"}</td>
                     <td>
-                      <span className="tag">{t.processing[r.processingState] ?? r.processingState}</span>
-                      {r.hasDraft && r.status !== "published" && <span className="tag">{t.draft}</span>}
+                      {/* Farba nesie stav (KNIZNICA.md, úloha 1). */}
+                      <span className={statusTagClass(r.status)}>{statusPill(r.status)}</span>
+                      {/* Technický stav spracovania len keď niečo hovorí —
+                          „vo vyhľadávaní" je normálny koniec a pri každom
+                          riadku by bol šum; zlyhanie je jediné červené.
+                          Pilulka „koncept" splynula so stavovou. */}
+                      {r.processingState !== "indexed" && (
+                        <span className={r.processingState === "failed" ? "tag tag--expired" : "tag"}>
+                          {t.processing[r.processingState] ?? r.processingState}
+                        </span>
+                      )}
                     </td>
                     <td className="doc-cell-quiet">
                       {r.effectiveLabel}

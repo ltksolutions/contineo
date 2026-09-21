@@ -17,6 +17,26 @@ import type { OriginalFile, ProcessingState } from "./libraryWrite"
 import { conditionQuery, type Condition, type MatchMode } from "./libraryConditions"
 import { openRounds } from "./approvalsDb"
 
+/**
+ * Trieda farebnej pilulky stavu (KNIZNICA.md, úloha 1).
+ *
+ * Farba nesie význam: v zozname 148 dokumentov je stav to prvé, čo človek
+ * hľadá, a sivá pilulka hovorila pri každom riadku to isté. Neznámy stav
+ * spadne na tichú sivú — cudzia hodnota nemá kričať farbou, ktorú si
+ * nezaslúžila. `expired` a `archived` sú pripravené dopredu: expirácia sa
+ * dnes odvodzuje z `effectiveTo` (D27) a vlastný stav zatiaľ nemá.
+ */
+export function statusTagClass(status: string): string {
+  switch (status) {
+    case "published": return "tag tag--published"
+    case "in-review": return "tag tag--review"
+    case "draft": return "tag tag--draft"
+    case "expired": return "tag tag--expired"
+    case "archived": return "tag tag--archived"
+    default: return "tag"
+  }
+}
+
 export interface LibraryRow {
   documentId: string
   title: string
