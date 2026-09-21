@@ -3756,6 +3756,11 @@ a.answer-source:focus-visible { outline: 2px solid var(--accent); outline-offset
 .kpi-value--bad { color: var(--bad-fg); }
 .kpi-value--warn { color: var(--warn-fg); }
 
+/* Nula je tichá (PREHLAD, úloha 2): štyri veľké nuly na úvodnej obrazovke
+   sú štyri falošné poplachy. Dlaždica zostáva — keby zmizla, ostatné by sa
+   preskupili a človek by pri každom prihlásení hľadal, kde čo je. */
+.kpi-value--zero { color: var(--muted); font-weight: 600; }
+
 .kpi-note { font-size: 11.5px; }
 
 /* ── Prehľad: dva panely ──────────────────────────────────────────────────── */

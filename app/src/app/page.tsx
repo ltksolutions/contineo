@@ -156,7 +156,13 @@ export default async function OverviewPage({
           {tiles.map(tile => (
             <Link key={tile.key} className="card kpi-tile" href={tile.href}>
               <span className="kpi-label">{t.tiles[tile.key]}</span>
-              <span className={`kpi-value${tile.tone ? ` kpi-value--${tile.tone}` : ""}`}>
+              {/* Nula je tichá a tón sa pri nej nepoužije — nula nie je
+                  červená (PREHLAD, úloha 2). */}
+              <span
+                className={`kpi-value${
+                  tile.value === 0 ? " kpi-value--zero" : tile.tone ? ` kpi-value--${tile.tone}` : ""
+                }`}
+              >
                 {tile.value}
               </span>
               {tile.note && <span className="quiet kpi-note">{tile.note}</span>}
