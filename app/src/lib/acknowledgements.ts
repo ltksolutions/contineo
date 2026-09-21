@@ -417,6 +417,103 @@ export async function validAcknowledgements(filter: {
     }))
 }
 
+/* ─────────────────────────────────────────────────────────────────────────
+ * Záznamy pre dôkaz (HR.md, úloha 5)
+ * ───────────────────────────────────────────────────────────────────────── */
+
+/** To, čo z potvrdenia číta rozbalený riadok evidencie — odtlačok, nie odkaz. */
+export interface EvidenceAcknowledgement {
+  acknowledgedAt: Date
+  ip: string | null
+  /** Názvy oddelení od koreňa po vlastné, v čase potvrdenia (D50). */
+  departmentNames: string[]
+  statementText: string
+  cycle: number
+}
+
+/** Posledné odvolanie — kto a prečo, skopírované v čase odvolania (D24). */
+export interface EvidenceRevocation {
+  revokedAt: Date
+  by: string | null
+  reason: string | null
+  cycle: number
+}
+
+export interface EvidenceRecords {
+  /** Posledné potvrdenie, aj keď už bolo odvolané. */
+  acknowledgement: EvidenceAcknowledgement | null
+  /** Odvolanie, ktoré **platí** — teda ruší posledné potvrdenie a nové neprišlo. */
+  revocation: EvidenceRevocation | null
+}
+
+/**
+ * Posledné potvrdenie a platné odvolanie pre každú dvojicu osoba × znenie.
+ *
+ * `validAcknowledgements()` hovorí, čo platí — a odvolané zahodí. Dôkaz ale
+ * musí vedieť ukázať aj to, čo bolo odvolané, kým a prečo; preto tento
+ * druhý pohľad. Pravidlo, či odvolanie platí, je to isté ako `isAcknowledged()`:
+ * odvolanie nesie číslo pokusu, ktorý ruší, takže platí vtedy, keď po ňom
+ * neprišlo potvrdenie s vyšším číslom.
+ */
+export type EvidenceRecordInput = Pick<
+  Acknowledgement,
+  "personId" | "versionId" | "type" | "cycle" | "acknowledgedAt"
+> & Partial<Pick<Acknowledgement, "ip" | "departmentNames" | "statementText" | "actedBy" | "reason">>
+
+/** Čistá časť — bez databázy, aby sa pravidlo o platnom odvolaní dalo otestovať. */
+export function evidenceRecordsFrom(rows: EvidenceRecordInput[]): Map<string, EvidenceRecords> {
+  const out = new Map<string, EvidenceRecords>()
+  for (const r of rows) {
+    const key = `${r.personId}|${r.versionId}`
+    const cur = out.get(key) ?? { acknowledgement: null, revocation: null }
+    const cycle = r.cycle ?? 0
+    if (r.type === "acknowledgement") {
+      if (!cur.acknowledgement || cycle > cur.acknowledgement.cycle) {
+        cur.acknowledgement = {
+          acknowledgedAt: new Date(r.acknowledgedAt),
+          ip: r.ip ?? null,
+          departmentNames: r.departmentNames ?? [],
+          statementText: r.statementText ?? "",
+          cycle,
+        }
+      }
+    } else if (!cur.revocation || cycle > cur.revocation.cycle) {
+      cur.revocation = {
+        revokedAt: new Date(r.acknowledgedAt),
+        by: r.actedBy?.fullName ?? r.actedBy?.email ?? null,
+        reason: r.reason ?? null,
+        cycle,
+      }
+    }
+    out.set(key, cur)
+  }
+
+  // Odvolanie platí len vtedy, keď ho neprebilo novšie potvrdenie.
+  for (const v of out.values()) {
+    if (v.revocation && v.acknowledgement && v.acknowledgement.cycle > v.revocation.cycle) {
+      v.revocation = null
+    }
+  }
+  return out
+}
+
+export async function evidenceRecords(companyCode: string): Promise<Map<string, EvidenceRecords>> {
+  const code = requireCompanyCode(companyCode, "evidenceRecords")
+  const col = await getCollection<Acknowledgement>(ACKNOWLEDGEMENTS_COLLECTION)
+  const rows = await col
+    .find(
+      { companyCode: code, type: { $in: ["acknowledgement", "revocation"] } },
+      {
+        projection: {
+          personId: 1, versionId: 1, type: 1, cycle: 1, acknowledgedAt: 1,
+          ip: 1, departmentNames: 1, statementText: 1, actedBy: 1, reason: 1,
+        },
+      },
+    )
+    .toArray()
+  return evidenceRecordsFrom(rows)
+}
+
 /** Má táto osoba **platne** potvrdenú túto verziu? */
 export async function hasAcknowledged(companyCode: string, personId: string, versionId: string): Promise<boolean> {
   return (await validAcknowledgements({ companyCode, personId, versionId })).length > 0

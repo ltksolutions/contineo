@@ -13,12 +13,23 @@
 
 import { duties, type Duty } from "./hrReport"
 import { evidenceTimeline, evidenceState, type EvidenceEvent, type EvidenceState } from "./evidence"
+import {
+  evidenceRecords, type EvidenceAcknowledgement, type EvidenceRevocation,
+} from "./acknowledgements"
 
 export interface EvidenceRow {
   duty: Duty
   firstOpenedAt: Date | null
   state: EvidenceState
   timeline: EvidenceEvent[]
+  /**
+   * Odtlačok posledného potvrdenia (IP, oddelenie, formulka) a platné
+   * odvolanie — to, čo kontrolór číta po rozbalení (HR.md, úloha 5).
+   * `revocation` nie je `null` práve vtedy, keď je povinnosť odvolaná:
+   * výkaz ju vtedy vidí ako nepotvrdenú, pilulka má povedať „odvolané".
+   */
+  acknowledgement: EvidenceAcknowledgement | null
+  revocation: EvidenceRevocation | null
 }
 
 /**
@@ -31,12 +42,13 @@ export interface EvidenceRow {
  * ADR-005 vyhýba.
  */
 export async function evidenceRows(companyCode: string): Promise<EvidenceRow[]> {
-  const rows = await duties(companyCode)
+  const [rows, records] = await Promise.all([duties(companyCode), evidenceRecords(companyCode)])
 
   // Otvorenie už nesie `Duty` (jeden join v `duties()`, kľúč osoba × znenie,
   // D28) — tu sa neskladá druhýkrát.
   return rows.map(duty => {
     const firstOpenedAt = duty.firstOpenedAt
+    const rec = records.get(`${duty.personId}|${duty.versionId}`)
     const input = {
       assignedAt: duty.since,
       firstOpenedAt,
@@ -48,6 +60,8 @@ export async function evidenceRows(companyCode: string): Promise<EvidenceRow[]> 
       firstOpenedAt,
       state: evidenceState(input),
       timeline: evidenceTimeline(input),
+      acknowledgement: rec?.acknowledgement ?? null,
+      revocation: rec?.revocation ?? null,
     }
   })
 }

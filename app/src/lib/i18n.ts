@@ -702,6 +702,18 @@ interface Dictionary {
     seconds: (n: number) => string
     times: (n: number) => string
     states: Record<string, string>
+    /** Riadky rozbaleného dôkazu (HR.md, úloha 5) — dvojice kľúč/hodnota. */
+    rows: {
+      ip: string
+      department: string
+      statement: string
+      reading: string
+      opened: string
+      revokedBy: string
+      revokeReason: string
+    }
+    /** Hodnota, ktorá sa nezaznamenala — pomlčka, nie prázdno. */
+    none: string
     filterPerson: string
     filterState: string
     filterAll: string
@@ -2393,6 +2405,16 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       "not-yet": "zatiaľ nie",
     },
     informative: "informatívne",
+    rows: {
+      ip: "IP adresa",
+      department: "Oddelenie v čase potvrdenia",
+      statement: "Znenie formulky",
+      reading: "Čas čítania",
+      opened: "Prvýkrát otvoril",
+      revokedBy: "Odvolal",
+      revokeReason: "Dôvod odvolania",
+    },
+    none: "—",
     seconds: n => (n < 60 ? `${n} s` : `${Math.round(n / 60)} min`),
     times: n => (n === 1 ? "raz" : n >= 2 && n <= 4 ? `${n} razy` : `${n} ráz`),
     states: {
@@ -4281,6 +4303,16 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       "not-yet": "zatím ne",
     },
     informative: "informativní",
+    rows: {
+      ip: "IP adresa",
+      department: "Oddělení v době potvrzení",
+      statement: "Znění formulky",
+      reading: "Čas čtení",
+      opened: "Poprvé otevřel",
+      revokedBy: "Odvolal",
+      revokeReason: "Důvod odvolání",
+    },
+    none: "—",
     seconds: n => (n < 60 ? `${n} s` : `${Math.round(n / 60)} min`),
     times: n => (n === 1 ? "jednou" : n >= 2 && n <= 4 ? `${n}krát` : `${n}krát`),
     states: {
@@ -6161,6 +6193,16 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       "not-yet": "not yet",
     },
     informative: "informative",
+    rows: {
+      ip: "IP address",
+      department: "Department at the time",
+      statement: "Statement wording",
+      reading: "Reading time",
+      opened: "First opened",
+      revokedBy: "Revoked by",
+      revokeReason: "Revocation reason",
+    },
+    none: "—",
     seconds: n => (n < 60 ? `${n} s` : `${Math.round(n / 60)} min`),
     times: n => (n === 1 ? "once" : `${n} times`),
     states: {
