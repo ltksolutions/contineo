@@ -2398,8 +2398,12 @@ html[data-theme="dark"] .editor-tui .CodeMirror {
     z-index: 40;
     margin: 0;
     border-radius: 0;
-    padding: 10px 12px calc(10px + env(safe-area-inset-bottom));
+    /* Vpravo miesto pre × v rohu. */
+    padding: 10px 48px calc(10px + env(safe-area-inset-bottom)) 12px;
   }
+
+  /* × v rohu pásu, nie na vlastnom riadku — ako v ráme Telefón 390. */
+  .bulk-clear { position: absolute; top: 8px; right: 6px; margin: 0; }
 
   .bulk-bar .button { min-height: 40px; }
 

@@ -40,6 +40,20 @@ ktorý sa mení nahlas.
 projekte): „Uložiť pohľad", presné stĺpce tabuľky (Zmenené, Potvrdenia %
 — to druhé čaká aj na dáta), správanie chips pri podmienkach.
 
+**PR 8 — solo handoff prišiel a bol radosť čítať.** KNIZNICA.md malo tabuľku
+„čo je hotové — nerob znova" s číslami riadkov: polovica práce pri handoffe
+je zvyčajne zistiť, čo neplatí, a tu to autor spravil za mňa. Päť úloh,
+commit na úlohu. Dve miesta, kde som sa musel rozhodnúť sám: pilulka
+v stĺpci Stav dovtedy ukazovala **technický stav spracovania** („vo
+vyhľadávaní" pri každom riadku) — handoff hovorí o stave dokumentu, tak
+stavová pilulka nesie `r.status` a spracovanie sa ukáže len keď niečo
+hovorí, zlyhanie červené. A pravidlo O6/7 „percento nikdy samo" vyzeralo
+v spore s pásikom — nie je: menovateľ sa presunul do `title` a `.sr-only`,
+takže oku zostal pásik a pravda zostala dostupná. `Potvrdenia %` na riadok,
+ktoré TODO odkladalo „na dáta", mimochodom celý čas existovalo
+(`documentsProgress` počíta viditeľnú stranu) — odložený bod bol o facete
+a stĺpci pre celý zoznam, nie o tomto.
+
 ---
 
 ## 2026-09-20 — nový balík handoffu a PR 1 (dva breakpointy)
