@@ -168,27 +168,6 @@ export default async function NewDocumentPage({
           }}
         />
 
-        <div className="field">
-          <span className="field-label">{t.scope}</span>
-          <Select name="scope" options={codelistOptions("scope")} initial="company" fieldLabel={t.scope} />
-        </div>
-
-        <div className="field">
-          <span className="field-label">{t.accessLevel}</span>
-          <Select name="accessLevel" options={codelistOptions("accessLevel")} initial="internal" fieldLabel={t.accessLevel} />
-          <span className="quiet field-hint">
-            <code>internal</code>{t.accessInternalNote}<code>public</code>{t.accessPublicNote}
-          </span>
-        </div>
-
-        <div className="field">
-          <span className="field-label">{t.documentLanguage}</span>
-          <Select name="language" options={codelistOptions("language")} initial={ctx.tenant.defaultLanguage ?? "sk"} fieldLabel={t.documentLanguage} />
-          <span className="quiet field-hint">
-            {t.documentLanguageNote}
-          </span>
-        </div>
-
         {/*
           Druh je povinný a medzi hlavnými poľami (NAHRAVANIE, úloha 5 /
           ADR-010): zoskupovanie prebral po Zaradení. Natívny `<select
@@ -209,7 +188,30 @@ export default async function NewDocumentPage({
             {t.categoryNote}{CODELISTS.category.items.slice(0, 8).map(p => p.key).join(", ")}.
           </span>
         </label>
+        <div className="field">
+          <span className="field-label">{t.accessLevel}</span>
+          <Select name="accessLevel" options={codelistOptions("accessLevel")} initial="internal" fieldLabel={t.accessLevel} />
+          <span className="quiet field-hint">
+            <code>internal</code>{t.accessInternalNote}<code>public</code>{t.accessPublicNote}
+          </span>
+        </div>
+        <div className="field">
+          <span className="field-label">{t.documentLanguage}</span>
+          <Select name="language" options={codelistOptions("language")} initial={ctx.tenant.defaultLanguage ?? "sk"} fieldLabel={t.documentLanguage} />
+          <span className="quiet field-hint">
+            {t.documentLanguageNote}
+          </span>
+        </div>
 
+        {/*
+          Ďalšie údaje v `<details>` (NAHRAVANIE, úloha 6): na telefóne bol
+          stĺpec 11 polí ~1400 px vysoký. Vždy `open` — zbalené nepovinné
+          polia na desktope by boli skrytá práca; na telefóne stačí, že sú
+          dole. Bez skriptu funguje rovnako.
+        */}
+        <details className="upload-optional upload-wide" open>
+          <summary>{t.moreFields}</summary>
+          <div className="upload-grid upload-optional-grid">
         <div className="field">
           <span className="field-label">{tf.ownerDepartment}</span>
           <Select
@@ -228,7 +230,6 @@ export default async function NewDocumentPage({
             {departmentRows.length === 0 ? tf.ownerDepartmentEmpty : tf.ownerDepartmentNote}
           </span>
         </div>
-
         <label className="field">
           <span className="field-label">{tf.internalNumber}</span>
           <input className="field-input" name="internalNumber" defaultValue=""
@@ -237,7 +238,6 @@ export default async function NewDocumentPage({
                  autoCapitalize="none" autoCorrect="off" />
           <span className="quiet field-hint">{tf.internalNumberNote}</span>
         </label>
-
         <div className="field upload-wide">
           <span className="field-label">{t.tags}</span>
           <TagSelect
@@ -248,6 +248,12 @@ export default async function NewDocumentPage({
             language={ctx.person.language}
           />
         </div>
+        <div className="field">
+          <span className="field-label">{t.scope}</span>
+          <Select name="scope" options={codelistOptions("scope")} initial="company" fieldLabel={t.scope} />
+        </div>
+          </div>
+        </details>
 
           </div>
         </section>

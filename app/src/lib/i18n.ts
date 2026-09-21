@@ -1808,6 +1808,8 @@ interface Dictionary {
       keysTaken: string
       /** Nápoveda pri Druhu — hodnoty z `CODELISTS.category` (úloha 5). */
       categoryNote: string
+      /** Nadpis rozbaľovacej skupiny nepovinných polí (úloha 6). */
+      moreFields: string
       scope: string
       accessLevel: string
       accessInternalNote: string
@@ -3686,6 +3688,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       keyTaken: id => `Identifikátor ${id} je obsadený. Upravte názov, alebo zadajte kľúč ručne.`,
       keysTaken: "Obsadené kľúče v tejto organizácii: ",
       categoryNote: "Zoskupuje dokumenty v knižnici a vo filtroch. Existujúce: ",
+      moreFields: "Ďalšie údaje",
       scope: "Pôsobnosť",
       accessLevel: "Prístupnosť",
       accessInternalNote: " vidia len ľudia organizácie, ",
@@ -5549,6 +5552,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       keyTaken: id => `Identifikátor ${id} je obsazený. Upravte název, nebo zadejte klíč ručně.`,
       keysTaken: "Obsazené klíče v této organizaci: ",
       categoryNote: "Seskupuje dokumenty v knihovně a ve filtrech. Existující: ",
+      moreFields: "Další údaje",
       scope: "Působnost",
       accessLevel: "Přístupnost",
       accessInternalNote: " vidí jen lidé organizace, ",
@@ -7406,6 +7410,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       keyTaken: id => `The identifier ${id} is already taken. Change the title, or enter the key manually.`,
       keysTaken: "Keys already taken in this organisation: ",
       categoryNote: "Groups documents in the library and in filters. Existing: ",
+      moreFields: "More details",
       scope: "Scope",
       accessLevel: "Access level",
       accessInternalNote: " is visible only to people of the organisation, ",

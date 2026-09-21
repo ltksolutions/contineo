@@ -2290,6 +2290,20 @@ html[data-theme="dark"] .editor-tui .CodeMirror {
    stĺpca sa v nich zle číta. */
 .upload-wide { grid-column: 1 / -1; }
 
+/* Nepovinné polia za jedným nadpisom (NAHRAVANIE, úloha 6), vždy otvorené. */
+.upload-optional > summary {
+  font-size: var(--fs-small);
+  font-weight: 600;
+  padding: 10px 0;
+  cursor: pointer;
+}
+.upload-optional-grid { margin-top: 4px; }
+
+/* Telefón (NAHRAVANIE, rámy): „Nahrať" na celú šírku, 44 px. */
+@media (max-width: 639px) {
+  .upload-form > div > .button { width: 100%; min-height: 44px; }
+}
+
 .upload-grid .field { margin: 0; min-width: 0; }
 
 /* Náhľad identifikátora pod názvom (NAHRAVANIE, úloha 4 / ADR-010). Monospace:
