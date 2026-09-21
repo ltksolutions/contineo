@@ -6,7 +6,7 @@
  * ich vo vyhľadávačoch, ani keď je stránka za prihlásením.
  */
 
-import type { Metadata } from "next"
+import type { Metadata, Viewport } from "next"
 import "./globals.css"
 import Header from "@/components/Header"
 import Footer from "@/components/Footer"
@@ -44,6 +44,18 @@ import { unreadCount } from "@/lib/notifications"
  * tá skutočná.
  */
 export const dynamic = "force-dynamic"
+
+/*
+ * `viewportFit: "cover"` — stránka sa na iPhone roztiahne až pod domáci
+ * indikátor a `env(safe-area-inset-bottom)` začne vracať skutočný odstup,
+ * ktorý si spodná lišta navigácie pripočítava k výške (inak vracia 0).
+ * Jediná zmena v tomto súbore od handoffu; schválil Ján Letko 2026-09-21.
+ */
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+}
 
 export async function generateMetadata(): Promise<Metadata> {
   try {

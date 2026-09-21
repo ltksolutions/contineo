@@ -445,22 +445,63 @@ export default async function LibraryPage({
         {t.introBefore}<strong>{t.introHighlight}</strong>{t.introAfter}
       </p>
 
+
+      <div className="library-grid">
+        <aside className="library-folders">
+          {filterPanel}
+        </aside>
+
+        <div className="library-list" id="results">
+
       {/*
+        Lišta nástrojov zoznamu (vzor, PR 7): pole hľadania, chips aktívnych
+        filtrov a „+ Podmienka" v jednom riadku **v stĺpci zoznamu**, nie cez
+        celú šírku nad mriežkou — filtre vľavo, všetko o zozname pri zozname.
+
         Hľadanie zostáva formulárom (`method="get"`), nie odkazom: text sa
         píše a odošle, nie vyberá. Skryté polia nesú zvyšok pohľadu — bez nich
         by odoslanie hľadania zrušilo facety, priečinok aj variant navigácie.
       */}
-      <div className="library-search-row">
+      <div className="library-toolbar">
         <LiveFilter className="library-search" action="/library" label={t.search}>
-          <label className="field" style={{ flex: "1 1 240px", margin: 0 }}>
-            <span className="field-label">{t.search}</span>
-            <input className="field-input" name="search" defaultValue={search ?? ""} placeholder={t.searchPlaceholder} />
-          </label>
+          {/* Bez viditeľného labelu (vzor) — meno poľa nesie `aria-label`
+              a placeholder; lišta má byť jeden riadok. */}
+          <input
+            className="field-input library-search-input"
+            name="search"
+            defaultValue={search ?? ""}
+            placeholder={t.searchPlaceholder}
+            aria-label={t.search}
+          />
           {carried
             .filter(([k]) => k !== "search")
             .map(([k, v], i) => <input key={`${k}-${i}`} type="hidden" name={k} value={v} />)}
           <button className="button button--quiet" type="submit">{t.filter}</button>
         </LiveFilter>
+
+      {/*
+        Chips aktívnych filtrov. Sú tu preto, že panel filtrov sa na úzkej
+        obrazovke zabalí nad zoznam a človek by inak nemal ako vidieť, prečo
+        je zoznam krátky — a hlavne ako to zrušiť. Krížik odoberá jeden filter,
+        nie všetky.
+      */}
+      {hasFilter && (
+        <div className="library-chips">
+          {activeChips(filters).map(({ key, value }) => (
+            <Link
+              key={`${key}-${value}`}
+              href={facetHref(key, value)}
+              className="library-chip"
+              aria-label={t.removeFilter(facetLabel[key].label(value))}
+            >
+              <span className="library-chip-key">{facetLabel[key].title}:</span>
+              {facetLabel[key].label(value)}
+              <span className="library-chip-x" aria-hidden="true">×</span>
+            </Link>
+          ))}
+          <Link className="library-chips-clear" href={toQuery(clearFilters(filters))}>{t.clearFilters}</Link>
+        </div>
+      )}
 
         {/*
           Zásuvka filtrov pod 1024 px (NASADENIE, PR 4): ten istý obsah ako
@@ -486,29 +527,6 @@ export default async function LibraryPage({
         </details>
       </div>
 
-      {/*
-        Chips aktívnych filtrov. Sú tu preto, že panel filtrov sa na úzkej
-        obrazovke zabalí nad zoznam a človek by inak nemal ako vidieť, prečo
-        je zoznam krátky — a hlavne ako to zrušiť. Krížik odoberá jeden filter,
-        nie všetky.
-      */}
-      {hasFilter && (
-        <div className="library-chips">
-          {activeChips(filters).map(({ key, value }) => (
-            <Link
-              key={`${key}-${value}`}
-              href={facetHref(key, value)}
-              className="library-chip"
-              aria-label={t.removeFilter(facetLabel[key].label(value))}
-            >
-              <span className="library-chip-key">{facetLabel[key].title}:</span>
-              {facetLabel[key].label(value)}
-              <span className="library-chip-x" aria-hidden="true">×</span>
-            </Link>
-          ))}
-          <Link className="library-chips-clear" href={toQuery(clearFilters(filters))}>{t.clearFilters}</Link>
-        </div>
-      )}
 
       {/*
         Query builder.
@@ -615,12 +633,6 @@ export default async function LibraryPage({
         <p className="quiet builder-hint">{tb.hint}</p>
       </details>
 
-      <div className="library-grid">
-        <aside className="library-folders">
-          {filterPanel}
-        </aside>
-
-        <div className="library-list" id="results">
 
       {rows.length === 0 ? (
         <p className="card" style={{ padding: 20, fontSize: "var(--fs-lead)" }}>
@@ -651,16 +663,53 @@ export default async function LibraryPage({
             <input key={id} type="hidden" name="document" value={id} />
           ))}
 
+          {/*
+            Pás hromadných akcií — **nad zoznamom a vo farbe akcentu** (vzor,
+            PR 7): „Označené: N", presun, vyžiadanie potvrdenia a zrušenie
+            výberu na jednom mieste. Kreslí sa len pri výbere — výber je
+            v adrese, takže server to vie. Na telefóne pás prekryje spodnú
+            lištu navigácie (viď CSS): kto vyberá, je uprostred úlohy.
+
+            „Vyžiadať potvrdenie" nič nezapisuje — odovzdá výber obrazovke
+            `/hr/assign`, ktorá prideľovanie už vie (D30, D6). Druhá kópia
+            tých pravidiel tu by sa raz rozišla s prvou.
+          */}
           {filters.picked.length > 0 && (
-            <p className="bulk-picked">
-              <span>{tl.picked(filters.picked.length)}</span>
-              {pickedOutside > 0 && (
-                <span className="quiet bulk-picked-outside">{tl.pickedOutside(pickedOutside)}</span>
-              )}
-              <Link className="bulk-picked-clear" href={toQuery(clearPicked(filters))}>
-                {tl.clearPicked}
-              </Link>
-            </p>
+          <div className="bulk-bar">
+            <span className="bulk-title">{tl.picked(filters.picked.length)}</span>
+            {pickedOutside > 0 && (
+              <span className="bulk-picked-outside">{tl.pickedOutside(pickedOutside)}</span>
+            )}
+
+            <div className="field bulk-folder">
+              <span className="field-label">{tl.moveTo}</span>
+              <Select
+                name="folderId"
+                fieldLabel={tl.moveTo}
+                options={[
+                  { value: "", label: tf.unfiled },
+                  ...tree.map(r => ({
+                    value: r.folder.id,
+                    label: `${"— ".repeat(r.level - 1)}${r.folder.name}`,
+                  })),
+                ]}
+              />
+            </div>
+
+            <button className="button button--quiet" type="submit" formAction={moveManyAction}>
+              {tl.move}
+            </button>
+            <button className="button button--quiet" type="submit" formAction={assignManyAction}>
+              {tl.assign}
+            </button>
+            <Link className="bulk-clear" href={toQuery(clearPicked(filters))}>
+              {tl.clearPicked}
+            </Link>
+
+            {/* Kam sa vrátiť — s filtrom, triedením aj stranou; po akcii je
+                výber minutý, vraciame sa bez neho. */}
+            <input type="hidden" name="back" value={toQuery(clearPicked(filters))} />
+          </div>
           )}
           {/*
             Tabuľka, nie karty: v knižnici sa dokumenty **porovnávajú** —
@@ -870,52 +919,6 @@ export default async function LibraryPage({
           </div>
           )}
 
-          {/*
-            Panel hromadných akcií — **až po označení** (NASADENIE, PR 4).
-
-            Kedysi tu stálo, že bez JavaScriptu sa server nedozvie, čo je
-            zaškrtnuté, a panel preto musí byť vidieť stále. Odvtedy je výber
-            v adrese (`filters.picked`), takže server to vie presne — panel
-            bez výberu je len pruh ovládačov, ktoré nemajú na čom pracovať.
-            Na telefóne vykreslený panel prekryje spodnú lištu navigácie:
-            kto vyberá dokumenty, je uprostred úlohy, nie na ceste inam.
-
-            „Vyžiadať potvrdenie" nič nezapisuje — odovzdá výber obrazovke
-            `/hr/assign`, ktorá prideľovanie už vie: N noriem × M publík
-            s jedným dôvodom, povinným (D30), a znenie bez platnosti odmietne
-            (D6). Druhá kópia tých pravidiel tu by sa raz rozišla s prvou.
-          */}
-          {filters.picked.length > 0 && (
-          <div className="bulk-bar">
-            <span className="bulk-title">{tl.heading}</span>
-
-            <div className="field bulk-folder">
-              <span className="field-label">{tl.moveTo}</span>
-              <Select
-                name="folderId"
-                fieldLabel={tl.moveTo}
-                options={[
-                  { value: "", label: tf.unfiled },
-                  ...tree.map(r => ({
-                    value: r.folder.id,
-                    label: `${"— ".repeat(r.level - 1)}${r.folder.name}`,
-                  })),
-                ]}
-              />
-            </div>
-
-            <button className="button button--quiet" type="submit" formAction={moveManyAction}>
-              {tl.move}
-            </button>
-            <button className="button button--quiet" type="submit" formAction={assignManyAction}>
-              {tl.assign}
-            </button>
-
-            {/* Kam sa vrátiť — s filtrom, triedením aj stranou. */}
-            {/* Po vykonanej akcii je výber minutý — vraciame sa bez neho. */}
-            <input type="hidden" name="back" value={toQuery(clearPicked(filters))} />
-          </div>
-          )}
 
           {/*
             Pätička je aj tam, kde je strana jediná — číslo „koľko z koľkých"

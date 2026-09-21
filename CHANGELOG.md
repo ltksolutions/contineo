@@ -4,6 +4,27 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Knižnica podľa vzoru: nástroje pri zozname, pás akcií vo farbe, textová navigácia (2026-09-21)
+
+Opravy z Jánovej kontroly produkcie proti návrhu (Obrazovky.dc.html):
+
+- **Hľadanie, chips a „+ Podmienka" sú v stĺpci zoznamu**, nie cez celú
+  šírku nad mriežkou — filtre vľavo, všetko o zozname pri zozname.
+- **Pás hromadných akcií je nad tabuľkou a vo farbe akcentu**, so
+  „zrušiť výber" priamo v ňom. Tichá karta pod tabuľkou sa strácala.
+- **Pás navigácie je textový.** S ikonou pri každej položke sa desať
+  položiek do šírky shellu nezmestilo a „Na posúdenie" prepadávalo do
+  „Viac" aj na širokom monitore. Ikony ostávajú v spodnej lište a bočnom
+  paneli, kde nesú informáciu samy.
+- **Číselníky bez kľúča v popisku** — „Norma (norma)" bol pozostatok
+  ladenia v `codelistOptions()`; facety aj formuláre teraz ukazujú čisté
+  názvy.
+- **Zvonček znova ukazuje skutočný počet** neprečítaných — bodka z návrhu
+  hovorila len „niečo", číslo hovorí „koľko" (rozhodnutie 2026-09-21).
+- **`viewport-fit=cover`** (`layout.tsx`, prvá a jediná zmena od handoffu,
+  schválená) — spodná lišta na iPhone rešpektuje domáci indikátor.
+- Nadpis „Knižnica dokumentov" podľa vzoru.
+
 ### Adresár: tri stĺpce a kontakty pod palcom (2026-09-20)
 
 Posledný krok dnešnej vlny plánu nasadenia (`docs/design/NASADENIE.md`, PR 6):

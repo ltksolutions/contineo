@@ -10,6 +10,38 @@
 
 ---
 
+## 2026-09-21 — kontrola proti vzoru a PR 7
+
+**Ján porovnal produkciu so vzorom a mal pravdu vo všetkom podstatnom.**
+Najväčší kus: hľadanie a Podmienky som v PR 4 nechal cez celú šírku nad
+mriežkou, lebo NASADENIE ich v odrážkach nespomínalo — ale vzor ich má
+v stĺpci zoznamu. Poučenie: odrážky plánu nie sú celý návrh; obrazovka
+v `.dc.html` je záväznejšia než zoznam bodov, ktorý z nej niekto vypísal.
+
+**„Viac 1" na širokom monitore mal dve príčiny naraz.** Prvá moja: dvojník
+merania kreslil všetky položky v aktívnom (hrubšom) reze — „opatrné"
+meranie, ktoré prepad hlásilo aj tam, kde nebol. Druhá koncepčná: pás mal
+pri každej položke ikonu, ktorú vzor nemá — 10 × ~23 px navyše sa do
+shellu nezmestí nikdy. Textový pás + presné meranie a všetkých desať
+položiek sedí.
+
+**„Norma (norma)" nebol v dátach, ale v kóde** — `codelistOptions()`
+lepil kľúč do popisku. Deň predtým som pri README správne povedal „kód je
+pravda, dokumentácia klame" a dnes to platilo naopak: kód klamal oku.
+Kľúč je adresa pre stroj; kde ho správca potrebuje, ukáže sa zvlášť.
+
+**Dve zvrátené rozhodnutia z NASADENIA, obe Jánove a obe správne:**
+zvonček znova ukazuje počet (bodka hovorí „niečo", číslo „koľko")
+a `layout.tsx` dostal svoju prvú zmenu — `viewport-fit=cover` — po
+výslovnom súhlase. Frozen súbor nie je zakázaný súbor; je to súbor,
+ktorý sa mení nahlas.
+
+**Otvorené pre solo handoff Knižnice** (Ján ho pripraví v dizajnovom
+projekte): „Uložiť pohľad", presné stĺpce tabuľky (Zmenené, Potvrdenia %
+— to druhé čaká aj na dáta), správanie chips pri podmienkach.
+
+---
+
 ## 2026-09-20 — nový balík handoffu a PR 1 (dva breakpointy)
 
 **Commit balíka nebol slepé kopírovanie.** Nový export

@@ -399,11 +399,12 @@ export default function Header({
               {/* 21 px, nie predvolených 17: zvonček stojí vedľa avatara
                   a v tej spoločnosti sa menšia ikona stráca. */}
               <Icon name="notifications" size={21} />
-              {/* Bodka, nie číslo (NASADENIE, PR 3): signál „máš nové" na
-                  jeden pohľad. Počet povie `aria-label` a samotná stránka
-                  upozornení. Pri nule nič. */}
+              {/* Číslo, nie bodka. NASADENIE (PR 3) chcelo bodku; rozhodnutie
+                  Jána Letka 2026-09-21 ju vrátilo späť na skutočný počet —
+                  bodka hovorí len „niečo", číslo hovorí „koľko". Pri nule
+                  sa nekreslí nič. */}
               {(notifications ?? 0) > 0 && (
-                <span className="bell-dot" aria-hidden="true" />
+                <span className="bell-badge" aria-hidden="true">{notifications}</span>
               )}
             </Link>
 

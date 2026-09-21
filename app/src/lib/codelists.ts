@@ -149,7 +149,11 @@ export function checkList(codelist: string, values: string[], extras?: CodelistE
 export function codelistOptions(codelist: string, extras?: CodelistExtras): { value: string; label: string }[] {
   return codelistFor(codelist, extras).items.map(p => ({
     value: p.key,
-    label: p.label ? `${p.label} (${p.key})` : p.key,
+    // Čistý popisok, bez kľúča v zátvorke. „Norma (norma)" vo facetoch aj
+    // formulároch bol pozostatok ladenia — kľúč je adresa pre stroj a tam,
+    // kde ho správca potrebuje vidieť, sa ukazuje zvlášť (nastavenie
+    // číselníkov), nie prilepený ku každému popisku (vzor, PR 7).
+    label: p.label ?? p.key,
   }))
 }
 
