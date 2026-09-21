@@ -94,12 +94,26 @@ export default async function CurationPage({
               {item.answer}
             </div>
 
-            <ul className="quiet" style={{ margin: "0 0 6px", paddingLeft: 18, fontSize: "var(--fs-small)" }}>
-              {item.sources.map(src => (
-                <li key={src.chunkId}>{[src.title, src.articleRef].filter(Boolean).join(" · ")}</li>
+            {/*
+              Zdroje ako karty z `/ask` (SPRAVA, úloha 2.3): zdroj je to, čím
+              sa odpoveď obhajuje, a dve obrazovky, ktoré zobrazujú to isté,
+              to majú zobrazovať rovnako. Tie isté triedy `.answer-source*`,
+              bez odkazu — úsek tu nikam nevedie (D9: úsek, nie dokument).
+            */}
+            <div className="answer-sources">
+              {item.sources.map((src, i) => (
+                <div key={src.chunkId} className="answer-source">
+                  <span className="answer-source-index">{i + 1}.</span>
+                  <span className="answer-source-body">
+                    <span className="answer-source-title">{src.title}</span>
+                    {src.articleRef && (
+                      <span className="quiet answer-source-meta">{src.articleRef}</span>
+                    )}
+                  </span>
+                </div>
               ))}
-            </ul>
-            <p className="quiet" style={{ fontSize: "var(--fs-micro)", margin: "0 0 14px" }}>{t.accessNote}</p>
+            </div>
+            <p className="quiet" style={{ fontSize: "var(--fs-micro)", margin: "10px 0 14px" }}>{t.accessNote}</p>
 
             <form action={publishCurationAction}>
               <input type="hidden" name="id" value={item.id} />
