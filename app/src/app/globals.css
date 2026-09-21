@@ -2903,6 +2903,15 @@ html[data-theme="dark"] .editor-tui .CodeMirror {
   border-radius: 9px;
 }
 
+/*
+ * Pole hľadania so značkou mimo knižnice (ZAKLAD, odchýlka B): každé pole,
+ * do ktorého sa píše otázka alebo hľadaný výraz, nesie značku Continea
+ * 16 px v `--muted` vľavo — nikdy lupu. Nie je to hľadanie v tabuľke,
+ * je to otázka položená obsahu.
+ */
+.search-field { display: flex; align-items: center; gap: 9px; }
+.search-field-mark { flex: 0 0 auto; display: inline-flex; color: var(--muted); }
+
 /* Chips žijú v lište — vlastný spodný odstup tam nemajú. */
 .library-toolbar .library-chips { margin-bottom: 0; }
 
