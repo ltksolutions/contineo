@@ -775,47 +775,51 @@ export default async function LibraryPage({
           */
           <ul className={`doc-cards${view === "auto" ? " doc-view-auto" : ""}`}>
             {paged.rows.map(r => (
-              <li key={r.documentId} className="doc-card">
-                <div className="doc-card-top">
-                  <Link
-                    href={toQuery(togglePick(filters, r.documentId))}
-                    className={`bulk-pick${isPicked(r.documentId) ? " is-on" : ""}`}
-                    aria-pressed={isPicked(r.documentId)}
-                  >
-                    <span className="bulk-pick-box" aria-hidden="true">{isPicked(r.documentId) ? "✓" : ""}</span>
-                    <span className="bulk-pick-text">{tl.pick(r.title)}</span>
-                  </Link>
-                  <span className={statusTagClass(r.status)}>{statusPill(r.status)}</span>
-                      {/* Technický stav spracovania len keď niečo hovorí —
-                          „vo vyhľadávaní" je normálny koniec a pri každom
-                          riadku by bol šum; zlyhanie je jediné červené.
-                          Pilulka „koncept" splynula so stavovou. */}
-                      {r.processingState !== "indexed" && (
-                        <span className={r.processingState === "failed" ? "tag tag--expired" : "tag"}>
-                          {t.processing[r.processingState] ?? r.processingState}
-                        </span>
-                      )}
-                  {r.category && <span className="quiet doc-card-kind">{categoryLabel(r.category)}</span>}
-                </div>
-
-                <Link href={`/library/${encodeURIComponent(r.documentId)}`} className="doc-card-title">
-                  {r.title}
+              <li key={r.documentId} className={`doc-card${isPicked(r.documentId) ? " is-picked" : ""}`}>
+                {/* Výber vľavo mimo obsahu (KNIZNICA.md, úloha 5): 22 px
+                    políčko vo vlastnom stĺpci karty, ako v rámoch — v riadku
+                    pilúl sa strácalo medzi nimi. */}
+                <Link
+                  href={toQuery(togglePick(filters, r.documentId))}
+                  className={`bulk-pick doc-card-pick${isPicked(r.documentId) ? " is-on" : ""}`}
+                  aria-pressed={isPicked(r.documentId)}
+                >
+                  <span className="bulk-pick-box" aria-hidden="true">{isPicked(r.documentId) ? "✓" : ""}</span>
+                  <span className="bulk-pick-text">{tl.pick(r.title)}</span>
                 </Link>
 
-                <div className="quiet doc-meta">
-                  {r.internalNumber && `${r.internalNumber} · `}
-                  {r.folderTrail?.length ? `${r.folderTrail.join(" / ")} · ` : ""}
-                  {r.documentId}
-                </div>
+                <div className="doc-card-body">
+                  <div className="doc-card-top">
+                    <span className={statusTagClass(r.status)}>{statusPill(r.status)}</span>
+                    {/* Technický stav spracovania len keď niečo hovorí —
+                        „vo vyhľadávaní" je normálny koniec a pri každom
+                        riadku by bol šum; zlyhanie je jediné červené. */}
+                    {r.processingState !== "indexed" && (
+                      <span className={r.processingState === "failed" ? "tag tag--expired" : "tag"}>
+                        {t.processing[r.processingState] ?? r.processingState}
+                      </span>
+                    )}
+                    {r.category && <span className="quiet doc-card-kind">{categoryLabel(r.category)}</span>}
+                    {/* Verzia vpravo — čo platí, na jeden pohľad. */}
+                    <span className="quiet doc-card-version">{r.effectiveLabel}</span>
+                  </div>
 
-                <div className="quiet doc-meta doc-card-foot">
-                  {r.effectiveLabel}
-                  {r.effectiveTo && ` · ${t.colEffectiveTo} ${formatDate(r.effectiveTo, uiLanguage)}`}
-                  {r.updatedAt && ` · ${formatDate(r.updatedAt, uiLanguage)}`}
-                </div>
+                  <Link href={`/library/${encodeURIComponent(r.documentId)}`} className="doc-card-title">
+                    {r.title}
+                  </Link>
 
-                {/* Pásik potvrdení je posledný riadok karty (úloha 2). */}
-                {ackBar(r.effectiveVersionId)}
+                  {/* Kde dokument je. Kľúč len ako záloha, keď niet čísla ani
+                      priečinka — riadok nemá byť prázdny (úloha 5). */}
+                  <div className="quiet doc-card-where">
+                    {[
+                      r.internalNumber,
+                      r.folderTrail?.length ? r.folderTrail.join(" / ") : undefined,
+                    ].filter(Boolean).join(" · ") || r.documentId}
+                  </div>
+
+                  {/* Pásik potvrdení je posledný riadok karty (úloha 2). */}
+                  {ackBar(r.effectiveVersionId)}
+                </div>
               </li>
             ))}
           </ul>
