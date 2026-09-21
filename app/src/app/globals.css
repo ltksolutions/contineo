@@ -2195,9 +2195,11 @@ html[data-theme="dark"] .editor-tui .CodeMirror {
 .pager-count { font-variant-numeric: tabular-nums; }
 .pager-spacer { flex: 1; }
 
-/* Rozmer k `.button--quiet` — odkaz nesie obe triedy. */
+/* Rozmer k `.button--quiet` — odkaz nesie obe triedy. Vypnutý stav
+   (opacity) berie z `.button[aria-disabled]`, aby vypnuté ovládače mali
+   jednu hodnotu v celom rozhraní; tu sa len vypína klik. */
 .pager-link { min-height: 28px; padding: 0 10px; }
-.pager-link[aria-disabled="true"] { opacity: 0.45; pointer-events: none; }
+.pager-link[aria-disabled="true"] { pointer-events: none; }
 
 /* ── nahratie dokumentu: sekcie a zóna na súbor ─────────────────────────
    Číslované sekcie, nie stepper: nahratie je jedno odoslanie formulára
