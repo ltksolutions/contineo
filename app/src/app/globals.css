@@ -2088,6 +2088,12 @@ html[data-theme="dark"] .editor-tui .CodeMirror {
 .doc-cell-quiet { color: var(--muted); }
 .doc-col-right { text-align: right; white-space: nowrap; }
 
+/* Hlavička jediného pravého stĺpca („Zmenené"). `th` v selektore je nutný,
+   nie štýl: holá trieda (0,1,0) prehráva s `.doc-table th` (0,1,1) vyššie,
+   takže dátumy boli vpravo a hlavička vľavo — `<td>` proti sebe
+   type-qualified pravidlo nemá, `<th>` áno (ZAKLAD, úloha 5). */
+.doc-table th.doc-col-right { text-align: right; }
+
 .doc-foot {
   display: flex;
   flex-wrap: wrap;
