@@ -1806,8 +1806,8 @@ interface Dictionary {
       keyManualNote: string
       keyTaken: (id: string) => string
       keysTaken: string
-      section: string
-      sectionNote: string
+      /** Nápoveda pri Druhu — hodnoty z `CODELISTS.category` (úloha 5). */
+      categoryNote: string
       scope: string
       accessLevel: string
       accessInternalNote: string
@@ -3685,8 +3685,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       keyManualNote: "Kľúč vzniká raz a nikdy sa nemení — žije v potvrdeniach, audite a exportoch. Premenovanie dokumentu ho nemení.",
       keyTaken: id => `Identifikátor ${id} je obsadený. Upravte názov, alebo zadajte kľúč ručne.`,
       keysTaken: "Obsadené kľúče v tejto organizácii: ",
-      section: "Zaradenie",
-      sectionNote: "Kam dokument patrí. Na rozdiel od kľúča ho môže mať viac dokumentov naraz. Existujúce: ",
+      categoryNote: "Zoskupuje dokumenty v knižnici a vo filtroch. Existujúce: ",
       scope: "Pôsobnosť",
       accessLevel: "Prístupnosť",
       accessInternalNote: " vidia len ľudia organizácie, ",
@@ -5549,8 +5548,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       keyManualNote: "Klíč vzniká jednou a nikdy se nemění — žije v potvrzeních, auditu a exportech. Přejmenování dokumentu ho nemění.",
       keyTaken: id => `Identifikátor ${id} je obsazený. Upravte název, nebo zadejte klíč ručně.`,
       keysTaken: "Obsazené klíče v této organizaci: ",
-      section: "Zařazení",
-      sectionNote: "Kam dokument patří. Na rozdíl od klíče ho může mít víc dokumentů najednou. Existující: ",
+      categoryNote: "Seskupuje dokumenty v knihovně a ve filtrech. Existující: ",
       scope: "Působnost",
       accessLevel: "Přístupnost",
       accessInternalNote: " vidí jen lidé organizace, ",
@@ -7407,8 +7405,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       keyManualNote: "The key is created once and never changes — it lives in acknowledgements, the audit trail and exports. Renaming the document does not change it.",
       keyTaken: id => `The identifier ${id} is already taken. Change the title, or enter the key manually.`,
       keysTaken: "Keys already taken in this organisation: ",
-      section: "Section",
-      sectionNote: "Where the document belongs. Unlike the key, several documents can share it. Existing: ",
+      categoryNote: "Groups documents in the library and in filters. Existing: ",
       scope: "Scope",
       accessLevel: "Access level",
       accessInternalNote: " is visible only to people of the organisation, ",

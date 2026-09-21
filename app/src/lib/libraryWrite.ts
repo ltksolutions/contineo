@@ -86,12 +86,14 @@ export interface DocumentMetadata {
    * a dôsledok bol ten, že dva rôzne dokumenty s tým istým zaradením sa
    * nedali mať — desať zápisníc by potrebovalo desať zaradení.
    *
-   * Nevyplnené sa dopĺňa zo `sectionKey`. Vďaka tomu má každý dokument
-   * spred D80 rovnaký `documentId` ako predtým — a to je podstatné, lebo
+   * Nevyplnené vzniká zo názvu (ADR-010). Dokumentom spred D80 určuje
+   * identitu `sectionKey` (`makeDocumentId` naň padá) — a to sa nemení, lebo
    * `documentId` je cudzí kľúč v `acknowledgements`, `document_chunks`,
    * `assignments`, `approval_rounds`, `onboarding_tracks` aj v audite.
    */
   documentKey: string
+  /** Od ADR-010 nepovinné (prázdny reťazec): mizne z formulára, v dátach
+   *  starých dokumentov zostáva ako historická záložka identity. */
   sectionKey: string
   companyCode: string
   scope: string
@@ -203,7 +205,12 @@ export function checkMetadata(
   // tvarom (`KEY_PATTERN`), nie príslušnosťou do slovníka. Nevyplnený vzniká
   // ako slug z názvu (ADR-010) — už NIE zo zaradenia: zaradenie je kategória
   // a prvý dokument kategórie by kľúč obsadil, identita ďalších by bola lož.
-  const sectionKey = checkValue("sectionKey", input.sectionKey ?? "")
+  // Zaradenie je od ADR-010 nepovinné: nové dokumenty ho nemajú (zoskupuje
+  // Druh), staré ho nesú ďalej ako záložnú identitu (`makeDocumentId`).
+  // Keď príde, overí sa proti číselníku ako doteraz — prázdne sa nevymýšľa.
+  const sectionKey = (input.sectionKey ?? "").trim()
+    ? checkValue("sectionKey", input.sectionKey ?? "")
+    : ""
   const documentKey = ((input.documentKey ?? "").trim() || slugifyKey(title)).toLowerCase()
   if (!KEY_PATTERN.test(documentKey)) {
     throw new LibraryError(

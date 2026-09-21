@@ -40,8 +40,8 @@ export default async function NewDocumentPage({
     notFound()
   }
 
-  const { error, title, sectionKey, documentKey } = normalizeQuery<{
-    error?: string; title?: string; sectionKey?: string; documentKey?: string
+  const { error, title, documentKey } = normalizeQuery<{
+    error?: string; title?: string; documentKey?: string
   }>(await searchParams)
   // Ponuka musí obsahovať aj to, čo si organizácia dopísala (D55).
   const t = dictionary(ctx.person.language).library.upload
@@ -50,6 +50,7 @@ export default async function NewDocumentPage({
   // Oddelenia nie sú číselník v repozitári, ale strom v databáze — iný pre
   // každú organizáciu. Preto sa načítavajú, nie importujú.
   const tf = dictionary(ctx.person.language).library.fields
+  const tl = dictionary(ctx.person.language).library.list
   const departmentRows = flattenTree(await allDepartments(ctx.tenant.companyCode))
   const { uploadAction: upload } = await import("../actions")
   // Formulár predvyplnený po chybe = súbor treba vybrať znova.
@@ -167,21 +168,6 @@ export default async function NewDocumentPage({
           }}
         />
 
-        {/*
-          Zaradenie a kľúč sú od D80 dve polia, nie jedno. Dovtedy `sectionKey`
-          niesol oboje a dôsledok bol ten, že dva rôzne dokumenty s tým istým
-          zaradením sa nedali mať — desať zápisníc by potrebovalo desať zaradení.
-        */}
-        <label className="field upload-wide">
-          <span className="field-label">{t.section}</span>
-          <input className="field-input" name="sectionKey" defaultValue={sectionKey ?? ""} required
-                 placeholder="poriadky" autoCapitalize="none" autoCorrect="off" />
-          <span className="quiet field-hint">
-            {t.sectionNote}
-            {CODELISTS.sectionKey.items.slice(0, 8).map(p => p.key).join(", ")}.
-          </span>
-        </label>
-
         <div className="field">
           <span className="field-label">{t.scope}</span>
           <Select name="scope" options={codelistOptions("scope")} initial="company" fieldLabel={t.scope} />
@@ -203,10 +189,26 @@ export default async function NewDocumentPage({
           </span>
         </div>
 
-        <div className="field">
-          <span className="field-label">{dictionary(ctx.person.language).library.list.category}</span>
-          <Select name="category" options={[{ value: "", label: t.unset }, ...codelistOptions("category", extras)]} initial="" fieldLabel={dictionary(ctx.person.language).library.list.category} />
-        </div>
+        {/*
+          Druh je povinný a medzi hlavnými poľami (NAHRAVANIE, úloha 5 /
+          ADR-010): zoskupovanie prebral po Zaradení. Natívny `<select
+          required>`, nie komponent Select — ten povinnosť vynútiť nevie
+          (skrytý input) a natívne pole ju drží aj bez skriptu. Server ho
+          nechá nepovinný: import, seed a staré dokumenty bez Druhu sa
+          nerozbijú (rozhodnutie Jána 2026-09-21).
+        */}
+        <label className="field">
+          <span className="field-label">{tl.category}</span>
+          <select className="field-input" name="category" required defaultValue="">
+            <option value="" disabled>{t.unset}</option>
+            {codelistOptions("category", extras).map(o => (
+              <option key={o.value} value={o.value}>{o.label}</option>
+            ))}
+          </select>
+          <span className="quiet field-hint">
+            {t.categoryNote}{CODELISTS.category.items.slice(0, 8).map(p => p.key).join(", ")}.
+          </span>
+        </label>
 
         <div className="field">
           <span className="field-label">{tf.ownerDepartment}</span>

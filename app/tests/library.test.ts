@@ -107,6 +107,17 @@ describe("metadata z formulara", () => {
       .toBe("pracovny_poriadok_sfz")
   })
 
+  it("sectionKey je nepovinny (ADR-010); ked pride, overi sa ako doteraz", () => {
+    const { sectionKey: _omit, ...withoutSection } = base
+    void _omit
+    const m = checkMetadata(withoutSection)
+    expect(m.sectionKey).toBe("")
+    expect(m.documentKey).toBe("stanovy")
+    // Stary dokument so zaradenim ho pri uprave metadat nestrati.
+    expect(checkMetadata({ ...base, sectionKey: "smernice" }).sectionKey).toBe("smernice")
+    expect(() => checkMetadata({ ...base, sectionKey: "neexistujuce zaradenie" })).toThrow(CodelistError)
+  })
+
   it("slugifyKey: male pismena bez diakritiky, interpunkcia na podciarkovnik", () => {
     expect(slugifyKey("Pracovný poriadok SFZ")).toBe("pracovny_poriadok_sfz")
     expect(slugifyKey("  Smernica č. 3/2026 — GDPR (v2)  ")).toBe("smernica_c_3_2026_gdpr_v2")
