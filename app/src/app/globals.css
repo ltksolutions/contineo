@@ -2422,6 +2422,14 @@ html[data-theme="dark"] .editor-tui .CodeMirror {
 .duty-meta { margin: 8px 0 0; font-size: var(--fs-small); color: var(--muted); }
 .duty-action { margin: 12px 0 0; }
 
+/* Telefón (DOCUMENTS, úloha 5): tlačidlo na celú šírku karty, 44 px;
+   poradie kroku na vlastnom riadku — inak zoberie názvu 60 px. */
+@media (max-width: 639px) {
+  .duty-action .button { width: 100%; min-height: 44px; }
+  .duty-head { gap: 8px; }
+  .duty-order { flex: 1 0 100%; }
+}
+
 /* Dve polia termínu vedľa seba, na telefóne pod sebou. Nechávajú sa vidieť
    obe: formulár beží bez JavaScriptu, takže sa skryť nedajú, a kto sa prepne
    z dátumu na dni a späť, o svoj dátum nepríde. */
