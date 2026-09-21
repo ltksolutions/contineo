@@ -701,7 +701,9 @@ interface Dictionary {
   approvals: {
     heading: string
     intro: string
-    nothing: string
+    /** Prázdny stav (`.empty`, APPROVALS úloha 3) — bez akcie: schvaľovateľ si prácu nevie nájsť sám. */
+    emptyTitle: string
+    emptyText: string
     versionLine: (label: string, round: string) => string
     roundLine: (round: number) => string
     submittedBy: (who: string, when: string) => string
@@ -2356,7 +2358,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
   approvals: {
     heading: "Na schválenie",
     intro: "Znenia, ktoré niekto predložil a čaká na tvoje rozhodnutie. Rozhoduješ sám za seba \u2014 ostatní schvaľovatelia rozhodujú nezávisle.",
-    nothing: "Nič na teba nečaká.",
+    emptyTitle: "Nič nečaká na vaše rozhodnutie",
+    emptyText: "Keď vás niekto určí schvaľovateľom znenia, objaví sa tu celý text aj s tým, kto ho predložil.",
     versionLine: (label, round) => `znenie ${label} \u00b7 ${round}`,
     roundLine: round => `${round}. kolo`,
     submittedBy: (who, when) => `predložil ${who} \u00b7 ${when}`,
@@ -4208,7 +4211,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
   approvals: {
     heading: "Ke schválení",
     intro: "Znění, která někdo předložil a čekají na tvé rozhodnutí. Rozhoduješ sám za sebe \u2014 ostatní schvalovatelé rozhodují nezávisle.",
-    nothing: "Nic na tebe nečeká.",
+    emptyTitle: "Nic nečeká na vaše rozhodnutí",
+    emptyText: "Když vás někdo určí schvalovatelem znění, objeví se tady celý text i s tím, kdo ho předložil.",
     versionLine: (label, round) => `znění ${label} \u00b7 ${round}`,
     roundLine: round => `${round}. kolo`,
     submittedBy: (who, when) => `předložil ${who} \u00b7 ${when}`,
@@ -6052,7 +6056,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
   approvals: {
     heading: "To approve",
     intro: "Versions somebody submitted that are waiting for your decision. You decide for yourself \u2014 the other approvers decide independently.",
-    nothing: "Nothing is waiting for you.",
+    emptyTitle: "Nothing awaits your decision",
+    emptyText: "When someone names you an approver of a version, the full text will appear here along with who submitted it.",
     versionLine: (label, round) => `version ${label} \u00b7 ${round}`,
     roundLine: round => `round ${round}`,
     submittedBy: (who, when) => `submitted by ${who} \u00b7 ${when}`,

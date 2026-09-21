@@ -71,7 +71,14 @@ export default async function ApprovalsPage({
         <h1 className="page-title" style={{ margin: "0 0 8px" }}>{t.heading}</h1>
         <p className="quiet page-lead" style={{ margin: "0 0 24px" }}>{t.intro}</p>
 
-        {rounds.length === 0 && <p className="card" style={{ padding: 20 }}>{t.nothing}</p>}
+        {/* `.empty` zo ZAKLADU, bez akcie (APPROVALS, úloha 3): schvaľovateľ
+            si prácu nevie nájsť sám — musí ho niekto určiť. */}
+        {rounds.length === 0 && (
+          <div className="empty">
+            <div className="empty-title">{t.emptyTitle}</div>
+            <div className="empty-text">{t.emptyText}</div>
+          </div>
+        )}
 
         <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "grid", gap: 20 }}>
           {rounds.map(r => {
