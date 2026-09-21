@@ -739,8 +739,11 @@ export default async function LibraryPage({
             <button className="button button--quiet" type="submit" formAction={assignManyAction}>
               {tl.assign}
             </button>
-            <Link className="bulk-clear" href={toQuery(clearPicked(filters))}>
-              {tl.clearPicked}
+            {/* Na telefóne sa text nezmestí — ostáva ×; meno akcie nesie
+                `aria-label` (KNIZNICA.md, úloha 4). */}
+            <Link className="bulk-clear" href={toQuery(clearPicked(filters))} aria-label={tl.clearPicked}>
+              <span className="bulk-clear-label">{tl.clearPicked}</span>
+              <span className="bulk-clear-x" aria-hidden="true">×</span>
             </Link>
 
             {/* Kam sa vrátiť — s filtrom, triedením aj stranou; po akcii je
