@@ -92,6 +92,19 @@ interface Dictionary {
    */
   statement(title: string, version: string, effectiveFrom: string): string
 
+  /** Spoločné texty prierezových komponentov (ZAKLAD). */
+  common: {
+    /** Prázdny stav zoznamu (`.empty`) — dve rôzne vety podľa filtra. */
+    empty: {
+      /** Filter je nasadený a nič mu nevyhovuje. */
+      filtered: string
+      /** Zoznam je prázdny sám od seba; obrazovky text spresnia vlastným. */
+      none: string
+      /** Akcia pri nasadenom filtri. */
+      clearFilters: string
+    }
+  }
+
   /** Texty potvrdzovacích obrazoviek. */
   onboarding: {
     listHeading: string
@@ -1798,6 +1811,13 @@ const daysEn = (n: number) => (n === 1 ? "1 day" : `${n} days`)
 
 export const DICTIONARY: Record<UiLanguage, Dictionary> = {
   sk: {
+  common: {
+    empty: {
+      filtered: "Filtru nič nevyhovuje",
+      none: "Zatiaľ tu nič nie je",
+      clearFilters: "Zrušiť filtre",
+    },
+  },
   onboarding: {
     listHeading: "Dokumenty na potvrdenie",
     listIntro: "Prečítajte si každý dokument a potvrďte, že ste sa s ním oboznámili. Potvrdenie sa viaže na konkrétne znenie — pri novej verzii vás systém požiada znova.",
@@ -3636,6 +3656,13 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
   },
 
   cs: {
+  common: {
+    empty: {
+      filtered: "Filtru nic nevyhovuje",
+      none: "Zatím tu nic není",
+      clearFilters: "Zrušit filtry",
+    },
+  },
   onboarding: {
     listHeading: "Dokumenty k potvrzení",
     listIntro: "Přečtěte si každý dokument a potvrďte, že jste se s ním seznámili. Potvrzení se váže na konkrétní znění — u nové verze vás systém požádá znovu.",
@@ -5472,6 +5499,13 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
   },
 
   en: {
+  common: {
+    empty: {
+      filtered: "Nothing matches the filter",
+      none: "Nothing here yet",
+      clearFilters: "Clear filters",
+    },
+  },
   onboarding: {
     listHeading: "Documents to acknowledge",
     listIntro: "Read each document and confirm that you have familiarised yourself with it. An acknowledgement is tied to a specific version — when a new one is issued, you will be asked again.",

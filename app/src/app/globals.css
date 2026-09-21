@@ -694,6 +694,31 @@ button:disabled { cursor: not-allowed; opacity: 0.55; }
 
 .page-head .page-title { margin: 0; }
 
+/*
+ * Prázdny stav zoznamu (ZAKLAD, úloha 1) — jedna trieda, tri časti: čo tu
+ * nie je, prečo, a čo s tým. Prázdno nie je chyba; text má povedať, či je
+ * zoznam prázdny preto, že filter nič nenašiel, alebo preto, že niet čoho.
+ * Bez ikony a ilustrácie: prázdny zoznam je bežný stav pracovného nástroja,
+ * nie udalosť, ktorú treba ozdobiť.
+ */
+.empty {
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  padding: 32px 20px;
+  border: 1px dashed var(--line);
+  border-radius: var(--radius);
+  text-align: center;
+}
+.empty-title { font-size: var(--fs-lead); font-weight: 600; }
+.empty-text {
+  font-size: var(--fs-small);
+  color: var(--muted);
+  line-height: 1.55;
+  max-width: 46ch;
+}
+.empty-action { margin-top: 10px; }
+
 .button {
   display: inline-flex;
   align-items: center;
