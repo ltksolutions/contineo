@@ -65,11 +65,11 @@ export default async function ApprovalsPage({
 
   return (
     <AppShell layout={normalizeLayout(q.layout)} language={person.language}>
-      <div style={{ maxWidth: 760, ...tenantStyle(branding) }}>
+      <div className="approval-page" style={tenantStyle(branding)}>
         <Notice message={q.msg} error={q.error === "1"} back="/approvals" />
 
-        <h1 className="page-title" style={{ margin: "0 0 8px" }}>{t.heading}</h1>
-        <p className="quiet page-lead" style={{ margin: "0 0 24px" }}>{t.intro}</p>
+        <h1 className="page-title">{t.heading}</h1>
+        <p className="quiet page-lead">{t.intro}</p>
 
         {/* `.empty` zo ZAKLADU, bez akcie (APPROVALS, úloha 3): schvaľovateľ
             si prácu nevie nájsť sám — musí ho niekto určiť. */}
@@ -80,7 +80,7 @@ export default async function ApprovalsPage({
           </div>
         )}
 
-        <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "grid", gap: 20 }}>
+        <ul className="approval-list">
           {rounds.map(r => {
             const doc = byId.get(r.documentId) as { title?: unknown; versions?: Version[]; markdown?: unknown } | undefined
             const version = (doc?.versions ?? []).find(v => v.versionId === r.versionId)
@@ -88,25 +88,21 @@ export default async function ApprovalsPage({
             const others = r.approvers.filter(a => a.email !== person.email)
 
             return (
-              <li key={`${r.documentId}-${r.versionId}-${r.round}`} className="card" style={{ padding: 18 }}>
-                <h2 style={{ fontSize: "var(--fs-section)", letterSpacing: "-0.01em", margin: "0 0 4px" }}>
-                  {String(doc?.title ?? r.documentId)}
-                </h2>
-                <div className="quiet" style={{ fontSize: "var(--fs-small)" }}>
+              <li key={`${r.documentId}-${r.versionId}-${r.round}`} className="card approval-card">
+                <h2 className="approval-title">{String(doc?.title ?? r.documentId)}</h2>
+                <div className="approval-meta">
                   {t.versionLine(version?.label ?? r.versionId, t.roundLine(r.round))}
                   {" · "}
                   {t.submittedBy(r.submittedBy, formatDate(r.submittedAt, person.language))}
                 </div>
 
-                {version?.effectiveFrom
-                  ? (
-                    <div className="quiet" style={{ fontSize: "var(--fs-small)" }}>
-                      {t.effectiveFrom(formatDate(version.effectiveFrom, person.language))}
-                    </div>
-                  )
-                  : <div className="quiet" style={{ fontSize: "var(--fs-small)" }}>{t.noEffectiveFrom}</div>}
+                <div className="approval-meta">
+                  {version?.effectiveFrom
+                    ? t.effectiveFrom(formatDate(version.effectiveFrom, person.language))
+                    : t.noEffectiveFrom}
+                </div>
 
-                {r.note && <p style={{ fontSize: "var(--fs-body)", margin: "10px 0 0" }}>{r.note}</p>}
+                {r.note && <p className="approval-card-note">{r.note}</p>}
 
                 {/*
                   Ostatní schvaľovatelia sú vidieť, ale ich rozhodnutie sa
@@ -115,7 +111,7 @@ export default async function ApprovalsPage({
                   bude musieť rozhodnúť, nie aby sa človek pridal k väčšine.
                 */}
                 {others.length > 0 && (
-                  <div className="quiet" style={{ fontSize: "var(--fs-small)", marginTop: 6 }}>
+                  <div className="approval-meta approval-others">
                     {t.alsoDeciding(others.map(a => a.fullName).join(", "))}
                   </div>
                 )}
@@ -127,11 +123,9 @@ export default async function ApprovalsPage({
                   kole je skryť ho za klik ako pýtať si podpis na zatvorenej
                   obálke. Tri plné znenia pod sebou sa naopak nedajú čítať.
                 */}
-                <details style={{ marginTop: 12 }} open={rounds.length === 1}>
-                  <summary className="quiet" style={{ fontSize: "var(--fs-small)", cursor: "pointer" }}>
-                    {t.readText}
-                  </summary>
-                  <article className="answer" style={{ lineHeight: 1.7, marginTop: 10 }}>
+                <details className="approval-read" open={rounds.length === 1}>
+                  <summary>{t.readText}</summary>
+                  <article className="answer approval-text">
                     {text ? <FormattedText text={text} /> : t.noText}
                   </article>
                 </details>
@@ -144,7 +138,7 @@ export default async function ApprovalsPage({
                   JavaScriptu ju formulár vynútiť nevie, keď sa dá odoslať
                   dvoma rôznymi tlačidlami.
                 */}
-                <form action={decideAction} className="approval-form" style={{ marginTop: 14 }}>
+                <form action={decideAction} className="approval-form">
                   <input type="hidden" name="documentId" value={r.documentId} />
                   <input type="hidden" name="versionId" value={r.versionId} />
                   <input type="hidden" name="round" value={r.round} />

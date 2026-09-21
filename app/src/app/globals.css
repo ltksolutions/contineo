@@ -3480,6 +3480,26 @@ a.answer-source:focus-visible { outline: 2px solid var(--accent); outline-offset
    vetu-dve nestačilo, plných 96 px z `textarea.field-input` je zas priveľa. */
 .approval-form textarea.field-input { min-height: 64px; }
 
+/* Karta kola na /approvals (APPROVALS, úloha 4) — inline štýly do tried.
+   Šírka 760 px je vec obsahu (text na čítanie), preto trieda stránky. */
+.approval-page { max-width: 760px; }
+.approval-list { list-style: none; padding: 0; margin: 0; display: grid; gap: 20px; }
+.approval-card { padding: 18px; }
+.approval-title {
+  font-size: var(--fs-section);
+  letter-spacing: -0.01em;
+  margin: 0 0 4px;
+  text-wrap: pretty;
+}
+.approval-meta { font-size: var(--fs-small); color: var(--muted); }
+.approval-others { margin-top: 6px; }
+/* `.approval-note` zo zadania už patrí panelu kôl na detaile dokumentu
+   (`ApprovalPanel.tsx`), preto poznámka predkladateľa má vlastnú triedu. */
+.approval-card-note { font-size: var(--fs-body); margin: 10px 0 0; }
+.approval-read { margin-top: 12px; }
+.approval-read > summary { font-size: var(--fs-small); color: var(--muted); cursor: pointer; }
+.approval-text { margin-top: 10px; line-height: 1.7; max-width: 70ch; }
+
 /* Posuvný rámik: pri stovke ľudí by zoznam bez neho odtlačil tlačidlo mimo
    obrazovku a na telefóne by sa k nemu nikto neprerolloval. */
 .approval-people {
