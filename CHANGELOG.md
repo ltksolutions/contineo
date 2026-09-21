@@ -4,6 +4,29 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Knižnica podľa solo handoffu: farebné stavy, pásiky potvrdení, karta pre palec (2026-09-21)
+
+Implementácia `docs/design/KNIZNICA.md` (vizuál `Contineo Obrazovky.dc.html`,
+sekcia `#s-kniznica`), päť úloh:
+
+- **Stavové pilulky nesú farbu** — publikované zelené, koncept oranžový,
+  na schválenie v akcente, zlyhanie prevodu červené. Technický stav
+  spracovania sa ukazuje len keď niečo hovorí („vo vyhľadávaní" pri každom
+  riadku bol šum).
+- **Potvrdenia sú vodorovný pásik + percento** v tabuľke aj na karte —
+  osem pásikov sa dá porovnať pohľadom, osem čísel v texte nie. Menovateľ
+  (O6/7) nezmizol: nesie ho `title` a text pre čítačku. Pomlčka znamená
+  „nikomu nepridelené", nie „nikto nepotvrdil".
+- **Pole hľadania nesie značku Continea** (nie lupu) a má 36 px / r9 ako
+  pole v hlavičke.
+- **Pás hromadných akcií na telefóne nahradí spodnú navigačnú lištu** —
+  dva pásy nad sebou by oba tvrdili, že sú dôležité. „Zrušiť výber" je ×
+  v rohu pásu.
+- **Karta dokumentu podľa rámu Telefón 390**: výber 22 px vľavo vo vlastnom
+  stĺpci, prvý riadok pilulka · kategória · verzia, pod názvom
+  `interné číslo · priečinok`, posledný riadok pásik potvrdení. Označená
+  karta to povie plochou.
+
 ### Knižnica podľa vzoru: nástroje pri zozname, pás akcií vo farbe, textová navigácia (2026-09-21)
 
 Opravy z Jánovej kontroly produkcie proti návrhu (Obrazovky.dc.html):

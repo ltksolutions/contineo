@@ -9,7 +9,7 @@
 import { notFound, redirect } from "next/navigation"
 import Link from "next/link"
 import { libraryContext } from "@/lib/library"
-import { libraryList, libraryFacets } from "@/lib/libraryRead"
+import { libraryList, libraryFacets, statusTagClass } from "@/lib/libraryRead"
 import { allFolders, flattenTree, counts } from "@/lib/folders"
 import { allDepartments } from "@/lib/departments"
 import { documentsProgress } from "@/lib/libraryProgress"
@@ -17,6 +17,7 @@ import { codelistOptions } from "@/lib/codelists"
 import { tenantExtras } from "@/lib/codelistsTenant"
 import Select from "@/components/Select"
 import LiveFilter from "@/components/LiveFilter"
+import { ContineoMark } from "@/components/ContineoMark"
 import { moveManyAction, assignManyAction } from "./actions"
 import AppShell from "@/components/AppShell"
 import WaitingForApproval from "@/components/WaitingForApproval"
@@ -216,6 +217,36 @@ export default async function LibraryPage({
     value === "published" ? t.statusPublished
     : value === "in-review" ? t.statusInReview
     : t.statusDrafts
+
+  /* Text pilulky pri jednom dokumente — facetové „koncepty" je množné
+     číslo a na riadku by klamalo počtom. */
+  const statusPill = (value: string) =>
+    value === "published" ? t.statusPublished
+    : value === "in-review" ? t.statusInReview
+    : t.draft
+
+  /*
+   * Potvrdenia ako pásik (KNIZNICA.md, úloha 2): stĺpec sa skenuje očami
+   * zhora dolu — osem čísel v texte sa neskenuje, osem pásikov áno.
+   * Menovateľ (O6/7) nezmizol: nesie ho `title` a text pre čítačku.
+   * Pomlčka znamená „nie je čo potvrdzovať" (nikomu nepridelené) — prázdny
+   * pásik by znamenal „nikto nepotvrdil", a to sú dve rôzne správy.
+   * Šírka výplne je inline: je to dátová hodnota, nie štýl.
+   */
+  const ackBar = (versionId?: string) => {
+    const p = versionId ? progress.get(versionId) : undefined
+    if (!p || p.percent === null) return <span className="quiet">—</span>
+    const tone = p.percent >= 90 ? "high" : p.percent >= 50 ? "mid" : "low"
+    return (
+      <span className="ack-bar" title={t.acknowledgedOf(p.acknowledged, p.assigned)}>
+        <span className="ack-track" aria-hidden="true">
+          <span className={`ack-fill ack-fill--${tone}`} style={{ width: `${p.percent}%` }} />
+        </span>
+        <span className="ack-value" aria-hidden="true">{p.percent} %</span>
+        <span className="sr-only">{t.acknowledgedOf(p.acknowledged, p.assigned)}</span>
+      </span>
+    )
+  }
 
   const facetLabel: Record<MultiKey, { title: string; label: (v: string) => string }> = {
     category: { title: t.category, label: categoryLabel },
@@ -464,6 +495,12 @@ export default async function LibraryPage({
       */}
       <div className="library-toolbar">
         <LiveFilter className="library-search" action="/library" label={t.search}>
+          {/* Značka, nie lupa (KNIZNICA.md, úloha 3): v celom portáli nesie
+              každé vstupné pole značku — nie je to hľadanie v tabuľke, je to
+              otázka položená obsahu. Nie je interaktívna, prstenec nemá. */}
+          <span className="library-search-mark" aria-hidden="true">
+            <ContineoMark size={16} />
+          </span>
           {/* Bez viditeľného labelu (vzor) — meno poľa nesie `aria-label`
               a placeholder; lišta má byť jeden riadok. */}
           <input
@@ -702,8 +739,11 @@ export default async function LibraryPage({
             <button className="button button--quiet" type="submit" formAction={assignManyAction}>
               {tl.assign}
             </button>
-            <Link className="bulk-clear" href={toQuery(clearPicked(filters))}>
-              {tl.clearPicked}
+            {/* Na telefóne sa text nezmestí — ostáva ×; meno akcie nesie
+                `aria-label` (KNIZNICA.md, úloha 4). */}
+            <Link className="bulk-clear" href={toQuery(clearPicked(filters))} aria-label={tl.clearPicked}>
+              <span className="bulk-clear-label">{tl.clearPicked}</span>
+              <span className="bulk-clear-x" aria-hidden="true">×</span>
             </Link>
 
             {/* Kam sa vrátiť — s filtrom, triedením aj stranou; po akcii je
@@ -735,41 +775,50 @@ export default async function LibraryPage({
           */
           <ul className={`doc-cards${view === "auto" ? " doc-view-auto" : ""}`}>
             {paged.rows.map(r => (
-              <li key={r.documentId} className="doc-card">
-                <div className="doc-card-top">
-                  <Link
-                    href={toQuery(togglePick(filters, r.documentId))}
-                    className={`bulk-pick${isPicked(r.documentId) ? " is-on" : ""}`}
-                    aria-pressed={isPicked(r.documentId)}
-                  >
-                    <span className="bulk-pick-box" aria-hidden="true">{isPicked(r.documentId) ? "✓" : ""}</span>
-                    <span className="bulk-pick-text">{tl.pick(r.title)}</span>
-                  </Link>
-                  <span className="tag">{t.processing[r.processingState] ?? r.processingState}</span>
-                  {r.hasDraft && r.status !== "published" && <span className="tag">{t.draft}</span>}
-                  {r.category && <span className="quiet doc-card-kind">{categoryLabel(r.category)}</span>}
-                </div>
-
-                <Link href={`/library/${encodeURIComponent(r.documentId)}`} className="doc-card-title">
-                  {r.title}
+              <li key={r.documentId} className={`doc-card${isPicked(r.documentId) ? " is-picked" : ""}`}>
+                {/* Výber vľavo mimo obsahu (KNIZNICA.md, úloha 5): 22 px
+                    políčko vo vlastnom stĺpci karty, ako v rámoch — v riadku
+                    pilúl sa strácalo medzi nimi. */}
+                <Link
+                  href={toQuery(togglePick(filters, r.documentId))}
+                  className={`bulk-pick doc-card-pick${isPicked(r.documentId) ? " is-on" : ""}`}
+                  aria-pressed={isPicked(r.documentId)}
+                >
+                  <span className="bulk-pick-box" aria-hidden="true">{isPicked(r.documentId) ? "✓" : ""}</span>
+                  <span className="bulk-pick-text">{tl.pick(r.title)}</span>
                 </Link>
 
-                <div className="quiet doc-meta">
-                  {r.internalNumber && `${r.internalNumber} · `}
-                  {r.folderTrail?.length ? `${r.folderTrail.join(" / ")} · ` : ""}
-                  {r.documentId}
-                </div>
+                <div className="doc-card-body">
+                  <div className="doc-card-top">
+                    <span className={statusTagClass(r.status)}>{statusPill(r.status)}</span>
+                    {/* Technický stav spracovania len keď niečo hovorí —
+                        „vo vyhľadávaní" je normálny koniec a pri každom
+                        riadku by bol šum; zlyhanie je jediné červené. */}
+                    {r.processingState !== "indexed" && (
+                      <span className={r.processingState === "failed" ? "tag tag--expired" : "tag"}>
+                        {t.processing[r.processingState] ?? r.processingState}
+                      </span>
+                    )}
+                    {r.category && <span className="quiet doc-card-kind">{categoryLabel(r.category)}</span>}
+                    {/* Verzia vpravo — čo platí, na jeden pohľad. */}
+                    <span className="quiet doc-card-version">{r.effectiveLabel}</span>
+                  </div>
 
-                <div className="quiet doc-meta doc-card-foot">
-                  {r.effectiveLabel}
-                  {r.effectiveTo && ` · ${t.colEffectiveTo} ${formatDate(r.effectiveTo, uiLanguage)}`}
-                  {(() => {
-                    const p = r.effectiveVersionId ? progress.get(r.effectiveVersionId) : undefined
-                    return p && p.percent !== null
-                      ? ` · ${p.percent} % (${t.acknowledgedOf(p.acknowledged, p.assigned)})`
-                      : ""
-                  })()}
-                  {r.updatedAt && ` · ${formatDate(r.updatedAt, uiLanguage)}`}
+                  <Link href={`/library/${encodeURIComponent(r.documentId)}`} className="doc-card-title">
+                    {r.title}
+                  </Link>
+
+                  {/* Kde dokument je. Kľúč len ako záloha, keď niet čísla ani
+                      priečinka — riadok nemá byť prázdny (úloha 5). */}
+                  <div className="quiet doc-card-where">
+                    {[
+                      r.internalNumber,
+                      r.folderTrail?.length ? r.folderTrail.join(" / ") : undefined,
+                    ].filter(Boolean).join(" · ") || r.documentId}
+                  </div>
+
+                  {/* Pásik potvrdení je posledný riadok karty (úloha 2). */}
+                  {ackBar(r.effectiveVersionId)}
                 </div>
               </li>
             ))}
@@ -861,8 +910,17 @@ export default async function LibraryPage({
                     </td>
                     <td className="doc-cell-quiet">{r.category ? categoryLabel(r.category) : "—"}</td>
                     <td>
-                      <span className="tag">{t.processing[r.processingState] ?? r.processingState}</span>
-                      {r.hasDraft && r.status !== "published" && <span className="tag">{t.draft}</span>}
+                      {/* Farba nesie stav (KNIZNICA.md, úloha 1). */}
+                      <span className={statusTagClass(r.status)}>{statusPill(r.status)}</span>
+                      {/* Technický stav spracovania len keď niečo hovorí —
+                          „vo vyhľadávaní" je normálny koniec a pri každom
+                          riadku by bol šum; zlyhanie je jediné červené.
+                          Pilulka „koncept" splynula so stavovou. */}
+                      {r.processingState !== "indexed" && (
+                        <span className={r.processingState === "failed" ? "tag tag--expired" : "tag"}>
+                          {t.processing[r.processingState] ?? r.processingState}
+                        </span>
+                      )}
                     </td>
                     <td className="doc-cell-quiet">
                       {r.effectiveLabel}
@@ -885,29 +943,12 @@ export default async function LibraryPage({
                       {r.effectiveTo ? formatDate(r.effectiveTo, uiLanguage) : "—"}
                     </td>
                     {/*
-                      Percento **nikdy samo** (O6/7): pod ním je menovateľ.
-                      „100 %" pri dokumente pridelenom trom ľuďom a „100 %" pri
-                      dokumente pridelenom štyristo ľuďom sú dve rôzne správy
-                      a bez menovateľa vyzerajú rovnako.
-
-                      Pomlčka znamená „nikomu nepridelené", nie „nikto
-                      nepotvrdil" — to sú dve rôzne veci a nula by z prvého
-                      spravila druhé.
+                      Pásik + percento (KNIZNICA.md, úloha 2). Menovateľ
+                      (O6/7 — percento nikdy samo) nesie `title` a text pre
+                      čítačku: „100 %" z troch a „100 %" zo štyristo sú dve
+                      rôzne správy.
                     */}
-                    <td className="doc-cell-quiet">
-                      {(() => {
-                        const p = r.effectiveVersionId ? progress.get(r.effectiveVersionId) : undefined
-                        if (!p || p.percent === null) return "—"
-                        return (
-                          <>
-                            {p.percent} %
-                            <div className="quiet doc-meta">
-                              {t.acknowledgedOf(p.acknowledged, p.assigned)}
-                            </div>
-                          </>
-                        )
-                      })()}
-                    </td>
+                    <td>{ackBar(r.effectiveVersionId)}</td>
                     <td className="doc-col-right doc-cell-quiet">
                       {r.updatedAt ? formatDate(r.updatedAt, uiLanguage) : "—"}
                       {r.updatedBy && <div className="quiet doc-meta">{r.updatedBy}</div>}
