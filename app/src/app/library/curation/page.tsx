@@ -76,12 +76,10 @@ export default async function CurationPage({
         {pending.map(item => (
           <div key={item.id} className="card">
             <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center", marginBottom: 10 }}>
-              <span
-                className="tag"
-                style={item.accessLevelPreview === "public"
-                  ? { fontSize: "var(--fs-micro)", fontWeight: 600 }
-                  : { background: "var(--warn-bg)", color: "var(--warn-fg)", fontSize: "var(--fs-micro)", fontWeight: 600 }}
-              >
+              {/* Prístup je stav a farba ho nesie (SPRAVA, úloha 2.2):
+                  verejné zelené — smie von; interné sivé — je to predvolený
+                  stav, nie chyba, preto nie jantárová ani červená. */}
+              <span className={item.accessLevelPreview === "public" ? "tag tag--published" : "tag tag--archived"}>
                 {t.access}: {item.accessLevelPreview === "public" ? t.accessPublic : t.accessInternal}
               </span>
               <span className="quiet" style={{ fontSize: "var(--fs-micro)", marginLeft: "auto" }}>
