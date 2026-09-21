@@ -875,7 +875,7 @@ export default async function LibraryPage({
               </thead>
               <tbody>
                 {paged.rows.map(r => (
-                  <tr key={r.documentId}>
+                  <tr key={r.documentId} className={isPicked(r.documentId) ? "is-picked" : undefined}>
                     <td className="doc-col-pick">
                       <Link
                         href={toQuery(togglePick(filters, r.documentId))}

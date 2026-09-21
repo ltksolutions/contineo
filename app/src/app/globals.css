@@ -2102,6 +2102,19 @@ html[data-theme="dark"] .editor-tui .CodeMirror {
 .doc-table tbody tr:last-child td { border-bottom: 0; }
 .doc-table tbody tr:hover { background: var(--bg); }
 
+/*
+ * Označený riadok (ZAKLAD, úloha 4): k pozadiu `--accent-soft` ľavý pruh
+ * 3 px v `--accent`. V tmavej téme je accent-soft proti `--surface` rozdiel,
+ * ktorý pri jednom riadku medzi neoznačenými nevidieť — pruh áno.
+ * `box-shadow: inset`, nie `border-left`: okraj by riadok posunul o 3 px
+ * a stĺpce by sa medzi označeným a neoznačeným riadkom rozišli.
+ * Stojí za `:hover` zámerne — označený riadok si pozadie drží aj pod myšou.
+ */
+.doc-table tbody tr.is-picked { background: var(--accent-soft); }
+.doc-table tbody tr.is-picked td:first-child {
+  box-shadow: inset 3px 0 0 var(--accent);
+}
+
 /* Hlavička je odkaz, ktorý mení adresu — musí to byť vidieť aj bez farby. */
 .doc-sort {
   display: inline-flex;
