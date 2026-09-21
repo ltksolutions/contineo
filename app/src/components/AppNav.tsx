@@ -21,15 +21,18 @@
  * (`.app-nav--measure`) dá šírky a `ResizeObserver` na páse ich pri každej
  * zmene šírky prepočíta. **Bez JavaScriptu** sa vykreslí prvých
  * `STRIP_DEFAULT_VISIBLE` položiek + „Viac" so zvyškom — serverové HTML je
- * presne tento stav a skript ho len spresňuje. Dvojník meria položky
- * v aktívnom reze (650, nie 500) — aktívna položka je širšia a merať tenšiu
- * by znamenalo, že pás pretečie práve na stránke, ktorá je otvorená.
+ * presne tento stav a skript ho len spresňuje. Dvojník kreslí v aktívnom
+ * reze (650) len položku, ktorá aktívna naozaj je — merať všetky nabold
+ * bolo príliš opatrné a „Viac 1" sa ukazovalo aj tam, kde sa pás zmestil.
+ *
+ * **Pás je textový** (vzor, PR 7): s ikonou pri každej položke sa desať
+ * položiek do šírky shellu nezmestí a „Na posúdenie" prepadávalo do „Viac"
+ * aj na širokom monitore. Ikony zostávajú tam, kde nesú informáciu samy —
+ * v spodnej lište a v bočnom paneli (vlastné, rozhodnutie 2026-09-14,
+ * `docs/O6_rozhodovaci_harok.md` bod 1; pravidlá v `Icon.tsx`).
  *
  * Variant `sidebar` zostáva: bočný panel od 640 px, pod 640 px aj on
  * ustupuje spodnej lište.
- *
- * Ikony sú vlastné (rozhodnutie Jána Letka 2026-09-14,
- * `docs/O6_rozhodovaci_harok.md` bod 1) — pravidlá v `Icon.tsx`.
  *
  * Zoznam položiek a čisté funkcie sú v `lib/appNav.ts`, nie tu: z modulu
  * s `"use client"` sa funkcia na serveri volať nedá a `/more` aj `/library`
@@ -77,7 +80,7 @@ export default function AppNav({
    * Závislosť je odtlačok obsahu — šírka položky sa mení s jazykom aj
    * s číslom v odznaku, nie len s počtom položiek.
    */
-  const fingerprint = items.map(o => `${o.key}:${o.count ?? ""}`).join("|") + "|" + (language ?? "")
+  const fingerprint = items.map(o => `${o.key}:${o.count ?? ""}`).join("|") + "|" + (language ?? "") + "|" + pathname
   useEffect(() => {
     const bar = strip.current
     const twin = measure.current
@@ -117,9 +120,10 @@ export default function AppNav({
     watcher.observe(bar)
     watcher.observe(twin)
     return () => watcher.disconnect()
+    // `fingerprint` nesie aj cestu: aktívna položka je hrubším rezom širšia.
   }, [fingerprint, layout])
 
-  const link = (o: NavItem) => {
+  const link = (o: NavItem, icon = true) => {
     const active = isActive(pathname, o.href)
     return (
       <Link
@@ -130,11 +134,10 @@ export default function AppNav({
       >
         {/*
           Ikona je **ozdoba, nie náhrada popisku**: `aria-hidden`, text zostáva.
-          Ikonová navigácia bez slov je hádanka, ktorú sa človek musí naučiť —
-          a pri položkách ako „Na potvrdenie" verzus „Na schválenie" by ju
-          neuhádol ani po týždni.
+          V páse sa nekreslí vôbec (vzor, PR 7) — desať položiek s ikonami sa
+          do shellu nezmestí; v bočnom paneli áno, tam stoja pod sebou.
         */}
-        <Icon name={o.key} size={16} />
+        {icon && <Icon name={o.key} size={16} />}
         {t[o.key]}
         {/*
           Nula sa nekreslí vôbec. Štítok s nulou nie je informácia, je to šum —
@@ -187,7 +190,7 @@ export default function AppNav({
     return (
       <>
         <nav className={`app-nav app-nav--${layout}`} aria-label={t.sections}>
-          {items.map(link)}
+          {items.map(o => link(o))}
         </nav>
         {tabbar}
       </>
@@ -200,12 +203,12 @@ export default function AppNav({
   return (
     <>
       <nav ref={strip} className="app-nav app-nav--topbar" aria-label={t.sections}>
-        {shown.map(link)}
+        {shown.map(o => link(o, false))}
         <details ref={morePopup} className="app-nav-more" hidden={overflow.length === 0}>
           <summary className="app-nav-item app-nav-more-toggle">
             {t.more} {overflow.length}
           </summary>
-          <div className="app-nav-more-menu">{overflow.map(link)}</div>
+          <div className="app-nav-more-menu">{overflow.map(o => link(o, false))}</div>
         </details>
       </nav>
 
@@ -217,8 +220,7 @@ export default function AppNav({
       */}
       <div ref={measure} className="app-nav app-nav--topbar app-nav--measure" aria-hidden="true">
         {items.map(o => (
-          <span key={o.href} className="app-nav-item is-active">
-            <Icon name={o.key} size={16} />
+          <span key={o.href} className={`app-nav-item${isActive(pathname, o.href) ? " is-active" : ""}`}>
             {t[o.key]}
             {typeof o.count === "number" && o.count > 0 && <span className="app-nav-count">{o.count}</span>}
           </span>

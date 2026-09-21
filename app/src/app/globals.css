@@ -2333,41 +2333,47 @@ html[data-theme="dark"] .editor-tui .CodeMirror {
 
 /* Koľko je označených — a koľko z toho nie je vidieť. Riadok je nad zoznamom,
    nie v pätičke: je to varovanie pred hromadnou akciou, nie štatistika. */
-.bulk-picked {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: 4px 10px;
-  margin: 0 0 10px;
-  padding: 7px 11px;
-  font-size: 13.5px;
-  background: var(--accent-soft);
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-}
-
-.bulk-picked-outside { font-size: 13px; }
-.bulk-picked-clear { margin-left: auto; font-size: 13px; }
-
+/* Pás hromadných akcií — nad zoznamom, vo farbe akcentu (vzor, PR 7).
+   Výber je výnimočný stav a pás to má povedať farbou; tichá karta pod
+   tabuľkou sa strácala. */
 .bulk-bar {
   display: flex;
   flex-wrap: wrap;
   align-items: flex-end;
-  gap: 10px;
-  margin-top: 12px;
-  padding: 10px 12px;
-  background: var(--surface);
-  border: 1px solid var(--line);
+  gap: 8px 10px;
+  margin: 0 0 12px;
+  padding: 8px 12px;
+  background: var(--accent);
+  color: var(--on-accent);
   border-radius: var(--radius);
 }
 
 .bulk-title {
   align-self: center;
   font-size: 13.5px;
-  font-weight: 600;
+  font-weight: 650;
 }
 
+.bulk-picked-outside { align-self: center; font-size: 13px; opacity: 0.85; }
+
 .bulk-bar .field { margin: 0; }
+.bulk-bar .field-label { color: inherit; opacity: 0.85; }
+
+/* Tlačidlá na akcente: plné svetlé, nie priehľadné — inak by splynuli. */
+.bulk-bar .button--quiet {
+  background: var(--surface);
+  color: var(--ink);
+  border-color: transparent;
+}
+
+.bulk-clear {
+  align-self: center;
+  margin-left: auto;
+  font-size: 13px;
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
 
 /* Na telefóne panel prekryje spodnú lištu navigácie (z-index nad ňou):
    kto vyberá dokumenty, je uprostred úlohy — akcie majú byť pod palcom,
@@ -2454,11 +2460,13 @@ html[data-theme="dark"] .editor-tui .CodeMirror {
    to funguje bez skriptu a čítačka obrazovky o stave vie sama. Otvorený je
    vtedy, keď nejaké podmienky sú — inak by človek nevidel, prečo je zoznam
    krátky. */
+/* Zavretý je to chip „+ Podmienka" v lište nástrojov (vzor, PR 7);
+   otvorený sa roztiahne na šírku stĺpca a ukáže riadky podmienok. */
 .builder {
   margin-bottom: 16px;
   padding: 10px 12px;
   background: var(--surface);
-  border: 1px solid var(--line);
+  border: 1px dashed var(--line);
   border-radius: var(--radius);
 }
 
@@ -2702,22 +2710,29 @@ html[data-theme="dark"] .editor-tui .CodeMirror {
   .view-switch-item--auto-table { background: var(--surface); color: var(--ink); }
 }
 
-/* ── knižnica: hľadanie a chips aktívnych filtrov ───────────────────────── */
-.library-search-row {
+/* ── knižnica: lišta nástrojov zoznamu (vzor, PR 7) ─────────────────────────
+   Pole hľadania, chips a „+ Podmienka" v jednom riadku v stĺpci zoznamu —
+   filtre vľavo, všetko o zozname pri zozname. */
+.library-toolbar {
   display: flex;
-  align-items: flex-end;
-  gap: 10px;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 10px;
   margin-bottom: 12px;
 }
 
 .library-search {
-  flex: 1 1 auto;
+  flex: 1 1 280px;
   min-width: 0;
   display: flex;
-  flex-wrap: wrap;
-  align-items: flex-end;
-  gap: 10px;
+  align-items: center;
+  gap: 8px;
 }
+
+.library-search-input { flex: 1 1 160px; min-width: 140px; }
+
+/* Chips žijú v lište — vlastný spodný odstup tam nemajú. */
+.library-toolbar .library-chips { margin-bottom: 0; }
 
 /*
  * Zásuvka filtrov pod 1024 px (NASADENIE, PR 4). `<details>`: tlačidlo
@@ -3630,12 +3645,11 @@ a.answer-source:focus-visible { outline: 2px solid var(--accent); outline-offset
    takže čítačka vidí vždy len jednu navigáciu. */
 
 /*
- * Bodka na zvončeku v hlavičke (NASADENIE, PR 3). Nie pilulka s číslom
- * (to je `.app-nav-count` v navigácii), ale 7 px bodka `--bad-fg` cez
- * pravý horný roh zvončeka — signál „máš nové" na jeden pohľad; počet
- * povie `aria-label` a stránka upozornení. Pri nule sa nekreslí vôbec
- * (kreslenie rieši Header). Lem vo farbe podkladu ju oddelí od ikony
- * aj v tmavej téme.
+ * Odznak na zvončeku v hlavičke — skutočný počet, nie bodka. NASADENIE
+ * (PR 3) chcelo bodku; rozhodnutie Jána Letka 2026-09-21 vrátilo číslo:
+ * bodka hovorí len „niečo", číslo hovorí „koľko". Pri nule sa nekreslí
+ * vôbec (kreslenie rieši Header). Lem vo farbe podkladu ho oddelí od
+ * ikony aj v tmavej téme.
  */
 /*
  * Zvonček v hlavičke. Vlastný terč 40 px — kruh ako avatar vedľa neho, nie
@@ -3657,14 +3671,22 @@ a.answer-source:focus-visible { outline: 2px solid var(--accent); outline-offset
 .bell:hover { background: var(--surface-2); }
 .bell:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
-.bell-dot {
+.bell-badge {
   position: absolute;
-  top: 7px;
-  right: 8px;
-  width: 7px;
-  height: 7px;
-  border-radius: 999px;
+  top: 2px;
+  right: 1px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9px;
   background: var(--bad-fg);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1;
   border: 2px solid var(--surface);
 }
 

@@ -3195,7 +3195,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       internalNumberPlaceholder: "12/2024",
     },
     list: {
-      heading: "Knižnica",
+      heading: "Knižnica dokumentov",
       upload: "Nahrať dokument",
       introBefore: "Nahratý súbor sa prevedie na text, ktorý si ",
       introHighlight: "prečítaš a opravíš",
@@ -3251,7 +3251,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
         assign: "Vyžiadať potvrdenie",
       },
       builder: {
-        heading: "Podmienky",
+        heading: "+ Podmienka",
         hint: "Vnútri skupiny platí „a“, medzi skupinami „alebo“ — teda (A a B) alebo (C a D). Spojku pred riadkom zmeníte odkazom vedľa neho.",
         field: "Pole",
         op: "Operátor",
@@ -5023,7 +5023,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       internalNumberPlaceholder: "12/2024",
     },
     list: {
-      heading: "Knihovna",
+      heading: "Knihovna dokumentů",
       upload: "Nahrát dokument",
       introBefore: "Nahraný soubor se převede na text, který si ",
       introHighlight: "přečteš a opravíš",
@@ -5079,7 +5079,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
         assign: "Vyžádat potvrzení",
       },
       builder: {
-        heading: "Podmínky",
+        heading: "+ Podmínka",
         hint: "Uvnitř skupiny platí „a“, mezi skupinami „nebo“ — tedy (A a B) nebo (C a D). Spojku před řádkem změníte odkazem vedle něj.",
         field: "Pole",
         op: "Operátor",
@@ -6845,7 +6845,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       internalNumberPlaceholder: "12/2024",
     },
     list: {
-      heading: "Library",
+      heading: "Document library",
       upload: "Upload a document",
       introBefore: "An uploaded file is converted into text that you ",
       introHighlight: "read and correct",
@@ -6901,7 +6901,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
         assign: "Request acknowledgement",
       },
       builder: {
-        heading: "Conditions",
+        heading: "+ Condition",
         hint: "Within a group “and” applies, between groups “or” — that is (A and B) or (C and D). Change the connector before a row with the link next to it.",
         field: "Field",
         op: "Operator",
