@@ -1624,6 +1624,8 @@ html[data-theme="dark"] select.field-input {
 .answer {
   font-size: 15.5px;
   line-height: 1.75;
+  /* Riadok textu cez 1440 px sa nečíta (ASK, úloha 4). */
+  max-width: 70ch;
 }
 
 .answer > *:last-child { margin-bottom: 0; }
@@ -3308,7 +3310,9 @@ a.answer-source:focus-visible { outline: 2px solid var(--accent); outline-offset
    svojho najdlhšieho slova a dlhý názov dokumentu roztiahne kartu. */
 .answer-source-body { flex: 1; min-width: 0; }
 
-.answer-source-title { font-size: 12.5px; font-weight: 600; }
+/* Názov zdroja sa zalomí, neskráti (ASK, úloha 4) — rovnaký dôvod ako pri
+   názve normy na Prehľade: skrátený názov je nepoužiteľný údaj. */
+.answer-source-title { font-size: 12.5px; font-weight: 600; text-wrap: pretty; overflow-wrap: anywhere; }
 .answer-source-meta { display: block; font-size: 11.5px; margin-top: 2px; }
 
 /* Tretí stav obrazovky (ASK, úloha 1): nič sa nenašlo. Tvarom ako karta
@@ -3316,6 +3320,12 @@ a.answer-source:focus-visible { outline: 2px solid var(--accent); outline-offset
 .answer--none { border-style: dashed; }
 .answer-none-text { margin: 8px 0 0; font-size: var(--fs-body); line-height: 1.6; color: var(--muted); }
 .answer-none-text a { color: var(--ink); font-weight: 600; }
+
+/* Telefón (ASK, úloha 4): zdroj je dotykový cieľ 44 px a celá karta je
+   klikateľná plocha (je to `<a>`, keď zdroj niekam vedie). */
+@media (max-width: 639px) {
+  .answer-source { min-height: 44px; align-items: center; }
+}
 
 /* ── nastavenie organizácie: ukážka farby a slot na logo ─────────────────
    Voľba hlavnej farby je jediné nastavenie, ktorého dôsledok nie je z hodnoty
