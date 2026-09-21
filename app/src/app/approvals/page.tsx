@@ -113,7 +113,14 @@ export default async function ApprovalsPage({
                   </div>
                 )}
 
-                <details style={{ marginTop: 12 }}>
+                {/*
+                  Rozbalené pri jednom kole, zbalené pri dvoch a viac
+                  (APPROVALS, úloha 1). Schvaľuje sa text (D68), ktorý sa
+                  doslova ocitne v potvrdzovacej formulke (D28) — pri jednom
+                  kole je skryť ho za klik ako pýtať si podpis na zatvorenej
+                  obálke. Tri plné znenia pod sebou sa naopak nedajú čítať.
+                */}
+                <details style={{ marginTop: 12 }} open={rounds.length === 1}>
                   <summary className="quiet" style={{ fontSize: "var(--fs-small)", cursor: "pointer" }}>
                     {t.readText}
                   </summary>
