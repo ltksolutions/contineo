@@ -5,6 +5,12 @@ príkazovým riadkom — zákazník si novelu nevedel nahrať sám.
 
 Základ: `ZAKLAD.md` (PR 0). Statická referencia: `SPRAVA.html` (časť 1).
 
+> ⚠️ **Prepísané 21. 9. 2026 podľa ADR-010.** Ján rozhodol, že pole
+> **Zaradenie z formulára mizne** a **kľúč sa negeneruje ručne, ale zo
+> názvu** so živým náhľadom. Úlohy 4 a 5 nižšie sú nové; rám v
+> `SPRAVA.html` ešte kreslí starý formulár s oboma poľami —
+> **v tomto jednom bode platí zadanie, nie rám.**
+
 ---
 
 ## Čo je UŽ HOTOVÉ — nerob znova
@@ -16,11 +22,11 @@ Základ: `ZAKLAD.md` (PR 0). Statická referencia: `SPRAVA.html` (časť 1).
 | Číslované sekcie (nie stepper) | `.upload-step`, `.upload-step-no` | ✅ |
 | Zóna na pretiahnutie bez JS | `.upload-drop`, `.upload-file` | ✅ |
 | Mriežka metadát | `.upload-grid`, `.upload-wide` | ✅ |
-| Zaradenie a kľúč ako dve polia (D80) | `sectionKey` + `documentKey` | ✅ |
-| Nápoveda s hodnotami číselníka | `CODELISTS.sectionKey` | ✅ |
+| ~~Zaradenie a kľúč ako dve polia~~ | `sectionKey` + `documentKey` | ⛔ **ruší ADR-010 — viď úlohy 4 a 5** |
+| Nápoveda s hodnotami číselníka | `CODELISTS.category` | ✅ (pre Druh) |
 | Oddelenie, ktoré dokument spravuje | `ownerDepartment` | ✅ |
 | Značky cez `MultiSelect` | `t.tags` | ✅ |
-| Predvyplnenie po chybe z adresy | `?title=&sectionKey=` | ✅ |
+| Predvyplnenie po chybe z adresy | `?title=&documentKey=` | ✅ |
 | Šírka 880 px | `maxWidth: 880` | ✅ |
 
 **Stepper sa nerobí a nerobil** — schvaľovací krok pri nahrávaní neexistuje
@@ -95,15 +101,79 @@ SVG zámerne nepodporujeme
 Hodnoty ber z `lib/branding.ts` (`MAX_BYTES`, `ALLOWED_TYPES`) — nie
 natvrdo. Keď sa limit zmení, text sa zmení s ním.
 
-## Úloha 4 — Sekcia 2 má na telefóne 11 polí v jednom stĺpci
+## Úloha 4 — Kľúč sa negeneruje ručne: pole nahradí náhľad (ADR-010)
 
-**Teraz:** `.upload-grid` má 11 polí. Na 390 px je to stĺpec vysoký ~1400 px
-a tlačidlo „Nahrať" je pod ním.
+**Teraz:** formulár pýta **Kľúč** ako povinné textové pole a nápoveda
+hovorí, že nevyplnený sa doplní zo zaradenia.
 
-**Má byť:** **povinné polia zostanú, nepovinné do `<details>`.**
+**Prečo to musí zmiznúť:** doplnenie zo zaradenia je pasca. Zaradenie je
+kategória — `poriadky` zdieľajú všetky poriadky — takže prvý dokument
+kategórie kľúč obsadí a identita ďalších je lož. „poriadky" nie je identita
+Pracovného poriadku.
 
-Povinné (vždy vidieť): názov, zaradenie, kľúč, prístup, jazyk.
-Nepovinné (v `<details>` „Ďalšie údaje"): druh, oddelenie, interné číslo,
+**Má byť:**
+
+1. **Pole „Kľúč" zmizne z bežného toku.** Kľúč vzniká ako slug z názvu:
+   malé písmená bez diakritiky, medzery a interpunkcia na podčiarkovník
+   („Pracovný poriadok SFZ" → `pracovny_poriadok_sfz`).
+2. **Pod poľom Názov je náhľad výsledného identifikátora** — celý, s
+   prefixom tenanta:
+
+```
+Identifikátor: sfz:pracovny_poriadok_sfz
+```
+
+```css
+.key-preview {
+  margin-top: 6px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: var(--fs-micro);
+  color: var(--muted);
+}
+.key-preview-value { color: var(--ink); }
+.key-preview--taken { color: var(--bad-fg); }
+```
+
+3. **Prepísať sa dá, ale je to vedomý krok** — `<details>` „Zadať kľúč
+   ručne" hneď pod náhľadom, nie samostatné pole v mriežke. Text v ňom:
+   „Kľúč vzniká raz a nikdy sa nemení — žije v potvrdeniach, audite a
+   exportoch. Premenovanie dokumentu ho nemení."
+4. **Pri kolízii varuj pred odoslaním** (`.key-preview--taken`):
+   „Identifikátor `sfz:pracovny_poriadok` je obsadený. Upravte názov, alebo
+   zadajte kľúč ručne." Serverová kontrola v `uploadDocument()` zostáva
+   poslednou bránou.
+
+⚠️ **Živý náhľad podľa toho, čo človek píše, vyžaduje JavaScript.**
+Handoff inak stojí na tom, že nič JS nevyžaduje — preto: **bez skriptu sa
+náhľad nevykreslí vôbec** (nie prázdny), pole na ručné zadanie zostane
+prístupné a server kľúč doplní sám. Formulár musí odoslateľný bez skriptu,
+len bez náhľadu.
+
+## Úloha 5 — Zaradenie sa zlučuje do Druhu (ADR-010)
+
+**Pole „Zaradenie" z formulára odstráň.** Od D80 je zaradenie len
+zoskupovanie — a presne to isté robí **Druh** (`category`). Dve polia na
+jednu rolu znamenajú, že pri každom dokumente niekto rieši, čím sa líšia.
+
+- **Druh sa stáva povinným** a presúva sa medzi hlavné polia (dnes je
+  nepovinný).
+- `sectionKey` **v dátach zostáva** — určuje `documentId` dokumentom spred
+  D80. Vo formulári o ňom nie je ani slovo.
+- Nápoveda pri Druhu vypisuje hodnoty z `CODELISTS.category`, nie
+  `sectionKey`.
+
+🔴 **Migráciu hodnôt `sectionKey.json` → `category.json` v tomto PR
+nerob.** ADR-010 ju radí až po Fáze 8 (ide o ostré dáta). Tento PR mení
+**len formulár**; ak v číselníku Druhov hodnota chýba, je to vec migrácie,
+nie tohto PR.
+
+## Úloha 6 — Sekcia 2 má na telefóne dlhý stĺpec
+
+Po úlohách 4 a 5 má formulár o jedno pole menej a kľúč je v `<details>`.
+Zostáva rozdelenie na hlavné a ďalšie:
+
+**Hlavné (vždy vidieť):** názov (+ náhľad kľúča), druh, prístup, jazyk.
+**Ďalšie (v `<details>` „Ďalšie údaje"):** oddelenie, interné číslo,
 značky, rozsah.
 
 ```css
@@ -115,11 +185,8 @@ značky, rozsah.
 }
 ```
 
-**Na desktope je `<details>` otvorené** (`open` atribút pri šírke nad 1024
-sa cez CSS nastaviť nedá — daj `open` vždy a na telefóne to človek zavrie
-sám; alebo, čistejšie: `open` nastav v `page.tsx` vždy `true` a
-neriešiť to). Rozhodnutie: **vždy `open`**. Zbalené nepovinné polia na
-desktope by boli skrytá práca; na telefóne stačí, že sú dole.
+`<details>` dávaj **vždy `open`**. Zbalené nepovinné polia na desktope by
+boli skrytá práca; na telefóne stačí, že sú dole.
 
 ---
 
@@ -129,6 +196,10 @@ desktope by boli skrytá práca; na telefóne stačí, že sú dole.
 | --- | --- |
 | **1440** | Obsah 880 px; `.upload-grid` dva stĺpce; `.upload-wide` cez oba |
 | **390** | Jeden stĺpec; nepovinné polia v `<details>`; „Nahrať" na celú šírku 44 px |
+
+**Rám v `SPRAVA.html` je v tomto zastaraný** — kreslí Zaradenie aj Kľúč ako
+polia v mriežke. Všetko ostatné (zóna na súbor, hlásenia, značky, rozloženie)
+platí.
 
 ---
 
@@ -140,4 +211,5 @@ desktope by boli skrytá práca; na telefóne stačí, že sú dole.
 | Počet strán pred nahraním | ❌ to isté. |
 | Schvaľovateľ pri nahrávaní | ❌ kolo sa zakladá na detaile, nie tu (ADR-006). |
 
-🔴 Zmena schémy: **netreba žiadnu.**
+🔴 Zmena schémy: **netreba žiadnu.** `sectionKey` zostáva v dátach; mizne
+len z formulára.

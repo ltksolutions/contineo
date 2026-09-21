@@ -3,9 +3,9 @@
 **Odpoveď na otázku „môžeme začať?“: áno, ale nie všetko naraz a nie hneď
 na `main`.**
 
-Navrhnutých je všetkých 31 rout handoffu (`MASTER.md`). Poradie ale nie je
-ľubovoľné: `ZAKLAD` nesie všetko ostatné a vlna A sú obrazovky, ktoré človek
-vidí každý deň.
+Navrhnutých je 8 obrazoviek z 31 (`MASTER.md`). To stačí na začatie, pretože
+poradie nie je ľubovoľné: `ZAKLAD` nesie všetko ostatné a vlna A sú obrazovky,
+ktoré človek vidí každý deň.
 
 ---
 
@@ -74,7 +74,7 @@ vzhľadu. Nech si na ňu najprv zvykne niekto interne.
 
 - **`layout.tsx`** — jediná povolená zmena zatiaľ bola `viewport-fit=cover`
   (schválená 21. 9. 2026).
-- **Zmena schémy.** Žiadne zo štrnástich zadaní ju nepotrebuje. Ak ju niektoré
+- **Zmena schémy.** Žiadne z ôsmich zadaní ju nepotrebuje. Ak ju niektoré
   vyžaduje, je to v ňom vyznačené 🔴 a čaká na rozhodnutie.
 - **`--accent` `#232a35`** a **`darken(hex, 0.16)`.** Tenant farbu skladá
   `tenantStyle()`.
