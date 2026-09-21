@@ -221,6 +221,7 @@ describe("výber ľudí na dnešnú pripomienku", () => {
     since: at("2026-09-01"),
     due,
     acknowledgedAt: null,
+    firstOpenedAt: null,
     readingSeconds: null,
     ...over,
   })

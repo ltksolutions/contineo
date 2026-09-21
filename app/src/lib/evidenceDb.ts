@@ -12,7 +12,6 @@
  */
 
 import { duties, type Duty } from "./hrReport"
-import { opensFor } from "./documentOpens"
 import { evidenceTimeline, evidenceState, type EvidenceEvent, type EvidenceState } from "./evidence"
 
 export interface EvidenceRow {
@@ -32,14 +31,12 @@ export interface EvidenceRow {
  * ADR-005 vyhýba.
  */
 export async function evidenceRows(companyCode: string): Promise<EvidenceRow[]> {
-  const [rows, opens] = await Promise.all([duties(companyCode), opensFor(companyCode)])
+  const rows = await duties(companyCode)
 
-  // Kľúč je osoba × znenie, nie osoba × dokument: otvorenie sa viaže na
-  // znenie (D28) a človek, ktorý čítal starú verziu, novú nevidel.
-  const openAt = new Map(opens.map(o => [`${o.personId}|${o.versionId}`, o.firstOpenedAt]))
-
+  // Otvorenie už nesie `Duty` (jeden join v `duties()`, kľúč osoba × znenie,
+  // D28) — tu sa neskladá druhýkrát.
   return rows.map(duty => {
-    const firstOpenedAt = openAt.get(`${duty.personId}|${duty.versionId}`) ?? null
+    const firstOpenedAt = duty.firstOpenedAt
     const input = {
       assignedAt: duty.since,
       firstOpenedAt,

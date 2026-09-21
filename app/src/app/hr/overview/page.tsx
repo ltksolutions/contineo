@@ -22,6 +22,7 @@ import { brandingView } from "@/lib/tenants"
 import { tenantStyle } from "@/components/TenantHeader"
 import { dictionary, formatDate } from "@/lib/i18n"
 import type { UiLanguage } from "@/lib/i18n"
+import { dutyState, dutyTagClass } from "@/lib/due"
 import { normalizeQuery, type RawQuery } from "@/lib/urlParams"
 import AppShell from "@/components/AppShell"
 import Notice from "@/components/Notice"
@@ -61,6 +62,8 @@ export default async function HrReportPage({
 
   const language = ctx.person.language
   const t = dictionary(language).hr.report
+  const tds = dictionary(language).hr.dutyState
+  const now = new Date()
   const branding = brandingView(ctx.tenant)
 
   const rows = await duties(ctx.person.companyCode)
@@ -131,12 +134,10 @@ export default async function HrReportPage({
                 <span className="quiet" style={{ fontSize: "var(--fs-body)", fontVariantNumeric: "tabular-nums" }}>
                   {t.done(s.done, s.total)}
                 </span>
-                <span
-                  className="tag"
-                  style={missing === 0
-                    ? { background: "var(--ok-bg)", color: "var(--ok-fg)" }
-                    : { background: "var(--warn-bg)", color: "var(--warn-fg)" }}
-                >
+                {/* Súhrn pridelenia, nie stav jednej povinnosti — preto
+                    variant zo ZAKLADU priamo, nie `dutyTagClass()`. Farby sú
+                    tie isté, čo tu boli inline (HR.md, úloha 1). */}
+                <span className={missing === 0 ? "tag tag--published" : "tag tag--draft"}>
                   {missing === 0 ? t.complete : t.missing(missing)}
                 </span>
               </div>
@@ -165,11 +166,13 @@ export default async function HrReportPage({
                       <span style={{ flex: "1 1 200px" }}>
                         {view === "person" ? d.documentTitle : d.fullName}
                       </span>
-                      <span className="quiet" style={{ fontSize: "var(--fs-small)" }}>
-                        {d.acknowledgedAt
-                          ? `${t.acknowledgedAt} ${formatDate(d.acknowledgedAt, language)}`
-                          : t.notAcknowledged}
-                      </span>
+                      {/* Jedna škála pre celú rolu (HR.md, úloha 1). */}
+                      <span className={dutyTagClass(d, now)}>{tds[dutyState(d, now)]}</span>
+                      {d.acknowledgedAt && (
+                        <span className="quiet" style={{ fontSize: "var(--fs-small)" }}>
+                          {t.acknowledgedAt} {formatDate(d.acknowledgedAt, language)}
+                        </span>
+                      )}
                       <span className="quiet" style={{ fontSize: "var(--fs-small)", fontVariantNumeric: "tabular-nums" }}>
                         {t.readingTime} {readingLabel(d.readingSeconds, language)}
                       </span>

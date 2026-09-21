@@ -493,7 +493,6 @@ interface Dictionary {
       open: string
       /** Riadky detailu jednej položky. */
       acknowledgedAt: string
-      notAcknowledged: string
       readingTime: string
       /** Odvolanie potvrdenia (D24) — vidí to a robí len personalista. */
       revoke: string
@@ -2180,7 +2179,6 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       export: "Stiahnuť ako CSV",
       open: "Rozpísať",
       acknowledgedAt: "potvrdené",
-      notAcknowledged: "nepotvrdené",
       revoke: "Odvolať potvrdenie",
       revokeReason: "Dôvod odvolania",
       revokeHint: "Povinnosť ožije s pôvodným termínom. Ak termín už prešiel, osoba bude hneď po termíne.",
@@ -4062,7 +4060,6 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       export: "Stáhnout jako CSV",
       open: "Rozepsat",
       acknowledgedAt: "potvrzeno",
-      notAcknowledged: "nepotvrzeno",
       revoke: "Odvolat potvrzení",
       revokeReason: "Důvod odvolání",
       revokeHint: "Povinnost ožije s původním termínem. Pokud termín už uplynul, osoba bude hned po termínu.",
@@ -5937,7 +5934,6 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       export: "Download as CSV",
       open: "Break down",
       acknowledgedAt: "acknowledged",
-      notAcknowledged: "not acknowledged",
       revoke: "Revoke acknowledgement",
       revokeReason: "Reason for revoking",
       revokeHint: "The duty comes back with its original deadline. If that deadline has passed, the person is overdue immediately.",

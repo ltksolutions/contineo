@@ -26,6 +26,7 @@ import { getCollection } from "./mongodb"
 import { dueFrom, type Due } from "./due"
 import { PERSONS_COLLECTION, normalizeKeys, inDepartmentSince, inGroupSince } from "./persons"
 import { validAcknowledgements } from "./acknowledgements"
+import { opensFor } from "./documentOpens"
 import { writeAudit } from "./audit"
 import type { Person } from "./persons"
 import { AppError } from "./appError"
@@ -623,7 +624,10 @@ export async function recordNotification(
 // ── prehľad pre HR (D33) ─────────────────────────────────────────────────────
 
 /** Osoba v publiku. `language` je tu preto, že sa jej píše e-mail. */
-export type AudienceMember = Pick<Person, "id" | "email" | "fullName" | "language"> & {
+export type AudienceMember = Pick<
+  Person,
+  "id" | "email" | "fullName" | "language" | "departmentHistory" | "groupHistory"
+> & {
   /**
    * Bola v oddelení v čase pridelenia, dnes už nie je (D50).
    *
@@ -669,7 +673,14 @@ export async function audienceMembers(
   const people = await col
     .find(
       { companyCode, status: { $ne: "inactive" } },
-      { projection: { id: 1, email: 1, fullName: 1, language: 1, groups: 1, tracks: 1, departmentPath: 1 } },
+      {
+        projection: {
+          id: 1, email: 1, fullName: 1, language: 1, groups: 1, tracks: 1, departmentPath: 1,
+          // História kvôli `dueForPerson()` v `notAcknowledged()` — termín
+          // pre osobu sa počíta odkedy je v oddelení (D50), nie od pridelenia.
+          departmentHistory: 1, groupHistory: 1,
+        },
+      },
     )
     .toArray()
   return people.filter(o => matchesAudience(o, audience))
@@ -711,11 +722,22 @@ export async function assignmentOverviews(companyCode: string): Promise<Assignme
   return out
 }
 
+/**
+ * Nepotvrdená osoba na `/hr/[id]`: kto, plus to, čo pilulka stavu potrebuje
+ * (`dutyState()` — termín pre túto osobu a či znenie vôbec otvorila).
+ */
+export type NotAcknowledgedMember = AudienceMember & {
+  /** Termín pre túto osobu (D62), alebo `null` bez termínu. */
+  due: Date | null
+  /** Kedy znenie prvýkrát otvorila, alebo `null`. */
+  firstOpenedAt: Date | null
+}
+
 /** Kto z publika ešte nepotvrdil. Menovite — s tým sa dá niečo spraviť. */
 export async function notAcknowledged(
   companyCode: string,
   assignmentId: string,
-): Promise<AudienceMember[]> {
+): Promise<NotAcknowledgedMember[]> {
   if (!ObjectId.isValid(assignmentId)) return []
   const col = await getCollection<Assignment>(ASSIGNMENTS_COLLECTION)
   const a = await col.findOne({ _id: new ObjectId(assignmentId), companyCode } as never)
@@ -725,14 +747,27 @@ export async function notAcknowledged(
     ...await audienceMembers(companyCode, a.audience),
     ...await formerMembers(companyCode, a),
   ]
-  const done = new Set(
-    (await validAcknowledgements({
+  const [acks, opens] = await Promise.all([
+    validAcknowledgements({
       companyCode,
       versionId: a.subject.versionId,
       personId: members.map(c => c.id),
-    })).map(v => v.personId),
+    }),
+    opensFor(companyCode),
+  ])
+  const done = new Set(acks.map(v => v.personId))
+  // Otvorenie sa viaže na znenie (D28): kto čítal staré, nové nevidel.
+  const openAt = new Map(
+    opens.filter(o => o.versionId === a.subject.versionId).map(o => [o.personId, o.firstOpenedAt]),
   )
-  return members.filter(c => !done.has(c.id))
+  return members
+    .filter(c => !done.has(c.id))
+    .map(c => ({
+      ...c,
+      // Ten istý výpočet ako vo výkaze a vo widgete, nie druhá kópia pravidla.
+      due: dueForPerson(a, c),
+      firstOpenedAt: openAt.get(c.id) ?? null,
+    }))
 }
 
 /**

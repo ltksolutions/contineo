@@ -12,7 +12,11 @@ const data: Record<string, Row[]> = {}
 
 function collection(title: string) {
   return {
-    find: vi.fn(() => ({ toArray: async () => data[title] ?? [] })),
+    // `sort()` vracia kurzor späť — `opensFor()` ho reťazí pred `toArray()`.
+    find: vi.fn(() => {
+      const cursor = { sort: () => cursor, toArray: async () => data[title] ?? [] }
+      return cursor
+    }),
   }
 }
 
@@ -29,6 +33,7 @@ import { ACKNOWLEDGEMENTS_COLLECTION } from "../src/lib/acknowledgements"
 import { ASSIGNMENTS_COLLECTION } from "../src/lib/assignments"
 import { TRACKS_COLLECTION } from "../src/lib/tracks"
 import { READING_COLLECTION } from "../src/lib/readingTime"
+import { DOCUMENT_OPENS_COLLECTION } from "../src/lib/documentOpens"
 
 const COMPANY = "sfz"
 const YESTERDAY = new Date(Date.now() - 24 * 60 * 60 * 1000)
@@ -145,6 +150,19 @@ describe("potvrdenia a cas citania", () => {
     const rows = await duties(COMPANY)
     expect(rows.find(d => d.personId === "a")?.acknowledgedAt).toEqual(when)
     expect(rows.find(d => d.personId === "b")?.acknowledgedAt).toBeNull()
+  })
+
+  it("spari prve otvorenie s osobou a znenim — na dokument sa neviaze (D28)", async () => {
+    const when = new Date("2026-09-02T08:00:00Z")
+    data[DOCUMENT_OPENS_COLLECTION] = [
+      { personId: "a", versionId: "v1", firstOpenedAt: when },
+      // Otvorenie ineho znenia toho isteho dokumentu sa nepocita.
+      { personId: "b", versionId: "v0", firstOpenedAt: when },
+    ]
+
+    const rows = await duties(COMPANY)
+    expect(rows.find(d => d.personId === "a")?.firstOpenedAt).toEqual(when)
+    expect(rows.find(d => d.personId === "b")?.firstOpenedAt).toBeNull()
   })
 
   it("nenamerany cas je null, nie nula", async () => {

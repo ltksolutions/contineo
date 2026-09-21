@@ -31,6 +31,7 @@ import type { Assignment } from "./assignments"
 import { TRACKS_COLLECTION } from "./tracks"
 import type { Track } from "./tracks"
 import { READING_COLLECTION } from "./readingTime"
+import { opensFor } from "./documentOpens"
 
 /** Odkiaľ povinnosť pochádza. Jedna povinnosť môže mať oboje. */
 export type DutySource = "assignment" | "track"
@@ -64,6 +65,13 @@ export interface Duty {
    */
   due: Date | null
   acknowledgedAt: Date | null
+  /**
+   * Kedy človek znenie prvýkrát otvoril, alebo `null`. Viaže sa na znenie,
+   * nie na dokument (D28). Je tu preto, že stav povinnosti (`dutyState()`)
+   * ho potrebuje na piatich obrazovkách — a jeden join v `duties()` je
+   * lepší než päť rovnakých vedľa seba.
+   */
+  firstOpenedAt: Date | null
   /**
    * Viditeľný čas nad znením. `null` znamená „nevieme", nie „nula" —
    * merať sme začali neskôr než potvrdzovať a rok starý údaj už nežije.
@@ -173,6 +181,7 @@ export async function duties(companyCode: string): Promise<Duty[]> {
       since,
       due,
       acknowledgedAt: null,
+      firstOpenedAt: null,
       readingSeconds: null,
     })
   }
@@ -228,9 +237,10 @@ export async function duties(companyCode: string): Promise<Duty[]> {
   const versionIds = [...new Set(all.map(d => d.versionId))]
 
   const readCol = await getCollection(READING_COLLECTION)
-  const [acks, reads] = await Promise.all([
+  const [acks, opens, reads] = await Promise.all([
     // Odvolané potvrdenie sa vo výkaze nesmie tváriť ako splnené (D24).
     validAcknowledgements({ companyCode, personId: personIds, versionId: versionIds }),
+    opensFor(companyCode),
     readCol
       .find(
         { companyCode, personId: { $in: personIds }, versionId: { $in: versionIds } },
@@ -242,10 +252,12 @@ export async function duties(companyCode: string): Promise<Duty[]> {
   const pair = (personId: string, versionId: string) => `${personId} ${versionId}`
   const ackAt = new Map(acks.map(a => [pair(a.personId, a.versionId), a.acknowledgedAt as Date]))
   const seconds = new Map(reads.map(r => [pair(r.personId, r.versionId), r.seconds as number]))
+  const openAt = new Map(opens.map(o => [pair(o.personId, o.versionId), o.firstOpenedAt]))
 
   for (const d of all) {
     const key = pair(d.personId, d.versionId)
     d.acknowledgedAt = ackAt.get(key) ?? null
+    d.firstOpenedAt = openAt.get(key) ?? null
     d.readingSeconds = seconds.get(key) ?? null
     d.sources.sort()
     d.trackTitles.sort()

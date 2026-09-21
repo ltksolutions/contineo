@@ -25,6 +25,7 @@ import { normalizeQuery, type RawQuery } from "@/lib/urlParams"
 import { dictionary, formatDate } from "@/lib/i18n"
 import { evidenceRows } from "@/lib/evidenceDb"
 import type { EvidenceState } from "@/lib/evidence"
+import { dutyState, dutyTagClass } from "@/lib/due"
 
 export const dynamic = "force-dynamic"
 
@@ -43,7 +44,9 @@ export default async function EvidencePage({
 
   const language = ctx.person.language
   const t = dictionary(language).evidence
+  const tds = dictionary(language).hr.dutyState
   const branding = brandingView(ctx.tenant)
+  const now = new Date()
 
   const all = await evidenceRows(ctx.person.companyCode)
   const wantedState = STATES.includes(q.state as EvidenceState) ? (q.state as EvidenceState) : null
@@ -131,8 +134,11 @@ export default async function EvidencePage({
                 <summary className="widget-summary">
                   <span className="widget-main">
                     <span className="widget-title">{r.duty.fullName}</span>
-                    <span className={`tag evidence-state evidence-state--${r.state}`}>
-                      {t.states[r.state]}
+                    {/* Jedna škála pre celú rolu (HR.md, úloha 1): stav aj
+                        farbu dáva `dutyState()`, nie vlastné triedy. Filter
+                        ostáva na troch stavoch osi — „po termíne" je nad nimi. */}
+                    <span className={dutyTagClass(r.duty, now)}>
+                      {tds[dutyState(r.duty, now)]}
                     </span>
                   </span>
                   <span className="quiet widget-meta">
