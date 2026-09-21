@@ -1500,7 +1500,9 @@ interface Dictionary {
       title: string
       description: string
       create: string
-      empty: string
+      /** Prázdny zoznam trás (SPRAVA, úloha 1.1). */
+      emptyTitle: string
+      emptyText: string
       active: string
       inactive: string
       enable: string
@@ -3398,7 +3400,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       title: "Názov",
       description: "Popis (nepovinný)",
       create: "Založiť trasu",
-      empty: "Zatiaľ tu nie je žiadna trasa.",
+      emptyTitle: "Žiadne trasy",
+      emptyText: "Trasa je poradie noriem, ktoré má človek prečítať — napríklad pri vstupe do organizácie. Prvú založíte formulárom nižšie.",
       active: "zapnutá",
       inactive: "vypnutá",
       enable: "Zapnúť",
@@ -5269,7 +5272,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       title: "Název",
       description: "Popis (nepovinný)",
       create: "Založit trasu",
-      empty: "Zatím tu není žádná trasa.",
+      emptyTitle: "Žádné trasy",
+      emptyText: "Trasa je pořadí norem, které má člověk přečíst — například při vstupu do organizace. První založíte formulářem níže.",
       active: "zapnutá",
       inactive: "vypnutá",
       enable: "Zapnout",
@@ -7134,7 +7138,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       title: "Title",
       description: "Description (optional)",
       create: "Create track",
-      empty: "There is no track here yet.",
+      emptyTitle: "No tracks",
+      emptyText: "A track is the order in which a person reads the documents — for example when joining the organisation. Create the first one with the form below.",
       active: "on",
       inactive: "off",
       enable: "Switch on",
