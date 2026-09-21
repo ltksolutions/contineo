@@ -1646,10 +1646,22 @@ html[data-theme="dark"] select.field-input {
   border: 1px solid var(--line);
   border-radius: var(--radius-lg);
   padding: 20px 16px;
+  /* Šírka riadka (ZNENIE, úloha 3): v 760 px kontajneri mal riadok ~95
+     znakov a norma sa čítala ťažšie, než musela. Písmo ostáva 15,5 px
+     z `.answer` — zadanie predpokladalo zdedených 14 px, kód ich nemal. */
+  max-width: 68ch;
+  /* Na telefóne 16 px: dlhý právny text, nie popisok. */
+  font-size: 16px;
 }
 
+/* Nadpisy článkov v znení dostanú priestor nad sebou, nie len tučné písmo. */
+.document-sheet h2,
+.document-sheet h3 { margin: 28px 0 8px; }
+.document-sheet h2:first-child,
+.document-sheet h3:first-child { margin-top: 0; }
+
 @media (min-width: 640px) {
-  .document-sheet { padding: 28px 32px; }
+  .document-sheet { padding: 28px 32px; font-size: 15.5px; }
 }
 
 /* Kurzor počas streamovania — bez neho nie je poznať, či sa ešte generuje. */
