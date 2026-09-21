@@ -17,6 +17,7 @@ import { brandingView } from "@/lib/tenants"
 import { tenantStyle } from "@/components/TenantHeader"
 import { dictionary, formatDate } from "@/lib/i18n"
 import Notice from "@/components/Notice"
+import AckBar from "@/components/AckBar"
 import { revokeAction } from "./actions"
 import { normalizeQuery, type RawQuery } from "@/lib/urlParams"
 import AppShell from "@/components/AppShell"
@@ -39,6 +40,7 @@ export default async function HrOverviewPage({
   const branding = brandingView(ctx.tenant)
   const language = ctx.person.language
   const t = dictionary(language).hr.overview
+  const tl = dictionary(language).library
 
   return (
     <AppShell language={language}>
@@ -92,6 +94,17 @@ export default async function HrOverviewPage({
                 <p style={{ fontSize: "var(--fs-body)", margin: "10px 0 0", lineHeight: 1.55 }}>
                   {p.reason}
                 </p>
+
+                {/* Ten istý pásik ako v knižnici (HR.md, úloha 2): pri desiatich
+                    prideleniach sa zaostávajúce nájde pohľadom, nie čítaním
+                    tridsiatich čísel. Čísla zostávajú pod ním. */}
+                <div className="hr-ack">
+                  <AckBar
+                    acknowledged={p.acknowledged}
+                    assigned={p.count}
+                    label={tl.list.acknowledgedOf(p.acknowledged, p.count)}
+                  />
+                </div>
 
                 <div className="admin-data">
                   <div>

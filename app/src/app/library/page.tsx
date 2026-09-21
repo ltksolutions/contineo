@@ -16,6 +16,7 @@ import { documentsProgress } from "@/lib/libraryProgress"
 import { codelistOptions } from "@/lib/codelists"
 import { tenantExtras } from "@/lib/codelistsTenant"
 import Select from "@/components/Select"
+import AckBar from "@/components/AckBar"
 import LiveFilter from "@/components/LiveFilter"
 import { ContineoMark } from "@/components/ContineoMark"
 import { moveManyAction, assignManyAction } from "./actions"
@@ -228,23 +229,18 @@ export default async function LibraryPage({
   /*
    * Potvrdenia ako pásik (KNIZNICA.md, úloha 2): stĺpec sa skenuje očami
    * zhora dolu — osem čísel v texte sa neskenuje, osem pásikov áno.
-   * Menovateľ (O6/7) nezmizol: nesie ho `title` a text pre čítačku.
-   * Pomlčka znamená „nie je čo potvrdzovať" (nikomu nepridelené) — prázdny
-   * pásik by znamenal „nikto nepotvrdil", a to sú dve rôzne správy.
-   * Šírka výplne je inline: je to dátová hodnota, nie štýl.
+   * Tvar aj prahy má `<AckBar>` — ten istý, čo kreslí `/hr` (HR.md, úloha 2).
+   * Bez záznamu o priebehu je to pomlčka: nie je čo potvrdzovať.
    */
   const ackBar = (versionId?: string) => {
     const p = versionId ? progress.get(versionId) : undefined
-    if (!p || p.percent === null) return <span className="quiet">—</span>
-    const tone = p.percent >= 90 ? "high" : p.percent >= 50 ? "mid" : "low"
+    if (!p) return <span className="quiet">—</span>
     return (
-      <span className="ack-bar" title={t.acknowledgedOf(p.acknowledged, p.assigned)}>
-        <span className="ack-track" aria-hidden="true">
-          <span className={`ack-fill ack-fill--${tone}`} style={{ width: `${p.percent}%` }} />
-        </span>
-        <span className="ack-value" aria-hidden="true">{p.percent} %</span>
-        <span className="sr-only">{t.acknowledgedOf(p.acknowledged, p.assigned)}</span>
-      </span>
+      <AckBar
+        acknowledged={p.acknowledged}
+        assigned={p.assigned}
+        label={t.acknowledgedOf(p.acknowledged, p.assigned)}
+      />
     )
   }
 

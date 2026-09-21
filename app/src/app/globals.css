@@ -2897,6 +2897,11 @@ html[data-theme="dark"] .editor-tui .CodeMirror {
   font-variant-numeric: tabular-nums;
 }
 
+/* Pásik na karte pridelenia (/hr, HR.md úloha 2): v stĺpci tabuľky je
+   inline a úzky, na karte dostane riadok a rozumnú šírku. */
+.hr-ack { margin-top: 14px; max-width: 360px; }
+.hr-ack .ack-bar { display: flex; }
+
 /* Text len pre čítačku — vizuálne skrytý, v strome prístupnosti ostáva.
    Rovnaký postup ako pri skrytom tlačidle hľadania v hlavičke. */
 .sr-only {
