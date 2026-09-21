@@ -17,6 +17,7 @@ import { normalizeLayout } from "@/lib/appNav"
 import type { RawQuery } from "@/lib/urlParams"
 import { normalizeQuery } from "@/lib/urlParams"
 import { dictionary, formatDate } from "@/lib/i18n"
+import { dueState } from "@/lib/due"
 
 export const dynamic = "force-dynamic"
 
@@ -64,6 +65,9 @@ export default async function DocumentsPage({
   const branding = brandingView(ctx.tenant)
 
   const t = dictionary(person.language).onboarding
+  // „do 12. 9. 2026" je ten istý kľúč ako na Prehľade — nie nový.
+  const tOverview = dictionary(person.language).overview
+  const now = new Date()
 
   /*
     Jeden výpočet pre štítok aj pre túto obrazovku.
@@ -76,6 +80,13 @@ export default async function DocumentsPage({
   const duties = await acknowledgementDuties(person)
   const tracks = duties.tracks
   const outside = duties.outsideTracks
+  /*
+    Termín kroku (DOCUMENTS, úloha 1). Kroky trasy (`tracks[].steps`) termín
+    nenesú, ale položky z tých istých krokov (`fromTracks`) áno — ten istý
+    výpočet, ktorý kreslí chip na Prehľade. Netreba nový návratový typ ani
+    druhý dotaz, stačí ich spárovať podľa dokumentu.
+  */
+  const dueByDocument = new Map(duties.fromTracks.map(i => [i.id, i.due]))
   const done = tracks.reduce((a, tr) => a + tr.doneCount, 0)
   const total = tracks.reduce((a, tr) => a + tr.totalCount, 0)
 
@@ -126,6 +137,8 @@ export default async function DocumentsPage({
           <ul style={{ listStyle: "none", padding: 0, margin: "12px 0 0", display: "grid", gap: 12 }}>
             {tr.steps.map(s => {
               const isNext = s.order === tr.nextOrder
+              // Bez termínu bez chipu — absencia termínu je bežný stav, nie šum.
+              const due = s.done || s.blocked ? null : dueByDocument.get(s.documentId) ?? null
               return (
                 <li
                   key={`${tr.key}-${s.order}`}
@@ -142,6 +155,12 @@ export default async function DocumentsPage({
                       {t.step(s.order, tr.totalCount)}
                     </span>
                     <strong style={{ fontSize: "var(--fs-lead)", flex: "1 1 260px" }}>{s.title}</strong>
+
+                    {due && (
+                      <span className={`due-chip duty-due due-chip--${dueState(due, now)}`}>
+                        {tOverview.by(formatDate(due, person.language))}
+                      </span>
+                    )}
 
                     {s.blocked ? (
                       <span className="tag" style={{ background: "var(--warn-bg)", color: "var(--warn-fg)" }}>
@@ -200,6 +219,11 @@ export default async function DocumentsPage({
               <li key={item.id} className="card" style={{ padding: "16px 18px" }}>
                 <div style={{ display: "flex", gap: 16, alignItems: "baseline", flexWrap: "wrap" }}>
                   <strong style={{ fontSize: "var(--fs-lead)", flex: "1 1 260px" }}>{item.title}</strong>
+                  {item.due && (
+                    <span className={`due-chip duty-due due-chip--${dueState(item.due, now)}`}>
+                      {tOverview.by(formatDate(item.due, person.language))}
+                    </span>
+                  )}
                   <span className="tag">{t.todo}</span>
                 </div>
                 {item.detail && (

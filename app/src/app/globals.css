@@ -2389,6 +2389,11 @@ html[data-theme="dark"] .editor-tui .CodeMirror {
 .due-chip--soon { background: var(--warn-bg); color: var(--warn-fg); }
 .due-chip--over { background: var(--bad-bg); color: var(--bad-fg); }
 
+/* Termín na karte povinnosti (DOCUMENTS, úloha 1) — vpravo, v riadku so
+   stavovou pilulkou. Ten istý chip a tie isté tri stavy ako na Prehľade:
+   človek tam vidí, že mu niečo horí, a tu to má vybaviť. */
+.duty-due { margin-left: auto; }
+
 /* Dve polia termínu vedľa seba, na telefóne pod sebou. Nechávajú sa vidieť
    obe: formulár beží bez JavaScriptu, takže sa skryť nedajú, a kto sa prepne
    z dátumu na dni a späť, o svoj dátum nepríde. */
