@@ -3820,11 +3820,21 @@ a.answer-source:focus-visible { outline: 2px solid var(--accent); outline-offset
 
 /* `min-width: 0` je nutné: bez neho sa flexová položka nezmenší pod šírku
    svojho najdlhšieho slova a názov predpisu odtlačí chip mimo panela. */
-.panel-main { flex: 1 1 160px; min-width: 0; }
+.panel-main { flex: 1; min-width: 0; }
 
+/* Dlhý názov sa zalomí, neskráti (PREHLAD, úloha 4): dva riadky sú v poriadku,
+   tri s elipsou. Skrátený názov normy je nepoužiteľný údaj — kto rozhoduje
+   o potvrdení, musí vedieť, čo potvrdzuje. */
 .panel-name {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
   font-size: 13px;
   font-weight: 550;
+  line-height: 1.35;
+  text-wrap: pretty;
+  overflow-wrap: anywhere;
   color: inherit;
   text-decoration: none;
 }
@@ -3844,6 +3854,13 @@ a.answer-source:focus-visible { outline: 2px solid var(--accent); outline-offset
 }
 
 .panel-action:hover { border-color: var(--accent); color: var(--accent); }
+
+/* Pod 640 px idú chip a akcia POD text, nie vedľa — inak na 390 px zostane
+   názvu 90 px. Akcia je dotykový cieľ 44 px. */
+@media (max-width: 639px) {
+  .panel-main { flex: 1 0 100%; }
+  .panel-action { display: inline-flex; align-items: center; min-height: 44px; }
+}
 
 /* ── navigácia: štítok s počtom, spodná lišta a prepad „Viac" ───────────────
    Tri tvary jednej navigácie (NASADENIE, PR 2): pod 640 px pevná spodná
