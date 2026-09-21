@@ -10,18 +10,20 @@ začína tabuľkou „Čo je v repozitári UŽ HOTOVÉ“ s číslami riadkov.
 
 ## Kde začať
 
-1. **`ZADANIE.md`** — ako to zadať Coworku. Presný text na skopírovanie,
-   tabuľka 14 PR, čo odpovedať na časté otázky. **Prečítaj prvé.**
-2. **`MASTER.md`** — zoznam všetkých rout, pravidlá platné všade,
+1. **`PROMPT.md`** — hotový text na skopírovanie do Coworku, pre každý PR.
+   **Toto otvor prvé.**
+2. **`ZADANIE.md`** — ako balík dostať do repozitára a čo odpovedať na
+   časté otázky.
+3. **`MASTER.md`** — zoznam všetkých rout, pravidlá platné všade,
    a rozhodnutia, ktoré už padli (stavový model, terminológia, stĺpce).
-3. **`POSTUP.md`** — poradie PR, riziká, čo sa nesmie bez súhlasu,
+4. **`POSTUP.md`** — poradie PR, riziká, čo sa nesmie bez súhlasu,
    overenie pred commitom.
-4. **`ZAKLAD.md`** — spoločný základ. Implementuje sa **prvý**, všetko
+5. **`ZAKLAD.md`** — spoločný základ. Implementuje sa **prvý**, všetko
    ostatné z neho číta.
 
-`README.md` je **pôvodný** desktopový handoff z prvej vlny (marec–september
-2026). Stále platí pre `/organisation` (§7) a `/sign-in` (§8) — tie sa
-v tejto vlne nemenia. Zvyšok nahrádzajú zadania nižšie.
+`README.md` je **archív prvej vlny** (marec–september 2026). Platí z neho
+len `/organisation` (§7) a `/sign-in` (§8) — tie sa v tejto vlne nemenia.
+Zvyšok je neplatný (staré názvoslovie tried) a je v ňom o tom varovanie.
 
 ---
 
@@ -29,7 +31,8 @@ v tejto vlne nemenia. Zvyšok nahrádzajú zadania nižšie.
 
 | Súbor | Čo je v ňom |
 | --- | --- |
-| `ZADANIE.md` | ako zadávať Coworku |
+| `PROMPT.md` | hotové prompty na skopírovanie |
+| `ZADANIE.md` | ako balík nasadiť, časté otázky |
 | `MASTER.md` | 31 rout, pravidlá, rozhodnutia, chýbajúce dáta |
 | `POSTUP.md` | poradie PR, riziká, zákazy |
 | `ZAKLAD.md` | tokeny a komponenty — PR 0 |
@@ -51,7 +54,7 @@ v tejto vlne nemenia. Zvyšok nahrádzajú zadania nižšie.
 | 10 | `HR.md` | `/hr` + 5 podstránok |
 | 11 | `POSUDENIE.md` | `/evaluation`, `/acknowledgements` |
 | 12 | `OSOBY.md` | `/people` + 4 podstránky |
-| 13 | `SPRAVCA.md` | `/admin`, `/guide` |
+| 13 | `ADMIN.md` | `/admin`, `/guide` |
 | — | `KNIZNICA.md` | `/library` — **hotové** (PR 8) |
 
 `/directory`, `/organisation` a `/sign-in` sú hotové z prvej vlny.
@@ -72,7 +75,7 @@ dlhé texty a tmavú tému.
 | `DETAIL.html` | `/library/[id]` + `/documents/[documentId]` |
 | `SPRAVA.html` | nahrávanie, priečinky, kolá, kurácia, upozornenia, Viac |
 | `HR.html` | výkaz, prideľovanie, dôkazy, potvrdenia, posúdenie |
-| `OSOBY.html` | osoby, karta osoby, admin, príručka |
+| `PEOPLE.html` | osoby, karta osoby, admin, príručka |
 
 ⚠️ Súbory `*.dc.html` v koreni projektu (nie tu) sú **šablóny** a bez
 behového prostredia sa nevykreslia. Needituj ich ani nepoužívaj na

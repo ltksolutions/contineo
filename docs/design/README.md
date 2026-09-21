@@ -1,3 +1,16 @@
+> ⚠️ **Tento súbor je archív prvej vlny (marec–september 2026).**
+>
+> Platí z neho len **§7 (`/organisation`)** a **§8 (`/sign-in`)** — tie sa
+> v druhej vlne nemenia. Všetko ostatné nahrádzajú zadania `ZAKLAD.md`,
+> `MASTER.md` a jednotlivé `<OBRAZOVKA>.md`.
+>
+> **Časti, ktoré sú už NEPLATNÉ:** názvoslovie tried (dnes `.button`,
+> `.field-input`, `.tag` — nie `tlacidlo`, `pole-vstup`, `stitok`),
+> tvrdenie o jednostĺpcovom layoute (AppShell existuje) a odkazy na
+> `Select.tsx` / `TagSelect.tsx` (dnes je `MultiSelect.tsx`).
+>
+> Necháva sa v balíku pre dohľadateľnosť rozhodnutí, nie ako zadanie.
+
 # Handoff: Contineo — responzívny intranet, knižnica a inteligentné zoznamy
 
 ## Overview

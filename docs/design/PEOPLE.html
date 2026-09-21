@@ -1,7 +1,7 @@
 <!DOCTYPE html>
-<html lang="sk"><head><meta charset="utf-8" /><meta name="viewport" content="width=device-width,initial-scale=1" /><title>OSOBY — rámy vlny D</title>
+<html lang="sk"><head><meta charset="utf-8" /><meta name="viewport" content="width=device-width,initial-scale=1" /><title>OSOBY + ADMIN — rámy vlny D</title>
 <style>
-:root{color-scheme:light;--bg:#f5f6f8;--surface:#fff;--surface-2:#eceef1;--ink:#161b22;--muted:#5c6675;--line:rgba(20,28,42,.12);--accent:#232a35;--accent-strong:#11151c;--on-accent:#fff;--accent-soft:rgba(35,42,53,.11);--ok-bg:#ecfdf5;--ok-fg:#047857;--bad-bg:#fef2f2;--bad-fg:#b91c1c;--warn-bg:#fffbeb;--warn-fg:#b45309;--radius:12px;--shadow:0 1px 2px rgba(20,28,42,.05),0 10px 30px rgba(20,28,42,.07);--pad-main:16px;--card-pad:16px;--list-py:9px;--gap:14px;--row-py:7px;--font-row:13px;--fs-title:26px;--fs-section:17px;--fs-lead:15px;--fs-body:14px;--fs-small:13px;--fs-micro:12px;--fs-label:13px;--fs-control:15px;--control-h:40px;--control-h-sm:36px}
+:root{color-scheme:light;--bg:#f5f6f8;--surface:#fff;--surface-2:#eceef1;--ink:#161b22;--muted:#5c6675;--line:rgba(20,28,42,.12);--accent:#232a35;--accent-strong:#11151c;--on-accent:#fff;--accent-soft:rgba(35,42,53,.11);--ok-bg:#ecfdf5;--ok-fg:#047857;--bad-bg:#fef2f2;--bad-fg:#b91c1c;--warn-bg:#fffbeb;--warn-fg:#b45309;--radius:12px;--radius-lg:18px;--shadow:0 1px 2px rgba(20,28,42,.05),0 10px 30px rgba(20,28,42,.07);--pad-main:16px;--card-pad:16px;--list-py:9px;--gap:14px;--row-py:7px;--font-row:13px;--fs-title:26px;--fs-section:17px;--fs-lead:15px;--fs-body:14px;--fs-small:13px;--fs-micro:12px;--fs-label:13px;--fs-control:15px;--control-h:40px;--control-h-sm:36px}
 .dark{color-scheme:dark;--bg:#0d1016;--surface:#161b22;--surface-2:#1d232c;--ink:#eef1f5;--muted:#9aa4b2;--line:rgba(255,255,255,.12);--accent:#eef1f5;--accent-strong:#fff;--on-accent:#11151c;--accent-soft:rgba(238,241,245,.11);--ok-bg:rgba(4,120,87,.16);--ok-fg:#6ee7b7;--bad-bg:rgba(185,28,28,.16);--bad-fg:#fca5a5;--warn-bg:rgba(180,83,9,.16);--warn-fg:#fcd34d;--shadow:0 1px 2px rgba(0,0,0,.4),0 10px 30px rgba(0,0,0,.45)}
 *{box-sizing:border-box}
 body{margin:0;background:#e6e8ec;font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;-webkit-font-smoothing:antialiased;line-height:1.6}
@@ -371,354 +371,282 @@ summary{cursor:pointer}
 .w390 .hr-actions .button{width:100%;min-height:44px}
 .w390 .ev-when{margin-left:0;flex:1 0 100%}
 
-.pe-page{max-width:880px}
-.library-chips{display:flex;flex-wrap:wrap;gap:6px}
+/* PREVZATÉ z globals.css: .field-row 762, .admin-data 1423, .answer 1573,
+   .evidence-head 3493, .tag--field 1322–1334. */
 .field-row{display:grid;gap:12px;grid-template-columns:minmax(0,1fr)}
 .w1440 .field-row,.w834 .field-row{grid-template-columns:repeat(2,minmax(0,1fr))}
+.admin-data{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px 16px;margin-top:14px}
+.w1440 .admin-data,.w834 .admin-data{grid-template-columns:repeat(4,minmax(0,1fr))}
+.admin-num{font-size:20px;font-weight:640;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
 .evidence-head{display:flex;gap:10px;align-items:baseline;flex-wrap:wrap}
-.answer{line-height:1.7;font-size:var(--fs-body)}
+.answer{line-height:1.7}
 .answer>*:last-child{margin-bottom:0}
+/* navrhované v OSOBY.md / ADMIN.md */
 .person-card{padding:14px 18px}
-.person-head{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-.person-name{font-size:var(--fs-lead);font-weight:600;color:var(--ink);text-decoration:none}
 .person-card.is-excluded{opacity:.75}
-.admin-tenant{padding:18px 20px}
-.admin-tenant.has-problem{box-shadow:inset 3px 0 0 var(--warn-fg)}
-.guide-body{max-width:68ch}
-.guide-toc{list-style:none;margin:0 0 20px;padding:12px 14px;border-radius:var(--radius);background:var(--bg);border:1px solid var(--line);display:grid;gap:5px}
-.guide-toc a{font-size:var(--fs-small)}
-.w390 .pe-actions .button{width:100%;min-height:44px}
+.person-head{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.person-name{font-size:var(--fs-body);font-weight:650}
+.person-line{font-size:var(--fs-small);color:var(--muted);margin:4px 0 0;overflow-wrap:anywhere}
+.guide-chapter{display:block;padding:12px 14px;border:1px solid var(--line);border-radius:var(--radius);background:var(--surface);text-decoration:none;color:inherit;font-size:var(--fs-body);font-weight:550}
+.guide-chapter.is-on{border-color:var(--accent);background:var(--accent-soft);color:var(--accent-strong)}
+.guide-body{max-width:68ch;line-height:1.75;padding:24px 26px}
+.w390 .guide-body{padding:18px 16px}
 </style></head>
 <body><div class="sheet">
 <h1 class="doc">Vlna D — rámy</h1>
-<p class="doc">Statická referencia k <code>OSOBY.md</code> a <code>SPRAVCA.md</code>. Sedem obrazoviek: osoby a ich podstránky, správa platformy, príručka. CSS <code>.field-row</code>, <code>.evidence-head</code>, <code>.answer</code>, <code>.admin-data</code> je prevzaté z <code>globals.css</code>.</p>
+<p class="doc">Statická referencia k <code>OSOBY.md</code> a <code>ADMIN.md</code>. Sedem obrazoviek: osoby a ich karty, správa platformy, príručka. <strong>Stav osoby nesie farbu, role zostávajú neutrálne</strong> — na osobe je rolí viac a farebné by prebili stav.</p>
 
-<p class="cap">1 · Osoby (/people) — 1440, stavová pilulka vpravo; vylúčená osoba zostáva, zoslabne</p>
-<div class="frames"><div class="frame w1440" style="width:1440px"><div class="hdr"><span class="logo"><svg width="17" height="17" viewBox="0 0 48 48" fill="none" aria-hidden="true" style="flex:0 0 auto"><circle cx="18" cy="18" r="13" stroke="currentColor" stroke-width="4"></circle><circle cx="13" cy="18" r="2.3" fill="currentColor"></circle><circle cx="23" cy="18" r="2.3" fill="currentColor"></circle><path d="M28 27 L41 41 L29 38 Z" fill="currentColor"></path></svg></span><span class="org">Slovenský futbalový zväz</span><div class="ask" style="flex:1;min-width:0"><svg width="16" height="16" viewBox="0 0 48 48" fill="none" aria-hidden="true" style="flex:0 0 auto"><circle cx="18" cy="18" r="13" stroke="currentColor" stroke-width="4"></circle><circle cx="13" cy="18" r="2.3" fill="currentColor"></circle><circle cx="23" cy="18" r="2.3" fill="currentColor"></circle><path d="M28 27 L41 41 L29 38 Z" fill="currentColor"></path></svg><span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Opýtajte sa svojich dokumentov…</span><span class="kbd">⌘K</span></div><span class="bell"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13.9 11.6c0-5.2-1.6-7-4.9-7s-4.9 1.8-4.9 7l-1.3 2.1h12.4z"></path><path d="M10.6 15.4a1.7 1.7 0 0 1-3.2 0"></path></svg><b style="position:absolute;top:5px;right:4px;min-width:16px;height:16px;padding:0 4px;border-radius:8px;background:var(--bad-fg);color:var(--on-accent);font-size:10px;font-weight:700;display:grid;place-items:center;box-shadow:0 0 0 2px var(--surface)">3</b></span><span class="av">JL</span></div><div class="nav"><a href="#" class="">Prehľad</a><a href="#" class="">Opýtať sa</a><a href="#" class="">Na potvrdenie<span class="c">9</span></a><a href="#" class="">Na schválenie<span class="c">3</span></a><a href="#" class="">Adresár</a><a href="#" class="">Knižnica</a><a href="#" class="">Pridelené normy</a><a href="#" class="">Reťaz dôkazov</a><a href="#" class="is-on">Osoby</a><a href="#" class="">Na posúdenie<span class="c">4</span></a></div><div class="body" style=""><div class="pe-page">
+<p class="cap">1 · Osoby (/people) — 1440, päť stavov; vylúčená osoba je stlmená, nie skrytá</p>
+<div class="frames"><div class="frame w1440" style="width:1440px"><div class="hdr"><span class="logo"><svg width="17" height="17" viewBox="0 0 48 48" fill="none" aria-hidden="true" style="flex:0 0 auto"><circle cx="18" cy="18" r="13" stroke="currentColor" stroke-width="4"></circle><circle cx="13" cy="18" r="2.3" fill="currentColor"></circle><circle cx="23" cy="18" r="2.3" fill="currentColor"></circle><path d="M28 27 L41 41 L29 38 Z" fill="currentColor"></path></svg></span><span class="org">Slovenský futbalový zväz</span><div class="ask" style="flex:1;min-width:0"><svg width="16" height="16" viewBox="0 0 48 48" fill="none" aria-hidden="true" style="flex:0 0 auto"><circle cx="18" cy="18" r="13" stroke="currentColor" stroke-width="4"></circle><circle cx="13" cy="18" r="2.3" fill="currentColor"></circle><circle cx="23" cy="18" r="2.3" fill="currentColor"></circle><path d="M28 27 L41 41 L29 38 Z" fill="currentColor"></path></svg><span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Opýtajte sa svojich dokumentov…</span><span class="kbd">⌘K</span></div><span class="bell"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13.9 11.6c0-5.2-1.6-7-4.9-7s-4.9 1.8-4.9 7l-1.3 2.1h12.4z"></path><path d="M10.6 15.4a1.7 1.7 0 0 1-3.2 0"></path></svg><b style="position:absolute;top:5px;right:4px;min-width:16px;height:16px;padding:0 4px;border-radius:8px;background:var(--bad-fg);color:var(--on-accent);font-size:10px;font-weight:700;display:grid;place-items:center;box-shadow:0 0 0 2px var(--surface)">3</b></span><span class="av">JL</span></div><div class="nav"><a href="#" class="">Prehľad</a><a href="#" class="">Opýtať sa</a><a href="#" class="">Na potvrdenie<span class="c">9</span></a><a href="#" class="">Na schválenie<span class="c">3</span></a><a href="#" class="">Adresár</a><a href="#" class="">Knižnica</a><a href="#" class="">Pridelené normy</a><a href="#" class="">Reťaz dôkazov</a><a href="#" class="is-on">Osoby</a><a href="#" class="">Na posúdenie<span class="c">4</span></a></div><div class="body" style=""><div style="max-width:880px">
   <h1 class="page-title">Osoby</h1>
-  <p class="quiet page-lead" style="max-width:620px">Kto má prístup do portálu. Vylúčená osoba zo zoznamu nezmizne — jej dôkazy o potvrdeniach platia ďalej (D24).</p>
-  <div class="pe-actions" style="display:flex;gap:8px;flex-wrap:wrap;margin:0 0 16px">
-    <a class="button" href="#">Pozvať osobu</a>
+  <p class="quiet page-lead" style="max-width:620px">Kto do organizácie patrí a aké má role. Vylúčená osoba zostáva dohľadateľná — jej potvrdenia platia aj potom.</p>
+  <div class="hr-actions" style="margin:0 0 16px">
+    <a class="button" href="#">Pridať osobu</a>
     <a class="button button--quiet" href="#">Import z CSV</a>
-    <a class="button button--quiet" href="#">Rozposlať pozvania (4)</a>
+    <a class="button button--quiet" href="#">Rozposlať pozvánky (12)</a>
   </div>
-  <label class="field" style="margin:0 0 12px"><span class="field-label">Hľadať</span><input class="field-input" value="" placeholder="Meno alebo e-mail" /></label>
-  <div style="display:flex;gap:7px;flex-wrap:wrap;margin:0 0 10px;align-items:center">
-    <span class="quiet" style="font-size:var(--fs-micro)">Stav:</span>
-    <a class="pill" href="#">Pozvaní<span class="pill-count">4</span></a>
-    <a class="pill" href="#">Aktívni<span class="pill-count">204</span></a>
-    <a class="pill" href="#">Vylúčení<span class="pill-count">2</span></a>
-    <span class="quiet" style="font-size:var(--fs-micro);margin-left:8px">Oddelenie:</span>
-    <a class="pill" href="#">Právne<span class="pill-count">24</span></a>
-    <a class="pill" href="#">Compliance<span class="pill-count">12</span></a>
-  </div>
-  
-  <p class="quiet" style="font-size:var(--fs-small);margin:0 0 10px">210 osôb</p>
+  <label class="field" style="margin:0 0 10px"><input class="field-input" value="" placeholder="Hľadať meno alebo e-mail…" /></label>
+  <p class="quiet" style="font-size:var(--fs-small);margin:0 0 10px">5 z 210 osôb</p>
   <ul class="hr-list">
     <li class="card person-card">
-      <div class="person-head">
-        <a href="#" class="person-name">Marek Horák</a>
-        <span class="tag">Zamestnanec</span>
-        <span class="tag">Správca obsahu</span><span class="tag">Schvaľovateľ</span>
-        <span class="tag tag--published" style="margin-left:auto">Aktívny</span>
-      </div>
-      <p class="quiet" style="font-size:var(--fs-small);margin:5px 0 0;overflow-wrap:anywhere">marek.horak@futbalsfz.sk</p>
-    </li>
+  <div class="person-head">
+    <a href="#" class="person-name" style="color:var(--ink);text-decoration:none">Ing. Marek Horák</a>
+    <span class="tag tag--published">Aktívna</span>
+    <span class="tag">hr</span><span class="tag">curator</span>
+    <span class="quiet" style="font-size:var(--fs-small);margin-left:auto">Právne a legislatíva</span>
+  </div>
+  <p class="person-line">marek.horak@futbalsfz.sk</p>
+</li>
     <li class="card person-card">
-      <div class="person-head">
-        <a href="#" class="person-name">Zuzana Kováčová</a>
-        <span class="tag">Zamestnanec</span>
-        <span class="tag">Personalista</span>
-        <span class="tag tag--published" style="margin-left:auto">Aktívny</span>
-      </div>
-      <p class="quiet" style="font-size:var(--fs-small);margin:5px 0 0;overflow-wrap:anywhere">zuzana.kovacova@futbalsfz.sk</p>
-    </li>
+  <div class="person-head">
+    <a href="#" class="person-name" style="color:var(--ink);text-decoration:none">Zuzana Kováčová</a>
+    <span class="tag tag--published">Aktívna</span>
+    <span class="tag">hr</span>
+    <span class="quiet" style="font-size:var(--fs-small);margin-left:auto">Ľudské zdroje</span>
+  </div>
+  <p class="person-line">zuzana.kovacova@futbalsfz.sk</p>
+</li>
     <li class="card person-card">
-      <div class="person-head">
-        <a href="#" class="person-name">Tomáš Sedlák</a>
-        <span class="tag">Zamestnanec</span>
-        <span class="tag">Správca obsahu</span>
-        <span class="tag tag--draft" style="margin-left:auto">Pozvaný</span>
-      </div>
-      <p class="quiet" style="font-size:var(--fs-small);margin:5px 0 0;overflow-wrap:anywhere">tomas.sedlak@futbalsfz.sk</p>
-    </li>
-    <li class="card person-card">
-      <div class="person-head">
-        <a href="#" class="person-name">Peter Novák</a>
-        <span class="tag">Zamestnanec</span>
-        
-        <span class="tag tag--published" style="margin-left:auto">Aktívny</span>
-      </div>
-      <p class="quiet" style="font-size:var(--fs-small);margin:5px 0 0;overflow-wrap:anywhere">peter.novak@futbalsfz.sk</p>
-    </li>
+  <div class="person-head">
+    <a href="#" class="person-name" style="color:var(--ink);text-decoration:none">Peter Novák</a>
+    <span class="tag tag--review">Pozvaná</span>
+    
+    <span class="quiet" style="font-size:var(--fs-small);margin-left:auto">Ekonomika</span>
+  </div>
+  <p class="person-line">peter.novak@futbalsfz.sk</p>
+</li>
     <li class="card person-card is-excluded">
-      <div class="person-head">
-        <a href="#" class="person-name">Lucia Bieliková</a>
-        <span class="tag">Externý</span>
-        <span class="tag">Hodnotiteľ</span>
-        <span class="tag tag--archived" style="margin-left:auto">Vylúčený</span>
-      </div>
-      <p class="quiet" style="font-size:var(--fs-small);margin:5px 0 0;overflow-wrap:anywhere">lucia.bielikova@futbalsfz.sk</p>
-    </li>
+  <div class="person-head">
+    <a href="#" class="person-name" style="color:var(--ink);text-decoration:none">Mgr. Lucia Bieliková, PhD.</a>
+    <span class="tag tag--archived">Vylúčená</span>
+    <span class="tag">curator</span>
+    <span class="quiet" style="font-size:var(--fs-small);margin-left:auto">Compliance</span>
+  </div>
+  <p class="person-line">lucia.bielikova@futbalsfz.sk</p>
+</li>
+    <li class="card person-card">
+  <div class="person-head">
+    <a href="#" class="person-name" style="color:var(--ink);text-decoration:none">Tomáš Sedlák</a>
+    <span class="tag tag">Bez konta</span>
+    
+    <span class="quiet" style="font-size:var(--fs-small);margin-left:auto">Súťaže</span>
+  </div>
+  <p class="person-line">tomas.sedlak@futbalsfz.sk</p>
+</li>
   </ul>
 </div></div></div></div>
 
-<p class="cap">1 · Osoby — filtre v URL (stav + oddelenie), chipy pod nimi; „kto z Právneho ešte nepotvrdil pozvanie“</p>
-<div class="frames"><div class="frame w1440" style="width:1440px"><div class="hdr"><span class="logo"><svg width="17" height="17" viewBox="0 0 48 48" fill="none" aria-hidden="true" style="flex:0 0 auto"><circle cx="18" cy="18" r="13" stroke="currentColor" stroke-width="4"></circle><circle cx="13" cy="18" r="2.3" fill="currentColor"></circle><circle cx="23" cy="18" r="2.3" fill="currentColor"></circle><path d="M28 27 L41 41 L29 38 Z" fill="currentColor"></path></svg></span><span class="org">Slovenský futbalový zväz</span><div class="ask" style="flex:1;min-width:0"><svg width="16" height="16" viewBox="0 0 48 48" fill="none" aria-hidden="true" style="flex:0 0 auto"><circle cx="18" cy="18" r="13" stroke="currentColor" stroke-width="4"></circle><circle cx="13" cy="18" r="2.3" fill="currentColor"></circle><circle cx="23" cy="18" r="2.3" fill="currentColor"></circle><path d="M28 27 L41 41 L29 38 Z" fill="currentColor"></path></svg><span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Opýtajte sa svojich dokumentov…</span><span class="kbd">⌘K</span></div><span class="bell"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13.9 11.6c0-5.2-1.6-7-4.9-7s-4.9 1.8-4.9 7l-1.3 2.1h12.4z"></path><path d="M10.6 15.4a1.7 1.7 0 0 1-3.2 0"></path></svg><b style="position:absolute;top:5px;right:4px;min-width:16px;height:16px;padding:0 4px;border-radius:8px;background:var(--bad-fg);color:var(--on-accent);font-size:10px;font-weight:700;display:grid;place-items:center;box-shadow:0 0 0 2px var(--surface)">3</b></span><span class="av">JL</span></div><div class="nav"><a href="#" class="">Prehľad</a><a href="#" class="">Opýtať sa</a><a href="#" class="">Na potvrdenie<span class="c">9</span></a><a href="#" class="">Na schválenie<span class="c">3</span></a><a href="#" class="">Adresár</a><a href="#" class="">Knižnica</a><a href="#" class="">Pridelené normy</a><a href="#" class="">Reťaz dôkazov</a><a href="#" class="is-on">Osoby</a><a href="#" class="">Na posúdenie<span class="c">4</span></a></div><div class="body" style=""><div class="pe-page">
-  <h1 class="page-title">Osoby</h1>
-  <p class="quiet page-lead" style="max-width:620px">Kto má prístup do portálu. Vylúčená osoba zo zoznamu nezmizne — jej dôkazy o potvrdeniach platia ďalej (D24).</p>
-  <div class="pe-actions" style="display:flex;gap:8px;flex-wrap:wrap;margin:0 0 16px">
-    <a class="button" href="#">Pozvať osobu</a>
-    <a class="button button--quiet" href="#">Import z CSV</a>
-    <a class="button button--quiet" href="#">Rozposlať pozvania (4)</a>
-  </div>
-  <label class="field" style="margin:0 0 12px"><span class="field-label">Hľadať</span><input class="field-input" value="" placeholder="Meno alebo e-mail" /></label>
-  <div style="display:flex;gap:7px;flex-wrap:wrap;margin:0 0 10px;align-items:center">
-    <span class="quiet" style="font-size:var(--fs-micro)">Stav:</span>
-    <a class="pill is-on" href="#">Pozvaní<span class="pill-count">4</span></a>
-    <a class="pill" href="#">Aktívni<span class="pill-count">204</span></a>
-    <a class="pill" href="#">Vylúčení<span class="pill-count">2</span></a>
-    <span class="quiet" style="font-size:var(--fs-micro);margin-left:8px">Oddelenie:</span>
-    <a class="pill is-on" href="#">Právne<span class="pill-count">24</span></a>
-    <a class="pill" href="#">Compliance<span class="pill-count">12</span></a>
-  </div>
-  <div class="library-chips" style="display:flex;gap:6px;flex-wrap:wrap;margin:0 0 12px">
-    <a class="library-chip" href="#"><span class="library-chip-key">Stav:</span>Pozvaní<span class="library-chip-x">×</span></a>
-    <a class="library-chip" href="#"><span class="library-chip-key">Oddelenie:</span>Právne<span class="library-chip-x">×</span></a>
-  </div>
-  <p class="quiet" style="font-size:var(--fs-small);margin:0 0 10px">2 z 210 osôb</p>
-  <ul class="hr-list">
-    <li class="card person-card">
-      <div class="person-head">
-        <a href="#" class="person-name">Tomáš Sedlák</a>
-        <span class="tag">Zamestnanec</span>
-        <span class="tag">Správca obsahu</span>
-        <span class="tag tag--draft" style="margin-left:auto">Pozvaný</span>
-      </div>
-      <p class="quiet" style="font-size:var(--fs-small);margin:5px 0 0;overflow-wrap:anywhere">tomas.sedlak@futbalsfz.sk</p>
-    </li>
-    <li class="card person-card">
-      <div class="person-head">
-        <a href="#" class="person-name">Eva Bartošová</a>
-        <span class="tag">Externý</span>
-        
-        <span class="tag tag--draft" style="margin-left:auto">Pozvaný</span>
-      </div>
-      <p class="quiet" style="font-size:var(--fs-small);margin:5px 0 0;overflow-wrap:anywhere">eva.bartosova@futbalsfz.sk</p>
-    </li>
-  </ul>
-</div></div></div></div>
-
-<p class="cap">2 · Karta osoby (/people/[id]) — 1440, vylúčenie v zbalenom &lt;details&gt;, nie ako štvrtá rovnaká karta</p>
+<p class="cap">2 · Karta osoby (/people/[id]) — 1440, vylúčenie v &lt;details&gt; (vzácna a nevratná akcia)</p>
 <div class="frames"><div class="frame w1440" style="width:1440px"><div class="hdr"><span class="logo"><svg width="17" height="17" viewBox="0 0 48 48" fill="none" aria-hidden="true" style="flex:0 0 auto"><circle cx="18" cy="18" r="13" stroke="currentColor" stroke-width="4"></circle><circle cx="13" cy="18" r="2.3" fill="currentColor"></circle><circle cx="23" cy="18" r="2.3" fill="currentColor"></circle><path d="M28 27 L41 41 L29 38 Z" fill="currentColor"></path></svg></span><span class="org">Slovenský futbalový zväz</span><div class="ask" style="flex:1;min-width:0"><svg width="16" height="16" viewBox="0 0 48 48" fill="none" aria-hidden="true" style="flex:0 0 auto"><circle cx="18" cy="18" r="13" stroke="currentColor" stroke-width="4"></circle><circle cx="13" cy="18" r="2.3" fill="currentColor"></circle><circle cx="23" cy="18" r="2.3" fill="currentColor"></circle><path d="M28 27 L41 41 L29 38 Z" fill="currentColor"></path></svg><span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Opýtajte sa svojich dokumentov…</span><span class="kbd">⌘K</span></div><span class="bell"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13.9 11.6c0-5.2-1.6-7-4.9-7s-4.9 1.8-4.9 7l-1.3 2.1h12.4z"></path><path d="M10.6 15.4a1.7 1.7 0 0 1-3.2 0"></path></svg><b style="position:absolute;top:5px;right:4px;min-width:16px;height:16px;padding:0 4px;border-radius:8px;background:var(--bad-fg);color:var(--on-accent);font-size:10px;font-weight:700;display:grid;place-items:center;box-shadow:0 0 0 2px var(--surface)">3</b></span><span class="av">JL</span></div><div class="nav"><a href="#" class="">Prehľad</a><a href="#" class="">Opýtať sa</a><a href="#" class="">Na potvrdenie<span class="c">9</span></a><a href="#" class="">Na schválenie<span class="c">3</span></a><a href="#" class="">Adresár</a><a href="#" class="">Knižnica</a><a href="#" class="">Pridelené normy</a><a href="#" class="">Reťaz dôkazov</a><a href="#" class="is-on">Osoby</a><a href="#" class="">Na posúdenie<span class="c">4</span></a></div><div class="body" style=""><div style="max-width:680px">
   <p style="margin:0 0 12px;font-size:var(--fs-body)"><a class="quiet" href="#" style="color:var(--muted)">← Osoby</a></p>
-  <div class="detail-chips"><span class="tag tag--published">Aktívny</span><span class="tag">Zamestnanec</span><span class="tag">Správca obsahu</span></div>
-  <h1 class="page-title" style="margin:0 0 4px">JUDr. Marek Horák</h1>
+  <div class="detail-chips"><span class="tag tag--published">Aktívna</span><span class="tag">hr</span><span class="tag">curator</span></div>
+  <h1 class="page-title" style="margin:0 0 4px">Ing. Marek Horák</h1>
   <p class="quiet" style="font-size:var(--fs-body);margin:0 0 4px;overflow-wrap:anywhere">marek.horak@futbalsfz.sk</p>
-  <p class="quiet" style="font-size:var(--fs-small);margin:0 0 20px">Právne a legislatíva · vedúci útvaru · v systéme od 12. 3. 2024</p>
+  <p class="quiet" style="font-size:var(--fs-small);margin:0 0 20px">Právne a legislatíva · vedúci útvaru · pozvaná 18. 12. 2025, prihlásená 19. 12. 2025</p>
 
   <form class="card" onsubmit="return false" style="padding:20px;display:grid;gap:16px">
+    <label class="field"><span class="field-label">E-mail</span><input class="field-input" value="marek.horak@futbalsfz.sk" /><span class="quiet field-hint">Prihlásenie je viazané na domény organizácie.</span></label>
     <div class="field-row">
       <label class="field"><span class="field-label">Meno</span><input class="field-input" value="Marek" /></label>
       <label class="field"><span class="field-label">Priezvisko</span><input class="field-input" value="Horák" /></label>
     </div>
     <div class="field-row">
-      <label class="field"><span class="field-label">Titul pred menom</span><input class="field-input" value="JUDr." /></label>
+      <label class="field"><span class="field-label">Titul pred menom</span><input class="field-input" value="Ing." /></label>
       <label class="field"><span class="field-label">Titul za menom</span><input class="field-input" /></label>
     </div>
-    <label class="field"><span class="field-label">Funkcia</span><input class="field-input" value="vedúci útvaru" /><span class="quiet field-hint">Zobrazuje sa v adresári a pri schvaľovaní.</span></label>
-    <label class="field"><span class="field-label">Mobil</span><input class="field-input" value="+421 900 123 456" /><span class="quiet field-hint">Medzinárodný formát. Používa sa len v adresári.</span></label>
-    <label class="field"><span class="field-label">Oddelenie</span><select class="field-input"><option>Právne a legislatíva</option></select><span class="quiet field-hint">Zmena oddelenia neruší doterajšie potvrdenia — tie nesú odtlačok oddelenia v čase potvrdenia (D50).</span></label>
-    <label class="field"><span class="field-label">Jazyk rozhrania</span><select class="field-input"><option>slovenčina</option><option>čeština</option><option>English</option></select></label>
-    <fieldset class="hr-group" style="margin:0"><legend class="field-label">Roly</legend>
+    <label class="field"><span class="field-label">Funkcia</span><input class="field-input" value="vedúci útvaru" /></label>
+    <label class="field"><span class="field-label">Oddelenie</span><select class="field-input"><option>Právne a legislatíva</option></select></label>
+    <fieldset class="hr-group"><legend class="field-label">Role</legend>
       <ul class="hr-choices">
-        <li><label class="hr-choice"><input type="checkbox" checked /><span>Správca obsahu <span class="quiet field-hint">nahráva a zverejňuje znenia</span></span></label></li>
-        <li><label class="hr-choice"><input type="checkbox" checked /><span>Schvaľovateľ <span class="quiet field-hint">rozhoduje v schvaľovacích kolách</span></span></label></li>
-        <li><label class="hr-choice"><input type="checkbox" /><span>Personalista <span class="quiet field-hint">prideľuje normy a vidí dôkazy</span></span></label></li>
+        <li><label class="hr-choice"><input type="checkbox" checked /><span>hr <span class="quiet field-hint">— prideľuje normy a vidí výkaz</span></span></label></li>
+        <li><label class="hr-choice"><input type="checkbox" checked /><span>curator <span class="quiet field-hint">— posudzuje a zverejňuje odpovede</span></span></label></li>
+        <li><label class="hr-choice"><input type="checkbox" /><span>admin <span class="quiet field-hint">— spravuje organizáciu</span></span></label></li>
       </ul>
-      <p class="quiet field-hint" style="margin:6px 0 0">Bez roly človek vidí knižnicu a svoje povinnosti — nič viac.</p>
     </fieldset>
     <div><button class="button" type="submit">Uložiť</button></div>
   </form>
 
-  <details class="detail-tools" style="margin-top:18px">
-    <summary>Pozvanie a prístup</summary>
+  <details class="detail-tools" style="margin:18px 0">
+    <summary>Prístup a členstvo</summary>
     <div class="detail-tools-body">
-      <section class="card detail-block" style="margin:0"><h3 class="detail-block-title">Poslať pozvanie znova</h3><p class="detail-block-note">Prístup má od 12. 3. 2024, takže to netreba. Použite, ak stratil prihlasovací odkaz.</p><div><button class="button button--quiet" type="button">Poslať znova</button></div></section>
-      <section class="card detail-block" style="margin:0"><h3 class="detail-block-title">Vylúčiť z organizácie</h3><p class="detail-block-note">Osoba stratí prístup. Jej potvrdenia zostávajú v evidencii — dôkaz sa nemaže (D24). Na potvrdenie prepíšte e-mail.</p><label class="field"><span class="field-label">Napíšte marek.horak@futbalsfz.sk</span><input class="field-input" /></label><div><button class="button button--quiet" type="button" style="color:var(--bad-fg)">Vylúčiť</button></div></section>
+      <section class="card detail-block" style="margin:0"><h3 class="detail-block-title">Opätovné pozvanie</h3><p class="detail-block-note">Pošle nový odkaz na prihlásenie. Starý prestane platiť.</p><div><button class="button button--quiet" type="button">Poslať pozvánku znova</button></div></section>
+      <section class="card detail-block" style="margin:0">
+        <h3 class="detail-block-title">Vylúčiť z organizácie</h3>
+        <p class="detail-block-note">Osoba stratí prístup a prestanú jej vznikať povinnosti. Potvrdenia, ktoré už dala, zostávajú platné (D24).</p>
+        <label class="field"><span class="field-label">Napíšte VYLÚČIŤ pre potvrdenie</span><input class="field-input" placeholder="VYLÚČIŤ" /><span class="quiet field-hint">Nevratná akcia — preto to trvá dlhšie.</span></label>
+        <div><button class="button button--quiet" type="button" style="color:var(--bad-fg)">Vylúčiť</button></div>
+      </section>
     </div>
   </details>
 
-  <section class="card" style="padding:20px;margin-top:24px;display:grid;gap:10px">
-    <div class="evidence-head"><h2 class="detail-block-title" style="margin:0">Dôkazy osoby</h2><a class="quiet" href="#" style="font-size:var(--fs-small);margin-left:auto">Celá reťaz dôkazov →</a></div>
-    <div class="evidence-head" style="padding:8px 0;border-bottom:1px solid var(--line)"><span style="flex:1 1 200px;font-size:var(--fs-body);font-weight:550">Registračný a prestupový poriadok</span><span class="tag tag--published">Potvrdené</span><span class="quiet" style="font-size:var(--fs-small)">18. 12. 2025</span></div>
-    <div class="evidence-head" style="padding:8px 0"><span style="flex:1 1 200px;font-size:var(--fs-body);font-weight:550">Smernica o ochrane osobných údajov</span><span class="tag tag--review">Otvorené</span><span class="quiet" style="font-size:var(--fs-small)">otvoril 20. 9. 2026</span></div>
+  <section class="card" style="padding:20px;display:grid;gap:10px">
+    <div class="evidence-head"><h2 class="detail-block-title" style="margin:0">Pridelené normy</h2><a class="quiet" href="#" style="font-size:var(--fs-small);margin-left:auto">Celá reťaz dôkazov →</a></div>
+    <div class="ack-bar" style="min-width:0"><span class="ack-track"><span class="ack-fill ack-fill--high" style="width:100%"></span></span><span class="ack-value">3 / 3</span></div>
+    <ul class="widget-list" style="margin:8px 0 0">
+      <li><div class="card" style="padding:12px 16px"><div class="evidence-head"><span class="widget-title">Registračný a prestupový poriadok</span><span class="tag tag--published">Potvrdené</span><span class="quiet" style="font-size:var(--fs-small);margin-left:auto;font-variant-numeric:tabular-nums">18. 12. 2025</span></div><div class="quiet" style="font-size:var(--fs-small);margin-top:3px">verzia 4.2</div></div></li>
+      <li><div class="card" style="padding:12px 16px"><div class="evidence-head"><span class="widget-title">Etický kódex</span><span class="tag tag--published">Potvrdené</span><span class="quiet" style="font-size:var(--fs-small);margin-left:auto;font-variant-numeric:tabular-nums">4. 9. 2026</span></div><div class="quiet" style="font-size:var(--fs-small);margin-top:3px">verzia 2.0</div></div></li>
+    </ul>
   </section>
 </div></div></div></div>
 
-<p class="cap">3 · Správa platformy (/admin) — 1440, problém má ľavý pruh; poriadok nemá značku</p>
+<p class="cap">3 · Správa platformy (/admin) — 1440, chýbajúca doména je varovanie, nie pilulka</p>
 <div class="frames"><div class="frame w1440" style="width:1440px"><div class="hdr"><span class="logo"><svg width="17" height="17" viewBox="0 0 48 48" fill="none" aria-hidden="true" style="flex:0 0 auto"><circle cx="18" cy="18" r="13" stroke="currentColor" stroke-width="4"></circle><circle cx="13" cy="18" r="2.3" fill="currentColor"></circle><circle cx="23" cy="18" r="2.3" fill="currentColor"></circle><path d="M28 27 L41 41 L29 38 Z" fill="currentColor"></path></svg></span><span class="org">Slovenský futbalový zväz</span><div class="ask" style="flex:1;min-width:0"><svg width="16" height="16" viewBox="0 0 48 48" fill="none" aria-hidden="true" style="flex:0 0 auto"><circle cx="18" cy="18" r="13" stroke="currentColor" stroke-width="4"></circle><circle cx="13" cy="18" r="2.3" fill="currentColor"></circle><circle cx="23" cy="18" r="2.3" fill="currentColor"></circle><path d="M28 27 L41 41 L29 38 Z" fill="currentColor"></path></svg><span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Opýtajte sa svojich dokumentov…</span><span class="kbd">⌘K</span></div><span class="bell"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13.9 11.6c0-5.2-1.6-7-4.9-7s-4.9 1.8-4.9 7l-1.3 2.1h12.4z"></path><path d="M10.6 15.4a1.7 1.7 0 0 1-3.2 0"></path></svg><b style="position:absolute;top:5px;right:4px;min-width:16px;height:16px;padding:0 4px;border-radius:8px;background:var(--bad-fg);color:var(--on-accent);font-size:10px;font-weight:700;display:grid;place-items:center;box-shadow:0 0 0 2px var(--surface)">3</b></span><span class="av">JL</span></div><div class="nav"><a href="#" class="">Prehľad</a><a href="#" class="">Opýtať sa</a><a href="#" class="">Na potvrdenie<span class="c">9</span></a><a href="#" class="">Na schválenie<span class="c">3</span></a><a href="#" class="">Adresár</a><a href="#" class="">Knižnica</a><a href="#" class="">Pridelené normy</a><a href="#" class="">Reťaz dôkazov</a><a href="#" class="">Osoby</a><a href="#" class="">Na posúdenie<span class="c">4</span></a></div><div class="body" style=""><div style="max-width:900px">
   <h1 class="page-title">Správa platformy</h1>
-  <p class="quiet page-lead" style="margin:0 0 16px">Stav dát podľa organizácie. Je to nástroj na poruchu — organizácia v poriadku tu nemá žiadnu značku.</p>
-  <div style="margin:0 0 16px"><a class="button" href="#">Nová organizácia</a></div>
+  <p class="quiet page-lead" style="margin:0 0 16px">Organizácie v systéme a ich obsah.</p>
+  <div class="hr-actions" style="margin:0 0 16px"><a class="button" href="#">Nová organizácia</a></div>
   <ul class="hr-list">
-    <li class="card admin-tenant">
-      <div class="hr-head"><span class="hr-title">Slovenský futbalový zväz</span><span class="tag">SFZ</span><span class="quiet" style="font-size:var(--fs-small);margin-left:auto">futbalsfz.sk</span></div>
+    <li class="card" style="padding:18px 20px">
+      <div class="person-head"><span class="hr-title">Slovenský futbalový zväz</span><span class="tag">SFZ</span><span class="quiet" style="font-size:var(--fs-small);margin-left:auto">vytvorená 1. 1. 2026</span></div>
+      <p class="quiet" style="font-size:var(--fs-small);margin:8px 0 0;overflow-wrap:anywhere">futbalsfz.sk, sfz.sk</p>
       <div class="admin-data">
-        <div><div class="quiet" style="font-size:var(--fs-micro)">Dokumenty</div><strong style="font-size:var(--fs-lead);font-variant-numeric:tabular-nums">148</strong></div>
-        <div><div class="quiet" style="font-size:var(--fs-micro)">Osoby</div><strong style="font-size:var(--fs-lead);font-variant-numeric:tabular-nums">210</strong></div>
-        <div><div class="quiet" style="font-size:var(--fs-micro)">Úseky</div><strong style="font-size:var(--fs-lead);font-variant-numeric:tabular-nums">1 240</strong> <span class="quiet" style="font-size:var(--fs-micro)">⌀ 8,4</span></div>
-        <div><div class="quiet" style="font-size:var(--fs-micro)">Trasy</div><strong style="font-size:var(--fs-lead);font-variant-numeric:tabular-nums">3</strong></div>
+        <div><div class="quiet" style="font-size:var(--fs-micro)">Dokumenty</div><div class="admin-num">148</div></div>
+        <div><div class="quiet" style="font-size:var(--fs-micro)">Znenia</div><div class="admin-num">312</div></div>
+        <div><div class="quiet" style="font-size:var(--fs-micro)">Osoby</div><div class="admin-num">210</div></div>
+        <div><div class="quiet" style="font-size:var(--fs-micro)">Potvrdenia</div><div class="admin-num">1 842</div></div>
       </div>
     </li>
-    <li class="card admin-tenant has-problem">
-      <div class="hr-head"><span class="hr-title">Mestský športový klub</span><span class="tag">MSK</span><span class="tag tag--draft">2 dokumenty bez verzie</span><span class="quiet" style="font-size:var(--fs-small);margin-left:auto">msk-klub.sk</span></div>
+    <li class="card" style="padding:18px 20px">
+      <div class="person-head"><span class="hr-title">Mestský športový klub</span><span class="tag">MSK</span><span class="tag tag--draft">2 dokumenty bez znenia</span><span class="quiet" style="font-size:var(--fs-small);margin-left:auto">vytvorená 12. 3. 2026</span></div>
+      <div class="notice notice--error" style="margin:10px 0 0"><span class="notice-mark">!</span><span class="notice-text">Do organizácie sa nedá prihlásiť — prihlásenie je viazané na domény. Doplňte aspoň jednu.</span></div>
       <div class="admin-data">
-        <div><div class="quiet" style="font-size:var(--fs-micro)">Dokumenty</div><strong style="font-size:var(--fs-lead);font-variant-numeric:tabular-nums">41</strong></div>
-        <div><div class="quiet" style="font-size:var(--fs-micro)">Osoby</div><strong style="font-size:var(--fs-lead);font-variant-numeric:tabular-nums">96</strong></div>
-        <div><div class="quiet" style="font-size:var(--fs-micro)">Úseky</div><strong style="font-size:var(--fs-lead);font-variant-numeric:tabular-nums">68</strong> <span style="font-size:var(--fs-micro);color:var(--warn-fg)">⌀ 1,7</span></div>
-        <div><div class="quiet" style="font-size:var(--fs-micro)">Trasy</div><strong style="font-size:var(--fs-lead);font-variant-numeric:tabular-nums">0</strong></div>
+        <div><div class="quiet" style="font-size:var(--fs-micro)">Dokumenty</div><div class="admin-num">41</div></div>
+        <div><div class="quiet" style="font-size:var(--fs-micro)">Znenia</div><div class="admin-num">58</div></div>
+        <div><div class="quiet" style="font-size:var(--fs-micro)">Osoby</div><div class="admin-num">96</div></div>
+        <div><div class="quiet" style="font-size:var(--fs-micro)">Potvrdenia</div><div class="admin-num">204</div></div>
       </div>
-      <p class="quiet" style="margin:10px 0 0;font-size:var(--fs-small)">Bez verzie: <span class="quiet">stanovy-2024, prevadzkovy-poriadok</span>. Priemer 1,7 úseku na dokument znamená, že indexovanie neprebehlo — skontrolujte konverziu.</p>
-    </li>
-    <li class="card admin-tenant">
-      <div class="hr-head"><span class="hr-title">LTK Solutions</span><span class="tag">LTK</span><span class="quiet" style="font-size:var(--fs-small);margin-left:auto">ltksolutions.sk</span></div>
-      <div class="admin-data">
-        <div><div class="quiet" style="font-size:var(--fs-micro)">Dokumenty</div><strong style="font-size:var(--fs-lead);font-variant-numeric:tabular-nums">62</strong></div>
-        <div><div class="quiet" style="font-size:var(--fs-micro)">Osoby</div><strong style="font-size:var(--fs-lead);font-variant-numeric:tabular-nums">34</strong></div>
-        <div><div class="quiet" style="font-size:var(--fs-micro)">Úseky</div><strong style="font-size:var(--fs-lead);font-variant-numeric:tabular-nums">702</strong> <span class="quiet" style="font-size:var(--fs-micro)">⌀ 11,3</span></div>
-        <div><div class="quiet" style="font-size:var(--fs-micro)">Trasy</div><strong style="font-size:var(--fs-lead);font-variant-numeric:tabular-nums">2</strong></div>
-      </div>
+      <p class="quiet" style="font-size:var(--fs-small);margin:10px 0 0">Bez znenia: <span class="quiet">stanovy-msk, rokovaci-poriadok</span></p>
     </li>
   </ul>
 </div></div></div></div>
 
-<p class="cap">4 · Príručka (/guide) — 1440, kapitoly ako .view-switch, obsah kapitoly nad textom, riadok 68ch</p>
+<p class="cap">4 · Príručka (/guide) — 1440, otvorená kapitola je vidieť; riadok 68ch</p>
 <div class="frames"><div class="frame w1440" style="width:1440px"><div class="hdr"><span class="logo"><svg width="17" height="17" viewBox="0 0 48 48" fill="none" aria-hidden="true" style="flex:0 0 auto"><circle cx="18" cy="18" r="13" stroke="currentColor" stroke-width="4"></circle><circle cx="13" cy="18" r="2.3" fill="currentColor"></circle><circle cx="23" cy="18" r="2.3" fill="currentColor"></circle><path d="M28 27 L41 41 L29 38 Z" fill="currentColor"></path></svg></span><span class="org">Slovenský futbalový zväz</span><div class="ask" style="flex:1;min-width:0"><svg width="16" height="16" viewBox="0 0 48 48" fill="none" aria-hidden="true" style="flex:0 0 auto"><circle cx="18" cy="18" r="13" stroke="currentColor" stroke-width="4"></circle><circle cx="13" cy="18" r="2.3" fill="currentColor"></circle><circle cx="23" cy="18" r="2.3" fill="currentColor"></circle><path d="M28 27 L41 41 L29 38 Z" fill="currentColor"></path></svg><span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Opýtajte sa svojich dokumentov…</span><span class="kbd">⌘K</span></div><span class="bell"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13.9 11.6c0-5.2-1.6-7-4.9-7s-4.9 1.8-4.9 7l-1.3 2.1h12.4z"></path><path d="M10.6 15.4a1.7 1.7 0 0 1-3.2 0"></path></svg><b style="position:absolute;top:5px;right:4px;min-width:16px;height:16px;padding:0 4px;border-radius:8px;background:var(--bad-fg);color:var(--on-accent);font-size:10px;font-weight:700;display:grid;place-items:center;box-shadow:0 0 0 2px var(--surface)">3</b></span><span class="av">JL</span></div><div class="nav"><a href="#" class="">Prehľad</a><a href="#" class="">Opýtať sa</a><a href="#" class="">Na potvrdenie<span class="c">9</span></a><a href="#" class="">Na schválenie<span class="c">3</span></a><a href="#" class="">Adresár</a><a href="#" class="">Knižnica</a><a href="#" class="">Pridelené normy</a><a href="#" class="">Reťaz dôkazov</a><a href="#" class="">Osoby</a><a href="#" class="">Na posúdenie<span class="c">4</span></a></div><div class="body" style=""><div style="max-width:720px">
   <h1 class="page-title">Príručka</h1>
-  <p class="quiet page-lead" style="margin:0 0 20px">Ako Contineo funguje a prečo je zariadené takto.</p>
-  <div class="view-switch" style="margin:0 0 20px;overflow-x:auto;max-width:100%">
-    <a class="view-switch-item is-on" href="#">Základy</a>
-    <a class="view-switch-item" href="#">Knižnica</a>
-    <a class="view-switch-item" href="#">Potvrdenia</a>
-    <a class="view-switch-item" href="#">Schvaľovanie</a>
-    <a class="view-switch-item" href="#">Otázky</a>
+  <p class="quiet page-lead" style="margin:0 0 20px">Ako Contineo funguje a prečo je postavené tak, ako je.</p>
+  <div style="display:flex;gap:8px;flex-wrap:wrap;margin:0 0 18px">
+    <a class="guide-chapter is-on" href="#">Ako sa pýtať</a>
+    <a class="guide-chapter" href="#">Potvrdzovanie noriem</a>
+    <a class="guide-chapter" href="#">Pre správcov obsahu</a>
   </div>
-  <article class="answer card guide-body" style="padding:24px 26px;line-height:1.75">
-    <ul class="guide-toc">
-      <li><a href="#a">Čo je znenie a čo verzia</a></li>
-      <li><a href="#b">Prečo sa potvrdenie nedá prepísať</a></li>
-      <li><a href="#c">Kde sa berie odpoveď</a></li>
-    </ul>
-    <h2 id="a" style="font-size:var(--fs-section);margin:0 0 8px">Čo je znenie a čo verzia</h2>
-    <p style="margin:0 0 14px">Dokument je vec, ktorá má názov a kľúč — napríklad <em>Registračný a prestupový poriadok</em>. Znenie je jeho konkrétna podoba účinná od nejakého dátumu. Keď príde novela, vzniká nové znenie; staré sa nemaže, lebo potvrdenia visia na ňom.</p>
-    <h2 id="b" style="font-size:var(--fs-section);margin:24px 0 8px">Prečo sa potvrdenie nedá prepísať</h2>
-    <p style="margin:0 0 14px">Potvrdenie je dôkaz o tom, že konkrétny človek v konkrétnom čase videl konkrétny text. Keby sa dalo upraviť, nebol by to dôkaz. Preto sa opravuje novým záznamom a odvoláva sa s dôvodom — pôvodný zápis zostáva.</p>
-    <h2 id="c" style="font-size:var(--fs-section);margin:24px 0 8px">Kde sa berie odpoveď</h2>
-    <p style="margin:0">Odpoveď skladá systém z úsekov vašich dokumentov a pri každom tvrdení ukáže zdroj. Keď zdroje nie sú, odpoveď nedostanete — to je zámer, nie porucha.</p>
+  <article class="card answer guide-body">
+    <h2 style="font-size:var(--fs-section);margin:0 0 8px">Ako sa pýtať</h2>
+    <p style="margin:0 0 12px">Pýtajte sa celou vetou, ako by ste sa pýtali kolegu. „Do kedy treba nahlásiť prestup hráča?“ funguje lepšie než „prestup termín“ — systém hľadá zmysel, nie slová.</p>
+    <p style="margin:0 0 12px">Odpoveď vždy nesie <strong>zdroje</strong>: konkrétny článok konkrétneho znenia. Ak zdroje nesedia, odpoveď nesedí — a je lepšie to nahlásiť než ju použiť.</p>
+    <p style="margin:0">Keď na otázku niet odpovede v dokumentoch, systém to povie. Nedomýšľa si.</p>
   </article>
 </div></div></div></div>
 
 <div class="frames">
-<div style="display:flex;flex-direction:column;gap:8px"><p class="cap" style="margin:0">Osoby — 390, akcie na celú šírku</p><div class="frame w390" style="width:390px"><div class="hdr" style="padding:0 10px;gap:8px"><span class="logo" style="width:30px;height:30px"><svg width="18" height="18" viewBox="0 0 48 48" fill="none" aria-hidden="true" style="flex:0 0 auto"><circle cx="18" cy="18" r="13" stroke="currentColor" stroke-width="4"></circle><circle cx="13" cy="18" r="2.3" fill="currentColor"></circle><circle cx="23" cy="18" r="2.3" fill="currentColor"></circle><path d="M28 27 L41 41 L29 38 Z" fill="currentColor"></path></svg></span><span class="org" style="flex:0 0 auto;font-size:15px">SFZ</span><div class="ask" style="flex:1;min-width:0"><svg width="16" height="16" viewBox="0 0 48 48" fill="none" aria-hidden="true" style="flex:0 0 auto"><circle cx="18" cy="18" r="13" stroke="currentColor" stroke-width="4"></circle><circle cx="13" cy="18" r="2.3" fill="currentColor"></circle><circle cx="23" cy="18" r="2.3" fill="currentColor"></circle><path d="M28 27 L41 41 L29 38 Z" fill="currentColor"></path></svg><span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Opýtajte sa…</span></div><span class="bell" style="width:40px;height:40px"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13.9 11.6c0-5.2-1.6-7-4.9-7s-4.9 1.8-4.9 7l-1.3 2.1h12.4z"></path><path d="M10.6 15.4a1.7 1.7 0 0 1-3.2 0"></path></svg><b style="position:absolute;top:7px;right:6px;min-width:16px;height:16px;padding:0 4px;border-radius:8px;background:var(--bad-fg);color:var(--on-accent);font-size:10px;font-weight:700;display:grid;place-items:center;box-shadow:0 0 0 2px var(--surface)">3</b></span><span class="av" style="width:32px;height:32px;font-size:11.5px">JL</span></div><div class="body" style="padding:14px 14px 20px"><div class="pe-page">
+<div style="display:flex;flex-direction:column;gap:8px"><p class="cap" style="margin:0">Pridať osobu — 390, .field-row jeden stĺpec</p><div class="frame w390" style="width:390px"><div class="hdr" style="padding:0 10px;gap:8px"><span class="logo" style="width:30px;height:30px"><svg width="18" height="18" viewBox="0 0 48 48" fill="none" aria-hidden="true" style="flex:0 0 auto"><circle cx="18" cy="18" r="13" stroke="currentColor" stroke-width="4"></circle><circle cx="13" cy="18" r="2.3" fill="currentColor"></circle><circle cx="23" cy="18" r="2.3" fill="currentColor"></circle><path d="M28 27 L41 41 L29 38 Z" fill="currentColor"></path></svg></span><span class="org" style="flex:0 0 auto;font-size:15px">SFZ</span><div class="ask" style="flex:1;min-width:0"><svg width="16" height="16" viewBox="0 0 48 48" fill="none" aria-hidden="true" style="flex:0 0 auto"><circle cx="18" cy="18" r="13" stroke="currentColor" stroke-width="4"></circle><circle cx="13" cy="18" r="2.3" fill="currentColor"></circle><circle cx="23" cy="18" r="2.3" fill="currentColor"></circle><path d="M28 27 L41 41 L29 38 Z" fill="currentColor"></path></svg><span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Opýtajte sa…</span></div><span class="bell" style="width:40px;height:40px"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13.9 11.6c0-5.2-1.6-7-4.9-7s-4.9 1.8-4.9 7l-1.3 2.1h12.4z"></path><path d="M10.6 15.4a1.7 1.7 0 0 1-3.2 0"></path></svg><b style="position:absolute;top:7px;right:6px;min-width:16px;height:16px;padding:0 4px;border-radius:8px;background:var(--bad-fg);color:var(--on-accent);font-size:10px;font-weight:700;display:grid;place-items:center;box-shadow:0 0 0 2px var(--surface)">3</b></span><span class="av" style="width:32px;height:32px;font-size:11.5px">JL</span></div><div class="body" style="padding:14px 14px 20px"><div style="max-width:560px">
+  <p style="margin:0 0 12px;font-size:var(--fs-body)"><a class="quiet" href="#" style="color:var(--muted)">← Osoby</a></p>
+  <h1 class="page-title">Pridať osobu</h1>
+  <p class="quiet page-lead" style="margin:0 0 20px">Osoba dostane pozvánku hneď po uložení. Prihlásiť sa vie len z domény organizácie.</p>
+  <form class="card" onsubmit="return false" style="padding:20px;display:grid;gap:16px">
+    <label class="field"><span class="field-label">E-mail</span><input class="field-input" placeholder="meno@futbalsfz.sk" /><span class="quiet field-hint">Na túto adresu odíde pozvánka.</span></label>
+    <div class="field-row">
+      <label class="field"><span class="field-label">Meno</span><input class="field-input" /></label>
+      <label class="field"><span class="field-label">Priezvisko</span><input class="field-input" /></label>
+    </div>
+    <div class="field-row">
+      <label class="field"><span class="field-label">Titul pred menom</span><input class="field-input" /></label>
+      <label class="field"><span class="field-label">Titul za menom</span><input class="field-input" /></label>
+    </div>
+    <label class="field"><span class="field-label">Funkcia</span><input class="field-input" /></label>
+    <label class="field"><span class="field-label">Oddelenie</span><input class="field-input" /></label>
+    <label class="field"><span class="field-label">Jazyk rozhrania</span><select class="field-input"><option>slovenčina</option><option>čeština</option><option>English</option></select><span class="quiet field-hint">Dá sa zmeniť kedykoľvek neskôr.</span></label>
+    <div><button class="button" type="submit">Pridať a pozvať</button></div>
+  </form>
+</div></div><div style="display:flex;padding:6px 6px 14px;background:var(--surface);border-top:1px solid var(--line)"><span style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;height:56px;justify-content:center;position:relative;color:var(--muted)"><span style="height:21px;display:grid;place-items:center"><svg width="21" height="21" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.29" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex:0 0 auto"><rect x="2.6" y="2.6" width="5.6" height="5.6" rx="1.2"/><rect x="9.8" y="2.6" width="5.6" height="5.6" rx="1.2"/><rect x="2.6" y="9.8" width="5.6" height="5.6" rx="1.2"/><rect x="9.8" y="9.8" width="5.6" height="5.6" rx="1.2"/></svg></span><span style="font-size:10.5px;font-weight:500">Prehľad</span></span><span style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;height:56px;justify-content:center;position:relative;color:var(--muted)"><span style="height:21px;display:grid;place-items:center"><svg width="21" height="21" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.29" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex:0 0 auto"><path d="M15.2 10.4a2 2 0 0 1-2 2H7.4L3.6 15.2v-2.8h-.2a2 2 0 0 1-2-2V4.6a2 2 0 0 1 2-2h9.8a2 2 0 0 1 2 2z"/></svg></span><span style="font-size:10.5px;font-weight:500">Opýtať sa</span></span><span style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;height:56px;justify-content:center;position:relative;color:var(--muted)"><span style="height:21px;display:grid;place-items:center"><svg width="21" height="21" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.29" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex:0 0 auto"><path d="M3.4 3.2h2.8v11.6H3.4zM7.6 3.2h2.8v11.6H7.6z"/><path d="m11.9 4.1 2.6.7-2.8 10.2-2.1-.6"/></svg></span><span style="font-size:10.5px;font-weight:500">Knižnica</span></span><span style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;height:56px;justify-content:center;position:relative;color:var(--muted)"><span style="height:21px;display:grid;place-items:center"><svg width="21" height="21" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.29" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex:0 0 auto"><rect x="2.6" y="2.6" width="12.8" height="12.8" rx="2.2"/><path d="M5.8 9.2 8 11.4l4.2-4.4"/></svg></span><span style="font-size:10.5px;font-weight:500">Úlohy</span><span style="position:absolute;top:4px;left:calc(50% + 6px);min-width:17px;height:17px;padding:0 5px;border-radius:9px;background:var(--bad-fg);color:var(--on-accent);font-size:10.5px;font-weight:700;display:grid;place-items:center">9</span></span><span style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;height:56px;justify-content:center;position:relative;color:var(--accent)"><span style="height:21px;display:grid;place-items:center"><svg width="21" height="21" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.29" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex:0 0 auto"><path d="M3.2 5.4h11.6M3.2 9h11.6M3.2 12.6h11.6"/></svg></span><span style="font-size:10.5px;font-weight:650">Viac</span></span></div></div></div>
+<div style="display:flex;flex-direction:column;gap:8px"><p class="cap" style="margin:0">Osoby — 390, tmavá téma</p><div class="frame w390 dark" style="width:390px"><div class="hdr" style="padding:0 10px;gap:8px"><span class="logo" style="width:30px;height:30px"><svg width="18" height="18" viewBox="0 0 48 48" fill="none" aria-hidden="true" style="flex:0 0 auto"><circle cx="18" cy="18" r="13" stroke="currentColor" stroke-width="4"></circle><circle cx="13" cy="18" r="2.3" fill="currentColor"></circle><circle cx="23" cy="18" r="2.3" fill="currentColor"></circle><path d="M28 27 L41 41 L29 38 Z" fill="currentColor"></path></svg></span><span class="org" style="flex:0 0 auto;font-size:15px">SFZ</span><div class="ask" style="flex:1;min-width:0"><svg width="16" height="16" viewBox="0 0 48 48" fill="none" aria-hidden="true" style="flex:0 0 auto"><circle cx="18" cy="18" r="13" stroke="currentColor" stroke-width="4"></circle><circle cx="13" cy="18" r="2.3" fill="currentColor"></circle><circle cx="23" cy="18" r="2.3" fill="currentColor"></circle><path d="M28 27 L41 41 L29 38 Z" fill="currentColor"></path></svg><span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Opýtajte sa…</span></div><span class="bell" style="width:40px;height:40px"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13.9 11.6c0-5.2-1.6-7-4.9-7s-4.9 1.8-4.9 7l-1.3 2.1h12.4z"></path><path d="M10.6 15.4a1.7 1.7 0 0 1-3.2 0"></path></svg><b style="position:absolute;top:7px;right:6px;min-width:16px;height:16px;padding:0 4px;border-radius:8px;background:var(--bad-fg);color:var(--on-accent);font-size:10px;font-weight:700;display:grid;place-items:center;box-shadow:0 0 0 2px var(--surface)">3</b></span><span class="av" style="width:32px;height:32px;font-size:11.5px">JL</span></div><div class="body" style="padding:14px 14px 20px"><div style="max-width:880px">
   <h1 class="page-title">Osoby</h1>
-  <p class="quiet page-lead" style="max-width:620px">Kto má prístup do portálu. Vylúčená osoba zo zoznamu nezmizne — jej dôkazy o potvrdeniach platia ďalej (D24).</p>
-  <div class="pe-actions" style="display:flex;gap:8px;flex-wrap:wrap;margin:0 0 16px">
-    <a class="button" href="#">Pozvať osobu</a>
+  <p class="quiet page-lead" style="max-width:620px">Kto do organizácie patrí a aké má role. Vylúčená osoba zostáva dohľadateľná — jej potvrdenia platia aj potom.</p>
+  <div class="hr-actions" style="margin:0 0 16px">
+    <a class="button" href="#">Pridať osobu</a>
     <a class="button button--quiet" href="#">Import z CSV</a>
-    <a class="button button--quiet" href="#">Rozposlať pozvania (4)</a>
+    <a class="button button--quiet" href="#">Rozposlať pozvánky (12)</a>
   </div>
-  <label class="field" style="margin:0 0 12px"><span class="field-label">Hľadať</span><input class="field-input" value="" placeholder="Meno alebo e-mail" /></label>
-  <div style="display:flex;gap:7px;flex-wrap:wrap;margin:0 0 10px;align-items:center">
-    <span class="quiet" style="font-size:var(--fs-micro)">Stav:</span>
-    <a class="pill" href="#">Pozvaní<span class="pill-count">4</span></a>
-    <a class="pill" href="#">Aktívni<span class="pill-count">204</span></a>
-    <a class="pill" href="#">Vylúčení<span class="pill-count">2</span></a>
-    <span class="quiet" style="font-size:var(--fs-micro);margin-left:8px">Oddelenie:</span>
-    <a class="pill" href="#">Právne<span class="pill-count">24</span></a>
-    <a class="pill" href="#">Compliance<span class="pill-count">12</span></a>
-  </div>
-  
-  <p class="quiet" style="font-size:var(--fs-small);margin:0 0 10px">210 osôb</p>
+  <label class="field" style="margin:0 0 10px"><input class="field-input" value="" placeholder="Hľadať meno alebo e-mail…" /></label>
+  <p class="quiet" style="font-size:var(--fs-small);margin:0 0 10px">5 z 210 osôb</p>
   <ul class="hr-list">
     <li class="card person-card">
-      <div class="person-head">
-        <a href="#" class="person-name">Marek Horák</a>
-        <span class="tag">Zamestnanec</span>
-        <span class="tag">Správca obsahu</span><span class="tag">Schvaľovateľ</span>
-        <span class="tag tag--published" style="margin-left:auto">Aktívny</span>
-      </div>
-      <p class="quiet" style="font-size:var(--fs-small);margin:5px 0 0;overflow-wrap:anywhere">marek.horak@futbalsfz.sk</p>
-    </li>
-    <li class="card person-card">
-      <div class="person-head">
-        <a href="#" class="person-name">Zuzana Kováčová</a>
-        <span class="tag">Zamestnanec</span>
-        <span class="tag">Personalista</span>
-        <span class="tag tag--published" style="margin-left:auto">Aktívny</span>
-      </div>
-      <p class="quiet" style="font-size:var(--fs-small);margin:5px 0 0;overflow-wrap:anywhere">zuzana.kovacova@futbalsfz.sk</p>
-    </li>
-    <li class="card person-card">
-      <div class="person-head">
-        <a href="#" class="person-name">Tomáš Sedlák</a>
-        <span class="tag">Zamestnanec</span>
-        <span class="tag">Správca obsahu</span>
-        <span class="tag tag--draft" style="margin-left:auto">Pozvaný</span>
-      </div>
-      <p class="quiet" style="font-size:var(--fs-small);margin:5px 0 0;overflow-wrap:anywhere">tomas.sedlak@futbalsfz.sk</p>
-    </li>
-    <li class="card person-card">
-      <div class="person-head">
-        <a href="#" class="person-name">Peter Novák</a>
-        <span class="tag">Zamestnanec</span>
-        
-        <span class="tag tag--published" style="margin-left:auto">Aktívny</span>
-      </div>
-      <p class="quiet" style="font-size:var(--fs-small);margin:5px 0 0;overflow-wrap:anywhere">peter.novak@futbalsfz.sk</p>
-    </li>
-    <li class="card person-card is-excluded">
-      <div class="person-head">
-        <a href="#" class="person-name">Lucia Bieliková</a>
-        <span class="tag">Externý</span>
-        <span class="tag">Hodnotiteľ</span>
-        <span class="tag tag--archived" style="margin-left:auto">Vylúčený</span>
-      </div>
-      <p class="quiet" style="font-size:var(--fs-small);margin:5px 0 0;overflow-wrap:anywhere">lucia.bielikova@futbalsfz.sk</p>
-    </li>
-  </ul>
-</div></div><div style="display:flex;padding:6px 6px 14px;background:var(--surface);border-top:1px solid var(--line)"><span style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;height:56px;justify-content:center;position:relative;color:var(--muted)"><span style="height:21px;display:grid;place-items:center"><svg width="21" height="21" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.29" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex:0 0 auto"><rect x="2.6" y="2.6" width="5.6" height="5.6" rx="1.2"/><rect x="9.8" y="2.6" width="5.6" height="5.6" rx="1.2"/><rect x="2.6" y="9.8" width="5.6" height="5.6" rx="1.2"/><rect x="9.8" y="9.8" width="5.6" height="5.6" rx="1.2"/></svg></span><span style="font-size:10.5px;font-weight:500">Prehľad</span></span><span style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;height:56px;justify-content:center;position:relative;color:var(--muted)"><span style="height:21px;display:grid;place-items:center"><svg width="21" height="21" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.29" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex:0 0 auto"><path d="M15.2 10.4a2 2 0 0 1-2 2H7.4L3.6 15.2v-2.8h-.2a2 2 0 0 1-2-2V4.6a2 2 0 0 1 2-2h9.8a2 2 0 0 1 2 2z"/></svg></span><span style="font-size:10.5px;font-weight:500">Opýtať sa</span></span><span style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;height:56px;justify-content:center;position:relative;color:var(--muted)"><span style="height:21px;display:grid;place-items:center"><svg width="21" height="21" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.29" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex:0 0 auto"><path d="M3.4 3.2h2.8v11.6H3.4zM7.6 3.2h2.8v11.6H7.6z"/><path d="m11.9 4.1 2.6.7-2.8 10.2-2.1-.6"/></svg></span><span style="font-size:10.5px;font-weight:500">Knižnica</span></span><span style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;height:56px;justify-content:center;position:relative;color:var(--muted)"><span style="height:21px;display:grid;place-items:center"><svg width="21" height="21" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.29" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex:0 0 auto"><rect x="2.6" y="2.6" width="12.8" height="12.8" rx="2.2"/><path d="M5.8 9.2 8 11.4l4.2-4.4"/></svg></span><span style="font-size:10.5px;font-weight:500">Úlohy</span><span style="position:absolute;top:4px;left:calc(50% + 6px);min-width:17px;height:17px;padding:0 5px;border-radius:9px;background:var(--bad-fg);color:var(--on-accent);font-size:10.5px;font-weight:700;display:grid;place-items:center">9</span></span><span style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;height:56px;justify-content:center;position:relative;color:var(--accent)"><span style="height:21px;display:grid;place-items:center"><svg width="21" height="21" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.29" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex:0 0 auto"><path d="M3.2 5.4h11.6M3.2 9h11.6M3.2 12.6h11.6"/></svg></span><span style="font-size:10.5px;font-weight:650">Viac</span></span></div></div></div>
-<div style="display:flex;flex-direction:column;gap:8px"><p class="cap" style="margin:0">Príručka — 390, tmavá téma</p><div class="frame w390 dark" style="width:390px"><div class="hdr" style="padding:0 10px;gap:8px"><span class="logo" style="width:30px;height:30px"><svg width="18" height="18" viewBox="0 0 48 48" fill="none" aria-hidden="true" style="flex:0 0 auto"><circle cx="18" cy="18" r="13" stroke="currentColor" stroke-width="4"></circle><circle cx="13" cy="18" r="2.3" fill="currentColor"></circle><circle cx="23" cy="18" r="2.3" fill="currentColor"></circle><path d="M28 27 L41 41 L29 38 Z" fill="currentColor"></path></svg></span><span class="org" style="flex:0 0 auto;font-size:15px">SFZ</span><div class="ask" style="flex:1;min-width:0"><svg width="16" height="16" viewBox="0 0 48 48" fill="none" aria-hidden="true" style="flex:0 0 auto"><circle cx="18" cy="18" r="13" stroke="currentColor" stroke-width="4"></circle><circle cx="13" cy="18" r="2.3" fill="currentColor"></circle><circle cx="23" cy="18" r="2.3" fill="currentColor"></circle><path d="M28 27 L41 41 L29 38 Z" fill="currentColor"></path></svg><span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Opýtajte sa…</span></div><span class="bell" style="width:40px;height:40px"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13.9 11.6c0-5.2-1.6-7-4.9-7s-4.9 1.8-4.9 7l-1.3 2.1h12.4z"></path><path d="M10.6 15.4a1.7 1.7 0 0 1-3.2 0"></path></svg><b style="position:absolute;top:7px;right:6px;min-width:16px;height:16px;padding:0 4px;border-radius:8px;background:var(--bad-fg);color:var(--on-accent);font-size:10px;font-weight:700;display:grid;place-items:center;box-shadow:0 0 0 2px var(--surface)">3</b></span><span class="av" style="width:32px;height:32px;font-size:11.5px">JL</span></div><div class="body" style="padding:14px 14px 20px"><div style="max-width:720px">
-  <h1 class="page-title">Príručka</h1>
-  <p class="quiet page-lead" style="margin:0 0 20px">Ako Contineo funguje a prečo je zariadené takto.</p>
-  <div class="view-switch" style="margin:0 0 20px;overflow-x:auto;max-width:100%">
-    <a class="view-switch-item is-on" href="#">Základy</a>
-    <a class="view-switch-item" href="#">Knižnica</a>
-    <a class="view-switch-item" href="#">Potvrdenia</a>
-    <a class="view-switch-item" href="#">Schvaľovanie</a>
-    <a class="view-switch-item" href="#">Otázky</a>
+  <div class="person-head">
+    <a href="#" class="person-name" style="color:var(--ink);text-decoration:none">Ing. Marek Horák</a>
+    <span class="tag tag--published">Aktívna</span>
+    <span class="tag">hr</span><span class="tag">curator</span>
+    <span class="quiet" style="font-size:var(--fs-small);margin-left:auto">Právne a legislatíva</span>
   </div>
-  <article class="answer card guide-body" style="padding:24px 26px;line-height:1.75">
-    <ul class="guide-toc">
-      <li><a href="#a">Čo je znenie a čo verzia</a></li>
-      <li><a href="#b">Prečo sa potvrdenie nedá prepísať</a></li>
-      <li><a href="#c">Kde sa berie odpoveď</a></li>
-    </ul>
-    <h2 id="a" style="font-size:var(--fs-section);margin:0 0 8px">Čo je znenie a čo verzia</h2>
-    <p style="margin:0 0 14px">Dokument je vec, ktorá má názov a kľúč — napríklad <em>Registračný a prestupový poriadok</em>. Znenie je jeho konkrétna podoba účinná od nejakého dátumu. Keď príde novela, vzniká nové znenie; staré sa nemaže, lebo potvrdenia visia na ňom.</p>
-    <h2 id="b" style="font-size:var(--fs-section);margin:24px 0 8px">Prečo sa potvrdenie nedá prepísať</h2>
-    <p style="margin:0 0 14px">Potvrdenie je dôkaz o tom, že konkrétny človek v konkrétnom čase videl konkrétny text. Keby sa dalo upraviť, nebol by to dôkaz. Preto sa opravuje novým záznamom a odvoláva sa s dôvodom — pôvodný zápis zostáva.</p>
-    <h2 id="c" style="font-size:var(--fs-section);margin:24px 0 8px">Kde sa berie odpoveď</h2>
-    <p style="margin:0">Odpoveď skladá systém z úsekov vašich dokumentov a pri každom tvrdení ukáže zdroj. Keď zdroje nie sú, odpoveď nedostanete — to je zámer, nie porucha.</p>
-  </article>
+  <p class="person-line">marek.horak@futbalsfz.sk</p>
+</li>
+    <li class="card person-card">
+  <div class="person-head">
+    <a href="#" class="person-name" style="color:var(--ink);text-decoration:none">Zuzana Kováčová</a>
+    <span class="tag tag--published">Aktívna</span>
+    <span class="tag">hr</span>
+    <span class="quiet" style="font-size:var(--fs-small);margin-left:auto">Ľudské zdroje</span>
+  </div>
+  <p class="person-line">zuzana.kovacova@futbalsfz.sk</p>
+</li>
+    <li class="card person-card">
+  <div class="person-head">
+    <a href="#" class="person-name" style="color:var(--ink);text-decoration:none">Peter Novák</a>
+    <span class="tag tag--review">Pozvaná</span>
+    
+    <span class="quiet" style="font-size:var(--fs-small);margin-left:auto">Ekonomika</span>
+  </div>
+  <p class="person-line">peter.novak@futbalsfz.sk</p>
+</li>
+    <li class="card person-card is-excluded">
+  <div class="person-head">
+    <a href="#" class="person-name" style="color:var(--ink);text-decoration:none">Mgr. Lucia Bieliková, PhD.</a>
+    <span class="tag tag--archived">Vylúčená</span>
+    <span class="tag">curator</span>
+    <span class="quiet" style="font-size:var(--fs-small);margin-left:auto">Compliance</span>
+  </div>
+  <p class="person-line">lucia.bielikova@futbalsfz.sk</p>
+</li>
+    <li class="card person-card">
+  <div class="person-head">
+    <a href="#" class="person-name" style="color:var(--ink);text-decoration:none">Tomáš Sedlák</a>
+    <span class="tag tag">Bez konta</span>
+    
+    <span class="quiet" style="font-size:var(--fs-small);margin-left:auto">Súťaže</span>
+  </div>
+  <p class="person-line">tomas.sedlak@futbalsfz.sk</p>
+</li>
+  </ul>
 </div></div><div style="display:flex;padding:6px 6px 14px;background:var(--surface);border-top:1px solid var(--line)"><span style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;height:56px;justify-content:center;position:relative;color:var(--muted)"><span style="height:21px;display:grid;place-items:center"><svg width="21" height="21" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.29" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex:0 0 auto"><rect x="2.6" y="2.6" width="5.6" height="5.6" rx="1.2"/><rect x="9.8" y="2.6" width="5.6" height="5.6" rx="1.2"/><rect x="2.6" y="9.8" width="5.6" height="5.6" rx="1.2"/><rect x="9.8" y="9.8" width="5.6" height="5.6" rx="1.2"/></svg></span><span style="font-size:10.5px;font-weight:500">Prehľad</span></span><span style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;height:56px;justify-content:center;position:relative;color:var(--muted)"><span style="height:21px;display:grid;place-items:center"><svg width="21" height="21" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.29" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex:0 0 auto"><path d="M15.2 10.4a2 2 0 0 1-2 2H7.4L3.6 15.2v-2.8h-.2a2 2 0 0 1-2-2V4.6a2 2 0 0 1 2-2h9.8a2 2 0 0 1 2 2z"/></svg></span><span style="font-size:10.5px;font-weight:500">Opýtať sa</span></span><span style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;height:56px;justify-content:center;position:relative;color:var(--muted)"><span style="height:21px;display:grid;place-items:center"><svg width="21" height="21" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.29" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex:0 0 auto"><path d="M3.4 3.2h2.8v11.6H3.4zM7.6 3.2h2.8v11.6H7.6z"/><path d="m11.9 4.1 2.6.7-2.8 10.2-2.1-.6"/></svg></span><span style="font-size:10.5px;font-weight:500">Knižnica</span></span><span style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;height:56px;justify-content:center;position:relative;color:var(--muted)"><span style="height:21px;display:grid;place-items:center"><svg width="21" height="21" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.29" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex:0 0 auto"><rect x="2.6" y="2.6" width="12.8" height="12.8" rx="2.2"/><path d="M5.8 9.2 8 11.4l4.2-4.4"/></svg></span><span style="font-size:10.5px;font-weight:500">Úlohy</span><span style="position:absolute;top:4px;left:calc(50% + 6px);min-width:17px;height:17px;padding:0 5px;border-radius:9px;background:var(--bad-fg);color:var(--on-accent);font-size:10.5px;font-weight:700;display:grid;place-items:center">9</span></span><span style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;height:56px;justify-content:center;position:relative;color:var(--accent)"><span style="height:21px;display:grid;place-items:center"><svg width="21" height="21" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.29" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex:0 0 auto"><path d="M3.2 5.4h11.6M3.2 9h11.6M3.2 12.6h11.6"/></svg></span><span style="font-size:10.5px;font-weight:650">Viac</span></span></div></div></div>
 </div>
 
-<p class="cap">Prázdne stavy</p>
-<div class="frames"><div class="frame w1440" style="width:1440px"><div class="hdr"><span class="logo"><svg width="17" height="17" viewBox="0 0 48 48" fill="none" aria-hidden="true" style="flex:0 0 auto"><circle cx="18" cy="18" r="13" stroke="currentColor" stroke-width="4"></circle><circle cx="13" cy="18" r="2.3" fill="currentColor"></circle><circle cx="23" cy="18" r="2.3" fill="currentColor"></circle><path d="M28 27 L41 41 L29 38 Z" fill="currentColor"></path></svg></span><span class="org">Slovenský futbalový zväz</span><div class="ask" style="flex:1;min-width:0"><svg width="16" height="16" viewBox="0 0 48 48" fill="none" aria-hidden="true" style="flex:0 0 auto"><circle cx="18" cy="18" r="13" stroke="currentColor" stroke-width="4"></circle><circle cx="13" cy="18" r="2.3" fill="currentColor"></circle><circle cx="23" cy="18" r="2.3" fill="currentColor"></circle><path d="M28 27 L41 41 L29 38 Z" fill="currentColor"></path></svg><span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Opýtajte sa svojich dokumentov…</span><span class="kbd">⌘K</span></div><span class="bell"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13.9 11.6c0-5.2-1.6-7-4.9-7s-4.9 1.8-4.9 7l-1.3 2.1h12.4z"></path><path d="M10.6 15.4a1.7 1.7 0 0 1-3.2 0"></path></svg><b style="position:absolute;top:5px;right:4px;min-width:16px;height:16px;padding:0 4px;border-radius:8px;background:var(--bad-fg);color:var(--on-accent);font-size:10px;font-weight:700;display:grid;place-items:center;box-shadow:0 0 0 2px var(--surface)">3</b></span><span class="av">JL</span></div><div class="nav"><a href="#" class="">Prehľad</a><a href="#" class="">Opýtať sa</a><a href="#" class="">Na potvrdenie<span class="c">9</span></a><a href="#" class="">Na schválenie<span class="c">3</span></a><a href="#" class="">Adresár</a><a href="#" class="">Knižnica</a><a href="#" class="">Pridelené normy</a><a href="#" class="">Reťaz dôkazov</a><a href="#" class="is-on">Osoby</a><a href="#" class="">Na posúdenie<span class="c">4</span></a></div><div class="body" style=""><div class="pe-page">
+<p class="cap">Prázdny stav s filtrom — ponúka cestu von</p>
+<div class="frames"><div class="frame w1440" style="width:1440px"><div class="hdr"><span class="logo"><svg width="17" height="17" viewBox="0 0 48 48" fill="none" aria-hidden="true" style="flex:0 0 auto"><circle cx="18" cy="18" r="13" stroke="currentColor" stroke-width="4"></circle><circle cx="13" cy="18" r="2.3" fill="currentColor"></circle><circle cx="23" cy="18" r="2.3" fill="currentColor"></circle><path d="M28 27 L41 41 L29 38 Z" fill="currentColor"></path></svg></span><span class="org">Slovenský futbalový zväz</span><div class="ask" style="flex:1;min-width:0"><svg width="16" height="16" viewBox="0 0 48 48" fill="none" aria-hidden="true" style="flex:0 0 auto"><circle cx="18" cy="18" r="13" stroke="currentColor" stroke-width="4"></circle><circle cx="13" cy="18" r="2.3" fill="currentColor"></circle><circle cx="23" cy="18" r="2.3" fill="currentColor"></circle><path d="M28 27 L41 41 L29 38 Z" fill="currentColor"></path></svg><span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Opýtajte sa svojich dokumentov…</span><span class="kbd">⌘K</span></div><span class="bell"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13.9 11.6c0-5.2-1.6-7-4.9-7s-4.9 1.8-4.9 7l-1.3 2.1h12.4z"></path><path d="M10.6 15.4a1.7 1.7 0 0 1-3.2 0"></path></svg><b style="position:absolute;top:5px;right:4px;min-width:16px;height:16px;padding:0 4px;border-radius:8px;background:var(--bad-fg);color:var(--on-accent);font-size:10px;font-weight:700;display:grid;place-items:center;box-shadow:0 0 0 2px var(--surface)">3</b></span><span class="av">JL</span></div><div class="nav"><a href="#" class="">Prehľad</a><a href="#" class="">Opýtať sa</a><a href="#" class="">Na potvrdenie<span class="c">9</span></a><a href="#" class="">Na schválenie<span class="c">3</span></a><a href="#" class="">Adresár</a><a href="#" class="">Knižnica</a><a href="#" class="">Pridelené normy</a><a href="#" class="">Reťaz dôkazov</a><a href="#" class="is-on">Osoby</a><a href="#" class="">Na posúdenie<span class="c">4</span></a></div><div class="body" style=""><div style="max-width:880px">
   <h1 class="page-title">Osoby</h1>
-  <p class="quiet page-lead">Kto má prístup do portálu.</p>
-  <div class="pe-actions" style="display:flex;gap:8px;flex-wrap:wrap;margin:0 0 16px"><a class="button" href="#">Pozvať osobu</a><a class="button button--quiet" href="#">Import z CSV</a></div>
-  <div class="empty"><div class="empty-title">Zatiaľ nikto</div><div class="empty-text">Pozvite prvú osobu alebo naimportujte zoznam z CSV.</div></div>
+  <p class="quiet page-lead" style="max-width:620px">Kto do organizácie patrí a aké má role. Vylúčená osoba zostáva dohľadateľná — jej potvrdenia platia aj potom.</p>
+  <div class="hr-actions" style="margin:0 0 16px">
+    <a class="button" href="#">Pridať osobu</a>
+    <a class="button button--quiet" href="#">Import z CSV</a>
+    <a class="button button--quiet" href="#">Rozposlať pozvánky (12)</a>
+  </div>
+  <label class="field" style="margin:0 0 10px"><input class="field-input" value="zzz" placeholder="Hľadať meno alebo e-mail…" /></label>
+  <div class="empty"><div class="empty-title">Filtru nič nevyhovuje</div><div class="empty-text">Skúste časť mena alebo e-mailu.</div><div class="empty-action"><a class="button button--quiet" href="#">Zrušiť filter</a></div></div>
 </div></div></div></div>
 </div></body></html>

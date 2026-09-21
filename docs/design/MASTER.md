@@ -216,14 +216,14 @@ každý; `/admin` vidím ja raz za mesiac.
 
 | # | Routa | Obrazovka | Návrh |
 | --- | --- | --- | --- |
-| 23 | `/people` | Osoby | ✅ `OSOBY.md` + `OSOBY.html` |
+| 23 | `/people` | Osoby | ✅ `OSOBY.md` + `PEOPLE.html` |
 | 24 | `/people/[id]` | Karta osoby | ✅ `OSOBY.md` úloha 3 |
 | 25 | `/people/new` | Nová osoba | ✅ `OSOBY.md` |
 | 26 | `/people/invite` | Pozvanie | ✅ `OSOBY.md` |
 | 27 | `/people/import` | Import osôb z CSV | ✅ `OSOBY.md` |
 | 28 | `/organisation` | Nastavenia organizácie | ✅ čiastočne (`docs/design/README.md` §7) |
-| 29 | `/admin` | Správa platformy | ✅ `SPRAVCA.md` §1 |
-| 30 | `/guide` | Príručka | ✅ `SPRAVCA.md` §2 |
+| 29 | `/admin` | Správa platformy | ✅ `ADMIN.md` §1 |
+| 30 | `/guide` | Príručka | ✅ `ADMIN.md` §2 |
 | 31 | `/sign-in` | Prihlásenie | ✅ hotové (`README.md` §8) |
 
 **Zoznam je úplný k 21. 9. 2026** — overený proti `app/src/app/**/page.tsx`.

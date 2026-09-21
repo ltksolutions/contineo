@@ -5,26 +5,24 @@ sa reálne píše do okna.
 
 ---
 
-## Krok 1 — dostať balík do repozitára
-
-Rozbaľ obsah do `contineo/docs/design/` a commitni.
-
-**Prepíšu sa tri staršie súbory** (`README.md`, `NASADENIE.md`,
-`KNIZNICA.md` tam už sú) — to je v poriadku, nové sú ich pokračovanie.
-Po commite má `docs/design/` obsahovať:
+## Krok 1 — vymeniť celý obsah `docs/design/`
 
 ```
-MASTER.md      ZAKLAD.md      POSTUP.md      ZADANIE.md
-PREHLAD.md     ASK.md         DOCUMENTS.md   APPROVALS.md
-ZNENIE.md      DETAIL.md      KNIZNICA.md    NAHRAVANIE.md
-PRIECINKY.md   SPRAVA.md      HR.md          POSUDENIE.md
-OSOBY.md       SPRAVCA.md
-ZAKLAD.html    PREHLAD.html   ASK.html       DOCUMENTS.html
-APPROVALS.html DETAIL.html    SPRAVA.html    HR.html
-OSOBY.html
+rm -rf contineo/docs/design/*
 ```
 
-`.html` súbory sa **needitujú** — sú to referencie na pozeranie.
+a rozbaliť balík na jeho miesto. **Adresár sa vymieňa celý**, nedopĺňa sa —
+po prvej vlne v ňom zostali tri súbory, ktoré si s novým handoffom
+protirečia (`NASADENIE.md` s vlastným poradím PR, `SPRAVCA.md` a
+`OSOBY.html` ako duplikáty vlny D).
+
+Po rozbalení má `docs/design/` obsahovať **30 súborov**: 21 `.md`
+a 9 `.html`. Nič viac.
+
+**Do `docs/design/` nepatria** (a v balíku nie sú):
+`*.dc.html`, `support.js`, `ios-frame.jsx`, `github.md` — sú to živé
+návrhové súbory, ktoré Cowork nevie vykresliť. Presne preto sú v balíku
+statické `.html` referencie.
 
 ## Krok 2 — jedno zadanie na jeden PR
 
@@ -49,25 +47,28 @@ Jeden commit na úlohu. Po dokončení zapíš riadok do docs/TODO.md.
 
 Pri ďalších stačí prvý riadok zmeniť:
 
-| # | Zadaj | Referencia |
-| --- | --- | --- |
-| 0 | `docs/design/ZAKLAD.md` | `ZAKLAD.html` |
-| 1 | `docs/design/PREHLAD.md` | `PREHLAD.html` |
-| 2 | `docs/design/DOCUMENTS.md` | `DOCUMENTS.html` |
-| 3 | `docs/design/APPROVALS.md` | `APPROVALS.html` |
-| 4 | `docs/design/ZNENIE.md` | `DETAIL.html` (dolná časť) |
-| 5 | `docs/design/DETAIL.md` | `DETAIL.html` (horná časť) |
-| 6 | `docs/design/ASK.md` | `ASK.html` |
-| 7 | `docs/design/NAHRAVANIE.md` | `SPRAVA.html` (časť 1) |
-| 8 | `docs/design/PRIECINKY.md` | `SPRAVA.html` (časť 2) |
-| 9 | `docs/design/SPRAVA.md` | `SPRAVA.html` (časť 3–4) |
-| 10 | `docs/design/HR.md` | `HR.html` |
-| 11 | `docs/design/POSUDENIE.md` | `HR.html` (časť 4–5) |
-| 12 | `docs/design/OSOBY.md` | `OSOBY.html` |
-| 13 | `docs/design/SPRAVCA.md` | `OSOBY.html` (časť 3–4) |
+**Poradie PR je jedno a je v `POSTUP.md`** — tam a nikde inde. Tu je len
+to, ktorá referencia patrí ku ktorému zadaniu:
+
+| Zadanie | Referencia na pozeranie |
+| --- | --- |
+| `ZAKLAD.md` | `ZAKLAD.html` |
+| `PREHLAD.md` | `PREHLAD.html` |
+| `DOCUMENTS.md` | `DOCUMENTS.html` |
+| `APPROVALS.md` | `APPROVALS.html` |
+| `ZNENIE.md` | `DETAIL.html` (dolná časť) |
+| `DETAIL.md` | `DETAIL.html` (horná časť) |
+| `ASK.md` | `ASK.html` |
+| `NAHRAVANIE.md` | `SPRAVA.html` (časť 1) |
+| `PRIECINKY.md` | `SPRAVA.html` (časť 2) |
+| `SPRAVA.md` | `SPRAVA.html` (časť 3–4) |
+| `HR.md` | `HR.html` |
+| `POSUDENIE.md` | `HR.html` (časť 4–5) |
+| `OSOBY.md` | `PEOPLE.html` |
+| `ADMIN.md` | `PEOPLE.html` (časť 3–4) |
 
 **PR 0 musí byť prvý.** Všetko ostatné číta jeho tokeny a triedy.
-Zvyšok už na sebe nezávisí — 1 až 13 sa dajú robiť v ľubovoľnom poradí, aj
+Zvyšok už na sebe nezávisí — PR 1–13 sa dajú robiť v ľubovoľnom poradí, aj
 súbežne, ak na nich robí viac ľudí.
 
 **Dva súbory obsahujú viac obrazoviek naraz:** `SPRAVA.md` (Kolá, Kurácia,
@@ -108,7 +109,7 @@ treba vedieť, že sa nič nerozbilo.
 
 ---
 
-## Dve rozhodnutia, ktoré padnú na teba počas vlny A
+## Rozhodnutia, ktoré padnú na teba
 
 Sú v `POSTUP.md` podrobne; v skratke:
 
@@ -118,3 +119,6 @@ Sú v `POSTUP.md` podrobne; v skratke:
    do návratového typu — povedz áno.
 2. **„Uložiť pohľad"** v knižnici: MASTER.md hovorí, že sa nerobí a odkaz
    sa odstráni. Ak s tým nesúhlasíš, povedz to **pred** PR 0.
+3. **PR 15 (`OSOBY.md`, úloha 5):** čo sa má stať pri importe CSV s osobou,
+   ktorá už v systéme je — prepísať, preskočiť, alebo import zastaviť.
+   Cowork najprv zistí, ako sa to chová dnes, a napíše ti to.

@@ -28,7 +28,7 @@ Navrhnuté je všetko. Poradie je podľa toho, koľko ľudí obrazovku vidí.
 | **10** | `HR.md` | `/hr` + 5 podstránok | **vyššie** — úloha 1 zjednocuje škálu naprieč 6 obrazovkami |
 | **11** | `POSUDENIE.md` | `/evaluation`, `/acknowledgements` | nízke |
 | **12** | `OSOBY.md` | `/people` + 4 podstránky | **stredné** — úloha 2 pridáva filtre do URL |
-| **13** | `SPRAVCA.md` | `/admin`, `/guide` | nízke |
+| **13** | `ADMIN.md` | `/admin`, `/guide` | nízke |
 | — | `KNIZNICA.md` | `/library` | ✅ hotové (PR 8) |
 | — | — | `/directory`, `/organisation`, `/sign-in` | ✅ hotové |
 
