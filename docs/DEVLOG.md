@@ -10,6 +10,33 @@
 
 ---
 
+## 2026-09-21 (2) — výmena handoffu a kontrola konzistencie
+
+**`docs/design/` vymenil kompletný handoff všetkých obrazoviek** (`ae9d2ea`):
+21 `.md` + 9 `.html`, stará vlna (NASADENIE.md, SPRAVCA.md, OSOBY.html,
+`.dc.html` šablóny, support.js) odišla. Pred implementáciou som handoff
+prečítal celý a porovnal s kódom — nič sa ešte neimplementovalo.
+
+**MASTER tvrdil „31 rout, úplné" — kód má obrazoviek viac.** Päť skutočných
+obrazoviek (`/admin/new`, `/admin/tenants/[code]`, `/hr/[id]/notify`,
+`/library/[id]/text`, `/library/tracks/[key]`) zadanie nemá; v kóde sú od
+augusta a septembra. Najkrikľavejšie: `SPRAVA.md` úloha 1.3 tvrdila, že
+úprava krokov trasy neexistuje a „kroky sa prideľujú inde" — pritom
+`/library/tracks/[key]` s pridávaním, odoberaním a posúvaním krokov žije
+od 6. 9. To isté poučenie ako pri README: dokumentácia je indícia, kód je
+pravda — a platí to aj na deň starý handoff.
+
+Menšie pozostatky starších verzií textov: POSTUP mal v úvode „8 z 31",
+ZADANIE „PR 15" namiesto PR 12, POSUDENIE a SPRAVA zlé čísla častí HTML
+referencií, INDEX tvrdil, že `.dc.html` sú v koreni repa. Opravené; MASTER
+dostal sekciu „Obrazovky mimo handoffu" a výnimku pre jediný JS prvok
+(ZNENIE úloha 4). TODO.md dostal sekciu tretej vlny, stará (NASADENIE)
+je uzavretá ako história, DESIGN_GAP má poznámku o odídených súboroch.
+
+Odkazy na NASADENIE v komentároch kódu (~30 miest v `globals.css`,
+`Header.tsx`, …) nechávam — sú to citácie zdroja rozhodnutí, nie funkčné
+odkazy na súbor.
+
 ## 2026-09-21 — kontrola proti vzoru a PR 7
 
 **Ján porovnal produkciu so vzorom a mal pravdu vo všetkom podstatnom.**

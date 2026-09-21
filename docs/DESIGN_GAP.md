@@ -3,6 +3,11 @@
 > Prvý zápis 2026-09-08, prerátané proti kódu **2026-09-11**. Zoznam je indícia;
 > pravdou je kód a `git log`. Kde sa to od 8. 9. zmenilo, je to napísané pri tom
 > mieste — nie prepísané tak, aby to vyzeralo, že to tak bolo vždy.
+>
+> **2026-09-21:** súbory `.dc.html`, `MultiSelect.dc.html`, `github.md`
+> a `support.js`, na ktoré sa zápis odvoláva, z repozitára odišli — adresár
+> `docs/design/` vymenil kompletný handoff so statickými `.html` referenciami
+> (`docs/design/INDEX.md`). Odkazy na ne nižšie sú história.
 
 Zápis vznikol po tom, čo Ján Letko postavil vedľa seba návrh a produkciu a povedal,
 že „hlavička nie je ok, nič nie je ok". **Mal pravdu.** Tento súbor je zoznam

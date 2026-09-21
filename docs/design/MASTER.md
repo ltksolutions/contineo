@@ -16,6 +16,8 @@ Zopakované zámerne, aby sa nemuseli hľadať:
    Chýbajúci preklad padá na slovenčinu, nie na kľúč.
 2. **Nič nevyžaduje JavaScript** — filtre a výber sú odkazy, formuláre sú
    `<form>`, stav nesie adresa. `normalizeQuery` / `toQuery` sa **nemenia**.
+   Jediná priznaná výnimka: ukazovateľ prečítaného (`ZNENIE.md`, úloha 4) —
+   bez skriptu sa nevykreslí a nič sa nestratí.
 3. **Breakpointy len 640 a 1024.** Mobile first je povinnosť (`CLAUDE.md`).
 4. **`--accent` ostáva `#232a35`**, `darken(hex, 0.16)` ostáva, tenant farbu
    skladá `tenantStyle()`.
@@ -226,15 +228,32 @@ každý; `/admin` vidím ja raz za mesiac.
 | 30 | `/guide` | Príručka | ✅ `ADMIN.md` §2 |
 | 31 | `/sign-in` | Prihlásenie | ✅ hotové (`README.md` §8) |
 
-**Zoznam je úplný k 21. 9. 2026** — overený proti `app/src/app/**/page.tsx`.
-Oproti prvej verzii tohto dokumentu pribudlo sedem rout, ktoré som predtým
-nemal: `/hr/overview`, `/hr/[id]`, `/hr/reminders`, `/people/[id]`,
-`/people/new`, `/people/invite`, `/people/import`.
+**Zoznam pokrýva 31 rout handoffu.** Oproti prvej verzii tohto dokumentu
+pribudlo sedem rout, ktoré som predtým nemal: `/hr/overview`, `/hr/[id]`,
+`/hr/reminders`, `/people/[id]`, `/people/new`, `/people/invite`,
+`/people/import`. V kóde je okrem nich ešte päť obrazoviek bez zadania —
+viď „Obrazovky mimo handoffu" nižšie.
 
-## ✅ Všetkých 31 rout je navrhnutých
+## Obrazovky mimo handoffu
 
-Od 21. 9. 2026 nie je v aplikácii obrazovka bez zadania. Zoznam vyššie je
-úplný a overený proti `app/src/app/**/page.tsx`.
+Päť rout v kóde zadanie nemá — existujú od augusta a septembra 2026
+(overené proti `app/src/app/**/page.tsx` a `git log`, 2026-09-21) a handoff
+ich nerieši. Platí pre ne to isté, čo pre všetko nepokryté: nechaj ich, ako
+sú, a čo padne do oka, napíš do PR ako otázku.
+
+| Routa | Obrazovka | V kóde od |
+| --- | --- | --- |
+| `/admin/new` | Nová organizácia | 2026-08-29 |
+| `/admin/tenants/[code]` | Detail organizácie a domén | 2026-08-29 |
+| `/hr/[id]/notify` | Náhľad pripomienky pred rozposlaním | 2026-08-29 |
+| `/library/[id]/text` | Editor textu — originál vedľa Markdownu (D53) | 2026-08-30 |
+| `/library/tracks/[key]` | Detail trasy — poradie krokov | 2026-09-06 |
+
+`/prehlad` je trvalé presmerovanie na `/`, nie obrazovka.
+
+## ✅ Všetkých 31 rout handoffu je navrhnutých
+
+Od 21. 9. 2026 nemá žiadna obrazovka handoffu chýbajúce zadanie.
 
 **Čo to znamená pre implementáciu:** keď pri práci naďabíš na niečo, čo
 zadanie danej obrazovky nepokrýva, **napíš to do PR ako otázku a kód nechaj,
@@ -299,6 +318,10 @@ PREHLAD.html         1440 / 834 / 390 + prázdny stav
 ASK.html             1440 / 390 + bez otázky + odpoveď + nič sa nenašlo
 DOCUMENTS.html       1440 / 390 + prázdny stav + po termíne
 APPROVALS.html       1440 / 390 + prázdny stav + vrátené s pripomienkou
+DETAIL.html          detail dokumentu + znenie na potvrdenie
+SPRAVA.html          nahrávanie, priečinky, kolá, kurácia, upozornenia, Viac
+HR.html              výkaz, prideľovanie, dôkazy, potvrdenia, posúdenie
+PEOPLE.html          osoby, karta osoby, admin, príručka
 ```
 
 Otvor priamo v prehliadači. Sú to jediné súbory, podľa ktorých sa dá

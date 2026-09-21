@@ -2,9 +2,10 @@
 
 **Pre Cowork. Samostatné zadanie, nezávislé od ostatných PR.**
 
-Vizuálny zdroj: `Contineo Obrazovky.dc.html`, sekcia `#s-kniznica` — štyri rámy
-(Desktop 1440, Tablet 834, Telefón 390, Telefón 390 so sheetom filtrov).
-Otvor v prehliadači a porovnávaj.
+Vizuálnym zdrojom bol `Contineo Obrazovky.dc.html`, sekcia `#s-kniznica`
+(štyri rámy: Desktop 1440, Tablet 834, Telefón 390, Telefón 390 so sheetom
+filtrov) — súbor z repozitára odišiel pri výmene handoffu 2026-09-21.
+Zadanie je **hotové** (PR 8, 2026-09-21) a ostáva ako archív.
 
 ---
 

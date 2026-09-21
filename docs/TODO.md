@@ -82,11 +82,25 @@
 
 > Návrh aplikačného shellu, knižnice s inteligentnými zoznamami a nastavení. Balík je **dizajnová referencia, nie kód na skopírovanie**. Shell je **opt-in** — `layout.tsx` sa nemení a stránky sa doň presúvajú po jednej.
 
-##### Responzívne nasadenie (`docs/design/NASADENIE.md`, od 2026-09-20)
+##### Kompletný handoff všetkých obrazoviek (`docs/design/INDEX.md`, od 2026-09-21)
 
-> Druhá vlna handoffu: mobil. Zdroj pravdy sú `Contineo Obrazovky.dc.html`
-> a `Contineo Mobile.dc.html`, plán po PR je `docs/design/NASADENIE.md`.
-> Jeden PR = jedno zadanie, PR 4 (knižnica) samostatne.
+> Tretia vlna: zadania pre všetkých 31 rout handoffu ako **diffy proti kódu**.
+> Rozcestník `INDEX.md`, pravidlá a padnuté rozhodnutia `MASTER.md`, poradie
+> PR a zákazy `POSTUP.md`, prompty `PROMPT.md`. Statické `.html` referencie
+> nahradili `.dc.html` šablóny (tie z repozitára odišli s výmenou adresára).
+> Jeden PR = jedno zadanie; PR 0 (`ZAKLAD.md`) musí byť prvý, PR 1–13 potom
+> v ľubovoľnom poradí. Päť obrazoviek mimo handoffu zadanie nemá a nechávajú
+> sa tak (`MASTER.md`, „Obrazovky mimo handoffu").
+
+- [ ] **PR 0 — Spoločný základ (`ZAKLAD.md`)** — musí byť prvý; po ňom prejsť všetkých 31 rout v svetlej aj tmavej téme
+- [ ] **PR 1–13** — poradie a riziká v `POSTUP.md`. Pred PR 0 potvrdiť „Uložiť pohľad sa nerobí"; pri PR 2 rozhodnúť termín v `acknowledgementDuties()`; pri PR 12 správanie importu CSV pri existujúcej osobe
+
+##### Responzívne nasadenie (`NASADENIE.md`, 2026-09-20 → nahradené 2026-09-21)
+
+> Druhá vlna handoffu: mobil. Zdrojom pravdy boli `Contineo Obrazovky.dc.html`
+> a `Contineo Mobile.dc.html`, plán po PR `NASADENIE.md` — všetky tri súbory
+> z repozitára odišli 2026-09-21 s výmenou za kompletný handoff. Zápisy nižšie
+> ostávajú ako história.
 
 - [x] **PR 1 — Tokeny a breakpointy** ✅ 2026-09-20 — tokeny, `--accent-soft` aj `tenantStyle()` už v kóde boli (bod 1 vyššie; hustota sa prepína `data-density` a v tmavom bloku sa zámerne neopakuje — kód tu bol pred NASADENIE a má to zdôvodnené). Zvyšok: 28 `@media` z ôsmich šírok (419–940) zjednotených na **640/1024** (`max-width` tvary 639/1023), dotykové ciele 44 px pod 640 (`.facet`, `.library-chip`, `.tree-row`, × v chipoch, „Upraviť" v strome — inline štýl nahradila trieda `tree-edit-toggle`). Odchýlka od „najbližšieho": prepínač tabuľka↔karty a farby prepínača pohľadu idú na **1024** — PR 4 výslovne hovorí „od 1024 px tabuľka".
 - [x] **PR 2 — Navigácia** ✅ 2026-09-20 — tri tvary z jedného `navItems()`: pod 640 px pevná spodná lišta (56 px + safe-area, ikona 21 px nad popiskom 10,5 px), od 640 px pás **bez vodorovného rolovania** s prepadom „Viac N" (`ResizeObserver` + skrytý dvojník na meranie; bez JS prvých 6 + „Viac"), od 1024 px pás 42 px. „Úlohy" zlučujú potvrdenia + schválenia (súčet v odznaku, svietia na oboch cestách). Nová routa `/more` (skupiny Organizácia / Správa, riadky 52 px); role a počty vyňaté z `AppShell` do `lib/navData.ts` s `cache()`. Zásuvka `<details>` zrušená.
@@ -98,7 +112,7 @@
       Odchýlka: „Na potvrdenie"/„Na schválenie" **ostávajú karty na všetkých šírkach**, tabuľková podoba sa nerobila — karta nesie pole dôvodu a rozbaľovacie znenie, riadok tabuľky to neunesie a porovnávať sa tu nič neporovnáva.
 - [x] **PR 8 — Knižnica podľa solo handoffu (`docs/design/KNIZNICA.md`)** ✅ 2026-09-21 — päť úloh, commit na úlohu: **1.** farebné stavové pilulky (`statusTagClass()` v `libraryRead.ts`, varianty `.tag--*` v oboch témach; technické spracovanie sa ukazuje len keď niečo hovorí, zlyhanie červené; pilulka „koncept" splynula so stavovou); **2.** potvrdenia ako pásik s prahmi ≥90/≥50 v tabuľke aj na karte (menovateľ O6/7 nesie `title` + `.sr-only`; pomlčka = nikomu nepridelené); **3.** značka Continea pri poli hľadania, pole 36 px r9 ako v hlavičke; **4.** pás akcií pod 640 px nahradí spodnú lištu (`body:has(.bulk-bar)`, z-index 40, zoznam +84 px, tlačidlá 40 px, „zrušiť výber" je × v rohu); **5.** karta podľa rámu Telefón 390 (výber 22 px vľavo, pilulka · kategória · verzia, názov 15/600, `internalNumber · priečinok`, pásik posledný; označená karta `--accent-soft` + rám). Pätička karty s dátumami odišla — porovnáva sa v tabuľke.
 - [x] **PR 7 — Knižnica podľa vzoru + opravy z kontroly Jána** ✅ 2026-09-21 — hľadanie, chips a „+ Podmienka" presunuté **do stĺpca zoznamu** (lišta `.library-toolbar`, pole bez viditeľného labelu); pás hromadných akcií **nad tabuľkou vo farbe akcentu** so „zrušiť výber"; **pás navigácie je textový** (s ikonami sa 10 položiek nezmestilo a „Na posúdenie" prepadávalo do „Viac" aj na širokom monitore — ikony ostávajú v spodnej lište a bočnom paneli); dvojník merania kreslí bold len skutočne aktívnu položku; `codelistOptions()` už nelepí kľúč do popisku („Norma (norma)" → „Norma"); nadpis „Knižnica dokumentov"; **zvonček znova ukazuje skutočný počet** (rozhodnutie Jána 2026-09-21 — ruší bodku z PR 3); **`viewport-fit=cover`** v `layout.tsx` (jediná zmena v ňom, schválená 2026-09-21) — safe-area na iPhone ožila.
-      Zostáva k vzoru: „Uložiť pohľad" (uložené pohľady neexistujú — nová funkcia, čaká na rozhodnutie) a detaily obrazovky podľa **solo handoffu Knižnice**, ktorý Ján pripraví v dizajnovom projekte.
+      Zostáva k vzoru: „Uložiť pohľad" — `MASTER.md` (2026-09-21) rozhodol, že sa **nerobí** a odkaz z knižnice sa odstráni pri PR 0 (adresa už je uložený pohľad); potvrdiť pred PR 0. Solo handoff Knižnice medzitým prišiel ako `docs/design/KNIZNICA.md` a je hotový — PR 8.
 - [x] **PR 6 — Adresár** ✅ 2026-09-20 — karty na všetkých šírkach: 1 / 2 / od 1024 px **3 stĺpce**; e-mail a telefón sú pod 640 px **36 px akčné tlačidlá** (`mailto:`/`tel:` odkazy boli, zmenil sa tvar). „Zvyšok" (Pridelené normy, Reťaz dôkazov, Osoby, Na posúdenie rovnakým vzorom) NASADENIE výslovne odkladá — „návrh dorobím na požiadanie" — takže čaká na návrh.
 
 - [x] **1. Tokeny** — `--accent-soft` a šestica premenných hustoty v `globals.css`, `soft()` v `TenantHeader.tsx`

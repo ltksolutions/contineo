@@ -3,7 +3,7 @@
 Štyri menšie obrazovky vlny B v jednom zadaní — každá má dve-tri úlohy
 a spoločný vzor: zoznam + formulár, prázdny stav, mobilná úprava.
 
-Základ: `ZAKLAD.md` (PR 0). Statická referencia: `SPRAVA.html` (časť 3–4).
+Základ: `ZAKLAD.md` (PR 0). Statická referencia: `SPRAVA.html` (časť 3–6).
 
 ---
 
@@ -24,14 +24,15 @@ aktívna, alebo nie:
 - aktívna → `.tag--published`
 - neaktívna → `.tag--archived`
 
-### Úloha 1.3 — Trasa vedie na svoje kroky
-Riadok trasy dnes **nie je odkaz**. Kto chce vidieť, čo v trase je, nemá kam
-kliknúť — hoci `/documents` tie kroky kreslí. Nadpis trasy urob odkazom na
-`/documents` (alebo na `/library?track=<key>`, ak sa filter doplní).
+### Úloha 1.3 — Trasa vedie na svoj detail
+Riadok trasy dnes **nie je odkaz** — pritom detail trasy existuje:
+`/library/tracks/[key]` (v kóde od 2026-09-06) nesie poradie krokov aj ich
+pridávanie, odoberanie a posúvanie. Nadpis trasy urob odkazom na
+`/library/tracks/<key>`.
 
-🔴 Rozhodnutie: úprava krokov trasy (pridať, odobrať, preradiť) na tejto
-obrazovke **nie je** a v návrhu ju nemám. Kroky sa dnes prideľujú inde.
-Nedopĺňaj to bez návrhu.
+Detail trasy vlastné zadanie nemá (viď `MASTER.md`, „Obrazovky mimo
+handoffu") — jeho vzhľad nechaj, ako je, a čo ti na ňom padne do oka,
+napíš do PR ako otázku.
 
 ---
 
@@ -124,7 +125,7 @@ má vidieť to isté. Nič neskrývaj mediálnym dotazom.
 
 | Kde | Údaj | Stav |
 | --- | --- | --- |
-| Kolá | úprava krokov trasy | ❌ nie je v návrhu ani v kóde |
+| Kolá | úprava krokov trasy | ✅ existuje na `/library/tracks/[key]` — mimo handoffu, nemeniť |
 | Upozornenia | nastavenie, čo chcem dostávať | ❌ 🔴 samostatné rozhodnutie (schéma: na osobe) |
 | Viac | skupina „Účet" | ❌ zámerne, viď úloha 4.2 |
 

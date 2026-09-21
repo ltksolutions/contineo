@@ -78,7 +78,7 @@ normalizeQuery/toQuery.
 | 6 | `Implementuj docs/design/ASK.md.` | `ASK.html` |
 | 7 | `Implementuj docs/design/NAHRAVANIE.md.` | `SPRAVA.html` (časť 1) |
 | 8 | `Implementuj docs/design/PRIECINKY.md.` | `SPRAVA.html` (časť 2) |
-| 9 | `Implementuj docs/design/SPRAVA.md.` | `SPRAVA.html` (časť 3–4) |
+| 9 | `Implementuj docs/design/SPRAVA.md.` | `SPRAVA.html` (časť 3–6) |
 | 10 | `Implementuj docs/design/HR.md.` | `HR.html` |
 | 11 | `Implementuj docs/design/POSUDENIE.md.` | `HR.html` (časť 4–5) |
 | 12 | `Implementuj docs/design/OSOBY.md.` | `PEOPLE.html` |
