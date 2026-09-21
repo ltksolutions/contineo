@@ -2308,9 +2308,25 @@ html[data-theme="dark"] .editor-tui .CodeMirror {
 .detail-chips {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
-  margin-bottom: 8px;
+  gap: 7px;
+  margin: 0 0 10px;
 }
+
+/* Bloky detailu (DETAIL, úloha 3) — inline štýly do tried. Šírka 1180 px
+   je vec obsahu (dva stĺpce), preto trieda stránky. */
+.detail-page { max-width: 1180px; }
+.detail-back { margin: 0 0 12px; font-size: var(--fs-body); }
+.detail-lead { margin: 0 0 18px; font-size: var(--fs-body); }
+.detail-section-title { font-size: var(--fs-section); margin: 0 0 10px; }
+.detail-block { padding: 18px; display: grid; gap: 12px; margin: 0 0 18px; }
+/* V nástrojoch rozostupy drží mriežka, nie okraj bloku. */
+.detail-tools-body > .detail-block { margin: 0; }
+/* Formulár priečinka je riadok, nie mriežka (`.tree-form`). */
+.detail-block.tree-form { display: flex; }
+.detail-block > summary { cursor: pointer; font-weight: 600; }
+.detail-block-title { font-size: var(--fs-section); margin: 0; }
+.detail-block-note { font-size: var(--fs-body); color: var(--muted); margin: 0; }
+.detail-block-small { font-size: var(--fs-small); color: var(--muted); margin: 0; }
 
 .detail-card { padding: 14px 16px; }
 

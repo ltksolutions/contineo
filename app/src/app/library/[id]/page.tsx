@@ -217,11 +217,11 @@ export default async function DocumentDetailPage({
 
   return (
     <AppShell language={ctx.person.language}>
-    <div style={{ maxWidth: 1180, ...tenantStyle(branding) }}>
+    <div className="detail-page" style={tenantStyle(branding)}>
       <Notice message={message} error={error === "1"} back={`/library/${encodeURIComponent(documentId)}`} />
 
-      <p style={{ margin: "0 0 12px" }}>
-        <Link className="quiet" href="/library" style={{ fontSize: "var(--fs-body)" }}>{t.back}</Link>
+      <p className="detail-back">
+        <Link className="quiet" href="/library">{t.back}</Link>
       </p>
 
       {/*
@@ -246,8 +246,8 @@ export default async function DocumentDetailPage({
         {d.category && <span className="tag quiet">{d.category}</span>}
       </div>
 
-      <h1 className="page-title" style={{ margin: "0 0 4px" }}>{d.title}</h1>
-      <p className="quiet" style={{ fontSize: "var(--fs-body)", margin: "0 0 18px" }}>
+      <h1 className="page-title">{d.title}</h1>
+      <p className="quiet detail-lead">
         {d.documentId}
         {effective && ` · ${effective.label}`}
         {effective?.effectiveFrom && ` · ${formatDate(effective.effectiveFrom, language)}`}
@@ -270,8 +270,8 @@ export default async function DocumentDetailPage({
         `ApprovalPanel`); publikované a nič sa nepripravuje → žiadna karta.
       */}
       {hasChangesToPublish && (
-      <section className="card" style={{ padding: 18, display: "grid", gap: 14, margin: "0 0 18px" }}>
-        <h2 style={{ fontSize: "var(--fs-section)", margin: 0 }}>
+      <section className="card detail-block">
+        <h2 className="detail-block-title">
           {draftState === "in-review"
             ? t.nowInReview
             : effective
@@ -294,12 +294,12 @@ export default async function DocumentDetailPage({
             </div>
 
             {draftState !== "approved" ? (
-              <p className="quiet" style={{ fontSize: "var(--fs-body)", margin: 0 }}>
+              <p className="detail-block-note">
                 {draftState === "in-review" ? t.publishWaitsForApproval : t.publishNeedsApproval}
               </p>
             ) : (
               <>
-                <p className="quiet" style={{ fontSize: "var(--fs-body)", margin: 0 }}>{t.publishApprovedNote}</p>
+                <p className="detail-block-note">{t.publishApprovedNote}</p>
               <form action={publishVersionAction} style={{ display: "grid", gap: 14 }}>
                 <input type="hidden" name="documentId" value={d.documentId} />
 
@@ -350,8 +350,8 @@ export default async function DocumentDetailPage({
       <details className="detail-tools">
         <summary>{t.toolsSummary}</summary>
         <div className="detail-tools-body">
-      <details className="card" style={{ padding: 18, margin: "0 0 18px" }}>
-        <summary style={{ cursor: "pointer", fontWeight: 600 }}>
+      <details className="card detail-block">
+        <summary>
           {t.documentData}
           <span className="quiet" style={{ fontWeight: 400, fontSize: "var(--fs-small)" }}>
             {" "}· {d.language} · {d.accessLevel}
@@ -436,21 +436,21 @@ export default async function DocumentDetailPage({
             />
           </div>
 
-          <p className="quiet" style={{ fontSize: "var(--fs-small)", margin: 0 }}>
+          <p className="detail-block-small">
             {t.keyNoteBefore}<code>{d.documentId}</code>{t.keyNoteAfter}
           </p>
 
           <div><button className="button" type="submit">{t.save}</button></div>
         </form>
       </details>
-      <section className="card" style={{ padding: 18, display: "grid", gap: 10, margin: "0 0 18px" }}>
+      <section className="card detail-block">
         <div style={{ display: "flex", gap: 10, alignItems: "baseline", flexWrap: "wrap" }}>
-          <h2 style={{ fontSize: "var(--fs-section)", margin: 0 }}>{t.text}</h2>
+          <h2 className="detail-block-title">{t.text}</h2>
           <Link href={`/library/${encodeURIComponent(documentId)}/text`}>{t.openEditor}</Link>
         </div>
 
         {d.originalFile ? (
-          <p className="quiet" style={{ fontSize: "var(--fs-body)", margin: 0 }}>
+          <p className="detail-block-note">
             {t.originalFile}{" "}
             <a href={`/api/library/file/${encodeURIComponent(d.originalFile.id)}`} target="_blank" rel="noreferrer">
               {d.originalFile.name}
@@ -459,7 +459,7 @@ export default async function DocumentDetailPage({
             {d.conversion && ` · ${t.conversionMethod(d.conversion.method)}`}
           </p>
         ) : (
-          <p className="quiet" style={{ fontSize: "var(--fs-body)", margin: 0 }}>
+          <p className="detail-block-note">
             {t.noOriginal}
           </p>
         )}
@@ -470,7 +470,7 @@ export default async function DocumentDetailPage({
           </ul>
         ) : null}
 
-        <p className="quiet" style={{ fontSize: "var(--fs-small)", margin: 0 }}>
+        <p className="detail-block-small">
           {hasChangesToPublish
             ? t.draftDiffers
             : draft || published
@@ -478,7 +478,7 @@ export default async function DocumentDetailPage({
               : t.draftEmpty}
         </p>
       </section>
-      <form action={assignToFolderAction} className="card tree-form" style={{ padding: 18, margin: "0 0 18px" }}>
+      <form action={assignToFolderAction} className="card detail-block tree-form">
         <input type="hidden" name="documentId" value={d.documentId} />
         <div className="field" style={{ flex: "1 1 260px", margin: 0 }}>
           <span className="field-label">{t.folder}</span>
@@ -499,10 +499,10 @@ export default async function DocumentDetailPage({
         <button className="button button--quiet" type="submit">{t.assign}</button>
       </form>
       {canAssign && carryOver.length > 0 && (
-      <form action={carryOverAssignmentsAction} className="card" style={{ padding: 18, margin: "0 0 18px" }}>
+      <form action={carryOverAssignmentsAction} className="card detail-block">
         <input type="hidden" name="documentId" value={d.documentId} />
-        <h2 style={{ fontSize: "var(--fs-section)", margin: "0 0 6px" }}>{tc.heading}</h2>
-        <p className="quiet" style={{ fontSize: "var(--fs-small)", margin: "0 0 14px" }}>
+        <h2 className="detail-block-title">{tc.heading}</h2>
+        <p className="detail-block-small">
           {tc.intro(carryOverVersion?.label ?? d.effectiveLabel)}
         </p>
 
@@ -557,10 +557,10 @@ export default async function DocumentDetailPage({
       </form>
       )}
       <form action={uploadVersionAction} encType="multipart/form-data"
-            className="card" style={{ padding: 18, display: "grid", gap: 10, margin: "0 0 18px" }}>
+            className="card detail-block">
         <input type="hidden" name="documentId" value={d.documentId} />
-        <h2 style={{ fontSize: "var(--fs-section)", margin: 0 }}>{t.newVersionHeading}</h2>
-        <p className="quiet" style={{ fontSize: "var(--fs-body)", margin: 0 }}>{t.newVersionNote}</p>
+        <h2 className="detail-block-title">{t.newVersionHeading}</h2>
+        <p className="detail-block-note">{t.newVersionNote}</p>
         <label className="field">
           <span className="field-label">{t.newVersionFile}</span>
           <input className="field-input" type="file" name="file" required
@@ -569,11 +569,11 @@ export default async function DocumentDetailPage({
         <div><button className="button button--quiet" type="submit">{t.newVersionSubmit}</button></div>
       </form>
             {effective && draftDiff && draftDiff.added + draftDiff.removed > 0 && (
-              <details className="card" style={{ padding: 18, margin: 0 }}>
-                <summary style={{ cursor: "pointer", fontWeight: 600 }}>{t.textFixHeading}</summary>
+              <details className="card detail-block">
+                <summary>{t.textFixHeading}</summary>
 
                 <div style={{ display: "grid", gap: 12, marginTop: 12 }}>
-                  <p className="quiet" style={{ fontSize: "var(--fs-body)", margin: 0 }}>{t.textFixIntro}</p>
+                  <p className="detail-block-note">{t.textFixIntro}</p>
 
                   <div>
                     <h4 className="field-label" style={{ margin: "0 0 6px" }}>
@@ -609,7 +609,7 @@ export default async function DocumentDetailPage({
                     </div>
                   </div>
 
-                  <p className="quiet" style={{ fontSize: "var(--fs-small)", margin: 0 }}>{t.textFixApprovalNote}</p>
+                  <p className="detail-block-small">{t.textFixApprovalNote}</p>
 
                   <form action={fixTextAction} style={{ display: "grid", gap: 12 }}>
                     <input type="hidden" name="documentId" value={d.documentId} />
@@ -632,10 +632,10 @@ export default async function DocumentDetailPage({
                 </div>
               </details>
             )}
-      <form action={reindexDocumentAction} className="card" style={{ padding: 18, display: "grid", gap: 10, margin: "0 0 18px" }}>
+      <form action={reindexDocumentAction} className="card detail-block">
         <input type="hidden" name="documentId" value={d.documentId} />
-        <h2 style={{ fontSize: "var(--fs-section)", margin: 0 }}>{t.reindexHeading}</h2>
-        <p className="quiet" style={{ fontSize: "var(--fs-body)", margin: 0 }}>
+        <h2 className="detail-block-title">{t.reindexHeading}</h2>
+        <p className="detail-block-note">
           {t.reindexNoteBefore}<strong>{t.reindexNoteHighlight}</strong>{t.reindexNoteAfter}
         </p>
         <div><button className="button button--quiet" type="submit">{t.reindex}</button></div>
@@ -643,7 +643,7 @@ export default async function DocumentDetailPage({
         </div>
       </details>
 
-      <h2 style={{ fontSize: "var(--fs-section)", margin: "0 0 10px" }}>{t.versionsHeading(d.versions.length)}</h2>
+      <h2 className="detail-section-title">{t.versionsHeading(d.versions.length)}</h2>
 
       {d.versions.length === 0 ? (
         <p className="card" style={{ padding: 18, fontSize: "var(--fs-lead)" }}>
@@ -752,7 +752,7 @@ export default async function DocumentDetailPage({
                     ho nemá — a rovno povie prečo.
                   */}
                   {(ackByVersion.get(v.versionId) ?? 0) > 0 ? (
-                    <p className="quiet" style={{ fontSize: "var(--fs-small)", margin: 0 }}>
+                    <p className="detail-block-small">
                       {t.versionLockedBefore}
                       <strong>{t.versionLockedHighlight(ackByVersion.get(v.versionId) ?? 0)}</strong>
                       {t.versionLockedAfter}
@@ -804,7 +804,7 @@ export default async function DocumentDetailPage({
                     <input type="hidden" name="documentId" value={d.documentId} />
                     <input type="hidden" name="versionId" value={v.versionId} />
                     <h3 style={{ fontSize: "var(--fs-body)", margin: 0 }}>{t.revokeVersionHeading}</h3>
-                    <p className="quiet" style={{ fontSize: "var(--fs-small)", margin: 0 }}>
+                    <p className="detail-block-small">
                       {t.revokeVersionNote(ackByVersion.get(v.versionId) ?? 0)}
                     </p>
                     <label className="field">
