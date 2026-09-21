@@ -86,6 +86,49 @@ export function dueState(due: Date | null, now: Date): DueState {
 }
 
 /**
+ * Stav jednej povinnosti voči človeku — jedna škála pre celú rolu HR
+ * (`docs/design/HR.md`, úloha 1). Šesť obrazoviek ho kreslí; každá z nich
+ * ho **volá, nie počíta**: druhá kópia pravidla by sa s prvou rozišla.
+ *
+ * Poradie je pravidlo, nie náhoda:
+ *  - `revoked` má prednosť pred všetkým — odvolanie je nový záznam (D24),
+ *    ktorý potvrdenie ruší, hoci `acknowledgedAt` na ňom stále je;
+ *  - `overdue` prebíja `opened`: keď platí oboje, kreslí sa po termíne.
+ *    Personalistu zaujíma, čo horí, nie čo si niekto otvoril. Deň termínu
+ *    ešte nie je po termíne — o tom rozhoduje `dueState()`, nie táto funkcia.
+ */
+export type DutyState = "acknowledged" | "opened" | "not-opened" | "overdue" | "revoked"
+
+/**
+ * Najmenší tvar, ktorý stav unesie. Spĺňa ho `Duty` z výkazu, riadok
+ * evidencie aj záznam z `/acknowledgements` — bez prekladania na spoločný typ.
+ */
+export interface DutyLike {
+  acknowledgedAt?: Date | null
+  firstOpenedAt?: Date | null
+  due?: Date | null
+  revokedAt?: Date | null
+}
+
+export function dutyState(duty: DutyLike, now: Date): DutyState {
+  if (duty.revokedAt) return "revoked"
+  if (duty.acknowledgedAt) return "acknowledged"
+  if (dueState(duty.due ?? null, now) === "over") return "overdue"
+  return duty.firstOpenedAt ? "opened" : "not-opened"
+}
+
+/** Trieda pilulky k stavu — varianty zo ZAKLADU, nie inline farba. */
+export function dutyTagClass(duty: DutyLike, now: Date): string {
+  switch (dutyState(duty, now)) {
+    case "acknowledged": return "tag tag--published"
+    case "opened": return "tag tag--review"
+    case "overdue": return "tag tag--expired"
+    case "revoked": return "tag tag--archived"
+    default: return "tag"
+  }
+}
+
+/**
  * Má sa dnes pripomenúť, a ako? (ADR-004 §3.2 — eskalácia, nie opakovanie.)
  *
  * Pred termínom denne po dobu šiestich dní (D-5 … D-0): termín sa naozaj blíži

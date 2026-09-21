@@ -468,6 +468,12 @@ interface Dictionary {
   /** Prideľovanie noriem (HR). */
   hr: {
     /**
+     * Jedna škála stavov povinnosti pre celú rolu (HR.md, úloha 1) — kľúč
+     * dáva `dutyState()` v `lib/due.ts`, popisok tento slovník. Obrazovky
+     * ho zdieľajú, aby ten istý stav nevyzeral na každej inak.
+     */
+    dutyState: Record<"acknowledged" | "opened" | "not-opened" | "overdue" | "revoked", string>
+    /**
      * Výkaz „ako je na tom organizácia" (D33). Iný pohľad než `overview`:
      * ten je o prideleniach, teda o tom, čo kurátor poslal. Tento je o tom,
      * čo z toho vyšlo — po dokumentoch, ľuďoch a trasách.
@@ -2153,6 +2159,13 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     citationsUnverified: "citácie neoverené",
   },
   hr: {
+    dutyState: {
+      acknowledged: "potvrdené",
+      opened: "otvorené, nepotvrdené",
+      "not-opened": "neotvorené",
+      overdue: "po termíne",
+      revoked: "odvolané",
+    },
     report: {
       heading: "Výkaz potvrdení",
       intro: "Kto čo má potvrdiť a kto to už potvrdil. Do menovateľa vstupuje ten, komu bol dokument pridelený alebo ho má ako krok v zapnutej trase — nie všetci v organizácii.",
@@ -4028,6 +4041,13 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     citationsUnverified: "citace neověřené",
   },
   hr: {
+    dutyState: {
+      acknowledged: "potvrzeno",
+      opened: "otevřeno, nepotvrzeno",
+      "not-opened": "neotevřeno",
+      overdue: "po termínu",
+      revoked: "odvoláno",
+    },
     report: {
       heading: "Výkaz potvrzení",
       intro: "Kdo co má potvrdit a kdo to už potvrdil. Do jmenovatele vstupuje ten, komu byl dokument přidělen nebo ho má jako krok v zapnuté trase — ne všichni v organizaci.",
@@ -5896,6 +5916,13 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     citationsUnverified: "citations not verified",
   },
   hr: {
+    dutyState: {
+      acknowledged: "acknowledged",
+      opened: "opened, not acknowledged",
+      "not-opened": "not opened",
+      overdue: "overdue",
+      revoked: "revoked",
+    },
     report: {
       heading: "Acknowledgement report",
       intro: "Who has to acknowledge what, and who already did. The denominator counts a person when the document was assigned to them or is a step in a track they are on — not everyone in the organisation.",
