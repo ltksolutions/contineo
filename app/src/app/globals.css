@@ -2315,6 +2315,10 @@ html[data-theme="dark"] .editor-tui .CodeMirror {
 /* Bloky detailu (DETAIL, úloha 3) — inline štýly do tried. Šírka 1180 px
    je vec obsahu (dva stĺpce), preto trieda stránky. */
 .detail-page { max-width: 1180px; }
+/* Dlhý názov normy sa zalomí pekne, nie s jedným slovom na druhom riadku
+   (DETAIL, úloha 4). Meta riadok pod ním sa zalamuje na „ · " s medzerami,
+   neskracuje sa. */
+.detail-page .page-title { text-wrap: pretty; overflow-wrap: anywhere; }
 .detail-back { margin: 0 0 12px; font-size: var(--fs-body); }
 .detail-lead { margin: 0 0 18px; font-size: var(--fs-body); }
 .detail-section-title { font-size: var(--fs-section); margin: 0 0 10px; }
