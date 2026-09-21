@@ -10,6 +10,7 @@
 import { notFound, redirect } from "next/navigation"
 import Link from "next/link"
 import Notice from "@/components/Notice"
+import { MAX_BYTES, ACCEPTED_EXTENSIONS } from "@/lib/fileStore"
 import { libraryContext } from "@/lib/library"
 import { codelistOptions, CODELISTS } from "@/lib/codelists"
 import { allDepartments, flattenTree } from "@/lib/departments"
@@ -118,7 +119,13 @@ export default async function NewDocumentPage({
           */}
           <label className={`upload-drop${retry ? " is-required" : ""}`}>
             <span className="upload-drop-title">{t.dropHint}</span>
+            {/* Formát a limit patria k zóne (NAHRAVANIE, úloha 3) — z tých
+                istých konštánt, ktoré server vynucuje, nie natvrdo. */}
             <span className="quiet upload-drop-note">
+              {ACCEPTED_EXTENSIONS.map(e => e.slice(1).toUpperCase()).join(" · ")}
+              <br />
+              {t.maxSize(MAX_BYTES / 1024 / 1024)}
+              <br />
               {t.oldFormatsBefore}<code>.doc</code>{t.oldFormatsMiddle}<code>.xls</code>{t.oldFormatsAfter}
             </span>
             <input
@@ -126,7 +133,7 @@ export default async function NewDocumentPage({
               type="file"
               name="file"
               required
-              accept=".pdf,.docx,.xlsx,.md,.txt,.csv"
+              accept={ACCEPTED_EXTENSIONS.join(",")}
               aria-label={t.file}
             />
           </label>

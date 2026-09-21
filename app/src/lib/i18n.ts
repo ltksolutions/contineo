@@ -1790,6 +1790,8 @@ interface Dictionary {
       /** Chyba pri nahrávaní (NAHRAVANIE, úloha 1): čo opraviť a že súbor treba vybrať znova. */
       errorBefore: string
       errorFileAgain: string
+      /** Limit veľkosti pri zóne na súbor — číslo z `fileStore.MAX_BYTES`. */
+      maxSize: (mb: number) => string
       /** Veta okolo `.doc` a `.xls` — značky zostávajú v JSX. */
       oldFormatsBefore: string
       oldFormatsMiddle: string
@@ -3669,6 +3671,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       file: "Súbor",
       errorBefore: "Dokument sa nenahral: ",
       errorFileAgain: "Vyberte súbor znova — prehliadač ho z bezpečnostných dôvodov neuchová.",
+      maxSize: mb => `najviac ${mb} MB`,
       oldFormatsBefore: "Staré ",
       oldFormatsMiddle: " a ",
       oldFormatsAfter: " sa previesť nedajú — ulož ich vo Worde alebo Exceli ako novší formát. Skenované PDF bez textu sa dá dať prepísať jazykovým modelom až v editore.",
@@ -5532,6 +5535,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       file: "Soubor",
       errorBefore: "Dokument se nenahrál: ",
       errorFileAgain: "Vyberte soubor znovu — prohlížeč ho z bezpečnostních důvodů neuchová.",
+      maxSize: mb => `nejvýše ${mb} MB`,
       oldFormatsBefore: "Staré ",
       oldFormatsMiddle: " a ",
       oldFormatsAfter: " převést nelze — ulož je ve Wordu nebo Excelu jako novější formát. Skenované PDF bez textu lze nechat přepsat jazykovým modelem až v editoru.",
@@ -7389,6 +7393,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       file: "File",
       errorBefore: "The document was not uploaded: ",
       errorFileAgain: "Choose the file again — the browser does not keep it for security reasons.",
+      maxSize: mb => `up to ${mb} MB`,
       oldFormatsBefore: "Legacy ",
       oldFormatsMiddle: " and ",
       oldFormatsAfter: " cannot be converted — save them from Word or Excel in a newer format. A scanned PDF with no text layer can be transcribed by the language model later, in the editor.",
