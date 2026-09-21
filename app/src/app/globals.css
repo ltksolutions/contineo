@@ -3327,6 +3327,14 @@ a.answer-source:focus-visible { outline: 2px solid var(--accent); outline-offset
   .answer-source { min-height: 44px; align-items: center; }
 }
 
+/* Rámy (ASK): na telefóne odpoveď 16 px / 1.65 a bez príkladov otázok —
+   tri dlhé vety zaberú viac miesta než samotné pole, rovnako ako návrhy
+   na Prehľade. Tablet 834 sa od 1440 líši len šírkou obsahu. */
+@media (max-width: 639px) {
+  .answer { font-size: 16px; line-height: 1.65; }
+  .ask-examples-wrap { display: none; }
+}
+
 /* ── nastavenie organizácie: ukážka farby a slot na logo ─────────────────
    Voľba hlavnej farby je jediné nastavenie, ktorého dôsledok nie je z hodnoty
    vidieť — `#0e7490` nikomu nepovie, ako bude vyzerať tlačidlo a odkaz. */
