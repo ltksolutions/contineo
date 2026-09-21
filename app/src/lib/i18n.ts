@@ -664,6 +664,9 @@ interface Dictionary {
       newsTitle: (days: number) => string
       newsText: string
     }
+    /** Hlavička panela — cesta k celému zoznamu, len keď panel niečo skrýva (úloha 3). */
+    showAll: (n: number) => string
+    wholeLibrary: string
     by: (date: string) => string
     until: (date: string) => string
     expiringChip: string
@@ -2305,6 +2308,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       newsTitle: days => `Za posledných ${days} dní nič nové`,
       newsText: "Nové znenia a tie, ktorým sa blíži koniec platnosti, sa ukážu tu.",
     },
+    showAll: n => `Zobraziť všetkých ${n} →`,
+    wholeLibrary: "Celá knižnica →",
     by: date => `do ${date}`,
     until: date => `platí do ${date}`,
     expiringChip: "expiruje",
@@ -4154,6 +4159,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       newsTitle: days => `Za posledních ${days} dní nic nového`,
       newsText: "Nová znění a ta, kterým se blíží konec platnosti, se ukážou tady.",
     },
+    showAll: n => `Zobrazit všech ${n} →`,
+    wholeLibrary: "Celá knihovna →",
     by: date => `do ${date}`,
     until: date => `platí do ${date}`,
     expiringChip: "expiruje",
@@ -5995,6 +6002,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       newsTitle: days => `Nothing new in the last ${days} days`,
       newsText: "New versions and those approaching the end of their validity will show up here.",
     },
+    showAll: n => `Show all ${n} →`,
+    wholeLibrary: "Whole library →",
     by: date => `by ${date}`,
     until: date => `valid until ${date}`,
     expiringChip: "expiring",

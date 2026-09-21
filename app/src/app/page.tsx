@@ -120,6 +120,23 @@ export default async function OverviewPage({
     },
   ]
 
+  /*
+    Stropy riadkov v paneloch (PREHLAD, úloha 3). Pozornosť: schválenia
+    najviac 2, povinnosti doplnia zvyšok do 6 — inak pri deviatich
+    povinnostiach schválenie nikto neuvidí, hoci je to rozhodnutie, ktoré
+    blokuje druhých ľudí. Odkaz na celý zoznam sa kreslí len keď panel
+    niečo skrýva.
+  */
+  const PANEL_ROWS = 6
+  const approvalsShown = approvals.slice(0, 2)
+  const dutiesShown = pending.items.slice(0, PANEL_ROWS - approvalsShown.length)
+  const attentionTotal = pending.items.length + approvals.length
+  const attentionHidden = attentionTotal > dutiesShown.length + approvalsShown.length
+  const newsShown = news.slice(0, 6)
+  const expiringShown = expiring.slice(0, 4)
+  const newsTotal = news.length + expiring.length
+  const newsHidden = newsTotal > newsShown.length + expiringShown.length
+
   return (
     <AppShell layout={normalizeLayout(q.layout)} language={language}>
       <div className="overview" style={tenantStyle(branding)}>
@@ -172,7 +189,13 @@ export default async function OverviewPage({
 
         <div className="overview-panels">
           <section className="card panel">
-            <div className="panel-head">{t.attention}</div>
+            <div className="panel-head">
+              <span>{t.attention}</span>
+              {attentionTotal > 0 && <span className="panel-head-count">{attentionTotal}</span>}
+              {attentionHidden && (
+                <Link className="panel-head-link" href="/documents">{t.showAll(attentionTotal)}</Link>
+              )}
+            </div>
             {/*
               Prázdno až vtedy, keď je prázdny celý panel — dovtedy sa veta
               „nič nečaká" kreslila aj nad riadkom schválenia. Dva riadky
@@ -184,7 +207,7 @@ export default async function OverviewPage({
                 <span className="panel-empty-text">{t.empty.attentionText}</span>
               </div>
             )}
-            {pending.items.slice(0, 6).map(i => (
+            {dutiesShown.map(i => (
               <div key={`${i.source}-${i.id}`} className="panel-row">
                 <div className="panel-main">
                   <Link className="panel-name" href={i.href}>{i.title}</Link>
@@ -198,7 +221,7 @@ export default async function OverviewPage({
                 <Link className="panel-action" href={i.href}>{t.open}</Link>
               </div>
             ))}
-            {approvals.slice(0, 3).map(r => (
+            {approvalsShown.map(r => (
               <div key={`${r.documentId}-${r.round}`} className="panel-row">
                 <div className="panel-main">
                   <Link className="panel-name" href="/approvals">{approvalTitles.get(r.documentId) ?? r.documentId}</Link>
@@ -210,14 +233,18 @@ export default async function OverviewPage({
           </section>
 
           <section className="card panel">
-            <div className="panel-head">{t.news}</div>
+            <div className="panel-head">
+              <span>{t.news}</span>
+              {newsTotal > 0 && <span className="panel-head-count">{newsTotal}</span>}
+              {newsHidden && <Link className="panel-head-link" href="/library">{t.wholeLibrary}</Link>}
+            </div>
             {news.length === 0 && expiring.length === 0 && (
               <div className="panel-empty">
                 <span className="panel-empty-title">{t.empty.newsTitle(NEW_DAYS)}</span>
                 <span className="panel-empty-text">{t.empty.newsText}</span>
               </div>
             )}
-            {news.slice(0, 6).map(n => (
+            {newsShown.map(n => (
               <div key={`${n.documentId}-${n.versionLabel}`} className="panel-row">
                 <div className="panel-main">
                   <Link className="panel-name" href={`/documents/${encodeURIComponent(n.documentId)}`}>
@@ -234,7 +261,7 @@ export default async function OverviewPage({
               tá istá otázka („čo sa v knižnici deje"), len z druhej strany.
               Vlastný panel pre dva riadky by bol prázdny priestor.
             */}
-            {expiring.slice(0, 4).map(e => (
+            {expiringShown.map(e => (
               <div key={`exp-${e.documentId}-${e.versionLabel}`} className="panel-row">
                 <div className="panel-main">
                   <Link className="panel-name" href={`/documents/${encodeURIComponent(e.documentId)}`}>
