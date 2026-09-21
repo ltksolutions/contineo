@@ -2627,6 +2627,45 @@ html[data-theme="dark"] .editor-tui .CodeMirror {
 
 .doc-card-foot { margin-top: 2px; }
 
+/* ── potvrdenia ako pásik (KNIZNICA.md, úloha 2) ────────────────────────────
+   Stĺpec sa skenuje zhora dolu — pásik sa dá porovnať pohľadom, číslo
+   treba prečítať. Prah farieb: ≥ 90 % v poriadku, ≥ 50 % beží, pod 50 %
+   treba pripomenúť. Menovateľ nesie `title` a `.sr-only`. */
+.ack-bar { display: inline-flex; align-items: center; gap: 6px; min-width: 104px; }
+
+.ack-track {
+  flex: 1;
+  height: 5px;
+  border-radius: 3px;
+  background: var(--surface-2);
+  overflow: hidden;
+}
+
+.ack-fill { display: block; height: 100%; }
+.ack-fill--high { background: var(--ok-fg); }
+.ack-fill--mid  { background: var(--accent); }
+.ack-fill--low  { background: var(--warn-fg); }
+
+.ack-value {
+  font-size: 11px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Text len pre čítačku — vizuálne skrytý, v strome prístupnosti ostáva.
+   Rovnaký postup ako pri skrytom tlačidle hľadania v hlavičke. */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
 /* Ponuka „⋯" so zvyšnými akciami hlavičky (NASADENIE, PR 4). `<details>`
    ako prepad navigácie: primárna akcia je jedna, zvyšok sa neroztláča
    do riadkov tlačidiel. */

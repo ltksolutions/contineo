@@ -224,6 +224,29 @@ export default async function LibraryPage({
     : value === "in-review" ? t.statusInReview
     : t.draft
 
+  /*
+   * Potvrdenia ako pásik (KNIZNICA.md, úloha 2): stĺpec sa skenuje očami
+   * zhora dolu — osem čísel v texte sa neskenuje, osem pásikov áno.
+   * Menovateľ (O6/7) nezmizol: nesie ho `title` a text pre čítačku.
+   * Pomlčka znamená „nie je čo potvrdzovať" (nikomu nepridelené) — prázdny
+   * pásik by znamenal „nikto nepotvrdil", a to sú dve rôzne správy.
+   * Šírka výplne je inline: je to dátová hodnota, nie štýl.
+   */
+  const ackBar = (versionId?: string) => {
+    const p = versionId ? progress.get(versionId) : undefined
+    if (!p || p.percent === null) return <span className="quiet">—</span>
+    const tone = p.percent >= 90 ? "high" : p.percent >= 50 ? "mid" : "low"
+    return (
+      <span className="ack-bar" title={t.acknowledgedOf(p.acknowledged, p.assigned)}>
+        <span className="ack-track" aria-hidden="true">
+          <span className={`ack-fill ack-fill--${tone}`} style={{ width: `${p.percent}%` }} />
+        </span>
+        <span className="ack-value" aria-hidden="true">{p.percent} %</span>
+        <span className="sr-only">{t.acknowledgedOf(p.acknowledged, p.assigned)}</span>
+      </span>
+    )
+  }
+
   const facetLabel: Record<MultiKey, { title: string; label: (v: string) => string }> = {
     category: { title: t.category, label: categoryLabel },
     status: { title: t.status, label: statusLabel },
@@ -778,14 +801,11 @@ export default async function LibraryPage({
                 <div className="quiet doc-meta doc-card-foot">
                   {r.effectiveLabel}
                   {r.effectiveTo && ` · ${t.colEffectiveTo} ${formatDate(r.effectiveTo, uiLanguage)}`}
-                  {(() => {
-                    const p = r.effectiveVersionId ? progress.get(r.effectiveVersionId) : undefined
-                    return p && p.percent !== null
-                      ? ` · ${p.percent} % (${t.acknowledgedOf(p.acknowledged, p.assigned)})`
-                      : ""
-                  })()}
                   {r.updatedAt && ` · ${formatDate(r.updatedAt, uiLanguage)}`}
                 </div>
+
+                {/* Pásik potvrdení je posledný riadok karty (úloha 2). */}
+                {ackBar(r.effectiveVersionId)}
               </li>
             ))}
           </ul>
@@ -909,29 +929,12 @@ export default async function LibraryPage({
                       {r.effectiveTo ? formatDate(r.effectiveTo, uiLanguage) : "—"}
                     </td>
                     {/*
-                      Percento **nikdy samo** (O6/7): pod ním je menovateľ.
-                      „100 %" pri dokumente pridelenom trom ľuďom a „100 %" pri
-                      dokumente pridelenom štyristo ľuďom sú dve rôzne správy
-                      a bez menovateľa vyzerajú rovnako.
-
-                      Pomlčka znamená „nikomu nepridelené", nie „nikto
-                      nepotvrdil" — to sú dve rôzne veci a nula by z prvého
-                      spravila druhé.
+                      Pásik + percento (KNIZNICA.md, úloha 2). Menovateľ
+                      (O6/7 — percento nikdy samo) nesie `title` a text pre
+                      čítačku: „100 %" z troch a „100 %" zo štyristo sú dve
+                      rôzne správy.
                     */}
-                    <td className="doc-cell-quiet">
-                      {(() => {
-                        const p = r.effectiveVersionId ? progress.get(r.effectiveVersionId) : undefined
-                        if (!p || p.percent === null) return "—"
-                        return (
-                          <>
-                            {p.percent} %
-                            <div className="quiet doc-meta">
-                              {t.acknowledgedOf(p.acknowledged, p.assigned)}
-                            </div>
-                          </>
-                        )
-                      })()}
-                    </td>
+                    <td>{ackBar(r.effectiveVersionId)}</td>
                     <td className="doc-col-right doc-cell-quiet">
                       {r.updatedAt ? formatDate(r.updatedAt, uiLanguage) : "—"}
                       {r.updatedBy && <div className="quiet doc-meta">{r.updatedBy}</div>}
