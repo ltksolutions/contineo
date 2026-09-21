@@ -20,6 +20,8 @@ import { tenantStyle } from "@/components/TenantHeader"
 import { loadDocumentFor, effectiveVersion } from "@/lib/documents"
 import { buildStatement, hasAcknowledged } from "@/lib/acknowledgements"
 import { dictionary, formatDate } from "@/lib/i18n"
+import { acknowledgementDuties } from "@/lib/pending"
+import { dueState } from "@/lib/due"
 import AcknowledgeButton from "@/components/AcknowledgeButton"
 import FormattedText from "@/components/FormattedText"
 import ReadingTimer from "@/components/ReadingTimer"
@@ -79,6 +81,21 @@ export default async function DocumentPage({
     }
   }
 
+  /*
+    Termín potvrdenia (ZNENIE, úloha 1) — z toho istého výpočtu, ktorý kreslí
+    chip na Prehľade a v zozname (`acknowledgementDuties`), nie z vlastného
+    čítania pridelení: pravidlo „pri dvoch prideleniach platí skorší termín"
+    má žiť na jednom mieste. Položka existuje len pre nepotvrdenú povinnosť,
+    takže po potvrdení chip zmizne sám.
+  */
+  const duties = version.ok ? await acknowledgementDuties(person) : null
+  const duty = duties
+    ? [...duties.fromTracks, ...duties.outsideTracks].find(i => i.id === doc.documentId)
+    : undefined
+  const due = duty?.due ?? null
+  const now = new Date()
+  const tOverview = dictionary(person.language).overview
+
   const q = await searchParams
   const text = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v)
   const message = text(q.msg)
@@ -104,6 +121,13 @@ export default async function DocumentPage({
       {version.ok ? (
         <p className="quiet" style={{ fontSize: "var(--fs-body)", margin: "0 0 28px" }}>
           {t.version(version.version.label, formatDate(version.version.effectiveFrom!, person.language))}
+          {/* Po lehote len chip v --bad-bg, nie červená karta: prekročený
+              termín potvrdenie nezakazuje a obrazovka sa nemá tváriť, že áno. */}
+          {due && (
+            <span className={`due-chip due-chip--${dueState(due, now)}`}>
+              {tOverview.by(formatDate(due, person.language))}
+            </span>
+          )}
         </p>
       ) : (
         <p className="card" style={{ padding: 16, margin: "16px 0 0" }}>
