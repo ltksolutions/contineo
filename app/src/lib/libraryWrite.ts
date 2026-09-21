@@ -27,6 +27,7 @@ import { chunkText, DEFAULT_PROFILE } from "./chunker.mjs"
 import { textFingerprint, chunkingFingerprint, needsReindex, CHUNKER_VERSION } from "./chunkIdentity"
 import { textFixProblem, textDiff, versionFixProblem, type TextFixProblem } from "./textFix"
 import { checkValue, checkList, KEY_PATTERN } from "./codelists"
+import { slugifyKey } from "./slug"
 import type { CodelistExtras } from "./codelists"
 import { saveFile, deleteFile } from "./fileStore"
 import { convert, FILE_TYPE_LABEL } from "./conversion"
@@ -198,11 +199,12 @@ export function checkMetadata(
   const title = (input.title ?? "").trim()
   if (!title) throw new LibraryError("library.titleRequired", "Názov dokumentu je povinný — bez neho je v zozname len kľúč.")
 
-  // Kľúč dokumentu nie je položka číselníka — je to identita, ktorú si volí
-  // kurátor. Overuje sa teda tvarom (`KEY_PATTERN`), nie príslušnosťou do
-  // slovníka. Nevyplnený sa dopĺňa zo `sectionKey` (D80).
+  // Kľúč dokumentu nie je položka číselníka — je to identita. Overuje sa
+  // tvarom (`KEY_PATTERN`), nie príslušnosťou do slovníka. Nevyplnený vzniká
+  // ako slug z názvu (ADR-010) — už NIE zo zaradenia: zaradenie je kategória
+  // a prvý dokument kategórie by kľúč obsadil, identita ďalších by bola lož.
   const sectionKey = checkValue("sectionKey", input.sectionKey ?? "")
-  const documentKey = ((input.documentKey ?? "").trim() || sectionKey).toLowerCase()
+  const documentKey = ((input.documentKey ?? "").trim() || slugifyKey(title)).toLowerCase()
   if (!KEY_PATTERN.test(documentKey)) {
     throw new LibraryError(
       "library.documentKeyShape",

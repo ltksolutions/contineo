@@ -11,6 +11,7 @@ import { readFileSync } from "node:fs"
 import { describe, it, expect } from "vitest"
 import { checkValue, checkList, CodelistError, KEY_PATTERN } from "../src/lib/codelists"
 import { makeDocumentId, checkMetadata, LibraryError, MAX_INTERNAL_NUMBER } from "../src/lib/libraryWrite"
+import { slugifyKey } from "../src/lib/slug"
 import { versionFixProblem } from "../src/lib/textFix"
 
 describe("ciselniky", () => {
@@ -98,8 +99,21 @@ describe("metadata z formulara", () => {
     expect(m.tags).toEqual([])
   })
 
-  it("documentKey sa doplni zo sectionKey, ked chyba (D80)", () => {
+  it("documentKey vznika zo nazvu, nie zo zaradenia (ADR-010)", () => {
+    // Zaradenie je kategoria: prvy dokument kategorie by kluc obsadil
+    // a identita dalsich by bola loz. Preto slug z nazvu.
     expect(checkMetadata(base).documentKey).toBe("stanovy")
+    expect(checkMetadata({ ...base, title: "Pracovný poriadok SFZ", sectionKey: "poriadky" }).documentKey)
+      .toBe("pracovny_poriadok_sfz")
+  })
+
+  it("slugifyKey: male pismena bez diakritiky, interpunkcia na podciarkovnik", () => {
+    expect(slugifyKey("Pracovný poriadok SFZ")).toBe("pracovny_poriadok_sfz")
+    expect(slugifyKey("  Smernica č. 3/2026 — GDPR (v2)  ")).toBe("smernica_c_3_2026_gdpr_v2")
+    expect(slugifyKey("Ľšťž ĎŤŇ")).toBe("lstz_dtn")
+    // Vysledok vzdy sedi s KEY_PATTERN, takze server ho prijme.
+    expect(KEY_PATTERN.test(slugifyKey("Pracovný poriadok SFZ"))).toBe(true)
+    expect(slugifyKey("x".repeat(80)).length).toBe(60)
   })
 
   it("documentKey sa da zadat vlastny a nemusi byt v ciselniku", () => {

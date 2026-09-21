@@ -1800,10 +1800,11 @@ interface Dictionary {
       titlePlaceholder: string
       titleNote: string
       key: string
-      keyNoteBefore: string
-      keyNoteAfterCode: string
-      keyNoteHighlight: string
-      keyNoteAfter: string
+      /** Náhľad identifikátora a ručný kľúč (NAHRAVANIE, úloha 4 / ADR-010). */
+      keyPreview: string
+      keyManualSummary: string
+      keyManualNote: string
+      keyTaken: (id: string) => string
       keysTaken: string
       section: string
       sectionNote: string
@@ -3679,10 +3680,10 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       titlePlaceholder: "Súťažný poriadok futbalu SFZ",
       titleNote: "Objaví sa doslovne v potvrdzovacej formulke, takže nech je to celý úradný názov.",
       key: "Kľúč dokumentu",
-      keyNoteBefore: "Malé písmená bez diakritiky a podčiarkovníky. Spolu s kódom organizácie tvorí identifikátor (",
-      keyNoteAfterCode: ").",
-      keyNoteHighlight: " Ten istý kľúč znamená ten istý dokument",
-      keyNoteAfter: " — nahratie na existujúci kľúč sa preto odmietne; nové znenie sa nahráva na detaile dokumentu. Nevyplnený sa doplní zo zaradenia.",
+      keyPreview: "Identifikátor:",
+      keyManualSummary: "Zadať kľúč ručne",
+      keyManualNote: "Kľúč vzniká raz a nikdy sa nemení — žije v potvrdeniach, audite a exportoch. Premenovanie dokumentu ho nemení.",
+      keyTaken: id => `Identifikátor ${id} je obsadený. Upravte názov, alebo zadajte kľúč ručne.`,
       keysTaken: "Obsadené kľúče v tejto organizácii: ",
       section: "Zaradenie",
       sectionNote: "Kam dokument patrí. Na rozdiel od kľúča ho môže mať viac dokumentov naraz. Existujúce: ",
@@ -5543,10 +5544,10 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       titlePlaceholder: "Súťažný poriadok futbalu SFZ",
       titleNote: "Objeví se doslovně v potvrzovací formulaci, ať je to tedy celý úřední název.",
       key: "Klíč dokumentu",
-      keyNoteBefore: "Malá písmena bez diakritiky a podtržítka. Spolu s kódem organizace tvoří identifikátor (",
-      keyNoteAfterCode: ").",
-      keyNoteHighlight: " Týž klíč znamená týž dokument",
-      keyNoteAfter: " — nahrání na existující klíč se proto odmítne; nové znění se nahrává na detailu dokumentu. Nevyplněný se doplní ze zařazení.",
+      keyPreview: "Identifikátor:",
+      keyManualSummary: "Zadat klíč ručně",
+      keyManualNote: "Klíč vzniká jednou a nikdy se nemění — žije v potvrzeních, auditu a exportech. Přejmenování dokumentu ho nemění.",
+      keyTaken: id => `Identifikátor ${id} je obsazený. Upravte název, nebo zadejte klíč ručně.`,
       keysTaken: "Obsazené klíče v této organizaci: ",
       section: "Zařazení",
       sectionNote: "Kam dokument patří. Na rozdíl od klíče ho může mít víc dokumentů najednou. Existující: ",
@@ -7401,10 +7402,10 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       titlePlaceholder: "Súťažný poriadok futbalu SFZ",
       titleNote: "It appears verbatim in the acknowledgement statement, so use the full official title.",
       key: "Document key",
-      keyNoteBefore: "Lower-case letters without diacritics, and underscores. Together with the organisation code it forms the identifier (",
-      keyNoteAfterCode: ").",
-      keyNoteHighlight: " The same key means the same document",
-      keyNoteAfter: " — uploading to an existing key is therefore refused; a new version is uploaded on the document detail page. Left empty, it is filled in from the section.",
+      keyPreview: "Identifier:",
+      keyManualSummary: "Enter the key manually",
+      keyManualNote: "The key is created once and never changes — it lives in acknowledgements, the audit trail and exports. Renaming the document does not change it.",
+      keyTaken: id => `The identifier ${id} is already taken. Change the title, or enter the key manually.`,
       keysTaken: "Keys already taken in this organisation: ",
       section: "Section",
       sectionNote: "Where the document belongs. Unlike the key, several documents can share it. Existing: ",

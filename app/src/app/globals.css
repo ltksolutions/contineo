@@ -2292,6 +2292,20 @@ html[data-theme="dark"] .editor-tui .CodeMirror {
 
 .upload-grid .field { margin: 0; min-width: 0; }
 
+/* Náhľad identifikátora pod názvom (NAHRAVANIE, úloha 4 / ADR-010). Monospace:
+   je to kľúč, nie veta. Ručný kľúč je vedomý krok za `<details>`. */
+.key-preview {
+  margin-top: 6px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: var(--fs-micro);
+  color: var(--muted);
+}
+.key-preview-value { color: var(--ink); }
+.key-preview--taken { color: var(--bad-fg); }
+.key-preview--taken .key-preview-value { color: var(--bad-fg); }
+.key-manual > summary { font-size: var(--fs-small); font-weight: 600; cursor: pointer; }
+.key-manual > .field { margin-top: 10px; }
+
 /* ── detail dokumentu: obsah + bočný panel ───────────────────────────────
    Dva stĺpce až od 1024 px. Na telefóne je zhrnutie **kartou nad textom**
    (NASADENIE, PR 5): potvrdenia, platnosť a súvisiace sú to, čo sa

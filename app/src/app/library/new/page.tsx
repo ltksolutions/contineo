@@ -11,6 +11,7 @@ import { notFound, redirect } from "next/navigation"
 import Link from "next/link"
 import Notice from "@/components/Notice"
 import { MAX_BYTES, ACCEPTED_EXTENSIONS } from "@/lib/fileStore"
+import KeyPreview from "@/components/KeyPreview"
 import { libraryContext } from "@/lib/library"
 import { codelistOptions, CODELISTS } from "@/lib/codelists"
 import { allDepartments, flattenTree } from "@/lib/departments"
@@ -143,14 +144,28 @@ export default async function NewDocumentPage({
           <h2 className="upload-step"><span className="upload-step-no">2</span>{t.sectionMeta}</h2>
           <div className="upload-grid">
 
-        <label className="field upload-wide">
-          <span className="field-label">{t.title}</span>
-          <input className="field-input" name="title" defaultValue={title ?? ""} required
-                 placeholder={t.titlePlaceholder} />
-          <span className="quiet field-hint">
-            {t.titleNote}
-          </span>
-        </label>
+        {/*
+          Kľúč sa negeneruje ručne (NAHRAVANIE, úloha 4 / ADR-010): pod
+          názvom je náhľad výsledného identifikátora, ručný kľúč je vedomý
+          krok za `<details>`. Bez skriptu náhľad nie je a kľúč doplní server.
+        */}
+        <KeyPreview
+          prefix={ctx.tenant.companyCode.toLowerCase()}
+          usedKeys={usedKeys}
+          initialTitle={title ?? ""}
+          initialKey={documentKey ?? ""}
+          labels={{
+            title: t.title,
+            titlePlaceholder: t.titlePlaceholder,
+            titleNote: t.titleNote,
+            preview: t.keyPreview,
+            manualSummary: t.keyManualSummary,
+            manualLabel: t.key,
+            manualNote: t.keyManualNote,
+            taken: t.keyTaken,
+            keysTaken: t.keysTaken,
+          }}
+        />
 
         {/*
           Zaradenie a kľúč sú od D80 dve polia, nie jedno. Dovtedy `sectionKey`
@@ -165,21 +180,6 @@ export default async function NewDocumentPage({
             {t.sectionNote}
             {CODELISTS.sectionKey.items.slice(0, 8).map(p => p.key).join(", ")}.
           </span>
-        </label>
-
-        <label className="field upload-wide">
-          <span className="field-label">{t.key}</span>
-          <input className="field-input" name="documentKey" defaultValue={documentKey ?? ""}
-                 placeholder="sutazny_poriadok" autoCapitalize="none" autoCorrect="off" />
-          <span className="quiet field-hint">
-            {t.keyNoteBefore}<code>{ctx.tenant.companyCode.toLowerCase()}:kluc</code>{t.keyNoteAfterCode}
-            <strong>{t.keyNoteHighlight}</strong>{t.keyNoteAfter}
-          </span>
-          {usedKeys.length > 0 && (
-            <span className="quiet field-hint">
-              {t.keysTaken}{usedKeys.join(", ")}.
-            </span>
-          )}
         </label>
 
         <div className="field">
