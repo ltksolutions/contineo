@@ -16,8 +16,6 @@ Zopakované zámerne, aby sa nemuseli hľadať:
    Chýbajúci preklad padá na slovenčinu, nie na kľúč.
 2. **Nič nevyžaduje JavaScript** — filtre a výber sú odkazy, formuláre sú
    `<form>`, stav nesie adresa. `normalizeQuery` / `toQuery` sa **nemenia**.
-   Jediná priznaná výnimka: ukazovateľ prečítaného (`ZNENIE.md`, úloha 4) —
-   bez skriptu sa nevykreslí a nič sa nestratí.
 3. **Breakpointy len 640 a 1024.** Mobile first je povinnosť (`CLAUDE.md`).
 4. **`--accent` ostáva `#232a35`**, `darken(hex, 0.16)` ostáva, tenant farbu
    skladá `tenantStyle()`.
@@ -25,6 +23,28 @@ Zopakované zámerne, aby sa nemuseli hľadať:
 6. **Nové tokeny do `:root` aj `html[data-theme="dark"]`.**
 7. **Terminológia** — viď nižšie. Mocky používali staré slová; platí kód.
 8. **Jeden commit na úlohu, jedna obrazovka = jeden PR.**
+
+---
+
+## ADR-010 platí nad zadaniami (21. 9. 2026)
+
+Po napísaní tohto handoffu Ján prijal **ADR-010 — Metadáta bez ručných
+kľúčov**. Mení dve veci, ktoré sa zadaní dotýkajú:
+
+| Čo | Dopad | Kde je to zapracované |
+| --- | --- | --- |
+| Kľúč dokumentu sa **generuje** zo názvu, formulár ukazuje náhľad | `/library/new` | `NAHRAVANIE.md` úloha 4 |
+| Pole **Zaradenie mizne**, zoskupovanie preberá **Druh** | `/library/new`, filtre | `NAHRAVANIE.md` úloha 5 |
+| `companyCode` **navrhuje systém**, admin potvrdzuje | `/admin` | `ADMIN.md` úloha 1.4 |
+
+**Statické rámy (`SPRAVA.html`) ADR-010 nezohľadňujú** — kreslia starý
+formulár so Zaradením aj Kľúčom. V tomto jednom bode platí zadanie, nie rám;
+všetko ostatné v rámoch platí.
+
+Zadania sú prepísané, netreba nič dopočítavať. Ak ADR-010 čítaš celé
+(`docs/ADR-010-metadata-bez-rucnych-klucov.md`), pozor na jeho bod 2:
+**migrácia hodnôt `sectionKey` → `category` ide až po Fáze 8**, nie
+s formulárom.
 
 ---
 
@@ -228,32 +248,15 @@ každý; `/admin` vidím ja raz za mesiac.
 | 30 | `/guide` | Príručka | ✅ `ADMIN.md` §2 |
 | 31 | `/sign-in` | Prihlásenie | ✅ hotové (`README.md` §8) |
 
-**Zoznam pokrýva 31 rout handoffu.** Oproti prvej verzii tohto dokumentu
-pribudlo sedem rout, ktoré som predtým nemal: `/hr/overview`, `/hr/[id]`,
-`/hr/reminders`, `/people/[id]`, `/people/new`, `/people/invite`,
-`/people/import`. V kóde je okrem nich ešte päť obrazoviek bez zadania —
-viď „Obrazovky mimo handoffu" nižšie.
+**Zoznam je úplný k 21. 9. 2026** — overený proti `app/src/app/**/page.tsx`.
+Oproti prvej verzii tohto dokumentu pribudlo sedem rout, ktoré som predtým
+nemal: `/hr/overview`, `/hr/[id]`, `/hr/reminders`, `/people/[id]`,
+`/people/new`, `/people/invite`, `/people/import`.
 
-## Obrazovky mimo handoffu
+## ✅ Všetkých 31 rout je navrhnutých
 
-Päť rout v kóde zadanie nemá — existujú od augusta a septembra 2026
-(overené proti `app/src/app/**/page.tsx` a `git log`, 2026-09-21) a handoff
-ich nerieši. Platí pre ne to isté, čo pre všetko nepokryté: nechaj ich, ako
-sú, a čo padne do oka, napíš do PR ako otázku.
-
-| Routa | Obrazovka | V kóde od |
-| --- | --- | --- |
-| `/admin/new` | Nová organizácia | 2026-08-29 |
-| `/admin/tenants/[code]` | Detail organizácie a domén | 2026-08-29 |
-| `/hr/[id]/notify` | Náhľad pripomienky pred rozposlaním | 2026-08-29 |
-| `/library/[id]/text` | Editor textu — originál vedľa Markdownu (D53) | 2026-08-30 |
-| `/library/tracks/[key]` | Detail trasy — poradie krokov | 2026-09-06 |
-
-`/prehlad` je trvalé presmerovanie na `/`, nie obrazovka.
-
-## ✅ Všetkých 31 rout handoffu je navrhnutých
-
-Od 21. 9. 2026 nemá žiadna obrazovka handoffu chýbajúce zadanie.
+Od 21. 9. 2026 nie je v aplikácii obrazovka bez zadania. Zoznam vyššie je
+úplný a overený proti `app/src/app/**/page.tsx`.
 
 **Čo to znamená pre implementáciu:** keď pri práci naďabíš na niečo, čo
 zadanie danej obrazovky nepokrýva, **napíš to do PR ako otázku a kód nechaj,
@@ -318,10 +321,6 @@ PREHLAD.html         1440 / 834 / 390 + prázdny stav
 ASK.html             1440 / 390 + bez otázky + odpoveď + nič sa nenašlo
 DOCUMENTS.html       1440 / 390 + prázdny stav + po termíne
 APPROVALS.html       1440 / 390 + prázdny stav + vrátené s pripomienkou
-DETAIL.html          detail dokumentu + znenie na potvrdenie
-SPRAVA.html          nahrávanie, priečinky, kolá, kurácia, upozornenia, Viac
-HR.html              výkaz, prideľovanie, dôkazy, potvrdenia, posúdenie
-PEOPLE.html          osoby, karta osoby, admin, príručka
 ```
 
 Otvor priamo v prehliadači. Sú to jediné súbory, podľa ktorých sa dá

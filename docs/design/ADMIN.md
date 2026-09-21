@@ -31,13 +31,49 @@ Ale poradie: dnes je to *osoby, dokumenty, znenia, potvrdenia*.
 Má byť **dokumenty, znenia, osoby, potvrdenia** — Contineo je systém na
 dokumenty, takže prvé číslo má byť o nich.
 
-### Úloha 1.3 — Prázdny stav
+### Úloha 1.3 — Prázdny stav (poradie: rob až po 1.4)
 `.empty`: **„Žiadne organizácie"** / „Prvú pridáte tlačidlom vyššie."
 
 Pozn.: v praxi sa nestane (`/admin` vidí len ten, kto už organizáciu má),
 ale prázdna obrazovka bez textu je horšia než veta, ktorá sa nezobrazí.
 
-### Úloha 1.4 — Organizácia bez domén je varovanie, nie poznámka
+### Úloha 1.4 — `companyCode` navrhuje Contineo, admin ho potvrdzuje (ADR-010)
+
+**Nová úloha z ADR-010 (21. 9. 2026).** Dnes sa kód organizácie píše čisto
+ručne — `normalizeCompanyCode()` len overí tvar, nič nenavrhne a kolíziu
+zachytí až server.
+
+**Prečo to má význam:** kód je zapečený v `documentId` **každého** dokumentu
+organizácie, v potvrdeniach a v audite. Po založení sa nemení nikdy. Preklep
+pri zakladaní teda žije roky v dátach.
+
+**Má byť** vo formulári novej organizácie:
+
+1. **Systém navrhne kód** z názvu — iniciály bez diakritiky
+   („Stredoslovenská vodárenská spoločnosť" → `SVS`), s kontrolou kolízie
+   voči existujúcim tenantom a návrhom variantu, keď je obsadený.
+2. **Admin návrh vidí v poli a môže ho prepísať.** Nie náhľad ako pri kľúči
+   dokumentu — tu je pole, len predvyplnené. Organizácie svoju skratku
+   spravidla už majú (`SFZ`, `StVPS`) a tá má prednosť pred strojovým
+   odvodením.
+3. **Nápoveda pod poľom:** „Kód sa po založení nemení — je súčasťou
+   identifikátora každého dokumentu."
+
+**Prečo návrh + potvrdenie, a nie tichá automatika** ako pri kľúči dokumentu:
+zakladanie tenantov je zriedkavé a robí ho admin, ktorý skratku organizácie
+pozná. Pri dokumente sa kľúč generuje ticho, lebo ich je stovky a nikto ich
+nechce vymýšľať.
+
+⚠️ Návrh z názvu za písania **vyžaduje JavaScript** — rovnaká výnimka ako
+v `NAHRAVANIE.md` úlohe 4. Bez skriptu zostane pole prázdne a povinné, admin
+kód napíše sám. Formulár musí byť odoslateľný bez skriptu.
+
+Pozn. z ADR-010: tenant ukladá kód **veľkými** písmenami (`CODE_PATTERN`
+v `tenantAdmin.ts`), ale `makeDocumentId()` celý identifikátor znižuje na
+malé (`sfz:kluc`). Funguje to; len pri každom novom dotaze, ktorý by
+porovnával `companyCode` s prefixom `documentId`, na to treba myslieť.
+
+### Úloha 1.5 — Organizácia bez domén je varovanie, nie poznámka
 Organizácia bez domény znamená, že **sa do nej nikto nevie prihlásiť**.
 Dnes je to pilulka medzi ostatnými.
 
@@ -87,6 +123,7 @@ Prázdny stav pre niečo, čo nemôže byť prázdne, je mŕtvy kód.
 | --- | --- | --- |
 | `/admin` | posledná aktivita organizácie | ❌ neukladá sa |
 | `/admin` | veľkosť úložiska | ❌ nepočíta sa |
+| `/admin` | návrh `companyCode` z názvu | ⚠️ ADR-010 ho zavádza — kontrola kolízie potrebuje dotaz na existujúce tenanty pri písaní |
 | `/guide` | vyhľadávanie v príručke | ❌ kapitol je málo, netreba |
 
 🔴 Zmena schémy: **netreba žiadnu.**

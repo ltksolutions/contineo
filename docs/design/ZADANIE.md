@@ -61,7 +61,7 @@ to, ktorá referencia patrí ku ktorému zadaniu:
 | `ASK.md` | `ASK.html` |
 | `NAHRAVANIE.md` | `SPRAVA.html` (časť 1) |
 | `PRIECINKY.md` | `SPRAVA.html` (časť 2) |
-| `SPRAVA.md` | `SPRAVA.html` (časť 3–6) |
+| `SPRAVA.md` | `SPRAVA.html` (časť 3–4) |
 | `HR.md` | `HR.html` |
 | `POSUDENIE.md` | `HR.html` (časť 4–5) |
 | `OSOBY.md` | `PEOPLE.html` |
@@ -119,6 +119,6 @@ Sú v `POSTUP.md` podrobne; v skratke:
    do návratového typu — povedz áno.
 2. **„Uložiť pohľad"** v knižnici: MASTER.md hovorí, že sa nerobí a odkaz
    sa odstráni. Ak s tým nesúhlasíš, povedz to **pred** PR 0.
-3. **PR 12 (`OSOBY.md`, úloha 5):** čo sa má stať pri importe CSV s osobou,
+3. **PR 15 (`OSOBY.md`, úloha 5):** čo sa má stať pri importe CSV s osobou,
    ktorá už v systéme je — prepísať, preskočiť, alebo import zastaviť.
    Cowork najprv zistí, ako sa to chová dnes, a napíše ti to.

@@ -3,7 +3,7 @@
 Dve obrazovky, ktoré spolu nesúvisia témou, ale majú spoločný tvar:
 **zoznam záznamov, ktoré sa nedajú prepísať.**
 
-Základ: `ZAKLAD.md` (PR 0). Statická referencia: `HR.html` (časť 4–5).
+Základ: `ZAKLAD.md` (PR 0). Statická referencia: `HR.html` (časť 3–4).
 
 ---
 

@@ -59,10 +59,6 @@ Zvyšok je neplatný (staré názvoslovie tried) a je v ňom o tom varovanie.
 
 `/directory`, `/organisation` a `/sign-in` sú hotové z prvej vlny.
 
-Päť obrazoviek mimo handoffu (`/admin/new`, `/admin/tenants/[code]`,
-`/hr/[id]/notify`, `/library/[id]/text`, `/library/tracks/[key]`) zadanie
-nemá — viď `MASTER.md`, „Obrazovky mimo handoffu".
-
 ## Vizuálne referencie
 
 Statické HTML s reálnymi hodnotami namiesto šablón. **Otvor v prehliadači,
@@ -81,10 +77,9 @@ dlhé texty a tmavú tému.
 | `HR.html` | výkaz, prideľovanie, dôkazy, potvrdenia, posúdenie |
 | `PEOPLE.html` | osoby, karta osoby, admin, príručka |
 
-⚠️ Súbory `*.dc.html` už v tomto repozitári nie sú — žijú v dizajnovom
-projekte (`design_handoff_contineo_intranet`). Sú to **šablóny** a bez
-behového prostredia sa nevykreslia; na porovnávanie slúžia výhradne
-statické `.html` tu.
+⚠️ Súbory `*.dc.html` v koreni projektu (nie tu) sú **šablóny** a bez
+behového prostredia sa nevykreslia. Needituj ich ani nepoužívaj na
+porovnávanie.
 
 ---
 
