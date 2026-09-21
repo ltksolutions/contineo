@@ -1,10 +1,10 @@
 /**
- * Domovská strana.
+ * Opýtať sa (`/ask`) — jediné miesto, kde sa otázka odpovedá.
  *
- * Poradie na nej nie je vecou vkusu. Odkaz na prihlásenie príde človeku
- * e-mailom a prvá obrazovka, ktorú po kliknutí uvidí, je táto — takže hore
- * patrí to, čo od neho chceme, a nie ukážka toho, čo systém vie. Hľadanie
- * zostáva pod tým: hodnotiteľ ho má stále na dosah (D9, otvorený bod E1).
+ * Kedysi to bola domovská strana; od PR 5 je `/` Prehľad s KPI a táto routa
+ * je obrazovka odpovede. **Routa nesmie zmiznúť:** `?q=` sem posiela pole
+ * v hlavičke z každej obrazovky portálu aj hero pole Prehľadu. Odpovedá sa
+ * na jednom mieste, pýtať sa dá všade.
  *
  * Widget sa **neukazuje každému**. Kto nemá ani jednu trasu, nemá tam čo
  * dostať ani o rok — prázdna karta „Nevybavené žiadosti" by mu len zabrala
