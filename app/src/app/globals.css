@@ -742,6 +742,18 @@ button:disabled { cursor: not-allowed; opacity: 0.55; }
   font-weight: 600;
   line-height: 1.2;
   transition: background 0.15s ease;
+  /*
+   * Odkaz s triedou `.button` je tlačidlo, nie odkaz v texte — podtrhnutie
+   * je afordancia odkazu vo vete a na tlačidle vyzerá ako chyba. Globálne
+   * pravidlo je len `a { color: inherit }` (od prvého commitu), takže
+   * podtrhnutie sem doteraz padalo z prehliadača a jednotlivé komponenty
+   * si ho vypínali sami — tridsaťšesť pravidiel s `text-decoration`
+   * v tomto súbore je práve táto záplata, len rozsypaná.
+   *
+   * Tu, nie na `a`: podtrhnutie odkazu **vo vete** je správne a globálne
+   * vypnutie by ho vzalo aj tam, kde nesie význam.
+   */
+  text-decoration: none;
 }
 
 .button:hover:not(:disabled) { background: var(--accent-strong); }
