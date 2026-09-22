@@ -11,7 +11,7 @@ import { readFileSync } from "node:fs"
 import { describe, it, expect } from "vitest"
 import { checkValue, checkList, CodelistError, KEY_PATTERN } from "../src/lib/codelists"
 import { makeDocumentId, checkMetadata, LibraryError, MAX_INTERNAL_NUMBER } from "../src/lib/libraryWrite"
-import { slugifyKey } from "../src/lib/slug"
+import { slugifyKey, suggestCompanyCode, withoutCollision } from "../src/lib/slug"
 import { versionFixProblem } from "../src/lib/textFix"
 
 describe("ciselniky", () => {
@@ -125,6 +125,24 @@ describe("metadata z formulara", () => {
     // Vysledok vzdy sedi s KEY_PATTERN, takze server ho prijme.
     expect(KEY_PATTERN.test(slugifyKey("Pracovný poriadok SFZ"))).toBe(true)
     expect(slugifyKey("x".repeat(80)).length).toBe(60)
+  })
+
+  it("suggestCompanyCode: inicialy bez diakritiky, jedno slovo prve tri pismena", () => {
+    expect(suggestCompanyCode("Stredoslovenská vodárenská spoločnosť")).toBe("SVS")
+    expect(suggestCompanyCode("Slovenský futbalový zväz")).toBe("SFZ")
+    expect(suggestCompanyCode("Contineo")).toBe("CON")
+    // Spojky do skratky nepatria.
+    expect(suggestCompanyCode("Únia miest a obcí")).toBe("UMO")
+    expect(suggestCompanyCode("   ")).toBe("")
+    // Navrh vzdy sedi s tvarom, ktory prijme normalizeCompanyCode().
+    expect(/^[A-Z0-9][A-Z0-9_-]{1,23}$/.test(suggestCompanyCode("Slovenský futbalový zväz"))).toBe(true)
+  })
+
+  it("withoutCollision: obsadeny navrh dostane cislo", () => {
+    expect(withoutCollision("SVS", ["SFZ"])).toBe("SVS")
+    expect(withoutCollision("SVS", ["svs"])).toBe("SVS2")
+    expect(withoutCollision("SVS", ["SVS", "SVS2"])).toBe("SVS3")
+    expect(withoutCollision("", ["SVS"])).toBe("")
   })
 
   it("documentKey sa da zadat vlastny a nemusi byt v ciselniku", () => {

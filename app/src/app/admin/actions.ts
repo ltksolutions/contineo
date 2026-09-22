@@ -173,8 +173,13 @@ export async function createTenantAction(fd: FormData) {
       actor.email,
     )
   } catch (e) {
-    const message = errorMessage(e, actor.language)
-    redirect(`/admin/new?msg=${encodeURIComponent(message)}&error=1`)
+    // Vyplnené hodnoty sa vracajú do formulára — kto sa pomýlil v kóde,
+    // nemá prepisovať názov a domény znova (ADMIN, úloha 1.4).
+    const back = new URLSearchParams({ msg: errorMessage(e, actor.language), error: "1" })
+    if (code) back.set("companyCode", code)
+    const displayName = fieldText(fd, "displayName")
+    if (displayName) back.set("displayName", displayName)
+    redirect(`/admin/new?${back.toString()}`)
   }
 
   // Až po uloženom tenantovi — zdroj pravdy je `tenants` a výpadok Vercelu

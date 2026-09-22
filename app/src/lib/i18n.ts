@@ -865,6 +865,8 @@ interface Dictionary {
       codeNoteBefore: string
       codeNoteHighlight: string
       codeNoteAfter: string
+      /** Kolízia návrhu kódu (ADR-010, ADMIN.md úloha 1.4). */
+      codeTaken: (code: string) => string
       name: string
       nameNote: string
       supportEmail: string
@@ -2578,9 +2580,10 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       code: "Kód organizácie",
       codeNoteBefore: "Veľké písmená, číslice, pomlčka. Nesie ho každá osoba, dokument aj potvrdenie — ",
       codeNoteHighlight: "neskôr sa nemení",
-      codeNoteAfter: ".",
+      codeNoteAfter: " — je súčasťou identifikátora každého dokumentu.",
+      codeTaken: (code) => `Kód ${code} je už obsadený. Zvoľte iný.`,
       name: "Názov",
-      nameNote: "To, čo ľudia uvidia v hlavičke portálu.",
+      nameNote: "To, čo ľudia uvidia v hlavičke portálu. Z názvu sa navrhne kód organizácie — skratku, ktorú organizácia používa, pokojne prepíšte.",
       supportEmail: "Kontakt organizácie",
       supportEmailNote: "Sem pôjdu pokyny k doméne.",
       domains: "Domény",
@@ -4496,9 +4499,10 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       code: "Kód organizace",
       codeNoteBefore: "Velká písmena, číslice, pomlčka. Nese ho každá osoba, dokument i potvrzení — ",
       codeNoteHighlight: "později se nemění",
-      codeNoteAfter: ".",
+      codeNoteAfter: " — je součástí identifikátoru každého dokumentu.",
+      codeTaken: (code) => `Kód ${code} je už obsazený. Zvolte jiný.`,
       name: "Název",
-      nameNote: "To, co lidé uvidí v hlavičce portálu.",
+      nameNote: "To, co lidé uvidí v hlavičce portálu. Z názvu se navrhne kód organizace — zkratku, kterou organizace používá, klidně přepište.",
       supportEmail: "Kontakt organizace",
       supportEmailNote: "Sem půjdou pokyny k doméně.",
       domains: "Domény",
@@ -6406,9 +6410,10 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       code: "Organisation code",
       codeNoteBefore: "Capital letters, digits, hyphen. Every person, document and acknowledgement carries it — ",
       codeNoteHighlight: "it never changes afterwards",
-      codeNoteAfter: ".",
+      codeNoteAfter: " — it is part of every document's identifier.",
+      codeTaken: (code) => `The code ${code} is already taken. Pick another one.`,
       name: "Name",
-      nameNote: "What people will see in the portal header.",
+      nameNote: "What people will see in the portal header. The organisation code is suggested from it — feel free to replace it with the abbreviation the organisation uses.",
       supportEmail: "Organisation contact",
       supportEmailNote: "The domain instructions go here.",
       domains: "Domains",
