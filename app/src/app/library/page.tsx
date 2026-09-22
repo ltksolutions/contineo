@@ -905,8 +905,15 @@ export default async function LibraryPage({
                           telefóne rozšíril kvôli údaju, ktorý väčšina
                           dokumentov nemá.
                       */}
+                      {/*
+                          Počet znení je tu, nie v stĺpci Verzia (MASTER.md):
+                          je to údaj **o dokumente**, nie o tom znení, ktoré
+                          práve platí — a v úzkom stĺpci robil z jedného riadka
+                          dva.
+                      */}
                       <div className="quiet doc-meta">
                         {r.internalNumber && `${r.internalNumber} · `}
+                        {r.versionCount > 0 && `${t.versions(r.versionCount)} · `}
                         {r.folderTrail?.length ? `${r.folderTrail.join(" / ")} · ` : ""}
                         {r.documentId}
                         {r.originalFile && ` · ${r.originalFile.name} (${formatSize(r.originalFile.bytes)})`}
@@ -926,9 +933,16 @@ export default async function LibraryPage({
                         </span>
                       )}
                     </td>
-                    <td className="doc-cell-quiet">
+                    {/*
+                      Jeden riadok, nie zalomený odsek. `label` je **voľný text**
+                      (`documents.ts`: „1.2", „novela 2026") — MASTER.md píta „len
+                      číslo", ale také pole schéma nemá a vytiahnuť ho z labelu by
+                      znamenalo vymyslieť si štruktúru. Preto celý label, ale
+                      orezaný elipsou a s plným znením v `title`: stĺpec ostane
+                      úzky a nič sa nestratí.
+                    */}
+                    <td className="doc-cell-quiet doc-col-version" title={r.effectiveLabel}>
                       {r.effectiveLabel}
-                      {r.versionCount > 0 && <div className="quiet doc-meta">{t.versions(r.versionCount)}</div>}
                     </td>
                     {/*
                       Pomlčka, nie prázdna bunka: prázdne miesto v tabuľke vyzerá

@@ -4374,6 +4374,27 @@ a.notif-row-link:focus-visible { outline: 2px solid var(--accent); outline-offse
    sa stĺpec nezalomil a číslice stáli pod sebou (návrh, časť 3). */
 .doc-col-date { white-space: nowrap; font-variant-numeric: tabular-nums; }
 
+/*
+ * Stĺpec Verzia (MASTER.md, stĺpec 5).
+ *
+ * `label` je **voľný text** — schéma (`documents.ts`) ho popísuje ako
+ * „ľudské označenie: 1.2, novela 2026", takže to nie je ani číslo, ani
+ * ohraničená dĺžka. Bez stropu jeden dlhší label zalomil bunku do piatich
+ * riadkov, riadok mal 150 px a tabuľka pretiekla nabok — stĺpce Potvrdenia
+ * a Zmenené sa na 1440 px už nezmestili.
+ *
+ * Orezanie elipsou, nie zalomenie: plné znenie nesie `title`, takže sa
+ * nič nestratí, a výška riadka prestane závisieť od toho, aké dlhé
+ * označenie niekto zneniu dal.
+ */
+.doc-col-version {
+  max-width: 132px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
 /* Vylúčená osoba v zozname (OSOBY.md, úloha 2): stlmená, nie schovaná.
    Dohľadateľná zostať musí — jej potvrdenia platia ďalej (D24). Ten istý
    prostriedok ako odvolaný záznam potvrdenia. */
