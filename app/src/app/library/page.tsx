@@ -313,70 +313,93 @@ export default async function LibraryPage({
         ktoré nikdy nič nenájdu, je len dlhší panel.
       */}
       <div className="facets">
-        <div className="facets-head">
-          <h2 className="facets-title">{t.filtersTitle}</h2>
-          {hasFilter && (
+        {/*
+          Panel nemá viditeľný nadpis (`KNIZNICA.html`, rám 1) — začína rovno
+          skupinou Priečinky. Nadpis „Filtre" nad štyrmi pomenovanými
+          skupinami hovoril to, čo je aj tak vidieť, a bral riadok.
+
+          Pre čítačku ale sekcia meno mať musí, inak je to blok odkazov
+          bez kontextu. Preto zostáva skrytý — `.sr-only`, nie `display: none`.
+
+          Zrušenie filtrov je vlastný riadok a kreslí sa len vtedy, keď je
+          čo rušiť; inak panel naozaj začína prvou skupinou.
+        */}
+        <h2 className="sr-only">{t.filtersTitle}</h2>
+        {hasFilter && (
+          <div className="facets-head">
             <Link className="facets-clear" href={toQuery(clearFilters(filters))}>{t.clearFilters}</Link>
-          )}
-        </div>
+          </div>
+        )}
 
         {/*
-          Priečinky sú **prvé a vyzerajú ako facety**. Dovtedy stáli až pod
-          všetkými skupinami a mali vlastný nadpis v štýle formulárového
-          štítka — tri rôzne štýly nadpisov v jednom paneli (`.facets-title`,
-          `.facet-group-title`, `.field-label`) hovorili, že ide o tri rôzne
-          druhy vecí. Sú to tri filtre.
+          Priečinky sú **prvá skupina panela** (`KNIZNICA.html`, rám 1).
+          Je to ten filter, ktorý ľudia používajú najčastejšie a ako prvý —
+          hľadá sa „kde to leží", nie „akého je to druhu".
 
-          Priečinok je pritom ten filter, ktorý ľudia používajú najčastejšie
-          a ako prvý — hľadá sa „kde to leží", nie „akého je to druhu".
+          Všetky skupiny majú jeden štýl nadpisu (`.lf-title`). Dovtedy tu
+          boli tri (`.facets-title`, `.facet-group-title`, `.field-label`)
+          a hovorili, že ide o tri rôzne druhy vecí. Sú to filtre.
         */}
         <div className="facet-group facet-group--folders">
-          <h3 className="facet-group-title">{tf.heading}</h3>
+          {/*
+            Nadpis nesie aj odkaz na správu (`KNIZNICA.html`, rám 1): je to
+            jedna vec o priečinkoch, nie dve. Dovtedy stál odkaz až pod
+            stromom, oddelený čiarou — vyzeral ako pätička celého panela,
+            hoci patrí k tejto skupine.
+          */}
+          <h3 className="lf-title">
+            {tf.heading}
+            <Link className="lf-manage" href="/library/folders">{tf.manage} →</Link>
+          </h3>
 
-        <ul className="tree">
-          <li className="tree-item">
-            <Link
-              href={withFolder(undefined)}
-              className={`tree-row${!folder ? " is-active" : ""}`}
-            >
-              <span className="tree-name">{tf.allDocuments}</span>
-            </Link>
-          </li>
-          <li className="tree-item">
-            <Link
-              href={withFolder("nezaradene")}
-              className={`tree-row${folder === "nezaradene" ? " is-active" : ""}`}
-            >
-              <span className="quiet tree-name">{tf.unfiled}</span>
-            </Link>
-          </li>
-        </ul>
+          {/*
+            Riadky priečinkov **nie sú strom s čiarami, ale zoznam ako facety**
+            (rám 1). Zanorenie nesie odsadenie zľava, nič iné — v paneli
+            širokom 250 px sa čiary aj tak zlievajú a berú miesto názvu.
 
-        {/* Fixné položky vyššie nie sú priečinky, ale pohľady na celý zoznam —
-            preto stoja mimo stromu s čiarami. */}
-        <ul className="tree tree--lines">
+            Checkbox tu nie je zámerne: priečinok je **jedna voľba**, nie
+            viacnásobná ako druh či stav. Zaškrtávacie políčko by sľubovalo
+            výber viacerých naraz.
+          */}
+          <Link
+            href={withFolder(undefined)}
+            className={`lf-folder${!folder ? " is-on" : ""}`}
+          >
+            <span>{tf.allDocuments}</span>
+            <span>{facets.all}</span>
+          </Link>
+
+          {/*
+            „Nezaradené" v ráme nie je — v mocku bol každý dokument zaradený.
+            V ostrých dátach je to jediná cesta k dokumentom mimo priečinkov
+            a pri nahratí tam padne každý nový, takže zostáva.
+          */}
+          <Link
+            href={withFolder("nezaradene")}
+            className={`lf-folder${folder === "nezaradene" ? " is-on" : ""}`}
+          >
+            <span className="quiet">{tf.unfiled}</span>
+          </Link>
+
           {tree.map(({ folder: p, level: level }) => {
             const c = folderCounts.get(p.id) ?? { direct: 0, withDescendants: 0 }
             return (
-              <li key={p.id} className="tree-item" style={{ "--level": level } as React.CSSProperties}>
-                <Link
-                  href={withFolder(p.id)}
-                  className={`tree-row${folder === p.id ? " is-active" : ""}`}
-                >
-                  <span className="tree-name">{p.name}</span>
-                  <span className="quiet tree-count">{c.withDescendants}</span>
-                </Link>
-              </li>
+              <Link
+                key={p.id}
+                href={withFolder(p.id)}
+                className={`lf-folder${folder === p.id ? " is-on" : ""}`}
+                style={{ paddingLeft: 6 + (level - 1) * 16 }}
+              >
+                <span>{p.name}</span>
+                <span>{c.withDescendants}</span>
+              </Link>
             )
           })}
-        </ul>
-
-        <Link className="folders-manage" href="/library/folders">{tf.manage} →</Link>
         </div>
 
         {facetGroups.map(group => group.rows.length === 0 ? null : (
           <div className="facet-group" key={group.key}>
-            <h3 className="facet-group-title">{facetLabel[group.key].title}</h3>
+            <h3 className="lf-title">{facetLabel[group.key].title}</h3>
             {group.rows.map(row => {
               const on = filters[group.key].includes(row.value)
               return (
