@@ -707,16 +707,20 @@ prepíše. Dôvody v ADR; tu len práca.
 - [x] doplnenie kľúča zo zaradenia zrušené (`checkMetadata()` berie slug z názvu)
 - [x] *navyše z NAHRAVANIE.md:* pole Zaradenie z formulára preč, `sectionKey` nepovinný na serveri (len formulár; filtre, migrácia a index ostávajú v kroku 2)
 
-**Krok 2 — zlúčenie Zaradenia do Druhu (migrácia, až po Fáze 8):**
-- [ ] preniesť chýbajúce hodnoty `sectionKey.json` → `category.json`; migračný skript dopíše `category` dokumentom, ktoré ho nemajú (nasucho + `--zapis`, vzor `migrate_document_key.mjs`)
-- [ ] pole Zaradenie preč z `/library/new`; filter zoznamu a vyhľadávania zo `sectionKey` na `category` (`libraryRead.ts`, `mongoSearch.ts`); starý parameter adresy prekladať cez `lib/urlParams.ts`
-- [ ] `sectionKey` vyradiť z `REQUIRED_CODELISTS`; **v dátach zostáva** — je záložnou identitou dokumentov spred D80 (`makeDocumentId()` naň padá, keď `documentKey` chýba) a to sa nemení
-- [ ] tým padajú dva otvorené body z O3 (skrývanie deviatich predpisov v ponuke, zmena zaradenia cez `saveMetadata()`) — pri realizácii ich tam odškrtnúť s odkazom sem
-- **Riziká:** migrácia na ostrých dátach; Atlas indexy a projekcie so `sectionKey`; dokumenty spred D80 nesmú zmeniť `documentId`
+**Krok 2 — zlúčenie Zaradenia do Druhu (migrácia):** ✅ 2026-09-22, PR #62 + migrácia na ostrých dátach
+- [x] chýbajúce hodnoty doplnené do `category.json` — pribudli **`zapisnica`, `zmluva`, `tlacivo`** (`sectionKey.json` mal druhy, ktoré Druh nepoznal). Mapovanie **nie je premenovanie**: `sectionKey` je „kam patrí", `category` je „čo to je", takže vzniklo `lib/sectionToCategory.ts` s tabuľkou, ktorú používa skript aj aplikácia — nemôžu sa rozísť. Testy +6 vrátane „každý cieľový druh existuje v číselníku".
+- [x] `sectionKey` prestal vznikať: dokumenty, úseky, CSV export aj vyhľadávanie (`libraryWrite.ts`, `mongoSearch.ts`, `library/csv/route.ts`, `library/new/page.tsx`). Filter zoznamu ide na `category`; `sectionKey` z `LibraryRow` a z projekcie odišiel, hľadanie odvtedy zaberá aj na `category`.
+- [x] **migrácia vykonaná 2026-09-22 na produkčnom clustri** (`migrate_section_to_category.mjs --zapis`): 10 dokumentov — 9 malo druh „norma" a prišlo len o zaradenie, `sfz:test_onboarding` dostal zo „smernice" druh „smernica"; **1991 úsekov** vyčistených. Žiadne neznáme zaradenie, žiadny dokument bez `documentKey`. Snímka pôvodných hodnôt pred zápisom: `private/zalohy/pred-o21-krok2-2026-09-22.json`.
+- [x] ochrana identity: skript **nezapíše nič**, ak čo i len jeden dokument nemá `documentKey` — zaradenie je záložná identita dokumentov spred D80 (`makeDocumentId()` naň padá) a jeho odstránenie by pri najbližšej úprave metadát zmenilo `documentId` a rozviazalo potvrdenia. Pri chýbajúcom kľúči posiela na `migrate_document_key.mjs`.
+- [x] dokument s neznámym zaradením by si ho **ponechal** — druh mu dá človek, nie skript. V praxi nenastalo.
+- [ ] **Atlas index má stále `sectionKey` ako filter aj token** (`scripts/atlas_init.mjs`). Nepokazil nič — Atlas Search chýbajúce pole znesie a dotazy sa naň už nepýtajú; overené otázkou na ostrom intranete hneď po migrácii (8 doslovných citácií, odpoveď v poriadku). Je to mŕtva definícia: vyhodiť pri najbližšom preindexovaní, prekresľovať index len kvôli tomu nestojí za to.
+- [ ] dva otvorené body z O3 (skrývanie deviatich predpisov v ponuke, zmena zaradenia cez `saveMetadata()`) — odškrtnúť tam s odkazom sem
 
-**Krok 3 — návrh `companyCode` (malé, samostatné):**
-- [ ] `suggestCompanyCode()` v `tenantAdmin.ts` (iniciály bez diakritiky, kolízia → variant) + predvyplnenie na obrazovke zakladania tenanta; kód zostáva prepísateľný a po založení nemenný
-- [ ] poznámka z ADR: tenant má kód veľkými, `makeDocumentId()` znižuje na malé — dať pozor pri nových dotazoch
+**Krok 3 — návrh `companyCode` (malé, samostatné):** ✅ 2026-09-22, PR 14 (`design/pr14-admin`)
+- [x] `suggestCompanyCode()` + `withoutCollision()` — **v `lib/slug.ts`, nie v `tenantAdmin.ts`** ako píše zadanie: sú to čisté funkcie bez databázy a patria vedľa `slugifyKey()`, kde sa testujú bez Monga. Iniciály bez diakritiky („Stredoslovenská vodárenská spoločnosť" → `SVS`), jednoslovný názov dá prvé tri písmená, krátke spojky sa vynechávajú, obsadený návrh dostane číslo (`SVS` → `SVS2`). Testy +2.
+- [x] predvyplnenie na obrazovke zakladania: `CompanyCodeField` dopĺňa kód z názvu, **kým sa kódu nedotkne človek** — organizácie svoju skratku spravidla majú. Kolízia proti zoznamu načítanému pri otvorení (bez nového API). **Bez JavaScriptu** sú to dve obyčajné povinné polia a formulár sa odošle rovnako.
+- [x] pri kolízii **server povie, ktorý kód je voľný** (tá istá `withoutCollision()`, akú používa formulár) — bez skriptu bolo „kód je obsadený" slepou uličkou. Rozhodnutie Jána 2026-09-22. Navyše: po chybe sa názov a kód vracajú do formulára, predtým sa strácali.
+- [x] poznámka z ADR ošetrená: tenant má kód veľkými, `makeDocumentId()` znižuje na malé
 
 
 ### O6 — medzery rozhrania → **rozhodnuté** `docs/O6_rozhodovaci_harok.md`

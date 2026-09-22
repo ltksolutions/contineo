@@ -21,28 +21,32 @@ commitov, PR #46–#62. Všetkých 17 PR je zavretých, vetvy zostali.
 v pätičke — píše sa tam krátky hash nasadeného commitu.
 
 Overenie pred zlúčením: `tsc` ✓, `eslint` 0 errors (42 warnings = baseline),
-`vitest` 1422 ✓ / 87 súborov, `build` ✓. Po nasadení prešlé naostro: prehlád,
+`vitest` 1422 ✓ / 87 súborov, `build` ✓. Po nasadení prešlé naostro: prehľad,
 knižnica (tabuľka aj karty), filter stavu vrátane **expirované**, `/hr`
 s pásikom potvrdení, odpoveď na otázku so **stupňami zhody** pri zdrojoch,
 a mobilné zobrazenie na 390 px.
 
+**Migrácia `sectionKey` → `category` prebehla** 2026-09-22 na produkčných
+dátach: desiatim dokumentom odišlo zaradenie, jednému z neho pribudol druh
+(„smernice" → `smernica`), z 1991 úsekov odišiel nepotrebný údaj. Snímka
+pôvodných hodnôt je v `private/zalohy/pred-o21-krok2-2026-09-22.json`.
+Vyhľadávanie overené po migrácii na ostrom intranete.
+
 ## Čo čaká na rozhodnutie Jána
 
-**Migrácia `sectionKey` → `category`** (`app/scripts/migrate_section_to_category.mjs`).
-Napísaná, **nespustená** — je to zmena dát. Beží nasucho, zapisuje až s `--zapis`,
-a odmietne všetko, ak čo i len jeden dokument nemá `documentKey`. Po nej treba
-prekresliť index v Atlase, ktorý stále filtruje na `sectionKey`.
+**Atlas index má stále `sectionKey` ako filter a token** (`scripts/atlas_init.mjs`).
+Nič tým nepokázil — Atlas Search chýbajúce pole znesie a dotazy sa naň už
+nepýtajú — ale je to mŕtva definícia. Vyhodí sa pri najbližšom
+preindexovaní; prekresliť index len kvôli tomu za to nestojí.
 
-## Tri najbližšie kroky
+## Najbližšie kroky
 
-1. **Spustiť migráciu `sectionKey`** — najprv nasucho, potom `--zapis`, potom
-   prekresliť index v Atlase. Čaká na rozhodnutie, viď vyššie.
-2. **Prázdny stav knižnice pri filtri, ktorý nič nenájde** — dnes sa napíše
+1. **Prázdny stav knižnice pri filtri, ktorý nič nenájde** — dnes sa napíše
    „Zatiaľ tu nie je nič. Začni nahratím prvého dokumentu", hoci dokumenty sú
-   a len im nevyhovuje filter. Podmienka pozerá len text hľadania, nie filtre.
+   a len im nevyhovuje filter. Podmienka pozerá len na text hľadania, nie filtre.
    Vidno to od filtra **expirované**, ktorý vracia nulu najčastejšie.
    Podrobnosti v `docs/TODO.md`.
-3. **„Všetko, čo vyhovuje filtru" namiesto zoznamu ID v adrese** — strop výberu
+2. **„Všetko, čo vyhovuje filtru" namiesto zoznamu ID v adrese** — strop výberu
    (`MAX_PICKED = 200`) rieši rezervu, nie princíp. Chce vlastný plán: mení sa
    sémantika hromadnej akcie. Podrobnosti v `docs/TODO.md`.
 

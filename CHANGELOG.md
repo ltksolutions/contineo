@@ -4,6 +4,21 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Zaradenie dokumentu zaniklo, druh zostáva (2026-09-22)
+
+Dokument mal dve škatuľky na to isté: **Zaradenie** (kam patrí) a **Druh**
+(čo to je). Odkedy identitu nesie `documentKey`, zaradenie už nič nedržalo.
+Zaniklo — z formulára, z vyhľadávania, z exportu aj z databázy.
+
+Kto mal druh vyplnený, nezmenilo sa mu nič. Kto nie, dostal ho zo zaradenia
+podľa mapovania (napr. „smernice" → **Smernica**). Číselník druhov dostal tri
+chýbajúce hodnoty: **Zápisnica**, **Zmluva**, **Tlačivo**.
+
+Migrácia prebehla 22. 9. 2026 na ostrých dátach: desať dokumentov, z toho
+jednému pribudol druh, a 1991 úsekov prišlo o nepotrebný údaj. Vyhľadávanie
+sa tým nemenilo.
+
+
 ### Import osôb už nemaže roly, skupiny ani trasy (2026-09-22)
 
 **Každý import zmazal roly každému, koho sa dotkol.** `upsertPersons()`

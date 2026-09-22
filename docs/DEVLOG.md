@@ -10,6 +10,70 @@
 
 ---
 
+## 2026-09-22 (2) — nasadenie do produkcie a migrácia O21 krok 2
+
+**Stoh sa zlúčil do `main` naraz.** Sedemnásť zreťazených PR (#46–#62, 105
+commitov) išlo do `main` jedným merge commitom `415d5d7`. Alternatíva —
+zlučovať zdola nahor po jednom — by znamenala sedemnásť nasadení a v každom
+medzistave nedokončený handoff na ostrom intranete. Skúšobné zlúčenie
+(`git merge-tree`) neukázalo ani jeden konflikt, čo je čakateľné: vetvy boli
+lineárne a `main` sa medzitým nepohla. Podriadené PR sa nezavreli samy —
+ich základom boli vetvy, nie `main` — takže dostali komentár, kde ich práca
+skončila, a zavreli sa ručne. **Žiadna vetva sa nemazala.**
+
+**Rituál „Zorientuj sa" dostal, na čom stáť.** Preferencia hovorí načítať
+`CLAUDE.md`, `NEXT.md`, `git log -20` a vetvu; `NEXT.md` v repozitári nebol
+a jeho úlohu suploval `docs/TODO.md` s 833 riadkami. Orientovať sa v ňom pri
+štarte je presný opak toho, na čo rituál je. `NEXT.md` je teraz jedna strana
+a platí preň jedno pravidlo: **aktualizuje sa výhradne pri „Poupratuj"**.
+Inak by z neho bol tretí zdroj pravdy, ktorý klame — presne to, čo sme
+v `TODO.md` deň predtým opravovali.
+
+Hneď sa to aj potvrdilo: po zlúčení `NEXT.md` tvrdil „17 otvorených PR, nič
+v `main`". Nepravda stará dvadsať minút. Prepísal sa v tom istom ťahu.
+
+**ADR sa presťahovali do `docs/decisions/`.** Rituál „Rozhodni" s tým
+priečinkom počítal, v repozitári nebol a ADR ležali priamo v `docs/`
+pomiešané s plánmi a koncepciami. `docs/decisions/` je konvencia MADR, čiže
+nie vymyslené miesto. Desať súborov cez `git mv` (história zostala), 51
+odkazov s cestou prepísaných v 27 súboroch. **Názvy sa nemenili** — MADR
+odporúča `0006-nazov.md`, ale „ADR-006" je v repozitári použité asi 400-krát
+ako identita rozhodnutia. Z konvencie sa oplatí vziať priečinok a nechať
+číslovanie; opačne by to znamenalo veľký diff naprieč kódom výmenou za nič.
+
+**Migrácia `sectionKey` → `category` prebehla na produkčných dátach.**
+Desať dokumentov: deväť malo druh „norma" a prišlo len o zaradenie, jednému
+(`sfz:test_onboarding`) zaradenie „smernice" doplnilo druh „smernica".
+Žiadne neznáme zaradenie, žiadny dokument bez `documentKey` — kontrola, na
+ktorej skript inak zastane, lebo bez kľúča je zaradenie záložná identita
+a jeho odstránenie by pri najbližšej úprave metadát zmenilo `documentId`
+a rozviazalo potvrdenia. Z `document_chunks` odišlo `sectionKey` z **1991**
+úsekov. Pred zápisom sa odložila snímka pôvodných hodnôt do
+`private/zalohy/` — nie preto, že by sa čakal problém, ale preto, že
+`$unset` sa inak nedá vrátiť.
+
+Čo stálo za overenie: Atlas index má `sectionKey` ako filter aj token
+(`scripts/atlas_init.mjs`). Chýbajúce pole Atlas Search znesie a dotazy sa
+naň už nepýtajú, takže to bola len zbytočnosť, nie porucha — potvrdené
+otázkou na ostrom intranete hneď po migrácii: osem doslovných citácií,
+odpoveď v poriadku. Index sa prekreslí pri najbližšom preindexovaní.
+
+**Testovanie na produkcii našlo dve veci, ktoré testy nenašli.** Prvá:
+prázdny stav knižnice nerozlišuje „nič tu nie je" od „filtru nič
+nevyhovuje" — podmienka pozerá len na text hľadania. Riadok je z 18. 9.,
+čiže nie regresia z handoffu; viditeľný je až teraz, lebo filter
+„expirované" vracia nulu najčastejšie. Druhá: stupne zhody vyšli všetky
+rovnaké, päťkrát „vysoká". Po reranku sú prvé zdroje tesne pri sebe, takže
+podiel voči najlepšiemu takmer vždy prekročí 0,8. Obe zapísané, ani jedna
+opravená — prvá je zmena textu na obrazovke, druhá by bola ladenie prahov
+od stola.
+
+Poučenie dňa: **jednotkové testy nepovedia, či obrazovka hovorí pravdu.**
+Oba nálezy vyšli z troch minút klikania na živej aplikácii.
+
+---
+
+
 ## 2026-09-22 — celý handoff (PR 0–14), oprava dátovej straty v importe a dorábky
 
 **Handoff je hotový: PR 0 až 14, zreťazené jeden na druhom.** Dnes pribudli
