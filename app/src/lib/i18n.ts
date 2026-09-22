@@ -1447,6 +1447,8 @@ interface Dictionary {
       categoryField: string
       tag: string
       status: string
+      /** Nadpis facetu jazyka. Dovtedy sa tam omylom používal `status`. */
+      language: string
       all: string
       /** Panel filtrov: nadpis, prístup, potvrdenie výberu, počet nájdených. */
       filtersTitle: string
@@ -1536,6 +1538,19 @@ interface Dictionary {
         preview: string
         fields: Record<string, string>
         ops: Record<string, string>
+      }
+      /**
+       * Názov stavu **jedného dokumentu**, v jednotnom čísle a s veľkým
+       * začiatočným písmenom (`MASTER.md`, stavový model). Nezamieňať so
+       * `statusPublished` a spol. nižšie — tie sú facetové, v množnom čísle,
+       * a patria zoznamu filtrov („publikované 12"). V riadku by znel
+       * facetový tvar ako popis skupiny, nie ako stav dokumentu.
+       */
+      statusLabel: {
+        published: string
+        draft: string
+        review: string
+        expired: string
       }
       statusPublished: string
       statusDrafts: string
@@ -3420,6 +3435,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       categoryField: "Druh dokumentu",
       tag: "Značka",
       status: "Stav",
+      language: "Jazyk",
       all: "— všetky —",
       filtersTitle: "Filtre",
       accessLevel: "Prístup",
@@ -3498,6 +3514,12 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
           before: "pred",
           after: "po",
         },
+      },
+      statusLabel: {
+        published: "Platný",
+        draft: "Návrh",
+        review: "Na schválenie",
+        expired: "Expirovaný",
       },
       statusPublished: "publikované",
       statusDrafts: "koncepty",
@@ -5344,6 +5366,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       categoryField: "Druh dokumentu",
       tag: "Značka",
       status: "Stav",
+      language: "Jazyk",
       all: "— všechny —",
       filtersTitle: "Filtry",
       accessLevel: "Přístup",
@@ -5422,6 +5445,12 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
           before: "před",
           after: "po",
         },
+      },
+      statusLabel: {
+        published: "Platný",
+        draft: "Návrh",
+        review: "Ke schválení",
+        expired: "Expirovaný",
       },
       statusPublished: "publikované",
       statusDrafts: "koncepty",
@@ -7262,6 +7291,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       categoryField: "Document category",
       tag: "Tag",
       status: "Status",
+      language: "Language",
       all: "— all —",
       filtersTitle: "Filters",
       accessLevel: "Access",
@@ -7340,6 +7370,12 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
           before: "before",
           after: "after",
         },
+      },
+      statusLabel: {
+        published: "Valid",
+        draft: "Draft",
+        review: "In review",
+        expired: "Expired",
       },
       statusPublished: "published",
       statusDrafts: "drafts",
