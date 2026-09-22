@@ -9,7 +9,7 @@
 import { notFound, redirect } from "next/navigation"
 import Link from "next/link"
 import { libraryContext } from "@/lib/library"
-import { libraryList, libraryFacets, statusTagClass } from "@/lib/libraryRead"
+import { libraryList, libraryFacets, statusTagClass, displayStatus } from "@/lib/libraryRead"
 import { allFolders, flattenTree, counts } from "@/lib/folders"
 import { allDepartments } from "@/lib/departments"
 import { documentsProgress } from "@/lib/libraryProgress"
@@ -44,12 +44,6 @@ import {
 import MultiSelect from "@/components/MultiSelect"
 
 export const dynamic = "force-dynamic"
-
-function formatSize(bytes: number): string {
-  return bytes > 1024 * 1024
-    ? `${(bytes / 1024 / 1024).toFixed(1)} MB`
-    : `${Math.max(1, Math.round(bytes / 1024))} kB`
-}
 
 export default async function LibraryPage({
   searchParams,
@@ -217,17 +211,42 @@ export default async function LibraryPage({
   const statusLabel = (value: string) =>
     value === "published" ? t.statusPublished
     : value === "in-review" ? t.statusInReview
-    // Expirované je podmnožina publikovaných, nie štvrtý stav dokumentu —
-    // vo filtri je to však vlastná voľba (rozhodnutie Jána 2026-09-22).
+    /*
+     * Expirované je **podmnožina publikovaných**, nie štvrtý stav dokumentu
+     * (`MASTER.md`, „Stavový model dokumentu"; D27 — stav sa odvodzuje,
+     * neukladá).
+     *
+     * Dovtedy tu stálo, že vo filtri je to „vlastná voľba (rozhodnutie Jána
+     * 2026-09-22)". Také rozhodnutie nepadlo — komentár aj commit
+     * `181de3e` si ho pripísali. Či má facet štvrtú hodnotu, hovorí
+     * `MASTER.md`, sekcia „Stavový model dokumentu", a tá je proti.
+     */
     : value === "expired" ? t.statusExpired
     : t.statusDrafts
 
-  /* Text pilulky pri jednom dokumente — facetové „koncepty" je množné
-     číslo a na riadku by klamalo počtom. */
+  /*
+   * Text pilulky pri **jednom** dokumente.
+   *
+   * Vlastné reťazce v jednotnom čísle (`MASTER.md`, stavový model), nie
+   * facetové: „publikované" a „koncepty" sú množné číslo pre zoznam filtrov
+   * a v riadku by zneli ako popis skupiny, nie ako stav dokumentu.
+   *
+   * Expirovaný sa odvodzuje z `effectiveTo` cez `displayStatus()` — jedno
+   * miesto vedľa `statusTagClass()`. Dovtedy tu vetva pre expirovaný
+   * chýbala a taký dokument dostal pilulku „koncept": nie nepresné slovo,
+   * ale nesprávny stav.
+   */
   const statusPill = (value: string) =>
-    value === "published" ? t.statusPublished
-    : value === "in-review" ? t.statusInReview
-    : t.draft
+    value === "published" ? t.statusLabel.published
+    : value === "in-review" ? t.statusLabel.review
+    : value === "expired" ? t.statusLabel.expired
+    : t.statusLabel.draft
+
+  /** Pilulka riadku: farba aj názov z toho istého odvodeného stavu. */
+  const statusTag = (row: { status: string; effectiveTo?: Date | string | null }) => {
+    const stav = displayStatus(row.status, row.effectiveTo)
+    return <span className={statusTagClass(stav)}>{statusPill(stav)}</span>
+  }
 
   /*
    * Potvrdenia ako pásik (KNIZNICA.md, úloha 2): stĺpec sa skenuje očami
@@ -252,7 +271,7 @@ export default async function LibraryPage({
     status: { title: t.status, label: statusLabel },
     tag: { title: t.tag, label: tagLabel },
     accessLevel: { title: t.accessLevel, label: accessLabel },
-    language: { title: t.status, label: (v) => v },
+    language: { title: t.language, label: (v) => v },
     ownerDepartment: { title: tfd.ownerDepartmentShort, label: departmentLabel },
   }
 
@@ -297,6 +316,60 @@ export default async function LibraryPage({
           {hasFilter && (
             <Link className="facets-clear" href={toQuery(clearFilters(filters))}>{t.clearFilters}</Link>
           )}
+        </div>
+
+        {/*
+          Priečinky sú **prvé a vyzerajú ako facety**. Dovtedy stáli až pod
+          všetkými skupinami a mali vlastný nadpis v štýle formulárového
+          štítka — tri rôzne štýly nadpisov v jednom paneli (`.facets-title`,
+          `.facet-group-title`, `.field-label`) hovorili, že ide o tri rôzne
+          druhy vecí. Sú to tri filtre.
+
+          Priečinok je pritom ten filter, ktorý ľudia používajú najčastejšie
+          a ako prvý — hľadá sa „kde to leží", nie „akého je to druhu".
+        */}
+        <div className="facet-group facet-group--folders">
+          <h3 className="facet-group-title">{tf.heading}</h3>
+
+        <ul className="tree">
+          <li className="tree-item">
+            <Link
+              href={withFolder(undefined)}
+              className={`tree-row${!folder ? " is-active" : ""}`}
+            >
+              <span className="tree-name">{tf.allDocuments}</span>
+            </Link>
+          </li>
+          <li className="tree-item">
+            <Link
+              href={withFolder("nezaradene")}
+              className={`tree-row${folder === "nezaradene" ? " is-active" : ""}`}
+            >
+              <span className="quiet tree-name">{tf.unfiled}</span>
+            </Link>
+          </li>
+        </ul>
+
+        {/* Fixné položky vyššie nie sú priečinky, ale pohľady na celý zoznam —
+            preto stoja mimo stromu s čiarami. */}
+        <ul className="tree tree--lines">
+          {tree.map(({ folder: p, level: level }) => {
+            const c = folderCounts.get(p.id) ?? { direct: 0, withDescendants: 0 }
+            return (
+              <li key={p.id} className="tree-item" style={{ "--level": level } as React.CSSProperties}>
+                <Link
+                  href={withFolder(p.id)}
+                  className={`tree-row${folder === p.id ? " is-active" : ""}`}
+                >
+                  <span className="tree-name">{p.name}</span>
+                  <span className="quiet tree-count">{c.withDescendants}</span>
+                </Link>
+              </li>
+            )
+          })}
+        </ul>
+
+        <Link className="folders-manage" href="/library/folders">{tf.manage} →</Link>
         </div>
 
         {facetGroups.map(group => group.rows.length === 0 ? null : (
@@ -352,47 +425,6 @@ export default async function LibraryPage({
         )}
       </div>
 
-      <h2 className="field-label" style={{ margin: "0 0 8px" }}>{tf.heading}</h2>
-
-      <ul className="tree">
-        <li className="tree-item">
-          <Link
-            href={withFolder(undefined)}
-            className={`tree-row${!folder ? " is-active" : ""}`}
-          >
-            <span className="tree-name">{tf.allDocuments}</span>
-          </Link>
-        </li>
-        <li className="tree-item">
-          <Link
-            href={withFolder("nezaradene")}
-            className={`tree-row${folder === "nezaradene" ? " is-active" : ""}`}
-          >
-            <span className="quiet tree-name">{tf.unfiled}</span>
-          </Link>
-        </li>
-      </ul>
-
-      {/* Fixné položky vyššie nie sú priečinky, ale pohľady na celý zoznam —
-          preto stoja mimo stromu s čiarami. */}
-      <ul className="tree tree--lines">
-        {tree.map(({ folder: p, level: level }) => {
-          const c = folderCounts.get(p.id) ?? { direct: 0, withDescendants: 0 }
-          return (
-            <li key={p.id} className="tree-item" style={{ "--level": level } as React.CSSProperties}>
-              <Link
-                href={withFolder(p.id)}
-                className={`tree-row${folder === p.id ? " is-active" : ""}`}
-              >
-                <span className="tree-name">{p.name}</span>
-                <span className="quiet tree-count">{c.withDescendants}</span>
-              </Link>
-            </li>
-          )
-        })}
-      </ul>
-
-      <Link className="folders-manage" href="/library/folders">{tf.manage} →</Link>
     </>
   )
 
@@ -474,9 +506,6 @@ export default async function LibraryPage({
           </div>
         </details>
       </div>
-      <p className="quiet page-lead" style={{ margin: "0 0 20px" }}>
-        {t.introBefore}<strong>{t.introHighlight}</strong>{t.introAfter}
-      </p>
 
 
       <div className="library-grid">
@@ -826,7 +855,7 @@ export default async function LibraryPage({
 
                 <div className="doc-card-body">
                   <div className="doc-card-top">
-                    <span className={statusTagClass(r.status)}>{statusPill(r.status)}</span>
+                    {statusTag(r)}
                     {/* Technický stav spracovania len keď niečo hovorí —
                         „vo vyhľadávaní" je normálny koniec a pri každom
                         riadku by bol šum; zlyhanie je jediné červené. */}
@@ -943,18 +972,26 @@ export default async function LibraryPage({
                           práve platí — a v úzkom stĺpci robil z jedného riadka
                           dva.
                       */}
+                      {/*
+                        Presne tri údaje: **počet znení · interné číslo ·
+                        priečinok** (`MASTER.md`). Dovtedy tu bolo aj `documentId`
+                        a názov súboru s veľkosťou — technické údaje, ktoré patria
+                        detailu dokumentu, nie riadku v zozname. Riadok sa nimi
+                        predlžoval a údaje, podľa ktorých sa dokument naozaj hľadá,
+                        v ňom zanikali.
+                      */}
                       <div className="quiet doc-meta">
-                        {r.internalNumber && `${r.internalNumber} · `}
-                        {r.versionCount > 0 && `${t.versions(r.versionCount)} · `}
-                        {r.folderTrail?.length ? `${r.folderTrail.join(" / ")} · ` : ""}
-                        {r.documentId}
-                        {r.originalFile && ` · ${r.originalFile.name} (${formatSize(r.originalFile.bytes)})`}
+                        {[
+                          r.versionCount > 0 ? t.versions(r.versionCount) : null,
+                          r.internalNumber || null,
+                          r.folderTrail?.length ? r.folderTrail.join(" / ") : null,
+                        ].filter(Boolean).join(" · ")}
                       </div>
                     </td>
                     <td className="doc-cell-quiet">{r.category ? categoryLabel(r.category) : "—"}</td>
                     <td>
                       {/* Farba nesie stav (KNIZNICA.md, úloha 1). */}
-                      <span className={statusTagClass(r.status)}>{statusPill(r.status)}</span>
+                      {statusTag(r)}
                       {/* Technický stav spracovania len keď niečo hovorí —
                           „vo vyhľadávaní" je normálny koniec a pri každom
                           riadku by bol šum; zlyhanie je jediné červené.
@@ -1000,8 +1037,10 @@ export default async function LibraryPage({
                     */}
                     <td>{ackBar(r.effectiveVersionId)}</td>
                     <td className="doc-col-right doc-cell-quiet">
+                      {/* Len dátum. E-mail autora je údaj o tom, kto zapisoval —
+                          patrí do záznamu na detaile, nie do stĺpca, ktorý sa
+                          skenuje očami zhora nadol (`MASTER.md`). */}
                       {r.updatedAt ? formatDate(r.updatedAt, uiLanguage) : "—"}
-                      {r.updatedBy && <div className="quiet doc-meta">{r.updatedBy}</div>}
                     </td>
                   </tr>
                 ))}

@@ -37,6 +37,33 @@ export function statusTagClass(status: string): string {
   }
 }
 
+/**
+ * Zobrazený stav dokumentu — **jediné miesto, kde sa odvodzuje**.
+ *
+ * `status` v databáze pozná `draft`, `in-review` a `published`. „Expirovaný"
+ * medzi nimi nie je a ani nemá byť (**D27**: stav sa odvodzuje, neukladá) —
+ * expirované znenie *je* publikované, len jeho platnosť sa skončila.
+ * `MASTER.md`, „Stavový model dokumentu": Expirovaný = `published`
+ * a `effectiveTo` v minulosti.
+ *
+ * Odvodenie žije tu, vedľa `statusTagClass()`, aby pilulka, farba aj názov
+ * vychádzali z toho istého výpočtu. Kým to bolo rozsypané po obrazovkách,
+ * ukazoval expirovaný dokument v zozname pilulku „koncept" — `statusPill`
+ * vetvu pre expirovaný nemal a prepadol do predvolenej.
+ *
+ * `asOf` je parameter, nie `new Date()` vnútri: bez neho sa to nedá otestovať
+ * inak než čakaním.
+ */
+export function displayStatus(
+  status: string,
+  effectiveTo?: Date | string | null,
+  asOf: Date = new Date(),
+): string {
+  if (status !== "published" || !effectiveTo) return status
+  const do_ = effectiveTo instanceof Date ? effectiveTo : new Date(effectiveTo)
+  return Number.isNaN(do_.getTime()) || do_ >= asOf ? status : "expired"
+}
+
 export interface LibraryRow {
   documentId: string
   title: string
@@ -292,8 +319,14 @@ export function queryParts(
   const wantsPublished = statuses.includes("published")
   const wantsDraft = statuses.includes("draft")
   const wantsInReview = statuses.includes("in-review")
-  // Štvrtá hodnota, piata os: expirované je podmnožina publikovaných
-  // (rozhodnutie Jána 2026-09-22 — hodnota vo filtri, nie stĺpec).
+  /*
+   * Expirované je podmnožina publikovaných, nie štvrtá hodnota stavu.
+   * Pravidlo je v `MASTER.md`, sekcia „Stavový model dokumentu".
+   *
+   * Dovtedy tu stálo „rozhodnutie Jána 2026-09-22". Také rozhodnutie
+   * nepadlo — pripísal si ho commit `181de3e`. Pri otázke, či má facet
+   * štvrtú hodnotu, platí `MASTER.md`, nie tento komentár.
+   */
   const wantsExpired = statuses.includes("expired")
 
   if (!(wantsPublished && wantsDraft) || wantsExpired) {
