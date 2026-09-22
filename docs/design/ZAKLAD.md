@@ -265,8 +265,19 @@ Platné pravidlo:
 | hlavička — otázka pre model | `ask` z `Icon.tsx` (bublina reči, tá istá ako v navigácii) |
 | knižnica, adresár, osoby — hľadanie v zozname | lupa |
 
-`ContineoMark` sa **pri 16 px nepoužíva**. Značku neprekresľuj — jedna
-značka, a v malom má miesto logo (28 px), nie ikona v poli.
+`ContineoMark` sa **nepoužíva ako ikona v poli** — tam ho pri 16 px
+nemožno odlíšiť od lupy. Značku neprekresľuj.
+
+Mimo polí je značka logo, nie ikona, a platí:
+
+| Miesto | Veľkosť |
+| --- | --- |
+| hlavička — záloha loga organizácie | 28 px (sedí s `<img width={28}>`) |
+| pätička — vedľa slova „Contineo" | 20 px, v `--muted` |
+
+V pätičke nehrozí zámena, lebo vedľa značky stojí jej názov a nie je tam
+nič, do čoho sa píše. 28 px by bolo vedľa 13 px textu priveľa, 16 px zasa
+nečitateľné.
 
 ### C. Rádiusy: 10 je základ, 12 je karta
 
