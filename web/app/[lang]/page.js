@@ -14,8 +14,8 @@ import CTA from "@/components/CTA";
 import Footer from "@/components/Footer";
 import JsonLd from "@/components/JsonLd";
 
-export default function Home({ params }) {
-  const { lang } = params;
+export default async function Home({ params }) {
+  const { lang } = await params;
   if (!locales.includes(lang)) notFound();
   const dict = getDictionary(lang);
 

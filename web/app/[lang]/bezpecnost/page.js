@@ -12,15 +12,16 @@ export function generateStaticParams() {
 }
 
 export async function generateMetadata({ params }) {
-  const dict = getDictionary(params.lang);
+  const { lang } = await params;
+  const dict = getDictionary(lang);
   return {
     title: "Contineo — " + dict.residency.navLabel,
     description: dict.residency.subtitle,
   };
 }
 
-export default function BezpecnostPage({ params }) {
-  const { lang } = params;
+export default async function BezpecnostPage({ params }) {
+  const { lang } = await params;
   if (!locales.includes(lang)) notFound();
   const dict = getDictionary(lang);
 

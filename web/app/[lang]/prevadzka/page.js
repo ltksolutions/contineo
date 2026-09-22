@@ -12,15 +12,16 @@ export function generateStaticParams() {
 }
 
 export async function generateMetadata({ params }) {
-  const dict = getDictionary(params.lang);
+  const { lang } = await params;
+  const dict = getDictionary(lang);
   return {
     title: "Contineo — " + dict.nav.runtime,
     description: dict.runtime.subtitle ?? dict.modes.subtitle,
   };
 }
 
-export default function PrevadzkaPage({ params }) {
-  const { lang } = params;
+export default async function PrevadzkaPage({ params }) {
+  const { lang } = await params;
   if (!locales.includes(lang)) notFound();
   const dict = getDictionary(lang);
 

@@ -12,14 +12,15 @@ const META = {
 };
 
 export async function generateMetadata({ params }) {
-  const dict = getDictionary(params.lang);
-  const meta = META[params.lang] ?? META.sk;
+  const { lang } = await params;
+  const dict = getDictionary(lang);
+  const meta = META[lang] ?? META.sk;
   const title = "Contineo — " + meta.podtitul;
   return {
     title,
     description: dict.metaDescription,
     alternates: {
-      canonical: `/${params.lang}`,
+      canonical: `/${lang}`,
       // hreflang pre všetky mutácie — inak si vyhľadávače myslia,
       // že ide o duplicitný obsah.
       languages: {
@@ -30,7 +31,7 @@ export async function generateMetadata({ params }) {
     openGraph: {
       title,
       description: dict.metaDescription,
-      url: `/${params.lang}`,
+      url: `/${lang}`,
       locale: meta.ogLocale,
     },
     twitter: {
@@ -40,10 +41,11 @@ export async function generateMetadata({ params }) {
   };
 }
 
-export default function LangLayout({ children, params }) {
-  const skip = (META[params.lang] ?? META.sk).skip;
+export default async function LangLayout({ children, params }) {
+  const { lang } = await params;
+  const skip = (META[lang] ?? META.sk).skip;
   return (
-    <div lang={params.lang}>
+    <div lang={lang}>
       <a href="#main" className="skip-link">{skip}</a>
       {children}
     </div>

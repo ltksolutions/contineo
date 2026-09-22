@@ -9,12 +9,13 @@ export function generateStaticParams() {
 }
 
 export async function generateMetadata({ params }) {
-  const dict = getDictionary(params.lang);
+  const { lang } = await params;
+  const dict = getDictionary(lang);
   return { title: "Contineo — " + dict.legal.privacy.title, description: dict.legal.privacy.intro };
 }
 
-export default function PrivacyPage({ params }) {
-  const { lang } = params;
+export default async function PrivacyPage({ params }) {
+  const { lang } = await params;
   if (!locales.includes(lang)) notFound();
   const dict = getDictionary(lang);
   return (
