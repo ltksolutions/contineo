@@ -18,7 +18,7 @@ import { tenantExtras } from "@/lib/codelistsTenant"
 import Select from "@/components/Select"
 import AckBar from "@/components/AckBar"
 import LiveFilter from "@/components/LiveFilter"
-import { ContineoMark } from "@/components/ContineoMark"
+import Icon from "@/components/Icon"
 import { moveManyAction, assignManyAction } from "./actions"
 import AppShell from "@/components/AppShell"
 import WaitingForApproval from "@/components/WaitingForApproval"
@@ -497,11 +497,13 @@ export default async function LibraryPage({
       */}
       <div className="library-toolbar">
         <LiveFilter className="library-search" action="/library" label={t.search}>
-          {/* Značka, nie lupa (KNIZNICA.md, úloha 3): v celom portáli nesie
-              každé vstupné pole značku — nie je to hľadanie v tabuľke, je to
-              otázka položená obsahu. Nie je interaktívna, prstenec nemá. */}
+          {/* Lupa (`ZAKLAD.md`, odchýlka B v znení z 22. 9. 2026): toto pole
+              hľadá reťazec v zozname dokumentov, nepýta sa modelu — lupa je
+              tu vecne správna. Bublina `ask` patrí poľu v hlavičke. Dovtedy
+              tu bola značka; pri 16 px z nej aj tak vyšla lupa, len horšie
+              čitateľná. Nie je interaktívna, prstenec nemá. */}
           <span className="library-search-mark" aria-hidden="true">
-            <ContineoMark size={16} />
+            <Icon name="search" size={16} />
           </span>
           {/* Bez viditeľného labelu (vzor) — meno poľa nesie `aria-label`
               a placeholder; lišta má byť jeden riadok. */}

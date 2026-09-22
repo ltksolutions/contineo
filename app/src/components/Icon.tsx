@@ -149,6 +149,24 @@ const PATHS: Record<string, React.ReactNode> = {
       <path d="M7.4 13.4a1.7 1.7 0 0 0 3.2 0" />
     </>
   ),
+  /*
+   * Hľadanie v zozname — lupa.
+   *
+   * **Nie je to položka navigácie**, ale patrí sem, lebo tu má mriežku
+   * a dopočítanú hrúbku ťahu. Presne to je rozpor, ktorý hárok O6
+   * pomenoval a ktorý je opísaný v záhlaví tohto súboru: lupa v hľadaní
+   * bola kreslená ručne, mimo systému, a vo váhe sa rozchádzala.
+   *
+   * Kde patrí a kde nie, hovorí `docs/design/ZAKLAD.md`, odchýlka B:
+   * lupa do knižnice, adresára a osôb (hľadá sa reťazec v zozname),
+   * `ask` do hlavičky (pýta sa model). Geometria je z `KNIZNICA.html`.
+   */
+  search: (
+    <>
+      <circle cx="8" cy="8" r="5.2" />
+      <path d="m12 12 3.6 3.6" />
+    </>
+  ),
   // Viac — tri bodky. Jediná plná kresba v sete: bodka z ťahu by na 18 px
   // bola krúžok a krúžky tu znamenajú schválenie a posúdenie.
   more: (

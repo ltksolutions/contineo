@@ -285,7 +285,13 @@ export default function Header({
                 <img src={branding.logoUrl} alt="" width={28} height={28} className="header-logo" />
               ) : (
                 <span className="header-mark" aria-hidden="true">
-                  <ContineoMark size={16} />
+                  {/*
+                    28 px, rovnako ako logo organizácie nad tým — je to jeho
+                    záloha, takže výmena nesmie posunúť výšku riadku.
+                    `ZAKLAD.md`, odchýlka B: v malom má miesto logo, nie
+                    značka zmenšená na 16 px.
+                  */}
+                  <ContineoMark size={28} />
                 </span>
               )}
               {/*
@@ -339,10 +345,14 @@ export default function Header({
           <form className="header-search" method="get" action="/ask" role="search">
             <span className="header-search-icon" aria-hidden="true">
               {/*
-                Značka Continea, nie lupa: nie je to hľadanie, je to otázka —
-                lupa by sľubovala filter zoznamu (NASADENIE, PR 3).
+                Bublina `ask`, nie lupa a nie značka (`ZAKLAD.md`, odchýlka B).
+                Toto pole ide na model, takže lupa by sľubovala filter zoznamu.
+                Značka tu stála do 22. 9. 2026 — lenže pri 16 px z nej vyjde
+                krúžok s rúčkou, teda presne tá lupa, ktorej sme sa vyhýbali.
+                Tá istá bublina je pri „Opýtať sa" v navigácii; jeden tvar pre
+                jednu vec.
               */}
-              <ContineoMark size={16} />
+              <Icon name="ask" size={16} />
             </span>
             <input
               ref={search}
