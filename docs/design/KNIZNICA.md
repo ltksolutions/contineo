@@ -2,9 +2,13 @@
 
 **Pre Cowork. Samostatné zadanie, nezávislé od ostatných PR.**
 
-Vizuálny zdroj: `Contineo Obrazovky.dc.html`, sekcia `#s-kniznica` — štyri rámy
-(Desktop 1440, Tablet 834, Telefón 390, Telefón 390 so sheetom filtrov).
-Otvor v prehliadači a porovnávaj.
+Vizuálny zdroj: **`KNIZNICA.html`** — statické rámy 1440 / 834 / 390 vrátane
+prázdnych stavov, zásuvky filtrov, pásu akcií a tmavej témy. Otvor v prehliadači.
+Stĺpce tabuľky a ich poradie určuje `MASTER.md`, nie tento súbor.
+
+> ⚠️ **Oprava 22. 9. 2026:** úloha 3 nižšie hovorila „značka Continea v poli
+> hľadania“. Neplatí — pole knižnice hľadá reťazec v zozname a má **lupu**.
+> Bublina (`ask`) patrí len poľu v hlavičke. Viď `ZAKLAD.md`, odchýlka B.
 
 ---
 
@@ -138,6 +142,16 @@ radšej ho tam nedávaj vôbec. Výška tlačidiel 40 px.
 
 Zoznam musí mať `padding-bottom` aspoň 84 px, aby posledná karta nezostala
 pod pásom.
+
+**84 px platí len pre jednoriadkový pás — pás sa na 390 px nesmie zalomiť.**
+„Označené 2" + „Presunúť" + „Vyžiadať potvrdenie" + „×" sa do 366 px
+nezmestí a „×" spadne na druhý riadok; pás má potom 120 px a prekryje
+poslednú kartu, hoci odsadenie „sedí". Preto pod 640 px:
+
+- `flex-wrap: nowrap`, `gap: 6px`,
+- počet len číslom („2"), celá veta v `aria-label`,
+- „×" ako štvorec 40 × 40,
+- výška pásu ≤ 64 px vrátane `env(safe-area-inset-bottom)`.
 
 ### 5. Karta dokumentu: stav a kategória do jedného riadku
 
