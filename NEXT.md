@@ -6,7 +6,7 @@
 > **Tento súbor je indícia, `git log` je pravda.** Keď si protirečia, verí sa
 > gitu a NEXT.md sa opraví. Aktualizuje sa pri rituáli **„Poupratuj"**.
 
-Posledná aktualizácia: **2026-09-22** (po zlúčení do `main` a nasadení)
+Posledná aktualizácia: **2026-09-22** (po zlúčení, nasadení a migrácii O21)
 
 ---
 
@@ -31,6 +31,10 @@ dátach: desiatim dokumentom odišlo zaradenie, jednému z neho pribudol druh
 („smernice" → `smernica`), z 1991 úsekov odišiel nepotrebný údaj. Snímka
 pôvodných hodnôt je v `private/zalohy/pred-o21-krok2-2026-09-22.json`.
 Vyhľadávanie overené po migrácii na ostrom intranete.
+
+Repozitár je čistý: pracovný strom bez zmien, všetko pushnuté, **nula
+otvorených PR**. Na `origin` sa povaľuje 58 už zlúčených vetiev — nemazú sa
+bez výslovného súhlasu, zapísané v `docs/TODO.md`.
 
 ## Čo čaká na rozhodnutie Jána
 

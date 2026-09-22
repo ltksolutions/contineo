@@ -86,10 +86,13 @@ export interface DocumentMetadata {
    * a dôsledok bol ten, že dva rôzne dokumenty s tým istým zaradením sa
    * nedali mať — desať zápisníc by potrebovalo desať zaradení.
    *
-   * Nevyplnené vzniká zo názvu (ADR-010). Dokumentom spred D80 určuje
-   * identitu `sectionKey` (`makeDocumentId` naň padá) — a to sa nemení, lebo
-   * `documentId` je cudzí kľúč v `acknowledgements`, `document_chunks`,
-   * `assignments`, `approval_rounds`, `onboarding_tracks` aj v audite.
+   * Nevyplnené vzniká z názvu (ADR-010). Dokumentom spred D80 určoval
+   * identitu `sectionKey` (`makeDocumentId` naň padá). Migrácia O21 krok 2
+   * (2026-09-22) bežala až po tom, čo každý dokument mal `documentKey` —
+   * skript to odmietal spraviť inak — takže táto záloha je dnes mŕtva cesta.
+   * Zostáva, lebo `documentId` je cudzí kľúč v `acknowledgements`,
+   * `document_chunks`, `assignments`, `approval_rounds`, `onboarding_tracks`
+   * aj v audite, a druhý tenant môže mať staršie dáta než tento.
    */
   documentKey: string
   /**

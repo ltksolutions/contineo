@@ -71,6 +71,23 @@ od stola.
 Poučenie dňa: **jednotkové testy nepovedia, či obrazovka hovorí pravdu.**
 Oba nálezy vyšli z troch minút klikania na živej aplikácii.
 
+**Pri upratovaní po migrácii klamali dva komentáre v kóde.** `codelists.ts`
+tvrdil, že `sectionKey` „v dátach starých dokumentov zostáva" — hodinu po
+migrácii už nezostával nikde. `libraryWrite.ts` písal o záložnej identite
+dokumentov spred D80 vetou „a to sa nemení", ktorá sa práve zmenila. Ani jeden
+nebol chybný, keď vznikal; oba prestali platiť zmenou dát, nie kódu — a tým
+sa dajú prehliadnuť najlepšie, lebo testy ani prekladač o tom nič nevedia.
+Opravené na stav veci, spätný pád v kóde zostal (je mŕtvy v tomto tenantovi,
+nie v kóde, ktorý obsluhuje aj ďalšie).
+
+Zvyšné zmienky o `TODO` v kóde sú odkazy do `docs/TODO.md`, nie zabudnuté
+značky — prešlé, v poriadku. Pracovný strom je čistý, všetko pushnuté,
+nula otvorených PR.
+
+**Čo sa neupratovalo:** v repozitári je **58 vzdialených vetiev, ktorých práca
+je celá v `main`**. Mazanie vetvy je výslovný súhlas Jána, takže zostávajú
+— zapísané sem, aby sa na to nečakalo ako na náhodu.
+
 ---
 
 

@@ -56,8 +56,11 @@ export const CODELISTS: Record<string, Codelist> = {
 }
 
 /** Povinné metadáta dokumentu — zhodné s `scripts/lib/meta.mjs`. */
-// `sectionKey` od ADR-010 nie je povinný — zaradenie zlučuje Druh; v dátach
-// starých dokumentov zostáva a keď príde, overuje sa ako doteraz.
+// `sectionKey` od ADR-010 nie je povinný — zaradenie zlúčil Druh. Migrácia
+// 2026-09-22 (O21 krok 2) ho odstránila **aj z dát**, takže dnes ho nenesie
+// žiadny dokument. Číselník zostáva kôli importom, ktoré ho ešte posielajú:
+// keď hodnota príde, overuje sa ako doteraz, a keď nepríde, nikoľvek ju
+// nedoplní.
 export const REQUIRED_CODELISTS = ["title", "companyCode", "scope", "accessLevel", "language"] as const
 
 /**
