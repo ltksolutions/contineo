@@ -383,6 +383,15 @@ export default async function PersonDetailPage({
         a keby stála hore, karta by prestala byť obrazovkou na úpravu údajov
         a stala by sa výkazom.
       */}
+      {isHr(ctx.person) && evidence.length === 0 && (
+        /* Prázdne dôkazy (OSOBY.md, úloha 4). Vidí ich len personalista —
+           komu sa zoznam nekreslí, nemá mu chýbať ani jeho prázdny tvar. */
+        <div className="empty" style={{ marginTop: 24 }}>
+          <div className="empty-title">{t.evidenceEmptyTitle}</div>
+          <div className="empty-text">{t.evidenceEmptyText}</div>
+        </div>
+      )}
+
       {evidence.length > 0 && (
         <section className="card" style={{ padding: 20, marginTop: 24, display: "grid", gap: 10 }}>
           <div className="evidence-head">

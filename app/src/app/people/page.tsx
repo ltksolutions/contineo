@@ -77,12 +77,28 @@ export default async function PeoplePage({
         </span>
       </LiveFilter>
 
-      <p className="quiet" style={{ fontSize: "var(--fs-small)", margin: "0 0 10px" }}>
-        {people.length === 0
-          ? t.nothingFound
-          : `${t.count(people.length)}${q ? t.matchesSearch : ""}`}
-        {people.length === 500 && t.capped}
-      </p>
+      {/* Počet len keď je čo počítať — prázdny stav hovorí za seba. */}
+      {people.length > 0 && (
+        <p className="quiet" style={{ fontSize: "var(--fs-small)", margin: "0 0 10px" }}>
+          {t.count(people.length)}{q ? t.matchesSearch : ""}
+          {people.length === 500 && t.capped}
+        </p>
+      )}
+
+      {/* Dva prázdne stavy (OSOBY.md, úloha 4): organizácia bez ľudí nie je
+          to isté ako filter, ktorý nič nenašiel — a pri filtri má byť cesta
+          späť k celému zoznamu. */}
+      {people.length === 0 && (
+        <div className="empty">
+          <div className="empty-title">{q ? t.emptyFilterTitle : t.emptyTitle}</div>
+          <div className="empty-text">{q ? t.emptyFilterText : t.emptyText}</div>
+          {q && (
+            <div className="empty-action">
+              <Link className="button button--quiet" href="/people">{t.clearFilter}</Link>
+            </div>
+          )}
+        </div>
+      )}
 
       <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "grid", gap: 10 }}>
         {people.map(o => {

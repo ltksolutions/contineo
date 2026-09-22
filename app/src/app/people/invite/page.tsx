@@ -54,7 +54,11 @@ export default async function InviteAllPage({
       <p className="quiet page-lead" style={{ margin: "0 0 24px", maxWidth: 620 }}>{t.intro}</p>
 
       {people.length === 0 ? (
-        <p className="card" style={{ padding: 20 }}>{t.none}</p>
+        /* Prázdny zoznam je dobrá správa (OSOBY.md, úloha 4). */
+        <div className="empty">
+          <div className="empty-title">{t.emptyTitle}</div>
+          <div className="empty-text">{t.none}</div>
+        </div>
       ) : (
         <>
           <ul style={{ listStyle: "none", padding: 0, margin: "0 0 24px", display: "grid", gap: 8 }}>

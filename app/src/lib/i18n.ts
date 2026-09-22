@@ -1175,6 +1175,12 @@ interface Dictionary {
       importCsv: string
       searchPlaceholder: string
       nothingFound: string
+      /** Prázdne stavy (OSOBY.md, úloha 4): bez filtra vs. s filtrom. */
+      emptyTitle: string
+      emptyText: string
+      emptyFilterTitle: string
+      emptyFilterText: string
+      clearFilter: string
       count: (n: number) => string
       matchesSearch: string
       capped: string
@@ -1186,6 +1192,7 @@ interface Dictionary {
       heading: string
       intro: string
       back: string
+      emptyTitle: string
       none: string
       preview: string
       send: (people: number) => string
@@ -1289,6 +1296,9 @@ interface Dictionary {
       save: string
       /** Súhrn `<details>` „Prístup a členstvo" (OSOBY.md, úloha 3). */
       accessSummary: string
+      /** Prázdne dôkazy na karte osoby (OSOBY.md, úloha 4). */
+      evidenceEmptyTitle: string
+      evidenceEmptyText: string
       returnHeading: string
       excludeHeading: string
       /** Karta „Pozvánka" na detaile — len kým sa osoba ani raz neprihlásila. */
@@ -3145,6 +3155,11 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       importCsv: "Import z CSV",
       searchPlaceholder: "Hľadať v mene, adrese alebo oddelení",
       nothingFound: "Nič sa nenašlo.",
+      emptyTitle: "Zatiaľ žiadne osoby",
+      emptyText: "Prvú pridáte tlačidlom vyššie, alebo naraz importom z CSV.",
+      emptyFilterTitle: "Filtru nič nevyhovuje",
+      emptyFilterText: "Skúste časť mena alebo e-mailu.",
+      clearFilter: "Zrušiť filter",
       count: (n) => `${n} ${n === 1 ? "osoba" : n < 5 ? "osoby" : "osôb"}`,
       matchesSearch: " vyhovuje hľadaniu",
       capped: " — zobrazených prvých 500, zúž hľadanie",
@@ -3159,7 +3174,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       heading: "Hromadné pozvánky",
       intro: "Ľudia, ktorí sa ešte ani raz neprihlásili. E-mail nesie odkaz na portál, nie prihlasovací odkaz — ten platí len krátko a poštové brány ho spotrebujú skôr, než sa k nemu človek dostane.",
       back: "← Späť na osoby",
-      none: "Všetci sa už aspoň raz prihlásili.",
+      emptyTitle: "Všetci sú pozvaní",
+      none: "Nikto nečaká na pozvánku — všetci sa už aspoň raz prihlásili.",
       preview: "Toto pôjde na uvedené adresy. Odoslaný e-mail sa odvolať nedá.",
       send: people => people === 1 ? "Odoslať 1 pozvánku" : people >= 2 && people <= 4 ? `Odoslať ${people} pozvánky` : `Odoslať ${people} pozvánok`,
       sent: n => `Odoslané: ${n}.`,
@@ -3262,6 +3278,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       roles: "Roly",
       rolesNote: "Správcu platformy sa odtiaľto prideliť nedá — patrí tenantovi dodávateľa a má vlastnú cestu.",
       save: "Uložiť",
+      evidenceEmptyTitle: "Žiadne pridelené normy",
+      evidenceEmptyText: "Tejto osobe zatiaľ nikto nepridelil normu na potvrdenie.",
       accessSummary: "Prístup a členstvo",
       returnHeading: "Vrátiť osobu",
       excludeHeading: "Vyradiť osobu",
@@ -5052,6 +5070,11 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       importCsv: "Import z CSV",
       searchPlaceholder: "Hledat ve jménu, adrese nebo oddělení",
       nothingFound: "Nic se nenašlo.",
+      emptyTitle: "Zatím žádné osoby",
+      emptyText: "První přidáte tlačítkem výše, nebo naráz importem z CSV.",
+      emptyFilterTitle: "Filtru nic nevyhovuje",
+      emptyFilterText: "Zkuste část jména nebo e-mailu.",
+      clearFilter: "Zrušit filtr",
       count: (n) => `${n} ${n === 1 ? "osoba" : n < 5 ? "osoby" : "osob"}`,
       matchesSearch: " vyhovuje hledání",
       capped: " — zobrazeno prvních 500, zužte hledání",
@@ -5066,7 +5089,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       heading: "Hromadné pozvánky",
       intro: "Lidé, kteří se ještě ani jednou nepřihlásili. E-mail nese odkaz na portál, ne přihlašovací odkaz — ten platí jen krátce a poštovní brány ho spotřebují dřív, než se k němu člověk dostane.",
       back: "← Zpět na osoby",
-      none: "Všichni se už aspoň jednou přihlásili.",
+      emptyTitle: "Všichni jsou pozvaní",
+      none: "Nikdo nečeká na pozvánku — všichni se už aspoň jednou přihlásili.",
       preview: "Toto půjde na uvedené adresy. Odeslaný e-mail se odvolat nedá.",
       send: people => people === 1 ? "Odeslat 1 pozvánku" : people >= 2 && people <= 4 ? `Odeslat ${people} pozvánky` : `Odeslat ${people} pozvánek`,
       sent: n => `Odesláno: ${n}.`,
@@ -5169,6 +5193,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       roles: "Role",
       rolesNote: "Správce platformy se odsud přidělit nedá — patří tenantovi dodavatele a má vlastní cestu.",
       save: "Uložit",
+      evidenceEmptyTitle: "Žádné přidělené předpisy",
+      evidenceEmptyText: "Této osobě zatím nikdo nepřidělil předpis k potvrzení.",
       accessSummary: "Přístup a členství",
       returnHeading: "Vrátit osobu",
       excludeHeading: "Vyřadit osobu",
@@ -6951,6 +6977,11 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       importCsv: "Import from CSV",
       searchPlaceholder: "Search by name, address or department",
       nothingFound: "Nothing found.",
+      emptyTitle: "No people yet",
+      emptyText: "Add the first one with the button above, or import a CSV to add many at once.",
+      emptyFilterTitle: "Nothing matches the filter",
+      emptyFilterText: "Try part of a name or an e-mail.",
+      clearFilter: "Clear the filter",
       count: (n) => `${n} ${n === 1 ? "person" : "people"}`,
       matchesSearch: " matching the search",
       capped: " — showing the first 500, narrow the search",
@@ -6965,7 +6996,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       heading: "Bulk invitations",
       intro: "People who have never signed in. The email carries a link to the portal, not a sign-in link — those are short-lived and mail gateways consume them before the person gets there.",
       back: "← Back to people",
-      none: "Everyone has signed in at least once.",
+      emptyTitle: "Everyone is invited",
+      none: "Nobody is waiting for an invitation — everyone has signed in at least once.",
       preview: "This goes to the addresses listed. A sent email cannot be taken back.",
       send: people => people === 1 ? "Send 1 invitation" : `Send ${people} invitations`,
       sent: n => `Sent: ${n}.`,
@@ -7068,6 +7100,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       roles: "Roles",
       rolesNote: "The platform administrator cannot be assigned from here — that role belongs to the supplier's tenant and has its own path.",
       save: "Save",
+      evidenceEmptyTitle: "No documents assigned",
+      evidenceEmptyText: "Nobody has assigned this person a document to acknowledge yet.",
       accessSummary: "Access and membership",
       returnHeading: "Reinstate the person",
       excludeHeading: "Exclude the person",
