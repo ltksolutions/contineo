@@ -120,7 +120,7 @@ export interface ActiveFilters {
   picked: string[]
 }
 
-const EMPTY: ActiveFilters = {
+export const EMPTY: ActiveFilters = {
   category: [], status: [], tag: [], accessLevel: [], language: [], ownerDepartment: [],
   conditions: [], match: "all", picked: [],
 }
@@ -384,10 +384,28 @@ export function carryFields(filters: ActiveFilters): [string, string][] {
  * človeka na začiatok pri každom zaškrtnutí by znamenalo, že sa na strane 3
  * nedá označiť nič.
  */
+/**
+ * Koľko dokumentov sa dá mať označených naraz.
+ *
+ * Výber sa nesie v adrese (`pick=<id>` pri každom), aby prežil prechod na
+ * ďalšiu stranu a fungoval bez JavaScriptu. Identifikátor má okolo 24 znakov,
+ * takže 200 označených je zhruba 6 kB — pod bežnou hranicou 8 kB, ktorú
+ * servery a prehliadače znesú, ale už blízko. **Strop je tu preto, aby
+ * pretečenie nebolo tiché:** bez neho sa adresa niekde po ceste oreže
+ * a výber zmizne bez vysvetlenia, alebo požiadavka skončí chybou 431.
+ *
+ * Nie je to konečné riešenie, len poctivá hranica. Keď bude treba označovať
+ * viac, správna odpoveď je „všetko, čo vyhovuje filtru" ako jeden príznak
+ * v adrese — zapísané v `docs/TODO.md`.
+ */
+export const MAX_PICKED = 200
+
 export function togglePick(filters: ActiveFilters, documentId: string): ActiveFilters {
   const id = documentId.trim()
   if (!id) return filters
   const has = filters.picked.includes(id)
+  // Odznačiť sa dá vždy — strop nesmie uväzniť výber, ktorý už vznikol.
+  if (!has && filters.picked.length >= MAX_PICKED) return filters
   return {
     ...filters,
     picked: has ? filters.picked.filter(x => x !== id) : [...filters.picked, id],
@@ -405,7 +423,11 @@ export function pickPage(filters: ActiveFilters, ids: string[], on: boolean): Ac
   const page = ids.map(i => i.trim()).filter(Boolean)
   if (on) {
     const add = page.filter(i => !filters.picked.includes(i))
-    return { ...filters, picked: [...filters.picked, ...add] }
+    // Strana sa pridá po prvok, ktorým by sa strop prekročil — nie celá
+    // alebo nič. Kto označí stranu pri 195 označených, dostane päť ďalších
+    // a hlášku; zahodiť celú stranu by bolo prekvapivejšie.
+    const room = Math.max(0, MAX_PICKED - filters.picked.length)
+    return { ...filters, picked: [...filters.picked, ...add.slice(0, room)] }
   }
   const drop = new Set(page)
   return { ...filters, picked: filters.picked.filter(i => !drop.has(i)) }
