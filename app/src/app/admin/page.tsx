@@ -57,11 +57,9 @@ export default async function TenantAdminPage() {
                 {tenant.displayName}
               </Link>
               <span className="tag">{tenant.companyCode}</span>
-              {tenant.status !== "active" && (
-                <span className="tag" style={{ background: "var(--warn-bg)", color: "var(--warn-fg)" }}>
-                  {t.disabled}
-                </span>
-              )}
+              {/* Variant zo ZAKLADU, nie inline farba (ADMIN, úloha 1.1):
+                  jantárová znamená „rozrobené, niečo chýba" — presne to. */}
+              {tenant.status !== "active" && <span className="tag tag--draft">{t.disabled}</span>}
               <span className="quiet" style={{ fontSize: "var(--fs-small)", marginLeft: "auto" }}>
                 {tenant.languages.join(" · ")}
               </span>
@@ -98,9 +96,7 @@ export default async function TenantAdminPage() {
                 mena sa nedá povedať, ktorý z nich opraviť. */}
             {tenant.documents.withoutVersion.length > 0 && (
               <p style={{ margin: "12px 0 0", fontSize: "var(--fs-small)" }}>
-                <span className="tag" style={{ background: "var(--warn-bg)", color: "var(--warn-fg)" }}>
-                  {t.withoutVersion}
-                </span>{" "}
+                <span className="tag tag--draft">{t.withoutVersion}</span>{" "}
                 <span className="quiet">{tenant.documents.withoutVersion.join(", ")}</span>
               </p>
             )}
