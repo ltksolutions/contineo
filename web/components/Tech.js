@@ -194,6 +194,13 @@ export default function Tech({ dict, lang }) {
             {/* Diagram je SVG, nie PNG — kvoli tomu sa da prelozit textovo
                 a je ostry na kazdom displeji. Subor podla jazyka; slovencina
                 je bez pripony. */}
+            {/*
+              `next/image` sa tu nepoužíva zámerne: optimalizátor SVG neprevádza
+              (`unoptimized` by z neho spravil obyčajný `<img>` aj tak) a jeho
+              povinné `width`/`height` by pri diagrame, ktorý sa ťahá na šírku
+              kontajnera, boli výmysel. Varovanie o LCP sa týka rastrov.
+            */}
+            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={lang && lang !== "sk" ? `/contineo_diagram.${lang}.svg` : "/contineo_diagram.svg"}
               alt={t.architectureTitle}
