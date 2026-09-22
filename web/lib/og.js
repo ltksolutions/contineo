@@ -102,10 +102,10 @@ export async function ogObrazok(lang, stranka) {
         {/* logo */}
         <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
           <svg width="46" height="46" viewBox="0 0 48 48" fill="none">
-            <circle cx="18" cy="18" r="13" stroke="#eef1f5" strokeWidth="4" />
-            <circle cx="13" cy="18" r="2.3" fill="#eef1f5" />
-            <circle cx="23" cy="18" r="2.3" fill="#eef1f5" />
-            <path d="M28 27 L41 41 L29 38 Z" fill="#eef1f5" />
+            <circle cx="24" cy="20" r="15" stroke="#eef1f5" strokeWidth="6" />
+            <circle cx="17.5" cy="20" r="3.4" fill="#eef1f5" />
+            <circle cx="30.5" cy="20" r="3.4" fill="#eef1f5" />
+            <path d="M17 32.5 L24 43 L29 31.5 Z" fill="#eef1f5" />
           </svg>
           <div style={{ fontSize: 30, fontWeight: 700, letterSpacing: "-0.02em" }}>Contineo</div>
         </div>
