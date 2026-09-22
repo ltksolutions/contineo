@@ -1,23 +1,20 @@
 # ESLint vo `web/`
 
-Konfigurácia je **klasická** (`.eslintrc.json` + `next lint`), nie plochá ako
-v `app/`. Nie je to rozmar, je to dôsledok verzií:
+Konfigurácia je **plochá** (`eslint.config.mjs`, ESLint 9), rovnaká ako
+v `app/`. Volá sa `eslint .`, nie `next lint` — ten príkaz v Next 16 už
+neexistuje.
 
-| | Next | ESLint | konfigurácia | príkaz |
-| --- | --- | --- | --- | --- |
-| `app/` (intranet) | 16 | 9 | `eslint.config.mjs` (plochá) | `eslint .` |
-| `web/` (marketing) | 14 | 8 | `.eslintrc.json` | `next lint` |
-
-`eslint-config-next@14` plochý tvar nemá a `next lint` v Next 16 už neexistuje —
-každá polovica teda musí ísť cestou svojej verzie. **Pri povýšení `web/` na
-Next 16 sa toto zlúči** do plochého tvaru presne ako v `app/`; dovtedy sú to
-dve konfigurácie, o ktorých sa vie.
+Do 22. 9. 2026 tu bola klasická konfigurácia (`.eslintrc.json` + `next lint`)
+a tento dokument vysvetľoval, prečo sa polovice repozitára líšia: `web/` bežal
+na Next 14 a `eslint-config-next@14` plochý tvar nemal. Povýšením `web/` na
+Next 16 ten dôvod zanikol a rozdiel s ním.
 
 ## Vypnuté pravidlá
 
-**`react/no-unescaped-entities`** — apostrofy a úvodzovky v slovenskom
-a českom texte sú bežné a escapovať ich v JSX by z textov spravilo
-neči­tateľnú kašu. Na webe v troch jazykoch je to šum, nie nález.
+**`react/no-unescaped-entities`** — apostrofy a úvodzovky v slovenskom,
+českom aj anglickom texte sú bežné a escapovať ich v JSX by z marketingových
+textov spravilo nečitateľnú kašu. Na webe v troch jazykoch je to šum,
+nie nález.
 
 ## Čo sa nekontroluje
 
