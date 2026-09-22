@@ -654,6 +654,14 @@ export default async function LibraryPage({
           <div className="field">
             <span className="field-label">{tb.field}</span>
             <Select name="add" options={fieldOps} initial={fieldOps[0]?.value} fieldLabel={tb.field} />
+            {/*
+              Veta je vidieť vždy, nie až po výbere „Platné do po".
+              Bez JavaScriptu sa na zmenu výberu zareagovať nedá, a keby
+              chýbala celkom, vyzeralo by to ako chyba v zozname: dokument
+              s neobmedzenou platnosťou má koniec platnosti prázdny, takže
+              otázke na koniec platnosti nevyhovie.
+            */}
+            <span className="quiet field-hint">{tb.fieldNote}</span>
           </div>
           <label className="field builder-value">
             <span className="field-label">{tb.value}</span>
