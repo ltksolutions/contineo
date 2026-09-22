@@ -561,11 +561,16 @@ export default async function LibraryPage({
             </Link>
           </div>
         </details>
-      </div>
-
 
       {/*
-        Query builder.
+        Query builder — **v lište nástrojov, nie kartou pod ňou**
+        (`docs/design/README.md`, „Panel hľadania + query builder").
+
+        Bez nasadenej podmienky je to jeden ovládač „+ Podmienka" v riadku
+        hľadania; až rozbalený dostane panel. Dovtedy stál ako samostatná
+        karta s prerušovaným rámikom a tvrdil, že je vlastným nástrojím —
+        pritom je to druhá polovica hľadania. Obe polovice vznikli
+        s odstupom (builder 8. 9., lišta 21. 9.) a nikto ich nespojil.
 
         Celý beží bez JavaScriptu: podmienky sú v adrese, pridanie je odoslanie
         formulára, odobranie aj zmena spojky sú odkazy.
@@ -668,6 +673,9 @@ export default async function LibraryPage({
 
         <p className="quiet builder-hint">{tb.hint}</p>
       </details>
+      </div>
+
+
 
 
       {rows.length === 0 ? (
