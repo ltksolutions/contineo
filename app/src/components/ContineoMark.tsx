@@ -9,14 +9,44 @@
  * strome.
  */
 
-/** Značka Continea — hlava s bublinou reči. */
+/**
+ * Značka Continea — hlava s bublinou reči.
+ *
+ * ## Prečo chvostík visí dole, a nie šikmo vpravo
+ *
+ * Pôvodná kresba mala chvostík na spojnici stredu a pravého dolného rohu
+ * (`M28 27 L41 41 L29 38 Z`). Kružnica s ručkou pod 45° je **silueta lupy**
+ * — a značka sa používa práve v poliach hľadania, kde to človek ako lupu aj
+ * prečíta. Pri 26 px to ešte prejde, lebo oči vnútri sú vidieť; pri
+ * **16 px** majú bodky pod 1,6 px, splynú s odleskom skla a zostane lupa.
+ *
+ * Namerané 2026-09-22 vedľa seba proti skutočnej lupe: **nepomáhalo
+ * zhrubnutie ťahu.** Aj s ťahom dopočítaným na konštantných ~2,2 px (pravidlo,
+ * ktoré pre ikony zavádza `Icon.tsx`) zostávala silueta lupy, len tučnejšia.
+ * Rozhoduje **kam chvostík mieri**, nie aký je hrubý.
+ *
+ * Chvostík preto visí **zvisle dole** a je širší než dlhší — tak sa kreslí
+ * bublina reči, nie ručka nástroja. Kruh dostal hrubší ťah a väčšie bodky,
+ * aby oči pri 16 px prehovorili.
+ *
+ * ## Jedna kresba pre všetky veľkosti
+ *
+ * Zadanie hovorilo o „variante pre 16 px". Dve rôzne siluety toho istého loga
+ * však stávajú **vedľa seba na jednej obrazovke**: hlavička nesie značku pri
+ * 26 px a hneď vedľa ňu pole hľadania pri 16 px. To je horšie než ktorákoľvek
+ * z tých dvoch kresieb samostatne, takže kresba je jedna a platí všade.
+ *
+ * `strokeWidth` je **pevný**, nie dopočítaný ako v `Icon.tsx`. Ikona má byť
+ * opticky rovnaká v každej veľkosti; značka má s veľkosťou **mohutnieť** —
+ * dopočítaný ťah robil pri 40 px chudokrvný krúžok.
+ */
 export function ContineoMark({ size = 26 }: { size?: number }) {
   return (
     <svg width={size} height={size} viewBox="0 0 48 48" fill="none" aria-hidden="true">
-      <circle cx="18" cy="18" r="13" stroke="currentColor" strokeWidth="4" />
-      <circle cx="13" cy="18" r="2.3" fill="currentColor" />
-      <circle cx="23" cy="18" r="2.3" fill="currentColor" />
-      <path d="M28 27 L41 41 L29 38 Z" fill="currentColor" />
+      <circle cx="24" cy="20" r="15" stroke="currentColor" strokeWidth="6" />
+      <circle cx="17.5" cy="20" r="3.4" fill="currentColor" />
+      <circle cx="30.5" cy="20" r="3.4" fill="currentColor" />
+      <path d="M17 32.5 L24 43 L29 31.5 Z" fill="currentColor" />
     </svg>
   )
 }

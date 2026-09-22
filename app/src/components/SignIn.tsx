@@ -3,6 +3,7 @@
 import { useState } from "react"
 import { signIn } from "next-auth/react"
 import TenantHeader from "./TenantHeader"
+import { ContineoMark } from "./ContineoMark"
 import type { TenantBrandingView } from "./TenantHeader"
 import { dictionary, type UiLanguage } from "@/lib/i18n"
 
@@ -109,12 +110,14 @@ export default function SignIn({
         <TenantHeader branding={branding} size={40} />
       ) : (
         <div style={{ display: "flex", alignItems: "center", gap: 11, marginBottom: 26 }}>
-          <svg width="30" height="30" viewBox="0 0 48 48" fill="none" aria-hidden="true">
-            <circle cx="18" cy="18" r="13" stroke="currentColor" strokeWidth="4" />
-            <circle cx="13" cy="18" r="2.3" fill="currentColor" />
-            <circle cx="23" cy="18" r="2.3" fill="currentColor" />
-            <path d="M28 27 L41 41 L29 38 Z" fill="currentColor" />
-          </svg>
+          {/*
+            Značka zo spoločného komponentu, nie štvrtá kópia kresby.
+            `ContineoMark.tsx` už vo svojom záhlaví píše, že kresba v SVG je
+            presne ten druh veci, ktorý sa pri kopírovaní rozíde — a práve to
+            sa stalo: pri prekreslení chvostíka (2026-09-22) tu zostala stará
+            kresba s lupou, zatiaľ čo zvyšok aplikácie už mal bublinu.
+          */}
+          <ContineoMark size={30} />
           <span style={{ fontWeight: 700, fontSize: 20, letterSpacing: "-0.02em" }}>
             Contineo
           </span>
