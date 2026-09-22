@@ -221,24 +221,17 @@ export default async function LibraryPage({
   const categoryLabel = labelFrom("category")
   const tagLabel = labelFrom("tags")
   const accessLabel = labelFrom("accessLevel")
-  const statusLabel = (value: string) =>
-    value === "published" ? t.statusPublished
-    : value === "in-review" ? t.statusInReview
-    : t.statusDrafts
-
   /*
-   * Text pilulky pri **jednom** dokumente.
+   * Názvy hodnôt facetu — **tie isté ako pri pilulke** (`KNIZNICA.html`,
+   * rám 1): Platný · Návrh · Na schválenie.
    *
-   * Vlastné reťazce v jednotnom čísle (`MASTER.md`, stavový model), nie
-   * facetové: „publikované" a „koncepty" sú množné číslo pre zoznam filtrov
-   * a v riadku by zneli ako popis skupiny, nie ako stav dokumentu.
-   *
-   * Expirovaný sa odvodzuje z `effectiveTo` cez `displayStatus()` — jedno
-   * miesto vedľa `statusTagClass()`. Dovtedy tu vetva pre expirovaný
-   * chýbala a taký dokument dostal pilulku „koncept": nie nepresné slovo,
-   * ale nesprávny stav.
+   * Do 23. 9. 2026 tu boli vlastné reťazce v množnom čísle („publikované",
+   * „koncepty"). Boli to dva slovníky o tom istom a na jednej obrazovke
+   * vedľa seba: riadok hovoril „Platný", panel „publikované". Množné číslo
+   * dávalo zmysel, kým v paneli stálo za číslom — ale pilulka aj facet
+   * pomenúvajú ten istý stav a majú ho volať rovnako.
    */
-  const statusPill = (value: string) =>
+  const statusLabel = (value: string) =>
     value === "published" ? t.statusLabel.published
     : value === "in-review" ? t.statusLabel.review
     : value === "expired" ? t.statusLabel.expired
@@ -247,7 +240,7 @@ export default async function LibraryPage({
   /** Pilulka riadku: farba aj názov z toho istého odvodeného stavu. */
   const statusTag = (row: { status: string; effectiveTo?: Date | string | null }) => {
     const stav = displayStatus(row.status, row.effectiveTo)
-    return <span className={statusTagClass(stav)}>{statusPill(stav)}</span>
+    return <span className={statusTagClass(stav)}>{statusLabel(stav)}</span>
   }
 
   /*

@@ -1551,11 +1551,13 @@ interface Dictionary {
         ops: Record<string, string>
       }
       /**
-       * Názov stavu **jedného dokumentu**, v jednotnom čísle a s veľkým
-       * začiatočným písmenom (`MASTER.md`, stavový model). Nezamieňať so
-       * `statusPublished` a spol. nižšie — tie sú facetové, v množnom čísle,
-       * a patria zoznamu filtrov („publikované 12"). V riadku by znel
-       * facetový tvar ako popis skupiny, nie ako stav dokumentu.
+       * Názov stavu, v jednotnom čísle a s veľkým začiatočným písmenom
+       * (`MASTER.md`, stavový model; `KNIZNICA.html`, rám 1).
+       *
+       * **Jeden slovník pre pilulku aj facet.** Do 23. 9. 2026 boli dva —
+       * facet mal vlastné reťazce v množnom čísle („publikované",
+       * „koncepty") — a na tej istej obrazovke vedľa seba hovoril riadok
+       * „Platný" a panel „publikované".
        */
       statusLabel: {
         published: string
@@ -1563,10 +1565,7 @@ interface Dictionary {
         review: string
         expired: string
       }
-      statusPublished: string
-      statusDrafts: string
       /** Tretia hodnota facetu Stav (ADR-006) — dokument s bežiacim kolom. */
-      statusInReview: string
       /** Štvrtá hodnota filtra stavu — odvodená z platnosti znenia (D27). */
       filter: string
       clearFilters: string
@@ -3537,9 +3536,6 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
         review: "Na schválenie",
         expired: "Expirovaný",
       },
-      statusPublished: "publikované",
-      statusDrafts: "koncepty",
-      statusInReview: "na schválenie",
       filter: "Filtrovať",
       clearFilters: "zrušiť filtre",
       processing: {
@@ -5472,9 +5468,6 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
         review: "Ke schválení",
         expired: "Expirovaný",
       },
-      statusPublished: "publikované",
-      statusDrafts: "koncepty",
-      statusInReview: "ke schválení",
       filter: "Filtrovat",
       clearFilters: "zrušit filtry",
       processing: {
@@ -7400,9 +7393,6 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
         review: "In review",
         expired: "Expired",
       },
-      statusPublished: "published",
-      statusDrafts: "drafts",
-      statusInReview: "to approve",
       filter: "Filter",
       clearFilters: "clear filters",
       processing: {
