@@ -8,11 +8,13 @@
 
 import { describe, it, expect, vi, beforeEach } from "vitest"
 
-const { findOne, updateOne, insertOne, invalidateTenants } = vi.hoisted(() => ({
+const { findOne, updateOne, insertOne, invalidateTenants, codes } = vi.hoisted(() => ({
   findOne: vi.fn(),
   updateOne: vi.fn(),
   insertOne: vi.fn(),
   invalidateTenants: vi.fn(),
+  /** Obsadené kódy — potrebuje ich návrh voľného variantu pri kolízii. */
+  codes: vi.fn(() => [] as { companyCode: string }[]),
 }))
 
 vi.mock("../src/lib/mongodb", () => ({
@@ -20,7 +22,7 @@ vi.mock("../src/lib/mongodb", () => ({
     findOne,
     updateOne,
     insertOne,
-    find: () => ({ sort: () => ({ toArray: async () => [] }) }),
+    find: () => ({ sort: () => ({ toArray: async () => codes() }), toArray: async () => codes() }),
   })),
 }))
 
@@ -153,6 +155,19 @@ describe("založenie", () => {
     await expect(createTenant("SFZ", { displayName: "Iný" }, "kto@ltk.solutions"))
       .rejects.toThrow(/už existuje/)
     expect(insertOne).not.toHaveBeenCalled()
+  })
+
+  it("pri kolízii povie, ktorý kód je voľný — bez skriptu inak admin háda", async () => {
+    findOne.mockResolvedValue(SFZ)
+    codes.mockReturnValue([{ companyCode: "SFZ" }, { companyCode: "SFZ2" }])
+
+    const error = await createTenant("SFZ", { displayName: "Iný" }, "kto@ltk.solutions")
+      .catch((e: unknown) => e as TenantValidationError)
+
+    expect(error).toBeInstanceOf(TenantValidationError)
+    // Návrh počíta tá istá funkcia ako formulár, takže obe strany dôjdu k tomu istému.
+    expect((error as TenantValidationError).params).toMatchObject({ code: "SFZ", free: "SFZ3" })
+    codes.mockReturnValue([])
   })
 
   it("bez názvu neprejde", async () => {
