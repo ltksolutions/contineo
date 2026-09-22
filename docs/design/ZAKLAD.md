@@ -243,14 +243,30 @@ vždy `var(--on-accent)`, inak sa pri prepnutí témy pár farieb prevráti.
 Platí pre odznak v zvončeku, odznak „Úlohy" v spodnej lište aj pás hromadných
 akcií.
 
-### B. Značka namiesto lupy — všade, nielen v knižnici
+### B. Ikona v poli podľa toho, čo pole robí
 
-`ContineoMark` je v hlavičke (PR 3) a v hľadaní knižnice (PR 8).
-**Chýba v `/directory` a `/people`** — tam je pole hľadania holé.
+⚠️ **Opravené 22. 9. 2026 — pôvodné pravidlo bolo prehnané a zlé.**
 
-Pravidlo pre celý portál: **každé pole, do ktorého sa píše otázka alebo
-hľadaný výraz, nesie značku Continea 16 px v `--muted` vľavo. Nikdy lupu.**
-Nie je to hľadanie v tabuľke, je to otázka položená obsahu.
+Písal som „každé pole nesie značku Continea, nikdy lupu". Dve veci na tom
+neplatia:
+
+1. **Tie polia nerobia to isté.** Pole v hlavičke (*„Opýtajte sa svojich
+   dokumentov"*) ide na model — tam lupa klame. Pole v knižnici, adresári
+   a osobách (*„názov alebo kľúč"*) hľadá reťazec v zozname — **tam je lupa
+   vecne správna** a značka mätie.
+2. **Značka pri 16 px vyzerá ako lupa.** `ContineoMark` je kružnica s dvoma
+   bodkami a chvostíkom; v malom je z toho krúžok s rúčkou a bodky splynú
+   s odleskom skla. Úloha sa dá splniť a výsledok aj tak povie „lupa".
+
+Platné pravidlo:
+
+| Pole | Ikona |
+| --- | --- |
+| hlavička — otázka pre model | `ask` z `Icon.tsx` (bublina reči, tá istá ako v navigácii) |
+| knižnica, adresár, osoby — hľadanie v zozname | lupa |
+
+`ContineoMark` sa **pri 16 px nepoužíva**. Značku neprekresľuj — jedna
+značka, a v malom má miesto logo (28 px), nie ikona v poli.
 
 ### C. Rádiusy: 10 je základ, 12 je karta
 
