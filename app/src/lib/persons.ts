@@ -585,8 +585,17 @@ export async function upsertPersons(
           id: crypto.randomUUID(),
           status: "invited" as PersonStatus,
           ...(r.language === undefined ? { language: normalizeLanguage(undefined) } : {}),
-          // Nová osoba musí mať zoznamy, aj keď o nich riadok mlčí — schéma
-          // ich má ako povinné polia. Existujúcej sa tadiaľto nedotknú.
+          /*
+            Nová osoba musí mať zoznamy, aj keď o nich riadok mlčí — schéma
+            ich má ako povinné polia. Existujúcej sa tadiaľto nedotknú.
+
+            **Prázdne `roles` sú bežný používateľ**, nie chýbajúca rola:
+            v Contineu je rola vždy nadstavba (`hr`, `people-admin`,
+            `content`, `evaluator`), práva sa pridávajú, nie odoberajú. Kto
+            má roly už nastavené, o ne importom nepríde — `roles` sem príde
+            len vtedy, keď ich riadok naozaj nesie (rozhodnutie Jána
+            2026-09-22).
+          */
           ...(r.tracks === undefined ? { tracks: [] } : {}),
           ...(r.groups === undefined ? { groups: [], groupHistory: [] } : {}),
           ...(r.roles === undefined ? { roles: [] } : {}),
