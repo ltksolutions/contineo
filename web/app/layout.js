@@ -51,7 +51,17 @@ const themeScript = `(function(){try{var t=localStorage.getItem('contineo-theme'
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="sk" suppressHydrationWarning>
+    /*
+     * `data-scroll-behavior="smooth"` je **protiváha**, nie ozdoba.
+     *
+     * V `globals.css` je `html { scroll-behavior: smooth }` kvôli odkazom
+     * v rámci stránky. Do Next 15 vrátane framework tento štýl pri prechode
+     * medzi stránkami sám potlačil, takže nová stránka naskočila hore
+     * okamžite. Next 16 to prestal robiť — bez tohto atribútu by sa prechod
+     * medzi stránkami plynulo posúval, čo pri dlhej stránke vyzerá ako
+     * zaseknutie. Atribút vracia pôvodné správanie.
+     */
+    <html lang="sk" data-scroll-behavior="smooth" suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
       </head>
