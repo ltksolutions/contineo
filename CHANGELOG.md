@@ -4,6 +4,26 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Tabuľka knižnice sa zmestí na obrazovku (2026-09-22)
+
+Stĺpce **Potvrdenia** a **Zmenené** boli na bežnom monitore odseknuté —
+tabuľka pretekala nabok a bolo ich treba doposúvať. Knižnica má odteraz
+širší priestor než ostatné obrazovky, takže všetkých deväť stĺpcov je
+vidieť naraz. Šírka má aj tak strop: na veľmi širokom monitore sa riadok
+ďalej neroztiahne, aby sa dal prečítať od názvu vľavo po dátum vpravo.
+
+Stĺpec **Platné znenie** sa volá **Verzia** a je to jeden riadok; celé
+označenie znenia sa ukáže po nabehnutí myšou. Riadky tým spľasli
+na polovicu — dlhé označenie ich predtým rozťahovalo na trojnásobok.
+Počet znení sa presunul pod názov dokumentu, kde je aj interné číslo.
+
+**„+ Podmienka"** je teraz pri poli hľadania, nie ako samostatná karta
+pod ním. Rozbalí sa až vtedy, keď ju treba.
+
+Tlačidlá, ktoré sú odkazmi — napríklad „Nahrať dokument" a „Export CSV" —
+už nie sú podčiarknuté.
+
+
 ### Zaradenie dokumentu zaniklo, druh zostáva (2026-09-22)
 
 Dokument mal dve škatuľky na to isté: **Zaradenie** (kam patrí) a **Druh**
