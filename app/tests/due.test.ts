@@ -13,7 +13,7 @@
 import { describe, it, expect } from "vitest"
 import {
   dueFrom, dueState, daysLeft, addDays, reminderPlan, SOON_DAYS,
-  dueFromFields, normalizeDueMode,
+  dueFromFields, normalizeDueMode, dutyState, dutyTagClass,
 } from "../src/lib/due"
 import { dueForPerson } from "../src/lib/assignments"
 import { dueRemindersFrom } from "../src/lib/reminders"
@@ -221,6 +221,7 @@ describe("výber ľudí na dnešnú pripomienku", () => {
     since: at("2026-09-01"),
     due,
     acknowledgedAt: null,
+    firstOpenedAt: null,
     readingSeconds: null,
     ...over,
   })
@@ -268,5 +269,36 @@ describe("výber ľudí na dnešnú pripomienku", () => {
       day(1),
     )
     expect(out.map(r => r.personId)).toEqual(["p2", "p1"])
+  })
+})
+
+describe("stav povinnosti pre pilulku (HR.md, úloha 1)", () => {
+  const now = at("2026-09-22")
+
+  it("odvolanie prebíja potvrdenie — záznam o odvolaní nesie aj acknowledgedAt", () => {
+    expect(dutyState({ acknowledgedAt: at("2026-09-01"), revokedAt: at("2026-09-10") }, now)).toBe("revoked")
+    expect(dutyTagClass({ acknowledgedAt: at("2026-09-01"), revokedAt: at("2026-09-10") }, now)).toBe("tag tag--archived")
+  })
+
+  it("potvrdené je potvrdené aj po termíne", () => {
+    expect(dutyState({ acknowledgedAt: at("2026-09-20"), due: at("2026-09-10") }, now)).toBe("acknowledged")
+    expect(dutyTagClass({ acknowledgedAt: at("2026-09-20") }, now)).toBe("tag tag--published")
+  })
+
+  it("po termíne prebíja otvorené", () => {
+    const d = { acknowledgedAt: null, firstOpenedAt: at("2026-09-15"), due: at("2026-09-20") }
+    expect(dutyState(d, now)).toBe("overdue")
+    expect(dutyTagClass(d, now)).toBe("tag tag--expired")
+  })
+
+  it("deň termínu ešte nie je po termíne", () => {
+    expect(dutyState({ firstOpenedAt: at("2026-09-15"), due: at("2026-09-22") }, now)).toBe("opened")
+    expect(dutyState({ due: at("2026-09-22") }, now)).toBe("not-opened")
+  })
+
+  it("otvorené a neotvorené bez termínu", () => {
+    expect(dutyTagClass({ firstOpenedAt: at("2026-09-15") }, now)).toBe("tag tag--review")
+    expect(dutyTagClass({ firstOpenedAt: null }, now)).toBe("tag")
+    expect(dutyTagClass({}, now)).toBe("tag")
   })
 })

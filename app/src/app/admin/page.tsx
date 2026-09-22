@@ -11,19 +11,9 @@ import Link from "next/link"
 import { platformContext, tenantOverviews } from "@/lib/admin"
 import { formatDate, dictionary } from "@/lib/i18n"
 import AppShell from "@/components/AppShell"
+import Fact from "@/components/Fact"
 
 export const dynamic = "force-dynamic"
-
-function Fact({ label, value, muted }: { label: string; value: string; muted?: boolean }) {
-  return (
-    <div>
-      <div className="quiet" style={{ fontSize: "var(--fs-micro)" }}>{label}</div>
-      <div style={{ fontSize: "var(--fs-lead)", fontWeight: 600, color: muted ? "var(--muted)" : undefined }}>
-        {value}
-      </div>
-    </div>
-  )
-}
 
 export default async function TenantAdminPage() {
   const ctx = await platformContext()
@@ -46,6 +36,16 @@ export default async function TenantAdminPage() {
         <Link className="button" href="/admin/new">{t.newTenant}</Link>
       </p>
 
+      {/* V praxi sa nestane — `/admin` vidí ten, kto organizáciu už má —
+          ale prázdna obrazovka bez textu je horšia než veta, ktorá sa
+          nezobrazí (ADMIN, úloha 1.3). */}
+      {overview.length === 0 && (
+        <div className="empty">
+          <div className="empty-title">{t.emptyTitle}</div>
+          <div className="empty-text">{t.emptyText}</div>
+        </div>
+      )}
+
       <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "grid", gap: 14 }}>
         {overview.map(tenant => (
           <li key={tenant.companyCode} className="card" style={{ padding: "18px 20px" }}>
@@ -57,27 +57,38 @@ export default async function TenantAdminPage() {
                 {tenant.displayName}
               </Link>
               <span className="tag">{tenant.companyCode}</span>
-              {tenant.status !== "active" && (
-                <span className="tag" style={{ background: "var(--warn-bg)", color: "var(--warn-fg)" }}>
-                  {t.disabled}
-                </span>
-              )}
+              {/* Variant zo ZAKLADU, nie inline farba (ADMIN, úloha 1.1):
+                  jantárová znamená „rozrobené, niečo chýba" — presne to. */}
+              {tenant.status !== "active" && <span className="tag tag--draft">{t.disabled}</span>}
               <span className="quiet" style={{ fontSize: "var(--fs-small)", marginLeft: "auto" }}>
                 {tenant.languages.join(" · ")}
               </span>
             </div>
 
-            <p className="quiet" style={{ fontSize: "var(--fs-small)", margin: "8px 0 0", overflowWrap: "anywhere" }}>
-              {tenant.hostnames.join(", ") || t.noDomain}
-            </p>
+            {/*
+              Bez domény sa do organizácie **nedá prihlásiť** (ADMIN, úloha
+              1.5) — to nie je poznámka medzi ostatnými, ale porucha. Inline
+              blok ako chyba vyhľadávania; `.notice` je modálne okno a na
+              stav v karte sa nehodí.
+            */}
+            {tenant.hostnames.length > 0 ? (
+              <p className="quiet" style={{ fontSize: "var(--fs-small)", margin: "8px 0 0", overflowWrap: "anywhere" }}>
+                {tenant.hostnames.join(", ")}
+              </p>
+            ) : (
+              <p className="ask-error" style={{ margin: "10px 0 0" }} role="alert">
+                {t.noDomainWarning}
+              </p>
+            )}
 
+            {/*
+              Poradie podľa dôležitosti (ADMIN, úloha 1.2): Contineo je systém
+              na dokumenty, takže prvé číslo je o nich a druhé o ich zneniach —
+              to je to, čo organizácia naozaj má. Počet trás bola vnútorná
+              mechanika (rozhodnutie Jána 2026-09-22); znenia sa počítajú
+              z dokumentov, ktoré `tenantOverviews()` už načítalo.
+            */}
             <div className="admin-data">
-              <Fact
-                label={t.people}
-                value={t.peopleValue(tenant.people.signedIn, tenant.people.total)}
-                muted={tenant.people.total === 0}
-              />
-              <Fact label={t.tracks} value={String(tenant.tracks)} muted={tenant.tracks === 0} />
               <Fact
                 label={t.documents}
                 value={t.documentsValue(
@@ -85,6 +96,12 @@ export default async function TenantAdminPage() {
                   tenant.documents.total,
                 )}
                 muted={tenant.documents.total === 0}
+              />
+              <Fact label={t.versions} value={String(tenant.versions)} muted={tenant.versions === 0} />
+              <Fact
+                label={t.people}
+                value={t.peopleValue(tenant.people.signedIn, tenant.people.total)}
+                muted={tenant.people.total === 0}
               />
               <Fact
                 label={t.acknowledgements}
@@ -98,9 +115,7 @@ export default async function TenantAdminPage() {
                 mena sa nedá povedať, ktorý z nich opraviť. */}
             {tenant.documents.withoutVersion.length > 0 && (
               <p style={{ margin: "12px 0 0", fontSize: "var(--fs-small)" }}>
-                <span className="tag" style={{ background: "var(--warn-bg)", color: "var(--warn-fg)" }}>
-                  {t.withoutVersion}
-                </span>{" "}
+                <span className="tag tag--draft">{t.withoutVersion}</span>{" "}
                 <span className="quiet">{tenant.documents.withoutVersion.join(", ")}</span>
               </p>
             )}

@@ -16,6 +16,7 @@ import { documentsProgress } from "@/lib/libraryProgress"
 import { codelistOptions } from "@/lib/codelists"
 import { tenantExtras } from "@/lib/codelistsTenant"
 import Select from "@/components/Select"
+import AckBar from "@/components/AckBar"
 import LiveFilter from "@/components/LiveFilter"
 import { ContineoMark } from "@/components/ContineoMark"
 import { moveManyAction, assignManyAction } from "./actions"
@@ -32,7 +33,7 @@ import {
   readFilters, toggle, setValue, clearFilters, isEmpty, toQuery, carryFields, activeChips,
   sortBy, currentSort, pageOf, withPage, sortRows, pageRows, setView, currentView,
   addCondition, removeCondition, splitConditions, mergeConditions,
-  togglePick, pickPage, clearPicked, pickedOutsideCount,
+  togglePick, pickPage, clearPicked, pickedOutsideCount, MAX_PICKED,
   type MultiKey, type SortKey,
 } from "@/lib/libraryFilters"
 import {
@@ -216,6 +217,9 @@ export default async function LibraryPage({
   const statusLabel = (value: string) =>
     value === "published" ? t.statusPublished
     : value === "in-review" ? t.statusInReview
+    // Expirované je podmnožina publikovaných, nie štvrtý stav dokumentu —
+    // vo filtri je to však vlastná voľba (rozhodnutie Jána 2026-09-22).
+    : value === "expired" ? t.statusExpired
     : t.statusDrafts
 
   /* Text pilulky pri jednom dokumente — facetové „koncepty" je množné
@@ -228,23 +232,18 @@ export default async function LibraryPage({
   /*
    * Potvrdenia ako pásik (KNIZNICA.md, úloha 2): stĺpec sa skenuje očami
    * zhora dolu — osem čísel v texte sa neskenuje, osem pásikov áno.
-   * Menovateľ (O6/7) nezmizol: nesie ho `title` a text pre čítačku.
-   * Pomlčka znamená „nie je čo potvrdzovať" (nikomu nepridelené) — prázdny
-   * pásik by znamenal „nikto nepotvrdil", a to sú dve rôzne správy.
-   * Šírka výplne je inline: je to dátová hodnota, nie štýl.
+   * Tvar aj prahy má `<AckBar>` — ten istý, čo kreslí `/hr` (HR.md, úloha 2).
+   * Bez záznamu o priebehu je to pomlčka: nie je čo potvrdzovať.
    */
   const ackBar = (versionId?: string) => {
     const p = versionId ? progress.get(versionId) : undefined
-    if (!p || p.percent === null) return <span className="quiet">—</span>
-    const tone = p.percent >= 90 ? "high" : p.percent >= 50 ? "mid" : "low"
+    if (!p) return <span className="quiet">—</span>
     return (
-      <span className="ack-bar" title={t.acknowledgedOf(p.acknowledged, p.assigned)}>
-        <span className="ack-track" aria-hidden="true">
-          <span className={`ack-fill ack-fill--${tone}`} style={{ width: `${p.percent}%` }} />
-        </span>
-        <span className="ack-value" aria-hidden="true">{p.percent} %</span>
-        <span className="sr-only">{t.acknowledgedOf(p.acknowledged, p.assigned)}</span>
-      </span>
+      <AckBar
+        acknowledged={p.acknowledged}
+        assigned={p.assigned}
+        label={t.acknowledgedOf(p.acknowledged, p.assigned)}
+      />
     )
   }
 
@@ -717,6 +716,11 @@ export default async function LibraryPage({
             {pickedOutside > 0 && (
               <span className="bulk-picked-outside">{tl.pickedOutside(pickedOutside)}</span>
             )}
+            {/* Strop sa povie nahlas. Bez toho by ďalšie označenie ticho
+                nefungovalo a človek by hľadal chybu v zozname. */}
+            {filters.picked.length >= MAX_PICKED && (
+              <span className="bulk-picked-outside">{tl.pickedMax(MAX_PICKED)}</span>
+            )}
 
             <div className="field bulk-folder">
               <span className="field-label">{tl.moveTo}</span>
@@ -875,7 +879,7 @@ export default async function LibraryPage({
               </thead>
               <tbody>
                 {paged.rows.map(r => (
-                  <tr key={r.documentId}>
+                  <tr key={r.documentId} className={isPicked(r.documentId) ? "is-picked" : undefined}>
                     <td className="doc-col-pick">
                       <Link
                         href={toQuery(togglePick(filters, r.documentId))}
@@ -966,22 +970,32 @@ export default async function LibraryPage({
             je odpoveď na otázku, ktorú si človek kladie vždy, nielen keď sa
             stránkuje.
           */}
-          <div className="doc-foot">
-            <span className="quiet">{t.pageRange(paged.from, paged.to, rows.length)}</span>
+          {/*
+            Komponent `.pager` (ZAKLAD, úloha 2). Neaktívny smer zostáva
+            odkazom s `aria-disabled`, nie tlačidlom — stránkovanie sú odkazy
+            a beží bez JavaScriptu. „Strana X z Y" odišla: rozsah vľavo
+            hovorí to isté a navyše koľko toho je.
+          */}
+          <div className="pager">
+            <span className="pager-count">{t.pageRange(paged.from, paged.to, rows.length)}</span>
+            <span className="pager-spacer" aria-hidden="true" />
             {paged.pages > 1 && (
-              <span className="doc-pager">
-                {paged.page > 1 && (
-                  <Link className="doc-page" href={toQuery(withPage(filters, paged.page - 1))}>
+              <>
+                {paged.page > 1 ? (
+                  <Link className="button button--quiet pager-link" href={toQuery(withPage(filters, paged.page - 1))}>
                     {t.prevPage}
                   </Link>
+                ) : (
+                  <a className="button button--quiet pager-link" aria-disabled="true">{t.prevPage}</a>
                 )}
-                <span className="quiet">{t.pageOf(paged.page, paged.pages)}</span>
-                {paged.page < paged.pages && (
-                  <Link className="doc-page" href={toQuery(withPage(filters, paged.page + 1))}>
+                {paged.page < paged.pages ? (
+                  <Link className="button button--quiet pager-link" href={toQuery(withPage(filters, paged.page + 1))}>
                     {t.nextPage}
                   </Link>
+                ) : (
+                  <a className="button button--quiet pager-link" aria-disabled="true">{t.nextPage}</a>
                 )}
-              </span>
+              </>
             )}
           </div>
         </form>

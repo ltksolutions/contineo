@@ -13,7 +13,7 @@
 import Link from "next/link"
 import { notFound, redirect } from "next/navigation"
 import { libraryContext } from "@/lib/library"
-import { allFolders, flattenTree, subtree, counts, depth, MAX_DEPTH } from "@/lib/folders"
+import { allFolders, flattenTree, subtree, counts, depth, canMove, MAX_DEPTH } from "@/lib/folders"
 import {
   createFolderAction, renameFolderAction, moveFolderAction, deleteFolderAction,
   shiftFolderAction, saveFolderOrderAction,
@@ -65,6 +65,18 @@ export default async function FoldersPage({
             ← {t.heading}
           </Link>
         </div>
+
+        {/*
+          Prázdny strom (PRIECINKY, úloha 1): `.empty` zo ZAKLADU nad
+          formulárom, bez tlačidla — formulár je hneď pod tým a dve výzvy
+          k tomu istému sú šum.
+        */}
+        {folders.length === 0 && (
+          <div className="empty">
+            <div className="empty-title">{tf.emptyTitle}</div>
+            <div className="empty-text">{tf.emptyText}</div>
+          </div>
+        )}
 
         <TreeWithOrder
           language={uiLanguage}
@@ -129,10 +141,15 @@ export default async function FoldersPage({
                         name="parentId"
                         initial={p.parentId ?? ""}
                         fieldLabel={tf.parentOf(p.name)}
+                        // Ponuka neobsahuje voľby, ktoré server odmietne
+                        // (PRIECINKY, úloha 3): sám seba, vlastný podstrom ani
+                        // rodiča, pod ktorým by podstrom prekročil hĺbku. Tou
+                        // istou funkciou ako server (`canMove`), nie vlastnou
+                        // kópiou pravidla — druhá kópia sa s prvou raz rozíde.
                         options={[
                           { value: "", label: tf.topLevel },
                           ...tree
-                            .filter(r => !inside.has(r.folder.id))
+                            .filter(r => canMove(folders, p.id, r.folder.id) === null)
                             .map(r => ({
                               value: r.folder.id,
                               label: `${"— ".repeat(r.level - 1)}${r.folder.name}`,
@@ -142,17 +159,32 @@ export default async function FoldersPage({
                       <button className="button button--quiet" type="submit">{tf.move}</button>
                     </form>
 
-                    {c.withDescendants === 0 && inside.size === 1 ? (
-                      <form action={deleteFolderAction}>
-                        <input type="hidden" name="id" value={p.id} />
-                        {carried.map(([k, v], i) => <input key={`${k}-${i}`} type="hidden" name={k} value={v} />)}
-                        <button className="button button--quiet" type="submit">{tf.remove}</button>
-                      </form>
-                    ) : (
-                      <p className="quiet" style={{ fontSize: "var(--fs-micro)", margin: 0 }}>
-                        {tf.removeHint}
-                      </p>
-                    )}
+                    {/*
+                      Zrušenie povie, prečo sa nedá (PRIECINKY, úloha 2):
+                      pri priečinku s obsahom je tlačidlo vypnuté a veta
+                      hovorí konkrétne čísla, ktoré už na obrazovke sú
+                      (`.tree-count`). `disabled`, nie `aria-disabled`: je to
+                      `<button>` vo formulári a bez skriptu ho vypne len
+                      atribút — `aria-disabled` zo ZAKLADU je pre odkazy.
+                      Server zrušenie neprázdneho priečinka odmieta ďalej.
+                    */}
+                    {(() => {
+                      const canDelete = c.withDescendants === 0 && inside.size === 1
+                      return (
+                        <form action={deleteFolderAction} className="tree-delete">
+                          <input type="hidden" name="id" value={p.id} />
+                          {carried.map(([k, v], i) => <input key={`${k}-${i}`} type="hidden" name={k} value={v} />)}
+                          <button className="button button--quiet" type="submit" disabled={!canDelete}>
+                            {tf.remove}
+                          </button>
+                          {!canDelete && (
+                            <span className="quiet tree-delete-hint">
+                              {tf.removeBlocked(c.withDescendants, inside.size - 1)}
+                            </span>
+                          )}
+                        </form>
+                      )
+                    })()}
                   </div>
                 </details>
                 </>

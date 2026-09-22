@@ -12,7 +12,7 @@
  */
 
 import { describe, it, expect } from "vitest"
-import { revokeProblem, isAcknowledged, nextCycle } from "../src/lib/acknowledgements"
+import { revokeProblem, isAcknowledged, nextCycle, evidenceRecordsFrom } from "../src/lib/acknowledgements"
 
 describe("kto smie odvolať potvrdenie", () => {
   it("personalista s dôvodom smie", () => {
@@ -67,5 +67,33 @@ describe("poradie pokusu", () => {
     // Dve súbežné kliknutia vypočítajú to isté číslo a druhé odmietne
     // databáza — ochrana proti dvojitému potvrdeniu tým zostáva.
     expect(nextCycle(1)).toBe(2)
+  })
+})
+
+describe("zaznamy pre dokaz (HR.md, uloha 5)", () => {
+  const at = (iso: string) => new Date(iso)
+  const ack = (cycle: number, when: string) => ({
+    personId: "p", versionId: "v", type: "acknowledgement" as const, cycle,
+    acknowledgedAt: at(when), ip: "10.0.0.1", departmentNames: ["SFZ", "Pravne"], statementText: "Potvrdzujem…",
+  })
+  const rev = (cycle: number, when: string) => ({
+    personId: "p", versionId: "v", type: "revocation" as const, cycle,
+    acknowledgedAt: at(when), actedBy: { personId: "hr", email: "hr@x.sk", fullName: "Eva HR" }, reason: "omyl",
+  })
+
+  it("odvolanie bez novsieho potvrdenia plati — riadok je odvolany", () => {
+    const r = evidenceRecordsFrom([ack(1, "2026-09-01"), rev(1, "2026-09-05")]).get("p|v")!
+    expect(r.acknowledgement?.ip).toBe("10.0.0.1")
+    expect(r.revocation).toEqual({ revokedAt: at("2026-09-05"), by: "Eva HR", reason: "omyl", cycle: 1 })
+  })
+
+  it("nove potvrdenie po odvolani odvolanie prebije", () => {
+    const r = evidenceRecordsFrom([ack(1, "2026-09-01"), rev(1, "2026-09-05"), ack(2, "2026-09-10")]).get("p|v")!
+    expect(r.acknowledgement?.cycle).toBe(2)
+    expect(r.revocation).toBeNull()
+  })
+
+  it("bez zaznamu nie je nic — dvojica v mape chyba", () => {
+    expect(evidenceRecordsFrom([]).size).toBe(0)
   })
 })

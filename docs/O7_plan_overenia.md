@@ -1,7 +1,7 @@
 # O7 — plán overenia vlastného embeddingu a reranku
 
 > **Stav:** 🔄 **fáza 0 čiastočne · fázy 1–5 odložené** (rozhodnuté 2026-08-27, viď „Stav k 2026-08-27" nižšie) · **Dátum:** 2026-07-28
-> **Súvisí:** `docs/ADR-001-provider-adaptery.md` (O1, O7), `docs/ADR-002-datova-rezidencia.md` (dodatok 14), `eval/o1/`
+> **Súvisí:** `docs/decisions/ADR-001-provider-adaptery.md` (O1, O7), `docs/decisions/ADR-002-datova-rezidencia.md` (dodatok 14), `eval/o1/`
 > **Cieľ:** overiť, že on-prem vetva **funguje** — nie ako rýchlo.
 
 ---

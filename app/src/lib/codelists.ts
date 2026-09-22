@@ -56,7 +56,9 @@ export const CODELISTS: Record<string, Codelist> = {
 }
 
 /** Povinné metadáta dokumentu — zhodné s `scripts/lib/meta.mjs`. */
-export const REQUIRED_CODELISTS = ["title", "sectionKey", "companyCode", "scope", "accessLevel", "language"] as const
+// `sectionKey` od ADR-010 nie je povinný — zaradenie zlučuje Druh; v dátach
+// starých dokumentov zostáva a keď príde, overuje sa ako doteraz.
+export const REQUIRED_CODELISTS = ["title", "companyCode", "scope", "accessLevel", "language"] as const
 
 /**
  * Tvar nového kľúča v otvorenom číselníku.

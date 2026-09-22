@@ -63,7 +63,6 @@ export async function GET(request: Request) {
   const csv = toCsv(rows, [
     { label: "documentId", value: r => r.documentId },
     { label: "title", value: r => r.title },
-    { label: "sectionKey", value: r => r.sectionKey },
     { label: "folderTrail", value: r => (r.folderTrail ?? []).join(" / ") },
     { label: "category", value: r => r.category ?? "" },
     { label: "status", value: r => r.status },

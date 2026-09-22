@@ -10,7 +10,7 @@
 import { notFound, redirect } from "next/navigation"
 import Link from "next/link"
 import { libraryContext } from "@/lib/library"
-import { libraryDetail } from "@/lib/libraryRead"
+import { libraryDetail, statusTagClass } from "@/lib/libraryRead"
 import { brandingView } from "@/lib/tenants"
 import { tenantStyle } from "@/components/TenantHeader"
 import { formatDate, dictionary } from "@/lib/i18n"
@@ -174,6 +174,15 @@ export default async function DocumentDetailPage({
   const draftRounds = draftVersionId ? (rounds.get(draftVersionId) ?? []) : []
   const draftState = stateOf(draftRounds)
 
+  /* Stav do hlavičky — ten istý slovník a tá istá trieda ako pilulka
+     v zozname (`statusTagClass`, PR 8). */
+  const tl = dictionary(language).library.list
+  const headerStatus = draftState === "in-review" ? "in-review" : d.status
+  const statusPill = (value: string) =>
+    value === "published" ? tl.statusPublished
+    : value === "in-review" ? tl.statusInReview
+    : tl.draft
+
   /*
    * Rozdiel konceptu proti **textu platného znenia** — podklad pre opravu bez
    * novej verzie. Text sa berie v tom istom poradí ako v `fixText()`
@@ -208,11 +217,11 @@ export default async function DocumentDetailPage({
 
   return (
     <AppShell language={ctx.person.language}>
-    <div style={{ maxWidth: 1180, ...tenantStyle(branding) }}>
+    <div className="detail-page" style={tenantStyle(branding)}>
       <Notice message={message} error={error === "1"} back={`/library/${encodeURIComponent(documentId)}`} />
 
-      <p style={{ margin: "0 0 12px" }}>
-        <Link className="quiet" href="/library" style={{ fontSize: "var(--fs-body)" }}>{t.back}</Link>
+      <p className="detail-back">
+        <Link className="quiet" href="/library">{t.back}</Link>
       </p>
 
       {/*
@@ -220,13 +229,25 @@ export default async function DocumentDetailPage({
         pohľad — stav spracovania a druh; identifikátor a priečinok idú pod
         názov, lebo sa čítajú až vtedy, keď názvy nestačia.
       */}
+      {/*
+        Stav dokumentu farebne, tou istou funkciou ako v zozname (DETAIL,
+        úloha 2) — človek príde z farebného zoznamu a nemá stratiť istotu,
+        že je to ten istý stav. Bežiace kolo nad konceptom je „na schválenie"
+        (MASTER). Technické spracovanie sa ukazuje len keď niečo hovorí:
+        hotový stav sa nekreslí, zlyhanie je červené (rovnako ako v zozname).
+      */}
       <div className="detail-chips">
-        <span className="tag">{dictionary(language).library.list.processing[d.processingState] ?? d.processingState}</span>
+        <span className={statusTagClass(headerStatus)}>{statusPill(headerStatus)}</span>
+        {d.processingState !== "indexed" && (
+          <span className={d.processingState === "failed" ? "tag tag--expired" : "tag"}>
+            {tl.processing[d.processingState] ?? d.processingState}
+          </span>
+        )}
         {d.category && <span className="tag quiet">{d.category}</span>}
       </div>
 
-      <h1 className="page-title" style={{ margin: "0 0 4px" }}>{d.title}</h1>
-      <p className="quiet" style={{ fontSize: "var(--fs-body)", margin: "0 0 18px" }}>
+      <h1 className="page-title">{d.title}</h1>
+      <p className="quiet detail-lead">
         {d.documentId}
         {effective && ` · ${effective.label}`}
         {effective?.effectiveFrom && ` · ${formatDate(effective.effectiveFrom, language)}`}
@@ -239,8 +260,98 @@ export default async function DocumentDetailPage({
       <div className="detail-grid">
         <div className="detail-main">
 
-      <details className="card" style={{ padding: 18, margin: "0 0 18px" }}>
-        <summary style={{ cursor: "pointer", fontWeight: 600 }}>
+      {/*
+        Úroveň 2 — čo treba teraz (DETAIL, úloha 1). Vždy najviac jedna karta
+        a vždy v jednom stave, odvodenom z dokumentu a z bežiaceho kola:
+        koncept bez platného znenia → zverejniť znenie; platné znenie a
+        pripravený koncept → zverejniť nové znenie (v názve je, ktoré platí,
+        aby bolo zrejmé, že karta hovorí o pripravovanom, nie o platnom);
+        beží kolo → stav kola, bez tlačidla na predloženie (to stráži
+        `ApprovalPanel`); publikované a nič sa nepripravuje → žiadna karta.
+      */}
+      {hasChangesToPublish && (
+      <section className="card detail-block">
+        <h2 className="detail-block-title">
+          {draftState === "in-review"
+            ? t.nowInReview
+            : effective
+              ? t.nowPublishNew(effective.label)
+              : t.publishHeading}
+        </h2>
+            <div style={{ display: "grid", gap: 8 }}>
+              <h3 className="field-label" style={{ margin: 0 }}>{t.draftApprovalHeading}</h3>
+              <ApprovalPanel
+                documentId={d.documentId}
+                documentTitle={d.title}
+                versionId={draftVersionId ?? ""}
+                versionLabel={t.approvalDraftLabel}
+                effectiveFrom={null}
+                state={draftState}
+                rounds={draftRounds}
+                people={approverChoices}
+                language={language}
+              />
+            </div>
+
+            {draftState !== "approved" ? (
+              <p className="detail-block-note">
+                {draftState === "in-review" ? t.publishWaitsForApproval : t.publishNeedsApproval}
+              </p>
+            ) : (
+              <>
+                <p className="detail-block-note">{t.publishApprovedNote}</p>
+              <form action={publishVersionAction} style={{ display: "grid", gap: 14 }}>
+                <input type="hidden" name="documentId" value={d.documentId} />
+
+                <label className="field">
+                  <span className="field-label">{t.versionLabel}</span>
+                  <input className="field-input" name="label" required
+                         placeholder={t.versionLabelPlaceholder} />
+                  <span className="quiet field-hint">
+                    {t.labelNoteBefore}<strong>{t.labelNoteHighlight}</strong>{t.labelNoteAfter}
+                  </span>
+                </label>
+
+                <label className="field">
+                  <span className="field-label">{t.effectiveFrom}</span>
+                  <input className="field-input" type="date" name="effectiveFrom" required />
+                  <span className="quiet field-hint">{t.effectiveFromNote}</span>
+                </label>
+
+                <label className="field">
+                  <span className="field-label">{t.effectiveFromSource}</span>
+                  <input className="field-input" name="effectiveFromSource" required
+                         placeholder={t.effectiveFromSourcePlaceholder} />
+                  <span className="quiet field-hint">{t.effectiveFromSourceNote}</span>
+                </label>
+
+                <label className="field">
+                  <span className="field-label">{t.changeNote}</span>
+                  <input className="field-input" name="changeNote" placeholder={t.changeNotePlaceholder} />
+                </label>
+
+                <div><button className="button" type="submit">{t.publish}</button></div>
+              </form>
+              </>
+            )}
+
+      </section>
+      )}
+
+      {/*
+        Úroveň 3 — ostatné akcie za jedným nadpisom (DETAIL, úloha 1).
+        Väčšina z nich je vzácna: preindexovanie pri poruche, nové znenie raz
+        za rok, oprava textu výnimočne. `<details>`, nie záložky: záložky
+        potrebujú klientsky stav alebo adresu, a zatvorený stav je tu správny
+        predvolený stav — kto prišiel dokument zverejniť, nechce vidieť
+        formulár na preindexovanie. Metadáta sú prvé, lebo sú z tejto skupiny
+        najčastejšie.
+      */}
+      <details className="detail-tools">
+        <summary>{t.toolsSummary}</summary>
+        <div className="detail-tools-body">
+      <details className="card detail-block">
+        <summary>
           {t.documentData}
           <span className="quiet" style={{ fontWeight: 400, fontSize: "var(--fs-small)" }}>
             {" "}· {d.language} · {d.accessLevel}
@@ -325,33 +436,73 @@ export default async function DocumentDetailPage({
             />
           </div>
 
-          <p className="quiet" style={{ fontSize: "var(--fs-small)", margin: 0 }}>
+          <p className="detail-block-small">
             {t.keyNoteBefore}<code>{d.documentId}</code>{t.keyNoteAfter}
           </p>
 
           <div><button className="button" type="submit">{t.save}</button></div>
         </form>
       </details>
+      <section className="card detail-block">
+        <div style={{ display: "flex", gap: 10, alignItems: "baseline", flexWrap: "wrap" }}>
+          <h2 className="detail-block-title">{t.text}</h2>
+          <Link href={`/library/${encodeURIComponent(documentId)}/text`}>{t.openEditor}</Link>
+        </div>
 
-      {/*
-        Zopakovanie pridelenia na nové znenie.
+        {d.originalFile ? (
+          <p className="detail-block-note">
+            {t.originalFile}{" "}
+            <a href={`/api/library/file/${encodeURIComponent(d.originalFile.id)}`} target="_blank" rel="noreferrer">
+              {d.originalFile.name}
+            </a>{" "}
+            · {t.uploadedBy(d.originalFile.uploadedBy, formatDate(d.originalFile.uploadedAt, language))}
+            {d.conversion && ` · ${t.conversionMethod(d.conversion.method)}`}
+          </p>
+        ) : (
+          <p className="detail-block-note">
+            {t.noOriginal}
+          </p>
+        )}
 
-        **Ukáže sa podľa stavu, nie po udalosti.** Znenie sa bežne zverejní
-        v septembri s účinnosťou od januára a prideliť sa dá až účinné (D73/D6),
-        takže ponuka viazaná na okamih zverejnenia by polovicu prípadov minula.
-        Táto visí dovtedy, kým platné znenie nemá pridelenia, ktoré predošlé
-        malo — teda presne nad tou pomlčkou, ktorú v knižnici ukazuje stĺpec
-        s potvrdeniami.
+        {d.conversion?.warnings?.length ? (
+          <ul className="quiet" style={{ fontSize: "var(--fs-small)", margin: 0, paddingLeft: 18 }}>
+            {d.conversion.warnings.map((u, i) => <li key={i}>{u}</li>)}
+          </ul>
+        ) : null}
 
-        Vidí ju personalista, nie správca obsahu: je to zápis povinnosti
-        človeku. Rolu overuje aj samotná akcia — karta, ktorá nie je vidieť,
-        nie je kontrola prístupu.
-      */}
-      {canAssign && carryOver.length > 0 && (
-      <form action={carryOverAssignmentsAction} className="card" style={{ padding: 18, margin: "0 0 18px" }}>
+        <p className="detail-block-small">
+          {hasChangesToPublish
+            ? t.draftDiffers
+            : draft || published
+              ? t.draftSame
+              : t.draftEmpty}
+        </p>
+      </section>
+      <form action={assignToFolderAction} className="card detail-block tree-form">
         <input type="hidden" name="documentId" value={d.documentId} />
-        <h2 style={{ fontSize: "var(--fs-section)", margin: "0 0 6px" }}>{tc.heading}</h2>
-        <p className="quiet" style={{ fontSize: "var(--fs-small)", margin: "0 0 14px" }}>
+        <div className="field">
+          <span className="field-label">{t.folder}</span>
+          <Select
+            name="folderId"
+            initial={d.folderId ?? ""}
+            fieldLabel={t.folder}
+            options={[
+              { value: "", label: t.folderUnfiled },
+              ...folderTree.map(r => ({
+                value: r.folder.id,
+                label: `${"— ".repeat(r.level - 1)}${r.folder.name}`,
+              })),
+            ]}
+          />
+          <span className="quiet field-hint">{t.folderNote}</span>
+        </div>
+        <button className="button button--quiet" type="submit">{t.assign}</button>
+      </form>
+      {canAssign && carryOver.length > 0 && (
+      <form action={carryOverAssignmentsAction} className="card detail-block">
+        <input type="hidden" name="documentId" value={d.documentId} />
+        <h2 className="detail-block-title">{tc.heading}</h2>
+        <p className="detail-block-small">
           {tc.intro(carryOverVersion?.label ?? d.effectiveLabel)}
         </p>
 
@@ -405,152 +556,24 @@ export default async function DocumentDetailPage({
         <p className="quiet" style={{ fontSize: "var(--fs-small)", margin: "10px 0 0" }}>{tc.noEmailNote}</p>
       </form>
       )}
-
-      <form action={assignToFolderAction} className="card tree-form" style={{ padding: 18, margin: "0 0 18px" }}>
+      <form action={uploadVersionAction} encType="multipart/form-data"
+            className="card detail-block">
         <input type="hidden" name="documentId" value={d.documentId} />
-        <div className="field" style={{ flex: "1 1 260px", margin: 0 }}>
-          <span className="field-label">{t.folder}</span>
-          <Select
-            name="folderId"
-            initial={d.folderId ?? ""}
-            fieldLabel={t.folder}
-            options={[
-              { value: "", label: t.folderUnfiled },
-              ...folderTree.map(r => ({
-                value: r.folder.id,
-                label: `${"— ".repeat(r.level - 1)}${r.folder.name}`,
-              })),
-            ]}
-          />
-          <span className="quiet field-hint">{t.folderNote}</span>
-        </div>
-        <button className="button button--quiet" type="submit">{t.assign}</button>
+        <h2 className="detail-block-title">{t.newVersionHeading}</h2>
+        <p className="detail-block-note">{t.newVersionNote}</p>
+        <label className="field">
+          <span className="field-label">{t.newVersionFile}</span>
+          <input className="field-input" type="file" name="file" required
+                 accept=".pdf,.docx,.xlsx,.md,.txt,.csv" />
+        </label>
+        <div><button className="button button--quiet" type="submit">{t.newVersionSubmit}</button></div>
       </form>
-
-      <section className="card" style={{ padding: 18, display: "grid", gap: 10, margin: "0 0 18px" }}>
-        <div style={{ display: "flex", gap: 10, alignItems: "baseline", flexWrap: "wrap" }}>
-          <h2 style={{ fontSize: "var(--fs-section)", margin: 0 }}>{t.text}</h2>
-          <Link href={`/library/${encodeURIComponent(documentId)}/text`}>{t.openEditor}</Link>
-        </div>
-
-        {d.originalFile ? (
-          <p className="quiet" style={{ fontSize: "var(--fs-body)", margin: 0 }}>
-            {t.originalFile}{" "}
-            <a href={`/api/library/file/${encodeURIComponent(d.originalFile.id)}`} target="_blank" rel="noreferrer">
-              {d.originalFile.name}
-            </a>{" "}
-            · {t.uploadedBy(d.originalFile.uploadedBy, formatDate(d.originalFile.uploadedAt, language))}
-            {d.conversion && ` · ${t.conversionMethod(d.conversion.method)}`}
-          </p>
-        ) : (
-          <p className="quiet" style={{ fontSize: "var(--fs-body)", margin: 0 }}>
-            {t.noOriginal}
-          </p>
-        )}
-
-        {d.conversion?.warnings?.length ? (
-          <ul className="quiet" style={{ fontSize: "var(--fs-small)", margin: 0, paddingLeft: 18 }}>
-            {d.conversion.warnings.map((u, i) => <li key={i}>{u}</li>)}
-          </ul>
-        ) : null}
-
-        <p className="quiet" style={{ fontSize: "var(--fs-small)", margin: 0 }}>
-          {hasChangesToPublish
-            ? t.draftDiffers
-            : draft || published
-              ? t.draftSame
-              : t.draftEmpty}
-        </p>
-      </section>
-
-      <section className="card" style={{ padding: 18, display: "grid", gap: 14, margin: "0 0 18px" }}>
-        <h2 style={{ fontSize: "var(--fs-section)", margin: 0 }}>{t.publishHeading}</h2>
-
-        {!hasChangesToPublish ? (
-          <p className="quiet" style={{ fontSize: "var(--fs-body)", margin: 0 }}>
-            {t.nothingToPublish}
-          </p>
-        ) : (
-          <>
-            {/*
-              Schvaľovací panel **nad** formulárom, nie chybová hláška po
-              odoslaní. Kto vypĺňa označenie a dátum platnosti, má vopred
-              vidieť, že bez schválenia to neprejde — formulár, ktorý sa dá
-              celý vyplniť a až potom odmietne, je stratený čas a vyzerá ako
-              porucha, hoci je to pravidlo.
-            */}
-            <div style={{ display: "grid", gap: 8 }}>
-              <h3 className="field-label" style={{ margin: 0 }}>{t.draftApprovalHeading}</h3>
-              <ApprovalPanel
-                documentId={d.documentId}
-                documentTitle={d.title}
-                versionId={draftVersionId ?? ""}
-                versionLabel={t.approvalDraftLabel}
-                effectiveFrom={null}
-                state={draftState}
-                rounds={draftRounds}
-                people={approverChoices}
-                language={language}
-              />
-            </div>
-
-            {draftState !== "approved" ? (
-              <p className="quiet" style={{ fontSize: "var(--fs-body)", margin: 0 }}>
-                {draftState === "in-review" ? t.publishWaitsForApproval : t.publishNeedsApproval}
-              </p>
-            ) : (
-              <>
-                <p className="quiet" style={{ fontSize: "var(--fs-body)", margin: 0 }}>{t.publishApprovedNote}</p>
-              <form action={publishVersionAction} style={{ display: "grid", gap: 14 }}>
-                <input type="hidden" name="documentId" value={d.documentId} />
-
-                <label className="field">
-                  <span className="field-label">{t.versionLabel}</span>
-                  <input className="field-input" name="label" required
-                         placeholder={t.versionLabelPlaceholder} />
-                  <span className="quiet field-hint">
-                    {t.labelNoteBefore}<strong>{t.labelNoteHighlight}</strong>{t.labelNoteAfter}
-                  </span>
-                </label>
-
-                <label className="field">
-                  <span className="field-label">{t.effectiveFrom}</span>
-                  <input className="field-input" type="date" name="effectiveFrom" required />
-                  <span className="quiet field-hint">{t.effectiveFromNote}</span>
-                </label>
-
-                <label className="field">
-                  <span className="field-label">{t.effectiveFromSource}</span>
-                  <input className="field-input" name="effectiveFromSource" required
-                         placeholder={t.effectiveFromSourcePlaceholder} />
-                  <span className="quiet field-hint">{t.effectiveFromSourceNote}</span>
-                </label>
-
-                <label className="field">
-                  <span className="field-label">{t.changeNote}</span>
-                  <input className="field-input" name="changeNote" placeholder={t.changeNotePlaceholder} />
-                </label>
-
-                <div><button className="button" type="submit">{t.publish}</button></div>
-              </form>
-              </>
-            )}
-
-            {/*
-              Druhá cesta, zámerne **pod** publikovaním a schovaná: oprava textu
-              platného znenia bez novej verzie. Je to výnimka, nie rovnocenná
-              možnosť — kto sem klikne, pošle von text, ktorý neprešiel
-              schvaľovaním (D73). Preto musí mať rozdiel pred očami a napísať
-              dôvod, a preto je to schované za jedným kliknutím navyše.
-            */}
             {effective && draftDiff && draftDiff.added + draftDiff.removed > 0 && (
-              <details>
-                <summary className="quiet" style={{ fontSize: "var(--fs-small)", cursor: "pointer" }}>
-                  {t.textFixHeading}
-                </summary>
+              <details className="card detail-block">
+                <summary>{t.textFixHeading}</summary>
 
                 <div style={{ display: "grid", gap: 12, marginTop: 12 }}>
-                  <p className="quiet" style={{ fontSize: "var(--fs-body)", margin: 0 }}>{t.textFixIntro}</p>
+                  <p className="detail-block-note">{t.textFixIntro}</p>
 
                   <div>
                     <h4 className="field-label" style={{ margin: "0 0 6px" }}>
@@ -586,7 +609,7 @@ export default async function DocumentDetailPage({
                     </div>
                   </div>
 
-                  <p className="quiet" style={{ fontSize: "var(--fs-small)", margin: 0 }}>{t.textFixApprovalNote}</p>
+                  <p className="detail-block-small">{t.textFixApprovalNote}</p>
 
                   <form action={fixTextAction} style={{ display: "grid", gap: 12 }}>
                     <input type="hidden" name="documentId" value={d.documentId} />
@@ -609,39 +632,18 @@ export default async function DocumentDetailPage({
                 </div>
               </details>
             )}
-          </>
-        )}
-      </section>
-
-      {/*
-        Nové znenie zo súboru (D80). Dovtedy sa nový súbor dal dostať dnu
-        jedine opätovným prechodom cez obrazovku nového dokumentu s tým istým
-        kľúčom — a tá cesta ticho prepísala koncept aj metadáta. Tu je zámer
-        jasný a metadáta sa neberú z formulára.
-      */}
-      <form action={uploadVersionAction} encType="multipart/form-data"
-            className="card" style={{ padding: 18, display: "grid", gap: 10, margin: "0 0 18px" }}>
+      <form action={reindexDocumentAction} className="card detail-block">
         <input type="hidden" name="documentId" value={d.documentId} />
-        <h2 style={{ fontSize: "var(--fs-section)", margin: 0 }}>{t.newVersionHeading}</h2>
-        <p className="quiet" style={{ fontSize: "var(--fs-body)", margin: 0 }}>{t.newVersionNote}</p>
-        <label className="field">
-          <span className="field-label">{t.newVersionFile}</span>
-          <input className="field-input" type="file" name="file" required
-                 accept=".pdf,.docx,.xlsx,.md,.txt,.csv" />
-        </label>
-        <div><button className="button button--quiet" type="submit">{t.newVersionSubmit}</button></div>
-      </form>
-
-      <form action={reindexDocumentAction} className="card" style={{ padding: 18, display: "grid", gap: 10, margin: "0 0 18px" }}>
-        <input type="hidden" name="documentId" value={d.documentId} />
-        <h2 style={{ fontSize: "var(--fs-section)", margin: 0 }}>{t.reindexHeading}</h2>
-        <p className="quiet" style={{ fontSize: "var(--fs-body)", margin: 0 }}>
+        <h2 className="detail-block-title">{t.reindexHeading}</h2>
+        <p className="detail-block-note">
           {t.reindexNoteBefore}<strong>{t.reindexNoteHighlight}</strong>{t.reindexNoteAfter}
         </p>
         <div><button className="button button--quiet" type="submit">{t.reindex}</button></div>
       </form>
+        </div>
+      </details>
 
-      <h2 style={{ fontSize: "var(--fs-section)", margin: "0 0 10px" }}>{t.versionsHeading(d.versions.length)}</h2>
+      <h2 className="detail-section-title">{t.versionsHeading(d.versions.length)}</h2>
 
       {d.versions.length === 0 ? (
         <p className="card" style={{ padding: 18, fontSize: "var(--fs-lead)" }}>
@@ -653,7 +655,9 @@ export default async function DocumentDetailPage({
             <li key={v.versionId} className="card audit-entry">
               <div className="audit-head">
                 <strong>{v.label}</strong>
-                {v.isActive ? <span className="tag">{t.active}</span> : <span className="tag">{t.archived}</span>}
+                {v.isActive
+                  ? <span className="tag tag--published">{t.active}</span>
+                  : <span className="tag tag--archived">{t.archived}</span>}
               </div>
               <div className="quiet audit-who">
                 {v.effectiveFrom ? t.effectiveFromOn(formatDate(v.effectiveFrom, language)) : t.noEffectiveDate}
@@ -748,7 +752,7 @@ export default async function DocumentDetailPage({
                     ho nemá — a rovno povie prečo.
                   */}
                   {(ackByVersion.get(v.versionId) ?? 0) > 0 ? (
-                    <p className="quiet" style={{ fontSize: "var(--fs-small)", margin: 0 }}>
+                    <p className="detail-block-small">
                       {t.versionLockedBefore}
                       <strong>{t.versionLockedHighlight(ackByVersion.get(v.versionId) ?? 0)}</strong>
                       {t.versionLockedAfter}
@@ -800,7 +804,7 @@ export default async function DocumentDetailPage({
                     <input type="hidden" name="documentId" value={d.documentId} />
                     <input type="hidden" name="versionId" value={v.versionId} />
                     <h3 style={{ fontSize: "var(--fs-body)", margin: 0 }}>{t.revokeVersionHeading}</h3>
-                    <p className="quiet" style={{ fontSize: "var(--fs-small)", margin: 0 }}>
+                    <p className="detail-block-small">
                       {t.revokeVersionNote(ackByVersion.get(v.versionId) ?? 0)}
                     </p>
                     <label className="field">

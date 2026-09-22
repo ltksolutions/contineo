@@ -25,6 +25,7 @@ import { normalizeQuery, type RawQuery } from "@/lib/urlParams"
 import { dictionary, formatDate } from "@/lib/i18n"
 import { evidenceRows } from "@/lib/evidenceDb"
 import type { EvidenceState } from "@/lib/evidence"
+import { dutyState, dutyTagClass } from "@/lib/due"
 
 export const dynamic = "force-dynamic"
 
@@ -43,7 +44,9 @@ export default async function EvidencePage({
 
   const language = ctx.person.language
   const t = dictionary(language).evidence
+  const tds = dictionary(language).hr.dutyState
   const branding = brandingView(ctx.tenant)
+  const now = new Date()
 
   const all = await evidenceRows(ctx.person.companyCode)
   const wantedState = STATES.includes(q.state as EvidenceState) ? (q.state as EvidenceState) : null
@@ -111,7 +114,14 @@ export default async function EvidencePage({
           <div><button className="button" type="submit">{t.apply}</button></div>
         </LiveFilter>
 
-        {rows.length === 0 && <p className="card" style={{ padding: 20 }}>{t.nothing}</p>}
+        {/* Dva prázdne stavy (HR.md, úloha 6): filter, ktorému nič nevyhovuje,
+            nie je to isté ako organizácia bez jediného záznamu. */}
+        {rows.length === 0 && (
+          <div className="empty" style={{ marginTop: 18 }}>
+            <div className="empty-title">{all.length > 0 ? t.emptyFilterTitle : t.emptyTitle}</div>
+            <div className="empty-text">{all.length > 0 ? t.emptyFilterText : t.emptyText}</div>
+          </div>
+        )}
 
         {/*
           Rozbaľovacie karty, nie rozvinuté osi pod sebou.
@@ -125,15 +135,30 @@ export default async function EvidencePage({
           v stránke aj v zloženom stave.
         */}
         <ul className="widget-list">
-          {rows.map(r => (
+          {rows.map(r => {
+            // Odvolanie je záznam, ktorý výkaz nevidí (platí len „nepotvrdené");
+            // pilulka ho má povedať — preto ide do `dutyState()` ako `revokedAt`.
+            const duty = { ...r.duty, revokedAt: r.revocation?.revokedAt ?? null }
+            const state = dutyState(duty, now)
+            // Dátum do `<summary>` (HR.md, úloha 5): to, čo kontrolór hľadá,
+            // je vidieť bez rozbalenia. Kedy potvrdil; pri odvolaní kedy
+            // odvolané; inak kedy otvoril — alebo že vôbec nie.
+            const when =
+              state === "acknowledged" && r.duty.acknowledgedAt ? formatDate(r.duty.acknowledgedAt, language)
+              : state === "revoked" && r.revocation ? formatDate(r.revocation.revokedAt, language)
+              : r.firstOpenedAt ? formatDate(r.firstOpenedAt, language)
+              : tds["not-opened"]
+            return (
             <li key={`${r.duty.personId}-${r.duty.versionId}`}>
               <details className="widget card">
                 <summary className="widget-summary">
                   <span className="widget-main">
                     <span className="widget-title">{r.duty.fullName}</span>
-                    <span className={`tag evidence-state evidence-state--${r.state}`}>
-                      {t.states[r.state]}
-                    </span>
+                    {/* Jedna škála pre celú rolu (HR.md, úloha 1): stav aj
+                        farbu dáva `dutyState()`, nie vlastné triedy. Filter
+                        ostáva na troch stavoch osi — „po termíne" je nad nimi. */}
+                    <span className={dutyTagClass(duty, now)}>{tds[state]}</span>
+                    <span className="quiet" style={{ fontSize: "var(--fs-small)" }}>{when}</span>
                   </span>
                   <span className="quiet widget-meta">
                     {r.duty.documentTitle} · {r.duty.versionLabel}
@@ -146,11 +171,60 @@ export default async function EvidencePage({
                   </svg>
                 </summary>
                 <div className="widget-body">
+                  {/*
+                    Údaje dôkazu (D24, D28) ako dvojice kľúč/hodnota — ten
+                    istý `<dl class="detail-meta">` ako bočný panel detailu
+                    dokumentu, žiadne nové triedy (HR.md, úloha 5). Nič sa
+                    nezmenšuje: os s váhou riadkov ostáva pod nimi.
+                  */}
+                  <dl className="detail-meta" style={{ margin: "12px 0 14px" }}>
+                    <div className="detail-meta-row">
+                      <dt className="quiet detail-meta-key">{t.rows.ip}</dt>
+                      <dd className="detail-meta-value">{r.acknowledgement?.ip ?? t.none}</dd>
+                    </div>
+                    <div className="detail-meta-row">
+                      <dt className="quiet detail-meta-key">{t.rows.department}</dt>
+                      <dd className="detail-meta-value">
+                        {r.acknowledgement?.departmentNames.length ? r.acknowledgement.departmentNames.join(" / ") : t.none}
+                      </dd>
+                    </div>
+                    <div className="detail-meta-row">
+                      <dt className="quiet detail-meta-key">{t.rows.statement}</dt>
+                      <dd className="detail-meta-value">{r.acknowledgement?.statementText || t.none}</dd>
+                    </div>
+                    <div className="detail-meta-row">
+                      <dt className="quiet detail-meta-key">{t.rows.reading}</dt>
+                      <dd className="detail-meta-value">
+                        {r.duty.readingSeconds !== null ? t.seconds(r.duty.readingSeconds) : t.none}
+                      </dd>
+                    </div>
+                    <div className="detail-meta-row">
+                      <dt className="quiet detail-meta-key">{t.rows.opened}</dt>
+                      <dd className="detail-meta-value">
+                        {r.firstOpenedAt ? formatDate(r.firstOpenedAt, language) : t.gap["not-yet"]}
+                      </dd>
+                    </div>
+                    {r.revocation && (
+                      <>
+                        <div className="detail-meta-row">
+                          <dt className="quiet detail-meta-key">{t.rows.revokedBy}</dt>
+                          <dd className="detail-meta-value">
+                            {r.revocation.by ?? t.none} · {formatDate(r.revocation.revokedAt, language)}
+                          </dd>
+                        </div>
+                        <div className="detail-meta-row">
+                          <dt className="quiet detail-meta-key">{t.rows.revokeReason}</dt>
+                          <dd className="detail-meta-value">{r.revocation.reason ?? t.none}</dd>
+                        </div>
+                      </>
+                    )}
+                  </dl>
                   <EvidenceTimeline timeline={r.timeline} language={language} />
                 </div>
               </details>
             </li>
-          ))}
+            )
+          })}
         </ul>
       </div>
     </AppShell>

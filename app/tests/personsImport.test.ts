@@ -7,7 +7,7 @@
  */
 
 import { describe, it, expect } from "vitest"
-import { rowToPerson, csvToPersons, fieldValue, REASONS, emptyNotes } from "../src/lib/personsImport"
+import { rowToPerson, csvToPersons, fieldValue, hasField, REASONS, emptyNotes } from "../src/lib/personsImport"
 
 describe("mapovanie hlaviciek", () => {
   it("rozpozná slovenské aj anglické názvy stĺpcov", () => {
@@ -34,11 +34,28 @@ describe("riadok na osobu", () => {
     expect(rowToPerson({ email: "a@b.sk" }).language).toBeUndefined()
   })
 
-  it("nevyplnené zoznamy zostanú nevyplnené, nie prázdne", () => {
-    // `undefined` znamená „nemeň", prázdne pole znamená „zmaž".
+  it("chýbajúci stĺpec zoznamu nechá hodnotu nevyplnenú, nie prázdnu", () => {
+    // `undefined` znamená „o tomto nič nehovorím", prázdne pole znamená „zmaž".
     const o = rowToPerson({ email: "a@b.sk" })
     expect(o.groups).toBeUndefined()
     expect(o.tracks).toBeUndefined()
+  })
+
+  it("prítomný ale prázdny stĺpec zoznamu znamená vyprázdniť", () => {
+    // Súbor so stĺpcom „skupiny" a prázdnou bunkou hovorí, že ten človek
+    // do žiadnej skupiny nepatrí — to sa zapísať má.
+    const o = rowToPerson({ email: "a@b.sk", skupiny: "", trasy: "" })
+    expect(o.groups).toEqual([])
+    expect(o.tracks).toEqual([])
+  })
+
+  it("hasField pozná stĺpec, nie hodnotu", () => {
+    expect(hasField({ skupiny: "" }, "groups")).toBe(true)
+    expect(hasField({ groups: "rozhodcovia" }, "groups")).toBe(true)
+    expect(hasField({ email: "a@b.sk" }, "groups")).toBe(false)
+    // Celý súbor: hlavička je, bunka prázdna — parseCsv dá kľúč každému riadku.
+    const [person] = csvToPersons("email;skupiny\na@b.sk;\n")
+    expect(person.groups).toEqual([])
   })
 })
 

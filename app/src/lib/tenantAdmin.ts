@@ -12,6 +12,7 @@
  */
 
 import { getCollection } from "./mongodb"
+import { withoutCollision } from "./slug"
 import { writeAudit, diff } from "./audit"
 import {
   TENANTS_COLLECTION,
@@ -316,7 +317,21 @@ export async function createTenant(
 
   const col = await getCollection<TenantDoc>(TENANTS_COLLECTION)
   if (await col.findOne({ companyCode: code })) {
-    throw new TenantValidationError("tenant.alreadyExists", `Organizácia ${code} už existuje.`, { code })
+    /*
+      Hláška nesie **voľný variant**, nie len „obsadené" (ADMIN, úloha 1.4,
+      rozhodnutie Jána 2026-09-22). Bez JavaScriptu je „kód je obsadený"
+      slepá ulička: admin háda ďalší a skúša znova. Návrh počíta tá istá
+      funkcia ako formulár (`withoutCollision`), takže obe strany dôjdu
+      k rovnakému kódu.
+    */
+    const taken = (await col.find({}, { projection: { companyCode: 1 } }).toArray())
+      .map(t => t.companyCode)
+    const free = withoutCollision(code, taken)
+    throw new TenantValidationError(
+      "tenant.alreadyExists",
+      `Organizácia ${code} už existuje. Voľný je ${free}.`,
+      { code, free },
+    )
   }
 
   const hostnames = change.hostnames ?? []

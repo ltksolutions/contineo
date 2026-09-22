@@ -115,6 +115,13 @@
    */
   --fs-control: 16px;
   --control-h: 40px;
+  /*
+   * Nižšie pole v páse — hlavička a lišta zoznamu (ZAKLAD, odchýlka A).
+   * 36 px je zámer, nie náhoda: pás sa používa, formulár sa vypĺňa
+   * (`--control-h`). Tretia výška poľa nesmie vzniknúť. Od témy nezávislé,
+   * preto sa v tmavom bloku neopakuje.
+   */
+  --control-h-sm: 36px;
 }
 
 @media (min-width: 640px) {
@@ -336,7 +343,7 @@ button:disabled { cursor: not-allowed; opacity: 0.55; }
      v hlavičke je tichšie než polia formulárov (`--control-h`). Písmo
      zostáva `--fs-control`: pod 16 px by iOS pri kliknutí do poľa stránku
      priblížil, a to nezávisí od výšky poľa. */
-  height: 36px;
+  height: var(--control-h-sm);
   padding: 0 11px 0 34px;
   font: inherit;
   font-size: var(--fs-control);
@@ -694,6 +701,31 @@ button:disabled { cursor: not-allowed; opacity: 0.55; }
 
 .page-head .page-title { margin: 0; }
 
+/*
+ * Prázdny stav zoznamu (ZAKLAD, úloha 1) — jedna trieda, tri časti: čo tu
+ * nie je, prečo, a čo s tým. Prázdno nie je chyba; text má povedať, či je
+ * zoznam prázdny preto, že filter nič nenašiel, alebo preto, že niet čoho.
+ * Bez ikony a ilustrácie: prázdny zoznam je bežný stav pracovného nástroja,
+ * nie udalosť, ktorú treba ozdobiť.
+ */
+.empty {
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  padding: 32px 20px;
+  border: 1px dashed var(--line);
+  border-radius: var(--radius);
+  text-align: center;
+}
+.empty-title { font-size: var(--fs-lead); font-weight: 600; }
+.empty-text {
+  font-size: var(--fs-small);
+  color: var(--muted);
+  line-height: 1.55;
+  max-width: 46ch;
+}
+.empty-action { margin-top: 10px; }
+
 .button {
   display: inline-flex;
   align-items: center;
@@ -728,6 +760,25 @@ button:disabled { cursor: not-allowed; opacity: 0.55; }
 }
 
 .button--quiet:hover:not(:disabled) { background: var(--surface-2); }
+
+/*
+ * Vypnutý stav ovládačov (ZAKLAD, úloha 3). `opacity`, nie vlastná sivá
+ * farba: tlačidlo si drží tenant farbu, takže vypnuté „Schváliť" je
+ * rozoznateľné od vypnutého „Zmazať" — sivá by z oboch urobila to isté
+ * tlačidlo. `aria-disabled` je tu preto, že odkaz sa `disabled` atribútom
+ * vypnúť nedá a stránkovanie aj nepovolené akcie sú odkazy.
+ */
+.button:disabled,
+.button[aria-disabled="true"] {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.field-input:disabled {
+  background: var(--surface-2);
+  color: var(--muted);
+  cursor: not-allowed;
+}
 
 /*
  * Správcovské formuláre.
@@ -1573,6 +1624,8 @@ html[data-theme="dark"] select.field-input {
 .answer {
   font-size: 15.5px;
   line-height: 1.75;
+  /* Riadok textu cez 1440 px sa nečíta (ASK, úloha 4). */
+  max-width: 70ch;
 }
 
 .answer > *:last-child { margin-bottom: 0; }
@@ -1595,10 +1648,22 @@ html[data-theme="dark"] select.field-input {
   border: 1px solid var(--line);
   border-radius: var(--radius-lg);
   padding: 20px 16px;
+  /* Šírka riadka (ZNENIE, úloha 3): v 760 px kontajneri mal riadok ~95
+     znakov a norma sa čítala ťažšie, než musela. Písmo ostáva 15,5 px
+     z `.answer` — zadanie predpokladalo zdedených 14 px, kód ich nemal. */
+  max-width: 68ch;
+  /* Na telefóne 16 px: dlhý právny text, nie popisok. */
+  font-size: 16px;
 }
 
+/* Nadpisy článkov v znení dostanú priestor nad sebou, nie len tučné písmo. */
+.document-sheet h2,
+.document-sheet h3 { margin: 28px 0 8px; }
+.document-sheet h2:first-child,
+.document-sheet h3:first-child { margin-top: 0; }
+
 @media (min-width: 640px) {
-  .document-sheet { padding: 28px 32px; }
+  .document-sheet { padding: 28px 32px; font-size: 15.5px; }
 }
 
 /* Kurzor počas streamovania — bez neho nie je poznať, či sa ešte generuje. */
@@ -1685,6 +1750,10 @@ html[data-theme="dark"] select.field-input {
    zostalo toľko miesta, že by v ňom nebolo vidieť názov. */
 .tree-form > :first-child { flex: 1 1 220px; min-width: 0; }
 
+/* Zrušenie priečinka s vetou, prečo sa nedá (PRIECINKY, úloha 2). */
+.tree-delete { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.tree-delete-hint { font-size: var(--fs-micro); line-height: 1.45; flex: 1 1 220px; }
+
 @media (max-width: 639px) {
   .tree-form { flex-direction: column; align-items: stretch; }
   .tree-form > * { width: 100%; }
@@ -1738,6 +1807,8 @@ html[data-theme="dark"] select.field-input {
   align-items: flex-end;
   margin: 0 0 14px;
 }
+
+.audit-filter > .field { flex: 1 1 260px; margin: 0; }
 
 @media (max-width: 639px) {
   .audit-filter { flex-direction: column; align-items: stretch; }
@@ -2058,6 +2129,19 @@ html[data-theme="dark"] .editor-tui .CodeMirror {
 .doc-table tbody tr:last-child td { border-bottom: 0; }
 .doc-table tbody tr:hover { background: var(--bg); }
 
+/*
+ * Označený riadok (ZAKLAD, úloha 4): k pozadiu `--accent-soft` ľavý pruh
+ * 3 px v `--accent`. V tmavej téme je accent-soft proti `--surface` rozdiel,
+ * ktorý pri jednom riadku medzi neoznačenými nevidieť — pruh áno.
+ * `box-shadow: inset`, nie `border-left`: okraj by riadok posunul o 3 px
+ * a stĺpce by sa medzi označeným a neoznačeným riadkom rozišli.
+ * Stojí za `:hover` zámerne — označený riadok si pozadie drží aj pod myšou.
+ */
+.doc-table tbody tr.is-picked { background: var(--accent-soft); }
+.doc-table tbody tr.is-picked td:first-child {
+  box-shadow: inset 3px 0 0 var(--accent);
+}
+
 /* Hlavička je odkaz, ktorý mení adresu — musí to byť vidieť aj bez farby. */
 .doc-sort {
   display: inline-flex;
@@ -2088,32 +2172,40 @@ html[data-theme="dark"] .editor-tui .CodeMirror {
 .doc-cell-quiet { color: var(--muted); }
 .doc-col-right { text-align: right; white-space: nowrap; }
 
-.doc-foot {
+/* Hlavička jediného pravého stĺpca („Zmenené"). `th` v selektore je nutný,
+   nie štýl: holá trieda (0,1,0) prehráva s `.doc-table th` (0,1,1) vyššie,
+   takže dátumy boli vpravo a hlavička vľavo — `<td>` proti sebe
+   type-qualified pravidlo nemá, `<th>` áno (ZAKLAD, úloha 5). */
+.doc-table th.doc-col-right { text-align: right; }
+
+/*
+ * Stránkovanie ako komponent (ZAKLAD, úloha 2) — jedna trieda, použiteľná
+ * pod tabuľkou aj pod kartami. Text vľavo je rozsah („Zobrazené 1–8 z 24"),
+ * nie číslo strany: číslo strany nehovorí nič o tom, koľko toho je.
+ * Neaktívny odkaz zostáva odkazom s `aria-disabled`, nie `<button disabled>`
+ * — stránkovanie musí fungovať bez JavaScriptu. Nahrádza niekdajšie
+ * `.doc-foot`/`.doc-page`, ktoré žili len v knižnici.
+ */
+.pager {
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
-  justify-content: space-between;
   gap: 10px;
-  padding: 10px 2px;
-  font-size: 13px;
-  font-variant-numeric: tabular-nums;
+  flex-wrap: wrap;
+  padding: 8px 12px;
+  background: var(--bg);
+  border-top: 1px solid var(--line);
+  font-size: var(--fs-micro);
+  color: var(--muted);
 }
 
-.doc-pager { display: inline-flex; align-items: center; gap: 10px; }
+.pager-count { font-variant-numeric: tabular-nums; }
+.pager-spacer { flex: 1; }
 
-.doc-page {
-  display: inline-flex;
-  align-items: center;
-  min-height: 36px;
-  padding: 0 12px;
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  color: var(--accent);
-  text-decoration: none;
-  font-weight: 600;
-}
-
-.doc-page:hover { background: var(--surface-2); }
+/* Rozmer k `.button--quiet` — odkaz nesie obe triedy. Vypnutý stav
+   (opacity) berie z `.button[aria-disabled]`, aby vypnuté ovládače mali
+   jednu hodnotu v celom rozhraní; tu sa len vypína klik. */
+.pager-link { min-height: 28px; padding: 0 10px; }
+.pager-link[aria-disabled="true"] { pointer-events: none; }
 
 /* ── nahratie dokumentu: sekcie a zóna na súbor ─────────────────────────
    Číslované sekcie, nie stepper: nahratie je jedno odoslanie formulára
@@ -2167,6 +2259,10 @@ html[data-theme="dark"] .editor-tui .CodeMirror {
 
 .upload-drop:hover { border-color: var(--accent); }
 
+/* Po chybe treba súbor vybrať znova (NAHRAVANIE, úloha 1) — zóna to povie
+   farbou, nielen hláška. */
+.upload-drop.is-required { border-color: var(--bad-fg); }
+
 /* Rámček dostane celá zóna, nie samotné pole — pri prechode klávesnicou
    je inak vidieť len tenký prúžok vnútri. */
 .upload-drop:focus-within {
@@ -2183,7 +2279,9 @@ html[data-theme="dark"] .editor-tui .CodeMirror {
   line-height: 1.5;
 }
 
-.upload-file { font: inherit; font-size: 14px; max-width: 100%; }
+/* Viditeľný, nie sr-only (NAHRAVANIE, úloha 2): prehliadač sám vypíše
+   „vybrané: rpp-4-2.pdf" — natívne chovanie, ktoré funguje všade. */
+.upload-file { font: inherit; font-size: var(--fs-small); max-width: 100%; margin-top: 10px; }
 
 .upload-grid {
   display: grid;
@@ -2196,7 +2294,35 @@ html[data-theme="dark"] .editor-tui .CodeMirror {
    stĺpca sa v nich zle číta. */
 .upload-wide { grid-column: 1 / -1; }
 
+/* Nepovinné polia za jedným nadpisom (NAHRAVANIE, úloha 6), vždy otvorené. */
+.upload-optional > summary {
+  font-size: var(--fs-small);
+  font-weight: 600;
+  padding: 10px 0;
+  cursor: pointer;
+}
+.upload-optional-grid { margin-top: 4px; }
+
+/* Telefón (NAHRAVANIE, rámy): „Nahrať" na celú šírku, 44 px. */
+@media (max-width: 639px) {
+  .upload-form > div > .button { width: 100%; min-height: 44px; }
+}
+
 .upload-grid .field { margin: 0; min-width: 0; }
+
+/* Náhľad identifikátora pod názvom (NAHRAVANIE, úloha 4 / ADR-010). Monospace:
+   je to kľúč, nie veta. Ručný kľúč je vedomý krok za `<details>`. */
+.key-preview {
+  margin-top: 6px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: var(--fs-micro);
+  color: var(--muted);
+}
+.key-preview-value { color: var(--ink); }
+.key-preview--taken { color: var(--bad-fg); }
+.key-preview--taken .key-preview-value { color: var(--bad-fg); }
+.key-manual > summary { font-size: var(--fs-small); font-weight: 600; cursor: pointer; }
+.key-manual > .field { margin-top: 10px; }
 
 /* ── detail dokumentu: obsah + bočný panel ───────────────────────────────
    Dva stĺpce až od 1024 px. Na telefóne je zhrnutie **kartou nad textom**
@@ -2226,11 +2352,48 @@ html[data-theme="dark"] .editor-tui .CodeMirror {
 .detail-chips {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
-  margin-bottom: 8px;
+  gap: 7px;
+  margin: 0 0 10px;
 }
 
+/* Bloky detailu (DETAIL, úloha 3) — inline štýly do tried. Šírka 1180 px
+   je vec obsahu (dva stĺpce), preto trieda stránky. */
+.detail-page { max-width: 1180px; }
+/* Dlhý názov normy sa zalomí pekne, nie s jedným slovom na druhom riadku
+   (DETAIL, úloha 4). Meta riadok pod ním sa zalamuje na „ · " s medzerami,
+   neskracuje sa. */
+.detail-page .page-title { text-wrap: pretty; overflow-wrap: anywhere; }
+.detail-back { margin: 0 0 12px; font-size: var(--fs-body); }
+.detail-lead { margin: 0 0 18px; font-size: var(--fs-body); }
+.detail-section-title { font-size: var(--fs-section); margin: 0 0 10px; }
+.detail-block { padding: 18px; display: grid; gap: 12px; margin: 0 0 18px; }
+/* V nástrojoch rozostupy drží mriežka, nie okraj bloku. */
+.detail-tools-body > .detail-block { margin: 0; }
+/* Formulár priečinka je riadok, nie mriežka (`.tree-form`). */
+.detail-block.tree-form { display: flex; }
+.detail-block.tree-form > .field { flex: 1 1 260px; margin: 0; }
+.detail-block > summary { cursor: pointer; font-weight: 600; }
+.detail-block-title { font-size: var(--fs-section); margin: 0; }
+.detail-block-note { font-size: var(--fs-body); color: var(--muted); margin: 0; }
+.detail-block-small { font-size: var(--fs-small); color: var(--muted); margin: 0; }
+
 .detail-card { padding: 14px 16px; }
+
+/* Ostatné akcie detailu za jedným súhrnným nadpisom (DETAIL, úloha 1).
+   Zatvorené je správny predvolený stav — kto prišiel dokument zverejniť,
+   nechce vidieť formulár na preindexovanie. Funguje bez JavaScriptu. */
+.detail-tools { margin: 0 0 18px; }
+.detail-tools > summary {
+  font-size: var(--fs-section);
+  font-weight: 650;
+  padding: 14px 18px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  cursor: pointer;
+}
+.detail-tools[open] > summary { border-radius: var(--radius) var(--radius) 0 0; }
+.detail-tools-body { display: grid; gap: 14px; padding: 14px 0 0; }
 
 .detail-card-title {
   margin: 0 0 10px;
@@ -2319,6 +2482,47 @@ html[data-theme="dark"] .editor-tui .CodeMirror {
 .due-chip--soon { background: var(--warn-bg); color: var(--warn-fg); }
 .due-chip--over { background: var(--bad-bg); color: var(--bad-fg); }
 
+/* Termín na karte povinnosti (DOCUMENTS, úloha 1) — vpravo, v riadku so
+   stavovou pilulkou. Ten istý chip a tie isté tri stavy ako na Prehľade:
+   človek tam vidí, že mu niečo horí, a tu to má vybaviť. */
+.duty-due { margin-left: auto; }
+
+/* Karty povinností (DOCUMENTS, úloha 3) — inline štýly do tried, presne to,
+   čo `.page-title` a `.page-lead` urobili na iných obrazovkách. Karty
+   zostávajú na všetkých šírkach: nesú poradie kroku, stav aj dôvod
+   blokovania, riadok tabuľky to neunesie (PR 5). Šírka 760 px je vec
+   obsahu (text na čítanie), preto trieda stránky, nie shellu. */
+.duty-page { max-width: 760px; }
+.duty-summary { font-size: var(--fs-body); margin: 0 0 24px; }
+.duty-track { margin: 0 0 32px; }
+.duty-track-head {
+  display: flex;
+  gap: 12px;
+  align-items: baseline;
+  flex-wrap: wrap;
+  margin: 0 0 4px;
+}
+.duty-track-title { flex: 1 1 auto; margin: 0; font-size: var(--fs-section); letter-spacing: -0.01em; }
+.duty-track-progress { font-size: var(--fs-small); }
+.duty-track-desc { margin: 0 0 12px; font-size: var(--fs-body); }
+.duty-list { list-style: none; padding: 0; margin: 12px 0 0; display: grid; gap: 12px; }
+.duty-card { padding: 16px 18px; }
+/* Miesto, kde človek skončil, musí byť vidieť na prvý pohľad. */
+.duty-card.is-next { border-color: var(--accent); }
+.duty-head { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+.duty-order { flex: 0 0 auto; font-size: var(--fs-small); color: var(--muted); }
+.duty-title { flex: 1 1 260px; font-size: var(--fs-lead); font-weight: 600; text-wrap: pretty; }
+.duty-meta { margin: 8px 0 0; font-size: var(--fs-small); color: var(--muted); }
+.duty-action { margin: 12px 0 0; }
+
+/* Telefón (DOCUMENTS, úloha 5): tlačidlo na celú šírku karty, 44 px;
+   poradie kroku na vlastnom riadku — inak zoberie názvu 60 px. */
+@media (max-width: 639px) {
+  .duty-action .button { width: 100%; min-height: 44px; }
+  .duty-head { gap: 8px; }
+  .duty-order { flex: 1 0 100%; }
+}
+
 /* Dve polia termínu vedľa seba, na telefóne pod sebou. Nechávajú sa vidieť
    obe: formulár beží bez JavaScriptu, takže sa skryť nedajú, a kto sa prepne
    z dátumu na dni a späť, o svoj dátum nepríde. */
@@ -2330,6 +2534,19 @@ html[data-theme="dark"] .editor-tui .CodeMirror {
 }
 
 .due-fields .field { flex: 1 1 180px; margin: 0; }
+
+/* Súhrn dopadu pred pridelením a pred pripomienkami (HR.md, úlohy 3–4):
+   číslo pred odoslaním je jediná poistka proti prekliku. Jemné pozadie
+   v akcente, nie výstraha — nie je to chyba, je to fakt na prečítanie. */
+.assign-impact {
+  display: grid;
+  gap: 4px;
+  padding: 12px 14px;
+  border-radius: var(--radius);
+  background: var(--accent-soft);
+  margin: 0 0 14px;
+}
+.assign-impact-count { font-size: var(--fs-lead); font-weight: 650; }
 
 /* Rámik termínu je ten istý ako pri výbere publika nad ním; zvyšok formulára
    ho nemá, takže bez tohto by mal každý fieldset iný odstup. */
@@ -2693,6 +2910,11 @@ html[data-theme="dark"] .editor-tui .CodeMirror {
   font-variant-numeric: tabular-nums;
 }
 
+/* Pásik na karte pridelenia (/hr, HR.md úloha 2): v stĺpci tabuľky je
+   inline a úzky, na karte dostane riadok a rozumnú šírku. */
+.hr-ack { margin-top: 14px; max-width: 360px; }
+.hr-ack .ack-bar { display: flex; }
+
 /* Text len pre čítačku — vizuálne skrytý, v strome prístupnosti ostáva.
    Rovnaký postup ako pri skrytom tlačidle hľadania v hlavičke. */
 .sr-only {
@@ -2829,9 +3051,18 @@ html[data-theme="dark"] .editor-tui .CodeMirror {
 .library-search-input {
   flex: 1 1 160px;
   min-width: 140px;
-  height: 36px;
+  height: var(--control-h-sm);
   border-radius: 9px;
 }
+
+/*
+ * Pole hľadania so značkou mimo knižnice (ZAKLAD, odchýlka B): každé pole,
+ * do ktorého sa píše otázka alebo hľadaný výraz, nesie značku Continea
+ * 16 px v `--muted` vľavo — nikdy lupu. Nie je to hľadanie v tabuľke,
+ * je to otázka položená obsahu.
+ */
+.search-field { display: flex; align-items: center; gap: 9px; }
+.search-field-mark { flex: 0 0 auto; display: inline-flex; color: var(--muted); }
 
 /* Chips žijú v lište — vlastný spodný odstup tam nemajú. */
 .library-toolbar .library-chips { margin-bottom: 0; }
@@ -3015,6 +3246,19 @@ html[data-theme="dark"] .editor-tui .CodeMirror {
 
 .ask-form { display: grid; gap: 10px; }
 
+/* Chyba nad hero kartou (ASK, úloha 2). Inline hláška, nie `.notice`:
+   `.notice` je modálne okno s pozadím a pole s otázkou pod ním musí
+   zostať vidieť a použiteľné. Červená = chyba; jantárová je upozornenie. */
+.ask-error {
+  padding: 12px 14px;
+  border-radius: var(--radius);
+  background: var(--bad-bg);
+  color: var(--bad-fg);
+  font-size: var(--fs-body);
+  line-height: 1.5;
+}
+.ask-error a { color: inherit; font-weight: 600; }
+
 .ask-field {
   width: 100%;
   resize: vertical;
@@ -3122,8 +3366,30 @@ a.answer-source:focus-visible { outline: 2px solid var(--accent); outline-offset
    svojho najdlhšieho slova a dlhý názov dokumentu roztiahne kartu. */
 .answer-source-body { flex: 1; min-width: 0; }
 
-.answer-source-title { font-size: 12.5px; font-weight: 600; }
+/* Názov zdroja sa zalomí, neskráti (ASK, úloha 4) — rovnaký dôvod ako pri
+   názve normy na Prehľade: skrátený názov je nepoužiteľný údaj. */
+.answer-source-title { font-size: 12.5px; font-weight: 600; text-wrap: pretty; overflow-wrap: anywhere; }
 .answer-source-meta { display: block; font-size: 11.5px; margin-top: 2px; }
+
+/* Tretí stav obrazovky (ASK, úloha 1): nič sa nenašlo. Tvarom ako karta
+   odpovede (hlavička so značkou), ale bez odpovede — prerušovaný rám. */
+.answer--none { border-style: dashed; }
+.answer-none-text { margin: 8px 0 0; font-size: var(--fs-body); line-height: 1.6; color: var(--muted); }
+.answer-none-text a { color: var(--ink); font-weight: 600; }
+
+/* Telefón (ASK, úloha 4): zdroj je dotykový cieľ 44 px a celá karta je
+   klikateľná plocha (je to `<a>`, keď zdroj niekam vedie). */
+@media (max-width: 639px) {
+  .answer-source { min-height: 44px; align-items: center; }
+}
+
+/* Rámy (ASK): na telefóne odpoveď 16 px / 1.65 a bez príkladov otázok —
+   tri dlhé vety zaberú viac miesta než samotné pole, rovnako ako návrhy
+   na Prehľade. Tablet 834 sa od 1440 líši len šírkou obsahu. */
+@media (max-width: 639px) {
+  .answer { font-size: 16px; line-height: 1.65; }
+  .ask-examples-wrap { display: none; }
+}
 
 /* ── nastavenie organizácie: ukážka farby a slot na logo ─────────────────
    Voľba hlavnej farby je jediné nastavenie, ktorého dôsledok nie je z hodnoty
@@ -3356,6 +3622,30 @@ a.answer-source:focus-visible { outline: 2px solid var(--accent); outline-offset
 
 .approval-form { display: grid; gap: 12px; margin-top: 10px; }
 
+/* Pole dôvodu má dva riadky (APPROVALS, úloha 2): jednoriadkové pole na
+   vetu-dve nestačilo, plných 96 px z `textarea.field-input` je zas priveľa. */
+.approval-form textarea.field-input { min-height: 64px; }
+
+/* Karta kola na /approvals (APPROVALS, úloha 4) — inline štýly do tried.
+   Šírka 760 px je vec obsahu (text na čítanie), preto trieda stránky. */
+.approval-page { max-width: 760px; }
+.approval-list { list-style: none; padding: 0; margin: 0; display: grid; gap: 20px; }
+.approval-card { padding: 18px; }
+.approval-title {
+  font-size: var(--fs-section);
+  letter-spacing: -0.01em;
+  margin: 0 0 4px;
+  text-wrap: pretty;
+}
+.approval-meta { font-size: var(--fs-small); color: var(--muted); }
+.approval-others { margin-top: 6px; }
+/* `.approval-note` zo zadania už patrí panelu kôl na detaile dokumentu
+   (`ApprovalPanel.tsx`), preto poznámka predkladateľa má vlastnú triedu. */
+.approval-card-note { font-size: var(--fs-body); margin: 10px 0 0; }
+.approval-read { margin-top: 12px; }
+.approval-read > summary { font-size: var(--fs-small); color: var(--muted); cursor: pointer; }
+.approval-text { margin-top: 10px; line-height: 1.7; max-width: 70ch; }
+
 /* Posuvný rámik: pri stovke ľudí by zoznam bez neho odtlačil tlačidlo mimo
    obrazovku a na telefóne by sa k nemu nikto neprerolloval. */
 .approval-people {
@@ -3393,9 +3683,13 @@ a.answer-source:focus-visible { outline: 2px solid var(--accent); outline-offset
 
 /* Na telefóne obe akcie pod sebou, každá 44 px (NASADENIE, PR 5):
    „Schváliť" a „Vrátiť s pripomienkou" vedľa seba sa na 390 px
-   preklikávajú omylom — a toto rozhodnutie je dôkazný záznam. */
+   preklikávajú omylom — a toto rozhodnutie je dôkazný záznam.
+   `column-reverse` (APPROVALS, úloha 5): „Zamietnuť" hore, „Schváliť"
+   dole pri palci — nevratné rozhodnutie nemá byť to, na ktoré padne palec
+   bez pozerania. Mení sa len vizuálne poradie; v DOM aj v tabulátore
+   zostáva „Schváliť" prvé, čo je správne pre čítačku. */
 @media (max-width: 639px) {
-  .approval-decide { flex-direction: column; }
+  .approval-decide { flex-direction: column-reverse; }
   .approval-decide > button { width: 100%; min-height: 44px; }
 }
 
@@ -3491,9 +3785,6 @@ a.answer-source:focus-visible { outline: 2px solid var(--accent); outline-offset
 .evidence-step--absent .evidence-what { color: var(--muted); }
 
 .evidence-head { display: flex; gap: 10px; align-items: baseline; flex-wrap: wrap; }
-.evidence-state--acknowledged { background: var(--ok-bg); color: var(--ok-fg); }
-.evidence-state--opened-not-acknowledged { background: var(--warn-bg); color: var(--warn-fg); }
-.evidence-state--not-opened { background: var(--surface-2); color: var(--muted); }
 
 /*
  * Rozbaľovacia karta („widget").
@@ -3627,6 +3918,14 @@ a.answer-source:focus-visible { outline: 2px solid var(--accent); outline-offset
 
 .overview-suggestion:hover { border-color: var(--accent); color: var(--accent); }
 
+/* Pod 640 px sa návrhy otázok neukazujú (PREHLAD, rámy): tri dlhé vety
+   zaberú na telefóne viac miesta než samotné pole. Kto sa chce spýtať,
+   klikne do poľa; návrhy sú pomôcka pre toho, kto nevie, čo systém vie —
+   a to sa zisťuje na väčšej obrazovke. */
+@media (max-width: 639px) {
+  .overview-suggestions { display: none; }
+}
+
 /* ── Prehľad: KPI pás ───────────────────────────────────────────────────────
    Každá dlaždica je odkaz na predfiltrovaný zoznam — číslo bez cesty k nemu
    je ozdoba. Preto `a`, nie `div`, a terčom je celá dlaždica, nie číslo. */
@@ -3677,15 +3976,26 @@ a.answer-source:focus-visible { outline: 2px solid var(--accent); outline-offset
 .kpi-value--bad { color: var(--bad-fg); }
 .kpi-value--warn { color: var(--warn-fg); }
 
+/* Nula je tichá (PREHLAD, úloha 2): štyri veľké nuly na úvodnej obrazovke
+   sú štyri falošné poplachy. Dlaždica zostáva — keby zmizla, ostatné by sa
+   preskupili a človek by pri každom prihlásení hľadal, kde čo je. */
+.kpi-value--zero { color: var(--muted); font-weight: 600; }
+
 .kpi-note { font-size: 11.5px; }
 
 /* ── Prehľad: dva panely ──────────────────────────────────────────────────── */
 
+/* Panely pod sebou až do 1024 px (PREHLAD, rámy): na tablete sú dva panely
+   po 400 px užšie než ich obsah. Od 1024 px vedľa seba, pozornosť širšia. */
 .overview-panels {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  grid-template-columns: minmax(0, 1fr);
   gap: 12px;
   align-items: start;
+}
+
+@media (min-width: 1024px) {
+  .overview-panels { grid-template-columns: 1.2fr 1fr; }
 }
 
 /* Odsadenie si kreslí hlavička a riadok, nie karta: inak by deliaca linka
@@ -3693,13 +4003,35 @@ a.answer-source:focus-visible { outline: 2px solid var(--accent); outline-offset
 .panel { padding: 0; overflow: hidden; }
 
 .panel-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
   padding: 11px 13px;
   border-bottom: 1px solid var(--line);
   font-size: 13.5px;
   font-weight: 650;
 }
 
-.panel-empty { margin: 0; padding: 13px; font-size: 13px; }
+/* Počet a cesta k celému zoznamu (PREHLAD, úloha 3). Odkaz je len vtedy,
+   keď panel niečo skrýva — „zobraziť všetko" nad zoznamom, ktorý je celý
+   vidieť, je klamstvo o tom, že niečo skrývame. */
+.panel-head-count {
+  font-size: var(--fs-micro);
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+.panel-head-link { margin-left: auto; font-size: var(--fs-micro); font-weight: 600; }
+
+/* Prázdny panel (PREHLAD, úloha 1) — dva riadky: čo tu nie je a čo z toho
+   vyplýva. Nie `.empty` zo ZAKLADU: ten je pre celú obrazovku a vnútri
+   panela by dashed rám vytvoril rám v ráme. */
+.panel-empty {
+  display: grid;
+  gap: 3px;
+  padding: 18px 15px;
+}
+.panel-empty-title { font-size: var(--fs-small); font-weight: 600; color: var(--ink); }
+.panel-empty-text { font-size: var(--fs-micro); color: var(--muted); line-height: 1.5; }
 
 .panel-row {
   display: flex;
@@ -3714,11 +4046,21 @@ a.answer-source:focus-visible { outline: 2px solid var(--accent); outline-offset
 
 /* `min-width: 0` je nutné: bez neho sa flexová položka nezmenší pod šírku
    svojho najdlhšieho slova a názov predpisu odtlačí chip mimo panela. */
-.panel-main { flex: 1 1 160px; min-width: 0; }
+.panel-main { flex: 1; min-width: 0; }
 
+/* Dlhý názov sa zalomí, neskráti (PREHLAD, úloha 4): dva riadky sú v poriadku,
+   tri s elipsou. Skrátený názov normy je nepoužiteľný údaj — kto rozhoduje
+   o potvrdení, musí vedieť, čo potvrdzuje. */
 .panel-name {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
   font-size: 13px;
   font-weight: 550;
+  line-height: 1.35;
+  text-wrap: pretty;
+  overflow-wrap: anywhere;
   color: inherit;
   text-decoration: none;
 }
@@ -3738,6 +4080,13 @@ a.answer-source:focus-visible { outline: 2px solid var(--accent); outline-offset
 }
 
 .panel-action:hover { border-color: var(--accent); color: var(--accent); }
+
+/* Pod 640 px idú chip a akcia POD text, nie vedľa — inak na 390 px zostane
+   názvu 90 px. Akcia je dotykový cieľ 44 px. */
+@media (max-width: 639px) {
+  .panel-main { flex: 1 0 100%; }
+  .panel-action { display: inline-flex; align-items: center; min-height: 44px; }
+}
 
 /* ── navigácia: štítok s počtom, spodná lišta a prepad „Viac" ───────────────
    Tri tvary jednej navigácie (NASADENIE, PR 2): pod 640 px pevná spodná
@@ -3785,7 +4134,11 @@ a.answer-source:focus-visible { outline: 2px solid var(--accent); outline-offset
   justify-content: center;
   border-radius: 9px;
   background: var(--bad-fg);
-  color: #fff;
+  /* `--bad-fg` je foreground token — v tmavej téme svetlý odtieň (#fca5a5).
+     S natvrdo bielym písmom malo číslo kontrast 1,9 : 1 a nebolo ho vidieť.
+     `--on-accent` sa s témou otočí (ZAKLAD, odchýlka B1); na farebnom
+     podklade nikdy #fff natvrdo. */
+  color: var(--on-accent);
   font-size: 11px;
   font-weight: 700;
   line-height: 1;
@@ -3973,12 +4326,46 @@ a.answer-source:focus-visible { outline: 2px solid var(--accent); outline-offset
 .more-row:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
 .more-row > svg { flex: none; color: var(--muted); }
 .more-row-label { flex: 1 1 auto; min-width: 0; }
-.more-row-chevron { color: var(--muted); font-size: 18px; line-height: 1; }
+/* Chevron je ikona, nie znak (SPRAVA, úloha 4.1): kreslí sa `currentColor`,
+   tak v tmavej téme zosvetlie sám. Otočený doprava — do riadku sa vchádza. */
+.more-row-chevron { flex: none; color: var(--muted); transform: rotate(-90deg); }
+
+/* ── Upozornenia (SPRAVA, úloha 3.1) ─────────────────────────────────────
+   Neprečítaná položka nesie ten istý znak ako označený riadok tabuľky
+   (ZAKLAD, úloha 4): pruh 3 px v akcente vľavo a mierne pozadie. Hrúbka
+   písma zostáva ako druhý kanál — pruh je farba, a farba sama pri slabom
+   zraku nestačí. Zoznam je `.card`, preto pruh ide inset a nie cez rám. */
+/* Zoznam je karta bez vlastného odsadenia; `overflow: hidden` ostrihá
+   pozadie prvej a poslednej položky do zaoblených rohov karty. */
+.notif-list { list-style: none; margin: 0; padding: 0; overflow: hidden; }
+.notif-row + .notif-row { border-top: 1px solid var(--line); }
+.notif-row.is-unread {
+  background: var(--accent-soft);
+  box-shadow: inset 3px 0 0 var(--accent);
+  font-weight: 600;
+}
+/* Celý riadok je odkaz (SPRAVA, úloha 3.3): odsadenie nesie odkaz, nie
+   položka, aby sa dalo trafiť kdekoľvek v riadku — aj na dátum. Bez cieľa
+   (neznámy druh) je to ten istý blok, len nie `<a>`. */
+.notif-row-link {
+  display: block;
+  padding: 14px 18px;
+  color: var(--ink);
+  text-decoration: none;
+}
+a.notif-row-link:hover { background: var(--surface-2); }
+a.notif-row-link:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+.notif-row-date { font-weight: 400; margin-top: 4px; }
 
 
 /* Dátum účinnosti v zozname dokumentov: `nowrap` a `tabular-nums`, aby
    sa stĺpec nezalomil a číslice stáli pod sebou (návrh, časť 3). */
 .doc-col-date { white-space: nowrap; font-variant-numeric: tabular-nums; }
+
+/* Vylúčená osoba v zozname (OSOBY.md, úloha 2): stlmená, nie schovaná.
+   Dohľadateľná zostať musí — jej potvrdenia platia ďalej (D24). Ten istý
+   prostriedok ako odvolaný záznam potvrdenia. */
+.person-card.is-excluded { opacity: .75; }
 
 /* ── Interný adresár (D87) ─────────────────────────────────────────────────
    Karty, nie tabuľka: tabuľka so šiestimi stĺpcami sa na telefóne číta dvoma
@@ -4217,4 +4604,21 @@ html[data-theme="dark"] { --skeleton-sheen: rgba(255, 255, 255, 0.07); }
   .tree-row { min-height: 44px; align-items: center; }
   .multiselect-chip-remove { width: 44px; height: 44px; }
   .tree-edit-toggle { min-height: 44px; padding-block: 0; }
+  .pager-link { min-height: 44px; }
+}
+
+/* ── Stĺpec pod 640 px: základ z riadku nesmie byť výška ──────────────────
+   Pravidlo pre celý stylesheet (CLAUDE.md): každý flex kontajner, ktorý pod
+   640 px otočí `flex-direction` na stĺpec, má deti v TOMTO bloku
+   s `flex-basis: auto`. `flex: 1 1 160px` z riadkovej podoby sa inak
+   v stĺpci stane výškou — hlavná os sa otočila — a z tlačidiel je 160 px,
+   z polí 260 px (nájdené trikrát v troch PR). Blok je na konci súboru
+   zámerne a selektory majú tú istú špecificitu ako riadkové pravidlá:
+   neskorší vyhráva, nič tu nepotrebuje `!important`. Nový stĺpec sem
+   pribudne — nie ad hoc k svojmu komponentu. */
+@media (max-width: 639px) {
+  .tree-form > :first-child,
+  .detail-block.tree-form > .field,
+  .audit-filter > .field,
+  .approval-decide > button { flex-basis: auto; }
 }

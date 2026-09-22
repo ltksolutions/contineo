@@ -24,6 +24,13 @@ export const BUCKET = "cms_files"
 /** Nad tým už to nie je norma, ale archív. Strop je aj ochrana funkcie. */
 export const MAX_BYTES = 32 * 1024 * 1024
 
+/**
+ * Prípony, ktoré formulár nahrávania ponúka. Jedno miesto pre `accept`
+ * aj pre popis zóny (NAHRAVANIE, úloha 3) — keď pribudne formát, text sa
+ * zmení s ním. Starý `.doc`/`.xls` zámerne nie: prevod ich nevie.
+ */
+export const ACCEPTED_EXTENSIONS = [".pdf", ".docx", ".xlsx", ".md", ".txt", ".csv"] as const
+
 export interface StoredFile {
   id: string
   name: string

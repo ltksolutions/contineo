@@ -12,8 +12,9 @@ import Link from "next/link"
 import { peopleContext, loadPersonById, ASSIGNABLE_ROLES } from "@/lib/people"
 import { isHr } from "@/lib/hr"
 import { evidenceForPerson } from "@/lib/evidenceDb"
+import { dutyState, dutyTagClass } from "@/lib/due"
 import EvidenceTimeline from "@/components/EvidenceTimeline"
-import { audiencesInOrg } from "@/lib/persons"
+import { audiencesInOrg, personTagClass } from "@/lib/persons"
 import { availableOptions } from "@/lib/codelistsTenant"
 import { displayName, needsInvitation } from "@/lib/personFields"
 import { allDepartments, flattenTree, pathTo } from "@/lib/departments"
@@ -65,7 +66,10 @@ export default async function PersonDetailPage({
   const language = ctx.person.language
   const d = dictionary(language).people
   const t = d.detail
+  const tl = d.list
   const te = dictionary(language).evidence
+  const tds = dictionary(language).hr.dutyState
+  const now = new Date()
   const excluded = o.status === "inactive"
 
   /*
@@ -78,6 +82,11 @@ export default async function PersonDetailPage({
     a oddelenie, nemá tým automaticky vidieť, čo kto otvoril a nepotvrdil.
     Väčšinou je to ten istý človek; keď nie je, rozhoduje rola, nie zvyk.
   */
+  // Odvolanie výkaz nevidí (platí len „nepotvrdené") — pilulka ho povedať má,
+  // rovnako ako na `/hr/evidence`.
+  const duty = (r: { duty: Parameters<typeof dutyTagClass>[0]; revocation: { revokedAt: Date } | null }) =>
+    ({ ...r.duty, revokedAt: r.revocation?.revokedAt ?? null })
+
   const evidence = isHr(ctx.person)
     ? await evidenceForPerson(ctx.person.companyCode, o.id)
     : []
@@ -89,8 +98,13 @@ export default async function PersonDetailPage({
         <Link className="quiet" href="/people" style={{ fontSize: "var(--fs-body)" }}>{t.back}</Link>
       </p>
 
-      {/* V nadpise meno **s titulmi** (D84) — je to zobrazenie, nie záznam. */}
-      <h1 className="page-title" style={{ margin: "0 0 4px" }}>{displayName(o)}</h1>
+      {/* V nadpise meno **s titulmi** (D84) — je to zobrazenie, nie záznam.
+          Vedľa neho stav osoby tou istou pilulkou ako v zozname (OSOBY.md,
+          úloha 1); stav povinností nižšie je iná škála a nezlučuje sa s ním. */}
+      <div style={{ display: "flex", gap: 10, alignItems: "baseline", flexWrap: "wrap", margin: "0 0 4px" }}>
+        <h1 className="page-title" style={{ margin: 0 }}>{displayName(o)}</h1>
+        <span className={personTagClass(o)}>{tl.status[o.status] ?? o.status}</span>
+      </div>
       <p className="quiet" style={{ fontSize: "var(--fs-body)", margin: "0 0 4px", overflowWrap: "anywhere" }}>
         {o.email}
         {o.emailHistory.length > 0 && (
@@ -302,61 +316,82 @@ export default async function PersonDetailPage({
       </form>
 
       {/*
-        Pozvánka — **len kým osoba ani raz nebola dnu** (`firstLoginAt`, nie
-        `status`: osoby z importu a zo samozaloženia majú `active` od začiatku
-        a pozvánku nikdy nedostali, D47). Kto sa už prihlásil, kartu nevidí —
-        tlačidlo, ktoré nič nerieši, len pridáva otázku, na čo je.
-
-        Vyradenej osobe sa tiež nekreslí: pozvánka niekomu, kto v organizácii
-        už nie je, je horšia než žiadna — rovnaké pravidlo ako v `neverSignedIn()`.
+        Vzácne a nevratné akcie do `<details>` (OSOBY.md, úloha 3) — ten istý
+        `.detail-tools` ako na detaile dokumentu. Vylúčenie schované je
+        zámer: nie je to súčasť úpravy telefónneho čísla. Zatvorený stav je
+        správny predvolený — kto prišiel opraviť údaj, toto vidieť nechce.
       */}
-      {needsInvitation(o) && (
-        <form action={resendInviteAction} className="card" style={{ padding: 20, marginTop: 16, display: "grid", gap: 12 }}>
-          <input type="hidden" name="id" value={o.id} />
+      <details className="detail-tools" style={{ marginTop: 18 }}>
+        <summary>{t.accessSummary}</summary>
+        <div className="detail-tools-body">
+        {/*
+          Pozvánka — **len kým osoba ani raz nebola dnu** (`firstLoginAt`, nie
+          `status`: osoby z importu a zo samozaloženia majú `active` od začiatku
+          a pozvánku nikdy nedostali, D47). Kto sa už prihlásil, kartu nevidí —
+          tlačidlo, ktoré nič nerieši, len pridáva otázku, na čo je.
 
-          <h2 style={{ fontSize: "var(--fs-section)", margin: 0 }}>{t.inviteHeading}</h2>
+          Vyradenej osobe sa tiež nekreslí: pozvánka niekomu, kto v organizácii
+          už nie je, je horšia než žiadna — rovnaké pravidlo ako v `neverSignedIn()`.
+        */}
+        {needsInvitation(o) && (
+          <form action={resendInviteAction} className="card" style={{ padding: 20, display: "grid", gap: 12 }}>
+            <input type="hidden" name="id" value={o.id} />
 
-          <p className="quiet" style={{ margin: 0, fontSize: "var(--fs-body)" }}>
-            {t.inviteNote}
-            {o.invitedAt && ` ${t.inviteNoteSince(formatDate(o.invitedAt, language))}`}
-          </p>
+            <h2 style={{ fontSize: "var(--fs-section)", margin: 0 }}>{t.inviteHeading}</h2>
 
-          <div><button className="button button--quiet" type="submit">{t.inviteSubmit}</button></div>
-        </form>
-      )}
-
-      <form action={togglePersonStatusAction} className="card" style={{ padding: 20, marginTop: 16, display: "grid", gap: 12 }}>
-        <input type="hidden" name="id" value={o.id} />
-        <input type="hidden" name="email" value={o.email} />
-        <input type="hidden" name="status" value={excluded ? "invited" : "inactive"} />
-
-        <h2 style={{ fontSize: "var(--fs-section)", margin: 0 }}>{excluded ? t.returnHeading : t.excludeHeading}</h2>
-
-        {excluded ? (
-          <>
             <p className="quiet" style={{ margin: 0, fontSize: "var(--fs-body)" }}>
-              {t.returnNoteBefore}<strong>{t.returnNoteHighlight}</strong>{t.returnNoteAfter}
+              {t.inviteNote}
+              {o.invitedAt && ` ${t.inviteNoteSince(formatDate(o.invitedAt, language))}`}
             </p>
-            <div><button className="button" type="submit">{t.returnSubmit}</button></div>
-          </>
-        ) : (
-          <>
-            <p className="quiet" style={{ margin: 0, fontSize: "var(--fs-body)" }}>{t.excludeNote}</p>
-            <label className="field">
-              <span className="field-label">{t.confirmLabel}</span>
-              <input className="field-input" name="confirmation" autoCapitalize="none" autoCorrect="off" />
-              <span className="quiet field-hint">{t.confirmNote}</span>
-            </label>
-            <div><button className="button button--quiet" type="submit">{t.excludeSubmit}</button></div>
-          </>
+
+            <div><button className="button button--quiet" type="submit">{t.inviteSubmit}</button></div>
+          </form>
         )}
-      </form>
+
+        {/* Rozostupy drží mriežka `.detail-tools-body`, nie okraj karty. */}
+        <form action={togglePersonStatusAction} className="card" style={{ padding: 20, display: "grid", gap: 12 }}>
+          <input type="hidden" name="id" value={o.id} />
+          <input type="hidden" name="email" value={o.email} />
+          <input type="hidden" name="status" value={excluded ? "invited" : "inactive"} />
+
+          <h2 style={{ fontSize: "var(--fs-section)", margin: 0 }}>{excluded ? t.returnHeading : t.excludeHeading}</h2>
+
+          {excluded ? (
+            <>
+              <p className="quiet" style={{ margin: 0, fontSize: "var(--fs-body)" }}>
+                {t.returnNoteBefore}<strong>{t.returnNoteHighlight}</strong>{t.returnNoteAfter}
+              </p>
+              <div><button className="button" type="submit">{t.returnSubmit}</button></div>
+            </>
+          ) : (
+            <>
+              <p className="quiet" style={{ margin: 0, fontSize: "var(--fs-body)" }}>{t.excludeNote}</p>
+              <label className="field">
+                <span className="field-label">{t.confirmLabel}</span>
+                <input className="field-input" name="confirmation" autoCapitalize="none" autoCorrect="off" />
+                <span className="quiet field-hint">{t.confirmNote}</span>
+              </label>
+              <div><button className="button button--quiet" type="submit">{t.excludeSubmit}</button></div>
+            </>
+          )}
+        </form>
+        </div>
+      </details>
 
       {/*
         Os je posledná, pod správou osoby. Je to pohľad, nie ovládanie —
         a keby stála hore, karta by prestala byť obrazovkou na úpravu údajov
         a stala by sa výkazom.
       */}
+      {isHr(ctx.person) && evidence.length === 0 && (
+        /* Prázdne dôkazy (OSOBY.md, úloha 4). Vidí ich len personalista —
+           komu sa zoznam nekreslí, nemá mu chýbať ani jeho prázdny tvar. */
+        <div className="empty" style={{ marginTop: 24 }}>
+          <div className="empty-title">{t.evidenceEmptyTitle}</div>
+          <div className="empty-text">{t.evidenceEmptyText}</div>
+        </div>
+      )}
+
       {evidence.length > 0 && (
         <section className="card" style={{ padding: 20, marginTop: 24, display: "grid", gap: 10 }}>
           <div className="evidence-head">
@@ -372,9 +407,12 @@ export default async function PersonDetailPage({
               <li key={r.duty.versionId}>
                 <div className="evidence-head">
                   <strong style={{ fontSize: "var(--fs-body)" }}>{r.duty.documentTitle}</strong>
-                  <span className={`tag evidence-state evidence-state--${r.state}`}>
-                    {te.states[r.state]}
-                  </span>
+                  {/*
+                    Stav povinnosti tou istou škálou ako u personalistu
+                    (OSOBY.md, úloha 3 → `dutyTagClass()` z HR.md, úloha 1).
+                    Je to **iný** stav než stav osoby v hlavičke a nezlučujú sa.
+                  */}
+                  <span className={dutyTagClass(duty(r), now)}>{tds[dutyState(duty(r), now)]}</span>
                 </div>
                 <div className="quiet" style={{ fontSize: "var(--fs-small)" }}>{r.duty.versionLabel}</div>
                 <EvidenceTimeline timeline={r.timeline} language={language} />

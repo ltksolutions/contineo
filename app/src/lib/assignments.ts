@@ -26,6 +26,7 @@ import { getCollection } from "./mongodb"
 import { dueFrom, type Due } from "./due"
 import { PERSONS_COLLECTION, normalizeKeys, inDepartmentSince, inGroupSince } from "./persons"
 import { validAcknowledgements } from "./acknowledgements"
+import { opensFor } from "./documentOpens"
 import { writeAudit } from "./audit"
 import type { Person } from "./persons"
 import { AppError } from "./appError"
@@ -623,7 +624,10 @@ export async function recordNotification(
 // ── prehľad pre HR (D33) ─────────────────────────────────────────────────────
 
 /** Osoba v publiku. `language` je tu preto, že sa jej píše e-mail. */
-export type AudienceMember = Pick<Person, "id" | "email" | "fullName" | "language"> & {
+export type AudienceMember = Pick<
+  Person,
+  "id" | "email" | "fullName" | "language" | "departmentHistory" | "groupHistory"
+> & {
   /**
    * Bola v oddelení v čase pridelenia, dnes už nie je (D50).
    *
@@ -661,18 +665,67 @@ export interface AssignmentOverview {
  * boli desaťtisíce, nahradí to agregácia — ale potom sa `matchesAudience`
  * musí stať jej vstupom, nie jej dvojníkom.
  */
+/** Osoba, ako ju vidí publikum: pre `matchesAudience()` aj pre e-mail. */
+type PoolMember = AudienceMember & Pick<Person, "groups" | "tracks" | "departmentPath">
+
+/** Aktívne osoby organizácie s tým, čo `matchesAudience()` potrebuje. */
+async function audiencePool(companyCode: string): Promise<PoolMember[]> {
+  const col = await getCollection<Person>(PERSONS_COLLECTION)
+  return col
+    .find(
+      { companyCode, status: { $ne: "inactive" } },
+      {
+        projection: {
+          id: 1, email: 1, fullName: 1, language: 1, groups: 1, tracks: 1, departmentPath: 1,
+          // História kvôli `dueForPerson()` v `notAcknowledged()` — termín
+          // pre osobu sa počíta odkedy je v oddelení (D50), nie od pridelenia.
+          departmentHistory: 1, groupHistory: 1,
+        },
+      },
+    )
+    .toArray()
+}
+
 export async function audienceMembers(
   companyCode: string,
   audience: Audience,
 ): Promise<AudienceMember[]> {
-  const col = await getCollection<Person>(PERSONS_COLLECTION)
-  const people = await col
-    .find(
-      { companyCode, status: { $ne: "inactive" } },
-      { projection: { id: 1, email: 1, fullName: 1, language: 1, groups: 1, tracks: 1, departmentPath: 1 } },
-    )
-    .toArray()
-  return people.filter(o => matchesAudience(o, audience))
+  return (await audiencePool(companyCode)).filter(o => matchesAudience(o, audience))
+}
+
+/**
+ * Dopad výberu publík **pred** pridelením (HR.md, úloha 3): koľkým ľuďom
+ * vznikne povinnosť a z ktorého publika koľko.
+ *
+ * Číta sa cez `audienceMembers()`, teda cez `matchesAudience()` — jediné
+ * miesto s pravidlom príslušnosti. Vlastný dotaz by bol druhá kópia pravidla
+ * a rozišla by sa s prvou. `people` je zjednotenie: kto je v dvoch publikách,
+ * počíta sa raz, lebo povinnosť mu vznikne raz (osoba × znenie).
+ */
+export interface AudienceImpact {
+  /** Koľkým ľuďom vznikne povinnosť — bez duplicít. */
+  people: number
+  /** To isté po publikách, v poradí výberu. Súčet môže byť väčší než `people`. */
+  perAudience: { audience: Audience; count: number }[]
+}
+
+export function impactFrom(
+  people: Pick<Person, "id" | "email" | "groups" | "tracks" | "departmentPath">[],
+  audiences: Audience[],
+): AudienceImpact {
+  const ids = new Set<string>()
+  const perAudience: AudienceImpact["perAudience"] = []
+  for (const audience of audiences) {
+    const members = people.filter(o => matchesAudience(o, audience))
+    for (const m of members) ids.add(m.id)
+    perAudience.push({ audience, count: members.length })
+  }
+  return { people: ids.size, perAudience }
+}
+
+/** Databázový obal — osoby sa načítajú raz, nie raz na publikum. */
+export async function audienceImpact(companyCode: string, audiences: Audience[]): Promise<AudienceImpact> {
+  return impactFrom(await audiencePool(companyCode), audiences)
 }
 
 /** Prehľad pridelení organizácie, najnovšie hore. */
@@ -711,11 +764,22 @@ export async function assignmentOverviews(companyCode: string): Promise<Assignme
   return out
 }
 
+/**
+ * Nepotvrdená osoba na `/hr/[id]`: kto, plus to, čo pilulka stavu potrebuje
+ * (`dutyState()` — termín pre túto osobu a či znenie vôbec otvorila).
+ */
+export type NotAcknowledgedMember = AudienceMember & {
+  /** Termín pre túto osobu (D62), alebo `null` bez termínu. */
+  due: Date | null
+  /** Kedy znenie prvýkrát otvorila, alebo `null`. */
+  firstOpenedAt: Date | null
+}
+
 /** Kto z publika ešte nepotvrdil. Menovite — s tým sa dá niečo spraviť. */
 export async function notAcknowledged(
   companyCode: string,
   assignmentId: string,
-): Promise<AudienceMember[]> {
+): Promise<NotAcknowledgedMember[]> {
   if (!ObjectId.isValid(assignmentId)) return []
   const col = await getCollection<Assignment>(ASSIGNMENTS_COLLECTION)
   const a = await col.findOne({ _id: new ObjectId(assignmentId), companyCode } as never)
@@ -725,14 +789,27 @@ export async function notAcknowledged(
     ...await audienceMembers(companyCode, a.audience),
     ...await formerMembers(companyCode, a),
   ]
-  const done = new Set(
-    (await validAcknowledgements({
+  const [acks, opens] = await Promise.all([
+    validAcknowledgements({
       companyCode,
       versionId: a.subject.versionId,
       personId: members.map(c => c.id),
-    })).map(v => v.personId),
+    }),
+    opensFor(companyCode),
+  ])
+  const done = new Set(acks.map(v => v.personId))
+  // Otvorenie sa viaže na znenie (D28): kto čítal staré, nové nevidel.
+  const openAt = new Map(
+    opens.filter(o => o.versionId === a.subject.versionId).map(o => [o.personId, o.firstOpenedAt]),
   )
-  return members.filter(c => !done.has(c.id))
+  return members
+    .filter(c => !done.has(c.id))
+    .map(c => ({
+      ...c,
+      // Ten istý výpočet ako vo výkaze a vo widgete, nie druhá kópia pravidla.
+      due: dueForPerson(a, c),
+      firstOpenedAt: openAt.get(c.id) ?? null,
+    }))
 }
 
 /**

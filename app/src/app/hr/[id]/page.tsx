@@ -16,6 +16,7 @@ import { assignmentOverviews, notAcknowledged, audienceLabel } from "@/lib/assig
 import { brandingView } from "@/lib/tenants"
 import { tenantStyle } from "@/components/TenantHeader"
 import { dictionary, formatDate } from "@/lib/i18n"
+import { dutyState, dutyTagClass } from "@/lib/due"
 import AppShell from "@/components/AppShell"
 
 export const dynamic = "force-dynamic"
@@ -45,6 +46,8 @@ export default async function AssignmentDetailPage({
   const branding = brandingView(ctx.tenant)
   const language = ctx.person.language
   const t = dictionary(language).hr.detail
+  const tds = dictionary(language).hr.dutyState
+  const now = new Date()
 
   return (
     <AppShell language={ctx.person.language}>
@@ -82,15 +85,21 @@ export default async function AssignmentDetailPage({
       </div>
 
       {missing.length === 0 ? (
-        <p className="card" style={{ padding: 18, fontSize: "var(--fs-lead)" }}>
-          {t.allAcknowledged}
-        </p>
+        /* Prázdny zoznam je dobrá správa, nie chyba — nadpis to hovorí
+           (HR.md, úloha 6). */
+        <div className="empty">
+          <div className="empty-title">{t.allTitle}</div>
+          <div className="empty-text">{t.allText}</div>
+        </div>
       ) : (
         <ul className="admin-domains">
           {missing.map(o => (
             <li key={o.id} className="card" style={{ padding: "12px 16px" }}>
               <div style={{ fontWeight: 600, display: "flex", gap: 8, alignItems: "baseline", flexWrap: "wrap" }}>
                 {o.fullName}
+                {/* Jedna škála pre celú rolu (HR.md, úloha 1): termín pre túto
+                    osobu a otvorenie nesie `notAcknowledged()`. */}
+                <span className={dutyTagClass(o, now)}>{tds[dutyState(o, now)]}</span>
                 {o.former && <span className="tag">{t.noLongerInDepartment}</span>}
               </div>
               <div className="quiet" style={{ fontSize: "var(--fs-small)" }}>{o.email}</div>

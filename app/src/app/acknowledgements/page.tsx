@@ -24,6 +24,7 @@ import { tenantStyle } from "@/components/TenantHeader"
 import AppShell from "@/components/AppShell"
 import { personAcknowledgements } from "@/lib/acknowledgements"
 import { dictionary, formatDate } from "@/lib/i18n"
+import { dutyState, dutyTagClass } from "@/lib/due"
 
 export const dynamic = "force-dynamic"
 
@@ -35,11 +36,20 @@ export default async function MyAcknowledgementsPage() {
 
   const language = ctx.person.language
   const t = dictionary(language).myAcknowledgements
+  const tds = dictionary(language).hr.dutyState
+  const now = new Date()
   const branding = brandingView(ctx.tenant)
 
   // Vlastné záznamy, nikdy nie cudzie: identifikátor ide z prihlásenej osoby,
   // nie z adresy (D32).
   const records = await personAcknowledgements(ctx.person.companyCode, ctx.person.id)
+
+  // Odvolanie je záznam s vlastným časom (D24), preto ide do `dutyState()`
+  // ako `revokedAt` — pilulka ho kreslí sivo, nie výstražne: je to hotová vec.
+  const dutyOf = (r: (typeof records)[number]) => ({
+    acknowledgedAt: r.acknowledgedAt,
+    revokedAt: r.type === "revocation" ? r.acknowledgedAt : null,
+  })
 
   return (
     <AppShell language={language}>
@@ -65,14 +75,8 @@ export default async function MyAcknowledgementsPage() {
                 <article key={String(r._id)} className="card" style={{ padding: "16px 18px" }}>
                   <div style={{ display: "flex", gap: 12, alignItems: "baseline", flexWrap: "wrap" }}>
                     <strong style={{ fontSize: "var(--fs-lead)", flex: "1 1 240px" }}>{r.documentTitle}</strong>
-                    <span
-                      className="tag"
-                      style={r.type === "revocation"
-                        ? { background: "var(--warn-bg)", color: "var(--warn-fg)" }
-                        : { background: "var(--ok-bg)", color: "var(--ok-fg)" }}
-                    >
-                      {r.type === "revocation" ? t.revoked : t.acknowledged}
-                    </span>
+                    {/* Tá istá škála ako u personalistu (HR.md, úloha 1). */}
+                    <span className={dutyTagClass(dutyOf(r), now)}>{tds[dutyState(dutyOf(r), now)]}</span>
                   </div>
 
                   <p className="quiet" style={{ fontSize: "var(--fs-small)", margin: "6px 0 0" }}>

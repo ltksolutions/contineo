@@ -136,7 +136,8 @@ export async function uploadAction(fd: FormData) {
     const meta = checkMetadata({
       title: fieldText(fd, "title"),
       documentKey: fieldText(fd, "documentKey"),
-      sectionKey: fieldText(fd, "sectionKey"),
+      // Zaradenie z formulára odišlo (ADR-010); nové dokumenty ho nemajú.
+      sectionKey: "",
       companyCode: self.companyCode,
       scope: fieldText(fd, "scope"),
       accessLevel: fieldText(fd, "accessLevel"),
@@ -168,7 +169,6 @@ export async function uploadAction(fd: FormData) {
     const q = new URLSearchParams({
       error: errorMessage(e, self.language),
       title: fieldText(fd, "title"),
-      sectionKey: fieldText(fd, "sectionKey"),
       documentKey: fieldText(fd, "documentKey"),
     })
     redirect(`/library/new?${q.toString()}`)

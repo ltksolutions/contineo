@@ -3,7 +3,7 @@
 > **Stav:** prijaté 2026-09-15
 > **Rozhodol:** Ján Letko
 > **Prekonáva:** D9 (`docs/D9_EVAL_zlata_sada.md`, `docs/OPEN_DECISIONS.md`)
-> **Súvisiace:** `docs/ADR-001-provider-adaptery.md`, `docs/ADR-002-datova-rezidencia.md`
+> **Súvisiace:** `docs/decisions/ADR-001-provider-adaptery.md`, `docs/decisions/ADR-002-datova-rezidencia.md`
 
 ---
 

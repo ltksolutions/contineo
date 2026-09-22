@@ -760,7 +760,7 @@ export default async function OrganisationPage({
             a funguje bez jediného riadku JavaScriptu. */}
         <LiveFilter className="audit-filter" action="/organisation" label={t.auditTab.search}>
           <input type="hidden" name="tab" value="audit" />
-          <label className="field" style={{ flex: "1 1 260px", margin: 0 }}>
+          <label className="field">
             <span className="field-label">{t.auditTab.search}</span>
             <input
               className="field-input"

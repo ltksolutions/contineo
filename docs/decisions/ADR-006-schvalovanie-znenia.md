@@ -5,7 +5,7 @@
 > **Odsúhlasil:** Ján Letko — D69 a D70 výslovne (2026-09-10), D74 a D75 pri
 > zadaní o nahradení skúšobného korpusu. Zvyšok rozhodnutí je môj návrh, ktorý
 > prijal ako celok.
-> **Nadväzuje na:** `docs/ADR-003-onboarding-a-potvrdzovanie.md` (D6, D24, D27, D28, D30, D51, D57), `docs/ADR-005-retaz-dokazov.md`
+> **Nadväzuje na:** `docs/decisions/ADR-003-onboarding-a-potvrdzovanie.md` (D6, D24, D27, D28, D30, D51, D57), `docs/decisions/ADR-005-retaz-dokazov.md`
 > **Súvisiace:** `docs/design/README.md` časť 6 (nahrávanie má tretí krok „Schválenie"), `docs/DESIGN_GAP.md`
 > **Implementácia:** hotová (2026-09-10), kroky 1–6 vrátane brány pri prideľovaní.
 > Odchýlky sú pomenované v `CHANGELOG.md` pri jednotlivých krokoch.

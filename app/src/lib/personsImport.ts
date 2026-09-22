@@ -48,6 +48,19 @@ export function fieldValue(row: Record<string, string>, field: string): string {
   return ""
 }
 
+/**
+ * **Je ten stĺpec v súbore?** — nie „má hodnotu".
+ *
+ * Pri zoznamoch (skupiny, trasy) je to rozdiel, na ktorom visia dáta:
+ * prázdna bunka znamená „tento človek nemá žiadne", chýbajúci stĺpec znamená
+ * „o tomto súbor nič nehovorí". Prvé sa má zapísať, druhé nie. `parseCsv()`
+ * dáva každému riadku kľúč pre každú hlavičku, takže prítomnosť stĺpca sa
+ * pozná podľa kľúča, nie podľa hodnoty.
+ */
+export function hasField(row: Record<string, string>, field: string): boolean {
+  return (ALIASES[field] ?? []).some(key => key in row)
+}
+
 const list = (s: string) => s.split(/[,;|]/).map(x => x.trim()).filter(Boolean)
 
 /**
@@ -120,8 +133,9 @@ export function rowToPerson(
     department: fieldValue(row, "department") || undefined,
     personType: (type || undefined) as PersonType | undefined,
     startDate: date ? new Date(date) : undefined,
-    tracks: tracks ? list(tracks) : undefined,
-    groups: groups ? list(groups) : undefined,
+    // Prázdny stĺpec vyprázdni, chýbajúci stĺpec nechá tak (viď `hasField`).
+    tracks: hasField(row, "tracks") ? list(tracks) : undefined,
+    groups: hasField(row, "groups") ? list(groups) : undefined,
     // Nevyplnený jazyk necháme `undefined` — `upsertPersons()` ho potom
     // existujúcej osobe neprepíše (inak by opakovaný import prepol každého
     // späť na slovenčinu).

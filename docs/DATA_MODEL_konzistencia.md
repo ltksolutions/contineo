@@ -86,7 +86,7 @@ Fáza 4b). Verejný web (Model B) sa nemení.
 
 ## Kolekcie onboardingu (Fáza 8)
 
-> Rozhodnutie: `docs/ADR-003-onboarding-a-potvrdzovanie.md` · Detailné schémy a indexy:
+> Rozhodnutie: `docs/decisions/ADR-003-onboarding-a-potvrdzovanie.md` · Detailné schémy a indexy:
 > `docs/ONBOARDING_KONCEPCIA.md` kap. 3. Tu je len to, čo patrí do jediného zdroja pravdy
 > pre názvy kolekcií a polí.
 

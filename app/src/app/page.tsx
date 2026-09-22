@@ -120,6 +120,23 @@ export default async function OverviewPage({
     },
   ]
 
+  /*
+    Stropy riadkov v paneloch (PREHLAD, úloha 3). Pozornosť: schválenia
+    najviac 2, povinnosti doplnia zvyšok do 6 — inak pri deviatich
+    povinnostiach schválenie nikto neuvidí, hoci je to rozhodnutie, ktoré
+    blokuje druhých ľudí. Odkaz na celý zoznam sa kreslí len keď panel
+    niečo skrýva.
+  */
+  const PANEL_ROWS = 6
+  const approvalsShown = approvals.slice(0, 2)
+  const dutiesShown = pending.items.slice(0, PANEL_ROWS - approvalsShown.length)
+  const attentionTotal = pending.items.length + approvals.length
+  const attentionHidden = attentionTotal > dutiesShown.length + approvalsShown.length
+  const newsShown = news.slice(0, 6)
+  const expiringShown = expiring.slice(0, 4)
+  const newsTotal = news.length + expiring.length
+  const newsHidden = newsTotal > newsShown.length + expiringShown.length
+
   return (
     <AppShell layout={normalizeLayout(q.layout)} language={language}>
       <div className="overview" style={tenantStyle(branding)}>
@@ -156,7 +173,13 @@ export default async function OverviewPage({
           {tiles.map(tile => (
             <Link key={tile.key} className="card kpi-tile" href={tile.href}>
               <span className="kpi-label">{t.tiles[tile.key]}</span>
-              <span className={`kpi-value${tile.tone ? ` kpi-value--${tile.tone}` : ""}`}>
+              {/* Nula je tichá a tón sa pri nej nepoužije — nula nie je
+                  červená (PREHLAD, úloha 2). */}
+              <span
+                className={`kpi-value${
+                  tile.value === 0 ? " kpi-value--zero" : tile.tone ? ` kpi-value--${tile.tone}` : ""
+                }`}
+              >
                 {tile.value}
               </span>
               {tile.note && <span className="quiet kpi-note">{tile.note}</span>}
@@ -166,9 +189,25 @@ export default async function OverviewPage({
 
         <div className="overview-panels">
           <section className="card panel">
-            <div className="panel-head">{t.attention}</div>
-            {pending.items.length === 0 && <p className="panel-empty quiet">{t.nothingPending}</p>}
-            {pending.items.slice(0, 6).map(i => (
+            <div className="panel-head">
+              <span>{t.attention}</span>
+              {attentionTotal > 0 && <span className="panel-head-count">{attentionTotal}</span>}
+              {attentionHidden && (
+                <Link className="panel-head-link" href="/documents">{t.showAll(attentionTotal)}</Link>
+              )}
+            </div>
+            {/*
+              Prázdno až vtedy, keď je prázdny celý panel — dovtedy sa veta
+              „nič nečaká" kreslila aj nad riadkom schválenia. Dva riadky
+              (PREHLAD, úloha 1): čo tu nie je a čo z toho vyplýva.
+            */}
+            {pending.items.length === 0 && approvals.length === 0 && (
+              <div className="panel-empty">
+                <span className="panel-empty-title">{t.empty.attentionTitle}</span>
+                <span className="panel-empty-text">{t.empty.attentionText}</span>
+              </div>
+            )}
+            {dutiesShown.map(i => (
               <div key={`${i.source}-${i.id}`} className="panel-row">
                 <div className="panel-main">
                   <Link className="panel-name" href={i.href}>{i.title}</Link>
@@ -182,7 +221,7 @@ export default async function OverviewPage({
                 <Link className="panel-action" href={i.href}>{t.open}</Link>
               </div>
             ))}
-            {approvals.slice(0, 3).map(r => (
+            {approvalsShown.map(r => (
               <div key={`${r.documentId}-${r.round}`} className="panel-row">
                 <div className="panel-main">
                   <Link className="panel-name" href="/approvals">{approvalTitles.get(r.documentId) ?? r.documentId}</Link>
@@ -194,9 +233,18 @@ export default async function OverviewPage({
           </section>
 
           <section className="card panel">
-            <div className="panel-head">{t.news}</div>
-            {news.length === 0 && <p className="panel-empty quiet">{t.nothingNew}</p>}
-            {news.slice(0, 6).map(n => (
+            <div className="panel-head">
+              <span>{t.news}</span>
+              {newsTotal > 0 && <span className="panel-head-count">{newsTotal}</span>}
+              {newsHidden && <Link className="panel-head-link" href="/library">{t.wholeLibrary}</Link>}
+            </div>
+            {news.length === 0 && expiring.length === 0 && (
+              <div className="panel-empty">
+                <span className="panel-empty-title">{t.empty.newsTitle(NEW_DAYS)}</span>
+                <span className="panel-empty-text">{t.empty.newsText}</span>
+              </div>
+            )}
+            {newsShown.map(n => (
               <div key={`${n.documentId}-${n.versionLabel}`} className="panel-row">
                 <div className="panel-main">
                   <Link className="panel-name" href={`/documents/${encodeURIComponent(n.documentId)}`}>
@@ -213,7 +261,7 @@ export default async function OverviewPage({
               tá istá otázka („čo sa v knižnici deje"), len z druhej strany.
               Vlastný panel pre dva riadky by bol prázdny priestor.
             */}
-            {expiring.slice(0, 4).map(e => (
+            {expiringShown.map(e => (
               <div key={`exp-${e.documentId}-${e.versionLabel}`} className="panel-row">
                 <div className="panel-main">
                   <Link className="panel-name" href={`/documents/${encodeURIComponent(e.documentId)}`}>

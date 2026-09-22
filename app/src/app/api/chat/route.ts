@@ -250,8 +250,14 @@ export async function POST(req: NextRequest) {
         }
 
         if (chunks.length === 0) {
-          // Žiadne výsledky – informujeme používateľa
-          send({ type: "token", token: dictionary(language).answer.noResults })
+          /*
+            Bez zdrojov sa odpoveď nezobrazuje vôbec a model sa nevolá
+            (ASK, úloha 1). Dovtedy odtiaľto odchádzala veta „nenašiel som…"
+            ako token — teda ako odpoveď s hlavičkou „z vašich dokumentov",
+            hoci ju nič nekrylo. Contineo odpovedá z obsahu organizácie
+            a s citáciou; odpoveď bez citácie je iný produkt. Klient si stav
+            odvodí z prázdneho zoznamu zdrojov a prázdneho textu.
+          */
           send({ type: "done", sources: [], model: "none" })
           controller.close()
           return

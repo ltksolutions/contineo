@@ -3,6 +3,34 @@
 > Toto číta Claude Code pri každom spustení. Sú to pravidlá, ktoré sa
 > **neopakujú v konverzácii** — keď je niečo tu, platí to bez pripomínania.
 
+## Rituály — pomenované príkazy
+
+Štyri vety, ktoré Ján používa ako príkaz. Keď zaznejú, znamenajú toto:
+
+**„Zorientuj sa"** — načítaj `CLAUDE.md`, `NEXT.md`, `git log -20` a aktuálnu
+vetvu; zhrň stav v **max. 10 riadkoch** a navrhni ďalší krok. Nič sa nemení,
+je to len čítanie. Keď si `NEXT.md` a `git log` protirečia, **platí git** —
+a rozpor sa povie nahlas, nie zamlčí.
+
+**„Poupratuj"** — zápis do `docs/DEVLOG.md` → prečisti `NEXT.md` a `docs/TODO.md`
+proti `git log` → doplň `CHANGELOG.md` → prejdi TODO/FIXME v kóde → lint
+a formát → commit podľa konvencie. **`NEXT.md` sa aktualizuje práve tu**, inde
+nie — inak by sa z neho stal tretí zdroj pravdy, ktorý klame.
+
+**„Odovzdaj"** — handover pre kolegu: čo je rozrobené a kde presne, čo treba
+vedieť, čo nefungovalo a prečo.
+
+**„Rozhodni"** — z diskusie vyrob ADR a zaraď ho do **`docs/decisions/`**
+(konvencia MADR). Názov `ADR-NNN-kratky-nazov.md`, ďalšie voľné číslo a postup
+sú v `docs/decisions/README.md`. Označenie `ADR-006` je identita rozhodnutia —
+odkazuje sa naň zo stoviek komentárov v kóde, takže sa **nepremenováva**.
+
+### Čo je `NEXT.md`
+
+Jedna strana: kde sme, čo čaká na Jánovo rozhodnutie, tri najbližšie kroky,
+ako sa projekt overuje. **Nie backlog** — ten je `docs/TODO.md` a má stovky
+riadkov s odôvodneniami. `NEXT.md` naň odkazuje a neduplikuje ho.
+
 ## Jazyk v kóde
 
 **Identifikátory sú anglické. Komentáre a texty pre používateľa slovenské.**
@@ -87,6 +115,9 @@ Podrobne: `docs/AKO_TO_BEZI.md`.
   `catch` hlási chybu zápisu — alebo použi `isRedirect()` (`lib/redirects.ts`)
   ako prvý riadok toho `catch`.
 - **Mobile first je povinnosť**, nie odporúčanie.
+- **Flex, ktorý pod 640 px ide do stĺpca, má deti so `flex-basis: auto`** —
+  v spoločnom bloku na konci `globals.css`, nie pri komponente. Základ
+  z riadku (`flex: 1 1 160px`) sa inak v stĺpci stane výškou.
 
 ## Kto smie commitovať priamo do `main`
 

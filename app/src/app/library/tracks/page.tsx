@@ -52,8 +52,13 @@ export default async function TracksPage({
       <h1 className="page-title">{t.heading}</h1>
       <p className="quiet page-lead" style={{ margin: "0 0 24px" }}>{t.intro}</p>
 
+      {/* `.empty` zo ZAKLADU (SPRAVA, úloha 1.1) — bez tlačidla, formulár
+          na novú trasu je hneď pod tým. */}
       {tracks.length === 0 && (
-        <p className="card" style={{ padding: 20, margin: "0 0 24px" }}>{t.empty}</p>
+        <div className="empty" style={{ margin: "0 0 24px" }}>
+          <div className="empty-title">{t.emptyTitle}</div>
+          <div className="empty-text">{t.emptyText}</div>
+        </div>
       )}
 
       <ul style={{ listStyle: "none", padding: 0, margin: "0 0 32px", display: "grid", gap: 12 }}>
@@ -63,10 +68,8 @@ export default async function TracksPage({
               <Link href={`/library/tracks/${encodeURIComponent(tr.key)}`} style={{ fontSize: "var(--fs-section)", fontWeight: 600, flex: "1 1 240px" }}>
                 {tr.title}
               </Link>
-              <span
-                className="tag"
-                style={tr.isActive ? { background: "var(--ok-bg)", color: "var(--ok-fg)" } : undefined}
-              >
+              {/* Stav cez variant zo ZAKLADU, nie inline farbu (SPRAVA, úloha 1.2). */}
+              <span className={tr.isActive ? "tag tag--published" : "tag tag--archived"}>
                 {tr.isActive ? t.active : t.inactive}
               </span>
             </div>

@@ -9,6 +9,7 @@
  * model niečo nedomyslel.
  */
 
+import Link from "next/link"
 import type { Citation, AskResult, AnswerPhase } from "@/lib/sseClient"
 import FormattedText from "@/components/FormattedText"
 import { cleanCitation, mergeCitations } from "@/lib/formatText"
@@ -61,6 +62,30 @@ export default function Answer({
   if (!text && !running && !done) return null
 
   const error = done?.error
+
+  /*
+    Tretí stav (ASK, úloha 1): vyhľadávanie nenašlo nič, čo by otázku krylo.
+    Server vtedy model nevolá a pošle prázdny zoznam zdrojov bez textu.
+    Tvarom ako karta odpovede, ale bez odpovede — a s cestou do knižnice,
+    lebo nie všetko je v predpisoch.
+  */
+  // Chyba bez textu: karta by nemala čo ukázať — hlášku nesie `Search`.
+  if (error && !text) return null
+
+  if (done && !error && !text && done.sources.length === 0) {
+    return (
+      <div className="card answer--none">
+        <div className="answer-head">
+          <span className="answer-mark" aria-hidden="true" />
+          <span className="answer-kicker">{tAsk.none.kicker}</span>
+        </div>
+        <p className="answer-none-text">
+          {tAsk.none.text}{" "}
+          <Link href={`/library?search=${encodeURIComponent(state.question)}`}>{tAsk.none.link}</Link>
+        </p>
+      </div>
+    )
+  }
   const truncated = done?.stopReason === "max_tokens"
 
   // Model cituje ten istý úryvok pri každom tvrdení, ktoré sa oň opiera.
@@ -81,12 +106,9 @@ export default function Answer({
           </div>
         )}
 
-        {error ? (
-          <div style={{ color: "var(--bad-fg)", fontSize: "var(--fs-lead)" }}>
-            <strong>{t.failed}</strong>
-            <div style={{ marginTop: 6, fontSize: "var(--fs-body)" }}>{error}</div>
-          </div>
-        ) : (
+        {/* Chybu hlási hláška nad hero kartou (`Search`), nie táto karta;
+            čo sa stihlo napísať, zostáva čitateľné. */}
+        {(
           <div className={running ? "answer caret" : "answer"}>
             {/*
               Kým nepríde prvé slovo, tu bývalo `null` — prázdna karta na tri
@@ -182,9 +204,17 @@ export default function Answer({
                   <span className="answer-source-index">{z.index}.</span>
                   <span className="answer-source-body">
                     <span className="answer-source-title">{z.title}</span>
-                    {(z.articleRef || z.heading) && (
+                    {(z.articleRef || z.heading || z.match) && (
                       <span className="quiet answer-source-meta">
-                        {[z.articleRef, z.heading].filter(Boolean).join(" · ")}
+                        {/*
+                          Zhoda v slovách, nie číslo: surové skóre nie je medzi
+                          režimami hľadania porovnateľné a „0,94" by predstieralo
+                          presnosť, ktorú nemá. Stupeň je relatívny voči
+                          najlepšiemu zdroju tejto odpovede (`matchLevel()`).
+                        */}
+                        {[z.articleRef, z.heading, z.match && t.match[z.match]]
+                          .filter(Boolean)
+                          .join(" · ")}
                       </span>
                     )}
                     {/*

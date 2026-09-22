@@ -77,7 +77,12 @@ export default async function NotificationsPage({
         </p>
 
         {rows.length === 0 ? (
-          <p className="card" style={{ padding: 18 }}>{t.empty}</p>
+          /* `.empty` zo ZAKLADU (SPRAVA, úloha 3.2). Bez akcie: upozornenie
+             si človek nevie „založiť" — príde samo, keď sa niečo stane. */
+          <div className="empty">
+            <div className="empty-title">{t.emptyTitle}</div>
+            <div className="empty-text">{t.emptyText}</div>
+          </div>
         ) : (
           <>
             {unread > 0 && (
@@ -87,25 +92,33 @@ export default async function NotificationsPage({
               </form>
             )}
 
-            <ul className="card" style={{ listStyle: "none", margin: 0, padding: 0 }}>
+            <ul className="card notif-list">
               {rows.map((r, i) => {
                 const href = notificationHref(r.kind, r.params)
                 const text = sentence(language, r.kind, r.params)
                 return (
                   <li
                     key={String(r._id ?? i)}
-                    style={{
-                      padding: "14px 18px",
-                      borderBottom: i === rows.length - 1 ? 0 : "1px solid var(--line)",
-                      // Neprečítané sa líši **hrúbkou písma, nie farbou**:
-                      // farba by sa v tmavej téme aj pri slabom zraku stratila.
-                      fontWeight: r.readAt ? 400 : 600,
-                    }}
+                    className={r.readAt ? "notif-row" : "notif-row is-unread"}
                   >
-                    {href ? <Link href={href}>{text}</Link> : <span>{text}</span>}
-                    <div className="quiet" style={{ fontSize: "var(--fs-small)", fontWeight: 400, marginTop: 4 }}>
-                      {formatDate(r.createdAt, language)}
-                    </div>
+                    {/* Celý riadok vedie na vec, o ktorej hovorí (SPRAVA, úloha 3.3).
+                        Bez cieľa ostane len neznámy druh — `notificationHref()`
+                        vracia null a nič nevymýšľa. */}
+                    {href ? (
+                      <Link href={href} className="notif-row-link">
+                        {text}
+                        <div className="quiet notif-row-date" style={{ fontSize: "var(--fs-small)" }}>
+                          {formatDate(r.createdAt, language)}
+                        </div>
+                      </Link>
+                    ) : (
+                      <div className="notif-row-link">
+                        {text}
+                        <div className="quiet notif-row-date" style={{ fontSize: "var(--fs-small)" }}>
+                          {formatDate(r.createdAt, language)}
+                        </div>
+                      </div>
+                    )}
                   </li>
                 )
               })}

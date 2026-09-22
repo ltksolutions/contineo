@@ -10,6 +10,70 @@
 
 ---
 
+## 2026-09-22 — celý handoff (PR 0–14), oprava dátovej straty v importe a dorábky
+
+**Handoff je hotový: PR 0 až 14, zreťazené jeden na druhom.** Dnes pribudli
+PR 9a/9b (Správa), 10–12 (HR), 13 (Osoby) a 14 (Admin a Príručka). Každý PR
+má commit na úlohu, zápis v `TODO.md` vrátane odchýlok a otázky v tele PR
+namiesto dotvárania z hlavy. Zadanie sa nikde nedopĺňalo domyslením — kde
+návrh popisoval niečo, čo v kóde nie je, odišla otázka do PR.
+
+**Najdôležitejšie zistenie dňa nie je z dizajnu, ale z kódu: import osôb
+mazal ľuďom roly.** `upsertPersons()` zapisovalo `tracks`, `groups` a `roles`
+vždy, takže súbor bez stĺpca ich existujúcim ľuďom vyprázdnil — a `roles`
+CSV nerozpoznáva vôbec, takže **každý import zmazal roly každému, koho sa
+dotkol**. Našlo sa to pri PR 13, keď som pre obrazovku importu zisťoval, čo
+sa vlastne stane s existujúcou osobou; zadanie to viedlo ako „napíš, ako sa
+to chová". Napísalo sa aj opravilo: chýbajúce pole znamená „o tomto nič
+nehovorím", prázdne znamená „vyprázdni". Rozdiel vie rozlíšiť len čítanie
+CSV, kde vidno hlavičky (`hasField()`) — dovtedy prázdna bunka padala do
+`undefined` rovnako ako chýbajúci stĺpec, takže vyprázdniť sa nedalo vôbec.
+
+**Poučenie, ktoré sa opakuje tretíkrát: TODO klame skôr než kód.** Pri
+otázke „čo ešte treba dorobiť" sa ukázalo, že dve z piatich „chýbajúcich"
+vecí sú dávno hotové — dokument oddelenie **nesie** (`ownerDepartmentId`,
+facet aj stĺpec) a percento potvrdení kreslí `.ack-bar` v tabuľke aj na
+karte. Zápisy boli spred PR 7/8 knižnice a nikto ich neodškrtol. Odškrtnuté
+dnes, s poznámkou, kedy vznikli.
+
+**Zhoda zdroja: tri stupne namiesto čísla.** Surové `score` sa ukázať nedalo
+— pri `$rankFusion` a `$rerank` nie je v rozsahu 0–1 a medzi režimami
+hľadania nie je porovnateľné, takže „0,94" by predstieralo presnosť, ktorú
+nemá. Stupeň sa počíta **relatívne k najlepšiemu zdroju tej istej odpovede**:
+to je porovnanie, ktoré dáva zmysel, lebo presne tú otázku si človek kladie.
+Bez skóre sa nekreslí nič.
+
+**Expirované je štvrtá hodnota filtra, nie štvrtý stav.** Expirovaná norma je
+publikovaná norma po dátume — stav dokumentu zostáva `published` (D27).
+Podmienka sa preto skladá dotazom (`expiredCondition()`): publikovaný
+dokument, ktorý dnes nemá platné znenie, hoci aspoň jedno už mal. To isté
+pravidlo, aké v JS počíta `effectiveVersion()`; v databáze preto, že zoznam
+je stránkovaný.
+
+**Strop výberu 200.** Výber v knižnici sa nesie v adrese, aby prežil prechod
+na ďalšiu stranu a fungoval bez skriptu; pri 148 označených je to ~4 kB a bez
+rezervy k hranici 8 kB. Strop nie je riešenie princípu, ale zabraňuje tichému
+pretečeniu — bez neho sa adresa niekde oreže a výber zmizne bez vysvetlenia.
+Správna odpoveď pri väčších dávkach je „všetko, čo vyhovuje filtru" ako jeden
+príznak; zapísané ako otvorená vec.
+
+**O21 krok 2 — Zaradenie sa zlúčilo do Druhu.** Ukázalo sa, že to nie je
+premenovanie: `sectionKey` hovoril *kam dokument patrí* (Stanovy, Zápisnice,
+Zmluvy), `category` hovorí *čo to je* (norma, smernica, zákon). Mapovanie
+bolo treba vyrobiť — pravidlo „poriadok je norma" a tri nové druhy
+(zápisnica, zmluva, tlačivo), lebo inak by import zo zaradenia musel klamať.
+Migračný skript **odmietne zapísať čokoľvek**, kým existuje dokument bez
+`documentKey`: zaradenie je jeho záložná identita a odstrániť ho skôr by pri
+najbližšej úprave metadát zmenilo `documentId` a rozviazalo potvrdenia, úseky
+aj pridelenia. Skript je napísaný a nespustený.
+
+**Čo stálo čas:** dvakrát som si regexom s `re.S` zmazal viac riadkov v
+`TODO.md`, než som chcel — raz to spojilo zápisy dvoch PR. Oboje som zachytil
+pri kontrole diffu pred commitom, ale je to zbytočné riziko: pri úprave
+jedného riadku dlhého súboru sa má hľadať v tom riadku, nie v celom texte.
+
+---
+
 ## 2026-09-21 (2) — výmena handoffu a kontrola konzistencie
 
 **`docs/design/` vymenil kompletný handoff všetkých obrazoviek** (`ae9d2ea`):
@@ -527,7 +591,7 @@ nakonfigurovaný — nechávam tak, nie je súčasť rozsahu.
 
 Ján si vyžiadal komplexnú kontrolu: kód, závislosti, infra a súlad webu
 s repozitárom, plus zápis on-prem cesty. Výsledok je v
-`docs/BEZPECNOSTNA_KONTROLA_2026-09.md` a `docs/ADR-009-on-prem-referencna-architektura.md`.
+`docs/BEZPECNOSTNA_KONTROLA_2026-09.md` a `docs/decisions/ADR-009-on-prem-referencna-architektura.md`.
 
 **V kóde sa kritická diera nenašla** — D90 drží, brány sú konzistentné,
 tajomstvá v repozitári nie sú. Tri veci s prioritou: O12 (Atlas allowlist),
@@ -891,7 +955,7 @@ overená odpoveď v znalostiach*.
 ### Rozhodnutia (Ján Letko)
 
 - **Zlatá sada von, celá.** Nie odložiť, nie zmenšiť — zrušiť. Dva mesiace bez
-  jediného posudku sú odpoveď. `docs/ADR-008-zrusenie-zlatej-sady.md`.
+  jediného posudku sú odpoveď. `docs/decisions/ADR-008-zrusenie-zlatej-sady.md`.
 - **Rola `evaluator`.** Bežný človek povie „sedí / nesedí" a čo mu vadilo;
   posudok potvrdzuje a opravuje hodnotiteľ. Identifikátor po anglicky,
   preklady SK/CZ/EN.

@@ -1,11 +1,11 @@
 > **Poznámka 2026-09-15:** zmienky o *zlatej sade* nižšie sú **historické** —
-> sada bola zrušená (`docs/ADR-008-zrusenie-zlatej-sady.md`). Rozhodnutia,
+> sada bola zrušená (`docs/decisions/ADR-008-zrusenie-zlatej-sady.md`). Rozhodnutia,
 > ktoré tento dokument „odkladá za zlatú sadu", tým zostali bez meradla.
 
 # ADR-002 — Dátová rezidencia ako vlastnosť tenanta
 
 > **Stav:** ✅ prijaté · **Dátum:** 2026-07-26 · **Revízia:** 2026-07-26 (**O5 a O6 uzavreté** z verejných dokumentov, sekcia 8)
-> **Nadväzuje na:** `docs/ADR-001-provider-adaptery.md` (tri adaptéry)
+> **Nadväzuje na:** `docs/decisions/ADR-001-provider-adaptery.md` (tri adaptéry)
 > **Súvisiace:** `docs/ATLAS_SETUP.md`, `docs/PRISTUPOVE_PRAVA.md`, `docs/D9_EVAL_zlata_sada.md`
 > **Implementácia:** `app/src/lib/residency.ts`, validácia v `app/src/lib/tenantProfile.ts`, Bedrock adaptér v `app/src/lib/providers/generation/bedrock.ts` — 54 testov
 
@@ -491,7 +491,7 @@ s desiatkami miliárd; **jedna menšia karta stačí** a nepotrebujeme cluster.
 Presné požiadavky treba overiť meraním, nie odhadom z tabuliek.
 
 > **Poznámka (2026-08-27):** toto odporúčanie už neplatí — TEI `voyage-4-nano`
-> nepodporuje, viď `docs/ADR-001-provider-adaptery.md` dodatok 10. Cesta A ide
+> nepodporuje, viď `docs/decisions/ADR-001-provider-adaptery.md` dodatok 10. Cesta A ide
 > cez vLLM/Infinity (`kind: "infinity"`).
 
 Pozn.: pre `voyage-4-nano` odporúčame **TEI, nie Infinity** — karta modelu

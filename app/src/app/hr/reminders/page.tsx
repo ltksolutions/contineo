@@ -14,6 +14,7 @@ import { brandingView } from "@/lib/tenants"
 import { tenantStyle } from "@/components/TenantHeader"
 import Notice from "@/components/Notice"
 import { dictionary } from "@/lib/i18n"
+import { dutyState, dutyTagClass } from "@/lib/due"
 import { normalizeQuery, type RawQuery } from "@/lib/urlParams"
 import { sendRemindersAction } from "../actions"
 import AppShell from "@/components/AppShell"
@@ -43,6 +44,8 @@ export default async function RemindersPage({
 
   const language = ctx.person.language
   const t = dictionary(language).hr.reminders
+  const tds = dictionary(language).hr.dutyState
+  const now = new Date()
   const branding = brandingView(ctx.tenant)
 
   const people = byPersonReminder(await overdue(ctx.person.companyCode, days))
@@ -87,7 +90,12 @@ export default async function RemindersPage({
       </div>
 
       {people.length === 0 ? (
-        <p className="card" style={{ padding: 20 }}>{notice ? t.noticeNone : t.none(days)}</p>
+        /* Jeden nadpis, text podľa režimu: v režime „všetkým nepotvrdeným"
+           nejde o termín, tak veta o termíne nesedí (HR.md, úloha 6). */
+        <div className="empty">
+          <div className="empty-title">{t.emptyTitle}</div>
+          <div className="empty-text">{notice ? t.noticeNone : t.none(days)}</div>
+        </div>
       ) : (
         <>
           <ul style={{ listStyle: "none", padding: 0, margin: "0 0 24px", display: "grid", gap: 10 }}>
@@ -102,12 +110,16 @@ export default async function RemindersPage({
                 </p>
                 <ul style={{ listStyle: "none", padding: 0, margin: "8px 0 0", fontSize: "var(--fs-small)" }}>
                   {p.items.map(o => (
-                    <li key={o.duty.versionId} className="quiet">
-                      · {o.duty.documentTitle} ({o.duty.versionLabel})
+                    <li key={o.duty.versionId} className="quiet" style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "baseline" }}>
+                      <span>· {o.duty.documentTitle} ({o.duty.versionLabel})</span>
+                      {/* Jedna škála pre celú rolu (HR.md, úloha 1): tu je
+                          každý nepotvrdený — pilulka povie, či aspoň otvoril
+                          a či už horí termín. */}
+                      <span className={dutyTagClass(o.duty, now)}>{tds[dutyState(o.duty, now)]}</span>
                       {/* Odkiaľ povinnosť plynie. Pri trase je to jediné
                           vysvetlenie, prečo tu človek je — pridelenie, ktoré
                           by personalista hľadal v zozname, neexistuje. */}
-                      {o.duty.trackTitles.length > 0 && ` · ${t.fromTrack(o.duty.trackTitles.join(", "))}`}
+                      {o.duty.trackTitles.length > 0 && <span>· {t.fromTrack(o.duty.trackTitles.join(", "))}</span>}
                     </li>
                   ))}
                 </ul>
@@ -115,7 +127,14 @@ export default async function RemindersPage({
             ))}
           </ul>
 
-          <p className="quiet" style={{ fontSize: "var(--fs-body)", margin: "0 0 14px" }}>{t.preview}</p>
+          {/* Súhrn pred odoslaním (HR.md, úloha 4) — ten istý blok ako pred
+              pridelením, len s iným slovesom: povie, čo sa stane, nie čo sa
+              poslalo. Jeden e-mail na človeka, preto počet ľudí = počet
+              e-mailov; kto už potvrdil, v zozname nie je (D61). */}
+          <div className="assign-impact" role="status">
+            <div className="assign-impact-count">{t.impactEmails(people.length)}</div>
+            <div className="quiet" style={{ fontSize: "var(--fs-small)" }}>{t.impactNote}</div>
+          </div>
 
           <form action={sendRemindersAction}>
             <input type="hidden" name="days" value={String(days)} />

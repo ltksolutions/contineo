@@ -66,10 +66,14 @@ export default async function MorePage({
                       {o.count}
                     </span>
                   )}
-                  {/* Šípka je ozdoba — smer „dovnútra" hovorí riadok sám. */}
-                  <span className="more-row-chevron" aria-hidden="true">
-                    ›
-                  </span>
+                  {/* Šípka je ozdoba — smer „dovnútra" hovorí riadok sám.
+                      Ten istý chevron ako `select.field-input` a `<details>`
+                      v evidencii, otočený doprava v CSS (SPRAVA, úloha 4.1). */}
+                  <svg className="more-row-chevron" width="14" height="14" viewBox="0 0 12 12"
+                       fill="none" stroke="currentColor" strokeWidth="1.6"
+                       strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <path d="M2.5 4.5L6 8l3.5-3.5" />
+                  </svg>
                 </Link>
               ))}
             </div>

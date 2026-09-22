@@ -1,7 +1,7 @@
 # Založenie MongoDB Atlas — cluster a indexy
 
 > **Stav:** návod na prvé nasadenie (2026-07-26)
-> **Súvisiace:** `docs/ADR-001-provider-adaptery.md`, `docs/DATA_MODEL_konzistencia.md`, `docs/rag-architecture.md`
+> **Súvisiace:** `docs/decisions/ADR-001-provider-adaptery.md`, `docs/DATA_MODEL_konzistencia.md`, `docs/rag-architecture.md`
 > **Skripty:** `app/scripts/atlas_init.mjs` (založí) · `app/scripts/atlas_check.mjs` (overí)
 
 Cieľ: rozbehnúť cloudový režim (T1) tak, aby fungoval hybridný dotaz `$rankFusion` nad `document_chunks`.
@@ -28,7 +28,7 @@ V [cloud.mongodb.com](https://cloud.mongodb.com) založ projekt a cluster:
 > smernice. **Auditný záznam bez zálohy nie je auditný záznam**, a M0 zálohy nemá. Prechod na
 > **M10+ je preto podmienka pred prvým ostrým potvrdením** (nie pred vývojom). Zároveň tým vzniká
 > možnosť privátneho endpointu, ktorá je len na dedikovaných clusteroch. Viď
-> `docs/ADR-003-onboarding-a-potvrdzovanie.md` kap. 6.2.
+> `docs/decisions/ADR-003-onboarding-a-potvrdzovanie.md` kap. 6.2.
 
 > ⚠️ **Ak pôjdeš rovno na M10+**, musíš zapnúť **auto-scaling úložiska aj tieru** — Automated Embedding to vyžaduje na prvotné vybudovanie indexu. Pri M10/M20 nastav strop aspoň na M30.
 

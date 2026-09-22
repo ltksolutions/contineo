@@ -49,13 +49,51 @@ function fieldText(fd: FormData, field: string): string {
  * skupiny a napísal odsek odôvodnenia, to po chybe druhýkrát nenapíše. Preto
  * sa vracia celý výber, nie len chybová hláška.
  */
-function backWithError(error: string, fd: FormData): never {
-  const q = new URLSearchParams({ error, reason: fieldText(fd, "reason") })
+/**
+ * Celý výber formulára do adresy — človek sa vracia k tomu, čo vyplnil.
+ * Jeden zápis pre návrat s chybou aj pre krok „Skontrolovať dopad"; termín
+ * sa nesie tiež, aby sa pri návrate nestratil.
+ */
+function selectionQuery(fd: FormData): URLSearchParams {
+  const q = new URLSearchParams({ reason: fieldText(fd, "reason") })
   for (const d of fd.getAll("document")) if (typeof d === "string") q.append("document", d)
   for (const p of fd.getAll("audience")) if (typeof p === "string") q.append("audience", p)
   if (fd.get("all")) q.set("all", "1")
   const addresses = fieldText(fd, "addresses")
   if (addresses) q.set("addresses", addresses)
+  for (const field of ["dueMode", "dueDate", "dueDays"] as const) {
+    const v = fieldText(fd, field)
+    if (v) q.set(field, v)
+  }
+  return q
+}
+
+function backWithError(error: string, fd: FormData): never {
+  const q = selectionQuery(fd)
+  q.set("error", error)
+  redirect(`/hr/assign?${q.toString()}`)
+}
+
+/**
+ * Krok „Skontrolovať dopad" (HR.md, úloha 3). Formulár beží bez skriptu,
+ * takže výber sa na server dostane až odoslaním — a číslo „povinnosť vznikne
+ * N ľuďom" sa počíta na serveri cez `matchesAudience()`. Nič sa nezapisuje:
+ * vráti sa ten istý formulár s výberom v adrese a so súhrnom nad tlačidlom.
+ * Bez publika je to tá istá chyba ako pri pridelení — nie je čo počítať.
+ */
+export async function previewAssignAction(fd: FormData) {
+  const actor = await hr()
+  if (!actor) redirect("/hr")
+  const audiences = audienceFromSelection({
+    all: Boolean(fd.get("all")),
+    selected: fd.getAll("audience").filter((v): v is string => typeof v === "string"),
+    addresses: fieldText(fd, "addresses"),
+  })
+  if (audiences.length === 0) {
+    backWithError(dictionary(actor.language).hr.actions.noAudience, fd)
+  }
+  const q = selectionQuery(fd)
+  q.set("preview", "1")
   redirect(`/hr/assign?${q.toString()}`)
 }
 

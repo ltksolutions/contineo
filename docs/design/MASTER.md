@@ -42,7 +42,7 @@ formulár so Zaradením aj Kľúčom. V tomto jednom bode platí zadanie, nie r�
 všetko ostatné v rámoch platí.
 
 Zadania sú prepísané, netreba nič dopočítavať. Ak ADR-010 čítaš celé
-(`docs/ADR-010-metadata-bez-rucnych-klucov.md`), pozor na jeho bod 2:
+(`docs/decisions/ADR-010-metadata-bez-rucnych-klucov.md`), pozor na jeho bod 2:
 **migrácia hodnôt `sectionKey` → `category` ide až po Fáze 8**, nie
 s formulárom.
 

@@ -17,6 +17,7 @@ import { onboardingContext } from "@/lib/session"
 import { brandingView } from "@/lib/tenants"
 import { tenantStyle } from "@/components/TenantHeader"
 import LiveFilter from "@/components/LiveFilter"
+import { ContineoMark } from "@/components/ContineoMark"
 import AppShell from "@/components/AppShell"
 import { listDirectory } from "@/lib/directory"
 import { availableOptions } from "@/lib/codelistsTenant"
@@ -58,14 +59,19 @@ export default async function DirectoryPage({
 
       {/* Hľadanie je v adrese — dá sa poslať odkazom a vrátiť sa naň z histórie. */}
       <LiveFilter className="field" action="/directory" label={t.searchPlaceholder}>
-        <input
-          className="field-input"
-          name="q"
-          defaultValue={q ?? ""}
-          placeholder={t.searchPlaceholder}
-          autoCapitalize="none"
-          autoCorrect="off"
-        />
+        {/* Značka Continea, nie lupa (ZAKLAD, odchýlka B) — pole kladie
+            otázku obsahu, nefiltruje tabuľku. */}
+        <span className="search-field">
+          <span className="search-field-mark" aria-hidden="true"><ContineoMark size={16} /></span>
+          <input
+            className="field-input"
+            name="q"
+            defaultValue={q ?? ""}
+            placeholder={t.searchPlaceholder}
+            autoCapitalize="none"
+            autoCorrect="off"
+          />
+        </span>
       </LiveFilter>
 
       <p className="quiet" style={{ fontSize: "var(--fs-small)", margin: "0 0 10px" }}>

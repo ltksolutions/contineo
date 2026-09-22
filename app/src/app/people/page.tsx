@@ -11,9 +11,11 @@ import Link from "next/link"
 import { peopleContext, listPeople } from "@/lib/people"
 import { availableOptions } from "@/lib/codelistsTenant"
 import { displayName, workplaceLabel } from "@/lib/personFields"
+import { personTagClass } from "@/lib/persons"
 import { brandingView } from "@/lib/tenants"
 import { tenantStyle } from "@/components/TenantHeader"
 import LiveFilter from "@/components/LiveFilter"
+import { ContineoMark } from "@/components/ContineoMark"
 import { formatDate, dictionary } from "@/lib/i18n"
 import Notice from "@/components/Notice"
 import { normalizeQuery, type RawQuery } from "@/lib/urlParams"
@@ -60,27 +62,48 @@ export default async function PeoplePage({
       {/* Serverový formulár — hľadanie je v adrese, takže sa dá poslať odkazom
           a vrátiť sa naň z histórie prehliadača. */}
       <LiveFilter className="field" action="/people" label={t.searchPlaceholder}>
-        <input
-          className="field-input"
-          name="q"
-          defaultValue={q ?? ""}
-          placeholder={t.searchPlaceholder}
-          autoCapitalize="none"
-          autoCorrect="off"
-        />
+        {/* Značka Continea, nie lupa (ZAKLAD, odchýlka B) — pole kladie
+            otázku obsahu, nefiltruje tabuľku. */}
+        <span className="search-field">
+          <span className="search-field-mark" aria-hidden="true"><ContineoMark size={16} /></span>
+          <input
+            className="field-input"
+            name="q"
+            defaultValue={q ?? ""}
+            placeholder={t.searchPlaceholder}
+            autoCapitalize="none"
+            autoCorrect="off"
+          />
+        </span>
       </LiveFilter>
 
-      <p className="quiet" style={{ fontSize: "var(--fs-small)", margin: "0 0 10px" }}>
-        {people.length === 0
-          ? t.nothingFound
-          : `${t.count(people.length)}${q ? t.matchesSearch : ""}`}
-        {people.length === 500 && t.capped}
-      </p>
+      {/* Počet len keď je čo počítať — prázdny stav hovorí za seba. */}
+      {people.length > 0 && (
+        <p className="quiet" style={{ fontSize: "var(--fs-small)", margin: "0 0 10px" }}>
+          {t.count(people.length)}{q ? t.matchesSearch : ""}
+          {people.length === 500 && t.capped}
+        </p>
+      )}
+
+      {/* Dva prázdne stavy (OSOBY.md, úloha 4): organizácia bez ľudí nie je
+          to isté ako filter, ktorý nič nenašiel — a pri filtri má byť cesta
+          späť k celému zoznamu. */}
+      {people.length === 0 && (
+        <div className="empty">
+          <div className="empty-title">{q ? t.emptyFilterTitle : t.emptyTitle}</div>
+          <div className="empty-text">{q ? t.emptyFilterText : t.emptyText}</div>
+          {q && (
+            <div className="empty-action">
+              <Link className="button button--quiet" href="/people">{t.clearFilter}</Link>
+            </div>
+          )}
+        </div>
+      )}
 
       <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "grid", gap: 10 }}>
         {people.map(o => {
           return (
-            <li key={o.id} className="card" style={{ padding: "14px 18px" }}>
+            <li key={o.id} className={`card person-card${o.status === "inactive" ? " is-excluded" : ""}`} style={{ padding: "14px 18px" }}>
               <div style={{ display: "flex", gap: 10, alignItems: "baseline", flexWrap: "wrap" }}>
                 <Link
                   href={`/people/${encodeURIComponent(o.id)}`}
@@ -88,14 +111,8 @@ export default async function PeoplePage({
                 >
                   {displayName(o)}
                 </Link>
-                <span
-                  className="tag"
-                  style={o.status === "inactive"
-                    ? { background: "var(--warn-bg)", color: "var(--warn-fg)" }
-                    : undefined}
-                >
-                  {t.status[o.status] ?? o.status}
-                </span>
+                {/* Stav farbou, role neutrálne (OSOBY.md, úloha 1). */}
+                <span className={personTagClass(o)}>{t.status[o.status] ?? o.status}</span>
                 {o.roles.map(r => (
                   <span key={r} className="tag">{r}</span>
                 ))}

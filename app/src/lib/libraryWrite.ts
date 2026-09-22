@@ -27,6 +27,7 @@ import { chunkText, DEFAULT_PROFILE } from "./chunker.mjs"
 import { textFingerprint, chunkingFingerprint, needsReindex, CHUNKER_VERSION } from "./chunkIdentity"
 import { textFixProblem, textDiff, versionFixProblem, type TextFixProblem } from "./textFix"
 import { checkValue, checkList, KEY_PATTERN } from "./codelists"
+import { slugifyKey } from "./slug"
 import type { CodelistExtras } from "./codelists"
 import { saveFile, deleteFile } from "./fileStore"
 import { convert, FILE_TYPE_LABEL } from "./conversion"
@@ -85,12 +86,18 @@ export interface DocumentMetadata {
    * a dôsledok bol ten, že dva rôzne dokumenty s tým istým zaradením sa
    * nedali mať — desať zápisníc by potrebovalo desať zaradení.
    *
-   * Nevyplnené sa dopĺňa zo `sectionKey`. Vďaka tomu má každý dokument
-   * spred D80 rovnaký `documentId` ako predtým — a to je podstatné, lebo
+   * Nevyplnené vzniká zo názvu (ADR-010). Dokumentom spred D80 určuje
+   * identitu `sectionKey` (`makeDocumentId` naň padá) — a to sa nemení, lebo
    * `documentId` je cudzí kľúč v `acknowledgements`, `document_chunks`,
    * `assignments`, `approval_rounds`, `onboarding_tracks` aj v audite.
    */
   documentKey: string
+  /**
+   * **Odchádza (O21 krok 2).** Zaradenie sa zlúčilo do Druhu: nové dokumenty
+   * ho nedostávajú a migrácia ho z dát odstraňuje. V type zostáva preto, že
+   * dokumentom spred D80 je záložnou identitou — `saveMetadata()` z neho
+   * dopočíta `documentKey`, keď chýba. Nikam sa už nezapisuje.
+   */
   sectionKey: string
   companyCode: string
   scope: string
@@ -198,11 +205,17 @@ export function checkMetadata(
   const title = (input.title ?? "").trim()
   if (!title) throw new LibraryError("library.titleRequired", "Názov dokumentu je povinný — bez neho je v zozname len kľúč.")
 
-  // Kľúč dokumentu nie je položka číselníka — je to identita, ktorú si volí
-  // kurátor. Overuje sa teda tvarom (`KEY_PATTERN`), nie príslušnosťou do
-  // slovníka. Nevyplnený sa dopĺňa zo `sectionKey` (D80).
-  const sectionKey = checkValue("sectionKey", input.sectionKey ?? "")
-  const documentKey = ((input.documentKey ?? "").trim() || sectionKey).toLowerCase()
+  // Kľúč dokumentu nie je položka číselníka — je to identita. Overuje sa
+  // tvarom (`KEY_PATTERN`), nie príslušnosťou do slovníka. Nevyplnený vzniká
+  // ako slug z názvu (ADR-010) — už NIE zo zaradenia: zaradenie je kategória
+  // a prvý dokument kategórie by kľúč obsadil, identita ďalších by bola lož.
+  // Zaradenie je od ADR-010 nepovinné: nové dokumenty ho nemajú (zoskupuje
+  // Druh), staré ho nesú ďalej ako záložnú identitu (`makeDocumentId`).
+  // Keď príde, overí sa proti číselníku ako doteraz — prázdne sa nevymýšľa.
+  const sectionKey = (input.sectionKey ?? "").trim()
+    ? checkValue("sectionKey", input.sectionKey ?? "")
+    : ""
+  const documentKey = ((input.documentKey ?? "").trim() || slugifyKey(title)).toLowerCase()
   if (!KEY_PATTERN.test(documentKey)) {
     throw new LibraryError(
       "library.documentKeyShape",
@@ -321,7 +334,6 @@ export async function uploadDocument(
         title: meta.title,
         slug: documentId.replace(/:/g, "-"),
         documentKey: meta.documentKey,
-        sectionKey: meta.sectionKey,
         companyCode: meta.companyCode,
         scope: meta.scope,
         accessLevel: meta.accessLevel,
@@ -472,7 +484,6 @@ export async function publish(
     heading: ch.heading,
     articleRef: ch.articleRef ?? null,
     chunkType: ch.typ ?? "clanok",
-    sectionKey: meta.sectionKey,
     companyCode,
     scope: meta.scope,
     accessLevel: meta.accessLevel,
@@ -864,7 +875,6 @@ export async function reindex(
       heading: ch.heading,
       articleRef: ch.articleRef ?? null,
       chunkType: ch.typ ?? "clanok",
-      sectionKey: meta.sectionKey,
       companyCode,
       scope: meta.scope,
       accessLevel: meta.accessLevel,

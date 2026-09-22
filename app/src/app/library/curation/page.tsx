@@ -63,10 +63,12 @@ export default async function CurationPage({
         <Link className="button button--quiet" href="/library">← {dictionary(language).nav.library}</Link>
       </p>
 
+      {/* `.empty` zo ZAKLADU (SPRAVA, úloha 2.1). Bez akcie: správca si
+          prácu nevie nájsť sám — pár mu pripraví hodnotiteľ. */}
       {pending.length === 0 && (
-        <div className="card">
-          <p style={{ margin: "0 0 6px", fontSize: "var(--fs-lead)" }}>{t.publishEmpty}</p>
-          <p className="quiet" style={{ margin: 0, fontSize: "var(--fs-body)" }}>{t.publishEmptyNote}</p>
+        <div className="empty">
+          <div className="empty-title">{t.publishEmpty}</div>
+          <div className="empty-text">{t.publishEmptyNote}</div>
         </div>
       )}
 
@@ -74,12 +76,10 @@ export default async function CurationPage({
         {pending.map(item => (
           <div key={item.id} className="card">
             <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center", marginBottom: 10 }}>
-              <span
-                className="tag"
-                style={item.accessLevelPreview === "public"
-                  ? { fontSize: "var(--fs-micro)", fontWeight: 600 }
-                  : { background: "var(--warn-bg)", color: "var(--warn-fg)", fontSize: "var(--fs-micro)", fontWeight: 600 }}
-              >
+              {/* Prístup je stav a farba ho nesie (SPRAVA, úloha 2.2):
+                  verejné zelené — smie von; interné sivé — je to predvolený
+                  stav, nie chyba, preto nie jantárová ani červená. */}
+              <span className={item.accessLevelPreview === "public" ? "tag tag--published" : "tag tag--archived"}>
                 {t.access}: {item.accessLevelPreview === "public" ? t.accessPublic : t.accessInternal}
               </span>
               <span className="quiet" style={{ fontSize: "var(--fs-micro)", marginLeft: "auto" }}>
@@ -94,12 +94,26 @@ export default async function CurationPage({
               {item.answer}
             </div>
 
-            <ul className="quiet" style={{ margin: "0 0 6px", paddingLeft: 18, fontSize: "var(--fs-small)" }}>
-              {item.sources.map(src => (
-                <li key={src.chunkId}>{[src.title, src.articleRef].filter(Boolean).join(" · ")}</li>
+            {/*
+              Zdroje ako karty z `/ask` (SPRAVA, úloha 2.3): zdroj je to, čím
+              sa odpoveď obhajuje, a dve obrazovky, ktoré zobrazujú to isté,
+              to majú zobrazovať rovnako. Tie isté triedy `.answer-source*`,
+              bez odkazu — úsek tu nikam nevedie (D9: úsek, nie dokument).
+            */}
+            <div className="answer-sources">
+              {item.sources.map((src, i) => (
+                <div key={src.chunkId} className="answer-source">
+                  <span className="answer-source-index">{i + 1}.</span>
+                  <span className="answer-source-body">
+                    <span className="answer-source-title">{src.title}</span>
+                    {src.articleRef && (
+                      <span className="quiet answer-source-meta">{src.articleRef}</span>
+                    )}
+                  </span>
+                </div>
               ))}
-            </ul>
-            <p className="quiet" style={{ fontSize: "var(--fs-micro)", margin: "0 0 14px" }}>{t.accessNote}</p>
+            </div>
+            <p className="quiet" style={{ fontSize: "var(--fs-micro)", margin: "10px 0 14px" }}>{t.accessNote}</p>
 
             <form action={publishCurationAction}>
               <input type="hidden" name="id" value={item.id} />

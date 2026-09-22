@@ -92,11 +92,26 @@ interface Dictionary {
    */
   statement(title: string, version: string, effectiveFrom: string): string
 
+  /** Spoločné texty prierezových komponentov (ZAKLAD). */
+  common: {
+    /** Prázdny stav zoznamu (`.empty`) — dve rôzne vety podľa filtra. */
+    empty: {
+      /** Filter je nasadený a nič mu nevyhovuje. */
+      filtered: string
+      /** Zoznam je prázdny sám od seba; obrazovky text spresnia vlastným. */
+      none: string
+      /** Akcia pri nasadenom filtri. */
+      clearFilters: string
+    }
+  }
+
   /** Texty potvrdzovacích obrazoviek. */
   onboarding: {
     listHeading: string
     listIntro: string
-    nothingToDo: string
+    /** Prázdny stav (`.empty`, DOCUMENTS úloha 4) — bez akcie: človek tu nemá čo urobiť. */
+    emptyTitle: string
+    emptyText: string
     /** Nadpis sekcie pre dokumenty pridelené mimo trasy. */
     assignedHeading: string
     progress: (done: number, total: number) => string
@@ -423,13 +438,16 @@ interface Dictionary {
     /** Bez JavaScriptu odpovedanie nefunguje — SSE sa formulárom nenahradí. */
     noScript: string
     noScriptLink: string
+    /** Tretí stav obrazovky (ASK, úloha 1): na otázku sa z dokumentov nedá odpovedať. */
+    none: { kicker: string; text: string; link: string }
+    /** Chyba nad hero kartou (ASK, úloha 2) — vždy s cestou von. */
+    error: { unavailable: string; link: string }
   }
 
   answer: {
     /** Hlavička karty odpovede — hovorí, odkiaľ odpoveď je. */
     fromDocuments: string
     failed: string
-    noResults: string
     incompleteHeading: string
     incompleteNote: string
     citations: (shown: number) => string
@@ -440,6 +458,8 @@ interface Dictionary {
     /** Štítok pri zdroji, ktorý je overenou odpoveďou, nie článkom normy (D11). */
     verified: string
     verifiedNote: string
+    /** Zhoda zdroja v troch stupňoch — relatívne v rámci jednej odpovede. */
+    match: Record<"high" | "medium" | "low", string>
     adapter: string
     firstToken: string
     costNote: (pricelistVersion: string) => string
@@ -450,6 +470,12 @@ interface Dictionary {
   /** Prideľovanie noriem (HR). */
   hr: {
     /**
+     * Jedna škála stavov povinnosti pre celú rolu (HR.md, úloha 1) — kľúč
+     * dáva `dutyState()` v `lib/due.ts`, popisok tento slovník. Obrazovky
+     * ho zdieľajú, aby ten istý stav nevyzeral na každej inak.
+     */
+    dutyState: Record<"acknowledged" | "opened" | "not-opened" | "overdue" | "revoked", string>
+    /**
      * Výkaz „ako je na tom organizácia" (D33). Iný pohľad než `overview`:
      * ten je o prideleniach, teda o tom, čo kurátor poslal. Tento je o tom,
      * čo z toho vyšlo — po dokumentoch, ľuďoch a trasách.
@@ -458,7 +484,9 @@ interface Dictionary {
       heading: string
       intro: string
       views: Record<"document" | "person" | "track", string>
-      empty: string
+      /** Prázdny stav cez `.empty` (HR.md, úloha 6). */
+      emptyTitle: string
+      emptyText: string
       done: (done: number, total: number) => string
       missing: (n: number) => string
       complete: string
@@ -469,7 +497,6 @@ interface Dictionary {
       open: string
       /** Riadky detailu jednej položky. */
       acknowledgedAt: string
-      notAcknowledged: string
       readingTime: string
       /** Odvolanie potvrdenia (D24) — vidí to a robí len personalista. */
       revoke: string
@@ -484,7 +511,8 @@ interface Dictionary {
       heading: string
       intro: string
       assign: string
-      empty: string
+      emptyTitle: string
+      emptyText: string
       acknowledged: string
       notified: string
       no: string
@@ -500,7 +528,9 @@ interface Dictionary {
       notAcknowledged: (missing: number, total: number) => string
       effectiveFrom: (date: string) => string
       notifyLink: string
-      allAcknowledged: string
+      /** Prázdny zoznam je dobrá správa, nie chyba — nadpis to má povedať. */
+      allTitle: string
+      allText: string
       noLongerInDepartment: string
       note: string
     }
@@ -527,7 +557,8 @@ interface Dictionary {
       introBefore: string
       introHighlight: string
       introAfter: string
-      noEffectiveVersion: string
+      emptyTitle: string
+      emptyText: string
       whichDocuments: string
       versionLine: (label: string, date: string) => string
       to: string
@@ -553,6 +584,10 @@ interface Dictionary {
       dueDaysUnit: string
       dueNote: string
       submit: string
+      /** Krok pred pridelením (HR.md, úloha 3): tlačidlo a súhrn dopadu. */
+      checkImpact: string
+      impactPeople: (n: number) => string
+      impactNote: string
     }
     actions: {
       noAudience: string
@@ -575,10 +610,14 @@ interface Dictionary {
       intro: (days: number) => string
       back: string
       open: string
+      /** Prázdny stav; text sa líši podľa režimu (meškajúci / všetci nepotvrdení). */
+      emptyTitle: string
       none: (days: number) => string
       person: (documents: number, days: number) => string
       send: (people: number) => string
-      preview: string
+      /** Súhrn pred odoslaním (HR.md, úloha 4): koľko e-mailov odíde a komu nič nepríde. */
+      impactEmails: (n: number) => string
+      impactNote: string
       sent: (n: number) => string
       nobody: string
       /**
@@ -644,8 +683,16 @@ interface Dictionary {
     expiringNote: (days: number) => string
     attention: string
     news: string
-    nothingPending: string
-    nothingNew: string
+    /** Prázdny panel — dva riadky: čo tu nie je a čo z toho vyplýva (PREHLAD, úloha 1). */
+    empty: {
+      attentionTitle: string
+      attentionText: string
+      newsTitle: (days: number) => string
+      newsText: string
+    }
+    /** Hlavička panela — cesta k celému zoznamu, len keď panel niečo skrýva (úloha 3). */
+    showAll: (n: number) => string
+    wholeLibrary: string
     by: (date: string) => string
     until: (date: string) => string
     expiringChip: string
@@ -658,13 +705,29 @@ interface Dictionary {
   evidence: {
     heading: string
     intro: string
-    nothing: string
+    /** Dva prázdne stavy: nič nevyhovuje filtru vs. žiadne záznamy vôbec. */
+    emptyTitle: string
+    emptyText: string
+    emptyFilterTitle: string
+    emptyFilterText: string
     kind: Record<string, string>
     gap: Record<string, string>
     informative: string
     seconds: (n: number) => string
     times: (n: number) => string
     states: Record<string, string>
+    /** Riadky rozbaleného dôkazu (HR.md, úloha 5) — dvojice kľúč/hodnota. */
+    rows: {
+      ip: string
+      department: string
+      statement: string
+      reading: string
+      opened: string
+      revokedBy: string
+      revokeReason: string
+    }
+    /** Hodnota, ktorá sa nezaznamenala — pomlčka, nie prázdno. */
+    none: string
     filterPerson: string
     filterState: string
     filterAll: string
@@ -678,7 +741,9 @@ interface Dictionary {
   approvals: {
     heading: string
     intro: string
-    nothing: string
+    /** Prázdny stav (`.empty`, APPROVALS úloha 3) — bez akcie: schvaľovateľ si prácu nevie nájsť sám. */
+    emptyTitle: string
+    emptyText: string
     versionLine: (label: string, round: string) => string
     roundLine: (round: number) => string
     submittedBy: (who: string, when: string) => string
@@ -779,10 +844,15 @@ interface Dictionary {
       intro: string
       newTenant: string
       disabled: string
-      noDomain: string
+      /** Bez domény sa do organizácie nedá prihlásiť (ADMIN, úloha 1.5). */
+      noDomainWarning: string
+      /** Prázdny stav (ADMIN, úloha 1.3). */
+      emptyTitle: string
+      emptyText: string
       people: string
       peopleValue: (signedIn: number, total: number) => string
-      tracks: string
+      /** Počet znení — ADMIN.md úloha 1.2 (rozhodnutie Jána 2026-09-22). */
+      versions: string
       documents: string
       documentsValue: (valid: number, total: number) => string
       acknowledgements: string
@@ -802,6 +872,8 @@ interface Dictionary {
       codeNoteBefore: string
       codeNoteHighlight: string
       codeNoteAfter: string
+      /** Kolízia návrhu kódu (ADR-010, ADMIN.md úloha 1.4). */
+      codeTaken: (code: string) => string
       name: string
       nameNote: string
       supportEmail: string
@@ -814,6 +886,9 @@ interface Dictionary {
     detail: {
       back: string
       disabled: string
+      /** Blok čísel organizácie — trasy sú tu, v prehľade nie. */
+      numbersHeading: string
+      tracks: string
       domainsHeading: string
       nothingNeeded: (host: string, reason: string) => string
       notInVercel: string
@@ -1112,6 +1187,12 @@ interface Dictionary {
       importCsv: string
       searchPlaceholder: string
       nothingFound: string
+      /** Prázdne stavy (OSOBY.md, úloha 4): bez filtra vs. s filtrom. */
+      emptyTitle: string
+      emptyText: string
+      emptyFilterTitle: string
+      emptyFilterText: string
+      clearFilter: string
       count: (n: number) => string
       matchesSearch: string
       capped: string
@@ -1123,6 +1204,7 @@ interface Dictionary {
       heading: string
       intro: string
       back: string
+      emptyTitle: string
       none: string
       preview: string
       send: (people: number) => string
@@ -1151,6 +1233,10 @@ interface Dictionary {
       introHighlight: string
       introMiddle: string
       introAfter: string
+      /** Čo sa stane s riadkom, ktorý už v systéme je (OSOBY.md, úloha 5). */
+      existingTitle: string
+      existingNote: string
+      existingWarning: string
       file: string
       /** Veta okolo zoznamu hlavičiek CSV — tie sa neprekladajú. */
       fileNoteBefore: string
@@ -1224,6 +1310,11 @@ interface Dictionary {
       roles: string
       rolesNote: string
       save: string
+      /** Súhrn `<details>` „Prístup a členstvo" (OSOBY.md, úloha 3). */
+      accessSummary: string
+      /** Prázdne dôkazy na karte osoby (OSOBY.md, úloha 4). */
+      evidenceEmptyTitle: string
+      evidenceEmptyText: string
       returnHeading: string
       excludeHeading: string
       /** Karta „Pozvánka" na detaile — len kým sa osoba ani raz neprihlásila. */
@@ -1288,7 +1379,8 @@ interface Dictionary {
     /** Popisok zvončeka pre čítačku obrazovky; nesie aj počet. */
     bellLabel: (unread: number) => string
     unread: (n: number) => string
-    empty: string
+    emptyTitle: string
+    emptyText: string
     markAllRead: string
     allRead: (n: number) => string
     retentionNote: (days: number) => string
@@ -1412,6 +1504,8 @@ interface Dictionary {
         /** Koľko je označených, koľko z toho nie je vidieť, a ako to zrušiť. */
         picked: (count: number) => string
         pickedOutside: (count: number) => string
+        /** Dosiahnutý strop výberu — povie to nahlas, nech nemizne ticho. */
+        pickedMax: (max: number) => string
         clearPicked: string
         moveTo: string
         move: string
@@ -1446,6 +1540,8 @@ interface Dictionary {
       statusDrafts: string
       /** Tretia hodnota facetu Stav (ADR-006) — dokument s bežiacim kolom. */
       statusInReview: string
+      /** Štvrtá hodnota filtra stavu — odvodená z platnosti znenia (D27). */
+      statusExpired: string
       filter: string
       clearFilters: string
       /** Stav spracovania súboru — kľúče sú hodnoty z databázy. */
@@ -1472,7 +1568,9 @@ interface Dictionary {
       title: string
       description: string
       create: string
-      empty: string
+      /** Prázdny zoznam trás (SPRAVA, úloha 1.1). */
+      emptyTitle: string
+      emptyText: string
       active: string
       inactive: string
       enable: string
@@ -1515,7 +1613,11 @@ interface Dictionary {
       topLevel: string
       move: string
       remove: string
-      removeHint: string
+      /** Prečo sa nedá zrušiť — s číslami, ktoré už na obrazovke sú (PRIECINKY, úloha 2). */
+      removeBlocked: (documents: number, subfolders: number) => string
+      /** Prázdny strom (PRIECINKY, úloha 1). */
+      emptyTitle: string
+      emptyText: string
       newFolder: string
       newFolderName: string
       parentFolder: string
@@ -1563,7 +1665,11 @@ interface Dictionary {
       draftSame: string
       draftEmpty: string
       publishHeading: string
-      nothingToPublish: string
+      /** Karta „čo treba teraz" (DETAIL, úloha 1): nové znenie s údajom, ktoré platí; bežiace kolo. */
+      nowPublishNew: (current: string) => string
+      nowInReview: string
+      /** Súhrnný nadpis rozbaľovacej skupiny s ostatnými akciami. */
+      toolsSummary: string
       /** Označenie konceptu v schvaľovacom paneli aj v e-maile schvaľovateľovi. */
       approvalDraftLabel: string
       draftApprovalHeading: string
@@ -1755,6 +1861,11 @@ interface Dictionary {
       heading: string
       intro: string
       file: string
+      /** Chyba pri nahrávaní (NAHRAVANIE, úloha 1): čo opraviť a že súbor treba vybrať znova. */
+      errorBefore: string
+      errorFileAgain: string
+      /** Limit veľkosti pri zóne na súbor — číslo z `fileStore.MAX_BYTES`. */
+      maxSize: (mb: number) => string
       /** Veta okolo `.doc` a `.xls` — značky zostávajú v JSX. */
       oldFormatsBefore: string
       oldFormatsMiddle: string
@@ -1763,13 +1874,16 @@ interface Dictionary {
       titlePlaceholder: string
       titleNote: string
       key: string
-      keyNoteBefore: string
-      keyNoteAfterCode: string
-      keyNoteHighlight: string
-      keyNoteAfter: string
+      /** Náhľad identifikátora a ručný kľúč (NAHRAVANIE, úloha 4 / ADR-010). */
+      keyPreview: string
+      keyManualSummary: string
+      keyManualNote: string
+      keyTaken: (id: string) => string
       keysTaken: string
-      section: string
-      sectionNote: string
+      /** Nápoveda pri Druhu — hodnoty z `CODELISTS.category` (úloha 5). */
+      categoryNote: string
+      /** Nadpis rozbaľovacej skupiny nepovinných polí (úloha 6). */
+      moreFields: string
       scope: string
       accessLevel: string
       accessInternalNote: string
@@ -1798,10 +1912,18 @@ const daysEn = (n: number) => (n === 1 ? "1 day" : `${n} days`)
 
 export const DICTIONARY: Record<UiLanguage, Dictionary> = {
   sk: {
+  common: {
+    empty: {
+      filtered: "Filtru nič nevyhovuje",
+      none: "Zatiaľ tu nič nie je",
+      clearFilters: "Zrušiť filtre",
+    },
+  },
   onboarding: {
     listHeading: "Dokumenty na potvrdenie",
     listIntro: "Prečítajte si každý dokument a potvrďte, že ste sa s ním oboznámili. Potvrdenie sa viaže na konkrétne znenie — pri novej verzii vás systém požiada znova.",
-    nothingToDo: "Momentálne nemáte nič na potvrdenie.",
+    emptyTitle: "Nemáte nič na potvrdenie",
+    emptyText: "Keď vám niekto pridelí normu alebo vás zaradí do trasy, objaví sa tu aj s termínom. Nič od vás teraz nikto nečaká.",
     assignedHeading: "Pridelené dokumenty",
     progress: (done, total) => `Hotové ${done} z ${total}`,
     step: (order, total) => `Krok ${order} z ${total}`,
@@ -2067,12 +2189,20 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     unknownError: "Neznáma chyba",
     noScript: "Odpovedanie potrebuje JavaScript — odpoveď prichádza po častiach, ako ju model píše. Dokumenty sa dajú čítať a potvrdzovať aj bez neho:",
     noScriptLink: "prejsť na dokumenty",
+    none: {
+      kicker: "V dokumentoch organizácie sa k tomu nič nenašlo",
+      text: "Skúste otázku inak, alebo hľadajte v knižnici — nie všetko je v predpisoch.",
+      link: "Hľadať v knižnici →",
+    },
+    error: {
+      unavailable: "Odpoveď sa teraz nedá zložiť. Skúste to o chvíľu — vyhľadávanie v knižnici funguje.",
+      link: "Otvoriť knižnicu →",
+    },
   },
 
   answer: {
     fromDocuments: "Odpoveď z vašich dokumentov",
     failed: "Odpoveď sa nepodarilo získať.",
-    noResults: "Nenašiel som relevantné informácie k vašej otázke v dostupných dokumentoch.",
     incompleteHeading: "Odpoveď je neúplná.",
     incompleteNote: "Model dosiahol limit dĺžky a zastavil sa uprostred — chýba jej záver. Skúste sa opýtať na užšiu časť problému.",
     citations: (shown) => `Doslovné citácie (${shown})`,
@@ -2082,6 +2212,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     internal: "interné",
     verified: "overená odpoveď",
     verifiedNote: "znenie, ktoré niekto overil nad predpisom — nie samotné znenie predpisu",
+    match: { high: "vysoká zhoda", medium: "stredná zhoda", low: "slabá zhoda" },
     adapter: "adaptér",
     firstToken: "prvý token",
     costNote: (pricelistVersion) => `Orientačne. Nezahŕňa pomocný model ani vyhľadávanie. Cenník ${pricelistVersion}.`,
@@ -2090,11 +2221,19 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     citationsUnverified: "citácie neoverené",
   },
   hr: {
+    dutyState: {
+      acknowledged: "potvrdené",
+      opened: "otvorené, nepotvrdené",
+      "not-opened": "neotvorené",
+      overdue: "po termíne",
+      revoked: "odvolané",
+    },
     report: {
       heading: "Výkaz potvrdení",
       intro: "Kto čo má potvrdiť a kto to už potvrdil. Do menovateľa vstupuje ten, komu bol dokument pridelený alebo ho má ako krok v zapnutej trase — nie všetci v organizácii.",
       views: { document: "Podľa dokumentu", person: "Podľa osoby", track: "Podľa trasy" },
-      empty: "Zatiaľ nie je čo vykazovať. Povinnosť vzniká pridelením alebo krokom v zapnutej trase.",
+      emptyTitle: "Zatiaľ niet čo zhrnúť",
+      emptyText: "Súhrn sa zjaví, keď bude prvé pridelenie.",
       done: (done, total) => `${done} z ${total}`,
       missing: n => (n === 1 ? "chýba 1" : n >= 2 && n <= 4 ? `chýbajú ${n}` : `chýba ${n}`),
       complete: "hotové",
@@ -2104,7 +2243,6 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       export: "Stiahnuť ako CSV",
       open: "Rozpísať",
       acknowledgedAt: "potvrdené",
-      notAcknowledged: "nepotvrdené",
       revoke: "Odvolať potvrdenie",
       revokeReason: "Dôvod odvolania",
       revokeHint: "Povinnosť ožije s pôvodným termínom. Ak termín už prešiel, osoba bude hneď po termíne.",
@@ -2118,7 +2256,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       heading: "Pridelené normy",
       intro: "Čo bolo komu uložené a kto to už potvrdil. Počty sa počítajú pri zobrazení — a týkajú sa ľudí, ktorí do skupiny patria",
       assign: "Prideliť normu",
-      empty: "Zatiaľ nie je pridelené nič. Kým sa norma nepridelí, ľuďom sa objaví len vtedy, keď je krokom ich trasy — a nikde nezostane stopa, kedy sa to stalo a prečo.",
+      emptyTitle: "Žiadne pridelenia",
+      emptyText: "Keď normu niekomu pridelíte, objaví sa tu aj s tým, koľkí ju už potvrdili.",
       acknowledged: "Potvrdili",
       notified: "Dali sme vedieť",
       no: "nie",
@@ -2134,7 +2273,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       notAcknowledged: (missing, total) => `Nepotvrdili (${missing} z ${total})`,
       effectiveFrom: (date) => `, platná od ${date}`,
       notifyLink: "dať im vedieť e-mailom →",
-      allAcknowledged: "Potvrdili všetci, ktorých sa pridelenie dnes týka.",
+      allTitle: "Všetci potvrdili",
+      allText: "Toto pridelenie je vybavené — nikto nechýba.",
       noLongerInDepartment: "už nie je v oddelení",
       note: "Zoznam sa počíta pri zobrazení. Kto z oddelenia odišiel bez potvrdenia, zostáva tu označený — inak by ticho zmizol a nikto by sa nedozvedel, že sa to nedoriešilo; e-mail sa mu ale neposiela. Kto odišiel z celej organizácie, tu nie je — jeho potvrdenie (alebo jeho chýbanie) však zostáva v záznamoch.",
     },
@@ -2160,7 +2300,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       introBefore: "Prideľuje sa ",
       introHighlight: "konkrétne znenie",
       introAfter: ", nie dokument. Keď pribudne novšie, staré pridelenie zaň neplatí — to je zámer.",
-      noEffectiveVersion: "Žiadny dokument nemá platné znenie, takže prideliť sa nedá nič. Znenie bez dátumu platnosti sa nedá ani potvrdiť (D6).",
+      emptyTitle: "Niet čo prideliť",
+      emptyText: "Prideliť sa dá len publikované znenie. V knižnici zatiaľ žiadne nie je.",
       whichDocuments: "Ktoré normy",
       versionLine: (label, date) => `verzia ${label}, platná od ${date}`,
       to: "Komu",
@@ -2185,6 +2326,12 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       reasonPlaceholder: "napr. novela čl. 12 — mení sa lehota na podanie odvolania",
       reasonNote: "Povinný a spoločný pre celý výber. Je to jediné miesto, kde bude o rok napísané, prečo sa normy potvrdzovali znova — a príde aj v e-maile ľuďom.",
       submit: "Prideliť",
+      checkImpact: "Skontrolovať dopad",
+      impactPeople: (n) =>
+        n === 0 ? "Povinnosť nevznikne nikomu"
+        : n === 1 ? "Povinnosť vznikne 1 človeku"
+        : `Povinnosť vznikne ${n} ľuďom`,
+      impactNote: "Kto do oddelenia pribudne neskôr, dostane ju odo dňa príchodu (D50).",
     },
     actions: {
       noAudience: "Nevybral si, komu sa prideľuje.",
@@ -2212,10 +2359,12 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       intro: days => `Ľudia, ktorí majú niečo nepotvrdené dlhšie než ${daysSk(days)}. Jeden e-mail na človeka — kto mešká so štyrmi smernicami, dostane jednu správu so štyrmi riadkami.`,
       back: "← Späť na prehľad",
       open: "Pripomenúť",
-      none: days => `Nikto nemešká viac než ${daysSk(days)}.`,
+      emptyTitle: "Niet komu pripomínať",
+      none: days => `Všetci, ktorým beží termín, už potvrdili — nikto nemešká viac než ${daysSk(days)}.`,
       person: (documents, days) => `${documents === 1 ? "1 dokument" : documents >= 2 && documents <= 4 ? `${documents} dokumenty` : `${documents} dokumentov`} · najdlhšie ${daysSk(days)}`,
       send: people => people === 1 ? "Odoslať 1 pripomienku" : people >= 2 && people <= 4 ? `Odoslať ${people} pripomienky` : `Odoslať ${people} pripomienok`,
-      preview: "Toto pôjde na uvedené adresy. Odoslaný e-mail sa odvolať nedá.",
+      impactEmails: n => n === 1 ? "Odíde 1 e-mail" : n >= 2 && n <= 4 ? `Odídu ${n} e-maily` : `Odíde ${n} e-mailov`,
+      impactNote: "Ľudia, ktorí už potvrdili, nedostanú nič (D61). Odoslaný e-mail sa odvolať nedá.",
       sent: n => `Odoslané: ${n}.`,
       nobody: "Nie je komu pripomínať.",
       modeLabel: "Komu poslať",
@@ -2274,8 +2423,14 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     expiringNote: days => `predpisov do ${days} dní`,
     attention: "Vyžaduje vašu pozornosť",
     news: "Novinky v knižnici",
-    nothingPending: "Nič na vás nečaká.",
-    nothingNew: "Za posledný týždeň nepribudlo nič.",
+    empty: {
+      attentionTitle: "Nič od vás nikto nečaká",
+      attentionText: "Keď vám niekto pridelí normu alebo vás určí schvaľovateľom, objaví sa to tu aj s termínom.",
+      newsTitle: days => `Za posledných ${days} dní nič nové`,
+      newsText: "Nové znenia a tie, ktorým sa blíži koniec platnosti, sa ukážu tu.",
+    },
+    showAll: n => `Zobraziť všetkých ${n} →`,
+    wholeLibrary: "Celá knižnica →",
     by: date => `do ${date}`,
     until: date => `platí do ${date}`,
     expiringChip: "expiruje",
@@ -2286,7 +2441,10 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
   evidence: {
     heading: "Reťaz dôkazov",
     intro: "Čo sa dialo s každou uloženou povinnosťou \u2014 od pridelenia po potvrdenie. Skladá sa pri zobrazení; neukladá sa nič.",
-    nothing: "Zatiaľ tu nie je čo ukázať.",
+    emptyTitle: "Žiadne záznamy",
+    emptyText: "Záznam vznikne, keď niekto dostane pridelenú normu alebo krok trasy.",
+    emptyFilterTitle: "Filtru nič nevyhovuje",
+    emptyFilterText: "Skúste iné meno alebo iný stav.",
     kind: {
       assigned: "Pridelené",
       notified: "Ozvalo sa jej",
@@ -2300,6 +2458,16 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       "not-yet": "zatiaľ nie",
     },
     informative: "informatívne",
+    rows: {
+      ip: "IP adresa",
+      department: "Oddelenie v čase potvrdenia",
+      statement: "Znenie formulky",
+      reading: "Čas čítania",
+      opened: "Prvýkrát otvoril",
+      revokedBy: "Odvolal",
+      revokeReason: "Dôvod odvolania",
+    },
+    none: "—",
     seconds: n => (n < 60 ? `${n} s` : `${Math.round(n / 60)} min`),
     times: n => (n === 1 ? "raz" : n >= 2 && n <= 4 ? `${n} razy` : `${n} ráz`),
     states: {
@@ -2319,7 +2487,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
   approvals: {
     heading: "Na schválenie",
     intro: "Znenia, ktoré niekto predložil a čaká na tvoje rozhodnutie. Rozhoduješ sám za seba \u2014 ostatní schvaľovatelia rozhodujú nezávisle.",
-    nothing: "Nič na teba nečaká.",
+    emptyTitle: "Nič nečaká na vaše rozhodnutie",
+    emptyText: "Keď vás niekto určí schvaľovateľom znenia, objaví sa tu celý text aj s tým, kto ho predložil.",
     versionLine: (label, round) => `znenie ${label} \u00b7 ${round}`,
     roundLine: round => `${round}. kolo`,
     submittedBy: (who, when) => `predložil ${who} \u00b7 ${when}`,
@@ -2330,7 +2499,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     noText: "Znenie nemá text.",
     reason: "Dôvod",
     reasonPlaceholder: "Napríklad: článok 4 odporuje stanovám.",
-    reasonHint: "Pri zamietnutí povinný \u2014 bez neho predkladateľ nevie, čo opraviť. Pri schválení ho vypĺňať netreba.",
+    reasonHint: "Pri zamietnutí je dôvod povinný. Pri schválení nepovinný \u2014 ale ostane v zázname.",
     approve: "Schváliť",
     reject: "Zamietnuť",
     doneApproved: "Schválené. Čaká sa na ostatných schvaľovateľov.",
@@ -2351,8 +2520,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     draftBadge: "pripravené",
     publishHeading: "Overené odpovede na zverejnenie",
     publishIntro: "Páry pripravené hodnotiteľom. Zverejnením sa dostanú do znalostí ako overená odpoveď — žiadny predpis sa tým nemení ani neprepisuje.",
-    publishEmpty: "Momentálne nie je čo zverejniť.",
-    publishEmptyNote: "Pár sem pridá hodnotiteľ z obrazovky „Na posúdenie“.",
+    publishEmpty: "Nič nečaká na zverejnenie",
+    publishEmptyNote: "Keď hodnotiteľ označí odpoveď ako overenú, objaví sa tu aj so zdrojmi, z ktorých vychádza.",
     preparedBy: "pripravil",
     preparedByUnknown: "osoba už nie je v adresári",
     access: "Prístup",
@@ -2405,10 +2574,12 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       intro: "Prehľad organizácií na platforme. Čísla sa počítajú pri zobrazení, nikde sa neukladajú. Obsah organizácií — dokumenty a potvrdenia — táto rola nesprístupňuje.",
       newTenant: "Nová organizácia",
       disabled: "vypnutý",
-      noDomain: "žiadna doména — portál sa nikde neukáže",
+      noDomainWarning: "Do organizácie sa nedá prihlásiť — prihlásenie je viazané na domény. Doplňte aspoň jednu.",
+      emptyTitle: "Žiadne organizácie",
+      emptyText: "Prvú pridáte tlačidlom vyššie.",
       people: "Osoby",
       peopleValue: (signedIn, total) => `${signedIn} / ${total} prihlásených`,
-      tracks: "Trasy",
+      versions: "Znenia",
       documents: "Dokumenty",
       documentsValue: (valid, total) => `${valid} / ${total} platných`,
       acknowledgements: "Potvrdenia",
@@ -2426,9 +2597,10 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       code: "Kód organizácie",
       codeNoteBefore: "Veľké písmená, číslice, pomlčka. Nesie ho každá osoba, dokument aj potvrdenie — ",
       codeNoteHighlight: "neskôr sa nemení",
-      codeNoteAfter: ".",
+      codeNoteAfter: " — je súčasťou identifikátora každého dokumentu.",
+      codeTaken: (code) => `Kód ${code} je už obsadený. Zvoľte iný.`,
       name: "Názov",
-      nameNote: "To, čo ľudia uvidia v hlavičke portálu.",
+      nameNote: "To, čo ľudia uvidia v hlavičke portálu. Z názvu sa navrhne kód organizácie — skratku, ktorú organizácia používa, pokojne prepíšte.",
       supportEmail: "Kontakt organizácie",
       supportEmailNote: "Sem pôjdu pokyny k doméne.",
       domains: "Domény",
@@ -2439,6 +2611,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     detail: {
       back: "← Správa tenantov",
       disabled: " · vypnutá",
+      numbersHeading: "Čísla organizácie",
+      tracks: "Trasy",
       domainsHeading: "Domény",
       nothingNeeded: (host, reason) => `${host} — netreba nič (${reason})`,
       notInVercel: "nie je vo Verceli",
@@ -2652,7 +2826,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "tenant.notFound": "Organizácia {code} neexistuje.",
     "tenant.needsDomain": "Bez domény sa portál organizácie nikde neukáže. Nechaj aspoň jednu.",
     "tenant.nameRequired": "Názov organizácie je povinný — je to to, čo ľudia uvidia v hlavičke.",
-    "tenant.alreadyExists": "Organizácia {code} už existuje.",
+    "tenant.alreadyExists": "Organizácia {code} už existuje. Voľný je {free} — použite ten, alebo zvoľte vlastnú skratku.",
     "tenant.noEncryptionKey": "Tajomstvo sa nedá uložiť: chýba OAUTH_SECRET_ENCRYPTION_KEY. Ukladať ho čitateľne nebudeme — je to prístup do cudzieho systému.",
     "tenant.needsBothCredentials": "Treba aj clientId, aj tajomstvo — jedno bez druhého sa nedá použiť.",
 
@@ -3007,6 +3181,11 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       importCsv: "Import z CSV",
       searchPlaceholder: "Hľadať v mene, adrese alebo oddelení",
       nothingFound: "Nič sa nenašlo.",
+      emptyTitle: "Zatiaľ žiadne osoby",
+      emptyText: "Prvú pridáte tlačidlom vyššie, alebo naraz importom z CSV.",
+      emptyFilterTitle: "Filtru nič nevyhovuje",
+      emptyFilterText: "Skúste časť mena alebo e-mailu.",
+      clearFilter: "Zrušiť filter",
       count: (n) => `${n} ${n === 1 ? "osoba" : n < 5 ? "osoby" : "osôb"}`,
       matchesSearch: " vyhovuje hľadaniu",
       capped: " — zobrazených prvých 500, zúž hľadanie",
@@ -3021,7 +3200,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       heading: "Hromadné pozvánky",
       intro: "Ľudia, ktorí sa ešte ani raz neprihlásili. E-mail nesie odkaz na portál, nie prihlasovací odkaz — ten platí len krátko a poštové brány ho spotrebujú skôr, než sa k nemu človek dostane.",
       back: "← Späť na osoby",
-      none: "Všetci sa už aspoň raz prihlásili.",
+      emptyTitle: "Všetci sú pozvaní",
+      none: "Nikto nečaká na pozvánku — všetci sa už aspoň raz prihlásili.",
       preview: "Toto pôjde na uvedené adresy. Odoslaný e-mail sa odvolať nedá.",
       send: people => people === 1 ? "Odoslať 1 pozvánku" : people >= 2 && people <= 4 ? `Odoslať ${people} pozvánky` : `Odoslať ${people} pozvánok`,
       sent: n => `Odoslané: ${n}.`,
@@ -3049,6 +3229,9 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       introHighlight: "čo by sa stalo",
       introMiddle: ", a zapíše sa až potom. Nahratie stovky ľudí naslepo je presne tá operácia, po ktorej sa hľadá, ako to vrátiť späť — a vrátiť sa nedá. Všetci sa zapíšu do organizácie ",
       introAfter: ", aj keď je v súbore niečo iné.",
+      existingTitle: "Kto už v systéme je, sa nezaloží znova",
+      existingNote: "Spáruje sa podľa e-mailu a doplní sa: prepíšu sa len stĺpce, ktoré súbor má. Čo v ňom nie je, zostáva nedotknuté — stav, jazyk aj roly. Import nikoho nevyradí.",
+      existingWarning: "Prázdna bunka v stĺpci, ktorý súbor má, hodnotu vymaže: prázdne „skupiny“ znamenajú, že ten človek do žiadnej nepatrí.",
       file: "Súbor CSV",
       fileNoteBefore: "Prvý riadok sú hlavičky. Rozpoznajú sa ",
       fileNoteAfter: " — aj bez diakritiky a s bodkočiarkou ako oddeľovačom, tak ako to ukladá Excel.",
@@ -3065,7 +3248,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       badPhones: "Čísla, ktoré sa nedali prečítať — tieto riadky prejdú, len bez telefónu:",
       statusNoteBefore: "Existujúcim osobám sa ",
       statusNoteHighlight: "nemení stav",
-      statusNoteAfter: " — kto sa už prihlásil, zostáva prihlásený. Nevyplnený jazyk sa neprepíše.",
+      statusNoteAfter: " — kto sa už prihlásil, zostáva prihlásený. Stĺpec, ktorý v súbore nie je, sa neprepíše: jazyk, skupiny, trasy ani roly sa nestratia.",
       write: "Zapísať",
       writing: "Zapisujem…",
       reasons: {
@@ -3124,6 +3307,9 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       roles: "Roly",
       rolesNote: "Správcu platformy sa odtiaľto prideliť nedá — patrí tenantovi dodávateľa a má vlastnú cestu.",
       save: "Uložiť",
+      evidenceEmptyTitle: "Žiadne pridelené normy",
+      evidenceEmptyText: "Tejto osobe zatiaľ nikto nepridelil normu na potvrdenie.",
+      accessSummary: "Prístup a členstvo",
       returnHeading: "Vrátiť osobu",
       excludeHeading: "Vyradiť osobu",
       inviteHeading: "Pozvánka",
@@ -3174,7 +3360,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     // pohľad a ktorú test na paritu kľúčov nechytí.
     bellLabel: (unread) => unread > 0 ? `Upozornenia — ${unreadWord(unread, "sk")}` : "Upozornenia",
     unread: (n) => unreadWord(n, "sk"),
-    empty: "Zatiaľ nič. Objavia sa tu dlhé operácie, keď dobehnú — preindexovanie, prepis a rozposlané pripomienky.",
+    emptyTitle: "Žiadne upozornenia",
+    emptyText: "Objaví sa tu, keď sa zverejní znenie, rozpošlú pripomienky alebo dobehne preindexovanie.",
     markAllRead: "Označiť všetko ako prečítané",
     allRead: (n) => `Označené ako prečítané: ${n}.`,
     retentionNote: (days) => `Upozornenia sa po ${days} dňoch mažú.`,
@@ -3265,6 +3452,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
         pick: (title) => `Označiť ${title}`,
         picked: (count) => `Označené: ${count}`,
         pickedOutside: (count) => `z toho ${count} mimo tohto zoznamu`,
+        pickedMax: (max) => `Viac než ${max} naraz označiť nejde — výber sa nesie v adrese. Spracujte túto dávku a označte ďalšiu.`,
         clearPicked: "zrušiť výber",
         moveTo: "Presunúť do",
         move: "Presunúť",
@@ -3307,6 +3495,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       statusPublished: "publikované",
       statusDrafts: "koncepty",
       statusInReview: "na schválenie",
+      statusExpired: "expirované",
       filter: "Filtrovať",
       clearFilters: "zrušiť filtre",
       processing: {
@@ -3331,7 +3520,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       title: "Názov",
       description: "Popis (nepovinný)",
       create: "Založiť trasu",
-      empty: "Zatiaľ tu nie je žiadna trasa.",
+      emptyTitle: "Žiadne trasy",
+      emptyText: "Trasa je poradie noriem, ktoré má človek prečítať — napríklad pri vstupe do organizácie. Prvú založíte formulárom nižšie.",
       active: "zapnutá",
       inactive: "vypnutá",
       enable: "Zapnúť",
@@ -3373,7 +3563,14 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       topLevel: "— najvyššia úroveň —",
       move: "Presunúť",
       remove: "Zrušiť priečinok",
-      removeHint: "Zrušiť sa dá až prázdny priečinok bez podpriečinkov.",
+      removeBlocked: (documents, subfolders) => {
+        const d = documents === 1 ? "1 dokument" : documents >= 2 && documents <= 4 ? `${documents} dokumenty` : `${documents} dokumentov`
+        const f = subfolders === 1 ? "1 podpriečinok" : subfolders >= 2 && subfolders <= 4 ? `${subfolders} podpriečinky` : `${subfolders} podpriečinkov`
+        const what = subfolders > 0 && documents > 0 ? `${d} a ${f}` : subfolders > 0 ? f : d
+        return `Zrušiť sa dá len prázdny priečinok. V tomto je ${what} — najprv ich presuňte.`
+      },
+      emptyTitle: "Knižnica nemá priečinky",
+      emptyText: "Dokumenty sú zatiaľ nezaradené. Priečinok založíte formulárom nižšie — a potom ich doň presuniete hromadne z knižnice.",
       newFolder: "Nový priečinok",
       newFolderName: "Názov nového priečinka",
       parentFolder: "Nadriadený priečinok",
@@ -3419,7 +3616,9 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       draftSame: "Koncept je zhodný s publikovaným znením.",
       draftEmpty: "Koncept je prázdny.",
       publishHeading: "Publikovať znenie",
-      nothingToPublish: "Niet čo publikovať — koncept je prázdny alebo zhodný s tým, čo už platí.",
+      nowPublishNew: current => `Publikovať nové znenie — teraz platí ${current}`,
+      nowInReview: "Znenie je v schvaľovaní",
+      toolsSummary: "Úpravy a správa dokumentu",
       approvalDraftLabel: "koncept",
       draftApprovalHeading: "Schválenie konceptu",
       publishNeedsApproval: "Koncept ešte nie je schválený. Predlož ho na schválenie vyššie — publikovať sa dá až schválené znenie.",
@@ -3607,6 +3806,9 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       heading: "Nahrať dokument",
       intro: "Word, PDF, Excel, Markdown alebo text. Súbor sa uloží tak, ako prišiel — prevod je odvodenina a originál musí zostať, aby sa dalo overiť, z čoho text vznikol.",
       file: "Súbor",
+      errorBefore: "Dokument sa nenahral: ",
+      errorFileAgain: "Vyberte súbor znova — prehliadač ho z bezpečnostných dôvodov neuchová.",
+      maxSize: mb => `najviac ${mb} MB`,
       oldFormatsBefore: "Staré ",
       oldFormatsMiddle: " a ",
       oldFormatsAfter: " sa previesť nedajú — ulož ich vo Worde alebo Exceli ako novší formát. Skenované PDF bez textu sa dá dať prepísať jazykovým modelom až v editore.",
@@ -3614,13 +3816,13 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       titlePlaceholder: "Súťažný poriadok futbalu SFZ",
       titleNote: "Objaví sa doslovne v potvrdzovacej formulke, takže nech je to celý úradný názov.",
       key: "Kľúč dokumentu",
-      keyNoteBefore: "Malé písmená bez diakritiky a podčiarkovníky. Spolu s kódom organizácie tvorí identifikátor (",
-      keyNoteAfterCode: ").",
-      keyNoteHighlight: " Ten istý kľúč znamená ten istý dokument",
-      keyNoteAfter: " — nahratie na existujúci kľúč sa preto odmietne; nové znenie sa nahráva na detaile dokumentu. Nevyplnený sa doplní zo zaradenia.",
+      keyPreview: "Identifikátor:",
+      keyManualSummary: "Zadať kľúč ručne",
+      keyManualNote: "Kľúč vzniká raz a nikdy sa nemení — žije v potvrdeniach, audite a exportoch. Premenovanie dokumentu ho nemení.",
+      keyTaken: id => `Identifikátor ${id} je obsadený. Upravte názov, alebo zadajte kľúč ručne.`,
       keysTaken: "Obsadené kľúče v tejto organizácii: ",
-      section: "Zaradenie",
-      sectionNote: "Kam dokument patrí. Na rozdiel od kľúča ho môže mať viac dokumentov naraz. Existujúce: ",
+      categoryNote: "Zoskupuje dokumenty v knižnici a vo filtroch. Existujúce: ",
+      moreFields: "Ďalšie údaje",
       scope: "Pôsobnosť",
       accessLevel: "Prístupnosť",
       accessInternalNote: " vidia len ľudia organizácie, ",
@@ -3636,10 +3838,18 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
   },
 
   cs: {
+  common: {
+    empty: {
+      filtered: "Filtru nic nevyhovuje",
+      none: "Zatím tu nic není",
+      clearFilters: "Zrušit filtry",
+    },
+  },
   onboarding: {
     listHeading: "Dokumenty k potvrzení",
     listIntro: "Přečtěte si každý dokument a potvrďte, že jste se s ním seznámili. Potvrzení se váže na konkrétní znění — u nové verze vás systém požádá znovu.",
-    nothingToDo: "Momentálně nemáte nic k potvrzení.",
+    emptyTitle: "Nemáte nic k potvrzení",
+    emptyText: "Když vám někdo přidělí normu nebo vás zařadí do trasy, objeví se tady i s termínem. Nikdo od vás teď nic nečeká.",
     assignedHeading: "Přidělené dokumenty",
     progress: (done, total) => `Hotovo ${done} z ${total}`,
     step: (order, total) => `Krok ${order} z ${total}`,
@@ -3905,12 +4115,20 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     unknownError: "Neznámá chyba",
     noScript: "Odpovídání potřebuje JavaScript — odpověď přichází po částech, jak ji model píše. Dokumenty se dají číst a potvrzovat i bez něj:",
     noScriptLink: "přejít na dokumenty",
+    none: {
+      kicker: "V dokumentech organizace se k tomu nic nenašlo",
+      text: "Zkuste otázku jinak, nebo hledejte v knihovně — ne všechno je v předpisech.",
+      link: "Hledat v knihovně →",
+    },
+    error: {
+      unavailable: "Odpověď se teď nedá sestavit. Zkuste to za chvíli — vyhledávání v knihovně funguje.",
+      link: "Otevřít knihovnu →",
+    },
   },
 
   answer: {
     fromDocuments: "Odpověď z vašich dokumentů",
     failed: "Odpověď se nepodařilo získat.",
-    noResults: "Nenašel jsem relevantní informace k vaší otázce v dostupných dokumentech.",
     incompleteHeading: "Odpověď je neúplná.",
     incompleteNote: "Model dosáhl limitu délky a zastavil se uprostřed — chybí jí závěr. Zkuste se zeptat na užší část problému.",
     citations: (shown) => `Doslovné citace (${shown})`,
@@ -3920,6 +4138,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     internal: "interní",
     verified: "ověřená odpověď",
     verifiedNote: "znění, které někdo ověřil nad předpisem — nikoli samotné znění předpisu",
+    match: { high: "vysoká shoda", medium: "střední shoda", low: "slabá shoda" },
     adapter: "adaptér",
     firstToken: "první token",
     costNote: (pricelistVersion) => `Orientačně. Nezahrnuje pomocný model ani vyhledávání. Ceník ${pricelistVersion}.`,
@@ -3928,11 +4147,19 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     citationsUnverified: "citace neověřené",
   },
   hr: {
+    dutyState: {
+      acknowledged: "potvrzeno",
+      opened: "otevřeno, nepotvrzeno",
+      "not-opened": "neotevřeno",
+      overdue: "po termínu",
+      revoked: "odvoláno",
+    },
     report: {
       heading: "Výkaz potvrzení",
       intro: "Kdo co má potvrdit a kdo to už potvrdil. Do jmenovatele vstupuje ten, komu byl dokument přidělen nebo ho má jako krok v zapnuté trase — ne všichni v organizaci.",
       views: { document: "Podle dokumentu", person: "Podle osoby", track: "Podle trasy" },
-      empty: "Zatím není co vykazovat. Povinnost vzniká přidělením nebo krokem v zapnuté trase.",
+      emptyTitle: "Zatím není co shrnout",
+      emptyText: "Souhrn se objeví, až bude první přidělení.",
       done: (done, total) => `${done} z ${total}`,
       missing: n => (n === 1 ? "chybí 1" : `chybí ${n}`),
       complete: "hotovo",
@@ -3942,7 +4169,6 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       export: "Stáhnout jako CSV",
       open: "Rozepsat",
       acknowledgedAt: "potvrzeno",
-      notAcknowledged: "nepotvrzeno",
       revoke: "Odvolat potvrzení",
       revokeReason: "Důvod odvolání",
       revokeHint: "Povinnost ožije s původním termínem. Pokud termín už uplynul, osoba bude hned po termínu.",
@@ -3956,7 +4182,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       heading: "Přidělené předpisy",
       intro: "Co bylo komu uloženo a kdo to už potvrdil. Počty se počítají při zobrazení — a týkají se lidí, kteří do skupiny patří",
       assign: "Přidělit předpis",
-      empty: "Zatím není přiděleno nic. Dokud se předpis nepřidělí, lidem se objeví jen tehdy, když je krokem jejich trasy — a nikde nezůstane stopa, kdy se to stalo a proč.",
+      emptyTitle: "Žádná přidělení",
+      emptyText: "Když předpis někomu přidělíte, objeví se tu i s tím, kolik lidí ho už potvrdilo.",
       acknowledged: "Potvrdili",
       notified: "Dali jsme vědět",
       no: "ne",
@@ -3972,7 +4199,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       notAcknowledged: (missing, total) => `Nepotvrdili (${missing} z ${total})`,
       effectiveFrom: (date) => `, platná od ${date}`,
       notifyLink: "dát jim vědět e-mailem →",
-      allAcknowledged: "Potvrdili všichni, kterých se přidělení dnes týká.",
+      allTitle: "Všichni potvrdili",
+      allText: "Toto přidělení je vyřízené — nikdo nechybí.",
       noLongerInDepartment: "už není v oddělení",
       note: "Seznam se počítá při zobrazení. Kdo z oddělení odešel bez potvrzení, zůstává tu označený — jinak by tiše zmizel a nikdo by se nedozvěděl, že se to nedořešilo; e-mail se mu ale neposílá. Kdo odešel z celé organizace, tu není — jeho potvrzení (nebo jeho chybění) však zůstává v záznamech.",
     },
@@ -3998,7 +4226,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       introBefore: "Přiděluje se ",
       introHighlight: "konkrétní znění",
       introAfter: ", ne dokument. Když přibude novější, staré přidělení pro ně neplatí — to je záměr.",
-      noEffectiveVersion: "Žádný dokument nemá platné znění, takže přidělit nelze nic. Znění bez data platnosti nelze ani potvrdit (D6).",
+      emptyTitle: "Není co přidělit",
+      emptyText: "Přidělit lze jen publikované znění. V knihovně zatím žádné není.",
       whichDocuments: "Které předpisy",
       versionLine: (label, date) => `verze ${label}, platná od ${date}`,
       to: "Komu",
@@ -4023,6 +4252,12 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       reasonPlaceholder: "např. novela čl. 12 — mění se lhůta pro podání odvolání",
       reasonNote: "Povinný a společný pro celý výběr. Je to jediné místo, kde bude za rok napsáno, proč se předpisy potvrzovaly znovu — a přijde i v e-mailu lidem.",
       submit: "Přidělit",
+      checkImpact: "Zkontrolovat dopad",
+      impactPeople: (n) =>
+        n === 0 ? "Povinnost nevznikne nikomu"
+        : n === 1 ? "Povinnost vznikne 1 člověku"
+        : `Povinnost vznikne ${n} lidem`,
+      impactNote: "Kdo do oddělení přibude později, dostane ji ode dne příchodu (D50).",
     },
     actions: {
       noAudience: "Nevybral jsi, komu se přiděluje.",
@@ -4050,10 +4285,12 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       intro: days => `Lidé, kteří mají něco nepotvrzené déle než ${daysCs(days)}. Jeden e-mail na člověka — kdo mešká se čtyřmi předpisy, dostane jednu zprávu se čtyřmi řádky.`,
       back: "← Zpět na přehled",
       open: "Připomenout",
-      none: days => `Nikdo nemešká více než ${daysCs(days)}.`,
+      emptyTitle: "Není komu připomínat",
+      none: days => `Všichni, kterým běží termín, už potvrdili — nikdo nemešká více než ${daysCs(days)}.`,
       person: (documents, days) => `${documents === 1 ? "1 dokument" : documents >= 2 && documents <= 4 ? `${documents} dokumenty` : `${documents} dokumentů`} · nejdéle ${daysCs(days)}`,
       send: people => people === 1 ? "Odeslat 1 připomínku" : people >= 2 && people <= 4 ? `Odeslat ${people} připomínky` : `Odeslat ${people} připomínek`,
-      preview: "Toto půjde na uvedené adresy. Odeslaný e-mail se odvolat nedá.",
+      impactEmails: n => n === 1 ? "Odejde 1 e-mail" : n >= 2 && n <= 4 ? `Odejdou ${n} e-maily` : `Odejde ${n} e-mailů`,
+      impactNote: "Lidé, kteří už potvrdili, nedostanou nic (D61). Odeslaný e-mail se odvolat nedá.",
       sent: n => `Odesláno: ${n}.`,
       nobody: "Není komu připomínat.",
       modeLabel: "Komu poslat",
@@ -4112,8 +4349,14 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     expiringNote: days => `předpisů do ${days} dní`,
     attention: "Vyžaduje vaši pozornost",
     news: "Novinky v knihovně",
-    nothingPending: "Nic na vás nečeká.",
-    nothingNew: "Za poslední týden nepřibylo nic.",
+    empty: {
+      attentionTitle: "Nikdo od vás nic nečeká",
+      attentionText: "Když vám někdo přidělí normu nebo vás určí schvalovatelem, objeví se to tady i s termínem.",
+      newsTitle: days => `Za posledních ${days} dní nic nového`,
+      newsText: "Nová znění a ta, kterým se blíží konec platnosti, se ukážou tady.",
+    },
+    showAll: n => `Zobrazit všech ${n} →`,
+    wholeLibrary: "Celá knihovna →",
     by: date => `do ${date}`,
     until: date => `platí do ${date}`,
     expiringChip: "expiruje",
@@ -4124,7 +4367,10 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
   evidence: {
     heading: "Řetěz důkazů",
     intro: "Co se dělo s každou uloženou povinností \u2014 od přidělení po potvrzení. Skládá se při zobrazení; neukládá se nic.",
-    nothing: "Zatím tu není co ukázat.",
+    emptyTitle: "Žádné záznamy",
+    emptyText: "Záznam vznikne, když někdo dostane přidělený předpis nebo krok trasy.",
+    emptyFilterTitle: "Filtru nic nevyhovuje",
+    emptyFilterText: "Zkuste jiné jméno nebo jiný stav.",
     kind: {
       assigned: "Přiděleno",
       notified: "Ozvalo se jí",
@@ -4138,6 +4384,16 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       "not-yet": "zatím ne",
     },
     informative: "informativní",
+    rows: {
+      ip: "IP adresa",
+      department: "Oddělení v době potvrzení",
+      statement: "Znění formulky",
+      reading: "Čas čtení",
+      opened: "Poprvé otevřel",
+      revokedBy: "Odvolal",
+      revokeReason: "Důvod odvolání",
+    },
+    none: "—",
     seconds: n => (n < 60 ? `${n} s` : `${Math.round(n / 60)} min`),
     times: n => (n === 1 ? "jednou" : n >= 2 && n <= 4 ? `${n}krát` : `${n}krát`),
     states: {
@@ -4157,7 +4413,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
   approvals: {
     heading: "Ke schválení",
     intro: "Znění, která někdo předložil a čekají na tvé rozhodnutí. Rozhoduješ sám za sebe \u2014 ostatní schvalovatelé rozhodují nezávisle.",
-    nothing: "Nic na tebe nečeká.",
+    emptyTitle: "Nic nečeká na vaše rozhodnutí",
+    emptyText: "Když vás někdo určí schvalovatelem znění, objeví se tady celý text i s tím, kdo ho předložil.",
     versionLine: (label, round) => `znění ${label} \u00b7 ${round}`,
     roundLine: round => `${round}. kolo`,
     submittedBy: (who, when) => `předložil ${who} \u00b7 ${when}`,
@@ -4168,7 +4425,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     noText: "Znění nemá text.",
     reason: "Důvod",
     reasonPlaceholder: "Například: článek 4 odporuje stanovám.",
-    reasonHint: "Při zamítnutí povinný \u2014 bez něj předkladatel neví, co opravit. Při schválení ho vyplňovat netřeba.",
+    reasonHint: "Při zamítnutí je důvod povinný. Při schválení nepovinný \u2014 ale zůstane v záznamu.",
     approve: "Schválit",
     reject: "Zamítnout",
     doneApproved: "Schváleno. Čeká se na ostatní schvalovatele.",
@@ -4189,8 +4446,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     draftBadge: "připraveno",
     publishHeading: "Ověřené odpovědi ke zveřejnění",
     publishIntro: "Páry připravené hodnotitelem. Zveřejněním se dostanou do znalostí jako ověřená odpověď — žádný předpis se tím nemění ani nepřepisuje.",
-    publishEmpty: "Momentálně není co zveřejnit.",
-    publishEmptyNote: "Pár sem přidá hodnotitel z obrazovky „K posouzení“.",
+    publishEmpty: "Nic nečeká na zveřejnění",
+    publishEmptyNote: "Když hodnotitel označí odpověď jako ověřenou, objeví se tady i se zdroji, ze kterých vychází.",
     preparedBy: "připravil",
     preparedByUnknown: "osoba už není v adresáři",
     access: "Přístup",
@@ -4243,10 +4500,12 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       intro: "Přehled organizací na platformě. Čísla se počítají při zobrazení, nikde se neukládají. Obsah organizací — dokumenty a potvrzení — tato role nezpřístupňuje.",
       newTenant: "Nová organizace",
       disabled: "vypnutý",
-      noDomain: "žádná doména — portál se nikde neukáže",
+      noDomainWarning: "Do organizace se nedá přihlásit — přihlášení je vázané na domény. Doplňte aspoň jednu.",
+      emptyTitle: "Žádné organizace",
+      emptyText: "První přidáte tlačítkem výše.",
       people: "Osoby",
       peopleValue: (signedIn, total) => `${signedIn} / ${total} přihlášených`,
-      tracks: "Trasy",
+      versions: "Znění",
       documents: "Dokumenty",
       documentsValue: (valid, total) => `${valid} / ${total} platných`,
       acknowledgements: "Potvrzení",
@@ -4264,9 +4523,10 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       code: "Kód organizace",
       codeNoteBefore: "Velká písmena, číslice, pomlčka. Nese ho každá osoba, dokument i potvrzení — ",
       codeNoteHighlight: "později se nemění",
-      codeNoteAfter: ".",
+      codeNoteAfter: " — je součástí identifikátoru každého dokumentu.",
+      codeTaken: (code) => `Kód ${code} je už obsazený. Zvolte jiný.`,
       name: "Název",
-      nameNote: "To, co lidé uvidí v hlavičce portálu.",
+      nameNote: "To, co lidé uvidí v hlavičce portálu. Z názvu se navrhne kód organizace — zkratku, kterou organizace používá, klidně přepište.",
       supportEmail: "Kontakt organizace",
       supportEmailNote: "Sem půjdou pokyny k doméně.",
       domains: "Domény",
@@ -4277,6 +4537,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     detail: {
       back: "← Správa tenantů",
       disabled: " · vypnutá",
+      numbersHeading: "Čísla organizace",
+      tracks: "Trasy",
       domainsHeading: "Domény",
       nothingNeeded: (host, reason) => `${host} — netřeba nic (${reason})`,
       notInVercel: "není ve Vercelu",
@@ -4490,7 +4752,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "tenant.notFound": "Organizace {code} neexistuje.",
     "tenant.needsDomain": "Bez domény se portál organizace nikde neukáže. Nech aspoň jednu.",
     "tenant.nameRequired": "Název organizace je povinný — je to to, co lidé uvidí v hlavičce.",
-    "tenant.alreadyExists": "Organizace {code} už existuje.",
+    "tenant.alreadyExists": "Organizace {code} už existuje. Volný je {free} — použijte ten, nebo zvolte vlastní zkratku.",
     "tenant.noEncryptionKey": "Tajemství nelze uložit: chybí OAUTH_SECRET_ENCRYPTION_KEY. Ukládat ho čitelně nebudeme — je to přístup do cizího systému.",
     "tenant.needsBothCredentials": "Je potřeba clientId i tajemství — jedno bez druhého použít nelze.",
 
@@ -4845,6 +5107,11 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       importCsv: "Import z CSV",
       searchPlaceholder: "Hledat ve jménu, adrese nebo oddělení",
       nothingFound: "Nic se nenašlo.",
+      emptyTitle: "Zatím žádné osoby",
+      emptyText: "První přidáte tlačítkem výše, nebo naráz importem z CSV.",
+      emptyFilterTitle: "Filtru nic nevyhovuje",
+      emptyFilterText: "Zkuste část jména nebo e-mailu.",
+      clearFilter: "Zrušit filtr",
       count: (n) => `${n} ${n === 1 ? "osoba" : n < 5 ? "osoby" : "osob"}`,
       matchesSearch: " vyhovuje hledání",
       capped: " — zobrazeno prvních 500, zužte hledání",
@@ -4859,7 +5126,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       heading: "Hromadné pozvánky",
       intro: "Lidé, kteří se ještě ani jednou nepřihlásili. E-mail nese odkaz na portál, ne přihlašovací odkaz — ten platí jen krátce a poštovní brány ho spotřebují dřív, než se k němu člověk dostane.",
       back: "← Zpět na osoby",
-      none: "Všichni se už aspoň jednou přihlásili.",
+      emptyTitle: "Všichni jsou pozvaní",
+      none: "Nikdo nečeká na pozvánku — všichni se už aspoň jednou přihlásili.",
       preview: "Toto půjde na uvedené adresy. Odeslaný e-mail se odvolat nedá.",
       send: people => people === 1 ? "Odeslat 1 pozvánku" : people >= 2 && people <= 4 ? `Odeslat ${people} pozvánky` : `Odeslat ${people} pozvánek`,
       sent: n => `Odesláno: ${n}.`,
@@ -4887,6 +5155,9 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       introHighlight: "co by se stalo",
       introMiddle: ", a zapíše se až potom. Nahrání stovky lidí naslepo je přesně ta operace, po které se hledá, jak to vrátit zpět — a vrátit se nedá. Všichni se zapíšou do organizace ",
       introAfter: ", i když je v souboru něco jiného.",
+      existingTitle: "Kdo už v systému je, se nezaloží znovu",
+      existingNote: "Spáruje se podle e-mailu a doplní se: přepíší se jen sloupce, které soubor má. Co v něm není, zůstává nedotčené — stav, jazyk i role. Import nikoho nevyřadí.",
+      existingWarning: "Prázdná buňka ve sloupci, který soubor má, hodnotu vymaže: prázdné „skupiny“ znamenají, že ten člověk do žádné nepatří.",
       file: "Soubor CSV",
       fileNoteBefore: "První řádek jsou hlavičky. Rozpoznají se ",
       fileNoteAfter: " — i bez diakritiky a se středníkem jako oddělovačem, tak jak to ukládá Excel.",
@@ -4903,7 +5174,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       badPhones: "Čísla, která se nedala přečíst — tyto řádky projdou, jen bez telefonu:",
       statusNoteBefore: "Existujícím osobám se ",
       statusNoteHighlight: "nemění stav",
-      statusNoteAfter: " — kdo se už přihlásil, zůstává přihlášený. Nevyplněný jazyk se nepřepíše.",
+      statusNoteAfter: " — kdo se už přihlásil, zůstává přihlášený. Sloupec, který v souboru není, se nepřepíše: jazyk, skupiny, trasy ani role se neztratí.",
       write: "Zapsat",
       writing: "Zapisuji…",
       reasons: {
@@ -4962,6 +5233,9 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       roles: "Role",
       rolesNote: "Správce platformy se odsud přidělit nedá — patří tenantovi dodavatele a má vlastní cestu.",
       save: "Uložit",
+      evidenceEmptyTitle: "Žádné přidělené předpisy",
+      evidenceEmptyText: "Této osobě zatím nikdo nepřidělil předpis k potvrzení.",
+      accessSummary: "Přístup a členství",
       returnHeading: "Vrátit osobu",
       excludeHeading: "Vyřadit osobu",
       inviteHeading: "Pozvánka",
@@ -5010,7 +5284,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     title: "Upozornění",
     bellLabel: (unread) => unread > 0 ? `Upozornění — ${unreadWord(unread, "cs")}` : "Upozornění",
     unread: (n) => unreadWord(n, "cs"),
-    empty: "Zatím nic. Objeví se tu dlouhé operace, až doběhnou — přeindexování, přepis a rozeslané připomínky.",
+    emptyTitle: "Žádná upozornění",
+    emptyText: "Objeví se tu, když se zveřejní znění, rozešlou připomínky nebo doběhne přeindexování.",
     markAllRead: "Označit vše jako přečtené",
     allRead: (n) => `Označeno jako přečtené: ${n}.`,
     retentionNote: (days) => `Upozornění se po ${days} dnech mažou.`,
@@ -5101,6 +5376,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
         pick: (title) => `Označit ${title}`,
         picked: (count) => `Označeno: ${count}`,
         pickedOutside: (count) => `z toho ${count} mimo tento seznam`,
+        pickedMax: (max) => `Více než ${max} naráz označit nelze — výběr se nese v adrese. Zpracujte tuto dávku a označte další.`,
         clearPicked: "zrušit výběr",
         moveTo: "Přesunout do",
         move: "Přesunout",
@@ -5143,6 +5419,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       statusPublished: "publikované",
       statusDrafts: "koncepty",
       statusInReview: "ke schválení",
+      statusExpired: "expirované",
       filter: "Filtrovat",
       clearFilters: "zrušit filtry",
       processing: {
@@ -5167,7 +5444,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       title: "Název",
       description: "Popis (nepovinný)",
       create: "Založit trasu",
-      empty: "Zatím tu není žádná trasa.",
+      emptyTitle: "Žádné trasy",
+      emptyText: "Trasa je pořadí norem, které má člověk přečíst — například při vstupu do organizace. První založíte formulářem níže.",
       active: "zapnutá",
       inactive: "vypnutá",
       enable: "Zapnout",
@@ -5209,7 +5487,14 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       topLevel: "— nejvyšší úroveň —",
       move: "Přesunout",
       remove: "Zrušit složku",
-      removeHint: "Zrušit lze jen prázdnou složku bez podsložek.",
+      removeBlocked: (documents, subfolders) => {
+        const d = documents === 1 ? "1 dokument" : documents >= 2 && documents <= 4 ? `${documents} dokumenty` : `${documents} dokumentů`
+        const f = subfolders === 1 ? "1 podsložka" : subfolders >= 2 && subfolders <= 4 ? `${subfolders} podsložky` : `${subfolders} podsložek`
+        const what = subfolders > 0 && documents > 0 ? `${d} a ${f}` : subfolders > 0 ? f : d
+        return `Zrušit lze jen prázdnou složku. V této je ${what} — nejprve je přesuňte.`
+      },
+      emptyTitle: "Knihovna nemá složky",
+      emptyText: "Dokumenty jsou zatím nezařazené. Složku založíte formulářem níže — a pak je do ní přesunete hromadně z knihovny.",
       newFolder: "Nová složka",
       newFolderName: "Název nové složky",
       parentFolder: "Nadřazená složka",
@@ -5255,7 +5540,9 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       draftSame: "Koncept je shodný s publikovaným zněním.",
       draftEmpty: "Koncept je prázdný.",
       publishHeading: "Publikovat znění",
-      nothingToPublish: "Není co publikovat — koncept je prázdný nebo shodný s tím, co už platí.",
+      nowPublishNew: current => `Publikovat nové znění — nyní platí ${current}`,
+      nowInReview: "Znění je ve schvalování",
+      toolsSummary: "Úpravy a správa dokumentu",
       approvalDraftLabel: "koncept",
       draftApprovalHeading: "Schválení konceptu",
       publishNeedsApproval: "Koncept ještě není schválený. Předlož ho ke schválení výše — publikovat lze až schválené znění.",
@@ -5443,6 +5730,9 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       heading: "Nahrát dokument",
       intro: "Word, PDF, Excel, Markdown nebo text. Soubor se uloží tak, jak přišel — převod je odvozenina a originál musí zůstat, aby šlo ověřit, z čeho text vznikl.",
       file: "Soubor",
+      errorBefore: "Dokument se nenahrál: ",
+      errorFileAgain: "Vyberte soubor znovu — prohlížeč ho z bezpečnostních důvodů neuchová.",
+      maxSize: mb => `nejvýše ${mb} MB`,
       oldFormatsBefore: "Staré ",
       oldFormatsMiddle: " a ",
       oldFormatsAfter: " převést nelze — ulož je ve Wordu nebo Excelu jako novější formát. Skenované PDF bez textu lze nechat přepsat jazykovým modelem až v editoru.",
@@ -5450,13 +5740,13 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       titlePlaceholder: "Súťažný poriadok futbalu SFZ",
       titleNote: "Objeví se doslovně v potvrzovací formulaci, ať je to tedy celý úřední název.",
       key: "Klíč dokumentu",
-      keyNoteBefore: "Malá písmena bez diakritiky a podtržítka. Spolu s kódem organizace tvoří identifikátor (",
-      keyNoteAfterCode: ").",
-      keyNoteHighlight: " Týž klíč znamená týž dokument",
-      keyNoteAfter: " — nahrání na existující klíč se proto odmítne; nové znění se nahrává na detailu dokumentu. Nevyplněný se doplní ze zařazení.",
+      keyPreview: "Identifikátor:",
+      keyManualSummary: "Zadat klíč ručně",
+      keyManualNote: "Klíč vzniká jednou a nikdy se nemění — žije v potvrzeních, auditu a exportech. Přejmenování dokumentu ho nemění.",
+      keyTaken: id => `Identifikátor ${id} je obsazený. Upravte název, nebo zadejte klíč ručně.`,
       keysTaken: "Obsazené klíče v této organizaci: ",
-      section: "Zařazení",
-      sectionNote: "Kam dokument patří. Na rozdíl od klíče ho může mít víc dokumentů najednou. Existující: ",
+      categoryNote: "Seskupuje dokumenty v knihovně a ve filtrech. Existující: ",
+      moreFields: "Další údaje",
       scope: "Působnost",
       accessLevel: "Přístupnost",
       accessInternalNote: " vidí jen lidé organizace, ",
@@ -5472,10 +5762,18 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
   },
 
   en: {
+  common: {
+    empty: {
+      filtered: "Nothing matches the filter",
+      none: "Nothing here yet",
+      clearFilters: "Clear filters",
+    },
+  },
   onboarding: {
     listHeading: "Documents to acknowledge",
     listIntro: "Read each document and confirm that you have familiarised yourself with it. An acknowledgement is tied to a specific version — when a new one is issued, you will be asked again.",
-    nothingToDo: "You have nothing to acknowledge at the moment.",
+    emptyTitle: "Nothing to acknowledge",
+    emptyText: "When someone assigns you a document or adds you to a track, it will appear here with its deadline. Nobody is waiting on you right now.",
     assignedHeading: "Assigned documents",
     progress: (done, total) => `${done} of ${total} done`,
     step: (order, total) => `Step ${order} of ${total}`,
@@ -5736,12 +6034,20 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     unknownError: "Unknown error",
     noScript: "Answering needs JavaScript — the answer arrives in pieces, as the model writes it. Documents can be read and acknowledged without it:",
     noScriptLink: "go to documents",
+    none: {
+      kicker: "Nothing on this was found in the organisation's documents",
+      text: "Try rephrasing the question, or search the library — not everything is in the regulations.",
+      link: "Search the library →",
+    },
+    error: {
+      unavailable: "The answer cannot be composed right now. Try again in a moment — the library search works.",
+      link: "Open the library →",
+    },
   },
 
   answer: {
     fromDocuments: "Answer from your documents",
     failed: "The answer could not be retrieved.",
-    noResults: "I found no information relevant to your question in the available documents.",
     incompleteHeading: "The answer is incomplete.",
     incompleteNote: "The model hit its length limit and stopped mid-sentence — the conclusion is missing. Try asking about a narrower part of the problem.",
     citations: (shown) => `Verbatim citations (${shown})`,
@@ -5751,6 +6057,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     internal: "internal",
     verified: "verified answer",
     verifiedNote: "wording someone verified against the document — not the document itself",
+    match: { high: "strong match", medium: "moderate match", low: "weak match" },
     adapter: "adapter",
     firstToken: "first token",
     costNote: (pricelistVersion) => `Approximate. Excludes the helper model and retrieval. Price list ${pricelistVersion}.`,
@@ -5759,11 +6066,19 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     citationsUnverified: "citations not verified",
   },
   hr: {
+    dutyState: {
+      acknowledged: "acknowledged",
+      opened: "opened, not acknowledged",
+      "not-opened": "not opened",
+      overdue: "overdue",
+      revoked: "revoked",
+    },
     report: {
       heading: "Acknowledgement report",
       intro: "Who has to acknowledge what, and who already did. The denominator counts a person when the document was assigned to them or is a step in a track they are on — not everyone in the organisation.",
       views: { document: "By document", person: "By person", track: "By track" },
-      empty: "There is nothing to report yet. A duty comes from an assignment or from a step in an active track.",
+      emptyTitle: "Nothing to summarise yet",
+      emptyText: "The summary appears once there is a first assignment.",
       done: (done, total) => `${done} of ${total}`,
       missing: n => `${n} missing`,
       complete: "complete",
@@ -5773,7 +6088,6 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       export: "Download as CSV",
       open: "Break down",
       acknowledgedAt: "acknowledged",
-      notAcknowledged: "not acknowledged",
       revoke: "Revoke acknowledgement",
       revokeReason: "Reason for revoking",
       revokeHint: "The duty comes back with its original deadline. If that deadline has passed, the person is overdue immediately.",
@@ -5787,7 +6101,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       heading: "Assigned documents",
       intro: "What has been assigned to whom and who has already acknowledged it. The counts are computed when the page is opened — and cover the people who belong to the group",
       assign: "Assign a document",
-      empty: "Nothing has been assigned yet. Until a document is assigned, people only see it when it is a step on their track — and nothing records when that happened or why.",
+      emptyTitle: "No assignments",
+      emptyText: "Once you assign a document to someone, it shows up here along with how many have acknowledged it.",
       acknowledged: "Acknowledged",
       notified: "Notified",
       no: "no",
@@ -5803,7 +6118,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       notAcknowledged: (missing, total) => `Not acknowledged (${missing} of ${total})`,
       effectiveFrom: (date) => `, effective from ${date}`,
       notifyLink: "notify them by e-mail →",
-      allAcknowledged: "Everyone the assignment applies to today has acknowledged it.",
+      allTitle: "Everyone has acknowledged",
+      allText: "This assignment is settled — nobody is missing.",
       noLongerInDepartment: "no longer in the department",
       note: "The list is computed when the page is opened. Anyone who left the department without acknowledging stays here, marked — otherwise they would quietly disappear and nobody would learn it was left unresolved; they are not e-mailed, though. Anyone who left the organisation altogether is not here — but their acknowledgement (or the lack of it) stays in the records.",
     },
@@ -5829,7 +6145,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       introBefore: "What is assigned is ",
       introHighlight: "a specific version",
       introAfter: ", not a document. When a newer one is issued, the old assignment does not carry over to it — that is deliberate.",
-      noEffectiveVersion: "No document has an effective version, so there is nothing to assign. A version without an effective date cannot be acknowledged either (D6).",
+      emptyTitle: "Nothing to assign",
+      emptyText: "Only a published version can be assigned. The library has none yet.",
       whichDocuments: "Which documents",
       versionLine: (label, date) => `version ${label}, effective from ${date}`,
       to: "Recipients",
@@ -5854,6 +6171,12 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       reasonPlaceholder: "e.g. amendment to Article 12 — the deadline for an appeal changes",
       reasonNote: "Required, and shared by the whole selection. It is the only place where, a year from now, it will say why these documents had to be acknowledged again — and it goes out in the e-mail as well.",
       submit: "Assign",
+      checkImpact: "Check the impact",
+      impactPeople: (n) =>
+        n === 0 ? "Nobody will get the obligation"
+        : n === 1 ? "1 person will get the obligation"
+        : `${n} people will get the obligation`,
+      impactNote: "Whoever joins the department later gets it from the day they arrive (D50).",
     },
     actions: {
       noAudience: "You did not choose who to assign to.",
@@ -5880,10 +6203,12 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       intro: days => `People with something unacknowledged for more than ${daysEn(days)}. One email per person — someone behind on four documents gets one message with four lines.`,
       back: "← Back to the overview",
       open: "Remind",
-      none: days => `Nobody is more than ${daysEn(days)} behind.`,
+      emptyTitle: "Nobody to remind",
+      none: days => `Everyone with a running deadline has acknowledged — nobody is more than ${daysEn(days)} behind.`,
       person: (documents, days) => `${documents === 1 ? "1 document" : `${documents} documents`} · longest ${daysEn(days)}`,
       send: people => people === 1 ? "Send 1 reminder" : `Send ${people} reminders`,
-      preview: "This goes to the addresses listed. A sent email cannot be taken back.",
+      impactEmails: n => n === 1 ? "1 e-mail will go out" : `${n} e-mails will go out`,
+      impactNote: "People who have already acknowledged get nothing (D61). A sent e-mail cannot be recalled.",
       sent: n => `Sent: ${n}.`,
       nobody: "There is nobody to remind.",
       modeLabel: "Who to send to",
@@ -5942,8 +6267,14 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     expiringNote: days => `rules within ${days} days`,
     attention: "Needs your attention",
     news: "New in the library",
-    nothingPending: "Nothing is waiting for you.",
-    nothingNew: "Nothing new in the past week.",
+    empty: {
+      attentionTitle: "Nobody is waiting on you",
+      attentionText: "When someone assigns you a document or names you an approver, it will appear here with its deadline.",
+      newsTitle: days => `Nothing new in the last ${days} days`,
+      newsText: "New versions and those approaching the end of their validity will show up here.",
+    },
+    showAll: n => `Show all ${n} →`,
+    wholeLibrary: "Whole library →",
     by: date => `by ${date}`,
     until: date => `valid until ${date}`,
     expiringChip: "expiring",
@@ -5954,7 +6285,10 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
   evidence: {
     heading: "Chain of evidence",
     intro: "What happened with each obligation \u2014 from assignment to acknowledgement. Composed on display; nothing is stored.",
-    nothing: "Nothing to show here yet.",
+    emptyTitle: "No records",
+    emptyText: "A record appears once someone is assigned a document or a track step.",
+    emptyFilterTitle: "Nothing matches the filter",
+    emptyFilterText: "Try a different name or state.",
     kind: {
       assigned: "Assigned",
       notified: "Contacted",
@@ -5968,6 +6302,16 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       "not-yet": "not yet",
     },
     informative: "informative",
+    rows: {
+      ip: "IP address",
+      department: "Department at the time",
+      statement: "Statement wording",
+      reading: "Reading time",
+      opened: "First opened",
+      revokedBy: "Revoked by",
+      revokeReason: "Revocation reason",
+    },
+    none: "—",
     seconds: n => (n < 60 ? `${n} s` : `${Math.round(n / 60)} min`),
     times: n => (n === 1 ? "once" : `${n} times`),
     states: {
@@ -5987,7 +6331,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
   approvals: {
     heading: "To approve",
     intro: "Versions somebody submitted that are waiting for your decision. You decide for yourself \u2014 the other approvers decide independently.",
-    nothing: "Nothing is waiting for you.",
+    emptyTitle: "Nothing awaits your decision",
+    emptyText: "When someone names you an approver of a version, the full text will appear here along with who submitted it.",
     versionLine: (label, round) => `version ${label} \u00b7 ${round}`,
     roundLine: round => `round ${round}`,
     submittedBy: (who, when) => `submitted by ${who} \u00b7 ${when}`,
@@ -5998,7 +6343,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     noText: "This version has no text.",
     reason: "Reason",
     reasonPlaceholder: "For example: article 4 conflicts with the statutes.",
-    reasonHint: "Required when rejecting \u2014 without it the submitter does not know what to fix. Not needed when approving.",
+    reasonHint: "Required when rejecting. Optional when approving \u2014 but it stays in the record.",
     approve: "Approve",
     reject: "Reject",
     doneApproved: "Approved. Waiting for the other approvers.",
@@ -6019,8 +6364,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     draftBadge: "prepared",
     publishHeading: "Verified answers to publish",
     publishIntro: "Pairs prepared by an evaluator. Publishing puts them into the knowledge base as a verified answer — no document is changed or overwritten.",
-    publishEmpty: "Nothing to publish right now.",
-    publishEmptyNote: "An evaluator adds pairs here from the „To evaluate“ screen.",
+    publishEmpty: "Nothing awaits publication",
+    publishEmptyNote: "When an evaluator marks an answer as verified, it appears here together with the sources it draws on.",
     preparedBy: "prepared by",
     preparedByUnknown: "person no longer in the directory",
     access: "Access",
@@ -6073,10 +6418,12 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       intro: "An overview of the organisations on the platform. The numbers are computed when the page is opened and are stored nowhere. This role does not give access to the organisations' content — documents and acknowledgements.",
       newTenant: "New organisation",
       disabled: "disabled",
-      noDomain: "no domain — the portal will not appear anywhere",
+      noDomainWarning: "Nobody can sign in to this organisation — signing in is tied to domains. Add at least one.",
+      emptyTitle: "No organisations",
+      emptyText: "Add the first one with the button above.",
       people: "People",
       peopleValue: (signedIn, total) => `${signedIn} / ${total} signed in`,
-      tracks: "Tracks",
+      versions: "Versions",
       documents: "Documents",
       documentsValue: (valid, total) => `${valid} / ${total} effective`,
       acknowledgements: "Acknowledgements",
@@ -6094,9 +6441,10 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       code: "Organisation code",
       codeNoteBefore: "Capital letters, digits, hyphen. Every person, document and acknowledgement carries it — ",
       codeNoteHighlight: "it never changes afterwards",
-      codeNoteAfter: ".",
+      codeNoteAfter: " — it is part of every document's identifier.",
+      codeTaken: (code) => `The code ${code} is already taken. Pick another one.`,
       name: "Name",
-      nameNote: "What people will see in the portal header.",
+      nameNote: "What people will see in the portal header. The organisation code is suggested from it — feel free to replace it with the abbreviation the organisation uses.",
       supportEmail: "Organisation contact",
       supportEmailNote: "The domain instructions go here.",
       domains: "Domains",
@@ -6107,6 +6455,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     detail: {
       back: "← Tenant administration",
       disabled: " · disabled",
+      numbersHeading: "Organisation numbers",
+      tracks: "Tracks",
       domainsHeading: "Domains",
       nothingNeeded: (host, reason) => `${host} — nothing needed (${reason})`,
       notInVercel: "not in Vercel",
@@ -6320,7 +6670,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "tenant.notFound": "Organisation {code} does not exist.",
     "tenant.needsDomain": "Without a domain the organisation's portal will not appear anywhere. Leave at least one.",
     "tenant.nameRequired": "The organisation name is required — it is what people see in the header.",
-    "tenant.alreadyExists": "Organisation {code} already exists.",
+    "tenant.alreadyExists": "Organisation {code} already exists. {free} is free — use that, or pick your own abbreviation.",
     "tenant.noEncryptionKey": "The secret cannot be stored: OAUTH_SECRET_ENCRYPTION_KEY is missing. We will not store it readable — it is access to someone else's system.",
     "tenant.needsBothCredentials": "Both clientId and the secret are needed — one without the other cannot be used.",
 
@@ -6675,6 +7025,11 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       importCsv: "Import from CSV",
       searchPlaceholder: "Search by name, address or department",
       nothingFound: "Nothing found.",
+      emptyTitle: "No people yet",
+      emptyText: "Add the first one with the button above, or import a CSV to add many at once.",
+      emptyFilterTitle: "Nothing matches the filter",
+      emptyFilterText: "Try part of a name or an e-mail.",
+      clearFilter: "Clear the filter",
       count: (n) => `${n} ${n === 1 ? "person" : "people"}`,
       matchesSearch: " matching the search",
       capped: " — showing the first 500, narrow the search",
@@ -6689,7 +7044,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       heading: "Bulk invitations",
       intro: "People who have never signed in. The email carries a link to the portal, not a sign-in link — those are short-lived and mail gateways consume them before the person gets there.",
       back: "← Back to people",
-      none: "Everyone has signed in at least once.",
+      emptyTitle: "Everyone is invited",
+      none: "Nobody is waiting for an invitation — everyone has signed in at least once.",
       preview: "This goes to the addresses listed. A sent email cannot be taken back.",
       send: people => people === 1 ? "Send 1 invitation" : `Send ${people} invitations`,
       sent: n => `Sent: ${n}.`,
@@ -6717,6 +7073,9 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       introHighlight: "what would happen",
       introMiddle: ", and only then is anything written. Uploading a hundred people blind is exactly the operation after which people look for the undo button — and there is none. Everyone is recorded in organisation ",
       introAfter: ", even if the file says otherwise.",
+      existingTitle: "Anyone already in the system is not created again",
+      existingNote: "They are matched by e-mail and topped up: only the columns the file has are overwritten. Whatever is not in it stays untouched — status, language and roles. The import excludes nobody.",
+      existingWarning: "An empty cell in a column the file does have clears the value: empty \u201cgroups\u201d means that person belongs to none.",
       file: "CSV file",
       fileNoteBefore: "The first row is the header. These are recognised: ",
       fileNoteAfter: " — with or without diacritics, and with a semicolon as the separator, the way Excel saves it.",
@@ -6733,7 +7092,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       badPhones: "Numbers that could not be read — these rows go through, just without a phone:",
       statusNoteBefore: "Existing people ",
       statusNoteHighlight: "keep their status",
-      statusNoteAfter: " — whoever has signed in stays signed in. An empty language field does not overwrite anything.",
+      statusNoteAfter: " — whoever has signed in stays signed in. A column the file does not have is never overwritten: language, groups, tracks and roles survive.",
       write: "Write",
       writing: "Writing…",
       reasons: {
@@ -6792,6 +7151,9 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       roles: "Roles",
       rolesNote: "The platform administrator cannot be assigned from here — that role belongs to the supplier's tenant and has its own path.",
       save: "Save",
+      evidenceEmptyTitle: "No documents assigned",
+      evidenceEmptyText: "Nobody has assigned this person a document to acknowledge yet.",
+      accessSummary: "Access and membership",
       returnHeading: "Reinstate the person",
       excludeHeading: "Exclude the person",
       inviteHeading: "Invitation",
@@ -6840,7 +7202,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     title: "Notifications",
     bellLabel: (unread) => unread > 0 ? `Notifications — ${unread} unread` : "Notifications",
     unread: (n) => `${n} unread`,
-    empty: "Nothing yet. Long-running work shows up here when it finishes — reindexing, rewriting and reminders that went out.",
+    emptyTitle: "No notifications",
+    emptyText: "They show up here when a version is published, reminders go out or reindexing finishes.",
     markAllRead: "Mark everything as read",
     allRead: (n) => `Marked as read: ${n}.`,
     retentionNote: (days) => `Notifications are deleted after ${days} days.`,
@@ -6931,6 +7294,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
         pick: (title) => `Select ${title}`,
         picked: (count) => `Selected: ${count}`,
         pickedOutside: (count) => `${count} outside this list`,
+        pickedMax: (max) => `You cannot select more than ${max} at once — the selection travels in the address. Handle this batch, then pick the next.`,
         clearPicked: "clear selection",
         moveTo: "Move to",
         move: "Move",
@@ -6973,6 +7337,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       statusPublished: "published",
       statusDrafts: "drafts",
       statusInReview: "to approve",
+      statusExpired: "expired",
       filter: "Filter",
       clearFilters: "clear filters",
       processing: {
@@ -6997,7 +7362,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       title: "Title",
       description: "Description (optional)",
       create: "Create track",
-      empty: "There is no track here yet.",
+      emptyTitle: "No tracks",
+      emptyText: "A track is the order in which a person reads the documents — for example when joining the organisation. Create the first one with the form below.",
       active: "on",
       inactive: "off",
       enable: "Switch on",
@@ -7039,7 +7405,14 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       topLevel: "— top level —",
       move: "Move",
       remove: "Delete folder",
-      removeHint: "Only an empty folder with no subfolders can be deleted.",
+      removeBlocked: (documents, subfolders) => {
+        const d = documents === 1 ? "1 document" : `${documents} documents`
+        const f = subfolders === 1 ? "1 subfolder" : `${subfolders} subfolders`
+        const what = subfolders > 0 && documents > 0 ? `${d} and ${f}` : subfolders > 0 ? f : d
+        return `Only an empty folder can be deleted. This one holds ${what} — move them first.`
+      },
+      emptyTitle: "The library has no folders",
+      emptyText: "Documents are not filed yet. Create a folder with the form below — then move them into it in bulk from the library.",
       newFolder: "New folder",
       newFolderName: "Name of the new folder",
       parentFolder: "Parent folder",
@@ -7085,7 +7458,9 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       draftSame: "The draft matches the published version.",
       draftEmpty: "The draft is empty.",
       publishHeading: "Publish a version",
-      nothingToPublish: "Nothing to publish — the draft is empty or identical to what already applies.",
+      nowPublishNew: current => `Publish a new version — ${current} is currently in force`,
+      nowInReview: "The version is under review",
+      toolsSummary: "Edits and document management",
       approvalDraftLabel: "draft",
       draftApprovalHeading: "Draft approval",
       publishNeedsApproval: "The draft is not approved yet. Submit it for approval above — only an approved version can be published.",
@@ -7273,6 +7648,9 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       heading: "Upload a document",
       intro: "Word, PDF, Excel, Markdown or plain text. The file is stored exactly as it arrived — the conversion is derived from it, and the original has to stay so it can be checked what the text came from.",
       file: "File",
+      errorBefore: "The document was not uploaded: ",
+      errorFileAgain: "Choose the file again — the browser does not keep it for security reasons.",
+      maxSize: mb => `up to ${mb} MB`,
       oldFormatsBefore: "Legacy ",
       oldFormatsMiddle: " and ",
       oldFormatsAfter: " cannot be converted — save them from Word or Excel in a newer format. A scanned PDF with no text layer can be transcribed by the language model later, in the editor.",
@@ -7280,13 +7658,13 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       titlePlaceholder: "Súťažný poriadok futbalu SFZ",
       titleNote: "It appears verbatim in the acknowledgement statement, so use the full official title.",
       key: "Document key",
-      keyNoteBefore: "Lower-case letters without diacritics, and underscores. Together with the organisation code it forms the identifier (",
-      keyNoteAfterCode: ").",
-      keyNoteHighlight: " The same key means the same document",
-      keyNoteAfter: " — uploading to an existing key is therefore refused; a new version is uploaded on the document detail page. Left empty, it is filled in from the section.",
+      keyPreview: "Identifier:",
+      keyManualSummary: "Enter the key manually",
+      keyManualNote: "The key is created once and never changes — it lives in acknowledgements, the audit trail and exports. Renaming the document does not change it.",
+      keyTaken: id => `The identifier ${id} is already taken. Change the title, or enter the key manually.`,
       keysTaken: "Keys already taken in this organisation: ",
-      section: "Section",
-      sectionNote: "Where the document belongs. Unlike the key, several documents can share it. Existing: ",
+      categoryNote: "Groups documents in the library and in filters. Existing: ",
+      moreFields: "More details",
       scope: "Scope",
       accessLevel: "Access level",
       accessInternalNote: " is visible only to people of the organisation, ",
