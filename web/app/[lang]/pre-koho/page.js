@@ -11,15 +11,16 @@ export function generateStaticParams() {
 }
 
 export async function generateMetadata({ params }) {
-  const dict = getDictionary(params.lang);
+  const { lang } = await params;
+  const dict = getDictionary(lang);
   return {
     title: "Contineo — " + dict.usecases.navLabel,
     description: dict.usecases.subtitle,
   };
 }
 
-export default function PreKohoPage({ params }) {
-  const { lang } = params;
+export default async function PreKohoPage({ params }) {
+  const { lang } = await params;
   if (!locales.includes(lang)) notFound();
   const dict = getDictionary(lang);
 

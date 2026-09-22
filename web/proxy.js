@@ -1,5 +1,5 @@
 /**
- * middleware.js — koreň `/` vracia stránku, nie presmerovanie.
+ * proxy.js — koreň `/` vracia stránku, nie presmerovanie.
  *
  * ## Prečo
  *
@@ -32,16 +32,24 @@
  *
  * ## Rozsah
  *
- * `matcher` je **výhradne `/`**. Middleware beží na okraji pri každej
- * požiadavke, ktorá mu vyhovie; nie je dôvod platiť to na obrázkoch,
- * statických súboroch ani na jazykových routách, ktoré fungujú samy.
+ * `matcher` je **výhradne `/`**. Proxy beží pred každou požiadavkou, ktorá
+ * mu vyhovie; nie je dôvod platiť to na obrázkoch, statických súboroch ani
+ * na jazykových routách, ktoré fungujú samy.
+ *
+ * ## Prečo `proxy`, nie `middleware`
+ *
+ * Next 16 názov `middleware` označil za zastaraný a premenoval na `proxy`.
+ * Nie je to len iné slovo: proxy beží na **Node.js**, nie na okraji siete.
+ * Tomuto súboru to nemení nič — prepis adresy nepotrebuje ani databázu, ani
+ * okraj — ale `app/src/proxy.ts` ten rozdiel využíva (overenie tenanta
+ * priamo v Atlase). Obe polovice teraz stoja na tej istej konvencii.
  */
 import { NextResponse } from "next/server"
 
 /** Predvolený jazyk. Zhodné s `x-default` v `alternates` a s pádom v `getDictionary()`. */
 const VYCHODZI_JAZYK = "sk"
 
-export function middleware(request) {
+export function proxy(request) {
   const url = request.nextUrl.clone()
   url.pathname = `/${VYCHODZI_JAZYK}`
   return NextResponse.rewrite(url)

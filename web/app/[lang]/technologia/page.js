@@ -9,15 +9,16 @@ export function generateStaticParams() {
 }
 
 export async function generateMetadata({ params }) {
-  const dict = getDictionary(params.lang);
+  const { lang } = await params;
+  const dict = getDictionary(lang);
   return {
     title: "Contineo — " + dict.tech.navLabel,
     description: dict.tech.subtitle,
   };
 }
 
-export default function TechnologiaPage({ params }) {
-  const { lang } = params;
+export default async function TechnologiaPage({ params }) {
+  const { lang } = await params;
   if (!locales.includes(lang)) notFound();
   const dict = getDictionary(lang);
 

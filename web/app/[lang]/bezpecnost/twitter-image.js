@@ -10,5 +10,6 @@ export function generateStaticParams() {
 }
 
 export default async function Image({ params }) {
-  return ogObrazok(params.lang, "bezpecnost");
+  const { lang } = await params;
+  return ogObrazok(lang, "bezpecnost");
 }
