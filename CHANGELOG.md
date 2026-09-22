@@ -4,6 +4,25 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Marketingový web povýšený na Next 16 (2026-09-22)
+
+Web beží na rovnakej veľkej verzii ako intranet — dovtedy bol o dve
+pozadu. Pre návštevníka sa nemení nič viditeľné; zmizol rozdiel medzi
+dvoma polovicami projektu, ktorý znamenal dve sady konvencií a dve
+odpovede na každú otázku „ako sa to tu robí".
+
+Pod kapotou: brána sa volá `proxy.js` namiesto `middleware.js`, ESLint má
+plochú konfiguráciu ako intranet a `params` sa čítajú asynchrónne. Jedno
+správanie bolo treba brániť výslovne — prechod medzi stránkami naskočí
+hore okamžite a neposúva sa, ako doteraz.
+
+### Prepínač témy prestal blikať cez stav (2026-09-22)
+
+Tlačidlo svetlej a tmavej témy si tému zrkadlilo do vlastného stavu,
+hoci ju vlastní stránka. Teraz číta priamo to, čo je nastavené, takže
+o jedno prekreslenie pri každom načítaní menej. Farby stránky sa nemenia
+a naďalej sú správne od prvého pixelu.
+
 ### Web už nesľubuje prihlásenie heslom (2026-09-22)
 
 Česká a anglická verzia stránky o technológii uvádzali medzi spôsobmi

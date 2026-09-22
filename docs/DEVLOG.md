@@ -10,6 +10,92 @@
 
 ---
 
+## 2026-09-22 (3) — web na Next 16, upratané vetvy a téma bez stavu
+
+**Tri PR sa zlúčili po jednom, nie naraz.** Na rozdiel od včerajšieho stohu
+(17 PR jedným merge commitom) išli #65 → #66 → #67 samostatne: každý menil
+niečo iné a každý si zaslúžil vlastné nasadenie. Po #66 a #67 bolo treba
+prebázovať základ ďalšieho PR na `main` — GitHub to sám nerobí, kým sa
+pôvodná vetva nezmaže. Overené naostro: `https://contineo.app/` vracia **200**
+s OG značkami aj obrázkom, teda oprava koreňa z #67 naozaj funguje tam,
+kde na nej záleží.
+
+**`web/` povýšený z Next 14 na 16.** Podmienka bola jednoduchá — `app/` na
+16.3.3 už mesiac beží, takže `web/` na 14 znamenal dve sady konvencií
+v jednom repozitári. Rozsah vyšiel menší, než príručka naznačuje: `web/`
+nepoužíva `next/image`, nemá jediný `fetch()`, žiadne paralelné cesty ani
+webpack konfiguráciu, takže väčšina kapitol o zmenách bola bezpredmetná.
+Zostali štyri veci: verzie, asynchrónne `params` (26 miest v 17 súboroch),
+`middleware.js` → `proxy.js` a `next lint` → plochý ESLint.
+
+**React zostal na 18.3.1 zámerne.** Príručka odporúča povýšiť ho spolu
+s Next, ale `app/` beží na Next 16 s Reactom 18.3.1 v produkcii — to nie je
+teória, to je fakt z `node_modules`. Jedna premenná menej v migrácii, ktorá
+sa aj tak dotýka sedemnástich súborov.
+
+**Jediná tichá zmena boli `params`.** Ostatné by pri chybe spadli hlasno.
+`params.lang` by v Next 16 nevrátil chybu, ale `undefined` — stránka by sa
+postavila, len bez slovníka. Preto sa menili exaktným porovnaním s kontrolou
+počtu zásahov, nie regexom cez súbory naslepo.
+
+**`npm install` padol prvý raz na `ENOTEMPTY`** pri odstraňovaní starého
+`next` — `package.json` sa už prepísal, ale `node_modules` zostali rozbité
+uprostred. Druhý, obyčajný `npm install` to dorovnal. Nestálo to nič okrem
+minúty, ale je dobré vedieť, že to nie je dôvod mazať `node_modules`.
+
+**Turbopack varoval na súbor, ktorý s projektom nemal nič spoločné.**
+Build hlásil, že ignoruje `package-lock.json` v `/Users/janletko`. V domovskom
+priečinku ležal 87-bajtový prázdny zámok z 14. júna — bez `package.json`, bez
+`node_modules`. Vznikol tak, že niekto pustil inštalačný príkaz v termináli,
+ktorý štartuje v `~`, a npm si názov doplnil z priečinka (`"name": "janletko"`).
+Turbopack hľadá koreň projektu smerom nahor a tento zámok našiel prvý; keďže
+leží mimo gitu, správne ho ignoroval. Presunutý do Koša, nie zmazaný natvrdo —
+je to súbor v používateľovom domove. Build je odvtedy **úplne bez varovania**
+a `turbopack.root` v konfigurácii netreba: príčina je preč, nie zamaskovaná.
+
+**Pri hlásení som ten súbor pomenoval zle** — napísal som `package.json`,
+hoci išlo o `package-lock.json`. Ján sa oprávnene pýtal, ako sa tam dostal
+`package.json`, lebo taký tam nikdy nebol. Rozdiel jedného slova poslal
+otázku úplne inam.
+
+**Vetvy upratané: 64 vzdialených a 64 lokálnych.** `git branch -r --no-merged
+origin/main` vrátil nulu, takže žiadna z nich nenesie prácu, ktorá by nebola
+v `main`. Lokálne sa mazali cez `git branch -d` (nie `-D`) — git tak sám
+odmietne vetvu, ktorá by zlúčená nebola, a poistka nestojí nič. Zostal len
+`main`, lokálne aj na `origin`. Bolo to v `docs/TODO.md` od zlúčenia handoffu
+a čakalo to výhradne na súhlas.
+
+**`ThemeToggle` prestal mať stav.** `eslint-config-next@16` priniesol pravidlo
+`react-hooks/set-state-in-effect` a v tomto komponente malo pravdu. Pri
+povýšení verzie sa neprepisoval — miešať migráciu s prestavbou komponentu je
+presne to, po čom sa v diffe nedá nič nájsť — a zostal ako výstraha. Vyriešil
+sa hneď potom, samostatne.
+
+Podstata: téma nikdy nebola stav komponentu. Žije v atribúte `data-theme` na
+`<html>` a nastavuje ju vložený skript v `app/layout.js`. Komponent si ju
+zrkadlil do `useState` cez `useEffect` — dva zdroje pravdy a vykreslenie
+navyše pri každom načítaní. `useSyncExternalStore` číta atribút priamo
+a prihlasuje sa `MutationObserverom`, takže `setState` zmizol aj z prepínača:
+zapíše atribút a o prekreslenie sa postará pozorovateľ. S ním odišiel aj
+príznak `mounted` — `getServerSnapshot` rieši zhodu servera a klienta priamo.
+
+**Že to nebliká, sa dalo overiť, nie iba tvrdiť.** V HTML zo servera je
+synchronný `<script>` na pozícii 3423 a `<body>` začína až na 3823 — atribút
+je teda nastavený pred parsovaním tela, a teda pred prvým pixelom. Server
+vykreslí výhradne mesiac (svetlá téma), slnko ani raz, takže hydratácia beží
+na hodnote, ktorú `getServerSnapshot` sľubuje. V konzole po tvrdom načítaní
+v tmavej téme nie je ani jedno varovanie Reactu o hydratácii — všetkých sedem
+hlášok je z rozšírenia prehliadača, nie zo stránky.
+
+**Mobil sa opäť neoveril naživo.** Chrome na Macu sa nedá zúžiť pod šírku
+okna; `resize_window` hlási úspech a snímka je ďalej 1501 px. Namiesto tvrdenia
+zostáva doklad: v celej vetve sa nezmenil ani jeden CSS súbor (`git diff
+--name-only` na `web/**/*.css` je prázdny) a jediná zmena v značkách je atribút
+na `<html>`. Rozloženie sa teda zmeniť nemohlo. Skutočná mobilná kontrola
+patrí na telefón, nie do tohto prehliadača.
+
+---
+
 ## 2026-09-22 (2) — nasadenie do produkcie a migrácia O21 krok 2
 
 **Stoh sa zlúčil do `main` naraz.** Sedemnásť zreťazených PR (#46–#62, 105
