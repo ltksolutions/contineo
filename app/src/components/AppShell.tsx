@@ -32,11 +32,25 @@ import type { UiLanguage } from "@/lib/i18n"
 export default async function AppShell({
   layout: layout = "topbar",
   language,
+  wide = false,
   children,
 }: {
   /** Variant navigácie. Zatiaľ z adresy (`?layout=sidebar`), nie z profilu. */
   layout?: NavLayout
   language?: UiLanguage
+  /**
+   * Širší strop obsahu (`--shell-maxw-wide`) namiesto predvolených 1240 px.
+   *
+   * Vypýta si ho **jediná obrazovka — knižnica**, lebo jediná má naraz
+   * bočný panel filtrov a deväťstĺpcovú tabuľku. Ostatné sú text alebo
+   * formuláre a tým 1240 px vyhovuje; širšie by im len rozťahovalo riadok.
+   *
+   * Nie je to prepínač na „plnú šírku okna": aj široký variant má strop.
+   * Na 27“ monitore by riadok bez stropu mal cez 2000 px a oko stratí
+   * spojitosť medzi názvom vľavo a dátumom vpravo — to je iná chyba, nie
+   * oprava (rozhodnutie Jána 2026-09-22).
+   */
+  wide?: boolean
   children: ReactNode
 }) {
   const { flags, counts } = await shellNavData()
@@ -47,7 +61,7 @@ export default async function AppShell({
       {/* `div`, nie `main`: `layout.tsx` už jeden `main` má a druhý vnútri
           neho by bol neplatné HTML — a pre čítačku obrazovky dva „hlavné
           obsahy" znamenajú, že ani jeden nie je ten hlavný. */}
-      <div className="app-main">{children}</div>
+      <div className={wide ? "app-main app-main--wide" : "app-main"}>{children}</div>
     </div>
   )
 }

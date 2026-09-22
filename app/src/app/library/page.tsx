@@ -408,7 +408,10 @@ export default async function LibraryPage({
      * na osobu alebo organizáciu znamená zmenu schémy, a tá je samostatné
      * rozhodnutie s vlastnou migráciou.
      */
-    <AppShell layout={normalizeLayout(q.layout)} language={uiLanguage}>
+    // `wide`: knižnica je jediná obrazovka s bočným panelom **aj**
+    // deväťstĺpcovou tabuľkou — do 1240 px sa nezmestí (namerané:
+    // pri 1440 px okna má stĺpec zoznamu 938 px, tabuľka potrebuje ~1060).
+    <AppShell layout={normalizeLayout(q.layout)} language={uiLanguage} wide>
     <div style={tenantStyle(branding)}>
       <Notice message={message} error={error === "1"} back="/library" />
 
@@ -561,11 +564,16 @@ export default async function LibraryPage({
             </Link>
           </div>
         </details>
-      </div>
-
 
       {/*
-        Query builder.
+        Query builder — **v lište nástrojov, nie kartou pod ňou**
+        (`docs/design/README.md`, „Panel hľadania + query builder").
+
+        Bez nasadenej podmienky je to jeden ovládač „+ Podmienka" v riadku
+        hľadania; až rozbalený dostane panel. Dovtedy stál ako samostatná
+        karta s prerušovaným rámikom a tvrdil, že je vlastným nástrojím —
+        pritom je to druhá polovica hľadania. Obe polovice vznikli
+        s odstupom (builder 8. 9., lišta 21. 9.) a nikto ich nespojil.
 
         Celý beží bez JavaScriptu: podmienky sú v adrese, pridanie je odoslanie
         formulára, odobranie aj zmena spojky sú odkazy.
@@ -668,6 +676,9 @@ export default async function LibraryPage({
 
         <p className="quiet builder-hint">{tb.hint}</p>
       </details>
+      </div>
+
+
 
 
       {rows.length === 0 ? (
@@ -905,8 +916,15 @@ export default async function LibraryPage({
                           telefóne rozšíril kvôli údaju, ktorý väčšina
                           dokumentov nemá.
                       */}
+                      {/*
+                          Počet znení je tu, nie v stĺpci Verzia (MASTER.md):
+                          je to údaj **o dokumente**, nie o tom znení, ktoré
+                          práve platí — a v úzkom stĺpci robil z jedného riadka
+                          dva.
+                      */}
                       <div className="quiet doc-meta">
                         {r.internalNumber && `${r.internalNumber} · `}
+                        {r.versionCount > 0 && `${t.versions(r.versionCount)} · `}
                         {r.folderTrail?.length ? `${r.folderTrail.join(" / ")} · ` : ""}
                         {r.documentId}
                         {r.originalFile && ` · ${r.originalFile.name} (${formatSize(r.originalFile.bytes)})`}
@@ -926,9 +944,16 @@ export default async function LibraryPage({
                         </span>
                       )}
                     </td>
-                    <td className="doc-cell-quiet">
+                    {/*
+                      Jeden riadok, nie zalomený odsek. `label` je **voľný text**
+                      (`documents.ts`: „1.2", „novela 2026") — MASTER.md píta „len
+                      číslo", ale také pole schéma nemá a vytiahnuť ho z labelu by
+                      znamenalo vymyslieť si štruktúru. Preto celý label, ale
+                      orezaný elipsou a s plným znením v `title`: stĺpec ostane
+                      úzky a nič sa nestratí.
+                    */}
+                    <td className="doc-cell-quiet doc-col-version" title={r.effectiveLabel}>
                       {r.effectiveLabel}
-                      {r.versionCount > 0 && <div className="quiet doc-meta">{t.versions(r.versionCount)}</div>}
                     </td>
                     {/*
                       Pomlčka, nie prázdna bunka: prázdne miesto v tabuľke vyzerá

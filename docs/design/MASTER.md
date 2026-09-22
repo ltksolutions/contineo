@@ -143,20 +143,53 @@ Zaradiť najskôr ako samostatný PR **po** dokončení všetkých obrazoviek.
 
 ## Stĺpce tabuľky knižnice — ROZHODNUTÉ
 
-Presné poradie zľava. Zodpovedá dnešnému kódu (`library/page.tsx`, ~790),
-takže sa **nemení** — je tu preto, aby sa pri úpravách nerozišlo.
+> ⚠️ **Táto tabuľka je cieľ, nie popis stavu.** Do 22. 9. 2026 tu stála veta
+> „Zodpovedá dnešnému kódu (`library/page.tsx`, ~790), takže sa **nemení**".
+> Nezodpovedala: piaty stĺpec mal v kóde hlavičku „Platné znenie" a celý
+> voľný text označenia znenia, nie „Verzia". Rozišlo sa to skôr, než tento
+> súbor vznikol, a **tá veta bola horšia než ten stĺpec** — nesprávny stĺpec
+> sa opraví za pol hodiny, veta, ktorá odrádza od kontroly, pokazí každý
+> ďalší PR (rozhodnutie Jána 2026-09-22).
+>
+> **Pravidlo:** pri úprave tabuľky sa tento zoznam overuje **proti kódu**,
+> nie naopak. Keď sa líšia, platí kód a opraví sa zápis.
+
+Presné poradie zľava.
 
 | # | Stĺpec | Zarovnanie | Pozn. |
 | --- | --- | --- | --- |
 | 1 | výber (checkbox) | — | `.doc-col-pick`, 36 px |
-| 2 | **Dokument** | vľavo | `min-width: 280px`; pod názvom `internalNumber · priečinok · id` |
+| 2 | **Dokument** | vľavo | `min-width: 280px`; pod názvom `internalNumber · počet znení · priečinok · id` |
 | 3 | **Druh** | vľavo | triediteľný |
 | 4 | **Stav** | vľavo | triediteľný, pilulka |
-| 5 | **Verzia** | vľavo | `tabular-nums` |
+| 5 | **Verzia** | vľavo | `.doc-col-version`: `tabular-nums`, `nowrap`, `max-width: 88px`, orezanie elipsou, plné znenie v `title` |
 | 6 | **Platné od** | vľavo | `.doc-col-date` |
 | 7 | **Platné do** | vľavo | `.doc-col-date` — **ostáva** |
 | 8 | **Potvrdenia** | vľavo | `.ack-bar`, min. 104 px |
 | 9 | **Zmenené** | **vpravo** | triediteľné, predvolené triedenie |
+
+**Stĺpec 5 nie je „len číslo".** Pôvodný zápis to žiadal, ale také pole
+schéma nemá: `Version.label` je v `documents.ts` výslovne **voľný text**
+(„ľudské označenie: 1.2, novela 2026"). Dokument s labelom „novela 2026"
+číslo nemá a vytiahnuť z neho „2026" by bolo nesprávne. Preto celý label,
+ale na jednom riadku a orezaný — úzky stĺpec sa dosiahne šírkou, nie
+vymyslenou štruktúrou.
+
+**Počet znení patrí pod názov**, nie do stĺpca Verzia: je to údaj
+o dokumente, nie o práve platnom znení.
+
+**Knižnica má vlastný strop šírky.** Deväť stĺpcov sa do predvolených
+1240 px (`--shell-maxw`) nezmestí — namerané 22. 9. 2026: pri okne 1440 px
+má stĺpec zoznamu 938 px a tabuľka potrebuje najmenej 1060 px, takže
+Potvrdenia a Zmenené odišli do vodorovného posunu. Knižnica preto volá
+`<AppShell wide>` a berie `--shell-maxw-wide` (1440 px); stĺpec zoznamu
+má potom 1138 px, teda ~78 px rezervy na dlhšie preklady. **Je to strop,
+nie plná šírka okna** — bez stropu by riadok na 27" monitore presiahol
+2000 px a oko stratí spojitosť medzi názvom vľavo a dátumom vpravo.
+
+**Pod približne 1360 px tabuľka aj naďalej pretečie** do vodorovného
+posunu vo `.doc-table-wrap`. To je zámer, nie chyba: `overflow-x: auto`
+je tam preto, aby sa stĺpce nestlačili na nečitateľné.
 
 **„Platné do" ostáva** — je to nosič expirácie, keďže Expirovaný nie je
 facet (viď vyššie). Bez tohto stĺpca by sa expirácia dala zistiť len
