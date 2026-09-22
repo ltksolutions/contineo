@@ -4367,6 +4367,11 @@ a.notif-row-link:focus-visible { outline: 2px solid var(--accent); outline-offse
    sa stĺpec nezalomil a číslice stáli pod sebou (návrh, časť 3). */
 .doc-col-date { white-space: nowrap; font-variant-numeric: tabular-nums; }
 
+/* Vylúčená osoba v zozname (OSOBY.md, úloha 2): stlmená, nie schovaná.
+   Dohľadateľná zostať musí — jej potvrdenia platia ďalej (D24). Ten istý
+   prostriedok ako odvolaný záznam potvrdenia. */
+.person-card.is-excluded { opacity: .75; }
+
 /* ── Interný adresár (D87) ─────────────────────────────────────────────────
    Karty, nie tabuľka: tabuľka so šiestimi stĺpcami sa na telefóne číta dvoma
    prstami. `minmax(0, 1fr)` drží dlhú adresu vnútri karty namiesto toho, aby

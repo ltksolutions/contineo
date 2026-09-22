@@ -87,7 +87,7 @@ export default async function PeoplePage({
       <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "grid", gap: 10 }}>
         {people.map(o => {
           return (
-            <li key={o.id} className="card" style={{ padding: "14px 18px" }}>
+            <li key={o.id} className={`card person-card${o.status === "inactive" ? " is-excluded" : ""}`} style={{ padding: "14px 18px" }}>
               <div style={{ display: "flex", gap: 10, alignItems: "baseline", flexWrap: "wrap" }}>
                 <Link
                   href={`/people/${encodeURIComponent(o.id)}`}
