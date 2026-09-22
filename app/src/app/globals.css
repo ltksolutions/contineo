@@ -1561,6 +1561,15 @@ html[data-theme="dark"] select.field-input {
 
 .footer-link:hover { text-decoration: underline; }
 
+/* Značka v pätičke je tlmená, text nie: `.footer-link` má `--ink`, a značka
+   kreslí z `currentColor`, takže bez tohto obalu by prebrala jeho farbu
+   (`ZAKLAD.md`, odchýlka B). */
+.footer-mark {
+  display: inline-flex;
+  flex: 0 0 auto;
+  color: var(--muted);
+}
+
 .footer-version {
   margin: 0;
   font-size: 12.5px;
