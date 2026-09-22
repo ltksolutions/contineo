@@ -90,7 +90,12 @@ export default async function RemindersPage({
       </div>
 
       {people.length === 0 ? (
-        <p className="card" style={{ padding: 20 }}>{notice ? t.noticeNone : t.none(days)}</p>
+        /* Jeden nadpis, text podľa režimu: v režime „všetkým nepotvrdeným"
+           nejde o termín, tak veta o termíne nesedí (HR.md, úloha 6). */
+        <div className="empty">
+          <div className="empty-title">{t.emptyTitle}</div>
+          <div className="empty-text">{notice ? t.noticeNone : t.none(days)}</div>
+        </div>
       ) : (
         <>
           <ul style={{ listStyle: "none", padding: 0, margin: "0 0 24px", display: "grid", gap: 10 }}>

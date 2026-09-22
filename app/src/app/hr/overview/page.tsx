@@ -121,7 +121,12 @@ export default async function HrReportPage({
         ))}
       </nav>
 
-      {summaries.length === 0 && <p className="card" style={{ padding: 20 }}>{t.empty}</p>}
+      {summaries.length === 0 && (
+        <div className="empty">
+          <div className="empty-title">{t.emptyTitle}</div>
+          <div className="empty-text">{t.emptyText}</div>
+        </div>
+      )}
 
       <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "grid", gap: 12 }}>
         {summaries.map(s => {

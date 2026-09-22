@@ -65,9 +65,12 @@ export default async function HrOverviewPage({
       </p>
 
       {overview.length === 0 ? (
-        <p className="card" style={{ padding: 20, fontSize: "var(--fs-lead)" }}>
-          {t.empty}
-        </p>
+        /* `.empty` zo ZAKLADU (HR.md, úloha 6). Bez tlačidla — „Prideliť
+           normu" je hneď nad tým. */
+        <div className="empty">
+          <div className="empty-title">{t.emptyTitle}</div>
+          <div className="empty-text">{t.emptyText}</div>
+        </div>
       ) : (
         <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "grid", gap: 14 }}>
           {overview.map(p => {

@@ -482,7 +482,9 @@ interface Dictionary {
       heading: string
       intro: string
       views: Record<"document" | "person" | "track", string>
-      empty: string
+      /** Prázdny stav cez `.empty` (HR.md, úloha 6). */
+      emptyTitle: string
+      emptyText: string
       done: (done: number, total: number) => string
       missing: (n: number) => string
       complete: string
@@ -507,7 +509,8 @@ interface Dictionary {
       heading: string
       intro: string
       assign: string
-      empty: string
+      emptyTitle: string
+      emptyText: string
       acknowledged: string
       notified: string
       no: string
@@ -523,7 +526,9 @@ interface Dictionary {
       notAcknowledged: (missing: number, total: number) => string
       effectiveFrom: (date: string) => string
       notifyLink: string
-      allAcknowledged: string
+      /** Prázdny zoznam je dobrá správa, nie chyba — nadpis to má povedať. */
+      allTitle: string
+      allText: string
       noLongerInDepartment: string
       note: string
     }
@@ -550,7 +555,8 @@ interface Dictionary {
       introBefore: string
       introHighlight: string
       introAfter: string
-      noEffectiveVersion: string
+      emptyTitle: string
+      emptyText: string
       whichDocuments: string
       versionLine: (label: string, date: string) => string
       to: string
@@ -602,6 +608,8 @@ interface Dictionary {
       intro: (days: number) => string
       back: string
       open: string
+      /** Prázdny stav; text sa líši podľa režimu (meškajúci / všetci nepotvrdení). */
+      emptyTitle: string
       none: (days: number) => string
       person: (documents: number, days: number) => string
       send: (people: number) => string
@@ -695,7 +703,11 @@ interface Dictionary {
   evidence: {
     heading: string
     intro: string
-    nothing: string
+    /** Dva prázdne stavy: nič nevyhovuje filtru vs. žiadne záznamy vôbec. */
+    emptyTitle: string
+    emptyText: string
+    emptyFilterTitle: string
+    emptyFilterText: string
     kind: Record<string, string>
     gap: Record<string, string>
     informative: string
@@ -2187,7 +2199,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       heading: "Výkaz potvrdení",
       intro: "Kto čo má potvrdiť a kto to už potvrdil. Do menovateľa vstupuje ten, komu bol dokument pridelený alebo ho má ako krok v zapnutej trase — nie všetci v organizácii.",
       views: { document: "Podľa dokumentu", person: "Podľa osoby", track: "Podľa trasy" },
-      empty: "Zatiaľ nie je čo vykazovať. Povinnosť vzniká pridelením alebo krokom v zapnutej trase.",
+      emptyTitle: "Zatiaľ niet čo zhrnúť",
+      emptyText: "Súhrn sa zjaví, keď bude prvé pridelenie.",
       done: (done, total) => `${done} z ${total}`,
       missing: n => (n === 1 ? "chýba 1" : n >= 2 && n <= 4 ? `chýbajú ${n}` : `chýba ${n}`),
       complete: "hotové",
@@ -2210,7 +2223,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       heading: "Pridelené normy",
       intro: "Čo bolo komu uložené a kto to už potvrdil. Počty sa počítajú pri zobrazení — a týkajú sa ľudí, ktorí do skupiny patria",
       assign: "Prideliť normu",
-      empty: "Zatiaľ nie je pridelené nič. Kým sa norma nepridelí, ľuďom sa objaví len vtedy, keď je krokom ich trasy — a nikde nezostane stopa, kedy sa to stalo a prečo.",
+      emptyTitle: "Žiadne pridelenia",
+      emptyText: "Keď normu niekomu pridelíte, objaví sa tu aj s tým, koľkí ju už potvrdili.",
       acknowledged: "Potvrdili",
       notified: "Dali sme vedieť",
       no: "nie",
@@ -2226,7 +2240,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       notAcknowledged: (missing, total) => `Nepotvrdili (${missing} z ${total})`,
       effectiveFrom: (date) => `, platná od ${date}`,
       notifyLink: "dať im vedieť e-mailom →",
-      allAcknowledged: "Potvrdili všetci, ktorých sa pridelenie dnes týka.",
+      allTitle: "Všetci potvrdili",
+      allText: "Toto pridelenie je vybavené — nikto nechýba.",
       noLongerInDepartment: "už nie je v oddelení",
       note: "Zoznam sa počíta pri zobrazení. Kto z oddelenia odišiel bez potvrdenia, zostáva tu označený — inak by ticho zmizol a nikto by sa nedozvedel, že sa to nedoriešilo; e-mail sa mu ale neposiela. Kto odišiel z celej organizácie, tu nie je — jeho potvrdenie (alebo jeho chýbanie) však zostáva v záznamoch.",
     },
@@ -2252,7 +2267,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       introBefore: "Prideľuje sa ",
       introHighlight: "konkrétne znenie",
       introAfter: ", nie dokument. Keď pribudne novšie, staré pridelenie zaň neplatí — to je zámer.",
-      noEffectiveVersion: "Žiadny dokument nemá platné znenie, takže prideliť sa nedá nič. Znenie bez dátumu platnosti sa nedá ani potvrdiť (D6).",
+      emptyTitle: "Niet čo prideliť",
+      emptyText: "Prideliť sa dá len publikované znenie. V knižnici zatiaľ žiadne nie je.",
       whichDocuments: "Ktoré normy",
       versionLine: (label, date) => `verzia ${label}, platná od ${date}`,
       to: "Komu",
@@ -2310,7 +2326,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       intro: days => `Ľudia, ktorí majú niečo nepotvrdené dlhšie než ${daysSk(days)}. Jeden e-mail na človeka — kto mešká so štyrmi smernicami, dostane jednu správu so štyrmi riadkami.`,
       back: "← Späť na prehľad",
       open: "Pripomenúť",
-      none: days => `Nikto nemešká viac než ${daysSk(days)}.`,
+      emptyTitle: "Niet komu pripomínať",
+      none: days => `Všetci, ktorým beží termín, už potvrdili — nikto nemešká viac než ${daysSk(days)}.`,
       person: (documents, days) => `${documents === 1 ? "1 dokument" : documents >= 2 && documents <= 4 ? `${documents} dokumenty` : `${documents} dokumentov`} · najdlhšie ${daysSk(days)}`,
       send: people => people === 1 ? "Odoslať 1 pripomienku" : people >= 2 && people <= 4 ? `Odoslať ${people} pripomienky` : `Odoslať ${people} pripomienok`,
       impactEmails: n => n === 1 ? "Odíde 1 e-mail" : n >= 2 && n <= 4 ? `Odídu ${n} e-maily` : `Odíde ${n} e-mailov`,
@@ -2391,7 +2408,10 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
   evidence: {
     heading: "Reťaz dôkazov",
     intro: "Čo sa dialo s každou uloženou povinnosťou \u2014 od pridelenia po potvrdenie. Skladá sa pri zobrazení; neukladá sa nič.",
-    nothing: "Zatiaľ tu nie je čo ukázať.",
+    emptyTitle: "Žiadne záznamy",
+    emptyText: "Záznam vznikne, keď niekto dostane pridelenú normu alebo krok trasy.",
+    emptyFilterTitle: "Filtru nič nevyhovuje",
+    emptyFilterText: "Skúste iné meno alebo iný stav.",
     kind: {
       assigned: "Pridelené",
       notified: "Ozvalo sa jej",
@@ -4085,7 +4105,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       heading: "Výkaz potvrzení",
       intro: "Kdo co má potvrdit a kdo to už potvrdil. Do jmenovatele vstupuje ten, komu byl dokument přidělen nebo ho má jako krok v zapnuté trase — ne všichni v organizaci.",
       views: { document: "Podle dokumentu", person: "Podle osoby", track: "Podle trasy" },
-      empty: "Zatím není co vykazovat. Povinnost vzniká přidělením nebo krokem v zapnuté trase.",
+      emptyTitle: "Zatím není co shrnout",
+      emptyText: "Souhrn se objeví, až bude první přidělení.",
       done: (done, total) => `${done} z ${total}`,
       missing: n => (n === 1 ? "chybí 1" : `chybí ${n}`),
       complete: "hotovo",
@@ -4108,7 +4129,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       heading: "Přidělené předpisy",
       intro: "Co bylo komu uloženo a kdo to už potvrdil. Počty se počítají při zobrazení — a týkají se lidí, kteří do skupiny patří",
       assign: "Přidělit předpis",
-      empty: "Zatím není přiděleno nic. Dokud se předpis nepřidělí, lidem se objeví jen tehdy, když je krokem jejich trasy — a nikde nezůstane stopa, kdy se to stalo a proč.",
+      emptyTitle: "Žádná přidělení",
+      emptyText: "Když předpis někomu přidělíte, objeví se tu i s tím, kolik lidí ho už potvrdilo.",
       acknowledged: "Potvrdili",
       notified: "Dali jsme vědět",
       no: "ne",
@@ -4124,7 +4146,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       notAcknowledged: (missing, total) => `Nepotvrdili (${missing} z ${total})`,
       effectiveFrom: (date) => `, platná od ${date}`,
       notifyLink: "dát jim vědět e-mailem →",
-      allAcknowledged: "Potvrdili všichni, kterých se přidělení dnes týká.",
+      allTitle: "Všichni potvrdili",
+      allText: "Toto přidělení je vyřízené — nikdo nechybí.",
       noLongerInDepartment: "už není v oddělení",
       note: "Seznam se počítá při zobrazení. Kdo z oddělení odešel bez potvrzení, zůstává tu označený — jinak by tiše zmizel a nikdo by se nedozvěděl, že se to nedořešilo; e-mail se mu ale neposílá. Kdo odešel z celé organizace, tu není — jeho potvrzení (nebo jeho chybění) však zůstává v záznamech.",
     },
@@ -4150,7 +4173,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       introBefore: "Přiděluje se ",
       introHighlight: "konkrétní znění",
       introAfter: ", ne dokument. Když přibude novější, staré přidělení pro ně neplatí — to je záměr.",
-      noEffectiveVersion: "Žádný dokument nemá platné znění, takže přidělit nelze nic. Znění bez data platnosti nelze ani potvrdit (D6).",
+      emptyTitle: "Není co přidělit",
+      emptyText: "Přidělit lze jen publikované znění. V knihovně zatím žádné není.",
       whichDocuments: "Které předpisy",
       versionLine: (label, date) => `verze ${label}, platná od ${date}`,
       to: "Komu",
@@ -4208,7 +4232,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       intro: days => `Lidé, kteří mají něco nepotvrzené déle než ${daysCs(days)}. Jeden e-mail na člověka — kdo mešká se čtyřmi předpisy, dostane jednu zprávu se čtyřmi řádky.`,
       back: "← Zpět na přehled",
       open: "Připomenout",
-      none: days => `Nikdo nemešká více než ${daysCs(days)}.`,
+      emptyTitle: "Není komu připomínat",
+      none: days => `Všichni, kterým běží termín, už potvrdili — nikdo nemešká více než ${daysCs(days)}.`,
       person: (documents, days) => `${documents === 1 ? "1 dokument" : documents >= 2 && documents <= 4 ? `${documents} dokumenty` : `${documents} dokumentů`} · nejdéle ${daysCs(days)}`,
       send: people => people === 1 ? "Odeslat 1 připomínku" : people >= 2 && people <= 4 ? `Odeslat ${people} připomínky` : `Odeslat ${people} připomínek`,
       impactEmails: n => n === 1 ? "Odejde 1 e-mail" : n >= 2 && n <= 4 ? `Odejdou ${n} e-maily` : `Odejde ${n} e-mailů`,
@@ -4289,7 +4314,10 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
   evidence: {
     heading: "Řetěz důkazů",
     intro: "Co se dělo s každou uloženou povinností \u2014 od přidělení po potvrzení. Skládá se při zobrazení; neukládá se nic.",
-    nothing: "Zatím tu není co ukázat.",
+    emptyTitle: "Žádné záznamy",
+    emptyText: "Záznam vznikne, když někdo dostane přidělený předpis nebo krok trasy.",
+    emptyFilterTitle: "Filtru nic nevyhovuje",
+    emptyFilterText: "Zkuste jiné jméno nebo jiný stav.",
     kind: {
       assigned: "Přiděleno",
       notified: "Ozvalo se jí",
@@ -5976,7 +6004,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       heading: "Acknowledgement report",
       intro: "Who has to acknowledge what, and who already did. The denominator counts a person when the document was assigned to them or is a step in a track they are on — not everyone in the organisation.",
       views: { document: "By document", person: "By person", track: "By track" },
-      empty: "There is nothing to report yet. A duty comes from an assignment or from a step in an active track.",
+      emptyTitle: "Nothing to summarise yet",
+      emptyText: "The summary appears once there is a first assignment.",
       done: (done, total) => `${done} of ${total}`,
       missing: n => `${n} missing`,
       complete: "complete",
@@ -5999,7 +6028,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       heading: "Assigned documents",
       intro: "What has been assigned to whom and who has already acknowledged it. The counts are computed when the page is opened — and cover the people who belong to the group",
       assign: "Assign a document",
-      empty: "Nothing has been assigned yet. Until a document is assigned, people only see it when it is a step on their track — and nothing records when that happened or why.",
+      emptyTitle: "No assignments",
+      emptyText: "Once you assign a document to someone, it shows up here along with how many have acknowledged it.",
       acknowledged: "Acknowledged",
       notified: "Notified",
       no: "no",
@@ -6015,7 +6045,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       notAcknowledged: (missing, total) => `Not acknowledged (${missing} of ${total})`,
       effectiveFrom: (date) => `, effective from ${date}`,
       notifyLink: "notify them by e-mail →",
-      allAcknowledged: "Everyone the assignment applies to today has acknowledged it.",
+      allTitle: "Everyone has acknowledged",
+      allText: "This assignment is settled — nobody is missing.",
       noLongerInDepartment: "no longer in the department",
       note: "The list is computed when the page is opened. Anyone who left the department without acknowledging stays here, marked — otherwise they would quietly disappear and nobody would learn it was left unresolved; they are not e-mailed, though. Anyone who left the organisation altogether is not here — but their acknowledgement (or the lack of it) stays in the records.",
     },
@@ -6041,7 +6072,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       introBefore: "What is assigned is ",
       introHighlight: "a specific version",
       introAfter: ", not a document. When a newer one is issued, the old assignment does not carry over to it — that is deliberate.",
-      noEffectiveVersion: "No document has an effective version, so there is nothing to assign. A version without an effective date cannot be acknowledged either (D6).",
+      emptyTitle: "Nothing to assign",
+      emptyText: "Only a published version can be assigned. The library has none yet.",
       whichDocuments: "Which documents",
       versionLine: (label, date) => `version ${label}, effective from ${date}`,
       to: "Recipients",
@@ -6098,7 +6130,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       intro: days => `People with something unacknowledged for more than ${daysEn(days)}. One email per person — someone behind on four documents gets one message with four lines.`,
       back: "← Back to the overview",
       open: "Remind",
-      none: days => `Nobody is more than ${daysEn(days)} behind.`,
+      emptyTitle: "Nobody to remind",
+      none: days => `Everyone with a running deadline has acknowledged — nobody is more than ${daysEn(days)} behind.`,
       person: (documents, days) => `${documents === 1 ? "1 document" : `${documents} documents`} · longest ${daysEn(days)}`,
       send: people => people === 1 ? "Send 1 reminder" : `Send ${people} reminders`,
       impactEmails: n => n === 1 ? "1 e-mail will go out" : `${n} e-mails will go out`,
@@ -6179,7 +6212,10 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
   evidence: {
     heading: "Chain of evidence",
     intro: "What happened with each obligation \u2014 from assignment to acknowledgement. Composed on display; nothing is stored.",
-    nothing: "Nothing to show here yet.",
+    emptyTitle: "No records",
+    emptyText: "A record appears once someone is assigned a document or a track step.",
+    emptyFilterTitle: "Nothing matches the filter",
+    emptyFilterText: "Try a different name or state.",
     kind: {
       assigned: "Assigned",
       notified: "Contacted",

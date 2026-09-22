@@ -85,9 +85,12 @@ export default async function AssignmentDetailPage({
       </div>
 
       {missing.length === 0 ? (
-        <p className="card" style={{ padding: 18, fontSize: "var(--fs-lead)" }}>
-          {t.allAcknowledged}
-        </p>
+        /* Prázdny zoznam je dobrá správa, nie chyba — nadpis to hovorí
+           (HR.md, úloha 6). */
+        <div className="empty">
+          <div className="empty-title">{t.allTitle}</div>
+          <div className="empty-text">{t.allText}</div>
+        </div>
       ) : (
         <ul className="admin-domains">
           {missing.map(o => (

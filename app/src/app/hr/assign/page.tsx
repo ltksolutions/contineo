@@ -131,9 +131,10 @@ export default async function AssignPage({
       )}
 
       {documents.length === 0 ? (
-        <p className="card" style={{ padding: 20, fontSize: "var(--fs-lead)" }}>
-          {t.noEffectiveVersion}
-        </p>
+        <div className="empty">
+          <div className="empty-title">{t.emptyTitle}</div>
+          <div className="empty-text">{t.emptyText}</div>
+        </div>
       ) : (
         <form action={assignAction} style={{ display: "grid", gap: 22 }}>
           <fieldset className="card hr-group">

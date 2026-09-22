@@ -114,7 +114,14 @@ export default async function EvidencePage({
           <div><button className="button" type="submit">{t.apply}</button></div>
         </LiveFilter>
 
-        {rows.length === 0 && <p className="card" style={{ padding: 20 }}>{t.nothing}</p>}
+        {/* Dva prázdne stavy (HR.md, úloha 6): filter, ktorému nič nevyhovuje,
+            nie je to isté ako organizácia bez jediného záznamu. */}
+        {rows.length === 0 && (
+          <div className="empty" style={{ marginTop: 18 }}>
+            <div className="empty-title">{all.length > 0 ? t.emptyFilterTitle : t.emptyTitle}</div>
+            <div className="empty-text">{all.length > 0 ? t.emptyFilterText : t.emptyText}</div>
+          </div>
+        )}
 
         {/*
           Rozbaľovacie karty, nie rozvinuté osi pod sebou.
