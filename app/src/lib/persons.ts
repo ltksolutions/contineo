@@ -508,6 +508,12 @@ export interface ImportResult {
  * `status` sa pri aktualizácii **nemení** — kto sa už prihlásil, zostáva
  * `active`, aj keď v CSV je znova ako nový riadok. Prepísať by znamenalo
  * stratiť informáciu, že tam ten človek už bol.
+ *
+ * **Zapisuje sa len to, čo v riadku naozaj je.** Chýbajúce pole (`undefined`)
+ * znamená „o tomto nič nehovorím", nie „vyprázdni" — inak by súbor bez stĺpca
+ * skupín zmazal členstvo celej organizácii. Prázdna hodnota v prítomnom
+ * stĺpci je naopak pokyn vyprázdniť; rozlíšiť ich vie `hasField()`
+ * v `personsImport.ts`, lebo len tam vidno hlavičky súboru.
  */
 export async function upsertPersons(
   rows: NewPerson[],
@@ -529,18 +535,29 @@ export async function upsertPersons(
     // spôsob, ako sa skupiny menia hromadne, a práve pri hromadnej zmene
     // je otázka „kto v skupine bol vtedy" najťažšia (D50).
     const until = await col.findOne(key, { projection: { groupHistory: 1 } })
-    const groups = normalizeKeys(r.groups)
     const name = resolveName(r)
     const changes: Record<string, unknown> = {
       fullName: name.fullName,
       department: r.department?.trim() || undefined,
       personType: r.personType ?? "employee",
       startDate: r.startDate,
-      tracks: r.tracks ?? [],
-      groups: groups,
-      groupHistory: newGroupHistory(until?.groupHistory, groups, now),
-      roles: r.roles ?? [],
     }
+
+    // Zoznamy len keď v riadku sú. Prázdne pole je platná hodnota („nemá
+    // žiadne"), `undefined` je mlčanie — a mlčanie sa nesmie zapísať ako
+    // prázdno: `roles` CSV nerozpoznáva vôbec, takže inak by každý import
+    // zmazal roly každému, koho sa dotkne.
+    if (r.tracks !== undefined) changes.tracks = r.tracks
+    if (r.groups !== undefined) {
+      const groups = normalizeKeys(r.groups)
+      changes.groups = groups
+      // História členstva sa hýbe **spolu so skupinami**, nie samostatne:
+      // import je najčastejší spôsob hromadnej zmeny a práve pri nej je
+      // otázka „kto v skupine bol vtedy" najťažšia (D50). Keď o skupinách
+      // riadok mlčí, členstvo sa nemení, takže nie je čo zapisovať.
+      changes.groupHistory = newGroupHistory(until?.groupHistory, groups, now)
+    }
+    if (r.roles !== undefined) changes.roles = r.roles
 
     // Jazyk sa prepíše LEN keď v riadku naozaj je. Bez tejto podmienky by
     // opakovaný import bez stĺpca jazyka ticho prepol každého späť na
@@ -568,6 +585,11 @@ export async function upsertPersons(
           id: crypto.randomUUID(),
           status: "invited" as PersonStatus,
           ...(r.language === undefined ? { language: normalizeLanguage(undefined) } : {}),
+          // Nová osoba musí mať zoznamy, aj keď o nich riadok mlčí — schéma
+          // ich má ako povinné polia. Existujúcej sa tadiaľto nedotknú.
+          ...(r.tracks === undefined ? { tracks: [] } : {}),
+          ...(r.groups === undefined ? { groups: [], groupHistory: [] } : {}),
+          ...(r.roles === undefined ? { roles: [] } : {}),
           invitedAt: now,
           externalRef: { sportnetId: null, entraObjectId: null },
           createdBy: actor,
