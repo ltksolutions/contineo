@@ -199,6 +199,22 @@ export default async function LibraryPage({
   /** Odkaz s vymeneným priečinkom; ostatné filtre zostávajú. */
   const withFolder = (folderId?: string) => toQuery(setValue(filters, "folder", folderId))
 
+  /*
+   * Mená filtrov, ktoré sú práve nasadené — pre prázdny stav.
+   *
+   * Vymenúvajú sa tie, ktoré sa **dajú pomenovať**: facety, hľadanie
+   * a priečinok. Podmienky buildera medzi nimi nie sú — tie sú vypísané
+   * hneď nad zoznamom vo vlastnom paneli, takže ich opakovať by bolo
+   * dvakrát to isté a veta by narástla cez tri riadky.
+   */
+  const activeNames = [
+    ...activeChips(filters).map(
+      ({ key, value }) => `${facetLabel[key].title}: ${facetLabel[key].label(value)}`,
+    ),
+    ...(search ? [`${t.search}: ${search}`] : []),
+    ...(folder ? [`${tf.heading}: ${folder === "nezaradene" ? tf.unfiled : (tree.find(x => x.folder.id === folder)?.folder.name ?? folder)}`] : []),
+  ]
+
   /** Odkaz, ktorý prepne jednu hodnotu facetu. */
   const facetHref = (key: MultiKey, value: string) => toQuery(toggle(filters, key, value))
 
@@ -607,6 +623,26 @@ export default async function LibraryPage({
             )}
           </summary>
           <div className="filter-sheet-body">
+            {/*
+              Zásuvka má **vlastnú hlavičku a držadlo** (`KNIZNICA.html`,
+              rám 5). V stĺpci panel nadpis nepotrebuje — je vidieť, že je to
+              bočný panel. Zásuvka vyskočí cez obsah a bez nadpisu nie je
+              jasné, čo to vyskočilo; držadlo navyše hovorí, že sa to dá
+              stiahnuť dole.
+
+              „Zrušiť všetky" je tu hore, nie dole pri tlačidle: keď človek
+              otvorí zásuvku a vidí, že filtre nič nenašli, chce ich zrušiť
+              hneď, nie po prerolovaní všetkých skupín.
+            */}
+            <div className="sheet-grip" aria-hidden="true" />
+            <div className="sheet-h">
+              <strong>{t.filters}</strong>
+              {hasFilter && (
+                <Link className="sheet-clear" href={toQuery(clearFilters(filters))}>
+                  {t.clearFilters}
+                </Link>
+              )}
+            </div>
             {filterPanel}
             <Link className="button filter-sheet-apply" href={toQuery(filters) + "#results"}>
               {t.showResults(facets.total)}
@@ -752,9 +788,58 @@ export default async function LibraryPage({
 
 
       {rows.length === 0 ? (
-        <p className="card" style={{ padding: 20, fontSize: "var(--fs-lead)" }}>
-          {search ? t.nothingFound : t.empty}
-        </p>
+        /*
+          Prázdny zoznam má **dve podoby** (`KNIZNICA.html`), nie jednu vetu
+          pre oboje. Rozdiel je v tom, čo má človek spraviť:
+
+          - knižnica je naozaj prázdna → nahrať prvý dokument,
+          - filtru nič nevyhovuje → zrušiť filter.
+
+          Dovtedy sa pri nule vždy písalo „Začni nahratím prvého dokumentu",
+          hoci podmienka pozerala len na text hľadania. Pri 148 dokumentoch
+          a zapnutom filtri to posielalo človeka robiť niečo, čo nepotrebuje,
+          a o skutočnej príčine mlčalo.
+
+          Rozlíšiť sa to dá presne: `facets.all` je počet **bez filtrov**.
+        */
+        facets.all === 0 ? (
+          <div className="empty">
+            <div className="empty-title">{t.empty}</div>
+            <div className="empty-text">{t.emptyText}</div>
+            <div className="empty-action">
+              <Link className="button" href="/library/new">{t.upload}</Link>
+            </div>
+          </div>
+        ) : (
+          <div className="empty">
+            <div className="empty-title">{t.emptyFilteredTitle}</div>
+            <div className="empty-text">
+              {/*
+                Filtre sa **vymenujú**, nie zhrnú do „skúste iné filtre".
+                Človek nevidí panel (na telefóne je v zásuvke) a bez mena
+                nevie, ktorý z nich zoznam vyprázdnil.
+              */}
+              {activeNames.length > 0 ? (
+                <>
+                  {t.emptyFilteredBefore(activeNames.length)}{" "}
+                  {activeNames.map((n, i) => (
+                    <span key={n}>
+                      {i > 0 && (i === activeNames.length - 1 ? ` ${t.and} ` : ", ")}
+                      <strong>{n}</strong>
+                    </span>
+                  ))}
+                  {". "}
+                </>
+              ) : null}
+              {t.emptyFilteredAfter}
+            </div>
+            <div className="empty-action">
+              <Link className="button button--quiet" href={toQuery(clearFilters(filters))}>
+                {t.clearFilters}
+              </Link>
+            </div>
+          </div>
+        )
       ) : (
         /*
           Výber riadkov je **v adrese**, nie stav formulára. Zaškrtávacie

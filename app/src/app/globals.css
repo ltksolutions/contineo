@@ -3355,11 +3355,61 @@ html[data-theme="dark"] .editor-tui .CodeMirror {
   z-index: 30;
   max-height: 78dvh;
   overflow-y: auto;
-  padding: 14px var(--pad-main) calc(10px + env(safe-area-inset-bottom));
+  /* 10 / 16 / 18 px ako rám 5; bezpečná zóna sa pripočíta k spodku, lebo
+     zásuvka roluje a posledná pilulka nesmie skončiť pod hranou. */
+  padding: 10px 16px calc(18px + env(safe-area-inset-bottom));
   background: var(--surface);
   border-top: 1px solid var(--line);
   border-radius: 16px 16px 0 0;
   box-shadow: var(--shadow);
+}
+
+/*
+ * Držadlo a hlavička zásuvky (`KNIZNICA.html`, rám 5).
+ *
+ * Držadlo je ozdoba s významom: hovorí, že sa panel dá stiahnuť dole.
+ * Preto `aria-hidden` — čítačke by len prekážalo.
+ */
+.sheet-grip {
+  width: 36px;
+  height: 4px;
+  margin: 0 auto 12px;
+  border-radius: 2px;
+  background: var(--line);
+}
+
+.sheet-h {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin: 0 0 12px;
+}
+
+.sheet-h strong { font-size: var(--fs-section); }
+
+.sheet-clear {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--accent);
+}
+
+/*
+ * Nadpisy skupín v zásuvke **nie sú verzálky.** V stĺpci sú tiché 11 px
+ * verzálky, lebo tam nesú štruktúru dlhého panela; v zásuvke sú skupiny
+ * tri a nadpis je bežný popis (rám 5: 12 px, 650, bez verzálok).
+ */
+/* Správa priečinkov v zásuvke nie je (rám 5): zásuvka je na filtrovanie,
+   správa je iná úloha na inej stránke a odkaz by z nej viedol preč
+   uprostred výberu. */
+.filter-sheet .lf-manage { display: none; }
+
+.filter-sheet .lf-title {
+  font-size: 12px;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--ink);
+  margin: 0 0 8px;
 }
 
 /* Facety v zásuvke: pilulky 36 px (r9, rámik) vedľa seba — palec triafa
@@ -3388,6 +3438,16 @@ html[data-theme="dark"] .editor-tui .CodeMirror {
 }
 
 .filter-sheet .facet-box { display: none; }
+
+/* Počet je vnútri pilulky, nie odtlačený na jej koniec (rám 5). */
+.filter-sheet .facet-name { flex: 0 1 auto; }
+.filter-sheet .facet-count { font-size: 12px; opacity: 0.65; color: inherit; }
+.filter-sheet .lf-folder span:last-child:not(:first-child) { font-size: 12px; opacity: 0.65; }
+
+/* Zapnutá pilulka nesie aj tučnejší text — rozdiel musí byť vidieť
+   aj bez farby (rám 5). */
+.filter-sheet .facet.is-on,
+.filter-sheet .lf-folder.is-on { font-weight: 600; color: var(--accent-strong); }
 .filter-sheet .facet.is-on { border-color: var(--accent); background: var(--accent-soft); }
 
 /* Hlavné tlačidlo dole, na celú šírku a `sticky` — nech je po ruke aj
@@ -3395,6 +3455,9 @@ html[data-theme="dark"] .editor-tui .CodeMirror {
 .filter-sheet-apply {
   position: sticky;
   bottom: 0;
+  /* 48 px, nie 40: je to jediné hlavné tlačidlo zásuvky a palec ho
+     hľadá naslepo pri spodnej hrane (rám 5). */
+  min-height: 48px;
   display: flex;
   justify-content: center;
   width: 100%;

@@ -1575,7 +1575,20 @@ interface Dictionary {
       effectiveVersion: string
       versions: (n: number) => string
       nothingFound: string
+      /**
+       * Prázdny zoznam má **dve podoby** (`KNIZNICA.html`): knižnica je
+       * naozaj prázdna, alebo filtru nič nevyhovuje. Jedna veta pre oboje
+       * klamala — „Začni nahratím prvého dokumentu" pri 148 dokumentoch
+       * a zapnutom filtri posiela človeka robiť niečo, čo nepotrebuje.
+       */
       empty: string
+      emptyText: string
+      emptyFilteredTitle: string
+      /** „Máte nasadené dva filtre:" — počet je v texte, preto funkcia. */
+      emptyFilteredBefore: (count: number) => string
+      emptyFilteredAfter: string
+      /** Spojka pred posledným filtrom vo výpočte. */
+      and: string
     }
     /**
      * Skladanie trás onboardingu (rozsah C).
@@ -3548,7 +3561,17 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       effectiveVersion: "platné znenie",
       versions: (n) => `${n} ${n === 1 ? "znenie" : n < 5 ? "znenia" : "znení"}`,
       nothingFound: "Nič sa nenašlo.",
-      empty: "Zatiaľ tu nie je nič. Začni nahratím prvého dokumentu.",
+      empty: "V knižnici zatiaľ nič nie je",
+      emptyText: "Keď nahráte prvý dokument, objaví sa tu aj s tým, kto ho má potvrdiť.",
+      emptyFilteredTitle: "Filtru nič nevyhovuje",
+      emptyFilteredBefore: count =>
+        count === 1
+          ? "Máte nasadený 1 filter:"
+          : count < 5
+            ? `Máte nasadené ${count} filtre:`
+            : `Máte nasadených ${count} filtrov:`,
+      emptyFilteredAfter: "Skúste niektorý zrušiť.",
+      and: "a",
     },
     tracks: {
       heading: "Trasy onboardingu",
@@ -5480,7 +5503,17 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       effectiveVersion: "platné znění",
       versions: (n) => `${n} ${n === 1 ? "znění" : n < 5 ? "znění" : "znění"}`,
       nothingFound: "Nic se nenašlo.",
-      empty: "Zatím tu nic není. Začni nahráním prvního dokumentu.",
+      empty: "V knihovně zatím nic není",
+      emptyText: "Až nahrajete první dokument, objeví se tu i s tím, kdo ho má potvrdit.",
+      emptyFilteredTitle: "Filtru nic nevyhovuje",
+      emptyFilteredBefore: count =>
+        count === 1
+          ? "Máte nasazený 1 filtr:"
+          : count < 5
+            ? `Máte nasazené ${count} filtry:`
+            : `Máte nasazených ${count} filtrů:`,
+      emptyFilteredAfter: "Zkuste některý zrušit.",
+      and: "a",
     },
     tracks: {
       heading: "Trasy onboardingu",
@@ -7405,7 +7438,12 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       effectiveVersion: "effective version",
       versions: (n) => `${n} ${n === 1 ? "version" : "versions"}`,
       nothingFound: "Nothing found.",
-      empty: "There is nothing here yet. Start by uploading the first document.",
+      empty: "Nothing in the library yet",
+      emptyText: "Once you upload the first document, it will appear here along with who needs to acknowledge it.",
+      emptyFilteredTitle: "No documents match the filter",
+      emptyFilteredBefore: count => `You have ${count} ${count === 1 ? "filter" : "filters"} on:`,
+      emptyFilteredAfter: "Try removing one.",
+      and: "and",
     },
     tracks: {
       heading: "Onboarding tracks",
