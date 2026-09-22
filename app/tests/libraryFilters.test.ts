@@ -11,6 +11,7 @@ import {
   readFilters, toggle, replace, setValue, clearFilters, isEmpty, toQuery, activeChips,
   sortBy, currentSort, pageOf, withPage, sortRows, pageRows, setView, currentView, normalizeView,
   togglePick, pickPage, clearPicked, pickedOutsideCount, carryFields, MAX_PICKED, EMPTY,
+  STATUS_VALUES,
 } from "../src/lib/libraryFilters"
 import { queryParts, buildQuery, expiredCondition } from "../src/lib/libraryRead"
 
@@ -431,5 +432,33 @@ describe("strop vyberu — pretecenie adresy nesmie byt tiche", () => {
     const few = full(3)
     expect(togglePick(few, "sfz:novy").picked).toHaveLength(4)
     expect(pickPage(few, ["x", "y"], true).picked).toHaveLength(5)
+  })
+})
+
+/**
+ * Neznáma hodnota stavu v adrese.
+ *
+ * Adresa je vstup od kohokoľvek — uložená záložka, odkaz v e-maile, preklep.
+ * Hodnota, ktorú facet nepozná, sa musí zahodiť ticho: nefiltrovať a ani sa
+ * nevykresliť ako pilulka aktívneho filtra, ktorú sa človek snaží pochopiť.
+ *
+ * Test stráži aj opačný smer — že sa pri tom nezahodia platné hodnoty.
+ */
+describe("neznámy stav v adrese", () => {
+  it("sa zahodí, platné hodnoty zostanú", () => {
+    expect(readFilters({ status: "published" }).status).toEqual(["published"])
+    expect(readFilters({ status: "vymyslene" }).status).toEqual([])
+    expect(readFilters({ status: ["published", "vymyslene", "draft"] }).status)
+      .toEqual(["published", "draft"])
+  })
+
+  it("nevykreslí sa ako aktívny filter", () => {
+    expect(activeChips(readFilters({ status: "vymyslene" }))).toEqual([])
+  })
+
+  it("pozná hodnoty, ktoré facet ponúka", () => {
+    for (const v of STATUS_VALUES) {
+      expect(readFilters({ status: v }).status).toEqual([v])
+    }
   })
 })
