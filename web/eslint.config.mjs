@@ -26,25 +26,6 @@ const konfiguracia = [
 
   {
     /**
-     * `react-hooks/set-state-in-effect` v `ThemeToggle` — **dlh, nie zámer**.
-     *
-     * Pravidlo je v `eslint-config-next` nové (verzia 16) a má pravdu:
-     * `setTheme()` priamo v tele efektu stojí jedno vykreslenie navyše.
-     * Dnešný tvar má ale svoj dôvod — vloženú tému nastavuje skript
-     * v `app/layout.js` ešte pred hydratáciou a komponent ju smie prečítať
-     * až po pripojení, inak sa server a klient nezhodnú. Učebnicová náhrada
-     * je `useSyncExternalStore`.
-     *
-     * Prepísať to tu by znamenalo miešať povýšenie verzie s prestavbou
-     * fungujúceho komponentu. Zostáva preto ako výstraha — viditeľná
-     * v každom behu, ale nezastavuje nasadenie — kým sa nevyrieši zvlášť.
-     */
-    files: ["components/ThemeToggle.js"],
-    rules: { "react-hooks/set-state-in-effect": "warn" },
-  },
-
-  {
-    /**
      * `react/no-unescaped-entities` — vypnuté zámerne.
      *
      * Apostrofy a úvodzovky sú v slovenskom, českom aj anglickom texte

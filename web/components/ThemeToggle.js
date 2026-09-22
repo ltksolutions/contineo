@@ -1,31 +1,77 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useSyncExternalStore } from "react";
 
-function getInitial() {
-  if (typeof document === "undefined") return "light";
-  return document.documentElement.getAttribute("data-theme") || "light";
+/**
+ * Prepínač témy.
+ *
+ * ## Téma nie je stav tohto komponentu
+ *
+ * Skutočná téma žije v atribúte `data-theme` na `<html>` a nastavuje ju
+ * vložený skript v `app/layout.js` **ešte pred prvým vykreslením** — inak by
+ * stránka blikla svetlou, kým sa React rozbehne. Komponent je teda iba
+ * pohľad na hodnotu, ktorú vlastní niekto iný.
+ *
+ * Preto `useSyncExternalStore` a nie `useState`. Predtým tu bol `useState`
+ * plnený z `useEffect`, čo znamenalo dva zdroje pravdy — atribút a stav —
+ * a jedno vykreslenie navyše pri každom načítaní. Pravidlo
+ * `react-hooks/set-state-in-effect` (nové v `eslint-config-next@16`) na to
+ * upozorňovalo právom.
+ *
+ * ## Prečo to nebliká
+ *
+ * `getServerSnapshot` vracia `"light"` a hydratácia sa deje presne s touto
+ * hodnotou, takže sa server a klient zhodnú. Až po nej React prečíta
+ * skutočný atribút a ikonu prípadne prekreslí. Farby stránky to nerieši —
+ * tie drží CSS podľa `data-theme`, ktorý je správny od prvého pixelu.
+ * Blikne nanajvýš ikona v tlačidle, nie stránka, a presne tak sa to
+ * správalo aj predtým.
+ */
+
+const LIGHT = "light";
+const DARK = "dark";
+
+/**
+ * Musí byť na úrovni modulu.
+ *
+ * `useSyncExternalStore` sa odhlási a prihlási vždy, keď sa zmení referencia
+ * na túto funkciu. Definovaná vnútri komponentu by to robila pri každom
+ * vykreslení — pozorovateľ by sa neustále rušil a zakladal nanovo.
+ */
+function subscribe(onChange) {
+  const observer = new MutationObserver(onChange);
+  observer.observe(document.documentElement, {
+    attributes: true,
+    attributeFilter: ["data-theme"],
+  });
+  return () => observer.disconnect();
+}
+
+function getSnapshot() {
+  return document.documentElement.getAttribute("data-theme") || LIGHT;
+}
+
+/**
+ * Na serveri žiadny `document` nie je a téma sa tam ani zistiť nedá —
+ * je uložená v prehliadači. `"light"` je tá istá voľba, akú robí vložený
+ * skript, keď `localStorage` nič nevie a systém tmavú tému nežiada.
+ */
+function getServerSnapshot() {
+  return LIGHT;
 }
 
 export default function ThemeToggle() {
-  const [theme, setTheme] = useState("light");
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setTheme(getInitial());
-    setMounted(true);
-  }, []);
+  const theme = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
+  const isDark = theme === DARK;
 
   function toggle() {
-    const next = theme === "dark" ? "light" : "dark";
-    setTheme(next);
+    const next = isDark ? LIGHT : DARK;
+    // Zapíše sa len atribút; nové vykreslenie si vyžiada pozorovateľ vyššie.
     document.documentElement.setAttribute("data-theme", next);
     try {
       localStorage.setItem("contineo-theme", next);
     } catch (e) {}
   }
-
-  const isDark = theme === "dark";
 
   return (
     <button
@@ -46,7 +92,7 @@ export default function ThemeToggle() {
         cursor: "pointer",
       }}
     >
-      {mounted && isDark ? (
+      {isDark ? (
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
           <circle cx="12" cy="12" r="4.5" />
           <path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M19.1 4.9l-1.4 1.4M6.3 17.7l-1.4 1.4" />
