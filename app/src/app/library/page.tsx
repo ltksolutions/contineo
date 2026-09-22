@@ -408,7 +408,10 @@ export default async function LibraryPage({
      * na osobu alebo organizáciu znamená zmenu schémy, a tá je samostatné
      * rozhodnutie s vlastnou migráciou.
      */
-    <AppShell layout={normalizeLayout(q.layout)} language={uiLanguage}>
+    // `wide`: knižnica je jediná obrazovka s bočným panelom **aj**
+    // deväťstĺpcovou tabuľkou — do 1240 px sa nezmestí (namerané:
+    // pri 1440 px okna má stĺpec zoznamu 938 px, tabuľka potrebuje ~1060).
+    <AppShell layout={normalizeLayout(q.layout)} language={uiLanguage} wide>
     <div style={tenantStyle(branding)}>
       <Notice message={message} error={error === "1"} back="/library" />
 

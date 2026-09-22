@@ -50,8 +50,21 @@
    * Vyššia než `--maxw`, lebo v shelli sú aj obrazovky s panelom vedľa
    * zoznamu — 940 px by tabuľku stlačilo do stĺpca. Stránka, ktorá potrebuje
    * užší text (znenie normy), si vnútri určí vlastnú šírku.
+   *
+   * Pre knižnicu ani 1240 px nestačí — viď `--shell-maxw-wide` nižšie.
    */
   --shell-maxw: 1240px;
+
+  /*
+   * Širší strop pre jedinú obrazovku, ktorá ho potrebuje — **knižnicu**.
+   * Má naraz bočný panel filtrov a deväťstĺpcovú tabuľku; ostatné
+   * obrazovky sú text alebo formuláre a tým 1240 px vyhovuje.
+   *
+   * **Strop, nie plná šírka okna.** Na 27“ monitore by riadok bez stropu
+   * mal cez 2000 px a oko stratí spojitosť medzi názvom vľavo a dátumom
+   * vpravo — to je iná chyba, nie oprava (rozhodnutie Jána 2026-09-22).
+   */
+  --shell-maxw-wide: 1440px;
   --shadow: 0 1px 2px rgba(20, 28, 42, 0.05), 0 10px 30px rgba(20, 28, 42, 0.07);
 
   /*
@@ -1039,6 +1052,11 @@ html[data-theme="dark"] select.field-input {
  * Hranica je vyššia než `--maxw` (940 px), lebo v shelli sú aj obrazovky
  * s panelom vedľa zoznamu — tam by 940 px stlačilo tabuľku do stĺpca.
  * Stránka, ktorá potrebuje užší text, si vnútri určí vlastnú šírku.
+ *
+ * **„Pár desiatok pixelov" bolo podcenenie** (opravené 2026-09-22). Pri
+ * knižnici išlo o 122 px a stĺpce Potvrdenia a Zmenené kvôli nim z obrazovky
+ * odišli. Tej jedinej obrazovke preto patrí `.app-main--wide` nižšie;
+ * pre ostatné platí odstavec vyššie bez zmeny.
  */
 .app-main {
   flex: 1;
@@ -1048,6 +1066,15 @@ html[data-theme="dark"] select.field-input {
   margin: 0 auto;
   padding: var(--pad-main) var(--pad-main) 56px;
 }
+
+/*
+ * Knižnica si pýta širší strop (`AppShell` s `wide`). Namerané 2026-09-22:
+ * pri okne 1440 px a stope 1240 má stĺpec zoznamu 938 px, pričom tabuľka
+ * potrebuje ~1060 px — stĺpce Potvrdenia a Zmenené sa nezmestili a pretekali
+ * do vodorovného posunu vo `.doc-table-wrap`. So stropom 1440 má stĺpec
+ * 1138 px, teda približne 78 px rezervy na dlhšie preklady.
+ */
+.app-main--wide { max-width: var(--shell-maxw-wide); }
 
 @media (min-width: 640px) {
   .app-shell--sidebar { flex-direction: row; }
@@ -4421,7 +4448,7 @@ a.notif-row-link:focus-visible { outline: 2px solid var(--accent); outline-offse
  * označenie niekto zneniu dal.
  */
 .doc-col-version {
-  max-width: 132px;
+  max-width: 88px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
