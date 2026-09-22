@@ -232,6 +232,33 @@ function listOf(value: string | string[] | undefined): string[] {
  * Podmienky sa skladajú do `$and`, nie do jedného objektu: fulltext aj
  * „nezaradené" používajú `$or` a v jednom objekte by si ho navzájom prepísali.
  */
+/**
+ * Podmienka „expirované" — **odvodená, nie uložená** (D27).
+ *
+ * Expirovaný dokument je publikovaný dokument, ktorý **dnes nemá platné
+ * znenie**, hoci aspoň jedno už mal: každé jeho znenie buď ešte nezačalo
+ * platiť, alebo mu platnosť skončila. Nie je to štvrtý stav dokumentu —
+ * stav je ďalej `published` — preto sa do filtra pridáva ako vlastná
+ * podmienka, nie ako hodnota poľa `status`.
+ *
+ * To isté pravidlo, aké v JS počíta `effectiveVersion()`; tu vyjadrené
+ * dotazom, lebo zoznam je stránkovaný a filtrovať sa musí v databáze.
+ */
+export function expiredCondition(asOf: Date = new Date()): Record<string, unknown> {
+  return {
+    status: "published",
+    "versions.0": { $exists: true },
+    versions: {
+      $not: {
+        $elemMatch: {
+          effectiveFrom: { $lte: asOf },
+          $or: [{ effectiveTo: null }, { effectiveTo: { $exists: false } }, { effectiveTo: { $gt: asOf } }],
+        },
+      },
+    },
+  }
+}
+
 export function queryParts(
   filter: LibraryFilter,
   /**
@@ -267,12 +294,16 @@ export function queryParts(
   const wantsPublished = statuses.includes("published")
   const wantsDraft = statuses.includes("draft")
   const wantsInReview = statuses.includes("in-review")
+  // Štvrtá hodnota, piata os: expirované je podmnožina publikovaných
+  // (rozhodnutie Jána 2026-09-22 — hodnota vo filtri, nie stĺpec).
+  const wantsExpired = statuses.includes("expired")
 
-  if (!(wantsPublished && wantsDraft)) {
+  if (!(wantsPublished && wantsDraft) || wantsExpired) {
     const conds: Record<string, unknown>[] = []
     if (wantsPublished) conds.push({ status: "published" })
     if (wantsDraft) conds.push({ status: { $ne: "published" } })
     if (wantsInReview) conds.push({ documentId: { $in: inReviewIds } })
+    if (wantsExpired) conds.push(expiredCondition())
     if (conds.length > 0) {
       parts.push({ key: "status", cond: conds.length === 1 ? conds[0] : { $or: conds } })
     }
@@ -435,6 +466,12 @@ export async function libraryFacets(
             { $match: { $and: [without("status"), { documentId: { $in: inReviewIds } }] } },
             { $count: "n" },
           ],
+          // To isté pre expirované: vlastná vetva s tým istým filtrom bez
+          // `status`, aby číslo hovorilo, čo by človek dostal po prepnutí.
+          statusExpired: [
+            { $match: { $and: [without("status"), expiredCondition()] } },
+            { $count: "n" },
+          ],
           tag: [
             { $match: without("tag") },
             { $unwind: "$tags" },
@@ -471,6 +508,9 @@ export async function libraryFacets(
       // riadok filtra len zaberá miesto.
       ...(count(out?.statusInReview as { n: number }[] | undefined) > 0
         ? [{ value: "in-review", count: count(out?.statusInReview as { n: number }[] | undefined) }]
+        : []),
+      ...(count(out?.statusExpired as { n: number }[] | undefined) > 0
+        ? [{ value: "expired", count: count(out?.statusExpired as { n: number }[] | undefined) }]
         : []),
     ],
     tag: sortCounts(out?.tag ?? []),

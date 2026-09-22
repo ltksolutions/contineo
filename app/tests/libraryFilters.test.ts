@@ -10,9 +10,9 @@ import { describe, it, expect } from "vitest"
 import {
   readFilters, toggle, replace, setValue, clearFilters, isEmpty, toQuery, activeChips,
   sortBy, currentSort, pageOf, withPage, sortRows, pageRows, setView, currentView, normalizeView,
-  togglePick, pickPage, clearPicked, pickedOutsideCount, carryFields,
+  togglePick, pickPage, clearPicked, pickedOutsideCount, carryFields, MAX_PICKED, EMPTY,
 } from "../src/lib/libraryFilters"
-import { queryParts, buildQuery } from "../src/lib/libraryRead"
+import { queryParts, buildQuery, expiredCondition } from "../src/lib/libraryRead"
 
 describe("čítanie z adresy", () => {
   it("opakovaný kľúč je zoznam, jedna hodnota tiež", () => {
@@ -367,5 +367,69 @@ describe("výber prežívajúci stránkovanie", () => {
     expect(pickedOutsideCount(["d1", "d2", "d3"], ["d2"])).toBe(2)
     expect(pickedOutsideCount(["d1"], ["d1", "d2"])).toBe(0)
     expect(pickedOutsideCount([], ["d1"])).toBe(0)
+  })
+})
+
+describe("expirovane je odvodene, nie ulozeny stav (D27)", () => {
+  const AS_OF = new Date("2026-09-22T12:00:00Z")
+
+  it("hlada publikovany dokument, ktory dnes nema platne znenie", () => {
+    const c = expiredCondition(AS_OF) as Record<string, unknown>
+    expect(c.status).toBe("published")
+    // Aspon jedno znenie musi mat — dokument bez zneni nie je expirovany,
+    // ten este nezacal platit.
+    expect(c["versions.0"]).toEqual({ $exists: true })
+    // A ziadne z jeho zneni nesmie byt prave platne.
+    expect(JSON.stringify(c.versions)).toContain("$not")
+    expect(JSON.stringify(c.versions)).toContain("$elemMatch")
+  })
+
+  it("filter prijme expirovane ako stvrtu hodnotu stavu", () => {
+    const parts = queryParts({ status: ["expired"] })
+    const status = parts.find(p => p.key === "status")
+    expect(status).toBeDefined()
+    expect(JSON.stringify(status!.cond)).toContain("versions")
+  })
+
+  it("expirovane sa da kombinovat s konceptom aj publikovanym cez $or", () => {
+    const parts = queryParts({ status: ["published", "draft", "expired"] })
+    const status = parts.find(p => p.key === "status")
+    // Publikovane + koncept je „vsetko", ale expirovane zuzuje — podmienka
+    // teda vzniknut musi, inak by zaskrtnutie expirovaneho nic nespravilo.
+    expect(status).toBeDefined()
+  })
+})
+
+describe("strop vyberu — pretecenie adresy nesmie byt tiche", () => {
+  const full = (n: number) => ({
+    ...EMPTY,
+    picked: Array.from({ length: n }, (_, i) => `sfz:doc_${i}`),
+  })
+
+  it("nad stropom sa dalsi dokument neprida", () => {
+    const at = full(MAX_PICKED)
+    expect(togglePick(at, "sfz:novy").picked).toHaveLength(MAX_PICKED)
+    expect(togglePick(at, "sfz:novy").picked).not.toContain("sfz:novy")
+  })
+
+  it("odznacit sa da vzdy — strop nesmie uveznit vyber", () => {
+    const at = full(MAX_PICKED)
+    const out = togglePick(at, "sfz:doc_0")
+    expect(out.picked).toHaveLength(MAX_PICKED - 1)
+    expect(out.picked).not.toContain("sfz:doc_0")
+  })
+
+  it("oznacit stranu prida len to, co sa zmesti", () => {
+    const near = full(MAX_PICKED - 3)
+    const page = ["a", "b", "c", "d", "e"]
+    expect(pickPage(near, page, true).picked).toHaveLength(MAX_PICKED)
+    // Prve tri z nich, nie nahodny vyber.
+    expect(pickPage(near, page, true).picked.slice(-3)).toEqual(["a", "b", "c"])
+  })
+
+  it("pod stropom sa nic nemeni", () => {
+    const few = full(3)
+    expect(togglePick(few, "sfz:novy").picked).toHaveLength(4)
+    expect(pickPage(few, ["x", "y"], true).picked).toHaveLength(5)
   })
 })

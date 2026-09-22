@@ -33,7 +33,7 @@ import {
   readFilters, toggle, setValue, clearFilters, isEmpty, toQuery, carryFields, activeChips,
   sortBy, currentSort, pageOf, withPage, sortRows, pageRows, setView, currentView,
   addCondition, removeCondition, splitConditions, mergeConditions,
-  togglePick, pickPage, clearPicked, pickedOutsideCount,
+  togglePick, pickPage, clearPicked, pickedOutsideCount, MAX_PICKED,
   type MultiKey, type SortKey,
 } from "@/lib/libraryFilters"
 import {
@@ -217,6 +217,9 @@ export default async function LibraryPage({
   const statusLabel = (value: string) =>
     value === "published" ? t.statusPublished
     : value === "in-review" ? t.statusInReview
+    // Expirované je podmnožina publikovaných, nie štvrtý stav dokumentu —
+    // vo filtri je to však vlastná voľba (rozhodnutie Jána 2026-09-22).
+    : value === "expired" ? t.statusExpired
     : t.statusDrafts
 
   /* Text pilulky pri jednom dokumente — facetové „koncepty" je množné
@@ -712,6 +715,11 @@ export default async function LibraryPage({
             <span className="bulk-title">{tl.picked(filters.picked.length)}</span>
             {pickedOutside > 0 && (
               <span className="bulk-picked-outside">{tl.pickedOutside(pickedOutside)}</span>
+            )}
+            {/* Strop sa povie nahlas. Bez toho by ďalšie označenie ticho
+                nefungovalo a človek by hľadal chybu v zozname. */}
+            {filters.picked.length >= MAX_PICKED && (
+              <span className="bulk-picked-outside">{tl.pickedMax(MAX_PICKED)}</span>
             )}
 
             <div className="field bulk-folder">

@@ -458,6 +458,8 @@ interface Dictionary {
     /** Štítok pri zdroji, ktorý je overenou odpoveďou, nie článkom normy (D11). */
     verified: string
     verifiedNote: string
+    /** Zhoda zdroja v troch stupňoch — relatívne v rámci jednej odpovede. */
+    match: Record<"high" | "medium" | "low", string>
     adapter: string
     firstToken: string
     costNote: (pricelistVersion: string) => string
@@ -1502,6 +1504,8 @@ interface Dictionary {
         /** Koľko je označených, koľko z toho nie je vidieť, a ako to zrušiť. */
         picked: (count: number) => string
         pickedOutside: (count: number) => string
+        /** Dosiahnutý strop výberu — povie to nahlas, nech nemizne ticho. */
+        pickedMax: (max: number) => string
         clearPicked: string
         moveTo: string
         move: string
@@ -1536,6 +1540,8 @@ interface Dictionary {
       statusDrafts: string
       /** Tretia hodnota facetu Stav (ADR-006) — dokument s bežiacim kolom. */
       statusInReview: string
+      /** Štvrtá hodnota filtra stavu — odvodená z platnosti znenia (D27). */
+      statusExpired: string
       filter: string
       clearFilters: string
       /** Stav spracovania súboru — kľúče sú hodnoty z databázy. */
@@ -2206,6 +2212,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     internal: "interné",
     verified: "overená odpoveď",
     verifiedNote: "znenie, ktoré niekto overil nad predpisom — nie samotné znenie predpisu",
+    match: { high: "vysoká zhoda", medium: "stredná zhoda", low: "slabá zhoda" },
     adapter: "adaptér",
     firstToken: "prvý token",
     costNote: (pricelistVersion) => `Orientačne. Nezahŕňa pomocný model ani vyhľadávanie. Cenník ${pricelistVersion}.`,
@@ -3445,6 +3452,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
         pick: (title) => `Označiť ${title}`,
         picked: (count) => `Označené: ${count}`,
         pickedOutside: (count) => `z toho ${count} mimo tohto zoznamu`,
+        pickedMax: (max) => `Viac než ${max} naraz označiť nejde — výber sa nesie v adrese. Spracujte túto dávku a označte ďalšiu.`,
         clearPicked: "zrušiť výber",
         moveTo: "Presunúť do",
         move: "Presunúť",
@@ -3487,6 +3495,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       statusPublished: "publikované",
       statusDrafts: "koncepty",
       statusInReview: "na schválenie",
+      statusExpired: "expirované",
       filter: "Filtrovať",
       clearFilters: "zrušiť filtre",
       processing: {
@@ -4129,6 +4138,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     internal: "interní",
     verified: "ověřená odpověď",
     verifiedNote: "znění, které někdo ověřil nad předpisem — nikoli samotné znění předpisu",
+    match: { high: "vysoká shoda", medium: "střední shoda", low: "slabá shoda" },
     adapter: "adaptér",
     firstToken: "první token",
     costNote: (pricelistVersion) => `Orientačně. Nezahrnuje pomocný model ani vyhledávání. Ceník ${pricelistVersion}.`,
@@ -5366,6 +5376,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
         pick: (title) => `Označit ${title}`,
         picked: (count) => `Označeno: ${count}`,
         pickedOutside: (count) => `z toho ${count} mimo tento seznam`,
+        pickedMax: (max) => `Více než ${max} naráz označit nelze — výběr se nese v adrese. Zpracujte tuto dávku a označte další.`,
         clearPicked: "zrušit výběr",
         moveTo: "Přesunout do",
         move: "Přesunout",
@@ -5408,6 +5419,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       statusPublished: "publikované",
       statusDrafts: "koncepty",
       statusInReview: "ke schválení",
+      statusExpired: "expirované",
       filter: "Filtrovat",
       clearFilters: "zrušit filtry",
       processing: {
@@ -6045,6 +6057,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     internal: "internal",
     verified: "verified answer",
     verifiedNote: "wording someone verified against the document — not the document itself",
+    match: { high: "strong match", medium: "moderate match", low: "weak match" },
     adapter: "adapter",
     firstToken: "first token",
     costNote: (pricelistVersion) => `Approximate. Excludes the helper model and retrieval. Price list ${pricelistVersion}.`,
@@ -7281,6 +7294,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
         pick: (title) => `Select ${title}`,
         picked: (count) => `Selected: ${count}`,
         pickedOutside: (count) => `${count} outside this list`,
+        pickedMax: (max) => `You cannot select more than ${max} at once — the selection travels in the address. Handle this batch, then pick the next.`,
         clearPicked: "clear selection",
         moveTo: "Move to",
         move: "Move",
@@ -7323,6 +7337,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       statusPublished: "published",
       statusDrafts: "drafts",
       statusInReview: "to approve",
+      statusExpired: "expired",
       filter: "Filter",
       clearFilters: "clear filters",
       processing: {
