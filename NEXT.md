@@ -6,31 +6,27 @@
 > **Tento súbor je indícia, `git log` je pravda.** Keď si protirečia, verí sa
 > gitu a NEXT.md sa opraví. Aktualizuje sa pri rituáli **„Poupratuj"**.
 
-Posledná aktualizácia: **2026-09-22**
+Posledná aktualizácia: **2026-09-22** (po zlúčení do `main` a nasadení)
 
 ---
 
 ## Kde sme teraz
 
-Dokončený je celý designový handoff — **PR 0 až 14** (`docs/design/*.md`), každý
-na vlastnej vetve zreťazenej nad predchádzajúcou, od `design/pr0-zaklad` po
-`design/pr14-admin`. Nad ním stojí vetva `fix/po-handoffe` so štyrmi dorábkami
-a upratovaním.
+Celý designový handoff — **PR 0 až 14** (`docs/design/*.md`) — plus štyri
+dorábky a upratanie sú **zlúčené v `main`**: merge commit `415d5d7`, 105
+commitov, PR #46–#62. Všetkých 17 PR je zavretých, vetvy zostali.
 
-**Nič z toho nie je v `main`.** Otvorených je **17 pull requestov** (#46–#62)
-a vetva `fix/po-handoffe` je **103 commitov pred `main`**. Vetvy sú zreťazené,
-takže každý PR má ako základ ten predchádzajúci, nie `main` — poradie zlučovania
-je dané a nedá sa preskočiť.
+**Nasadené do produkcie** 2026-09-22: Vercel projekt `contineo-app`, domény
+`intranet.futbalsfz.sk` a `app.contineo.app`. Prítomnosť znenia sa dá overiť
+v pätičke — píše sa tam krátky hash nasadeného commitu.
 
-Posledné overenie (2026-09-22, `fix/po-handoffe`): `tsc` ✓, `eslint` 0 errors
-(42 warnings = baseline), `vitest` 1422 ✓ / 87 súborov, `build` ✓.
+Overenie pred zlúčením: `tsc` ✓, `eslint` 0 errors (42 warnings = baseline),
+`vitest` 1422 ✓ / 87 súborov, `build` ✓. Po nasadení prešlé naostro: prehlád,
+knižnica (tabuľka aj karty), filter stavu vrátane **expirované**, `/hr`
+s pásikom potvrdení, odpoveď na otázku so **stupňami zhody** pri zdrojoch,
+a mobilné zobrazenie na 390 px.
 
 ## Čo čaká na rozhodnutie Jána
-
-**Zlúčenie stohu do `main`.** Sedemnásť otvorených PR je veľa na to, aby sa
-recenzovali jeden po druhom, a čím dlhšie stoja, tým väčšia je šanca na konflikt.
-Treba rozhodnúť, či sa zlučuje zdola nahor po jednom, alebo sa celý stoh spojí
-do jedného PR proti `main`.
 
 **Migrácia `sectionKey` → `category`** (`app/scripts/migrate_section_to_category.mjs`).
 Napísaná, **nespustená** — je to zmena dát. Beží nasucho, zapisuje až s `--zapis`,
@@ -39,10 +35,13 @@ prekresliť index v Atlase, ktorý stále filtruje na `sectionKey`.
 
 ## Tri najbližšie kroky
 
-1. **Rozhodnúť a vykonať zlučovanie stohu** — viď vyššie. Bez toho sa všetko
-   ostatné stavia na vetvách, ktoré ešte nikto nevidel v `main`.
-2. **Spustiť migráciu `sectionKey`** po rozhodnutí — najprv nasucho, potom
-   `--zapis`, potom index v Atlase.
+1. **Spustiť migráciu `sectionKey`** — najprv nasucho, potom `--zapis`, potom
+   prekresliť index v Atlase. Čaká na rozhodnutie, viď vyššie.
+2. **Prázdny stav knižnice pri filtri, ktorý nič nenájde** — dnes sa napíše
+   „Zatiaľ tu nie je nič. Začni nahratím prvého dokumentu", hoci dokumenty sú
+   a len im nevyhovuje filter. Podmienka pozerá len text hľadania, nie filtre.
+   Vidno to od filtra **expirované**, ktorý vracia nulu najčastejšie.
+   Podrobnosti v `docs/TODO.md`.
 3. **„Všetko, čo vyhovuje filtru" namiesto zoznamu ID v adrese** — strop výberu
    (`MAX_PICKED = 200`) rieši rezervu, nie princíp. Chce vlastný plán: mení sa
    sémantika hromadnej akcie. Podrobnosti v `docs/TODO.md`.
