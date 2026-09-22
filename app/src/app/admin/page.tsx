@@ -69,13 +69,13 @@ export default async function TenantAdminPage() {
               {tenant.hostnames.join(", ") || t.noDomain}
             </p>
 
+            {/*
+              Poradie podľa dôležitosti (ADMIN, úloha 1.2): Contineo je systém
+              na dokumenty, takže prvé číslo je o nich. Zadanie píše
+              „dokumenty, znenia, osoby, potvrdenia"; znenia sa tu nepočítajú
+              (druhé číslo sú trasy) — necháva sa na jeho mieste, otázka v PR.
+            */}
             <div className="admin-data">
-              <Fact
-                label={t.people}
-                value={t.peopleValue(tenant.people.signedIn, tenant.people.total)}
-                muted={tenant.people.total === 0}
-              />
-              <Fact label={t.tracks} value={String(tenant.tracks)} muted={tenant.tracks === 0} />
               <Fact
                 label={t.documents}
                 value={t.documentsValue(
@@ -83,6 +83,12 @@ export default async function TenantAdminPage() {
                   tenant.documents.total,
                 )}
                 muted={tenant.documents.total === 0}
+              />
+              <Fact label={t.tracks} value={String(tenant.tracks)} muted={tenant.tracks === 0} />
+              <Fact
+                label={t.people}
+                value={t.peopleValue(tenant.people.signedIn, tenant.people.total)}
+                muted={tenant.people.total === 0}
               />
               <Fact
                 label={t.acknowledgements}
