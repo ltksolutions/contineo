@@ -4,6 +4,18 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Značka Continea sa pri malej veľkosti už nepletie s lupou (2026-09-22)
+
+Značka v poli hľadania a v hlavičke vyzerala pri 16 px ako lupa —
+kružnica s ručkou pod uhlom. V poli, do ktorého sa píše otázka, to
+sľubovalo filter zoznamu namiesto otázky položenej dokumentom.
+
+Chvostík značky teraz visí zvisle dole, ako sa kreslí bublina reči,
+a kruh má hrubší ťah a väčšie oči. Je to tá istá značka, len čitateľná
+aj v malom. Prihlasovacia obrazovka ju dostala tiež — dovtedy mala
+vlastnú kópiu, ktorá by zostala stará.
+
+
 ### Tabuľka knižnice sa zmestí na obrazovku (2026-09-22)
 
 Stĺpce **Potvrdenia** a **Zmenené** boli na bežnom monitore odseknuté —
