@@ -46,6 +46,16 @@ export default async function TenantAdminPage() {
         <Link className="button" href="/admin/new">{t.newTenant}</Link>
       </p>
 
+      {/* V praxi sa nestane — `/admin` vidí ten, kto organizáciu už má —
+          ale prázdna obrazovka bez textu je horšia než veta, ktorá sa
+          nezobrazí (ADMIN, úloha 1.3). */}
+      {overview.length === 0 && (
+        <div className="empty">
+          <div className="empty-title">{t.emptyTitle}</div>
+          <div className="empty-text">{t.emptyText}</div>
+        </div>
+      )}
+
       <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "grid", gap: 14 }}>
         {overview.map(tenant => (
           <li key={tenant.companyCode} className="card" style={{ padding: "18px 20px" }}>
@@ -65,9 +75,21 @@ export default async function TenantAdminPage() {
               </span>
             </div>
 
-            <p className="quiet" style={{ fontSize: "var(--fs-small)", margin: "8px 0 0", overflowWrap: "anywhere" }}>
-              {tenant.hostnames.join(", ") || t.noDomain}
-            </p>
+            {/*
+              Bez domény sa do organizácie **nedá prihlásiť** (ADMIN, úloha
+              1.5) — to nie je poznámka medzi ostatnými, ale porucha. Inline
+              blok ako chyba vyhľadávania; `.notice` je modálne okno a na
+              stav v karte sa nehodí.
+            */}
+            {tenant.hostnames.length > 0 ? (
+              <p className="quiet" style={{ fontSize: "var(--fs-small)", margin: "8px 0 0", overflowWrap: "anywhere" }}>
+                {tenant.hostnames.join(", ")}
+              </p>
+            ) : (
+              <p className="ask-error" style={{ margin: "10px 0 0" }} role="alert">
+                {t.noDomainWarning}
+              </p>
+            )}
 
             {/*
               Poradie podľa dôležitosti (ADMIN, úloha 1.2): Contineo je systém

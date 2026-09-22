@@ -842,7 +842,11 @@ interface Dictionary {
       intro: string
       newTenant: string
       disabled: string
-      noDomain: string
+      /** Bez domény sa do organizácie nedá prihlásiť (ADMIN, úloha 1.5). */
+      noDomainWarning: string
+      /** Prázdny stav (ADMIN, úloha 1.3). */
+      emptyTitle: string
+      emptyText: string
       people: string
       peopleValue: (signedIn: number, total: number) => string
       tracks: string
@@ -2559,7 +2563,9 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       intro: "Prehľad organizácií na platforme. Čísla sa počítajú pri zobrazení, nikde sa neukladajú. Obsah organizácií — dokumenty a potvrdenia — táto rola nesprístupňuje.",
       newTenant: "Nová organizácia",
       disabled: "vypnutý",
-      noDomain: "žiadna doména — portál sa nikde neukáže",
+      noDomainWarning: "Do organizácie sa nedá prihlásiť — prihlásenie je viazané na domény. Doplňte aspoň jednu.",
+      emptyTitle: "Žiadne organizácie",
+      emptyText: "Prvú pridáte tlačidlom vyššie.",
       people: "Osoby",
       peopleValue: (signedIn, total) => `${signedIn} / ${total} prihlásených`,
       tracks: "Trasy",
@@ -4478,7 +4484,9 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       intro: "Přehled organizací na platformě. Čísla se počítají při zobrazení, nikde se neukládají. Obsah organizací — dokumenty a potvrzení — tato role nezpřístupňuje.",
       newTenant: "Nová organizace",
       disabled: "vypnutý",
-      noDomain: "žádná doména — portál se nikde neukáže",
+      noDomainWarning: "Do organizace se nedá přihlásit — přihlášení je vázané na domény. Doplňte aspoň jednu.",
+      emptyTitle: "Žádné organizace",
+      emptyText: "První přidáte tlačítkem výše.",
       people: "Osoby",
       peopleValue: (signedIn, total) => `${signedIn} / ${total} přihlášených`,
       tracks: "Trasy",
@@ -6389,7 +6397,9 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       intro: "An overview of the organisations on the platform. The numbers are computed when the page is opened and are stored nowhere. This role does not give access to the organisations' content — documents and acknowledgements.",
       newTenant: "New organisation",
       disabled: "disabled",
-      noDomain: "no domain — the portal will not appear anywhere",
+      noDomainWarning: "Nobody can sign in to this organisation — signing in is tied to domains. Add at least one.",
+      emptyTitle: "No organisations",
+      emptyText: "Add the first one with the button above.",
       people: "People",
       peopleValue: (signedIn, total) => `${signedIn} / ${total} signed in`,
       tracks: "Tracks",
