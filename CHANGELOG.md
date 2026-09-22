@@ -4,6 +4,16 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Web už nesľubuje prihlásenie heslom (2026-09-22)
+
+Česká a anglická verzia stránky o technológii uvádzali medzi spôsobmi
+prihlásenia aj **vlastnú databázu účtov mimo SSO**. Také prihlásenie
+v Continee nie je — prihlasuje sa odkazom v e-maile, cez Microsoft Entra ID
+alebo cez Google. Položka odišla.
+
+Napojenie na CRM je oproti tomu označené ako pripravované už vo všetkých
+troch jazykoch, nie len v slovenčine.
+
 ### Odkaz na contineo.app už ukáže náhľad (2026-09-22)
 
 Keď niekto poslal `https://contineo.app`, v chate ani na sociálnej sieti
