@@ -31,7 +31,16 @@ export default function Footer({ language }: { language?: UiLanguage }) {
         <p className="footer-block">
           <span className="quiet">{t.footer.runsOn}</span>
           <a className="footer-link" href="https://contineo.app" {...EXTERNAL}>
-            <ContineoMark size={16} />
+            {/*
+              20 px a `--muted` (`ZAKLAD.md`, odchýlka B). Do 22. 9. 2026 tu
+              bolo 16 px — v tej veľkosti sa značka nedá odlíšiť od lupy.
+              Tu nie je ikonou v poli, ale logom vedľa vlastného názvu, takže
+              zámena nehrozí; 28 px z hlavičky by bolo vedľa 13 px textu
+              priveľa. Tlmená farba drží dôraz na slove, nie na značke.
+            */}
+            <span className="footer-mark" aria-hidden="true">
+              <ContineoMark size={20} />
+            </span>
             Contineo
           </a>
         </p>

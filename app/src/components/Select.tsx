@@ -30,12 +30,20 @@ export default function Select({
   options: options,
   initial: initial,
   fieldLabel: fieldLabel,
+  form: form,
 }: {
   name: string
   options: SelectOption[]
   initial?: string
   /** Pre čítačky obrazovky, keď `<label>` obaľuje celý blok. */
   fieldLabel?: string
+  /**
+   * `id` formulára, do ktorého hodnota patrí — keď výber **nestojí vnútri
+   * neho**. Používa to zásuvka presunu v knižnici: leží vnútri formulára
+   * hromadných akcií, ale odosiela sa vlastným formulárom, a vnorený
+   * `<form>` by nebol platné HTML.
+   */
+  form?: string
 }) {
   const [value, setValue] = useState(initial ?? options[0]?.value ?? "")
   const [open, setOpen] = useState(false)
@@ -97,7 +105,7 @@ export default function Select({
 
   return (
     <div className="select" ref={wrap}>
-      <input type="hidden" name={name} value={value} />
+      <input type="hidden" name={name} value={value} form={form} />
 
       <button
         type="button"
@@ -140,7 +148,7 @@ export default function Select({
       {/* Bez JavaScriptu sa odošle toto. Pri zapnutom JS to prehliadač
           neparsuje ako prvky, takže sa hodnota nikdy neodošle dvakrát. */}
       <noscript>
-        <select className="field-input" name={name} defaultValue={initial}>
+        <select className="field-input" name={name} defaultValue={initial} form={form}>
           {options.map(v => <option key={v.value} value={v.value}>{v.label}</option>)}
         </select>
       </noscript>

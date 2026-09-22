@@ -15,7 +15,7 @@ import { personTagClass } from "@/lib/persons"
 import { brandingView } from "@/lib/tenants"
 import { tenantStyle } from "@/components/TenantHeader"
 import LiveFilter from "@/components/LiveFilter"
-import { ContineoMark } from "@/components/ContineoMark"
+import Icon from "@/components/Icon"
 import { formatDate, dictionary } from "@/lib/i18n"
 import Notice from "@/components/Notice"
 import { normalizeQuery, type RawQuery } from "@/lib/urlParams"
@@ -65,7 +65,9 @@ export default async function PeoplePage({
         {/* Značka Continea, nie lupa (ZAKLAD, odchýlka B) — pole kladie
             otázku obsahu, nefiltruje tabuľku. */}
         <span className="search-field">
-          <span className="search-field-mark" aria-hidden="true"><ContineoMark size={16} /></span>
+          {/* Lupa, nie značka (`ZAKLAD.md`, odchýlka B): hľadá sa reťazec
+              v zozname, nepýta sa model. */}
+          <span className="search-field-mark" aria-hidden="true"><Icon name="search" size={16} /></span>
           <input
             className="field-input"
             name="q"
