@@ -19,7 +19,7 @@
 
 import type { RawQuery } from "./urlParams"
 import {
-  readConditions, readMatch, conditionFields, normalizeGroups, splitAt, mergeUp,
+  readConditions, readMatch, conditionFields, normalizeGroups, splitAt, mergeUp, TODAY,
   type Condition, type MatchMode,
 } from "./libraryConditions"
 
@@ -148,15 +148,46 @@ export function list(value: string | string[] | undefined): string[] {
 }
 
 /**
- * Hodnoty, ktoré facet „Stav" pozná.
+ * Hodnoty, ktoré facet „Stav" pozná — **tri**, ako hovorí `MASTER.md`.
  *
- * `expired` je medzi nimi **prechodne**: `MASTER.md` ho medzi hodnoty facetu
- * neráta (expirované znenie *je* publikované), ale kým query builder nevie
- * pole „Platné do", je to jediný spôsob, ako expirované vypísať. Odchod
- * hodnoty je samostatný krok aj s prekladom starých odkazov —
- * `MASTER.md`, „Prechodný stav".
+ * `expired` medzi nimi nie je a nikdy tam nemal byť: expirované znenie *je*
+ * publikované, takže ako štvrtá hodnota rozbíja počty (jeden dokument
+ * v dvoch hodnotách) a filter „Platný" by tajne znamenal „platný a nie
+ * expirovaný". Zoznam expirovaných sa dostane podmienkou
+ * **„Platné do · pred · dnes"** — na to builder je (`MASTER.md`).
  */
-export const STATUS_VALUES = ["published", "draft", "in-review", "expired"] as const
+export const STATUS_VALUES = ["published", "draft", "in-review"] as const
+
+/**
+ * Hodnota, ktorú stav niesol do 23. 9. 2026.
+ *
+ * Adresy s ňou existujú — v záložkách, v e-mailoch, v odkazoch, ktoré si
+ * ľudia poslali. Zahodiť ju ako neznámu by znamenalo, že taký odkaz ticho
+ * ukáže **celú knižnicu** namiesto expirovaných. To je horšie než chyba:
+ * vyzerá to ako platná odpoveď. Preto sa prekladá, nie zahadzuje.
+ */
+export const LEGACY_EXPIRED = "expired"
+
+/**
+ * Preklad starého `?status=expired` na podmienku buildera.
+ *
+ * Že preklad ukazuje **to isté**, a nie skoro to isté, stráži test
+ * „«pred» znamená to isté čo expiredCondition" v `libraryConditions.test.ts`:
+ * porovnáva dotaz z buildera s pôvodnou podmienkou facetu. Bez neho by
+ * to bola domnienka.
+ *
+ * Podmienka sa pripája do **poslednej skupiny**, teda cez „a zároveň".
+ * Starý odkaz zužoval zoznam a po preklade musí zužovať tiež; `alebo` by
+ * z neho spravilo niečo úplne iné.
+ */
+export function withLegacyExpired(q: RawQuery, conditions: Condition[]): Condition[] {
+  const statusy = Array.isArray(q.status) ? q.status : q.status === undefined ? [] : [q.status]
+  if (!statusy.flatMap(v => v.split(",")).map(v => v.trim()).includes(LEGACY_EXPIRED)) {
+    return conditions
+  }
+  const posledna = conditions.reduce((max, c) => Math.max(max, c.group ?? 0), 0)
+  return [...conditions, { field: "effectiveTo" as const, op: "before" as const, value: TODAY, group: posledna }]
+}
 
 /**
  * Neznáma hodnota stavu sa **ticho zahodí**.
@@ -205,7 +236,7 @@ export function readFilters(q: RawQuery): ActiveFilters {
     sort: normalizeSort(q.sort),
     dir: normalizeDir(q.dir),
     page: normalizePage(q.page),
-    conditions: readConditions(q),
+    conditions: withLegacyExpired(q, readConditions(q)),
     match: readMatch(q),
     picked: list(q.pick),
   }

@@ -1565,7 +1565,6 @@ interface Dictionary {
       /** Tretia hodnota facetu Stav (ADR-006) — dokument s bežiacim kolom. */
       statusInReview: string
       /** Štvrtá hodnota filtra stavu — odvodená z platnosti znenia (D27). */
-      statusExpired: string
       filter: string
       clearFilters: string
       /** Stav spracovania súboru — kľúče sú hodnoty z databázy. */
@@ -3536,7 +3535,6 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       statusPublished: "publikované",
       statusDrafts: "koncepty",
       statusInReview: "na schválenie",
-      statusExpired: "expirované",
       filter: "Filtrovať",
       clearFilters: "zrušiť filtre",
       processing: {
@@ -5470,7 +5468,6 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       statusPublished: "publikované",
       statusDrafts: "koncepty",
       statusInReview: "ke schválení",
-      statusExpired: "expirované",
       filter: "Filtrovat",
       clearFilters: "zrušit filtry",
       processing: {
@@ -7398,7 +7395,6 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       statusPublished: "published",
       statusDrafts: "drafts",
       statusInReview: "to approve",
-      statusExpired: "expired",
       filter: "Filter",
       clearFilters: "clear filters",
       processing: {

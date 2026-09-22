@@ -269,6 +269,17 @@ function listOf(value: string | string[] | undefined): string[] {
  * To isté pravidlo, aké v JS počíta `effectiveVersion()`; tu vyjadrené
  * dotazom, lebo zoznam je stránkovaný a filtrovať sa musí v databáze.
  */
+/*
+ * ⚠️ **Dotazovú cestu už neobsluhuje.** Od 23. 9. 2026 expirované vypisuje
+ * query builder podmienkou „Platné do · pred · dnes"
+ * (`validityCondition()` v `libraryConditions.ts`).
+ *
+ * Funkcia zostáva ako **nezávislá referencia**: test
+ * „«pred» znamená to isté čo expiredCondition" porovnáva podmienku buildera
+ * proti nej. Hodnota toho testu stojí na tom, že sú to dva **nezávisle
+ * napísané** výrazy — keby jeden volal druhý alebo keby sa očakávanie
+ * prepísalo do testu naraz s kódom, test by už nedokazoval nič.
+ */
 export function expiredCondition(asOf: Date = new Date()): Record<string, unknown> {
   return {
     status: "published",
@@ -320,21 +331,20 @@ export function queryParts(
   const wantsDraft = statuses.includes("draft")
   const wantsInReview = statuses.includes("in-review")
   /*
-   * Expirované je podmnožina publikovaných, nie štvrtá hodnota stavu.
-   * Pravidlo je v `MASTER.md`, sekcia „Stavový model dokumentu".
+   * Expirované tu **už nie je**. Je to podmnožina publikovaných, nie štvrtá
+   * hodnota stavu (`MASTER.md`, „Stavový model dokumentu"), a ako hodnota
+   * facetu rozbíjala počty: dokument sa rátal dvakrát.
    *
-   * Dovtedy tu stálo „rozhodnutie Jána 2026-09-22". Také rozhodnutie
-   * nepadlo — pripísal si ho commit `181de3e`. Pri otázke, či má facet
-   * štvrtú hodnotu, platí `MASTER.md`, nie tento komentár.
+   * Starý odkaz `?status=expired` sa prekladá na podmienku buildera
+   * „Platné do · pred · dnes" už v `readFilters()` — sem sa teda nedostane
+   * a sem ani nepatrí.
    */
-  const wantsExpired = statuses.includes("expired")
 
-  if (!(wantsPublished && wantsDraft) || wantsExpired) {
+  if (!(wantsPublished && wantsDraft)) {
     const conds: Record<string, unknown>[] = []
     if (wantsPublished) conds.push({ status: "published" })
     if (wantsDraft) conds.push({ status: { $ne: "published" } })
     if (wantsInReview) conds.push({ documentId: { $in: inReviewIds } })
-    if (wantsExpired) conds.push(expiredCondition())
     if (conds.length > 0) {
       parts.push({ key: "status", cond: conds.length === 1 ? conds[0] : { $or: conds } })
     }
@@ -498,12 +508,6 @@ export async function libraryFacets(
             { $match: { $and: [without("status"), { documentId: { $in: inReviewIds } }] } },
             { $count: "n" },
           ],
-          // To isté pre expirované: vlastná vetva s tým istým filtrom bez
-          // `status`, aby číslo hovorilo, čo by človek dostal po prepnutí.
-          statusExpired: [
-            { $match: { $and: [without("status"), expiredCondition()] } },
-            { $count: "n" },
-          ],
           tag: [
             { $match: without("tag") },
             { $unwind: "$tags" },
@@ -540,9 +544,6 @@ export async function libraryFacets(
       // riadok filtra len zaberá miesto.
       ...(count(out?.statusInReview as { n: number }[] | undefined) > 0
         ? [{ value: "in-review", count: count(out?.statusInReview as { n: number }[] | undefined) }]
-        : []),
-      ...(count(out?.statusExpired as { n: number }[] | undefined) > 0
-        ? [{ value: "expired", count: count(out?.statusExpired as { n: number }[] | undefined) }]
         : []),
     ],
     tag: sortCounts(out?.tag ?? []),
