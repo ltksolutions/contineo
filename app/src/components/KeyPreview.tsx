@@ -40,7 +40,17 @@ export default function KeyPreview({
     manualSummary: string
     manualLabel: string
     manualNote: string
-    taken: (id: string) => string
+    /**
+     * **Šablóna s `{id}`, nie funkcia.**
+     *
+     * Tento komponent je `"use client"` a `labels` doň posiela serverový
+     * komponent `/library/new`. Funkcia cez tú hranicu neprejde — React ju
+     * odmietne a spadne **celá stránka**, nie len táto hláška. Tak to
+     * v produkcii aj skončilo (digest 2684807689, od 21. 9.). `tsc` to
+     * nechytí: typ je z pohľadu TypeScriptu v poriadku, chyba vzniká až za
+     * behu pri serializácii.
+     */
+    taken: string
     keysTaken: string
   }
 }) {
@@ -71,7 +81,7 @@ export default function KeyPreview({
         {mounted && id && (
           <span className={`key-preview${taken ? " key-preview--taken" : ""}`} aria-live="polite">
             {labels.preview} <span className="key-preview-value">{id}</span>
-            {taken && <><br />{labels.taken(id)}</>}
+            {taken && <><br />{labels.taken.replace("{id}", id)}</>}
           </span>
         )}
       </label>
