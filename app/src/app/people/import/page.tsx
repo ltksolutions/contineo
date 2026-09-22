@@ -41,6 +41,19 @@ export default async function ImportPage() {
         <strong>{ctx.tenant.companyCode}</strong>{t.introAfter}
       </p>
 
+      {/*
+        Prvá otázka pri importe je „čo sa stane s tým, kto už v systéme je" —
+        a odpoveď má stáť **pred** nahraním, nie až v náhľade (OSOBY.md,
+        úloha 5). Ten istý blok ako pred pridelením a pred pripomienkami:
+        hovorí, čo sa stane, keď klikneš. Text je opísané správanie
+        `upsertPersons()`, nie sľub.
+      */}
+      <div className="assign-impact">
+        <div className="assign-impact-count">{t.existingTitle}</div>
+        <div className="quiet" style={{ fontSize: "var(--fs-small)" }}>{t.existingNote}</div>
+        <div className="quiet" style={{ fontSize: "var(--fs-small)" }}>{t.existingWarning}</div>
+      </div>
+
       <PeopleImport language={language} />
     </div>
     </AppShell>

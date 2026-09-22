@@ -1221,6 +1221,10 @@ interface Dictionary {
       introHighlight: string
       introMiddle: string
       introAfter: string
+      /** Čo sa stane s riadkom, ktorý už v systéme je (OSOBY.md, úloha 5). */
+      existingTitle: string
+      existingNote: string
+      existingWarning: string
       file: string
       /** Veta okolo zoznamu hlavičiek CSV — tie sa neprekladajú. */
       fileNoteBefore: string
@@ -3203,6 +3207,9 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       introHighlight: "čo by sa stalo",
       introMiddle: ", a zapíše sa až potom. Nahratie stovky ľudí naslepo je presne tá operácia, po ktorej sa hľadá, ako to vrátiť späť — a vrátiť sa nedá. Všetci sa zapíšu do organizácie ",
       introAfter: ", aj keď je v súbore niečo iné.",
+      existingTitle: "Kto už v systéme je, sa nezaloží znova",
+      existingNote: "Spáruje sa podľa e-mailu a doplní sa: prepíšu sa stĺpce, ktoré súbor má. Stav ani jazyk sa nemenia — kto sa už prihlásil, zostáva prihlásený. Import nikoho nevyradí a nič nezmaže.",
+      existingWarning: "Trasy, skupiny a roly sa nastavia podľa súboru — keď stĺpec v ňom nie je, ostanú prázdne.",
       file: "Súbor CSV",
       fileNoteBefore: "Prvý riadok sú hlavičky. Rozpoznajú sa ",
       fileNoteAfter: " — aj bez diakritiky a s bodkočiarkou ako oddeľovačom, tak ako to ukladá Excel.",
@@ -5118,6 +5125,9 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       introHighlight: "co by se stalo",
       introMiddle: ", a zapíše se až potom. Nahrání stovky lidí naslepo je přesně ta operace, po které se hledá, jak to vrátit zpět — a vrátit se nedá. Všichni se zapíšou do organizace ",
       introAfter: ", i když je v souboru něco jiného.",
+      existingTitle: "Kdo už v systému je, se nezaloží znovu",
+      existingNote: "Spáruje se podle e-mailu a doplní se: přepíší se sloupce, které soubor má. Stav ani jazyk se nemění — kdo se už přihlásil, zůstává přihlášený. Import nikoho nevyřadí a nic nesmaže.",
+      existingWarning: "Trasy, skupiny a role se nastaví podle souboru — když v něm sloupec není, zůstanou prázdné.",
       file: "Soubor CSV",
       fileNoteBefore: "První řádek jsou hlavičky. Rozpoznají se ",
       fileNoteAfter: " — i bez diakritiky a se středníkem jako oddělovačem, tak jak to ukládá Excel.",
@@ -7025,6 +7035,9 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       introHighlight: "what would happen",
       introMiddle: ", and only then is anything written. Uploading a hundred people blind is exactly the operation after which people look for the undo button — and there is none. Everyone is recorded in organisation ",
       introAfter: ", even if the file says otherwise.",
+      existingTitle: "Anyone already in the system is not created again",
+      existingNote: "They are matched by e-mail and topped up: the columns the file has are overwritten. Status and language stay as they are — whoever has signed in stays signed in. The import excludes nobody and deletes nothing.",
+      existingWarning: "Tracks, groups and roles are set from the file — when a column is missing, they end up empty.",
       file: "CSV file",
       fileNoteBefore: "The first row is the header. These are recognised: ",
       fileNoteAfter: " — with or without diacritics, and with a semicolon as the separator, the way Excel saves it.",
