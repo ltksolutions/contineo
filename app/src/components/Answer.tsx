@@ -204,9 +204,17 @@ export default function Answer({
                   <span className="answer-source-index">{z.index}.</span>
                   <span className="answer-source-body">
                     <span className="answer-source-title">{z.title}</span>
-                    {(z.articleRef || z.heading) && (
+                    {(z.articleRef || z.heading || z.match) && (
                       <span className="quiet answer-source-meta">
-                        {[z.articleRef, z.heading].filter(Boolean).join(" · ")}
+                        {/*
+                          Zhoda v slovách, nie číslo: surové skóre nie je medzi
+                          režimami hľadania porovnateľné a „0,94" by predstieralo
+                          presnosť, ktorú nemá. Stupeň je relatívny voči
+                          najlepšiemu zdroju tejto odpovede (`matchLevel()`).
+                        */}
+                        {[z.articleRef, z.heading, z.match && t.match[z.match]]
+                          .filter(Boolean)
+                          .join(" · ")}
                       </span>
                     )}
                     {/*

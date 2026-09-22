@@ -57,7 +57,35 @@ ${supportsCitations
 
 // ── Zostavenie citácií ───────────────────────────────────────────────────────
 
+/**
+ * Zhoda zdroja v troch stupňoch — **relatívne k najlepšiemu v tej istej
+ * odpovedi**, nie absolútne.
+ *
+ * Surové `score` sa ukázať nedá: pri `$rankFusion` a `$rerank` nie je
+ * v rozsahu 0–1 a medzi režimami hľadania (fulltext / vektor / hybrid) nie je
+ * porovnateľné — číslo „0,94" by predstieralo presnosť, ktorú nemá. Porovnať
+ * sa dajú zdroje **medzi sebou v jednej odpovedi**, a to je práve otázka,
+ * ktorú si človek kladie: ktorý z nich sedí najlepšie.
+ *
+ * Bez skóre (staršie odpovede, on-prem bez reranku) nie je stupeň žiadny —
+ * radšej nič než vymyslená hodnota.
+ */
+export type MatchLevel = "high" | "medium" | "low"
+
+export function matchLevel(score: number | undefined, best: number | undefined): MatchLevel | undefined {
+  if (typeof score !== "number" || typeof best !== "number" || !(best > 0)) return undefined
+  const share = score / best
+  if (share >= 0.8) return "high"
+  if (share >= 0.5) return "medium"
+  return "low"
+}
+
 export function buildSources(chunks: ChunkResult[]) {
+  // Meradlom je najlepší zdroj tejto odpovede, nie pevná hranica.
+  const best = chunks.reduce<number | undefined>(
+    (max, c) => (typeof c.score === "number" && (max === undefined || c.score > max) ? c.score : max),
+    undefined,
+  )
   return chunks.map((c, i) => ({
     index:       i + 1,
     /**
@@ -76,6 +104,7 @@ export function buildSources(chunks: ChunkResult[]) {
     heading:     c.heading,
     // Prenesené na klienta, aby sa dal overiť únik interného obsahu (eval D9).
     accessLevel: c.accessLevel,
+    match:       matchLevel(c.score, best),
   }))
 }
 

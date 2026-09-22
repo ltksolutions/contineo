@@ -33,6 +33,12 @@ export interface AnswerSource {
   articleRef?: string
   heading?: string
   accessLevel?: string
+  /**
+   * Zhoda v troch stupňoch, **relatívne k najlepšiemu zdroju tej istej
+   * odpovede** (`matchLevel()`). Chýba, keď hľadanie skóre nevrátilo —
+   * vtedy sa nekreslí nič.
+   */
+  match?: "high" | "medium" | "low"
 }
 
 export interface Citation {
