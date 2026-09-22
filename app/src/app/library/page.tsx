@@ -657,7 +657,20 @@ export default async function LibraryPage({
           </div>
           <label className="field builder-value">
             <span className="field-label">{tb.value}</span>
-            <input className="field-input" name="value" required />
+            {/*
+              `<datalist>` ponúkne „dnes" pri dátumových poliach a je to
+              nápoveda, nie obmedzenie — do poľa sa ďalej dá napísať dátum.
+              Prehliadač bez podpory ju ignoruje a pole zostane obyčajné,
+              takže to funguje aj bez skriptu.
+
+              Napísané slovo sa uloží ako **token**, nie ako dnešný dátum
+              (`normalizeDateValue`): odkaz poslaný dnes má o týždeň stále
+              znamenať „dnes", nie ten dávny deň.
+            */}
+            <input className="field-input" name="value" list="builder-hodnoty" required />
+            <datalist id="builder-hodnoty">
+              <option value={tb.today} />
+            </datalist>
           </label>
           {carried.map(([k, v], i) => <input key={`${k}-${i}`} type="hidden" name={k} value={v} />)}
           {/* Dve tlačidlá jedného formulára, nie prepínač vedľa neho: spojka

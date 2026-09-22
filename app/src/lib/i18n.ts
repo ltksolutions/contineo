@@ -1519,6 +1519,8 @@ interface Dictionary {
         field: string
         op: string
         value: string
+        /** Ponuka pri dátumovom poli — napísané slovo sa uloží ako token. */
+        today: string
         add: string
         remove: (description: string) => string
         matchAll: string
@@ -3471,6 +3473,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
         field: "Pole",
         op: "Operátor",
         value: "Hodnota",
+        /** Ponuka pri dátumovom poli — napísané slovo sa uloží ako token. */
+        today: "dnes",
         add: "Pridať podmienku",
         remove: (description) => `Odobrať podmienku ${description}`,
         matchAll: "spĺňa všetky",
@@ -3490,6 +3494,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
           tag: "Značka",
           accessLevel: "Prístup",
           updatedAt: "Zmenené",
+          effectiveTo: "Platné do",
         },
         ops: {
           is: "je",
@@ -5395,6 +5400,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
         field: "Pole",
         op: "Operátor",
         value: "Hodnota",
+        today: "dnes",
         add: "Přidat podmínku",
         remove: (description) => `Odebrat podmínku ${description}`,
         matchAll: "splňuje všechny",
@@ -5414,6 +5420,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
           tag: "Značka",
           accessLevel: "Přístup",
           updatedAt: "Změněno",
+          effectiveTo: "Platné do",
         },
         ops: {
           is: "je",
@@ -7313,6 +7320,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
         field: "Field",
         op: "Operator",
         value: "Value",
+        today: "today",
         add: "Add condition",
         remove: (description) => `Remove condition ${description}`,
         matchAll: "match all",
@@ -7332,6 +7340,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
           tag: "Tag",
           accessLevel: "Access",
           updatedAt: "Changed",
+          effectiveTo: "Valid to",
         },
         ops: {
           is: "is",
