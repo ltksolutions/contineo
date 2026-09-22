@@ -158,6 +158,19 @@ export default async function LibraryPage({
   )
   const tb = t.builder
   const tl = t.bulk
+
+  /*
+   * Zoznam priečinkov pre presun — **jeden na dve miesta**. Od 640 px stojí
+   * výber v páse, pod ním v zásuvke; dve kópie toho istého poľa by sa raz
+   * rozišli v odsadení úrovní.
+   */
+  const folderOptions = [
+    { value: "", label: tf.unfiled },
+    ...tree.map(r => ({
+      value: r.folder.id,
+      label: `${"— ".repeat(r.level - 1)}${r.folder.name}`,
+    })),
+  ]
   const conditions = filters.conditions
   /*
    * Podmienky s doplnenými skupinami. Robí sa to raz tu, nie v každom
@@ -701,6 +714,22 @@ export default async function LibraryPage({
           tichý výber, ktorý sa vlečie naprieč filtrami, je pri hromadnom
           presune drahé prekvapenie.
         */
+        <>
+        {/*
+          Formulár zásuvky presunu. Stojí **vedľa** formulára hromadných
+          akcií, nie v ňom — polia v zásuvke sa naň viažu atribútom `form`.
+          Nesie tie isté skryté polia, lebo je to samostatné odoslanie:
+          `moveManyAction` číta `document` z formulára, ktorý ho spustil.
+        */}
+        {filters.picked.length > 0 && (
+          <form id="bulk-move" action={moveManyAction} className="bulk-move-form">
+            {filters.picked.map(id => (
+              <input key={id} type="hidden" name="document" value={id} />
+            ))}
+            <input type="hidden" name="back" value={toQuery(clearPicked(filters))} />
+          </form>
+        )}
+
         <form className="bulk-form">
           {/*
             Výber ide do akcie skrytými poľami, nie políčkami v riadkoch:
@@ -725,7 +754,18 @@ export default async function LibraryPage({
           */}
           {filters.picked.length > 0 && (
           <div className="bulk-bar">
-            <span className="bulk-title">{tl.picked(filters.picked.length)}</span>
+            {/*
+              Pod 640 px ukazuje pás **len číslo** (KNIZNICA.md, úloha 4) —
+              „Označené: 2" + dve tlačidlá + × sa do 366 px nezmestí a pás
+              by sa zalomil na dva riadky, teda na 120 px, a prekryl poslednú
+              kartu. Celá veta ale nesmie zmiznúť pre čítačku, preto sú tu
+              oba tvary a CSS medzi nimi prepína. `aria-label` na obyčajnom
+              `<span>` by nestačil: prvok bez role ho nedostane prečítaný.
+            */}
+            <span className="bulk-title">
+              <span className="bulk-title-long">{tl.picked(filters.picked.length)}</span>
+              <span className="bulk-title-short" aria-hidden="true">{filters.picked.length}</span>
+            </span>
             {pickedOutside > 0 && (
               <span className="bulk-picked-outside">{tl.pickedOutside(pickedOutside)}</span>
             )}
@@ -735,24 +775,57 @@ export default async function LibraryPage({
               <span className="bulk-picked-outside">{tl.pickedMax(MAX_PICKED)}</span>
             )}
 
+            {/*
+              Výber priečinka priamo v páse — **len od 640 px**. Pod ním naň
+              nie je miesto: `.bulk-folder` má 240 px a s dvoma tlačidlami
+              a × by pás pretiekol. Tam presun prevezme zásuvka nižšie.
+            */}
             <div className="field bulk-folder">
               <span className="field-label">{tl.moveTo}</span>
               <Select
                 name="folderId"
                 fieldLabel={tl.moveTo}
-                options={[
-                  { value: "", label: tf.unfiled },
-                  ...tree.map(r => ({
-                    value: r.folder.id,
-                    label: `${"— ".repeat(r.level - 1)}${r.folder.name}`,
-                  })),
-                ]}
+                options={folderOptions}
               />
             </div>
 
-            <button className="button button--quiet" type="submit" formAction={moveManyAction}>
+            <button className="button button--quiet bulk-move-wide" type="submit" formAction={moveManyAction}>
               {tl.move}
             </button>
+
+            {/*
+              Presun na telefóne — zásuvka, nie výber v páse (KNIZNICA.md,
+              úloha 4). Je to tá istá `filter-sheet` ako pri filtroch, teda
+              `<details>` a **žiadny JavaScript**.
+
+              Cieľ presunu sa vyberá až v nej a presun sa stane až odoslaním
+              jej formulára; klik v páse nepresunie nič. Bez toho by „Presunúť"
+              muselo buď tiché brať prázdny priečinok (teda „nezaradené"),
+              alebo by výber musel zostať v páse — a ten by sa zalomil.
+
+              Polia patria formuláru `bulk-move` cez atribút `form`, hoci
+              stoja vnútri formulára hromadných akcií: vnorený `<form>` nie je
+              platné HTML, `form="…"` áno a je to presne na tento prípad.
+            */}
+            <details className="filter-sheet bulk-move">
+              <summary className="button button--quiet filter-sheet-toggle">
+                {tl.move}
+              </summary>
+              <div className="filter-sheet-body bulk-move-body">
+                <div className="field">
+                  <span className="field-label">{tl.moveTo}</span>
+                  <Select
+                    name="folderId"
+                    fieldLabel={tl.moveTo}
+                    options={folderOptions}
+                    form="bulk-move"
+                  />
+                </div>
+                <button className="button filter-sheet-apply" type="submit" form="bulk-move">
+                  {tl.moveConfirm(filters.picked.length)}
+                </button>
+              </div>
+            </details>
             <button className="button button--quiet" type="submit" formAction={assignManyAction}>
               {tl.assign}
             </button>
@@ -1026,6 +1099,7 @@ export default async function LibraryPage({
             )}
           </div>
         </form>
+        </>
       )}
         </div>
       </div>

@@ -2619,6 +2619,13 @@ html[data-theme="dark"] .editor-tui .CodeMirror {
   font-weight: 650;
 }
 
+/* Číslo namiesto vety žije až na telefóne (KNIZNICA.md, úloha 4). */
+.bulk-title-short { display: none; }
+
+/* Zásuvka presunu je len pod 640 px — nad ňou stojí výber priamo v páse. */
+.bulk-move { display: none; }
+.bulk-move-form { display: contents; }
+
 .bulk-picked-outside { align-self: center; font-size: 13px; opacity: 0.85; }
 
 .bulk-bar .field { margin: 0; }
@@ -2648,22 +2655,76 @@ html[data-theme="dark"] .editor-tui .CodeMirror {
    v adrese, takže pás — a s ním aj skrytie lišty — zmizne presne so
    zrušením výberu. Kto vyberá dokumenty, je uprostred úlohy. */
 @media (max-width: 639px) {
+  /*
+   * Pás sa **nesmie zalomiť** (KNIZNICA.md, úloha 4, rám 6).
+   *
+   * Dovtedy tu bolo `flex-wrap: wrap` zdedené zo širokej obrazovky. „Označené
+   * 2" + „Presunúť" + „Vyžiadať potvrdenie" + „×" sa do 366 px nezmestí, × išlo
+   * na druhý riadok a pás mal 120 px — teda prekryl poslednú kartu, hoci
+   * `padding-bottom` zoznamu „sedel". Preto `nowrap`, číslo namiesto vety
+   * a výber priečinka preč do zásuvky.
+   *
+   * Výška: 10 + 40 + 14 = 64 px, ako rám 6. Bezpečná zóna sa do spodných
+   * 14 px **zmestí** cez `max()` — pripočítať ju by strop prekročilo.
+   */
   .bulk-bar {
     position: fixed;
     inset: auto 0 0 0;
     z-index: 40;
     margin: 0;
     border-radius: 0;
-    /* Vpravo miesto pre × v rohu. */
-    padding: 10px 48px calc(10px + env(safe-area-inset-bottom)) 12px;
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: 6px;
+    padding: 10px 12px max(14px, env(safe-area-inset-bottom));
   }
 
-  /* × v rohu pásu, nie na vlastnom riadku — ako v ráme Telefón 390. */
-  .bulk-clear { position: absolute; top: 8px; right: 6px; margin: 0; }
+  .bulk-title-long { display: none; }
+  .bulk-title-short { display: inline; }
+  .bulk-title { white-space: nowrap; }
 
-  .bulk-bar .button { min-height: 40px; }
+  /* Medzera odtlačí akcie doprava — v ráme 6 je medzi počtom a tlačidlami. */
+  .bulk-title { margin-right: auto; }
 
-  .bulk-clear { text-decoration: none; }
+  /* Výber v páse a jeho tlačidlo tu nie sú; presun vedie cez zásuvku. */
+  .bulk-folder,
+  .bulk-move-wide,
+  .bulk-picked-outside { display: none; }
+
+  .bulk-move { display: block; flex: 0 0 auto; }
+
+  /*
+   * Zásuvka musí byť **nad** pásom.
+   *
+   * `.filter-sheet-body` má `z-index: 30`, pás `40`, a obe sú ukotvené na
+   * spodku. Pri rovnakej špecifickosti by neskoršie pravidlo v súbore
+   * vyhralo a pás by prekryl spodných 64 px zásuvky — teda práve tlačidlo
+   * „Presunúť 2 dokumenty do …". Zmerané: zásuvka siahala po 780 px,
+   * pás začínal na 716 px. Preto dvojtriedny selektor, nie `!important`.
+   */
+  .bulk-move .filter-sheet-body { z-index: 41; }
+
+  /*
+   * 13 px ako v ráme 6 — a nie je to kozmetika. Pri predvolenej veľkosti
+   * má „Vyžiadať potvrdenie" 206 px a pás pretečie o 2 px: `nowrap` ho
+   * nezalomí, takže namiesto druhého riadku vznikne vodorovný posun.
+   * Zmerané na 390 px.
+   */
+  .bulk-bar .button {
+    min-height: 40px;
+    padding: 0 11px;
+    font-size: 13px;
+    white-space: nowrap;
+  }
+
+  /* × je štvorec 40 × 40 v riadku, nie odkaz v rohu — rám 6. */
+  .bulk-clear {
+    position: static;
+    margin: 0;
+    flex: 0 0 40px;
+    text-decoration: none;
+  }
+
   .bulk-clear-label { display: none; }
 
   .bulk-clear-x {
@@ -2671,7 +2732,7 @@ html[data-theme="dark"] .editor-tui .CodeMirror {
     align-items: center;
     justify-content: center;
     width: 40px;
-    min-height: 40px;
+    height: 40px;
     font-size: 20px;
     line-height: 1;
   }

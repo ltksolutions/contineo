@@ -1509,6 +1509,9 @@ interface Dictionary {
         clearPicked: string
         moveTo: string
         move: string
+        /** Potvrdenie presunu v zásuvke na telefóne — nesie počet, lebo pás
+            pod 640 px ukazuje už len číslo. */
+        moveConfirm: (count: number) => string
         assign: string
       }
       /** Query builder: podmienky, ktoré si človek zostaví sám. */
@@ -3454,6 +3457,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
         pickedOutside: (count) => `z toho ${count} mimo tohto zoznamu`,
         pickedMax: (max) => `Viac než ${max} naraz označiť nejde — výber sa nesie v adrese. Spracujte túto dávku a označte ďalšiu.`,
         clearPicked: "zrušiť výber",
+        moveConfirm: count =>
+          `Presunúť ${count} ${count === 1 ? "dokument" : count < 5 ? "dokumenty" : "dokumentov"} do …`,
         moveTo: "Presunúť do",
         move: "Presunúť",
         assign: "Vyžiadať potvrdenie",
@@ -5378,6 +5383,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
         pickedOutside: (count) => `z toho ${count} mimo tento seznam`,
         pickedMax: (max) => `Více než ${max} naráz označit nelze — výběr se nese v adrese. Zpracujte tuto dávku a označte další.`,
         clearPicked: "zrušit výběr",
+        moveConfirm: count =>
+          `Přesunout ${count} ${count === 1 ? "dokument" : count < 5 ? "dokumenty" : "dokumentů"} do …`,
         moveTo: "Přesunout do",
         move: "Přesunout",
         assign: "Vyžádat potvrzení",
@@ -7296,6 +7303,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
         pickedOutside: (count) => `${count} outside this list`,
         pickedMax: (max) => `You cannot select more than ${max} at once — the selection travels in the address. Handle this batch, then pick the next.`,
         clearPicked: "clear selection",
+        moveConfirm: count => `Move ${count} ${count === 1 ? "document" : "documents"} to …`,
         moveTo: "Move to",
         move: "Move",
         assign: "Request acknowledgement",
