@@ -20,8 +20,8 @@
  * potvrdili niečo, čo dnes už neplatí.
  *
  * Toto je **jeden dokument, nie riadok v zozname** — jeden dotaz navyše na
- * stránku. To isté číslo v stĺpci zoznamu je samostatná úloha (`docs/TODO.md`),
- * lebo tam by to bol dotaz na každý riadok.
+ * stránku. To isté číslo pre celý zoznam počíta `documentsProgress()` nižšie,
+ * a počíta ho pevným počtom dotazov — preto stĺpec v knižnici existuje.
  */
 
 import { getCollection } from "./mongodb"

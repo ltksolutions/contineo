@@ -4,6 +4,61 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Import osôb už nemaže roly, skupiny ani trasy (2026-09-22)
+
+**Každý import zmazal roly každému, koho sa dotkol.** `upsertPersons()`
+zapisovalo `tracks`, `groups` a `roles` vždy — aj keď o nich súbor nehovoril.
+Súbor bez stĺpca skupín ich teda existujúcim ľuďom vyprázdnil, a keďže roly
+CSV nerozpoznáva vôbec, prišiel o ne pri každom behu každý, kto bol v súbore.
+
+- **Zapisuje sa len to, čo v riadku naozaj je.** Chýbajúce pole znamená
+  „o tomto nič nehovorím", prázdne znamená „vyprázdni" — dva rôzne pokyny,
+  ktoré dovtedy splývali.
+- **Prázdny stĺpec teraz naozaj vyprázdni.** Dovtedy sa to nedalo vôbec:
+  prázdna bunka padala do `undefined` rovnako ako chýbajúci stĺpec. Rozdiel
+  vie rozlíšiť jedine čítanie CSV, kde vidno hlavičky (`hasField()`).
+- **História členstva sa hýbe spolu so skupinami**, nie samostatne — keď
+  riadok o skupinách mlčí, členstvo sa nemení, takže nie je čo zapisovať.
+- Obrazovka importu to hovorí **pred** nahraním, nie až v náhľade.
+
+### Zhoda zdroja v troch stupňoch (2026-09-22)
+
+Pri odpovedi sa už nekreslí surové skóre, ale „vysoká / stredná / slabá
+zhoda" — **relatívne k najlepšiemu zdroju tej istej odpovede**. Číslo ako
+„0,94" by predstieralo presnosť, ktorú nemá: pri hybridnom hľadaní nie je
+v rozsahu 0–1 a medzi režimami nie je porovnateľné. Bez skóre sa nekreslí nič.
+
+### Expirované znenia sa dajú vyfiltrovať (2026-09-22)
+
+Filter stavu v knižnici má štvrtú hodnotu **Expirované**: publikovaný
+dokument, ktorý dnes nemá platné znenie, hoci aspoň jedno už mal. Stav
+dokumentu sa tým nemení (D27) — je to podmnožina publikovaných, odvodená
+z platnosti znenia, nie uložený príznak.
+
+### Zaradenie sa zlúčilo do Druhu (2026-09-22, ADR-010 / O21)
+
+Dokument mal dve podobné políčka: **Zaradenie** (kam patrí) a **Druh** (čo to
+je). Odkedy identitu nesie kľúč dokumentu (D80), bolo Zaradenie druhou
+škatuľkou na to isté. Odchádza — do Druhu pribudli zápisnica, zmluva
+a tlačivo, aby mali kam prejsť dokumenty, ktoré normy nie sú. Zaradenie sa
+už nikam nezapisuje; z existujúcich dát ho odstráni migračný skript, ktorý
+najprv beží nasucho.
+
+### Výber v knižnici má strop (2026-09-22)
+
+Naraz sa dá označiť najviac 200 dokumentov. Výber sa nesie v adrese, aby
+prežil prechod na ďalšiu stranu a fungoval bez JavaScriptu; nad stropom by sa
+adresa niekde po ceste orezala a výber by zmizol bez vysvetlenia. Pás akcií
+to povie nahlas.
+
+### Správa platformy: kód organizácie navrhne Contineo (2026-09-22, ADR-010)
+
+Pri zakladaní organizácie sa kód navrhne z názvu (iniciály bez diakritiky,
+obsadený dostane variant) a admin ho môže prepísať — organizácie svoju
+skratku spravidla majú. Kód je súčasťou identifikátora každého dokumentu
+a po založení sa nemení, tak to hovorí aj nápoveda. Keď je zvolený kód
+obsadený, hláška zo servera rovno ponúkne voľný.
+
 ### Pozvánka sa naozaj odosiela — a dá sa poslať znovu (2026-09-21)
 
 **Formulár „Pozvať osobu" e-mail neposielal vôbec.** Osobu zapísal, nastavil
