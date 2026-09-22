@@ -41,6 +41,28 @@ export type PersonType = "employee" | "external" | "referee" | "official"
 /** `invited` = pozvaná, ešte sa neprihlásila. `inactive` = už sem nepatrí. */
 export type PersonStatus = "invited" | "active" | "inactive"
 
+/**
+ * Trieda pilulky pre stav osoby (OSOBY.md, úloha 1) — varianty zo ZAKLADU,
+ * nie inline farba. Volá ju `/people` aj `/people/[id]`, aby ten istý stav
+ * nevyzeral na dvoch obrazovkách inak.
+ *
+ * **Je to stav osoby, nie stav povinnosti.** Zoznam pridelených noriem na
+ * karte kreslí `dutyTagClass()` — dve rôzne škály, ktoré sa nezlučujú.
+ *
+ * Role (`hr`, `admin`, `curator`) zostávajú neutrálne `.tag`: je ich na
+ * osobe viac a farebné by stav prebili.
+ */
+export function personTagClass(person: { status?: PersonStatus | string }): string {
+  switch (person.status) {
+    case "active": return "tag tag--published"
+    case "invited": return "tag tag--review"
+    case "inactive": return "tag tag--archived"
+    // Neznámy stav zo staršieho záznamu radšej neutrálne než farbou, ktorá
+    // by tvrdila niečo, čo nevieme.
+    default: return "tag"
+  }
+}
+
 export interface Person {
   _id?: ObjectId
 

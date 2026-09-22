@@ -11,6 +11,7 @@ import Link from "next/link"
 import { peopleContext, listPeople } from "@/lib/people"
 import { availableOptions } from "@/lib/codelistsTenant"
 import { displayName, workplaceLabel } from "@/lib/personFields"
+import { personTagClass } from "@/lib/persons"
 import { brandingView } from "@/lib/tenants"
 import { tenantStyle } from "@/components/TenantHeader"
 import LiveFilter from "@/components/LiveFilter"
@@ -94,14 +95,8 @@ export default async function PeoplePage({
                 >
                   {displayName(o)}
                 </Link>
-                <span
-                  className="tag"
-                  style={o.status === "inactive"
-                    ? { background: "var(--warn-bg)", color: "var(--warn-fg)" }
-                    : undefined}
-                >
-                  {t.status[o.status] ?? o.status}
-                </span>
+                {/* Stav farbou, role neutrálne (OSOBY.md, úloha 1). */}
+                <span className={personTagClass(o)}>{t.status[o.status] ?? o.status}</span>
                 {o.roles.map(r => (
                   <span key={r} className="tag">{r}</span>
                 ))}
