@@ -13,6 +13,7 @@ import {
   togglePick, pickPage, clearPicked, pickedOutsideCount, carryFields, MAX_PICKED, EMPTY,
   STATUS_VALUES,
 } from "../src/lib/libraryFilters"
+import { TODAY } from "../src/lib/libraryConditions"
 import { queryParts, buildQuery, expiredCondition } from "../src/lib/libraryRead"
 
 describe("čítanie z adresy", () => {
@@ -385,19 +386,26 @@ describe("expirovane je odvodene, nie ulozeny stav (D27)", () => {
     expect(JSON.stringify(c.versions)).toContain("$elemMatch")
   })
 
-  it("filter prijme expirovane ako stvrtu hodnotu stavu", () => {
+  /*
+   * Tieto dva testy do 23. 9. 2026 tvrdili opak: ze filter stavu prijme
+   * `expired` ako stvrtu hodnotu a ze sa da kombinovat s ostatnymi cez
+   * `$or`. Oboje odislo — `MASTER.md` hovori, ze facet ma tri hodnoty,
+   * lebo expirovane znenie *je* publikovane a dokument by sa ratal dvakrat.
+   *
+   * Zoznam expirovanych teraz robi query builder a stary odkaz sa naň
+   * prekladá (`withLegacyExpired`). Testy su preto obratene: hodnota sa
+   * do dotazu dostat **nesmie**.
+   */
+  it("hodnota expired sa do filtra stavu uz nedostane", () => {
     const parts = queryParts({ status: ["expired"] })
-    const status = parts.find(p => p.key === "status")
-    expect(status).toBeDefined()
-    expect(JSON.stringify(status!.cond)).toContain("versions")
+    expect(parts.find(p => p.key === "status")).toBeUndefined()
   })
 
-  it("expirovane sa da kombinovat s konceptom aj publikovanym cez $or", () => {
+  it("publikovane plus koncept je vsetko, aj ked v adrese zostal expired", () => {
+    // Zaskrtnute oboje znamena „vsetko" a filter vtedy nevznika. Expirovane
+    // uz na tom nic nemeni — nie je to hodnota stavu.
     const parts = queryParts({ status: ["published", "draft", "expired"] })
-    const status = parts.find(p => p.key === "status")
-    // Publikovane + koncept je „vsetko", ale expirovane zuzuje — podmienka
-    // teda vzniknut musi, inak by zaskrtnutie expirovaneho nic nespravilo.
-    expect(status).toBeDefined()
+    expect(parts.find(p => p.key === "status")).toBeUndefined()
   })
 })
 
@@ -460,5 +468,55 @@ describe("neznámy stav v adrese", () => {
     for (const v of STATUS_VALUES) {
       expect(readFilters({ status: v }).status).toEqual([v])
     }
+  })
+})
+
+/**
+ * Starý odkaz `?status=expired`.
+ *
+ * Do 23. 9. 2026 bola expirácia štvrtou hodnotou facetu Stav. Adresy s ňou
+ * existujú — v záložkách, v e-mailoch, v odkazoch, ktoré si ľudia poslali.
+ * Zahodiť ju ako neznámu hodnotu by znamenalo, že taký odkaz ticho ukáže
+ * **celú knižnicu**; to je horšie než chyba, lebo to vyzerá ako odpoveď.
+ *
+ * Že preklad ukazuje to isté, a nie skoro to isté, stráži test
+ * „«pred» znamená to isté čo expiredCondition" v `libraryConditions.test.ts`.
+ */
+describe("starý odkaz na expirované", () => {
+  it("sa preloží na podmienku Platné do pred dnes", () => {
+    const f = readFilters({ status: "expired" })
+    expect(f.status).toEqual([])
+    expect(f.conditions).toEqual([
+      { field: "effectiveTo", op: "before", value: TODAY, group: 0 },
+    ])
+  })
+
+  it("zužuje spolu s ostatnými podmienkami, nie vedľa nich", () => {
+    // Starý odkaz zužoval zoznam; po preklade musí zužovať tiež. „Alebo"
+    // by z neho spravilo niečo úplne iné.
+    const f = readFilters({ status: "expired", cond: "g0~title~contains~poriadok" })
+    expect(f.conditions.map(c => c.group)).toEqual([0, 0])
+  })
+
+  it("nechá ostatné hodnoty stavu na pokoji", () => {
+    const f = readFilters({ status: ["published", "expired"] })
+    expect(f.status).toEqual(["published"])
+    expect(f.conditions).toHaveLength(1)
+  })
+
+  it("bez neho nepridá nič", () => {
+    expect(readFilters({ status: "published" }).conditions).toEqual([])
+  })
+
+  it("nová adresa už hodnotu nenesie", () => {
+    // `toQuery` skladá adresu z filtrov, takže ďalší klik nesie podmienku,
+    // nie starú hodnotu — odkaz sa sám vylieči.
+    const adresa = toQuery(readFilters({ status: "expired" }))
+    expect(adresa).not.toContain("status=expired")
+    expect(adresa).toContain("effectiveTo")
+  })
+
+  it("facet Stav má tri hodnoty, ako hovorí MASTER.md", () => {
+    expect(STATUS_VALUES).toEqual(["published", "draft", "in-review"])
   })
 })

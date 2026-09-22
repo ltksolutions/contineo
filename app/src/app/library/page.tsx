@@ -224,17 +224,6 @@ export default async function LibraryPage({
   const statusLabel = (value: string) =>
     value === "published" ? t.statusPublished
     : value === "in-review" ? t.statusInReview
-    /*
-     * Expirované je **podmnožina publikovaných**, nie štvrtý stav dokumentu
-     * (`MASTER.md`, „Stavový model dokumentu"; D27 — stav sa odvodzuje,
-     * neukladá).
-     *
-     * Dovtedy tu stálo, že vo filtri je to „vlastná voľba (rozhodnutie Jána
-     * 2026-09-22)". Také rozhodnutie nepadlo — komentár aj commit
-     * `181de3e` si ho pripísali. Či má facet štvrtú hodnotu, hovorí
-     * `MASTER.md`, sekcia „Stavový model dokumentu", a tá je proti.
-     */
-    : value === "expired" ? t.statusExpired
     : t.statusDrafts
 
   /*
