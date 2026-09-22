@@ -147,6 +147,30 @@ export function list(value: string | string[] | undefined): string[] {
   return [...new Set(raw.flatMap(v => v.split(",")).map(v => v.trim()).filter(Boolean))]
 }
 
+/**
+ * Hodnoty, ktoré facet „Stav" pozná.
+ *
+ * `expired` je medzi nimi **prechodne**: `MASTER.md` ho medzi hodnoty facetu
+ * neráta (expirované znenie *je* publikované), ale kým query builder nevie
+ * pole „Platné do", je to jediný spôsob, ako expirované vypísať. Odchod
+ * hodnoty je samostatný krok aj s prekladom starých odkazov —
+ * `MASTER.md`, „Prechodný stav".
+ */
+export const STATUS_VALUES = ["published", "draft", "in-review", "expired"] as const
+
+/**
+ * Neznáma hodnota stavu sa **ticho zahodí**.
+ *
+ * Adresa je vstup od kohokoľvek — uložená záložka, odkaz v e-maile, preklep.
+ * Doteraz sa neznáma hodnota niesla ďalej: nefiltrovala nič, ale vykreslila
+ * sa ako pilulka aktívneho filtra, ktorú sa človek snažil pochopiť. Rovnaký
+ * prístup ako pri triedení a stránkovaní nižšie — zahodiť, nie spadnúť
+ * a nie ukazovať.
+ */
+export function normalizeStatuses(value: string | string[] | undefined): string[] {
+  return list(value).filter(v => (STATUS_VALUES as readonly string[]).includes(v))
+}
+
 /** Neznáme triedenie sa zahodí, nie použije — hodnota ide z adresy. */
 export function normalizeSort(value: string | string[] | undefined): SortKey | undefined {
   const v = one(value)
@@ -169,7 +193,7 @@ export function readFilters(q: RawQuery): ActiveFilters {
     search: one(q.search),
     folder: one(q.folder),
     category: list(q.category),
-    status: list(q.status),
+    status: normalizeStatuses(q.status),
     tag: list(q.tag),
     accessLevel: list(q.accessLevel),
     language: list(q.language),

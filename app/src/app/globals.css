@@ -206,7 +206,45 @@ html, body {
   -webkit-font-smoothing: antialiased;
 }
 
-a { color: inherit; }
+/*
+ * Odkazy nie sú podčiarknuté — **okrem bežného textu**.
+ *
+ * `a { color: inherit }` tu stojí od prvého commitu a je správne: portál je
+ * plný odkazov, ktoré odkazmi nevyzerajú — riadky tabuľky, dlaždice, pilulky
+ * filtra, tlačidlá. Modrá farba by z nich spravila text na čítanie.
+ * Podčiarknutie sa ale nedoplnilo, takže si ho každý taký prvok musel
+ * potláčať sám — a tridsaťšesť miest to robilo tridsaťšesťkrát, niektoré
+ * nedopatrením vôbec. Preto sa potlačí tu a vracia sa výslovne.
+ *
+ * Kde sa vracia: odkaz **v behu vety**. Tam je podčiarknutie jediná
+ * informácia, že sa dá kliknúť — v odseku nie je ani rámik, ani pozadie,
+ * ani poloha, ktorá by to prezradila. Inde afordanciu nesie tvar prvku.
+ */
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.answer a,
+.page-lead a,
+p a,
+/*
+ * Ďalšie tri miesta našiel prechod obrazoviek po tejto zmene, nie zadanie.
+ *
+ * `.field-hint` a `.ask-error` sú bežný text — celá veta s odkazom
+ * uprostred — len nie sú v `<p>`, takže ich pravidlo vyššie minulo.
+ *
+ * `.directory-contact` je vedomá odchýlka: nie je to veta, ale adresa
+ * a telefón. Komentár nad tým kódom hovorí „adresa a číslo sú odkazy, nie
+ * text — adresár existuje preto, aby sa niekomu dalo ozvať". Bez
+ * podčiarknutia by z nich bol práve ten text.
+ */
+.field-hint a,
+.ask-error a,
+.directory-contact a {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
 
 button {
   font: inherit;
@@ -2047,6 +2085,33 @@ html[data-theme="dark"] .editor-tui .CodeMirror {
   letter-spacing: 0.04em;
   text-transform: uppercase;
   color: var(--muted);
+}
+
+/*
+ * Priečinky v paneli filtrov vyzerajú ako facety.
+ *
+ * `.tree-row` je spoločný so správou priečinkov (`/library/folders`), kde je
+ * riadok väčší a má editačné ovládače — preto sa nemení tam, ale **len
+ * v paneli**. V ňom je priečinok jeden z troch filtrov a od ostatných dvoch
+ * sa nemá líšiť výškou ani odsadením; rozdiel by hovoril o rozdiele, ktorý
+ * tam nie je.
+ */
+.facets .tree-row {
+  min-height: 36px;
+  padding: 4px 6px;
+  border-radius: 8px;
+  gap: 8px;
+}
+
+.facets .tree-name { font-weight: 400; font-size: 14.5px; }
+.facets .tree-row.is-active .tree-name { font-weight: 650; }
+.facets .tree-count { margin-left: auto; }
+
+/* Odkaz na správu priečinkov je pätička skupiny, nie ďalšia jej položka. */
+.facets .folders-manage {
+  display: inline-block;
+  margin: 6px 0 0 6px;
+  font-size: 13px;
 }
 
 .facet {
