@@ -3,6 +3,34 @@
 > Toto číta Claude Code pri každom spustení. Sú to pravidlá, ktoré sa
 > **neopakujú v konverzácii** — keď je niečo tu, platí to bez pripomínania.
 
+## Rituály — pomenované príkazy
+
+Štyri vety, ktoré Ján používa ako príkaz. Keď zaznejú, znamenajú toto:
+
+**„Zorientuj sa"** — načítaj `CLAUDE.md`, `NEXT.md`, `git log -20` a aktuálnu
+vetvu; zhrň stav v **max. 10 riadkoch** a navrhni ďalší krok. Nič sa nemení,
+je to len čítanie. Keď si `NEXT.md` a `git log` protirečia, **platí git** —
+a rozpor sa povie nahlas, nie zamlčí.
+
+**„Poupratuj"** — zápis do `docs/DEVLOG.md` → prečisti `NEXT.md` a `docs/TODO.md`
+proti `git log` → doplň `CHANGELOG.md` → prejdi TODO/FIXME v kóde → lint
+a formát → commit podľa konvencie. **`NEXT.md` sa aktualizuje práve tu**, inde
+nie — inak by sa z neho stal tretí zdroj pravdy, ktorý klame.
+
+**„Odovzdaj"** — handover pre kolegu: čo je rozrobené a kde presne, čo treba
+vedieť, čo nefungovalo a prečo.
+
+**„Rozhodni"** — z diskusie vyrob ADR. Ján ich vedie v `docs/decisions/`, ten
+v tomto repozitári **zatiaľ nie je** — ADR ležia priamo v `docs/` ako
+`ADR-NNN-nazov.md`. Kým sa nerozhodne inak, nové ADR idú tam; presun je
+samostatné rozhodnutie, nie úprava mimochodom.
+
+### Čo je `NEXT.md`
+
+Jedna strana: kde sme, čo čaká na Jánovo rozhodnutie, tri najbližšie kroky,
+ako sa projekt overuje. **Nie backlog** — ten je `docs/TODO.md` a má stovky
+riadkov s odôvodneniami. `NEXT.md` naň odkazuje a neduplikuje ho.
+
 ## Jazyk v kóde
 
 **Identifikátory sú anglické. Komentáre a texty pre používateľa slovenské.**
