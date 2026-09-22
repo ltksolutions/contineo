@@ -4,6 +4,14 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Odkaz na contineo.app už ukáže náhľad (2026-09-22)
+
+Keď niekto poslal `https://contineo.app`, v chate ani na sociálnej sieti
+sa neobjavil obrázok ani popis — hoci `https://contineo.app/sk` ich
+ukázal. Koreň totiž odpovedal presmerovaním a služby, ktoré náhľad
+skladajú, sa na presmerovanie spravidla ani nepozrú. Teraz vráti riadnu
+stránku a náhľad sa zobrazí.
+
 ### Značka Continea sa pri malej veľkosti už nepletie s lupou (2026-09-22)
 
 Značka v poli hľadania a v hlavičke vyzerala pri 16 px ako lupa —
