@@ -11,19 +11,9 @@ import Link from "next/link"
 import { platformContext, tenantOverviews } from "@/lib/admin"
 import { formatDate, dictionary } from "@/lib/i18n"
 import AppShell from "@/components/AppShell"
+import Fact from "@/components/Fact"
 
 export const dynamic = "force-dynamic"
-
-function Fact({ label, value, muted }: { label: string; value: string; muted?: boolean }) {
-  return (
-    <div>
-      <div className="quiet" style={{ fontSize: "var(--fs-micro)" }}>{label}</div>
-      <div style={{ fontSize: "var(--fs-lead)", fontWeight: 600, color: muted ? "var(--muted)" : undefined }}>
-        {value}
-      </div>
-    </div>
-  )
-}
 
 export default async function TenantAdminPage() {
   const ctx = await platformContext()

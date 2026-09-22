@@ -884,6 +884,9 @@ interface Dictionary {
     detail: {
       back: string
       disabled: string
+      /** Blok čísel organizácie — trasy sú tu, v prehľade nie. */
+      numbersHeading: string
+      tracks: string
       domainsHeading: string
       nothingNeeded: (host: string, reason: string) => string
       notInVercel: string
@@ -2601,6 +2604,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     detail: {
       back: "← Správa tenantov",
       disabled: " · vypnutá",
+      numbersHeading: "Čísla organizácie",
+      tracks: "Trasy",
       domainsHeading: "Domény",
       nothingNeeded: (host, reason) => `${host} — netreba nič (${reason})`,
       notInVercel: "nie je vo Verceli",
@@ -4522,6 +4527,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     detail: {
       back: "← Správa tenantů",
       disabled: " · vypnutá",
+      numbersHeading: "Čísla organizace",
+      tracks: "Trasy",
       domainsHeading: "Domény",
       nothingNeeded: (host, reason) => `${host} — netřeba nic (${reason})`,
       notInVercel: "není ve Vercelu",
@@ -6435,6 +6442,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     detail: {
       back: "← Tenant administration",
       disabled: " · disabled",
+      numbersHeading: "Organisation numbers",
+      tracks: "Tracks",
       domainsHeading: "Domains",
       nothingNeeded: (host, reason) => `${host} — nothing needed (${reason})`,
       notInVercel: "not in Vercel",

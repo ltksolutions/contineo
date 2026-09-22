@@ -14,6 +14,7 @@
 import { getCollection } from "./mongodb"
 import { effectiveVersion, DOCUMENTS_COLLECTION } from "./documents"
 import { PERSONS_COLLECTION } from "./persons"
+import { TRACKS_COLLECTION } from "./tracks"
 import { validAcknowledgements } from "./acknowledgements"
 import { TENANTS_COLLECTION, normalizeTenant } from "./tenants"
 import { currentTenant, currentPerson } from "./session"
@@ -92,9 +93,14 @@ export interface TenantOverview {
  * čitateľnejšie a rovnako rýchle; keby ich boli stovky, nahradí to jedna
  * `$facet` agregácia bez zmeny tvaru návratu.
  */
-export async function tenantOverviews(): Promise<TenantOverview[]> {
+export async function tenantOverviews(only?: string): Promise<TenantOverview[]> {
   const tenantCol = await getCollection<Tenant>(TENANTS_COLLECTION)
-  const raw = await tenantCol.find({}).sort({ companyCode: 1 }).toArray()
+  // `only` je pre detail jednej organizácie: počítať čísla všetkých, keď sa
+  // ukazuje jedna, je práca navyše, ktorú nikto neuvidí.
+  const raw = await tenantCol
+    .find(only ? { companyCode: only } : {})
+    .sort({ companyCode: 1 })
+    .toArray()
 
   const personCol = await getCollection<Person>(PERSONS_COLLECTION)
   const docCol = await getCollection<DocumentRecord>(DOCUMENTS_COLLECTION)
@@ -146,4 +152,14 @@ export async function tenantOverviews(): Promise<TenantOverview[]> {
   }
 
   return out
+}
+
+/**
+ * Koľko trás organizácia má. **Len pre detail** — v prehľade by to bol dotaz
+ * na každý riadok a trasa je vnútorná mechanika, nie číslo na porovnávanie
+ * organizácií (rozhodnutie Jána 2026-09-22).
+ */
+export async function trackCount(companyCode: string): Promise<number> {
+  const col = await getCollection(TRACKS_COLLECTION)
+  return col.countDocuments({ companyCode })
 }

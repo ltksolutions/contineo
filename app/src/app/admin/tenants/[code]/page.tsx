@@ -11,7 +11,8 @@ import { notFound, redirect } from "next/navigation"
 import { auditRecords } from "@/lib/audit"
 import AuditList from "@/components/AuditList"
 import Link from "next/link"
-import { platformContext } from "@/lib/admin"
+import { platformContext, tenantOverviews, trackCount } from "@/lib/admin"
+import Fact from "@/components/Fact"
 import { allTenants } from "@/lib/tenantAdmin"
 import { domainStatus, cnameInstruction } from "@/lib/vercel"
 import { UI_LANGUAGES, dictionary } from "@/lib/i18n"
@@ -195,6 +196,12 @@ export default async function TenantDetailPage({
   // ten istý výpis, aký vidí zákazník u seba (D51), len sem sa dostane bez
   // prepínania domén.
   const records = await auditRecords(tenant.companyCode, { limit: 50 })
+  // Čísla tejto jednej organizácie — `tenantOverviews()` s kódom počíta len
+  // ju. Trasy sú navyše oproti prehľadu: tu je na ne miesto a otázka „koľko
+  // ich vlastne má" sa kladie práve pri jednej organizácii (rozhodnutie Jána
+  // 2026-09-22).
+  const [overview] = await tenantOverviews(tenant.companyCode)
+  const tracks = await trackCount(tenant.companyCode)
   const pending = domains.filter(d => !d.skipped && !d.configuredBy)
   const enabled = tenant.status === "active"
   const language = ctx.person.language
@@ -219,6 +226,38 @@ export default async function TenantDetailPage({
       </p>
 
       <Notice message={message} error={error === "1"} back={`/admin/tenants/${encodeURIComponent(code)}`} />
+
+      {overview && (
+        <section className="card" style={{ padding: "18px 20px", marginBottom: 16 }}>
+          <h2 style={{ fontSize: "var(--fs-section)", margin: 0 }}>{t.numbersHeading}</h2>
+          {/* Tie isté dlaždice ako v prehľade (`Fact` + `.admin-data`), v tom
+              istom poradí — inak by si človek čísla medzi obrazovkami
+              nespojil. Trasy sú na konci: sú to vnútorné dráhy, nie to, čo
+              organizácia „má". */}
+          <div className="admin-data">
+            <Fact
+              label={d.admin.list.documents}
+              value={d.admin.list.documentsValue(
+                overview.documents.total - overview.documents.withoutVersion.length,
+                overview.documents.total,
+              )}
+              muted={overview.documents.total === 0}
+            />
+            <Fact label={d.admin.list.versions} value={String(overview.versions)} muted={overview.versions === 0} />
+            <Fact
+              label={d.admin.list.people}
+              value={d.admin.list.peopleValue(overview.people.signedIn, overview.people.total)}
+              muted={overview.people.total === 0}
+            />
+            <Fact
+              label={d.admin.list.acknowledgements}
+              value={String(overview.acknowledgements)}
+              muted={overview.acknowledgements === 0}
+            />
+            <Fact label={t.tracks} value={String(tracks)} muted={tracks === 0} />
+          </div>
+        </section>
+      )}
 
       <section className="card" style={{ padding: "18px 20px", marginBottom: 16 }}>
         <h2 style={{ fontSize: "var(--fs-section)", margin: "0 0 12px" }}>{t.domainsHeading}</h2>
