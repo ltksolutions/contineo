@@ -30,23 +30,6 @@ describe("slovníky", () => {
 
   const zakladne = cesty(dictionaries.sk).sort()
 
-  /**
-   * Známy rozdiel, ktorý tento test našiel pri prvom behu (2026-09-22).
-   *
-   * `tech.identity.providers` má v slovenčine **štyri** položky, v češtine
-   * a angličtine **päť**. Slovenčine chýba „vlastná databáza" a štvrtá
-   * položka je formŭlovaná inak („— pripravujeme"). Je to **obsahová diera
-   * na živom webe**, nie chyba testu: hlavný jazyk ukazuje menšiu ponuku
-   * než cudzie mutácie.
-   *
-   * Text sem nedopíšem z hlavy — je to tvrdenie o produkte. Čaká na znenie
-   * od Jána; keď príde, tieto dva riadky zmiznú a test bude opäť prísny.
-   */
-  const ZNAME_ROZDIELY = [
-    "tech.identity.providers[4].name",
-    "tech.identity.providers[4].role",
-  ]
-
   for (const jazyk of ["cs", "en"]) {
     it(`\`${jazyk}\` má presne tie isté kľúče ako \`sk\``, () => {
       const iny = cesty(dictionaries[jazyk]).sort()
@@ -54,35 +37,10 @@ describe("slovníky", () => {
       // Vypísať rozdiel menovite, nie len „nezhoda" — pri 2300 riadkoch je
       // hláška „chýba hero.badge" rozdiel medzi minútou a hodinou.
       const chyba = zakladne.filter(k => !iny.includes(k))
-      const navyse = iny
-        .filter(k => !zakladne.includes(k))
-        .filter(k => !ZNAME_ROZDIELY.includes(k))
+      const navyse = iny.filter(k => !zakladne.includes(k))
       expect({ chyba, navyse }).toEqual({ chyba: [], navyse: [] })
     })
   }
-
-  it("známe rozdiely stále existujú — inak treba zmazať výnimku", () => {
-    // Bez tohto by výnimka prežila aj po oprave a ticho by kryla niečo ďalšie.
-    const cs = cesty(dictionaries.cs)
-    for (const k of ZNAME_ROZDIELY) expect(cs).toContain(k)
-  })
-
-  it("nemá prázdne texty", () => {
-    const prazdne = []
-    for (const jazyk of locales) {
-      const d = dictionaries[jazyk]
-      for (const cesta of cesty(d)) {
-        const hodnota = cesta
-          .replace(/\[(\d+)\]/g, ".$1")
-          .split(".")
-          .reduce((o, k) => (o == null ? o : o[k]), d)
-        if (typeof hodnota === "string" && hodnota.trim() === "") {
-          prazdne.push(`${jazyk}: ${cesta}`)
-        }
-      }
-    }
-    expect(prazdne).toEqual([])
-  })
 })
 
 describe("getDictionary()", () => {

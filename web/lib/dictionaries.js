@@ -1393,8 +1393,7 @@ export const dictionaries = {
           { name: "E-mailový odkaz", role: "přihlášení bez hesla; používá se i na pozvánky" },
           { name: "Microsoft Entra ID", role: "SSO pro firemní účty zaměstnanců" },
           { name: "Google Workspace", role: "SSO (alternativa)" },
-          { name: "CRM / API zdroje identity", role: "zdroj pravdy o osobách a organizačních jednotkách; mapování na companyCode, role a skupiny" },
-          { name: "Vlastní databáze", role: "účty mimo SSO (credentials)" },
+          { name: "CRM / API zdroje identity — připravujeme", role: "zdroj pravdy o osobách a organizačních jednotkách; mapování na companyCode, role a skupiny" },
         ],
         principlesTitle: "Principy bezpečnosti",
         principles: [
@@ -2127,8 +2126,7 @@ export const dictionaries = {
           { name: "E-mail link", role: "passwordless sign-in; also used for invitations" },
           { name: "Microsoft Entra ID", role: "SSO for employees' corporate accounts" },
           { name: "Google Workspace", role: "SSO (alternative)" },
-          { name: "Identity source CRM / API", role: "source of truth about people and organisational units; mapping to companyCode, roles and groups" },
-          { name: "Own database", role: "accounts outside SSO (credentials)" },
+          { name: "Identity source CRM / API — in preparation", role: "source of truth about people and organisational units; mapping to companyCode, roles and groups" },
         ],
         principlesTitle: "Security principles",
         principles: [
