@@ -185,7 +185,7 @@ prihlásenia sedia s kódom. Nesúlady:
 
 ## 4. On-prem pripravenosť
 
-Zmapovaná v `docs/ADR-009-on-prem-referencna-architektura.md` — vrátane
+Zmapovaná v `docs/decisions/ADR-009-on-prem-referencna-architektura.md` — vrátane
 zoznamu, čo je hotové (adaptéry, rezidencia, `useStageRerank`), čo je
 vedome zablokované (O7 fáza 0: rozlíšenie dotaz/dokument v embeddingu)
 a čo on-prem vetve ešte chýba mimo AI reťaze (e-mail, cron, hosting).

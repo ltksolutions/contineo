@@ -418,7 +418,7 @@ KROK 5 – ULOŽENIE + CHUNKING + AUTO-EMBED
 > aj HR výkaz bežia v produkcii (ADR-003 až ADR-007). Otvorené zostáva už len
 > „osoba vidí a stiahne si svoje potvrdenia" — vedie sa v `docs/TODO.md`.
 
-> **Zaradenie:** `docs/ADR-003-onboarding-a-potvrdzovanie.md` · **Koncepcia:** `docs/ONBOARDING_KONCEPCIA.md`
+> **Zaradenie:** `docs/decisions/ADR-003-onboarding-a-potvrdzovanie.md` · **Koncepcia:** `docs/ONBOARDING_KONCEPCIA.md`
 > **Prvé nasadenie:** SFZ, doména `intranet.futbalsfz.sk`, vyše 100 osôb vrátane ľudí bez licencie M365.
 
 **Poradie fáz tu neplatí.** Fáza 8 beží **teraz**, teda pred dokončením Fázy 4 (Import & CMS)

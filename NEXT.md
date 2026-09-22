@@ -72,10 +72,7 @@ overuje až po zastavení dev servera.
 `CLAUDE.md` sú konvencie repozitára a rituály. **`NEXT.md` (tento súbor)** je
 stav a ďalší krok. `docs/TODO.md` je dlhý backlog s odôvodneniami — čo sa
 nerobí a prečo. `docs/DEVLOG.md` je datovaný denník práce. `CHANGELOG.md` sú
-zmeny pre používateľa. Rozhodnutia sú v `docs/ADR-*.md` (prijaté) a
-`docs/OPEN_DECISIONS.md` (otvorené).
-
-> Poznámka: rituál „Rozhodni“ počíta s `docs/decisions/`, ten v repozitári
-> **nie je** — ADR ležia priamo v `docs/` ako `ADR-NNN-nazov.md`. Buď sa nové
-> ADR budú zakladať tam, alebo sa zavedie `docs/decisions/` a staré sa presťahujú;
-> to je rozhodnutie, nie úprava mimochodom.
+zmeny pre používateľa. **Rozhodnutia sú v `docs/decisions/`** (prijaté ADR,
+rozcestník v `README.md` toho priečinka, konvencia MADR) a `docs/OPEN_DECISIONS.md`
+(otvorené, očíslované `D1`, `D2`…). Plány `docs/D79_plan_*.md` a `docs/O7_plan_*.md`
+sú návrhy postupu, nie rozhodnutia, a zostávajú v `docs/`.

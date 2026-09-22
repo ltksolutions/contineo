@@ -1,11 +1,11 @@
 > **Poznámka 2026-09-15:** zmienky o *eval sade D9* nižšie sú **historické** —
-> zlatá sada bola zrušená (`docs/ADR-008-zrusenie-zlatej-sady.md`). Meradlo,
+> zlatá sada bola zrušená (`docs/decisions/ADR-008-zrusenie-zlatej-sady.md`). Meradlo,
 > o ktoré sa porovnanie adaptérov opiera, dnes neexistuje.
 
 # ADR-001 — Tri provider adaptéry vyberané konfiguráciou tenanta
 
 > **Stav:** ✅ prijaté · **Dátum:** 2026-07-25 · **Revízia:** 2026-07-26 (overenie voyage-4-nano + **O1 zmerané a uzavreté**, sekcia 3) · **Revízia:** 2026-08-27 (**TEI × `voyage-4-nano` neplatí** — dodatok 10) · **Nahrádza:** stack rozhodnutia v `docs/rag-architecture.md` (sekcia „Stack rozhodnutia")
-> **Nadväzuje:** `docs/ADR-002-datova-rezidencia.md` — rezidencia tenanta rozhoduje, ktoré adaptéry sú preň prípustné.
+> **Nadväzuje:** `docs/decisions/ADR-002-datova-rezidencia.md` — rezidencia tenanta rozhoduje, ktoré adaptéry sú preň prípustné.
 > Aplikačný rerank tam prestáva byť ústupkom pre air-gap a stáva sa požiadavkou každého tenanta, ktorý nesmie posielať text mimo EÚ.
 > **Súvisiace:** `docs/OPEN_DECISIONS.md` (D15 — modely/fallback/náklady), `docs/DATA_MODEL_konzistencia.md`, `docs/PRISTUPOVE_PRAVA.md`
 > **Implementácia:** `app/src/lib/providers/` — ✅ **kroky 1–5 hotové** (2026-07-26), 109 testov, `tsc --noEmit` čistý. Integračne neoverené (TEI, Infinity a vLLM čakajú na stroj s GPU).

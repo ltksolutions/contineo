@@ -780,7 +780,7 @@ kurovať — to je dôvod, prečo ide táto vrstva prvá.
 ### Zlatá sada zrušená (2026-09-15) — a povedané, čo tým padá
 
 Rozhodnutie Jána Letka: **kvalitu meriame z prevádzky, nie z pripravenej sady.**
-Zdôvodnenie a dôsledky sú v `docs/ADR-008-zrusenie-zlatej-sady.md`.
+Zdôvodnenie a dôsledky sú v `docs/decisions/ADR-008-zrusenie-zlatej-sady.md`.
 
 Sada mala 74 otázok, vlastné obrazovky so zoznamom, detailom, prekryvom dvoch
 hodnotiteľov aj úpravou znenia otázok. **Za dva mesiace ju neposúdil nikto** —
@@ -1108,7 +1108,7 @@ Príčina: uložený `versions[].markdown` prešiel prepisom cez jazykový model
 
 ### Changed (2026-09-14 — dodatok do ADR-007)
 
-Zrušenie voľby `onDateChange` (D82) je zapísané tam, kde to rozhodnutie vzniklo — `docs/ADR-007-oprava-textu-znenia.md`, Dodatok 1 — nielen v CHANGELOGu. Inak by si ho o pol roka niekto prečítal a riadil sa niečím, čo už neplatí.
+Zrušenie voľby `onDateChange` (D82) je zapísané tam, kde to rozhodnutie vzniklo — `docs/decisions/ADR-007-oprava-textu-znenia.md`, Dodatok 1 — nielen v CHANGELOGu. Inak by si ho o pol roka niekto prečítal a riadil sa niečím, čo už neplatí.
 
 
 ### Changed (2026-09-13 — čo je vo formulke, sa po prvom potvrdení zamyká, D82)
@@ -1191,7 +1191,7 @@ Zároveň vznikol plán **D79 — členenie per dokument** (`docs/D79_plan_clene
 
 Predpis je schválený, pridelený a v RAG, ľudia ho potvrdzujú — a príde pripomienka, že v článku 4 chýba čiarka. Dovtedy sa to dalo vyriešiť **jedine novým znením**: `versionId` je odtlačok textu (D57), takže jednoznaková zmena vyrobila novú verziu, novú povinnosť pre všetkých, ktorí už potvrdili, a v histórii záznam, o ktorom o rok nikto nevie, či bol novela alebo preklep. Cena za opravu preklepu bola vyššia než cena za to nechať ho tam.
 
-Rozhodnutia sú v `docs/ADR-007-oprava-textu-znenia.md` (D76–D78).
+Rozhodnutia sú v `docs/decisions/ADR-007-oprava-textu-znenia.md` (D76–D78).
 
 - **`versionId` sa nemení, `contentHash` áno.** `versionId` je **identita** znenia — visia na ňom potvrdenia, pridelenia, trasy aj chunky. Odtlačok dnešného textu nesie `contentHash`; pole existovalo, pri publikovaní dostávalo tú istú hodnotu a odteraz sa po prvej oprave rozíde. Žiadne nové pole na to nebolo treba.
 - **Opravuje správca obsahu** a má štyri podmienky, z ktorých žiadna nie je ozdoba: rola, **povinný dôvod**, **rozdiel vidieť pred uložením** a **snímok celého predchádzajúceho textu** v `versions[].textFixes[]`. „Nemení to význam“ je tvrdenie toho, kto opravuje, a stojí na ňom platnosť cudzích podpisov — tvrdenie, ktoré si nikto nemohol overiť, nie je doklad.
@@ -1499,7 +1499,7 @@ Krok 2 z ADR-004. Bez neho termín nikto nezadá a model z kroku 1 leží.
 
 ### Added (2026-09-09 — termín potvrdenia: model a kadencia pripomienok)
 
-Prvý krok z `docs/ADR-004-termin-potvrdenia.md`. Zámerne len model a čisté funkcie — prideľovací formulár, zobrazenie a e-maily idú ďalšími PR.
+Prvý krok z `docs/decisions/ADR-004-termin-potvrdenia.md`. Zámerne len model a čisté funkcie — prideľovací formulár, zobrazenie a e-maily idú ďalšími PR.
 
 - **`lib/due.ts`** — termín ako hodnota, bez závislosti na databáze aj na pridelení, takže sa dá otestovať bez Monga a nevzniká kruh v importoch.
 - **Dva tvary termínu (D62).** `{ kind: "date" }` je to, čo personalista obvykle chce („všetci do konferencie"), a `{ kind: "days" }` to, čo nemá jeho dieru: kto do oddelenia príde deň pred absolútnym termínom, dostal by na normu jeden deň. Relatívny tvar sedí na D50 a pri povinnosti z trasy je jediný možný — trasa pridelenie nemá, takže absolútny dátum nemá kam zapísať.

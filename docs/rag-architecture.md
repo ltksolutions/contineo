@@ -10,7 +10,7 @@
 
 ## Stack rozhodnutia (zafixované pre Fázu 3)
 
-> ⚠️ **Prekonané rozhodnutím ADR-001** (2026-07-25). Stack už nie je jedna fixná kombinácia — embedding, rerank a generovanie sú tri **vymeniteľné adaptéry** vyberané profilom tenanta (cloud alebo on-prem). Tabuľka nižšie popisuje **predvolený cloudový profil**. Viď `docs/ADR-001-provider-adaptery.md`.
+> ⚠️ **Prekonané rozhodnutím ADR-001** (2026-07-25). Stack už nie je jedna fixná kombinácia — embedding, rerank a generovanie sú tri **vymeniteľné adaptéry** vyberané profilom tenanta (cloud alebo on-prem). Tabuľka nižšie popisuje **predvolený cloudový profil**. Viď `docs/decisions/ADR-001-provider-adaptery.md`.
 
 
 | Vrstva | Rozhodnutie | Dôvod |
@@ -205,7 +205,7 @@ Dotaz
 > v `evaluations`, do indexu ide úsek so `sourceType: "qa"` a poľom `derivedFrom`.
 > Nová kolekcia `tickets` (helpdesk) — Fáza 4b.
 > Nové kolekcie `persons`, `acknowledgements`, `onboarding_tracks` a rozšírenie `documents.versions[]` — Fáza 8,
-> viď `docs/ONBOARDING_KONCEPCIA.md` a `docs/ADR-003-onboarding-a-potvrdzovanie.md`. Onboarding **nevolá žiadny model** —
+> viď `docs/ONBOARDING_KONCEPCIA.md` a `docs/decisions/ADR-003-onboarding-a-potvrdzovanie.md`. Onboarding **nevolá žiadny model** —
 > reťaz z `docs/AKO_TO_BEZI.md` pri ňom nebeží.
 
 ### `document_chunks` — RAG vyhľadávanie

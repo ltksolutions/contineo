@@ -1,6 +1,6 @@
 # O1 — zhoda vektorových priestorov
 
-Odpovedá na otvorenú otázku **O1** z `docs/ADR-001-provider-adaptery.md`.
+Odpovedá na otvorenú otázku **O1** z `docs/decisions/ADR-001-provider-adaptery.md`.
 
 **GPU netreba.** `voyage-4-nano` má 340M parametrov a beží na CPU aj na Apple Silicon (MPS). Pri fp32 na CPU je výsledok tohto merania dokonca presnejší než pri bf16 na GPU.
 

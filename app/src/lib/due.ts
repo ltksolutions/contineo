@@ -4,7 +4,7 @@
  * **Termín je na pridelení, nie odvodený z prahu pripomienok.** Prah
  * `DEFAULT_DAYS` v `reminders.ts` je spúšťač prehľadu pre personalistu, nie
  * sľub daný človeku: kto potvrdí na pätnásty deň, nemá byť „po termíne",
- * keď mu nikto termín nedal. Rozhodnuté v `docs/ADR-004-termin-potvrdenia.md`.
+ * keď mu nikto termín nedal. Rozhodnuté v `docs/decisions/ADR-004-termin-potvrdenia.md`.
  *
  * Tento súbor je zámerne **bez závislostí na databáze aj na pridelení**. Berie
  * dátum, odkedy povinnosť pre danú osobu beží, a vracia termín — takže sa dá

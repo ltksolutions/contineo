@@ -4,7 +4,7 @@
 > **Čo to nie je:** právne stanovisko. Retenčné lehoty pri reťazi dôkazov **nie sú
 > rozhodnuté** a čakajú na odpoveď k O16 (`docs/O15_O16_otazky_pre_DPO.md`, časť B).
 > **Súvisiace:** `docs/GDPR_DATA_PROTECTION.md` (kap. 4 a 7), `docs/ATLAS_SETUP.md`,
-> `docs/ADR-005-retaz-dokazov.md`, `docs/ADR-002-datova-rezidencia.md`.
+> `docs/decisions/ADR-005-retaz-dokazov.md`, `docs/decisions/ADR-002-datova-rezidencia.md`.
 > **Založené:** 2026-09-14.
 
 ## 1. Čo sa zálohuje

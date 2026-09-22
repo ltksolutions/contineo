@@ -6,7 +6,7 @@ import Icon from "./Icon";
  * Vedomé rozhodnutie: tabuľka ukazuje aj to, čo zatiaľ NEVIEME. Stav
  * „overuje sa“ je poctivejší než tvrdenie bez opory a pri tendri sa
  * nevedieť odpovedať na vlastné marketingové tvrdenie vypomstí viac,
- * než keby tam tá tabuľka nebola. Viď docs/ADR-002-datova-rezidencia.md.
+ * než keby tam tá tabuľka nebola. Viď docs/decisions/ADR-002-datova-rezidencia.md.
  */
 
 const ODTIEN = {

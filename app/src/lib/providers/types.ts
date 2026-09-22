@@ -8,7 +8,7 @@
  * OpenAI-kompatibilita je implementačný detail jedného adaptéra — pri Claude
  * ideme natívne, lebo Citations API a prompt caching cez OpenAI schému neprejdú.
  *
- * Viď docs/ADR-001-provider-adaptery.md
+ * Viď docs/decisions/ADR-001-provider-adaptery.md
  */
 
 import type { ChunkResult } from "../mongoSearch"
@@ -30,7 +30,7 @@ export type Tier = "T1" | "T2" | "T3"
 
 /**
  * Úroveň ochrany tenanta. Určuje, ktoré kombinácie adaptérov sú prípustné —
- * viď `src/lib/residency.ts` a `docs/ADR-002-datova-rezidencia.md`.
+ * viď `src/lib/residency.ts` a `docs/decisions/ADR-002-datova-rezidencia.md`.
  *
  * Pôvodná hodnota "eu" bola nejednoznačná: nerozlišovala medzi „dáta ležia
  * v EÚ" a „nič neopustí EÚ". Práve ten rozdiel rozhoduje o tom, či sa smie

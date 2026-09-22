@@ -2,7 +2,7 @@
 
 > **Stav:** schválené · **Dátum:** 2026-09-09
 > **Rozhodol:** Ján Letko (termín na pridelení + denné pripomienky), zvyšok je návrh
-> **Nadväzuje na:** `docs/ADR-003-onboarding-a-potvrdzovanie.md` (D6, D24, D27, D30, D50)
+> **Nadväzuje na:** `docs/decisions/ADR-003-onboarding-a-potvrdzovanie.md` (D6, D24, D27, D30, D50)
 > **Súvisiace:** `docs/DESIGN_GAP.md` (obrazovka Prehľad si termín vyžiada), `app/src/lib/reminders.ts`, `app/src/app/api/cron/overdue/route.ts`
 > **Implementácia:** hotová — `lib/due.ts`, `Assignment.due` a `dueForPerson()` v `lib/assignments.ts`, `reminderPlan()` v `lib/reminders.ts`, `api/cron/overdue`.
 

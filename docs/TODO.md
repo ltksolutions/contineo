@@ -171,7 +171,7 @@
 - [x] **IP v zázname z produkcie overená** ✅ 2026-09-08 — `headers()` v serverovej akcii `x-forwarded-for` na Verceli **dostane**. Potvrdené na ostrom zázname: verzia 1.1 skúšobnej smernice, `acknowledgedAt 2026-09-08T13:16:15Z`, `ip` vyplnená verejnou adresou, `userAgent` vyplnený. Overené stavom v Atlase, nie logom — log je pominuteľný, záznam trvalý (ten istý dôvod ako pri `User.Read`).
       Vedľajší nález z toho istého záznamu: **`supersedes: null` je tu správne**, nie diera. Nová verzia nie je oprava starého potvrdenia — obe stoja ako dôkaz každé pre svoju verziu. `supersedes` je pre odvolanie a opravu, a **tá cesta neexistuje**: `acknowledge()` má hodnotu zapísanú natvrdo na `null` a nikto ju nenastavuje. Rovnaká polovica ako `trackId`.
 - [x] **Odvolanie potvrdenia** ✅ 2026-09-12 — `revoke()` v `lib/acknowledgements.ts`, brána `revokeProblem()` (odvoláva **len personalista**, dôvod povinný), pole `cycle` a index `acknowledgement_cycle_unique` (migrácia `scripts/migrate_ack_cycle.mjs`), jedno miesto na čítanie `validAcknowledgements()` a formulár vo výkaze HR. Povinnosť ožije **s pôvodným termínom**.
-- [x] **Oprava textu publikovaného znenia** ✅ 2026-09-13 — `fixText()` v `lib/libraryWrite.ts`, pravidlo a rozdiel v `lib/textFix.ts`, snímok v `versions[].textFixes[]`. `versionId` zostáva, `contentHash` sa mení, potvrdenia platia ďalej, RAG sa preindexuje pri tom istom znení. Rozhodnutia: `docs/ADR-007-oprava-textu-znenia.md` (D76–D78).
+- [x] **Oprava textu publikovaného znenia** ✅ 2026-09-13 — `fixText()` v `lib/libraryWrite.ts`, pravidlo a rozdiel v `lib/textFix.ts`, snímok v `versions[].textFixes[]`. `versionId` zostáva, `contentHash` sa mení, potvrdenia platia ďalej, RAG sa preindexuje pri tom istom znení. Rozhodnutia: `docs/decisions/ADR-007-oprava-textu-znenia.md` (D76–D78).
 - [ ] **Oprava potvrdenia sa stále nedá zapísať** — typ `correction` v kóde je, cesta nie. Treba rozhodnúť, ktoré polia záznamu sa smú opravovať a kto to smie. Pôvodný zápis: — `supersedes` je v type aj v zázname, ale `acknowledge()` doň vždy dá `null` a druhé volanie, ktoré by ukazovalo na starý záznam, neexistuje. Kolekcia je zámerne append-only (D24), takže bez tejto cesty sa omylom potvrdený dokument nedá ani odvolať, ani opraviť — dá sa len potvrdiť znova. Rozhodnúť, kto smie odvolať (osoba sama? HR?) a čo to znamená pre výkaz.
 - [ ] **Prihlásenie bez JavaScriptu** — odkaz na e-mail sa odosiela cez `fetch` a konto cez `signIn()` z next-auth; bez skriptu sa človek nedostane dnu vôbec. Dnes to hláška povie. Serverová cesta znamená vlastný `<form action>` pre e-mailový odkaz a `<form method="post">` na `/api/auth/signin/<provider>` s CSRF tokenom — treba overiť, či to next-auth v tejto verzii podporuje
 - [ ] **Zásuvka filtrov ako v návrhu** (panel schovaný za tlačidlom, nie kotva) — `<details>` sa na širokej obrazovke nedá spoľahlivo držať otvorené cez CSS (`::details-content` je čerstvé) a druhá kópia panelu v DOM je horšia než kotva. Má zmysel až s klientskym stavom, teda spolu s rozhodnutím, že knižnica smie vyžadovať JavaScript
@@ -230,7 +230,7 @@
 
 ### I. Onboarding a potvrdzovanie noriem — **Fáza 8** 🔴 → `docs/ONBOARDING_KONCEPCIA.md`
 
-> Zaradenie: `docs/ADR-003-onboarding-a-potvrdzovanie.md`. Prvé nasadenie: SFZ,
+> Zaradenie: `docs/decisions/ADR-003-onboarding-a-potvrdzovanie.md`. Prvé nasadenie: SFZ,
 > `intranet.futbalsfz.sk`, vyše 100 osôb vrátane ľudí bez licencie M365.
 > Beží **pred** dokončením fáz 4 a 5 a berie si z nich minimálny výrez v cieľovom tvare.
 
@@ -540,7 +540,7 @@
 **Zostáva (mimo rozsahu B)**
 
 - [x] **pripomienky podľa času** — naplánovanú úlohu **máme**: `app/vercel.json` má cron `/api/cron/overdue` (dnes `0 6 * * 1`, teda týždenne). Tento zápis tvrdil opak a bol zastaraný — dokumentácia je indícia, kód je pravda.
-- [x] **Schvaľovanie znenia pred zverejnením** ✅ 2026-09-10 — kroky 1 až 6 vrátane brány pri prideľovaní a facetu `Stav`. — návrh spísaný v `docs/ADR-006-schvalovanie-znenia.md` (2026-09-10). Schvaľuje sa **znenie, nie dokument**; schvaľovatelia sú menovaní ľudia, nie rola; súbežne, nie za sebou; zamietnutie je záznam s povinným dôvodom; schválený text sa nemení (iný text = nové znenie); schválené ≠ účinné. Desať dnešných noriem sa spätne neschvaľuje — označia sa ako zverejnené pred zavedením.
+- [x] **Schvaľovanie znenia pred zverejnením** ✅ 2026-09-10 — kroky 1 až 6 vrátane brány pri prideľovaní a facetu `Stav`. — návrh spísaný v `docs/decisions/ADR-006-schvalovanie-znenia.md` (2026-09-10). Schvaľuje sa **znenie, nie dokument**; schvaľovatelia sú menovaní ľudia, nie rola; súbežne, nie za sebou; zamietnutie je záznam s povinným dôvodom; schválený text sa nemení (iný text = nové znenie); schválené ≠ účinné. Desať dnešných noriem sa spätne neschvaľuje — označia sa ako zverejnené pred zavedením.
       **Poradie krokov je záväzné:** brána pri prideľovaní nesmie ísť pred migráciou označenia, inak personalista nemôže prideliť nič.
       **Krok 6 čiastočne (2026-09-10):** „Čaká na schválenie" je nad knižnicou — zoznam s menami a dátumom predloženia, nie dlaždica s číslom. Presunie sa na Prehľad, keď vznikne.
       **Facet `Stav` hotový (2026-09-10):** tretia hodnota „na schválenie", dva dotazy namiesto spojenia kolekcií. Nie je to tretia priehradka — dokument môže byť publikovaný a zároveň mať bežiace kolo, takže sa pridáva cez `$or`.
@@ -691,7 +691,7 @@ koná personalista, dôvod povinný, nový záznam namiesto úpravy starého.
 - [ ] Zvážiť `loading.tsx` aj pre stránky, ktoré sa načítajú do ~100 ms. Tam je kostra blik navyše a patrí preč.
 
 
-### O21 — metadáta bez ručných kľúčov → `docs/ADR-010-metadata-bez-rucnych-klucov.md` (prijaté 2026-09-21)
+### O21 — metadáta bez ručných kľúčov → `docs/decisions/ADR-010-metadata-bez-rucnych-klucov.md` (prijaté 2026-09-21)
 
 Tri rozhodnutia z nahrávania Pracovného poriadku SFZ: kľúč dokumentu sa
 generuje ako slug z názvu (formulár ukáže len náhľad, prepísateľný, po vzniku

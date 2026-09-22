@@ -20,10 +20,10 @@ nie — inak by sa z neho stal tretí zdroj pravdy, ktorý klame.
 **„Odovzdaj"** — handover pre kolegu: čo je rozrobené a kde presne, čo treba
 vedieť, čo nefungovalo a prečo.
 
-**„Rozhodni"** — z diskusie vyrob ADR. Ján ich vedie v `docs/decisions/`, ten
-v tomto repozitári **zatiaľ nie je** — ADR ležia priamo v `docs/` ako
-`ADR-NNN-nazov.md`. Kým sa nerozhodne inak, nové ADR idú tam; presun je
-samostatné rozhodnutie, nie úprava mimochodom.
+**„Rozhodni"** — z diskusie vyrob ADR a zaraď ho do **`docs/decisions/`**
+(konvencia MADR). Názov `ADR-NNN-kratky-nazov.md`, ďalšie voľné číslo a postup
+sú v `docs/decisions/README.md`. Označenie `ADR-006` je identita rozhodnutia —
+odkazuje sa naň zo stoviek komentárov v kóde, takže sa **nepremenováva**.
 
 ### Čo je `NEXT.md`
 

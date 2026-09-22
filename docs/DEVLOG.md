@@ -591,7 +591,7 @@ nakonfigurovaný — nechávam tak, nie je súčasť rozsahu.
 
 Ján si vyžiadal komplexnú kontrolu: kód, závislosti, infra a súlad webu
 s repozitárom, plus zápis on-prem cesty. Výsledok je v
-`docs/BEZPECNOSTNA_KONTROLA_2026-09.md` a `docs/ADR-009-on-prem-referencna-architektura.md`.
+`docs/BEZPECNOSTNA_KONTROLA_2026-09.md` a `docs/decisions/ADR-009-on-prem-referencna-architektura.md`.
 
 **V kóde sa kritická diera nenašla** — D90 drží, brány sú konzistentné,
 tajomstvá v repozitári nie sú. Tri veci s prioritou: O12 (Atlas allowlist),
@@ -955,7 +955,7 @@ overená odpoveď v znalostiach*.
 ### Rozhodnutia (Ján Letko)
 
 - **Zlatá sada von, celá.** Nie odložiť, nie zmenšiť — zrušiť. Dva mesiace bez
-  jediného posudku sú odpoveď. `docs/ADR-008-zrusenie-zlatej-sady.md`.
+  jediného posudku sú odpoveď. `docs/decisions/ADR-008-zrusenie-zlatej-sady.md`.
 - **Rola `evaluator`.** Bežný človek povie „sedí / nesedí" a čo mu vadilo;
   posudok potvrdzuje a opravuje hodnotiteľ. Identifikátor po anglicky,
   preklady SK/CZ/EN.

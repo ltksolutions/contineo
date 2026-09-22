@@ -1,7 +1,7 @@
 /**
  * residency.ts — kde smie tenantov text prebiehať spracovaním.
  *
- * Viď `docs/ADR-002-datova-rezidencia.md`.
+ * Viď `docs/decisions/ADR-002-datova-rezidencia.md`.
  *
  * Myšlienka: každý adaptér má známu LOKALITU SPRACOVANIA. Rezidencia
  * tenanta hovorí, ktoré lokality sú preň prípustné. Kombinácia sa tak

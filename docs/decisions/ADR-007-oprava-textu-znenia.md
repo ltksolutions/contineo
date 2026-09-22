@@ -10,8 +10,8 @@
 > **Odsúhlasil:** Ján Letko — opravuje **správca obsahu**, ukazuje sa **celý snímok**
 > textu, a počas bežiaceho kola schvaľovania sa má radšej nechať vzniknúť nové kolo
 > („bod 2 musíme pre čistotu nechať vytvoriť opätovné schvaľovanie“).
-> **Nadväzuje na:** `docs/ADR-003-onboarding-a-potvrdzovanie.md` (D6, D24, D27, D28, D30, D57),
-> `docs/ADR-006-schvalovanie-znenia.md` (D73, D74, D75)
+> **Nadväzuje na:** `docs/decisions/ADR-003-onboarding-a-potvrdzovanie.md` (D6, D24, D27, D28, D30, D57),
+> `docs/decisions/ADR-006-schvalovanie-znenia.md` (D73, D74, D75)
 > **Implementácia:** hotová (2026-09-13) — `src/lib/textFix.ts`, `fixText()`
 > v `src/lib/libraryWrite.ts`, `fixTextAction()`, rozdiel a história v detaile dokumentu.
 

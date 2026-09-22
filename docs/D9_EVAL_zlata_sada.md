@@ -2,7 +2,7 @@
 
 > # ⛔ PREKONANÉ 2026-09-15 — zlatá sada bola zrušená
 >
-> Rozhodnutie a jeho dôsledky: **`docs/ADR-008-zrusenie-zlatej-sady.md`**.
+> Rozhodnutie a jeho dôsledky: **`docs/decisions/ADR-008-zrusenie-zlatej-sady.md`**.
 > Obrazovky, knižnica, kolekcia `eval_questions` aj materiály v `eval/` sú
 > preč. Kvalita sa meria z prevádzky.
 >
@@ -13,7 +13,7 @@
 
 > **Stav (pôvodný):** kostra pripravená 2026-07-25, čaká na overené odpovede od legislatívca SFZ
 > **Uzatvára:** rozhodnutie D9 z `docs/OPEN_DECISIONS.md` (zlatá sada 50–100 otázok + akceptačný prah ako brána pred go-live)
-> **Súvisiace:** `docs/PRECEDENCIA_NORIEM.md` (R1–R4), `docs/CISELNIKY_governance.md` (`sectionKey`, `companyCode`), `docs/PRISTUPOVE_PRAVA.md` (`accessLevel`), `docs/ADR-001-provider-adaptery.md` (porovnanie adaptérov)
+> **Súvisiace:** `docs/PRECEDENCIA_NORIEM.md` (R1–R4), `docs/CISELNIKY_governance.md` (`sectionKey`, `companyCode`), `docs/PRISTUPOVE_PRAVA.md` (`accessLevel`), `docs/decisions/ADR-001-provider-adaptery.md` (porovnanie adaptérov)
 > **Materiály:** `eval/`
 
 ---
