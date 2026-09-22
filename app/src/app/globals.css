@@ -50,8 +50,21 @@
    * Vyššia než `--maxw`, lebo v shelli sú aj obrazovky s panelom vedľa
    * zoznamu — 940 px by tabuľku stlačilo do stĺpca. Stránka, ktorá potrebuje
    * užší text (znenie normy), si vnútri určí vlastnú šírku.
+   *
+   * Pre knižnicu ani 1240 px nestačí — viď `--shell-maxw-wide` nižšie.
    */
   --shell-maxw: 1240px;
+
+  /*
+   * Širší strop pre jedinú obrazovku, ktorá ho potrebuje — **knižnicu**.
+   * Má naraz bočný panel filtrov a deväťstĺpcovú tabuľku; ostatné
+   * obrazovky sú text alebo formuláre a tým 1240 px vyhovuje.
+   *
+   * **Strop, nie plná šírka okna.** Na 27“ monitore by riadok bez stropu
+   * mal cez 2000 px a oko stratí spojitosť medzi názvom vľavo a dátumom
+   * vpravo — to je iná chyba, nie oprava (rozhodnutie Jána 2026-09-22).
+   */
+  --shell-maxw-wide: 1440px;
   --shadow: 0 1px 2px rgba(20, 28, 42, 0.05), 0 10px 30px rgba(20, 28, 42, 0.07);
 
   /*
@@ -1039,6 +1052,11 @@ html[data-theme="dark"] select.field-input {
  * Hranica je vyššia než `--maxw` (940 px), lebo v shelli sú aj obrazovky
  * s panelom vedľa zoznamu — tam by 940 px stlačilo tabuľku do stĺpca.
  * Stránka, ktorá potrebuje užší text, si vnútri určí vlastnú šírku.
+ *
+ * **„Pár desiatok pixelov" bolo podcenenie** (opravené 2026-09-22). Pri
+ * knižnici išlo o 122 px a stĺpce Potvrdenia a Zmenené kvôli nim z obrazovky
+ * odišli. Tej jedinej obrazovke preto patrí `.app-main--wide` nižšie;
+ * pre ostatné platí odstavec vyššie bez zmeny.
  */
 .app-main {
   flex: 1;
@@ -1048,6 +1066,15 @@ html[data-theme="dark"] select.field-input {
   margin: 0 auto;
   padding: var(--pad-main) var(--pad-main) 56px;
 }
+
+/*
+ * Knižnica si pýta širší strop (`AppShell` s `wide`). Namerané 2026-09-22:
+ * pri okne 1440 px a stope 1240 má stĺpec zoznamu 938 px, pričom tabuľka
+ * potrebuje ~1060 px — stĺpce Potvrdenia a Zmenené sa nezmestili a pretekali
+ * do vodorovného posunu vo `.doc-table-wrap`. So stropom 1440 má stĺpec
+ * 1138 px, teda približne 78 px rezervy na dlhšie preklady.
+ */
+.app-main--wide { max-width: var(--shell-maxw-wide); }
 
 @media (min-width: 640px) {
   .app-shell--sidebar { flex-direction: row; }
@@ -2720,24 +2747,57 @@ html[data-theme="dark"] .editor-tui .CodeMirror {
    to funguje bez skriptu a čítačka obrazovky o stave vie sama. Otvorený je
    vtedy, keď nejaké podmienky sú — inak by človek nevidel, prečo je zoznam
    krátky. */
-/* Zavretý je to chip „+ Podmienka" v lište nástrojov (vzor, PR 7);
-   otvorený sa roztiahne na šírku stĺpca a ukáže riadky podmienok. */
-.builder {
-  margin-bottom: 16px;
+/*
+ * Zavretý je to jeden ovládač „+ Podmienka" **v riadku hľadania**, otvorený
+ * sa roztiahne na celú šírku lišty a dostane panel s riadkami podmienok.
+ *
+ * Tento komentár to tvrdil už predtým, ale kód to nerobil: `.builder` bol
+ * karta s prerušovaným rámikom **pod** lištou, a to aj keď žiadna podmienka
+ * nasadená nebola. Obe polovice jedného panela vznikli s odstupom (builder
+ * 8. 9., lišta 21. 9.) a nikto ich nespojil.
+ *
+ * Chrom karty je preto na `[open]`, nie na `.builder`: `<details>` mení ten
+ * atribút sám, aj bez skriptu, takže CSS sleduje živý stav a nie to, čím
+ * server začínal.
+ */
+.builder { min-width: 0; }
+
+.library-toolbar .builder[open] { flex: 1 1 100%; }
+
+.builder[open] {
   padding: 10px 12px;
   background: var(--surface);
   border: 1px dashed var(--line);
   border-radius: var(--radius);
 }
 
+/*
+ * Zavretý summary je chip: prerušovaný rámik a `--muted` podľa vzoru
+ * (`docs/design/README.md`). Otvorený rámik stratí — panel ho už má —
+ * a od riadkov ho oddíľi linka.
+ */
 .builder-summary {
   display: flex;
   align-items: center;
   gap: 8px;
-  min-height: 32px;
+  min-height: var(--control-h-sm);
+  padding: 0 10px;
+  border: 1px dashed var(--line);
+  border-radius: 7px;
+  color: var(--muted);
   font-size: 13.5px;
   font-weight: 600;
   cursor: pointer;
+}
+
+.builder-summary:hover { color: var(--accent); border-color: var(--accent); }
+
+.builder[open] > .builder-summary {
+  padding: 0 0 9px;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  border-radius: 0;
+  color: var(--ink);
 }
 
 .builder-count {
@@ -4373,6 +4433,27 @@ a.notif-row-link:focus-visible { outline: 2px solid var(--accent); outline-offse
 /* Dátum účinnosti v zozname dokumentov: `nowrap` a `tabular-nums`, aby
    sa stĺpec nezalomil a číslice stáli pod sebou (návrh, časť 3). */
 .doc-col-date { white-space: nowrap; font-variant-numeric: tabular-nums; }
+
+/*
+ * Stĺpec Verzia (MASTER.md, stĺpec 5).
+ *
+ * `label` je **voľný text** — schéma (`documents.ts`) ho popísuje ako
+ * „ľudské označenie: 1.2, novela 2026", takže to nie je ani číslo, ani
+ * ohraničená dĺžka. Bez stropu jeden dlhší label zalomil bunku do piatich
+ * riadkov, riadok mal 150 px a tabuľka pretiekla nabok — stĺpce Potvrdenia
+ * a Zmenené sa na 1440 px už nezmestili.
+ *
+ * Orezanie elipsou, nie zalomenie: plné znenie nesie `title`, takže sa
+ * nič nestratí, a výška riadka prestane závisieť od toho, aké dlhé
+ * označenie niekto zneniu dal.
+ */
+.doc-col-version {
+  max-width: 88px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
 
 /* Vylúčená osoba v zozname (OSOBY.md, úloha 2): stlmená, nie schovaná.
    Dohľadateľná zostať musí — jej potvrdenia platia ďalej (D24). Ten istý
