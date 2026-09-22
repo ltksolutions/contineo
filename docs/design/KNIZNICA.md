@@ -153,6 +153,18 @@ poslednú kartu, hoci odsadenie „sedí". Preto pod 640 px:
 - „×" ako štvorec 40 × 40,
 - výška pásu ≤ 64 px vrátane `env(safe-area-inset-bottom)`.
 
+**Presun potrebuje cieľ — a v páse naň nie je miesto.** Rám 6 v
+`KNIZNICA.html` výber priečinka nemá; kód ho má (`<Select>` „Presunúť do").
+Pod 640 px preto:
+
+- „Presunúť" v páse je `<summary>` elementu `<details class="filter-sheet">`
+  — tá istá zásuvka zdola ako filtre, **bez JavaScriptu**,
+- v zásuvke je `<form>` s výberom priečinka a primárnym tlačidlom
+  „Presunúť 2 dokumenty do …",
+- presun sa stane až po odoslaní formulára v zásuvke, nikdy klikom v páse.
+
+Od 640 px ostáva výber priečinka priamo v páse, ako dnes.
+
 ### 5. Karta dokumentu: stav a kategória do jedného riadku
 
 **Teraz:** `.doc-card-top` má výber, `.tag` processing state, `.tag` draft
