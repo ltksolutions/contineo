@@ -873,7 +873,8 @@ interface Dictionary {
       codeNoteHighlight: string
       codeNoteAfter: string
       /** Kolízia návrhu kódu (ADR-010, ADMIN.md úloha 1.4). */
-      codeTaken: (code: string) => string
+      /** Šablóna s `{code}`, nie funkcia — dôvod pri `keyTaken`. */
+      codeTaken: string
       name: string
       nameNote: string
       supportEmail: string
@@ -1878,7 +1879,13 @@ interface Dictionary {
       keyPreview: string
       keyManualSummary: string
       keyManualNote: string
-      keyTaken: (id: string) => string
+      /**
+       * **Šablóna, nie funkcia.** Klientsky komponent `KeyPreview` dosadí
+       * `{id}` sám. Funkcia by sa sem vrátiť nesmela: `/library/new` je
+       * serverový komponent a funkcia cez hranicu do klienta neprejde —
+       * React ju odmietne a stránka spadne celá, nie len tá hláška.
+       */
+      keyTaken: string
       keysTaken: string
       /** Nápoveda pri Druhu — hodnoty z `CODELISTS.category` (úloha 5). */
       categoryNote: string
@@ -2598,7 +2605,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       codeNoteBefore: "Veľké písmená, číslice, pomlčka. Nesie ho každá osoba, dokument aj potvrdenie — ",
       codeNoteHighlight: "neskôr sa nemení",
       codeNoteAfter: " — je súčasťou identifikátora každého dokumentu.",
-      codeTaken: (code) => `Kód ${code} je už obsadený. Zvoľte iný.`,
+      codeTaken: "Kód {code} je už obsadený. Zvoľte iný.",
       name: "Názov",
       nameNote: "To, čo ľudia uvidia v hlavičke portálu. Z názvu sa navrhne kód organizácie — skratku, ktorú organizácia používa, pokojne prepíšte.",
       supportEmail: "Kontakt organizácie",
@@ -3819,7 +3826,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       keyPreview: "Identifikátor:",
       keyManualSummary: "Zadať kľúč ručne",
       keyManualNote: "Kľúč vzniká raz a nikdy sa nemení — žije v potvrdeniach, audite a exportoch. Premenovanie dokumentu ho nemení.",
-      keyTaken: id => `Identifikátor ${id} je obsadený. Upravte názov, alebo zadajte kľúč ručne.`,
+      keyTaken: "Identifikátor {id} je obsadený. Upravte názov, alebo zadajte kľúč ručne.",
       keysTaken: "Obsadené kľúče v tejto organizácii: ",
       categoryNote: "Zoskupuje dokumenty v knižnici a vo filtroch. Existujúce: ",
       moreFields: "Ďalšie údaje",
@@ -4524,7 +4531,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       codeNoteBefore: "Velká písmena, číslice, pomlčka. Nese ho každá osoba, dokument i potvrzení — ",
       codeNoteHighlight: "později se nemění",
       codeNoteAfter: " — je součástí identifikátoru každého dokumentu.",
-      codeTaken: (code) => `Kód ${code} je už obsazený. Zvolte jiný.`,
+      codeTaken: "Kód {code} je už obsazený. Zvolte jiný.",
       name: "Název",
       nameNote: "To, co lidé uvidí v hlavičce portálu. Z názvu se navrhne kód organizace — zkratku, kterou organizace používá, klidně přepište.",
       supportEmail: "Kontakt organizace",
@@ -5743,7 +5750,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       keyPreview: "Identifikátor:",
       keyManualSummary: "Zadat klíč ručně",
       keyManualNote: "Klíč vzniká jednou a nikdy se nemění — žije v potvrzeních, auditu a exportech. Přejmenování dokumentu ho nemění.",
-      keyTaken: id => `Identifikátor ${id} je obsazený. Upravte název, nebo zadejte klíč ručně.`,
+      keyTaken: "Identifikátor {id} je obsazený. Upravte název, nebo zadejte klíč ručně.",
       keysTaken: "Obsazené klíče v této organizaci: ",
       categoryNote: "Seskupuje dokumenty v knihovně a ve filtrech. Existující: ",
       moreFields: "Další údaje",
@@ -6442,7 +6449,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       codeNoteBefore: "Capital letters, digits, hyphen. Every person, document and acknowledgement carries it — ",
       codeNoteHighlight: "it never changes afterwards",
       codeNoteAfter: " — it is part of every document's identifier.",
-      codeTaken: (code) => `The code ${code} is already taken. Pick another one.`,
+      codeTaken: "The code {code} is already taken. Pick another one.",
       name: "Name",
       nameNote: "What people will see in the portal header. The organisation code is suggested from it — feel free to replace it with the abbreviation the organisation uses.",
       supportEmail: "Organisation contact",
@@ -7661,7 +7668,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       keyPreview: "Identifier:",
       keyManualSummary: "Enter the key manually",
       keyManualNote: "The key is created once and never changes — it lives in acknowledgements, the audit trail and exports. Renaming the document does not change it.",
-      keyTaken: id => `The identifier ${id} is already taken. Change the title, or enter the key manually.`,
+      keyTaken: "The identifier {id} is already taken. Change the title, or enter the key manually.",
       keysTaken: "Keys already taken in this organisation: ",
       categoryNote: "Groups documents in the library and in filters. Existing: ",
       moreFields: "More details",

@@ -38,7 +38,8 @@ export default function CompanyCodeField({
     codeNote: string
     codeNoteHighlight: string
     codeNoteAfter: string
-    taken: (code: string) => string
+    /** Šablóna s `{code}`, nie funkcia — dôvod v `KeyPreview.tsx`. */
+    taken: string
   }
 }) {
   const [name, setName] = useState(initialName)
@@ -82,7 +83,7 @@ export default function CompanyCodeField({
         </span>
         {taken && (
           <span className="key-preview key-preview--taken" aria-live="polite">
-            {labels.taken(code.toUpperCase())}
+            {labels.taken.replace("{code}", code.toUpperCase())}
           </span>
         )}
       </label>
