@@ -2091,8 +2091,15 @@ html[data-theme="dark"] .editor-tui .CodeMirror {
   font-weight: 600;
 }
 
-/* Počet vpravo, zarovnaný v stĺpci — preto `tabular-nums`. */
-.lf-folder span:last-child {
+/*
+ * Počet vpravo, zarovnaný v stĺpci — preto `tabular-nums`.
+ *
+ * `:not(:first-child)` je tu nutnosť, nie opatrnosť: „Nezaradené" počet
+ * nemá, a bez tej podmienky by `margin-left: auto` chytilo jeho jediný
+ * `<span>` a odtlačilo **názov** doprava. Vyzeralo by to ako preklep
+ * v jednom riadku, nie ako pravidlo, ktoré sa minulo cieľom.
+ */
+.lf-folder span:last-child:not(:first-child) {
   margin-left: auto;
   font-size: 11.5px;
   color: var(--muted);
