@@ -14,7 +14,6 @@
 import { getCollection } from "./mongodb"
 import { effectiveVersion, DOCUMENTS_COLLECTION } from "./documents"
 import { PERSONS_COLLECTION } from "./persons"
-import { TRACKS_COLLECTION } from "./tracks"
 import { validAcknowledgements } from "./acknowledgements"
 import { TENANTS_COLLECTION, normalizeTenant } from "./tenants"
 import { currentTenant, currentPerson } from "./session"
@@ -71,7 +70,12 @@ export interface TenantOverview {
   languages: string[]
   hostnames: string[]
   people: { total: number; signedIn: number }
-  tracks: number
+  /**
+   * Koľko znení organizácia má — **vrátane starších**: znenie je to, čo sa
+   * potvrdzuje, a archív je časť toho, čo organizácia naozaj má (D24).
+   * Počíta sa z dokumentov, ktoré sa už načítali, nie druhým dotazom.
+   */
+  versions: number
   /** `bezZnenia` sú vypísané menovite — je to najčastejšia tichá príčina
    *  toho, že sa človeku v zozname nič neobjaví (D6). */
   documents: { total: number; withoutVersion: string[] }
@@ -93,7 +97,6 @@ export async function tenantOverviews(): Promise<TenantOverview[]> {
   const raw = await tenantCol.find({}).sort({ companyCode: 1 }).toArray()
 
   const personCol = await getCollection<Person>(PERSONS_COLLECTION)
-  const trackCol = await getCollection(TRACKS_COLLECTION)
   const docCol = await getCollection<DocumentRecord>(DOCUMENTS_COLLECTION)
 
   const asOf = new Date()
@@ -103,10 +106,9 @@ export async function tenantOverviews(): Promise<TenantOverview[]> {
     const t = normalizeTenant(doc)
     const code = t.companyCode
 
-    const [total, signedIn, tracks, acknowledgements, documents] = await Promise.all([
+    const [total, signedIn, acknowledgements, documents] = await Promise.all([
       personCol.countDocuments({ companyCode: code }),
       personCol.countDocuments({ companyCode: code, lastLoginAt: { $exists: true } }),
-      trackCol.countDocuments({ companyCode: code }),
       // Dovtedy sa počítali **všetky** záznamy kolekcie vrátane odvolaní —
       // číslo teda rástlo aj vtedy, keď potvrdení ubudlo.
       validAcknowledgements({ companyCode: code }).then(v => v.length),
@@ -119,6 +121,12 @@ export async function tenantOverviews(): Promise<TenantOverview[]> {
       .filter(d => !effectiveVersion(d, asOf).ok)
       .map(d => d.title || d.documentId)
 
+    // Znenia z tých istých dokumentov — projekcia `versions` sa už načítala,
+    // takže to nie je dotaz navyše (ADMIN, úloha 1.2, rozhodnutie Jána
+    // 2026-09-22: počet trás je vnútorná mechanika, znenia sú to, čo
+    // organizácia má).
+    const versions = documents.reduce((n, d) => n + (d.versions?.length ?? 0), 0)
+
     const ds = (doc as Tenant & { domainSetup?: { requestedAt: Date; requestedTo: string } }).domainSetup
 
     out.push({
@@ -128,7 +136,7 @@ export async function tenantOverviews(): Promise<TenantOverview[]> {
       languages: t.languages,
       hostnames: t.hostnames,
       people: { total: total, signedIn: signedIn },
-      tracks,
+      versions,
       documents: { total: documents.length, withoutVersion: withoutVersion },
       acknowledgements: acknowledgements,
       ...(ds?.requestedAt

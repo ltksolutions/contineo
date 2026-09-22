@@ -93,9 +93,10 @@ export default async function TenantAdminPage() {
 
             {/*
               Poradie podľa dôležitosti (ADMIN, úloha 1.2): Contineo je systém
-              na dokumenty, takže prvé číslo je o nich. Zadanie píše
-              „dokumenty, znenia, osoby, potvrdenia"; znenia sa tu nepočítajú
-              (druhé číslo sú trasy) — necháva sa na jeho mieste, otázka v PR.
+              na dokumenty, takže prvé číslo je o nich a druhé o ich zneniach —
+              to je to, čo organizácia naozaj má. Počet trás bola vnútorná
+              mechanika (rozhodnutie Jána 2026-09-22); znenia sa počítajú
+              z dokumentov, ktoré `tenantOverviews()` už načítalo.
             */}
             <div className="admin-data">
               <Fact
@@ -106,7 +107,7 @@ export default async function TenantAdminPage() {
                 )}
                 muted={tenant.documents.total === 0}
               />
-              <Fact label={t.tracks} value={String(tenant.tracks)} muted={tenant.tracks === 0} />
+              <Fact label={t.versions} value={String(tenant.versions)} muted={tenant.versions === 0} />
               <Fact
                 label={t.people}
                 value={t.peopleValue(tenant.people.signedIn, tenant.people.total)}

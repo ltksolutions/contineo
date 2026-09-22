@@ -849,7 +849,8 @@ interface Dictionary {
       emptyText: string
       people: string
       peopleValue: (signedIn: number, total: number) => string
-      tracks: string
+      /** Počet znení — ADMIN.md úloha 1.2 (rozhodnutie Jána 2026-09-22). */
+      versions: string
       documents: string
       documentsValue: (valid: number, total: number) => string
       acknowledgements: string
@@ -2568,7 +2569,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       emptyText: "Prvú pridáte tlačidlom vyššie.",
       people: "Osoby",
       peopleValue: (signedIn, total) => `${signedIn} / ${total} prihlásených`,
-      tracks: "Trasy",
+      versions: "Znenia",
       documents: "Dokumenty",
       documentsValue: (valid, total) => `${valid} / ${total} platných`,
       acknowledgements: "Potvrdenia",
@@ -2813,7 +2814,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "tenant.notFound": "Organizácia {code} neexistuje.",
     "tenant.needsDomain": "Bez domény sa portál organizácie nikde neukáže. Nechaj aspoň jednu.",
     "tenant.nameRequired": "Názov organizácie je povinný — je to to, čo ľudia uvidia v hlavičke.",
-    "tenant.alreadyExists": "Organizácia {code} už existuje.",
+    "tenant.alreadyExists": "Organizácia {code} už existuje. Voľný je {free} — použite ten, alebo zvoľte vlastnú skratku.",
     "tenant.noEncryptionKey": "Tajomstvo sa nedá uložiť: chýba OAUTH_SECRET_ENCRYPTION_KEY. Ukladať ho čitateľne nebudeme — je to prístup do cudzieho systému.",
     "tenant.needsBothCredentials": "Treba aj clientId, aj tajomstvo — jedno bez druhého sa nedá použiť.",
 
@@ -4489,7 +4490,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       emptyText: "První přidáte tlačítkem výše.",
       people: "Osoby",
       peopleValue: (signedIn, total) => `${signedIn} / ${total} přihlášených`,
-      tracks: "Trasy",
+      versions: "Znění",
       documents: "Dokumenty",
       documentsValue: (valid, total) => `${valid} / ${total} platných`,
       acknowledgements: "Potvrzení",
@@ -4734,7 +4735,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "tenant.notFound": "Organizace {code} neexistuje.",
     "tenant.needsDomain": "Bez domény se portál organizace nikde neukáže. Nech aspoň jednu.",
     "tenant.nameRequired": "Název organizace je povinný — je to to, co lidé uvidí v hlavičce.",
-    "tenant.alreadyExists": "Organizace {code} už existuje.",
+    "tenant.alreadyExists": "Organizace {code} už existuje. Volný je {free} — použijte ten, nebo zvolte vlastní zkratku.",
     "tenant.noEncryptionKey": "Tajemství nelze uložit: chybí OAUTH_SECRET_ENCRYPTION_KEY. Ukládat ho čitelně nebudeme — je to přístup do cizího systému.",
     "tenant.needsBothCredentials": "Je potřeba clientId i tajemství — jedno bez druhého použít nelze.",
 
@@ -6402,7 +6403,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       emptyText: "Add the first one with the button above.",
       people: "People",
       peopleValue: (signedIn, total) => `${signedIn} / ${total} signed in`,
-      tracks: "Tracks",
+      versions: "Versions",
       documents: "Documents",
       documentsValue: (valid, total) => `${valid} / ${total} effective`,
       acknowledgements: "Acknowledgements",
@@ -6647,7 +6648,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "tenant.notFound": "Organisation {code} does not exist.",
     "tenant.needsDomain": "Without a domain the organisation's portal will not appear anywhere. Leave at least one.",
     "tenant.nameRequired": "The organisation name is required — it is what people see in the header.",
-    "tenant.alreadyExists": "Organisation {code} already exists.",
+    "tenant.alreadyExists": "Organisation {code} already exists. {free} is free — use that, or pick your own abbreviation.",
     "tenant.noEncryptionKey": "The secret cannot be stored: OAUTH_SECRET_ENCRYPTION_KEY is missing. We will not store it readable — it is access to someone else's system.",
     "tenant.needsBothCredentials": "Both clientId and the secret are needed — one without the other cannot be used.",
 
