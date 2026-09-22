@@ -698,10 +698,31 @@ export default async function LibraryPage({
           <div className="field">
             <span className="field-label">{tb.field}</span>
             <Select name="add" options={fieldOps} initial={fieldOps[0]?.value} fieldLabel={tb.field} />
+            {/*
+              Veta je vidieť vždy, nie až po výbere „Platné do po".
+              Bez JavaScriptu sa na zmenu výberu zareagovať nedá, a keby
+              chýbala celkom, vyzeralo by to ako chyba v zozname: dokument
+              s neobmedzenou platnosťou má koniec platnosti prázdny, takže
+              otázke na koniec platnosti nevyhovie.
+            */}
+            <span className="quiet field-hint">{tb.fieldNote}</span>
           </div>
           <label className="field builder-value">
             <span className="field-label">{tb.value}</span>
-            <input className="field-input" name="value" required />
+            {/*
+              `<datalist>` ponúkne „dnes" pri dátumových poliach a je to
+              nápoveda, nie obmedzenie — do poľa sa ďalej dá napísať dátum.
+              Prehliadač bez podpory ju ignoruje a pole zostane obyčajné,
+              takže to funguje aj bez skriptu.
+
+              Napísané slovo sa uloží ako **token**, nie ako dnešný dátum
+              (`normalizeDateValue`): odkaz poslaný dnes má o týždeň stále
+              znamenať „dnes", nie ten dávny deň.
+            */}
+            <input className="field-input" name="value" list="builder-hodnoty" required />
+            <datalist id="builder-hodnoty">
+              <option value={tb.today} />
+            </datalist>
           </label>
           {carried.map(([k, v], i) => <input key={`${k}-${i}`} type="hidden" name={k} value={v} />)}
           {/* Dve tlačidlá jedného formulára, nie prepínač vedľa neho: spojka

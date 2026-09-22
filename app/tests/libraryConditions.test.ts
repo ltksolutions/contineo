@@ -10,9 +10,9 @@ import { describe, it, expect } from "vitest"
 import {
   decodeCondition, encodeCondition, readConditions, readMatch,
   conditionFields, conditionQuery, describeConditions, OPS_FOR_FIELD,
-  normalizeGroups, groupsOf, splitAt, mergeUp, startsGroup,
+  normalizeGroups, groupsOf, splitAt, mergeUp, startsGroup, TODAY,
 } from "../src/lib/libraryConditions"
-import { buildQuery } from "../src/lib/libraryRead"
+import { buildQuery, expiredCondition } from "../src/lib/libraryRead"
 
 describe("čítanie z adresy", () => {
   it("kruh podmienka → adresa → podmienka drží", () => {
@@ -255,5 +255,70 @@ describe("skupiny podmienok — zátvorky bez znakov", () => {
     const two = describeConditions([c("a", 0), c("b", 0), c("c", 1)], "all", label, op, join)
     expect(two).toContain("(")
     expect(two).toContain("alebo")
+  })
+})
+
+/**
+ * Pole „Platné do" a token „dnes".
+ *
+ * `MASTER.md` hovorí, že zoznam expirovaných sa dostane podmienkou
+ * „Platné do · pred · dnes". Na tom stojí aj preklad starých odkazov
+ * `?status=expired`, takže „pred dnes" musí dať **ten istý** dotaz ako
+ * `expiredCondition()` — bez podmienky na `status`, ktorý je vlastný filter.
+ */
+describe("Platné do v query builderi", () => {
+  const den = new Date("2026-06-15T12:00:00.000Z")
+
+  it("token sa vyhodnotí až pri dotaze, nie pri zapísaní do adresy", () => {
+    // Odkaz poslaný dnes má o týždeň znamenať vtedajší dnešok, nie tento deň.
+    const c = decodeCondition("effectiveTo~before~dnes")
+    expect(c?.value).toBe(TODAY)
+
+    const teraz = conditionQuery([c!], "all", den)
+    const inokedy = conditionQuery([c!], "all", new Date("2026-12-01T00:00:00.000Z"))
+    expect(teraz).not.toEqual(inokedy)
+  })
+
+  it("„dnes“ sa uloží rovnako, nech ho človek napíše akokoľvek", () => {
+    for (const slovo of ["dnes", "Dnes", " DNES ", "today", "Today"]) {
+      expect(decodeCondition(`effectiveTo~before~${encodeURIComponent(slovo)}`)?.value).toBe(TODAY)
+    }
+    // Dátum zostáva dátumom.
+    expect(decodeCondition("effectiveTo~before~2026-01-31")?.value).toBe("2026-01-31")
+  })
+
+  it("„pred“ znamená to isté čo expiredCondition, bez podmienky na stav", () => {
+    const zBuildera = conditionQuery([{ field: "effectiveTo", op: "before", value: TODAY }], "all", den)
+    const { status, ...zFacetu } = expiredCondition(den)
+    expect(status).toBe("published")
+    expect(zBuildera).toEqual(zFacetu)
+  })
+
+  it("„pred“ nechytí dokument, ktorý má popri starom znení aj platné", () => {
+    const q = conditionQuery([{ field: "effectiveTo", op: "before", value: TODAY }], "all", den) as
+      { versions: { $not: { $elemMatch: Record<string, unknown> } } }
+    // Naivné `versions.effectiveTo < X` by taký dokument vzalo. Preto `$not
+    // $elemMatch`: dokument nesmie mať ani jedno znenie platné k dátumu.
+    expect(q.versions.$not.$elemMatch).toMatchObject({ effectiveFrom: { $lte: den } })
+  })
+
+  it("„po“ sa pýta na znenie s ohraničenou platnosťou, ktoré ešte platí", () => {
+    expect(conditionQuery([{ field: "effectiveTo", op: "after", value: TODAY }], "all", den))
+      .toEqual({ versions: { $elemMatch: { effectiveFrom: { $lte: den }, effectiveTo: { $gt: den } } } })
+  })
+
+  it("nezmysel v hodnote podmienku zahodí, nevráti prázdny zoznam", () => {
+    // `$lt: Invalid Date` by nevrátilo nič a vyzeralo by to, že knižnica
+    // je prázdna — teda ako chyba v dátach, nie v adrese.
+    expect(conditionQuery([{ field: "effectiveTo", op: "before", value: "vcera" }], "all", den)).toBeNull()
+  })
+
+  it("ponúka sa len s operátormi pred/po", () => {
+    expect(OPS_FOR_FIELD.effectiveTo).toEqual(["before", "after"])
+  })
+
+  it("token funguje aj pri poli Zmenené", () => {
+    expect(conditionQuery([{ field: "updatedAt", op: "after", value: TODAY }], "all", den))
+      .toEqual({ updatedAt: { $gt: den } })
   })
 })

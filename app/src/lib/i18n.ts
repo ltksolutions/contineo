@@ -1524,6 +1524,14 @@ interface Dictionary {
         field: string
         op: string
         value: string
+        /** Ponuka pri dátumovom poli — napísané slovo sa uloží ako token. */
+        today: string
+        /**
+         * Veta pri výbere poľa. „Platné do po X" sa pýta na koniec platnosti,
+         * takže dokument bez neho nevyhovie — bez upozornenia to vyzerá ako
+         * chyba v zozname.
+         */
+        fieldNote: string
         add: string
         remove: (description: string) => string
         matchAll: string
@@ -3492,6 +3500,9 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
         field: "Pole",
         op: "Operátor",
         value: "Hodnota",
+        /** Ponuka pri dátumovom poli — napísané slovo sa uloží ako token. */
+        today: "dnes",
+        fieldNote: "Pri „Platné do po“ sa dokumenty s neobmedzenou platnosťou nezobrazia — nemajú koniec platnosti, na ktorý sa pýtate.",
         add: "Pridať podmienku",
         remove: (description) => `Odobrať podmienku ${description}`,
         matchAll: "spĺňa všetky",
@@ -3511,6 +3522,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
           tag: "Značka",
           accessLevel: "Prístup",
           updatedAt: "Zmenené",
+          effectiveTo: "Platné do",
         },
         ops: {
           is: "je",
@@ -5425,6 +5437,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
         field: "Pole",
         op: "Operátor",
         value: "Hodnota",
+        today: "dnes",
+        fieldNote: "U „Platné do po“ se dokumenty s neomezenou platností nezobrazí — nemají konec platnosti, na který se ptáte.",
         add: "Přidat podmínku",
         remove: (description) => `Odebrat podmínku ${description}`,
         matchAll: "splňuje všechny",
@@ -5444,6 +5458,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
           tag: "Značka",
           accessLevel: "Přístup",
           updatedAt: "Změněno",
+          effectiveTo: "Platné do",
         },
         ops: {
           is: "je",
@@ -7351,6 +7366,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
         field: "Field",
         op: "Operator",
         value: "Value",
+        today: "today",
+        fieldNote: "With “Valid to after”, documents with unlimited validity are not shown — they have no end date to ask about.",
         add: "Add condition",
         remove: (description) => `Remove condition ${description}`,
         matchAll: "match all",
@@ -7370,6 +7387,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
           tag: "Tag",
           accessLevel: "Access",
           updatedAt: "Changed",
+          effectiveTo: "Valid to",
         },
         ops: {
           is: "is",
