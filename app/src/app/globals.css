@@ -3785,11 +3785,6 @@ a.answer-source:focus-visible { outline: 2px solid var(--accent); outline-offset
 .evidence-step--absent .evidence-what { color: var(--muted); }
 
 .evidence-head { display: flex; gap: 10px; align-items: baseline; flex-wrap: wrap; }
-/* Ešte ich kreslí /people/[id] (OSOBY.md); /hr/evidence prešla na
-   `dutyTagClass()` (HR.md, úloha 1). Odídu s PR k osobám. */
-.evidence-state--acknowledged { background: var(--ok-bg); color: var(--ok-fg); }
-.evidence-state--opened-not-acknowledged { background: var(--warn-bg); color: var(--warn-fg); }
-.evidence-state--not-opened { background: var(--surface-2); color: var(--muted); }
 
 /*
  * Rozbaľovacia karta („widget").

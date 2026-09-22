@@ -1287,6 +1287,8 @@ interface Dictionary {
       roles: string
       rolesNote: string
       save: string
+      /** Súhrn `<details>` „Prístup a členstvo" (OSOBY.md, úloha 3). */
+      accessSummary: string
       returnHeading: string
       excludeHeading: string
       /** Karta „Pozvánka" na detaile — len kým sa osoba ani raz neprihlásila. */
@@ -3260,6 +3262,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       roles: "Roly",
       rolesNote: "Správcu platformy sa odtiaľto prideliť nedá — patrí tenantovi dodávateľa a má vlastnú cestu.",
       save: "Uložiť",
+      accessSummary: "Prístup a členstvo",
       returnHeading: "Vrátiť osobu",
       excludeHeading: "Vyradiť osobu",
       inviteHeading: "Pozvánka",
@@ -5166,6 +5169,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       roles: "Role",
       rolesNote: "Správce platformy se odsud přidělit nedá — patří tenantovi dodavatele a má vlastní cestu.",
       save: "Uložit",
+      accessSummary: "Přístup a členství",
       returnHeading: "Vrátit osobu",
       excludeHeading: "Vyřadit osobu",
       inviteHeading: "Pozvánka",
@@ -7064,6 +7068,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       roles: "Roles",
       rolesNote: "The platform administrator cannot be assigned from here — that role belongs to the supplier's tenant and has its own path.",
       save: "Save",
+      accessSummary: "Access and membership",
       returnHeading: "Reinstate the person",
       excludeHeading: "Exclude the person",
       inviteHeading: "Invitation",
