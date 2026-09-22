@@ -6,7 +6,7 @@
 > **Tento súbor je indícia, `git log` je pravda.** Keď si protirečia, verí sa
 > gitu a NEXT.md sa opraví. Aktualizuje sa pri rituáli **„Poupratuj"**.
 
-Posledná aktualizácia: **2026-09-22** (po zlúčení, nasadení a migrácii O21)
+Posledná aktualizácia: **2026-09-22** (po povýšení `web/` na Next 16 a upratovaní vetiev)
 
 ---
 
@@ -32,9 +32,14 @@ dátach: desiatim dokumentom odišlo zaradenie, jednému z neho pribudol druh
 pôvodných hodnôt je v `private/zalohy/pred-o21-krok2-2026-09-22.json`.
 Vyhľadávanie overené po migrácii na ostrom intranete.
 
+**Marketingový web beží na Next 16.** Obe polovice repozitára sú tým na
+rovnakej veľkej verzii: `app/` od 17. 9., `web/` od 22. 9. Zanikol tým aj
+rozdiel v ESLinte (obe majú plochú konfiguráciu) a v bráne (`proxy.js`
+namiesto `middleware.js`). React zostáva v oboch na 18.3.1.
+
 Repozitár je čistý: pracovný strom bez zmien, všetko pushnuté, **nula
-otvorených PR**. Na `origin` sa povaľuje 58 už zlúčených vetiev — nemazú sa
-bez výslovného súhlasu, zapísané v `docs/TODO.md`.
+otvorených PR**, a **jediná vetva je `main`** — lokálne aj na `origin`.
+Všetkých 64 zlúčených vetiev sa zmazalo 22. 9. so súhlasom Jána.
 
 ## Čo čaká na rozhodnutie Jána
 
@@ -73,6 +78,16 @@ Zlomové body sú len **640 a 1024**, iné nepribúdajú.
 
 `npm run build` zhodí bežiaci `npm run dev` — zdieľajú `.next`. Buildom sa
 overuje až po zastavení dev servera.
+
+**Marketingový web má vlastnú sadu** a púšťa sa z `web/`:
+
+```
+cd web && npx eslint . && npx vitest run && npm run build
+```
+
+Baseline: **0 errors, 0 warnings, 13 testov v 2 súboroch, 62 predgenerovaných
+stránok** (z toho 18 OG a Twitter obrázkov). `next lint` tu už neexistuje —
+volá sa priamo `eslint`.
 
 ## Mapa dokumentácie
 
