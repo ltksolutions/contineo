@@ -92,8 +92,12 @@ export interface DocumentMetadata {
    * `assignments`, `approval_rounds`, `onboarding_tracks` aj v audite.
    */
   documentKey: string
-  /** Od ADR-010 nepovinné (prázdny reťazec): mizne z formulára, v dátach
-   *  starých dokumentov zostáva ako historická záložka identity. */
+  /**
+   * **Odchádza (O21 krok 2).** Zaradenie sa zlúčilo do Druhu: nové dokumenty
+   * ho nedostávajú a migrácia ho z dát odstraňuje. V type zostáva preto, že
+   * dokumentom spred D80 je záložnou identitou — `saveMetadata()` z neho
+   * dopočíta `documentKey`, keď chýba. Nikam sa už nezapisuje.
+   */
   sectionKey: string
   companyCode: string
   scope: string
@@ -330,7 +334,6 @@ export async function uploadDocument(
         title: meta.title,
         slug: documentId.replace(/:/g, "-"),
         documentKey: meta.documentKey,
-        sectionKey: meta.sectionKey,
         companyCode: meta.companyCode,
         scope: meta.scope,
         accessLevel: meta.accessLevel,
@@ -481,7 +484,6 @@ export async function publish(
     heading: ch.heading,
     articleRef: ch.articleRef ?? null,
     chunkType: ch.typ ?? "clanok",
-    sectionKey: meta.sectionKey,
     companyCode,
     scope: meta.scope,
     accessLevel: meta.accessLevel,
@@ -873,7 +875,6 @@ export async function reindex(
       heading: ch.heading,
       articleRef: ch.articleRef ?? null,
       chunkType: ch.typ ?? "clanok",
-      sectionKey: meta.sectionKey,
       companyCode,
       scope: meta.scope,
       accessLevel: meta.accessLevel,

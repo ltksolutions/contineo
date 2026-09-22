@@ -61,9 +61,9 @@ export default async function NewDocumentPage({
   // súbor, je zbytočne neskoro. Zoznam je serverový zámerne: obrazovka nemá
   // vyžadovať JavaScript kvôli nápovede.
   const usedKeys = (await (await getCollection(DOCUMENTS_COLLECTION))
-    .find({ companyCode: ctx.tenant.companyCode }, { projection: { documentKey: 1, sectionKey: 1 } })
-    .toArray() as unknown as { documentKey?: string; sectionKey?: string }[])
-    .map(d => d.documentKey ?? d.sectionKey ?? "")
+    .find({ companyCode: ctx.tenant.companyCode }, { projection: { documentKey: 1 } })
+    .toArray() as unknown as { documentKey?: string }[])
+    .map(d => d.documentKey ?? "")
     .filter(Boolean)
     .sort()
 

@@ -52,7 +52,6 @@ export interface SearchOptions {
    * bez organizácie sa nehľadá vôbec (`tenantFilter()` vyhodí výnimku).
    */
   companyCode: string
-  sectionKey?: string
   /**
    * Zahrnúť aj archivované verzie (isActive: false).
    *
@@ -73,7 +72,6 @@ export interface ChunkResult {
   documentId: string
   versionId?: string
   // tagging / domain filtering
-  sectionKey?: string
   companyCode?: string
   scope?: "global" | "company" | "region"
   accessLevel?: string          // public | internal — visibility / RBAC
@@ -147,7 +145,7 @@ function lookupDocument(scoreMeta: ScoreMeta): Document[] { return [
   {
     $project: {
       text: 1, documentId: 1, versionId: 1,
-      sectionKey: 1, companyCode: 1, scope: 1, accessLevel: 1, language: 1,
+      companyCode: 1, scope: 1, accessLevel: 1, language: 1,
       articleRef: 1, heading: 1, chunkIndex: 1, tags: 1, chunkType: 1,
       sourceType: 1, derivedFrom: 1,
       embeddingModel: 1, isActive: 1, effectiveFrom: 1, effectiveTo: 1,
@@ -174,7 +172,6 @@ export function vectorFilter(opts: SearchOptions): Document {
   // Organizácia ide do filtra ako prvá a bez podmienky (D90).
   const filter: Document = { companyCode: tenantFilter(opts) }
   if (opts.accessLevel === "public") filter.accessLevel = "public"
-  if (opts.sectionKey) filter.sectionKey = opts.sectionKey
   if (!opts.includeArchived) filter.isActive = true
   return filter
 }
@@ -184,7 +181,6 @@ export function searchFilterClauses(opts: SearchOptions): Document[] {
   // Organizácia ide do filtra ako prvá a bez podmienky (D90).
   const clauses: Document[] = [{ equals: { path: "companyCode", value: tenantFilter(opts) } }]
   if (opts.accessLevel === "public") clauses.push({ equals: { path: "accessLevel", value: "public" } })
-  if (opts.sectionKey) clauses.push({ equals: { path: "sectionKey", value: opts.sectionKey } })
   if (!opts.includeArchived) clauses.push({ equals: { path: "isActive", value: true } })
   return clauses
 }

@@ -40,7 +40,6 @@ export function statusTagClass(status: string): string {
 export interface LibraryRow {
   documentId: string
   title: string
-  sectionKey: string
   category?: string
   language?: string
   accessLevel?: string
@@ -154,7 +153,6 @@ function toRow(d: RawRow): LibraryRow {
   return {
     documentId: String(d.documentId),
     title: String(d.title ?? d.documentId),
-    sectionKey: String(d.sectionKey ?? ""),
     category: d.category ? String(d.category) : undefined,
     language: d.language ? String(d.language) : undefined,
     accessLevel: d.accessLevel ? String(d.accessLevel) : undefined,
@@ -346,7 +344,8 @@ export function queryParts(
         $or: [
           { title: { $regex: safe, $options: "i" } },
           { documentId: { $regex: safe, $options: "i" } },
-          { sectionKey: { $regex: safe, $options: "i" } },
+          // Zaradenie z hľadania odišlo s O21 krokom 2 — zlúčilo sa do Druhu.
+          { category: { $regex: safe, $options: "i" } },
           // Interné číslo je to, čím predpis volá polovica domu („12/2024").
           // Keby sa podľa neho nedalo hľadať, bolo by to pole na pozeranie.
           { internalNumber: { $regex: safe, $options: "i" } },
@@ -539,7 +538,7 @@ export async function libraryList(
   const records = await col
     .find(q as never, {
       projection: {
-        documentId: 1, title: 1, sectionKey: 1, category: 1, language: 1, accessLevel: 1,
+        documentId: 1, title: 1, category: 1, language: 1, accessLevel: 1,
         tags: 1, status: 1, processingStatus: 1, draftMarkdown: 1, originalFile: 1,
         folderId: 1, folderPath: 1, updatedAt: 1, updatedBy: 1,
         ownerDepartmentId: 1, internalNumber: 1,
