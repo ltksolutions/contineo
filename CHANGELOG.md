@@ -15,6 +15,11 @@ a kruh má hrubší ťah a väčšie oči. Je to tá istá značka, len čitate�
 aj v malom. Prihlasovacia obrazovka ju dostala tiež — dovtedy mala
 vlastnú kópiu, ktorá by zostala stará.
 
+Rovnaké to bolo na contineo.app: logo, favicon, ikony aplikácie aj
+obrázky pre zdieľanie na sociálnych sieťach niesli starú kresbu.
+Zdieľaný obrázok má pritom nadpis „Opýtajte sa. Nehľadajte." — a vedľa
+neho bola nakreslená lupa. Už nie je.
+
 
 ### Tabuľka knižnice sa zmestí na obrazovku (2026-09-22)
 
