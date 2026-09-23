@@ -10,7 +10,7 @@
 import { notFound, redirect } from "next/navigation"
 import Link from "next/link"
 import Notice from "@/components/Notice"
-import { MAX_BYTES, ACCEPTED_EXTENSIONS } from "@/lib/fileStore"
+import { MAX_FORM_BYTES, ACCEPTED_EXTENSIONS } from "@/lib/fileStore"
 import KeyPreview from "@/components/KeyPreview"
 import UploadSubmit from "@/components/UploadSubmit"
 import { libraryContext } from "@/lib/library"
@@ -127,7 +127,7 @@ export default async function NewDocumentPage({
             <span className="quiet upload-drop-note">
               {ACCEPTED_EXTENSIONS.map(e => e.slice(1).toUpperCase()).join(" · ")}
               <br />
-              {t.maxSize(MAX_BYTES / 1024 / 1024)}
+              {t.maxSize(MAX_FORM_BYTES / 1024 / 1024)}
               <br />
               {t.oldFormatsBefore}<code>.doc</code>{t.oldFormatsMiddle}<code>.xls</code>{t.oldFormatsAfter}
             </span>

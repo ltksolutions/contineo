@@ -2868,6 +2868,10 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     // ── uložený súbor ──────────────────────────────────────────────────────
     "file.empty": "Súbor je prázdny.",
     "file.tooLarge": "Súbor má {mb} MB, strop je {maxMb} MB.",
+    "file.nameRequired": "Súbor nemá názov.",
+    "file.uploadNotFound": "Nahrávanie sa nenašlo alebo vypršalo. Začni znova.",
+    "file.chunkInvalid": "Časť súboru neprišla celá. Skús nahrať znova.",
+    "file.uploadIncomplete": "Súbor neprišiel celý. Skús nahrať znova.",
 
     // ── priečinky knižnice ─────────────────────────────────────────────────
     "folder.nameRequired": "Názov priečinka je povinný.",
@@ -4901,6 +4905,10 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     // ── uložený soubor ─────────────────────────────────────────────────────
     "file.empty": "Soubor je prázdný.",
     "file.tooLarge": "Soubor má {mb} MB, strop je {maxMb} MB.",
+    "file.nameRequired": "Soubor nemá název.",
+    "file.uploadNotFound": "Nahrávání se nenašlo nebo vypršelo. Začni znovu.",
+    "file.chunkInvalid": "Část souboru nepřišla celá. Zkus nahrát znovu.",
+    "file.uploadIncomplete": "Soubor nepřišel celý. Zkus nahrát znovu.",
 
     // ── složky knihovny ────────────────────────────────────────────────────
     "folder.nameRequired": "Název složky je povinný.",
@@ -6925,6 +6933,10 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     // ── stored file ────────────────────────────────────────────────────────
     "file.empty": "The file is empty.",
     "file.tooLarge": "The file is {mb} MB; the limit is {maxMb} MB.",
+    "file.nameRequired": "The file has no name.",
+    "file.uploadNotFound": "The upload was not found or has expired. Start again.",
+    "file.chunkInvalid": "Part of the file did not arrive complete. Try uploading again.",
+    "file.uploadIncomplete": "The file did not arrive complete. Try uploading again.",
 
     // ── library folders ────────────────────────────────────────────────────
     "folder.nameRequired": "The folder name is required.",
