@@ -4,6 +4,18 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Každý platný predpis má zodpovednú osobu (2026-09-23)
+
+Všetky platné znenia predpisov majú odteraz zodpovednú osobu, takže nad
+potvrdením vidno, na koho sa obrátiť. Kým sa garanti jednotlivých predpisov
+neurčia menovite, je ňou Ján Letko; zmena na inú osobu sa robí v knižnici
+a zostane v histórii znenia.
+
+Položky v číselníku právnych základov dostali presnejšie názvy a odkazy —
+napríklad „Oboznámenie pri nástupe (pracovný poriadok, kolektívna zmluva,
+predpisy BOZP)" alebo „Interná smernica zväzu". Odkazy na predpisy ešte
+kontroluje zodpovedná osoba za ochranu osobných údajov.
+
 ### Právny základ sa vyberá z číselníka (2026-09-23)
 
 Zodpovedná osoba už odkaz na zákon nepíše ručne — vyberá z číselníka

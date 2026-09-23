@@ -10,6 +10,48 @@
 
 ---
 
+## 2026-09-23 (5) — prechod do VS Code, zodpovedná osoba, `text-decoration`, plán D93
+
+**Prvé sedenie v Claude Code vo VS Code na Jánovom Macu**, nie na claude.ai.
+Repozitár už bol v `~/GitHub/contineo`, stačilo overiť, že sedí s `origin`,
+a spustiť sadu proti baseline. Pamäť z predošlých sedení sa neprenáša — nesie
+ju `CLAUDE.md`, `NEXT.md` a `docs/`, a stačilo to. Pri „Zorientuj sa" NEXT.md
+ešte nepoznal PR #79; povedané nahlas, opravené upratovaním #81.
+
+**Zodpovedná osoba pre všetky platné znenia je Ján** (jeho pokyn: „všade
+pridaj mňa"). Skript `set_responsible.mjs` zapisuje cez `setVersionResponsible()`,
+nie priamo do kolekcie — história v `responsibleChanges[]` a audit vznikli
+rovnako ako z obrazovky. Nahradené znenia (2) som nechal: spätne dopísaná
+osoba by tvrdila, že za ne vtedy niekto zodpovedal. Záloha pred zápisom
+v `private/zalohy/`. Právny základ som nevyberal — to je rozhodnutie
+zodpovednej osoby, nie skriptu.
+
+**„Založ číselník podľa návrhu" znamenalo menej, než to znelo** — číselník
+už v kóde bol od D92 a každá organizácia ho mala. Rozdiel proti dokumentu
+pre Švehlovú boli štyri texty; kľúče sa nemenili, takže sa nič nerozviazalo.
+
+**`text-decoration`: čítanie by jedno pravidlo zmazalo zle.** Prešiel som
+všetky výskyty tried cez AST (je to odkaz? je v `<p>` alebo pod triedou,
+ktorá podčiarknutie vracia?) a z 29 vyšli 3, ktoré zostať musia. Potom som
+porovnal vypočítaný `text-decoration-line` so starým a novým CSS v Chrome
+pri 390 a 1440 px — a našiel sa štvrtý: `.bulk-clear` je podčiarknutý
+zámerne a jeho `none` v `@media` ruší **vlastné** pravidlo, nie koreň.
+Z AST sa to vidieť nedalo, lebo nejde o predka, ale o zlom. Poučenie:
+pri mazaní CSS porovnávať vypočítané hodnoty, nie selektory.
+
+Obrazovky som po prihlásení **nevidel** — lokálne prihlásenie by chcelo
+zápis relácie do ostrej databázy a to bez výslovného súhlasu nerobím.
+
+**Plán D93** (výber podľa filtra) pripravil podagent, tri jeho nálezy som
+overil v kóde sám, kým šli do dokumentu: presun do priečinka nezapisuje
+audit, CSV ignoruje filter oddelenia a „z toho N mimo" počíta proti strane.
+Prvé dva sú chyby nezávislé od rozhodnutia o variante.
+
+Zlúčené PR #82–#84 na Jánov pokyn, všetky zlúčené vetvy zmazané
+(`--no-merged` vrátil nulu). Na `origin` zostal jediný `main`.
+
+---
+
 ## 2026-09-23 (4) — číselník právnych základov (D92)
 
 Ján navrhol, aby odkaz na zákon nebol voľný text, ale číselník s predvyplnenými
