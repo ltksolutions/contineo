@@ -10,7 +10,7 @@
 import { describe, it, expect } from "vitest"
 import * as XLSX from "xlsx"
 import JSZip from "jszip"
-import { detectFileType, convert, ConversionError, FILE_TYPE_LABEL, stripInlineImages } from "../src/lib/conversion"
+import { detectFileType, convert, ConversionError, FILE_TYPE_LABEL, stripInlineImages, stripWordToc, inlineFootnotes } from "../src/lib/conversion"
 
 const zip = Buffer.from([0x50, 0x4b, 0x03, 0x04, 0x00])
 const pdf = Buffer.from("%PDF-1.7\n...")
@@ -138,5 +138,39 @@ describe("obrázky sa do textu nevkladajú", () => {
   it("obrázok s obyčajnou adresou nechá tak — to nie je náklad, ale odkaz", () => {
     const md = "![schéma](https://example.org/schema.png)"
     expect(stripInlineImages(md)).toEqual({ markdown: md, removed: 0 })
+  })
+})
+
+describe("prevod .docx pre vyhľadávanie (pracovný poriadok SFZ, 23. 9.)", () => {
+  it("obsah z Wordu zmizne — odkazy na #_Toc aj prázdne kotvy", () => {
+    const html = '<a id="_Toc1"></a><p>Obsah</p><p><a href="#_Toc2">Článok 1 – Všeobecné\t4</a></p><h2>Článok 1</h2>'
+    expect(stripWordToc(html)).toBe("<p>Obsah</p><h2>Článok 1</h2>")
+  })
+
+  it("poznámka pod čiarou sa vloží k odkazu a zoznam na konci zmizne", () => {
+    const html = '<p>kvalifikácie<sup><a href="#footnote-39" id="footnote-ref-39">[39]</a></sup>,</p>' +
+      '<ol><li id="footnote-39"><p> § 140 ZP <a href="#footnote-ref-39">↑</a></p></li></ol>'
+    expect(inlineFootnotes(html)).toBe("<p>kvalifikácie (pozn. 39: § 140 ZP),</p>")
+  })
+
+  it("tabuľka vyjde ako tabuľka Markdownu, nie ako rozsypané riadky", async () => {
+    const zip = new JSZip()
+    zip.file("[Content_Types].xml",
+      '<?xml version="1.0" encoding="UTF-8"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">' +
+      '<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>' +
+      '<Default Extension="xml" ContentType="application/xml"/>' +
+      '<Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/></Types>')
+    zip.file("_rels/.rels",
+      '<?xml version="1.0" encoding="UTF-8"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">' +
+      '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/></Relationships>')
+    const cell = (t: string) => `<w:tc><w:p><w:r><w:t>${t}</w:t></w:r></w:p></w:tc>`
+    zip.file("word/document.xml",
+      '<?xml version="1.0" encoding="UTF-8"?><w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body>' +
+      `<w:tbl><w:tr>${cell("Schválil")}${cell("VV SFZ")}</w:tr><w:tr>${cell("Dátum | účinnosti")}${cell("07.09.2026")}</w:tr></w:tbl>` +
+      '</w:body></w:document>')
+    const r = await convert("norma.docx", await zip.generateAsync({ type: "nodebuffer" }))
+    expect(r.markdown).toBe(
+      "| Schválil | VV SFZ |\n| --- | --- |\n| Dátum \\| účinnosti | 07.09.2026 |",
+    )
   })
 })

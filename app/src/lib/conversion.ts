@@ -108,6 +108,73 @@ export function stripInlineImages(markdown: string): { markdown: string; removed
   return { markdown: out, removed }
 }
 
+/**
+ * Obsah vygenerovaný Wordom — každý riadok je odkaz na kotvu `#_Toc…` s číslom
+ * strany. V prevedenom texte nič nenaviguje (kotvy nie sú) a vo vyhľadávaní je
+ * to šum: štyridsať riadkov „Článok 7 – Pracovná cesta 9" pred prvým článkom.
+ * Zahodia sa aj prázdne kotvy `<a id="_Toc…">`, ktoré Word rozsieva po nadpisoch.
+ */
+export function stripWordToc(html: string): string {
+  return html
+    .replace(/<p>\s*<a href="#_Toc[^"]*">[\s\S]*?<\/a>\s*<\/p>/g, "")
+    .replace(/<a id="_Toc[^"]*"><\/a>/g, "")
+}
+
+/**
+ * Poznámky pod čiarou **k textu**, nie na koniec (23. 9. 2026, pracovný
+ * poriadok SFZ). V predpisoch sú to spravidla odkazy na zákon — „§ 140 ZP" —
+ * a úsek s článkom sa na vyhľadávanie reže osobitne; poznámky na konci
+ * dokumentu by pri ňom nikdy neboli. Odkaz `[39]` sa nahradí
+ * „(pozn. 39: § 140 ZP)" a zoznam poznámok na konci sa zahodí.
+ *
+ * Tvar je presne ten, ktorý robí mammoth: `<sup><a href="#footnote-N"
+ * id="footnote-ref-N">[N]</a></sup>` v texte a `<li id="footnote-N">` so
+ * spätným odkazom „↑" na konci.
+ */
+export function inlineFootnotes(html: string): string {
+  const notes = new Map<string, string>()
+  const withoutList = html.replace(/<li id="footnote-(\d+)">([\s\S]*?)<\/li>/g, (_all, n: string, body: string) => {
+    const text = body
+      .replace(/<a href="#footnote-ref-\d+">[\s\S]*?<\/a>/g, "")
+      .replace(/<[^>]+>/g, " ")
+      .replace(/\s+/g, " ")
+      .trim()
+    notes.set(n, text)
+    return ""
+  })
+  return withoutList
+    .replace(/<ol>\s*<\/ol>/g, "")
+    .replace(/<sup><a href="#footnote-(\d+)" id="footnote-ref-\d+">\[\d+\]<\/a><\/sup>/g, (all, n: string) => {
+      const text = notes.get(n)
+      return text ? ` (pozn. ${n}: ${text})` : all
+    })
+}
+
+/**
+ * Tabuľka ako tabuľka Markdownu (GFM). Turndown ju bez doplnku rozsype na
+ * samostatné odseky — „Schválil" a „VV SFZ" potom stoja v texte ako dva
+ * nesúvisiace riadky. Prvý riadok je hlavička (Markdown bez nej tabuľku
+ * nevykreslí); bunky sa zlejú do jedného riadku a `|` sa escapuje.
+ */
+type TurndownLike = { turndown(html: string): string }
+type TableNode = { querySelectorAll(sel: string): ArrayLike<{ querySelectorAll(sel: string): ArrayLike<{ innerHTML: string }> }> }
+
+function tableToMarkdown(node: TableNode, service: TurndownLike): string {
+  const rows = Array.from(node.querySelectorAll("tr")).map(tr =>
+    Array.from(tr.querySelectorAll("td, th")).map(cell =>
+      service.turndown(cell.innerHTML).replace(/\s*\n+\s*/g, " ").replace(/\|/g, "\\|").trim(),
+    ),
+  ).filter(r => r.length > 0)
+  if (rows.length === 0) return ""
+  const width = Math.max(...rows.map(r => r.length))
+  const line = (r: string[]) => "| " + Array.from({ length: width }, (_, i) => r[i] ?? "").join(" | ") + " |"
+  return "\n\n" + [
+    line(rows[0]),
+    "| " + Array.from({ length: width }, () => "---").join(" | ") + " |",
+    ...rows.slice(1).map(line),
+  ].join("\n") + "\n\n"
+}
+
 async function fromDocx(data: Buffer): Promise<ConversionResult> {
   const mammoth = (await import("mammoth")).default
   const TurndownService = (await import("turndown")).default
@@ -136,7 +203,12 @@ async function fromDocx(data: Buffer): Promise<ConversionResult> {
     bulletListMarker: "-",
     codeBlockStyle: "fenced",
   })
-  const stripped = stripInlineImages(turndown.turndown(result.value))
+  turndown.addRule("table", {
+    filter: "table",
+    replacement: (_content, node) => tableToMarkdown(node as unknown as TableNode, turndown),
+  })
+  const html = inlineFootnotes(stripWordToc(result.value))
+  const stripped = stripInlineImages(turndown.turndown(html))
   const markdown = tidied(stripped.markdown)
 
   const warnings: string[] = []
