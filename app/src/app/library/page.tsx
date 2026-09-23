@@ -488,11 +488,22 @@ export default async function LibraryPage({
       */}
       <WaitingForApproval rounds={waiting} titles={waitingTitles} language={uiLanguage} />
 
-      <div style={{ display: "flex", gap: 12, alignItems: "baseline", flexWrap: "wrap", margin: "0 0 6px" }}>
+      {/*
+        Hlavička stránky je `.page-head` ako inde v portáli, nie vlastné
+        inline štýly — boli to tie isté hodnoty, len opísané druhýkrát.
+
+        Medzera (`.page-head-spacer`) tlačí akcie k pravému okraju, ako v
+        `KNIZNICA.html` (rámy 1 a 8). Je to prvok, nie `margin-left: auto`
+        na prepínači pohľadu: pod 640 px je prepínač skrytý a odsadenie by
+        s ním zmizlo, hoci rám 4 má akcie vpravo aj na telefóne.
+      */}
+      <div className="page-head">
         <h1 className="page-title" style={{ margin: 0 }}>{t.heading}</h1>
         {/* „N z M" hovorí, či je krátky zoznam výsledok filtra alebo stav
             knižnice. Bez toho čísla sa to nedá rozoznať. */}
         <span className="quiet library-count">{t.shown(facets.total, facets.all)}</span>
+
+        <span className="page-head-spacer" aria-hidden="true" />
 
         {/*
           Prepínač pohľadu. Sú to dva odkazy, nie tlačidlá s JavaScriptom:
@@ -512,8 +523,11 @@ export default async function LibraryPage({
             </Link>
           ))}
         </span>
-        <Link className="button" href="/library/new">{t.upload}</Link>
         {/*
+          Poradie akcií je z rámu 1: tiché akcie (Export CSV, ⋯) obklopujú
+          primárnu (Nahrať dokument), nie naopak. Primárna akcia takto nie je
+          prvá v rade zľava, ale je jediná plná — to ju odlíši.
+
           Export nesie **tie isté filtre**, aké sú na obrazovke — preto
           `toQuery(filters, …)` a nie holá adresa. Kto si vyfiltruje osem
           dokumentov, má dostať osem, nie stoštyridsaťosem.
@@ -521,6 +535,7 @@ export default async function LibraryPage({
         <Link className="button button--quiet" href={toQuery(filters, "/library/csv")}>
           {t.exportCsv}
         </Link>
+        <Link className="button" href="/library/new">{t.upload}</Link>
         {/*
           Zvyšné akcie v ponuke „⋯" (NASADENIE, PR 4). Primárna akcia je
           jedna — nahrať dokument; šesť tlačidiel vedľa seba sa na telefóne
@@ -543,7 +558,16 @@ export default async function LibraryPage({
 
 
       <div className="library-grid">
-        <aside className="library-folders">
+        {/*
+          Panel je **karta** (`KNIZNICA.html`, rámy 1 a 8): plocha `--surface`,
+          rám `--line`, rádius 12. Dovtedy bol priehľadný, takže priečinky
+          a facety splývali s pozadím stránky a stĺpec vľavo nemal okraj —
+          vyzeral ako text nalepený vedľa tabuľky, nie ako panel.
+
+          Výplň 14 px si drží `.library-folders`; `.card` má 18/20 px, čo je
+          na 250 px široký stĺpec veľa.
+        */}
+        <aside className="card library-folders">
           {filterPanel}
         </aside>
 

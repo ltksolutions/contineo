@@ -753,6 +753,17 @@ button:disabled { cursor: not-allowed; opacity: 0.55; }
 .page-head .page-title { margin: 0; }
 
 /*
+ * Medzera, ktorá tlačí akcie k pravému okraju (`KNIZNICA.html`, rámy 1, 4
+ * a 8). `flex: 1` na prázdnom prvku, nie `margin-left: auto` na prvej
+ * akcii: akcie sa skrývajú podľa šírky (prepínač pohľadu pod 640 px) a
+ * odsadenie viazané na konkrétnu akciu by zmizlo spolu s ňou.
+ *
+ * Pri zalomení riadka medzera zmizne (`flex-basis: 0`), takže na úzkej
+ * obrazovke nevytlačí akcie na samostatný riadok.
+ */
+.page-head-spacer { flex: 1 1 0; min-width: 0; }
+
+/*
  * Prázdny stav zoznamu (ZAKLAD, úloha 1) — jedna trieda, tri časti: čo tu
  * nie je, prečo, a čo s tým. Prázdno nie je chyba; text má povedať, či je
  * zoznam prázdny preto, že filter nič nenašiel, alebo preto, že niet čoho.
