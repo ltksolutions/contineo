@@ -36,6 +36,19 @@ import type { Tenant } from "./tenants"
  */
 const requestSession = cache(() => getServerSession(authOptions))
 
+/** Hostiteľ, na ktorý prišla táto požiadavka. */
+export const requestHostname = cache(async (): Promise<string> => {
+  const h = await headers()
+  // Za proxy Vercelu je pôvodný hostiteľ v `x-forwarded-host`; `host` môže
+  // byť interná adresa. Poradie je preto takéto a nie opačné.
+  return normalizeHostname(h.get("x-forwarded-host") ?? h.get("host"))
+})
+
+/** Tenant pre práve spracúvanú požiadavku. `null` = neznámy hostiteľ. */
+export const currentTenant = cache(async (): Promise<Tenant | null> => {
+  return resolveTenant(await requestHostname())
+})
+
 export const currentPerson = cache(async (): Promise<Person | null> => {
   const session = await requestSession()
   const email = session?.user?.email
@@ -61,19 +74,6 @@ export const currentPerson = cache(async (): Promise<Person | null> => {
 export const currentEmail = cache(async (): Promise<string | null> => {
   const session = await requestSession()
   return session?.user?.email ?? null
-})
-
-/** Hostiteľ, na ktorý prišla táto požiadavka. */
-export const requestHostname = cache(async (): Promise<string> => {
-  const h = await headers()
-  // Za proxy Vercelu je pôvodný hostiteľ v `x-forwarded-host`; `host` môže
-  // byť interná adresa. Poradie je preto takéto a nie opačné.
-  return normalizeHostname(h.get("x-forwarded-host") ?? h.get("host"))
-})
-
-/** Tenant pre práve spracúvanú požiadavku. `null` = neznámy hostiteľ. */
-export const currentTenant = cache(async (): Promise<Tenant | null> => {
-  return resolveTenant(await requestHostname())
 })
 
 /**

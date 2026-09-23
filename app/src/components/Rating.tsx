@@ -39,6 +39,17 @@ const EMPTY: RatingFields = {
   verifiedAnswer: "", correctSources: "", note: "",
 }
 
+const fieldStyle: React.CSSProperties = {
+  width: "100%",
+  background: "var(--surface)",
+  color: "var(--ink)",
+  border: "1px solid var(--line)",
+  borderRadius: 9,
+  padding: "8px 10px",
+  fontSize: "var(--fs-body)",
+  fontFamily: "inherit",
+}
+
 function Choice({
   active: active, color: color, onClick, children,
 }: {
@@ -277,15 +288,4 @@ export default function Rating({
       </div>
     </div>
   )
-}
-
-const fieldStyle: React.CSSProperties = {
-  width: "100%",
-  background: "var(--surface)",
-  color: "var(--ink)",
-  border: "1px solid var(--line)",
-  borderRadius: 9,
-  padding: "8px 10px",
-  fontSize: "var(--fs-body)",
-  fontFamily: "inherit",
 }
