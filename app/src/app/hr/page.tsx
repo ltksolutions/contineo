@@ -80,7 +80,7 @@ export default async function HrOverviewPage({
                 <div style={{ display: "flex", gap: 10, alignItems: "baseline", flexWrap: "wrap" }}>
                   <Link
                     href={`/hr/${encodeURIComponent(p.id)}`}
-                    style={{ fontSize: "var(--fs-section)", fontWeight: 700, textDecoration: "none" }}
+                    style={{ fontSize: "var(--fs-section)", fontWeight: 700 }}
                   >
                     {p.subject.documentTitle}
                   </Link>
