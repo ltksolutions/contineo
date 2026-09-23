@@ -4,6 +4,18 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Export knižnice zodpovedá tomu, čo je na obrazovke (2026-09-23)
+
+Export do CSV odteraz rešpektuje aj filter **oddelenia, ktoré dokument
+spravuje**. Dovtedy ho vynechával a pri tomto filtri vrátil viac dokumentov,
+než bolo vidieť v knižnici.
+
+### Presun dokumentu do priečinka je v audite (2026-09-23)
+
+Presun dokumentu do iného priečinka — po jednom aj hromadne — sa zapisuje do
+auditu organizácie: kto, kedy a odkiaľ kam. Priečinky sú v zázname uvedené
+názvom, takže záznam zostane čitateľný aj po ich premenovaní alebo zrušení.
+
 ### Každý platný predpis má zodpovednú osobu (2026-09-23)
 
 Všetky platné znenia predpisov majú odteraz zodpovednú osobu, takže nad
