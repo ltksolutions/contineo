@@ -26,6 +26,46 @@ const konfiguracia = [
 
   {
     /**
+     * Použitie premennej nad jej deklaráciou je **chyba, nie štýl**.
+     *
+     * 23. 9. 2026 na tom spadla produkčná knižnica s akýmkoľvek filtrom:
+     * `activeNames` siahalo na `facetLabel`, ktorý vznikal o sedemdesiat
+     * riadkov nižšie. Pole sa vyhodnocuje v mieste zápisu, takže `.map`
+     * bežal ihneď a `facetLabel` bol ešte v dočasnej mŕtvej zóne.
+     *
+     * **TypeScript to nevie chytiť a nie je to jeho chyba.** `TS2448` hlási
+     * len priamy odkaz v tom istom mieste; náš odkaz bol vnútri callbacku
+     * a telo funkcie je pre kompilátor odložené vykonanie — nemá ako vedieť,
+     * že ten callback sa zavolá hneď a nie o hodinu. Testy tú stránku
+     * nevykresľujú, takže ju nechytili tiež.
+     *
+     * ESLint to rieši hrubšie: neuvažuje, kedy sa callback zavolá, a ohlási
+     * samotný odkaz nahor. Práve tá hrubosť je tu cenná.
+     *
+     * `functions: false`, lebo deklarácie funkcií sa vyťahujú nahor a volať
+     * ich zhora nadol je v tomto repozitári bežné a bezpečné. `typedefs`
+     * a `enums` sú typy, tie za behu neexistujú.
+     */
+    files: ["**/*.ts", "**/*.tsx"],
+    rules: {
+      // Základné pravidlo musí ísť preč, inak hlásia obe naraz.
+      "no-use-before-define": "off",
+      "@typescript-eslint/no-use-before-define": [
+        "error",
+        {
+          functions: false,
+          classes: false,
+          typedefs: false,
+          enums: false,
+          variables: true,
+          allowNamedExports: true,
+        },
+      ],
+    },
+  },
+
+  {
+    /**
      * V testoch je `any` nástroj, nie nedbalosť.
      *
      * Atrapa má úmyselne nesprávny tvar — testuje sa práve to, čo sa stane,
