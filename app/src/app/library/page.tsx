@@ -1038,12 +1038,21 @@ export default async function LibraryPage({
                     {r.title}
                   </Link>
 
-                  {/* Kde dokument je. Kľúč len ako záloha, keď niet čísla ani
-                      priečinka — riadok nemá byť prázdny (úloha 5). */}
+                  {/*
+                    Kde dokument je a koľko ho je — `interné číslo · priečinok ·
+                    počet znení` (`KNIZNICA.html`, rám 4). Počet znení tu
+                    dovtedy chýbal; na karte niet stĺpca Verzia ako v tabuľke,
+                    takže bez neho sa z karty nedalo zistiť, či má dokument
+                    jedno znenie alebo sedem.
+
+                    Kľúč je záloha, keď niet ničoho iného — riadok nemá byť
+                    prázdny.
+                  */}
                   <div className="quiet doc-card-where">
                     {[
                       r.internalNumber,
                       r.folderTrail?.length ? r.folderTrail.join(" / ") : undefined,
+                      r.versionCount > 0 ? t.versions(r.versionCount) : undefined,
                     ].filter(Boolean).join(" · ") || r.documentId}
                   </div>
 

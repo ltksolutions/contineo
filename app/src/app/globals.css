@@ -3084,15 +3084,32 @@ html[data-theme="dark"] .editor-tui .CodeMirror {
 
 /* ── knižnica: kartový pohľad a prepínač ────────────────────────────────
    Karty sú na prezeranie: názov dostane miesto na tri riadky a údaje idú pod
-   neho. Šírka stĺpca je `minmax(250px, 1fr)` s `auto-fill` — počet stĺpcov
-   určuje šírka okna, nie breakpoint, takže to sedí aj na tablete na šírku. */
+   neho.
+
+   Počet stĺpcov je daný breakpointom, nie dopočítaný (`KNIZNICA.html`,
+   rámy 3 a 4). `auto-fill minmax(250px, 1fr)` dávalo na tablete 834 px tri
+   stĺpce — rám má dva. Pri troch má karta 250 px a dlhý názov sa do nej
+   zmestí len elipsou; pri dvoch má 395 px a je čitateľný. Na tablete je
+   karta na čítanie, nie na porovnávanie; na to je tabuľka nad 1024 px.
+
+   Nad 1024 px sa karty kreslia len na výslovné prepnutie (`?view=cards`),
+   a tam má dopočítanie zmysel: kto si ich vypýta na širokej obrazovke,
+   chce ich vidieť čo najviac. */
 .doc-cards {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  grid-template-columns: minmax(0, 1fr);
   gap: 10px;
   margin: 0;
   padding: 0;
   list-style: none;
+}
+
+@media (min-width: 640px) {
+  .doc-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (min-width: 1024px) {
+  .doc-cards { grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); }
 }
 
 /* Karta: výber vľavo vo vlastnom stĺpci, obsah vpravo (KNIZNICA.md,
