@@ -10,6 +10,106 @@
 
 ---
 
+## 2026-09-23 — výpadok produkcie, knižnica proti MASTER.md a rámy 1–8
+
+**Deň začal tým, že `/library/new` na produkcii nešla vôbec.** Hláška „A server
+error occurred" a v runtime logoch Vercelu dôvod: funkcia sa nedá serializovať
+cez hranicu servera a klienta. Vinník bol slovníkový kľúč `keyTaken`, ktorý bol
+napísaný ako funkcia `(id) => string` a odovzdával sa klientskemu komponentu ako
+prop. Na serveri to roky fungovalo; v klientskom komponente to padne vždy.
+Prerobené na šablónu s `{id}`, ktorú si komponent dosadí sám. To isté bolo na
+`/admin/new` — našiel som to až keď som hľadal druhý výskyt namiesto toho, aby
+som opravil ten nahlásený a šiel ďalej.
+
+**`tsc` túto chybu nevie chytiť a nikdy nebude.** Typ `(id: string) => string` je
+úplne platný typ; chybné je až to, že hodnota toho typu prekročí hranicu RSC.
+Preto k oprave pribudol test, ktorý prejde každý `"use client"` súbor pod
+`src/components` a `src/app` a hľadá prop, ktorého typ sa končí na `=> string`.
+Overil som ho tak, že som chybu zámerne vrátil — test spadol — a až potom ju
+zase odstránil. Test, ktorý som nevidel padnúť, nič nedokazuje.
+
+**Potom prišlo šesť bodov, v ktorých knižnica nesedí s `MASTER.md`.** Ján chcel
+najprv vedieť, čo je regresia z dizajnového handoffu a čo tam bolo vždy.
+`git log -S` na každý z nich: päť z nich je staršie než PR #46–#62, handoff ich
+len zviditeľnil. Regresia bola čiastočne jedna — stavová pilulka je nová
+(`49c7beb`, 21. 9.), ale napojila sa na už existujúce množné facetové reťazce.
+Toto poradie — najprv zistiť, odkiaľ vec pochádza, až potom ju opravovať — stálo
+polhodinu a ušetrilo hádanie v troch ďalších bodoch.
+
+**Pilulka stavu nemala vetvu pre expirovaný** a prepadla do predvolenej, takže
+expirovaný dokument hlásil „koncept". To nie je nepresné slovo, to je nesprávny
+stav. Odvodenie je teraz v `displayStatus()` hneď vedľa `statusTagClass()`, aby
+farba aj názov vychádzali z jedného výpočtu; `asOf` je parameter, nie
+`new Date()` vnútri, inak sa to nedá otestovať inak než čakaním.
+
+**Podčiarknutie odkazov sa vyriešilo koreňovo** — `a { text-decoration: none }`
+a výslovné vrátenie v bežnom texte. Prešiel som po tom 22 odkazov na
+jedenástich obrazovkách. Tri by sa tým zhoršili a doplnili sa do pravidla:
+`.field-hint` a `.ask-error` sú bežné vety s odkazom uprostred, len nie sú v
+`<p>`, a `.directory-contact` je vedomá odchýlka — e-mail a telefón v adresári
+majú vyzerať ako odkazy, lebo adresár existuje práve na to. Tridsať pravidiel,
+ktoré si podčiarknutie potláčali samy, tým stratilo dôvod; neodstránil som ich,
+je to samostatné upratovanie.
+
+**K expirovanému facetu som odmietol siahnuť, kým to builder nevie.** Ján
+rozhodol podľa `MASTER.md`, že expirovaný nie je hodnota facetu, ale odvodený
+príznak, a chcel ho preložiť na podmienku „Platné do · pred · dnes". Overil som,
+či to query builder vie — nevedel: pole `effectiveTo` v ňom nebolo a hodnota sa
+čítala cez `new Date(c.value)`, takže slovo „dnes" by skončilo ako `Invalid
+Date`. Napísal som to a nerobil to. Rozdelilo sa to na dva PR: najprv builder
+dostal pole aj token, až potom facet odišiel.
+
+**Najcennejšia časť tých dvoch PR je pasca s `effectiveTo` na znení.** Koniec
+platnosti nie je na dokumente, je na každom znení zvlášť, takže naivné
+`effectiveTo < dnes` by vrátilo aj dokument, ktorý má jedno staré znenie
+a jedno platné. Preto `$not: { $elemMatch: … }` — žiadne znenie nie je platné.
+A preto som `expiredCondition()` **nechal ako samostatný kód** a neprepísal ju
+tak, aby volala nový builder: test tvrdí, že obe cesty vrátia ten istý dotaz,
+a keby jedna volala druhú, netvrdil by nič.
+
+**Chyba, ktorú som spravil ja: prepísal som `MASTER.md` staršou kópiou.** Ján
+poslal súbor, ja som ho commitol a tým ticho zmizlo 36 riadkov vrátane
+varovania, ktoré sám predtým označil za dôležitejšie než ten nesprávny stĺpec.
+Všimol som si to až po pushnutí. Obnovené cez `git checkout <vetva> -- súbor`
+a overené, že proti predchádzajúcemu stavu neubudol ani riadok. Poučenie je
+konkrétne: **pri celosúborovej kópii sa pozerám, koľko riadkov ubudlo**, nie
+koľko pribudlo. Ján odvtedy posiela len konkrétne sekcie s miestom, kam patria.
+
+**Zvyšok noci a ráno išli rámy z `KNIZNICA.html`, jeden po druhom.** Postup,
+ktorý sa osvedčil: vykreslím rám, vykreslím našu značku pod naším `globals.css`
+a porovnám **vypočítané hodnoty prvok po prvku**. Čítaním CSS by sa nenašlo nič
+z toho, čo sa našlo — že „Nezaradené" sa zarovnalo vpravo, lebo
+`span:last-child { margin-left: auto }` platilo aj na riadok bez počtu; že
+`auto-fill minmax(250px, 1fr)` dáva na tablete tri stĺpce tam, kde rám má dva;
+že akcie v hlavičke končia na 973 px zo 1408.
+
+**Panel filtrov nebol karta a prišiel som na to až na druhý raz.** V prvom kole
+som porovnával pravidlo `.library-folders` proti pravidlu `.library-folders`
+a sedelo. Vzhľad karty ale v ráme nesie **druhá trieda v tej istej značke**
+(`class="card library-folders"`), takže panel u nás bol priehľadný a bez okraja
+— presne to, na čo sa Ján sťažoval slovami „filtre a priečinky vľavo nesedia".
+Poučenie: porovnávať celý `class`, nie jeho hlavnú časť.
+
+**Chrome sa celý deň nedal spoľahlivo zmenšiť** — zostával na 500 px a hlásil
+`outerWidth: 0`. Overovanie sa preto presťahovalo do Playwrightu v kontajneri,
+kde sa načíta skutočný `globals.css`. Bolo to rýchlejšie aj presnejšie, lebo sa
+dá merať, nie pozerať. Neskoro večer Chrome zafungoval a doplatil sa dlh:
+kontrola tabuľky pri 1440 px, stĺpec obsahu presne 1138 px, bez vodorovného
+posunu.
+
+**Jazyková chyba, ktorú by test nechytil:** moja funkcia na skloňovanie by
+napísala „Máte nasadených 2 filtre". Správne je „nasadené". Prepísané na vetvy
+1 / 2–4 / 5+ pre slovenčinu aj češtinu. A do commit správy sa mi raz dostala
+azbuka („brało"); odvtedy každú správu pred commitom preženiem skriptom, ktorý
+hľadá cyriliku.
+
+**Čo zostalo otvorené:** PR #75 je otvorený a nezlúčený; tridsať nadbytočných
+`text-decoration: none` čaká na samostatné upratovanie; a `.page-head` má
+medzeru 12 px a spodný odstup 6 px proti rámovým 10 a 14 — triedu zdieľa
+`/hr/evidence`, takže to nie je zmena do PR o knižnici.
+
+---
+
 ## 2026-09-22 (3) — web na Next 16, upratané vetvy a téma bez stavu
 
 **Tri PR sa zlúčili po jednom, nie naraz.** Na rozdiel od včerajšieho stohu
