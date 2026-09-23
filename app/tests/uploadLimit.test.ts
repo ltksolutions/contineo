@@ -7,7 +7,7 @@
  * posiela po kúskoch; každá požiadavka sa musí zmestiť pod strop Vercelu.
  */
 import { describe, it, expect } from "vitest"
-import { MAX_BYTES, MAX_FORM_BYTES, CHUNK_BYTES, chunkCount, expectedChunkLength } from "../src/lib/fileStore"
+import { MAX_BYTES, MAX_FORM_BYTES, CHUNK_BYTES, chunkCount, expectedChunkLength, cleanFileName } from "../src/lib/fileStore"
 import nextConfig from "../next.config.mjs"
 
 /** Strop Vercelu pre telo požiadavky do funkcie. Nedá sa nastaviť. */
@@ -62,5 +62,17 @@ describe("rozdelenie na kúsky", () => {
     expect(expectedChunkLength(7, 3, C)).toBeNull()
     expect(expectedChunkLength(7, -1, C)).toBeNull()
     expect(expectedChunkLength(7, 1.5, C)).toBeNull()
+  })
+})
+
+describe("názov súboru v jednom tvare (NFC)", () => {
+  const nfd = "Pracovny\u0301 poriadok.pdf" // „ý" rozložené, ako ho posiela Safari na Macu
+  it("rozložená diakritika sa zloží — hľadanie podľa názvu potom súbor nájde", () => {
+    expect(nfd).not.toBe("Pracovný poriadok.pdf")
+    expect(cleanFileName(nfd)).toBe("Pracovný poriadok.pdf")
+  })
+  it("orezanie medzier a dĺžky", () => {
+    expect(cleanFileName("  a.pdf  ")).toBe("a.pdf")
+    expect(cleanFileName("x".repeat(300))).toHaveLength(255)
   })
 })

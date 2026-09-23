@@ -303,7 +303,7 @@ async function resolveFile(
     const type = detectFileType(incoming.name, incoming.data)
     const stored = await saveFile(companyCode, incoming.name, "application/octet-stream", incoming.data, actor)
     created.push(stored.id)
-    return { id: stored.id, name: incoming.name, bytes: stored.bajtov, sha256: stored.sha256, type, data: incoming.data }
+    return { id: stored.id, name: stored.name, bytes: stored.bajtov, sha256: stored.sha256, type, data: incoming.data }
   }
   // Nahratý po kúskoch: patrí tejto organizácii? (D32 — podmienka v dotaze)
   const info = await fileInfo(companyCode, incoming.storedId)
