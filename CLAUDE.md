@@ -140,3 +140,26 @@ npm run build         # prejde
 ```
 
 Databázové invarianty: `npm run check` (predtým `kontrola`).
+
+### Čo tieto štyri brzdy nevidia
+
+Sú to kontroly **pred behom**. Chybu, ktorá vznikne až pri vykresľovaní
+stránky, neuvidí ani jedna — 23. 9. 2026 prešli všetky štyri a knižnica
+s filtrom aj tak vracala chybu servera (dočasná mŕtva zóna: premenná použitá
+nad svojou deklaráciou vnútri callbacku).
+
+`tsc` túto triedu chýb chytiť **nevie a nie je to jeho chyba**: `TS2448`
+hlási len priamy odkaz v tom istom mieste. Odkaz vnútri funkcie je pre
+kompilátor odložené vykonanie — nemá ako vedieť, či sa callback zavolá hneď
+alebo o hodinu. Preto je zapnuté `@typescript-eslint/no-use-before-define`
+ako **chyba**; neuvažuje kedy, a ohlási samotný odkaz nahor.
+
+### Ako sa overuje nasadená stránka
+
+**Pozerá sa telo odpovede, nie stavový kód.** Next servíruje chybovú stránku
+s kódom **200**, takže `-w '%{http_code}'` o ničom nevypovedá. Hľadá sa
+reťazec „A server error occurred" alebo `__next_error__` v tele.
+
+**Skúša sa to, čo s obrazovkou robia ľudia, nie to, čo sa menilo.** Knižnica
+nasadená bez vyskúšaného filtra nie je overená knižnica; formulár bez
+odoslania tiež nie.

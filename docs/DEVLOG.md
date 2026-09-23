@@ -10,6 +10,62 @@
 
 ---
 
+## 2026-09-23 (2) — výpadok knižnice s filtrom a brzda, ktorá ho nabudúce zastaví
+
+**Po zlúčení PR #75 knižnica spadla pri každom filtri.** Bez filtra fungovala,
+s akýmkoľvek facetom vrátila „A server error occurred". Runtime log Vercelu:
+`ReferenceError: Cannot access 'aZ' before initialization` v `Array.map`,
+digest `1208623390`.
+
+**Príčinou bolo poradie deklarácií.** `activeNames` stálo v súbore nad
+`facetLabel` a siahalo naň. Pole sa vyhodnocuje v mieste zápisu, takže `.map`
+bežal ihneď a `facetLabel` bol v tej chvíli ešte v dočasnej mŕtvej zóne —
+`const` o sedemdesiat riadkov nižšie. Oprava je presun deklarácie, nič iné.
+
+**Prečo to nikto nevidel:** bez filtra vráti `activeChips(filters)` prázdne
+pole, callback sa nezavolá a k `facetLabel` sa nikdy nesiahne. Stránka teda
+fungovala presne dovtedy, kým človek nepoužil filter.
+
+**A tu je moja chyba, nie tá v kóde.** Pol hodiny predtým som Jánovi napísal,
+že je všetko nasadené, a meral som pritom prázdnu knižnicu: nadpis, pätičku,
+panel, hlavičku. Ani raz som nezafiltroval. Overoval som **to, čo som menil**,
+namiesto toho, čo ľudia s tou obrazovkou robia. Knižnica je nástroj na
+hľadanie; keď ju nasadím a nevyskúšam filter, neoveril som ju vôbec.
+
+**Druhá chyba, tentokrát v diagnostike.** Prvý pokus reprodukovať som robil
+cez `fetch` a pozeral len stavový kód. Osem adries vrátilo 200 a na chvíľu som
+si myslel, že chyba neexistuje. Next totiž chybovú stránku servíruje s kódom
+**200**. Až keď som pozrel telo odpovede, bolo to vidieť okamžite. Pravidlo do
+budúcna: pri overovaní stránky sa pozerá do tela, nie na stavový kód.
+
+**Zo štyroch bŕzd nezastavila výpadok ani jedna, a stojí za to vedieť prečo.**
+`tsc` hlási `TS2448` len pri priamom odkaze v tom istom mieste; náš odkaz bol
+vnútri callbacku pre `.map` a telo funkcie je pre kompilátor **odložené
+vykonanie** — nemá ako vedieť, že sa zavolá ihneď a nie o hodinu. Mlčal teda
+správne. Testy tú stránku nevykresľujú. `next build` prešiel, lebo je to chyba
+za behu. ESLint mal pravidlo vypnuté.
+
+**Zapnuté je odteraz `@typescript-eslint/no-use-before-define` ako chyba**
+(PR #77). Rieši to hrubšie než TypeScript: neuvažuje, kedy sa callback zavolá,
+a ohlási samotný odkaz nahor. Práve tá hrubosť je cenná. Overené tak, že som
+chybu vrátil späť do kódu — `tsc` naďalej nula, eslint dve chyby s menom
+`facetLabel` — a až potom ju zase odstránil.
+
+Pravidlo našlo ešte tri miesta a **ani jedno nebola chyba**: `fieldStyle`
+v `Rating.tsx` je modulová konštanta v JSX, ktoré sa kreslí až po dobehnutí
+modulu, a `currentTenant` v `session.ts` sa volá vnútri async funkcie. Obe by
+za behu prešli. Presunul som ich, lebo inak sa pravidlo nedá zapnúť ako chyba,
+a ako varovanie by dnešok nezastavilo. Sú to čisté presuny — toľko riadkov
+pribudlo, koľko ubudlo, ani jeden riadok kódu sa nezmenil.
+
+**Čo si z toho odnášam okrem pravidla:** dve zo štyroch dnešných chýb boli
+v overovaní, nie v kóde. Prvá bola v tom, čo som overil (svoju zmenu, nie
+použitie obrazovky), druhá v tom, ako (stavový kód namiesto tela odpovede).
+Pravidlo v ESLinte chytí len tú prvú triedu problémov. Druhá sa dá ošetriť
+len návykom.
+
+---
+
 ## 2026-09-23 — výpadok produkcie, knižnica proti MASTER.md a rámy 1–8
 
 **Deň začal tým, že `/library/new` na produkcii nešla vôbec.** Hláška „A server

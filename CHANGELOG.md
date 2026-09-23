@@ -4,6 +4,12 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Knižnica s filtrom sa nakrátko nedala otvoriť (2026-09-23)
+
+Po rannom nasadení vracala knižnica pri akomkoľvek zapnutom filtri chybu
+servera; bez filtra fungovala. Trvalo to približne dvadsať minút a je to
+opravené. Dáta sa tým nedotklo, išlo o chybu pri vykresľovaní stránky.
+
 ### Nahrávanie dokumentu a zakladanie organizácie zase fungujú (2026-09-22)
 
 Stránka „Nahrať dokument" hlásila chybu servera a nedala sa otvoriť vôbec.
