@@ -11,7 +11,7 @@ import {
   readFilters, toggle, replace, setValue, clearFilters, isEmpty, toQuery, activeChips,
   sortBy, currentSort, pageOf, withPage, sortRows, pageRows, setView, currentView, normalizeView,
   togglePick, pickPage, clearPicked, pickedOutsideCount, carryFields, MAX_PICKED, EMPTY,
-  STATUS_VALUES,
+  STATUS_VALUES, listFilterOf,
 } from "../src/lib/libraryFilters"
 import { TODAY } from "../src/lib/libraryConditions"
 import { queryParts, buildQuery, expiredCondition } from "../src/lib/libraryRead"
@@ -518,5 +518,40 @@ describe("starý odkaz na expirované", () => {
 
   it("facet Stav má tri hodnoty, ako hovorí MASTER.md", () => {
     expect(STATUS_VALUES).toEqual(["published", "draft", "in-review"])
+  })
+})
+
+describe("jedno mapovanie filtra pre obrazovku aj export (D93, N2)", () => {
+  const filters = readFilters({
+    search: "poriadok",
+    folder: "f1",
+    category: ["norma", "smernica"],
+    status: "published",
+    tag: "gdpr",
+    accessLevel: "internal",
+    language: "sk",
+    ownerDepartment: ["d1", "d2"],
+    c: "effectiveTo:lt:today",
+  })
+
+  it("nesie každý facet, vrátane oddelenia", () => {
+    const f = listFilterOf(filters)
+    expect(f.search).toBe("poriadok")
+    expect(f.priecinok).toBe("f1")
+    expect(f.category).toEqual(["norma", "smernica"])
+    expect(f.status).toEqual(["published"])
+    expect(f.tag).toEqual(["gdpr"])
+    expect(f.accessLevel).toEqual(["internal"])
+    expect(f.language).toEqual(["sk"])
+    expect(f.ownerDepartment).toEqual(["d1", "d2"])
+    expect(f.conditions).toEqual(filters.conditions)
+    expect(f.match).toBe(filters.match)
+  })
+
+  it("filter oddelenia sa prejaví v dotaze — export ho už nezahodí", () => {
+    const withDept = buildQuery("sfz", listFilterOf(readFilters({ ownerDepartment: "d1" })))
+    const without = buildQuery("sfz", listFilterOf(readFilters({})))
+    expect(withDept).not.toEqual(without)
+    expect(JSON.stringify(withDept)).toContain("d1")
   })
 })
