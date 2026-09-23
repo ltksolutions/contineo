@@ -7,6 +7,35 @@
 
 ---
 
+## Odpovede DPO (prijaté 2026-09-23)
+
+Odpovede prišli v revízii dokumentu (označené voľby a poznámky). Zapísané doslovne
+podľa zmyslu, bez výkladu; kde odpoveď chýba, je to povedané.
+
+| # | Odpoveď | Poznámka DPO | Čo s tým systém robí |
+|---|---|---|---|
+| A1 | súhlasím (nie súhlas dotknutej osoby) | kategorizovať: **plnenie zákonnej povinnosti** pre povinnosti zo zákona (napr. BOZP), **oprávnený záujem** pre interné smernice bez zákonnej opory | **D91** — právny základ pri znení, odkaz na predpis pri zákonnej povinnosti povinný |
+| A2 | súhlasím (čas čítania oddelene) | — | bez zmeny |
+| A3 | — | vykoná **DPO**, zodpovedá **štatutár (prezident)**, termín **pred spustením pilotu** | brána pred pilotom |
+| A4 | potvrdzujem | — | pozor: pri oprávnenom záujme právo namietať (čl. 21) — návrh úpravy v `GDPR_DATA_PROTECTION.md` §6 na potvrdenie |
+| A5 | ponechať | musí byť súčasťou balančného testu, lehotu viazať na B1 | bez zmeny |
+| A6 | áno, s informovaním | — | bez zmeny; patrí do C1 |
+| A7 | súhlasím | — | bez zmeny |
+| B1 | od **skončenia pomeru** | **minimálne 3 roky** | čaká na presné číslo a strop (B10) |
+| B2–B4 | rovnako ako B1 | — | čaká na B1 |
+| B5–B7 | **bez odpovede** | — | otvorené |
+| B8 | **mazať** | zásada minimalizácie uchovania | mazať celý riadok |
+| B9 | súhlasím | — | držať podľa B1 aj po skončení platnosti predpisu |
+| B10 | bez označenej voľby | zvážiť **maximálny strop**, ak dátum skončenia nepríde (odkaz na § 10, 12, 13 zákona o ochrane osobných údajov) | otvorené — strop treba určiť |
+| C1–C4 | **bez odpovede** | — | otvorené; C1 a A3 sú brány pred pilotom |
+
+**Na druhé kolo:** presný počet rokov v B1 a maximálny strop (B10), lehoty B5–B7, časť C,
+úprava vety v §6 pre oprávnený záujem a osoby bez pracovného pomeru (rozhodcovia,
+funkcionári, externí — `persons.personType`), pri ktorých „skončenie pracovného pomeru"
+ani zákonná povinnosť zamestnávateľa nemusia platiť.
+
+---
+
 ## 0. Kontext na desať riadkov
 
 Contineo je vnútorný systém zväzu. Robí tri veci, pri ktorých vznikajú osobné údaje:

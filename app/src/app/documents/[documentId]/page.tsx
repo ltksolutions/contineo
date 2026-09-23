@@ -29,6 +29,10 @@ import Notice from "@/components/Notice"
 import AppShell from "@/components/AppShell"
 import { normalizeLayout } from "@/lib/appNav"
 import { acknowledgeAction } from "./actions"
+import { responsibleContact } from "@/lib/versionResponsibilityDb"
+import { canSetLegalBasis } from "@/lib/versionResponsibility"
+import { isContentManager } from "@/lib/library"
+import LegalBasisForm from "@/components/LegalBasisForm"
 
 export const dynamic = "force-dynamic"
 
@@ -96,6 +100,24 @@ export default async function DocumentPage({
   const now = new Date()
   const tOverview = dictionary(person.language).overview
 
+  /*
+    Zodpovedná osoba za znenie (D91) — **dnešný** kontakt, nie odtlačok:
+    človek sa má dovolať. Odtlačok z okamihu potvrdenia si nesie záznam.
+  */
+  const tr = dictionary(person.language).responsibility
+  const responsible = version.ok ? version.version.responsiblePerson : undefined
+  const contact = await responsibleContact(person.companyCode, responsible)
+  /*
+    Formulár na právny základ vidí len ten, kto ho smie určiť — to isté
+    pravidlo ako v `setVersionLegalBasis()`. Bežný čitateľ ho nevidí vôbec.
+  */
+  const canSetBasis = version.ok && canSetLegalBasis({
+    actorPersonId: person.id,
+    isContentManager: isContentManager(person) && person.companyCode === ctx.tenant.companyCode,
+    responsible,
+    responsibleActive: Boolean(contact?.active),
+  })
+
   const q = await searchParams
   const text = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v)
   const message = text(q.msg)
@@ -135,6 +157,43 @@ export default async function DocumentPage({
         </p>
       )}
 
+      {/*
+        Úloha pre zodpovednú osobu: určiť právny základ. Hore, nie pod textom —
+        je to dôvod, pre ktorý sem prišla (odkaz zo zvončeka). Keď je základ
+        určený, zbalí sa do `<details>`: zmena je výnimočná.
+      */}
+      {version.ok && canSetBasis && (
+        version.version.legalBasis ? (
+          <details className="card" style={{ padding: 16, margin: "0 0 24px" }}>
+            <summary style={{ cursor: "pointer" }}>
+              {tr.legalBasis}: {tr.basisLabel[version.version.legalBasis]}
+              {version.version.legalBasisReference && ` · ${version.version.legalBasisReference}`}
+            </summary>
+            <div style={{ marginTop: 12 }}>
+              <LegalBasisForm
+                documentId={doc.documentId}
+                versionId={version.version.versionId}
+                current={version.version.legalBasis}
+                currentReference={version.version.legalBasisReference}
+                language={person.language}
+                back="document"
+              />
+            </div>
+          </details>
+        ) : (
+          <section className="card" style={{ padding: 16, margin: "0 0 24px" }}>
+            <h2 style={{ fontSize: "var(--fs-section)", margin: "0 0 6px" }}>{tr.yourTaskHeading}</h2>
+            <p className="quiet" style={{ margin: "0 0 12px" }}>{tr.yourTaskNote}</p>
+            <LegalBasisForm
+              documentId={doc.documentId}
+              versionId={version.version.versionId}
+              language={person.language}
+              back="document"
+            />
+          </section>
+        )
+      )}
+
       {version.ok && (
         <>
           {/*
@@ -152,6 +211,39 @@ export default async function DocumentPage({
             hlavou; údaj nemá následok a nemá tak ani vyzerať.
           */}
           <ReadingTimer documentId={doc.documentId} language={person.language} />
+
+          {/*
+            Na koho sa obrátiť (D91). Pred potvrdením, nie za ním: otázka
+            vzniká pri čítaní, a kto nerozumie, nemá potvrdzovať naslepo.
+            Telefón a e-mail sú odkazy — na mobile sa dá rovno zavolať.
+          */}
+          {contact && (
+            <section className="card" style={{ padding: 16, marginTop: 24, fontSize: "var(--fs-body)" }}>
+              {contact.active ? (
+                <>
+                  <div className="quiet" style={{ fontSize: "var(--fs-small)", margin: "0 0 4px" }}>{tr.contactHeading}</div>
+                  <div style={{ fontWeight: 600 }}>{contact.fullName}</div>
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: "4px 14px", marginTop: 4 }}>
+                    <a href={`mailto:${contact.email}`}>{contact.email}</a>
+                    {contact.mobilePhone && (
+                      <a href={`tel:${contact.mobilePhone.replace(/\s+/g, "")}`}>{contact.mobilePhone}</a>
+                    )}
+                    <Link className="quiet" href={`/directory?q=${encodeURIComponent(contact.fullName)}`}>
+                      {tr.contactProfile}
+                    </Link>
+                  </div>
+                </>
+              ) : (
+                <p className="quiet" style={{ margin: 0 }}>{tr.contactGone}</p>
+              )}
+              {version.version.legalBasis && (
+                <div className="quiet" style={{ fontSize: "var(--fs-small)", marginTop: 8 }}>
+                  {tr.legalBasis}: {tr.basisLabel[version.version.legalBasis]}
+                  {version.version.legalBasisReference && ` · ${version.version.legalBasisReference}`}
+                </div>
+              )}
+            </section>
+          )}
 
           <section className="card acknowledge-card" style={{ padding: 20, marginTop: 32 }}>
             <h2 style={{ fontSize: "var(--fs-section)", margin: "0 0 10px" }}>{t.confirmHeading}</h2>

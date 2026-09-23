@@ -796,6 +796,38 @@ tam sa neprihlási.
 
 ---
 
+### D91 — Zodpovedná osoba a právny základ pri znení 🔴
+
+**Otázka:** kto je za predpis zodpovedný (na koho sa majú obracať ľudia, ktorí ho
+potvrdzujú) a na akom právnom základe sa spracúvajú záznamy o oboznámení (O15)?
+
+**✅ Rozhodnuté (2026-09-23, Ján Letko; právny základ podľa odpovedí DPO k O15/O16):**
+
+| Čo | Rozhodnutie |
+|---|---|
+| **Zodpovedná osoba** | pri **znení**, nie pri predpise; **povinná pri každom novom znení** a **nededí sa** z predošlého — novela o tri roky môže mať iného garanta, pôvodný mohol odísť. Jedna osoba na znenie, z ľubovoľného oddelenia. |
+| Kto ju určuje | správca obsahu (`content-admin`) — pri zverejnení a neskôr zmenou s povinným dôvodom (`versions[].responsibleChanges[]`) |
+| **Právny základ** | pri **znení**; `legal_obligation` (plnenie zákonnej povinnosti, napr. BOZP — **odkaz na predpis povinný**) alebo `legitimate_interest` (interné smernice bez zákonnej opory). Súhlas zámerne nie. |
+| Kto ho určuje | **zodpovedná osoba toho znenia**; správca obsahu len ako náhradník, keď znenie osobu nemá alebo už nie je aktívna. Oprávnenie sa **odvodzuje** (D27) — žiadna rola „právnik". Zmena už určeného základu vyžaduje dôvod (`legalBasisChanges[]`). |
+| Chýbajúci základ | **neblokuje** pridelenie — obrazovka pridelenia upozorní, `npm run check` vypíše. Blokovať by zastavilo bežiaci onboarding, kým sa základ nedoplní k existujúcim smerniciam. |
+| Potvrdenie | nesie **odtlačok** zodpovednej osoby aj právneho základu v čase potvrdenia (`acknowledgements.responsiblePerson`, `legalBasis`, `legalBasisReference`). Staré záznamy sa nedopĺňajú (D24); `null` = v tom čase neurčené. |
+| Znenia spred D91 | osobu ani základ nemajú a **nič sa za ne spätne nevymýšľa** (rovnaká logika ako D74). Doplní ich človek, `npm run check` ich vypíše. |
+
+**Kde to je:** pravidlá `src/lib/versionResponsibility.ts`, zápis
+`src/lib/versionResponsibilityDb.ts`, zverejnenie `publish()` v `libraryWrite.ts`.
+Formulár na právny základ je pri **znení pre čitateľa** (`/documents/[id]`) — zodpovedná osoba
+nemusí byť správca obsahu a do knižnice nesmie. Do zvončeka jej príde upozornenie
+`responsibleAssigned`. Kontakt (meno, e-mail, telefón) vidí každý nad potvrdzovacou kartou.
+
+**Otvorené:** veta v `GDPR_DATA_PROTECTION.md` §6 (potvrdená v A4) hovorí o „povinnosti voči
+zamestnávateľovi" — pri oprávnenom záujme má človek právo namietať (čl. 21). Návrh úpravy je
+v §6, potvrdiť ho má DPO. Evidencia na obrazovke (`evidence.ts`) odtlačok zatiaľ neukazuje,
+výkaz `npm run ack:report` áno.
+
+**Súvisiace:** O15, O16, D24, D27, D28, D74, ADR-003, ADR-006, `O15_O16_otazky_pre_DPO.md`.
+
+---
+
 ## Otvorené body vedené v ADR-003
 
 Nie sú to rozhodnutia backlogu, ale otvorené otázky konkrétneho ADR. Uvedené tu kvôli
@@ -805,6 +837,6 @@ prehľadu:
 |---|---|---|
 | ~~**O12**~~ | ~~`0.0.0.0/0` v Atlase~~ | ✅ **Uzavreté 2026-08-27: Vercel Static IPs** (100 $/mes. na projekt, plán Pro), zapnúť pred prvým ostrým potvrdením. Preverené aj Render, Railway, vlastný stroj v EÚ a SOCKS5 proxy — analýza a dôvody v **ADR-003 kap. 6.1**. Presun aplikácie z Vercelu zostáva dlhodobým smerom (ADR-002, dodatky 10 a 11). ♻️ **Revidované 2026-09-18 (Ján Letko): Static IPs sa pri jednom tenantovi NEZAPÍNAJÚ** — 100 $/mes. na projekt + metrovaný Private Data Transfer (cez statické IP tečie každý dotaz do Atlasu) je neúmerný náklad. Allowlist zatiaľ zostáva otvorený; riziko úniku prihlasovacích údajov kryjú kompenzačné opatrenia (samostatný aplikačný DB používateľ len `readWrite` na `contineo` — overené, že aplikácia sa dnes pripája správcovským účtom s `atlasAdmin`; upozornenia na neúspešné prihlásenia; rotácia hesla — viď TODO). Spúšťače návratu k Static IPs: druhý platiaci tenant, verejný widget, tender alebo bezpečnostný dotazník. **Prestáva blokovať prvé ostré potvrdenie.** |
 | **O14** | Meriame čas nad dokumentom alebo doskrolovanie na koniec? | Zvyšuje dôkaznú hodnotu, ale je to sledovanie správania zamestnanca. Rozhodnúť **pred** implementáciou. **Čiastočne zodpovedané (2026-09-10):** čas nad znením sa meria a je **výslovne informatívny**, prvé otvorenie sa zaznamenáva ako serverový fakt (ADR-005, D64) a oboje je zapísané v `GDPR_DATA_PROTECTION.md`. Otvorené zostáva **„otvoril a nepotvrdil"** ako údaj o človeku a doskrolovanie na koniec, ktoré sa nemeria vôbec. |
-| **O15** | Právny základ spracúvania `acknowledgements` | Návrh: oprávnený záujem / plnenie zmluvy, **nie súhlas** (odvolateľný dôkaz o oboznámení je protirečenie). Rozširuje D10. |
-| **O16** | Retencia auditného záznamu po skončení pracovného pomeru | Iná lehota než pri konverzáciách (D10). |
+| **O15** 🟡 | Právny základ spracúvania `acknowledgements` | **Čiastočne zodpovedané (2026-09-23, DPO):** nie súhlas; základ sa určuje **podľa predpisu** — zákonná povinnosť (napr. BOZP) alebo oprávnený záujem (interné smernice). Implementované ako **D91** (základ pri znení, určuje zodpovedná osoba). Balančný test vykoná DPO, zodpovedá štatutár, **pred pilotom**. IP a user agent ponechať, musia byť v balančnom teste. Otvorené: úprava vety v `GDPR_DATA_PROTECTION.md` §6 pre oprávnený záujem (právo namietať), osoby bez pracovného pomeru. Odpovede: `O15_O16_otazky_pre_DPO.md`. |
+| **O16** 🟡 | Retencia auditného záznamu po skončení pracovného pomeru | **Čiastočne zodpovedané (2026-09-23, DPO):** potvrdenie, pridelenie, otvorenie a schválenie — **minimálne 3 roky od skončenia pracovného pomeru**, aj po skončení platnosti predpisu; **mazať**, nie anonymizovať. Otvorené: presné číslo (nie „minimálne"), **maximálny strop** pre prípad, že HR dátum skončenia nedodá, lehoty B5–B7 (čas čítania, audit prístupov, pripomienky) a osoby bez pracovného pomeru. Lehoty v databáze sa preto zatiaľ neimplementujú. |
 | **O17** | Jazykové verzie tej istej normy | Dnes je česká verzia **samostatný dokument s vlastným kľúčom** — nič ju nespája so slovenskou. Pri pridelení treba vybrať obe a človek uvidí obe, lebo pridelenie nevie vybrať verziu podľa jeho jazyka. Kým je všetok obsah slovenský, je to teoretické; **rozhodnúť pri prvej druhej jazykovej verzii** (2026-08-31). Do `documentId` sa jazyk zapracovať nesmie — visia naň potvrdenia (D24). Ľahká cesta: nepovinný odkaz na súrodeneckú verziu. Ťažká: pridelenie mieri na normu a systém vyberie jazyk. Pomáha, že `documents.language` sa už zapisuje a `acknowledgements.documentLanguage` už drží, ktorú verziu človek videl. |

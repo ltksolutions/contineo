@@ -40,7 +40,7 @@ const chunks = await db.collection("document_chunks").find(tenantFilter).toArray
 const acknowledgements = await db.collection("acknowledgements")
   .find({ ...tenantFilter, type: "acknowledgement" }).toArray()
 const persons = await db.collection("persons")
-  .find(tenantFilter, { projection: { email: 1, roles: 1 } }).toArray()
+  .find(tenantFilter, { projection: { id: 1, email: 1, roles: 1, status: 1 } }).toArray()
 
 const findings = []
 const check = (condition, message, why) => { if (condition) findings.push({ sprava: message, preco: why }) }
@@ -227,6 +227,36 @@ for (const z of hodnotenia) {
     )
   }
 }
+
+/*
+ * Zodpovedná osoba a právny základ pri **platnom** znení (D91, O15).
+ *
+ * Informácia, nie rozpor: znenia spred D91 ich nemajú a mať nemôžu — nikto
+ * ich spätne nedopĺňa za človeka. Pridelenie bez právneho základu sa zámerne
+ * neblokuje (rozhodnutie 2026-09-23), preto sa to vypisuje tu, aby sa to
+ * doplnilo pred ostrou prevádzkou. Neaktívna zodpovedná osoba je horšia než
+ * žiadna: ľudí posiela za niekým, kto im neodpovie.
+ */
+const activePersonIds = new Set(persons.filter(o => o.status !== "inactive").map(o => o.id))
+const withoutResponsible = [], inactiveResponsible = [], withoutBasis = []
+for (const d of documents) {
+  const v = (d.versions ?? []).find(x => x.isActive && !x.effectiveTo)
+  if (!v) continue
+  const name = `${d.documentId} (${v.label})`
+  if (!v.responsiblePerson) withoutResponsible.push(name)
+  else if (!activePersonIds.has(v.responsiblePerson.personId)) inactiveResponsible.push(`${name} — ${v.responsiblePerson.fullName}`)
+  if (!v.legalBasis) withoutBasis.push(name)
+}
+const listOut = (title, list) => {
+  if (list.length === 0) return
+  console.log(`${INFO} ${title}: ${list.length}`)
+  for (const x of list.slice(0, 20)) console.log(`     ${x}`)
+  if (list.length > 20) console.log(`     … a ďalších ${list.length - 20}`)
+  console.log("")
+}
+listOut("platné znenia bez zodpovednej osoby (D91) — doplní správca obsahu v knižnici", withoutResponsible)
+listOut("platné znenia, ktorých zodpovedná osoba už nie je aktívna — treba určiť novú", inactiveResponsible)
+listOut("platné znenia bez právneho základu (O15) — určí zodpovedná osoba", withoutBasis)
 
 if (withoutValidity > 0) {
   console.log(`${INFO} ${withoutValidity} aktívnych znení nemá dátum platnosti — nedajú sa potvrdiť (D6)\n`)

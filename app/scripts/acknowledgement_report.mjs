@@ -140,7 +140,27 @@ const COLUMNS = [
   { label: "Potvrdené dňa",     value: r => (r.ack ? date(r.ack.acknowledgedAt) : "") },
   { label: "Jazyk potvrdenia",  value: r => r.ack?.language ?? "" },
   { label: "Jazyk dokumentu",   value: r => r.doc.language ?? "" },
+  // Zodpovedná osoba a právny základ (D91). Odtlačok z potvrdenia má prednosť;
+  // pri potvrdení spred D91 alebo pri nepotvrdenom riadku sa berie zo znenia
+  // a výkaz to **povie** — odvodený údaj sa nesmie tváriť ako odtlačok.
+  {
+    label: "Zodpovedná osoba",
+    value: r => r.ack?.responsiblePerson?.fullName
+      ?? (r.version.responsiblePerson?.fullName ? `${r.version.responsiblePerson.fullName} (zo znenia)` : ""),
+  },
+  {
+    label: "Právny základ",
+    value: r => {
+      if (r.ack?.legalBasis) return basis(r.ack.legalBasis, r.ack.legalBasisReference)
+      return r.version.legalBasis ? `${basis(r.version.legalBasis, r.version.legalBasisReference)} (zo znenia)` : ""
+    },
+  },
 ]
+
+const BASIS = { legal_obligation: "zákonná povinnosť", legitimate_interest: "oprávnený záujem" }
+function basis(key, reference) {
+  return `${BASIS[key] ?? key}${reference ? ` · ${reference}` : ""}`
+}
 
 /** Dátum aj s časom, lebo pri audite ide o poradie udalostí, nie o deň. */
 function date(d) {

@@ -62,6 +62,8 @@ export type NotificationKind =
   | "rewritten"
   | "remindersSent"
   | "versionPublished"
+  /** Osoba bola určená za zodpovednú za znenie (D91) — má určiť právny základ. */
+  | "responsibleAssigned"
 
 export interface NotificationParams {
   documentId?: string
@@ -100,6 +102,10 @@ export function notificationHref(
     case "rewritten":
     case "versionPublished":
       return documentId ? `/library/${encodeURIComponent(documentId)}` : null
+    case "responsibleAssigned":
+      // Na znenie pre čitateľa, nie do knižnice: zodpovedná osoba nemusí byť
+      // správca obsahu, a formulár na právny základ je práve tam.
+      return documentId ? `/documents/${encodeURIComponent(documentId)}` : null
     case "remindersSent":
       return "/hr/reminders"
     default:

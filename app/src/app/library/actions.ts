@@ -48,6 +48,7 @@ import { brandingView } from "@/lib/tenants"
 import { personLanguage } from "@/lib/persons"
 import type { ApprovalRound } from "@/lib/approvals"
 import { formatDate } from "@/lib/i18n"
+import { setVersionResponsible } from "@/lib/versionResponsibilityDb"
 
 async function actor(): Promise<
   {
@@ -288,6 +289,7 @@ export async function publishVersionAction(fd: FormData) {
       effectiveFrom: new Date(`${day}T00:00:00.000Z`),
       effectiveFromSource: fieldText(fd, "effectiveFromSource"),
       changeNote: fieldText(fd, "changeNote"),
+      responsiblePersonId: fieldText(fd, "responsiblePersonId"),
     }, self.email)
 
     message = v.alreadyDone
@@ -304,6 +306,21 @@ export async function publishVersionAction(fd: FormData) {
           versionLabel: fieldText(fd, "label"),
         },
       })
+      // Zodpovednej osobe do zvončeka: má určiť právny základ (D91). Ide
+      // osobe, nie adrese — a len ak to nie je ten, kto práve zverejnil.
+      const responsibleId = fieldText(fd, "responsiblePersonId")
+      if (responsibleId && responsibleId !== self.personId) {
+        await notify({
+          companyCode: self.companyCode,
+          personId: responsibleId,
+          kind: "responsibleAssigned",
+          params: {
+            documentId: id,
+            documentTitle: await documentTitleFor(self.companyCode, id),
+            versionLabel: fieldText(fd, "label"),
+          },
+        })
+      }
     }
   } catch (e) {
     message = errorMessage(e, self.language)
@@ -821,6 +838,51 @@ export async function fixVersionAction(fd: FormData) {
     }, self.email)
 
     message = say(self.language).fixed
+  } catch (e) {
+    message = errorMessage(e, self.language)
+    error = true
+  }
+
+  revalidatePath(`/library/${id}`)
+  redirect(`/library/${encodeURIComponent(id)}?msg=${encodeURIComponent(message)}${error ? "&error=1" : ""}`)
+}
+
+/**
+ * Zmena (alebo doplnenie) zodpovednej osoby znenia (D91).
+ *
+ * Robí ju správca obsahu — tú istú rolu, ktorá znenie zverejňuje. Pravidlo aj
+ * oprávnenie sa overujú v `setVersionResponsible()`, nie tu.
+ */
+export async function setResponsibleAction(fd: FormData) {
+  const self = await actor()
+  if (!self) redirect("/")
+
+  const id = fieldText(fd, "documentId")
+  let message = ""
+  let error = false
+  try {
+    const to = await setVersionResponsible({
+      companyCode: self.companyCode,
+      documentId: id,
+      versionId: fieldText(fd, "versionId"),
+      personId: fieldText(fd, "responsiblePersonId"),
+      reason: fieldText(fd, "reason"),
+      actor: self.email,
+      canManageContent: self.canManageContent,
+    })
+    message = dictionary(self.language).responsibility.responsibleSaved
+    if (to.personId !== self.personId) {
+      await notify({
+        companyCode: self.companyCode,
+        personId: to.personId,
+        kind: "responsibleAssigned",
+        params: {
+          documentId: id,
+          documentTitle: await documentTitleFor(self.companyCode, id),
+          versionLabel: fieldText(fd, "versionLabel"),
+        },
+      })
+    }
   } catch (e) {
     message = errorMessage(e, self.language)
     error = true

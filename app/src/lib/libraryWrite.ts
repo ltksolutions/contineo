@@ -39,6 +39,7 @@ import { AppError } from "./appError"
 import { publishBlock } from "./approvals"
 import { allDepartments } from "./departments"
 import { versionStateFor } from "./approvalsDb"
+import { responsibleSnapshot } from "./versionResponsibilityDb"
 
 export const CHUNKS_COLLECTION = "document_chunks"
 
@@ -421,7 +422,14 @@ export interface PublishResult {
 export async function publish(
   companyCode: string,
   documentId: string,
-  input: { label: string; effectiveFrom: Date; effectiveFromSource?: string; changeNote?: string },
+  input: {
+    label: string
+    effectiveFrom: Date
+    effectiveFromSource?: string
+    changeNote?: string
+    /** `persons.id` zodpovednej osoby — povinná pri každom novom znení (D91). */
+    responsiblePersonId: string
+  },
   actor: string,
 ): Promise<PublishResult> {
   const label = (input.label ?? "").trim()
@@ -454,9 +462,30 @@ export async function publish(
     )
   }
 
+  /*
+   * Zodpovedná osoba je **povinná pri každom novom znení** a nededí sa (D91).
+   * Novela o tri roky môže mať iného garanta a pôvodný mohol medzitým odísť —
+   * znenie, ktoré by ho prevzalo potichu, by ľudí posielalo za človekom,
+   * ktorý v zväze nie je. Meno sa berie zo záznamu osoby, nie z formulára.
+   */
+  if (!input.responsiblePersonId?.trim()) {
+    throw new LibraryError(
+      "responsibility.personRequired",
+      "Zodpovedná osoba je povinná — na ňu sa budú obracať ľudia, ktorí znenie potvrdzujú.",
+    )
+  }
+
   const col = await getCollection(DOCUMENTS_COLLECTION)
   const doc = await col.findOne({ documentId, companyCode }) as Record<string, unknown> | null
   if (!doc) throw new LibraryError("library.documentNotFound", "Taký dokument tu nie je.")
+
+  const responsible = await responsibleSnapshot(companyCode, input.responsiblePersonId)
+  if (!responsible) {
+    throw new LibraryError(
+      "responsibility.unknownPerson",
+      "Vybraná zodpovedná osoba tu nie je alebo je vyradená.",
+    )
+  }
 
   const markdown = String(doc.draftMarkdown ?? "").trim()
   if (!markdown) throw new LibraryError("library.documentHasNoText", "Dokument nemá text — najprv nahraj súbor alebo napíš znenie.")
@@ -621,6 +650,9 @@ export async function publish(
           contentHash: versionId,
           effectiveFromSource: input.effectiveFromSource?.trim() || undefined,
           changeNote: input.changeNote?.trim() || undefined,
+          // Právny základ sa tu zámerne nezapisuje: určuje ho zodpovedná
+          // osoba, nie ten, kto znenie zverejňuje (D91).
+          responsiblePerson: responsible,
           markdown,
           // `requiresReacknowledgement` sa zámerne nenastavuje: vypĺňa ho
           // človek (D30) a `false` by bolo tiché rozhodnutie, že zmena nie je
@@ -636,7 +668,8 @@ export async function publish(
     companyCode, subject: "document", action: "published", actor: actor,
     targetId: documentId, targetLabel: `${meta.title} — ${label}`,
     note: `${chunks.length} úsekov · platné od ${input.effectiveFrom.toISOString().slice(0, 10)}` +
-      (input.effectiveFromSource ? ` · zdroj: ${input.effectiveFromSource}` : ""),
+      (input.effectiveFromSource ? ` · zdroj: ${input.effectiveFromSource}` : "") +
+      ` · zodpovedná osoba: ${responsible.fullName}`,
   })
 
   return { versionId, chunks: chunks.length, archived: archive.modifiedCount, alreadyDone: false }
