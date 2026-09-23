@@ -26,6 +26,7 @@ import type { UiLanguage } from "./i18n"
 import type { Person } from "./persons"
 import type { TenantOAuth } from "./oauth"
 import type { ChunkingProfile, ChunkingProfileDef } from "./chunkingProfile"
+import type { TenantLegalBasis } from "./legalBases"
 
 export const TENANTS_COLLECTION = "tenants"
 
@@ -89,6 +90,15 @@ export interface Tenant {
    * čomu nikde inde v systéme nikto nerozumie.
    */
   codelists?: Partial<Record<string, { key: string; label?: string }[]>>
+
+  /**
+   * Vlastné položky číselníka právnych základov (D92). Štandardné sú v kóde
+   * (`codelists/legalBasis.json`); tu je len to, čo si organizácia dopísala.
+   * Položka sa nemaže, len vyradí (`retiredAt`) — znenia na ňu odkazujú.
+   */
+  legalBases?: TenantLegalBasis[]
+  /** Kľúče štandardných položiek, ktoré organizácia v ponuke nechce. */
+  legalBasesHidden?: string[]
 
   /**
    * Medzinárodná predvoľba pre telefónne čísla bez nej (D86).

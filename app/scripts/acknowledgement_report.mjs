@@ -151,15 +151,19 @@ const COLUMNS = [
   {
     label: "Právny základ",
     value: r => {
-      if (r.ack?.legalBasis) return basis(r.ack.legalBasis, r.ack.legalBasisReference)
-      return r.version.legalBasis ? `${basis(r.version.legalBasis, r.version.legalBasisReference)} (zo znenia)` : ""
+      if (r.ack?.legalBasis) return basis(r.ack.legalBasis, r.ack.legalBasisReference, r.ack.legalBasisLabel)
+      return r.version.legalBasis
+        ? `${basis(r.version.legalBasis, r.version.legalBasisReference, r.version.legalBasisLabel)} (zo znenia)`
+        : ""
     },
   },
 ]
 
 const BASIS = { legal_obligation: "zákonná povinnosť", legitimate_interest: "oprávnený záujem" }
-function basis(key, reference) {
-  return `${BASIS[key] ?? key}${reference ? ` · ${reference}` : ""}`
+/** Názov položky číselníka (D92), ak je; inak kategória. */
+function basis(key, reference, label) {
+  const name = label ? `${label} (${BASIS[key] ?? key})` : (BASIS[key] ?? key)
+  return `${name}${reference ? ` · ${reference}` : ""}`
 }
 
 /** Dátum aj s časom, lebo pri audite ide o poradie udalostí, nie o deň. */

@@ -1431,6 +1431,26 @@ interface Dictionary {
     yourTaskNote: string
     missingBasisTag: string
     missingBasisNote: string
+    missingOptionNote: string
+    outsideCodelist: string
+    orgHeading: string
+    orgHint: string
+    standardTag: string
+    customTag: string
+    hiddenTag: string
+    retiredTag: string
+    hide: string
+    unhide: string
+    retire: string
+    usedIn: (n: number) => string
+    addHeading: string
+    labelField: string
+    labelPlaceholder: string
+    keyField: string
+    keyPlaceholder: string
+    categoryField: string
+    referenceField: string
+    addButton: string
   }
   library: {
     /**
@@ -2796,6 +2816,12 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     },
   },
   errors: {
+    "legalBasis.unknownKey": "Taká položka v číselníku právnych základov nie je, alebo je skrytá či vyradená.",
+    "legalBasis.badKey": "Kľúč môže obsahovať len malé písmená bez diakritiky, číslice a podčiarkovník.",
+    "legalBasis.labelRequired": "Názov právneho základu je povinný.",
+    "legalBasis.keyTaken": "Taký kľúč už v číselníku je (aj medzi skrytými a vyradenými položkami).",
+    "legalBasis.notCustom": "Takú vlastnú položku organizácia nemá.",
+    "legalBasis.notStandard": "Taká štandardná položka neexistuje.",
     "responsibility.personRequired": "Zodpovedná osoba je povinná — na ňu sa budú obracať ľudia, ktorí znenie potvrdzujú.",
     "responsibility.unknownPerson": "Vybraná zodpovedná osoba tu nie je alebo je vyradená.",
     "responsibility.samePerson": "Toto je už zodpovedná osoba tohto znenia.",
@@ -3524,6 +3550,26 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     yourTaskNote: "Určte, na akom právnom základe sa spracúvajú záznamy o oboznámení s týmto znením.",
     missingBasisTag: "bez právneho základu",
     missingBasisNote: "Predpis bez právneho základu sa prideliť dá. Zodpovedná osoba by ho však mala určiť ešte pred ostrou prevádzkou.",
+    missingOptionNote: "Chýba vhodná položka? Požiadajte správcu organizácie, aby ju doplnil do číselníka právnych základov.",
+    outsideCodelist: "mimo číselníka",
+    orgHeading: "Právne základy",
+    orgHint: "Z tohto zoznamu vyberá zodpovedná osoba právny základ pri každom znení predpisu. Štandardné položky sa dajú skryť, vlastné vyradiť — nič sa nemaže, znenia si nesú kópiu.",
+    standardTag: "štandardná",
+    customTag: "vlastná",
+    hiddenTag: "skrytá",
+    retiredTag: "vyradená",
+    hide: "Skryť",
+    unhide: "Vrátiť",
+    retire: "Vyradiť",
+    addHeading: "Pridať právny základ",
+    labelField: "Názov",
+    labelPlaceholder: "Napríklad: Dopingová kontrola",
+    keyField: "Kľúč",
+    keyPlaceholder: "napr. doping",
+    categoryField: "Kategória",
+    referenceField: "Odkaz na predpis",
+    addButton: "Pridať",
+    usedIn: n => (n === 1 ? "1 znenie" : n >= 2 && n <= 4 ? `${n} znenia` : `${n} znení`),
   },
   library: {
     carryOver: {
@@ -4799,6 +4845,12 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     },
   },
   errors: {
+    "legalBasis.unknownKey": "Taková položka v číselníku právních základů není, nebo je skrytá či vyřazená.",
+    "legalBasis.badKey": "Klíč může obsahovat jen malá písmena bez diakritiky, číslice a podtržítko.",
+    "legalBasis.labelRequired": "Název právního základu je povinný.",
+    "legalBasis.keyTaken": "Takový klíč už v číselníku je (i mezi skrytými a vyřazenými položkami).",
+    "legalBasis.notCustom": "Takovou vlastní položku organizace nemá.",
+    "legalBasis.notStandard": "Taková standardní položka neexistuje.",
     "responsibility.personRequired": "Odpovědná osoba je povinná — na ni se budou obracet lidé, kteří znění potvrzují.",
     "responsibility.unknownPerson": "Vybraná odpovědná osoba zde není nebo je vyřazená.",
     "responsibility.samePerson": "Toto už je odpovědná osoba tohoto znění.",
@@ -5525,6 +5577,26 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     yourTaskNote: "Určete, na jakém právním základě se zpracovávají záznamy o seznámení s tímto zněním.",
     missingBasisTag: "bez právního základu",
     missingBasisNote: "Předpis bez právního základu se přidělit dá. Odpovědná osoba by jej však měla určit ještě před ostrým provozem.",
+    missingOptionNote: "Chybí vhodná položka? Požádejte správce organizace, aby ji doplnil do číselníku právních základů.",
+    outsideCodelist: "mimo číselník",
+    orgHeading: "Právní základy",
+    orgHint: "Z tohoto seznamu vybírá odpovědná osoba právní základ u každého znění předpisu. Standardní položky lze skrýt, vlastní vyřadit — nic se nemaže, znění si nesou kopii.",
+    standardTag: "standardní",
+    customTag: "vlastní",
+    hiddenTag: "skrytá",
+    retiredTag: "vyřazená",
+    hide: "Skrýt",
+    unhide: "Vrátit",
+    retire: "Vyřadit",
+    addHeading: "Přidat právní základ",
+    labelField: "Název",
+    labelPlaceholder: "Například: Dopingová kontrola",
+    keyField: "Klíč",
+    keyPlaceholder: "např. doping",
+    categoryField: "Kategorie",
+    referenceField: "Odkaz na předpis",
+    addButton: "Přidat",
+    usedIn: n => (n === 1 ? "1 znění" : `${n} znění`),
   },
   library: {
     carryOver: {
@@ -6793,6 +6865,12 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     },
   },
   errors: {
+    "legalBasis.unknownKey": "There is no such item in the legal bases list, or it is hidden or retired.",
+    "legalBasis.badKey": "The key may contain only lowercase letters without diacritics, digits and underscores.",
+    "legalBasis.labelRequired": "The name of the legal basis is required.",
+    "legalBasis.keyTaken": "This key is already in the list (including hidden and retired items).",
+    "legalBasis.notCustom": "The organisation has no such custom item.",
+    "legalBasis.notStandard": "No such standard item exists.",
     "responsibility.personRequired": "A responsible person is required — people acknowledging the version will turn to them.",
     "responsibility.unknownPerson": "The selected responsible person is not here or has been deactivated.",
     "responsibility.samePerson": "This is already the responsible person for this version.",
@@ -7519,6 +7597,26 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     yourTaskNote: "Set the legal basis on which records of acknowledgement of this version are processed.",
     missingBasisTag: "no legal basis",
     missingBasisNote: "A regulation without a legal basis can still be assigned. The responsible person should, however, set it before going live.",
+    missingOptionNote: "Missing a suitable option? Ask the organisation administrator to add it to the legal bases list.",
+    outsideCodelist: "outside the list",
+    orgHeading: "Legal bases",
+    orgHint: "The responsible person picks the legal basis for every version of a regulation from this list. Standard items can be hidden, custom ones retired — nothing is deleted, versions keep a copy.",
+    standardTag: "standard",
+    customTag: "custom",
+    hiddenTag: "hidden",
+    retiredTag: "retired",
+    hide: "Hide",
+    unhide: "Restore",
+    retire: "Retire",
+    addHeading: "Add legal basis",
+    labelField: "Name",
+    labelPlaceholder: "For example: Doping control",
+    keyField: "Key",
+    keyPlaceholder: "e.g. doping",
+    categoryField: "Category",
+    referenceField: "Legal reference",
+    addButton: "Add",
+    usedIn: n => (n === 1 ? "1 version" : `${n} versions`),
   },
   library: {
     carryOver: {

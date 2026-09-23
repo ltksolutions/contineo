@@ -238,7 +238,7 @@ for (const z of hodnotenia) {
  * žiadna: ľudí posiela za niekým, kto im neodpovie.
  */
 const activePersonIds = new Set(persons.filter(o => o.status !== "inactive").map(o => o.id))
-const withoutResponsible = [], inactiveResponsible = [], withoutBasis = []
+const withoutResponsible = [], inactiveResponsible = [], withoutBasis = [], outsideCodelist = []
 for (const d of documents) {
   const v = (d.versions ?? []).find(x => x.isActive && !x.effectiveTo)
   if (!v) continue
@@ -246,6 +246,7 @@ for (const d of documents) {
   if (!v.responsiblePerson) withoutResponsible.push(name)
   else if (!activePersonIds.has(v.responsiblePerson.personId)) inactiveResponsible.push(`${name} — ${v.responsiblePerson.fullName}`)
   if (!v.legalBasis) withoutBasis.push(name)
+  else if (!v.legalBasisKey) outsideCodelist.push(`${name} — ${v.legalBasisReference ?? v.legalBasis}`)
 }
 const listOut = (title, list) => {
   if (list.length === 0) return
@@ -257,6 +258,7 @@ const listOut = (title, list) => {
 listOut("platné znenia bez zodpovednej osoby (D91) — doplní správca obsahu v knižnici", withoutResponsible)
 listOut("platné znenia, ktorých zodpovedná osoba už nie je aktívna — treba určiť novú", inactiveResponsible)
 listOut("platné znenia bez právneho základu (O15) — určí zodpovedná osoba", withoutBasis)
+listOut("platné znenia s právnym základom mimo číselníka (D92) — vybrať položku z číselníka", outsideCodelist)
 
 if (withoutValidity > 0) {
   console.log(`${INFO} ${withoutValidity} aktívnych znení nemá dátum platnosti — nedajú sa potvrdiť (D6)\n`)

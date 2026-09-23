@@ -19,9 +19,11 @@ import { PERSONS_COLLECTION, type Person } from "./persons"
 import { writeAudit } from "./audit"
 import { AppError } from "./appError"
 import {
-  canSetLegalBasis, legalBasisProblem, responsibleChangeProblem, tidyReference,
-  type LegalBasis, type ResponsiblePerson,
+  canSetLegalBasis, legalBasisChoiceProblem, responsibleChangeProblem,
+  type ResponsiblePerson,
 } from "./versionResponsibility"
+import { TENANTS_COLLECTION, type Tenant } from "./tenants"
+import { findLegalBasisOption, type LegalBasisOption } from "./legalBases"
 
 export class ResponsibilityError extends AppError {}
 
@@ -36,6 +38,7 @@ const MESSAGES: Record<string, string> = {
   "legalBasis.referenceTooLong": "Odkaz na predpis je pridlhý — stačí citácia, nie text ustanovenia.",
   "legalBasis.noChange": "Právny základ je už takto určený.",
   "legalBasis.reasonRequired": "Dôvod zmeny právneho základu je povinný — potvrdenia, ktoré medzitým vznikli, si nesú pôvodný.",
+  "legalBasis.unknownKey": "Taká položka v číselníku právnych základov nie je, alebo je skrytá či vyradená.",
   "legalBasis.notAllowed": "Právny základ určuje zodpovedná osoba tohto znenia. Správca obsahu ho smie určiť len vtedy, keď znenie zodpovednú osobu nemá alebo už nie je aktívna.",
   "library.documentNotFound": "Taký dokument tu nie je.",
   "library.versionNotFound": "Také znenie tu nie je.",
@@ -172,22 +175,22 @@ export async function setVersionResponsible(input: {
 }
 
 /**
- * Určí alebo zmení právny základ znenia.
+ * Určí alebo zmení právny základ znenia — **výberom z číselníka** (D92).
  *
  * Oprávnenie sa overuje **tu, proti uloženému zneniu**, nie na obrazovke:
  * akcií môže pribudnúť viac a kontrola, ktorá sa dá obísť iným vstupom, nie je
- * kontrola.
+ * kontrola. Z formulára prichádza len kľúč položky; názov, kategória a odkaz
+ * sa berú z číselníka organizácie a do znenia sa uložia ako kópia.
  */
 export async function setVersionLegalBasis(input: {
   companyCode: string
   documentId: string
   versionId: string
-  basis: string
-  reference?: string | null
+  legalBasisKey: string
   reason?: string
   actor: { personId: string; email: string }
   isContentManager: boolean
-}): Promise<{ basis: LegalBasis; reference: string | null }> {
+}): Promise<LegalBasisOption> {
   const { col, title, version } = await loadVersion(input.companyCode, input.documentId, input.versionId)
 
   const responsible = version.responsiblePerson ?? null
@@ -202,31 +205,37 @@ export async function setVersionLegalBasis(input: {
   })
   if (!allowed) fail("legalBasis.notAllowed")
 
-  const problem = legalBasisProblem({
-    basis: input.basis,
-    reference: input.reference,
+  const tenants = await getCollection<Tenant>(TENANTS_COLLECTION)
+  const tenant = await tenants.findOne(
+    { companyCode: input.companyCode },
+    { projection: { legalBases: 1, legalBasesHidden: 1 } },
+  )
+  const option = findLegalBasisOption(tenant, input.legalBasisKey ?? "")
+
+  const problem = legalBasisChoiceProblem({
+    option,
+    currentKey: version.legalBasisKey ?? null,
     current: version.legalBasis ?? null,
-    currentReference: version.legalBasisReference ?? null,
     reason: input.reason,
   })
   if (problem) fail(problem)
-
-  const basis = input.basis as LegalBasis
-  const reference = tidyReference(input.reference)
+  const chosen = option as LegalBasisOption
   const reason = input.reason?.trim()
 
   await col.updateOne(
     { companyCode: input.companyCode, documentId: input.documentId },
     {
       $set: {
-        "versions.$[v].legalBasis": basis,
-        ...(reference ? { "versions.$[v].legalBasisReference": reference } : {}),
+        "versions.$[v].legalBasis": chosen.basis,
+        "versions.$[v].legalBasisKey": chosen.key,
+        "versions.$[v].legalBasisLabel": chosen.label,
+        ...(chosen.reference ? { "versions.$[v].legalBasisReference": chosen.reference } : {}),
         updatedAt: new Date(),
         updatedBy: input.actor.email,
       },
-      // Oprávnený záujem bez odkazu nemá niesť odkaz z predošlej zákonnej
-      // povinnosti — to by bol údaj, ktorý nikto nezadal.
-      ...(reference ? {} : { $unset: { "versions.$[v].legalBasisReference": "" } }),
+      // Položka bez odkazu nemá niesť odkaz z predošlej voľby — to by bol
+      // údaj, ktorý nikto nezadal.
+      ...(chosen.reference ? {} : { $unset: { "versions.$[v].legalBasisReference": "" } }),
       $push: {
         "versions.$[v].legalBasisChanges": {
           at: new Date(),
@@ -234,8 +243,11 @@ export async function setVersionLegalBasis(input: {
           ...(reason ? { reason } : {}),
           from: version.legalBasis ?? null,
           fromReference: version.legalBasisReference ?? null,
-          to: basis,
-          toReference: reference,
+          fromKey: version.legalBasisKey ?? null,
+          to: chosen.basis,
+          toReference: chosen.reference,
+          toKey: chosen.key,
+          toLabel: chosen.label,
         },
       },
     } as never,
@@ -246,11 +258,11 @@ export async function setVersionLegalBasis(input: {
     companyCode: input.companyCode, subject: "document", action: "legal-basis", actor: input.actor.email,
     targetId: input.documentId, targetLabel: `${title} — ${version.label}`,
     changes: {
-      legalBasis: { from: version.legalBasis ?? null, to: basis },
-      legalBasisReference: { from: version.legalBasisReference ?? null, to: reference },
+      legalBasis: { from: version.legalBasisLabel ?? version.legalBasis ?? null, to: chosen.label },
+      legalBasisReference: { from: version.legalBasisReference ?? null, to: chosen.reference },
     },
     ...(reason ? { note: reason } : {}),
   })
 
-  return { basis, reference }
+  return chosen
 }

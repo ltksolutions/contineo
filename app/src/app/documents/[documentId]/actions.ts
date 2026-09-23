@@ -140,8 +140,7 @@ export async function setLegalBasisAction(fd: FormData) {
       companyCode: person.companyCode,
       documentId,
       versionId: field("versionId"),
-      basis: field("legalBasis"),
-      reference: field("legalBasisReference"),
+      legalBasisKey: field("legalBasisKey"),
       reason: field("reason"),
       actor: { personId: person.id, email: person.email },
       // Náhradník len vo vlastnej organizácii — rovnako ako `libraryContext()`.

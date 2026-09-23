@@ -141,6 +141,13 @@ export interface Version {
   legalBasis?: LegalBasis
   /** Odkaz na predpis — povinný pri `legal_obligation`. */
   legalBasisReference?: string
+  /**
+   * Položka číselníka právnych základov (D92) a **kópia** jej názvu v čase
+   * výberu. Chýba pri základe určenom ešte ručne — `npm run check` ho vypíše
+   * ako „mimo číselníka".
+   */
+  legalBasisKey?: string
+  legalBasisLabel?: string
   legalBasisChanges?: LegalBasisChange[]
 }
 

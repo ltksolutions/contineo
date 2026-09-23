@@ -5,7 +5,7 @@
  */
 import { describe, it, expect } from "vitest"
 import {
-  canSetLegalBasis, isLegalBasis, legalBasisProblem, responsibleChangeProblem,
+  canSetLegalBasis, isLegalBasis, legalBasisChoiceProblem, legalBasisProblem, responsibleChangeProblem,
   tidyReference, MAX_LEGAL_REFERENCE,
 } from "../src/lib/versionResponsibility"
 
@@ -114,6 +114,25 @@ describe("zmena zodpovednej osoby", () => {
     expect(responsibleChangeProblem({ personId: "p-novy", current: null, reason: " " }))
       .toBe("responsibility.reasonRequired")
     expect(responsibleChangeProblem({ personId: "p-novy", current: GARANT, reason: "pôvodná osoba odišla" }))
+      .toBeNull()
+  })
+})
+
+describe("výber z číselníka (D92)", () => {
+  it("bez položky z ponuky neprejde", () => {
+    expect(legalBasisChoiceProblem({ option: null })).toBe("legalBasis.unknownKey")
+  })
+  it("prvý výber bez dôvodu, zmena s dôvodom, tá istá položka nie je zmena", () => {
+    expect(legalBasisChoiceProblem({ option: { key: "bozp" } })).toBeNull()
+    expect(legalBasisChoiceProblem({ option: { key: "bozp" }, current: "legitimate_interest", currentKey: "interna_smernica" }))
+      .toBe("legalBasis.reasonRequired")
+    expect(legalBasisChoiceProblem({ option: { key: "bozp" }, current: "legal_obligation", currentKey: "bozp", reason: "x" }))
+      .toBe("legalBasis.noChange")
+  })
+  it("ručne zadaný základ spred číselníka sa dá nahradiť — so zdôvodnením", () => {
+    expect(legalBasisChoiceProblem({ option: { key: "bozp" }, current: "legal_obligation", currentKey: null }))
+      .toBe("legalBasis.reasonRequired")
+    expect(legalBasisChoiceProblem({ option: { key: "bozp" }, current: "legal_obligation", currentKey: null, reason: "prechod na číselník" }))
       .toBeNull()
   })
 })

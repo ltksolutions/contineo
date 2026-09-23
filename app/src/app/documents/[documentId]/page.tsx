@@ -33,6 +33,7 @@ import { responsibleContact } from "@/lib/versionResponsibilityDb"
 import { canSetLegalBasis } from "@/lib/versionResponsibility"
 import { isContentManager } from "@/lib/library"
 import LegalBasisForm from "@/components/LegalBasisForm"
+import { legalBasisOptions } from "@/lib/legalBases"
 
 export const dynamic = "force-dynamic"
 
@@ -118,6 +119,10 @@ export default async function DocumentPage({
     responsibleActive: Boolean(contact?.active),
   })
 
+  const basisOptions = canSetBasis ? legalBasisOptions(ctx.tenant) : []
+  const basisName = (v: { legalBasis?: string; legalBasisLabel?: string }) =>
+    v.legalBasisLabel ?? (v.legalBasis ? tr.basisLabel[v.legalBasis] : "")
+
   const q = await searchParams
   const text = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v)
   const message = text(q.msg)
@@ -166,7 +171,7 @@ export default async function DocumentPage({
         version.version.legalBasis ? (
           <details className="card" style={{ padding: 16, margin: "0 0 24px" }}>
             <summary style={{ cursor: "pointer" }}>
-              {tr.legalBasis}: {tr.basisLabel[version.version.legalBasis]}
+              {tr.legalBasis}: {basisName(version.version)}
               {version.version.legalBasisReference && ` · ${version.version.legalBasisReference}`}
             </summary>
             <div style={{ marginTop: 12 }}>
@@ -174,7 +179,8 @@ export default async function DocumentPage({
                 documentId={doc.documentId}
                 versionId={version.version.versionId}
                 current={version.version.legalBasis}
-                currentReference={version.version.legalBasisReference}
+                currentKey={version.version.legalBasisKey}
+                options={basisOptions}
                 language={person.language}
                 back="document"
               />
@@ -187,6 +193,7 @@ export default async function DocumentPage({
             <LegalBasisForm
               documentId={doc.documentId}
               versionId={version.version.versionId}
+              options={basisOptions}
               language={person.language}
               back="document"
             />
@@ -238,7 +245,7 @@ export default async function DocumentPage({
               )}
               {version.version.legalBasis && (
                 <div className="quiet" style={{ fontSize: "var(--fs-small)", marginTop: 8 }}>
-                  {tr.legalBasis}: {tr.basisLabel[version.version.legalBasis]}
+                  {tr.legalBasis}: {basisName(version.version)}
                   {version.version.legalBasisReference && ` · ${version.version.legalBasisReference}`}
                 </div>
               )}
