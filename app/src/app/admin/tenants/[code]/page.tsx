@@ -281,7 +281,7 @@ export default async function TenantDetailPage({
         )}
       </section>
 
-      <form action={saveTenantAction} className="card admin-form" encType="multipart/form-data">
+      <form action={saveTenantAction} className="card admin-form">
         <input type="hidden" name="companyCode" value={tenant.companyCode} />
         <h2 style={{ fontSize: "var(--fs-section)", margin: 0 }}>{t.brandingHeading}</h2>
 

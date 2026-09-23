@@ -2008,6 +2008,10 @@ interface Dictionary {
       tags: string
       newTag: string
       submit: string
+      /** Text tlačidla počas odosielania. */
+      submitPending: string
+      /** Veta pod pruhom — čo sa deje a že to trvá. */
+      submitPendingNote: string
     }
   }
 }
@@ -4051,6 +4055,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       tags: "Značky",
       newTag: "Nová značka",
       submit: "Nahrať a previesť",
+      submitPending: "Nahrávam a prevádzam…",
+      submitPendingNote: "Súbor sa odosiela a prevádza na text. Pri väčšom dokumente to môže trvať aj minútu — stránku nezatváraj.",
     },
   },
   },
@@ -6078,6 +6084,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       tags: "Značky",
       newTag: "Nová značka",
       submit: "Nahrát a převést",
+      submitPending: "Nahrávám a převádím…",
+      submitPendingNote: "Soubor se odesílá a převádí na text. U většího dokumentu to může trvat i minutu — stránku nezavírej.",
     },
   },
   },
@@ -8093,6 +8101,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       tags: "Tags",
       newTag: "New tag",
       submit: "Upload and convert",
+      submitPending: "Uploading and converting…",
+      submitPendingNote: "The file is being uploaded and converted to text. A larger document can take up to a minute — keep this page open.",
     },
   },
   },
