@@ -52,7 +52,7 @@ export default async function TenantAdminPage() {
             <div style={{ display: "flex", gap: 10, alignItems: "baseline", flexWrap: "wrap" }}>
               <Link
                 href={`/admin/tenants/${encodeURIComponent(tenant.companyCode)}`}
-                style={{ fontSize: "var(--fs-section)", fontWeight: 700, textDecoration: "none" }}
+                style={{ fontSize: "var(--fs-section)", fontWeight: 700 }}
               >
                 {tenant.displayName}
               </Link>

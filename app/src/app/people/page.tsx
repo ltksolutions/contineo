@@ -109,7 +109,7 @@ export default async function PeoplePage({
               <div style={{ display: "flex", gap: 10, alignItems: "baseline", flexWrap: "wrap" }}>
                 <Link
                   href={`/people/${encodeURIComponent(o.id)}`}
-                  style={{ fontSize: "var(--fs-lead)", fontWeight: 700, textDecoration: "none" }}
+                  style={{ fontSize: "var(--fs-lead)", fontWeight: 700 }}
                 >
                   {displayName(o)}
                 </Link>
