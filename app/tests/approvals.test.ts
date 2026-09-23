@@ -13,7 +13,7 @@
  *     personalista zo dňa na deň nemohol prideliť nič.
  */
 
-import { approvalText } from "../src/lib/approvals"
+import { approvalText, canSeeDraftPdf } from "../src/lib/approvals"
 import { textFingerprint } from "../src/lib/chunkIdentity"
 import { describe, it, expect } from "vitest"
 import {
@@ -317,5 +317,22 @@ describe("approvalText — schvaľovateľ vidí text, na ktorom kolo beží", ()
 
   it("chýbajúci dokument", () => {
     expect(approvalText(undefined, draftId, textFingerprint)).toEqual({ kind: "missing" })
+  })
+})
+
+describe("canSeeDraftPdf — kto smie vidieť PDF konceptu (ADR-011, D99)", () => {
+  const round = { approvers: [{ email: "pravnicka@futbalsfz.sk", fullName: "P", decidedAt: null, decision: null }] }
+
+  it("správca obsahu áno, aj bez kola", () => {
+    expect(canSeeDraftPdf({ isContentManager: true, email: "x@sfz.sk", rounds: [] })).toBe(true)
+  })
+  it("menovaný schvaľovateľ kola na tejto podobe áno (bez ohľadu na veľkosť písmen)", () => {
+    expect(canSeeDraftPdf({ isContentManager: false, email: "Pravnicka@futbalsfz.sk", rounds: [round] })).toBe(true)
+  })
+  it("zamestnanec, ktorý nie je schvaľovateľ, nie", () => {
+    expect(canSeeDraftPdf({ isContentManager: false, email: "novak@futbalsfz.sk", rounds: [round] })).toBe(false)
+  })
+  it("bez kola na aktuálnej podobe nie — ani bývalý schvaľovateľ", () => {
+    expect(canSeeDraftPdf({ isContentManager: false, email: "pravnicka@futbalsfz.sk", rounds: [] })).toBe(false)
   })
 })

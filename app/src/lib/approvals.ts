@@ -66,6 +66,24 @@ export interface ApprovalRound {
 export type VersionState = "draft" | "in-review" | "approved" | "published-before"
 
 /**
+ * Smie človek otvoriť **PDF konceptu**? (ADR-011, D99)
+ *
+ * Správca obsahu áno. Ostatní len ako **menovaný schvaľovateľ** kola, ktoré
+ * beží presne na tejto podobe konceptu — `rounds` sú kolá na aktuálnej
+ * identite (PDF + text). Schvaľovateľ zo staršieho kola nové PDF nevidí:
+ * nerozhoduje o ňom, a koncept nie je verejný, kým ho niekto nezverejní.
+ */
+export function canSeeDraftPdf(input: {
+  isContentManager: boolean
+  email: string
+  rounds: Pick<ApprovalRound, "approvers">[]
+}): boolean {
+  if (input.isContentManager) return true
+  const me = input.email.trim().toLowerCase()
+  return input.rounds.some(r => r.approvers.some(a => a.email.trim().toLowerCase() === me))
+}
+
+/**
  * Text, ktorý má schvaľovateľ pred sebou — **presne ten, na ktorom kolo beží.**
  *
  * Kolo sa vedie na odtlačku konceptu (`draftMarkdown`), nie na zverejnenom

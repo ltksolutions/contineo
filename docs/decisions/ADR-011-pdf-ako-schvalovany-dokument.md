@@ -13,6 +13,7 @@
 > **Nadväzuje na:** ADR-002 (dátová rezidencia), ADR-005 (reťaz dôkazov),
 > ADR-006 (schvaľovanie, D68), ADR-007 (oprava textu, D76), D24, D28, D53, D57
 > **Mení:** D68 — schvaľuje sa PDF **a** text, nie len text.
+> **Implementácia:** hotová (2026-09-23) — PR #91, #93, #94 a krok 4.
 
 ---
 
@@ -171,8 +172,9 @@ Po krokoch, každý samostatný PR:
 1. ✅ Oprava obrazovky schvaľovania — koncept namiesto platného znenia (PR #91).
 2. ✅ Úložisko: SHA-256 pri ukladaní, čítanie prúdom, nahrávanie po kúskoch,
    strop 25 MB (D98) — PR #93.
-3. Model a nahrávanie: povinné PDF + odporúčaný zdroj, `draftIdentity()`,
+3. ✅ Model a nahrávanie: povinné PDF + odporúčaný zdroj, `draftIdentity()`,
    `versions[].pdf` a `versions[].source` pri zverejnení, stiahnutie zdroja
-   ako predlohy (D94–D97).
-4. Zobrazenie a prístup: PDF pri schvaľovaní a potvrdení, SHA-256 v potvrdení
-   (D97, D99).
+   ako predlohy (D94–D97) — PR #94.
+4. ✅ Zobrazenie a prístup: PDF pri schvaľovaní a potvrdení
+   (`/api/documents/[id]/pdf`, `PdfView`, `canSeeDraftPdf`), SHA-256 a názov
+   PDF v potvrdení (D97, D99).

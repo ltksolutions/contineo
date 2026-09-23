@@ -107,6 +107,9 @@ interface Dictionary {
 
   /** Texty potvrdzovacích obrazoviek. */
   onboarding: {
+    /** ADR-011: PDF znenia a text na vyhľadávanie pod ním. */
+    openPdf: string
+    searchText: string
     listHeading: string
     listIntro: string
     /** Prázdny stav (`.empty`, DOCUMENTS úloha 4) — bez akcie: človek tu nemá čo urobiť. */
@@ -739,6 +742,9 @@ interface Dictionary {
   }
 
   approvals: {
+    /** ADR-011: PDF konceptu a text na vyhľadávanie pod ním. */
+    openPdf: string
+    searchText: string
     heading: string
     intro: string
     /** Prázdny stav (`.empty`, APPROVALS úloha 3) — bez akcie: schvaľovateľ si prácu nevie nájsť sám. */
@@ -2058,6 +2064,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     },
   },
   onboarding: {
+    openPdf: "Otvoriť PDF",
+    searchText: "Text dokumentu (slúži na vyhľadávanie)",
     listHeading: "Dokumenty na potvrdenie",
     listIntro: "Prečítajte si každý dokument a potvrďte, že ste sa s ním oboznámili. Potvrdenie sa viaže na konkrétne znenie — pri novej verzii vás systém požiada znova.",
     emptyTitle: "Nemáte nič na potvrdenie",
@@ -2623,6 +2631,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     notifiedMissing: "Riadok o upozorneniach os zatiaľ nemá: log pripomienok je prevádzkový a po 90 dňoch sa maže, a zápis na pridelení hovorí „ozvalo sa N ľuďom\u201c, nie ktorým.",
   },
   approvals: {
+    openPdf: "Otvoriť PDF",
+    searchText: "Text na vyhľadávanie a odpovede — schvaľuje sa spolu s PDF",
     heading: "Na schválenie",
     intro: "Znenia, ktoré niekto predložil a čaká na tvoje rozhodnutie. Rozhoduješ sám za seba \u2014 ostatní schvaľovatelia rozhodujú nezávisle.",
     emptyTitle: "Nič nečaká na vaše rozhodnutie",
@@ -4115,6 +4125,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     },
   },
   onboarding: {
+    openPdf: "Otevřít PDF",
+    searchText: "Text dokumentu (slouží k vyhledávání)",
     listHeading: "Dokumenty k potvrzení",
     listIntro: "Přečtěte si každý dokument a potvrďte, že jste se s ním seznámili. Potvrzení se váže na konkrétní znění — u nové verze vás systém požádá znovu.",
     emptyTitle: "Nemáte nic k potvrzení",
@@ -4680,6 +4692,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     notifiedMissing: "Řádek o upozorněních osa zatím nemá: log připomínek je provozní a po 90 dnech se maže, a zápis na přidělení říká „ozvalo se N lidem\u201c, ne kterým.",
   },
   approvals: {
+    openPdf: "Otevřít PDF",
+    searchText: "Text pro vyhledávání a odpovědi — schvaluje se spolu s PDF",
     heading: "Ke schválení",
     intro: "Znění, která někdo předložil a čekají na tvé rozhodnutí. Rozhoduješ sám za sebe \u2014 ostatní schvalovatelé rozhodují nezávisle.",
     emptyTitle: "Nic nečeká na vaše rozhodnutí",
@@ -6169,6 +6183,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     },
   },
   onboarding: {
+    openPdf: "Open PDF",
+    searchText: "Document text (used for search)",
     listHeading: "Documents to acknowledge",
     listIntro: "Read each document and confirm that you have familiarised yourself with it. An acknowledgement is tied to a specific version — when a new one is issued, you will be asked again.",
     emptyTitle: "Nothing to acknowledge",
@@ -6728,6 +6744,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     notifiedMissing: "The timeline has no notification row yet: the reminder log is operational and is deleted after 90 days, and the record on the assignment says how many people were contacted, not which ones.",
   },
   approvals: {
+    openPdf: "Open PDF",
+    searchText: "Text for search and answers — approved together with the PDF",
     heading: "To approve",
     intro: "Versions somebody submitted that are waiting for your decision. You decide for yourself \u2014 the other approvers decide independently.",
     emptyTitle: "Nothing awaits your decision",

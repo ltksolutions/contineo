@@ -21,6 +21,7 @@ import { tenantStyle } from "@/components/TenantHeader"
 import AppShell from "@/components/AppShell"
 import Notice from "@/components/Notice"
 import FormattedText from "@/components/FormattedText"
+import PdfView from "@/components/PdfView"
 import { normalizeLayout } from "@/lib/appNav"
 import { normalizeQuery, type RawQuery } from "@/lib/urlParams"
 import { dictionary, formatDate } from "@/lib/i18n"
@@ -88,6 +89,14 @@ export default async function ApprovalsPage({
               { title?: unknown; versions?: Version[]; draftMarkdown?: unknown; draftPdf?: VersionFile | null } | undefined
             const version = (doc?.versions ?? []).find(v => v.versionId === r.versionId)
             const shown = approvalText(doc, r.versionId, text => draftIdentity(text, doc?.draftPdf?.sha256))
+            // PDF k tomu istému, čo je v texte: koncept → PDF konceptu,
+            // zverejnené znenie → jeho PDF (ADR-011). Znenia spred ADR-011 ho nemajú.
+            const encodedId = encodeURIComponent(r.documentId)
+            const pdf = shown.kind === "draft" && doc?.draftPdf
+              ? { file: doc.draftPdf, href: `/api/documents/${encodedId}/pdf?draft=1` }
+              : shown.kind === "version" && version?.pdf
+                ? { file: version.pdf, href: `/api/documents/${encodedId}/pdf?version=${encodeURIComponent(r.versionId)}` }
+                : null
             const others = r.approvers.filter(a => a.email !== person.email)
 
             return (
@@ -128,11 +137,29 @@ export default async function ApprovalsPage({
                 */}
                 <details className="approval-read" open={rounds.length === 1}>
                   <summary>{t.readText}</summary>
-                  <article className="answer approval-text">
-                    {"text" in shown
-                      ? <FormattedText text={shown.text} />
-                      : shown.kind === "changed" ? t.draftChanged : t.noText}
-                  </article>
+                  {/*
+                    Schvaľuje sa **PDF aj text** (ADR-011, D96): PDF je predpis,
+                    ako ho ľudia uvidia, text je to, z čoho systém odpovedá.
+                    PDF hore, text zbalený pod ním — ten si väčšina prečíta
+                    len vtedy, keď chce vedieť, čo bude vyhľadávanie hovoriť.
+                  */}
+                  {pdf && (
+                    <PdfView href={pdf.href} name={pdf.file.name} bytes={pdf.file.bytes} labels={{ open: t.openPdf }} />
+                  )}
+                  {pdf && "text" in shown ? (
+                    <details className="approval-search-text">
+                      <summary>{t.searchText}</summary>
+                      <article className="answer approval-text">
+                        <FormattedText text={shown.text} />
+                      </article>
+                    </details>
+                  ) : (
+                    <article className="answer approval-text">
+                      {"text" in shown
+                        ? <FormattedText text={shown.text} />
+                        : shown.kind === "changed" ? t.draftChanged : t.noText}
+                    </article>
+                  )}
                 </details>
 
                 {/*
