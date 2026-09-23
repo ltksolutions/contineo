@@ -23,6 +23,24 @@ import type {
 
 export const DOCUMENTS_COLLECTION = "documents"
 
+/**
+ * Súbor pripojený k zneniu alebo konceptu — **kópia údajov, nie odkaz**
+ * (ADR-011, D97). Nové nahratie dokumentu ho neprepíše; o rok sa podľa
+ * `sha256` dá overiť, že súbor v úložisku je ten, ktorý ľudia videli.
+ */
+export interface VersionFile {
+  /** Identifikátor v GridFS (`cms_files`). */
+  id: string
+  name: string
+  bytes: number
+  /** SHA-256 bajtov (hex). */
+  sha256: string
+  /** Druh podľa prevodu: `pdf`, `docx`, `xlsx`, `markdown`, `text`. */
+  type: string
+  uploadedAt: Date
+  uploadedBy: string
+}
+
 export interface Version {
   /** Nemenné. Zhodné s `document_chunks.versionId` — chunk patrí verzii. */
   versionId: string
@@ -45,6 +63,18 @@ export interface Version {
 
   isActive: boolean
   contentHash?: string
+
+  /**
+   * PDF tohto znenia — to, čo ľudia schválili a potvrdzujú (ADR-011, D94).
+   * Chýba pri zneniach spred ADR-011; **spätne sa nedopĺňa** — dopísať, že
+   * ľudia videli súbor, ktorý nevideli, by bol vyrobený dôkaz (ako D74).
+   */
+  pdf?: VersionFile
+  /**
+   * Zdrojový súbor (`.docx`…) — z neho vznikol text na vyhľadávanie a je to
+   * **upraviteľná predloha pre ďalšie znenie** (D95). Nie je to dôkaz.
+   */
+  source?: VersionFile
   changeNote?: string
 
   /**

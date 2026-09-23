@@ -11,7 +11,7 @@
 
 import { getCollection } from "./mongodb"
 import { allFolders, pathTo } from "./folders"
-import { DOCUMENTS_COLLECTION, effectiveVersion } from "./documents"
+import { DOCUMENTS_COLLECTION, effectiveVersion, type VersionFile } from "./documents"
 import type { Version } from "./documents"
 import type { OriginalFile, ProcessingState } from "./libraryWrite"
 import { conditionQuery, type Condition, type MatchMode } from "./libraryConditions"
@@ -124,6 +124,9 @@ export interface LibraryDetail extends LibraryRow {
   editableText: string
   versions: Version[]
   originalFile?: OriginalFile
+  /** PDF a upraviteľný zdroj konceptu (ADR-011). Pri zverejnení sa skopírujú do znenia. */
+  draftPdf?: VersionFile | null
+  draftSource?: VersionFile | null
   conversion?: { method: string; warnings: string[]; at: Date }
   processingError?: string | null
   scope?: string
@@ -632,6 +635,8 @@ export async function libraryDetail(
       return tb - ta
     }),
     originalFile: d.originalFile as OriginalFile | undefined,
+    draftPdf: (d.draftPdf as VersionFile | null | undefined) ?? null,
+    draftSource: (d.draftSource as VersionFile | null | undefined) ?? null,
     conversion: d.konverzia as LibraryDetail["conversion"],
     processingError: (d.processingError as string | null) ?? null,
   }

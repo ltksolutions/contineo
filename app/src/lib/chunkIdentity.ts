@@ -80,6 +80,23 @@ export function textFingerprint(markdown: string): string {
 }
 
 /**
+ * Identita **konceptu** — na nej beží kolo schvaľovania a z nej vznikne
+ * `versionId` zverejneného znenia (ADR-011, D96).
+ *
+ * Od ADR-011 sa schvaľuje **PDF aj text**: PDF je dôkaz, text je to, z čoho
+ * systém odpovedá. Zmena ktoréhokoľvek z nich musí schválenie zrušiť, preto
+ * do identity vstupujú obe. Vyladenie chunkera ju nemení (D57 platí), lebo
+ * úseky do nej nevstupujú.
+ *
+ * **Bez PDF je to presne `textFingerprint()`** — znenia a kolá spred ADR-011
+ * si tak zachovajú svoje `versionId` a nič sa nepreraďuje.
+ */
+export function draftIdentity(markdown: string, pdfSha256?: string | null): string {
+  const text = textFingerprint(markdown)
+  return pdfSha256 ? hash(`pdf:${pdfSha256}\ntext:${text}`) : text
+}
+
+/**
  * Odtlačok **členenia**: čím sa rezalo a čo z toho vyšlo.
  *
  * Hashuje sa presne to, čo sa zapíše do `document_chunks` — rovnaká zásada

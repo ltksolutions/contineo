@@ -39,7 +39,11 @@ import { isHr } from "@/lib/hr"
 import { validAcknowledgements } from "@/lib/acknowledgements"
 import { roundsByVersion, stateOf } from "@/lib/approvalsDb"
 import type { CSSProperties } from "react"
-import { textFingerprint } from "@/lib/chunkIdentity"
+import { textFingerprint, draftIdentity } from "@/lib/chunkIdentity"
+import UploadFiles from "@/components/UploadFiles"
+import UploadSubmit from "@/components/UploadSubmit"
+import { MAX_BYTES, MAX_FORM_BYTES, SOURCE_EXTENSIONS } from "@/lib/fileStore"
+import type { VersionFile } from "@/lib/documents"
 import { textDiff, type DiffKind } from "@/lib/textFix"
 import { listPeople } from "@/lib/people"
 import ResponsiblePicker from "@/components/ResponsiblePicker"
@@ -71,6 +75,7 @@ export default async function DocumentDetailPage({
   const branding = brandingView(ctx.tenant)
   const language = ctx.person.language
   const t = dictionary(language).library.detail
+  const tu = dictionary(language).library.upload
   const extras = tenantExtras(ctx.tenant)
   const folders = await allFolders(ctx.tenant.companyCode)
   const folderTree = flattenTree(folders)
@@ -188,7 +193,11 @@ export default async function DocumentDetailPage({
    * odtlačok zmení a schválenie prestane platiť.** Presne to žiada D28 —
    * potvrdzuje sa text, ktorý ľudia videli, nie dokument s tým istým názvom.
    */
-  const draftVersionId = draft ? textFingerprint(draft) : null
+  // Identita konceptu = PDF + text (ADR-011, D96) — na nej beží kolo
+  // schvaľovania. Oprava textu (ADR-007) sa ale stráži odtlačkom **len
+  // textu**: porovnáva sa s tým, čo bolo v rozdiele na obrazovke.
+  const draftVersionId = draft ? draftIdentity(draft, d.draftPdf?.sha256) : null
+  const draftTextFingerprint = draft ? textFingerprint(draft) : null
   const draftRounds = draftVersionId ? (rounds.get(draftVersionId) ?? []) : []
   const draftState = stateOf(draftRounds)
 
@@ -495,6 +504,15 @@ export default async function DocumentDetailPage({
             {t.noOriginal}
           </p>
         )}
+        {/* PDF a zdroj konceptu (ADR-011). PDF je to, čo sa schvaľuje. */}
+        {d.draftPdf ? (
+          <p className="detail-block-note">
+            {t.draftPdf} <FileLink file={d.draftPdf} />
+            {d.draftSource && <> · {t.draftSource} <FileLink file={d.draftSource} download /></>}
+          </p>
+        ) : d.draftMarkdown && (
+          <p className="detail-block-note">{t.noDraftPdf}</p>
+        )}
 
         {d.conversion?.warnings?.length ? (
           <ul className="quiet" style={{ fontSize: "var(--fs-small)", margin: 0, paddingLeft: 18 }}>
@@ -593,12 +611,25 @@ export default async function DocumentDetailPage({
         <input type="hidden" name="documentId" value={d.documentId} />
         <h2 className="detail-block-title">{t.newVersionHeading}</h2>
         <p className="detail-block-note">{t.newVersionNote}</p>
-        <label className="field">
-          <span className="field-label">{t.newVersionFile}</span>
-          <input className="field-input" type="file" name="file" required
-                 accept=".pdf,.docx,.xlsx,.md,.txt,.csv" />
-        </label>
-        <div><button className="button button--quiet" type="submit">{t.newVersionSubmit}</button></div>
+        <UploadFiles
+          pdfAccept=".pdf,application/pdf"
+          sourceAccept={SOURCE_EXTENSIONS.join(",")}
+          maxBytes={MAX_BYTES}
+          labels={{
+            pdfTitle: tu.pdfTitle,
+            pdfNote: tu.pdfNote,
+            sourceTitle: tu.sourceTitle,
+            sourceNote: `${tu.sourceNote} ${SOURCE_EXTENSIONS.map(e => e.slice(1).toUpperCase()).join(" · ")}`,
+            maxSize: tu.maxSize(MAX_BYTES / 1024 / 1024),
+            noScriptLimit: tu.noScriptLimit(MAX_FORM_BYTES / 1024 / 1024),
+            uploading: tu.uploadingFile,
+            failed: tu.uploadFailed,
+            tooLarge: tu.fileTooLarge,
+          }}
+        />
+        <div>
+          <UploadSubmit labels={{ submit: t.newVersionSubmit, pending: tu.submitPending, pendingNote: tu.submitPendingNote }} />
+        </div>
       </form>
             {effective && draftDiff && draftDiff.added + draftDiff.removed > 0 && (
               <details className="card detail-block">
@@ -650,7 +681,7 @@ export default async function DocumentDetailPage({
                       koncept medzitým nezmenil — uložiť sa má ten text, ktorého
                       rozdiel si človek pozrel.
                     */}
-                    <input type="hidden" name="expectedFingerprint" value={draftVersionId ?? ""} />
+                    <input type="hidden" name="expectedFingerprint" value={draftTextFingerprint ?? ""} />
 
                     <label className="field">
                       <span className="field-label">{t.textFixReason}</span>
@@ -701,6 +732,13 @@ export default async function DocumentDetailPage({
                 <div className="quiet audit-note">{t.dateSource(v.effectiveFromSource)}</div>
               )}
               {v.changeNote && <div className="quiet audit-note">{v.changeNote}</div>}
+              {/* PDF znenia je dôkaz; zdroj je predloha pre ďalšie znenie (ADR-011). */}
+              <div className="audit-note" style={{ fontSize: "var(--fs-small)" }}>
+                {v.pdf
+                  ? <>{t.versionPdf} <FileLink file={v.pdf} /></>
+                  : <span className="quiet">{t.noPdf}</span>}
+                {v.source && <><br />{t.versionSource} <FileLink file={v.source} download /></>}
+              </div>
 
               {/*
                 Zodpovedná osoba a právny základ (D91). Chýbajúci údaj sa
@@ -1046,5 +1084,16 @@ export default async function DocumentDetailPage({
       </div>
     </div>
     </AppShell>
+  )
+}
+
+
+/** Odkaz na súbor v úložisku — PDF sa otvára, zdroj sa sťahuje. */
+function FileLink({ file, download = false }: { file: VersionFile; download?: boolean }) {
+  const href = `/api/library/file/${encodeURIComponent(file.id)}${download ? "?download=1" : ""}`
+  return (
+    <a href={href} target={download ? undefined : "_blank"} rel="noreferrer" download={download ? file.name : undefined}>
+      {file.name}
+    </a>
   )
 }

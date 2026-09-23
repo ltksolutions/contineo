@@ -26,9 +26,9 @@ import { normalizeQuery, type RawQuery } from "@/lib/urlParams"
 import { dictionary, formatDate } from "@/lib/i18n"
 import { roundsWaitingFor } from "@/lib/approvalsDb"
 import { approvalText } from "@/lib/approvals"
-import { textFingerprint } from "@/lib/chunkIdentity"
+import { draftIdentity } from "@/lib/chunkIdentity"
 import { getCollection } from "@/lib/mongodb"
-import { DOCUMENTS_COLLECTION, type Version } from "@/lib/documents"
+import { DOCUMENTS_COLLECTION, type Version, type VersionFile } from "@/lib/documents"
 import { decideAction } from "./actions"
 
 export const dynamic = "force-dynamic"
@@ -59,7 +59,7 @@ export default async function ApprovalsPage({
   const docs = ids.length === 0 ? [] : await (await getCollection(DOCUMENTS_COLLECTION))
     .find(
       { companyCode: person.companyCode, documentId: { $in: ids } },
-      { projection: { documentId: 1, title: 1, versions: 1, draftMarkdown: 1 } },
+      { projection: { documentId: 1, title: 1, versions: 1, draftMarkdown: 1, draftPdf: 1 } },
     )
     .toArray()
 
@@ -84,9 +84,10 @@ export default async function ApprovalsPage({
 
         <ul className="approval-list">
           {rounds.map(r => {
-            const doc = byId.get(r.documentId) as { title?: unknown; versions?: Version[]; draftMarkdown?: unknown } | undefined
+            const doc = byId.get(r.documentId) as
+              { title?: unknown; versions?: Version[]; draftMarkdown?: unknown; draftPdf?: VersionFile | null } | undefined
             const version = (doc?.versions ?? []).find(v => v.versionId === r.versionId)
-            const shown = approvalText(doc, r.versionId, textFingerprint)
+            const shown = approvalText(doc, r.versionId, text => draftIdentity(text, doc?.draftPdf?.sha256))
             const others = r.approvers.filter(a => a.email !== person.email)
 
             return (

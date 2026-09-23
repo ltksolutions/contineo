@@ -16,7 +16,8 @@ import { getCollection } from "./mongodb"
 import { AppError } from "./appError"
 import { writeAudit } from "./audit"
 import { PERSONS_COLLECTION, type Person } from "./persons"
-import { DOCUMENTS_COLLECTION } from "./documents"
+import { DOCUMENTS_COLLECTION, type VersionFile } from "./documents"
+import { draftIdentity } from "./chunkIdentity"
 import {
   APPROVALS_COLLECTION, submitProblem, versionState, decideProblem, roundOutcome,
   type ApprovalRound, type ApproverDecision, type VersionState,
@@ -104,6 +105,30 @@ export async function submitForApproval(input: SubmitInput): Promise<ApprovalRou
       "approval.unknownApprover",
       "Niektorý z vybraných schvaľovateľov tu nie je alebo je vyradený.",
     )
+  }
+
+  /*
+   * **Na čom kolo beží, určuje server, nie formulár** (ADR-011, D96). Kolo na
+   * koncepte musí sedieť s tým, čo je v koncepte práve teraz — PDF aj text.
+   * Formulár nesie identitu z chvíle, keď sa stránka načítala; keby sa medzitým
+   * nahralo iné PDF, kolo by schvaľovalo niečo, čo už neexistuje.
+   *
+   * Kolo na **zverejnenom** znení (D74 — dodatočné schválenie) sa týka
+   * znenia s daným `versionId` a tieto kontroly nepotrebuje.
+   */
+  const doc = await (await getCollection(DOCUMENTS_COLLECTION)).findOne(
+    { companyCode: input.companyCode, documentId: input.documentId },
+    { projection: { draftMarkdown: 1, draftPdf: 1, "versions.versionId": 1 } },
+  ) as { draftMarkdown?: string; draftPdf?: VersionFile | null; versions?: { versionId: string }[] } | null
+  if (!doc) throw new ApprovalError("approval.documentNotFound", "Taký dokument tu nie je.")
+  const isPublished = (doc.versions ?? []).some(v => v.versionId === input.versionId)
+  if (!isPublished) {
+    if (!doc.draftPdf) {
+      throw new ApprovalError("approval.pdfRequired", "Koncept nemá PDF — nahraj znenie znova aj s PDF.")
+    }
+    if (draftIdentity(String(doc.draftMarkdown ?? ""), doc.draftPdf.sha256) !== input.versionId) {
+      throw new ApprovalError("approval.draftChanged", "Koncept sa medzitým zmenil — obnov stránku a predlož ho znova.")
+    }
   }
 
   const rounds = await roundsForVersion(input.companyCode, input.documentId, input.versionId)
