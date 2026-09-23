@@ -50,6 +50,7 @@ import { onboardingContext }  from "@/lib/session"
 import { getProviders }       from "@/lib/providers/factory"
 import { assertEmbeddingSpace, EmbeddingSpaceMismatchError } from "@/lib/embeddingGuard"
 import { dictionary } from "@/lib/i18n"
+import { sameOrigin } from "@/lib/sameOrigin"
 
 // ── Typy ────────────────────────────────────────────────────────────────────
 
@@ -64,6 +65,11 @@ interface ChatRequest {
 // ── Handler ──────────────────────────────────────────────────────────────────
 
 export async function POST(req: NextRequest) {
+  // 0. Pôvod (CSRF). Každá otázka spúšťa vyhľadávanie a jazykový model — za
+  //    to sa platí — a zapisuje sa pod prihláseným. Cudzia stránka ju nemá
+  //    vedieť poslať s jeho cookie. Viď `lib/sameOrigin.ts`.
+  if (!sameOrigin(req.headers)) return new Response(null, { status: 403 })
+
   // 1. Organizácia a osoba (D29, D90). Rozhoduje doména a prihlásenie,
   //    nie nič, čo pošle klient. Ide to prvé, ešte pred čítaním tela: cudzia
   //    doména nemá z odpovede 400 zistiť, že tu endpoint je.

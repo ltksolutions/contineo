@@ -20,6 +20,7 @@ import { recordAnswer, saveVerdict, saveReaderFeedback } from "@/lib/ratings"
 import type { NewRating, RatingEdit, ReaderFeedback, Verdict } from "@/lib/ratings"
 import { isEvaluator } from "@/lib/evaluation"
 import { onboardingContext } from "@/lib/session"
+import { sameOrigin } from "@/lib/sameOrigin"
 
 /**
  * Kto je na druhej strane — **osoba organizácie domény, alebo odmietnutie**
@@ -59,6 +60,10 @@ function text(v: unknown, max: number): string | undefined {
 }
 
 export async function POST(req: NextRequest) {
+  // Pôvod pred čímkoľvek iným (CSRF): hodnotenie sa zapisuje v mene
+  // prihláseného a cudzia stránka ho nemá vedieť podstrčiť. Viď `lib/sameOrigin.ts`.
+  if (!sameOrigin(req.headers)) return new Response(null, { status: 403 })
+
   const who = await caller()
   if ("error" in who) return who.error
 
@@ -103,6 +108,9 @@ export async function POST(req: NextRequest) {
 }
 
 export async function PATCH(req: NextRequest) {
+  // To isté ako pri `POST` — úprava hodnotenia je tiež zápis v jeho mene.
+  if (!sameOrigin(req.headers)) return new Response(null, { status: 403 })
+
   const who = await caller()
   if ("error" in who) return who.error
 

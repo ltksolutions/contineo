@@ -24,10 +24,17 @@ import { onboardingContext } from "@/lib/session"
 import { acknowledge } from "@/lib/acknowledgements"
 import { trackForDocument } from "@/lib/tracks"
 import { clientIp } from "@/lib/requestMeta"
+import { sameOrigin } from "@/lib/sameOrigin"
 
 export const dynamic = "force-dynamic"
 
 export async function POST(request: Request) {
+  // Pôvod pred čímkoľvek iným (CSRF): zapisuje sa **dôkazné potvrdenie**
+  // (D24) a cookie prihláseného by poslal aj formulár z cudzej stránky —
+  // napríklad z inej organizácie na tej istej doméne `*.contineo.app`,
+  // kam `SameSite=Lax` nesiaha. Viď `lib/sameOrigin.ts`.
+  if (!sameOrigin(request.headers)) return new Response(null, { status: 403 })
+
   // Tenant sa overuje aj tu, nielen na stránke. Zápis potvrdenia je jediné
   // miesto, kde vzniká auditný záznam, a ten nesmie vzniknúť pod hlavičkou
   // organizácie, ku ktorej potvrdzujúci nepatrí — volanie API stránku obchádza.

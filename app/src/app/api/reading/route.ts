@@ -15,10 +15,15 @@ import { NextResponse } from "next/server"
 import { onboardingContext } from "@/lib/session"
 import { loadDocumentFor, effectiveVersion } from "@/lib/documents"
 import { recordReading } from "@/lib/readingTime"
+import { sameOrigin } from "@/lib/sameOrigin"
 
 export const dynamic = "force-dynamic"
 
 export async function POST(request: Request) {
+  // Pôvod pred čímkoľvek iným (CSRF): cudzia stránka by inak vedela
+  // v mene prihláseného zapisovať čas čítania smernice. Viď `lib/sameOrigin.ts`.
+  if (!sameOrigin(request.headers)) return new Response(null, { status: 403 })
+
   const ctx = await onboardingContext()
   if (ctx.state === "unknown-host") {
     return NextResponse.json({ ok: false }, { status: 404 })
