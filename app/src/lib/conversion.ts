@@ -83,22 +83,66 @@ function tidied(text: string): string {
     .trim()
 }
 
+/**
+ * Obrázky vložené do textu ako `data:` adresa — `![popis](data:image/…;base64,…)`
+ * aj holý `<img src="data:…">`, ktorý turndown niekedy nechá v HTML.
+ */
+const INLINE_IMAGE = /!\[[^\]]*\]\(\s*data:[^)]*\)|<img\b[^>]*\bsrc=["']?data:[^>]*>/gi
+
+/**
+ * Odstráni z Markdownu obrázky vložené ako `data:` adresa.
+ *
+ * **Poistka, nie hlavná cesta** — `fromDocx()` obrázky zahodí už pri prevode.
+ * Je tu preto, že obrázok v texte nerobí len šum: 23. 9. 2026 mal pracovný
+ * poriadok (2,5 MB .docx) vo vnútri 34 MB obrázok EMF, z textu bolo 47 MB
+ * base64 a zápis do Monga padol na strope 17 MB buffra BSON. Do úsekov na
+ * hľadanie by sa navyše dostali stovky kilobajtov nezmyslov, ktoré sa
+ * embeddujú a za ktoré sa platí.
+ */
+export function stripInlineImages(markdown: string): { markdown: string; removed: number } {
+  let removed = 0
+  const out = markdown.replace(INLINE_IMAGE, () => {
+    removed++
+    return ""
+  })
+  return { markdown: out, removed }
+}
+
 async function fromDocx(data: Buffer): Promise<ConversionResult> {
   const mammoth = (await import("mammoth")).default
   const TurndownService = (await import("turndown")).default
 
-  const result = await mammoth.convertToHtml({ buffer: data })
+  /*
+   * Obrázky sa **zahodia pri prevode**, nie až v Markdowne. Predvolene ich
+   * mammoth vkladá do HTML ako base64 — celé, aj 34 MB obrázok EMF, ktorý
+   * prehliadač ani nezobrazí. Obrázok bez `src` turndown vynechá; norma je
+   * text a originál so všetkými obrázkami zostáva v GridFS.
+   *
+   * Počítajú sa tu, nie z hlásení mammothu — ten hlási len nezvyčajné
+   * formáty (EMF), takže pri bežnom PNG by varovanie nezaznelo nikdy.
+   */
+  let images = 0
+  const result = await mammoth.convertToHtml(
+    { buffer: data },
+    {
+      convertImage: mammoth.images.imgElement(async () => {
+        images++
+        return { src: "" }
+      }),
+    },
+  )
   const turndown = new TurndownService({
     headingStyle: "atx",
     bulletListMarker: "-",
     codeBlockStyle: "fenced",
   })
-  const markdown = tidied(turndown.turndown(result.value))
+  const stripped = stripInlineImages(turndown.turndown(result.value))
+  const markdown = tidied(stripped.markdown)
 
   const warnings: string[] = []
-  // Mammoth hlási, čo zahodil. Väčšinou sú to štýly bez významu, ale
-  // obrázky a poznámky pod čiarou stoja za zmienku — v norme to býva text.
-  if (result.messages.some(m => /image/i.test(m.message))) {
+  // Obrázok v norme býva text (schéma, podpis, tabuľka ako obrázok), takže
+  // stojí za zmienku, že sa do Markdownu nedostal.
+  if (images > 0 || stripped.removed > 0) {
     warnings.push("Dokument obsahoval obrázky — do Markdownu sa neprepísali.")
   }
   if (!markdown) warnings.push("Z dokumentu nevyšiel žiadny text.")

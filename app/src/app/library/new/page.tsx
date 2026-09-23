@@ -12,6 +12,7 @@ import Link from "next/link"
 import Notice from "@/components/Notice"
 import { MAX_BYTES, ACCEPTED_EXTENSIONS } from "@/lib/fileStore"
 import KeyPreview from "@/components/KeyPreview"
+import UploadSubmit from "@/components/UploadSubmit"
 import { libraryContext } from "@/lib/library"
 import { codelistOptions, CODELISTS } from "@/lib/codelists"
 import { allDepartments, flattenTree } from "@/lib/departments"
@@ -109,7 +110,7 @@ export default async function NewDocumentPage({
         po prečítaní prevedeného textu. Tretí krok by tu stále nikam neviedol,
         len z iného dôvodu než vtedy.
       */}
-      <form action={upload} className="upload-form" encType="multipart/form-data">
+      <form action={upload} className="upload-form">
         <section className="card upload-section">
           <h2 className="upload-step"><span className="upload-step-no">1</span>{t.sectionFile}</h2>
 
@@ -258,7 +259,9 @@ export default async function NewDocumentPage({
           </div>
         </section>
 
-        <div><button className="button" type="submit">{t.submit}</button></div>
+        <div>
+          <UploadSubmit labels={{ submit: t.submit, pending: t.submitPending, pendingNote: t.submitPendingNote }} />
+        </div>
       </form>
     </div>
     </AppShell>

@@ -588,7 +588,7 @@ export default async function DocumentDetailPage({
         <p className="quiet" style={{ fontSize: "var(--fs-small)", margin: "10px 0 0" }}>{tc.noEmailNote}</p>
       </form>
       )}
-      <form action={uploadVersionAction} encType="multipart/form-data"
+      <form action={uploadVersionAction}
             className="card detail-block">
         <input type="hidden" name="documentId" value={d.documentId} />
         <h2 className="detail-block-title">{t.newVersionHeading}</h2>

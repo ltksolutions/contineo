@@ -258,7 +258,7 @@ export default async function OrganisationPage({
       </nav>
 
       {now === "branding" && (
-      <form action={saveBrandingAction} className="card" style={{ padding: 20, display: "grid", gap: 16 }} encType="multipart/form-data">
+      <form action={saveBrandingAction} className="card" style={{ padding: 20, display: "grid", gap: 16 }}>
         <input type="hidden" name="tab" value="branding" />
 
         <label className="field">

@@ -2480,6 +2480,44 @@ html[data-theme="dark"] .editor-tui .CodeMirror {
 
 .upload-grid .field { margin: 0; min-width: 0; }
 
+/* Stav odosielania pod „Nahrať a previesť" (`UploadSubmit`). Pruh je
+   neurčitý — koľko z nahratia je hotové, server nehlási, takže sa len
+   prelieva. Prázdny kontajner nezaberá miesto. */
+.upload-progress:empty { display: none; }
+.upload-progress { display: grid; gap: 8px; margin-top: 12px; max-width: 520px; }
+
+.upload-progress-bar {
+  position: relative;
+  display: block;
+  height: 4px;
+  overflow: hidden;
+  border-radius: 2px;
+  background: var(--line);
+}
+
+.upload-progress-bar::after {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 35%;
+  border-radius: 2px;
+  background: var(--accent);
+  animation: upload-progress 1.4s ease-in-out infinite;
+}
+
+@keyframes upload-progress {
+  from { transform: translateX(-100%); }
+  to   { transform: translateX(290%); }
+}
+
+.upload-progress-note { font-size: var(--fs-small); }
+
+/* Pri vypnutom pohybe stojí plný pruh — povie to isté („pracuje sa"), len sa
+   nehýbe. Rovnaká zásada ako `.route-progress`. */
+@media (prefers-reduced-motion: reduce) {
+  .upload-progress-bar::after { width: 100%; animation: none; }
+}
+
 /* Náhľad identifikátora pod názvom (NAHRAVANIE, úloha 4 / ADR-010). Monospace:
    je to kľúč, nie veta. Ručný kľúč je vedomý krok za `<details>`. */
 .key-preview {
