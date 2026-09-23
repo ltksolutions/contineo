@@ -66,6 +66,34 @@ export interface ApprovalRound {
 export type VersionState = "draft" | "in-review" | "approved" | "published-before"
 
 /**
+ * Text, ktorý má schvaľovateľ pred sebou — **presne ten, na ktorom kolo beží.**
+ *
+ * Kolo sa vedie na odtlačku konceptu (`draftMarkdown`), nie na zverejnenom
+ * znení: to v `versions[]` do publikovania nie je. Obrazovka schvaľovania
+ * dovtedy brala `versions[].markdown ?? markdown`, teda **platné znenie**
+ * — a pri novom dokumente nič. Schvaľovateľ tak schvaľoval text, ktorý
+ * nevidel (nájdené 2026-09-23, porušenie D28).
+ *
+ * Poradie: koncept, ak jeho odtlačok sedí s kolom; potom zverejnené znenie
+ * s tým istým `versionId` (kolo dobehlo a medzitým sa publikovalo). Ak
+ * nesedí nič, koncept sa po predložení zmenil — vtedy sa **neukáže žiadny
+ * text**, ale veta, že kolo sa týka inej podoby. Ukázať súčasný koncept by
+ * bola presne tá istá chyba v novom šate.
+ */
+export function approvalText(
+  doc: { draftMarkdown?: unknown; versions?: { versionId: string; markdown?: string }[] } | undefined,
+  versionId: string,
+  fingerprint: (text: string) => string,
+): { kind: "draft" | "version"; text: string } | { kind: "changed" } | { kind: "missing" } {
+  if (!doc) return { kind: "missing" }
+  const draft = typeof doc.draftMarkdown === "string" ? doc.draftMarkdown : ""
+  if (draft && fingerprint(draft) === versionId) return { kind: "draft", text: draft }
+  const version = (doc.versions ?? []).find(v => v.versionId === versionId)
+  if (version?.markdown) return { kind: "version", text: version.markdown }
+  return draft ? { kind: "changed" } : { kind: "missing" }
+}
+
+/**
  * Stav z kôl daného znenia.
  *
  * Rozhoduje **posledné kolo**, nie súčet: kto po zamietnutí predloží znovu,

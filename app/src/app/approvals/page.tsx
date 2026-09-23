@@ -25,6 +25,8 @@ import { normalizeLayout } from "@/lib/appNav"
 import { normalizeQuery, type RawQuery } from "@/lib/urlParams"
 import { dictionary, formatDate } from "@/lib/i18n"
 import { roundsWaitingFor } from "@/lib/approvalsDb"
+import { approvalText } from "@/lib/approvals"
+import { textFingerprint } from "@/lib/chunkIdentity"
 import { getCollection } from "@/lib/mongodb"
 import { DOCUMENTS_COLLECTION, type Version } from "@/lib/documents"
 import { decideAction } from "./actions"
@@ -57,7 +59,7 @@ export default async function ApprovalsPage({
   const docs = ids.length === 0 ? [] : await (await getCollection(DOCUMENTS_COLLECTION))
     .find(
       { companyCode: person.companyCode, documentId: { $in: ids } },
-      { projection: { documentId: 1, title: 1, versions: 1, markdown: 1 } },
+      { projection: { documentId: 1, title: 1, versions: 1, draftMarkdown: 1 } },
     )
     .toArray()
 
@@ -82,9 +84,9 @@ export default async function ApprovalsPage({
 
         <ul className="approval-list">
           {rounds.map(r => {
-            const doc = byId.get(r.documentId) as { title?: unknown; versions?: Version[]; markdown?: unknown } | undefined
+            const doc = byId.get(r.documentId) as { title?: unknown; versions?: Version[]; draftMarkdown?: unknown } | undefined
             const version = (doc?.versions ?? []).find(v => v.versionId === r.versionId)
-            const text = String(version?.markdown ?? doc?.markdown ?? "")
+            const shown = approvalText(doc, r.versionId, textFingerprint)
             const others = r.approvers.filter(a => a.email !== person.email)
 
             return (
@@ -126,7 +128,9 @@ export default async function ApprovalsPage({
                 <details className="approval-read" open={rounds.length === 1}>
                   <summary>{t.readText}</summary>
                   <article className="answer approval-text">
-                    {text ? <FormattedText text={text} /> : t.noText}
+                    {"text" in shown
+                      ? <FormattedText text={shown.text} />
+                      : shown.kind === "changed" ? t.draftChanged : t.noText}
                   </article>
                 </details>
 
