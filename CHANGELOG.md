@@ -4,6 +4,15 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Právny základ sa vyberá z číselníka (2026-09-23)
+
+Zodpovedná osoba už odkaz na zákon nepíše ručne — vyberá z číselníka
+právnych základov (napríklad „BOZP — § 7 zákona č. 124/2006 Z. z." alebo
+„Interná smernica"). Číselník je predvyplnený a správca organizácie ho
+spravuje v **Nastavenie organizácie → Číselníky**: štandardné položky môže
+skryť, vlastné pridať alebo vyradiť. Nič sa nemaže; znenia a potvrdenia si
+pamätajú, čo bolo vybraté v tej chvíli.
+
 ### Zodpovedná osoba a právny základ pri každom znení predpisu (2026-09-23)
 
 Pri zverejnení nového znenia treba určiť **zodpovednú osobu** — človeka, na

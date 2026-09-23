@@ -77,6 +77,9 @@ export interface Acknowledgement {
    */
   legalBasis?: LegalBasis | null
   legalBasisReference?: string | null
+  /** Položka číselníka a kópia jej názvu (D92). */
+  legalBasisKey?: string | null
+  legalBasisLabel?: string | null
 
   // ČÍM — doslovné znenie, nie odkaz naň
   statementText: string
@@ -310,6 +313,8 @@ export async function acknowledge(
     responsiblePerson: v.responsiblePerson ?? null,
     legalBasis: v.legalBasis ?? null,
     legalBasisReference: v.legalBasisReference ?? null,
+    legalBasisKey: v.legalBasisKey ?? null,
+    legalBasisLabel: v.legalBasisLabel ?? null,
     statementText: statement,
     statementHash: await hashStatement(statement),
     language: language,

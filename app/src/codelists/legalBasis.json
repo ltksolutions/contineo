@@ -1,0 +1,16 @@
+{
+  "codelist": "legalBasis",
+  "closed": true,
+  "hierarchical": false,
+  "description": "Štandardné právne základy spracúvania záznamu o oboznámení (D91, D92). Návrh IT na kontrolu DPO — odkazy označené v docs/decisions sú neoverené. Organizácia ich môže skryť a dopĺňať vlastné, prepísať nie.",
+  "items": [
+    { "key": "bozp", "label": "Bezpečnosť a ochrana zdravia pri práci", "basis": "legal_obligation", "reference": "§ 7 zákona č. 124/2006 Z. z." },
+    { "key": "nastup_zamestnanca", "label": "Oboznámenie pri nástupe (pracovný poriadok, kolektívna zmluva)", "basis": "legal_obligation", "reference": "§ 47 ods. 2 zákona č. 311/2001 Z. z. (Zákonník práce)" },
+    { "key": "ochrana_pred_poziarmi", "label": "Ochrana pred požiarmi", "basis": "legal_obligation", "reference": "zákon č. 314/2001 Z. z. o ochrane pred požiarmi" },
+    { "key": "ochrana_osobnych_udajov", "label": "Ochrana osobných údajov — poučenie oprávnených osôb", "basis": "legal_obligation", "reference": "čl. 29 a čl. 32 ods. 4 GDPR; zákon č. 18/2018 Z. z." },
+    { "key": "ochrana_oznamovatelov", "label": "Ochrana oznamovateľov protispoločenskej činnosti", "basis": "legal_obligation", "reference": "zákon č. 54/2019 Z. z." },
+    { "key": "interna_smernica", "label": "Interná smernica", "basis": "legitimate_interest", "reference": null },
+    { "key": "eticky_kodex", "label": "Etický kódex", "basis": "legitimate_interest", "reference": null },
+    { "key": "predpisy_zvazu", "label": "Predpisy zväzu pre rozhodcov, delegátov a funkcionárov", "basis": "legitimate_interest", "reference": null }
+  ]
+}

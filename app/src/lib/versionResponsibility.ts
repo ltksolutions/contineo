@@ -74,8 +74,13 @@ export interface LegalBasisChange {
   reason?: string
   from: LegalBasis | null
   fromReference: string | null
+  /** Kľúč položky číselníka (D92). `null` pri zázname spred číselníka. */
+  fromKey?: string | null
   to: LegalBasis
   toReference: string | null
+  toKey?: string
+  /** Kópia názvu položky v čase výberu. */
+  toLabel?: string
 }
 
 export type ResponsibilityProblem =
@@ -87,6 +92,7 @@ export type ResponsibilityProblem =
   | "legalBasis.referenceTooLong"
   | "legalBasis.noChange"
   | "legalBasis.reasonRequired"
+  | "legalBasis.unknownKey"
 
 /** Odkaz na predpis bez bielych miest navyše; prázdny znamená žiadny. */
 export function tidyReference(reference: string | null | undefined): string | null {
@@ -116,6 +122,29 @@ export function legalBasisProblem(input: {
     if (input.current === input.basis && tidyReference(input.currentReference) === reference) {
       return "legalBasis.noChange"
     }
+    if (!input.reason?.trim()) return "legalBasis.reasonRequired"
+  }
+  return null
+}
+
+/**
+ * Dá sa pri znení vybrať táto položka číselníka (D92)?
+ *
+ * Voľný text sa už nepripúšťa — zodpovedná osoba vyberá len z ponuky. Pri
+ * **zmene** už určeného základu je dôvod povinný z rovnakého dôvodu ako
+ * v `legalBasisProblem()`. Základ určený ešte ručne (bez kľúča) sa dá
+ * nahradiť položkou z číselníka, ale zdôvodniť to treba.
+ */
+export function legalBasisChoiceProblem(input: {
+  /** Nájdená položka z aktívnej ponuky; `null`, keď kľúč v ponuke nie je. */
+  option: { key: string } | null
+  currentKey?: string | null
+  current?: LegalBasis | null
+  reason?: string
+}): ResponsibilityProblem | null {
+  if (!input.option) return "legalBasis.unknownKey"
+  if (input.current) {
+    if (input.currentKey && input.currentKey === input.option.key) return "legalBasis.noChange"
     if (!input.reason?.trim()) return "legalBasis.reasonRequired"
   }
   return null

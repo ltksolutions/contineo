@@ -828,6 +828,32 @@ výkaz `npm run ack:report` áno.
 
 ---
 
+### D92 — Číselník právnych základov 🟡
+
+**Otázka:** má zodpovedná osoba písať odkaz na zákon ručne (D91), alebo vyberať zo zoznamu?
+
+**✅ Rozhodnuté (2026-09-23, Ján Letko):** vyberá **len zo zoznamu**, voľný text nie je.
+
+| Čo | Rozhodnutie |
+|---|---|
+| Kategória | zostáva pevne v kóde (`legal_obligation` / `legitimate_interest`) — riadi správanie pri výmaze a námietke |
+| Položka | názov + kategória + odkaz; štandardné v `codelists/legalBasis.json`, vlastné v `tenants.legalBases[]` |
+| Kto spravuje | správca organizácie (`people-admin`), Nastavenie organizácie → Číselníky; zoznam dostane DPO na kontrolu |
+| Mazanie | nie — štandardná sa **skryje** (`tenants.legalBasesHidden`), vlastná **vyradí** (`retiredAt`) |
+| Znenie a potvrdenie | kľúč **a kópia** názvu, kategórie a odkazu (`legalBasisKey`, `legalBasisLabel`); zmena číselníka ich spätne nemení |
+| Ručne zadaný základ (D91) | zostáva platný, označený „mimo číselníka", `npm run check` ho vypíše; nahradiť sa dá s dôvodom |
+
+**Predvyplnené položky sú návrh IT**, nie overené odkazy — na kontrole u DPO
+(`Pravne_zaklady_navrh_ciselnika.docx`). Po jej odpovedi sa opraví JSON; znenia, ktoré už
+položku majú, si nesú kópiu starého odkazu, takže sa zmena na ne neprenesie sama.
+
+**Kde to je:** `src/lib/legalBases.ts` (pravidlá), `src/lib/legalBasesDb.ts` (správa),
+`setVersionLegalBasis()` v `versionResponsibilityDb.ts`, `components/LegalBasisForm.tsx`.
+
+**Súvisiace:** D91, O15, D55 (číselníky organizácie).
+
+---
+
 ## Otvorené body vedené v ADR-003
 
 Nie sú to rozhodnutia backlogu, ale otvorené otázky konkrétneho ADR. Uvedené tu kvôli

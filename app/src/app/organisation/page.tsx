@@ -39,6 +39,12 @@ import AuditList from "@/components/AuditList"
 import type { OAuthProviderName } from "@/lib/oauth"
 import type { Tenant } from "@/lib/tenants"
 import AppShell from "@/components/AppShell"
+import { STANDARD_LEGAL_BASES, MAX_LEGAL_REFERENCE_FIELD } from "@/lib/legalBases"
+import { legalBasisUsage } from "@/lib/legalBasesDb"
+import { LEGAL_BASES } from "@/lib/versionResponsibility"
+import {
+  addLegalBasisAction, retireLegalBasisAction, toggleStandardLegalBasisAction,
+} from "./actions"
 
 const TAB_KEYS = ["branding", "departments", "domains", "signin", "codelists", "chunking", "audit"]
 
@@ -198,6 +204,11 @@ export default async function OrganisationPage({
         ) as Record<string, number>,
       })))
     : []
+
+  // Právne základy (D92) — na tej istej záložke ako ostatné číselníky.
+  const basisUsage = now === "codelists" ? await legalBasisUsage(tenant.companyCode) : new Map<string, number>()
+  const hiddenBases = new Set(tenant.legalBasesHidden ?? [])
+  const tr = d.responsibility
 
   // Koľko dokumentov by nový profil narezal inak. Počíta sa naozajstným
   // narezaním — odhad by pri zmene parametra nevedel povedať, či na tomto
@@ -660,6 +671,90 @@ export default async function OrganisationPage({
             <p className="quiet" style={{ fontSize: "var(--fs-small)", margin: 0 }}>{t.codelists.keyNote}</p>
           </section>
         ))}
+
+        {/*
+          Právne základy (D92). Iný tvar než ostatné číselníky — položka má
+          kategóriu a odkaz na predpis — a nič sa nemaže: štandardná sa skryje,
+          vlastná vyradí. Znenia si nesú kópiu, takže sa ich to nedotkne.
+        */}
+        <section className="card" style={{ padding: 20, display: "grid", gap: 12 }}>
+          <div>
+            <h2 style={{ fontSize: "var(--fs-section)", margin: "0 0 4px" }}>{tr.orgHeading}</h2>
+            <p className="quiet" style={{ fontSize: "var(--fs-body)", margin: 0 }}>{tr.orgHint}</p>
+          </div>
+
+          <ul className="tree">
+            {[
+              ...STANDARD_LEGAL_BASES.map(i => ({ ...i, source: "standard" as const, off: hiddenBases.has(i.key) })),
+              ...(tenant.legalBases ?? []).map(i => ({ ...i, source: "custom" as const, off: Boolean(i.retiredAt) })),
+            ].map(i => (
+              <li key={i.key} className="tree-item">
+                <div className="tree-row" style={{ flexWrap: "wrap", opacity: i.off ? 0.6 : 1 }}>
+                  <span className="tree-name">
+                    {i.label}
+                    <span className="quiet" style={{ display: "block", fontSize: "var(--fs-small)" }}>
+                      {tr.basisLabel[i.basis]}{i.reference ? ` · ${i.reference}` : ""}
+                    </span>
+                  </span>
+                  <span className="quiet tree-count">
+                    <code>{i.key}</code>
+                    {" · "}{i.source === "standard" ? tr.standardTag : tr.customTag}
+                    {i.off && ` · ${i.source === "standard" ? tr.hiddenTag : tr.retiredTag}`}
+                    {(basisUsage.get(i.key) ?? 0) > 0 && ` · ${tr.usedIn(basisUsage.get(i.key) ?? 0)}`}
+                  </span>
+                  {i.source === "standard" && (
+                    <form action={toggleStandardLegalBasisAction} style={{ marginLeft: "auto" }}>
+                      <input type="hidden" name="tab" value="codelists" />
+                      <input type="hidden" name="key" value={i.key} />
+                      <input type="hidden" name="hidden" value={i.off ? "0" : "1"} />
+                      <button className="button button--quiet" type="submit">{i.off ? tr.unhide : tr.hide}</button>
+                    </form>
+                  )}
+                  {i.source === "custom" && !i.off && (
+                    <form action={retireLegalBasisAction} style={{ marginLeft: "auto" }}>
+                      <input type="hidden" name="tab" value="codelists" />
+                      <input type="hidden" name="key" value={i.key} />
+                      <button className="button button--quiet" type="submit">{tr.retire}</button>
+                    </form>
+                  )}
+                </div>
+              </li>
+            ))}
+          </ul>
+
+          <form action={addLegalBasisAction} style={{ display: "grid", gap: 10 }}>
+            <input type="hidden" name="tab" value="codelists" />
+            <h3 style={{ fontSize: "var(--fs-body)", margin: 0 }}>{tr.addHeading}</h3>
+            <label className="field">
+              <span className="field-label">{tr.labelField}</span>
+              <input className="field-input" name="label" required placeholder={tr.labelPlaceholder} />
+            </label>
+            <label className="field">
+              <span className="field-label">{tr.keyField}</span>
+              <input className="field-input" name="key" required placeholder={tr.keyPlaceholder}
+                     autoCapitalize="none" autoCorrect="off" style={{ maxWidth: 260 }} />
+            </label>
+            <fieldset className="hr-group">
+              <legend className="field-label">{tr.categoryField}</legend>
+              {LEGAL_BASES.map(b => (
+                <label key={b} className="hr-choice">
+                  <input type="radio" name="basis" value={b} required />
+                  <span>
+                    {tr.basisLabel[b]}
+                    <span className="quiet field-hint"> {tr.basisHint[b]}</span>
+                  </span>
+                </label>
+              ))}
+            </fieldset>
+            <label className="field">
+              <span className="field-label">{tr.referenceField}</span>
+              <input className="field-input" name="reference" maxLength={MAX_LEGAL_REFERENCE_FIELD}
+                     placeholder={tr.referencePlaceholder} />
+              <span className="quiet field-hint">{tr.referenceNote}</span>
+            </label>
+            <div><button className="button button--quiet" type="submit">{tr.addButton}</button></div>
+          </form>
+        </section>
       </div>
       )}
 

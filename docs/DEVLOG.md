@@ -10,6 +10,22 @@
 
 ---
 
+## 2026-09-23 (4) — číselník právnych základov (D92)
+
+Ján navrhol, aby odkaz na zákon nebol voľný text, ale číselník s predvyplnenými
+položkami. Rozdelil som to na dve úrovne: **kategória** zostáva v kóde (riadi
+výmaz a námietku, organizácia ju meniť nemá) a **položka** je v číselníku.
+Štandardné položky sú v JSON, aby ich každá organizácia mala bez migrácie; tie
+isté kľúče si organizácia vie skryť, ale nie prepísať.
+
+Predvyplnené odkazy **nie sú overené** — pri ochrane pred požiarmi a oznamovateľoch
+chýba paragraf. Nechcel som si ich vymyslieť, preto šli Švehlovej ako samostatný
+dokument na kontrolu (druhé kolo už bolo odoslané). Do JSON sa opravia po odpovedi.
+
+Mobile som znova neoveril očami — lokálne treba prihlásenie.
+
+---
+
 ## 2026-09-23 (3) — odpovede DPO k O15/O16 a zodpovedná osoba pri znení (D91)
 
 **Odpovede prišli v revízii Wordu a prvýkrát som ich prečítal zle.** DPO

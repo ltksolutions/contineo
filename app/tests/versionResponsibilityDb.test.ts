@@ -37,6 +37,7 @@ import {
 } from "../src/lib/versionResponsibilityDb"
 import { DOCUMENTS_COLLECTION } from "../src/lib/documents"
 import { PERSONS_COLLECTION } from "../src/lib/persons"
+import { TENANTS_COLLECTION } from "../src/lib/tenants"
 
 const COMPANY = "SFZ"
 const GARANT = { personId: "p-garant", fullName: "Garant Predpisu", email: "garant@futbalsfz.sk" }
@@ -70,34 +71,90 @@ beforeEach(() => {
   vi.clearAllMocks()
 })
 
-describe("právny základ", () => {
-  it("zodpovedná osoba ho určí a história má deklarované kľúče", async () => {
+describe("právny základ z číselníka (D92)", () => {
+  function tenantHas(t: Record<string, unknown> = {}) {
+    collection(TENANTS_COLLECTION).findOne.mockResolvedValue({ companyCode: COMPANY, ...t })
+  }
+
+  it("zodpovedná osoba vyberie štandardnú položku a do znenia sa uloží kópia", async () => {
     collection(DOCUMENTS_COLLECTION).findOne.mockResolvedValue(doc({ responsiblePerson: GARANT }))
     personsAre([{ id: "p-garant", fullName: GARANT.fullName, email: GARANT.email, status: "active" }])
+    tenantHas()
 
     await setVersionLegalBasis({
       companyCode: COMPANY, documentId: "sfz:sutazny_poriadok", versionId: "v1",
-      basis: "legal_obligation", reference: "§ 7 zák. 124/2006 Z. z.",
+      legalBasisKey: "bozp",
       actor: { personId: "p-garant", email: GARANT.email }, isContentManager: false,
     })
 
     const { filter, update: u } = update()
     expect(filter).toMatchObject({ companyCode: COMPANY })
     expect(u.$set["versions.$[v].legalBasis"]).toBe("legal_obligation")
-    expect(u.$set["versions.$[v].legalBasisReference"]).toBe("§ 7 zák. 124/2006 Z. z.")
+    expect(u.$set["versions.$[v].legalBasisKey"]).toBe("bozp")
+    expect(u.$set["versions.$[v].legalBasisLabel"]).toBe("Bezpečnosť a ochrana zdravia pri práci")
+    expect(String(u.$set["versions.$[v].legalBasisReference"])).toContain("124/2006")
     const entry = u.$push["versions.$[v].legalBasisChanges"] as Record<string, unknown>
-    expect(Object.keys(entry).sort()).toEqual(["at", "by", "from", "fromReference", "to", "toReference"])
-    expect(entry).toMatchObject({ from: null, to: "legal_obligation", by: GARANT.email })
+    expect(Object.keys(entry).sort()).toEqual(
+      ["at", "by", "from", "fromKey", "fromReference", "to", "toKey", "toLabel", "toReference"],
+    )
+    expect(entry).toMatchObject({ from: null, to: "legal_obligation", toKey: "bozp", by: GARANT.email })
     expect(audit.writeAudit).toHaveBeenCalledOnce()
+  })
+
+  it("voľný text ani neznámy kľúč neprejde", async () => {
+    collection(DOCUMENTS_COLLECTION).findOne.mockResolvedValue(doc({ responsiblePerson: GARANT }))
+    personsAre([{ id: "p-garant", fullName: GARANT.fullName, email: GARANT.email, status: "active" }])
+    tenantHas()
+    await expect(setVersionLegalBasis({
+      companyCode: COMPANY, documentId: "sfz:sutazny_poriadok", versionId: "v1",
+      legalBasisKey: "§ 7 zákona 124/2006",
+      actor: { personId: "p-garant", email: GARANT.email }, isContentManager: false,
+    })).rejects.toMatchObject({ code: "legalBasis.unknownKey" })
+    expect(collection(DOCUMENTS_COLLECTION).updateOne).not.toHaveBeenCalled()
+  })
+
+  it("skrytú štandardnú položku organizácie vybrať nedá", async () => {
+    collection(DOCUMENTS_COLLECTION).findOne.mockResolvedValue(doc({ responsiblePerson: GARANT }))
+    personsAre([{ id: "p-garant", fullName: GARANT.fullName, email: GARANT.email, status: "active" }])
+    tenantHas({ legalBasesHidden: ["bozp"] })
+    await expect(setVersionLegalBasis({
+      companyCode: COMPANY, documentId: "sfz:sutazny_poriadok", versionId: "v1",
+      legalBasisKey: "bozp",
+      actor: { personId: "p-garant", email: GARANT.email }, isContentManager: false,
+    })).rejects.toMatchObject({ code: "legalBasis.unknownKey" })
+  })
+
+  it("vlastná položka organizácie sa dá vybrať, vyradená nie", async () => {
+    collection(DOCUMENTS_COLLECTION).findOne.mockResolvedValue(doc({ responsiblePerson: GARANT }))
+    personsAre([{ id: "p-garant", fullName: GARANT.fullName, email: GARANT.email, status: "active" }])
+    const own = { key: "doping", label: "Dopingová kontrola", basis: "legitimate_interest", reference: null, createdAt: new Date(), createdBy: "x" }
+    tenantHas({ legalBases: [own, { ...own, key: "stara", retiredAt: new Date() }] })
+
+    await setVersionLegalBasis({
+      companyCode: COMPANY, documentId: "sfz:sutazny_poriadok", versionId: "v1",
+      legalBasisKey: "doping",
+      actor: { personId: "p-garant", email: GARANT.email }, isContentManager: false,
+    })
+    const { update: u } = update()
+    expect(u.$set["versions.$[v].legalBasisLabel"]).toBe("Dopingová kontrola")
+    // Bez odkazu sa prípadný starý odkaz odstráni, nezostane visieť.
+    expect(u.$unset).toEqual({ "versions.$[v].legalBasisReference": "" })
+
+    collection(DOCUMENTS_COLLECTION).updateOne.mockClear()
+    await expect(setVersionLegalBasis({
+      companyCode: COMPANY, documentId: "sfz:sutazny_poriadok", versionId: "v1",
+      legalBasisKey: "stara",
+      actor: { personId: "p-garant", email: GARANT.email }, isContentManager: false,
+    })).rejects.toMatchObject({ code: "legalBasis.unknownKey" })
   })
 
   it("správca obsahu pri aktívnej zodpovednej osobe neprejde — overuje sa na serveri", async () => {
     collection(DOCUMENTS_COLLECTION).findOne.mockResolvedValue(doc({ responsiblePerson: GARANT }))
     personsAre([{ id: "p-garant", fullName: GARANT.fullName, email: GARANT.email, status: "active" }])
-
+    tenantHas()
     await expect(setVersionLegalBasis({
       companyCode: COMPANY, documentId: "sfz:sutazny_poriadok", versionId: "v1",
-      basis: "legitimate_interest",
+      legalBasisKey: "interna_smernica",
       actor: { personId: "p-spravca", email: "spravca@futbalsfz.sk" }, isContentManager: true,
     })).rejects.toMatchObject({ code: "legalBasis.notAllowed" })
     expect(collection(DOCUMENTS_COLLECTION).updateOne).not.toHaveBeenCalled()
@@ -106,38 +163,37 @@ describe("právny základ", () => {
   it("správca obsahu smie, keď zodpovedná osoba odišla", async () => {
     collection(DOCUMENTS_COLLECTION).findOne.mockResolvedValue(doc({ responsiblePerson: GARANT }))
     personsAre([{ id: "p-garant", fullName: GARANT.fullName, email: GARANT.email, status: "inactive" }])
-
+    tenantHas()
     await setVersionLegalBasis({
       companyCode: COMPANY, documentId: "sfz:sutazny_poriadok", versionId: "v1",
-      basis: "legitimate_interest",
+      legalBasisKey: "interna_smernica",
       actor: { personId: "p-spravca", email: "spravca@futbalsfz.sk" }, isContentManager: true,
     })
-    const { update: u } = update()
-    expect(u.$set["versions.$[v].legalBasis"]).toBe("legitimate_interest")
-    // Bez odkazu sa starý odkaz odstráni, nezostane visieť.
-    expect(u.$unset).toEqual({ "versions.$[v].legalBasisReference": "" })
+    expect(update().update.$set["versions.$[v].legalBasisKey"]).toBe("interna_smernica")
   })
 
-  it("zmena bez dôvodu neprejde", async () => {
+  it("zmena bez dôvodu neprejde, rovnaká položka nie je zmena", async () => {
     collection(DOCUMENTS_COLLECTION).findOne.mockResolvedValue(doc({
-      responsiblePerson: GARANT, legalBasis: "legitimate_interest",
+      responsiblePerson: GARANT, legalBasis: "legitimate_interest", legalBasisKey: "interna_smernica",
     }))
     personsAre([{ id: "p-garant", fullName: GARANT.fullName, email: GARANT.email, status: "active" }])
-
-    const e = await setVersionLegalBasis({
+    tenantHas()
+    const base = {
       companyCode: COMPANY, documentId: "sfz:sutazny_poriadok", versionId: "v1",
-      basis: "legal_obligation", reference: "§ 7",
       actor: { personId: "p-garant", email: GARANT.email }, isContentManager: false,
-    }).catch(x => x)
+    }
+    const e = await setVersionLegalBasis({ ...base, legalBasisKey: "bozp" }).catch(x => x)
     expect(e).toBeInstanceOf(ResponsibilityError)
     expect(e.code).toBe("legalBasis.reasonRequired")
+    await expect(setVersionLegalBasis({ ...base, legalBasisKey: "interna_smernica", reason: "x" }))
+      .rejects.toMatchObject({ code: "legalBasis.noChange" })
   })
 
   it("neznáme znenie povie, že neexistuje", async () => {
     collection(DOCUMENTS_COLLECTION).findOne.mockResolvedValue(doc())
     await expect(setVersionLegalBasis({
       companyCode: COMPANY, documentId: "sfz:sutazny_poriadok", versionId: "v-neexistuje",
-      basis: "legitimate_interest",
+      legalBasisKey: "bozp",
       actor: { personId: "p-spravca", email: "s@futbalsfz.sk" }, isContentManager: true,
     })).rejects.toMatchObject({ code: "library.versionNotFound" })
   })

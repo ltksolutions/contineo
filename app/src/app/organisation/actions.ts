@@ -31,6 +31,7 @@ import { reindexAll } from "@/lib/libraryWrite"
 import { dictionary, errorText, type UiLanguage } from "@/lib/i18n"
 import { AppError } from "@/lib/appError"
 import { DEFAULT_PROFILE_KEY } from "@/lib/chunkingProfile"
+import { addLegalBasis, retireLegalBasis, setStandardLegalBasisHidden } from "@/lib/legalBasesDb"
 
 async function actor(): Promise<{ email: string; companyCode: string; language: UiLanguage } | null> {
   const ctx = await orgContext()
@@ -370,6 +371,56 @@ export async function removeCodelistItemAction(fd: FormData) {
     revalidatePath("/organisation")
     revalidatePath("/library")
     back(fd, say(self.language).codelistRemoved)
+  } catch (e) {
+    if (isRedirect(e)) throw e
+    back(fd, errorMessage(e, self.language), true)
+  }
+}
+
+// ── právne základy (D92) ─────────────────────────────────────────────────────
+
+export async function addLegalBasisAction(fd: FormData) {
+  const self = await actor()
+  if (!self) redirect("/")
+  try {
+    await addLegalBasis({
+      companyCode: self.companyCode,
+      key: fieldText(fd, "key"),
+      label: fieldText(fd, "label"),
+      basis: fieldText(fd, "basis"),
+      reference: fieldText(fd, "reference"),
+      actor: self.email,
+    })
+    revalidatePath("/organisation")
+    back(fd, say(self.language).saved)
+  } catch (e) {
+    if (isRedirect(e)) throw e
+    back(fd, errorMessage(e, self.language), true)
+  }
+}
+
+export async function retireLegalBasisAction(fd: FormData) {
+  const self = await actor()
+  if (!self) redirect("/")
+  try {
+    await retireLegalBasis(self.companyCode, fieldText(fd, "key"), self.email)
+    revalidatePath("/organisation")
+    back(fd, say(self.language).saved)
+  } catch (e) {
+    if (isRedirect(e)) throw e
+    back(fd, errorMessage(e, self.language), true)
+  }
+}
+
+export async function toggleStandardLegalBasisAction(fd: FormData) {
+  const self = await actor()
+  if (!self) redirect("/")
+  try {
+    await setStandardLegalBasisHidden(
+      self.companyCode, fieldText(fd, "key"), fieldText(fd, "hidden") === "1", self.email,
+    )
+    revalidatePath("/organisation")
+    back(fd, say(self.language).saved)
   } catch (e) {
     if (isRedirect(e)) throw e
     back(fd, errorMessage(e, self.language), true)

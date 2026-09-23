@@ -45,6 +45,7 @@ import { listPeople } from "@/lib/people"
 import ResponsiblePicker from "@/components/ResponsiblePicker"
 import LegalBasisForm from "@/components/LegalBasisForm"
 import { canSetLegalBasis } from "@/lib/versionResponsibility"
+import { legalBasisOptions } from "@/lib/legalBases"
 
 export const dynamic = "force-dynamic"
 
@@ -137,6 +138,9 @@ export default async function DocumentDetailPage({
     .map(p => ({ id: p.id, fullName: p.fullName, email: p.email, department: p.department }))
   const activePersonIds = new Set(responsibleChoices.map(p => p.id))
   const tr = dictionary(language).responsibility
+  const basisOptions = legalBasisOptions(ctx.tenant)
+  const basisName = (v: { legalBasis?: string; legalBasisLabel?: string }) =>
+    v.legalBasisLabel ?? (v.legalBasis ? tr.basisLabel[v.legalBasis] : "")
   /*
    * Koľko ľudí platné znenie potvrdilo. Jeden dotaz navyše na stránku — je to
    * jeden dokument, nie riadok v zozname, kde by to bol dotaz na každý riadok.
@@ -717,7 +721,10 @@ export default async function DocumentDetailPage({
               <div className="audit-note" style={{ fontSize: "var(--fs-small)" }}>
                 <span className="quiet">{tr.legalBasis}: </span>
                 {v.legalBasis
-                  ? `${tr.basisLabel[v.legalBasis]}${v.legalBasisReference ? ` · ${v.legalBasisReference}` : ""}`
+                  ? <>
+                      {`${basisName(v)}${v.legalBasisReference ? ` · ${v.legalBasisReference}` : ""}`}
+                      {!v.legalBasisKey && <> <span className="tag tag--draft">{tr.outsideCodelist}</span></>}
+                    </>
                   : <span className="tag tag--draft">{tr.basisUnset}</span>}
               </div>
 
@@ -753,7 +760,7 @@ export default async function DocumentDetailPage({
                             c.by,
                             formatDate(c.at, language),
                             c.from ? tr.basisLabel[c.from] : tr.basisUnset,
-                            `${tr.basisLabel[c.to]}${c.toReference ? ` (${c.toReference})` : ""}`,
+                            `${c.toLabel ?? tr.basisLabel[c.to]}${c.toReference ? ` (${c.toReference})` : ""}`,
                           )}
                         </div>
                       </li>
@@ -806,7 +813,8 @@ export default async function DocumentDetailPage({
                       documentId={d.documentId}
                       versionId={v.versionId}
                       current={v.legalBasis}
-                      currentReference={v.legalBasisReference}
+                      currentKey={v.legalBasisKey}
+                      options={basisOptions}
                       language={language}
                       back="library"
                     />
@@ -1020,7 +1028,7 @@ export default async function DocumentDetailPage({
               {([
                 [t.category, d.category],
                 [tr.responsiblePerson, effective?.responsiblePerson?.fullName],
-                [tr.legalBasis, effective?.legalBasis ? tr.basisLabel[effective.legalBasis] : ""],
+                [tr.legalBasis, effective ? basisName(effective) : ""],
                 [t.tags, d.tags.length ? d.tags.join(", ") : ""],
                 [t.accessLevel, d.accessLevel],
                 [t.documentLanguage, d.language],
