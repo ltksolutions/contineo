@@ -6,7 +6,7 @@
 > **Tento súbor je indícia, `git log` je pravda.** Keď si protirečia, verí sa
 > gitu a NEXT.md sa opraví. Aktualizuje sa pri rituáli **„Poupratuj"**.
 
-Posledná aktualizácia: **2026-09-23** (po zlúčení rámov knižnice, oprave výpadku s filtrom a zapnutí `no-use-before-define`)
+Posledná aktualizácia: **2026-09-23 večer** (po odpovediach DPO k O15/O16, D91 a D92 — PR #79, #80)
 
 ---
 
@@ -63,11 +63,32 @@ lebo `activeChips` vrátilo prázdne pole a callback sa nezavolal.
 `tsc` to chytiť nevie — `TS2448` hlási len priamy odkaz v tom istom mieste,
 a náš bol vnútri callbacku, teda pre kompilátor odložené vykonanie.
 
-Repozitár: pracovný strom čistý, **nula otvorených PR**. Vetvy `fix/panel-filtrov-podla-ramu`,
-`fix/tdz-v-kniznici` a `chore/lint-use-before-define` sú zlúčené a **nezmazané** —
+**Prišli odpovede DPO k O15/O16** (Švehlová, 23. 9.) — 15 z 21 otázok; zapísané
+v `docs/O15_O16_otazky_pre_DPO.md`. Z nich vznikli dve zmeny, obe **zlúčené a nasadené**:
+
+- **D91 (PR #79)** — pri každom znení je **povinná zodpovedná osoba** (nededí sa)
+  a **právny základ** (zákonná povinnosť / oprávnený záujem). Základ určuje
+  zodpovedná osoba na stránke znenia, správca obsahu len ako náhradník.
+  Potvrdenie nesie odtlačok oboch. Kontakt vidno nad potvrdzovacou kartou.
+- **D92 (PR #80)** — právny základ sa vyberá **len z číselníka**; štandardné
+  položky v `codelists/legalBasis.json`, vlastné spravuje správca organizácie
+  v Nastavenie organizácie → Číselníky.
+
+**Obe obrazovky neboli overené očami na mobile** (lokálne treba prihlásenie).
+
+Repozitár: **nula otvorených PR**. Zlúčené a **nezmazané** vetvy:
+`fix/panel-filtrov-podla-ramu`, `fix/tdz-v-kniznici`, `chore/lint-use-before-define`,
+`feat/zodpovedna-osoba-a-pravny-zaklad`, `feat/ciselnik-pravnych-zakladov` —
 na mazanie treba Jánov súhlas.
 
 ## Čo čaká na rozhodnutie Jána
+
+**Dva dokumenty sú u DPO (Švehlová)** v `Claude outputs`:
+`O15_O16_otazky_pre_DPO_kolo2.docx` (presné číslo retencie a strop, B5–B7, časť C,
+čl. 21 pri oprávnenom záujme, osoby bez pracovného pomeru) a
+`Pravne_zaklady_navrh_ciselnika.docx` (kontrola predvyplnených odkazov). **Kým
+neodpovie, lehoty v databáze sa neimplementujú** a odkazy v číselníku sú návrh IT.
+C1 (informovanie) a A3 (balančný test) sú **brány pred pilotom**.
 
 **Atlas index má stále `sectionKey` ako filter a token** (`scripts/atlas_init.mjs`).
 Nič tým nepokázil — Atlas Search chýbajúce pole znesie a dotazy sa naň už
@@ -82,6 +103,10 @@ hodnotu.
 
 ## Najbližšie kroky
 
+0. **Doplniť zodpovednú osobu existujúcim zneniam** (správca obsahu v knižnici)
+   a pozrieť `npm run check` — vypíše znenia bez osoby a bez právneho základu.
+   Po odpovedi Švehlovej opraviť `codelists/legalBasis.json` **skôr**, než sa
+   podľa neho začnú vyberať základy (znenia si nesú kópiu).
 1. **Tridsať nadbytočných `text-decoration: none` v `globals.css`** — odkedy
    je pravidlo v koreni, potláčajú si podčiarknutie samé bez dôvodu. Samostatné
    upratovanie, nie prílepok: v jednom veľkom diffe by sa stratila vecná zmena
@@ -107,8 +132,8 @@ Všetko sa púšťa z adresára `app/`:
 cd app && npx tsc --noEmit && npx eslint . && npx vitest run && npm run build
 ```
 
-Baseline, proti ktorej sa porovnáva: **0 errors, 42 warnings, 1440 testov
-v 88 súboroch.** Nová chyba alebo nové varovanie znamená regresiu, nie šum.
+Baseline, proti ktorej sa porovnáva: **0 errors, 42 warnings, 1484 testov
+v 91 súboroch.** Nová chyba alebo nové varovanie znamená regresiu, nie šum.
 
 **Tieto štyri brzdy nevidia chyby za behu.** 23. 9. prešli všetky štyri
 a produkcia aj tak spadla (dočasná mŕtva zóna v `library/page.tsx`). Preto
