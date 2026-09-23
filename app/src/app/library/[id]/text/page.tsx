@@ -70,10 +70,17 @@ export default async function EditorPage({
   const branding = brandingView(ctx.tenant)
   const language = ctx.person.language
   const t = dictionary(language).library.editor
-  const isPdf = d.originalFile?.type === "pdf"
-  const fileUrl = d.originalFile
-    ? `/api/library/file/${encodeURIComponent(d.originalFile.id)}`
+  /*
+   * Vľavo je **PDF konceptu**, keď ho koncept má (ADR-011) — to je predpis,
+   * ako ho ľudia uvidia, a s ním sa text porovnáva. `originalFile` je od
+   * ADR-011 súbor, z ktorého vznikol text — pri `.docx` zdroji by vľavo
+   * stála len veta, že sa Word v prehliadači nezobrazí (23. 9. 2026).
+   */
+  const shown = d.draftPdf ? { id: d.draftPdf.id, name: d.draftPdf.name, isPdf: true }
+    : d.originalFile ? { id: d.originalFile.id, name: d.originalFile.name, isPdf: d.originalFile.type === "pdf" }
     : null
+  const isPdf = shown?.isPdf ?? false
+  const fileUrl = shown ? `/api/library/file/${encodeURIComponent(shown.id)}` : null
 
   return (
     <AppShell language={ctx.person.language}>
@@ -138,7 +145,7 @@ export default async function EditorPage({
               </object>
             ) : (
               <p className="card" style={{ padding: 16, fontSize: "var(--fs-body)" }}>
-                {t.fileNotShown(d.originalFile?.name ?? "")}
+                {t.fileNotShown(shown?.name ?? "")}
                 <a href={fileUrl} target="_blank" rel="noreferrer">{t.download}</a>{t.compareAfterDownload}
               </p>
             )
