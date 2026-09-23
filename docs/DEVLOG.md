@@ -24,6 +24,9 @@ dokument na kontrolu (druhé kolo už bolo odoslané). Do JSON sa opravia po odp
 
 Mobile som znova neoveril očami — lokálne treba prihlásenie.
 
+**Nasadené** (PR #80, merge `555a958`) na Jánov pokyn aj pred odpoveďou DPO;
+korekcie číselníka prídu, keď Švehlová pošle dokument späť.
+
 ---
 
 ## 2026-09-23 (3) — odpovede DPO k O15/O16 a zodpovedná osoba pri znení (D91)
