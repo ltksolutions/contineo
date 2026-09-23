@@ -1,6 +1,7 @@
 # D93 — „Všetko, čo vyhovuje filtru" namiesto zoznamu ID v adrese
 
 > **Stav:** 📝 plán, **čaká na rozhodnutie Jána** (otázky v časti 6).
+> **PR 0 a 1 sú hotové** (PR #86, zlúčený 2026-09-23): N2 aj N1 opravené.
 > Nadväzuje na `docs/TODO.md` (výber, ktorý prežije stránkovanie; `MAX_PICKED`),
 > D32 (`companyCode` v podmienke), D51 (audit), D27 (stav sa odvodzuje).
 > Podklad z kódu k 2026-09-23 (`main` po PR #81).

@@ -6,7 +6,7 @@
 > **Tento súbor je indícia, `git log` je pravda.** Keď si protirečia, verí sa
 > gitu a NEXT.md sa opraví. Aktualizuje sa pri rituáli **„Poupratuj"**.
 
-Posledná aktualizácia: **2026-09-23 neskoro večer** (po PR #82–#84: zodpovedná osoba, číselník podľa návrhu pre DPO, `text-decoration`, plán D93)
+Posledná aktualizácia: **2026-09-23** (po PR #86: D93 PR 0 a 1 — export CSV s filtrom oddelenia, audit presunu do priečinka)
 
 ---
 
@@ -90,8 +90,18 @@ v `docs/O15_O16_otazky_pre_DPO.md`. Z nich vznikli dve zmeny, obe **zlúčené a
   prihlásených obrazovkách**.
 - **Plán D93** (výber podľa filtra) je v `docs/D93_plan_vyber_podla_filtra.md`.
 
-Repozitár: **nula otvorených PR**, zlúčené vetvy zmazané so súhlasom Jána —
-na `origin` aj lokálne je jediný `main`.
+**Potom zlúčené PR #86 — D93 PR 0 a 1**, dve chyby nezávislé od rozhodnutia
+o variante:
+
+- **Export CSV rešpektuje filter oddelenia** — obrazovka aj export berú
+  filtre z jednej funkcie `listFilterOf()`. Overené na `sfz.localhost`:
+  obrazovka = CSV pri piatich filtroch (produkcia pred opravou 0 vs. 10).
+- **Presun do priečinka zapisuje audit** — po jednom aj hromadne, priečinky
+  cestou názvov. **Naživo neoverené**, len testy: lokálny server píše do ostrej
+  databázy a záznam v audite je nevratný. Pozrieť pri prvom skutočnom presune.
+
+Vetva `fix/d93-filter-export-a-audit-presunu` zostala na `origin` (mazanie
+vetiev len so súhlasom Jána).
 
 ## Čo čaká na rozhodnutie Jána
 
@@ -125,13 +135,12 @@ hodnotu.
    na stránke znenia; `npm run check` ich vypíše. Po odpovedi Švehlovej opraviť
    `codelists/legalBasis.json` **skôr**, než sa podľa neho začnú vyberať
    základy — znenia si nesú kópiu. Zodpovedná osoba je doplnená (PR #82).
-1. **D93 PR 0 a 1 — dve chyby nezávislé od rozhodnutia o variante:**
-   export CSV ignoruje filter oddelenia (dve ručné kópie mapovania
-   `filters → LibraryFilter`, zjednotiť do `listFilterOf()`) a presun
-   dokumentu do priečinka **nezapisuje audit** (`assignDocument()`).
-   Popri tom „z toho N mimo tohto zoznamu" počíta proti strane, nie filtru.
-2. **D93 PR 2 a ďalej — výber „všetko, čo vyhovuje filtru"** podľa plánu,
-   až po odpovediach na otázky v časti 6.
+1. **D93 PR 2 — poistná sieť:** testy `moveManyAction` pri dnešnom správaní
+   (prázdny výber, čiastočná dávka, `back` bez open redirectu). Na rozhodnutí
+   nezávisí; treba nový vzor mockovania `libraryContext` a `next/navigation`.
+2. **D93 PR 3 a ďalej — výber „všetko, čo vyhovuje filtru"** podľa plánu,
+   až po odpovediach na otázky v časti 6. „z toho N mimo tohto zoznamu"
+   (počíta proti strane, nie filtru) sa opravuje v PR 4.
 
 Prázdny stav knižnice pri filtri, ktorý nič nenájde, bol pôvodne prvým krokom
 a **je vybavený** (`19db418`, `accb500`): prázdno z filtra vymenuje filtre, ktoré
@@ -149,8 +158,8 @@ Všetko sa púšťa z adresára `app/`:
 cd app && npx tsc --noEmit && npx eslint . && npx vitest run && npm run build
 ```
 
-Baseline, proti ktorej sa porovnáva: **0 errors, 42 warnings, 1484 testov
-v 91 súboroch.** Nová chyba alebo nové varovanie znamená regresiu, nie šum.
+Baseline, proti ktorej sa porovnáva: **0 errors, 42 warnings, 1492 testov
+v 92 súboroch.** Nová chyba alebo nové varovanie znamená regresiu, nie šum.
 
 **Tieto štyri brzdy nevidia chyby za behu.** 23. 9. prešli všetky štyri
 a produkcia aj tak spadla (dočasná mŕtva zóna v `library/page.tsx`). Preto
@@ -170,6 +179,13 @@ Zlomové body sú len **640 a 1024**, iné nepribúdajú.
 
 `npm run build` zhodí bežiaci `npm run dev` — zdieľajú `.next`. Buildom sa
 overuje až po zastavení dev servera.
+
+**Lokálne SFZ je na `http://sfz.localhost:3000`, nie na `localhost`** — ten
+patrí tenantovi LTK a osoba Jána tam nie je (D90), takže knižnica hlási
+„Stránka sa nenašla" aj pri prihlásení. Prihlasuje sa zvlášť; odkaz z e-mailu
+má v `callbackUrl` https, po prihlásení treba ručne otvoriť `http://`.
+**Lokálny server píše do ostrej databázy** — zápisy (presun, audit) sa
+naživo skúšajú len so súhlasom Jána.
 
 **Marketingový web má vlastnú sadu** a púšťa sa z `web/`:
 

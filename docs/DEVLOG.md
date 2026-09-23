@@ -10,6 +10,44 @@
 
 ---
 
+## 2026-09-23 (6) — D93 PR 0 a 1: export s filtrom oddelenia, audit presunu
+
+Obe chyby z plánu D93, ktoré nečakajú na rozhodnutie o variante, sú v jednom
+PR (#86) ako dva commity.
+
+**Export:** mapovanie `filters → LibraryFilter` je odteraz jedna funkcia
+`listFilterOf()`. Návratový typ vyžaduje každý kľúč `LibraryFilter` — keby
+pribudol ďalší filter, `tsc` zastaví práve toto miesto. Bez toho by sa tá
+istá chyba vrátila pri prvom novom facete.
+
+**Audit presunu:** pôvodný priečinok sa berie z `findOneAndUpdate`
+s `returnDocument: "before"`, nie zo samostatného `findOne` — medzi dvomi
+dotazmi by dokument mohol presunúť niekto iný a audit by tvrdil presun
+odinakiaľ. Priečinky sa zapisujú cestou názvov, nie `id`.
+
+**Piata brzda sa vyplatila hneď v prvý deň** — `no-use-before-define`
+zachytilo konštantu v mojom novom teste, použitú v mocku nad deklaráciou.
+
+**Čo stálo čas: lokálne prihlásenie.** `localhost` patrí tenantovi **LTK**,
+SFZ je na **`sfz.localhost:3000`** a osoba (D90) existuje len v SFZ — na
+`localhost` bol Ján prihlásený, hlavička ukazovala avatar, ale knižnica
+hlásila „Stránka sa nenašla" a export 401. Na `sfz.localhost` sa treba
+prihlásiť zvlášť (cookies sú na hostiteľa) a odkaz z e-mailu má v `callbackUrl`
+**https**, ktoré dev server nevie — po prihlásení treba ručne otvoriť
+`http://sfz.localhost:3000/...`. Prihlasovací odkaz otvára Ján, nie asistent.
+
+**Overenie:** chyba potvrdená najprv na produkcii (filter oddelenia: obrazovka
+0, CSV 10), potom oprava na `sfz.localhost` (0 a 0; ďalšie štyri filtre
+obrazovka = CSV). Audit presunu **naživo neoverený** — lokálny server píše do
+ostrej databázy a záznam v audite sa nedá zmazať. Kladný prípad filtra
+oddelenia tiež nie: v SFZ ho zatiaľ nemá vyplnený žiadny dokument.
+
+Chyba na mojej strane: `npm run build` som pustil pri bežiacom `next dev`,
+hoci NEXT.md varuje, že zdieľajú `.next`. Tentoraz dev server prežil;
+nabudúce ho najprv zastaviť.
+
+---
+
 ## 2026-09-23 (5) — prechod do VS Code, zodpovedná osoba, `text-decoration`, plán D93
 
 **Prvé sedenie v Claude Code vo VS Code na Jánovom Macu**, nie na claude.ai.
