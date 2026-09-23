@@ -59,6 +59,12 @@ const PENDING_HOURS = 6
  */
 export const ACCEPTED_EXTENSIONS = [".pdf", ".docx", ".xlsx", ".md", ".txt", ".csv"] as const
 
+/**
+ * Prípony **upraviteľného zdroja** (ADR-011, D95) — všetko okrem PDF. PDF je
+ * samostatné, povinné pole; druhé PDF ako „zdroj" by nič neupravilo.
+ */
+export const SOURCE_EXTENSIONS = [".docx", ".xlsx", ".md", ".txt", ".csv"] as const
+
 export interface StoredFile {
   id: string
   name: string

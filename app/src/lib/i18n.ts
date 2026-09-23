@@ -1771,6 +1771,13 @@ interface Dictionary {
       uploadedBy: (who: string, when: string) => string
       conversionMethod: (method: string) => string
       noOriginal: string
+      /** ADR-011: PDF a upraviteľný zdroj konceptu a znení. */
+      draftPdf: string
+      draftSource: string
+      versionPdf: string
+      versionSource: string
+      noPdf: string
+      noDraftPdf: string
       draftDiffers: string
       draftSame: string
       draftEmpty: string
@@ -2014,6 +2021,17 @@ interface Dictionary {
       submitPending: string
       /** Veta pod pruhom — čo sa deje a že to trvá. */
       submitPendingNote: string
+      /** Dve polia na súbor (ADR-011): PDF povinné, zdroj odporúčaný. */
+      pdfTitle: string
+      pdfNote: string
+      sourceTitle: string
+      sourceNote: string
+      noScriptLimit: (mb: number) => string
+      /** Šablóna — `{name}`, `{percent}`. Ide do klientskeho komponentu, funkcia by tam neprešla. */
+      uploadingFile: string
+      uploadFailed: string
+      /** Šablóna — `{name}`, `{mb}`, `{maxMb}`. */
+      fileTooLarge: string
     }
   }
 }
@@ -2849,6 +2867,9 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "approval.alreadyApproved": "Toto znenie je schválené. Iný text znamená nové znenie, nie nové kolo.",
     "approval.publishedBefore": "Toto znenie bolo zverejnené pred zavedením schvaľovania a spätne sa neschvaľuje. Nahradí ho oficiálne znenie.",
     "approval.unknownApprover": "Niektorý z vybraných schvaľovateľov tu nie je alebo je vyradený.",
+    "approval.documentNotFound": "Taký dokument tu nie je.",
+    "approval.pdfRequired": "Koncept nemá PDF — nahraj znenie znova aj s PDF. Schvaľuje sa PDF spolu s textom.",
+    "approval.draftChanged": "Koncept sa medzitým zmenil — obnov stránku a predlož ho znova.",
     "approval.reasonRequired": "Bez dôvodu sa kolo zrušiť nedá. O rok nikto nezistí, prečo skončilo.",
     "approval.nothingRunning": "Pre toto znenie nebeží žiadne kolo.",
     "assignment.notApproved": "Znenie nie je schválené. Prideliť sa dá až text, na ktorom sa niekto zhodol \u2014 predlož ho na schválenie v detaile dokumentu.",
@@ -2974,6 +2995,9 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
 
     // ── knižnica ───────────────────────────────────────────────────────────
     "library.noFileChosen": "Nevybral si súbor.",
+    "library.pdfRequired": "Schvaľovaná podoba musí byť PDF — ulož dokument vo Worde ako PDF.",
+    "library.sourceNotPdf": "Zdrojový súbor má byť upraviteľný (.docx, .xlsx, .md…), nie druhé PDF.",
+    "library.uploadedFileNotFound": "Nahratý súbor sa nenašiel. Skús ho nahrať znova.",
     "library.documentNotFound": "Taký dokument tu nie je.",
     "library.documentExists": "Dokument „{title}“ ({documentId}) už existuje. Nové znenie sa nahráva na jeho detaile, nie ako nový dokument — táto obrazovka zakladá nový dokument.",
     "library.documentKeyShape": "Kľúč dokumentu „{key}“ nemá správny tvar — smie mať len malé písmená bez diakritiky, číslice a podčiarkovníky.",
@@ -3841,6 +3865,12 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       uploadedBy: (who, when) => `nahral ${who} ${when}`,
       conversionMethod: (method) => `prevod: ${method}`,
       noOriginal: "Bez pôvodného súboru — dokument sa sem dostal importom z príkazového riadka.",
+      draftPdf: "PDF konceptu:",
+      draftSource: "Upraviteľný zdroj:",
+      versionPdf: "PDF znenia:",
+      versionSource: "Upraviteľný zdroj (predloha pre ďalšie znenie):",
+      noPdf: "Znenie spred ADR-011 — PDF k nemu nie je, schvaľoval a potvrdzoval sa text.",
+      noDraftPdf: "Koncept nemá PDF. Pred predložením na schválenie nahraj znenie znova aj s PDF.",
       draftDiffers: "Koncept sa líši od publikovaného znenia.",
       draftSame: "Koncept je zhodný s publikovaným znením.",
       draftEmpty: "Koncept je prázdny.",
@@ -4033,7 +4063,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       pick: "Vybrať súbor",
       back: "← Späť do knižnice",
       heading: "Nahrať dokument",
-      intro: "Word, PDF, Excel, Markdown alebo text. Súbor sa uloží tak, ako prišiel — prevod je odvodenina a originál musí zostať, aby sa dalo overiť, z čoho text vznikol.",
+      intro: "Schvaľuje a potvrdzuje sa PDF — tak, ako ho ľudia uvidia, aj s prílohami. K nemu pridaj upraviteľný zdroj (Word, Excel…): z neho vznikne text na vyhľadávanie a pri ďalšom znení z neho budeš vychádzať. Oba súbory sa uložia tak, ako prišli.",
       file: "Súbor",
       errorBefore: "Dokument sa nenahral: ",
       errorFileAgain: "Vyberte súbor znova — prehliadač ho z bezpečnostných dôvodov neuchová.",
@@ -4063,7 +4093,15 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       newTag: "Nová značka",
       submit: "Nahrať a previesť",
       submitPending: "Nahrávam a prevádzam…",
-      submitPendingNote: "Súbor sa odosiela a prevádza na text. Pri väčšom dokumente to môže trvať aj minútu — stránku nezatváraj.",
+      submitPendingNote: "Súbor sa prevádza na text. Pri väčšom dokumente to môže trvať aj minútu — stránku nezatváraj.",
+      pdfTitle: "PDF — schvaľovaná podoba (povinné)",
+      pdfNote: "Takto dokument uvidia schvaľovatelia aj zamestnanci — vrátane príloh, formulárov a obrázkov. Vo Worde: Súbor → Uložiť ako → PDF.",
+      sourceTitle: "Upraviteľný zdroj (odporúčané)",
+      sourceNote: "Word, Excel, Markdown alebo text. Z neho vznikne čistejší text na vyhľadávanie a je to predloha, z ktorej sa pripraví ďalšie znenie.",
+      noScriptLimit: mb => `bez JavaScriptu najviac ${mb} MB`,
+      uploadingFile: "Nahrávam {name} — {percent} %",
+      uploadFailed: "Nahratie zlyhalo:",
+      fileTooLarge: "{name} má {mb} MB, strop je {maxMb} MB.",
     },
   },
   },
@@ -4886,6 +4924,9 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "approval.alreadyApproved": "Toto znění je schválené. Jiný text znamená nové znění, ne nové kolo.",
     "approval.publishedBefore": "Toto znění bylo zveřejněno před zavedením schvalování a zpětně se neschvaluje. Nahradí ho oficiální znění.",
     "approval.unknownApprover": "Někdo z vybraných schvalovatelů tu není nebo je vyřazený.",
+    "approval.documentNotFound": "Takový dokument tu není.",
+    "approval.pdfRequired": "Koncept nemá PDF — nahraj znění znovu i s PDF. Schvaluje se PDF spolu s textem.",
+    "approval.draftChanged": "Koncept se mezitím změnil — obnov stránku a předlož ho znovu.",
     "approval.reasonRequired": "Bez důvodu kolo zrušit nelze. Za rok nikdo nezjistí, proč skončilo.",
     "approval.nothingRunning": "Pro toto znění neběží žádné kolo.",
     "assignment.notApproved": "Znění není schválené. Přidělit lze až text, na kterém se někdo shodl \u2014 předlož ho ke schválení v detailu dokumentu.",
@@ -5011,6 +5052,9 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
 
     // ── knihovna ───────────────────────────────────────────────────────────
     "library.noFileChosen": "Nevybral jsi soubor.",
+    "library.pdfRequired": "Schvalovaná podoba musí být PDF — ulož dokument ve Wordu jako PDF.",
+    "library.sourceNotPdf": "Zdrojový soubor má být upravitelný (.docx, .xlsx, .md…), ne druhé PDF.",
+    "library.uploadedFileNotFound": "Nahraný soubor se nenašel. Zkus ho nahrát znovu.",
     "library.documentNotFound": "Takový dokument tu není.",
     "library.documentExists": "Dokument „{title}“ ({documentId}) už existuje. Nové znění se nahrává na jeho detailu, ne jako nový dokument — tato obrazovka zakládá nový dokument.",
     "library.documentKeyShape": "Klíč dokumentu „{key}“ nemá správný tvar — smí mít jen malá písmena bez diakritiky, číslice a podtržítka.",
@@ -5875,6 +5919,12 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       uploadedBy: (who, when) => `nahrál ${who} ${when}`,
       conversionMethod: (method) => `převod: ${method}`,
       noOriginal: "Bez původního souboru — dokument se sem dostal importem z příkazové řádky.",
+      draftPdf: "PDF konceptu:",
+      draftSource: "Upravitelný zdroj:",
+      versionPdf: "PDF znění:",
+      versionSource: "Upravitelný zdroj (předloha pro další znění):",
+      noPdf: "Znění z doby před ADR-011 — PDF k němu není, schvaloval a potvrzoval se text.",
+      noDraftPdf: "Koncept nemá PDF. Před předložením ke schválení nahraj znění znovu i s PDF.",
       draftDiffers: "Koncept se liší od publikovaného znění.",
       draftSame: "Koncept je shodný s publikovaným zněním.",
       draftEmpty: "Koncept je prázdný.",
@@ -6067,7 +6117,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       pick: "Vybrat soubor",
       back: "← Zpět do knihovny",
       heading: "Nahrát dokument",
-      intro: "Word, PDF, Excel, Markdown nebo text. Soubor se uloží tak, jak přišel — převod je odvozenina a originál musí zůstat, aby šlo ověřit, z čeho text vznikl.",
+      intro: "Schvaluje a potvrzuje se PDF — tak, jak ho lidé uvidí, i s přílohami. K němu přidej upravitelný zdroj (Word, Excel…): z něj vznikne text pro vyhledávání a při dalším znění z něj budeš vycházet. Oba soubory se uloží tak, jak přišly.",
       file: "Soubor",
       errorBefore: "Dokument se nenahrál: ",
       errorFileAgain: "Vyberte soubor znovu — prohlížeč ho z bezpečnostních důvodů neuchová.",
@@ -6097,7 +6147,15 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       newTag: "Nová značka",
       submit: "Nahrát a převést",
       submitPending: "Nahrávám a převádím…",
-      submitPendingNote: "Soubor se odesílá a převádí na text. U většího dokumentu to může trvat i minutu — stránku nezavírej.",
+      submitPendingNote: "Soubor se převádí na text. U většího dokumentu to může trvat i minutu — stránku nezavírej.",
+      pdfTitle: "PDF — schvalovaná podoba (povinné)",
+      pdfNote: "Takto dokument uvidí schvalovatelé i zaměstnanci — včetně příloh, formulářů a obrázků. Ve Wordu: Soubor → Uložit jako → PDF.",
+      sourceTitle: "Upravitelný zdroj (doporučeno)",
+      sourceNote: "Word, Excel, Markdown nebo text. Z něj vznikne čistší text pro vyhledávání a je to předloha, ze které se připraví další znění.",
+      noScriptLimit: mb => `bez JavaScriptu nejvýše ${mb} MB`,
+      uploadingFile: "Nahrávám {name} — {percent} %",
+      uploadFailed: "Nahrání selhalo:",
+      fileTooLarge: "{name} má {mb} MB, strop je {maxMb} MB.",
     },
   },
   },
@@ -6914,6 +6972,9 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "approval.alreadyApproved": "This version is approved. Different text means a new version, not a new round.",
     "approval.publishedBefore": "This version was published before approvals existed and is not approved retroactively. An official version will replace it.",
     "approval.unknownApprover": "One of the chosen approvers is not here or has been deactivated.",
+    "approval.documentNotFound": "No such document here.",
+    "approval.pdfRequired": "The draft has no PDF — upload the version again with a PDF. The PDF is approved together with the text.",
+    "approval.draftChanged": "The draft has changed in the meantime — reload the page and submit it again.",
     "approval.reasonRequired": "A round cannot be cancelled without a reason. A year from now nobody would know why it ended.",
     "approval.nothingRunning": "No round is running for this version.",
     "assignment.notApproved": "This version is not approved. Only text somebody has agreed on can be assigned \u2014 submit it for approval on the document page.",
@@ -7039,6 +7100,9 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
 
     // ── library ────────────────────────────────────────────────────────────
     "library.noFileChosen": "You did not choose a file.",
+    "library.pdfRequired": "The version for approval must be a PDF — save the document from Word as PDF.",
+    "library.sourceNotPdf": "The source file must be editable (.docx, .xlsx, .md…), not a second PDF.",
+    "library.uploadedFileNotFound": "The uploaded file was not found. Try uploading it again.",
     "library.documentNotFound": "There is no such document here.",
     "library.documentExists": "The document \u201C{title}\u201D ({documentId}) already exists. A new version is uploaded on its detail page, not as a new document — this screen creates a new document.",
     "library.documentKeyShape": "The document key \u201C{key}\u201D has the wrong shape — only lowercase letters without diacritics, digits and underscores are allowed.",
@@ -7897,6 +7961,12 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       uploadedBy: (who, when) => `uploaded by ${who} ${when}`,
       conversionMethod: (method) => `conversion: ${method}`,
       noOriginal: "No original file — this document arrived through a command-line import.",
+      draftPdf: "Draft PDF:",
+      draftSource: "Editable source:",
+      versionPdf: "Version PDF:",
+      versionSource: "Editable source (template for the next version):",
+      noPdf: "Version from before ADR-011 — it has no PDF; the text was approved and acknowledged.",
+      noDraftPdf: "The draft has no PDF. Upload the version again with a PDF before submitting it for approval.",
       draftDiffers: "The draft differs from the published version.",
       draftSame: "The draft matches the published version.",
       draftEmpty: "The draft is empty.",
@@ -8089,7 +8159,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       pick: "Choose a file",
       back: "← Back to the library",
       heading: "Upload a document",
-      intro: "Word, PDF, Excel, Markdown or plain text. The file is stored exactly as it arrived — the conversion is derived from it, and the original has to stay so it can be checked what the text came from.",
+      intro: "The PDF is what gets approved and acknowledged — exactly as people will see it, annexes included. Add an editable source (Word, Excel…): it gives the text for search and is what you start from for the next version. Both files are stored exactly as they arrived.",
       file: "File",
       errorBefore: "The document was not uploaded: ",
       errorFileAgain: "Choose the file again — the browser does not keep it for security reasons.",
@@ -8119,7 +8189,15 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       newTag: "New tag",
       submit: "Upload and convert",
       submitPending: "Uploading and converting…",
-      submitPendingNote: "The file is being uploaded and converted to text. A larger document can take up to a minute — keep this page open.",
+      submitPendingNote: "The file is being converted to text. A larger document can take up to a minute — keep this page open.",
+      pdfTitle: "PDF — the version for approval (required)",
+      pdfNote: "This is what approvers and employees will see — including annexes, forms and images. In Word: File → Save As → PDF.",
+      sourceTitle: "Editable source (recommended)",
+      sourceNote: "Word, Excel, Markdown or text. It gives cleaner text for search and is the template for preparing the next version.",
+      noScriptLimit: mb => `without JavaScript up to ${mb} MB`,
+      uploadingFile: "Uploading {name} — {percent} %",
+      uploadFailed: "Upload failed:",
+      fileTooLarge: "{name} is {mb} MB; the limit is {maxMb} MB.",
     },
   },
   },

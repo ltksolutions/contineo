@@ -21,16 +21,16 @@
  */
 
 import { getCollection } from "./mongodb"
-import { DOCUMENTS_COLLECTION } from "./documents"
+import { DOCUMENTS_COLLECTION, type VersionFile } from "./documents"
 import { validAcknowledgements } from "./acknowledgements"
 import { chunkText, DEFAULT_PROFILE } from "./chunker.mjs"
-import { textFingerprint, chunkingFingerprint, needsReindex, CHUNKER_VERSION } from "./chunkIdentity"
+import { textFingerprint, draftIdentity, chunkingFingerprint, needsReindex, CHUNKER_VERSION } from "./chunkIdentity"
 import { textFixProblem, textDiff, versionFixProblem, type TextFixProblem } from "./textFix"
 import { checkValue, checkList, KEY_PATTERN } from "./codelists"
 import { slugifyKey } from "./slug"
 import type { CodelistExtras } from "./codelists"
-import { saveFile, deleteFile } from "./fileStore"
-import { convert, FILE_TYPE_LABEL } from "./conversion"
+import { saveFile, deleteFile, fileInfo, loadFile } from "./fileStore"
+import { convert, detectFileType, FILE_TYPE_LABEL, type FileType } from "./conversion"
 import { writeAudit, diff } from "./audit"
 import type { Chunk } from "./chunker.mjs"
 import { toChunkerProfile, chunkingFor, type ChunkingProfile, type ChunkingProfileDef } from "./chunkingProfile"
@@ -260,11 +260,63 @@ export function checkMetadata(
  */
 export type UploadMode = "new" | "version"
 
+/**
+ * Súbor do `uploadDocument()` — buď **bajty z formulára** (bez JavaScriptu,
+ * do 4 MB), alebo **už nahratý po kúskoch** do GridFS (ADR-011, D98).
+ */
+export type IncomingFile = { name: string; data: Buffer } | { storedId: string }
+
+/** PDF je povinné (D94), zdroj textu odporúčaný (D95). */
+export interface UploadFiles {
+  pdf: IncomingFile
+  source?: IncomingFile | null
+}
+
 export interface UploadResult {
   documentId: string
   markdown: string
   warnings: string[]
   isNew: boolean
+}
+
+interface ResolvedFile {
+  id: string
+  name: string
+  bytes: number
+  sha256: string
+  type: FileType
+  data: Buffer
+}
+
+/**
+ * Súbor z formulára uloží, súbor nahratý po kúskoch nájde — v oboch prípadoch
+ * vráti bajty, odtlačok a typ **podľa obsahu** (`detectFileType`), nie podľa
+ * toho, čo tvrdil prehliadač.
+ */
+async function resolveFile(
+  companyCode: string,
+  incoming: IncomingFile,
+  actor: string,
+  created: string[],
+): Promise<ResolvedFile> {
+  if ("data" in incoming) {
+    const type = detectFileType(incoming.name, incoming.data)
+    const stored = await saveFile(companyCode, incoming.name, "application/octet-stream", incoming.data, actor)
+    created.push(stored.id)
+    return { id: stored.id, name: incoming.name, bytes: stored.bajtov, sha256: stored.sha256, type, data: incoming.data }
+  }
+  // Nahratý po kúskoch: patrí tejto organizácii? (D32 — podmienka v dotaze)
+  const info = await fileInfo(companyCode, incoming.storedId)
+  const loaded = info ? await loadFile(companyCode, incoming.storedId) : null
+  if (!info || !loaded || !info.sha256) {
+    throw new LibraryError("library.uploadedFileNotFound", "Nahratý súbor sa nenašiel. Skús ho nahrať znova.")
+  }
+  // Nahratý, ale ešte k ničomu nepripojený — pri zlyhaní ho treba upratať.
+  created.push(info.id)
+  return {
+    id: info.id, name: info.name, bytes: info.bytes, sha256: info.sha256,
+    type: detectFileType(info.name, loaded.data), data: loaded.data,
+  }
 }
 
 /**
@@ -276,8 +328,7 @@ export interface UploadResult {
  */
 export async function uploadDocument(
   meta: DocumentMetadata,
-  fileName: string,
-  data: Buffer,
+  files: UploadFiles,
   actor: string,
   mode: UploadMode,
 ): Promise<UploadResult> {
@@ -308,23 +359,54 @@ export async function uploadDocument(
   // ku ktorému nevedie žiadny záznam.
   const ownerDepartmentId = await checkOwnerDepartment(meta.companyCode, meta.ownerDepartmentId)
 
-  const file = await saveFile(meta.companyCode, fileName, "application/octet-stream", data, actor)
+  /*
+   * Súbory sa uložia (alebo nájdu, ak prišli po kúskoch) a overia **pred**
+   * prevodom. Keď čokoľvek zlyhá, zmaže sa všetko, čo toto nahratie uložilo —
+   * po odmietnutom nahratí nemá v úložisku zostať súbor bez záznamu.
+   */
+  const created: string[] = []
+  const cleanup = async () => {
+    for (const id of created) await deleteFile(meta.companyCode, id).catch(() => {})
+  }
 
+  let pdf: ResolvedFile
+  let source: ResolvedFile | null = null
   let converted
   try {
-    converted = await convert(fileName, data)
+    pdf = await resolveFile(meta.companyCode, files.pdf, actor, created)
+    if (pdf.type !== "pdf") {
+      throw new LibraryError("library.pdfRequired", "Schvaľovaná podoba musí byť PDF — ulož dokument vo Worde ako PDF.")
+    }
+    if (files.source) {
+      source = await resolveFile(meta.companyCode, files.source, actor, created)
+      if (source.type === "pdf") {
+        throw new LibraryError(
+          "library.sourceNotPdf",
+          "Zdrojový súbor má byť upraviteľný (.docx, .xlsx, .md…), nie druhé PDF.",
+        )
+      }
+    }
+    // Text sa robí zo zdroja, ak je (D95) — z Wordu vyjde čistejší než z PDF.
+    const from = source ?? pdf
+    converted = await convert(from.name, from.data)
   } catch (e) {
-    await deleteFile(meta.companyCode, file.id)
+    await cleanup()
     throw e
   }
 
   const now = new Date()
+  const asVersionFile = (f: ResolvedFile): VersionFile => ({
+    id: f.id, name: f.name, bytes: f.bytes, sha256: f.sha256, type: f.type, uploadedAt: now, uploadedBy: actor,
+  })
+  const convertedFrom = source ?? pdf
 
+  // `originalFile` zostáva: je to súbor, **z ktorého vznikol text** — editor
+  // ho ukazuje vedľa Markdownu a prepis zo skenu z neho číta.
   const original: OriginalFile = {
-    id: file.id,
-    name: fileName,
-    contentType: file.contentType,
-    bytes: file.bajtov,
+    id: convertedFrom.id,
+    name: convertedFrom.name,
+    contentType: "application/octet-stream",
+    bytes: convertedFrom.bytes,
     type: converted.type,
     uploadedAt: now,
     uploadedBy: actor,
@@ -353,6 +435,10 @@ export async function uploadDocument(
         processingError: null,
         conversion: { method: converted.method, warnings: converted.warnings, at: now },
         originalFile: original,
+        // PDF a zdroj konceptu (ADR-011). Pri zverejnení sa skopírujú do
+        // `versions[]`, takže ďalšie nahratie ich pri znení neprepíše (D97).
+        draftPdf: asVersionFile(pdf),
+        draftSource: source ? asVersionFile(source) : null,
         updatedAt: now,
         updatedBy: actor,
       },
@@ -368,7 +454,9 @@ export async function uploadDocument(
     actor: actor,
     targetId: documentId,
     targetLabel: meta.title,
-    note: `${FILE_TYPE_LABEL[converted.type]} · ${fileName} · ${converted.method}`,
+    note: `PDF · ${pdf.name}` +
+      (source ? ` · zdroj ${FILE_TYPE_LABEL[converted.type]} · ${source.name}` : "") +
+      ` · ${converted.method}`,
   })
 
   return {
@@ -526,12 +614,17 @@ export async function publish(
     embeddingProvider: process.env.EMBEDDING_KIND ?? "atlas-auto",
   })
 
-  // **Identita znenia je odtlačok textu, nie chunkov (D57).** Kým sa počítala
+  // **Identita znenia je odtlačok PDF a textu, nie chunkov (D57, ADR-011 D96).** Kým sa počítala
   // z chunkov, vyladenie chunkera vyrobilo novú verziu — a tým aj povinnosť
   // potvrdiť normu znova, hoci sa v nej nezmenilo ani slovo. Označenie
   // a dátum platnosti do identity nevstupujú zámerne: preklep v nich sa musí
   // dať opraviť bez toho, aby sa rozbili existujúce potvrdenia.
-  const versionId = textFingerprint(markdown)
+  // Tá istá identita, na ktorej bežalo kolo schvaľovania — inak by sa
+  // zverejnilo niečo iné, než sa schválilo. Bez PDF (znenia spred ADR-011)
+  // je to presne odtlačok textu ako doteraz.
+  const draftPdf = (doc.draftPdf as VersionFile | null | undefined) ?? null
+  const draftSource = (doc.draftSource as VersionFile | null | undefined) ?? null
+  const versionId = draftIdentity(markdown, draftPdf?.sha256)
   const chunkingId = chunkingFingerprint(chunks, { ...DEFAULT_PROFILE, ...forChunker })
   const now = new Date()
 
@@ -654,6 +747,9 @@ export async function publish(
           // osoba, nie ten, kto znenie zverejňuje (D91).
           responsiblePerson: responsible,
           markdown,
+          // Kópia pri znení (D97): ďalšie nahratie prepíše koncept, nie toto.
+          ...(draftPdf ? { pdf: draftPdf } : {}),
+          ...(draftSource ? { source: draftSource } : {}),
           // `requiresReacknowledgement` sa zámerne nenastavuje: vypĺňa ho
           // človek (D30) a `false` by bolo tiché rozhodnutie, že zmena nie je
           // podstatná. Chýbajúce pole znamená „nikto zatiaľ nerozhodol".

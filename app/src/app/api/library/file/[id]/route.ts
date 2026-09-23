@@ -30,7 +30,7 @@ const TYPES: Record<string, string> = {
 }
 
 export async function GET(
-  _req: Request,
+  req: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
   const ctx = await libraryContext()
@@ -57,7 +57,9 @@ export async function GET(
       "Content-Type": type,
       // `Content-Length` zámerne nie: odpoveď so známou dĺžkou môže platforma
       // spracovať ako celú, nie ako prúd — a tým ju vrátiť pod strop 4,5 MB.
-      "Content-Disposition": `inline; filename*=UTF-8''${encodeURIComponent(s.name)}`,
+      // `?download=1` — upraviteľný zdroj sa sťahuje, nie otvára (predloha
+      // pre ďalšie znenie, ADR-011 D95). PDF sa otvára v prehliadači.
+      "Content-Disposition": `${new URL(req.url).searchParams.get("download") === "1" ? "attachment" : "inline"}; filename*=UTF-8''${encodeURIComponent(s.name)}`,
       "Cache-Control": "private, max-age=3600",
       "X-Content-Type-Options": "nosniff",
       // Odtlačok ako ETag: súbor sa pod rovnakým id nikdy nemení.

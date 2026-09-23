@@ -18,7 +18,7 @@ import { libraryContext, isContentManager } from "@/lib/library"
 import { isRedirect } from "@/lib/redirects"
 import {
   uploadDocument, saveDraft, publish, checkMetadata, makeDocumentId, saveMetadata,
-  reindex, fixVersion, fixText, LibraryError,
+  reindex, fixVersion, fixText, LibraryError, type UploadFiles, type IncomingFile,
 } from "@/lib/libraryWrite"
 import { loadFile } from "@/lib/fileStore"
 import { textDiff } from "@/lib/textFix"
@@ -123,15 +123,36 @@ function errorMessage(e: unknown, language: UiLanguage): string {
   return errorText(e, language)
 }
 
+/**
+ * PDF a zdroj z formulára (ADR-011).
+ *
+ * Každý môže prísť dvoma cestami: ako **identifikátor** súboru, ktorý
+ * prehliadač už nahral po kúskoch (`pdfFileId`, `sourceFileId` — s
+ * JavaScriptom, do 25 MB), alebo ako **súbor vo formulári** (`pdf`,
+ * `source` — bez JavaScriptu, do 4 MB). Identifikátor má prednosť: keď ho
+ * skript vyplnil, súbor z poľa už neodoslal.
+ */
+async function filesFromForm(fd: FormData): Promise<UploadFiles> {
+  const pick = async (idField: string, fileField: string): Promise<IncomingFile | null> => {
+    const storedId = fieldText(fd, idField)
+    if (storedId) return { storedId }
+    const file = fd.get(fileField)
+    if (file instanceof File && file.size > 0) {
+      return { name: file.name, data: Buffer.from(await file.arrayBuffer()) }
+    }
+    return null
+  }
+  const pdf = await pick("pdfFileId", "pdf")
+  if (!pdf) throw new LibraryError("library.pdfRequired", "Schvaľovaná podoba musí byť PDF — ulož dokument vo Worde ako PDF.")
+  return { pdf, source: await pick("sourceFileId", "source") }
+}
+
 export async function uploadAction(fd: FormData) {
   const self = await actor()
   if (!self) redirect("/")
 
   try {
-    const file = fd.get("file")
-    if (!(file instanceof File) || file.size === 0) {
-      throw new LibraryError("library.noFileChosen", "Nevybral si súbor.")
-    }
+    const files = await filesFromForm(fd)
 
     // Organizácia je z prihláseného človeka, nie z formulára.
     const meta = checkMetadata({
@@ -152,9 +173,7 @@ export async function uploadAction(fd: FormData) {
     // Táto obrazovka zakladá **nový** dokument. Keď kľúč už existuje, zápis
     // sa odmietne — dovtedy ticho prepísal koncept, metadáta aj pôvodný
     // súbor existujúceho dokumentu (D80).
-    const v = await uploadDocument(
-      meta, file.name, Buffer.from(await file.arrayBuffer()), self.email, "new",
-    )
+    const v = await uploadDocument(meta, files, self.email, "new")
 
     revalidatePath("/library")
     // Rovno do editora: po nahratí nasleduje čítanie prevedeného textu
@@ -197,10 +216,7 @@ export async function uploadVersionAction(fd: FormData) {
 
   const id = fieldText(fd, "documentId")
   try {
-    const file = fd.get("file")
-    if (!(file instanceof File) || file.size === 0) {
-      throw new LibraryError("library.noFileChosen", "Nevybral si súbor.")
-    }
+    const files = await filesFromForm(fd)
 
     const col = await getCollection(DOCUMENTS_COLLECTION)
     const before = await col.findOne({ documentId: id, companyCode: self.companyCode })
@@ -225,9 +241,7 @@ export async function uploadVersionAction(fd: FormData) {
       internalNumber: (before.internalNumber as string | null) ?? undefined,
     }, self.extras)
 
-    const v = await uploadDocument(
-      meta, file.name, Buffer.from(await file.arrayBuffer()), self.email, "version",
-    )
+    const v = await uploadDocument(meta, files, self.email, "version")
 
     // **Porovnanie s platným znením hneď, nie až v editore.** Bez neho sa nedá
     // odlíšiť novela od znovunahratia toho istého PDF — a to je presne tá

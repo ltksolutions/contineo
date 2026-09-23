@@ -7,8 +7,9 @@
 > a schválili, verzia dokumentu ‚markdown' je len pre účely RAG a vyhľadávania"
 > (2026-09-23)
 > **Odsúhlasil:** Ján Letko (2026-09-23) — dokumenty **do 25 MB**; správca nahrá
-> **povinne PDF** a voliteľne `.docx` alebo iný zdroj pre lepší text; úložisko
-> **zostáva v Atlase** (GridFS).
+> **povinne PDF** a odporúčane `.docx` alebo iný zdroj, ktorý slúži na text
+> aj ako upraviteľná predloha pre ďalšie znenie; úložisko **zostáva v Atlase**
+> (GridFS).
 > **Nadväzuje na:** ADR-002 (dátová rezidencia), ADR-005 (reťaz dôkazov),
 > ADR-006 (schvaľovanie, D68), ADR-007 (oprava textu, D76), D24, D28, D53, D57
 > **Mení:** D68 — schvaľuje sa PDF **a** text, nie len text.
@@ -50,14 +51,21 @@ Prečo PDF a nie `.docx`: prehliadač PDF zobrazí verne a bez ďalšej služby.
 žiadna knižnica v prehliadači, a rozloženie, ktoré sa líši od Wordu, nie je
 podklad pre schválenie.
 
-### D95 — Voliteľný **zdroj textu**
+### D95 — Odporúčaný **upraviteľný zdroj**
 
-Popri PDF môže správca nahrať **zdroj textu** — `.docx`, `.xlsx`, `.md`, `.txt`,
-`.csv`. Markdown sa potom robí zo zdroja, lebo z Wordu vychádza čistejší text než
-z PDF (nadpisy, zoznamy, tabuľky). Bez zdroja sa Markdown robí z PDF.
+Popri PDF správca nahrá **upraviteľný zdroj** — `.docx`, `.xlsx`, `.md`, `.txt`,
+`.csv`. Je **odporúčaný, nie povinný**, a má dve úlohy (doplnené Jánom
+2026-09-23: „zabijeme tým dve muchy jednou ranou"):
 
-Zdroj **nie je dôkaz** — ukladá sa pre ďalší prevod a pre správcu, schvaľovateľ
-ani zamestnanec ho nevidia.
+1. **Text na vyhľadávanie** sa robí zo zdroja — z Wordu vychádza čistejší text
+   než z PDF (nadpisy, zoznamy, tabuľky). Bez zdroja sa robí z PDF.
+2. **Predloha pre ďalšie znenie.** Zdroj sa pri zverejnení uloží k zneniu ako
+   kópia (rovnako ako PDF, D97). Správca si ho na detaile dokumentu stiahne,
+   upraví vo Worde a nahrá ako novelu — nemusí hľadať, kde leží „posledný
+   Word", a nestane sa, že novela vznikne zo staršej verzie než tá, ktorá platí.
+
+Zdroj **nie je dôkaz** — schvaľovateľ ani zamestnanec ho nevidia, sťahuje ho
+len správca obsahu.
 
 ### D96 — Odtlačok PDF je súčasťou identity konceptu
 
@@ -72,6 +80,9 @@ spolu** (`draftIdentity()`), nie len text:
 
 Pre znenia bez PDF (spred tohto ADR) zostáva identita odtlačkom textu, takže
 existujúce kolá, znenia a potvrdenia sa nemenia.
+
+**Identitu kola počíta server** z toho, čo je v koncepte práve teraz, nie
+z formulára — a koncept bez PDF sa na schválenie predložiť nedá.
 
 `versionId` zverejneného znenia vzniká z tej istej identity. Chunky ho nesú
 ďalej ako doteraz (D57 platí: vyladenie chunkera identitu nemení, lebo do nej
@@ -158,9 +169,10 @@ Dnes originál otvorí len správca obsahu. Odteraz:
 Po krokoch, každý samostatný PR:
 
 1. ✅ Oprava obrazovky schvaľovania — koncept namiesto platného znenia (PR #91).
-2. Úložisko: SHA-256 pri ukladaní, čítanie prúdom, nahrávanie po kúskoch,
-   strop 25 MB (D98).
-3. Model a nahrávanie: povinné PDF + voliteľný zdroj, `draftIdentity()`,
-   `versions[].file` pri zverejnení (D94–D97).
+2. ✅ Úložisko: SHA-256 pri ukladaní, čítanie prúdom, nahrávanie po kúskoch,
+   strop 25 MB (D98) — PR #93.
+3. Model a nahrávanie: povinné PDF + odporúčaný zdroj, `draftIdentity()`,
+   `versions[].pdf` a `versions[].source` pri zverejnení, stiahnutie zdroja
+   ako predlohy (D94–D97).
 4. Zobrazenie a prístup: PDF pri schvaľovaní a potvrdení, SHA-256 v potvrdení
    (D97, D99).

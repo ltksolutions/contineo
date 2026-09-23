@@ -10,7 +10,8 @@
 import { notFound, redirect } from "next/navigation"
 import Link from "next/link"
 import Notice from "@/components/Notice"
-import { MAX_FORM_BYTES, ACCEPTED_EXTENSIONS } from "@/lib/fileStore"
+import { MAX_BYTES, MAX_FORM_BYTES, SOURCE_EXTENSIONS } from "@/lib/fileStore"
+import UploadFiles from "@/components/UploadFiles"
 import KeyPreview from "@/components/KeyPreview"
 import UploadSubmit from "@/components/UploadSubmit"
 import { libraryContext } from "@/lib/library"
@@ -114,32 +115,23 @@ export default async function NewDocumentPage({
         <section className="card upload-section">
           <h2 className="upload-step"><span className="upload-step-no">1</span>{t.sectionFile}</h2>
 
-          {/*
-            Zóna na pretiahnutie je `<label>` okolo `<input type="file">` —
-            prehliadač do neho súbor pustí sám, takže drag & drop funguje bez
-            jediného riadku skriptu. Vlastná zóna postavená na JavaScripte by
-            bez neho nefungovala vôbec.
-          */}
-          <label className={`upload-drop${retry ? " is-required" : ""}`}>
-            <span className="upload-drop-title">{t.dropHint}</span>
-            {/* Formát a limit patria k zóne (NAHRAVANIE, úloha 3) — z tých
-                istých konštánt, ktoré server vynucuje, nie natvrdo. */}
-            <span className="quiet upload-drop-note">
-              {ACCEPTED_EXTENSIONS.map(e => e.slice(1).toUpperCase()).join(" · ")}
-              <br />
-              {t.maxSize(MAX_FORM_BYTES / 1024 / 1024)}
-              <br />
-              {t.oldFormatsBefore}<code>.doc</code>{t.oldFormatsMiddle}<code>.xls</code>{t.oldFormatsAfter}
-            </span>
-            <input
-              className="upload-file"
-              type="file"
-              name="file"
-              required
-              accept={ACCEPTED_EXTENSIONS.join(",")}
-              aria-label={t.file}
-            />
-          </label>
+          <UploadFiles
+            highlight={retry}
+            pdfAccept=".pdf,application/pdf"
+            sourceAccept={SOURCE_EXTENSIONS.join(",")}
+            maxBytes={MAX_BYTES}
+            labels={{
+              pdfTitle: t.pdfTitle,
+              pdfNote: t.pdfNote,
+              sourceTitle: t.sourceTitle,
+              sourceNote: `${t.sourceNote} ${SOURCE_EXTENSIONS.map(e => e.slice(1).toUpperCase()).join(" · ")}`,
+              maxSize: t.maxSize(MAX_BYTES / 1024 / 1024),
+              noScriptLimit: t.noScriptLimit(MAX_FORM_BYTES / 1024 / 1024),
+              uploading: t.uploadingFile,
+              failed: t.uploadFailed,
+              tooLarge: t.fileTooLarge,
+            }}
+          />
         </section>
 
         <section className="card upload-section">
