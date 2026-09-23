@@ -7,6 +7,9 @@
 # next.js build
 **/.next/
 **/out/
+# Generuje ho Next pri každom `dev` aj `build` a dev server doň píše iné
+# cesty (`.next/dev/types`) než build — v gite len blokoval `git pull`.
+**/next-env.d.ts
 
 # logs
 *.log

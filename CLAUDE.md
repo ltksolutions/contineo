@@ -126,8 +126,13 @@ priamo do `main`. **Ktokoľvek iný ide cez pull request.** Pravidlo nie je o d�
 ale o tom, kto nesie zodpovednosť za to, čo sa nasadí: `main` je to, čo o pár minút
 beží na `intranet.futbalsfz.sk`.
 
-Nezmenené zostáva, že bez výslovného súhlasu sa nikdy nerobí `force push`, rebase
-zdieľanej vetvy ani mazanie vetvy.
+Nezmenené zostáva, že bez výslovného súhlasu sa nikdy nerobí `force push` ani rebase
+zdieľanej vetvy.
+
+**Vetva sa po zlúčení maže automaticky**, bez pýtania — ak PR prešiel bez
+problémov (zlúčený, nasadenie na Verceli `success`). Lokálne aj na `origin`.
+Nezlúčená vetva alebo vetva, pri ktorej niečo zlyhalo, sa bez súhlasu Jána
+nemaže. (Súhlas Jána 2026-09-23.)
 
 ## Overenie pred commitom
 
