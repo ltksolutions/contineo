@@ -4,6 +4,67 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Nahrávanie dokumentu a zakladanie organizácie zase fungujú (2026-09-22)
+
+Stránka „Nahrať dokument" hlásila chybu servera a nedala sa otvoriť vôbec.
+To isté zakladanie novej organizácie. Príčinou bol živý náhľad kľúča
+dokumentu, ktorý si od servera pýtal hotovú vetu namiesto textu —
+prehliadka stránky na tom padla ešte predtým, než sa vykreslila.
+
+Obe stránky sú v poriadku vrátane náhľadu kľúča aj návrhu firemného kódu.
+Pribudla kontrola, ktorá takú chybu odhalí pri testoch, nie až v produkcii.
+
+### Expirovaný dokument sa už nehlási ako koncept (2026-09-22)
+
+Farebná pilulka pri dokumente po skončení platnosti ukazovala **Koncept**.
+Nebolo to nepresné slovo, bol to nesprávny stav — a pri norme, ktorá
+prestala platiť, je to rozdiel, na ktorom záleží. Teraz píše **Expirovaný**.
+
+Pilulka zároveň hovorí v jednotnom čísle, lebo popisuje jeden dokument:
+**Platný · Návrh · Na schválenie · Expirovaný**. Filtre vľavo zostávajú
+v množnom čísle — tie počítajú, koľko dokumentov do stavu patrí.
+
+### Filter „Expirované" nahradila podmienka „Platné do pred dnes" (2026-09-23)
+
+Expirovaný nie je stav, v ktorom dokument leží — je to dôsledok dátumu,
+ktorý prešiel. V zozname filtrov preto stál vedľa vecí, ktoré sú niečo iné.
+Odišiel a to isté sa dá teraz povedať podmienkou v hľadaní: **Platné do ·
+pred · dnes**. Slovo „dnes" sa dá napísať priamo a znamená deň, keď sa
+zoznam pozerá — odkaz poslaný kolegovi bude o týždeň stále hovoriť „dnes",
+nie o minulom týždni.
+
+Staré odkazy s `?status=expired` fungujú ďalej; automaticky sa preložia
+na tú podmienku.
+
+Pri hľadaní podľa konca platnosti pribudla veta, ktorá hovorí, že dokumenty
+s neobmedzenou platnosťou sa v takom výsledku neobjavia — koniec platnosti
+nemajú, takže otázke na koniec platnosti nevyhovejú.
+
+### Prázdna knižnica a prázdny filter už nehovoria to isté (2026-09-23)
+
+Keď filter nič nenašiel, knižnica písala „Začni nahratím prvého dokumentu",
+hoci dokumentov bolo stoštyridsaťosem a len im nevyhovel filter. Teraz
+vymenuje, ktoré filtre zoznam vyprázdnili, a ponúkne ich zrušiť.
+
+Naozaj prázdna knižnica je odteraz iná stránka: nadpis, prázdny stav
+a „Nahrať dokument". Panel priečinkov, hľadanie ani export tam nie sú —
+pri nule dokumentov niet čo filtrovať a export by dal prázdny súbor.
+
+### Knižnica sedí s návrhom aj na tablete a telefóne (2026-09-23)
+
+Karty dokumentov mali na tablete tri stĺpce namiesto dvoch, takže sa dlhé
+názvy krátili tromi bodkami. Na karte navyše chýbal počet znení, ktorý
+tabuľka ukazuje — z karty sa nedalo zistiť, či má dokument jedno znenie
+alebo sedem.
+
+Panel priečinkov a filtrov vľavo dostal podobu karty s vlastným okrajom;
+dovtedy splýval s pozadím stránky. Akcie v hlavičke stránky sú zarovnané
+k pravému okraju, nie nalepené hneď za nadpisom.
+
+Nadpis stránky je krátky — **Knižnica** — lebo hneď nad ním je rovnaké
+slovo v navigácii. Karta prehliadača nesie naopak celé „Knižnica dokumentov
+— Contineo", aby sa dala rozoznať medzi viacerými otvorenými záložkami.
+
 ### Marketingový web povýšený na Next 16 (2026-09-22)
 
 Web beží na rovnakej veľkej verzii ako intranet — dovtedy bol o dve

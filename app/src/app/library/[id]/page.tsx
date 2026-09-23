@@ -10,7 +10,7 @@
 import { notFound, redirect } from "next/navigation"
 import Link from "next/link"
 import { libraryContext } from "@/lib/library"
-import { libraryDetail, statusTagClass } from "@/lib/libraryRead"
+import { libraryDetail, statusTagClass, displayStatus } from "@/lib/libraryRead"
 import { brandingView } from "@/lib/tenants"
 import { tenantStyle } from "@/components/TenantHeader"
 import { formatDate, dictionary } from "@/lib/i18n"
@@ -174,14 +174,26 @@ export default async function DocumentDetailPage({
   const draftRounds = draftVersionId ? (rounds.get(draftVersionId) ?? []) : []
   const draftState = stateOf(draftRounds)
 
-  /* Stav do hlavičky — ten istý slovník a tá istá trieda ako pilulka
-     v zozname (`statusTagClass`, PR 8). */
+  /*
+   * Stav do hlavičky — **ten istý slovník aj tá istá trieda ako v zozname.**
+   *
+   * Do 23. 9. 2026 to bola tretia kópia toho istého mapovania a používala
+   * facetové reťazce v množnom čísle: detail hovoril „publikované", zoznam
+   * „Platný". Dva názvy pre jeden stav na dvoch obrazovkách vedľa seba.
+   *
+   * Expirovaný sa odvodzuje `displayStatus()` z platného znenia — tá istá
+   * funkcia ako v zozname. Dovtedy tu vetva chýbala a expirovaný dokument
+   * mal v hlavičke „koncept".
+   */
   const tl = dictionary(language).library.list
-  const headerStatus = draftState === "in-review" ? "in-review" : d.status
+  const headerStatus = draftState === "in-review"
+    ? "in-review"
+    : displayStatus(d.status, effective?.effectiveTo)
   const statusPill = (value: string) =>
-    value === "published" ? tl.statusPublished
-    : value === "in-review" ? tl.statusInReview
-    : tl.draft
+    value === "published" ? tl.statusLabel.published
+    : value === "in-review" ? tl.statusLabel.review
+    : value === "expired" ? tl.statusLabel.expired
+    : tl.statusLabel.draft
 
   /*
    * Rozdiel konceptu proti **textu platného znenia** — podklad pre opravu bez

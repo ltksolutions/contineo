@@ -753,6 +753,17 @@ button:disabled { cursor: not-allowed; opacity: 0.55; }
 .page-head .page-title { margin: 0; }
 
 /*
+ * Medzera, ktorá tlačí akcie k pravému okraju (`KNIZNICA.html`, rámy 1, 4
+ * a 8). `flex: 1` na prázdnom prvku, nie `margin-left: auto` na prvej
+ * akcii: akcie sa skrývajú podľa šírky (prepínač pohľadu pod 640 px) a
+ * odsadenie viazané na konkrétnu akciu by zmizlo spolu s ňou.
+ *
+ * Pri zalomení riadka medzera zmizne (`flex-basis: 0`), takže na úzkej
+ * obrazovke nevytlačí akcie na samostatný riadok.
+ */
+.page-head-spacer { flex: 1 1 0; min-width: 0; }
+
+/*
  * Prázdny stav zoznamu (ZAKLAD, úloha 1) — jedna trieda, tri časti: čo tu
  * nie je, prečo, a čo s tým. Prázdno nie je chyba; text má povedať, či je
  * zoznam prázdny preto, že filter nič nenašiel, alebo preto, že niet čoho.
@@ -2004,7 +2015,18 @@ html[data-theme="dark"] .editor-tui .CodeMirror {
  * v DOM naraz a prepína ich toto `@media`; `display: none` skryje druhú
  * aj pred čítačkou, takže sa panel neprečíta dvakrát.
  */
-.library-folders { min-width: 0; }
+/*
+ * Panel filtrov je **karta**, nie holý stĺpec (`KNIZNICA.html`, rám 1).
+ * Rozmery sú z rámu, nie odhadnuté: `padding: 14px`, medzera medzi
+ * skupinami `16px`.
+ */
+.library-folders {
+  min-width: 0;
+  padding: 14px;
+  display: grid;
+  gap: 16px;
+  align-content: start;
+}
 .library-list { min-width: 0; }
 
 @media (max-width: 1023px) {
@@ -2026,19 +2048,74 @@ html[data-theme="dark"] .editor-tui .CodeMirror {
   color: var(--accent, var(--ink));
 }
 
-/* Odkaz na správu priečinkov — pod stromom, oddelený, tichý. Správa má
-   vlastnú stránku (`/library/folders`): filtrovanie a správa sú dve úlohy. */
-.folders-manage {
-  display: block;
-  margin-top: 14px;
-  padding-top: 12px;
-  border-top: 1px solid var(--line);
-  font-size: 13px;
+/*
+ * Nadpis skupiny v paneli (`.lf-title`) — rozmery z rámu 1.
+ *
+ * `space-between` preto, že nadpis Priečinkov nesie vpravo odkaz na
+ * správu. Ostatné skupiny pravú stranu nemajú a nič sa tým nemení.
+ */
+.lf-title {
+  margin: 0 0 6px;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 11px;
+  font-weight: 650;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+/* Odkaz v nadpise nie je nadpis — späť na normálny text. */
+.lf-manage {
+  text-transform: none;
+  letter-spacing: 0;
+  font-size: 12px;
+  font-weight: 500;
   color: var(--accent);
+  white-space: nowrap;
+}
+
+.lf-manage:hover { text-decoration: underline; }
+
+/*
+ * Riadok priečinka. Nižší než facet (32 vs 34 px), lebo nemá checkbox —
+ * rovnaká výška by pri rovnakom texte vyzerala redšie.
+ */
+.lf-folder {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 32px;
+  padding: 0 6px;
+  border-radius: 7px;
+  font-size: 13px;
+  color: var(--ink);
   text-decoration: none;
 }
 
-.folders-manage:hover { text-decoration: underline; }
+.lf-folder:hover { background: var(--surface-2); }
+
+.lf-folder.is-on {
+  background: var(--accent-soft);
+  font-weight: 600;
+}
+
+/*
+ * Počet vpravo, zarovnaný v stĺpci — preto `tabular-nums`.
+ *
+ * `:not(:first-child)` je tu nutnosť, nie opatrnosť: „Nezaradené" počet
+ * nemá, a bez tej podmienky by `margin-left: auto` chytilo jeho jediný
+ * `<span>` a odtlačilo **názov** doprava. Vyzeralo by to ako preklep
+ * v jednom riadku, nie ako pravidlo, ktoré sa minulo cieľom.
+ */
+.lf-folder span:last-child:not(:first-child) {
+  margin-left: auto;
+  font-size: 11.5px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
 
 /* ── knižnica: panel filtrov s počtami ──────────────────────────────────
    Počty sú súčasť ovládacieho prvku, nie ozdoba: bez nich je facet hádanie.
@@ -2052,10 +2129,13 @@ html[data-theme="dark"] .editor-tui .CodeMirror {
    * stĺpca so zoznamom a `text-overflow: ellipsis` nemal na čom zabrať.
    */
   grid-template-columns: minmax(0, 1fr);
-  gap: 14px;
-  margin-bottom: 20px;
-  padding-bottom: 16px;
-  border-bottom: 1px solid var(--line);
+  /*
+   * Medzeru aj odsadenie nesie `.library-folders` (karta z rámu 1), nie
+   * tento blok. Dovtedy tu bola čiara a `margin-bottom: 20px`, lebo pod
+   * panelom stál ešte samostatný strom priečinkov — ten je teraz prvou
+   * skupinou vnútri, takže by čiara delila skupiny od skupín.
+   */
+  gap: 16px;
 }
 
 .facets-head {
@@ -2065,27 +2145,12 @@ html[data-theme="dark"] .editor-tui .CodeMirror {
   gap: 8px;
 }
 
-.facets-title {
-  margin: 0;
-  font-size: 13.5px;
-  font-weight: 600;
-}
-
 .facets-clear {
   font-size: 13px;
   color: var(--accent);
 }
 
 .facet-group { display: grid; grid-template-columns: minmax(0, 1fr); gap: 2px; }
-
-.facet-group-title {
-  margin: 0 0 2px;
-  font-size: 12px;
-  font-weight: 650;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: var(--muted);
-}
 
 /*
  * Priečinky v paneli filtrov vyzerajú ako facety.
@@ -2119,11 +2184,11 @@ html[data-theme="dark"] .editor-tui .CodeMirror {
   align-items: center;
   min-width: 0;
   gap: 8px;
-  /* Celý riadok je terč, aj na dotyk. */
-  min-height: 36px;
-  padding: 4px 6px;
-  border-radius: 8px;
-  font-size: 14.5px;
+  /* Celý riadok je terč, aj na dotyk. Rozmery z rámu 1. */
+  min-height: 34px;
+  padding: 0 6px;
+  border-radius: 7px;
+  font-size: 13px;
   color: inherit;
   text-decoration: none;
 }
@@ -2137,11 +2202,11 @@ html[data-theme="dark"] .editor-tui .CodeMirror {
   display: grid;
   place-items: center;
   flex: none;
-  width: 17px;
-  height: 17px;
+  width: 15px;
+  height: 15px;
   border: 1px solid var(--line);
-  border-radius: 5px;
-  font-size: 11px;
+  border-radius: 4px;
+  font-size: 9px;
   font-weight: 800;
   line-height: 1;
 }
@@ -2164,7 +2229,7 @@ html[data-theme="dark"] .editor-tui .CodeMirror {
 
 .facet-count {
   flex: none;
-  font-size: 12.5px;
+  font-size: 11.5px;
   color: var(--muted);
   font-variant-numeric: tabular-nums;
 }
@@ -3030,15 +3095,32 @@ html[data-theme="dark"] .editor-tui .CodeMirror {
 
 /* ── knižnica: kartový pohľad a prepínač ────────────────────────────────
    Karty sú na prezeranie: názov dostane miesto na tri riadky a údaje idú pod
-   neho. Šírka stĺpca je `minmax(250px, 1fr)` s `auto-fill` — počet stĺpcov
-   určuje šírka okna, nie breakpoint, takže to sedí aj na tablete na šírku. */
+   neho.
+
+   Počet stĺpcov je daný breakpointom, nie dopočítaný (`KNIZNICA.html`,
+   rámy 3 a 4). `auto-fill minmax(250px, 1fr)` dávalo na tablete 834 px tri
+   stĺpce — rám má dva. Pri troch má karta 250 px a dlhý názov sa do nej
+   zmestí len elipsou; pri dvoch má 395 px a je čitateľný. Na tablete je
+   karta na čítanie, nie na porovnávanie; na to je tabuľka nad 1024 px.
+
+   Nad 1024 px sa karty kreslia len na výslovné prepnutie (`?view=cards`),
+   a tam má dopočítanie zmysel: kto si ich vypýta na širokej obrazovke,
+   chce ich vidieť čo najviac. */
 .doc-cards {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  grid-template-columns: minmax(0, 1fr);
   gap: 10px;
   margin: 0;
   padding: 0;
   list-style: none;
+}
+
+@media (min-width: 640px) {
+  .doc-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (min-width: 1024px) {
+  .doc-cards { grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); }
 }
 
 /* Karta: výber vľavo vo vlastnom stĺpci, obsah vpravo (KNIZNICA.md,
@@ -3301,18 +3383,80 @@ html[data-theme="dark"] .editor-tui .CodeMirror {
   z-index: 30;
   max-height: 78dvh;
   overflow-y: auto;
-  padding: 14px var(--pad-main) calc(10px + env(safe-area-inset-bottom));
+  /* 10 / 16 / 18 px ako rám 5; bezpečná zóna sa pripočíta k spodku, lebo
+     zásuvka roluje a posledná pilulka nesmie skončiť pod hranou. */
+  padding: 10px 16px calc(18px + env(safe-area-inset-bottom));
   background: var(--surface);
   border-top: 1px solid var(--line);
   border-radius: 16px 16px 0 0;
   box-shadow: var(--shadow);
 }
 
+/*
+ * Držadlo a hlavička zásuvky (`KNIZNICA.html`, rám 5).
+ *
+ * Držadlo je ozdoba s významom: hovorí, že sa panel dá stiahnuť dole.
+ * Preto `aria-hidden` — čítačke by len prekážalo.
+ */
+.sheet-grip {
+  width: 36px;
+  height: 4px;
+  margin: 0 auto 12px;
+  border-radius: 2px;
+  background: var(--line);
+}
+
+.sheet-h {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin: 0 0 12px;
+}
+
+.sheet-h strong { font-size: var(--fs-section); }
+
+.sheet-clear {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--accent);
+}
+
+/*
+ * Nadpisy skupín v zásuvke **nie sú verzálky.** V stĺpci sú tiché 11 px
+ * verzálky, lebo tam nesú štruktúru dlhého panela; v zásuvke sú skupiny
+ * tri a nadpis je bežný popis (rám 5: 12 px, 650, bez verzálok).
+ */
+/* Správa priečinkov v zásuvke nie je (rám 5): zásuvka je na filtrovanie,
+   správa je iná úloha na inej stránke a odkaz by z nej viedol preč
+   uprostred výberu. */
+.filter-sheet .lf-manage { display: none; }
+
+.filter-sheet .lf-title {
+  font-size: 12px;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--ink);
+  margin: 0 0 8px;
+}
+
 /* Facety v zásuvke: pilulky 36 px (r9, rámik) vedľa seba — palec triafa
    plochu, nie štvorček. Štvorček sa nekreslí, zapnutie nesie pozadie. */
 .filter-sheet .facets { border: 0; border-radius: 0; }
 .filter-sheet .facet-group { display: flex; flex-wrap: wrap; gap: 8px; }
-.filter-sheet .facet-group-title { flex: 1 0 100%; }
+.filter-sheet .lf-title { flex: 1 0 100%; }
+
+/* Priečinky v zásuvke sú pilulky ako facety — palec triafa plochu.
+   V stĺpci sú to riadky, tu dlaždice; je to tá istá voľba, iný priestor. */
+.filter-sheet .lf-folder {
+  min-height: 36px;
+  padding: 0 12px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+}
+
+.filter-sheet .lf-folder.is-on { border-color: var(--accent); background: var(--accent-soft); }
+.filter-sheet .lf-folder span:last-child { margin-left: 4px; }
 
 .filter-sheet .facet {
   min-height: 36px;
@@ -3322,6 +3466,16 @@ html[data-theme="dark"] .editor-tui .CodeMirror {
 }
 
 .filter-sheet .facet-box { display: none; }
+
+/* Počet je vnútri pilulky, nie odtlačený na jej koniec (rám 5). */
+.filter-sheet .facet-name { flex: 0 1 auto; }
+.filter-sheet .facet-count { font-size: 12px; opacity: 0.65; color: inherit; }
+.filter-sheet .lf-folder span:last-child:not(:first-child) { font-size: 12px; opacity: 0.65; }
+
+/* Zapnutá pilulka nesie aj tučnejší text — rozdiel musí byť vidieť
+   aj bez farby (rám 5). */
+.filter-sheet .facet.is-on,
+.filter-sheet .lf-folder.is-on { font-weight: 600; color: var(--accent-strong); }
 .filter-sheet .facet.is-on { border-color: var(--accent); background: var(--accent-soft); }
 
 /* Hlavné tlačidlo dole, na celú šírku a `sticky` — nech je po ruke aj
@@ -3329,6 +3483,9 @@ html[data-theme="dark"] .editor-tui .CodeMirror {
 .filter-sheet-apply {
   position: sticky;
   bottom: 0;
+  /* 48 px, nie 40: je to jediné hlavné tlačidlo zásuvky a palec ho
+     hľadá naslepo pri spodnej hrane (rám 5). */
+  min-height: 48px;
   display: flex;
   justify-content: center;
   width: 100%;
@@ -4495,7 +4652,7 @@ a.answer-source:focus-visible { outline: 2px solid var(--accent); outline-offset
 
 /*
  * /more — zvyšok navigácie na telefóne. Riadky 52 px z návrhu; nadpisy
- * skupín sú tiché ako `.facet-group-title`.
+ * skupín sú tiché ako `.lf-title` v paneli filtrov.
  */
 .more-group { margin: 0 0 18px; }
 

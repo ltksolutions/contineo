@@ -45,6 +45,19 @@ import MultiSelect from "@/components/MultiSelect"
 
 export const dynamic = "force-dynamic"
 
+/*
+ * Vlastný názov karty prehliadača. Dovtedy niesli všetky stránky jeden názov
+ * z `layout.tsx` a podľa záložky sa nedalo rozoznať, ktorá je ktorá.
+ *
+ * Nadpis na obrazovke je krátky („Knižnica", rámy 1–8), tu je dlhý: karta
+ * nie je hlavička stránky a pri viacerých otvorených záložkách je samotné
+ * „Knižnica" málo.
+ *
+ * Jazyk osoby tu ešte nepoznáme — metadáta sa skladajú skôr, než je jasné,
+ * kto sa pozerá — preto predvolený slovník, rovnako ako v `layout.tsx`.
+ */
+export const metadata = { title: dictionary(undefined).library.list.metaTitle }
+
 export default async function LibraryPage({
   searchParams,
 }: {
@@ -199,6 +212,22 @@ export default async function LibraryPage({
   /** Odkaz s vymeneným priečinkom; ostatné filtre zostávajú. */
   const withFolder = (folderId?: string) => toQuery(setValue(filters, "folder", folderId))
 
+  /*
+   * Mená filtrov, ktoré sú práve nasadené — pre prázdny stav.
+   *
+   * Vymenúvajú sa tie, ktoré sa **dajú pomenovať**: facety, hľadanie
+   * a priečinok. Podmienky buildera medzi nimi nie sú — tie sú vypísané
+   * hneď nad zoznamom vo vlastnom paneli, takže ich opakovať by bolo
+   * dvakrát to isté a veta by narástla cez tri riadky.
+   */
+  const activeNames = [
+    ...activeChips(filters).map(
+      ({ key, value }) => `${facetLabel[key].title}: ${facetLabel[key].label(value)}`,
+    ),
+    ...(search ? [`${t.search}: ${search}`] : []),
+    ...(folder ? [`${tf.heading}: ${folder === "nezaradene" ? tf.unfiled : (tree.find(x => x.folder.id === folder)?.folder.name ?? folder)}`] : []),
+  ]
+
   /** Odkaz, ktorý prepne jednu hodnotu facetu. */
   const facetHref = (key: MultiKey, value: string) => toQuery(toggle(filters, key, value))
 
@@ -221,24 +250,17 @@ export default async function LibraryPage({
   const categoryLabel = labelFrom("category")
   const tagLabel = labelFrom("tags")
   const accessLabel = labelFrom("accessLevel")
-  const statusLabel = (value: string) =>
-    value === "published" ? t.statusPublished
-    : value === "in-review" ? t.statusInReview
-    : t.statusDrafts
-
   /*
-   * Text pilulky pri **jednom** dokumente.
+   * Názvy hodnôt facetu — **tie isté ako pri pilulke** (`KNIZNICA.html`,
+   * rám 1): Platný · Návrh · Na schválenie.
    *
-   * Vlastné reťazce v jednotnom čísle (`MASTER.md`, stavový model), nie
-   * facetové: „publikované" a „koncepty" sú množné číslo pre zoznam filtrov
-   * a v riadku by zneli ako popis skupiny, nie ako stav dokumentu.
-   *
-   * Expirovaný sa odvodzuje z `effectiveTo` cez `displayStatus()` — jedno
-   * miesto vedľa `statusTagClass()`. Dovtedy tu vetva pre expirovaný
-   * chýbala a taký dokument dostal pilulku „koncept": nie nepresné slovo,
-   * ale nesprávny stav.
+   * Do 23. 9. 2026 tu boli vlastné reťazce v množnom čísle („publikované",
+   * „koncepty"). Boli to dva slovníky o tom istom a na jednej obrazovke
+   * vedľa seba: riadok hovoril „Platný", panel „publikované". Množné číslo
+   * dávalo zmysel, kým v paneli stálo za číslom — ale pilulka aj facet
+   * pomenúvajú ten istý stav a majú ho volať rovnako.
    */
-  const statusPill = (value: string) =>
+  const statusLabel = (value: string) =>
     value === "published" ? t.statusLabel.published
     : value === "in-review" ? t.statusLabel.review
     : value === "expired" ? t.statusLabel.expired
@@ -247,7 +269,7 @@ export default async function LibraryPage({
   /** Pilulka riadku: farba aj názov z toho istého odvodeného stavu. */
   const statusTag = (row: { status: string; effectiveTo?: Date | string | null }) => {
     const stav = displayStatus(row.status, row.effectiveTo)
-    return <span className={statusTagClass(stav)}>{statusPill(stav)}</span>
+    return <span className={statusTagClass(stav)}>{statusLabel(stav)}</span>
   }
 
   /*
@@ -313,70 +335,93 @@ export default async function LibraryPage({
         ktoré nikdy nič nenájdu, je len dlhší panel.
       */}
       <div className="facets">
-        <div className="facets-head">
-          <h2 className="facets-title">{t.filtersTitle}</h2>
-          {hasFilter && (
+        {/*
+          Panel nemá viditeľný nadpis (`KNIZNICA.html`, rám 1) — začína rovno
+          skupinou Priečinky. Nadpis „Filtre" nad štyrmi pomenovanými
+          skupinami hovoril to, čo je aj tak vidieť, a bral riadok.
+
+          Pre čítačku ale sekcia meno mať musí, inak je to blok odkazov
+          bez kontextu. Preto zostáva skrytý — `.sr-only`, nie `display: none`.
+
+          Zrušenie filtrov je vlastný riadok a kreslí sa len vtedy, keď je
+          čo rušiť; inak panel naozaj začína prvou skupinou.
+        */}
+        <h2 className="sr-only">{t.filtersTitle}</h2>
+        {hasFilter && (
+          <div className="facets-head">
             <Link className="facets-clear" href={toQuery(clearFilters(filters))}>{t.clearFilters}</Link>
-          )}
-        </div>
+          </div>
+        )}
 
         {/*
-          Priečinky sú **prvé a vyzerajú ako facety**. Dovtedy stáli až pod
-          všetkými skupinami a mali vlastný nadpis v štýle formulárového
-          štítka — tri rôzne štýly nadpisov v jednom paneli (`.facets-title`,
-          `.facet-group-title`, `.field-label`) hovorili, že ide o tri rôzne
-          druhy vecí. Sú to tri filtre.
+          Priečinky sú **prvá skupina panela** (`KNIZNICA.html`, rám 1).
+          Je to ten filter, ktorý ľudia používajú najčastejšie a ako prvý —
+          hľadá sa „kde to leží", nie „akého je to druhu".
 
-          Priečinok je pritom ten filter, ktorý ľudia používajú najčastejšie
-          a ako prvý — hľadá sa „kde to leží", nie „akého je to druhu".
+          Všetky skupiny majú jeden štýl nadpisu (`.lf-title`). Dovtedy tu
+          boli tri (`.facets-title`, `.facet-group-title`, `.field-label`)
+          a hovorili, že ide o tri rôzne druhy vecí. Sú to filtre.
         */}
         <div className="facet-group facet-group--folders">
-          <h3 className="facet-group-title">{tf.heading}</h3>
+          {/*
+            Nadpis nesie aj odkaz na správu (`KNIZNICA.html`, rám 1): je to
+            jedna vec o priečinkoch, nie dve. Dovtedy stál odkaz až pod
+            stromom, oddelený čiarou — vyzeral ako pätička celého panela,
+            hoci patrí k tejto skupine.
+          */}
+          <h3 className="lf-title">
+            {tf.heading}
+            <Link className="lf-manage" href="/library/folders">{tf.manage} →</Link>
+          </h3>
 
-        <ul className="tree">
-          <li className="tree-item">
-            <Link
-              href={withFolder(undefined)}
-              className={`tree-row${!folder ? " is-active" : ""}`}
-            >
-              <span className="tree-name">{tf.allDocuments}</span>
-            </Link>
-          </li>
-          <li className="tree-item">
-            <Link
-              href={withFolder("nezaradene")}
-              className={`tree-row${folder === "nezaradene" ? " is-active" : ""}`}
-            >
-              <span className="quiet tree-name">{tf.unfiled}</span>
-            </Link>
-          </li>
-        </ul>
+          {/*
+            Riadky priečinkov **nie sú strom s čiarami, ale zoznam ako facety**
+            (rám 1). Zanorenie nesie odsadenie zľava, nič iné — v paneli
+            širokom 250 px sa čiary aj tak zlievajú a berú miesto názvu.
 
-        {/* Fixné položky vyššie nie sú priečinky, ale pohľady na celý zoznam —
-            preto stoja mimo stromu s čiarami. */}
-        <ul className="tree tree--lines">
+            Checkbox tu nie je zámerne: priečinok je **jedna voľba**, nie
+            viacnásobná ako druh či stav. Zaškrtávacie políčko by sľubovalo
+            výber viacerých naraz.
+          */}
+          <Link
+            href={withFolder(undefined)}
+            className={`lf-folder${!folder ? " is-on" : ""}`}
+          >
+            <span>{tf.allDocuments}</span>
+            <span>{facets.all}</span>
+          </Link>
+
+          {/*
+            „Nezaradené" v ráme nie je — v mocku bol každý dokument zaradený.
+            V ostrých dátach je to jediná cesta k dokumentom mimo priečinkov
+            a pri nahratí tam padne každý nový, takže zostáva.
+          */}
+          <Link
+            href={withFolder("nezaradene")}
+            className={`lf-folder${folder === "nezaradene" ? " is-on" : ""}`}
+          >
+            <span className="quiet">{tf.unfiled}</span>
+          </Link>
+
           {tree.map(({ folder: p, level: level }) => {
             const c = folderCounts.get(p.id) ?? { direct: 0, withDescendants: 0 }
             return (
-              <li key={p.id} className="tree-item" style={{ "--level": level } as React.CSSProperties}>
-                <Link
-                  href={withFolder(p.id)}
-                  className={`tree-row${folder === p.id ? " is-active" : ""}`}
-                >
-                  <span className="tree-name">{p.name}</span>
-                  <span className="quiet tree-count">{c.withDescendants}</span>
-                </Link>
-              </li>
+              <Link
+                key={p.id}
+                href={withFolder(p.id)}
+                className={`lf-folder${folder === p.id ? " is-on" : ""}`}
+                style={{ paddingLeft: 6 + (level - 1) * 16 }}
+              >
+                <span>{p.name}</span>
+                <span>{c.withDescendants}</span>
+              </Link>
             )
           })}
-        </ul>
-
-        <Link className="folders-manage" href="/library/folders">{tf.manage} →</Link>
         </div>
 
         {facetGroups.map(group => group.rows.length === 0 ? null : (
           <div className="facet-group" key={group.key}>
-            <h3 className="facet-group-title">{facetLabel[group.key].title}</h3>
+            <h3 className="lf-title">{facetLabel[group.key].title}</h3>
             {group.rows.map(row => {
               const on = filters[group.key].includes(row.value)
               return (
@@ -430,6 +475,25 @@ export default async function LibraryPage({
     </>
   )
 
+  /*
+    Prázdna knižnica je **iná stránka**, nie zoznam s nulou riadkov
+    (`KNIZNICA.html`, rám 7): zostane nadpis, počet, „Nahrať dokument",
+    ponuka „⋯" a prázdny stav. Panel priečinkov, hľadanie, prepínač pohľadu,
+    zásuvka filtrov, staviteľ podmienok aj Export CSV odchádzajú.
+
+    Dôvod je vecný, nie vzhľadový: pri nule dokumentov niet čo filtrovať,
+    niet medzi čím hľadať, každý facet je nula a export dá prázdny súbor.
+    Všetko to sľubuje prácu, ktorá nikam nevedie.
+
+    Ponuka „⋯" zostáva zámerne, proti rámu (rozhodnutie Jána, 23. 9. 2026):
+    vedie na Trasy onboardingu a Kuráciu, čo nie sú obsah knižnice — bez nej
+    by sa z prázdnej knižnice nedali dosiahnuť vôbec.
+
+    `facets.all` je počet **bez filtrov**, takže nula znamená prázdnu
+    knižnicu, nie prísny filter.
+  */
+  const emptyLibrary = facets.all === 0
+
   return (
     /*
      * Prvá stránka v aplikačnom shelli (viď `components/AppShell.tsx`).
@@ -456,18 +520,33 @@ export default async function LibraryPage({
       */}
       <WaitingForApproval rounds={waiting} titles={waitingTitles} language={uiLanguage} />
 
-      <div style={{ display: "flex", gap: 12, alignItems: "baseline", flexWrap: "wrap", margin: "0 0 6px" }}>
+      {/*
+        Hlavička stránky je `.page-head` ako inde v portáli, nie vlastné
+        inline štýly — boli to tie isté hodnoty, len opísané druhýkrát.
+
+        Medzera (`.page-head-spacer`) tlačí akcie k pravému okraju, ako v
+        `KNIZNICA.html` (rámy 1 a 8). Je to prvok, nie `margin-left: auto`
+        na prepínači pohľadu: pod 640 px je prepínač skrytý a odsadenie by
+        s ním zmizlo, hoci rám 4 má akcie vpravo aj na telefóne.
+      */}
+      <div className="page-head">
         <h1 className="page-title" style={{ margin: 0 }}>{t.heading}</h1>
         {/* „N z M" hovorí, či je krátky zoznam výsledok filtra alebo stav
             knižnice. Bez toho čísla sa to nedá rozoznať. */}
         <span className="quiet library-count">{t.shown(facets.total, facets.all)}</span>
+
+        <span className="page-head-spacer" aria-hidden="true" />
 
         {/*
           Prepínač pohľadu. Sú to dva odkazy, nie tlačidlá s JavaScriptom:
           pohľad je súčasť adresy, takže sa dá poslať aj s ním — a funguje bez
           skriptu. Aktívny odkaz zostáva odkazom (vedie sám na seba), lebo
           `aria-current` povie čítačke to isté a nemusí sa riešiť dvojaký tvar.
+
+          Pri prázdnej knižnici prepínač nie je (rám 7): tabuľka aj karty by
+          ukázali to isté prázdno.
         */}
+        {!emptyLibrary && (
         <span className="view-switch" role="group" aria-label={t.viewSwitch}>
           {([["table", t.viewTable], ["cards", t.viewCards]] as const).map(([key, label]) => (
             <Link
@@ -480,15 +559,22 @@ export default async function LibraryPage({
             </Link>
           ))}
         </span>
-        <Link className="button" href="/library/new">{t.upload}</Link>
+        )}
         {/*
+          Poradie akcií je z rámu 1: tiché akcie (Export CSV, ⋯) obklopujú
+          primárnu (Nahrať dokument), nie naopak. Primárna akcia takto nie je
+          prvá v rade zľava, ale je jediná plná — to ju odlíši.
+
           Export nesie **tie isté filtre**, aké sú na obrazovke — preto
           `toQuery(filters, …)` a nie holá adresa. Kto si vyfiltruje osem
           dokumentov, má dostať osem, nie stoštyridsaťosem.
         */}
+        {!emptyLibrary && (
         <Link className="button button--quiet" href={toQuery(filters, "/library/csv")}>
           {t.exportCsv}
         </Link>
+        )}
+        <Link className="button" href="/library/new">{t.upload}</Link>
         {/*
           Zvyšné akcie v ponuke „⋯" (NASADENIE, PR 4). Primárna akcia je
           jedna — nahrať dokument; šesť tlačidiel vedľa seba sa na telefóne
@@ -510,8 +596,27 @@ export default async function LibraryPage({
       </div>
 
 
+      {emptyLibrary ? (
+        /* Rám 7: prázdna knižnica je nadpis a prázdny stav, nič viac. */
+        <div className="empty">
+          <div className="empty-title">{t.empty}</div>
+          <div className="empty-text">{t.emptyText}</div>
+          <div className="empty-action">
+            <Link className="button" href="/library/new">{t.upload}</Link>
+          </div>
+        </div>
+      ) : (
       <div className="library-grid">
-        <aside className="library-folders">
+        {/*
+          Panel je **karta** (`KNIZNICA.html`, rámy 1 a 8): plocha `--surface`,
+          rám `--line`, rádius 12. Dovtedy bol priehľadný, takže priečinky
+          a facety splývali s pozadím stránky a stĺpec vľavo nemal okraj —
+          vyzeral ako text nalepený vedľa tabuľky, nie ako panel.
+
+          Výplň 14 px si drží `.library-folders`; `.card` má 18/20 px, čo je
+          na 250 px široký stĺpec veľa.
+        */}
+        <aside className="card library-folders">
           {filterPanel}
         </aside>
 
@@ -591,6 +696,26 @@ export default async function LibraryPage({
             )}
           </summary>
           <div className="filter-sheet-body">
+            {/*
+              Zásuvka má **vlastnú hlavičku a držadlo** (`KNIZNICA.html`,
+              rám 5). V stĺpci panel nadpis nepotrebuje — je vidieť, že je to
+              bočný panel. Zásuvka vyskočí cez obsah a bez nadpisu nie je
+              jasné, čo to vyskočilo; držadlo navyše hovorí, že sa to dá
+              stiahnuť dole.
+
+              „Zrušiť všetky" je tu hore, nie dole pri tlačidle: keď človek
+              otvorí zásuvku a vidí, že filtre nič nenašli, chce ich zrušiť
+              hneď, nie po prerolovaní všetkých skupín.
+            */}
+            <div className="sheet-grip" aria-hidden="true" />
+            <div className="sheet-h">
+              <strong>{t.filters}</strong>
+              {hasFilter && (
+                <Link className="sheet-clear" href={toQuery(clearFilters(filters))}>
+                  {t.clearFilters}
+                </Link>
+              )}
+            </div>
             {filterPanel}
             <Link className="button filter-sheet-apply" href={toQuery(filters) + "#results"}>
               {t.showResults(facets.total)}
@@ -736,9 +861,44 @@ export default async function LibraryPage({
 
 
       {rows.length === 0 ? (
-        <p className="card" style={{ padding: 20, fontSize: "var(--fs-lead)" }}>
-          {search ? t.nothingFound : t.empty}
-        </p>
+        /*
+          Sem sa dostane len prázdno **z filtra** — prázdnu knižnicu rieši
+          `emptyLibrary` vyššie, na úrovni celej stránky.
+
+          Rozdiel je v tom, čo má človek spraviť: prázdna knižnica chce
+          nahrať prvý dokument, prázdny filter chce filter zrušiť. Dovtedy
+          sa pri nule vždy písalo „Začni nahratím prvého dokumentu", hoci
+          podmienka pozerala len na text hľadania — pri 148 dokumentoch
+          a zapnutom filtri to posielalo človeka robiť niečo, čo nepotrebuje.
+        */
+          <div className="empty">
+            <div className="empty-title">{t.emptyFilteredTitle}</div>
+            <div className="empty-text">
+              {/*
+                Filtre sa **vymenujú**, nie zhrnú do „skúste iné filtre".
+                Človek nevidí panel (na telefóne je v zásuvke) a bez mena
+                nevie, ktorý z nich zoznam vyprázdnil.
+              */}
+              {activeNames.length > 0 ? (
+                <>
+                  {t.emptyFilteredBefore(activeNames.length)}{" "}
+                  {activeNames.map((n, i) => (
+                    <span key={n}>
+                      {i > 0 && (i === activeNames.length - 1 ? ` ${t.and} ` : ", ")}
+                      <strong>{n}</strong>
+                    </span>
+                  ))}
+                  {". "}
+                </>
+              ) : null}
+              {t.emptyFilteredAfter}
+            </div>
+            <div className="empty-action">
+              <Link className="button button--quiet" href={toQuery(clearFilters(filters))}>
+                {t.clearFilters}
+              </Link>
+            </div>
+          </div>
       ) : (
         /*
           Výber riadkov je **v adrese**, nie stav formulára. Zaškrtávacie
@@ -937,12 +1097,21 @@ export default async function LibraryPage({
                     {r.title}
                   </Link>
 
-                  {/* Kde dokument je. Kľúč len ako záloha, keď niet čísla ani
-                      priečinka — riadok nemá byť prázdny (úloha 5). */}
+                  {/*
+                    Kde dokument je a koľko ho je — `interné číslo · priečinok ·
+                    počet znení` (`KNIZNICA.html`, rám 4). Počet znení tu
+                    dovtedy chýbal; na karte niet stĺpca Verzia ako v tabuľke,
+                    takže bez neho sa z karty nedalo zistiť, či má dokument
+                    jedno znenie alebo sedem.
+
+                    Kľúč je záloha, keď niet ničoho iného — riadok nemá byť
+                    prázdny.
+                  */}
                   <div className="quiet doc-card-where">
                     {[
                       r.internalNumber,
                       r.folderTrail?.length ? r.folderTrail.join(" / ") : undefined,
+                      r.versionCount > 0 ? t.versions(r.versionCount) : undefined,
                     ].filter(Boolean).join(" · ") || r.documentId}
                   </div>
 
@@ -1152,6 +1321,7 @@ export default async function LibraryPage({
       )}
         </div>
       </div>
+      )}
     </div>
     </AppShell>
   )
