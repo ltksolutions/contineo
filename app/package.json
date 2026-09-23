@@ -24,6 +24,7 @@
     "versions": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --disable-warning=DEP0205 --import ./scripts/lib/ts-hook.mjs scripts/versions_from_chunks.mjs",
     "validity": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/validity.mjs",
     "departments": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/departments_from_text.mjs",
+    "responsible:set": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --disable-warning=DEP0205 --env-file=.env.local --import ./scripts/lib/ts-hook.mjs scripts/set_responsible.mjs",
     "check": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --env-file=.env.local scripts/check.mjs",
     "migrate:versionid": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/migrate_versionid.mjs",
     "files:attach": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/attach_original_files.mjs",
