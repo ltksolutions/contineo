@@ -81,6 +81,14 @@ export interface Acknowledgement {
   legalBasisKey?: string | null
   legalBasisLabel?: string | null
 
+  /**
+   * PDF, ktoré človek potvrdil (ADR-011, D97) — **SHA-256 a názov v čase
+   * potvrdenia**. O rok sa dá overiť, že súbor v úložisku je bajt po bajte ten,
+   * ktorý mal pred sebou. Chýba pri zneniach spred ADR-011 (potvrdzoval sa text).
+   */
+  pdfSha256?: string | null
+  pdfName?: string | null
+
   // ČÍM — doslovné znenie, nie odkaz naň
   statementText: string
   statementHash: string
@@ -315,6 +323,8 @@ export async function acknowledge(
     legalBasisReference: v.legalBasisReference ?? null,
     legalBasisKey: v.legalBasisKey ?? null,
     legalBasisLabel: v.legalBasisLabel ?? null,
+    pdfSha256: v.pdf?.sha256 ?? null,
+    pdfName: v.pdf?.name ?? null,
     statementText: statement,
     statementHash: await hashStatement(statement),
     language: language,

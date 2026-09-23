@@ -211,6 +211,28 @@ describe("potvrd — zápis právneho záznamu", () => {
     expect(z.legalBasisReference).toBe("§ 7 zák. 124/2006 Z. z.")
   })
 
+  it("nesie SHA-256 a názov PDF, ktoré človek potvrdil (ADR-011, D97)", async () => {
+    const pdf = { id: "f1", name: "Smernica GDPR.pdf", bytes: 1000, sha256: "a".repeat(64),
+      type: "pdf", uploadedAt: new Date(), uploadedBy: "jan@sfz.sk" }
+    collection("documents").findOne.mockResolvedValue({
+      ...DOCUMENT,
+      versions: [DOCUMENT.versions[0], { ...DOCUMENT.versions[1], pdf }],
+    })
+    await acknowledge(ACTOR, "smernica-gdpr")
+
+    const z = collection("acknowledgements").insertOne.mock.calls[0][0]
+    expect(z.pdfSha256).toBe("a".repeat(64))
+    expect(z.pdfName).toBe("Smernica GDPR.pdf")
+  })
+
+  it("znenie spred ADR-011 zapíše prázdne miesto pri PDF — potvrdzoval sa text", async () => {
+    collection("documents").findOne.mockResolvedValue(DOCUMENT)
+    await acknowledge(ACTOR, "smernica-gdpr")
+    const z = collection("acknowledgements").insertOne.mock.calls[0][0]
+    expect(z.pdfSha256).toBeNull()
+    expect(z.pdfName).toBeNull()
+  })
+
   it("znenie spred D91 zapíše prázdne miesto, nie vymyslenú hodnotu", async () => {
     // `null` = v čase potvrdenia neurčené. Keby sa pole vynechalo, nedalo by
     // sa rozlíšiť „ešte nebolo" od „zabudli sme ho zapísať".

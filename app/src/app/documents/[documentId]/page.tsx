@@ -24,6 +24,7 @@ import { acknowledgementDuties } from "@/lib/pending"
 import { dueState } from "@/lib/due"
 import AcknowledgeButton from "@/components/AcknowledgeButton"
 import FormattedText from "@/components/FormattedText"
+import PdfView from "@/components/PdfView"
 import ReadingTimer from "@/components/ReadingTimer"
 import Notice from "@/components/Notice"
 import AppShell from "@/components/AppShell"
@@ -209,9 +210,31 @@ export default async function DocumentPage({
             tento text má pred potvrdením prečítať. Vykresľuje ho ten istý
             komponent ako odpoveď vyhľadávania.
           */}
-          <article className="answer document-sheet" style={{ lineHeight: 1.7 }}>
-            <FormattedText text={version.version.markdown ?? doc.markdown ?? ""} />
-          </article>
+          {/*
+            **Potvrdzuje sa PDF** (ADR-011, D94) — predpis tak, ako vyšiel,
+            s prílohami a formulármi. Text pod ním je odvodenina na
+            vyhľadávanie; znenia spred ADR-011 PDF nemajú a zostáva im text.
+          */}
+          {version.version.pdf ? (
+            <>
+              <PdfView
+                href={`/api/documents/${encodeURIComponent(doc.documentId)}/pdf?version=${encodeURIComponent(version.version.versionId)}`}
+                name={version.version.pdf.name}
+                bytes={version.version.pdf.bytes}
+                labels={{ open: t.openPdf }}
+              />
+              <details className="document-search-text">
+                <summary>{t.searchText}</summary>
+                <article className="answer document-sheet" style={{ lineHeight: 1.7 }}>
+                  <FormattedText text={version.version.markdown ?? doc.markdown ?? ""} />
+                </article>
+              </details>
+            </>
+          ) : (
+            <article className="answer document-sheet" style={{ lineHeight: 1.7 }}>
+              <FormattedText text={version.version.markdown ?? doc.markdown ?? ""} />
+            </article>
+          )}
 
           {/*
             Merač je pod textom, nie nad ním. Hore by z neho bola stopka nad
