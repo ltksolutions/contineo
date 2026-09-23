@@ -61,6 +61,12 @@ export interface AssignableDocument {
   versionId: string
   versionLabel: string
   effectiveFrom: Date
+  /**
+   * Platné znenie nemá určený právny základ (D91, O15). Pridelenie to
+   * **neblokuje** — rozhodnutie 2026-09-23: kým sa základ doplní k existujúcim
+   * smerniciam, blokovanie by zastavilo bežiaci onboarding. Obrazovka upozorní.
+   */
+  legalBasisMissing: boolean
 }
 
 /**
@@ -91,6 +97,7 @@ export async function assignableDocuments(companyCode: string): Promise<Assignab
       versionId: v.version.versionId,
       versionLabel: v.version.label,
       effectiveFrom: v.version.effectiveFrom,
+      legalBasisMissing: !v.version.legalBasis,
     })
   }
   return out.sort((a, b) => a.title.localeCompare(b.title, "sk"))

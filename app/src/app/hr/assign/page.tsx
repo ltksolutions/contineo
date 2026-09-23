@@ -76,6 +76,7 @@ export default async function AssignPage({
   const treeRows = flattenTree(tree)
   const branding = brandingView(ctx.tenant)
   const t = dictionary(ctx.person.language).hr.assign
+  const tr = dictionary(ctx.person.language).responsibility
   const language = ctx.person.language
 
   const selectedDocuments = new Set(asArray(q.document))
@@ -139,6 +140,10 @@ export default async function AssignPage({
         <form action={assignAction} style={{ display: "grid", gap: 22 }}>
           <fieldset className="card hr-group">
             <legend className="field-label">{t.whichDocuments}</legend>
+            {/* Upozornenie, nie brána (D91): pridelenie bez právneho základu prejde. */}
+            {documents.some(d => d.legalBasisMissing) && (
+              <p className="quiet field-hint" style={{ margin: "0 0 8px" }}>{tr.missingBasisNote}</p>
+            )}
             <ul className="hr-choices">
               {documents.map(d => (
                 <li key={d.documentId}>
@@ -154,6 +159,9 @@ export default async function AssignPage({
                       <span className="quiet field-hint">
                         {" "}{t.versionLine(d.versionLabel ?? "", formatDate(d.effectiveFrom, language))}
                       </span>
+                      {d.legalBasisMissing && (
+                        <>{" "}<span className="tag tag--draft">{tr.missingBasisTag}</span></>
+                      )}
                     </span>
                   </label>
                 </li>

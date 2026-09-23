@@ -43,6 +43,7 @@ function sentence(language: UiLanguage, kind: string, params: NotificationParams
     case "rewritten": return t.rewritten(title)
     case "remindersSent": return t.remindersSent(params.count ?? 0)
     case "versionPublished": return t.versionPublished(title, params.versionLabel ?? "")
+    case "responsibleAssigned": return t.responsibleAssigned(title, params.versionLabel ?? "")
     default: return title || kind
   }
 }

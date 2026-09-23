@@ -18,7 +18,7 @@ import Notice from "@/components/Notice"
 import {
   publishVersionAction, saveDocumentMetadataAction, assignToFolderAction, reindexDocumentAction,
   fixVersionAction, fixTextAction, uploadVersionAction, revokeVersionAction,
-  carryOverAssignmentsAction,
+  carryOverAssignmentsAction, setResponsibleAction,
 } from "../actions"
 import { allFolders, flattenTree } from "@/lib/folders"
 // Strom oddelení a strom priečinkov majú rovnaké pomenovanie funkcií —
@@ -42,6 +42,9 @@ import type { CSSProperties } from "react"
 import { textFingerprint } from "@/lib/chunkIdentity"
 import { textDiff, type DiffKind } from "@/lib/textFix"
 import { listPeople } from "@/lib/people"
+import ResponsiblePicker from "@/components/ResponsiblePicker"
+import LegalBasisForm from "@/components/LegalBasisForm"
+import { canSetLegalBasis } from "@/lib/versionResponsibility"
 
 export const dynamic = "force-dynamic"
 
@@ -120,9 +123,20 @@ export default async function DocumentDetailPage({
     rozhranie. Vyradení ľudia sa neponúkajú — kolo, ktoré na nich čaká, sa
     neuzavrie nikdy.
   */
-  const approverChoices = (await listPeople(ctx.tenant.companyCode))
+  const people = await listPeople(ctx.tenant.companyCode)
+  const approverChoices = people
     .filter(p => p.status !== "inactive" && p.email !== ctx.person.email)
     .map(p => ({ id: p.id, fullName: p.fullName, email: p.email, department: p.department }))
+  /*
+    Zodpovedná osoba za znenie (D91). Na rozdiel od schvaľovateľov sa
+    ponúka aj ten, kto znenie zverejňuje — garant predpisu môže byť zároveň
+    správca obsahu. Vyradení nie: ľudí by posielalo za niekým, kto v zväze nie je.
+  */
+  const responsibleChoices = people
+    .filter(p => p.status !== "inactive")
+    .map(p => ({ id: p.id, fullName: p.fullName, email: p.email, department: p.department }))
+  const activePersonIds = new Set(responsibleChoices.map(p => p.id))
+  const tr = dictionary(language).responsibility
   /*
    * Koľko ľudí platné znenie potvrdilo. Jeden dotaz navyše na stránku — je to
    * jeden dokument, nie riadok v zozname, kde by to bol dotaz na každý riadok.
@@ -341,6 +355,8 @@ export default async function DocumentDetailPage({
                   <span className="field-label">{t.changeNote}</span>
                   <input className="field-input" name="changeNote" placeholder={t.changeNotePlaceholder} />
                 </label>
+
+                <ResponsiblePicker people={responsibleChoices} language={language} />
 
                 <div><button className="button" type="submit">{t.publish}</button></div>
               </form>
@@ -682,6 +698,122 @@ export default async function DocumentDetailPage({
               )}
               {v.changeNote && <div className="quiet audit-note">{v.changeNote}</div>}
 
+              {/*
+                Zodpovedná osoba a právny základ (D91). Chýbajúci údaj sa
+                hovorí nahlas, nie mlčí — pri zneniach spred D91 je to bežný
+                stav a `npm run check` ho vypisuje.
+              */}
+              <div className="audit-note" style={{ fontSize: "var(--fs-small)" }}>
+                <span className="quiet">{tr.responsiblePerson}: </span>
+                {v.responsiblePerson
+                  ? <>
+                      {v.responsiblePerson.fullName}
+                      {!activePersonIds.has(v.responsiblePerson.personId) && (
+                        <> <span className="tag tag--draft">{tr.inactiveResponsible}</span></>
+                      )}
+                    </>
+                  : <span className="tag tag--draft">{tr.noResponsible}</span>}
+              </div>
+              <div className="audit-note" style={{ fontSize: "var(--fs-small)" }}>
+                <span className="quiet">{tr.legalBasis}: </span>
+                {v.legalBasis
+                  ? `${tr.basisLabel[v.legalBasis]}${v.legalBasisReference ? ` · ${v.legalBasisReference}` : ""}`
+                  : <span className="tag tag--draft">{tr.basisUnset}</span>}
+              </div>
+
+              {v.responsibleChanges && v.responsibleChanges.length > 0 && (
+                <details style={{ marginTop: 6 }}>
+                  <summary className="quiet" style={{ fontSize: "var(--fs-small)", cursor: "pointer" }}>
+                    {tr.responsibleHistory(v.responsibleChanges.length)}
+                  </summary>
+                  <ul style={{ listStyle: "none", padding: 0, margin: "8px 0 0", display: "grid", gap: 8 }}>
+                    {[...v.responsibleChanges].reverse().map((c, i) => (
+                      <li key={`${v.versionId}-resp-${i}`} style={{ fontSize: "var(--fs-small)" }}>
+                        <div>{c.reason}</div>
+                        <div className="quiet" style={{ fontSize: "var(--fs-micro)" }}>
+                          {tr.responsibleChangeLine(c.by, formatDate(c.at, language), c.from?.fullName ?? "—", c.to.fullName)}
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                </details>
+              )}
+
+              {v.legalBasisChanges && v.legalBasisChanges.length > 0 && (
+                <details style={{ marginTop: 6 }}>
+                  <summary className="quiet" style={{ fontSize: "var(--fs-small)", cursor: "pointer" }}>
+                    {tr.basisHistory(v.legalBasisChanges.length)}
+                  </summary>
+                  <ul style={{ listStyle: "none", padding: 0, margin: "8px 0 0", display: "grid", gap: 8 }}>
+                    {[...v.legalBasisChanges].reverse().map((c, i) => (
+                      <li key={`${v.versionId}-basis-${i}`} style={{ fontSize: "var(--fs-small)" }}>
+                        {c.reason && <div>{c.reason}</div>}
+                        <div className="quiet" style={{ fontSize: "var(--fs-micro)" }}>
+                          {tr.basisChangeLine(
+                            c.by,
+                            formatDate(c.at, language),
+                            c.from ? tr.basisLabel[c.from] : tr.basisUnset,
+                            `${tr.basisLabel[c.to]}${c.toReference ? ` (${c.toReference})` : ""}`,
+                          )}
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                </details>
+              )}
+
+              <details style={{ marginTop: 6 }}>
+                <summary className="quiet" style={{ fontSize: "var(--fs-small)", cursor: "pointer" }}>
+                  {v.responsiblePerson ? tr.changeResponsible : tr.setResponsible}
+                </summary>
+                <form action={setResponsibleAction} style={{ display: "grid", gap: 10, marginTop: 10 }}>
+                  <input type="hidden" name="documentId" value={d.documentId} />
+                  <input type="hidden" name="versionId" value={v.versionId} />
+                  <input type="hidden" name="versionLabel" value={v.label} />
+                  <ResponsiblePicker
+                    people={responsibleChoices}
+                    language={language}
+                    exclude={v.responsiblePerson?.personId}
+                  />
+                  <label className="field">
+                    <span className="field-label">{tr.changeReason}</span>
+                    <input className="field-input" name="reason" required
+                           placeholder={tr.changeReasonPlaceholder} />
+                  </label>
+                  <div><button className="button button--quiet" type="submit">{tr.saveResponsible}</button></div>
+                </form>
+              </details>
+
+              {/*
+                Právny základ smie v knižnici určiť správca obsahu len ako
+                náhradník — keď znenie zodpovednú osobu nemá alebo už nie je
+                aktívna — alebo keď je sám zodpovednou osobou. To isté pravidlo
+                stráži server; tu sa len neponúka formulár, ktorý by odmietol.
+              */}
+              {canSetLegalBasis({
+                actorPersonId: ctx.person.id,
+                isContentManager: true,
+                responsible: v.responsiblePerson,
+                responsibleActive: Boolean(v.responsiblePerson && activePersonIds.has(v.responsiblePerson.personId)),
+              }) && (
+                <details style={{ marginTop: 6 }}>
+                  <summary className="quiet" style={{ fontSize: "var(--fs-small)", cursor: "pointer" }}>
+                    {tr.legalBasis}
+                  </summary>
+                  <div style={{ marginTop: 10, display: "grid", gap: 10 }}>
+                    <p className="detail-block-small">{tr.basisWho}</p>
+                    <LegalBasisForm
+                      documentId={d.documentId}
+                      versionId={v.versionId}
+                      current={v.legalBasis}
+                      currentReference={v.legalBasisReference}
+                      language={language}
+                      back="library"
+                    />
+                  </div>
+                </details>
+              )}
+
               <ApprovalPanel
                 documentId={d.documentId}
                 documentTitle={d.title}
@@ -887,6 +1019,8 @@ export default async function DocumentDetailPage({
             <dl className="detail-meta">
               {([
                 [t.category, d.category],
+                [tr.responsiblePerson, effective?.responsiblePerson?.fullName],
+                [tr.legalBasis, effective?.legalBasis ? tr.basisLabel[effective.legalBasis] : ""],
                 [t.tags, d.tags.length ? d.tags.join(", ") : ""],
                 [t.accessLevel, d.accessLevel],
                 [t.documentLanguage, d.language],

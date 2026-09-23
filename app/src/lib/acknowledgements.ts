@@ -38,6 +38,7 @@ import { allDepartments, pathTo } from "./departments"
 import { formatDate, dictionary, normalizeLanguage } from "./i18n"
 import type { UiLanguage } from "./i18n"
 import { requireCompanyCode } from "./tenantScope"
+import type { LegalBasis } from "./versionResponsibility"
 
 export const ACKNOWLEDGEMENTS_COLLECTION = "acknowledgements"
 
@@ -62,6 +63,20 @@ export interface Acknowledgement {
   effectiveFrom: Date
   /** Jazyk, v ktorom je napísaná samotná smernica. */
   documentLanguage: string | null
+
+  /**
+   * Zodpovedná osoba za znenie v čase potvrdenia (D91) — **odtlačok**. Na ňu
+   * sa človek vtedy mal obrátiť; keď sa osoba neskôr zmení alebo odíde,
+   * záznam o tom, čo platilo pri podpise, zostáva. Nepovinné, lebo záznamy
+   * spred D91 ho nemajú — a dopĺňať ich spätne by znamenalo meniť dôkaz (D24).
+   */
+  responsiblePerson?: { personId: string; fullName: string; email: string } | null
+  /**
+   * Právny základ spracúvania tohto záznamu v čase potvrdenia (O15, D91).
+   * `null` znamená, že v tom čase ešte nebol určený — nie „bez základu".
+   */
+  legalBasis?: LegalBasis | null
+  legalBasisReference?: string | null
 
   // ČÍM — doslovné znenie, nie odkaz naň
   statementText: string
@@ -292,6 +307,9 @@ export async function acknowledge(
     versionLabel: v.label,
     effectiveFrom: effectiveFrom,
     documentLanguage: doc.language ?? null,
+    responsiblePerson: v.responsiblePerson ?? null,
+    legalBasis: v.legalBasis ?? null,
+    legalBasisReference: v.legalBasisReference ?? null,
     statementText: statement,
     statementHash: await hashStatement(statement),
     language: language,

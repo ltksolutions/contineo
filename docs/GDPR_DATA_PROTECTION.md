@@ -169,7 +169,9 @@ niečo o správaní konkrétneho človeka, nie o jeho povinnosti. Preto:
 
 - **Prístup, oprava, výmaz, obmedzenie, namietanie.**
 - **Výmaz (right to erasure):** na žiadosť vymazať konverzácie, tickety a audit viazané na osobu cez `userId`; identitné údaje riešiť cez Sportnet (zdroj) + lokálne kópie. Pseudonymizácia umožní cielený výmaz podľa `userId`.
-- **Výmaz sa nevzťahuje na doklad o oboznámení.** Potvrdenie, pridelenie a otvorenie znenia sú záznamy o splnení povinnosti voči zamestnávateľovi, nie údaje spracúvané so súhlasom — na žiadosť sa nemažú, kým trvá dôvod, pre ktorý existujú. **Túto vetu musí potvrdiť právnik (O15):** je to tvrdenie o právnom základe, nie o technike, a systém sa podľa nej bude správať pri prvej žiadosti o výmaz.
+- **Výmaz sa nevzťahuje na doklad o oboznámení.** Potvrdenie, pridelenie a otvorenie znenia sú záznamy o splnení povinnosti voči zamestnávateľovi, nie údaje spracúvané so súhlasom — na žiadosť sa nemažú, kým trvá dôvod, pre ktorý existujú. *Vetu potvrdil DPO 2026-09-23 (O15/A4).*
+- **Právny základ sa určuje podľa predpisu (O15/A1, D91).** Každé znenie nesie `legalBasis`: **plnenie zákonnej povinnosti** (napr. BOZP, s odkazom na predpis) alebo **oprávnený záujem** (interné smernice bez zákonnej opory). Určuje ho zodpovedná osoba znenia a potvrdenie si ho nesie ako odtlačok.
+- ⚠️ **Návrh na potvrdenie DPO — oprávnený záujem a námietka (čl. 21):** pri zneniach s oprávneným záujmom má dotknutá osoba právo namietať. Návrh: námietka sa posúdi jednotlivo proti balančnému testu (A3); doklad o oboznámení sa nemaže automaticky, kým prevádzkovateľ nepreukáže, že závažné oprávnené dôvody neprevažujú — alebo kým doklad nie je potrebný na preukázanie, uplatňovanie alebo obhajovanie právnych nárokov. **Toto nie je právne posúdenie**, je to formulácia na potvrdenie.
 - **Čas čítania sa vymazať dá** a zmizne aj sám po roku — nie je to doklad, je to meranie.
 - **Prenosnosť** podľa relevancie (obsah zväzu nie je osobný údaj dotknutého).
 - Žiadosti smerované na prevádzkovateľa (zväz); Contineo ako sprostredkovateľ poskytuje súčinnosť.

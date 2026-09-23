@@ -10,6 +10,44 @@
 
 ---
 
+## 2026-09-23 (3) — odpovede DPO k O15/O16 a zodpovedná osoba pri znení (D91)
+
+**Odpovede prišli v revízii Wordu a prvýkrát som ich prečítal zle.** DPO
+nezaškrtávala políčka, ale zvolenú možnosť podfarbila červenou. Moja extrakcia
+hľadala len červený *text*, tak som hlásil „odpovedala na 6 z 21". Ján ma
+opravil; po prečítaní podfarbenia (`w:highlight`) je zodpovedaných 15.
+Pravidlo do budúcna: pri revízii od človeka hľadať text, farbu textu,
+zvýraznenie aj revízie — nie len to, čo som si vopred myslel, že tam bude.
+
+**A1 zmenilo model.** Namiesto jedného právneho základu pre všetko DPO chce
+kategóriu podľa predpisu (zákonná povinnosť, alebo oprávnený záujem). Plán
+som trikrát prepracoval podľa Jánových odpovedí, a zakaždým to bolo správne:
+
+1. najprv rola `legal`, ktorá smie meniť základ;
+2. potom zodpovedná osoba pri **predpise** — lebo ľudia potrebujú vedieť,
+   na koho sa obrátiť, a garanti sú z rôznych oddelení;
+3. nakoniec pri **znení**, povinná a nededená — lebo novela súťažného
+   poriadku o tri roky môže mať iného garanta a pôvodný mohol odísť.
+
+Z tretej verzie vypadla rola úplne: kto smie určiť základ, sa **odvodzuje**
+z toho, kto je zodpovednou osobou znenia (D27). Správca obsahu je náhradník.
+
+**Kde je formulár.** Knižnica je len pre `content-admin`, zodpovedná osoba ním
+byť nemusí. Formulár je preto na stránke znenia pre čitateľa a zvonček
+(`responsibleAssigned`) vedie tam. Oprávnenie stráži `setVersionLegalBasis()`
+proti uloženému zneniu, nie obrazovka.
+
+**Čo som neoveril:** vzhľad na telefóne. Lokálny dev server chce prihlásenie
+a to za Jána robiť nebudem. Formuláre používajú existujúce triedy
+(`approval-people`, `hr-choice`, `field`), ktoré sú na mobile odskúšané
+z výberu schvaľovateľov, ale oko na to treba.
+
+**Čo zostáva:** druhé kolo otázok pre DPO (B1 číslo a strop, B5–B7, časť C,
+§6 a čl. 21, osoby bez pracovného pomeru); lehoty v databáze až potom.
+Evidencia na obrazovke odtlačok ešte neukazuje, výkaz áno.
+
+---
+
 ## 2026-09-23 (2) — výpadok knižnice s filtrom a brzda, ktorá ho nabudúce zastaví
 
 **Po zlúčení PR #75 knižnica spadla pri každom filtri.** Bez filtra fungovala,

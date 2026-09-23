@@ -1390,9 +1390,48 @@ interface Dictionary {
       rewritten: (title: string) => string
       remindersSent: (count: number) => string
       versionPublished: (title: string, label: string) => string
+      responsibleAssigned: (title: string, label: string) => string
     }
   }
   /** Knižnica dokumentov (D53). */
+  /** Zodpovedná osoba a právny základ pri znení (D91, O15). */
+  responsibility: {
+    responsiblePerson: string
+    responsibleNote: string
+    choosePerson: string
+    noResponsible: string
+    inactiveResponsible: string
+    setResponsible: string
+    changeResponsible: string
+    changeReason: string
+    changeReasonPlaceholder: string
+    saveResponsible: string
+    responsibleHistory: (n: number) => string
+    responsibleChangeLine: (by: string, date: string, from: string, to: string) => string
+    responsibleSaved: string
+    legalBasis: string
+    basisLabel: Record<string, string>
+    basisHint: Record<string, string>
+    basisUnset: string
+    basisMissing: string
+    reference: string
+    referencePlaceholder: string
+    referenceNote: string
+    basisReason: string
+    basisReasonNote: string
+    saveBasis: string
+    basisWho: string
+    basisHistory: (n: number) => string
+    basisChangeLine: (by: string, date: string, from: string, to: string) => string
+    basisSaved: string
+    contactHeading: string
+    contactProfile: string
+    contactGone: string
+    yourTaskHeading: string
+    yourTaskNote: string
+    missingBasisTag: string
+    missingBasisNote: string
+  }
   library: {
     /**
      * Zopakovanie pridelenia na nové znenie.
@@ -2757,6 +2796,17 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     },
   },
   errors: {
+    "responsibility.personRequired": "Zodpovedná osoba je povinná — na ňu sa budú obracať ľudia, ktorí znenie potvrdzujú.",
+    "responsibility.unknownPerson": "Vybraná zodpovedná osoba tu nie je alebo je vyradená.",
+    "responsibility.samePerson": "Toto je už zodpovedná osoba tohto znenia.",
+    "responsibility.reasonRequired": "Dôvod zmeny zodpovednej osoby je povinný — o rok sa musí dať zistiť, prečo sa kontakt zmenil.",
+    "responsibility.notContentManager": "Zodpovednú osobu určuje správca obsahu.",
+    "legalBasis.invalid": "Taký právny základ systém nepozná.",
+    "legalBasis.referenceRequired": "Pri zákonnej povinnosti je odkaz na predpis povinný (napríklad § 7 zákona č. 124/2006 Z. z.).",
+    "legalBasis.referenceTooLong": "Odkaz na predpis je pridlhý — stačí citácia, nie text ustanovenia.",
+    "legalBasis.noChange": "Právny základ je už takto určený.",
+    "legalBasis.reasonRequired": "Dôvod zmeny právneho základu je povinný — potvrdenia, ktoré medzitým vznikli, si nesú pôvodný.",
+    "legalBasis.notAllowed": "Právny základ určuje zodpovedná osoba tohto znenia. Správca obsahu ho smie určiť len vtedy, keď znenie zodpovednú osobu nemá alebo už nie je aktívna.",
     unknown: "Nepodarilo sa to. Skús to znova.",
 
     // schvalovanie znenia (ADR-006)
@@ -2962,6 +3012,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       "version-fix": "oprava znenia",
       "text-fix": "oprava textu znenia",
       "new-version": "nahraté nové znenie",
+      "responsible-changed": "zmena zodpovednej osoby",
+      "legal-basis": "právny základ",
     },
     fields: {
       email: "adresa",
@@ -3427,7 +3479,51 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       remindersSent: (count) =>
         `Rozposlané pripomienky: ${count} ${count === 1 ? "správa" : count < 5 ? "správy" : "správ"}.`,
       versionPublished: (title, label) => `Zverejnené znenie „${label}" dokumentu „${title}".`,
+      responsibleAssigned: (title, label) => `Ste zodpovedná osoba za znenie „${label}" dokumentu „${title}". Určte právny základ.`,
     },
+  },
+  responsibility: {
+    responsiblePerson: "Zodpovedná osoba",
+    responsibleNote: "Na ňu sa budú obracať ľudia, ktorí znenie potvrdzujú, a ona určí právny základ. Pri každom novom znení sa určuje znova — z predošlého sa nepreberá.",
+    choosePerson: "— vyber osobu —",
+    noResponsible: "Znenie nemá určenú zodpovednú osobu.",
+    inactiveResponsible: "Zodpovedná osoba už nie je aktívna — treba určiť novú.",
+    setResponsible: "Určiť zodpovednú osobu",
+    changeResponsible: "Zmeniť zodpovednú osobu",
+    changeReason: "Dôvod zmeny",
+    changeReasonPlaceholder: "Napríklad: pôvodná zodpovedná osoba odišla zo zväzu",
+    saveResponsible: "Uložiť zodpovednú osobu",
+    responsibleHistory: n => (n === 1 ? "1 zmena zodpovednej osoby" : n >= 2 && n <= 4 ? `${n} zmeny zodpovednej osoby` : `${n} zmien zodpovednej osoby`),
+    responsibleChangeLine: (by, date, from, to) => `${by} · ${date} · ${from} → ${to}`,
+    responsibleSaved: "Zodpovedná osoba bola uložená.",
+    legalBasis: "Právny základ",
+    basisLabel: {
+      legal_obligation: "Plnenie zákonnej povinnosti",
+      legitimate_interest: "Oprávnený záujem",
+    },
+    basisHint: {
+      legal_obligation: "Povinnosť oboznámiť sa vyplýva zo zákona — napríklad predpisy BOZP.",
+      legitimate_interest: "Interná smernica bez výslovnej zákonnej opory.",
+    },
+    basisUnset: "neurčený",
+    basisMissing: "Právny základ zatiaľ nie je určený.",
+    reference: "Odkaz na predpis",
+    referencePlaceholder: "Napríklad § 7 ods. 3 zákona č. 124/2006 Z. z.",
+    referenceNote: "Pri zákonnej povinnosti povinný.",
+    basisReason: "Dôvod zmeny",
+    basisReasonNote: "Povinný pri zmene už určeného základu — potvrdenia, ktoré medzitým vznikli, si nesú pôvodný.",
+    saveBasis: "Uložiť právny základ",
+    basisWho: "Právny základ určuje zodpovedná osoba znenia. Keď ju znenie nemá alebo už nie je aktívna, určí ho správca obsahu.",
+    basisHistory: n => (n === 1 ? "1 zmena právneho základu" : n >= 2 && n <= 4 ? `${n} zmeny právneho základu` : `${n} zmien právneho základu`),
+    basisChangeLine: (by, date, from, to) => `${by} · ${date} · ${from} → ${to}`,
+    basisSaved: "Právny základ bol uložený.",
+    contactHeading: "S otázkami k predpisu sa obráťte na",
+    contactProfile: "profil v adresári",
+    contactGone: "Zodpovedná osoba už nie je aktívna. S otázkami sa zatiaľ obráťte na personálne oddelenie.",
+    yourTaskHeading: "Ste zodpovedná osoba za toto znenie",
+    yourTaskNote: "Určte, na akom právnom základe sa spracúvajú záznamy o oboznámení s týmto znením.",
+    missingBasisTag: "bez právneho základu",
+    missingBasisNote: "Predpis bez právneho základu sa prideliť dá. Zodpovedná osoba by ho však mala určiť ešte pred ostrou prevádzkou.",
   },
   library: {
     carryOver: {
@@ -4703,6 +4799,17 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     },
   },
   errors: {
+    "responsibility.personRequired": "Odpovědná osoba je povinná — na ni se budou obracet lidé, kteří znění potvrzují.",
+    "responsibility.unknownPerson": "Vybraná odpovědná osoba zde není nebo je vyřazená.",
+    "responsibility.samePerson": "Toto už je odpovědná osoba tohoto znění.",
+    "responsibility.reasonRequired": "Důvod změny odpovědné osoby je povinný — za rok se musí dát zjistit, proč se kontakt změnil.",
+    "responsibility.notContentManager": "Odpovědnou osobu určuje správce obsahu.",
+    "legalBasis.invalid": "Takový právní základ systém nezná.",
+    "legalBasis.referenceRequired": "U zákonné povinnosti je odkaz na předpis povinný (například § 7 zákona č. 124/2006 Z. z.).",
+    "legalBasis.referenceTooLong": "Odkaz na předpis je příliš dlouhý — stačí citace, ne text ustanovení.",
+    "legalBasis.noChange": "Právní základ je už takto určen.",
+    "legalBasis.reasonRequired": "Důvod změny právního základu je povinný — potvrzení, která mezitím vznikla, si nesou původní.",
+    "legalBasis.notAllowed": "Právní základ určuje odpovědná osoba tohoto znění. Správce obsahu jej smí určit jen tehdy, když znění odpovědnou osobu nemá nebo už není aktivní.",
     unknown: "Nepodařilo se to. Zkus to znovu.",
 
     // schvalovani zneni (ADR-006)
@@ -4908,6 +5015,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       "version-fix": "oprava znění",
       "text-fix": "oprava textu znění",
       "new-version": "nahráno nové znění",
+      "responsible-changed": "změna odpovědné osoby",
+      "legal-basis": "právní základ",
     },
     fields: {
       email: "adresa",
@@ -5371,7 +5480,51 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       remindersSent: (count) =>
         `Rozeslané připomínky: ${count} ${count === 1 ? "zpráva" : count < 5 ? "zprávy" : "zpráv"}.`,
       versionPublished: (title, label) => `Zveřejněné znění „${label}" dokumentu „${title}".`,
+      responsibleAssigned: (title, label) => `Jste odpovědná osoba za znění „${label}" dokumentu „${title}". Určete právní základ.`,
     },
+  },
+  responsibility: {
+    responsiblePerson: "Odpovědná osoba",
+    responsibleNote: "Na ni se budou obracet lidé, kteří znění potvrzují, a ona určí právní základ. U každého nového znění se určuje znovu — z předchozího se nepřebírá.",
+    choosePerson: "— vyber osobu —",
+    noResponsible: "Znění nemá určenou odpovědnou osobu.",
+    inactiveResponsible: "Odpovědná osoba už není aktivní — je třeba určit novou.",
+    setResponsible: "Určit odpovědnou osobu",
+    changeResponsible: "Změnit odpovědnou osobu",
+    changeReason: "Důvod změny",
+    changeReasonPlaceholder: "Například: původní odpovědná osoba odešla ze svazu",
+    saveResponsible: "Uložit odpovědnou osobu",
+    responsibleHistory: n => (n === 1 ? "1 změna odpovědné osoby" : n >= 2 && n <= 4 ? `${n} změny odpovědné osoby` : `${n} změn odpovědné osoby`),
+    responsibleChangeLine: (by, date, from, to) => `${by} · ${date} · ${from} → ${to}`,
+    responsibleSaved: "Odpovědná osoba byla uložena.",
+    legalBasis: "Právní základ",
+    basisLabel: {
+      legal_obligation: "Plnění zákonné povinnosti",
+      legitimate_interest: "Oprávněný zájem",
+    },
+    basisHint: {
+      legal_obligation: "Povinnost seznámit se vyplývá ze zákona — například předpisy BOZP.",
+      legitimate_interest: "Interní směrnice bez výslovné zákonné opory.",
+    },
+    basisUnset: "neurčený",
+    basisMissing: "Právní základ zatím není určen.",
+    reference: "Odkaz na předpis",
+    referencePlaceholder: "Například § 7 odst. 3 zákona č. 124/2006 Z. z.",
+    referenceNote: "U zákonné povinnosti povinný.",
+    basisReason: "Důvod změny",
+    basisReasonNote: "Povinný při změně již určeného základu — potvrzení, která mezitím vznikla, si nesou původní.",
+    saveBasis: "Uložit právní základ",
+    basisWho: "Právní základ určuje odpovědná osoba znění. Když ji znění nemá nebo už není aktivní, určí jej správce obsahu.",
+    basisHistory: n => (n === 1 ? "1 změna právního základu" : n >= 2 && n <= 4 ? `${n} změny právního základu` : `${n} změn právního základu`),
+    basisChangeLine: (by, date, from, to) => `${by} · ${date} · ${from} → ${to}`,
+    basisSaved: "Právní základ byl uložen.",
+    contactHeading: "S dotazy k předpisu se obraťte na",
+    contactProfile: "profil v adresáři",
+    contactGone: "Odpovědná osoba už není aktivní. S dotazy se zatím obraťte na personální oddělení.",
+    yourTaskHeading: "Jste odpovědná osoba za toto znění",
+    yourTaskNote: "Určete, na jakém právním základě se zpracovávají záznamy o seznámení s tímto zněním.",
+    missingBasisTag: "bez právního základu",
+    missingBasisNote: "Předpis bez právního základu se přidělit dá. Odpovědná osoba by jej však měla určit ještě před ostrým provozem.",
   },
   library: {
     carryOver: {
@@ -6640,6 +6793,17 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     },
   },
   errors: {
+    "responsibility.personRequired": "A responsible person is required — people acknowledging the version will turn to them.",
+    "responsibility.unknownPerson": "The selected responsible person is not here or has been deactivated.",
+    "responsibility.samePerson": "This is already the responsible person for this version.",
+    "responsibility.reasonRequired": "A reason for changing the responsible person is required — a year from now it must be clear why the contact changed.",
+    "responsibility.notContentManager": "The responsible person is set by the content manager.",
+    "legalBasis.invalid": "The system does not know this legal basis.",
+    "legalBasis.referenceRequired": "A legal reference is required for a legal obligation (for example Section 7 of Act No. 124/2006 Coll.).",
+    "legalBasis.referenceTooLong": "The legal reference is too long — a citation is enough, not the text of the provision.",
+    "legalBasis.noChange": "The legal basis is already set this way.",
+    "legalBasis.reasonRequired": "A reason for changing the legal basis is required — acknowledgements made in the meantime keep the original one.",
+    "legalBasis.notAllowed": "The legal basis is set by the responsible person for this version. The content manager may set it only when the version has no responsible person or they are no longer active.",
     unknown: "That did not work. Try again.",
 
     // version approval (ADR-006)
@@ -6845,6 +7009,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       "version-fix": "version correction",
       "text-fix": "text correction",
       "new-version": "new version uploaded",
+      "responsible-changed": "responsible person changed",
+      "legal-basis": "legal basis",
     },
     fields: {
       email: "address",
@@ -7308,7 +7474,51 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       remindersSent: (count) =>
         `Reminders sent: ${count} ${count === 1 ? "message" : "messages"}.`,
       versionPublished: (title, label) => `Published version “${label}” of “${title}”.`,
+      responsibleAssigned: (title, label) => `You are the responsible person for version “${label}” of “${title}”. Please set the legal basis.`,
     },
+  },
+  responsibility: {
+    responsiblePerson: "Responsible person",
+    responsibleNote: "People acknowledging this version will turn to this person, who also decides the legal basis. It is set again for every new version — never carried over from the previous one.",
+    choosePerson: "— choose a person —",
+    noResponsible: "This version has no responsible person.",
+    inactiveResponsible: "The responsible person is no longer active — a new one needs to be set.",
+    setResponsible: "Set responsible person",
+    changeResponsible: "Change responsible person",
+    changeReason: "Reason for the change",
+    changeReasonPlaceholder: "For example: the original responsible person has left the association",
+    saveResponsible: "Save responsible person",
+    responsibleHistory: n => (n === 1 ? "1 change of responsible person" : `${n} changes of responsible person`),
+    responsibleChangeLine: (by, date, from, to) => `${by} · ${date} · ${from} → ${to}`,
+    responsibleSaved: "The responsible person has been saved.",
+    legalBasis: "Legal basis",
+    basisLabel: {
+      legal_obligation: "Compliance with a legal obligation",
+      legitimate_interest: "Legitimate interest",
+    },
+    basisHint: {
+      legal_obligation: "The duty to be familiar with it follows from law — for example health and safety rules.",
+      legitimate_interest: "An internal directive without an explicit statutory basis.",
+    },
+    basisUnset: "not set",
+    basisMissing: "The legal basis has not been set yet.",
+    reference: "Legal reference",
+    referencePlaceholder: "For example Section 7(3) of Act No. 124/2006 Coll.",
+    referenceNote: "Required for a legal obligation.",
+    basisReason: "Reason for the change",
+    basisReasonNote: "Required when changing a basis that is already set — acknowledgements made in the meantime keep the original one.",
+    saveBasis: "Save legal basis",
+    basisWho: "The legal basis is set by the version's responsible person. If there is none or they are no longer active, the content manager sets it.",
+    basisHistory: n => (n === 1 ? "1 change of legal basis" : `${n} changes of legal basis`),
+    basisChangeLine: (by, date, from, to) => `${by} · ${date} · ${from} → ${to}`,
+    basisSaved: "The legal basis has been saved.",
+    contactHeading: "For questions about this regulation, contact",
+    contactProfile: "directory profile",
+    contactGone: "The responsible person is no longer active. For now, please contact the HR department with questions.",
+    yourTaskHeading: "You are the responsible person for this version",
+    yourTaskNote: "Set the legal basis on which records of acknowledgement of this version are processed.",
+    missingBasisTag: "no legal basis",
+    missingBasisNote: "A regulation without a legal basis can still be assigned. The responsible person should, however, set it before going live.",
   },
   library: {
     carryOver: {

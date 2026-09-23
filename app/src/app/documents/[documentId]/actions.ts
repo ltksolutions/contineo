@@ -26,8 +26,11 @@ import { acknowledge } from "@/lib/acknowledgements"
 import { trackForDocument } from "@/lib/tracks"
 import { clientIp } from "@/lib/requestMeta"
 import { isRedirect } from "@/lib/redirects"
-import { dictionary } from "@/lib/i18n"
+import { dictionary, errorText } from "@/lib/i18n"
 import type { UiLanguage } from "@/lib/i18n"
+import { AppError } from "@/lib/appError"
+import { isContentManager } from "@/lib/library"
+import { setVersionLegalBasis } from "@/lib/versionResponsibilityDb"
 
 /**
  * Späť na dokument s hlásením. Chyba aj úspech idú tou istou cestou, takže
@@ -102,4 +105,60 @@ export async function acknowledgeAction(fd: FormData) {
   // vráti `hasAcknowledged()` už `true` a namiesto tlačidla bude štítok.
   revalidatePath(`/documents/${documentId}`)
   back(documentId, t.confirmed)
+}
+
+/**
+ * Určenie alebo zmena právneho základu znenia (D91, O15).
+ *
+ * Akcia je pri **zneni pre čitateľa**, nie v knižnici: zodpovedná osoba
+ * (napríklad z legislatívy alebo súťažného oddelenia) nemusí byť správca
+ * obsahu a do knižnice nesmie. Tú istú akciu používa aj detail v knižnici
+ * pre náhradníka — `back=library` vráti správcu tam, odkiaľ prišiel.
+ *
+ * Kto smie, sa **neoveruje tu**, ale v `setVersionLegalBasis()` proti
+ * uloženému zneniu. Z formulára prichádza len dokument, znenie a rozhodnutie.
+ */
+export async function setLegalBasisAction(fd: FormData) {
+  const field = (name: string) => {
+    const v = fd.get(name)
+    return typeof v === "string" ? v.trim() : ""
+  }
+  const documentId = field("documentId")
+  const toLibrary = field("back") === "library"
+
+  const ctx = await onboardingContext()
+  if (ctx.state === "unknown-host") redirect("/")
+  if (ctx.state === "not-signed-in") redirect("/sign-in")
+  if (ctx.state === "not-in-tenant") redirect("/")
+  const person = ctx.person
+  const language = person.language as UiLanguage
+
+  let message = dictionary(language).responsibility.basisSaved
+  let error = false
+  try {
+    await setVersionLegalBasis({
+      companyCode: person.companyCode,
+      documentId,
+      versionId: field("versionId"),
+      basis: field("legalBasis"),
+      reference: field("legalBasisReference"),
+      reason: field("reason"),
+      actor: { personId: person.id, email: person.email },
+      // Náhradník len vo vlastnej organizácii — rovnako ako `libraryContext()`.
+      isContentManager: isContentManager(person) && person.companyCode === ctx.tenant.companyCode,
+    })
+  } catch (e) {
+    if (!(e instanceof AppError)) console.error("[pravny-zaklad] zápis zlyhal:", e)
+    message = errorText(e, language)
+    error = true
+  }
+
+  const q = new URLSearchParams({ msg: message })
+  if (error) q.set("error", "1")
+  if (toLibrary) {
+    revalidatePath(`/library/${documentId}`)
+    redirect(`/library/${encodeURIComponent(documentId)}?${q.toString()}`)
+  }
+  revalidatePath(`/documents/${documentId}`)
+  redirect(`/documents/${encodeURIComponent(documentId)}?${q.toString()}`)
 }

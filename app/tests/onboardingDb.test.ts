@@ -193,6 +193,36 @@ describe("potvrd — zápis právneho záznamu", () => {
     expect(z.statementHash).toMatch(/^[0-9a-f]{64}$/)
   })
 
+  it("nesie odtlačok zodpovednej osoby a právneho základu platného znenia (D91)", async () => {
+    const responsible = { personId: "p-9", fullName: "Michaela Príkladná", email: "garant@futbalsfz.sk" }
+    collection("documents").findOne.mockResolvedValue({
+      ...DOCUMENT,
+      versions: [
+        DOCUMENT.versions[0],
+        { ...DOCUMENT.versions[1], responsiblePerson: responsible,
+          legalBasis: "legal_obligation", legalBasisReference: "§ 7 zák. 124/2006 Z. z." },
+      ],
+    })
+    await acknowledge(ACTOR, "smernica-gdpr")
+
+    const z = collection("acknowledgements").insertOne.mock.calls[0][0]
+    expect(z.responsiblePerson).toEqual(responsible)
+    expect(z.legalBasis).toBe("legal_obligation")
+    expect(z.legalBasisReference).toBe("§ 7 zák. 124/2006 Z. z.")
+  })
+
+  it("znenie spred D91 zapíše prázdne miesto, nie vymyslenú hodnotu", async () => {
+    // `null` = v čase potvrdenia neurčené. Keby sa pole vynechalo, nedalo by
+    // sa rozlíšiť „ešte nebolo" od „zabudli sme ho zapísať".
+    collection("documents").findOne.mockResolvedValue(DOCUMENT)
+    await acknowledge(ACTOR, "smernica-gdpr")
+
+    const z = collection("acknowledgements").insertOne.mock.calls[0][0]
+    expect(z.responsiblePerson).toBeNull()
+    expect(z.legalBasis).toBeNull()
+    expect(z.legalBasisReference).toBeNull()
+  })
+
   it("dokument cudzej organizácie sa nedá potvrdiť uhádnutím identifikátora", async () => {
     // Dokument existuje, ale patrí inému tenantovi a nie je zdieľaný (D32).
     // Musí sa tváriť ako neexistujúci — rozlíšenie by prezradilo, aké

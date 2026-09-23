@@ -17,6 +17,9 @@
 
 import { getCollection } from "./mongodb"
 import { requireCompanyCode } from "./tenantScope"
+import type {
+  LegalBasis, LegalBasisChange, ResponsibleChange, ResponsiblePerson,
+} from "./versionResponsibility"
 
 export const DOCUMENTS_COLLECTION = "documents"
 
@@ -119,6 +122,26 @@ export interface Version {
    * prejsť.
    */
   publishedBefore?: boolean
+
+  /**
+   * Zodpovedná osoba za **toto znenie** (D91) — na ňu sa obracajú ľudia,
+   * ktorí znenie potvrdzujú. Pri novom znení povinná a **nededí sa** z
+   * predošlého: novela o tri roky môže mať iného garanta, pôvodný mohol odísť.
+   * Chýba pri zneniach spred D91 — `npm run check` ich vypíše.
+   */
+  responsiblePerson?: ResponsiblePerson
+  /** História zmien zodpovednej osoby počas platnosti znenia. */
+  responsibleChanges?: ResponsibleChange[]
+
+  /**
+   * Právny základ spracúvania záznamov o oboznámení s týmto znením (O15, D91).
+   * Chýbajúci znamená „ešte neurčený" — pridelenie ho neblokuje, len
+   * upozorní.
+   */
+  legalBasis?: LegalBasis
+  /** Odkaz na predpis — povinný pri `legal_obligation`. */
+  legalBasisReference?: string
+  legalBasisChanges?: LegalBasisChange[]
 }
 
 /** Len tá časť `documents`, ktorú potrebuje onboarding. */

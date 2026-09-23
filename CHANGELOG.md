@@ -4,6 +4,25 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Zodpovedná osoba a právny základ pri každom znení predpisu (2026-09-23)
+
+Pri zverejnení nového znenia treba určiť **zodpovednú osobu** — človeka, na
+ktorého sa obracajú tí, čo znenie potvrdzujú. Nepreberá sa z predošlého
+znenia: novela o pár rokov môže mať iného garanta. Počas platnosti sa dá
+zmeniť, s dôvodom, ktorý zostane v histórii.
+
+Na stránke predpisu teraz nad potvrdením vidno, na koho sa obrátiť (meno,
+e-mail, telefón).
+
+Každé znenie má aj **právny základ** — plnenie zákonnej povinnosti (s odkazom
+na zákon) alebo oprávnený záujem. Určuje ho zodpovedná osoba, ktorej o tom
+príde upozornenie. Ak znenie zodpovednú osobu nemá, určí ho správca obsahu.
+Predpis bez právneho základu sa prideliť dá, obrazovka pridelenia na to
+upozorní.
+
+Každé nové potvrdenie si pamätá zodpovednú osobu aj právny základ platný
+v okamihu potvrdenia. Výkaz potvrdení má pre ne dva nové stĺpce.
+
 ### Knižnica s filtrom sa nakrátko nedala otvoriť (2026-09-23)
 
 Po rannom nasadení vracala knižnica pri akomkoľvek zapnutom filtri chybu
