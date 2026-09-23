@@ -752,6 +752,8 @@ interface Dictionary {
     alsoDeciding: (names: string) => string
     readText: string
     noText: string
+    /** Koncept sa po predložení zmenil — kolo sa týka inej podoby textu. */
+    draftChanged: string
     reason: string
     reasonPlaceholder: string
     reasonHint: string
@@ -2615,6 +2617,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     alsoDeciding: names => `Rozhodujú aj: ${names}`,
     readText: "prečítať znenie",
     noText: "Znenie nemá text.",
+    draftChanged: "Text sa po predložení na schválenie zmenil. Toto kolo sa týka pôvodnej podoby, ktorá už neexistuje — správca obsahu ho musí predložiť znova.",
     reason: "Dôvod",
     reasonPlaceholder: "Napríklad: článok 4 odporuje stanovám.",
     reasonHint: "Pri zamietnutí je dôvod povinný. Pri schválení nepovinný \u2014 ale ostane v zázname.",
@@ -4647,6 +4650,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     alsoDeciding: names => `Rozhodují také: ${names}`,
     readText: "přečíst znění",
     noText: "Znění nemá text.",
+    draftChanged: "Text se po předložení ke schválení změnil. Toto kolo se týká původní podoby, která už neexistuje — správce obsahu ho musí předložit znovu.",
     reason: "Důvod",
     reasonPlaceholder: "Například: článek 4 odporuje stanovám.",
     reasonHint: "Při zamítnutí je důvod povinný. Při schválení nepovinný \u2014 ale zůstane v záznamu.",
@@ -6670,6 +6674,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     alsoDeciding: names => `Also deciding: ${names}`,
     readText: "read the text",
     noText: "This version has no text.",
+    draftChanged: "The text changed after it was submitted for approval. This round refers to the earlier wording, which no longer exists — the content manager must submit it again.",
     reason: "Reason",
     reasonPlaceholder: "For example: article 4 conflicts with the statutes.",
     reasonHint: "Required when rejecting. Optional when approving \u2014 but it stays in the record.",

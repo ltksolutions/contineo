@@ -13,6 +13,8 @@
  *     personalista zo dňa na deň nemohol prideliť nič.
  */
 
+import { approvalText } from "../src/lib/approvals"
+import { textFingerprint } from "../src/lib/chunkIdentity"
 import { describe, it, expect } from "vitest"
 import {
   versionState, roundOutcome, pendingApprovers, submitProblem, assignBlock, publishBlock, decideProblem,
@@ -285,5 +287,35 @@ describe("brána pred zverejnením", () => {
     // Taký text v knižnici **už je** (D74). Zastaviť ho tu nechráni nič —
     // len by sa prestal dať znovu zverejniť dnešný skúšobný korpus.
     expect(publishBlock({ state: "published-before" })).toBe(null)
+  })
+})
+
+describe("approvalText — schvaľovateľ vidí text, na ktorom kolo beží", () => {
+  const draft = "# Pracovný poriadok\n\nNový článok 5."
+  const published = "# Pracovný poriadok\n\nPôvodný článok 5."
+  const draftId = textFingerprint(draft)
+  const publishedId = textFingerprint(published)
+
+  it("kolo na koncepte ukáže koncept, nie platné znenie (chyba z 23. 9.)", () => {
+    const doc = { draftMarkdown: draft, versions: [{ versionId: publishedId, markdown: published }] }
+    expect(approvalText(doc, draftId, textFingerprint)).toEqual({ kind: "draft", text: draft })
+  })
+
+  it("nový dokument bez zverejneného znenia ukáže koncept", () => {
+    expect(approvalText({ draftMarkdown: draft }, draftId, textFingerprint)).toEqual({ kind: "draft", text: draft })
+  })
+
+  it("kolo na už zverejnenom znení ukáže to znenie", () => {
+    const doc = { versions: [{ versionId: publishedId, markdown: published }] }
+    expect(approvalText(doc, publishedId, textFingerprint)).toEqual({ kind: "version", text: published })
+  })
+
+  it("koncept zmenený po predložení: žiadny text, ale hlásenie — nie súčasný koncept", () => {
+    const doc = { draftMarkdown: draft + "\n\nDoplnené.", versions: [{ versionId: publishedId, markdown: published }] }
+    expect(approvalText(doc, draftId, textFingerprint)).toEqual({ kind: "changed" })
+  })
+
+  it("chýbajúci dokument", () => {
+    expect(approvalText(undefined, draftId, textFingerprint)).toEqual({ kind: "missing" })
   })
 })
