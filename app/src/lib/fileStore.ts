@@ -87,6 +87,18 @@ async function bucket(): Promise<GridFSBucket> {
 export class FileStoreError extends AppError {}
 
 /**
+ * Názov súboru v **zloženom tvare Unicode (NFC)**.
+ *
+ * Safari na Macu posiela diakritiku rozloženú (NFD): „ý" ako „y" a samostatnú
+ * čiarku. Na obrazovke to vyzerá rovnako, ale reťazec je iný — hľadanie podľa
+ * názvu ho nenájde (23. 9. 2026 sa tak pri upratovaní nenašlo 82 súborov)
+ * a dva „rovnaké" názvy sa nezhodujú. Preto jeden tvar pri každom uložení.
+ */
+export function cleanFileName(name: string): string {
+  return String(name ?? "").normalize("NFC").trim().slice(0, 255)
+}
+
+/**
  * Uloží súbor a vráti jeho identifikátor.
  *
  * `companyCode` ide do metadát a **do každého čítania ako podmienka** —
@@ -104,6 +116,7 @@ export async function saveFile(
   if (data.byteLength > MAX_BYTES) throw tooLarge(data.byteLength)
 
   const sha256 = createHash("sha256").update(data).digest("hex")
+  name = cleanFileName(name)
   const b = await bucket()
   const stream = b.openUploadStream(name, {
     contentType,
@@ -282,7 +295,7 @@ export async function startUpload(
   name: string,
   bytes: number,
 ): Promise<{ uploadId: string; chunkSize: number; chunks: number }> {
-  const clean = String(name ?? "").trim().slice(0, 255)
+  const clean = cleanFileName(name)
   if (!clean) throw new FileStoreError("file.nameRequired", "Súbor nemá názov.")
   if (!Number.isInteger(bytes) || bytes <= 0) throw new FileStoreError("file.empty", "Súbor je prázdny.")
   if (bytes > MAX_BYTES) throw tooLarge(bytes)
