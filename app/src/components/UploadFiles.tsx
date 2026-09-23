@@ -16,11 +16,23 @@
  * **S JavaScriptom** sa formulár pred odoslaním zastaví: súbory odídu po
  * kúskoch na `/api/library/upload` (do 25 MB, D98), ich identifikátory sa
  * zapíšu do skrytých polí, polia so súbormi stratia `name` (aby sa bajty
- * neposielali druhýkrát) a formulár sa odošle znova. Priebeh je skutočný —
- * prehliadač vie, koľko kúskov odoslal.
+ * neposielali druhýkrát) a formulár sa odošle znova.
+ *
+ * **Identifikátory sú v stave Reactu, nie v DOM.** Prvá verzia ich zapisovala
+ * do `<input type="hidden" defaultValue="">` priamo — a skryté pole má hodnotu
+ * totožnú s predvolenou, takže ju React pri každom prekreslení (každé percento)
+ * vrátil na prázdnu. Druhé odoslanie tak našlo prázdne pole a nahrávalo znova,
+ * dookola (23. 9. 2026, 246 požiadaviek za pár minút na produkcii). Odoslanie
+ * sa preto spúšťa až po tom, čo React stav s identifikátormi vykreslil.
+ *
+ * **Priebeh je okno v strede obrazovky**, nie riadok pod formulárom: kto
+ * odoslal formulár zo spodku stránky, riadok hore neuvidí a nevie, že sa
+ * niečo deje (Ján, 23. 9.). Okno prekryje stránku aj počas prevodu na
+ * serveri (`useFormStatus`), aby sa formulár neodoslal druhýkrát.
  */
 
 import { useEffect, useRef, useState } from "react"
+import { useFormStatus } from "react-dom"
 import { uploadInChunks } from "@/lib/chunkedUpload"
 
 /** Doplní `{kľúč}` v šablóne. */
@@ -42,6 +54,15 @@ interface Labels {
   failed: string
   /** Šablóna — `{name}`, `{mb}`, `{maxMb}`. */
   tooLarge: string
+  /** Nadpis okna priebehu. */
+  progressTitle: string
+  /** Veta v okne počas prevodu na serveri. */
+  converting: string
+}
+
+interface Uploaded {
+  pdf: string
+  source: string
 }
 
 export default function UploadFiles({
@@ -59,79 +80,109 @@ export default function UploadFiles({
   highlight?: boolean
 }) {
   const root = useRef<HTMLDivElement>(null)
+  const [uploaded, setUploaded] = useState<Uploaded | null>(null)
+  /** `uploading` — kúsky idú na server; `submitting` — čaká sa na serverovú akciu. */
+  const [phase, setPhase] = useState<"idle" | "uploading" | "submitting">("idle")
   const [status, setStatus] = useState<string | null>(null)
   const [percent, setPercent] = useState<number | null>(null)
   const [error, setError] = useState<string | null>(null)
+  /** Nahraté identifikátory aj pre poslucháča `submit`, ktorý stav nevidí. */
+  const uploadedRef = useRef<Uploaded | null>(null)
+  /** Tlačidlo, ktorým človek formulár odoslal — pošle sa ním aj druhýkrát. */
+  const submitter = useRef<HTMLElement | null | undefined>(undefined)
+  const form = useFormStatus()
 
+  // Prvé odoslanie: zastaviť, nahrať po kúskoch, zapísať identifikátory do stavu.
   useEffect(() => {
-    const form = root.current?.closest("form")
-    if (!form) return
+    const el = root.current?.closest("form")
+    if (!el) return
 
     const onSubmit = async (e: SubmitEvent) => {
-      const pdfInput = form.querySelector<HTMLInputElement>('input[data-upload="pdf"]')
-      const sourceInput = form.querySelector<HTMLInputElement>('input[data-upload="source"]')
-      const pdfId = form.querySelector<HTMLInputElement>('input[name="pdfFileId"]')
-      const sourceId = form.querySelector<HTMLInputElement>('input[name="sourceFileId"]')
-      if (!pdfInput || !pdfId || !sourceId) return
-      // Druhé odoslanie — súbory sú už nahraté, nech ide serverovej akcii.
-      if (pdfId.value) return
+      // Súbory sú už nahraté — nech formulár ide serverovej akcii.
+      if (uploadedRef.current) return
 
-      const pdf = pdfInput.files?.[0]
-      const source = sourceInput?.files?.[0]
+      const pdf = el.querySelector<HTMLInputElement>('input[data-upload="pdf"]')?.files?.[0]
+      const source = el.querySelector<HTMLInputElement>('input[data-upload="source"]')?.files?.[0]
       if (!pdf) return // povinnosť ohlási prehliadač (`required`) alebo server
 
       e.preventDefault()
       setError(null)
-      const buttons = [...form.querySelectorAll<HTMLButtonElement>('button[type="submit"]')]
-      buttons.forEach(b => (b.disabled = true))
-
+      setPhase("uploading")
       try {
-        const queue = [{ file: pdf, target: pdfId }, ...(source ? [{ file: source, target: sourceId }] : [])]
-        for (const { file } of queue) {
+        const queue = [pdf, ...(source ? [source] : [])]
+        for (const file of queue) {
           if (file.size > maxBytes) {
-            throw new Error(fill(labels.tooLarge, { name: file.name, mb: Math.ceil(file.size / 1024 / 1024), maxMb: maxBytes / 1024 / 1024 }))
+            throw new Error(fill(labels.tooLarge, {
+              name: file.name, mb: Math.ceil(file.size / 1024 / 1024), maxMb: maxBytes / 1024 / 1024,
+            }))
           }
         }
-        const total = queue.reduce((n, q) => n + q.file.size, 0)
+        const total = queue.reduce((n, f) => n + f.size, 0)
         let done = 0
-        for (const { file, target } of queue) {
+        const ids: string[] = []
+        setPercent(0)
+        for (const file of queue) {
           const r = await uploadInChunks(file, sent => {
-            const p = Math.round(((done + sent) / total) * 100)
+            const p = Math.min(100, Math.round(((done + sent) / total) * 100))
             setPercent(p)
             setStatus(fill(labels.uploading, { name: file.name, percent: p }))
           })
           done += file.size
-          target.value = r.fileId
+          ids.push(r.fileId)
         }
-        // Bajty už sú na serveri — z formulára ich druhýkrát neposielať.
-        pdfInput.removeAttribute("name")
-        sourceInput?.removeAttribute("name")
-        setStatus(null)
-        setPercent(null)
-        buttons.forEach(b => (b.disabled = false))
-        form.requestSubmit(e.submitter instanceof HTMLButtonElement ? e.submitter : undefined)
+        const next = { pdf: ids[0], source: ids[1] ?? "" }
+        uploadedRef.current = next
+        submitter.current = e.submitter
+        setPhase("submitting")
+        setUploaded(next) // odoslanie spustí efekt nižšie, po vykreslení
       } catch (err) {
-        pdfId.value = ""
-        sourceId.value = ""
+        setPhase("idle")
         setStatus(null)
         setPercent(null)
         setError(`${labels.failed} ${err instanceof Error ? err.message : ""}`.trim())
-        buttons.forEach(b => (b.disabled = false))
       }
     }
 
-    form.addEventListener("submit", onSubmit)
-    return () => form.removeEventListener("submit", onSubmit)
+    el.addEventListener("submit", onSubmit)
+    return () => el.removeEventListener("submit", onSubmit)
   }, [labels, maxBytes])
+
+  // Druhé odoslanie — **až keď React vykreslil skryté polia s identifikátormi**.
+  useEffect(() => {
+    if (!uploaded || submitter.current === undefined) return
+    const el = root.current?.closest("form")
+    const by = submitter.current
+    submitter.current = undefined
+    el?.requestSubmit(by instanceof HTMLButtonElement ? by : undefined)
+  }, [uploaded])
+
+  // Serverová akcia skončila a sme stále tu (chyba) — súbory server upratal,
+  // takže identifikátory neplatia. Nabudúce sa nahráva odznova.
+  const wasPending = useRef(false)
+  useEffect(() => {
+    if (form.pending) wasPending.current = true
+    else if (wasPending.current) {
+      wasPending.current = false
+      uploadedRef.current = null
+      setUploaded(null)
+      setPhase("idle")
+      setStatus(null)
+      setPercent(null)
+    }
+  }, [form.pending])
+
+  const uploading = phase === "uploading"
+  const busy = phase !== "idle" || form.pending
 
   return (
     <div ref={root} className="upload-files">
-      <input type="hidden" name="pdfFileId" defaultValue="" />
-      <input type="hidden" name="sourceFileId" defaultValue="" />
+      <input type="hidden" name="pdfFileId" value={uploaded?.pdf ?? ""} readOnly />
+      <input type="hidden" name="sourceFileId" value={uploaded?.source ?? ""} readOnly />
 
       {/*
         Zóna na pretiahnutie je `<label>` okolo `<input type="file">` —
         prehliadač do neho súbor pustí sám, drag & drop funguje aj bez skriptu.
+        Po nahratí po kúskoch pole stratí `name`: bajty už sú na serveri.
       */}
       <label className={`upload-drop${highlight ? " is-required" : ""}`}>
         <span className="upload-drop-title">{labels.pdfTitle}</span>
@@ -140,26 +191,41 @@ export default function UploadFiles({
           <br />
           {labels.maxSize} · {labels.noScriptLimit}
         </span>
-        <input className="upload-file" type="file" name="pdf" data-upload="pdf" required accept={pdfAccept} />
+        <input className="upload-file" type="file" name={uploaded ? undefined : "pdf"}
+               data-upload="pdf" required accept={pdfAccept} />
       </label>
 
       <label className="upload-drop upload-drop--optional">
         <span className="upload-drop-title">{labels.sourceTitle}</span>
         <span className="quiet upload-drop-note">{labels.sourceNote}</span>
-        <input className="upload-file" type="file" name="source" data-upload="source" accept={sourceAccept} />
+        <input className="upload-file" type="file" name={uploaded ? undefined : "source"}
+               data-upload="source" accept={sourceAccept} />
       </label>
 
-      <div className="upload-progress" role="status">
-        {status && (
-          <>
-            <span className="upload-progress-bar upload-progress-bar--determinate" aria-hidden="true">
-              <span style={{ width: `${percent ?? 0}%` }} />
-            </span>
-            <span className="quiet upload-progress-note">{status}</span>
-          </>
-        )}
-      </div>
       {error && <p className="upload-error" role="alert">{error}</p>}
+
+      {/*
+        Okno priebehu v strede obrazovky. `role="dialog"` s `aria-modal` a
+        živou oblasťou — čítačka ohlási zmenu fázy. Nedá sa zavrieť: nahrávanie
+        ani prevod sa zrušiť nedajú a zavreté okno by len skrylo, že bežia.
+      */}
+      {busy && (
+        <div className="upload-overlay" role="dialog" aria-modal="true" aria-labelledby="upload-overlay-title">
+          <div className="upload-overlay-card">
+            <h2 id="upload-overlay-title" className="upload-overlay-title">{labels.progressTitle}</h2>
+            {uploading ? (
+              <span className="upload-progress-bar upload-progress-bar--determinate" aria-hidden="true">
+                <span style={{ width: `${percent ?? 0}%` }} />
+              </span>
+            ) : (
+              <span className="upload-progress-bar" aria-hidden="true" />
+            )}
+            <p className="quiet upload-overlay-note" aria-live="polite">
+              {uploading ? status : labels.converting}
+            </p>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

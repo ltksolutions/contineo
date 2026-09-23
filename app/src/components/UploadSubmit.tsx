@@ -26,25 +26,14 @@ export default function UploadSubmit({
   labels: {
     submit: string
     pending: string
-    pendingNote: string
   }
 }) {
   const status = useFormStatus()
+  // Priebeh ukazuje okno v `UploadFiles` (stred obrazovky); tu stačí, že
+  // tlačidlo počas odosielania nepustí druhý klik a povie prečo.
   return (
-    <>
-      <button className="button" type="submit" disabled={status.pending} aria-disabled={status.pending}>
-        {status.pending ? labels.pending : labels.submit}
-      </button>
-      {/* `role="status"` je v DOM stále, aby ho čítačka ohlásila pri zmene —
-          živá oblasť, ktorá vznikne až s obsahom, sa často neprečíta. */}
-      <div className="upload-progress" role="status">
-        {status.pending && (
-          <>
-            <span className="upload-progress-bar" aria-hidden="true" />
-            <span className="quiet upload-progress-note">{labels.pendingNote}</span>
-          </>
-        )}
-      </div>
-    </>
+    <button className="button" type="submit" disabled={status.pending} aria-disabled={status.pending}>
+      {status.pending ? labels.pending : labels.submit}
+    </button>
   )
 }
