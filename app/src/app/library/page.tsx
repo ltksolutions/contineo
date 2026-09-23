@@ -45,6 +45,19 @@ import MultiSelect from "@/components/MultiSelect"
 
 export const dynamic = "force-dynamic"
 
+/*
+ * Vlastný názov karty prehliadača. Dovtedy niesli všetky stránky jeden názov
+ * z `layout.tsx` a podľa záložky sa nedalo rozoznať, ktorá je ktorá.
+ *
+ * Nadpis na obrazovke je krátky („Knižnica", rámy 1–8), tu je dlhý: karta
+ * nie je hlavička stránky a pri viacerých otvorených záložkách je samotné
+ * „Knižnica" málo.
+ *
+ * Jazyk osoby tu ešte nepoznáme — metadáta sa skladajú skôr, než je jasné,
+ * kto sa pozerá — preto predvolený slovník, rovnako ako v `layout.tsx`.
+ */
+export const metadata = { title: dictionary(undefined).library.list.metaTitle }
+
 export default async function LibraryPage({
   searchParams,
 }: {
@@ -462,6 +475,25 @@ export default async function LibraryPage({
     </>
   )
 
+  /*
+    Prázdna knižnica je **iná stránka**, nie zoznam s nulou riadkov
+    (`KNIZNICA.html`, rám 7): zostane nadpis, počet, „Nahrať dokument",
+    ponuka „⋯" a prázdny stav. Panel priečinkov, hľadanie, prepínač pohľadu,
+    zásuvka filtrov, staviteľ podmienok aj Export CSV odchádzajú.
+
+    Dôvod je vecný, nie vzhľadový: pri nule dokumentov niet čo filtrovať,
+    niet medzi čím hľadať, každý facet je nula a export dá prázdny súbor.
+    Všetko to sľubuje prácu, ktorá nikam nevedie.
+
+    Ponuka „⋯" zostáva zámerne, proti rámu (rozhodnutie Jána, 23. 9. 2026):
+    vedie na Trasy onboardingu a Kuráciu, čo nie sú obsah knižnice — bez nej
+    by sa z prázdnej knižnice nedali dosiahnuť vôbec.
+
+    `facets.all` je počet **bez filtrov**, takže nula znamená prázdnu
+    knižnicu, nie prísny filter.
+  */
+  const emptyLibrary = facets.all === 0
+
   return (
     /*
      * Prvá stránka v aplikačnom shelli (viď `components/AppShell.tsx`).
@@ -510,7 +542,11 @@ export default async function LibraryPage({
           pohľad je súčasť adresy, takže sa dá poslať aj s ním — a funguje bez
           skriptu. Aktívny odkaz zostáva odkazom (vedie sám na seba), lebo
           `aria-current` povie čítačke to isté a nemusí sa riešiť dvojaký tvar.
+
+          Pri prázdnej knižnici prepínač nie je (rám 7): tabuľka aj karty by
+          ukázali to isté prázdno.
         */}
+        {!emptyLibrary && (
         <span className="view-switch" role="group" aria-label={t.viewSwitch}>
           {([["table", t.viewTable], ["cards", t.viewCards]] as const).map(([key, label]) => (
             <Link
@@ -523,6 +559,7 @@ export default async function LibraryPage({
             </Link>
           ))}
         </span>
+        )}
         {/*
           Poradie akcií je z rámu 1: tiché akcie (Export CSV, ⋯) obklopujú
           primárnu (Nahrať dokument), nie naopak. Primárna akcia takto nie je
@@ -532,9 +569,11 @@ export default async function LibraryPage({
           `toQuery(filters, …)` a nie holá adresa. Kto si vyfiltruje osem
           dokumentov, má dostať osem, nie stoštyridsaťosem.
         */}
+        {!emptyLibrary && (
         <Link className="button button--quiet" href={toQuery(filters, "/library/csv")}>
           {t.exportCsv}
         </Link>
+        )}
         <Link className="button" href="/library/new">{t.upload}</Link>
         {/*
           Zvyšné akcie v ponuke „⋯" (NASADENIE, PR 4). Primárna akcia je
@@ -557,6 +596,16 @@ export default async function LibraryPage({
       </div>
 
 
+      {emptyLibrary ? (
+        /* Rám 7: prázdna knižnica je nadpis a prázdny stav, nič viac. */
+        <div className="empty">
+          <div className="empty-title">{t.empty}</div>
+          <div className="empty-text">{t.emptyText}</div>
+          <div className="empty-action">
+            <Link className="button" href="/library/new">{t.upload}</Link>
+          </div>
+        </div>
+      ) : (
       <div className="library-grid">
         {/*
           Panel je **karta** (`KNIZNICA.html`, rámy 1 a 8): plocha `--surface`,
@@ -813,28 +862,15 @@ export default async function LibraryPage({
 
       {rows.length === 0 ? (
         /*
-          Prázdny zoznam má **dve podoby** (`KNIZNICA.html`), nie jednu vetu
-          pre oboje. Rozdiel je v tom, čo má človek spraviť:
+          Sem sa dostane len prázdno **z filtra** — prázdnu knižnicu rieši
+          `emptyLibrary` vyššie, na úrovni celej stránky.
 
-          - knižnica je naozaj prázdna → nahrať prvý dokument,
-          - filtru nič nevyhovuje → zrušiť filter.
-
-          Dovtedy sa pri nule vždy písalo „Začni nahratím prvého dokumentu",
-          hoci podmienka pozerala len na text hľadania. Pri 148 dokumentoch
-          a zapnutom filtri to posielalo človeka robiť niečo, čo nepotrebuje,
-          a o skutočnej príčine mlčalo.
-
-          Rozlíšiť sa to dá presne: `facets.all` je počet **bez filtrov**.
+          Rozdiel je v tom, čo má človek spraviť: prázdna knižnica chce
+          nahrať prvý dokument, prázdny filter chce filter zrušiť. Dovtedy
+          sa pri nule vždy písalo „Začni nahratím prvého dokumentu", hoci
+          podmienka pozerala len na text hľadania — pri 148 dokumentoch
+          a zapnutom filtri to posielalo človeka robiť niečo, čo nepotrebuje.
         */
-        facets.all === 0 ? (
-          <div className="empty">
-            <div className="empty-title">{t.empty}</div>
-            <div className="empty-text">{t.emptyText}</div>
-            <div className="empty-action">
-              <Link className="button" href="/library/new">{t.upload}</Link>
-            </div>
-          </div>
-        ) : (
           <div className="empty">
             <div className="empty-title">{t.emptyFilteredTitle}</div>
             <div className="empty-text">
@@ -863,7 +899,6 @@ export default async function LibraryPage({
               </Link>
             </div>
           </div>
-        )
       ) : (
         /*
           Výber riadkov je **v adrese**, nie stav formulára. Zaškrtávacie
@@ -1286,6 +1321,7 @@ export default async function LibraryPage({
       )}
         </div>
       </div>
+      )}
     </div>
     </AppShell>
   )

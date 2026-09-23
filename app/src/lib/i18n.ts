@@ -1436,7 +1436,18 @@ interface Dictionary {
       internalNumberPlaceholder: string
     }
     list: {
+      /**
+       * Nadpis na obrazovke je **krátky** (`KNIZNICA.html`, rámy 1–8):
+       * stojí pod navigáciou, kde je „Knižnica" hneď vedľa, a dlhší tvar
+       * tlačil akcie v hlavičke na tablete do druhého riadka.
+       */
       heading: string
+      /**
+       * Názov karty prehliadača je naopak **dlhší**: karta nie je hlavička
+       * stránky a pri viacerých otvorených záložkách je samotné „Knižnica"
+       * málo na rozoznanie.
+       */
+      metaTitle: string
       upload: string
       introBefore: string
       introHighlight: string
@@ -3446,7 +3457,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       internalNumberPlaceholder: "12/2024",
     },
     list: {
-      heading: "Knižnica dokumentov",
+      heading: "Knižnica",
+      metaTitle: "Knižnica dokumentov — Contineo",
       upload: "Nahrať dokument",
       introBefore: "Nahratý súbor sa prevedie na text, ktorý si ",
       introHighlight: "prečítaš a opravíš",
@@ -3463,7 +3475,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       accessLevel: "Prístup",
       apply: "Použiť",
       tagSearch: "hľadať značku…",
-      shown: (found, all) => `${found} z ${all} dokumentov`,
+      shown: (found, all) => `${found} z ${all}`,
       removeFilter: (value) => `Odobrať filter ${value}`,
       colDocument: "Dokument",
       colVersion: "Verzia",
@@ -5389,7 +5401,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       internalNumberPlaceholder: "12/2024",
     },
     list: {
-      heading: "Knihovna dokumentů",
+      heading: "Knihovna",
+      metaTitle: "Knihovna dokumentů — Contineo",
       upload: "Nahrát dokument",
       introBefore: "Nahraný soubor se převede na text, který si ",
       introHighlight: "přečteš a opravíš",
@@ -5406,7 +5419,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       accessLevel: "Přístup",
       apply: "Použít",
       tagSearch: "hledat značku…",
-      shown: (found, all) => `${found} z ${all} dokumentů`,
+      shown: (found, all) => `${found} z ${all}`,
       removeFilter: (value) => `Odebrat filtr ${value}`,
       colDocument: "Dokument",
       colVersion: "Verze",
@@ -7325,7 +7338,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       internalNumberPlaceholder: "12/2024",
     },
     list: {
-      heading: "Document library",
+      heading: "Library",
+      metaTitle: "Document library — Contineo",
       upload: "Upload a document",
       introBefore: "An uploaded file is converted into text that you ",
       introHighlight: "read and correct",
@@ -7342,7 +7356,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       accessLevel: "Access",
       apply: "Apply",
       tagSearch: "search tags…",
-      shown: (found, all) => `${found} of ${all} documents`,
+      shown: (found, all) => `${found} of ${all}`,
       removeFilter: (value) => `Remove filter ${value}`,
       colDocument: "Document",
       colVersion: "Version",
