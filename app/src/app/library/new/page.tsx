@@ -130,6 +130,8 @@ export default async function NewDocumentPage({
               uploading: t.uploadingFile,
               failed: t.uploadFailed,
               tooLarge: t.fileTooLarge,
+              progressTitle: t.submitPending,
+              converting: t.submitPendingNote,
             }}
           />
         </section>
@@ -252,7 +254,7 @@ export default async function NewDocumentPage({
         </section>
 
         <div>
-          <UploadSubmit labels={{ submit: t.submit, pending: t.submitPending, pendingNote: t.submitPendingNote }} />
+          <UploadSubmit labels={{ submit: t.submit, pending: t.submitPending }} />
         </div>
       </form>
     </div>
