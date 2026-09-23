@@ -10,6 +10,49 @@
 
 ---
 
+## 2026-09-23 (7) — prvé ostré nahratie, ADR-011, CSRF
+
+**Ján nahral Pracovný poriadok (2,5 MB .docx) a padlo to dvakrát.** Prvý raz
+na strope serverovej akcie 1 MB (formulár sľuboval 32 MB — cez rozhranie sa
+dovtedy nenahrávalo, normy šli skriptom). Druhý raz `RangeError` pri zápise:
+dokument mal vo vnútri 34 MB obrázok EMF, mammoth ho vložil do HTML ako
+base64 a z textu bolo 47 MB. Súbor som stiahol z GridFS a pád zopakoval
+lokálne — až potom oprava. Varovanie „obrázky sa neprepísali" pritom tvrdilo
+opak toho, čo prevod robil, a pri PNG nezaznelo nikdy.
+
+**Z toho vyšla skutočná otázka.** Ján: dokumenty majú prílohy, formuláre,
+obrázky — schvaľovať sa musí celok, Markdown je len na RAG. Pri mapovaní sa
+ukázalo, že je to horšie, než to znelo: schvaľovalo aj potvrdzovalo sa
+Markdown, odtlačok originálu neexistoval, znenie si ani nepamätalo, z akého
+súboru vzniklo — a **schvaľovateľ videl platné znenie namiesto konceptu**.
+Tú chybu (PR #91) som opravil prvú, lebo nezávisela od ničoho.
+
+**ADR-011 za jedno popoludnie, v piatich PR.** Rozhodnutia, ktoré dal Ján:
+25 MB, povinné PDF, zostávame v Atlase. Doplnil počas práce: zdroj nie je
+len pre text, ale **predloha pre ďalšie znenie** („dve muchy jednou ranou").
+Kľúčové technické rozhodnutie bolo, kam dať odtlačok PDF — do identity
+konceptu (`draftIdentity`), nie do samostatného poľa pri kole. Kolá, publish
+aj chunky tak idú cez jednu hodnotu a bez PDF je to presne `textFingerprint`,
+takže staré znenia sa nepohli.
+
+**Čo som overil v dokumentácii, nie odhadol:** strop 4,5 MB na Verceli platí
+pre request aj response, **odpoveď v prúde je výnimka**. Preto čítanie prúdom
+a bez `Content-Length`.
+
+**Chyba, ktorú som takmer zopakoval:** poslať funkciu zo serverovej stránky
+do klientskeho komponentu (texty s parametrom) — presne toto raz zhodilo
+`/library/new`. Chytil som to pri písaní; texty idú ako šablóny `{name}`.
+
+**CSRF:** nová cesta na nahrávanie dostala `sameOrigin()`; ďalšie štyri POST
+cesty ju nemali (PR #96). `SameSite=Lax` nestačí na `*.contineo.app`, kde sú
+organizácie „same-site".
+
+**Neoverené naostro:** nič z ADR-011 — žiadne znenie ešte nemá PDF. Lokálne
+som skúšal len vykreslenie a čítanie existujúceho originálu prúdom; zápis
+do ostrej DB som nerobil. Prvé nahratie robí Ján.
+
+---
+
 ## 2026-09-23 (6) — D93 PR 0 a 1: export s filtrom oddelenia, audit presunu
 
 Obe chyby z plánu D93, ktoré nečakajú na rozhodnutie o variante, sú v jednom

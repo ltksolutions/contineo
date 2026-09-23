@@ -4,6 +4,31 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Schvaľuje a potvrdzuje sa PDF, aj s prílohami (2026-09-23)
+
+Pri nahratí predpisu je **PDF povinné** — takto ho uvidia schvaľovatelia
+aj zamestnanci, vrátane príloh, formulárov, tabuliek a obrázkov. K nemu sa
+odporúča nahrať **upraviteľný zdroj** (Word, Excel…): z neho vznikne text na
+vyhľadávanie a pri ďalšom znení si ho správca stiahne ako predlohu.
+
+Schvaľovateľ vidí PDF konceptu a pod ním text na vyhľadávanie; zamestnanec
+pri potvrdení vidí PDF. Záznam o potvrdení si pamätá odtlačok PDF, takže sa
+dá neskôr overiť, že ide o ten istý súbor. Staršie znenia zostávajú, ako boli.
+
+Dokumenty môžu mať **do 25 MB** a pri nahrávaní vidno priebeh v percentách.
+
+### Schvaľovateľ vidí to, o čom rozhoduje (2026-09-23)
+
+Obrazovka „Na schválenie" ukazovala platné znenie namiesto konceptu, ktorý
+sa schvaľoval — pri novom dokumente dokonca nič. Odteraz ukazuje presne
+predložený koncept; ak sa po predložení zmenil, povie to.
+
+### Nahrávanie dokumentov z rozhrania funguje (2026-09-23)
+
+Nahratie z knižnice padalo pri súboroch nad 1 MB a pri dokumentoch Wordu
+s veľkými obrázkami. Obe chyby sú opravené; počas nahrávania je tlačidlo
+zablokované a vidno, čo sa deje.
+
 ### Export knižnice zodpovedá tomu, čo je na obrazovke (2026-09-23)
 
 Export do CSV odteraz rešpektuje aj filter **oddelenia, ktoré dokument

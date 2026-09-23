@@ -6,7 +6,7 @@
 > **Tento súbor je indícia, `git log` je pravda.** Keď si protirečia, verí sa
 > gitu a NEXT.md sa opraví. Aktualizuje sa pri rituáli **„Poupratuj"**.
 
-Posledná aktualizácia: **2026-09-23** (po PR #86: D93 PR 0 a 1 — export CSV s filtrom oddelenia, audit presunu do priečinka)
+Posledná aktualizácia: **2026-09-23 popoludní** (po PR #96: ADR-011 — PDF ako schvaľovaný dokument, nahrávanie do 25 MB, CSRF na POST cestách)
 
 ---
 
@@ -100,10 +100,34 @@ o variante:
   cestou názvov. **Naživo neoverené**, len testy: lokálny server píše do ostrej
   databázy a záznam v audite je nevratný. Pozrieť pri prvom skutočnom presune.
 
-Vetva `fix/d93-filter-export-a-audit-presunu` zostala na `origin` (mazanie
-vetiev len so súhlasom Jána).
+**Potom prvé nahratie ostrého dokumentu cez rozhranie — a z neho ADR-011**
+(PR #88–#96). Pracovný poriadok SFZ (2,5 MB `.docx`) padol dvakrát: najprv
+na strope serverovej akcie 1 MB, potom na 34 MB obrázku EMF, ktorý prevod
+vkladal do textu ako base64 (47 MB → zápis do Monga padol). Obe opravené.
+Ján pritom pomenoval skutočný problém: **schvaľovalo a potvrdzovalo sa
+Markdown**, bez príloh, formulárov a obrázkov. Odtiaľ ADR-011:
+
+- **PDF je dôkaz** (povinné pri znení), **upraviteľný zdroj** (`.docx`…) je
+  odporúčaný — text na vyhľadávanie aj predloha pre ďalšie znenie.
+- **Súbory do 25 MB** po kúskoch do GridFS (Atlas, žiadne druhé úložisko),
+  čítanie prúdom, SHA-256 pri každom súbore.
+- **Identita konceptu = PDF + text** (`draftIdentity`); zmena ktoréhokoľvek
+  zruší schválenie. Znenia spred ADR-011 majú identitu z textu ako doteraz.
+- Schvaľovateľ a zamestnanec **vidia PDF**; potvrdenie nesie SHA-256 PDF.
+- Popri tom: schvaľovateľ videl platné znenie namiesto konceptu (PR #91),
+  a kontrola `Origin` na POST cestách (PR #93, #96).
+
+**Nič z ADR-011 zatiaľ nebolo vyskúšané naostro** — žiadne znenie PDF ešte
+nemá. Prvé nahratie PDF + `.docx` robí Ján.
+
+Zlúčené vetvy sa odteraz mažú automaticky (`CLAUDE.md`, súhlas Jána);
+na `origin` aj lokálne je jediný `main`.
 
 ## Čo čaká na rozhodnutie Jána
+
+**Automatický prevod `.docx` → PDF** (ADR-011, časť 4) — ušetril by správcovi
+krok, ale cez Microsoft Graph chce nové povolenia v Entra ID. Kým nie je
+rozhodnuté, správca ukladá PDF z Wordu sám.
 
 **D93 — deväť otázok v časti 6 plánu** (`docs/D93_plan_vyber_podla_filtra.md`):
 kľúč v adrese, čo s dokumentom, ktorý medzi náhľadom a vykonaním z filtra
@@ -131,14 +155,19 @@ hodnotu.
 
 ## Najbližšie kroky
 
-0. **Právny základ pre 10 platných znení** — vyberá ho zodpovedná osoba (Ján)
+0. **Prvé nahratie podľa ADR-011** — Pracovný poriadok SFZ ako PDF (povinné)
+   + `.docx` (zdroj). Overiť: nahratie po kúskoch s percentami, text zo
+   zdroja bez obrázkov, PDF a zdroj na detaile, predloženie na schválenie,
+   PDF u schvaľovateľa na počítači aj telefóne (390 px). Pri chybe logy
+   Vercelu (`POST /library/new`, `/api/library/upload`).
+1. **Právny základ pre 10 platných znení** — vyberá ho zodpovedná osoba (Ján)
    na stránke znenia; `npm run check` ich vypíše. Po odpovedi Švehlovej opraviť
    `codelists/legalBasis.json` **skôr**, než sa podľa neho začnú vyberať
    základy — znenia si nesú kópiu. Zodpovedná osoba je doplnená (PR #82).
-1. **D93 PR 2 — poistná sieť:** testy `moveManyAction` pri dnešnom správaní
+2. **D93 PR 2 — poistná sieť:** testy `moveManyAction` pri dnešnom správaní
    (prázdny výber, čiastočná dávka, `back` bez open redirectu). Na rozhodnutí
    nezávisí; treba nový vzor mockovania `libraryContext` a `next/navigation`.
-2. **D93 PR 3 a ďalej — výber „všetko, čo vyhovuje filtru"** podľa plánu,
+3. **D93 PR 3 a ďalej — výber „všetko, čo vyhovuje filtru"** podľa plánu,
    až po odpovediach na otázky v časti 6. „z toho N mimo tohto zoznamu"
    (počíta proti strane, nie filtru) sa opravuje v PR 4.
 
@@ -158,8 +187,8 @@ Všetko sa púšťa z adresára `app/`:
 cd app && npx tsc --noEmit && npx eslint . && npx vitest run && npm run build
 ```
 
-Baseline, proti ktorej sa porovnáva: **0 errors, 42 warnings, 1492 testov
-v 92 súboroch.** Nová chyba alebo nové varovanie znamená regresiu, nie šum.
+Baseline, proti ktorej sa porovnáva: **0 errors, 42 warnings, 1548 testov
+v 97 súboroch.** Nová chyba alebo nové varovanie znamená regresiu, nie šum.
 
 **Tieto štyri brzdy nevidia chyby za behu.** 23. 9. prešli všetky štyri
 a produkcia aj tak spadla (dočasná mŕtva zóna v `library/page.tsx`). Preto
