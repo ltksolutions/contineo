@@ -6,7 +6,7 @@
 > **Tento súbor je indícia, `git log` je pravda.** Keď si protirečia, verí sa
 > gitu a NEXT.md sa opraví. Aktualizuje sa pri rituáli **„Poupratuj"**.
 
-Posledná aktualizácia: **2026-09-23 večer** (po odpovediach DPO k O15/O16, D91 a D92 — PR #79, #80)
+Posledná aktualizácia: **2026-09-23 neskoro večer** (po PR #82–#84: zodpovedná osoba, číselník podľa návrhu pre DPO, `text-decoration`, plán D93)
 
 ---
 
@@ -76,12 +76,30 @@ v `docs/O15_O16_otazky_pre_DPO.md`. Z nich vznikli dve zmeny, obe **zlúčené a
 
 **Obe obrazovky neboli overené očami na mobile** (lokálne treba prihlásenie).
 
-Repozitár: **nula otvorených PR**. Zlúčené a **nezmazané** vetvy:
-`fix/panel-filtrov-podla-ramu`, `fix/tdz-v-kniznici`, `chore/lint-use-before-define`,
-`feat/zodpovedna-osoba-a-pravny-zaklad`, `feat/ciselnik-pravnych-zakladov` —
-na mazanie treba Jánov súhlas.
+**Večer 23. 9. zlúčené a nasadené PR #82 až #84** (práca už z VS Code na Jánovom Macu):
+
+- **Zodpovedná osoba je doplnená všetkým 10 platným zneniam** v SFZ — Ján,
+  kým sa garanti neurčia menovite. Zapísané skriptom `npm run responsible:set`
+  cez `setVersionResponsible()`, teda s históriou a auditom. Nahradené znenia
+  nechané bez osoby zámerne. `npm run check` ich už nevypisuje.
+- **Číselník právnych základov** je zosúladený so znením, ktoré dostala DPO
+  (štyri texty, kľúče bez zmeny).
+- **Krok „nadbytočné `text-decoration`" je hotový** — 24 pravidiel a tri
+  inline štýly preč; päť zostalo a každé má dôvod v komentári. Overené
+  porovnaním vypočítaných štýlov v Chrome (390 a 1440 px), **nie očami na
+  prihlásených obrazovkách**.
+- **Plán D93** (výber podľa filtra) je v `docs/D93_plan_vyber_podla_filtra.md`.
+
+Repozitár: **nula otvorených PR**, zlúčené vetvy zmazané so súhlasom Jána —
+na `origin` aj lokálne je jediný `main`.
 
 ## Čo čaká na rozhodnutie Jána
+
+**D93 — deväť otázok v časti 6 plánu** (`docs/D93_plan_vyber_podla_filtra.md`):
+kľúč v adrese, čo s dokumentom, ktorý medzi náhľadom a vykonaním z filtra
+vypadol alebo pribudol, povinnosť náhľadu, audit presunu, prideľovanie
+v režime „filter" a strop. Odporúčanie je v pláne; bez odpovedí sa začína
+len PR 0 a 1, ktoré na rozhodnutí nezávisia.
 
 **Dva dokumenty sú u DPO (Švehlová)** v `Claude outputs`:
 `O15_O16_otazky_pre_DPO_kolo2.docx` (presné číslo retencie a strop, B5–B7, časť C,
@@ -103,18 +121,17 @@ hodnotu.
 
 ## Najbližšie kroky
 
-0. **Doplniť zodpovednú osobu existujúcim zneniam** (správca obsahu v knižnici)
-   a pozrieť `npm run check` — vypíše znenia bez osoby a bez právneho základu.
-   Po odpovedi Švehlovej opraviť `codelists/legalBasis.json` **skôr**, než sa
-   podľa neho začnú vyberať základy (znenia si nesú kópiu).
-1. **Tridsať nadbytočných `text-decoration: none` v `globals.css`** — odkedy
-   je pravidlo v koreni, potláčajú si podčiarknutie samé bez dôvodu. Samostatné
-   upratovanie, nie prílepok: v jednom veľkom diffe by sa stratila vecná zmena
-   a pri každom pravidle treba overiť, že ho naozaj drží len koreň. Patrí sem
-   aj `.notice-confirm`. Podrobnosti v `docs/TODO.md`.
-2. **„Všetko, čo vyhovuje filtru" namiesto zoznamu ID v adrese** — strop výberu
-   (`MAX_PICKED = 200`) rieši rezervu, nie princíp. Chce vlastný plán: mení sa
-   sémantika hromadnej akcie. Podrobnosti v `docs/TODO.md`.
+0. **Právny základ pre 10 platných znení** — vyberá ho zodpovedná osoba (Ján)
+   na stránke znenia; `npm run check` ich vypíše. Po odpovedi Švehlovej opraviť
+   `codelists/legalBasis.json` **skôr**, než sa podľa neho začnú vyberať
+   základy — znenia si nesú kópiu. Zodpovedná osoba je doplnená (PR #82).
+1. **D93 PR 0 a 1 — dve chyby nezávislé od rozhodnutia o variante:**
+   export CSV ignoruje filter oddelenia (dve ručné kópie mapovania
+   `filters → LibraryFilter`, zjednotiť do `listFilterOf()`) a presun
+   dokumentu do priečinka **nezapisuje audit** (`assignDocument()`).
+   Popri tom „z toho N mimo tohto zoznamu" počíta proti strane, nie filtru.
+2. **D93 PR 2 a ďalej — výber „všetko, čo vyhovuje filtru"** podľa plánu,
+   až po odpovediach na otázky v časti 6.
 
 Prázdny stav knižnice pri filtri, ktorý nič nenájde, bol pôvodne prvým krokom
 a **je vybavený** (`19db418`, `accb500`): prázdno z filtra vymenuje filtre, ktoré

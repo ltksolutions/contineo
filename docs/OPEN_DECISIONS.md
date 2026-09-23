@@ -854,6 +854,24 @@ položku majú, si nesú kópiu starého odkazu, takže sa zmena na ne neprenesi
 
 ---
 
+### D93 — Hromadný výber „všetko, čo vyhovuje filtru" ⏳
+
+**Otázka:** má hromadný výber v knižnici niesť namiesto zoznamu ID v adrese
+(strop `MAX_PICKED = 200`) príznak „celý tento filter" — a nad čím potom beží
+akcia, keď sa výsledok filtra medzi zobrazením a vykonaním zmení?
+
+**Návrh (nerozhodnuté):** príznak v adrese nesie zámer; pred akciou sa zobrazí
+**náhľad** s počtom a názvami, ktorý zoznam zhmotní na serveri a pošle ho
+v tele POST. Dokument, ktorý medzitým pribudol, sa nespracuje; zmena sa povie
+nahlas. Ručný výber so stropom zostáva pre malé výbery.
+
+**Plán a deväť otázok:** `docs/D93_plan_vyber_podla_filtra.md` (časť 6).
+
+**Súvisiace:** D32 (`companyCode` v podmienke), D51 (audit — presun do
+priečinka ho dnes nezapisuje), D27.
+
+---
+
 ## Otvorené body vedené v ADR-003
 
 Nie sú to rozhodnutia backlogu, ale otvorené otázky konkrétneho ADR. Uvedené tu kvôli
