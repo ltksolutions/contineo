@@ -212,22 +212,6 @@ export default async function LibraryPage({
   /** Odkaz s vymeneným priečinkom; ostatné filtre zostávajú. */
   const withFolder = (folderId?: string) => toQuery(setValue(filters, "folder", folderId))
 
-  /*
-   * Mená filtrov, ktoré sú práve nasadené — pre prázdny stav.
-   *
-   * Vymenúvajú sa tie, ktoré sa **dajú pomenovať**: facety, hľadanie
-   * a priečinok. Podmienky buildera medzi nimi nie sú — tie sú vypísané
-   * hneď nad zoznamom vo vlastnom paneli, takže ich opakovať by bolo
-   * dvakrát to isté a veta by narástla cez tri riadky.
-   */
-  const activeNames = [
-    ...activeChips(filters).map(
-      ({ key, value }) => `${facetLabel[key].title}: ${facetLabel[key].label(value)}`,
-    ),
-    ...(search ? [`${t.search}: ${search}`] : []),
-    ...(folder ? [`${tf.heading}: ${folder === "nezaradene" ? tf.unfiled : (tree.find(x => x.folder.id === folder)?.folder.name ?? folder)}`] : []),
-  ]
-
   /** Odkaz, ktorý prepne jednu hodnotu facetu. */
   const facetHref = (key: MultiKey, value: string) => toQuery(toggle(filters, key, value))
 
@@ -298,6 +282,29 @@ export default async function LibraryPage({
     language: { title: t.language, label: (v) => v },
     ownerDepartment: { title: tfd.ownerDepartmentShort, label: departmentLabel },
   }
+
+  /*
+   * Mená filtrov, ktoré sú práve nasadené — pre prázdny stav.
+   *
+   * Vymenúvajú sa tie, ktoré sa **dajú pomenovať**: facety, hľadanie
+   * a priečinok. Podmienky buildera medzi nimi nie sú — tie sú vypísané
+   * hneď nad zoznamom vo vlastnom paneli, takže ich opakovať by bolo
+   * dvakrát to isté a veta by narástla cez tri riadky.
+   *
+   * **Stojí to tu, hneď za `facetLabel`, a nie vyššie.** Pole sa vyhodnotí
+   * v mieste zápisu, takže `.map` beží ihneď — a keď stálo nad `facetLabel`,
+   * siahalo naň skôr, než vzniklo. Bez filtra to prešlo, lebo `activeChips`
+   * vrátilo prázdne pole a callback sa nezavolal vôbec; s akýmkoľvek
+   * nasadeným facetom stránka spadla na `ReferenceError`. Nová deklarácia
+   * facetu patrí **pod** tento blok, nie nad neho.
+   */
+  const activeNames = [
+    ...activeChips(filters).map(
+      ({ key, value }) => `${facetLabel[key].title}: ${facetLabel[key].label(value)}`,
+    ),
+    ...(search ? [`${t.search}: ${search}`] : []),
+    ...(folder ? [`${tf.heading}: ${folder === "nezaradene" ? tf.unfiled : (tree.find(x => x.folder.id === folder)?.folder.name ?? folder)}`] : []),
+  ]
 
   /** Skupiny, ktoré sa v paneli vykresľujú ako zoznam s počtami. */
   const facetGroups: { key: MultiKey; rows: { value: string; count: number }[] }[] = [
