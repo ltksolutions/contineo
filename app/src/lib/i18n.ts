@@ -3042,6 +3042,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       "legal-basis": "právny základ",
     },
     fields: {
+      folder: "priečinok",
       email: "adresa",
       fullName: "meno",
       department: "oddelenie (text)",
@@ -5071,6 +5072,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       "legal-basis": "právní základ",
     },
     fields: {
+      folder: "složka",
       email: "adresa",
       fullName: "jméno",
       department: "oddělení (text)",
@@ -7091,6 +7093,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       "legal-basis": "legal basis",
     },
     fields: {
+      folder: "folder",
       email: "address",
       fullName: "name",
       department: "department (text)",

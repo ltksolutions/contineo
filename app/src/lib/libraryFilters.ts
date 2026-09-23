@@ -18,6 +18,7 @@
  */
 
 import type { RawQuery } from "./urlParams"
+import type { LibraryFilter } from "./libraryRead"
 import {
   readConditions, readMatch, conditionFields, normalizeGroups, splitAt, mergeUp, TODAY,
   type Condition, type MatchMode,
@@ -399,6 +400,33 @@ export function toQuery(filters: ActiveFilters, base = "/library"): string {
   const p = new URLSearchParams(carryFields(filters))
   const s = p.toString()
   return s ? `${base}?${s}` : base
+}
+
+/**
+ * Filtre z adresy v tvare, aký čaká dotazová vrstva (`libraryList()`,
+ * `libraryFacets()`).
+ *
+ * **Jediné miesto tohto mapovania.** Dovtedy boli dve ručné kópie —
+ * v obrazovke a v exporte CSV — a exportu chýbalo `ownerDepartment`, takže
+ * pri filtri oddelenia vrátil viac, než človek videl (D93, nález N2).
+ *
+ * Návratový typ vyžaduje **každý** kľúč `LibraryFilter`, aj keď je hodnota
+ * prázdna. Nový filter v dotazovej vrstve tak zhodí `tsc` tu, nie až výkaz
+ * u zákazníka.
+ */
+export function listFilterOf(filters: ActiveFilters): { [K in keyof Required<LibraryFilter>]: LibraryFilter[K] } {
+  return {
+    search: filters.search,
+    status: filters.status,
+    priecinok: filters.folder,
+    category: filters.category,
+    language: filters.language,
+    accessLevel: filters.accessLevel,
+    tag: filters.tag,
+    ownerDepartment: filters.ownerDepartment,
+    conditions: filters.conditions,
+    match: filters.match,
+  }
 }
 
 /**

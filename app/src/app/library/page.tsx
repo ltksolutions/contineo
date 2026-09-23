@@ -33,7 +33,7 @@ import {
   readFilters, toggle, setValue, clearFilters, isEmpty, toQuery, carryFields, activeChips,
   sortBy, currentSort, pageOf, withPage, sortRows, pageRows, setView, currentView,
   addCondition, removeCondition, splitConditions, mergeConditions,
-  togglePick, pickPage, clearPicked, pickedOutsideCount, MAX_PICKED,
+  togglePick, pickPage, clearPicked, pickedOutsideCount, MAX_PICKED, listFilterOf,
   type MultiKey, type SortKey,
 } from "@/lib/libraryFilters"
 import {
@@ -101,18 +101,7 @@ export default async function LibraryPage({
   // Filtre z adresy v tvare, aký čaká dotazová vrstva. Ten istý objekt ide
   // do zoznamu aj do počtov — keby sa rozišli, panel by ukazoval čísla
   // k inému pohľadu, než je na obrazovke.
-  const listFilter = {
-    search: filters.search,
-    status: filters.status,
-    priecinok: filters.folder,
-    category: filters.category,
-    language: filters.language,
-    accessLevel: filters.accessLevel,
-    tag: filters.tag,
-    ownerDepartment: filters.ownerDepartment,
-    conditions: filters.conditions,
-    match: filters.match,
-  }
+  const listFilter = listFilterOf(filters)
 
   const [rows, folders, folderCounts, facets, waiting, departments] = await Promise.all([
     libraryList(ctx.tenant.companyCode, listFilter),

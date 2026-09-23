@@ -2,8 +2,8 @@
  * GET /library/csv — zoznam dokumentov ako CSV.
  *
  * Exportuje sa **ten istý zoznam a s tými istými filtrami**, aký je na
- * obrazovke: `readFilters()` → `libraryList()` → `sortRows()`, teda tá istá
- * cesta, nie druhý dotaz s podobnými podmienkami. Výkaz, ktorý sa nezhoduje
+ * obrazovke: `readFilters()` → `listFilterOf()` → `libraryList()` →
+ * `sortRows()`, teda tá istá cesta, nie druhý dotaz s podobnými podmienkami. Výkaz, ktorý sa nezhoduje
  * s obrazovkou, je horší než žiadny.
  *
  * **Bez stránkovania, zámerne.** Na obrazovke je strana, v exporte celý
@@ -16,7 +16,7 @@
 
 import { libraryContext } from "@/lib/library"
 import { libraryList } from "@/lib/libraryRead"
-import { readFilters, currentSort, sortRows } from "@/lib/libraryFilters"
+import { readFilters, currentSort, sortRows, listFilterOf } from "@/lib/libraryFilters"
 import { toCsv } from "@/lib/csv"
 import type { RawQuery } from "@/lib/urlParams"
 
@@ -43,17 +43,7 @@ export async function GET(request: Request) {
   const filters = readFilters(raw)
   const sort = currentSort(filters)
   const rows = sortRows(
-    await libraryList(ctx.tenant.companyCode, {
-      search: filters.search,
-      status: filters.status,
-      priecinok: filters.folder,
-      category: filters.category,
-      language: filters.language,
-      accessLevel: filters.accessLevel,
-      tag: filters.tag,
-      conditions: filters.conditions,
-      match: filters.match,
-    }),
+    await libraryList(ctx.tenant.companyCode, listFilterOf(filters)),
     sort.key,
     sort.dir,
   )

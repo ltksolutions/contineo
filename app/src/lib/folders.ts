@@ -309,6 +309,17 @@ export async function counts(
  *
  * Cesta sa zapisuje **v tom istom zápise**: rozdelené na dva by chvíľu platilo,
  * že dokument v priečinku je, ale filter „aj s podpriečinkami" ho nenájde.
+ *
+ * **Zapisuje audit** (D51, D93 nález N1) — dovtedy ho nezapisoval ani presun
+ * po jednom, ani hromadný, hoci všetky ostatné operácie s priečinkami áno.
+ * Pôvodný priečinok sa berie z `findOneAndUpdate` s tvarom *pred* zápisom,
+ * nie zo samostatného čítania: medzi dvomi dotazmi by ho mohol presunúť
+ * niekto iný a audit by tvrdil presun odinakiaľ.
+ *
+ * Priečinky sa do auditu píšu **cestou názvov, nie identifikátorom** — kópia,
+ * nie odkaz. Priečinok sa dá premenovať aj zrušiť a „z 8f3a… do c21e…" by
+ * o rok nepovedalo nič. Presun do toho istého priečinka sa nezapisuje;
+ * audit hovorí, ako sa stav zmenil, a tu sa nezmenil.
  */
 export async function assignDocument(
   companyCode: string,
@@ -322,7 +333,7 @@ export async function assignDocument(
   }
 
   const col = await getCollection(DOCUMENTS_COLLECTION)
-  const r = await col.updateOne(
+  const before = await col.findOneAndUpdate(
     { companyCode, documentId },
     {
       $set: {
@@ -332,8 +343,20 @@ export async function assignDocument(
         updatedBy: actor,
       },
     },
+    { returnDocument: "before", projection: { title: 1, folderId: 1 } },
   )
-  if (!r.matchedCount) throw new FolderError("folder.documentNotFound", "Taký dokument tu nie je.")
+  if (!before) throw new FolderError("folder.documentNotFound", "Taký dokument tu nie je.")
+
+  const fromId = (before.folderId as string | null | undefined) ?? null
+  const toId = folderId ?? null
+  if (fromId === toId) return
+
+  const trail = (id: string | null) => (id ? pathTo(all, id).map(p => p.name).join(" / ") || id : null)
+  await writeAudit({
+    companyCode, subject: "document", action: "moved", actor,
+    targetId: documentId, targetLabel: String(before.title ?? documentId),
+    changes: { folder: { from: trail(fromId), to: trail(toId) } },
+  })
 }
 
 
