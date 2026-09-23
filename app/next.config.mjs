@@ -43,6 +43,21 @@ const nextConfig = {
    * Overené v produkcii, nie odhadnuté: prvá oprava cestu v hláške zmenila
    * a prevod aj tak spadol.
    */
+  /*
+   * Strop tela serverovej akcie — predvolený je **1 MB** a nahrávanie
+   * dokumentu na ňom 23. 9. 2026 padlo s chybou servera.
+   *
+   * Hodnota je zámerne vyššia než `MAX_BYTES` v `lib/fileStore.ts` (4 MB):
+   * príliš veľký súbor má doraziť do akcie a dostať zrozumiteľnú vetu. Vyššie
+   * než 4,5 MB to nemá zmysel dávať — to je strop Vercelu pre telo požiadavky
+   * a ten sa nastaviť nedá.
+   */
+  experimental: {
+    serverActions: {
+      bodySizeLimit: "4.5mb",
+    },
+  },
+
   outputFileTracingIncludes: {
     "/**": ["./node_modules/pdfjs-dist/legacy/build/pdf.worker.mjs"],
   },

@@ -21,8 +21,25 @@ import { AppError } from "./appError"
 
 export const BUCKET = "cms_files"
 
-/** Nad tým už to nie je norma, ale archív. Strop je aj ochrana funkcie. */
-export const MAX_BYTES = 32 * 1024 * 1024
+/**
+ * Strop pôvodného súboru — **4 MB, nie 32.**
+ *
+ * Súbor prichádza v tele serverovej akcie a Vercel pustí do funkcie telo
+ * požiadavky najviac 4,5 MB; nad tým odpovie 413 skôr, než sa kód vôbec
+ * spustí, a nastavením sa to zvýšiť nedá. Pôvodných 32 MB bol sľub, ktorý
+ * sa nedal splniť: 23. 9. 2026 nahrávanie z rozhrania padlo na predvolenom
+ * strope Nextu (1 MB) a za ním by čakal ten Vercelu. Dovtedy sa normy
+ * nahrávali skriptom, takže to nikto nevidel.
+ *
+ * 4 MB nechávajú rezervu na obal `multipart` a ostatné polia formulára.
+ * Najväčšia norma SFZ má 2,3 MB. Väčší súbor by chcel nahrávanie po
+ * kúskoch priamo do GridFS — zapísané v `docs/TODO.md`.
+ *
+ * `experimental.serverActions.bodySizeLimit` v `next.config.mjs` je zámerne
+ * **nad** týmto stropom: súbor s 4,2 MB má prejsť až sem a dostať vetu
+ * „strop je 4 MB", nie holú chybu servera.
+ */
+export const MAX_BYTES = 4 * 1024 * 1024
 
 /**
  * Prípony, ktoré formulár nahrávania ponúka. Jedno miesto pre `accept`
