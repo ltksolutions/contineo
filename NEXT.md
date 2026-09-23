@@ -6,7 +6,7 @@
 > **Tento súbor je indícia, `git log` je pravda.** Keď si protirečia, verí sa
 > gitu a NEXT.md sa opraví. Aktualizuje sa pri rituáli **„Poupratuj"**.
 
-Posledná aktualizácia: **2026-09-23** (po oprave výpadku `/library/new` a nasadení rámov knižnice)
+Posledná aktualizácia: **2026-09-23** (po zlúčení rámov knižnice, oprave výpadku s filtrom a zapnutí `no-use-before-define`)
 
 ---
 
@@ -48,11 +48,24 @@ slovník stavov, panel filtrov); query builder s poľom „Platné do" a hodnoto
 `dnes` ako tokenom; a odchod facetu `expired`, ktorý sa odteraz prekladá na
 podmienku „Platné do pred dnes".
 
-**Otvorený je jeden PR: #75** na vetve `fix/panel-filtrov-podla-ramu` — nasadenie
-`KNIZNICA.html` rám po ráme. Prejdených je všetkých osem rámov: panel filtrov,
-zásuvka na telefóne, dva prázdne stavy, karty na tablete a telefóne, panel ako
-karta, akcie v hlavičke vpravo, prázdna knižnica a tmavá téma. Vetva je
-odoslaná, PR nezlúčený.
+**`KNIZNICA.html` je nasadený celý** (PR #75, zlúčený 23. 9.): prejdených je
+všetkých osem rámov — panel filtrov, zásuvka na telefóne, dva prázdne stavy,
+karty na tablete a telefóne, panel ako karta, akcie v hlavičke vpravo, prázdna
+knižnica a tmavá téma.
+
+**Po tom zlúčení knižnica s filtrom spadla** a hneď sa to opravilo (PR #76).
+`activeNames` siahalo na `facetLabel`, ktorý vznikal o sedemdesiat riadkov
+nižšie — `ReferenceError` v dočasnej mŕtvej zóne. Bez filtra stránka fungovala,
+lebo `activeChips` vrátilo prázdne pole a callback sa nezavolal.
+
+**Ani jedna z našich štyroch bŕzd to nezastavila**, preto pribudla piata:
+`@typescript-eslint/no-use-before-define` je odteraz **chyba** (PR #77).
+`tsc` to chytiť nevie — `TS2448` hlási len priamy odkaz v tom istom mieste,
+a náš bol vnútri callbacku, teda pre kompilátor odložené vykonanie.
+
+Repozitár: pracovný strom čistý, **nula otvorených PR**. Vetvy `fix/panel-filtrov-podla-ramu`,
+`fix/tdz-v-kniznici` a `chore/lint-use-before-define` sú zlúčené a **nezmazané** —
+na mazanie treba Jánov súhlas.
 
 ## Čo čaká na rozhodnutie Jána
 
@@ -69,19 +82,16 @@ hodnotu.
 
 ## Najbližšie kroky
 
-1. **Zlúčiť PR #75.** Je hotový a overený, čaká na Jánovu prehliadku. Kým
-   nie je v `main`, produkcia nemá ani panel ako kartu, ani akcie v hlavičke
-   vpravo, ani prázdnu knižnicu podľa rámu 7.
-2. **Tridsať nadbytočných `text-decoration: none` v `globals.css`** — odkedy
+1. **Tridsať nadbytočných `text-decoration: none` v `globals.css`** — odkedy
    je pravidlo v koreni, potláčajú si podčiarknutie samé bez dôvodu. Samostatné
    upratovanie, nie prílepok: v jednom veľkom diffe by sa stratila vecná zmena
    a pri každom pravidle treba overiť, že ho naozaj drží len koreň. Patrí sem
    aj `.notice-confirm`. Podrobnosti v `docs/TODO.md`.
-3. **„Všetko, čo vyhovuje filtru" namiesto zoznamu ID v adrese** — strop výberu
+2. **„Všetko, čo vyhovuje filtru" namiesto zoznamu ID v adrese** — strop výberu
    (`MAX_PICKED = 200`) rieši rezervu, nie princíp. Chce vlastný plán: mení sa
    sémantika hromadnej akcie. Podrobnosti v `docs/TODO.md`.
 
-Prázdny stav knižnice pri filtri, ktorý nič nenájde, bol dovtedy prvým krokom
+Prázdny stav knižnice pri filtri, ktorý nič nenájde, bol pôvodne prvým krokom
 a **je vybavený** (`19db418`, `accb500`): prázdno z filtra vymenuje filtre, ktoré
 zoznam vyprázdnili, a prázdna knižnica je odteraz iná stránka — bez panela,
 hľadania a exportu, lebo pri nule dokumentov niet čo filtrovať.
@@ -99,6 +109,19 @@ cd app && npx tsc --noEmit && npx eslint . && npx vitest run && npm run build
 
 Baseline, proti ktorej sa porovnáva: **0 errors, 42 warnings, 1440 testov
 v 88 súboroch.** Nová chyba alebo nové varovanie znamená regresiu, nie šum.
+
+**Tieto štyri brzdy nevidia chyby za behu.** 23. 9. prešli všetky štyri
+a produkcia aj tak spadla (dočasná mŕtva zóna v `library/page.tsx`). Preto
+je odteraz `@typescript-eslint/no-use-before-define` zapnuté ako **chyba** —
+`tsc` túto triedu chýb chytiť nevie, hlási len priamy odkaz v tom istom
+mieste, nie odkaz vnútri callbacku.
+
+**Stránka sa overuje telom odpovede, nie stavovým kódom.** Next servíruje
+chybovú stránku s kódom **200**, takže `curl -o /dev/null -w '%{http_code}'`
+o ničom nevypovedá. Hľadá sa reťazec „A server error occurred" v tele.
+
+**A overuje sa to, čo ľudia s obrazovkou robia, nie to, čo sa menilo.**
+Knižnica nasadená bez vyskúšaného filtra nie je overená knižnica.
 
 Rozhranie sa overuje **mobile first**: 390 px tmavá a 1440 px svetlá.
 Zlomové body sú len **640 a 1024**, iné nepribúdajú.
