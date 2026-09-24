@@ -15,7 +15,7 @@
 
 | Kde | Čo |
 |---|---|
-| **Stránka `/privacy`** v Contineu | celý text nižšie, v jazyku prostredia (sk, cs, en); dostupná každému prihlásenému |
+| **Stránka `/privacy`** v Contineu | celý text nižšie, v jazyku prostredia (sk, cs, en); verejná — otvorí sa aj pred prihlásením |
 | **Karta potvrdenia** pri každom predpise | jedna veta pod tlačidlom: „Čo sa pri potvrdení ukladá a ako dlho → Ochrana osobných údajov" |
 | **Prvé prihlásenie** | rovnaká veta na úvodnej obrazovke |
 | **Pozvánka e-mailom** | odkaz na `/privacy` v päte |

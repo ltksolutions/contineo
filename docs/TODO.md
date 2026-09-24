@@ -278,7 +278,7 @@
   - [x] **Na produkcii** ✅ 2026-09-24 — `onboarding_init.mjs` (kolekcia `objections`, `audit_ttl`); `migrate:deactivated-at` nemal čo doplniť (žiadna vyradená osoba).
   - [ ] **Zapnúť `RETENTION_MODE=delete`** na Verceli (Production) — až po kontrole výkazu `retention` v odpovedi denného cronu `/api/cron/overdue` (log Vercelu). Dnes by nezmazal nič: projekt je mladší ako 3 roky.
   - [x] **Rola `dpo`** ✅ 2026-09-24 — DPO je **Ján Letko** (pridelené na jeho pokyn, audit).
-  - [ ] **DPO (Ján) schváli text C1** a zodpovie C2, C3 (`docs/C1_…`–`C3_…`, ako .docx v `docs/dpo/`).
+  - [ ] **DPO (Ján) schváli text C1** a zodpovie C2, C3 (`docs/C1_…`–`C3_…`; na vyplnenie ako `C1_C3_ochrana_udajov.docx`, 24. 9.).
   - [x] **Prevádzkovateľ v nastavení organizácie** ✅ 2026-09-24 — právny názov, sídlo, IČO (Nastavenie organizácie → Značka); ukazujú sa na `/privacy`. Vyplniť pre SFZ.
   - [ ] **Odkaz na `/privacy` do pozvánky** (päta `inviteEmail`).
   - [ ] **Opraviť `codelists/legalBasis.json` podľa DPO** — skôr, než sa podľa neho začnú vyberať základy.
