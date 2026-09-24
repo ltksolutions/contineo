@@ -28,6 +28,16 @@ export default function PdfView({
         {/* Prehliadač bez vstavaného PDF zobrazí toto. */}
         <a href={href} target="_blank" rel="noreferrer">{labels.open}</a>
       </object>
+      {/* Pod 640 px dlaždica na palec (ZNENIE-kontakt-a-privacy, bod 5);
+          od 640 px tlačidlo a riadok pod vloženým PDF ako doteraz. */}
+      <a className="pdf-tile" href={href} target="_blank" rel="noreferrer">
+        <span className="pdf-tile-ico" aria-hidden="true">PDF</span>
+        <span className="pdf-tile-main">
+          <span className="pdf-tile-name">{labels.open}</span>
+          <span className="pdf-tile-meta">{name} · {size}</span>
+        </span>
+        <span className="pdf-tile-go" aria-hidden="true">↗</span>
+      </a>
       <p className="pdf-view-link">
         <a className="button button--quiet" href={href} target="_blank" rel="noreferrer">{labels.open}</a>
         <span className="quiet">{name} · {size}</span>

@@ -115,7 +115,7 @@ export default function ReadingTimer({
 
   return (
     <p className="quiet" style={{ fontSize: "var(--fs-small)", margin: "12px 0 0" }}>
-      {t.readingElapsed(formatted)} <span style={{ opacity: 0.8 }}>{t.readingNote}</span>
+      {t.readingElapsed(formatted)} · <span style={{ opacity: 0.8 }}>{t.readingNote}</span>
     </p>
   )
 }
