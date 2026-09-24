@@ -10,7 +10,7 @@
 import { notFound, redirect } from "next/navigation"
 import Link from "next/link"
 import { libraryContext } from "@/lib/library"
-import { libraryDetail, statusTagClass, displayStatus, versionMetaSuggestions } from "@/lib/libraryRead"
+import { libraryDetail, statusTagClass, displayStatus, versionMetaSuggestions, tagOptions } from "@/lib/libraryRead"
 import VersionMetaFields from "@/components/VersionMetaFields"
 import VersionMetaLine from "@/components/VersionMetaLine"
 import { brandingView } from "@/lib/tenants"
@@ -518,7 +518,7 @@ export default async function DocumentDetailPage({
             <span className="field-label">{t.tags}</span>
             <TagSelect
               name="tags"
-              options={codelistOptions("tags", extras).map(v => ({ value: v.value }))}
+              options={await tagOptions(ctx.tenant.companyCode, extras)}
               selected={d.tags}
               newLabel={t.newTag}
               language={language}
