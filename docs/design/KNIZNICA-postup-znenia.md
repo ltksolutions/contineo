@@ -69,7 +69,7 @@ Stavy sa odvodzujú z `draftState`, kôl a pridelení — žiadny nový stav v m
 
 | Údaj | Stav |
 | --- | --- |
-| „Stiahnuť kolo" | ⚠️ overiť, či `ApprovalPanel` stiahnutie kola má; ak nie, **nekresliť** |
+| „Stiahnuť kolo" | ✅ existuje — `cancelRound()` v `approvalsDb.ts`, **dôvod povinný** (`approval.reasonRequired`). V kroku 2 doplniť pole dôvodu. |
 | Počet článkov textu („18 článkov") | ❌ vynechať |
 | „schvaľovatelia uvidia, že sa nič nezmenilo" | ⚠️ overiť, či `/approvals` pri kole 2 porovná identitu konceptu s kolom 1 (D96); ak nie, vetu vynechať |
 | Rola schvaľovateľa pod menom | ⚠️ z adresára (oddelenie/funkcia), ak je |

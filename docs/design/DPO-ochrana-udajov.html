@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="sk"><head><meta charset="utf-8" /><meta name="viewport" content="width=device-width,initial-scale=1" /><title>DPO — ochrana údajov</title>
+<style>
+:root{color-scheme:light;--bg:#f5f6f8;--surface:#fff;--surface-2:#eceef1;--ink:#161b22;--muted:#5c6675;--line:rgba(20,28,42,.12);--accent:#232a35;--accent-strong:#11151c;--on-accent:#fff;--accent-soft:rgba(35,42,53,.11);--ok-bg:#ecfdf5;--ok-fg:#047857;--bad-bg:#fef2f2;--bad-fg:#b91c1c;--warn-bg:#fffbeb;--warn-fg:#b45309;--radius:12px;--radius-lg:18px;--shadow:0 1px 2px rgba(20,28,42,.05),0 10px 30px rgba(20,28,42,.07);--pad-main:16px;--card-pad:16px;--list-py:9px;--gap:14px;--row-py:7px;--font-row:13px;--fs-title:26px;--fs-section:17px;--fs-lead:15px;--fs-body:14px;--fs-small:13px;--fs-micro:12px;--fs-label:13px;--fs-control:15px;--control-h:40px;--control-h-sm:36px}
+.dark{color-scheme:dark;--bg:#0d1016;--surface:#161b22;--surface-2:#1d232c;--ink:#eef1f5;--muted:#9aa4b2;--line:rgba(255,255,255,.12);--accent:#eef1f5;--accent-strong:#fff;--on-accent:#11151c;--accent-soft:rgba(238,241,245,.11);--ok-bg:rgba(4,120,87,.16);--ok-fg:#6ee7b7;--bad-bg:rgba(185,28,28,.16);--bad-fg:#fca5a5;--warn-bg:rgba(180,83,9,.16);--warn-fg:#fcd34d;--shadow:0 1px 2px rgba(0,0,0,.4),0 10px 30px rgba(0,0,0,.45)}
+*{box-sizing:border-box}
+body{margin:0;background:#e6e8ec;font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;-webkit-font-smoothing:antialiased;line-height:1.6}
+.sheet{background:var(--bg);color:var(--ink);padding:28px 32px 40px}
+h1.doc{font-size:22px;letter-spacing:-.02em;margin:0 0 4px}
+p.doc{font-size:14px;color:var(--muted);margin:0 0 24px;max-width:80ch}
+.sec{margin:0 0 30px}
+.sec-h{font-size:11px;font-weight:650;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin:0 0 4px}
+.sec-n{font-size:var(--fs-section);font-weight:650;margin:0 0 3px}
+.sec-w{font-size:13px;color:var(--muted);margin:0 0 12px;max-width:78ch;line-height:1.55}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:0 0 10px}
+.lbl{font-size:11px;color:var(--muted);font-family:ui-monospace,Menlo,monospace;width:100%;margin:6px 0 2px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:var(--card-pad)}
+.quiet{color:var(--muted)}
+.tag{display:inline-flex;align-items:center;justify-content:center;gap:6px;border:1px solid var(--line);border-radius:999px;min-height:24px;padding:0 10px;font-size:var(--fs-micro);font-weight:600;line-height:1.2;white-space:nowrap}
+.tag--published{background:var(--ok-bg);color:var(--ok-fg);border-color:transparent}
+.tag--draft{background:var(--warn-bg);color:var(--warn-fg);border-color:transparent}
+.tag--review{background:var(--accent-soft);color:var(--accent-strong);border-color:transparent}
+.tag--expired{background:var(--bad-bg);color:var(--bad-fg);border-color:transparent}
+.tag--archived{background:var(--surface-2);color:var(--muted);border-color:transparent}
+.button{display:inline-flex;align-items:center;justify-content:center;gap:8px;background:var(--accent);color:var(--on-accent);border:1px solid var(--accent);border-radius:10px;min-height:var(--control-h);padding:0 18px;font-size:var(--fs-control);font-weight:600;line-height:1.2;font-family:inherit;text-decoration:none;cursor:pointer}
+.button--quiet{background:transparent;color:var(--ink);border-color:var(--line)}
+.is-hover.button{background:var(--accent-strong)}
+.is-hover.button--quiet{background:var(--surface-2)}
+.is-focus{outline:2px solid var(--accent);outline-offset:2px}
+.button:disabled,.button[aria-disabled=true]{opacity:.5;cursor:not-allowed}
+.field{display:grid;gap:5px}
+.field-label{font-size:var(--fs-label);font-weight:600}
+.field-hint{font-size:var(--fs-micro);color:var(--muted)}
+.field-input{font:inherit;font-size:var(--fs-control);color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:10px;min-height:var(--control-h);line-height:1.2;padding:8px 12px;width:100%}
+.field-input:disabled{background:var(--surface-2);color:var(--muted);cursor:not-allowed}
+.is-focus.field-input{outline:2px solid var(--accent);outline-offset:1px}
+.ask{display:flex;align-items:center;gap:9px;min-height:var(--control-h-sm);padding:0 12px;border-radius:9px;background:var(--bg);border:1px solid var(--line);color:var(--muted);font-size:13px}
+.kbd{font-size:11.5px;color:var(--muted);padding:2px 6px;border-radius:5px;background:var(--surface-2);font-family:ui-monospace,Menlo,monospace}
+.bulk-pick{display:inline-flex;align-items:center;gap:8px;text-decoration:none;color:inherit}
+.bulk-pick-box{display:grid;place-items:center;width:15px;height:15px;border-radius:4px;border:1px solid var(--line);background:transparent;color:var(--on-accent);font-size:9px;font-weight:800}
+.bulk-pick.is-on .bulk-pick-box{background:var(--accent);border-color:var(--accent)}
+.box22{width:22px;height:22px;border-radius:6px;font-size:12px}
+.library-chip{display:inline-flex;align-items:center;gap:5px;min-height:28px;padding:0 5px 0 9px;border-radius:6px;background:var(--accent-soft);color:var(--accent-strong);font-size:12px;text-decoration:none}
+.library-chip-key{color:var(--muted)}
+.library-chip-x{font-size:15px;line-height:1;color:var(--muted);width:16px;text-align:center}
+.facet{display:flex;align-items:center;gap:8px;min-height:34px;padding:0 6px;border-radius:7px;text-decoration:none;color:inherit;font-size:13px}
+.facet.is-on{background:var(--accent-soft);font-weight:600}
+.facet-box{display:grid;place-items:center;width:15px;height:15px;border-radius:4px;border:1px solid var(--line);color:var(--on-accent);font-size:9px;font-weight:800}
+.facet.is-on .facet-box{background:var(--accent);border-color:var(--accent)}
+.facet-name{flex:1}
+.facet-count{font-size:11.5px;color:var(--muted);font-variant-numeric:tabular-nums}
+.pill{display:inline-flex;align-items:center;gap:6px;min-height:36px;padding:0 10px;border-radius:9px;border:1px solid var(--line);background:var(--surface);font-size:14px;text-decoration:none;color:var(--ink)}
+.pill.is-on{border-color:var(--accent);background:var(--accent-soft);color:var(--accent-strong);font-weight:600}
+.pill-count{font-size:12px;opacity:.65;font-variant-numeric:tabular-nums}
+.ack-bar{display:inline-flex;align-items:center;gap:6px;min-width:104px}
+.ack-track{flex:1;height:5px;border-radius:3px;background:var(--surface-2);overflow:hidden}
+.ack-fill{display:block;height:100%}
+.ack-fill--high{background:var(--ok-fg)}
+.ack-fill--mid{background:var(--accent)}
+.ack-fill--low{background:var(--warn-fg)}
+.ack-value{font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums}
+.doc-table-wrap{border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;background:var(--surface)}
+.doc-table{width:100%;border-collapse:collapse}
+.doc-table th{padding:8px 10px;text-align:left;font-size:10.5px;font-weight:650;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);white-space:nowrap;background:var(--bg);border-bottom:1px solid var(--line)}
+.doc-table td{padding:var(--row-py) 10px;font-size:var(--font-row);border-bottom:1px solid var(--line);vertical-align:top}
+.doc-table tbody tr:last-child td{border-bottom:0}
+.doc-table tbody tr.is-hover{background:var(--bg)}
+.doc-table tbody tr.is-picked{background:var(--accent-soft)}
+.doc-table tbody tr.is-picked td:first-child{box-shadow:inset 3px 0 0 var(--accent)}
+.doc-title{color:var(--ink);font-weight:600;text-decoration:none}
+.doc-meta{font-size:11px;color:var(--muted);margin-top:1px}
+.doc-col-right{text-align:right}
+.doc-card{display:flex;gap:12px;padding:12px 12px 12px 10px;border:1px solid var(--line);border-radius:var(--radius);background:var(--surface)}
+.doc-card.is-picked{background:var(--accent-soft);border-color:var(--accent)}
+.doc-card-top{display:flex;align-items:center;gap:6px;margin-bottom:4px}
+.doc-card-title{display:block;font-size:15px;font-weight:600;line-height:1.3;color:var(--ink);text-decoration:none;text-wrap:pretty}
+.empty{display:grid;justify-items:center;gap:4px;padding:32px 20px;border:1px dashed var(--line);border-radius:var(--radius);text-align:center}
+.empty-title{font-size:var(--fs-lead);font-weight:600}
+.empty-text{font-size:var(--fs-small);color:var(--muted);line-height:1.55;max-width:46ch}
+.empty-action{margin-top:10px}
+.notice{display:flex;gap:9px;align-items:flex-start;padding:10px 12px;border-radius:9px;background:var(--ok-bg);border:1px solid rgba(4,120,87,.2)}
+.notice-mark{display:grid;place-items:center;width:20px;height:20px;border-radius:50%;background:var(--ok-bg);color:var(--ok-fg);font-weight:800;font-size:12px;flex:0 0 auto}
+.notice-text{font-size:13px;color:var(--ok-fg);line-height:1.45}
+.notice--error{background:var(--bad-bg);border-color:rgba(185,28,28,.2)}
+.notice--error .notice-mark{background:var(--bad-bg);color:var(--bad-fg)}
+.notice--error .notice-text{color:var(--bad-fg)}
+.pager{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:8px 12px;background:var(--bg);border-top:1px solid var(--line);font-size:var(--fs-micro);color:var(--muted)}
+.pager-count{font-variant-numeric:tabular-nums}
+.pager-spacer{flex:1}
+.pager-link{min-height:28px;padding:0 10px;font-size:12px}
+.pager-link[aria-disabled=true]{opacity:.45;pointer-events:none}
+.page-title{font-size:var(--fs-title);letter-spacing:-.02em;line-height:1.2;margin:0 0 6px}
+.page-lead{font-size:var(--fs-lead);line-height:1.55;margin:0 0 18px;max-width:640px;color:var(--muted)}
+.view-switch{display:inline-flex;padding:3px;gap:2px;background:var(--surface-2);border-radius:9px}
+.view-switch-item{display:grid;place-items:center;min-height:30px;padding:0 11px;border-radius:7px;font-size:12.5px;color:var(--muted);text-decoration:none}
+.view-switch-item.is-on{background:var(--surface);color:var(--ink);font-weight:600}
+table.spec{width:100%;border-collapse:collapse;font-size:12.5px;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden}
+table.spec th{text-align:left;padding:7px 10px;font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);background:var(--bg);border-bottom:1px solid var(--line)}
+table.spec td{padding:6px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+table.spec tr:last-child td{border-bottom:0}
+code{font-family:ui-monospace,Menlo,monospace;font-size:12px;background:var(--surface-2);padding:1px 5px;border-radius:4px}
+
+.frame{flex:0 0 auto;min-width:0;background:var(--bg);color:var(--ink);border:1px solid rgba(20,28,42,.18);border-radius:12px;overflow:hidden;box-shadow:0 20px 44px rgba(0,0,0,.12)}
+.hdr{display:flex;align-items:center;gap:14px;height:56px;padding:0 24px;background:var(--surface);border-bottom:1px solid var(--line)}
+.logo{display:grid;place-items:center;width:28px;height:28px;border-radius:8px;background:var(--accent);color:var(--on-accent);flex:0 0 auto}
+.org{font-size:14px;font-weight:650;letter-spacing:-.01em;white-space:nowrap}
+.bell{position:relative;display:grid;place-items:center;width:36px;height:36px;color:var(--muted);flex:0 0 auto}
+.bell b{position:absolute;top:5px;right:4px;min-width:16px;height:16px;padding:0 4px;border-radius:8px;background:var(--bad-fg);color:var(--on-accent);font-size:10px;font-weight:700;display:grid;place-items:center;box-shadow:0 0 0 2px var(--surface)}
+.av{display:grid;place-items:center;width:30px;height:30px;border-radius:50%;background:var(--surface-2);font-size:11px;font-weight:650;flex:0 0 auto}
+.nav{display:flex;gap:2px;padding:0 24px;background:var(--surface);border-bottom:1px solid var(--line)}
+.nav a{display:flex;align-items:center;gap:6px;height:42px;padding:0 12px;font-size:13.5px;color:var(--muted);text-decoration:none;border-bottom:2px solid transparent;white-space:nowrap}
+.nav a.is-on{color:var(--accent);font-weight:650;border-bottom-color:var(--accent)}
+.nav .c{font-size:11px;font-weight:600;padding:1px 6px;border-radius:10px;background:var(--surface-2);color:var(--muted)}
+.body{padding:var(--pad-main) var(--pad-main) 32px}
+.wrap{max-width:1240px;margin:0 auto}
+.overview{display:grid;gap:var(--gap)}
+.overview-hello{font-size:var(--fs-title);letter-spacing:-.02em;line-height:1.2;margin:0 0 3px}
+.overview-lede{font-size:var(--fs-lead);color:var(--muted);margin:0 0 14px}
+.overview-ask{display:flex;gap:8px}
+.overview-ask-input{flex:1}
+.overview-suggestions{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+.overview-suggestion{padding:5px 11px;border:1px solid var(--line);border-radius:999px;font-size:12.5px;color:var(--muted);text-decoration:none}
+.kpi{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.kpi-tile{display:grid;gap:4px;text-decoration:none;color:inherit;padding:14px 15px}
+.kpi-label{font-size:11px;font-weight:650;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
+.kpi-value{font-size:27px;font-weight:640;letter-spacing:-.03em;font-variant-numeric:tabular-nums;line-height:1.1}
+.kpi-value--bad{color:var(--bad-fg)}
+.kpi-value--warn{color:var(--warn-fg)}
+.kpi-value--zero{color:var(--muted);font-weight:600}
+.kpi-note{font-size:11.5px;color:var(--muted)}
+.overview-panels{display:grid;gap:14px}
+.panel{padding:0;overflow:hidden}
+.panel-head{display:flex;align-items:center;gap:10px;padding:12px 15px;border-bottom:1px solid var(--line);font-size:14px;font-weight:650}
+.panel-head-count{font-size:var(--fs-micro);color:var(--muted);font-weight:400;font-variant-numeric:tabular-nums}
+.panel-head-link{margin-left:auto;font-size:var(--fs-micro);font-weight:600;color:var(--accent);text-decoration:none}
+.panel-row{display:flex;align-items:center;gap:12px;padding:11px 15px;border-bottom:1px solid var(--line)}
+.panel-row:last-child{border-bottom:0}
+.panel-main{flex:1;min-width:0}
+.panel-name{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;font-size:13.5px;font-weight:550;color:var(--ink);text-decoration:none;line-height:1.35;text-wrap:pretty;overflow-wrap:anywhere}
+.panel-meta{font-size:12px;color:var(--muted);margin-top:1px}
+.panel-action{min-height:32px;padding:0 12px;font-size:12.5px}
+.panel-empty{display:grid;gap:3px;padding:18px 15px}
+.panel-empty-title{font-size:var(--fs-small);font-weight:600;color:var(--ink)}
+.panel-empty-text{font-size:var(--fs-micro);color:var(--muted);line-height:1.5}
+.due-chip{display:inline-flex;align-items:center;min-height:24px;padding:0 8px;border-radius:6px;font-size:12px;font-weight:600;background:var(--surface-2);color:var(--muted);white-space:nowrap}
+.due-chip--soon{background:var(--warn-bg);color:var(--warn-fg)}
+.due-chip--over{background:var(--bad-bg);color:var(--bad-fg)}
+.ask-hero{padding:20px 22px}
+.ask-field{display:flex;gap:8px;align-items:flex-start}
+.answer{font-size:var(--fs-body);line-height:1.7;max-width:70ch;margin:0}
+.answer-head{display:flex;align-items:center;gap:8px;margin-bottom:12px}
+.answer-mark{color:var(--accent);display:grid;place-items:center}
+.answer-kicker{font-size:11px;font-weight:650;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.answer sup{font-size:10px;color:var(--accent);font-weight:700}
+.answer-sources{display:grid;gap:6px;margin-top:14px}
+.answer-source{display:flex;gap:10px;padding:10px 12px;border-radius:9px;background:var(--bg);border:1px solid var(--line);text-decoration:none;color:inherit}
+.answer-source-index{flex:0 0 20px;font-size:11.5px;font-weight:700;color:var(--accent)}
+.answer-source-body{flex:1;min-width:0}
+.answer-source-title{font-size:12.5px;font-weight:600;text-wrap:pretty;overflow-wrap:anywhere}
+.answer-source-meta{display:block;font-size:11.5px;color:var(--muted);margin-top:2px}
+.answer--none{border-style:dashed}
+.rating{display:flex;align-items:center;gap:10px;margin-top:14px;padding-top:12px;border-top:1px solid var(--line);font-size:12.5px;color:var(--muted);flex-wrap:wrap}
+.cap{font-size:11.5px;font-weight:600;color:#5c6675;margin:0 0 8px;font-family:ui-monospace,Menlo,monospace}
+.frames{display:flex;gap:24px;align-items:flex-start;flex-wrap:wrap;margin:0 0 30px}
+/* Layout rámu urči TRIEDOU rámu, nikdy viewportovou @media — rám má fixnú
+   šírku, takže @media by sa vyhodnocovala proti oknu prehliadača a referencia
+   by vyzerala inak podľa toho, ako široko ju kto otvorí. */
+.w1440 .kpi{grid-template-columns:repeat(4,1fr)}
+.w1440 .overview-panels{grid-template-columns:1.2fr 1fr}
+.w390 .kpi{grid-template-columns:1fr 1fr}
+.w390 .overview-panels{grid-template-columns:1fr}
+.w390 .overview-suggestions,.w390 .ask-examples-wrap{display:none}
+.w390 .panel-row{flex-wrap:wrap}
+.w390 .panel-main{flex:1 0 100%}
+.w390 .panel-action{min-height:44px}
+.w390 .answer{font-size:16px;line-height:1.65}
+.w390 .answer-source{min-height:44px}
+.w834 .kpi{grid-template-columns:1fr 1fr}
+.w834 .overview-panels{grid-template-columns:1fr}
+
+.duty-page{max-width:760px}
+.duty-track{margin:0 0 32px}
+.duty-track-head{display:flex;gap:12px;align-items:baseline;flex-wrap:wrap;margin:0 0 4px}
+.duty-track-title{font-size:var(--fs-section);letter-spacing:-.01em;margin:0;flex:1 1 auto}
+.duty-track-progress{font-size:var(--fs-small);color:var(--muted)}
+.duty-list{list-style:none;padding:0;margin:12px 0 0;display:grid;gap:12px}
+.duty-card{padding:16px 18px}
+.duty-card.is-next{border-color:var(--accent)}
+.duty-head{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.duty-order{flex:0 0 auto;font-size:var(--fs-small);color:var(--muted)}
+.duty-title{flex:1 1 260px;font-size:var(--fs-lead);font-weight:600;text-wrap:pretty}
+.duty-due{margin-left:auto}
+.duty-meta{font-size:var(--fs-small);color:var(--muted);margin:8px 0 0}
+.duty-action{margin:12px 0 0}
+.approval-list{list-style:none;padding:0;margin:0;display:grid;gap:20px}
+.approval-card{padding:18px}
+.approval-title{font-size:var(--fs-section);letter-spacing:-.01em;margin:0 0 4px;text-wrap:pretty}
+.approval-meta{font-size:var(--fs-small);color:var(--muted)}
+.approval-note{font-size:var(--fs-body);margin:10px 0 0}
+.approval-text{margin-top:10px;line-height:1.7;max-width:70ch;font-size:var(--fs-body)}
+.approval-form{display:grid;gap:12px;margin-top:14px}
+.approval-decide{display:flex;gap:10px;flex-wrap:wrap}
+.w390 .duty-order{flex:1 0 100%}
+.w390 .duty-due{margin-left:0}
+.w390 .duty-action .button{width:100%;min-height:44px}
+.w390 .duty-head{gap:8px}
+.w390 .approval-decide{flex-direction:column-reverse}
+.w390 .approval-decide .button{width:100%;min-height:44px}
+.w390 .approval-form textarea.field-input{min-height:64px}
+.approval-form textarea.field-input{min-height:64px}
+summary{cursor:pointer}
+
+/* PREVZATÉ z globals.css: .detail-* 2208–2299, .audit* 1694–1735,
+   .document-sheet 1593–1602, .acknowledge-* 3409–3425. */
+.detail-page{max-width:1180px}
+.detail-grid{display:grid;grid-template-columns:minmax(0,1fr);gap:18px;align-items:start}
+.detail-main{min-width:0}
+.detail-side{display:grid;gap:12px;min-width:0}
+.w1440 .detail-grid,.w834 .detail-grid{grid-template-columns:minmax(0,1fr) 280px}
+.w390 .detail-grid{grid-template-columns:minmax(0,1fr)}
+.w390 .detail-side{order:-1}
+.detail-chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px}
+.detail-card{padding:14px 16px}
+.detail-card-title{margin:0 0 10px;font-size:13px;font-weight:650;letter-spacing:.04em;text-transform:uppercase;color:var(--muted)}
+.detail-progress-head{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
+.detail-percent{font-size:26px;font-weight:640;letter-spacing:-.03em;font-variant-numeric:tabular-nums}
+.detail-progress-of{font-size:13px;font-variant-numeric:tabular-nums}
+.detail-bar{margin-top:10px;height:6px;border-radius:3px;background:var(--surface-2);overflow:hidden}
+.detail-bar-fill{display:block;height:100%;background:var(--accent)}
+.detail-card-link{margin:10px 0 0;font-size:13px;font-weight:600}
+.detail-card-link a{color:var(--accent)}
+.detail-empty{margin:0;font-size:13.5px;line-height:1.5}
+.detail-meta{margin:0;display:grid;gap:8px}
+.detail-meta-row{display:flex;gap:10px;align-items:baseline}
+.detail-meta-key{flex:0 0 104px;font-size:12.5px}
+.detail-meta-value{flex:1;min-width:0;margin:0;font-size:13.5px;overflow-wrap:anywhere}
+.audit{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.audit-entry{padding:12px 16px;display:grid;gap:6px}
+.audit-head{display:flex;gap:8px;align-items:baseline;flex-wrap:wrap}
+.audit-target{font-size:14.5px}
+.audit-who{font-size:13px;color:var(--muted)}
+.audit-note{font-size:13px;font-style:italic;color:var(--muted)}
+.document-sheet{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius-lg);padding:28px 32px}
+.w390 .document-sheet{padding:20px 16px}
+.acknowledge-card{padding:20px;margin-top:32px}
+.w390 .acknowledge-card{margin-bottom:64px}
+.acknowledge-dock{position:relative;display:flex;padding:0 10px}
+.acknowledge-dock .button{width:100%;min-height:50px;border-radius:12px;box-shadow:var(--shadow)}
+.acknowledge-progress{position:absolute;inset:0 auto auto 0;height:2px;background:var(--accent)}
+.detail-block{padding:18px;display:grid;gap:12px;margin:0 0 18px}
+.detail-block-title{font-size:var(--fs-section);margin:0}
+.detail-block-note{font-size:var(--fs-body);color:var(--muted);margin:0}
+.detail-tools{margin:0 0 18px}
+.detail-tools>summary{font-size:var(--fs-section);font-weight:650;padding:14px 18px;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);cursor:pointer;list-style:none}
+.detail-tools>summary::-webkit-details-marker{display:none}
+/* Chevron z produktu (globals.css, select.field-input), nie znak: znak kreslí
+   operačný systém a na každom vyzerá inak. Zatvorené smeruje vpravo, otvorené dole. */
+.detail-tools>summary{display:flex;align-items:center;gap:9px}
+.detail-tools>summary::before{content:"";flex:0 0 12px;width:12px;height:12px;background:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12' fill='none'><path d='M2.5 4.5L6 8l3.5-3.5' stroke='%235c6675' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/></svg>") no-repeat center;transform:rotate(-90deg)}
+.detail-tools[open]>summary::before{transform:none}
+.dark .detail-tools>summary::before{background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12' fill='none'><path d='M2.5 4.5L6 8l3.5-3.5' stroke='%239aa4b2' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/></svg>")}
+.detail-tools[open]>summary{border-radius:var(--radius) var(--radius) 0 0}
+.detail-tools-body{display:grid;gap:14px;padding:14px 0 0}
+.detail-card{padding:14px}
+.detail-card-title{font-size:11px;font-weight:650;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:0 0 9px}
+.detail-percent{font-size:25px;font-weight:640;letter-spacing:-.03em;font-variant-numeric:tabular-nums}
+.detail-progress-head{display:flex;align-items:baseline;gap:7px;margin-bottom:8px}
+.detail-progress-of{font-size:12px}
+.detail-bar{height:6px;border-radius:3px;background:var(--surface-2);overflow:hidden;margin-bottom:10px}
+.detail-bar-fill{display:block;height:100%;background:var(--accent)}
+.detail-card-link{margin:0;font-size:12.5px;font-weight:600}
+.detail-meta{margin:0;display:grid;gap:9px}
+.detail-meta-row{display:flex;gap:10px;align-items:baseline}
+.detail-meta-key{flex:0 0 84px;font-size:12px;margin:0}
+.detail-meta-value{flex:1;font-size:12.5px;margin:0;text-wrap:pretty;overflow-wrap:anywhere}
+.detail-page .page-title{text-wrap:pretty;overflow-wrap:anywhere}
+.audit{list-style:none;padding:0;margin:0;display:grid;gap:12px}
+.audit-entry{padding:14px 16px}
+.audit-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.audit-who{font-size:12px;margin-top:3px}
+.audit-note{font-size:12px;margin-top:3px}
+.document-sheet{max-width:68ch;font-size:var(--fs-lead);line-height:1.7}
+.document-sheet h2{margin:28px 0 8px;font-size:var(--fs-section)}
+.document-sheet h2:first-child{margin-top:0}
+.document-sheet p{margin:0 0 12px}
+.w390 .document-sheet{font-size:16px}
+.acknowledge-card{padding:20px;margin-top:32px}
+.acknowledge-dock{position:relative;display:flex;padding:10px 14px 18px;background:var(--surface);border-top:1px solid var(--line)}
+.acknowledge-progress{position:absolute;inset:0 auto auto 0;height:2px;background:var(--accent)}
+.formulka{font-size:var(--fs-body);line-height:1.6;margin:0 0 14px}
+
+
+
+.dpo{max-width:1180px}
+.w834 .dpo,.w390 .dpo{max-width:none}
+.tiles{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:0 0 20px}
+.w390 .tiles{grid-template-columns:1fr 1fr}
+.tile{padding:14px 15px;display:grid;gap:3px}
+.tile-l{font-size:11px;font-weight:650;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
+.tile-v{font-size:27px;font-weight:640;letter-spacing:-.03em;line-height:1.1;font-variant-numeric:tabular-nums}
+.tile-v.warn{color:var(--warn-fg)}
+.sec-head{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin:0 0 10px}
+.sec-head h2{font-size:var(--fs-section);margin:0}
+.sec-head .sp{flex:1}
+.sec-head .button{min-height:36px;font-size:14px}
+.tbl-wrap{border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;background:var(--surface)}
+.tbl{width:100%;border-collapse:collapse}
+.tbl th{padding:8px 12px;text-align:left;font-size:10.5px;font-weight:650;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);background:var(--bg);border-bottom:1px solid var(--line)}
+.tbl td{padding:10px 12px;font-size:13px;border-bottom:1px solid var(--line);vertical-align:top}
+.tbl tr.grp td{background:var(--bg);font-size:11.5px;font-weight:650;color:var(--muted);padding:7px 12px}
+.tbl a{color:var(--ink)}
+.t-title{font-weight:600;color:var(--ink);text-decoration:none}
+.t-sub{font-size:11.5px;color:var(--muted);margin-top:2px;overflow-wrap:anywhere}
+.none{color:var(--muted)}
+.chips{display:flex;gap:4px;flex-wrap:wrap}
+.cards{list-style:none;padding:0;margin:0;display:grid;gap:10px}
+.rcard{padding:14px;display:grid;gap:8px}
+.rcard-top{display:flex;gap:8px;align-items:flex-start;justify-content:space-between}
+.rcard-title{font-weight:600;font-size:14.5px;line-height:1.35;text-wrap:pretty}
+.rcard dl{display:grid;grid-template-columns:auto 1fr;gap:4px 10px;margin:0;font-size:13px}
+.rcard dt{color:var(--muted)}
+.rcard dd{margin:0;overflow-wrap:anywhere}
+.grp-h{font-size:11.5px;font-weight:650;color:var(--muted);margin:8px 0 2px;text-transform:uppercase;letter-spacing:.05em}
+.obj{padding:0;overflow:hidden}
+.obj-head{padding:14px 16px;display:grid;gap:6px}
+.obj-top{display:flex;gap:8px;align-items:baseline;flex-wrap:wrap}
+.obj-meta{font-size:var(--fs-small);color:var(--muted)}
+.obj-text{margin:0;padding:10px 12px;border-radius:9px;background:var(--bg);border:1px solid var(--line);font-size:13.5px;line-height:1.55;white-space:pre-wrap}
+.obj-decide{padding:14px 16px;border-top:1px solid var(--line);background:var(--bg);display:grid;gap:10px}
+.choice{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;border:1px solid var(--line);border-radius:9px;background:var(--surface);font-size:13.5px;line-height:1.4}
+.choice.is-on{border-color:var(--accent);background:var(--accent-soft)}
+.choice.danger.is-on{border-color:var(--bad-fg);background:var(--bad-bg)}
+.radio{width:16px;height:16px;border-radius:50%;border:1.5px solid var(--muted);flex:0 0 auto;margin-top:1px;display:grid;place-items:center}
+.is-on .radio{border-color:currentColor}
+.is-on .radio::after{content:"";width:8px;height:8px;border-radius:50%;background:currentColor}
+.warnbox{margin:0;padding:9px 12px;border-radius:9px;background:var(--bad-bg);color:var(--bad-fg);font-size:12.5px;font-weight:600}
+.obj-done{padding:12px 16px;border-top:1px solid var(--line);font-size:var(--fs-small);display:grid;gap:3px}
+.record>summary{list-style:none;cursor:pointer;display:inline-flex;align-items:center;gap:8px;min-height:40px;padding:0 16px;border:1px solid var(--line);border-radius:10px;background:var(--surface);font-weight:600;font-size:14.5px}
+.record>summary::-webkit-details-marker{display:none}
+.record-body{margin-top:10px;padding:18px;display:grid;gap:12px}
+.w390 .button,.w390 .record>summary{min-height:44px}
+.w390 .field-input{min-height:44px;font-size:16px}
+.ann{font-size:12px;color:#5c6675;max-width:78ch;margin:8px 0 0;line-height:1.5}
+.ann b{color:#161b22}
+.num{display:inline-grid;place-items:center;width:18px;height:18px;border-radius:50%;background:#b45309;color:#fff;font-size:10.5px;font-weight:700;margin-right:4px;vertical-align:1px}
+.q{display:inline-grid;place-items:center;min-width:22px;height:18px;border-radius:9px;background:#1d4ed8;color:#fff;font-size:10.5px;font-weight:700;padding:0 5px;margin-left:4px;vertical-align:1px}
+</style></head>
+<body><div class="sheet">
+<h1 class="doc">DPO — ochrana údajov</h1>
+<p class="doc">Obrazovka <code>/dpo</code> (rola DPO, ADR-012, D104, D105). Funguje: výkaz právnych základov s nedostatkami, CSV, námietky so zápisom a rozhodnutím. Snímka <code>uploads/DPO-1440</code>: 13 kariet rovnakej váhy pod sebou, 11 s rovnakým nedostatkom — DPO musí čítať každú. Návrh mení podobu: počty hore, od 1024 px tabuľka, nedostatky ako prvá skupina, námietka s rozhodnutím v päte. Nič sa nemení v tom, čo DPO smie (kontroluje, neurčuje). Zadanie: <code>DPO-ochrana-udajov.md</code>.</p>
+<p class="cap">Desktop 1440 — tabuľka, nedostatky hore, jedna námietka čaká</p>
+<div class="frames"><div class="frame w1440" style="width:1440px"><div class="hdr"><span class="logo"><svg width="17" height="17" viewBox="0 0 48 48" fill="none" aria-hidden="true" style="flex:0 0 auto"><circle cx="18" cy="18" r="13" stroke="currentColor" stroke-width="4"></circle><circle cx="13" cy="18" r="2.3" fill="currentColor"></circle><circle cx="23" cy="18" r="2.3" fill="currentColor"></circle><path d="M28 27 L41 41 L29 38 Z" fill="currentColor"></path></svg></span><span class="org">Slovenský futbalový zväz</span>  <div class="ask" style="flex:1;min-width:0"><svg width="16" height="16" viewBox="0 0 48 48" fill="none" aria-hidden="true" style="flex:0 0 auto"><circle cx="18" cy="18" r="13" stroke="currentColor" stroke-width="4"></circle><circle cx="13" cy="18" r="2.3" fill="currentColor"></circle><circle cx="23" cy="18" r="2.3" fill="currentColor"></circle><path d="M28 27 L41 41 L29 38 Z" fill="currentColor"></path></svg><span style="flex:1">Opýtajte sa svojich dokumentov…</span><span class="kbd">⌘K</span></div>  <span class="bell"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13.9 11.6c0-5.2-1.6-7-4.9-7s-4.9 1.8-4.9 7l-1.3 2.1h12.4z"></path><path d="M10.6 15.4a1.7 1.7 0 0 1-3.2 0"></path></svg><b>3</b></span><span class="av">JL</span></div><div class="nav"><a href="#" class="">Prehľad</a><a href="#" class="">Voľné otázky</a><a href="#" class="">Na potvrdenie<span class="c">1</span></a><a href="#" class="">Na schválenie</a><a href="#" class="">Adresár</a><a href="#" class="">Knižnica</a><a href="#" class="">Pridelené normy</a><a href="#" class="">Reťaz dôkazov</a><a href="#" class="">Osoby</a><a href="#" class="">Na posúdenie</a><a href="#" class="is-on">Ochrana údajov</a></div><div class="body"><div class="wrap"><div class="dpo"><h1 class="page-title">Ochrana údajov</h1><p class="page-lead">Právne základy platných predpisov. Určuje ich zodpovedná osoba za predpis, vy ich kontrolujete — raz za štvrťrok vám príde prehľad e-mailom.</p><div class="tiles"><div class="card tile"><span class="tile-l">Platné predpisy</span><span class="tile-v">13</span></div><div class="card tile"><span class="tile-l">S nedostatkom</span><span class="tile-v warn">11</span></div><div class="card tile"><span class="tile-l">Zákonná povinnosť</span><span class="tile-v">1</span></div><div class="card tile"><span class="tile-l">Oprávnený záujem</span><span class="tile-v">1</span></div></div><div class="sec-head"><h2>Právne základy platných predpisov</h2><span class="quiet" style="font-size:var(--fs-small)">13 platných predpisov, z toho 11 s nedostatkom.</span><span class="sp"></span><span class="button button--quiet">Stiahnuť CSV</span></div><div class="tbl-wrap"><table class="tbl"><thead><tr><th style="width:34%">Predpis</th><th>Právny základ</th><th style="width:18%">Zodpovedná osoba</th><th style="width:16%">Stav</th></tr></thead><tbody>
+<tr class="grp"><td colspan="4">S nedostatkom · 11</td></tr>
+<tr><td><a class="t-title" href="#">Disciplinárny poriadok SFZ</a><div class="t-sub">Znenie: 1.0 · 1. 7. 2023</div></td><td><span class="none">—</span></td><td><a href="#">Ján Letko</a><div class="t-sub">jan.letko@futbalsfz.sk</div></td><td><div class="chips"><span class="tag tag--draft">chýba právny základ</span></div></td></tr><tr><td><a class="t-title" href="#">Organizačný a návštevný poriadok</a><div class="t-sub">Znenie: 1.0 · 1. 7. 2014</div></td><td><span class="none">—</span></td><td><a href="#">Ján Letko</a><div class="t-sub">jan.letko@futbalsfz.sk</div></td><td><div class="chips"><span class="tag tag--draft">chýba právny základ</span></div></td></tr><tr><td><a class="t-title" href="#">Poriadok komory pre riešenie sporov</a><div class="t-sub">Znenie: 1.0 · 7. 12. 2021</div></td><td><span class="none">—</span></td><td><a href="#">Ján Letko</a><div class="t-sub">jan.letko@futbalsfz.sk</div></td><td><div class="chips"><span class="tag tag--draft">chýba právny základ</span></div></td></tr><tr><td><a class="t-title" href="#">Registračný a prestupový poriadok SFZ</a><div class="t-sub">Znenie: 1.0 · 1. 6. 2026</div></td><td><span class="none">—</span></td><td><a href="#">Ján Letko</a><div class="t-sub">jan.letko@futbalsfz.sk</div></td><td><div class="chips"><span class="tag tag--draft">chýba právny základ</span></div></td></tr><tr><td><a class="t-title" href="#">Revízny poriadok</a><div class="t-sub">Znenie: 1.0 · 1. 1. 2026</div></td><td><span class="none">—</span></td><td><a href="#">Ján Letko</a><div class="t-sub">jan.letko@futbalsfz.sk</div></td><td><div class="chips"><span class="tag tag--draft">chýba právny základ</span></div></td></tr><tr><td><a class="t-title" href="#">Rokovací poriadok Konferencie SFZ</a><div class="t-sub">Znenie: 1.0 · 4. 6. 2016</div></td><td><span class="none">—</span></td><td><a href="#">Ján Letko</a><div class="t-sub">jan.letko@futbalsfz.sk</div></td><td><div class="chips"><span class="tag tag--draft">chýba právny základ</span></div></td></tr>
+<tr><td colspan="4" class="none" style="font-size:12.5px">… ďalších 5</td></tr>
+<tr class="grp"><td colspan="4">V poriadku · 2</td></tr>
+<tr><td><a class="t-title" href="#">Finančná smernica SFZ</a><div class="t-sub">Znenie: Finančná smernica SFZ 20260907 · 7. 9. 2026</div></td><td>Interná smernica zväzu</td><td><a href="#">Ján Letko</a><div class="t-sub">jan.letko@futbalsfz.sk</div></td><td><div class="chips"><span class="tag tag--published">v poriadku</span></div></td></tr><tr><td><a class="t-title" href="#">Pracovný poriadok SFZ</a><div class="t-sub">Znenie: Pracovný poriadok SFZ 20260907 · 7. 9. 2026</div></td><td>Oboznámenie pri nástupe (pracovný poriadok, kolektívna zmluva, predpisy BOZP)<div class="t-sub">Predpis: § 47 ods. 2 zákona č. 311/2001 Z. z. (Zákonník práce)</div></td><td><a href="#">Ján Letko</a><div class="t-sub">jan.letko@futbalsfz.sk</div></td><td><div class="chips"><span class="tag tag--published">v poriadku</span></div></td></tr>
+</tbody></table></div><section style="display:grid;gap:12px;margin-top:32px"><div class="sec-head" style="margin:0"><h2>Námietky (čl. 21)</h2><span class="tag tag--draft">1 čaká na rozhodnutie</span></div>
+<p class="quiet" style="margin:0;max-width:640px;font-size:var(--fs-body)">Pri predpisoch s oprávneným záujmom môže človek namietať. Námietku zaevidujete tu a rozhodnete o nej; do rozhodnutia sa nič nemaže. Pri vyhovení sa zmažú jeho doklady pri zneniach s oprávneným záujmom — pri zákonnej povinnosti zostanú.</p>
+<ul class="cards">
+<li class="card obj"><div class="obj-head"><div class="obj-top"><strong>Martin Novák</strong><span class="tag tag--draft">čaká na rozhodnutie</span></div><div class="obj-meta">doručená 22. 9. 2026 · e-mailom · zaevidoval(a) Ján Letko, 22. 9. 2026</div><p class="obj-text">Nesúhlasím so spracúvaním záznamu o oboznámení s Etickým kódexom, nie som zamestnanec, len dobrovoľník pri mládeži.</p></div>
+<form class="obj-decide"><span class="field-label">Rozhodnutie</span>
+<label class="choice is-on"><span class="radio"></span><span>Zamietnuť — prevažujú závažné oprávnené dôvody alebo právne nároky</span></label>
+<label class="choice danger"><span class="radio"></span><span>Vyhovieť — zmazať doklady pri oprávnenom záujme</span></label>
+<p class="warnbox">Vyhovenie zmaže doklady natrvalo, hneď po odoslaní.</p>
+<label class="field"><span class="field-label">Odôvodnenie</span><span class="field-input" style="min-height:72px;background:var(--surface)"></span></label>
+<div><span class="button">Rozhodnúť</span></div></form></li>
+<li class="card obj"><div class="obj-head"><div class="obj-top"><strong>Eva Horváthová</strong><span class="tag">zamietnuté</span></div><div class="obj-meta">doručená 2. 9. 2026 · listom · zaevidoval(a) Ján Letko, 3. 9. 2026</div></div><div class="obj-done"><span>Predpis zväzu pre rozhodcov je podmienkou výkonu funkcie; doklad je potrebný na preukázanie.</span><span class="quiet">rozhodol(a) Ján Letko, 10. 9. 2026</span></div></li>
+</ul>
+<details class="record"><summary>+ Zaevidovať námietku</summary><div class="card record-body">
+<label class="field"><span class="field-label">E-mail osoby</span><span class="field-input"></span><span class="field-hint">Aj predošlá adresa — námietka často príde z adresy, ktorú človek používal vo zväze.</span></label>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px"><label class="field"><span class="field-label">Doručená</span><span class="field-input">24. 9. 2026</span></label><label class="field"><span class="field-label">Ako prišla</span><span class="field-input">e-mailom</span></label></div>
+<label class="field"><span class="field-label">Znenie námietky</span><span class="field-input" style="min-height:88px"></span><span class="field-hint">Ako prišla — bez vlastného výkladu.</span></label>
+<div><span class="button button--quiet">Zaevidovať</span></div></div></details></section></div></div></div></div></div>
+<p class="ann"><span class="num">1</span><b>Počty</b> ako dlaždice (<code>summarize()</code> už existuje — tie isté čísla ako v štvrťročnom e-maile). <span class="num">2</span><b>Tabuľka od 1024 px</b>; pod ním karty (komentár v kóde: DPO otvára výkaz z e-mailu v mobile). <span class="num">3</span><b>Skupiny</b> „S nedostatkom" a „V poriadku" — poradie riadkov ako dnes, len so záhlavím skupiny. <span class="num">4</span>Meno zodpovednej osoby je odkaz (<code>mailto:</code>) — DPO sa na ňu obracia. <span class="num">5</span><b>Námietka</b>: text v rámčeku, rozhodnutie v päte; „Vyhovieť" pri výbere červené. <span class="num">6</span><b>Zaevidovať námietku</b> zbalené za tlačidlom — námietka príde zriedka.</p>
+<div class="frames" style="margin-top:24px">
+<div style="display:flex;flex-direction:column;gap:8px"><p class="cap" style="margin:0">Tablet 834 — karty v skupinách</p><div class="frame w834" style="width:834px"><div class="hdr" style="padding:0 16px"><span class="logo"><svg width="17" height="17" viewBox="0 0 48 48" fill="none" aria-hidden="true" style="flex:0 0 auto"><circle cx="18" cy="18" r="13" stroke="currentColor" stroke-width="4"></circle><circle cx="13" cy="18" r="2.3" fill="currentColor"></circle><circle cx="23" cy="18" r="2.3" fill="currentColor"></circle><path d="M28 27 L41 41 L29 38 Z" fill="currentColor"></path></svg></span><span class="org">SFZ</span>  <div class="ask" style="flex:1;min-width:0"><svg width="16" height="16" viewBox="0 0 48 48" fill="none" aria-hidden="true" style="flex:0 0 auto"><circle cx="18" cy="18" r="13" stroke="currentColor" stroke-width="4"></circle><circle cx="13" cy="18" r="2.3" fill="currentColor"></circle><circle cx="23" cy="18" r="2.3" fill="currentColor"></circle><path d="M28 27 L41 41 L29 38 Z" fill="currentColor"></path></svg><span style="flex:1">Opýtajte sa svojich dokumentov…</span></div>  <span class="bell"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13.9 11.6c0-5.2-1.6-7-4.9-7s-4.9 1.8-4.9 7l-1.3 2.1h12.4z"></path><path d="M10.6 15.4a1.7 1.7 0 0 1-3.2 0"></path></svg><b>3</b></span><span class="av">JL</span></div><div class="nav"><a href="#" class="">Prehľad</a><a href="#" class="">Voľné otázky</a><a href="#" class="">Na potvrdenie<span class="c">1</span></a><a href="#" class="is-on">Ochrana údajov</a><a href="#" class="" style="margin-left:auto">Viac 7</a></div><div class="body"><div class="dpo"><h1 class="page-title">Ochrana údajov</h1><p class="page-lead">Právne základy platných predpisov. Určuje ich zodpovedná osoba za predpis, vy ich kontrolujete — raz za štvrťrok vám príde prehľad e-mailom.</p><div class="tiles"><div class="card tile"><span class="tile-l">Platné predpisy</span><span class="tile-v">13</span></div><div class="card tile"><span class="tile-l">S nedostatkom</span><span class="tile-v warn">11</span></div><div class="card tile"><span class="tile-l">Zákonná povinnosť</span><span class="tile-v">1</span></div><div class="card tile"><span class="tile-l">Oprávnený záujem</span><span class="tile-v">1</span></div></div><div class="sec-head"><h2>Právne základy platných predpisov</h2><span class="quiet" style="font-size:var(--fs-small)">13 platných predpisov, z toho 11 s nedostatkom.</span><span class="sp"></span><span class="button button--quiet">Stiahnuť CSV</span></div><p class="grp-h">S nedostatkom · 11</p><ul class="cards"><li class="card rcard"><div class="rcard-top"><a class="rcard-title" href="#" style="color:var(--ink);text-decoration:none">Disciplinárny poriadok SFZ</a><span class="tag tag--draft">chýba právny základ</span></div><dl><dt>Znenie</dt><dd>1.0 · 1. 7. 2023</dd><dt>Základ</dt><dd><span class="none">—</span></dd><dt>Garant</dt><dd><a href="#" style="color:var(--ink)">Ján Letko</a></dd></dl></li><li class="card rcard"><div class="rcard-top"><a class="rcard-title" href="#" style="color:var(--ink);text-decoration:none">Organizačný a návštevný poriadok</a><span class="tag tag--draft">chýba právny základ</span></div><dl><dt>Znenie</dt><dd>1.0 · 1. 7. 2014</dd><dt>Základ</dt><dd><span class="none">—</span></dd><dt>Garant</dt><dd><a href="#" style="color:var(--ink)">Ján Letko</a></dd></dl></li><li class="card rcard"><div class="rcard-top"><a class="rcard-title" href="#" style="color:var(--ink);text-decoration:none">Poriadok komory pre riešenie sporov</a><span class="tag tag--draft">chýba právny základ</span></div><dl><dt>Znenie</dt><dd>1.0 · 7. 12. 2021</dd><dt>Základ</dt><dd><span class="none">—</span></dd><dt>Garant</dt><dd><a href="#" style="color:var(--ink)">Ján Letko</a></dd></dl></li></ul><p class="quiet" style="font-size:12.5px;margin:6px 0">… ďalších 8</p><p class="grp-h">V poriadku · 2</p><ul class="cards"><li class="card rcard"><div class="rcard-top"><a class="rcard-title" href="#" style="color:var(--ink);text-decoration:none">Pracovný poriadok SFZ</a><span class="tag tag--published">v poriadku</span></div><dl><dt>Znenie</dt><dd>Pracovný poriadok SFZ 20260907 · 7. 9. 2026</dd><dt>Základ</dt><dd>Oboznámenie pri nástupe (pracovný poriadok, kolektívna zmluva, predpisy BOZP)<div class="t-sub">§ 47 ods. 2 zákona č. 311/2001 Z. z. (Zákonník práce)</div></dd><dt>Garant</dt><dd><a href="#" style="color:var(--ink)">Ján Letko</a></dd></dl></li></ul><section style="display:grid;gap:12px;margin-top:32px"><div class="sec-head" style="margin:0"><h2>Námietky (čl. 21)</h2><span class="tag tag--draft">1 čaká na rozhodnutie</span></div>
+<p class="quiet" style="margin:0;max-width:640px;font-size:var(--fs-body)">Pri predpisoch s oprávneným záujmom môže človek namietať. Námietku zaevidujete tu a rozhodnete o nej; do rozhodnutia sa nič nemaže. Pri vyhovení sa zmažú jeho doklady pri zneniach s oprávneným záujmom — pri zákonnej povinnosti zostanú.</p>
+<ul class="cards">
+<li class="card obj"><div class="obj-head"><div class="obj-top"><strong>Martin Novák</strong><span class="tag tag--draft">čaká na rozhodnutie</span></div><div class="obj-meta">doručená 22. 9. 2026 · e-mailom · zaevidoval(a) Ján Letko, 22. 9. 2026</div><p class="obj-text">Nesúhlasím so spracúvaním záznamu o oboznámení s Etickým kódexom, nie som zamestnanec, len dobrovoľník pri mládeži.</p></div>
+<form class="obj-decide"><span class="field-label">Rozhodnutie</span>
+<label class="choice is-on"><span class="radio"></span><span>Zamietnuť — prevažujú závažné oprávnené dôvody alebo právne nároky</span></label>
+<label class="choice danger"><span class="radio"></span><span>Vyhovieť — zmazať doklady pri oprávnenom záujme</span></label>
+<p class="warnbox">Vyhovenie zmaže doklady natrvalo, hneď po odoslaní.</p>
+<label class="field"><span class="field-label">Odôvodnenie</span><span class="field-input" style="min-height:72px;background:var(--surface)"></span></label>
+<div><span class="button">Rozhodnúť</span></div></form></li>
+<li class="card obj"><div class="obj-head"><div class="obj-top"><strong>Eva Horváthová</strong><span class="tag">zamietnuté</span></div><div class="obj-meta">doručená 2. 9. 2026 · listom · zaevidoval(a) Ján Letko, 3. 9. 2026</div></div><div class="obj-done"><span>Predpis zväzu pre rozhodcov je podmienkou výkonu funkcie; doklad je potrebný na preukázanie.</span><span class="quiet">rozhodol(a) Ján Letko, 10. 9. 2026</span></div></li>
+</ul>
+<details class="record"><summary>+ Zaevidovať námietku</summary><div class="card record-body">
+<label class="field"><span class="field-label">E-mail osoby</span><span class="field-input"></span><span class="field-hint">Aj predošlá adresa — námietka často príde z adresy, ktorú človek používal vo zväze.</span></label>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px"><label class="field"><span class="field-label">Doručená</span><span class="field-input">24. 9. 2026</span></label><label class="field"><span class="field-label">Ako prišla</span><span class="field-input">e-mailom</span></label></div>
+<label class="field"><span class="field-label">Znenie námietky</span><span class="field-input" style="min-height:88px"></span><span class="field-hint">Ako prišla — bez vlastného výkladu.</span></label>
+<div><span class="button button--quiet">Zaevidovať</span></div></div></details></section></div></div></div></div>
+<div style="display:flex;flex-direction:column;gap:8px"><p class="cap" style="margin:0">Telefón 390 — z e-mailu; formulár námietky otvorený</p><div class="frame w390" style="width:390px">  <div class="hdr" style="padding:0 10px;gap:8px">
+  <span class="logo" style="width:30px;height:30px"><svg width="18" height="18" viewBox="0 0 48 48" fill="none" aria-hidden="true" style="flex:0 0 auto"><circle cx="18" cy="18" r="13" stroke="currentColor" stroke-width="4"></circle><circle cx="13" cy="18" r="2.3" fill="currentColor"></circle><circle cx="23" cy="18" r="2.3" fill="currentColor"></circle><path d="M28 27 L41 41 L29 38 Z" fill="currentColor"></path></svg></span>
+  <span class="org" style="flex:0 0 auto;font-size:15px">SFZ</span>
+  <div class="ask" style="flex:1;min-width:0"><svg width="16" height="16" viewBox="0 0 48 48" fill="none" aria-hidden="true" style="flex:0 0 auto"><circle cx="18" cy="18" r="13" stroke="currentColor" stroke-width="4"></circle><circle cx="13" cy="18" r="2.3" fill="currentColor"></circle><circle cx="23" cy="18" r="2.3" fill="currentColor"></circle><path d="M28 27 L41 41 L29 38 Z" fill="currentColor"></path></svg><span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Opýtajte sa…</span></div>
+  <span class="bell" style="width:40px;height:40px"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13.9 11.6c0-5.2-1.6-7-4.9-7s-4.9 1.8-4.9 7l-1.3 2.1h12.4z"></path><path d="M10.6 15.4a1.7 1.7 0 0 1-3.2 0"></path></svg><b>3</b></span>
+  <span class="av" style="width:32px;height:32px;font-size:11.5px">JL</span>
+</div>
+  <div class="body" style="padding:14px"><div class="dpo"><h1 class="page-title">Ochrana údajov</h1><p class="page-lead">Právne základy platných predpisov. Určuje ich zodpovedná osoba za predpis, vy ich kontrolujete — raz za štvrťrok vám príde prehľad e-mailom.</p><div class="tiles"><div class="card tile"><span class="tile-l">Platné predpisy</span><span class="tile-v">13</span></div><div class="card tile"><span class="tile-l">S nedostatkom</span><span class="tile-v warn">11</span></div><div class="card tile"><span class="tile-l">Zákonná povinnosť</span><span class="tile-v">1</span></div><div class="card tile"><span class="tile-l">Oprávnený záujem</span><span class="tile-v">1</span></div></div><div class="sec-head"><h2>Právne základy platných predpisov</h2><span class="quiet" style="font-size:var(--fs-small)">13 platných predpisov, z toho 11 s nedostatkom.</span><span class="sp"></span><span class="button button--quiet">Stiahnuť CSV</span></div><p class="grp-h">S nedostatkom · 11</p><ul class="cards"><li class="card rcard"><div class="rcard-top"><a class="rcard-title" href="#" style="color:var(--ink);text-decoration:none">Disciplinárny poriadok SFZ</a><span class="tag tag--draft">chýba právny základ</span></div><dl><dt>Znenie</dt><dd>1.0 · 1. 7. 2023</dd><dt>Základ</dt><dd><span class="none">—</span></dd><dt>Garant</dt><dd><a href="#" style="color:var(--ink)">Ján Letko</a></dd></dl></li><li class="card rcard"><div class="rcard-top"><a class="rcard-title" href="#" style="color:var(--ink);text-decoration:none">Organizačný a návštevný poriadok</a><span class="tag tag--draft">chýba právny základ</span></div><dl><dt>Znenie</dt><dd>1.0 · 1. 7. 2014</dd><dt>Základ</dt><dd><span class="none">—</span></dd><dt>Garant</dt><dd><a href="#" style="color:var(--ink)">Ján Letko</a></dd></dl></li><li class="card rcard"><div class="rcard-top"><a class="rcard-title" href="#" style="color:var(--ink);text-decoration:none">Poriadok komory pre riešenie sporov</a><span class="tag tag--draft">chýba právny základ</span></div><dl><dt>Znenie</dt><dd>1.0 · 7. 12. 2021</dd><dt>Základ</dt><dd><span class="none">—</span></dd><dt>Garant</dt><dd><a href="#" style="color:var(--ink)">Ján Letko</a></dd></dl></li></ul><p class="quiet" style="font-size:12.5px;margin:6px 0">… ďalších 8</p><p class="grp-h">V poriadku · 2</p><ul class="cards"><li class="card rcard"><div class="rcard-top"><a class="rcard-title" href="#" style="color:var(--ink);text-decoration:none">Pracovný poriadok SFZ</a><span class="tag tag--published">v poriadku</span></div><dl><dt>Znenie</dt><dd>Pracovný poriadok SFZ 20260907 · 7. 9. 2026</dd><dt>Základ</dt><dd>Oboznámenie pri nástupe (pracovný poriadok, kolektívna zmluva, predpisy BOZP)<div class="t-sub">§ 47 ods. 2 zákona č. 311/2001 Z. z. (Zákonník práce)</div></dd><dt>Garant</dt><dd><a href="#" style="color:var(--ink)">Ján Letko</a></dd></dl></li></ul><section style="display:grid;gap:12px;margin-top:32px"><div class="sec-head" style="margin:0"><h2>Námietky (čl. 21)</h2><span class="tag tag--draft">1 čaká na rozhodnutie</span></div>
+<p class="quiet" style="margin:0;max-width:640px;font-size:var(--fs-body)">Pri predpisoch s oprávneným záujmom môže človek namietať. Námietku zaevidujete tu a rozhodnete o nej; do rozhodnutia sa nič nemaže. Pri vyhovení sa zmažú jeho doklady pri zneniach s oprávneným záujmom — pri zákonnej povinnosti zostanú.</p>
+<ul class="cards">
+<li class="card obj"><div class="obj-head"><div class="obj-top"><strong>Martin Novák</strong><span class="tag tag--draft">čaká na rozhodnutie</span></div><div class="obj-meta">doručená 22. 9. 2026 · e-mailom · zaevidoval(a) Ján Letko, 22. 9. 2026</div><p class="obj-text">Nesúhlasím so spracúvaním záznamu o oboznámení s Etickým kódexom, nie som zamestnanec, len dobrovoľník pri mládeži.</p></div>
+<form class="obj-decide"><span class="field-label">Rozhodnutie</span>
+<label class="choice is-on"><span class="radio"></span><span>Zamietnuť — prevažujú závažné oprávnené dôvody alebo právne nároky</span></label>
+<label class="choice danger"><span class="radio"></span><span>Vyhovieť — zmazať doklady pri oprávnenom záujme</span></label>
+<p class="warnbox">Vyhovenie zmaže doklady natrvalo, hneď po odoslaní.</p>
+<label class="field"><span class="field-label">Odôvodnenie</span><span class="field-input" style="min-height:72px;background:var(--surface)"></span></label>
+<div><span class="button">Rozhodnúť</span></div></form></li>
+
+</ul>
+<details class="record" open><summary>+ Zaevidovať námietku</summary><div class="card record-body">
+<label class="field"><span class="field-label">E-mail osoby</span><span class="field-input"></span><span class="field-hint">Aj predošlá adresa — námietka často príde z adresy, ktorú človek používal vo zväze.</span></label>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px"><label class="field"><span class="field-label">Doručená</span><span class="field-input">24. 9. 2026</span></label><label class="field"><span class="field-label">Ako prišla</span><span class="field-input">e-mailom</span></label></div>
+<label class="field"><span class="field-label">Znenie námietky</span><span class="field-input" style="min-height:88px"></span><span class="field-hint">Ako prišla — bez vlastného výkladu.</span></label>
+<div><span class="button button--quiet">Zaevidovať</span></div></div></details></section></div></div></div>
+<p class="ann" style="max-width:390px"><span class="num">7</span>Karta: názov + stav v jednom riadku, pod ním <code>&lt;dl&gt;</code> Znenie · Základ · Garant. Dnes štyri riadky textu s popiskami v tej istej farbe.</p></div>
+</div>
+</div></body></html>
