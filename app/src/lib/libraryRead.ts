@@ -18,6 +18,7 @@ import type { OriginalFile, ProcessingState } from "./libraryWrite"
 import { conditionQuery, type Condition, type MatchMode } from "./libraryConditions"
 import { openRounds } from "./approvalsDb"
 import { allDepartments } from "./departments"
+import { codelistOptions, type CodelistExtras } from "./codelists"
 
 /**
  * Trieda farebnej pilulky stavu (KNIZNICA.md, úloha 1).
@@ -673,4 +674,23 @@ export async function versionMetaSuggestions(companyCode: string): Promise<{ aut
     authors: uniq([...used("author"), ...departments]),
     approvers: uniq(used("approvedBy")),
   }
+}
+
+
+/**
+ * Ponuka značiek pri dokumente: číselník (globálny aj organizácie, D55)
+ * **a značky, ktoré dokumenty organizácie už majú**.
+ *
+ * Číselník značiek je otvorený — novú značku sa dá napísať priamo pri
+ * dokumente a uloží sa. Ponuka ju však nevidela, takže pri ďalšom dokumente
+ * akoby neexistovala a človek ju písal znova (24. 9. 2026, „smernica").
+ * Do číselníka organizácie sa sama nepridáva: ten spravuje správca vedome.
+ */
+export async function tagOptions(companyCode: string, extras?: CodelistExtras): Promise<{ value: string }[]> {
+  const fromCodelist = codelistOptions("tags", extras).map(o => o.value)
+  const used = (await (await getCollection(DOCUMENTS_COLLECTION)).distinct("tags", { companyCode }) as unknown[])
+    .filter((t): t is string => typeof t === "string" && t.trim() !== "")
+    .map(t => t.trim().toLowerCase())
+  const extra = [...new Set(used)].filter(t => !fromCodelist.includes(t)).sort((a, b) => a.localeCompare(b, "sk"))
+  return [...fromCodelist, ...extra].map(value => ({ value }))
 }

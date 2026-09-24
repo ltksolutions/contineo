@@ -14,7 +14,7 @@ import { MAX_BYTES, MAX_FORM_BYTES, SOURCE_EXTENSIONS } from "@/lib/fileStore"
 import UploadFiles from "@/components/UploadFiles"
 import KeyPreview from "@/components/KeyPreview"
 import VersionMetaFields from "@/components/VersionMetaFields"
-import { versionMetaSuggestions } from "@/lib/libraryRead"
+import { versionMetaSuggestions, tagOptions } from "@/lib/libraryRead"
 import UploadSubmit from "@/components/UploadSubmit"
 import { libraryContext } from "@/lib/library"
 import { codelistOptions, CODELISTS } from "@/lib/codelists"
@@ -241,7 +241,7 @@ export default async function NewDocumentPage({
           <span className="field-label">{t.tags}</span>
           <TagSelect
             name="tags"
-            options={codelistOptions("tags", extras).map(v => ({ value: v.value }))}
+            options={await tagOptions(ctx.tenant.companyCode, extras)}
             selected={[]}
             newLabel={t.newTag}
             language={ctx.person.language}
