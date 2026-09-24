@@ -990,15 +990,8 @@ export default async function DocumentDetailPage({
               <p className="flow-lead">{tflow.lead3}</p>
               {d.draftMeta && <MetaFacts meta={d.draftMeta} language={language} />}
 
-              {/* Označenie sa skladá z dátumu účinnosti (ADR-016, D113) — nezadáva sa. */}
-              {labelSuggestion && (
-                <div className="field">
-                  <span className="field-label">{t.versionLabel}</span>
-                  <strong>{labelSuggestion}</strong>
-                  <span className="quiet field-hint">{tflow.autoLabelNote}</span>
-                </div>
-              )}
-
+              {/* Označenie znenia sa nezadáva ani neukazuje (ADR-016) — znenie
+                  určuje dátum účinnosti zo schválených údajov. */}
               {/* Dátum účinnosti je v schválených údajoch o znení (ADR-013)
                   a tu sa už nezadáva. Pole zostáva len pre koncept spred ADR-013. */}
               {!draftEffectiveFrom && (
@@ -1100,7 +1093,6 @@ export default async function DocumentDetailPage({
             <h2>{tflow.currentHeading}</h2>
             {effective.effectiveFrom && <span className="quiet">{tflow.fromDate(date(effective.effectiveFrom))}</span>}
           </div>
-          <strong>{effective.label}</strong>
           {/*
             Zodpovedná osoba a právny základ (D91). Chýbajúci údaj sa hovorí
             nahlas, nie mlčí — pri zneniach spred D91 je to bežný stav.
@@ -1160,9 +1152,10 @@ export default async function DocumentDetailPage({
             <ul className="older">
               {olderVersions.map(v => (
                 <li key={v.versionId} className="older-row" id={`v-${v.versionId}`}>
-                  <strong>{v.label}</strong>
-                  <span className="quiet">
+                  <strong>
                     {v.effectiveFrom ? t.effectiveFromOn(date(v.effectiveFrom)) : t.noEffectiveDate}
+                  </strong>
+                  <span className="quiet">
                     {v.effectiveTo && ` ${t.effectiveTo(date(v.effectiveTo))}`}
                   </span>
                   <div className="older-panel">

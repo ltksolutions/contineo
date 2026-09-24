@@ -311,7 +311,6 @@ export default async function DocumentPage({
             <p style={{ fontSize: "var(--fs-lead)", lineHeight: 1.65, margin: "0 0 18px" }}>
               {buildStatement(
                 doc.title,
-                version.version.label,
                 version.version.effectiveFrom!,
                 person.language
               )}

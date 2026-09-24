@@ -32,10 +32,10 @@ describe("e-mail o pridelení", () => {
     expect(e.html).toContain("lehota na podanie odvolania")
   })
 
-  it("nesie názov, verziu aj platnosť", () => {
+  it("nesie názov a dátum účinnosti", () => {
     const e = email()
     expect(e.text).toContain("Súťažný poriadok futbalu SFZ")
-    expect(e.text).toContain("verzia 1.0")
+    expect(e.text).toContain("znenie účinné od")
     expect(e.text).toContain("24. 6. 2026")
   })
 
@@ -83,6 +83,6 @@ describe("e-mail o pridelení", () => {
 
   it("chýbajúca platnosť sa nevydáva za dátum", () => {
     const e = email({ effectiveFrom: "—" })
-    expect(e.text).toContain("platná od —")
+    expect(e.text).toContain("účinné od —")
   })
 })
