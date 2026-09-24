@@ -14,7 +14,7 @@
 import { redirect } from "next/navigation"
 import { isRedirect } from "@/lib/redirects"
 import { revalidatePath } from "next/cache"
-import { peopleContext, savePerson, invitePerson, setPersonStatus, neverSignedIn, loadPersonById } from "@/lib/people"
+import { peopleContext, savePerson, invitePerson, setPersonStatus, setPersonEndedAt, neverSignedIn, loadPersonById } from "@/lib/people"
 import { needsInvitation } from "@/lib/personFields"
 import { send, inviteEmail } from "@/lib/ecomail"
 import { brandingView } from "@/lib/tenants"
@@ -259,7 +259,7 @@ export async function togglePersonStatusAction(fd: FormData) {
     error = true
   } else {
     try {
-      await setPersonStatus(actor.companyCode, id, toStatus, actor.email)
+      await setPersonStatus(actor.companyCode, id, toStatus, actor.email, dateField(fd, "endedAt"))
       message = toStatus === "inactive"
         ? say(actor.language).excluded
         : say(actor.language).returned
@@ -267,6 +267,39 @@ export async function togglePersonStatusAction(fd: FormData) {
       message = errorMessage(e, actor.language)
       error = true
     }
+  }
+
+  revalidatePath("/people")
+  redirect(`/people/${encodeURIComponent(id)}?msg=${encodeURIComponent(message)}${error ? "&error=1" : ""}`)
+}
+
+/**
+ * `<input type="date">` → dátum o polnoci UTC; prázdne pole je `null`.
+ * Nečitateľná hodnota sa vráti ako neplatný dátum — odmietne ho `people.ts`
+ * s vlastnou hláškou, nie tichým zahodením.
+ */
+function dateField(fd: FormData, name: string): Date | null {
+  const v = fieldText(fd, name)
+  if (!v) return null
+  return /^\d{4}-\d{2}-\d{2}$/.test(v) ? new Date(`${v}T00:00:00Z`) : new Date(NaN)
+}
+
+/**
+ * Skončenie vzťahu pri vyradenej osobe (ADR-012, D100) — doplnenie alebo oprava.
+ */
+export async function setEndedAtAction(fd: FormData) {
+  const actor = await peopleAdmin()
+  if (!actor) redirect("/people")
+
+  const id = fieldText(fd, "id")
+  let message = ""
+  let error = false
+  try {
+    await setPersonEndedAt(actor.companyCode, id, dateField(fd, "endedAt"), actor.email)
+    message = say(actor.language).endedAtSaved
+  } catch (e) {
+    message = errorMessage(e, actor.language)
+    error = true
   }
 
   revalidatePath("/people")

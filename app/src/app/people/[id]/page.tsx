@@ -24,7 +24,7 @@ import Notice from "@/components/Notice"
 import { brandingView } from "@/lib/tenants"
 import { tenantStyle } from "@/components/TenantHeader"
 import { formatDate, UI_LANGUAGES, dictionary } from "@/lib/i18n"
-import { savePersonAction, togglePersonStatusAction, resendInviteAction } from "../actions"
+import { savePersonAction, togglePersonStatusAction, resendInviteAction, setEndedAtAction } from "../actions"
 import { normalizeQuery, type RawQuery } from "@/lib/urlParams"
 import AppShell from "@/components/AppShell"
 
@@ -71,6 +71,7 @@ export default async function PersonDetailPage({
   const tds = dictionary(language).hr.dutyState
   const now = new Date()
   const excluded = o.status === "inactive"
+  const todayIso = now.toISOString().slice(0, 10)
 
   /*
     Reťaz dôkazov na karte osoby (ADR-005, D67) — **ten istý komponent nad tou
@@ -366,6 +367,13 @@ export default async function PersonDetailPage({
           ) : (
             <>
               <p className="quiet" style={{ margin: 0, fontSize: "var(--fs-body)" }}>{t.excludeNote}</p>
+              {/* Skončenie vzťahu (ADR-012, D100) — od neho plynie lehota dokladov.
+                  Nepovinné: dátum z personalistiky často príde až neskôr. */}
+              <label className="field">
+                <span className="field-label">{t.endedAtLabel}</span>
+                <input className="field-input" type="date" name="endedAt" max={todayIso} />
+                <span className="quiet field-hint">{t.endedAtNote}</span>
+              </label>
               <label className="field">
                 <span className="field-label">{t.confirmLabel}</span>
                 <input className="field-input" name="confirmation" autoCapitalize="none" autoCorrect="off" />
@@ -375,6 +383,29 @@ export default async function PersonDetailPage({
             </>
           )}
         </form>
+
+        {/*
+          Pri vyradenej osobe: odkedy plynie lehota dokladov a oprava dátumu
+          skončenia. Samostatný formulár — vrátiť osobu a opraviť dátum sú dve
+          rôzne rozhodnutia.
+        */}
+        {excluded && (
+          <form action={setEndedAtAction} className="card" style={{ padding: 20, display: "grid", gap: 12 }}>
+            <input type="hidden" name="id" value={o.id} />
+            <h2 style={{ fontSize: "var(--fs-section)", margin: 0 }}>{t.endedAtHeading}</h2>
+            <p className="quiet" style={{ margin: 0, fontSize: "var(--fs-body)" }}>
+              {o.deactivatedAt && `${t.deactivatedOn(formatDate(o.deactivatedAt, language))} `}
+              {o.endedAt ? t.endedAtCurrent(formatDate(o.endedAt, language)) : t.endedAtMissing}
+            </p>
+            <label className="field">
+              <span className="field-label">{t.endedAtLabel}</span>
+              <input className="field-input" type="date" name="endedAt" max={todayIso}
+                     defaultValue={o.endedAt ? o.endedAt.toISOString().slice(0, 10) : ""} />
+              <span className="quiet field-hint">{t.endedAtNote}</span>
+            </label>
+            <div><button className="button button--quiet" type="submit">{t.endedAtSubmit}</button></div>
+          </form>
+        )}
         </div>
       </details>
 

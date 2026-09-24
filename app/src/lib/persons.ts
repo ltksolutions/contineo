@@ -89,6 +89,24 @@ export interface Person {
   status: PersonStatus
 
   /**
+   * Kedy bola osoba v systéme **vyradená** (ADR-012, D100). Pri vrátení sa maže.
+   *
+   * **Uložené, nie odvodené** (výnimka z D27): odvodiť sa dá z auditu, lenže
+   * audit sa po 24 mesiacoch maže (D103) a lehota dokladov je 3 roky od
+   * skončenia. Dátum, od ktorého lehota plynie, nesmie zmiznúť skôr než
+   * doklady, ktorých sa týka.
+   */
+  deactivatedAt?: Date | null
+
+  /**
+   * **Skončenie pracovného pomeru alebo vzťahu so zväzom** (koniec licencie,
+   * funkcie, spolupráce) — údaj z personalistiky, zadáva ho človek. Od neho
+   * plynie 3-ročná lehota dokladov (O16/B1a, B10b). Keď chýba, plynie od
+   * `deactivatedAt` (poistka, B10a).
+   */
+  endedAt?: Date | null
+
+  /**
    * Jazyk **prostredia** — v čom sa s človekom rozprávame (rozhranie, e-maily,
    * znenie formulky). Nemá nič spoločné s jazykom smerníc, ktoré číta:
    * český rozhodca môže v českom rozhraní potvrdzovať slovenský predpis

@@ -41,6 +41,7 @@
     "docs:import": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --disable-warning=DEP0205 --env-file=.env.local --import ./scripts/lib/ts-hook.mjs scripts/import.mjs",
     "docs:delete": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --disable-warning=DEP0205 --import ./scripts/lib/ts-hook.mjs scripts/delete_documents.mjs",
     "tag:test": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --disable-warning=DEP0205 --import ./scripts/lib/ts-hook.mjs scripts/tag_test_documents.mjs",
+    "migrate:deactivated-at": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/migrate_person_deactivated_at.mjs",
     "migrate:grandfather": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --disable-warning=DEP0205 --import ./scripts/lib/ts-hook.mjs scripts/migrate_published_before.mjs"
   },
   "dependencies": {

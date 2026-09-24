@@ -115,6 +115,10 @@ export interface PersonRow {
   emailHistory: { email: string; until: Date }[]
   /** Kto ju zapísal. `auto:microsoft` znamená, že sa založila sama (D47). */
   createdBy?: string
+  /** Kedy bola vyradená (ADR-012, D100). */
+  deactivatedAt?: Date | null
+  /** Skončenie vzťahu so zväzom — od neho plynie lehota dokladov (D100). */
+  endedAt?: Date | null
 }
 
 function toRow(p: Person): PersonRow {
@@ -143,6 +147,8 @@ function toRow(p: Person): PersonRow {
     invitedAt: p.invitedAt,
     emailHistory: (p.emailHistory ?? []).map(h => ({ email: h.email, until: h.until })),
     createdBy: p.createdBy,
+    deactivatedAt: p.deactivatedAt ?? null,
+    endedAt: p.endedAt ?? null,
     accounts: [
       ...(p.externalRef?.entraObjectId ? ["microsoft" as const] : []),
       ...(p.externalRef?.googleSub ? ["google" as const] : []),
@@ -526,20 +532,92 @@ export async function setPersonStatus(
   id: string,
   status: "inactive" | "invited",
   actor: string,
+  /** Skončenie vzťahu so zväzom (ADR-012, D100) — len pri vyradení, nepovinné. */
+  endedAt: Date | null = null,
+  now: Date = new Date(),
 ): Promise<void> {
   const col = await getCollection<Person>(PERSONS_COLLECTION)
   const existing = await col.findOne({ companyCode, id })
   if (!existing) throw new PersonValidationError("person.notFound", "Taká osoba tu nie je.")
+  if (status === "inactive" && endedAt) checkEndedAt(endedAt, now)
 
-  await col.updateOne(
-    { companyCode, id },
-    { $set: { status, updatedBy: actor, updatedAt: new Date() } } as never,
-  )
+  /*
+   * Dátumy pre lehotu dokladov (ADR-012, D100). Opakované vyradenie už
+   * vyradenej osoby dátum vyradenia **neposúva** — lehota by sa inak dala
+   * predlžovať klikaním. Vrátenie oba dátumy zmaže: osoba je znova vo zväze
+   * a lehota neplynie.
+   */
+  const dates = status === "inactive"
+    ? {
+        $set: {
+          status, updatedBy: actor, updatedAt: now,
+          deactivatedAt: existing.status === "inactive" && existing.deactivatedAt ? existing.deactivatedAt : now,
+          endedAt: endedAt ?? existing.endedAt ?? null,
+        },
+      }
+    : { $set: { status, updatedBy: actor, updatedAt: now }, $unset: { deactivatedAt: "", endedAt: "" } }
+
+  await col.updateOne({ companyCode, id }, dates as never)
   await writeAudit({
     companyCode, subject: "person",
     action: status === "inactive" ? "vyradene" : "vratene",
     actor: actor, targetId: id, targetLabel: existing.fullName,
-    changes: { status: { from: existing.status, to: status } },
+    changes: {
+      status: { from: existing.status, to: status },
+      ...(status === "inactive" && endedAt
+        ? { endedAt: { from: dateOnly(existing.endedAt), to: dateOnly(endedAt) } }
+        : {}),
+    },
+  })
+}
+
+/** `2026-09-24` — do auditu, kde čas dňa nič nehovorí. */
+function dateOnly(d: Date | null | undefined): string | null {
+  return d ? d.toISOString().slice(0, 10) : null
+}
+
+/**
+ * Skončenie vzťahu nesmie byť v budúcnosti — osoba sa vyraďuje, keď už vo
+ * zväze nie je. Budúci dátum by lehotu dokladov posunul o toľko, o koľko sa
+ * človek pomýlil.
+ */
+function checkEndedAt(endedAt: Date, now: Date): void {
+  if (Number.isNaN(endedAt.getTime())) {
+    throw new PersonValidationError("person.badEndedAt", "Dátum skončenia nie je platný dátum.")
+  }
+  if (endedAt.getTime() > now.getTime()) {
+    throw new PersonValidationError("person.endedInFuture", "Dátum skončenia nemôže byť v budúcnosti.")
+  }
+}
+
+/**
+ * Doplní alebo opraví **skončenie vzťahu** pri už vyradenej osobe (ADR-012,
+ * D100). Dátum z personalistiky často príde až po vyradení; bez neho by
+ * lehota plynula od vyradenia.
+ */
+export async function setPersonEndedAt(
+  companyCode: string,
+  id: string,
+  endedAt: Date | null,
+  actor: string,
+  now: Date = new Date(),
+): Promise<void> {
+  const col = await getCollection<Person>(PERSONS_COLLECTION)
+  const existing = await col.findOne({ companyCode, id })
+  if (!existing) throw new PersonValidationError("person.notFound", "Taká osoba tu nie je.")
+  if (existing.status !== "inactive") {
+    throw new PersonValidationError("person.endedNotInactive", "Skončenie vzťahu sa zadáva až pri vyradenej osobe.")
+  }
+  if (endedAt) checkEndedAt(endedAt, now)
+
+  await col.updateOne(
+    { companyCode, id },
+    { $set: { endedAt, updatedBy: actor, updatedAt: now } } as never,
+  )
+  await writeAudit({
+    companyCode, subject: "person", action: "changed",
+    actor: actor, targetId: id, targetLabel: existing.fullName,
+    changes: { endedAt: { from: dateOnly(existing.endedAt), to: dateOnly(endedAt) } },
   })
 }
 
