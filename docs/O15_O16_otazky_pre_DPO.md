@@ -29,6 +29,43 @@ podľa zmyslu, bez výkladu; kde odpoveď chýba, je to povedané.
 | B10 | bez označenej voľby | zvážiť **maximálny strop**, ak dátum skončenia nepríde (odkaz na § 10, 12, 13 zákona o ochrane osobných údajov) | otvorené — strop treba určiť |
 | C1–C4 | **bez odpovede** | — | otvorené; C1 a A3 sú brány pred pilotom |
 
+## Odpovede DPO — druhé kolo (prijaté 2026-09-24)
+
+Odpovede prišli v `O15_O16_otazky_pre_DPO_kolo2-2.docx` ako **červené podfarbenie**
+pri zvolenej možnosti (zaškrtávacie okienka sa vo Worde nedali použiť; ďalšie
+dotazníky preto pôjdu bez nich, viď poznámku na konci). Zapísané doslovne podľa
+zmyslu, bez výkladu.
+
+| # | Odpoveď | Poznámka DPO | Čo s tým systém robí |
+|---|---|---|---|
+| A8 | súhlasím — námietka sa posúdi jednotlivo podľa balančného testu, doklad sa do rozhodnutia nemaže | — | veta v `GDPR_DATA_PROTECTION.md` §6 potvrdená; námietka dostane evidenciu a obrazovku |
+| A9 | súhlasím — základ podľa predpisu aj pri rozhodcoch, funkcionároch a externých; namiesto pomeru **skončenie vzťahu so zväzom** | — | lehota sa počíta od konca vzťahu, nie len pracovného pomeru |
+| A10 | súhlasím — základ určuje **zodpovedná osoba**, DPO dostane **raz za štvrťrok** zoznam na kontrolu | — | D91 platí; treba výkaz pre DPO |
+| A11 | **jeden spoločný** balančný test pre „záznam o oboznámení s internou smernicou" (vrátane IP a prehliadača) | termín testu nevyplnený | test nie je podmienkou zverejnenia predpisu |
+| B1a | **3 roky** od skončenia pomeru | — | lehota pre `acknowledgements`, `assignments`, `document_opens` |
+| B10a | súhlasím s oboma poistkami — lehota od **vyradenia**, ak dátum z HR nepríde, a **absolútny strop** | počet rokov **nevyplnený**; poznámka: „strop napríklad 5 rokov. Môže slúžiť aj na osvieženie pamäti pre zamestnancov." | ⚠️ 5 rokov je príklad, nie rozhodnutie — potvrdiť číslo |
+| B10b | súhlasím — pri osobách bez pomeru od skončenia vzťahu (licencia, funkcia, spolupráca); dátum dodá útvar, ktorý vzťah eviduje | — | kým dátum nepríde, platí poistka z B10a |
+| B5 | potvrdzujem **12 mesiacov** (čas čítania) | — | bez zmeny (TTL už beží) |
+| B6 | **24 mesiacov** (audit prístupov) | — | TTL na `audit` treba zaviesť |
+| B7 | potvrdzujem **90 dní** (log pripomienok) | — | bez zmeny (TTL už beží) |
+| B4a | súhlasím — schválenie sa drží, **kým existuje aspoň jeden doklad** o oboznámení s tým znením | — | `approval_rounds` sa mažú s posledným potvrdením znenia |
+| B11 | súhlasím — zodpovedná osoba má **rovnakú lehotu ako schválenie** | — | súčasť dokladu o znení |
+| C1, C2 | **bez odpovede** (zodpovedný a termín nevyplnené) | — | otvorené; C1 je brána pred pilotom |
+| C3 | **bez odpovede** | — | otvorené |
+| C4 | **bez odpovede** | „Toto doriešiť s Miškou (resp. Lukáš)" | zmluvy (DPA, Sportnet, sub-procesori) — riešiť mimo DPO |
+
+**Čo nevrátila:** kontrolu číselníka `Pravne_zaklady_navrh_ciselnika.docx` —
+`codelists/legalBasis.json` sa preto stále nemá opraviť ani podľa neho vyberať.
+
+**Zostáva otvorené:** počet rokov stropu (B10a), termín balančného testu (A11, A3),
+C1–C4.
+
+**Forma ďalších dotazníkov:** bez zaškrtávacích okienok. Pri každej otázke
+**očíslované možnosti** a riadok „Odpoveď: ___", kam sa napíše číslo voľby alebo
+vlastný text — funguje vo Worde, v PDF aj v e-maile.
+
+---
+
 **Na druhé kolo:** presný počet rokov v B1 a maximálny strop (B10), lehoty B5–B7, časť C,
 úprava vety v §6 pre oprávnený záujem a osoby bez pracovného pomeru (rozhodcovia,
 funkcionári, externí — `persons.personType`), pri ktorých „skončenie pracovného pomeru"

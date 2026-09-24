@@ -120,17 +120,17 @@ niečo o správaní konkrétneho človeka, nie o jeho povinnosti. Preto:
 | Údaj | Návrh lehoty | Odôvodnenie |
 |---|---|---|
 | **Konverzácie** (logy otázok/odpovedí) | **12 mesiacov** (pseudonymizované) | dosť na ladenie kvality, eval a spätnú väzbu; po roku nízka hodnota → minimalizácia |
-| **Audit prístupov** | **24 mesiacov** | bezpečnostné vyšetrovanie a preukázanie compliance si vyžaduje dlhší horizont než konverzácie |
+| **Audit prístupov** | **24 mesiacov** (potvrdil DPO 2026-09-24, B6) | bezpečnostné vyšetrovanie a preukázanie compliance si vyžaduje dlhší horizont než konverzácie |
 | **Tickety** | **24 mesiacov po uzavretí** | história podpory; predĺžiť len ak existuje právny/účtovný dôvod |
 | **Overené odpovede** (kurácia) | **kým platí podkladová norma** | expirujú s ňou (`expireCurationFor()`, D11 revidované); bez osobných údajov |
 | **Členstvá osoby** (pole na zázname v `persons`) | **len aktuálny stav** | samostatná kolekcia `person_memberships` **neexistuje** — je to plán D7; obnova login+webhook; pri zrušení príslušnosti **bezodkladne** vymazať/deaktivovať |
 | **Identita** (kópia z CRM) | **počas aktívneho vzťahu** | zrkadlo zo Sportnet; pri ukončení vzťahu vymazať lokálnu kópiu |
-| **Potvrdenia** (`acknowledgements`) | **otvorené — patrí k O16** | je to doklad o oboznámení so záväzným predpisom. Lehota nie je technická otázka: odvíja sa od toho, ako dlho sa taký doklad môže hodiť, a to určí právnik |
+| **Potvrdenia** (`acknowledgements`) | **3 roky od skončenia pomeru / vzťahu so zväzom** (DPO 2026-09-24, B1a, B10b) | doklad o oboznámení. Ak dátum skončenia nepríde, plynie od vyradenia osoby; absolútny strop od posledného potvrdenia — **počet rokov ešte nepotvrdený** (B10a, príklad DPO: 5) |
 | **Pridelenia** (`assignments`) | **ako potvrdenia** | bez pridelenia sa nedá vysvetliť, prečo mal človek povinnosť; samotné potvrdenie by zostalo bez kontextu |
 | **Otvorenia znenia** (`document_opens`) | **ako potvrdenia** | je to súčasť tej istej reťaze (D64). Otvorenie **bez** potvrdenia je tiež údaj — hovorí, že človek vedel a nepotvrdil |
-| **Časy čítania** (`reading_times`) | **12 mesiacov** (rozhodnuté 2026-09-06) | nie je to dôkaz, je to meranie na klientovi. Preto kratšia lehota než pri zvyšku reťaze a TTL priamo v databáze |
-| **Kolá schvaľovania** (`approval_rounds`) | **ako potvrdenia** | schválenie je dôvod, prečo znenie vôbec smelo ísť ľuďom |
-| **Log pripomienok** (`reminder_log`) | **90 dní** (TTL) | prevádzkový záznam proti dvojitému odoslaniu, nie dôkaz. Dôkazom je `notified[]` na pridelení |
+| **Časy čítania** (`reading_times`) | **12 mesiacov** (rozhodnuté 2026-09-06, potvrdil DPO 2026-09-24) | nie je to dôkaz, je to meranie na klientovi. Preto kratšia lehota než pri zvyšku reťaze a TTL priamo v databáze |
+| **Kolá schvaľovania** (`approval_rounds`) | **kým existuje aspoň jedno potvrdenie znenia** (DPO 2026-09-24, B4a) | schválenie je dôvod, prečo znenie vôbec smelo ísť ľuďom. To isté platí pre zodpovednú osobu znenia (B11) |
+| **Log pripomienok** (`reminder_log`) | **90 dní** (TTL, potvrdil DPO 2026-09-24) | prevádzkový záznam proti dvojitému odoslaniu, nie dôkaz. Dôkazom je `notified[]` na pridelení |
 | **Upozornenia** (`notifications`) | **90 dní** (rozhodnuté 2026-09-15) | prevádzková správa o dobehnutej operácii, nie dôkaz. Je to údaj o **správaní** — čo kto kedy videl — takže lehota je krátka a zhodná s `reminder_log`: jedno pravidlo namiesto dvoch |
 | **Záznamy odpovedí** (`evaluations`) | **12 mesiacov** (návrh, nie rozhodnutie) | **dnes sa nemažú — lehota nie je zavedená.** Otázka je text, ktorý napísal človek, takže môže obsahovať osobný údaj; bez nej sa ale odpoveď nedá spätne posúdiť. Podpisy sú od O17 pseudonymné (`persons.id`), takže pri výmaze osoby väzba zanikne aj bez lehoty |
 
@@ -138,7 +138,7 @@ niečo o správaní konkrétneho človeka, nie o jeho povinnosti. Preto:
 | **Prihlasovacie kontá** (`auth_users`) | **s osobou** | technická vrstva pod `persons`; sama o sebe drží len e-mail a meno, ale bez nej sa osoba neprihlási — maže sa spolu s ňou |
 | **Jednorazové tokeny** (`auth_tokens`) | **po použití** | `useVerificationToken()` ho zmazá hneď pri výmene. **Nepoužitý token však TTL nemá** — zostane v kolekcii aj po expirácii; drobná, ale zbytočná stopa |
 | **Fotky osôb** (`person_photos`) | **s osobou** | nemá vlastný dôvod existovať dlhšie než osoba |
-| **Audit** (`audit`) | 24 mesiacov | dnes sa **nemaže** — TTL nie je zavedený |
+| **Audit** (`audit`) | 24 mesiacov (DPO 2026-09-24, B6) | dnes sa **nemaže** — TTL nie je zavedený |
 
 > Lehoty sú **návrh** — finálne čísla potvrdí DPO/právnik podľa účelu a prípadných zákonných povinností.
 > **Ako sa to reálne maže a čo s tým robia zálohy** je v `docs/ZALOHOVANIE_A_RETENCIA.md`.
@@ -171,7 +171,8 @@ niečo o správaní konkrétneho človeka, nie o jeho povinnosti. Preto:
 - **Výmaz (right to erasure):** na žiadosť vymazať konverzácie, tickety a audit viazané na osobu cez `userId`; identitné údaje riešiť cez Sportnet (zdroj) + lokálne kópie. Pseudonymizácia umožní cielený výmaz podľa `userId`.
 - **Výmaz sa nevzťahuje na doklad o oboznámení.** Potvrdenie, pridelenie a otvorenie znenia sú záznamy o splnení povinnosti voči zamestnávateľovi, nie údaje spracúvané so súhlasom — na žiadosť sa nemažú, kým trvá dôvod, pre ktorý existujú. *Vetu potvrdil DPO 2026-09-23 (O15/A4).*
 - **Právny základ sa určuje podľa predpisu (O15/A1, D91).** Každé znenie nesie `legalBasis`: **plnenie zákonnej povinnosti** (napr. BOZP, s odkazom na predpis) alebo **oprávnený záujem** (interné smernice bez zákonnej opory). Určuje ho zodpovedná osoba znenia a potvrdenie si ho nesie ako odtlačok.
-- ⚠️ **Návrh na potvrdenie DPO — oprávnený záujem a námietka (čl. 21):** pri zneniach s oprávneným záujmom má dotknutá osoba právo namietať. Návrh: námietka sa posúdi jednotlivo proti balančnému testu (A3); doklad o oboznámení sa nemaže automaticky, kým prevádzkovateľ nepreukáže, že závažné oprávnené dôvody neprevažujú — alebo kým doklad nie je potrebný na preukázanie, uplatňovanie alebo obhajovanie právnych nárokov. **Toto nie je právne posúdenie**, je to formulácia na potvrdenie.
+- **Oprávnený záujem a námietka (čl. 21):** pri zneniach s oprávneným záujmom má dotknutá osoba právo namietať. Námietka sa posúdi jednotlivo proti balančnému testu (A3); doklad o oboznámení sa nemaže automaticky, kým prevádzkovateľ nepreukáže, že závažné oprávnené dôvody neprevažujú — alebo kým doklad nie je potrebný na preukázanie, uplatňovanie alebo obhajovanie právnych nárokov. Systém námietku zaeviduje a doklad do rozhodnutia ponechá. *Potvrdil DPO 2026-09-24 (O15/A8).* Balančný test je **jeden spoločný** pre záznam o oboznámení s internou smernicou (A11).
+- **Osoby bez pracovného pomeru** (rozhodca, funkcionár, externý): právny základ podľa predpisu rovnako; namiesto skončenia pracovného pomeru platí **skončenie vzťahu so zväzom** (O15/A9, O16/B10b, 2026-09-24).
 - **Čas čítania sa vymazať dá** a zmizne aj sám po roku — nie je to doklad, je to meranie.
 - **Prenosnosť** podľa relevancie (obsah zväzu nie je osobný údaj dotknutého).
 - Žiadosti smerované na prevádzkovateľa (zväz); Contineo ako sprostredkovateľ poskytuje súčinnosť.
