@@ -27,6 +27,13 @@ Text sa **nepotvrdzuje**. Informovanie podľa čl. 13 je povinnosť prevádzkova
 nie súhlas dotknutej osoby. Stačí, že bol dostupný skôr, než sa údaje začali
 zbierať, a že sa to dá preukázať (dátum zverejnenia verzie textu).
 
+**Stav (24. 9. 2026):** stránka `/privacy` a odkaz pri každom potvrdení sú
+nasadené s textom nižšie (ADR-012, krok 5). Stránka je verejná, dá sa otvoriť aj
+pred prihlásením. Zmena textu = úprava `dictionary().privacy` v `i18n.ts`
+v troch jazykoch **a posunutie `PRIVACY_NOTICE_VERSION`** v `lib/privacy.ts`.
+Odkaz v pozvánke ešte chýba. Adresa a IČO prevádzkovateľa sa zatiaľ neukazujú,
+lebo profil organizácie ich nemá; na stránke je len názov.
+
 **Podmienka pred pilotom (C1):** text schváli DPO a zverejní sa **skôr**, než
 prvý človek v pilote dostane predpis na potvrdenie.
 

@@ -10,7 +10,7 @@
 > D91, D92, O15, O16
 > **Mení:** D24 — dôkazné záznamy sa **po uplynutí lehoty mažú**. Nemenia sa
 > ďalej a nemažú sa inak než touto dávkou alebo rozhodnutím o námietke.
-> **Implementácia:** po krokoch, viď kap. 6.
+> **Implementácia:** hotová (2026-09-24) — PR #102 až #106; mazanie beží v režime `report`, kým ho Ján nezapne.
 
 ---
 

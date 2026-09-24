@@ -274,11 +274,11 @@
 - [ ] **O15, O16 — právny základ a retencia** `acknowledgements` (DPO, právnik) — rozširuje D10. **Prvé kolo zodpovedané 2026-09-23** (15/21, `docs/O15_O16_otazky_pre_DPO.md`); právny základ implementovaný ako **D91 + D92**. **Druhé kolo odoslané 2026-09-23, zodpovedané 2026-09-24** (A8–A11, B1a, B4a–B7, B10a/b, B11 — zapísané v `docs/O15_O16_otazky_pre_DPO.md`); strop B10a **5 rokov** (Ján); C4 formálne akceptované pre pilot; C1–C3 návrhy v `docs/C1_…`–`C3_…` čakajú na DPO; **otvorené:** termín balančného testu, kontrola číselníka `Pravne_zaklady_navrh_ciselnika.docx` sa nevrátila. Teraz: TTL pre `acknowledgements`, `assignments`, `document_opens`, `approval_rounds`; postup pri výmaze a námietke (čl. 21); úprava vety v `GDPR_DATA_PROTECTION.md` §6.
   - [ ] **Evidencia na obrazovke** (`evidence.ts`) neukazuje odtlačok zodpovednej osoby ani právneho základu z potvrdenia — výkaz `npm run ack:report` áno.
   - [ ] **Overiť na mobile** (390 px): výber zodpovednej osoby pri zverejnení, karta znenia v knižnici, `/documents/[id]` (kontakt, výber základu), Nastavenie organizácie → Číselníky → Právne základy.
-  - [ ] **ADR-012 krok 1** — `deactivatedAt`, `endedAt`, migrácia z auditu, TTL na `audit`.
-  - [ ] **ADR-012 krok 2** — retenčná dávka (`RETENTION_MODE=report` → po kontrole `delete`), `retention_log`.
-  - [ ] **ADR-012 krok 3** — rola `dpo`, `/dpo` s výkazom právnych základov, štvrťročný e-mail (A10).
-  - [ ] **ADR-012 krok 4** — námietky (A8).
-  - [ ] **ADR-012 krok 5** — `/privacy` a odkaz pri potvrdení (C1) — text schváli DPO.
+  - [x] **ADR-012 kroky 1–5** ✅ 2026-09-24 (PR #102–#106): dátumy pri osobe, retenčná dávka (režim `report`), rola `dpo` s výkazom a štvrťročným e-mailom, námietky, `/privacy`.
+  - [ ] **Na produkcii spustiť** `node scripts/onboarding_init.mjs` (indexy `audit_ttl`, `objections`) a `npm run migrate:deactivated-at -- --zapisat` — so súhlasom Jána.
+  - [ ] **Zapnúť `RETENTION_MODE=delete`** na Verceli po kontrole výkazu v odpovedi cronu.
+  - [ ] **Prideliť rolu `dpo`** (Švehlová) v Ľuďoch — bez nej `/privacy` neukazuje kontakt a štvrťročný e-mail nemá komu odísť.
+  - [ ] **DPO schváli text C1** a zodpovie C2, C3 (`docs/C1_…`–`C3_…`); potom odkaz na `/privacy` do pozvánky a adresa/IČO prevádzkovateľa do profilu organizácie.
   - [ ] **Opraviť `codelists/legalBasis.json` podľa DPO** — skôr, než sa podľa neho začnú vyberať základy.
 - [x] **O17 — pseudonymizácia v `evaluations`** ✅ 2026-09-16 — päť podpisových polí nesie `persons.id`, nie e-mail. Migrácia `npm run migrate:eval-personid` prebehla (7 záznamov, 12 polí), invariant v `npm run check` stráži návrat e-mailu. `docs/O17_plan_personid_v_hodnoteniach.md`. `GDPR_DATA_PROTECTION.md` kap. 3 má zásadu „`userId`/`sessionId` pseudonymizovať", ale kolekcia ukladá e-mail pýtajúceho aj hodnotiteľa **doslovne**. Buď sa to pseudonymizuje, alebo sa zásada prepíše — **rozhodnutie, nie implementácia**.
 - [ ] **Poradie nasadenia (rozhodnuté 2026-09-16, Ján):** prvé kolo beží na **Anthropic + MongoDB Atlas** (režim `eu-data`). **On-prem sa rieši až po dodaní hardvéru** — dovtedy je to na webe aj v dokumentácii označené ako pripravované, nie ako voľba pri objednávke. Týka sa to `O7_plan_overenia.md` (on-prem vetva) aj `ADR-002` (rezidencia).

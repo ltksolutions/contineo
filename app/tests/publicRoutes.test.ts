@@ -27,6 +27,10 @@ describe("brána prihlásenia", () => {
     expect(isPublicPath("/api/brand/sfz")).toBe(true)
   })
 
+  it("informovanie o ochrane údajov prejde — má byť dostupné pred prihlásením (C1)", () => {
+    expect(isPublicPath("/privacy")).toBe(true)
+  })
+
   it("obsah noriem neprejde", () => {
     // Toto je ten dôvod, pre ktorý brána existuje: bez nej by ktokoľvek na
     // internete dostal odpovede nad korpusom.
