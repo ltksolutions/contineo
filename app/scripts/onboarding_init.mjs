@@ -109,6 +109,8 @@ const PLAN = [
         why: "filter na osoby, oddelenia, pridelenia" },
       { key: { companyCode: 1, targetId: 1, at: -1 }, opts: { name: "by_target" },
         why: "história jednej osoby alebo jedného oddelenia" },
+      { key: { at: 1 }, opts: { name: "audit_ttl", expireAfterSeconds: 730 * 24 * 3600 },
+        why: "retencia 24 mesiacov (O16/B6, ADR-012 D103) — maže databáza sama" },
     ],
   },
   {

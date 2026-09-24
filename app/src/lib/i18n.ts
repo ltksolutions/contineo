@@ -1339,6 +1339,13 @@ interface Dictionary {
       confirmLabel: string
       confirmNote: string
       excludeSubmit: string
+      endedAtLabel: string
+      endedAtNote: string
+      endedAtHeading: string
+      deactivatedOn: (date: string) => string
+      endedAtCurrent: (date: string) => string
+      endedAtMissing: string
+      endedAtSubmit: string
     }
     actions: {
       saved: string
@@ -1352,6 +1359,7 @@ interface Dictionary {
       inviteNotNeeded: string
       excluded: string
       returned: string
+      endedAtSaved: string
       confirmAddress: (email: string) => string
       failed: string
       noRight: string
@@ -2932,6 +2940,9 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
 
     // ── osoby ──────────────────────────────────────────────────────────────
     "person.notFound": "Taká osoba tu nie je.",
+    "person.badEndedAt": "Dátum skončenia nie je platný dátum.",
+    "person.endedInFuture": "Dátum skončenia nemôže byť v budúcnosti.",
+    "person.endedNotInactive": "Skončenie vzťahu sa zadáva až pri vyradenej osobe.",
     "person.badEmail": "To nie je e-mailová adresa.",
     "person.emailTaken": "{email} v organizácii už je.",
     "person.alreadyInvited": "{email} je v organizácii už zapísaná.",
@@ -3499,10 +3510,17 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       returnNoteHighlight: "pozvaná",
       returnNoteAfter: ", nie aktívna — aktívna znamená „už sa prihlásila“ a to sa vrátením nestalo. Prepne ju prvé prihlásenie.",
       returnSubmit: "Vrátiť",
-      excludeNote: "Po vyradení sa neprihlási — okamžite. Záznam ani jej potvrdenia sa nemažú; sú to platné doklady o tom, čo si prečítala, a musia prežiť jej odchod.",
+      excludeNote: "Po vyradení sa neprihlási — okamžite. Záznam a jej potvrdenia zostávajú ako doklad o tom, čo si prečítala; zmažú sa 3 roky po skončení vzťahu so zväzom (ADR-012).",
       confirmLabel: "Napíš adresu na potvrdenie",
       confirmNote: "Zámerne to nie je „naozaj?“ — to sa odklikne skôr, než sa prečíta.",
       excludeSubmit: "Vyradiť",
+      endedAtLabel: "Vzťah so zväzom skončil (nepovinné)",
+      endedAtNote: "Koniec pracovného pomeru, licencie, funkcie alebo spolupráce. Od tohto dátumu plynie 3-ročná lehota uchovania potvrdení; keď ho nevyplníš, plynie odo dňa vyradenia.",
+      endedAtHeading: "Skončenie vzťahu",
+      deactivatedOn: (date) => `Vyradená ${date}.`,
+      endedAtCurrent: (date) => `Vzťah skončil ${date}.`,
+      endedAtMissing: "Dátum skončenia nie je vyplnený — lehota plynie odo dňa vyradenia.",
+      endedAtSubmit: "Uložiť dátum",
     },
     actions: {
       saved: "Uložené.",
@@ -3513,6 +3531,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       inviteNotNeeded: "Táto osoba už bola prihlásená — pozvánku nepotrebuje.",
       excluded: "Vyradená. Záznam a jej potvrdenia zostávajú.",
       returned: "Vrátená. Prihlási sa a stav sa prepne sám.",
+      endedAtSaved: "Dátum skončenia uložený.",
       confirmAddress: (email) => `Na vyradenie napíš adresu (${email}).`,
       failed: "Zmenu sa nepodarilo uložiť. Skús to znova.",
       noRight: "Nemáš na to právo.",
@@ -4993,6 +5012,9 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
 
     // ── osoby ──────────────────────────────────────────────────────────────
     "person.notFound": "Taková osoba tu není.",
+    "person.badEndedAt": "Datum skončení není platné datum.",
+    "person.endedInFuture": "Datum skončení nemůže být v budoucnosti.",
+    "person.endedNotInactive": "Skončení vztahu se zadává až u vyřazené osoby.",
     "person.badEmail": "To není e-mailová adresa.",
     "person.emailTaken": "{email} v organizaci už je.",
     "person.alreadyInvited": "{email} je v organizaci už zapsaná.",
@@ -5560,10 +5582,17 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       returnNoteHighlight: "pozvaná",
       returnNoteAfter: ", ne aktivní — aktivní znamená „už se přihlásila“ a to se vrácením nestalo. Přepne ji první přihlášení.",
       returnSubmit: "Vrátit",
-      excludeNote: "Po vyřazení se nepřihlásí — okamžitě. Záznam ani její potvrzení se nemažou; jsou to platné doklady o tom, co si přečetla, a musí přežít její odchod.",
+      excludeNote: "Po vyřazení se nepřihlásí — okamžitě. Záznam a její potvrzení zůstávají jako doklad o tom, co si přečetla; smažou se 3 roky po skončení vztahu se svazem (ADR-012).",
       confirmLabel: "Napiš adresu pro potvrzení",
       confirmNote: "Záměrně to není „opravdu?“ — to se odklikne dřív, než se přečte.",
       excludeSubmit: "Vyřadit",
+      endedAtLabel: "Vztah se svazem skončil (nepovinné)",
+      endedAtNote: "Konec pracovního poměru, licence, funkce nebo spolupráce. Od tohoto data běží 3letá lhůta uchování potvrzení; když ho nevyplníš, běží ode dne vyřazení.",
+      endedAtHeading: "Skončení vztahu",
+      deactivatedOn: (date) => `Vyřazená ${date}.`,
+      endedAtCurrent: (date) => `Vztah skončil ${date}.`,
+      endedAtMissing: "Datum skončení není vyplněné — lhůta běží ode dne vyřazení.",
+      endedAtSubmit: "Uložit datum",
     },
     actions: {
       saved: "Uloženo.",
@@ -5574,6 +5603,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       inviteNotNeeded: "Tato osoba už byla přihlášená — pozvánku nepotřebuje.",
       excluded: "Vyřazená. Záznam a její potvrzení zůstávají.",
       returned: "Vrácená. Přihlásí se a stav se přepne sám.",
+      endedAtSaved: "Datum skončení uloženo.",
       confirmAddress: (email) => `Pro vyřazení napiš adresu (${email}).`,
       failed: "Změnu se nepodařilo uložit. Zkus to znovu.",
       noRight: "Nemáš na to právo.",
@@ -7045,6 +7075,9 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
 
     // ── people ─────────────────────────────────────────────────────────────
     "person.notFound": "There is no such person here.",
+    "person.badEndedAt": "The end date is not a valid date.",
+    "person.endedInFuture": "The end date cannot be in the future.",
+    "person.endedNotInactive": "The end of the relationship is entered only for an excluded person.",
     "person.badEmail": "That is not an email address.",
     "person.emailTaken": "{email} is already in the organisation.",
     "person.alreadyInvited": "{email} is already recorded in the organisation.",
@@ -7612,10 +7645,17 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       returnNoteHighlight: "invited",
       returnNoteAfter: ", not active — active means “has already signed in”, and reinstating did not make that happen. Their first sign-in switches it.",
       returnSubmit: "Reinstate",
-      excludeNote: "After exclusion they cannot sign in — immediately. Neither the record nor their acknowledgements are deleted; they are valid evidence of what the person read, and they have to outlive their departure.",
+      excludeNote: "After exclusion they cannot sign in — immediately. The record and their acknowledgements stay as evidence of what the person read; they are deleted 3 years after the relationship with the association ends (ADR-012).",
       confirmLabel: "Type the address to confirm",
       confirmNote: "Deliberately not “are you sure?” — that gets clicked away before it is read.",
       excludeSubmit: "Exclude",
+      endedAtLabel: "Relationship ended on (optional)",
+      endedAtNote: "End of employment, licence, office or cooperation. The 3-year retention of acknowledgements runs from this date; if left empty, it runs from the day of exclusion.",
+      endedAtHeading: "End of relationship",
+      deactivatedOn: (date) => `Excluded on ${date}.`,
+      endedAtCurrent: (date) => `Relationship ended on ${date}.`,
+      endedAtMissing: "The end date is not filled in — retention runs from the day of exclusion.",
+      endedAtSubmit: "Save date",
     },
     actions: {
       saved: "Saved.",
@@ -7626,6 +7666,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       inviteNotNeeded: "This person has already signed in — they do not need an invitation.",
       excluded: "Excluded. The record and their acknowledgements remain.",
       returned: "Reinstated. They sign in and the status switches by itself.",
+      endedAtSaved: "End date saved.",
       confirmAddress: (email) => `To exclude, type the address (${email}).`,
       failed: "The change could not be saved. Try again.",
       noRight: "You do not have permission for that.",

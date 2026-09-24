@@ -40,7 +40,7 @@ const chunks = await db.collection("document_chunks").find(tenantFilter).toArray
 const acknowledgements = await db.collection("acknowledgements")
   .find({ ...tenantFilter, type: "acknowledgement" }).toArray()
 const persons = await db.collection("persons")
-  .find(tenantFilter, { projection: { id: 1, email: 1, roles: 1, status: 1 } }).toArray()
+  .find(tenantFilter, { projection: { id: 1, email: 1, roles: 1, status: 1, fullName: 1, deactivatedAt: 1, endedAt: 1 } }).toArray()
 
 const findings = []
 const check = (condition, message, why) => { if (condition) findings.push({ sprava: message, preco: why }) }
@@ -259,6 +259,17 @@ listOut("platné znenia bez zodpovednej osoby (D91) — doplní správca obsahu 
 listOut("platné znenia, ktorých zodpovedná osoba už nie je aktívna — treba určiť novú", inactiveResponsible)
 listOut("platné znenia bez právneho základu (O15) — určí zodpovedná osoba", withoutBasis)
 listOut("platné znenia s právnym základom mimo číselníka (D92) — vybrať položku z číselníka", outsideCodelist)
+
+/*
+ * Vyradené osoby bez dátumu vyradenia (ADR-012, D100). Lehota dokladov pri nich
+ * nemá od čoho plynúť a uplatní sa strop 5 rokov od poslednej udalosti.
+ * Doplnenie z auditu: `npm run migrate:deactivated-at`; kde audit nie je,
+ * doplní HR skončenie vzťahu na karte osoby.
+ */
+listOut(
+  "vyradené osoby bez dátumu vyradenia (ADR-012) — lehota dokladov plynie až od stropu 5 rokov",
+  persons.filter(o => o.status === "inactive" && !o.deactivatedAt && !o.endedAt).map(o => `${o.id} — ${o.fullName ?? ""}`),
+)
 
 if (withoutValidity > 0) {
   console.log(`${INFO} ${withoutValidity} aktívnych znení nemá dátum platnosti — nedajú sa potvrdiť (D6)\n`)
