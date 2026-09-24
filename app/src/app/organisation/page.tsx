@@ -192,6 +192,7 @@ export default async function OrganisationPage({
   const language = ctx.person.language
   const d = dictionary(language)
   const t = d.org
+  const tp = d.privacy
   const pending = (await domainRequests(tenant.companyCode)).filter(
     z => !tenant.hostnames.includes(z.host),
   )
@@ -269,156 +270,201 @@ export default async function OrganisationPage({
         ))}
       </nav>
 
+      {/*
+        Vzhľad a jazyky v sekciách (rám ADMIN-prevadzkovatel-a-ciselniky):
+        nadpis a vysvetlenie vľavo, polia vpravo (od 1024 px), jeden
+        formulár a jedno Uložiť v lište, ktorá je vždy na dosah.
+      */}
       {now === "branding" && (
-      <form action={saveBrandingAction} className="card" style={{ padding: 20, display: "grid", gap: 16 }}>
+      <form action={saveBrandingAction} className="card set-form">
         <input type="hidden" name="tab" value="branding" />
 
-        <label className="field">
-          <span className="field-label">{t.branding.name}</span>
-          <input className="field-input" name="displayName" defaultValue={tenant.branding.displayName} required />
-          <span className="quiet field-hint">{t.branding.nameNote}</span>
-        </label>
+        <section className="set-sec">
+          <div className="set-sec-head">
+            <h2>{t.branding.secIdentity}</h2>
+            <p>{t.branding.secIdentityNote}</p>
+          </div>
+          <div className="set-sec-body">
+            <label className="field">
+              <span className="field-label">{t.branding.name}</span>
+              <input className="field-input" name="displayName" defaultValue={tenant.branding.displayName} required />
+              <span className="quiet field-hint">{t.branding.nameNote}</span>
+            </label>
 
-        <label className="field">
-          <span className="field-label">{t.branding.shortName}</span>
-          <input className="field-input" name="shortName" defaultValue={tenant.branding.shortName ?? ""} />
-          <span className="quiet field-hint">{t.branding.shortNameNote}</span>
-        </label>
+            <label className="field">
+              <span className="field-label">{t.branding.shortName}</span>
+              <input className="field-input" name="shortName" defaultValue={tenant.branding.shortName ?? ""} />
+              <span className="quiet field-hint">{t.branding.shortNameNote}</span>
+            </label>
 
-        <div className="field">
-          <span className="field-label">{t.branding.logo}</span>
-          {/* Slot je veľký 96 px, hoci v hlavičke má logo 26 — na 26 px sa
-              nedá posúdiť, či je obrázok orezaný alebo rozmazaný, a práve to
-              je jediné, čo sa tu dá skontrolovať pred uložením. */}
-          <div className="logo-row">
-            <div className="logo-slot">
-              {tenant.branding.logoUrl ? (
-                // `alt` nie je prázdny, na rozdiel od hlavičky: tam je logo
-                // ozdoba vedľa názvu, tu je to jediný spôsob, ako zistiť,
-                // aké logo je uložené — teda obsah, nie ozdoba.
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={tenant.branding.logoUrl} alt={t.branding.logoCurrent} />
-              ) : (
-                <span className="logo-slot-empty">{t.branding.logoEmpty}</span>
-              )}
-            </div>
-            <div className="logo-row-fields">
-              <input className="field-input" type="file" name="logo" accept="image/png,image/jpeg,image/webp" />
-              <span className="quiet field-hint">{t.branding.logoNote}</span>
+            <div className="field">
+              <span className="field-label">{t.branding.logo}</span>
+              {/* Slot je veľký 96 px, hoci v hlavičke má logo 26 — na 26 px sa
+                  nedá posúdiť, či je obrázok orezaný alebo rozmazaný, a práve to
+                  je jediné, čo sa tu dá skontrolovať pred uložením. */}
+              <div className="logo-row">
+                <div className="logo-slot">
+                  {tenant.branding.logoUrl ? (
+                    // `alt` nie je prázdny, na rozdiel od hlavičky: tu je logo obsah.
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={tenant.branding.logoUrl} alt={t.branding.logoCurrent} />
+                  ) : (
+                    <span className="logo-slot-empty">{t.branding.logoEmpty}</span>
+                  )}
+                </div>
+                <div className="logo-row-fields">
+                  <input className="field-input" type="file" name="logo" accept="image/png,image/jpeg,image/webp" />
+                  {/* „Odstrániť logo" pri logu (rám, Q1 — Ján 24. 9.). Je to druhý
+                      formulár; vnoriť sa nedá, tlačidlo ho volá cez `form`. */}
+                  {tenant.branding.logoUrl && (
+                    <button className="set-remove" type="submit" form="remove-logo"
+                            title={t.branding.logoRemoveNote}>
+                      {t.branding.logoRemove}
+                    </button>
+                  )}
+                  <span className="quiet field-hint">{t.branding.logoNote}</span>
+                </div>
+              </div>
             </div>
           </div>
-        </div>
+        </section>
 
-        <div className="field">
-          <span className="field-label">{t.branding.color}</span>
-          <ColorSelect name="accentColor" value={tenant.branding.accentColor} language={language} />
-          <span className="quiet field-hint">{t.branding.colorNote}</span>
-        </div>
+        <section className="set-sec">
+          <div className="set-sec-head">
+            <h2>{t.branding.color}</h2>
+            <p>{t.branding.colorNote}</p>
+          </div>
+          <div className="set-sec-body">
+            <ColorSelect name="accentColor" value={tenant.branding.accentColor} language={language} />
+          </div>
+        </section>
 
-        <label className="field">
-          <span className="field-label">{t.branding.supportEmail}</span>
-          <input className="field-input" name="supportEmail" type="email" defaultValue={tenant.branding.supportEmail ?? ""} />
-          <span className="quiet field-hint">{t.branding.supportEmailNote}</span>
-        </label>
+        <section className="set-sec">
+          <div className="set-sec-head">
+            <h2>{t.branding.secContact}</h2>
+          </div>
+          <div className="set-sec-body">
+            <label className="field">
+              <span className="field-label">{t.branding.supportEmail}</span>
+              <input className="field-input" name="supportEmail" type="email" defaultValue={tenant.branding.supportEmail ?? ""} />
+              <span className="quiet field-hint">{t.branding.supportEmailNote}</span>
+            </label>
 
-        {/*
-          Predvoľba telefónu (D86). Je to nastavenie organizácie, nie značka —
-          ale patrí sem, lebo je to jediné pole vo svojej skupine a vlastná
-          záložka pre jeden riadok by znamenala, že ho nikto nenájde.
-        */}
-        <label className="field">
-          <span className="field-label">{t.branding.phonePrefix}</span>
-          <input
-            className="field-input"
-            name="phonePrefix"
-            inputMode="tel"
-            placeholder={DEFAULT_PHONE_PREFIX}
-            defaultValue={tenant.phonePrefix ?? ""}
-          />
-          <span className="quiet field-hint">{t.branding.phonePrefixNote}</span>
-        </label>
+            {/* Predvoľba telefónu (D86) — nastavenie organizácie, jediné pole
+                vo svojej skupine; vlastná záložka by ho skryla. */}
+            <label className="field">
+              <span className="field-label">{t.branding.phonePrefix}</span>
+              <input
+                className="field-input"
+                name="phonePrefix"
+                inputMode="tel"
+                placeholder={DEFAULT_PHONE_PREFIX}
+                defaultValue={tenant.phonePrefix ?? ""}
+              />
+              <span className="quiet field-hint">{t.branding.phonePrefixNote}</span>
+            </label>
+          </div>
+        </section>
 
         {/*
           Prevádzkovateľ (C1, ADR-012) — údaje do informovania dotknutých
-          osôb na `/privacy`. Skupina, nie tri voľné polia: je to jedna vec
-          (kto zodpovedá za osobné údaje), nie tri nastavenia vzhľadu.
+          osôb na `/privacy`. Pod poľami náhľad vety z tej stránky (rám, Q2)
+          z uložených hodnôt — bez JavaScriptu, takže ukazuje, čo platí.
         */}
-        <fieldset className="hr-group" style={{ border: "1px solid var(--line)", display: "grid", gap: 12 }}>
-          <legend className="field-label">{t.branding.controller}</legend>
-          <span className="quiet field-hint">{t.branding.controllerNote}</span>
-          <label className="field">
-            <span className="field-label">{t.branding.controllerLegalName}</span>
-            <input className="field-input" name="controllerLegalName" defaultValue={tenant.controller?.legalName ?? ""}
-                   placeholder={tenant.branding.displayName} />
-          </label>
-          <label className="field">
-            <span className="field-label">{t.branding.controllerAddress}</span>
-            <input className="field-input" name="controllerAddress" defaultValue={tenant.controller?.address ?? ""} />
-          </label>
-          <label className="field">
-            <span className="field-label">{t.branding.controllerRegistrationNumber}</span>
-            <input className="field-input" name="controllerRegistrationNumber" inputMode="numeric"
-                   defaultValue={tenant.controller?.registrationNumber ?? ""} />
-          </label>
-        </fieldset>
-
-        <fieldset className="hr-group" style={{ border: "1px solid var(--line)" }}>
-          <legend className="field-label">{t.branding.languages}</legend>
-          <div className="tags-list">
-            {UI_LANGUAGES.map(j => (
-              <label key={j} className="tag tag--choice tag--field">
-                <input type="checkbox" name="languages" value={j} defaultChecked={tenant.languages.includes(j)} />
-                <span className="tag-mark" aria-hidden="true" />
-                {d.people.languages[j] ?? j}
-              </label>
-            ))}
+        <section className="set-sec">
+          <div className="set-sec-head">
+            <h2>{t.branding.controller}</h2>
+            <p>{t.branding.controllerNote}</p>
           </div>
-        </fieldset>
+          <div className="set-sec-body">
+            <label className="field">
+              <span className="field-label">{t.branding.controllerLegalName}</span>
+              <input className="field-input" name="controllerLegalName" defaultValue={tenant.controller?.legalName ?? ""}
+                     placeholder={tenant.branding.displayName} />
+            </label>
+            <div className="set-pair">
+              <label className="field">
+                <span className="field-label">{t.branding.controllerAddress}</span>
+                <input className="field-input" name="controllerAddress" defaultValue={tenant.controller?.address ?? ""} />
+              </label>
+              <label className="field">
+                <span className="field-label">{t.branding.controllerRegistrationNumber}</span>
+                <input className="field-input" name="controllerRegistrationNumber" inputMode="numeric"
+                       defaultValue={tenant.controller?.registrationNumber ?? ""} />
+              </label>
+            </div>
+            <p className="set-preview">
+              {t.branding.controllerPreview}{" "}
+              <b>„{tp.controller(tenant.controller?.legalName || tenant.branding.displayName)}“</b>
+              {(tenant.controller?.address || tenant.controller?.registrationNumber) &&
+                ` · ${tp.controllerDetails(tenant.controller?.address ?? "", tenant.controller?.registrationNumber ?? "")}`}
+            </p>
+          </div>
+        </section>
 
-        <div className="field">
-          <span className="field-label">{t.branding.defaultLanguage}</span>
-          <Select language={language}
-            name="defaultLanguage"
-            options={UI_LANGUAGES.map(j => ({ value: j, label: d.people.languages[j] ?? j }))}
-            initial={tenant.defaultLanguage}
-            fieldLabel={t.branding.defaultLanguage}
-          />
-          <span className="quiet field-hint">{t.branding.defaultLanguageNote}</span>
+        <section className="set-sec">
+          <div className="set-sec-head">
+            <h2>{t.branding.languages}</h2>
+          </div>
+          <div className="set-sec-body">
+            <div className="tags-list">
+              {UI_LANGUAGES.map(j => (
+                <label key={j} className="tag tag--choice tag--field">
+                  <input type="checkbox" name="languages" value={j} defaultChecked={tenant.languages.includes(j)} />
+                  <span className="tag-mark" aria-hidden="true" />
+                  {d.people.languages[j] ?? j}
+                </label>
+              ))}
+            </div>
+            <div className="field">
+              <span className="field-label">{t.branding.defaultLanguage}</span>
+              <Select language={language}
+                name="defaultLanguage"
+                options={UI_LANGUAGES.map(j => ({ value: j, label: d.people.languages[j] ?? j }))}
+                initial={tenant.defaultLanguage}
+                fieldLabel={t.branding.defaultLanguage}
+              />
+              <span className="quiet field-hint">{t.branding.defaultLanguageNote}</span>
+            </div>
+          </div>
+        </section>
+
+        <section className="set-sec">
+          <div className="set-sec-head">
+            <h2>{t.branding.secAutoProvision}</h2>
+          </div>
+          <div className="set-sec-body">
+            <label className="field">
+              <span className="field-label">{t.branding.autoProvision}</span>
+              <textarea
+                className="field-input"
+                name="autoProvisionDomains"
+                rows={2}
+                defaultValue={(tenant.autoProvisionDomains ?? []).join("\n")}
+                placeholder="futbalsfz.sk&#10;sfzmarketing.sk"
+                autoCapitalize="none"
+                autoCorrect="off"
+              />
+              <span className="quiet field-hint">
+                {t.branding.autoProvisionBefore}<strong>{t.branding.autoProvisionHighlight}</strong>{t.branding.autoProvisionAfter}
+              </span>
+            </label>
+          </div>
+        </section>
+
+        <div className="set-savebar">
+          <button className="button" type="submit">{t.branding.save}</button>
+          <span className="quiet">{t.branding.saveBarNote}</span>
         </div>
-
-        <label className="field">
-          <span className="field-label">{t.branding.autoProvision}</span>
-          <textarea
-            className="field-input"
-            name="autoProvisionDomains"
-            rows={2}
-            defaultValue={(tenant.autoProvisionDomains ?? []).join("\n")}
-            placeholder="futbalsfz.sk&#10;sfzmarketing.sk"
-            autoCapitalize="none"
-            autoCorrect="off"
-          />
-          <span className="quiet field-hint">
-            {t.branding.autoProvisionBefore}<strong>{t.branding.autoProvisionHighlight}</strong>{t.branding.autoProvisionAfter}
-          </span>
-        </label>
-
-        <div><button className="button" type="submit">{t.branding.save}</button></div>
       </form>
       )}
 
-      {/* Vlastný formulár, nie tlačidlo v tom hornom: formuláre sa vnárať
-          nedajú a odstránenie loga navyše nemá ísť cez „Uložiť" — je to iná
-          akcia s iným následkom. */}
+      {/* Formulár odstránenia loga — samostatný (formuláre sa vnárať nedajú),
+          volá ho tlačidlo pri logu cez `form="remove-logo"`. */}
       {now === "branding" && tenant.branding.logoUrl && (
-      <form action={deleteLogoAction} className="card logo-remove" style={{ padding: 20, marginTop: 16 }}>
-        <input type="hidden" name="tab" value="branding" />
-        <p className="quiet" style={{ margin: 0, fontSize: "var(--fs-body)", lineHeight: 1.6 }}>{t.branding.logoRemoveNote}</p>
-        <div>
-          <button className="button button--quiet" type="submit" style={{ color: "var(--bad-fg)" }}>
-            {t.branding.logoRemove}
-          </button>
-        </div>
-      </form>
+        <form id="remove-logo" action={deleteLogoAction} hidden>
+          <input type="hidden" name="tab" value="branding" />
+        </form>
       )}
 
       {now === "departments" && (
@@ -650,115 +696,149 @@ export default async function OrganisationPage({
           {t.codelists.introBefore}<strong>{t.codelists.introHighlight}</strong>{t.codelists.introAfter}
         </p>
 
-        {codelists.map(c => (
-          <section key={c.name} className="card" style={{ padding: 20, display: "grid", gap: 12 }}>
-            <div>
-              <h2 style={{ fontSize: "var(--fs-section)", margin: "0 0 4px" }}>{t.codelists.labels[c.name].name}</h2>
-              <p className="quiet" style={{ fontSize: "var(--fs-body)", margin: 0 }}>
-                {t.codelists.labels[c.name].hint}
-              </p>
+        {/* Rozcestník s počtom položiek (rám ADMIN, bod 5). */}
+        <nav className="cl-nav" aria-label={t.tabs.codelists}>
+          {codelists.map(c => (
+            <a key={c.name} href={`#cl-${c.name}`}>
+              {t.codelists.labels[c.name].name} <span>{c.vsetky.length}</span>
+            </a>
+          ))}
+          <a href="#cl-legal">{tr.orgHeading} <span>{STANDARD_LEGAL_BASES.length + (tenant.legalBases ?? []).length}</span></a>
+        </nav>
+
+        {codelists.map(c => {
+          const isCustom = (key: string) => c.vlastne.some(v => v.key === key)
+          const base = c.vsetky.filter(p => !isCustom(p.key))
+          const custom = c.vsetky.filter(p => isCustom(p.key))
+          const row = (p: (typeof c.vsetky)[number]) => {
+            const own = isCustom(p.key)
+            return (
+              <div key={p.key} className="cl-row">
+                <span className="cl-name">{p.label ?? p.key}</span>
+                <code className="cl-key">{p.key}</code>
+                <span className="cl-use">
+                  {!own ? <span className="cl-badge">{t.codelists.baseBadge}</span>
+                    : c.pocty[p.key] > 0 ? t.codelists.used(c.pocty[p.key]) : ""}
+                </span>
+                <span className="cl-act">
+                  {own && (
+                    <form action={removeCodelistItemAction}>
+                      <input type="hidden" name="tab" value="codelists" />
+                      <input type="hidden" name="codelist" value={c.name} />
+                      <input type="hidden" name="key" value={p.key} />
+                      <button className="button button--quiet" type="submit">{t.codelists.remove}</button>
+                    </form>
+                  )}
+                </span>
+              </div>
+            )
+          }
+          return (
+          <section key={c.name} id={`cl-${c.name}`} className="card cl">
+            <div className="cl-head">
+              <h2>{t.codelists.labels[c.name].name}</h2>
+              <p>{t.codelists.labels[c.name].hint}</p>
             </div>
+            <div className="cl-row cl-th" aria-hidden="true">
+              <span>{t.codelists.colName}</span><span>{t.codelists.colKey}</span><span>{t.codelists.colUse}</span><span />
+            </div>
+            {/* Základné položky nad tri zbalené (rám, Q3 — Ján 24. 9.): sú tu
+                vždy a nedá sa s nimi nič robiť. Vlastné sú vidieť celé. */}
+            {base.slice(0, 3).map(row)}
+            {base.length > 3 && (
+              <details className="cl-more">
+                <summary>{t.codelists.moreBase(base.length - 3)}</summary>
+                {base.slice(3).map(row)}
+              </details>
+            )}
+            {custom.map(row)}
 
-            <ul className="tree">
-              {c.vsetky.map(p => {
-                const custom = c.vlastne.some(v => v.key === p.key)
-                return (
-                  <li key={p.key} className="tree-item">
-                    <div className="tree-row">
-                      <span className="tree-name">{p.label ?? p.key}</span>
-                      <span className="quiet tree-count">
-                        <code>{p.key}</code>
-                        {!custom && t.codelists.base}
-                        {custom && c.pocty[p.key] > 0 && t.codelists.used(c.pocty[p.key])}
-                      </span>
-                      {custom && (
-                        <form action={removeCodelistItemAction} style={{ marginLeft: "auto" }}>
-                          <input type="hidden" name="tab" value="codelists" />
-                          <input type="hidden" name="codelist" value={c.name} />
-                          <input type="hidden" name="key" value={p.key} />
-                          <button className="button button--quiet" type="submit">{t.codelists.remove}</button>
-                        </form>
-                      )}
-                    </div>
-                  </li>
-                )
-              })}
-            </ul>
-
-            <form action={addCodelistItemAction} className="tree-form">
+            <form action={addCodelistItemAction} className="tree-form cl-add">
               <input type="hidden" name="tab" value="codelists" />
               <input type="hidden" name="codelist" value={c.name} />
-              {/* Kľúč sa predgeneruje z názvu (ako pri novom dokumente, ADR-010). */}
+              {/* Kľúč sa predgeneruje z názvu (ako pri novom dokumente, ADR-010).
+                  Príklad v poli je `placeholder` pre daný číselník (rám, bod 7). */}
               <KeyFromLabel
                 usedKeys={c.vsetky.map(p => p.key)}
                 labels={{
                   label: t.codelists.newItemLabel(t.codelists.labels[c.name].name),
-                  labelPlaceholder: t.codelists.newItemPlaceholder,
+                  labelPlaceholder: t.codelists.examples[c.name]?.label ?? t.codelists.newItemPlaceholder,
                   key: t.codelists.key,
-                  keyPlaceholder: t.codelists.keyPlaceholder,
+                  keyPlaceholder: t.codelists.examples[c.name]?.key ?? t.codelists.keyPlaceholder,
                   taken: t.codelists.keyTakenHint,
                 }}
               />
               <button className="button button--quiet" type="submit">{t.codelists.add}</button>
             </form>
-
-            <p className="quiet" style={{ fontSize: "var(--fs-small)", margin: 0 }}>{t.codelists.keyNote}</p>
+            <p className="quiet cl-note">{t.codelists.keyNote}</p>
           </section>
-        ))}
+          )
+        })}
 
         {/*
           Právne základy (D92). Iný tvar než ostatné číselníky — položka má
           kategóriu a odkaz na predpis — a nič sa nemaže: štandardná sa skryje,
           vlastná vyradí. Znenia si nesú kópiu, takže sa ich to nedotkne.
+          Zoskupené podľa kategórie, odkaz na predpis pod názvom, akcia vždy
+          v stĺpci (rám, bod 8).
         */}
-        <section className="card" style={{ padding: 20, display: "grid", gap: 12 }}>
-          <div>
-            <h2 style={{ fontSize: "var(--fs-section)", margin: "0 0 4px" }}>{tr.orgHeading}</h2>
-            <p className="quiet" style={{ fontSize: "var(--fs-body)", margin: 0 }}>{tr.orgHint}</p>
+        <section id="cl-legal" className="card cl">
+          <div className="cl-head">
+            <h2>{tr.orgHeading}</h2>
+            <p>{tr.orgHint}</p>
           </div>
-
-          <ul className="tree">
-            {[
+          <div className="cl-row cl-th" aria-hidden="true">
+            <span>{t.codelists.colName}</span><span>{t.codelists.colKey}</span><span>{t.codelists.colUse}</span><span />
+          </div>
+          {LEGAL_BASES.map(group => {
+            const items = [
               ...STANDARD_LEGAL_BASES.map(i => ({ ...i, source: "standard" as const, off: hiddenBases.has(i.key) })),
               ...(tenant.legalBases ?? []).map(i => ({ ...i, source: "custom" as const, off: Boolean(i.retiredAt) })),
-            ].map(i => (
-              <li key={i.key} className="tree-item">
-                <div className="tree-row" style={{ flexWrap: "wrap", opacity: i.off ? 0.6 : 1 }}>
-                  <span className="tree-name">
-                    {i.label}
-                    <span className="quiet" style={{ display: "block", fontSize: "var(--fs-small)" }}>
-                      {tr.basisLabel[i.basis]}{i.reference ? ` · ${i.reference}` : ""}
+            ].filter(i => i.basis === group)
+            if (items.length === 0) return null
+            return (
+              <div key={group}>
+                <div className="cl-group">{tr.basisLabel[group]}</div>
+                {items.map(i => (
+                  <div key={i.key} className={`cl-row${i.off ? " is-off" : ""}`}>
+                    <span className="cl-name">
+                      {i.label}
+                      {i.reference && <span className="cl-sub">{i.reference}</span>}
                     </span>
-                  </span>
-                  <span className="quiet tree-count">
-                    <code>{i.key}</code>
-                    {" · "}{i.source === "standard" ? tr.standardTag : tr.customTag}
-                    {i.off && ` · ${i.source === "standard" ? tr.hiddenTag : tr.retiredTag}`}
-                    {(basisUsage.get(i.key) ?? 0) > 0 && ` · ${tr.usedIn(basisUsage.get(i.key) ?? 0)}`}
-                  </span>
-                  {i.source === "standard" && (
-                    <form action={toggleStandardLegalBasisAction} style={{ marginLeft: "auto" }}>
-                      <input type="hidden" name="tab" value="codelists" />
-                      <input type="hidden" name="key" value={i.key} />
-                      <input type="hidden" name="hidden" value={i.off ? "0" : "1"} />
-                      <button className="button button--quiet" type="submit">{i.off ? tr.unhide : tr.hide}</button>
-                    </form>
-                  )}
-                  {i.source === "custom" && !i.off && (
-                    <form action={retireLegalBasisAction} style={{ marginLeft: "auto" }}>
-                      <input type="hidden" name="tab" value="codelists" />
-                      <input type="hidden" name="key" value={i.key} />
-                      <button className="button button--quiet" type="submit">{tr.retire}</button>
-                    </form>
-                  )}
-                </div>
-              </li>
-            ))}
-          </ul>
+                    <code className="cl-key">{i.key}</code>
+                    <span className="cl-use">
+                      {(basisUsage.get(i.key) ?? 0) > 0
+                        ? tr.usedIn(basisUsage.get(i.key) ?? 0)
+                        : <span className="cl-badge">{i.source === "standard" ? tr.standardTag : tr.customTag}</span>}
+                      {i.off && ` · ${i.source === "standard" ? tr.hiddenTag : tr.retiredTag}`}
+                    </span>
+                    <span className="cl-act">
+                      {i.source === "standard" && (
+                        <form action={toggleStandardLegalBasisAction}>
+                          <input type="hidden" name="tab" value="codelists" />
+                          <input type="hidden" name="key" value={i.key} />
+                          <input type="hidden" name="hidden" value={i.off ? "0" : "1"} />
+                          <button className="button button--quiet" type="submit">{i.off ? tr.unhide : tr.hide}</button>
+                        </form>
+                      )}
+                      {i.source === "custom" && !i.off && (
+                        <form action={retireLegalBasisAction}>
+                          <input type="hidden" name="tab" value="codelists" />
+                          <input type="hidden" name="key" value={i.key} />
+                          <button className="button button--quiet" type="submit">{tr.retire}</button>
+                        </form>
+                      )}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )
+          })}
 
-          <form action={addLegalBasisAction} style={{ display: "grid", gap: 10 }}>
+          <details className="cl-more cl-add-basis">
+            <summary>+ {tr.addHeading}</summary>
+          <form action={addLegalBasisAction} style={{ display: "grid", gap: 10, padding: "12px 18px 18px" }}>
             <input type="hidden" name="tab" value="codelists" />
-            <h3 style={{ fontSize: "var(--fs-body)", margin: 0 }}>{tr.addHeading}</h3>
             <KeyFromLabel
               layout="fields"
               usedKeys={[...STANDARD_LEGAL_BASES.map(i => i.key), ...(tenant.legalBases ?? []).map(i => i.key)]}
@@ -790,6 +870,7 @@ export default async function OrganisationPage({
             </label>
             <div><button className="button button--quiet" type="submit">{tr.addButton}</button></div>
           </form>
+          </details>
         </section>
       </div>
       )}
