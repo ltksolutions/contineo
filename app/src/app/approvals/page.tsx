@@ -1,5 +1,7 @@
 /**
  * Obrazovka schvaľovateľa — čo čaká na moje rozhodnutie (ADR-006, krok 4).
+ * Podoba podľa rámu `docs/design/APPROVALS-pdf-konceptu.md` (24. 9. 2026):
+ * karta v troch pásoch — hlavička, čo schvaľuješ, rozhodnutie.
  *
  * **Prečo vlastná obrazovka a nie detail dokumentu**, ako predpokladalo ADR:
  * schvaľovatelia sú **menovaní ľudia** (D69), nie držitelia roly. Kolegyňa
@@ -28,7 +30,9 @@ import { dictionary, formatDate } from "@/lib/i18n"
 import { roundsWaitingFor } from "@/lib/approvalsDb"
 import { approvalText } from "@/lib/approvals"
 import { documentDraftIdentity, normalizeMeta } from "@/lib/versionMeta"
-import VersionMetaLine from "@/components/VersionMetaLine"
+import MetaFacts from "@/components/MetaFacts"
+import { initials } from "@/lib/initials"
+import { listPeople } from "@/lib/people"
 import { getCollection } from "@/lib/mongodb"
 import { DOCUMENTS_COLLECTION, type Version, type VersionFile } from "@/lib/documents"
 import { decideAction } from "./actions"
@@ -66,6 +70,9 @@ export default async function ApprovalsPage({
     .toArray()
 
   const byId = new Map(docs.map(d => [String(d.documentId), d]))
+  // Kolo nesie adresu predkladateľa; na obrazovku patrí meno.
+  const people = rounds.length === 0 ? [] : await listPeople(person.companyCode)
+  const nameOf = (email: string) => people.find(p => p.email.toLowerCase() === email.toLowerCase())?.fullName ?? email
 
   return (
     <AppShell layout={normalizeLayout(q.layout)} language={person.language}>
@@ -84,7 +91,7 @@ export default async function ApprovalsPage({
           </div>
         )}
 
-        <ul className="approval-list">
+        <ul className="ap-list">
           {rounds.map(r => {
             const doc = byId.get(r.documentId) as
               { title?: unknown; versions?: Version[]; draftMarkdown?: unknown; draftPdf?: VersionFile | null; draftMeta?: Record<string, unknown> | null } | undefined
@@ -101,113 +108,161 @@ export default async function ApprovalsPage({
                 : null
             const others = r.approvers.filter(a => a.email !== person.email)
 
-            return (
-              <li key={`${r.documentId}-${r.versionId}-${r.round}`} className="card approval-card">
-                <h2 className="approval-title">{String(doc?.title ?? r.documentId)}</h2>
-                <div className="approval-meta">
-                  {t.versionLine(version?.label ?? r.versionId, t.roundLine(r.round))}
-                  {" · "}
-                  {t.submittedBy(r.submittedBy, formatDate(r.submittedAt, person.language))}
-                </div>
+            const changed = shown.kind === "changed"
+            const hasCurrent = (doc?.versions ?? []).some(v => v.isActive && v.effectiveFrom)
+            const draftMeta = shown.kind === "draft" && doc?.draftMeta ? normalizeMeta(doc.draftMeta) : null
+            const versionMeta = version ? normalizeMeta({
+              author: version.author, approvedBy: version.approvedBy,
+              approvedOn: version.approvedOn, effectiveFrom: version.effectiveFrom,
+            }) : null
+            const meta = draftMeta ?? versionMeta
+            /*
+              Štítok znenia (rám, Q1). Koncept označenie ešte nemá — dovtedy
+              sa tu ukazovalo technické `versionId`. Teraz ten istý názov ako
+              karta na detaile: „Nové znenie od …" / „Prvé znenie od …".
+            */
+            const draftFrom = draftMeta?.effectiveFrom ? formatDate(draftMeta.effectiveFrom, person.language) : ""
+            const label = version?.label
+              ?? (!draftFrom ? t.draftVersion : hasCurrent ? t.newVersionFrom(draftFrom) : t.firstVersionFrom(draftFrom))
+            const title = String(doc?.title ?? r.documentId)
+            const kicker = t.kicker(r.round, nameOf(r.submittedBy), formatDate(r.submittedAt, person.language))
+
+            const body = (
+              <div className="ap-body">
+                {/* Zmenený koncept: upozornenie hore, „Schváliť" ostáva aktívne
+                    (rám, Q3 = nie). Schválenie sa týka podoby z predloženia. */}
+                {changed && <p className="ap-warn">{t.draftChanged}</p>}
 
                 {/*
-                  Údaje o znení (ADR-013) sú **súčasťou schvaľovaného** — pri
-                  koncepte z konceptu, pri zverejnenom znení zo znenia.
+                  Schvaľuje sa **PDF aj text** (ADR-011, D96) a údaje o znení
+                  (D107) — jedným rozhodnutím. PDF hore, text zbalený pod ním.
                 */}
-                {shown.kind === "draft" && doc?.draftMeta ? (
-                  <VersionMetaLine {...normalizeMeta(doc.draftMeta)} language={person.language} />
-                ) : (
-                  <>
-                    <div className="approval-meta">
-                      {version?.effectiveFrom
-                        ? t.effectiveFrom(formatDate(version.effectiveFrom, person.language))
-                        : t.noEffectiveFrom}
-                    </div>
-                    {version && (
-                      <VersionMetaLine author={version.author} approvedBy={version.approvedBy}
-                                       approvedOn={version.approvedOn} language={person.language} />
+                {!changed && (
+                  <section className="ap-sec">
+                    <h3 className="ap-sec-h">{t.whatYouApprove}<span>{t.whatYouApproveNote}</span></h3>
+                    {pdf && (
+                      <PdfView href={pdf.href} name={pdf.file.name} bytes={pdf.file.bytes} labels={{ open: t.openPdf }} />
                     )}
-                  </>
+                    {pdf && "text" in shown ? (
+                      <details className="approval-search-text">
+                        <summary>{t.searchTextNote}</summary>
+                        <article className="answer approval-text">
+                          <FormattedText text={shown.text} />
+                        </article>
+                      </details>
+                    ) : (
+                      <article className="answer approval-text">
+                        {"text" in shown ? <FormattedText text={shown.text} /> : t.noText}
+                      </article>
+                    )}
+                  </section>
                 )}
 
-                {r.note && <p className="approval-card-note">{r.note}</p>}
+                {meta ? (
+                  <section className="ap-sec">
+                    <h3 className="ap-sec-h">{t.metaHeading}<span>{t.metaNote}</span></h3>
+                    <div className="ap-box"><MetaFacts meta={meta} language={person.language} omitEmpty /></div>
+                  </section>
+                ) : (
+                  <div className="approval-meta">{t.noEffectiveFrom}</div>
+                )}
+
+                {r.note && (
+                  <section className="ap-sec">
+                    <h3 className="ap-sec-h">{t.noteFrom}</h3>
+                    <p className="ap-box ap-note">{r.note}</p>
+                  </section>
+                )}
 
                 {/*
-                  Ostatní schvaľovatelia sú vidieť, ale ich rozhodnutie sa
-                  neukazuje ako odporúčanie — kolo je súbežné (D70) a každý
-                  rozhoduje sám. Zoznam je tu preto, aby bolo jasné, kto ešte
-                  bude musieť rozhodnúť, nie aby sa človek pridal k väčšine.
+                  Ostatní schvaľovatelia bez ich rozhodnutí — kolo je súbežné
+                  (D70) a každý rozhoduje sám. Zoznam hovorí, kto ešte musí
+                  rozhodnúť, nie ako rozhodla väčšina.
                 */}
                 {others.length > 0 && (
-                  <div className="approval-meta approval-others">
-                    {t.alsoDeciding(others.map(a => a.fullName).join(", "))}
-                  </div>
+                  <section className="ap-sec">
+                    <h3 className="ap-sec-h">{t.alsoDecidingHeading}</h3>
+                    <div className="ap-chips">
+                      {others.map(a => (
+                        <span key={a.email} className="ap-chip">
+                          <span className="flow-av" aria-hidden="true">{initials(a.fullName, a.email)}</span>
+                          {a.fullName}
+                        </span>
+                      ))}
+                    </div>
+                  </section>
                 )}
+              </div>
+            )
 
-                {/*
-                  Rozbalené pri jednom kole, zbalené pri dvoch a viac
-                  (APPROVALS, úloha 1). Schvaľuje sa text (D68), ktorý sa
-                  doslova ocitne v potvrdzovacej formulke (D28) — pri jednom
-                  kole je skryť ho za klik ako pýtať si podpis na zatvorenej
-                  obálke. Tri plné znenia pod sebou sa naopak nedajú čítať.
-                */}
-                <details className="approval-read" open={rounds.length === 1}>
-                  <summary>{t.readText}</summary>
-                  {/*
-                    Schvaľuje sa **PDF aj text** (ADR-011, D96): PDF je predpis,
-                    ako ho ľudia uvidia, text je to, z čoho systém odpovedá.
-                    PDF hore, text zbalený pod ním — ten si väčšina prečíta
-                    len vtedy, keď chce vedieť, čo bude vyhľadávanie hovoriť.
-                  */}
-                  {pdf && (
-                    <PdfView href={pdf.href} name={pdf.file.name} bytes={pdf.file.bytes} labels={{ open: t.openPdf }} />
-                  )}
-                  {pdf && "text" in shown ? (
-                    <details className="approval-search-text">
-                      <summary>{t.searchText}</summary>
-                      <article className="answer approval-text">
-                        <FormattedText text={shown.text} />
-                      </article>
-                    </details>
-                  ) : (
-                    <article className="answer approval-text">
-                      {"text" in shown
-                        ? <FormattedText text={shown.text} />
-                        : shown.kind === "changed" ? t.draftChanged : t.noText}
-                    </article>
-                  )}
-                </details>
+            /*
+              Dve tlačidlá v jednom formulári, nie dva formuláre: dôvod je
+              jedno pole a pri zamietnutí je povinný. Povinnosť dôvodu stráži
+              server (D71) — bez JavaScriptu ju formulár vynútiť nevie, keď sa
+              dá odoslať dvoma rôznymi tlačidlami. Päta so sivým pozadím
+              oddeľuje rozhodnutie od čítania (rám, bod 6).
+            */
+            const decide = (
+              <form action={decideAction} className="ap-decide">
+                <input type="hidden" name="documentId" value={r.documentId} />
+                <input type="hidden" name="versionId" value={r.versionId} />
+                <input type="hidden" name="round" value={r.round} />
 
-                {/*
-                  Dve tlačidlá v jednom formulári, nie dva formuláre: dôvod je
-                  jedno pole a pri zamietnutí je povinný. Dva formuláre by
-                  znamenali dve polia na dôvod a človek by vypĺňal to druhé.
-                  Povinnosť dôvodu pri zamietnutí stráži server (D71) — bez
-                  JavaScriptu ju formulár vynútiť nevie, keď sa dá odoslať
-                  dvoma rôznymi tlačidlami.
-                */}
-                <form action={decideAction} className="approval-form">
-                  <input type="hidden" name="documentId" value={r.documentId} />
-                  <input type="hidden" name="versionId" value={r.versionId} />
-                  <input type="hidden" name="round" value={r.round} />
+                <label className="field">
+                  <span className="field-label">{t.reason}</span>
+                  <textarea className="field-input" name="reason" rows={2} placeholder={t.reasonPlaceholder} />
+                  <span className="quiet field-hint">{t.reasonHint}</span>
+                </label>
 
-                  <label className="field">
-                    <span className="field-label">{t.reason}</span>
-                    {/* Dva riadky, nie jeden (APPROVALS, úloha 2): pri zamietnutí
-                        sem človek píše vetu-dve a musí si ich vedieť prečítať. */}
-                    <textarea className="field-input" name="reason" rows={2} placeholder={t.reasonPlaceholder} />
-                    <span className="quiet field-hint">{t.reasonHint}</span>
-                  </label>
+                <div className="ap-btns">
+                  <button className="button" type="submit" name="decision" value="approved">
+                    {t.approve}
+                  </button>
+                  <button className="button button--quiet" type="submit" name="decision" value="rejected">
+                    {t.reject}
+                  </button>
+                </div>
+              </form>
+            )
 
-                  <div className="approval-decide">
-                    <button className="button" type="submit" name="decision" value="approved">
-                      {t.approve}
-                    </button>
-                    <button className="button button--quiet" type="submit" name="decision" value="rejected">
-                      {t.reject}
-                    </button>
-                  </div>
-                </form>
+            const kick = (
+              <div className="ap-kicker">
+                <span className="tag">{label}</span>
+                <span>{kicker}</span>
+              </div>
+            )
+
+            /*
+              Jedno kolo: karta rozbalená. Schvaľuje sa text (D68), ktorý sa
+              doslova ocitne v potvrdzovacej formulke (D28) — skryť ho za klik
+              by bolo ako pýtať si podpis na zatvorenej obálke. Dve a viac:
+              každé kolo je riadok s „Prečítať a rozhodnúť" (rám, Q2), klik
+              rozbalí tú istú kartu.
+            */
+            return (
+              <li key={`${r.documentId}-${r.versionId}-${r.round}`} className="card ap-card">
+                {rounds.length === 1 ? (
+                  <>
+                    <div className="ap-head">
+                      {kick}
+                      <h2 className="ap-title">{title}</h2>
+                    </div>
+                    {body}
+                    {decide}
+                  </>
+                ) : (
+                  <details className="ap-fold">
+                    <summary className="ap-row">
+                      <span className="ap-row-main">
+                        {kick}
+                        <span className="ap-title">{title}</span>
+                      </span>
+                      <span className="button button--quiet ap-open">{t.readAndDecide}</span>
+                    </summary>
+                    {body}
+                    {decide}
+                  </details>
+                )}
               </li>
             )
           })}
