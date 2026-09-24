@@ -758,6 +758,13 @@ export default async function DocumentDetailPage({
             {tflow.downloadPdf}
           </a>
         )}
+        {/* Upraviteľný zdroj platného znenia (.docx a pod.) — predloha pre ďalšie znenie (ADR-011). */}
+        {effective?.source && (
+          <a className="button button--quiet" href={`/api/library/file/${encodeURIComponent(effective.source.id)}?download=1`}
+             download={effective.source.name}>
+            {tflow.downloadSource}
+          </a>
+        )}
         <Link className="button button--quiet" href={`${base}?edit=document`}>{tflow.editDocument}</Link>
         {newVersionBlocked ? (
           <span className="button is-disabled" aria-disabled="true" title={effective ? tflow.newVersionBusy : tflow.newVersionFirst}>
