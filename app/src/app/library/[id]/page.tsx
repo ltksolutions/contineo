@@ -20,7 +20,7 @@ import { formatDate, dictionary, type UiLanguage } from "@/lib/i18n"
 import Notice from "@/components/Notice"
 import {
   publishVersionAction, prepareDraftAction, saveDocumentMetadataAction, reindexDocumentAction,
-  fixVersionAction, fixTextAction, revokeVersionAction, cancelApprovalAction,
+  fixTextAction, revokeVersionAction, cancelApprovalAction,
   carryOverAssignmentsAction, setResponsibleAction,
 } from "../actions"
 import { allFolders, flattenTree } from "@/lib/folders"
@@ -50,6 +50,7 @@ import ApprovalRounds from "@/components/ApprovalRounds"
 import PublishSubmit from "@/components/PublishSubmit"
 import MetaFacts from "@/components/MetaFacts"
 import { initials } from "@/lib/initials"
+import { autoVersionLabel } from "@/lib/versionLabel"
 import { assignHref } from "@/lib/libraryBulk"
 import type { VersionFile } from "@/lib/documents"
 import { textDiff, type DiffKind } from "@/lib/textFix"
@@ -62,8 +63,8 @@ import { legalBasisOptions } from "@/lib/legalBases"
 export const dynamic = "force-dynamic"
 
 /** Ktorý panel pri znení je otvorený (`?open=…`). Bez JavaScriptu — server ho vykreslí otvorený. */
-type Panel = "responsible" | "basis" | "fix" | "history"
-const PANELS: Panel[] = ["responsible", "basis", "fix", "history"]
+type Panel = "responsible" | "basis" | "revoke" | "history"
+const PANELS: Panel[] = ["responsible", "basis", "revoke", "history"]
 
 export default async function DocumentDetailPage({
   params,
@@ -260,9 +261,9 @@ export default async function DocumentDetailPage({
     ? await carryOverCandidates(ctx.tenant.companyCode, documentId, draftVersionId)
     : []
   const draftEffectiveFrom = d.draftMeta?.effectiveFrom ?? null
-  const labelSuggestion = draftEffectiveFrom ? tflow.labelSuggestion(date(draftEffectiveFrom)) : ""
-  const sourceSuggestion = d.draftMeta?.approvedBy
-    ? `${d.draftMeta.approvedBy}${d.draftMeta.approvedOn ? `, ${date(d.draftMeta.approvedOn)}` : ""}`
+  // Označenie, aké dostane znenie pri zverejnení (ADR-016, D113) — tou istou funkciou ako `publish()`.
+  const labelSuggestion = draftEffectiveFrom
+    ? autoVersionLabel(new Date(draftEffectiveFrom), d.language, d.versions.map(v => v.label))
     : ""
 
   /*
@@ -347,7 +348,9 @@ export default async function DocumentDetailPage({
       {([
         ["responsible", tflow.changeResponsible, true],
         ["basis", tflow.changeBasis, canSetBasis(v)],
-        ["fix", tflow.fixData, true],
+        // „Opraviť údaje" zrušené (ADR-016): označenie sa skladá samo, dátum je
+        // schválený s údajmi o znení. Ostáva odvolanie potvrdení personalistom.
+        ["revoke", t.revokeVersionHeading, canRevoke && (ackByVersion.get(v.versionId) ?? 0) > 0],
         ["history", tflow.history, true],
       ] as [Panel, string, boolean][]).filter(([, , show]) => show).map(([panel, label]) => (
         <Link key={panel} href={panelHref(v, panel)} aria-current={panelOf(v) === panel ? "true" : undefined}>
@@ -403,86 +406,24 @@ export default async function DocumentDetailPage({
           </>
         )}
 
-        {panel === "fix" && (
-          <>
-            <form action={fixVersionAction} style={{ display: "grid", gap: 10 }}>
-              <input type="hidden" name="documentId" value={d.documentId} />
-              <input type="hidden" name="versionId" value={v.versionId} />
-
-              {/*
-                Zamknuté polia sa **neponúkajú**, nie sú len odmietnuté pri
-                uložení (D82). Formulár, ktorý dá človeku vyplniť pole
-                a potom mu povie, že sa nedá, je horší než formulár, ktorý
-                ho nemá — a rovno povie prečo.
-              */}
-              {acks > 0 ? (
-                <p className="detail-block-small">
-                  {t.versionLockedBefore}
-                  <strong>{t.versionLockedHighlight(acks)}</strong>
-                  {t.versionLockedAfter}
-                </p>
-              ) : (
-                <>
-                  <label className="field">
-                    <span className="field-label">{t.fixLabel}</span>
-                    <input className="field-input" name="label" defaultValue={v.label} />
-                  </label>
-
-                  {/* Dátum schválený s údajmi o znení sa opraviť nedá (ADR-013). */}
-                  {!v.metaApproved && (
-                    <label className="field">
-                      <span className="field-label">{t.effectiveFrom}</span>
-                      <input
-                        className="field-input"
-                        type="date"
-                        name="effectiveFrom"
-                        defaultValue={v.effectiveFrom ? new Date(v.effectiveFrom).toISOString().slice(0, 10) : ""}
-                      />
-                      <span className="quiet field-hint">
-                        {t.fixEffectiveFromNoteBefore}<strong>{t.fixEffectiveFromNoteHighlight}</strong>{t.fixEffectiveFromNoteAfter}
-                      </span>
-                    </label>
-                  )}
-                </>
-              )}
-
-              <label className="field">
-                <span className="field-label">{t.effectiveFromSource}</span>
-                <input className="field-input" name="effectiveFromSource" defaultValue={v.effectiveFromSource ?? ""} />
-              </label>
-
-              <label className="field">
-                <span className="field-label">{t.fixReason}</span>
-                <input className="field-input" name="reason" required
-                       placeholder={t.fixReasonPlaceholder} />
-                <span className="quiet field-hint">{t.fixReasonNote}</span>
-              </label>
-
-              <div><button className="button button--quiet" type="submit">{t.fixSubmit}</button></div>
-            </form>
-
-            {/*
-              Odomknutie: hromadné odvolanie potvrdení. Vidí ho len
-              personalista — správcovi obsahu by tlačidlo, ktoré nemá
-              povolené stlačiť, len sľubovalo cestu, ktorú nemá.
-            */}
-            {canRevoke && acks > 0 && (
-              <form action={revokeVersionAction} style={{ display: "grid", gap: 10, marginTop: 4 }}>
-                <input type="hidden" name="documentId" value={d.documentId} />
-                <input type="hidden" name="versionId" value={v.versionId} />
-                <h3 style={{ fontSize: "var(--fs-body)", margin: 0 }}>{t.revokeVersionHeading}</h3>
-                <p className="detail-block-small">{t.revokeVersionNote(acks)}</p>
-                <label className="field">
-                  <span className="field-label">{t.revokeVersionReason}</span>
-                  <input className="field-input" name="reason" required
-                         placeholder={t.revokeVersionReasonPlaceholder} />
-                </label>
-                <div>
-                  <button className="button button--quiet" type="submit">{t.revokeVersionSubmit}</button>
-                </div>
-              </form>
-            )}
-          </>
+        {/*
+          Odvolanie potvrdení (D82): vidí ho len personalista a len pri znení,
+          ktoré niekto potvrdil. Všetci pridelení ho potom potvrdia znova.
+        */}
+        {panel === "revoke" && canRevoke && acks > 0 && (
+          <form action={revokeVersionAction} style={{ display: "grid", gap: 10 }}>
+            <input type="hidden" name="documentId" value={d.documentId} />
+            <input type="hidden" name="versionId" value={v.versionId} />
+            <p className="detail-block-small">{t.revokeVersionNote(acks)}</p>
+            <label className="field">
+              <span className="field-label">{t.revokeVersionReason}</span>
+              <input className="field-input" name="reason" required
+                     placeholder={t.revokeVersionReasonPlaceholder} />
+            </label>
+            <div>
+              <button className="button button--quiet" type="submit">{t.revokeVersionSubmit}</button>
+            </div>
+          </form>
         )}
 
         {panel === "history" && (
@@ -769,7 +710,7 @@ export default async function DocumentDetailPage({
                 <h2 className="detail-card-title">{tflow.elsewhereHeading}</h2>
                 <ul className="edit-elsewhere">
                   <li><Link href={`${base}/version`}>{tflow.elsewhereVersion}</Link></li>
-                  <li><Link href={hasChangesToPublish ? `${base}#flow` : `${base}?open=fix#current`}>{tflow.elsewhereMeta}</Link></li>
+                  <li><Link href={hasChangesToPublish ? `${base}#flow` : `${base}?open=history#current`}>{tflow.elsewhereMeta}</Link></li>
                   <li><Link href={`${base}?open=responsible#current`}>{tflow.elsewhereResponsible}</Link></li>
                   <li><Link href={`${base}/text`}>{tflow.elsewhereText}</Link></li>
                 </ul>
@@ -1049,12 +990,14 @@ export default async function DocumentDetailPage({
               <p className="flow-lead">{tflow.lead3}</p>
               {d.draftMeta && <MetaFacts meta={d.draftMeta} language={language} />}
 
-              <label className="field">
-                <span className="field-label">{t.versionLabel}</span>
-                <input className="field-input" name="label" required defaultValue={labelSuggestion}
-                       placeholder={t.versionLabelPlaceholder} />
-                <span className="quiet field-hint">{labelSuggestion ? tflow.labelSuggested : <>{t.labelNoteBefore}<strong>{t.labelNoteHighlight}</strong>{t.labelNoteAfter}</>}</span>
-              </label>
+              {/* Označenie sa skladá z dátumu účinnosti (ADR-016, D113) — nezadáva sa. */}
+              {labelSuggestion && (
+                <div className="field">
+                  <span className="field-label">{t.versionLabel}</span>
+                  <strong>{labelSuggestion}</strong>
+                  <span className="quiet field-hint">{tflow.autoLabelNote}</span>
+                </div>
+              )}
 
               {/* Dátum účinnosti je v schválených údajoch o znení (ADR-013)
                   a tu sa už nezadáva. Pole zostáva len pre koncept spred ADR-013. */}
@@ -1065,13 +1008,6 @@ export default async function DocumentDetailPage({
                   <span className="quiet field-hint">{t.effectiveFromNote}</span>
                 </label>
               )}
-
-              <label className="field">
-                <span className="field-label">{t.effectiveFromSource}</span>
-                <input className="field-input" name="effectiveFromSource" required defaultValue={sourceSuggestion}
-                       placeholder={t.effectiveFromSourcePlaceholder} />
-                <span className="quiet field-hint">{sourceSuggestion ? tflow.effectiveFromSourceSuggested : t.effectiveFromSourceNote}</span>
-              </label>
 
               <label className="field">
                 <span className="field-label">{t.changeNote}</span>
