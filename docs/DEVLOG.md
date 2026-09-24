@@ -10,6 +10,74 @@
 
 ---
 
+## 2026-09-24 — druhé kolo DPO: retencia, rola DPO, námietky, /privacy; údaje o znení
+
+**Ráno kontrola nahratia (PR #101).** Ján nahral pracovný poriadok znova;
+čítal som priamo z databázy, nič nezapisoval. Nahratie sedelo, ale našli sa
+štyri drobnosti: 881 escapovaných `\_` z prázdnych miest vo formulároch
+(šum do vyhľadávania), osamotené „Obsah" po odstránení obsahu z Wordu,
+CRLF z `<textarea>` a **osirelé súbory predošlého konceptu** — každé „Nové
+znenie" nechávalo v GridFS dva súbory bez odkazu. Opravené a overené na
+skutočnom `.docx` stiahnutom z GridFS (`\_` 881 → 0, tabuľky a poznámky
+zostali). Pri ďalšom nahratí Jána sa staré súbory zmazali samy.
+
+**Druhé kolo odpovedí DPO prišlo so zaškrtávacími okienkami, ktoré sa nedali
+použiť** — odpovede boli červené podfarbenie. Čítal som ich z `w:highlight`
+v XML, nie zo stavu okienok. Ďalšie dotazníky už bez okienok (pamäť
+`questionnaire-no-checkboxes`): očíslované voľby a riadok „Odpoveď:".
+
+**ADR-012 v piatich PR (#102–#106).** Tri rozhodnutia dal Ján: strop 5 rokov
+len pre vyradené osoby (aktívnym by zmiznuté doklady znamenali, že im predpisy
+naskočia ako nepotvrdené), nová rola `dpo`, mazanie najprv len ako výkaz.
+Čo stálo za rozmyslenie:
+
+- **`deactivatedAt` sa ukladá, hoci je v audite** — výnimka z D27, lebo audit
+  sa po 24 mesiacoch maže a lehota dokladov je 3 roky od skončenia.
+- **Kolá schvaľovania platného znenia sa nemažú nikdy** — stav znenia sa
+  z nich odvodzuje a bez nich by zverejnené znenie vyzeralo ako neschválené.
+- **Testy výmazu nad malou náhradou Monga, ktorá filtre naozaj vyhodnocuje.**
+  Mock, ktorý overí, že sa zavolal `deleteMany`, by nepovedal, *čo* by sa
+  zmazalo — a pri výmaze dôkazov je to jediná otázka.
+- **Prvá verzia dávky robila tri dotazy na každú osobu denne** — prepísané
+  na tri agregácie na organizáciu ešte pred prvým commitom.
+- **Námietku eviduje DPO na `/dpo`, nie HR na karte osoby** — karta patrí
+  správe osôb a námietka nie je údaj pre ňu. ADR som podľa toho opravil.
+
+**Na produkcii so súhlasom:** indexy (`objections`, `audit_ttl` — najstarší
+audit je z 30. 8., nič sa nezmazalo), migrácia `deactivatedAt` (nemala čo
+doplniť), rola `dpo` Jánovi a prevádzkovateľ SFZ (IČO bez medzier) — oboje
+priamym zápisom s audit záznamom, lebo obrazovka pre to neexistovala alebo
+by to robil Ján pod sebou.
+
+**`/privacy` je verejná** — informovanie má predchádzať zberu, teda aj
+prvému prihláseniu z pozvánky. Overené na 375 px bez vodorovného rolovania
+a naostro telom odpovede.
+
+**ADR-013 (PR #108) — údaje o znení.** Ján chcel autora, schvaľujúci orgán
+a dátumy „už pri zadávaní" a nemenné po schválení. Pri mapovaní vyšlo, že
+**dátum účinnosti už existuje** („Platné od" pri zverejnení) a že **po
+schválení sa dnes nezamyká nič** — úprava len zneplatní schválenie. Štyri
+otázky, Ján zvolil všetky odporúčania: jedno pole, súčasť schválenia (do
+`draftIdentity`, len keď údaje sú — staré kolá platia), text s návrhmi,
+predvyplnenie z tabuľky prvej strany `.docx` ako návrh.
+
+**Chyba, ktorú som našiel až v prehliadači:** pracovný poriadok je schválený
+bez údajov a zámok „po schválení" ich nedovolil doplniť — teda presne to, čo
+Ján chcel spraviť. Zámok je odteraz počas kola vždy, po schválení len keď
+údaje boli súčasťou schválenia. Karta sa predvyplnila z dokumentu správne;
+**neuložil som ju** — zápis do ostrých dát a zrušenie schválenia je Jánovo
+rozhodnutie.
+
+**Čo stálo čas:** `gh pr create --body "$(cat <<EOF …)"` padol na zátvorke
+v tele (bash parsuje `$( )` aj s heredocom) — telo PR odvtedy zo súboru.
+A `find ~/Library/CloudStorage` visel na OneDrive; súbor som vzal z GridFS.
+
+**Neoverené naostro:** `/dpo` (výkaz, CSV, námietka), dátum skončenia na
+karte osoby, uloženie údajov o znení a zverejnenie s nimi. Retenčná dávka
+beží v režime `report` a dnes by nezmazala nič.
+
+---
+
 ## 2026-09-23 (7) — prvé ostré nahratie, ADR-011, CSRF
 
 **Ján nahral Pracovný poriadok (2,5 MB .docx) a padlo to dvakrát.** Prvý raz

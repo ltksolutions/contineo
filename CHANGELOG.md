@@ -4,6 +4,38 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Údaje o znení: autor, kto schválil a dátumy (2026-09-24)
+
+Pri každom znení predpisu sa eviduje **autor** (osoba, oddelenie alebo
+komisia), **kto ho schválil** (napríklad Výkonný výbor SFZ), **dátum
+schválenia** a **dátum účinnosti**. Zadávajú sa pri nahratí; z tabuľky na
+prvej strane dokumentu Word sa predvyplnia a správca ich len skontroluje.
+Schvaľovateľ ich vidí pri PDF a schvaľuje spolu s ním — po predložení sa už
+meniť nedajú. Dátum účinnosti sa pri zverejnení už nezadáva znova.
+
+### Ochrana osobných údajov: lehoty, rola DPO, námietky (2026-09-24)
+
+Podľa odpovedí zodpovednej osoby (DPO) sa doklady o oboznámení držia
+**3 roky od skončenia pomeru alebo vzťahu so zväzom** a potom sa zmažú;
+pri vyradení osoby sa dá zadať, kedy vzťah skončil. Mazanie zatiaľ beží len
+ako výkaz. Audit sa drží 24 mesiacov.
+
+Nová rola **DPO** má stránku „Ochrana údajov": prehľad právnych základov
+platných predpisov (aj ako CSV), raz za štvrťrok e-mail a evidenciu
+**námietok** — pri vyhovení sa zmažú doklady pri predpisoch s oprávneným
+záujmom.
+
+Stránka **Ochrana osobných údajov** (`/privacy`) vysvetľuje, čo sa ukladá,
+prečo a ako dlho; odkaz je pri každom potvrdení a otvorí sa aj bez
+prihlásenia. Údaje prevádzkovateľa (právny názov, sídlo, IČO) sa vypĺňajú
+v Nastavení organizácie.
+
+### Čistejší text z Wordu a upratané súbory (2026-09-24)
+
+Prázdne miesta vo formulároch (`______`, `......`) sa v texte na vyhľadávanie
+nahrádzajú „…" a zvyšné slovo „Obsah" zmizne. Pri nahratí nového znenia sa
+zmažú súbory nahradeného konceptu, ak na ne nič neodkazuje.
+
 ### Schvaľuje a potvrdzuje sa PDF, aj s prílohami (2026-09-23)
 
 Pri nahratí predpisu je **PDF povinné** — takto ho uvidia schvaľovatelia

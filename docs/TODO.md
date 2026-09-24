@@ -1,6 +1,6 @@
 # TODO — Contineo
 
-> Pracovný zoznam krokov. Aktualizované 2026-09-21.
+> Pracovný zoznam krokov. Aktualizované 2026-09-24.
 >
 > **Hotové položky sú datované zápisy a neprepísavajú sa.** Menujú cesty,
 > súbory a roly tak, ako sa volali v ten deň — časť z nich sa medzitým
@@ -186,7 +186,9 @@
 - [x] **5a. Detail dokumentu — pravý panel** — potvrdenia platného znenia (percento z pridelených osôb), prehľad metadát, chips v hlavičke. Editora sa to nedotklo
 - [x] **5b. Nahrávanie** (`/library/new`) — číslované sekcie (nie stepper, schvaľovací krok neexistuje), zóna na pretiahnutie bez JavaScriptu, mriežka metadát
 - [x] ~~**Nahrávanie súborov nad 4 MB**~~ ✅ 2026-09-23 (ADR-011, PR #93) — po kúskoch po 3 MB do GridFS, strop 25 MB, čítanie prúdom; bez JavaScriptu formulár do 4 MB. Pôvodný zápis: **Nahrávanie súborov nad 4 MB** — 2026-09-23 nahrávanie z rozhrania padlo na strope serverovej akcie (1 MB, `Body exceeded 1 MB limit`); formulár sľuboval 32 MB. Strop znížený na 4 MB (`fileStore.MAX_BYTES`) a `bodySizeLimit` na 4,5 MB, lebo **Vercel pustí do funkcie telo najviac 4,5 MB a nedá sa to nastaviť**. Najväčšia norma SFZ má 2,3 MB, takže dnes to stačí. Väčší súbor by chcel nahrávanie po kúskoch (niekoľko požiadaviek pod 4 MB, skladané v GridFS) — mení to formulár, ktorý dnes funguje bez JavaScriptu, preto až keď príde prvý taký súbor. Cudzie úložisko (Blob, S3) nie: D53 a ADR-002, dáta zákazníka na jednom mieste.
-- [ ] **ADR-011 naostro** — prvé nahratie PDF + `.docx`, predloženie na schválenie, PDF u schvaľovateľa (1440 aj 390 px) a u zamestnanca, SHA-256 v zázname potvrdenia. Do 23. 9. overené len testami a lokálnym vykreslením bez PDF.
+- [ ] **ADR-011 naostro** — ✅ 2026-09-24 nahratie PDF + `.docx` (Pracovný poriadok), čistý text (PR #101), prvé kolo schvaľovania. **Zostáva:** zverejnenie s PDF, PDF u schvaľovateľa na 390 px, PDF u zamestnanca a SHA-256 v zázname potvrdenia.
+- [ ] **ADR-013 naostro** — uložiť údaje o znení Pracovného poriadku (zruší doterajšie schválenie), nové kolo, zverejnenie: dátum účinnosti z údajov, kópia v potvrdení.
+- [ ] **ADR-012 naostro** — `/dpo` (výkaz, CSV), dátum skončenia na karte osoby, námietka len na testovacej osobe.
 - [ ] **Automatický prevod `.docx` → PDF** (ADR-011, časť 4) — Microsoft Graph (`/content?format=pdf`) by ušetril správcovi krok; chce povolenia v Entra ID, čaká na rozhodnutie Jána.
 - [ ] **Staré súbory bez SHA-256** — originály nahraté pred PR #93 nemajú `metadata.sha256`. Nevadí (nie sú dôkazom, ADR-011 §3), ale ETag im chýba. Dopočítať skriptom len ak bude treba.
 - [x] **5c. „Opýtať sa"** (`/`) — hero karta okolo poľa na otázku, hlavička karty odpovede („Odpoveď z vašich dokumentov"), zdroje ako karty s odkazom na originál. `Answer.tsx` a `Rating.tsx` znovupoužité, streamovania sa to nedotklo. Rozsah hľadania a skóre zhody vynechané — viď nižšie
