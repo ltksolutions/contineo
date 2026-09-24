@@ -1630,6 +1630,8 @@ interface Dictionary {
     missingBasisTag: string
     missingBasisNote: string
     missingOptionNote: string
+    /** Viac základov naraz (ADR-017, D115). */
+    multipleNote: string
     outsideCodelist: string
     orgHeading: string
     orgHint: string
@@ -4137,6 +4139,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     missingBasisTag: "bez právneho základu",
     missingBasisNote: "Predpis bez právneho základu sa prideliť dá. Zodpovedná osoba by ho však mala určiť ešte pred ostrou prevádzkou.",
     missingOptionNote: "Chýba vhodná položka? Požiadajte správcu organizácie, aby ju doplnil do číselníka právnych základov.",
+    multipleNote: "Vyberte jeden alebo viac — aj z oboch skupín. Keď je medzi nimi zákonná povinnosť, záznam o potvrdení sa na námietku nemaže.",
     outsideCodelist: "mimo číselníka",
     orgHeading: "Právne základy",
     orgHint: "Z tohto zoznamu vyberá zodpovedná osoba právny základ pri každom znení predpisu. Štandardné položky sa dajú skryť, vlastné vyradiť — nič sa nemaže, znenia si nesú kópiu.",
@@ -6535,6 +6538,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     missingBasisTag: "bez právního základu",
     missingBasisNote: "Předpis bez právního základu se přidělit dá. Odpovědná osoba by jej však měla určit ještě před ostrým provozem.",
     missingOptionNote: "Chybí vhodná položka? Požádejte správce organizace, aby ji doplnil do číselníku právních základů.",
+    multipleNote: "Vyberte jeden nebo více — i z obou skupin. Když je mezi nimi zákonná povinnost, záznam o potvrzení se na námitku nemaže.",
     outsideCodelist: "mimo číselník",
     orgHeading: "Právní základy",
     orgHint: "Z tohoto seznamu vybírá odpovědná osoba právní základ u každého znění předpisu. Standardní položky lze skrýt, vlastní vyřadit — nic se nemaže, znění si nesou kopii.",
@@ -8925,6 +8929,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     missingBasisTag: "no legal basis",
     missingBasisNote: "A regulation without a legal basis can still be assigned. The responsible person should, however, set it before going live.",
     missingOptionNote: "Missing a suitable option? Ask the organisation administrator to add it to the legal bases list.",
+    multipleNote: "Choose one or more — from both groups if needed. If a legal obligation is among them, the acknowledgement record is not deleted on objection.",
     outsideCodelist: "outside the list",
     orgHeading: "Legal bases",
     orgHint: "The responsible person picks the legal basis for every version of a regulation from this list. Standard items can be hidden, custom ones retired — nothing is deleted, versions keep a copy.",

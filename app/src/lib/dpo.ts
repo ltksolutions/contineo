@@ -8,7 +8,7 @@
 
 import { currentTenant, currentPerson } from "./session"
 import { effectiveVersion, type DocumentRecord } from "./documents"
-import type { LegalBasis } from "./versionResponsibility"
+import { basesOf, dominantBasis, type LegalBasis, type LegalBasisEntry } from "./versionResponsibility"
 import type { Person } from "./persons"
 import type { Tenant } from "./tenants"
 
@@ -50,7 +50,10 @@ export interface LegalBasisRow {
   versionId: string
   versionLabel: string
   effectiveFrom: Date | null
+  /** Rozhodujúci druh (ADR-017, D116 — zákonná povinnosť má prednosť). */
   legalBasis: LegalBasis | null
+  /** Všetky druhy, ktoré znenie má (D115) — pre počty v dlaždiciach. */
+  categories: LegalBasis[]
   /** Názov položky číselníka, ak je; inak `null`. */
   basisLabel: string | null
   reference: string | null
@@ -79,13 +82,17 @@ export function legalBasisReport(
       legalBasisKey?: string | null
       legalBasisLabel?: string | null
       legalBasisReference?: string | null
+      legalBases?: LegalBasisEntry[] | null
       responsiblePerson?: { personId: string; fullName: string; email: string } | null
     }
+    // Každý základ znenia zvlášť (ADR-017): bez kľúča je mimo číselníka,
+    // zákonná povinnosť bez odkazu na predpis je nedostatok.
+    const bases = basesOf(v)
     const problems: BasisProblem[] = []
-    if (!v.legalBasis) problems.push("noBasis")
+    if (bases.length === 0) problems.push("noBasis")
     else {
-      if (!v.legalBasisKey) problems.push("outsideCodelist")
-      if (v.legalBasis === "legal_obligation" && !v.legalBasisReference) problems.push("noReference")
+      if (bases.some(b => !b.key)) problems.push("outsideCodelist")
+      if (bases.some(b => b.basis === "legal_obligation" && !b.reference)) problems.push("noReference")
     }
     if (!v.responsiblePerson) problems.push("noResponsible")
     else if (!activePersonIds.has(v.responsiblePerson.personId)) problems.push("inactiveResponsible")
@@ -96,7 +103,8 @@ export function legalBasisReport(
       versionId: v.versionId,
       versionLabel: v.label,
       effectiveFrom: v.effectiveFrom ?? null,
-      legalBasis: v.legalBasis ?? null,
+      legalBasis: dominantBasis(bases),
+      categories: [...new Set(bases.map(b => b.basis))],
       basisLabel: v.legalBasisLabel ?? null,
       reference: v.legalBasisReference ?? null,
       responsible: v.responsiblePerson
@@ -130,8 +138,9 @@ export interface QuarterSummary {
 export function summarize(rows: LegalBasisRow[]): QuarterSummary {
   return {
     total: rows.length,
-    legalObligation: rows.filter(r => r.legalBasis === "legal_obligation").length,
-    legitimateInterest: rows.filter(r => r.legalBasis === "legitimate_interest").length,
+    // Predpis s oboma druhmi sa ráta v oboch (ADR-017).
+    legalObligation: rows.filter(r => r.categories.includes("legal_obligation")).length,
+    legitimateInterest: rows.filter(r => r.categories.includes("legitimate_interest")).length,
     withProblems: rows.filter(r => r.problems.length > 0).length,
   }
 }

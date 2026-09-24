@@ -151,6 +151,65 @@ export function legalBasisChoiceProblem(input: {
 }
 
 /**
+ * Jeden právny základ znenia (ADR-017, D115). Znenie ich môže mať viac,
+ * aj z oboch kategórií — napr. BOZP (zákonná povinnosť) a interná smernica
+ * (oprávnený záujem).
+ */
+export interface LegalBasisEntry {
+  basis: LegalBasis
+  key?: string | null
+  label?: string | null
+  reference?: string | null
+}
+
+/**
+ * Základy znenia ako zoznam. Znenia spred ADR-017 majú jeden základ v starých
+ * poliach — tie sa čítajú ako zoznam s jednou položkou.
+ */
+export function basesOf(v: {
+  legalBases?: LegalBasisEntry[] | null
+  legalBasis?: LegalBasis | null
+  legalBasisKey?: string | null
+  legalBasisLabel?: string | null
+  legalBasisReference?: string | null
+}): LegalBasisEntry[] {
+  if (Array.isArray(v.legalBases) && v.legalBases.length > 0) return v.legalBases
+  if (!v.legalBasis) return []
+  return [{ basis: v.legalBasis, key: v.legalBasisKey ?? null, label: v.legalBasisLabel ?? null, reference: v.legalBasisReference ?? null }]
+}
+
+/**
+ * Rozhodujúci druh základu (ADR-017, D116): **zákonná povinnosť má prednosť.**
+ * Kým ju má znenie aspoň raz, záznam o potvrdení je potrebný kvôli zákonu
+ * a námietka (čl. 21 GDPR) ho nezmaže — oprávnený záujem vedľa nej nič
+ * nemení. Tento druh sa ukladá do starého poľa `legalBasis`, takže námietky,
+ * retencia a kontroly, ktoré ho čítajú, platia bez zmeny.
+ */
+export function dominantBasis(entries: LegalBasisEntry[]): LegalBasis | null {
+  if (entries.some(e => e.basis === "legal_obligation")) return "legal_obligation"
+  if (entries.some(e => e.basis === "legitimate_interest")) return "legitimate_interest"
+  return null
+}
+
+/** Dá sa zvoliť tento výber základov (D115)? Poradie výberu nerozhoduje. */
+export function legalBasesChoiceProblem(input: {
+  /** Nájdené položky z aktívnej ponuky; `null` tam, kde kľúč v ponuke nie je. */
+  options: ({ key: string } | null)[]
+  currentKeys: string[]
+  hasCurrent: boolean
+  reason?: string
+}): ResponsibilityProblem | null {
+  if (input.options.length === 0) return "legalBasis.unknownKey"
+  if (input.options.some(o => !o)) return "legalBasis.unknownKey"
+  const next = [...new Set(input.options.map(o => o!.key))].sort().join(",")
+  if (input.hasCurrent) {
+    if (next === [...new Set(input.currentKeys)].sort().join(",")) return "legalBasis.noChange"
+    if (!input.reason?.trim()) return "legalBasis.reasonRequired"
+  }
+  return null
+}
+
+/**
  * Smie tento človek určiť právny základ znenia?
  *
  * Rozhoduje **zodpovedná osoba toho znenia** — ona predpis pozná a zodpovedá

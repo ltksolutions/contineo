@@ -29,7 +29,7 @@ vi.mock("../src/app/dpo/actions", () => ({ recordObjectionAction: async () => {}
 
 const row = (over: Record<string, unknown>) => ({
   documentId: "sfz:a", title: "Predpis A", versionId: "v1", versionLabel: "1.0",
-  effectiveFrom: new Date("2026-09-07T00:00:00Z"), legalBasis: null, basisLabel: null, reference: null,
+  effectiveFrom: new Date("2026-09-07T00:00:00Z"), legalBasis: null, categories: [], basisLabel: null, reference: null,
   responsible: { fullName: "Ján Letko", email: "jan@sfz.sk" }, problems: ["noBasis"], ...over,
 })
 
@@ -41,7 +41,7 @@ async function render(query: Record<string, string> = {}) {
 beforeEach(() => {
   state.rows = [
     row({}),
-    row({ documentId: "sfz:b", title: "Predpis B", legalBasis: "legal_obligation", reference: "§ 47 ZP", problems: [] }),
+    row({ documentId: "sfz:b", title: "Predpis B", legalBasis: "legal_obligation", categories: ["legal_obligation", "legitimate_interest"], reference: "§ 47 ZP", problems: [] }),
   ]
   state.objections = [{
     id: "o1", companyCode: "SFZ", personId: "p-x", personName: "Martin Novák",
@@ -58,6 +58,8 @@ describe("/dpo", () => {
     expect(html).toContain("V poriadku · 1")
     expect(html).toContain('href="mailto:jan@sfz.sk"')
     expect(html).toContain("Zodpovedná osoba")
+    // Predpis s oboma druhmi sa ráta v oboch dlaždiciach (ADR-017).
+    expect(html.match(/dpo-tile-v">1</g)?.length).toBeGreaterThanOrEqual(2)
   })
 
   it("čakajúca námietka: počet pri nadpise, voľby ako dlaždice, zaevidovanie zbalené", async () => {
