@@ -1743,6 +1743,9 @@ interface Dictionary {
       versionPageTitle: string
       versionPageBack: string
       /** Názov v príprave nového znenia (ADR-015, D112). */
+      /** Označenie znenia z dátumu účinnosti (ADR-016, D113). */
+      autoLabel: (date: string) => string
+      autoLabelNote: string
       titleNote: string
       newTitle: (title: string) => string
       /** Pohľad „Upraviť dokument" (rám KNIZNICA-uprava-dokumentu). */
@@ -4241,6 +4244,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       approvalHistory: "História schvaľovania",
       versionPageTitle: "Nové znenie",
       versionPageBack: "← Späť na dokument",
+      autoLabel: d => `znenie účinné od ${d}`,
+      autoLabelNote: "Označenie sa skladá z dátumu účinnosti a je doslova vo formulke potvrdenia.",
       titleNote: "Pri platnom znení sa názov mení len novým znením — schváli sa spolu s ním a zverejnením sa zmení v knižnici aj vo formulke potvrdenia.",
       newTitle: t => `Nový názov dokumentu: „${t}“`,
       secBasic: "Základné údaje",
@@ -6636,6 +6641,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       approvalHistory: "Historie schvalování",
       versionPageTitle: "Nové znění",
       versionPageBack: "← Zpět na dokument",
+      autoLabel: d => `znění účinné od ${d}`,
+      autoLabelNote: "Označení se skládá z data účinnosti a je doslova ve formulce potvrzení.",
       titleNote: "U platného znění se název mění jen novým zněním — schválí se spolu s ním a zveřejněním se změní v knihovně i ve formulce potvrzení.",
       newTitle: t => `Nový název dokumentu: „${t}“`,
       secBasic: "Základní údaje",
@@ -9024,6 +9031,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       approvalHistory: "Approval history",
       versionPageTitle: "New version",
       versionPageBack: "← Back to the document",
+      autoLabel: d => `version effective from ${d}`,
+      autoLabelNote: "The label is made from the effective date and appears verbatim in the acknowledgement statement.",
       titleNote: "With a current version, the title changes only with a new version — it is approved with it and publishing changes it in the library and in the acknowledgement statement.",
       newTitle: t => `New document title: “${t}”`,
       secBasic: "Basic details",

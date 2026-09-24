@@ -154,7 +154,10 @@ describe("detail — postup znenia", () => {
     })]]])
     state.carryOver = [{ audience: { kind: "all" }, previousReason: "nástup" }]
     const html = await render()
-    expect(html).toContain('value="úplné znenie od 1. 10. 2026"')
+    // Označenie sa nezadáva, skladá sa z dátumu účinnosti (ADR-016).
+    expect(html).toContain("znenie účinné od 1. 10. 2026")
+    expect(html).not.toContain('name="label"')
+    expect(html).not.toContain('name="effectiveFromSource"')
     expect(html).toContain("Zodpovedná osoba: Marek Horák. Určená v príprave.")
     expect(html).toContain('name="carryOver"')
     expect(html).toContain("Zverejniť a prideliť")
@@ -170,10 +173,12 @@ describe("detail — postup znenia", () => {
 
   it("bez prípravy a prenosu nie je karta, platné znenie je súhrn s panelom v adrese", async () => {
     state.detail = detail({ draftMarkdown: effective.markdown, draftPdf: effective.pdf })
-    const html = await render({ open: "fix" })
+    const html = await render({ open: "history" })
     expect(html).not.toContain('class="card flow"')
     expect(html).toContain("Platné znenie")
-    expect(html).toContain("Dôvod opravy")
+    // „Opraviť údaje" zrušené (ADR-016).
+    expect(html).not.toContain("Dôvod opravy")
+    expect(html).not.toContain("Opraviť údaje")
   })
 
   it("úprava dokumentu: samostatný pohľad, názov pri zverejnenom znení zamknutý (ADR-015)", async () => {

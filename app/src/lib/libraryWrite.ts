@@ -41,6 +41,7 @@ import { documentDraftIdentity, normalizeMeta, isEmptyMeta, suggestMetaFromMarkd
 import { allDepartments } from "./departments"
 import { versionStateFor } from "./approvalsDb"
 import { responsibleSnapshot } from "./versionResponsibilityDb"
+import { autoVersionLabel } from "./versionLabel"
 
 export const CHUNKS_COLLECTION = "document_chunks"
 
@@ -693,6 +694,8 @@ export async function saveDraftTitle(
 
 export interface PublishResult {
   versionId: string
+  /** Označenie znenia — zložené z dátumu účinnosti (ADR-016, D113). */
+  label: string
   chunks: number
   archived: number
   alreadyDone: boolean
@@ -717,7 +720,8 @@ export async function publish(
   companyCode: string,
   documentId: string,
   input: {
-    label: string
+    /** Ignoruje sa — označenie sa skladá z dátumu účinnosti (ADR-016, D113). */
+    label?: string
     /** Len pre koncept bez údajov o znení (spred ADR-013); inak sa berie z nich. */
     effectiveFrom?: Date | null
     effectiveFromSource?: string
@@ -730,38 +734,11 @@ export async function publish(
   },
   actor: string,
 ): Promise<PublishResult> {
-  const label = (input.label ?? "").trim()
-  if (!label) {
-    throw new LibraryError(
-      "library.labelRequired",
-      "Označenie znenia je povinné — objaví sa doslovne v každom zázname o potvrdení. " +
-      "Napíš to, čo je v dokumente (napríklad: úplné znenie z 27. 2. 2026), nie vymyslené číslo.",
-    )
-  }
-
   /*
-   * Zdroj dátumu je **povinný pri publikovaní** (D82).
-   *
-   * Nie je to evidencia pre evidenciu. Odkedy sa dátum po prvom potvrdení
-   * zamyká, okno na bezbolestnú opravu je od publikovania po prvé potvrdenie —
-   * teda minúty. Obrana sa tým presúva dopredu: kto musí napísať „uznesenie
-   * VV SFZ č. … z …", ten sa doň pozrie. Útočí to na príčinu, nie na následok.
-   *
-   * Platí len pre **nové** publikovanie; existujúcich znení sa to nedotýka.
-   */
-  if (!input.effectiveFromSource?.trim()) {
-    throw new LibraryError(
-      "library.effectiveFromSourceRequired",
-      "Zdroj dátumu platnosti je povinný — napíš, odkiaľ dátum je (napríklad uznesenie VV SFZ č. … z …). " +
-      "Po prvom potvrdení sa dátum už meniť nedá.",
-    )
-  }
-
-  /*
-   * Zodpovedná osoba je **povinná pri každom novom znení** a nededí sa (D91).
-   * Novela o tri roky môže mať iného garanta a pôvodný mohol medzitým odísť —
-   * znenie, ktoré by ho prevzalo potichu, by ľudí posielalo za človekom,
-   * ktorý v zväze nie je. Meno sa berie zo záznamu osoby, nie z formulára.
+   * Označenie a zdroj dátumu sa od ADR-016 (D113) nezadávajú. Označenie sa
+   * skladá z dátumu účinnosti nižšie; zdroj dátumu nahradili schválené údaje
+   * o znení (Schválil, dátum schválenia — ADR-013), ktoré sa po predložení
+   * nedajú zmeniť, čo je silnejšia záruka než pole vyplnené pri zverejnení.
    */
   const col = await getCollection(DOCUMENTS_COLLECTION)
   const doc = await col.findOne({ documentId, companyCode }) as Record<string, unknown> | null
@@ -788,6 +765,12 @@ export async function publish(
   if (!(effectiveFrom instanceof Date) || Number.isNaN(effectiveFrom.getTime())) {
     throw new LibraryError("library.effectiveFromRequired", "Dátum platnosti je povinný — bez neho sa znenie nedá potvrdiť (D6).")
   }
+
+  const label = autoVersionLabel(
+    effectiveFrom,
+    doc.language as string | undefined,
+    ((doc.versions ?? []) as { label?: string }[]).map(v => String(v.label ?? "")),
+  )
 
   const responsible = await responsibleSnapshot(companyCode, responsiblePersonId)
   if (!responsible) {
@@ -860,7 +843,10 @@ export async function publish(
 
   // Rovnaké znenie už publikované? Nič sa nedeje — publikovanie je idempotentné.
   const existing = (doc.versions as { versionId: string }[] | undefined)?.some(v => v.versionId === versionId)
-  if (existing) return { versionId, chunks: chunks.length, archived: 0, alreadyDone: true }
+  if (existing) {
+    const was = (doc.versions as { versionId: string; label?: string }[]).find(v => v.versionId === versionId)
+    return { versionId, label: String(was?.label ?? label), chunks: chunks.length, archived: 0, alreadyDone: true }
+  }
 
   /*
    * ── Brána: neschválený text sa nezverejňuje (D73 posunuté o krok skôr) ──
@@ -1009,7 +995,7 @@ export async function publish(
       (draftTitle && draftTitle !== String(doc.title ?? "") ? ` · nový názov: „${draftTitle}" (pôvodne „${String(doc.title ?? "")}")` : ""),
   })
 
-  return { versionId, chunks: chunks.length, archived: archive.modifiedCount, alreadyDone: false }
+  return { versionId, label, chunks: chunks.length, archived: archive.modifiedCount, alreadyDone: false }
 }
 
 

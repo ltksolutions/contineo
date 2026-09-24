@@ -19,7 +19,7 @@ import { libraryContext, isContentManager } from "@/lib/library"
 import { isRedirect } from "@/lib/redirects"
 import {
   uploadDocument, saveDraft, saveDraftMeta, saveDraftResponsible, saveDraftTitle, publish, checkMetadata, makeDocumentId, saveMetadata,
-  reindex, fixVersion, fixText, LibraryError, type UploadFiles, type IncomingFile,
+  reindex, fixText, LibraryError, type UploadFiles, type IncomingFile,
 } from "@/lib/libraryWrite"
 import { loadFile } from "@/lib/fileStore"
 import { textDiff } from "@/lib/textFix"
@@ -428,7 +428,6 @@ export async function publishVersionAction(fd: FormData) {
     }
     const day = fieldText(fd, "effectiveFrom")
     const v = await publish(self.companyCode, id, {
-      label: fieldText(fd, "label"),
       // Dátum bez času a v UTC — `effectiveFrom` je deň, nie okamih, a
       // miestne pásmo by ho pri polnoci posunulo o deň. Pole je vo formulári
       // len pri koncepte bez údajov o znení (ADR-013); inak ho berie `publish()`.
@@ -449,7 +448,7 @@ export async function publishVersionAction(fd: FormData) {
         params: {
           documentId: id,
           documentTitle: await documentTitleFor(self.companyCode, id),
-          versionLabel: fieldText(fd, "label"),
+          versionLabel: v.label,
         },
       })
       // Zodpovednej osobe do zvončeka: má určiť právny základ (D91). Ide
@@ -462,7 +461,7 @@ export async function publishVersionAction(fd: FormData) {
           params: {
             documentId: id,
             documentTitle: await documentTitleFor(self.companyCode, id),
-            versionLabel: fieldText(fd, "label"),
+            versionLabel: v.label,
           },
         })
       }
@@ -1023,33 +1022,6 @@ export async function reindexDocumentAction(fd: FormData) {
   redirect(`/library/${encodeURIComponent(id)}?msg=${encodeURIComponent(message)}${error ? "&error=1" : ""}`)
 }
 
-/** Oprava údajov už publikovaného znenia (D57). */
-export async function fixVersionAction(fd: FormData) {
-  const self = await actor()
-  if (!self) redirect("/")
-
-  const id = fieldText(fd, "documentId")
-  let message = ""
-  let error = false
-  try {
-    const day = fieldText(fd, "effectiveFrom")
-    await fixVersion(self.companyCode, id, fieldText(fd, "versionId"), {
-      label: fieldText(fd, "label") || undefined,
-      effectiveFrom: day ? new Date(`${day}T00:00:00.000Z`) : undefined,
-      effectiveFromSource: fieldText(fd, "effectiveFromSource"),
-      changeNote: fieldText(fd, "changeNote"),
-      reason: fieldText(fd, "reason"),
-    }, self.email)
-
-    message = say(self.language).fixed
-  } catch (e) {
-    message = errorMessage(e, self.language)
-    error = true
-  }
-
-  revalidatePath(`/library/${id}`)
-  redirect(`/library/${encodeURIComponent(id)}?msg=${encodeURIComponent(message)}${error ? "&error=1" : ""}`)
-}
 
 /**
  * Zmena (alebo doplnenie) zodpovednej osoby znenia (D91).
