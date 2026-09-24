@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="sk"><head><meta charset="utf-8" /><meta name="viewport" content="width=device-width,initial-scale=1" /><title>HR — právny základ</title>
+<style>
+:root{color-scheme:light;--bg:#f5f6f8;--surface:#fff;--surface-2:#eceef1;--ink:#161b22;--muted:#5c6675;--line:rgba(20,28,42,.12);--accent:#232a35;--accent-strong:#11151c;--on-accent:#fff;--accent-soft:rgba(35,42,53,.11);--ok-bg:#ecfdf5;--ok-fg:#047857;--bad-bg:#fef2f2;--bad-fg:#b91c1c;--warn-bg:#fffbeb;--warn-fg:#b45309;--radius:12px;--radius-lg:18px;--shadow:0 1px 2px rgba(20,28,42,.05),0 10px 30px rgba(20,28,42,.07);--pad-main:16px;--card-pad:16px;--list-py:9px;--gap:14px;--row-py:7px;--font-row:13px;--fs-title:26px;--fs-section:17px;--fs-lead:15px;--fs-body:14px;--fs-small:13px;--fs-micro:12px;--fs-label:13px;--fs-control:15px;--control-h:40px;--control-h-sm:36px}
+.dark{color-scheme:dark;--bg:#0d1016;--surface:#161b22;--surface-2:#1d232c;--ink:#eef1f5;--muted:#9aa4b2;--line:rgba(255,255,255,.12);--accent:#eef1f5;--accent-strong:#fff;--on-accent:#11151c;--accent-soft:rgba(238,241,245,.11);--ok-bg:rgba(4,120,87,.16);--ok-fg:#6ee7b7;--bad-bg:rgba(185,28,28,.16);--bad-fg:#fca5a5;--warn-bg:rgba(180,83,9,.16);--warn-fg:#fcd34d;--shadow:0 1px 2px rgba(0,0,0,.4),0 10px 30px rgba(0,0,0,.45)}
+*{box-sizing:border-box}
+body{margin:0;background:#e6e8ec;font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;-webkit-font-smoothing:antialiased;line-height:1.6}
+.sheet{background:var(--bg);color:var(--ink);padding:28px 32px 40px}
+h1.doc{font-size:22px;letter-spacing:-.02em;margin:0 0 4px}
+p.doc{font-size:14px;color:var(--muted);margin:0 0 24px;max-width:80ch}
+.sec{margin:0 0 30px}
+.sec-h{font-size:11px;font-weight:650;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin:0 0 4px}
+.sec-n{font-size:var(--fs-section);font-weight:650;margin:0 0 3px}
+.sec-w{font-size:13px;color:var(--muted);margin:0 0 12px;max-width:78ch;line-height:1.55}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:0 0 10px}
+.lbl{font-size:11px;color:var(--muted);font-family:ui-monospace,Menlo,monospace;width:100%;margin:6px 0 2px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:var(--card-pad)}
+.quiet{color:var(--muted)}
+.tag{display:inline-flex;align-items:center;justify-content:center;gap:6px;border:1px solid var(--line);border-radius:999px;min-height:24px;padding:0 10px;font-size:var(--fs-micro);font-weight:600;line-height:1.2;white-space:nowrap}
+.tag--published{background:var(--ok-bg);color:var(--ok-fg);border-color:transparent}
+.tag--draft{background:var(--warn-bg);color:var(--warn-fg);border-color:transparent}
+.tag--review{background:var(--accent-soft);color:var(--accent-strong);border-color:transparent}
+.tag--expired{background:var(--bad-bg);color:var(--bad-fg);border-color:transparent}
+.tag--archived{background:var(--surface-2);color:var(--muted);border-color:transparent}
+.button{display:inline-flex;align-items:center;justify-content:center;gap:8px;background:var(--accent);color:var(--on-accent);border:1px solid var(--accent);border-radius:10px;min-height:var(--control-h);padding:0 18px;font-size:var(--fs-control);font-weight:600;line-height:1.2;font-family:inherit;text-decoration:none;cursor:pointer}
+.button--quiet{background:transparent;color:var(--ink);border-color:var(--line)}
+.is-hover.button{background:var(--accent-strong)}
+.is-hover.button--quiet{background:var(--surface-2)}
+.is-focus{outline:2px solid var(--accent);outline-offset:2px}
+.button:disabled,.button[aria-disabled=true]{opacity:.5;cursor:not-allowed}
+.field{display:grid;gap:5px}
+.field-label{font-size:var(--fs-label);font-weight:600}
+.field-hint{font-size:var(--fs-micro);color:var(--muted)}
+.field-input{font:inherit;font-size:var(--fs-control);color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:10px;min-height:var(--control-h);line-height:1.2;padding:8px 12px;width:100%}
+.field-input:disabled{background:var(--surface-2);color:var(--muted);cursor:not-allowed}
+.is-focus.field-input{outline:2px solid var(--accent);outline-offset:1px}
+.ask{display:flex;align-items:center;gap:9px;min-height:var(--control-h-sm);padding:0 12px;border-radius:9px;background:var(--bg);border:1px solid var(--line);color:var(--muted);font-size:13px}
+.kbd{font-size:11.5px;color:var(--muted);padding:2px 6px;border-radius:5px;background:var(--surface-2);font-family:ui-monospace,Menlo,monospace}
+.bulk-pick{display:inline-flex;align-items:center;gap:8px;text-decoration:none;color:inherit}
+.bulk-pick-box{display:grid;place-items:center;width:15px;height:15px;border-radius:4px;border:1px solid var(--line);background:transparent;color:var(--on-accent);font-size:9px;font-weight:800}
+.bulk-pick.is-on .bulk-pick-box{background:var(--accent);border-color:var(--accent)}
+.box22{width:22px;height:22px;border-radius:6px;font-size:12px}
+.library-chip{display:inline-flex;align-items:center;gap:5px;min-height:28px;padding:0 5px 0 9px;border-radius:6px;background:var(--accent-soft);color:var(--accent-strong);font-size:12px;text-decoration:none}
+.library-chip-key{color:var(--muted)}
+.library-chip-x{font-size:15px;line-height:1;color:var(--muted);width:16px;text-align:center}
+.facet{display:flex;align-items:center;gap:8px;min-height:34px;padding:0 6px;border-radius:7px;text-decoration:none;color:inherit;font-size:13px}
+.facet.is-on{background:var(--accent-soft);font-weight:600}
+.facet-box{display:grid;place-items:center;width:15px;height:15px;border-radius:4px;border:1px solid var(--line);color:var(--on-accent);font-size:9px;font-weight:800}
+.facet.is-on .facet-box{background:var(--accent);border-color:var(--accent)}
+.facet-name{flex:1}
+.facet-count{font-size:11.5px;color:var(--muted);font-variant-numeric:tabular-nums}
+.pill{display:inline-flex;align-items:center;gap:6px;min-height:36px;padding:0 10px;border-radius:9px;border:1px solid var(--line);background:var(--surface);font-size:14px;text-decoration:none;color:var(--ink)}
+.pill.is-on{border-color:var(--accent);background:var(--accent-soft);color:var(--accent-strong);font-weight:600}
+.pill-count{font-size:12px;opacity:.65;font-variant-numeric:tabular-nums}
+.ack-bar{display:inline-flex;align-items:center;gap:6px;min-width:104px}
+.ack-track{flex:1;height:5px;border-radius:3px;background:var(--surface-2);overflow:hidden}
+.ack-fill{display:block;height:100%}
+.ack-fill--high{background:var(--ok-fg)}
+.ack-fill--mid{background:var(--accent)}
+.ack-fill--low{background:var(--warn-fg)}
+.ack-value{font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums}
+.doc-table-wrap{border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;background:var(--surface)}
+.doc-table{width:100%;border-collapse:collapse}
+.doc-table th{padding:8px 10px;text-align:left;font-size:10.5px;font-weight:650;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);white-space:nowrap;background:var(--bg);border-bottom:1px solid var(--line)}
+.doc-table td{padding:var(--row-py) 10px;font-size:var(--font-row);border-bottom:1px solid var(--line);vertical-align:top}
+.doc-table tbody tr:last-child td{border-bottom:0}
+.doc-table tbody tr.is-hover{background:var(--bg)}
+.doc-table tbody tr.is-picked{background:var(--accent-soft)}
+.doc-table tbody tr.is-picked td:first-child{box-shadow:inset 3px 0 0 var(--accent)}
+.doc-title{color:var(--ink);font-weight:600;text-decoration:none}
+.doc-meta{font-size:11px;color:var(--muted);margin-top:1px}
+.doc-col-right{text-align:right}
+.doc-card{display:flex;gap:12px;padding:12px 12px 12px 10px;border:1px solid var(--line);border-radius:var(--radius);background:var(--surface)}
+.doc-card.is-picked{background:var(--accent-soft);border-color:var(--accent)}
+.doc-card-top{display:flex;align-items:center;gap:6px;margin-bottom:4px}
+.doc-card-title{display:block;font-size:15px;font-weight:600;line-height:1.3;color:var(--ink);text-decoration:none;text-wrap:pretty}
+.empty{display:grid;justify-items:center;gap:4px;padding:32px 20px;border:1px dashed var(--line);border-radius:var(--radius);text-align:center}
+.empty-title{font-size:var(--fs-lead);font-weight:600}
+.empty-text{font-size:var(--fs-small);color:var(--muted);line-height:1.55;max-width:46ch}
+.empty-action{margin-top:10px}
+.notice{display:flex;gap:9px;align-items:flex-start;padding:10px 12px;border-radius:9px;background:var(--ok-bg);border:1px solid rgba(4,120,87,.2)}
+.notice-mark{display:grid;place-items:center;width:20px;height:20px;border-radius:50%;background:var(--ok-bg);color:var(--ok-fg);font-weight:800;font-size:12px;flex:0 0 auto}
+.notice-text{font-size:13px;color:var(--ok-fg);line-height:1.45}
+.notice--error{background:var(--bad-bg);border-color:rgba(185,28,28,.2)}
+.notice--error .notice-mark{background:var(--bad-bg);color:var(--bad-fg)}
+.notice--error .notice-text{color:var(--bad-fg)}
+.pager{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:8px 12px;background:var(--bg);border-top:1px solid var(--line);font-size:var(--fs-micro);color:var(--muted)}
+.pager-count{font-variant-numeric:tabular-nums}
+.pager-spacer{flex:1}
+.pager-link{min-height:28px;padding:0 10px;font-size:12px}
+.pager-link[aria-disabled=true]{opacity:.45;pointer-events:none}
+.page-title{font-size:var(--fs-title);letter-spacing:-.02em;line-height:1.2;margin:0 0 6px}
+.page-lead{font-size:var(--fs-lead);line-height:1.55;margin:0 0 18px;max-width:640px;color:var(--muted)}
+.view-switch{display:inline-flex;padding:3px;gap:2px;background:var(--surface-2);border-radius:9px}
+.view-switch-item{display:grid;place-items:center;min-height:30px;padding:0 11px;border-radius:7px;font-size:12.5px;color:var(--muted);text-decoration:none}
+.view-switch-item.is-on{background:var(--surface);color:var(--ink);font-weight:600}
+table.spec{width:100%;border-collapse:collapse;font-size:12.5px;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden}
+table.spec th{text-align:left;padding:7px 10px;font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);background:var(--bg);border-bottom:1px solid var(--line)}
+table.spec td{padding:6px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+table.spec tr:last-child td{border-bottom:0}
+code{font-family:ui-monospace,Menlo,monospace;font-size:12px;background:var(--surface-2);padding:1px 5px;border-radius:4px}
+
+.frame{flex:0 0 auto;min-width:0;background:var(--bg);color:var(--ink);border:1px solid rgba(20,28,42,.18);border-radius:12px;overflow:hidden;box-shadow:0 20px 44px rgba(0,0,0,.12)}
+.hdr{display:flex;align-items:center;gap:14px;height:56px;padding:0 24px;background:var(--surface);border-bottom:1px solid var(--line)}
+.logo{display:grid;place-items:center;width:28px;height:28px;border-radius:8px;background:var(--accent);color:var(--on-accent);flex:0 0 auto}
+.org{font-size:14px;font-weight:650;letter-spacing:-.01em;white-space:nowrap}
+.bell{position:relative;display:grid;place-items:center;width:36px;height:36px;color:var(--muted);flex:0 0 auto}
+.bell b{position:absolute;top:5px;right:4px;min-width:16px;height:16px;padding:0 4px;border-radius:8px;background:var(--bad-fg);color:var(--on-accent);font-size:10px;font-weight:700;display:grid;place-items:center;box-shadow:0 0 0 2px var(--surface)}
+.av{display:grid;place-items:center;width:30px;height:30px;border-radius:50%;background:var(--surface-2);font-size:11px;font-weight:650;flex:0 0 auto}
+.nav{display:flex;gap:2px;padding:0 24px;background:var(--surface);border-bottom:1px solid var(--line)}
+.nav a{display:flex;align-items:center;gap:6px;height:42px;padding:0 12px;font-size:13.5px;color:var(--muted);text-decoration:none;border-bottom:2px solid transparent;white-space:nowrap}
+.nav a.is-on{color:var(--accent);font-weight:650;border-bottom-color:var(--accent)}
+.nav .c{font-size:11px;font-weight:600;padding:1px 6px;border-radius:10px;background:var(--surface-2);color:var(--muted)}
+.body{padding:var(--pad-main) var(--pad-main) 32px}
+.wrap{max-width:1240px;margin:0 auto}
+.overview{display:grid;gap:var(--gap)}
+.overview-hello{font-size:var(--fs-title);letter-spacing:-.02em;line-height:1.2;margin:0 0 3px}
+.overview-lede{font-size:var(--fs-lead);color:var(--muted);margin:0 0 14px}
+.overview-ask{display:flex;gap:8px}
+.overview-ask-input{flex:1}
+.overview-suggestions{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+.overview-suggestion{padding:5px 11px;border:1px solid var(--line);border-radius:999px;font-size:12.5px;color:var(--muted);text-decoration:none}
+.kpi{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.kpi-tile{display:grid;gap:4px;text-decoration:none;color:inherit;padding:14px 15px}
+.kpi-label{font-size:11px;font-weight:650;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
+.kpi-value{font-size:27px;font-weight:640;letter-spacing:-.03em;font-variant-numeric:tabular-nums;line-height:1.1}
+.kpi-value--bad{color:var(--bad-fg)}
+.kpi-value--warn{color:var(--warn-fg)}
+.kpi-value--zero{color:var(--muted);font-weight:600}
+.kpi-note{font-size:11.5px;color:var(--muted)}
+.overview-panels{display:grid;gap:14px}
+.panel{padding:0;overflow:hidden}
+.panel-head{display:flex;align-items:center;gap:10px;padding:12px 15px;border-bottom:1px solid var(--line);font-size:14px;font-weight:650}
+.panel-head-count{font-size:var(--fs-micro);color:var(--muted);font-weight:400;font-variant-numeric:tabular-nums}
+.panel-head-link{margin-left:auto;font-size:var(--fs-micro);font-weight:600;color:var(--accent);text-decoration:none}
+.panel-row{display:flex;align-items:center;gap:12px;padding:11px 15px;border-bottom:1px solid var(--line)}
+.panel-row:last-child{border-bottom:0}
+.panel-main{flex:1;min-width:0}
+.panel-name{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;font-size:13.5px;font-weight:550;color:var(--ink);text-decoration:none;line-height:1.35;text-wrap:pretty;overflow-wrap:anywhere}
+.panel-meta{font-size:12px;color:var(--muted);margin-top:1px}
+.panel-action{min-height:32px;padding:0 12px;font-size:12.5px}
+.panel-empty{display:grid;gap:3px;padding:18px 15px}
+.panel-empty-title{font-size:var(--fs-small);font-weight:600;color:var(--ink)}
+.panel-empty-text{font-size:var(--fs-micro);color:var(--muted);line-height:1.5}
+.due-chip{display:inline-flex;align-items:center;min-height:24px;padding:0 8px;border-radius:6px;font-size:12px;font-weight:600;background:var(--surface-2);color:var(--muted);white-space:nowrap}
+.due-chip--soon{background:var(--warn-bg);color:var(--warn-fg)}
+.due-chip--over{background:var(--bad-bg);color:var(--bad-fg)}
+.ask-hero{padding:20px 22px}
+.ask-field{display:flex;gap:8px;align-items:flex-start}
+.answer{font-size:var(--fs-body);line-height:1.7;max-width:70ch;margin:0}
+.answer-head{display:flex;align-items:center;gap:8px;margin-bottom:12px}
+.answer-mark{color:var(--accent);display:grid;place-items:center}
+.answer-kicker{font-size:11px;font-weight:650;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.answer sup{font-size:10px;color:var(--accent);font-weight:700}
+.answer-sources{display:grid;gap:6px;margin-top:14px}
+.answer-source{display:flex;gap:10px;padding:10px 12px;border-radius:9px;background:var(--bg);border:1px solid var(--line);text-decoration:none;color:inherit}
+.answer-source-index{flex:0 0 20px;font-size:11.5px;font-weight:700;color:var(--accent)}
+.answer-source-body{flex:1;min-width:0}
+.answer-source-title{font-size:12.5px;font-weight:600;text-wrap:pretty;overflow-wrap:anywhere}
+.answer-source-meta{display:block;font-size:11.5px;color:var(--muted);margin-top:2px}
+.answer--none{border-style:dashed}
+.rating{display:flex;align-items:center;gap:10px;margin-top:14px;padding-top:12px;border-top:1px solid var(--line);font-size:12.5px;color:var(--muted);flex-wrap:wrap}
+.cap{font-size:11.5px;font-weight:600;color:#5c6675;margin:0 0 8px;font-family:ui-monospace,Menlo,monospace}
+.frames{display:flex;gap:24px;align-items:flex-start;flex-wrap:wrap;margin:0 0 30px}
+/* Layout rámu urči TRIEDOU rámu, nikdy viewportovou @media — rám má fixnú
+   šírku, takže @media by sa vyhodnocovala proti oknu prehliadača a referencia
+   by vyzerala inak podľa toho, ako široko ju kto otvorí. */
+.w1440 .kpi{grid-template-columns:repeat(4,1fr)}
+.w1440 .overview-panels{grid-template-columns:1.2fr 1fr}
+.w390 .kpi{grid-template-columns:1fr 1fr}
+.w390 .overview-panels{grid-template-columns:1fr}
+.w390 .overview-suggestions,.w390 .ask-examples-wrap{display:none}
+.w390 .panel-row{flex-wrap:wrap}
+.w390 .panel-main{flex:1 0 100%}
+.w390 .panel-action{min-height:44px}
+.w390 .answer{font-size:16px;line-height:1.65}
+.w390 .answer-source{min-height:44px}
+.w834 .kpi{grid-template-columns:1fr 1fr}
+.w834 .overview-panels{grid-template-columns:1fr}
+
+.duty-page{max-width:760px}
+.duty-track{margin:0 0 32px}
+.duty-track-head{display:flex;gap:12px;align-items:baseline;flex-wrap:wrap;margin:0 0 4px}
+.duty-track-title{font-size:var(--fs-section);letter-spacing:-.01em;margin:0;flex:1 1 auto}
+.duty-track-progress{font-size:var(--fs-small);color:var(--muted)}
+.duty-list{list-style:none;padding:0;margin:12px 0 0;display:grid;gap:12px}
+.duty-card{padding:16px 18px}
+.duty-card.is-next{border-color:var(--accent)}
+.duty-head{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.duty-order{flex:0 0 auto;font-size:var(--fs-small);color:var(--muted)}
+.duty-title{flex:1 1 260px;font-size:var(--fs-lead);font-weight:600;text-wrap:pretty}
+.duty-due{margin-left:auto}
+.duty-meta{font-size:var(--fs-small);color:var(--muted);margin:8px 0 0}
+.duty-action{margin:12px 0 0}
+.approval-list{list-style:none;padding:0;margin:0;display:grid;gap:20px}
+.approval-card{padding:18px}
+.approval-title{font-size:var(--fs-section);letter-spacing:-.01em;margin:0 0 4px;text-wrap:pretty}
+.approval-meta{font-size:var(--fs-small);color:var(--muted)}
+.approval-note{font-size:var(--fs-body);margin:10px 0 0}
+.approval-text{margin-top:10px;line-height:1.7;max-width:70ch;font-size:var(--fs-body)}
+.approval-form{display:grid;gap:12px;margin-top:14px}
+.approval-decide{display:flex;gap:10px;flex-wrap:wrap}
+.w390 .duty-order{flex:1 0 100%}
+.w390 .duty-due{margin-left:0}
+.w390 .duty-action .button{width:100%;min-height:44px}
+.w390 .duty-head{gap:8px}
+.w390 .approval-decide{flex-direction:column-reverse}
+.w390 .approval-decide .button{width:100%;min-height:44px}
+.w390 .approval-form textarea.field-input{min-height:64px}
+.approval-form textarea.field-input{min-height:64px}
+summary{cursor:pointer}
+
+/* PREVZATÉ z globals.css: .detail-* 2208–2299, .audit* 1694–1735,
+   .document-sheet 1593–1602, .acknowledge-* 3409–3425. */
+.detail-page{max-width:1180px}
+.detail-grid{display:grid;grid-template-columns:minmax(0,1fr);gap:18px;align-items:start}
+.detail-main{min-width:0}
+.detail-side{display:grid;gap:12px;min-width:0}
+.w1440 .detail-grid,.w834 .detail-grid{grid-template-columns:minmax(0,1fr) 280px}
+.w390 .detail-grid{grid-template-columns:minmax(0,1fr)}
+.w390 .detail-side{order:-1}
+.detail-chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px}
+.detail-card{padding:14px 16px}
+.detail-card-title{margin:0 0 10px;font-size:13px;font-weight:650;letter-spacing:.04em;text-transform:uppercase;color:var(--muted)}
+.detail-progress-head{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
+.detail-percent{font-size:26px;font-weight:640;letter-spacing:-.03em;font-variant-numeric:tabular-nums}
+.detail-progress-of{font-size:13px;font-variant-numeric:tabular-nums}
+.detail-bar{margin-top:10px;height:6px;border-radius:3px;background:var(--surface-2);overflow:hidden}
+.detail-bar-fill{display:block;height:100%;background:var(--accent)}
+.detail-card-link{margin:10px 0 0;font-size:13px;font-weight:600}
+.detail-card-link a{color:var(--accent)}
+.detail-empty{margin:0;font-size:13.5px;line-height:1.5}
+.detail-meta{margin:0;display:grid;gap:8px}
+.detail-meta-row{display:flex;gap:10px;align-items:baseline}
+.detail-meta-key{flex:0 0 104px;font-size:12.5px}
+.detail-meta-value{flex:1;min-width:0;margin:0;font-size:13.5px;overflow-wrap:anywhere}
+.audit{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.audit-entry{padding:12px 16px;display:grid;gap:6px}
+.audit-head{display:flex;gap:8px;align-items:baseline;flex-wrap:wrap}
+.audit-target{font-size:14.5px}
+.audit-who{font-size:13px;color:var(--muted)}
+.audit-note{font-size:13px;font-style:italic;color:var(--muted)}
+.document-sheet{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius-lg);padding:28px 32px}
+.w390 .document-sheet{padding:20px 16px}
+.acknowledge-card{padding:20px;margin-top:32px}
+.w390 .acknowledge-card{margin-bottom:64px}
+.acknowledge-dock{position:relative;display:flex;padding:0 10px}
+.acknowledge-dock .button{width:100%;min-height:50px;border-radius:12px;box-shadow:var(--shadow)}
+.acknowledge-progress{position:absolute;inset:0 auto auto 0;height:2px;background:var(--accent)}
+.detail-block{padding:18px;display:grid;gap:12px;margin:0 0 18px}
+.detail-block-title{font-size:var(--fs-section);margin:0}
+.detail-block-note{font-size:var(--fs-body);color:var(--muted);margin:0}
+.detail-tools{margin:0 0 18px}
+.detail-tools>summary{font-size:var(--fs-section);font-weight:650;padding:14px 18px;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);cursor:pointer;list-style:none}
+.detail-tools>summary::-webkit-details-marker{display:none}
+/* Chevron z produktu (globals.css, select.field-input), nie znak: znak kreslí
+   operačný systém a na každom vyzerá inak. Zatvorené smeruje vpravo, otvorené dole. */
+.detail-tools>summary{display:flex;align-items:center;gap:9px}
+.detail-tools>summary::before{content:"";flex:0 0 12px;width:12px;height:12px;background:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12' fill='none'><path d='M2.5 4.5L6 8l3.5-3.5' stroke='%235c6675' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/></svg>") no-repeat center;transform:rotate(-90deg)}
+.detail-tools[open]>summary::before{transform:none}
+.dark .detail-tools>summary::before{background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12' fill='none'><path d='M2.5 4.5L6 8l3.5-3.5' stroke='%239aa4b2' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/></svg>")}
+.detail-tools[open]>summary{border-radius:var(--radius) var(--radius) 0 0}
+.detail-tools-body{display:grid;gap:14px;padding:14px 0 0}
+.detail-card{padding:14px}
+.detail-card-title{font-size:11px;font-weight:650;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:0 0 9px}
+.detail-percent{font-size:25px;font-weight:640;letter-spacing:-.03em;font-variant-numeric:tabular-nums}
+.detail-progress-head{display:flex;align-items:baseline;gap:7px;margin-bottom:8px}
+.detail-progress-of{font-size:12px}
+.detail-bar{height:6px;border-radius:3px;background:var(--surface-2);overflow:hidden;margin-bottom:10px}
+.detail-bar-fill{display:block;height:100%;background:var(--accent)}
+.detail-card-link{margin:0;font-size:12.5px;font-weight:600}
+.detail-meta{margin:0;display:grid;gap:9px}
+.detail-meta-row{display:flex;gap:10px;align-items:baseline}
+.detail-meta-key{flex:0 0 84px;font-size:12px;margin:0}
+.detail-meta-value{flex:1;font-size:12.5px;margin:0;text-wrap:pretty;overflow-wrap:anywhere}
+.detail-page .page-title{text-wrap:pretty;overflow-wrap:anywhere}
+.audit{list-style:none;padding:0;margin:0;display:grid;gap:12px}
+.audit-entry{padding:14px 16px}
+.audit-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.audit-who{font-size:12px;margin-top:3px}
+.audit-note{font-size:12px;margin-top:3px}
+.document-sheet{max-width:68ch;font-size:var(--fs-lead);line-height:1.7}
+.document-sheet h2{margin:28px 0 8px;font-size:var(--fs-section)}
+.document-sheet h2:first-child{margin-top:0}
+.document-sheet p{margin:0 0 12px}
+.w390 .document-sheet{font-size:16px}
+.acknowledge-card{padding:20px;margin-top:32px}
+.acknowledge-dock{position:relative;display:flex;padding:10px 14px 18px;background:var(--surface);border-top:1px solid var(--line)}
+.acknowledge-progress{position:absolute;inset:0 auto auto 0;height:2px;background:var(--accent)}
+.formulka{font-size:var(--fs-body);line-height:1.6;margin:0 0 14px}
+
+
+
+
+.as{max-width:880px}
+.grp{padding:0;border:1px solid var(--line);border-radius:var(--radius);background:var(--surface);margin:0}
+.grp-h{display:flex;gap:10px;align-items:baseline;flex-wrap:wrap;padding:12px 16px;border-bottom:1px solid var(--line)}
+.grp-h b{font-size:var(--fs-section)}
+.grp-h .quiet{font-size:12.5px}
+.warnrow{display:flex;gap:8px;align-items:flex-start;margin:12px 16px 0;padding:9px 12px;border-radius:9px;background:var(--warn-bg);color:var(--warn-fg);font-size:12.5px;line-height:1.5}
+.docs{list-style:none;padding:6px 8px 10px;margin:0;display:grid}
+.drow{display:grid;grid-template-columns:20px minmax(0,1fr) auto;gap:2px 10px;align-items:start;padding:8px;border-radius:8px}
+.drow.is-on{background:var(--accent-soft)}
+.cb{width:18px;height:18px;border-radius:5px;border:1.5px solid var(--muted);margin-top:1px;display:grid;place-items:center;font-size:11px;font-weight:800;color:var(--on-accent)}
+.is-on>.cb{background:var(--accent);border-color:var(--accent)}
+.doc-t{font-size:14px;font-weight:550;line-height:1.35;min-width:0}
+.doc-m{grid-column:2;font-size:12px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.drow .tag{grid-row:1;grid-column:3}
+.all{display:grid;grid-template-columns:20px 1fr;gap:2px 10px;margin:12px 16px 4px;padding:10px 12px;border:1px solid var(--line);border-radius:9px;background:var(--bg)}
+.all b{font-size:14px}
+.all span.quiet{grid-column:2;font-size:12px}
+.sub{font-size:11px;font-weight:650;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:14px 16px 4px}
+.subnote{font-size:12px;color:var(--muted);margin:0 16px 6px}
+.tree{list-style:none;padding:0 8px 8px;margin:0;display:grid;columns:2;column-gap:12px}
+.w390 .tree{columns:1}
+.tree li{break-inside:avoid;display:grid;grid-template-columns:18px minmax(0,1fr) auto;gap:8px;align-items:center;min-height:34px;padding:0 8px;border-radius:7px;font-size:13px}
+.tree li.is-on{background:var(--accent-soft)}
+.tree .cb{width:16px;height:16px;border-width:1.5px}
+.tree .n{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tree .c{font-size:11.5px;color:var(--muted);font-variant-numeric:tabular-nums}
+.tree .c.z{opacity:.55}
+.l1{}.l2 .n{padding-left:14px;border-left:1px solid var(--line)}.l3 .n{padding-left:28px;border-left:1px solid var(--line)}
+.body-pad{padding:12px 16px 16px;display:grid;gap:14px}
+.due{display:grid;gap:6px}
+.due-opt{display:grid;grid-template-columns:18px auto minmax(0,1fr);gap:10px;align-items:center;min-height:44px;padding:4px 12px;border:1px solid var(--line);border-radius:9px;background:var(--bg);font-size:13.5px}
+.due-opt.is-on{border-color:var(--accent);background:var(--accent-soft)}
+.radio{width:16px;height:16px;border-radius:50%;border:1.5px solid var(--muted);display:grid;place-items:center}
+.is-on .radio{border-color:var(--accent)}
+.is-on .radio::after{content:"";width:8px;height:8px;border-radius:50%;background:var(--accent)}
+.due-opt .field-input{min-height:32px;padding:4px 10px;font-size:13px;max-width:170px;justify-self:end}
+.acts{display:flex;gap:10px;flex-wrap:wrap}
+.w390 .acts .button{flex:1;min-height:44px}
+.w390 .field-input{font-size:16px}
+.w390 .due-opt{grid-template-columns:18px 1fr}
+.w390 .due-opt .field-input{grid-column:2;justify-self:stretch;max-width:none;min-height:40px}
+.ev{max-width:960px}
+.ev-head{display:flex;gap:12px;align-items:baseline;flex-wrap:wrap;margin:0 0 6px}
+.ev-head h1{margin:0}
+.ev-filter{display:grid;grid-template-columns:minmax(0,1fr) 200px auto;gap:10px;align-items:end;padding:14px 16px;margin:14px 0}
+.ev-list{border:1px solid var(--line);border-radius:var(--radius);background:var(--surface);overflow:hidden}
+.ev-row{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1.6fr) 120px 100px 16px;gap:12px;align-items:center;padding:10px 14px;border-bottom:1px solid var(--line);font-size:13px}
+.ev-row:last-child{border-bottom:0}
+.ev-row.th{background:var(--bg);font-size:10.5px;font-weight:650;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);padding:8px 14px}
+.ev-row .nm{font-weight:600}
+.ev-row .dc{color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ev-row .dt{font-variant-numeric:tabular-nums;color:var(--muted)}
+.ev-open{background:var(--bg);border-bottom:1px solid var(--line);padding:4px 14px 14px}
+.kv{display:grid;grid-template-columns:170px 1fr;gap:6px 14px;margin:8px 0 0;font-size:13px}
+.kv dt{color:var(--muted)}
+.kv dd{margin:0;overflow-wrap:anywhere}
+.kv .new{background:var(--accent-soft);margin:0 -6px;padding:2px 6px;border-radius:5px}
+.ann{font-size:12px;color:#5c6675;max-width:78ch;margin:8px 0 0;line-height:1.5}
+.ann b{color:#161b22}
+.num{display:inline-grid;place-items:center;width:18px;height:18px;border-radius:50%;background:#b45309;color:#fff;font-size:10.5px;font-weight:700;margin-right:4px;vertical-align:1px}
+.q{display:inline-grid;place-items:center;min-width:22px;height:18px;border-radius:9px;background:#1d4ed8;color:#fff;font-size:10.5px;font-weight:700;padding:0 5px;margin-left:4px;vertical-align:1px}
+</style></head>
+<body><div class="sheet">
+<h1 class="doc">HR — právny základ (pridelenie a reťaz dôkazov)</h1>
+<p class="doc"><code>/hr/assign</code> a <code>/hr/evidence</code>. Funguje: upozornenie (nie brána, D91) pri predpise bez právneho základu, štítok „bez právneho základu", potvrdenie si ukladá zodpovednú osobu a právny základ (dnes len v CSV). Snímky <code>uploads/HR-pridelenie-*</code>, <code>HR-vykaz-*</code>: strom oddelení ako odsadené štítky v zalomenom riadku (na 390 pretiekol), dlhé označenia znení v riadku predpisu, termín ako select + dve polia. Návrh mení podobu; texty z i18n <code>hr.assign</code>, <code>responsibility</code>, <code>evidence</code>. Zadanie: <code>HR-pravny-zaklad.md</code>.</p>
+<p class="cap">Desktop 1440 — Prideliť normy</p>
+<div class="frames"><div class="frame w1440" style="width:1440px"><div class="hdr"><span class="logo"><svg width="17" height="17" viewBox="0 0 48 48" fill="none" aria-hidden="true" style="flex:0 0 auto"><circle cx="18" cy="18" r="13" stroke="currentColor" stroke-width="4"></circle><circle cx="13" cy="18" r="2.3" fill="currentColor"></circle><circle cx="23" cy="18" r="2.3" fill="currentColor"></circle><path d="M28 27 L41 41 L29 38 Z" fill="currentColor"></path></svg></span><span class="org">Slovenský futbalový zväz</span>  <div class="ask" style="flex:1;min-width:0"><svg width="16" height="16" viewBox="0 0 48 48" fill="none" aria-hidden="true" style="flex:0 0 auto"><circle cx="18" cy="18" r="13" stroke="currentColor" stroke-width="4"></circle><circle cx="13" cy="18" r="2.3" fill="currentColor"></circle><circle cx="23" cy="18" r="2.3" fill="currentColor"></circle><path d="M28 27 L41 41 L29 38 Z" fill="currentColor"></path></svg><span style="flex:1">Opýtajte sa svojich dokumentov…</span><span class="kbd">⌘K</span></div>  <span class="bell"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13.9 11.6c0-5.2-1.6-7-4.9-7s-4.9 1.8-4.9 7l-1.3 2.1h12.4z"></path><path d="M10.6 15.4a1.7 1.7 0 0 1-3.2 0"></path></svg><b>3</b></span><span class="av">JL</span></div><div class="nav"><a href="#" class="">Prehľad</a><a href="#" class="">Voľné otázky</a><a href="#" class="">Na potvrdenie<span class="c">1</span></a><a href="#" class="">Na schválenie</a><a href="#" class="">Adresár</a><a href="#" class="">Knižnica</a><a href="#" class="is-on">Pridelené normy</a><a href="#" class="">Reťaz dôkazov</a><a href="#" class="">Osoby</a><a href="#" class="">Na posúdenie</a><a href="#" class="">Ochrana údajov</a></div><div class="body"><div class="wrap"><div class="as"><p style="margin:0 0 12px;font-size:var(--fs-body)"><a href="#" style="color:var(--muted)">← Späť na prehľad</a></p>
+<h1 class="page-title">Prideliť normy</h1><p class="page-lead">Prideľuje sa <b style="color:var(--ink)">konkrétne znenie</b>, nie dokument. Keď pribudne novšie, staré pridelenie zaň neplatí — to je zámer.</p>
+<div style="display:grid;gap:16px">
+<fieldset class="grp"><div class="grp-h"><b>Ktoré normy</b><span class="quiet">13 platných · vybrané 2</span></div>
+<p class="warnrow"><span>⚠</span><span>Predpis bez právneho základu sa prideliť dá. Zodpovedná osoba by ho však mala určiť ešte pred ostrou prevádzkou.</span></p>
+<ul class="docs"><li class="drow "><span class="cb"></span><span class="doc-t">Disciplinárny poriadok SFZ</span><span class="tag tag--draft">bez právneho základu</span><span class="doc-m">verzia 1.0, platná od 1. 7. 2023</span></li><li class="drow "><span class="cb"></span><span class="doc-t">Finančná smernica SFZ</span><span></span><span class="doc-m">verzia Finančná smernica SFZ 20260907, platná od 7. 9. 2026</span></li><li class="drow "><span class="cb"></span><span class="doc-t">Organizačný a návštevný poriadok</span><span class="tag tag--draft">bez právneho základu</span><span class="doc-m">verzia 1.0, platná od 1. 7. 2014</span></li><li class="drow is-on"><span class="cb">✓</span><span class="doc-t">Pracovný poriadok SFZ</span><span></span><span class="doc-m">verzia Pracovný poriadok SFZ 20260907, platná od 7. 9. 2026</span></li><li class="drow is-on"><span class="cb">✓</span><span class="doc-t">Registračný a prestupový poriadok SFZ</span><span class="tag tag--draft">bez právneho základu</span><span class="doc-m">verzia 1.0, platná od 1. 6. 2026</span></li><li class="drow "><span class="cb"></span><span class="doc-t">Smernica o pracovných cestách a poskytovaní cestovných náhrad SFZ</span><span class="tag tag--draft">bez právneho základu</span><span class="doc-m">verzia Smernica o pracovných cestách a poskytovaní cestovných náhrad SFZ 20260907, platná od 7. 9. 2026</span></li><li class="drow"><span></span><span class="doc-m" style="grid-row:1">… ďalších 7</span></li></ul></fieldset>
+<fieldset class="grp"><div class="grp-h"><b>Komu</b><span class="quiet">vybrané: 2 oddelenia · 4 ľudia <span class="q">Q2</span></span></div>
+<label class="all"><span class="cb"></span><b>Všetkým v organizácii</b><span class="quiet">prebije výber nižšie — inak by to isté znenie viselo v prehľade niekoľkokrát a nikto by nevedel, ktorý riadok niečo znamená</span></label>
+<p class="sub">Oddelenia</p><p class="subnote">Pridelenie oddelenia platí <b>aj pre všetky podriadené</b>. Číslo je počet ľudí vrátane nich — to je to, koho sa to naozaj týka.</p>
+<ul class="tree"><li class="l1 "><span class="cb"></span><span class="n">Konferencia SFZ</span><span class="c ">2</span></li><li class="l1 "><span class="cb"></span><span class="n">Prezident SFZ</span><span class="c ">2</span></li><li class="l1 "><span class="cb"></span><span class="n">Generálny sekretár</span><span class="c ">2</span></li><li class="l2 "><span class="cb"></span><span class="n">Ekonomický úsek</span><span class="c z">0</span></li><li class="l3 "><span class="cb"></span><span class="n">Ekonomické oddelenie</span><span class="c z">0</span></li><li class="l3 "><span class="cb"></span><span class="n">Oddelenie kontrolingu</span><span class="c z">0</span></li><li class="l2 is-on"><span class="cb">✓</span><span class="n">Úsek prezidenta a generálneho sekretára</span><span class="c ">2</span></li><li class="l3 "><span class="cb"></span><span class="n">Legislatívno právne oddelenie</span><span class="c z">0</span></li><li class="l3 is-on"><span class="cb">✓</span><span class="n">Oddelenie IT</span><span class="c ">2</span></li><li class="l3 "><span class="cb"></span><span class="n">Oddelenie ľudských zdrojov</span><span class="c z">0</span></li><li class="l3 "><span class="cb"></span><span class="n">SFZ Marketing</span><span class="c z">0</span></li><li class="l1 "><span class="cb"></span><span class="n">Výkonný výbor SFZ</span><span class="c z">0</span></li></ul>
+<p class="sub">Trasy</p><ul class="tree" style="columns:1"><li class="l1"><span class="cb"></span><span class="n">test-2026</span><span class="c">1</span></li></ul>
+<div class="body-pad" style="padding-top:4px"><label class="field"><span class="field-label">Jednotlivé adresy</span><span class="field-input" style="min-height:56px;color:var(--muted)">jan.novak@example.sk, eva.mala@example.sk</span><span class="field-hint">Nepovinné. Oddeľ čiarkou alebo novým riadkom.</span></label></div></fieldset>
+<fieldset class="grp"><div class="body-pad">
+<label class="field"><span class="field-label">Dôvod</span><span class="field-input" style="min-height:56px">Novela pracovného poriadku — home office</span><span class="field-hint">Povinný a spoločný pre celý výber. Je to jediné miesto, kde bude o rok napísané, prečo sa normy potvrdzovali znova — a príde aj v e-maile ľuďom.</span></label>
+<div class="due"><span class="field-label">Termín potvrdenia</span>
+<label class="due-opt"><span class="radio"></span><span>bez termínu</span><span></span></label>
+<label class="due-opt is-on"><span class="radio"></span><span>do dátumu</span><span class="field-input">15. 10. 2026</span></label>
+<label class="due-opt"><span class="radio"></span><span>do počtu dní</span><span class="field-input" style="color:var(--muted)">dní od pridelenia</span></label>
+<span class="field-hint">Nepovinný. Dátum platí pre všetkých rovnako; počet dní beží každému odo dňa, keď mu povinnosť vznikla — to je rozdiel pre toho, kto do oddelenia príde neskôr. Bez termínu sa pripomienky neposielajú automaticky.</span></div>
+</div></fieldset>
+<div class="acts"><span class="button">Prideliť</span><span class="button button--quiet">Skontrolovať dopad</span></div>
+</div></div></div></div></div></div>
+<p class="ann"><span class="num">1</span><b>Upozornenie</b> <code>missingBasisNote</code> ako jantárový rámček hore v skupine, nie sivá nápoveda. <span class="num">2</span><b>Riadok predpisu</b>: názov + štítok vpravo, pod ním verzia a platnosť (elipsa). Vybraný riadok <code>--accent-soft</code>. <span class="num">3</span><b>Oddelenia ako strom</b> — zoznam s čiarou odsadenia a počtom vpravo, dva stĺpce (<code>columns: 2</code>), nula tlmene. Dnes štítky s <code>marginLeft</code> v zalomenom riadku — úroveň sa nedá prečítať. <span class="num">4</span><b>Termín</b>: tri prepínače, pole vedľa svojej voľby (bez JS funguje — polia sú v DOM stále). Dnes select + dve polia pod ním.</p>
+<div class="frames" style="margin-top:24px">
+<div style="display:flex;flex-direction:column;gap:8px"><p class="cap" style="margin:0">Tablet 834 — Reťaz dôkazov, jeden riadok rozbalený</p><div class="frame w834" style="width:834px"><div class="hdr" style="padding:0 16px"><span class="logo"><svg width="17" height="17" viewBox="0 0 48 48" fill="none" aria-hidden="true" style="flex:0 0 auto"><circle cx="18" cy="18" r="13" stroke="currentColor" stroke-width="4"></circle><circle cx="13" cy="18" r="2.3" fill="currentColor"></circle><circle cx="23" cy="18" r="2.3" fill="currentColor"></circle><path d="M28 27 L41 41 L29 38 Z" fill="currentColor"></path></svg></span><span class="org">SFZ</span>  <div class="ask" style="flex:1;min-width:0"><svg width="16" height="16" viewBox="0 0 48 48" fill="none" aria-hidden="true" style="flex:0 0 auto"><circle cx="18" cy="18" r="13" stroke="currentColor" stroke-width="4"></circle><circle cx="13" cy="18" r="2.3" fill="currentColor"></circle><circle cx="23" cy="18" r="2.3" fill="currentColor"></circle><path d="M28 27 L41 41 L29 38 Z" fill="currentColor"></path></svg><span style="flex:1">Opýtajte sa svojich dokumentov…</span></div>  <span class="bell"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13.9 11.6c0-5.2-1.6-7-4.9-7s-4.9 1.8-4.9 7l-1.3 2.1h12.4z"></path><path d="M10.6 15.4a1.7 1.7 0 0 1-3.2 0"></path></svg><b>3</b></span><span class="av">JL</span></div><div class="nav"><a href="#" class="">Prehľad</a><a href="#" class="">Voľné otázky</a><a href="#" class="">Na potvrdenie<span class="c">1</span></a><a href="#" class="is-on">Reťaz dôkazov</a><a href="#" class="" style="margin-left:auto">Viac 7</a></div><div class="body"><div class="ev"><div class="ev-head"><h1 class="page-title">Reťaz dôkazov</h1><span class="quiet" style="font-size:var(--fs-small)">7 z 7 povinností</span><span style="flex:1"></span><span class="button button--quiet" style="min-height:36px;font-size:14px">Export CSV</span></div>
+<p class="page-lead" style="margin:0">Čo sa dialo s každou uloženou povinnosťou — od pridelenia po potvrdenie. Skladá sa pri zobrazení; neukladá sa nič.</p>
+<div class="card ev-filter"><label class="field"><span class="field-label">Osoba</span><span class="field-input"></span></label><label class="field"><span class="field-label">Stav</span><span class="field-input">všetky</span></label><span class="button">Použiť</span></div>
+<div class="ev-list"><div class="ev-row th"><span>Osoba</span><span>Predpis · znenie</span><span>Stav</span><span>Dátum</span><span></span></div>
+<div class="ev-row"><span class="nm">Agáta Galková</span><span class="dc">Skúšobná smernica (testovacie prostredie) · 1.0</span><span><span class="tag ">neotvorené</span></span><span class="dt">—</span><span style="color:var(--muted)">⌄</span></div>
+<div class="ev-row"><span class="nm">Ján Letko</span><span class="dc">Skúšobná smernica (testovacie prostredie) · 1.0</span><span><span class="tag tag--archived">odvolané</span></span><span class="dt">12. 9. 2026</span><span style="color:var(--muted)">⌄</span></div>
+<div class="ev-row"><span class="nm">Agáta Galková</span><span class="dc">Revízny poriadok · 1.0 · do 20. 9. 2026</span><span><span class="tag tag--published">potvrdené</span></span><span class="dt">15. 9. 2026</span><span style="color:var(--muted)">⌃</span></div>
+<div class="ev-open"><dl class="kv"><dt>IP adresa</dt><dd>185.23.41.7</dd><dt>Oddelenie</dt><dd>Oddelenie IT</dd><dt>Znenie formulky</dt><dd>Potvrdzujem, že som sa oboznámil s dokumentom „Revízny poriadok", verzia 1.0, platná od 1. 1. 2026, porozumel som jeho obsahu a zaväzujem sa ho dodržiavať.</dd><dt class="new">Zodpovedná osoba</dt><dd class="new">Ján Letko · jan.letko@futbalsfz.sk <span class="q">Q1</span></dd><dt class="new">Právny základ</dt><dd class="new">— (neurčený v čase potvrdenia)</dd><dt>Čas čítania</dt><dd>2 min 10 s</dd><dt>Prvé otvorenie</dt><dd>15. 9. 2026</dd></dl><p class="quiet" style="font-size:12px;margin:10px 0 0">+ os udalostí (EvidenceTimeline) bez zmeny</p></div>
+<div class="ev-row"><span class="nm">Ján Letko</span><span class="dc">Revízny poriadok · 1.0 · do 20. 9. 2026</span><span><span class="tag tag--expired">po termíne</span></span><span class="dt">14. 9. 2026</span><span style="color:var(--muted)">⌄</span></div>
+<div class="ev-row"><span class="nm">Ján Letko</span><span class="dc">Skúšobná smernica (testovacie prostredie) · 1.2 (skúšobné znenie na overenie schvaľovania)</span><span><span class="tag tag--published">potvrdené</span></span><span class="dt">12. 9. 2026</span><span style="color:var(--muted)">⌄</span></div>
+</div></div></div></div>
+<p class="ann" style="max-width:834px"><span class="num">5</span><b>Riadky ako tabuľka</b> (Osoba · Predpis · Stav · Dátum) — dnes karta s dvomi riadkami. <span class="num">6</span><b>„neotvorené neotvorené"</b>: štítok aj dátum hovoria to isté (snímka) — dátum „—". <span class="num">7</span>V rozbalení <b>Zodpovedná osoba a Právny základ v čase potvrdenia</b> <span class="q">Q1</span> — dnes len v CSV.</p></div>
+<div style="display:flex;flex-direction:column;gap:8px"><p class="cap" style="margin:0">Telefón 390 — Prideliť normy, strom v jednom stĺpci</p><div class="frame w390" style="width:390px">  <div class="hdr" style="padding:0 10px;gap:8px">
+  <span class="logo" style="width:30px;height:30px"><svg width="18" height="18" viewBox="0 0 48 48" fill="none" aria-hidden="true" style="flex:0 0 auto"><circle cx="18" cy="18" r="13" stroke="currentColor" stroke-width="4"></circle><circle cx="13" cy="18" r="2.3" fill="currentColor"></circle><circle cx="23" cy="18" r="2.3" fill="currentColor"></circle><path d="M28 27 L41 41 L29 38 Z" fill="currentColor"></path></svg></span>
+  <span class="org" style="flex:0 0 auto;font-size:15px">SFZ</span>
+  <div class="ask" style="flex:1;min-width:0"><svg width="16" height="16" viewBox="0 0 48 48" fill="none" aria-hidden="true" style="flex:0 0 auto"><circle cx="18" cy="18" r="13" stroke="currentColor" stroke-width="4"></circle><circle cx="13" cy="18" r="2.3" fill="currentColor"></circle><circle cx="23" cy="18" r="2.3" fill="currentColor"></circle><path d="M28 27 L41 41 L29 38 Z" fill="currentColor"></path></svg><span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Opýtajte sa…</span></div>
+  <span class="bell" style="width:40px;height:40px"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13.9 11.6c0-5.2-1.6-7-4.9-7s-4.9 1.8-4.9 7l-1.3 2.1h12.4z"></path><path d="M10.6 15.4a1.7 1.7 0 0 1-3.2 0"></path></svg><b>3</b></span>
+  <span class="av" style="width:32px;height:32px;font-size:11.5px">JL</span>
+</div>
+  <div class="body" style="padding:14px"><div class="as"><p style="margin:0 0 12px;font-size:var(--fs-body)"><a href="#" style="color:var(--muted)">← Späť na prehľad</a></p>
+<h1 class="page-title">Prideliť normy</h1><p class="page-lead">Prideľuje sa <b style="color:var(--ink)">konkrétne znenie</b>, nie dokument. Keď pribudne novšie, staré pridelenie zaň neplatí — to je zámer.</p>
+<div style="display:grid;gap:16px">
+<fieldset class="grp"><div class="grp-h"><b>Ktoré normy</b><span class="quiet">13 platných · vybrané 2</span></div>
+<p class="warnrow"><span>⚠</span><span>Predpis bez právneho základu sa prideliť dá. Zodpovedná osoba by ho však mala určiť ešte pred ostrou prevádzkou.</span></p>
+<ul class="docs"><li class="drow "><span class="cb"></span><span class="doc-t">Disciplinárny poriadok SFZ</span><span class="tag tag--draft">bez právneho základu</span><span class="doc-m">verzia 1.0, platná od 1. 7. 2023</span></li><li class="drow "><span class="cb"></span><span class="doc-t">Finančná smernica SFZ</span><span></span><span class="doc-m">verzia Finančná smernica SFZ 20260907, platná od 7. 9. 2026</span></li><li class="drow "><span class="cb"></span><span class="doc-t">Organizačný a návštevný poriadok</span><span class="tag tag--draft">bez právneho základu</span><span class="doc-m">verzia 1.0, platná od 1. 7. 2014</span></li><li class="drow is-on"><span class="cb">✓</span><span class="doc-t">Pracovný poriadok SFZ</span><span></span><span class="doc-m">verzia Pracovný poriadok SFZ 20260907, platná od 7. 9. 2026</span></li><li class="drow"><span></span><span class="doc-m" style="grid-row:1">… ďalších 7</span></li></ul></fieldset>
+<fieldset class="grp"><div class="grp-h"><b>Komu</b><span class="quiet">vybrané: 2 oddelenia · 4 ľudia <span class="q">Q2</span></span></div>
+<label class="all"><span class="cb"></span><b>Všetkým v organizácii</b><span class="quiet">prebije výber nižšie — inak by to isté znenie viselo v prehľade niekoľkokrát a nikto by nevedel, ktorý riadok niečo znamená</span></label>
+<p class="sub">Oddelenia</p><p class="subnote">Pridelenie oddelenia platí <b>aj pre všetky podriadené</b>. Číslo je počet ľudí vrátane nich — to je to, koho sa to naozaj týka.</p>
+<ul class="tree"><li class="l1 "><span class="cb"></span><span class="n">Konferencia SFZ</span><span class="c ">2</span></li><li class="l1 "><span class="cb"></span><span class="n">Prezident SFZ</span><span class="c ">2</span></li><li class="l1 "><span class="cb"></span><span class="n">Generálny sekretár</span><span class="c ">2</span></li><li class="l2 "><span class="cb"></span><span class="n">Ekonomický úsek</span><span class="c z">0</span></li><li class="l3 "><span class="cb"></span><span class="n">Ekonomické oddelenie</span><span class="c z">0</span></li><li class="l3 "><span class="cb"></span><span class="n">Oddelenie kontrolingu</span><span class="c z">0</span></li><li class="l2 is-on"><span class="cb">✓</span><span class="n">Úsek prezidenta a generálneho sekretára</span><span class="c ">2</span></li><li class="l3 "><span class="cb"></span><span class="n">Legislatívno právne oddelenie</span><span class="c z">0</span></li><li class="l3 is-on"><span class="cb">✓</span><span class="n">Oddelenie IT</span><span class="c ">2</span></li><li class="l3 "><span class="cb"></span><span class="n">Oddelenie ľudských zdrojov</span><span class="c z">0</span></li><li class="l3 "><span class="cb"></span><span class="n">SFZ Marketing</span><span class="c z">0</span></li><li class="l1 "><span class="cb"></span><span class="n">Výkonný výbor SFZ</span><span class="c z">0</span></li></ul>
+<p class="sub">Trasy</p><ul class="tree" style="columns:1"><li class="l1"><span class="cb"></span><span class="n">test-2026</span><span class="c">1</span></li></ul>
+<div class="body-pad" style="padding-top:4px"><label class="field"><span class="field-label">Jednotlivé adresy</span><span class="field-input" style="min-height:56px;color:var(--muted)">jan.novak@example.sk, eva.mala@example.sk</span><span class="field-hint">Nepovinné. Oddeľ čiarkou alebo novým riadkom.</span></label></div></fieldset>
+<fieldset class="grp"><div class="body-pad">
+<label class="field"><span class="field-label">Dôvod</span><span class="field-input" style="min-height:56px">Novela pracovného poriadku — home office</span><span class="field-hint">Povinný a spoločný pre celý výber. Je to jediné miesto, kde bude o rok napísané, prečo sa normy potvrdzovali znova — a príde aj v e-maile ľuďom.</span></label>
+<div class="due"><span class="field-label">Termín potvrdenia</span>
+<label class="due-opt"><span class="radio"></span><span>bez termínu</span><span></span></label>
+<label class="due-opt is-on"><span class="radio"></span><span>do dátumu</span><span class="field-input">15. 10. 2026</span></label>
+<label class="due-opt"><span class="radio"></span><span>do počtu dní</span><span class="field-input" style="color:var(--muted)">dní od pridelenia</span></label>
+<span class="field-hint">Nepovinný. Dátum platí pre všetkých rovnako; počet dní beží každému odo dňa, keď mu povinnosť vznikla — to je rozdiel pre toho, kto do oddelenia príde neskôr. Bez termínu sa pripomienky neposielajú automaticky.</span></div>
+</div></fieldset>
+<div class="acts"><span class="button">Prideliť</span><span class="button button--quiet">Skontrolovať dopad</span></div>
+</div></div></div></div>
+<p class="ann" style="max-width:390px"><span class="num">8</span>Strom v jednom stĺpci, dlhé názvy s elipsou — žiadne pretečenie (opravené v kóde 24. 9., tu podoba).</p></div>
+</div>
+</div></body></html>
