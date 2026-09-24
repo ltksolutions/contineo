@@ -1742,6 +1742,23 @@ interface Dictionary {
       approvalHistory: string
       versionPageTitle: string
       versionPageBack: string
+      /** Názov v príprave nového znenia (ADR-015, D112). */
+      titleNote: string
+      newTitle: (title: string) => string
+      /** Pohľad „Upraviť dokument" (rám KNIZNICA-uprava-dokumentu). */
+      secBasic: string
+      secPlacement: string
+      optional: string
+      editSaveNote: string
+      cancel: string
+      titleLockedBefore: string
+      titleLockedLink: string
+      titleLockedAfter: string
+      elsewhereHeading: string
+      elsewhereVersion: string
+      elsewhereMeta: string
+      elsewhereResponsible: string
+      elsewhereText: string
     }
     /**
      * Zopakovanie pridelenia na nové znenie.
@@ -3480,6 +3497,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "library.sourceNotPdf": "Zdrojový súbor má byť upraviteľný (.docx, .xlsx, .md…), nie druhé PDF.",
     "library.uploadedFileNotFound": "Nahratý súbor sa nenašiel. Skús ho nahrať znova.",
     "library.documentNotFound": "Taký dokument tu nie je.",
+    "library.titleLocked": "Názov dokumentu so zverejneným znením sa mení len novým znením — zmeň ho v príprave nového znenia, schváli sa s ním.",
     "library.documentExists": "Dokument „{title}“ ({documentId}) už existuje. Nové znenie sa nahráva na jeho detaile, nie ako nový dokument — táto obrazovka zakladá nový dokument.",
     "library.documentKeyShape": "Kľúč dokumentu „{key}“ nemá správny tvar — smie mať len malé písmená bez diakritiky, číslice a podčiarkovníky.",
     "library.noOriginalFile": "Dokument nemá pôvodný súbor, ktorý by sa dal prepísať.",
@@ -4223,6 +4241,21 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       approvalHistory: "História schvaľovania",
       versionPageTitle: "Nové znenie",
       versionPageBack: "← Späť na dokument",
+      titleNote: "Pri platnom znení sa názov mení len novým znením — schváli sa spolu s ním a zverejnením sa zmení v knižnici aj vo formulke potvrdenia.",
+      newTitle: t => `Nový názov dokumentu: „${t}“`,
+      secBasic: "Základné údaje",
+      secPlacement: "Zaradenie",
+      optional: "nepovinné",
+      editSaveNote: "Mení údaje o dokumente, nie znenie. Schválenie ani potvrdenia sa tým nerušia.",
+      cancel: "Zrušiť",
+      titleLockedBefore: "🔒 Dokument má zverejnené znenie — názov sa mení len ",
+      titleLockedLink: "novým znením",
+      titleLockedAfter: ". Schváli sa spolu s ním.",
+      elsewhereHeading: "Upravuje sa inde",
+      elsewhereVersion: "Nové znenie",
+      elsewhereMeta: "Údaje o znení",
+      elsewhereResponsible: "Zodpovedná osoba a právny základ",
+      elsewhereText: "Text na vyhľadávanie",
     },
     carryOver: {
       heading: "Prideliť aj nové znenie",
@@ -5861,6 +5894,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "library.sourceNotPdf": "Zdrojový soubor má být upravitelný (.docx, .xlsx, .md…), ne druhé PDF.",
     "library.uploadedFileNotFound": "Nahraný soubor se nenašel. Zkus ho nahrát znovu.",
     "library.documentNotFound": "Takový dokument tu není.",
+    "library.titleLocked": "Název dokumentu se zveřejněným zněním se mění jen novým zněním — změň ho v přípravě nového znění, schválí se s ním.",
     "library.documentExists": "Dokument „{title}“ ({documentId}) už existuje. Nové znění se nahrává na jeho detailu, ne jako nový dokument — tato obrazovka zakládá nový dokument.",
     "library.documentKeyShape": "Klíč dokumentu „{key}“ nemá správný tvar — smí mít jen malá písmena bez diakritiky, číslice a podtržítka.",
     "library.noOriginalFile": "Dokument nemá původní soubor, který by šel přepsat.",
@@ -6602,6 +6636,21 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       approvalHistory: "Historie schvalování",
       versionPageTitle: "Nové znění",
       versionPageBack: "← Zpět na dokument",
+      titleNote: "U platného znění se název mění jen novým zněním — schválí se spolu s ním a zveřejněním se změní v knihovně i ve formulce potvrzení.",
+      newTitle: t => `Nový název dokumentu: „${t}“`,
+      secBasic: "Základní údaje",
+      secPlacement: "Zařazení",
+      optional: "nepovinné",
+      editSaveNote: "Mění údaje o dokumentu, ne znění. Schválení ani potvrzení se tím neruší.",
+      cancel: "Zrušit",
+      titleLockedBefore: "🔒 Dokument má zveřejněné znění — název se mění jen ",
+      titleLockedLink: "novým zněním",
+      titleLockedAfter: ". Schválí se spolu s ním.",
+      elsewhereHeading: "Upravuje se jinde",
+      elsewhereVersion: "Nové znění",
+      elsewhereMeta: "Údaje o znění",
+      elsewhereResponsible: "Odpovědná osoba a právní základ",
+      elsewhereText: "Text pro vyhledávání",
     },
     carryOver: {
       heading: "Přidělit i nové znění",
@@ -8233,6 +8282,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "library.sourceNotPdf": "The source file must be editable (.docx, .xlsx, .md…), not a second PDF.",
     "library.uploadedFileNotFound": "The uploaded file was not found. Try uploading it again.",
     "library.documentNotFound": "There is no such document here.",
+    "library.titleLocked": "The title of a document with a published version changes only with a new version — change it when preparing the new version; it is approved with it.",
     "library.documentExists": "The document \u201C{title}\u201D ({documentId}) already exists. A new version is uploaded on its detail page, not as a new document — this screen creates a new document.",
     "library.documentKeyShape": "The document key \u201C{key}\u201D has the wrong shape — only lowercase letters without diacritics, digits and underscores are allowed.",
     "library.noOriginalFile": "The document has no original file that could be transcribed.",
@@ -8974,6 +9024,21 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       approvalHistory: "Approval history",
       versionPageTitle: "New version",
       versionPageBack: "← Back to the document",
+      titleNote: "With a current version, the title changes only with a new version — it is approved with it and publishing changes it in the library and in the acknowledgement statement.",
+      newTitle: t => `New document title: “${t}”`,
+      secBasic: "Basic details",
+      secPlacement: "Placement",
+      optional: "optional",
+      editSaveNote: "Changes the document details, not the version. Approval and acknowledgements stay valid.",
+      cancel: "Cancel",
+      titleLockedBefore: "🔒 The document has a published version — the title changes only with a ",
+      titleLockedLink: "new version",
+      titleLockedAfter: ". It is approved with it.",
+      elsewhereHeading: "Edited elsewhere",
+      elsewhereVersion: "New version",
+      elsewhereMeta: "Version details",
+      elsewhereResponsible: "Responsible person and legal basis",
+      elsewhereText: "Search text",
     },
     carryOver: {
       heading: "Assign the new version too",

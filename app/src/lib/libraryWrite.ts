@@ -643,6 +643,54 @@ export async function saveDraftResponsible(
   return true
 }
 
+/**
+ * Nový názov dokumentu v príprave nového znenia (ADR-015, D112).
+ *
+ * Pri platnom znení sa názov **mení len novým znením**: je doslova vo
+ * formulke potvrdenia (D28) a nové potvrdenia starého znenia by inak niesli
+ * iný názov, než má schválené PDF. Názov preto vstupuje do identity konceptu
+ * a schvaľuje sa spolu s textom — zámok je ten istý ako pri údajoch o znení
+ * (počas kola a po schválení). Rovnaký názov ako dnes = žiadna zmena.
+ */
+export async function saveDraftTitle(
+  companyCode: string,
+  documentId: string,
+  title: string,
+  actor: string,
+  now: Date = new Date(),
+): Promise<boolean> {
+  const col = await getCollection(DOCUMENTS_COLLECTION)
+  const doc = await col.findOne({ documentId, companyCode }) as Record<string, unknown> | null
+  if (!doc) throw new LibraryError("library.documentNotFound", "Taký dokument tu nie je.")
+  if (!String(doc.draftMarkdown ?? "").trim()) {
+    throw new LibraryError("meta.noDraft", "Dokument nemá koncept — údaje o znení sa zadávajú pri novom znení.")
+  }
+  const clean = title.replace(/\s+/g, " ").trim()
+  if (!clean) throw new LibraryError("library.titleRequired", "Názov dokumentu je povinný.")
+  const next = clean === String(doc.title ?? "") ? null : clean
+  const before = typeof doc.draftTitle === "string" && doc.draftTitle.trim() ? doc.draftTitle : null
+  if (next === before) return false
+  const state = await versionStateFor(companyCode, documentId, documentDraftIdentity(doc))
+  if (state === "in-review" || state === "approved") {
+    throw new LibraryError(
+      "meta.locked",
+      "Údaje o znení sa už meniť nedajú — koncept je na schválení alebo schválený. Zmena by zrušila schválenie; nahraj nové znenie.",
+    )
+  }
+  await col.updateOne(
+    { documentId, companyCode },
+    next ? { $set: { draftTitle: next, updatedAt: now, updatedBy: actor } }
+      : { $unset: { draftTitle: "" }, $set: { updatedAt: now, updatedBy: actor } },
+  )
+  await writeAudit({
+    companyCode, subject: "document", action: "changed", actor,
+    targetId: documentId, targetLabel: String(doc.title ?? documentId),
+    changes: diff({ draftTitle: before }, { draftTitle: next }),
+    note: "nový názov v príprave znenia (ADR-015)",
+  })
+  return true
+}
+
 export interface PublishResult {
   versionId: string
   chunks: number
@@ -752,8 +800,16 @@ export async function publish(
   const markdown = String(doc.draftMarkdown ?? "").trim()
   if (!markdown) throw new LibraryError("library.documentHasNoText", "Dokument nemá text — najprv nahraj súbor alebo napíš znenie.")
 
+  /*
+   * Nový názov z prípravy (ADR-015, D112) — schválený spolu so znením,
+   * preto sa zverejnením stáva názvom dokumentu. Kým sa nezverejní,
+   * dokument sa volá po starom.
+   */
+  const draftTitle = typeof doc.draftTitle === "string" && doc.draftTitle.trim()
+    ? doc.draftTitle.replace(/\s+/g, " ").trim()
+    : null
   const meta = {
-    title: String(doc.title ?? ""),
+    title: draftTitle ?? String(doc.title ?? ""),
     sectionKey: String(doc.sectionKey ?? ""),
     companyCode,
     scope: String(doc.scope ?? ""),
@@ -798,7 +854,7 @@ export async function publish(
   // je to presne odtlačok textu ako doteraz.
   const draftPdf = (doc.draftPdf as VersionFile | null | undefined) ?? null
   const draftSource = (doc.draftSource as VersionFile | null | undefined) ?? null
-  const versionId = documentDraftIdentity({ draftMarkdown: markdown, draftPdf, draftMeta })
+  const versionId = documentDraftIdentity({ draftMarkdown: markdown, draftPdf, draftMeta, draftTitle })
   const chunkingId = chunkingFingerprint(chunks, { ...DEFAULT_PROFILE, ...forChunker })
   const now = new Date()
 
@@ -900,6 +956,7 @@ export async function publish(
         versionId,
         chunkingId,
         markdown,
+        ...(draftTitle ? { title: draftTitle } : {}),
         status: "published",
         processingStatus: "indexed" as ProcessingState,
         effectiveFrom: effectiveFrom,
@@ -908,7 +965,7 @@ export async function publish(
         updatedBy: actor,
       },
       // Príprava sa skončila — zodpovedná osoba je odteraz pri znení.
-      $unset: { draftResponsible: "" },
+      $unset: { draftResponsible: "", draftTitle: "" },
       $push: {
         versions: {
           versionId,
@@ -948,7 +1005,8 @@ export async function publish(
     targetId: documentId, targetLabel: `${meta.title} — ${label}`,
     note: `${chunks.length} úsekov · platné od ${effectiveFrom.toISOString().slice(0, 10)}` +
       (input.effectiveFromSource ? ` · zdroj: ${input.effectiveFromSource}` : "") +
-      ` · zodpovedná osoba: ${responsible.fullName}`,
+      ` · zodpovedná osoba: ${responsible.fullName}` +
+      (draftTitle && draftTitle !== String(doc.title ?? "") ? ` · nový názov: „${draftTitle}" (pôvodne „${String(doc.title ?? "")}")` : ""),
   })
 
   return { versionId, chunks: chunks.length, archived: archive.modifiedCount, alreadyDone: false }
@@ -992,6 +1050,20 @@ export async function saveMetadata(
     sectionKey: String(before.sectionKey ?? ""),
     companyCode,
   }, extras)
+
+  /*
+   * Názov sa pri zverejnenom znení **mení len novým znením** (ADR-015, D112):
+   * je doslova vo formulke potvrdenia a nové potvrdenia by inak niesli iný
+   * názov než schválené PDF. Bez zverejneného znenia (len koncept) sa dá
+   * upraviť tu.
+   */
+  const hasPublished = Array.isArray(before.versions) && (before.versions as unknown[]).length > 0
+  if (hasPublished && meta.title !== String(before.title ?? "")) {
+    throw new LibraryError(
+      "library.titleLocked",
+      "Názov dokumentu so zverejneným znením sa mení len novým znením — zmeň ho v príprave nového znenia, schváli sa s ním.",
+    )
+  }
 
   const ownerDepartmentId = await checkOwnerDepartment(companyCode, meta.ownerDepartmentId)
 

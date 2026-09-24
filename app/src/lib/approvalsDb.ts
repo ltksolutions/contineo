@@ -118,8 +118,8 @@ export async function submitForApproval(input: SubmitInput): Promise<ApprovalRou
    */
   const doc = await (await getCollection(DOCUMENTS_COLLECTION)).findOne(
     { companyCode: input.companyCode, documentId: input.documentId },
-    { projection: { draftMarkdown: 1, draftPdf: 1, draftMeta: 1, "versions.versionId": 1 } },
-  ) as { draftMarkdown?: string; draftPdf?: VersionFile | null; draftMeta?: Record<string, unknown> | null; versions?: { versionId: string }[] } | null
+    { projection: { draftMarkdown: 1, draftPdf: 1, draftMeta: 1, draftTitle: 1, "versions.versionId": 1 } },
+  ) as { draftMarkdown?: string; draftPdf?: VersionFile | null; draftMeta?: Record<string, unknown> | null; draftTitle?: string | null; versions?: { versionId: string }[] } | null
   if (!doc) throw new ApprovalError("approval.documentNotFound", "Taký dokument tu nie je.")
   const isPublished = (doc.versions ?? []).some(v => v.versionId === input.versionId)
   if (!isPublished) {
