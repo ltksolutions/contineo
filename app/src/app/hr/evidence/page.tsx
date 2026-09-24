@@ -44,6 +44,7 @@ export default async function EvidencePage({
 
   const language = ctx.person.language
   const t = dictionary(language).evidence
+  const tr = dictionary(language).responsibility
   const tds = dictionary(language).hr.dutyState
   const branding = brandingView(ctx.tenant)
   const now = new Date()
@@ -134,7 +135,12 @@ export default async function EvidencePage({
           ovláda sa klávesnicou a prehliadač ho vie nájsť vyhľadávaním
           v stránke aj v zloženom stave.
         */}
-        <ul className="widget-list">
+        {rows.length > 0 && (
+          <div className="ev-head" aria-hidden="true">
+            <span>{t.colPerson}</span><span>{t.colDocument}</span><span>{t.colState}</span><span>{t.colDate}</span><span />
+          </div>
+        )}
+        <ul className="widget-list ev-list">
           {rows.map(r => {
             // Odvolanie je záznam, ktorý výkaz nevidí (platí len „nepotvrdené");
             // pilulka ho má povedať — preto ide do `dutyState()` ako `revokedAt`.
@@ -147,23 +153,24 @@ export default async function EvidencePage({
               state === "acknowledged" && r.duty.acknowledgedAt ? formatDate(r.duty.acknowledgedAt, language)
               : state === "revoked" && r.revocation ? formatDate(r.revocation.revokedAt, language)
               : r.firstOpenedAt ? formatDate(r.firstOpenedAt, language)
-              : tds["not-opened"]
+              // „—", nie druhýkrát „neotvorené" — to už hovorí štítok (rám HR, bod 7).
+              : "—"
             return (
             <li key={`${r.duty.personId}-${r.duty.versionId}`}>
               <details className="widget card">
-                <summary className="widget-summary">
-                  <span className="widget-main">
-                    <span className="widget-title">{r.duty.fullName}</span>
-                    {/* Jedna škála pre celú rolu (HR.md, úloha 1): stav aj
-                        farbu dáva `dutyState()`, nie vlastné triedy. Filter
-                        ostáva na troch stavoch osi — „po termíne" je nad nimi. */}
-                    <span className={dutyTagClass(duty, now)}>{tds[state]}</span>
-                    <span className="quiet" style={{ fontSize: "var(--fs-small)" }}>{when}</span>
-                  </span>
-                  <span className="quiet widget-meta">
+                {/* Od 640 px riadok tabuľky Osoba · Predpis · Stav · Dátum
+                    (rám HR-pravny-zaklad, bod 6), pod tým karta ako dovtedy. */}
+                <summary className="widget-summary ev-summary">
+                  <span className="widget-title ev-name">{r.duty.fullName}</span>
+                  <span className="quiet ev-doc">
                     {r.duty.documentTitle} · {r.duty.versionLabel}
                     {r.duty.due && ` · ${formatDate(r.duty.due, language)}`}
                   </span>
+                  {/* Jedna škála pre celú rolu (HR.md, úloha 1): stav aj
+                      farbu dáva `dutyState()`, nie vlastné triedy. Filter
+                      ostáva na troch stavoch osi — „po termíne" je nad nimi. */}
+                  <span className="ev-state"><span className={dutyTagClass(duty, now)}>{tds[state]}</span></span>
+                  <span className="quiet ev-date">{when}</span>
                   <svg className="widget-chevron" width="14" height="14" viewBox="0 0 12 12"
                        fill="none" stroke="currentColor" strokeWidth="1.6"
                        strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -192,6 +199,24 @@ export default async function EvidencePage({
                       <dt className="quiet detail-meta-key">{t.rows.statement}</dt>
                       <dd className="detail-meta-value">{r.acknowledgement?.statementText || t.none}</dd>
                     </div>
+                    {/* Zodpovedná osoba a právny základ v čase potvrdenia
+                        (rám HR, Q1 — Ján 24. 9.): kópia pri zázname, nie dnešný stav. */}
+                    {r.acknowledgement && (
+                      <>
+                        <div className="detail-meta-row">
+                          <dt className="quiet detail-meta-key">{tr.responsiblePerson}</dt>
+                          <dd className="detail-meta-value">{r.acknowledgement.responsibleName ?? t.none}</dd>
+                        </div>
+                        <div className="detail-meta-row">
+                          <dt className="quiet detail-meta-key">{tr.legalBasis}</dt>
+                          <dd className="detail-meta-value">
+                            {r.acknowledgement.legalBasis
+                              ? `${r.acknowledgement.legalBasisLabel ?? tr.basisLabel[r.acknowledgement.legalBasis]}${r.acknowledgement.legalBasisReference ? ` · ${r.acknowledgement.legalBasisReference}` : ""}`
+                              : t.none}
+                          </dd>
+                        </div>
+                      </>
+                    )}
                     <div className="detail-meta-row">
                       <dt className="quiet detail-meta-key">{t.rows.reading}</dt>
                       <dd className="detail-meta-value">

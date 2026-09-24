@@ -198,3 +198,12 @@ describe("zoznam na /more (NASADENIE, PR 2)", () => {
     expect(hrefs).not.toContain("/ask")
   })
 })
+
+describe("activeHref", () => {
+  it("svieti len najdlhšia zhodná položka (HR-pravny-zaklad, bod 8)", async () => {
+    const { activeHref } = await import("../src/lib/appNav")
+    expect(activeHref("/hr/evidence", ["/", "/hr", "/hr/evidence"])).toBe("/hr/evidence")
+    expect(activeHref("/hr/assign", ["/", "/hr", "/hr/evidence"])).toBe("/hr")
+    expect(activeHref("/library/x", ["/", "/hr"])).toBeNull()
+  })
+})

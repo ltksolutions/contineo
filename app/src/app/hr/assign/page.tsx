@@ -32,7 +32,6 @@ import { tenantStyle } from "@/components/TenantHeader"
 import { formatDate, dictionary } from "@/lib/i18n"
 import { assignAction, previewAssignAction } from "../actions"
 import { normalizeQuery, type RawQuery } from "@/lib/urlParams"
-import Select from "@/components/Select"
 import AppShell from "@/components/AppShell"
 
 export const dynamic = "force-dynamic"
@@ -141,29 +140,29 @@ export default async function AssignPage({
       ) : (
         <form action={assignAction} style={{ display: "grid", gap: 22 }}>
           <fieldset className="card hr-group">
-            <legend className="field-label">{t.whichDocuments}</legend>
-            {/* Upozornenie, nie brána (D91): pridelenie bez právneho základu prejde. */}
+            <legend className="field-label">
+              {t.whichDocuments} <span className="quiet hr-count">{t.documentsCount(documents.length)}</span>
+            </legend>
+            {/* Upozornenie, nie brána (D91): pridelenie bez právneho základu
+                prejde. Jantárový rámček namiesto sivej nápovedy (rám HR, bod 1). */}
             {documents.some(d => d.legalBasisMissing) && (
-              <p className="quiet field-hint" style={{ margin: "0 0 8px" }}>{tr.missingBasisNote}</p>
+              <p className="hr-warn"><span aria-hidden="true">⚠</span> {tr.missingBasisNote}</p>
             )}
+            {/* Riadok: políčko · názov · štítok vpravo, pod tým znenie (bod 2). */}
             <ul className="hr-choices">
               {documents.map(d => (
                 <li key={d.documentId}>
-                  <label className="hr-choice">
+                  <label className="hr-doc">
                     <input
                       type="checkbox"
                       name="document"
                       value={d.documentId}
                       defaultChecked={selectedDocuments.has(d.documentId)}
                     />
-                    <span>
-                      {d.title}
-                      <span className="quiet field-hint">
-                        {" "}{t.versionLine(d.versionLabel ?? "", formatDate(d.effectiveFrom, language))}
-                      </span>
-                      {d.legalBasisMissing && (
-                        <>{" "}<span className="tag tag--draft">{tr.missingBasisTag}</span></>
-                      )}
+                    <span className="hr-doc-title">{d.title}</span>
+                    {d.legalBasisMissing && <span className="tag tag--draft hr-doc-tag">{tr.missingBasisTag}</span>}
+                    <span className="quiet hr-doc-meta">
+                      {t.versionLine(d.versionLabel ?? "", formatDate(d.effectiveFrom, language))}
                     </span>
                   </label>
                 </li>
@@ -314,39 +313,30 @@ export default async function AssignPage({
                 nejednotnou. */}
             <legend className="field-label">{t.due}</legend>
 
-            <Select language={language}
-              name="dueMode"
-              fieldLabel={t.due}
-              initial={q.dueMode ?? "none"}
-              options={[
-                { value: "none", label: t.dueNone },
-                { value: "date", label: t.dueDate },
-                { value: "days", label: t.dueDays },
-              ]}
-            />
-
-            <div className="due-fields">
-              <label className="field">
-                <span className="quiet field-label">{t.dueDate}</span>
-                <input
-                  type="date"
-                  name="dueDate"
-                  defaultValue={q.dueDate ?? ""}
-                  className="field-input"
-                />
-              </label>
-              <label className="field">
-                <span className="quiet field-label">{t.dueDaysUnit}</span>
-                <input
-                  type="number"
-                  name="dueDays"
-                  min={1}
-                  step={1}
-                  defaultValue={q.dueDays ?? ""}
-                  className="field-input"
-                  inputMode="numeric"
-                />
-              </label>
+            {/*
+              Tri voľby, pole vedľa svojej (rám HR, bod 4). Tie isté mená
+              a hodnoty ako predtým výber (`dueMode` none/date/days) — server
+              (`dueFromFields()`) číta to isté. Bez JavaScriptu funguje rovnako.
+            */}
+            <div className="hr-due">
+              {([
+                ["none", t.dueNone, null],
+                ["date", t.dueDate, (
+                  <input key="d" type="date" name="dueDate" defaultValue={q.dueDate ?? ""}
+                         className="field-input" aria-label={t.dueDate} />
+                )],
+                ["days", t.dueDays, (
+                  <input key="n" type="number" name="dueDays" min={1} step={1} defaultValue={q.dueDays ?? ""}
+                         className="field-input" inputMode="numeric" aria-label={t.dueDaysUnit}
+                         placeholder={t.dueDaysUnit} />
+                )],
+              ] as [string, string, React.ReactNode][]).map(([value, label, input]) => (
+                <label key={value} className="hr-due-opt">
+                  <input type="radio" name="dueMode" value={value} defaultChecked={(q.dueMode ?? "none") === value} />
+                  <span>{label}</span>
+                  {input}
+                </label>
+              ))}
             </div>
 
             <span className="quiet field-hint">{t.dueNote}</span>
