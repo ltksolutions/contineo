@@ -101,6 +101,15 @@ const PLAN = [
     ],
   },
   {
+    collection: "objections",
+    indexes: [
+      { key: { companyCode: 1, id: 1 }, opts: { name: "tenant_id", unique: true },
+        why: "rozhodnutie o námietke podľa identifikátora (ADR-012, D105)" },
+      { key: { companyCode: 1, personId: 1 }, opts: { name: "tenant_person" },
+        why: "námietky osoby — mažú sa s jej dokladmi po lehote" },
+    ],
+  },
+  {
     collection: "audit",
     indexes: [
       { key: { companyCode: 1, at: -1 }, opts: { name: "by_time" },
