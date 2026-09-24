@@ -121,7 +121,6 @@ export async function saveBrandingAction(fd: FormData) {
       supportEmail: fieldText(fd, "supportEmail"),
       languages: fd.getAll("languages").filter(v => typeof v === "string") as string[],
       defaultLanguage: fieldText(fd, "defaultLanguage"),
-      autoProvisionDomains: normalizeDomains(fieldText(fd, "autoProvisionDomains")),
       phonePrefix: fieldText(fd, "phonePrefix"),
       controllerLegalName: fieldText(fd, "controllerLegalName"),
       controllerAddress: fieldText(fd, "controllerAddress"),
@@ -133,6 +132,26 @@ export async function saveBrandingAction(fd: FormData) {
     back(fd, errorMessage(e, self.language), true)
   }
 
+  revalidatePath("/organisation")
+  back(fd, say(self.language).saved)
+}
+
+/**
+ * E-mailové domény pre automatické založenie — od 25. 9. 2026 v záložke
+ * Prihlasovanie, nie vo Vzhľade: súvisia s tým, kto sa smie prihlásiť.
+ * Vzhľad ich už neposiela, takže ich uloženie vzhľadu nezmaže.
+ */
+export async function saveAutoProvisionAction(fd: FormData) {
+  const self = await actor()
+  if (!self) redirect("/")
+  try {
+    await saveTenant(self.companyCode, {
+      autoProvisionDomains: normalizeDomains(fieldText(fd, "autoProvisionDomains")),
+    }, self.email)
+  } catch (e) {
+    if (isRedirect(e)) throw e
+    back(fd, errorMessage(e, self.language), true)
+  }
   revalidatePath("/organisation")
   back(fd, say(self.language).saved)
 }
