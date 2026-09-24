@@ -116,8 +116,27 @@ export function stripInlineImages(markdown: string): { markdown: string; removed
  */
 export function stripWordToc(html: string): string {
   return html
-    .replace(/<p>\s*<a href="#_Toc[^"]*">[\s\S]*?<\/a>\s*<\/p>/g, "")
     .replace(/<a id="_Toc[^"]*"><\/a>/g, "")
+    // Nadpis „Obsah" nad zoznamom — bez položiek by zostal v texte sám
+    // (24. 9. 2026). Len keď za ním naozaj ide obsah z Wordu; „Obsah" ako
+    // bežné slovo v inom odseku sa nechá.
+    .replace(/<(p|h[1-6])>\s*(?:Obsah|Contents|Table of Contents)\s*<\/\1>\s*(?=<p>\s*<a href="#_Toc)/gi, "")
+    .replace(/<p>\s*<a href="#_Toc[^"]*">[\s\S]*?<\/a>\s*<\/p>/g, "")
+}
+
+/**
+ * Prázdne miesta na vyplnenie vo formulároch — `______` a `...........`.
+ * Príloha predpisu je často tlačivo a turndown z každého podčiarknutia
+ * urobí `\_`: pracovný poriadok SFZ ich mal 881 (24. 9. 2026). Vyhľadávanie
+ * z nich nemá nič, len platí za tokeny; miesto sa v texte naznačí „…".
+ *
+ * Len pre prevod z Wordu a PDF — Markdown, ktorý niekto napísal sám, sa
+ * neprepisuje.
+ */
+export function collapseBlanks(markdown: string): string {
+  return markdown
+    .replace(/(?:\\?_){3,}/g, "…")
+    .replace(/\.{10,}/g, "…")
 }
 
 /**
@@ -209,7 +228,7 @@ async function fromDocx(data: Buffer): Promise<ConversionResult> {
   })
   const html = inlineFootnotes(stripWordToc(result.value))
   const stripped = stripInlineImages(turndown.turndown(html))
-  const markdown = tidied(stripped.markdown)
+  const markdown = tidied(collapseBlanks(stripped.markdown))
 
   const warnings: string[] = []
   // Obrázok v norme býva text (schéma, podpis, tabuľka ako obrázok), takže
@@ -295,7 +314,7 @@ async function fromPdf(data: Buffer): Promise<ConversionResult> {
     pageCount.push(lines.filter(Boolean).join("\n"))
   }
 
-  const markdown = tidied(pageCount.join("\n\n"))
+  const markdown = tidied(collapseBlanks(pageCount.join("\n\n")))
   const warnings: string[] = []
 
   // Skenované PDF má strany a nemá text. Nepodsúvame OCR ticho: text, ktorý

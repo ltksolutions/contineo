@@ -10,7 +10,7 @@
 import { describe, it, expect } from "vitest"
 import * as XLSX from "xlsx"
 import JSZip from "jszip"
-import { detectFileType, convert, ConversionError, FILE_TYPE_LABEL, stripInlineImages, stripWordToc, inlineFootnotes } from "../src/lib/conversion"
+import { detectFileType, convert, ConversionError, FILE_TYPE_LABEL, stripInlineImages, stripWordToc, inlineFootnotes, collapseBlanks } from "../src/lib/conversion"
 
 const zip = Buffer.from([0x50, 0x4b, 0x03, 0x04, 0x00])
 const pdf = Buffer.from("%PDF-1.7\n...")
@@ -144,7 +144,22 @@ describe("obrázky sa do textu nevkladajú", () => {
 describe("prevod .docx pre vyhľadávanie (pracovný poriadok SFZ, 23. 9.)", () => {
   it("obsah z Wordu zmizne — odkazy na #_Toc aj prázdne kotvy", () => {
     const html = '<a id="_Toc1"></a><p>Obsah</p><p><a href="#_Toc2">Článok 1 – Všeobecné\t4</a></p><h2>Článok 1</h2>'
-    expect(stripWordToc(html)).toBe("<p>Obsah</p><h2>Článok 1</h2>")
+    expect(stripWordToc(html)).toBe("<h2>Článok 1</h2>")
+  })
+
+  it("„Obsah“ bez zoznamu z Wordu za ním sa nechá — je to bežné slovo", () => {
+    const html = "<p>Obsah</p><p>Prílohy:</p>"
+    expect(stripWordToc(html)).toBe(html)
+  })
+
+  it("prázdne miesta vo formulároch sa zlejú do „…“ (24. 9.)", () => {
+    expect(collapseBlanks("deň nástupu: \\_\\_\\_\\_ / \\_\\_\\_\\_")).toBe("deň nástupu: … / …")
+    expect(collapseBlanks("Podpis: ____________")).toBe("Podpis: …")
+    expect(collapseBlanks("Dátum: ..........................")).toBe("Dátum: …")
+  })
+
+  it("krátke podčiarknutia a bodky zostanú — `snake_case`, „atď...“", () => {
+    expect(collapseBlanks("pole a_b, \\_ a atď...")).toBe("pole a_b, \\_ a atď...")
   })
 
   it("poznámka pod čiarou sa vloží k odkazu a zoznam na konci zmizne", () => {

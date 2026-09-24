@@ -7,9 +7,11 @@ import { describe, it, expect, vi, beforeEach } from "vitest"
 const docs = vi.hoisted(() => ({
   findOne: vi.fn(async () => null as unknown),
   updateOne: vi.fn(async () => ({ matchedCount: 1 })),
+  countDocuments: vi.fn(async () => 0),
 }))
+const rounds = vi.hoisted(() => ({ countDocuments: vi.fn(async () => 0) }))
 vi.mock("../src/lib/mongodb", () => ({
-  getCollection: vi.fn(async () => docs),
+  getCollection: vi.fn(async (name: string) => (name === "approval_rounds" ? rounds : docs)),
   getDb: vi.fn(),
   getClient: vi.fn(),
 }))
@@ -43,7 +45,7 @@ vi.mock("../src/lib/audit", async importOriginal => ({
   writeAudit: vi.fn(async () => {}),
 }))
 
-import { uploadDocument, LibraryError } from "../src/lib/libraryWrite"
+import { uploadDocument, saveDraft, LibraryError } from "../src/lib/libraryWrite"
 import { draftIdentity, textFingerprint } from "../src/lib/chunkIdentity"
 
 const META = {
@@ -62,6 +64,8 @@ beforeEach(() => {
   vi.clearAllMocks()
   store.reset()
   docs.findOne.mockResolvedValue(null)
+  docs.countDocuments.mockResolvedValue(0)
+  rounds.countDocuments.mockResolvedValue(0)
   conv.convert.mockImplementation(async (name: string) => ({
     type: name.endsWith(".pdf") ? "pdf" : "docx", markdown: `# Text z ${name}`, method: "m", warnings: [],
   }))
@@ -118,6 +122,50 @@ describe("uploadDocument — PDF a zdroj (ADR-011)", () => {
     await uploadDocument(META, { pdf: { storedId: "big" } }, "jan@sfz.sk", "new")
     expect(store.saveFile).not.toHaveBeenCalled()
     expect(written().draftPdf).toMatchObject({ id: "big", sha256: "abc", bytes: 20_000_000 })
+  })
+})
+
+describe("nahradený koncept po sebe nenechá súbory (24. 9. 2026)", () => {
+  const OLD = {
+    documentId: "sfz:pracovny_poriadok", title: "Pracovný poriadok SFZ",
+    draftPdf: { id: "old-pdf", sha256: "a" }, draftSource: { id: "old-docx", sha256: "b" },
+    versions: [],
+  }
+
+  it("nové znenie zmaže PDF aj zdroj predošlého konceptu", async () => {
+    docs.findOne.mockResolvedValue(OLD)
+    await uploadDocument(META, { pdf: PDF, source: DOCX }, "jan@sfz.sk", "version")
+    expect(store.deleteFile.mock.calls.map(c => (c as unknown[])[1])).toEqual(["old-pdf", "old-docx"])
+  })
+
+  it("súbor, na ktorý odkazuje zverejnené znenie, zostane (D97)", async () => {
+    docs.findOne.mockResolvedValue(OLD)
+    docs.countDocuments.mockImplementation((async (q: { $or: Record<string, string>[] }) =>
+      q.$or.some(c => c["versions.pdf.id"] === "old-pdf") ? 1 : 0) as never)
+    await uploadDocument(META, { pdf: PDF, source: DOCX }, "jan@sfz.sk", "version")
+    expect(store.deleteFile.mock.calls.map(c => (c as unknown[])[1])).toEqual(["old-docx"])
+  })
+
+  it("kolo schvaľovania nad konceptom — nemaže sa nič, schvaľovatelia to PDF videli", async () => {
+    docs.findOne.mockResolvedValue(OLD)
+    rounds.countDocuments.mockResolvedValue(1)
+    await uploadDocument(META, { pdf: PDF, source: DOCX }, "jan@sfz.sk", "version")
+    expect(store.deleteFile).not.toHaveBeenCalled()
+  })
+
+  it("ten istý súbor nahratý znova (po kúskoch) sa nezmaže", async () => {
+    docs.findOne.mockResolvedValue({ ...OLD, draftSource: null })
+    store.fileInfo.mockResolvedValue({ id: "old-pdf", name: "p.pdf", contentType: "x", bytes: 10, sha256: "a" })
+    store.loadFile.mockResolvedValue({ data: PDF.data, contentType: "x", name: "p.pdf" })
+    await uploadDocument(META, { pdf: { storedId: "old-pdf" } }, "jan@sfz.sk", "version")
+    expect(store.deleteFile).not.toHaveBeenCalled()
+  })
+})
+
+describe("saveDraft", () => {
+  it("konce riadkov z textarea (CRLF) sa uložia ako LF", async () => {
+    await saveDraft("SFZ", "sfz:x", "# A\r\n\r\nText\r\n", "jan@sfz.sk")
+    expect(written().draftMarkdown).toBe("# A\n\nText")
   })
 })
 
