@@ -31,6 +31,8 @@ import { overdue, byPersonReminder, DEFAULT_DAYS, dueRemindersFor, claimReminder
 import { notifyPeople, purgeExpired } from "@/lib/notifications"
 import { send, reminderEmail, dueReminderEmail } from "@/lib/ecomail"
 import { normalizeLanguage, formatDate } from "@/lib/i18n"
+import { runRetention, type RetentionRun } from "@/lib/retentionDb"
+import { retentionMode } from "@/lib/retention"
 
 export const dynamic = "force-dynamic"
 /** Prehľad naprieč tenantmi trvá; predvolených 10 s by nestačilo. */
@@ -263,5 +265,25 @@ export async function GET(request: Request) {
     console.error("[cron] mazanie starych upozorneni zlyhalo:", e)
   }
 
-  return NextResponse.json({ ok: true, tenants: report, due: dueReport, purged })
+  /*
+   * Retencia reťaze dôkazov (ADR-012, D102). Rovnaký dôvod ako vyššie — beží
+   * s týmto behom, nie vlastným cronom. **Predvolene len výkaz**: maže až
+   * s `RETENTION_MODE=delete` na Verceli, ktoré sa zapína po kontrole výkazu.
+   * Výsledok ide do odpovede cronu (a logu Vercelu) bez mien a adries.
+   */
+  const mode = retentionMode(process.env.RETENTION_MODE)
+  const retention: RetentionRun[] = []
+  for (const tenant of tenants) {
+    try {
+      const run = await runRetention(tenant.companyCode, mode)
+      retention.push(run)
+      if (run.persons.length > 0 || run.staleActive > 0) {
+        console.log(`[cron] retencia ${tenant.companyCode} (${mode}): osôb ${run.persons.length}, aktívnych bez udalosti 5 rokov ${run.staleActive}`)
+      }
+    } catch (e) {
+      console.error(`[cron] retencia ${tenant.companyCode} zlyhala:`, e)
+    }
+  }
+
+  return NextResponse.json({ ok: true, tenants: report, due: dueReport, purged, retention })
 }
