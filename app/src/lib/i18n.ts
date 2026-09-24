@@ -1232,6 +1232,8 @@ interface Dictionary {
       newItemLabel: (codelist: string) => string
       key: string
       keyPlaceholder: string
+      /** Pri obsadenom kľúči pod poľom. */
+      keyTakenHint: string
       add: string
       keyNote: string
     }
@@ -3554,6 +3556,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       newItemLabel: (codelist) => `Názov novej položky — ${codelist}`,
       key: "Kľúč",
       keyPlaceholder: "metodicky_pokyn",
+      keyTakenHint: "Taký kľúč už v číselníku je — zmeň názov alebo kľúč.",
       add: "Pridať",
       keyNote: "Kľúč: malé písmená bez diakritiky, číslice a podčiarkovník. Zostáva v obsahu natrvalo, takže sa nedá vziať späť — názov vedľa neho sa meniť dá.",
     },
@@ -5785,6 +5788,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       newItemLabel: (codelist) => `Název nové položky — ${codelist}`,
       key: "Klíč",
       keyPlaceholder: "metodicky_pokyn",
+      keyTakenHint: "Takový klíč už v číselníku je — změň název nebo klíč.",
       add: "Přidat",
       keyNote: "Klíč: malá písmena bez diakritiky, číslice a podtržítko. Zůstává v obsahu natrvalo, takže se nedá vzít zpět — název vedle něj se měnit dá.",
     },
@@ -8007,6 +8011,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       newItemLabel: (codelist) => `Name of the new item — ${codelist}`,
       key: "Key",
       keyPlaceholder: "guideline",
+      keyTakenHint: "This key is already in the code list — change the name or the key.",
       add: "Add",
       keyNote: "Key: lowercase letters without diacritics, digits and underscores. It stays in the content permanently and cannot be taken back — the name beside it can be changed.",
     },
