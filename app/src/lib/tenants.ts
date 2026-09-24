@@ -187,8 +187,13 @@ export class UnknownHostError extends Error {
 // Kladné aj záporné výsledky. Bez záporných by stačilo v slučke volať
 // vymyslené hostiteľské mená a každý dotaz by šiel do databázy; TTL je
 // kratšie, aby novo pridaná doména nečakala päť minút.
+//
+// **Minúta, nie päť.** `invalidateTenants()` vyprázdni pamäť len v inštancii,
+// ktorá zmenu uložila; na Verceli ich beží viac a ostatné by novú položku
+// číselníka alebo zmenený vzhľad ukazovali až po piatich minútach. Dotaz na
+// organizáciu je jeden malý `findOne` za minútu na inštanciu.
 
-const HIT_TTL_MS = 5 * 60 * 1000
+const HIT_TTL_MS = 60 * 1000
 const MISS_TTL_MS = 30 * 1000
 
 interface CacheEntry { tenant: Tenant | null; expiresAt: number }
