@@ -12,6 +12,7 @@
  * zväzu, je len iný spôsob, ako si privolať telefonát o polnoci.
  */
 
+import { slugifyKey } from "@/lib/slug"
 import { redirect } from "next/navigation"
 import { revalidatePath } from "next/cache"
 import { orgContext } from "@/lib/orgSettings"
@@ -75,6 +76,15 @@ function errorMessage(e: unknown, language: UiLanguage): string {
  * vidieť nie je — napríklad že treba nastaviť DNS.
  */
 
+
+/**
+ * Kľúč položky číselníka: ručne zadaný, inak odvodený z názvu — to isté
+ * pravidlo, aké formulár ukazuje (`KeyFromLabel`). Bez JavaScriptu zostane
+ * pole prázdne a kľúč vznikne až tu.
+ */
+function keyOrFromLabel(fd: FormData): string {
+  return fieldText(fd, "key") || slugifyKey(fieldText(fd, "label"))
+}
 
 function back(fd: FormData, message: string, error = false): never {
   // Starý kľúč záložky (`utvary`) sa preloží aj tu, nielen pri čítaní stránky:
@@ -355,7 +365,7 @@ export async function addCodelistItemAction(fd: FormData) {
   if (!self) redirect("/")
   try {
     await addCodelistItem(
-      self.companyCode, fieldText(fd, "codelist"), fieldText(fd, "key"), fieldText(fd, "label"), self.email,
+      self.companyCode, fieldText(fd, "codelist"), keyOrFromLabel(fd), fieldText(fd, "label"), self.email,
     )
     revalidatePath("/organisation")
     revalidatePath("/library")
@@ -388,7 +398,7 @@ export async function addLegalBasisAction(fd: FormData) {
   try {
     await addLegalBasis({
       companyCode: self.companyCode,
-      key: fieldText(fd, "key"),
+      key: keyOrFromLabel(fd),
       label: fieldText(fd, "label"),
       basis: fieldText(fd, "basis"),
       reference: fieldText(fd, "reference"),

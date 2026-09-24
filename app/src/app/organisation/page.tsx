@@ -28,6 +28,7 @@ import { createDepartmentAction, renameDepartmentAction, moveDepartmentAction, d
 import { addCodelistItemAction, removeCodelistItemAction, saveChunkingProfileAction, reindexAllAction } from "./actions"
 import { shiftDepartmentAction, saveDepartmentOrderAction } from "./actions"
 import TreeWithOrder from "@/components/TreeWithOrder"
+import KeyFromLabel from "@/components/KeyFromLabel"
 import { reindexState } from "@/lib/libraryWrite"
 import { DEFAULT_CHUNKING, DEFAULT_PROFILE_KEY } from "@/lib/chunkingProfile"
 import { availableOptions, customItems, codelistUsage } from "@/lib/codelistsTenant"
@@ -694,11 +695,17 @@ export default async function OrganisationPage({
             <form action={addCodelistItemAction} className="tree-form">
               <input type="hidden" name="tab" value="codelists" />
               <input type="hidden" name="codelist" value={c.name} />
-              <input className="field-input" name="label" placeholder={t.codelists.newItemPlaceholder}
-                     aria-label={t.codelists.newItemLabel(t.codelists.labels[c.name].name)} required />
-              <input className="field-input" name="key" placeholder={t.codelists.keyPlaceholder}
-                     aria-label={t.codelists.key} autoCapitalize="none" autoCorrect="off" required
-                     style={{ maxWidth: 220 }} />
+              {/* Kľúč sa predgeneruje z názvu (ako pri novom dokumente, ADR-010). */}
+              <KeyFromLabel
+                usedKeys={c.vsetky.map(p => p.key)}
+                labels={{
+                  label: t.codelists.newItemLabel(t.codelists.labels[c.name].name),
+                  labelPlaceholder: t.codelists.newItemPlaceholder,
+                  key: t.codelists.key,
+                  keyPlaceholder: t.codelists.keyPlaceholder,
+                  taken: t.codelists.keyTakenHint,
+                }}
+              />
               <button className="button button--quiet" type="submit">{t.codelists.add}</button>
             </form>
 
@@ -759,15 +766,17 @@ export default async function OrganisationPage({
           <form action={addLegalBasisAction} style={{ display: "grid", gap: 10 }}>
             <input type="hidden" name="tab" value="codelists" />
             <h3 style={{ fontSize: "var(--fs-body)", margin: 0 }}>{tr.addHeading}</h3>
-            <label className="field">
-              <span className="field-label">{tr.labelField}</span>
-              <input className="field-input" name="label" required placeholder={tr.labelPlaceholder} />
-            </label>
-            <label className="field">
-              <span className="field-label">{tr.keyField}</span>
-              <input className="field-input" name="key" required placeholder={tr.keyPlaceholder}
-                     autoCapitalize="none" autoCorrect="off" style={{ maxWidth: 260 }} />
-            </label>
+            <KeyFromLabel
+              layout="fields"
+              usedKeys={[...STANDARD_LEGAL_BASES.map(i => i.key), ...(tenant.legalBases ?? []).map(i => i.key)]}
+              labels={{
+                label: tr.labelField,
+                labelPlaceholder: tr.labelPlaceholder,
+                key: tr.keyField,
+                keyPlaceholder: tr.keyPlaceholder,
+                taken: t.codelists.keyTakenHint,
+              }}
+            />
             <fieldset className="hr-group">
               <legend className="field-label">{tr.categoryField}</legend>
               {LEGAL_BASES.map(b => (
