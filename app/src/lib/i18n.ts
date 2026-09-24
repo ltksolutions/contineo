@@ -254,6 +254,9 @@ interface Dictionary {
 
   /** Prosba o schválenie znenia (ADR-006). Menovitá správa, nie hromadná pošta. */
   privacy: {
+    /** Rám PRIVACY-citatelnost (24. 9. 2026): obsah stránky a nadpis rámčeka námietky. */
+    tocHeading: string
+    objectionHeading: string
     title: string
     lead: string
     controllerHeading: string
@@ -2442,6 +2445,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       note: "Potvrdenie je krátke \u2014 dokument si prečítate a kliknete. Keď ste to už spravili, tento e-mail nabudúce nepríde.",
     },
     privacy: {
+      tocHeading: "Obsah",
+      objectionHeading: "Právo namietať",
       title: "Ochrana osobných údajov",
       lead: "Čo sa o vás v tomto systéme ukladá, prečo a ako dlho.",
       controllerHeading: "Kto je prevádzkovateľ",
@@ -4791,6 +4796,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       note: "Potvrzení je krátké \u2014 dokument si přečtete a kliknete. Když jste to už udělali, tento e-mail příště nepřijde.",
     },
     privacy: {
+      tocHeading: "Obsah",
+      objectionHeading: "Právo vznést námitku",
       title: "Ochrana osobních údajů",
       lead: "Co se o vás v tomto systému ukládá, proč a jak dlouho.",
       controllerHeading: "Kdo je správce",
@@ -7132,6 +7139,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       note: "Acknowledging is quick \u2014 read the document and click. If you have already done it, this email will not come again.",
     },
     privacy: {
+      tocHeading: "Contents",
+      objectionHeading: "Right to object",
       title: "Data protection",
       lead: "What this system stores about you, why, and for how long.",
       controllerHeading: "Who the controller is",

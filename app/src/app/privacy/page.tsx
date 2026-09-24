@@ -15,14 +15,26 @@ import { dpoContacts, PRIVACY_NOTICE_VERSION } from "@/lib/privacy"
 
 export const dynamic = "force-dynamic"
 
+/**
+ * Tabuľka od 640 px, pod tým zoznam kariet (rám PRIVACY-citatelnost, bod 3):
+ * prvý stĺpec tučne, ostatné pod ním. Obe podoby sú v HTML, prepína CSS.
+ */
 function Table({ columns, rows }: { columns: string[]; rows: string[][] }) {
   return (
-    <div style={{ overflowX: "auto" }}>
+    <>
       <table className="privacy-table">
         <thead><tr>{columns.map(c => <th key={c} scope="col">{c}</th>)}</tr></thead>
         <tbody>{rows.map(r => <tr key={r[0]}>{r.map((c, i) => <td key={i}>{c}</td>)}</tr>)}</tbody>
       </table>
-    </div>
+      <ul className="privacy-stack">
+        {rows.map(r => (
+          <li key={r[0]} className="card">
+            <strong>{r[0]}</strong>
+            {r.slice(1).filter(Boolean).length > 0 && <span className="quiet">{r.slice(1).filter(Boolean).join(" · ")}</span>}
+          </li>
+        ))}
+      </ul>
+    </>
   )
 }
 
@@ -42,65 +54,97 @@ export default async function PrivacyPage() {
   const branding = brandingView(tenant)
   const dpos = await dpoContacts(tenant.companyCode).catch(() => [])
 
-  const h2 = { fontSize: "var(--fs-section)", margin: "28px 0 8px" } as const
-  const p = { margin: "0 0 10px", lineHeight: 1.65 } as const
+  /*
+   * Obsah stránky (rám, bod 1): nadpisy sekcií s kotvami. Od 1024 px bočný
+   * stĺpec, pod tým riadok odkazov. Text je právny dokument — mení sa len
+   * podoba, žiadna veta (C1).
+   */
+  const sections: [string, string][] = [
+    ["purpose", t.purposeHeading],
+    ["data", t.dataHeading],
+    ["basis", t.basisHeading],
+    ["retention", t.retentionHeading],
+    ["recipients", t.recipientsHeading],
+    ["rights", t.rightsHeading],
+  ]
+  const toc = (className: string) => (
+    <nav className={className} aria-label={t.tocHeading}>
+      {className === "privacy-toc" && <p className="privacy-toc-h">{t.tocHeading}</p>}
+      {sections.map(([id, label]) => <a key={id} href={`#${id}`}>{label}</a>)}
+    </nav>
+  )
 
   return (
-    <div className="wrap" style={{ padding: "40px 16px 64px", maxWidth: 760, ...tenantStyle(branding) }}>
-      <h1 className="page-title">{t.title}</h1>
-      <p className="quiet page-lead" style={{ margin: "0 0 8px" }}>{t.lead}</p>
+    <div className="wrap privacy" style={tenantStyle(branding)}>
+      {toc("privacy-toc")}
+      <div className="privacy-main">
+        <h1 className="page-title">{t.title}</h1>
+        <p className="quiet page-lead">{t.lead}</p>
+        {toc("privacy-chips")}
 
-      <h2 style={h2}>{t.controllerHeading}</h2>
-      <p style={p}>{t.controller(tenant.controller?.legalName || branding.displayName)}</p>
-      {(tenant.controller?.address || tenant.controller?.registrationNumber) && (
-        <p className="quiet" style={p}>
-          {t.controllerDetails(tenant.controller?.address ?? "", tenant.controller?.registrationNumber ?? "")}
+        {/* Prevádzkovateľ a DPO ako dve karty hneď pod úvodom (bod 2). */}
+        <div className="privacy-who">
+          <section className="card privacy-who-card">
+            <h2>{t.controllerHeading}</h2>
+            <p>{t.controller(tenant.controller?.legalName || branding.displayName)}</p>
+            {(tenant.controller?.address || tenant.controller?.registrationNumber) && (
+              <p className="quiet">
+                {t.controllerDetails(tenant.controller?.address ?? "", tenant.controller?.registrationNumber ?? "")}
+              </p>
+            )}
+          </section>
+          <section className="card privacy-who-card">
+            <h2>{t.dpoHeading}</h2>
+            {dpos.length > 0
+              ? dpos.map(d => (
+                  <p key={d.email}>
+                    {d.fullName} · <a href={`mailto:${d.email}`}>{d.email}</a>
+                  </p>
+                ))
+              : <p>{t.dpoMissing}</p>}
+            {/* Presunuté z konca stránky (Ján 24. 9.) — patrí ku kontaktu. */}
+            <p className="quiet">{t.requests}</p>
+          </section>
+        </div>
+
+        <h2 id="purpose">{t.purposeHeading}</h2>
+        <p>{t.purpose}</p>
+
+        <h2 id="data">{t.dataHeading}</h2>
+        <Table columns={t.dataColumns} rows={t.data} />
+        <p>{t.hrNote}</p>
+        <p>{t.responsibleNote}</p>
+
+        <h2 id="basis">{t.basisHeading}</h2>
+        <p>{t.basisIntro}</p>
+        <ul className="privacy-list">
+          <li>{t.basisObligation}</li>
+          <li>{t.basisInterest}</li>
+        </ul>
+        <p>{t.basisDirectory}</p>
+
+        <h2 id="retention">{t.retentionHeading}</h2>
+        <Table columns={t.retentionColumns} rows={t.retention} />
+        <p>{t.retentionDelete}</p>
+
+        <h2 id="recipients">{t.recipientsHeading}</h2>
+        <p>{t.recipients}</p>
+        <Table columns={t.processorsColumns} rows={t.processors} />
+        <p>{t.noSale}</p>
+
+        <h2 id="rights">{t.rightsHeading}</h2>
+        <p>{t.rights}</p>
+        {/* Právo namietať v rámčeku s nadpisom (bod 4, Ján 24. 9.). */}
+        <div className="privacy-objection">
+          <h3>{t.objectionHeading}</h3>
+          <p>{t.objection}</p>
+        </div>
+        <p>{t.complaint}</p>
+
+        <p className="privacy-foot">
+          {t.version(formatDate(PRIVACY_NOTICE_VERSION, language))}
         </p>
-      )}
-
-      <h2 style={h2}>{t.dpoHeading}</h2>
-      {dpos.length > 0
-        ? dpos.map(d => (
-            <p key={d.email} style={p}>
-              {d.fullName} · <a href={`mailto:${d.email}`}>{d.email}</a>
-            </p>
-          ))
-        : <p style={p}>{t.dpoMissing}</p>}
-
-      <h2 style={h2}>{t.purposeHeading}</h2>
-      <p style={p}>{t.purpose}</p>
-
-      <h2 style={h2}>{t.dataHeading}</h2>
-      <Table columns={t.dataColumns} rows={t.data} />
-      <p style={{ ...p, marginTop: 12 }}>{t.hrNote}</p>
-      <p style={p}>{t.responsibleNote}</p>
-
-      <h2 style={h2}>{t.basisHeading}</h2>
-      <p style={p}>{t.basisIntro}</p>
-      <ul style={{ margin: "0 0 10px", paddingLeft: 20, lineHeight: 1.65 }}>
-        <li>{t.basisObligation}</li>
-        <li>{t.basisInterest}</li>
-      </ul>
-      <p style={p}>{t.basisDirectory}</p>
-
-      <h2 style={h2}>{t.retentionHeading}</h2>
-      <Table columns={t.retentionColumns} rows={t.retention} />
-      <p style={{ ...p, marginTop: 12 }}>{t.retentionDelete}</p>
-
-      <h2 style={h2}>{t.recipientsHeading}</h2>
-      <p style={p}>{t.recipients}</p>
-      <Table columns={t.processorsColumns} rows={t.processors} />
-      <p style={{ ...p, marginTop: 12 }}>{t.noSale}</p>
-
-      <h2 style={h2}>{t.rightsHeading}</h2>
-      <p style={p}>{t.rights}</p>
-      <p style={p}><strong>{t.objection}</strong></p>
-      <p style={p}>{t.complaint}</p>
-      <p style={p}>{t.requests}</p>
-
-      <p className="quiet" style={{ fontSize: "var(--fs-small)", marginTop: 28 }}>
-        {t.version(formatDate(PRIVACY_NOTICE_VERSION, language))}
-      </p>
+      </div>
     </div>
   )
 }
