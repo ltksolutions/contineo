@@ -113,6 +113,9 @@ export async function saveBrandingAction(fd: FormData) {
       defaultLanguage: fieldText(fd, "defaultLanguage"),
       autoProvisionDomains: normalizeDomains(fieldText(fd, "autoProvisionDomains")),
       phonePrefix: fieldText(fd, "phonePrefix"),
+      controllerLegalName: fieldText(fd, "controllerLegalName"),
+      controllerAddress: fieldText(fd, "controllerAddress"),
+      controllerRegistrationNumber: fieldText(fd, "controllerRegistrationNumber"),
       ...(logoUrl ? { logoUrl } : {}),
     }, self.email)
   } catch (e) {

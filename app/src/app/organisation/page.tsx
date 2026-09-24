@@ -326,6 +326,30 @@ export default async function OrganisationPage({
           <span className="quiet field-hint">{t.branding.phonePrefixNote}</span>
         </label>
 
+        {/*
+          Prevádzkovateľ (C1, ADR-012) — údaje do informovania dotknutých
+          osôb na `/privacy`. Skupina, nie tri voľné polia: je to jedna vec
+          (kto zodpovedá za osobné údaje), nie tri nastavenia vzhľadu.
+        */}
+        <fieldset className="hr-group" style={{ border: "1px solid var(--line)", display: "grid", gap: 12 }}>
+          <legend className="field-label">{t.branding.controller}</legend>
+          <span className="quiet field-hint">{t.branding.controllerNote}</span>
+          <label className="field">
+            <span className="field-label">{t.branding.controllerLegalName}</span>
+            <input className="field-input" name="controllerLegalName" defaultValue={tenant.controller?.legalName ?? ""}
+                   placeholder={tenant.branding.displayName} />
+          </label>
+          <label className="field">
+            <span className="field-label">{t.branding.controllerAddress}</span>
+            <input className="field-input" name="controllerAddress" defaultValue={tenant.controller?.address ?? ""} />
+          </label>
+          <label className="field">
+            <span className="field-label">{t.branding.controllerRegistrationNumber}</span>
+            <input className="field-input" name="controllerRegistrationNumber" inputMode="numeric"
+                   defaultValue={tenant.controller?.registrationNumber ?? ""} />
+          </label>
+        </fieldset>
+
         <fieldset className="hr-group" style={{ border: "1px solid var(--line)" }}>
           <legend className="field-label">{t.branding.languages}</legend>
           <div className="tags-list">

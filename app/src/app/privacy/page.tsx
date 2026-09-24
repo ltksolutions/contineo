@@ -51,7 +51,12 @@ export default async function PrivacyPage() {
       <p className="quiet page-lead" style={{ margin: "0 0 8px" }}>{t.lead}</p>
 
       <h2 style={h2}>{t.controllerHeading}</h2>
-      <p style={p}>{t.controller(branding.displayName)}</p>
+      <p style={p}>{t.controller(tenant.controller?.legalName || branding.displayName)}</p>
+      {(tenant.controller?.address || tenant.controller?.registrationNumber) && (
+        <p className="quiet" style={p}>
+          {t.controllerDetails(tenant.controller?.address ?? "", tenant.controller?.registrationNumber ?? "")}
+        </p>
+      )}
 
       <h2 style={h2}>{t.dpoHeading}</h2>
       {dpos.length > 0

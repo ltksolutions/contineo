@@ -113,6 +113,21 @@ export interface Tenant {
   phonePrefix?: string
 
   /**
+   * **Prevádzkovateľ** v zmysle GDPR — kto spracúva osobné údaje (C1,
+   * ADR-012). Ukazuje sa v informovaní dotknutých osôb (`/privacy`). Nie je
+   * to značka: `branding.displayName` je, ako sa organizácia volá v hlavičke,
+   * toto je, ako sa volá v obchodnom registri.
+   */
+  controller?: {
+    /** Úplný právny názov, napr. „Slovenský futbalový zväz". */
+    legalName?: string
+    /** Sídlo v jednom riadku, napr. „Tomášikova 30C, 821 01 Bratislava". */
+    address?: string
+    /** IČO — ako sa píše (medzery zostávajú), overené sú len číslice. */
+    registrationNumber?: string
+  }
+
+  /**
    * Profil členenia dokumentov na úseky (D58).
    *
    * Jeden algoritmus, parametre navonok. Vlastný chunker per zákazník by

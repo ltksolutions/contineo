@@ -139,6 +139,36 @@ describe("uloženie zmeny", () => {
     expect(updateOne).not.toHaveBeenCalled()
   })
 
+  it("prevádzkovateľ (C1): IČO sa uloží, ako je napísané, overia sa číslice", async () => {
+    findOne.mockResolvedValue(SFZ)
+
+    await saveTenant("SFZ", {
+      controllerLegalName: " Slovenský futbalový zväz ",
+      controllerAddress: "Tomášikova 30C, 821 01 Bratislava",
+      controllerRegistrationNumber: "00  687 308",
+    }, "kto@ltk.solutions")
+
+    const set = updateOne.mock.calls[0][1].$set
+    expect(set["controller.legalName"]).toBe("Slovenský futbalový zväz")
+    expect(set["controller.registrationNumber"]).toBe("00 687 308")
+  })
+
+  it("IČO s písmenami alebo prikrátke neprejde", async () => {
+    findOne.mockResolvedValue(SFZ)
+
+    await expect(saveTenant("SFZ", { controllerRegistrationNumber: "SK123" }, "kto@ltk.solutions"))
+      .rejects.toMatchObject({ code: "tenant.registrationNumberShape" })
+    expect(updateOne).not.toHaveBeenCalled()
+  })
+
+  it("prázdne IČO sa zapíše prázdne — údaj sa dá zmazať", async () => {
+    findOne.mockResolvedValue(SFZ)
+
+    await saveTenant("SFZ", { controllerRegistrationNumber: "" }, "kto@ltk.solutions")
+
+    expect(updateOne.mock.calls[0][1].$set["controller.registrationNumber"]).toBe("")
+  })
+
   it("neexistujúcu organizáciu nezaloží potichu", async () => {
     findOne.mockResolvedValue(null)
 

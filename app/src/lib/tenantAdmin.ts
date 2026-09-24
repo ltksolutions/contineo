@@ -95,6 +95,10 @@ export interface TenantChange {
   autoProvisionDomains?: string[]
   /** Medzinárodná predvoľba pre čísla bez nej (D86). Prázdne = späť na `+421`. */
   phonePrefix?: string
+  /** Prevádzkovateľ pre informovanie (C1). Prázdne pole sa zapíše prázdne. */
+  controllerLegalName?: string
+  controllerAddress?: string
+  controllerRegistrationNumber?: string
   chunking?: Partial<ChunkingProfile>
   /** Pomenované profily členenia (D79). */
   chunkingProfiles?: ChunkingProfileDef[]
@@ -191,6 +195,26 @@ function toSet(change: TenantChange): Record<string, unknown> {
       )
     }
     set.phonePrefix = prefix
+  }
+  /*
+    Prevádzkovateľ (C1). Prázdne sa zapíše prázdne — organizácia musí vedieť
+    údaj zmazať. IČO sa ukladá tak, ako ho človek napísal („00 687 308"),
+    overujú sa len číslice: 6 až 12, aby sa zmestili aj zahraničné registre
+    a neprešiel preklep typu telefónneho čísla.
+  */
+  if (change.controllerLegalName !== undefined) set["controller.legalName"] = change.controllerLegalName.trim()
+  if (change.controllerAddress !== undefined) set["controller.address"] = change.controllerAddress.trim()
+  if (change.controllerRegistrationNumber !== undefined) {
+    const reg = change.controllerRegistrationNumber.trim().replace(/\s+/g, " ")
+    const digits = reg.replace(/\s/g, "")
+    if (reg && !/^\d{6,12}$/.test(digits)) {
+      throw new TenantValidationError(
+        "tenant.registrationNumberShape",
+        `IČO „${reg}" nemá správny tvar — očakáva sa 6 až 12 číslic.`,
+        { value: reg },
+      )
+    }
+    set["controller.registrationNumber"] = reg
   }
   if (change.chunking !== undefined) {
     // Pole sa volá `chunking`, nie `chunkovanie`: po migrácii na anglické

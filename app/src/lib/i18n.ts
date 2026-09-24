@@ -258,6 +258,8 @@ interface Dictionary {
     lead: string
     controllerHeading: string
     controller: (organisation: string) => string
+    /** Sídlo a IČO pod názvom prevádzkovateľa. */
+    controllerDetails: (address: string, registrationNumber: string) => string
     dpoHeading: string
     dpoMissing: string
     purposeHeading: string
@@ -1118,6 +1120,11 @@ interface Dictionary {
       supportEmailNote: string
       phonePrefix: string
       phonePrefixNote: string
+      controller: string
+      controllerNote: string
+      controllerLegalName: string
+      controllerAddress: string
+      controllerRegistrationNumber: string
       languages: string
       defaultLanguage: string
       defaultLanguageNote: string
@@ -2289,6 +2296,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       lead: "Čo sa o vás v tomto systéme ukladá, prečo a ako dlho.",
       controllerHeading: "Kto je prevádzkovateľ",
       controller: org => `Vaše osobné údaje spracúva ${org}. Systém Contineo pre neho prevádzkuje dodávateľ ako sprostredkovateľ na základe zmluvy o spracúvaní osobných údajov.`,
+      controllerDetails: (address, reg) => [address, reg && `IČO ${reg}`].filter(Boolean).join(" · "),
       dpoHeading: "Zodpovedná osoba (DPO)",
       dpoMissing: "Kontakt na zodpovednú osobu vám poskytne personálne oddelenie.",
       purposeHeading: "Na čo systém slúži",
@@ -3168,6 +3176,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "person.nameRequired": "Meno je povinné — bez neho je v zozname len adresa.",
     "person.nameRequiredShort": "Meno je povinné.",
     "tenant.phonePrefixShape": "Predvoľba „{value}“ nemá správny tvar — očakáva sa napríklad +421.",
+    "tenant.registrationNumberShape": "IČO „{value}“ nemá správny tvar — očakáva sa 6 až 12 číslic.",
     "person.givenNameRequired": "Meno je povinné.",
     "person.surnameRequired": "Priezvisko je povinné.",
     "person.unknownWorkplace": "Pracovisko „{value}“ v číselníku organizácie nie je. Doplňte ho v Organizácia → Číselníky.",
@@ -3394,6 +3403,11 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       supportEmailNote: "Kam sa má obrátiť človek, ktorému niečo nesedí.",
       phonePrefix: "Predvoľba telefónu",
       phonePrefixNote: "Doplní sa k číslam zadaným s nulou (0905 123 456). Prázdne znamená +421. Čísla zapísané s +  sa ňou nedopĺňajú.",
+      controller: "Prevádzkovateľ osobných údajov",
+      controllerNote: "Ukazuje sa v informovaní o ochrane osobných údajov (stránka Ochrana osobných údajov). Prázdny právny názov = použije sa názov organizácie.",
+      controllerLegalName: "Právny názov",
+      controllerAddress: "Sídlo",
+      controllerRegistrationNumber: "IČO",
       languages: "Jazyky",
       defaultLanguage: "Predvolený jazyk",
       defaultLanguageNote: "Platí pre človeka, ktorý ešte nie je prihlásený.",
@@ -4487,6 +4501,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       lead: "Co se o vás v tomto systému ukládá, proč a jak dlouho.",
       controllerHeading: "Kdo je správce",
       controller: org => `Vaše osobní údaje zpracovává ${org}. Systém Contineo pro něj provozuje dodavatel jako zpracovatel na základě smlouvy o zpracování osobních údajů.`,
+      controllerDetails: (address, reg) => [address, reg && `IČO ${reg}`].filter(Boolean).join(" · "),
       dpoHeading: "Pověřenec pro ochranu osobních údajů (DPO)",
       dpoMissing: "Kontakt na pověřence vám poskytne personální oddělení.",
       purposeHeading: "K čemu systém slouží",
@@ -5366,6 +5381,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "person.nameRequired": "Jméno je povinné — bez něj je v seznamu jen adresa.",
     "person.nameRequiredShort": "Jméno je povinné.",
     "tenant.phonePrefixShape": "Předvolba „{value}“ nemá správný tvar — očekává se například +420.",
+    "tenant.registrationNumberShape": "IČO „{value}“ nemá správný tvar — očekává se 6 až 12 číslic.",
     "person.givenNameRequired": "Jméno je povinné.",
     "person.surnameRequired": "Příjmení je povinné.",
     "person.unknownWorkplace": "Pracoviště „{value}“ v číselníku organizace není. Doplňte ho v Organizace → Číselníky.",
@@ -5592,6 +5608,11 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       supportEmailNote: "Kam se má obrátit člověk, kterému něco nesedí.",
       phonePrefix: "Předvolba telefonu",
       phonePrefixNote: "Doplní se k číslům zadaným s nulou (0905 123 456). Prázdné znamená +421. Čísla zapsaná s + se jí nedoplňují.",
+      controller: "Správce osobních údajů",
+      controllerNote: "Zobrazuje se v informacích o ochraně osobních údajů (stránka Ochrana osobních údajů). Prázdný právní název = použije se název organizace.",
+      controllerLegalName: "Právní název",
+      controllerAddress: "Sídlo",
+      controllerRegistrationNumber: "IČO",
       languages: "Jazyky",
       defaultLanguage: "Výchozí jazyk",
       defaultLanguageNote: "Platí pro člověka, který ještě není přihlášený.",
@@ -6677,6 +6698,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       lead: "What this system stores about you, why, and for how long.",
       controllerHeading: "Who the controller is",
       controller: org => `Your personal data is processed by ${org}. The Contineo system is operated for it by a supplier acting as a processor under a data processing agreement.`,
+      controllerDetails: (address, reg) => [address, reg && `Company ID ${reg}`].filter(Boolean).join(" · "),
       dpoHeading: "Data protection officer (DPO)",
       dpoMissing: "The HR department will give you the contact of the data protection officer.",
       purposeHeading: "What the system is for",
@@ -7555,6 +7577,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "person.nameRequired": "The name is required — without it the list shows only the address.",
     "person.nameRequiredShort": "The name is required.",
     "tenant.phonePrefixShape": "The dialling code “{value}” has the wrong shape — something like +421 is expected.",
+    "tenant.registrationNumberShape": "The company ID “{value}” has the wrong shape — 6 to 12 digits are expected.",
     "person.givenNameRequired": "The first name is required.",
     "person.surnameRequired": "The surname is required.",
     "person.unknownWorkplace": "The workplace “{value}” is not in the organisation's code list. Add it under Organisation → Code lists.",
@@ -7781,6 +7804,11 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       supportEmailNote: "Where someone should turn when something does not add up.",
       phonePrefix: "Phone dialling code",
       phonePrefixNote: "Added to numbers entered with a leading zero (0905 123 456). Empty means +421. Numbers written with a + are left alone.",
+      controller: "Data controller",
+      controllerNote: "Shown in the data protection notice (Data protection page). An empty legal name means the organisation name is used.",
+      controllerLegalName: "Legal name",
+      controllerAddress: "Registered address",
+      controllerRegistrationNumber: "Company ID",
       languages: "Languages",
       defaultLanguage: "Default language",
       defaultLanguageNote: "Applies to anyone who is not signed in yet.",
