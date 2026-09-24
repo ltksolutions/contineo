@@ -14,7 +14,7 @@ import Link from "next/link"
 import { orgContext } from "@/lib/orgSettings"
 import { domainRequests, domainInstruction } from "@/lib/customerDomains"
 import { providerStatus, PROVIDER_LABEL, PROVIDER_ID } from "@/lib/oauth"
-import { brandingView } from "@/lib/tenants"
+import { brandingView, tenantByCompanyCode } from "@/lib/tenants"
 import { tenantStyle } from "@/components/TenantHeader"
 import LiveFilter from "@/components/LiveFilter"
 import { DEFAULT_PHONE_PREFIX } from "@/lib/personFields"
@@ -175,7 +175,17 @@ export default async function OrganisationPage({
   // preloží. Zmizne, keď prestane chodiť.
   const key = tabValue(tab)
   const now = TAB_KEYS.includes(key ?? "") ? key! : "branding"
-  const tenant = ctx.tenant
+  /*
+    Organizácia **priamo z databázy**, nie z `ctx.tenant`.
+
+    Po uložení (serverová akcia → `redirect`) sa táto stránka vykreslí v tej
+    istej požiadavke. `currentTenant()` je zapamätaný na požiadavku a akcia
+    ho načítala ešte **pred** zápisom — obrazovka tak ukázala stav spred
+    zmeny a nová položka číselníka sa objavila až po obnovení (24. 9. 2026).
+    Nastavenie je jediné miesto, kde musí byť vidieť presne to, čo je
+    uložené; na ostatných stránkach stačí zapamätaný tvar.
+  */
+  const tenant = (await tenantByCompanyCode(ctx.tenant.companyCode)) ?? ctx.tenant
   const branding = brandingView(tenant)
   const language = ctx.person.language
   const d = dictionary(language)
