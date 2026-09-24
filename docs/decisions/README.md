@@ -25,6 +25,7 @@ identita rozhodnutia** a je použité v stovkách komentárov v kóde
 | [ADR-011](ADR-011-pdf-ako-schvalovany-dokument.md) | Schvaľuje a potvrdzuje sa PDF; text je na vyhľadávanie | ✅ prijaté |
 | [ADR-012](ADR-012-retencia-dokazov-a-dpo.md) | Retencia reťaze dôkazov, rola DPO a námietka | ✅ prijaté |
 | [ADR-013](ADR-013-udaje-o-zneni.md) | Údaje o znení: autor, schválil, dátumy | ✅ prijaté |
+| [ADR-014](ADR-014-postup-znenia.md) | Postup znenia v štyroch krokoch | ✅ prijaté |
 
 ## Čo sem nepatrí
 
@@ -37,6 +38,6 @@ rozhodnutia. Zostávajú v `docs/`.
 
 ## Nové ADR
 
-Ďalšie voľné číslo je **ADR-014**. Súbor `ADR-014-kratky-nazov.md` sem, riadok
+Ďalšie voľné číslo je **ADR-015**. Súbor `ADR-015-kratky-nazov.md` sem, riadok
 do tabuľky vyššie, a v hlavičke sa uvedie stav, dátum, kto rozhodol a na čo to
 nadväzuje. Rituál **„Rozhodni"** robí presne toto.

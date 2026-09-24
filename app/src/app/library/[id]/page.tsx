@@ -1,10 +1,10 @@
 /**
  * Detail dokumentu v knižnici (D53).
  *
- * Dve veci vedľa seba, lebo sú to dve rôzne otázky: **čo je v koncepte**
- * (text, ktorý nikto nepustil von) a **ktoré znenia platia** (história, na
- * ktorú sa viažu potvrdenia). Publikovanie je most medzi nimi a má vlastný
- * formulár — nie tlačidlo, lebo pýta údaje, ktoré nikto iný ako človek nevie.
+ * Dve veci vedľa seba, lebo sú to dve rôzne otázky: **čo sa pripravuje**
+ * (karta postupu znenia v štyroch krokoch, ADR-014) a **ktoré znenia platia**
+ * (platné znenie ako súhrn, staršie po riadku — na ne sa viažu potvrdenia).
+ * Rám z Claude Design: `docs/design/KNIZNICA-postup-znenia.md`.
  */
 
 import { notFound, redirect } from "next/navigation"
@@ -15,11 +15,11 @@ import VersionMetaFields from "@/components/VersionMetaFields"
 import VersionMetaLine from "@/components/VersionMetaLine"
 import { brandingView } from "@/lib/tenants"
 import { tenantStyle } from "@/components/TenantHeader"
-import { formatDate, dictionary } from "@/lib/i18n"
+import { formatDate, dictionary, type UiLanguage } from "@/lib/i18n"
 import Notice from "@/components/Notice"
 import {
-  publishVersionAction, saveDraftMetaAction, saveDocumentMetadataAction, assignToFolderAction, reindexDocumentAction,
-  fixVersionAction, fixTextAction, uploadVersionAction, revokeVersionAction,
+  publishVersionAction, prepareDraftAction, saveDocumentMetadataAction, assignToFolderAction, reindexDocumentAction,
+  fixVersionAction, fixTextAction, revokeVersionAction, cancelApprovalAction,
   carryOverAssignmentsAction, setResponsibleAction,
 } from "../actions"
 import { allFolders, flattenTree } from "@/lib/folders"
@@ -42,10 +42,13 @@ import { validAcknowledgements } from "@/lib/acknowledgements"
 import { roundsByVersion, stateOf } from "@/lib/approvalsDb"
 import type { CSSProperties } from "react"
 import { textFingerprint } from "@/lib/chunkIdentity"
-import { documentDraftIdentity, metaLocked } from "@/lib/versionMeta"
-import UploadFiles from "@/components/UploadFiles"
-import UploadSubmit from "@/components/UploadSubmit"
-import { MAX_BYTES, MAX_FORM_BYTES, SOURCE_EXTENSIONS } from "@/lib/fileStore"
+import { documentDraftIdentity, metaLocked, type VersionMeta } from "@/lib/versionMeta"
+import { versionFlow, lastPreparationRound, previousApproverIds, rejectedBy } from "@/lib/versionFlow"
+import FlowSteps from "@/components/FlowSteps"
+import ApprovalRounds from "@/components/ApprovalRounds"
+import PublishSubmit from "@/components/PublishSubmit"
+import { initials } from "@/lib/initials"
+import { assignHref } from "@/lib/libraryBulk"
 import type { VersionFile } from "@/lib/documents"
 import { textDiff, type DiffKind } from "@/lib/textFix"
 import { listPeople } from "@/lib/people"
@@ -55,6 +58,10 @@ import { canSetLegalBasis } from "@/lib/versionResponsibility"
 import { legalBasisOptions } from "@/lib/legalBases"
 
 export const dynamic = "force-dynamic"
+
+/** Ktorý panel pri znení je otvorený (`?open=…`). Bez JavaScriptu — server ho vykreslí otvorený. */
+type Panel = "responsible" | "basis" | "fix" | "history"
+const PANELS: Panel[] = ["responsible", "basis", "fix", "history"]
 
 export default async function DocumentDetailPage({
   params,
@@ -70,7 +77,10 @@ export default async function DocumentDetailPage({
   }
 
   const { id } = await params
-  const { msg: message, error } = normalizeQuery<{ msg?: string; error?: string }>(await searchParams)
+  const query = normalizeQuery<{ msg?: string; error?: string; open?: string; version?: string; edit?: string }>(await searchParams)
+  const { msg: message, error } = query
+  const openPanel = PANELS.includes(query.open as Panel) ? (query.open as Panel) : null
+  const editDocument = query.edit === "document"
   const documentId = decodeURIComponent(id)
   const d = await libraryDetail(ctx.tenant.companyCode, documentId)
   if (!d) notFound()
@@ -78,24 +88,26 @@ export default async function DocumentDetailPage({
   const branding = brandingView(ctx.tenant)
   const language = ctx.person.language
   const t = dictionary(language).library.detail
-  const tu = dictionary(language).library.upload
+  const tf = dictionary(language).library.fields
+  const tflow = dictionary(language).library.flow
   const extras = tenantExtras(ctx.tenant)
   const folders = await allFolders(ctx.tenant.companyCode)
   const folderTree = flattenTree(folders)
-  const tf = dictionary(language).library.fields
   const departments = await allDepartments(ctx.tenant.companyCode)
   const departmentRows = flattenDepartments(departments)
-  const ownerDepartment = departments.find(o => o.id === d.ownerDepartmentId)
   const draft = (d.draftMarkdown ?? "").trim()
+  const date = (v: Date | string | null | undefined) => (v ? formatDate(new Date(v), language) : "")
+  const base = `/library/${encodeURIComponent(documentId)}`
   // Publikované znenie je pri dokumentoch z importu len vo `versions[]` —
   // porovnávať koncept s prázdnym `markdown` by tvrdilo, že je čo publikovať,
   // aj keď je text ten istý.
   const effective = d.versions.find(v => v.isActive && v.effectiveFrom)
+  const olderVersions = d.versions.filter(v => v !== effective)
 
   const tc = dictionary(language).library.carryOver
   /*
    * Publiká, ktoré platné znenie „zdedí" po predošlých (D28). Prázdny zoznam
-   * je bežný stav — vtedy sa karta nevykreslí vôbec a obrazovka o nej mlčí.
+   * je bežný stav — vtedy sa krok 4 nevykreslí vôbec a obrazovka o ňom mlčí.
    */
   const canAssign = isHr(ctx.person)
   /*
@@ -114,13 +126,12 @@ export default async function DocumentDetailPage({
    * sa aj on — inak len veta o novom znení. Skladať dokopy tri rôzne dôvody by
    * vyrobilo vetu, ktorú nikto nenapísal.
    */
-  const sharedReason = carryOver.length > 0 &&
-    carryOver.every(c => c.previousReason === carryOver[0].previousReason)
-    ? carryOver[0].previousReason
-    : ""
-  const carryOverReason = carryOverVersion
-    ? `Nové znenie „${carryOverVersion.label}"${sharedReason ? `, pôvodne: ${sharedReason}` : ""}`
-    : sharedReason
+  const sharedReasonOf = (list: typeof carryOver) =>
+    list.length > 0 && list.every(c => c.previousReason === list[0].previousReason) ? list[0].previousReason : ""
+  const reasonFor = (label: string, list: typeof carryOver) => {
+    const shared = sharedReasonOf(list)
+    return label ? `Nové znenie „${label}"${shared ? `, pôvodne: ${shared}` : ""}` : shared
+  }
 
   // Schvaľovanie (ADR-006). Kolá pre celý dokument jedným dotazom — pri
   // desiatich zneniach je rozdiel medzi jedným a desiatimi dotazmi vidieť.
@@ -136,6 +147,7 @@ export default async function DocumentDetailPage({
   const approverChoices = people
     .filter(p => p.status !== "inactive" && p.email !== ctx.person.email)
     .map(p => ({ id: p.id, fullName: p.fullName, email: p.email, department: p.department }))
+  const departmentOf = new Map(people.map(p => [p.email.toLowerCase(), p.department ?? ""]))
   /*
     Zodpovedná osoba za znenie (D91). Na rozdiel od schvaľovateľov sa
     ponúka aj ten, kto znenie zverejňuje — garant predpisu môže byť zároveň
@@ -181,13 +193,10 @@ export default async function DocumentDetailPage({
   const ts = t.side
   const folderName = d.folderTrail?.length ? d.folderTrail.join(" / ") : ts.unfiled
   const published = ((d.markdown ?? effective?.markdown) ?? "").trim()
-  // Koncept, ktorý sa líši od publikovaného znenia, je nedokončená práca —
-  // a je to jediný stav, v ktorom má zmysel niečo publikovať.
-  const hasChangesToPublish = Boolean(draft) && draft !== published
 
   /*
    * Schvaľuje sa **koncept**, nie hotové znenie. `versionId` vzniká až vnútri
-   * `publish()` ako odtlačok textu (D57), takže pred publikovaním znenie ešte
+   * `publish()` ako odtlačok (D57), takže pred publikovaním znenie ešte
    * neexistuje a nie je na čom viesť kolo. Odtlačok konceptu sa preto počíta
    * tu — tou istou funkciou, akú použije `publish()`, aby sa kolo a znenie,
    * ktoré z neho vznikne, nemohli rozísť.
@@ -196,19 +205,63 @@ export default async function DocumentDetailPage({
    * odtlačok zmení a schválenie prestane platiť.** Presne to žiada D28 —
    * potvrdzuje sa text, ktorý ľudia videli, nie dokument s tým istým názvom.
    */
-  // Identita konceptu = PDF + text (ADR-011, D96) — na nej beží kolo
-  // schvaľovania. Oprava textu (ADR-007) sa ale stráži odtlačkom **len
-  // textu**: porovnáva sa s tým, čo bolo v rozdiele na obrazovke.
+  // Identita konceptu = PDF + text + údaje o znení (ADR-011 D96, ADR-013 D107)
+  // — na nej beží kolo schvaľovania. Oprava textu (ADR-007) sa ale stráži
+  // odtlačkom **len textu**: porovnáva sa s tým, čo bolo v rozdiele na obrazovke.
   const draftVersionId = draft ? documentDraftIdentity({ draftMarkdown: draft, draftPdf: d.draftPdf, draftMeta: d.draftMeta }) : null
   const draftTextFingerprint = draft ? textFingerprint(draft) : null
   const draftRounds = draftVersionId ? (rounds.get(draftVersionId) ?? []) : []
   const draftState = stateOf(draftRounds)
+  /*
+   * Pripravuje sa nové znenie? Koncept s iným textom — alebo s tým istým
+   * textom, ale iným PDF (ADR-011): schvaľuje a potvrdzuje sa PDF, takže
+   * nové PDF je nové znenie, aj keď sa z neho vytiahol rovnaký text.
+   */
+  const hasChangesToPublish = Boolean(draft) && (
+    draft !== published ||
+    Boolean(d.draftPdf && effective && effective.pdf?.id !== d.draftPdf.id &&
+      !d.versions.some(v => v.versionId === draftVersionId))
+  )
   // Údaje o znení (ADR-013): uložené, návrh z prvej strany a zámok po predložení.
   const tm = dictionary(language).versionMeta
   const metaIsLocked = metaLocked(draftState, Boolean(d.draftMeta))
   // Schválené ešte bez údajov (pred ADR-013): doplniť sa smú, ale zrušia schválenie.
   const metaVoidsApproval = draftState === "approved" && !d.draftMeta
   const metaOptions = await versionMetaSuggestions(ctx.tenant.companyCode)
+
+  /*
+   * Postup znenia v štyroch krokoch (ADR-014). Krok sa odvodzuje — z konceptu,
+   * z kôl a z pridelení (D27). Posledné kolo prípravy môže byť aj na staršej
+   * identite konceptu: po zamietnutí sa zvyčajne vymení PDF a dôvod
+   * zamietnutia má zostať vidieť.
+   */
+  const lastPublishedAt = d.versions.reduce<Date | null>((acc, v) => {
+    const at = v.publishedAt ? new Date(v.publishedAt) : null
+    return at && (!acc || at > acc) ? at : acc
+  }, null)
+  const lastRound = lastPreparationRound(rounds.values(), lastPublishedAt)
+  const flow = versionFlow({
+    preparing: hasChangesToPublish,
+    draftState,
+    lastRound,
+    carryOverCount: carryOver.length,
+  })
+  const running = draftRounds.find(r => r.outcome === null) ?? null
+  const approvedRound = [...draftRounds].reverse().find(r => r.outcome === "approved") ?? null
+  // Meno namiesto adresy tam, kde kolo nesie len adresu predkladateľa.
+  const nameOf = (email: string) => people.find(p => p.email.toLowerCase() === email.toLowerCase())?.fullName ?? email
+  const prefilledApprovers = new Set(previousApproverIds(rounds.values(), approverChoices))
+  // Kolá sa číslujú na identite konceptu — po výmene PDF začína znova od 1.
+  const nextRound = draftRounds.length + 1
+  // Publiká na prenos pri zverejnení (krok 3) — všetko, čo mali doterajšie znenia.
+  const draftCarryOver = canAssign && flow?.step === 3 && draftVersionId && effective
+    ? await carryOverCandidates(ctx.tenant.companyCode, documentId, draftVersionId)
+    : []
+  const draftEffectiveFrom = d.draftMeta?.effectiveFrom ?? null
+  const labelSuggestion = draftEffectiveFrom ? tflow.labelSuggestion(date(draftEffectiveFrom)) : ""
+  const sourceSuggestion = d.draftMeta?.approvedBy
+    ? `${d.draftMeta.approvedBy}${d.draftMeta.approvedOn ? `, ${date(d.draftMeta.approvedOn)}` : ""}`
+    : ""
 
   /*
    * Stav do hlavičky — **ten istý slovník aj tá istá trieda ako v zozname.**
@@ -263,26 +316,321 @@ export default async function DocumentDetailPage({
           ? { opacity: 0.55, fontStyle: "italic" }
           : {}
 
+  /*
+   * Odkazy a panely pri znení (bod 3 rámu). Formuláre sa otvárajú až po
+   * kliknutí — dovtedy to bolo sedem `<details>` pod sebou. Otvorený panel
+   * je v adrese (`?open=`), takže funguje bez JavaScriptu a prežije
+   * presmerovanie po uložení.
+   */
+  type V = (typeof d.versions)[number]
+  const panelHref = (v: V, panel: Panel) => {
+    const p = new URLSearchParams()
+    if (v !== effective) p.set("version", v.versionId)
+    if (!(openPanel === panel && (v === effective ? !query.version : query.version === v.versionId))) p.set("open", panel)
+    const qs = p.toString()
+    return `${base}${qs ? `?${qs}` : ""}#${v === effective ? "current" : `v-${v.versionId}`}`
+  }
+  const panelOf = (v: V): Panel | null =>
+    openPanel && (v === effective ? !query.version : query.version === v.versionId) ? openPanel : null
+  const canSetBasis = (v: V) => canSetLegalBasis({
+    actorPersonId: ctx.person.id,
+    isContentManager: true,
+    responsible: v.responsiblePerson,
+    responsibleActive: Boolean(v.responsiblePerson && activePersonIds.has(v.responsiblePerson.personId)),
+  })
+
+  const versionLinks = (v: V) => (
+    <div className="cur-links">
+      {v.pdf && <FileLink file={v.pdf} label="PDF" />}
+      {([
+        ["responsible", tflow.changeResponsible, true],
+        ["basis", tflow.changeBasis, canSetBasis(v)],
+        ["fix", tflow.fixData, true],
+        ["history", tflow.history, true],
+      ] as [Panel, string, boolean][]).filter(([, , show]) => show).map(([panel, label]) => (
+        <Link key={panel} href={panelHref(v, panel)} aria-current={panelOf(v) === panel ? "true" : undefined}>
+          {label}
+        </Link>
+      ))}
+    </div>
+  )
+
+  const versionPanel = (v: V) => {
+    const panel = panelOf(v)
+    if (!panel) return null
+    const acks = ackByVersion.get(v.versionId) ?? 0
+    return (
+      <div className="cur-panel">
+        {panel === "responsible" && (
+          <form action={setResponsibleAction} style={{ display: "grid", gap: 10 }}>
+            <input type="hidden" name="documentId" value={d.documentId} />
+            <input type="hidden" name="versionId" value={v.versionId} />
+            <input type="hidden" name="versionLabel" value={v.label} />
+            <ResponsiblePicker
+              people={responsibleChoices}
+              language={language}
+              exclude={v.responsiblePerson?.personId}
+            />
+            <label className="field">
+              <span className="field-label">{tr.changeReason}</span>
+              <input className="field-input" name="reason" required
+                     placeholder={tr.changeReasonPlaceholder} />
+            </label>
+            <div><button className="button button--quiet" type="submit">{tr.saveResponsible}</button></div>
+          </form>
+        )}
+
+        {/*
+          Právny základ smie v knižnici určiť správca obsahu len ako
+          náhradník — keď znenie zodpovednú osobu nemá alebo už nie je
+          aktívna — alebo keď je sám zodpovednou osobou. To isté pravidlo
+          stráži server; tu sa len neponúka formulár, ktorý by odmietol.
+        */}
+        {panel === "basis" && canSetBasis(v) && (
+          <>
+            <p className="detail-block-small">{tr.basisWho}</p>
+            <LegalBasisForm
+              documentId={d.documentId}
+              versionId={v.versionId}
+              current={v.legalBasis}
+              currentKey={v.legalBasisKey}
+              options={basisOptions}
+              language={language}
+              back="library"
+            />
+          </>
+        )}
+
+        {panel === "fix" && (
+          <>
+            <form action={fixVersionAction} style={{ display: "grid", gap: 10 }}>
+              <input type="hidden" name="documentId" value={d.documentId} />
+              <input type="hidden" name="versionId" value={v.versionId} />
+
+              {/*
+                Zamknuté polia sa **neponúkajú**, nie sú len odmietnuté pri
+                uložení (D82). Formulár, ktorý dá človeku vyplniť pole
+                a potom mu povie, že sa nedá, je horší než formulár, ktorý
+                ho nemá — a rovno povie prečo.
+              */}
+              {acks > 0 ? (
+                <p className="detail-block-small">
+                  {t.versionLockedBefore}
+                  <strong>{t.versionLockedHighlight(acks)}</strong>
+                  {t.versionLockedAfter}
+                </p>
+              ) : (
+                <>
+                  <label className="field">
+                    <span className="field-label">{t.fixLabel}</span>
+                    <input className="field-input" name="label" defaultValue={v.label} />
+                  </label>
+
+                  {/* Dátum schválený s údajmi o znení sa opraviť nedá (ADR-013). */}
+                  {!v.metaApproved && (
+                    <label className="field">
+                      <span className="field-label">{t.effectiveFrom}</span>
+                      <input
+                        className="field-input"
+                        type="date"
+                        name="effectiveFrom"
+                        defaultValue={v.effectiveFrom ? new Date(v.effectiveFrom).toISOString().slice(0, 10) : ""}
+                      />
+                      <span className="quiet field-hint">
+                        {t.fixEffectiveFromNoteBefore}<strong>{t.fixEffectiveFromNoteHighlight}</strong>{t.fixEffectiveFromNoteAfter}
+                      </span>
+                    </label>
+                  )}
+                </>
+              )}
+
+              <label className="field">
+                <span className="field-label">{t.effectiveFromSource}</span>
+                <input className="field-input" name="effectiveFromSource" defaultValue={v.effectiveFromSource ?? ""} />
+              </label>
+
+              <label className="field">
+                <span className="field-label">{t.fixReason}</span>
+                <input className="field-input" name="reason" required
+                       placeholder={t.fixReasonPlaceholder} />
+                <span className="quiet field-hint">{t.fixReasonNote}</span>
+              </label>
+
+              <div><button className="button button--quiet" type="submit">{t.fixSubmit}</button></div>
+            </form>
+
+            {/*
+              Odomknutie: hromadné odvolanie potvrdení. Vidí ho len
+              personalista — správcovi obsahu by tlačidlo, ktoré nemá
+              povolené stlačiť, len sľubovalo cestu, ktorú nemá.
+            */}
+            {canRevoke && acks > 0 && (
+              <form action={revokeVersionAction} style={{ display: "grid", gap: 10, marginTop: 4 }}>
+                <input type="hidden" name="documentId" value={d.documentId} />
+                <input type="hidden" name="versionId" value={v.versionId} />
+                <h3 style={{ fontSize: "var(--fs-body)", margin: 0 }}>{t.revokeVersionHeading}</h3>
+                <p className="detail-block-small">{t.revokeVersionNote(acks)}</p>
+                <label className="field">
+                  <span className="field-label">{t.revokeVersionReason}</span>
+                  <input className="field-input" name="reason" required
+                         placeholder={t.revokeVersionReasonPlaceholder} />
+                </label>
+                <div>
+                  <button className="button button--quiet" type="submit">{t.revokeVersionSubmit}</button>
+                </div>
+              </form>
+            )}
+          </>
+        )}
+
+        {panel === "history" && (
+          <>
+            <div className="quiet audit-who" style={{ fontSize: "var(--fs-small)" }}>
+              {v.effectiveFrom ? t.effectiveFromOn(date(v.effectiveFrom)) : t.noEffectiveDate}
+              {v.effectiveTo && ` ${t.effectiveTo(date(v.effectiveTo))}`}
+              {v.publishedBy && ` · ${v.publishedBy}`}
+              {v.publishedAt && ` · ${date(v.publishedAt)}`}
+            </div>
+            {v.effectiveFromSource && <div className="quiet audit-note">{t.dateSource(v.effectiveFromSource)}</div>}
+            {v.changeNote && <div className="quiet audit-note">{v.changeNote}</div>}
+            {v.source && <div className="audit-note" style={{ fontSize: "var(--fs-small)" }}>{t.versionSource} <FileLink file={v.source} download /></div>}
+
+            <ApprovalPanel
+              documentId={d.documentId}
+              documentTitle={d.title}
+              versionId={v.versionId}
+              versionLabel={v.label}
+              effectiveFrom={v.effectiveFrom ?? null}
+              state={stateOf(rounds.get(v.versionId), v.publishedBefore)}
+              rounds={rounds.get(v.versionId) ?? []}
+              people={approverChoices}
+              language={language}
+            />
+
+            {v.responsibleChanges && v.responsibleChanges.length > 0 && (
+              <HistoryList title={tr.responsibleHistory(v.responsibleChanges.length)}>
+                {[...v.responsibleChanges].reverse().map((c, i) => (
+                  <li key={`${v.versionId}-resp-${i}`}>
+                    <div>{c.reason}</div>
+                    <div className="quiet" style={{ fontSize: "var(--fs-micro)" }}>
+                      {tr.responsibleChangeLine(c.by, date(c.at), c.from?.fullName ?? "—", c.to.fullName)}
+                    </div>
+                  </li>
+                ))}
+              </HistoryList>
+            )}
+
+            {v.legalBasisChanges && v.legalBasisChanges.length > 0 && (
+              <HistoryList title={tr.basisHistory(v.legalBasisChanges.length)}>
+                {[...v.legalBasisChanges].reverse().map((c, i) => (
+                  <li key={`${v.versionId}-basis-${i}`}>
+                    {c.reason && <div>{c.reason}</div>}
+                    <div className="quiet" style={{ fontSize: "var(--fs-micro)" }}>
+                      {tr.basisChangeLine(
+                        c.by,
+                        date(c.at),
+                        c.from ? tr.basisLabel[c.from] : tr.basisUnset,
+                        `${c.toLabel ?? tr.basisLabel[c.to]}${c.toReference ? ` (${c.toReference})` : ""}`,
+                      )}
+                    </div>
+                  </li>
+                ))}
+              </HistoryList>
+            )}
+
+            {/*
+              História opráv. Dôvod opravy je povinný práve preto, aby sa o rok
+              dalo prečítať, či išlo o preklep alebo o zmenu povinnosti.
+            */}
+            {v.fixes && v.fixes.length > 0 && (
+              <HistoryList title={t.fixHistory(v.fixes.length)}>
+                {[...v.fixes].reverse().map((fix, i) => (
+                  <li key={`${v.versionId}-fix-${i}`}>
+                    <div>{fix.reason}</div>
+                    <div className="quiet" style={{ fontSize: "var(--fs-micro)" }}>
+                      {t.fixLine(fix.by, date(fix.at))}
+                      {" · "}
+                      {t.fixWas(fix.fromLabel, fix.fromEffectiveFrom ? date(fix.fromEffectiveFrom) : t.fixNoDate)}
+                      {fix.requiresReacknowledgement && ` · ${t.fixReacknowledged}`}
+                    </div>
+                  </li>
+                ))}
+              </HistoryList>
+            )}
+
+            {/*
+              História opráv **textu** — iná vec než `fixes` vyššie. Celé
+              predchádzajúce znenie je v databáze (`textFixes[].fromMarkdown`).
+            */}
+            {v.textFixes && v.textFixes.length > 0 && (
+              <HistoryList title={t.textFixHistory(v.textFixes.length)}>
+                {[...v.textFixes].reverse().map((fix, i) => (
+                  <li key={`${v.versionId}-text-${i}`}>
+                    <div>{fix.reason}</div>
+                    <div className="quiet" style={{ fontSize: "var(--fs-micro)" }}>
+                      {t.textFixLine(fix.by, date(fix.at))}
+                    </div>
+                  </li>
+                ))}
+              </HistoryList>
+            )}
+          </>
+        )}
+      </div>
+    )
+  }
+
+  /* ── Karta postupu znenia (body 2, 5–9 rámu) ─────────────────────────── */
+  const flowHeading = !flow ? "" : flow.step === 4
+    ? tflow.publishedHeading(date(effective?.effectiveFrom))
+    : !effective ? tflow.firstVersion
+    : draftEffectiveFrom ? tflow.heading(date(draftEffectiveFrom)) : tflow.headingUndated
+  const flowStatus = !flow ? "" : flow.step === 1
+    ? (flow.rejected ? tflow.statusRejected(date(flow.rejected.closedAt ?? flow.rejected.submittedAt)) : tflow.statusPreparing)
+    : flow.step === 2 && running ? tflow.statusInReview(nameOf(running.submittedBy), date(running.submittedAt))
+    : flow.step === 3
+      ? `${tflow.statusApproved}${approvedRound?.closedAt ? ` · ${date(approvedRound.closedAt)}` : ""}`
+    : tflow.statusPublished(date(effective?.publishedAt))
+  const decided = running ? running.approvers.filter(a => a.decision === "approved").length : 0
+  const flowSubs = !flow ? [] : [
+    flow.step === 1 ? tflow.subPrepare : tflow.subPrepareDone,
+    flow.step === 1
+      ? (flow.rejected ? (rejectedBy(flow.rejected) ? tflow.subRejected(flow.rejected.round) : tflow.subCancelled(flow.rejected.round)) : tflow.subWaitSubmit)
+      : flow.step === 2 ? tflow.subInReview(decided, running?.approvers.length ?? 0)
+      : tflow.subApproved,
+    flow.step === 2 ? tflow.subWaitApproval : flow.step === 4 ? tflow.subPublished : "",
+    flow.step === 4 ? tflow.subAssign : "",
+  ]
+  const nextRows = (
+    <div className="flow-next">
+      <span className="flow-section-title">{tflow.next}</span>
+      {flow && flow.step < 3 && (
+        <div className="flow-next-row"><b>3 {tflow.steps[2]}</b><span className="quiet">{tflow.next3}</span></div>
+      )}
+      <div className="flow-next-row">
+        <b>4 {tflow.steps[3]}</b>
+        <span className="quiet">{effective ? tflow.next4 : tflow.next4None}</span>
+      </div>
+    </div>
+  )
+
+  const newVersionHref = `${base}/version`
+  const newVersionBlocked = hasChangesToPublish
+
   return (
     <AppShell language={ctx.person.language}>
     <div className="detail-page" style={tenantStyle(branding)}>
-      <Notice message={message} error={error === "1"} back={`/library/${encodeURIComponent(documentId)}`} />
+      <Notice message={message} error={error === "1"} back={base} />
 
       <p className="detail-back">
         <Link className="quiet" href="/library">{t.back}</Link>
       </p>
 
       {/*
-        Hlavička dokumentu. Chips nesú to, čo o dokumente rozhoduje na prvý
-        pohľad — stav spracovania a druh; identifikátor a priečinok idú pod
-        názov, lebo sa čítajú až vtedy, keď názvy nestačia.
-      */}
-      {/*
         Stav dokumentu farebne, tou istou funkciou ako v zozname (DETAIL,
-        úloha 2) — človek príde z farebného zoznamu a nemá stratiť istotu,
-        že je to ten istý stav. Bežiace kolo nad konceptom je „na schválenie"
-        (MASTER). Technické spracovanie sa ukazuje len keď niečo hovorí:
-        hotový stav sa nekreslí, zlyhanie je červené (rovnako ako v zozname).
+        úloha 2). Bežiace kolo nad konceptom je „na schválenie" (MASTER).
+        Technické spracovanie sa ukazuje len keď niečo hovorí: hotový stav
+        sa nekreslí, zlyhanie je červené (rovnako ako v zozname).
       */}
       <div className="detail-chips">
         <span className={statusTagClass(headerStatus)}>{statusPill(headerStatus)}</span>
@@ -297,158 +645,439 @@ export default async function DocumentDetailPage({
       <h1 className="page-title">{d.title}</h1>
       <p className="quiet detail-lead">
         {d.documentId}
-        {effective && ` · ${effective.label}`}
-        {effective?.effectiveFrom && ` · ${formatDate(effective.effectiveFrom, language)}`}
+        {` · ${folderName}`}
+        {effective?.effectiveFrom && ` · ${t.effectiveFromOn(date(effective.effectiveFrom))}`}
       </p>
 
       {/*
-        Dva stĺpce až od 900 px. Pravý panel je zhrnutie — na telefóne patrí
-        pod obsah, nie nad neho: človek prišiel čítať dokument, nie metadáta.
+        Akcie v hlavičke (bod 1 rámu). „Nové znenie" je hlavné tlačidlo, nie
+        formulár schovaný v správe. Kým sa jedno znenie pripravuje, je
+        neaktívne a `title` povie prečo — súbory sa vtedy vymieňajú v príprave.
       */}
+      <div className="detail-actions">
+        {effective?.pdf && (
+          <a className="button button--quiet" href={`/api/library/file/${encodeURIComponent(effective.pdf.id)}`} target="_blank" rel="noreferrer">
+            {tflow.downloadPdf}
+          </a>
+        )}
+        <Link className="button button--quiet" href={`${base}?edit=document#document-data`}>{tflow.editDocument}</Link>
+        {newVersionBlocked ? (
+          <span className="button is-disabled" aria-disabled="true" title={effective ? tflow.newVersionBusy : tflow.newVersionFirst}>
+            {tflow.newVersion}
+          </span>
+        ) : (
+          <Link className="button" href={newVersionHref}>{tflow.newVersion}</Link>
+        )}
+      </div>
+
       <div className="detail-grid">
         <div className="detail-main">
 
-      {/*
-        Úroveň 2 — čo treba teraz (DETAIL, úloha 1). Vždy najviac jedna karta
-        a vždy v jednom stave, odvodenom z dokumentu a z bežiaceho kola:
-        koncept bez platného znenia → zverejniť znenie; platné znenie a
-        pripravený koncept → zverejniť nové znenie (v názve je, ktoré platí,
-        aby bolo zrejmé, že karta hovorí o pripravovanom, nie o platnom);
-        beží kolo → stav kola, bez tlačidla na predloženie (to stráži
-        `ApprovalPanel`); publikované a nič sa nepripravuje → žiadna karta.
-      */}
-      {hasChangesToPublish && (
-      <section className="card detail-block">
-        <h2 className="detail-block-title">
-          {draftState === "in-review"
-            ? t.nowInReview
-            : effective
-              ? t.nowPublishNew(effective.label)
-              : t.publishHeading}
-        </h2>
-            {/*
-              Údaje o znení (ADR-013) — **pred** schvaľovaním, lebo sú jeho
-              súčasťou. Po predložení je formulár zamknutý a server zmenu
-              odmietne (`saveDraftMeta()`), nielen že sa nekreslí tlačidlo.
-            */}
-            <form id="version-meta" action={saveDraftMetaAction} style={{ display: "grid", gap: 10, marginBottom: 16 }}>
-              <input type="hidden" name="documentId" value={d.documentId} />
-              <h3 className="field-label" style={{ margin: 0 }}>{tm.heading}</h3>
-              <p className="detail-block-small" style={{ margin: 0 }}>{tm.intro}</p>
-              {metaVoidsApproval && <p className="detail-block-note" style={{ margin: 0 }}>{tm.voidsApproval}</p>}
-              {metaIsLocked
-                ? <p className="detail-block-note" style={{ margin: 0 }}>{tm.locked}</p>
-                : !d.draftMeta?.effectiveFrom && (
-                    // Nie je uložený dátum účinnosti — bez neho sa nedá predložiť.
-                    // Ak ho návrh z dokumentu má, pole je predvyplnené, ale uloží sa
-                    // až tlačidlom (D108).
-                    <p className="detail-block-note" style={{ margin: 0 }}>
-                      {d.draftMetaSuggestion?.effectiveFrom ? tm.suggested : tm.missing}
-                    </p>
-                  )}
-              <VersionMetaFields
-                value={d.draftMeta}
-                suggestion={metaIsLocked ? null : d.draftMetaSuggestion}
-                authors={metaOptions.authors}
-                approvers={metaOptions.approvers}
-                language={language}
-                disabled={metaIsLocked}
-              />
-              {!metaIsLocked && <div><button className="button button--quiet" type="submit">{tm.save}</button></div>}
-            </form>
+      {flow && (
+      <section className="card flow" id="flow">
+        <div className="flow-head">
+          <h2>{flowHeading}</h2>
+          <span className="quiet">{flowStatus}</span>
+        </div>
+        <FlowSteps states={flow.states} names={tflow.steps} subs={flowSubs} label={tflow.stepOf(flow.step)} />
 
-            <div style={{ display: "grid", gap: 8 }}>
-              <h3 className="field-label" style={{ margin: 0 }}>{t.draftApprovalHeading}</h3>
-              <ApprovalPanel
-                documentId={d.documentId}
-                documentTitle={d.title}
-                versionId={draftVersionId ?? ""}
-                versionLabel={t.approvalDraftLabel}
-                effectiveFrom={null}
-                state={draftState}
-                rounds={draftRounds}
-                people={approverChoices}
+        {/* ── Krok 1: Príprava ── */}
+        {flow.step === 1 && (
+          <form action={prepareDraftAction}>
+            <input type="hidden" name="documentId" value={d.documentId} />
+            <input type="hidden" name="versionLabel" value={t.approvalDraftLabel} />
+            {!metaIsLocked && <input type="hidden" name="metaEditable" value="1" />}
+            <div className="flow-body">
+              {flow.rejected && (
+                <div className="flow-reject" role="note">
+                  <b>
+                    {rejectedBy(flow.rejected)
+                      ? tflow.rejectedBy(rejectedBy(flow.rejected)!.fullName, date(rejectedBy(flow.rejected)!.decidedAt), flow.rejected.round)
+                      : tflow.cancelled(date(flow.rejected.closedAt ?? flow.rejected.submittedAt), flow.rejected.round)}
+                  </b>
+                  {rejectedBy(flow.rejected)?.reason
+                    ? <q>{rejectedBy(flow.rejected)!.reason}</q>
+                    : flow.rejected.note && <q>{flow.rejected.note}</q>}
+                </div>
+              )}
+              <p className="flow-lead">{flow.rejected ? tflow.lead1Rejected : tflow.lead1}</p>
+
+              <div className="flow-check">
+                <div className="flow-check-row">
+                  <span className={`flow-check-ico ${d.draftPdf ? "is-ok" : "is-todo"}`} aria-hidden="true">{d.draftPdf ? "✓" : "!"}</span>
+                  <div className="flow-check-main">
+                    {d.draftPdf
+                      ? <>{tflow.checkPdf} — <FileLink file={d.draftPdf} /></>
+                      : tflow.checkPdfMissing}
+                    {d.draftPdf?.bytes ? <div className="flow-check-note">{formatSize(d.draftPdf.bytes)}</div> : null}
+                  </div>
+                  <Link className="flow-check-act" href={newVersionHref}>{tflow.replace}</Link>
+                </div>
+                <div className="flow-check-row">
+                  <span className={`flow-check-ico ${d.draftSource ? "is-ok" : "is-opt"}`} aria-hidden="true">{d.draftSource ? "✓" : "–"}</span>
+                  <div className="flow-check-main">
+                    {d.draftSource ? <>{tflow.checkSource} — <FileLink file={d.draftSource} download /></> : tflow.checkSource}
+                    <div className="flow-check-note">{d.draftSource ? tflow.checkSourceNote : tflow.checkSourceMissing}</div>
+                  </div>
+                  <Link className="flow-check-act" href={`${base}/text`}>{tflow.showText}</Link>
+                </div>
+              </div>
+
+              {/*
+                Údaje o znení (ADR-013) — **pred** schvaľovaním, lebo sú jeho
+                súčasťou. Zámok stráži server (`saveDraftMeta()`), nielen
+                formulár.
+              */}
+              <div id="version-meta" style={{ display: "grid", gap: 10 }}>
+                <h3 className="flow-section-title">{tflow.metaHeading}</h3>
+                {metaVoidsApproval && <p className="detail-block-note">{tm.voidsApproval}</p>}
+                {metaIsLocked
+                  ? <p className="detail-block-note">{tm.locked}</p>
+                  : !d.draftMeta?.effectiveFrom && (
+                      // Bez uloženého dátumu účinnosti sa nedá predložiť. Návrh
+                      // z dokumentu je predvyplnený, uloží sa až tlačidlom (D108).
+                      <p className="detail-block-note">
+                        {d.draftMetaSuggestion?.effectiveFrom ? tm.suggested : tflow.metaNote}
+                      </p>
+                    )}
+                <VersionMetaFields
+                  value={d.draftMeta}
+                  suggestion={metaIsLocked ? null : d.draftMetaSuggestion}
+                  authors={metaOptions.authors}
+                  approvers={metaOptions.approvers}
+                  language={language}
+                  disabled={metaIsLocked}
+                />
+              </div>
+
+              {/* Schvaľovatelia predvyplnení z posledného kola (ADR-014, D110). */}
+              <fieldset className="hr-group">
+                <legend className="field-label">{tflow.approvers}</legend>
+                <span className="quiet field-hint">{tflow.approversPrefilled}</span>
+                {approverChoices.length === 0 ? (
+                  <p className="quiet">{t.approvalNoPeople}</p>
+                ) : (
+                  <div className="approval-people">
+                    {approverChoices.map(p => (
+                      <label key={p.id} className="approval-person">
+                        <input type="checkbox" name="approver" value={p.id} defaultChecked={prefilledApprovers.has(p.id)} />
+                        <span>
+                          <span className="approval-person-name">{p.fullName}</span>
+                          <span className="quiet approval-person-meta">
+                            {p.department ? `${p.department} · ` : ""}{p.email}
+                          </span>
+                        </span>
+                      </label>
+                    ))}
+                  </div>
+                )}
+              </fieldset>
+
+              {/* Zodpovedná osoba už v príprave (ADR-014, D109) — nepovinná tu,
+                  povinná pri zverejnení. */}
+              <ResponsiblePicker
+                people={responsibleChoices}
+                language={language}
+                initial={d.draftResponsible?.personId}
+                required={false}
+                note={tflow.responsibleNote}
+              />
+
+              <label className="field">
+                <span className="field-label">{tflow.note}</span>
+                <textarea className="field-input" name="note" rows={2} placeholder={t.approvalNotePlaceholder} />
+              </label>
+            </div>
+            <div className="flow-foot">
+              <button className="button" type="submit" name="intent" value="submit">
+                {draftRounds.length > 0 ? tflow.resubmit(nextRound) : tflow.submitAndSave}
+              </button>
+              <button className="button button--quiet" type="submit" name="intent" value="save">{tflow.saveOnly}</button>
+            </div>
+          </form>
+        )}
+
+        {/* ── Krok 2: Schválenie ── */}
+        {flow.step === 2 && running && (
+          <>
+            <div className="flow-body">
+              <p className="flow-lead">{tflow.lead2(decided, running.approvers.length)}</p>
+              <ul className="flow-approvers">
+                {running.approvers.map(a => (
+                  <li key={a.email} className="flow-appr">
+                    <span className="flow-av" aria-hidden="true">{initials(a.fullName, a.email)}</span>
+                    <span className="flow-appr-name">
+                      {a.fullName}
+                      {departmentOf.get(a.email.toLowerCase()) && (
+                        <span className="flow-appr-role">{departmentOf.get(a.email.toLowerCase())}</span>
+                      )}
+                    </span>
+                    <span className={`flow-appr-state${a.decision === "approved" ? " is-ok" : a.decision === "rejected" ? " is-bad" : ""}`}>
+                      {a.decision === "approved" && a.decidedAt ? t.approvalApproved(date(a.decidedAt))
+                        : a.decision === "rejected" && a.decidedAt ? t.approvalRejected(date(a.decidedAt))
+                        : t.approvalWaiting}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+              <p className="detail-block-small">{tflow.approvalsWhere}</p>
+
+              <h3 className="flow-section-title">
+                {tflow.whatIsApproved}
+                <span className="flow-lock">🔒 {tflow.locked}</span>
+              </h3>
+              <div className="flow-check">
+                {d.draftPdf && (
+                  <div className="flow-check-row">
+                    <span className="flow-check-ico is-ok" aria-hidden="true">✓</span>
+                    <div className="flow-check-main">
+                      <FileLink file={d.draftPdf} />
+                      <div className="flow-check-note">PDF{d.draftPdf.bytes ? ` · ${formatSize(d.draftPdf.bytes)}` : ""}</div>
+                    </div>
+                  </div>
+                )}
+                <div className="flow-check-row">
+                  <span className="flow-check-ico is-ok" aria-hidden="true">✓</span>
+                  <div className="flow-check-main">
+                    {tflow.searchText}
+                    <div className="flow-check-note">{tflow.searchTextNote}</div>
+                  </div>
+                  <Link className="flow-check-act" href={`${base}/text`}>{tflow.show}</Link>
+                </div>
+              </div>
+              {d.draftMeta && <MetaFacts meta={d.draftMeta} language={language} />}
+              {nextRows}
+            </div>
+            <div className="flow-foot">
+              <details>
+                <summary className="quiet" style={{ cursor: "pointer" }}>{tflow.withdraw}</summary>
+                <form action={cancelApprovalAction} className="approval-form">
+                  <input type="hidden" name="documentId" value={d.documentId} />
+                  <input type="hidden" name="versionId" value={draftVersionId ?? ""} />
+                  <p className="detail-block-small">{tflow.withdrawNote}</p>
+                  <label className="field">
+                    <span className="field-label">{t.approvalCancelReason}</span>
+                    <input className="field-input" name="reason" required />
+                  </label>
+                  <div><button className="button button--quiet" type="submit">{tflow.withdraw}</button></div>
+                </form>
+              </details>
+            </div>
+          </>
+        )}
+
+        {/* ── Krok 3: Zverejnenie ── */}
+        {flow.step === 3 && (
+          <form action={publishVersionAction}>
+            <input type="hidden" name="documentId" value={d.documentId} />
+            <div className="flow-body">
+              <p className="flow-lead">{tflow.lead3}</p>
+              {d.draftMeta && <MetaFacts meta={d.draftMeta} language={language} />}
+
+              <label className="field">
+                <span className="field-label">{t.versionLabel}</span>
+                <input className="field-input" name="label" required defaultValue={labelSuggestion}
+                       placeholder={t.versionLabelPlaceholder} />
+                <span className="quiet field-hint">{labelSuggestion ? tflow.labelSuggested : <>{t.labelNoteBefore}<strong>{t.labelNoteHighlight}</strong>{t.labelNoteAfter}</>}</span>
+              </label>
+
+              {/* Dátum účinnosti je v schválených údajoch o znení (ADR-013)
+                  a tu sa už nezadáva. Pole zostáva len pre koncept spred ADR-013. */}
+              {!draftEffectiveFrom && (
+                <label className="field">
+                  <span className="field-label">{t.effectiveFrom}</span>
+                  <input className="field-input" type="date" name="effectiveFrom" required />
+                  <span className="quiet field-hint">{t.effectiveFromNote}</span>
+                </label>
+              )}
+
+              <label className="field">
+                <span className="field-label">{t.effectiveFromSource}</span>
+                <input className="field-input" name="effectiveFromSource" required defaultValue={sourceSuggestion}
+                       placeholder={t.effectiveFromSourcePlaceholder} />
+                <span className="quiet field-hint">{sourceSuggestion ? tflow.effectiveFromSourceSuggested : t.effectiveFromSourceNote}</span>
+              </label>
+
+              <label className="field">
+                <span className="field-label">{t.changeNote}</span>
+                <input className="field-input" name="changeNote" placeholder={t.changeNotePlaceholder} />
+              </label>
+
+              {d.draftResponsible ? (
+                <div style={{ display: "grid", gap: 6 }}>
+                  <p className="detail-block-note">{tflow.responsibleChosen(d.draftResponsible.fullName)}</p>
+                  <details>
+                    <summary className="quiet" style={{ cursor: "pointer", fontSize: "var(--fs-small)" }}>{tflow.responsibleChange}</summary>
+                    <ResponsiblePicker people={responsibleChoices} language={language} required={false}
+                                       exclude={d.draftResponsible.personId} />
+                  </details>
+                </div>
+              ) : (
+                <ResponsiblePicker people={responsibleChoices} language={language} />
+              )}
+
+              {/* Prenos pridelení ako voľba pri zverejnení (ADR-014, D111). */}
+              {draftCarryOver.length > 0 && (
+                <div style={{ display: "grid", gap: 12 }}>
+                  <label className="approval-person">
+                    <input type="checkbox" name="carryOver" value="1" defaultChecked />
+                    <span>
+                      <span className="approval-person-name">{tflow.carryOver(draftCarryOver.length)}</span>
+                      <span className="quiet approval-person-meta">{tflow.carryOverNote}</span>
+                    </span>
+                  </label>
+                  <div data-carry-over style={{ display: "grid", gap: 12 }}>
+                    <CarryOverFields
+                      candidates={draftCarryOver}
+                      reason={reasonFor(labelSuggestion, draftCarryOver)}
+                      language={language}
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+            <div className="flow-foot">
+              <PublishSubmit
+                withCarryOver={draftCarryOver.length > 0}
+                labels={{
+                  publish: draftEffectiveFrom ? tflow.publishFrom(date(draftEffectiveFrom)) : t.publish,
+                  publishAndAssign: tflow.publishAndAssign,
+                }}
+              />
+            </div>
+          </form>
+        )}
+
+        {/* ── Krok 4: Pridelenie ── */}
+        {flow.step === 4 && (
+          <form action={carryOverAssignmentsAction}>
+            <input type="hidden" name="documentId" value={d.documentId} />
+            <div className="flow-body">
+              <p className="flow-lead">{tflow.lead4} {tc.intro(carryOverVersion?.label ?? d.effectiveLabel)}</p>
+              <CarryOverFields
+                candidates={carryOver}
+                reason={reasonFor(carryOverVersion?.label ?? "", carryOver)}
                 language={language}
               />
             </div>
+            <div className="flow-foot">
+              <button className="button" type="submit">{tflow.assignChosen}</button>
+              <Link href={assignHref([d.documentId])}>{tflow.assignElsewhere}</Link>
+            </div>
+          </form>
+        )}
 
-            {draftState !== "approved" ? (
-              <p className="detail-block-note">
-                {draftState === "in-review" ? t.publishWaitsForApproval : t.publishNeedsApproval}
-              </p>
-            ) : (
-              <>
-                <p className="detail-block-note">{t.publishApprovedNote}</p>
-              <form action={publishVersionAction} style={{ display: "grid", gap: 14 }}>
-                <input type="hidden" name="documentId" value={d.documentId} />
-
-                <label className="field">
-                  <span className="field-label">{t.versionLabel}</span>
-                  <input className="field-input" name="label" required
-                         placeholder={t.versionLabelPlaceholder} />
-                  <span className="quiet field-hint">
-                    {t.labelNoteBefore}<strong>{t.labelNoteHighlight}</strong>{t.labelNoteAfter}
-                  </span>
-                </label>
-
-                {/* Dátum účinnosti je v schválených údajoch o znení (ADR-013)
-                    a tu sa už nezadáva. Pole zostáva len pre koncept spred ADR-013. */}
-                {d.draftMeta?.effectiveFrom ? (
-                  <p className="detail-block-note" style={{ margin: 0 }}>
-                    {tm.fromMeta(formatDate(d.draftMeta.effectiveFrom, language))}
-                  </p>
-                ) : (
-                  <label className="field">
-                    <span className="field-label">{t.effectiveFrom}</span>
-                    <input className="field-input" type="date" name="effectiveFrom" required />
-                    <span className="quiet field-hint">{t.effectiveFromNote}</span>
-                  </label>
-                )}
-
-                <label className="field">
-                  <span className="field-label">{t.effectiveFromSource}</span>
-                  <input className="field-input" name="effectiveFromSource" required
-                         placeholder={t.effectiveFromSourcePlaceholder} />
-                  <span className="quiet field-hint">{t.effectiveFromSourceNote}</span>
-                </label>
-
-                <label className="field">
-                  <span className="field-label">{t.changeNote}</span>
-                  <input className="field-input" name="changeNote" placeholder={t.changeNotePlaceholder} />
-                </label>
-
-                <ResponsiblePicker people={responsibleChoices} language={language} />
-
-                <div><button className="button" type="submit">{t.publish}</button></div>
-              </form>
-              </>
-            )}
-
+        {flow.step !== 4 && lastRound && (
+          <details className="flow-foot" style={{ display: "block" }}>
+            <summary className="quiet" style={{ cursor: "pointer" }}>{tflow.approvalHistory}</summary>
+            <ApprovalRounds
+              versionId={draftVersionId ?? "draft"}
+              rounds={[...rounds.values()].flat()
+                .filter(r => !lastPublishedAt || new Date(r.submittedAt) > lastPublishedAt)
+                .sort((a, b) => new Date(a.submittedAt).getTime() - new Date(b.submittedAt).getTime())}
+              language={language}
+            />
+          </details>
+        )}
       </section>
       )}
 
+      {/* ── Platné znenie ako súhrn (bod 3 rámu) ── */}
+      {effective ? (
+        <section className="card cur" id="current">
+          <div className="cur-head">
+            <h2>{tflow.currentHeading}</h2>
+            {effective.effectiveFrom && <span className="quiet">{tflow.fromDate(date(effective.effectiveFrom))}</span>}
+          </div>
+          <strong>{effective.label}</strong>
+          {/*
+            Zodpovedná osoba a právny základ (D91). Chýbajúci údaj sa hovorí
+            nahlas, nie mlčí — pri zneniach spred D91 je to bežný stav.
+          */}
+          <dl className="facts">
+            <div>
+              <dt>{tr.responsiblePerson}</dt>
+              <dd>
+                {effective.responsiblePerson
+                  ? <>
+                      {effective.responsiblePerson.fullName}
+                      {!activePersonIds.has(effective.responsiblePerson.personId) && (
+                        <> <span className="tag tag--draft">{tr.inactiveResponsible}</span></>
+                      )}
+                    </>
+                  : <span className="tag tag--draft">{tr.noResponsible}</span>}
+              </dd>
+            </div>
+            <div>
+              <dt>{tr.legalBasis}</dt>
+              <dd>
+                {effective.legalBasis
+                  ? <>
+                      {`${basisName(effective)}${effective.legalBasisReference ? ` · ${effective.legalBasisReference}` : ""}`}
+                      {!effective.legalBasisKey && <> <span className="tag tag--draft">{tr.outsideCodelist}</span></>}
+                    </>
+                  : <span className="tag tag--draft">{tr.basisUnset}</span>}
+              </dd>
+            </div>
+            <div>
+              <dt>{tm.approvedBy}</dt>
+              <dd>{effective.approvedBy
+                ? `${effective.approvedBy}${effective.approvedOn ? ` · ${date(effective.approvedOn)}` : ""}`
+                : ts.none}</dd>
+            </div>
+            <div>
+              <dt>{tm.author}</dt>
+              <dd>{effective.author || ts.none}</dd>
+            </div>
+          </dl>
+          {versionLinks(effective)}
+          {versionPanel(effective)}
+        </section>
+      ) : d.versions.length === 0 && !flow && (
+        <p className="card" style={{ padding: 18, fontSize: "var(--fs-lead)" }}>
+          {t.nothingPublished}
+        </p>
+      )}
+
+      {/* ── Staršie znenia (bod 4 rámu) ── */}
+      {(effective || olderVersions.length > 0) && (
+        <>
+          <h2 className="detail-card-title">{tflow.olderHeading}</h2>
+          {olderVersions.length === 0 ? (
+            <p className="quiet detail-empty" style={{ margin: "0 0 18px" }}>{tflow.olderNone}</p>
+          ) : (
+            <ul className="older">
+              {olderVersions.map(v => (
+                <li key={v.versionId} className="older-row" id={`v-${v.versionId}`}>
+                  <strong>{v.label}</strong>
+                  <span className="quiet">
+                    {v.effectiveFrom ? t.effectiveFromOn(date(v.effectiveFrom)) : t.noEffectiveDate}
+                    {v.effectiveTo && ` ${t.effectiveTo(date(v.effectiveTo))}`}
+                  </span>
+                  <div className="older-panel">
+                    <VersionMetaLine author={v.author} approvedBy={v.approvedBy} approvedOn={v.approvedOn} language={language} />
+                    {versionLinks(v)}
+                    {versionPanel(v)}
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </>
+      )}
+
       {/*
-        Úroveň 3 — ostatné akcie za jedným nadpisom (DETAIL, úloha 1).
-        Väčšina z nich je vzácna: preindexovanie pri poruche, nové znenie raz
-        za rok, oprava textu výnimočne. `<details>`, nie záložky: záložky
-        potrebujú klientsky stav alebo adresu, a zatvorený stav je tu správny
-        predvolený stav — kto prišiel dokument zverejniť, nechce vidieť
-        formulár na preindexovanie. Metadáta sú prvé, lebo sú z tejto skupiny
-        najčastejšie.
+        Správa — vzácne úkony za jedným nadpisom (DETAIL, úloha 1): údaje
+        o dokumente, text a pôvodný súbor, priečinok, oprava textu,
+        preindexovanie. Zatvorené je správny predvolený stav; „Upraviť
+        dokument" ju otvorí adresou (`?edit=document`), bez JavaScriptu.
       */}
-      <details className="detail-tools">
-        <summary>{t.toolsSummary}</summary>
+      <details className="detail-tools" open={editDocument}>
+        <summary>{tflow.manage}</summary>
         <div className="detail-tools-body">
-      <details className="card detail-block">
+      <details className="card detail-block" id="document-data" open={editDocument}>
         <summary>
           {t.documentData}
-          <span className="quiet" style={{ fontWeight: 400, fontSize: "var(--fs-small)" }}>
-            {" "}· {d.language} · {d.accessLevel}
-            {d.category && ` · ${d.category}`}
-            {d.internalNumber && ` · ${d.internalNumber}`}
-            {ownerDepartment && ` · ${ownerDepartment.name}`}
-            {d.tags.length > 0 && ` · ${d.tags.join(", ")}`}
-          </span>
         </summary>
 
         <form action={saveDocumentMetadataAction} style={{ display: "grid", gap: 14, marginTop: 14 }}>
@@ -596,104 +1225,6 @@ export default async function DocumentDetailPage({
         </div>
         <button className="button button--quiet" type="submit">{t.assign}</button>
       </form>
-      {canAssign && carryOver.length > 0 && (
-      <form action={carryOverAssignmentsAction} className="card detail-block">
-        <input type="hidden" name="documentId" value={d.documentId} />
-        <h2 className="detail-block-title">{tc.heading}</h2>
-        <p className="detail-block-small">
-          {tc.intro(carryOverVersion?.label ?? d.effectiveLabel)}
-        </p>
-
-        <fieldset className="hr-group" style={{ border: "1px solid var(--line)", margin: "0 0 14px" }}>
-          <legend className="field-label">{tc.audiences}</legend>
-          {carryOver.map(c => (
-            <label key={audienceRef(c.audience)} className="check-row" style={{ display: "block", padding: "6px 0" }}>
-              <input type="checkbox" name="audience" value={audienceRef(c.audience)} defaultChecked />
-              {" "}
-              <span>{tc.previously(audienceLabel(c.audience), c.previousReason)}</span>
-            </label>
-          ))}
-        </fieldset>
-
-        <label className="field">
-          <span className="field-label">{tc.reason}</span>
-          <input className="field-input" name="reason" required
-                 defaultValue={carryOverReason} />
-          <span className="quiet field-hint">{tc.reasonNote}</span>
-        </label>
-
-        <fieldset className="hr-group" style={{ border: "1px solid var(--line)", margin: "14px 0" }}>
-          <legend className="field-label">{tc.due}</legend>
-          <Select
-            name="dueMode"
-            fieldLabel={tc.due}
-            initial="none"
-            options={[
-              { value: "none", label: tc.dueNone },
-              { value: "date", label: tc.dueDate },
-              { value: "days", label: tc.dueDays },
-            ]}
-          />
-          {/* Obe polia sú v DOM stále — formulár beží bez JavaScriptu, takže
-              sa skryť nedajú, a `dueFromFields()` číta len to, ktoré patrí
-              k zvolenému režimu. */}
-          <div className="due-fields">
-            <label className="field">
-              <span className="quiet field-label">{tc.dueDate}</span>
-              <input className="field-input" type="date" name="dueDate" defaultValue="" />
-            </label>
-            <label className="field">
-              <span className="quiet field-label">{tc.dueDaysUnit}</span>
-              <input className="field-input" type="number" min={1} name="dueDays" defaultValue="" />
-            </label>
-          </div>
-          <span className="quiet field-hint">{tc.dueNote}</span>
-        </fieldset>
-
-        <div><button className="button" type="submit">{tc.submit}</button></div>
-        <p className="quiet" style={{ fontSize: "var(--fs-small)", margin: "10px 0 0" }}>{tc.noEmailNote}</p>
-      </form>
-      )}
-      <form action={uploadVersionAction}
-            className="card detail-block">
-        <input type="hidden" name="documentId" value={d.documentId} />
-        <h2 className="detail-block-title">{t.newVersionHeading}</h2>
-        <p className="detail-block-note">{t.newVersionNote}</p>
-        {/* Autor a Schválil sa predvyplnia z platného znenia — pri novele
-            bývajú rovnaké; dátumy nie, tie sú pri každom znení iné. */}
-        <details>
-          <summary className="field-label" style={{ cursor: "pointer" }}>{tm.uploadHeading}</summary>
-          <p className="quiet field-hint" style={{ margin: "8px 0" }}>{tm.uploadNote}</p>
-          <VersionMetaFields
-            value={effective ? { author: effective.author ?? null, approvedBy: effective.approvedBy ?? null, approvedOn: null, effectiveFrom: null } : null}
-            authors={metaOptions.authors}
-            approvers={metaOptions.approvers}
-            language={language}
-          />
-        </details>
-        <UploadFiles
-          pdfAccept=".pdf,application/pdf"
-          sourceAccept={SOURCE_EXTENSIONS.join(",")}
-          maxBytes={MAX_BYTES}
-          labels={{
-            pdfTitle: tu.pdfTitle,
-            pdfNote: tu.pdfNote,
-            sourceTitle: tu.sourceTitle,
-            sourceNote: `${tu.sourceNote} ${SOURCE_EXTENSIONS.map(e => e.slice(1).toUpperCase()).join(" · ")}`,
-            maxSize: tu.maxSize(MAX_BYTES / 1024 / 1024),
-            noScriptLimit: tu.noScriptLimit(MAX_FORM_BYTES / 1024 / 1024),
-            uploading: tu.uploadingFile,
-            failed: tu.uploadFailed,
-            tooLarge: tu.fileTooLarge,
-            progressTitle: tu.submitPending,
-            converting: tu.submitPendingNote,
-            change: tu.change,
-          }}
-        />
-        <div className="upload-submit">
-          <UploadSubmit labels={{ submit: t.newVersionSubmit, pending: tu.submitPending, pickPdfFirst: tu.pickPdfFirst }} />
-        </div>
-      </form>
             {effective && draftDiff && draftDiff.added + draftDiff.removed > 0 && (
               <details className="card detail-block">
                 <summary>{t.textFixHeading}</summary>
@@ -768,321 +1299,12 @@ export default async function DocumentDetailPage({
       </form>
         </div>
       </details>
-
-      <h2 className="detail-section-title">{t.versionsHeading(d.versions.length)}</h2>
-
-      {d.versions.length === 0 ? (
-        <p className="card" style={{ padding: 18, fontSize: "var(--fs-lead)" }}>
-          {t.nothingPublished}
-        </p>
-      ) : (
-        <ul className="audit">
-          {d.versions.map(v => (
-            <li key={v.versionId} className="card audit-entry">
-              <div className="audit-head">
-                <strong>{v.label}</strong>
-                {v.isActive
-                  ? <span className="tag tag--published">{t.active}</span>
-                  : <span className="tag tag--archived">{t.archived}</span>}
-              </div>
-              <div className="quiet audit-who">
-                {v.effectiveFrom ? t.effectiveFromOn(formatDate(v.effectiveFrom, language)) : t.noEffectiveDate}
-                {v.effectiveTo && ` ${t.effectiveTo(formatDate(v.effectiveTo, language))}`}
-                {v.publishedBy && ` · ${v.publishedBy}`}
-                {v.publishedAt && ` · ${formatDate(v.publishedAt, language)}`}
-              </div>
-              {v.effectiveFromSource && (
-                <div className="quiet audit-note">{t.dateSource(v.effectiveFromSource)}</div>
-              )}
-              {v.changeNote && <div className="quiet audit-note">{v.changeNote}</div>}
-              <VersionMetaLine author={v.author} approvedBy={v.approvedBy} approvedOn={v.approvedOn} language={language} />
-              {/* PDF znenia je dôkaz; zdroj je predloha pre ďalšie znenie (ADR-011). */}
-              <div className="audit-note" style={{ fontSize: "var(--fs-small)" }}>
-                {v.pdf
-                  ? <>{t.versionPdf} <FileLink file={v.pdf} /></>
-                  : <span className="quiet">{t.noPdf}</span>}
-                {v.source && <><br />{t.versionSource} <FileLink file={v.source} download /></>}
-              </div>
-
-              {/*
-                Zodpovedná osoba a právny základ (D91). Chýbajúci údaj sa
-                hovorí nahlas, nie mlčí — pri zneniach spred D91 je to bežný
-                stav a `npm run check` ho vypisuje.
-              */}
-              <div className="audit-note" style={{ fontSize: "var(--fs-small)" }}>
-                <span className="quiet">{tr.responsiblePerson}: </span>
-                {v.responsiblePerson
-                  ? <>
-                      {v.responsiblePerson.fullName}
-                      {!activePersonIds.has(v.responsiblePerson.personId) && (
-                        <> <span className="tag tag--draft">{tr.inactiveResponsible}</span></>
-                      )}
-                    </>
-                  : <span className="tag tag--draft">{tr.noResponsible}</span>}
-              </div>
-              <div className="audit-note" style={{ fontSize: "var(--fs-small)" }}>
-                <span className="quiet">{tr.legalBasis}: </span>
-                {v.legalBasis
-                  ? <>
-                      {`${basisName(v)}${v.legalBasisReference ? ` · ${v.legalBasisReference}` : ""}`}
-                      {!v.legalBasisKey && <> <span className="tag tag--draft">{tr.outsideCodelist}</span></>}
-                    </>
-                  : <span className="tag tag--draft">{tr.basisUnset}</span>}
-              </div>
-
-              {v.responsibleChanges && v.responsibleChanges.length > 0 && (
-                <details style={{ marginTop: 6 }}>
-                  <summary className="quiet" style={{ fontSize: "var(--fs-small)", cursor: "pointer" }}>
-                    {tr.responsibleHistory(v.responsibleChanges.length)}
-                  </summary>
-                  <ul style={{ listStyle: "none", padding: 0, margin: "8px 0 0", display: "grid", gap: 8 }}>
-                    {[...v.responsibleChanges].reverse().map((c, i) => (
-                      <li key={`${v.versionId}-resp-${i}`} style={{ fontSize: "var(--fs-small)" }}>
-                        <div>{c.reason}</div>
-                        <div className="quiet" style={{ fontSize: "var(--fs-micro)" }}>
-                          {tr.responsibleChangeLine(c.by, formatDate(c.at, language), c.from?.fullName ?? "—", c.to.fullName)}
-                        </div>
-                      </li>
-                    ))}
-                  </ul>
-                </details>
-              )}
-
-              {v.legalBasisChanges && v.legalBasisChanges.length > 0 && (
-                <details style={{ marginTop: 6 }}>
-                  <summary className="quiet" style={{ fontSize: "var(--fs-small)", cursor: "pointer" }}>
-                    {tr.basisHistory(v.legalBasisChanges.length)}
-                  </summary>
-                  <ul style={{ listStyle: "none", padding: 0, margin: "8px 0 0", display: "grid", gap: 8 }}>
-                    {[...v.legalBasisChanges].reverse().map((c, i) => (
-                      <li key={`${v.versionId}-basis-${i}`} style={{ fontSize: "var(--fs-small)" }}>
-                        {c.reason && <div>{c.reason}</div>}
-                        <div className="quiet" style={{ fontSize: "var(--fs-micro)" }}>
-                          {tr.basisChangeLine(
-                            c.by,
-                            formatDate(c.at, language),
-                            c.from ? tr.basisLabel[c.from] : tr.basisUnset,
-                            `${c.toLabel ?? tr.basisLabel[c.to]}${c.toReference ? ` (${c.toReference})` : ""}`,
-                          )}
-                        </div>
-                      </li>
-                    ))}
-                  </ul>
-                </details>
-              )}
-
-              <details style={{ marginTop: 6 }}>
-                <summary className="quiet" style={{ fontSize: "var(--fs-small)", cursor: "pointer" }}>
-                  {v.responsiblePerson ? tr.changeResponsible : tr.setResponsible}
-                </summary>
-                <form action={setResponsibleAction} style={{ display: "grid", gap: 10, marginTop: 10 }}>
-                  <input type="hidden" name="documentId" value={d.documentId} />
-                  <input type="hidden" name="versionId" value={v.versionId} />
-                  <input type="hidden" name="versionLabel" value={v.label} />
-                  <ResponsiblePicker
-                    people={responsibleChoices}
-                    language={language}
-                    exclude={v.responsiblePerson?.personId}
-                  />
-                  <label className="field">
-                    <span className="field-label">{tr.changeReason}</span>
-                    <input className="field-input" name="reason" required
-                           placeholder={tr.changeReasonPlaceholder} />
-                  </label>
-                  <div><button className="button button--quiet" type="submit">{tr.saveResponsible}</button></div>
-                </form>
-              </details>
-
-              {/*
-                Právny základ smie v knižnici určiť správca obsahu len ako
-                náhradník — keď znenie zodpovednú osobu nemá alebo už nie je
-                aktívna — alebo keď je sám zodpovednou osobou. To isté pravidlo
-                stráži server; tu sa len neponúka formulár, ktorý by odmietol.
-              */}
-              {canSetLegalBasis({
-                actorPersonId: ctx.person.id,
-                isContentManager: true,
-                responsible: v.responsiblePerson,
-                responsibleActive: Boolean(v.responsiblePerson && activePersonIds.has(v.responsiblePerson.personId)),
-              }) && (
-                <details style={{ marginTop: 6 }}>
-                  <summary className="quiet" style={{ fontSize: "var(--fs-small)", cursor: "pointer" }}>
-                    {tr.legalBasis}
-                  </summary>
-                  <div style={{ marginTop: 10, display: "grid", gap: 10 }}>
-                    <p className="detail-block-small">{tr.basisWho}</p>
-                    <LegalBasisForm
-                      documentId={d.documentId}
-                      versionId={v.versionId}
-                      current={v.legalBasis}
-                      currentKey={v.legalBasisKey}
-                      options={basisOptions}
-                      language={language}
-                      back="library"
-                    />
-                  </div>
-                </details>
-              )}
-
-              <ApprovalPanel
-                documentId={d.documentId}
-                documentTitle={d.title}
-                versionId={v.versionId}
-                versionLabel={v.label}
-                effectiveFrom={v.effectiveFrom ?? null}
-                state={stateOf(rounds.get(v.versionId), v.publishedBefore)}
-                rounds={rounds.get(v.versionId) ?? []}
-                people={approverChoices}
-                language={language}
-              />
-
-              {/*
-                História opráv. Zapisuje sa od zavedenia `fixVersion()`,
-                ukazuje sa až odteraz — dôvod opravy je povinný práve preto,
-                aby sa o rok dalo prečítať, či išlo o preklep alebo o zmenu
-                povinnosti. Kým ho nemal kto ukázať, bola to polovica veci.
-              */}
-              {v.fixes && v.fixes.length > 0 && (
-                <details style={{ marginTop: 6 }}>
-                  <summary className="quiet" style={{ fontSize: "var(--fs-small)", cursor: "pointer" }}>
-                    {t.fixHistory(v.fixes.length)}
-                  </summary>
-                  <ul style={{ listStyle: "none", padding: 0, margin: "8px 0 0", display: "grid", gap: 8 }}>
-                    {/* Najnovšia oprava hore — staršie sa dohľadávajú, novšia zaujíma. */}
-                    {[...v.fixes].reverse().map((fix, i) => (
-                      <li key={`${v.versionId}-fix-${i}`} style={{ fontSize: "var(--fs-small)" }}>
-                        <div>{fix.reason}</div>
-                        <div className="quiet" style={{ fontSize: "var(--fs-micro)" }}>
-                          {t.fixLine(fix.by, formatDate(fix.at, language))}
-                          {" · "}
-                          {t.fixWas(
-                            fix.fromLabel,
-                            fix.fromEffectiveFrom
-                              ? formatDate(fix.fromEffectiveFrom, language)
-                              : t.fixNoDate,
-                          )}
-                          {fix.requiresReacknowledgement && ` · ${t.fixReacknowledged}`}
-                        </div>
-                      </li>
-                    ))}
-                  </ul>
-                </details>
-              )}
-
-              {/*
-                História opráv **textu** — iná vec než `fixes` vyššie. Tie menili
-                údaje o znení, tieto samotný text. Celé predchádzajúce znenie je
-                v databáze (`textFixes[].fromMarkdown`); tu je vidieť, že sa to
-                stalo, kto to bol a prečo.
-              */}
-              {v.textFixes && v.textFixes.length > 0 && (
-                <details style={{ marginTop: 6 }}>
-                  <summary className="quiet" style={{ fontSize: "var(--fs-small)", cursor: "pointer" }}>
-                    {t.textFixHistory(v.textFixes.length)}
-                  </summary>
-                  <ul style={{ listStyle: "none", padding: 0, margin: "8px 0 0", display: "grid", gap: 8 }}>
-                    {[...v.textFixes].reverse().map((fix, i) => (
-                      <li key={`${v.versionId}-text-${i}`} style={{ fontSize: "var(--fs-small)" }}>
-                        <div>{fix.reason}</div>
-                        <div className="quiet" style={{ fontSize: "var(--fs-micro)" }}>
-                          {t.textFixLine(fix.by, formatDate(fix.at, language))}
-                        </div>
-                      </li>
-                    ))}
-                  </ul>
-                </details>
-              )}
-
-              <details style={{ marginTop: 6 }}>
-                <summary className="quiet" style={{ fontSize: "var(--fs-small)", cursor: "pointer" }}>{t.fix}</summary>
-                <form action={fixVersionAction} style={{ display: "grid", gap: 10, marginTop: 10 }}>
-                  <input type="hidden" name="documentId" value={d.documentId} />
-                  <input type="hidden" name="versionId" value={v.versionId} />
-
-                  {/*
-                    Zamknuté polia sa **neponúkajú**, nie sú len odmietnuté pri
-                    uložení (D82). Formulár, ktorý dá človeku vyplniť pole
-                    a potom mu povie, že sa nedá, je horší než formulár, ktorý
-                    ho nemá — a rovno povie prečo.
-                  */}
-                  {(ackByVersion.get(v.versionId) ?? 0) > 0 ? (
-                    <p className="detail-block-small">
-                      {t.versionLockedBefore}
-                      <strong>{t.versionLockedHighlight(ackByVersion.get(v.versionId) ?? 0)}</strong>
-                      {t.versionLockedAfter}
-                    </p>
-                  ) : (
-                    <>
-                      <label className="field">
-                        <span className="field-label">{t.fixLabel}</span>
-                        <input className="field-input" name="label" defaultValue={v.label} />
-                      </label>
-
-                      <label className="field">
-                        <span className="field-label">{t.effectiveFrom}</span>
-                        <input
-                          className="field-input"
-                          type="date"
-                          name="effectiveFrom"
-                          defaultValue={v.effectiveFrom ? new Date(v.effectiveFrom).toISOString().slice(0, 10) : ""}
-                        />
-                        <span className="quiet field-hint">
-                          {t.fixEffectiveFromNoteBefore}<strong>{t.fixEffectiveFromNoteHighlight}</strong>{t.fixEffectiveFromNoteAfter}
-                        </span>
-                      </label>
-                    </>
-                  )}
-
-                  <label className="field">
-                    <span className="field-label">{t.effectiveFromSource}</span>
-                    <input className="field-input" name="effectiveFromSource" defaultValue={v.effectiveFromSource ?? ""} />
-                  </label>
-
-                  <label className="field">
-                    <span className="field-label">{t.fixReason}</span>
-                    <input className="field-input" name="reason" required
-                           placeholder={t.fixReasonPlaceholder} />
-                    <span className="quiet field-hint">{t.fixReasonNote}</span>
-                  </label>
-
-                  <div><button className="button button--quiet" type="submit">{t.fixSubmit}</button></div>
-                </form>
-
-                {/*
-                  Odomknutie: hromadné odvolanie potvrdení. Vidí ho len
-                  personalista — správcovi obsahu by tlačidlo, ktoré nemá
-                  povolené stlačiť, len sľuboval cestu, ktorú nemá.
-                */}
-                {canRevoke && (ackByVersion.get(v.versionId) ?? 0) > 0 && (
-                  <form action={revokeVersionAction} style={{ display: "grid", gap: 10, marginTop: 14 }}>
-                    <input type="hidden" name="documentId" value={d.documentId} />
-                    <input type="hidden" name="versionId" value={v.versionId} />
-                    <h3 style={{ fontSize: "var(--fs-body)", margin: 0 }}>{t.revokeVersionHeading}</h3>
-                    <p className="detail-block-small">
-                      {t.revokeVersionNote(ackByVersion.get(v.versionId) ?? 0)}
-                    </p>
-                    <label className="field">
-                      <span className="field-label">{t.revokeVersionReason}</span>
-                      <input className="field-input" name="reason" required
-                             placeholder={t.revokeVersionReasonPlaceholder} />
-                    </label>
-                    <div>
-                      <button className="button button--quiet" type="submit">{t.revokeVersionSubmit}</button>
-                    </div>
-                  </form>
-                )}
-              </details>
-            </li>
-          ))}
-        </ul>
-      )}
         </div>
 
         {/*
-          Pravý panel — zhrnutie, nie ovládanie. Meniť sa dá všetko o kúsok
-          vyššie vo formulári „Údaje o dokumente"; tu je len to, na čo sa
-          človek pri otvorenom dokumente pýta: koľkí to už potvrdili a čo to
-          vlastne je.
+          Pravý panel — zhrnutie, nie ovládanie. Údaje o znení a zodpovedná
+          osoba sú v karte platného znenia (bod 5 rámu); tu sú potvrdenia
+          a údaje o dokumente s odkazom na ich úpravu.
         */}
         <aside className="detail-side">
           <section className="card detail-card">
@@ -1106,12 +1328,8 @@ export default async function DocumentDetailPage({
                   <span className="detail-bar-fill" style={{ width: `${progress.percent}%` }} />
                 </div>
                 {/*
-                  Odkaz vidí **len personalista** a mieri na **toto znenie**.
-                  Dovtedy robil obe veci zle: viedol na `/hr` (teda na celý
-                  výkaz, nie na to, čo štítok sľubuje) a ukazoval sa každému,
-                  kto smie do knižnice — vrátane správcu obsahu, ktorý do
-                  `/hr` nesmie. Odkaz, ktorý skončí na 404, je horší než
-                  žiadny: prezradí, že v systéme niečo je, a zároveň nepustí.
+                  Odkaz vidí **len personalista** a mieri na **toto znenie** —
+                  správca obsahu do `/hr` nesmie a odkaz na 404 je horší než žiadny.
                 */}
                 {canSeeWho && effective && (
                   <p className="detail-card-link">
@@ -1125,17 +1343,13 @@ export default async function DocumentDetailPage({
           </section>
 
           <section className="card detail-card">
-            <h2 className="detail-card-title">{ts.metaHeading}</h2>
+            <h2 className="detail-card-title">
+              {ts.metaHeading}
+              <Link href={`${base}?edit=document#document-data`}>{tflow.editDocument}</Link>
+            </h2>
             <dl className="detail-meta">
               {([
                 [t.category, d.category],
-                [tr.responsiblePerson, effective?.responsiblePerson?.fullName],
-                [tr.legalBasis, effective ? basisName(effective) : ""],
-                // Údaje o platnom znení (ADR-013).
-                [tm.author, effective?.author ?? ""],
-                [tm.approvedBy, effective?.approvedBy
-                  ? `${effective.approvedBy}${effective.approvedOn ? ` · ${formatDate(effective.approvedOn, language)}` : ""}`
-                  : ""],
                 [t.tags, d.tags.length ? d.tags.join(", ") : ""],
                 [t.accessLevel, d.accessLevel],
                 [t.documentLanguage, d.language],
@@ -1158,11 +1372,110 @@ export default async function DocumentDetailPage({
 
 
 /** Odkaz na súbor v úložisku — PDF sa otvára, zdroj sa sťahuje. */
-function FileLink({ file, download = false }: { file: VersionFile; download?: boolean }) {
+function FileLink({ file, download = false, label }: { file: VersionFile; download?: boolean; label?: string }) {
   const href = `/api/library/file/${encodeURIComponent(file.id)}${download ? "?download=1" : ""}`
   return (
     <a href={href} target={download ? undefined : "_blank"} rel="noreferrer" download={download ? file.name : undefined}>
-      {file.name}
+      {label ?? file.name}
     </a>
+  )
+}
+
+/** Veľkosť súboru pre človeka — „1,3 MB". */
+function formatSize(bytes: number): string {
+  const mb = bytes / 1024 / 1024
+  return mb >= 0.1 ? `${mb.toFixed(1).replace(".", ",")} MB` : `${Math.max(1, Math.round(bytes / 1024))} kB`
+}
+
+/** Zbalený zoznam histórie pri znení — zmeny osoby, základu, opravy. */
+function HistoryList({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <details>
+      <summary className="quiet" style={{ fontSize: "var(--fs-small)", cursor: "pointer" }}>{title}</summary>
+      <ul style={{ listStyle: "none", padding: 0, margin: "8px 0 0", display: "grid", gap: 8, fontSize: "var(--fs-small)" }}>
+        {children}
+      </ul>
+    </details>
+  )
+}
+
+/** Údaje o znení ako štyri fakty (ADR-013) — to, čo sa schvaľuje spolu s PDF. */
+function MetaFacts({ meta, language }: { meta: VersionMeta; language: UiLanguage }) {
+  const tm = dictionary(language).versionMeta
+  const none = dictionary(language).library.detail.side.none
+  const day = (v: Date | null) => (v ? formatDate(new Date(v), language) : none)
+  return (
+    <dl className="facts">
+      <div><dt>{tm.author}</dt><dd>{meta.author || none}</dd></div>
+      <div><dt>{tm.approvedBy}</dt><dd>{meta.approvedBy || none}</dd></div>
+      <div><dt>{tm.approvedOn}</dt><dd>{day(meta.approvedOn)}</dd></div>
+      <div><dt>{tm.effectiveFrom}</dt><dd>{day(meta.effectiveFrom)}</dd></div>
+    </dl>
+  )
+}
+
+/**
+ * Polia prenosu pridelení (D28, D30) — publiká, povinný nový dôvod a termín.
+ * Spoločné pre krok 3 (voľba pri zverejnení) aj krok 4 (samostatne).
+ * **Termín sa neprenáša** a **e-maily sa neposielajú** — viď `carryOverTo()`.
+ */
+function CarryOverFields({
+  candidates,
+  reason,
+  language,
+}: {
+  candidates: Awaited<ReturnType<typeof carryOverCandidates>>
+  reason: string
+  language: UiLanguage
+}) {
+  const tc = dictionary(language).library.carryOver
+  return (
+    <>
+      <fieldset className="hr-group" style={{ border: "1px solid var(--line)", margin: 0 }}>
+        <legend className="field-label">{tc.audiences}</legend>
+        {candidates.map(c => (
+          <label key={audienceRef(c.audience)} className="check-row" style={{ display: "block", padding: "6px 0" }}>
+            <input type="checkbox" name="audience" value={audienceRef(c.audience)} defaultChecked />
+            {" "}
+            <span>{tc.previously(audienceLabel(c.audience), c.previousReason)}</span>
+          </label>
+        ))}
+      </fieldset>
+
+      <label className="field">
+        <span className="field-label">{tc.reason}</span>
+        <input className="field-input" name="reason" required defaultValue={reason} />
+        <span className="quiet field-hint">{tc.reasonNote}</span>
+      </label>
+
+      <fieldset className="hr-group" style={{ border: "1px solid var(--line)", margin: 0 }}>
+        <legend className="field-label">{tc.due}</legend>
+        <Select
+          name="dueMode"
+          fieldLabel={tc.due}
+          initial="none"
+          options={[
+            { value: "none", label: tc.dueNone },
+            { value: "date", label: tc.dueDate },
+            { value: "days", label: tc.dueDays },
+          ]}
+        />
+        {/* Obe polia sú v DOM stále — formulár beží bez JavaScriptu, takže
+            sa skryť nedajú, a `dueFromFields()` číta len to, ktoré patrí
+            k zvolenému režimu. */}
+        <div className="due-fields">
+          <label className="field">
+            <span className="quiet field-label">{tc.dueDate}</span>
+            <input className="field-input" type="date" name="dueDate" defaultValue="" />
+          </label>
+          <label className="field">
+            <span className="quiet field-label">{tc.dueDaysUnit}</span>
+            <input className="field-input" type="number" min={1} name="dueDays" defaultValue="" />
+          </label>
+        </div>
+        <span className="quiet field-hint">{tc.dueNote}</span>
+      </fieldset>
+      <p className="quiet" style={{ fontSize: "var(--fs-small)", margin: 0 }}>{tc.noEmailNote}</p>
+    </>
   )
 }

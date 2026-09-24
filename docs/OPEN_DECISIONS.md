@@ -806,7 +806,7 @@ potvrdzujú) a na akom právnom základe sa spracúvajú záznamy o oboznámení
 | Čo | Rozhodnutie |
 |---|---|
 | **Zodpovedná osoba** | pri **znení**, nie pri predpise; **povinná pri každom novom znení** a **nededí sa** z predošlého — novela o tri roky môže mať iného garanta, pôvodný mohol odísť. Jedna osoba na znenie, z ľubovoľného oddelenia. |
-| Kto ju určuje | správca obsahu (`content-admin`) — pri zverejnení a neskôr zmenou s povinným dôvodom (`versions[].responsibleChanges[]`) |
+| Kto ju určuje | správca obsahu (`content-admin`) — pri zverejnení a neskôr zmenou s povinným dôvodom (`versions[].responsibleChanges[]`). **Od ADR-014 (D109) aj už v príprave** (`draftResponsible`), pri zverejnení sa len potvrdí. |
 | **Právny základ** | pri **znení**; `legal_obligation` (plnenie zákonnej povinnosti, napr. BOZP — **odkaz na predpis povinný**) alebo `legitimate_interest` (interné smernice bez zákonnej opory). Súhlas zámerne nie. |
 | Kto ho určuje | **zodpovedná osoba toho znenia**; správca obsahu len ako náhradník, keď znenie osobu nemá alebo už nie je aktívna. Oprávnenie sa **odvodzuje** (D27) — žiadna rola „právnik". Zmena už určeného základu vyžaduje dôvod (`legalBasisChanges[]`). |
 | Chýbajúci základ | **neblokuje** pridelenie — obrazovka pridelenia upozorní, `npm run check` vypíše. Blokovať by zastavilo bežiaci onboarding, kým sa základ nedoplní k existujúcim smerniciam. |

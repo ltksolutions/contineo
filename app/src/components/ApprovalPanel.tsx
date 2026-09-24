@@ -11,9 +11,10 @@
  * naň, nie druhý zdroj pravdy.
  */
 
-import { formatDate, dictionary, type UiLanguage } from "@/lib/i18n"
+import { dictionary, type UiLanguage } from "@/lib/i18n"
 import type { ApprovalRound, VersionState } from "@/lib/approvals"
 import { submitForApprovalAction, cancelApprovalAction } from "@/app/library/actions"
+import ApprovalRounds from "./ApprovalRounds"
 
 export interface ApproverChoice {
   id: string
@@ -81,43 +82,7 @@ export default function ApprovalPanel({
       {rounds.length > 0 && (
         <details className="approval-history">
           <summary className="quiet">{t.approvalHistory(rounds.length)}</summary>
-          <ul className="approval-rounds">
-            {[...rounds].reverse().map(r => (
-              <li key={`${versionId}-r${r.round}`}>
-                <div className="approval-round-head">
-                  <strong>{t.approvalRoundHeading(r.round)}</strong>
-                  <span className="quiet">
-                    {t.approvalSubmittedBy(r.submittedBy, formatDate(r.submittedAt, language))}
-                  </span>
-                </div>
-                {r.note && <div className="quiet approval-note">{r.note}</div>}
-                <ul className="approval-people-decided">
-                  {r.approvers.map(a => (
-                    <li key={`${versionId}-r${r.round}-${a.email}`}>
-                      <span>{a.fullName}</span>
-                      <span className="quiet">
-                        {a.decision === "approved" && a.decidedAt
-                          ? t.approvalApproved(formatDate(a.decidedAt, language))
-                          : a.decision === "rejected" && a.decidedAt
-                            ? t.approvalRejected(formatDate(a.decidedAt, language))
-                            // V **uzavretom** kole už nikto nečaká: kolo
-                            // skončilo a rozhodnutie nepríde. „Čaká" by tam
-                            // tvrdilo, že sa na človeka stále čaká — a je to
-                            // text v histórii, ktorá má byť dôkazom.
-                            : r.outcome === null ? t.approvalWaiting : t.approvalNotDecided}
-                      </span>
-                      {/* Dôvod zamietnutia je spätná väzba na prácu človeka —
-                          patrí k menu toho, kto ho napísal, nie pod anonymné
-                          „zamietnuté". */}
-                      {a.decision === "rejected" && a.reason && (
-                        <span className="approval-reason">{a.reason}</span>
-                      )}
-                    </li>
-                  ))}
-                </ul>
-              </li>
-            ))}
-          </ul>
+          <ApprovalRounds versionId={versionId} rounds={rounds} language={language} />
         </details>
       )}
 

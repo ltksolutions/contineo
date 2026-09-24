@@ -1593,6 +1593,99 @@ interface Dictionary {
   }
   library: {
     /**
+     * Postup znenia v štyroch krokoch (rám KNIZNICA-postup-znenia, ADR-014).
+     * Karta na detaile, ktorá nahradila „Čo treba teraz" a zbalené nástroje.
+     */
+    flow: {
+      heading: (date: string) => string
+      headingUndated: string
+      firstVersion: string
+      publishedHeading: (date: string) => string
+      steps: [string, string, string, string]
+      stepOf: (n: number) => string
+      subPrepare: string
+      subPrepareDone: string
+      subWaitSubmit: string
+      subInReview: (done: number, total: number) => string
+      subApproved: string
+      subRejected: (round: number) => string
+      subCancelled: (round: number) => string
+      subWaitApproval: string
+      subPublished: string
+      subAssign: string
+      statusPreparing: string
+      statusInReview: (by: string, date: string) => string
+      statusApproved: string
+      statusRejected: (date: string) => string
+      statusPublished: (date: string) => string
+      lead1: string
+      lead1Rejected: string
+      rejectedBy: (who: string, date: string, round: number) => string
+      cancelled: (date: string, round: number) => string
+      checkPdf: string
+      checkPdfMissing: string
+      checkSource: string
+      checkSourceNote: string
+      checkSourceMissing: string
+      replace: string
+      showText: string
+      metaHeading: string
+      metaNote: string
+      approvers: string
+      approversPrefilled: string
+      responsible: string
+      responsibleNote: string
+      responsibleChosen: (name: string) => string
+      responsibleChange: string
+      note: string
+      submitAndSave: string
+      resubmit: (round: number) => string
+      saveOnly: string
+      lead2: (done: number, total: number) => string
+      approvalsWhere: string
+      whatIsApproved: string
+      locked: string
+      searchText: string
+      searchTextNote: string
+      open: string
+      show: string
+      next: string
+      next3: string
+      next4: string
+      next4None: string
+      withdraw: string
+      withdrawNote: string
+      lead3: string
+      labelSuggestion: (date: string) => string
+      labelSuggested: string
+      effectiveFromSourceSuggested: string
+      carryOver: (n: number) => string
+      carryOverNote: string
+      publishFrom: (date: string) => string
+      publishAndAssign: string
+      lead4: string
+      assignElsewhere: string
+      assignChosen: string
+      newVersion: string
+      newVersionBusy: string
+      newVersionFirst: string
+      downloadPdf: string
+      editDocument: string
+      currentHeading: string
+      fromDate: (date: string) => string
+      changeResponsible: string
+      changeBasis: string
+      fixData: string
+      history: string
+      olderHeading: string
+      olderNone: string
+      manage: string
+      uploadNext: string
+      approvalHistory: string
+      versionPageTitle: string
+      versionPageBack: string
+    }
+    /**
      * Zopakovanie pridelenia na nové znenie.
      *
      * Vlastná skupina, nie súčasť `detail`: je to jediná karta na tej
@@ -2104,6 +2197,10 @@ interface Dictionary {
       submittedForApproval: (n: number) => string
       approvalNotAllNotified: (n: number) => string
       approvalCancelled: string
+      /** Krok 1 uložený bez predloženia (ADR-014). */
+      draftPrepared: string
+      /** Znenie sa zverejnilo, prenos pridelení nie. Za vetou nasleduje dôvod. */
+      carryOverFailed: string
       failed: string
     }
     upload: {
@@ -3926,6 +4023,95 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     usedIn: n => (n === 1 ? "1 znenie" : n >= 2 && n <= 4 ? `${n} znenia` : `${n} znení`),
   },
   library: {
+    flow: {
+      heading: d => `Nové znenie od ${d}`,
+      headingUndated: "Nové znenie",
+      firstVersion: "Prvé znenie",
+      publishedHeading: d => `Znenie od ${d}`,
+      steps: ["Príprava", "Schválenie", "Zverejnenie", "Pridelenie"],
+      stepOf: n => `Krok ${n} z 4`,
+      subPrepare: "PDF, Word, údaje o znení",
+      subPrepareDone: "hotová",
+      subWaitSubmit: "čaká na predloženie",
+      subInReview: (done, total) => `${done} z ${total} schválilo`,
+      subApproved: "schválené",
+      subRejected: n => `kolo ${n} zamietnuté`,
+      subCancelled: n => `kolo ${n} stiahnuté`,
+      subWaitApproval: "čaká na schválenie",
+      subPublished: "zverejnené",
+      subAssign: "prenos pridelení",
+      statusPreparing: "príprava",
+      statusInReview: (by, date) => `na schválení · predložil ${by} ${date}`,
+      statusApproved: "schválené, čaká na zverejnenie",
+      statusRejected: date => `príprava · vrátené zo schválenia ${date}`,
+      statusPublished: date => `zverejnené ${date} · zatiaľ nikomu nepridelené`,
+      lead1: "Skontroluj, čo sa bude schvaľovať. Po predložení sa nič z toho nedá zmeniť.",
+      lead1Rejected: "Oprav, čo schvaľovateľ vytkol, skontroluj údaje a predlož nové kolo. Zamietnutie zostáva v histórii.",
+      rejectedBy: (who, date, n) => `${who} zamietol ${date} · kolo ${n} sa tým zastavilo`,
+      cancelled: (date, n) => `Kolo ${n} stiahnuté ${date}`,
+      checkPdf: "PDF",
+      checkPdfMissing: "Chýba PDF — bez neho sa znenie nedá predložiť. Nahraj ho cez „Vymeniť“.",
+      checkSource: "Upraviteľný zdroj",
+      checkSourceNote: "text na vyhľadávanie vznikol z neho",
+      checkSourceMissing: "bez zdroja — text na vyhľadávanie vznikol z PDF",
+      replace: "Vymeniť",
+      showText: "Zobraziť text",
+      metaHeading: "Údaje o znení",
+      metaNote: "Dátum účinnosti je povinný pred predložením na schválenie.",
+      approvers: "Schvaľovatelia",
+      approversPrefilled: "Predvyplnené z posledného kola, dá sa zmeniť. Seba schváliť nemôžeš.",
+      responsible: "Zodpovedná osoba nového znenia",
+      responsibleNote: "Ak ju určíš už teraz, pri zverejnení sa len potvrdí a hneď po zverejnení jej príde upozornenie, aby určila právny základ.",
+      responsibleChosen: name => `Zodpovedná osoba: ${name}. Určená v príprave.`,
+      responsibleChange: "Zmeniť zodpovednú osobu",
+      note: "Poznámka pre schvaľovateľov",
+      submitAndSave: "Uložiť a predložiť na schválenie",
+      resubmit: n => `Uložiť a predložiť kolo ${n}`,
+      saveOnly: "Len uložiť",
+      lead2: (done, total) => `Čaká na schválenie — ${done} z ${total}. Keď schvália všetci, znenie sa dá zverejniť. Jedno zamietnutie vráti znenie do prípravy.`,
+      approvalsWhere: "Schvaľovatelia rozhodujú v „Na schválenie“; e-mail im odišiel pri predložení.",
+      whatIsApproved: "Čo sa schvaľuje",
+      locked: "zamknuté počas kola",
+      searchText: "Text na vyhľadávanie",
+      searchTextNote: "z neho odpovedá vyhľadávanie",
+      open: "Otvoriť",
+      show: "Zobraziť",
+      next: "Potom",
+      next3: "označenie znenia a zodpovedná osoba",
+      next4: "ponúkne sa prenos pridelení z predošlého znenia",
+      next4None: "prideľovanie v Pridelených normách",
+      withdraw: "Stiahnuť kolo",
+      withdrawNote: "Stiahnutím sa znenie vráti do prípravy a dá sa upraviť. Kolo zostane v histórii.",
+      lead3: "Znenie je schválené. Doplň označenie a zverejni ho.",
+      labelSuggestion: d => `úplné znenie od ${d}`,
+      labelSuggested: "Návrh z dátumu účinnosti. Označenie je doslova vo formulke potvrdenia.",
+      effectiveFromSourceSuggested: "Predvyplnené zo schválených údajov o znení.",
+      carryOver: n => `Prideliť nové znenie tým istým publikám (${n})`,
+      carryOverNote: "Odškrtni, ak chceš prideliť inak — potom to urobíš v kroku 4 alebo v Pridelených normách.",
+      publishFrom: d => `Zverejniť od ${d}`,
+      publishAndAssign: "Zverejniť a prideliť",
+      lead4: "Potvrdenie sa viaže na znenie, takže nové znenie treba prideliť znova.",
+      assignElsewhere: "Prideliť iným ľuďom →",
+      assignChosen: "Prideliť vybraným",
+      newVersion: "Nové znenie",
+      newVersionBusy: "Nové znenie sa už pripravuje. Súbory vymeníš v príprave.",
+      newVersionFirst: "Dokument ešte nemá platné znenie — najprv dokonči prvé.",
+      downloadPdf: "Stiahnuť PDF",
+      editDocument: "Upraviť dokument",
+      currentHeading: "Platné znenie",
+      fromDate: d => `od ${d}`,
+      changeResponsible: "Zmeniť zodpovednú osobu",
+      changeBasis: "Zmeniť právny základ",
+      fixData: "Opraviť údaje",
+      history: "História",
+      olderHeading: "Staršie znenia",
+      olderNone: "Žiadne. Po zverejnení nového znenia sa sem presunie platné.",
+      manage: "Správa",
+      uploadNext: "Potom na detaile skontroluješ text, vyberieš schvaľovateľov a zodpovednú osobu a predložíš.",
+      approvalHistory: "História schvaľovania",
+      versionPageTitle: "Nové znenie",
+      versionPageBack: "← Späť na dokument",
+    },
     carryOver: {
       heading: "Prideliť aj nové znenie",
       intro: (label) => `Znenie „${label}" nemá zatiaľ pridelené nikoho. Predošlé znenia pridelené boli — potvrdenie sa viaže na konkrétne znenie, takže novelu treba prideliť znova.`,
@@ -4373,6 +4559,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
         `Predložené na schválenie ${n === 1 ? "jednému človeku" : `${n} ľuďom`}.`,
       approvalNotAllNotified: n => `Ale ${n === 1 ? "jednému človeku" : `${n} ľuďom`} sa e-mail odoslať nepodarilo \u2014 kolo beží, len o ňom nevedia.`,
       approvalCancelled: "Kolo zrušené. Zostáva v histórii aj s dôvodom.",
+      draftPrepared: "Príprava je uložená.",
+      carryOverFailed: "Znenie je zverejnené, prenos pridelení sa ale nepodaril:",
       failed: "Nepodarilo sa to. Skús to znova.",
     },
     upload: {
@@ -6160,6 +6348,95 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     usedIn: n => (n === 1 ? "1 znění" : `${n} znění`),
   },
   library: {
+    flow: {
+      heading: d => `Nové znění od ${d}`,
+      headingUndated: "Nové znění",
+      firstVersion: "První znění",
+      publishedHeading: d => `Znění od ${d}`,
+      steps: ["Příprava", "Schválení", "Zveřejnění", "Přidělení"],
+      stepOf: n => `Krok ${n} ze 4`,
+      subPrepare: "PDF, Word, údaje o znění",
+      subPrepareDone: "hotová",
+      subWaitSubmit: "čeká na předložení",
+      subInReview: (done, total) => `${done} z ${total} schválilo`,
+      subApproved: "schváleno",
+      subRejected: n => `kolo ${n} zamítnuto`,
+      subCancelled: n => `kolo ${n} staženo`,
+      subWaitApproval: "čeká na schválení",
+      subPublished: "zveřejněno",
+      subAssign: "přenos přidělení",
+      statusPreparing: "příprava",
+      statusInReview: (by, date) => `ke schválení · předložil ${by} ${date}`,
+      statusApproved: "schváleno, čeká na zveřejnění",
+      statusRejected: date => `příprava · vráceno ze schválení ${date}`,
+      statusPublished: date => `zveřejněno ${date} · zatím nikomu nepřiděleno`,
+      lead1: "Zkontroluj, co se bude schvalovat. Po předložení nic z toho nelze změnit.",
+      lead1Rejected: "Oprav, co schvalovatel vytkl, zkontroluj údaje a předlož nové kolo. Zamítnutí zůstává v historii.",
+      rejectedBy: (who, date, n) => `${who} zamítl ${date} · kolo ${n} se tím zastavilo`,
+      cancelled: (date, n) => `Kolo ${n} staženo ${date}`,
+      checkPdf: "PDF",
+      checkPdfMissing: "Chybí PDF — bez něj nelze znění předložit. Nahraj ho přes „Vyměnit“.",
+      checkSource: "Upravitelný zdroj",
+      checkSourceNote: "text pro vyhledávání vznikl z něj",
+      checkSourceMissing: "bez zdroje — text pro vyhledávání vznikl z PDF",
+      replace: "Vyměnit",
+      showText: "Zobrazit text",
+      metaHeading: "Údaje o znění",
+      metaNote: "Datum účinnosti je povinné před předložením ke schválení.",
+      approvers: "Schvalovatelé",
+      approversPrefilled: "Předvyplněno z posledního kola, lze změnit. Sám sebe schválit nemůžeš.",
+      responsible: "Odpovědná osoba nového znění",
+      responsibleNote: "Když ji určíš už teď, při zveřejnění se jen potvrdí a hned po zveřejnění jí přijde upozornění, aby určila právní základ.",
+      responsibleChosen: name => `Odpovědná osoba: ${name}. Určena v přípravě.`,
+      responsibleChange: "Změnit odpovědnou osobu",
+      note: "Poznámka pro schvalovatele",
+      submitAndSave: "Uložit a předložit ke schválení",
+      resubmit: n => `Uložit a předložit kolo ${n}`,
+      saveOnly: "Jen uložit",
+      lead2: (done, total) => `Čeká na schválení — ${done} z ${total}. Až schválí všichni, znění lze zveřejnit. Jedno zamítnutí vrátí znění do přípravy.`,
+      approvalsWhere: "Schvalovatelé rozhodují v „Ke schválení“; e-mail jim odešel při předložení.",
+      whatIsApproved: "Co se schvaluje",
+      locked: "zamčeno během kola",
+      searchText: "Text pro vyhledávání",
+      searchTextNote: "z něj odpovídá vyhledávání",
+      open: "Otevřít",
+      show: "Zobrazit",
+      next: "Potom",
+      next3: "označení znění a odpovědná osoba",
+      next4: "nabídne se přenos přidělení z předchozího znění",
+      next4None: "přidělování v Přidělených předpisech",
+      withdraw: "Stáhnout kolo",
+      withdrawNote: "Stažením se znění vrátí do přípravy a lze ho upravit. Kolo zůstane v historii.",
+      lead3: "Znění je schválené. Doplň označení a zveřejni ho.",
+      labelSuggestion: d => `úplné znění od ${d}`,
+      labelSuggested: "Návrh z data účinnosti. Označení je doslova ve formulce potvrzení.",
+      effectiveFromSourceSuggested: "Předvyplněno ze schválených údajů o znění.",
+      carryOver: n => `Přidělit nové znění stejným publikům (${n})`,
+      carryOverNote: "Odškrtni, pokud chceš přidělit jinak — pak to uděláš v kroku 4 nebo v Přidělených předpisech.",
+      publishFrom: d => `Zveřejnit od ${d}`,
+      publishAndAssign: "Zveřejnit a přidělit",
+      lead4: "Potvrzení se váže na znění, takže nové znění je třeba přidělit znovu.",
+      assignElsewhere: "Přidělit jiným lidem →",
+      assignChosen: "Přidělit vybraným",
+      newVersion: "Nové znění",
+      newVersionBusy: "Nové znění se už připravuje. Soubory vyměníš v přípravě.",
+      newVersionFirst: "Dokument zatím nemá platné znění — nejdřív dokonči první.",
+      downloadPdf: "Stáhnout PDF",
+      editDocument: "Upravit dokument",
+      currentHeading: "Platné znění",
+      fromDate: d => `od ${d}`,
+      changeResponsible: "Změnit odpovědnou osobu",
+      changeBasis: "Změnit právní základ",
+      fixData: "Opravit údaje",
+      history: "Historie",
+      olderHeading: "Starší znění",
+      olderNone: "Žádná. Po zveřejnění nového znění se sem přesune platné.",
+      manage: "Správa",
+      uploadNext: "Potom na detailu zkontroluješ text, vybereš schvalovatele a odpovědnou osobu a předložíš.",
+      approvalHistory: "Historie schvalování",
+      versionPageTitle: "Nové znění",
+      versionPageBack: "← Zpět na dokument",
+    },
     carryOver: {
       heading: "Přidělit i nové znění",
       intro: (label) => `Znění „${label}" zatím nemá přiděleného nikoho. Předchozí znění přidělená byla — potvrzení se váže na konkrétní znění, takže novelu je třeba přidělit znovu.`,
@@ -6606,6 +6883,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
         `Předloženo ke schválení ${n === 1 ? "jednomu člověku" : `${n} lidem`}.`,
       approvalNotAllNotified: n => `Ale ${n === 1 ? "jednomu člověku" : `${n} lidem`} se e-mail odeslat nepodařilo \u2014 kolo běží, jen o něm nevědí.`,
       approvalCancelled: "Kolo zrušeno. Zůstává v historii i s důvodem.",
+      draftPrepared: "Příprava je uložena.",
+      carryOverFailed: "Znění je zveřejněno, přenos přidělení se ale nepodařil:",
       failed: "Nepodařilo se to. Zkus to znovu.",
     },
     upload: {
@@ -8387,6 +8666,95 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     usedIn: n => (n === 1 ? "1 version" : `${n} versions`),
   },
   library: {
+    flow: {
+      heading: d => `New version from ${d}`,
+      headingUndated: "New version",
+      firstVersion: "First version",
+      publishedHeading: d => `Version from ${d}`,
+      steps: ["Preparation", "Approval", "Publication", "Assignment"],
+      stepOf: n => `Step ${n} of 4`,
+      subPrepare: "PDF, Word, version details",
+      subPrepareDone: "done",
+      subWaitSubmit: "waiting to be submitted",
+      subInReview: (done, total) => `${done} of ${total} approved`,
+      subApproved: "approved",
+      subRejected: n => `round ${n} rejected`,
+      subCancelled: n => `round ${n} withdrawn`,
+      subWaitApproval: "waiting for approval",
+      subPublished: "published",
+      subAssign: "carry over assignments",
+      statusPreparing: "preparation",
+      statusInReview: (by, date) => `in approval · submitted by ${by} ${date}`,
+      statusApproved: "approved, waiting to be published",
+      statusRejected: date => `preparation · returned from approval ${date}`,
+      statusPublished: date => `published ${date} · not assigned to anyone yet`,
+      lead1: "Check what will be approved. After submitting, none of it can be changed.",
+      lead1Rejected: "Fix what the approver pointed out, check the details and submit a new round. The rejection stays in the history.",
+      rejectedBy: (who, date, n) => `${who} rejected ${date} · this stopped round ${n}`,
+      cancelled: (date, n) => `Round ${n} withdrawn ${date}`,
+      checkPdf: "PDF",
+      checkPdfMissing: "The PDF is missing — the version cannot be submitted without it. Upload it via “Replace”.",
+      checkSource: "Editable source",
+      checkSourceNote: "the search text was made from it",
+      checkSourceMissing: "no source — the search text was made from the PDF",
+      replace: "Replace",
+      showText: "Show text",
+      metaHeading: "Version details",
+      metaNote: "The effective date is required before submitting for approval.",
+      approvers: "Approvers",
+      approversPrefilled: "Prefilled from the last round, can be changed. You cannot approve yourself.",
+      responsible: "Responsible person for the new version",
+      responsibleNote: "If you choose them now, publication only confirms it, and right after publication they are asked to set the legal basis.",
+      responsibleChosen: name => `Responsible person: ${name}. Chosen in preparation.`,
+      responsibleChange: "Change responsible person",
+      note: "Note for approvers",
+      submitAndSave: "Save and submit for approval",
+      resubmit: n => `Save and submit round ${n}`,
+      saveOnly: "Save only",
+      lead2: (done, total) => `Waiting for approval — ${done} of ${total}. Once everyone approves, the version can be published. One rejection returns it to preparation.`,
+      approvalsWhere: "Approvers decide in “To approve”; they were emailed on submission.",
+      whatIsApproved: "What is being approved",
+      locked: "locked during the round",
+      searchText: "Search text",
+      searchTextNote: "search answers from it",
+      open: "Open",
+      show: "Show",
+      next: "Next",
+      next3: "version label and responsible person",
+      next4: "carrying over assignments from the previous version will be offered",
+      next4None: "assigning in Assigned documents",
+      withdraw: "Withdraw round",
+      withdrawNote: "Withdrawing returns the version to preparation so it can be edited. The round stays in the history.",
+      lead3: "The version is approved. Add a label and publish it.",
+      labelSuggestion: d => `consolidated version from ${d}`,
+      labelSuggested: "Suggested from the effective date. The label appears verbatim in the acknowledgement statement.",
+      effectiveFromSourceSuggested: "Prefilled from the approved version details.",
+      carryOver: n => `Assign the new version to the same audiences (${n})`,
+      carryOverNote: "Untick to assign differently — you can then do it in step 4 or in Assigned documents.",
+      publishFrom: d => `Publish from ${d}`,
+      publishAndAssign: "Publish and assign",
+      lead4: "Acknowledgement is tied to a version, so the new version has to be assigned again.",
+      assignElsewhere: "Assign to other people →",
+      assignChosen: "Assign to selected",
+      newVersion: "New version",
+      newVersionBusy: "A new version is already being prepared. Replace its files in preparation.",
+      newVersionFirst: "The document has no current version yet — finish the first one.",
+      downloadPdf: "Download PDF",
+      editDocument: "Edit document",
+      currentHeading: "Current version",
+      fromDate: d => `from ${d}`,
+      changeResponsible: "Change responsible person",
+      changeBasis: "Change legal basis",
+      fixData: "Correct details",
+      history: "History",
+      olderHeading: "Older versions",
+      olderNone: "None. When a new version is published, the current one moves here.",
+      manage: "Administration",
+      uploadNext: "Then, on the detail page, you check the text, choose approvers and the responsible person, and submit.",
+      approvalHistory: "Approval history",
+      versionPageTitle: "New version",
+      versionPageBack: "← Back to the document",
+    },
     carryOver: {
       heading: "Assign the new version too",
       intro: (label) => `Version “${label}” has nobody assigned yet. Earlier versions did — an acknowledgement is tied to one specific version, so an amendment has to be assigned again.`,
@@ -8827,6 +9195,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
         `Submitted for approval to ${n === 1 ? "one person" : `${n} people`}.`,
       approvalNotAllNotified: n => `But the email could not be sent to ${n === 1 ? "one person" : `${n} people`} \u2014 the round is running, they just do not know about it.`,
       approvalCancelled: "Round cancelled. It stays in the history with its reason.",
+      draftPrepared: "Preparation saved.",
+      carryOverFailed: "The version is published, but carrying over assignments failed:",
       failed: "That did not work. Try again.",
     },
     upload: {

@@ -238,6 +238,8 @@ describe("zodpovedná osoba", () => {
 
 describe("zverejnenie nového znenia", () => {
   it("bez zodpovednej osoby neprejde — a nič nezapíše", async () => {
+    // Koncept bez osoby určenej v príprave (ADR-014) a formulár bez voľby.
+    collection(DOCUMENTS_COLLECTION).findOne.mockResolvedValue({ documentId: "sfz:sutazny_poriadok", draftMarkdown: "# Čl. 1\ntext" })
     const { publish } = await import("../src/lib/libraryWrite")
     await expect(publish(COMPANY, "sfz:sutazny_poriadok", {
       label: "novela 2029",
@@ -259,5 +261,49 @@ describe("zverejnenie nového znenia", () => {
       responsiblePersonId: "p-odisla",
     }, "spravca@futbalsfz.sk")).rejects.toMatchObject({ code: "responsibility.unknownPerson" })
     expect(collection(DOCUMENTS_COLLECTION).updateOne).not.toHaveBeenCalled()
+  })
+
+  it("bez voľby vo formulári vezme osobu určenú v príprave (ADR-014)", async () => {
+    const { publish } = await import("../src/lib/libraryWrite")
+    collection(DOCUMENTS_COLLECTION).findOne.mockResolvedValue({
+      ...doc(), draftMarkdown: "# Článok 1\n\nText.",
+      draftResponsible: { personId: "p-odisla", fullName: "Odídená", email: "o@futbalsfz.sk" },
+    })
+    personsAre([{ id: "p-odisla", fullName: "Odídená", email: "o@futbalsfz.sk", status: "inactive" }])
+    // Osoba z prípravy medzitým odišla — zverejnenie ju overí rovnako ako voľbu z formulára.
+    await expect(publish(COMPANY, "sfz:sutazny_poriadok", {
+      label: "novela 2029",
+      effectiveFrom: new Date("2029-07-01T00:00:00Z"),
+      effectiveFromSource: "uznesenie VV SFZ č. 1/2029",
+    }, "spravca@futbalsfz.sk")).rejects.toMatchObject({ code: "responsibility.unknownPerson" })
+  })
+})
+
+describe("zodpovedná osoba v príprave (ADR-014, D109)", () => {
+  it("uloží odtlačok osoby zo záznamu a zapíše audit", async () => {
+    const { saveDraftResponsible } = await import("../src/lib/libraryWrite")
+    collection(DOCUMENTS_COLLECTION).findOne.mockResolvedValue({ ...doc(), draftMarkdown: "# Čl. 1" })
+    personsAre([{ id: "p-novy", fullName: "Nová Garantka", email: "nova@futbalsfz.sk", status: "active" }])
+    expect(await saveDraftResponsible(COMPANY, "sfz:sutazny_poriadok", "p-novy", "spravca@futbalsfz.sk")).toBe(true)
+    const u = collection(DOCUMENTS_COLLECTION).updateOne.mock.calls[0][1] as { $set: Record<string, unknown> }
+    expect(u.$set.draftResponsible).toEqual({ personId: "p-novy", fullName: "Nová Garantka", email: "nova@futbalsfz.sk" })
+  })
+
+  it("tá istá osoba znova nič nezapíše", async () => {
+    const { saveDraftResponsible } = await import("../src/lib/libraryWrite")
+    collection(DOCUMENTS_COLLECTION).findOne.mockResolvedValue({
+      ...doc(), draftMarkdown: "# Čl. 1",
+      draftResponsible: { personId: "p-novy", fullName: "Nová Garantka", email: "nova@futbalsfz.sk" },
+    })
+    personsAre([{ id: "p-novy", fullName: "Nová Garantka", email: "nova@futbalsfz.sk", status: "active" }])
+    expect(await saveDraftResponsible(COMPANY, "sfz:sutazny_poriadok", "p-novy", "s@futbalsfz.sk")).toBe(false)
+    expect(collection(DOCUMENTS_COLLECTION).updateOne).not.toHaveBeenCalled()
+  })
+
+  it("bez konceptu ju neurčí", async () => {
+    const { saveDraftResponsible } = await import("../src/lib/libraryWrite")
+    collection(DOCUMENTS_COLLECTION).findOne.mockResolvedValue(doc())
+    await expect(saveDraftResponsible(COMPANY, "sfz:sutazny_poriadok", "p-novy", "s@futbalsfz.sk"))
+      .rejects.toMatchObject({ code: "meta.noDraft" })
   })
 })
