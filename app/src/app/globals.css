@@ -762,6 +762,28 @@ button:disabled { cursor: not-allowed; opacity: 0.55; }
 .page-head-spacer { flex: 1 1 0; min-width: 0; }
 
 /*
+ * Tabuľky v informovaní o ochrane údajov (/privacy, C1). Na telefóne sa
+ * roluje tabuľka, nie stránka — obal má `overflow-x: auto`.
+ */
+.privacy-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--fs-small);
+  line-height: 1.5;
+}
+.privacy-table th,
+.privacy-table td {
+  text-align: left;
+  vertical-align: top;
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--line);
+}
+.privacy-table th {
+  color: var(--muted);
+  font-weight: 600;
+}
+
+/*
  * Prázdny stav zoznamu (ZAKLAD, úloha 1) — jedna trieda, tri časti: čo tu
  * nie je, prečo, a čo s tým. Prázdno nie je chyba; text má povedať, či je
  * zoznam prázdny preto, že filter nič nenašiel, alebo preto, že niet čoho.

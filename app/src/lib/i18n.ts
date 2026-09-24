@@ -253,6 +253,45 @@ interface Dictionary {
   }
 
   /** Prosba o schválenie znenia (ADR-006). Menovitá správa, nie hromadná pošta. */
+  privacy: {
+    title: string
+    lead: string
+    controllerHeading: string
+    controller: (organisation: string) => string
+    dpoHeading: string
+    dpoMissing: string
+    purposeHeading: string
+    purpose: string
+    dataHeading: string
+    dataColumns: [string, string]
+    data: [string, string][]
+    hrNote: string
+    responsibleNote: string
+    basisHeading: string
+    basisIntro: string
+    basisObligation: string
+    basisInterest: string
+    basisDirectory: string
+    retentionHeading: string
+    retentionColumns: [string, string]
+    retention: [string, string][]
+    retentionDelete: string
+    recipientsHeading: string
+    recipients: string
+    processorsColumns: [string, string, string]
+    processors: [string, string, string][]
+    noSale: string
+    rightsHeading: string
+    rights: string
+    objection: string
+    complaint: string
+    requests: string
+    version: (date: string) => string
+    /** Odkaz pri potvrdení a v pozvánke. */
+    linkBefore: string
+    link: string
+  }
+
   dpoEmail: {
     subject: (organisation: string, quarter: string) => string
     subtitle: string
@@ -2244,6 +2283,64 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
         `termín bol ${due}, ${daysOver === 1 ? "ste po ňom deň" : daysOver <= 4 ? `ste po ňom ${daysOver} dni` : `ste po ňom ${daysOver} dní`}`,
       button: "Otvoriť a potvrdiť",
       note: "Potvrdenie je krátke \u2014 dokument si prečítate a kliknete. Keď ste to už spravili, tento e-mail nabudúce nepríde.",
+    },
+    privacy: {
+      title: "Ochrana osobných údajov",
+      lead: "Čo sa o vás v tomto systéme ukladá, prečo a ako dlho.",
+      controllerHeading: "Kto je prevádzkovateľ",
+      controller: org => `Vaše osobné údaje spracúva ${org}. Systém Contineo pre neho prevádzkuje dodávateľ ako sprostredkovateľ na základe zmluvy o spracúvaní osobných údajov.`,
+      dpoHeading: "Zodpovedná osoba (DPO)",
+      dpoMissing: "Kontakt na zodpovednú osobu vám poskytne personálne oddelenie.",
+      purposeHeading: "Na čo systém slúži",
+      purpose: "Organizácia v ňom zverejňuje záväzné predpisy a interné smernice a eviduje, kto sa s nimi oboznámil. Systém odpovedá aj na otázky k obsahu predpisov.",
+      dataHeading: "Aké údaje a prečo",
+      dataColumns: ["Údaj", "Prečo"],
+      data: [
+        ["meno, e-mail, pracovná pozícia, oddelenie, typ vzťahu", "aby vám mohli byť pridelené predpisy, ktoré sa vás týkajú, a aby ste sa mohli prihlásiť"],
+        ["pridelenie predpisu: kto, prečo a dokedy", "doklad o tom, že ste mali povinnosť sa s predpisom oboznámiť"],
+        ["prvé otvorenie znenia predpisu", "doklad, že vám bolo znenie sprístupnené; ukladá sa jeden záznam na znenie, nie každé zobrazenie"],
+        ["potvrdenie: čas, znenie predpisu, doslovný text potvrdenia, IP adresa, údaj o prehliadači", "doklad o oboznámení s predpisom"],
+        ["čas strávený nad znením", "informatívny údaj pre personalistu, nie doklad; nič sa podľa neho nevyhodnocuje"],
+        ["pripomienky: komu a kedy sa odoslali", "aby vám rovnaká pripomienka neprišla dvakrát"],
+        ["otázky, ktoré systému položíte, a jeho odpovede", "aby sa dala preveriť správnosť odpovedí"],
+        ["mobilný telefón, pracovisko a fotografia, ak ich vyplníte", "interný adresár; vyplniť ich nemusíte"],
+      ],
+      hrNote: "Personalista vidí pri každom človeku, či predpis otvoril, či ho potvrdil a koľko času nad ním strávil. Stav „otvoril a nepotvrdil“ je sledovaný stav; personalista vás podľa neho môže upozorniť, že potvrdenie chýba.",
+      responsibleNote: "Pri každom predpise je uvedená zodpovedná osoba (meno a e-mail), na ktorú sa môžete obrátiť s otázkou k predpisu.",
+      basisHeading: "Právny základ",
+      basisIntro: "Určuje sa pri každom predpise zvlášť a vidíte ho pri ňom:",
+      basisObligation: "plnenie zákonnej povinnosti (čl. 6 ods. 1 písm. c) GDPR) pri predpisoch, ktorých oboznámenie vyžaduje zákon, napríklad bezpečnosť a ochrana zdravia pri práci; pri predpise je uvedený konkrétny zákon;",
+      basisInterest: "oprávnený záujem (čl. 6 ods. 1 písm. f) GDPR) pri interných smerniciach — záujmom je preukázať, že s pravidlami boli oboznámení tí, ktorých sa týkajú.",
+      basisDirectory: "Údaje v adresári (mobil, pracovisko, fotografia) sa spracúvajú na základe oprávneného záujmu na vnútornej komunikácii.",
+      retentionHeading: "Ako dlho",
+      retentionColumns: ["Údaj", "Lehota"],
+      retention: [
+        ["potvrdenie, pridelenie, otvorenie znenia", "3 roky od skončenia pracovného pomeru alebo vzťahu s organizáciou; ak dátum skončenia nie je známy, od vyradenia zo systému; najdlhšie 5 rokov od poslednej udalosti, ak nie je známy ani jeden dátum"],
+        ["schválenie predpisu a zodpovedná osoba", "kým existuje aspoň jeden doklad o oboznámení s daným znením"],
+        ["čas strávený nad znením", "12 mesiacov"],
+        ["pripomienky", "90 dní"],
+        ["záznam o prístupoch a zmenách (audit)", "24 mesiacov"],
+      ],
+      retentionDelete: "Po uplynutí lehoty sa záznam zmaže celý, neanonymizuje sa.",
+      recipientsHeading: "Komu sa údaje dostanú",
+      recipients: "Personalistom a správcom obsahu organizácie v rozsahu ich úlohy, kolegom len údaje z adresára. Mimo organizácie sprostredkovateľom, ktorí zabezpečujú prevádzku:",
+      processorsColumns: ["Kto", "Na čo", "Kde"],
+      processors: [
+        ["MongoDB Atlas", "databáza a vyhľadávanie", "EÚ (Frankfurt)"],
+        ["Vercel", "beh aplikácie", "EÚ"],
+        ["Anthropic", "tvorba odpovedí na otázky; bez uchovávania a bez trénovania na dátach", "podľa zmluvy so sprostredkovateľom"],
+        ["Voyage AI (cez MongoDB)", "vyhľadávanie v texte predpisov", "podľa zmluvy so sprostredkovateľom"],
+        ["Ecomail", "odosielanie e-mailov", "EÚ"],
+      ],
+      noSale: "Údaje sa nepredávajú a nepoužívajú sa na reklamu ani na trénovanie modelov umelej inteligencie. O nikom sa nerozhoduje automatizovane.",
+      rightsHeading: "Vaše práva",
+      rights: "Máte právo na prístup k svojim údajom, ich opravu, obmedzenie spracúvania a prenosnosť.",
+      objection: "Pri predpisoch s oprávneným záujmom máte právo namietať. Námietku posúdi zodpovedná osoba jednotlivo a doklad sa do jej rozhodnutia nemaže. Výmaz dokladu o oboznámení pred uplynutím lehoty nie je možný, kým je potrebný na preukázanie, uplatnenie alebo obhajobu právnych nárokov.",
+      complaint: "Máte právo podať sťažnosť Úradu na ochranu osobných údajov SR (dataprotection.gov.sk).",
+      requests: "Žiadosti posielajte zodpovednej osobe (DPO).",
+      version: date => `Verzia textu: ${date}`,
+      linkBefore: "Čo sa pri potvrdení ukladá a ako dlho: ",
+      link: "Ochrana osobných údajov",
     },
     dpoEmail: {
       subject: (org, quarter) => `Výkaz právnych základov ${quarter} \u2014 ${org}`,
@@ -4385,6 +4482,64 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       button: "Otevřít a potvrdit",
       note: "Potvrzení je krátké \u2014 dokument si přečtete a kliknete. Když jste to už udělali, tento e-mail příště nepřijde.",
     },
+    privacy: {
+      title: "Ochrana osobních údajů",
+      lead: "Co se o vás v tomto systému ukládá, proč a jak dlouho.",
+      controllerHeading: "Kdo je správce",
+      controller: org => `Vaše osobní údaje zpracovává ${org}. Systém Contineo pro něj provozuje dodavatel jako zpracovatel na základě smlouvy o zpracování osobních údajů.`,
+      dpoHeading: "Pověřenec pro ochranu osobních údajů (DPO)",
+      dpoMissing: "Kontakt na pověřence vám poskytne personální oddělení.",
+      purposeHeading: "K čemu systém slouží",
+      purpose: "Organizace v něm zveřejňuje závazné předpisy a interní směrnice a eviduje, kdo se s nimi seznámil. Systém odpovídá i na otázky k obsahu předpisů.",
+      dataHeading: "Jaké údaje a proč",
+      dataColumns: ["Údaj", "Proč"],
+      data: [
+        ["jméno, e-mail, pracovní pozice, oddělení, typ vztahu", "aby vám mohly být přiděleny předpisy, které se vás týkají, a abyste se mohli přihlásit"],
+        ["přidělení předpisu: kdo, proč a dokdy", "doklad o tom, že jste měli povinnost se s předpisem seznámit"],
+        ["první otevření znění předpisu", "doklad, že vám bylo znění zpřístupněno; ukládá se jeden záznam na znění, ne každé zobrazení"],
+        ["potvrzení: čas, znění předpisu, doslovný text potvrzení, IP adresa, údaj o prohlížeči", "doklad o seznámení s předpisem"],
+        ["čas strávený nad zněním", "informativní údaj pro personalistu, ne doklad; nic se podle něj nevyhodnocuje"],
+        ["připomínky: komu a kdy byly odeslány", "aby vám stejná připomínka nepřišla dvakrát"],
+        ["otázky, které systému položíte, a jeho odpovědi", "aby se dala prověřit správnost odpovědí"],
+        ["mobilní telefon, pracoviště a fotografie, pokud je vyplníte", "interní adresář; vyplnit je nemusíte"],
+      ],
+      hrNote: "Personalista vidí u každého člověka, zda předpis otevřel, zda ho potvrdil a kolik času nad ním strávil. Stav „otevřel a nepotvrdil“ je sledovaný stav; personalista vás podle něj může upozornit, že potvrzení chybí.",
+      responsibleNote: "U každého předpisu je uvedena odpovědná osoba (jméno a e-mail), na kterou se můžete obrátit s dotazem k předpisu.",
+      basisHeading: "Právní základ",
+      basisIntro: "Určuje se u každého předpisu zvlášť a vidíte ho u něj:",
+      basisObligation: "plnění právní povinnosti (čl. 6 odst. 1 písm. c) GDPR) u předpisů, jejichž seznámení vyžaduje zákon, například bezpečnost a ochrana zdraví při práci; u předpisu je uveden konkrétní zákon;",
+      basisInterest: "oprávněný zájem (čl. 6 odst. 1 písm. f) GDPR) u interních směrnic — zájmem je prokázat, že s pravidly byli seznámeni ti, kterých se týkají.",
+      basisDirectory: "Údaje v adresáři (mobil, pracoviště, fotografie) se zpracovávají na základě oprávněného zájmu na vnitřní komunikaci.",
+      retentionHeading: "Jak dlouho",
+      retentionColumns: ["Údaj", "Lhůta"],
+      retention: [
+        ["potvrzení, přidělení, otevření znění", "3 roky od skončení pracovního poměru nebo vztahu s organizací; pokud datum skončení není známé, od vyřazení ze systému; nejdéle 5 let od poslední události, pokud není známé ani jedno datum"],
+        ["schválení předpisu a odpovědná osoba", "dokud existuje alespoň jeden doklad o seznámení s daným zněním"],
+        ["čas strávený nad zněním", "12 měsíců"],
+        ["připomínky", "90 dní"],
+        ["záznam o přístupech a změnách (audit)", "24 měsíců"],
+      ],
+      retentionDelete: "Po uplynutí lhůty se záznam smaže celý, neanonymizuje se.",
+      recipientsHeading: "Komu se údaje dostanou",
+      recipients: "Personalistům a správcům obsahu organizace v rozsahu jejich úlohy, kolegům jen údaje z adresáře. Mimo organizaci zpracovatelům, kteří zajišťují provoz:",
+      processorsColumns: ["Kdo", "K čemu", "Kde"],
+      processors: [
+        ["MongoDB Atlas", "databáze a vyhledávání", "EU (Frankfurt)"],
+        ["Vercel", "běh aplikace", "EU"],
+        ["Anthropic", "tvorba odpovědí na otázky; bez uchovávání a bez trénování na datech", "podle smlouvy se zpracovatelem"],
+        ["Voyage AI (přes MongoDB)", "vyhledávání v textu předpisů", "podle smlouvy se zpracovatelem"],
+        ["Ecomail", "odesílání e-mailů", "EU"],
+      ],
+      noSale: "Údaje se neprodávají a nepoužívají se k reklamě ani k trénování modelů umělé inteligence. O nikom se nerozhoduje automatizovaně.",
+      rightsHeading: "Vaše práva",
+      rights: "Máte právo na přístup ke svým údajům, jejich opravu, omezení zpracování a přenositelnost.",
+      objection: "U předpisů s oprávněným zájmem máte právo vznést námitku. Námitku posoudí pověřenec jednotlivě a doklad se do jeho rozhodnutí nemaže. Výmaz dokladu o seznámení před uplynutím lhůty není možný, dokud je potřebný k prokázání, uplatnění nebo obhajobě právních nároků.",
+      complaint: "Máte právo podat stížnost dozorovému úřadu (na Slovensku Úrad na ochranu osobných údajov SR, dataprotection.gov.sk).",
+      requests: "Žádosti posílejte pověřenci (DPO).",
+      version: date => `Verze textu: ${date}`,
+      linkBefore: "Co se při potvrzení ukládá a jak dlouho: ",
+      link: "Ochrana osobních údajů",
+    },
     dpoEmail: {
       subject: (org, quarter) => `Výkaz právních základů ${quarter} \u2014 ${org}`,
       subtitle: "Čtvrtletní kontrola",
@@ -6516,6 +6671,64 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
         `the deadline was ${due}, ${daysOver === 1 ? "one day ago" : `${daysOver} days ago`}`,
       button: "Open it and acknowledge",
       note: "Acknowledging is quick \u2014 read the document and click. If you have already done it, this email will not come again.",
+    },
+    privacy: {
+      title: "Data protection",
+      lead: "What this system stores about you, why, and for how long.",
+      controllerHeading: "Who the controller is",
+      controller: org => `Your personal data is processed by ${org}. The Contineo system is operated for it by a supplier acting as a processor under a data processing agreement.`,
+      dpoHeading: "Data protection officer (DPO)",
+      dpoMissing: "The HR department will give you the contact of the data protection officer.",
+      purposeHeading: "What the system is for",
+      purpose: "The organisation publishes binding rules and internal policies in it and records who has read them. The system also answers questions about the content of the rules.",
+      dataHeading: "What data and why",
+      dataColumns: ["Data", "Why"],
+      data: [
+        ["name, e-mail, job title, department, type of relationship", "so that the rules that concern you can be assigned to you and you can sign in"],
+        ["assignment of a document: who, why and by when", "evidence that you were required to read the document"],
+        ["first opening of a version", "evidence that the version was made available to you; one record per version, not every view"],
+        ["acknowledgement: time, version, the exact wording of the statement, IP address, browser information", "evidence that you read the document"],
+        ["time spent on a version", "informative only, not evidence; nothing is assessed on its basis"],
+        ["reminders: to whom and when they were sent", "so that you do not get the same reminder twice"],
+        ["questions you ask the system and its answers", "so that the accuracy of the answers can be checked"],
+        ["mobile phone, workplace and photo, if you fill them in", "internal directory; filling them in is optional"],
+      ],
+      hrNote: "HR sees for each person whether they opened a document, whether they acknowledged it and how long they spent on it. “Opened but not acknowledged” is a tracked state; HR may remind you that the acknowledgement is missing.",
+      responsibleNote: "Each document names a responsible person (name and e-mail) you can contact with questions about it.",
+      basisHeading: "Legal basis",
+      basisIntro: "It is set for each document separately and shown with it:",
+      basisObligation: "compliance with a legal obligation (Art. 6(1)(c) GDPR) for documents the law requires people to read, such as health and safety at work; the specific law is named with the document;",
+      basisInterest: "legitimate interest (Art. 6(1)(f) GDPR) for internal policies — the interest is to show that the people concerned were made aware of the rules.",
+      basisDirectory: "Directory data (mobile, workplace, photo) is processed on the basis of the legitimate interest in internal communication.",
+      retentionHeading: "How long",
+      retentionColumns: ["Data", "Period"],
+      retention: [
+        ["acknowledgement, assignment, opening of a version", "3 years from the end of employment or of the relationship with the organisation; if the end date is not known, from removal from the system; at most 5 years from the last event if neither date is known"],
+        ["approval of a document and the responsible person", "as long as at least one acknowledgement of that version exists"],
+        ["time spent on a version", "12 months"],
+        ["reminders", "90 days"],
+        ["access and change log (audit)", "24 months"],
+      ],
+      retentionDelete: "After the period the record is deleted entirely, not anonymised.",
+      recipientsHeading: "Who receives the data",
+      recipients: "HR and content managers of the organisation to the extent of their role; colleagues only see directory data. Outside the organisation, the processors that run the service:",
+      processorsColumns: ["Who", "What for", "Where"],
+      processors: [
+        ["MongoDB Atlas", "database and search", "EU (Frankfurt)"],
+        ["Vercel", "running the application", "EU"],
+        ["Anthropic", "writing answers to questions; no retention and no training on the data", "under the processor agreement"],
+        ["Voyage AI (via MongoDB)", "searching the text of documents", "under the processor agreement"],
+        ["Ecomail", "sending e-mails", "EU"],
+      ],
+      noSale: "The data is not sold and is not used for advertising or for training artificial intelligence models. No decisions about anyone are automated.",
+      rightsHeading: "Your rights",
+      rights: "You have the right of access to your data, to rectification, to restriction of processing and to data portability.",
+      objection: "For documents based on legitimate interest you have the right to object. The data protection officer assesses each objection individually and the evidence is not deleted before the decision. Evidence of having read a document cannot be deleted before the end of the period while it is needed to establish, exercise or defend legal claims.",
+      complaint: "You have the right to lodge a complaint with the supervisory authority (in Slovakia the Office for Personal Data Protection, dataprotection.gov.sk).",
+      requests: "Send requests to the data protection officer (DPO).",
+      version: date => `Text version: ${date}`,
+      linkBefore: "What is stored when you acknowledge, and for how long: ",
+      link: "Data protection",
     },
     dpoEmail: {
       subject: (org, quarter) => `Legal basis report ${quarter} \u2014 ${org}`,

@@ -39,6 +39,12 @@ export const PUBLIC_PATHS = [
    * rozhodnúť tú bránu, ktorá vie, o čo ide.
    */
   "/api/cron/",
+  /*
+   * Informovanie dotknutých osôb (čl. 13 GDPR, C1). Má byť dostupné skôr, než
+   * sa údaje začnú zbierať — aj pred prvým prihlásením, z odkazu v pozvánke.
+   * Stránka ukazuje len údaje o organizácii a kontakt na DPO.
+   */
+  "/privacy",
 ] as const
 
 /** Je táto cesta prístupná bez prihlásenia? */

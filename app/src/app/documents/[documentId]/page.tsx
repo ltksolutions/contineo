@@ -305,6 +305,12 @@ export default async function DocumentPage({
                 />
               </div>
             )}
+
+            {/* Informovanie (čl. 13, C1) — pri každom potvrdení, nie len raz. */}
+            <p className="quiet" style={{ fontSize: "var(--fs-small)", margin: "14px 0 0" }}>
+              {dictionary(person.language).privacy.linkBefore}
+              <Link href="/privacy">{dictionary(person.language).privacy.link}</Link>
+            </p>
           </section>
         </>
       )}
