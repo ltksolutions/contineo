@@ -5,9 +5,9 @@
  * z ponuky organizácie, ktorú spravuje správca organizácie. Chýbajúcu
  * položku doplní on — preto nápoveda hovorí, na koho sa obrátiť.
  *
- * Prepínače zoskupené podľa kategórie, nie rozbaľovací zoznam: na telefóne
- * sa ovládajú lepšie, fungujú bez JavaScriptu a odkaz na predpis je vidieť
- * ešte pred výberom.
+ * Zaškrtávacie políčka zoskupené podľa kategórie (ADR-017, D115): znenie
+ * môže mať viac základov, aj z oboch kategórií. Fungujú bez JavaScriptu
+ * a odkaz na predpis je vidieť ešte pred výberom.
  *
  * Dôvod sa pýta len pri **zmene** už určeného základu.
  */
@@ -21,7 +21,7 @@ export default function LegalBasisForm({
   documentId,
   versionId,
   current,
-  currentKey,
+  currentKeys,
   options,
   language,
   back,
@@ -29,7 +29,8 @@ export default function LegalBasisForm({
   documentId: string
   versionId: string
   current?: LegalBasis | null
-  currentKey?: string | null
+  /** Kľúče základov, ktoré znenie má (ADR-017). */
+  currentKeys?: string[]
   options: LegalBasisOption[]
   language: UiLanguage
   /** Kam sa vrátiť po uložení — knižnica alebo znenie pre čitateľa. */
@@ -50,7 +51,7 @@ export default function LegalBasisForm({
             <legend className="field-label">{t.basisLabel[category]}</legend>
             {list.map(o => (
               <label key={o.key} className="hr-choice hr-choice--tile">
-                <input type="radio" name="legalBasisKey" value={o.key} required defaultChecked={currentKey === o.key} />
+                <input type="checkbox" name="legalBasisKey" value={o.key} defaultChecked={currentKeys?.includes(o.key)} />
                 <span>
                   {o.label}
                   {/* Odkaz na zákon na vlastnom riadku (ZNENIE-kontakt-a-privacy, bod 4). */}
@@ -61,7 +62,7 @@ export default function LegalBasisForm({
           </fieldset>
         )
       })}
-      <span className="quiet field-hint">{t.missingOptionNote}</span>
+      <span className="quiet field-hint">{t.multipleNote} {t.missingOptionNote}</span>
 
       {current && (
         <label className="field">

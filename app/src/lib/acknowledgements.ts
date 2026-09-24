@@ -38,7 +38,7 @@ import { allDepartments, pathTo } from "./departments"
 import { formatDate, dictionary, normalizeLanguage } from "./i18n"
 import type { UiLanguage } from "./i18n"
 import { requireCompanyCode } from "./tenantScope"
-import type { LegalBasis } from "./versionResponsibility"
+import type { LegalBasis, LegalBasisEntry } from "./versionResponsibility"
 
 export const ACKNOWLEDGEMENTS_COLLECTION = "acknowledgements"
 
@@ -80,6 +80,8 @@ export interface Acknowledgement {
   /** Položka číselníka a kópia jej názvu (D92). */
   legalBasisKey?: string | null
   legalBasisLabel?: string | null
+  /** Všetky základy v čase potvrdenia (ADR-017, D115); staré polia nesú rozhodujúci druh. */
+  legalBases?: LegalBasisEntry[] | null
 
   /**
    * PDF, ktoré človek potvrdil (ADR-011, D97) — **SHA-256 a názov v čase
@@ -331,6 +333,7 @@ export async function acknowledge(
     legalBasisReference: v.legalBasisReference ?? null,
     legalBasisKey: v.legalBasisKey ?? null,
     legalBasisLabel: v.legalBasisLabel ?? null,
+    legalBases: v.legalBases ?? null,
     pdfSha256: v.pdf?.sha256 ?? null,
     pdfName: v.pdf?.name ?? null,
     author: v.author ?? null,

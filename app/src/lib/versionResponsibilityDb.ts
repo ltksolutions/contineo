@@ -19,8 +19,8 @@ import { PERSONS_COLLECTION, type Person } from "./persons"
 import { writeAudit } from "./audit"
 import { AppError } from "./appError"
 import {
-  canSetLegalBasis, legalBasisChoiceProblem, responsibleChangeProblem,
-  type ResponsiblePerson,
+  canSetLegalBasis, legalBasesChoiceProblem, basesOf, dominantBasis, responsibleChangeProblem,
+  type ResponsiblePerson, type LegalBasis,
 } from "./versionResponsibility"
 import { TENANTS_COLLECTION, type Tenant } from "./tenants"
 import { findLegalBasisOption, type LegalBasisOption } from "./legalBases"
@@ -186,11 +186,14 @@ export async function setVersionLegalBasis(input: {
   companyCode: string
   documentId: string
   versionId: string
-  legalBasisKey: string
+  /** Jeden alebo viac kľúčov z číselníka (ADR-017, D115). */
+  legalBasisKeys?: string[]
+  /** Starý tvar s jedným kľúčom — len pre volajúcich spred ADR-017. */
+  legalBasisKey?: string
   reason?: string
   actor: { personId: string; email: string }
   isContentManager: boolean
-}): Promise<LegalBasisOption> {
+}): Promise<LegalBasisOption[]> {
   const { col, title, version } = await loadVersion(input.companyCode, input.documentId, input.versionId)
 
   const responsible = version.responsiblePerson ?? null
@@ -210,32 +213,48 @@ export async function setVersionLegalBasis(input: {
     { companyCode: input.companyCode },
     { projection: { legalBases: 1, legalBasesHidden: 1 } },
   )
-  const option = findLegalBasisOption(tenant, input.legalBasisKey ?? "")
+  const keys = [...new Set((input.legalBasisKeys ?? (input.legalBasisKey ? [input.legalBasisKey] : []))
+    .map(k => k.trim()).filter(Boolean))]
+  const options = keys.map(k => findLegalBasisOption(tenant, k))
+  const current = basesOf(version)
 
-  const problem = legalBasisChoiceProblem({
-    option,
-    currentKey: version.legalBasisKey ?? null,
-    current: version.legalBasis ?? null,
+  const problem = legalBasesChoiceProblem({
+    options,
+    currentKeys: current.map(e => e.key ?? "").filter(Boolean),
+    hasCurrent: current.length > 0,
     reason: input.reason,
   })
   if (problem) fail(problem)
-  const chosen = option as LegalBasisOption
+  const chosen = options as LegalBasisOption[]
   const reason = input.reason?.trim()
+
+  /*
+   * Zoznam je presný údaj (D115). Staré polia nesú **rozhodujúci druh**
+   * (D116, zákonná povinnosť má prednosť) a spojené názvy a odkazy — tak ich
+   * námietky, retencia, výkazy aj kópie v potvrdeniach čítajú ďalej správne.
+   */
+  const entries = chosen.map(o => ({ basis: o.basis, key: o.key, label: o.label, reference: o.reference ?? null }))
+  const dominant = dominantBasis(entries) as LegalBasis
+  const joinedLabel = entries.map(e => e.label).join(" + ")
+  const joinedKey = entries.map(e => e.key).join(",")
+  const references = entries.map(e => e.reference).filter((r): r is string => Boolean(r))
+  const joinedReference = references.length ? references.join("; ") : null
 
   await col.updateOne(
     { companyCode: input.companyCode, documentId: input.documentId },
     {
       $set: {
-        "versions.$[v].legalBasis": chosen.basis,
-        "versions.$[v].legalBasisKey": chosen.key,
-        "versions.$[v].legalBasisLabel": chosen.label,
-        ...(chosen.reference ? { "versions.$[v].legalBasisReference": chosen.reference } : {}),
+        "versions.$[v].legalBases": entries,
+        "versions.$[v].legalBasis": dominant,
+        "versions.$[v].legalBasisKey": joinedKey,
+        "versions.$[v].legalBasisLabel": joinedLabel,
+        ...(joinedReference ? { "versions.$[v].legalBasisReference": joinedReference } : {}),
         updatedAt: new Date(),
         updatedBy: input.actor.email,
       },
-      // Položka bez odkazu nemá niesť odkaz z predošlej voľby — to by bol
+      // Výber bez odkazu nemá niesť odkaz z predošlej voľby — to by bol
       // údaj, ktorý nikto nezadal.
-      ...(chosen.reference ? {} : { $unset: { "versions.$[v].legalBasisReference": "" } }),
+      ...(joinedReference ? {} : { $unset: { "versions.$[v].legalBasisReference": "" } }),
       $push: {
         "versions.$[v].legalBasisChanges": {
           at: new Date(),
@@ -244,10 +263,10 @@ export async function setVersionLegalBasis(input: {
           from: version.legalBasis ?? null,
           fromReference: version.legalBasisReference ?? null,
           fromKey: version.legalBasisKey ?? null,
-          to: chosen.basis,
-          toReference: chosen.reference,
-          toKey: chosen.key,
-          toLabel: chosen.label,
+          to: dominant,
+          toReference: joinedReference,
+          toKey: joinedKey,
+          toLabel: joinedLabel,
         },
       },
     } as never,
@@ -258,8 +277,8 @@ export async function setVersionLegalBasis(input: {
     companyCode: input.companyCode, subject: "document", action: "legal-basis", actor: input.actor.email,
     targetId: input.documentId, targetLabel: `${title} — ${version.label}`,
     changes: {
-      legalBasis: { from: version.legalBasisLabel ?? version.legalBasis ?? null, to: chosen.label },
-      legalBasisReference: { from: version.legalBasisReference ?? null, to: chosen.reference },
+      legalBasis: { from: version.legalBasisLabel ?? version.legalBasis ?? null, to: joinedLabel },
+      legalBasisReference: { from: version.legalBasisReference ?? null, to: joinedReference },
     },
     ...(reason ? { note: reason } : {}),
   })

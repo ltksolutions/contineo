@@ -11,6 +11,7 @@
  */
 
 import Link from "next/link"
+import { basesOf } from "@/lib/versionResponsibility"
 import VersionMetaLine from "@/components/VersionMetaLine"
 import { initials } from "@/lib/initials"
 import { notFound, redirect } from "next/navigation"
@@ -194,7 +195,7 @@ export default async function DocumentPage({
                 documentId={doc.documentId}
                 versionId={version.version.versionId}
                 current={version.version.legalBasis}
-                currentKey={version.version.legalBasisKey}
+                currentKeys={basesOf(version.version).map(e => e.key ?? "").filter(Boolean)}
                 options={basisOptions}
                 language={person.language}
                 back="document"

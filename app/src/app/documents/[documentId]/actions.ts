@@ -140,7 +140,8 @@ export async function setLegalBasisAction(fd: FormData) {
       companyCode: person.companyCode,
       documentId,
       versionId: field("versionId"),
-      legalBasisKey: field("legalBasisKey"),
+      // Viac základov naraz (ADR-017, D115).
+      legalBasisKeys: fd.getAll("legalBasisKey").filter((v): v is string => typeof v === "string"),
       reason: field("reason"),
       actor: { personId: person.id, email: person.email },
       // Náhradník len vo vlastnej organizácii — rovnako ako `libraryContext()`.

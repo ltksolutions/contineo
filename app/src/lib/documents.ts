@@ -19,6 +19,7 @@ import { getCollection } from "./mongodb"
 import { requireCompanyCode } from "./tenantScope"
 import type {
   LegalBasis, LegalBasisChange, ResponsibleChange, ResponsiblePerson,
+  LegalBasisEntry,
 } from "./versionResponsibility"
 
 export const DOCUMENTS_COLLECTION = "documents"
@@ -179,6 +180,11 @@ export interface Version {
   legalBasisKey?: string
   legalBasisLabel?: string
   legalBasisChanges?: LegalBasisChange[]
+  /**
+   * Všetky právne základy znenia (ADR-017, D115). Staré polia vyššie nesú
+   * rozhodujúci druh (D116) a spojené názvy — pre čitateľov spred ADR-017.
+   */
+  legalBases?: LegalBasisEntry[]
 
   /**
    * Údaje o znení (ADR-013, D106). Dátum účinnosti je `effectiveFrom` vyššie.

@@ -8,6 +8,7 @@
  */
 
 import { notFound, redirect } from "next/navigation"
+import { basesOf } from "@/lib/versionResponsibility"
 import { treeOptions } from "@/lib/treeOptions"
 import Link from "next/link"
 import { libraryContext } from "@/lib/library"
@@ -398,7 +399,7 @@ export default async function DocumentDetailPage({
               documentId={d.documentId}
               versionId={v.versionId}
               current={v.legalBasis}
-              currentKey={v.legalBasisKey}
+              currentKeys={basesOf(v).map(e => e.key ?? "").filter(Boolean)}
               options={basisOptions}
               language={language}
               back="library"
