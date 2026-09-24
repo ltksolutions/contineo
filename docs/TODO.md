@@ -275,10 +275,12 @@
   - [ ] **Evidencia na obrazovke** (`evidence.ts`) neukazuje odtlačok zodpovednej osoby ani právneho základu z potvrdenia — výkaz `npm run ack:report` áno.
   - [ ] **Overiť na mobile** (390 px): výber zodpovednej osoby pri zverejnení, karta znenia v knižnici, `/documents/[id]` (kontakt, výber základu), Nastavenie organizácie → Číselníky → Právne základy.
   - [x] **ADR-012 kroky 1–5** ✅ 2026-09-24 (PR #102–#106): dátumy pri osobe, retenčná dávka (režim `report`), rola `dpo` s výkazom a štvrťročným e-mailom, námietky, `/privacy`.
-  - [ ] **Na produkcii spustiť** `node scripts/onboarding_init.mjs` (indexy `audit_ttl`, `objections`) a `npm run migrate:deactivated-at -- --zapisat` — so súhlasom Jána.
-  - [ ] **Zapnúť `RETENTION_MODE=delete`** na Verceli po kontrole výkazu v odpovedi cronu.
-  - [ ] **Prideliť rolu `dpo`** (Švehlová) v Ľuďoch — bez nej `/privacy` neukazuje kontakt a štvrťročný e-mail nemá komu odísť.
-  - [ ] **DPO schváli text C1** a zodpovie C2, C3 (`docs/C1_…`–`C3_…`); potom odkaz na `/privacy` do pozvánky a adresa/IČO prevádzkovateľa do profilu organizácie.
+  - [x] **Na produkcii** ✅ 2026-09-24 — `onboarding_init.mjs` (kolekcia `objections`, `audit_ttl`); `migrate:deactivated-at` nemal čo doplniť (žiadna vyradená osoba).
+  - [ ] **Zapnúť `RETENTION_MODE=delete`** na Verceli (Production) — až po kontrole výkazu `retention` v odpovedi denného cronu `/api/cron/overdue` (log Vercelu). Dnes by nezmazal nič: projekt je mladší ako 3 roky.
+  - [x] **Rola `dpo`** ✅ 2026-09-24 — DPO je **Ján Letko** (pridelené na jeho pokyn, audit).
+  - [ ] **DPO (Ján) schváli text C1** a zodpovie C2, C3 (`docs/C1_…`–`C3_…`, ako .docx v `docs/dpo/`).
+  - [x] **Prevádzkovateľ v nastavení organizácie** ✅ 2026-09-24 — právny názov, sídlo, IČO (Nastavenie organizácie → Značka); ukazujú sa na `/privacy`. Vyplniť pre SFZ.
+  - [ ] **Odkaz na `/privacy` do pozvánky** (päta `inviteEmail`).
   - [ ] **Opraviť `codelists/legalBasis.json` podľa DPO** — skôr, než sa podľa neho začnú vyberať základy.
 - [x] **O17 — pseudonymizácia v `evaluations`** ✅ 2026-09-16 — päť podpisových polí nesie `persons.id`, nie e-mail. Migrácia `npm run migrate:eval-personid` prebehla (7 záznamov, 12 polí), invariant v `npm run check` stráži návrat e-mailu. `docs/O17_plan_personid_v_hodnoteniach.md`. `GDPR_DATA_PROTECTION.md` kap. 3 má zásadu „`userId`/`sessionId` pseudonymizovať", ale kolekcia ukladá e-mail pýtajúceho aj hodnotiteľa **doslovne**. Buď sa to pseudonymizuje, alebo sa zásada prepíše — **rozhodnutie, nie implementácia**.
 - [ ] **Poradie nasadenia (rozhodnuté 2026-09-16, Ján):** prvé kolo beží na **Anthropic + MongoDB Atlas** (režim `eu-data`). **On-prem sa rieši až po dodaní hardvéru** — dovtedy je to na webe aj v dokumentácii označené ako pripravované, nie ako voľba pri objednávke. Týka sa to `O7_plan_overenia.md` (on-prem vetva) aj `ADR-002` (rezidencia).

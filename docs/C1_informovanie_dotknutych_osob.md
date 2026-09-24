@@ -31,8 +31,8 @@ zbierať, a že sa to dá preukázať (dátum zverejnenia verzie textu).
 nasadené s textom nižšie (ADR-012, krok 5). Stránka je verejná, dá sa otvoriť aj
 pred prihlásením. Zmena textu = úprava `dictionary().privacy` v `i18n.ts`
 v troch jazykoch **a posunutie `PRIVACY_NOTICE_VERSION`** v `lib/privacy.ts`.
-Odkaz v pozvánke ešte chýba. Adresa a IČO prevádzkovateľa sa zatiaľ neukazujú,
-lebo profil organizácie ich nemá; na stránke je len názov.
+Odkaz v pozvánke ešte chýba. Právny názov, sídlo a IČO prevádzkovateľa sa
+vyplnia v Nastavení organizácie → Značka → Prevádzkovateľ osobných údajov.
 
 **Podmienka pred pilotom (C1):** text schváli DPO a zverejní sa **skôr**, než
 prvý človek v pilote dostane predpis na potvrdenie.
