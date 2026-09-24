@@ -195,6 +195,14 @@ boli skrytá práca; na telefóne stačí, že sú dole.
 
 ---
 
+## Rozhodnutie — priebeh nahrávania je modálne okno (Ján Letko, 23. 9. 2026)
+
+Priebeh sa ukazuje v **modálnom okne v strede obrazovky** (`.upload-overlay` v `UploadFiles.tsx`, `role="dialog"`, `aria-modal`): percentá počas nahrávania (`uploadingFile`), neurčitý pruh počas prevodu (`submitPendingNote`).
+
+**Neprenášať do zóny súboru ani pod tlačidlo.** Kto odošle formulár zo spodku stránky, priebeh v zóne hore nevidí. Ďalšie návrhy toto nemenia.
+
+---
+
 ## Rámy
 
 | Šírka | Čo sa mení |

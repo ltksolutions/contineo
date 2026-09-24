@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="sk"><head><meta charset="utf-8" /><meta name="viewport" content="width=device-width,initial-scale=1" /><title>NAHRAVANIE — PDF a údaje o znení</title>
+<html lang="sk"><head><meta charset="utf-8" /><meta name="viewport" content="width=device-width,initial-scale=1" /><title>ZNENIE — kontakt a ochrana údajov</title>
 <style>
 :root{color-scheme:light;--bg:#f5f6f8;--surface:#fff;--surface-2:#eceef1;--ink:#161b22;--muted:#5c6675;--line:rgba(20,28,42,.12);--accent:#232a35;--accent-strong:#11151c;--on-accent:#fff;--accent-soft:rgba(35,42,53,.11);--ok-bg:#ecfdf5;--ok-fg:#047857;--bad-bg:#fef2f2;--bad-fg:#b91c1c;--warn-bg:#fffbeb;--warn-fg:#b45309;--radius:12px;--radius-lg:18px;--shadow:0 1px 2px rgba(20,28,42,.05),0 10px 30px rgba(20,28,42,.07);--pad-main:16px;--card-pad:16px;--list-py:9px;--gap:14px;--row-py:7px;--font-row:13px;--fs-title:26px;--fs-section:17px;--fs-lead:15px;--fs-body:14px;--fs-small:13px;--fs-micro:12px;--fs-label:13px;--fs-control:15px;--control-h:40px;--control-h-sm:36px}
 .dark{color-scheme:dark;--bg:#0d1016;--surface:#161b22;--surface-2:#1d232c;--ink:#eef1f5;--muted:#9aa4b2;--line:rgba(255,255,255,.12);--accent:#eef1f5;--accent-strong:#fff;--on-accent:#11151c;--accent-soft:rgba(238,241,245,.11);--ok-bg:rgba(4,120,87,.16);--ok-fg:#6ee7b7;--bad-bg:rgba(185,28,28,.16);--bad-fg:#fca5a5;--warn-bg:rgba(180,83,9,.16);--warn-fg:#fcd34d;--shadow:0 1px 2px rgba(0,0,0,.4),0 10px 30px rgba(0,0,0,.45)}
@@ -289,135 +289,137 @@ summary{cursor:pointer}
 .acknowledge-progress{position:absolute;inset:0 auto auto 0;height:2px;background:var(--accent)}
 .formulka{font-size:var(--fs-body);line-height:1.6;margin:0 0 14px}
 
-.up-page{max-width:880px}
-.upload-form{display:grid;gap:14px}
-.upload-section{padding:18px 20px}
-.upload-step{display:flex;align-items:center;gap:10px;margin:0 0 14px;font-size:15px}
-.upload-step-no{display:grid;place-items:center;width:24px;height:24px;border-radius:50%;background:var(--accent);color:var(--on-accent);font-size:12.5px;font-weight:700}
-.upload-step-opt{margin-left:auto;font-size:var(--fs-micro);font-weight:500;color:var(--muted)}
-.upload-files{display:grid;gap:12px;grid-template-columns:1.25fr 1fr}
-.w390 .upload-files{grid-template-columns:1fr}
-.upload-drop{display:grid;grid-template-columns:minmax(0,1fr);align-content:start;justify-items:start;gap:6px;padding:16px;border:1px dashed var(--line);border-radius:11px;background:repeating-linear-gradient(135deg,var(--surface-2) 0 8px,transparent 8px 16px);min-width:0}
-.upload-drop--optional{background:none}
-.upload-drop-title{font-size:14.5px;font-weight:600}
-.upload-drop-note{font-size:12.5px;color:var(--muted);line-height:1.5}
-.upload-drop-ext{font-family:ui-monospace,Menlo,monospace;font-size:12px;color:var(--muted)}
-.upload-drop.is-set{border-style:solid;border-color:var(--ok-fg);background:var(--surface)}
-.upload-drop--optional.is-set{border-color:var(--line)}
-.upload-chosen{display:flex;align-items:center;gap:10px;width:100%;margin-top:4px;padding:8px 10px;border-radius:8px;background:var(--bg);border:1px solid var(--line)}
-.upload-chosen-ico{display:grid;place-items:center;width:30px;height:34px;border-radius:5px;background:var(--surface-2);font-size:9.5px;font-weight:800;letter-spacing:.03em;color:var(--muted);flex:0 0 auto}
-.upload-chosen-main{flex:1;min-width:0}
-.upload-chosen-name{font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.upload-chosen-meta{font-size:11.5px;color:var(--muted)}
-.upload-chosen-act{font-size:12.5px;font-weight:600;color:var(--ink);text-decoration:underline;text-underline-offset:2px}
-.upload-bar{display:block;height:4px;border-radius:2px;background:var(--line);overflow:hidden;width:100%}
-.upload-bar>span{display:block;height:100%;background:var(--accent);border-radius:2px}
-.upload-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px;align-items:start}
-.upload-wide{grid-column:1/-1}
-.key-preview{margin-top:2px;font-family:ui-monospace,Menlo,monospace;font-size:var(--fs-micro);color:var(--muted)}
-.key-preview b{color:var(--ink);font-weight:500}
-.upload-optional>summary{font-size:var(--fs-small);font-weight:600;padding:6px 0;cursor:pointer}
-.prefill-note{display:flex;gap:8px;align-items:flex-start;margin:0 0 14px;padding:9px 12px;border-radius:9px;background:var(--bg);border:1px solid var(--line);font-size:12.5px;color:var(--muted);line-height:1.5}
-.prefill-note b{color:var(--ink);font-weight:600}
-.upload-submit{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
-.upload-submit-note{font-size:12.5px;color:var(--muted)}
-.w390 .upload-section{padding:16px}
-.w390 .upload-submit .button{width:100%;min-height:44px}
-.w390 .field-input{min-height:44px;font-size:16px}
-.ann{font-size:12px;color:#5c6675;max-width:78ch;margin:6px 0 0;line-height:1.5}
+.zn-page{max-width:760px}
+.zn-head{display:grid;gap:4px;margin:0 0 24px}
+.zn-line{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;font-size:var(--fs-body);color:var(--muted)}
+.zn-meta{font-size:var(--fs-small);color:var(--muted);overflow-wrap:anywhere}
+.pdf-frame{display:grid;place-items:center;height:520px;border:1px solid var(--line);border-radius:10px;background:var(--surface-2);color:var(--muted);font-size:13px}
+.pdf-page{width:300px;height:420px;background:#fff;box-shadow:0 2px 10px rgba(0,0,0,.12);padding:28px 26px;display:grid;align-content:start;gap:9px}
+.pdf-page i{display:block;height:6px;border-radius:2px;background:#e3e6ea}
+.pdf-link{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;margin:10px 0 0;font-size:var(--fs-small)}
+.pdf-tile{display:flex;align-items:center;gap:12px;min-height:56px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--surface);text-decoration:none;color:var(--ink)}
+.pdf-tile-ico{display:grid;place-items:center;width:32px;height:38px;border-radius:5px;background:var(--surface-2);font-size:9.5px;font-weight:800;color:var(--muted);flex:0 0 auto}
+.pdf-tile-main{flex:1;min-width:0}
+.pdf-tile-name{font-size:14px;font-weight:600}
+.pdf-tile-meta{font-size:12px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pdf-tile-go{font-size:18px;color:var(--muted)}
+.search-text{margin-top:12px}
+.search-text>summary{cursor:pointer;font-size:var(--fs-small);color:var(--muted);min-height:32px;display:flex;align-items:center}
+.reading{font-size:var(--fs-micro);color:var(--muted);margin:14px 0 0}
+.contact{display:grid;gap:12px;padding:16px;margin-top:24px}
+.contact-kicker{font-size:var(--fs-small);color:var(--muted);margin:0}
+.contact-person{display:flex;gap:12px;align-items:flex-start}
+.contact-av{display:grid;place-items:center;width:40px;height:40px;border-radius:50%;background:var(--accent-soft);color:var(--accent-strong);font-size:13px;font-weight:700;flex:0 0 auto}
+.contact-main{flex:1;min-width:0;display:grid;gap:4px}
+.contact-name{font-weight:600;font-size:var(--fs-body)}
+.contact-links{display:flex;flex-wrap:wrap;gap:6px}
+.contact-link{display:inline-flex;align-items:center;gap:6px;min-height:32px;padding:0 10px;border:1px solid var(--line);border-radius:8px;font-size:13px;color:var(--ink);text-decoration:none;background:var(--bg);overflow-wrap:anywhere}
+.contact-link--quiet{border-color:transparent;background:none;color:var(--muted);text-decoration:underline;text-underline-offset:2px;padding:0 4px}
+.contact-basis{display:grid;gap:2px;padding-top:12px;border-top:1px solid var(--line);font-size:var(--fs-small)}
+.contact-basis dt{color:var(--muted)}
+.contact-basis dd{margin:0}
+.contact-gone{margin:0;padding:10px 12px;border-radius:9px;background:var(--warn-bg);color:var(--warn-fg);font-size:13px;line-height:1.5}
+.ack{padding:20px;margin-top:32px}
+.ack h2{font-size:var(--fs-section);margin:0 0 10px}
+.ack-statement{font-size:var(--fs-lead);line-height:1.65;margin:0 0 18px}
+.ack-privacy{display:flex;gap:8px;align-items:baseline;margin:16px 0 0;padding-top:12px;border-top:1px solid var(--line);font-size:var(--fs-small);color:var(--muted)}
+.ack-privacy a{color:var(--ink);text-underline-offset:2px}
+.task{padding:16px;margin:0 0 24px;border-color:var(--accent)}
+.task h2{font-size:var(--fs-section);margin:0 0 6px}
+.task-note{margin:0 0 14px;color:var(--muted);font-size:var(--fs-body)}
+.basis-group{border:0;padding:0;margin:0 0 12px;display:grid;gap:6px}
+.basis-group legend{font-size:var(--fs-label);font-weight:600;margin:0 0 6px;padding:0}
+.basis-choice{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;border:1px solid var(--line);border-radius:9px;background:var(--bg);font-size:13.5px;line-height:1.4}
+.basis-choice.is-on{border-color:var(--accent);background:var(--accent-soft)}
+.basis-radio{width:16px;height:16px;border-radius:50%;border:1.5px solid var(--muted);flex:0 0 auto;margin-top:1px;display:grid;place-items:center}
+.basis-choice.is-on .basis-radio{border-color:var(--accent)}
+.basis-choice.is-on .basis-radio::after{content:"";width:8px;height:8px;border-radius:50%;background:var(--accent)}
+.basis-ref{display:block;font-size:12px;color:var(--muted);margin-top:2px}
+.basis-sum{padding:14px 16px;margin:0 0 24px}
+.basis-sum summary{cursor:pointer;font-size:var(--fs-body);font-weight:600}
+.basis-sum-ref{display:block;margin:2px 0 0 18px;font-size:var(--fs-small);font-weight:400;color:var(--muted)}
+.dock{position:absolute;left:10px;right:10px;bottom:66px;z-index:5}
+.dock .button{width:100%;min-height:50px;border-radius:12px;box-shadow:var(--shadow)}
+.tabbar{position:absolute;left:0;right:0;bottom:0;height:58px;background:var(--surface);border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(4,1fr);font-size:10.5px;color:var(--muted);text-align:center;align-items:center}
+.tabbar .is-on{color:var(--accent);font-weight:650}
+.w390 .contact-link{min-height:44px}
+.w390 .ack{margin-bottom:64px}
+.w390 .zn-page .page-title{font-size:22px}
+.ann{font-size:12px;color:#5c6675;max-width:78ch;margin:8px 0 0;line-height:1.5}
 .ann b{color:#161b22}
 .num{display:inline-grid;place-items:center;width:18px;height:18px;border-radius:50%;background:#b45309;color:#fff;font-size:10.5px;font-weight:700;margin-right:4px;vertical-align:1px}
+.states{display:grid;grid-template-columns:repeat(auto-fit,minmax(360px,1fr));gap:18px;max-width:1440px}
+.state{background:var(--bg);border:1px solid rgba(20,28,42,.18);border-radius:12px;padding:16px}
 
-
-.upload-overlay{position:absolute;inset:0;z-index:10;display:grid;place-items:center;padding:16px;background:rgba(10,14,22,.45)}
-.upload-overlay-card{display:grid;gap:14px;width:min(440px,100%);padding:22px 22px 18px;border-radius:14px;background:var(--surface);box-shadow:0 18px 50px rgba(0,0,0,.25)}
-.upload-overlay-title{margin:0;font-size:17px}
-.upload-overlay-note{margin:0;font-size:var(--fs-small);overflow-wrap:anywhere}
-.upload-progress-bar{position:relative;display:block;height:4px;overflow:hidden;border-radius:2px;background:var(--line)}
-.upload-progress-bar--determinate>span{display:block;height:100%;border-radius:2px;background:var(--accent)}
 </style></head>
 <body><div class="sheet">
-<h1 class="doc">NAHRAVANIE — PDF a údaje o znení</h1>
-<p class="doc">Obrazovka <code>/library/new</code>. Kód už má tri úseky (Súbor · Metadáta · Údaje o znení), povinné PDF a priebeh v %. Návrh dorovnáva handoff a mení len podobu: zóny vedľa seba, vybraný súbor ako riadok, úsek 3 označený „nepovinné". Priebeh nahrávania (modálne okno) sa nemení. Zadanie: <code>NAHRAVANIE-pdf-a-udaje-o-zneni.md</code>.</p>
+<h1 class="doc">ZNENIE — kontakt a ochrana údajov</h1>
+<p class="doc">Obrazovka <code>/documents/[documentId]</code>. Všetko tu už funguje (D91, ADR-011, ADR-013, C1). Návrh mení len podobu: hlavičku bez záporného okraja, PDF na telefóne ako dlaždicu, kartu kontaktu s osobou a právnym základom oddeleným čiarou, odkaz na ochranu údajov ako pätičku potvrdenia a úlohu zodpovednej osoby ako výber z dlaždíc. Poradie blokov ani texty sa nemenia. Zadanie: <code>ZNENIE-kontakt-a-privacy.md</code>.</p>
 
-<p class="cap">Desktop 1440 — súbory vybrané, metadáta aj údaje o znení vyplnené, pripravené na odoslanie</p>
+<p class="cap">Desktop 1440 — zamestnanec, nepotvrdené, termín o 6 dní</p>
 <div class="frames"><div class="frame w1440" style="width:1440px">  <div class="hdr">
   <span class="logo"><svg width="17" height="17" viewBox="0 0 48 48" fill="none" aria-hidden="true" style="flex:0 0 auto"><circle cx="18" cy="18" r="13" stroke="currentColor" stroke-width="4"></circle><circle cx="13" cy="18" r="2.3" fill="currentColor"></circle><circle cx="23" cy="18" r="2.3" fill="currentColor"></circle><path d="M28 27 L41 41 L29 38 Z" fill="currentColor"></path></svg></span><span class="org">Slovenský futbalový zväz</span>
   <div class="ask" style="flex:1;min-width:0"><svg width="16" height="16" viewBox="0 0 48 48" fill="none" aria-hidden="true" style="flex:0 0 auto"><circle cx="18" cy="18" r="13" stroke="currentColor" stroke-width="4"></circle><circle cx="13" cy="18" r="2.3" fill="currentColor"></circle><circle cx="23" cy="18" r="2.3" fill="currentColor"></circle><path d="M28 27 L41 41 L29 38 Z" fill="currentColor"></path></svg><span style="flex:1">Opýtajte sa svojich dokumentov…</span><span class="kbd">⌘K</span></div>
   <span class="bell"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13.9 11.6c0-5.2-1.6-7-4.9-7s-4.9 1.8-4.9 7l-1.3 2.1h12.4z"></path><path d="M10.6 15.4a1.7 1.7 0 0 1-3.2 0"></path></svg><b>3</b></span><span class="av">JL</span>
-</div><div class="nav"><a href="#" class="">Prehľad</a><a href="#" class="">Opýtať sa</a><a href="#" class="">Na potvrdenie<span class="c">9</span></a><a href="#" class="">Na schválenie<span class="c">3</span></a><a href="#" class="">Adresár</a><a href="#" class="is-on">Knižnica</a><a href="#" class="">Pridelené normy</a><a href="#" class="">Reťaz dôkazov</a><a href="#" class="">Osoby</a><a href="#" class="">Na posúdenie<span class="c">4</span></a></div><div class="body"><div class="wrap"><div class="up-page">
-<p style="margin:0 0 12px;font-size:var(--fs-body)"><a href="#" style="color:var(--muted)">← Knižnica</a></p>
-<h1 class="page-title">Nahrať dokument</h1>
-<p class="page-lead">Schvaľuje a potvrdzuje sa PDF — tak, ako ho ľudia uvidia, aj s prílohami. K nemu pridaj upraviteľný zdroj (Word, Excel…): z neho vznikne text na vyhľadávanie a pri ďalšom znení z neho budeš vychádzať. Oba súbory sa uložia tak, ako prišli.</p>
-<div class="upload-form">
-<section class="card upload-section"><h2 class="upload-step"><span class="upload-step-no">1</span>Súbor</h2><div class="upload-files"><div class="upload-drop is-set"><span class="upload-drop-title"><span style="color:var(--ok-fg)">✓</span> PDF — schvaľovaná podoba</span><div class="upload-chosen"><span class="upload-chosen-ico">PDF</span><div class="upload-chosen-main"><div class="upload-chosen-name">Registracny_a_prestupovy_poriadok_2026.pdf</div><div class="upload-chosen-meta">15,1 MB</div></div><a class="upload-chosen-act" href="#">Zmeniť</a></div></div><div class="upload-drop upload-drop--optional is-set"><span class="upload-drop-title">Upraviteľný zdroj</span><div class="upload-chosen"><span class="upload-chosen-ico">DOCX</span><div class="upload-chosen-main"><div class="upload-chosen-name">Registracny_a_prestupovy_poriadok_2026.docx</div><div class="upload-chosen-meta">2,4 MB</div></div><a class="upload-chosen-act" href="#">Zmeniť</a></div></div></div></section>
-<section class="card upload-section"><h2 class="upload-step"><span class="upload-step-no">2</span>Metadáta</h2><div class="upload-grid">
-<label class="field upload-wide"><span class="field-label">Názov dokumentu</span><span class="field-input">Registračný a prestupový poriadok</span><span class="key-preview">Identifikátor: <b>sfz-registracny-a-prestupovy-poriadok</b></span></label>
-<label class="field"><span class="field-label">Druh</span><span class="field-input">Norma</span></label>
-<label class="field"><span class="field-label">Prístup</span><span class="field-input">Interný</span></label>
-<label class="field"><span class="field-label">Jazyk dokumentu</span><span class="field-input">Slovenčina</span></label>
-<details class="upload-optional upload-wide"><summary>Ďalšie údaje — oddelenie, interné číslo, značky, rozsah</summary></details>
-</div></section>
-<section class="card upload-section"><h2 class="upload-step"><span class="upload-step-no">3</span>Údaje o znení<span class="upload-step-opt">nepovinné</span></h2><p class="prefill-note"><span>ⓘ</span><span>Nepovinné už tu. Ak ich nevyplníš, predvyplnia sa z prvej strany dokumentu a potvrdíš ich na detaile.</span></p><div class="upload-grid">
-<label class="field"><span class="field-label">Autor</span><span class="field-input">Legislatívna komisia SFZ</span><span class="field-hint">Osoba, oddelenie alebo komisia, ktorá dokument pripravila.</span></label>
-<label class="field"><span class="field-label">Schválil</span><span class="field-input">Výkonný výbor SFZ</span><span class="field-hint">Osoba alebo orgán, napríklad Výkonný výbor SFZ.</span></label>
-<label class="field"><span class="field-label">Dátum schválenia</span><span class="field-input">16. 9. 2026</span></label>
-<label class="field"><span class="field-label">Dátum účinnosti</span><span class="field-input">1. 10. 2026</span><span class="field-hint">Povinný pred predložením na schválenie. Pri zverejnení sa už nezadáva.</span></label>
-</div></section>
-<div class="upload-submit"><span class="button">Nahrať a previesť</span><span class="upload-submit-note">Po nahratí ťa presmerujeme na detail dokumentu.</span></div>
-</div></div></div></div></div></div>
-<p class="ann"><span class="num">1</span><b>Zóny vedľa seba</b> (1,25 : 1). PDF s pruhmi, zdroj bez nich — pravidlo z globals.css ostáva. <span class="num">2</span><b>Vybraný súbor</b> ako riadok s názvom, veľkosťou a „Zmeniť"; zóna PDF dostane zelený okraj. <span class="num">3</span><b>„nepovinné"</b> v nadpise úseku 3.</p>
+</div><div class="nav"><a href="#" class="">Prehľad</a><a href="#" class="">Opýtať sa</a><a href="#" class="is-on">Na potvrdenie<span class="c">9</span></a><a href="#" class="">Na schválenie<span class="c">3</span></a><a href="#" class="">Adresár</a><a href="#" class="">Knižnica</a><a href="#" class="">Pridelené normy</a><a href="#" class="">Reťaz dôkazov</a><a href="#" class="">Osoby</a><a href="#" class="">Na posúdenie<span class="c">4</span></a></div>
+  <div class="body"><div class="wrap"><div class="zn-page"><p style="margin:0 0 16px;font-size:var(--fs-body)"><a href="#" style="color:var(--muted)">← Späť na zoznam</a></p>
+<h1 class="page-title">Registračný a prestupový poriadok</h1>
+<div class="zn-head"><div class="zn-line"><span>verzia 4.2, platná od 1. 10. 2026</span><span class="due-chip due-chip--soon">do 30. 9. 2026</span></div>
+<p class="zn-meta" style="margin:0">Autor: Legislatívna komisia SFZ · Schválil: Výkonný výbor SFZ · Dátum schválenia: 16. 9. 2026</p></div><div class="pdf-frame"><div class="pdf-page"><i style="width:60%;height:9px;background:#cfd4da"></i><i></i><i></i><i style="width:85%"></i><i></i><i style="width:70%"></i><i></i><i></i><i style="width:55%"></i></div></div>
+<p class="pdf-link"><a class="button button--quiet" href="#" style="min-height:34px;font-size:13px">Otvoriť PDF</a><span class="quiet">Registracny_a_prestupovy_poriadok_2026.pdf · 15.1 MB</span></p><details class="search-text"><summary>▸ Text dokumentu (slúži na vyhľadávanie)</summary></details>
+<p class="reading">Čas čítania: 4 minúty · Zaznamenáva sa, je informatívny a nie je súčasťou potvrdenia.</p><section class="card contact"><p class="contact-kicker">S otázkami k predpisu sa obráťte na</p>
+<div class="contact-person"><span class="contact-av">JL</span><div class="contact-main"><span class="contact-name">Ján Letko</span><div class="contact-links"><a class="contact-link" href="#">✉ jan.letko@futbalsfz.sk</a><a class="contact-link" href="#">☏ +421 905 123 456</a><a class="contact-link contact-link--quiet" href="#">profil v adresári</a></div></div></div>
+<dl class="contact-basis" style="margin:0"><dt>Právny základ</dt><dd>Predpisy zväzu pre rozhodcov, delegátov a funkcionárov</dd></dl></section><section class="card ack"><h2>Potvrdenie oboznámenia</h2><p class="ack-statement">Potvrdzujem, že som sa oboznámil s dokumentom „Registračný a prestupový poriadok", verzia 4.2, platná od 1. 10. 2026, porozumel som jeho obsahu a zaväzujem sa ho dodržiavať.</p>
+<div><span class="button">Potvrdzujem</span></div>
+<p class="ack-privacy"><span aria-hidden="true">ⓘ</span><span>Čo sa pri potvrdení ukladá a ako dlho: <a href="#">Ochrana osobných údajov</a></span></p></section></div></div></div></div></div>
+<p class="ann"><span class="num">1</span><b>Hlavička</b>: verzia a termín v jednom riadku s medzerou, údaje o znení hneď pod ním — bez <code>margin: -20px</code>. <span class="num">2</span><b>Kontakt</b>: iniciály, meno, e-mail a telefón ako odkazy s rámikom (32 px, na telefóne 44 px), profil ticho. Právny základ pod čiarou ako <code>&lt;dl&gt;</code>. <span class="num">3</span><b>Ochrana údajov</b> je pätička karty potvrdenia oddelená čiarou — patrí k potvrdeniu, nie je to ďalšia veta formulky.</p>
 
 <div class="frames" style="margin-top:24px">
-<div style="display:flex;flex-direction:column;gap:8px"><p class="cap" style="margin:0">Tablet 834 — nahrávanie 62 %: modálne okno v strede (bez zmeny); zdroj je Word → poznámka o predvyplnení</p><div class="frame w834" style="width:834px;position:relative"><div class="hdr"><span class="logo"><svg width="17" height="17" viewBox="0 0 48 48" fill="none" aria-hidden="true"><circle cx="18" cy="18" r="13" stroke="currentColor" stroke-width="4"></circle><circle cx="13" cy="18" r="2.3" fill="currentColor"></circle><circle cx="23" cy="18" r="2.3" fill="currentColor"></circle><path d="M28 27 L41 41 L29 38 Z" fill="currentColor"></path></svg></span><span class="org">Slovenský futbalový zväz</span><div class="ask" style="flex:1;min-width:0"><svg width="16" height="16" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.69" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex:0 0 auto"><path d="M15.2 10.4a2 2 0 0 1-2 2H7.4L3.6 15.2v-2.8h-.2a2 2 0 0 1-2-2V4.6a2 2 0 0 1 2-2h9.8a2 2 0 0 1 2 2z"/></svg><span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Opýtajte sa svojich dokumentov…</span><span class="kbd">⌘K</span></div><span class="bell"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13.9 11.6c0-5.2-1.6-7-4.9-7s-4.9 1.8-4.9 7l-1.3 2.1h12.4z"></path><path d="M10.6 15.4a1.7 1.7 0 0 1-3.2 0"></path></svg><b style="position:absolute;top:5px;right:4px;min-width:16px;height:16px;padding:0 4px;border-radius:8px;background:var(--bad-fg);color:var(--on-accent);font-size:10px;font-weight:700;display:grid;place-items:center;box-shadow:0 0 0 2px var(--surface)">3</b></span><span class="av">JL</span></div><div class="nav"><a href="#" class="">Prehľad</a><a href="#" class="">Opýtať sa</a><a href="#" class="">Na potvrdenie<span class="c">9</span></a><a href="#" class="">Na schválenie<span class="c">3</span></a><a href="#" class="">Adresár</a><a href="#" class="is-on">Knižnica</a><a href="#" style="margin-left:auto">Viac 4</a></div><div class="body"><div class="up-page">
-<p style="margin:0 0 12px;font-size:var(--fs-body)"><a href="#" style="color:var(--muted)">← Knižnica</a></p>
-<h1 class="page-title">Nahrať dokument</h1>
-<p class="page-lead">Schvaľuje a potvrdzuje sa PDF — tak, ako ho ľudia uvidia, aj s prílohami. K nemu pridaj upraviteľný zdroj (Word, Excel…): z neho vznikne text na vyhľadávanie a pri ďalšom znení z neho budeš vychádzať. Oba súbory sa uložia tak, ako prišli.</p>
-<div class="upload-form">
-<section class="card upload-section"><h2 class="upload-step"><span class="upload-step-no">1</span>Súbor</h2><div class="upload-files"><div class="upload-drop is-set"><span class="upload-drop-title"><span style="color:var(--ok-fg)">✓</span> PDF — schvaľovaná podoba</span><div class="upload-chosen"><span class="upload-chosen-ico">PDF</span><div class="upload-chosen-main"><div class="upload-chosen-name">Registracny_a_prestupovy_poriadok_2026.pdf</div><div class="upload-chosen-meta">15,1 MB</div></div><a class="upload-chosen-act" href="#">Zmeniť</a></div></div><div class="upload-drop upload-drop--optional is-set"><span class="upload-drop-title">Upraviteľný zdroj</span><div class="upload-chosen"><span class="upload-chosen-ico">DOCX</span><div class="upload-chosen-main"><div class="upload-chosen-name">Registracny_a_prestupovy_poriadok_2026.docx</div><div class="upload-chosen-meta">2,4 MB</div></div><a class="upload-chosen-act" href="#">Zmeniť</a></div></div></div></section>
-<section class="card upload-section"><h2 class="upload-step"><span class="upload-step-no">2</span>Metadáta</h2><div class="upload-grid">
-<label class="field upload-wide"><span class="field-label">Názov dokumentu</span><span class="field-input">Registračný a prestupový poriadok</span><span class="key-preview">Identifikátor: <b>sfz-registracny-a-prestupovy-poriadok</b></span></label>
-<label class="field"><span class="field-label">Druh</span><span class="field-input">Norma</span></label>
-<label class="field"><span class="field-label">Prístup</span><span class="field-input">Interný</span></label>
-<label class="field"><span class="field-label">Jazyk dokumentu</span><span class="field-input">Slovenčina</span></label>
-<details class="upload-optional upload-wide"><summary>Ďalšie údaje — oddelenie, interné číslo, značky, rozsah</summary></details>
-</div></section>
-<section class="card upload-section"><h2 class="upload-step"><span class="upload-step-no">3</span>Údaje o znení<span class="upload-step-opt">nepovinné</span></h2><p class="prefill-note"><span>ⓘ</span><span>Nepovinné už tu. Zdroj je <b>Word</b> — ak polia necháš prázdne, predvyplnia sa z tabuľky na prvej strane a na detaile ich len skontroluješ.</span></p><div class="upload-grid">
-<label class="field"><span class="field-label">Autor</span><span class="field-input"></span><span class="field-hint">Osoba, oddelenie alebo komisia, ktorá dokument pripravila.</span></label>
-<label class="field"><span class="field-label">Schválil</span><span class="field-input"></span><span class="field-hint">Osoba alebo orgán, napríklad Výkonný výbor SFZ.</span></label>
-<label class="field"><span class="field-label">Dátum schválenia</span><span class="field-input"><span class="quiet">dd. mm. rrrr</span></span></label>
-<label class="field"><span class="field-label">Dátum účinnosti</span><span class="field-input"><span class="quiet">dd. mm. rrrr</span></span><span class="field-hint">Povinný pred predložením na schválenie. Pri zverejnení sa už nezadáva.</span></label>
-</div></section>
-<div class="upload-submit"><span class="button" aria-disabled="true">Nahráva sa…</span><span class="upload-submit-note">Stránku nezatváraj. Po nahratí sa súbor prevedie na text — pri väčšom dokumente to trvá aj minútu.</span></div>
-</div></div></div><div class="upload-overlay" role="dialog" aria-modal="true"><div class="upload-overlay-card"><h2 class="upload-overlay-title">Nahrávam a prevádzam…</h2><span class="upload-progress-bar upload-progress-bar--determinate"><span style="width:62%"></span></span><p class="quiet upload-overlay-note">Nahrávam Registracny_a_prestupovy_poriadok_2026.pdf — 62 %</p></div></div></div>
-<p class="ann"><span class="num">4</span><b>Priebeh sa nemení</b> — modálne okno <code>.upload-overlay</code> (<code>UploadFiles.tsx</code>): percentá počas nahrávania, neurčitý pruh počas prevodu. Rozhodol Ján Letko 23. 9. 2026: kto odošle formulár zo spodku stránky, priebeh v zóne hore nevidí. <span class="num">5</span>Pri <code>.docx</code> poznámka menuje Word.</p></div>
-<div style="display:flex;flex-direction:column;gap:8px"><p class="cap" style="margin:0">Telefón 390 — prázdny stav, zóny pod sebou, tlačidlo neaktívne</p><div class="frame w390" style="width:390px">  <div class="hdr" style="padding:0 10px;gap:8px">
+<div style="display:flex;flex-direction:column;gap:8px"><p class="cap" style="margin:0">Tablet 834 — zodpovedná osoba prišla zo zvončeka: úloha hore, nad PDF</p><div class="frame w834" style="width:834px"><div class="hdr"><span class="logo"><svg width="17" height="17" viewBox="0 0 48 48" fill="none" aria-hidden="true"><circle cx="18" cy="18" r="13" stroke="currentColor" stroke-width="4"></circle><circle cx="13" cy="18" r="2.3" fill="currentColor"></circle><circle cx="23" cy="18" r="2.3" fill="currentColor"></circle><path d="M28 27 L41 41 L29 38 Z" fill="currentColor"></path></svg></span><span class="org">Slovenský futbalový zväz</span><div class="ask" style="flex:1;min-width:0"><svg width="16" height="16" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.69" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex:0 0 auto"><path d="M15.2 10.4a2 2 0 0 1-2 2H7.4L3.6 15.2v-2.8h-.2a2 2 0 0 1-2-2V4.6a2 2 0 0 1 2-2h9.8a2 2 0 0 1 2 2z"/></svg><span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Opýtajte sa svojich dokumentov…</span><span class="kbd">⌘K</span></div><span class="bell"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13.9 11.6c0-5.2-1.6-7-4.9-7s-4.9 1.8-4.9 7l-1.3 2.1h12.4z"></path><path d="M10.6 15.4a1.7 1.7 0 0 1-3.2 0"></path></svg><b style="position:absolute;top:5px;right:4px;min-width:16px;height:16px;padding:0 4px;border-radius:8px;background:var(--bad-fg);color:var(--on-accent);font-size:10px;font-weight:700;display:grid;place-items:center;box-shadow:0 0 0 2px var(--surface)">3</b></span><span class="av">JL</span></div><div class="nav"><a href="#" class="">Prehľad</a><a href="#" class="">Opýtať sa</a><a href="#" class="is-on">Na potvrdenie<span class="c">9</span></a><a href="#" class="">Na schválenie<span class="c">3</span></a><a href="#" class="">Adresár</a><a href="#" class="">Knižnica</a><a href="#" style="margin-left:auto">Viac 4</a></div><div class="body"><div class="zn-page"><p style="margin:0 0 16px;font-size:var(--fs-body)"><a href="#" style="color:var(--muted)">← Späť na zoznam</a></p>
+<h1 class="page-title">Registračný a prestupový poriadok</h1>
+<div class="zn-head"><div class="zn-line"><span>verzia 4.2, platná od 1. 10. 2026</span></div>
+<p class="zn-meta" style="margin:0">Autor: Legislatívna komisia SFZ · Schválil: Výkonný výbor SFZ · Dátum schválenia: 16. 9. 2026</p></div><section class="card task"><h2>Ste zodpovedná osoba za toto znenie</h2><p class="task-note">Určte, na akom právnom základe sa spracúvajú záznamy o oboznámení s týmto znením.</p>
+<fieldset class="basis-group"><legend>Plnenie zákonnej povinnosti</legend>
+<label class="basis-choice"><span class="basis-radio"></span><span>Bezpečnosť a ochrana zdravia pri práci<span class="basis-ref">§ 7 zákona č. 124/2006 Z. z. o bezpečnosti a ochrane zdravia pri práci</span></span></label>
+<label class="basis-choice"><span class="basis-radio"></span><span>Oboznámenie pri nástupe (pracovný poriadok, kolektívna zmluva, predpisy BOZP)<span class="basis-ref">§ 47 ods. 2 zákona č. 311/2001 Z. z. (Zákonník práce)</span></span></label>
+<label class="basis-choice"><span class="basis-radio"></span><span>Ochrana osobných údajov — poučenie oprávnených osôb<span class="basis-ref">čl. 29 a čl. 32 ods. 4 nariadenia (EÚ) 2016/679 (GDPR); zákon č. 18/2018 Z. z.</span></span></label>
+</fieldset>
+<fieldset class="basis-group"><legend>Oprávnený záujem</legend>
+<label class="basis-choice"><span class="basis-radio"></span><span>Interná smernica zväzu</span></label>
+<label class="basis-choice is-on"><span class="basis-radio"></span><span>Predpisy zväzu pre rozhodcov, delegátov a funkcionárov</span></label>
+</fieldset>
+<p class="field-hint" style="margin:0 0 14px">Chýba vhodná položka? Požiadajte správcu organizácie, aby ju doplnil do číselníka právnych základov.</p>
+<div><span class="button">Uložiť právny základ</span></div></section><div class="pdf-frame"><div class="pdf-page"><i style="width:60%;height:9px;background:#cfd4da"></i><i></i><i></i><i style="width:85%"></i><i></i><i style="width:70%"></i><i></i><i></i><i style="width:55%"></i></div></div>
+<p class="pdf-link"><a class="button button--quiet" href="#" style="min-height:34px;font-size:13px">Otvoriť PDF</a><span class="quiet">Registracny_a_prestupovy_poriadok_2026.pdf · 15.1 MB</span></p><details class="search-text"><summary>▸ Text dokumentu (slúži na vyhľadávanie)</summary></details>
+<p class="reading">Čas čítania: 4 minúty · Zaznamenáva sa, je informatívny a nie je súčasťou potvrdenia.</p></div></div></div>
+<p class="ann" style="max-width:834px"><span class="num">4</span><b>Úloha</b> má okraj v <code>--accent</code> (ako <code>.duty-card.is-next</code>). Prepínače ako dlaždice na celú šírku; odkaz na predpis pod názvom položky. Skupiny a ich poradie z <code>LEGAL_BASES</code>. Obsah sa nemení, len podoba <code>.hr-choice</code> v tomto formulári.</p></div>
+<div style="display:flex;flex-direction:column;gap:8px"><p class="cap" style="margin:0">Telefón 390 — PDF ako dlaždica, pás s tlačidlom nad spodnou lištou</p><div class="frame w390" style="width:390px;position:relative">  <div class="hdr" style="padding:0 10px;gap:8px">
   <span class="logo" style="width:30px;height:30px"><svg width="18" height="18" viewBox="0 0 48 48" fill="none" aria-hidden="true" style="flex:0 0 auto"><circle cx="18" cy="18" r="13" stroke="currentColor" stroke-width="4"></circle><circle cx="13" cy="18" r="2.3" fill="currentColor"></circle><circle cx="23" cy="18" r="2.3" fill="currentColor"></circle><path d="M28 27 L41 41 L29 38 Z" fill="currentColor"></path></svg></span>
   <span class="org" style="flex:0 0 auto;font-size:15px">SFZ</span>
   <div class="ask" style="flex:1;min-width:0"><svg width="16" height="16" viewBox="0 0 48 48" fill="none" aria-hidden="true" style="flex:0 0 auto"><circle cx="18" cy="18" r="13" stroke="currentColor" stroke-width="4"></circle><circle cx="13" cy="18" r="2.3" fill="currentColor"></circle><circle cx="23" cy="18" r="2.3" fill="currentColor"></circle><path d="M28 27 L41 41 L29 38 Z" fill="currentColor"></path></svg><span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Opýtajte sa…</span></div>
   <span class="bell" style="width:40px;height:40px"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13.9 11.6c0-5.2-1.6-7-4.9-7s-4.9 1.8-4.9 7l-1.3 2.1h12.4z"></path><path d="M10.6 15.4a1.7 1.7 0 0 1-3.2 0"></path></svg><b>3</b></span>
   <span class="av" style="width:32px;height:32px;font-size:11.5px">JL</span>
 </div>
-  <div class="body"><div class="up-page">
-<p style="margin:0 0 12px;font-size:var(--fs-body)"><a href="#" style="color:var(--muted)">← Knižnica</a></p>
-<h1 class="page-title">Nahrať dokument</h1>
-<p class="page-lead">Schvaľuje a potvrdzuje sa PDF — tak, ako ho ľudia uvidia, aj s prílohami. K nemu pridaj upraviteľný zdroj (Word, Excel…): z neho vznikne text na vyhľadávanie a pri ďalšom znení z neho budeš vychádzať. Oba súbory sa uložia tak, ako prišli.</p>
-<div class="upload-form">
-<section class="card upload-section"><h2 class="upload-step"><span class="upload-step-no">1</span>Súbor</h2><div class="upload-files"><div class="upload-drop"><span class="upload-drop-title">PDF — schvaľovaná podoba (povinné)</span><span class="upload-drop-note">Takto dokument uvidia schvaľovatelia aj zamestnanci — vrátane príloh, formulárov a obrázkov. Vo Worde: Súbor → Uložiť ako → PDF.</span><span class="button button--quiet" style="min-height:34px;font-size:13px;margin-top:4px">Vybrať PDF</span><span class="upload-drop-ext">.pdf · najviac 25 MB</span></div><div class="upload-drop upload-drop--optional"><span class="upload-drop-title">Upraviteľný zdroj (odporúčané)</span><span class="upload-drop-note">Z neho vznikne čistejší text na vyhľadávanie a je to predloha pre ďalšie znenie.</span><span class="button button--quiet" style="min-height:34px;font-size:13px;margin-top:4px">Vybrať súbor</span><span class="upload-drop-ext">DOCX · XLSX · MD · TXT</span></div></div></section>
-<section class="card upload-section"><h2 class="upload-step"><span class="upload-step-no">2</span>Metadáta</h2><div class="upload-grid">
-<label class="field upload-wide"><span class="field-label">Názov dokumentu</span><span class="field-input"><span class="quiet">napr. Registračný a prestupový poriadok</span></span><span class="key-preview">Identifikátor: <b>sfz-…</b></span></label>
-<label class="field"><span class="field-label">Druh</span><span class="field-input"><span class="quiet">— nevybrané —</span></span></label>
-<label class="field"><span class="field-label">Prístup</span><span class="field-input">Interný</span></label>
-<label class="field"><span class="field-label">Jazyk dokumentu</span><span class="field-input">Slovenčina</span></label>
-<details class="upload-optional upload-wide"><summary>Ďalšie údaje — oddelenie, interné číslo, značky, rozsah</summary></details>
-</div></section>
-<section class="card upload-section"><h2 class="upload-step"><span class="upload-step-no">3</span>Údaje o znení<span class="upload-step-opt">nepovinné</span></h2><p class="prefill-note"><span>ⓘ</span><span>Nepovinné už tu. Ak ich nevyplníš, predvyplnia sa z prvej strany dokumentu a potvrdíš ich na detaile.</span></p><div class="upload-grid">
-<label class="field"><span class="field-label">Autor</span><span class="field-input"></span><span class="field-hint">Osoba, oddelenie alebo komisia, ktorá dokument pripravila.</span></label>
-<label class="field"><span class="field-label">Schválil</span><span class="field-input"></span><span class="field-hint">Osoba alebo orgán, napríklad Výkonný výbor SFZ.</span></label>
-<label class="field"><span class="field-label">Dátum schválenia</span><span class="field-input"><span class="quiet">dd. mm. rrrr</span></span></label>
-<label class="field"><span class="field-label">Dátum účinnosti</span><span class="field-input"><span class="quiet">dd. mm. rrrr</span></span><span class="field-hint">Povinný pred predložením na schválenie. Pri zverejnení sa už nezadáva.</span></label>
-</div></section>
-<div class="upload-submit"><span class="button" aria-disabled="true">Nahrať a previesť</span><span class="upload-submit-note">Najprv vyber PDF.</span></div>
-</div></div></div></div></div>
+<div class="body" style="padding:14px 14px 130px"><div class="zn-page"><p style="margin:0 0 16px;font-size:var(--fs-body)"><a href="#" style="color:var(--muted)">← Späť na zoznam</a></p>
+<h1 class="page-title">Registračný a prestupový poriadok</h1>
+<div class="zn-head"><div class="zn-line"><span>verzia 4.2, platná od 1. 10. 2026</span><span class="due-chip due-chip--soon">do 30. 9. 2026</span></div>
+<p class="zn-meta" style="margin:0">Autor: Legislatívna komisia SFZ · Schválil: Výkonný výbor SFZ · Dátum schválenia: 16. 9. 2026</p></div><a class="pdf-tile" href="#"><span class="pdf-tile-ico">PDF</span><span class="pdf-tile-main"><span class="pdf-tile-name" style="display:block">Otvoriť PDF</span><span class="pdf-tile-meta" style="display:block">Registracny_a_prestupovy_poriadok_2026.pdf · 15.1 MB</span></span><span class="pdf-tile-go">↗</span></a><details class="search-text"><summary>▸ Text dokumentu (slúži na vyhľadávanie)</summary></details>
+<p class="reading">Čas čítania: 4 minúty · Zaznamenáva sa, je informatívny a nie je súčasťou potvrdenia.</p><section class="card contact"><p class="contact-kicker">S otázkami k predpisu sa obráťte na</p>
+<div class="contact-person"><span class="contact-av">JL</span><div class="contact-main"><span class="contact-name">Ján Letko</span><div class="contact-links"><a class="contact-link" href="#">✉ jan.letko@futbalsfz.sk</a><a class="contact-link" href="#">☏ +421 905 123 456</a><a class="contact-link contact-link--quiet" href="#">profil v adresári</a></div></div></div>
+<dl class="contact-basis" style="margin:0"><dt>Právny základ</dt><dd>Predpisy zväzu pre rozhodcov, delegátov a funkcionárov</dd></dl></section><section class="card ack"><h2>Potvrdenie oboznámenia</h2><p class="ack-statement">Potvrdzujem, že som sa oboznámil s dokumentom „Registračný a prestupový poriadok", verzia 4.2, platná od 1. 10. 2026, porozumel som jeho obsahu a zaväzujem sa ho dodržiavať.</p>
+
+<p class="ack-privacy"><span aria-hidden="true">ⓘ</span><span>Čo sa pri potvrdení ukladá a ako dlho: <a href="#">Ochrana osobných údajov</a></span></p></section></div></div><div class="dock"><span class="button">Potvrdzujem</span></div><div class="tabbar" style="grid-template-columns:repeat(5,1fr)"><span>Prehľad</span><span>Voľné otázky</span><span>Knižnica</span><span class="is-on">Úlohy</span><span>Viac</span></div></div>
+<p class="ann" style="max-width:390px"><span class="num">5</span>Na telefóne je PDF len odkaz (<code>PdfView</code>, mobile first) — navrhujem ho ako dlaždicu 56 px namiesto tlačidla a riadku textu.</p></div>
+</div>
+
+<p class="cap" style="margin-top:10px">Stavy</p>
+<div class="states">
+<div class="state"><p class="cap">Stav · zodpovedná osoba nie je aktívna (<code>contactGone</code>)</p><section class="card contact"><p class="contact-kicker">S otázkami k predpisu sa obráťte na</p>
+<p class="contact-gone">Zodpovedná osoba už nie je aktívna. S otázkami sa zatiaľ obráťte na personálne oddelenie.</p>
+<dl class="contact-basis" style="margin:0"><dt>Právny základ</dt><dd>Predpisy zväzu pre rozhodcov, delegátov a funkcionárov</dd></dl></section></div>
+<div class="state"><p class="cap">Stav · už potvrdené — tlačidlo zmizne, odkaz na ochranu údajov ostáva</p><section class="card ack"><h2>Potvrdenie oboznámenia</h2><p class="ack-statement">Potvrdzujem, že som sa oboznámil s dokumentom „Registračný a prestupový poriadok", verzia 4.2, platná od 1. 10. 2026, porozumel som jeho obsahu a zaväzujem sa ho dodržiavať.</p>
+<span class="tag tag--published">Potvrdené. Ďakujeme.</span>
+<p class="ack-privacy"><span aria-hidden="true">ⓘ</span><span>Čo sa pri potvrdení ukladá a ako dlho: <a href="#">Ochrana osobných údajov</a></span></p></section></div>
+<div class="state"><p class="cap">Stav · zodpovedná osoba, základ je určený → zbalené</p><details class="card basis-sum"><summary>Právny základ: Oboznámenie pri nástupe (pracovný poriadok, kolektívna zmluva, predpisy BOZP)<span class="basis-sum-ref">§ 47 ods. 2 zákona č. 311/2001 Z. z. (Zákonník práce)</span></summary></details><p class="ann">Dnes je súhrn 17 px a odkaz na predpis v tom istom riadku za „·" — na 390 px sú to 4 riadky. Návrh: názov <code>--fs-body</code>/600, odkaz na novom riadku v <code>--muted</code>. Text rovnaký. Po rozbalení ten istý formulár ako v úlohe, s poľom „Dôvod zmeny".</p></div>
 </div>
 </div></body></html>
