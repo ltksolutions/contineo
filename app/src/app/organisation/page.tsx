@@ -24,7 +24,7 @@ import type { UiLanguage } from "@/lib/i18n"
 import Select from "@/components/Select"
 import ColorSelect from "@/components/ColorSelect"
 import Notice from "@/components/Notice"
-import { saveBrandingAction, deleteLogoAction, saveSignInAction, deleteSignInAction, requestDomainAction, verifyDomainAction, cancelDomainAction } from "./actions"
+import { saveBrandingAction, saveAutoProvisionAction, deleteLogoAction, saveSignInAction, deleteSignInAction, requestDomainAction, verifyDomainAction, cancelDomainAction } from "./actions"
 import { createDepartmentAction, renameDepartmentAction, moveDepartmentAction, deleteDepartmentAction } from "./actions"
 import { addCodelistItemAction, removeCodelistItemAction, saveChunkingProfileAction, reindexAllAction } from "./actions"
 import { shiftDepartmentAction, saveDepartmentOrderAction } from "./actions"
@@ -429,29 +429,6 @@ export default async function OrganisationPage({
           </div>
         </section>
 
-        <section className="set-sec">
-          <div className="set-sec-head">
-            <h2>{t.branding.secAutoProvision}</h2>
-          </div>
-          <div className="set-sec-body">
-            <label className="field">
-              <span className="field-label">{t.branding.autoProvision}</span>
-              <textarea
-                className="field-input"
-                name="autoProvisionDomains"
-                rows={2}
-                defaultValue={(tenant.autoProvisionDomains ?? []).join("\n")}
-                placeholder="futbalsfz.sk&#10;sfzmarketing.sk"
-                autoCapitalize="none"
-                autoCorrect="off"
-              />
-              <span className="quiet field-hint">
-                {t.branding.autoProvisionBefore}<strong>{t.branding.autoProvisionHighlight}</strong>{t.branding.autoProvisionAfter}
-              </span>
-            </label>
-          </div>
-        </section>
-
         <div className="set-savebar">
           <button className="button" type="submit">{t.branding.save}</button>
           <span className="quiet">{t.branding.saveBarNote}</span>
@@ -687,6 +664,33 @@ export default async function OrganisationPage({
       <div style={{ display: "grid", gap: 16 }}>
         <ProviderRow tenant={tenant} provider="microsoft" domain={tenant.hostnames[0]} language={language} />
         <ProviderRow tenant={tenant} provider="google" domain={tenant.hostnames[0]} language={language} />
+
+        {/*
+          Automatické založenie patrí k prihlasovaniu, nie k vzhľadu (Ján
+          25. 9. 2026). Sú to **e-mailové domény pracovných kont**, nie webové
+          adresy portálu zo záložky Domény — preto to veta hovorí nahlas.
+        */}
+        <form action={saveAutoProvisionAction} className="card" style={{ padding: "18px 20px", display: "grid", gap: 12 }}>
+          <input type="hidden" name="tab" value="signin" />
+          <h2 style={{ fontSize: "var(--fs-section)", margin: 0 }}>{t.branding.secAutoProvision}</h2>
+          <label className="field">
+            <span className="field-label">{t.branding.autoProvision}</span>
+            <textarea
+              className="field-input"
+              name="autoProvisionDomains"
+              rows={2}
+              defaultValue={(tenant.autoProvisionDomains ?? []).join("\n")}
+              placeholder="futbalsfz.sk&#10;sfzmarketing.sk"
+              autoCapitalize="none"
+              autoCorrect="off"
+            />
+            <span className="quiet field-hint">
+              {t.branding.autoProvisionBefore}<strong>{t.branding.autoProvisionHighlight}</strong>{t.branding.autoProvisionAfter}
+            </span>
+            <span className="quiet field-hint">{t.branding.autoProvisionNotHosts}</span>
+          </label>
+          <div><button className="button" type="submit">{t.branding.save}</button></div>
+        </form>
       </div>
       )}
 

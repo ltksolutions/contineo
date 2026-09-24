@@ -1078,6 +1078,8 @@ interface Dictionary {
       autoProvisionBefore: string
       autoProvisionHighlight: string
       autoProvisionAfter: string
+      /** Rozlíšenie od webových adries portálu (záložka Domény). */
+      autoProvisionNotHosts: string
       save: string
       disableHeading: string
       enableHeading: string
@@ -1194,6 +1196,8 @@ interface Dictionary {
       autoProvisionBefore: string
       autoProvisionHighlight: string
       autoProvisionAfter: string
+      /** Rozlíšenie od webových adries portálu (záložka Domény). */
+      autoProvisionNotHosts: string
       save: string
     }
     departments: {
@@ -3276,6 +3280,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       autoProvisionBefore: "Jedna na riadok. Kto sa prihlási ",
       autoProvisionHighlight: "pracovným kontom",
       autoProvisionAfter: " z tejto domény a v zozname osôb ešte nie je, založí sa sám ako bežný člen — bez rolí a bez trás. Platí len pre kontá, nie pre odkaz v e-maile: konto z adresára organizácie je dôkaz príslušnosti, napísaná adresa nie. Prázdne = nikoho nezakladať.",
+      autoProvisionNotHosts: "Sú to e-mailové domény pracovných kont (meno@futbalsfz.sk), nie webové adresy portálu — tie sú v záložke Domény.",
       save: "Uložiť",
       disableHeading: "Vypnúť organizáciu",
       enableHeading: "Zapnúť organizáciu",
@@ -3684,6 +3689,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       autoProvisionBefore: "Jedna na riadok. Kto sa prihlási ",
       autoProvisionHighlight: "pracovným kontom",
       autoProvisionAfter: " z tejto domény a v zozname osôb ešte nie je, založí sa sám ako bežný člen — bez rolí a bez trás. Platí len pre kontá, nie pre odkaz v e-maile.",
+      autoProvisionNotHosts: "Sú to e-mailové domény pracovných kont (meno@futbalsfz.sk), nie webové adresy portálu — tie sú v záložke Domény.",
       save: "Uložiť",
     },
     departments: {
@@ -5677,6 +5683,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       autoProvisionBefore: "Jedna na řádek. Kdo se přihlásí ",
       autoProvisionHighlight: "pracovním účtem",
       autoProvisionAfter: " z této domény a v seznamu osob ještě není, založí se sám jako běžný člen — bez rolí a bez tras. Platí jen pro účty, ne pro odkaz v e-mailu: účet z adresáře organizace je důkaz příslušnosti, napsaná adresa ne. Prázdné = nikoho nezakládat.",
+      autoProvisionNotHosts: "Jsou to e-mailové domény pracovních účtů (jmeno@futbalsfz.sk), ne webové adresy portálu — ty jsou v záložce Domény.",
       save: "Uložit",
       disableHeading: "Vypnout organizaci",
       enableHeading: "Zapnout organizaci",
@@ -6085,6 +6092,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       autoProvisionBefore: "Jedna na řádek. Kdo se přihlásí ",
       autoProvisionHighlight: "pracovním účtem",
       autoProvisionAfter: " z této domény a v seznamu osob ještě není, založí se sám jako běžný člen — bez rolí a bez tras. Platí jen pro účty, ne pro odkaz v e-mailu.",
+      autoProvisionNotHosts: "Jsou to e-mailové domény pracovních účtů (jmeno@futbalsfz.sk), ne webové adresy portálu — ty jsou v záložce Domény.",
       save: "Uložit",
     },
     departments: {
@@ -8068,6 +8076,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       autoProvisionBefore: "One per line. Anyone who signs in with a ",
       autoProvisionHighlight: "work account",
       autoProvisionAfter: " from this domain and is not yet in the list of people is created automatically as an ordinary member — no roles and no tracks. This applies to accounts only, not to the emailed link: an account from the organisation's directory proves membership, a typed address does not. Empty = create nobody.",
+      autoProvisionNotHosts: "These are email domains of work accounts (name@futbalsfz.sk), not the portal web addresses — those are on the Domains tab.",
       save: "Save",
       disableHeading: "Disable the organisation",
       enableHeading: "Enable the organisation",
@@ -8476,6 +8485,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       autoProvisionBefore: "One per line. Anyone who signs in with a ",
       autoProvisionHighlight: "work account",
       autoProvisionAfter: " from this domain and is not yet in the list of people is created automatically as an ordinary member — no roles and no tracks. This applies to accounts only, not to the emailed link.",
+      autoProvisionNotHosts: "These are email domains of work accounts (name@futbalsfz.sk), not the portal web addresses — those are on the Domains tab.",
       save: "Save",
     },
     departments: {
