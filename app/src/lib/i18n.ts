@@ -87,10 +87,11 @@ interface Dictionary {
    * Pri vnútornom predpise je súhlas právne zvláštny: smernica zaväzuje bez
    * ohľadu na to, či s ňou niekto súhlasí.
    *
-   * Musí obsahovať názov, verziu **aj** dátum platnosti — bez nich sa o rok
-   * nedá povedať, čo presne bolo potvrdené.
+   * Musí obsahovať názov **aj** dátum účinnosti — bez nich sa o rok nedá
+   * povedať, čo presne bolo potvrdené. Označenie znenia v nej od ADR-016 nie je.
    */
-  statement(title: string, version: string, effectiveFrom: string): string
+  /** Formulka potvrdenia — znenie určuje dátum účinnosti, nie označenie (ADR-016). */
+  statement(title: string, effectiveFrom: string): string
 
   /** Spoločné texty prierezových komponentov (ZAKLAD). */
   common: {
@@ -2400,7 +2401,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       "no-longer-effective": "platnosť už skončila",
       "document-unavailable": "dokument nie je dostupný",
     },
-    version: (label, from) => `verzia ${label}, platná od ${from}`,
+    version: (_label, from) => `znenie účinné od ${from}`,
     readingElapsed: t => `Čas čítania: ${t}`,
     readingNote: "Zaznamenáva sa, je informatívny a nie je súčasťou potvrdenia.",
     readingSeconds: n => `${n} s`,
@@ -2421,7 +2422,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
   },
     pending: {
       heading: "Nevybavené žiadosti",
-      version: label => `verzia ${label}`,
+      version: label => `${label}`,
       waitingSince: d => `čaká od ${d}`,
       dueBy: d => `do ${d}`,
       dueToday: "termín dnes",
@@ -2438,9 +2439,9 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
             ? `${n} dokumenty zatiaľ nie sú dostupné.`
             : `${n} dokumentov zatiaľ nie je dostupných.`,
     },
-    statement: (title, version, effectiveFrom) =>
-      `Potvrdzujem, že som sa oboznámil s dokumentom „${title}", verzia ${version}, ` +
-      `platná od ${effectiveFrom}, porozumel som jeho obsahu a zaväzujem sa ho dodržiavať.`,
+    statement: (title, effectiveFrom) =>
+      `Potvrdzujem, že som sa oboznámil s dokumentom „${title}" v znení účinnom od ${effectiveFrom}, ` +
+      `porozumel som jeho obsahu a zaväzujem sa ho dodržiavať.`,
     email: {
       subject: org => `Prihlásenie — ${org}`,
       heading: org => `Prihlásenie — ${org}`,
@@ -2458,7 +2459,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
         : count >= 2 && count <= 4
           ? `${count} dokumenty stále čakajú na vaše potvrdenie.`
           : `${count} dokumentov stále čaká na vaše potvrdenie.`,
-      itemLine: (label, days) => `verzia ${label}, čaká ${daysSk(days)}`,
+      itemLine: (label, days) => `${label}, čaká ${daysSk(days)}`,
       button: "Otvoriť zoznam",
       note: "Potvrdenie sa viaže na konkrétne znenie a zaberie pár minút. Ak si myslíte, že sa vás dokument netýka, ozvite sa personálnemu oddeleniu.",
       noticeSubject: organisation => `Na potvrdenie: dokumenty — ${organisation}`,
@@ -2468,7 +2469,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
         : count >= 2 && count <= 4
           ? `${count} dokumenty čakajú na vaše potvrdenie.`
           : `${count} dokumentov čaká na vaše potvrdenie.`,
-      noticeItemLine: label => `verzia ${label}`,
+      noticeItemLine: label => `${label}`,
     },
 
     inviteEmail: {
@@ -2591,7 +2592,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       subtitle: "Na schválenie",
       intro: who => `${who} predložil znenie a čaká na vaše rozhodnutie:`,
       noteLabel: "Čo sa v znení mení",
-      versionLine: (label, effectiveFrom) => `znenie ${label} \u00b7 účinnosť od ${effectiveFrom}`,
+      versionLine: (_label, effectiveFrom) => `znenie účinné od ${effectiveFrom}`,
       button: "Prečítať a rozhodnúť",
       note: "Rozhodujete sami za seba \u2014 ostatní schvaľovatelia rozhodujú nezávisle. Pri zamietnutí je dôvod povinný, aby predkladateľ vedel, čo opraviť.",
     },
@@ -2600,7 +2601,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       subtitle: "Na potvrdenie",
       intro: "Do vášho zoznamu pribudol dokument, s ktorým sa máte oboznámiť:",
       reasonLabel: "Dôvod",
-      versionLine: (label, effectiveFrom) => `verzia ${label}, platná od ${effectiveFrom}`,
+      versionLine: (_label, effectiveFrom) => `znenie účinné od ${effectiveFrom}`,
       button: "Otvoriť a potvrdiť",
       note: "Dokument nájdete aj po prihlásení v zozname na úvodnej strane. Kým ho nepotvrdíte, zostane vám tam.",
     },
@@ -2612,7 +2613,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     count: n => (n === 1 ? "1 záznam" : n <= 4 ? `${n} záznamy` : `${n} záznamov`),
     acknowledged: "potvrdené",
     revoked: "odvolané",
-    versionLine: (label, effectiveFrom) => `verzia ${label}, platná od ${effectiveFrom}`,
+    versionLine: (_label, effectiveFrom) => `znenie účinné od ${effectiveFrom}`,
     whenLine: when => `potvrdené ${when}`,
     revokedWhenLine: when => `odvolané ${when}`,
     revokedStatement: "Znenie, pod ktorým bolo potvrdenie pôvodne dané:",
@@ -2912,7 +2913,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       emptyTitle: "Niet čo prideliť",
       emptyText: "Prideliť sa dá len publikované znenie. V knižnici zatiaľ žiadne nie je.",
       whichDocuments: "Ktoré normy",
-      versionLine: (label, date) => `verzia ${label}, platná od ${date}`,
+      versionLine: (_label, date) => `znenie účinné od ${date}`,
       to: "Komu",
       departments: "Oddelenia",
       groups: "Skupiny",
@@ -3104,7 +3105,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     intro: "Znenia, ktoré niekto predložil a čaká na tvoje rozhodnutie. Rozhoduješ sám za seba \u2014 ostatní schvaľovatelia rozhodujú nezávisle.",
     emptyTitle: "Nič nečaká na vaše rozhodnutie",
     emptyText: "Keď vás niekto určí schvaľovateľom znenia, objaví sa tu celý text aj s tým, kto ho predložil.",
-    versionLine: (label, round) => `znenie ${label} \u00b7 ${round}`,
+    versionLine: (label, round) => `${label} \u00b7 ${round}`,
     roundLine: round => `${round}. kolo`,
     submittedBy: (who, when) => `predložil ${who} \u00b7 ${when}`,
     effectiveFrom: date => `účinnosť od ${date}`,
@@ -4799,7 +4800,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       "no-longer-effective": "platnost už skončila",
       "document-unavailable": "dokument není dostupný",
     },
-    version: (label, from) => `verze ${label}, platná od ${from}`,
+    version: (_label, from) => `znění účinné od ${from}`,
     readingElapsed: t => `Čas čtení: ${t}`,
     readingNote: "Zaznamenává se, je informativní a není součástí potvrzení.",
     readingSeconds: n => `${n} s`,
@@ -4820,7 +4821,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
   },
     pending: {
       heading: "Nevyřízené žádosti",
-      version: label => `verze ${label}`,
+      version: label => `${label}`,
       waitingSince: d => `čeká od ${d}`,
       dueBy: d => `do ${d}`,
       dueToday: "termín dnes",
@@ -4837,9 +4838,9 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
             ? `${n} dokumenty zatím nejsou dostupné.`
             : `${n} dokumentů zatím není dostupných.`,
     },
-    statement: (title, version, effectiveFrom) =>
-      `Potvrzuji, že jsem se seznámil s dokumentem „${title}", verze ${version}, ` +
-      `platná od ${effectiveFrom}, porozuměl jsem jeho obsahu a zavazuji se jej dodržovat.`,
+    statement: (title, effectiveFrom) =>
+      `Potvrzuji, že jsem se seznámil s dokumentem „${title}" ve znění účinném od ${effectiveFrom}, ` +
+      `porozuměl jsem jeho obsahu a zavazuji se jej dodržovat.`,
     email: {
       subject: org => `Přihlášení — ${org}`,
       heading: org => `Přihlášení — ${org}`,
@@ -4857,7 +4858,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
         : count >= 2 && count <= 4
           ? `${count} dokumenty stále čekají na vaše potvrzení.`
           : `${count} dokumentů stále čeká na vaše potvrzení.`,
-      itemLine: (label, days) => `verze ${label}, čeká ${daysCs(days)}`,
+      itemLine: (label, days) => `${label}, čeká ${daysCs(days)}`,
       noticeSubject: organisation => `K potvrzení: dokumenty — ${organisation}`,
       noticeSubtitle: "K potvrzení",
       noticeIntro: count => count === 1
@@ -4865,7 +4866,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
         : count >= 2 && count <= 4
           ? `${count} dokumenty čekají na vaše potvrzení.`
           : `${count} dokumentů čeká na vaše potvrzení.`,
-      noticeItemLine: label => `verze ${label}`,
+      noticeItemLine: label => `${label}`,
       button: "Otevřít seznam",
       note: "Potvrzení se váže na konkrétní znění a zabere pár minut. Pokud si myslíte, že se vás dokument netýká, ozvěte se personálnímu oddělení.",
     },
@@ -4990,7 +4991,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       subtitle: "Ke schválení",
       intro: who => `${who} předložil znění a čeká na vaše rozhodnutí:`,
       noteLabel: "Co se ve znění mění",
-      versionLine: (label, effectiveFrom) => `znění ${label} \u00b7 účinnost od ${effectiveFrom}`,
+      versionLine: (_label, effectiveFrom) => `znění účinné od ${effectiveFrom}`,
       button: "Přečíst a rozhodnout",
       note: "Rozhodujete sami za sebe \u2014 ostatní schvalovatelé rozhodují nezávisle. Při zamítnutí je důvod povinný, aby předkladatel věděl, co opravit.",
     },
@@ -4999,7 +5000,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       subtitle: "K potvrzení",
       intro: "Do vašeho seznamu přibyl dokument, se kterým se máte seznámit:",
       reasonLabel: "Důvod",
-      versionLine: (label, effectiveFrom) => `verze ${label}, platná od ${effectiveFrom}`,
+      versionLine: (_label, effectiveFrom) => `znění účinné od ${effectiveFrom}`,
       button: "Otevřít a potvrdit",
       note: "Dokument najdete i po přihlášení v seznamu na úvodní straně. Dokud jej nepotvrdíte, zůstane vám tam.",
     },
@@ -5011,7 +5012,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     count: n => (n === 1 ? "1 záznam" : n <= 4 ? `${n} záznamy` : `${n} záznamů`),
     acknowledged: "potvrzeno",
     revoked: "odvoláno",
-    versionLine: (label, effectiveFrom) => `verze ${label}, platná od ${effectiveFrom}`,
+    versionLine: (_label, effectiveFrom) => `znění účinné od ${effectiveFrom}`,
     whenLine: when => `potvrzeno ${when}`,
     revokedWhenLine: when => `odvoláno ${when}`,
     revokedStatement: "Znění, pod kterým bylo potvrzení původně dáno:",
@@ -5311,7 +5312,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       emptyTitle: "Není co přidělit",
       emptyText: "Přidělit lze jen publikované znění. V knihovně zatím žádné není.",
       whichDocuments: "Které předpisy",
-      versionLine: (label, date) => `verze ${label}, platná od ${date}`,
+      versionLine: (_label, date) => `znění účinné od ${date}`,
       to: "Komu",
       departments: "Oddělení",
       groups: "Skupiny",
@@ -5503,7 +5504,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     intro: "Znění, která někdo předložil a čekají na tvé rozhodnutí. Rozhoduješ sám za sebe \u2014 ostatní schvalovatelé rozhodují nezávisle.",
     emptyTitle: "Nic nečeká na vaše rozhodnutí",
     emptyText: "Když vás někdo určí schvalovatelem znění, objeví se tady celý text i s tím, kdo ho předložil.",
-    versionLine: (label, round) => `znění ${label} \u00b7 ${round}`,
+    versionLine: (label, round) => `${label} \u00b7 ${round}`,
     roundLine: round => `${round}. kolo`,
     submittedBy: (who, when) => `předložil ${who} \u00b7 ${when}`,
     effectiveFrom: date => `účinnost od ${date}`,
@@ -7195,7 +7196,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       "no-longer-effective": "it is no longer effective",
       "document-unavailable": "the document is not available",
     },
-    version: (label, from) => `version ${label}, effective from ${from}`,
+    version: (_label, from) => `version effective from ${from}`,
     readingElapsed: t => `Reading time: ${t}`,
     readingNote: "It is recorded, informative, and not part of the acknowledgement.",
     readingSeconds: n => `${n} s`,
@@ -7216,7 +7217,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
   },
     pending: {
       heading: "Pending items",
-      version: label => `version ${label}`,
+      version: label => `${label}`,
       waitingSince: d => `waiting since ${d}`,
       dueBy: d => `by ${d}`,
       dueToday: "due today",
@@ -7231,10 +7232,9 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
           ? "One document is not available yet."
           : `${n} documents are not available yet.`,
     },
-    statement: (title, version, effectiveFrom) =>
-      `I confirm that I have read the document "${title}", version ${version}, ` +
-      `effective from ${effectiveFrom}, that I understand its contents ` +
-      `and undertake to comply with it.`,
+    statement: (title, effectiveFrom) =>
+      `I confirm that I have read the document "${title}" in the version effective from ${effectiveFrom}, ` +
+      `that I understand its contents and undertake to comply with it.`,
     email: {
       subject: org => `Sign in — ${org}`,
       heading: org => `Sign in — ${org}`,
@@ -7250,13 +7250,13 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       intro: count => count === 1
         ? "One document is still waiting for your acknowledgement."
         : `${count} documents are still waiting for your acknowledgement.`,
-      itemLine: (label, days) => `version ${label}, waiting ${daysEn(days)}`,
+      itemLine: (label, days) => `${label}, waiting ${daysEn(days)}`,
       noticeSubject: organisation => `To acknowledge: documents — ${organisation}`,
       noticeSubtitle: "To acknowledge",
       noticeIntro: count => count === 1
         ? "One document is waiting for your acknowledgement."
         : `${count} documents are waiting for your acknowledgement.`,
-      noticeItemLine: label => `version ${label}`,
+      noticeItemLine: label => `${label}`,
       button: "Open the list",
       note: "An acknowledgement is tied to one specific version and takes a couple of minutes. If you believe a document does not apply to you, contact HR.",
     },
@@ -7381,7 +7381,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       subtitle: "To approve",
       intro: who => `${who} submitted a version and is waiting for your decision:`,
       noteLabel: "What changes in this version",
-      versionLine: (label, effectiveFrom) => `version ${label} \u00b7 effective from ${effectiveFrom}`,
+      versionLine: (_label, effectiveFrom) => `version effective from ${effectiveFrom}`,
       button: "Read it and decide",
       note: "You decide for yourself \u2014 the other approvers decide independently. A reason is required when rejecting, so the submitter knows what to fix.",
     },
@@ -7390,7 +7390,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       subtitle: "To acknowledge",
       intro: "A document has been added to your list:",
       reasonLabel: "Reason",
-      versionLine: (label, effectiveFrom) => `version ${label}, effective from ${effectiveFrom}`,
+      versionLine: (_label, effectiveFrom) => `version effective from ${effectiveFrom}`,
       button: "Open and acknowledge",
       note: "You will also find the document in the list on the home page after signing in. It stays there until you acknowledge it.",
     },
@@ -7402,7 +7402,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     count: n => (n === 1 ? "1 record" : `${n} records`),
     acknowledged: "acknowledged",
     revoked: "revoked",
-    versionLine: (label, effectiveFrom) => `version ${label}, effective from ${effectiveFrom}`,
+    versionLine: (_label, effectiveFrom) => `version effective from ${effectiveFrom}`,
     whenLine: when => `acknowledged ${when}`,
     revokedWhenLine: when => `revoked ${when}`,
     revokedStatement: "The statement under which it was originally acknowledged:",
@@ -7702,7 +7702,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       emptyTitle: "Nothing to assign",
       emptyText: "Only a published version can be assigned. The library has none yet.",
       whichDocuments: "Which documents",
-      versionLine: (label, date) => `version ${label}, effective from ${date}`,
+      versionLine: (_label, date) => `version effective from ${date}`,
       to: "Recipients",
       departments: "Departments",
       groups: "Groups",
@@ -7893,7 +7893,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     intro: "Versions somebody submitted that are waiting for your decision. You decide for yourself \u2014 the other approvers decide independently.",
     emptyTitle: "Nothing awaits your decision",
     emptyText: "When someone names you an approver of a version, the full text will appear here along with who submitted it.",
-    versionLine: (label, round) => `version ${label} \u00b7 ${round}`,
+    versionLine: (label, round) => `${label} \u00b7 ${round}`,
     roundLine: round => `round ${round}`,
     submittedBy: (who, when) => `submitted by ${who} \u00b7 ${when}`,
     effectiveFrom: date => `effective from ${date}`,

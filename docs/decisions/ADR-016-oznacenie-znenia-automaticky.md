@@ -25,13 +25,18 @@ vyplnené pri zverejnení.
 
 ## 2. Rozhodnutie
 
-### D113 — Označenie sa skladá, nezadáva
+### D113 — Označenie znenia zaniká
 
-- Pri zverejnení vznikne označenie z dátumu účinnosti v jazyku dokumentu:
-  **„znenie účinné od 1. 1. 2027"** (`autoVersionLabel()`).
-- Dve zverejnené znenia s tou istou účinnosťou (chybné nahradené opraveným)
-  dostanú „(2)", „(3)" — aby sa formulky dali rozlíšiť aj človekom.
-- Formulka potvrdenia: *„… Pracovný poriadok SFZ, znenie účinné od 1. 1. 2027 …"*.
+**Doplnené 2026-09-25 (Ján Letko):** „úplne odstrániť aj Označenie".
+
+- Označenie sa nezadáva ani neukazuje. **Znenie určuje dátum účinnosti.**
+- Formulka potvrdenia: *„Potvrdzujem, že som sa oboznámil s dokumentom
+  „Pracovný poriadok SFZ" v znení účinnom od 1. 1. 2027, porozumel som…"*.
+- E-maily a zoznamy hovoria „znenie účinné od {dátum}".
+- Znenie si pri zverejnení ukladá len odvodený text „znenie účinné od
+  1. 1. 2027" (`autoVersionLabel()`, pri rovnakej účinnosti „(2)") — ako
+  meno do kópií v prideleniach a upozorneniach, nie ako údaj, ktorý niekto
+  vypĺňa. Staré potvrdenia si nesú svoju formulku aj s pôvodným označením.
 
 ### D114 — Bez zdroja dátumu a bez „Opraviť údaje"
 
@@ -48,6 +53,6 @@ vyplnené pri zverejnení.
 
 - Staré potvrdenia si nesú svoju kópiu označenia a nemenia sa.
 - Existujúce znenia s ručným označením („1.0", „Pracovný poriadok SFZ
-  20260907") ostávajú, kým sa nevymenia novým znením alebo jednorazovou
-  úpravou dát znení bez potvrdení (samostatný krok so súhlasom).
+  20260907") sa neprepisujú: pôvodné predpisy aj testovacie dokumenty sa
+  pred ostrou prevádzkou zmažú celé (Ján, 2026-09-25) — samostatný krok.
 - Chyba v dátume účinnosti sa po schválení rieši novým znením, nie opravou.

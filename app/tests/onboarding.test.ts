@@ -101,12 +101,13 @@ t("prázdny vstup padá na predvolený jazyk", normalizeLanguage(undefined) === 
 // ── znenie formulky (D28) ────────────────────────────────────────────────────
 
 const TITLE = "Smernica o ochrane osobných údajov"
-const statement = buildStatement(TITLE, "1.2", day(2026, 9, 1), "sk")
+const statement = buildStatement(TITLE, day(2026, 9, 1), "sk")
 
 t("formulka hovorí o oboznámení, NIE o súhlase", /oboznámil/.test(statement) && !/súhlas/i.test(statement), statement)
 t("formulka obsahuje záväzok dodržiavať", /zaväzujem sa ho dodržiavať/.test(statement))
 t("formulka obsahuje názov dokumentu", statement.includes(TITLE))
-t("formulka obsahuje označenie verzie", /verzia 1\.2/.test(statement))
+// Znenie určuje dátum účinnosti, nie označenie (ADR-016).
+t("formulka určuje znenie dátumom účinnosti", /v znení účinnom od 1\. 9\. 2026/.test(statement), statement)
 t("formulka obsahuje dátum platnosti", statement.includes("1. 9. 2026"))
 
 // Znenie v češtine a angličtine sa tu netestuje. **Preklady prostredia sú
@@ -118,13 +119,13 @@ t("formulka obsahuje dátum platnosti", statement.includes("1. 9. 2026"))
 // Nech je jazyk akýkoľvek, tri veci tam musia byť vždy — bez nich sa o rok
 // nedá povedať, čo človek potvrdil.
 for (const j of UI_LANGUAGES) {
-  const z = buildStatement(TITLE, "1.2", day(2026, 9, 1), j)
-  t(`[${j}] formulka nesie názov, verziu aj dátum`,
-    z.includes(TITLE) && z.includes("1.2") && /2026/.test(z), z)
+  const z = buildStatement(TITLE, day(2026, 9, 1), j)
+  t(`[${j}] formulka nesie názov aj dátum účinnosti`,
+    z.includes(TITLE) && /2026/.test(z), z)
 }
 
 t("neznámy jazyk nespadne, vráti slovenskú formulku",
-  buildStatement(TITLE, "1.2", day(2026, 9, 1), "de" as never) === statement)
+  buildStatement(TITLE, day(2026, 9, 1), "de" as never) === statement)
 
 // ── odtlačok znenia ──────────────────────────────────────────────────────────
 

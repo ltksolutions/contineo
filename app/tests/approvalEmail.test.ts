@@ -29,11 +29,12 @@ describe("e-mail o predložení na schválenie", () => {
     expect(e.html).toContain(BY)
   })
 
-  it("nesie označenie znenia aj dátum účinnosti", () => {
+  it("nesie dátum účinnosti, nie označenie znenia (ADR-016)", () => {
     // Schvaľuje sa konkrétne znenie (D68) a účinnosť je iná os než schválenie
     // (D73) — z e-mailu musí byť vidieť oboje.
     const e = email()
-    expect(e.text).toContain("4.2")
+    // Znenie určuje dátum účinnosti, nie označenie (ADR-016).
+    expect(e.text).not.toContain("4.2")
     expect(e.text).toContain("1. 1. 2027")
   })
 
