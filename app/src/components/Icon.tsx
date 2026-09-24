@@ -132,6 +132,13 @@ const PATHS: Record<string, React.ReactNode> = {
       <path d="m6.3 9.1 1.9 1.9 3.5-3.9" />
     </>
   ),
+  // Ochrana údajov — štít. Nie zámok (ten znamená prihlásenie).
+  dpo: (
+    <>
+      <path d="M9 1.9 3.4 4v4.6c0 3.4 2.4 6.2 5.6 7.5 3.2-1.3 5.6-4.1 5.6-7.5V4z" />
+      <path d="M9 6.2v3.6M9 12.1v.1" />
+    </>
+  ),
   people: (
     <>
       <circle cx="7" cy="6.4" r="2.6" />

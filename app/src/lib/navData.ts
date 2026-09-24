@@ -23,6 +23,7 @@ import { hrContext } from "@/lib/hr"
 import { peopleContext } from "@/lib/people"
 import { libraryContext } from "@/lib/library"
 import { evaluationContext, queueCount } from "@/lib/evaluation"
+import { dpoContext } from "@/lib/dpo"
 import { currentPerson } from "@/lib/session"
 import { pendingForPerson } from "@/lib/pending"
 import { roundsWaitingFor } from "@/lib/approvalsDb"
@@ -53,6 +54,11 @@ export const shellNavData = cache(async (): Promise<ShellNavData> => {
     flags.isEvaluator = (await evaluationContext()).state === "ready"
   } catch (e) {
     console.error("[shell] rolu hodnotiteľa sa nepodarilo overiť:", e)
+  }
+  try {
+    flags.isDpo = (await dpoContext()).state === "ready"
+  } catch (e) {
+    console.error("[shell] rolu DPO sa nepodarilo overiť:", e)
   }
 
   /*

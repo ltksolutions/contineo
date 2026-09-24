@@ -253,6 +253,34 @@ interface Dictionary {
   }
 
   /** Prosba o schválenie znenia (ADR-006). Menovitá správa, nie hromadná pošta. */
+  dpoEmail: {
+    subject: (organisation: string, quarter: string) => string
+    subtitle: string
+    intro: (quarter: string) => string
+    total: (n: number) => string
+    legalObligation: (n: number) => string
+    legitimateInterest: (n: number) => string
+    withProblems: (n: number) => string
+    button: string
+    note: string
+  }
+
+  dpo: {
+    heading: string
+    intro: string
+    reportHeading: string
+    csv: string
+    empty: string
+    summary: (total: number, problems: number) => string
+    basis: string
+    reference: string
+    responsible: string
+    version: string
+    none: string
+    ok: string
+    problems: Record<"noBasis" | "outsideCodelist" | "noReference" | "noResponsible" | "inactiveResponsible", string>
+  }
+
   approvalEmail: {
     subject: (organisation: string) => string
     subtitle: string
@@ -340,6 +368,7 @@ interface Dictionary {
   }
   nav: {
     ask: string
+    dpo: string
     toApprove: string
     evidence: string
     overview: string
@@ -2190,6 +2219,17 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       button: "Otvoriť a potvrdiť",
       note: "Potvrdenie je krátke \u2014 dokument si prečítate a kliknete. Keď ste to už spravili, tento e-mail nabudúce nepríde.",
     },
+    dpoEmail: {
+      subject: (org, quarter) => `Výkaz právnych základov ${quarter} \u2014 ${org}`,
+      subtitle: "Štvrťročná kontrola",
+      intro: quarter => `Štvrťročný prehľad právnych základov platných predpisov (${quarter}):`,
+      total: n => `platných predpisov: ${n}`,
+      legalObligation: n => `zákonná povinnosť: ${n}`,
+      legitimateInterest: n => `oprávnený záujem: ${n}`,
+      withProblems: n => `s nedostatkom: ${n}`,
+      button: "Otvoriť výkaz",
+      note: "Právny základ určuje zodpovedná osoba za predpis; vy ho kontrolujete (O15/A10). Zoznam predpisov je vo výkaze po prihlásení, v e-maile sú len počty.",
+    },
     approvalEmail: {
       subject: org => `Znenie na schválenie \u2014 ${org}`,
       subtitle: "Na schválenie",
@@ -2243,6 +2283,27 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     nothingFound: "Nikto nezodpovedá hľadaniu.",
     count: n => (n === 1 ? "1 osoba" : n <= 4 ? `${n} osoby` : `${n} osôb`),
   },
+  dpo: {
+    heading: "Ochrana údajov",
+    intro: "Právne základy platných predpisov. Určuje ich zodpovedná osoba za predpis, vy ich kontrolujete — raz za štvrťrok vám príde prehľad e-mailom.",
+    reportHeading: "Právne základy platných predpisov",
+    csv: "Stiahnuť CSV",
+    empty: "Organizácia zatiaľ nemá platný predpis.",
+    summary: (total, problems) => `${total} platných predpisov, z toho ${problems} s nedostatkom.`,
+    basis: "Právny základ",
+    reference: "Predpis",
+    responsible: "Zodpovedná osoba",
+    version: "Znenie",
+    none: "—",
+    ok: "v poriadku",
+    problems: {
+      noBasis: "chýba právny základ",
+      outsideCodelist: "základ mimo číselníka",
+      noReference: "zákonná povinnosť bez odkazu na zákon",
+      noResponsible: "chýba zodpovedná osoba",
+      inactiveResponsible: "zodpovedná osoba je vyradená",
+    },
+  },
   nav: {
     ask: "Voľné otázky",
     toApprove: "Na schválenie",
@@ -2258,6 +2319,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     toAcknowledge: "Na potvrdenie",
     assigned: "Pridelené normy",
     evaluation: "Na posúdenie",
+    dpo: "Ochrana údajov",
     people: "Osoby",
     directory: "Adresár",
     library: "Knižnica",
@@ -3361,6 +3423,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       "people-admin": "people-admin — spravuje osoby (táto obrazovka)",
       "content-admin": "content-admin — nahráva a upravuje normy v knižnici",
       evaluator: "evaluator — posudzuje odpovede systému, keď niekto povie, že nesedia",
+      dpo: "dpo — zodpovedná osoba: kontroluje právne základy, rozhoduje o námietkach",
     },
     list: {
       heading: "Osoby",
@@ -4262,6 +4325,17 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       button: "Otevřít a potvrdit",
       note: "Potvrzení je krátké \u2014 dokument si přečtete a kliknete. Když jste to už udělali, tento e-mail příště nepřijde.",
     },
+    dpoEmail: {
+      subject: (org, quarter) => `Výkaz právních základů ${quarter} \u2014 ${org}`,
+      subtitle: "Čtvrtletní kontrola",
+      intro: quarter => `Čtvrtletní přehled právních základů platných předpisů (${quarter}):`,
+      total: n => `platných předpisů: ${n}`,
+      legalObligation: n => `zákonná povinnost: ${n}`,
+      legitimateInterest: n => `oprávněný zájem: ${n}`,
+      withProblems: n => `s nedostatkem: ${n}`,
+      button: "Otevřít výkaz",
+      note: "Právní základ určuje odpovědná osoba za předpis; vy ho kontrolujete (O15/A10). Seznam předpisů je ve výkazu po přihlášení, v e-mailu jsou jen počty.",
+    },
     approvalEmail: {
       subject: org => `Znění ke schválení \u2014 ${org}`,
       subtitle: "Ke schválení",
@@ -4315,6 +4389,27 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     nothingFound: "Nikdo neodpovídá hledání.",
     count: n => (n === 1 ? "1 osoba" : n <= 4 ? `${n} osoby` : `${n} osob`),
   },
+  dpo: {
+    heading: "Ochrana údajů",
+    intro: "Právní základy platných předpisů. Určuje je odpovědná osoba za předpis, vy je kontrolujete — jednou za čtvrtletí vám přijde přehled e-mailem.",
+    reportHeading: "Právní základy platných předpisů",
+    csv: "Stáhnout CSV",
+    empty: "Organizace zatím nemá platný předpis.",
+    summary: (total, problems) => `${total} platných předpisů, z toho ${problems} s nedostatkem.`,
+    basis: "Právní základ",
+    reference: "Předpis",
+    responsible: "Odpovědná osoba",
+    version: "Znění",
+    none: "—",
+    ok: "v pořádku",
+    problems: {
+      noBasis: "chybí právní základ",
+      outsideCodelist: "základ mimo číselník",
+      noReference: "zákonná povinnost bez odkazu na zákon",
+      noResponsible: "chybí odpovědná osoba",
+      inactiveResponsible: "odpovědná osoba je vyřazená",
+    },
+  },
   nav: {
     ask: "Volné otázky",
     toApprove: "Ke schválení",
@@ -4330,6 +4425,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     toAcknowledge: "K potvrzení",
     assigned: "Přidělené předpisy",
     evaluation: "K posouzení",
+    dpo: "Ochrana údajů",
     people: "Osoby",
     directory: "Adresář",
     library: "Knihovna",
@@ -5433,6 +5529,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       "people-admin": "people-admin — spravuje osoby (tato obrazovka)",
       "content-admin": "content-admin — nahrává a upravuje normy v knihovně",
       evaluator: "evaluator — posuzuje odpovědi systému, když někdo řekne, že nesedí",
+      dpo: "dpo — pověřenec: kontroluje právní základy, rozhoduje o námitkách",
     },
     list: {
       heading: "Osoby",
@@ -6326,6 +6423,17 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       button: "Open it and acknowledge",
       note: "Acknowledging is quick \u2014 read the document and click. If you have already done it, this email will not come again.",
     },
+    dpoEmail: {
+      subject: (org, quarter) => `Legal basis report ${quarter} \u2014 ${org}`,
+      subtitle: "Quarterly review",
+      intro: quarter => `Quarterly overview of the legal bases of documents in force (${quarter}):`,
+      total: n => `documents in force: ${n}`,
+      legalObligation: n => `legal obligation: ${n}`,
+      legitimateInterest: n => `legitimate interest: ${n}`,
+      withProblems: n => `with a gap: ${n}`,
+      button: "Open the report",
+      note: "The legal basis is set by the person responsible for the document; you review it (O15/A10). The list of documents is in the report after signing in; the e-mail only carries counts.",
+    },
     approvalEmail: {
       subject: org => `A version to approve \u2014 ${org}`,
       subtitle: "To approve",
@@ -6379,6 +6487,27 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     nothingFound: "Nobody matches that search.",
     count: n => (n === 1 ? "1 person" : `${n} people`),
   },
+  dpo: {
+    heading: "Data protection",
+    intro: "Legal bases of documents in force. The person responsible for each document sets them, you review them — once a quarter you get an overview by e-mail.",
+    reportHeading: "Legal bases of documents in force",
+    csv: "Download CSV",
+    empty: "The organisation has no document in force yet.",
+    summary: (total, problems) => `${total} documents in force, ${problems} of them with a gap.`,
+    basis: "Legal basis",
+    reference: "Law",
+    responsible: "Responsible person",
+    version: "Version",
+    none: "—",
+    ok: "fine",
+    problems: {
+      noBasis: "legal basis missing",
+      outsideCodelist: "basis outside the code list",
+      noReference: "legal obligation without a reference to the law",
+      noResponsible: "responsible person missing",
+      inactiveResponsible: "responsible person is excluded",
+    },
+  },
   nav: {
     ask: "Ask a question",
     toApprove: "To approve",
@@ -6394,6 +6523,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     toAcknowledge: "To acknowledge",
     assigned: "Assigned documents",
     evaluation: "To evaluate",
+    dpo: "Data protection",
     people: "People",
     directory: "Directory",
     library: "Library",
@@ -7496,6 +7626,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       "people-admin": "people-admin — manages people (this screen)",
       "content-admin": "content-admin — uploads and edits documents in the library",
       evaluator: "evaluator — reviews the system's answers when someone says they are wrong",
+      dpo: "dpo — data protection officer: reviews legal bases, decides on objections",
     },
     list: {
       heading: "People",

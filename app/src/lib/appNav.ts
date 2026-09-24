@@ -16,7 +16,7 @@
 export type NavLayout = "sidebar" | "topbar"
 
 /** Kľúč do `dictionary().nav` — nie hotový text, aby zostal preložiteľný. */
-export type NavKey = "overview" | "ask" | "toAcknowledge" | "toApprove" | "library" | "assigned" | "evidence" | "people" | "directory" | "evaluation"
+export type NavKey = "overview" | "ask" | "toAcknowledge" | "toApprove" | "library" | "assigned" | "evidence" | "people" | "directory" | "evaluation" | "dpo"
 
 export interface NavItem {
   href: string
@@ -44,6 +44,7 @@ export interface NavFlags {
   isPeopleAdmin?: boolean
   isContentManager?: boolean
   isEvaluator?: boolean
+  isDpo?: boolean
 }
 
 /**
@@ -83,6 +84,9 @@ export function navItems(flags: NavFlags, counts: NavCounts = {}): NavItem[] {
     // Fronta hodnotiteľa. Podmienená rolou zámerne: nie je to zoznam vecí
     // na prečítanie, ale pracovný stôl s cudzími otázkami a odpoveďami.
     ...(flags.isEvaluator ? [{ href: "/evaluation", key: "evaluation" as const }] : []),
+    // Ochrana údajov (ADR-012, D104) — výkaz právnych základov a námietky.
+    // Len pre rolu `dpo`: námietka je osobný údaj o konkrétnom človeku.
+    ...(flags.isDpo ? [{ href: "/dpo", key: "dpo" as const }] : []),
   ]
 
   /*
@@ -193,7 +197,7 @@ export type MoreGroupKey = "organisation" | "management"
  */
 const MORE_GROUPS: Record<MoreGroupKey, NavKey[]> = {
   organisation: ["directory", "people"],
-  management: ["toApprove", "assigned", "evidence", "evaluation"],
+  management: ["toApprove", "assigned", "evidence", "evaluation", "dpo"],
 }
 
 export interface MoreGroup {

@@ -33,6 +33,8 @@ import { send, reminderEmail, dueReminderEmail } from "@/lib/ecomail"
 import { normalizeLanguage, formatDate } from "@/lib/i18n"
 import { runRetention, type RetentionRun } from "@/lib/retentionDb"
 import { retentionMode } from "@/lib/retention"
+import { sendQuarterlyDpoReports } from "@/lib/dpoDb"
+import { isQuarterStart } from "@/lib/dpo"
 
 export const dynamic = "force-dynamic"
 /** Prehľad naprieč tenantmi trvá; predvolených 10 s by nestačilo. */
@@ -285,5 +287,20 @@ export async function GET(request: Request) {
     }
   }
 
-  return NextResponse.json({ ok: true, tenants: report, due: dueReport, purged, retention })
+  /*
+   * Štvrťročný výkaz právnych základov pre DPO (ADR-012, D104) — v prvý deň
+   * kvartálu. Opakovaný beh v ten istý deň druhý e-mail nepošle (`reminder_log`).
+   */
+  let dpoReports = 0
+  if (isQuarterStart(new Date())) {
+    for (const tenant of tenants) {
+      try {
+        dpoReports += await sendQuarterlyDpoReports(tenant)
+      } catch (e) {
+        console.error(`[cron] výkaz pre DPO ${tenant.companyCode} zlyhal:`, e)
+      }
+    }
+  }
+
+  return NextResponse.json({ ok: true, tenants: report, due: dueReport, purged, retention, dpoReports })
 }
