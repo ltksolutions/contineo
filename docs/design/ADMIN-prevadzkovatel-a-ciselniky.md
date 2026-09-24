@@ -23,6 +23,8 @@ Polia, ich texty a nápovedy; jeden formulár s jedným Uložiť na záložke Vz
 
 ## Otázky pre Jána
 
+**Odpovede Jána 24. 9. 2026:** Q1 ✅ „Odstrániť logo" pri logu · Q2 ✅ náhľad vety áno · Q3 ✅ základné položky nad tri zbaliť.
+
 - **Q1** — „Odstrániť logo" ako červený odkaz pri logu namiesto samostatnej karty dole. Je to druhý formulár — vnoriť sa nedá, tlačidlo by bolo `form="remove-logo"` s formulárom mimo. Súhlas?
 - **Q2** — Náhľad vety zo stránky Ochrana osobných údajov pod údajmi prevádzkovateľa (bez JS ukazuje uložené hodnoty). Chceš?
 - **Q3** — Základné položky nad tri zbaliť („+ ďalších 6 základných")? Nedá sa s nimi nič robiť, len zaberajú miesto.

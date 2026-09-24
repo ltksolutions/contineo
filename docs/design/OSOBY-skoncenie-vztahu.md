@@ -16,6 +16,8 @@ Referencia: `OSOBY-skoncenie-vztahu.html`. Základ: `ZAKLAD.md`, `OSOBY.md`. Zdr
 
 ## Otázky pre Jána
 
+**Odpovede Jána 24. 9. 2026:** Q1 ✅ časová os áno · Q2 ✅ „Potvrdenia sa zmažú od {dátum}" áno.
+
 - **Q1 — Časová os** (Vyradenie → Vzťah skončil → + 3 roky) v karte vyradenia. Je to len obrázok textu `excludeNote`/`endedAtNote`; nové krátke texty („dnes · neprihlási sa", „potvrdenia sa zmažú", „nevyplnené → od vyradenia"). Chceš ju?
 - **Q2 — „Potvrdenia sa zmažú od {dátum}"** pri vyradenej osobe: dátum = `endedAt ?? deactivatedAt` + 3 roky (pravidlo z `retentionDb.ts`; 5-ročný strop od poslednej udalosti sa tu neuplatní). Nový odvodený údaj — ukázať?
 

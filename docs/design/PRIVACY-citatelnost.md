@@ -17,6 +17,8 @@ Verejná stránka (`publicRoutes.ts`), jazyk prihláseného alebo organizácie, 
 
 ## Otázky pre Jána
 
+**Odpovede Jána 24. 9. 2026:** bod 2 — vetu `requests` **presunúť do karty DPO** (na konci už nie) · bod 4 — nadpis „Právo namietať" **áno**.
+
 - Bod 2: „Žiadosti posielajte zodpovednej osobe (DPO)." — presunúť z konca do karty DPO, alebo nechať na konci a v karte nič?
 - Bod 4: nový nadpis „Právo namietať" — môže byť? (Obsah odseku bez zmeny.)
 

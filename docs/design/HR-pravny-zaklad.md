@@ -22,6 +22,8 @@ Pridelenie bez právneho základu **prejde** (upozornenie, nie brána, D91). „
 
 ## Otázky pre Jána
 
+**Odpovede Jána 24. 9. 2026:** Q1 ✅ áno — zodpovedná osoba a právny základ v rozbalenom riadku reťaze · Q2 ❌ súhrn v prehliadači netreba, stačí „Skontrolovať dopad".
+
 - **Q1** — Zobraziť v rozbalenom riadku reťaze **Zodpovednú osobu a Právny základ v čase potvrdenia** (dnes len v CSV)? Údaj existuje, pribudol by na obrazovke.
 - **Q2** — Súhrn „vybrané: 2 oddelenia · 4 ľudia" v hlavičke skupiny „Komu" počíta klient (JS). Chceš ho, alebo stačí „Skontrolovať dopad"?
 
