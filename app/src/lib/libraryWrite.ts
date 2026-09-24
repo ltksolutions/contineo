@@ -36,7 +36,7 @@ import type { Chunk } from "./chunker.mjs"
 import { toChunkerProfile, chunkingFor, type ChunkingProfile, type ChunkingProfileDef } from "./chunkingProfile"
 import { TENANTS_COLLECTION } from "./tenants"
 import { AppError } from "./appError"
-import { publishBlock } from "./approvals"
+import { publishBlock, APPROVALS_COLLECTION } from "./approvals"
 import { allDepartments } from "./departments"
 import { versionStateFor } from "./approvalsDb"
 import { responsibleSnapshot } from "./versionResponsibilityDb"
@@ -459,12 +459,66 @@ export async function uploadDocument(
       ` · ${converted.method}`,
   })
 
+  // Predošlý koncept je nahradený — jeho súbory už nič neukazuje.
+  if (existing) {
+    const previous = [existing.draftPdf, existing.draftSource] as (VersionFile | null | undefined)[]
+    await releaseDraftFiles(meta.companyCode, documentId, previous, [pdf.id, source?.id ?? ""])
+      .catch(() => {}) // upratovanie; nahratie už prebehlo a nemá kvôli nemu zlyhať
+  }
+
   return {
     documentId,
     markdown: converted.markdown,
     warnings: converted.warnings,
     isNew: !existing,
   }
+}
+
+/**
+ * Zmaže súbory **nahradeného konceptu** — PDF a zdroj, ktoré nové nahratie
+ * vytlačilo. Bez toho po každom „Novom znení" zostali v GridFS dva súbory,
+ * ku ktorým nevedie žiadny záznam (24. 9. 2026, pracovný poriadok SFZ).
+ *
+ * Nemaže sa nič, čo je dôkaz (D24, D97):
+ *   · súbor, na ktorý odkazuje zverejnené znenie (`versions[].pdf/source`)
+ *     alebo akýkoľvek iný dokument organizácie;
+ *   · nič, keď na dokumente bolo kolo schvaľovania nad **konceptom**, ktorý
+ *     sa nezverejnil — schvaľovatelia videli PDF konceptu a ich rozhodnutie
+ *     (aj zamietnutie) sa naň odvoláva.
+ */
+export async function releaseDraftFiles(
+  companyCode: string,
+  documentId: string,
+  previous: (VersionFile | null | undefined)[],
+  keep: string[],
+): Promise<string[]> {
+  const ids = [...new Set(previous.map(f => f?.id).filter((id): id is string => Boolean(id) && !keep.includes(id!)))]
+  if (ids.length === 0) return []
+
+  const col = await getCollection(DOCUMENTS_COLLECTION)
+  const doc = await col.findOne(
+    { documentId, companyCode },
+    { projection: { "versions.versionId": 1 } },
+  ) as { versions?: { versionId: string }[] } | null
+  const published = (doc?.versions ?? []).map(v => v.versionId)
+  const draftRounds = await (await getCollection(APPROVALS_COLLECTION))
+    .countDocuments({ companyCode, documentId, versionId: { $nin: published } })
+  if (draftRounds > 0) return []
+
+  const deleted: string[] = []
+  for (const id of ids) {
+    const used = await col.countDocuments({
+      companyCode,
+      $or: [
+        { "draftPdf.id": id }, { "draftSource.id": id }, { "originalFile.id": id },
+        { "versions.pdf.id": id }, { "versions.source.id": id },
+      ],
+    })
+    if (used > 0) continue
+    await deleteFile(companyCode, id)
+    deleted.push(id)
+  }
+  return deleted
 }
 
 /** Uloží upravený Markdown konceptu. Publikované znenie sa tým nemení. */
@@ -474,7 +528,9 @@ export async function saveDraft(
   markdown: string,
   actor: string,
 ): Promise<void> {
-  const text = (markdown ?? "").trim()
+  // `<textarea>` posiela konce riadkov ako CRLF — do databázy idú ako LF,
+  // rovnako ako z prevodu (24. 9. 2026: celý koncept sa uložil s `\r\n`).
+  const text = (markdown ?? "").replace(/\r\n?/g, "\n").trim()
   if (!text) throw new LibraryError("library.emptyText", "Prázdny text sa uložiť nedá — dokument by nemal čo obsahovať.")
 
   const col = await getCollection(DOCUMENTS_COLLECTION)
