@@ -18,6 +18,7 @@ import { ASSIGNMENTS_COLLECTION } from "./assignments"
 import { READING_COLLECTION } from "./readingTime"
 import { APPROVALS_COLLECTION } from "./approvals"
 import { DOCUMENTS_COLLECTION, effectiveVersion, type DocumentRecord } from "./documents"
+import { OBJECTIONS_COLLECTION } from "./objections"
 import {
   retentionDecision, isStaleActive, RETENTION_LOG_DAYS,
   type RetentionBasis, type RetentionMode,
@@ -34,11 +35,13 @@ export interface DeletionCounts {
   assignments: number
   approvalRounds: number
   responsibleCleared: number
+  /** Námietky osoby — osobný údaj, maže sa s ostatnými dokladmi (D105). */
+  objections: number
 }
 
 const ZERO: DeletionCounts = {
   acknowledgements: 0, documentOpens: 0, readingTimes: 0,
-  assignments: 0, approvalRounds: 0, responsibleCleared: 0,
+  assignments: 0, approvalRounds: 0, responsibleCleared: 0, objections: 0,
 }
 
 const total = (c: DeletionCounts) => Object.values(c).reduce((a, b) => a + b, 0)
@@ -160,12 +163,20 @@ export async function deletePersonEvidence(
       return inScope(s?.documentId, s?.versionId)
     })
 
+  // Námietky sa mažú len s lehotou, nie pri vyhovení námietky — tá musí
+  // zostať ako doklad, že sa o nej rozhodlo a čo sa zmazalo.
+  const objectionsCol = await getCollection(OBJECTIONS_COLLECTION)
+  const objections = reason === "objection" || versions
+    ? []
+    : await objectionsCol.find({ companyCode, personId: person.id }, { projection: { _id: 1 } }).toArray()
+
   const counts: DeletionCounts = {
     ...ZERO,
     acknowledgements: acks.length,
     documentOpens: opens.length,
     readingTimes: reading.length,
     assignments: own.length,
+    objections: objections.length,
   }
 
   // Znenia, ktorých sa výmaz dotkol — kandidáti na zmazanie kôl (B4a).
@@ -181,6 +192,7 @@ export async function deletePersonEvidence(
     if (opens.length) await opensCol.deleteMany({ companyCode, ...ids(opens) })
     if (reading.length) await readingCol.deleteMany({ companyCode, ...ids(reading) })
     if (own.length) await assignCol.deleteMany({ companyCode, ...ids(own as { _id: unknown }[]) })
+    if (objections.length) await objectionsCol.deleteMany({ companyCode, ...ids(objections) })
   }
 
   // Kolá a zodpovedná osoba pri zneniach, o ktorých už nie je žiadny doklad.

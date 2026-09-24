@@ -279,6 +279,32 @@ interface Dictionary {
     none: string
     ok: string
     problems: Record<"noBasis" | "outsideCodelist" | "noReference" | "noResponsible" | "inactiveResponsible", string>
+    objectionsHeading: string
+    objectionsIntro: string
+    recordHeading: string
+    personEmail: string
+    personEmailNote: string
+    receivedAt: string
+    channel: string
+    channels: Record<"email" | "letter" | "in-person" | "other", string>
+    objectionText: string
+    objectionTextNote: string
+    recordSubmit: string
+    noObjections: string
+    status: Record<"pending" | "upheld" | "rejected", string>
+    receivedLine: (date: string, channel: string) => string
+    recordedLine: (who: string, date: string) => string
+    decideHeading: string
+    upheld: string
+    rejected: string
+    decisionNote: string
+    upheldWarning: string
+    decideSubmit: string
+    decidedLine: (who: string, date: string) => string
+    deletedLine: (acknowledgements: number, unknownBasis: number) => string
+    objectionRecorded: string
+    objectionUpheld: string
+    objectionRejected: string
   }
 
   approvalEmail: {
@@ -2303,6 +2329,32 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       noResponsible: "chýba zodpovedná osoba",
       inactiveResponsible: "zodpovedná osoba je vyradená",
     },
+    objectionsHeading: "Námietky (čl. 21)",
+    objectionsIntro: "Pri predpisoch s oprávneným záujmom môže človek namietať. Námietku zaevidujete tu a rozhodnete o nej; do rozhodnutia sa nič nemaže. Pri vyhovení sa zmažú jeho doklady pri zneniach s oprávneným záujmom — pri zákonnej povinnosti zostanú.",
+    recordHeading: "Zaevidovať námietku",
+    personEmail: "E-mail osoby",
+    personEmailNote: "Aj predošlá adresa — námietka často príde z adresy, ktorú človek používal vo zväze.",
+    receivedAt: "Doručená",
+    channel: "Ako prišla",
+    channels: { email: "e-mailom", letter: "listom", "in-person": "osobne", other: "inak" },
+    objectionText: "Znenie námietky",
+    objectionTextNote: "Ako prišla — bez vlastného výkladu.",
+    recordSubmit: "Zaevidovať",
+    noObjections: "Zatiaľ žiadna námietka.",
+    status: { pending: "čaká na rozhodnutie", upheld: "vyhovené", rejected: "zamietnuté" },
+    receivedLine: (date, channel) => `doručená ${date} · ${channel}`,
+    recordedLine: (who, date) => `zaevidoval(a) ${who}, ${date}`,
+    decideHeading: "Rozhodnutie",
+    upheld: "Vyhovieť — zmazať doklady pri oprávnenom záujme",
+    rejected: "Zamietnuť — prevažujú závažné oprávnené dôvody alebo právne nároky",
+    decisionNote: "Odôvodnenie",
+    upheldWarning: "Vyhovenie zmaže doklady natrvalo, hneď po odoslaní.",
+    decideSubmit: "Rozhodnúť",
+    decidedLine: (who, date) => `rozhodol(a) ${who}, ${date}`,
+    deletedLine: (acks, unknown) => `zmazaných potvrdení: ${acks}` + (unknown ? ` · ${unknown} potvrdení bez zapísaného právneho základu zostalo — posúďte ich ručne` : ""),
+    objectionRecorded: "Námietka zaevidovaná.",
+    objectionUpheld: "Námietke vyhovené, doklady pri oprávnenom záujme sú zmazané.",
+    objectionRejected: "Námietka zamietnutá.",
   },
   nav: {
     ask: "Voľné otázky",
@@ -3002,6 +3054,14 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
 
     // ── osoby ──────────────────────────────────────────────────────────────
     "person.notFound": "Taká osoba tu nie je.",
+    "objection.emptyText": "Chýba znenie námietky.",
+    "objection.badDate": "Dátum doručenia nie je platný dátum.",
+    "objection.futureDate": "Dátum doručenia nemôže byť v budúcnosti.",
+    "objection.badDecision": "Vyber, či námietke vyhovieť alebo ju zamietnuť.",
+    "objection.noteRequired": "Rozhodnutie potrebuje odôvodnenie.",
+    "objection.personNotFound": "Osoba s adresou {email} v organizácii nie je.",
+    "objection.notFound": "Taká námietka tu nie je.",
+    "objection.notPending": "O námietke už bolo rozhodnuté.",
     "person.badEndedAt": "Dátum skončenia nie je platný dátum.",
     "person.endedInFuture": "Dátum skončenia nemôže byť v budúcnosti.",
     "person.endedNotInactive": "Skončenie vzťahu sa zadáva až pri vyradenej osobe.",
@@ -4409,6 +4469,32 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       noResponsible: "chybí odpovědná osoba",
       inactiveResponsible: "odpovědná osoba je vyřazená",
     },
+    objectionsHeading: "Námitky (čl. 21)",
+    objectionsIntro: "U předpisů s oprávněným zájmem může člověk vznést námitku. Námitku zde zaevidujete a rozhodnete o ní; do rozhodnutí se nic nemaže. Při vyhovění se smažou jeho doklady u znění s oprávněným zájmem — u zákonné povinnosti zůstanou.",
+    recordHeading: "Zaevidovat námitku",
+    personEmail: "E-mail osoby",
+    personEmailNote: "I předchozí adresa — námitka často přijde z adresy, kterou člověk používal ve svazu.",
+    receivedAt: "Doručena",
+    channel: "Jak přišla",
+    channels: { email: "e-mailem", letter: "dopisem", "in-person": "osobně", other: "jinak" },
+    objectionText: "Znění námitky",
+    objectionTextNote: "Jak přišla — bez vlastního výkladu.",
+    recordSubmit: "Zaevidovat",
+    noObjections: "Zatím žádná námitka.",
+    status: { pending: "čeká na rozhodnutí", upheld: "vyhověno", rejected: "zamítnuto" },
+    receivedLine: (date, channel) => `doručena ${date} · ${channel}`,
+    recordedLine: (who, date) => `zaevidoval(a) ${who}, ${date}`,
+    decideHeading: "Rozhodnutí",
+    upheld: "Vyhovět — smazat doklady u oprávněného zájmu",
+    rejected: "Zamítnout — převažují závažné oprávněné důvody nebo právní nároky",
+    decisionNote: "Odůvodnění",
+    upheldWarning: "Vyhovění smaže doklady natrvalo, hned po odeslání.",
+    decideSubmit: "Rozhodnout",
+    decidedLine: (who, date) => `rozhodl(a) ${who}, ${date}`,
+    deletedLine: (acks, unknown) => `smazaných potvrzení: ${acks}` + (unknown ? ` · ${unknown} potvrzení bez zapsaného právního základu zůstalo — posuďte je ručně` : ""),
+    objectionRecorded: "Námitka zaevidována.",
+    objectionUpheld: "Námitce vyhověno, doklady u oprávněného zájmu jsou smazány.",
+    objectionRejected: "Námitka zamítnuta.",
   },
   nav: {
     ask: "Volné otázky",
@@ -5108,6 +5194,14 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
 
     // ── osoby ──────────────────────────────────────────────────────────────
     "person.notFound": "Taková osoba tu není.",
+    "objection.emptyText": "Chybí znění námitky.",
+    "objection.badDate": "Datum doručení není platné datum.",
+    "objection.futureDate": "Datum doručení nemůže být v budoucnosti.",
+    "objection.badDecision": "Vyber, zda námitce vyhovět, nebo ji zamítnout.",
+    "objection.noteRequired": "Rozhodnutí potřebuje odůvodnění.",
+    "objection.personNotFound": "Osoba s adresou {email} v organizaci není.",
+    "objection.notFound": "Taková námitka tu není.",
+    "objection.notPending": "O námitce už bylo rozhodnuto.",
     "person.badEndedAt": "Datum skončení není platné datum.",
     "person.endedInFuture": "Datum skončení nemůže být v budoucnosti.",
     "person.endedNotInactive": "Skončení vztahu se zadává až u vyřazené osoby.",
@@ -6507,6 +6601,32 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       noResponsible: "responsible person missing",
       inactiveResponsible: "responsible person is excluded",
     },
+    objectionsHeading: "Objections (Art. 21)",
+    objectionsIntro: "For documents based on legitimate interest a person may object. Record the objection here and decide on it; nothing is deleted before the decision. If upheld, their evidence for versions based on legitimate interest is deleted — evidence under a legal obligation stays.",
+    recordHeading: "Record an objection",
+    personEmail: "Person's e-mail",
+    personEmailNote: "A previous address works too — objections often come from the address the person used while in the association.",
+    receivedAt: "Received",
+    channel: "Received by",
+    channels: { email: "e-mail", letter: "letter", "in-person": "in person", other: "other" },
+    objectionText: "Wording of the objection",
+    objectionTextNote: "As received — without your own interpretation.",
+    recordSubmit: "Record",
+    noObjections: "No objections yet.",
+    status: { pending: "awaiting decision", upheld: "upheld", rejected: "rejected" },
+    receivedLine: (date, channel) => `received ${date} · ${channel}`,
+    recordedLine: (who, date) => `recorded by ${who}, ${date}`,
+    decideHeading: "Decision",
+    upheld: "Uphold — delete evidence based on legitimate interest",
+    rejected: "Reject — compelling legitimate grounds or legal claims prevail",
+    decisionNote: "Reasoning",
+    upheldWarning: "Upholding deletes the evidence permanently, right after sending.",
+    decideSubmit: "Decide",
+    decidedLine: (who, date) => `decided by ${who}, ${date}`,
+    deletedLine: (acks, unknown) => `acknowledgements deleted: ${acks}` + (unknown ? ` · ${unknown} acknowledgements without a recorded legal basis remain — review them manually` : ""),
+    objectionRecorded: "Objection recorded.",
+    objectionUpheld: "Objection upheld; evidence based on legitimate interest has been deleted.",
+    objectionRejected: "Objection rejected.",
   },
   nav: {
     ask: "Ask a question",
@@ -7205,6 +7325,14 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
 
     // ── people ─────────────────────────────────────────────────────────────
     "person.notFound": "There is no such person here.",
+    "objection.emptyText": "The wording of the objection is missing.",
+    "objection.badDate": "The date received is not a valid date.",
+    "objection.futureDate": "The date received cannot be in the future.",
+    "objection.badDecision": "Choose whether to uphold or reject the objection.",
+    "objection.noteRequired": "The decision needs a reasoning.",
+    "objection.personNotFound": "There is no person with the address {email} in the organisation.",
+    "objection.notFound": "There is no such objection here.",
+    "objection.notPending": "The objection has already been decided.",
     "person.badEndedAt": "The end date is not a valid date.",
     "person.endedInFuture": "The end date cannot be in the future.",
     "person.endedNotInactive": "The end of the relationship is entered only for an excluded person.",

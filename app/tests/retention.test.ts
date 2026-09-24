@@ -135,6 +135,10 @@ function seed() {
         { versionId: "v2", isActive: true, effectiveFrom: Y("2020-01-01"), effectiveTo: null, responsiblePerson: { personId: "g" } },
       ] },
     ],
+    objections: [
+      { _id: "n1", companyCode: "SFZ", personId: "p1" },
+      { _id: "n2", companyCode: "SFZ", personId: "p2" },
+    ],
     retention_log: [],
   }
 }
@@ -144,7 +148,7 @@ beforeEach(seed)
 describe("deletePersonEvidence (D101)", () => {
   it("výkaz spočíta, ale nezmaže nič a nezapíše záznam o výmaze", async () => {
     const c = await deletePersonEvidence(PERSON, "endedAt", "report", NOW)
-    expect(c).toEqual({ acknowledgements: 3, documentOpens: 1, readingTimes: 1, assignments: 1, approvalRounds: 1, responsibleCleared: 1 })
+    expect(c).toEqual({ acknowledgements: 3, documentOpens: 1, readingTimes: 1, assignments: 1, approvalRounds: 1, responsibleCleared: 1, objections: 1 })
     expect(db.data.acknowledgements).toHaveLength(5)
     expect(db.data.retention_log).toHaveLength(0)
   })
@@ -189,8 +193,14 @@ describe("deletePersonEvidence (D101)", () => {
     expect(JSON.stringify(log)).not.toContain("@")
   })
 
-  it("obmedzenie na znenia (námietka) zmaže len vybrané", async () => {
+  it("obmedzenie na znenia (námietka) zmaže len vybrané a námietku nechá", async () => {
     await deletePersonEvidence(PERSON, "objection", "delete", NOW, new Set(["d-old|v1"]))
     expect(db.data.acknowledgements.map(a => a._id).sort()).toEqual(["a2", "a3", "a4", "a5"])
+    expect(db.data.objections).toHaveLength(2)
+  })
+
+  it("po lehote zmizne aj námietka osoby, cudzia zostane (D105)", async () => {
+    await deletePersonEvidence(PERSON, "endedAt", "delete", NOW)
+    expect(db.data.objections.map(o => o._id)).toEqual(["n2"])
   })
 })

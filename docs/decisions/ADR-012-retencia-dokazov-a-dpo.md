@@ -129,11 +129,15 @@ vznikol v auguste 2026, takže zavedenie indexu dnes nič nezmaže.
 
 ### D105 — Námietka (čl. 21)
 
-- Námietku **zaeviduje HR alebo DPO** na karte osoby: kedy a ako prišla a jej znenie.
+- Námietku **zaeviduje DPO** na stránke `/dpo`: komu patrí (podľa adresy, aj predošlej),
+  kedy a ako prišla a jej znenie. Keď príde personalistovi, postúpi ju DPO — karta
+  osoby patrí správe osôb a námietka nie je údaj pre ňu.
 - **Rozhoduje DPO** — `vyhovené` alebo `zamietnuté`, s odôvodnením.
 - Do rozhodnutia sa **nič nemaže**.
 - **Vyhovené:** zmažú sa doklady osoby pri zneniach, ktorých právny základ bol
-  v čase potvrdenia **oprávnený záujem**. Pri zákonnej povinnosti sa námietka
+  v čase potvrdenia **oprávnený záujem**. Potvrdenia bez zapísaného základu (spred D91)
+  sa nemažú — základ nie je známy; ich počet sa pri rozhodnutí ukáže a DPO ich
+  posúdi ručne. Pri zákonnej povinnosti sa námietka
   neuplatňuje, tie doklady zostanú. Výmaz ide tou istou cestou ako pri lehote
   (D102), s dôvodom `objection`. Zápis sa robí vždy ostro a nezávisí od
   `RETENTION_MODE` — o výmaze rozhodol človek, nie dávka.
