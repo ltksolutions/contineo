@@ -58,6 +58,8 @@ interface Labels {
   progressTitle: string
   /** Veta v okne počas prevodu na serveri. */
   converting: string
+  /** „Zmeniť" pri vybranom súbore. */
+  change: string
 }
 
 interface Uploaded {
@@ -91,6 +93,12 @@ export default function UploadFiles({
   /** Tlačidlo, ktorým človek formulár odoslal — pošle sa ním aj druhýkrát. */
   const submitter = useRef<HTMLElement | null | undefined>(undefined)
   const form = useFormStatus()
+  /** Vybrané súbory — na riadok s názvom a veľkosťou (NAHRAVANIE-pdf-a-udaje-o-zneni, bod 2). */
+  const [chosen, setChosen] = useState<{ pdf: File | null; source: File | null }>({ pdf: null, source: null })
+  const pick = (kind: "pdf" | "source") => (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0] ?? null
+    setChosen(prev => ({ ...prev, [kind]: file }))
+  }
 
   // Prvé odoslanie: zastaviť, nahrať po kúskoch, zapísať identifikátory do stavu.
   useEffect(() => {
@@ -184,7 +192,7 @@ export default function UploadFiles({
         prehliadač do neho súbor pustí sám, drag & drop funguje aj bez skriptu.
         Po nahratí po kúskoch pole stratí `name`: bajty už sú na serveri.
       */}
-      <label className={`upload-drop${highlight ? " is-required" : ""}`}>
+      <label className={`upload-drop${highlight && !chosen.pdf ? " is-required" : ""}${chosen.pdf ? " is-set" : ""}`}>
         <span className="upload-drop-title">{labels.pdfTitle}</span>
         <span className="quiet upload-drop-note">
           {labels.pdfNote}
@@ -192,14 +200,16 @@ export default function UploadFiles({
           {labels.maxSize} · {labels.noScriptLimit}
         </span>
         <input className="upload-file" type="file" name={uploaded ? undefined : "pdf"}
-               data-upload="pdf" required accept={pdfAccept} />
+               data-upload="pdf" required accept={pdfAccept} onChange={pick("pdf")} />
+        {chosen.pdf && <ChosenFile file={chosen.pdf} change={labels.change} />}
       </label>
 
-      <label className="upload-drop upload-drop--optional">
+      <label className={`upload-drop upload-drop--optional${chosen.source ? " is-set" : ""}`}>
         <span className="upload-drop-title">{labels.sourceTitle}</span>
         <span className="quiet upload-drop-note">{labels.sourceNote}</span>
         <input className="upload-file" type="file" name={uploaded ? undefined : "source"}
-               data-upload="source" accept={sourceAccept} />
+               data-upload="source" accept={sourceAccept} onChange={pick("source")} />
+        {chosen.source && <ChosenFile file={chosen.source} change={labels.change} />}
       </label>
 
       {error && <p className="upload-error" role="alert">{error}</p>}
@@ -227,5 +237,27 @@ export default function UploadFiles({
         </div>
       )}
     </div>
+  )
+}
+
+/**
+ * Vybraný súbor ako riadok: typ, názov (s elipsou), veľkosť a „Zmeniť".
+ * Je vnútri `<label>`, takže klik kamkoľvek — aj na „Zmeniť" — otvorí výber
+ * súboru znova. Natívne pole sa pri vybranom súbore len vizuálne skryje
+ * (`.upload-drop.is-set .upload-file`); čítačka ho vidí ďalej.
+ */
+function ChosenFile({ file, change }: { file: File; change: string }) {
+  const ext = (file.name.split(".").pop() ?? "").slice(0, 4).toUpperCase()
+  const lang = typeof document !== "undefined" ? document.documentElement.lang || "sk" : "sk"
+  const mb = new Intl.NumberFormat(lang, { maximumFractionDigits: 1 }).format(file.size / 1024 / 1024)
+  return (
+    <span className="upload-chosen">
+      <span className="upload-chosen-ico" aria-hidden="true">{ext}</span>
+      <span className="upload-chosen-main">
+        <span className="upload-chosen-name" style={{ display: "block" }}>{file.name}</span>
+        <span className="upload-chosen-meta">{mb} MB</span>
+      </span>
+      <span className="upload-chosen-act">{change}</span>
+    </span>
   )
 }

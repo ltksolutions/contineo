@@ -2456,6 +2456,54 @@ html[data-theme="dark"] .editor-tui .CodeMirror {
 .upload-files { display: grid; gap: 12px; }
 .upload-drop--optional { background: none; }
 
+/* Od 640 px zóny vedľa seba (NAHRAVANIE-pdf-a-udaje-o-zneni, bod 1): úsek je
+   nižší a je vidieť, že sú to dve časti jedného nahratia. PDF je širšie —
+   je povinné. Pod 640 px jeden stĺpec (mobile first). */
+@media (min-width: 640px) {
+  .upload-files { grid-template-columns: 1.25fr 1fr; align-items: start; }
+}
+
+/* Vybraný súbor (bod 2) — riadok s typom, názvom a veľkosťou namiesto
+   natívneho „vybrané: …". Progresívne vylepšenie: bez skriptu zostáva
+   natívne pole. Zóna s vybraným PDF dostane plný zelený okraj. */
+.upload-drop.is-set { border-style: solid; border-color: var(--ok-fg); background: var(--surface); }
+.upload-drop--optional.is-set { border-color: var(--line); }
+.upload-drop.is-set .upload-file {
+  position: absolute; width: 1px; height: 1px; overflow: hidden;
+  clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap;
+}
+.upload-drop { position: relative; min-width: 0; }
+.upload-chosen {
+  display: flex; align-items: center; gap: 10px;
+  width: 100%; margin-top: 4px; padding: 8px 10px;
+  border-radius: 8px; background: var(--bg); border: 1px solid var(--line);
+}
+.upload-chosen-ico {
+  display: grid; place-items: center; flex: 0 0 auto;
+  width: 30px; height: 34px; border-radius: 5px;
+  background: var(--surface-2); color: var(--muted);
+  font-size: 9.5px; font-weight: 800; letter-spacing: .03em;
+}
+.upload-chosen-main { flex: 1; min-width: 0; }
+.upload-chosen-name { font-size: 13px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.upload-chosen-meta { font-size: 11.5px; color: var(--muted); }
+.upload-chosen-act { font-size: 12.5px; font-weight: 600; color: var(--ink); text-decoration: underline; text-underline-offset: 2px; }
+
+/* „nepovinné" v nadpise úseku (bod 4) a rámček s vetou o predvyplnení. */
+.upload-step-opt { margin-left: auto; font-size: var(--fs-micro); font-weight: 500; color: var(--muted); }
+.prefill-note {
+  margin: 0 0 14px; padding: 9px 12px; border-radius: 9px;
+  background: var(--bg); border: 1px solid var(--line);
+  font-size: 12.5px; color: var(--muted); line-height: 1.5;
+}
+
+/* Tlačidlo a veta „Najprv vyber PDF." (bod 5). Na telefóne tlačidlo na celú šírku. */
+.upload-submit { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+.upload-submit-note { font-size: 12.5px; color: var(--muted); }
+@media (max-width: 639px) {
+  .upload-submit .button { width: 100%; min-height: 44px; }
+}
+
 .upload-error {
   margin: 0;
   padding: 10px 12px;

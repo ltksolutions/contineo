@@ -41,7 +41,7 @@ sekcie sú správne: je to jeden formulár, nie sprievodca.
 `--warn-fg` a formulár sa predvyplní z adresy (`?title=&sectionKey=`).
 **Súbor sa ale nepredvyplní** — ten prehliadač preniesť nevie.
 
-Človek teda nahral 40 MB PDF, dostal chybu v metadátach a musí súbor vybrať
+Človek teda nahral 30 MB PDF, dostal chybu v metadátach a musí súbor vybrať
 znova, hoci s ním nič nebolo.
 
 **Má byť:** hláška povie, **čo presne** treba opraviť a **že súbor treba
@@ -86,20 +86,25 @@ Zóna zostáva klikateľná ako celok (je to `<label>`), len prestane predstiera
 
 ## Úloha 3 — Formát a limit patria k zóne, nie do nápovedy
 
-**Teraz:** `.upload-drop-note` nesie formáty. Limit veľkosti (40 MB) a to,
-**že SVG sa zámerne nepodporuje**, v texte nie je — hoci to server odmietne
-a človek sa to dozvie až po nahraní.
+**Teraz:** `.upload-drop-note` nesie formáty. Limit veľkosti v texte nie je —
+hoci to server odmietne a človek sa to dozvie až po nahraní.
 
-**Má byť** v `.upload-drop-note`, monospace, tri riadky:
+**Má byť** v `.upload-drop-note`, monospace, dva riadky:
 
 ```
 PDF · DOCX · MD · sken (OCR)
-najviac 40 MB
-SVG zámerne nepodporujeme
+najviac 32 MB
 ```
 
-Hodnoty ber z `lib/branding.ts` (`MAX_BYTES`, `ALLOWED_TYPES`) — nie
-natvrdo. Keď sa limit zmení, text sa zmení s ním.
+Hodnotu ber z **`fileStore.MAX_BYTES`** — nie natvrdo. Keď sa limit zmení,
+text sa zmení s ním.
+
+> ⚠️ **Oprava zadania (21. 9. 2026).** Pôvodne tu stálo „najviac 40 MB“
+> a riadok „SVG zámerne nepodporujeme“ s odkazom na `lib/branding.ts`.
+> Bolo to zle: `branding.ts` drží limity **loga** (256 kB, PNG/JPEG/WebP),
+> kde je zákaz SVG bezpečnostná vec — SVG môže nesť skript. Dokumenty
+> strážia `fileStore.MAX_BYTES = 32 MB` a SVG k nim nepatrí ani ako téma.
+> **32 MB je správna hodnota; konštantu nemeň.**
 
 ## Úloha 4 — Kľúč sa negeneruje ručne: pole nahradí náhľad (ADR-010)
 

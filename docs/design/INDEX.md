@@ -1,3 +1,5 @@
+> **Stav projektu (2026-09-24):** platný je len tento priečinok. Staré živé prototypy (`*.dc.html`, `support.js`, `ios-frame.jsx`) sú v `_archiv/` v koreni projektu — len na dohľadanie, nie ako zadanie. Nové návrhy: `<OBRAZOVKA>-<zmena>.html` + `.md` s rovnakým menom v tomto priečinku.
+
 # Handoff nového dizajnu Contineo — rozcestník
 
 **Kompletné zadanie pre všetkých 31 obrazoviek aplikácie.** Pre Cowork.

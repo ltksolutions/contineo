@@ -687,10 +687,11 @@ export default async function DocumentDetailPage({
             tooLarge: tu.fileTooLarge,
             progressTitle: tu.submitPending,
             converting: tu.submitPendingNote,
+            change: tu.change,
           }}
         />
-        <div>
-          <UploadSubmit labels={{ submit: t.newVersionSubmit, pending: tu.submitPending }} />
+        <div className="upload-submit">
+          <UploadSubmit labels={{ submit: t.newVersionSubmit, pending: tu.submitPending, pickPdfFirst: tu.pickPdfFirst }} />
         </div>
       </form>
             {effective && draftDiff && draftDiff.added + draftDiff.removed > 0 && (

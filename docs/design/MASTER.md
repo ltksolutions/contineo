@@ -342,7 +342,7 @@ organizácie a jediné delenie je `accessLevel`. Pilulky by predstierali
 voľbu, ktorá nič nemení. Zapísané v `TODO.md` (riadok 146).
 
 **V `ASK.md` ich preto nekreslím.** Ak ich uvidíš v starom ráme
-`Contineo Obrazovky.dc.html`, ignoruj ich.
+`_archiv/Contineo Obrazovky.dc.html`, ignoruj ich.
 
 ### 3. Skóre zhody pri zdrojoch odpovede
 
@@ -357,7 +357,7 @@ ktorá sa medzi dotazmi nedá porovnávať. Ukázať ju znamená tvrdiť, že
 
 ## Renderované referencie
 
-Rámy v `Contineo Obrazovky.dc.html` sú **šablóny** (`{{ d.status }}`,
+Rámy v `_archiv/Contineo Obrazovky.dc.html` sú **šablóny** (`{{ d.status }}`,
 `support.js`) a v prehliadači sa bez behového prostredia nevykreslia.
 
 Preto je pri každom `<OBRAZOVKA>.md` **statické HTML** s reálnymi hodnotami
