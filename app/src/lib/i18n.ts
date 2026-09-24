@@ -1729,6 +1729,7 @@ interface Dictionary {
       newVersionBusy: string
       newVersionFirst: string
       downloadPdf: string
+      downloadSource: string
       editDocument: string
       currentHeading: string
       fromDate: (date: string) => string
@@ -4231,6 +4232,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       newVersionBusy: "Nové znenie sa už pripravuje. Súbory vymeníš v príprave.",
       newVersionFirst: "Dokument ešte nemá platné znenie — najprv dokonči prvé.",
       downloadPdf: "Stiahnuť PDF",
+      downloadSource: "Stiahnuť zdrojový súbor",
       editDocument: "Upraviť dokument",
       currentHeading: "Platné znenie",
       fromDate: d => `od ${d}`,
@@ -6628,6 +6630,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       newVersionBusy: "Nové znění se už připravuje. Soubory vyměníš v přípravě.",
       newVersionFirst: "Dokument zatím nemá platné znění — nejdřív dokonči první.",
       downloadPdf: "Stáhnout PDF",
+      downloadSource: "Stáhnout zdrojový soubor",
       editDocument: "Upravit dokument",
       currentHeading: "Platné znění",
       fromDate: d => `od ${d}`,
@@ -9017,6 +9020,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       newVersionBusy: "A new version is already being prepared. Replace its files in preparation.",
       newVersionFirst: "The document has no current version yet — finish the first one.",
       downloadPdf: "Download PDF",
+      downloadSource: "Download source file",
       editDocument: "Edit document",
       currentHeading: "Current version",
       fromDate: d => `from ${d}`,
