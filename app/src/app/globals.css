@@ -976,21 +976,56 @@ html[data-theme="dark"] select.field-input {
 
 .select-arrow { flex: none; color: var(--muted); }
 
-.select-list {
+/* Rozbalený zoznam — s hľadaním hore, keď je možností veľa. */
+.select-pop {
   position: absolute;
   top: calc(100% + 4px);
   left: 0;
   right: 0;
   z-index: 40;
+  display: grid;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+
+.select-list {
   margin: 0;
   padding: 5px;
   list-style: none;
   max-height: 280px;
   overflow-y: auto;
-  background: var(--surface);
+}
+
+/* 16 px — pod tým iOS pri kliknutí priblíži stránku. */
+.select-search {
+  margin: 5px 5px 0;
+  min-height: 40px;
+  padding: 8px 10px;
   border: 1px solid var(--line);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow);
+  border-radius: 8px;
+  background: var(--bg);
+  color: var(--ink);
+  font: inherit;
+  font-size: 16px;
+}
+.select-search:focus-visible { outline: 2px solid var(--accent); outline-offset: 0; }
+
+/* Názov a pod ním cesta v strome — namiesto odsadenia „— — ". */
+.select-value { display: grid; min-width: 0; text-align: left; }
+.select-value > span:first-child { overflow: hidden; text-overflow: ellipsis; }
+.select-path {
+  font-size: 11.5px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.select-item mark, .multiselect-option mark { background: var(--warn-bg); color: inherit; border-radius: 2px; }
+.select-empty { padding: 10px; font-size: 14px; color: var(--muted); }
+
+/* Skryté povinné pole — prehliadač pri ňom ukáže bublinu, človek ho nevidí. */
+.select-required {
+  position: absolute; left: 12px; bottom: 0; width: 1px; height: 1px;
+  opacity: 0; pointer-events: none; border: 0; padding: 0;
 }
 
 .select-item {
@@ -5629,3 +5664,9 @@ html[data-theme="dark"] { --skeleton-sheen: rgba(255, 255, 255, 0.07); }
   .ex-tl-step:first-child::before { left: 5px; }
   .ex-tl-step:last-child::before { display: none; }
 }
+
+/* Strom a cesta v MultiSelect (rám KOMPONENT-vyber-oddelenia). */
+.multiselect-option-name { display: grid; min-width: 0; }
+.multiselect-option-path { font-size: 11.5px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.multiselect-note { margin: 0; padding: 8px 12px 0; font-size: 12px; color: var(--muted); }
+.multiselect-noscript { display: grid; gap: 4px; }

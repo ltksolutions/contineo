@@ -14,6 +14,8 @@ import { brandingView } from "@/lib/tenants"
 import { tenantStyle } from "@/components/TenantHeader"
 import { UI_LANGUAGES, dictionary } from "@/lib/i18n"
 import Select from "@/components/Select"
+import { allDepartments, flattenTree } from "@/lib/departments"
+import { treeOptions } from "@/lib/treeOptions"
 import { invitePersonAction } from "../actions"
 import { normalizeQuery, type RawQuery } from "@/lib/urlParams"
 import AppShell from "@/components/AppShell"
@@ -41,10 +43,11 @@ export default async function NewPersonPage({
     jobTitle?: string
     mobilePhone?: string
     workplace?: string
-    department?: string
+    departmentId?: string
   }>(await searchParams)
   const branding = brandingView(ctx.tenant)
   const workplaces = availableOptions(ctx.tenant, "workplace")
+  const departmentRows = flattenTree(await allDepartments(ctx.tenant.companyCode))
   const d = dictionary(ctx.person.language).people
   const t = d.invite
   // Popisky polí sú tie isté ako na karte osoby — dva rôzne názvy toho istého
@@ -126,7 +129,7 @@ export default async function NewPersonPage({
 
         <div className="field">
           <span className="field-label">{td.workplace}</span>
-          <Select
+          <Select language={ctx.person.language}
             name="workplace"
             fieldLabel={td.workplace}
             initial={q.workplace ?? ""}
@@ -137,14 +140,33 @@ export default async function NewPersonPage({
           />
         </div>
 
-        <label className="field">
+        {/*
+          Oddelenie zo stromu, nie voľný text (rám KOMPONENT-vyber-oddelenia,
+          Q2 — Ján 24. 9.): zhodne s úpravou osoby, s hľadaním a cestou.
+        */}
+        <div className="field">
           <span className="field-label">{t.department}</span>
-          <input className="field-input" name="department" defaultValue={q.department ?? ""} />
-        </label>
+          <Select language={ctx.person.language}
+            name="departmentId"
+            fieldLabel={t.department}
+            initial={q.departmentId ?? ""}
+            options={[
+              { value: "", label: td.departmentNone },
+              ...treeOptions(departmentRows.map(r => ({ id: r.department.id, name: r.department.name, level: r.level }))),
+            ]}
+          />
+          {departmentRows.length === 0 && (
+            <span className="quiet field-hint">
+              {td.noDepartmentsBefore}
+              <Link href="/organisation?tab=departments">{td.noDepartmentsLink}</Link>
+              {td.noDepartmentsAfter}
+            </span>
+          )}
+        </div>
 
         <div className="field">
           <span className="field-label">{t.personType}</span>
-          <Select
+          <Select language={ctx.person.language}
             name="personType"
             options={Object.entries(d.types).map(([value, label]) => ({ value, label }))}
             initial="employee"
@@ -154,7 +176,7 @@ export default async function NewPersonPage({
 
         <div className="field">
           <span className="field-label">{t.language}</span>
-          <Select
+          <Select language={ctx.person.language}
             name="language"
             options={UI_LANGUAGES.map(l => ({ value: l, label: d.languages[l] ?? l }))}
             initial="sk"

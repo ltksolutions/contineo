@@ -331,7 +331,7 @@ export default async function TenantDetailPage({
 
         <div className="field">
           <span className="field-label">{t.defaultLanguage}</span>
-          <Select
+          <Select language={language}
             name="defaultLanguage"
             options={UI_LANGUAGES.map(j => ({ value: j, label: d.people.languages[j] ?? j }))}
             initial={tenant.defaultLanguage}

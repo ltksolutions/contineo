@@ -10,6 +10,7 @@
  */
 
 import { notFound, redirect } from "next/navigation"
+import { treeOptions } from "@/lib/treeOptions"
 import Link from "next/link"
 import { orgContext } from "@/lib/orgSettings"
 import { domainRequests, domainInstruction } from "@/lib/customerDomains"
@@ -376,7 +377,7 @@ export default async function OrganisationPage({
 
         <div className="field">
           <span className="field-label">{t.branding.defaultLanguage}</span>
-          <Select
+          <Select language={language}
             name="defaultLanguage"
             options={UI_LANGUAGES.map(j => ({ value: j, label: d.people.languages[j] ?? j }))}
             initial={tenant.defaultLanguage}
@@ -495,21 +496,17 @@ export default async function OrganisationPage({
                         <form action={moveDepartmentAction} className="tree-form">
                           <input type="hidden" name="tab" value="departments" />
                           <input type="hidden" name="id" value={department.id} />
-                          <Select
+                          <Select language={language}
                             name="parentId"
                             initial={department.parentId ?? ""}
                             fieldLabel={t.departments.parentOf(department.name)}
                             options={[
                               { value: "", label: t.departments.topLevel },
-                              ...rows
-                                // Pod seba ani pod vlastného potomka sa presunúť
-                                // nedá, tak sa to ani neponúka. Pravidlo aj tak
-                                // platí na serveri — toto len šetrí človeku chybu.
-                                .filter(r => !inside.has(r.department.id))
-                                .map(r => ({
-                                  value: r.department.id,
-                                  label: `${"— ".repeat(r.level - 1)}${r.department.name}`,
-                                })),
+                              // Pod seba ani pod vlastného potomka sa presunúť
+                              // nedá, tak sa to ani neponúka. Pravidlo aj tak
+                              // platí na serveri — toto len šetrí človeku chybu.
+                              ...treeOptions(rows.map(r => ({ id: r.department.id, name: r.department.name, level: r.level })))
+                                .filter(o => !inside.has(o.value)),
                             ]}
                           />
                           <button className="button button--quiet" type="submit">{t.departments.move}</button>
@@ -544,18 +541,14 @@ export default async function OrganisationPage({
 
           <label className="field">
             <span className="field-label">{t.departments.parent}</span>
-            <Select
+            <Select language={language}
               name="parentId"
               initial=""
               options={[
                 { value: "", label: t.departments.topLevel },
-                ...rows
-                  // Hlbšie než povolené sa založiť nedá, tak sa to neponúka.
-                  .filter(r => depth(tenantDepartments, r.department.id) < MAX_DEPTH)
-                  .map(r => ({
-                    value: r.department.id,
-                    label: `${"— ".repeat(r.level - 1)}${r.department.name}`,
-                  })),
+                // Hlbšie než povolené sa založiť nedá, tak sa to neponúka.
+                ...treeOptions(rows.map(r => ({ id: r.department.id, name: r.department.name, level: r.level })))
+                  .filter(o => depth(tenantDepartments, o.value) < MAX_DEPTH),
               ]}
             />
             <span className="quiet field-hint">{t.departments.maxDepth(MAX_DEPTH)}</span>

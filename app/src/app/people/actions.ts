@@ -194,7 +194,7 @@ export async function invitePersonAction(fd: FormData) {
       jobTitle: fieldText(fd, "jobTitle"),
       mobilePhone: fieldText(fd, "mobilePhone"),
       workplace: fieldText(fd, "workplace"),
-      department: fieldText(fd, "department"),
+      departmentId: fieldText(fd, "departmentId") || null,
       personType: (fieldText(fd, "personType") || undefined) as PersonType | undefined,
       language: fieldText(fd, "language") || undefined,
     }, actor.email)
@@ -231,7 +231,7 @@ export async function invitePersonAction(fd: FormData) {
       jobTitle: fieldText(fd, "jobTitle"),
       mobilePhone: fieldText(fd, "mobilePhone"),
       workplace: fieldText(fd, "workplace"),
-      department: fieldText(fd, "department"),
+      departmentId: fieldText(fd, "departmentId"),
     })
     redirect(`/people/new?${q.toString()}`)
   }

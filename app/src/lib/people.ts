@@ -456,7 +456,13 @@ export async function invitePerson(
     jobTitle?: string
     mobilePhone?: string
     workplace?: string
+    /** Text spred stromu oddelení — len import z CSV (mapuje sa zvlášť). */
     department?: string
+    /**
+     * Oddelenie zo stromu (rám KOMPONENT-vyber-oddelenia, Q2 — Ján 24. 9.):
+     * formulár pozvania ho vyberá zo zoznamu, nie ako voľný text.
+     */
+    departmentId?: string | null
     personType?: PersonType
     language?: string
   },
@@ -484,8 +490,25 @@ export async function invitePerson(
     throw new PersonValidationError("person.alreadyInvited", `${email} je v organizácii už zapísaná.`, { email })
   }
 
+  // Zaradenie, cesta a história spolu — z toho istého dôvodu ako v `savePerson`.
+  const departmentId = input.departmentId?.trim() || null
+  let placement: Pick<Person, "departmentId" | "departmentPath" | "departmentHistory"> = {}
+  if (departmentId) {
+    const tree = await allDepartments(companyCode)
+    if (!tree.some(o => o.id === departmentId)) {
+      throw new PersonValidationError("person.departmentNotFound", "Také oddelenie neexistuje.")
+    }
+    const path = pathIdsTo(tree, departmentId)
+    placement = {
+      departmentId,
+      departmentPath: path,
+      departmentHistory: newDepartmentHistory(undefined, departmentId, path, new Date()),
+    }
+  }
+
   const now = new Date()
   const person: Person = {
+    ...placement,
     id: crypto.randomUUID(),
     companyCode,
     email,
