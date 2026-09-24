@@ -366,6 +366,17 @@ interface Dictionary {
     objectionRecorded: string
     objectionUpheld: string
     objectionRejected: string
+    /** Rám DPO-ochrana-udajov (24. 9. 2026). */
+    tileTotal: string
+    tileProblems: string
+    tileObligation: string
+    tileInterest: string
+    groupProblems: (n: number) => string
+    groupOk: (n: number) => string
+    colDocument: string
+    colStatus: string
+    pendingCount: (n: number) => string
+    recordOpen: string
   }
 
   approvalEmail: {
@@ -2618,6 +2629,16 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     objectionRecorded: "Námietka zaevidovaná.",
     objectionUpheld: "Námietke vyhovené, doklady pri oprávnenom záujme sú zmazané.",
     objectionRejected: "Námietka zamietnutá.",
+    tileTotal: "Platné predpisy",
+    tileProblems: "S nedostatkom",
+    tileObligation: "Zákonná povinnosť",
+    tileInterest: "Oprávnený záujem",
+    groupProblems: n => `S nedostatkom · ${n}`,
+    groupOk: n => `V poriadku · ${n}`,
+    colDocument: "Predpis",
+    colStatus: "Stav",
+    pendingCount: n => `${n} čaká na rozhodnutie`,
+    recordOpen: "+ Zaevidovať námietku",
   },
   nav: {
     ask: "Voľné otázky",
@@ -4957,6 +4978,16 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     objectionRecorded: "Námitka zaevidována.",
     objectionUpheld: "Námitce vyhověno, doklady u oprávněného zájmu jsou smazány.",
     objectionRejected: "Námitka zamítnuta.",
+    tileTotal: "Platné předpisy",
+    tileProblems: "S nedostatkem",
+    tileObligation: "Zákonná povinnost",
+    tileInterest: "Oprávněný zájem",
+    groupProblems: n => `S nedostatkem · ${n}`,
+    groupOk: n => `V pořádku · ${n}`,
+    colDocument: "Předpis",
+    colStatus: "Stav",
+    pendingCount: n => `${n} čeká na rozhodnutí`,
+    recordOpen: "+ Zaevidovat námitku",
   },
   nav: {
     ask: "Volné otázky",
@@ -7288,6 +7319,16 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     objectionRecorded: "Objection recorded.",
     objectionUpheld: "Objection upheld; evidence based on legitimate interest has been deleted.",
     objectionRejected: "Objection rejected.",
+    tileTotal: "Current documents",
+    tileProblems: "With issues",
+    tileObligation: "Legal obligation",
+    tileInterest: "Legitimate interest",
+    groupProblems: n => `With issues · ${n}`,
+    groupOk: n => `In order · ${n}`,
+    colDocument: "Document",
+    colStatus: "Status",
+    pendingCount: n => `${n} awaiting decision`,
+    recordOpen: "+ Record an objection",
   },
   nav: {
     ask: "Ask a question",
