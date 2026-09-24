@@ -762,8 +762,9 @@ button:disabled { cursor: not-allowed; opacity: 0.55; }
 .page-head-spacer { flex: 1 1 0; min-width: 0; }
 
 /*
- * Tabuľky v informovaní o ochrane údajov (/privacy, C1). Na telefóne sa
- * roluje tabuľka, nie stránka — obal má `overflow-x: auto`.
+ * Tabuľky v informovaní o ochrane údajov (/privacy, C1). Od 640 px tabuľka
+ * s tučným prvým stĺpcom, pod tým zoznam kariet `.privacy-stack`
+ * (rám PRIVACY-citatelnost, bod 3).
  */
 .privacy-table {
   width: 100%;
@@ -782,6 +783,7 @@ button:disabled { cursor: not-allowed; opacity: 0.55; }
   color: var(--muted);
   font-weight: 600;
 }
+.privacy-table td:first-child { font-weight: 600; }
 
 /*
  * Prázdny stav zoznamu (ZAKLAD, úloha 1) — jedna trieda, tri časti: čo tu
@@ -5543,3 +5545,43 @@ html[data-theme="dark"] { --skeleton-sheen: rgba(255, 255, 255, 0.07); }
 .dpo-obj-done { padding: 12px 16px; border-top: 1px solid var(--line); font-size: var(--fs-small); display: grid; gap: 3px; }
 .dpo-record > summary { list-style: none; display: inline-flex; cursor: pointer; }
 .dpo-record > summary::-webkit-details-marker { display: none; }
+
+/* ── /privacy — čitateľnosť (rám PRIVACY-citatelnost, 24. 9. 2026) ────────── */
+.privacy { display: grid; gap: 40px; max-width: 1040px; margin: 0 auto; padding: 40px 16px 64px; }
+.privacy-main { max-width: 68ch; min-width: 0; }
+.privacy-main > h2 { font-size: var(--fs-section); margin: 36px 0 10px; scroll-margin-top: 16px; }
+.privacy-main p { margin: 0 0 10px; line-height: 1.65; font-size: var(--fs-body); }
+.privacy-main .page-lead { margin: 0 0 8px; }
+.privacy-list { margin: 0 0 10px; padding-left: 20px; line-height: 1.65; }
+.privacy-toc { display: none; }
+.privacy-toc-h { font-size: 11px; font-weight: 650; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); margin: 0 0 6px; }
+.privacy-toc a { display: block; padding: 5px 10px; border-radius: 7px; color: var(--muted); text-decoration: none; font-size: 13px; }
+.privacy-toc a:hover { background: var(--accent-soft); color: var(--ink); }
+.privacy-chips { display: flex; gap: 6px; overflow-x: auto; padding: 0 0 4px; margin: 16px 0 0; }
+.privacy-chips a {
+  flex: 0 0 auto; display: inline-flex; align-items: center; min-height: 32px; padding: 0 12px;
+  border: 1px solid var(--line); border-radius: 999px; font-size: 12.5px; color: var(--ink);
+  text-decoration: none; background: var(--surface);
+}
+@media (min-width: 1024px) {
+  .privacy { grid-template-columns: 220px minmax(0, 1fr); }
+  .privacy-toc { display: grid; gap: 2px; position: sticky; top: 16px; align-self: start; }
+  .privacy-chips { display: none; }
+}
+.privacy-who { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; margin: 22px 0 0; }
+.privacy-who-card { padding: 14px 16px; display: grid; gap: 4px; }
+.privacy-who-card h2 { font-size: 11px; font-weight: 650; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); margin: 0 0 4px; }
+.privacy-who-card p { margin: 0; font-size: 13.5px; line-height: 1.5; overflow-wrap: anywhere; }
+.privacy-who-card a { color: var(--ink); }
+.privacy-stack { list-style: none; margin: 0 0 12px; padding: 0; display: grid; gap: 8px; }
+.privacy-stack li { padding: 10px 12px; display: grid; gap: 2px; font-size: var(--fs-small); line-height: 1.5; }
+.privacy-table { margin: 0 0 12px; }
+@media (max-width: 639px) { .privacy-table { display: none; } }
+@media (min-width: 640px) { .privacy-stack { display: none; } }
+.privacy-objection { margin: 4px 0 14px; padding: 12px 14px; border-radius: 10px; background: var(--accent-soft); }
+.privacy-objection h3 { font-size: var(--fs-body); margin: 0 0 4px; }
+.privacy-objection p { margin: 0; }
+.privacy-foot { margin-top: 28px; padding-top: 12px; border-top: 1px solid var(--line); font-size: var(--fs-small); color: var(--muted); }
+@media (max-width: 639px) {
+  .privacy-main p, .privacy-list li { font-size: 15px; }
+}
