@@ -14,6 +14,7 @@ import { getCollection } from "./mongodb"
 import { allFolders, pathTo } from "./folders"
 import { DOCUMENTS_COLLECTION, effectiveVersion, type VersionFile } from "./documents"
 import type { Version } from "./documents"
+import type { ResponsiblePerson } from "./versionResponsibility"
 import type { OriginalFile, ProcessingState } from "./libraryWrite"
 import { conditionQuery, type Condition, type MatchMode } from "./libraryConditions"
 import { openRounds } from "./approvalsDb"
@@ -134,6 +135,8 @@ export interface LibraryDetail extends LibraryRow {
   draftMeta?: VersionMeta | null
   /** Návrh údajov z prvej strany dokumentu (D108) — nie je to uložený údaj. */
   draftMetaSuggestion?: VersionMeta | null
+  /** Zodpovedná osoba určená v príprave (ADR-014, D109). */
+  draftResponsible?: ResponsiblePerson | null
   conversion?: { method: string; warnings: string[]; at: Date }
   processingError?: string | null
   scope?: string
@@ -650,6 +653,7 @@ export async function libraryDetail(
     draftMetaSuggestion: d.draftMetaSuggestion
       ? normalizeMeta(d.draftMetaSuggestion as never)
       : d.draftMarkdown ? suggestMetaFromMarkdown(String(d.draftMarkdown)) : null,
+    draftResponsible: (d.draftResponsible as ResponsiblePerson | null | undefined) ?? null,
     conversion: d.konverzia as LibraryDetail["conversion"],
     processingError: (d.processingError as string | null) ?? null,
   }

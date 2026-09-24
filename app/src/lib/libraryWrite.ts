@@ -603,6 +603,46 @@ export async function saveDraftMeta(
   })
 }
 
+/**
+ * Zodpovedná osoba nového znenia **už v príprave** (ADR-014, D109).
+ *
+ * Nie je súčasťou schválenia — schvaľuje sa text a údaje o znení, nie kto
+ * bude ľuďom odpovedať — preto sa dá zmeniť aj počas kola. Pri zverejnení
+ * sa prenesie do znenia a z konceptu zmizne. Nededí sa (D91): pri novom
+ * znení ju niekto vyberie vedome.
+ */
+export async function saveDraftResponsible(
+  companyCode: string,
+  documentId: string,
+  personId: string,
+  actor: string,
+  now: Date = new Date(),
+): Promise<boolean> {
+  const col = await getCollection(DOCUMENTS_COLLECTION)
+  const doc = await col.findOne({ documentId, companyCode }) as Record<string, unknown> | null
+  if (!doc) throw new LibraryError("library.documentNotFound", "Taký dokument tu nie je.")
+  if (!String(doc.draftMarkdown ?? "").trim()) {
+    throw new LibraryError("meta.noDraft", "Dokument nemá koncept — údaje o znení sa zadávajú pri novom znení.")
+  }
+  const to = await responsibleSnapshot(companyCode, personId)
+  if (!to) {
+    throw new LibraryError("responsibility.unknownPerson", "Vybraná zodpovedná osoba tu nie je alebo je vyradená.")
+  }
+  const before = doc.draftResponsible as { personId?: string; fullName?: string } | null | undefined
+  if (before?.personId === to.personId) return false
+  await col.updateOne(
+    { documentId, companyCode },
+    { $set: { draftResponsible: to, updatedAt: now, updatedBy: actor } },
+  )
+  await writeAudit({
+    companyCode, subject: "document", action: "changed", actor,
+    targetId: documentId, targetLabel: String(doc.title ?? documentId),
+    changes: diff({ draftResponsible: before?.fullName ?? null }, { draftResponsible: to.fullName }),
+    note: "zodpovedná osoba nového znenia (ADR-014)",
+  })
+  return true
+}
+
 export interface PublishResult {
   versionId: string
   chunks: number
@@ -634,8 +674,11 @@ export async function publish(
     effectiveFrom?: Date | null
     effectiveFromSource?: string
     changeNote?: string
-    /** `persons.id` zodpovednej osoby — povinná pri každom novom znení (D91). */
-    responsiblePersonId: string
+    /**
+     * `persons.id` zodpovednej osoby — povinná pri každom novom znení (D91).
+     * Prázdna = tá, ktorú určil už v príprave (ADR-014, D109).
+     */
+    responsiblePersonId?: string
   },
   actor: string,
 ): Promise<PublishResult> {
@@ -672,16 +715,19 @@ export async function publish(
    * znenie, ktoré by ho prevzalo potichu, by ľudí posielalo za človekom,
    * ktorý v zväze nie je. Meno sa berie zo záznamu osoby, nie z formulára.
    */
-  if (!input.responsiblePersonId?.trim()) {
+  const col = await getCollection(DOCUMENTS_COLLECTION)
+  const doc = await col.findOne({ documentId, companyCode }) as Record<string, unknown> | null
+  if (!doc) throw new LibraryError("library.documentNotFound", "Taký dokument tu nie je.")
+
+  // Určená v príprave (ADR-014, D109) platí, kým ju formulár nezmení.
+  const responsiblePersonId = input.responsiblePersonId?.trim()
+    || String((doc.draftResponsible as { personId?: string } | null | undefined)?.personId ?? "")
+  if (!responsiblePersonId) {
     throw new LibraryError(
       "responsibility.personRequired",
       "Zodpovedná osoba je povinná — na ňu sa budú obracať ľudia, ktorí znenie potvrdzujú.",
     )
   }
-
-  const col = await getCollection(DOCUMENTS_COLLECTION)
-  const doc = await col.findOne({ documentId, companyCode }) as Record<string, unknown> | null
-  if (!doc) throw new LibraryError("library.documentNotFound", "Taký dokument tu nie je.")
 
   /*
    * Dátum účinnosti je **súčasťou schválených údajov o znení** (ADR-013,
@@ -695,7 +741,7 @@ export async function publish(
     throw new LibraryError("library.effectiveFromRequired", "Dátum platnosti je povinný — bez neho sa znenie nedá potvrdiť (D6).")
   }
 
-  const responsible = await responsibleSnapshot(companyCode, input.responsiblePersonId)
+  const responsible = await responsibleSnapshot(companyCode, responsiblePersonId)
   if (!responsible) {
     throw new LibraryError(
       "responsibility.unknownPerson",
@@ -861,6 +907,8 @@ export async function publish(
         updatedAt: now,
         updatedBy: actor,
       },
+      // Príprava sa skončila — zodpovedná osoba je odteraz pri znení.
+      $unset: { draftResponsible: "" },
       $push: {
         versions: {
           versionId,

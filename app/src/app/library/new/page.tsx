@@ -17,6 +17,7 @@ import VersionMetaFields from "@/components/VersionMetaFields"
 import PrefillNote from "@/components/PrefillNote"
 import { versionMetaSuggestions, tagOptions } from "@/lib/libraryRead"
 import UploadSubmit from "@/components/UploadSubmit"
+import FlowSteps from "@/components/FlowSteps"
 import { libraryContext } from "@/lib/library"
 import { codelistOptions, CODELISTS } from "@/lib/codelists"
 import { allDepartments, flattenTree } from "@/lib/departments"
@@ -50,6 +51,7 @@ export default async function NewDocumentPage({
   }>(await searchParams)
   // Ponuka musí obsahovať aj to, čo si organizácia dopísala (D55).
   const t = dictionary(ctx.person.language).library.upload
+  const tflow = dictionary(ctx.person.language).library.flow
   const extras = tenantExtras(ctx.tenant)
   const branding = brandingView(ctx.tenant)
   // Oddelenia nie sú číselník v repozitári, ale strom v databáze — iný pre
@@ -103,7 +105,20 @@ export default async function NewDocumentPage({
       />
 
       {/*
-        Číslované sekcie, **nie stepper**.
+        Krokovník postupu znenia (ADR-014, bod 8 rámu). Nie je to sprievodca
+        týmto formulárom — ukazuje, že nahratím sa začína krok 1 z celého
+        postupu, a čo príde potom. Formulár sám sa nemení.
+      */}
+      <FlowSteps
+        states={["current", "todo", "todo", "todo"]}
+        names={tflow.steps}
+        subs={[tflow.subPrepare, "", "", ""]}
+        label={tflow.stepOf(1)}
+      />
+
+      {/*
+        Číslované sekcie, **nie stepper** (krokovník vyššie je postup znenia,
+        nie tohto formulára).
 
         Návrh má tri kroky (Súbor / Metadáta / Schválenie) a prepínanie medzi
         nimi. Nahratie je ale **jedno odoslanie formulára**: súbor aj metadáta
@@ -279,6 +294,7 @@ export default async function NewDocumentPage({
         <div className="upload-submit">
           <UploadSubmit labels={{ submit: t.submit, pending: t.submitPending, pickPdfFirst: t.pickPdfFirst }} />
         </div>
+        <p className="quiet field-hint">{tflow.uploadNext}</p>
       </form>
     </div>
     </AppShell>

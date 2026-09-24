@@ -278,6 +278,8 @@
   - [ ] **Overiť na mobile** (390 px): výber zodpovednej osoby pri zverejnení, karta znenia v knižnici, `/documents/[id]` (kontakt, výber základu), Nastavenie organizácie → Číselníky → Právne základy.
   - [x] **ADR-012 kroky 1–5** ✅ 2026-09-24 (PR #102–#106): dátumy pri osobe, retenčná dávka (režim `report`), rola `dpo` s výkazom a štvrťročným e-mailom, námietky, `/privacy`.
   - [x] **Na produkcii** ✅ 2026-09-24 — `onboarding_init.mjs` (kolekcia `objections`, `audit_ttl`); `migrate:deactivated-at` nemal čo doplniť (žiadna vyradená osoba).
+  - [ ] **Právny základ už počas schvaľovania** (ADR-014, D109) — zodpovedná osoba sa dá určiť v príprave, ale základ určí až po zverejnení: koncept nevidí nikto bez prístupu do knižnice. Treba miesto (napr. `/documents/[id]` s náhľadom konceptu pre zodpovednú osobu) a pole `draftLegalBasis`, ktoré `publish()` prenesie do znenia.
+  - [ ] **Naživo overiť postup znenia (ADR-014)** na `sfz:test_onboarding`: nové znenie → „Uložiť a predložiť" → schválenie → „Zverejniť a prideliť" → krok 4 po odškrtnutí.
   - [ ] **Zapnúť `RETENTION_MODE=delete`** na Verceli (Production) — až po kontrole výkazu `retention` v odpovedi denného cronu `/api/cron/overdue` (log Vercelu). Dnes by nezmazal nič: projekt je mladší ako 3 roky.
   - [x] **Rola `dpo`** ✅ 2026-09-24 — DPO je **Ján Letko** (pridelené na jeho pokyn, audit).
   - [ ] **DPO (Ján) schváli text C1** a zodpovie C2, C3 (`docs/C1_…`–`C3_…`; na vyplnenie ako `C1_C3_ochrana_udajov.docx`, 24. 9.).

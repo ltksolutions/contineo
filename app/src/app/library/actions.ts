@@ -12,13 +12,13 @@
  * druhého (D32).
  */
 
-import { normalizeMeta, parseDate, type VersionMeta } from "@/lib/versionMeta"
+import { normalizeMeta, parseDate, metaCanonical, documentDraftIdentity, type VersionMeta } from "@/lib/versionMeta"
 import { redirect } from "next/navigation"
 import { revalidatePath } from "next/cache"
 import { libraryContext, isContentManager } from "@/lib/library"
 import { isRedirect } from "@/lib/redirects"
 import {
-  uploadDocument, saveDraft, saveDraftMeta, publish, checkMetadata, makeDocumentId, saveMetadata,
+  uploadDocument, saveDraft, saveDraftMeta, saveDraftResponsible, publish, checkMetadata, makeDocumentId, saveMetadata,
   reindex, fixVersion, fixText, LibraryError, type UploadFiles, type IncomingFile,
 } from "@/lib/libraryWrite"
 import { loadFile } from "@/lib/fileStore"
@@ -284,7 +284,8 @@ export async function uploadVersionAction(fd: FormData) {
     redirect(`/library/${encodeURIComponent(v.documentId)}/text?msg=${encodeURIComponent(parts.join(" "))}`)
   } catch (e) {
     if (isRedirect(e)) throw e
-    redirect(`/library/${encodeURIComponent(id)}?msg=${encodeURIComponent(
+    // Späť na formulár nového znenia — tam sa súbor vyberá znova.
+    redirect(`/library/${encodeURIComponent(id)}/version?msg=${encodeURIComponent(
       errorMessage(e, self.language),
     )}&error=1`)
   }
@@ -327,6 +328,76 @@ export async function saveDraftMetaAction(fd: FormData) {
   redirect(`/library/${encodeURIComponent(id)}?msg=${encodeURIComponent(message)}${error ? "&error=1" : ""}#version-meta`)
 }
 
+/**
+ * Krok 1 — Príprava (ADR-014): údaje o znení, zodpovedná osoba a
+ * schvaľovatelia **v jednom formulári**. „Len uložiť" uloží, „Uložiť
+ * a predložiť" navyše otvorí kolo.
+ *
+ * Na čom kolo beží, sa počíta **až po uložení** a na serveri: údaje o znení
+ * sú súčasťou identity konceptu (D107), takže identita z chvíle načítania
+ * stránky by po uložení už nesedela.
+ */
+export async function prepareDraftAction(fd: FormData) {
+  const self = await actor()
+  if (!self) redirect("/")
+  const id = fieldText(fd, "documentId")
+  const submit = fieldText(fd, "intent") === "submit"
+  const m = say(self.language)
+  let message = m.draftPrepared
+  let error = false
+  try {
+    const col = await getCollection(DOCUMENTS_COLLECTION)
+    const before = await col.findOne({ documentId: id, companyCode: self.companyCode })
+    if (!before) throw new LibraryError("library.documentNotFound", "Taký dokument tu nie je.")
+
+    // Údaje o znení len vtedy, keď ich formulár nesie (pri zámku nie)
+    // a keď sa naozaj zmenili — rovnaké uloženie by zapisovalo prázdny audit.
+    if (fieldText(fd, "metaEditable") === "1") {
+      const meta = metaFromForm(fd)
+      const was = before.draftMeta ? normalizeMeta(before.draftMeta as never) : null
+      if (!was || metaCanonical(was) !== metaCanonical(meta)) {
+        await saveDraftMeta(self.companyCode, id, meta, self.email)
+      }
+    }
+
+    const responsibleId = fieldText(fd, "responsiblePersonId")
+    if (responsibleId) await saveDraftResponsible(self.companyCode, id, responsibleId, self.email)
+
+    if (submit) {
+      const after = await col.findOne({ documentId: id, companyCode: self.companyCode })
+      if (!after) throw new LibraryError("library.documentNotFound", "Taký dokument tu nie je.")
+      const round = await submitForApproval({
+        companyCode: self.companyCode,
+        documentId: id,
+        versionId: documentDraftIdentity(after as never),
+        approverIds: fd.getAll("approver").filter(v => typeof v === "string") as string[],
+        note: fieldText(fd, "note"),
+        submittedBy: self.email,
+      })
+      const effectiveFrom = after.draftMeta ? normalizeMeta(after.draftMeta as never).effectiveFrom : null
+      const notified = await notifyApprovers({
+        companyCode: self.companyCode,
+        documentId: id,
+        round,
+        versionLabel: fieldText(fd, "versionLabel"),
+        effectiveFrom: effectiveFrom ? effectiveFrom.toISOString() : "",
+        title: String(after.title ?? id),
+        submittedBy: self.email,
+      })
+      message = m.submittedForApproval(round.approvers.length)
+      if (notified < round.approvers.length) {
+        message += ` ${m.approvalNotAllNotified(round.approvers.length - notified)}`
+      }
+    }
+  } catch (e) {
+    if (isRedirect(e)) throw e
+    message = errorMessage(e, self.language)
+    error = true
+  }
+  revalidatePath(`/library/${id}`)
+  redirect(`/library/${encodeURIComponent(id)}?msg=${encodeURIComponent(message)}${error ? "&error=1" : ""}#flow`)
+}
+
 export async function publishVersionAction(fd: FormData) {
   const self = await actor()
   if (!self) redirect("/")
@@ -335,6 +406,21 @@ export async function publishVersionAction(fd: FormData) {
   let message = ""
   let error = false
   try {
+    // Zodpovedná osoba z prípravy (ADR-014) — `publish()` ju z konceptu
+    // odstráni, upozornenie ju ale potrebuje aj potom.
+    const col = await getCollection(DOCUMENTS_COLLECTION)
+    const before = await col.findOne({ documentId: id, companyCode: self.companyCode })
+    const responsibleId = fieldText(fd, "responsiblePersonId")
+      || String((before?.draftResponsible as { personId?: string } | null | undefined)?.personId ?? "")
+    // Prenos pri zverejnení: dôvod a termín sa overia **pred** zverejnením,
+    // nech chyba vo formulári nevyrobí zverejnené, ale nepridelené znenie.
+    if (fieldText(fd, "carryOver") === "1") {
+      if (!fieldText(fd, "reason")) {
+        throw new AppError("assignment.missingReason", "Dôvod pridelenia je povinný.")
+      }
+      const due = dueFromFields({ mode: fd.get("dueMode"), date: fieldText(fd, "dueDate"), days: fieldText(fd, "dueDays") })
+      if ("error" in due) throw new AppError(due.error, due.error)
+    }
     const day = fieldText(fd, "effectiveFrom")
     const v = await publish(self.companyCode, id, {
       label: fieldText(fd, "label"),
@@ -344,7 +430,7 @@ export async function publishVersionAction(fd: FormData) {
       effectiveFrom: day ? new Date(`${day}T00:00:00.000Z`) : null,
       effectiveFromSource: fieldText(fd, "effectiveFromSource"),
       changeNote: fieldText(fd, "changeNote"),
-      responsiblePersonId: fieldText(fd, "responsiblePersonId"),
+      responsiblePersonId: responsibleId,
     }, self.email)
 
     message = v.alreadyDone
@@ -363,7 +449,6 @@ export async function publishVersionAction(fd: FormData) {
       })
       // Zodpovednej osobe do zvončeka: má určiť právny základ (D91). Ide
       // osobe, nie adrese — a len ak to nie je ten, kto práve zverejnil.
-      const responsibleId = fieldText(fd, "responsiblePersonId")
       if (responsibleId && responsibleId !== self.personId) {
         await notify({
           companyCode: self.companyCode,
@@ -375,6 +460,36 @@ export async function publishVersionAction(fd: FormData) {
             versionLabel: fieldText(fd, "label"),
           },
         })
+      }
+
+      /*
+       * Prenos pridelení ako voľba pri zverejnení (ADR-014, D111). Znenie je
+       * už zverejnené — keby prenos zlyhal (napr. chýba dôvod), zverejnenie
+       * sa nevracia; povie sa to a karta prenosu (krok 4) zostane na detaile.
+       */
+      if (fieldText(fd, "carryOver") === "1") {
+        const ctx = await libraryContext()
+        if (ctx.state === "ready" && isHr(ctx.person)) {
+          try {
+            const after = await col.findOne({ documentId: id, companyCode: self.companyCode })
+            const version = ((after?.versions ?? []) as { versionId: string; label: string; effectiveFrom?: Date | null }[])
+              .find(x => x.versionId === v.versionId)
+            if (after && version) {
+              const r = await carryOverTo({
+                companyCode: self.companyCode,
+                documentId: id,
+                documentTitle: String(after.title ?? id),
+                version,
+                fd,
+                by: self.email,
+              })
+              message += ` ${say(self.language).carriedOver(r.created, r.already)}`
+            }
+          } catch (e) {
+            message += ` ${say(self.language).carryOverFailed} ${errorMessage(e, self.language)}`
+            error = true
+          }
+        }
       }
     }
   } catch (e) {
@@ -572,20 +687,6 @@ export async function carryOverAssignmentsAction(fd: FormData) {
       throw new AppError("assignment.forbidden", "Prideľovať smie personalista.")
     }
 
-    const reason = fieldText(fd, "reason")
-    /*
-     * Termín sa parsuje **pred** cyklom, rovnako ako v `/hr/assign`: je
-     * spoločný pre celý výber a chyba v ňom má vrátiť človeka k formuláru
-     * skôr, než sa čokoľvek zapíše.
-     */
-    const parsed = dueFromFields({
-      mode: fd.get("dueMode"),
-      date: fieldText(fd, "dueDate"),
-      days: fieldText(fd, "dueDays"),
-    })
-    if ("error" in parsed) throw new AppError(parsed.error, parsed.error)
-    const due = parsed.due
-
     // Znenie sa berie zo servera, nie z formulára — keby `versionId` prišlo
     // z prehliadača, dalo by sa prideliť ľubovoľné, aj cudzie.
     const col = await getCollection(DOCUMENTS_COLLECTION)
@@ -598,39 +699,14 @@ export async function carryOverAssignmentsAction(fd: FormData) {
         "Dokument nemá platné znenie — prideliť sa dá len to, čo už platí.",
       )
     }
-    const version = effective.version
-
-    // Publiká tiež zo servera: formulár hovorí **ktoré** z ponúknutých, nie
-    // aké. Inak by sa dalo prideliť publiku, ktoré tento dokument nikdy nemalo.
-    const candidates = await carryOverCandidates(ctx.person.companyCode, id, version.versionId)
-    const picked = new Set(
-      fd.getAll("audience").filter((v): v is string => typeof v === "string"),
-    )
-    const chosen = candidates.filter(c => picked.has(audienceRef(c.audience)))
-    if (chosen.length === 0) {
-      throw new AppError("assignment.noAudience", "Nevybral si žiadne publikum.")
-    }
-
-    let created = 0
-    let already = 0
-    for (const c of chosen) {
-      const r = await assign({
-        companyCode: ctx.person.companyCode,
-        subject: {
-          documentId: id,
-          versionId: version.versionId,
-          documentTitle: String(doc.title ?? id),
-          versionLabel: version.label,
-          effectiveFrom: version.effectiveFrom ? new Date(version.effectiveFrom) : null,
-        },
-        audience: c.audience,
-        reason: reason,
-        assignedBy: ctx.person.email,
-        due: due,
-      })
-      if (r.status === "pridelene") created += 1
-      else already += 1
-    }
+    const { created, already } = await carryOverTo({
+      companyCode: ctx.person.companyCode,
+      documentId: id,
+      documentTitle: String(doc.title ?? id),
+      version: effective.version,
+      fd,
+      by: ctx.person.email,
+    })
     message = say(language).carriedOver(created, already)
   } catch (e) {
     if (isRedirect(e)) throw e
@@ -641,6 +717,68 @@ export async function carryOverAssignmentsAction(fd: FormData) {
   revalidatePath("/library")
   revalidatePath(`/library/${id}`)
   redirect(`/library/${encodeURIComponent(id)}?msg=${encodeURIComponent(message)}${error ? "&error=1" : ""}`)
+}
+
+/**
+ * Prenos pridelení na znenie — spoločné pre kartu prenosu aj pre voľbu pri
+ * zverejnení (ADR-014, D111). Publiká aj znenie sú zo servera; formulár
+ * hovorí len **ktoré** z ponúknutých, dôvod a termín.
+ */
+async function carryOverTo(input: {
+  companyCode: string
+  documentId: string
+  documentTitle: string
+  version: { versionId: string; label: string; effectiveFrom?: Date | string | null }
+  fd: FormData
+  by: string
+}): Promise<{ created: number; already: number }> {
+  const { fd } = input
+  const reason = fieldText(fd, "reason")
+  /*
+   * Termín sa parsuje **pred** cyklom, rovnako ako v `/hr/assign`: je
+   * spoločný pre celý výber a chyba v ňom má vrátiť človeka k formuláru
+   * skôr, než sa čokoľvek zapíše.
+   */
+  const parsed = dueFromFields({
+    mode: fd.get("dueMode"),
+    date: fieldText(fd, "dueDate"),
+    days: fieldText(fd, "dueDays"),
+  })
+  if ("error" in parsed) throw new AppError(parsed.error, parsed.error)
+  const due = parsed.due
+
+  // Publiká zo servera: formulár hovorí **ktoré** z ponúknutých, nie
+  // aké. Inak by sa dalo prideliť publiku, ktoré tento dokument nikdy nemalo.
+  const candidates = await carryOverCandidates(input.companyCode, input.documentId, input.version.versionId)
+  const picked = new Set(
+    fd.getAll("audience").filter((v): v is string => typeof v === "string"),
+  )
+  const chosen = candidates.filter(c => picked.has(audienceRef(c.audience)))
+  if (chosen.length === 0) {
+    throw new AppError("assignment.noAudience", "Nevybral si žiadne publikum.")
+  }
+
+  let created = 0
+  let already = 0
+  for (const c of chosen) {
+    const r = await assign({
+      companyCode: input.companyCode,
+      subject: {
+        documentId: input.documentId,
+        versionId: input.version.versionId,
+        documentTitle: input.documentTitle,
+        versionLabel: input.version.label,
+        effectiveFrom: input.version.effectiveFrom ? new Date(input.version.effectiveFrom) : null,
+      },
+      audience: c.audience,
+      reason: reason,
+      assignedBy: input.by,
+      due: due,
+    })
+    if (r.status === "pridelene") created += 1
+    else already += 1
+  }
+  return { created, already }
 }
 
 /** Uloží údaje o dokumente z detailu. */
