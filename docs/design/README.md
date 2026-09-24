@@ -203,7 +203,7 @@ media queries. (Ak chcete pravý mobilný režim, viď „Responsive behavior".)
 - Pod oddeľovačom tri multiselecty s vyhľadávaním: **Útvar / stredisko**, **Štítky**
   (`codelists/tags.json`), **Autor / schvaľovateľ**
 
-**Multiselect s vyhľadávaním** (`MultiSelect.dc.html`, produkčne rozšírenie
+**Multiselect s vyhľadávaním** (`_archiv/MultiSelect.dc.html`, produkčne rozšírenie
 `components/TagSelect.tsx` / nový `components/MultiSelect.tsx`)
 - Label `11px/650`, `letter-spacing: .06em`, uppercase, `--muted`
 - Kontrolka: `min-height: 32px`, `padding: 4px 6px`, `border-radius: 8px`,
@@ -563,7 +563,7 @@ chyba návrhu, nie zámer. Ostať na **0.16**: zmena koeficientu by potichu prek
 hover stavy u všetkých existujúcich tenantov.
 Prototyp ich nastavuje na `document.documentElement`; v Next.js ich radšej dať ako
 inline `style` na obal (server render, bez bliknutia) — presne ako `tenantStyle()`
-robí dnes. `darken()` a `soft()` sú v `Contineo Intranet.dc.html`, funkcia `darken`
+robí dnes. `darken()` a `soft()` sú v `_archiv/Contineo Intranet.dc.html`, funkcia `darken`
 už existuje v `TenantHeader.tsx` — použiť tú.
 
 **Typografia**
@@ -629,12 +629,12 @@ Prototyp neobsahuje žiadne bitmapy ani vlastné SVG kresby.
 
 | Súbor | Čo obsahuje |
 | --- | --- |
-| `Contineo Intranet.dc.html` | všetkých 7 obrazoviek, app shell, oba varianty navigácie, tokeny, dáta ukážky |
-| `MultiSelect.dc.html` | multiselect s vyhľadávaním, chips, klávesnicou a pridávaním hodnôt |
-| `support.js` | runtime prototypu — **do produkcie nepatrí** |
+| `_archiv/Contineo Intranet.dc.html` | všetkých 7 obrazoviek, app shell, oba varianty navigácie, tokeny, dáta ukážky |
+| `_archiv/MultiSelect.dc.html` | multiselect s vyhľadávaním, chips, klávesnicou a pridávaním hodnôt |
+| `_archiv/support.js` | runtime prototypu — **do produkcie nepatrí** |
 | `github.md` | mapa obrazovka → zdrojové súbory v repozitári |
 
-Otvorte `Contineo Intranet.dc.html` v prehliadači; navigácia je klikateľná,
+Otvorte `_archiv/Contineo Intranet.dc.html` v prehliadači; navigácia je klikateľná,
 filtre, triedenie, označovanie riadkov aj multiselecty sú funkčné.
 Variant navigácie a hustotu prepnete v paneli Tweaks (`layout`, `density`,
 `accent`, `tenantName`).
@@ -654,7 +654,7 @@ Variant navigácie a hustotu prepnete v paneli Tweaks (`layout`, `density`,
    v shelli je `/library` (krok 4) — tam sa shell overí na reálnom obsahu.
    Ostatné stránky sa presúvajú až potom, jedna po druhej, každá s vlastným PR.
    Kým je stránka mimo shellu, funguje presne ako dnes.
-3. **MultiSelect** — nový `components/MultiSelect.tsx` podľa `MultiSelect.dc.html`,
+3. **MultiSelect** — nový `components/MultiSelect.tsx` podľa `_archiv/MultiSelect.dc.html`,
    s `<noscript>` fallbackom a klávesnicou ako `Select.tsx`. Nasadiť na útvary,
    štítky, osoby, typy dokumentov a stav workflow.
 4. **Knižnica** — `app/src/app/library/page.tsx`: doplniť faceted panel, chips,

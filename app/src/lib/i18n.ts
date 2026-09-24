@@ -2159,6 +2159,12 @@ interface Dictionary {
       submitPending: string
       /** Veta pod pruhom — čo sa deje a že to trvá. */
       submitPendingNote: string
+      /** „Zmeniť" pri vybranom súbore (NAHRAVANIE-pdf-a-udaje-o-zneni). */
+      change: string
+      optional: string
+      pickPdfFirst: string
+      /** Variant poznámky o predvyplnení, keď je zdroj dokument Word. */
+      prefillFromWord: string
       /** Dve polia na súbor (ADR-011): PDF povinné, zdroj odporúčaný. */
       pdfTitle: string
       pdfNote: string
@@ -4407,6 +4413,10 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       submit: "Nahrať a previesť",
       submitPending: "Nahrávam a prevádzam…",
       submitPendingNote: "Súbor sa prevádza na text. Pri väčšom dokumente to môže trvať aj minútu — stránku nezatváraj.",
+      change: "Zmeniť",
+      optional: "nepovinné",
+      pickPdfFirst: "Najprv vyber PDF.",
+      prefillFromWord: "Zdroj je dokument Word — prázdne polia sa predvyplnia z tabuľky na jeho prvej strane (Schválil, Dátum schválenia, Dátum účinnosti). Potvrdíš ich na detaile.",
       pdfTitle: "PDF — schvaľovaná podoba (povinné)",
       pdfNote: "Takto dokument uvidia schvaľovatelia aj zamestnanci — vrátane príloh, formulárov a obrázkov. Vo Worde: Súbor → Uložiť ako → PDF.",
       sourceTitle: "Upraviteľný zdroj (odporúčané)",
@@ -6636,6 +6646,10 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       submit: "Nahrát a převést",
       submitPending: "Nahrávám a převádím…",
       submitPendingNote: "Soubor se převádí na text. U většího dokumentu to může trvat i minutu — stránku nezavírej.",
+      change: "Změnit",
+      optional: "nepovinné",
+      pickPdfFirst: "Nejprve vyber PDF.",
+      prefillFromWord: "Zdroj je dokument Word — prázdná pole se předvyplní z tabulky na jeho první straně (Schválil, Datum schválení, Datum účinnosti). Potvrdíš je na detailu.",
       pdfTitle: "PDF — schvalovaná podoba (povinné)",
       pdfNote: "Takto dokument uvidí schvalovatelé i zaměstnanci — včetně příloh, formulářů a obrázků. Ve Wordu: Soubor → Uložit jako → PDF.",
       sourceTitle: "Upravitelný zdroj (doporučeno)",
@@ -8853,6 +8867,10 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       submit: "Upload and convert",
       submitPending: "Uploading and converting…",
       submitPendingNote: "The file is being converted to text. A larger document can take up to a minute — keep this page open.",
+      change: "Change",
+      optional: "optional",
+      pickPdfFirst: "Choose the PDF first.",
+      prefillFromWord: "The source is a Word document — empty fields are prefilled from the table on its first page (Approved by, Approval date, Effective date). You confirm them on the detail page.",
       pdfTitle: "PDF — the version for approval (required)",
       pdfNote: "This is what approvers and employees will see — including annexes, forms and images. In Word: File → Save As → PDF.",
       sourceTitle: "Editable source (recommended)",

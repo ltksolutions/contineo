@@ -107,7 +107,7 @@ Tablet 834 sa od 1440 líši len šírkou obsahu — vlastný rám nepotrebuje.
 
 ## Údaje, ktoré v modeli NEEXISTUJÚ — NEKRESLIŤ
 
-Obe veci sú v starom ráme `Contineo Obrazovky.dc.html`. **Ignoruj ich.**
+Obe veci sú v starom ráme `_archiv/Contineo Obrazovky.dc.html`. **Ignoruj ich.**
 
 ### 1. Rozsah hľadania („Knižnica / Intranet / Verejný web / Archív")
 

@@ -14,6 +14,7 @@ import { MAX_BYTES, MAX_FORM_BYTES, SOURCE_EXTENSIONS } from "@/lib/fileStore"
 import UploadFiles from "@/components/UploadFiles"
 import KeyPreview from "@/components/KeyPreview"
 import VersionMetaFields from "@/components/VersionMetaFields"
+import PrefillNote from "@/components/PrefillNote"
 import { versionMetaSuggestions, tagOptions } from "@/lib/libraryRead"
 import UploadSubmit from "@/components/UploadSubmit"
 import { libraryContext } from "@/lib/library"
@@ -136,6 +137,7 @@ export default async function NewDocumentPage({
               tooLarge: t.fileTooLarge,
               progressTitle: t.submitPending,
               converting: t.submitPendingNote,
+              change: t.change,
             }}
           />
         </section>
@@ -262,8 +264,11 @@ export default async function NewDocumentPage({
           predvyplnia sa z prvej strany dokumentu a potvrdia na detaile (D108).
         */}
         <section className="card upload-section">
-          <h2 className="upload-step"><span className="upload-step-no">3</span>{tm.uploadHeading}</h2>
-          <p className="quiet field-hint" style={{ margin: "0 0 12px" }}>{tm.uploadNote}</p>
+          <h2 className="upload-step">
+            <span className="upload-step-no">3</span>{tm.uploadHeading}
+            <span className="upload-step-opt">{t.optional}</span>
+          </h2>
+          <PrefillNote text={tm.uploadNote} wordText={t.prefillFromWord} />
           <VersionMetaFields
             authors={metaOptions.authors}
             approvers={metaOptions.approvers}
@@ -271,8 +276,8 @@ export default async function NewDocumentPage({
           />
         </section>
 
-        <div>
-          <UploadSubmit labels={{ submit: t.submit, pending: t.submitPending }} />
+        <div className="upload-submit">
+          <UploadSubmit labels={{ submit: t.submit, pending: t.submitPending, pickPdfFirst: t.pickPdfFirst }} />
         </div>
       </form>
     </div>
