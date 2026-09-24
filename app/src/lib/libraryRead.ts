@@ -137,6 +137,8 @@ export interface LibraryDetail extends LibraryRow {
   draftMetaSuggestion?: VersionMeta | null
   /** Zodpovedná osoba určená v príprave (ADR-014, D109). */
   draftResponsible?: ResponsiblePerson | null
+  /** Nový názov dokumentu z prípravy (ADR-015, D112); `null` = bez zmeny. */
+  draftTitle?: string | null
   conversion?: { method: string; warnings: string[]; at: Date }
   processingError?: string | null
   scope?: string
@@ -654,6 +656,7 @@ export async function libraryDetail(
       ? normalizeMeta(d.draftMetaSuggestion as never)
       : d.draftMarkdown ? suggestMetaFromMarkdown(String(d.draftMarkdown)) : null,
     draftResponsible: (d.draftResponsible as ResponsiblePerson | null | undefined) ?? null,
+    draftTitle: typeof d.draftTitle === "string" && d.draftTitle.trim() ? d.draftTitle : null,
     conversion: d.konverzia as LibraryDetail["conversion"],
     processingError: (d.processingError as string | null) ?? null,
   }

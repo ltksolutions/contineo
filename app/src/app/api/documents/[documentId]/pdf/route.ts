@@ -45,8 +45,8 @@ export async function GET(
   if (url.searchParams.get("draft") === "1") {
     const doc = await (await getCollection(DOCUMENTS_COLLECTION)).findOne(
       { companyCode: person.companyCode, documentId },
-      { projection: { draftMarkdown: 1, draftPdf: 1, draftMeta: 1 } },
-    ) as { draftMarkdown?: string; draftPdf?: VersionFile | null; draftMeta?: Record<string, unknown> | null } | null
+      { projection: { draftMarkdown: 1, draftPdf: 1, draftMeta: 1, draftTitle: 1 } },
+    ) as { draftMarkdown?: string; draftPdf?: VersionFile | null; draftMeta?: Record<string, unknown> | null; draftTitle?: string | null } | null
     if (!doc?.draftPdf) return new Response(null, { status: 404 })
     const manager = isContentManager(person)
     const identity = documentDraftIdentity(doc)

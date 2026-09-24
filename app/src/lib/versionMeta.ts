@@ -65,11 +65,19 @@ export function documentDraftIdentity(doc: {
   draftMarkdown?: unknown
   draftPdf?: { sha256?: string | null } | null
   draftMeta?: Partial<Record<keyof VersionMeta, unknown>> | null
+  /** Nový názov dokumentu z prípravy (ADR-015, D112) — schvaľuje sa s textom. */
+  draftTitle?: unknown
 }): string {
+  const meta = doc.draftMeta ? metaCanonical(normalizeMeta(doc.draftMeta)) : null
+  // Názov sa pripája **len keď je** — rovnako ako údaje o znení (D107):
+  // koncept bez nového názvu si zachová identitu a bežiace kolá platia.
+  const title = typeof doc.draftTitle === "string" && doc.draftTitle.trim()
+    ? `title:${doc.draftTitle.replace(/\s+/g, " ").trim()}`
+    : null
   return draftIdentity(
     String(doc.draftMarkdown ?? ""),
     doc.draftPdf?.sha256 ?? null,
-    doc.draftMeta ? metaCanonical(normalizeMeta(doc.draftMeta)) : null,
+    title ? `${meta ?? ""}\n${title}` : meta,
   )
 }
 

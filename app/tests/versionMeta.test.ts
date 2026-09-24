@@ -131,3 +131,53 @@ describe("saveDraftMeta — zámok po predložení (D106)", () => {
       .rejects.toMatchObject({ code: "meta.approvedOnInFuture" })
   })
 })
+
+describe("nový názov v príprave (ADR-015, D112)", () => {
+  beforeEach(() => {
+    col.findOne.mockReset()
+    col.updateOne.mockClear()
+    state.versionStateFor.mockResolvedValue("draft")
+  })
+
+  it("vstupuje do identity konceptu len keď je", () => {
+    const base = { draftMarkdown: "# Čl. 1", draftPdf: { sha256: "abc" }, draftMeta: null }
+    expect(documentDraftIdentity({ ...base, draftTitle: null })).toBe(documentDraftIdentity(base))
+    expect(documentDraftIdentity({ ...base, draftTitle: "Nový názov" })).not.toBe(documentDraftIdentity(base))
+    // Medzery v názve identitu nemenia.
+    expect(documentDraftIdentity({ ...base, draftTitle: "Nový  názov " }))
+      .toBe(documentDraftIdentity({ ...base, draftTitle: "Nový názov" }))
+  })
+
+  it("rovnaký názov ako dnes nič neuloží", async () => {
+    const { saveDraftTitle } = await import("../src/lib/libraryWrite")
+    col.findOne.mockResolvedValue({ documentId: "sfz:a", title: "Poriadok", draftMarkdown: "x" })
+    expect(await saveDraftTitle("SFZ", "sfz:a", "Poriadok", "s@sfz.sk")).toBe(false)
+    expect(col.updateOne).not.toHaveBeenCalled()
+  })
+
+  it("počas kola sa nemení", async () => {
+    const { saveDraftTitle } = await import("../src/lib/libraryWrite")
+    col.findOne.mockResolvedValue({ documentId: "sfz:a", title: "Poriadok", draftMarkdown: "x" })
+    state.versionStateFor.mockResolvedValue("in-review")
+    await expect(saveDraftTitle("SFZ", "sfz:a", "Nový poriadok", "s@sfz.sk")).rejects.toMatchObject({ code: "meta.locked" })
+  })
+
+  it("nový názov sa uloží na koncept", async () => {
+    const { saveDraftTitle } = await import("../src/lib/libraryWrite")
+    col.findOne.mockResolvedValue({ documentId: "sfz:a", title: "Poriadok", draftMarkdown: "x" })
+    expect(await saveDraftTitle("SFZ", "sfz:a", "Nový poriadok", "s@sfz.sk")).toBe(true)
+    const u = col.updateOne.mock.calls[0][1] as { $set: Record<string, unknown> }
+    expect(u.$set.draftTitle).toBe("Nový poriadok")
+  })
+
+  it("úprava dokumentu so zverejneným znením názov nezmení", async () => {
+    const { saveMetadata } = await import("../src/lib/libraryWrite")
+    col.findOne.mockResolvedValue({
+      documentId: "sfz:poriadok", title: "Poriadok", documentKey: "poriadok", sectionKey: "normy", versions: [{ versionId: "v1" }],
+    })
+    await expect(saveMetadata("SFZ", "sfz:a", {
+      title: "Iný názov", scope: "company", accessLevel: "internal", language: "sk",
+    }, "s@sfz.sk")).rejects.toMatchObject({ code: "library.titleLocked" })
+    expect(col.updateOne).not.toHaveBeenCalled()
+  })
+})

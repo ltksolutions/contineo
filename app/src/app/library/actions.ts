@@ -18,7 +18,7 @@ import { revalidatePath } from "next/cache"
 import { libraryContext, isContentManager } from "@/lib/library"
 import { isRedirect } from "@/lib/redirects"
 import {
-  uploadDocument, saveDraft, saveDraftMeta, saveDraftResponsible, publish, checkMetadata, makeDocumentId, saveMetadata,
+  uploadDocument, saveDraft, saveDraftMeta, saveDraftResponsible, saveDraftTitle, publish, checkMetadata, makeDocumentId, saveMetadata,
   reindex, fixVersion, fixText, LibraryError, type UploadFiles, type IncomingFile,
 } from "@/lib/libraryWrite"
 import { loadFile } from "@/lib/fileStore"
@@ -362,6 +362,11 @@ export async function prepareDraftAction(fd: FormData) {
 
     const responsibleId = fieldText(fd, "responsiblePersonId")
     if (responsibleId) await saveDraftResponsible(self.companyCode, id, responsibleId, self.email)
+
+    // Nový názov (ADR-015, D112) — len keď ho formulár nesie (pri zámku nie).
+    if (fieldText(fd, "titleEditable") === "1") {
+      await saveDraftTitle(self.companyCode, id, fieldText(fd, "title"), self.email)
+    }
 
     if (submit) {
       const after = await col.findOne({ documentId: id, companyCode: self.companyCode })
@@ -800,6 +805,12 @@ export async function saveDocumentMetadataAction(fd: FormData) {
       ownerDepartmentId: fieldText(fd, "ownerDepartmentId") || undefined,
       internalNumber: fieldText(fd, "internalNumber") || undefined,
     }, self.email, self.extras)
+    // Priečinok je od 24. 9. 2026 v tom istom formulári (rám
+    // KNIZNICA-uprava-dokumentu, Q2). Presun ide cez `assignDocument()` —
+    // ten istý auditný záznam ako samostatný presun; bez zmeny nezapíše nič.
+    if (fd.has("folderId")) {
+      await assignDocument(self.companyCode, id, fieldText(fd, "folderId") || null, self.email)
+    }
   } catch (e) {
     message = errorMessage(e, self.language)
     error = true

@@ -19,7 +19,7 @@ import { tenantStyle } from "@/components/TenantHeader"
 import { formatDate, dictionary, type UiLanguage } from "@/lib/i18n"
 import Notice from "@/components/Notice"
 import {
-  publishVersionAction, prepareDraftAction, saveDocumentMetadataAction, assignToFolderAction, reindexDocumentAction,
+  publishVersionAction, prepareDraftAction, saveDocumentMetadataAction, reindexDocumentAction,
   fixVersionAction, fixTextAction, revokeVersionAction, cancelApprovalAction,
   carryOverAssignmentsAction, setResponsibleAction,
 } from "../actions"
@@ -210,7 +210,7 @@ export default async function DocumentDetailPage({
   // Identita konceptu = PDF + text + údaje o znení (ADR-011 D96, ADR-013 D107)
   // — na nej beží kolo schvaľovania. Oprava textu (ADR-007) sa ale stráži
   // odtlačkom **len textu**: porovnáva sa s tým, čo bolo v rozdiele na obrazovke.
-  const draftVersionId = draft ? documentDraftIdentity({ draftMarkdown: draft, draftPdf: d.draftPdf, draftMeta: d.draftMeta }) : null
+  const draftVersionId = draft ? documentDraftIdentity({ draftMarkdown: draft, draftPdf: d.draftPdf, draftMeta: d.draftMeta, draftTitle: d.draftTitle }) : null
   const draftTextFingerprint = draft ? textFingerprint(draft) : null
   const draftRounds = draftVersionId ? (rounds.get(draftVersionId) ?? []) : []
   const draftState = stateOf(draftRounds)
@@ -624,6 +624,161 @@ export default async function DocumentDetailPage({
     <div className="detail-page" style={tenantStyle(branding)}>
       <Notice message={message} error={error === "1"} back={base} />
 
+      {/*
+        Úprava dokumentu ako samostatný pohľad (rám KNIZNICA-uprava-dokumentu):
+        pri `?edit=document` sa hlavný stĺpec nahradí formulárom — karta
+        nového znenia, platné znenie ani Správa sa nekreslia. Úseky ako pri
+        nahratí; priečinok je v tom istom formulári (Q2).
+      */}
+      {editDocument ? (
+        <>
+          <p className="detail-back">
+            <Link className="quiet" href={base}>{tflow.versionPageBack}</Link>
+          </p>
+          <p className="quiet detail-lead" style={{ margin: 0 }}>{d.title}</p>
+          <h1 className="page-title">{tflow.editDocument}</h1>
+          <div className="detail-grid">
+            <form action={saveDocumentMetadataAction} className="detail-main edit-form" id="document-data">
+              <input type="hidden" name="documentId" value={d.documentId} />
+
+              <section className="card upload-section">
+                <h2 className="upload-step"><span className="upload-step-no">1</span>{tflow.secBasic}</h2>
+                <div className="upload-grid">
+                  {/* Názov sa pri zverejnenom znení mení len novým znením (Q3,
+                      ADR-015). Hodnota ide skryto, aby ju server dostal nezmenenú. */}
+                  <label className="field upload-wide">
+                    <span className="field-label">{t.title}</span>
+                    {d.versions.length > 0 ? (
+                      <>
+                        <input type="hidden" name="title" value={d.title} />
+                        <input className="field-input" value={d.title} disabled readOnly />
+                        <span className="quiet field-hint">
+                          {tflow.titleLockedBefore}<Link href={`${base}/version`}>{tflow.titleLockedLink}</Link>{tflow.titleLockedAfter}
+                        </span>
+                      </>
+                    ) : (
+                      <>
+                        <input className="field-input" name="title" defaultValue={d.title} required />
+                        <span className="quiet field-hint">{t.titleNote}</span>
+                      </>
+                    )}
+                  </label>
+
+                  <div className="field">
+                    <span className="field-label">{t.category}</span>
+                    <Select language={language}
+                      name="category"
+                      options={[{ value: "", label: t.unset }, ...codelistOptions("category", extras)]}
+                      initial={d.category ?? ""}
+                      fieldLabel={t.category}
+                      searchable
+                    />
+                  </div>
+
+                  <div className="field">
+                    <span className="field-label">{t.accessLevel}</span>
+                    <Select language={language} name="accessLevel" options={codelistOptions("accessLevel")} initial={d.accessLevel ?? "internal"} fieldLabel={t.accessLevel} />
+                  </div>
+
+                  <div className="field">
+                    <span className="field-label">{t.documentLanguage}</span>
+                    <Select language={language} name="language" options={codelistOptions("language")} initial={d.language ?? "sk"} fieldLabel={t.documentLanguage} />
+                  </div>
+                </div>
+              </section>
+
+              <section className="card upload-section">
+                <h2 className="upload-step">
+                  <span className="upload-step-no">2</span>{tflow.secPlacement}
+                  <span className="upload-step-opt">{tflow.optional}</span>
+                </h2>
+                <div className="upload-grid">
+                  <div className="field">
+                    <span className="field-label">{t.folder}</span>
+                    <Select language={language}
+                      name="folderId"
+                      initial={d.folderId ?? ""}
+                      fieldLabel={t.folder}
+                      options={[
+                        { value: "", label: t.folderUnfiled },
+                        ...treeOptions(folderTree.map(r => ({ id: r.folder.id, name: r.folder.name, level: r.level }))),
+                      ]}
+                    />
+                    <span className="quiet field-hint">{t.folderNote}</span>
+                  </div>
+
+                  <div className="field">
+                    <span className="field-label">{tf.ownerDepartment}</span>
+                    <Select language={language}
+                      name="ownerDepartmentId"
+                      initial={d.ownerDepartmentId ?? ""}
+                      fieldLabel={tf.ownerDepartment}
+                      options={[
+                        { value: "", label: tf.ownerDepartmentNone },
+                        ...treeOptions(departmentRows.map(r => ({ id: r.department.id, name: r.department.name, level: r.level }))),
+                      ]}
+                    />
+                    <span className="quiet field-hint">
+                      {departmentRows.length === 0 ? tf.ownerDepartmentEmpty : tf.ownerDepartmentNote}
+                    </span>
+                  </div>
+
+                  <label className="field">
+                    <span className="field-label">{tf.internalNumber}</span>
+                    <input className="field-input" name="internalNumber"
+                           defaultValue={d.internalNumber ?? ""}
+                           maxLength={MAX_INTERNAL_NUMBER}
+                           placeholder={tf.internalNumberPlaceholder}
+                           autoCapitalize="none" autoCorrect="off" />
+                    <span className="quiet field-hint">{tf.internalNumberNote}</span>
+                  </label>
+
+                  <div className="field">
+                    <span className="field-label">{t.scope}</span>
+                    <Select language={language} name="scope" options={codelistOptions("scope")} initial={d.scope ?? "company"} fieldLabel={t.scope} />
+                  </div>
+
+                  <div className="field upload-wide">
+                    <span className="field-label">{t.tags}</span>
+                    <TagSelect
+                      name="tags"
+                      options={await tagOptions(ctx.tenant.companyCode, extras)}
+                      selected={d.tags}
+                      newLabel={t.newTag}
+                      language={language}
+                    />
+                  </div>
+                </div>
+              </section>
+
+              {/* Identifikátor len na čítanie (bod 3). */}
+              <p className="detail-block-small">
+                {t.keyNoteBefore}<code>{d.documentId}</code>{t.keyNoteAfter}
+              </p>
+
+              <div className="set-savebar edit-savebar">
+                <button className="button" type="submit">{t.save}</button>
+                <Link className="button button--quiet" href={base}>{tflow.cancel}</Link>
+                <span className="quiet">{tflow.editSaveNote}</span>
+              </div>
+            </form>
+
+            {/* Čo sa upravuje inde (bod 5) — na telefóne pod formulárom. */}
+            <aside className="detail-side">
+              <section className="card detail-card">
+                <h2 className="detail-card-title">{tflow.elsewhereHeading}</h2>
+                <ul className="edit-elsewhere">
+                  <li><Link href={`${base}/version`}>{tflow.elsewhereVersion}</Link></li>
+                  <li><Link href={hasChangesToPublish ? `${base}#flow` : `${base}?open=fix#current`}>{tflow.elsewhereMeta}</Link></li>
+                  <li><Link href={`${base}?open=responsible#current`}>{tflow.elsewhereResponsible}</Link></li>
+                  <li><Link href={`${base}/text`}>{tflow.elsewhereText}</Link></li>
+                </ul>
+              </section>
+            </aside>
+          </div>
+        </>
+      ) : (
+      <>
       <p className="detail-back">
         <Link className="quiet" href="/library">{t.back}</Link>
       </p>
@@ -662,7 +817,7 @@ export default async function DocumentDetailPage({
             {tflow.downloadPdf}
           </a>
         )}
-        <Link className="button button--quiet" href={`${base}?edit=document#document-data`}>{tflow.editDocument}</Link>
+        <Link className="button button--quiet" href={`${base}?edit=document`}>{tflow.editDocument}</Link>
         {newVersionBlocked ? (
           <span className="button is-disabled" aria-disabled="true" title={effective ? tflow.newVersionBusy : tflow.newVersionFirst}>
             {tflow.newVersion}
@@ -724,6 +879,21 @@ export default async function DocumentDetailPage({
                   <Link className="flow-check-act" href={`${base}/text`}>{tflow.showText}</Link>
                 </div>
               </div>
+
+              {/*
+                Názov dokumentu (ADR-015, D112): pri platnom znení sa mení len
+                novým znením a schvaľuje sa s ním. Predvyplnený z dokumentu;
+                rovnaký názov = bez zmeny.
+              */}
+              {effective && (
+                <label className="field">
+                  <span className="field-label">{t.title}</span>
+                  {!metaIsLocked && <input type="hidden" name="titleEditable" value="1" />}
+                  <input className="field-input" name="title" required disabled={metaIsLocked}
+                         defaultValue={d.draftTitle ?? d.title} />
+                  <span className="quiet field-hint">{tflow.titleNote}</span>
+                </label>
+              )}
 
               {/*
                 Údaje o znení (ADR-013) — **pred** schvaľovaním, lebo sú jeho
@@ -847,6 +1017,9 @@ export default async function DocumentDetailPage({
                   <Link className="flow-check-act" href={`${base}/text`}>{tflow.show}</Link>
                 </div>
               </div>
+              {d.draftTitle && (
+                <p className="detail-block-note">{tflow.newTitle(d.draftTitle)}</p>
+              )}
               {d.draftMeta && <MetaFacts meta={d.draftMeta} language={language} />}
               {nextRows}
             </div>
@@ -1074,92 +1247,9 @@ export default async function DocumentDetailPage({
         preindexovanie. Zatvorené je správny predvolený stav; „Upraviť
         dokument" ju otvorí adresou (`?edit=document`), bez JavaScriptu.
       */}
-      <details className="detail-tools" open={editDocument}>
+      <details className="detail-tools">
         <summary>{tflow.manage}</summary>
         <div className="detail-tools-body">
-      <details className="card detail-block" id="document-data" open={editDocument}>
-        <summary>
-          {t.documentData}
-        </summary>
-
-        <form action={saveDocumentMetadataAction} style={{ display: "grid", gap: 14, marginTop: 14 }}>
-          <input type="hidden" name="documentId" value={d.documentId} />
-
-          <label className="field">
-            <span className="field-label">{t.title}</span>
-            <input className="field-input" name="title" defaultValue={d.title} required />
-            <span className="quiet field-hint">{t.titleNote}</span>
-          </label>
-
-          <div className="field">
-            <span className="field-label">{t.scope}</span>
-            <Select language={language} name="scope" options={codelistOptions("scope")} initial={d.scope ?? "company"} fieldLabel={t.scope} />
-          </div>
-
-          <div className="field">
-            <span className="field-label">{t.accessLevel}</span>
-            <Select language={language} name="accessLevel" options={codelistOptions("accessLevel")} initial={d.accessLevel ?? "internal"} fieldLabel={t.accessLevel} />
-          </div>
-
-          <div className="field">
-            <span className="field-label">{t.documentLanguage}</span>
-            <Select language={language} name="language" options={codelistOptions("language")} initial={d.language ?? "sk"} fieldLabel={t.documentLanguage} />
-          </div>
-
-          <div className="field">
-            <span className="field-label">{t.category}</span>
-            <Select language={language}
-              name="category"
-              options={[{ value: "", label: t.unset }, ...codelistOptions("category", extras)]}
-              initial={d.category ?? ""}
-              fieldLabel={t.category}
-            />
-          </div>
-
-          <div className="field">
-            <span className="field-label">{tf.ownerDepartment}</span>
-            <Select language={language}
-              name="ownerDepartmentId"
-              initial={d.ownerDepartmentId ?? ""}
-              fieldLabel={tf.ownerDepartment}
-              options={[
-                { value: "", label: tf.ownerDepartmentNone },
-                ...treeOptions(departmentRows.map(r => ({ id: r.department.id, name: r.department.name, level: r.level }))),
-              ]}
-            />
-            <span className="quiet field-hint">
-              {departmentRows.length === 0 ? tf.ownerDepartmentEmpty : tf.ownerDepartmentNote}
-            </span>
-          </div>
-
-          <label className="field">
-            <span className="field-label">{tf.internalNumber}</span>
-            <input className="field-input" name="internalNumber"
-                   defaultValue={d.internalNumber ?? ""}
-                   maxLength={MAX_INTERNAL_NUMBER}
-                   placeholder={tf.internalNumberPlaceholder}
-                   autoCapitalize="none" autoCorrect="off" />
-            <span className="quiet field-hint">{tf.internalNumberNote}</span>
-          </label>
-
-          <div className="field">
-            <span className="field-label">{t.tags}</span>
-            <TagSelect
-              name="tags"
-              options={await tagOptions(ctx.tenant.companyCode, extras)}
-              selected={d.tags}
-              newLabel={t.newTag}
-              language={language}
-            />
-          </div>
-
-          <p className="detail-block-small">
-            {t.keyNoteBefore}<code>{d.documentId}</code>{t.keyNoteAfter}
-          </p>
-
-          <div><button className="button" type="submit">{t.save}</button></div>
-        </form>
-      </details>
       <section className="card detail-block">
         <div style={{ display: "flex", gap: 10, alignItems: "baseline", flexWrap: "wrap" }}>
           <h2 className="detail-block-title">{t.text}</h2>
@@ -1204,23 +1294,6 @@ export default async function DocumentDetailPage({
               : t.draftEmpty}
         </p>
       </section>
-      <form action={assignToFolderAction} className="card detail-block tree-form">
-        <input type="hidden" name="documentId" value={d.documentId} />
-        <div className="field">
-          <span className="field-label">{t.folder}</span>
-          <Select language={language}
-            name="folderId"
-            initial={d.folderId ?? ""}
-            fieldLabel={t.folder}
-            options={[
-              { value: "", label: t.folderUnfiled },
-              ...treeOptions(folderTree.map(r => ({ id: r.folder.id, name: r.folder.name, level: r.level }))),
-            ]}
-          />
-          <span className="quiet field-hint">{t.folderNote}</span>
-        </div>
-        <button className="button button--quiet" type="submit">{t.assign}</button>
-      </form>
             {effective && draftDiff && draftDiff.added + draftDiff.removed > 0 && (
               <details className="card detail-block">
                 <summary>{t.textFixHeading}</summary>
@@ -1341,7 +1414,7 @@ export default async function DocumentDetailPage({
           <section className="card detail-card">
             <h2 className="detail-card-title">
               {ts.metaHeading}
-              <Link href={`${base}?edit=document#document-data`}>{tflow.editDocument}</Link>
+              <Link href={`${base}?edit=document`}>{tflow.editDocument}</Link>
             </h2>
             <dl className="detail-meta">
               {([
@@ -1361,6 +1434,8 @@ export default async function DocumentDetailPage({
           </section>
         </aside>
       </div>
+      </>
+      )}
     </div>
     </AppShell>
   )

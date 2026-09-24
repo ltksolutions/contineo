@@ -175,4 +175,19 @@ describe("detail — postup znenia", () => {
     expect(html).toContain("Platné znenie")
     expect(html).toContain("Dôvod opravy")
   })
+
+  it("úprava dokumentu: samostatný pohľad, názov pri zverejnenom znení zamknutý (ADR-015)", async () => {
+    const html = await render({ edit: "document" })
+    expect(html).toContain("Upraviť dokument")
+    expect(html).not.toContain('class="card flow"')
+    expect(html).toContain("novým znením")
+    expect(html).toMatch(/<input type="hidden" name="title" value="Pracovný poriadok SFZ"\/>/)
+    expect(html).toContain('name="folderId"')
+  })
+
+  it("krok 1 pri platnom znení ponúka nový názov", async () => {
+    const html = await render()
+    expect(html).toContain('name="titleEditable"')
+    expect(html).toMatch(/name="title"[^>]*value="Pracovný poriadok SFZ"|value="Pracovný poriadok SFZ"[^>]*name="title"/)
+  })
 })
