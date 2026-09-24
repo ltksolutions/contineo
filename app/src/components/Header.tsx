@@ -67,20 +67,15 @@ function ThemeIcon({ choice: choice }: { choice: ThemeChoice }) {
 }
 
 /**
- * Iniciály z mena, a keď meno nie je, z adresy.
+ * Iniciály z mena, a keď meno nie je, z adresy (`lib/initials.ts`).
  *
  * Fotografia zatiaľ nie je zámerne: Google ju v profile vracia, Microsoft nie
  * — vyžaduje volanie Graphu a oprávnenie navyše od IT zákazníka. Polovica
  * ľudí s fotografiou a polovica bez nej vyzerá horšie než iniciály pre
  * všetkých, a doplniť sa dá kedykoľvek bez prepisovania.
  */
-export function initials(name: string | undefined, email: string): string {
-  const words = (name ?? "").trim().split(/\s+/).filter(Boolean)
-  if (words.length >= 2) return (words[0][0] + words[words.length - 1][0]).toUpperCase()
-  if (words.length === 1 && words[0].length > 0) return words[0].slice(0, 2).toUpperCase()
-  const before = email.split("@")[0] ?? ""
-  return (before.slice(0, 2) || "?").toUpperCase()
-}
+export { initials } from "@/lib/initials"
+import { initials } from "@/lib/initials"
 
 /**
  * Odtieň avatara z adresy.

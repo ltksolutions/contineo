@@ -5162,6 +5162,89 @@ html[data-theme="dark"] { --skeleton-sheen: rgba(255, 255, 255, 0.07); }
   }
 }
 
+/* PDF na telefóne ako dlaždica (ZNENIE-kontakt-a-privacy, bod 5). Od 640 px
+   sa skryje a ostáva vložené PDF s tlačidlom a riadkom. */
+.pdf-tile {
+  display: flex; align-items: center; gap: 12px; min-height: 56px;
+  padding: 10px 12px; border: 1px solid var(--line); border-radius: 10px;
+  background: var(--surface); color: var(--ink); text-decoration: none;
+}
+.pdf-tile-ico {
+  display: grid; place-items: center; flex: 0 0 auto; width: 32px; height: 38px;
+  border-radius: 5px; background: var(--surface-2); color: var(--muted);
+  font-size: 9.5px; font-weight: 800;
+}
+.pdf-tile-main { flex: 1; min-width: 0; display: grid; }
+.pdf-tile-name { font-size: 14px; font-weight: 600; }
+.pdf-tile-meta { font-size: 12px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pdf-tile-go { font-size: 18px; color: var(--muted); }
+.pdf-view-link { display: none; }
+@media (min-width: 640px) {
+  .pdf-tile { display: none; }
+  .pdf-view-link { display: flex; }
+}
+
+/* ── Znenie pre čitateľa (ZNENIE-kontakt-a-privacy) ───────────────────── */
+
+.zn-head { display: grid; gap: 4px; margin: 0 0 24px; }
+.zn-version {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px;
+  margin: 0; font-size: var(--fs-body);
+}
+
+/* Zbalený právny základ (bod 6): bežná veľkosť, odkaz na vlastnom riadku. */
+.zn-basis > summary { cursor: pointer; font-size: var(--fs-body); font-weight: 600; }
+.zn-basis-ref { display: block; margin-top: 2px; font-weight: 400; font-size: var(--fs-small); color: var(--muted); }
+
+/* Karta kontaktu (bod 2). */
+.contact { display: grid; gap: 12px; padding: 16px; margin-top: 24px; }
+.contact-kicker { margin: 0; font-size: var(--fs-small); color: var(--muted); }
+.contact-person { display: flex; gap: 12px; align-items: flex-start; }
+.contact-av {
+  display: grid; place-items: center; flex: 0 0 auto; width: 40px; height: 40px;
+  border-radius: 50%; background: var(--accent-soft); color: var(--accent-strong);
+  font-size: 13px; font-weight: 700;
+}
+.contact-main { flex: 1; min-width: 0; display: grid; gap: 4px; }
+.contact-name { font-weight: 600; font-size: var(--fs-body); }
+.contact-links { display: flex; flex-wrap: wrap; gap: 6px; }
+.contact-link {
+  display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 0 10px;
+  border: 1px solid var(--line); border-radius: 8px; background: var(--bg);
+  color: var(--ink); font-size: 13px; text-decoration: none; overflow-wrap: anywhere;
+}
+.contact-link--quiet {
+  border-color: transparent; background: none; color: var(--muted);
+  text-decoration: underline; text-underline-offset: 2px; padding: 0 4px;
+}
+@media (min-width: 640px) { .contact-link { min-height: 32px; } }
+.contact-basis {
+  display: grid; gap: 2px; margin: 0; padding-top: 12px;
+  border-top: 1px solid var(--line); font-size: var(--fs-small);
+}
+.contact-basis dt { color: var(--muted); }
+.contact-basis dd { margin: 0; }
+.contact-gone {
+  margin: 0; padding: 10px 12px; border-radius: 9px;
+  background: var(--warn-bg); color: var(--warn-fg); font-size: 13px; line-height: 1.5;
+}
+
+/* Pätička karty potvrdenia (bod 3) — ostáva aj po potvrdení. */
+.ack-privacy {
+  display: flex; gap: 8px; align-items: baseline;
+  margin: 16px 0 0; padding-top: 12px; border-top: 1px solid var(--line);
+  font-size: var(--fs-small); color: var(--muted);
+}
+.ack-privacy a { color: var(--ink); text-underline-offset: 2px; }
+
+/* Voľby právneho základu ako dlaždice (bod 4). */
+.hr-choice--tile {
+  padding: 10px 12px; margin-top: 6px;
+  border: 1px solid var(--line); border-radius: 9px;
+}
+.hr-choice--tile:has(input:checked) { background: var(--accent-soft); border-color: var(--accent); }
+.hr-choice-ref { display: block; }
+
 /* Text na vyhľadávanie pod PDF — zbalený, lebo potvrdzuje sa PDF. */
 .approval-search-text,
 .document-search-text { margin-top: 12px; }

@@ -49,11 +49,12 @@ export default function LegalBasisForm({
           <fieldset key={category} className="hr-group">
             <legend className="field-label">{t.basisLabel[category]}</legend>
             {list.map(o => (
-              <label key={o.key} className="hr-choice">
+              <label key={o.key} className="hr-choice hr-choice--tile">
                 <input type="radio" name="legalBasisKey" value={o.key} required defaultChecked={currentKey === o.key} />
                 <span>
                   {o.label}
-                  {o.reference && <span className="quiet field-hint"> {o.reference}</span>}
+                  {/* Odkaz na zákon na vlastnom riadku (ZNENIE-kontakt-a-privacy, bod 4). */}
+                  {o.reference && <span className="quiet field-hint hr-choice-ref">{o.reference}</span>}
                 </span>
               </label>
             ))}

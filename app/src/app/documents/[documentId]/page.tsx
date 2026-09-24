@@ -12,6 +12,7 @@
 
 import Link from "next/link"
 import VersionMetaLine from "@/components/VersionMetaLine"
+import { initials } from "@/lib/initials"
 import { notFound, redirect } from "next/navigation"
 import { onboardingContext } from "@/lib/session"
 import { recordOpen } from "@/lib/documentOpens"
@@ -147,21 +148,23 @@ export default async function DocumentPage({
 
       <h1 className="page-title">{doc.title}</h1>
 
+      {/*
+        Hlavička znenia (ZNENIE-kontakt-a-privacy, bod 1): riadok verzie
+        s termínovým chipom a pod ním údaje o znení (ADR-013) v jednom obale,
+        nie zápornými okrajmi.
+      */}
       {version.ok ? (
-        <p className="quiet" style={{ fontSize: "var(--fs-body)", margin: "0 0 28px" }}>
-          {t.version(version.version.label, formatDate(version.version.effectiveFrom!, person.language))}
-          {/* Po lehote len chip v --bad-bg, nie červená karta: prekročený
-              termín potvrdenie nezakazuje a obrazovka sa nemá tváriť, že áno. */}
-          {due && (
-            <span className={`due-chip due-chip--${dueState(due, now)}`}>
-              {tOverview.by(formatDate(due, person.language))}
-            </span>
-          )}
-        </p>
-      ) : null}
-      {/* Autor a kto znenie schválil (ADR-013) — pod označením znenia. */}
-      {version.ok ? (
-        <div style={{ margin: "-20px 0 24px" }}>
+        <div className="zn-head">
+          <p className="quiet zn-version">
+            <span>{t.version(version.version.label, formatDate(version.version.effectiveFrom!, person.language))}</span>
+            {/* Po lehote len chip v --bad-bg, nie červená karta: prekročený
+                termín potvrdenie nezakazuje a obrazovka sa nemá tváriť, že áno. */}
+            {due && (
+              <span className={`due-chip due-chip--${dueState(due, now)}`}>
+                {tOverview.by(formatDate(due, person.language))}
+              </span>
+            )}
+          </p>
           <VersionMetaLine author={version.version.author} approvedBy={version.version.approvedBy}
                            approvedOn={version.version.approvedOn} language={person.language} />
         </div>
@@ -178,10 +181,13 @@ export default async function DocumentPage({
       */}
       {version.ok && canSetBasis && (
         version.version.legalBasis ? (
-          <details className="card" style={{ padding: 16, margin: "0 0 24px" }}>
-            <summary style={{ cursor: "pointer" }}>
+          <details className="card zn-basis" style={{ padding: 16, margin: "0 0 24px" }}>
+            {/* Bod 6: súhrn v bežnej veľkosti, odkaz na zákon na vlastnom riadku. */}
+            <summary>
               {tr.legalBasis}: {basisName(version.version)}
-              {version.version.legalBasisReference && ` · ${version.version.legalBasisReference}`}
+              {version.version.legalBasisReference && (
+                <span className="zn-basis-ref">{version.version.legalBasisReference}</span>
+              )}
             </summary>
             <div style={{ marginTop: 12 }}>
               <LegalBasisForm
@@ -196,7 +202,8 @@ export default async function DocumentPage({
             </div>
           </details>
         ) : (
-          <section className="card" style={{ padding: 16, margin: "0 0 24px" }}>
+          // Bod 4: úloha zodpovednej osoby s okrajom akcentu, ako ďalší krok v prehľade.
+          <section className="card duty-card is-next" style={{ margin: "0 0 24px" }}>
             <h2 style={{ fontSize: "var(--fs-section)", margin: "0 0 6px" }}>{tr.yourTaskHeading}</h2>
             <p className="quiet" style={{ margin: "0 0 12px" }}>{tr.yourTaskNote}</p>
             <LegalBasisForm
@@ -255,30 +262,44 @@ export default async function DocumentPage({
             vzniká pri čítaní, a kto nerozumie, nemá potvrdzovať naslepo.
             Telefón a e-mail sú odkazy — na mobile sa dá rovno zavolať.
           */}
+          {/*
+            Karta kontaktu (bod 2): iniciály, e-mail a telefón ako rámčeky na
+            palec (pod 640 px 44 px), právny základ pod čiarou. Nefunkčný
+            kontakt je upozornenie, nie sivá veta — človek sa má dozvedieť,
+            že tu odpoveď nedostane.
+          */}
           {contact && (
-            <section className="card" style={{ padding: 16, marginTop: 24, fontSize: "var(--fs-body)" }}>
+            <section className="card contact">
               {contact.active ? (
                 <>
-                  <div className="quiet" style={{ fontSize: "var(--fs-small)", margin: "0 0 4px" }}>{tr.contactHeading}</div>
-                  <div style={{ fontWeight: 600 }}>{contact.fullName}</div>
-                  <div style={{ display: "flex", flexWrap: "wrap", gap: "4px 14px", marginTop: 4 }}>
-                    <a href={`mailto:${contact.email}`}>{contact.email}</a>
-                    {contact.mobilePhone && (
-                      <a href={`tel:${contact.mobilePhone.replace(/\s+/g, "")}`}>{contact.mobilePhone}</a>
-                    )}
-                    <Link className="quiet" href={`/directory?q=${encodeURIComponent(contact.fullName)}`}>
-                      {tr.contactProfile}
-                    </Link>
+                  <p className="contact-kicker">{tr.contactHeading}</p>
+                  <div className="contact-person">
+                    <span className="contact-av" aria-hidden="true">{initials(contact.fullName, contact.email)}</span>
+                    <div className="contact-main">
+                      <div className="contact-name">{contact.fullName}</div>
+                      <div className="contact-links">
+                        <a className="contact-link" href={`mailto:${contact.email}`}>{contact.email}</a>
+                        {contact.mobilePhone && (
+                          <a className="contact-link" href={`tel:${contact.mobilePhone.replace(/\s+/g, "")}`}>{contact.mobilePhone}</a>
+                        )}
+                        <Link className="contact-link contact-link--quiet" href={`/directory?q=${encodeURIComponent(contact.fullName)}`}>
+                          {tr.contactProfile}
+                        </Link>
+                      </div>
+                    </div>
                   </div>
                 </>
               ) : (
-                <p className="quiet" style={{ margin: 0 }}>{tr.contactGone}</p>
+                <p className="contact-gone" role="status">{tr.contactGone}</p>
               )}
               {version.version.legalBasis && (
-                <div className="quiet" style={{ fontSize: "var(--fs-small)", marginTop: 8 }}>
-                  {tr.legalBasis}: {basisName(version.version)}
-                  {version.version.legalBasisReference && ` · ${version.version.legalBasisReference}`}
-                </div>
+                <dl className="contact-basis">
+                  <dt>{tr.legalBasis}</dt>
+                  <dd>
+                    {basisName(version.version)}
+                    {version.version.legalBasisReference && ` · ${version.version.legalBasisReference}`}
+                  </dd>
+                </dl>
               )}
             </section>
           )}
@@ -315,9 +336,12 @@ export default async function DocumentPage({
             )}
 
             {/* Informovanie (čl. 13, C1) — pri každom potvrdení, nie len raz. */}
-            <p className="quiet" style={{ fontSize: "var(--fs-small)", margin: "14px 0 0" }}>
-              {dictionary(person.language).privacy.linkBefore}
-              <Link href="/privacy">{dictionary(person.language).privacy.link}</Link>
+            <p className="ack-privacy">
+              <span aria-hidden="true">ⓘ</span>
+              <span>
+                {dictionary(person.language).privacy.linkBefore}
+                <Link href="/privacy">{dictionary(person.language).privacy.link}</Link>
+              </span>
             </p>
           </section>
         </>
