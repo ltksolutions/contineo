@@ -1522,6 +1522,20 @@ html[data-theme="dark"] select.field-input {
   margin: 0;
 }
 
+/*
+ * `<fieldset>` má v prehliadači predvolene `min-width: min-content` — na
+ * rozdiel od `<div>` sa nezúži pod šírku najdlhšieho nezalomiteľného obsahu.
+ * Na telefóne tak `/hr/assign` roztiahol stránku na 441 px a spodná lišta
+ * aj formulár pretiekli do strany (24. 9. 2026, pri snímkach pre Claude
+ * Design). Platí pre všetky skupiny polí, nielen pre túto.
+ */
+fieldset { min-width: 0; }
+.hr-choice { overflow-wrap: anywhere; }
+/* Voliteľný štítok (oddelenie, skupina) sa pri dlhom názve smie zalomiť —
+   „Národné tréningové centrum Senec" odsadené v strome by inak na telefóne
+   pretieklo. Štítky stavu (`.tag` bez `--field`) zostávajú v jednom riadku. */
+.tag--field { max-width: 100%; white-space: normal; text-align: left; }
+
 .hr-group legend {
   padding: 0 6px;
 }
