@@ -5585,3 +5585,47 @@ html[data-theme="dark"] { --skeleton-sheen: rgba(255, 255, 255, 0.07); }
 @media (max-width: 639px) {
   .privacy-main p, .privacy-list li { font-size: 15px; }
 }
+
+/* ── Vyradenie osoby (rám OSOBY-skoncenie-vztahu, 24. 9. 2026) ─────────────
+   Nevratná akcia má vyzerať inak ako úprava telefónu: „!" v hlavičke,
+   päta so sivým pozadím, „Vyradiť" s červeným obrysom. */
+.button--danger { background: var(--surface); color: var(--bad-fg); border: 1px solid var(--bad-fg); }
+.button--danger:hover { background: var(--bad-bg); }
+.ex { padding: 0; overflow: hidden; }
+.ex-head { display: flex; gap: 10px; align-items: center; padding: 14px 18px; border-bottom: 1px solid var(--line); }
+.ex-head h2 { font-size: var(--fs-section); margin: 0; }
+.ex-ico {
+  display: grid; place-items: center; width: 26px; height: 26px; border-radius: 50%;
+  background: var(--bad-bg); color: var(--bad-fg); font-weight: 800; font-size: 13px; flex: 0 0 auto;
+}
+.ex-body { padding: 16px 18px; display: grid; gap: 16px; }
+.ex-note { margin: 0; font-size: var(--fs-body); line-height: 1.55; }
+.ex-foot { padding: 14px 18px; border-top: 1px solid var(--line); background: var(--bg); display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.ex-copy { user-select: all; font-size: 13px; overflow-wrap: anywhere; }
+.ex-facts { padding: 12px 14px; border: 1px solid var(--line); border-radius: 10px; background: var(--bg); }
+
+/* Časová os: vodorovne, na telefóne zvisle. */
+.ex-tl {
+  list-style: none; margin: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
+  padding: 12px 14px; border: 1px solid var(--line); border-radius: 10px; background: var(--bg);
+}
+.ex-tl-step { display: grid; gap: 3px; position: relative; padding-top: 18px; font-size: 12.5px; min-width: 0; }
+.ex-tl-step::before { content: ""; position: absolute; top: 5px; left: 0; right: 0; height: 2px; background: var(--line); }
+.ex-tl-step:first-child::before { left: 6px; }
+.ex-tl-step:last-child::before { right: auto; width: 8px; }
+.ex-tl-dot { position: absolute; top: 0; left: 0; width: 12px; height: 12px; border-radius: 50%; background: var(--surface); border: 2px solid var(--muted); }
+.ex-tl-step.is-now .ex-tl-dot { border-color: var(--bad-fg); background: var(--bad-fg); }
+.ex-tl-step.is-end .ex-tl-dot { border-color: var(--ink); }
+.ex-tl-step b { font-weight: 650; }
+.ex-tl-step span:last-child { color: var(--muted); padding-right: 8px; }
+.ex-return { padding: 14px 18px; display: flex; gap: 12px; align-items: center; justify-content: space-between; flex-wrap: wrap; }
+.ex-return p { margin: 0; flex: 1 1 260px; font-size: var(--fs-body); }
+@media (max-width: 639px) {
+  .ex-head, .ex-body, .ex-foot { padding-left: 14px; padding-right: 14px; }
+  .ex-foot > .button, .ex-return > .button { width: 100%; min-height: 44px; flex-basis: auto; }
+  .ex-tl { grid-template-columns: minmax(0, 1fr); gap: 10px; }
+  .ex-tl-step { padding: 0 0 0 22px; }
+  .ex-tl-step::before { top: 14px; bottom: -12px; left: 5px; right: auto; width: 2px; height: auto; }
+  .ex-tl-step:first-child::before { left: 5px; }
+  .ex-tl-step:last-child::before { display: none; }
+}
