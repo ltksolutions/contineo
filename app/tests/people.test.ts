@@ -22,6 +22,7 @@ import { HR_ROLE } from "../src/lib/hr"
 import { PLATFORM_ROLE } from "../src/lib/admin"
 import { CONTENT_ROLE } from "../src/lib/library"
 import { EVALUATOR_ROLE } from "../src/lib/evaluation"
+import { DPO_ROLE } from "../src/lib/dpo"
 import type { Person } from "../src/lib/persons"
 import type { Tenant } from "../src/lib/tenants"
 
@@ -110,7 +111,7 @@ describe("co sa da priradit", () => {
     // Patrí tenantovi dodávateľa a má vlastnú cestu (`npm run admin`).
     expect(ASSIGNABLE_ROLES as readonly string[]).not.toContain(PLATFORM_ROLE)
     expect(ASSIGNABLE_ROLES as readonly string[])
-      .toEqual([HR_ROLE, PEOPLE_ROLE, CONTENT_ROLE, EVALUATOR_ROLE])
+      .toEqual([HR_ROLE, PEOPLE_ROLE, CONTENT_ROLE, EVALUATOR_ROLE, DPO_ROLE])
   })
 })
 

@@ -32,11 +32,12 @@ import { availableOptions } from "./codelistsTenant"
 import { allDepartments, pathIdsTo, pathTo } from "./departments"
 import { AppError } from "./appError"
 import { EVALUATOR_ROLE } from "./evaluation"
+import { DPO_ROLE } from "./dpo"
 
 export const PEOPLE_ROLE = "people-admin"
 
 /** Roly, ktoré sa dajú prideliť z tejto obrazovky. */
-export const ASSIGNABLE_ROLES = [HR_ROLE, PEOPLE_ROLE, CONTENT_ROLE, EVALUATOR_ROLE] as const
+export const ASSIGNABLE_ROLES = [HR_ROLE, PEOPLE_ROLE, CONTENT_ROLE, EVALUATOR_ROLE, DPO_ROLE] as const
 
 export function isPeopleAdmin(person: Person | null): boolean {
   return Boolean(person?.roles?.includes(PEOPLE_ROLE))

@@ -469,6 +469,53 @@ export function approvalEmail(
 }
 
 /**
+ * Štvrťročný výkaz právnych základov pre DPO (ADR-012, D104).
+ *
+ * V e-maile sú **len počty**, nie zoznam predpisov: zoznam je na `/dpo`
+ * za prihlásením a e-mail sa preposiela ľahšie, než sa zdá.
+ */
+export function dpoReportEmail(
+  link: string,
+  host: string,
+  quarter: string,
+  summary: { total: number; legalObligation: number; legitimateInterest: number; withProblems: number },
+  language: UiLanguage = "sk",
+  branding?: SignInBranding,
+): Omit<Message, "to"> {
+  const s = dictionary(language).dpoEmail
+  const organisation = branding?.displayName ?? "Contineo"
+  const accent = branding?.accentColor ?? "#232a35"
+  const logo = logoTag(branding, host)
+  const lines = [
+    s.total(summary.total),
+    s.legalObligation(summary.legalObligation),
+    s.legitimateInterest(summary.legitimateInterest),
+    s.withProblems(summary.withProblems),
+  ]
+
+  const text = [s.intro(quarter), "", ...lines, "", link, "", s.note].join("\n")
+  const html = `<!doctype html>
+<html lang="${language}"><body style="margin:0;padding:24px;background:#f5f6f8;font-family:ui-sans-serif,system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;color:#161b22">
+  <div style="max-width:520px;margin:0 auto;background:#fff;border:1px solid rgba(20,28,42,.12);border-radius:12px;padding:28px">
+    <div style="font-size:18px;font-weight:700;letter-spacing:-.02em;margin-bottom:6px">${logo}<span style="vertical-align:middle">${escapujHtml(organisation)}</span></div>
+    <div style="font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:#5c6675;margin-bottom:22px">${escapujHtml(s.subtitle)}</div>
+    <p style="font-size:15.5px;line-height:1.65;margin:0 0 16px">${escapujHtml(s.intro(quarter))}</p>
+    <div style="border-left:3px solid ${accent};padding:2px 0 2px 14px;margin:0 0 20px;font-size:15px;line-height:1.7">
+      ${lines.map(l => `<div>${escapujHtml(l)}</div>`).join("")}
+    </div>
+    <a href="${link}" style="display:inline-block;background:${accent};color:#fff;text-decoration:none;border-radius:10px;padding:12px 22px;font-size:15px;font-weight:600">
+      ${escapujHtml(s.button)}
+    </a>
+    <p style="font-size:13px;line-height:1.6;color:#5c6675;margin:22px 0 0">${escapujHtml(s.note)}</p>
+    <hr style="border:none;border-top:1px solid rgba(20,28,42,.12);margin:22px 0 14px">
+    <div style="font-size:12px;color:#5c6675">${escapujHtml(host)} · LTK Solutions</div>
+  </div>
+</body></html>`
+
+  return { subject: s.subject(organisation, quarter), text, html }
+}
+
+/**
  * Pripomienka termínu (ADR-004, krok 4). **Jedna správa na človeka**, nie na
  * povinnosť — rovnaké pravidlo ako pri `reminderEmail()`.
  *
