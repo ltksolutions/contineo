@@ -25,6 +25,7 @@ import { brandingView } from "@/lib/tenants"
 import { tenantStyle } from "@/components/TenantHeader"
 import { formatDate, UI_LANGUAGES, dictionary } from "@/lib/i18n"
 import { savePersonAction, togglePersonStatusAction, resendInviteAction, setEndedAtAction } from "../actions"
+import { addYears, RETENTION_YEARS } from "@/lib/retention"
 import { normalizeQuery, type RawQuery } from "@/lib/urlParams"
 import AppShell from "@/components/AppShell"
 
@@ -349,24 +350,28 @@ export default async function PersonDetailPage({
           </form>
         )}
 
-        {/* Rozostupy drží mriežka `.detail-tools-body`, nie okraj karty. */}
-        <form action={togglePersonStatusAction} className="card" style={{ padding: 20, display: "grid", gap: 12 }}>
-          <input type="hidden" name="id" value={o.id} />
-          <input type="hidden" name="email" value={o.email} />
-          <input type="hidden" name="status" value={excluded ? "invited" : "inactive"} />
-
-          <h2 style={{ fontSize: "var(--fs-section)", margin: 0 }}>{excluded ? t.returnHeading : t.excludeHeading}</h2>
-
-          {excluded ? (
-            <>
-              <p className="quiet" style={{ margin: 0, fontSize: "var(--fs-body)" }}>
-                {t.returnNoteBefore}<strong>{t.returnNoteHighlight}</strong>{t.returnNoteAfter}
-              </p>
-              <div><button className="button" type="submit">{t.returnSubmit}</button></div>
-            </>
-          ) : (
-            <>
-              <p className="quiet" style={{ margin: 0, fontSize: "var(--fs-body)" }}>{t.excludeNote}</p>
+        {/*
+          Vyradenie ako karta nevratnej akcie (rám OSOBY-skoncenie-vztahu):
+          hlavička s „!", časová os, adresa na opísanie a „Vyradiť" v päte.
+          Rozostupy drží mriežka `.detail-tools-body`, nie okraj karty.
+        */}
+        {!excluded && (
+          <form action={togglePersonStatusAction} className="card ex">
+            <input type="hidden" name="id" value={o.id} />
+            <input type="hidden" name="email" value={o.email} />
+            <input type="hidden" name="status" value="inactive" />
+            <div className="ex-head">
+              <span className="ex-ico" aria-hidden="true">!</span>
+              <h2>{t.excludeHeading}</h2>
+            </div>
+            <div className="ex-body">
+              <p className="ex-note">{t.excludeNote}</p>
+              {/* Obrázok toho, čo hovorí text vyššie a nápoveda dátumu (Ján 24. 9.). */}
+              <ol className="ex-tl" aria-hidden="true">
+                <li className="ex-tl-step is-now"><span className="ex-tl-dot" /><b>{t.tlDeactivate}</b><span>{t.tlDeactivateSub}</span></li>
+                <li className="ex-tl-step"><span className="ex-tl-dot" /><b>{t.tlEnded}</b><span>{t.tlEndedSub}</span></li>
+                <li className="ex-tl-step is-end"><span className="ex-tl-dot" /><b>{t.tlRetention(RETENTION_YEARS)}</b><span>{t.tlRetentionSub}</span></li>
+              </ol>
               {/* Skončenie vzťahu (ADR-012, D100) — od neho plynie lehota dokladov.
                   Nepovinné: dátum z personalistiky často príde až neskôr. */}
               <label className="field">
@@ -376,13 +381,17 @@ export default async function PersonDetailPage({
               </label>
               <label className="field">
                 <span className="field-label">{t.confirmLabel}</span>
+                {/* Adresa na opísanie priamo pod popiskom (bod 3). */}
+                <code className="ex-copy">{o.email}</code>
                 <input className="field-input" name="confirmation" autoCapitalize="none" autoCorrect="off" />
                 <span className="quiet field-hint">{t.confirmNote}</span>
               </label>
-              <div><button className="button button--quiet" type="submit">{t.excludeSubmit}</button></div>
-            </>
-          )}
-        </form>
+            </div>
+            <div className="ex-foot">
+              <button className="button button--danger" type="submit">{t.excludeSubmit}</button>
+            </div>
+          </form>
+        )}
 
         {/*
           Pri vyradenej osobe: odkedy plynie lehota dokladov a oprava dátumu
@@ -390,20 +399,51 @@ export default async function PersonDetailPage({
           rôzne rozhodnutia.
         */}
         {excluded && (
-          <form action={setEndedAtAction} className="card" style={{ padding: 20, display: "grid", gap: 12 }}>
+          <form action={setEndedAtAction} className="card ex">
             <input type="hidden" name="id" value={o.id} />
-            <h2 style={{ fontSize: "var(--fs-section)", margin: 0 }}>{t.endedAtHeading}</h2>
-            <p className="quiet" style={{ margin: 0, fontSize: "var(--fs-body)" }}>
-              {o.deactivatedAt && `${t.deactivatedOn(formatDate(o.deactivatedAt, language))} `}
-              {o.endedAt ? t.endedAtCurrent(formatDate(o.endedAt, language)) : t.endedAtMissing}
+            <div className="ex-head"><h2>{t.endedAtHeading}</h2></div>
+            <div className="ex-body">
+              <dl className="facts ex-facts">
+                <div>
+                  <dt>{t.factDeactivated}</dt>
+                  <dd>{o.deactivatedAt ? formatDate(o.deactivatedAt, language) : "—"}</dd>
+                </div>
+                <div>
+                  <dt>{t.factEnded}</dt>
+                  <dd>{o.endedAt ? formatDate(o.endedAt, language) : "—"}</dd>
+                </div>
+                {/* Odvodené z pravidla ADR-012 (D100), nikde sa neukladá (Ján 24. 9.). */}
+                {(o.endedAt ?? o.deactivatedAt) && (
+                  <div>
+                    <dt>{t.factDeleteFrom}</dt>
+                    <dd>{formatDate(addYears(new Date((o.endedAt ?? o.deactivatedAt)!), RETENTION_YEARS), language)}</dd>
+                  </div>
+                )}
+              </dl>
+              {!o.endedAt && <p className="quiet field-hint" style={{ margin: 0 }}>{t.endedAtMissing}</p>}
+              <label className="field">
+                <span className="field-label">{t.endedAtLabel}</span>
+                <input className="field-input" type="date" name="endedAt" max={todayIso}
+                       defaultValue={o.endedAt ? o.endedAt.toISOString().slice(0, 10) : ""} />
+                <span className="quiet field-hint">{t.endedAtNote}</span>
+              </label>
+            </div>
+            <div className="ex-foot">
+              <button className="button button--quiet" type="submit">{t.endedAtSubmit}</button>
+            </div>
+          </form>
+        )}
+
+        {/* „Vrátiť osobu" — malá karta pod skončením (bod 5). */}
+        {excluded && (
+          <form action={togglePersonStatusAction} className="card ex-return">
+            <input type="hidden" name="id" value={o.id} />
+            <input type="hidden" name="email" value={o.email} />
+            <input type="hidden" name="status" value="invited" />
+            <p className="quiet">
+              {t.returnNoteBefore}<strong>{t.returnNoteHighlight}</strong>{t.returnNoteAfter}
             </p>
-            <label className="field">
-              <span className="field-label">{t.endedAtLabel}</span>
-              <input className="field-input" type="date" name="endedAt" max={todayIso}
-                     defaultValue={o.endedAt ? o.endedAt.toISOString().slice(0, 10) : ""} />
-              <span className="quiet field-hint">{t.endedAtNote}</span>
-            </label>
-            <div><button className="button button--quiet" type="submit">{t.endedAtSubmit}</button></div>
+            <button className="button button--quiet" type="submit">{t.returnSubmit}</button>
           </form>
         )}
         </div>

@@ -1496,6 +1496,16 @@ interface Dictionary {
       endedAtCurrent: (date: string) => string
       endedAtMissing: string
       endedAtSubmit: string
+      /** Rám OSOBY-skoncenie-vztahu (24. 9. 2026): časová os a fakty vyradenej osoby. */
+      tlDeactivate: string
+      tlDeactivateSub: string
+      tlEnded: string
+      tlEndedSub: string
+      tlRetention: (years: number) => string
+      tlRetentionSub: string
+      factDeactivated: string
+      factEnded: string
+      factDeleteFrom: string
     }
     actions: {
       saved: string
@@ -3958,6 +3968,15 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       endedAtCurrent: (date) => `Vzťah skončil ${date}.`,
       endedAtMissing: "Dátum skončenia nie je vyplnený — lehota plynie odo dňa vyradenia.",
       endedAtSubmit: "Uložiť dátum",
+      tlDeactivate: "Vyradenie",
+      tlDeactivateSub: "dnes · neprihlási sa",
+      tlEnded: "Vzťah skončil",
+      tlEndedSub: "dátum nižšie · nevyplnený → od vyradenia",
+      tlRetention: n => `+ ${n} roky`,
+      tlRetentionSub: "potvrdenia sa zmažú",
+      factDeactivated: "Vyradená",
+      factEnded: "Vzťah skončil",
+      factDeleteFrom: "Potvrdenia sa zmažú od",
     },
     actions: {
       saved: "Uložené.",
@@ -6309,6 +6328,15 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       endedAtCurrent: (date) => `Vztah skončil ${date}.`,
       endedAtMissing: "Datum skončení není vyplněné — lhůta běží ode dne vyřazení.",
       endedAtSubmit: "Uložit datum",
+      tlDeactivate: "Vyřazení",
+      tlDeactivateSub: "dnes · nepřihlásí se",
+      tlEnded: "Vztah skončil",
+      tlEndedSub: "datum níže · nevyplněné → od vyřazení",
+      tlRetention: n => `+ ${n} roky`,
+      tlRetentionSub: "potvrzení se smažou",
+      factDeactivated: "Vyřazena",
+      factEnded: "Vztah skončil",
+      factDeleteFrom: "Potvrzení se smažou od",
     },
     actions: {
       saved: "Uloženo.",
@@ -8651,6 +8679,15 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       endedAtCurrent: (date) => `Relationship ended on ${date}.`,
       endedAtMissing: "The end date is not filled in — retention runs from the day of exclusion.",
       endedAtSubmit: "Save date",
+      tlDeactivate: "Deactivation",
+      tlDeactivateSub: "today · can no longer sign in",
+      tlEnded: "Relationship ended",
+      tlEndedSub: "date below · if empty → from deactivation",
+      tlRetention: n => `+ ${n} years`,
+      tlRetentionSub: "acknowledgements are deleted",
+      factDeactivated: "Deactivated",
+      factEnded: "Relationship ended",
+      factDeleteFrom: "Acknowledgements deleted from",
     },
     actions: {
       saved: "Saved.",
