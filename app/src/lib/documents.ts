@@ -179,6 +179,19 @@ export interface Version {
   legalBasisKey?: string
   legalBasisLabel?: string
   legalBasisChanges?: LegalBasisChange[]
+
+  /**
+   * Údaje o znení (ADR-013, D106). Dátum účinnosti je `effectiveFrom` vyššie.
+   * Chýbajú pri zneniach spred ADR-013.
+   */
+  author?: string | null
+  approvedBy?: string | null
+  approvedOn?: Date | null
+  /**
+   * Údaje o znení (vrátane dátumu účinnosti) boli **súčasťou schválenia**
+   * (D107) — dátum účinnosti sa preto opravou znenia (D82) meniť nedá.
+   */
+  metaApproved?: boolean
 }
 
 /** Len tá časť `documents`, ktorú potrebuje onboarding. */

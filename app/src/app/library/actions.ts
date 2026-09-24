@@ -12,12 +12,13 @@
  * druhého (D32).
  */
 
+import { normalizeMeta, parseDate, type VersionMeta } from "@/lib/versionMeta"
 import { redirect } from "next/navigation"
 import { revalidatePath } from "next/cache"
 import { libraryContext, isContentManager } from "@/lib/library"
 import { isRedirect } from "@/lib/redirects"
 import {
-  uploadDocument, saveDraft, publish, checkMetadata, makeDocumentId, saveMetadata,
+  uploadDocument, saveDraft, saveDraftMeta, publish, checkMetadata, makeDocumentId, saveMetadata,
   reindex, fixVersion, fixText, LibraryError, type UploadFiles, type IncomingFile,
 } from "@/lib/libraryWrite"
 import { loadFile } from "@/lib/fileStore"
@@ -111,6 +112,26 @@ function fieldText(fd: FormData, actorName: string): string {
 }
 
 /** Hlásenia akcií v jazyku prihláseného človeka. */
+/**
+ * Údaje o znení z formulára (ADR-013). Dátum z `<input type="date">` ide
+ * ako deň v UTC; nečitateľný dátum sa odmietne, nezahodí.
+ */
+function metaFromForm(fd: FormData): VersionMeta {
+  const date = (name: string) => {
+    const v = fieldText(fd, name)
+    if (!v) return null
+    const d = parseDate(v)
+    if (!d) throw new LibraryError("meta.badDate", "Dátum v údajoch o znení nie je platný dátum.")
+    return d
+  }
+  return normalizeMeta({
+    author: fieldText(fd, "metaAuthor"),
+    approvedBy: fieldText(fd, "metaApprovedBy"),
+    approvedOn: date("metaApprovedOn"),
+    effectiveFrom: date("metaEffectiveFrom"),
+  })
+}
+
 function say(language: UiLanguage) {
   return dictionary(language).library.actions
 }
@@ -173,7 +194,7 @@ export async function uploadAction(fd: FormData) {
     // Táto obrazovka zakladá **nový** dokument. Keď kľúč už existuje, zápis
     // sa odmietne — dovtedy ticho prepísal koncept, metadáta aj pôvodný
     // súbor existujúceho dokumentu (D80).
-    const v = await uploadDocument(meta, files, self.email, "new")
+    const v = await uploadDocument(meta, files, self.email, "new", metaFromForm(fd))
 
     revalidatePath("/library")
     // Rovno do editora: po nahratí nasleduje čítanie prevedeného textu
@@ -241,7 +262,7 @@ export async function uploadVersionAction(fd: FormData) {
       internalNumber: (before.internalNumber as string | null) ?? undefined,
     }, self.extras)
 
-    const v = await uploadDocument(meta, files, self.email, "version")
+    const v = await uploadDocument(meta, files, self.email, "version", metaFromForm(fd))
 
     // **Porovnanie s platným znením hneď, nie až v editore.** Bez neho sa nedá
     // odlíšiť novela od znovunahratia toho istého PDF — a to je presne tá
@@ -287,6 +308,25 @@ export async function saveTextAction(fd: FormData) {
   redirect(`/library/${encodeURIComponent(id)}/text?msg=${encodeURIComponent(message)}${error ? "&error=1" : ""}`)
 }
 
+/** Uloží údaje o znení konceptu (ADR-013). Zámok po predložení stráži `saveDraftMeta()`. */
+export async function saveDraftMetaAction(fd: FormData) {
+  const self = await actor()
+  if (!self) redirect("/")
+  const id = fieldText(fd, "documentId")
+  let message: string
+  let error = false
+  try {
+    await saveDraftMeta(self.companyCode, id, metaFromForm(fd), self.email)
+    message = say(self.language).metaSaved
+  } catch (e) {
+    if (isRedirect(e)) throw e
+    message = errorMessage(e, self.language)
+    error = true
+  }
+  revalidatePath(`/library/${id}`)
+  redirect(`/library/${encodeURIComponent(id)}?msg=${encodeURIComponent(message)}${error ? "&error=1" : ""}#version-meta`)
+}
+
 export async function publishVersionAction(fd: FormData) {
   const self = await actor()
   if (!self) redirect("/")
@@ -299,8 +339,9 @@ export async function publishVersionAction(fd: FormData) {
     const v = await publish(self.companyCode, id, {
       label: fieldText(fd, "label"),
       // Dátum bez času a v UTC — `effectiveFrom` je deň, nie okamih, a
-      // miestne pásmo by ho pri polnoci posunulo o deň.
-      effectiveFrom: new Date(`${day}T00:00:00.000Z`),
+      // miestne pásmo by ho pri polnoci posunulo o deň. Pole je vo formulári
+      // len pri koncepte bez údajov o znení (ADR-013); inak ho berie `publish()`.
+      effectiveFrom: day ? new Date(`${day}T00:00:00.000Z`) : null,
       effectiveFromSource: fieldText(fd, "effectiveFromSource"),
       changeNote: fieldText(fd, "changeNote"),
       responsiblePersonId: fieldText(fd, "responsiblePersonId"),

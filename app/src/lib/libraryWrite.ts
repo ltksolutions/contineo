@@ -24,7 +24,7 @@ import { getCollection } from "./mongodb"
 import { DOCUMENTS_COLLECTION, type VersionFile } from "./documents"
 import { validAcknowledgements } from "./acknowledgements"
 import { chunkText, DEFAULT_PROFILE } from "./chunker.mjs"
-import { textFingerprint, draftIdentity, chunkingFingerprint, needsReindex, CHUNKER_VERSION } from "./chunkIdentity"
+import { textFingerprint, chunkingFingerprint, needsReindex, CHUNKER_VERSION } from "./chunkIdentity"
 import { textFixProblem, textDiff, versionFixProblem, type TextFixProblem } from "./textFix"
 import { checkValue, checkList, KEY_PATTERN } from "./codelists"
 import { slugifyKey } from "./slug"
@@ -37,6 +37,7 @@ import { toChunkerProfile, chunkingFor, type ChunkingProfile, type ChunkingProfi
 import { TENANTS_COLLECTION } from "./tenants"
 import { AppError } from "./appError"
 import { publishBlock, APPROVALS_COLLECTION } from "./approvals"
+import { documentDraftIdentity, normalizeMeta, isEmptyMeta, suggestMetaFromMarkdown, metaLocked, type VersionMeta } from "./versionMeta"
 import { allDepartments } from "./departments"
 import { versionStateFor } from "./approvalsDb"
 import { responsibleSnapshot } from "./versionResponsibilityDb"
@@ -331,6 +332,8 @@ export async function uploadDocument(
   files: UploadFiles,
   actor: string,
   mode: UploadMode,
+  /** Údaje o znení z formulára (ADR-013). Prázdne = doplní sa na detaile. */
+  versionMeta: VersionMeta | null = null,
 ): Promise<UploadResult> {
   const documentId = makeDocumentId(meta)
   const col = await getCollection(DOCUMENTS_COLLECTION)
@@ -439,6 +442,14 @@ export async function uploadDocument(
         // `versions[]`, takže ďalšie nahratie ich pri znení neprepíše (D97).
         draftPdf: asVersionFile(pdf),
         draftSource: source ? asVersionFile(source) : null,
+        /*
+          Údaje o znení (ADR-013). Nové nahratie je nový koncept — údaje
+          predošlého sa **neprenášajú**, lebo patria inému súboru. Vyplnené
+          vo formulári sa uložia hneď (človek ich videl); návrh z prvej strany
+          dokumentu sa len ponúkne (D108).
+        */
+        draftMeta: versionMeta && !isEmptyMeta(versionMeta) ? versionMeta : null,
+        draftMetaSuggestion: suggestMetaFromMarkdown(converted.markdown),
         updatedAt: now,
         updatedBy: actor,
       },
@@ -541,6 +552,57 @@ export async function saveDraft(
   if (!r.matchedCount) throw new LibraryError("library.documentNotFound", "Taký dokument tu nie je.")
 }
 
+/**
+ * Uloží údaje o znení konceptu (ADR-013, D106).
+ *
+ * **Kým beží kolo alebo je koncept schválený, zmena sa odmietne.** Údaje sú
+ * súčasťou schváleného (D107); zmena by schválenie potichu zrušila a na
+ * zverejnenie by išlo niečo, čo nikto neschválil.
+ */
+export async function saveDraftMeta(
+  companyCode: string,
+  documentId: string,
+  input: VersionMeta,
+  actor: string,
+  now: Date = new Date(),
+): Promise<void> {
+  const meta = normalizeMeta(input)
+  if (meta.approvedOn && meta.approvedOn.getTime() > now.getTime()) {
+    throw new LibraryError("meta.approvedOnInFuture", "Dátum schválenia nemôže byť v budúcnosti.")
+  }
+
+  const col = await getCollection(DOCUMENTS_COLLECTION)
+  const doc = await col.findOne({ documentId, companyCode }) as Record<string, unknown> | null
+  if (!doc) throw new LibraryError("library.documentNotFound", "Taký dokument tu nie je.")
+  if (!String(doc.draftMarkdown ?? "").trim()) {
+    throw new LibraryError("meta.noDraft", "Dokument nemá koncept — údaje o znení sa zadávajú pri novom znení.")
+  }
+
+  const state = await versionStateFor(companyCode, documentId, documentDraftIdentity(doc))
+  if (metaLocked(state, Boolean(doc.draftMeta))) {
+    throw new LibraryError(
+      "meta.locked",
+      "Údaje o znení sa už meniť nedajú — koncept je na schválení alebo schválený. Zmena by zrušila schválenie; nahraj nové znenie.",
+    )
+  }
+
+  const before = doc.draftMeta ? normalizeMeta(doc.draftMeta as never) : null
+  await col.updateOne(
+    { documentId, companyCode },
+    { $set: { draftMeta: isEmptyMeta(meta) ? null : meta, updatedAt: now, updatedBy: actor } },
+  )
+  const day = (d: Date | null | undefined) => (d ? d.toISOString().slice(0, 10) : null)
+  await writeAudit({
+    companyCode, subject: "document", action: "changed", actor,
+    targetId: documentId, targetLabel: String(doc.title ?? documentId),
+    changes: diff(
+      before ? { ...before, approvedOn: day(before.approvedOn), effectiveFrom: day(before.effectiveFrom) } : {},
+      { ...meta, approvedOn: day(meta.approvedOn), effectiveFrom: day(meta.effectiveFrom) },
+    ),
+    note: "údaje o znení (ADR-013)",
+  })
+}
+
 export interface PublishResult {
   versionId: string
   chunks: number
@@ -568,7 +630,8 @@ export async function publish(
   documentId: string,
   input: {
     label: string
-    effectiveFrom: Date
+    /** Len pre koncept bez údajov o znení (spred ADR-013); inak sa berie z nich. */
+    effectiveFrom?: Date | null
     effectiveFromSource?: string
     changeNote?: string
     /** `persons.id` zodpovednej osoby — povinná pri každom novom znení (D91). */
@@ -583,9 +646,6 @@ export async function publish(
       "Označenie znenia je povinné — objaví sa doslovne v každom zázname o potvrdení. " +
       "Napíš to, čo je v dokumente (napríklad: úplné znenie z 27. 2. 2026), nie vymyslené číslo.",
     )
-  }
-  if (!(input.effectiveFrom instanceof Date) || Number.isNaN(input.effectiveFrom.getTime())) {
-    throw new LibraryError("library.effectiveFromRequired", "Dátum platnosti je povinný — bez neho sa znenie nedá potvrdiť (D6).")
   }
 
   /*
@@ -622,6 +682,18 @@ export async function publish(
   const col = await getCollection(DOCUMENTS_COLLECTION)
   const doc = await col.findOne({ documentId, companyCode }) as Record<string, unknown> | null
   if (!doc) throw new LibraryError("library.documentNotFound", "Taký dokument tu nie je.")
+
+  /*
+   * Dátum účinnosti je **súčasťou schválených údajov o znení** (ADR-013,
+   * D106) a pri zverejnení sa už nezadáva — formulár by ho inak dovolil
+   * zmeniť po schválení. Z formulára sa berie len pri koncepte bez údajov
+   * (spred ADR-013).
+   */
+  const draftMeta = doc.draftMeta ? normalizeMeta(doc.draftMeta as never) : null
+  const effectiveFrom = draftMeta?.effectiveFrom ?? input.effectiveFrom ?? null
+  if (!(effectiveFrom instanceof Date) || Number.isNaN(effectiveFrom.getTime())) {
+    throw new LibraryError("library.effectiveFromRequired", "Dátum platnosti je povinný — bez neho sa znenie nedá potvrdiť (D6).")
+  }
 
   const responsible = await responsibleSnapshot(companyCode, input.responsiblePersonId)
   if (!responsible) {
@@ -680,7 +752,7 @@ export async function publish(
   // je to presne odtlačok textu ako doteraz.
   const draftPdf = (doc.draftPdf as VersionFile | null | undefined) ?? null
   const draftSource = (doc.draftSource as VersionFile | null | undefined) ?? null
-  const versionId = draftIdentity(markdown, draftPdf?.sha256)
+  const versionId = documentDraftIdentity({ draftMarkdown: markdown, draftPdf, draftMeta })
   const chunkingId = chunkingFingerprint(chunks, { ...DEFAULT_PROFILE, ...forChunker })
   const now = new Date()
 
@@ -760,7 +832,7 @@ export async function publish(
       verziaChunkera: CHUNKER_VERSION,
       embeddedAt: now,
       isActive: true,
-      effectiveFrom: input.effectiveFrom,
+      effectiveFrom: effectiveFrom,
       effectiveTo: null,
       createdAt: now,
     })),
@@ -771,7 +843,7 @@ export async function publish(
   // nové platnosť naozaj má.
   await col.updateOne(
     { documentId, companyCode },
-    { $set: { "versions.$[stara].effectiveTo": input.effectiveFrom, "versions.$[stara].isActive": false } },
+    { $set: { "versions.$[stara].effectiveTo": effectiveFrom, "versions.$[stara].isActive": false } },
     { arrayFilters: [{ "stara.effectiveTo": null, "stara.versionId": { $ne: versionId } }] },
   )
 
@@ -784,7 +856,7 @@ export async function publish(
         markdown,
         status: "published",
         processingStatus: "indexed" as ProcessingState,
-        effectiveFrom: input.effectiveFrom,
+        effectiveFrom: effectiveFrom,
         effectiveTo: null,
         updatedAt: now,
         updatedBy: actor,
@@ -793,7 +865,7 @@ export async function publish(
         versions: {
           versionId,
           label,
-          effectiveFrom: input.effectiveFrom,
+          effectiveFrom: effectiveFrom,
           effectiveTo: null,
           isActive: true,
           contentHash: versionId,
@@ -802,6 +874,13 @@ export async function publish(
           // Právny základ sa tu zámerne nezapisuje: určuje ho zodpovedná
           // osoba, nie ten, kto znenie zverejňuje (D91).
           responsiblePerson: responsible,
+          // Údaje o znení (ADR-013) — kópia schválených.
+          ...(draftMeta ? {
+            author: draftMeta.author,
+            approvedBy: draftMeta.approvedBy,
+            approvedOn: draftMeta.approvedOn,
+            metaApproved: true,
+          } : {}),
           markdown,
           // Kópia pri znení (D97): ďalšie nahratie prepíše koncept, nie toto.
           ...(draftPdf ? { pdf: draftPdf } : {}),
@@ -819,7 +898,7 @@ export async function publish(
   await writeAudit({
     companyCode, subject: "document", action: "published", actor: actor,
     targetId: documentId, targetLabel: `${meta.title} — ${label}`,
-    note: `${chunks.length} úsekov · platné od ${input.effectiveFrom.toISOString().slice(0, 10)}` +
+    note: `${chunks.length} úsekov · platné od ${effectiveFrom.toISOString().slice(0, 10)}` +
       (input.effectiveFromSource ? ` · zdroj: ${input.effectiveFromSource}` : "") +
       ` · zodpovedná osoba: ${responsible.fullName}`,
   })
@@ -1161,6 +1240,15 @@ export async function fixVersion(
     (!v.effectiveFrom || new Date(v.effectiveFrom).getTime() !== input.effectiveFrom.getTime())
 
   const changesLabel = Boolean(input.label?.trim()) && input.label!.trim() !== v.label
+
+  // Dátum účinnosti bol súčasťou schválenia (ADR-013, D107) — oprava ho
+  // nezmení ani pred prvým potvrdením. Nové znenie áno.
+  if (changesDate && (v as { metaApproved?: boolean }).metaApproved) {
+    throw new LibraryError(
+      "meta.effectiveFromApproved",
+      "Dátum účinnosti bol schválený spolu so znením — zmeniť ho možno len novým znením a novým schválením.",
+    )
+  }
 
   const problem = versionFixProblem({
     acknowledgements: acknowledgementCount,

@@ -294,6 +294,26 @@ interface Dictionary {
     link: string
   }
 
+  versionMeta: {
+    heading: string
+    intro: string
+    author: string
+    authorHint: string
+    approvedBy: string
+    approvedByHint: string
+    approvedOn: string
+    effectiveFrom: string
+    effectiveFromHint: string
+    save: string
+    locked: string
+    voidsApproval: string
+    suggested: string
+    missing: string
+    uploadHeading: string
+    uploadNote: string
+    fromMeta: (date: string) => string
+  }
+
   dpoEmail: {
     subject: (organisation: string, quarter: string) => string
     subtitle: string
@@ -2055,6 +2075,7 @@ interface Dictionary {
     /** Hlásenia serverových akcií — chodia späť cez `?msg=`. */
     actions: {
       converted: string
+      metaSaved: string
       convertedWithWarnings: (warnings: string) => string
       versionSameAsPublished: string
       versionDiffers: (added: number, removed: number) => string
@@ -2349,6 +2370,25 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       version: date => `Verzia textu: ${date}`,
       linkBefore: "Čo sa pri potvrdení ukladá a ako dlho: ",
       link: "Ochrana osobných údajov",
+    },
+    versionMeta: {
+      heading: "Údaje o znení",
+      intro: "Autor, kto znenie schválil a dátumy. Sú súčasťou schválenia — schvaľovateľ ich vidí pri PDF a po predložení sa už meniť nedajú.",
+      author: "Autor",
+      authorHint: "Osoba, oddelenie alebo komisia, ktorá dokument pripravila.",
+      approvedBy: "Schválil",
+      approvedByHint: "Osoba alebo orgán, napríklad Výkonný výbor SFZ.",
+      approvedOn: "Dátum schválenia",
+      effectiveFrom: "Dátum účinnosti",
+      effectiveFromHint: "Povinný pred predložením na schválenie. Je aj v potvrdzovacej formulke; pri zverejnení sa už nezadáva.",
+      save: "Uložiť údaje",
+      locked: "Koncept je na schválení alebo schválený — údaje sa už meniť nedajú. Zmena je možná len novým znením.",
+      voidsApproval: "Koncept bol schválený ešte bez údajov o znení. Ich uložením schválenie prestane platiť a koncept treba predložiť znova — schvaľovatelia tak schvália aj tieto údaje.",
+      suggested: "Predvyplnené z prvej strany dokumentu — skontroluj a ulož. Kým ich neuložíš, nie sú súčasťou znenia.",
+      missing: "Údaje o znení zatiaľ nie sú uložené. Bez dátumu účinnosti sa koncept nedá predložiť na schválenie.",
+      uploadHeading: "Údaje o znení",
+      uploadNote: "Nepovinné už tu — ak ich nevyplníš, predvyplnia sa z prvej strany dokumentu a potvrdíš ich na detaile.",
+      fromMeta: date => `Dátum účinnosti ${date} — zo schválených údajov o znení.`,
     },
     dpoEmail: {
       subject: (org, quarter) => `Výkaz právnych základov ${quarter} \u2014 ${org}`,
@@ -3258,6 +3298,12 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "library.emptyText": "Prázdny text sa uložiť nedá — dokument by nemal čo obsahovať.",
     "library.labelRequired": "Označenie znenia je povinné — objaví sa doslovne v každom zázname o potvrdení. Napíš to, čo je v dokumente (napríklad: úplné znenie z 27. 2. 2026), nie vymyslené číslo.",
     "library.effectiveFromRequired": "Dátum platnosti je povinný — bez neho sa znenie nedá potvrdiť (D6).",
+    "meta.badDate": "Dátum v údajoch o znení nie je platný dátum.",
+    "meta.approvedOnInFuture": "Dátum schválenia nemôže byť v budúcnosti.",
+    "meta.noDraft": "Dokument nemá koncept — údaje o znení sa zadávajú pri novom znení.",
+    "meta.locked": "Údaje o znení sa už meniť nedajú — koncept je na schválení alebo schválený. Zmena by zrušila schválenie; nahraj nové znenie.",
+    "meta.effectiveFromApproved": "Dátum účinnosti bol schválený spolu so znením — zmeniť ho možno len novým znením a novým schválením.",
+    "meta.effectiveFromRequired": "Pred predložením doplň v údajoch o znení dátum účinnosti.",
     "library.effectiveFromSourceRequired": "Zdroj dátumu platnosti je povinný — napíš, odkiaľ dátum je (napríklad uznesenie VV SFZ č. … z …). Po prvom potvrdení sa dátum už meniť nedá.",
     "library.documentHasNoText": "Dokument nemá text — najprv nahraj súbor alebo napíš znenie.",
     "library.noChunks": "Z textu nevznikol ani jeden úsek. Skontroluj, či má dokument členenie na články alebo nadpisy.",
@@ -4283,6 +4329,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     },
     actions: {
       converted: "Prevedené. Prečítaj text a porovnaj ho s originálom.",
+      metaSaved: "Údaje o znení uložené.",
       convertedWithWarnings: (warnings) => `Prevedené. ${warnings}`,
       versionSameAsPublished: "Pozor: prevedený text je zhodný s platným znením — nahratý súbor neprináša žiadnu zmenu.",
       versionDiffers: (added, removed) => `Oproti platnému zneniu: ${added} pridaných, ${removed} odobraných riadkov.`,
@@ -4554,6 +4601,25 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       version: date => `Verze textu: ${date}`,
       linkBefore: "Co se při potvrzení ukládá a jak dlouho: ",
       link: "Ochrana osobních údajů",
+    },
+    versionMeta: {
+      heading: "Údaje o znění",
+      intro: "Autor, kdo znění schválil, a data. Jsou součástí schválení — schvalovatel je vidí u PDF a po předložení se už měnit nedají.",
+      author: "Autor",
+      authorHint: "Osoba, oddělení nebo komise, která dokument připravila.",
+      approvedBy: "Schválil",
+      approvedByHint: "Osoba nebo orgán, například Výkonný výbor.",
+      approvedOn: "Datum schválení",
+      effectiveFrom: "Datum účinnosti",
+      effectiveFromHint: "Povinné před předložením ke schválení. Je i v potvrzovací formulce; při zveřejnění se už nezadává.",
+      save: "Uložit údaje",
+      locked: "Koncept je ve schvalování nebo schválený — údaje se už měnit nedají. Změna je možná jen novým zněním.",
+      voidsApproval: "Koncept byl schválen ještě bez údajů o znění. Jejich uložením schválení přestane platit a koncept je třeba předložit znovu — schvalovatelé tak schválí i tyto údaje.",
+      suggested: "Předvyplněno z první strany dokumentu — zkontroluj a ulož. Dokud je neuložíš, nejsou součástí znění.",
+      missing: "Údaje o znění zatím nejsou uložené. Bez data účinnosti nelze koncept předložit ke schválení.",
+      uploadHeading: "Údaje o znění",
+      uploadNote: "Nepovinné už zde — pokud je nevyplníš, předvyplní se z první strany dokumentu a potvrdíš je na detailu.",
+      fromMeta: date => `Datum účinnosti ${date} — ze schválených údajů o znění.`,
     },
     dpoEmail: {
       subject: (org, quarter) => `Výkaz právních základů ${quarter} \u2014 ${org}`,
@@ -5463,6 +5529,12 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "library.emptyText": "Prázdný text uložit nelze — dokument by neměl co obsahovat.",
     "library.labelRequired": "Označení znění je povinné — objeví se doslovně v každém záznamu o potvrzení. Napiš to, co je v dokumentu (například: úplné znění z 27. 2. 2026), ne vymyšlené číslo.",
     "library.effectiveFromRequired": "Datum platnosti je povinné — bez něj znění nelze potvrdit (D6).",
+    "meta.badDate": "Datum v údajích o znění není platné datum.",
+    "meta.approvedOnInFuture": "Datum schválení nemůže být v budoucnosti.",
+    "meta.noDraft": "Dokument nemá koncept — údaje o znění se zadávají u nového znění.",
+    "meta.locked": "Údaje o znění se už měnit nedají — koncept je ve schvalování nebo schválený. Změna by zrušila schválení; nahraj nové znění.",
+    "meta.effectiveFromApproved": "Datum účinnosti bylo schváleno spolu se zněním — změnit ho lze jen novým zněním a novým schválením.",
+    "meta.effectiveFromRequired": "Před předložením doplň v údajích o znění datum účinnosti.",
     "library.effectiveFromSourceRequired": "Zdroj data platnosti je povinný — napiš, odkud datum je (například usnesení VV SFZ č. … z …). Po prvním potvrzení se datum už měnit nedá.",
     "library.documentHasNoText": "Dokument nemá text — nejprve nahraj soubor nebo napiš znění.",
     "library.noChunks": "Z textu nevznikl ani jeden úsek. Zkontroluj, jestli má dokument členění na články nebo nadpisy.",
@@ -6485,6 +6557,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     },
     actions: {
       converted: "Převedeno. Přečti text a porovnej ho s originálem.",
+      metaSaved: "Údaje o znění uloženy.",
       convertedWithWarnings: (warnings) => `Převedeno. ${warnings}`,
       versionSameAsPublished: "Pozor: převedený text je shodný s platným zněním — nahraný soubor nepřináší žádnou změnu.",
       versionDiffers: (added, removed) => `Oproti platnému znění: ${added} přidaných, ${removed} odebraných řádků.`,
@@ -6751,6 +6824,25 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       version: date => `Text version: ${date}`,
       linkBefore: "What is stored when you acknowledge, and for how long: ",
       link: "Data protection",
+    },
+    versionMeta: {
+      heading: "Version details",
+      intro: "Author, who approved the version, and the dates. They are part of the approval — approvers see them with the PDF, and they cannot be changed once submitted.",
+      author: "Author",
+      authorHint: "Person, department or committee that prepared the document.",
+      approvedBy: "Approved by",
+      approvedByHint: "A person or a body, for example the Executive Committee.",
+      approvedOn: "Approval date",
+      effectiveFrom: "Effective date",
+      effectiveFromHint: "Required before submitting for approval. It is also in the acknowledgement statement; it is not entered again at publishing.",
+      save: "Save details",
+      locked: "The draft is under review or approved — the details can no longer change. Only a new version can change them.",
+      voidsApproval: "The draft was approved before version details existed. Saving them voids the approval and the draft must be submitted again — so approvers also approve these details.",
+      suggested: "Prefilled from the first page of the document — check and save. Until you save them, they are not part of the version.",
+      missing: "Version details are not saved yet. Without the effective date the draft cannot be submitted for approval.",
+      uploadHeading: "Version details",
+      uploadNote: "Optional here — if left empty, they are prefilled from the first page of the document and you confirm them on the detail page.",
+      fromMeta: date => `Effective date ${date} — from the approved version details.`,
     },
     dpoEmail: {
       subject: (org, quarter) => `Legal basis report ${quarter} \u2014 ${org}`,
@@ -7659,6 +7751,12 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "library.emptyText": "Empty text cannot be saved — the document would have no content.",
     "library.labelRequired": "The version label is required — it appears verbatim in every acknowledgement record. Write what the document says (for example: consolidated text of 27 February 2026), not an invented number.",
     "library.effectiveFromRequired": "The effective date is required — without it the version cannot be acknowledged (D6).",
+    "meta.badDate": "A date in the version details is not a valid date.",
+    "meta.approvedOnInFuture": "The approval date cannot be in the future.",
+    "meta.noDraft": "The document has no draft — version details are entered with a new version.",
+    "meta.locked": "The version details can no longer change — the draft is under review or approved. A change would void the approval; upload a new version.",
+    "meta.effectiveFromApproved": "The effective date was approved together with the version — it can only change with a new version and a new approval.",
+    "meta.effectiveFromRequired": "Before submitting, fill in the effective date in the version details.",
     "library.effectiveFromSourceRequired": "The source of the effective date is required — write down where the date comes from (for example board resolution no. … of …). After the first acknowledgement the date can no longer be changed.",
     "library.documentHasNoText": "The document has no text — upload a file or write the wording first.",
     "library.noChunks": "The text produced no chunks at all. Check whether the document is organised into articles or headings.",
@@ -8676,6 +8774,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     },
     actions: {
       converted: "Converted. Read the text and compare it with the original.",
+      metaSaved: "Version details saved.",
       convertedWithWarnings: (warnings) => `Converted. ${warnings}`,
       versionSameAsPublished: "Note: the converted text is identical to the published version — the uploaded file brings no change.",
       versionDiffers: (added, removed) => `Against the published version: ${added} lines added, ${removed} removed.`,

@@ -125,6 +125,25 @@ describe("uploadDocument — PDF a zdroj (ADR-011)", () => {
   })
 })
 
+describe("údaje o znení pri nahratí (ADR-013)", () => {
+  it("vyplnené vo formulári sa uložia; návrh z prvej strany sa len ponúkne", async () => {
+    conv.convert.mockResolvedValueOnce({
+      type: "docx", method: "m", warnings: [],
+      markdown: "| **Schválil** | VV SFZ |\n| --- | --- |\n| **Dátum účinnosti** | 07.09.2026 |\n\n# Článok 1",
+    })
+    await uploadDocument(META, { pdf: PDF, source: DOCX }, "jan@sfz.sk", "new",
+      { author: "Oddelenie ľudských zdrojov", approvedBy: null, approvedOn: null, effectiveFrom: null })
+    const set = written()
+    expect(set.draftMeta).toMatchObject({ author: "Oddelenie ľudských zdrojov", effectiveFrom: null })
+    expect(set.draftMetaSuggestion).toMatchObject({ approvedBy: "VV SFZ", effectiveFrom: new Date("2026-09-07T00:00:00Z") })
+  })
+
+  it("prázdny formulár neuloží nič — nové znenie nepreberá údaje predošlého", async () => {
+    await uploadDocument(META, { pdf: PDF }, "jan@sfz.sk", "new")
+    expect(written().draftMeta).toBeNull()
+  })
+})
+
 describe("nahradený koncept po sebe nenechá súbory (24. 9. 2026)", () => {
   const OLD = {
     documentId: "sfz:pracovny_poriadok", title: "Pracovný poriadok SFZ",

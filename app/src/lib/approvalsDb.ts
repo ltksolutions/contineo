@@ -17,7 +17,7 @@ import { AppError } from "./appError"
 import { writeAudit } from "./audit"
 import { PERSONS_COLLECTION, type Person } from "./persons"
 import { DOCUMENTS_COLLECTION, type VersionFile } from "./documents"
-import { draftIdentity } from "./chunkIdentity"
+import { documentDraftIdentity, metaProblem, normalizeMeta } from "./versionMeta"
 import {
   APPROVALS_COLLECTION, submitProblem, versionState, decideProblem, roundOutcome,
   type ApprovalRound, type ApproverDecision, type VersionState,
@@ -118,15 +118,20 @@ export async function submitForApproval(input: SubmitInput): Promise<ApprovalRou
    */
   const doc = await (await getCollection(DOCUMENTS_COLLECTION)).findOne(
     { companyCode: input.companyCode, documentId: input.documentId },
-    { projection: { draftMarkdown: 1, draftPdf: 1, "versions.versionId": 1 } },
-  ) as { draftMarkdown?: string; draftPdf?: VersionFile | null; versions?: { versionId: string }[] } | null
+    { projection: { draftMarkdown: 1, draftPdf: 1, draftMeta: 1, "versions.versionId": 1 } },
+  ) as { draftMarkdown?: string; draftPdf?: VersionFile | null; draftMeta?: Record<string, unknown> | null; versions?: { versionId: string }[] } | null
   if (!doc) throw new ApprovalError("approval.documentNotFound", "Taký dokument tu nie je.")
   const isPublished = (doc.versions ?? []).some(v => v.versionId === input.versionId)
   if (!isPublished) {
     if (!doc.draftPdf) {
       throw new ApprovalError("approval.pdfRequired", "Koncept nemá PDF — nahraj znenie znova aj s PDF.")
     }
-    if (draftIdentity(String(doc.draftMarkdown ?? ""), doc.draftPdf.sha256) !== input.versionId) {
+    // Dátum účinnosti je povinný (ADR-013, D107) — bez neho sa znenie nedá
+    // potvrdiť a schvaľovateľ by schválil formulku s prázdnym miestom.
+    if (metaProblem(doc.draftMeta ? normalizeMeta(doc.draftMeta) : null)) {
+      throw new ApprovalError("meta.effectiveFromRequired", "Pred predložením doplň v údajoch o znení dátum účinnosti.")
+    }
+    if (documentDraftIdentity(doc) !== input.versionId) {
       throw new ApprovalError("approval.draftChanged", "Koncept sa medzitým zmenil — obnov stránku a predlož ho znova.")
     }
   }

@@ -13,6 +13,8 @@ import Notice from "@/components/Notice"
 import { MAX_BYTES, MAX_FORM_BYTES, SOURCE_EXTENSIONS } from "@/lib/fileStore"
 import UploadFiles from "@/components/UploadFiles"
 import KeyPreview from "@/components/KeyPreview"
+import VersionMetaFields from "@/components/VersionMetaFields"
+import { versionMetaSuggestions } from "@/lib/libraryRead"
 import UploadSubmit from "@/components/UploadSubmit"
 import { libraryContext } from "@/lib/library"
 import { codelistOptions, CODELISTS } from "@/lib/codelists"
@@ -57,6 +59,8 @@ export default async function NewDocumentPage({
   const { uploadAction: upload } = await import("../actions")
   // Formulár predvyplnený po chybe = súbor treba vybrať znova.
   const retry = Boolean(error || title)
+  const tm = dictionary(ctx.person.language).versionMeta
+  const metaOptions = await versionMetaSuggestions(ctx.tenant.companyCode)
 
   // **Kľúče, ktoré organizácia už má.** Nahratie na obsadený kľúč sa odmietne
   // (D80) — a dozvedieť sa to až po tom, čo človek vyplní formulár a nahrá
@@ -251,6 +255,20 @@ export default async function NewDocumentPage({
         </details>
 
           </div>
+        </section>
+
+        {/*
+          Údaje o znení (ADR-013). Nepovinné už tu: keď sa nevyplnia,
+          predvyplnia sa z prvej strany dokumentu a potvrdia na detaile (D108).
+        */}
+        <section className="card upload-section">
+          <h2 className="upload-step"><span className="upload-step-no">3</span>{tm.uploadHeading}</h2>
+          <p className="quiet field-hint" style={{ margin: "0 0 12px" }}>{tm.uploadNote}</p>
+          <VersionMetaFields
+            authors={metaOptions.authors}
+            approvers={metaOptions.approvers}
+            language={ctx.person.language}
+          />
         </section>
 
         <div>

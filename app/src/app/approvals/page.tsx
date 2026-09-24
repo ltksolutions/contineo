@@ -27,7 +27,8 @@ import { normalizeQuery, type RawQuery } from "@/lib/urlParams"
 import { dictionary, formatDate } from "@/lib/i18n"
 import { roundsWaitingFor } from "@/lib/approvalsDb"
 import { approvalText } from "@/lib/approvals"
-import { draftIdentity } from "@/lib/chunkIdentity"
+import { documentDraftIdentity, normalizeMeta } from "@/lib/versionMeta"
+import VersionMetaLine from "@/components/VersionMetaLine"
 import { getCollection } from "@/lib/mongodb"
 import { DOCUMENTS_COLLECTION, type Version, type VersionFile } from "@/lib/documents"
 import { decideAction } from "./actions"
@@ -60,7 +61,7 @@ export default async function ApprovalsPage({
   const docs = ids.length === 0 ? [] : await (await getCollection(DOCUMENTS_COLLECTION))
     .find(
       { companyCode: person.companyCode, documentId: { $in: ids } },
-      { projection: { documentId: 1, title: 1, versions: 1, draftMarkdown: 1, draftPdf: 1 } },
+      { projection: { documentId: 1, title: 1, versions: 1, draftMarkdown: 1, draftPdf: 1, draftMeta: 1 } },
     )
     .toArray()
 
@@ -86,9 +87,10 @@ export default async function ApprovalsPage({
         <ul className="approval-list">
           {rounds.map(r => {
             const doc = byId.get(r.documentId) as
-              { title?: unknown; versions?: Version[]; draftMarkdown?: unknown; draftPdf?: VersionFile | null } | undefined
+              { title?: unknown; versions?: Version[]; draftMarkdown?: unknown; draftPdf?: VersionFile | null; draftMeta?: Record<string, unknown> | null } | undefined
             const version = (doc?.versions ?? []).find(v => v.versionId === r.versionId)
-            const shown = approvalText(doc, r.versionId, text => draftIdentity(text, doc?.draftPdf?.sha256))
+            const shown = approvalText(doc, r.versionId, text =>
+              documentDraftIdentity({ draftMarkdown: text, draftPdf: doc?.draftPdf, draftMeta: doc?.draftMeta }))
             // PDF k tomu istému, čo je v texte: koncept → PDF konceptu,
             // zverejnené znenie → jeho PDF (ADR-011). Znenia spred ADR-011 ho nemajú.
             const encodedId = encodeURIComponent(r.documentId)
@@ -108,11 +110,25 @@ export default async function ApprovalsPage({
                   {t.submittedBy(r.submittedBy, formatDate(r.submittedAt, person.language))}
                 </div>
 
-                <div className="approval-meta">
-                  {version?.effectiveFrom
-                    ? t.effectiveFrom(formatDate(version.effectiveFrom, person.language))
-                    : t.noEffectiveFrom}
-                </div>
+                {/*
+                  Údaje o znení (ADR-013) sú **súčasťou schvaľovaného** — pri
+                  koncepte z konceptu, pri zverejnenom znení zo znenia.
+                */}
+                {shown.kind === "draft" && doc?.draftMeta ? (
+                  <VersionMetaLine {...normalizeMeta(doc.draftMeta)} language={person.language} />
+                ) : (
+                  <>
+                    <div className="approval-meta">
+                      {version?.effectiveFrom
+                        ? t.effectiveFrom(formatDate(version.effectiveFrom, person.language))
+                        : t.noEffectiveFrom}
+                    </div>
+                    {version && (
+                      <VersionMetaLine author={version.author} approvedBy={version.approvedBy}
+                                       approvedOn={version.approvedOn} language={person.language} />
+                    )}
+                  </>
+                )}
 
                 {r.note && <p className="approval-card-note">{r.note}</p>}
 
