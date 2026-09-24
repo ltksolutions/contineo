@@ -10,13 +10,15 @@
 import { notFound, redirect } from "next/navigation"
 import Link from "next/link"
 import { libraryContext } from "@/lib/library"
-import { libraryDetail, statusTagClass, displayStatus } from "@/lib/libraryRead"
+import { libraryDetail, statusTagClass, displayStatus, versionMetaSuggestions } from "@/lib/libraryRead"
+import VersionMetaFields from "@/components/VersionMetaFields"
+import VersionMetaLine from "@/components/VersionMetaLine"
 import { brandingView } from "@/lib/tenants"
 import { tenantStyle } from "@/components/TenantHeader"
 import { formatDate, dictionary } from "@/lib/i18n"
 import Notice from "@/components/Notice"
 import {
-  publishVersionAction, saveDocumentMetadataAction, assignToFolderAction, reindexDocumentAction,
+  publishVersionAction, saveDraftMetaAction, saveDocumentMetadataAction, assignToFolderAction, reindexDocumentAction,
   fixVersionAction, fixTextAction, uploadVersionAction, revokeVersionAction,
   carryOverAssignmentsAction, setResponsibleAction,
 } from "../actions"
@@ -39,7 +41,8 @@ import { isHr } from "@/lib/hr"
 import { validAcknowledgements } from "@/lib/acknowledgements"
 import { roundsByVersion, stateOf } from "@/lib/approvalsDb"
 import type { CSSProperties } from "react"
-import { textFingerprint, draftIdentity } from "@/lib/chunkIdentity"
+import { textFingerprint } from "@/lib/chunkIdentity"
+import { documentDraftIdentity, metaLocked } from "@/lib/versionMeta"
 import UploadFiles from "@/components/UploadFiles"
 import UploadSubmit from "@/components/UploadSubmit"
 import { MAX_BYTES, MAX_FORM_BYTES, SOURCE_EXTENSIONS } from "@/lib/fileStore"
@@ -196,10 +199,16 @@ export default async function DocumentDetailPage({
   // Identita konceptu = PDF + text (ADR-011, D96) — na nej beží kolo
   // schvaľovania. Oprava textu (ADR-007) sa ale stráži odtlačkom **len
   // textu**: porovnáva sa s tým, čo bolo v rozdiele na obrazovke.
-  const draftVersionId = draft ? draftIdentity(draft, d.draftPdf?.sha256) : null
+  const draftVersionId = draft ? documentDraftIdentity({ draftMarkdown: draft, draftPdf: d.draftPdf, draftMeta: d.draftMeta }) : null
   const draftTextFingerprint = draft ? textFingerprint(draft) : null
   const draftRounds = draftVersionId ? (rounds.get(draftVersionId) ?? []) : []
   const draftState = stateOf(draftRounds)
+  // Údaje o znení (ADR-013): uložené, návrh z prvej strany a zámok po predložení.
+  const tm = dictionary(language).versionMeta
+  const metaIsLocked = metaLocked(draftState, Boolean(d.draftMeta))
+  // Schválené ešte bez údajov (pred ADR-013): doplniť sa smú, ale zrušia schválenie.
+  const metaVoidsApproval = draftState === "approved" && !d.draftMeta
+  const metaOptions = await versionMetaSuggestions(ctx.tenant.companyCode)
 
   /*
    * Stav do hlavičky — **ten istý slovník aj tá istá trieda ako v zozname.**
@@ -317,6 +326,37 @@ export default async function DocumentDetailPage({
               ? t.nowPublishNew(effective.label)
               : t.publishHeading}
         </h2>
+            {/*
+              Údaje o znení (ADR-013) — **pred** schvaľovaním, lebo sú jeho
+              súčasťou. Po predložení je formulár zamknutý a server zmenu
+              odmietne (`saveDraftMeta()`), nielen že sa nekreslí tlačidlo.
+            */}
+            <form id="version-meta" action={saveDraftMetaAction} style={{ display: "grid", gap: 10, marginBottom: 16 }}>
+              <input type="hidden" name="documentId" value={d.documentId} />
+              <h3 className="field-label" style={{ margin: 0 }}>{tm.heading}</h3>
+              <p className="detail-block-small" style={{ margin: 0 }}>{tm.intro}</p>
+              {metaVoidsApproval && <p className="detail-block-note" style={{ margin: 0 }}>{tm.voidsApproval}</p>}
+              {metaIsLocked
+                ? <p className="detail-block-note" style={{ margin: 0 }}>{tm.locked}</p>
+                : !d.draftMeta?.effectiveFrom && (
+                    // Nie je uložený dátum účinnosti — bez neho sa nedá predložiť.
+                    // Ak ho návrh z dokumentu má, pole je predvyplnené, ale uloží sa
+                    // až tlačidlom (D108).
+                    <p className="detail-block-note" style={{ margin: 0 }}>
+                      {d.draftMetaSuggestion?.effectiveFrom ? tm.suggested : tm.missing}
+                    </p>
+                  )}
+              <VersionMetaFields
+                value={d.draftMeta}
+                suggestion={metaIsLocked ? null : d.draftMetaSuggestion}
+                authors={metaOptions.authors}
+                approvers={metaOptions.approvers}
+                language={language}
+                disabled={metaIsLocked}
+              />
+              {!metaIsLocked && <div><button className="button button--quiet" type="submit">{tm.save}</button></div>}
+            </form>
+
             <div style={{ display: "grid", gap: 8 }}>
               <h3 className="field-label" style={{ margin: 0 }}>{t.draftApprovalHeading}</h3>
               <ApprovalPanel
@@ -351,11 +391,19 @@ export default async function DocumentDetailPage({
                   </span>
                 </label>
 
-                <label className="field">
-                  <span className="field-label">{t.effectiveFrom}</span>
-                  <input className="field-input" type="date" name="effectiveFrom" required />
-                  <span className="quiet field-hint">{t.effectiveFromNote}</span>
-                </label>
+                {/* Dátum účinnosti je v schválených údajoch o znení (ADR-013)
+                    a tu sa už nezadáva. Pole zostáva len pre koncept spred ADR-013. */}
+                {d.draftMeta?.effectiveFrom ? (
+                  <p className="detail-block-note" style={{ margin: 0 }}>
+                    {tm.fromMeta(formatDate(d.draftMeta.effectiveFrom, language))}
+                  </p>
+                ) : (
+                  <label className="field">
+                    <span className="field-label">{t.effectiveFrom}</span>
+                    <input className="field-input" type="date" name="effectiveFrom" required />
+                    <span className="quiet field-hint">{t.effectiveFromNote}</span>
+                  </label>
+                )}
 
                 <label className="field">
                   <span className="field-label">{t.effectiveFromSource}</span>
@@ -611,6 +659,18 @@ export default async function DocumentDetailPage({
         <input type="hidden" name="documentId" value={d.documentId} />
         <h2 className="detail-block-title">{t.newVersionHeading}</h2>
         <p className="detail-block-note">{t.newVersionNote}</p>
+        {/* Autor a Schválil sa predvyplnia z platného znenia — pri novele
+            bývajú rovnaké; dátumy nie, tie sú pri každom znení iné. */}
+        <details>
+          <summary className="field-label" style={{ cursor: "pointer" }}>{tm.uploadHeading}</summary>
+          <p className="quiet field-hint" style={{ margin: "8px 0" }}>{tm.uploadNote}</p>
+          <VersionMetaFields
+            value={effective ? { author: effective.author ?? null, approvedBy: effective.approvedBy ?? null, approvedOn: null, effectiveFrom: null } : null}
+            authors={metaOptions.authors}
+            approvers={metaOptions.approvers}
+            language={language}
+          />
+        </details>
         <UploadFiles
           pdfAccept=".pdf,application/pdf"
           sourceAccept={SOURCE_EXTENSIONS.join(",")}
@@ -734,6 +794,7 @@ export default async function DocumentDetailPage({
                 <div className="quiet audit-note">{t.dateSource(v.effectiveFromSource)}</div>
               )}
               {v.changeNote && <div className="quiet audit-note">{v.changeNote}</div>}
+              <VersionMetaLine author={v.author} approvedBy={v.approvedBy} approvedOn={v.approvedOn} language={language} />
               {/* PDF znenia je dôkaz; zdroj je predloha pre ďalšie znenie (ADR-011). */}
               <div className="audit-note" style={{ fontSize: "var(--fs-small)" }}>
                 {v.pdf
@@ -1069,6 +1130,11 @@ export default async function DocumentDetailPage({
                 [t.category, d.category],
                 [tr.responsiblePerson, effective?.responsiblePerson?.fullName],
                 [tr.legalBasis, effective ? basisName(effective) : ""],
+                // Údaje o platnom znení (ADR-013).
+                [tm.author, effective?.author ?? ""],
+                [tm.approvedBy, effective?.approvedBy
+                  ? `${effective.approvedBy}${effective.approvedOn ? ` · ${formatDate(effective.approvedOn, language)}` : ""}`
+                  : ""],
                 [t.tags, d.tags.length ? d.tags.join(", ") : ""],
                 [t.accessLevel, d.accessLevel],
                 [t.documentLanguage, d.language],

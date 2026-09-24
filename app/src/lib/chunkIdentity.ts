@@ -90,9 +90,15 @@ export function textFingerprint(markdown: string): string {
  *
  * **Bez PDF je to presne `textFingerprint()`** — znenia a kolá spred ADR-011
  * si tak zachovajú svoje `versionId` a nič sa nepreraďuje.
+ *
+ * `meta` sú údaje o znení v tvare `metaCanonical()` (ADR-013). Skladá ich
+ * `documentDraftIdentity()` v `versionMeta.ts` — volať radšej tú.
  */
-export function draftIdentity(markdown: string, pdfSha256?: string | null): string {
+export function draftIdentity(markdown: string, pdfSha256?: string | null, meta?: string | null): string {
   const text = textFingerprint(markdown)
+  // Údaje o znení (ADR-013, D107) sa pripájajú **len keď sú** — koncept bez
+  // nich si zachová identitu spred ADR-013 a existujúce kolá platia ďalej.
+  if (meta) return hash(`${pdfSha256 ? `pdf:${pdfSha256}\n` : ""}text:${text}\nmeta:${meta}`)
   return pdfSha256 ? hash(`pdf:${pdfSha256}\ntext:${text}`) : text
 }
 

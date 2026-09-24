@@ -9,6 +9,7 @@
  * podmienka, nie ako kontrola nad ním (D32).
  */
 
+import { normalizeMeta, suggestMetaFromMarkdown, type VersionMeta } from "./versionMeta"
 import { getCollection } from "./mongodb"
 import { allFolders, pathTo } from "./folders"
 import { DOCUMENTS_COLLECTION, effectiveVersion, type VersionFile } from "./documents"
@@ -16,6 +17,7 @@ import type { Version } from "./documents"
 import type { OriginalFile, ProcessingState } from "./libraryWrite"
 import { conditionQuery, type Condition, type MatchMode } from "./libraryConditions"
 import { openRounds } from "./approvalsDb"
+import { allDepartments } from "./departments"
 
 /**
  * Trieda farebnej pilulky stavu (KNIZNICA.md, úloha 1).
@@ -127,6 +129,10 @@ export interface LibraryDetail extends LibraryRow {
   /** PDF a upraviteľný zdroj konceptu (ADR-011). Pri zverejnení sa skopírujú do znenia. */
   draftPdf?: VersionFile | null
   draftSource?: VersionFile | null
+  /** Údaje o znení konceptu (ADR-013). `null` = ešte ich nikto neuložil. */
+  draftMeta?: VersionMeta | null
+  /** Návrh údajov z prvej strany dokumentu (D108) — nie je to uložený údaj. */
+  draftMetaSuggestion?: VersionMeta | null
   conversion?: { method: string; warnings: string[]; at: Date }
   processingError?: string | null
   scope?: string
@@ -637,7 +643,34 @@ export async function libraryDetail(
     originalFile: d.originalFile as OriginalFile | undefined,
     draftPdf: (d.draftPdf as VersionFile | null | undefined) ?? null,
     draftSource: (d.draftSource as VersionFile | null | undefined) ?? null,
+    draftMeta: d.draftMeta ? normalizeMeta(d.draftMeta as never) : null,
+    // Koncept nahratý pred ADR-013 návrh uložený nemá — spočíta sa z textu,
+    // aby sa kvôli nemu nemuselo nahrávať znova. Stále je to len návrh (D108).
+    draftMetaSuggestion: d.draftMetaSuggestion
+      ? normalizeMeta(d.draftMetaSuggestion as never)
+      : d.draftMarkdown ? suggestMetaFromMarkdown(String(d.draftMarkdown)) : null,
     conversion: d.konverzia as LibraryDetail["conversion"],
     processingError: (d.processingError as string | null) ?? null,
+  }
+}
+
+
+/**
+ * Návrhy pre polia Autor a Schválil (ADR-013, D106) — hodnoty už použité
+ * v organizácii (znenia aj koncepty) a názvy jej útvarov. Voľný text zostáva
+ * voľný; návrhy len zmierňujú „VV SFZ" vedľa „Výkonný výbor SFZ".
+ */
+export async function versionMetaSuggestions(companyCode: string): Promise<{ authors: string[]; approvers: string[] }> {
+  const docs = await (await getCollection(DOCUMENTS_COLLECTION))
+    .find({ companyCode }, { projection: { "versions.author": 1, "versions.approvedBy": 1, draftMeta: 1 } })
+    .toArray() as unknown as { versions?: { author?: string | null; approvedBy?: string | null }[]; draftMeta?: { author?: string | null; approvedBy?: string | null } | null }[]
+  const departments = (await allDepartments(companyCode)).map(d => d.name)
+  const uniq = (xs: (string | null | undefined)[]) =>
+    [...new Set(xs.map(x => x?.trim()).filter((x): x is string => Boolean(x)))].sort((a, b) => a.localeCompare(b, "sk"))
+  const used = (k: "author" | "approvedBy") =>
+    docs.flatMap(d => [...(d.versions ?? []).map(v => v[k]), d.draftMeta?.[k]])
+  return {
+    authors: uniq([...used("author"), ...departments]),
+    approvers: uniq(used("approvedBy")),
   }
 }

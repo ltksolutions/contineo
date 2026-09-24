@@ -11,6 +11,7 @@
  */
 
 import Link from "next/link"
+import VersionMetaLine from "@/components/VersionMetaLine"
 import { notFound, redirect } from "next/navigation"
 import { onboardingContext } from "@/lib/session"
 import { recordOpen } from "@/lib/documentOpens"
@@ -157,6 +158,13 @@ export default async function DocumentPage({
             </span>
           )}
         </p>
+      ) : null}
+      {/* Autor a kto znenie schválil (ADR-013) — pod označením znenia. */}
+      {version.ok ? (
+        <div style={{ margin: "-20px 0 24px" }}>
+          <VersionMetaLine author={version.version.author} approvedBy={version.version.approvedBy}
+                           approvedOn={version.version.approvedOn} language={person.language} />
+        </div>
       ) : (
         <p className="card" style={{ padding: 16, margin: "16px 0 0" }}>
           {t.blockedReason[version.reason] ?? version.reason}

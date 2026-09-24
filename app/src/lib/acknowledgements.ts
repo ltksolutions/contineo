@@ -89,6 +89,14 @@ export interface Acknowledgement {
   pdfSha256?: string | null
   pdfName?: string | null
 
+  /**
+   * Údaje o znení v čase potvrdenia (ADR-013) — kópia, nie odkaz: kto
+   * dokument pripravil a kto ho schválil. Chýbajú pri zneniach spred ADR-013.
+   */
+  author?: string | null
+  approvedBy?: string | null
+  approvedOn?: Date | null
+
   // ČÍM — doslovné znenie, nie odkaz naň
   statementText: string
   statementHash: string
@@ -325,6 +333,9 @@ export async function acknowledge(
     legalBasisLabel: v.legalBasisLabel ?? null,
     pdfSha256: v.pdf?.sha256 ?? null,
     pdfName: v.pdf?.name ?? null,
+    author: v.author ?? null,
+    approvedBy: v.approvedBy ?? null,
+    approvedOn: v.approvedOn ?? null,
     statementText: statement,
     statementHash: await hashStatement(statement),
     language: language,

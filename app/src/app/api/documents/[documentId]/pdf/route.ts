@@ -23,7 +23,7 @@ import { openFileStream } from "@/lib/fileStore"
 import { getCollection } from "@/lib/mongodb"
 import { isContentManager } from "@/lib/library"
 import { roundsForVersion } from "@/lib/approvalsDb"
-import { draftIdentity } from "@/lib/chunkIdentity"
+import { documentDraftIdentity } from "@/lib/versionMeta"
 import { canSeeDraftPdf } from "@/lib/approvals"
 
 export const dynamic = "force-dynamic"
@@ -45,11 +45,11 @@ export async function GET(
   if (url.searchParams.get("draft") === "1") {
     const doc = await (await getCollection(DOCUMENTS_COLLECTION)).findOne(
       { companyCode: person.companyCode, documentId },
-      { projection: { draftMarkdown: 1, draftPdf: 1 } },
-    ) as { draftMarkdown?: string; draftPdf?: VersionFile | null } | null
+      { projection: { draftMarkdown: 1, draftPdf: 1, draftMeta: 1 } },
+    ) as { draftMarkdown?: string; draftPdf?: VersionFile | null; draftMeta?: Record<string, unknown> | null } | null
     if (!doc?.draftPdf) return new Response(null, { status: 404 })
     const manager = isContentManager(person)
-    const identity = draftIdentity(String(doc.draftMarkdown ?? ""), doc.draftPdf.sha256)
+    const identity = documentDraftIdentity(doc)
     const rounds = manager ? [] : await roundsForVersion(person.companyCode, documentId, identity)
     if (!canSeeDraftPdf({ isContentManager: manager, email: person.email, rounds })) {
       return new Response(null, { status: 404 })
