@@ -125,9 +125,9 @@ niečo o správaní konkrétneho človeka, nie o jeho povinnosti. Preto:
 | **Overené odpovede** (kurácia) | **kým platí podkladová norma** | expirujú s ňou (`expireCurationFor()`, D11 revidované); bez osobných údajov |
 | **Členstvá osoby** (pole na zázname v `persons`) | **len aktuálny stav** | samostatná kolekcia `person_memberships` **neexistuje** — je to plán D7; obnova login+webhook; pri zrušení príslušnosti **bezodkladne** vymazať/deaktivovať |
 | **Identita** (kópia z CRM) | **počas aktívneho vzťahu** | zrkadlo zo Sportnet; pri ukončení vzťahu vymazať lokálnu kópiu |
-| **Potvrdenia** (`acknowledgements`) | **3 roky od skončenia pomeru / vzťahu so zväzom** (DPO 2026-09-24, B1a, B10b) | doklad o oboznámení. Ak dátum skončenia nepríde, plynie od vyradenia osoby; absolútny strop od posledného potvrdenia — **počet rokov ešte nepotvrdený** (B10a, príklad DPO: 5) |
-| **Pridelenia** (`assignments`) | **ako potvrdenia** | bez pridelenia sa nedá vysvetliť, prečo mal človek povinnosť; samotné potvrdenie by zostalo bez kontextu |
-| **Otvorenia znenia** (`document_opens`) | **ako potvrdenia** | je to súčasť tej istej reťaze (D64). Otvorenie **bez** potvrdenia je tiež údaj — hovorí, že človek vedel a nepotvrdil |
+| **Potvrdenia** (`acknowledgements`) | **3 roky od skončenia pomeru / vzťahu so zväzom** (DPO 2026-09-24, B1a, B10b) | doklad o oboznámení. Ak dátum skončenia nepríde, plynie od vyradenia osoby; vyradená osoba bez dátumu: strop **5 rokov** od poslednej udalosti (B10a, ADR-012) |
+| **Pridelenia** (`assignments`) | **ako potvrdenia** — maže sa pridelenie osobe; pridelenie skupine zostáva (ADR-012, D101) | bez pridelenia sa nedá vysvetliť, prečo mal človek povinnosť; samotné potvrdenie by zostalo bez kontextu |
+| **Otvorenia znenia** (`document_opens`) | **ako potvrdenia** (ADR-012) | je to súčasť tej istej reťaze (D64). Otvorenie **bez** potvrdenia je tiež údaj — hovorí, že človek vedel a nepotvrdil |
 | **Časy čítania** (`reading_times`) | **12 mesiacov** (rozhodnuté 2026-09-06, potvrdil DPO 2026-09-24) | nie je to dôkaz, je to meranie na klientovi. Preto kratšia lehota než pri zvyšku reťaze a TTL priamo v databáze |
 | **Kolá schvaľovania** (`approval_rounds`) | **kým existuje aspoň jedno potvrdenie znenia** (DPO 2026-09-24, B4a) | schválenie je dôvod, prečo znenie vôbec smelo ísť ľuďom. To isté platí pre zodpovednú osobu znenia (B11) |
 | **Log pripomienok** (`reminder_log`) | **90 dní** (TTL, potvrdil DPO 2026-09-24) | prevádzkový záznam proti dvojitému odoslaniu, nie dôkaz. Dôkazom je `notified[]` na pridelení |
@@ -152,6 +152,7 @@ niečo o správaní konkrétneho človeka, nie o jeho povinnosti. Preto:
 | MongoDB Atlas | DB, vektory, fulltext | **EU región** |
 | Hosting (Vercel) | beh aplikácie | EU región (podľa konfigurácie) |
 | Voyage AI (cez MongoDB) | embedding + rerank | trénovanie **vypnuté** v Atlase 2026-09-18 (predvolene je zapnuté); Europe Geography je od 9/2026 v preview, ale zatiaľ len pre priame API, nie pre automated embedding; doba uchovania logov nezverejnená — O18 |
+| Ecomail | odosielanie e-mailov (prihlasovací odkaz, pridelenie, pripomienky, schvaľovanie) | EÚ — **doplnené 2026-09-24**, v tabuľke chýbal |
 | Anthropic Claude | **primárny** generujúci model (`claude-sonnet-5`) | **zero-retention, no-training**, EU |
 | vLLM / SGLang / Ollama | voliteľný self-hosted generátor (`kind: "openai"`) | **dnes nenasadené** — adaptér existuje, prevádzka nie |
 

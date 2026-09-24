@@ -43,7 +43,7 @@ zmyslu, bez výkladu.
 | A10 | súhlasím — základ určuje **zodpovedná osoba**, DPO dostane **raz za štvrťrok** zoznam na kontrolu | — | D91 platí; treba výkaz pre DPO |
 | A11 | **jeden spoločný** balančný test pre „záznam o oboznámení s internou smernicou" (vrátane IP a prehliadača) | termín testu nevyplnený | test nie je podmienkou zverejnenia predpisu |
 | B1a | **3 roky** od skončenia pomeru | — | lehota pre `acknowledgements`, `assignments`, `document_opens` |
-| B10a | súhlasím s oboma poistkami — lehota od **vyradenia**, ak dátum z HR nepríde, a **absolútny strop** | počet rokov **nevyplnený**; poznámka: „strop napríklad 5 rokov. Môže slúžiť aj na osvieženie pamäti pre zamestnancov." | ⚠️ 5 rokov je príklad, nie rozhodnutie — potvrdiť číslo |
+| B10a | súhlasím s oboma poistkami — lehota od **vyradenia**, ak dátum z HR nepríde, a **absolútny strop** | počet rokov **nevyplnený**; poznámka: „strop napríklad 5 rokov. Môže slúžiť aj na osvieženie pamäti pre zamestnancov." | **5 rokov** — potvrdil Ján 2026-09-24; strop len pre **vyradené** osoby bez dátumu (ADR-012, D100) |
 | B10b | súhlasím — pri osobách bez pomeru od skončenia vzťahu (licencia, funkcia, spolupráca); dátum dodá útvar, ktorý vzťah eviduje | — | kým dátum nepríde, platí poistka z B10a |
 | B5 | potvrdzujem **12 mesiacov** (čas čítania) | — | bez zmeny (TTL už beží) |
 | B6 | **24 mesiacov** (audit prístupov) | — | TTL na `audit` treba zaviesť |
@@ -52,13 +52,15 @@ zmyslu, bez výkladu.
 | B11 | súhlasím — zodpovedná osoba má **rovnakú lehotu ako schválenie** | — | súčasť dokladu o znení |
 | C1, C2 | **bez odpovede** (zodpovedný a termín nevyplnené) | — | otvorené; C1 je brána pred pilotom |
 | C3 | **bez odpovede** | — | otvorené |
-| C4 | **bez odpovede** | „Toto doriešiť s Miškou (resp. Lukáš)" | zmluvy (DPA, Sportnet, sub-procesori) — riešiť mimo DPO |
+| C4 | **bez odpovede** | „Toto doriešiť s Miškou (resp. Lukáš)" | **v riešení, formálne akceptované pre pilot** (Ján, 2026-09-24) |
 
 **Čo nevrátila:** kontrolu číselníka `Pravne_zaklady_navrh_ciselnika.docx` —
 `codelists/legalBasis.json` sa preto stále nemá opraviť ani podľa neho vyberať.
 
-**Zostáva otvorené:** počet rokov stropu (B10a), termín balančného testu (A11, A3),
-C1–C4.
+**Zostáva otvorené:** termín balančného testu (A11, A3); C1–C3 — návrhy riešenia
+a textov sú v `docs/C1_informovanie_dotknutych_osob.md`,
+`docs/C2_zaznam_o_spracovatelskych_cinnostiach.md` a `docs/C3_DPIA_predbezne_posudenie.md`.
+Implementácia odpovedí: **ADR-012**.
 
 **Forma ďalších dotazníkov:** bez zaškrtávacích okienok. Pri každej otázke
 **očíslované možnosti** a riadok „Odpoveď: ___", kam sa napíše číslo voľby alebo
