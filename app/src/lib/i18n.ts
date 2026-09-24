@@ -1179,6 +1179,13 @@ interface Dictionary {
       controllerLegalName: string
       controllerAddress: string
       controllerRegistrationNumber: string
+      /** Sekcie formulára (rám ADMIN-prevadzkovatel-a-ciselniky, 24. 9. 2026). */
+      secIdentity: string
+      secIdentityNote: string
+      secContact: string
+      secAutoProvision: string
+      saveBarNote: string
+      controllerPreview: string
       languages: string
       defaultLanguage: string
       defaultLanguageNote: string
@@ -1270,6 +1277,13 @@ interface Dictionary {
       keyTakenHint: string
       add: string
       keyNote: string
+      /** Príklad do prázdneho poľa, pre každý číselník iný (rám ADMIN, bod 7). */
+      examples: Record<string, { label: string; key: string }>
+      moreBase: (n: number) => string
+      colName: string
+      colKey: string
+      colUse: string
+      baseBadge: string
     }
     chunking: {
       heading: string
@@ -3632,6 +3646,12 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       controllerLegalName: "Právny názov",
       controllerAddress: "Sídlo",
       controllerRegistrationNumber: "IČO",
+      secIdentity: "Identita",
+      secIdentityNote: "Názov a logo v hlavičke, v e-mailoch a na prihlasovacej obrazovke.",
+      secContact: "Kontakt",
+      secAutoProvision: "Automatické založenie",
+      saveBarNote: "Jedno uloženie pre celú stránku.",
+      controllerPreview: "Na stránke Ochrana osobných údajov:",
       languages: "Jazyky",
       defaultLanguage: "Predvolený jazyk",
       defaultLanguageNote: "Platí pre človeka, ktorý ešte nie je prihlásený.",
@@ -3735,6 +3755,16 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       keyTakenHint: "Taký kľúč už v číselníku je — zmeň názov alebo kľúč.",
       add: "Pridať",
       keyNote: "Kľúč: malé písmená bez diakritiky, číslice a podčiarkovník. Zostáva v obsahu natrvalo, takže sa nedá vziať späť — názov vedľa neho sa meniť dá.",
+      examples: {
+        category: { label: "napr. Rozhodnutie", key: "rozhodnutie" },
+        tags: { label: "napr. mládež", key: "mladez" },
+        workplace: { label: "napr. Senec", key: "senec" },
+      },
+      moreBase: n => `+ ďalších ${n} základných`,
+      colName: "Názov",
+      colKey: "Kľúč",
+      colUse: "Použitie",
+      baseBadge: "základná",
     },
     chunking: {
       heading: "Členenie dokumentov na úseky",
@@ -5997,6 +6027,12 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       controllerLegalName: "Právní název",
       controllerAddress: "Sídlo",
       controllerRegistrationNumber: "IČO",
+      secIdentity: "Identita",
+      secIdentityNote: "Název a logo v hlavičce, v e-mailech a na přihlašovací obrazovce.",
+      secContact: "Kontakt",
+      secAutoProvision: "Automatické založení",
+      saveBarNote: "Jedno uložení pro celou stránku.",
+      controllerPreview: "Na stránce Ochrana osobních údajů:",
       languages: "Jazyky",
       defaultLanguage: "Výchozí jazyk",
       defaultLanguageNote: "Platí pro člověka, který ještě není přihlášený.",
@@ -6100,6 +6136,16 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       keyTakenHint: "Takový klíč už v číselníku je — změň název nebo klíč.",
       add: "Přidat",
       keyNote: "Klíč: malá písmena bez diakritiky, číslice a podtržítko. Zůstává v obsahu natrvalo, takže se nedá vzít zpět — název vedle něj se měnit dá.",
+      examples: {
+        category: { label: "např. Rozhodnutí", key: "rozhodnuti" },
+        tags: { label: "např. mládež", key: "mladez" },
+        workplace: { label: "např. Brno", key: "brno" },
+      },
+      moreBase: n => `+ dalších ${n} základních`,
+      colName: "Název",
+      colKey: "Klíč",
+      colUse: "Použití",
+      baseBadge: "základní",
     },
     chunking: {
       heading: "Členění dokumentů na úseky",
@@ -8353,6 +8399,12 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       controllerLegalName: "Legal name",
       controllerAddress: "Registered address",
       controllerRegistrationNumber: "Company ID",
+      secIdentity: "Identity",
+      secIdentityNote: "Name and logo in the header, in emails and on the sign-in screen.",
+      secContact: "Contact",
+      secAutoProvision: "Automatic sign-up",
+      saveBarNote: "One save for the whole page.",
+      controllerPreview: "On the Privacy page:",
       languages: "Languages",
       defaultLanguage: "Default language",
       defaultLanguageNote: "Applies to anyone who is not signed in yet.",
@@ -8456,6 +8508,16 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       keyTakenHint: "This key is already in the code list — change the name or the key.",
       add: "Add",
       keyNote: "Key: lowercase letters without diacritics, digits and underscores. It stays in the content permanently and cannot be taken back — the name beside it can be changed.",
+      examples: {
+        category: { label: "e.g. Decision", key: "decision" },
+        tags: { label: "e.g. youth", key: "youth" },
+        workplace: { label: "e.g. Senec", key: "senec" },
+      },
+      moreBase: n => `+ ${n} more built-in`,
+      colName: "Name",
+      colKey: "Key",
+      colUse: "Usage",
+      baseBadge: "built-in",
     },
     chunking: {
       heading: "Splitting documents into chunks",

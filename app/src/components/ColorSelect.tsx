@@ -117,15 +117,10 @@ export default function ColorSelect({
         })}
       </div>
 
-      <button
-        type="button"
-        className="button button--quiet colors-custom"
-        onClick={() => setCustom(v => !v)}
-      >
-        {custom ? t.hideCustom : t.showCustom}
-      </button>
-
-      {custom && (
+      {/* Vlastná hodnota za `<details>` (rám ADMIN, bod 4) namiesto
+          tlačidla „Skryť vlastnú hodnotu" — otvorené, keď je farba mimo palety. */}
+      <details className="colors-custom" open={custom} onToggle={e => setCustom((e.target as HTMLDetailsElement).open)}>
+        <summary>{t.showCustom}</summary>
         <input
           className="field-input"
           value={color}
@@ -134,7 +129,7 @@ export default function ColorSelect({
           autoCapitalize="none"
           autoCorrect="off"
         />
-      )}
+      </details>
 
       {/*
         * Ukážka na troch prvkoch, na ktorých farba naozaj je: primárne
