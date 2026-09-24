@@ -166,7 +166,7 @@ describe("nový názov v príprave (ADR-015, D112)", () => {
     const { saveDraftTitle } = await import("../src/lib/libraryWrite")
     col.findOne.mockResolvedValue({ documentId: "sfz:a", title: "Poriadok", draftMarkdown: "x" })
     expect(await saveDraftTitle("SFZ", "sfz:a", "Nový poriadok", "s@sfz.sk")).toBe(true)
-    const u = col.updateOne.mock.calls[0][1] as { $set: Record<string, unknown> }
+    const u = (col.updateOne.mock.calls[0] as unknown[])[1] as { $set: Record<string, unknown> }
     expect(u.$set.draftTitle).toBe("Nový poriadok")
   })
 
