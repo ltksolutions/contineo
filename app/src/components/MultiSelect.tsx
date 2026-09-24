@@ -32,6 +32,10 @@ export interface MultiSelectOption {
   label: string
   /** Koľko záznamov ju má. Zobrazuje sa vpravo v zozname, keď je známy. */
   count?: number
+  /** Úroveň v strome (1 = koreň) — bez písania sa zoznam odsadí ako strom. */
+  level?: number
+  /** Cesta nad položkou — ukáže sa pri hľadaní, keď sa strom splošti. */
+  path?: string
 }
 
 /**
@@ -56,8 +60,13 @@ export function fold(text: string): string {
  * nemá — inak by sa uložením ticho stratilo niečo, čo nikto nezmazal.
  * Rovnaký dôvod ako v `TagSelect.tsx`.
  */
-export function mergeOptions(options: MultiSelectOption[], chosen: string[]): MultiSelectOption[] {
-  const known = new Set(options.map(o => normalizeValue(o.value)))
+export function mergeOptions(
+  options: MultiSelectOption[],
+  chosen: string[],
+  caseSensitive = false,
+): MultiSelectOption[] {
+  const norm = (v: string) => (caseSensitive ? v.trim() : normalizeValue(v))
+  const known = new Set(options.map(o => norm(o.value)))
   return [
     ...options,
     ...chosen.filter(v => !known.has(v)).map(v => ({ value: v, label: v })),
@@ -68,7 +77,7 @@ export function mergeOptions(options: MultiSelectOption[], chosen: string[]): Mu
 export function filterOptions(all: MultiSelectOption[], query: string): MultiSelectOption[] {
   const q = fold(query.trim())
   if (!q) return all
-  return all.filter(o => fold(o.label).includes(q) || fold(o.value).includes(q))
+  return all.filter(o => fold(o.label).includes(q) || fold(o.value).includes(q) || fold(o.path ?? "").includes(q))
 }
 
 /**
@@ -102,6 +111,9 @@ export default function MultiSelect({
   allowNew: allowNew = false,
   emit: emit = "csv",
   language,
+  caseSensitive = false,
+  noscript = "text",
+  note,
 }: {
   name: string
   /** Popis nad poľom. Keď chýba, pole si ho vypýta obal cez `<label>`. */
@@ -115,9 +127,22 @@ export default function MultiSelect({
   emit?: EmitShape
   /** Jazyk prostredia. */
   language?: UiLanguage
+  /**
+   * Hodnoty sú identifikátory, nie text — nemenia sa na malé písmená
+   * (oddelenia v prideľovaní a vo filtri knižnice).
+   */
+  caseSensitive?: boolean
+  /**
+   * Záloha bez JavaScriptu: textové pole (štítky — dajú sa napísať), alebo
+   * zaškrtávacie políčka (identifikátory — tie nikto písať nevie).
+   */
+  noscript?: "text" | "checkboxes"
+  /** Poznámka v päte zoznamu — napr. že oddelenie platí aj pre podriadené. */
+  note?: string
 }) {
   const t = dictionary(language).multiSelect
-  const [chosen, setChosen] = useState<string[]>(selected.map(normalizeValue))
+  const norm = (v: string) => (caseSensitive ? v.trim() : normalizeValue(v))
+  const [chosen, setChosen] = useState<string[]>(selected.map(norm))
   const [extra, setExtra] = useState<MultiSelectOption[]>([])
   const [query, setQuery] = useState("")
   const [open, setOpen] = useState(false)
@@ -126,9 +151,9 @@ export default function MultiSelect({
   const input = useRef<HTMLInputElement>(null)
   const listId = useId()
 
-  const all = mergeOptions([...options, ...extra], chosen)
+  const all = mergeOptions([...options, ...extra], chosen, caseSensitive)
   const visible = filterOptions(all, query)
-  const byValue = new Map(all.map(o => [normalizeValue(o.value), o.label]))
+  const byValue = new Map(all.map(o => [norm(o.value), o.label]))
 
   // Kliknutie mimo aj Escape zatvárajú — bez toho zoznam prekrýva formulár
   // a človek nechápe, prečo sa nedá kliknúť na ďalšie pole.
@@ -142,7 +167,7 @@ export default function MultiSelect({
   }, [open])
 
   function toggle(value: string) {
-    const v = normalizeValue(value)
+    const v = norm(value)
     setChosen(z => (z.includes(v) ? z.filter(x => x !== v) : [...z, v]))
   }
 
@@ -151,12 +176,12 @@ export default function MultiSelect({
     const raw = query.trim()
     if (!raw) return
     const hit = all.find(o => fold(o.label) === fold(raw) || fold(o.value) === fold(raw))
-    const value = normalizeValue(hit ? hit.value : raw)
+    const value = norm(hit ? hit.value : raw)
     if (!hit) {
       if (!allowNew) return
       // Pôvodný zápis si pamätáme kvôli chipu: v ňom má byť „Právne
       // a legislatíva", nie „právne a legislatíva".
-      setExtra(z => (z.some(o => normalizeValue(o.value) === value) ? z : [...z, { value, label: raw }]))
+      setExtra(z => (z.some(o => norm(o.value) === value) ? z : [...z, { value, label: raw }]))
     }
     setChosen(z => (z.includes(value) ? z : [...z, value]))
     setQuery("")
@@ -244,7 +269,7 @@ export default function MultiSelect({
       {open && (
         <div className="multiselect-list" id={listId} role="listbox" aria-multiselectable="true">
           {visible.map((o, i) => {
-            const v = normalizeValue(o.value)
+            const v = norm(o.value)
             const has = chosen.includes(v)
             return (
               <div
@@ -258,7 +283,15 @@ export default function MultiSelect({
                 onMouseDown={e => { e.preventDefault(); toggle(v) }}
               >
                 <span className="multiselect-mark" aria-hidden="true">{has ? "✓" : ""}</span>
-                <span className="multiselect-option-name">{o.label}</span>
+                {/* Bez písania strom (odsadenie podľa úrovne), s písaním
+                    výsledky s cestou — rám KOMPONENT-vyber-oddelenia. */}
+                <span
+                  className="multiselect-option-name"
+                  style={!query.trim() && o.level ? { paddingLeft: (o.level - 1) * 18 } : undefined}
+                >
+                  {o.label}
+                  {query.trim() && o.path && <span className="multiselect-option-path">{o.path}</span>}
+                </span>
                 {o.count !== undefined && <span className="multiselect-option-count">{o.count}</span>}
               </div>
             )
@@ -270,6 +303,7 @@ export default function MultiSelect({
             </p>
           )}
 
+          {note && <p className="multiselect-note">{note}</p>}
           <div className="multiselect-footer">
             <button
               type="button"
@@ -292,13 +326,26 @@ export default function MultiSelect({
       {/* Bez JavaScriptu zostáva pôvodné pole. Je horšie, ale funguje —
           a odošle sa rovnaký tvar, aký číta `splitList()`. */}
       <noscript>
-        <input
-          className="field-input"
-          name={name}
-          defaultValue={serialize(selected.map(normalizeValue))}
-          autoCapitalize="none"
-          autoCorrect="off"
-        />
+        {noscript === "checkboxes" ? (
+          <div className="multiselect-noscript">
+            {options.map(o => (
+              <label key={o.value} className="hr-choice">
+                <input type="checkbox" name={name} value={o.value} defaultChecked={selected.map(norm).includes(norm(o.value))} />
+                <span style={o.level ? { paddingLeft: (o.level - 1) * 18 } : undefined}>
+                  {o.label}{o.count !== undefined && <span className="quiet"> · {o.count}</span>}
+                </span>
+              </label>
+            ))}
+          </div>
+        ) : (
+          <input
+            className="field-input"
+            name={name}
+            defaultValue={serialize(selected.map(norm))}
+            autoCapitalize="none"
+            autoCorrect="off"
+          />
+        )}
       </noscript>
     </div>
   )

@@ -8,6 +8,7 @@
  */
 
 import { notFound, redirect } from "next/navigation"
+import { treeOptions } from "@/lib/treeOptions"
 import Link from "next/link"
 import { peopleContext, loadPersonById, ASSIGNABLE_ROLES } from "@/lib/people"
 import { isHr } from "@/lib/hr"
@@ -17,7 +18,7 @@ import EvidenceTimeline from "@/components/EvidenceTimeline"
 import { audiencesInOrg, personTagClass } from "@/lib/persons"
 import { availableOptions } from "@/lib/codelistsTenant"
 import { displayName, needsInvitation } from "@/lib/personFields"
-import { allDepartments, flattenTree, pathTo } from "@/lib/departments"
+import { allDepartments, flattenTree } from "@/lib/departments"
 import Select from "@/components/Select"
 import TagSelect from "@/components/TagSelect"
 import Notice from "@/components/Notice"
@@ -58,10 +59,6 @@ export default async function PersonDetailPage({
   const workplaces = availableOptions(ctx.tenant, "workplace")
   const tree = await allDepartments(ctx.person.companyCode)
   const treeRows = flattenTree(tree)
-  // Celá cesta, nie len vlastné oddelenie: „Oddelenie sociálnych sietí" samo
-  // o sebe nepovie, pod koho patrí, a práve to rozhoduje o tom, ktoré
-  // pridelenia sa človeka týkajú.
-  const placement = pathTo(tree, o.departmentId)
 
   const branding = brandingView(ctx.tenant)
   const language = ctx.person.language
@@ -194,7 +191,7 @@ export default async function PersonDetailPage({
 
         <div className="field">
           <span className="field-label">{t.workplace}</span>
-          <Select
+          <Select language={language}
             name="workplace"
             fieldLabel={t.workplace}
             initial={o.workplace ?? ""}
@@ -216,16 +213,13 @@ export default async function PersonDetailPage({
 
         <div className="field">
           <span className="field-label">{t.department}</span>
-          <Select
+          <Select language={language}
             name="departmentId"
             fieldLabel={t.department}
             initial={o.departmentId ?? ""}
             options={[
               { value: "", label: t.departmentNone },
-              ...treeRows.map(r => ({
-                value: r.department.id,
-                label: `${"— ".repeat(r.level - 1)}${r.department.name}`,
-              })),
+              ...treeOptions(treeRows.map(r => ({ id: r.department.id, name: r.department.name, level: r.level }))),
             ]}
           />
           <span className="quiet field-hint">
@@ -236,10 +230,9 @@ export default async function PersonDetailPage({
                 {t.noDepartmentsAfter}
               </>
             ) : (
-              <>
-                {t.departmentNote}
-                {placement.length > 1 ? t.placement(placement.map(x => x.name).join(" › ")) : ""}
-              </>
+              // Cesta v strome je pod hodnotou výberu (rám KOMPONENT-vyber-oddelenia),
+              // veta „Zaradenie: …" by ju len opakovala.
+              t.departmentNote
             )}
           </span>
         </div>
@@ -252,7 +245,7 @@ export default async function PersonDetailPage({
 
         <div className="field">
           <span className="field-label">{t.personType}</span>
-          <Select
+          <Select language={language}
             name="personType"
             options={Object.entries(d.types).map(([value, label]) => ({ value, label }))}
             initial={o.personType}
@@ -263,7 +256,7 @@ export default async function PersonDetailPage({
 
         <div className="field">
           <span className="field-label">{t.language}</span>
-          <Select
+          <Select language={language}
             name="language"
             options={UI_LANGUAGES.map(l => ({ value: l, label: d.languages[l] ?? l }))}
             initial={o.language}

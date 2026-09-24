@@ -8,6 +8,7 @@
  */
 
 import { notFound, redirect } from "next/navigation"
+import { treeOptions } from "@/lib/treeOptions"
 import Link from "next/link"
 import Notice from "@/components/Notice"
 import { MAX_BYTES, MAX_FORM_BYTES, SOURCE_EXTENSIONS } from "@/lib/fileStore"
@@ -186,34 +187,35 @@ export default async function NewDocumentPage({
 
         {/*
           Druh je povinný a medzi hlavnými poľami (NAHRAVANIE, úloha 5 /
-          ADR-010): zoskupovanie prebral po Zaradení. Natívny `<select
-          required>`, nie komponent Select — ten povinnosť vynútiť nevie
-          (skrytý input) a natívne pole ju drží aj bez skriptu. Server ho
-          nechá nepovinný: import, seed a staré dokumenty bez Druhu sa
-          nerozbijú (rozhodnutie Jána 2026-09-21).
+          ADR-010): zoskupovanie prebral po Zaradení. Od 24. 9. 2026 Select
+          s hľadaním (rám KOMPONENT-vyber-oddelenia, Q3): povinnosť s JS
+          stráži skryté povinné pole, bez JS `<noscript><select required>`.
+          Server ho nechá nepovinný: import, seed a staré dokumenty bez Druhu
+          sa nerozbijú (rozhodnutie Jána 2026-09-21).
         */}
         <label className="field">
           <span className="field-label">{tl.category}</span>
-          <select className="field-input" name="category" required defaultValue="">
-            <option value="" disabled>{t.unset}</option>
-            {codelistOptions("category", extras).map(o => (
-              <option key={o.value} value={o.value}>{o.label}</option>
-            ))}
-          </select>
+          <Select language={ctx.person.language}
+            name="category"
+            required
+            searchable
+            fieldLabel={tl.category}
+            options={codelistOptions("category", extras)}
+          />
           <span className="quiet field-hint">
             {t.categoryNote}{CODELISTS.category.items.slice(0, 8).map(p => p.key).join(", ")}.
           </span>
         </label>
         <div className="field">
           <span className="field-label">{t.accessLevel}</span>
-          <Select name="accessLevel" options={codelistOptions("accessLevel")} initial="internal" fieldLabel={t.accessLevel} />
+          <Select language={ctx.person.language} name="accessLevel" options={codelistOptions("accessLevel")} initial="internal" fieldLabel={t.accessLevel} />
           <span className="quiet field-hint">
             <code>internal</code>{t.accessInternalNote}<code>public</code>{t.accessPublicNote}
           </span>
         </div>
         <div className="field">
           <span className="field-label">{t.documentLanguage}</span>
-          <Select name="language" options={codelistOptions("language")} initial={ctx.tenant.defaultLanguage ?? "sk"} fieldLabel={t.documentLanguage} />
+          <Select language={ctx.person.language} name="language" options={codelistOptions("language")} initial={ctx.tenant.defaultLanguage ?? "sk"} fieldLabel={t.documentLanguage} />
           <span className="quiet field-hint">
             {t.documentLanguageNote}
           </span>
@@ -230,16 +232,13 @@ export default async function NewDocumentPage({
           <div className="upload-grid upload-optional-grid">
         <div className="field">
           <span className="field-label">{tf.ownerDepartment}</span>
-          <Select
+          <Select language={ctx.person.language}
             name="ownerDepartmentId"
             initial=""
             fieldLabel={tf.ownerDepartment}
             options={[
               { value: "", label: tf.ownerDepartmentNone },
-              ...departmentRows.map(r => ({
-                value: r.department.id,
-                label: `${"— ".repeat(r.level - 1)}${r.department.name}`,
-              })),
+              ...treeOptions(departmentRows.map(r => ({ id: r.department.id, name: r.department.name, level: r.level }))),
             ]}
           />
           <span className="quiet field-hint">
@@ -266,7 +265,7 @@ export default async function NewDocumentPage({
         </div>
         <div className="field">
           <span className="field-label">{t.scope}</span>
-          <Select name="scope" options={codelistOptions("scope")} initial="company" fieldLabel={t.scope} />
+          <Select language={ctx.person.language} name="scope" options={codelistOptions("scope")} initial="company" fieldLabel={t.scope} />
         </div>
           </div>
         </details>

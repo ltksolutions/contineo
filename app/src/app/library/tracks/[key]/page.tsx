@@ -152,7 +152,7 @@ export default async function TrackDetailPage({
           {carry}
           <div className="field">
             <span className="field-label">{t.addStep}</span>
-            <Select
+            <Select language={ctx.person.language}
               name="documentId"
               options={[{ value: "", label: t.chooseDocument }, ...available]}
               initial=""

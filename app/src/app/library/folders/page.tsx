@@ -11,6 +11,7 @@
  */
 
 import Link from "next/link"
+import { treeOptions } from "@/lib/treeOptions"
 import { notFound, redirect } from "next/navigation"
 import { libraryContext } from "@/lib/library"
 import { allFolders, flattenTree, subtree, counts, depth, canMove, MAX_DEPTH } from "@/lib/folders"
@@ -137,7 +138,7 @@ export default async function FoldersPage({
                     <form action={moveFolderAction} className="tree-form">
                       <input type="hidden" name="id" value={p.id} />
                       {carried.map(([k, v], i) => <input key={`${k}-${i}`} type="hidden" name={k} value={v} />)}
-                      <Select
+                      <Select language={ctx.person.language}
                         name="parentId"
                         initial={p.parentId ?? ""}
                         fieldLabel={tf.parentOf(p.name)}
@@ -148,12 +149,8 @@ export default async function FoldersPage({
                         // kópiou pravidla — druhá kópia sa s prvou raz rozíde.
                         options={[
                           { value: "", label: tf.topLevel },
-                          ...tree
-                            .filter(r => canMove(folders, p.id, r.folder.id) === null)
-                            .map(r => ({
-                              value: r.folder.id,
-                              label: `${"— ".repeat(r.level - 1)}${r.folder.name}`,
-                            })),
+                          ...treeOptions(tree.map(r => ({ id: r.folder.id, name: r.folder.name, level: r.level })))
+                            .filter(o => canMove(folders, p.id, o.value) === null),
                         ]}
                       />
                       <button className="button button--quiet" type="submit">{tf.move}</button>
@@ -197,18 +194,14 @@ export default async function FoldersPage({
           {carried.map(([k, v], i) => <input key={`${k}-${i}`} type="hidden" name={k} value={v} />)}
           <input className="field-input" name="name" placeholder={tf.newFolder}
                  aria-label={tf.newFolderName} required />
-          <Select
+          <Select language={ctx.person.language}
             name="parentId"
             initial=""
             fieldLabel={tf.parentFolder}
             options={[
               { value: "", label: tf.topLevel },
-              ...tree
-                .filter(r => depth(folders, r.folder.id) < MAX_DEPTH)
-                .map(r => ({
-                  value: r.folder.id,
-                  label: `${"— ".repeat(r.level - 1)}${r.folder.name}`,
-                })),
+              ...treeOptions(tree.map(r => ({ id: r.folder.id, name: r.folder.name, level: r.level })))
+                .filter(o => depth(folders, o.value) < MAX_DEPTH),
             ]}
           />
           <button className="button button--quiet" type="submit">{tf.create}</button>

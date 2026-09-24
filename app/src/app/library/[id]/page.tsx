@@ -8,6 +8,7 @@
  */
 
 import { notFound, redirect } from "next/navigation"
+import { treeOptions } from "@/lib/treeOptions"
 import Link from "next/link"
 import { libraryContext } from "@/lib/library"
 import { libraryDetail, statusTagClass, displayStatus, versionMetaSuggestions, tagOptions } from "@/lib/libraryRead"
@@ -1092,22 +1093,22 @@ export default async function DocumentDetailPage({
 
           <div className="field">
             <span className="field-label">{t.scope}</span>
-            <Select name="scope" options={codelistOptions("scope")} initial={d.scope ?? "company"} fieldLabel={t.scope} />
+            <Select language={language} name="scope" options={codelistOptions("scope")} initial={d.scope ?? "company"} fieldLabel={t.scope} />
           </div>
 
           <div className="field">
             <span className="field-label">{t.accessLevel}</span>
-            <Select name="accessLevel" options={codelistOptions("accessLevel")} initial={d.accessLevel ?? "internal"} fieldLabel={t.accessLevel} />
+            <Select language={language} name="accessLevel" options={codelistOptions("accessLevel")} initial={d.accessLevel ?? "internal"} fieldLabel={t.accessLevel} />
           </div>
 
           <div className="field">
             <span className="field-label">{t.documentLanguage}</span>
-            <Select name="language" options={codelistOptions("language")} initial={d.language ?? "sk"} fieldLabel={t.documentLanguage} />
+            <Select language={language} name="language" options={codelistOptions("language")} initial={d.language ?? "sk"} fieldLabel={t.documentLanguage} />
           </div>
 
           <div className="field">
             <span className="field-label">{t.category}</span>
-            <Select
+            <Select language={language}
               name="category"
               options={[{ value: "", label: t.unset }, ...codelistOptions("category", extras)]}
               initial={d.category ?? ""}
@@ -1117,16 +1118,13 @@ export default async function DocumentDetailPage({
 
           <div className="field">
             <span className="field-label">{tf.ownerDepartment}</span>
-            <Select
+            <Select language={language}
               name="ownerDepartmentId"
               initial={d.ownerDepartmentId ?? ""}
               fieldLabel={tf.ownerDepartment}
               options={[
                 { value: "", label: tf.ownerDepartmentNone },
-                ...departmentRows.map(r => ({
-                  value: r.department.id,
-                  label: `${"— ".repeat(r.level - 1)}${r.department.name}`,
-                })),
+                ...treeOptions(departmentRows.map(r => ({ id: r.department.id, name: r.department.name, level: r.level }))),
               ]}
             />
             <span className="quiet field-hint">
@@ -1210,16 +1208,13 @@ export default async function DocumentDetailPage({
         <input type="hidden" name="documentId" value={d.documentId} />
         <div className="field">
           <span className="field-label">{t.folder}</span>
-          <Select
+          <Select language={language}
             name="folderId"
             initial={d.folderId ?? ""}
             fieldLabel={t.folder}
             options={[
               { value: "", label: t.folderUnfiled },
-              ...folderTree.map(r => ({
-                value: r.folder.id,
-                label: `${"— ".repeat(r.level - 1)}${r.folder.name}`,
-              })),
+              ...treeOptions(folderTree.map(r => ({ id: r.folder.id, name: r.folder.name, level: r.level }))),
             ]}
           />
           <span className="quiet field-hint">{t.folderNote}</span>
@@ -1436,7 +1431,7 @@ function CarryOverFields({
 
       <fieldset className="hr-group" style={{ border: "1px solid var(--line)", margin: 0 }}>
         <legend className="field-label">{tc.due}</legend>
-        <Select
+        <Select language={language}
           name="dueMode"
           fieldLabel={tc.due}
           initial="none"

@@ -7,11 +7,12 @@
  */
 
 import { notFound, redirect } from "next/navigation"
+import { treeOptions } from "@/lib/treeOptions"
 import Link from "next/link"
 import { libraryContext } from "@/lib/library"
 import { libraryList, libraryFacets, statusTagClass, displayStatus } from "@/lib/libraryRead"
 import { allFolders, flattenTree, counts } from "@/lib/folders"
-import { allDepartments } from "@/lib/departments"
+import { allDepartments, flattenTree as flattenDepartments } from "@/lib/departments"
 import { documentsProgress } from "@/lib/libraryProgress"
 import { codelistOptions } from "@/lib/codelists"
 import { tenantExtras } from "@/lib/codelistsTenant"
@@ -162,10 +163,7 @@ export default async function LibraryPage({
    */
   const folderOptions = [
     { value: "", label: tf.unfiled },
-    ...tree.map(r => ({
-      value: r.folder.id,
-      label: `${"— ".repeat(r.level - 1)}${r.folder.name}`,
-    })),
+    ...treeOptions(tree.map(r => ({ id: r.folder.id, name: r.folder.name, level: r.level }))),
   ]
   const conditions = filters.conditions
   /*
@@ -300,10 +298,18 @@ export default async function LibraryPage({
     { key: "category", rows: facets.category },
     { key: "status", rows: facets.status },
     { key: "accessLevel", rows: facets.accessLevel },
-    // Až za prístupom: je to nepovinné pole, takže pri väčšine organizácií
-    // bude skupina prázdna a `facetGroups` ju vtedy nevykreslí vôbec.
-    { key: "ownerDepartment", rows: facets.ownerDepartment },
+    // Oddelenie tu už nie je: je to výber s hľadaním a stromom nižšie
+    // (rám KOMPONENT-vyber-oddelenia, 24. 9. 2026), ako Značky.
   ]
+  /*
+   * Oddelenia vo filtri — v poradí stromu, s cestou, len tie, ktoré nejaký
+   * dokument má (`facets.ownerDepartment`), s počtom dokumentov.
+   */
+  const departmentCounts = new Map(facets.ownerDepartment.map(r => [r.value, r.count]))
+  const departmentFacet = treeOptions(flattenDepartments(departments)
+    .map(r => ({ id: r.department.id, name: r.department.name, level: r.level })))
+    .filter(o => departmentCounts.has(o.value))
+    .map(o => ({ ...o, count: departmentCounts.get(o.value) }))
 
 
   /*
@@ -445,6 +451,25 @@ export default async function LibraryPage({
           filtrovať podľa značky, ktorú nikto nemá, znamená prázdny zoznam
           a človek by hľadal chybu v dátach.
         */}
+        {departmentFacet.length > 0 && (
+          <form className="facet-group" method="get" action="/library">
+            <MultiSelect
+              name="ownerDepartment"
+              label={tfd.ownerDepartmentShort}
+              emit="repeat"
+              caseSensitive
+              noscript="checkboxes"
+              language={uiLanguage}
+              selected={filters.ownerDepartment}
+              options={departmentFacet}
+            />
+            {carried
+              .filter(([k]) => k !== "ownerDepartment")
+              .map(([k, v], i) => <input key={`${k}-${i}`} type="hidden" name={k} value={v} />)}
+            <button className="button button--quiet facet-apply" type="submit">{t.apply}</button>
+          </form>
+        )}
+
         {facets.tag.length > 0 && (
           <form className="facet-group" method="get" action="/library">
             <MultiSelect
@@ -807,7 +832,7 @@ export default async function LibraryPage({
         <form className="builder-add" method="get" action="/library">
           <div className="field">
             <span className="field-label">{tb.field}</span>
-            <Select name="add" options={fieldOps} initial={fieldOps[0]?.value} fieldLabel={tb.field} />
+            <Select language={ctx.person.language} name="add" options={fieldOps} initial={fieldOps[0]?.value} fieldLabel={tb.field} />
             {/*
               Veta je vidieť vždy, nie až po výbere „Platné do po".
               Bez JavaScriptu sa na zmenu výberu zareagovať nedá, a keby
@@ -977,7 +1002,7 @@ export default async function LibraryPage({
             */}
             <div className="field bulk-folder">
               <span className="field-label">{tl.moveTo}</span>
-              <Select
+              <Select language={ctx.person.language}
                 name="folderId"
                 fieldLabel={tl.moveTo}
                 options={folderOptions}
@@ -1009,7 +1034,7 @@ export default async function LibraryPage({
               <div className="filter-sheet-body bulk-move-body">
                 <div className="field">
                   <span className="field-label">{tl.moveTo}</span>
-                  <Select
+                  <Select language={ctx.person.language}
                     name="folderId"
                     fieldLabel={tl.moveTo}
                     options={folderOptions}

@@ -20,6 +20,8 @@
  */
 
 import { notFound, redirect } from "next/navigation"
+import MultiSelect from "@/components/MultiSelect"
+import { treeOptions } from "@/lib/treeOptions"
 import Link from "next/link"
 import { hrContext, assignableDocuments } from "@/lib/hr"
 import { audienceFromSelection, audienceImpact, type Audience } from "@/lib/assignments"
@@ -182,34 +184,31 @@ export default async function AssignPage({
               </span>
             </label>
 
+            {/*
+              Oddelenia ako výber s hľadaním a stromom (rám
+              KOMPONENT-vyber-oddelenia, 24. 9. 2026) — dovtedy štítky
+              v strome, pri desiatkach oddelení stena. Hodnoty sú tie isté
+              `department:<id>` ako predtým; bez JavaScriptu zaškrtávacie
+              políčka. Počet ľudí vrátane podriadených (`withDescendants`).
+            */}
             {treeRows.length > 0 && (
               <>
                 <div className="hr-subtitle">{t.departments}</div>
-                <p className="quiet field-hint" style={{ margin: "0 0 8px" }}>
-                  {t.departmentNoteBefore}<strong>{t.departmentNoteHighlight}</strong>{t.departmentNoteAfter}
-                </p>
-                <div className="tags-list">
-                  {treeRows.map(({ department: department, level: level }) => {
-                    const p = departmentCounts.get(department.id) ?? { direct: 0, withDescendants: 0 }
-                    return (
-                      <label
-                        key={`d-${department.id}`}
-                        className="tag tag--choice tag--field"
-                        style={{ marginLeft: (level - 1) * 14 }}
-                      >
-                        <input
-                          type="checkbox"
-                          name="audience"
-                          value={`department:${department.id}`}
-                          defaultChecked={selectedAudiences.has(`department:${department.id}`)}
-                        />
-                        <span className="tag-mark" aria-hidden="true" />
-                        {department.name}
-                        <span className="tag-count">{p.withDescendants}</span>
-                      </label>
-                    )
-                  })}
-                </div>
+                <MultiSelect
+                  name="audience"
+                  emit="repeat"
+                  caseSensitive
+                  noscript="checkboxes"
+                  language={language}
+                  note={`${t.departmentNoteBefore}${t.departmentNoteHighlight}${t.departmentNoteAfter}`}
+                  selected={[...selectedAudiences].filter(a => a.startsWith("department:"))}
+                  options={treeOptions(treeRows.map(r => ({ id: r.department.id, name: r.department.name, level: r.level })))
+                    .map(o => ({
+                      ...o,
+                      value: `department:${o.value}`,
+                      count: (departmentCounts.get(o.value) ?? { withDescendants: 0 }).withDescendants,
+                    }))}
+                />
               </>
             )}
 
@@ -315,7 +314,7 @@ export default async function AssignPage({
                 nejednotnou. */}
             <legend className="field-label">{t.due}</legend>
 
-            <Select
+            <Select language={language}
               name="dueMode"
               fieldLabel={t.due}
               initial={q.dueMode ?? "none"}
