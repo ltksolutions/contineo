@@ -42,11 +42,12 @@ import { validAcknowledgements } from "@/lib/acknowledgements"
 import { roundsByVersion, stateOf } from "@/lib/approvalsDb"
 import type { CSSProperties } from "react"
 import { textFingerprint } from "@/lib/chunkIdentity"
-import { documentDraftIdentity, metaLocked, type VersionMeta } from "@/lib/versionMeta"
+import { documentDraftIdentity, metaLocked } from "@/lib/versionMeta"
 import { versionFlow, lastPreparationRound, previousApproverIds, rejectedBy } from "@/lib/versionFlow"
 import FlowSteps from "@/components/FlowSteps"
 import ApprovalRounds from "@/components/ApprovalRounds"
 import PublishSubmit from "@/components/PublishSubmit"
+import MetaFacts from "@/components/MetaFacts"
 import { initials } from "@/lib/initials"
 import { assignHref } from "@/lib/libraryBulk"
 import type { VersionFile } from "@/lib/documents"
@@ -1396,21 +1397,6 @@ function HistoryList({ title, children }: { title: string; children: React.React
         {children}
       </ul>
     </details>
-  )
-}
-
-/** Údaje o znení ako štyri fakty (ADR-013) — to, čo sa schvaľuje spolu s PDF. */
-function MetaFacts({ meta, language }: { meta: VersionMeta; language: UiLanguage }) {
-  const tm = dictionary(language).versionMeta
-  const none = dictionary(language).library.detail.side.none
-  const day = (v: Date | null) => (v ? formatDate(new Date(v), language) : none)
-  return (
-    <dl className="facts">
-      <div><dt>{tm.author}</dt><dd>{meta.author || none}</dd></div>
-      <div><dt>{tm.approvedBy}</dt><dd>{meta.approvedBy || none}</dd></div>
-      <div><dt>{tm.approvedOn}</dt><dd>{day(meta.approvedOn)}</dd></div>
-      <div><dt>{tm.effectiveFrom}</dt><dd>{day(meta.effectiveFrom)}</dd></div>
-    </dl>
   )
 }
 

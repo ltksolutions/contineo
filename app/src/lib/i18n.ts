@@ -872,6 +872,19 @@ interface Dictionary {
     effectiveFrom: (date: string) => string
     noEffectiveFrom: string
     alsoDeciding: (names: string) => string
+    /** Rám APPROVALS-pdf-konceptu (24. 9. 2026). */
+    newVersionFrom: (date: string) => string
+    firstVersionFrom: (date: string) => string
+    draftVersion: string
+    kicker: (round: number, who: string, when: string) => string
+    whatYouApprove: string
+    whatYouApproveNote: string
+    searchTextNote: string
+    metaHeading: string
+    metaNote: string
+    noteFrom: string
+    alsoDecidingHeading: string
+    readAndDecide: string
     readText: string
     noText: string
     /** Koncept sa po predložení zmenil — kolo sa týka inej podoby textu. */
@@ -3014,6 +3027,18 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     submittedBy: (who, when) => `predložil ${who} \u00b7 ${when}`,
     effectiveFrom: date => `účinnosť od ${date}`,
     noEffectiveFrom: "dátum účinnosti zatiaľ nie je \u2014 prideliť sa to bude dať až s ním",
+    newVersionFrom: d => `Nové znenie od ${d}`,
+    firstVersionFrom: d => `Prvé znenie od ${d}`,
+    draftVersion: "Nové znenie",
+    kicker: (round, who, when) => `${round}. kolo · predložil ${who} · ${when}`,
+    whatYouApprove: "Čo schvaľuješ",
+    whatYouApproveNote: "PDF, text a údaje o znení — jedným rozhodnutím",
+    searchTextNote: "Text na vyhľadávanie a odpovede — schvaľuje sa spolu s PDF",
+    metaHeading: "Údaje o znení",
+    metaNote: "súčasť schválenia · po predložení sa nedajú meniť",
+    noteFrom: "Poznámka od predkladateľa",
+    alsoDecidingHeading: "Rozhodujú aj",
+    readAndDecide: "Prečítať a rozhodnúť",
     alsoDeciding: names => `Rozhodujú aj: ${names}`,
     readText: "prečítať znenie",
     noText: "Znenie nemá text.",
@@ -5341,6 +5366,18 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     submittedBy: (who, when) => `předložil ${who} \u00b7 ${when}`,
     effectiveFrom: date => `účinnost od ${date}`,
     noEffectiveFrom: "datum účinnosti zatím není \u2014 přidělit to půjde až s ním",
+    newVersionFrom: d => `Nové znění od ${d}`,
+    firstVersionFrom: d => `První znění od ${d}`,
+    draftVersion: "Nové znění",
+    kicker: (round, who, when) => `${round}. kolo · předložil ${who} · ${when}`,
+    whatYouApprove: "Co schvaluješ",
+    whatYouApproveNote: "PDF, text a údaje o znění — jedním rozhodnutím",
+    searchTextNote: "Text pro vyhledávání a odpovědi — schvaluje se spolu s PDF",
+    metaHeading: "Údaje o znění",
+    metaNote: "součást schválení · po předložení je nelze měnit",
+    noteFrom: "Poznámka od předkladatele",
+    alsoDecidingHeading: "Rozhodují také",
+    readAndDecide: "Přečíst a rozhodnout",
     alsoDeciding: names => `Rozhodují také: ${names}`,
     readText: "přečíst znění",
     noText: "Znění nemá text.",
@@ -7659,6 +7696,18 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     submittedBy: (who, when) => `submitted by ${who} \u00b7 ${when}`,
     effectiveFrom: date => `effective from ${date}`,
     noEffectiveFrom: "no effective date yet \u2014 it cannot be assigned until it has one",
+    newVersionFrom: d => `New version from ${d}`,
+    firstVersionFrom: d => `First version from ${d}`,
+    draftVersion: "New version",
+    kicker: (round, who, when) => `Round ${round} · submitted by ${who} · ${when}`,
+    whatYouApprove: "What you are approving",
+    whatYouApproveNote: "PDF, text and version details — one decision",
+    searchTextNote: "Search and answer text — approved together with the PDF",
+    metaHeading: "Version details",
+    metaNote: "part of the approval · cannot be changed after submission",
+    noteFrom: "Note from the submitter",
+    alsoDecidingHeading: "Also deciding",
+    readAndDecide: "Read and decide",
     alsoDeciding: names => `Also deciding: ${names}`,
     readText: "read the text",
     noText: "This version has no text.",

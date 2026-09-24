@@ -5432,3 +5432,58 @@ html[data-theme="dark"] { --skeleton-sheen: rgba(255, 255, 255, 0.07); }
 :not(.flow) > .flow-steps {
   border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; margin: 0 0 18px;
 }
+
+/* ── Obrazovka schvaľovateľa v troch pásoch (rám APPROVALS-pdf-konceptu) ──
+   Hlavička · čítanie · rozhodnutie. Päta so sivým pozadím oddeľuje
+   rozhodnutie od čítania. */
+.ap-list { list-style: none; padding: 0; margin: 0; display: grid; gap: 20px; }
+.ap-card { padding: 0; overflow: hidden; }
+.ap-head { padding: 16px 18px 14px; display: grid; gap: 6px; border-bottom: 1px solid var(--line); }
+.ap-kicker {
+  display: flex; gap: 8px; flex-wrap: wrap; align-items: center;
+  font-size: var(--fs-small); color: var(--muted);
+}
+.ap-title { font-size: var(--fs-section); letter-spacing: -0.01em; margin: 0; text-wrap: pretty; overflow-wrap: anywhere; }
+.ap-body { padding: 16px 18px; display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; }
+.ap-sec { display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; }
+.ap-sec-h {
+  display: flex; justify-content: space-between; gap: 4px 10px; flex-wrap: wrap; align-items: baseline;
+  font-size: 11px; font-weight: 650; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); margin: 0;
+}
+.ap-sec-h span { font-size: 12px; letter-spacing: 0; text-transform: none; font-weight: 400; }
+.ap-box { margin: 0; padding: 12px 14px; border-radius: 10px; background: var(--bg); border: 1px solid var(--line); }
+.ap-note { font-size: var(--fs-body); line-height: 1.55; white-space: pre-line; overflow-wrap: anywhere; }
+.ap-chips { display: flex; gap: 6px; flex-wrap: wrap; }
+.ap-chip {
+  display: inline-flex; align-items: center; gap: 8px; padding: 3px 10px 3px 3px;
+  border: 1px solid var(--line); border-radius: 999px; font-size: 13px; background: var(--surface);
+}
+.ap-chip .flow-av { width: 24px; height: 24px; font-size: 10px; }
+.ap-warn {
+  margin: 0; padding: 10px 12px; border-radius: 9px;
+  background: var(--warn-bg); color: var(--warn-fg); font-size: 13.5px; line-height: 1.5;
+}
+.ap-decide {
+  padding: 16px 18px; border-top: 1px solid var(--line); background: var(--bg);
+  display: grid; gap: 12px; margin: 0;
+}
+.ap-decide .field-input { min-height: 64px; background: var(--surface); }
+.ap-btns { display: flex; gap: 10px; flex-wrap: wrap; }
+.ap-btns > .button { flex: 1 1 160px; }
+
+/* Dve a viac kôl: riadok s „Prečítať a rozhodnúť", klik rozbalí kartu. */
+.ap-fold > summary { list-style: none; cursor: pointer; }
+.ap-fold > summary::-webkit-details-marker { display: none; }
+.ap-row { display: flex; gap: 12px; align-items: center; padding: 14px 18px; }
+.ap-row-main { flex: 1; min-width: 0; display: grid; gap: 3px; }
+.ap-row .ap-title { font-size: 15px; font-weight: 650; }
+.ap-fold[open] > .ap-row { border-bottom: 1px solid var(--line); }
+.ap-fold[open] .ap-open { display: none; }
+
+@media (max-width: 639px) {
+  .ap-head, .ap-body, .ap-decide { padding-left: 14px; padding-right: 14px; }
+  .ap-btns { flex-direction: column-reverse; }
+  .ap-btns > .button { width: 100%; min-height: 44px; flex-basis: auto; }
+  .ap-row { flex-wrap: wrap; padding-left: 14px; padding-right: 14px; }
+  .ap-row .ap-open { width: 100%; min-height: 44px; justify-content: center; }
+}
