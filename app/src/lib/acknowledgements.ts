@@ -473,6 +473,14 @@ export interface EvidenceAcknowledgement {
   departmentNames: string[]
   statementText: string
   cycle: number
+  /**
+   * Zodpovedná osoba a právny základ **v čase potvrdenia** (D91, kópia pri
+   * zázname). Na obrazovke reťaze od 24. 9. 2026 (rám HR-pravny-zaklad, Q1).
+   */
+  responsibleName?: string | null
+  legalBasis?: LegalBasis | null
+  legalBasisLabel?: string | null
+  legalBasisReference?: string | null
 }
 
 /** Posledné odvolanie — kto a prečo, skopírované v čase odvolania (D24). */
@@ -502,7 +510,10 @@ export interface EvidenceRecords {
 export type EvidenceRecordInput = Pick<
   Acknowledgement,
   "personId" | "versionId" | "type" | "cycle" | "acknowledgedAt"
-> & Partial<Pick<Acknowledgement, "ip" | "departmentNames" | "statementText" | "actedBy" | "reason">>
+> & Partial<Pick<Acknowledgement,
+  "ip" | "departmentNames" | "statementText" | "actedBy" | "reason" |
+  "responsiblePerson" | "legalBasis" | "legalBasisLabel" | "legalBasisReference"
+>>
 
 /** Čistá časť — bez databázy, aby sa pravidlo o platnom odvolaní dalo otestovať. */
 export function evidenceRecordsFrom(rows: EvidenceRecordInput[]): Map<string, EvidenceRecords> {
@@ -519,6 +530,10 @@ export function evidenceRecordsFrom(rows: EvidenceRecordInput[]): Map<string, Ev
           departmentNames: r.departmentNames ?? [],
           statementText: r.statementText ?? "",
           cycle,
+          responsibleName: r.responsiblePerson?.fullName ?? null,
+          legalBasis: r.legalBasis ?? null,
+          legalBasisLabel: r.legalBasisLabel ?? null,
+          legalBasisReference: r.legalBasisReference ?? null,
         }
       }
     } else if (!cur.revocation || cycle > cur.revocation.cycle) {
@@ -551,6 +566,7 @@ export async function evidenceRecords(companyCode: string): Promise<Map<string, 
         projection: {
           personId: 1, versionId: 1, type: 1, cycle: 1, acknowledgedAt: 1,
           ip: 1, departmentNames: 1, statementText: 1, actedBy: 1, reason: 1,
+          responsiblePerson: 1, legalBasis: 1, legalBasisLabel: 1, legalBasisReference: 1,
         },
       },
     )

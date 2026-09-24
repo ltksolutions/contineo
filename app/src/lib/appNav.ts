@@ -115,6 +115,19 @@ export function isActive(pathname: string, href: string): boolean {
   return pathname === href || pathname.startsWith(href + "/")
 }
 
+/**
+ * Aktívna je **najdlhšia** zhodná položka, nie každá zhodná. Na
+ * `/hr/evidence` by inak svietili „Pridelené normy" (`/hr`) aj „Reťaz
+ * dôkazov" (`/hr/evidence`) — rám HR-pravny-zaklad, bod 8.
+ */
+export function activeHref(pathname: string, hrefs: string[]): string | null {
+  let best: string | null = null
+  for (const h of hrefs) {
+    if (isActive(pathname, h) && (!best || h.length > best.length)) best = h
+  }
+  return best
+}
+
 /* ── Tri tvary navigácie (NASADENIE, PR 2) ──────────────────────────────── */
 
 /**

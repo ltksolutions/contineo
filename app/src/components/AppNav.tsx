@@ -43,7 +43,7 @@ import { useEffect, useRef, useState } from "react"
 import Link from "next/link"
 import Icon from "./Icon"
 import { usePathname } from "next/navigation"
-import { navItems, isActive, tabbarItems, isTabActive, STRIP_DEFAULT_VISIBLE } from "@/lib/appNav"
+import { navItems, activeHref, tabbarItems, isTabActive, STRIP_DEFAULT_VISIBLE } from "@/lib/appNav"
 import type { NavLayout, NavFlags, NavCounts, NavItem } from "@/lib/appNav"
 import { dictionary, type UiLanguage } from "@/lib/i18n"
 
@@ -123,8 +123,11 @@ export default function AppNav({
     // `fingerprint` nesie aj cestu: aktívna položka je hrubším rezom širšia.
   }, [fingerprint, layout])
 
+  // Jedna aktívna položka — najdlhšia zhodná adresa (`activeHref`).
+  const current = activeHref(pathname, items.map(o => o.href))
+
   const link = (o: NavItem, icon = true) => {
-    const active = isActive(pathname, o.href)
+    const active = o.href === current
     return (
       <Link
         key={o.href}
@@ -220,7 +223,7 @@ export default function AppNav({
       */}
       <div ref={measure} className="app-nav app-nav--topbar app-nav--measure" aria-hidden="true">
         {items.map(o => (
-          <span key={o.href} className={`app-nav-item${isActive(pathname, o.href) ? " is-active" : ""}`}>
+          <span key={o.href} className={`app-nav-item${o.href === current ? " is-active" : ""}`}>
             {t[o.key]}
             {typeof o.count === "number" && o.count > 0 && <span className="app-nav-count">{o.count}</span>}
           </span>

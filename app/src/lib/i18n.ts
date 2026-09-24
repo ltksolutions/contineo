@@ -685,6 +685,8 @@ interface Dictionary {
       send: (n: number) => string
     }
     assign: {
+      /** Počet v hlavičke skupiny „Ktoré normy" (rám HR-pravny-zaklad, bod 5). */
+      documentsCount: (n: number) => string
       back: string
       heading: string
       introBefore: string
@@ -836,6 +838,11 @@ interface Dictionary {
 
   /** Reťaz dôkazov o potvrdení (ADR-005). Os je pohľad, nie záznam. */
   evidence: {
+    /** Hlavička riadkov reťaze od 640 px (rám HR-pravny-zaklad, bod 6). */
+    colPerson: string
+    colDocument: string
+    colState: string
+    colDate: string
     heading: string
     intro: string
     /** Dva prázdne stavy: nič nevyhovuje filtru vs. žiadne záznamy vôbec. */
@@ -2862,6 +2869,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       send: (n) => `Odoslať ${n} ${n === 1 ? "e-mail" : n < 5 ? "e-maily" : "e-mailov"}`,
     },
     assign: {
+      documentsCount: n => `${n} platných`,
       back: "← Späť na prehľad",
       heading: "Prideliť normy",
       introBefore: "Prideľuje sa ",
@@ -3006,6 +3014,10 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     submittedBy: who => `predložil ${who}`,
   },
   evidence: {
+    colPerson: "Osoba",
+    colDocument: "Predpis · znenie",
+    colState: "Stav",
+    colDate: "Dátum",
     heading: "Reťaz dôkazov",
     intro: "Čo sa dialo s každou uloženou povinnosťou \u2014 od pridelenia po potvrdenie. Skladá sa pri zobrazení; neukladá sa nič.",
     emptyTitle: "Žiadne záznamy",
@@ -5222,6 +5234,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       send: (n) => `Odeslat ${n} ${n === 1 ? "e-mail" : n < 5 ? "e-maily" : "e-mailů"}`,
     },
     assign: {
+      documentsCount: n => `${n} platných`,
       back: "← Zpět na přehled",
       heading: "Přidělit předpisy",
       introBefore: "Přiděluje se ",
@@ -5366,6 +5379,10 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     submittedBy: who => `předložil ${who}`,
   },
   evidence: {
+    colPerson: "Osoba",
+    colDocument: "Předpis · znění",
+    colState: "Stav",
+    colDate: "Datum",
     heading: "Řetěz důkazů",
     intro: "Co se dělo s každou uloženou povinností \u2014 od přidělení po potvrzení. Skládá se při zobrazení; neukládá se nic.",
     emptyTitle: "Žádné záznamy",
@@ -7574,6 +7591,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       send: (n) => `Send ${n} ${n === 1 ? "e-mail" : "e-mails"}`,
     },
     assign: {
+      documentsCount: n => `${n} current`,
       back: "← Back to the overview",
       heading: "Assign documents",
       introBefore: "What is assigned is ",
@@ -7717,6 +7735,10 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     submittedBy: who => `submitted by ${who}`,
   },
   evidence: {
+    colPerson: "Person",
+    colDocument: "Document · version",
+    colState: "Status",
+    colDate: "Date",
     heading: "Chain of evidence",
     intro: "What happened with each obligation \u2014 from assignment to acknowledgement. Composed on display; nothing is stored.",
     emptyTitle: "No records",
