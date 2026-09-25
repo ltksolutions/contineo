@@ -4,6 +4,47 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Viac právnych základov pri jednom predpise (2026-09-25)
+
+Zodpovedná osoba môže pri znení vybrať **jeden alebo viac právnych
+základov**, aj zákonnú povinnosť spolu s oprávneným záujmom. Keď má znenie
+aspoň jednu zákonnú povinnosť, záznam o potvrdení sa pri námietke nemaže.
+Prehľad pre DPO kontroluje každý základ zvlášť.
+
+### Znenie určuje dátum účinnosti, nie označenie (2026-09-25)
+
+Pri zverejnení sa už nevypĺňa „Označenie znenia" ani „Odkiaľ je dátum".
+Formulka potvrdenia znie: *„… s dokumentom „Pracovný poriadok SFZ" v znení
+účinnom od 1. 1. 2027 …"*. Zmizla aj „Oprava údajov" pri znení; odvolanie
+potvrdení personalistom zostáva.
+
+### Názov dokumentu sa mení novým znením (2026-09-25)
+
+Keď má dokument zverejnené znenie, jeho názov sa v úprave dokumentu meniť
+nedá — nový názov sa zadá pri príprave nového znenia, schvaľovatelia ho
+schvália spolu so znením a zverejnením sa zmení v knižnici aj vo formulke.
+Úprava dokumentu má vlastnú obrazovku a priečinok je priamo v nej.
+
+### Nový postup nového znenia v štyroch krokoch (2026-09-24)
+
+Na detaile dokumentu je karta **Príprava → Schválenie → Zverejnenie →
+Pridelenie**. V príprave sú údaje o znení, schvaľovatelia (predvyplnení
+z posledného kola) aj zodpovedná osoba v jednom formulári s tlačidlom
+„Uložiť a predložiť na schválenie". Pri zverejnení sa dá hneď prideliť
+novelu tým istým ľuďom. „Nové znenie" je hlavné tlačidlo v hlavičke, pri
+ňom aj **Stiahnuť PDF** a **Stiahnuť zdrojový súbor** (len pre správcu obsahu).
+
+### Nový vzhľad podľa návrhov z Claude Design (2026-09-24)
+
+Prepracované obrazovky: potvrdenie predpisu (kontakt, ochrana údajov),
+**Na schválenie**, **Ochrana údajov** pre DPO, stránka **Ochrana osobných
+údajov**, vyradenie osoby, **Prideliť normy** a **Reťaz dôkazov** (zodpovedná
+osoba a právny základ v čase potvrdenia), **Nastavenie organizácie**
+(sekcie, číselníky v stĺpcoch). Výbery s dlhým zoznamom — oddelenia, druhy,
+priečinky — majú **hľadanie** a ukazujú cestu v strome; pri pozvaní osoby
+sa oddelenie vyberá zo zoznamu. Automatické založenie osôb je v záložke
+Prihlasovanie.
+
 ### Údaje o znení: autor, kto schválil a dátumy (2026-09-24)
 
 Pri každom znení predpisu sa eviduje **autor** (osoba, oddelenie alebo

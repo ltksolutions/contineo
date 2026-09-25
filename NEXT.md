@@ -6,73 +6,66 @@
 > **Tento súbor je indícia, `git log` je pravda.** Keď si protirečia, verí sa
 > gitu a NEXT.md sa opraví. Aktualizuje sa pri rituáli **„Poupratuj"**.
 
-Posledná aktualizácia: **2026-09-24 popoludní** (po PR #108: ADR-012 retencia a DPO, C1 `/privacy`, ADR-013 údaje o znení)
+Posledná aktualizácia: **2026-09-25** (po PR #128: rámy z Claude Design, ADR-014 až ADR-017)
 
 ---
 
 ## Kde sme teraz
 
 Všetko je **zlúčené v `main` a nasadené** na `intranet.futbalsfz.sk`; jediná
-vetva je `main`. Hash nasadeného commitu je v pätičke. Staršia história
-(handoff PR 0–14, knižnica proti `MASTER.md`, D91/D92) je v `CHANGELOG.md`
-a `docs/DEVLOG.md`.
+vetva je `main`. Hash nasadeného commitu je v pätičke. Staršia história je
+v `CHANGELOG.md` a `docs/DEVLOG.md`.
 
-**ADR-011 (PDF ako schvaľovaný dokument) beží naostro.** Pracovný poriadok SFZ
-je nahratý ako PDF + `.docx`, text je čistý (PR #101) a koncept prešiel
-prvým kolom schvaľovania. Súbory nahradeného konceptu sa po novom nahratí
-mažú samy.
+**Rámy z Claude Design sú zapracované všetky** (`docs/design/`, PR #113–#123).
+Postup: Ján navrhne rám, napíše **„stiahni design"**, archív sa stiahne cez
+Share → Project HTML → Project archive, rámy idú do `docs/design`, každý rám
+jeden PR. Priebeh nahrávania zostáva modálne okno (CLAUDE.md projektu v Claude
+Design).
 
-**ADR-012 — retencia a DPO** (PR #102–#106, podľa druhého kola odpovedí DPO):
+**Znenie predpisu po štyroch rozhodnutiach (24.–25. 9.):**
 
-- doklady 3 roky od skončenia pomeru/vzťahu (`persons.endedAt`), poistka od
-  vyradenia (`deactivatedAt`), strop 5 rokov len pre vyradené bez dátumu;
-- denná dávka v `/api/cron/overdue` beží v režime **`report`** — nič nemaže;
-- audit 24 mesiacov (TTL `audit_ttl` je na produkcii);
-- rola **`dpo`** (má ju **Ján — DPO je on**), `/dpo` s výkazom právnych
-  základov, štvrťročný e-mail a **námietky** podľa čl. 21;
-- **`/privacy`** (C1) je verejná, s údajmi prevádzkovateľa SFZ z nastavenia
-  organizácie. Návrhy C1–C3 sú v `docs/C1_…`–`C3_…` a ako `.docx`.
+- **ADR-014** — karta Príprava → Schválenie → Zverejnenie → Pridelenie;
+  zodpovedná osoba už v príprave, schvaľovatelia z posledného kola, prenos
+  pridelení pri zverejnení.
+- **ADR-015** — názov dokumentu so zverejneným znením sa mení len novým
+  znením a schvaľuje sa s ním.
+- **ADR-016** — bez označenia znenia, zdroja dátumu a opravy údajov; formulka
+  „… v znení účinnom od {dátum} …".
+- **ADR-017** — viac právnych základov pri znení; zákonná povinnosť má
+  prednosť (námietka nemaže).
 
-**ADR-013 — údaje o znení** (PR #108): autor, schválil, dátum schválenia,
-dátum účinnosti. Zadávajú sa pri nahratí, predvypĺňajú z prvej strany `.docx`,
-sú súčasťou schválenia a po predložení sa nemenia. Dátum účinnosti = „Platné od".
+**ADR-012 (retencia a DPO)** beží v režime `report`; DPO je Ján. **ADR-013**
+(údaje o znení) je súčasťou schválenia.
 
-**Naostro neoverené:** `/dpo` (výkaz, CSV, námietka), dátum skončenia na karte
-osoby, uloženie údajov o znení a zverejnenie s nimi; z D93 audit presunu
-do priečinka.
+**Naostro neoverené:** celý postup nového znenia cez kartu (predloženie,
+zverejnenie s novým názvom, prenos pridelení), uloženie kombinácie
+právnych základov, `/dpo` s námietkou, vyradená osoba.
 
 ## Čo čaká na rozhodnutie Jána
 
-**Ako DPO — `C1_C3_ochrana_udajov.docx`:** schváliť text informovania (C1),
-kto a dokedy zapíše záznam o spracovateľských činnostiach (C2), záver, že
-pred pilotom DPIA netreba (C3). Otvorený je aj **termín balančného testu**
-(A3, A11). C1 a A3 sú brány pred pilotom.
+**Ako DPO — `C1_C3_ochrana_udajov.docx`:** text informovania (C1), záznam
+o spracovateľských činnostiach (C2), DPIA pred pilotom (C3), termín
+balančného testu (A3, A11). C1 a A3 sú brány pred pilotom.
 
-**Kontrola číselníka právnych základov** (`Pravne_zaklady_navrh_ciselnika.docx`)
-sa od Švehlovej nevrátila — kým ju DPO nepotvrdí, podľa číselníka sa
-základy nevyberajú.
+**Mazanie pôvodných noriem a testovacích dokumentov** pred ostrou prevádzkou
+— Ján povie kedy a ktoré; predtým výpis toho, čo sa na ne odkazuje.
 
-**Zapnúť ostré mazanie** — `RETENTION_MODE=delete` na Verceli po kontrole
-výkazu `retention` v odpovedi cronu.
+**Zapnúť ostré mazanie** — `RETENTION_MODE=delete` po kontrole výkazu
+`retention` v odpovedi cronu.
 
-**Automatický prevod `.docx` → PDF** (Graph, nové povolenia v Entra ID) a
-**D93 — deväť otázok v časti 6 plánu** (`docs/D93_plan_vyber_podla_filtra.md`)
-čakajú ako doteraz. Drobnosti (`.page-head` o dve hodnoty, `sectionKey`
-v Atlas indexe) sú v `docs/TODO.md`.
+**Automatický prevod `.docx` → PDF** (Graph, povolenia v Entra ID) a **D93**
+(`docs/D93_plan_vyber_podla_filtra.md`) čakajú ako doteraz.
 
 ## Najbližšie kroky
 
-0. **Pracovný poriadok dotiahnuť do konca:** na detaile uložiť predvyplnené
-   údaje o znení (Oddelenie ľudských zdrojov · VV SFZ · 7. 9. 2026 ·
-   7. 9. 2026) — **zruší to doterajšie schválenie** —, predložiť znova,
-   schváliť, zverejniť. Tým sa naostro overí ADR-013 aj zverejnenie s PDF.
-   Potom priradiť na potvrdenie a vyskúšať potvrdenie PDF na telefóne (390 px).
-1. **Prejsť `/dpo` naostro:** výkaz a CSV; námietku skúsiť len na testovacej
-   osobe (vyhovenie maže doklady natrvalo).
-2. **Odkaz na `/privacy` do pozvánky** (päta `inviteEmail`) — posledná
+1. **Prvé ostré nové znenie cez kartu** — pri ňom overiť nový názov,
+   formulku „v znení účinnom od", kombináciu právnych základov a prenos
+   pridelení (`docs/TODO.md`, O15/O16).
+2. **Prejsť `/dpo` naostro:** výkaz, CSV; námietku len na testovacej osobe.
+3. **Odkaz na `/privacy` do pozvánky** (päta `inviteEmail`) — posledná
    chýbajúca časť C1.
-3. **D93 PR 2 — testy `moveManyAction`** pri dnešnom správaní; na rozhodnutí
-   nezávisí.
+4. **Právny základ už počas schvaľovania** (ADR-014, D109) — návrh miesta,
+   kde koncept uvidí zodpovedná osoba bez prístupu do knižnice.
 
 ## Ako sa projekt overuje
 
@@ -82,8 +75,8 @@ Všetko sa púšťa z adresára `app/`:
 cd app && npx tsc --noEmit && npx eslint . && npx vitest run && npm run build
 ```
 
-Baseline, proti ktorej sa porovnáva: **0 errors, 42 warnings, 1623 testov
-v 102 súboroch.** Nová chyba alebo nové varovanie znamená regresiu, nie šum.
+Baseline, proti ktorej sa porovnáva: **0 errors, 42 warnings, 1671 testov
+v 110 súboroch.** Nová chyba alebo nové varovanie znamená regresiu, nie šum.
 
 **Tieto štyri brzdy nevidia chyby za behu.** 23. 9. prešli všetky štyri
 a produkcia aj tak spadla (dočasná mŕtva zóna v `library/page.tsx`). Preto
@@ -97,6 +90,10 @@ o ničom nevypovedá. Hľadá sa reťazec „A server error occurred" v tele.
 
 **A overuje sa to, čo ľudia s obrazovkou robia, nie to, čo sa menilo.**
 Knižnica nasadená bez vyskúšaného filtra nie je overená knižnica.
+
+Stav, ktorý sa naživo nedá vyvolať bez zápisu (karta v kroku 2, námietka),
+sa overuje **testom vykreslenia** s podvrhnutými dátami
+(`tests/libraryDetailFlow.test.ts`, `approvalsPage`, `dpoPage`).
 
 Rozhranie sa overuje **mobile first**: 390 px tmavá a 1440 px svetlá.
 Zlomové body sú len **640 a 1024**, iné nepribúdajú.

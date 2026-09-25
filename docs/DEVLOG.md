@@ -10,6 +10,71 @@
 
 ---
 
+## 2026-09-24/25 — rámy z Claude Design a štyri rozhodnutia o znení (PR #109–#128)
+
+**Postup s Claude Design sa ustálil.** Ján navrhne rám, napíše „stiahni
+design"; archív sa stiahne cez Share → Project HTML → Project archive
+(Claude Design do repozitára zapisovať nevie — Ján to overil), rozbalí sa
+Pythonom (názvy v cp437, NFC), nové rámy idú do `docs/design` samostatným
+commitom a každý rám je potom **jeden PR**. Otvorené otázky z rámu sa pýtajú
+naraz a odpovede sa zapisujú späť do `.md` rámu, aby ich videl aj Claude
+Design. Posledná sada (šesť rámov) mala deväť otázok — dve dávky
+`AskUserQuestion` stačili.
+
+**Rámy (PR #114–#123):** ZNENIE, KNIZNICA postup znenia (karta so štyrmi
+krokmi, ADR-014), APPROVALS, DPO, PRIVACY, OSOBY, výber oddelenia s hľadaním,
+HR, ADMIN, úprava dokumentu (ADR-015). Čo stálo za rozmyslenie:
+
+- **Krok karty sa odvodzuje** (`versionFlow.ts`) — v modeli nepribudol žiadny
+  stav. Kolá sa číslujú na identite konceptu, takže po výmene PDF začína
+  „kolo 1" znova; tlačidlo „Predložiť kolo N" preto berie počet kôl na
+  aktuálnej identite, nie posledné kolo dokumentu.
+- **Kroky 1–3 sa nedali vidieť naživo** — v databáze nebol dokument
+  v príprave a zápis do produkcie bez súhlasu nie. Riešenie: **test, ktorý
+  vykreslí serverovú stránku s podvrhnutými dátami** (`libraryDetailFlow`,
+  `approvalsPage`, `dpoPage`) a z neho statické HTML so štýlmi aplikácie na
+  pozretie očami. Chytil dve chyby, ktoré `tsc` nevidí (e-mail namiesto mena,
+  veta začínajúca malým písmenom).
+- **Screenshot po posune stránky v paneli prehliadača vychádza prázdny.**
+  Pomohlo emulovať vysoké okno a nescrollovať, alebo prvok presunúť hore.
+- **Nový názov dokumentu vstupuje do identity konceptu len keď je** — rovnaký
+  trik ako pri údajoch o znení (D107), aby bežiace kolá platili ďalej.
+- **Výber s hľadaním sa zapína sám od 8 možností** a oddelenia nesú cestu
+  („A › B") namiesto odsadenia. `MultiSelect` dostal `caseSensitive`
+  (identifikátory sa nesmú meniť na malé písmená) a zálohu bez JS ako
+  zaškrtávacie políčka. Test klientskych komponentov odmietol funkciu ako
+  parameter — nahradená príznakom.
+- **Navigácia svietila dvakrát** (`/hr` aj `/hr/evidence`) — aktívna je teraz
+  najdlhšia zhodná adresa.
+
+**Štyri rozhodnutia Jána nad rámec rámov:**
+
+- **ADR-016 (PR #124, #125):** „Odkiaľ je dátum", „Označenie znenia" ani
+  „Dôvod opravy" netreba. Prvý krok skladal označenie z dátumu; Ján chcel
+  označenie preč úplne. Formulka je teraz „… v znení účinnom od 1. 1. 2027".
+  Existujúce označenia („1.0") sa neprepisovali — pôvodné aj testovacie
+  dokumenty sa pred ostrou prevádzkou zmažú celé.
+- **ADR-017 (PR #127):** viac právnych základov pri znení. Aby sa nerozbilo
+  ~200 miest, ktoré čítajú jeden základ, **pôvodné pole nesie rozhodujúci
+  druh** (zákonná povinnosť má prednosť) a spojené názvy — námietky,
+  retencia a kontroly tak platia bez zmeny; presný zoznam je v `legalBases[]`.
+- **Stiahnuť zdrojový súbor** v knižnici (PR #126), len pre správcu obsahu —
+  stráži to `libraryContext()` aj `/api/library/file`.
+- **Automatické založenie do Prihlasovania** (PR #128) — Ján ho považoval za
+  duplicitu záložky Domény; sú to e-mailové domény kont, nie webové adresy.
+
+**Pomocný skript** `ship.sh` (v scratchpade, nie v repozitári): PR, čakanie
+na kontroly, zlúčenie, čakanie na nasadenie, zmazanie vetvy. Pri #123
+najprv zlyhal `tsc` na type mocku v teste — CI to chytilo, opravené
+samostatným commitom, vetva zmazaná až po úspešnom nasadení.
+
+**Naostro neoverené:** predloženie a zverejnenie cez novú kartu (vrátane
+nového názvu a prenosu pridelení), uloženie kombinácie právnych základov,
+námietka, vyradená osoba. Všetko má testy, nič z toho nebolo stlačené na
+produkcii.
+
+---
+
 ## 2026-09-24 — druhé kolo DPO: retencia, rola DPO, námietky, /privacy; údaje o znení
 
 **Ráno kontrola nahratia (PR #101).** Ján nahral pracovný poriadok znova;
