@@ -9,6 +9,14 @@
  * serveri aj náhľad vo formulári v prehliadači, a obe strany musia dôjsť
  * k tomu istému kľúču. Keby existovali dve kópie, raz sa rozídu.
  */
+/**
+ * Kľúč trasy onboardingu z názvu — to isté pravidlo, len s pomlčkou
+ * (`TRACK_KEY` v `tracks.ts`): „Nový zamestnanec" → `novy-zamestnanec`.
+ */
+export function slugifyTrackKey(title: string): string {
+  return slugifyKey(title).replace(/_/g, "-")
+}
+
 export function slugifyKey(title: string): string {
   return title
     .normalize("NFD")

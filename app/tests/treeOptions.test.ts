@@ -15,3 +15,10 @@ describe("treeOptions", () => {
     expect(o[2]).toMatchObject({ value: "c", label: "Oddelenie IT", level: 3 })
   })
 })
+
+describe("slugifyTrackKey", () => {
+  it("kľúč trasy z názvu s pomlčkou (TRACK_KEY)", async () => {
+    const { slugifyTrackKey } = await import("../src/lib/slug")
+    expect(slugifyTrackKey("Nový zamestnanec — kancelária")).toBe("novy-zamestnanec-kancelaria")
+  })
+})

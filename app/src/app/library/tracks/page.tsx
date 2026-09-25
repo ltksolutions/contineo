@@ -6,6 +6,7 @@
  */
 
 import { notFound, redirect } from "next/navigation"
+import KeyFromLabel from "@/components/KeyFromLabel"
 import Link from "next/link"
 import { libraryContext } from "@/lib/library"
 import { allTracks } from "@/lib/tracks"
@@ -86,24 +87,24 @@ export default async function TracksPage({
       <h2 style={{ fontSize: "var(--fs-section)", letterSpacing: "-0.01em", margin: "0 0 12px" }}>{t.newHeading}</h2>
 
       <form action={createTrackAction} className="card" style={{ padding: 20, display: "grid", gap: 16 }}>
-        <label className="field">
-          <span className="field-label">{t.title}</span>
-          <input className="field-input" name="title" defaultValue={title ?? ""} required />
-        </label>
-
-        <label className="field">
-          <span className="field-label">{t.key}</span>
-          <input
-            className="field-input"
-            name="key"
-            defaultValue={key ?? ""}
-            required
-            placeholder="novy-zamestnanec"
-            autoCapitalize="none"
-            autoCorrect="off"
-          />
-          <span className="quiet field-hint">{t.keyHint}</span>
-        </label>
+        {/* Kľúč sa predgeneruje z názvu (ako pri dokumente a číselníkoch,
+            Ján 25. 9. 2026); ručne sa dá prepísať. */}
+        <KeyFromLabel
+          layout="fields"
+          labelName="title"
+          separator="-"
+          initialLabel={title ?? ""}
+          initialKey={key ?? ""}
+          usedKeys={tracks.map(tr => tr.key)}
+          hint={t.keyHint}
+          labels={{
+            label: t.title,
+            labelPlaceholder: "",
+            key: t.key,
+            keyPlaceholder: "novy-zamestnanec",
+            taken: t.keyTaken,
+          }}
+        />
 
         <label className="field">
           <span className="field-label">{t.description}</span>

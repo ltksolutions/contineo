@@ -1991,6 +1991,8 @@ interface Dictionary {
       newHeading: string
       key: string
       keyHint: string
+      /** Pri obsadenom kľúči pod poľom. */
+      keyTaken: string
       title: string
       description: string
       create: string
@@ -4436,6 +4438,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       newHeading: "Nová trasa",
       key: "Kľúč",
       keyHint: "Malé písmená bez diakritiky, číslice a pomlčka. Ide do adries a zostáva.",
+      keyTaken: "Taká trasa už existuje — zmeň kľúč.",
       title: "Názov",
       description: "Popis (nepovinný)",
       create: "Založiť trasu",
@@ -6836,6 +6839,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       newHeading: "Nová trasa",
       key: "Klíč",
       keyHint: "Malá písmena bez diakritiky, číslice a pomlčka. Jde do adres a zůstává.",
+      keyTaken: "Taková trasa už existuje — změň klíč.",
       title: "Název",
       description: "Popis (nepovinný)",
       create: "Založit trasu",
@@ -9223,6 +9227,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       newHeading: "New track",
       key: "Key",
       keyHint: "Lower-case letters without diacritics, digits and a hyphen. It goes into addresses and stays there.",
+      keyTaken: "A track with this key already exists — change the key.",
       title: "Title",
       description: "Description (optional)",
       create: "Create track",
