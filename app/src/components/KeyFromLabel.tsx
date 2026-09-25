@@ -16,12 +16,17 @@
  */
 
 import { useState } from "react"
-import { slugifyKey } from "@/lib/slug"
+import { slugifyKey, slugifyTrackKey } from "@/lib/slug"
 
 export default function KeyFromLabel({
   usedKeys,
   labels,
   layout = "inline",
+  labelName = "label",
+  separator = "_",
+  initialLabel = "",
+  initialKey = "",
+  hint,
 }: {
   usedKeys: string[]
   labels: {
@@ -34,15 +39,25 @@ export default function KeyFromLabel({
   }
   /** `inline` — dve polia v riadku bez nadpisov; `fields` — polia s popiskami. */
   layout?: "inline" | "fields"
+  /** Meno poľa názvu vo formulári — trasa ho volá `title`. */
+  labelName?: string
+  /** Oddeľovač v kľúči: `_` (číselníky, dokumenty) alebo `-` (trasy onboardingu). */
+  separator?: "_" | "-"
+  /** Hodnoty po chybe — formulár sa vráti predvyplnený. */
+  initialLabel?: string
+  initialKey?: string
+  /** Nápoveda pod kľúčom (pri `fields`). */
+  hint?: string
 }) {
-  const [label, setLabel] = useState("")
-  const [key, setKey] = useState("")
-  const [manual, setManual] = useState(false)
-  const shown = manual ? key : slugifyKey(label)
+  const slug = separator === "-" ? slugifyTrackKey : slugifyKey
+  const [label, setLabel] = useState(initialLabel)
+  const [key, setKey] = useState(initialKey)
+  const [manual, setManual] = useState(initialKey.trim() !== "" && initialKey !== slug(initialLabel))
+  const shown = manual ? key : slug(label)
   const taken = Boolean(shown) && usedKeys.includes(shown)
 
   const labelInput = (
-    <input className="field-input" name="label" required value={label}
+    <input className="field-input" name={labelName} required value={label}
            placeholder={labels.labelPlaceholder}
            aria-label={layout === "inline" ? labels.label : undefined}
            onChange={e => setLabel(e.target.value)} />
@@ -77,6 +92,7 @@ export default function KeyFromLabel({
         <span className="field-label">{labels.key}</span>
         {keyInput}
         {warning}
+        {hint && <span className="quiet field-hint">{hint}</span>}
       </label>
     </>
   )

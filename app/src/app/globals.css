@@ -5815,3 +5815,27 @@ html[data-theme="dark"] { --skeleton-sheen: rgba(255, 255, 255, 0.07); }
 /* Odkaz na predpis pod názvom základu, nie nalepený za ním — `.hr-choice
    .field-hint` ho inak drží v riadku (snímka Jána, 25. 9. 2026). */
 .hr-choice .field-hint.hr-choice-ref { display: block; margin-top: 2px; }
+
+/* ── Stav načítavania pri záložkách a tlačidlách (Ján, 25. 9. 2026) ────────
+   Záložka s inou `?tab=` je tá istá stránka — `loading.tsx` sa neukáže.
+   Záložka, na ktorú sa čaká, má pruh pod sebou a obsah pod záložkami sa
+   stlmí; tlačidlo počas ukladania má točiaci sa kruh a je neaktívne. */
+.tab { position: relative; }
+.tab-pending { display: none; }
+.tab-pending.is-on {
+  display: block; position: absolute; left: 10%; right: 10%; bottom: -1px; height: 2px;
+  background: var(--accent); border-radius: 2px; animation: tab-pending 0.9s ease-in-out infinite alternate;
+}
+@keyframes tab-pending { from { opacity: 0.35; } to { opacity: 1; } }
+.tabs:has(.tab-pending.is-on) ~ * { opacity: 0.55; pointer-events: none; transition: opacity 0.15s 0.1s; }
+
+.button.is-pending { cursor: progress; }
+.button-spinner {
+  display: inline-block; width: 12px; height: 12px; margin-right: 8px; vertical-align: -1px;
+  border: 2px solid currentColor; border-right-color: transparent; border-radius: 50%;
+  animation: button-spin 0.7s linear infinite;
+}
+@keyframes button-spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) {
+  .tab-pending.is-on, .button-spinner { animation: none; }
+}

@@ -14,6 +14,7 @@
  */
 
 import { redirect } from "next/navigation"
+import { slugifyTrackKey } from "@/lib/slug"
 import { revalidatePath } from "next/cache"
 import { libraryContext } from "@/lib/library"
 import { isRedirect } from "@/lib/redirects"
@@ -51,7 +52,8 @@ export async function createTrackAction(fd: FormData) {
   const self = await actor()
   if (!self) redirect("/")
 
-  const key = text(fd, "key")
+  // Bez skriptu kľúč nepredvyplní nikto — odvodí sa z názvu tým istým pravidlom.
+  const key = text(fd, "key") || slugifyTrackKey(text(fd, "title"))
   try {
     await createTrack(
       self.companyCode,

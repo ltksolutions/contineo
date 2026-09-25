@@ -10,6 +10,8 @@
  */
 
 import { notFound, redirect } from "next/navigation"
+import TabLink from "@/components/TabLink"
+import SubmitButton from "@/components/SubmitButton"
 import { treeOptions } from "@/lib/treeOptions"
 import Link from "next/link"
 import { orgContext } from "@/lib/orgSettings"
@@ -139,7 +141,7 @@ function ProviderRow({
           </label>
         )}
 
-        <div><button className="button" type="submit">{t.save}</button></div>
+        <div><SubmitButton className="button">{t.save}</SubmitButton></div>
       </form>
 
       {s.source === "tenant" && (
@@ -151,7 +153,7 @@ function ProviderRow({
             <span className="field-label">{t.confirmLabel(tenant.companyCode)}</span>
             <input className="field-input" name="confirmation" autoCapitalize="characters" autoCorrect="off" />
           </label>
-          <div><button className="button button--quiet" type="submit">{t.deleteSubmit}</button></div>
+          <div><SubmitButton className="button button--quiet">{t.deleteSubmit}</SubmitButton></div>
         </form>
       )}
     </section>
@@ -259,14 +261,9 @@ export default async function OrganisationPage({
           obrazovkách posúvania cez veci, ktoré nehľadal. */}
       <nav className="tabs" aria-label={t.tabsLabel}>
         {TAB_KEYS.map(k => (
-          <Link
-            key={k}
-            href={`/organisation?tab=${k}`}
-            className={`tab${k === now ? " is-active" : ""}`}
-            aria-current={k === now ? "page" : undefined}
-          >
+          <TabLink key={k} href={`/organisation?tab=${k}`} active={k === now}>
             {t.tabs[k] ?? k}
-          </Link>
+          </TabLink>
         ))}
       </nav>
 
@@ -430,7 +427,7 @@ export default async function OrganisationPage({
         </section>
 
         <div className="set-savebar">
-          <button className="button" type="submit">{t.branding.save}</button>
+          <SubmitButton className="button">{t.branding.save}</SubmitButton>
           <span className="quiet">{t.branding.saveBarNote}</span>
         </div>
       </form>
@@ -491,15 +488,15 @@ export default async function OrganisationPage({
                             <input type="hidden" name="tab" value="departments" />
                             <input type="hidden" name="id" value={department.id} />
                             <input type="hidden" name="direction" value="up" />
-                            <button className="button button--quiet" type="submit"
-                                    aria-label={t.departments.moveUp(department.name)}>{t.departments.up}</button>
+                            <SubmitButton className="button button--quiet"
+                                    ariaLabel={t.departments.moveUp(department.name)}>{t.departments.up}</SubmitButton>
                           </form>
                           <form action={shiftDepartmentAction}>
                             <input type="hidden" name="tab" value="departments" />
                             <input type="hidden" name="id" value={department.id} />
                             <input type="hidden" name="direction" value="down" />
-                            <button className="button button--quiet" type="submit"
-                                    aria-label={t.departments.moveDown(department.name)}>{t.departments.down}</button>
+                            <SubmitButton className="button button--quiet"
+                                    ariaLabel={t.departments.moveDown(department.name)}>{t.departments.down}</SubmitButton>
                           </form>
                         </div>
 
@@ -513,7 +510,7 @@ export default async function OrganisationPage({
                             aria-label={t.departments.nameOf(department.name)}
                             required
                           />
-                          <button className="button button--quiet" type="submit">{t.departments.rename}</button>
+                          <SubmitButton className="button button--quiet">{t.departments.rename}</SubmitButton>
                         </form>
 
                         <form action={moveDepartmentAction} className="tree-form">
@@ -532,14 +529,14 @@ export default async function OrganisationPage({
                                 .filter(o => !inside.has(o.value)),
                             ]}
                           />
-                          <button className="button button--quiet" type="submit">{t.departments.move}</button>
+                          <SubmitButton className="button button--quiet">{t.departments.move}</SubmitButton>
                         </form>
 
                         {p.withDescendants === 0 && inside.size === 1 ? (
                           <form action={deleteDepartmentAction}>
                             <input type="hidden" name="tab" value="departments" />
                             <input type="hidden" name="id" value={department.id} />
-                            <button className="button button--quiet" type="submit">{t.departments.remove}</button>
+                            <SubmitButton className="button button--quiet">{t.departments.remove}</SubmitButton>
                           </form>
                         ) : (
                           <p className="quiet" style={{ fontSize: "var(--fs-small)", margin: 0 }}>{t.departments.removeHint}</p>
@@ -577,7 +574,7 @@ export default async function OrganisationPage({
             <span className="quiet field-hint">{t.departments.maxDepth(MAX_DEPTH)}</span>
           </label>
 
-          <div><button className="button" type="submit">{t.departments.create}</button></div>
+          <div><SubmitButton className="button">{t.departments.create}</SubmitButton></div>
         </form>
       </div>
       )}
@@ -594,9 +591,9 @@ export default async function OrganisationPage({
                 <form action={cancelDomainAction} style={{ marginLeft: "auto" }}>
                   <input type="hidden" name="host" value={h} />
                   <input type="hidden" name="tab" value="domains" />
-                  <button className="button button--quiet" type="submit" style={{ padding: "5px 10px", fontSize: "var(--fs-small)" }}>
+                  <SubmitButton className="button button--quiet" style={{ padding: "5px 10px", fontSize: "var(--fs-small)" }}>
                     {t.domains.remove}
-                  </button>
+                  </SubmitButton>
                 </form>
               )}
             </li>
@@ -630,16 +627,16 @@ export default async function OrganisationPage({
                     <form action={verifyDomainAction}>
                       <input type="hidden" name="host" value={z.host} />
                       <input type="hidden" name="tab" value="domains" />
-                      <button className="button" type="submit" style={{ padding: "6px 14px", fontSize: "var(--fs-small)" }}>
+                      <SubmitButton className="button" style={{ padding: "6px 14px", fontSize: "var(--fs-small)" }}>
                         {t.domains.verify}
-                      </button>
+                      </SubmitButton>
                     </form>
                     <form action={cancelDomainAction}>
                       <input type="hidden" name="host" value={z.host} />
                       <input type="hidden" name="tab" value="domains" />
-                      <button className="button button--quiet" type="submit" style={{ padding: "6px 14px", fontSize: "var(--fs-small)" }}>
+                      <SubmitButton className="button button--quiet" style={{ padding: "6px 14px", fontSize: "var(--fs-small)" }}>
                         {t.domains.cancelRequest}
-                      </button>
+                      </SubmitButton>
                     </form>
                   </div>
                 </li>
@@ -655,7 +652,7 @@ export default async function OrganisationPage({
             <input className="field-input" name="host" placeholder={t.domains.hostPlaceholder} autoCapitalize="none" autoCorrect="off" />
             <span className="quiet field-hint">{t.domains.addNote}</span>
           </label>
-          <div><button className="button button--quiet" type="submit">{t.domains.request}</button></div>
+          <div><SubmitButton className="button button--quiet">{t.domains.request}</SubmitButton></div>
         </form>
       </section>
       )}
@@ -689,7 +686,7 @@ export default async function OrganisationPage({
             </span>
             <span className="quiet field-hint">{t.branding.autoProvisionNotHosts}</span>
           </label>
-          <div><button className="button" type="submit">{t.branding.save}</button></div>
+          <div><SubmitButton className="button">{t.branding.save}</SubmitButton></div>
         </form>
       </div>
       )}
@@ -730,7 +727,7 @@ export default async function OrganisationPage({
                       <input type="hidden" name="tab" value="codelists" />
                       <input type="hidden" name="codelist" value={c.name} />
                       <input type="hidden" name="key" value={p.key} />
-                      <button className="button button--quiet" type="submit">{t.codelists.remove}</button>
+                      <SubmitButton className="button button--quiet">{t.codelists.remove}</SubmitButton>
                     </form>
                   )}
                 </span>
@@ -772,7 +769,7 @@ export default async function OrganisationPage({
                   taken: t.codelists.keyTakenHint,
                 }}
               />
-              <button className="button button--quiet" type="submit">{t.codelists.add}</button>
+              <SubmitButton className="button button--quiet">{t.codelists.add}</SubmitButton>
             </form>
             <p className="quiet cl-note">{t.codelists.keyNote}</p>
           </section>
@@ -822,14 +819,14 @@ export default async function OrganisationPage({
                           <input type="hidden" name="tab" value="codelists" />
                           <input type="hidden" name="key" value={i.key} />
                           <input type="hidden" name="hidden" value={i.off ? "0" : "1"} />
-                          <button className="button button--quiet" type="submit">{i.off ? tr.unhide : tr.hide}</button>
+                          <SubmitButton className="button button--quiet">{i.off ? tr.unhide : tr.hide}</SubmitButton>
                         </form>
                       )}
                       {i.source === "custom" && !i.off && (
                         <form action={retireLegalBasisAction}>
                           <input type="hidden" name="tab" value="codelists" />
                           <input type="hidden" name="key" value={i.key} />
-                          <button className="button button--quiet" type="submit">{tr.retire}</button>
+                          <SubmitButton className="button button--quiet">{tr.retire}</SubmitButton>
                         </form>
                       )}
                     </span>
@@ -872,7 +869,7 @@ export default async function OrganisationPage({
                      placeholder={tr.referencePlaceholder} />
               <span className="quiet field-hint">{tr.referenceNote}</span>
             </label>
-            <div><button className="button button--quiet" type="submit">{tr.addButton}</button></div>
+            <div><SubmitButton className="button button--quiet">{tr.addButton}</SubmitButton></div>
           </form>
           </details>
         </section>
@@ -936,7 +933,7 @@ export default async function OrganisationPage({
           {t.chunking.saveNoteMiddle}<em>{t.chunking.saveNoteButton}</em>{t.chunking.saveNoteAfter}
         </p>
 
-        <div><button className="button" type="submit">{t.chunking.save}</button></div>
+        <div><SubmitButton className="button">{t.chunking.save}</SubmitButton></div>
       </form>
       )}
 
@@ -957,9 +954,9 @@ export default async function OrganisationPage({
             </p>
             <p className="quiet" style={{ fontSize: "var(--fs-small)", margin: 0 }}>{t.chunking.batchNote}</p>
             <div>
-              <button className="button" type="submit">
+              <SubmitButton className="button">
                 {t.chunking.reindexAll(indexState.neaktualnych)}
-              </button>
+              </SubmitButton>
             </div>
           </>
         )}
@@ -986,7 +983,7 @@ export default async function OrganisationPage({
               autoCapitalize="none"
             />
           </label>
-          <button className="button button--quiet" type="submit">{t.auditTab.searchSubmit}</button>
+          <SubmitButton className="button button--quiet">{t.auditTab.searchSubmit}</SubmitButton>
           {search ? (
             <Link className="quiet" href="/organisation?tab=audit" style={{ fontSize: "var(--fs-body)" }}>
               {t.auditTab.clearFilter}
