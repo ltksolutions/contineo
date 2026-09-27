@@ -1,0 +1,794 @@
+<!DOCTYPE html>
+<html lang="sk"><head><meta charset="utf-8" /><meta name="viewport" content="width=device-width,initial-scale=1" /><title>TESTS — Testy a banka otázok</title>
+<style>
+:root{color-scheme:light;--bg:#f5f6f8;--surface:#fff;--surface-2:#eceef1;--ink:#161b22;--muted:#5c6675;--line:rgba(20,28,42,.12);--accent:#232a35;--accent-strong:#11151c;--on-accent:#fff;--accent-soft:rgba(35,42,53,.11);--ok-bg:#ecfdf5;--ok-fg:#047857;--bad-bg:#fef2f2;--bad-fg:#b91c1c;--warn-bg:#fffbeb;--warn-fg:#b45309;--radius:12px;--radius-lg:18px;--shadow:0 1px 2px rgba(20,28,42,.05),0 10px 30px rgba(20,28,42,.07);--pad-main:16px;--card-pad:16px;--list-py:9px;--gap:14px;--row-py:7px;--font-row:13px;--fs-title:26px;--fs-section:17px;--fs-lead:15px;--fs-body:14px;--fs-small:13px;--fs-micro:12px;--fs-label:13px;--fs-control:15px;--control-h:40px;--control-h-sm:36px}
+.dark{color-scheme:dark;--bg:#0d1016;--surface:#161b22;--surface-2:#1d232c;--ink:#eef1f5;--muted:#9aa4b2;--line:rgba(255,255,255,.12);--accent:#eef1f5;--accent-strong:#fff;--on-accent:#11151c;--accent-soft:rgba(238,241,245,.11);--ok-bg:rgba(4,120,87,.16);--ok-fg:#6ee7b7;--bad-bg:rgba(185,28,28,.16);--bad-fg:#fca5a5;--warn-bg:rgba(180,83,9,.16);--warn-fg:#fcd34d;--shadow:0 1px 2px rgba(0,0,0,.4),0 10px 30px rgba(0,0,0,.45)}
+*{box-sizing:border-box}
+body{margin:0;background:#e6e8ec;font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;-webkit-font-smoothing:antialiased;line-height:1.6}
+.sheet{background:var(--bg);color:var(--ink);padding:28px 32px 40px}
+h1.doc{font-size:22px;letter-spacing:-.02em;margin:0 0 4px}
+p.doc{font-size:14px;color:var(--muted);margin:0 0 24px;max-width:80ch}
+.sec{margin:0 0 30px}
+.sec-h{font-size:11px;font-weight:650;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin:0 0 4px}
+.sec-n{font-size:var(--fs-section);font-weight:650;margin:0 0 3px}
+.sec-w{font-size:13px;color:var(--muted);margin:0 0 12px;max-width:78ch;line-height:1.55}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:0 0 10px}
+.lbl{font-size:11px;color:var(--muted);font-family:ui-monospace,Menlo,monospace;width:100%;margin:6px 0 2px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:var(--card-pad)}
+.quiet{color:var(--muted)}
+.tag{display:inline-flex;align-items:center;justify-content:center;gap:6px;border:1px solid var(--line);border-radius:999px;min-height:24px;padding:0 10px;font-size:var(--fs-micro);font-weight:600;line-height:1.2;white-space:nowrap}
+.tag--published{background:var(--ok-bg);color:var(--ok-fg);border-color:transparent}
+.tag--draft{background:var(--warn-bg);color:var(--warn-fg);border-color:transparent}
+.tag--review{background:var(--accent-soft);color:var(--accent-strong);border-color:transparent}
+.tag--expired{background:var(--bad-bg);color:var(--bad-fg);border-color:transparent}
+.tag--archived{background:var(--surface-2);color:var(--muted);border-color:transparent}
+.button{display:inline-flex;align-items:center;justify-content:center;gap:8px;background:var(--accent);color:var(--on-accent);border:1px solid var(--accent);border-radius:10px;min-height:var(--control-h);padding:0 18px;font-size:var(--fs-control);font-weight:600;line-height:1.2;font-family:inherit;text-decoration:none;cursor:pointer}
+.button--quiet{background:transparent;color:var(--ink);border-color:var(--line)}
+.is-hover.button{background:var(--accent-strong)}
+.is-hover.button--quiet{background:var(--surface-2)}
+.is-focus{outline:2px solid var(--accent);outline-offset:2px}
+.button:disabled,.button[aria-disabled=true]{opacity:.5;cursor:not-allowed}
+.field{display:grid;gap:5px}
+.field-label{font-size:var(--fs-label);font-weight:600}
+.field-hint{font-size:var(--fs-micro);color:var(--muted)}
+.field-input{font:inherit;font-size:var(--fs-control);color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:10px;min-height:var(--control-h);line-height:1.2;padding:8px 12px;width:100%}
+.field-input:disabled{background:var(--surface-2);color:var(--muted);cursor:not-allowed}
+.is-focus.field-input{outline:2px solid var(--accent);outline-offset:1px}
+.ask{display:flex;align-items:center;gap:9px;min-height:var(--control-h-sm);padding:0 12px;border-radius:9px;background:var(--bg);border:1px solid var(--line);color:var(--muted);font-size:13px}
+.kbd{font-size:11.5px;color:var(--muted);padding:2px 6px;border-radius:5px;background:var(--surface-2);font-family:ui-monospace,Menlo,monospace}
+.bulk-pick{display:inline-flex;align-items:center;gap:8px;text-decoration:none;color:inherit}
+.bulk-pick-box{display:grid;place-items:center;width:15px;height:15px;border-radius:4px;border:1px solid var(--line);background:transparent;color:var(--on-accent);font-size:9px;font-weight:800}
+.bulk-pick.is-on .bulk-pick-box{background:var(--accent);border-color:var(--accent)}
+.box22{width:22px;height:22px;border-radius:6px;font-size:12px}
+.library-chip{display:inline-flex;align-items:center;gap:5px;min-height:28px;padding:0 5px 0 9px;border-radius:6px;background:var(--accent-soft);color:var(--accent-strong);font-size:12px;text-decoration:none}
+.library-chip-key{color:var(--muted)}
+.library-chip-x{font-size:15px;line-height:1;color:var(--muted);width:16px;text-align:center}
+.facet{display:flex;align-items:center;gap:8px;min-height:34px;padding:0 6px;border-radius:7px;text-decoration:none;color:inherit;font-size:13px}
+.facet.is-on{background:var(--accent-soft);font-weight:600}
+.facet-box{display:grid;place-items:center;width:15px;height:15px;border-radius:4px;border:1px solid var(--line);color:var(--on-accent);font-size:9px;font-weight:800}
+.facet.is-on .facet-box{background:var(--accent);border-color:var(--accent)}
+.facet-name{flex:1}
+.facet-count{font-size:11.5px;color:var(--muted);font-variant-numeric:tabular-nums}
+.pill{display:inline-flex;align-items:center;gap:6px;min-height:36px;padding:0 10px;border-radius:9px;border:1px solid var(--line);background:var(--surface);font-size:14px;text-decoration:none;color:var(--ink)}
+.pill.is-on{border-color:var(--accent);background:var(--accent-soft);color:var(--accent-strong);font-weight:600}
+.pill-count{font-size:12px;opacity:.65;font-variant-numeric:tabular-nums}
+.ack-bar{display:inline-flex;align-items:center;gap:6px;min-width:104px}
+.ack-track{flex:1;height:5px;border-radius:3px;background:var(--surface-2);overflow:hidden}
+.ack-fill{display:block;height:100%}
+.ack-fill--high{background:var(--ok-fg)}
+.ack-fill--mid{background:var(--accent)}
+.ack-fill--low{background:var(--warn-fg)}
+.ack-value{font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums}
+.doc-table-wrap{border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;background:var(--surface)}
+.doc-table{width:100%;border-collapse:collapse}
+.doc-table th{padding:8px 10px;text-align:left;font-size:10.5px;font-weight:650;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);white-space:nowrap;background:var(--bg);border-bottom:1px solid var(--line)}
+.doc-table td{padding:var(--row-py) 10px;font-size:var(--font-row);border-bottom:1px solid var(--line);vertical-align:top}
+.doc-table tbody tr:last-child td{border-bottom:0}
+.doc-table tbody tr.is-hover{background:var(--bg)}
+.doc-table tbody tr.is-picked{background:var(--accent-soft)}
+.doc-table tbody tr.is-picked td:first-child{box-shadow:inset 3px 0 0 var(--accent)}
+.doc-title{color:var(--ink);font-weight:600;text-decoration:none}
+.doc-meta{font-size:11px;color:var(--muted);margin-top:1px}
+.doc-col-right{text-align:right}
+.doc-card{display:flex;gap:12px;padding:12px 12px 12px 10px;border:1px solid var(--line);border-radius:var(--radius);background:var(--surface)}
+.doc-card.is-picked{background:var(--accent-soft);border-color:var(--accent)}
+.doc-card-top{display:flex;align-items:center;gap:6px;margin-bottom:4px}
+.doc-card-title{display:block;font-size:15px;font-weight:600;line-height:1.3;color:var(--ink);text-decoration:none;text-wrap:pretty}
+.empty{display:grid;justify-items:center;gap:4px;padding:32px 20px;border:1px dashed var(--line);border-radius:var(--radius);text-align:center}
+.empty-title{font-size:var(--fs-lead);font-weight:600}
+.empty-text{font-size:var(--fs-small);color:var(--muted);line-height:1.55;max-width:46ch}
+.empty-action{margin-top:10px}
+.notice{display:flex;gap:9px;align-items:flex-start;padding:10px 12px;border-radius:9px;background:var(--ok-bg);border:1px solid rgba(4,120,87,.2)}
+.notice-mark{display:grid;place-items:center;width:20px;height:20px;border-radius:50%;background:var(--ok-bg);color:var(--ok-fg);font-weight:800;font-size:12px;flex:0 0 auto}
+.notice-text{font-size:13px;color:var(--ok-fg);line-height:1.45}
+.notice--error{background:var(--bad-bg);border-color:rgba(185,28,28,.2)}
+.notice--error .notice-mark{background:var(--bad-bg);color:var(--bad-fg)}
+.notice--error .notice-text{color:var(--bad-fg)}
+.pager{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:8px 12px;background:var(--bg);border-top:1px solid var(--line);font-size:var(--fs-micro);color:var(--muted)}
+.pager-count{font-variant-numeric:tabular-nums}
+.pager-spacer{flex:1}
+.pager-link{min-height:28px;padding:0 10px;font-size:12px}
+.pager-link[aria-disabled=true]{opacity:.45;pointer-events:none}
+.page-title{font-size:var(--fs-title);letter-spacing:-.02em;line-height:1.2;margin:0 0 6px}
+.page-lead{font-size:var(--fs-lead);line-height:1.55;margin:0 0 18px;max-width:640px;color:var(--muted)}
+.view-switch{display:inline-flex;padding:3px;gap:2px;background:var(--surface-2);border-radius:9px}
+.view-switch-item{display:grid;place-items:center;min-height:30px;padding:0 11px;border-radius:7px;font-size:12.5px;color:var(--muted);text-decoration:none}
+.view-switch-item.is-on{background:var(--surface);color:var(--ink);font-weight:600}
+table.spec{width:100%;border-collapse:collapse;font-size:12.5px;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden}
+table.spec th{text-align:left;padding:7px 10px;font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);background:var(--bg);border-bottom:1px solid var(--line)}
+table.spec td{padding:6px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+table.spec tr:last-child td{border-bottom:0}
+code{font-family:ui-monospace,Menlo,monospace;font-size:12px;background:var(--surface-2);padding:1px 5px;border-radius:4px}
+
+.frame{flex:0 0 auto;min-width:0;background:var(--bg);color:var(--ink);border:1px solid rgba(20,28,42,.18);border-radius:12px;overflow:hidden;box-shadow:0 20px 44px rgba(0,0,0,.12)}
+.hdr{display:flex;align-items:center;gap:14px;height:56px;padding:0 24px;background:var(--surface);border-bottom:1px solid var(--line)}
+.logo{display:grid;place-items:center;width:28px;height:28px;border-radius:8px;background:var(--accent);color:var(--on-accent);flex:0 0 auto}
+.org{font-size:14px;font-weight:650;letter-spacing:-.01em;white-space:nowrap}
+.bell{position:relative;display:grid;place-items:center;width:36px;height:36px;color:var(--muted);flex:0 0 auto}
+.bell b{position:absolute;top:5px;right:4px;min-width:16px;height:16px;padding:0 4px;border-radius:8px;background:var(--bad-fg);color:var(--on-accent);font-size:10px;font-weight:700;display:grid;place-items:center;box-shadow:0 0 0 2px var(--surface)}
+.av{display:grid;place-items:center;width:30px;height:30px;border-radius:50%;background:var(--surface-2);font-size:11px;font-weight:650;flex:0 0 auto}
+.nav{display:flex;gap:2px;padding:0 24px;background:var(--surface);border-bottom:1px solid var(--line)}
+.nav a{display:flex;align-items:center;gap:6px;height:42px;padding:0 12px;font-size:13.5px;color:var(--muted);text-decoration:none;border-bottom:2px solid transparent;white-space:nowrap}
+.nav a.is-on{color:var(--accent);font-weight:650;border-bottom-color:var(--accent)}
+.nav .c{font-size:11px;font-weight:600;padding:1px 6px;border-radius:10px;background:var(--surface-2);color:var(--muted)}
+.body{padding:var(--pad-main) var(--pad-main) 32px}
+.wrap{max-width:1240px;margin:0 auto}
+.overview{display:grid;gap:var(--gap)}
+.overview-hello{font-size:var(--fs-title);letter-spacing:-.02em;line-height:1.2;margin:0 0 3px}
+.overview-lede{font-size:var(--fs-lead);color:var(--muted);margin:0 0 14px}
+.overview-ask{display:flex;gap:8px}
+.overview-ask-input{flex:1}
+.overview-suggestions{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+.overview-suggestion{padding:5px 11px;border:1px solid var(--line);border-radius:999px;font-size:12.5px;color:var(--muted);text-decoration:none}
+.kpi{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.kpi-tile{display:grid;gap:4px;text-decoration:none;color:inherit;padding:14px 15px}
+.kpi-label{font-size:11px;font-weight:650;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
+.kpi-value{font-size:27px;font-weight:640;letter-spacing:-.03em;font-variant-numeric:tabular-nums;line-height:1.1}
+.kpi-value--bad{color:var(--bad-fg)}
+.kpi-value--warn{color:var(--warn-fg)}
+.kpi-value--zero{color:var(--muted);font-weight:600}
+.kpi-note{font-size:11.5px;color:var(--muted)}
+.overview-panels{display:grid;gap:14px}
+.panel{padding:0;overflow:hidden}
+.panel-head{display:flex;align-items:center;gap:10px;padding:12px 15px;border-bottom:1px solid var(--line);font-size:14px;font-weight:650}
+.panel-head-count{font-size:var(--fs-micro);color:var(--muted);font-weight:400;font-variant-numeric:tabular-nums}
+.panel-head-link{margin-left:auto;font-size:var(--fs-micro);font-weight:600;color:var(--accent);text-decoration:none}
+.panel-row{display:flex;align-items:center;gap:12px;padding:11px 15px;border-bottom:1px solid var(--line)}
+.panel-row:last-child{border-bottom:0}
+.panel-main{flex:1;min-width:0}
+.panel-name{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;font-size:13.5px;font-weight:550;color:var(--ink);text-decoration:none;line-height:1.35;text-wrap:pretty;overflow-wrap:anywhere}
+.panel-meta{font-size:12px;color:var(--muted);margin-top:1px}
+.panel-action{min-height:32px;padding:0 12px;font-size:12.5px}
+.panel-empty{display:grid;gap:3px;padding:18px 15px}
+.panel-empty-title{font-size:var(--fs-small);font-weight:600;color:var(--ink)}
+.panel-empty-text{font-size:var(--fs-micro);color:var(--muted);line-height:1.5}
+.due-chip{display:inline-flex;align-items:center;min-height:24px;padding:0 8px;border-radius:6px;font-size:12px;font-weight:600;background:var(--surface-2);color:var(--muted);white-space:nowrap}
+.due-chip--soon{background:var(--warn-bg);color:var(--warn-fg)}
+.due-chip--over{background:var(--bad-bg);color:var(--bad-fg)}
+.ask-hero{padding:20px 22px}
+.ask-field{display:flex;gap:8px;align-items:flex-start}
+.answer{font-size:var(--fs-body);line-height:1.7;max-width:70ch;margin:0}
+.answer-head{display:flex;align-items:center;gap:8px;margin-bottom:12px}
+.answer-mark{color:var(--accent);display:grid;place-items:center}
+.answer-kicker{font-size:11px;font-weight:650;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.answer sup{font-size:10px;color:var(--accent);font-weight:700}
+.answer-sources{display:grid;gap:6px;margin-top:14px}
+.answer-source{display:flex;gap:10px;padding:10px 12px;border-radius:9px;background:var(--bg);border:1px solid var(--line);text-decoration:none;color:inherit}
+.answer-source-index{flex:0 0 20px;font-size:11.5px;font-weight:700;color:var(--accent)}
+.answer-source-body{flex:1;min-width:0}
+.answer-source-title{font-size:12.5px;font-weight:600;text-wrap:pretty;overflow-wrap:anywhere}
+.answer-source-meta{display:block;font-size:11.5px;color:var(--muted);margin-top:2px}
+.answer--none{border-style:dashed}
+.rating{display:flex;align-items:center;gap:10px;margin-top:14px;padding-top:12px;border-top:1px solid var(--line);font-size:12.5px;color:var(--muted);flex-wrap:wrap}
+.cap{font-size:11.5px;font-weight:600;color:#5c6675;margin:0 0 8px;font-family:ui-monospace,Menlo,monospace}
+.frames{display:flex;gap:24px;align-items:flex-start;flex-wrap:wrap;margin:0 0 30px}
+/* Layout rámu urči TRIEDOU rámu, nikdy viewportovou @media — rám má fixnú
+   šírku, takže @media by sa vyhodnocovala proti oknu prehliadača a referencia
+   by vyzerala inak podľa toho, ako široko ju kto otvorí. */
+
+.frames{display:flex;gap:24px;align-items:flex-start;flex-wrap:wrap;margin:0 0 30px}
+.ann{font-size:12px;color:#5c6675;max-width:78ch;margin:8px 0 0;line-height:1.5}
+.ann b{color:#161b22}
+.num{display:inline-grid;place-items:center;width:18px;height:18px;border-radius:50%;background:#b45309;color:#fff;font-size:10.5px;font-weight:700;margin-right:4px;vertical-align:1px}
+.q{display:inline-grid;place-items:center;min-width:22px;height:18px;border-radius:9px;background:#1d4ed8;color:#fff;font-size:10.5px;font-weight:700;padding:0 5px;margin-left:4px;vertical-align:1px}
+.anns{display:grid;gap:6px;max-width:1440px;margin:0 0 30px}
+.anns p{margin:0}
+table.inv{width:100%;max-width:1440px;border-collapse:collapse;font-size:13px;background:#fff;border:1px solid rgba(20,28,42,.14);border-radius:12px;overflow:hidden;margin:0 0 30px}
+table.inv th{text-align:left;padding:8px 12px;font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:#5c6675;background:#f5f6f8;border-bottom:1px solid rgba(20,28,42,.12)}
+table.inv td{padding:9px 12px;border-bottom:1px solid rgba(20,28,42,.08);vertical-align:top;line-height:1.45}
+.spec{display:grid;grid-template-columns:repeat(auto-fit,minmax(330px,1fr));gap:18px;max-width:1440px;margin:0 0 30px}
+.spec-card{background:var(--bg);color:var(--ink);border:1px solid rgba(20,28,42,.18);border-radius:12px;padding:16px;display:grid;gap:10px;align-content:start}
+.spec-card h3{margin:0;font-size:13px}
+.spec-card p{margin:0;font-size:12px;color:var(--muted);line-height:1.5}
+.w1440 .kpi{grid-template-columns:repeat(4,1fr)}
+.w1440 .overview-panels{grid-template-columns:1.2fr 1fr}
+.w390 .kpi{grid-template-columns:1fr 1fr}
+.w390 .overview-panels{grid-template-columns:1fr}
+.w390 .overview-suggestions,.w390 .ask-examples-wrap{display:none}
+.w390 .panel-row{flex-wrap:wrap}
+.w390 .panel-main{flex:1 0 100%}
+.w390 .panel-action{min-height:44px}
+.w390 .answer{font-size:16px;line-height:1.65}
+.w390 .answer-source{min-height:44px}
+.w834 .kpi{grid-template-columns:1fr 1fr}
+.w834 .overview-panels{grid-template-columns:1fr}
+
+.duty-page{max-width:760px}
+.duty-track{margin:0 0 32px}
+.duty-track-head{display:flex;gap:12px;align-items:baseline;flex-wrap:wrap;margin:0 0 4px}
+.duty-track-title{font-size:var(--fs-section);letter-spacing:-.01em;margin:0;flex:1 1 auto}
+.duty-track-progress{font-size:var(--fs-small);color:var(--muted)}
+.duty-list{list-style:none;padding:0;margin:12px 0 0;display:grid;gap:12px}
+.duty-card{padding:16px 18px}
+.duty-card.is-next{border-color:var(--accent)}
+.duty-head{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.duty-order{flex:0 0 auto;font-size:var(--fs-small);color:var(--muted)}
+.duty-title{flex:1 1 260px;font-size:var(--fs-lead);font-weight:600;text-wrap:pretty}
+.duty-due{margin-left:auto}
+.duty-meta{font-size:var(--fs-small);color:var(--muted);margin:8px 0 0}
+.duty-action{margin:12px 0 0}
+.approval-list{list-style:none;padding:0;margin:0;display:grid;gap:20px}
+.approval-card{padding:18px}
+.approval-title{font-size:var(--fs-section);letter-spacing:-.01em;margin:0 0 4px;text-wrap:pretty}
+.approval-meta{font-size:var(--fs-small);color:var(--muted)}
+.approval-note{font-size:var(--fs-body);margin:10px 0 0}
+.approval-text{margin-top:10px;line-height:1.7;max-width:70ch;font-size:var(--fs-body)}
+.approval-form{display:grid;gap:12px;margin-top:14px}
+.approval-decide{display:flex;gap:10px;flex-wrap:wrap}
+.w390 .duty-order{flex:1 0 100%}
+.w390 .duty-due{margin-left:0}
+.w390 .duty-action .button{width:100%;min-height:44px}
+.w390 .duty-head{gap:8px}
+.w390 .approval-decide{flex-direction:column-reverse}
+.w390 .approval-decide .button{width:100%;min-height:44px}
+.w390 .approval-form textarea.field-input{min-height:64px}
+.approval-form textarea.field-input{min-height:64px}
+summary{cursor:pointer}
+
+/* PREVZATÉ z globals.css: .detail-* 2208–2299, .audit* 1694–1735,
+   .document-sheet 1593–1602, .acknowledge-* 3409–3425. */
+.detail-page{max-width:1180px}
+.detail-grid{display:grid;grid-template-columns:minmax(0,1fr);gap:18px;align-items:start}
+.detail-main{min-width:0}
+.detail-side{display:grid;gap:12px;min-width:0}
+.w1440 .detail-grid,.w834 .detail-grid{grid-template-columns:minmax(0,1fr) 280px}
+.w390 .detail-grid{grid-template-columns:minmax(0,1fr)}
+.w390 .detail-side{order:-1}
+.detail-chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px}
+.detail-card{padding:14px 16px}
+.detail-card-title{margin:0 0 10px;font-size:13px;font-weight:650;letter-spacing:.04em;text-transform:uppercase;color:var(--muted)}
+.detail-progress-head{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
+.detail-percent{font-size:26px;font-weight:640;letter-spacing:-.03em;font-variant-numeric:tabular-nums}
+.detail-progress-of{font-size:13px;font-variant-numeric:tabular-nums}
+.detail-bar{margin-top:10px;height:6px;border-radius:3px;background:var(--surface-2);overflow:hidden}
+.detail-bar-fill{display:block;height:100%;background:var(--accent)}
+.detail-card-link{margin:10px 0 0;font-size:13px;font-weight:600}
+.detail-card-link a{color:var(--accent)}
+.detail-empty{margin:0;font-size:13.5px;line-height:1.5}
+.detail-meta{margin:0;display:grid;gap:8px}
+.detail-meta-row{display:flex;gap:10px;align-items:baseline}
+.detail-meta-key{flex:0 0 104px;font-size:12.5px}
+.detail-meta-value{flex:1;min-width:0;margin:0;font-size:13.5px;overflow-wrap:anywhere}
+.audit{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.audit-entry{padding:12px 16px;display:grid;gap:6px}
+.audit-head{display:flex;gap:8px;align-items:baseline;flex-wrap:wrap}
+.audit-target{font-size:14.5px}
+.audit-who{font-size:13px;color:var(--muted)}
+.audit-note{font-size:13px;font-style:italic;color:var(--muted)}
+.document-sheet{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius-lg);padding:28px 32px}
+.w390 .document-sheet{padding:20px 16px}
+.acknowledge-card{padding:20px;margin-top:32px}
+.w390 .acknowledge-card{margin-bottom:64px}
+.acknowledge-dock{position:relative;display:flex;padding:0 10px}
+.acknowledge-dock .button{width:100%;min-height:50px;border-radius:12px;box-shadow:var(--shadow)}
+.acknowledge-progress{position:absolute;inset:0 auto auto 0;height:2px;background:var(--accent)}
+.detail-block{padding:18px;display:grid;gap:12px;margin:0 0 18px}
+.detail-block-title{font-size:var(--fs-section);margin:0}
+.detail-block-note{font-size:var(--fs-body);color:var(--muted);margin:0}
+.detail-tools{margin:0 0 18px}
+.detail-tools>summary{font-size:var(--fs-section);font-weight:650;padding:14px 18px;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);cursor:pointer;list-style:none}
+.detail-tools>summary::-webkit-details-marker{display:none}
+/* Chevron z produktu (globals.css, select.field-input), nie znak: znak kreslí
+   operačný systém a na každom vyzerá inak. Zatvorené smeruje vpravo, otvorené dole. */
+.detail-tools>summary{display:flex;align-items:center;gap:9px}
+.detail-tools>summary::before{content:"";flex:0 0 12px;width:12px;height:12px;background:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12' fill='none'><path d='M2.5 4.5L6 8l3.5-3.5' stroke='%235c6675' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/></svg>") no-repeat center;transform:rotate(-90deg)}
+.detail-tools[open]>summary::before{transform:none}
+.dark .detail-tools>summary::before{background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12' fill='none'><path d='M2.5 4.5L6 8l3.5-3.5' stroke='%239aa4b2' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/></svg>")}
+.detail-tools[open]>summary{border-radius:var(--radius) var(--radius) 0 0}
+.detail-tools-body{display:grid;gap:14px;padding:14px 0 0}
+.detail-card{padding:14px}
+.detail-card-title{font-size:11px;font-weight:650;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:0 0 9px}
+.detail-percent{font-size:25px;font-weight:640;letter-spacing:-.03em;font-variant-numeric:tabular-nums}
+.detail-progress-head{display:flex;align-items:baseline;gap:7px;margin-bottom:8px}
+.detail-progress-of{font-size:12px}
+.detail-bar{height:6px;border-radius:3px;background:var(--surface-2);overflow:hidden;margin-bottom:10px}
+.detail-bar-fill{display:block;height:100%;background:var(--accent)}
+.detail-card-link{margin:0;font-size:12.5px;font-weight:600}
+.detail-meta{margin:0;display:grid;gap:9px}
+.detail-meta-row{display:flex;gap:10px;align-items:baseline}
+.detail-meta-key{flex:0 0 84px;font-size:12px;margin:0}
+.detail-meta-value{flex:1;font-size:12.5px;margin:0;text-wrap:pretty;overflow-wrap:anywhere}
+.detail-page .page-title{text-wrap:pretty;overflow-wrap:anywhere}
+.audit{list-style:none;padding:0;margin:0;display:grid;gap:12px}
+.audit-entry{padding:14px 16px}
+.audit-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.audit-who{font-size:12px;margin-top:3px}
+.audit-note{font-size:12px;margin-top:3px}
+.document-sheet{max-width:68ch;font-size:var(--fs-lead);line-height:1.7}
+.document-sheet h2{margin:28px 0 8px;font-size:var(--fs-section)}
+.document-sheet h2:first-child{margin-top:0}
+.document-sheet p{margin:0 0 12px}
+.w390 .document-sheet{font-size:16px}
+.acknowledge-card{padding:20px;margin-top:32px}
+.acknowledge-dock{position:relative;display:flex;padding:10px 14px 18px;background:var(--surface);border-top:1px solid var(--line)}
+.acknowledge-progress{position:absolute;inset:0 auto auto 0;height:2px;background:var(--accent)}
+.formulka{font-size:var(--fs-body);line-height:1.6;margin:0 0 14px}
+
+.dp{max-width:1180px}
+.dp-top{display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap;margin:0 0 18px}
+.dp-title{flex:1 1 420px;min-width:0}
+.dp-title .page-title{margin:0 0 4px;text-wrap:pretty}
+.dp-sub{font-size:var(--fs-small);color:var(--muted)}
+.dp-actions{display:flex;gap:8px;flex-wrap:wrap}
+.dp-actions .button{min-height:36px;font-size:14px;padding:0 14px}
+.grid2{display:grid;gap:16px;align-items:start}
+.w1440 .grid2{grid-template-columns:minmax(0,1fr) 280px}
+.w834 .grid2,.w390 .grid2{grid-template-columns:minmax(0,1fr)}
+.sec-title{font-size:11px;font-weight:650;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:0 0 8px}
+.flow{padding:0;overflow:hidden}
+.flow-head{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;padding:14px 18px;border-bottom:1px solid var(--line)}
+.flow-head h2{font-size:var(--fs-section);margin:0}
+.flow-head .quiet{font-size:var(--fs-small)}
+.steps{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));border-bottom:1px solid var(--line);background:var(--bg)}
+.step{display:grid;grid-template-columns:auto 1fr;gap:2px 9px;align-items:center;padding:12px 14px;border-right:1px solid var(--line);min-width:0}
+.step:last-child{border-right:0}
+.step-dot{grid-row:span 2;display:grid;place-items:center;width:24px;height:24px;border-radius:50%;border:1.5px solid var(--line);font-size:12px;font-weight:700;color:var(--muted);background:var(--surface)}
+.step-name{font-size:13px;font-weight:650;min-width:0}
+.step-state{font-size:11.5px;color:var(--muted);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.step.is-done .step-dot{background:var(--ok-bg);border-color:transparent;color:var(--ok-fg)}
+.step.is-now{background:var(--surface);box-shadow:inset 0 -2px 0 var(--accent)}
+.step.is-now .step-dot{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.step.is-now .step-state{color:var(--ink)}
+.flow-body{padding:16px 18px;display:grid;gap:14px}
+.flow-lead{margin:0;font-size:var(--fs-body)}
+.approvers{display:grid;gap:0;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.appr{display:flex;align-items:center;gap:10px;padding:9px 12px;border-bottom:1px solid var(--line);font-size:13.5px}
+.appr:last-child{border-bottom:0}
+.appr .av{width:28px;height:28px;font-size:10.5px}
+.appr-name{flex:1;min-width:0}
+.appr-role{font-size:12px;color:var(--muted)}
+.facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px 16px;margin:0}
+.facts div{min-width:0}
+.facts dt{font-size:11.5px;color:var(--muted)}
+.facts dd{margin:1px 0 0;font-size:13.5px;overflow-wrap:anywhere}
+.lock{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--muted)}
+.next{display:grid;gap:6px;padding:12px 14px;border-radius:10px;background:var(--bg);border:1px dashed var(--line)}
+.next-title{font-size:12px;font-weight:650;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+.next-row{display:flex;gap:8px;font-size:13px;align-items:baseline}
+.next-row b{font-weight:600;min-width:110px}
+.flow-foot{display:flex;gap:10px;flex-wrap:wrap;align-items:center;padding:12px 18px;border-top:1px solid var(--line);background:var(--bg)}
+.flow-foot .quiet{font-size:12.5px}
+.linkish{font-size:13px;color:var(--ink);text-decoration:underline;text-underline-offset:2px}
+.cur{padding:16px 18px;display:grid;gap:12px}
+.cur-head{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.cur-head h2{font-size:var(--fs-section);margin:0}
+.cur-links{display:flex;gap:6px 16px;flex-wrap:wrap;padding-top:10px;border-top:1px solid var(--line)}
+.hist{display:grid;gap:0;border:1px solid var(--line);border-radius:var(--radius);background:var(--surface);overflow:hidden}
+.hist-row{display:flex;gap:10px;align-items:center;padding:10px 14px;border-bottom:1px solid var(--line);font-size:13px}
+.hist-row:last-child{border-bottom:0}
+.hist-row .grow{flex:1;min-width:0}
+.side-card{padding:14px 16px}
+.side-card h3{font-size:11px;font-weight:650;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:0 0 10px;display:flex;justify-content:space-between}
+.side-card h3 a{font-size:12px;letter-spacing:0;text-transform:none;color:var(--ink);font-weight:600}
+.kv{display:grid;grid-template-columns:96px 1fr;gap:6px 10px;margin:0;font-size:13px}
+.kv dt{color:var(--muted)}
+.kv dd{margin:0;overflow-wrap:anywhere}
+.check{display:grid;gap:0;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.check-row{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;border-bottom:1px solid var(--line);font-size:13.5px}
+.check-row:last-child{border-bottom:0}
+.check-ico{display:grid;place-items:center;width:20px;height:20px;border-radius:50%;flex:0 0 auto;font-size:11px;font-weight:800;margin-top:1px}
+.check-ico.ok{background:var(--ok-bg);color:var(--ok-fg)}
+.check-ico.todo{background:var(--warn-bg);color:var(--warn-fg)}
+.check-ico.opt{background:var(--surface-2);color:var(--muted)}
+.check-main{flex:1;min-width:0}
+.check-note{font-size:12px;color:var(--muted);margin-top:1px}
+.check-act{font-size:12.5px;font-weight:600;color:var(--ink);text-decoration:underline;text-underline-offset:2px;white-space:nowrap}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.pchip{display:inline-flex;align-items:center;gap:6px;min-height:30px;padding:0 6px 0 4px;border-radius:999px;background:var(--accent-soft);font-size:12.5px}
+.pchip .av{width:22px;height:22px;font-size:9px}
+.pchip x{color:var(--muted);font-size:14px;padding:0 3px}
+.opt-row{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;border:1px solid var(--line);border-radius:9px;background:var(--bg);font-size:13.5px}
+.box{width:18px;height:18px;border-radius:5px;background:var(--accent);color:var(--on-accent);display:grid;place-items:center;font-size:11px;font-weight:800;flex:0 0 auto;margin-top:1px}
+.w390 .steps{grid-template-columns:repeat(4,minmax(0,1fr))}
+.w390 .step{grid-template-columns:1fr;justify-items:center;text-align:center;padding:10px 4px;gap:4px}
+.w390 .step-dot{grid-row:auto}
+.w390 .step-state{display:none}
+.w390 .step-name{font-size:11.5px}
+.w390 .flow-body,.w390 .flow-head,.w390 .flow-foot{padding-left:14px;padding-right:14px}
+.w390 .flow-foot .button{width:100%;min-height:48px}
+.w390 .field-input{min-height:44px;font-size:16px}
+.w390 .dp-actions{width:100%}
+.w390 .dp-actions .button{flex:1;min-height:44px}
+/* mapa postupu */
+.map{display:grid;gap:14px;max-width:1440px;margin:0 0 30px}
+.map-row{background:#fff;border:1px solid rgba(20,28,42,.14);border-radius:12px;padding:14px 16px}
+.map-h{font-size:13px;font-weight:700;margin:0 0 10px;display:flex;gap:10px;align-items:baseline;flex-wrap:wrap}
+.map-h span{font-weight:400;color:#5c6675;font-size:12.5px}
+.map-steps{display:flex;gap:6px;flex-wrap:wrap;align-items:stretch}
+.ms{display:grid;gap:2px;padding:8px 10px;border-radius:8px;background:#f5f6f8;border:1px solid rgba(20,28,42,.1);font-size:12.5px;min-width:0;max-width:210px}
+.ms b{font-size:12.5px}
+.ms i{font-style:normal;font-size:11px;color:#5c6675}
+.ms.hidden{border-style:dashed}
+.arrow{align-self:center;color:#9aa4b2;font-size:14px}
+.ms.new{background:#ecfdf5;border-color:rgba(4,120,87,.25)}
+.ann{font-size:12px;color:#5c6675;max-width:78ch;margin:8px 0 0;line-height:1.5}
+.ann b{color:#161b22}
+.num{display:inline-grid;place-items:center;width:18px;height:18px;border-radius:50%;background:#b45309;color:#fff;font-size:10.5px;font-weight:700;margin-right:4px;vertical-align:1px}
+.q{display:inline-grid;place-items:center;min-width:22px;height:18px;border-radius:9px;background:#1d4ed8;color:#fff;font-size:10.5px;font-weight:700;padding:0 5px;margin-left:4px;vertical-align:1px}
+
+
+.step.is-bad .step-dot{background:var(--bad-bg);border-color:transparent;color:var(--bad-fg)}
+.step.is-bad .step-state{color:var(--bad-fg)}
+.reject{display:grid;gap:4px;padding:12px 14px;border-radius:10px;background:var(--bad-bg);color:var(--bad-fg);font-size:13.5px;line-height:1.5}
+.reject b{font-weight:650}
+.reject q{color:var(--ink);quotes:"„" "“"}
+.up-steps{margin:0 0 16px;border:1px solid var(--line);border-radius:var(--radius);overflow:hidden}
+.up-page{max-width:880px}
+.upload-form{display:grid;gap:14px}
+.upload-section{padding:18px 20px}
+.upload-step{display:flex;align-items:center;gap:10px;margin:0 0 14px;font-size:15px}
+.upload-step-no{display:grid;place-items:center;width:24px;height:24px;border-radius:50%;background:var(--accent);color:var(--on-accent);font-size:12.5px;font-weight:700}
+.upload-step-opt{margin-left:auto;font-size:var(--fs-micro);font-weight:500;color:var(--muted)}
+.upload-files{display:grid;gap:12px;grid-template-columns:1.25fr 1fr}
+.w390 .upload-files{grid-template-columns:1fr}
+.upload-drop{display:grid;grid-template-columns:minmax(0,1fr);align-content:start;justify-items:start;gap:6px;padding:16px;border:1px dashed var(--line);border-radius:11px;background:repeating-linear-gradient(135deg,var(--surface-2) 0 8px,transparent 8px 16px);min-width:0}
+.upload-drop--optional{background:none}
+.upload-drop-title{font-size:14.5px;font-weight:600}
+.upload-drop-note{font-size:12.5px;color:var(--muted);line-height:1.5}
+.upload-drop-ext{font-family:ui-monospace,Menlo,monospace;font-size:12px;color:var(--muted)}
+.upload-drop.is-set{border-style:solid;border-color:var(--ok-fg);background:var(--surface)}
+.upload-drop--optional.is-set{border-color:var(--line)}
+.upload-chosen{display:flex;align-items:center;gap:10px;width:100%;margin-top:4px;padding:8px 10px;border-radius:8px;background:var(--bg);border:1px solid var(--line)}
+.upload-chosen-ico{display:grid;place-items:center;width:30px;height:34px;border-radius:5px;background:var(--surface-2);font-size:9.5px;font-weight:800;letter-spacing:.03em;color:var(--muted);flex:0 0 auto}
+.upload-chosen-main{flex:1;min-width:0}
+.upload-chosen-name{font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.upload-chosen-meta{font-size:11.5px;color:var(--muted)}
+.upload-chosen-act{font-size:12.5px;font-weight:600;color:var(--ink);text-decoration:underline;text-underline-offset:2px}
+.upload-bar{display:block;height:4px;border-radius:2px;background:var(--line);overflow:hidden;width:100%}
+.upload-bar>span{display:block;height:100%;background:var(--accent);border-radius:2px}
+.upload-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px;align-items:start}
+.upload-wide{grid-column:1/-1}
+.key-preview{margin-top:2px;font-family:ui-monospace,Menlo,monospace;font-size:var(--fs-micro);color:var(--muted)}
+.key-preview b{color:var(--ink);font-weight:500}
+.upload-optional>summary{font-size:var(--fs-small);font-weight:600;padding:6px 0;cursor:pointer}
+.prefill-note{display:flex;gap:8px;align-items:flex-start;margin:0 0 14px;padding:9px 12px;border-radius:9px;background:var(--bg);border:1px solid var(--line);font-size:12.5px;color:var(--muted);line-height:1.5}
+.prefill-note b{color:var(--ink);font-weight:600}
+.upload-submit{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.upload-submit-note{font-size:12.5px;color:var(--muted)}
+.w390 .upload-section{padding:16px}
+.w390 .upload-submit .button{width:100%;min-height:44px}
+.w390 .field-input{min-height:44px;font-size:16px}
+
+.ed{max-width:1180px}
+.ed-top{display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap;margin:0 0 16px}
+.ed-top .grow{flex:1 1 360px;min-width:0}
+.ed-top .page-title{margin:0}
+.ed-kick{font-size:var(--fs-small);color:var(--muted);margin:0 0 4px}
+.ro{display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:10px 12px;border-radius:9px;background:var(--bg);border:1px solid var(--line);font-size:12.5px;color:var(--muted)}
+.ro code{font-size:12px;color:var(--ink)}
+.ed-save{position:sticky;bottom:0;display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:12px 16px;border:1px solid var(--line);border-radius:var(--radius);background:var(--surface);box-shadow:var(--shadow)}
+.ed-save .quiet{font-size:12.5px}
+.elsewhere{padding:14px 16px;display:grid;gap:8px}
+.elsewhere h3{font-size:11px;font-weight:650;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:0}
+.elsewhere a{display:grid;gap:1px;padding:8px 10px;border-radius:8px;border:1px solid var(--line);text-decoration:none;color:var(--ink);font-size:13.5px;font-weight:600;background:var(--bg)}
+.elsewhere a span{font-size:12px;font-weight:400;color:var(--muted)}
+.tagsel{display:flex;gap:6px;flex-wrap:wrap;align-items:center;min-height:40px;padding:5px 8px;border:1px solid var(--line);border-radius:10px;background:var(--bg)}
+.tagsel span{display:inline-flex;align-items:center;gap:4px;min-height:26px;padding:0 4px 0 9px;border-radius:6px;background:var(--accent-soft);font-size:12.5px}
+.tagsel span i{font-style:normal;color:var(--muted);padding:0 4px}
+.w390 .ed-save .button{flex:1;min-height:44px}
+.ann{font-size:12px;color:#5c6675;max-width:78ch;margin:8px 0 0;line-height:1.5}
+.ann b{color:#161b22}
+.num{display:inline-grid;place-items:center;width:18px;height:18px;border-radius:50%;background:#b45309;color:#fff;font-size:10.5px;font-weight:700;margin-right:4px;vertical-align:1px}
+
+.dsel{position:relative;display:grid;gap:5px;min-width:0}
+.dsel-control{display:flex;flex-wrap:wrap;align-items:center;gap:5px;min-height:44px;padding:5px 7px;background:var(--bg);border:1px solid var(--line);border-radius:10px}
+.dsel-control.is-focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.dsel-chip{display:inline-flex;align-items:center;gap:4px;min-height:32px;padding:0 4px 0 10px;border-radius:7px;background:var(--surface-2);font-size:14px;white-space:nowrap}
+.dsel-chip small{color:var(--muted);font-size:11.5px}
+.dsel-chip x{display:grid;place-items:center;width:26px;height:26px;color:var(--muted);font-size:16px}
+.dsel-input{flex:1 1 80px;min-width:70px;padding:4px 2px;font-size:15px;color:var(--muted)}
+.dsel-input.typed{color:var(--ink)}
+.dsel-counter{font-size:12px;color:var(--muted);padding:0 2px}
+.dsel-caret{margin-left:auto;color:var(--muted);padding:0 4px}
+.dsel-value{flex:1;min-width:0;display:grid;gap:0;padding:2px 4px}
+.dsel-value b{font-weight:500;font-size:15px}
+.dsel-value span{font-size:11.5px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dsel-list{margin-top:4px;max-height:none;padding:5px;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow)}
+.dsel-search{display:flex;align-items:center;gap:8px;min-height:40px;padding:0 10px;margin:0 0 5px;border:1px solid var(--line);border-radius:8px;background:var(--bg);font-size:14px;color:var(--muted)}
+.dsel-opt{display:flex;align-items:center;gap:8px;min-height:40px;padding:6px 10px;border-radius:8px;font-size:14.5px}
+.dsel-opt.is-hl{background:var(--surface-2)}
+.dsel-mark{width:14px;flex:none;color:var(--accent);font-weight:700}
+.dsel-name{flex:1;min-width:0;display:grid}
+.dsel-name b{font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dsel-name b mark{background:var(--warn-bg);color:inherit;border-radius:3px;padding:0 1px}
+.dsel-path{font-size:11.5px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dsel-count{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+.dsel-ind1{padding-left:18px}.dsel-ind2{padding-left:36px}
+.dsel-foot{display:flex;justify-content:space-between;gap:8px;margin:5px -5px -5px;padding:8px 10px;border-top:1px solid var(--line);font-size:13.5px}
+.dsel-foot b{color:var(--accent)}
+.dsel-note{font-size:12px;color:var(--muted);padding:6px 10px 2px}
+.spec{display:grid;grid-template-columns:repeat(auto-fit,minmax(420px,1fr));gap:22px;max-width:1440px;margin:0 0 30px}
+.spec-card{background:var(--bg);border:1px solid rgba(20,28,42,.18);border-radius:12px;padding:18px;display:grid;gap:12px;align-content:start}
+.spec-card h3{margin:0;font-size:14px}
+.spec-card p{margin:0;font-size:12.5px;color:#5c6675;line-height:1.5}
+table.inv{width:100%;max-width:1440px;border-collapse:collapse;font-size:13px;background:#fff;border:1px solid rgba(20,28,42,.14);border-radius:12px;overflow:hidden;margin:0 0 30px}
+table.inv th{text-align:left;padding:8px 12px;font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:#5c6675;background:#f5f6f8;border-bottom:1px solid rgba(20,28,42,.12)}
+table.inv td{padding:9px 12px;border-bottom:1px solid rgba(20,28,42,.08);vertical-align:top;line-height:1.45}
+table.inv td code{font-size:11.5px}
+.ipill{display:inline-block;font-size:11px;font-weight:650;padding:2px 8px;border-radius:999px}
+.p-s{background:#e0e7ff;color:#3730a3}.p-m{background:#ecfdf5;color:#047857}.p-x{background:#fef2f2;color:#b91c1c}.p-k{background:#f1f5f9;color:#475569}
+.ann{font-size:12px;color:#5c6675;max-width:78ch;margin:8px 0 0;line-height:1.5}
+.ann b{color:#161b22}
+.q{display:inline-grid;place-items:center;min-width:22px;height:18px;border-radius:9px;background:#1d4ed8;color:#fff;font-size:10.5px;font-weight:700;padding:0 5px;margin-left:4px;vertical-align:1px}
+
+/* nové: learning */
+.lp{max-width:1180px;margin:0 auto}
+.lp-head{display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap;margin:0 0 14px}
+.lp-head .grow{flex:1 1 320px;min-width:0}
+.lp-head .page-title{margin:0 0 4px}
+.lp-head .page-lead{margin:0}
+.lp-cols{display:grid;grid-template-columns:minmax(0,1fr);gap:22px;align-items:start}
+.w1440 .lp-cols{grid-template-columns:232px minmax(0,1fr)}
+.lf{display:grid;gap:16px;align-content:start}
+.lf-k{font-size:11px;font-weight:650;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:0 0 4px}
+.lf-group{display:grid;gap:1px}
+.lf-note{font-size:11.5px;color:var(--muted);line-height:1.45;margin:0}
+.lpills{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 10px}
+.w390 .lpills{flex-wrap:nowrap;overflow-x:auto;margin:0 -14px 10px;padding:0 14px 2px;scrollbar-width:none}
+.w390 .pill{min-height:44px;white-space:nowrap}
+.lfd{margin:0 0 16px;border:1px solid var(--line);border-radius:10px;background:var(--surface)}
+.lfd>summary{display:flex;align-items:center;gap:8px;min-height:40px;padding:0 12px;font-size:13.5px;font-weight:600;list-style:none}
+.lfd>summary::-webkit-details-marker{display:none}
+.lfd>summary .quiet{font-weight:400;font-size:12.5px;margin-left:auto}
+.w390 .lfd>summary{min-height:44px}
+.lfd-body{display:grid;gap:12px;padding:4px 12px 12px;border-top:1px solid var(--line)}
+.lfd-body .lf-group{display:flex;flex-wrap:wrap;gap:6px}
+.lfd-body .lf-k{width:100%;margin:8px 0 0}
+.lchips{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin:0 0 16px}
+.lchips .linkish{font-size:12.5px}
+.lgroup{margin:0 0 26px}
+.lgroup:last-child{margin-bottom:0}
+.lgroup-head{display:flex;align-items:baseline;gap:8px;margin:0 0 10px}
+.lgroup-head h2{font-size:var(--fs-section);letter-spacing:-.01em;margin:0}
+.lgroup-head .quiet{font-size:var(--fs-small);font-variant-numeric:tabular-nums}
+.lcards{display:grid;gap:12px;grid-template-columns:repeat(auto-fill,minmax(290px,1fr))}
+.lc{display:grid;grid-template-columns:minmax(0,1fr);gap:8px;padding:14px 16px 12px;align-content:start;min-width:0}
+.lc-top{display:flex;align-items:center;gap:8px}
+.lc-topic{flex:1;min-width:0;font-size:12px;font-weight:600;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lc-title{font-size:16px;font-weight:650;line-height:1.3;letter-spacing:-.01em;color:var(--ink);text-decoration:none;text-wrap:pretty;overflow-wrap:anywhere}
+.lc-tags{display:flex;flex-wrap:wrap;gap:5px}
+.stag{display:inline-flex;align-items:center;gap:4px;min-height:24px;padding:0 8px;border-radius:6px;background:var(--surface-2);font-size:12px;color:var(--ink);text-decoration:none;white-space:nowrap}
+.stag-k{color:var(--muted)}
+.stag.is-on{background:var(--accent-soft);box-shadow:inset 0 0 0 1px var(--accent);font-weight:600}
+.lc-meta{display:flex;flex-wrap:wrap;gap:2px 12px;font-size:12.5px;color:var(--muted)}
+.lc-prog{display:grid;gap:5px;margin-top:2px}
+.lc-prog-row{display:flex;justify-content:space-between;gap:8px;font-size:12.5px}
+.lc-prog-row b{font-weight:600;font-variant-numeric:tabular-nums}
+.lc-track{height:6px;border-radius:3px;background:var(--surface-2);overflow:hidden}
+.lc-track span{display:block;height:100%;background:var(--accent);border-radius:3px}
+.lc-act{display:flex;align-items:center;gap:6px 12px;flex-wrap:wrap;margin-top:4px;padding-top:12px;border-top:1px solid var(--line)}
+.lc-act .button{min-height:36px;font-size:14px;padding:0 14px}
+.lc-next{flex:1 1 140px;min-width:0;font-size:12.5px;color:var(--muted);line-height:1.4}
+.lc-next b{color:var(--ink);font-weight:600}
+.lc-link{font-size:13px;font-weight:600;color:var(--ink);text-decoration:underline;text-underline-offset:2px}
+.w390 .lc-act .button{width:100%;min-height:44px;font-size:15px}
+.w390 .lc-next{flex-basis:100%}
+.lc--done{background:transparent}
+.empty--compact{padding:18px 16px;margin:0 0 22px}
+.tabbar{display:grid;grid-template-columns:repeat(5,1fr);height:58px;background:var(--surface);border-top:1px solid var(--line)}
+.tabbar a{position:relative;display:grid;place-items:center;align-content:center;gap:3px;font-size:10.5px;color:var(--muted);text-decoration:none}
+.tabbar a i{display:block;width:18px;height:18px;border-radius:5px;border:1.5px solid currentColor;opacity:.8}
+.tabbar a.is-on{color:var(--accent);font-weight:650}
+.tabbar a.is-on::before{content:"";position:absolute;top:0;left:22%;right:22%;height:2px;background:var(--accent);border-radius:0 0 2px 2px}
+.tabbar b{position:absolute;top:6px;left:calc(50% + 4px);min-width:16px;height:16px;padding:0 4px;border-radius:8px;background:var(--bad-fg);color:var(--on-accent);font-size:10px;display:grid;place-items:center}
+
+.kv{display:grid;grid-template-columns:96px 1fr;gap:6px 10px;margin:0;font-size:13px}
+.kv dt{color:var(--muted)}
+.kv dd{margin:0;overflow-wrap:anywhere}
+.notice--info{background:var(--surface);border-color:var(--line)}
+.notice--info .notice-mark{background:var(--surface-2);color:var(--ink)}
+.notice--info .notice-text{color:var(--ink)}
+.notice--warn{background:var(--warn-bg);border-color:rgba(180,83,9,.2)}
+.notice--warn .notice-mark{background:var(--warn-bg);color:var(--warn-fg)}
+.notice--warn .notice-text{color:var(--warn-fg)}
+.notice-text a{color:inherit;font-weight:650;text-decoration:underline;text-underline-offset:2px}
+.crumbs{display:flex;gap:6px;align-items:center;flex-wrap:wrap;font-size:12.5px;color:var(--muted);margin:0 0 10px}
+.crumbs a{color:var(--muted);text-decoration:none}
+.tabs{display:flex;gap:2px;border-bottom:1px solid var(--line);margin:0 0 16px;overflow-x:auto;overflow-y:hidden}
+.tabs a{display:flex;align-items:center;gap:6px;min-height:40px;padding:0 12px;font-size:13.5px;color:var(--muted);text-decoration:none;border-bottom:2px solid transparent;white-space:nowrap;margin-bottom:-1px}
+.tabs a.is-on{color:var(--ink);font-weight:650;border-bottom-color:var(--accent)}
+.tabs .c{font-size:11px;font-weight:600;padding:1px 6px;border-radius:10px;background:var(--surface-2);color:var(--muted)}
+.w390 .tabs{margin:0 -14px 14px;padding:0 8px}
+.w390 .tabs a{min-height:44px}
+.sw{display:inline-flex;align-items:center;gap:10px;font-size:14px}
+.sw i{position:relative;width:36px;height:20px;border-radius:10px;background:var(--surface-2);border:1px solid var(--line);flex:0 0 auto}
+.sw i::after{content:"";position:absolute;top:2px;left:2px;width:14px;height:14px;border-radius:50%;background:var(--muted)}
+.sw.is-on i{background:var(--accent);border-color:var(--accent)}
+.sw.is-on i::after{left:18px;background:var(--on-accent)}
+.av-row{display:flex;gap:4px;align-items:center}
+.av-row .av{width:24px;height:24px;font-size:9.5px;box-shadow:0 0 0 2px var(--surface)}
+.av-row .av+.av{margin-left:-8px}
+.num-cell{font-variant-numeric:tabular-nums;white-space:nowrap}
+.bad{color:var(--bad-fg)}
+.okc{color:var(--ok-fg)}
+.warnc{color:var(--warn-fg)}
+
+.tp{max-width:1180px;margin:0 auto}
+.tp-head{display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;margin:0 0 14px}
+.tp-head .grow{flex:1 1 300px;min-width:0}
+.tp-head .page-title{margin:0}
+.w390 .tp-head .page-title{font-size:22px}
+.w390 .tp-head .button{flex:1;min-height:44px}
+.bar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:0 0 12px}
+.w390 .view-switch{width:100%;overflow-x:auto}
+.w390 .view-switch-item{min-height:40px;flex:1 0 auto;white-space:nowrap}
+.key{font-family:ui-monospace,Menlo,monospace;font-size:11.5px;color:var(--muted)}
+.ttab td{vertical-align:middle}
+.ttab .act{text-align:right;white-space:nowrap}
+.ttab .act a{font-size:12.5px;font-weight:600;color:var(--ink)}
+.tag--warnx{background:var(--warn-bg);color:var(--warn-fg);border-color:transparent}
+.tcards{display:grid;gap:10px}
+.tc{display:grid;gap:6px;padding:12px 14px}
+.tc-top{display:flex;gap:8px;align-items:center;justify-content:space-between}
+.tc b{font-size:15px;font-weight:600;text-wrap:pretty}
+.tc-meta{display:flex;flex-wrap:wrap;gap:2px 12px;font-size:12.5px;color:var(--muted)}
+.ed2{display:grid;gap:16px;grid-template-columns:minmax(0,1fr);align-items:start}
+.w1440 .ed2{grid-template-columns:minmax(0,1fr) 300px}
+.w390 .ed2-side{order:-1}
+.box2{padding:16px;display:grid;gap:14px}
+.box2 h2{font-size:var(--fs-section);margin:0}
+.box2 h3{font-size:11px;font-weight:650;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:0}
+.w390 .box2{padding:14px}
+.w390 .field-input{min-height:44px;font-size:16px}
+.fgrid{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
+textarea.field-input{min-height:80px;line-height:1.5}
+.rp{display:grid;border:1px solid var(--line);border-radius:10px;max-height:212px;overflow:auto;background:var(--bg)}
+.rp label{display:flex;align-items:center;gap:10px;min-height:44px;padding:0 12px;border-bottom:1px solid var(--line);font-size:14px}
+.rp label:last-child{border-bottom:0}
+.rp .av{width:26px;height:26px;font-size:10px}
+.rp small{margin-left:auto;font-size:12px;color:var(--muted)}
+.rp .box.off{background:transparent;border:1.5px solid var(--muted)}
+.secs{display:grid;gap:10px}
+.sec2{display:grid;grid-template-columns:28px minmax(0,1fr) 110px;gap:8px 12px;align-items:start;padding:12px;border:1px solid var(--line);border-radius:10px;background:var(--bg)}
+.sec2.is-bad{border-color:var(--bad-fg);background:var(--bad-bg)}
+.sec2-n{display:grid;place-items:center;width:26px;height:26px;border-radius:50%;background:var(--surface-2);font-size:12px;font-weight:700;margin-top:24px}
+.sec2-foot{grid-column:2/4;display:flex;gap:6px 14px;flex-wrap:wrap;align-items:center;font-size:12.5px}
+.sec2-foot .fit{font-weight:600}
+.sec2-foot a{font-size:12.5px;font-weight:600;color:var(--ink)}
+.sec2-foot .ord{margin-left:auto;display:flex;gap:4px}
+.arr{display:grid;place-items:center;width:30px;height:30px;border-radius:7px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font-size:12px}
+.arr[aria-disabled=true]{opacity:.35}
+.w390 .sec2{grid-template-columns:minmax(0,1fr)}
+.w390 .sec2-n{display:none}
+.w390 .sec2-foot{grid-column:1}
+.w390 .arr{width:40px;height:40px}
+.stin{display:grid;gap:5px}
+.stin-control{display:flex;flex-wrap:wrap;align-items:center;gap:5px;min-height:40px;padding:4px 6px;background:var(--surface);border:1px solid var(--line);border-radius:10px}
+.stin-pill{display:inline-flex;align-items:center;gap:3px;min-height:28px;padding:0 3px 0 9px;border-radius:7px;background:var(--surface-2);font-size:13px;white-space:nowrap}
+.stin-pill .k{color:var(--muted)}
+.stin-pill x{display:grid;place-items:center;width:22px;height:22px;color:var(--muted);font-size:14px}
+.stin-in{flex:1 1 80px;min-width:70px;padding:3px 2px;font-size:14px;color:var(--muted)}
+.rules{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(170px,1fr))}
+.used{display:grid;gap:6px}
+.used a{display:grid;gap:1px;padding:8px 10px;border-radius:8px;border:1px solid var(--line);background:var(--bg);font-size:13px;font-weight:600;color:var(--ink);text-decoration:none}
+.used a span{font-size:12px;font-weight:400;color:var(--muted)}
+.savebar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:12px 16px;border:1px solid var(--line);border-radius:var(--radius);background:var(--surface);box-shadow:var(--shadow)}
+.savebar .quiet{font-size:12.5px;flex:1 1 200px}
+.w390 .savebar .button{flex:1;min-height:44px}
+.qcols{display:grid;gap:18px;grid-template-columns:minmax(0,1fr);align-items:start}
+.w1440 .qcols{grid-template-columns:220px minmax(0,1fr)}
+.qtab td{vertical-align:top}
+.qtab .qt{font-weight:500;text-wrap:pretty;max-width:52ch}
+.qtab .tags{display:flex;gap:4px;flex-wrap:wrap;margin-top:4px}
+.qtype{font-size:12px;white-space:nowrap}
+.qcards{display:grid;gap:10px}
+.qc{display:grid;gap:6px;padding:12px 14px}
+.qc-t{font-size:14px;font-weight:500;text-wrap:pretty}
+.qc-meta{display:flex;flex-wrap:wrap;gap:2px 12px;font-size:12.5px;color:var(--muted)}
+.ans{display:grid;gap:6px}
+.ansr{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:10px;align-items:center;padding:6px 8px;border:1px solid var(--line);border-radius:9px;background:var(--surface)}
+.ansr.is-right{border-color:var(--ok-fg);background:var(--ok-bg)}
+.ansr .field-input{min-height:36px;border:0;background:transparent;padding:4px 2px}
+.ansr small{font-size:12px;color:var(--muted);white-space:nowrap}
+.ansr.is-right small{color:var(--ok-fg);font-weight:600}
+.rd{width:18px;height:18px;border-radius:50%;border:1.5px solid var(--muted);flex:0 0 auto}
+.rd.on{border:5px solid var(--ok-fg)}
+.cb{width:18px;height:18px;border-radius:5px;border:1.5px solid var(--muted);display:grid;place-items:center;font-size:11px;font-weight:800;color:#fff;flex:0 0 auto}
+.cb.on{background:var(--ok-fg);border-color:var(--ok-fg)}
+.tf{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.tf label{display:flex;align-items:center;justify-content:center;gap:8px;min-height:48px;border:1px solid var(--line);border-radius:10px;background:var(--surface);font-size:15px;font-weight:600}
+.tf label.is-on{border-color:var(--ok-fg);background:var(--ok-bg);color:var(--ok-fg)}
+.seg{display:flex;flex-wrap:wrap;gap:6px}
+.seg label{display:inline-flex;align-items:center;gap:7px;min-height:36px;padding:0 12px;border:1px solid var(--line);border-radius:9px;background:var(--surface);font-size:13.5px}
+.seg label.is-on{border-color:var(--accent);background:var(--accent-soft);font-weight:600}
+.seg label i{width:14px;height:14px;border-radius:50%;border:1.5px solid var(--muted);flex:0 0 auto}
+.seg label.is-on i{border:4px solid var(--accent)}
+.w390 .seg label{min-height:44px;flex:1 1 auto}
+.valid{font-size:12.5px;color:var(--bad-fg);font-weight:600}
+.rtab td{vertical-align:middle}
+.rtab .sc{font-weight:650;font-variant-numeric:tabular-nums}
+.rtab .act a{font-size:12.5px;font-weight:600;color:var(--ink)}
+.rcards{display:grid;gap:10px}
+.rc{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:3px 10px;padding:12px 14px}
+.rc b{font-size:14px;font-weight:600}
+.rc .sc{grid-row:span 2;align-self:center;font-size:20px;font-weight:650;font-variant-numeric:tabular-nums}
+.rc span{font-size:12.5px;color:var(--muted)}
+.reset{display:grid;gap:12px;padding:16px;border-color:var(--bad-fg);margin:0 0 14px}
+.reset h2{font-size:var(--fs-section);margin:0}
+.reset p{margin:0;font-size:13.5px}
+.w390 .reset .button{flex:1;min-height:44px}
+.hr-note{display:block;padding:10px 12px;border-radius:9px;border:1px dashed #1d4ed8;background:#eef2ff;color:#1e3a8a;font-size:12.5px;margin:0 0 14px}
+.dark .hr-note{background:rgba(29,78,216,.18);color:#c7d2fe}
+</style></head>
+<body><div class="sheet">
+<h1 class="doc">TESTS — Testy, Banka otázok, Výsledky (<code>/learning/tests</code>)</h1>
+<p class="doc">Rám 6 z 9 podľa <code>docs/design/LEARNING-zadanie.md</code> (L2). Záložky <code>?tab=tests | questions | results</code>. Nové komponenty: <b>editor sekcií testu</b> (filter smart:tagov + počet + „v banke vyhovuje N"), <b>editor odpovedí</b> podľa typu otázky. Zadanie pre Claude Code: <code>TESTS-testy-a-banka.md</code>.</p>
+<h2 class="sec-n">Testy — zoznam</h2>
+<div class="frames"><div><p class="cap">390 — testy</p><div class="frame w390" style="width:390px"><div class="hdr" style="padding:0 10px;gap:8px"><span class="logo" style="width:30px;height:30px"><svg width="18" height="18" viewBox="0 0 48 48" fill="none" aria-hidden="true"><circle cx="18" cy="18" r="13" stroke="currentColor" stroke-width="4"></circle><circle cx="13" cy="18" r="2.3" fill="currentColor"></circle><circle cx="23" cy="18" r="2.3" fill="currentColor"></circle><path d="M28 27 L41 41 L29 38 Z" fill="currentColor"></path></svg></span><span class="org" style="font-size:15px">SFZ</span><div class="ask" style="flex:1;min-width:0"><svg width="16" height="16" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" aria-hidden="true"><path d="M3 4.5h12v7.5H8l-3.5 2.5V12H3z"></path></svg><span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Opýtajte sa…</span></div><span class="bell" style="width:40px;height:40px"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13.9 11.6c0-5.2-1.6-7-4.9-7s-4.9 1.8-4.9 7l-1.3 2.1h12.4z"></path><path d="M10.6 15.4a1.7 1.7 0 0 1-3.2 0"></path></svg><b>2</b></span><span class="av" style="width:32px;height:32px">PH</span></div><div class="body" style="padding:14px 14px 24px"><div class="tp"><div class="tp-head"><div class="grow"><h1 class="page-title">Testy</h1></div><a href="#" class="button">Nový test</a></div><nav class="tabs"><a href="#" class="is-on">Testy <span class="c">5</span></a><a href="#">Banka otázok <span class="c">128</span></a><a href="#">Výsledky</a></nav><div class="bar"><div class="view-switch"><a class="view-switch-item is-on">Všetky 5</a><a class="view-switch-item">Pripravené 2</a><a class="view-switch-item">Koncepty 2</a><a class="view-switch-item">Vyradené 1</a></div></div><div class="tcards"><article class="card tc"><div class="tc-top"><span class="tag tag--published">Pripravený</span><span class="av-row"><span class="av">PH</span></span></div><b>Bezpečnosť vo výťahu</b><div class="tc-meta"><span>1 sekcia · 10 otázok</span><span>hranica 80 %</span></div></article><article class="card tc"><div class="tc-top"><span class="tag tag--published">Pripravený</span><span class="av-row"><span class="av">PH</span><span class="av">JH</span></span></div><b>Evakuácia a únikové cesty</b><div class="tc-meta"><span>2 sekcie · 20 otázok</span><span>hranica 80 %</span></div></article><article class="card tc"><div class="tc-top"><span class="tag tag--warnx">⚠ Nedostatok otázok</span><span class="av-row"><span class="av">LŠ</span></span></div><b>Ochrana osobných údajov — základy</b><div class="tc-meta"><span>3 sekcie · 24 otázok</span><span>hranica 75 %</span></div></article><article class="card tc"><div class="tc-top"><span class="tag tag--draft">Koncept</span><span class="valid">bez zodpovednej osoby</span></div><b>Trénerská licencia UEFA C — vstupný test</b><div class="tc-meta"><span>2 sekcie · 30 otázok</span><span>hranica 70 %</span></div></article><article class="card tc"><div class="tc-top"><span class="tag tag--archived">Vyradený</span><span class="av-row"><span class="av">PH</span></span></div><b>Požiarna ochrana 2025</b><div class="tc-meta"><span>1 sekcia · 15 otázok</span><span>hranica 80 %</span></div></article></div></div></div><nav class="tabbar"><a href="#"><i></i>Prehľad</a><a href="#"><i></i>Opýtať sa</a><a href="#"><i></i>Vzdelávanie</a><a href="#"><i></i>Úlohy<b>1</b></a><a href="#" class="is-on"><i></i>Viac</a></nav></div></div><div><p class="cap">834 — testy</p><div class="frame w834" style="width:834px"><div class="hdr"><span class="logo"><svg width="18" height="18" viewBox="0 0 48 48" fill="none" aria-hidden="true"><circle cx="18" cy="18" r="13" stroke="currentColor" stroke-width="4"></circle><circle cx="13" cy="18" r="2.3" fill="currentColor"></circle><circle cx="23" cy="18" r="2.3" fill="currentColor"></circle><path d="M28 27 L41 41 L29 38 Z" fill="currentColor"></path></svg></span><span class="org">Slovenský futbalový zväz</span><div class="ask" style="flex:1;max-width:520px;margin:0 auto"><svg width="16" height="16" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" aria-hidden="true"><path d="M3 4.5h12v7.5H8l-3.5 2.5V12H3z"></path></svg><span style="flex:1">Opýtajte sa svojich dokumentov…</span><span class="kbd">/</span></div><span class="bell"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13.9 11.6c0-5.2-1.6-7-4.9-7s-4.9 1.8-4.9 7l-1.3 2.1h12.4z"></path><path d="M10.6 15.4a1.7 1.7 0 0 1-3.2 0"></path></svg><b>2</b></span><span class="av">PH</span></div>
+<nav class="nav"><a href="#">Prehľad</a><a href="#">Opýtať sa</a><a href="#">Na potvrdenie <span class="c">1</span></a><a href="#">Na schválenie</a><a href="#">Adresár</a><a href="#">Vzdelávanie</a><a href="#">Správa kurzov</a><a href="#" class="is-on">Testy</a></nav><div class="body" style="padding:22px 24px 36px"><div class="tp"><div class="tp-head"><div class="grow"><h1 class="page-title">Testy</h1></div><a href="#" class="button">Nový test</a></div><nav class="tabs"><a href="#" class="is-on">Testy <span class="c">5</span></a><a href="#">Banka otázok <span class="c">128</span></a><a href="#">Výsledky</a></nav><div class="bar"><div class="view-switch"><a class="view-switch-item is-on">Všetky 5</a><a class="view-switch-item">Pripravené 2</a><a class="view-switch-item">Koncepty 2</a><a class="view-switch-item">Vyradené 1</a></div></div><div class="doc-table-wrap"><table class="doc-table ttab"><thead><tr><th>Test</th><th class="doc-col-right">Sekcie</th><th class="doc-col-right">Otázok</th><th class="doc-col-right">Hranica</th><th>Zodpovedné osoby</th><th>Stav</th><th></th></tr></thead><tbody><tr><td><a href="#" class="doc-title">Bezpečnosť vo výťahu</a></td><td class="doc-col-right num-cell">1</td><td class="doc-col-right num-cell">10</td><td class="doc-col-right num-cell">80 %</td><td><span class="av-row"><span class="av">PH</span></span></td><td><span class="tag tag--published">Pripravený</span></td><td class="act"><a href="#">Upraviť</a></td></tr><tr><td><a href="#" class="doc-title">Evakuácia a únikové cesty</a></td><td class="doc-col-right num-cell">2</td><td class="doc-col-right num-cell">20</td><td class="doc-col-right num-cell">80 %</td><td><span class="av-row"><span class="av">PH</span><span class="av">JH</span></span></td><td><span class="tag tag--published">Pripravený</span></td><td class="act"><a href="#">Upraviť</a></td></tr><tr><td><a href="#" class="doc-title">Ochrana osobných údajov — základy</a></td><td class="doc-col-right num-cell">3</td><td class="doc-col-right num-cell">24</td><td class="doc-col-right num-cell">75 %</td><td><span class="av-row"><span class="av">LŠ</span></span></td><td><span class="tag tag--warnx">⚠ Nedostatok otázok</span></td><td class="act"><a href="#">Upraviť</a></td></tr><tr><td><a href="#" class="doc-title">Trénerská licencia UEFA C — vstupný test</a></td><td class="doc-col-right num-cell">2</td><td class="doc-col-right num-cell">30</td><td class="doc-col-right num-cell">70 %</td><td><span class="valid">nikto — nedá sa pripraviť</span></td><td><span class="tag tag--draft">Koncept</span></td><td class="act"><a href="#">Upraviť</a></td></tr><tr><td><a href="#" class="doc-title">Požiarna ochrana 2025</a></td><td class="doc-col-right num-cell">1</td><td class="doc-col-right num-cell">15</td><td class="doc-col-right num-cell">80 %</td><td><span class="av-row"><span class="av">PH</span></span></td><td><span class="tag tag--archived">Vyradený</span></td><td class="act"><a href="#">Upraviť</a></td></tr></tbody></table></div></div></div></div></div></div>
+<div class="frames"><div><p class="cap">1440 — testy</p><div class="frame w1440" style="width:1440px"><div class="hdr"><span class="logo"><svg width="18" height="18" viewBox="0 0 48 48" fill="none" aria-hidden="true"><circle cx="18" cy="18" r="13" stroke="currentColor" stroke-width="4"></circle><circle cx="13" cy="18" r="2.3" fill="currentColor"></circle><circle cx="23" cy="18" r="2.3" fill="currentColor"></circle><path d="M28 27 L41 41 L29 38 Z" fill="currentColor"></path></svg></span><span class="org">Slovenský futbalový zväz</span><div class="ask" style="flex:1;max-width:520px;margin:0 auto"><svg width="16" height="16" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" aria-hidden="true"><path d="M3 4.5h12v7.5H8l-3.5 2.5V12H3z"></path></svg><span style="flex:1">Opýtajte sa svojich dokumentov…</span><span class="kbd">/</span></div><span class="bell"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13.9 11.6c0-5.2-1.6-7-4.9-7s-4.9 1.8-4.9 7l-1.3 2.1h12.4z"></path><path d="M10.6 15.4a1.7 1.7 0 0 1-3.2 0"></path></svg><b>2</b></span><span class="av">PH</span></div>
+<nav class="nav"><a href="#">Prehľad</a><a href="#">Opýtať sa</a><a href="#">Na potvrdenie <span class="c">1</span></a><a href="#">Na schválenie</a><a href="#">Adresár</a><a href="#">Vzdelávanie</a><a href="#">Správa kurzov</a><a href="#" class="is-on">Testy</a></nav><div class="body" style="padding:24px 28px 40px"><div class="tp"><div class="tp-head"><div class="grow"><h1 class="page-title">Testy</h1></div><a href="#" class="button">Nový test</a></div><nav class="tabs"><a href="#" class="is-on">Testy <span class="c">5</span></a><a href="#">Banka otázok <span class="c">128</span></a><a href="#">Výsledky</a></nav><div class="bar"><div class="view-switch"><a class="view-switch-item is-on">Všetky 5</a><a class="view-switch-item">Pripravené 2</a><a class="view-switch-item">Koncepty 2</a><a class="view-switch-item">Vyradené 1</a></div></div><div class="doc-table-wrap"><table class="doc-table ttab"><thead><tr><th>Test</th><th class="doc-col-right">Sekcie</th><th class="doc-col-right">Otázok</th><th class="doc-col-right">Hranica</th><th>Zodpovedné osoby</th><th>Stav</th><th></th></tr></thead><tbody><tr><td><a href="#" class="doc-title">Bezpečnosť vo výťahu</a></td><td class="doc-col-right num-cell">1</td><td class="doc-col-right num-cell">10</td><td class="doc-col-right num-cell">80 %</td><td><span class="av-row"><span class="av">PH</span></span></td><td><span class="tag tag--published">Pripravený</span></td><td class="act"><a href="#">Upraviť</a></td></tr><tr><td><a href="#" class="doc-title">Evakuácia a únikové cesty</a></td><td class="doc-col-right num-cell">2</td><td class="doc-col-right num-cell">20</td><td class="doc-col-right num-cell">80 %</td><td><span class="av-row"><span class="av">PH</span><span class="av">JH</span></span></td><td><span class="tag tag--published">Pripravený</span></td><td class="act"><a href="#">Upraviť</a></td></tr><tr><td><a href="#" class="doc-title">Ochrana osobných údajov — základy</a></td><td class="doc-col-right num-cell">3</td><td class="doc-col-right num-cell">24</td><td class="doc-col-right num-cell">75 %</td><td><span class="av-row"><span class="av">LŠ</span></span></td><td><span class="tag tag--warnx">⚠ Nedostatok otázok</span></td><td class="act"><a href="#">Upraviť</a></td></tr><tr><td><a href="#" class="doc-title">Trénerská licencia UEFA C — vstupný test</a></td><td class="doc-col-right num-cell">2</td><td class="doc-col-right num-cell">30</td><td class="doc-col-right num-cell">70 %</td><td><span class="valid">nikto — nedá sa pripraviť</span></td><td><span class="tag tag--draft">Koncept</span></td><td class="act"><a href="#">Upraviť</a></td></tr><tr><td><a href="#" class="doc-title">Požiarna ochrana 2025</a></td><td class="doc-col-right num-cell">1</td><td class="doc-col-right num-cell">15</td><td class="doc-col-right num-cell">80 %</td><td><span class="av-row"><span class="av">PH</span></span></td><td><span class="tag tag--archived">Vyradený</span></td><td class="act"><a href="#">Upraviť</a></td></tr></tbody></table></div></div></div></div></div></div>
+<div class="anns"><p class="ann"><span class="num">1</span><b>Stav testu</b>: Koncept <code>.tag--draft</code> · Pripravený <code>.tag--published</code> · ⚠ Nedostatok otázok (nový <code>.tag--warn</code>) · Vyradený <code>.tag--archived</code>. Test bez zodpovednej osoby má v stĺpci červenú vetu namiesto iniciál.</p></div>
+<h2 class="sec-n">Editor testu</h2>
+<div class="frames"><div><p class="cap">1440 — editor · pripravený</p><div class="frame w1440" style="width:1440px"><div class="hdr"><span class="logo"><svg width="18" height="18" viewBox="0 0 48 48" fill="none" aria-hidden="true"><circle cx="18" cy="18" r="13" stroke="currentColor" stroke-width="4"></circle><circle cx="13" cy="18" r="2.3" fill="currentColor"></circle><circle cx="23" cy="18" r="2.3" fill="currentColor"></circle><path d="M28 27 L41 41 L29 38 Z" fill="currentColor"></path></svg></span><span class="org">Slovenský futbalový zväz</span><div class="ask" style="flex:1;max-width:520px;margin:0 auto"><svg width="16" height="16" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" aria-hidden="true"><path d="M3 4.5h12v7.5H8l-3.5 2.5V12H3z"></path></svg><span style="flex:1">Opýtajte sa svojich dokumentov…</span><span class="kbd">/</span></div><span class="bell"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13.9 11.6c0-5.2-1.6-7-4.9-7s-4.9 1.8-4.9 7l-1.3 2.1h12.4z"></path><path d="M10.6 15.4a1.7 1.7 0 0 1-3.2 0"></path></svg><b>2</b></span><span class="av">PH</span></div>
+<nav class="nav"><a href="#">Prehľad</a><a href="#">Opýtať sa</a><a href="#">Na potvrdenie <span class="c">1</span></a><a href="#">Na schválenie</a><a href="#">Adresár</a><a href="#">Vzdelávanie</a><a href="#">Správa kurzov</a><a href="#" class="is-on">Testy</a></nav><div class="body" style="padding:24px 28px 40px"><div class="tp"><nav class="crumbs"><a href="#">← Testy</a></nav><div class="ed2"><div style="display:grid;gap:14px;min-width:0">
+<section class="card box2"><h2>Základ</h2><label class="field"><span class="field-label">Názov testu</span><input class="field-input" value="Evakuácia a únikové cesty"></label><label class="field"><span class="field-label">Inštrukcie pre študenta</span><textarea class="field-input" style="min-height:104px">Test má 20 otázok. Pri otázkach s viacerými správnymi odpoveďami to test vopred povie.</textarea></label>
+<div class="field"><span class="field-label">Zodpovedné osoby</span><div class="rp"><label><span class="box">✓</span><span class="av">PH</span>Peter Hudák<small>Oddelenie prevádzky</small></label><label><span class="box">✓</span><span class="av">JH</span>Jana Horváthová<small>Oddelenie ľudských zdrojov</small></label><label><span class="box off"></span><span class="av">LŠ</span>Lucia Šimková<small>Legislatívno právne oddelenie</small></label><label><span class="box off"></span><span class="av">MK</span>Marek Kováč<small>Oddelenie IT</small></label><label><span class="box off"></span><span class="av">TB</span>Tomáš Baláž<small>Ekonomické oddelenie</small></label></div><span class="field-hint">Vidia pokusy a skóre tohto testu a môžu resetovať pokus. Nič nie je predvolené.</span></div></section>
+<section class="card box2"><h2>Sekcie</h2><p class="field-hint" style="margin:-6px 0 0">Každý pokus losuje otázky znova a mieša odpovede. Rôzne kľúče musia platiť naraz, hodnoty jedného kľúča sú alternatívy.</p><div class="secs"><div class="sec2"><span class="sec2-n">1</span><div class="stin"><span class="field-label">Sekcia 1 — otázky so smart:tagmi</span><div class="stin-control"><span class="stin-pill"><span class="k">Bezpečnosť:</span>Evakuácia<x>×</x></span><span class="stin-in">Kľúč: Hodnota</span></div></div><label class="field"><span class="field-label">Počet otázok</span><input class="field-input" value="12"></label><div class="sec2-foot"><span class="fit okc">V banke vyhovuje 37 otázok</span><a href="#">Zobraziť v banke</a><span class="ord"><a class="arr" aria-disabled="true">↑</a><a class="arr">↓</a><a href="#" class="linkish" style="align-self:center;margin-left:6px">Odstrániť</a></span></div></div><div class="sec2"><span class="sec2-n">2</span><div class="stin"><span class="field-label">Sekcia 2 — otázky so smart:tagmi</span><div class="stin-control"><span class="stin-pill"><span class="k">Bezpečnosť:</span>Požiar<x>×</x></span><span class="stin-in">Kľúč: Hodnota</span></div></div><label class="field"><span class="field-label">Počet otázok</span><input class="field-input" value="8"></label><div class="sec2-foot"><span class="fit okc">V banke vyhovuje 18 otázok</span><a href="#">Zobraziť v banke</a><span class="ord"><a class="arr">↑</a><a class="arr" aria-disabled="true">↓</a><a href="#" class="linkish" style="align-self:center;margin-left:6px">Odstrániť</a></span></div></div></div><a href="#" class="button button--quiet" style="justify-self:start">Pridať sekciu</a></section>
+<section class="card box2"><h2>Pravidlá</h2><div class="rules"><label class="field"><span class="field-label">Hranica úspešnosti</span><input class="field-input" value="80 %"></label><label class="field"><span class="field-label">Limit času</span><input class="field-input" value="30 minút"></label><label class="field"><span class="field-label">Najviac pokusov</span><input class="field-input" value="3"></label><label class="field"><span class="field-label">Pauza medzi pokusmi</span><input class="field-input" value="30 minút"></label><label class="field" style="grid-column:1/-1"><span class="field-label">Kedy ukázať správne odpovede</span><div class="dsel-control"><span class="dsel-value"><b>Po prejdení testu</b></span><span class="dsel-caret">▾</span></div><span class="field-hint">Nikdy · po odovzdaní · po prejdení · po vyčerpaní pokusov</span></label></div></section>
+<section class="card box2"><h2>smart:tagy testu</h2><div class="stin"><div class="stin-control"><span class="stin-pill"><span class="k">Bezpečnosť:</span>Evakuácia<x>×</x></span><span class="stin-pill"><span class="k">Úroveň:</span>1<x>×</x></span><span class="stin-in">Kľúč: Hodnota</span></div><span class="field-hint">Na hľadanie testu — nemenia, ktoré otázky sa losujú.</span></div></section>
+<div class="savebar"><button type="button" class="button">Uložiť</button><span class="quiet">Uložené 25. 9. 2026 — test je pripravený.</span><a href="#" class="linkish">Vyradiť test</a></div></div><aside class="ed2-side" style="display:grid;gap:14px"><section class="card box2"><h3>Stav testu</h3><div><span class="tag tag--published">Pripravený</span></div><div class="check"><div class="check-row"><span class="check-ico ok">✓</span><div class="check-main">Zodpovedné osoby: 2</div></div><div class="check-row"><span class="check-ico ok">✓</span><div class="check-main">Každá sekcia má dosť otázok</div></div><div class="check-row"><span class="check-ico ok">✓</span><div class="check-main">Hranica, pokusy a čas sú vyplnené</div></div></div><p class="field-hint" style="margin:0">Zmena receptu zverejnenú verziu kurzu nezmení — kurz má zmrazenú verziu testu.</p></section>
+<section class="card box2"><h3>Použité v</h3><div class="used"><a href="#">Bezpečnosť pri práci v sídle SFZ<span>časť 4 · povinný · test verzia 2</span></a><a href="#">Požiarna ochrana — ročné školenie 2026<span>časť 2 · nepovinný · test verzia 1</span></a></div></section></aside></div></div></div></div></div></div>
+<div class="frames"><div><p class="cap">1440 — editor · bez zodpovednej osoby + sekcie bez dostatku otázok</p><div class="frame w1440" style="width:1440px"><div class="hdr"><span class="logo"><svg width="18" height="18" viewBox="0 0 48 48" fill="none" aria-hidden="true"><circle cx="18" cy="18" r="13" stroke="currentColor" stroke-width="4"></circle><circle cx="13" cy="18" r="2.3" fill="currentColor"></circle><circle cx="23" cy="18" r="2.3" fill="currentColor"></circle><path d="M28 27 L41 41 L29 38 Z" fill="currentColor"></path></svg></span><span class="org">Slovenský futbalový zväz</span><div class="ask" style="flex:1;max-width:520px;margin:0 auto"><svg width="16" height="16" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" aria-hidden="true"><path d="M3 4.5h12v7.5H8l-3.5 2.5V12H3z"></path></svg><span style="flex:1">Opýtajte sa svojich dokumentov…</span><span class="kbd">/</span></div><span class="bell"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13.9 11.6c0-5.2-1.6-7-4.9-7s-4.9 1.8-4.9 7l-1.3 2.1h12.4z"></path><path d="M10.6 15.4a1.7 1.7 0 0 1-3.2 0"></path></svg><b>2</b></span><span class="av">PH</span></div>
+<nav class="nav"><a href="#">Prehľad</a><a href="#">Opýtať sa</a><a href="#">Na potvrdenie <span class="c">1</span></a><a href="#">Na schválenie</a><a href="#">Adresár</a><a href="#">Vzdelávanie</a><a href="#">Správa kurzov</a><a href="#" class="is-on">Testy</a></nav><div class="body" style="padding:24px 28px 40px"><div class="tp"><nav class="crumbs"><a href="#">← Testy</a></nav><div class="ed2"><div style="display:grid;gap:14px;min-width:0">
+<section class="card box2"><h2>Základ</h2><label class="field"><span class="field-label">Názov testu</span><input class="field-input" value="Ochrana osobných údajov — základy"></label><label class="field"><span class="field-label">Inštrukcie pre študenta</span><textarea class="field-input" style="min-height:104px">Test má 24 otázok. Pri otázkach s viacerými správnymi odpoveďami to test vopred povie.</textarea></label>
+<div class="field"><span class="field-label">Zodpovedné osoby</span><div class="rp"><label><span class="box off"></span><span class="av">PH</span>Peter Hudák<small>Oddelenie prevádzky</small></label><label><span class="box off"></span><span class="av">JH</span>Jana Horváthová<small>Oddelenie ľudských zdrojov</small></label><label><span class="box off"></span><span class="av">LŠ</span>Lucia Šimková<small>Legislatívno právne oddelenie</small></label><label><span class="box off"></span><span class="av">MK</span>Marek Kováč<small>Oddelenie IT</small></label><label><span class="box off"></span><span class="av">TB</span>Tomáš Baláž<small>Ekonomické oddelenie</small></label></div><span class="field-hint valid">Zvoľte aspoň jednu osobu — bez nej sa test nedá pripraviť.</span></div></section>
+<section class="card box2"><h2>Sekcie</h2><p class="field-hint" style="margin:-6px 0 0">Každý pokus losuje otázky znova a mieša odpovede. Rôzne kľúče musia platiť naraz, hodnoty jedného kľúča sú alternatívy.</p><div class="secs"><div class="sec2"><span class="sec2-n">1</span><div class="stin"><span class="field-label">Sekcia 1 — otázky so smart:tagmi</span><div class="stin-control"><span class="stin-pill"><span class="k">Oblasť:</span>GDPR<x>×</x></span><span class="stin-pill"><span class="k">Úroveň:</span>1<x>×</x></span><span class="stin-in">Kľúč: Hodnota</span></div></div><label class="field"><span class="field-label">Počet otázok</span><input class="field-input" value="12"></label><div class="sec2-foot"><span class="fit okc">V banke vyhovuje 20 otázok</span><a href="#">Zobraziť v banke</a><span class="ord"><a class="arr" aria-disabled="true">↑</a><a class="arr">↓</a><a href="#" class="linkish" style="align-self:center;margin-left:6px">Odstrániť</a></span></div></div><div class="sec2 is-bad"><span class="sec2-n">2</span><div class="stin"><span class="field-label">Sekcia 2 — otázky so smart:tagmi</span><div class="stin-control"><span class="stin-pill"><span class="k">Oblasť:</span>GDPR<x>×</x></span><span class="stin-pill"><span class="k">Úroveň:</span>2<x>×</x></span><span class="stin-in">Kľúč: Hodnota</span></div></div><label class="field"><span class="field-label">Počet otázok</span><input class="field-input" value="8"></label><div class="sec2-foot"><span class="fit bad">V banke vyhovuje len 5 otázok — chýba 3</span><a href="#">Pridať otázky →</a><span class="ord"><a class="arr">↑</a><a class="arr">↓</a><a href="#" class="linkish" style="align-self:center;margin-left:6px">Odstrániť</a></span></div></div><div class="sec2 is-bad"><span class="sec2-n">3</span><div class="stin"><span class="field-label">Sekcia 3 — otázky so smart:tagmi</span><div class="stin-control"><span class="stin-pill"><span class="k">Oblasť:</span>Kamerový systém<x>×</x></span><span class="stin-in">Kľúč: Hodnota</span></div></div><label class="field"><span class="field-label">Počet otázok</span><input class="field-input" value="4"></label><div class="sec2-foot"><span class="fit bad">V banke vyhovuje len 0 otázok — chýba 4</span><a href="#">Pridať otázky →</a><span class="ord"><a class="arr">↑</a><a class="arr" aria-disabled="true">↓</a><a href="#" class="linkish" style="align-self:center;margin-left:6px">Odstrániť</a></span></div></div></div><a href="#" class="button button--quiet" style="justify-self:start">Pridať sekciu</a></section>
+<section class="card box2"><h2>Pravidlá</h2><div class="rules"><label class="field"><span class="field-label">Hranica úspešnosti</span><input class="field-input" value="75 %"></label><label class="field"><span class="field-label">Limit času</span><input class="field-input" value="30 minút"></label><label class="field"><span class="field-label">Najviac pokusov</span><input class="field-input" value="3"></label><label class="field"><span class="field-label">Pauza medzi pokusmi</span><input class="field-input" value="30 minút"></label><label class="field" style="grid-column:1/-1"><span class="field-label">Kedy ukázať správne odpovede</span><div class="dsel-control"><span class="dsel-value"><b>Po prejdení testu</b></span><span class="dsel-caret">▾</span></div><span class="field-hint">Nikdy · po odovzdaní · po prejdení · po vyčerpaní pokusov</span></label></div></section>
+<section class="card box2"><h2>smart:tagy testu</h2><div class="stin"><div class="stin-control"><span class="stin-pill"><span class="k">Oblasť:</span>GDPR<x>×</x></span><span class="stin-in">Kľúč: Hodnota</span></div><span class="field-hint">Na hľadanie testu — nemenia, ktoré otázky sa losujú.</span></div></section>
+<div class="savebar"><button type="button" class="button">Uložiť</button><span class="quiet">Uloží sa ako koncept — na pripravenie chýbajú 3 veci.</span><a href="#" class="linkish">Vyradiť test</a></div></div><aside class="ed2-side" style="display:grid;gap:14px"><section class="card box2"><h3>Stav testu</h3><div><span class="tag tag--warnx">⚠ Nedostatok otázok</span></div><div class="check"><div class="check-row"><span class="check-ico todo">!</span><div class="check-main">Aspoň jedna zodpovedná osoba<div class="check-note">Bez nej výsledky nikto nevidí.</div></div></div><div class="check-row"><span class="check-ico todo">!</span><div class="check-main">Sekcia 2: chýbajú 3 otázky<div class="check-note">Oblasť: GDPR + Úroveň: 2</div></div></div><div class="check-row"><span class="check-ico todo">!</span><div class="check-main">Sekcia 3: chýbajú 4 otázky<div class="check-note">Oblasť: Kamerový systém</div></div></div><div class="check-row"><span class="check-ico ok">✓</span><div class="check-main">Hranica, pokusy a čas sú vyplnené</div></div></div><p class="field-hint" style="margin:0">Test sa dá priradiť ku kurzu, až keď je pripravený. Hovorí sa to pri uložení, nie pri pokuse.</p></section>
+<section class="card box2"><h3>Použité v</h3><div class="used"><span class="quiet" style="font-size:13px">Zatiaľ nikde.</span></div></section></aside></div></div></div></div></div></div>
+<div class="frames"><div><p class="cap">390 — editor · bez zodpovednej osoby + nedostatok</p><div class="frame w390" style="width:390px"><div class="hdr" style="padding:0 10px;gap:8px"><span class="logo" style="width:30px;height:30px"><svg width="18" height="18" viewBox="0 0 48 48" fill="none" aria-hidden="true"><circle cx="18" cy="18" r="13" stroke="currentColor" stroke-width="4"></circle><circle cx="13" cy="18" r="2.3" fill="currentColor"></circle><circle cx="23" cy="18" r="2.3" fill="currentColor"></circle><path d="M28 27 L41 41 L29 38 Z" fill="currentColor"></path></svg></span><span class="org" style="font-size:15px">SFZ</span><div class="ask" style="flex:1;min-width:0"><svg width="16" height="16" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" aria-hidden="true"><path d="M3 4.5h12v7.5H8l-3.5 2.5V12H3z"></path></svg><span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Opýtajte sa…</span></div><span class="bell" style="width:40px;height:40px"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13.9 11.6c0-5.2-1.6-7-4.9-7s-4.9 1.8-4.9 7l-1.3 2.1h12.4z"></path><path d="M10.6 15.4a1.7 1.7 0 0 1-3.2 0"></path></svg><b>2</b></span><span class="av" style="width:32px;height:32px">PH</span></div><div class="body" style="padding:14px 14px 24px"><div class="tp"><nav class="crumbs"><a href="#">← Testy</a></nav><div class="ed2"><div style="display:grid;gap:14px;min-width:0">
+<section class="card box2"><h2>Základ</h2><label class="field"><span class="field-label">Názov testu</span><input class="field-input" value="Ochrana osobných údajov — základy"></label><label class="field"><span class="field-label">Inštrukcie pre študenta</span><textarea class="field-input" style="min-height:104px">Test má 24 otázok. Pri otázkach s viacerými správnymi odpoveďami to test vopred povie.</textarea></label>
+<div class="field"><span class="field-label">Zodpovedné osoby</span><div class="rp"><label><span class="box off"></span><span class="av">PH</span>Peter Hudák<small>Oddelenie prevádzky</small></label><label><span class="box off"></span><span class="av">JH</span>Jana Horváthová<small>Oddelenie ľudských zdrojov</small></label><label><span class="box off"></span><span class="av">LŠ</span>Lucia Šimková<small>Legislatívno právne oddelenie</small></label><label><span class="box off"></span><span class="av">MK</span>Marek Kováč<small>Oddelenie IT</small></label><label><span class="box off"></span><span class="av">TB</span>Tomáš Baláž<small>Ekonomické oddelenie</small></label></div><span class="field-hint valid">Zvoľte aspoň jednu osobu — bez nej sa test nedá pripraviť.</span></div></section>
+<section class="card box2"><h2>Sekcie</h2><p class="field-hint" style="margin:-6px 0 0">Každý pokus losuje otázky znova a mieša odpovede. Rôzne kľúče musia platiť naraz, hodnoty jedného kľúča sú alternatívy.</p><div class="secs"><div class="sec2"><span class="sec2-n">1</span><div class="stin"><span class="field-label">Sekcia 1 — otázky so smart:tagmi</span><div class="stin-control"><span class="stin-pill"><span class="k">Oblasť:</span>GDPR<x>×</x></span><span class="stin-pill"><span class="k">Úroveň:</span>1<x>×</x></span><span class="stin-in">Kľúč: Hodnota</span></div></div><label class="field"><span class="field-label">Počet otázok</span><input class="field-input" value="12"></label><div class="sec2-foot"><span class="fit okc">V banke vyhovuje 20 otázok</span><a href="#">Zobraziť v banke</a><span class="ord"><a class="arr" aria-disabled="true">↑</a><a class="arr">↓</a><a href="#" class="linkish" style="align-self:center;margin-left:6px">Odstrániť</a></span></div></div><div class="sec2 is-bad"><span class="sec2-n">2</span><div class="stin"><span class="field-label">Sekcia 2 — otázky so smart:tagmi</span><div class="stin-control"><span class="stin-pill"><span class="k">Oblasť:</span>GDPR<x>×</x></span><span class="stin-pill"><span class="k">Úroveň:</span>2<x>×</x></span><span class="stin-in">Kľúč: Hodnota</span></div></div><label class="field"><span class="field-label">Počet otázok</span><input class="field-input" value="8"></label><div class="sec2-foot"><span class="fit bad">V banke vyhovuje len 5 otázok — chýba 3</span><a href="#">Pridať otázky →</a><span class="ord"><a class="arr">↑</a><a class="arr">↓</a><a href="#" class="linkish" style="align-self:center;margin-left:6px">Odstrániť</a></span></div></div><div class="sec2 is-bad"><span class="sec2-n">3</span><div class="stin"><span class="field-label">Sekcia 3 — otázky so smart:tagmi</span><div class="stin-control"><span class="stin-pill"><span class="k">Oblasť:</span>Kamerový systém<x>×</x></span><span class="stin-in">Kľúč: Hodnota</span></div></div><label class="field"><span class="field-label">Počet otázok</span><input class="field-input" value="4"></label><div class="sec2-foot"><span class="fit bad">V banke vyhovuje len 0 otázok — chýba 4</span><a href="#">Pridať otázky →</a><span class="ord"><a class="arr">↑</a><a class="arr" aria-disabled="true">↓</a><a href="#" class="linkish" style="align-self:center;margin-left:6px">Odstrániť</a></span></div></div></div><a href="#" class="button button--quiet" style="justify-self:start">Pridať sekciu</a></section>
+<section class="card box2"><h2>Pravidlá</h2><div class="rules"><label class="field"><span class="field-label">Hranica úspešnosti</span><input class="field-input" value="75 %"></label><label class="field"><span class="field-label">Limit času</span><input class="field-input" value="30 minút"></label><label class="field"><span class="field-label">Najviac pokusov</span><input class="field-input" value="3"></label><label class="field"><span class="field-label">Pauza medzi pokusmi</span><input class="field-input" value="30 minút"></label><label class="field" style="grid-column:1/-1"><span class="field-label">Kedy ukázať správne odpovede</span><div class="dsel-control"><span class="dsel-value"><b>Po prejdení testu</b></span><span class="dsel-caret">▾</span></div><span class="field-hint">Nikdy · po odovzdaní · po prejdení · po vyčerpaní pokusov</span></label></div></section>
+<section class="card box2"><h2>smart:tagy testu</h2><div class="stin"><div class="stin-control"><span class="stin-pill"><span class="k">Oblasť:</span>GDPR<x>×</x></span><span class="stin-in">Kľúč: Hodnota</span></div><span class="field-hint">Na hľadanie testu — nemenia, ktoré otázky sa losujú.</span></div></section>
+<div class="savebar"><button type="button" class="button">Uložiť</button><span class="quiet">Uloží sa ako koncept — na pripravenie chýbajú 3 veci.</span><a href="#" class="linkish">Vyradiť test</a></div></div><aside class="ed2-side" style="display:grid;gap:14px"><section class="card box2"><h3>Stav testu</h3><div><span class="tag tag--warnx">⚠ Nedostatok otázok</span></div><div class="check"><div class="check-row"><span class="check-ico todo">!</span><div class="check-main">Aspoň jedna zodpovedná osoba<div class="check-note">Bez nej výsledky nikto nevidí.</div></div></div><div class="check-row"><span class="check-ico todo">!</span><div class="check-main">Sekcia 2: chýbajú 3 otázky<div class="check-note">Oblasť: GDPR + Úroveň: 2</div></div></div><div class="check-row"><span class="check-ico todo">!</span><div class="check-main">Sekcia 3: chýbajú 4 otázky<div class="check-note">Oblasť: Kamerový systém</div></div></div><div class="check-row"><span class="check-ico ok">✓</span><div class="check-main">Hranica, pokusy a čas sú vyplnené</div></div></div><p class="field-hint" style="margin:0">Test sa dá priradiť ku kurzu, až keď je pripravený. Hovorí sa to pri uložení, nie pri pokuse.</p></section>
+<section class="card box2"><h3>Použité v</h3><div class="used"><span class="quiet" style="font-size:13px">Zatiaľ nikde.</span></div></section></aside></div></div></div><nav class="tabbar"><a href="#"><i></i>Prehľad</a><a href="#"><i></i>Opýtať sa</a><a href="#"><i></i>Vzdelávanie</a><a href="#"><i></i>Úlohy<b>1</b></a><a href="#" class="is-on"><i></i>Viac</a></nav></div></div><div><p class="cap">390 — editor · pripravený · tmavá téma</p><div class="frame w390 dark" style="width:390px"><div class="hdr" style="padding:0 10px;gap:8px"><span class="logo" style="width:30px;height:30px"><svg width="18" height="18" viewBox="0 0 48 48" fill="none" aria-hidden="true"><circle cx="18" cy="18" r="13" stroke="currentColor" stroke-width="4"></circle><circle cx="13" cy="18" r="2.3" fill="currentColor"></circle><circle cx="23" cy="18" r="2.3" fill="currentColor"></circle><path d="M28 27 L41 41 L29 38 Z" fill="currentColor"></path></svg></span><span class="org" style="font-size:15px">SFZ</span><div class="ask" style="flex:1;min-width:0"><svg width="16" height="16" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" aria-hidden="true"><path d="M3 4.5h12v7.5H8l-3.5 2.5V12H3z"></path></svg><span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Opýtajte sa…</span></div><span class="bell" style="width:40px;height:40px"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13.9 11.6c0-5.2-1.6-7-4.9-7s-4.9 1.8-4.9 7l-1.3 2.1h12.4z"></path><path d="M10.6 15.4a1.7 1.7 0 0 1-3.2 0"></path></svg><b>2</b></span><span class="av" style="width:32px;height:32px">PH</span></div><div class="body" style="padding:14px 14px 24px"><div class="tp"><nav class="crumbs"><a href="#">← Testy</a></nav><div class="ed2"><div style="display:grid;gap:14px;min-width:0">
+<section class="card box2"><h2>Základ</h2><label class="field"><span class="field-label">Názov testu</span><input class="field-input" value="Evakuácia a únikové cesty"></label><label class="field"><span class="field-label">Inštrukcie pre študenta</span><textarea class="field-input" style="min-height:104px">Test má 20 otázok. Pri otázkach s viacerými správnymi odpoveďami to test vopred povie.</textarea></label>
+<div class="field"><span class="field-label">Zodpovedné osoby</span><div class="rp"><label><span class="box">✓</span><span class="av">PH</span>Peter Hudák<small>Oddelenie prevádzky</small></label><label><span class="box">✓</span><span class="av">JH</span>Jana Horváthová<small>Oddelenie ľudských zdrojov</small></label><label><span class="box off"></span><span class="av">LŠ</span>Lucia Šimková<small>Legislatívno právne oddelenie</small></label><label><span class="box off"></span><span class="av">MK</span>Marek Kováč<small>Oddelenie IT</small></label><label><span class="box off"></span><span class="av">TB</span>Tomáš Baláž<small>Ekonomické oddelenie</small></label></div><span class="field-hint">Vidia pokusy a skóre tohto testu a môžu resetovať pokus. Nič nie je predvolené.</span></div></section>
+<section class="card box2"><h2>Sekcie</h2><p class="field-hint" style="margin:-6px 0 0">Každý pokus losuje otázky znova a mieša odpovede. Rôzne kľúče musia platiť naraz, hodnoty jedného kľúča sú alternatívy.</p><div class="secs"><div class="sec2"><span class="sec2-n">1</span><div class="stin"><span class="field-label">Sekcia 1 — otázky so smart:tagmi</span><div class="stin-control"><span class="stin-pill"><span class="k">Bezpečnosť:</span>Evakuácia<x>×</x></span><span class="stin-in">Kľúč: Hodnota</span></div></div><label class="field"><span class="field-label">Počet otázok</span><input class="field-input" value="12"></label><div class="sec2-foot"><span class="fit okc">V banke vyhovuje 37 otázok</span><a href="#">Zobraziť v banke</a><span class="ord"><a class="arr" aria-disabled="true">↑</a><a class="arr">↓</a><a href="#" class="linkish" style="align-self:center;margin-left:6px">Odstrániť</a></span></div></div><div class="sec2"><span class="sec2-n">2</span><div class="stin"><span class="field-label">Sekcia 2 — otázky so smart:tagmi</span><div class="stin-control"><span class="stin-pill"><span class="k">Bezpečnosť:</span>Požiar<x>×</x></span><span class="stin-in">Kľúč: Hodnota</span></div></div><label class="field"><span class="field-label">Počet otázok</span><input class="field-input" value="8"></label><div class="sec2-foot"><span class="fit okc">V banke vyhovuje 18 otázok</span><a href="#">Zobraziť v banke</a><span class="ord"><a class="arr">↑</a><a class="arr" aria-disabled="true">↓</a><a href="#" class="linkish" style="align-self:center;margin-left:6px">Odstrániť</a></span></div></div></div><a href="#" class="button button--quiet" style="justify-self:start">Pridať sekciu</a></section>
+<section class="card box2"><h2>Pravidlá</h2><div class="rules"><label class="field"><span class="field-label">Hranica úspešnosti</span><input class="field-input" value="80 %"></label><label class="field"><span class="field-label">Limit času</span><input class="field-input" value="30 minút"></label><label class="field"><span class="field-label">Najviac pokusov</span><input class="field-input" value="3"></label><label class="field"><span class="field-label">Pauza medzi pokusmi</span><input class="field-input" value="30 minút"></label><label class="field" style="grid-column:1/-1"><span class="field-label">Kedy ukázať správne odpovede</span><div class="dsel-control"><span class="dsel-value"><b>Po prejdení testu</b></span><span class="dsel-caret">▾</span></div><span class="field-hint">Nikdy · po odovzdaní · po prejdení · po vyčerpaní pokusov</span></label></div></section>
+<section class="card box2"><h2>smart:tagy testu</h2><div class="stin"><div class="stin-control"><span class="stin-pill"><span class="k">Bezpečnosť:</span>Evakuácia<x>×</x></span><span class="stin-pill"><span class="k">Úroveň:</span>1<x>×</x></span><span class="stin-in">Kľúč: Hodnota</span></div><span class="field-hint">Na hľadanie testu — nemenia, ktoré otázky sa losujú.</span></div></section>
+<div class="savebar"><button type="button" class="button">Uložiť</button><span class="quiet">Uložené 25. 9. 2026 — test je pripravený.</span><a href="#" class="linkish">Vyradiť test</a></div></div><aside class="ed2-side" style="display:grid;gap:14px"><section class="card box2"><h3>Stav testu</h3><div><span class="tag tag--published">Pripravený</span></div><div class="check"><div class="check-row"><span class="check-ico ok">✓</span><div class="check-main">Zodpovedné osoby: 2</div></div><div class="check-row"><span class="check-ico ok">✓</span><div class="check-main">Každá sekcia má dosť otázok</div></div><div class="check-row"><span class="check-ico ok">✓</span><div class="check-main">Hranica, pokusy a čas sú vyplnené</div></div></div><p class="field-hint" style="margin:0">Zmena receptu zverejnenú verziu kurzu nezmení — kurz má zmrazenú verziu testu.</p></section>
+<section class="card box2"><h3>Použité v</h3><div class="used"><a href="#">Bezpečnosť pri práci v sídle SFZ<span>časť 4 · povinný · test verzia 2</span></a><a href="#">Požiarna ochrana — ročné školenie 2026<span>časť 2 · nepovinný · test verzia 1</span></a></div></section></aside></div></div></div><nav class="tabbar"><a href="#"><i></i>Prehľad</a><a href="#"><i></i>Opýtať sa</a><a href="#"><i></i>Vzdelávanie</a><a href="#"><i></i>Úlohy<b>1</b></a><a href="#" class="is-on"><i></i>Viac</a></nav></div></div></div>
+<div class="anns"><p class="ann"><span class="num">2</span><b>Sekcia</b> = vstup smart:tagov (<code>SmartTagInput</code> z MANAGE-COURSE) + počet + živý údaj „V banke vyhovuje 37 otázok" (<code>--ok-fg</code>). Menej než počet → celá sekcia <code>--bad-bg</code>, veta „vyhovuje len 5 — chýba 3" a odkaz „Pridať otázky →" (banka s predvyplneným filtrom). Údaj sa počíta pri uložení; s JS aj priebežne.</p><p class="ann"><span class="num">3</span><b>Zodpovedné osoby</b> = <code>ResponsiblePicker</code> v režime 1..n (políčka v posuvnom rámiku, nič predvolené). Bez osoby test nie je pripravený — bočná karta „Stav testu" vymenúva, čo chýba (tvar <code>.check</code>).</p><p class="ann"><span class="num">4</span><b>Použité v</b>: kurz · časť · povinný · zmrazená verzia testu. Zmena receptu vytvorí novú verziu testu; zverejnené kurzy ostávajú na svojej (D118).</p></div>
+<h2 class="sec-n">Banka otázok</h2>
+<div class="frames"><div><p class="cap">1440 — banka · filter smart:tagov</p><div class="frame w1440" style="width:1440px"><div class="hdr"><span class="logo"><svg width="18" height="18" viewBox="0 0 48 48" fill="none" aria-hidden="true"><circle cx="18" cy="18" r="13" stroke="currentColor" stroke-width="4"></circle><circle cx="13" cy="18" r="2.3" fill="currentColor"></circle><circle cx="23" cy="18" r="2.3" fill="currentColor"></circle><path d="M28 27 L41 41 L29 38 Z" fill="currentColor"></path></svg></span><span class="org">Slovenský futbalový zväz</span><div class="ask" style="flex:1;max-width:520px;margin:0 auto"><svg width="16" height="16" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" aria-hidden="true"><path d="M3 4.5h12v7.5H8l-3.5 2.5V12H3z"></path></svg><span style="flex:1">Opýtajte sa svojich dokumentov…</span><span class="kbd">/</span></div><span class="bell"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13.9 11.6c0-5.2-1.6-7-4.9-7s-4.9 1.8-4.9 7l-1.3 2.1h12.4z"></path><path d="M10.6 15.4a1.7 1.7 0 0 1-3.2 0"></path></svg><b>2</b></span><span class="av">PH</span></div>
+<nav class="nav"><a href="#">Prehľad</a><a href="#">Opýtať sa</a><a href="#">Na potvrdenie <span class="c">1</span></a><a href="#">Na schválenie</a><a href="#">Adresár</a><a href="#">Vzdelávanie</a><a href="#">Správa kurzov</a><a href="#" class="is-on">Testy</a></nav><div class="body" style="padding:24px 28px 40px"><div class="tp"><div class="tp-head"><div class="grow"><h1 class="page-title">Testy</h1></div><a href="#" class="button">Nová otázka</a><a href="#" class="button button--quiet">Import CSV</a></div><nav class="tabs"><a href="#">Testy <span class="c">5</span></a><a href="#" class="is-on">Banka otázok <span class="c">128</span></a><a href="#">Výsledky</a></nav><div class="qcols"><aside class="lf"><div><p class="lf-k">Bezpečnosť</p><div class="lf-group"><a href="#" class="facet is-on"><span class="facet-box">✓</span><span class="facet-name">Evakuácia</span><span class="facet-count">11</span></a><a href="#" class="facet is-on"><span class="facet-box">✓</span><span class="facet-name">Požiar</span><span class="facet-count">18</span></a><a href="#" class="facet"><span class="facet-box"></span><span class="facet-name">Prvá pomoc</span><span class="facet-count">9</span></a><a href="#" class="facet"><span class="facet-box"></span><span class="facet-name">Výťah</span><span class="facet-count">14</span></a></div></div><div><p class="lf-k">Oblasť</p><div class="lf-group"><a href="#" class="facet"><span class="facet-box"></span><span class="facet-name">GDPR</span><span class="facet-count">20</span></a><a href="#" class="facet"><span class="facet-box"></span><span class="facet-name">Ekonomika</span><span class="facet-count">6</span></a></div></div><div><p class="lf-k">Typ</p><div class="lf-group"><a href="#" class="facet"><span class="facet-box"></span><span class="facet-name">Jedna správna</span><span class="facet-count">61</span></a><a href="#" class="facet"><span class="facet-box"></span><span class="facet-name">Viac správnych</span><span class="facet-count">32</span></a><a href="#" class="facet"><span class="facet-box"></span><span class="facet-name">Pravda / nepravda</span><span class="facet-count">24</span></a><a href="#" class="facet"><span class="facet-box"></span><span class="facet-name">Krátky text</span><span class="facet-count">11</span></a></div></div><div><p class="lf-k">Stav</p><div class="lf-group"><a href="#" class="facet"><span class="facet-box"></span><span class="facet-name">Aktívne</span><span class="facet-count">121</span></a><a href="#" class="facet"><span class="facet-box"></span><span class="facet-name">Vyradené</span><span class="facet-count">7</span></a></div></div></aside><div style="min-width:0"><div class="lchips"><a href="#" class="library-chip"><span class="library-chip-key">Bezpečnosť:</span>Evakuácia<span class="library-chip-x">×</span></a><a href="#" class="library-chip"><span class="library-chip-key">Bezpečnosť:</span>Požiar<span class="library-chip-x">×</span></a><span class="quiet" style="font-size:12.5px">29 otázok · hodnoty jedného kľúča = alebo</span><a href="#" class="linkish">Zrušiť filtre</a></div><div class="doc-table-wrap"><table class="doc-table qtab"><thead><tr><th>Otázka</th><th>Typ</th><th class="doc-col-right">Váha</th><th>Stav</th><th></th></tr></thead><tbody><tr><td><div class="qt">Kam sa zhromaždíte po opustení budovy?</div><div class="tags"><a href="#" class="stag"><span class="stag-k">Bezpečnosť:</span>Evakuácia</a></div></td><td class="qtype">Jedna správna</td><td class="doc-col-right num-cell">1</td><td><span class="quiet" style="font-size:12.5px">aktívna</span></td><td class="act" style="text-align:right"><a href="#" style="font-size:12.5px;font-weight:600;color:var(--ink)">Upraviť</a></td></tr><tr><td><div class="qt">Ktoré z týchto sú únikové východy z 2. poschodia?</div><div class="tags"><a href="#" class="stag"><span class="stag-k">Bezpečnosť:</span>Evakuácia</a><a href="#" class="stag"><span class="stag-k">Úroveň:</span>1</a></div></td><td class="qtype">Viac správnych</td><td class="doc-col-right num-cell">2</td><td><span class="quiet" style="font-size:12.5px">aktívna</span></td><td class="act" style="text-align:right"><a href="#" style="font-size:12.5px;font-weight:600;color:var(--ink)">Upraviť</a></td></tr><tr><td><div class="qt">Pri požiarnom poplachu sa môže použiť výťah.</div><div class="tags"><a href="#" class="stag"><span class="stag-k">Bezpečnosť:</span>Požiar</a><a href="#" class="stag"><span class="stag-k">Bezpečnosť:</span>Výťah</a></div></td><td class="qtype">Pravda / nepravda</td><td class="doc-col-right num-cell">1</td><td><span class="quiet" style="font-size:12.5px">aktívna</span></td><td class="act" style="text-align:right"><a href="#" style="font-size:12.5px;font-weight:600;color:var(--ink)">Upraviť</a></td></tr><tr><td><div class="qt">Ako sa volá osoba, ktorá riadi evakuáciu poschodia?</div><div class="tags"><a href="#" class="stag"><span class="stag-k">Bezpečnosť:</span>Evakuácia</a></div></td><td class="qtype">Krátky text</td><td class="doc-col-right num-cell">1</td><td><span class="quiet" style="font-size:12.5px">aktívna</span></td><td class="act" style="text-align:right"><a href="#" style="font-size:12.5px;font-weight:600;color:var(--ink)">Upraviť</a></td></tr><tr><td><div class="qt" style="color:var(--muted)">Kde je hlavný uzáver plynu?</div><div class="tags"><a href="#" class="stag"><span class="stag-k">Bezpečnosť:</span>Požiar</a></div></td><td class="qtype">Jedna správna</td><td class="doc-col-right num-cell">1</td><td><span class="tag tag--archived">Vyradená</span></td><td class="act" style="text-align:right"><a href="#" style="font-size:12.5px;font-weight:600;color:var(--ink)">Upraviť</a></td></tr></tbody></table><div class="pager"><span class="pager-count">Zobrazené 1–5 z 29</span><span class="pager-spacer"></span><a class="button button--quiet pager-link" aria-disabled="true">← Predchádzajúce</a><a class="button button--quiet pager-link">Ďalšie →</a></div></div></div></div></div></div></div></div></div>
+<div class="frames"><div><p class="cap">390 — banka</p><div class="frame w390" style="width:390px"><div class="hdr" style="padding:0 10px;gap:8px"><span class="logo" style="width:30px;height:30px"><svg width="18" height="18" viewBox="0 0 48 48" fill="none" aria-hidden="true"><circle cx="18" cy="18" r="13" stroke="currentColor" stroke-width="4"></circle><circle cx="13" cy="18" r="2.3" fill="currentColor"></circle><circle cx="23" cy="18" r="2.3" fill="currentColor"></circle><path d="M28 27 L41 41 L29 38 Z" fill="currentColor"></path></svg></span><span class="org" style="font-size:15px">SFZ</span><div class="ask" style="flex:1;min-width:0"><svg width="16" height="16" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" aria-hidden="true"><path d="M3 4.5h12v7.5H8l-3.5 2.5V12H3z"></path></svg><span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Opýtajte sa…</span></div><span class="bell" style="width:40px;height:40px"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13.9 11.6c0-5.2-1.6-7-4.9-7s-4.9 1.8-4.9 7l-1.3 2.1h12.4z"></path><path d="M10.6 15.4a1.7 1.7 0 0 1-3.2 0"></path></svg><b>2</b></span><span class="av" style="width:32px;height:32px">PH</span></div><div class="body" style="padding:14px 14px 24px"><div class="tp"><div class="tp-head"><div class="grow"><h1 class="page-title">Testy</h1></div><a href="#" class="button">Nová otázka</a><a href="#" class="button button--quiet">Import CSV</a></div><nav class="tabs"><a href="#">Testy <span class="c">5</span></a><a href="#" class="is-on">Banka otázok <span class="c">128</span></a><a href="#">Výsledky</a></nav><div class="qcols"><div style="min-width:0"><details class="lfd" open><summary>Filter<span class="quiet">zvolené 2</span></summary><div class="lfd-body"><p class="lf-k">Bezpečnosť</p><div class="lf-group"><a href="#" class="stag is-on"><span class="stag-k">Bezpečnosť:</span>Evakuácia</a><a href="#" class="stag is-on"><span class="stag-k">Bezpečnosť:</span>Požiar</a><a href="#" class="stag"><span class="stag-k">Bezpečnosť:</span>Prvá pomoc</a><a href="#" class="stag"><span class="stag-k">Bezpečnosť:</span>Výťah</a></div><p class="lf-k">Typ</p><div class="lf-group"><a href="#" class="pill">Jedna správna</a><a href="#" class="pill">Viac správnych</a><a href="#" class="pill">Pravda / nepravda</a><a href="#" class="pill">Krátky text</a></div></div></details><div class="lchips"><a href="#" class="library-chip"><span class="library-chip-key">Bezpečnosť:</span>Evakuácia<span class="library-chip-x">×</span></a><a href="#" class="library-chip"><span class="library-chip-key">Bezpečnosť:</span>Požiar<span class="library-chip-x">×</span></a><span class="quiet" style="font-size:12.5px">29 otázok · hodnoty jedného kľúča = alebo</span><a href="#" class="linkish">Zrušiť filtre</a></div><div class="qcards"><article class="card qc"><span class="qc-t">Kam sa zhromaždíte po opustení budovy?</span><div class="lc-tags"><a href="#" class="stag"><span class="stag-k">Bezpečnosť:</span>Evakuácia</a></div><div class="qc-meta"><span>Jedna správna</span><span>váha 1</span></div></article><article class="card qc"><span class="qc-t">Ktoré z týchto sú únikové východy z 2. poschodia?</span><div class="lc-tags"><a href="#" class="stag"><span class="stag-k">Bezpečnosť:</span>Evakuácia</a><a href="#" class="stag"><span class="stag-k">Úroveň:</span>1</a></div><div class="qc-meta"><span>Viac správnych</span><span>váha 2</span></div></article><article class="card qc"><span class="qc-t">Pri požiarnom poplachu sa môže použiť výťah.</span><div class="lc-tags"><a href="#" class="stag"><span class="stag-k">Bezpečnosť:</span>Požiar</a><a href="#" class="stag"><span class="stag-k">Bezpečnosť:</span>Výťah</a></div><div class="qc-meta"><span>Pravda / nepravda</span><span>váha 1</span></div></article><article class="card qc"><span class="qc-t">Ako sa volá osoba, ktorá riadi evakuáciu poschodia?</span><div class="lc-tags"><a href="#" class="stag"><span class="stag-k">Bezpečnosť:</span>Evakuácia</a></div><div class="qc-meta"><span>Krátky text</span><span>váha 1</span></div></article><article class="card qc"><span class="qc-t" style="color:var(--muted)">Kde je hlavný uzáver plynu?</span><div class="lc-tags"><a href="#" class="stag"><span class="stag-k">Bezpečnosť:</span>Požiar</a></div><div class="qc-meta"><span>Jedna správna</span><span>váha 1</span><span class="tag tag--archived">Vyradená</span></div></article></div></div></div></div></div><nav class="tabbar"><a href="#"><i></i>Prehľad</a><a href="#"><i></i>Opýtať sa</a><a href="#"><i></i>Vzdelávanie</a><a href="#"><i></i>Úlohy<b>1</b></a><a href="#" class="is-on"><i></i>Viac</a></nav></div></div><div><p class="cap">390 — banka prázdna</p><div class="frame w390" style="width:390px"><div class="hdr" style="padding:0 10px;gap:8px"><span class="logo" style="width:30px;height:30px"><svg width="18" height="18" viewBox="0 0 48 48" fill="none" aria-hidden="true"><circle cx="18" cy="18" r="13" stroke="currentColor" stroke-width="4"></circle><circle cx="13" cy="18" r="2.3" fill="currentColor"></circle><circle cx="23" cy="18" r="2.3" fill="currentColor"></circle><path d="M28 27 L41 41 L29 38 Z" fill="currentColor"></path></svg></span><span class="org" style="font-size:15px">SFZ</span><div class="ask" style="flex:1;min-width:0"><svg width="16" height="16" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" aria-hidden="true"><path d="M3 4.5h12v7.5H8l-3.5 2.5V12H3z"></path></svg><span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Opýtajte sa…</span></div><span class="bell" style="width:40px;height:40px"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13.9 11.6c0-5.2-1.6-7-4.9-7s-4.9 1.8-4.9 7l-1.3 2.1h12.4z"></path><path d="M10.6 15.4a1.7 1.7 0 0 1-3.2 0"></path></svg><b>2</b></span><span class="av" style="width:32px;height:32px">PH</span></div><div class="body" style="padding:14px 14px 24px"><div class="tp"><div class="tp-head"><div class="grow"><h1 class="page-title">Testy</h1></div></div><nav class="tabs"><a href="#">Testy <span class="c">5</span></a><a href="#" class="is-on">Banka otázok <span class="c">128</span></a><a href="#">Výsledky</a></nav><div class="empty"><div class="empty-title">Banka otázok je prázdna</div><div class="empty-text">Test losuje otázky z banky podľa smart:tagov. Pridajte otázky po jednej alebo ich nahrajte z CSV.</div><div class="empty-action" style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center"><a href="#" class="button">Nová otázka</a><a href="#" class="button button--quiet">Import CSV</a></div></div></div></div><nav class="tabbar"><a href="#"><i></i>Prehľad</a><a href="#"><i></i>Opýtať sa</a><a href="#"><i></i>Vzdelávanie</a><a href="#"><i></i>Úlohy<b>1</b></a><a href="#" class="is-on"><i></i>Viac</a></nav></div></div><div><p class="cap">390 — nová otázka · bez smart:tagu</p><div class="frame w390" style="width:390px"><div class="hdr" style="padding:0 10px;gap:8px"><span class="logo" style="width:30px;height:30px"><svg width="18" height="18" viewBox="0 0 48 48" fill="none" aria-hidden="true"><circle cx="18" cy="18" r="13" stroke="currentColor" stroke-width="4"></circle><circle cx="13" cy="18" r="2.3" fill="currentColor"></circle><circle cx="23" cy="18" r="2.3" fill="currentColor"></circle><path d="M28 27 L41 41 L29 38 Z" fill="currentColor"></path></svg></span><span class="org" style="font-size:15px">SFZ</span><div class="ask" style="flex:1;min-width:0"><svg width="16" height="16" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" aria-hidden="true"><path d="M3 4.5h12v7.5H8l-3.5 2.5V12H3z"></path></svg><span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Opýtajte sa…</span></div><span class="bell" style="width:40px;height:40px"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13.9 11.6c0-5.2-1.6-7-4.9-7s-4.9 1.8-4.9 7l-1.3 2.1h12.4z"></path><path d="M10.6 15.4a1.7 1.7 0 0 1-3.2 0"></path></svg><b>2</b></span><span class="av" style="width:32px;height:32px">PH</span></div><div class="body" style="padding:14px 14px 24px"><div class="tp"><nav class="crumbs"><a href="#">← Banka otázok</a></nav><section class="card box2"><h2>Nová otázka</h2>
+<div class="field"><span class="field-label">Typ</span><div class="seg"><label class="is-on"><i></i>Jedna správna</label><label><i></i>Viac správnych</label><label><i></i>Pravda / nepravda</label><label><i></i>Krátky text</label></div></div>
+<label class="field"><span class="field-label">Znenie otázky</span><textarea class="field-input" style="min-height:64px">Kam sa zhromaždíte po opustení budovy?</textarea></label>
+<div class="field"><span class="field-label">Obrázok <span class="quiet" style="font-weight:400">— nepovinné</span></span><div class="upload-drop upload-drop--optional" style="padding:12px"><span class="upload-drop-note">Presuňte sem obrázok alebo vyberte · JPG, PNG</span></div></div>
+<div class="field"><span class="field-label">Odpovede</span><div class="ans"><div class="ansr is-right"><span class="rd on"></span><input class="field-input" value="Na parkovisku pred hlavným vchodom"><small>správna</small></div><div class="ansr"><span class="rd"></span><input class="field-input" value="V garáži pod budovou"><small>Odstrániť</small></div><div class="ansr"><span class="rd"></span><input class="field-input" value="Na chodbe pri výťahoch"><small>Odstrániť</small></div><a href="#" class="linkish">+ Pridať odpoveď</a></div></div>
+<label class="field"><span class="field-label">Vysvetlenie</span><textarea class="field-input" style="min-height:64px">Výťahy sa pri požiari vypínajú a šachta sa môže zaplniť dymom.</textarea><span class="field-hint">Ukáže sa po odovzdaní, ak to test povoľuje.</span></label>
+<div class="fgrid"><label class="field"><span class="field-label">Váha</span><input class="field-input" value="1"></label><label class="field"><span class="field-label">Obtiažnosť</span><div class="dsel-control"><span class="dsel-value"><b>Stredná</b></span><span class="dsel-caret">▾</span></div></label></div>
+<div class="stin"><span class="field-label">smart:tagy</span><div class="stin-control" style="border-color:var(--bad-fg)"><span class="stin-in">Kľúč: Hodnota</span></div><span class="field-hint valid">Pridajte aspoň jeden smart:tag — bez neho otázku žiadny test nevylosuje.</span></div>
+<div class="savebar" style="box-shadow:none"><button type="button" class="button">Uložiť otázku</button></div></section></div></div><nav class="tabbar"><a href="#"><i></i>Prehľad</a><a href="#"><i></i>Opýtať sa</a><a href="#"><i></i>Vzdelávanie</a><a href="#"><i></i>Úlohy<b>1</b></a><a href="#" class="is-on"><i></i>Viac</a></nav></div></div></div>
+<div class="frames"><div><p class="cap">1440 — otázka · viac správnych</p><div class="frame w1440" style="width:1440px"><div class="hdr"><span class="logo"><svg width="18" height="18" viewBox="0 0 48 48" fill="none" aria-hidden="true"><circle cx="18" cy="18" r="13" stroke="currentColor" stroke-width="4"></circle><circle cx="13" cy="18" r="2.3" fill="currentColor"></circle><circle cx="23" cy="18" r="2.3" fill="currentColor"></circle><path d="M28 27 L41 41 L29 38 Z" fill="currentColor"></path></svg></span><span class="org">Slovenský futbalový zväz</span><div class="ask" style="flex:1;max-width:520px;margin:0 auto"><svg width="16" height="16" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" aria-hidden="true"><path d="M3 4.5h12v7.5H8l-3.5 2.5V12H3z"></path></svg><span style="flex:1">Opýtajte sa svojich dokumentov…</span><span class="kbd">/</span></div><span class="bell"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13.9 11.6c0-5.2-1.6-7-4.9-7s-4.9 1.8-4.9 7l-1.3 2.1h12.4z"></path><path d="M10.6 15.4a1.7 1.7 0 0 1-3.2 0"></path></svg><b>2</b></span><span class="av">PH</span></div>
+<nav class="nav"><a href="#">Prehľad</a><a href="#">Opýtať sa</a><a href="#">Na potvrdenie <span class="c">1</span></a><a href="#">Na schválenie</a><a href="#">Adresár</a><a href="#">Vzdelávanie</a><a href="#">Správa kurzov</a><a href="#" class="is-on">Testy</a></nav><div class="body" style="padding:24px 28px 40px"><div class="tp"><nav class="crumbs"><a href="#">← Banka otázok</a></nav><section class="card box2"><h2>Upraviť otázku</h2>
+<div class="field"><span class="field-label">Typ</span><div class="seg"><label><i></i>Jedna správna</label><label class="is-on"><i></i>Viac správnych</label><label><i></i>Pravda / nepravda</label><label><i></i>Krátky text</label></div></div>
+<label class="field"><span class="field-label">Znenie otázky</span><textarea class="field-input" style="min-height:64px">Ktoré z týchto sú únikové východy z 2. poschodia?</textarea></label>
+<div class="field"><span class="field-label">Obrázok <span class="quiet" style="font-weight:400">— nepovinné</span></span><div class="upload-drop upload-drop--optional" style="padding:12px"><span class="upload-drop-note">Presuňte sem obrázok alebo vyberte · JPG, PNG</span></div></div>
+<div class="field"><span class="field-label">Odpovede</span><div class="ans"><div class="ansr is-right"><span class="cb on">✓</span><input class="field-input" value="Schodisko A pri recepcii"><small>správna</small></div><div class="ansr is-right"><span class="cb on">✓</span><input class="field-input" value="Schodisko C na konci chodby"><small>správna</small></div><div class="ansr"><span class="cb"></span><input class="field-input" value="Výťah pri kuchynke"><small>Odstrániť</small></div><div class="ansr is-right"><span class="cb on">✓</span><input class="field-input" value="Požiarny rebrík z terasy"><small>správna</small></div><a href="#" class="linkish">+ Pridať odpoveď</a><span class="field-hint">Študent uvidí vetu „Táto otázka má viac správnych odpovedí". Bodovanie: všetko alebo nič — plná váha len pri presnej zhode (Q2 ✓).</span></div></div>
+<label class="field"><span class="field-label">Vysvetlenie</span><textarea class="field-input" style="min-height:64px">Výťahy sa pri požiari vypínajú a šachta sa môže zaplniť dymom.</textarea><span class="field-hint">Ukáže sa po odovzdaní, ak to test povoľuje.</span></label>
+<div class="fgrid"><label class="field"><span class="field-label">Váha</span><input class="field-input" value="1"></label><label class="field"><span class="field-label">Obtiažnosť</span><div class="dsel-control"><span class="dsel-value"><b>Stredná</b></span><span class="dsel-caret">▾</span></div></label></div>
+<div class="stin"><span class="field-label">smart:tagy</span><div class="stin-control"><span class="stin-pill"><span class="k">Bezpečnosť:</span>Požiar<x>×</x></span><span class="stin-pill"><span class="k">Bezpečnosť:</span>Výťah<x>×</x></span><span class="stin-in">Kľúč: Hodnota</span></div><span class="field-hint">Podľa nich otázku losujú sekcie testov.</span></div>
+<div class="savebar" style="box-shadow:none"><button type="button" class="button">Uložiť otázku</button><span class="quiet">Použitá v 2 testoch · 41 pokusov ju cituje snímkou</span><a href="#" class="linkish">Vyradiť</a></div></section></div></div></div></div><div><p class="cap">390 — otázka · krátky text</p><div class="frame w390" style="width:390px"><div class="hdr" style="padding:0 10px;gap:8px"><span class="logo" style="width:30px;height:30px"><svg width="18" height="18" viewBox="0 0 48 48" fill="none" aria-hidden="true"><circle cx="18" cy="18" r="13" stroke="currentColor" stroke-width="4"></circle><circle cx="13" cy="18" r="2.3" fill="currentColor"></circle><circle cx="23" cy="18" r="2.3" fill="currentColor"></circle><path d="M28 27 L41 41 L29 38 Z" fill="currentColor"></path></svg></span><span class="org" style="font-size:15px">SFZ</span><div class="ask" style="flex:1;min-width:0"><svg width="16" height="16" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" aria-hidden="true"><path d="M3 4.5h12v7.5H8l-3.5 2.5V12H3z"></path></svg><span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Opýtajte sa…</span></div><span class="bell" style="width:40px;height:40px"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13.9 11.6c0-5.2-1.6-7-4.9-7s-4.9 1.8-4.9 7l-1.3 2.1h12.4z"></path><path d="M10.6 15.4a1.7 1.7 0 0 1-3.2 0"></path></svg><b>2</b></span><span class="av" style="width:32px;height:32px">PH</span></div><div class="body" style="padding:14px 14px 24px"><div class="tp"><nav class="crumbs"><a href="#">← Banka otázok</a></nav><section class="card box2"><h2>Upraviť otázku</h2>
+<div class="field"><span class="field-label">Typ</span><div class="seg"><label><i></i>Jedna správna</label><label><i></i>Viac správnych</label><label><i></i>Pravda / nepravda</label><label class="is-on"><i></i>Krátky text</label></div></div>
+<label class="field"><span class="field-label">Znenie otázky</span><textarea class="field-input" style="min-height:64px">Ako sa volá osoba, ktorá riadi evakuáciu poschodia?</textarea></label>
+<div class="field"><span class="field-label">Obrázok <span class="quiet" style="font-weight:400">— nepovinné</span></span><div class="upload-drop upload-drop--optional" style="padding:12px"><span class="upload-drop-note">Presuňte sem obrázok alebo vyberte · JPG, PNG</span></div></div>
+<div class="field"><span class="field-label">Odpovede</span><div style="display:grid;gap:10px"><label class="field"><span class="field-label">Očakávaná odpoveď</span><input class="field-input" value="požiarny hliadkar"></label><label class="field"><span class="field-label">Aj takto je správne</span><div class="stin-control"><span class="stin-pill">hliadkar<x>×</x></span><span class="stin-pill">požiarna hliadka<x>×</x></span><span class="stin-in">ďalšia…</span></div><span class="field-hint">Porovnáva sa bez diakritiky a veľkosti písmen.</span></label></div></div>
+<label class="field"><span class="field-label">Vysvetlenie</span><textarea class="field-input" style="min-height:64px">Výťahy sa pri požiari vypínajú a šachta sa môže zaplniť dymom.</textarea><span class="field-hint">Ukáže sa po odovzdaní, ak to test povoľuje.</span></label>
+<div class="fgrid"><label class="field"><span class="field-label">Váha</span><input class="field-input" value="1"></label><label class="field"><span class="field-label">Obtiažnosť</span><div class="dsel-control"><span class="dsel-value"><b>Stredná</b></span><span class="dsel-caret">▾</span></div></label></div>
+<div class="stin"><span class="field-label">smart:tagy</span><div class="stin-control"><span class="stin-pill"><span class="k">Bezpečnosť:</span>Požiar<x>×</x></span><span class="stin-pill"><span class="k">Bezpečnosť:</span>Výťah<x>×</x></span><span class="stin-in">Kľúč: Hodnota</span></div><span class="field-hint">Podľa nich otázku losujú sekcie testov.</span></div>
+<div class="savebar" style="box-shadow:none"><button type="button" class="button">Uložiť otázku</button><span class="quiet">Použitá v 2 testoch · 41 pokusov ju cituje snímkou</span><a href="#" class="linkish">Vyradiť</a></div></section></div></div><nav class="tabbar"><a href="#"><i></i>Prehľad</a><a href="#"><i></i>Opýtať sa</a><a href="#"><i></i>Vzdelávanie</a><a href="#"><i></i>Úlohy<b>1</b></a><a href="#" class="is-on"><i></i>Viac</a></nav></div></div></div>
+<h3 class="sec-n" style="font-size:14px">Editor odpovedí podľa typu</h3><div class="spec"><div class="spec-card"><h3>Jedna správna — prepínače</h3><p>Správnu označí prepínač; riadok v --ok.</p><div class="ans"><div class="ansr is-right"><span class="rd on"></span><input class="field-input" value="Na parkovisku pred hlavným vchodom"><small>správna</small></div><div class="ansr"><span class="rd"></span><input class="field-input" value="V garáži pod budovou"><small>Odstrániť</small></div><div class="ansr"><span class="rd"></span><input class="field-input" value="Na chodbe pri výťahoch"><small>Odstrániť</small></div><a href="#" class="linkish">+ Pridať odpoveď</a></div></div><div class="spec-card"><h3>Viac správnych — políčka</h3><p>Políčka; aspoň dve správne. Veta pre študenta sa pridá automaticky.</p><div class="ans"><div class="ansr is-right"><span class="cb on">✓</span><input class="field-input" value="Schodisko A pri recepcii"><small>správna</small></div><div class="ansr is-right"><span class="cb on">✓</span><input class="field-input" value="Schodisko C na konci chodby"><small>správna</small></div><div class="ansr"><span class="cb"></span><input class="field-input" value="Výťah pri kuchynke"><small>Odstrániť</small></div><div class="ansr is-right"><span class="cb on">✓</span><input class="field-input" value="Požiarny rebrík z terasy"><small>správna</small></div><a href="#" class="linkish">+ Pridať odpoveď</a><span class="field-hint">Študent uvidí vetu „Táto otázka má viac správnych odpovedí". Bodovanie: všetko alebo nič — plná váha len pri presnej zhode (Q2 ✓).</span></div></div><div class="spec-card"><h3>Pravda / nepravda — pevné</h3><p>Dve veľké voľby, nič sa nepíše.</p><div class="tf"><label><span class="rd"></span>Pravda</label><label class="is-on"><span class="rd on"></span>Nepravda</label></div></div><div class="spec-card"><h3>Krátky text — očakávaná + alternatívy</h3><p>Porovnanie bez diakritiky a veľkosti písmen.</p><div style="display:grid;gap:10px"><label class="field"><span class="field-label">Očakávaná odpoveď</span><input class="field-input" value="požiarny hliadkar"></label><label class="field"><span class="field-label">Aj takto je správne</span><div class="stin-control"><span class="stin-pill">hliadkar<x>×</x></span><span class="stin-pill">požiarna hliadka<x>×</x></span><span class="stin-in">ďalšia…</span></div><span class="field-hint">Porovnáva sa bez diakritiky a veľkosti písmen.</span></label></div></div></div>
+<div class="anns"><p class="ann"><span class="num">5</span><b>Filter</b> ako v knižnici: 1440 facety vľavo (smart:tagy po kľúčoch, typ, stav), 390 <code>&lt;details&gt;</code>. Zvolené ako <code>.library-chip</code>.</p><p class="ann"><span class="num">6</span><b>Otázka bez smart:tagu</b> sa neuloží — validačná veta pod poľom v <code>--bad</code>. <b>Vyradiť</b> namiesto zmazať; pri uložení veta „Použitá v 2 testoch · 41 pokusov ju cituje snímkou" (zmena textu nemení snímky v pokusoch, D120).</p><p class="ann"><span class="num">7</span><b>Import CSV</b>: vlastný formát (anglické kódy stĺpcov, oddeľovač <code>;</code>, <code>id</code> na úpravu existujúcej otázky), náhľad s kontrolou a pri chybe sa neimportuje nič. Formát v <code>.md</code>, vzor <code>TESTS-import-otazok-vzor.csv</code>. <span class="q">Q1 ✓</span></p></div>
+<h2 class="sec-n">Výsledky</h2>
+<div class="frames"><div><p class="cap">1440 — výsledky · resetovať pokusy</p><div class="frame w1440" style="width:1440px"><div class="hdr"><span class="logo"><svg width="18" height="18" viewBox="0 0 48 48" fill="none" aria-hidden="true"><circle cx="18" cy="18" r="13" stroke="currentColor" stroke-width="4"></circle><circle cx="13" cy="18" r="2.3" fill="currentColor"></circle><circle cx="23" cy="18" r="2.3" fill="currentColor"></circle><path d="M28 27 L41 41 L29 38 Z" fill="currentColor"></path></svg></span><span class="org">Slovenský futbalový zväz</span><div class="ask" style="flex:1;max-width:520px;margin:0 auto"><svg width="16" height="16" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" aria-hidden="true"><path d="M3 4.5h12v7.5H8l-3.5 2.5V12H3z"></path></svg><span style="flex:1">Opýtajte sa svojich dokumentov…</span><span class="kbd">/</span></div><span class="bell"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13.9 11.6c0-5.2-1.6-7-4.9-7s-4.9 1.8-4.9 7l-1.3 2.1h12.4z"></path><path d="M10.6 15.4a1.7 1.7 0 0 1-3.2 0"></path></svg><b>2</b></span><span class="av">PH</span></div>
+<nav class="nav"><a href="#">Prehľad</a><a href="#">Opýtať sa</a><a href="#">Na potvrdenie <span class="c">1</span></a><a href="#">Na schválenie</a><a href="#">Adresár</a><a href="#">Vzdelávanie</a><a href="#">Správa kurzov</a><a href="#" class="is-on">Testy</a></nav><div class="body" style="padding:24px 28px 40px"><div class="tp"><div class="tp-head"><div class="grow"><h1 class="page-title">Testy</h1></div></div><nav class="tabs"><a href="#">Testy <span class="c">5</span></a><a href="#">Banka otázok <span class="c">128</span></a><a href="#" class="is-on">Výsledky</a></nav><div class="hr-note"><b>Poznámka k rámu:</b> záložku Výsledky vidí len zodpovedná osoba testu a len svoje testy. Rola <code>hr</code> ani <code>learning-admin</code> ju sama osebe nemá (D121).</div><form class="card reset"><h2>Resetovať pokusy — Tomáš Baláž</h2><p>Test Evakuácia a únikové cesty · využité 3 z 3 pokusov. Po resete bude mať znova 3 pokusy. Doterajšie pokusy <b>ostanú v zázname</b> ako resetované.</p><label class="field"><span class="field-label">Dôvod — povinný</span><textarea class="field-input" style="min-height:64px">Pri treťom pokuse vypadlo pripojenie v zasadačke.</textarea><span class="field-hint">Zapíše sa do auditu s vaším menom.</span></label><div class="addb-act" style="display:flex;gap:10px;flex-wrap:wrap"><button type="button" class="button">Resetovať pokusy</button><a href="#" class="button button--quiet">Zrušiť</a></div></form><div class="bar"><label class="field" style="flex:1 1 280px"><span class="field-label">Test</span><div class="dsel-control"><span class="dsel-value"><b>Evakuácia a únikové cesty</b><span>zodpovedáte vy a Jana Horváthová</span></span><span class="dsel-caret">▾</span></div></label><a href="#" class="button button--quiet" style="align-self:flex-end">Export CSV</a></div><div class="doc-table-wrap"><table class="doc-table rtab"><thead><tr><th>Osoba</th><th>Kurz / kontext</th><th>Dátum</th><th>Pokus</th><th class="doc-col-right">Skóre</th><th>Výsledok</th><th></th></tr></thead><tbody><tr><td><b style="font-weight:600">Marek Kováč</b><div class="doc-meta">Oddelenie IT</div></td><td>Bezpečnosť pri práci · časť 4</td><td class="num-cell">25. 9. 2026 10:14</td><td class="num-cell">2 z 3</td><td class="doc-col-right sc">60 %</td><td><span class="tag tag--expired">Neprešiel</span></td><td class="act" style="text-align:right"></td></tr><tr><td><b style="font-weight:600">Jana Horváthová</b><div class="doc-meta">Oddelenie ľudských zdrojov</div></td><td>Bezpečnosť pri práci · časť 4</td><td class="num-cell">18. 9. 2026 9:02</td><td class="num-cell">1 z 3</td><td class="doc-col-right sc">90 %</td><td><span class="tag tag--published">Prešiel</span></td><td class="act" style="text-align:right"></td></tr><tr class="is-picked"><td><b style="font-weight:600">Tomáš Baláž</b><div class="doc-meta">Ekonomické oddelenie</div></td><td>Bezpečnosť pri práci · časť 4</td><td class="num-cell">17. 9. 2026 15:40</td><td class="num-cell">3 z 3</td><td class="doc-col-right sc">55 %</td><td><span class="tag tag--expired">Neprešiel</span></td><td class="act" style="text-align:right"><a href="#">Resetovať</a></td></tr><tr><td><b style="font-weight:600">Lucia Šimková</b><div class="doc-meta">Legislatívno právne oddelenie</div></td><td>Požiarna ochrana 2026 · časť 2</td><td class="num-cell">12. 9. 2026 11:25</td><td class="num-cell">1 z 3</td><td class="doc-col-right sc">85 %</td><td><span class="tag tag--published">Prešiel</span></td><td class="act" style="text-align:right"></td></tr></tbody></table><div class="pager"><span class="pager-count">Zobrazené 1–4 z 41</span><span class="pager-spacer"></span><a class="button button--quiet pager-link" aria-disabled="true">← Predchádzajúce</a><a class="button button--quiet pager-link">Ďalšie →</a></div></div></div></div></div></div></div>
+<div class="frames"><div><p class="cap">390 — výsledky</p><div class="frame w390" style="width:390px"><div class="hdr" style="padding:0 10px;gap:8px"><span class="logo" style="width:30px;height:30px"><svg width="18" height="18" viewBox="0 0 48 48" fill="none" aria-hidden="true"><circle cx="18" cy="18" r="13" stroke="currentColor" stroke-width="4"></circle><circle cx="13" cy="18" r="2.3" fill="currentColor"></circle><circle cx="23" cy="18" r="2.3" fill="currentColor"></circle><path d="M28 27 L41 41 L29 38 Z" fill="currentColor"></path></svg></span><span class="org" style="font-size:15px">SFZ</span><div class="ask" style="flex:1;min-width:0"><svg width="16" height="16" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" aria-hidden="true"><path d="M3 4.5h12v7.5H8l-3.5 2.5V12H3z"></path></svg><span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Opýtajte sa…</span></div><span class="bell" style="width:40px;height:40px"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13.9 11.6c0-5.2-1.6-7-4.9-7s-4.9 1.8-4.9 7l-1.3 2.1h12.4z"></path><path d="M10.6 15.4a1.7 1.7 0 0 1-3.2 0"></path></svg><b>2</b></span><span class="av" style="width:32px;height:32px">PH</span></div><div class="body" style="padding:14px 14px 24px"><div class="tp"><div class="tp-head"><div class="grow"><h1 class="page-title">Testy</h1></div></div><nav class="tabs"><a href="#">Testy <span class="c">5</span></a><a href="#">Banka otázok <span class="c">128</span></a><a href="#" class="is-on">Výsledky</a></nav><div class="hr-note"><b>Poznámka k rámu:</b> záložku Výsledky vidí len zodpovedná osoba testu a len svoje testy. Rola <code>hr</code> ani <code>learning-admin</code> ju sama osebe nemá (D121).</div><div class="bar"><label class="field" style="flex:1 1 280px"><span class="field-label">Test</span><div class="dsel-control"><span class="dsel-value"><b>Evakuácia a únikové cesty</b><span>zodpovedáte vy a Jana Horváthová</span></span><span class="dsel-caret">▾</span></div></label><a href="#" class="button button--quiet" style="align-self:flex-end">Export CSV</a></div><div class="rcards"><article class="card rc"><b>Marek Kováč</b><span class="sc bad">60 %</span><span>25. 9. 2026 10:14 · pokus 2 z 3</span><span style="grid-column:1/-1">Bezpečnosť pri práci · časť 4</span></article><article class="card rc"><b>Jana Horváthová</b><span class="sc okc">90 %</span><span>18. 9. 2026 9:02 · pokus 1 z 3</span><span style="grid-column:1/-1">Bezpečnosť pri práci · časť 4</span></article><article class="card rc"><b>Tomáš Baláž</b><span class="sc bad">55 %</span><span>17. 9. 2026 15:40 · pokus 3 z 3</span><span style="grid-column:1/-1">Bezpečnosť pri práci · časť 4</span><a href="#" class="linkish" style="grid-column:1/-1;font-size:12.5px;min-height:40px;display:flex;align-items:center">Resetovať pokusy</a></article><article class="card rc"><b>Lucia Šimková</b><span class="sc okc">85 %</span><span>12. 9. 2026 11:25 · pokus 1 z 3</span><span style="grid-column:1/-1">Požiarna ochrana 2026 · časť 2</span></article></div></div></div><nav class="tabbar"><a href="#"><i></i>Prehľad</a><a href="#"><i></i>Opýtať sa</a><a href="#"><i></i>Vzdelávanie</a><a href="#"><i></i>Úlohy<b>1</b></a><a href="#" class="is-on"><i></i>Viac</a></nav></div></div><div><p class="cap">390 — resetovať pokusy</p><div class="frame w390" style="width:390px"><div class="hdr" style="padding:0 10px;gap:8px"><span class="logo" style="width:30px;height:30px"><svg width="18" height="18" viewBox="0 0 48 48" fill="none" aria-hidden="true"><circle cx="18" cy="18" r="13" stroke="currentColor" stroke-width="4"></circle><circle cx="13" cy="18" r="2.3" fill="currentColor"></circle><circle cx="23" cy="18" r="2.3" fill="currentColor"></circle><path d="M28 27 L41 41 L29 38 Z" fill="currentColor"></path></svg></span><span class="org" style="font-size:15px">SFZ</span><div class="ask" style="flex:1;min-width:0"><svg width="16" height="16" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" aria-hidden="true"><path d="M3 4.5h12v7.5H8l-3.5 2.5V12H3z"></path></svg><span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Opýtajte sa…</span></div><span class="bell" style="width:40px;height:40px"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13.9 11.6c0-5.2-1.6-7-4.9-7s-4.9 1.8-4.9 7l-1.3 2.1h12.4z"></path><path d="M10.6 15.4a1.7 1.7 0 0 1-3.2 0"></path></svg><b>2</b></span><span class="av" style="width:32px;height:32px">PH</span></div><div class="body" style="padding:14px 14px 24px"><div class="tp"><div class="tp-head"><div class="grow"><h1 class="page-title">Testy</h1></div></div><nav class="tabs"><a href="#">Testy <span class="c">5</span></a><a href="#">Banka otázok <span class="c">128</span></a><a href="#" class="is-on">Výsledky</a></nav><div class="hr-note"><b>Poznámka k rámu:</b> záložku Výsledky vidí len zodpovedná osoba testu a len svoje testy. Rola <code>hr</code> ani <code>learning-admin</code> ju sama osebe nemá (D121).</div><form class="card reset"><h2>Resetovať pokusy — Tomáš Baláž</h2><p>Test Evakuácia a únikové cesty · využité 3 z 3 pokusov. Po resete bude mať znova 3 pokusy. Doterajšie pokusy <b>ostanú v zázname</b> ako resetované.</p><label class="field"><span class="field-label">Dôvod — povinný</span><textarea class="field-input" style="min-height:64px">Pri treťom pokuse vypadlo pripojenie v zasadačke.</textarea><span class="field-hint">Zapíše sa do auditu s vaším menom.</span></label><div class="addb-act" style="display:flex;gap:10px;flex-wrap:wrap"><button type="button" class="button">Resetovať pokusy</button><a href="#" class="button button--quiet">Zrušiť</a></div></form><div class="bar"><label class="field" style="flex:1 1 280px"><span class="field-label">Test</span><div class="dsel-control"><span class="dsel-value"><b>Evakuácia a únikové cesty</b><span>zodpovedáte vy a Jana Horváthová</span></span><span class="dsel-caret">▾</span></div></label><a href="#" class="button button--quiet" style="align-self:flex-end">Export CSV</a></div><div class="rcards"><article class="card rc"><b>Marek Kováč</b><span class="sc bad">60 %</span><span>25. 9. 2026 10:14 · pokus 2 z 3</span><span style="grid-column:1/-1">Bezpečnosť pri práci · časť 4</span></article><article class="card rc"><b>Jana Horváthová</b><span class="sc okc">90 %</span><span>18. 9. 2026 9:02 · pokus 1 z 3</span><span style="grid-column:1/-1">Bezpečnosť pri práci · časť 4</span></article><article class="card rc"><b>Tomáš Baláž</b><span class="sc bad">55 %</span><span>17. 9. 2026 15:40 · pokus 3 z 3</span><span style="grid-column:1/-1">Bezpečnosť pri práci · časť 4</span><a href="#" class="linkish" style="grid-column:1/-1;font-size:12.5px;min-height:40px;display:flex;align-items:center">Resetovať pokusy</a></article><article class="card rc"><b>Lucia Šimková</b><span class="sc okc">85 %</span><span>12. 9. 2026 11:25 · pokus 1 z 3</span><span style="grid-column:1/-1">Požiarna ochrana 2026 · časť 2</span></article></div></div></div><nav class="tabbar"><a href="#"><i></i>Prehľad</a><a href="#"><i></i>Opýtať sa</a><a href="#"><i></i>Vzdelávanie</a><a href="#"><i></i>Úlohy<b>1</b></a><a href="#" class="is-on"><i></i>Viac</a></nav></div></div></div>
+<div class="anns"><p class="ann"><span class="num">8</span><b>Výsledky</b>: výber testu = len testy, za ktoré je prihlásený zodpovedný. Tabuľka pokusov: osoba · kontext (kurz · časť) · dátum · pokus N z M · skóre · Prešiel/Neprešiel. Export CSV.</p><p class="ann"><span class="num">9</span><b>Resetovať pokusy</b> (<code>?reset=</code>) s povinným dôvodom; doterajšie pokusy sa nemažú, označia sa ako resetované (D24) a zapíšu do auditu.</p></div>
+</div></body></html>
