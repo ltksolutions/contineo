@@ -13,6 +13,11 @@ import { getCollection } from "./mongodb"
 import { COURSES_COLLECTION, publishedVersion, type Course } from "./courses"
 import { enrollmentFor } from "./enrollmentsDb"
 
+/** Prípony súborov kurzu (obrázky, hotové video bez prekódovania, D122). */
+export const COURSE_MEDIA_EXTENSIONS = [".jpg", ".jpeg", ".png", ".webp", ".gif", ".mp4", ".webm"] as const
+export const IMAGE_ACCEPT = ".jpg,.jpeg,.png,.webp,.gif"
+export const VIDEO_ACCEPT = ".mp4,.webm"
+
 /** Kurzy organizácie, v ktorých je súbor použitý (v ktorejkoľvek verzii). */
 export async function coursesUsingFile(companyCode: string, fileId: string): Promise<Course[]> {
   return (await getCollection<Course>(COURSES_COLLECTION)).find({

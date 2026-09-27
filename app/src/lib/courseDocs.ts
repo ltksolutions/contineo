@@ -41,3 +41,27 @@ export async function courseDocInfo(companyCode: string, part: Part): Promise<Ma
   }
   return out
 }
+
+export interface DocumentChoice {
+  documentId: string
+  versionId: string
+  title: string
+  label: string
+}
+
+/**
+ * Ponuka pre blok „dokument z knižnice" (rám MANAGE-COURSE): dokumenty
+ * organizácie s **platným znením** k dnešku. Blok si uloží práve toto
+ * znenie (`versionId`) — odkaz na konkrétne znenie, nie kópiu obsahu.
+ */
+export async function documentChoices(companyCode: string): Promise<DocumentChoice[]> {
+  const docs = await (await getCollection<DocumentRecord & { companyCode: string }>(DOCUMENTS_COLLECTION))
+    .find({ companyCode }, { projection: { _id: 0, documentId: 1, title: 1, versions: 1 } })
+    .toArray()
+  const out: DocumentChoice[] = []
+  for (const d of docs) {
+    const eff = effectiveVersion(d)
+    if (eff.ok) out.push({ documentId: d.documentId, versionId: eff.version.versionId, title: d.title, label: eff.version.label })
+  }
+  return out.sort((a, b) => a.title.localeCompare(b.title, "sk"))
+}

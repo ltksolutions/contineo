@@ -44,7 +44,7 @@ const baseCourse = (): Course => ({
   companyCode: "SFZ", key: "bozp", title: "BOZP", topicKey: "bozp", topicLabel: "BOZP", smartTags: [], language: "sk",
   openEnrollment: true, createdAt: at, createdBy: "jan",
   versions: [{
-    versionId: "v1", version: 1, state: "published", title: "BOZP", sequential: true, issuesCertificate: false, createdAt: at, createdBy: "jan",
+    versionId: "v1", version: 1, state: "published", title: "BOZP", sequential: true, issuesCertificate: false, legalBasisKey: "bozp", createdAt: at, createdBy: "jan",
     parts: [
       { key: "uvod", title: "Úvod", required: true, tests: [], blocks: [
         { id: "vid", type: "video", source: { kind: "internal", assetId: "a" }, mustWatch: true, durationSec: 100 },

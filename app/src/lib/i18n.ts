@@ -2561,6 +2561,84 @@ interface Dictionary {
       mergeResult: (target: string) => string
       merged: (n: number, target: string) => string
     }
+    /** Úprava kurzu (rám MANAGE-COURSE). */
+    edit: {
+      stepsLabel: string
+      missingHeading: string
+      readyHeading: string
+      checkParts: string
+      checkLegal: string
+      checkTopic: string
+      publishDisabledNote: string
+      publishedLead: string
+      newVersion: string
+      archive: string
+      restore: string
+      cannotPublish: string
+      archived: string
+      tabParts: string
+      tabSettings: string
+      tabPeople: string
+      partsHeading: string
+      up: string
+      down: string
+      editPart: string
+      view: string
+      newPart: string
+      partTitle: string
+      required: string
+      addPart: string
+      noParts: string
+      allParts: string
+      removePart: string
+      save: string
+      minutes: string
+      summary: string
+      blocksHeading: string
+      noBlocks: string
+      addBlock: string
+      blockType: string
+      markdown: string
+      alt: string
+      altGallery: string
+      caption: string
+      document: string
+      videoSource: string
+      sourceUpload: string
+      sourceExternal: string
+      url: string
+      mustWatch: string
+      mustWatchNote: string
+      externalWarn: string
+      removeBlock: string
+      add: string
+      mediaImage: string
+      mediaVideo: string
+      mediaNote: string
+      progressTitle: string
+      uploading: string
+      uploadFailed: string
+      tooLarge: string
+      testsHeading: string
+      testsLater: string
+      mustWatchShort: string
+      cancel: string
+      editBlock: string
+      noDocuments: string
+      optional: string
+      steps: string[]
+      stepSub: { draft: (n: number) => string; published: (n: number) => string; archived: (n: number) => string }
+      blockTypes: { text: string; image: string; gallery: string; document: string; video: string; videoExternal: string }
+      problem: (code: string, part: string) => string
+      publishButton: (n: number) => string
+      keepPublished: (prev: number, next: number) => string
+      archivedLead: (n: number) => string
+      published: (n: number) => string
+      newVersionStarted: (n: number) => string
+      blocksTests: (blocks: number, tests: number) => string
+      readOnly: (n: number) => string
+      savedAt: (date: string) => string
+    }
   }
 }
 
@@ -3543,6 +3621,13 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     },
   },
   errors: {
+    "learning.urlInvalid": "Adresa videa nie je platná — podporované sú YouTube, Vimeo a odkazy https.",
+    "learning.fileRequired": "Najprv nahrajte súbor.",
+    "learning.documentRequired": "Vyberte dokument z knižnice.",
+    "learning.textRequired": "Text bloku je prázdny.",
+    "learning.altRequired": "Chýba popis obrázka.",
+    "learning.partTitleRequired": "Názov časti je povinný.",
+    "learning.mediaType": "Súbor {name} nie je obrázok ani video MP4 či WebM.",
     "learning.topicRequired": "Vyberte tému kurzu.",
     "learning.mergeNeedsTwo": "Na zlúčenie treba aspoň dva smart:tagy.",
     "learning.tagShape": "„{value}“ nie je smart:tag v tvare „Kľúč: Hodnota“.",
@@ -5212,6 +5297,95 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       mergeResult: target => `Vybrané tagy zmiznú, zostane „${target}“. Kurz, otázka či test, ktorý ich mal viac, dostane „${target}“ raz.`,
       merged: (n, target) => `Zlúčené: ${n} ${n <= 4 ? "tagy" : "tagov"} → ${target}.`,
     },
+    edit: {
+      stepsLabel: "Stav verzie kurzu",
+      missingHeading: "Na zverejnenie chýba",
+      readyHeading: "Pripravené na zverejnenie",
+      checkParts: "Časti a bloky",
+      checkLegal: "Právny základ (Nastavenia)",
+      checkTopic: "Téma",
+      publishDisabledNote: "Najprv doplňte, čo chýba.",
+      publishedLead: "Zverejnená verzia sa nemení. Zmena = nová verzia (kópia).",
+      newVersion: "Nová verzia",
+      archive: "Archivovať",
+      restore: "Obnoviť ako novú verziu",
+      cannotPublish: "Kurz sa zatiaľ nedá zverejniť — pozrite, čo chýba.",
+      archived: "Kurz je archivovaný. Rozpracovaní ho dokončia.",
+      tabParts: "Časti",
+      tabSettings: "Nastavenia",
+      tabPeople: "Zapísaní",
+      partsHeading: "Časti kurzu",
+      up: "Posunúť vyššie",
+      down: "Posunúť nižšie",
+      editPart: "Upraviť",
+      view: "Zobraziť",
+      newPart: "Nová časť",
+      partTitle: "Názov časti",
+      required: "Povinná",
+      addPart: "Pridať časť",
+      noParts: "Kurz zatiaľ nemá žiadnu časť",
+      allParts: "← Všetky časti",
+      removePart: "Odobrať časť",
+      save: "Uložiť",
+      minutes: "Odhad času (minúty)",
+      summary: "Krátky popis",
+      blocksHeading: "Bloky",
+      noBlocks: "Časť zatiaľ nemá žiadny blok.",
+      addBlock: "Pridať blok",
+      blockType: "Typ bloku",
+      markdown: "Text",
+      alt: "Popis obrázka",
+      altGallery: "Popis obrázkov",
+      caption: "Popisok pod obrázkom",
+      document: "Dokument z knižnice",
+      videoSource: "Zdroj videa",
+      sourceUpload: "Nahrať MP4 alebo WebM (do 25 MB)",
+      sourceExternal: "Externý odkaz",
+      url: "Adresa videa (YouTube, Vimeo, https)",
+      mustWatch: "Povinné dopozeranie",
+      mustWatchNote: "Pretáčanie dopredu sa vypne; časť sa dá označiť až po pozretí 90 %.",
+      externalWarn: "Pri externom videu sa dopozeranie neoverí. Ak ho potrebujete, nahrajte MP4.",
+      removeBlock: "Odobrať",
+      add: "Pridať",
+      mediaImage: "Obrázok (JPG, PNG, WebP, GIF)",
+      mediaVideo: "Video MP4 alebo WebM (do 25 MB)",
+      mediaNote: "Súbor sa nahrá pri pridaní bloku.",
+      progressTitle: "Nahrávam súbor",
+      uploading: "Nahrávam {name} — {percent} %",
+      uploadFailed: "Nahratie zlyhalo:",
+      tooLarge: "{name} má {mb} MB, strop je {maxMb} MB.",
+      testsHeading: "Testy časti",
+      testsLater: "Testy sa budú dať priradiť, keď pribudne banka otázok a testov.",
+      mustWatchShort: "povinné dopozeranie",
+      cancel: "Zrušiť",
+      editBlock: "Upraviť",
+      noDocuments: "V knižnici zatiaľ nie je dokument s platným znením.",
+      optional: "Nepovinná",
+      steps: ["Koncept", "Zverejnené", "Archív"],
+      stepSub: { draft: n => `verzia ${n}`, published: n => `verzia ${n}`, archived: n => `verzia ${n}` },
+      blockTypes: { text: "Text", image: "Obrázok", gallery: "Galéria", document: "Dokument z knižnice", video: "Video", videoExternal: "Video externé" },
+      problem: (code, part) => ({
+        noTitle: "Kurz nemá názov.",
+        noParts: "Kurz nemá žiadnu časť.",
+        noRequiredPart: "Aspoň jedna časť musí byť povinná.",
+        emptyPart: `Časť „${part}“ nemá žiadny blok.`,
+        badPartKey: `Časť „${part}“ má neplatný kľúč.`,
+        duplicatePartKey: `Časť „${part}“ je v kurze dvakrát.`,
+        videoWithoutDuration: `Povinné video v časti „${part}“ nemá dĺžku — nahrajte ho znova.`,
+        mustWatchExternal: `Externé video v časti „${part}“ nemôže mať povinné dopozeranie.`,
+        testNotReady: `Test v časti „${part}“ nie je pripravený.`,
+        noIssuer: "Chýba vydavateľ certifikátu.",
+        noLegalBasis: "Chýba právny základ — doplňte ho v Nastaveniach.",
+      } as Record<string, string>)[code] ?? code,
+      publishButton: n => `Zverejniť verziu ${n}`,
+      keepPublished: (prev, next) => `Verzia ${prev} zostáva zverejnená, kým nezverejníte túto. Zapísaní vo v${prev} ju dokončia; noví sa zapíšu do v${next}.`,
+      archivedLead: n => `Nikto nový sa nezapíše. Rozpracovaní dokončia svoju verziu (${n}).`,
+      published: n => `Verzia ${n} je zverejnená.`,
+      newVersionStarted: n => `Vznikol koncept verzie ${n} — kópia poslednej verzie.`,
+      blocksTests: (b, t) => `${b} ${b === 1 ? "blok" : b >= 2 && b <= 4 ? "bloky" : "blokov"}${t ? ` · ${t} ${t === 1 ? "test" : t <= 4 ? "testy" : "testov"}` : ""}`,
+      readOnly: n => `Verzia ${n} je zverejnená — časti a bloky sú len na čítanie. Zmeny: Nová verzia.`,
+      savedAt: date => `Uložené ${date}`,
+    },
   },
   },
 
@@ -6181,6 +6355,13 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     },
   },
   errors: {
+    "learning.urlInvalid": "Adresa videa není platná — podporovány jsou YouTube, Vimeo a odkazy https.",
+    "learning.fileRequired": "Nejprve nahrajte soubor.",
+    "learning.documentRequired": "Vyberte dokument z knihovny.",
+    "learning.textRequired": "Text bloku je prázdný.",
+    "learning.altRequired": "Chybí popis obrázku.",
+    "learning.partTitleRequired": "Název části je povinný.",
+    "learning.mediaType": "Soubor {name} není obrázek ani video MP4 či WebM.",
     "learning.topicRequired": "Vyberte téma kurzu.",
     "learning.mergeNeedsTwo": "Ke sloučení jsou potřeba alespoň dva smart:tagy.",
     "learning.tagShape": "„{value}“ není smart:tag ve tvaru „Klíč: Hodnota“.",
@@ -7847,6 +8028,95 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       mergeResult: target => `Vybrané tagy zmizí, zůstane „${target}“. Kurz, otázka či test, který jich měl víc, dostane „${target}“ jednou.`,
       merged: (n, target) => `Sloučeno: ${n} ${n <= 4 ? "tagy" : "tagů"} → ${target}.`,
     },
+    edit: {
+      stepsLabel: "Stav verze kurzu",
+      missingHeading: "Ke zveřejnění chybí",
+      readyHeading: "Připraveno ke zveřejnění",
+      checkParts: "Části a bloky",
+      checkLegal: "Právní základ (Nastavení)",
+      checkTopic: "Téma",
+      publishDisabledNote: "Nejprve doplňte, co chybí.",
+      publishedLead: "Zveřejněná verze se nemění. Změna = nová verze (kopie).",
+      newVersion: "Nová verze",
+      archive: "Archivovat",
+      restore: "Obnovit jako novou verzi",
+      cannotPublish: "Kurz zatím nelze zveřejnit — podívejte se, co chybí.",
+      archived: "Kurz je archivovaný. Rozpracovaní ho dokončí.",
+      tabParts: "Části",
+      tabSettings: "Nastavení",
+      tabPeople: "Zapsaní",
+      partsHeading: "Části kurzu",
+      up: "Posunout výš",
+      down: "Posunout níž",
+      editPart: "Upravit",
+      view: "Zobrazit",
+      newPart: "Nová část",
+      partTitle: "Název části",
+      required: "Povinná",
+      addPart: "Přidat část",
+      noParts: "Kurz zatím nemá žádnou část",
+      allParts: "← Všechny části",
+      removePart: "Odebrat část",
+      save: "Uložit",
+      minutes: "Odhad času (minuty)",
+      summary: "Krátký popis",
+      blocksHeading: "Bloky",
+      noBlocks: "Část zatím nemá žádný blok.",
+      addBlock: "Přidat blok",
+      blockType: "Typ bloku",
+      markdown: "Text",
+      alt: "Popis obrázku",
+      altGallery: "Popis obrázků",
+      caption: "Popisek pod obrázkem",
+      document: "Dokument z knihovny",
+      videoSource: "Zdroj videa",
+      sourceUpload: "Nahrát MP4 nebo WebM (do 25 MB)",
+      sourceExternal: "Externí odkaz",
+      url: "Adresa videa (YouTube, Vimeo, https)",
+      mustWatch: "Povinné dokoukání",
+      mustWatchNote: "Přetáčení dopředu se vypne; část lze označit až po zhlédnutí 90 %.",
+      externalWarn: "U externího videa se dokoukání neověří. Pokud ho potřebujete, nahrajte MP4.",
+      removeBlock: "Odebrat",
+      add: "Přidat",
+      mediaImage: "Obrázek (JPG, PNG, WebP, GIF)",
+      mediaVideo: "Video MP4 nebo WebM (do 25 MB)",
+      mediaNote: "Soubor se nahraje při přidání bloku.",
+      progressTitle: "Nahrávám soubor",
+      uploading: "Nahrávám {name} — {percent} %",
+      uploadFailed: "Nahrání selhalo:",
+      tooLarge: "{name} má {mb} MB, strop je {maxMb} MB.",
+      testsHeading: "Testy části",
+      testsLater: "Testy půjde přiřadit, až přibude banka otázek a testů.",
+      mustWatchShort: "povinné dokoukání",
+      cancel: "Zrušit",
+      editBlock: "Upravit",
+      noDocuments: "V knihovně zatím není dokument s platným zněním.",
+      optional: "Nepovinná",
+      steps: ["Koncept", "Zveřejněno", "Archiv"],
+      stepSub: { draft: n => `verze ${n}`, published: n => `verze ${n}`, archived: n => `verze ${n}` },
+      blockTypes: { text: "Text", image: "Obrázek", gallery: "Galerie", document: "Dokument z knihovny", video: "Video", videoExternal: "Video externí" },
+      problem: (code, part) => ({
+        noTitle: "Kurz nemá název.",
+        noParts: "Kurz nemá žádnou část.",
+        noRequiredPart: "Alespoň jedna část musí být povinná.",
+        emptyPart: `Část „${part}“ nemá žádný blok.`,
+        badPartKey: `Část „${part}“ má neplatný klíč.`,
+        duplicatePartKey: `Část „${part}“ je v kurzu dvakrát.`,
+        videoWithoutDuration: `Povinné video v části „${part}“ nemá délku — nahrajte ho znovu.`,
+        mustWatchExternal: `Externí video v části „${part}“ nemůže mít povinné dokoukání.`,
+        testNotReady: `Test v části „${part}“ není připravený.`,
+        noIssuer: "Chybí vydavatel certifikátu.",
+        noLegalBasis: "Chybí právní základ — doplňte ho v Nastavení.",
+      } as Record<string, string>)[code] ?? code,
+      publishButton: n => `Zveřejnit verzi ${n}`,
+      keepPublished: (prev, next) => `Verze ${prev} zůstává zveřejněná, dokud nezveřejníte tuto. Zapsaní ve v${prev} ji dokončí; noví se zapíšou do v${next}.`,
+      archivedLead: n => `Nikdo nový se nezapíše. Rozpracovaní dokončí svou verzi (${n}).`,
+      published: n => `Verze ${n} je zveřejněná.`,
+      newVersionStarted: n => `Vznikl koncept verze ${n} — kopie poslední verze.`,
+      blocksTests: (b, t) => `${b} ${b === 1 ? "blok" : b >= 2 && b <= 4 ? "bloky" : "bloků"}${t ? ` · ${t} ${t === 1 ? "test" : t <= 4 ? "testy" : "testů"}` : ""}`,
+      readOnly: n => `Verze ${n} je zveřejněná — části a bloky jsou jen ke čtení. Změny: Nová verze.`,
+      savedAt: date => `Uloženo ${date}`,
+    },
   },
   },
 
@@ -8809,6 +9079,13 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     },
   },
   errors: {
+    "learning.urlInvalid": "The video address is not valid — YouTube, Vimeo and https links are supported.",
+    "learning.fileRequired": "Upload a file first.",
+    "learning.documentRequired": "Choose a document from the library.",
+    "learning.textRequired": "The block text is empty.",
+    "learning.altRequired": "The image description is missing.",
+    "learning.partTitleRequired": "The part title is required.",
+    "learning.mediaType": "The file {name} is not an image or an MP4/WebM video.",
     "learning.topicRequired": "Choose the course topic.",
     "learning.mergeNeedsTwo": "Merging needs at least two smart:tags.",
     "learning.tagShape": "“{value}” is not a smart:tag in the form “Key: Value”.",
@@ -10467,6 +10744,95 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       mergeTitle: n => `Merge ${n} smart:tags into one`,
       mergeResult: target => `The selected tags disappear and “${target}” remains. A course, question or test that had several gets “${target}” once.`,
       merged: (n, target) => `Merged: ${n} tags → ${target}.`,
+    },
+    edit: {
+      stepsLabel: "Course version status",
+      missingHeading: "Missing before publishing",
+      readyHeading: "Ready to publish",
+      checkParts: "Parts and blocks",
+      checkLegal: "Legal basis (Settings)",
+      checkTopic: "Topic",
+      publishDisabledNote: "Fill in what is missing first.",
+      publishedLead: "A published version does not change. A change = a new version (copy).",
+      newVersion: "New version",
+      archive: "Archive",
+      restore: "Restore as a new version",
+      cannotPublish: "The course cannot be published yet — see what is missing.",
+      archived: "The course is archived. Those in progress can finish it.",
+      tabParts: "Parts",
+      tabSettings: "Settings",
+      tabPeople: "Enrolled",
+      partsHeading: "Course parts",
+      up: "Move up",
+      down: "Move down",
+      editPart: "Edit",
+      view: "View",
+      newPart: "New part",
+      partTitle: "Part title",
+      required: "Required",
+      addPart: "Add part",
+      noParts: "The course has no parts yet",
+      allParts: "← All parts",
+      removePart: "Remove part",
+      save: "Save",
+      minutes: "Estimated time (minutes)",
+      summary: "Short description",
+      blocksHeading: "Blocks",
+      noBlocks: "The part has no blocks yet.",
+      addBlock: "Add block",
+      blockType: "Block type",
+      markdown: "Text",
+      alt: "Image description",
+      altGallery: "Image descriptions",
+      caption: "Caption below the image",
+      document: "Document from the library",
+      videoSource: "Video source",
+      sourceUpload: "Upload MP4 or WebM (up to 25 MB)",
+      sourceExternal: "External link",
+      url: "Video address (YouTube, Vimeo, https)",
+      mustWatch: "Required viewing",
+      mustWatchNote: "Skipping ahead is disabled; the part can be marked only after 90 % has been watched.",
+      externalWarn: "Viewing of an external video is not verified. If you need it, upload an MP4.",
+      removeBlock: "Remove",
+      add: "Add",
+      mediaImage: "Image (JPG, PNG, WebP, GIF)",
+      mediaVideo: "MP4 or WebM video (up to 25 MB)",
+      mediaNote: "The file is uploaded when you add the block.",
+      progressTitle: "Uploading file",
+      uploading: "Uploading {name} — {percent} %",
+      uploadFailed: "Upload failed:",
+      tooLarge: "{name} is {mb} MB; the limit is {maxMb} MB.",
+      testsHeading: "Tests in this part",
+      testsLater: "Tests can be assigned once the question and test bank arrives.",
+      mustWatchShort: "required viewing",
+      cancel: "Cancel",
+      editBlock: "Edit",
+      noDocuments: "There is no document with an effective version in the library yet.",
+      optional: "Optional",
+      steps: ["Draft", "Published", "Archived"],
+      stepSub: { draft: n => `version ${n}`, published: n => `version ${n}`, archived: n => `version ${n}` },
+      blockTypes: { text: "Text", image: "Image", gallery: "Gallery", document: "Library document", video: "Video", videoExternal: "External video" },
+      problem: (code, part) => ({
+        noTitle: "The course has no title.",
+        noParts: "The course has no parts.",
+        noRequiredPart: "At least one part must be required.",
+        emptyPart: `Part “${part}” has no blocks.`,
+        badPartKey: `Part “${part}” has an invalid key.`,
+        duplicatePartKey: `Part “${part}” appears twice in the course.`,
+        videoWithoutDuration: `The required video in part “${part}” has no duration — upload it again.`,
+        mustWatchExternal: `The external video in part “${part}” cannot require full viewing.`,
+        testNotReady: `A test in part “${part}” is not ready.`,
+        noIssuer: "The certificate issuer is missing.",
+        noLegalBasis: "The legal basis is missing — add it in Settings.",
+      } as Record<string, string>)[code] ?? code,
+      publishButton: n => `Publish version ${n}`,
+      keepPublished: (prev, next) => `Version ${prev} stays published until you publish this one. Those enrolled in v${prev} finish it; new people enrol in v${next}.`,
+      archivedLead: n => `No one new can enrol. Those in progress finish their version (${n}).`,
+      published: n => `Version ${n} is published.`,
+      newVersionStarted: n => `A draft of version ${n} has been created — a copy of the latest version.`,
+      blocksTests: (b, t) => `${b} block${b === 1 ? "" : "s"}${t ? ` · ${t} test${t === 1 ? "" : "s"}` : ""}`,
+      readOnly: n => `Version ${n} is published — parts and blocks are read-only. To change them: New version.`,
+      savedAt: date => `Saved ${date}`,
     },
   },
   },
