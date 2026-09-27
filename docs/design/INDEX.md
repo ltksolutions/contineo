@@ -93,9 +93,9 @@ Zadanie: `docs/design/LEARNING-zadanie.md` (a6c7ddc). Spoločné nové triedy
 | # | Rám | Routa | Stav |
 | --- | --- | --- | --- |
 | 1 | `LEARNING-moje-kurzy` | `/learning` | ✅ Q1, Q2 rozhodnuté |
-| 2 | `COURSE-prehlad-kurzu` | `/learning/[courseKey]` | hotový, Q1 otvorená |
-| 3 | `PART-cast-kurzu` | `/learning/[courseKey]/[partKey]` | hotový, Q1–Q2 otvorené |
-| 4 | `MANAGE-sprava-kurzov` | `/learning/manage` | hotový, Q1 otvorená |
+| 2 | `COURSE-prehlad-kurzu` | `/learning/[courseKey]` | ✅ Q1 rozhodnutá |
+| 3 | `PART-cast-kurzu` | `/learning/[courseKey]/[partKey]` | ✅ Q1, Q2 rozhodnuté |
+| 4 | `MANAGE-sprava-kurzov` | `/learning/manage` | ✅ Q1 rozhodnutá (alternatíva) |
 | 5 | `MANAGE-COURSE` | `/learning/manage/[courseKey]` | ďalší |
 | 6–9 | `TESTS`, `TEST-ATTEMPT`, `RESULT`, `CERTIFICATE` | L2–L3 | čaká |
 
@@ -119,7 +119,7 @@ každého `.md`):
   `video_watch` rozsahov (hranica 90 %).
 - **Témy:** číselník s `retiredAt` (vyradiť, nie zmazať).
 - **smart:tagy:** agregácia počtov naprieč kurzami / otázkami / testami
-  (odvodená); premenovanie `label` podľa MANAGE Q1.
+  (odvodená); premenovanie mení tag všade (MANAGE Q1, 27. 9.).
 - **Navigácia:** `NavKey` `"learning"` (všetci pri zapnutom module),
   `tabbarItems()` — „Vzdelávanie" na 3. pozíciu, len keď v zozname nie je
   `library` (LEARNING Q1 ✅).

@@ -217,6 +217,14 @@ export function courseProgress(version: Pick<CourseVersion, "parts" | "sequentia
 
 /* ── Stráž „Označiť ako prejdené" ──────────────────────────────────────── */
 
+/**
+ * Časť sa smie označiť ako prejdená aj pred prejdením povinného testu —
+ * tlačidlo stráži len video (rám PART, Q1 ✅ Ján 27. 9. 2026). Hotová je
+ * časť aj tak až s prejdeným testom (`evaluatePart`). Obrazovka podá túto
+ * hodnotu do `completionBlockers` / `completePart`.
+ */
+export const ALLOW_COMPLETE_BEFORE_REQUIRED_TEST = true
+
 export type CompletionBlocker =
   | { code: "locked" }
   | { code: "alreadyCompleted" }
@@ -227,11 +235,9 @@ export type CompletionBlocker =
  * Čo bráni zapísať dokončenie časti. Server to overuje z uložených údajov,
  * nie z tlačidla (D119).
  *
- * `allowBeforeRequiredTests` — **otvorená otázka PART Q1** (smie sa časť
- * označiť pred prejdením povinného testu?). Zámerne bez predvolenej
- * hodnoty: rozhodne Ján a obrazovka, ktorá to volá, ju podá výslovne.
- * Hotová časť aj tak vyžaduje prejdený test (`evaluatePart`) — otázka je
- * len o tom, či sa dá zapísať dokončenie skôr.
+ * `allowBeforeRequiredTests` — pravidlo PART Q1 je
+ * `ALLOW_COMPLETE_BEFORE_REQUIRED_TEST`; parameter ostáva výslovný, aby
+ * sa pri zmene rozhodnutia menilo jedno miesto a testy videli obe vetvy.
  */
 export function completionBlockers(
   version: Pick<CourseVersion, "parts" | "sequential">,

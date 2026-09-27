@@ -66,6 +66,18 @@ Nové: `.tabs` (ak `/organisation` nemá triedu na znovupoužitie — overiť), 
 - Kolekcie `courses`, `enrollments`; `topics` ako číselník organizácie (`retiredAt`).
 - Agregácia smart:tagov naprieč `courses`, `questions`, `tests` (počty) — odvodená, neukladá sa.
 
+## Rozhodnutia Jána 27. 9. 2026
+
+- **Q1 ❌ návrh, platí alternatíva:** premenovanie smart:tagu mení tag
+  **všade** — na kurzoch, otázkach aj testoch, nielen v živých záznamoch
+  („inak vznikne neporiadok"). Premenovanie na existujúcu hodnotu = zlúčenie.
+  S D118 to nekoliduje: smart:tagy sú na kurze, nie vo verzii; snímky otázok
+  v pokusoch (D120) tagy nenesú, takže sa dôkazy nemenia.
+- **Zlúčenie ✅ (nové, 27. 9.):** okrem premenovania aj výslovné zlúčenie
+  **viacerých** tagov do jedného (cieľ je jeden z nich alebo nový zápis).
+  V ráme zatiaľ nie je — knižnica áno (`mergeSmartTags`); rám treba doplniť
+  v Claude Design (výber hodnôt v karte kľúča + „Zlúčiť do…").
+
 ## Otázky pre Jána
 
 - **Q1** — Premenovanie smart:tagu mení `label` **aj v zverejnených verziách** kurzov a v snímkach otázok v pokusoch? Návrh: mení sa len zobrazený text v živých záznamoch (koncepty, banka, testy, filtre); zverejnené verzie a snímky pokusov (D118, D120) ostávajú, ako boli — porovnáva sa normalizovaný tvar, takže filter funguje ďalej. Premenovanie na existujúcu hodnotu = zlúčenie.

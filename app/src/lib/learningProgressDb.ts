@@ -125,8 +125,8 @@ export async function recordVideoWatch(input: {
  * „Označiť ako prejdené" — zapíše dokončenie časti, ak mu nič nebráni.
  * Stráž počíta server z uložených údajov (D119), nie tlačidlo.
  *
- * `allowBeforeRequiredTests` je otvorená otázka PART Q1 — volajúci ju podá
- * výslovne (`completionBlockers`).
+ * `allowBeforeRequiredTests` podá volajúci — pravidlo je
+ * `ALLOW_COMPLETE_BEFORE_REQUIRED_TEST` (PART Q1 ✅).
  */
 export async function completePart(input: {
   enrollment: Enrollment

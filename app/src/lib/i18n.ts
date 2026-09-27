@@ -3363,6 +3363,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     },
   },
   errors: {
+    "learning.mergeNeedsTwo": "Na zlúčenie treba aspoň dva smart:tagy.",
+    "learning.tagShape": "„{value}“ nie je smart:tag v tvare „Kľúč: Hodnota“.",
     "learning.courseKeyShape": "Kľúč kurzu „{key}“ nemá správny tvar — malé písmená bez diakritiky, číslice a pomlčka.",
     "learning.titleRequired": "Názov kurzu je povinný.",
     "learning.courseKeyTaken": "Kurz s kľúčom „{key}“ už existuje.",
@@ -3613,6 +3615,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       track: "trasa",
       course: "kurz",
       enrollment: "zápis do kurzu",
+      "smart-tag": "smart:tag",
     },
     actions: {
       created: "založené",
@@ -3636,6 +3639,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       "new-version": "nahraté nové znenie",
       "responsible-changed": "zmena zodpovednej osoby",
       "legal-basis": "právny základ",
+      merged: "zlúčené",
       "archived": "archivované",
       "retired": "vyradené z ponuky",
       "course-version": "nová verzia kurzu",
@@ -5809,6 +5813,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     },
   },
   errors: {
+    "learning.mergeNeedsTwo": "Ke sloučení jsou potřeba alespoň dva smart:tagy.",
+    "learning.tagShape": "„{value}“ není smart:tag ve tvaru „Klíč: Hodnota“.",
     "learning.courseKeyShape": "Klíč kurzu „{key}“ nemá správný tvar — malá písmena bez diakritiky, číslice a pomlčka.",
     "learning.titleRequired": "Název kurzu je povinný.",
     "learning.courseKeyTaken": "Kurz s klíčem „{key}“ už existuje.",
@@ -6059,6 +6065,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       track: "trasa",
       course: "kurz",
       enrollment: "zápis do kurzu",
+      "smart-tag": "smart:tag",
     },
     actions: {
       created: "založeno",
@@ -6082,6 +6089,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       "new-version": "nahráno nové znění",
       "responsible-changed": "změna odpovědné osoby",
       "legal-basis": "právní základ",
+      merged: "sloučeno",
       "archived": "archivováno",
       "retired": "vyřazeno z nabídky",
       "course-version": "nová verze kurzu",
@@ -8245,6 +8253,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     },
   },
   errors: {
+    "learning.mergeNeedsTwo": "Merging needs at least two smart:tags.",
+    "learning.tagShape": "“{value}” is not a smart:tag in the form “Key: Value”.",
     "learning.courseKeyShape": "The course key “{key}” has the wrong shape — lowercase letters without diacritics, digits and hyphens.",
     "learning.titleRequired": "The course title is required.",
     "learning.courseKeyTaken": "A course with the key “{key}” already exists.",
@@ -8495,6 +8505,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       track: "track",
       course: "course",
       enrollment: "course enrolment",
+      "smart-tag": "smart:tag",
     },
     actions: {
       created: "created",
@@ -8518,6 +8529,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       "new-version": "new version uploaded",
       "responsible-changed": "responsible person changed",
       "legal-basis": "legal basis",
+      merged: "merged",
       "archived": "archived",
       "retired": "retired",
       "course-version": "new course version",

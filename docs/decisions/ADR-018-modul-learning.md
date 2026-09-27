@@ -47,7 +47,11 @@ prednosť pri nasadení do ostrej prevádzky.
 - **smart:tag** `Kľúč: Hodnota` („Bezpečnosť: Výťah", „Úroveň: 2") je na
   kurzoch, otázkach a testoch. Kľúč aj hodnota sa normalizujú na
   porovnávanie, `label` je kópia toho, čo človek napísal. Filter: rôzne
-  kľúče = AND, rovnaký kľúč = OR. Zatiaľ len v module `learning`;
+  kľúče = AND, rovnaký kľúč = OR. **Premenovanie** tagu (alebo kľúča) mení tag
+  všade — na kurzoch, otázkach aj testoch; premenovanie na existujúci tag
+  ich zlúči; zlúčiť sa dá aj viac tagov naraz. Tagy sú na kurze, nie vo verzii, a snímky otázok v pokusoch
+  ich nenesú, takže D118 ani D24 sa to nedotýka. *(Ján 27. 9. 2026, rám
+  MANAGE Q1.)* Zatiaľ len v module `learning`;
   dokumenty ostávajú pri `tags` / `category`.
 - **Úrovne a moduly z ClubUpu sa nemodelujú v kurze.** Program „4 úrovne ×
   10 tém" = **4 trasy** (jedna na úroveň) z 10 kurzov s témou z číselníka
