@@ -16,7 +16,7 @@
 export type NavLayout = "sidebar" | "topbar"
 
 /** Kľúč do `dictionary().nav` — nie hotový text, aby zostal preložiteľný. */
-export type NavKey = "overview" | "ask" | "toAcknowledge" | "toApprove" | "library" | "assigned" | "evidence" | "people" | "directory" | "evaluation" | "dpo"
+export type NavKey = "overview" | "ask" | "toAcknowledge" | "toApprove" | "library" | "assigned" | "evidence" | "people" | "directory" | "evaluation" | "dpo" | "learning" | "learningManage" | "learningTests"
 
 export interface NavItem {
   href: string
@@ -45,6 +45,10 @@ export interface NavFlags {
   isContentManager?: boolean
   isEvaluator?: boolean
   isDpo?: boolean
+  /** Organizácia má zapnutý modul Vzdelávanie a človek je prihlásený (ADR-018). */
+  learning?: boolean
+  /** Rola `learning-admin` — má zmysel len spolu s `learning`. */
+  isLearningAdmin?: boolean
 }
 
 /**
@@ -87,6 +91,14 @@ export function navItems(flags: NavFlags, counts: NavCounts = {}): NavItem[] {
     // Ochrana údajov (ADR-012, D104) — výkaz právnych základov a námietky.
     // Len pre rolu `dpo`: námietka je osobný údaj o konkrétnom človeku.
     ...(flags.isDpo ? [{ href: "/dpo", key: "dpo" as const }] : []),
+    // Vzdelávanie (ADR-018, D123) — len pri zapnutom module. Moje kurzy pre
+    // každého, správa a testy pre lektora. Rola bez zapnutého modulu nič
+    // neotvára: routy by aj tak odpovedali 404.
+    ...(flags.learning ? [{ href: "/learning", key: "learning" as const }] : []),
+    ...(flags.learning && flags.isLearningAdmin ? [
+      { href: "/learning/manage", key: "learningManage" as const },
+      { href: "/learning/tests", key: "learningTests" as const },
+    ] : []),
   ]
 
   /*
@@ -209,8 +221,9 @@ export type MoreGroupKey = "organisation" | "management"
  * (ten istý dôvod ako v `Header.tsx`).
  */
 const MORE_GROUPS: Record<MoreGroupKey, NavKey[]> = {
-  organisation: ["directory", "people"],
-  management: ["toApprove", "assigned", "evidence", "evaluation", "dpo"],
+  // Vzdelávanie je pre každého, nie správa — patrí k adresáru.
+  organisation: ["directory", "learning", "people"],
+  management: ["toApprove", "assigned", "evidence", "evaluation", "dpo", "learningManage", "learningTests"],
 }
 
 export interface MoreGroup {

@@ -24,6 +24,7 @@ import { peopleContext } from "@/lib/people"
 import { libraryContext } from "@/lib/library"
 import { evaluationContext, queueCount } from "@/lib/evaluation"
 import { dpoContext } from "@/lib/dpo"
+import { learningContext } from "@/lib/learning"
 import { currentPerson } from "@/lib/session"
 import { pendingForPerson } from "@/lib/pending"
 import { roundsWaitingFor } from "@/lib/approvalsDb"
@@ -59,6 +60,13 @@ export const shellNavData = cache(async (): Promise<ShellNavData> => {
     flags.isDpo = (await dpoContext()).state === "ready"
   } catch (e) {
     console.error("[shell] rolu DPO sa nepodarilo overiť:", e)
+  }
+  try {
+    const learning = await learningContext()
+    flags.learning = learning.state === "ready"
+    flags.isLearningAdmin = learning.state === "ready" && learning.isAdmin
+  } catch (e) {
+    console.error("[shell] modul Vzdelávanie sa nepodarilo overiť:", e)
   }
 
   /*

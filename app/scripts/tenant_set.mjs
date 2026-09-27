@@ -4,6 +4,7 @@
  *     npm run tenant                     # výpis stavu
  *     npm run tenant -- --company SFZ \
  *       --host intranet.futbalsfz.sk --name "Slovenský futbalový zväz"
+ *     npm run tenant -- --company SFZ --learning true   # modul Vzdelávanie (ADR-018)
  *
  * `tenants` je jediné miesto, kde je napísané, ktorá doména patrí komu.
  * Neznámy hostiteľ sa správa ako zakázaný (`src/lib/tenants.ts`), takže
@@ -65,6 +66,7 @@ function parseArgs(argv) {
       case "--language": out.language = value; break
       case "--languages": out.languages = value.split(",").map(s => s.trim()); break
       case "--disable": out.disable = value === "true" || value === "1"; break
+      case "--learning": out.learning = value === "true" || value === "1"; break
       default:
         console.error(`${FAIL} Neznámy prepínač ${a}`)
         process.exit(1)
@@ -81,6 +83,7 @@ function print(t) {
   console.log(`${mark} ${t.companyCode} · ${t.branding?.displayName ?? ""} · ${t.status}`)
   console.log(`   domény: ${(t.hostnames ?? []).join(", ") || "(žiadne)"}`)
   console.log(`   jazyky: ${(t.languages ?? []).join(", ")} (predvolený ${t.defaultLanguage})`)
+  console.log(`   moduly: vzdelávanie ${t.modules?.learning ? "zapnuté" : "vypnuté"}`)
 }
 
 try {
@@ -107,6 +110,7 @@ try {
     ...(args.language ? { defaultLanguage: args.language } : {}),
     ...(args.languages ? { languages: args.languages } : {}),
     ...(args.disable !== undefined ? { status: args.disable ? "disabled" : "active" } : {}),
+    ...(args.learning !== undefined ? { learning: args.learning } : {}),
   }
 
   const already = (await allTenants()).some(t => t.companyCode === args.company.toUpperCase())
