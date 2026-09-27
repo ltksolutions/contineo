@@ -14,7 +14,7 @@ import { writeAudit } from "./audit"
 import { AppError } from "./appError"
 import { listQuestions } from "./questionsDb"
 import { getTest } from "./testsDb"
-import { recipeOf } from "./tests"
+import { recipeOf, type Test, type TestRecipe } from "./tests"
 import type { Enrollment } from "./enrollments"
 import type { PassedTestFact } from "./learningProgress"
 import {
@@ -172,4 +172,40 @@ export async function passedTestsFor(companyCode: string, enrollmentIds: string[
   ).toArray()
   for (const a of passed) out.get(a.context.enrollmentId)?.push({ partKey: a.context.partKey, testKey: a.testKey, at: a.submittedAt! })
   return out
+}
+
+export interface PartTestRow {
+  testKey: string
+  required: boolean
+  test: Test | null
+  rules: TestRecipe["rules"] | null
+  questionCount: number
+  attempts: TestAttempt[]
+  availability: ReturnType<typeof availability>
+  /** Posledný uzavretý pokus. */
+  last: TestAttempt | null
+}
+
+/**
+ * Stav testov jednej časti pre zapísaného človeka (PART, COURSE, úvod
+ * testu): recept zo zmrazenej verzie (D118), pokusy, dostupnosť.
+ */
+export async function partTestRows(enrollment: Enrollment, part: { key: string; tests: { testKey: string; required: boolean; testVersion?: number }[] }): Promise<PartTestRow[]> {
+  const now = new Date()
+  return Promise.all(part.tests.map(async x => {
+    const test = await getTest(enrollment.companyCode, x.testKey)
+    const recipe = test ? recipeOf(test, x.testVersion) : null
+    const attempts = await attemptsFor(enrollment.companyCode, enrollment.personId, x.testKey, enrollment.id, part.key)
+    const closed = attempts.filter(a => a.submittedAt && !a.resetAt)
+    return {
+      testKey: x.testKey,
+      required: x.required,
+      test,
+      rules: recipe?.rules ?? null,
+      questionCount: recipe ? recipe.sections.reduce((n, s) => n + s.count, 0) : 0,
+      attempts,
+      availability: availability(attempts, recipe?.rules ?? {}, now),
+      last: closed[closed.length - 1] ?? null,
+    }
+  }))
 }

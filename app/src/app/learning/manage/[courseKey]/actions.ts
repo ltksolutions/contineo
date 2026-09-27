@@ -18,7 +18,7 @@ import { allDepartments } from "@/lib/departments"
 import { parseSmartTags } from "@/lib/smartTags"
 import { findLegalBasisOption } from "@/lib/legalBases"
 import { draftVersion, type ContentBlock, type Part } from "@/lib/courses"
-import { addBlock, addPart, DraftError, moveBlock, movePart, removeBlock, removePart, updateBlock, updatePart } from "@/lib/courseDraft"
+import { addBlock, addPart, addPartTest, DraftError, moveBlock, movePart, removeBlock, removePart, removePartTest, setPartTestRequired, updateBlock, updatePart } from "@/lib/courseDraft"
 import { documentChoices } from "@/lib/courseDocs"
 import { embedUrl } from "@/lib/courseView"
 import { AppError } from "@/lib/appError"
@@ -256,4 +256,21 @@ export async function assignCourseAction(fd: FormData) {
     go(courseKey, "tab=people&assign=1", errorText(e, ctx.person.language), true)
   }
   go(courseKey, "tab=people", tp.assigned(result.created, result.existing))
+}
+
+/** Priradiť hotový test k časti (len `ready`, rám MANAGE-COURSE). */
+export async function addPartTestAction(fd: FormData) {
+  const ctx = await admin()
+  const testKey = field(fd, "testKey")
+  const ready = await readyTestVersions(ctx.person.companyCode)
+  if (!ready.has(testKey)) go(field(fd, "courseKey"), partTab(fd), errorText(new AppError("attempt.testNotFound", ""), ctx.person.language), true)
+  await editParts(fd, parts => addPartTest(parts, field(fd, "partKey"), testKey, fd.get("required") === "1"), partTab)
+}
+
+export async function removePartTestAction(fd: FormData) {
+  await editParts(fd, parts => removePartTest(parts, field(fd, "partKey"), field(fd, "testKey")), partTab)
+}
+
+export async function partTestRequiredAction(fd: FormData) {
+  await editParts(fd, parts => setPartTestRequired(parts, field(fd, "partKey"), field(fd, "testKey"), fd.get("required") === "1"), partTab)
 }

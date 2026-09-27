@@ -28,6 +28,8 @@ export default function PeopleImport({ language }: { language?: UiLanguage }) {
   const [preview, setPreview] = useState<Preview | null>(null)
   const [busy, setBusy] = useState(false)
   const [result, setResult] = useState<string | null>(null)
+  // Prepis existujúcich je výslovná voľba, predvolene vypnutá (ADR-019).
+  const [overwrite, setOverwrite] = useState(false)
 
   async function onPick(e: React.ChangeEvent<HTMLInputElement>) {
     const f = e.target.files?.[0]
@@ -48,7 +50,7 @@ export default function PeopleImport({ language }: { language?: UiLanguage }) {
   async function submit() {
     setBusy(true)
     try {
-      const v = await runImportAction(text)
+      const v = await runImportAction(text, overwrite)
       setResult(v.message)
       if (v.ok) {
         setPreview(null)
@@ -62,6 +64,30 @@ export default function PeopleImport({ language }: { language?: UiLanguage }) {
 
   return (
     <div style={{ display: "grid", gap: 18 }}>
+      {/*
+        Prvá otázka pri importe je „čo sa stane s tým, kto už v systéme je" —
+        a odpoveď má stáť **pred** nahraním, nie až v náhľade (OSOBY.md,
+        úloha 5). Text je opísané správanie `upsertPersons()`, nie sľub, a mení
+        sa s prepínačom: doplnenie prázdnych polí je predvolené, prepis sa
+        musí zapnúť (ADR-019).
+      */}
+      <div className="assign-impact">
+        <div className="assign-impact-count">{t.existingTitle}</div>
+        <div className="quiet" style={{ fontSize: "var(--fs-small)" }}>
+          {overwrite ? t.overwriteNote : t.existingNote}
+        </div>
+        <label style={{ display: "flex", gap: 8, alignItems: "flex-start", fontSize: "var(--fs-small)", cursor: "pointer" }}>
+          <input
+            type="checkbox"
+            checked={overwrite}
+            onChange={e => setOverwrite(e.target.checked)}
+            disabled={busy}
+            style={{ marginTop: 3 }}
+          />
+          <span>{t.overwriteLabel}</span>
+        </label>
+      </div>
+
       <label className="field">
         <span className="field-label">{t.file}</span>
         <input
@@ -106,7 +132,7 @@ export default function PeopleImport({ language }: { language?: UiLanguage }) {
               <div style={{ fontSize: "var(--fs-lead)", fontWeight: 600 }}>{preview.created?.length ?? 0}</div>
             </div>
             <div>
-              <div className="quiet" style={{ fontSize: "var(--fs-micro)" }}>{t.willUpdate}</div>
+              <div className="quiet" style={{ fontSize: "var(--fs-micro)" }}>{t.willUpdate(overwrite)}</div>
               <div style={{ fontSize: "var(--fs-lead)", fontWeight: 600 }}>{preview.existing?.length ?? 0}</div>
             </div>
             <div>

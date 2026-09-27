@@ -16,6 +16,8 @@ import { progressFacts } from "@/lib/learningProgressDb"
 import { estimatedMinutes, isArchived, publishedVersion, versionById } from "@/lib/courses"
 import { courseProgress, NO_FACTS, type PartProgress, type ProgressFacts } from "@/lib/learningProgress"
 import { mustWatchPercent, partSummary, unlocksAfter } from "@/lib/courseView"
+import { partTestRows, type PartTestRow } from "@/lib/testAttemptsDb"
+import { testRowView } from "@/lib/testView"
 import { tagId } from "@/lib/smartTags"
 import { brandingView } from "@/lib/tenants"
 import { tenantStyle } from "@/components/TenantHeader"
@@ -55,6 +57,9 @@ export default async function CoursePage({ params, searchParams }: {
 
   const facts: ProgressFacts = enrollment ? await progressFacts(companyCode, enrollment.id) : NO_FACTS
   const progress = courseProgress(version, facts)
+  const testRows = new Map<string, PartTestRow[]>(enrollment
+    ? await Promise.all(version.parts.filter(x => x.tests.length).map(async x => [x.key, await partTestRows(enrollment, x)] as [string, PartTestRow[]]))
+    : [])
   const language = ctx.person.language
   const t = dictionary(language).learning
   const tc = t.course
@@ -165,7 +170,7 @@ export default async function CoursePage({ params, searchParams }: {
               </div>
               <ol className="pr-list">
                 {progress.parts.map((p, i) => (
-                  <PartRow key={p.part.key} p={p} index={i} parts={progress.parts} facts={facts}
+                  <PartRow key={p.part.key} p={p} index={i} parts={progress.parts} facts={facts} rows={testRows.get(p.part.key) ?? []}
                            href={enrollment ? `${base}/${p.part.key}` : null}
                            isNext={Boolean(next && next.key === p.part.key)} language={language} started={progress.started} />
                 ))}
@@ -179,8 +184,9 @@ export default async function CoursePage({ params, searchParams }: {
   )
 }
 
-function PartRow({ p, index, parts, facts, href, isNext, language, started }: {
+function PartRow({ p, index, parts, facts, rows, href, isNext, language, started }: {
   p: PartProgress
+  rows: PartTestRow[]
   index: number
   parts: PartProgress[]
   facts: ProgressFacts
@@ -199,7 +205,6 @@ function PartRow({ p, index, parts, facts, href, isNext, language, started }: {
   const after = unlocksAfter(parts, index)
   const link = href && !locked ? href : null
   const markClass = { done: "done", "in-progress": "prog", available: "", locked: "lock" }[p.state]
-  const passed = new Set(facts.passedTests.filter(x => x.partKey === p.part.key).map(x => x.testKey))
 
   return (
     <li className={`pr${isNext ? " is-next" : ""}`}>
@@ -236,14 +241,18 @@ function PartRow({ p, index, parts, facts, href, isNext, language, started }: {
       </div>
       {p.part.tests.length > 0 && (
         <div className="pr-tests">
-          {p.part.tests.map(x => (
-            <div key={x.testKey} className="pt">
-              {/* Názov testu pribudne s bankou testov (L2); dovtedy kľúč. */}
-              <span className="pt-name"><span className="quiet">{tc.testLabel} · </span>{x.testKey}</span>
-              <span className="pt-req">{x.required ? tc.testRequired : tc.testOptional}</span>
-              {href && <span className={`pt-res${passed.has(x.testKey) ? " ok" : ""}`}>{passed.has(x.testKey) ? tc.testPassed : tc.testNotStarted}</span>}
-            </div>
-          ))}
+          {p.part.tests.map(x => {
+            const row = rows.find(r => r.testKey === x.testKey)
+            const view = row && href ? testRowView(row, href, { ...t.attempt, notStarted: tc.testNotStarted, start: t.part.testStart }, new Date(), d => d.toLocaleTimeString(language, { hour: "2-digit", minute: "2-digit" })) : null
+            return (
+              <div key={x.testKey} className="pt">
+                <span className="pt-name"><span className="quiet">{tc.testLabel} · </span>{row?.test?.title ?? x.testKey}</span>
+                <span className="pt-req">{x.required ? tc.testRequired : tc.testOptional}</span>
+                {view && <span className={`pt-res tone-${view.tone}`}>{view.state}</span>}
+                {view?.action && view.tone === "warn" && <Link className="lc-link" href={view.action.href}>{view.action.label}</Link>}
+              </div>
+            )
+          })}
         </div>
       )}
     </li>

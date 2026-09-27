@@ -10,6 +10,38 @@
 
 ---
 
+## 2026-09-27 (2) — import osôb SFZ: pravidlo pre existujúcich (ADR-019)
+
+**Zadanie.** Založiť 155 zamestnancov a spolupracovníkov SFZ z licenčného
+zoznamu M365 (hárok „Na import do contineo"). Súbor `sfz-osoby-import.csv`
+(Meno, Priezvisko, Email, Pozicia = Title + Department z exportu; oddelenie
+zámerne vynechané — je to číselník, zaradí sa ručne). Náhľad proti databáze:
+152 nových, 3 existujúci, 0 chybných. Samotný import spúšťa Ján na obrazovke.
+
+**Čo sa našlo po ceste.**
+
+- `scripts/import_persons.mjs` importoval `riadokNaOsobu`, `DOVODY`, `ALIASY`
+  — názvy, ktoré po premenovaní knižnice do angličtiny (`20800fc`) už
+  neexistovali. Skript teda od toho dňa padal; obrazovka bola v poriadku.
+  Opravené, pribudol `--org=KOD` (skript nemá prihláseného človeka, od
+  ktorého by organizáciu vzal).
+- Otázka k vete „Prázdna bunka v stĺpci, ktorý súbor má, hodnotu vymaže"
+  odhalila dve veci: že import je pre existujúcich nebezpečný predvolene, a že
+  `department`/`startDate` išli do `$set` ako `undefined` → driver ich uložil
+  ako `null`. Dokumentácia sľubovala „chýbajúci stĺpec sa nedotkne", kód to
+  pri dvoch poliach nedodržal.
+
+**Rozhodnutie (ADR-019, D124–D126).** Prvý návrh bol tvrdo preskočiť
+existujúcich; Ján ho upravil na „doplniť len prázdne polia, ako pri Entra" —
+a prepis nechať ako výslovný prepínač. Je to lepšie pravidlo: bezpečné
+predvolene, a doplnenie chýbajúcich údajov je práve ten častý prípad, o ktorý
+by tvrdé preskočenie prišlo.
+
+**Prevádzková poznámka.** Z Cowork VM sa Atlas nedosiahne (SRV dotaz padá);
+náhľad aj testy bežali cez Control your Mac. Popri tom v repe beží druhá
+session na learning module (necommitnuté zmeny v `i18n.ts` a inde) — commit
+tejto zmeny berie z `i18n.ts` len vlastné hunky, cez `git apply --cached`.
+
 ## 2026-09-27 — Vzdelávanie ako modul platformy: ADR-018 (bez kódu)
 
 **Čo sa rozhodlo.** LMS (ClubUp) bude **modul `learning`** tej istej

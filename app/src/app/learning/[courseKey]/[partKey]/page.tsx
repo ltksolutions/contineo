@@ -16,6 +16,8 @@ import { getCourse } from "@/lib/coursesDb"
 import { enrollmentFor } from "@/lib/enrollmentsDb"
 import { progressFacts } from "@/lib/learningProgressDb"
 import { courseDocInfo } from "@/lib/courseDocs"
+import { partTestRows, type PartTestRow } from "@/lib/testAttemptsDb"
+import { testRowView } from "@/lib/testView"
 import { mustWatchPercent } from "@/lib/courseView"
 import { versionById } from "@/lib/courses"
 import { courseProgress, type PartProgress } from "@/lib/learningProgress"
@@ -58,7 +60,7 @@ export default async function PartPage({ params, searchParams }: {
   const progress = courseProgress(version, facts)
   const current = progress.parts[index]
   if (current.state === "locked") redirect(`/learning/${course.key}`)
-  const docs = await courseDocInfo(companyCode, current.part)
+  const [docs, testRows] = await Promise.all([courseDocInfo(companyCode, current.part), partTestRows(enrollment, current.part)])
 
   const language = ctx.person.language
   const t = dictionary(language).learning
@@ -104,21 +106,17 @@ export default async function PartPage({ params, searchParams }: {
             {current.part.tests.length > 0 && (
               <section id="tests" className="card ptests ptests--flow">
                 <h2>{tp.testsHeading}</h2>
-                <TestRows p={current} base={self} passed={passedKeys(current, facts.passedTests)} language={language} />
+                <TestRows rows={testRows} base={self} language={language} />
               </section>
             )}
 
             <PartDock p={current} courseKey={course.key} base={self} nextHref={nextPart ? `${base}/${nextPart.key}` : null}
-                      percent={mustWatchPercent(current.part, facts) ?? 0} passed={passedKeys(current, facts.passedTests)} language={language} />
+                      percent={mustWatchPercent(current.part, facts) ?? 0} rows={testRows} language={language} />
           </div>
         </div>
       </div>
     </AppShell>
   )
-}
-
-function passedKeys(p: PartProgress, passed: { partKey: string; testKey: string }[]): Set<string> {
-  return new Set(passed.filter(x => x.partKey === p.part.key).map(x => x.testKey))
 }
 
 function OutlineRow({ p, n, href, current }: { p: PartProgress; n: number; href: string; current: boolean }) {
@@ -130,45 +128,50 @@ function OutlineRow({ p, n, href, current }: { p: PartProgress; n: number; href:
     : <Link className={cls} href={href} aria-current={current ? "page" : undefined}>{body}</Link>
 }
 
-function TestRows({ p, base, passed, language }: { p: PartProgress; base: string; passed: Set<string>; language: UiLanguage }) {
-  const t = dictionary(language).learning
+function TestRows({ rows, base, language }: { rows: PartTestRow[]; base: string; language: UiLanguage }) {
+  const d = dictionary(language).learning
+  const now = new Date()
+  const time = (x: Date) => x.toLocaleTimeString(language, { hour: "2-digit", minute: "2-digit" })
   return (
     <>
-      {p.part.tests.map(x => (
-        <div key={x.testKey} className="ptr">
-          {/* Názov testu pribudne s bankou testov (L2); dovtedy kľúč. */}
-          <span className="ptr-name"><span>{t.course.testLabel}: </span><b>{x.testKey}</b> <span>· {x.required ? t.course.testRequired : t.course.testOptional}</span></span>
-          {passed.has(x.testKey)
-            ? <span className="ptr-res ok">{t.course.testPassed}</span>
-            : <Link className="button button--quiet" href={`${base}/test/${encodeURIComponent(x.testKey)}`}>{t.part.testStart}</Link>}
-        </div>
-      ))}
+      {rows.map(r => {
+        const v = testRowView(r, base, { ...d.attempt, notStarted: d.course.testNotStarted, start: d.part.testStart }, now, time)
+        return (
+          <div key={r.testKey} className="ptr">
+            <span className="ptr-name"><span>{d.course.testLabel}: </span><b>{r.test?.title ?? r.testKey}</b> <span>· {r.required ? d.course.testRequired : d.course.testOptional}</span></span>
+            <span className={`ptr-res tone-${v.tone}`}>{v.state}</span>
+            {v.resultHref && <Link className="lc-link" href={v.resultHref}>{d.attempt.result}</Link>}
+            {v.action && <Link className={v.tone === "warn" ? "button" : "button button--quiet"} href={v.action.href}>{v.action.label}</Link>}
+          </div>
+        )
+      })}
     </>
   )
 }
 
-function PartDock({ p, courseKey, base, nextHref, percent, passed, language }: {
+function PartDock({ p, courseKey, base, nextHref, percent, rows, language }: {
   p: PartProgress
   courseKey: string
   base: string
   nextHref: string | null
   percent: number
-  passed: Set<string>
+  rows: PartTestRow[]
   language: UiLanguage
 }) {
   const t = dictionary(language).learning
   const tp = t.part
   const e = p.evaluation
-  const required = p.part.tests.filter(x => x.required)
-  const optionalOpen = p.part.tests.some(x => !x.required && !passed.has(x.testKey))
-  const summary = required.length > 0
-    ? tp.requiredTestSummary(required.every(x => passed.has(x.testKey)) ? t.course.testPassed : t.course.testNotStarted)
-    : null
+  const now = new Date()
+  const time = (x: Date) => x.toLocaleTimeString(language, { hour: "2-digit", minute: "2-digit" })
+  const view = (r: PartTestRow) => testRowView(r, base, { ...t.attempt, notStarted: t.course.testNotStarted, start: tp.testStart }, now, time)
+  const optionalOpen = rows.some(r => !r.required && !r.availability.lastPassed)
+  const firstRequired = rows.find(r => r.required)
+  const summary = firstRequired ? tp.requiredTestSummary(view(firstRequired).state) : null
 
   return (
     <div className="pdock">
       {p.part.tests.length > 0 && (
-        <div className="pdock-tests"><TestRows p={p} base={base} passed={passed} language={language} /></div>
+        <div className="pdock-tests"><TestRows rows={rows} base={base} language={language} /></div>
       )}
       {summary && (
         <p className="pdock-summary">{summary} · <a href="#tests">{tp.testsJump}</a></p>

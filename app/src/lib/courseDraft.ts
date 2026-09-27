@@ -117,3 +117,21 @@ export function updateBlock(parts: Part[], partKey: string, blockId: string, cha
     return blocks.map((b, k) => (k === i ? next : b))
   })
 }
+
+/** Priradí test k časti (len raz). Zverejnenie zmrazí jeho verziu (D118). */
+export function addPartTest(parts: Part[], partKey: string, testKey: string, required: boolean): Part[] {
+  const i = indexOf(parts, partKey)
+  if (!testKey) throw new DraftError("attempt.testNotFound", "Taký test nie je.")
+  if (parts[i].tests.some(t => t.testKey === testKey)) return parts
+  return parts.map((p, k) => (k === i ? { ...p, tests: [...p.tests, { testKey, required }] } : p))
+}
+
+export function removePartTest(parts: Part[], partKey: string, testKey: string): Part[] {
+  const i = indexOf(parts, partKey)
+  return parts.map((p, k) => (k === i ? { ...p, tests: p.tests.filter(t => t.testKey !== testKey) } : p))
+}
+
+export function setPartTestRequired(parts: Part[], partKey: string, testKey: string, required: boolean): Part[] {
+  const i = indexOf(parts, partKey)
+  return parts.map((p, k) => (k === i ? { ...p, tests: p.tests.map(t => (t.testKey === testKey ? { ...t, required } : t)) } : p))
+}

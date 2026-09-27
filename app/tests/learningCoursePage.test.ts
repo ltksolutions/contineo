@@ -23,6 +23,13 @@ vi.mock("@/lib/learning", () => ({
 }))
 vi.mock("@/lib/coursesDb", () => ({ getCourse: async () => db.course }))
 vi.mock("@/lib/enrollmentsDb", () => ({ enrollmentFor: async () => db.enrollment }))
+vi.mock("@/lib/testAttemptsDb", () => ({
+  partTestRows: async (_e: unknown, part: { tests: { testKey: string; required: boolean }[] }) => part.tests.map(t => ({
+    testKey: t.testKey, required: t.required, test: { title: `Test ${t.testKey}`, responsible: [] }, rules: { maxAttempts: 3 }, questionCount: 10, attempts: [],
+    availability: { open: null, canStart: true, reason: null, nextAt: null, used: 0, remaining: 3, lastPassed: (globalThis as { __passed?: string[] }).__passed?.includes(t.testKey) ?? false },
+    last: (globalThis as { __passed?: string[] }).__passed?.includes(t.testKey) ? { id: "a1", percent: 90, passed: true } : null,
+  })),
+}))
 vi.mock("@/lib/learningProgressDb", () => ({ progressFacts: async () => db.facts }))
 vi.mock("../src/app/learning/actions", () => ({ enrolAction: async () => {} }))
 
@@ -79,7 +86,7 @@ describe("/learning/[courseKey]", () => {
     expect(html).toContain("Hotová 12. 9. 2026")
     expect(html).toContain("Sprístupní sa po časti 2")
     expect(html).not.toContain('href="/learning/bozp/zaver"')
-    expect(html).toContain("evakuacia-test")
+    expect(html).toContain("Test evakuacia-test")
     expect(html).toContain("nespustený")
     expect(html).toContain("12. 9. 2026 · pridelením")
     expect(html).toContain("postupne")
@@ -113,8 +120,10 @@ describe("/learning/[courseKey]", () => {
       watches: [{ partKey: "evakuacia", blockId: "v", watchedRanges: [[0, 720]], durationSec: 720, updatedAt: at }],
       passedTests: [{ partKey: "evakuacia", testKey: "evakuacia-test", at }],
     })
-    const html = await render()
-    expect(html).toContain("Kurz ste dokončili 18. 9. 2026.")
-    expect(html).toContain("prešiel")
+    ;(globalThis as { __passed?: string[] }).__passed = ["evakuacia-test"]
+    const done = await render()
+    ;(globalThis as { __passed?: string[] }).__passed = []
+    expect(done).toContain("Kurz ste dokončili 18. 9. 2026.")
+    expect(done).toContain("prešiel 90 %")
   })
 })
