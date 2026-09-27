@@ -10,6 +10,45 @@
 
 ---
 
+## 2026-09-27 (5) — Vzdelávanie L0 až L3 v produkcii; PDF certifikátu; pohlavie osoby
+
+**Čo sa spravilo.** Modul `learning` (ADR-018) prešiel od kostry po
+certifikáty za jeden deň, v poradí L0 → L1 → L2 → L3, jeden rám z Claude
+Design = jeden PR (#130–#153). Pre SFZ je zapnutý, Ján má rolu
+`learning-admin`, indexy vytvoril `learning_init.mjs`.
+
+- L1: smart:tagy (premenovanie aj zlúčenie všade — rozhodnutie Jána
+  MANAGE Q1 = B), kurzy s verziami, zápisy, odvodený postup (D119),
+  video s povinným dopozeraním (Range 206), obrazovky študenta a správcu.
+- L2: banka otázok (aj obrázky a videá v otázkach), testy ako recept
+  (sekcie = filter + počet), pokus so serverovým časom a autosave,
+  výsledky len pre zodpovedné osoby (D121).
+- L3: certifikát pri dokončení (znova overené z udalostí), číslo
+  `SFZ-2026-0001`, overenie `/verify/…?h=` bez mena, odvolanie s dôvodom,
+  tlač A4 a **PDF s QR** (Ján: áno závislostiam `pdf-lib`, fontkit,
+  `qrcode`; rate limit na `/verify` nie).
+- **Pohlavie osoby** (`persons.gender`): najprv „oslovenie" kvôli
+  „absolvoval / absolvovala", po Jánovej otázke prepnuté na pohlavie —
+  poslúži aj na štatistiky. Pole nemalo dáta, preto bez migrácie.
+
+**Nefungovalo / poučenie.**
+
+- `@pdf-lib/fontkit` so `subset: true` z Noto stratil znaky (z „CERTIFIKÁT"
+  zostalo „CER"). Písma sú preto orezané vopred cez `pyftsubset` a vkladajú
+  sa celé (`app/assets/fonts/README.md`). Chyba bola vidieť až na obrázku
+  PDF — test s čítaním textu cez pdfjs ju teraz chytí.
+- Next nepovolí `react-dom/server` v aplikácii — značka Contineo pre PDF je
+  reťazec SVG hneď pod komponentom `ContineoMark`.
+- Tlačová stránka A4 pretekala na telefóne do strany (1154 px). Vidno to
+  len pri 390 px; odteraz sa každá „pevná" stránka skúša aj na mobile.
+- Overovacia adresa v PDF sa berie z domény organizácie, nie z hlavičky
+  `host`: lokálny server píše do ostrej databázy a `sfz.localhost` by na
+  uloženom PDF zostal navždy.
+- Slovenčina: „percentuálnych bodov", nie „percentných" (Ján) — aj s tvarmi
+  1 / 2–4 / 5+.
+- `sed -E` na macOS nepozná `\b` — premenovanie `salutation` → `gender` prešlo
+  len čiastočne; dorobené cez `perl -pi`.
+
 ## 2026-09-27 (4) — import osôb SFZ hotový; hľadanie v náhľade; upratovanie
 
 **Import prebehol.** Ján nahral opravený hárok (2. verzia Excelu): 153 osôb

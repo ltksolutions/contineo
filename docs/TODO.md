@@ -891,13 +891,21 @@ nie táto sekcia.
 > **Rozhodnutie:** `docs/decisions/ADR-018-modul-learning.md` (D117–D123) ·
 > **Plán s krokmi, súbormi a rizikami:** `docs/LEARNING_analyza_a_plan.md` ·
 > **Dizajn:** `docs/design/LEARNING-zadanie.md` (rámy z Claude Design, jeden rám = jeden PR).
-> Podrobnosti sú tam a neduplikujú sa sem. Modul je pre SFZ vypnutý až do pokynu Jána.
+> Podrobnosti sú tam a neduplikujú sa sem. Modul je pre SFZ **zapnutý** (27. 9.), Ján je `learning-admin`.
 
 - [x] ADR-018, Okruh 8 v `OPEN_DECISIONS.md`, Fáza 10 v projektovom pláne, zadanie pre Claude Design ✅ 2026-09-27
-- [ ] **L0** — `Tenant.modules.learning` + `npm run tenant`; `lib/learning.ts` (`learning-admin`, `learningContext()`); `appNav.ts` (`learning`, `learningManage`, `learningTests`), `navData.ts`; `i18n.ts` sekcia `learning` sk/cs/en; prázdne `/learning`, `/learning/manage`, `/learning/tests` s `notFound()` pri vypnutom module. Vetva `learning-l0`, PR.
-- [ ] Rámy L1 z Claude Design (LEARNING, COURSE, PART, MANAGE, MANAGE-COURSE) → `docs/design/`
-- [ ] **L1** — `smartTags.ts`, číselník tém, `courses.ts` (verzie, validácia zverejnenia), `videoStore.ts` (GridFS + adaptér) a `VideoPlayer.tsx` (povinné dopozeranie), `enrollments.ts`, `part_completions`, `learningProgress.ts` (odvodenie), obrazovky študenta a správcu, `scripts/learning_init.mjs` (indexy), `npm run check` invarianty
-- [ ] Rámy L2/L3 (TESTS, QUESTIONS, TEST-ATTEMPT, RESULT, CERTIFICATE)
-- [ ] **L2** — `questions.ts`, `tests.ts` (sekcie, zodpovedné osoby, `ready`), `testAttempts.ts` (losovanie, snímky, vyhodnotenie), pokus a výsledok, `?tab=results` len pre zodpovedné osoby; **dodatok k ADR-012** (retencia `part_completions`, `video_watch`, `test_attempts`, `certificates`; certifikát sa anonymizuje) — O24
-- [ ] **L3** — `certificates.ts`, PDF, `/learning/[courseKey]/certificate`, verejné `/verify/[registrationNumber]?h=`, `revoke`
+- [x] **L0** ✅ 2026-09-27 (PR #130) — `Tenant.modules.learning` + `npm run tenant`; `lib/learning.ts` (`learning-admin`, `learningContext()`); `appNav.ts` (`learning`, `learningManage`, `learningTests`), `navData.ts`; `i18n.ts` sekcia `learning` sk/cs/en; prázdne `/learning`, `/learning/manage`, `/learning/tests` s `notFound()` pri vypnutom module. Vetva `learning-l0`, PR.
+- [x] Rámy L1 z Claude Design (LEARNING, COURSE, PART, MANAGE, MANAGE-COURSE) → `docs/design/` ✅ 2026-09-27
+- [x] **L1** ✅ 2026-09-27 (PR #131–#142) — `smartTags.ts`, číselník tém, `courses.ts` (verzie, validácia zverejnenia), `videoStore.ts` (GridFS + adaptér) a `VideoPlayer.tsx` (povinné dopozeranie), `enrollments.ts`, `part_completions`, `learningProgress.ts` (odvodenie), obrazovky študenta a správcu, `scripts/learning_init.mjs` (indexy), `npm run check` invarianty
+- [x] Rámy L2/L3 (TESTS, QUESTIONS, TEST-ATTEMPT, RESULT, CERTIFICATE) ✅ 2026-09-27 (PR #133, #135)
+- [x] **L2** ✅ 2026-09-27 (PR #143–#146), **okrem dodatku k ADR-012** (riadok nižšie) — `questions.ts`, `tests.ts` (sekcie, zodpovedné osoby, `ready`), `testAttempts.ts` (losovanie, snímky, vyhodnotenie), pokus a výsledok, `?tab=results` len pre zodpovedné osoby; **dodatok k ADR-012** (retencia `part_completions`, `video_watch`, `test_attempts`, `certificates`; certifikát sa anonymizuje) — O24
+- [x] **L3** ✅ 2026-09-27 (PR #147, #149) — `certificates.ts`, PDF s QR (`pdf-lib`, písma Noto v `app/assets/fonts`), `/learning/[courseKey]/certificate`, verejné `/verify/[registrationNumber]?h=`, `revoke`. Rate limit na `/verify` **nie** (Ján 27. 9.; hash má 80 bitov).
+- [x] **Pohlavie osoby** `persons.gender` ✅ 2026-09-28 (PR #150, #153) — „absolvoval / absolvovala" na certifikáte, štatistiky zloženia; formulár, pozvanie, import (`pohlavie`, berie aj pán/pani). Nevyplnené = „absolvoval(a)", PDF sa vtedy neukladá.
+- [ ] **Dodatok k ADR-012 (O24)** — retencia `part_completions`, `video_watch`, `test_attempts`, `certificates`; anonymizácia certifikátu (`anonymizedAt`, meno preč, číslo overiteľné) a jej beh v crone. Rozhoduje Ján ako DPO.
+- [ ] **Pohlavie do záznamu o spracúvaní** (C2) — účel: štatistiky zloženia, gramatika textov.
+- [ ] Médiá aj v **odpovediach** (D120 — otázky ich majú, voľby zatiaľ len text).
+- [ ] Náhľad kurzu pre `learning-admin` bez zápisu; prideľovanie kurzu aj pre `hr`.
+- [ ] Nahrávanie médií bez JavaScriptu (dnes len modálne okno s priebehom).
+- [ ] Certifikát od externého vydavateľa (`issuedBy.kind = "external"`) — typ je hotový, tok nie.
+- [ ] Prvý kurz naostro: dokončiť, stiahnuť PDF, overiť QR na telefóne, skúsiť odvolanie na testovacej osobe.
 - [ ] Po L2: test ako krok trasy (O18) a trasa z kurzov (O19) — dohoda s onboardingom, mení `tracks.ts`, `/documents`, ADR-005
