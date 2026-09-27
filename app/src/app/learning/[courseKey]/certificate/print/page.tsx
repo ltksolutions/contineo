@@ -1,19 +1,18 @@
 /**
  * Certifikát na tlač — A4 na šírku, jedna strana (rám CERTIFICATE, „PDF").
  *
- * Kým nie je rozhodnuté o generovaní PDF na serveri (knižnica, vložené
- * písmo pre diakritiku), PDF si človek uloží z prehliadača („Uložiť ako
- * PDF"). Obsah je len z kópií v certifikáte, takže vyzerá rovnako aj o rok.
+ * PDF s QR kódom sa sťahuje zo `certificate/pdf`; táto stránka je na
+ * priamu tlač. Obsah je len z kópií v certifikáte, takže vyzerá rovnako
+ * aj o rok.
  * Farby sú pevné (tlač, nie téma); pätkové písmo len nadpis a meno (Q2 ✅).
  */
 
 import Link from "next/link"
-import { headers } from "next/headers"
 import { notFound, redirect } from "next/navigation"
 import { learningContext } from "@/lib/learning"
 import { enrollmentFor } from "@/lib/enrollmentsDb"
 import { certificateForEnrollment } from "@/lib/certificatesDb"
-import { verifyPath } from "@/lib/certificates"
+import { tenantOrigin, verifyPath } from "@/lib/certificates"
 import { CertificateLogo } from "@/components/CertificateCard"
 import { dictionary, formatDate } from "@/lib/i18n"
 
@@ -30,8 +29,7 @@ export default async function CertificatePrintPage({ params }: { params: Promise
   if (!c || c.revokedAt) redirect(`/learning/${key}/certificate`)
   const language = ctx.person.language
   const t = dictionary(language).learning.cert
-  const h = await headers()
-  const url = `${h.get("x-forwarded-proto") ?? "https"}://${h.get("host") ?? ""}${verifyPath(c)}`
+  const url = `${tenantOrigin(ctx.tenant.hostnames)}${verifyPath(c)}`
 
   return (
     <div className="cert-print-wrap">

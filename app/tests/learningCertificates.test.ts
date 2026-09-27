@@ -10,6 +10,7 @@ import { newVerificationHash, numberPrefix, registrationNumber, verifyPath } fro
 const s = vi.hoisted(() => ({
   existing: null as unknown, course: null as unknown, facts: { completions: [] as unknown[], watches: [], passedTests: [] as unknown[] },
   inserted: [] as unknown[], seq: 197, brand: null as unknown, saved: [] as unknown[], verify: null as unknown,
+  files: {} as Record<string, Buffer>, deleted: [] as string[], updates: [] as unknown[], modified: 1,
 }))
 
 vi.mock("next/navigation", () => ({
@@ -21,15 +22,21 @@ vi.mock("../src/lib/mongodb", () => ({
     findOne: async () => (name === "certificates" ? s.existing : null),
     insertOne: async (doc: unknown) => { s.inserted.push(doc); return {} },
     findOneAndUpdate: async () => ({ seq: ++s.seq }),
+    updateOne: async (...a: unknown[]) => { s.updates.push(a); return { modifiedCount: s.modified } },
   }),
 }))
 vi.mock("../src/lib/audit", () => ({ writeAudit: async () => {} }))
 vi.mock("../src/lib/branding", () => ({ loadBrand: async () => s.brand }))
-vi.mock("../src/lib/fileStore", () => ({ saveFile: async (...a: unknown[]) => { s.saved.push(a); return { id: "logo1" } } }))
+vi.mock("../src/lib/fileStore", () => ({
+  saveFile: async (...a: unknown[]) => { s.saved.push(a); return { id: a[2] === "application/pdf" ? "pdf1" : "logo1" } },
+  loadFile: async (_c: string, id: string) => (s.files[id] ? { data: s.files[id], contentType: "", name: "" } : null),
+  deleteFile: async (_c: string, id: string) => { s.deleted.push(id) },
+}))
 vi.mock("../src/lib/coursesDb", () => ({ getCourse: async () => s.course }))
 vi.mock("../src/lib/learningProgressDb", () => ({ progressFacts: async () => s.facts }))
 
-import { ensureCertificate } from "../src/lib/certificatesDb"
+import { certificatePdf, ensureCertificate } from "../src/lib/certificatesDb"
+import type { Certificate } from "../src/lib/certificates"
 
 const at = new Date("2026-09-18T00:00:00Z")
 const version = { versionId: "v2", version: 2, state: "published", title: "Bezpečnosť v sídle", sequential: false, issuesCertificate: true,
@@ -46,6 +53,10 @@ beforeEach(() => {
   s.inserted = []
   s.saved = []
   s.brand = { contentType: "image/png", data: Buffer.from("png") }
+  s.files = {}
+  s.deleted = []
+  s.updates = []
+  s.modified = 1
 })
 
 describe("číslo a hash", () => {
@@ -91,5 +102,39 @@ describe("ensureCertificate", () => {
     expect(c1?.issuedBy.logoFileId).toBeUndefined()
     const c2 = await ensureCertificate(enrollment, { ...tenant, branding: { ...tenant.branding, logoUrl: "" } } as never)
     expect(c2?.issuedBy.logoFileId ?? c2?.issuedBy.logoUrl).toBeUndefined()
+  })
+})
+
+describe("certificatePdf", () => {
+  const cert = (over: Partial<Certificate> = {}): Certificate => ({
+    id: "c1", companyCode: "SFZ", type: "course", enrollmentId: "e1", personId: "p", holderName: "Marek Horák", courseKey: "bozp", versionId: "v2",
+    courseTitle: "Bezpečnosť v sídle", courseVersion: 2, partsCount: 1, testsPassed: 0, completedAt: at, issuedAt: at,
+    issuedBy: { kind: "tenant", name: "SFZ", logoUrl: "/tenants/sfz.svg" }, registrationNumber: "SFZ-2026-0198", verificationHash: "abcdefghijkmnpqr", revokedAt: null, ...over,
+  })
+
+  it("prvé stiahnutie: vyrobí, uloží a zapíše pdfFileId len ak ešte nie je", async () => {
+    const pdf = await certificatePdf(cert(), "https://intranet.futbalsfz.sk", "sk")
+    expect(Buffer.from(pdf!.slice(0, 5)).toString()).toBe("%PDF-")
+    expect((s.saved.at(-1) as unknown[]).slice(0, 3)).toEqual(["SFZ", "certifikat-SFZ-2026-0198.pdf", "application/pdf"])
+    expect(s.updates[0]).toEqual([{ companyCode: "SFZ", id: "c1", pdfFileId: { $exists: false } }, { $set: { pdfFileId: "pdf1" } }])
+  })
+  it("uložené PDF sa vráti bez nového vykreslenia", async () => {
+    s.files.stored = Buffer.from("%PDF-stored")
+    expect(Buffer.from(await certificatePdf(cert({ pdfFileId: "stored" }), "https://x", "sk") as Uint8Array).toString()).toBe("%PDF-stored")
+    expect(s.saved).toHaveLength(0)
+  })
+  it("súbežné stiahnutie: naše PDF sa zmaže, platí to prvé", async () => {
+    s.modified = 0
+    s.existing = cert({ pdfFileId: "first" })
+    s.files.first = Buffer.from("%PDF-first")
+    expect(Buffer.from(await certificatePdf(cert(), "https://x", "sk") as Uint8Array).toString()).toBe("%PDF-first")
+    expect(s.deleted).toEqual(["pdf1"])
+  })
+  it("odvolaný: žiadne PDF", async () => {
+    expect(await certificatePdf(cert({ revokedAt: at }), "https://x", "sk")).toBeNull()
+    expect(s.saved).toHaveLength(0)
+  })
+  it("bez loga: značka Contineo, PDF vznikne", async () => {
+    expect(await certificatePdf(cert({ issuedBy: { kind: "tenant", name: "SFZ" } }), "https://x", "sk")).not.toBeNull()
   })
 })

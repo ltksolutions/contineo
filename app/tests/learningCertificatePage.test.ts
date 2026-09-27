@@ -9,10 +9,9 @@ import type { Certificate } from "../src/lib/certificates"
 
 const s = vi.hoisted(() => ({ cert: null as unknown }))
 vi.mock("next/navigation", () => ({ notFound: () => { throw new Error("notFound") }, redirect: (to: string) => { throw new Error(`redirect ${to}`) } }))
-vi.mock("next/headers", () => ({ headers: async () => new Headers({ host: "intranet.futbalsfz.sk", "x-forwarded-proto": "https" }) }))
 vi.mock("@/components/AppShell", () => ({ default: ({ children }: { children: unknown }) => children }))
 vi.mock("@/components/CopyLink", () => ({ default: () => null }))
-vi.mock("@/lib/learning", () => ({ learningContext: async () => ({ state: "ready", person: { id: "p", companyCode: "SFZ", language: "sk" }, tenant: { companyCode: "SFZ" } }) }))
+vi.mock("@/lib/learning", () => ({ learningContext: async () => ({ state: "ready", person: { id: "p", companyCode: "SFZ", language: "sk" }, tenant: { companyCode: "SFZ", hostnames: ["sfz.localhost", "intranet.futbalsfz.sk"] } }) }))
 vi.mock("@/lib/coursesDb", () => ({ getCourse: async () => ({ key: "bozp", title: "BOZP", versions: [{ versionId: "v2", version: 2, title: "Bezpečnosť v sídle", issuesCertificate: true, parts: [] }] }) }))
 vi.mock("@/lib/enrollmentsDb", () => ({ enrollmentFor: async () => ({ id: "e1", versionId: "v2", cancelledAt: null }) }))
 vi.mock("@/lib/certificatesDb", () => ({ ensureCertificate: async () => s.cert }))
@@ -31,11 +30,13 @@ async function render() {
 beforeEach(() => { s.cert = cert() })
 
 describe("/learning/[courseKey]/certificate", () => {
-  it("platný: meno, číslo, logo organizácie, tlač a overovací odkaz", async () => {
+  it("platný: meno, číslo, logo organizácie, PDF, tlač a overovací odkaz (doména, nie localhost)", async () => {
     const html = await render()
     expect(html).toContain("Marek Horák")
     expect(html).toContain("absolvoval kurz Bezpečnosť v sídle (verzia 2)")
     expect(html).toContain('src="/tenants/sfz.svg"')
+    expect(html).toContain('href="/learning/bozp/certificate/pdf"')
+    expect(html).toContain("Stiahnuť PDF")
     expect(html).toContain('href="/learning/bozp/certificate/print"')
     expect(html).toContain("https://intranet.futbalsfz.sk/verify/SFZ-2026-0198?h=abcdefghijkmnpqr")
   })
@@ -45,6 +46,8 @@ describe("/learning/[courseKey]/certificate", () => {
     expect(html).toContain("Certifikát bol odvolaný 22. 9. 2026. Dôvod: chybné údaje")
     expect(html).toContain('disabled="" aria-disabled="true"')
     expect(html).not.toContain("/verify/")
+    expect(html).not.toContain("/certificate/pdf")
+    expect(html).toContain("Pri odvolanom certifikáte sa PDF ani tlač neponúka.")
   })
   it("ešte nevydaný: veta", async () => {
     s.cert = null

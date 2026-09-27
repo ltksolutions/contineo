@@ -1,20 +1,19 @@
 /**
  * /learning/[courseKey]/certificate — certifikát pre držiteľa (rám CERTIFICATE).
  *
- * Karta z kópií v certifikáte, tlač alebo uloženie ako PDF (A4 na šírku),
+ * Karta z kópií v certifikáte, PDF na stiahnutie (A4 na šírku, s QR), tlač,
  * overovací odkaz. Odvolaný: dôvod vidí len držiteľ, tlač sa neponúka
  * a overovací blok sa neukazuje. Certifikát sa tu vydá, ak kurz je
  * dokončený a ešte vydaný nebol (`ensureCertificate` si to overí sám).
  */
 
 import Link from "next/link"
-import { headers } from "next/headers"
 import { notFound, redirect } from "next/navigation"
 import { learningContext } from "@/lib/learning"
 import { getCourse } from "@/lib/coursesDb"
 import { enrollmentFor } from "@/lib/enrollmentsDb"
 import { ensureCertificate } from "@/lib/certificatesDb"
-import { verifyPath } from "@/lib/certificates"
+import { tenantOrigin, verifyPath } from "@/lib/certificates"
 import { versionById } from "@/lib/courses"
 import AppShell from "@/components/AppShell"
 import CertificateCard from "@/components/CertificateCard"
@@ -50,8 +49,7 @@ export default async function CertificatePage({ params, searchParams }: { params
       </section>
     )
   } else {
-    const h = await headers()
-    const url = `${h.get("x-forwarded-proto") ?? "https"}://${h.get("host") ?? ""}${verifyPath(c)}`
+    const url = `${tenantOrigin(ctx.tenant.hostnames)}${verifyPath(c)}`
     body = (
       <div className="rs-cols">
         <div className="rs-main">
@@ -61,8 +59,8 @@ export default async function CertificatePage({ params, searchParams }: { params
           <CertificateCard c={c} language={language} />
           <div className="rs-act">
             {c.revokedAt
-              ? <><button type="button" className="button" disabled aria-disabled="true" aria-describedby="cert-why">{t.print}</button><p id="cert-why" className="quiet">{t.revokedPdf}</p></>
-              : <Link className="button" href={`${base}/certificate/print`}>{t.print}</Link>}
+              ? <><button type="button" className="button" disabled aria-disabled="true" aria-describedby="cert-why">{t.downloadPdf}</button><p id="cert-why" className="quiet">{t.revokedPdf}</p></>
+              : <><a className="button" href={`${base}/certificate/pdf`} download>{t.downloadPdf}</a><Link className="button button--quiet" href={`${base}/certificate/print`}>{t.print}</Link></>}
             <Link className="button button--quiet" href={base}>{t.backToCourse}</Link>
           </div>
           {!c.revokedAt && (
