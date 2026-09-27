@@ -71,7 +71,7 @@ import type { ImportSettings } from "@/lib/personsImport"
 import { tenantByCompanyCode } from "@/lib/tenants"
 import { availableOptions } from "@/lib/codelistsTenant"
 import { previewImport, upsertPersons } from "@/lib/persons"
-import type { PersonType } from "@/lib/persons"
+import type { PersonType, RowPlan } from "@/lib/persons"
 import { dictionary, errorText, type UiLanguage } from "@/lib/i18n"
 import { AppError } from "@/lib/appError"
 
@@ -313,16 +313,14 @@ export async function setEndedAtAction(fd: FormData) {
  * operácia, po ktorej sa hľadá, ako to vrátiť späť, a `persons` nemá rollback.
  * Preto import bez náhľadu neexistuje ani na obrazovke, ani v skripte.
  */
-export async function previewImportAction(text: string): Promise<{
+export async function previewImportAction(text: string, overwrite = false): Promise<{
   ok: boolean
   message?: string
-  created?: string[]
-  existing?: string[]
-  errors?: string[]
+  /** Plán po riadkoch — presne to, čo `runImportAction()` s tým istým textom zapíše. */
+  rows?: RowPlan[]
   /** Hodnoty, ktoré riadok neodmietli, ale pole nevyplnili (D85, D86). */
   unknownWorkplaces?: string[]
   badPhones?: string[]
-  total?: number
 }> {
   const actor = await peopleAdmin()
   if (!actor) return { ok: false, message: NO_RIGHT }
@@ -337,14 +335,11 @@ export async function previewImportAction(text: string): Promise<{
   }
 
   try {
-    const n = await previewImport(people)
+    // Ten istý režim ako pri zápise (ADR-019): prepínač mení plán, nie len text.
+    const rows = await previewImport(people, overwrite ? "overwrite" : "fill")
     return {
       ok: true,
-      total: people.length,
-      created: n.created,
-      existing: n.existing,
-      errors: n.errors.map(e =>
-        `${e.email || "—"} — ${dictionary(actor.language).people.import.reasons[e.reason] ?? e.reason}`),
+      rows,
       // Náhľad musí povedať aj to, čo sa **ticho nevyplní**. Inak personalista
       // uvidí „100 osôb pribudne", import prejde bez jedinej chyby a pracoviská
       // budú prázdne — a hľadať sa to bude až o mesiac.

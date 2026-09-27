@@ -549,6 +549,109 @@ export type ImportMode = "fill" | "overwrite"
  * stĺpci je v režime `overwrite` pokyn vyprázdniť; rozlíšiť ich vie `hasField()`
  * v `personsImport.ts`, lebo len tam vidno hlavičky súboru.
  */
+/** Jedna zmena poľa, ako ju ukáže náhľad: čo tam je dnes a čo tam bude. */
+export interface FieldChange {
+  field: string
+  before: unknown
+  after: unknown
+}
+
+/**
+ * Plán zápisu pre jeden riadok — **to isté**, čo `upsertPersons()` zapíše.
+ *
+ * Náhľad a zápis volajú túto jednu funkciu. Náhľad tak nie je odhad, ale
+ * doslova plán, ktorý sa potom vykoná; keby mal každý vlastnú logiku,
+ * personalista by odsúhlasil jedno a databáza dostala druhé.
+ *
+ * `set` je hotový obsah `$set`. `changes` je ten istý obsah pre človeka:
+ * pri existujúcej osobe len polia, ktoré sa naozaj zmenia (s dnešnou
+ * hodnotou), pri novej všetko, čo sa zapíše. `groupHistory` v `changes` nie
+ * je — je to odvodený záznam, nie údaj, ktorý by niekto v súbore poslal.
+ */
+export function planChanges(
+  existing: Person | null,
+  r: NewPerson,
+  mode: ImportMode,
+  now: Date,
+): { set: Record<string, unknown>; changes: FieldChange[] } {
+  const name = resolveName(r)
+  const set: Record<string, unknown> = {
+    fullName: name.fullName,
+    personType: r.personType ?? "employee",
+  }
+  // `undefined` v `$set` by driver uložil ako `null` (predvolené
+  // `ignoreUndefined: false`) — a to už je prepis, nie mlčanie. Preto sa
+  // oddelenie a nástup pridávajú len keď v riadku sú, ako ostatné polia nižšie.
+  if (r.department?.trim()) set.department = r.department.trim()
+  if (r.startDate) set.startDate = r.startDate
+
+  // Zoznamy len keď v riadku sú. Prázdne pole je platná hodnota („nemá
+  // žiadne"), `undefined` je mlčanie — a mlčanie sa nesmie zapísať ako
+  // prázdno: `roles` CSV nerozpoznáva vôbec, takže inak by každý import
+  // zmazal roly každému, koho sa dotkne.
+  if (r.tracks !== undefined) set.tracks = r.tracks
+  if (r.groups !== undefined) {
+    const groups = normalizeKeys(r.groups)
+    set.groups = groups
+    // História členstva sa hýbe **spolu so skupinami**, nie samostatne:
+    // import je najčastejší spôsob hromadnej zmeny a práve pri nej je
+    // otázka „kto v skupine bol vtedy" najťažšia (D50). Keď o skupinách
+    // riadok mlčí, členstvo sa nemení, takže nie je čo zapisovať.
+    set.groupHistory = newGroupHistory(existing?.groupHistory, groups, now)
+  }
+  if (r.roles !== undefined) set.roles = r.roles
+
+  // Jazyk sa prepíše LEN keď v riadku naozaj je. Bez tejto podmienky by
+  // opakovaný import bez stĺpca jazyka ticho prepol každého späť na
+  // slovenčinu — rovnaká pasca ako pri `status`, len horšie viditeľná,
+  // lebo sa prejaví až v e-maile, ktorý už niekomu odišiel.
+  if (r.language !== undefined) set.language = normalizeLanguage(r.language)
+
+  // Tá istá pasca pri každom novom poli (D83–D86): súbor spred tejto zmeny
+  // stĺpce Priezvisko, Pozícia, Mobil ani Pracovisko nemá, a keby sa zapísali
+  // vždy, opakovaný import by ich ticho vymazal celej organizácii. Zapisuje
+  // sa preto **len to, čo v riadku naozaj je**.
+  if (name.givenName) set.givenName = name.givenName
+  if (name.surname) set.surname = name.surname
+  if (r.titleBefore?.trim()) set.titleBefore = r.titleBefore.trim()
+  if (r.titleAfter?.trim()) set.titleAfter = r.titleAfter.trim()
+  if (r.jobTitle?.trim()) set.jobTitle = r.jobTitle.trim()
+  if (r.mobilePhone?.trim()) set.mobilePhone = r.mobilePhone.trim()
+  if (r.workplace?.trim()) set.workplace = r.workplace.trim()
+
+  if (!existing) {
+    return {
+      set,
+      changes: Object.keys(set).filter(f => f !== "groupHistory").map(f => ({ field: f, before: undefined, after: set[f] })),
+    }
+  }
+
+  const record = existing as unknown as Record<string, unknown>
+  const empty = (x: unknown) =>
+    x === undefined || x === null || (typeof x === "string" && x.trim() === "") || (Array.isArray(x) && x.length === 0)
+
+  // Režim `fill`: z toho, čo riadok nesie, ostane len to, čo osoba ešte nemá
+  // (ADR-019). Prázdne je `undefined`, `null`, prázdny reťazec aj prázdny zoznam.
+  // História členstva ide so skupinami — keď sa skupiny nedopĺňajú, nezapíše
+  // sa ani ona, inak by pribudol záznam o zmene, ktorá sa nestala.
+  if (mode === "fill") {
+    for (const field of Object.keys(set)) {
+      if (field === "groupHistory") continue
+      if (!empty(record[field])) delete set[field]
+    }
+    if (!("groups" in set)) delete set.groupHistory
+  }
+
+  // Čo sa naozaj zmení: porovnanie hodnotou, nie odkazom — zoznam
+  // `["a"]` a `["a"]` je tá istá hodnota a nemá svietiť ako zmena.
+  const same = (a: unknown, b: unknown) => JSON.stringify(a ?? null) === JSON.stringify(b ?? null)
+  const changes = Object.keys(set)
+    .filter(f => f !== "groupHistory" && !same(record[f], set[f]))
+    .map(f => ({ field: f, before: record[f], after: set[f] }))
+
+  return { set, changes }
+}
+
 export async function upsertPersons(
   rows: NewPerson[],
   actor: string,
@@ -566,77 +669,17 @@ export async function upsertPersons(
     const { email, companyCode } = checked
 
     const key = { companyCode, email }
-    // História členstva sa musí zapísať aj tadeto: import je najčastejší
-    // spôsob, ako sa skupiny menia hromadne, a práve pri hromadnej zmene
-    // je otázka „kto v skupine bol vtedy" najťažšia (D50).
-    // Celý záznam, nie len história: režim `fill` potrebuje vedieť, ktoré
-    // polia už osoba má, a to sa nedá zistiť z projekcie na jedno pole.
+    // Celý záznam, nie projekcia: plán potrebuje vedieť, ktoré polia osoba
+    // už má, a história členstva (D50) sa odvíja od tej dnešnej.
     const existing = await col.findOne(key)
-    const until = existing
-    const name = resolveName(r)
-    const changes: Record<string, unknown> = {
-      fullName: name.fullName,
-      personType: r.personType ?? "employee",
-    }
-    // `undefined` v `$set` by driver uložil ako `null` (predvolené
-    // `ignoreUndefined: false`) — a to už je prepis, nie mlčanie. Preto sa
-    // oddelenie a nástup pridávajú len keď v riadku sú, ako ostatné polia nižšie.
-    if (r.department?.trim()) changes.department = r.department.trim()
-    if (r.startDate) changes.startDate = r.startDate
+    const { set } = planChanges(existing, r, mode, now)
 
-    // Zoznamy len keď v riadku sú. Prázdne pole je platná hodnota („nemá
-    // žiadne"), `undefined` je mlčanie — a mlčanie sa nesmie zapísať ako
-    // prázdno: `roles` CSV nerozpoznáva vôbec, takže inak by každý import
-    // zmazal roly každému, koho sa dotkne.
-    if (r.tracks !== undefined) changes.tracks = r.tracks
-    if (r.groups !== undefined) {
-      const groups = normalizeKeys(r.groups)
-      changes.groups = groups
-      // História členstva sa hýbe **spolu so skupinami**, nie samostatne:
-      // import je najčastejší spôsob hromadnej zmeny a práve pri nej je
-      // otázka „kto v skupine bol vtedy" najťažšia (D50). Keď o skupinách
-      // riadok mlčí, členstvo sa nemení, takže nie je čo zapisovať.
-      changes.groupHistory = newGroupHistory(until?.groupHistory, groups, now)
-    }
-    if (r.roles !== undefined) changes.roles = r.roles
-
-    // Jazyk sa prepíše LEN keď v riadku naozaj je. Bez tejto podmienky by
-    // opakovaný import bez stĺpca jazyka ticho prepol každého späť na
-    // slovenčinu — rovnaká pasca ako pri `status`, len horšie viditeľná,
-    // lebo sa prejaví až v e-maile, ktorý už niekomu odišiel.
-    if (r.language !== undefined) changes.language = normalizeLanguage(r.language)
-
-    // Tá istá pasca pri každom novom poli (D83–D86): súbor spred tejto zmeny
-    // stĺpce Priezvisko, Pozícia, Mobil ani Pracovisko nemá, a keby sa zapísali
-    // vždy, opakovaný import by ich ticho vymazal celej organizácii. Zapisuje
-    // sa preto **len to, čo v riadku naozaj je**.
-    if (name.givenName) changes.givenName = name.givenName
-    if (name.surname) changes.surname = name.surname
-    if (r.titleBefore?.trim()) changes.titleBefore = r.titleBefore.trim()
-    if (r.titleAfter?.trim()) changes.titleAfter = r.titleAfter.trim()
-    if (r.jobTitle?.trim()) changes.jobTitle = r.jobTitle.trim()
-    if (r.mobilePhone?.trim()) changes.mobilePhone = r.mobilePhone.trim()
-    if (r.workplace?.trim()) changes.workplace = r.workplace.trim()
-
-    // Režim `fill`: z toho, čo riadok nesie, ostane len to, čo osoba ešte nemá.
-    // Prázdne je `undefined`, `null`, prázdny reťazec aj prázdny zoznam.
-    // História členstva ide so skupinami — keď sa skupiny nedopĺňajú, nezapíše
-    // sa ani ona, inak by pribudol záznam o zmene, ktorá sa nestala.
-    if (existing && mode === "fill") {
-      const record = existing as unknown as Record<string, unknown>
-      const empty = (x: unknown) =>
-        x === undefined || x === null || (typeof x === "string" && x.trim() === "") || (Array.isArray(x) && x.length === 0)
-      for (const field of Object.keys(changes)) {
-        if (field === "groupHistory") continue
-        if (!empty(record[field])) delete changes[field]
-      }
-      if (!("groups" in changes)) delete changes.groupHistory
-      if (Object.keys(changes).length === 0) { v.unchanged++; continue }
-    }
+    // Existujúcej osobe, ktorej niet čo doplniť, sa nezapíše nič.
+    if (existing && Object.keys(set).length === 0) { v.unchanged++; continue }
 
     try {
       const result = await col.updateOne(key, {
-        $set: changes,
+        $set: set,
         $setOnInsert: {
           ...key,
           id: crypto.randomUUID(),
@@ -674,39 +717,66 @@ export async function upsertPersons(
   return v
 }
 
+/** Čo náhľad povie o jednom riadku súboru. */
+export type RowPlanStatus = "new" | "fill" | "overwrite" | "unchanged" | "error"
+
+export interface RowPlan {
+  email: string
+  fullName: string
+  status: RowPlanStatus
+  /** Strojový kľúč dôvodu pri `error` (viď `REASONS` v `personsImport.ts`). */
+  reason?: string
+  /** Polia, ktoré sa zapíšu; pri existujúcej osobe s dnešnou hodnotou. */
+  changes: FieldChange[]
+}
+
 /**
  * Náhľad pred zápisom — čo by import spravil, keby sa spustil.
  *
  * Nie je to voliteľná ozdoba. Nahratie stovky ľudí naslepo je presne tá
  * operácia, po ktorej sa hľadá, ako to vrátiť späť — a `persons` nemá
  * rollback. Preto import bez náhľadu neexistuje.
+ *
+ * Plán každého riadku počíta `planChanges()` — tá istá funkcia, ktorou
+ * potom zapisuje `upsertPersons()`. Existujúce osoby sa načítajú jedným
+ * dotazom na organizáciu (`$in`), nie dotazom na riadok.
  */
-export async function previewImport(rows: NewPerson[]): Promise<{
-  created: string[]
-  existing: string[]
-  errors: { email: string; reason: string }[]
-}> {
-  const created: string[] = []
-  const existing: string[] = []
-  const errors: { email: string; reason: string }[] = []
-
+export async function previewImport(rows: NewPerson[], mode: ImportMode = "fill"): Promise<RowPlan[]> {
   const col = await getCollection<Person>(PERSONS_COLLECTION)
+  const now = new Date()
+
+  // Overenie a duplicity najprv — až potom sa pýtame databázy, a len na
+  // adresy, ktoré prešli.
+  const checked = rows.map(r => ({ r, v: validateRow(r) }))
   const seen = new Set<string>()
-
-  for (const r of rows) {
-    const checked = validateRow(r)
-    if (!checked.ok) { errors.push({ email: checked.email, reason: checked.reason }); continue }
-    const { email, companyCode } = checked
-
-    const key = `${companyCode}|${email}`
-    if (seen.has(key)) { errors.push({ email, reason: "duplicate-in-file" }); continue }
+  const byCompany = new Map<string, Set<string>>()
+  for (const c of checked) {
+    if (!c.v.ok) continue
+    const key = `${c.v.companyCode}|${c.v.email}`
+    if (seen.has(key)) { c.v = { ok: false, email: c.v.email, reason: "duplicate-in-file" }; continue }
     seen.add(key)
-
-    const exists = await col.findOne({ companyCode, email })
-    ;(exists ? existing : created).push(email)
+    if (!byCompany.has(c.v.companyCode)) byCompany.set(c.v.companyCode, new Set())
+    byCompany.get(c.v.companyCode)!.add(c.v.email)
   }
 
-  return { created, existing, errors }
+  const found = new Map<string, Person>()
+  for (const [companyCode, emails] of byCompany) {
+    const people = await col.find({ companyCode, email: { $in: [...emails] } }).toArray()
+    for (const p of people) found.set(`${companyCode}|${p.email}`, p)
+  }
+
+  return checked.map(({ r, v }) => {
+    const fullName = resolveName(r).fullName
+    if (!v.ok) return { email: v.email, fullName, status: "error" as const, reason: v.reason, changes: [] }
+    const existing = found.get(`${v.companyCode}|${v.email}`) ?? null
+    const { set, changes } = planChanges(existing, r, mode, now)
+    const status: RowPlanStatus = !existing
+      ? "new"
+      : (Object.keys(set).length === 0 || changes.length === 0)
+        ? "unchanged"
+        : mode === "fill" ? "fill" : "overwrite"
+    return { email: v.email, fullName, status, changes }
+  })
 }
 
 /**
