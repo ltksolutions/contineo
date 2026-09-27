@@ -208,6 +208,8 @@ v dvoch miestach líšia — **platí kód** (stĺpec vpravo).
 | `test_attempts.deadlineAt`, `closedBy`, `resetAt`/`resetBy`/`resetReason` | limit času stráži server (`closedBy: user \| timeout`); pokus beží ďalej po odchode (TEST-ATTEMPT Q2); reset s dôvodom (D121) | L2 |
 | `certificates.issuedBy.logo` | **kópia súboru** loga pri vydaní; bez loga organizácie logo Contineo | `Issuer.logoUrl` (typ hotový), súbor v L3 |
 | `certificates.revokedAt`/`revokedBy`/`revokedReason` | odvolanie správcom (`learning-admin`) s povinným dôvodom, nevratné | L3 |
+| typy otázok | D120 píše `single_choice` · `multiple_choice`; rámy a CSV používajú `single` · `multiple` · `true_false` · `short_text` | kódy z CSV (`questions.ts`) |
+| `test_attempts.seed`, `questions[]` (snímky), `passingPercent`, `showAnswers` (kópia) | losovanie so seedom — pokus sa dá presne zopakovať; pravidlá v čase pokusu | `testAttempts.ts` (L2, hotové) |
 | `course.signer` | podpisujúci (meno + funkcia), predvolený z `Tenant.certificateSigner` | `CourseVersion.signer` (typ hotový) |
 
 Viac správnych odpovedí sa boduje **všetko alebo nič** (TESTS Q2); model

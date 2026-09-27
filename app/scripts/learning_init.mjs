@@ -5,8 +5,7 @@
  *     node scripts/learning_init.mjs --stav    len vypíše, čo existuje
  *
  * Len nové kolekcie modulu — existujúce sa nemenia (žiadna migrácia).
- * Kolekcie `questions`, `tests`, `test_attempts` a `certificates` pribudnú
- * s L2 a L3. Model: `docs/LEARNING_analyza_a_plan.md` kap. 4.
+ * `certificates` pribudne s L3. Model: `docs/LEARNING_analyza_a_plan.md` kap. 4.
  */
 
 import { MongoClient } from "mongodb"
@@ -56,6 +55,40 @@ const PLAN = [
     indexes: [
       { key: { companyCode: 1, enrollmentId: 1, partKey: 1, blockId: 1 }, opts: { unique: true, name: "enrollment_block_unique" },
         why: "jedno meranie sledovania na blok videa v zápise" },
+    ],
+  },
+  // ── L2: banka otázok, testy, pokusy (D120, D121) ──
+  {
+    collection: "questions",
+    indexes: [
+      { key: { companyCode: 1, key: 1 }, opts: { unique: true, name: "tenant_question_unique" },
+        why: "kľúč otázky je jedinečný v tenante (import CSV cez id)" },
+      { key: { companyCode: 1, "smartTags.key": 1, "smartTags.value": 1 }, opts: { name: "tenant_question_tags" },
+        why: "losovanie a filter banky podľa smart:tagov" },
+    ],
+  },
+  {
+    collection: "tests",
+    indexes: [
+      { key: { companyCode: 1, key: 1 }, opts: { unique: true, name: "tenant_test_unique" },
+        why: "kľúč testu je jedinečný v tenante (je v adrese)" },
+      { key: { companyCode: 1, "responsible.personId": 1 }, opts: { name: "tenant_test_responsible" },
+        why: "záložka Výsledky — testy, za ktoré človek zodpovedá (D121)" },
+    ],
+  },
+  {
+    collection: "test_attempts",
+    indexes: [
+      { key: { companyCode: 1, id: 1 }, opts: { unique: true, name: "tenant_attempt_id" },
+        why: "pokus podľa identifikátora (je v adrese)" },
+      { key: { companyCode: 1, idempotencyKey: 1 }, opts: { unique: true, name: "attempt_idempotency" },
+        why: "jedno „Spustiť“ = jeden pokus aj pri dvojkliku" },
+      { key: { companyCode: 1, personId: 1, testKey: 1 }, opts: { name: "tenant_person_test" },
+        why: "pokusy osoby o test — dostupnosť, pauza, počet" },
+      { key: { companyCode: 1, "context.enrollmentId": 1 }, opts: { name: "tenant_attempt_enrollment" },
+        why: "prejdené testy zápisu — odvodenie postupu (D119)" },
+      { key: { companyCode: 1, testKey: 1, startedAt: -1 }, opts: { name: "tenant_test_attempts" },
+        why: "záložka Výsledky — pokusy o test" },
     ],
   },
 ]

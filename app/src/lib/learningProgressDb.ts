@@ -11,6 +11,7 @@
 import { getCollection } from "./mongodb"
 import { AppError } from "./appError"
 import { versionById } from "./courses"
+import { passedTestsFor } from "./testAttemptsDb"
 import { getCourse } from "./coursesDb"
 import type { Enrollment } from "./enrollments"
 import {
@@ -44,8 +45,7 @@ interface VideoWatchDoc extends VideoWatchFact {
 }
 
 /**
- * Udalosti jedného zápisu. `passedTests` zostáva prázdne, kým nie sú testy
- * (L2) — časť s povinným testom dovtedy hotová byť nemôže, čo je správne.
+ * Udalosti jedného zápisu vrátane prejdených testov (L2, `test_attempts`).
  */
 export async function progressFacts(companyCode: string, enrollmentId: string): Promise<ProgressFacts> {
   const [completions, watches] = await Promise.all([
@@ -54,7 +54,8 @@ export async function progressFacts(companyCode: string, enrollmentId: string): 
     (await getCollection<VideoWatchDoc>(VIDEO_WATCH_COLLECTION))
       .find({ companyCode, enrollmentId }, { projection: { _id: 0 } }).toArray(),
   ])
-  return { completions, watches, passedTests: [] }
+  const passed = await passedTestsFor(companyCode, [enrollmentId])
+  return { completions, watches, passedTests: passed.get(enrollmentId) ?? [] }
 }
 
 /** To isté pre viac zápisov naraz (obrazovka „Moje kurzy"). */
@@ -69,6 +70,7 @@ export async function progressFactsMany(companyCode: string, enrollmentIds: stri
   ])
   for (const c of completions) out.get(c.enrollmentId)?.completions.push(c)
   for (const w of watches) out.get(w.enrollmentId)?.watches.push(w)
+  for (const [id, list] of await passedTestsFor(companyCode, enrollmentIds)) out.get(id)?.passedTests.push(...list)
   return out
 }
 

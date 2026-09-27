@@ -11,6 +11,7 @@ import { revalidatePath } from "next/cache"
 import { learningAdminContext } from "@/lib/learning"
 import { archiveCourse, getCourse, publishCourse, saveCourseSettings, saveDraft, startNewVersion } from "@/lib/coursesDb"
 import { findTopic } from "@/lib/learningTopics"
+import { readyTestVersions } from "@/lib/testsDb"
 import { assignCourse } from "@/lib/enrollmentsDb"
 import { audienceFromSelection } from "@/lib/assignments"
 import { allDepartments } from "@/lib/departments"
@@ -161,8 +162,8 @@ export async function publishAction(fd: FormData) {
   const ctx = await admin()
   const courseKey = field(fd, "courseKey")
   const t = dictionary(ctx.person.language).learning.edit
-  // Testy pribudnú s L2 — dovtedy nie je žiadny `ready` a kurz s testom sa nezverejní.
-  const r = await publishCourse(ctx.person.companyCode, courseKey, ctx.person.email)
+  // Zmrazia sa verzie testov v stave `ready` (D118); iný test zverejnenie zastaví.
+  const r = await publishCourse(ctx.person.companyCode, courseKey, ctx.person.email, await readyTestVersions(ctx.person.companyCode))
   go(courseKey, "", r.ok ? t.published(r.version.version) : t.cannotPublish, !r.ok)
 }
 

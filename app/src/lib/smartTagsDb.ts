@@ -18,8 +18,8 @@ import { COURSES_COLLECTION } from "./courses"
 import { aggregateSmartTags, mergeTagsIn, parseSmartTag, renameKeyIn, renameTagIn, tagId, type SmartTag, type SmartTagUsage } from "./smartTags"
 import { slugifyKey } from "./slug"
 
-export const QUESTIONS_COLLECTION = "questions"
-export const TESTS_COLLECTION = "tests"
+import { QUESTIONS_COLLECTION } from "./questions"
+import { TESTS_COLLECTION } from "./tests"
 
 interface Tagged {
   companyCode: string
