@@ -64,20 +64,29 @@ v teste chybovali; potom už len výsledok.
 Je to výnimka z D24 (záznam sa nemení), rovnakého druhu ako výmaz v ADR-012:
 jediná cesta je táto dávka.
 
-### D132 — Certifikát po lehote osoby: meno preč, číslo zostáva
+### D132 — Vydaný certifikát sa nemaže ani neanonymizuje
 
-Keď osobe uplynie lehota (D130), certifikát sa **nemaže, ale anonymizuje**:
+**Certifikát, ktorý bol raz vydaný, platí a drží sa celý** (Ján 28. 9. 2026,
+opravil pôvodný návrh anonymizácie):
 
-- odstráni sa meno (`holderName: null`), väzba na osobu (`personId`),
-  pohlavie (`holderGender`), a nastaví sa `anonymizedAt`;
-- **uložené PDF sa zmaže** (`pdfFileId`) — meno je v ňom;
-- číslo, kurz, verzia, dátumy, vydavateľ a stav odvolania **zostanú** —
-  overenie cez `/verify` (aj QR z papiera, ktorý má človek doma) ďalej
-  povie, že certifikát s týmto číslom bol vydaný a platí.
+- meno, pohlavie, väzba na osobu, kurz, číslo, dátumy, vydavateľ,
+  podpisujúci **aj uložené PDF** zostávajú;
+- lehota D130 sa na certifikát **nevzťahuje** — keď osobe zmiznú zápisy,
+  pokusy a sledovanie videa, certifikát ostane (nesie kópie, na tie
+  záznamy sa neodkazuje);
+- jediná zmena je **odvolanie** (`revokedAt`, dôvod, audit) — aj odvolaný
+  certifikát zostáva, len overenie ukáže, že neplatí.
 
-Verejné overenie meno neukazuje ani dnes (rám CERTIFICATE), takže
-anonymizácia overenie nezmení. Držiteľ, ktorý má PDF alebo papier, má
-doklad naďalej — Contineo len prestane vedieť, komu patrí.
+**Prečo:** certifikát je vydaný doklad o kvalifikácii, nie záznam o priebehu.
+Držiteľ ho používa roky po odchode (rozhodca v inom zväze, BOZP u nového
+zamestnávateľa) a zväz ho musí vedieť potvrdiť aj po rokoch — minimálne
+z dôvodu **archivácie** (registratúra zväzu).
+
+**Právny základ uchovávania:** čl. 6 ods. 1 písm. c) v spojení so zákonom
+č. 395/2002 Z. z. o archívoch a registratúrach (certifikát ako registratúrny
+záznam), pri ostatných kurzoch čl. 6 ods. 1 písm. f). **Lehotu uloženia
+a znak hodnoty doplní DPO podľa registratúrneho plánu zväzu** — do záznamu
+o spracovateľských činnostiach (C2), nie do kódu; kód nemaže nikdy.
 
 ### D133 — Pohlavie osoby
 
@@ -89,8 +98,8 @@ doklad naďalej — Contineo len prestane vedieť, komu patrí.
   nič neblokuje — certifikát napíše „absolvoval(a)".
 - **Z mena sa nehádá** — ani automaticky, ani pri importe.
 - **Lehota:** s osobou, ako ostatné evidenčné údaje (`persons`, ADR-012 §4 —
-  osud záznamu osoby je otvorený). Na certifikáte je kópia (`holderGender`),
-  ktorá zanikne anonymizáciou (D132).
+  osud záznamu osoby je otvorený). Kópia na certifikáte (`holderGender`)
+  zostáva s certifikátom (D132).
 
 ---
 
@@ -99,8 +108,11 @@ doklad naďalej — Contineo len prestane vedieť, komu patrí.
 - **Po roku sa nedá ukázať, ako človek na otázku odpovedal** — len že test
   urobil s daným výsledkom. Pri spore o konkrétnu odpoveď to nestačí; lehotu
   určil DPO kvôli minimalizácii.
-- **Anonymizovaný certifikát sa nedá priradiť človeku** ani na žiadosť
-  (napr. „vystavte mi kópiu"). Kópiu si má držať držiteľ.
+- **Certifikát s menom žije dlhšie než ostatné údaje o osobe.** Obhajuje ho
+  archivácia a to, že ide o vydaný doklad; lehotu uloženia musí DPO mať
+  v registratúrnom pláne, inak by to bolo „navždy bez dôvodu".
+- **Žiadosť o výmaz (čl. 17)** sa pri certifikáte vybaví odkazom na
+  archiváciu a povinnosť (čl. 17 ods. 3 písm. b)), nie výmazom.
 - **Štatistika podľa pohlavia je len taká úplná, ako HR údaj vyplní.**
   Nevyplnené sa vo výkaze ukáže ako samostatná skupina, nie sa rozpočíta.
 
@@ -120,11 +132,11 @@ doklad naďalej — Contineo len prestane vedieť, komu patrí.
 Jeden PR:
 
 1. `retentionDb.ts`: `deletePersonEvidence` maže aj `enrollments`,
-   `part_completions`, `video_watch`, `test_attempts` osoby a anonymizuje jej
-   certifikáty (D130, D132); `lastEvents` započíta udalosti vzdelávania;
-   počty v `DeletionCounts`.
+   `part_completions`, `video_watch`, `test_attempts` osoby (D130);
+   **`certificates` sa nedotýka** (D132); `lastEvents` započíta udalosti
+   vzdelávania; počty v `DeletionCounts`.
 2. Denná úloha orezania podrobností (D131) v tom istom crone a režime;
    obrazovka výsledku pokusu povie, že podrobnosti boli po roku odstránené.
-3. Testy: výkaz aj ostrý režim, nedokončený kurz sa neoreže, certifikát po
-   anonymizácii ďalej overiteľný.
+3. Testy: výkaz aj ostrý režim, nedokončený kurz sa neoreže, certifikát
+   po výmaze záznamov osoby zostane celý a overiteľný.
 4. `docs/C2_…` a `docs/GDPR_DATA_PROTECTION.md` — v PR s týmto ADR.

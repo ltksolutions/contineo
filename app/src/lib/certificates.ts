@@ -6,8 +6,9 @@
  * vidieť (meno, kurz, verzia, vydavateľ, logo, podpisujúci): o rok musí
  * vyzerať rovnako, aj keď sa organizácia premenuje alebo zmení logo.
  *
- * Nemaže sa: odvolanie je `revokedAt` + dôvod (D24); pri retencii
- * (ADR-012) sa z neho odstráni meno, číslo ostane overiteľné.
+ * **Nemaže sa ani neanonymizuje** (ADR-021, D132): vydaný certifikát platí
+ * a drží sa kvôli archivácii. Jediná zmena je odvolanie — `revokedAt`
+ * + dôvod (D24).
  *
  * Verejné overenie potrebuje číslo **a** `verificationHash` (80 bitov
  * náhody) — číslo samo sa dá uhádnuť, hash nie.
@@ -38,7 +39,7 @@ export interface Certificate {
   type: "course"
   enrollmentId: string
   personId: string
-  /** Kópia mena; pri retencii sa odstráni (`anonymizedAt`). */
+  /** Kópia mena v čase vydania; `null` len pri osobe bez mena. */
   holderName: string | null
   /**
    * Kópia pohlavia pre tvar „absolvoval/-a". Chýba = v čase vydania
@@ -67,7 +68,6 @@ export interface Certificate {
   revokedAt?: Date | null
   revokedBy?: string
   revokedReason?: string
-  anonymizedAt?: Date | null
 }
 
 /** Predpona čísla: skratka organizácie (len písmená a číslice), inak kód. */

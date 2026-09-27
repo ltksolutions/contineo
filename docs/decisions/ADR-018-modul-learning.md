@@ -128,7 +128,8 @@ prednosť pri nasadení do ostrej prevádzky.
   (3 roky od skončenia pomeru, strop 5 rokov) sa rozširuje na
   `part_completions`, `video_watch`, `test_attempts`; **certifikát sa
   nemaže, anonymizuje sa** — číslo musí zostať overiteľné. Dodatok k
-  ADR-012 vznikne pred L2 naostro.
+  ADR-012 vznikne pred L2 naostro. *(Zmenené ADR-021, D132: vydaný
+  certifikát sa nemaže ani neanonymizuje.)*
 
 ### D122 — Rola, zápis, certifikát, video
 

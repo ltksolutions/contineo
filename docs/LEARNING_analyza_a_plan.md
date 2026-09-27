@@ -410,7 +410,7 @@ Design idú **pred** obrazovkami, dátová vrstva ich nepotrebuje a ide hneď.
     s dôvodom (audit); CSV. HR nič.
 19. GDPR: právny základ na verzii kurzu (D92 číselník), výkaz pre `/dpo`,
     retencia — dodatok k ADR-012 (`part_completions`, `video_watch`,
-    `test_attempts`, `certificates`; certifikát sa anonymizuje, nemaže).
+    `test_attempts`; vydaný certifikát sa nemaže ani neanonymizuje — ADR-021, D132).
 
 ### L3 — Certifikáty `[1 týždeň]`
 
@@ -420,7 +420,7 @@ Design idú **pred** obrazovkami, dátová vrstva ich nepotrebuje a ide hneď.
 21. PDF (generované, uložené ako `VersionFile`) s overovacím odkazom a QR.
 22. `/learning/[courseKey]/certificate`, zoznam v `/learning`;
     `/verify/[registrationNumber]?h=` (verejná, `publicRoutes.ts`, 404 bez hashu).
-23. `revoke` s dôvodom (audit); anonymizácia pri retencii.
+23. `revoke` s dôvodom (audit). Certifikát sa pri retencii nemení (ADR-021, D132).
 
 ### Zámerne mimo L1–L3
 
