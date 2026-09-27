@@ -41,12 +41,14 @@ import { audienceFromSelection, audienceMembers } from "@/lib/assignments"
 import { audiencesInOrg } from "@/lib/persons"
 import { allDepartments, flattenTree, counts } from "@/lib/departments"
 import { courseRoster, type RosterRow, type RosterState } from "@/lib/learningStats"
+import { listTests } from "@/lib/testsDb"
+import { questionCount, type Test } from "@/lib/tests"
 import { normalizeLayout } from "@/lib/appNav"
 import { normalizeQuery, type RawQuery } from "@/lib/urlParams"
 import { dictionary, formatDate, type UiLanguage } from "@/lib/i18n"
 import {
   addBlockAction, addPartAction, archiveAction, moveBlockAction, movePartAction, newVersionAction,
-  assignCourseAction, publishAction, removeBlockAction, removePartAction, saveSettingsAction, updateBlockAction, updatePartAction,
+  addPartTestAction, assignCourseAction, partTestRequiredAction, publishAction, removePartTestAction, removeBlockAction, removePartAction, saveSettingsAction, updateBlockAction, updatePartAction,
 } from "./actions"
 
 export const dynamic = "force-dynamic"
@@ -82,6 +84,7 @@ export default async function ManageCoursePage({ params, searchParams }: {
   const stats = (await courseStats(ctx.person.companyCode, [course])).get(course.key) ?? { enrolled: 0, completed: 0 }
   const part = q.part ? shown.parts.find(p => p.key === q.part) ?? null : null
   const docs = part && draft && q.add === "document" ? await documentChoices(ctx.person.companyCode) : []
+  const allTests = part ? await listTests(ctx.person.companyCode) : []
   const tab = q.tab === "settings" ? "settings" : q.tab === "people" ? "people" : "parts"
   const usage = tab === "settings" ? await smartTagUsage(ctx.person.companyCode) : []
 
@@ -113,7 +116,7 @@ export default async function ManageCoursePage({ params, searchParams }: {
             <>
               {!draft && <p className="mc-ro">{te.readOnly(shown.version)}</p>}
               {part
-                ? <PartDetail course={course} version={shown} part={part} editable={Boolean(draft)} q={q} docs={docs} te={te} language={language} />
+                ? <PartDetail course={course} version={shown} part={part} editable={Boolean(draft)} q={q} docs={docs} tests={allTests} te={te} language={language} />
                 : <PartList course={course} version={shown} editable={Boolean(draft)} te={te} />}
             </>
           )}
@@ -277,16 +280,18 @@ function blockSummary(b: ContentBlock, te: Edit): string {
   }
 }
 
-function PartDetail({ course, version, part, editable, q, docs, te, language }: {
+function PartDetail({ course, version, part, editable, q, docs, tests, te, language }: {
   course: Course
   version: CourseVersion
   part: Part
   editable: boolean
   q: Q
   docs: Awaited<ReturnType<typeof documentChoices>>
+  tests: Test[]
   te: Edit
   language: UiLanguage
 }) {
+  const ta = dictionary(language).learning.attempt
   const base = `/learning/manage/${course.key}`
   const self = `${base}?tab=parts&part=${part.key}`
   const ids = { courseKey: course.key, partKey: part.key }
@@ -412,7 +417,35 @@ function PartDetail({ course, version, part, editable, q, docs, te, language }: 
 
         <section className="card mc-list">
           <div className="parts-head"><h2>{te.testsHeading}</h2></div>
-          <p className="quiet mc-row">{te.testsLater}</p>
+          {part.tests.map(pt => {
+            const t = tests.find(x => x.key === pt.testKey)
+            return (
+              <div key={pt.testKey} className="mc-row">
+                <span className="mc-row-main">
+                  <Link className="mg-title" href={`/learning/tests/${pt.testKey}`}>{t?.title ?? pt.testKey}</Link>
+                  {t && <span className="mc-row-meta">{ta.testMeta(questionCount(t), t.rules.passingPercent, t.rules.maxAttempts, t.responsible.map(r => r.fullName).join(", "))}</span>}
+                </span>
+                {editable ? (
+                  <>
+                    <form action={partTestRequiredAction}><Hidden values={{ ...ids, testKey: pt.testKey, required: pt.required ? "0" : "1" }} />
+                      <button type="submit" className="button button--quiet" aria-pressed={pt.required}>{pt.required ? `✓ ${ta.testRequired}` : ta.testRequired}</button></form>
+                    <form action={removePartTestAction}><Hidden values={{ ...ids, testKey: pt.testKey }} /><SubmitButton className="button button--quiet">{ta.removeTest}</SubmitButton></form>
+                  </>
+                ) : <span className="quiet">{pt.required ? ta.testRequired : ""}{pt.testVersion ? ` · v${pt.testVersion}` : ""}</span>}
+              </div>
+            )
+          })}
+          {editable && (() => {
+            const offer = tests.filter(t => t.status === "ready" && !part.tests.some(x => x.testKey === t.key))
+            return offer.length ? (
+              <form action={addPartTestAction} className="mc-row mc-inline">
+                <Hidden values={ids} />
+                <Select name="testKey" searchable options={offer.map(t => ({ value: t.key, label: t.title }))} fieldLabel={ta.assignTest} language={language} />
+                <label className="mc-check"><input type="checkbox" name="required" value="1" defaultChecked /> {ta.testRequired}</label>
+                <SubmitButton className="button">{ta.assignTest}</SubmitButton>
+              </form>
+            ) : <p className="quiet mc-row">{ta.noReadyTests}</p>
+          })()}
         </section>
       </div>
     </div>

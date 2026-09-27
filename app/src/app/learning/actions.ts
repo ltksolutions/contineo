@@ -11,6 +11,10 @@ import { learningContext } from "@/lib/learning"
 import { enrollSelf, enrollmentFor } from "@/lib/enrollmentsDb"
 import { completePart } from "@/lib/learningProgressDb"
 import { ALLOW_COMPLETE_BEFORE_REQUIRED_TEST } from "@/lib/learningProgress"
+import { getCourse } from "@/lib/coursesDb"
+import { versionById } from "@/lib/courses"
+import { getAttempt, saveAnswers, startAttempt, submitAttempt } from "@/lib/testAttemptsDb"
+import { answerFromForm } from "@/lib/testAttempts"
 import { AppError } from "@/lib/appError"
 import { dictionary, errorText } from "@/lib/i18n"
 
@@ -61,4 +65,64 @@ export async function completePartAction(fd: FormData) {
   }
   revalidatePath(back)
   redirect(`${back}?msg=${encodeURIComponent(message)}${error ? "&error=1" : ""}`)
+}
+
+function testBase(courseKey: string, partKey: string, testKey: string): string {
+  const ok = [courseKey, partKey, testKey].every(k => /^[a-z0-9-]+$/.test(k))
+  return ok ? `/learning/${courseKey}/${partKey}/test/${testKey}` : "/learning"
+}
+
+/**
+ * „Spustiť test" (rám TEST-ATTEMPT). Idempotentné — kľúč z úvodnej
+ * stránky; otvorený pokus sa vráti a pokračuje sa v ňom (Q2 ✅).
+ */
+export async function startAttemptAction(fd: FormData) {
+  const ctx = await learningContext()
+  if (ctx.state !== "ready") redirect("/")
+  const [courseKey, partKey, testKey] = ["courseKey", "partKey", "testKey"].map(k => String(fd.get(k) ?? "").trim())
+  const base = testBase(courseKey, partKey, testKey)
+  let attemptId = ""
+  try {
+    const e = await enrollmentFor(ctx.person.companyCode, ctx.person.id, courseKey)
+    if (!e || e.cancelledAt) throw new AppError("learning.courseNotFound", "Zápis do kurzu neexistuje.")
+    const course = await getCourse(ctx.person.companyCode, courseKey)
+    const part = course ? versionById(course, e.versionId)?.parts.find(p => p.key === partKey) : null
+    const pt = part?.tests.find(t => t.testKey === testKey)
+    if (!pt) throw new AppError("attempt.testNotFound", "Taký test nie je.")
+    attemptId = (await startAttempt({ enrollment: e, partKey, testKey, testVersion: pt.testVersion, idempotencyKey: String(fd.get("idempotencyKey") ?? crypto.randomUUID()) })).id
+  } catch (err) {
+    if (!(err instanceof AppError)) console.error("[learning] spustenie testu zlyhalo:", err)
+    redirect(`${base}?msg=${encodeURIComponent(errorText(err, ctx.person.language))}&error=1`)
+  }
+  redirect(`${base}/${attemptId}`)
+}
+
+/**
+ * Uloženie odpovede a posun (Ďalej, Späť, Prehľad, odovzdanie). Funguje bez
+ * JavaScriptu — každý posun je odoslanie formulára, teda aj uloženie.
+ */
+export async function answerAction(fd: FormData) {
+  const ctx = await learningContext()
+  if (ctx.state !== "ready") redirect("/")
+  const [courseKey, partKey, testKey, attemptId] = ["courseKey", "partKey", "testKey", "attemptId"].map(k => String(fd.get(k) ?? "").trim())
+  const base = `${testBase(courseKey, partKey, testKey)}/${attemptId}`
+  const go = String(fd.get("go") ?? "next")
+  const index = Number(fd.get("index") ?? 0)
+  const a = await getAttempt(ctx.person.companyCode, attemptId)
+  if (!a || a.personId !== ctx.person.id) redirect(testBase(courseKey, partKey, testKey))
+  if (a.submittedAt) redirect(`${base}/result`)
+  const q = a.questions[index]
+  if (q && fd.get("hasAnswer") === "1") {
+    const value = answerFromForm(q, fd.getAll("a").map(String))
+    if (value) await saveAnswers(ctx.person.companyCode, attemptId, ctx.person.id, { [q.questionKey]: value }).catch(() => {})
+  }
+  if (go === "submit") {
+    await submitAttempt(ctx.person.companyCode, attemptId, ctx.person.id)
+    revalidatePath(`/learning/${courseKey}`)
+    redirect(`${base}/result`)
+  }
+  if (go === "review" || go === "confirm") redirect(`${base}?review=1${go === "confirm" ? "&confirm=1" : ""}`)
+  const target = go === "prev" ? index - 1 : go.startsWith("q:") ? Number(go.slice(2)) : index + 1
+  if (target >= a.questions.length) redirect(`${base}?review=1`)
+  redirect(`${base}?q=${Math.max(0, target) + 1}`)
 }

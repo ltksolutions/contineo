@@ -236,3 +236,38 @@ export function availability(
 export function answersVisible(show: ShowAnswers, passed: boolean, exhausted: boolean): boolean {
   return show === "after_submit" || (show === "after_pass" && passed) || (show === "after_last_attempt" && (exhausted || passed))
 }
+
+/* ── Formulár pokusu ───────────────────────────────────────────────────── */
+
+/**
+ * Odpoveď na jednu otázku z formulára pokusu (pole `a`). To isté číta
+ * serverová akcia („Ďalej", „Odovzdať") aj priebežné ukladanie — jedno
+ * pravidlo. Id odpovedí mimo snímky sa zahodia.
+ */
+export function answerFromForm(q: QuestionSnapshot, values: string[]): AnswerValue | null {
+  switch (q.type) {
+    case "single":
+    case "multiple": {
+      const ids = new Set(q.answers.map(a => a.id))
+      const chosen = values.filter(v => ids.has(v))
+      return { kind: "choice", ids: q.type === "single" ? chosen.slice(0, 1) : [...new Set(chosen)] }
+    }
+    case "true_false":
+      return values[0] === "true" ? { kind: "bool", value: true } : values[0] === "false" ? { kind: "bool", value: false } : null
+    case "short_text":
+      return { kind: "text", value: (values[0] ?? "").slice(0, 500) }
+  }
+}
+
+export function isAnswered(a: AnswerValue | undefined): boolean {
+  if (!a) return false
+  if (a.kind === "choice") return a.ids.length > 0
+  if (a.kind === "text") return a.value.trim().length > 0
+  return true
+}
+
+/** Posledná otázka, na ktorej človek bol — pri návrate pokračuje (TEST-ATTEMPT Q2 ✅). */
+export function resumeIndex(a: Pick<TestAttempt, "questions" | "answers">): number {
+  const first = a.questions.findIndex(q => !isAnswered(a.answers[q.questionKey]))
+  return first < 0 ? a.questions.length - 1 : first
+}

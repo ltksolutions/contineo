@@ -24,6 +24,13 @@ vi.mock("@/lib/learning", () => ({
 }))
 vi.mock("@/lib/coursesDb", () => ({ getCourse: async () => db.course }))
 vi.mock("@/lib/enrollmentsDb", () => ({ enrollmentFor: async () => db.enrollment }))
+vi.mock("@/lib/testAttemptsDb", () => ({
+  partTestRows: async (_e: unknown, part: { tests: { testKey: string; required: boolean }[] }) => part.tests.map(t => ({
+    testKey: t.testKey, required: t.required, test: { title: `Test ${t.testKey}`, responsible: [] }, rules: { maxAttempts: 3 }, questionCount: 10, attempts: [],
+    availability: { open: null, canStart: true, reason: null, nextAt: null, used: 0, remaining: 3, lastPassed: (globalThis as { __passed?: string[] }).__passed?.includes(t.testKey) ?? false },
+    last: (globalThis as { __passed?: string[] }).__passed?.includes(t.testKey) ? { id: "a1", percent: 90, passed: true } : null,
+  })),
+}))
 vi.mock("@/lib/learningProgressDb", () => ({ progressFacts: async () => db.facts }))
 vi.mock("@/lib/courseDocs", () => ({ courseDocInfo: async () => db.docs }))
 vi.mock("../src/app/learning/actions", () => ({ completePartAction: async () => {}, enrolAction: async () => {} }))
@@ -84,6 +91,8 @@ describe("/learning/[courseKey]/[partKey]", () => {
     expect(html).toContain("https://www.youtube-nocookie.com/embed/abcdefghijk")
     expect(html).toContain("Externé video · dopozeranie sa neoveruje")
     expect(html).toContain("Povinný test: nespustený")
+    expect(html).toContain("Test evak")
+    expect(html).toContain('href="/learning/bozp/evakuacia/test/evak"')
   })
 
   it("dopozerané: tlačidlo je formulár, test pred prejdením nebráni (PART Q1)", async () => {
@@ -101,10 +110,13 @@ describe("/learning/[courseKey]/[partKey]", () => {
       completions: [{ partKey: "uvod", at }, { partKey: "evakuacia", at }], watches: [watched(700)],
       passedTests: [{ partKey: "evakuacia", testKey: "evak", at }],
     })
+    ;(globalThis as { __passed?: string[] }).__passed = ["evak"]
     const html = await render()
     expect(html).toContain("Časť je hotová · 17. 9. 2026")
     expect(html).toContain("Nepovinný test môžete spraviť kedykoľvek.")
     expect(html).toContain('href="/learning/bozp/zaver"')
+    expect(html).toContain("prešiel 90 %")
+    ;(globalThis as { __passed?: string[] }).__passed = []
   })
 
   it("zamknutá časť a nezapísaný vracajú na prehľad kurzu", async () => {

@@ -42,18 +42,11 @@ export default async function ImportPage() {
       </p>
 
       {/*
-        Prvá otázka pri importe je „čo sa stane s tým, kto už v systéme je" —
-        a odpoveď má stáť **pred** nahraním, nie až v náhľade (OSOBY.md,
-        úloha 5). Ten istý blok ako pred pridelením a pred pripomienkami:
-        hovorí, čo sa stane, keď klikneš. Text je opísané správanie
-        `upsertPersons()`, nie sľub.
+        Blok „čo sa stane s tým, kto už v systéme je" stojí pred nahraním, nie
+        až v náhľade (OSOBY.md, úloha 5) — a od ADR-019 je v komponente, lebo
+        jeho znenie závisí od prepínača „Aktualizovať existujúcich", a ten je
+        klientsky stav.
       */}
-      <div className="assign-impact">
-        <div className="assign-impact-count">{t.existingTitle}</div>
-        <div className="quiet" style={{ fontSize: "var(--fs-small)" }}>{t.existingNote}</div>
-        <div className="quiet" style={{ fontSize: "var(--fs-small)" }}>{t.existingWarning}</div>
-      </div>
-
       <PeopleImport language={language} />
     </div>
     </AppShell>

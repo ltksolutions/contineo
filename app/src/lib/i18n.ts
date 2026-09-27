@@ -1422,10 +1422,12 @@ interface Dictionary {
       introHighlight: string
       introMiddle: string
       introAfter: string
-      /** Čo sa stane s riadkom, ktorý už v systéme je (OSOBY.md, úloha 5). */
+      /** Čo sa stane s riadkom, ktorý už v systéme je (OSOBY.md, úloha 5; ADR-019). */
       existingTitle: string
       existingNote: string
-      existingWarning: string
+      /** Prepínač „Aktualizovať existujúcich“ a vysvetlenie, čo zapne. */
+      overwriteLabel: string
+      overwriteNote: string
       file: string
       /** Veta okolo zoznamu hlavičiek CSV — tie sa neprekladajú. */
       fileNoteBefore: string
@@ -1434,7 +1436,7 @@ interface Dictionary {
       whatHappens: (name: string) => string
       rows: string
       willAdd: string
-      willUpdate: string
+      willUpdate: (overwrite: boolean) => string
       invalid: string
       added: string
       andMore: (n: number) => string
@@ -1555,7 +1557,7 @@ interface Dictionary {
       noRight: string
       fileEmpty: string
       noRows: string
-      importResult: (created: number, updated: number, unchanged: number, invalid: number) => string
+      importResult: (created: number, updated: number, unchanged: number, invalid: number, overwrite: boolean) => string
     }
   },
   /**
@@ -2841,6 +2843,98 @@ interface Dictionary {
       newTags: (list: string) => string
       importRun: (n: number) => string
       imported: (created: number, updated: number) => string
+    }
+    /** Pokus a výsledok testu (rámy TEST-ATTEMPT, RESULT). */
+    attempt: {
+      factQuestions: string
+      factToPass: string
+      factTime: string
+      factAttempt: string
+      noLimit: string
+      ruleDraw: string
+      ruleSave: string
+      start: string
+      blockedPassed: string
+      backToPart: string
+      saving: string
+      saveFailed: string
+      multipleNote: string
+      shortNote: string
+      videoNote: string
+      trueLabel: string
+      falseLabel: string
+      prev: string
+      next: string
+      review: string
+      reviewHeading: string
+      unanswered: string
+      answered: string
+      submit: string
+      confirmTitle: string
+      confirmAll: string
+      cancelReview: string
+      timeUp: string
+      submitted: string
+      showResult: string
+      passedNotice: string
+      passedWord: string
+      failedWord: string
+      factPassing: string
+      factRemaining: string
+      factNext: string
+      unlimited: string
+      now: string
+      retry: string
+      retryNote: string
+      toCourse: string
+      reviewTitle: string
+      filterAll: string
+      filterWrong: string
+      yourAnswer: string
+      correctAnswer: string
+      noAnswer: string
+      hidden: string
+      attemptsSide: string
+      whoSees: string
+      continueTest: string
+      result: string
+      tryAgain: string
+      assignTest: string
+      testRequired: string
+      removeTest: string
+      noReadyTests: string
+      intro: string
+      answerLabel: string
+      multipleShort: string
+      factDuration: string
+      minutes: (n: number) => string
+      attemptOf: (n: number, max?: number) => string
+      ruleShow: { never: string; after_submit: string; after_pass: string; after_last_attempt: string }
+      previous: (date: string, percent: number, passed: boolean) => string
+      blockedPause: (time: string) => string
+      blockedExhausted: (n: number, names: string) => string
+      questionOf: (n: number, total: number) => string
+      remaining: (time: string) => string
+      saved: (time: string) => string
+      questionHead: (n: number, total: number, weight: number) => string
+      reviewUnanswered: (n: number) => string
+      confirmText: (n: number, list: string) => string
+      noscriptDeadline: (start: string, end: string) => string
+      kicker: (title: string, n: number, max: number | undefined, date: string) => string
+      partDoneNotice: (title: string) => string
+      failedNotice: (missing: number, pass: number) => string
+      points: (points: number, max: number) => string
+      passMark: (p: number) => string
+      hiddenReason: { never: string; after_submit: string; after_pass: string; after_last_attempt: string }
+      wrongCount: (n: number) => string
+      whoSeesText: (names: string) => string
+      duration: (seconds: number) => string
+      testOpen: (time: string | null, q: number, total: number) => string
+      testPassedPct: (p: number) => string
+      testFailedPct: (p: number) => string
+      nextAttemptAt: (time: string) => string
+      attemptsLeft: (remaining: number, max: number) => string
+      testMeta: (questions: number, pass: number, attempts: number | undefined, names: string) => string
     }
   }
 }
@@ -4502,8 +4596,9 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       introMiddle: ", a zapíše sa až potom. Nahratie stovky ľudí naslepo je presne tá operácia, po ktorej sa hľadá, ako to vrátiť späť — a vrátiť sa nedá. Všetci sa zapíšu do organizácie ",
       introAfter: ", aj keď je v súbore niečo iné.",
       existingTitle: "Kto už v systéme je, sa nezaloží znova",
-      existingNote: "Spáruje sa podľa e-mailu a doplní sa: prepíšu sa len stĺpce, ktoré súbor má. Čo v ňom nie je, zostáva nedotknuté — stav, jazyk aj roly. Import nikoho nevyradí.",
-      existingWarning: "Prázdna bunka v stĺpci, ktorý súbor má, hodnotu vymaže: prázdne „skupiny“ znamenajú, že ten človek do žiadnej nepatrí.",
+      existingNote: "Spáruje sa podľa e-mailu a doplnia sa mu len prázdne polia. Čo už má, ostáva — aj keď súbor nesie inú hodnotu. Stav, jazyk, roly ani skupiny sa nemenia. Import nikoho nevyradí.",
+      overwriteLabel: "Aktualizovať existujúcich hodnotami zo súboru",
+      overwriteNote: "Stĺpec, ktorý súbor má, prepíše hodnotu existujúcej osobe — a prázdna bunka ju vymaže: prázdne „skupiny“ znamenajú, že ten človek do žiadnej nepatrí. Čo v súbore nie je, zostáva nedotknuté.",
       file: "Súbor CSV",
       fileNoteBefore: "Prvý riadok sú hlavičky. Rozpoznajú sa ",
       fileNoteAfter: " — aj bez diakritiky a s bodkočiarkou ako oddeľovačom, tak ako to ukladá Excel.",
@@ -4511,7 +4606,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       whatHappens: (name) => `Čo sa stane — ${name}`,
       rows: "Riadkov",
       willAdd: "Pribudne",
-      willUpdate: "Aktualizuje sa",
+      willUpdate: (overwrite) => overwrite ? "Existuje — aktualizuje sa" : "Existuje — doplní sa",
       invalid: "Chybných",
       added: "Pribudnú",
       andMore: (n) => ` … a ďalších ${n}`,
@@ -4628,8 +4723,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       noRight: "Nemáš na to právo.",
       fileEmpty: "Súbor je prázdny.",
       noRows: "V súbore nie je ani jeden riadok s údajmi. Má prvý riadok hlavičky?",
-      importResult: (created, updated, unchanged, invalid) =>
-        `Pribudlo ${created}, zmenených ${updated}, bez zmeny ${unchanged}` +
+      importResult: (created, updated, unchanged, invalid, overwrite) =>
+        `Pribudlo ${created}, ${overwrite ? "zmenených" : "doplnených"} ${updated}, bez zmeny ${unchanged}` +
         (invalid ? `, chybných ${invalid}` : "") + ".",
     },
   },
@@ -5829,6 +5924,97 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       newTags: list => `Nové smart:tagy: ${list}`,
       importRun: n => `Importovať ${n} ${n === 1 ? "otázku" : n >= 2 && n <= 4 ? "otázky" : "otázok"}`,
       imported: (c, u) => `Importované: nových ${c}, upravených ${u}.`,
+    },
+    attempt: {
+      factQuestions: "Otázok",
+      factToPass: "Na prejdenie",
+      factTime: "Limit času",
+      factAttempt: "Pokus",
+      noLimit: "bez limitu",
+      ruleDraw: "Otázky sa pri každom pokuse vylosujú a odpovede zamiešajú.",
+      ruleSave: "Odpovede sa priebežne ukladajú; čas beží ďalej aj pri výpadku.",
+      start: "Spustiť test",
+      blockedPassed: "Test máte prejdený.",
+      backToPart: "Späť na časť",
+      saving: "ukladá sa…",
+      saveFailed: "neuložené — skúšame znova",
+      multipleNote: "Táto otázka má viac správnych odpovedí — označte všetky.",
+      shortNote: "Na diakritike a veľkých písmenách nezáleží.",
+      videoNote: "Video nemusíte dopozerať — pretáčať môžete voľne, čas testu beží ďalej.",
+      trueLabel: "Pravda",
+      falseLabel: "Nepravda",
+      prev: "← Späť",
+      next: "Ďalej →",
+      review: "Prehľad odpovedí",
+      reviewHeading: "Prehľad odpovedí",
+      unanswered: "nezodpovedaná",
+      answered: "zodpovedaná",
+      submit: "Odovzdať test",
+      confirmTitle: "Odovzdať test?",
+      confirmAll: "Všetky otázky sú zodpovedané. Po odovzdaní sa odpovede nedajú zmeniť.",
+      cancelReview: "Späť k otázkam",
+      timeUp: "Čas vypršal — test sa uzavrel s odpoveďami, ktoré ste stihli uložiť.",
+      submitted: "Test je odovzdaný.",
+      showResult: "Zobraziť výsledok",
+      passedNotice: "Test ste prešli.",
+      passedWord: "Prešiel",
+      failedWord: "Neprešiel",
+      factPassing: "Hranica",
+      factRemaining: "Zostáva pokusov",
+      factNext: "Ďalší pokus",
+      unlimited: "bez obmedzenia",
+      now: "hneď",
+      retry: "Skúsiť znova",
+      retryNote: "Otázky sa vylosujú znova.",
+      toCourse: "Prehľad kurzu",
+      reviewTitle: "Prehľad otázok",
+      filterAll: "Všetky",
+      filterWrong: "Nesprávne",
+      yourAnswer: "Vaša odpoveď",
+      correctAnswer: "Správna odpoveď",
+      noAnswer: "bez odpovede",
+      hidden: "Správne odpovede sa nezobrazujú",
+      attemptsSide: "Vaše pokusy",
+      whoSees: "Kto vidí výsledok",
+      continueTest: "Pokračovať",
+      result: "Výsledok",
+      tryAgain: "Skúsiť znova",
+      assignTest: "Priradiť test",
+      testRequired: "Povinný",
+      removeTest: "Odobrať",
+      noReadyTests: "Zatiaľ nie je žiadny pripravený test.",
+      intro: "Úvod",
+      answerLabel: "Odpoveď",
+      multipleShort: "viac správnych",
+      factDuration: "Čas",
+      minutes: n => `${n} min`,
+      attemptOf: (n, m) => (m ? `${n} z ${m}` : `${n}`),
+      ruleShow: { never: "Správne odpovede sa nezobrazujú.", after_submit: "Správne odpovede uvidíte po odovzdaní.", after_pass: "Správne odpovede uvidíte po prejdení testu.", after_last_attempt: "Správne odpovede uvidíte po poslednom pokuse." },
+      previous: (date, pct, passed) => `Predchádzajúci pokus ${date}: ${pct} % — ${passed ? "prešiel" : "neprešiel"}.`,
+      blockedPause: time => `Ďalší pokus je možný o ${time} — test má pauzu medzi pokusmi.`,
+      blockedExhausted: (n, names) => `Využili ste ${n} z ${n} pokusov. Ďalší pokus môže povoliť zodpovedná osoba testu${names ? ` — ${names}` : ""}.`,
+      questionOf: (n, m) => `Otázka ${n} / ${m}`,
+      remaining: t => `zostáva ${t}`,
+      saved: t => `✓ uložené ${t}`,
+      questionHead: (n, m, w) => `Otázka ${n} z ${m}${w > 1 ? ` · váha ${w}` : ""}`,
+      reviewUnanswered: n => `Prehľad odpovedí · ${n} ${n === 1 ? "nezodpovedaná" : n >= 2 && n <= 4 ? "nezodpovedané" : "nezodpovedaných"}`,
+      confirmText: (n, list) => `Nezodpovedané otázky: ${n} (${list}). Po odovzdaní sa odpovede nedajú zmeniť.`,
+      noscriptDeadline: (start, end) => `Test ste spustili o ${start} — odovzdajte ho do ${end}. Po tomto čase server prijme len to, čo už bolo odoslané.`,
+      kicker: (title, n, m, date) => `Test: ${title} · pokus ${n}${m ? ` z ${m}` : ""} · ${date}`,
+      partDoneNotice: title => `Časť „${title}“ je hotová.`,
+      failedNotice: (missing, pass) => `Neprešli ste — chýba ${missing} percentných bodov do hranice ${pass} %.`,
+      points: (p, max) => `${p} z ${max} ${max === 1 ? "bodu" : "bodov"}`,
+      passMark: p => `hranica ${p} %`,
+      hiddenReason: { never: "Test správne odpovede neukazuje.", after_submit: "Ukážu sa po odovzdaní.", after_pass: "Ukážu sa po prejdení testu.", after_last_attempt: "Ukážu sa po poslednom pokuse." },
+      wrongCount: n => `Nesprávne odpovede: ${n}.`,
+      whoSeesText: names => `Vy a zodpovedné osoby testu${names ? ` (${names})` : ""}. Personálne oddelenie skóre nevidí.`,
+      duration: s => `${Math.floor(s / 60)} min ${s % 60} s`,
+      testOpen: (time, q, total) => `rozpracovaný · ${time ? `zostáva ${time}` : "bez limitu času"} · otázka ${q} z ${total}`,
+      testPassedPct: p => `prešiel ${p} %`,
+      testFailedPct: p => `neprešiel ${p} %`,
+      nextAttemptAt: t => `ďalší pokus o ${t}`,
+      attemptsLeft: (r, m) => `zostávajú ${r} z ${m}`,
+      testMeta: (q, pass, att, names) => `${q} otázok · hranica ${pass} %${att ? ` · ${att} pokusy` : ""}${names ? ` · zodpovedá ${names}` : ""}`,
     },
   },
   },
@@ -7477,8 +7663,9 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       introMiddle: ", a zapíše se až potom. Nahrání stovky lidí naslepo je přesně ta operace, po které se hledá, jak to vrátit zpět — a vrátit se nedá. Všichni se zapíšou do organizace ",
       introAfter: ", i když je v souboru něco jiného.",
       existingTitle: "Kdo už v systému je, se nezaloží znovu",
-      existingNote: "Spáruje se podle e-mailu a doplní se: přepíší se jen sloupce, které soubor má. Co v něm není, zůstává nedotčené — stav, jazyk i role. Import nikoho nevyřadí.",
-      existingWarning: "Prázdná buňka ve sloupci, který soubor má, hodnotu vymaže: prázdné „skupiny“ znamenají, že ten člověk do žádné nepatří.",
+      existingNote: "Spáruje se podle e-mailu a doplní se mu jen prázdná pole. Co už má, zůstává — i když soubor nese jinou hodnotu. Stav, jazyk, role ani skupiny se nemění. Import nikoho nevyřadí.",
+      overwriteLabel: "Aktualizovat existující hodnotami ze souboru",
+      overwriteNote: "Sloupec, který soubor má, přepíše hodnotu existující osobě — a prázdná buňka ji vymaže: prázdné „skupiny“ znamenají, že ten člověk do žádné nepatří. Co v souboru není, zůstává nedotčené.",
       file: "Soubor CSV",
       fileNoteBefore: "První řádek jsou hlavičky. Rozpoznají se ",
       fileNoteAfter: " — i bez diakritiky a se středníkem jako oddělovačem, tak jak to ukládá Excel.",
@@ -7486,7 +7673,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       whatHappens: (name) => `Co se stane — ${name}`,
       rows: "Řádků",
       willAdd: "Přibude",
-      willUpdate: "Aktualizuje se",
+      willUpdate: (overwrite) => overwrite ? "Existuje — aktualizuje se" : "Existuje — doplní se",
       invalid: "Chybných",
       added: "Přibudou",
       andMore: (n) => ` … a dalších ${n}`,
@@ -7603,8 +7790,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       noRight: "Nemáš na to právo.",
       fileEmpty: "Soubor je prázdný.",
       noRows: "V souboru není ani jeden řádek s údaji. Má první řádek hlavičky?",
-      importResult: (created, updated, unchanged, invalid) =>
-        `Přibylo ${created}, změněných ${updated}, beze změny ${unchanged}` +
+      importResult: (created, updated, unchanged, invalid, overwrite) =>
+        `Přibylo ${created}, ${overwrite ? "změněných" : "doplněných"} ${updated}, beze změny ${unchanged}` +
         (invalid ? `, chybných ${invalid}` : "") + ".",
     },
   },
@@ -8801,6 +8988,97 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       newTags: list => `Nové smart:tagy: ${list}`,
       importRun: n => `Importovat ${n} ${n === 1 ? "otázku" : n >= 2 && n <= 4 ? "otázky" : "otázek"}`,
       imported: (c, u) => `Importováno: nových ${c}, upravených ${u}.`,
+    },
+    attempt: {
+      factQuestions: "Otázek",
+      factToPass: "Ke složení",
+      factTime: "Časový limit",
+      factAttempt: "Pokus",
+      noLimit: "bez limitu",
+      ruleDraw: "Otázky se při každém pokusu vylosují a odpovědi zamíchají.",
+      ruleSave: "Odpovědi se průběžně ukládají; čas běží dál i při výpadku.",
+      start: "Spustit test",
+      blockedPassed: "Test máte složený.",
+      backToPart: "Zpět na část",
+      saving: "ukládá se…",
+      saveFailed: "neuloženo — zkoušíme znovu",
+      multipleNote: "Tato otázka má více správných odpovědí — označte všechny.",
+      shortNote: "Na diakritice a velkých písmenech nezáleží.",
+      videoNote: "Video nemusíte dokoukat — přetáčet můžete volně, čas testu běží dál.",
+      trueLabel: "Pravda",
+      falseLabel: "Nepravda",
+      prev: "← Zpět",
+      next: "Dále →",
+      review: "Přehled odpovědí",
+      reviewHeading: "Přehled odpovědí",
+      unanswered: "nezodpovězená",
+      answered: "zodpovězená",
+      submit: "Odevzdat test",
+      confirmTitle: "Odevzdat test?",
+      confirmAll: "Všechny otázky jsou zodpovězené. Po odevzdání se odpovědi nedají změnit.",
+      cancelReview: "Zpět k otázkám",
+      timeUp: "Čas vypršel — test se uzavřel s odpověďmi, které jste stihli uložit.",
+      submitted: "Test je odevzdaný.",
+      showResult: "Zobrazit výsledek",
+      passedNotice: "Test jste složili.",
+      passedWord: "Prošel",
+      failedWord: "Neprošel",
+      factPassing: "Hranice",
+      factRemaining: "Zbývá pokusů",
+      factNext: "Další pokus",
+      unlimited: "bez omezení",
+      now: "hned",
+      retry: "Zkusit znovu",
+      retryNote: "Otázky se vylosují znovu.",
+      toCourse: "Přehled kurzu",
+      reviewTitle: "Přehled otázek",
+      filterAll: "Všechny",
+      filterWrong: "Nesprávné",
+      yourAnswer: "Vaše odpověď",
+      correctAnswer: "Správná odpověď",
+      noAnswer: "bez odpovědi",
+      hidden: "Správné odpovědi se nezobrazují",
+      attemptsSide: "Vaše pokusy",
+      whoSees: "Kdo vidí výsledek",
+      continueTest: "Pokračovat",
+      result: "Výsledek",
+      tryAgain: "Zkusit znovu",
+      assignTest: "Přiřadit test",
+      testRequired: "Povinný",
+      removeTest: "Odebrat",
+      noReadyTests: "Zatím není žádný připravený test.",
+      intro: "Úvod",
+      answerLabel: "Odpověď",
+      multipleShort: "více správných",
+      factDuration: "Čas",
+      minutes: n => `${n} min`,
+      attemptOf: (n, m) => (m ? `${n} z ${m}` : `${n}`),
+      ruleShow: { never: "Správné odpovědi se nezobrazují.", after_submit: "Správné odpovědi uvidíte po odevzdání.", after_pass: "Správné odpovědi uvidíte po složení testu.", after_last_attempt: "Správné odpovědi uvidíte po posledním pokusu." },
+      previous: (date, pct, passed) => `Předchozí pokus ${date}: ${pct} % — ${passed ? "prošel" : "neprošel"}.`,
+      blockedPause: time => `Další pokus je možný v ${time} — test má pauzu mezi pokusy.`,
+      blockedExhausted: (n, names) => `Využili jste ${n} z ${n} pokusů. Další pokus může povolit odpovědná osoba testu${names ? ` — ${names}` : ""}.`,
+      questionOf: (n, m) => `Otázka ${n} / ${m}`,
+      remaining: t => `zbývá ${t}`,
+      saved: t => `✓ uloženo ${t}`,
+      questionHead: (n, m, w) => `Otázka ${n} z ${m}${w > 1 ? ` · váha ${w}` : ""}`,
+      reviewUnanswered: n => `Přehled odpovědí · ${n} ${n === 1 ? "nezodpovězená" : n >= 2 && n <= 4 ? "nezodpovězené" : "nezodpovězených"}`,
+      confirmText: (n, list) => `Nezodpovězené otázky: ${n} (${list}). Po odevzdání se odpovědi nedají změnit.`,
+      noscriptDeadline: (start, end) => `Test jste spustili v ${start} — odevzdejte ho do ${end}. Po tomto čase server přijme jen to, co už bylo odesláno.`,
+      kicker: (title, n, m, date) => `Test: ${title} · pokus ${n}${m ? ` z ${m}` : ""} · ${date}`,
+      partDoneNotice: title => `Část „${title}“ je hotová.`,
+      failedNotice: (missing, pass) => `Neprošli jste — chybí ${missing} procentních bodů do hranice ${pass} %.`,
+      points: (p, max) => `${p} z ${max} bodů`,
+      passMark: p => `hranice ${p} %`,
+      hiddenReason: { never: "Test správné odpovědi neukazuje.", after_submit: "Ukážou se po odevzdání.", after_pass: "Ukážou se po složení testu.", after_last_attempt: "Ukážou se po posledním pokusu." },
+      wrongCount: n => `Nesprávné odpovědi: ${n}.`,
+      whoSeesText: names => `Vy a odpovědné osoby testu${names ? ` (${names})` : ""}. Personální oddělení skóre nevidí.`,
+      duration: s => `${Math.floor(s / 60)} min ${s % 60} s`,
+      testOpen: (time, q, total) => `rozpracovaný · ${time ? `zbývá ${time}` : "bez časového limitu"} · otázka ${q} z ${total}`,
+      testPassedPct: p => `prošel ${p} %`,
+      testFailedPct: p => `neprošel ${p} %`,
+      nextAttemptAt: t => `další pokus v ${t}`,
+      attemptsLeft: (r, m) => `zbývají ${r} z ${m}`,
+      testMeta: (q, pass, att, names) => `${q} otázek · hranice ${pass} %${att ? ` · ${att} pokusy` : ""}${names ? ` · odpovídá ${names}` : ""}`,
     },
   },
   },
@@ -10442,8 +10720,9 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       introMiddle: ", and only then is anything written. Uploading a hundred people blind is exactly the operation after which people look for the undo button — and there is none. Everyone is recorded in organisation ",
       introAfter: ", even if the file says otherwise.",
       existingTitle: "Anyone already in the system is not created again",
-      existingNote: "They are matched by e-mail and topped up: only the columns the file has are overwritten. Whatever is not in it stays untouched — status, language and roles. The import excludes nobody.",
-      existingWarning: "An empty cell in a column the file does have clears the value: empty \u201cgroups\u201d means that person belongs to none.",
+      existingNote: "They are matched by e-mail and only their empty fields are filled in. Whatever they already have stays — even when the file carries a different value. Status, language, roles and groups are not touched. The import excludes nobody.",
+      overwriteLabel: "Update existing people with the values from the file",
+      overwriteNote: "A column the file has overwrites the existing person\u2019s value — and an empty cell clears it: empty \u201cgroups\u201d means that person belongs to none. Whatever is not in the file stays untouched.",
       file: "CSV file",
       fileNoteBefore: "The first row is the header. These are recognised: ",
       fileNoteAfter: " — with or without diacritics, and with a semicolon as the separator, the way Excel saves it.",
@@ -10451,7 +10730,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       whatHappens: (name) => `What will happen — ${name}`,
       rows: "Rows",
       willAdd: "Will be added",
-      willUpdate: "Will be updated",
+      willUpdate: (overwrite) => overwrite ? "Exists — will be updated" : "Exists — will be topped up",
       invalid: "Invalid",
       added: "Will be added",
       andMore: (n) => ` … and ${n} more`,
@@ -10568,8 +10847,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       noRight: "You do not have permission for that.",
       fileEmpty: "The file is empty.",
       noRows: "The file has no data rows. Does the first row contain headers?",
-      importResult: (created, updated, unchanged, invalid) =>
-        `Added ${created}, updated ${updated}, unchanged ${unchanged}` +
+      importResult: (created, updated, unchanged, invalid, overwrite) =>
+        `Added ${created}, ${overwrite ? "updated" : "topped up"} ${updated}, unchanged ${unchanged}` +
         (invalid ? `, invalid ${invalid}` : "") + ".",
     },
   },
@@ -11759,6 +12038,97 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       newTags: list => `New smart:tags: ${list}`,
       importRun: n => `Import ${n} question${n === 1 ? "" : "s"}`,
       imported: (c, u) => `Imported: ${c} new, ${u} updated.`,
+    },
+    attempt: {
+      factQuestions: "Questions",
+      factToPass: "To pass",
+      factTime: "Time limit",
+      factAttempt: "Attempt",
+      noLimit: "no limit",
+      ruleDraw: "Questions are drawn for every attempt and answers are shuffled.",
+      ruleSave: "Answers are saved continuously; time keeps running even if you get disconnected.",
+      start: "Start test",
+      blockedPassed: "You have passed the test.",
+      backToPart: "Back to the part",
+      saving: "saving…",
+      saveFailed: "not saved — retrying",
+      multipleNote: "This question has more than one correct answer — select all of them.",
+      shortNote: "Diacritics and capital letters do not matter.",
+      videoNote: "You do not have to watch the whole video — you can skip freely; the test time keeps running.",
+      trueLabel: "True",
+      falseLabel: "False",
+      prev: "← Back",
+      next: "Next →",
+      review: "Review answers",
+      reviewHeading: "Review answers",
+      unanswered: "unanswered",
+      answered: "answered",
+      submit: "Submit test",
+      confirmTitle: "Submit the test?",
+      confirmAll: "All questions are answered. After submitting, answers cannot be changed.",
+      cancelReview: "Back to the questions",
+      timeUp: "Time is up — the test was closed with the answers you managed to save.",
+      submitted: "The test has been submitted.",
+      showResult: "Show result",
+      passedNotice: "You passed the test.",
+      passedWord: "Passed",
+      failedWord: "Not passed",
+      factPassing: "Pass mark",
+      factRemaining: "Attempts left",
+      factNext: "Next attempt",
+      unlimited: "no limit",
+      now: "now",
+      retry: "Try again",
+      retryNote: "Questions will be drawn again.",
+      toCourse: "Course overview",
+      reviewTitle: "Question review",
+      filterAll: "All",
+      filterWrong: "Incorrect",
+      yourAnswer: "Your answer",
+      correctAnswer: "Correct answer",
+      noAnswer: "no answer",
+      hidden: "Correct answers are not shown",
+      attemptsSide: "Your attempts",
+      whoSees: "Who sees the result",
+      continueTest: "Continue",
+      result: "Result",
+      tryAgain: "Try again",
+      assignTest: "Assign test",
+      testRequired: "Required",
+      removeTest: "Remove",
+      noReadyTests: "There is no ready test yet.",
+      intro: "Introduction",
+      answerLabel: "Answer",
+      multipleShort: "multiple correct",
+      factDuration: "Time",
+      minutes: n => `${n} min`,
+      attemptOf: (n, m) => (m ? `${n} of ${m}` : `${n}`),
+      ruleShow: { never: "Correct answers are not shown.", after_submit: "You will see the correct answers after submitting.", after_pass: "You will see the correct answers after passing the test.", after_last_attempt: "You will see the correct answers after the last attempt." },
+      previous: (date, pct, passed) => `Previous attempt ${date}: ${pct} % — ${passed ? "passed" : "not passed"}.`,
+      blockedPause: time => `The next attempt is possible at ${time} — the test has a pause between attempts.`,
+      blockedExhausted: (n, names) => `You have used ${n} of ${n} attempts. Another attempt can be allowed by the person responsible for the test${names ? ` — ${names}` : ""}.`,
+      questionOf: (n, m) => `Question ${n} / ${m}`,
+      remaining: t => `${t} left`,
+      saved: t => `✓ saved ${t}`,
+      questionHead: (n, m, w) => `Question ${n} of ${m}${w > 1 ? ` · weight ${w}` : ""}`,
+      reviewUnanswered: n => `Review answers · ${n} unanswered`,
+      confirmText: (n, list) => `Unanswered questions: ${n} (${list}). After submitting, answers cannot be changed.`,
+      noscriptDeadline: (start, end) => `You started the test at ${start} — submit it by ${end}. After that the server accepts only what has already been sent.`,
+      kicker: (title, n, m, date) => `Test: ${title} · attempt ${n}${m ? ` of ${m}` : ""} · ${date}`,
+      partDoneNotice: title => `Part “${title}” is done.`,
+      failedNotice: (missing, pass) => `Not passed — ${missing} percentage points short of the ${pass} % pass mark.`,
+      points: (p, max) => `${p} of ${max} points`,
+      passMark: p => `pass mark ${p} %`,
+      hiddenReason: { never: "This test does not show correct answers.", after_submit: "They are shown after submitting.", after_pass: "They will be shown after passing the test.", after_last_attempt: "They will be shown after the last attempt." },
+      wrongCount: n => `Incorrect answers: ${n}.`,
+      whoSeesText: names => `You and the people responsible for the test${names ? ` (${names})` : ""}. HR does not see the score.`,
+      duration: s => `${Math.floor(s / 60)} min ${s % 60} s`,
+      testOpen: (time, q, total) => `in progress · ${time ? `${time} left` : "no time limit"} · question ${q} of ${total}`,
+      testPassedPct: p => `passed ${p} %`,
+      testFailedPct: p => `not passed ${p} %`,
+      nextAttemptAt: t => `next attempt at ${t}`,
+      attemptsLeft: (r, m) => `${r} of ${m} left`,
+      testMeta: (q, pass, att, names) => `${q} questions · pass mark ${pass} %${att ? ` · ${att} attempts` : ""}${names ? ` · responsible: ${names}` : ""}`,
     },
   },
   },

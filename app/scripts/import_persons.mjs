@@ -4,6 +4,7 @@
  *     npm run persons:import -- osoby.csv            len náhľad
  *     npm run persons:import -- osoby.csv --zapis    naozaj zapíše
  *     npm run persons:import -- osoby.csv --org=SFZ  doplní organizáciu, keď súbor stĺpec nemá
+ *     npm run persons:import -- osoby.csv --prepisat  existujúcim prepíše hodnoty zo súboru (ADR-019)
  *
  * **Náhľad je predvolené správanie, zápis sa musí vypýtať.** Nahratie stovky
  * ľudí naslepo je presne tá operácia, po ktorej sa hľadá, ako to vrátiť späť —
@@ -26,12 +27,14 @@ const OK = "\x1b[32m✔\x1b[0m", ERR = "\x1b[31m✘\x1b[0m", INFO = "\x1b[33m·\
 const args = process.argv.slice(2)
 const file = args.find(a => !a.startsWith("--"))
 const write = args.includes("--zapis")
+// Existujúcim sa predvolene dopĺňajú len prázdne polia; prepis je výslovná voľba (ADR-019).
+const mode = args.includes("--prepisat") ? "overwrite" : "fill"
 // Na obrazovke organizáciu dopĺňa prihlásený človek (D32); skript nemá koho,
 // preto ju dostane parametrom. Stĺpec v súbore má prednosť — parameter len dopĺňa.
 const org = args.find(a => a.startsWith("--org="))?.slice("--org=".length) || undefined
 
 if (!file || args.includes("--help")) {
-  console.log("Použitie: node scripts/import_persons.mjs <súbor.csv> [--zapis] [--org=KOD]")
+  console.log("Použitie: node scripts/import_persons.mjs <súbor.csv> [--zapis] [--org=KOD] [--prepisat]")
   console.log("\nStĺpce (stačí jeden z tvarov, na diakritike ani veľkosti nezáleží):")
   for (const [field, names] of Object.entries(ALIASES)) {
     console.log(`  ${field.padEnd(12)} ${names.join(" · ")}`)
@@ -56,7 +59,7 @@ const people = rows.map(r => {
 const preview = await previewImport(people)
 
 console.log(`${OK} nových:     ${preview.created.length}`)
-console.log(`${INFO} existujúcich: ${preview.existing.length}  (aktualizujú sa)`)
+console.log(`${INFO} existujúcich: ${preview.existing.length}  (${mode === "overwrite" ? "prepíšu sa hodnotami zo súboru" : "doplnia sa len prázdne polia"})`)
 if (preview.errors.length) {
   console.log(`${ERR} chybných:    ${preview.errors.length}`)
   for (const e of preview.errors.slice(0, 20)) {
@@ -76,8 +79,8 @@ if (preview.errors.length) {
   process.exit(1)
 }
 
-const v = await upsertPersons(people, process.env.USER ?? "import_persons.mjs")
-console.log(`\n${OK} zapísané — nových ${v.created}, aktualizovaných ${v.updated}, bez zmeny ${v.unchanged}`)
+const v = await upsertPersons(people, process.env.USER ?? "import_persons.mjs", mode)
+console.log(`\n${OK} zapísané — nových ${v.created}, ${mode === "overwrite" ? "zmenených" : "doplnených"} ${v.updated}, bez zmeny ${v.unchanged}`)
 if (v.errors.length) {
   console.log(`${ERR} pri zápise zlyhalo ${v.errors.length}:`)
   for (const e of v.errors) console.log(`     ${e.email} — ${e.reason}`)

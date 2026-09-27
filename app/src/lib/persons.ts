@@ -516,8 +516,24 @@ export interface ImportResult {
 }
 
 /**
+ * Čo import smie urobiť s osobou, ktorá už v organizácii je (ADR-019).
+ *
+ * - `fill` (predvolené) — **doplní len prázdne polia**. Čo už osoba má, ostáva,
+ *   aj keď súbor nesie inú hodnotu. Rovnaké pravidlo, aké platí pri doplnení
+ *   z adresára M365 (`fillMissing`, D88): súbor od personalistu je zdroj
+ *   pre ľudí, ktorých systém nepozná, nie autorita nad tými, ktorých už pozná —
+ *   tí si mohli údaje medzitým opraviť sami alebo cez Entra.
+ * - `overwrite` — pôvodné správanie: prítomný stĺpec prepíše hodnotu.
+ *   Zapína sa výslovne („Aktualizovať existujúcich“), nikdy predvolene.
+ *
+ * Nové osoby sa zakladajú rovnako v oboch režimoch.
+ */
+export type ImportMode = "fill" | "overwrite"
+
+/**
  * Založí alebo aktualizuje osoby. **Idempotentné**: opakovaný beh toho istého
- * zoznamu nezaloží duplikáty, len prepíše, čo sa zmenilo.
+ * zoznamu nezaloží duplikáty; existujúcim v režime `fill` doplní prázdne
+ * polia, v režime `overwrite` prepíše, čo sa zmenilo.
  *
  * Rozpoznávacím kľúčom je `companyCode` + `email` — nie samotná adresa.
  * Tá istá osoba môže vystupovať vo viacerých jednotkách a sú to z pohľadu
@@ -530,12 +546,13 @@ export interface ImportResult {
  * **Zapisuje sa len to, čo v riadku naozaj je.** Chýbajúce pole (`undefined`)
  * znamená „o tomto nič nehovorím", nie „vyprázdni" — inak by súbor bez stĺpca
  * skupín zmazal členstvo celej organizácii. Prázdna hodnota v prítomnom
- * stĺpci je naopak pokyn vyprázdniť; rozlíšiť ich vie `hasField()`
+ * stĺpci je v režime `overwrite` pokyn vyprázdniť; rozlíšiť ich vie `hasField()`
  * v `personsImport.ts`, lebo len tam vidno hlavičky súboru.
  */
 export async function upsertPersons(
   rows: NewPerson[],
-  actor: string
+  actor: string,
+  mode: ImportMode = "fill",
 ): Promise<ImportResult> {
   const v: ImportResult = { created: 0, updated: 0, unchanged: 0, errors: [] }
   if (rows.length === 0) return v
@@ -552,14 +569,20 @@ export async function upsertPersons(
     // História členstva sa musí zapísať aj tadeto: import je najčastejší
     // spôsob, ako sa skupiny menia hromadne, a práve pri hromadnej zmene
     // je otázka „kto v skupine bol vtedy" najťažšia (D50).
-    const until = await col.findOne(key, { projection: { groupHistory: 1 } })
+    // Celý záznam, nie len história: režim `fill` potrebuje vedieť, ktoré
+    // polia už osoba má, a to sa nedá zistiť z projekcie na jedno pole.
+    const existing = await col.findOne(key)
+    const until = existing
     const name = resolveName(r)
     const changes: Record<string, unknown> = {
       fullName: name.fullName,
-      department: r.department?.trim() || undefined,
       personType: r.personType ?? "employee",
-      startDate: r.startDate,
     }
+    // `undefined` v `$set` by driver uložil ako `null` (predvolené
+    // `ignoreUndefined: false`) — a to už je prepis, nie mlčanie. Preto sa
+    // oddelenie a nástup pridávajú len keď v riadku sú, ako ostatné polia nižšie.
+    if (r.department?.trim()) changes.department = r.department.trim()
+    if (r.startDate) changes.startDate = r.startDate
 
     // Zoznamy len keď v riadku sú. Prázdne pole je platná hodnota („nemá
     // žiadne"), `undefined` je mlčanie — a mlčanie sa nesmie zapísať ako
@@ -594,6 +617,22 @@ export async function upsertPersons(
     if (r.jobTitle?.trim()) changes.jobTitle = r.jobTitle.trim()
     if (r.mobilePhone?.trim()) changes.mobilePhone = r.mobilePhone.trim()
     if (r.workplace?.trim()) changes.workplace = r.workplace.trim()
+
+    // Režim `fill`: z toho, čo riadok nesie, ostane len to, čo osoba ešte nemá.
+    // Prázdne je `undefined`, `null`, prázdny reťazec aj prázdny zoznam.
+    // História členstva ide so skupinami — keď sa skupiny nedopĺňajú, nezapíše
+    // sa ani ona, inak by pribudol záznam o zmene, ktorá sa nestala.
+    if (existing && mode === "fill") {
+      const record = existing as unknown as Record<string, unknown>
+      const empty = (x: unknown) =>
+        x === undefined || x === null || (typeof x === "string" && x.trim() === "") || (Array.isArray(x) && x.length === 0)
+      for (const field of Object.keys(changes)) {
+        if (field === "groupHistory") continue
+        if (!empty(record[field])) delete changes[field]
+      }
+      if (!("groups" in changes)) delete changes.groupHistory
+      if (Object.keys(changes).length === 0) { v.unchanged++; continue }
+    }
 
     try {
       const result = await col.updateOne(key, {

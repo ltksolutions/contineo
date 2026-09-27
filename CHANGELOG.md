@@ -4,6 +4,17 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Import osôb existujúcim dopĺňa len prázdne polia — ADR-019 (2026-09-27)
+
+Kto už v organizácii je (podľa e-mailu), sa importom **nezmení**: doplnia sa
+mu len polia, ktoré má prázdne — rovnako ako pri doplnení z adresára M365.
+Pôvodný prepis hodnotami zo súboru zostáva ako výslovná voľba: prepínač
+„Aktualizovať existujúcich" na obrazovke importu, `--prepisat` v skripte.
+Opravené: súbor bez stĺpca oddelenia alebo nástupu už existujúcim tie polia
+nevynuluje (`undefined` sa do zápisu nedostane). Skript `persons:import`
+po premenovaní knižnice do angličtiny padal na starých názvoch — opravený,
+pribudol parameter `--org=KOD`.
+
 ### Rozhodnuté: vzdelávanie ako modul platformy — ADR-018 (2026-09-27)
 
 LMS (ClubUp) bude **modul `learning`** tej istej platformy, zapínaný profilom

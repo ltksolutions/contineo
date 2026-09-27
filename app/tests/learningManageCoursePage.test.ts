@@ -36,10 +36,11 @@ vi.mock("@/lib/assignments", () => ({
 }))
 vi.mock("@/lib/persons", () => ({ audiencesInOrg: async () => ({ groups: [{ value: "rozhodcovia", count: 4 }], tracks: [{ value: "zaklad", count: 2 }] }) }))
 vi.mock("@/lib/departments", () => ({ allDepartments: async () => [], flattenTree: () => [], counts: async () => new Map() }))
+vi.mock("@/lib/testsDb", () => ({ listTests: async () => [{ key: "evak", title: "Evakuácia", status: "ready", sections: [{ count: 5 }], rules: { passingPercent: 80, maxAttempts: 3 }, responsible: [{ fullName: "Marek" }] }] }))
 vi.mock("@/lib/smartTagsDb", () => ({ smartTagUsage: async () => [{ key: "uroven", value: "1", label: "Úroveň: 1", courses: 2, questions: 0, tests: 0 }] }))
 vi.mock("@/lib/courseDocs", () => ({ documentChoices: async () => [{ documentId: "sfz:bozp", versionId: "v1", title: "Smernica BOZP", label: "úplné znenie od 1. 3. 2026" }] }))
 vi.mock("../src/app/learning/manage/[courseKey]/actions", () => Object.fromEntries(
-  ["assignCourseAction","saveSettingsAction","addBlockAction","addPartAction","archiveAction","moveBlockAction","movePartAction","newVersionAction","publishAction","removeBlockAction","removePartAction","updateBlockAction","updatePartAction"].map(n => [n, async () => {}])))
+  ["addPartTestAction","removePartTestAction","partTestRequiredAction","assignCourseAction","saveSettingsAction","addBlockAction","addPartAction","archiveAction","moveBlockAction","movePartAction","newVersionAction","publishAction","removeBlockAction","removePartAction","updateBlockAction","updatePartAction"].map(n => [n, async () => {}])))
 
 const at = new Date("2026-09-20T00:00:00Z")
 const part = (key: string, blocks: Part["blocks"] = [{ id: "t", type: "text", markdown: "Vitajte v kurze." }]): Part => ({ key, title: `Časť ${key}`, required: true, tests: [], blocks })
@@ -107,6 +108,9 @@ describe("/learning/manage/[courseKey]", () => {
     expect(up).toContain("Povinné dopozeranie")
     const doc = await render({ tab: "parts", part: "uvod", add: "document" })
     expect(doc).toContain("Smernica BOZP")
+    // Priradiť sa dá len pripravený test (rám MANAGE-COURSE, TESTS).
+    expect(doc).toContain("Priradiť test")
+    expect(doc).toContain("Evakuácia")
   })
 
   it("úprava textového bloku na mieste", async () => {

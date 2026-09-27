@@ -62,9 +62,9 @@ describe("import zapisuje len to, co v riadku naozaj je", () => {
     expect(set()).not.toHaveProperty("groupHistory")
   })
 
-  it("prazdne pole sa zapise — je to pokyn vyprazdnit", async () => {
+  it("prazdne pole sa v rezime prepisu zapise — je to pokyn vyprazdnit", async () => {
     existing = { groupHistory: [{ group: "rozhodcovia", from: new Date("2026-01-01") }] }
-    await upsertPersons([row({ groups: [], tracks: [], roles: [] })], "test@futbalsfz.sk")
+    await upsertPersons([row({ groups: [], tracks: [], roles: [] })], "test@futbalsfz.sk", "overwrite")
 
     expect(set().groups).toEqual([])
     expect(set().tracks).toEqual([])
@@ -97,5 +97,88 @@ describe("import zapisuje len to, co v riadku naozaj je", () => {
     await upsertPersons([row({ groups: ["rozhodcovia"] })], "a@b.sk")
     expect(set().groups).toEqual(["rozhodcovia"])
     expect(onInsert()).not.toHaveProperty("groups")
+  })
+})
+
+/*
+  ADR-019: existujúcej osobe sa predvolene **dopĺňajú len prázdne polia** —
+  rovnako ako pri doplnení z adresára (`fillMissing`, D88). Súbor od
+  personalistu je zdroj pre ľudí, ktorých systém nepozná; tí, ktorých pozná,
+  si údaje mohli medzitým opraviť sami a import ich nesmie potichu vrátiť.
+*/
+describe("existujuca osoba: predvolene sa doplnaju len prazdne polia (ADR-019)", () => {
+  const full = () => ({
+    fullName: "Anna Stará",
+    givenName: "Anna",
+    surname: "Stará",
+    jobTitle: "Referentka",
+    department: "Ekonomické oddelenie",
+    personType: "employee",
+    language: "cs",
+    groups: ["ekonomika"],
+    tracks: ["zaklad"],
+    groupHistory: [{ group: "ekonomika", from: new Date("2026-01-01") }],
+  })
+
+  it("co osoba uz ma, sa neprepise — ani ked subor nesie inu hodnotu", async () => {
+    existing = full()
+    const v = await upsertPersons(
+      [row({ fullName: "Anna Nová", givenName: "Anna", surname: "Nová", jobTitle: "Vedúca", department: "IT", groups: ["it"], language: "en" })],
+      "test@futbalsfz.sk",
+    )
+    // Nie je co zapisat — riadok sa zarata ako „bez zmeny" a do databazy nejde nic.
+    expect(updates).toHaveLength(0)
+    expect(v.unchanged).toBe(1)
+    expect(v.updated).toBe(0)
+  })
+
+  it("prazdne polia sa doplnia, vyplnene ostanu", async () => {
+    existing = { ...full(), jobTitle: "", mobilePhone: null, groups: [], groupHistory: [] }
+    await upsertPersons(
+      [row({ fullName: "Anna Nová", jobTitle: "Vedúca", mobilePhone: "+421900000000", groups: ["it"], department: "IT" })],
+      "test@futbalsfz.sk",
+    )
+    expect(set().jobTitle).toBe("Vedúca")
+    expect(set().mobilePhone).toBe("+421900000000")
+    expect(set().groups).toEqual(["it"])
+    // Historia clenstva ide so skupinami: doplnenie prazdnych skupin ju zalozi.
+    expect(set().groupHistory).toBeDefined()
+    expect(set()).not.toHaveProperty("fullName")
+    expect(set()).not.toHaveProperty("department")
+    expect(set()).not.toHaveProperty("personType")
+    expect(set()).not.toHaveProperty("language")
+  })
+
+  it("ked sa skupiny nedoplnaju, nehybe sa ani ich historia", async () => {
+    existing = { ...full(), jobTitle: "" }
+    await upsertPersons([row({ jobTitle: "Vedúca", groups: ["it"] })], "test@futbalsfz.sk")
+    expect(set().jobTitle).toBe("Vedúca")
+    expect(set()).not.toHaveProperty("groups")
+    expect(set()).not.toHaveProperty("groupHistory")
+  })
+
+  it("v rezime prepisu sa existujuca hodnota prepise", async () => {
+    existing = full()
+    await upsertPersons([row({ fullName: "Anna Nová", jobTitle: "Vedúca", groups: ["it"] })], "test@futbalsfz.sk", "overwrite")
+    expect(set().fullName).toBe("Anna Nová")
+    expect(set().jobTitle).toBe("Vedúca")
+    expect(set().groups).toEqual(["it"])
+  })
+
+  it("chybajuce oddelenie a nastup sa do $set nedostanu ani ako undefined", async () => {
+    // Driver by `undefined` ulozil ako `null` — a to je prepis, nie mlcanie.
+    existing = full()
+    await upsertPersons([row({ fullName: "Anna Nová" })], "test@futbalsfz.sk", "overwrite")
+    expect(set()).not.toHaveProperty("department")
+    expect(set()).not.toHaveProperty("startDate")
+  })
+
+  it("nova osoba sa zaklada rovnako v oboch rezimoch", async () => {
+    existing = null
+    await upsertPersons([row({ jobTitle: "Vedúca", department: "IT" })], "test@futbalsfz.sk")
+    expect(set().fullName).toBe("Anna Bieliková")
+    expect(set().jobTitle).toBe("Vedúca")
+    expect(set().department).toBe("IT")
+    expect(onInsert().status).toBe("invited")
   })
 })

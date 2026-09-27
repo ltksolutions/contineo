@@ -372,7 +372,10 @@ async function importSettings(companyCode: string): Promise<ImportSettings> {
 }
 
 /** Zápis. Volá sa až po náhľade, z toho istého textu. */
-export async function runImportAction(text: string): Promise<{ ok: boolean; message: string }> {
+export async function runImportAction(
+  text: string,
+  overwrite = false,
+): Promise<{ ok: boolean; message: string }> {
   const actor = await peopleAdmin()
   if (!actor) return { ok: false, message: NO_RIGHT }
 
@@ -380,11 +383,13 @@ export async function runImportAction(text: string): Promise<{ ok: boolean; mess
     // Ten istý súbor a tie isté nastavenia ako v náhľade — inak by zápis
     // spravil niečo iné, než čo si personalista pred chvíľou odsúhlasil.
     const people = csvToPersons(text, actor.companyCode, await importSettings(actor.companyCode))
-    const v = await upsertPersons(people, actor.email)
+    // Predvolene sa existujúcim len dopĺňajú prázdne polia (ADR-019); prepis
+    // je výslovná voľba personalistu na obrazovke, nie vlastnosť súboru.
+    const v = await upsertPersons(people, actor.email, overwrite ? "overwrite" : "fill")
     revalidatePath("/people")
     return {
       ok: true,
-      message: say(actor.language).importResult(v.created, v.updated, v.unchanged, v.errors.length),
+      message: say(actor.language).importResult(v.created, v.updated, v.unchanged, v.errors.length, overwrite),
     }
   } catch (e) {
     return { ok: false, message: errorMessage(e, actor.language) }
