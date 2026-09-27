@@ -1,0 +1,185 @@
+"use server"
+
+/**
+ * Akcie úpravy kurzu (rám MANAGE-COURSE). Rola `learning-admin` sa overuje
+ * v každej akcii. Menia sa len **koncepty** — `saveDraft` má v podmienke
+ * stav `draft`, zverejnená verzia sa nezmení ani súbežným klikom (D118).
+ */
+
+import { redirect } from "next/navigation"
+import { revalidatePath } from "next/cache"
+import { learningAdminContext } from "@/lib/learning"
+import { archiveCourse, getCourse, publishCourse, saveDraft, startNewVersion } from "@/lib/coursesDb"
+import { draftVersion, type ContentBlock, type Part } from "@/lib/courses"
+import { addBlock, addPart, DraftError, moveBlock, movePart, removeBlock, removePart, updateBlock, updatePart } from "@/lib/courseDraft"
+import { documentChoices } from "@/lib/courseDocs"
+import { embedUrl } from "@/lib/courseView"
+import { AppError } from "@/lib/appError"
+import { dictionary, errorText } from "@/lib/i18n"
+
+function field(fd: FormData, name: string): string {
+  const v = fd.get(name)
+  return typeof v === "string" ? v.trim() : ""
+}
+
+async function admin() {
+  const ctx = await learningAdminContext()
+  if (ctx.state !== "ready") redirect("/")
+  return ctx
+}
+
+function go(courseKey: string, query: string, message?: string, error = false): never {
+  const base = `/learning/manage/${courseKey}`
+  revalidatePath(base)
+  const msg = message ? `${query ? "&" : ""}msg=${encodeURIComponent(message)}${error ? "&error=1" : ""}` : ""
+  redirect(`${base}${query || msg ? "?" : ""}${query}${msg}`)
+}
+
+/** Úprava častí konceptu: načítať, zmeniť čistou funkciou, zapísať. */
+async function editParts(fd: FormData, change: (parts: Part[]) => Part[], query: (fd: FormData) => string) {
+  const ctx = await admin()
+  const courseKey = field(fd, "courseKey")
+  const course = await getCourse(ctx.person.companyCode, courseKey)
+  if (!course) redirect("/learning/manage")
+  const draft = draftVersion(course)
+  try {
+    if (!draft) throw new DraftError("learning.noDraft", "Kurz nemá koncept.", { key: courseKey })
+    await saveDraft(ctx.person.companyCode, courseKey, { parts: change(draft.parts) }, ctx.person.email)
+  } catch (e) {
+    if (!(e instanceof AppError)) console.error("[learning] úprava konceptu zlyhala:", e)
+    go(courseKey, query(fd), errorText(e, ctx.person.language), true)
+  }
+  go(courseKey, query(fd))
+}
+
+const partsTab = () => "tab=parts"
+const partTab = (fd: FormData) => `tab=parts&part=${encodeURIComponent(field(fd, "partKey"))}`
+const dir = (fd: FormData): "up" | "down" => (field(fd, "dir") === "up" ? "up" : "down")
+
+export async function addPartAction(fd: FormData) {
+  await editParts(fd, parts => addPart(parts, field(fd, "title"), fd.get("required") === "1"), partsTab)
+}
+
+export async function movePartAction(fd: FormData) {
+  await editParts(fd, parts => movePart(parts, field(fd, "partKey"), dir(fd)), partsTab)
+}
+
+export async function updatePartAction(fd: FormData) {
+  const minutes = Number(field(fd, "estimatedMinutes"))
+  await editParts(fd, parts => updatePart(parts, field(fd, "partKey"), {
+    title: field(fd, "title"),
+    required: fd.get("required") === "1",
+    summary: field(fd, "summary"),
+    estimatedMinutes: Number.isFinite(minutes) && minutes > 0 ? minutes : null,
+  }), partTab)
+}
+
+export async function removePartAction(fd: FormData) {
+  await editParts(fd, parts => removePart(parts, field(fd, "partKey")), partsTab)
+}
+
+export async function moveBlockAction(fd: FormData) {
+  await editParts(fd, parts => moveBlock(parts, field(fd, "partKey"), field(fd, "blockId"), dir(fd)), partTab)
+}
+
+export async function removeBlockAction(fd: FormData) {
+  await editParts(fd, parts => removeBlock(parts, field(fd, "partKey"), field(fd, "blockId")), partTab)
+}
+
+function providerOf(url: string): "youtube" | "vimeo" | "stream" {
+  if (/youtu\.?be/.test(url)) return "youtube"
+  if (/vimeo\.com/.test(url)) return "vimeo"
+  return "stream"
+}
+
+/** Blok z formulára „Pridať blok". Súbory sú už nahraté (`fileIds`). */
+async function blockFrom(fd: FormData, companyCode: string): Promise<ContentBlock> {
+  const id = crypto.randomUUID()
+  const ids = field(fd, "fileIds").split(",").map(s => s.trim()).filter(Boolean)
+  switch (field(fd, "type")) {
+    case "image":
+      if (!ids[0]) throw new DraftError("learning.fileRequired", "Najprv nahrajte súbor.")
+      return { id, type: "image", fileId: ids[0], alt: field(fd, "alt"), caption: field(fd, "caption") || undefined }
+    case "gallery": {
+      if (!ids.length) throw new DraftError("learning.fileRequired", "Najprv nahrajte súbor.")
+      const alt = field(fd, "alt")
+      return { id, type: "gallery", items: ids.map((fileId, i) => ({ fileId, alt: alt ? (ids.length > 1 ? `${alt} ${i + 1}` : alt) : "" })) }
+    }
+    case "document": {
+      const [documentId, versionId] = field(fd, "document").split("|")
+      const choice = (await documentChoices(companyCode)).find(c => c.documentId === documentId && c.versionId === versionId)
+      if (!choice) throw new DraftError("learning.documentRequired", "Vyberte dokument z knižnice.")
+      return { id, type: "document", documentId, versionId, title: choice.title }
+    }
+    case "video": {
+      if (field(fd, "source") === "external") {
+        const url = field(fd, "url")
+        const provider = providerOf(url)
+        if (!embedUrl(provider, url)) throw new DraftError("learning.urlInvalid", "Adresa videa nie je platná.")
+        return { id, type: "video", source: { kind: "external", provider, url }, mustWatch: false }
+      }
+      if (!ids[0]) throw new DraftError("learning.fileRequired", "Najprv nahrajte súbor.")
+      const duration = Number(field(fd, "durationSec"))
+      return {
+        id, type: "video", source: { kind: "internal", assetId: ids[0] }, mustWatch: fd.get("mustWatch") === "1",
+        durationSec: Number.isFinite(duration) && duration > 0 ? duration : undefined,
+      }
+    }
+    default:
+      return { id, type: "text", markdown: field(fd, "markdown") }
+  }
+}
+
+export async function addBlockAction(fd: FormData) {
+  const ctx = await admin()
+  let block: ContentBlock
+  try {
+    block = await blockFrom(fd, ctx.person.companyCode)
+  } catch (e) {
+    go(field(fd, "courseKey"), `${partTab(fd)}&add=${encodeURIComponent(field(fd, "type"))}`, errorText(e, ctx.person.language), true)
+  }
+  await editParts(fd, parts => addBlock(parts, field(fd, "partKey"), block), partTab)
+}
+
+/** Úprava bloku na mieste: text, popisy obrázka, povinné dopozeranie. */
+export async function updateBlockAction(fd: FormData) {
+  await editParts(fd, parts => updateBlock(parts, field(fd, "partKey"), field(fd, "blockId"), b => {
+    if (b.type === "text") return { ...b, markdown: field(fd, "markdown") || b.markdown }
+    if (b.type === "image") return { ...b, alt: field(fd, "alt") || b.alt, caption: field(fd, "caption") || undefined }
+    if (b.type === "video") return { ...b, mustWatch: fd.get("mustWatch") === "1" }
+    return b
+  }), partTab)
+}
+
+export async function publishAction(fd: FormData) {
+  const ctx = await admin()
+  const courseKey = field(fd, "courseKey")
+  const t = dictionary(ctx.person.language).learning.edit
+  // Testy pribudnú s L2 — dovtedy nie je žiadny `ready` a kurz s testom sa nezverejní.
+  const r = await publishCourse(ctx.person.companyCode, courseKey, ctx.person.email)
+  go(courseKey, "", r.ok ? t.published(r.version.version) : t.cannotPublish, !r.ok)
+}
+
+export async function newVersionAction(fd: FormData) {
+  const ctx = await admin()
+  const courseKey = field(fd, "courseKey")
+  const t = dictionary(ctx.person.language).learning.edit
+  let version = 0
+  try {
+    version = (await startNewVersion(ctx.person.companyCode, courseKey, ctx.person.email)).version
+  } catch (e) {
+    go(courseKey, "", errorText(e, ctx.person.language), true)
+  }
+  go(courseKey, "tab=parts", t.newVersionStarted(version))
+}
+
+export async function archiveAction(fd: FormData) {
+  const ctx = await admin()
+  const courseKey = field(fd, "courseKey")
+  try {
+    await archiveCourse(ctx.person.companyCode, courseKey, ctx.person.email)
+  } catch (e) {
+    go(courseKey, "", errorText(e, ctx.person.language), true)
+  }
+  go(courseKey, "", dictionary(ctx.person.language).learning.edit.archived)
+}

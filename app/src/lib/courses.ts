@@ -183,6 +183,8 @@ export type PublishProblem =
   | { code: "mustWatchExternal"; partKey: string; blockId: string }
   | { code: "testNotReady"; partKey: string; testKey: string }
   | { code: "noIssuer" }
+  /** Výsledky kurzu sú osobné údaje — bez právneho základu sa nezverejní (D121, rám MANAGE-COURSE). */
+  | { code: "noLegalBasis" }
 
 /**
  * Čo bráni zverejneniu (plán L1, bod 8). Prázdne pole = dá sa zverejniť.
@@ -192,7 +194,7 @@ export type PublishProblem =
  * než zverejniť kurz, ktorého povinný test sa nikdy nedá prejsť.
  */
 export function publishProblems(
-  version: Pick<CourseVersion, "title" | "parts" | "issuesCertificate" | "issuer">,
+  version: Pick<CourseVersion, "title" | "parts" | "issuesCertificate" | "issuer" | "legalBasisKey">,
   readyTests: ReadonlySet<string> = new Set(),
 ): PublishProblem[] {
   const out: PublishProblem[] = []
@@ -220,6 +222,7 @@ export function publishProblems(
     }
   }
   if (version.issuesCertificate && !version.issuer?.name.trim()) out.push({ code: "noIssuer" })
+  if (!version.legalBasisKey) out.push({ code: "noLegalBasis" })
   return out
 }
 

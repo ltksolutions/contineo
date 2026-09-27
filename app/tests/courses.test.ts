@@ -13,7 +13,7 @@ const at = new Date("2026-10-01T00:00:00Z")
 const part = (key: string, over: Partial<Part> = {}): Part => ({ key, title: key, required: true, tests: [], blocks: [{ id: "t", type: "text", markdown: "x" }], ...over })
 const version = (over: Partial<CourseVersion> = {}): CourseVersion => ({
   versionId: "v1", version: 1, state: "published", title: "BOZP", sequential: false, parts: [part("uvod")],
-  issuesCertificate: false, createdAt: at, createdBy: "jan@sfz.sk", ...over,
+  issuesCertificate: false, legalBasisKey: "legitimate_interest", createdAt: at, createdBy: "jan@sfz.sk", ...over,
 })
 const course = (key: string, over: Partial<Course> = {}): Course => ({
   companyCode: "SFZ", key, title: key, topicKey: "bozp", topicLabel: "BOZP", smartTags: [], language: "sk",
@@ -26,6 +26,7 @@ const enrollment = (courseKey: string, over: Partial<Enrollment> = {}): Enrollme
 
 describe("publishProblems", () => {
   it("čistý koncept prejde", () => expect(publishProblems(version())).toEqual([]))
+  it("bez právneho základu nie", () => expect(publishProblems(version({ legalBasisKey: undefined })).map(p => p.code)).toEqual(["noLegalBasis"]))
   it("pomenuje všetko, čo chýba", () => {
     const codes = publishProblems(version({
       title: " ",

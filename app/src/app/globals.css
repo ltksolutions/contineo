@@ -6145,3 +6145,49 @@ html[data-theme="dark"] { --skeleton-sheen: rgba(255, 255, 255, 0.07); }
   .tg-bar.is-on { bottom: calc(56px + env(safe-area-inset-bottom)); margin: 0 -16px; border-radius: 0; border-width: 1px 0 0; }
   .tg-bar .button { flex: 1 1 auto; min-height: 44px; justify-content: center; }
 }
+
+/* ── Vzdelávanie: úprava kurzu (rám MANAGE-COURSE-uprava-kurzu, 27. 9. 2026) ─ */
+.mc { max-width: 1180px; margin: 0 auto; display: grid; gap: 16px; }
+.mc .ch { margin-bottom: 0; }
+.mc-status { margin: 0; }
+.mc-foot { display: flex; align-items: center; gap: 8px 12px; flex-wrap: wrap; }
+.mc-foot form { display: contents; }
+.mc-body { display: grid; gap: 16px; }
+.mc-ro { margin: 0; padding: 10px 12px; border-radius: 9px; background: var(--surface-2); font-size: 13px; color: var(--muted); }
+.mc-list { padding: 0; overflow: hidden; }
+.mc-row { display: flex; align-items: center; gap: 6px 12px; flex-wrap: wrap; padding: 10px 16px; border-bottom: 1px solid var(--line); margin: 0; }
+.mc-row:last-child { border-bottom: 0; }
+.mc-row-main { flex: 1 1 220px; min-width: 0; display: grid; gap: 2px; }
+.mc-row-meta { display: flex; align-items: center; gap: 4px 10px; flex-wrap: wrap; font-size: 12.5px; color: var(--muted); overflow-wrap: anywhere; }
+.mc-row-meta .tag { min-height: 22px; padding: 0 8px; font-size: 11.5px; }
+.mc-arrows { display: inline-flex; gap: 4px; }
+.mc-arrow { min-width: 32px; min-height: 32px; padding: 0; justify-content: center; }
+.mc-inline { display: flex; align-items: center; gap: 8px 12px; flex-wrap: wrap; }
+.mc-inline .field-input { flex: 1 1 220px; }
+.mc-check { display: inline-flex; align-items: center; gap: 8px; font-size: 14px; min-height: 36px; }
+.mc-check input { width: 16px; height: 16px; accent-color: var(--accent); }
+.mc-form { display: grid; gap: 12px; }
+.mc-minutes { max-width: 200px; }
+.mc-note { margin: -4px 0 0; font-size: 12.5px; }
+.mc-h2 { font-size: var(--fs-section); margin: 0; }
+.mc-detail { display: grid; grid-template-columns: minmax(0, 1fr); gap: 20px; align-items: start; }
+.mc-side { display: grid; gap: 2px; }
+.mc-side .pp-orow { display: none; }
+.mc-main { display: grid; gap: 16px; min-width: 0; }
+.mc-partform { display: grid; gap: 10px; }
+.mc-blockedit { flex-basis: 100%; padding: 8px 0 4px; }
+.btype { font-size: 10.5px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); background: var(--surface-2); border-radius: 5px; padding: 3px 7px; white-space: nowrap; }
+.cmu { display: grid; gap: 8px; }
+
+@media (max-width: 639px) {
+  .mc-arrow { min-width: 40px; min-height: 40px; }
+  .mc-check { min-height: 44px; }
+  .mc-foot .button { width: 100%; min-height: 44px; justify-content: center; }
+}
+
+@media (min-width: 1024px) {
+  .mc-detail { grid-template-columns: 240px minmax(0, 1fr); }
+  .mc-side { position: sticky; top: 12px; }
+  .mc-side .pp-orow { display: flex; }
+  .mc-back { display: none; }
+}
