@@ -40,7 +40,12 @@
 | **Log pripomienok** (`reminder_log`) | komu sa v ktorý deň odoslala pripomienka | áno |
 | **Upozornenia** (`notifications`) | ktorej osobe sa ukázala ktorá udalosť a kedy si ju prečítala | áno |
 | **Záznamy odpovedí** (`evaluations`) | pri **každej** odpovedi: otázka človeka a odpoveď systému **doslovne**, zdroje a citácie, model, časy a cena, organizácia a **`persons.id`** toho, kto sa pýtal (od O17, 2026-09-16 — predtým e-mail); nepovinne „sedí/nesedí" a popis chyby od čitateľa, posudok hodnotiteľa a `persons.id` hodnotiteľa | áno — otázka je voľný text, podpisy sú pseudonymné odkazy |
-| **Evidenčné údaje osoby** (`persons`) | meno a priezvisko zvlášť, tituly, pracovná pozícia, oddelenie, **mobilný telefón**, pracovisko (mesto/obec) | áno |
+| **Evidenčné údaje osoby** (`persons`) | meno a priezvisko zvlášť, tituly, pracovná pozícia, oddelenie, **mobilný telefón**, pracovisko (mesto/obec), **pohlavie** (voliteľné, D133) | áno |
+| **Zápisy do kurzov** (`enrollments`) | kto, do ktorej verzie kurzu, kedy, kto pridelil | áno |
+| **Dokončenia častí** (`part_completions`) | kto dokončil ktorú časť kurzu a kedy | áno |
+| **Sledovanie videa** (`video_watch`) | ktoré úseky videa osoba pozrela, kedy prekročila hranicu | áno — údaj o správaní |
+| **Pokusy v testoch** (`test_attempts`) | losované otázky, odpovede, body, výsledok, časy; meno a e-mail ako kópia | áno |
+| **Certifikáty** (`certificates`) | meno a pohlavie (kópia), kurz, číslo, overovací kód, vydavateľ, podpisujúci, uložené PDF | áno — po lehote anonymizované (D132) |
 | **Fotka osoby** (`person_photos`) | fotografia ako uložený súbor | áno |
 | **Prihlasovacie kontá** (`auth_users`) | e-mail, meno, `emailVerified` — technická vrstva NextAuth pod `persons` (`lib/authAdapter.ts`) | áno |
 | **Jednorazové tokeny** (`auth_tokens`) | e-mail + token prihlasovacieho odkazu, platnosť; **maže sa pri použití** | áno |
@@ -138,6 +143,10 @@ niečo o správaní konkrétneho človeka, nie o jeho povinnosti. Preto:
 | **Prihlasovacie kontá** (`auth_users`) | **s osobou** | technická vrstva pod `persons`; sama o sebe drží len e-mail a meno, ale bez nej sa osoba neprihlási — maže sa spolu s ňou |
 | **Jednorazové tokeny** (`auth_tokens`) | **po použití** | `useVerificationToken()` ho zmazá hneď pri výmene. **Nepoužitý token však TTL nemá** — zostane v kolekcii aj po expirácii; drobná, ale zbytočná stopa |
 | **Fotky osôb** (`person_photos`) | **s osobou** | nemá vlastný dôvod existovať dlhšie než osoba |
+| **Pohlavie** (`persons.gender`) | **s osobou** (D133) | evidenčný údaj; voliteľné; oprávnený záujem (štatistiky zloženia, gramatika textov) |
+| **Vzdelávanie** (`enrollments`, `part_completions`, `video_watch`, `test_attempts`) | **ako potvrdenia** (DPO 2026-09-28, ADR-021, D130) | doklad o školení slúži tomu istému ako doklad o oboznámení |
+| **Odpovede v teste a sledovanie videa** | **12 mesiacov po dokončení kurzu** (D131) | podrobnejšie, než treba na preukázanie; zostáva výsledok a dokončenie časti. Nedokončený kurz sa neorezáva |
+| **Certifikáty** (`certificates`) | **anonymizácia** po lehote osoby (D132) | meno, väzba na osobu a PDF preč; číslo zostáva overiteľné — papier u držiteľa platí ďalej |
 | **Audit** (`audit`) | 24 mesiacov (DPO 2026-09-24, B6) | dnes sa **nemaže** — TTL nie je zavedený |
 
 > Lehoty sú **návrh** — finálne čísla potvrdí DPO/právnik podľa účelu a prípadných zákonných povinností.

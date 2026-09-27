@@ -901,8 +901,9 @@ nie táto sekcia.
 - [x] **L2** ✅ 2026-09-27 (PR #143–#146), **okrem dodatku k ADR-012** (riadok nižšie) — `questions.ts`, `tests.ts` (sekcie, zodpovedné osoby, `ready`), `testAttempts.ts` (losovanie, snímky, vyhodnotenie), pokus a výsledok, `?tab=results` len pre zodpovedné osoby; **dodatok k ADR-012** (retencia `part_completions`, `video_watch`, `test_attempts`, `certificates`; certifikát sa anonymizuje) — O24
 - [x] **L3** ✅ 2026-09-27 (PR #147, #149) — `certificates.ts`, PDF s QR (`pdf-lib`, písma Noto v `app/assets/fonts`), `/learning/[courseKey]/certificate`, verejné `/verify/[registrationNumber]?h=`, `revoke`. Rate limit na `/verify` **nie** (Ján 27. 9.; hash má 80 bitov).
 - [x] **Pohlavie osoby** `persons.gender` ✅ 2026-09-28 (PR #150, #153) — „absolvoval / absolvovala" na certifikáte, štatistiky zloženia; formulár, pozvanie, import (`pohlavie`, berie aj pán/pani). Nevyplnené = „absolvoval(a)", PDF sa vtedy neukladá.
-- [ ] **Dodatok k ADR-012 (O24)** — retencia `part_completions`, `video_watch`, `test_attempts`, `certificates`; anonymizácia certifikátu (`anonymizedAt`, meno preč, číslo overiteľné) a jej beh v crone. Rozhoduje Ján ako DPO.
-- [ ] **Pohlavie do záznamu o spracúvaní** (C2) — účel: štatistiky zloženia, gramatika textov.
+- [x] **Dodatok k ADR-012 (O24)** — rozhodnuté ako **ADR-021** ✅ 2026-09-28 (D130–D133): lehota ako doklady, podrobnosti 12 mesiacov po dokončení, certifikát sa anonymizuje. C2 a `GDPR_DATA_PROTECTION.md` doplnené.
+- [ ] **ADR-021 v kóde** — retenčná dávka pre kolekcie vzdelávania, anonymizácia certifikátu, orezanie podrobností po roku (ADR-021 kap. 5).
+- [x] **Pohlavie do záznamu o spracúvaní** (C2) ✅ 2026-09-28 — D133, oprávnený záujem, voliteľné.
 - [ ] Médiá aj v **odpovediach** (D120 — otázky ich majú, voľby zatiaľ len text).
 - [ ] Náhľad kurzu pre `learning-admin` bez zápisu; prideľovanie kurzu aj pre `hr`.
 - [ ] Nahrávanie médií bez JavaScriptu (dnes len modálne okno s priebehom).

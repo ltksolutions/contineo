@@ -32,6 +32,7 @@ identita rozhodnutia** a je použité v stovkách komentárov v kóde
 | [ADR-018](ADR-018-modul-learning.md) | Vzdelávanie ako modul platformy (`learning`); ClubUp ako produkt nad Contineom | ✅ prijaté |
 | [ADR-019](ADR-019-import-doplna-existujucich.md) | Import osôb existujúcim dopĺňa len prázdne polia; prepis je výslovná voľba | ✅ prijaté |
 | [ADR-020](ADR-020-jedna-session-jeden-worktree.md) | Každá súbežná session pracuje vo vlastnom `git worktree` | ✅ prijaté |
+| [ADR-021](ADR-021-retencia-vzdelavania-a-pohlavie.md) | Retencia vzdelávania (lehota ako doklady, podrobnosti po roku, anonymizácia certifikátu) a pohlavie osoby | ✅ prijaté |
 
 ## Čo sem nepatrí
 
@@ -44,6 +45,6 @@ rozhodnutia. Zostávajú v `docs/`.
 
 ## Nové ADR
 
-Ďalšie voľné číslo je **ADR-021**. Súbor `ADR-021-kratky-nazov.md` sem, riadok
+Ďalšie voľné číslo je **ADR-022**. Súbor `ADR-022-kratky-nazov.md` sem, riadok
 do tabuľky vyššie, a v hlavičke sa uvedie stav, dátum, kto rozhodol a na čo to
 nadväzuje. Rituál **„Rozhodni"** robí presne toto.
