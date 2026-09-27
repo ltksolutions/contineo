@@ -267,6 +267,21 @@ export default async function PersonDetailPage({
         </div>
 
         <div className="field">
+          <span className="field-label">{t.salutation}</span>
+          <Select language={language}
+            name="salutation"
+            fieldLabel={t.salutation}
+            initial={o.salutation ?? ""}
+            options={[
+              { value: "", label: d.salutations.none },
+              { value: "mr", label: d.salutations.mr },
+              { value: "ms", label: d.salutations.ms },
+            ]}
+          />
+          <span className="quiet field-hint">{t.salutationNote}</span>
+        </div>
+
+        <div className="field">
           <span className="field-label">{t.groups}</span>
           <TagSelect
             name="groups"

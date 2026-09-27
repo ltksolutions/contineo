@@ -31,7 +31,7 @@ export default function CertificateCard({ c, language }: { c: Certificate; langu
       </div>
       <p className="cert-kicker">{t.kicker}</p>
       <h1 className="cert-name">{c.holderName ?? "—"}</h1>
-      <p className="cert-course">{t.completedCourse(c.courseTitle, c.courseVersion)}</p>
+      <p className="cert-course">{t.completedCourse(c.courseTitle, c.courseVersion, c.holderSalutation)}</p>
       <dl className="cert-facts">
         <div><dt>{t.number}</dt><dd><code>{c.registrationNumber}</code></dd></div>
         <div><dt>{t.completed}</dt><dd>{formatDate(c.completedAt, language)}</dd></div>

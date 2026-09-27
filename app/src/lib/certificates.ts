@@ -40,6 +40,12 @@ export interface Certificate {
   personId: string
   /** Kópia mena; pri retencii sa odstráni (`anonymizedAt`). */
   holderName: string | null
+  /**
+   * Kópia oslovenia pre tvar „absolvoval/-a". Chýba = v čase vydania
+   * nebolo vyplnené; doplní sa raz, keď ho osoba dostane
+   * (`withHolderSalutation`), potom sa nemení.
+   */
+  holderSalutation?: "mr" | "ms"
   courseKey: string
   versionId: string
   courseTitle: string

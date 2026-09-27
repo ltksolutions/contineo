@@ -139,7 +139,7 @@ export default function PeopleImport({ language }: { language?: UiLanguage }) {
         <span className="quiet field-hint">
           {t.fileNoteBefore}<code>email</code>, <code>meno</code>,{" "}
           <code>oddelenie</code>, <code>typ</code>, <code>nástup</code>, <code>trasy</code>,{" "}
-          <code>skupiny</code>, <code>jazyk</code>{t.fileNoteAfter}
+          <code>skupiny</code>, <code>jazyk</code>, <code>oslovenie</code>{t.fileNoteAfter}
         </span>
       </label>
 
@@ -172,6 +172,7 @@ export default function PeopleImport({ language }: { language?: UiLanguage }) {
         const label = (field: string, v: unknown): string => {
           if (typeof v === "string" && field === "personType") return people.types[v as keyof typeof people.types] ?? v
           if (typeof v === "string" && field === "language") return people.languages[v as keyof typeof people.languages] ?? v
+          if (typeof v === "string" && field === "salutation") return people.salutations[v] ?? v
           return show(v, t.emptyValue)
         }
 

@@ -165,3 +165,29 @@ export function needsInvitation(
 ): boolean {
   return person.status !== "inactive" && !person.firstLoginAt
 }
+
+// ── Oslovenie ────────────────────────────────────────────────────────────────
+
+/**
+ * Oslovenie (pán / pani) — **len kvôli gramatike** textov o osobe:
+ * „absolvoval" / „absolvovala" na certifikáte (Ján 27. 9. 2026).
+ *
+ * Z mena sa nehádá: „-ová" nie je pravidlo a chybný tvar na certifikáte
+ * je horší než zátvorka. Kým nie je vyplnené, text použije „absolvoval(a)".
+ */
+export const SALUTATIONS = ["mr", "ms"] as const
+export type Salutation = (typeof SALUTATIONS)[number]
+
+/** Hodnota z formulára alebo zo súboru → `mr` | `ms`; inak `undefined`. */
+export function normalizeSalutation(raw: string | undefined | null): Salutation | undefined {
+  const v = (raw ?? "").trim().toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/\.$/, "")
+  if (!v) return undefined
+  if (["mr", "pan", "p", "muz", "m"].includes(v)) return "mr"
+  if (["ms", "mrs", "pani", "pi", "zena", "z", "f"].includes(v)) return "ms"
+  return undefined
+}
+
+/** Tri tvary slovesa podľa oslovenia: muž, žena, neznáme. */
+export function bySalutation<T>(s: Salutation | undefined, forms: { mr: T; ms: T; unknown: T }): T {
+  return s === "mr" ? forms.mr : s === "ms" ? forms.ms : forms.unknown
+}

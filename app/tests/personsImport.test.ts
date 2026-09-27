@@ -34,6 +34,15 @@ describe("riadok na osobu", () => {
     expect(rowToPerson({ email: "a@b.sk" }).language).toBeUndefined()
   })
 
+  it("oslovenie: pán/pani v rôznych tvaroch; prázdne a neznáme = nevyplnené", () => {
+    expect(rowToPerson({ email: "a@b.sk", oslovenie: "Pán" }).salutation).toBe("mr")
+    expect(rowToPerson({ email: "a@b.sk", oslovenie: "pani" }).salutation).toBe("ms")
+    expect(rowToPerson({ email: "a@b.sk", salutation: "Ms." }).salutation).toBe("ms")
+    expect(rowToPerson({ email: "a@b.sk", oslovenie: "" }).salutation).toBeUndefined()
+    expect(rowToPerson({ email: "a@b.sk", oslovenie: "Ing." }).salutation).toBeUndefined()
+    expect(rowToPerson({ email: "a@b.sk" }).salutation).toBeUndefined()
+  })
+
   it("chýbajúci stĺpec zoznamu nechá hodnotu nevyplnenú, nie prázdnu", () => {
     // `undefined` znamená „o tomto nič nehovorím", prázdne pole znamená „zmaž".
     const o = rowToPerson({ email: "a@b.sk" })
