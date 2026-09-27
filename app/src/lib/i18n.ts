@@ -1451,6 +1451,7 @@ interface Dictionary {
       colChanges: string
       filterAll: string
       noRowsForFilter: string
+      searchPlaceholder: string
       nothingToWrite: string
       emptyValue: string
       unknownWorkplaces: string
@@ -4723,6 +4724,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       colChanges: "Čo sa zapíše",
       filterAll: "Všetko",
       noRowsForFilter: "Tomuto filtru nevyhovuje žiadny riadok.",
+      searchPlaceholder: "Hľadať v mene alebo adrese",
       nothingToWrite: "nič — všetko už má",
       emptyValue: "—",
       unknownWorkplaces: "Pracoviská, ktoré v číselníku nie sú — tieto riadky prejdú, len bez pracoviska:",
@@ -7883,6 +7885,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       colChanges: "Co se zapíše",
       filterAll: "Vše",
       noRowsForFilter: "Tomuto filtru nevyhovuje žádný řádek.",
+      searchPlaceholder: "Hledat ve jménu nebo adrese",
       nothingToWrite: "nic — vše už má",
       emptyValue: "—",
       unknownWorkplaces: "Pracoviště, která v číselníku nejsou — tyto řádky projdou, jen bez pracoviště:",
@@ -11033,6 +11036,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       colChanges: "What gets written",
       filterAll: "All",
       noRowsForFilter: "No row matches this filter.",
+      searchPlaceholder: "Search by name or e-mail",
       nothingToWrite: "nothing — already has it all",
       emptyValue: "—",
       unknownWorkplaces: "Workplaces not in the code list — these rows go through, just without a workplace:",
