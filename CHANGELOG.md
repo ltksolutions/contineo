@@ -4,6 +4,27 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Vzdelávanie: kurzy, testy a certifikáty (2026-09-27)
+
+Modul **Vzdelávanie** je pre SFZ zapnutý. Kurz má časti s textom, galériou
+a videom (povinné dopozeranie), verzie (zverejnená sa nemení, zapísaní
+dokončujú svoju) a smart:tagy `Kľúč: Hodnota`, ktoré sa dajú premenovať
+aj zlúčiť naprieč organizáciou. Testy losujú otázky z banky podľa sekcií,
+otázky môžu mať obrázok alebo video, čas stráži server a rozpracovaný
+pokus sa ukladá priebežne; výsledky vidia len zodpovedné osoby.
+
+Po dokončení kurzu sa vydá **certifikát** s číslom (`SFZ-2026-0001`),
+logom organizácie a podpisujúcim. Držiteľ ho stiahne ako **PDF s QR kódom**
+alebo vytlačí; ktokoľvek s odkazom ho overí na `/verify/…` — bez mena
+držiteľa. Správca ho môže odvolať s povinným dôvodom.
+
+### Pohlavie osoby (2026-09-28)
+
+Pri osobe pribudlo **pohlavie** (muž / žena) — na detaile, pri pozvaní
+a v importe CSV (stĺpec `pohlavie`, berie aj pán/pani). Certifikát podľa
+neho píše „absolvoval" alebo „absolvovala"; kým nie je vyplnené,
+„absolvoval(a)". Poslúži aj na štatistiky zloženia.
+
 ### Osoby SFZ naimportované; hľadanie v náhľade importu (2026-09-27)
 
 Z licenčného zoznamu M365 pribudlo **150 osôb** a 3 existujúcim sa doplnila

@@ -6,7 +6,7 @@
 > **Tento súbor je indícia, `git log` je pravda.** Keď si protirečia, verí sa
 > gitu a NEXT.md sa opraví. Aktualizuje sa pri rituáli **„Poupratuj"**.
 
-Posledná aktualizácia: **2026-09-27 večer** (import osôb SFZ, ADR-019, ADR-020; súbežne learning L3 v druhej session)
+Posledná aktualizácia: **2026-09-28 v noci** (Vzdelávanie L0–L3 v produkcii, PDF certifikátu, pohlavie osoby; import osôb SFZ)
 
 ---
 
@@ -49,17 +49,23 @@ Design).
 zverejnenie s novým názvom, prenos pridelení), uloženie kombinácie
 právnych základov, `/dpo` s námietkou, vyradená osoba.
 
-**Vzdelávanie (modul `learning`) — rozhodnuté 27. 9., ADR-018, zatiaľ bez
-kódu.** Plán L0–L3 je v `docs/LEARNING_analyza_a_plan.md`, zadanie pre
-Claude Design v `docs/design/LEARNING-zadanie.md`. Modul zostáva pre SFZ
-**vypnutý**, kým Ján nepovie; onboarding má prednosť. Prvý krok kódu je
-**L0 vo vetve `learning-l0` cez PR** (`tenants.ts` `modules.learning`,
-`lib/learning.ts` s rolou `learning-admin`, `appNav.ts`, `i18n.ts` sekcia
-`learning`, prázdne `/learning*`) — dotýka sa súborov, na ktorých beží aj
-onboarding, preto malé PR a rebase pred každým. `tracks.ts` sa v L1–L3
-nemení (O18).
+**Vzdelávanie (modul `learning`, ADR-018) je L0–L3 v produkcii** (PR
+#130–#153): kurzy s verziami a videom, banka otázok a testy, výsledky pre
+zodpovedné osoby, certifikát s overením `/verify/…?h=`, tlačou a PDF s QR.
+Pre SFZ **zapnutý**, Ján je `learning-admin`. **Naostro zatiaľ nikto kurz
+nedokončil** — žiadny certifikát v databáze, PDF ani odvolanie neboli
+skúšané na živých dátach. Rozpis zvyšku je v `docs/TODO.md`, sekcia P.
+
+**Pohlavie osoby** (`persons.gender`, muž / žena): formulár, pozvanie,
+import CSV (stĺpec `pohlavie`). Na certifikáte „absolvoval / absolvovala",
+nevyplnené = „absolvoval(a)". Zatiaľ ho nemá nikto.
 
 ## Čo čaká na rozhodnutie Jána
+
+**Dodatok k ADR-012 pre Vzdelávanie (O24):** ako dlho držať pokusy,
+dokončenia, sledovanie videa a certifikáty a kedy z certifikátu odstrániť
+meno. **Pohlavie** treba ako DPO doplniť do záznamu o spracúvaní (účel:
+štatistiky zloženia a gramatika textov).
 
 **22 osôb z `@sfzmarketing.sk`** sú v tenante SFZ ako `employee` — nechať,
 alebo typ `external` / vlastný tenant? A či doplniť ľudí mimo Basic/Standard
@@ -81,7 +87,10 @@ balančného testu (A3, A11). C1 a A3 sú brány pred pilotom.
 ## Najbližšie kroky
 
 0. **Zaradiť 153 osôb do oddelení** v `/organisation` — bez toho sa im
-   normy podľa oddelenia nepridelia (D49).
+   normy podľa oddelenia nepridelia (D49). Pri tom istom importe sa dá
+   doplniť **pohlavie** (stĺpec `pohlavie`).
+0. **Prvý kurz naostro:** Ján zverejní kurz, prejde ho sám s testom
+   a stiahne certifikát aj PDF — overiť `/verify` z QR na telefóne.
 1. **Prvé ostré nové znenie cez kartu** — pri ňom overiť nový názov,
    formulku „v znení účinnom od", kombináciu právnych základov a prenos
    pridelení (`docs/TODO.md`, O15/O16).
@@ -99,7 +108,7 @@ Všetko sa púšťa z adresára `app/`:
 cd app && npx tsc --noEmit && npx eslint . && npx vitest run && npm run build
 ```
 
-Baseline, proti ktorej sa porovnáva (27. 9. večer): **0 errors, 41 warnings,
+Baseline, proti ktorej sa porovnáva (28. 9.): **0 errors, 41 warnings,
 1864 testov v 133 súboroch.** Nová chyba alebo nové varovanie znamená regresiu, nie šum.
 
 **Tieto štyri brzdy nevidia chyby za behu.** 23. 9. prešli všetky štyri
