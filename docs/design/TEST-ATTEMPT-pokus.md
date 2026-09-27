@@ -41,6 +41,16 @@ Nová obrazovka pokusu. Nové komponenty: **otázka testu** (`AttemptQuestion`, 
 - Obrázok otázky nad voľbami (ak je).
 - Poradie volieb = uložené poradie pokusu (D120), nie poradie v banke.
 
+## Médiá v otázkach a odpovediach (D120)
+
+- **Médiá otázky nad znením**: obrázok na šírku karty (16:9, `alt`), video v prehrávači **bez povinného dopozerania** (pretáčanie voľné, limit beží ďalej; veta „Video nemusíte dopozerať — pretáčať môžete voľne, čas testu beží ďalej."). Viac médií pod sebou v poradí z banky.
+- **Odpovede s médiom = dlaždice**: 390 pod sebou, 834+ mriežka 2 stĺpce. Políčko / prepínač 26 px v ľavom hornom rohu dlaždice, celá dlaždica je `<label>`, min. 44 px. Zvolená: rám 2 px `--accent` + `--accent-soft`. Médium 4:3, text pod ním. Textová odpoveď v tej istej mriežke.
+- **Video v odpovedi**: samostatné tlačidlo „Prehrať 0:14" **mimo** `<label>` (44 px na 390) — prehratie odpoveď nevyberie.
+- „Viac správnych" — veta nad otázkou ostáva.
+- Bez JS: `<img alt>`, `<video controls>`, dlaždice ako obyčajné políčka.
+
+Rámy: 390 otázka s videom · viac správnych s dlaždicami · tmavá; 1440 oboje.
+
 ## Navigácia
 
 - 834 / 1440: pod otázkou „← Späť" · „Prehľad odpovedí" · „Ďalej →".
@@ -70,6 +80,9 @@ Druhý variant: všetky otázky v jednom `<form>`, jedno „Odovzdať test". Nam
 Nové: `AttemptBar` (klient: odpočet, ukladanie), `AttemptQuestion`, `QuestionNavigator`, `AttemptReview`, `.opt`, `.tf2`, `.q-multi`, `.adock`.
 
 ## Údaje, ktoré v modeli zatiaľ nie sú
+
+- `question.media[]` — 0..n médií otázky v poradí; `answer.media` — najviac jedno médium odpovede (pri `short_text` nikdy). `QuestionMedia = { kind: "image", fileId, alt } | { kind: "video", source: "upload" | "external", fileId?, url?, durationSec }`. `alt` povinný pri obrázku. Otázka: text **alebo** aspoň jedno médium; odpoveď: text **alebo** médium (D120, rozhodnutie 27. 9. 2026). Dokumenty ani iné súbory nie.
+- Snímka pokusu (D120) nesie aj `media` — pokus ukazuje médiá zo snímky (fileId sa po vyradení otázky nemaže, kým ho cituje pokus).
 
 - `test_attempts`: `startedAt`, `deadlineAt` (server), `answers[]` s `savedAt`, `submittedAt`, `closedBy` (`user` | `timeout`).
 - Snímky a poradie otázok/odpovedí pokusu (D120) — sú v ADR, len pripomenutie: obrazovka číta **len** zo snímky.

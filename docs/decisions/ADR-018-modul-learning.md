@@ -190,3 +190,27 @@ tenant ClubUp s vlastnou doménou.
 - Požiadavky ŽU na certifikáty a evidenciu (garancia obsahu, akreditácia) — Ján.
 - Predaj: platby, faktúry, DPH, spotrebiteľské podmienky — účtovník a právnik.
 - Test ako krok trasy: dohoda s onboardingom (ADR-005 reťaz dôkazov, `/documents`).
+
+## 6. Dodatok 27. 9. 2026 — údaje, ktoré potrebujú rámy
+
+Rámy z Claude Design (`docs/design/INDEX.md`, sekcia „Modul Vzdelávanie")
+potrebujú nad rámec D117–D123 tieto polia. Mená v rámoch a v kóde sa
+v dvoch miestach líšia — **platí kód** (stĺpec vpravo).
+
+| Údaj | Význam | V kóde |
+|---|---|---|
+| `course.sequential` | časti postupne / ľubovoľne; zamknutie sa odvodzuje (D119) | `CourseVersion.sequential` (L1, hotové) |
+| `enrollment.source` | `assignment` · `self` + kto pridelil | `Enrollment.source`, `assignedBy` (L1, hotové) |
+| `block.video.requireFullWatch`, `durationSec` | povinné dopozeranie ≥ 90 %, dĺžka zo zverejnenia | `mustWatch`, `durationSec`; zdroj `internal` = rámov `upload` (L1, hotové) |
+| `test.versions[]` | zmena receptu po priradení ku zverejnenému kurzu; kurz cituje `testVersion` (D118) | L2 |
+| `test.showAnswers` | `never` · `after_submit` · `after_pass` · `after_last_attempt` | L2 |
+| `question.media[]`, `answer.media` | `QuestionMedia = image {fileId, alt} \| video {source, fileId?, url?, durationSec}`; otázka text alebo ≥ 1 médium, odpoveď text alebo jedno médium, pri krátkom texte médium len v otázke; povinný `alt`; video v otázke bez povinného dopozerania; dokumenty nie (D120) | L2 |
+| `test_attempts.deadlineAt`, `closedBy`, `resetAt`/`resetBy`/`resetReason` | limit času stráži server (`closedBy: user \| timeout`); pokus beží ďalej po odchode (TEST-ATTEMPT Q2); reset s dôvodom (D121) | L2 |
+| `certificates.issuedBy.logo` | **kópia súboru** loga pri vydaní; bez loga organizácie logo Contineo | `Issuer.logoUrl` (typ hotový), súbor v L3 |
+| `certificates.revokedAt`/`revokedBy`/`revokedReason` | odvolanie správcom (`learning-admin`) s povinným dôvodom, nevratné | L3 |
+| `course.signer` | podpisujúci (meno + funkcia), predvolený z `Tenant.certificateSigner` | `CourseVersion.signer` (typ hotový) |
+
+Viac správnych odpovedí sa boduje **všetko alebo nič** (TESTS Q2); model
+ukladá odpovede, nie body, takže pomerné bodovanie sa dá pridať neskôr ako
+voľba testu. Import otázok má vlastný formát CSV
+(`docs/design/TESTS-import-otazok-vzor.csv`, TESTS Q1).

@@ -62,6 +62,22 @@ Typ (4 prepínače) · Znenie · Obrázok (nepovinné) · **Odpovede podľa typu
 - **Aspoň jeden smart:tag**: bez neho sa otázka neuloží, veta „…bez neho otázku žiadny test nevylosuje." v `--bad`.
 - Pri existujúcej otázke: „Použitá v 2 testoch · 41 pokusov ju cituje snímkou" + „Vyradiť" (nie zmazať, D120).
 
+## Médiá v otázkach a odpovediach (D120, Ján 27. 9. 2026)
+
+- **Otázka**: text a/alebo 0..n obrázkov a videí (interné aj externé) v poradí. Aspoň jedno z textu a médií povinné.
+- **Odpoveď**: text a/alebo **jedno** médium (obrázok alebo video). Aspoň jedno povinné. „Krátky text" = odpoveď vždy text, médium len v otázke.
+- **Obrázok** má povinné pole „Popis obrázka" (alt).
+- **Video v otázke sa nemusí dopozerať** — limit času beží ďalej. Povinné dopozeranie je len pri kurze (PART).
+
+Formulár otázky:
+- Pod znením „Obrázky a videá v otázke": zoznam (náhľad 88 px · Popis obrázka · ↑ ↓ · Odstrániť) + „Pridať obrázok" · „Pridať video" (`UploadFiles`, priebeh v `.upload-overlay`) · „Vložiť odkaz na video".
+- Každá odpoveď: hlavička (správna ✓ · „Odpoveď A" · prepínač obsahu **Text · Obrázok · Video** · Odstrániť), telo (médium + Popis obrázka / súbor videa + „Text pod … — nepovinné"), vpravo **náhľad dlaždice** ako v teste (834/1440; na 390 nie).
+- Validácia pri uložení (`.notice--error` + veta pri poli): „Otázka potrebuje text alebo aspoň jeden obrázok či video." · „Odpoveď 3 je prázdna." · „Chýba popis obrázka."
+- Zoznam banky: ikonky obrázka a videa (`Icon.tsx`, 15 px, `--muted`) vedľa typu.
+- Import CSV médiá nenesie — veta v náhľade importu: „Obrázky a videá sa pridajú pri otázke po importe."
+
+Rámy: 1440 formulár s obrázkom v otázke a odpoveďami obrázok · video · text; 390 to isté; 390 chyby.
+
 ## Záložka Výsledky
 
 - Výber testu (Select, len testy, za ktoré zodpovedám; pod názvom kto ďalší zodpovedá) · „Export CSV".
@@ -90,19 +106,15 @@ Nové: `TestSectionEditor`, `AnswerEditor`, `.tag--warn`, `.sec2`, `.ansr`, `.tf
 
 ## Údaje, ktoré v modeli zatiaľ nie sú
 
+- `question.media[]` — 0..n médií otázky v poradí; `answer.media` — najviac jedno médium odpovede (pri `short_text` nikdy). `QuestionMedia = { kind: "image", fileId, alt } | { kind: "video", source: "upload" | "external", fileId?, url?, durationSec }`. `alt` povinný pri obrázku. Otázka: text **alebo** aspoň jedno médium; odpoveď: text **alebo** médium (D120, rozhodnutie 27. 9. 2026). Dokumenty ani iné súbory nie.
+
 - `test.versions[]` — zmena receptu po priradení ku zverejnenému kurzu (D118 zmrazuje `testVersion`).
 - `test.showAnswers`: `never | after_submit | after_pass | after_last_attempt`.
-- `question.difficulty`, `question.image`, `question.alternatives[]` (krátky text).
+- `question.difficulty`, `question.alternatives[]` (krátky text).
 - `test_attempts.resetAt`, `resetBy`, `resetReason`.
 - Počet vyhovujúcich otázok na sekciu (odvodené dopytom nad bankou).
 
 ## Rozhodnutia Jána 27. 9. 2026
-
-- **Médiá v otázkach a odpovediach ✅ (doplnené neskôr 27. 9.)** — nie len
-  text: otázka môže mať text a/alebo obrázky a videá, odpoveď text a/alebo
-  jeden obrázok či video, v akejkoľvek kombinácii. Dokumenty nie. Rám zatiaľ
-  kreslí len text — treba doplniť (TESTS formulár otázky, TEST-ATTEMPT,
-  RESULT). Model: ADR-018 D120, plán 4.4.
 
 - **Q1 ✅** Vlastný formát CSV (nižšie). Vzor: `TESTS-import-otazok-vzor.csv`.
 - **Q2 ✅** „Viac správnych" sa boduje **všetko alebo nič**: plná váha len pri presnej zhode (všetky správne, žiadna nesprávna), inak 0. Dôvod: pri pomernom bodovaní sa oplatí zaškrtnúť všetko; test overuje pochopenie pre prax (bezpečnosť, predpisy), nie odhad. Pomerné bodovanie sa dá pridať neskôr ako voľba testu — model ukladá odpovede, nie body, takže prepočet je možný.
@@ -123,9 +135,7 @@ Nové: `TestSectionEditor`, `AnswerEditor`, `.tag--warn`, `.sec2`, `.ansr`, `.tf
 | `difficulty` | nie | `easy` · `medium` · `hard`, predvolene `medium` |
 | `tags` | áno | smart:tagy `Kľúč: Hodnota` oddelené `|` (`Bezpečnosť: Požiar | Úroveň: 1`) — aspoň jeden |
 
-Obrázky a videá sa cez CSV nenahrávajú — doplnia sa pri otázke po importe
-(aj k odpovediam). Otázka alebo odpoveď, ktorá má byť len médium, dostane
-v CSV dočasný text; po doplnení média ho autor smie zmazať.
+Obrázky a videá sa CSV nenahrávajú — veta v náhľade importu: „Obrázky a videá sa pridajú pri otázke po importe."
 
 **Pravidlá kontroly** (každá chyba = veta s číslom riadku):
 - neznámy `type` · chýba `text` · chýba `tags` alebo tag nie je v tvare „Kľúč: Hodnota"

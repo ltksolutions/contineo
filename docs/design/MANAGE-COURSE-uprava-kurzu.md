@@ -58,7 +58,7 @@ Zverejnený: polia ako text na `--surface-2` + `.ro` „Verzia 2 je zverejnená 
 ## Záložka Zapísaní (`?tab=people`)
 
 - Filter `.view-switch`: Všetci · Nezačali · Rozpracovaní · Dokončili. „Prideliť kurz" · „Export CSV".
-- Tabuľka (390: karty): Meno · Oddelenie · Zápis (pridelením / samozápisom) · Stav („3 z 5 častí" / „dokončil 18. 9." `--ok-fg` / „nezačal") · Posledná aktivita. **Bez skóre** (D121).
+- Tabuľka (390: karty): Meno · Oddelenie · Zápis (pridelením / samozápisom) · Stav („3 z 5 častí" / „dokončil 18. 9." `--ok-fg` / „nezačal") · Posledná aktivita · Certifikát (číslo, pri dokončenom „Odvolať" → `?revoke=` — návrh v `CERTIFICATE-certifikat`, Q3). **Bez skóre** (D121).
 - **Prideliť kurz** (`?assign=1`): adresáti prepínačmi — Všetkým v organizácii / Oddeleniam / Skupinám / Trase; oddelenia cez `MultiSelect` so stromom; súhrn „Zapíše sa 19 ľudí do verzie 2 · 4 sú už zapísaní a nič sa im nezmení." + „Prideliť 19 ľuďom". Prideliť môže aj `hr`.
 
 ## Rámy
