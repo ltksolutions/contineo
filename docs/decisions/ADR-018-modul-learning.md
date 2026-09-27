@@ -94,6 +94,15 @@ prednosť pri nasadení do ostrej prevádzky.
   `multiple_choice`, `true_false`, `short_text`), váhu, vysvetlenie a
   **aspoň jeden smart:tag**. Otázka sa nemaže, vyraďuje sa (`retired`) —
   pokusy ju citujú snímkou.
+- **Otázka aj odpoveď môžu byť v akejkoľvek kombinácii text · obrázok ·
+  video** (Ján 27. 9. 2026). Otázka: text a/alebo médiá (obrázky, videá —
+  interné aj externé). Odpoveď: text a/alebo **jedno** médium (obrázok
+  alebo video). **Dokument z knižnice ani iný súbor v otázke či odpovedi
+  nie je.** Obrázok má povinný alternatívny text (čítačky, a aby sa dal
+  vyhodnotiť pokus aj bez náhľadu). Médiá sú v úložisku ako súbory kurzu
+  (ADR-011, adaptér videa D122); snímka pokusu ich cituje odkazom
+  (`fileId`), preto sa súbor citovaný pokusom **nemaže** (D24). Pri
+  krátkom texte je odpoveď vždy text, médium môže byť len v otázke.
 - **Test je recept, nie zoznam otázok**: sekcie, každá = *filter
   smart:tagov + počet otázok*. Pri každom pokuse sa otázky **losujú**
   a odpovede **miešajú**; pokus si uloží **snímky otázok, poradie otázok

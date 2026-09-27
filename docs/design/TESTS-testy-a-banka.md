@@ -98,6 +98,12 @@ Nové: `TestSectionEditor`, `AnswerEditor`, `.tag--warn`, `.sec2`, `.ansr`, `.tf
 
 ## Rozhodnutia Jána 27. 9. 2026
 
+- **Médiá v otázkach a odpovediach ✅ (doplnené neskôr 27. 9.)** — nie len
+  text: otázka môže mať text a/alebo obrázky a videá, odpoveď text a/alebo
+  jeden obrázok či video, v akejkoľvek kombinácii. Dokumenty nie. Rám zatiaľ
+  kreslí len text — treba doplniť (TESTS formulár otázky, TEST-ATTEMPT,
+  RESULT). Model: ADR-018 D120, plán 4.4.
+
 - **Q1 ✅** Vlastný formát CSV (nižšie). Vzor: `TESTS-import-otazok-vzor.csv`.
 - **Q2 ✅** „Viac správnych" sa boduje **všetko alebo nič**: plná váha len pri presnej zhode (všetky správne, žiadna nesprávna), inak 0. Dôvod: pri pomernom bodovaní sa oplatí zaškrtnúť všetko; test overuje pochopenie pre prax (bezpečnosť, predpisy), nie odhad. Pomerné bodovanie sa dá pridať neskôr ako voľba testu — model ukladá odpovede, nie body, takže prepočet je možný.
 
@@ -117,7 +123,9 @@ Nové: `TestSectionEditor`, `AnswerEditor`, `.tag--warn`, `.sec2`, `.ansr`, `.tf
 | `difficulty` | nie | `easy` · `medium` · `hard`, predvolene `medium` |
 | `tags` | áno | smart:tagy `Kľúč: Hodnota` oddelené `|` (`Bezpečnosť: Požiar | Úroveň: 1`) — aspoň jeden |
 
-Obrázky sa CSV nenahrávajú — doplnia sa pri otázke po importe.
+Obrázky a videá sa cez CSV nenahrávajú — doplnia sa pri otázke po importe
+(aj k odpovediam). Otázka alebo odpoveď, ktorá má byť len médium, dostane
+v CSV dočasný text; po doplnení média ho autor smie zmazať.
 
 **Pravidlá kontroly** (každá chyba = veta s číslom riadku):
 - neznámy `type` · chýba `text` · chýba `tags` alebo tag nie je v tvare „Kľúč: Hodnota"
