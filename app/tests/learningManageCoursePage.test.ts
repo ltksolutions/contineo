@@ -20,13 +20,14 @@ vi.mock("@/components/TabLink", () => ({ default: ({ children }: { children: unk
 vi.mock("@/components/CourseMediaUpload", async () => { const { createElement: h } = await import("react"); return { default: ({ kind }: { kind: string }) => h("div", { "data-media": kind }) } })
 vi.mock("@/lib/tenants", () => ({ brandingView: () => ({}) }))
 vi.mock("@/lib/learning", () => ({
-  learningAdminContext: async () => ({ state: "ready", isAdmin: true, person: { id: "p", companyCode: "SFZ", language: "sk", email: "jan@sfz.sk" }, tenant: { companyCode: "SFZ" } }),
+  learningAdminContext: async () => ({ state: "ready", isAdmin: true, person: { id: "p", companyCode: "SFZ", language: "sk", email: "jan@sfz.sk" }, tenant: { companyCode: "SFZ", branding: { displayName: "SFZ" }, learningTopics: [{ key: "bozp", label: "Bezpečnosť a ochrana zdravia" }], certificateSigner: { name: "Ján Letko", role: "generálny sekretár" } } }),
 }))
 vi.mock("@/lib/coursesDb", () => ({ getCourse: async () => s.course }))
 vi.mock("@/lib/learningStats", () => ({ courseStats: async () => new Map([["bozp", { enrolled: 5, completed: 2 }]]) }))
+vi.mock("@/lib/smartTagsDb", () => ({ smartTagUsage: async () => [{ key: "uroven", value: "1", label: "Úroveň: 1", courses: 2, questions: 0, tests: 0 }] }))
 vi.mock("@/lib/courseDocs", () => ({ documentChoices: async () => [{ documentId: "sfz:bozp", versionId: "v1", title: "Smernica BOZP", label: "úplné znenie od 1. 3. 2026" }] }))
 vi.mock("../src/app/learning/manage/[courseKey]/actions", () => Object.fromEntries(
-  ["addBlockAction","addPartAction","archiveAction","moveBlockAction","movePartAction","newVersionAction","publishAction","removeBlockAction","removePartAction","updateBlockAction","updatePartAction"].map(n => [n, async () => {}])))
+  ["saveSettingsAction","addBlockAction","addPartAction","archiveAction","moveBlockAction","movePartAction","newVersionAction","publishAction","removeBlockAction","removePartAction","updateBlockAction","updatePartAction"].map(n => [n, async () => {}])))
 
 const at = new Date("2026-09-20T00:00:00Z")
 const part = (key: string, blocks: Part["blocks"] = [{ id: "t", type: "text", markdown: "Vitajte v kurze." }]): Part => ({ key, title: `Časť ${key}`, required: true, tests: [], blocks })
@@ -100,5 +101,21 @@ describe("/learning/manage/[courseKey]", () => {
     const html = await render({ tab: "parts", part: "uvod", editBlock: "t" })
     expect(html).toContain('name="markdown"')
     expect(html).toContain("Vitajte v kurze.</textarea>")
+  })
+
+  it("nastavenia: formulár s tagmi (bez JS textarea), podpisujúci z organizácie, právny základ", async () => {
+    const html = await render({ tab: "settings" })
+    expect(html).toContain("Uložiť nastavenia")
+    expect(html).toContain('name="smartTags"')
+    expect(html).toContain("Ján Letko")
+    expect(html).toContain("Časti idú postupne")
+    expect(html).toContain("bez právneho základu sa kurz nezverejní")
+  })
+
+  it("nastavenia zverejnenej verzie sú len na čítanie", async () => {
+    s.course = course([v(2, "published")])
+    const html = await render({ tab: "settings" })
+    expect(html).toContain("nastavenia sú len na čítanie")
+    expect(html).not.toContain("Uložiť nastavenia")
   })
 })

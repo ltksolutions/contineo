@@ -6191,3 +6191,29 @@ html[data-theme="dark"] { --skeleton-sheen: rgba(255, 255, 255, 0.07); }
   .mc-side .pp-orow { display: flex; }
   .mc-back { display: none; }
 }
+
+/* ── Úprava kurzu: nastavenia a vstup smart:tagov (rám MANAGE-COURSE) ─────── */
+.mc-settings { padding: 18px; display: grid; gap: 14px; max-width: 820px; }
+.mc-grid2 { display: grid; gap: 12px; grid-template-columns: minmax(0, 1fr); }
+.mc-group { border: 1px solid var(--line); border-radius: var(--radius); padding: 12px 14px; margin: 0; display: grid; gap: 6px; }
+.mc-group legend { padding: 0 4px; }
+.mc-kv { padding: 8px 16px; margin: 0; display: grid; }
+.mc-kv-row { display: grid; grid-template-columns: 180px minmax(0, 1fr); gap: 8px; padding: 8px 0; border-bottom: 1px solid var(--line); font-size: 13.5px; }
+.mc-kv-row:last-child { border-bottom: 0; }
+.mc-kv-row dt { color: var(--muted); }
+.mc-kv-row dd { margin: 0; overflow-wrap: anywhere; }
+.sti { position: relative; }
+.sti-box { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; min-height: 44px; height: auto; padding: 6px 8px; cursor: text; }
+.sti-input { flex: 1 1 140px; min-width: 120px; border: 0; outline: 0; background: transparent; font: inherit; color: var(--ink); min-height: 30px; }
+.sti-x { border: 0; background: transparent; color: var(--muted); cursor: pointer; font-size: 14px; line-height: 1; padding: 0 0 0 4px; }
+.sti-list { position: absolute; left: 0; right: 0; top: calc(100% + 4px); z-index: 30; max-height: 280px; overflow: auto; margin: 0; padding: 4px; list-style: none; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); }
+.sti-list .select-item { display: flex; justify-content: space-between; gap: 12px; min-height: 38px; align-items: center; padding: 0 10px; border-radius: 7px; cursor: pointer; }
+.sti-hint { font-size: 12px; white-space: nowrap; }
+
+@media (min-width: 640px) {
+  .mc-grid2 { grid-template-columns: 1fr 1fr; }
+}
+
+@media (max-width: 639px) {
+  .mc-kv-row { grid-template-columns: minmax(0, 1fr); gap: 2px; }
+}

@@ -9,13 +9,16 @@
 import { redirect } from "next/navigation"
 import { revalidatePath } from "next/cache"
 import { learningAdminContext } from "@/lib/learning"
-import { archiveCourse, getCourse, publishCourse, saveDraft, startNewVersion } from "@/lib/coursesDb"
+import { archiveCourse, getCourse, publishCourse, saveCourseSettings, saveDraft, startNewVersion } from "@/lib/coursesDb"
+import { findTopic } from "@/lib/learningTopics"
+import { parseSmartTags } from "@/lib/smartTags"
+import { findLegalBasisOption } from "@/lib/legalBases"
 import { draftVersion, type ContentBlock, type Part } from "@/lib/courses"
 import { addBlock, addPart, DraftError, moveBlock, movePart, removeBlock, removePart, updateBlock, updatePart } from "@/lib/courseDraft"
 import { documentChoices } from "@/lib/courseDocs"
 import { embedUrl } from "@/lib/courseView"
 import { AppError } from "@/lib/appError"
-import { dictionary, errorText } from "@/lib/i18n"
+import { dictionary, errorText, UI_LANGUAGES } from "@/lib/i18n"
 
 function field(fd: FormData, name: string): string {
   const v = fd.get(name)
@@ -182,4 +185,49 @@ export async function archiveAction(fd: FormData) {
     go(courseKey, "", errorText(e, ctx.person.language), true)
   }
   go(courseKey, "", dictionary(ctx.person.language).learning.edit.archived)
+}
+
+/**
+ * Nastavenia kurzu (záložka Nastavenia). Polia verzie idú do konceptu,
+ * téma, smart:tagy, jazyk a samozápis na kurz — len keď je koncept
+ * (zverejnená verzia je len na čítanie, rám MANAGE-COURSE).
+ */
+export async function saveSettingsAction(fd: FormData) {
+  const ctx = await admin()
+  const courseKey = field(fd, "courseKey")
+  const te = dictionary(ctx.person.language).learning.edit
+  const course = await getCourse(ctx.person.companyCode, courseKey)
+  if (!course) redirect("/learning/manage")
+  try {
+    if (!draftVersion(course)) throw new DraftError("learning.noDraft", "Kurz nemá koncept.", { key: courseKey })
+    const topic = findTopic(ctx.tenant, field(fd, "topicKey"))
+    if (!topic) throw new AppError("learning.topicRequired", "Vyberte tému kurzu.")
+    const { tags, invalid } = parseSmartTags(field(fd, "smartTags"))
+    if (invalid.length) throw new AppError("learning.tagShape", "", { value: invalid[0] })
+    const language = (UI_LANGUAGES as readonly string[]).includes(field(fd, "language")) ? field(fd, "language") : course.language
+    const legal = field(fd, "legalBasisKey") ? findLegalBasisOption(ctx.tenant, field(fd, "legalBasisKey")) : null
+    const minutes = Number(field(fd, "estimatedMinutes"))
+    const issues = fd.get("issuesCertificate") === "1"
+    const b = ctx.tenant.branding
+    await saveDraft(ctx.person.companyCode, courseKey, {
+      title: field(fd, "title"),
+      subtitle: field(fd, "subtitle") || null,
+      description: field(fd, "description") || null,
+      estimatedMinutes: Number.isFinite(minutes) && minutes > 0 ? Math.round(minutes) : null,
+      sequential: fd.get("sequential") === "1",
+      issuesCertificate: issues,
+      // Vydavateľ = organizácia sama (D122), kópia v čase uloženia.
+      issuer: issues ? { kind: "tenant", name: b.displayName, shortName: b.shortName, logoUrl: b.logoUrl || undefined } : null,
+      signer: field(fd, "signerName") ? { name: field(fd, "signerName"), role: field(fd, "signerRole") } : null,
+      legalBasisKey: legal?.key ?? null,
+      legalBasisLabel: legal?.label ?? null,
+    }, ctx.person.email)
+    await saveCourseSettings(ctx.person.companyCode, courseKey, {
+      topicKey: topic.key, topicLabel: topic.label, smartTags: tags, openEnrollment: fd.get("openEnrollment") === "1", language,
+    }, ctx.person.email)
+  } catch (e) {
+    if (!(e instanceof AppError)) console.error("[learning] uloženie nastavení zlyhalo:", e)
+    go(courseKey, "tab=settings", errorText(e, ctx.person.language), true)
+  }
+  go(courseKey, "tab=settings", te.settingsSaved)
 }
