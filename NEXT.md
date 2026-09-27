@@ -6,15 +6,23 @@
 > **Tento súbor je indícia, `git log` je pravda.** Keď si protirečia, verí sa
 > gitu a NEXT.md sa opraví. Aktualizuje sa pri rituáli **„Poupratuj"**.
 
-Posledná aktualizácia: **2026-09-27** (ADR-018 — modul `learning`; bez kódu)
+Posledná aktualizácia: **2026-09-27 večer** (import osôb SFZ, ADR-019, ADR-020; súbežne learning L3 v druhej session)
 
 ---
 
 ## Kde sme teraz
 
-Všetko je **zlúčené v `main` a nasadené** na `intranet.futbalsfz.sk`; jediná
-vetva je `main`. Hash nasadeného commitu je v pätičke. Staršia história je
-v `CHANGELOG.md` a `docs/DEVLOG.md`.
+Všetko je **zlúčené v `main` a nasadené** na `intranet.futbalsfz.sk`. Hash
+nasadeného commitu je v pätičke. Staršia história je v `CHANGELOG.md`
+a `docs/DEVLOG.md`. **Od 27. 9. pracujú v repe dve sessions naraz** —
+každá vo vlastnom `git worktree` (ADR-020); rozrobené vetvy druhej session
+vidno v `git branch -a`, nie v tomto súbore.
+
+**Osoby SFZ sú v systéme (27. 9.):** 153 osôb z licenčného zoznamu M365
+(150 nových + 3 doplnené), bez technických kont. Zaradenie do oddelení je
+ručné a čaká (`docs/TODO.md`, I4). **ADR-019:** import existujúcim dopĺňa
+len prázdne polia; prepis je prepínač „Aktualizovať existujúcich".
+Náhľad importu je tabuľka s rozdielom „dnes → po" a hľadaním.
 
 **Rámy z Claude Design sú zapracované všetky** (`docs/design/`, PR #113–#123).
 Postup: Ján navrhne rám, napíše **„stiahni design"**, archív sa stiahne cez
@@ -53,6 +61,10 @@ nemení (O18).
 
 ## Čo čaká na rozhodnutie Jána
 
+**22 osôb z `@sfzmarketing.sk`** sú v tenante SFZ ako `employee` — nechať,
+alebo typ `external` / vlastný tenant? A či doplniť ľudí mimo Basic/Standard
+licencií (Ján v exporte nebol).
+
 **Ako DPO — `C1_C3_ochrana_udajov.docx`:** text informovania (C1), záznam
 o spracovateľských činnostiach (C2), DPIA pred pilotom (C3), termín
 balančného testu (A3, A11). C1 a A3 sú brány pred pilotom.
@@ -68,6 +80,8 @@ balančného testu (A3, A11). C1 a A3 sú brány pred pilotom.
 
 ## Najbližšie kroky
 
+0. **Zaradiť 153 osôb do oddelení** v `/organisation` — bez toho sa im
+   normy podľa oddelenia nepridelia (D49).
 1. **Prvé ostré nové znenie cez kartu** — pri ňom overiť nový názov,
    formulku „v znení účinnom od", kombináciu právnych základov a prenos
    pridelení (`docs/TODO.md`, O15/O16).
@@ -85,8 +99,8 @@ Všetko sa púšťa z adresára `app/`:
 cd app && npx tsc --noEmit && npx eslint . && npx vitest run && npm run build
 ```
 
-Baseline, proti ktorej sa porovnáva: **0 errors, 42 warnings, 1671 testov
-v 110 súboroch.** Nová chyba alebo nové varovanie znamená regresiu, nie šum.
+Baseline, proti ktorej sa porovnáva (27. 9. večer): **0 errors, 41 warnings,
+1864 testov v 133 súboroch.** Nová chyba alebo nové varovanie znamená regresiu, nie šum.
 
 **Tieto štyri brzdy nevidia chyby za behu.** 23. 9. prešli všetky štyri
 a produkcia aj tak spadla (dočasná mŕtva zóna v `library/page.tsx`). Preto

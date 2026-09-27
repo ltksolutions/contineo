@@ -377,6 +377,16 @@
 - [x] **`branding.logoUrl`** ✅ 2026-09-18 — zápis už nie je zastaraný: v `tenants` je `/api/brand/sfz?v=…`, teda nová cesta bez presmerovania (prepísalo sa pri opätovnom uložení loga). Overené priamo v databáze, nič sa nemenilo.
 - [x] ✅ Osoba vidí a stiahne si **svoje** potvrdenia — hotové v `5247a26` (`/acknowledgements`, `/api/acknowledgements/export`); v TODO zostalo neodškrtnuté, zistené 2026-09-17
 
+**I4. Osoby SFZ — import a zaradenie (2026-09-27)**
+
+- [x] **Import 153 osôb SFZ z licenčného zoznamu M365** ✅ 2026-09-27 — CSV `sfz-osoby-import.csv` (Meno, Priezvisko, Email, Pozicia = Title + Department); oddelenie zámerne nie (číselník, zaradí sa ručne). Vylúčené technické kontá a `@naraznicek.sk`. Náhľad 150 nových + 3 doplnené, zápis prešiel.
+- [x] **ADR-019 — existujúcim import dopĺňa len prázdne polia; prepis je prepínač** ✅ 2026-09-27 (D124–D126). Opravené: `department`/`startDate` išli do `$set` ako `undefined` → `null`. Skript `persons:import` opravený (staré názvy po premenovaní), `--org=KOD`, `--prepisat`.
+- [x] **Náhľad importu ako tabuľka + hľadanie** ✅ 2026-09-27 (PR #148, #151) — `planChanges()` je jedna funkcia pre náhľad aj zápis; existujúci jedným `$in`. Zápis na obrazovke až bez chybných riadkov.
+- [ ] **Zaradiť 153 osôb do oddelení** (strom `/organisation`) — ručne; import `departmentId` nechytá (D49). Textové `department` sa neimportovalo, zdroj je stĺpec Department v Exceli (60 rôznych zápisov, často funkcia namiesto oddelenia).
+- [ ] **Rozhodnúť `@sfzmarketing.sk` (22 osôb)** — dnes v tenante SFZ ako `employee`; alternatíva vlastný tenant / typ `external`. Zmena typu je ručná alebo importom s prepínačom.
+- [ ] **Chýbajúci ľudia mimo Basic/Standard licencií** (napr. Ján) — export ich nemal; buď doplniť ručne, alebo druhý export z M365 s ostatnými typmi licencií.
+- [ ] **Pracoviská v číselníku SFZ sú prázdne** (od D85) a `Tenant.phonePrefix` nemá obrazovku — bez toho import pracovisko ani mobil nevyplní.
+
 **I3. Brána pred ostrou prevádzkou**
 
 - [x] **Automatické nasadzovanie z GitHubu** ✅ 2026-08-28 — projekt `contineo-app` napojený na `ltksolutions/contineo`, root directory `app`, produkčná vetva `main`. Dovtedy napojený nebol: posledné nasadenie bolo staré 31 dní napriek desiatim commitom, takže `/dokumenty` na `app.contineo.app` neexistovalo. Postup a dôvod v `NASADENIE_app.md` kap. 0.

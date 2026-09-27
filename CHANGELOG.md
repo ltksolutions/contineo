@@ -4,6 +4,12 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Osoby SFZ naimportované; hľadanie v náhľade importu (2026-09-27)
+
+Z licenčného zoznamu M365 pribudlo **150 osôb** a 3 existujúcim sa doplnila
+pozícia. Nad tabuľkou náhľadu importu je pole „Hľadať v mene alebo adrese",
+ktoré sa kombinuje s filtrom stavu.
+
 ### Rozhodnuté: súbežné sessions vo vlastnom worktree — ADR-020 (2026-09-27)
 
 Každá ďalšia session v repozitári pracuje vo vlastnom `git worktree`

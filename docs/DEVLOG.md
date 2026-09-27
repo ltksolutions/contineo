@@ -10,6 +10,25 @@
 
 ---
 
+## 2026-09-27 (4) — import osôb SFZ hotový; hľadanie v náhľade; upratovanie
+
+**Import prebehol.** Ján nahral opravený hárok (2. verzia Excelu): 153 osôb
+(bez `spravca.letko@`, `mailgateway.issf@`, `misko@naraznicek.sk` a technických
+kont z hárku „Vynechané"). Náhľad ukázal 150 nových + 3 existujúce na
+doplnenie, zápis prešiel — „všetko ok, celý import". 22 ľudí z
+`@sfzmarketing.sk` je v tenante SFZ ako `employee` (Ján neurčil inak).
+Ján sám v exporte nie je (iný typ licencie než Basic/Standard) — vie o tom.
+
+**Hľadanie v náhľade (PR #151).** „Seba nevidím" bola prvá otázka nad
+tabuľkou so 150 riadkami; filter podľa stavu na ňu neodpovedá. Pole
+„Hľadať v mene alebo adrese" sa kombinuje s filtrom. Druhý worktree
+(`import-search`) podľa ADR-020, po zlúčení odstránený aj s vetvou.
+
+**Upratovanie dvoch sessions naraz.** Toto „Poupratuj" ide cez worktree
+`chore/poupratuj-import` a PR, lebo druhá session upratuje learning L3 v tom
+istom čase — `NEXT.md`, devlog a changelog sa zrazia; kto zlučuje druhý,
+rieši konflikt „ponechať oboje".
+
 ## 2026-09-27 (3) — náhľad importu ako tabuľka; prvý worktree
 
 **Zadanie.** Ján ukázal screenshot náhľadu importu (155 e-mailov oddelených
