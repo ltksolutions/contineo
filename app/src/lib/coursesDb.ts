@@ -91,7 +91,7 @@ export async function createCourse(input: NewCourse): Promise<Course> {
 /** Čo sa dá meniť na koncepte. Stav, číslo a údaje o zverejnení nie. */
 export type DraftPatch = Partial<Pick<CourseVersion,
   "title" | "subtitle" | "description" | "estimatedMinutes" | "sequential" | "parts" |
-  "issuesCertificate" | "issuer" | "legalBasisKey" | "legalBasisLabel" | "changeNote">>
+  "issuesCertificate" | "issuer" | "signer" | "legalBasisKey" | "legalBasisLabel" | "changeNote">>
 
 export async function saveDraft(companyCode: string, key: string, patch: DraftPatch, actor: string): Promise<void> {
   const set: Record<string, unknown> = {}

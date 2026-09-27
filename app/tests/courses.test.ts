@@ -52,11 +52,12 @@ describe("publishProblems", () => {
 
 describe("draftFrom", () => {
   it("hlboká kópia, koncept bez údajov o zverejnení a bez zmrazených testov", () => {
-    const from = version({ publishedAt: at, publishedBy: "x", parts: [part("a", { tests: [{ testKey: "t", required: true, testVersion: 3 }] })] })
+    const from = version({ publishedAt: at, publishedBy: "x", signer: { name: "Ján Letko", role: "generálny sekretár" }, parts: [part("a", { tests: [{ testKey: "t", required: true, testVersion: 3 }] })] })
     const d = draftFrom(from, { versionId: "v2", version: 2, at, actor: "y" })
     expect(d).toMatchObject({ versionId: "v2", version: 2, state: "draft", createdBy: "y" })
     expect(d.publishedAt).toBeUndefined()
     expect(d.parts[0].tests).toEqual([{ testKey: "t", required: true }])
+    expect(d.signer).toEqual({ name: "Ján Letko", role: "generálny sekretár" })
     d.parts[0].title = "zmenené"
     expect(from.parts[0].title).toBe("a")
   })

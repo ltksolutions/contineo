@@ -59,6 +59,20 @@ Nové: `CertificateCard`, `VerifyPage`, šablóna PDF (generátor na serveri), Q
 - Podpisujúci: meno a funkcia — pri kurze alebo v nastaveniach organizácie (Q1).
 - Externý vydavateľ (ŽU pre ClubUp): ten istý záznam, ručne doplnené číslo a nahraté PDF (D122) — v UI len „Vydal: {externý}" a PDF nahraté, nie generované. Rám to nekreslí.
 
+## Rozhodnutia Jána 27. 9. 2026
+
+- **Q1 ✅** Nové pole kurzu „Podpisuje za vydavateľa" (meno + funkcia),
+  predvolené z nastavení organizácie. V PDF je len meno nad čiarou, nie
+  obrázok podpisu.
+- **Q2 ✅** Serif v PDF (nadpis a meno) ostáva — jediná výnimka zo sans.
+- **Logo ✅ (doplnené 27. 9.):** certifikát nesie **logo organizácie**, ak ho
+  má nahraté (`branding.logoUrl`, kópia v `issuedBy` pri vydaní) — v karte
+  v aplikácii, na `/verify` aj v PDF. **Bez loga organizácie logo Contineo**
+  (značka z `web/app/icon.svg`), nie názov textom. Názov organizácie ostáva
+  pri „Vydal".
+- **Q3 ✅** Odvoláva `learning-admin` v `MANAGE-COURSE` → Zapísaní, pri
+  dokončenom človeku „Odvolať certifikát" s povinným dôvodom (audit).
+
 ## Otázky pre Jána
 
 - **Q1** — Kto podpisuje certifikát? Návrh: nové pole kurzu „Podpisuje za vydavateľa" (osoba + funkcia), predvolené z nastavení organizácie. Podpis je v PDF len meno nad čiarou — nie obrázok podpisu.
