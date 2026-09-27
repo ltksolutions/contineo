@@ -102,6 +102,8 @@ export interface TenantChange {
   chunking?: Partial<ChunkingProfile>
   /** Pomenované profily členenia (D79). */
   chunkingProfiles?: ChunkingProfileDef[]
+  /** Modul Vzdelávanie (ADR-018). `undefined` = nemeniť. */
+  learning?: boolean
 }
 
 /**
@@ -238,6 +240,8 @@ function toSet(change: TenantChange): Record<string, unknown> {
       return { key, label: String(p.label ?? "").trim() || key, ...clampChunking(p) }
     })
   }
+  // Bodková cesta, aby zapnutie jedného modulu nezmazalo ostatné.
+  if (change.learning !== undefined) set["modules.learning"] = change.learning
   return set
 }
 

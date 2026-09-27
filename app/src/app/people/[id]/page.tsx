@@ -11,6 +11,7 @@ import { notFound, redirect } from "next/navigation"
 import { treeOptions } from "@/lib/treeOptions"
 import Link from "next/link"
 import { peopleContext, loadPersonById, ASSIGNABLE_ROLES } from "@/lib/people"
+import { LEARNING_ROLE, learningEnabled } from "@/lib/learning"
 import { isHr } from "@/lib/hr"
 import { evidenceForPerson } from "@/lib/evidenceDb"
 import { dutyState, dutyTagClass } from "@/lib/due"
@@ -291,7 +292,7 @@ export default async function PersonDetailPage({
         <fieldset className="hr-group" style={{ border: "1px solid var(--line)" }}>
           <legend className="field-label">{t.roles}</legend>
           <ul className="hr-choices">
-            {ASSIGNABLE_ROLES.map(r => (
+            {ASSIGNABLE_ROLES.filter(r => r !== LEARNING_ROLE || learningEnabled(ctx.tenant)).map(r => (
               <li key={r}>
                 <label className="hr-choice">
                   <input type="checkbox" name="roles" value={r} defaultChecked={o.roles.includes(r)} />
@@ -300,6 +301,10 @@ export default async function PersonDetailPage({
               </li>
             ))}
           </ul>
+          {/* Vypnutý modul: rola sa neukáže, ale uložením sa nesmie stratiť. */}
+          {!learningEnabled(ctx.tenant) && o.roles.includes(LEARNING_ROLE) && (
+            <input type="hidden" name="roles" value={LEARNING_ROLE} />
+          )}
           <p className="quiet field-hint" style={{ margin: "6px 0 0" }}>
             {t.rolesNote}
           </p>

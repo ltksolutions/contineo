@@ -164,6 +164,23 @@ export interface Tenant {
    */
   autoProvisionDomains?: string[]
 
+  /**
+   * Zapnuté moduly platformy (ADR-018, D123). Chýbajúci záznam = vypnuté:
+   * modul, o ktorom organizácia nevie, sa jej nemá ukázať len preto, že ho
+   * niekto nasadil. Vypnutý modul skrýva navigáciu **aj** routy (`notFound()`).
+   */
+  modules?: {
+    /** Vzdelávanie — kurzy, testy, certifikáty (`/learning`). */
+    learning?: boolean
+  }
+
+  /**
+   * Kam sa ukladá video modulu Vzdelávanie (ADR-018, D122). Chýbajúce =
+   * `gridfs` (do 25 MB, ako súbory knižnice). S3 a Azure sú adaptéry na
+   * väčšie súbory — pribudnú v L1 spolu s nahrávaním.
+   */
+  videoStorage?: "gridfs" | "s3" | "azure"
+
   createdAt?: Date
   updatedAt?: Date
 }

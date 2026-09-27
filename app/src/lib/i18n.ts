@@ -471,6 +471,10 @@ interface Dictionary {
   nav: {
     ask: string
     dpo: string
+    /** Modul Vzdelávanie (ADR-018) — len pri zapnutom module. */
+    learning: string
+    learningManage: string
+    learningTests: string
     toApprove: string
     evidence: string
     overview: string
@@ -2363,6 +2367,21 @@ interface Dictionary {
       fileTooLarge: string
     }
   }
+  /** Modul Vzdelávanie (ADR-018). L0: len nadpisy a prázdne stavy. */
+  learning: {
+    heading: string
+    intro: string
+    empty: string
+    emptyNote: string
+    manageHeading: string
+    manageIntro: string
+    manageEmpty: string
+    manageEmptyNote: string
+    testsHeading: string
+    testsIntro: string
+    testsEmpty: string
+    testsEmptyNote: string
+  }
 }
 
 /**
@@ -2722,6 +2741,9 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     assigned: "Pridelené normy",
     evaluation: "Na posúdenie",
     dpo: "Ochrana údajov",
+    learning: "Vzdelávanie",
+    learningManage: "Správa kurzov",
+    learningTests: "Testy",
     people: "Osoby",
     directory: "Adresár",
     library: "Knižnica",
@@ -3883,6 +3905,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       "content-admin": "content-admin — nahráva a upravuje normy v knižnici",
       evaluator: "evaluator — posudzuje odpovede systému, keď niekto povie, že nesedia",
       dpo: "dpo — zodpovedná osoba: kontroluje právne základy, rozhoduje o námietkach",
+      "learning-admin": "learning-admin — lektor: spravuje kurzy, banku otázok a testy",
     },
     list: {
       heading: "Osoby",
@@ -4780,6 +4803,21 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       fileTooLarge: "{name} má {mb} MB, strop je {maxMb} MB.",
     },
   },
+
+  learning: {
+    heading: "Vzdelávanie",
+    intro: "Kurzy, ktoré máš pridelené, a otvorené kurzy, na ktoré sa môžeš zapísať.",
+    empty: "Zatiaľ tu nie je žiadny kurz.",
+    emptyNote: "Keď ti niekto kurz pridelí alebo zverejní otvorený kurz, uvidíš ho tu.",
+    manageHeading: "Správa kurzov",
+    manageIntro: "Kurzy, témy a smart:tagy organizácie.",
+    manageEmpty: "Zatiaľ tu nie je žiadny kurz.",
+    manageEmptyNote: "Zakladanie kurzov pribudne v ďalšej časti modulu.",
+    testsHeading: "Testy",
+    testsIntro: "Banka otázok, testy a výsledky testov, za ktoré zodpovedáš.",
+    testsEmpty: "Zatiaľ tu nie je žiadny test.",
+    testsEmptyNote: "Banka otázok a testy pribudnú v ďalšej časti modulu.",
+  },
   },
 
   cs: {
@@ -5126,6 +5164,9 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     assigned: "Přidělené předpisy",
     evaluation: "K posouzení",
     dpo: "Ochrana údajů",
+    learning: "Vzdělávání",
+    learningManage: "Správa kurzů",
+    learningTests: "Testy",
     people: "Osoby",
     directory: "Adresář",
     library: "Knihovna",
@@ -6287,6 +6328,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       "content-admin": "content-admin — nahrává a upravuje normy v knihovně",
       evaluator: "evaluator — posuzuje odpovědi systému, když někdo řekne, že nesedí",
       dpo: "dpo — pověřenec: kontroluje právní základy, rozhoduje o námitkách",
+      "learning-admin": "learning-admin — lektor: spravuje kurzy, banku otázek a testy",
     },
     list: {
       heading: "Osoby",
@@ -7181,6 +7223,21 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       fileTooLarge: "{name} má {mb} MB, strop je {maxMb} MB.",
     },
   },
+
+  learning: {
+    heading: "Vzdělávání",
+    intro: "Kurzy, které máš přidělené, a otevřené kurzy, do kterých se můžeš zapsat.",
+    empty: "Zatím tu není žádný kurz.",
+    emptyNote: "Až ti někdo kurz přidělí nebo zveřejní otevřený kurz, uvidíš ho tady.",
+    manageHeading: "Správa kurzů",
+    manageIntro: "Kurzy, témata a smart:tagy organizace.",
+    manageEmpty: "Zatím tu není žádný kurz.",
+    manageEmptyNote: "Zakládání kurzů přibude v další části modulu.",
+    testsHeading: "Testy",
+    testsIntro: "Banka otázek, testy a výsledky testů, za které odpovídáš.",
+    testsEmpty: "Zatím tu není žádný test.",
+    testsEmptyNote: "Banka otázek a testy přibudou v další části modulu.",
+  },
   },
 
   en: {
@@ -7521,6 +7578,9 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     assigned: "Assigned documents",
     evaluation: "To evaluate",
     dpo: "Data protection",
+    learning: "Learning",
+    learningManage: "Course management",
+    learningTests: "Tests",
     people: "People",
     directory: "Directory",
     library: "Library",
@@ -8681,6 +8741,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       "content-admin": "content-admin — uploads and edits documents in the library",
       evaluator: "evaluator — reviews the system's answers when someone says they are wrong",
       dpo: "dpo — data protection officer: reviews legal bases, decides on objections",
+      "learning-admin": "learning-admin — instructor: manages courses, the question bank and tests",
     },
     list: {
       heading: "People",
@@ -9568,6 +9629,21 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       uploadFailed: "Upload failed:",
       fileTooLarge: "{name} is {mb} MB; the limit is {maxMb} MB.",
     },
+  },
+
+  learning: {
+    heading: "Learning",
+    intro: "Courses assigned to you and open courses you can enrol in.",
+    empty: "There are no courses yet.",
+    emptyNote: "When someone assigns you a course or publishes an open one, it will appear here.",
+    manageHeading: "Course management",
+    manageIntro: "Your organisation's courses, topics and smart:tags.",
+    manageEmpty: "There are no courses yet.",
+    manageEmptyNote: "Creating courses arrives in the next part of the module.",
+    testsHeading: "Tests",
+    testsIntro: "The question bank, tests and results of the tests you are responsible for.",
+    testsEmpty: "There are no tests yet.",
+    testsEmptyNote: "The question bank and tests arrive in the next part of the module.",
   },
   },
 }

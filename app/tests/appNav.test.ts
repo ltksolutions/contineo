@@ -41,6 +41,20 @@ describe("položky navigácie", () => {
   })
 })
 
+describe("modul Vzdelávanie (ADR-018)", () => {
+  it("vypnutý modul nepridá nič, ani lektorovi", () => {
+    const hrefs = navItems({ isLearningAdmin: true }).map(o => o.href)
+    expect(hrefs.some(h => h.startsWith("/learning"))).toBe(false)
+  })
+
+  it("zapnutý modul: kurzy pre každého, správa a testy len pre lektora", () => {
+    expect(navItems({ learning: true }).map(o => o.href).filter(h => h.startsWith("/learning")))
+      .toEqual(["/learning"])
+    expect(navItems({ learning: true, isLearningAdmin: true }).map(o => o.href).filter(h => h.startsWith("/learning")))
+      .toEqual(["/learning", "/learning/manage", "/learning/tests"])
+  })
+})
+
 describe("počty pri položkách", () => {
   it("bez počtov nemá položka číslo", () => {
     expect(navItems({}).every(o => o.count === undefined)).toBe(true)
@@ -189,6 +203,13 @@ describe("zoznam na /more (NASADENIE, PR 2)", () => {
       ...moreGroups(items).flatMap(g => g.items.map(o => o.href)),
     ])
     for (const o of items) expect(covered.has(o.href)).toBe(true)
+  })
+
+  it("vzdelávanie: kurzy v Organizácii, správa a testy v Správe (ADR-018)", () => {
+    const groups = moreGroups(navItems({ ...ALL, learning: true, isLearningAdmin: true }))
+    expect(groups[0].items.map(o => o.key)).toEqual(["directory", "learning", "people"])
+    expect(groups[1].items.map(o => o.key)).toContain("learningManage")
+    expect(groups[1].items.map(o => o.key)).toContain("learningTests")
   })
 
   it("knižnica je v lište, na /more sa neopakuje", () => {
