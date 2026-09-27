@@ -7,8 +7,9 @@
 
 import { redirect } from "next/navigation"
 import { revalidatePath } from "next/cache"
-import { learningAdminContext } from "@/lib/learning"
-import { createTest, getTest, saveTest, setTestRetired } from "@/lib/testsDb"
+import { learningAdminContext, learningContext } from "@/lib/learning"
+import { resetAttempts } from "@/lib/testAttemptsDb"
+import { createTest, getTest, saveTest, setTestRetired, testsResponsibleFor } from "@/lib/testsDb"
 import { getQuestion, importQuestions, saveQuestion, setQuestionStatus, type QuestionInput } from "@/lib/questionsDb"
 import { importQuestionsCsv, MAX_ANSWERS, QUESTION_TYPES, DIFFICULTIES, type Answer, type QuestionMedia, type QuestionType, type Difficulty } from "@/lib/questions"
 import { SHOW_ANSWERS, type ShowAnswers, type TestSection } from "@/lib/tests"
@@ -207,4 +208,26 @@ export async function runImportAction(fd: FormData) {
   const r = await importQuestions(ctx.person.companyCode, parsed.questions, ctx.person.email)
   await dropImport(ctx.person.companyCode, ctx.person.email, id)
   go("/learning/tests?tab=questions", t.imported(r.created, r.updated))
+}
+
+/**
+ * Reset pokusov osoby (záložka Výsledky, D121) — len zodpovedná osoba
+ * testu, nie lektor ani HR. Pokusy sa nemažú; dôvod je povinný a ide do
+ * auditu (`resetAttempts`).
+ */
+export async function resetAttemptsAction(fd: FormData) {
+  const ctx = await learningContext()
+  if (ctx.state !== "ready") redirect("/")
+  const testKey = field(fd, "testKey")
+  const personId = field(fd, "personId")
+  const back = `/learning/tests?tab=results&test=${encodeURIComponent(testKey)}`
+  const mine = await testsResponsibleFor(ctx.person.companyCode, ctx.person.id)
+  if (!mine.some(t => t.key === testKey)) go("/learning/tests?tab=results")
+  let n = 0
+  try {
+    n = await resetAttempts(ctx.person.companyCode, testKey, personId, field(fd, "reason"), ctx.person.email)
+  } catch (e) {
+    go(`${back}&reset=${encodeURIComponent(personId)}`, errorText(e, ctx.person.language), true)
+  }
+  go(back, dictionary(ctx.person.language).learning.results.resetDone(n))
 }

@@ -49,6 +49,8 @@ export interface NavFlags {
   learning?: boolean
   /** Rola `learning-admin` — má zmysel len spolu s `learning`. */
   isLearningAdmin?: boolean
+  /** Zodpovedá aspoň za jeden test — vidí jeho výsledky (D121), aj bez roly. */
+  isTestResponsible?: boolean
 }
 
 /**
@@ -95,10 +97,11 @@ export function navItems(flags: NavFlags, counts: NavCounts = {}): NavItem[] {
     // každého, správa a testy pre lektora. Rola bez zapnutého modulu nič
     // neotvára: routy by aj tak odpovedali 404.
     ...(flags.learning ? [{ href: "/learning", key: "learning" as const }] : []),
-    ...(flags.learning && flags.isLearningAdmin ? [
-      { href: "/learning/manage", key: "learningManage" as const },
-      { href: "/learning/tests", key: "learningTests" as const },
-    ] : []),
+    ...(flags.learning && flags.isLearningAdmin ? [{ href: "/learning/manage", key: "learningManage" as const }] : []),
+    // Testy: lektor celú obrazovku, zodpovedná osoba testu len svoje výsledky.
+    ...(flags.learning && (flags.isLearningAdmin || flags.isTestResponsible)
+      ? [{ href: flags.isLearningAdmin ? "/learning/tests" : "/learning/tests?tab=results", key: "learningTests" as const }]
+      : []),
   ]
 
   /*
