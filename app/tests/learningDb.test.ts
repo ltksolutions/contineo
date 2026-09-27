@@ -147,3 +147,33 @@ describe("enrollSelf", () => {
     await expect(enrollSelf("SFZ", "bozp", { id: "p", email: "p@sfz.sk", fullName: "P" })).rejects.toMatchObject({ code: "learning.notOpen" })
   })
 })
+
+describe("renameSmartTag — všade (MANAGE Q1)", () => {
+  it("prejde kurzy, otázky aj testy vrátane filtrov sekcií", async () => {
+    const { renameSmartTag } = await import("../src/lib/smartTagsDb")
+    const { parseSmartTag } = await import("../src/lib/smartTags")
+    const old = parseSmartTag("Bezpečnosť: Vytah")!
+    const docs: Record<string, unknown[]> = {
+      courses: [{ key: "bozp", smartTags: [old] }],
+      questions: [{ key: "q1", smartTags: [old, parseSmartTag("Úroveň: 1")!] }],
+      tests: [{ key: "t1", smartTags: [], sections: [{ filter: [old] }] }],
+    }
+    const mongo = await import("../src/lib/mongodb")
+    const updates: { col: string; set: Record<string, unknown> }[] = []
+    vi.spyOn(mongo, "getCollection").mockImplementation((async (name: string) => ({
+      find: () => ({ toArray: async () => docs[name] ?? [] }),
+      updateOne: async (_f: unknown, u: { $set: Record<string, unknown> }) => { updates.push({ col: name, set: u.$set }); return { matchedCount: 1 } },
+    })) as never)
+    const r = await renameSmartTag("SFZ", old, "Bezpečnosť: Výťah", "jan")
+    expect(r).toEqual({ courses: 1, questions: 1, tests: 1 })
+    expect((updates[0].set.smartTags as { label: string }[])[0].label).toBe("Bezpečnosť: Výťah")
+    expect((updates[2].set.sections as { filter: { label: string }[] }[])[0].filter[0].label).toBe("Bezpečnosť: Výťah")
+  })
+})
+
+describe("mergeSmartTags", () => {
+  it("menej než dva tagy odmietne", async () => {
+    const { mergeSmartTags } = await import("../src/lib/smartTagsDb")
+    await expect(mergeSmartTags("SFZ", [{ key: "a", value: "b" }], "A: C", "jan")).rejects.toMatchObject({ code: "learning.mergeNeedsTwo" })
+  })
+})

@@ -3,7 +3,7 @@
  * filter AND/OR a odvodený prehľad použitia.
  */
 import { describe, it, expect } from "vitest"
-import { parseSmartTag, parseSmartTags, matchesSmartFilter, aggregateSmartTags, tagId, filterFromQuery } from "../src/lib/smartTags"
+import { parseSmartTag, parseSmartTags, matchesSmartFilter, aggregateSmartTags, tagId, filterFromQuery, renameTagIn, renameKeyIn, mergeTagsIn } from "../src/lib/smartTags"
 
 const T = (s: string) => parseSmartTag(s)!
 
@@ -55,5 +55,37 @@ describe("aggregateSmartTags", () => {
       ["uroven:1", 2, 1, 0],
     ])
     expect(rows[1].label).toBe("Úroveň: 1")
+  })
+})
+
+describe("premenovanie (MANAGE Q1 — všade)", () => {
+  it("tag sa premenuje, na existujúci sa zlúči, poradie ostáva", () => {
+    const tags = [T("Úroveň: 1"), T("Bezpečnosť: Vytah"), T("Bezpečnosť: Výťah budovy")]
+    expect(renameTagIn(tags, T("Bezpečnosť: Vytah"), T("Bezpečnosť: Výťah")).map(t => t.label))
+      .toEqual(["Úroveň: 1", "Bezpečnosť: Výťah", "Bezpečnosť: Výťah budovy"])
+    expect(renameTagIn(tags, T("Bezpečnosť: Vytah"), T("Úroveň: 1")).map(t => t.label))
+      .toEqual(["Úroveň: 1", "Bezpečnosť: Výťah budovy"])
+  })
+  it("bez tagu vráti to isté pole", () => {
+    const tags = [T("Úroveň: 1")]
+    expect(renameTagIn(tags, T("X: y"), T("Z: w"))).toBe(tags)
+  })
+  it("kľúč sa premenuje na všetkých hodnotách a zápis hodnoty ostane", () => {
+    const tags = [T("Bezpecnost: Výťah"), T("Bezpecnost: Požiar"), T("Úroveň: 1")]
+    expect(renameKeyIn(tags, "bezpecnost", "Bezpečnosť").map(t => t.label))
+      .toEqual(["Bezpečnosť: Výťah", "Bezpečnosť: Požiar", "Úroveň: 1"])
+    expect(renameKeyIn(tags, "bezpecnost", "Oblasť").map(tagId)).toEqual(["oblast:vytah", "oblast:poziar", "uroven:1"])
+  })
+})
+
+describe("zlúčenie", () => {
+  it("viac tagov do jedného, entita s viacerými dostane cieľ raz", () => {
+    const tags = [T("Bezpečnosť: Vytah"), T("Úroveň: 1"), T("Bezpečnosť: Lift")]
+    expect(mergeTagsIn(tags, [T("Bezpečnosť: Vytah"), T("Bezpečnosť: Lift")], T("Bezpečnosť: Výťah")).map(t => t.label))
+      .toEqual(["Bezpečnosť: Výťah", "Úroveň: 1"])
+  })
+  it("cieľ môže byť jeden zo zdrojov", () => {
+    const tags = [T("Bezpečnosť: Lift"), T("Bezpečnosť: Výťah")]
+    expect(mergeTagsIn(tags, [T("Bezpečnosť: Lift")], T("Bezpečnosť: Výťah")).map(t => t.label)).toEqual(["Bezpečnosť: Výťah"])
   })
 })

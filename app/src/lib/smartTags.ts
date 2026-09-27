@@ -9,7 +9,8 @@
  * Čisté funkcie bez databázy: volá ich server aj vstup v prehliadači a obe
  * strany musia dôjsť k tomu istému tagu (ten istý dôvod ako `slug.ts`).
  *
- * Premenovanie tagu (MANAGE Q1) tu zámerne nie je — čaká na Jána.
+ * Premenovanie mení tag **všade** (MANAGE Q1, Ján 27. 9.) — `renameTagIn`,
+ * `renameKeyIn` sú čisté pravidlo, zápis je v `smartTagsDb.ts`.
  */
 
 import { slugifyKey } from "./slug"
@@ -148,4 +149,45 @@ export function aggregateSmartTags(sources: {
       label: [...labels.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0], "sk"))[0][0],
     }))
     .sort((a, b) => a.key.localeCompare(b.key) || a.value.localeCompare(b.value))
+}
+
+/** Tagy bez duplicít po normalizácii — prvý výskyt vyhráva. */
+export function dedupeTags(tags: SmartTag[]): SmartTag[] {
+  const seen = new Set<string>()
+  return tags.filter(t => (seen.has(tagId(t)) ? false : (seen.add(tagId(t)), true)))
+}
+
+/**
+ * Premenuje jeden tag (`from` = kľúč a hodnota) na nový zápis. Keď entita
+ * nový tag už má, oba sa **zlúčia** do jedného. Poradie ostatných tagov sa
+ * nemení.
+ */
+export function renameTagIn(tags: SmartTag[], from: Pick<SmartTag, "key" | "value">, to: SmartTag): SmartTag[] {
+  if (!tags.some(t => t.key === from.key && t.value === from.value)) return tags
+  return dedupeTags(tags.map(t => (t.key === from.key && t.value === from.value ? { ...to } : t)))
+}
+
+/**
+ * Premenuje kľúč na všetkých hodnotách („Bezpecnost" → „Bezpečnosť"):
+ * hodnota a jej zápis ostávajú, mení sa len časť pred dvojbodkou.
+ * `toKeyLabel` je nový zápis kľúča bez dvojbodky.
+ */
+export function renameKeyIn(tags: SmartTag[], fromKey: string, toKeyLabel: string): SmartTag[] {
+  if (!tags.some(t => t.key === fromKey)) return tags
+  return dedupeTags(tags.map(t => {
+    if (t.key !== fromKey) return t
+    const valueLabel = t.label.slice(t.label.indexOf(":") + 1).trim()
+    return parseSmartTag(`${toKeyLabel}: ${valueLabel}`) ?? t
+  }))
+}
+
+/**
+ * Zlúči viac tagov do jedného (Ján 27. 9.): každý zo `sources` sa nahradí
+ * cieľom `to` a duplicity zmiznú. Premenovanie na existujúci tag je
+ * zlúčenie dvoch — toto je to isté pre ľubovoľný počet naraz.
+ */
+export function mergeTagsIn(tags: SmartTag[], sources: Pick<SmartTag, "key" | "value">[], to: SmartTag): SmartTag[] {
+  const ids = new Set(sources.map(tagId))
+  if (!tags.some(t => ids.has(tagId(t)))) return tags
+  return dedupeTags(tags.map(t => (ids.has(tagId(t)) ? { ...to } : t)))
 }

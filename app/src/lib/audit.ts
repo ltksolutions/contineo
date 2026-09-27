@@ -55,6 +55,7 @@ export type AuditSubject =
   /** Modul Vzdelávanie (ADR-018). */
   | "course"
   | "enrollment"
+  | "smart-tag"
 
 export interface AuditRecord {
   _id?: ObjectId

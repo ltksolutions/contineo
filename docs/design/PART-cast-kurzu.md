@@ -79,6 +79,14 @@ Nové: `ContentBlock`, `VideoPlayer` (klient), `PartDock`, `.vid-*`, `.vchip`, `
 - `part.estimatedMinutes` (alebo súčet z blokov).
 - Čas ďalšieho pokusu = posledný pokus + pauza testu.
 
+## Rozhodnutia Jána 27. 9. 2026
+
+- **Q1 ✅** Časť sa dá označiť ako prejdená aj pred prejdením povinného
+  testu; tlačidlo stráži len video. Časť potom ukazuje „bude hotová po
+  prejdení povinného testu" — hotová je až s testom (D119).
+- **Q2 ✅** Pod kartičkou dokumentu veta „Platné je už znenie N", odkaz
+  ostáva na znenie z kurzu.
+
 ## Otázky pre Jána
 
 - **Q1** — Môže človek označiť časť ako prejdenú **pred** prejdením povinného testu? Návrh: áno (tlačidlo stráži len video, ako v zadaní), časť potom ukazuje „bude hotová po prejdení povinného testu". Alternatíva: tlačidlo vypnúť aj kvôli testu.

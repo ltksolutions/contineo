@@ -74,6 +74,11 @@ Nové: `PartList`, `.notice--info`, `.pr-*`, `.prog-card`.
 - Pri časti: počet blokov a súhrn typov (odvodené z `blocks[]`), dĺžka videa (`durationSec` pri nahratí).
 - Pri teste: čas ďalšieho pokusu (odvodené z posledného pokusu + pauza testu), zostávajúce pokusy.
 
+## Rozhodnutia Jána 27. 9. 2026
+
+- **Q1 ✅** Nezapísaný človek na otvorenom kurze vidí zoznam častí (názvy,
+  povinnosť, obsah) bez odkazov.
+
 ## Otázky pre Jána
 
 - **Q1** — Nezapísaný človek na otvorenom kurze: vidí zoznam častí (názvy, povinnosť, obsah) bez odkazov, aby vedel, do čoho sa zapisuje? Návrh: áno. Zadanie tento stav nemá.
