@@ -4,6 +4,25 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Rozhodnuté: súbežné sessions vo vlastnom worktree — ADR-020 (2026-09-27)
+
+Každá ďalšia session v repozitári pracuje vo vlastnom `git worktree`
+v `.worktrees/<nazov>` (vlastná vetva nestačí, pracovná kópia je jedna).
+Po zlúčení sa worktree odstráni spolu s vetvou. D127–D129.
+
+### Náhľad importu osôb ako tabuľka (2026-09-27)
+
+Namiesto zoznamu e-mailov ukáže náhľad **tabuľku po osobách**: farebný
+štítok stavu (Nová / Doplní sa / Zmení sa / Bez zmeny / Chyba), meno
+s adresou a pri existujúcich **čo presne sa zapíše — dnešná → nová hodnota**.
+Čísla nad tabuľkou sú filtre. Prepínač „Aktualizovať existujúcich" náhľad
+prepočíta. Na telefóne sa riadok skladá na kartu.
+
+Pod tým: náhľad aj zápis idú cez jednu funkciu `planChanges()`, takže náhľad
+je doslova plán, ktorý sa vykoná — nie odhad. Existujúce osoby sa načítajú
+jedným dotazom (`$in`) namiesto dotazu na riadok. Zápis na obrazovke je
+možný až keď v súbore nie je chybný riadok (skript to tak mal vždy).
+
 ### Import osôb existujúcim dopĺňa len prázdne polia — ADR-019 (2026-09-27)
 
 Kto už v organizácii je (podľa e-mailu), sa importom **nezmení**: doplnia sa

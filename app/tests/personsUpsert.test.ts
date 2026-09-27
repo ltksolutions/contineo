@@ -19,6 +19,8 @@ let existing: Record<string, unknown> | null = null
 
 const collection = {
   findOne: vi.fn(async () => existing),
+  // Náhľad číta jedným dotazom na organizáciu; mock vráti „existujúceho", ak je.
+  find: vi.fn(() => ({ toArray: async () => (existing ? [{ email: "anna@futbalsfz.sk", companyCode: "SFZ", ...existing }] : []) })),
   updateOne: vi.fn(async (key: unknown, update: Update) => {
     updates.push({ key, update })
     return { upsertedCount: existing ? 0 : 1, modifiedCount: existing ? 1 : 0 }
@@ -31,8 +33,8 @@ vi.mock("../src/lib/mongodb", () => ({
   getClient: vi.fn(),
 }))
 
-import { upsertPersons } from "../src/lib/persons"
-import type { NewPerson } from "../src/lib/persons"
+import { upsertPersons, planChanges, previewImport } from "../src/lib/persons"
+import type { NewPerson, Person } from "../src/lib/persons"
 
 const row = (over: Partial<NewPerson> = {}): NewPerson => ({
   email: "anna@futbalsfz.sk",
@@ -180,5 +182,70 @@ describe("existujuca osoba: predvolene sa doplnaju len prazdne polia (ADR-019)",
     expect(set().jobTitle).toBe("Vedúca")
     expect(set().department).toBe("IT")
     expect(onInsert().status).toBe("invited")
+  })
+})
+
+/*
+  Náhľad a zápis idú cez jednu funkciu `planChanges()` — náhľad je plán,
+  nie odhad. Tu sa stráži, že plán hovorí presne to, čo sa potom zapíše,
+  a že tabuľka dostane rozdiel „dnes → po importe".
+*/
+describe("planChanges: nahlad je ten isty plan ako zapis", () => {
+  const now = new Date("2026-09-27T12:00:00Z")
+  const person = (over: Record<string, unknown> = {}) =>
+    ({ email: "anna@futbalsfz.sk", companyCode: "SFZ", fullName: "Anna Stará", givenName: "Anna", surname: "Stará", personType: "employee", jobTitle: "Referentka", groups: ["ekonomika"], ...over }) as unknown as Person
+
+  it("nova osoba: kazde zapisane pole je zmena bez predoslej hodnoty", () => {
+    const { set, changes } = planChanges(null, row({ jobTitle: "Vedúca" }), "fill", now)
+    expect(set.jobTitle).toBe("Vedúca")
+    // `resolveName()` z „Anna Bieliková" odvodí aj meno a priezvisko.
+    expect(changes.map(c => c.field).sort()).toEqual(["fullName", "givenName", "jobTitle", "personType", "surname"])
+    expect(changes.every(c => c.before === undefined)).toBe(true)
+  })
+
+  it("fill: zmena je len doplnene prazdne pole, s dnesnou hodnotou", () => {
+    const { set, changes } = planChanges(person({ jobTitle: "" }), row({ fullName: "Anna Nová", jobTitle: "Vedúca" }), "fill", now)
+    expect(Object.keys(set)).toEqual(["jobTitle"])
+    expect(changes).toEqual([{ field: "jobTitle", before: "", after: "Vedúca" }])
+  })
+
+  it("overwrite: rovnaka hodnota nie je zmena — porovnava sa hodnotou, nie odkazom", () => {
+    const { set, changes } = planChanges(person(), row({ fullName: "Anna Stará", jobTitle: "Referentka", groups: ["ekonomika"] }), "overwrite", now)
+    expect(set.groups).toEqual(["ekonomika"])
+    expect(changes).toEqual([])
+  })
+
+  it("overwrite: ina hodnota je zmena s dnesnou hodnotou; groupHistory sa v zmenach neukazuje", () => {
+    const { set, changes } = planChanges(person(), row({ fullName: "Anna Stará", groups: ["it"] }), "overwrite", now)
+    expect(set.groupHistory).toBeDefined()
+    expect(changes.find(c => c.field === "groups")).toEqual({ field: "groups", before: ["ekonomika"], after: ["it"] })
+    expect(changes.find(c => c.field === "groupHistory")).toBeUndefined()
+  })
+})
+
+describe("previewImport: stav riadku pre tabulku", () => {
+  it("nova / doplni sa / bez zmeny / chyba / duplicita", async () => {
+    existing = { fullName: "Anna Stará", givenName: "Anna", surname: "Stará", jobTitle: "Referentka", personType: "employee" }
+    const plan = await previewImport([
+      row({ fullName: "Anna Stará" }),                                  // existuje, nic na doplnenie
+      row({ email: "novy@futbalsfz.sk", fullName: "Nový Človek" }),     // neexistuje
+      row({ email: "zle", fullName: "Bez Adresy" }),                    // neplatny e-mail
+      row({ email: "novy@futbalsfz.sk", fullName: "Nový Človek" }),     // duplicita v subore
+    ])
+    expect(plan.map(p => p.status)).toEqual(["unchanged", "new", "error", "error"])
+    expect(plan[2].reason).toBe("invalid-email")
+    expect(plan[3].reason).toBe("duplicate-in-file")
+    // Jeden dotaz na organizaciu, nie dotaz na riadok.
+    expect(collection.find).toHaveBeenCalledTimes(1)
+  })
+
+  it("existujuca osoba s prazdnym polom je „doplni sa“, v rezime prepisu „zmeni sa“", async () => {
+    existing = { fullName: "Anna Stará", givenName: "Anna", surname: "Stará", jobTitle: "", personType: "employee" }
+    const fill = await previewImport([row({ fullName: "Anna Nová", jobTitle: "Vedúca" })])
+    expect(fill[0].status).toBe("fill")
+    expect(fill[0].changes).toEqual([{ field: "jobTitle", before: "", after: "Vedúca" }])
+    const over = await previewImport([row({ fullName: "Anna Nová", jobTitle: "Vedúca" })], "overwrite")
+    expect(over[0].status).toBe("overwrite")
+    expect(over[0].changes.map(c => c.field).sort()).toEqual(["fullName", "jobTitle", "surname"])
   })
 })

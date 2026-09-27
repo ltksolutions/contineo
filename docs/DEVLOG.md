@@ -10,6 +10,42 @@
 
 ---
 
+## 2026-09-27 (3) — náhľad importu ako tabuľka; prvý worktree
+
+**Zadanie.** Ján ukázal screenshot náhľadu importu (155 e-mailov oddelených
+čiarkou): „vyzerá strašne". Chcel tabuľku s farebným rozlíšením, čo pribudne
+a čo sa mení.
+
+**Ako sa to spravilo.** Nie len vizuál. Aby náhľad vedel povedať *čo* sa
+zmení, musel počítať to isté, čo zápis — preto z `upsertPersons()` vznikla
+čistá `planChanges(existing, row, mode, now)` a `previewImport()` vracia
+plán po riadkoch (`RowPlan`: stav + zmeny „pred → po"). Skript aj obrazovka
+ho ukazujú. Jedna funkcia = jedna pravda; predtým mal náhľad vlastnú,
+hrubšiu logiku („existuje/neexistuje").
+
+**Rozhodnuté (ADR-020).** Ján nechal na mňa, či worktree po zlúčení
+odstrániť a či ho zaviesť ako pravidlo: áno, oboje. Vlastná vetva bez
+vlastnej pracovnej kópie problém z rána nerieši. Odstránenie ide spolu
+s vetvou podľa existujúceho pravidla o automatickom mazaní po zlúčení.
+
+**Nefungovalo / poučenie.**
+
+- Pri zlúčení `origin/main` do vetvy (PR #147 medzitým pridal CSS
+  certifikátov) git zaradil zatvárajúcu `}` môjho `@media` bloku do
+  spoločnej časti konfliktu; „ponechať oboje" bez kontroly zátvoriek by
+  rozbilo CSS. Odteraz po každom konflikte v `globals.css` počítať `{`/`}`.
+- Prvé testy `planChanges()` padli na mojich fixtures, nie na kóde:
+  `resolveName()` z celého mena odvodí aj `givenName`/`surname`, takže
+  „existujúca osoba" bez nich vyzerala ako osoba s prázdnymi poľami.
+- Druhá session bežala na vetve `learning-l3-certificates` s rozrobeným
+  `i18n.ts`. Podľa nového pravidla v `CLAUDE.md` som nešiel cez `checkout`
+  (jedna pracovná kópia by to nevyriešila), ale cez **`git worktree`**
+  v `.worktrees/import-preview` (vylúčené v `.git/info/exclude`,
+  `node_modules` symlinkom). Prvýkrát v tomto repe; funguje — build, testy
+  aj lint bežia v worktree nezávisle.
+- `do shell script` v Control your Mac má časový strop — celá sada testov
+  + build sa musí spustiť cez `nohup` a čítať z logu.
+
 ## 2026-09-27 (2) — import osôb SFZ: pravidlo pre existujúcich (ADR-019)
 
 **Zadanie.** Založiť 155 zamestnancov a spolupracovníkov SFZ z licenčného

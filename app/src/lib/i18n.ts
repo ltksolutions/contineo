@@ -1438,9 +1438,17 @@ interface Dictionary {
       willAdd: string
       willUpdate: (overwrite: boolean) => string
       invalid: string
-      added: string
-      andMore: (n: number) => string
-      skippedRows: string
+      unchanged: string
+      /** Tabuľka náhľadu (ADR-019): štítky stavov, názvy polí, hlavičky. */
+      statuses: Record<"new" | "fill" | "overwrite" | "unchanged" | "error", string>
+      fields: Record<string, string>
+      colStatus: string
+      colPerson: string
+      colChanges: string
+      filterAll: string
+      noRowsForFilter: string
+      nothingToWrite: string
+      emptyValue: string
       unknownWorkplaces: string
       badPhones: string
       statusNoteBefore: string
@@ -4685,9 +4693,20 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       willAdd: "Pribudne",
       willUpdate: (overwrite) => overwrite ? "Existuje — aktualizuje sa" : "Existuje — doplní sa",
       invalid: "Chybných",
-      added: "Pribudnú",
-      andMore: (n) => ` … a ďalších ${n}`,
-      skippedRows: "Tieto riadky sa preskočia",
+      unchanged: "Bez zmeny",
+      statuses: { new: "Nová", fill: "Doplní sa", overwrite: "Zmení sa", unchanged: "Bez zmeny", error: "Chyba" },
+      fields: {
+        fullName: "meno a priezvisko", givenName: "meno", surname: "priezvisko", titleBefore: "titul pred menom", titleAfter: "titul za menom",
+        jobTitle: "pozícia", mobilePhone: "mobil", workplace: "pracovisko", department: "oddelenie", personType: "typ osoby",
+        startDate: "nástup", tracks: "trasy", groups: "skupiny", roles: "roly", language: "jazyk",
+      },
+      colStatus: "Stav",
+      colPerson: "Osoba",
+      colChanges: "Čo sa zapíše",
+      filterAll: "Všetko",
+      noRowsForFilter: "Tomuto filtru nevyhovuje žiadny riadok.",
+      nothingToWrite: "nič — všetko už má",
+      emptyValue: "—",
       unknownWorkplaces: "Pracoviská, ktoré v číselníku nie sú — tieto riadky prejdú, len bez pracoviska:",
       badPhones: "Čísla, ktoré sa nedali prečítať — tieto riadky prejdú, len bez telefónu:",
       statusNoteBefore: "Existujúcim osobám sa ",
@@ -7827,9 +7846,20 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       willAdd: "Přibude",
       willUpdate: (overwrite) => overwrite ? "Existuje — aktualizuje se" : "Existuje — doplní se",
       invalid: "Chybných",
-      added: "Přibudou",
-      andMore: (n) => ` … a dalších ${n}`,
-      skippedRows: "Tyto řádky se přeskočí",
+      unchanged: "Beze změny",
+      statuses: { new: "Nová", fill: "Doplní se", overwrite: "Změní se", unchanged: "Beze změny", error: "Chyba" },
+      fields: {
+        fullName: "jméno a příjmení", givenName: "jméno", surname: "příjmení", titleBefore: "titul před jménem", titleAfter: "titul za jménem",
+        jobTitle: "pozice", mobilePhone: "mobil", workplace: "pracoviště", department: "oddělení", personType: "typ osoby",
+        startDate: "nástup", tracks: "trasy", groups: "skupiny", roles: "role", language: "jazyk",
+      },
+      colStatus: "Stav",
+      colPerson: "Osoba",
+      colChanges: "Co se zapíše",
+      filterAll: "Vše",
+      noRowsForFilter: "Tomuto filtru nevyhovuje žádný řádek.",
+      nothingToWrite: "nic — vše už má",
+      emptyValue: "—",
       unknownWorkplaces: "Pracoviště, která v číselníku nejsou — tyto řádky projdou, jen bez pracoviště:",
       badPhones: "Čísla, která se nedala přečíst — tyto řádky projdou, jen bez telefonu:",
       statusNoteBefore: "Existujícím osobám se ",
@@ -10959,9 +10989,20 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       willAdd: "Will be added",
       willUpdate: (overwrite) => overwrite ? "Exists — will be updated" : "Exists — will be topped up",
       invalid: "Invalid",
-      added: "Will be added",
-      andMore: (n) => ` … and ${n} more`,
-      skippedRows: "These rows will be skipped",
+      unchanged: "Unchanged",
+      statuses: { new: "New", fill: "Will be topped up", overwrite: "Will be updated", unchanged: "Unchanged", error: "Error" },
+      fields: {
+        fullName: "full name", givenName: "given name", surname: "surname", titleBefore: "title before name", titleAfter: "title after name",
+        jobTitle: "job title", mobilePhone: "mobile", workplace: "workplace", department: "department", personType: "person type",
+        startDate: "start date", tracks: "tracks", groups: "groups", roles: "roles", language: "language",
+      },
+      colStatus: "Status",
+      colPerson: "Person",
+      colChanges: "What gets written",
+      filterAll: "All",
+      noRowsForFilter: "No row matches this filter.",
+      nothingToWrite: "nothing — already has it all",
+      emptyValue: "—",
       unknownWorkplaces: "Workplaces not in the code list — these rows go through, just without a workplace:",
       badPhones: "Numbers that could not be read — these rows go through, just without a phone:",
       statusNoteBefore: "Existing people ",

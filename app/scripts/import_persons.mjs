@@ -56,24 +56,30 @@ const people = rows.map(r => {
   const o = rowToPerson(r)
   return o.companyCode || !org ? o : { ...o, companyCode: org }
 })
-const preview = await previewImport(people)
+const plan = await previewImport(people, mode)
+const count = status => plan.filter(p => p.status === status).length
+const errors = plan.filter(p => p.status === "error")
 
-console.log(`${OK} nových:     ${preview.created.length}`)
-console.log(`${INFO} existujúcich: ${preview.existing.length}  (${mode === "overwrite" ? "prepíšu sa hodnotami zo súboru" : "doplnia sa len prázdne polia"})`)
-if (preview.errors.length) {
-  console.log(`${ERR} chybných:    ${preview.errors.length}`)
-  for (const e of preview.errors.slice(0, 20)) {
+console.log(`${OK} nových:     ${count("new")}`)
+console.log(`${INFO} existujúcich: ${count("fill") + count("overwrite")}  (${mode === "overwrite" ? "prepíšu sa hodnotami zo súboru" : "doplnia sa len prázdne polia"}), bez zmeny ${count("unchanged")}`)
+for (const p of plan.filter(p => p.status === "fill" || p.status === "overwrite")) {
+  const list = p.changes.map(c => `${c.field}: ${JSON.stringify(c.before ?? null)} → ${JSON.stringify(c.after)}`).join("; ")
+  console.log(`     ${p.email} — ${list}`)
+}
+if (errors.length) {
+  console.log(`${ERR} chybných:    ${errors.length}`)
+  for (const e of errors.slice(0, 20)) {
     console.log(`     ${e.email || "(bez adresy)"} — ${REASONS[e.reason] ?? e.reason}`)
   }
-  if (preview.errors.length > 20) console.log(`     … a ďalších ${preview.errors.length - 20}`)
+  if (errors.length > 20) console.log(`     … a ďalších ${errors.length - 20}`)
 }
 
 if (!write) {
   console.log(`\n${INFO} Len náhľad, nič sa nezapísalo. Zápis: pridaj --zapis`)
-  process.exit(preview.errors.length ? 1 : 0)
+  process.exit(errors.length ? 1 : 0)
 }
 
-if (preview.errors.length) {
+if (errors.length) {
   console.log(`\n${ERR} Sú tam chybné riadky — oprav ich a spusti znova.`)
   console.log(`${INFO} Zápis po častiach by nechal databázu v polovičnom stave.`)
   process.exit(1)
