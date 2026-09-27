@@ -34,13 +34,15 @@ describe("riadok na osobu", () => {
     expect(rowToPerson({ email: "a@b.sk" }).language).toBeUndefined()
   })
 
-  it("oslovenie: pán/pani v rôznych tvaroch; prázdne a neznáme = nevyplnené", () => {
-    expect(rowToPerson({ email: "a@b.sk", oslovenie: "Pán" }).salutation).toBe("mr")
-    expect(rowToPerson({ email: "a@b.sk", oslovenie: "pani" }).salutation).toBe("ms")
-    expect(rowToPerson({ email: "a@b.sk", salutation: "Ms." }).salutation).toBe("ms")
-    expect(rowToPerson({ email: "a@b.sk", oslovenie: "" }).salutation).toBeUndefined()
-    expect(rowToPerson({ email: "a@b.sk", oslovenie: "Ing." }).salutation).toBeUndefined()
-    expect(rowToPerson({ email: "a@b.sk" }).salutation).toBeUndefined()
+  it("pohlavie: muž/žena aj pán/pani v rôznych tvaroch; prázdne a neznáme = nevyplnené", () => {
+    expect(rowToPerson({ email: "a@b.sk", oslovenie: "Pán" }).gender).toBe("male")
+    expect(rowToPerson({ email: "a@b.sk", oslovenie: "pani" }).gender).toBe("female")
+    expect(rowToPerson({ email: "a@b.sk", gender: "Ms." }).gender).toBe("female")
+    expect(rowToPerson({ email: "a@b.sk", pohlavie: "žena" }).gender).toBe("female")
+    expect(rowToPerson({ email: "a@b.sk", pohlavie: "M" }).gender).toBe("male")
+    expect(rowToPerson({ email: "a@b.sk", oslovenie: "" }).gender).toBeUndefined()
+    expect(rowToPerson({ email: "a@b.sk", oslovenie: "Ing." }).gender).toBeUndefined()
+    expect(rowToPerson({ email: "a@b.sk" }).gender).toBeUndefined()
   })
 
   it("chýbajúci stĺpec zoznamu nechá hodnotu nevyplnenú, nie prázdnu", () => {

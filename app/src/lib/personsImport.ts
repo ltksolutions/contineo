@@ -11,7 +11,7 @@
 import { parseCsv } from "./csv"
 import type { NewPerson, PersonType } from "./persons"
 import type { CodelistItem } from "./codelists"
-import { normalizePhone, matchWorkplace, composeFullName, normalizeSalutation } from "./personFields"
+import { normalizePhone, matchWorkplace, composeFullName, normalizeGender } from "./personFields"
 
 /** Hlavičky sa normalizujú (malé písmená, bez diakritiky), takže stačí tvar. */
 export const ALIASES: Record<string, string[]> = {
@@ -33,7 +33,7 @@ export const ALIASES: Record<string, string[]> = {
   tracks: ["trasa", "trasy", "tracks"],
   groups: ["skupina", "skupiny", "groups"],
   language: ["jazyk", "language", "lang"],
-  salutation: ["oslovenie", "salutation", "pohlavie", "gender"],
+  gender: ["pohlavie", "pohlavi", "gender", "sex", "oslovenie"],
 }
 
 /** Strojové kľúče z `validateRow()` → veta pre človeka. */
@@ -142,7 +142,7 @@ export function rowToPerson(
     // späť na slovenčinu).
     language: fieldValue(row, "language") || undefined,
     // Nerozpoznaná hodnota = nevyplnené; nič sa neprepíše (ako jazyk).
-    salutation: normalizeSalutation(fieldValue(row, "salutation")),
+    gender: normalizeGender(fieldValue(row, "gender")),
   }
 }
 

@@ -166,28 +166,34 @@ export function needsInvitation(
   return person.status !== "inactive" && !person.firstLoginAt
 }
 
-// ── Oslovenie ────────────────────────────────────────────────────────────────
+// ── Pohlavie ─────────────────────────────────────────────────────────────────
 
 /**
- * Oslovenie (pán / pani) — **len kvôli gramatike** textov o osobe:
- * „absolvoval" / „absolvovala" na certifikáte (Ján 27. 9. 2026).
+ * Pohlavie osoby — na **štatistiky zloženia** (napr. podiel žien medzi
+ * rozhodcami) a na **gramatiku** textov o osobe: „absolvoval" /
+ * „absolvovala" na certifikáte (Ján 27. 9. 2026). Účel treba mať
+ * v zázname o spracúvaní — bez neho by to bol údaj navyše.
  *
  * Z mena sa nehádá: „-ová" nie je pravidlo a chybný tvar na certifikáte
  * je horší než zátvorka. Kým nie je vyplnené, text použije „absolvoval(a)".
  */
-export const SALUTATIONS = ["mr", "ms"] as const
-export type Salutation = (typeof SALUTATIONS)[number]
+export const GENDERS = ["male", "female"] as const
+export type Gender = (typeof GENDERS)[number]
 
-/** Hodnota z formulára alebo zo súboru → `mr` | `ms`; inak `undefined`. */
-export function normalizeSalutation(raw: string | undefined | null): Salutation | undefined {
-  const v = (raw ?? "").trim().toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/\.$/, "")
+/**
+ * Hodnota z formulára alebo zo súboru → `male` | `female`; inak
+ * `undefined`. Berie aj oslovenie (pán/pani, Mr/Ms) — tak ho mávajú
+ * exporty z iných systémov.
+ */
+export function normalizeGender(raw: string | undefined | null): Gender | undefined {
+  const v = (raw ?? "").trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\.$/, "")
   if (!v) return undefined
-  if (["mr", "pan", "p", "muz", "m"].includes(v)) return "mr"
-  if (["ms", "mrs", "pani", "pi", "zena", "z", "f"].includes(v)) return "ms"
+  if (["male", "man", "m", "muz", "mr", "pan", "p"].includes(v)) return "male"
+  if (["female", "woman", "f", "z", "zena", "ms", "mrs", "pani", "pi"].includes(v)) return "female"
   return undefined
 }
 
-/** Tri tvary slovesa podľa oslovenia: muž, žena, neznáme. */
-export function bySalutation<T>(s: Salutation | undefined, forms: { mr: T; ms: T; unknown: T }): T {
-  return s === "mr" ? forms.mr : s === "ms" ? forms.ms : forms.unknown
+/** Tri tvary slovesa podľa pohlavia: muž, žena, nevyplnené. */
+export function byGender<T>(s: Gender | undefined, forms: { male: T; female: T; unknown: T }): T {
+  return s === "male" ? forms.male : s === "female" ? forms.female : forms.unknown
 }

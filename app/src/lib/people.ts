@@ -27,7 +27,7 @@ import { HR_ROLE } from "./hr"
 import type { Person, PersonStatus, PersonType } from "./persons"
 import { tenantByCompanyCode } from "./tenants"
 import type { Tenant } from "./tenants"
-import { composeFullName, splitFullName, normalizePhone, matchWorkplace, normalizeSalutation, type Salutation } from "./personFields"
+import { composeFullName, splitFullName, normalizePhone, matchWorkplace, normalizeGender, type Gender } from "./personFields"
 import { availableOptions } from "./codelistsTenant"
 import { allDepartments, pathIdsTo, pathTo } from "./departments"
 import { AppError } from "./appError"
@@ -101,7 +101,7 @@ export interface PersonRow {
   personType: PersonType
   status: PersonStatus
   language: string
-  salutation?: Salutation
+  gender?: Gender
   tracks: string[]
   groups: string[]
   roles: string[]
@@ -146,7 +146,7 @@ function toRow(p: Person): PersonRow {
     personType: p.personType,
     status: p.status,
     language: p.language,
-    salutation: p.salutation,
+    gender: p.gender,
     tracks: p.tracks ?? [],
     groups: p.groups ?? [],
     roles: p.roles ?? [],
@@ -236,7 +236,7 @@ export interface PersonChange {
   personType?: PersonType
   language?: string
   /** Prázdny reťazec = vyprázdniť. */
-  salutation?: string
+  gender?: string
   tracks?: string[]
   groups?: string[]
   roles?: string[]
@@ -409,10 +409,10 @@ export async function savePerson(
     set.personType = change.personType
   }
   if (change.language !== undefined) set.language = normalizeLanguage(change.language)
-  if (change.salutation !== undefined) {
-    const s = normalizeSalutation(change.salutation)
-    if (change.salutation.trim() && !s) throw new PersonValidationError("person.unknownSalutation", "Neznáme oslovenie.")
-    set.salutation = s
+  if (change.gender !== undefined) {
+    const s = normalizeGender(change.gender)
+    if (change.gender.trim() && !s) throw new PersonValidationError("person.unknownGender", "Neznáme pohlavie.")
+    set.gender = s
   }
   if (change.tracks !== undefined) set.tracks = normalizeKeys(change.tracks)
   // Skupiny a ich história sa zapisujú **spolu**, rovnako ako oddelenie a cesta.
@@ -479,7 +479,7 @@ export async function invitePerson(
     departmentId?: string | null
     personType?: PersonType
     language?: string
-    salutation?: string
+    gender?: string
   },
   actor: string,
 ): Promise<PersonRow> {
@@ -539,7 +539,7 @@ export async function invitePerson(
     personType: (input.personType && TYPES.includes(input.personType)) ? input.personType : "employee",
     status: "invited",
     language: normalizeLanguage(input.language),
-    ...(normalizeSalutation(input.salutation) ? { salutation: normalizeSalutation(input.salutation) } : {}),
+    ...(normalizeGender(input.gender) ? { gender: normalizeGender(input.gender) } : {}),
     tracks: [],
     groups: [],
     groupHistory: [],

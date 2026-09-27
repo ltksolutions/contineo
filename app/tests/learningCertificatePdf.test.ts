@@ -37,11 +37,11 @@ describe("certificatePdf", () => {
     expect(t).toContain(url.replace(/\s+/g, ""))
   })
 
-  it("tvar slovesa podľa oslovenia v kópii; nevyplnené = absolvoval(a)", async () => {
-    const say = async (holderSalutation?: "mr" | "ms") =>
-      (await text(await renderCertificatePdf({ certificate: c, texts: certificatePdfTexts({ ...c, holderSalutation }, "sk"), verifyUrl: url }))).replace(/\s+/g, "")
-    expect(await say("ms")).toContain("úspešneabsolvovalakurz")
-    expect(await say("mr")).toContain("úspešneabsolvovalkurz")
+  it("tvar slovesa podľa pohlavia v kópii; nevyplnené = absolvoval(a)", async () => {
+    const say = async (holderGender?: "male" | "female") =>
+      (await text(await renderCertificatePdf({ certificate: c, texts: certificatePdfTexts({ ...c, holderGender }, "sk"), verifyUrl: url }))).replace(/\s+/g, "")
+    expect(await say("female")).toContain("úspešneabsolvovalakurz")
+    expect(await say("male")).toContain("úspešneabsolvovalkurz")
     expect(await say()).toContain("úspešneabsolvoval(a)kurz")
   })
 

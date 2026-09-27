@@ -23,7 +23,7 @@
  */
 
 import { ObjectId } from "mongodb"
-import { composeFullName, splitFullName, type Salutation } from "./personFields"
+import { composeFullName, splitFullName, type Gender } from "./personFields"
 import { getCollection } from "./mongodb"
 import { normalizeLanguage } from "./i18n"
 import type { UiLanguage } from "./i18n"
@@ -194,8 +194,8 @@ export interface Person {
   /** Pracovná pozícia z adresára. Evidenčný údaj, o prístupe nerozhoduje. */
   jobTitle?: string
 
-  /** Oslovenie — len na gramatiku textov („absolvoval/-a"), `personFields.ts`. */
-  salutation?: Salutation
+  /** Pohlavie — štatistiky zloženia a gramatika textov („absolvoval/-a"), `personFields.ts`. */
+  gender?: Gender
 
   /**
    * Mobil v tvare E.164 — `+421905123456` (D86).
@@ -291,7 +291,7 @@ export interface NewPerson {
   /** Voliteľné v CSV; neznáme alebo chýbajúce padá na slovenčinu. */
   language?: string
   /** Voliteľné v CSV; zapíše sa len rozpoznaná hodnota. */
-  salutation?: Salutation
+  gender?: Gender
 }
 
 /** Adresa v tvare, v ktorom sa porovnáva a ukladá. */
@@ -623,7 +623,7 @@ export function planChanges(
   if (r.jobTitle?.trim()) set.jobTitle = r.jobTitle.trim()
   if (r.mobilePhone?.trim()) set.mobilePhone = r.mobilePhone.trim()
   if (r.workplace?.trim()) set.workplace = r.workplace.trim()
-  if (r.salutation) set.salutation = r.salutation
+  if (r.gender) set.gender = r.gender
 
   if (!existing) {
     return {

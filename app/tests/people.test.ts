@@ -160,15 +160,15 @@ describe("ulozenie osoby", () => {
     expect(updateOne).not.toHaveBeenCalled()
   })
 
-  it("oslovenie: pán/pani sa uloží, prázdne vyprázdni, neznáme sa odmietne", async () => {
+  it("pohlavie: muž/žena (aj pán/pani) sa uloží, prázdne vyprázdni, neznáme sa odmietne", async () => {
     let updateOne = collection(person())
-    await savePerson("SFZ", "p1", { salutation: "pani" }, "ja@sfz.sk")
-    expect(updateOne.mock.calls[0][1].$set.salutation).toBe("ms")
-    updateOne = collection(person({ salutation: "ms" }))
-    await savePerson("SFZ", "p1", { salutation: "" }, "ja@sfz.sk")
-    expect(updateOne.mock.calls[0][1].$set.salutation).toBeUndefined()
+    await savePerson("SFZ", "p1", { gender: "pani" }, "ja@sfz.sk")
+    expect(updateOne.mock.calls[0][1].$set.gender).toBe("female")
+    updateOne = collection(person({ gender: "female" }))
+    await savePerson("SFZ", "p1", { gender: "" }, "ja@sfz.sk")
+    expect(updateOne.mock.calls[0][1].$set.gender).toBeUndefined()
     collection(person())
-    await expect(savePerson("SFZ", "p1", { salutation: "kapitán" }, "ja@sfz.sk")).rejects.toThrow()
+    await expect(savePerson("SFZ", "p1", { gender: "kapitán" }, "ja@sfz.sk")).rejects.toThrow()
   })
 
   it("neznámy typ osoby sa odmietne", async () => {
