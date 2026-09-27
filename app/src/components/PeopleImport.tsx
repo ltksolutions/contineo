@@ -55,6 +55,8 @@ export default function PeopleImport({ language }: { language?: UiLanguage }) {
   const [overwrite, setOverwrite] = useState(false)
   // Filter tabuľky podľa stavu; `null` = všetko.
   const [filter, setFilter] = useState<RowPlanStatus | null>(null)
+  // Hľadanie v mene a adrese — pri 150 riadkoch je „kde som ja" prvá otázka.
+  const [query, setQuery] = useState("")
 
   async function onPick(e: React.ChangeEvent<HTMLInputElement>) {
     const f = e.target.files?.[0]
@@ -162,8 +164,10 @@ export default function PeopleImport({ language }: { language?: UiLanguage }) {
         const count = (st: RowPlanStatus) => rows.filter(r => r.status === st).length
         const existingCount = count("fill") + count("overwrite")
         const errorCount = count("error")
+        const needle = query.trim().toLowerCase()
         const visible = rows
           .filter(r => !filter || r.status === filter)
+          .filter(r => !needle || r.email.toLowerCase().includes(needle) || r.fullName.toLowerCase().includes(needle))
           .sort((a, b) => ORDER.indexOf(a.status) - ORDER.indexOf(b.status))
         const canWrite = errorCount === 0 && (count("new") + existingCount) > 0
 
@@ -197,6 +201,15 @@ export default function PeopleImport({ language }: { language?: UiLanguage }) {
         return (
         <section className="card" style={{ padding: "18px 20px", display: "grid", gap: 14 }}>
           <h2 style={{ fontSize: "var(--fs-section)", margin: 0 }}>{t.whatHappens(name)}</h2>
+
+          <input
+            className="field-input"
+            type="search"
+            value={query}
+            onChange={e => setQuery(e.target.value)}
+            placeholder={t.searchPlaceholder}
+            aria-label={t.searchPlaceholder}
+          />
 
           <div className="import-stats">
             {stat(t.rows, rows.length, null)}
