@@ -33,6 +33,7 @@ Riadok = značka 28 px · „N. Názov" · stav vpravo; pod tým `.tag` Povinná
 
 - Zamknutá **len** pri kurze s poradím „postupne". Nepovinná časť poradie neblokuje a do „N z M" sa nepočíta.
 - Test pri časti: „Test · názov · povinný/nepovinný · výsledok" — „nespustený" · „prešiel 85 %" (`--ok-fg`) · „neprešiel 60 % · ďalší pokus o 25 minút · zostávajú 2 z 3" (`--bad-fg`).
+- Otvorený pokus (TEST-ATTEMPT Q2 ✅): „Test · názov · povinný · rozpracovaný · zostáva 12 minút · Pokračovať v teste" (`--warn-fg`). „Pokračovať tu" vedie do časti, nie do testu.
 - Na 390 stav a tlačidlo idú pod názov, tlačidlo na celú šírku 44 px.
 
 ## Hlášky nad obsahom

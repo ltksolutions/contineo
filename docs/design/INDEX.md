@@ -93,14 +93,14 @@ Zadanie: `docs/design/LEARNING-zadanie.md` (a6c7ddc). Spoločné nové triedy
 | # | Rám | Routa | Stav |
 | --- | --- | --- | --- |
 | 1 | `LEARNING-moje-kurzy` | `/learning` | ✅ Q1, Q2 rozhodnuté |
-| 2 | `COURSE-prehlad-kurzu` | `/learning/[courseKey]` | ✅ Q1 rozhodnutá |
-| 3 | `PART-cast-kurzu` | `/learning/[courseKey]/[partKey]` | ✅ Q1, Q2 rozhodnuté |
-| 4 | `MANAGE-sprava-kurzov` | `/learning/manage` | ✅ Q1 rozhodnutá (alternatíva) |
+| 2 | `COURSE-prehlad-kurzu` | `/learning/[courseKey]` | ✅ Q1 rozhodnutá (+ rozpracovaný test) |
+| 3 | `PART-cast-kurzu` | `/learning/[courseKey]/[partKey]` | ✅ Q1, Q2 rozhodnuté (+ rozpracovaný test) |
+| 4 | `MANAGE-sprava-kurzov` | `/learning/manage` | ✅ Q1 rozhodnutá · + zlúčenie smart:tagov |
 | 5 | `MANAGE-COURSE-uprava-kurzu` | `/learning/manage/[courseKey]` | ✅ Q1, Q2 rozhodnuté |
 | 6 | `TESTS-testy-a-banka` (+ `TESTS-import-otazok-vzor.csv`) | `/learning/tests` | ✅ Q1, Q2 rozhodnuté |
 | 7 | `TEST-ATTEMPT-pokus` | `…/test/[testKey]` | ✅ Q1, Q2 rozhodnuté |
 | 8 | `RESULT-vysledok-pokusu` | `…/[attemptId]/result` | hotový, bez otázok |
-| 9 | `CERTIFICATE-certifikat` | `/learning/[courseKey]/certificate`, `/verify/…`, PDF | ✅ Q1–Q3 rozhodnuté |
+| 9 | `CERTIFICATE-certifikat` | `/learning/[courseKey]/certificate`, `/verify/…`, PDF | ✅ Q1–Q3 rozhodnuté (+ logo org./Contineo, odvolanie) |
 
 ### Pre knižnice L1 (bez obrazoviek) — čo rámy potrebujú od modelu
 
@@ -111,6 +111,8 @@ každého `.md`):
   ADR-018 ho nemá, zadanie áno · `subtitle`, `description`,
   `estimatedMinutes`, `issuesCertificate`, `openEnrollment`, `topicId`,
   `smartTags[]`, `version.publishedAt`.
+- **Test / pokus (L2):** `test.versions[]`, `test.showAnswers`, `test_attempts.deadlineAt` / `closedBy` / `resetAt` / `resetBy` / `resetReason`.
+- **Certifikát (L3):** `issuedBy.logo` (kópia loga pri vydaní), `revokedAt` / `revokedBy` / `revokedReason`.
 - **Zápis:** `source` (`assignment` | `self`) + kto pridelil (veta
   „Pridelené 22. 9. · Oddelenie ľudských zdrojov").
 - **Časť:** `required`, `estimatedMinutes` (alebo súčet z blokov).
@@ -122,7 +124,8 @@ každého `.md`):
   `video_watch` rozsahov (hranica 90 %).
 - **Témy:** číselník s `retiredAt` (vyradiť, nie zmazať).
 - **smart:tagy:** agregácia počtov naprieč kurzami / otázkami / testami
-  (odvodená); premenovanie mení tag všade (MANAGE Q1, 27. 9.).
+  (odvodená); premenovanie a zlúčenie mení tag všade (MANAGE Q1 ✅,
+  `lib/smartTagsDb.ts`).
 - **Navigácia:** `NavKey` `"learning"` (všetci pri zapnutom module),
   `tabbarItems()` — „Vzdelávanie" na 3. pozíciu, len keď v zozname nie je
   `library` (LEARNING Q1 ✅).

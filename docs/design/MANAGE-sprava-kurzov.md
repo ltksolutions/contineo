@@ -37,16 +37,41 @@ Nová obrazovka pre rolu `learning-admin` so záložkami `?tab=courses | topics 
 
 ## Záložka smart:tagy
 
-- Karta na kľúč: hlavička (kľúč · „kurzy 3 · otázky 42 · testy 2" · „Premenovať kľúč"), riadky hodnôt (`.stag` · kurzy · otázky · testy · „Premenovať").
-- 390: počty ako jeden riadok pod hodnotou.
-- Premenovanie: formulár pod riadkom (`?rename=key:value`), pole s novým zápisom, veta „Zmení sa na všetkých 16 miestach (1 kurz, 14 otázok, 1 test)…", „Premenovať" / „Zrušiť".
-- smart:tag sa **tu nevytvára** — vzniká, kde sa prvýkrát napíše. Hodnota bez použitia sa v prehľade neukazuje.
+- Karta na kľúč: hlavička (kľúč · „kurzy 3 · otázky 50 · testy 3" · „Premenovať kľúč"), riadky hodnôt (políčko · `.stag` · kurzy · otázky · testy · „Premenovať").
+- 390: počty ako jeden riadok pod hodnotou, políčko 44 px.
+- Premenovanie: formulár pod riadkom (`?rename=key:value`), pole s novým zápisom, veta „Zmení sa všade — na 15 miestach (2 kurzy, 12 otázok, 1 test), vrátane filtrov sekcií testov.", „Premenovať" / „Zrušiť".
+- **Premenovanie na existujúcu hodnotu = zlúčenie**: veta v `--warn-fg` „„Bezpečnosť: Požiar" už existuje — zlúčia sa. Zostane jeden tag na 17 miestach (…)." a tlačidlo „Zlúčiť" namiesto „Premenovať".
+- smart:tag sa **tu nevytvára** — vzniká, kde sa prvýkrát napíše. Hodnota bez použitia sa v prehľade neukazuje; kľúč bez hodnôt tiež nie.
+
+## Zlúčenie
+
+Rozhodnutie Jána 27. 9. 2026. Knižnica je hotová (`mergeSmartTags`), chýba obrazovka.
+
+**Pravidlá**
+- Premenovanie aj zlúčenie mení tag **všade**: kurzy, banka otázok, testy vrátane filtrov sekcií (Q1 ✅ — alternatíva).
+- Zlúčiť sa dá **2 a viac** hodnôt do jednej. Cieľ = jedna zo zlučovaných alebo nový zápis „Kľúč: Hodnota". Kurz/otázka/test, ktorý mal viac zlučovaných, dostane cieľ **raz**.
+- V rámci jedného kľúča aj **naprieč kľúčmi** („Bezpecnost: Lift" + „Bezpečnosť: Výťah"). Kľúč, ktorému nezostane žiadna hodnota, zmizne z prehľadu.
+
+**Postup**
+1. **Výber**: políčko pri každom riadku hodnoty (390: 44 px). Vybraný riadok `--accent-soft` + `inset 3px 0 0 var(--accent)`. Od 2 vybraných pás **„Vybraté 3 · Zlúčiť do…"** + „Zrušiť výber":
+   - 1440: nad kartami, `position: sticky; top: 0`, s vybranými `.stag`;
+   - 390: prilepený dole nad spodnou lištou (ako savebar v `/organisation`), bez zoznamu tagov.
+2. **Zlúčiť do…** (`?merge=K:V,K:V,…`): karta pod pásom — „Zlúčiť 3 smart:tagy do jedného", prepínače „Čo zostane" (vybrané `.stag` + použitie; predvolená najpoužívanejšia) a posledná voľba **„Nový zápis"** s poľom „Kľúč: Hodnota". Veta dopadu: „Zmení sa na 23 miestach (4 kurzy, 17 otázok, 2 testy) — aj vo filtroch sekcií testov. Vybrané tagy zmiznú, zostane „Bezpečnosť: Výťah". …dostane „Bezpečnosť: Výťah" raz." + „Zlúčiť" / „Zrušiť". Dopad sa počíta na serveri pri zobrazení kroku 2.
+3. **Výsledok**: `.notice` „Zlúčené: 3 tagy → Bezpečnosť: Výťah (23 miest)." Cieľový riadok krátko v `--ok-bg`. Audit: subjekt `smart:tag`, akcia `zlúčené`, zoznam zdrojov a cieľ.
+
+**Bez JS**: karty sú jeden `<form method="get">` s políčkami a tlačidlom „Zlúčiť vybraté" → `?merge=…` zobrazí ten istý formulár (krok 2). S JS sa pás ukazuje priebežne.
+
+**Chyby** (`.notice--error` / veta pod poľom v `--bad-fg`)
+- vybratá 1 hodnota → „Na zlúčenie treba aspoň dva smart:tagy."
+- neplatný nový zápis → „„X" nie je smart:tag v tvare „Kľúč: Hodnota"."
+
+**Rámy zlúčenia**: 390 výber + pás · formulár s dopadom · výsledok · formulár v tmavej téme; 1440 to isté; dve chybové karty.
 
 ## Rámy
 
-- **390**: kurzy · nový kurz · prázdne · tmavá · témy · smart:tagy s otvoreným premenovaním.
+- **390**: kurzy · nový kurz · prázdne · tmavá · témy · smart:tagy s premenovaním na existujúcu hodnotu · zlúčenie (3 kroky + tmavá).
 - **834**: kurzy.
-- **1440**: kurzy · prázdne · témy · smart:tagy.
+- **1440**: kurzy · prázdne · témy · smart:tagy s premenovaním · zlúčenie (3 kroky).
 
 ## Čo je v repozitári UŽ HOTOVÉ — nerob znova
 
@@ -58,6 +83,9 @@ Nová obrazovka pre rolu `learning-admin` so záložkami `?tab=courses | topics 
 | Číslovník s vyradením | `category` (D55) |
 | Select s hľadaním | `Select.tsx` (`searchable`, KOMPONENT-vyber-oddelenia) |
 | AppShell, `/more` | `AppNav.tsx`, `lib/appNav.ts` |
+| Zlúčenie a premenovanie smart:tagov | `mergeSmartTags`, `renameSmartTag`, `renameSmartTagKey` v `lib/smartTagsDb.ts` |
+| Savebar prilepený dole | `/organisation` |
+| Audit | `lib/audit.ts` |
 
 Nové: `.tabs` (ak `/organisation` nemá triedu na znovupoužitie — overiť), `.tgk`/`.tgv`, `.trow`.
 
@@ -68,16 +96,8 @@ Nové: `.tabs` (ak `/organisation` nemá triedu na znovupoužitie — overiť), 
 
 ## Rozhodnutia Jána 27. 9. 2026
 
-- **Q1 ❌ návrh, platí alternatíva:** premenovanie smart:tagu mení tag
-  **všade** — na kurzoch, otázkach aj testoch, nielen v živých záznamoch
-  („inak vznikne neporiadok"). Premenovanie na existujúcu hodnotu = zlúčenie.
-  S D118 to nekoliduje: smart:tagy sú na kurze, nie vo verzii; snímky otázok
-  v pokusoch (D120) tagy nenesú, takže sa dôkazy nemenia.
-- **Zlúčenie ✅ (nové, 27. 9.):** okrem premenovania aj výslovné zlúčenie
-  **viacerých** tagov do jedného (cieľ je jeden z nich alebo nový zápis).
-  V ráme zatiaľ nie je — knižnica áno (`mergeSmartTags`); rám treba doplniť
-  v Claude Design (výber hodnôt v karte kľúča + „Zlúčiť do…").
+- **Q1 ✅ (alternatíva)** Premenovanie aj zlúčenie mení smart:tag **všade** — kurzy, banka otázok, testy vrátane filtrov sekcií. Premenovanie na existujúcu hodnotu je zlúčenie. Knižnica: `lib/smartTagsDb.ts`.
 
-## Otázky pre Jána
+## Pôvodná otázka
 
-- **Q1** — Premenovanie smart:tagu mení `label` **aj v zverejnených verziách** kurzov a v snímkach otázok v pokusoch? Návrh: mení sa len zobrazený text v živých záznamoch (koncepty, banka, testy, filtre); zverejnené verzie a snímky pokusov (D118, D120) ostávajú, ako boli — porovnáva sa normalizovaný tvar, takže filter funguje ďalej. Premenovanie na existujúcu hodnotu = zlúčenie.
+- **Q1** — Premenovanie smart:tagu mení `label` aj v zverejnených verziách? Návrh bol: len v živých záznamoch. Rozhodnuté inak (vyššie).

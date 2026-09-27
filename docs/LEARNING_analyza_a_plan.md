@@ -205,8 +205,11 @@ aby zmena testu neprepísala, čo ľudia robili.
 interface Question {
   companyCode: string; key: string
   type: "single_choice" | "multiple_choice" | "true_false" | "short_text"
-  text: string (markdown); imageFileId?
-  answers?: { id, text, isCorrect }[]      // multiple_choice: ≥ 1 správna; single: presne 1
+  text?: string (markdown)                  // text a/alebo médiá — aspoň jedno (Ján 27. 9.)
+  media?: QuestionMedia[]                   // obrázky a videá, v poradí
+  answers?: { id, text?, media?: QuestionMedia, isCorrect }[]  // text a/alebo jedno médium; multiple: ≥ 2 správne, single: presne 1
+  // QuestionMedia = { kind: "image", fileId, alt } | { kind: "video", source: VideoSource, durationSec? }
+  // dokument ani iný súbor nie — len obrázok a video
   expectedText?, expectedTextAlternatives?  // short_text
   explanation?, weight: number (1), difficulty?
   smartTags: SmartTag[]                     // ≥ 1 povinný

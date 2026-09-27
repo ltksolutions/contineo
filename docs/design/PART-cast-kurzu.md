@@ -52,6 +52,8 @@ Nová obrazovka časti kurzu. Nové komponenty: **blok obsahu** (6 typov), **pre
 | hotová | ✓ · „Časť je hotová · 17. 9. 2026" · „Ďalšia časť →" |
 | hotová, nepovinný test nespravený | to isté + „nepovinný test môžete spraviť kedykoľvek" |
 
+**Rozpracovaný pokus** (TEST-ATTEMPT Q2 ✅): riadok testu „rozpracovaný" `--warn-fg` · „zostáva 12 minút · otázka 8 z 20" (bez limitu: „bez limitu času") · `.button` „Pokračovať" → `…/test/[testKey]/[attemptId]?q=8`. Na 390 súhrn „Povinný test: rozpracovaný · zostáva 12 minút · Pokračovať ↓". Keď čas uplynie, server pokus uzavrie a riadok ukáže výsledok.
+
 Tlačidlo sa vypína **len** kvôli povinnému videu (zadanie). Povinný test je samostatná podmienka hotovej časti (D119).
 
 ## Rámy

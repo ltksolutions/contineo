@@ -31,6 +31,8 @@ Len ak `showAnswers` to v tomto stave dovolí (`after_submit`; `after_pass` pri 
 - Riadok: značka ✓ `--ok` / ✕ `--bad` / ! `--warn` (nezodpovedaná) · „Otázka 7 · váha 2 · viac správnych" · znenie · „Vaša odpoveď" (nesprávna preškrtnutá `--bad-fg`) · „Správna odpoveď" `--ok-fg` · vysvetlenie v `--bg` rámiku.
 - Obsah **zo snímky pokusu** (D120) — zmena otázky v banke ho nezmení.
 
+- **Odpoveď s médiom** (D120): „Vaša odpoveď" aj „Správna odpoveď" ako malé dlaždice 96 px (náhľad obrázka / prvá snímka videa + text alebo popis obrázka). Nesprávne zvolená: rám `--bad-fg`, text preškrtnutý; správna: rám `--ok-fg`. Video sa v prehľade neprehráva, médiá otázky sa neopakujú. Rám: 390 riadok s obrázkovou odpoveďou.
+
 Inak karta: „Správne odpovede sa nezobrazujú" + dôvod podľa nastavenia + počet nesprávnych (bez toho, ktoré).
 
 ## 1440
@@ -54,6 +56,8 @@ Obsah 1fr + bočný stĺpec 320 px: „Vaše pokusy" (dátum, skóre) a „Kto v
 Nové: `AttemptScore`, `AttemptReviewList`, `.rs-*`, `.ri-*`.
 
 ## Údaje, ktoré v modeli zatiaľ nie sú
+
+- `question.media[]` — 0..n médií otázky v poradí; `answer.media` — najviac jedno médium odpovede (pri `short_text` nikdy). `QuestionMedia = { kind: "image", fileId, alt } | { kind: "video", source: "upload" | "external", fileId?, url?, durationSec }`. `alt` povinný pri obrázku. Otázka: text **alebo** aspoň jedno médium; odpoveď: text **alebo** médium (D120, rozhodnutie 27. 9. 2026). Dokumenty ani iné súbory nie.
 
 - `test_attempts.score` (percento), `points`, `maxPoints`, `passed`, `durationSec` — vyhodnocuje server pri uzavretí.
 - Čas ďalšieho pokusu = `submittedAt` posledného + `test.pauseMinutes` (odvodené).
