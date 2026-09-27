@@ -12,7 +12,7 @@ import { notFound, redirect } from "next/navigation"
 import { learningContext } from "@/lib/learning"
 import { getCourse } from "@/lib/coursesDb"
 import { enrollmentFor } from "@/lib/enrollmentsDb"
-import { ensureCertificate } from "@/lib/certificatesDb"
+import { ensureCertificate, withHolderSalutation } from "@/lib/certificatesDb"
 import { tenantOrigin, verifyPath } from "@/lib/certificates"
 import { versionById } from "@/lib/courses"
 import AppShell from "@/components/AppShell"
@@ -37,7 +37,8 @@ export default async function CertificatePage({ params, searchParams }: { params
   const version = versionById(course, e.versionId)
   const language = ctx.person.language
   const t = dictionary(language).learning.cert
-  const c = await ensureCertificate(e, ctx.tenant)
+  const issued = await ensureCertificate(e, ctx.tenant)
+  const c = issued ? await withHolderSalutation(issued) : null
   const base = `/learning/${course.key}`
 
   let body

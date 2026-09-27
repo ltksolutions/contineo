@@ -14,7 +14,7 @@ vi.mock("@/components/CopyLink", () => ({ default: () => null }))
 vi.mock("@/lib/learning", () => ({ learningContext: async () => ({ state: "ready", person: { id: "p", companyCode: "SFZ", language: "sk" }, tenant: { companyCode: "SFZ", hostnames: ["sfz.localhost", "intranet.futbalsfz.sk"] } }) }))
 vi.mock("@/lib/coursesDb", () => ({ getCourse: async () => ({ key: "bozp", title: "BOZP", versions: [{ versionId: "v2", version: 2, title: "Bezpečnosť v sídle", issuesCertificate: true, parts: [] }] }) }))
 vi.mock("@/lib/enrollmentsDb", () => ({ enrollmentFor: async () => ({ id: "e1", versionId: "v2", cancelledAt: null }) }))
-vi.mock("@/lib/certificatesDb", () => ({ ensureCertificate: async () => s.cert }))
+vi.mock("@/lib/certificatesDb", () => ({ ensureCertificate: async () => s.cert, withHolderSalutation: async (c: unknown) => c }))
 
 const at = new Date("2026-09-18T00:00:00Z")
 const cert = (over: Partial<Certificate> = {}): Certificate => ({
@@ -33,7 +33,8 @@ describe("/learning/[courseKey]/certificate", () => {
   it("platný: meno, číslo, logo organizácie, PDF, tlač a overovací odkaz (doména, nie localhost)", async () => {
     const html = await render()
     expect(html).toContain("Marek Horák")
-    expect(html).toContain("absolvoval kurz Bezpečnosť v sídle (verzia 2)")
+    // Oslovenie nevyplnené → zátvorkový tvar.
+    expect(html).toContain("absolvoval(a) kurz Bezpečnosť v sídle (verzia 2)")
     expect(html).toContain('src="/tenants/sfz.svg"')
     expect(html).toContain('href="/learning/bozp/certificate/pdf"')
     expect(html).toContain("Stiahnuť PDF")
@@ -48,6 +49,12 @@ describe("/learning/[courseKey]/certificate", () => {
     expect(html).not.toContain("/verify/")
     expect(html).not.toContain("/certificate/pdf")
     expect(html).toContain("Pri odvolanom certifikáte sa PDF ani tlač neponúka.")
+  })
+  it("oslovenie v kópii: absolvoval / absolvovala", async () => {
+    s.cert = cert({ holderSalutation: "ms" })
+    expect(await render()).toContain("absolvovala kurz Bezpečnosť v sídle")
+    s.cert = cert({ holderSalutation: "mr" })
+    expect(await render()).toContain("absolvoval kurz Bezpečnosť v sídle")
   })
   it("ešte nevydaný: veta", async () => {
     s.cert = null

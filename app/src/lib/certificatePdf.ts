@@ -44,7 +44,7 @@ export interface CertificatePdfTexts {
 
 /** Texty z kópií v certifikáte — tie isté vety ako verzia na tlač. */
 export function certificatePdfTexts(
-  c: Pick<Certificate, "issuedBy" | "courseTitle" | "courseVersion" | "partsCount" | "testsPassed" | "completedAt" | "issuedAt">,
+  c: Pick<Certificate, "issuedBy" | "courseTitle" | "courseVersion" | "partsCount" | "testsPassed" | "completedAt" | "issuedAt" | "holderSalutation">,
   language: UiLanguage,
 ): CertificatePdfTexts {
   const t = dictionary(language).learning.cert
@@ -52,7 +52,7 @@ export function certificatePdfTexts(
     title: t.pdfTitle,
     sub: t.pdfSub,
     confirms: t.pdfConfirms(c.issuedBy.legalName ?? c.issuedBy.name),
-    completed: t.pdfCompleted(c.courseTitle),
+    completed: t.pdfCompleted(c.courseTitle, c.holderSalutation),
     meta: t.pdfMeta(c.courseVersion, c.partsCount, c.testsPassed, formatDate(c.completedAt, language)),
     issuedOn: t.issuedOn(formatDate(c.issuedAt, language)),
     verify: t.pdfVerify,

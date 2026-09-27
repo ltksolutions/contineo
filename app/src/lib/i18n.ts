@@ -1365,6 +1365,8 @@ interface Dictionary {
     types: Record<string, string>
     /** Jazyk prostredia — kľúče sú kódy z `UI_LANGUAGES`. */
     languages: Record<string, string>
+    /** Oslovenie — kľúče `mr`, `ms` a `none` (nevyplnené). */
+    salutations: Record<string, string>
     /** Roly — kľúč je názov roly, hodnota celý riadok aj s vysvetlením. */
     roles: Record<string, string>
     list: {
@@ -1413,6 +1415,8 @@ interface Dictionary {
       personType: string
       language: string
       languageNote: string
+      salutation: string
+      salutationNote: string
       submit: string
     }
     import: {
@@ -1501,6 +1505,8 @@ interface Dictionary {
       personTypeNote: string
       language: string
       languageNote: string
+      salutation: string
+      salutationNote: string
       groups: string
       newGroup: string
       groupsNote: string
@@ -3010,12 +3016,12 @@ interface Dictionary {
       revokedMsg: string
       cancel: string
       printNote: string
-      completedCourse: (title: string, version: number) => string
+      completedCourse: (title: string, version: number, salutation?: string) => string
       revokedNotice: (date: string, reason: string) => string
       vValid: (issuer: string) => string
       vRevoked: (date: string) => string
       pdfConfirms: (org: string) => string
-      pdfCompleted: (title: string) => string
+      pdfCompleted: (title: string, salutation?: string) => string
       pdfMeta: (version: number, parts: number, tests: number, date: string) => string
       issuedOn: (date: string) => string
       revokeTitle: (name: string) => string
@@ -3031,6 +3037,13 @@ interface Dictionary {
  * si na obrazovke všimne každý. `Intl.PluralRules` by tvar vybralo, ale text
  * by aj tak musel byť napísaný trikrát; pribudla by závislosť bez úspory.
  */
+/**
+ * „absolvoval" / „absolvovala" podľa oslovenia osoby (`persons.salutation`);
+ * nevyplnené = „absolvoval(a)" (Ján 27. 9. 2026). V slovenčine aj češtine
+ * je tvar rovnaký.
+ */
+const completedVerb = (s?: string) => (s === "mr" ? "absolvoval" : s === "ms" ? "absolvovala" : "absolvoval(a)")
+
 const daysSk = (n: number) => (n === 1 ? "1 deň" : n >= 2 && n <= 4 ? `${n} dni` : `${n} dní`)
 const daysCs = (n: number) => (n === 1 ? "1 den" : n >= 2 && n <= 4 ? `${n} dny` : `${n} dní`)
 const daysEn = (n: number) => (n === 1 ? "1 day" : `${n} days`)
@@ -4173,6 +4186,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "phone.shape": "„{value}“ nevyzerá ako telefónne číslo.",
     "person.departmentNotFound": "Také oddelenie neexistuje.",
     "person.unknownType": "Neznámy typ osoby.",
+    "person.unknownSalutation": "Neznáme oslovenie.",
 
     // ── prideľovanie noriem ────────────────────────────────────────────────
     "assignment.missingReason": "Dôvod pridelenia je povinný — je to jediné miesto, kde sa dá zaznamenať, prečo sa má norma potvrdiť znova (D30).",
@@ -4611,6 +4625,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       referee: "rozhodca",
       official: "funkcionár",
     },
+    salutations: { mr: "pán", ms: "pani", none: "nevyplnené" },
     languages: {
       sk: "slovenčina",
       cs: "čeština",
@@ -4672,6 +4687,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       personType: "Typ osoby",
       language: "Jazyk prostredia",
       languageNote: "Skupiny a trasy sa vyberajú až na detaile — tam už vidno, čo v organizácii existuje.",
+      salutation: "Oslovenie",
+      salutationNote: "Len kvôli gramatike textov, napr. „absolvoval / absolvovala“ na certifikáte. Z mena sa nehádá.",
       submit: "Pozvať",
     },
     import: {
@@ -4699,7 +4716,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       fields: {
         fullName: "meno a priezvisko", givenName: "meno", surname: "priezvisko", titleBefore: "titul pred menom", titleAfter: "titul za menom",
         jobTitle: "pozícia", mobilePhone: "mobil", workplace: "pracovisko", department: "oddelenie", personType: "typ osoby",
-        startDate: "nástup", tracks: "trasy", groups: "skupiny", roles: "roly", language: "jazyk",
+        startDate: "nástup", tracks: "trasy", groups: "skupiny", roles: "roly", language: "jazyk", salutation: "oslovenie",
       },
       colStatus: "Stav",
       colPerson: "Osoba",
@@ -4763,6 +4780,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       personTypeNote: "Evidenčný údaj. O prístupe k obsahu nerozhoduje — ten rieši organizácia a úroveň dokumentu.",
       language: "Jazyk prostredia",
       languageNote: "V čom sa s človekom rozprávame. Nie jazyk dokumentov, ktoré číta.",
+      salutation: "Oslovenie",
+      salutationNote: "Len kvôli gramatike textov, napr. „absolvoval / absolvovala“ na certifikáte. Z mena sa nehádá.",
       groups: "Skupiny",
       newGroup: "nová skupina, napr. rozhodcovia",
       groupsNote: "Podľa nich sa prideľujú normy. Číslo je počet ľudí, ktorí skupinu majú — skupina, ktorú nemá nikto, nedostane nič.",
@@ -6177,12 +6196,12 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       revokedMsg: "Certifikát je odvolaný.",
       cancel: "Zrušiť",
       printNote: "Tlač nastavte na A4 na šírku. PDF s QR kódom si stiahnete na stránke certifikátu.",
-      completedCourse: (title, v) => `absolvoval kurz ${title} (verzia ${v})`,
+      completedCourse: (title, v, s) => `${completedVerb(s)} kurz ${title} (verzia ${v})`,
       revokedNotice: (date, reason) => `Certifikát bol odvolaný ${date}. Dôvod: ${reason}`,
       vValid: issuer => `Certifikát je platný — vydal ho ${issuer} a nebol odvolaný.`,
       vRevoked: date => `Certifikát bol odvolaný — ${date}.`,
       pdfConfirms: org => `${org} potvrdzuje, že`,
-      pdfCompleted: title => `úspešne absolvoval kurz ${title}`,
+      pdfCompleted: (title, s) => `úspešne ${completedVerb(s)} kurz ${title}`,
       pdfMeta: (v, parts, tests, date) => `verzia ${v} · ${parts} ${parts === 1 ? "časť" : parts <= 4 ? "časti" : "častí"}${tests ? ` · ${tests} ${tests === 1 ? "test prejdený" : tests <= 4 ? "testy prejdené" : "testov prejdených"}` : ""} · dokončené ${date}`,
       issuedOn: date => `Vydané ${date}`,
       revokeTitle: name => `Odvolať certifikát — ${name}`,
@@ -7327,6 +7346,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "phone.shape": "„{value}“ nevypadá jako telefonní číslo.",
     "person.departmentNotFound": "Takové oddělení neexistuje.",
     "person.unknownType": "Neznámý typ osoby.",
+    "person.unknownSalutation": "Neznámé oslovení.",
 
     // ── přidělování předpisů ───────────────────────────────────────────────
     "assignment.missingReason": "Důvod přidělení je povinný — je to jediné místo, kde lze zaznamenat, proč se má předpis potvrdit znovu (D30).",
@@ -7765,6 +7785,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       referee: "rozhodčí",
       official: "funkcionář",
     },
+    salutations: { mr: "pan", ms: "paní", none: "nevyplněno" },
     languages: {
       sk: "slovenština",
       cs: "čeština",
@@ -7826,6 +7847,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       personType: "Typ osoby",
       language: "Jazyk prostředí",
       languageNote: "Skupiny a trasy se vybírají až na detailu — tam už je vidět, co v organizaci existuje.",
+      salutation: "Oslovení",
+      salutationNote: "Jen kvůli gramatice textů, např. „absolvoval / absolvovala“ na certifikátu. Ze jména se nehádá.",
       submit: "Pozvat",
     },
     import: {
@@ -7853,7 +7876,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       fields: {
         fullName: "jméno a příjmení", givenName: "jméno", surname: "příjmení", titleBefore: "titul před jménem", titleAfter: "titul za jménem",
         jobTitle: "pozice", mobilePhone: "mobil", workplace: "pracoviště", department: "oddělení", personType: "typ osoby",
-        startDate: "nástup", tracks: "trasy", groups: "skupiny", roles: "role", language: "jazyk",
+        startDate: "nástup", tracks: "trasy", groups: "skupiny", roles: "role", language: "jazyk", salutation: "oslovení",
       },
       colStatus: "Stav",
       colPerson: "Osoba",
@@ -7917,6 +7940,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       personTypeNote: "Evidenční údaj. O přístupu k obsahu nerozhoduje — ten řeší organizace a úroveň dokumentu.",
       language: "Jazyk prostředí",
       languageNote: "V čem se s člověkem bavíme. Ne jazyk dokumentů, které čte.",
+      salutation: "Oslovení",
+      salutationNote: "Jen kvůli gramatice textů, např. „absolvoval / absolvovala“ na certifikátu. Ze jména se nehádá.",
       groups: "Skupiny",
       newGroup: "nová skupina, např. rozhodčí",
       groupsNote: "Podle nich se přidělují normy. Číslo je počet lidí, kteří skupinu mají — skupina, kterou nemá nikdo, nedostane nic.",
@@ -9328,12 +9353,12 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       revokedMsg: "Certifikát je odvolaný.",
       cancel: "Zrušit",
       printNote: "Tisk nastavte na A4 na šířku. PDF s QR kódem si stáhnete na stránce certifikátu.",
-      completedCourse: (title, v) => `absolvoval kurz ${title} (verze ${v})`,
+      completedCourse: (title, v, s) => `${completedVerb(s)} kurz ${title} (verze ${v})`,
       revokedNotice: (date, reason) => `Certifikát byl odvolán ${date}. Důvod: ${reason}`,
       vValid: issuer => `Certifikát je platný — vydal ho ${issuer} a nebyl odvolán.`,
       vRevoked: date => `Certifikát byl odvolán — ${date}.`,
       pdfConfirms: org => `${org} potvrzuje, že`,
-      pdfCompleted: title => `úspěšně absolvoval kurz ${title}`,
+      pdfCompleted: (title, s) => `úspěšně ${completedVerb(s)} kurz ${title}`,
       pdfMeta: (v, parts, tests, date) => `verze ${v} · ${parts} ${parts === 1 ? "část" : parts <= 4 ? "části" : "částí"}${tests ? ` · ${tests} ${tests === 1 ? "test složen" : tests <= 4 ? "testy složeny" : "testů složeno"}` : ""} · dokončeno ${date}`,
       issuedOn: date => `Vydáno ${date}`,
       revokeTitle: name => `Odvolat certifikát — ${name}`,
@@ -10471,6 +10496,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     "phone.shape": "“{value}” does not look like a phone number.",
     "person.departmentNotFound": "There is no such department.",
     "person.unknownType": "Unknown person type.",
+    "person.unknownSalutation": "Unknown salutation.",
 
     // ── assigning documents ────────────────────────────────────────────────
     "assignment.missingReason": "The reason for the assignment is required — it is the only place to record why the document has to be acknowledged again (D30).",
@@ -10909,6 +10935,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       referee: "referee",
       official: "official",
     },
+    salutations: { mr: "Mr", ms: "Ms", none: "not set" },
     languages: {
       sk: "Slovak",
       cs: "Czech",
@@ -10970,6 +10997,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       personType: "Person type",
       language: "Interface language",
       languageNote: "Groups and tracks are chosen on the detail page — there you can see what already exists in the organisation.",
+      salutation: "Salutation",
+      salutationNote: "Only for grammar in Slovak and Czech texts (e.g. on a certificate). Not guessed from the name.",
       submit: "Invite",
     },
     import: {
@@ -10997,7 +11026,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       fields: {
         fullName: "full name", givenName: "given name", surname: "surname", titleBefore: "title before name", titleAfter: "title after name",
         jobTitle: "job title", mobilePhone: "mobile", workplace: "workplace", department: "department", personType: "person type",
-        startDate: "start date", tracks: "tracks", groups: "groups", roles: "roles", language: "language",
+        startDate: "start date", tracks: "tracks", groups: "groups", roles: "roles", language: "language", salutation: "salutation",
       },
       colStatus: "Status",
       colPerson: "Person",
@@ -11061,6 +11090,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       personTypeNote: "A record-keeping field. It does not decide access to content — that is settled by the organisation and the document's access level.",
       language: "Interface language",
       languageNote: "The language we speak to this person in. Not the language of the documents they read.",
+      salutation: "Salutation",
+      salutationNote: "Only for grammar in Slovak and Czech texts (e.g. on a certificate). Not guessed from the name.",
       groups: "Groups",
       newGroup: "new group, e.g. referees",
       groupsNote: "Documents are assigned by these. The number is how many people have the group — a group nobody has receives nothing.",

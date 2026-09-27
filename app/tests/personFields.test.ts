@@ -9,8 +9,20 @@
 import { describe, it, expect } from "vitest"
 import {
   composeFullName, displayName, splitFullName,
-  normalizePhone, matchWorkplace, workplaceLabel,
+  normalizePhone, matchWorkplace, workplaceLabel, normalizeSalutation, bySalutation,
 } from "../src/lib/personFields"
+
+describe("oslovenie", () => {
+  it("rozpozná pán/pani s diakritikou aj bez, skratky a anglické tvary", () => {
+    for (const v of ["pán", "Pan", "p.", "Mr", "muž"]) expect(normalizeSalutation(v)).toBe("mr")
+    for (const v of ["pani", "Paní", "pí", "Ms", "Mrs.", "žena"]) expect(normalizeSalutation(v)).toBe("ms")
+    for (const v of ["", "  ", "Ing.", undefined, null]) expect(normalizeSalutation(v)).toBeUndefined()
+  })
+  it("bySalutation vyberie tvar, nevyplnené = unknown", () => {
+    const f = { mr: "absolvoval", ms: "absolvovala", unknown: "absolvoval(a)" }
+    expect([bySalutation("mr", f), bySalutation("ms", f), bySalutation(undefined, f)]).toEqual(["absolvoval", "absolvovala", "absolvoval(a)"])
+  })
+})
 
 describe("meno sa sklada", () => {
   it("z mena a priezviska", () => {

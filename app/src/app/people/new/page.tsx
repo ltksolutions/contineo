@@ -185,6 +185,21 @@ export default async function NewPersonPage({
           <span className="quiet field-hint">{t.languageNote}</span>
         </div>
 
+        <div className="field">
+          <span className="field-label">{t.salutation}</span>
+          <Select language={ctx.person.language}
+            name="salutation"
+            fieldLabel={t.salutation}
+            initial={""}
+            options={[
+              { value: "", label: d.salutations.none },
+              { value: "mr", label: d.salutations.mr },
+              { value: "ms", label: d.salutations.ms },
+            ]}
+          />
+          <span className="quiet field-hint">{t.salutationNote}</span>
+        </div>
+
         <div>
           <button className="button" type="submit">{t.submit}</button>
         </div>

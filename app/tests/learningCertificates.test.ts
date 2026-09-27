@@ -10,7 +10,7 @@ import { newVerificationHash, numberPrefix, registrationNumber, verifyPath } fro
 const s = vi.hoisted(() => ({
   existing: null as unknown, course: null as unknown, facts: { completions: [] as unknown[], watches: [], passedTests: [] as unknown[] },
   inserted: [] as unknown[], seq: 197, brand: null as unknown, saved: [] as unknown[], verify: null as unknown,
-  files: {} as Record<string, Buffer>, deleted: [] as string[], updates: [] as unknown[], modified: 1,
+  files: {} as Record<string, Buffer>, deleted: [] as string[], updates: [] as unknown[], modified: 1, person: null as unknown,
 }))
 
 vi.mock("next/navigation", () => ({
@@ -19,7 +19,7 @@ vi.mock("next/navigation", () => ({
 }))
 vi.mock("../src/lib/mongodb", () => ({
   getCollection: async (name: string) => ({
-    findOne: async () => (name === "certificates" ? s.existing : null),
+    findOne: async () => (name === "certificates" ? s.existing : name === "persons" ? s.person : null),
     insertOne: async (doc: unknown) => { s.inserted.push(doc); return {} },
     findOneAndUpdate: async () => ({ seq: ++s.seq }),
     updateOne: async (...a: unknown[]) => { s.updates.push(a); return { modifiedCount: s.modified } },
@@ -57,6 +57,7 @@ beforeEach(() => {
   s.deleted = []
   s.updates = []
   s.modified = 1
+  s.person = null
 })
 
 describe("číslo a hash", () => {
@@ -82,6 +83,12 @@ describe("ensureCertificate", () => {
       signer: { name: "Ján Letko" }, issuedBy: { name: "Slovenský futbalový zväz", registrationNumber: "00 687 308", logoFileId: "logo1" },
     })
     expect(s.inserted).toHaveLength(1)
+  })
+  it("oslovenie osoby sa skopíruje; nevyplnené chýba", async () => {
+    s.person = { salutation: "ms" }
+    expect((await ensureCertificate(enrollment, tenant as never))?.holderSalutation).toBe("ms")
+    s.person = {}
+    expect((await ensureCertificate(enrollment, tenant as never))?.holderSalutation).toBeUndefined()
   })
   it("existujúci sa vráti, nevydá sa druhý", async () => {
     s.existing = { id: "x" }
@@ -113,7 +120,7 @@ describe("certificatePdf", () => {
   })
 
   it("prvé stiahnutie: vyrobí, uloží a zapíše pdfFileId len ak ešte nie je", async () => {
-    const pdf = await certificatePdf(cert(), "https://intranet.futbalsfz.sk", "sk")
+    const pdf = await certificatePdf(cert({ holderSalutation: "mr" }), "https://intranet.futbalsfz.sk", "sk")
     expect(Buffer.from(pdf!.slice(0, 5)).toString()).toBe("%PDF-")
     expect((s.saved.at(-1) as unknown[]).slice(0, 3)).toEqual(["SFZ", "certifikat-SFZ-2026-0198.pdf", "application/pdf"])
     expect(s.updates[0]).toEqual([{ companyCode: "SFZ", id: "c1", pdfFileId: { $exists: false } }, { $set: { pdfFileId: "pdf1" } }])
@@ -127,8 +134,20 @@ describe("certificatePdf", () => {
     s.modified = 0
     s.existing = cert({ pdfFileId: "first" })
     s.files.first = Buffer.from("%PDF-first")
-    expect(Buffer.from(await certificatePdf(cert(), "https://x", "sk") as Uint8Array).toString()).toBe("%PDF-first")
+    expect(Buffer.from(await certificatePdf(cert({ holderSalutation: "ms" }), "https://x", "sk") as Uint8Array).toString()).toBe("%PDF-first")
     expect(s.deleted).toEqual(["pdf1"])
+  })
+  it("bez oslovenia: PDF sa vydá, ale neuloží (po doplnení vznikne správne)", async () => {
+    const pdf = await certificatePdf(cert(), "https://x", "sk")
+    expect(Buffer.from(pdf!.slice(0, 5)).toString()).toBe("%PDF-")
+    expect(s.saved).toHaveLength(0)
+    expect(s.updates).toHaveLength(0)
+  })
+  it("oslovenie doplnené pri osobe neskôr: do certifikátu raz, potom sa PDF uloží", async () => {
+    s.person = { salutation: "ms" }
+    await certificatePdf(cert(), "https://x", "sk")
+    expect(s.updates[0]).toEqual([{ companyCode: "SFZ", id: "c1", holderSalutation: { $exists: false } }, { $set: { holderSalutation: "ms" } }])
+    expect(s.saved).toHaveLength(1)
   })
   it("odvolaný: žiadne PDF", async () => {
     expect(await certificatePdf(cert({ revokedAt: at }), "https://x", "sk")).toBeNull()

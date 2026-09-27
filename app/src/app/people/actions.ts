@@ -131,6 +131,7 @@ export async function savePersonAction(fd: FormData) {
       jobTitle: fieldText(fd, "jobTitle"),
       personType: (fieldText(fd, "personType") || undefined) as PersonType | undefined,
       language: fieldText(fd, "language") || undefined,
+      salutation: fieldText(fd, "salutation"),
       tracks: listField(fd, "tracks"),
       groups: listField(fd, "groups"),
       // Zaškrtávacie políčka: neprítomná hodnota znamená „odobrať".
@@ -197,6 +198,7 @@ export async function invitePersonAction(fd: FormData) {
       departmentId: fieldText(fd, "departmentId") || null,
       personType: (fieldText(fd, "personType") || undefined) as PersonType | undefined,
       language: fieldText(fd, "language") || undefined,
+      salutation: fieldText(fd, "salutation"),
     }, actor.email)
 
     /*

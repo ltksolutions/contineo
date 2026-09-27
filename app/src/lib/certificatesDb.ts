@@ -22,6 +22,7 @@ import { versionById } from "./courses"
 import { courseProgress } from "./learningProgress"
 import { progressFacts } from "./learningProgressDb"
 import type { Enrollment } from "./enrollments"
+import { PERSONS_COLLECTION, type Person } from "./persons"
 import type { Tenant } from "./tenants"
 import {
   CERTIFICATE_COUNTERS_COLLECTION, CERTIFICATES_COLLECTION, newVerificationHash, numberPrefix, registrationNumber, verifyPath,
@@ -50,6 +51,25 @@ export async function certificatesForPerson(companyCode: string, personId: strin
 export async function certificateToVerify(companyCode: string, number: string, hash: string): Promise<Certificate | null> {
   if (!number || !/^[a-z0-9]{16}$/.test(hash)) return null
   return (await col()).findOne({ companyCode, registrationNumber: number, verificationHash: hash }, { projection: { _id: 0 } })
+}
+
+/** Oslovenie osoby dnes (pán/pani), ak je vyplnené. */
+async function personSalutation(companyCode: string, personId: string): Promise<"mr" | "ms" | undefined> {
+  const p = await (await getCollection<Person>(PERSONS_COLLECTION)).findOne({ companyCode, id: personId }, { projection: { salutation: 1 } })
+  return p?.salutation === "mr" || p?.salutation === "ms" ? p.salutation : undefined
+}
+
+/**
+ * Doplní kópiu oslovenia do certifikátu vydaného skôr, než ho osoba mala
+ * vyplnené — **raz**: podmienka `$exists: false` zaručí, že neskoršia zmena
+ * pri osobe vydaný certifikát už nezmení (kópia, nie odkaz).
+ */
+export async function withHolderSalutation(c: Certificate): Promise<Certificate> {
+  if (c.holderSalutation || c.anonymizedAt) return c
+  const s = await personSalutation(c.companyCode, c.personId)
+  if (!s) return c
+  await (await col()).updateOne({ companyCode: c.companyCode, id: c.id, holderSalutation: { $exists: false } }, { $set: { holderSalutation: s } })
+  return { ...c, holderSalutation: s }
 }
 
 /** Ďalšie poradové číslo v roku — atomicky, dve vydania nedostanú to isté. */
@@ -107,6 +127,7 @@ export async function ensureCertificate(enrollment: Enrollment, tenant: Tenant):
 
   const now = new Date()
   const year = progress.completedAt.getUTCFullYear()
+  const salutation = await personSalutation(e.companyCode, e.personId)
   const cert: Certificate = {
     id: crypto.randomUUID(),
     companyCode: e.companyCode,
@@ -114,6 +135,7 @@ export async function ensureCertificate(enrollment: Enrollment, tenant: Tenant):
     enrollmentId: e.id,
     personId: e.personId,
     holderName: e.fullName,
+    ...(salutation ? { holderSalutation: salutation } : {}),
     courseKey: course.key,
     versionId: version.versionId,
     courseTitle: version.title,
@@ -180,20 +202,25 @@ async function logoPng(c: Certificate): Promise<Buffer | null> {
  * PDF certifikátu. Pri prvom stiahnutí sa vyrobí a uloží (`pdfFileId`),
  * potom sa vracia to isté — vydaný dokument sa nemení (D24), ani keď sa
  * zmení šablóna. Jazyk je jazyk prostredia človeka pri prvom stiahnutí.
+ * Ukladá sa až s vyplneným oslovením (tvar „absolvoval/-a").
  * Odvolaný certifikát PDF nedostane (`null`).
  */
-export async function certificatePdf(c: Certificate, origin: string, language: UiLanguage): Promise<Uint8Array | null> {
-  if (c.revokedAt) return null
-  if (c.pdfFileId) {
-    const stored = await loadFile(c.companyCode, c.pdfFileId)
+export async function certificatePdf(cert: Certificate, origin: string, language: UiLanguage): Promise<Uint8Array | null> {
+  if (cert.revokedAt) return null
+  if (cert.pdfFileId) {
+    const stored = await loadFile(cert.companyCode, cert.pdfFileId)
     if (stored) return stored.data
   }
+  const c = await withHolderSalutation(cert)
   const pdf = await renderCertificatePdf({
     certificate: c,
     texts: certificatePdfTexts(c, language),
     verifyUrl: `${origin}${verifyPath(c)}`,
     logoPng: await logoPng(c),
   })
+  // Bez oslovenia je v texte „absolvoval(a)" — také PDF sa neuloží, aby
+  // sa po doplnení oslovenia vyrobilo správne (Ján 27. 9. 2026).
+  if (!c.holderSalutation) return pdf
   const file = await saveFile(c.companyCode, `certifikat-${c.registrationNumber}.pdf`, "application/pdf", Buffer.from(pdf), "system")
   const r = await (await col()).updateOne(
     { companyCode: c.companyCode, id: c.id, pdfFileId: { $exists: false } },

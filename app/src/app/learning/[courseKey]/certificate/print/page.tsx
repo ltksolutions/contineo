@@ -11,7 +11,7 @@ import Link from "next/link"
 import { notFound, redirect } from "next/navigation"
 import { learningContext } from "@/lib/learning"
 import { enrollmentFor } from "@/lib/enrollmentsDb"
-import { certificateForEnrollment } from "@/lib/certificatesDb"
+import { certificateForEnrollment, withHolderSalutation } from "@/lib/certificatesDb"
 import { tenantOrigin, verifyPath } from "@/lib/certificates"
 import { CertificateLogo } from "@/components/CertificateCard"
 import { dictionary, formatDate } from "@/lib/i18n"
@@ -25,8 +25,9 @@ export default async function CertificatePrintPage({ params }: { params: Promise
   const key = decodeURIComponent((await params).courseKey)
   const e = await enrollmentFor(ctx.person.companyCode, ctx.person.id, key)
   if (!e) notFound()
-  const c = await certificateForEnrollment(ctx.person.companyCode, e.id)
-  if (!c || c.revokedAt) redirect(`/learning/${key}/certificate`)
+  const found = await certificateForEnrollment(ctx.person.companyCode, e.id)
+  if (!found || found.revokedAt) redirect(`/learning/${key}/certificate`)
+  const c = await withHolderSalutation(found)
   const language = ctx.person.language
   const t = dictionary(language).learning.cert
   const url = `${tenantOrigin(ctx.tenant.hostnames)}${verifyPath(c)}`
@@ -44,7 +45,7 @@ export default async function CertificatePrintPage({ params }: { params: Promise
           <p className="cp-sub">{t.pdfSub}</p>
           <p className="cp-line">{t.pdfConfirms(c.issuedBy.legalName ?? c.issuedBy.name)}</p>
           <p className="cp-name">{c.holderName ?? "—"}</p>
-          <p className="cp-line">{t.pdfCompleted(c.courseTitle)}</p>
+          <p className="cp-line">{t.pdfCompleted(c.courseTitle, c.holderSalutation)}</p>
           <p className="cp-meta">{t.pdfMeta(c.courseVersion, c.partsCount, c.testsPassed, formatDate(c.completedAt, language))}</p>
         </div>
         <div className="cp-bottom">
