@@ -45,7 +45,7 @@
 | **Dokončenia častí** (`part_completions`) | kto dokončil ktorú časť kurzu a kedy | áno |
 | **Sledovanie videa** (`video_watch`) | ktoré úseky videa osoba pozrela, kedy prekročila hranicu | áno — údaj o správaní |
 | **Pokusy v testoch** (`test_attempts`) | losované otázky, odpovede, body, výsledok, časy; meno a e-mail ako kópia | áno |
-| **Certifikáty** (`certificates`) | meno a pohlavie (kópia), kurz, číslo, overovací kód, vydavateľ, podpisujúci, uložené PDF | áno — po lehote anonymizované (D132) |
+| **Certifikáty** (`certificates`) | meno a pohlavie (kópia), kurz, číslo, overovací kód, vydavateľ, podpisujúci, uložené PDF | áno — vydaný certifikát sa nemaže ani neanonymizuje (D132) |
 | **Fotka osoby** (`person_photos`) | fotografia ako uložený súbor | áno |
 | **Prihlasovacie kontá** (`auth_users`) | e-mail, meno, `emailVerified` — technická vrstva NextAuth pod `persons` (`lib/authAdapter.ts`) | áno |
 | **Jednorazové tokeny** (`auth_tokens`) | e-mail + token prihlasovacieho odkazu, platnosť; **maže sa pri použití** | áno |
@@ -146,7 +146,7 @@ niečo o správaní konkrétneho človeka, nie o jeho povinnosti. Preto:
 | **Pohlavie** (`persons.gender`) | **s osobou** (D133) | evidenčný údaj; voliteľné; oprávnený záujem (štatistiky zloženia, gramatika textov) |
 | **Vzdelávanie** (`enrollments`, `part_completions`, `video_watch`, `test_attempts`) | **ako potvrdenia** (DPO 2026-09-28, ADR-021, D130) | doklad o školení slúži tomu istému ako doklad o oboznámení |
 | **Odpovede v teste a sledovanie videa** | **12 mesiacov po dokončení kurzu** (D131) | podrobnejšie, než treba na preukázanie; zostáva výsledok a dokončenie časti. Nedokončený kurz sa neorezáva |
-| **Certifikáty** (`certificates`) | **anonymizácia** po lehote osoby (D132) | meno, väzba na osobu a PDF preč; číslo zostáva overiteľné — papier u držiteľa platí ďalej |
+| **Certifikáty** (`certificates`) | **nemažú sa ani neanonymizujú** (Ján 2026-09-28, D132); lehota uloženia podľa registratúrneho plánu — **doplní DPO** | vydaný doklad o kvalifikácii platí; archivácia (zákon č. 395/2002 Z. z.). Jediná zmena je odvolanie |
 | **Audit** (`audit`) | 24 mesiacov (DPO 2026-09-24, B6) | dnes sa **nemaže** — TTL nie je zavedený |
 
 > Lehoty sú **návrh** — finálne čísla potvrdí DPO/právnik podľa účelu a prípadných zákonných povinností.

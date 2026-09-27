@@ -2,8 +2,7 @@
  * /verify/[registrationNumber]?h= — verejné overenie certifikátu (rám
  * CERTIFICATE). Bez prihlásenia a bez AppShell.
  *
- * Ukáže číslo, kurz, dátum a vydavateľa — **meno držiteľa nikdy** (ani pri
- * anonymizovanom certifikáte). Odvolaný: dátum, **dôvod nie** (môže byť
+ * Ukáže číslo, kurz, dátum a vydavateľa — **meno držiteľa nikdy**. Odvolaný: dátum, **dôvod nie** (môže byť
  * osobný údaj). Zlé číslo aj zlý `h` = tá istá stránka „nenašiel sa"
  * s kódom 404 — neprezradí sa, či číslo existuje. `noindex`.
  */

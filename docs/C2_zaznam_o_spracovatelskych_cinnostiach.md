@@ -73,7 +73,8 @@ Spoločné pre všetky štyri činnosti:
 | Dotknuté osoby | zamestnanci, rozhodcovia, funkcionári, externí spolupracovníci zapísaní do kurzu |
 | Kategórie údajov | zápis do kurzu (kedy, kto pridelil); dokončenie častí; ktoré úseky videa osoba pozrela; pokusy v teste (losované otázky, odpovede, body, výsledok, časy); certifikát (meno, pohlavie kvôli tvaru „absolvoval/-a", kurz, číslo, dátumy, vydavateľ, podpisujúci) |
 | Príjemcovia | správcovia vzdelávania; **výsledky testov len zodpovedné osoby za test** (HR nie, D121); ktokoľvek s odkazom overí certifikát — **bez mena** držiteľa |
-| Lehota výmazu | ako doklady o oboznámení: 3 roky od skončenia vzťahu, poistka od vyradenia, strop 5 rokov (D130); odpovede v teste a sledovanie videa **12 mesiacov po dokončení kurzu** (D131); certifikát sa po lehote **anonymizuje** — meno a PDF preč, číslo zostáva overiteľné (D132) |
+| Právny základ uchovania certifikátu | čl. 6 ods. 1 písm. c) + zákon č. 395/2002 Z. z. o archívoch a registratúrach (registratúrny záznam); pri ostatných kurzoch písm. f) |
+| Lehota výmazu | ako doklady o oboznámení: 3 roky od skončenia vzťahu, poistka od vyradenia, strop 5 rokov (D130); odpovede v teste a sledovanie videa **12 mesiacov po dokončení kurzu** (D131); **vydaný certifikát sa nemaže ani neanonymizuje** — lehota uloženia podľa registratúrneho plánu zväzu (**DPO doplní**, D132) |
 
 ### Pohlavie osoby (D133)
 
@@ -84,7 +85,7 @@ Spoločné pre všetky štyri činnosti:
 | Účel | štatistiky zloženia (podiel žien a mužov v skupinách, orgánoch, medzi rozhodcami); gramatika textov o osobe („absolvoval / absolvovala") |
 | Právny základ | čl. 6 ods. 1 písm. f) — oprávnený záujem; nejde o osobitnú kategóriu (čl. 9) |
 | Zdroj | vypĺňa HR (formulár, import); **voliteľné**; z mena sa neodvodzuje |
-| Lehota výmazu | s osobou (evidenčný údaj); kópia na certifikáte zaniká anonymizáciou |
+| Lehota výmazu | s osobou (evidenčný údaj); kópia na certifikáte zostáva s certifikátom (D132) |
 
 ---
 

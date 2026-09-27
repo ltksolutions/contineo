@@ -65,7 +65,7 @@ async function personGender(companyCode: string, personId: string): Promise<"mal
  * pri osobe vydaný certifikát už nezmení (kópia, nie odkaz).
  */
 export async function withHolderGender(c: Certificate): Promise<Certificate> {
-  if (c.holderGender || c.anonymizedAt) return c
+  if (c.holderGender) return c
   const s = await personGender(c.companyCode, c.personId)
   if (!s) return c
   await (await col()).updateOne({ companyCode: c.companyCode, id: c.id, holderGender: { $exists: false } }, { $set: { holderGender: s } })
@@ -149,7 +149,6 @@ export async function ensureCertificate(enrollment: Enrollment, tenant: Tenant):
     registrationNumber: registrationNumber(numberPrefix(tenant.branding.shortName, e.companyCode), year, await nextSeq(e.companyCode, year)),
     verificationHash: newVerificationHash(),
     revokedAt: null,
-    anonymizedAt: null,
   }
   try {
     await (await col()).insertOne({ ...cert })
