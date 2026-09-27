@@ -53,6 +53,11 @@ export interface Certificate {
   /** `SFZ-2026-0198` — jedinečné v organizácii. */
   registrationNumber: string
   verificationHash: string
+  /**
+   * PDF vyrobené pri prvom stiahnutí a odvtedy to isté (kópia, nie
+   * nové vykreslenie — zmena šablóny vydaný certifikát nezmení).
+   */
+  pdfFileId?: string
   revokedAt?: Date | null
   revokedBy?: string
   revokedReason?: string
@@ -80,6 +85,16 @@ export function newVerificationHash(): string {
 
 export function verifyPath(c: Pick<Certificate, "registrationNumber" | "verificationHash">): string {
   return `/verify/${encodeURIComponent(c.registrationNumber)}?h=${c.verificationHash}`
+}
+
+/**
+ * Adresa organizácie pre overovací odkaz: prvý hostiteľ, ktorý nie je
+ * lokálny. Nie z požiadavky — PDF sa ukladá natrvalo a lokálny server
+ * zapisuje do ostrej databázy; `sfz.localhost` by na papieri ostal navždy.
+ */
+export function tenantOrigin(hostnames: readonly string[]): string {
+  const host = hostnames.find(h => h !== "localhost" && !h.endsWith(".localhost")) ?? hostnames[0] ?? ""
+  return `https://${host}`
 }
 
 export function isRevoked(c: Pick<Certificate, "revokedAt">): boolean {

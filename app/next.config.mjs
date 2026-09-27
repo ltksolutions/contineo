@@ -60,6 +60,8 @@ const nextConfig = {
 
   outputFileTracingIncludes: {
     "/**": ["./node_modules/pdfjs-dist/legacy/build/pdf.worker.mjs"],
+    // Písma a statické logá pre PDF certifikátu — čítajú sa z disku za behu.
+    "/learning/[courseKey]/certificate/pdf": ["./assets/fonts/*.ttf", "./public/tenants/**"],
   },
   /*
    * Bezpečnostné hlavičky (N4, `docs/BEZPECNOSTNA_KONTROLA_2026-09.md`).

@@ -10,7 +10,13 @@ import { getCollection } from "./mongodb"
 import { writeAudit } from "./audit"
 import { AppError } from "./appError"
 import { loadBrand } from "./branding"
-import { saveFile } from "./fileStore"
+import { deleteFile, loadFile, saveFile } from "./fileStore"
+import { readFile } from "node:fs/promises"
+import path from "node:path"
+import sharp from "sharp"
+import { contineoMarkSvg } from "@/components/ContineoMark"
+import { certificatePdfTexts, renderCertificatePdf } from "./certificatePdf"
+import type { UiLanguage } from "./i18n"
 import { getCourse } from "./coursesDb"
 import { versionById } from "./courses"
 import { courseProgress } from "./learningProgress"
@@ -18,7 +24,7 @@ import { progressFacts } from "./learningProgressDb"
 import type { Enrollment } from "./enrollments"
 import type { Tenant } from "./tenants"
 import {
-  CERTIFICATE_COUNTERS_COLLECTION, CERTIFICATES_COLLECTION, newVerificationHash, numberPrefix, registrationNumber,
+  CERTIFICATE_COUNTERS_COLLECTION, CERTIFICATES_COLLECTION, newVerificationHash, numberPrefix, registrationNumber, verifyPath,
   type Certificate, type CertificateIssuer,
 } from "./certificates"
 
@@ -145,4 +151,60 @@ export async function revokeCertificate(companyCode: string, enrollmentId: strin
   await (await col()).updateOne({ companyCode, id: c.id, revokedAt: null }, { $set: { revokedAt: at, revokedBy: actor, revokedReason: text } })
   await writeAudit({ companyCode, subject: "certificate", action: "revoked", actor, targetId: c.registrationNumber, targetLabel: `${c.holderName ?? "—"} · ${c.courseTitle}`, note: text })
   return { ...c, revokedAt: at, revokedBy: actor, revokedReason: text }
+}
+
+/**
+ * Logo certifikátu ako PNG pre PDF (pdf-lib vie len PNG a JPEG). Kópia
+ * v úložisku, statické logo z `public/`, inak značka Contineo
+ * (`contineoMarkSvg`, vedľa `ContineoMark`).
+ */
+async function logoPng(c: Certificate): Promise<Buffer | null> {
+  let src: Buffer | null = null
+  if (c.issuedBy.logoFileId) src = (await loadFile(c.companyCode, c.issuedBy.logoFileId))?.data ?? null
+  else if (c.issuedBy.logoUrl?.startsWith("/tenants/")) {
+    // Len meno súboru — adresa je dáta, nie cesta na disku.
+    src = await readFile(path.join(process.cwd(), "public", "tenants", path.basename(c.issuedBy.logoUrl.split("?")[0]))).catch(() => null)
+  }
+  if (!src) {
+    src = Buffer.from(contineoMarkSvg(240, "#232a35"))
+  }
+  try {
+    return await sharp(src, { density: 300 }).resize({ height: 240, withoutEnlargement: false }).png().toBuffer()
+  } catch {
+    // Poškodené logo nesmie zablokovať certifikát — PDF bude bez neho.
+    return null
+  }
+}
+
+/**
+ * PDF certifikátu. Pri prvom stiahnutí sa vyrobí a uloží (`pdfFileId`),
+ * potom sa vracia to isté — vydaný dokument sa nemení (D24), ani keď sa
+ * zmení šablóna. Jazyk je jazyk prostredia človeka pri prvom stiahnutí.
+ * Odvolaný certifikát PDF nedostane (`null`).
+ */
+export async function certificatePdf(c: Certificate, origin: string, language: UiLanguage): Promise<Uint8Array | null> {
+  if (c.revokedAt) return null
+  if (c.pdfFileId) {
+    const stored = await loadFile(c.companyCode, c.pdfFileId)
+    if (stored) return stored.data
+  }
+  const pdf = await renderCertificatePdf({
+    certificate: c,
+    texts: certificatePdfTexts(c, language),
+    verifyUrl: `${origin}${verifyPath(c)}`,
+    logoPng: await logoPng(c),
+  })
+  const file = await saveFile(c.companyCode, `certifikat-${c.registrationNumber}.pdf`, "application/pdf", Buffer.from(pdf), "system")
+  const r = await (await col()).updateOne(
+    { companyCode: c.companyCode, id: c.id, pdfFileId: { $exists: false } },
+    { $set: { pdfFileId: file.id } },
+  )
+  if (r.modifiedCount === 0) {
+    // Súbežné stiahnutie bolo rýchlejšie — platí jeho PDF, naše nikto nepozná.
+    await deleteFile(c.companyCode, file.id)
+    const fresh = await certificateForEnrollment(c.companyCode, c.enrollmentId)
+    const stored = fresh?.pdfFileId ? await loadFile(c.companyCode, fresh.pdfFileId) : null
+    if (stored) return stored.data
+  }
+  return pdf
 }

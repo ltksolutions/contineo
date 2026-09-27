@@ -51,6 +51,19 @@ export function ContineoMark({ size = 26 }: { size?: number }) {
   )
 }
 
+/**
+ * Tá istá značka ako reťazec SVG — pre PDF certifikátu, kde sa rasterizuje
+ * na serveri. `react-dom/server` Next v aplikácii nepovolí, preto je kresba
+ * tu, hneď pod komponentom: kto mení jednu, vidí druhú.
+ */
+export function contineoMarkSvg(size: number, color: string): string {
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 48 48" fill="none">` +
+    `<circle cx="24" cy="20" r="15" stroke="${color}" stroke-width="6"/>` +
+    `<circle cx="17.5" cy="20" r="3.4" fill="${color}"/>` +
+    `<circle cx="30.5" cy="20" r="3.4" fill="${color}"/>` +
+    `<path d="M17 32.5 L24 43 L29 31.5 Z" fill="${color}"/></svg>`
+}
+
 /** Značka GitHubu. Oficiálny tvar — inak sa odkaz na repozitár nedá poznať. */
 export function GitHubMark({ size = 16 }: { size?: number }) {
   return (
