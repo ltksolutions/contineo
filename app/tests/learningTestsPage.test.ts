@@ -9,7 +9,7 @@ import type { Question } from "../src/lib/questions"
 import type { Test } from "../src/lib/tests"
 import { parseSmartTag } from "../src/lib/smartTags"
 
-const s = vi.hoisted(() => ({ tests: [] as unknown[], bank: [] as unknown[], csv: null as string | null, courses: [] as unknown[] }))
+const s = vi.hoisted(() => ({ tests: [] as unknown[], bank: [] as unknown[], csv: null as string | null, courses: [] as unknown[], attempts: [] as unknown[], person: "p" }))
 
 vi.mock("next/navigation", () => ({
   notFound: () => { throw new Error("notFound") },
@@ -23,14 +23,20 @@ vi.mock("@/components/CourseMediaUpload", () => ({ default: () => null }))
 vi.mock("@/lib/tenants", () => ({ brandingView: () => ({}) }))
 vi.mock("@/lib/learning", () => ({
   learningAdminContext: async () => ({ state: "ready", isAdmin: true, person: { id: "p", companyCode: "SFZ", language: "sk", email: "jan@sfz.sk" }, tenant: { companyCode: "SFZ" } }),
+  learningContext: async () => ({ state: "ready", isAdmin: false, person: { id: s.person, companyCode: "SFZ", language: "sk", email: "x@sfz.sk" }, tenant: { companyCode: "SFZ" } }),
 }))
-vi.mock("@/lib/testsDb", () => ({ listTests: async () => s.tests, getTest: async (_c: string, k: string) => (s.tests as Test[]).find(t => t.key === k) ?? null }))
+vi.mock("@/lib/testsDb", () => ({
+  listTests: async () => s.tests,
+  getTest: async (_c: string, k: string) => (s.tests as Test[]).find(t => t.key === k) ?? null,
+  testsResponsibleFor: async (_c: string, personId: string) => (s.tests as Test[]).filter(t => t.responsible.some(r => r.personId === personId)),
+}))
+vi.mock("@/lib/testAttemptsDb", () => ({ attemptsOfTest: async () => s.attempts }))
 vi.mock("@/lib/questionsDb", () => ({ listQuestions: async () => s.bank, questionUsage: async () => ({ tests: 2, attempts: 41 }) }))
 vi.mock("@/lib/smartTagsDb", () => ({ smartTagUsage: async () => [] }))
 vi.mock("@/lib/questionImports", () => ({ loadImport: async () => (s.csv ? { name: "otazky.csv", csv: s.csv } : null) }))
 vi.mock("@/lib/coursesDb", () => ({ listCourses: async () => s.courses }))
 vi.mock("@/lib/people", () => ({ listPeople: async () => [{ id: "p1", fullName: "Marek Horák", email: "m@sfz.sk", status: "active" }] }))
-vi.mock("../src/app/learning/tests/actions", () => Object.fromEntries(["createTestAction","previewImportAction","questionStatusAction","runImportAction","saveQuestionAction","saveTestAction","retireTestAction"].map(n => [n, async () => {}])))
+vi.mock("../src/app/learning/tests/actions", () => Object.fromEntries(["createTestAction","previewImportAction","questionStatusAction","runImportAction","saveQuestionAction","saveTestAction","retireTestAction","resetAttemptsAction"].map(n => [n, async () => {}])))
 
 const at = new Date("2026-10-01T00:00:00Z")
 const T = (x: string) => parseSmartTag(x)!
@@ -58,6 +64,8 @@ beforeEach(() => {
   s.tests = [test("poziar"), test("vytah", { sections: [{ key: "s1", filter: [T("Bezpečnosť: Výťah")], count: 3 }] }), test("bez", { responsible: [], status: "draft" })]
   s.csv = null
   s.courses = []
+  s.attempts = []
+  s.person = "p"
 })
 
 describe("/learning/tests", () => {
@@ -98,5 +106,26 @@ describe("/learning/tests", () => {
     expect(html).toContain('name="responsiblePersonId"')
     expect(html).toContain("BOZP · Evakuácia · povinný · verzia testu 1")
     expect(html).toContain('value="add"')
+  })
+
+  it("výsledky: zodpovedná osoba bez roly vidí svoje testy a reset pri vyčerpaných", async () => {
+    s.person = "p1"
+    const a = (id: string, person: string, n: number, over = {}) => ({ id, personId: person, fullName: person === "x" ? "Peter Kováč" : "Eva", email: `${person}@x`, testKey: "poziar", attemptNumber: n, startedAt: new Date(at.getTime() + n * 1000), submittedAt: at, percent: 50, passed: false, resetAt: null, context: { courseKey: "bozp", partKey: "cast" }, ...over })
+    s.tests = [test("poziar", { rules: { passingPercent: 80, maxAttempts: 2, showAnswers: "after_submit" } })]
+    s.attempts = [a("1", "x", 1), a("2", "x", 2), a("3", "y", 1)]
+    const html = await renderList({ tab: "results" })
+    expect(html).toContain("Peter Kováč")
+    expect(html).toContain("Neprešiel")
+    expect(html.match(/&amp;reset=x/g)?.length).toBe(2) // tabuľka + karta, len pri poslednom pokuse
+    expect(html).not.toContain("reset=y")
+    expect(html).not.toContain("Banka otázok") // bez roly lektora len výsledky
+    const card = await renderList({ tab: "results", reset: "x" })
+    expect(card).toContain("Resetovať pokusy — Peter Kováč")
+    expect(card).toContain('name="reason"')
+  })
+
+  it("výsledky: kto nezodpovedá za žiadny test, dostane 404", async () => {
+    s.person = "nikto"
+    await expect(renderList({ tab: "results" })).rejects.toThrow("notFound")
   })
 })

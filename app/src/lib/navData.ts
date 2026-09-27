@@ -25,6 +25,7 @@ import { libraryContext } from "@/lib/library"
 import { evaluationContext, queueCount } from "@/lib/evaluation"
 import { dpoContext } from "@/lib/dpo"
 import { learningContext } from "@/lib/learning"
+import { testsResponsibleFor } from "@/lib/testsDb"
 import { currentPerson } from "@/lib/session"
 import { pendingForPerson } from "@/lib/pending"
 import { roundsWaitingFor } from "@/lib/approvalsDb"
@@ -65,6 +66,9 @@ export const shellNavData = cache(async (): Promise<ShellNavData> => {
     const learning = await learningContext()
     flags.learning = learning.state === "ready"
     flags.isLearningAdmin = learning.state === "ready" && learning.isAdmin
+    if (learning.state === "ready" && !learning.isAdmin) {
+      flags.isTestResponsible = (await testsResponsibleFor(learning.person.companyCode, learning.person.id)).length > 0
+    }
   } catch (e) {
     console.error("[shell] modul Vzdelávanie sa nepodarilo overiť:", e)
   }

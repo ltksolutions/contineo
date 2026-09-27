@@ -2936,6 +2936,30 @@ interface Dictionary {
       attemptsLeft: (remaining: number, max: number) => string
       testMeta: (questions: number, pass: number, attempts: number | undefined, names: string) => string
     }
+    /** Výsledky testov (rám TESTS, ?tab=results; D121). */
+    results: {
+      selectTest: string
+      exportCsv: string
+      colPerson: string
+      colContext: string
+      colDate: string
+      colAttempt: string
+      colScore: string
+      colResult: string
+      openState: string
+      resetState: string
+      reset: string
+      resetText: string
+      reason: string
+      resetButton: string
+      empty: string
+      cancel: string
+      noTests: string
+      show: string
+      alsoResponsible: (names: string) => string
+      resetTitle: (name: string) => string
+      resetDone: (n: number) => string
+    }
   }
 }
 
@@ -6016,6 +6040,29 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       attemptsLeft: (r, m) => `zostávajú ${r} z ${m}`,
       testMeta: (q, pass, att, names) => `${q} otázok · hranica ${pass} %${att ? ` · ${att} pokusy` : ""}${names ? ` · zodpovedá ${names}` : ""}`,
     },
+    results: {
+      selectTest: "Test",
+      exportCsv: "Export CSV",
+      colPerson: "Osoba",
+      colContext: "Kurz / časť",
+      colDate: "Dátum",
+      colAttempt: "Pokus",
+      colScore: "Skóre",
+      colResult: "Výsledok",
+      openState: "rozpracovaný",
+      resetState: "resetovaný",
+      reset: "Resetovať",
+      resetText: "Pokusy sa nezmažú — označia sa ako resetované a človek môže test skúsiť znova. Zapíše sa do auditu.",
+      reason: "Dôvod (povinný)",
+      resetButton: "Resetovať pokusy",
+      empty: "Test zatiaľ nikto neskúšal.",
+      cancel: "Zrušiť",
+      noTests: "Nezodpovedáte za žiadny test.",
+      show: "Zobraziť",
+      alsoResponsible: names => `Zodpovedajú aj: ${names}`,
+      resetTitle: name => `Resetovať pokusy — ${name}`,
+      resetDone: n => `Resetované pokusy: ${n}.`,
+    },
   },
   },
 
@@ -9080,6 +9127,29 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       attemptsLeft: (r, m) => `zbývají ${r} z ${m}`,
       testMeta: (q, pass, att, names) => `${q} otázek · hranice ${pass} %${att ? ` · ${att} pokusy` : ""}${names ? ` · odpovídá ${names}` : ""}`,
     },
+    results: {
+      selectTest: "Test",
+      exportCsv: "Export CSV",
+      colPerson: "Osoba",
+      colContext: "Kurz / část",
+      colDate: "Datum",
+      colAttempt: "Pokus",
+      colScore: "Skóre",
+      colResult: "Výsledek",
+      openState: "rozpracovaný",
+      resetState: "resetovaný",
+      reset: "Resetovat",
+      resetText: "Pokusy se nesmažou — označí se jako resetované a člověk může test zkusit znovu. Zapíše se do auditu.",
+      reason: "Důvod (povinný)",
+      resetButton: "Resetovat pokusy",
+      empty: "Test zatím nikdo nezkoušel.",
+      cancel: "Zrušit",
+      noTests: "Neodpovídáte za žádný test.",
+      show: "Zobrazit",
+      alsoResponsible: names => `Odpovídají také: ${names}`,
+      resetTitle: name => `Resetovat pokusy — ${name}`,
+      resetDone: n => `Resetované pokusy: ${n}.`,
+    },
   },
   },
 
@@ -12129,6 +12199,29 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       nextAttemptAt: t => `next attempt at ${t}`,
       attemptsLeft: (r, m) => `${r} of ${m} left`,
       testMeta: (q, pass, att, names) => `${q} questions · pass mark ${pass} %${att ? ` · ${att} attempts` : ""}${names ? ` · responsible: ${names}` : ""}`,
+    },
+    results: {
+      selectTest: "Test",
+      exportCsv: "Export CSV",
+      colPerson: "Person",
+      colContext: "Course / part",
+      colDate: "Date",
+      colAttempt: "Attempt",
+      colScore: "Score",
+      colResult: "Result",
+      openState: "in progress",
+      resetState: "reset",
+      reset: "Reset",
+      resetText: "Attempts are not deleted — they are marked as reset and the person can try the test again. This is recorded in the audit log.",
+      reason: "Reason (required)",
+      resetButton: "Reset attempts",
+      empty: "No one has taken the test yet.",
+      cancel: "Cancel",
+      noTests: "You are not responsible for any test.",
+      show: "Show",
+      alsoResponsible: names => `Also responsible: ${names}`,
+      resetTitle: name => `Reset attempts — ${name}`,
+      resetDone: n => `Attempts reset: ${n}.`,
     },
   },
   },

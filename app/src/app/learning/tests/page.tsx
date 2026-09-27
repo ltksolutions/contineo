@@ -1,8 +1,10 @@
 /**
  * /learning/tests — testy a banka otázok (rám `docs/design/TESTS-testy-a-banka.md`).
  *
- * Záložky `?tab=tests | questions` pre rolu `learning-admin`. Výsledky
- * (`?tab=results`, len zodpovedná osoba testu, D121) pribudnú v ďalšom PR.
+ * Záložky `?tab=tests | questions` pre rolu `learning-admin`;
+ * `?tab=results` **len pre zodpovednú osobu testu** a len jej testy —
+ * lektor ani HR ju samy osebe nemajú (D121). Kto nie je zodpovedný za
+ * žiadny test, záložku nevidí (404).
  *
  * - Testy: stav vrátane „Nedostatok otázok" (pripravený test, ktorému
  *   banka medzičasom nestačí), zodpovedné osoby, nový test.
@@ -12,11 +14,14 @@
 
 import Link from "next/link"
 import { notFound, redirect } from "next/navigation"
-import { learningAdminContext } from "@/lib/learning"
-import { listTests } from "@/lib/testsDb"
+import { learningAdminContext, learningContext } from "@/lib/learning"
+import { listTests, testsResponsibleFor } from "@/lib/testsDb"
+import { attemptsOfTest } from "@/lib/testAttemptsDb"
+import type { TestAttempt } from "@/lib/testAttempts"
+import type { Test } from "@/lib/tests"
 import { listQuestions, questionUsage } from "@/lib/questionsDb"
 import { importQuestionsCsv, MAX_ANSWERS, QUESTION_TYPES, DIFFICULTIES, type Question, type QuestionType } from "@/lib/questions"
-import { questionCount, type Test } from "@/lib/tests"
+import { questionCount } from "@/lib/tests"
 import { displayStatus } from "@/lib/testView"
 import TestStatusTag from "@/components/TestStatusTag"
 import Select from "@/components/Select"
@@ -35,26 +40,27 @@ import SmartTagInput from "@/components/SmartTagInput"
 import CourseMediaUpload from "@/components/CourseMediaUpload"
 import { normalizeLayout } from "@/lib/appNav"
 import { normalizeQuery, type RawQuery } from "@/lib/urlParams"
-import { dictionary, type UiLanguage } from "@/lib/i18n"
-import { createTestAction, previewImportAction, questionStatusAction, runImportAction, saveQuestionAction } from "./actions"
+import { dictionary, formatDate, type UiLanguage } from "@/lib/i18n"
+import { createTestAction, previewImportAction, questionStatusAction, resetAttemptsAction, runImportAction, saveQuestionAction } from "./actions"
 
 export const dynamic = "force-dynamic"
 
 type Q = {
   layout?: string; tab?: string; status?: string; new?: string; type?: string; q?: string; import?: string
-  tag?: string | string[]; qtype?: string; qstatus?: string; msg?: string; error?: string
+  tag?: string | string[]; qtype?: string; qstatus?: string; msg?: string; error?: string; test?: string; reset?: string
 }
 type Tt = ReturnType<typeof dictionary>["learning"]["tests"]
 
 export default async function LearningTestsPage({ searchParams }: { searchParams: Promise<RawQuery> }) {
   const q = normalizeQuery<Q>(await searchParams)
+  if (q.tab === "results") return ResultsPage(q)
   const ctx = await learningAdminContext()
   if (ctx.state === "not-signed-in") redirect("/sign-in")
   if (ctx.state !== "ready") notFound()
   const language = ctx.person.language
   const tt = dictionary(language).learning.tests
   const tab = q.tab === "questions" ? "questions" : "tests"
-  const [tests, bank] = await Promise.all([listTests(ctx.person.companyCode), listQuestions(ctx.person.companyCode)])
+  const [tests, bank, mine] = await Promise.all([listTests(ctx.person.companyCode), listQuestions(ctx.person.companyCode), testsResponsibleFor(ctx.person.companyCode, ctx.person.id)])
   const body = tab === "tests"
     ? <TestsTab tests={tests} bank={bank} q={q} tt={tt} />
     : await QuestionsTab({ companyCode: ctx.person.companyCode, actor: ctx.person.email, bank, q, tt, language })
@@ -72,6 +78,7 @@ export default async function LearningTestsPage({ searchParams }: { searchParams
         <nav className="tabs" aria-label={tt.tabsLabel}>
           <TabLink href="/learning/tests?tab=tests" active={tab === "tests"}>{tt.tabTests}</TabLink>
           <TabLink href="/learning/tests?tab=questions" active={tab === "questions"}>{tt.tabQuestions}</TabLink>
+          {mine.length > 0 && <TabLink href="/learning/tests?tab=results" active={false}>{tt.tabResults}</TabLink>}
         </nav>
         <div className="mg-body">{body}</div>
       </div>
@@ -389,4 +396,117 @@ async function ImportPanel({ companyCode, actor, bank, q, tt, language }: { comp
       )}
     </section>
   )
+}
+
+/**
+ * Záložka Výsledky — vlastná brána: prihlásený v organizácii so zapnutým
+ * modulom, ktorý zodpovedá aspoň za jeden test (D121).
+ */
+async function ResultsPage(q: Q) {
+  const ctx = await learningContext()
+  if (ctx.state === "not-signed-in") redirect("/sign-in")
+  if (ctx.state !== "ready") notFound()
+  const companyCode = ctx.person.companyCode
+  const mine = await testsResponsibleFor(companyCode, ctx.person.id)
+  if (!mine.length) notFound()
+  const language = ctx.person.language
+  const d = dictionary(language).learning
+  const tt = d.tests
+  const tr = d.results
+  const ta = d.attempt
+  const test = mine.find(t => t.key === q.test) ?? mine[0]
+  const attempts = await attemptsOfTest(companyCode, test.key)
+  const others = test.responsible.filter(r => r.personId !== ctx.person.id).map(r => r.fullName).join(", ")
+  const self = `/learning/tests?tab=results&test=${encodeURIComponent(test.key)}`
+  const rows = resultRows(attempts, test)
+  const resetting = q.reset ? rows.find(r => r.a.personId === q.reset) : null
+
+  return (
+    <AppShell layout={normalizeLayout(q.layout)} language={language}>
+      <div className="mg" style={tenantStyle(brandingView(ctx.tenant))}>
+        <div className="lp-head"><div className="grow"><h1 className="page-title">{d.testsHeading}</h1></div></div>
+        <Notice message={q.msg} error={q.error === "1"} back={self} />
+        <nav className="tabs" aria-label={tt.tabsLabel}>
+          {ctx.isAdmin && <TabLink href="/learning/tests?tab=tests" active={false}>{tt.tabTests}</TabLink>}
+          {ctx.isAdmin && <TabLink href="/learning/tests?tab=questions" active={false}>{tt.tabQuestions}</TabLink>}
+          <TabLink href="/learning/tests?tab=results" active>{tt.tabResults}</TabLink>
+        </nav>
+        <div className="mg-body">
+          <div className="mc-people-head">
+            <form method="get" action="/learning/tests" className="mc-inline">
+              <input type="hidden" name="tab" value="results" />
+              <Select name="test" initial={test.key} searchable={mine.length >= 8} options={mine.map(t => ({ value: t.key, label: t.title }))} fieldLabel={tr.selectTest} language={language} />
+              <button type="submit" className="button button--quiet">{tr.show}</button>
+            </form>
+            <a className="button button--quiet" href={`/api/learning/tests/${encodeURIComponent(test.key)}/results`}>{tr.exportCsv}</a>
+          </div>
+          {others && <p className="quiet mc-note">{tr.alsoResponsible(others)}</p>}
+
+          {resetting && (
+            <form action={resetAttemptsAction} className="card mg-new rs-reset">
+              <input type="hidden" name="testKey" value={test.key} />
+              <input type="hidden" name="personId" value={resetting.a.personId} />
+              <h2>{tr.resetTitle(resetting.a.fullName)}</h2>
+              <p className="quiet mc-note">{tr.resetText}</p>
+              <label className="field"><span className="field-label">{tr.reason}</span><textarea className="field-input" name="reason" rows={2} required /></label>
+              <div className="mg-actions"><SubmitButton className="button">{tr.resetButton}</SubmitButton><Link className="button button--quiet" href={self}>{tr.cancel}</Link></div>
+            </form>
+          )}
+
+          {rows.length === 0 ? (
+            <div className="empty"><div className="empty-text">{tr.empty}</div></div>
+          ) : (
+            <>
+              <div className="doc-table-wrap mg-table">
+                <table className="doc-table">
+                  <thead><tr><th>{tr.colPerson}</th><th>{tr.colContext}</th><th>{tr.colDate}</th><th>{tr.colAttempt}</th><th className="doc-col-right">{tr.colScore}</th><th>{tr.colResult}</th><th /></tr></thead>
+                  <tbody>
+                    {rows.map(({ a, canReset }) => (
+                      <tr key={a.id} className={a.resetAt ? "is-retired" : ""}>
+                        <td><b>{a.fullName}</b><div className="mg-sub">{a.email}</div></td>
+                        <td>{a.context.courseKey} · {a.context.partKey}</td>
+                        <td>{formatDate(a.submittedAt ?? a.startedAt, language)}</td>
+                        <td>{ta.attemptOf(a.attemptNumber, test.rules.maxAttempts)}</td>
+                        <td className="doc-col-right">{a.submittedAt ? `${a.percent ?? 0} %` : "—"}</td>
+                        <td><ResultTag a={a} tr={tr} ta={ta} /></td>
+                        <td>{canReset && <Link className="lc-link" href={`${self}&reset=${encodeURIComponent(a.personId)}`}>{tr.reset}</Link>}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              <div className="mg-cards">
+                {rows.map(({ a, canReset }) => (
+                  <div key={a.id} className="card mg-card">
+                    <span className="mg-title">{a.fullName}</span>
+                    <span className="mg-sub">{formatDate(a.submittedAt ?? a.startedAt, language)} · {ta.attemptOf(a.attemptNumber, test.rules.maxAttempts)} · {a.submittedAt ? `${a.percent ?? 0} %` : "—"}</span>
+                    <span><ResultTag a={a} tr={tr} ta={ta} /></span>
+                    {canReset && <Link className="lc-link" href={`${self}&reset=${encodeURIComponent(a.personId)}`}>{tr.reset}</Link>}
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+    </AppShell>
+  )
+}
+
+/** Reset sa ponúkne pri poslednom pokuse osoby, keď má vyčerpané pokusy a neprešla. */
+function resultRows(attempts: TestAttempt[], test: Test) {
+  const byPerson = new Map<string, TestAttempt[]>()
+  for (const a of attempts) byPerson.set(a.personId, [...(byPerson.get(a.personId) ?? []), a])
+  return attempts.map(a => {
+    const live = (byPerson.get(a.personId) ?? []).filter(x => !x.resetAt)
+    const latest = live.sort((x, y) => y.startedAt.getTime() - x.startedAt.getTime())[0]
+    const exhausted = Boolean(test.rules.maxAttempts) && live.length >= test.rules.maxAttempts! && !live.some(x => x.passed)
+    return { a, canReset: exhausted && latest?.id === a.id }
+  })
+}
+
+function ResultTag({ a, tr, ta }: { a: TestAttempt; tr: ReturnType<typeof dictionary>["learning"]["results"]; ta: ReturnType<typeof dictionary>["learning"]["attempt"] }) {
+  if (a.resetAt) return <span className="tag tag--archived">{tr.resetState}</span>
+  if (!a.submittedAt) return <span className="tag tag--draft">{tr.openState}</span>
+  return a.passed ? <span className="tag tag--published">{ta.passedWord}</span> : <span className="tag tag--expired">{ta.failedWord}</span>
 }
