@@ -5,7 +5,8 @@
  *     node scripts/learning_init.mjs --stav    len vypíše, čo existuje
  *
  * Len nové kolekcie modulu — existujúce sa nemenia (žiadna migrácia).
- * `certificates` pribudne s L3. Model: `docs/LEARNING_analyza_a_plan.md` kap. 4.
+ * Pokrýva L1 (kurzy, zápisy, postup), L2 (otázky, testy, pokusy) a L3
+ * (certifikáty). Model: `docs/LEARNING_analyza_a_plan.md` kap. 4.
  */
 
 import { MongoClient } from "mongodb"
@@ -65,6 +66,25 @@ const PLAN = [
         why: "kľúč otázky je jedinečný v tenante (import CSV cez id)" },
       { key: { companyCode: 1, "smartTags.key": 1, "smartTags.value": 1 }, opts: { name: "tenant_question_tags" },
         why: "losovanie a filter banky podľa smart:tagov" },
+    ],
+  },
+  // ── L3: certifikáty (D122) ──
+  {
+    collection: "certificates",
+    indexes: [
+      { key: { companyCode: 1, enrollmentId: 1 }, opts: { unique: true, name: "tenant_certificate_enrollment" },
+        why: "jeden certifikát na zápis — súbežné vydanie vyrobí jeden" },
+      { key: { companyCode: 1, registrationNumber: 1 }, opts: { unique: true, name: "tenant_certificate_number" },
+        why: "číslo certifikátu je jedinečné v organizácii (verejné overenie)" },
+      { key: { companyCode: 1, courseKey: 1 }, opts: { name: "tenant_certificate_course" },
+        why: "certifikáty kurzu — zapísaní v úprave kurzu" },
+    ],
+  },
+  {
+    collection: "certificate_counters",
+    indexes: [
+      { key: { companyCode: 1, year: 1 }, opts: { unique: true, name: "tenant_year_unique" },
+        why: "poradové číslo certifikátu v roku (atomické)" },
     ],
   },
   {

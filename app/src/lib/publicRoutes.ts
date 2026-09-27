@@ -45,6 +45,12 @@ export const PUBLIC_PATHS = [
    * Stránka ukazuje len údaje o organizácii a kontakt na DPO.
    */
   "/privacy",
+  /*
+   * Verejné overenie certifikátu (ADR-018, D122). Stránka pustí ďalej len
+   * číslo **a** 80-bitový hash; bez nich odpovie 404 ako na neexistujúce
+   * číslo. Meno držiteľa neukáže nikdy.
+   */
+  "/verify/",
 ] as const
 
 /** Je táto cesta prístupná bez prihlásenia? */

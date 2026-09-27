@@ -7,6 +7,7 @@ import { renderToStaticMarkup } from "react-dom/server"
 
 const s = vi.hoisted(() => ({ ctx: null as unknown }))
 
+vi.mock("@/lib/certificatesDb", () => ({ ensureCertificate: async () => null, certificatesForPerson: async () => [], certificatesForCourse: async () => [], certificateForEnrollment: async () => null }))
 vi.mock("next/navigation", () => ({
   notFound: () => { throw new Error("notFound") },
   redirect: (to: string) => { throw new Error(`redirect ${to}`) },

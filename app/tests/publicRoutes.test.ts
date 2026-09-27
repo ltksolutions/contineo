@@ -62,7 +62,9 @@ describe("brána prihlásenia", () => {
     // Nie je to štýlová poznámka: každá položka je cesta, ktorú nechráni
     // prihlásenie, a musí mať v súbore napísaný dôvod. Keď ich pribúda,
     // treba sa pýtať prečo.
-    expect(PUBLIC_PATHS.length).toBeLessThanOrEqual(6)
+    // 7. položka: verejné overenie certifikátu (ADR-018, D122) — chránené
+    // 80-bitovým hashom v adrese, nie prihlásením.
+    expect(PUBLIC_PATHS.length).toBeLessThanOrEqual(7)
   })
 })
 

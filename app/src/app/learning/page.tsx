@@ -14,6 +14,7 @@ import { learningContext } from "@/lib/learning"
 import { listCourses } from "@/lib/coursesDb"
 import { enrollmentsForPerson } from "@/lib/enrollmentsDb"
 import { progressFactsMany } from "@/lib/learningProgressDb"
+import { certificatesForPerson } from "@/lib/certificatesDb"
 import { groupMyCourses, type MyCourse } from "@/lib/enrollments"
 import { publishedVersion } from "@/lib/courses"
 import { isFiltered, learningFacets, learningFilterFromQuery, learningHref, type LearningFilter } from "@/lib/learningFilters"
@@ -43,7 +44,8 @@ export default async function LearningPage({ searchParams }: { searchParams: Pro
   const t = dictionary(language).learning
   const companyCode = ctx.person.companyCode
   const [courses, enrollments] = await Promise.all([listCourses(companyCode), enrollmentsForPerson(companyCode, ctx.person.id)])
-  const facts = await progressFactsMany(companyCode, enrollments.map(e => e.id))
+  const [facts, certs] = await Promise.all([progressFactsMany(companyCode, enrollments.map(e => e.id)), certificatesForPerson(companyCode, ctx.person.id)])
+  const certNumber = (i: MyCourse) => certs.find(c => c.enrollmentId === i.enrollment?.id && !c.revokedAt)?.registrationNumber ?? null
   const filter = learningFilterFromQuery(q)
 
   // Viditeľné = zapísané + otvorené zverejnené (rám: počty filtra z nich).
@@ -65,7 +67,7 @@ export default async function LearningPage({ searchParams }: { searchParams: Pro
 
   const cards = (items: MyCourse[], kindOf: (i: MyCourse) => CourseCardKind) => (
     <div className="lcards">
-      {items.map(i => <CourseCard key={i.course.key} item={i} kind={kindOf(i)} filter={filter} language={language} enrolAction={enrolAction} />)}
+      {items.map(i => <CourseCard key={i.course.key} item={i} kind={kindOf(i)} filter={filter} language={language} enrolAction={enrolAction} certificateNumber={certNumber(i)} />)}
     </div>
   )
 
