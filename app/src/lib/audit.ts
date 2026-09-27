@@ -56,6 +56,9 @@ export type AuditSubject =
   | "course"
   | "enrollment"
   | "smart-tag"
+  | "question"
+  | "test"
+  | "test-attempt"
 
 export interface AuditRecord {
   _id?: ObjectId
