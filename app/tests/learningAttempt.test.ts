@@ -137,7 +137,7 @@ describe("výsledok", () => {
     s.attempt = attempt({ submittedAt: at, closedBy: "user", points: 1, maxPoints: 3, percent: 33, passed: false, showAnswers: "after_pass" })
     s.ctx = ctx({ row: { ...(ctx().row as object), availability: av({ canStart: false, reason: "pause", nextAt: new Date(at.getTime() + 1800000) }) } })
     const html = await result()
-    expect(html).toContain("chýba 47 percentných bodov do hranice 80 %")
+    expect(html).toContain("chýba 47 percentuálnych bodov do hranice 80 %")
     expect(html).toContain("Správne odpovede sa nezobrazujú")
     expect(html).toContain("Nesprávne odpovede: 2.")
     expect(html).toContain('aria-describedby="rs-why"')

@@ -11,6 +11,7 @@ import type { ProgressFacts } from "../src/lib/learningProgress"
 
 const db = vi.hoisted(() => ({ course: null as unknown, enrollment: null as unknown, facts: null as unknown }))
 
+vi.mock("@/lib/certificatesDb", () => ({ ensureCertificate: async () => null, certificatesForPerson: async () => [], certificatesForCourse: async () => [], certificateForEnrollment: async () => null }))
 vi.mock("next/navigation", () => ({
   notFound: () => { throw new Error("notFound") },
   redirect: (to: string) => { throw new Error(`redirect ${to}`) },

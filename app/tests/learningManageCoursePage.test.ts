@@ -9,6 +9,7 @@ import type { Course, CourseVersion, Part } from "../src/lib/courses"
 
 const s = vi.hoisted(() => ({ course: null as unknown }))
 
+vi.mock("@/lib/certificatesDb", () => ({ ensureCertificate: async () => null, certificatesForPerson: async () => [], certificatesForCourse: async () => [], certificateForEnrollment: async () => null }))
 vi.mock("next/navigation", () => ({
   notFound: () => { throw new Error("notFound") },
   redirect: (to: string) => { throw new Error(`redirect ${to}`) },
@@ -40,7 +41,7 @@ vi.mock("@/lib/testsDb", () => ({ listTests: async () => [{ key: "evak", title: 
 vi.mock("@/lib/smartTagsDb", () => ({ smartTagUsage: async () => [{ key: "uroven", value: "1", label: "Úroveň: 1", courses: 2, questions: 0, tests: 0 }] }))
 vi.mock("@/lib/courseDocs", () => ({ documentChoices: async () => [{ documentId: "sfz:bozp", versionId: "v1", title: "Smernica BOZP", label: "úplné znenie od 1. 3. 2026" }] }))
 vi.mock("../src/app/learning/manage/[courseKey]/actions", () => Object.fromEntries(
-  ["addPartTestAction","removePartTestAction","partTestRequiredAction","assignCourseAction","saveSettingsAction","addBlockAction","addPartAction","archiveAction","moveBlockAction","movePartAction","newVersionAction","publishAction","removeBlockAction","removePartAction","updateBlockAction","updatePartAction"].map(n => [n, async () => {}])))
+  ["revokeCertificateAction","addPartTestAction","removePartTestAction","partTestRequiredAction","assignCourseAction","saveSettingsAction","addBlockAction","addPartAction","archiveAction","moveBlockAction","movePartAction","newVersionAction","publishAction","removeBlockAction","removePartAction","updateBlockAction","updatePartAction"].map(n => [n, async () => {}])))
 
 const at = new Date("2026-09-20T00:00:00Z")
 const part = (key: string, blocks: Part["blocks"] = [{ id: "t", type: "text", markdown: "Vitajte v kurze." }]): Part => ({ key, title: `Časť ${key}`, required: true, tests: [], blocks })

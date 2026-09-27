@@ -17,13 +17,15 @@ import SubmitButton from "./SubmitButton"
 export type CourseCardKind = "in-progress" | "assigned" | "open" | "done"
 
 export default function CourseCard({
-  item, kind, filter, language, enrolAction,
+  item, kind, filter, language, enrolAction, certificateNumber,
 }: {
   item: MyCourse
   kind: CourseCardKind
   filter: LearningFilter
   language: UiLanguage
   enrolAction: (form: FormData) => Promise<void>
+  /** Číslo platného certifikátu, ak bol vydaný (rám LEARNING). */
+  certificateNumber?: string | null
 }) {
   const t = dictionary(language).learning
   const { course, version, enrollment, progress } = item
@@ -102,9 +104,12 @@ export default function CourseCard({
         )}
         {kind === "done" && (
           <>
-            <Link href={href} className="lc-link">{t.openCourse}</Link>
+            {certificateNumber
+              ? <Link href={`${href}/certificate`} className="lc-link">{t.certificate}</Link>
+              : <Link href={href} className="lc-link">{t.openCourse}</Link>}
             <span className="lc-next">
               {progress?.completedAt ? t.doneOn(formatDate(progress.completedAt, language)) : ""}
+              {certificateNumber && <> · <code>{certificateNumber}</code></>}
               {!version.issuesCertificate && <> · {t.noCertificate}</>}
             </span>
           </>

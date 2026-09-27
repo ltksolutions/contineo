@@ -59,6 +59,7 @@ export type AuditSubject =
   | "question"
   | "test"
   | "test-attempt"
+  | "certificate"
 
 export interface AuditRecord {
   _id?: ObjectId

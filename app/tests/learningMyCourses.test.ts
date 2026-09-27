@@ -12,6 +12,7 @@ import { parseSmartTag } from "../src/lib/smartTags"
 
 const db = vi.hoisted(() => ({ courses: [] as unknown[], enrollments: [] as unknown[], facts: new Map<string, unknown>() }))
 
+vi.mock("@/lib/certificatesDb", () => ({ ensureCertificate: async () => null, certificatesForPerson: async () => [], certificatesForCourse: async () => [], certificateForEnrollment: async () => null }))
 vi.mock("next/navigation", () => ({
   notFound: () => { throw new Error("notFound") },
   redirect: (to: string) => { throw new Error(`redirect ${to}`) },

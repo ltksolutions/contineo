@@ -15,6 +15,22 @@ import { getCourse } from "@/lib/coursesDb"
 import { versionById } from "@/lib/courses"
 import { getAttempt, saveAnswers, startAttempt, submitAttempt } from "@/lib/testAttemptsDb"
 import { answerFromForm } from "@/lib/testAttempts"
+import { ensureCertificate } from "@/lib/certificatesDb"
+import type { Enrollment } from "@/lib/enrollments"
+import type { Tenant } from "@/lib/tenants"
+
+/**
+ * Po udalosti, ktorá môže kurz dokončiť, sa skúsi vydať certifikát (D122).
+ * `ensureCertificate` si dokončenie overí sám; zlyhanie nesmie zhodiť
+ * označenie časti ani odovzdanie testu — stránka certifikátu to skúsi znova.
+ */
+async function tryCertificate(e: Enrollment, tenant: Tenant) {
+  try {
+    await ensureCertificate(e, tenant)
+  } catch (err) {
+    console.error("[learning] vydanie certifikátu zlyhalo:", err)
+  }
+}
 import { AppError } from "@/lib/appError"
 import { dictionary, errorText } from "@/lib/i18n"
 
@@ -57,6 +73,7 @@ export async function completePartAction(fd: FormData) {
     const e = await enrollmentFor(ctx.person.companyCode, ctx.person.id, courseKey)
     if (!e || e.cancelledAt) throw new AppError("learning.courseNotFound", "Zápis do kurzu neexistuje.")
     await completePart({ enrollment: e, partKey, allowBeforeRequiredTests: ALLOW_COMPLETE_BEFORE_REQUIRED_TEST })
+    await tryCertificate(e, ctx.tenant)
     message = dictionary(ctx.person.language).learning.part.marked
   } catch (e) {
     if (!(e instanceof AppError)) console.error("[learning] označenie časti zlyhalo:", e)
@@ -118,6 +135,8 @@ export async function answerAction(fd: FormData) {
   }
   if (go === "submit") {
     await submitAttempt(ctx.person.companyCode, attemptId, ctx.person.id)
+    const e = await enrollmentFor(ctx.person.companyCode, ctx.person.id, courseKey)
+    if (e) await tryCertificate(e, ctx.tenant)
     revalidatePath(`/learning/${courseKey}`)
     redirect(`${base}/result`)
   }

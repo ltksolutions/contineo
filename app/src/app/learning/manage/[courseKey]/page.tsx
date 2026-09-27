@@ -42,20 +42,21 @@ import { audiencesInOrg } from "@/lib/persons"
 import { allDepartments, flattenTree, counts } from "@/lib/departments"
 import { courseRoster, type RosterRow, type RosterState } from "@/lib/learningStats"
 import { listTests } from "@/lib/testsDb"
+import { certificatesForCourse } from "@/lib/certificatesDb"
 import { questionCount, type Test } from "@/lib/tests"
 import { normalizeLayout } from "@/lib/appNav"
 import { normalizeQuery, type RawQuery } from "@/lib/urlParams"
 import { dictionary, formatDate, type UiLanguage } from "@/lib/i18n"
 import {
   addBlockAction, addPartAction, archiveAction, moveBlockAction, movePartAction, newVersionAction,
-  addPartTestAction, assignCourseAction, partTestRequiredAction, publishAction, removePartTestAction, removeBlockAction, removePartAction, saveSettingsAction, updateBlockAction, updatePartAction,
+  addPartTestAction, assignCourseAction, revokeCertificateAction, partTestRequiredAction, publishAction, removePartTestAction, removeBlockAction, removePartAction, saveSettingsAction, updateBlockAction, updatePartAction,
 } from "./actions"
 
 export const dynamic = "force-dynamic"
 
 type Q = {
   layout?: string; tab?: string; part?: string; add?: string; src?: string; editBlock?: string; msg?: string; error?: string
-  filter?: string; assign?: string; preview?: string; all?: string; audience?: string | string[]
+  filter?: string; assign?: string; preview?: string; all?: string; audience?: string | string[]; revoke?: string
 }
 type Edit = ReturnType<typeof dictionary>["learning"]["edit"]
 
@@ -542,7 +543,10 @@ async function PeopleTab({ course, published, companyCode, q, language }: {
   const tp = d.learning.people
   const tc = d.learning.course
   const base = `/learning/manage/${course.key}`
-  const roster = await courseRoster(companyCode, course)
+  const [roster, certs] = await Promise.all([courseRoster(companyCode, course), certificatesForCourse(companyCode, course.key)])
+  const tcert = d.learning.cert
+  const certOf = (enrollmentId: string) => certs.find(c => c.enrollmentId === enrollmentId) ?? null
+  const revoking = q.revoke ? roster.find(r => r.enrollment.id === q.revoke) : null
   const filters: ("all" | RosterState)[] = ["all", "not-started", "in-progress", "done"]
   const filter = filters.includes(q.filter as RosterState) ? (q.filter as RosterState) : "all"
   const shown = filter === "all" ? roster : roster.filter(r => r.state === filter)
@@ -628,13 +632,23 @@ async function PeopleTab({ course, published, companyCode, q, language }: {
         </div>
       </div>
       {assign}
+      {revoking && certOf(revoking.enrollment.id) && !certOf(revoking.enrollment.id)!.revokedAt && (
+        <form action={revokeCertificateAction} className="card mg-new rs-reset">
+          <input type="hidden" name="courseKey" value={course.key} />
+          <input type="hidden" name="enrollmentId" value={revoking.enrollment.id} />
+          <h2>{tcert.revokeTitle(revoking.enrollment.fullName)}</h2>
+          <p className="quiet mc-note">{tcert.revokeText}</p>
+          <label className="field"><span className="field-label">{tcert.revokeReason}</span><textarea className="field-input" name="reason" rows={2} required /></label>
+          <div className="mg-actions"><SubmitButton className="button">{tcert.revokeButton}</SubmitButton><Link className="button button--quiet" href={`${base}?tab=people`}>{tcert.cancel}</Link></div>
+        </form>
+      )}
       {roster.length === 0 ? (
         <div className="empty"><div className="empty-text">{tp.empty}</div></div>
       ) : (
         <>
           <div className="doc-table-wrap mg-table">
             <table className="doc-table">
-              <thead><tr><th>{tp.colName}</th><th>{tp.colDepartment}</th><th>{tp.colEnrollment}</th><th>{tp.colState}</th><th>{tp.colActivity}</th></tr></thead>
+              <thead><tr><th>{tp.colName}</th><th>{tp.colDepartment}</th><th>{tp.colEnrollment}</th><th>{tp.colState}</th><th>{tp.colActivity}</th><th>{tcert.colCertificate}</th></tr></thead>
               <tbody>
                 {shown.map(r => (
                   <tr key={r.enrollment.id}>
@@ -643,6 +657,7 @@ async function PeopleTab({ course, published, companyCode, q, language }: {
                     <td>{tc.enrolledVia[r.enrollment.source]}</td>
                     <td>{stateText(r)}</td>
                     <td>{formatDate(r.lastActivity, language)}</td>
+                    <td><CertCell c={certOf(r.enrollment.id)} href={`${base}?tab=people&revoke=${r.enrollment.id}`} t={tcert} /></td>
                   </tr>
                 ))}
               </tbody>
@@ -654,11 +669,22 @@ async function PeopleTab({ course, published, companyCode, q, language }: {
                 <span className="mg-title">{r.enrollment.fullName}</span>
                 <span className="mg-sub">{[r.department, tc.enrolledVia[r.enrollment.source]].filter(Boolean).join(" · ")}</span>
                 <span className="mg-sub">{stateText(r)} · {formatDate(r.lastActivity, language)}</span>
+                <CertCell c={certOf(r.enrollment.id)} href={`${base}?tab=people&revoke=${r.enrollment.id}`} t={tcert} />
               </div>
             ))}
           </div>
         </>
       )}
     </>
+  )
+}
+
+function CertCell({ c, href, t }: { c: import("@/lib/certificates").Certificate | null; href: string; t: ReturnType<typeof dictionary>["learning"]["cert"] }) {
+  if (!c) return <span className="quiet">—</span>
+  return (
+    <span className="mc-cert">
+      <code>{c.registrationNumber}</code>
+      {c.revokedAt ? <span className="tag tag--expired">{t.revoked}</span> : <Link className="lc-link" href={href}>{t.revoke}</Link>}
+    </span>
   )
 }
