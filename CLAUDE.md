@@ -134,6 +134,22 @@ problémov (zlúčený, nasadenie na Verceli `success`). Lokálne aj na `origin`
 Nezlúčená vetva alebo vetva, pri ktorej niečo zlyhalo, sa bez súhlasu Jána
 nemaže. (Súhlas Jána 2026-09-23.)
 
+## Dve sessions v jednom repozitári = dve vetvy
+
+Keď v tom istom repozitári pracuje naraz viac sessions (asistentov, okien,
+ľudí), **každá pracuje na vlastnej vetve** — nikdy dve na `main` alebo na
+jednej spoločnej vetve. Pracovná kópia je jedna; `git add -A` alebo `git add .`
+v jednej session zoberie do commitu aj rozrobené súbory tej druhej.
+
+Stalo sa 27. 9. 2026: commit `12d7f3b` (PR #145, learning modul) odniesol so
+sebou celú rozrobenú zmenu importu osôb (ADR-019) aj pomocný súbor, ktorý
+do repozitára nepatril. História sa neprepisuje, takže zmiešaný commit ostal.
+
+Z toho vyplýva aj pre jednu session: pred `git add` sa pozrie `git status`
+a pridávajú sa **menovite tie súbory, ktoré patria k zmene** — nie všetko,
+čo je v pracovnej kópii zmenené. Cudzí `M` v `git status` je signál, že
+niekto ďalší práve pracuje, a dôvod prejsť na vlastnú vetvu, nie ho pribaliť.
+
 ## Overenie pred commitom
 
 ```
