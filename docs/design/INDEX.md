@@ -85,6 +85,48 @@ porovnávanie.
 
 ---
 
+## Modul Vzdelávanie (`/learning`, ADR-018) — rámy 2026-09-27
+
+Zadanie: `docs/design/LEARNING-zadanie.md` (a6c7ddc). Spoločné nové triedy
+(`.stag`, `.notice--info`, `.tabs`) sú opísané v prvom ráme, kde sa objavia.
+
+| # | Rám | Routa | Stav |
+| --- | --- | --- | --- |
+| 1 | `LEARNING-moje-kurzy` | `/learning` | ✅ Q1, Q2 rozhodnuté |
+| 2 | `COURSE-prehlad-kurzu` | `/learning/[courseKey]` | hotový, Q1 otvorená |
+| 3 | `PART-cast-kurzu` | `/learning/[courseKey]/[partKey]` | hotový, Q1–Q2 otvorené |
+| 4 | `MANAGE-sprava-kurzov` | `/learning/manage` | hotový, Q1 otvorená |
+| 5 | `MANAGE-COURSE` | `/learning/manage/[courseKey]` | ďalší |
+| 6–9 | `TESTS`, `TEST-ATTEMPT`, `RESULT`, `CERTIFICATE` | L2–L3 | čaká |
+
+### Pre knižnice L1 (bez obrazoviek) — čo rámy potrebujú od modelu
+
+Nad rámec ADR-018 (podrobne v sekcii „Údaje, ktoré v modeli zatiaľ nie sú"
+každého `.md`):
+
+- **Kurz / verzia:** `sequential` (poradie častí postupne / ľubovoľne) —
+  ADR-018 ho nemá, zadanie áno · `subtitle`, `description`,
+  `estimatedMinutes`, `issuesCertificate`, `openEnrollment`, `topicId`,
+  `smartTags[]`, `version.publishedAt`.
+- **Zápis:** `source` (`assignment` | `self`) + kto pridelil (veta
+  „Pridelené 22. 9. · Oddelenie ľudských zdrojov").
+- **Časť:** `required`, `estimatedMinutes` (alebo súčet z blokov).
+- **Blok video:** `durationSec`, `requireFullWatch`, poster; externé video
+  `requireFullWatch` mať nemôže.
+- **Odvodené (neukladá sa, D119):** stav časti (hotová / rozpracovaná /
+  dostupná / zamknutá), „prvá nehotová povinná časť", „N z M povinných",
+  dátum dokončenia kurzu, percento a najďalej pozreté miesto videa z
+  `video_watch` rozsahov (hranica 90 %).
+- **Témy:** číselník s `retiredAt` (vyradiť, nie zmazať).
+- **smart:tagy:** agregácia počtov naprieč kurzami / otázkami / testami
+  (odvodená); premenovanie `label` podľa MANAGE Q1.
+- **Navigácia:** `NavKey` `"learning"` (všetci pri zapnutom module),
+  `tabbarItems()` — „Vzdelávanie" na 3. pozíciu, len keď v zozname nie je
+  `library` (LEARNING Q1 ✅).
+
+Adresár `_tools/` v koreni projektu sú generátory rámov — nie je súčasť
+handoffu, nesťahovať.
+
 ## Čo platí bez výnimky
 
 - **Žiadny text natvrdo** — i18n sk/cs/en cez `lib/i18n.ts`

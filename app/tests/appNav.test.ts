@@ -47,6 +47,15 @@ describe("modul Vzdelávanie (ADR-018)", () => {
     expect(hrefs.some(h => h.startsWith("/learning"))).toBe(false)
   })
 
+  it("lišta: bežná osoba má Vzdelávanie na 3. pozícii, správca obsahu pod Viac (LEARNING Q1)", () => {
+    const plain = navItems({ learning: true })
+    expect(tabbarItems(plain).map(o => o.key)).toEqual(["overview", "ask", "learning", "tasks", "more"])
+    expect(moreGroups(plain).flatMap(g => g.items.map(o => o.key))).not.toContain("learning")
+    const editor = navItems({ learning: true, isContentManager: true })
+    expect(tabbarItems(editor).map(o => o.key)).toEqual(["overview", "ask", "library", "tasks", "more"])
+    expect(moreGroups(editor)[0].items.map(o => o.key)).toContain("learning")
+  })
+
   it("zapnutý modul: kurzy pre každého, správa a testy len pre lektora", () => {
     expect(navItems({ learning: true }).map(o => o.href).filter(h => h.startsWith("/learning")))
       .toEqual(["/learning"])

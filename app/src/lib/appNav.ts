@@ -162,8 +162,20 @@ export interface TabItem {
 /** Poradie lišty z návrhu: Prehľad · Opýtať sa · Knižnica · Úlohy · Viac. */
 const TABBAR_KEYS: NavKey[] = ["overview", "ask", "library"]
 
+/**
+ * Tretia pozícia lišty. Kto má Knižnicu, má ju tam; kto nie a má zapnuté
+ * Vzdelávanie, dostane tam Vzdelávanie (rám LEARNING, Q1 ✅ 27. 9.).
+ * U správcu obsahu je Vzdelávanie pod „Viac" — lišta sa nepredlžuje.
+ */
+function tabbarKeys(items: NavItem[]): NavKey[] {
+  const has = (k: NavKey) => items.some(o => o.key === k)
+  return has("library") || !has("learning") ? TABBAR_KEYS : ["overview", "ask", "learning"]
+}
+
 /** Čo lišta pokrýva sama — zvyšok patrí na `/more`. */
-const IN_TABBAR: NavKey[] = [...TABBAR_KEYS, "toAcknowledge", "toApprove"]
+function inTabbar(items: NavItem[]): NavKey[] {
+  return [...tabbarKeys(items), "toAcknowledge", "toApprove"]
+}
 
 /**
  * Položky spodnej lišty na telefóne. Kto nemá rolu správy obsahu, nemá
@@ -173,7 +185,7 @@ const IN_TABBAR: NavKey[] = [...TABBAR_KEYS, "toAcknowledge", "toApprove"]
 export function tabbarItems(items: NavItem[]): TabItem[] {
   const byKey = new Map(items.map(o => [o.key, o] as const))
   const tabs: TabItem[] = []
-  for (const key of TABBAR_KEYS) {
+  for (const key of tabbarKeys(items)) {
     const o = byKey.get(key)
     if (o) tabs.push({ href: o.href, key: o.key, count: o.count, activeFor: [o.href] })
   }
@@ -203,7 +215,7 @@ export function tabbarItems(items: NavItem[]): TabItem[] {
     key: "more",
     // Svieti aj na sekciách, ktoré pod „Viac" bývajú — človek má na lište
     // vidieť, kade sa tam dostal. Schvaľovanie svieti na „Úlohách", nie tu.
-    activeFor: ["/more", ...items.filter(o => !IN_TABBAR.includes(o.key)).map(o => o.href)],
+    activeFor: ["/more", ...items.filter(o => !inTabbar(items).includes(o.key)).map(o => o.href)],
   })
   return tabs
 }
@@ -233,8 +245,11 @@ export interface MoreGroup {
 
 /** Zvyšok `navItems()` pre `/more`, v skupinách. Prázdna skupina sa nevracia. */
 export function moreGroups(items: NavItem[]): MoreGroup[] {
+  // „Na schválenie" je v lište len cez „Úlohy", na /more zostáva (inak by sa
+  // naň z telefónu nedalo dostať). Vzdelávanie na lište sa tu neopakuje.
+  const onBar = new Set(tabbarKeys(items))
   const pick = (keys: NavKey[]) =>
-    keys.map(k => items.find(o => o.key === k)).filter((o): o is NavItem => o !== undefined)
+    keys.filter(k => !onBar.has(k)).map(k => items.find(o => o.key === k)).filter((o): o is NavItem => o !== undefined)
 
   const groups: MoreGroup[] = [
     { key: "organisation", items: pick(MORE_GROUPS.organisation) },
@@ -246,7 +261,7 @@ export function moreGroups(items: NavItem[]): MoreGroup[] {
    * do „Správy". Odkaz v nesprávnej skupine je nepohodlie; odkaz, ktorý sa
    * z telefónu stratí úplne, je výpadok sekcie.
    */
-  const covered = new Set<NavKey>([...IN_TABBAR, ...MORE_GROUPS.organisation, ...MORE_GROUPS.management])
+  const covered = new Set<NavKey>([...inTabbar(items), ...MORE_GROUPS.organisation, ...MORE_GROUPS.management])
   groups[1].items.push(...items.filter(o => !covered.has(o.key)))
 
   return groups.filter(g => g.items.length > 0)

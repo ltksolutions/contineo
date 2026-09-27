@@ -52,6 +52,9 @@ export type AuditSubject =
   | "signin-settings"
   | "tenant"
   | "track"
+  /** Modul Vzdelávanie (ADR-018). */
+  | "course"
+  | "enrollment"
 
 export interface AuditRecord {
   _id?: ObjectId
