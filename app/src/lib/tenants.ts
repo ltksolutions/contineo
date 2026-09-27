@@ -181,6 +181,13 @@ export interface Tenant {
    */
   videoStorage?: "gridfs" | "s3" | "azure"
 
+  /**
+   * Témy kurzov (ADR-018, D117) — číselník organizácie. Po vzore právnych
+   * základov (D92), nie v `codelists`: položka sa nemaže, len vyradí
+   * (`retiredAt`), lebo kurzy na ňu odkazujú (a nesú kópiu názvu).
+   */
+  learningTopics?: { key: string; label: string; retiredAt?: Date | null; createdAt?: Date; createdBy?: string }[]
+
   createdAt?: Date
   updatedAt?: Date
 }
