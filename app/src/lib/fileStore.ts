@@ -190,6 +190,25 @@ export async function openFileStream(
   }
 }
 
+/**
+ * Úsek súboru ako prúd — pre `Range` pri videu (modul Vzdelávanie, D122).
+ * Bez 206 sa vo videu nedá posúvať; prehliadač si pýta kúsky a každý je
+ * pod stropom odpovede na Verceli. `end` je vrátane (ako v hlavičke Range).
+ */
+export async function openFileRange(
+  companyCode: string,
+  id: string,
+  start: number,
+  end: number,
+): Promise<{ stream: ReadableStream<Uint8Array>; name: string; contentType: string; bytes: number } | null> {
+  const info = await fileInfo(companyCode, id)
+  if (!info) return null
+  const b = await bucket()
+  // GridFS berie `end` bez posledného bajtu (exkluzívne).
+  const node = b.openDownloadStream(new ObjectId(id), { start, end: end + 1 })
+  return { stream: Readable.toWeb(node) as ReadableStream<Uint8Array>, name: info.name, contentType: info.contentType, bytes: info.bytes }
+}
+
 /** Načíta súbor vlastnej organizácie. `null`, keď taký nie je. */
 export async function loadFile(
   companyCode: string,

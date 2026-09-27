@@ -63,3 +63,24 @@ export function unlocksAfter(parts: PartProgress[], index: number): number | nul
   const blocker = parts.slice(0, index).findIndex(p => p.part.required && p.state !== "done")
   return blocker < 0 ? null : blocker + 1
 }
+
+/**
+ * Adresa na vloženie externého videa (`<iframe>`). YouTube a Vimeo z bežnej
+ * adresy na prehrávač; iné len `https`. `null` = adresa sa vložiť nedá.
+ */
+export function embedUrl(provider: "youtube" | "vimeo" | "stream", url: string): string | null {
+  let u: URL
+  try { u = new URL(url) } catch { return null }
+  if (u.protocol !== "https:") return null
+  if (provider === "youtube") {
+    const id = u.hostname.endsWith("youtu.be") ? u.pathname.slice(1)
+      : u.pathname.startsWith("/embed/") ? u.pathname.slice(7)
+      : u.searchParams.get("v")
+    return id && /^[\w-]{6,}$/.test(id) ? `https://www.youtube-nocookie.com/embed/${id}` : null
+  }
+  if (provider === "vimeo") {
+    const id = u.pathname.split("/").filter(Boolean).pop()
+    return id && /^\d+$/.test(id) ? `https://player.vimeo.com/video/${id}` : null
+  }
+  return u.toString()
+}
