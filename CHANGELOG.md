@@ -4,6 +4,15 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Rozhodnuté: vzdelávanie ako modul platformy — ADR-018 (2026-09-27)
+
+LMS (ClubUp) bude **modul `learning`** tej istej platformy, zapínaný profilom
+tenanta; ClubUp zostáva značkou a doménou. Kurz je plochý (kurz → časti),
+téma je číselník, smart:tagy `Kľúč: Hodnota`; testy sú služba platformy
+s bankou otázok; stav sa odvodzuje z udalostí; certifikát vydáva tenant.
+Rozhodnutia D117–D123, plán v `docs/LEARNING_analyza_a_plan.md`. Zatiaľ len
+dokumentácia — v kóde nič, modul pre SFZ vypnutý až do pokynu.
+
 ### Viac právnych základov pri jednom predpise (2026-09-25)
 
 Zodpovedná osoba môže pri znení vybrať **jeden alebo viac právnych

@@ -507,6 +507,28 @@ dôvodom, prehľad pre rolu `hr`. **Uzatvára D30.**
 
 **9c — Rozsah C** — ďalšie zdroje (kurácia, helpdesk) až keď existujú.
 
+### Fáza 10 – Vzdelávanie, modul `learning` `[L0 2–3 dni · L1 3–4 týždne · L2 2–3 týždne · L3 1 týždeň]`
+
+> **Rozhodnutie:** `docs/decisions/ADR-018-modul-learning.md` (D117–D123) · **Plán:** `docs/LEARNING_analyza_a_plan.md`
+> **Stav: schválené 2026-09-27.** Modul je pre SFZ vypnutý, kým Ján nepovie — onboarding (Fáza 8) má prednosť v ostrej prevádzke.
+
+LMS ako modul tej istej platformy (D34: modul, nie fork); ClubUp zostáva
+značkou a doménou. Kurz → časti (povinné / nepovinné) s blokmi text, obrázok,
+galéria, dokument z knižnice, video (interné s povinným dopozeraním aj
+externé); téma z číselníka, smart:tagy `Kľúč: Hodnota`. Testy sú služba
+platformy s bankou otázok — test je recept (sekcie = filter tagov + počet),
+otázky sa losujú, odpovede miešajú, pokus si uloží snímky. Stav postupu sa
+odvodzuje z udalostí (D27), dôkazy sa nemenia (D24). Certifikát vydáva
+tenant, PDF generuje Contineo, verejné overenie `/verify/…`.
+
+**L0** ADR-018, `Tenant.modules.learning`, rola `learning-admin`, navigácia,
+i18n, prázdne `/learning*`, zadanie pre Claude Design →
+**L1** smart:tagy, témy, kurzy s verziami, bloky obsahu, video (GridFS +
+adaptér), zápis (pridelenie / samozápis), dokončenia, odvodený postup,
+obrazovky študenta a správcu →
+**L2** banka otázok, testy, pokusy, výsledky pre zodpovedné osoby, GDPR →
+**L3** certifikáty, PDF, `/verify`.
+
 ## 8. MongoDB schémata
 
 > **Kanonický dátový model = Model B** (rozhodnuté 2026-06-25). Schémy nižšie sú **stav Fázy 3 (Model A)**.

@@ -29,6 +29,7 @@ identita rozhodnutia** a je použité v stovkách komentárov v kóde
 | [ADR-015](ADR-015-nazov-dokumentu-novym-znenim.md) | Názov dokumentu sa mení len novým znením | ✅ prijaté |
 | [ADR-016](ADR-016-oznacenie-znenia-automaticky.md) | Označenie znenia z dátumu účinnosti | ✅ prijaté |
 | [ADR-017](ADR-017-viac-pravnych-zakladov.md) | Znenie môže mať viac právnych základov | ✅ prijaté |
+| [ADR-018](ADR-018-modul-learning.md) | Vzdelávanie ako modul platformy (`learning`); ClubUp ako produkt nad Contineom | ✅ prijaté |
 
 ## Čo sem nepatrí
 
@@ -41,6 +42,6 @@ rozhodnutia. Zostávajú v `docs/`.
 
 ## Nové ADR
 
-Ďalšie voľné číslo je **ADR-018**. Súbor `ADR-018-kratky-nazov.md` sem, riadok
+Ďalšie voľné číslo je **ADR-019**. Súbor `ADR-019-kratky-nazov.md` sem, riadok
 do tabuľky vyššie, a v hlavičke sa uvedie stav, dátum, kto rozhodol a na čo to
 nadväzuje. Rituál **„Rozhodni"** robí presne toto.

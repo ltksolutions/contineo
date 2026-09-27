@@ -77,6 +77,11 @@ ClubUp zostáva nezmenený ako solo LMS s akreditáciou ŽU.
 
 ### 3.1 Hranica voči LMS — čo onboarding zámerne nemá
 
+> **Doplnené ADR-018 (2026-09-27):** LMS je od ADR-018 **modul `learning` tej istej
+> platformy**, nie cudzí systém — „prepojí sa s ClubUpom" nižšie znamená väzbu dvoch
+> modulov v jednom systéme. Hranica *potvrdenie ≠ test* platí ďalej: test do
+> potvrdenia nepatrí; ako krok trasy môže pribudnúť až po dohode (ADR-018 D120).
+
 Toto je najdôležitejšia veta celého ADR, lebo bez nej sa onboarding do roka zvrhne
 na druhý LMS:
 

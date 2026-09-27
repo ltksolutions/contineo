@@ -872,6 +872,34 @@ priečinka ho dnes nezapisuje), D27.
 
 ---
 
+## Okruh 8 — Vzdelávanie, modul `learning` (otvorené 2026-09-27)
+
+> **Rozhodnutie:** `docs/decisions/ADR-018-modul-learning.md` · **Plán:** `docs/LEARNING_analyza_a_plan.md`
+
+| # | O čom | Stav |
+|---|---|---|
+| D117 | Kurz je plochý (kurz → časti); téma je číselník; smart:tag `Kľúč: Hodnota`; úrovne ClubUpu sú trasy | ✅ ADR-018 |
+| D118 | Publikovaná verzia kurzu je nemenná; zápis nesie `versionId` | ✅ ADR-018 |
+| D119 | Stav postupu sa odvodzuje z udalostí; povinné dopozeranie videa počíta server | ✅ ADR-018 |
+| D120 | Testy sú služba platformy s bankou otázok; test je recept (sekcie = filter tagov + počet) | ✅ ADR-018 |
+| D121 | Zodpovednosť za test je menovitá; HR výsledky nevidí; právny základ a retencia | ✅ ADR-018 |
+| D122 | Rola `learning-admin`; zápis pridelením alebo samozápisom; certifikát vydáva tenant, PDF generuje Contineo; video v GridFS do 25 MB + adaptér | ✅ ADR-018 |
+| D123 | Modul je jeden podstrom `/learning`, zapínaný `Tenant.modules.learning`; žiadna migrácia | ✅ ADR-018 |
+
+**Otvorené (nie sú v L1–L3):**
+
+| # | Otázka | Poznámka |
+|---|---|---|
+| **O18** | Test ako krok trasy onboardingu | Model to dovoľuje (`test_attempts.context`); krok `test` v `tracks.ts` mení `/documents` a reťaz dôkazov (ADR-005) — dohoda s onboardingom, až po L2. |
+| **O19** | Trasa z kurzov s prerekvizitami (ClubUp: 4 trasy, jedna na úroveň) | Rozšírenie `onboarding_tracks` o krok `course`; po L1. |
+| **O20** | SportUp SSO a spájanie účtov (Entra + SportUp = jedna osoba) | Stav OIDC v SportUpe neznámy — Ján. |
+| **O21** | Požiadavky ŽU na certifikáty a evidenciu | Garancia obsahu, akreditácia, evidencia — Ján. |
+| **O22** | Predaj kurzov (objednávky, platby, DPH, spotrebiteľské podmienky) | Účtovník a právnik; oprávnenie ku kurzu je od platby oddelené už v modeli (`enrollments.reason`). |
+| **O23** | smart:tagy aj na dokumentoch | Dnes `tags` / `category`; zjednotenie je samostatné rozhodnutie. |
+| **O24** | Retencia nových kolekcií a anonymizácia certifikátu | Dodatok k ADR-012 pred L2 naostro (D121). |
+
+---
+
 ## Otvorené body vedené v ADR-003
 
 Nie sú to rozhodnutia backlogu, ale otvorené otázky konkrétneho ADR. Uvedené tu kvôli
