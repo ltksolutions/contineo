@@ -2381,6 +2381,40 @@ interface Dictionary {
     testsIntro: string
     testsEmpty: string
     testsEmptyNote: string
+    groupInProgress: string
+    groupToEnroll: string
+    groupDone: string
+    statusInProgress: string
+    statusAssigned: string
+    statusOpen: string
+    statusDone: string
+    continue: string
+    start: string
+    enrol: string
+    certificate: string
+    openCourse: string
+    next: (n: number, title: string) => string
+    assignedOn: (date: string, who: string) => string
+    assignedOnNoWho: (date: string) => string
+    openNote: string
+    noCertificate: string
+    doneOn: (date: string) => string
+    archivedNote: string
+    minutes: (n: number) => string
+    parts: (n: number, required: number) => string
+    issuesCertificate: string
+    progress: (done: number, total: number) => string
+    nothingWaiting: string
+    nothingWaitingNote: string
+    filterNone: (names: string) => string
+    clearFilters: string
+    topic: string
+    allTopics: string
+    smartTags: string
+    selected: (n: number) => string
+    filterNote: string
+    enrolled: (title: string) => string
+    removeFilter: (name: string) => string
   }
 }
 
@@ -4834,8 +4868,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
   learning: {
     heading: "Vzdelávanie",
     intro: "Kurzy, ktoré máš pridelené, a otvorené kurzy, na ktoré sa môžeš zapísať.",
-    empty: "Zatiaľ tu nie je žiadny kurz.",
-    emptyNote: "Keď ti niekto kurz pridelí alebo zverejní otvorený kurz, uvidíš ho tu.",
+    empty: "Zatiaľ tu nemáte žiadny kurz",
+    emptyNote: "Keď vám organizácia pridelí kurz alebo otvorí kurz na zápis, uvidíte ho tu. Nič netreba robiť.",
     manageHeading: "Správa kurzov",
     manageIntro: "Kurzy, témy a smart:tagy organizácie.",
     manageEmpty: "Zatiaľ tu nie je žiadny kurz.",
@@ -4844,6 +4878,46 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     testsIntro: "Banka otázok, testy a výsledky testov, za ktoré zodpovedáš.",
     testsEmpty: "Zatiaľ tu nie je žiadny test.",
     testsEmptyNote: "Banka otázok a testy pribudnú v ďalšej časti modulu.",
+    groupInProgress: "Rozpracované",
+    groupToEnroll: "Na zápis",
+    groupDone: "Dokončené",
+    statusInProgress: "Rozpracovaný",
+    statusAssigned: "Pridelený",
+    statusOpen: "Otvorený na zápis",
+    statusDone: "Dokončený",
+    continue: "Pokračovať",
+    start: "Začať",
+    enrol: "Zapísať sa",
+    certificate: "Certifikát",
+    openCourse: "Otvoriť kurz",
+    next: (n, title) => `Ďalej: Časť ${n} · ${title}`,
+    assignedOn: (date, who) => `Pridelené ${date} · ${who}`,
+    assignedOnNoWho: date => `Pridelené ${date}`,
+    openNote: "Kurz je otvorený — zapísať sa môže ktokoľvek v organizácii.",
+    noCertificate: "Kurz nevydáva certifikát.",
+    doneOn: date => `Dokončené ${date}`,
+    archivedNote: "Kurz bol archivovaný — dokončiť ho môžete.",
+    minutes: n => {
+      const m = (k: number) => `${k} ${k === 1 ? "minúta" : k <= 4 ? "minúty" : "minút"}`
+      const h = Math.floor(n / 60)
+      if (!h) return `približne ${m(n)}`
+      return `približne ${h} ${h === 1 ? "hodina" : h <= 4 ? "hodiny" : "hodín"}${n % 60 ? ` ${m(n % 60)}` : ""}`
+    },
+    parts: (n, required) => `${n} ${n === 1 ? "časť" : n <= 4 ? "časti" : "častí"}` +
+      (required === n ? "" : `, z toho ${required} ${required === 1 ? "povinná" : required <= 4 ? "povinné" : "povinných"}`),
+    issuesCertificate: "certifikát",
+    progress: (done, total) => `${done} z ${total} povinných častí`,
+    nothingWaiting: "Nič nečaká",
+    nothingWaitingNote: "Všetky kurzy máte dokončené. Keď pribudne nový, uvidíte ho tu.",
+    filterNone: names => `Filtru ${names} nevyhovuje žiadny kurz.`,
+    clearFilters: "Zrušiť filtre",
+    topic: "Téma",
+    allTopics: "Všetky",
+    smartTags: "smart:tagy",
+    selected: n => `vybraté ${n}`,
+    filterNote: "Rôzne kľúče musia platiť všetky, z hodnôt jedného kľúča stačí jedna.",
+    enrolled: title => `Ste zapísaný do kurzu „${title}“.`,
+    removeFilter: name => `Zrušiť filter ${name}`,
   },
   },
 
@@ -7281,8 +7355,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
   learning: {
     heading: "Vzdělávání",
     intro: "Kurzy, které máš přidělené, a otevřené kurzy, do kterých se můžeš zapsat.",
-    empty: "Zatím tu není žádný kurz.",
-    emptyNote: "Až ti někdo kurz přidělí nebo zveřejní otevřený kurz, uvidíš ho tady.",
+    empty: "Zatím tu nemáte žádný kurz",
+    emptyNote: "Až vám organizace přidělí kurz nebo otevře kurz k zápisu, uvidíte ho tady. Nic není třeba dělat.",
     manageHeading: "Správa kurzů",
     manageIntro: "Kurzy, témata a smart:tagy organizace.",
     manageEmpty: "Zatím tu není žádný kurz.",
@@ -7291,6 +7365,46 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     testsIntro: "Banka otázek, testy a výsledky testů, za které odpovídáš.",
     testsEmpty: "Zatím tu není žádný test.",
     testsEmptyNote: "Banka otázek a testy přibudou v další části modulu.",
+    groupInProgress: "Rozpracované",
+    groupToEnroll: "K zápisu",
+    groupDone: "Dokončené",
+    statusInProgress: "Rozpracovaný",
+    statusAssigned: "Přidělený",
+    statusOpen: "Otevřený k zápisu",
+    statusDone: "Dokončený",
+    continue: "Pokračovat",
+    start: "Začít",
+    enrol: "Zapsat se",
+    certificate: "Certifikát",
+    openCourse: "Otevřít kurz",
+    next: (n, title) => `Dále: Část ${n} · ${title}`,
+    assignedOn: (date, who) => `Přiděleno ${date} · ${who}`,
+    assignedOnNoWho: date => `Přiděleno ${date}`,
+    openNote: "Kurz je otevřený — zapsat se může kdokoli v organizaci.",
+    noCertificate: "Kurz nevydává certifikát.",
+    doneOn: date => `Dokončeno ${date}`,
+    archivedNote: "Kurz byl archivován — dokončit ho můžete.",
+    minutes: n => {
+      const m = (k: number) => `${k} ${k === 1 ? "minuta" : k <= 4 ? "minuty" : "minut"}`
+      const h = Math.floor(n / 60)
+      if (!h) return `přibližně ${m(n)}`
+      return `přibližně ${h} ${h === 1 ? "hodina" : h <= 4 ? "hodiny" : "hodin"}${n % 60 ? ` ${m(n % 60)}` : ""}`
+    },
+    parts: (n, required) => `${n} ${n === 1 ? "část" : n <= 4 ? "části" : "částí"}` +
+      (required === n ? "" : `, z toho ${required} ${required === 1 ? "povinná" : required <= 4 ? "povinné" : "povinných"}`),
+    issuesCertificate: "certifikát",
+    progress: (done, total) => `${done} z ${total} povinných částí`,
+    nothingWaiting: "Nic nečeká",
+    nothingWaitingNote: "Všechny kurzy máte dokončené. Až přibude nový, uvidíte ho tady.",
+    filterNone: names => `Filtru ${names} nevyhovuje žádný kurz.`,
+    clearFilters: "Zrušit filtry",
+    topic: "Téma",
+    allTopics: "Všechna",
+    smartTags: "smart:tagy",
+    selected: n => `vybráno ${n}`,
+    filterNote: "Různé klíče musí platit všechny, z hodnot jednoho klíče stačí jedna.",
+    enrolled: title => `Jste zapsán do kurzu „${title}“.`,
+    removeFilter: name => `Zrušit filtr ${name}`,
   },
   },
 
@@ -9715,8 +9829,8 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
   learning: {
     heading: "Learning",
     intro: "Courses assigned to you and open courses you can enrol in.",
-    empty: "There are no courses yet.",
-    emptyNote: "When someone assigns you a course or publishes an open one, it will appear here.",
+    empty: "You have no courses yet",
+    emptyNote: "When your organisation assigns you a course or opens one for enrolment, it will appear here. Nothing to do.",
     manageHeading: "Course management",
     manageIntro: "Your organisation's courses, topics and smart:tags.",
     manageEmpty: "There are no courses yet.",
@@ -9725,6 +9839,45 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     testsIntro: "The question bank, tests and results of the tests you are responsible for.",
     testsEmpty: "There are no tests yet.",
     testsEmptyNote: "The question bank and tests arrive in the next part of the module.",
+    groupInProgress: "In progress",
+    groupToEnroll: "To start",
+    groupDone: "Completed",
+    statusInProgress: "In progress",
+    statusAssigned: "Assigned",
+    statusOpen: "Open for enrolment",
+    statusDone: "Completed",
+    continue: "Continue",
+    start: "Start",
+    enrol: "Enrol",
+    certificate: "Certificate",
+    openCourse: "Open course",
+    next: (n, title) => `Next: Part ${n} · ${title}`,
+    assignedOn: (date, who) => `Assigned ${date} · ${who}`,
+    assignedOnNoWho: date => `Assigned ${date}`,
+    openNote: "The course is open — anyone in the organisation can enrol.",
+    noCertificate: "The course does not issue a certificate.",
+    doneOn: date => `Completed ${date}`,
+    archivedNote: "The course has been archived — you can still finish it.",
+    minutes: n => {
+      const m = (k: number) => `${k} minute${k === 1 ? "" : "s"}`
+      const h = Math.floor(n / 60)
+      if (!h) return `about ${m(n)}`
+      return `about ${h} hour${h === 1 ? "" : "s"}${n % 60 ? ` ${m(n % 60)}` : ""}`
+    },
+    parts: (n, required) => `${n} part${n === 1 ? "" : "s"}${required === n ? "" : `, ${required} required`}`,
+    issuesCertificate: "certificate",
+    progress: (done, total) => `${done} of ${total} required parts`,
+    nothingWaiting: "Nothing waiting",
+    nothingWaitingNote: "You have completed all your courses. New ones will appear here.",
+    filterNone: names => `No course matches ${names}.`,
+    clearFilters: "Clear filters",
+    topic: "Topic",
+    allTopics: "All",
+    smartTags: "smart:tags",
+    selected: n => `${n} selected`,
+    filterNote: "Different keys must all match; within one key, any value is enough.",
+    enrolled: title => `You are enrolled in “${title}”.`,
+    removeFilter: name => `Remove filter ${name}`,
   },
   },
 }
