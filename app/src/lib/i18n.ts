@@ -2563,6 +2563,7 @@ interface Dictionary {
     }
     /** Úprava kurzu (rám MANAGE-COURSE). */
     edit: {
+      settingsSaved: string
       stepsLabel: string
       missingHeading: string
       readyHeading: string
@@ -2638,6 +2639,39 @@ interface Dictionary {
       blocksTests: (blocks: number, tests: number) => string
       readOnly: (n: number) => string
       savedAt: (date: string) => string
+    }
+    /** Nastavenia kurzu (rám MANAGE-COURSE, ?tab=settings). */
+    settings: {
+      title: string
+      keyNote: string
+      subtitle: string
+      description: string
+      topic: string
+      language: string
+      languageNote: string
+      estimate: string
+      smartTags: string
+      groupFlow: string
+      sequential: string
+      sequentialNote: string
+      openEnrollment: string
+      openEnrollmentNote: string
+      issuesCertificate: string
+      signerName: string
+      signerRole: string
+      groupLegal: string
+      legalNote: string
+      legalNone: string
+      save: string
+      tagPlaceholder: string
+      tagNewKey: string
+      tagNewValue: string
+      tagRemove: string
+      tagValues: string
+      tagField: string
+      tagNoScript: string
+      none: string
+      readOnly: (n: number) => string
     }
   }
 }
@@ -5298,6 +5332,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       merged: (n, target) => `Zlúčené: ${n} ${n <= 4 ? "tagy" : "tagov"} → ${target}.`,
     },
     edit: {
+      settingsSaved: "Nastavenia sú uložené.",
       stepsLabel: "Stav verzie kurzu",
       missingHeading: "Na zverejnenie chýba",
       readyHeading: "Pripravené na zverejnenie",
@@ -5385,6 +5420,38 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       blocksTests: (b, t) => `${b} ${b === 1 ? "blok" : b >= 2 && b <= 4 ? "bloky" : "blokov"}${t ? ` · ${t} ${t === 1 ? "test" : t <= 4 ? "testy" : "testov"}` : ""}`,
       readOnly: n => `Verzia ${n} je zverejnená — časti a bloky sú len na čítanie. Zmeny: Nová verzia.`,
       savedAt: date => `Uložené ${date}`,
+    },
+    settings: {
+      title: "Názov kurzu",
+      keyNote: "Kľúč v adrese sa po vytvorení nemení.",
+      subtitle: "Podnázov",
+      description: "Popis",
+      topic: "Téma",
+      language: "Jazyk obsahu",
+      languageNote: "Kurz v inom jazyku je iný kurz.",
+      estimate: "Odhad času (minúty)",
+      smartTags: "smart:tagy",
+      groupFlow: "Priebeh",
+      sequential: "Časti idú postupne",
+      sequentialNote: "Ďalšia časť sa otvorí až po hotovej predošlej povinnej.",
+      openEnrollment: "Otvorený na zápis",
+      openEnrollmentNote: "Kurz sa ponúkne každému v organizácii v „Na zápis“.",
+      issuesCertificate: "Vydáva certifikát",
+      signerName: "Podpisuje za vydavateľa — meno",
+      signerRole: "Funkcia",
+      groupLegal: "Právny základ",
+      legalNote: "Postup, pokusy a výsledky kurzu sú osobné údaje — bez právneho základu sa kurz nezverejní.",
+      legalNone: "— vyberte —",
+      save: "Uložiť nastavenia",
+      tagPlaceholder: "Kľúč: Hodnota",
+      tagNewKey: "Nový kľúč „{k}“",
+      tagNewValue: "Nová hodnota „{v}“",
+      tagRemove: "Odobrať {t}",
+      tagValues: "hodnoty: {n}",
+      tagField: "smart:tagy kurzu",
+      tagNoScript: "Jeden smart:tag na riadok v tvare Kľúč: Hodnota.",
+      none: "—",
+      readOnly: n => `Verzia ${n} je zverejnená — nastavenia sú len na čítanie. Zmeny: Nová verzia.`,
     },
   },
   },
@@ -8029,6 +8096,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       merged: (n, target) => `Sloučeno: ${n} ${n <= 4 ? "tagy" : "tagů"} → ${target}.`,
     },
     edit: {
+      settingsSaved: "Nastavení jsou uložená.",
       stepsLabel: "Stav verze kurzu",
       missingHeading: "Ke zveřejnění chybí",
       readyHeading: "Připraveno ke zveřejnění",
@@ -8116,6 +8184,38 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       blocksTests: (b, t) => `${b} ${b === 1 ? "blok" : b >= 2 && b <= 4 ? "bloky" : "bloků"}${t ? ` · ${t} ${t === 1 ? "test" : t <= 4 ? "testy" : "testů"}` : ""}`,
       readOnly: n => `Verze ${n} je zveřejněná — části a bloky jsou jen ke čtení. Změny: Nová verze.`,
       savedAt: date => `Uloženo ${date}`,
+    },
+    settings: {
+      title: "Název kurzu",
+      keyNote: "Klíč v adrese se po vytvoření nemění.",
+      subtitle: "Podtitul",
+      description: "Popis",
+      topic: "Téma",
+      language: "Jazyk obsahu",
+      languageNote: "Kurz v jiném jazyce je jiný kurz.",
+      estimate: "Odhad času (minuty)",
+      smartTags: "smart:tagy",
+      groupFlow: "Průběh",
+      sequential: "Části jdou postupně",
+      sequentialNote: "Další část se otevře až po hotové předchozí povinné.",
+      openEnrollment: "Otevřený k zápisu",
+      openEnrollmentNote: "Kurz se nabídne každému v organizaci v „K zápisu“.",
+      issuesCertificate: "Vydává certifikát",
+      signerName: "Podepisuje za vydavatele — jméno",
+      signerRole: "Funkce",
+      groupLegal: "Právní základ",
+      legalNote: "Postup, pokusy a výsledky kurzu jsou osobní údaje — bez právního základu se kurz nezveřejní.",
+      legalNone: "— vyberte —",
+      save: "Uložit nastavení",
+      tagPlaceholder: "Klíč: Hodnota",
+      tagNewKey: "Nový klíč „{k}“",
+      tagNewValue: "Nová hodnota „{v}“",
+      tagRemove: "Odebrat {t}",
+      tagValues: "hodnoty: {n}",
+      tagField: "smart:tagy kurzu",
+      tagNoScript: "Jeden smart:tag na řádek ve tvaru Klíč: Hodnota.",
+      none: "—",
+      readOnly: n => `Verze ${n} je zveřejněná — nastavení jsou jen ke čtení. Změny: Nová verze.`,
     },
   },
   },
@@ -10746,6 +10846,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       merged: (n, target) => `Merged: ${n} tags → ${target}.`,
     },
     edit: {
+      settingsSaved: "The settings have been saved.",
       stepsLabel: "Course version status",
       missingHeading: "Missing before publishing",
       readyHeading: "Ready to publish",
@@ -10833,6 +10934,38 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       blocksTests: (b, t) => `${b} block${b === 1 ? "" : "s"}${t ? ` · ${t} test${t === 1 ? "" : "s"}` : ""}`,
       readOnly: n => `Version ${n} is published — parts and blocks are read-only. To change them: New version.`,
       savedAt: date => `Saved ${date}`,
+    },
+    settings: {
+      title: "Course title",
+      keyNote: "The key in the address does not change after creation.",
+      subtitle: "Subtitle",
+      description: "Description",
+      topic: "Topic",
+      language: "Content language",
+      languageNote: "A course in another language is a different course.",
+      estimate: "Estimated time (minutes)",
+      smartTags: "smart:tags",
+      groupFlow: "Flow",
+      sequential: "Parts go in sequence",
+      sequentialNote: "The next part opens only after the previous required one is done.",
+      openEnrollment: "Open for enrolment",
+      openEnrollmentNote: "The course is offered to everyone in the organisation under “To start”.",
+      issuesCertificate: "Issues a certificate",
+      signerName: "Signs for the issuer — name",
+      signerRole: "Position",
+      groupLegal: "Legal basis",
+      legalNote: "Course progress, attempts and results are personal data — without a legal basis the course cannot be published.",
+      legalNone: "— choose —",
+      save: "Save settings",
+      tagPlaceholder: "Key: Value",
+      tagNewKey: "New key “{k}”",
+      tagNewValue: "New value “{v}”",
+      tagRemove: "Remove {t}",
+      tagValues: "values: {n}",
+      tagField: "Course smart:tags",
+      tagNoScript: "One smart:tag per line as Key: Value.",
+      none: "—",
+      readOnly: n => `Version ${n} is published — settings are read-only. To change them: New version.`,
     },
   },
   },

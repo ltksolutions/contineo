@@ -89,23 +89,27 @@ export async function createCourse(input: NewCourse): Promise<Course> {
 }
 
 /** Čo sa dá meniť na koncepte. Stav, číslo a údaje o zverejnení nie. */
-export type DraftPatch = Partial<Pick<CourseVersion,
+type DraftFields = Pick<CourseVersion,
   "title" | "subtitle" | "description" | "estimatedMinutes" | "sequential" | "parts" |
-  "issuesCertificate" | "issuer" | "signer" | "legalBasisKey" | "legalBasisLabel" | "changeNote">>
+  "issuesCertificate" | "issuer" | "signer" | "legalBasisKey" | "legalBasisLabel" | "changeNote">
+/** `undefined` = nemeniť, `null` = odstrániť pole (napr. podnázov, vydavateľ). */
+export type DraftPatch = { [K in keyof DraftFields]?: DraftFields[K] | null }
 
 export async function saveDraft(companyCode: string, key: string, patch: DraftPatch, actor: string): Promise<void> {
   const set: Record<string, unknown> = {}
+  const unset: Record<string, ""> = {}
   for (const [field, value] of Object.entries(patch)) {
-    if (value !== undefined) set[`versions.$[d].${field}`] = value
+    if (value === null) unset[`versions.$[d].${field}`] = ""
+    else if (value !== undefined) set[`versions.$[d].${field}`] = value
   }
-  if (Object.keys(set).length === 0) return
+  if (Object.keys(set).length === 0 && Object.keys(unset).length === 0) return
   const at = new Date()
   set["versions.$[d].updatedAt"] = at
   set["versions.$[d].updatedBy"] = actor
   set.updatedAt = at
   const r = await (await courses()).updateOne(
     { companyCode, key, "versions.state": "draft" },
-    { $set: set },
+    { $set: set, ...(Object.keys(unset).length ? { $unset: unset } : {}) },
     { arrayFilters: [{ "d.state": "draft" }] },
   )
   if (r.matchedCount === 0) {
@@ -117,7 +121,7 @@ export async function saveDraft(companyCode: string, key: string, patch: DraftPa
 export async function saveCourseSettings(
   companyCode: string,
   key: string,
-  change: { topicKey?: string; topicLabel?: string; smartTags?: SmartTag[]; openEnrollment?: boolean },
+  change: { topicKey?: string; topicLabel?: string; smartTags?: SmartTag[]; openEnrollment?: boolean; language?: string },
   actor: string,
 ): Promise<void> {
   const set: Record<string, unknown> = { updatedAt: new Date() }

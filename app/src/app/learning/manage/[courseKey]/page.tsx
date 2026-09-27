@@ -7,7 +7,8 @@
  * video nahraté alebo externé). Meniť sa dá len koncept — zverejnená verzia
  * je len na čítanie (D118), zmena = „Nová verzia".
  *
- * Záložky Nastavenia a Zapísaní pribudnú v ďalších PR tohto rámu.
+ * Záložka Nastavenia: polia verzie, téma, smart:tagy (`SmartTagInput`),
+ * priebeh a právny základ. Zapísaní pribudnú v ďalšom PR tohto rámu.
  */
 
 import Link from "next/link"
@@ -27,12 +28,18 @@ import FlowSteps from "@/components/FlowSteps"
 import SubmitButton from "@/components/SubmitButton"
 import Select from "@/components/Select"
 import CourseMediaUpload from "@/components/CourseMediaUpload"
+import SmartTagInput from "@/components/SmartTagInput"
+import { topicOptions } from "@/lib/learningTopics"
+import { smartTagUsage } from "@/lib/smartTagsDb"
+import { legalBasisOptions } from "@/lib/legalBases"
+import { UI_LANGUAGES } from "@/lib/i18n"
+import type { Tenant } from "@/lib/tenants"
 import { normalizeLayout } from "@/lib/appNav"
 import { normalizeQuery, type RawQuery } from "@/lib/urlParams"
 import { dictionary, formatDate, type UiLanguage } from "@/lib/i18n"
 import {
   addBlockAction, addPartAction, archiveAction, moveBlockAction, movePartAction, newVersionAction,
-  publishAction, removeBlockAction, removePartAction, updateBlockAction, updatePartAction,
+  publishAction, removeBlockAction, removePartAction, saveSettingsAction, updateBlockAction, updatePartAction,
 } from "./actions"
 
 export const dynamic = "force-dynamic"
@@ -65,6 +72,8 @@ export default async function ManageCoursePage({ params, searchParams }: {
   const stats = (await courseStats(ctx.person.companyCode, [course])).get(course.key) ?? { enrolled: 0, completed: 0 }
   const part = q.part ? shown.parts.find(p => p.key === q.part) ?? null : null
   const docs = part && draft && q.add === "document" ? await documentChoices(ctx.person.companyCode) : []
+  const tab = q.tab === "settings" ? "settings" : "parts"
+  const usage = tab === "settings" ? await smartTagUsage(ctx.person.companyCode) : []
 
   return (
     <AppShell layout={normalizeLayout(q.layout)} language={language}>
@@ -80,14 +89,21 @@ export default async function ManageCoursePage({ params, searchParams }: {
         <StatusCard course={course} draft={draft} published={published} latest={latest} inProgress={stats.enrolled - stats.completed} te={te} language={language} />
 
         <nav className="tabs" aria-label={t.manage.tabsLabel}>
-          <TabLink href={`${base}?tab=parts`} active>{te.tabParts}</TabLink>
+          <TabLink href={`${base}?tab=parts`} active={tab === "parts"}>{te.tabParts}</TabLink>
+          <TabLink href={`${base}?tab=settings`} active={tab === "settings"}>{te.tabSettings}</TabLink>
         </nav>
 
         <div className="mc-body">
-          {!draft && <p className="mc-ro">{te.readOnly(shown.version)}</p>}
-          {part
-            ? <PartDetail course={course} version={shown} part={part} editable={Boolean(draft)} q={q} docs={docs} te={te} language={language} />
-            : <PartList course={course} version={shown} editable={Boolean(draft)} te={te} />}
+          {tab === "settings" ? (
+            <SettingsTab course={course} version={shown} editable={Boolean(draft)} tenant={ctx.tenant} usage={usage} language={language} />
+          ) : (
+            <>
+              {!draft && <p className="mc-ro">{te.readOnly(shown.version)}</p>}
+              {part
+                ? <PartDetail course={course} version={shown} part={part} editable={Boolean(draft)} q={q} docs={docs} te={te} language={language} />
+                : <PartList course={course} version={shown} editable={Boolean(draft)} te={te} />}
+            </>
+          )}
         </div>
       </div>
     </AppShell>
@@ -387,5 +403,84 @@ function PartDetail({ course, version, part, editable, q, docs, te, language }: 
         </section>
       </div>
     </div>
+  )
+}
+
+function SettingsTab({ course, version, editable, tenant, usage, language }: {
+  course: Course
+  version: CourseVersion
+  editable: boolean
+  tenant: Tenant
+  usage: Awaited<ReturnType<typeof smartTagUsage>>
+  language: UiLanguage
+}) {
+  const d = dictionary(language)
+  const ts = d.learning.settings
+  const tc = d.learning.course
+  const tm = d.learning.manage
+  const topics = topicOptions(tenant)
+  // Vyradená téma kurzu zostáva v ponuke, kým ju človek nezmení.
+  const topicList = topics.some(x => x.key === course.topicKey) ? topics : [{ key: course.topicKey, label: course.topicLabel }, ...topics]
+  const legal = legalBasisOptions(tenant)
+  const langName = (l: string) => d.people.languages[l] ?? l
+
+  if (!editable) {
+    const rows: [string, string][] = [
+      [ts.title, version.title], [ts.subtitle, version.subtitle ?? ts.none], [ts.topic, course.topicLabel],
+      [ts.language, langName(course.language)], [ts.estimate, version.estimatedMinutes ? String(version.estimatedMinutes) : ts.none],
+      [ts.smartTags, course.smartTags.map(x => x.label).join(", ") || ts.none],
+      [ts.sequential, version.sequential ? tc.yes : tc.no], [ts.openEnrollment, course.openEnrollment ? tc.yes : tc.no],
+      [ts.issuesCertificate, version.issuesCertificate ? tc.yes : tc.no], [ts.groupLegal, version.legalBasisLabel ?? ts.none],
+    ]
+    return (
+      <>
+        <p className="mc-ro">{ts.readOnly(version.version)}</p>
+        <dl className="card kv mc-kv">{rows.map(([k, v]) => <div key={k} className="mc-kv-row"><dt>{k}</dt><dd>{v}</dd></div>)}</dl>
+      </>
+    )
+  }
+
+  return (
+    <form action={saveSettingsAction} className="card mc-settings">
+      <input type="hidden" name="courseKey" value={course.key} />
+      <label className="field"><span className="field-label">{ts.title}</span><input className="field-input" name="title" defaultValue={version.title} required /><span className="quiet field-hint">{ts.keyNote} <code>{course.key}</code></span></label>
+      <label className="field"><span className="field-label">{ts.subtitle}</span><input className="field-input" name="subtitle" defaultValue={version.subtitle ?? ""} /></label>
+      <label className="field"><span className="field-label">{ts.description}</span><textarea className="field-input" name="description" rows={5} defaultValue={version.description ?? ""} /></label>
+      <div className="mc-grid2">
+        <label className="field"><span className="field-label">{ts.topic}</span><Select name="topicKey" required initial={course.topicKey} options={topicList.map(x => ({ value: x.key, label: x.label }))} fieldLabel={ts.topic} language={language} /></label>
+        <label className="field"><span className="field-label">{ts.language}</span><Select name="language" initial={course.language} options={UI_LANGUAGES.map(l => ({ value: l, label: langName(l) }))} fieldLabel={ts.language} language={language} /><span className="quiet field-hint">{ts.languageNote}</span></label>
+      </div>
+      <label className="field mc-minutes"><span className="field-label">{ts.estimate}</span><input className="field-input" name="estimatedMinutes" type="number" min="1" defaultValue={version.estimatedMinutes ?? ""} /></label>
+      <div className="field">
+        <span className="field-label">{ts.smartTags}</span>
+        <SmartTagInput
+          name="smartTags"
+          initial={course.smartTags.map(x => x.label)}
+          suggestions={usage.map(u => ({ key: u.key, value: u.value, label: u.label, usage: tm.usage(u.courses, u.questions, u.tests) }))}
+          labels={{ placeholder: ts.tagPlaceholder, newKey: ts.tagNewKey, newValue: ts.tagNewValue, remove: ts.tagRemove, values: ts.tagValues, field: ts.tagField, noScript: ts.tagNoScript }}
+        />
+      </div>
+
+      <fieldset className="mc-group">
+        <legend className="field-label">{ts.groupFlow}</legend>
+        <label className="mc-check"><input type="checkbox" name="sequential" value="1" defaultChecked={version.sequential} /> {ts.sequential}</label>
+        <p className="quiet mc-note">{ts.sequentialNote}</p>
+        <label className="mc-check"><input type="checkbox" name="openEnrollment" value="1" defaultChecked={course.openEnrollment} /> {ts.openEnrollment}</label>
+        <p className="quiet mc-note">{ts.openEnrollmentNote}</p>
+        <label className="mc-check"><input type="checkbox" name="issuesCertificate" value="1" defaultChecked={version.issuesCertificate} /> {ts.issuesCertificate}</label>
+        <div className="mc-grid2">
+          <label className="field"><span className="field-label">{ts.signerName}</span><input className="field-input" name="signerName" defaultValue={version.signer?.name ?? tenant.certificateSigner?.name ?? ""} /></label>
+          <label className="field"><span className="field-label">{ts.signerRole}</span><input className="field-input" name="signerRole" defaultValue={version.signer?.role ?? tenant.certificateSigner?.role ?? ""} /></label>
+        </div>
+      </fieldset>
+
+      <fieldset className="mc-group">
+        <legend className="field-label">{ts.groupLegal}</legend>
+        <p className="quiet mc-note">{ts.legalNote}</p>
+        <Select name="legalBasisKey" initial={version.legalBasisKey ?? ""} options={[{ value: "", label: ts.legalNone }, ...legal.map(o => ({ value: o.key, label: o.label, path: d.responsibility.basisLabel[o.basis] }))]} fieldLabel={ts.groupLegal} language={language} />
+      </fieldset>
+
+      <div className="mg-actions"><SubmitButton className="button">{ts.save}</SubmitButton></div>
+    </form>
   )
 }
