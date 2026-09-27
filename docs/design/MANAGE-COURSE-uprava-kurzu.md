@@ -94,6 +94,13 @@ Nové: `SmartTagInput`, `AddBlockForm`, `.notice--warn`, `.btype`, `.orow`, `.se
 - `part.tests[]`: `{ testKey, testVersion, required }` (zmrazené pri zverejnení).
 - Súhrn prideľovania: počet nových zápisov vs. už zapísaných (odvodené pred odoslaním).
 
+## Rozhodnutia Jána 27. 9. 2026
+
+- **Q1 ✅** „Obnoviť ako novú verziu" pri archivovanom kurze vytvorí koncept
+  z poslednej verzie (`startNewVersion`).
+- **Q2 ✅** Voľba „Trase" ostáva: zapíše ľudí, ktorí trasu majú — ako adresát
+  normy (`Audience` kind `track`). Trasa **z kurzov** zostáva mimo L1–L3.
+
 ## Otázky pre Jána
 
 - **Q1** — „Obnoviť ako novú verziu" pri archivovanom kurze: vytvorí koncept z poslednej verzie (návrh), alebo sa archív nedá vrátiť vôbec?

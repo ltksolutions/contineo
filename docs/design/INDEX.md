@@ -96,11 +96,11 @@ Zadanie: `docs/design/LEARNING-zadanie.md` (a6c7ddc). Spoločné nové triedy
 | 2 | `COURSE-prehlad-kurzu` | `/learning/[courseKey]` | ✅ Q1 rozhodnutá |
 | 3 | `PART-cast-kurzu` | `/learning/[courseKey]/[partKey]` | ✅ Q1, Q2 rozhodnuté |
 | 4 | `MANAGE-sprava-kurzov` | `/learning/manage` | ✅ Q1 rozhodnutá (alternatíva) |
-| 5 | `MANAGE-COURSE-uprava-kurzu` | `/learning/manage/[courseKey]` | hotový, Q1–Q2 otvorené |
+| 5 | `MANAGE-COURSE-uprava-kurzu` | `/learning/manage/[courseKey]` | ✅ Q1, Q2 rozhodnuté |
 | 6 | `TESTS-testy-a-banka` (+ `TESTS-import-otazok-vzor.csv`) | `/learning/tests` | ✅ Q1, Q2 rozhodnuté |
 | 7 | `TEST-ATTEMPT-pokus` | `…/test/[testKey]` | ✅ Q1, Q2 rozhodnuté |
 | 8 | `RESULT-vysledok-pokusu` | `…/[attemptId]/result` | hotový, bez otázok |
-| 9 | `CERTIFICATE-certifikat` | `/learning/[courseKey]/certificate`, `/verify/…`, PDF | hotový, Q1–Q3 otvorené |
+| 9 | `CERTIFICATE-certifikat` | `/learning/[courseKey]/certificate`, `/verify/…`, PDF | ✅ Q1–Q3 rozhodnuté |
 
 ### Pre knižnice L1 (bez obrazoviek) — čo rámy potrebujú od modelu
 

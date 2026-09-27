@@ -186,6 +186,12 @@ export interface Tenant {
    * základov (D92), nie v `codelists`: položka sa nemaže, len vyradí
    * (`retiredAt`), lebo kurzy na ňu odkazujú (a nesú kópiu názvu).
    */
+  /**
+   * Predvolený podpisujúci certifikátov kurzov (rám CERTIFICATE, Q1 ✅) —
+   * kurz ho preberie ako kópiu a smie ho zmeniť.
+   */
+  certificateSigner?: { name: string; role: string }
+
   learningTopics?: { key: string; label: string; retiredAt?: Date | null; createdAt?: Date; createdBy?: string }[]
 
   createdAt?: Date

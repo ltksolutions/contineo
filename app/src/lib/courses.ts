@@ -26,6 +26,17 @@ export interface Issuer {
   kind: "tenant" | "external"
   name: string
   shortName?: string
+  /**
+   * Logo vydavateľa — kópia `branding.logoUrl` v čase vydania. Chýbajúce =
+   * na certifikáte je logo Contineo (rám CERTIFICATE, Ján 27. 9. 2026).
+   */
+  logoUrl?: string
+}
+
+/** Podpisujúci certifikát — meno a funkcia, kópia (nie odkaz na osobu). */
+export interface Signer {
+  name: string
+  role: string
 }
 
 export type VideoSource =
@@ -88,6 +99,12 @@ export interface CourseVersion {
   parts: Part[]
   issuesCertificate: boolean
   issuer?: Issuer
+  /**
+   * Kto podpisuje certifikát za vydavateľa (rám CERTIFICATE, Q1 ✅) — kópia
+   * mena a funkcie; predvolené z `Tenant.certificateSigner`. V PDF je len
+   * meno nad čiarou, nie obrázok podpisu.
+   */
+  signer?: Signer
   /** Právny základ ako pri znení (D92, D121) — pre záznamy o postupe a pokusoch. */
   legalBasisKey?: string
   legalBasisLabel?: string
@@ -228,6 +245,7 @@ export function draftFrom(
     parts: copy.parts.map(p => ({ ...p, tests: p.tests.map(({ testKey, required }) => ({ testKey, required })) })),
     issuesCertificate: copy.issuesCertificate,
     issuer: copy.issuer,
+    signer: copy.signer,
     legalBasisKey: copy.legalBasisKey,
     legalBasisLabel: copy.legalBasisLabel,
     createdAt: next.at,
