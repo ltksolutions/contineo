@@ -2706,6 +2706,142 @@ interface Dictionary {
       assignButton: (n: number) => string
       assigned: (created: number, existing: number) => string
     }
+    /** Testy a banka otázok (rám TESTS). */
+    tests: {
+      tabsLabel: string
+      tabTests: string
+      tabQuestions: string
+      tabResults: string
+      newTest: string
+      testTitle: string
+      testKey: string
+      create: string
+      cancel: string
+      statusAll: string
+      statusReady: string
+      statusDraft: string
+      statusRetired: string
+      tagReady: string
+      tagDraft: string
+      tagShort: string
+      tagRetired: string
+      colTest: string
+      colSections: string
+      colQuestions: string
+      colPassing: string
+      colResponsible: string
+      colStatus: string
+      edit: string
+      nobody: string
+      testsEmpty: string
+      testsEmptyNote: string
+      back: string
+      groupBase: string
+      instructions: string
+      responsibleLegend: string
+      responsibleNote: string
+      noResponsible: string
+      groupSections: string
+      sectionFilter: string
+      sectionCount: string
+      showInBank: string
+      addQuestions: string
+      addSection: string
+      removeSection: string
+      sectionsNote: string
+      groupRules: string
+      passing: string
+      timeLimit: string
+      maxAttempts: string
+      pause: string
+      showAnswers: string
+      showNever: string
+      showAfterSubmit: string
+      showAfterPass: string
+      showAfterLast: string
+      emptyMeansNone: string
+      testTags: string
+      save: string
+      statusCard: string
+      checkResponsible: string
+      checkSections: string
+      checkRules: string
+      statusNote: string
+      usedIn: string
+      usedNone: string
+      retire: string
+      restore: string
+      savedReady: string
+      savedDraft: string
+      newQuestion: string
+      importCsv: string
+      exportCsv: string
+      bankEmpty: string
+      bankEmptyNote: string
+      filterType: string
+      filterStatus: string
+      filterTags: string
+      statusActive: string
+      statusRetiredQ: string
+      clearFilters: string
+      colQuestion: string
+      colType: string
+      colWeight: string
+      questionText: string
+      media: string
+      mediaNote: string
+      removeMedia: string
+      mediaAlt: string
+      answers: string
+      correct: string
+      multipleNote: string
+      trueLabel: string
+      falseLabel: string
+      expected: string
+      alternatives: string
+      shortNote: string
+      explanation: string
+      explanationNote: string
+      weight: string
+      difficulty: string
+      tagsLabel: string
+      tagRequiredNote: string
+      saveQuestion: string
+      retireQ: string
+      restoreQ: string
+      questionSaved: string
+      answerMediaLater: string
+      importHeading: string
+      importNote: string
+      importFile: string
+      importUpload: string
+      importErrorsNote: string
+      colLine: string
+      colColumn: string
+      colProblem: string
+      mediaNoteImport: string
+      importExpired: string
+      templateLink: string
+      noResponsiblePeople: string
+      keyTaken: string
+      up: string
+      down: string
+      required: string
+      optional: string
+      types: { single: string; multiple: string; true_false: string; short_text: string }
+      difficulties: { easy: string; medium: string; hard: string }
+      sectionTitle: (n: number) => string
+      enough: (n: number) => string
+      short: (n: number, missing: number) => string
+      usedRow: (course: string, part: string, required: boolean, version?: number) => string
+      version: (n: number) => string
+      answer: (n: number) => string
+      usage: (tests: number, attempts: number) => string
+      importSummary: (total: number, created: number, updated: number, errors: number) => string
+      newTags: (list: string) => string
+      importRun: (n: number) => string
+      imported: (created: number, updated: number) => string
+    }
   }
 }
 
@@ -5559,6 +5695,141 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       assignButton: n => `Prideliť ${n} ${n === 1 ? "človeku" : "ľuďom"}`,
       assigned: (n, m) => `Zapísaní noví: ${n}, už zapísaní: ${m}.`,
     },
+    tests: {
+      tabsLabel: "Testy",
+      tabTests: "Testy",
+      tabQuestions: "Banka otázok",
+      tabResults: "Výsledky",
+      newTest: "Nový test",
+      testTitle: "Názov testu",
+      testKey: "Kľúč testu",
+      create: "Vytvoriť test",
+      cancel: "Zrušiť",
+      statusAll: "Všetky",
+      statusReady: "Pripravené",
+      statusDraft: "Koncepty",
+      statusRetired: "Vyradené",
+      tagReady: "Pripravený",
+      tagDraft: "Koncept",
+      tagShort: "Nedostatok otázok",
+      tagRetired: "Vyradený",
+      colTest: "Test",
+      colSections: "Sekcie",
+      colQuestions: "Otázok",
+      colPassing: "Hranica",
+      colResponsible: "Zodpovedné osoby",
+      colStatus: "Stav",
+      edit: "Upraviť",
+      nobody: "nikto — nedá sa pripraviť",
+      testsEmpty: "Zatiaľ tu nie je žiadny test.",
+      testsEmptyNote: "Test je recept: sekcie vyberajú otázky z banky podľa smart:tagov.",
+      back: "← Testy",
+      groupBase: "Základ",
+      instructions: "Inštrukcie",
+      responsibleLegend: "Zodpovedné osoby",
+      responsibleNote: "Vidia výsledky svojho testu a smú resetovať pokusy. Personálne oddelenie výsledky nevidí.",
+      noResponsible: "Bez zodpovednej osoby sa test nedá pripraviť.",
+      groupSections: "Sekcie",
+      sectionFilter: "smart:tagy sekcie",
+      sectionCount: "Počet otázok",
+      showInBank: "Zobraziť v banke",
+      addQuestions: "Pridať otázky →",
+      addSection: "Pridať sekciu",
+      removeSection: "Odstrániť",
+      sectionsNote: "Otázky sa losujú pri každom pokuse, odpovede sa miešajú. Rôzne kľúče musia platiť všetky, z hodnôt jedného kľúča stačí jedna.",
+      groupRules: "Pravidlá",
+      passing: "Hranica úspešnosti (%)",
+      timeLimit: "Limit času (minúty)",
+      maxAttempts: "Najviac pokusov",
+      pause: "Pauza medzi pokusmi (minúty)",
+      showAnswers: "Kedy ukázať správne odpovede",
+      showNever: "Nikdy",
+      showAfterSubmit: "Po odovzdaní",
+      showAfterPass: "Po prejdení",
+      showAfterLast: "Po vyčerpaní pokusov",
+      emptyMeansNone: "Prázdne = bez obmedzenia.",
+      testTags: "smart:tagy testu (na hľadanie, losovanie nemenia)",
+      save: "Uložiť",
+      statusCard: "Stav testu",
+      checkResponsible: "Zodpovedné osoby",
+      checkSections: "Každá sekcia má dosť otázok",
+      checkRules: "Pravidlá vyplnené",
+      statusNote: "Hovorí sa to pri uložení, nie pri pokuse.",
+      usedIn: "Použité v",
+      usedNone: "Test zatiaľ nie je v žiadnom kurze.",
+      retire: "Vyradiť test",
+      restore: "Vrátiť test",
+      savedReady: "Test je uložený a pripravený.",
+      savedDraft: "Test je uložený ako koncept — pozrite, čo chýba.",
+      newQuestion: "Nová otázka",
+      importCsv: "Import CSV",
+      exportCsv: "Export CSV",
+      bankEmpty: "Banka otázok je prázdna",
+      bankEmptyNote: "Pridajte otázku alebo nahrajte CSV.",
+      filterType: "Typ",
+      filterStatus: "Stav",
+      filterTags: "smart:tagy",
+      statusActive: "Aktívne",
+      statusRetiredQ: "Vyradené",
+      clearFilters: "Zrušiť filtre",
+      colQuestion: "Otázka",
+      colType: "Typ",
+      colWeight: "Váha",
+      questionText: "Znenie",
+      media: "Obrázky a videá v otázke",
+      mediaNote: "Obrázky a videá sa nahrajú pri uložení otázky.",
+      removeMedia: "Odobrať",
+      mediaAlt: "Popis obrázka (pre nové obrázky)",
+      answers: "Odpovede",
+      correct: "správna",
+      multipleNote: "Študent uvidí vetu „Táto otázka má viac správnych odpovedí“.",
+      trueLabel: "Pravda",
+      falseLabel: "Nepravda",
+      expected: "Očakávaná odpoveď",
+      alternatives: "Aj takto je správne",
+      shortNote: "Porovnáva sa bez diakritiky a veľkosti písmen.",
+      explanation: "Vysvetlenie",
+      explanationNote: "Ukáže sa po odovzdaní, ak to test povoľuje.",
+      weight: "Váha",
+      difficulty: "Obtiažnosť",
+      tagsLabel: "smart:tagy (aspoň jeden)",
+      tagRequiredNote: "Bez smart:tagu otázku žiadny test nevylosuje.",
+      saveQuestion: "Uložiť otázku",
+      retireQ: "Vyradiť",
+      restoreQ: "Vrátiť",
+      questionSaved: "Otázka je uložená.",
+      answerMediaLater: "Obrázky a videá v odpovediach pribudnú v ďalšej úprave.",
+      importHeading: "Import otázok z CSV",
+      importNote: "UTF-8, oddeľovač bodkočiarka, prvý riadok hlavička — stĺpce id, type, text, answer_1 … answer_8, correct, explanation, weight, difficulty, tags.",
+      importFile: "Súbor CSV",
+      importUpload: "Nahrať a skontrolovať",
+      importErrorsNote: "Pri chybe sa neimportuje nič — opravte súbor a nahrajte ho znova.",
+      colLine: "Riadok",
+      colColumn: "Stĺpec",
+      colProblem: "Chyba",
+      mediaNoteImport: "Obrázky a videá sa pridajú pri otázke po importe.",
+      importExpired: "Nahratý súbor už nie je k dispozícii — nahrajte ho znova.",
+      templateLink: "Stiahnuť vzor CSV",
+      noResponsiblePeople: "V organizácii nie je nikto, koho by sa dalo určiť.",
+      keyTaken: "Test s takým kľúčom už existuje.",
+      up: "Posunúť vyššie",
+      down: "Posunúť nižšie",
+      required: "povinný",
+      optional: "nepovinný",
+      types: { single: "Jedna správna", multiple: "Viac správnych", true_false: "Pravda / nepravda", short_text: "Krátky text" },
+      difficulties: { easy: "Ľahká", medium: "Stredná", hard: "Ťažká" },
+      sectionTitle: n => `Sekcia ${n}`,
+      enough: n => `V banke vyhovuje ${n} ${n === 1 ? "otázka" : n >= 2 && n <= 4 ? "otázky" : "otázok"}`,
+      short: (n, missing) => `V banke vyhovuje len ${n} ${n === 1 ? "otázka" : n >= 2 && n <= 4 ? "otázky" : "otázok"} — chýba ${missing}`,
+      usedRow: (course, part, required, v) => `${course} · ${part} · ${required ? "povinný" : "nepovinný"} · verzia testu ${v ?? "—"}`,
+      version: n => `verzia ${n}`,
+      answer: n => `Odpoveď ${n}`,
+      usage: (t, a) => `Použitá v ${t} ${t === 1 ? "teste" : "testoch"} · ${a} ${a === 1 ? "pokus ju cituje" : a >= 2 && a <= 4 ? "pokusy ju citujú" : "pokusov ju cituje"} snímkou`,
+      importSummary: (total, created, updated, errors) => `${total} otázok · ${created} nových · ${updated} úprav · ${errors} ${errors === 1 ? "chyba" : errors >= 2 && errors <= 4 ? "chyby" : "chýb"}`,
+      newTags: list => `Nové smart:tagy: ${list}`,
+      importRun: n => `Importovať ${n} ${n === 1 ? "otázku" : n >= 2 && n <= 4 ? "otázky" : "otázok"}`,
+      imported: (c, u) => `Importované: nových ${c}, upravených ${u}.`,
+    },
   },
   },
 
@@ -8396,6 +8667,141 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       assignButton: n => `Přidělit ${n} ${n === 1 ? "člověku" : "lidem"}`,
       assigned: (n, m) => `Zapsaní noví: ${n}, už zapsaní: ${m}.`,
     },
+    tests: {
+      tabsLabel: "Testy",
+      tabTests: "Testy",
+      tabQuestions: "Banka otázek",
+      tabResults: "Výsledky",
+      newTest: "Nový test",
+      testTitle: "Název testu",
+      testKey: "Klíč testu",
+      create: "Vytvořit test",
+      cancel: "Zrušit",
+      statusAll: "Všechny",
+      statusReady: "Připravené",
+      statusDraft: "Koncepty",
+      statusRetired: "Vyřazené",
+      tagReady: "Připravený",
+      tagDraft: "Koncept",
+      tagShort: "Nedostatek otázek",
+      tagRetired: "Vyřazený",
+      colTest: "Test",
+      colSections: "Sekce",
+      colQuestions: "Otázek",
+      colPassing: "Hranice",
+      colResponsible: "Odpovědné osoby",
+      colStatus: "Stav",
+      edit: "Upravit",
+      nobody: "nikdo — nelze připravit",
+      testsEmpty: "Zatím tu není žádný test.",
+      testsEmptyNote: "Test je recept: sekce vybírají otázky z banky podle smart:tagů.",
+      back: "← Testy",
+      groupBase: "Základ",
+      instructions: "Instrukce",
+      responsibleLegend: "Odpovědné osoby",
+      responsibleNote: "Vidí výsledky svého testu a smějí resetovat pokusy. Personální oddělení výsledky nevidí.",
+      noResponsible: "Bez odpovědné osoby test nelze připravit.",
+      groupSections: "Sekce",
+      sectionFilter: "smart:tagy sekce",
+      sectionCount: "Počet otázek",
+      showInBank: "Zobrazit v bance",
+      addQuestions: "Přidat otázky →",
+      addSection: "Přidat sekci",
+      removeSection: "Odstranit",
+      sectionsNote: "Otázky se losují při každém pokusu, odpovědi se míchají. Různé klíče musí platit všechny, z hodnot jednoho klíče stačí jedna.",
+      groupRules: "Pravidla",
+      passing: "Hranice úspěšnosti (%)",
+      timeLimit: "Časový limit (minuty)",
+      maxAttempts: "Nejvýše pokusů",
+      pause: "Pauza mezi pokusy (minuty)",
+      showAnswers: "Kdy ukázat správné odpovědi",
+      showNever: "Nikdy",
+      showAfterSubmit: "Po odevzdání",
+      showAfterPass: "Po složení",
+      showAfterLast: "Po vyčerpání pokusů",
+      emptyMeansNone: "Prázdné = bez omezení.",
+      testTags: "smart:tagy testu (pro hledání, losování nemění)",
+      save: "Uložit",
+      statusCard: "Stav testu",
+      checkResponsible: "Odpovědné osoby",
+      checkSections: "Každá sekce má dost otázek",
+      checkRules: "Pravidla vyplněna",
+      statusNote: "Říká se to při uložení, ne při pokusu.",
+      usedIn: "Použito v",
+      usedNone: "Test zatím není v žádném kurzu.",
+      retire: "Vyřadit test",
+      restore: "Vrátit test",
+      savedReady: "Test je uložený a připravený.",
+      savedDraft: "Test je uložený jako koncept — podívejte se, co chybí.",
+      newQuestion: "Nová otázka",
+      importCsv: "Import CSV",
+      exportCsv: "Export CSV",
+      bankEmpty: "Banka otázek je prázdná",
+      bankEmptyNote: "Přidejte otázku nebo nahrajte CSV.",
+      filterType: "Typ",
+      filterStatus: "Stav",
+      filterTags: "smart:tagy",
+      statusActive: "Aktivní",
+      statusRetiredQ: "Vyřazené",
+      clearFilters: "Zrušit filtry",
+      colQuestion: "Otázka",
+      colType: "Typ",
+      colWeight: "Váha",
+      questionText: "Znění",
+      media: "Obrázky a videa v otázce",
+      mediaNote: "Obrázky a videa se nahrají při uložení otázky.",
+      removeMedia: "Odebrat",
+      mediaAlt: "Popis obrázku (pro nové obrázky)",
+      answers: "Odpovědi",
+      correct: "správná",
+      multipleNote: "Student uvidí větu „Tato otázka má více správných odpovědí“.",
+      trueLabel: "Pravda",
+      falseLabel: "Nepravda",
+      expected: "Očekávaná odpověď",
+      alternatives: "I takto je správně",
+      shortNote: "Porovnává se bez diakritiky a velikosti písmen.",
+      explanation: "Vysvětlení",
+      explanationNote: "Ukáže se po odevzdání, pokud to test dovoluje.",
+      weight: "Váha",
+      difficulty: "Obtížnost",
+      tagsLabel: "smart:tagy (alespoň jeden)",
+      tagRequiredNote: "Bez smart:tagu otázku žádný test nevylosuje.",
+      saveQuestion: "Uložit otázku",
+      retireQ: "Vyřadit",
+      restoreQ: "Vrátit",
+      questionSaved: "Otázka je uložená.",
+      answerMediaLater: "Obrázky a videa v odpovědích přibudou v další úpravě.",
+      importHeading: "Import otázek z CSV",
+      importNote: "UTF-8, oddělovač středník, první řádek hlavička — sloupce id, type, text, answer_1 … answer_8, correct, explanation, weight, difficulty, tags.",
+      importFile: "Soubor CSV",
+      importUpload: "Nahrát a zkontrolovat",
+      importErrorsNote: "Při chybě se neimportuje nic — opravte soubor a nahrajte ho znovu.",
+      colLine: "Řádek",
+      colColumn: "Sloupec",
+      colProblem: "Chyba",
+      mediaNoteImport: "Obrázky a videa se přidají u otázky po importu.",
+      importExpired: "Nahraný soubor už není k dispozici — nahrajte ho znovu.",
+      templateLink: "Stáhnout vzor CSV",
+      noResponsiblePeople: "V organizaci není nikdo, koho by šlo určit.",
+      keyTaken: "Test s takovým klíčem už existuje.",
+      up: "Posunout výš",
+      down: "Posunout níž",
+      required: "povinný",
+      optional: "nepovinný",
+      types: { single: "Jedna správná", multiple: "Více správných", true_false: "Pravda / nepravda", short_text: "Krátký text" },
+      difficulties: { easy: "Lehká", medium: "Střední", hard: "Těžká" },
+      sectionTitle: n => `Sekce ${n}`,
+      enough: n => `V bance vyhovuje ${n} ${n === 1 ? "otázka" : n >= 2 && n <= 4 ? "otázky" : "otázek"}`,
+      short: (n, missing) => `V bance vyhovuje jen ${n} ${n === 1 ? "otázka" : n >= 2 && n <= 4 ? "otázky" : "otázek"} — chybí ${missing}`,
+      usedRow: (course, part, required, v) => `${course} · ${part} · ${required ? "povinný" : "nepovinný"} · verze testu ${v ?? "—"}`,
+      version: n => `verze ${n}`,
+      answer: n => `Odpověď ${n}`,
+      usage: (t, a) => `Použita v ${t} ${t === 1 ? "testu" : "testech"} · ${a} ${a === 1 ? "pokus ji cituje" : a >= 2 && a <= 4 ? "pokusy ji citují" : "pokusů ji cituje"} snímkem`,
+      importSummary: (total, created, updated, errors) => `${total} otázek · ${created} nových · ${updated} úprav · ${errors} ${errors === 1 ? "chyba" : errors >= 2 && errors <= 4 ? "chyby" : "chyb"}`,
+      newTags: list => `Nové smart:tagy: ${list}`,
+      importRun: n => `Importovat ${n} ${n === 1 ? "otázku" : n >= 2 && n <= 4 ? "otázky" : "otázek"}`,
+      imported: (c, u) => `Importováno: nových ${c}, upravených ${u}.`,
+    },
   },
   },
 
@@ -11218,6 +11624,141 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       summary: (n, v, m) => `${n} ${n === 1 ? "person" : "people"} will be enrolled in version ${v}${m ? ` · ${m} already enrolled, nothing changes for them` : ""}.`,
       assignButton: n => `Assign to ${n} ${n === 1 ? "person" : "people"}`,
       assigned: (n, m) => `Newly enrolled: ${n}, already enrolled: ${m}.`,
+    },
+    tests: {
+      tabsLabel: "Tests",
+      tabTests: "Tests",
+      tabQuestions: "Question bank",
+      tabResults: "Results",
+      newTest: "New test",
+      testTitle: "Test title",
+      testKey: "Test key",
+      create: "Create test",
+      cancel: "Cancel",
+      statusAll: "All",
+      statusReady: "Ready",
+      statusDraft: "Drafts",
+      statusRetired: "Retired",
+      tagReady: "Ready",
+      tagDraft: "Draft",
+      tagShort: "Not enough questions",
+      tagRetired: "Retired",
+      colTest: "Test",
+      colSections: "Sections",
+      colQuestions: "Questions",
+      colPassing: "Pass mark",
+      colResponsible: "Responsible people",
+      colStatus: "Status",
+      edit: "Edit",
+      nobody: "nobody — cannot be made ready",
+      testsEmpty: "There are no tests yet.",
+      testsEmptyNote: "A test is a recipe: sections draw questions from the bank by smart:tags.",
+      back: "← Tests",
+      groupBase: "Basics",
+      instructions: "Instructions",
+      responsibleLegend: "Responsible people",
+      responsibleNote: "They see the results of their test and may reset attempts. HR does not see results.",
+      noResponsible: "Without a responsible person the test cannot be made ready.",
+      groupSections: "Sections",
+      sectionFilter: "Section smart:tags",
+      sectionCount: "Number of questions",
+      showInBank: "Show in bank",
+      addQuestions: "Add questions →",
+      addSection: "Add section",
+      removeSection: "Remove",
+      sectionsNote: "Questions are drawn for every attempt and answers are shuffled. Different keys must all match; within one key, any value is enough.",
+      groupRules: "Rules",
+      passing: "Pass mark (%)",
+      timeLimit: "Time limit (minutes)",
+      maxAttempts: "Maximum attempts",
+      pause: "Pause between attempts (minutes)",
+      showAnswers: "When to show correct answers",
+      showNever: "Never",
+      showAfterSubmit: "After submitting",
+      showAfterPass: "After passing",
+      showAfterLast: "After the last attempt",
+      emptyMeansNone: "Empty = no limit.",
+      testTags: "Test smart:tags (for search, they do not affect drawing)",
+      save: "Save",
+      statusCard: "Test status",
+      checkResponsible: "Responsible people",
+      checkSections: "Every section has enough questions",
+      checkRules: "Rules filled in",
+      statusNote: "This is checked on save, not during an attempt.",
+      usedIn: "Used in",
+      usedNone: "The test is not used in any course yet.",
+      retire: "Retire test",
+      restore: "Restore test",
+      savedReady: "The test is saved and ready.",
+      savedDraft: "The test is saved as a draft — see what is missing.",
+      newQuestion: "New question",
+      importCsv: "Import CSV",
+      exportCsv: "Export CSV",
+      bankEmpty: "The question bank is empty",
+      bankEmptyNote: "Add a question or upload a CSV.",
+      filterType: "Type",
+      filterStatus: "Status",
+      filterTags: "smart:tags",
+      statusActive: "Active",
+      statusRetiredQ: "Retired",
+      clearFilters: "Clear filters",
+      colQuestion: "Question",
+      colType: "Type",
+      colWeight: "Weight",
+      questionText: "Text",
+      media: "Images and videos in the question",
+      mediaNote: "Images and videos are uploaded when the question is saved.",
+      removeMedia: "Remove",
+      mediaAlt: "Image description (for new images)",
+      answers: "Answers",
+      correct: "correct",
+      multipleNote: "The student will see “This question has more than one correct answer”.",
+      trueLabel: "True",
+      falseLabel: "False",
+      expected: "Expected answer",
+      alternatives: "Also correct",
+      shortNote: "Compared without diacritics and case.",
+      explanation: "Explanation",
+      explanationNote: "Shown after submitting, if the test allows it.",
+      weight: "Weight",
+      difficulty: "Difficulty",
+      tagsLabel: "smart:tags (at least one)",
+      tagRequiredNote: "Without a smart:tag no test will draw the question.",
+      saveQuestion: "Save question",
+      retireQ: "Retire",
+      restoreQ: "Restore",
+      questionSaved: "The question has been saved.",
+      answerMediaLater: "Images and videos in answers arrive in a later update.",
+      importHeading: "Import questions from CSV",
+      importNote: "UTF-8, semicolon separator, header in the first row — columns id, type, text, answer_1 … answer_8, correct, explanation, weight, difficulty, tags.",
+      importFile: "CSV file",
+      importUpload: "Upload and check",
+      importErrorsNote: "If there is any error nothing is imported — fix the file and upload it again.",
+      colLine: "Row",
+      colColumn: "Column",
+      colProblem: "Error",
+      mediaNoteImport: "Images and videos are added to the question after import.",
+      importExpired: "The uploaded file is no longer available — upload it again.",
+      templateLink: "Download CSV template",
+      noResponsiblePeople: "There is no one in the organisation who could be assigned.",
+      keyTaken: "A test with this key already exists.",
+      up: "Move up",
+      down: "Move down",
+      required: "required",
+      optional: "optional",
+      types: { single: "Single choice", multiple: "Multiple choice", true_false: "True / false", short_text: "Short text" },
+      difficulties: { easy: "Easy", medium: "Medium", hard: "Hard" },
+      sectionTitle: n => `Section ${n}`,
+      enough: n => `${n} question${n === 1 ? "" : "s"} in the bank match`,
+      short: (n, missing) => `Only ${n} question${n === 1 ? "" : "s"} in the bank match — ${missing} missing`,
+      usedRow: (course, part, required, v) => `${course} · ${part} · ${required ? "required" : "optional"} · test version ${v ?? "—"}`,
+      version: n => `version ${n}`,
+      answer: n => `Answer ${n}`,
+      usage: (t, a) => `Used in ${t} test${t === 1 ? "" : "s"} · ${a} attempt${a === 1 ? " cites" : "s cite"} it as a snapshot`,
+      importSummary: (total, created, updated, errors) => `${total} questions · ${created} new · ${updated} updates · ${errors} error${errors === 1 ? "" : "s"}`,
+      newTags: list => `New smart:tags: ${list}`,
+      importRun: n => `Import ${n} question${n === 1 ? "" : "s"}`,
+      imported: (c, u) => `Imported: ${c} new, ${u} updated.`,
     },
   },
   },

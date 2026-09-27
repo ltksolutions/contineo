@@ -24,6 +24,9 @@ export default function ResponsiblePicker({
   initial,
   required = true,
   note,
+  multiple = false,
+  initialMany,
+  legend,
 }: {
   people: ResponsibleChoice[]
   language: UiLanguage
@@ -35,18 +38,29 @@ export default function ResponsiblePicker({
   required?: boolean
   /** Vlastná nápoveda namiesto všeobecnej. */
   note?: string
+  /**
+   * Viac osôb (1..n) — zaškrtávacie políčka namiesto prepínačov. Test môže
+   * mať viac zodpovedných osôb za rôzne oblasti (ADR-018, D121). Nič nie je
+   * predvolené; povinnosť aspoň jednej stráži server.
+   */
+  multiple?: boolean
+  initialMany?: string[]
+  /** Vlastný nadpis skupiny. */
+  legend?: string
 }) {
   const t = dictionary(language).responsibility
   const choices = exclude ? people.filter(p => p.id !== exclude) : people
   return (
     <fieldset className="hr-group">
-      <legend className="field-label">{t.responsiblePerson}</legend>
+      <legend className="field-label">{legend ?? t.responsiblePerson}</legend>
       <span className="quiet field-hint">{note ?? t.responsibleNote}</span>
       <div className="approval-people">
         {choices.map(p => (
           <label key={p.id} className="approval-person">
-            <input type="radio" name="responsiblePersonId" value={p.id} required={required}
-                   defaultChecked={p.id === initial} />
+            {multiple
+              ? <input type="checkbox" name="responsiblePersonId" value={p.id} defaultChecked={initialMany?.includes(p.id)} />
+              : <input type="radio" name="responsiblePersonId" value={p.id} required={required}
+                       defaultChecked={p.id === initial} />}
             <span>
               <span className="approval-person-name">{p.fullName}</span>
               <span className="quiet approval-person-meta">

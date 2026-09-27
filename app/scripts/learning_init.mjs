@@ -68,6 +68,13 @@ const PLAN = [
     ],
   },
   {
+    collection: "question_imports",
+    indexes: [
+      { key: { expiresAt: 1 }, opts: { expireAfterSeconds: 0, name: "expires_ttl" },
+        why: "dočasný súbor importu CSV zmizne po 24 h" },
+    ],
+  },
+  {
     collection: "tests",
     indexes: [
       { key: { companyCode: 1, key: 1 }, opts: { unique: true, name: "tenant_test_unique" },
