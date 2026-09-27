@@ -27,6 +27,9 @@ export async function enrolAction(fd: FormData) {
     message = errorText(e, ctx.person.language)
     error = true
   }
+  // Späť tam, odkiaľ sa zapisovalo — len v rámci modulu, nikdy inam.
+  const raw = String(fd.get("back") ?? "")
+  const back = /^\/learning(\/[a-z0-9-]+)?$/.test(raw) ? raw : "/learning"
   revalidatePath("/learning")
-  redirect(`/learning?msg=${encodeURIComponent(message)}${error ? "&error=1" : ""}`)
+  redirect(`${back}?msg=${encodeURIComponent(message)}${error ? "&error=1" : ""}`)
 }

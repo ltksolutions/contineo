@@ -2415,6 +2415,50 @@ interface Dictionary {
     filterNote: string
     enrolled: (title: string) => string
     removeFilter: (name: string) => string
+    /** Prehľad kurzu (rám COURSE). */
+    course: {
+      yourProgress: string
+      countOf: (done: number, total: number) => string
+      requiredParts: string
+      startCourse: string
+      continueHere: string
+      kvVersion: string
+      kvEnrolled: string
+      enrolledVia: { assignment: string; self: string }
+      kvLanguage: string
+      kvEstimate: string
+      kvCertificate: string
+      kvOrder: string
+      yes: string
+      no: string
+      orderSequential: string
+      orderAny: string
+      aboutCourse: string
+      partsHeading: string
+      partsNoteSequential: string
+      partsNoteAny: string
+      partRequired: string
+      partOptional: string
+      blocks: (n: number) => string
+      blockTypes: { image: string; gallery: string; document: string; video: string; videoExternal: string }
+      mustWatchVideo: (minutes: number) => string
+      partDoneOn: (date: string) => string
+      partAvailable: string
+      partLockedAfter: (n: number) => string
+      partInProgress: string
+      partInProgressVideo: (percent: number) => string
+      testLabel: string
+      testRequired: string
+      testOptional: string
+      testNotStarted: string
+      testPassed: string
+      noticeDone: (date: string) => string
+      noticeNewVersion: (version: number, date: string, mine: number) => string
+      noticeArchived: string
+      versionN: (n: number) => string
+      enrolledSince: (date: string) => string
+      notEnrolledNote: string
+    }
   }
 }
 
@@ -4918,6 +4962,49 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     filterNote: "Rôzne kľúče musia platiť všetky, z hodnôt jedného kľúča stačí jedna.",
     enrolled: title => `Ste zapísaný do kurzu „${title}“.`,
     removeFilter: name => `Zrušiť filter ${name}`,
+    course: {
+      yourProgress: "Váš postup",
+      countOf: (d, n) => `${d} z ${n}`,
+      requiredParts: "povinných častí",
+      startCourse: "Začať",
+      continueHere: "Pokračovať tu",
+      kvVersion: "Verzia",
+      kvEnrolled: "Zapísaný od",
+      enrolledVia: { assignment: "pridelením", self: "samozápisom" },
+      kvLanguage: "Jazyk obsahu",
+      kvEstimate: "Odhad času",
+      kvCertificate: "Certifikát",
+      kvOrder: "Poradie častí",
+      yes: "áno",
+      no: "nie",
+      orderSequential: "postupne",
+      orderAny: "ľubovoľne",
+      aboutCourse: "O kurze",
+      partsHeading: "Časti kurzu",
+      partsNoteSequential: "Časti sa otvárajú postupne.",
+      partsNoteAny: "Časti môžete prechádzať v ľubovoľnom poradí.",
+      partRequired: "Povinná",
+      partOptional: "Nepovinná",
+      blocks: n => `${n} ${n === 1 ? "blok" : n <= 4 ? "bloky" : "blokov"}`,
+      blockTypes: { image: "obrázok", gallery: "galéria", document: "dokument", video: "video", videoExternal: "video externé" },
+      mustWatchVideo: m => `povinné video ${m} ${m === 1 ? "minúta" : m <= 4 ? "minúty" : "minút"}`,
+      partDoneOn: date => `Hotová ${date}`,
+      partAvailable: "Dostupná",
+      partLockedAfter: n => `Sprístupní sa po časti ${n}`,
+      partInProgress: "rozpracovaná",
+      partInProgressVideo: p => `rozpracovaná — video pozreté ${p} %`,
+      testLabel: "Test",
+      testRequired: "povinný",
+      testOptional: "nepovinný",
+      testNotStarted: "nespustený",
+      testPassed: "prešiel",
+      noticeDone: date => `Kurz ste dokončili ${date}.`,
+      noticeNewVersion: (v, date, mine) => `Kurz má novú verziu ${v} (zverejnená ${date}). Dokončujete verziu ${mine}, do ktorej ste sa zapísali — nič netreba robiť.`,
+      noticeArchived: "Kurz bol archivovaný — dokončiť ho môžete. Nikto nový sa doň už nezapíše.",
+      versionN: n => `verzia ${n}`,
+      enrolledSince: date => `zapísaný od ${date}`,
+      notEnrolledNote: "Kurz je otvorený — zapísať sa môže ktokoľvek v organizácii. Časti sa sprístupnia po zapísaní.",
+    },
   },
   },
 
@@ -7405,6 +7492,49 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     filterNote: "Různé klíče musí platit všechny, z hodnot jednoho klíče stačí jedna.",
     enrolled: title => `Jste zapsán do kurzu „${title}“.`,
     removeFilter: name => `Zrušit filtr ${name}`,
+    course: {
+      yourProgress: "Váš postup",
+      countOf: (d, n) => `${d} z ${n}`,
+      requiredParts: "povinných částí",
+      startCourse: "Začít",
+      continueHere: "Pokračovat zde",
+      kvVersion: "Verze",
+      kvEnrolled: "Zapsán od",
+      enrolledVia: { assignment: "přidělením", self: "samozápisem" },
+      kvLanguage: "Jazyk obsahu",
+      kvEstimate: "Odhad času",
+      kvCertificate: "Certifikát",
+      kvOrder: "Pořadí částí",
+      yes: "ano",
+      no: "ne",
+      orderSequential: "postupně",
+      orderAny: "libovolně",
+      aboutCourse: "O kurzu",
+      partsHeading: "Části kurzu",
+      partsNoteSequential: "Části se otevírají postupně.",
+      partsNoteAny: "Části můžete procházet v libovolném pořadí.",
+      partRequired: "Povinná",
+      partOptional: "Nepovinná",
+      blocks: n => `${n} ${n === 1 ? "blok" : n <= 4 ? "bloky" : "bloků"}`,
+      blockTypes: { image: "obrázek", gallery: "galerie", document: "dokument", video: "video", videoExternal: "video externí" },
+      mustWatchVideo: m => `povinné video ${m} ${m === 1 ? "minuta" : m <= 4 ? "minuty" : "minut"}`,
+      partDoneOn: date => `Hotová ${date}`,
+      partAvailable: "Dostupná",
+      partLockedAfter: n => `Zpřístupní se po části ${n}`,
+      partInProgress: "rozpracovaná",
+      partInProgressVideo: p => `rozpracovaná — video zhlédnuto ${p} %`,
+      testLabel: "Test",
+      testRequired: "povinný",
+      testOptional: "nepovinný",
+      testNotStarted: "nespuštěný",
+      testPassed: "prošel",
+      noticeDone: date => `Kurz jste dokončili ${date}.`,
+      noticeNewVersion: (v, date, mine) => `Kurz má novou verzi ${v} (zveřejněna ${date}). Dokončujete verzi ${mine}, do které jste se zapsali — nic není třeba dělat.`,
+      noticeArchived: "Kurz byl archivován — dokončit ho můžete. Nikdo nový se do něj už nezapíše.",
+      versionN: n => `verze ${n}`,
+      enrolledSince: date => `zapsán od ${date}`,
+      notEnrolledNote: "Kurz je otevřený — zapsat se může kdokoli v organizaci. Části se zpřístupní po zapsání.",
+    },
   },
   },
 
@@ -9878,6 +10008,49 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     filterNote: "Different keys must all match; within one key, any value is enough.",
     enrolled: title => `You are enrolled in “${title}”.`,
     removeFilter: name => `Remove filter ${name}`,
+    course: {
+      yourProgress: "Your progress",
+      countOf: (d, n) => `${d} of ${n}`,
+      requiredParts: "required parts",
+      startCourse: "Start",
+      continueHere: "Continue here",
+      kvVersion: "Version",
+      kvEnrolled: "Enrolled",
+      enrolledVia: { assignment: "by assignment", self: "self-enrolled" },
+      kvLanguage: "Content language",
+      kvEstimate: "Estimated time",
+      kvCertificate: "Certificate",
+      kvOrder: "Part order",
+      yes: "yes",
+      no: "no",
+      orderSequential: "in sequence",
+      orderAny: "any order",
+      aboutCourse: "About the course",
+      partsHeading: "Course parts",
+      partsNoteSequential: "Parts open one after another.",
+      partsNoteAny: "You can go through the parts in any order.",
+      partRequired: "Required",
+      partOptional: "Optional",
+      blocks: n => `${n} block${n === 1 ? "" : "s"}`,
+      blockTypes: { image: "image", gallery: "gallery", document: "document", video: "video", videoExternal: "external video" },
+      mustWatchVideo: m => `required video ${m} minute${m === 1 ? "" : "s"}`,
+      partDoneOn: date => `Done ${date}`,
+      partAvailable: "Available",
+      partLockedAfter: n => `Opens after part ${n}`,
+      partInProgress: "in progress",
+      partInProgressVideo: p => `in progress — ${p} % of the video watched`,
+      testLabel: "Test",
+      testRequired: "required",
+      testOptional: "optional",
+      testNotStarted: "not started",
+      testPassed: "passed",
+      noticeDone: date => `You completed the course on ${date}.`,
+      noticeNewVersion: (v, date, mine) => `The course has a new version ${v} (published ${date}). You are finishing version ${mine}, which you enrolled in — nothing to do.`,
+      noticeArchived: "The course has been archived — you can still finish it. No one new can enrol.",
+      versionN: n => `version ${n}`,
+      enrolledSince: date => `enrolled ${date}`,
+      notEnrolledNote: "The course is open — anyone in the organisation can enrol. The parts open after you enrol.",
+    },
   },
   },
 }
