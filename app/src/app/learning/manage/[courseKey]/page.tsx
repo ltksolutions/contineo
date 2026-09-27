@@ -8,7 +8,8 @@
  * je len na čítanie (D118), zmena = „Nová verzia".
  *
  * Záložka Nastavenia: polia verzie, téma, smart:tagy (`SmartTagInput`),
- * priebeh a právny základ. Zapísaní pribudnú v ďalšom PR tohto rámu.
+ * priebeh a právny základ. Záložka Zapísaní: stav bez skóre (D121),
+ * prideľovanie adresátom ako pri norme a export CSV.
  */
 
 import Link from "next/link"
@@ -34,17 +35,26 @@ import { smartTagUsage } from "@/lib/smartTagsDb"
 import { legalBasisOptions } from "@/lib/legalBases"
 import { UI_LANGUAGES } from "@/lib/i18n"
 import type { Tenant } from "@/lib/tenants"
+import MultiSelect from "@/components/MultiSelect"
+import { treeOptions } from "@/lib/treeOptions"
+import { audienceFromSelection, audienceMembers } from "@/lib/assignments"
+import { audiencesInOrg } from "@/lib/persons"
+import { allDepartments, flattenTree, counts } from "@/lib/departments"
+import { courseRoster, type RosterRow, type RosterState } from "@/lib/learningStats"
 import { normalizeLayout } from "@/lib/appNav"
 import { normalizeQuery, type RawQuery } from "@/lib/urlParams"
 import { dictionary, formatDate, type UiLanguage } from "@/lib/i18n"
 import {
   addBlockAction, addPartAction, archiveAction, moveBlockAction, movePartAction, newVersionAction,
-  publishAction, removeBlockAction, removePartAction, saveSettingsAction, updateBlockAction, updatePartAction,
+  assignCourseAction, publishAction, removeBlockAction, removePartAction, saveSettingsAction, updateBlockAction, updatePartAction,
 } from "./actions"
 
 export const dynamic = "force-dynamic"
 
-type Q = { layout?: string; tab?: string; part?: string; add?: string; src?: string; editBlock?: string; msg?: string; error?: string }
+type Q = {
+  layout?: string; tab?: string; part?: string; add?: string; src?: string; editBlock?: string; msg?: string; error?: string
+  filter?: string; assign?: string; preview?: string; all?: string; audience?: string | string[]
+}
 type Edit = ReturnType<typeof dictionary>["learning"]["edit"]
 
 const BLOCK_TYPES = ["text", "image", "gallery", "document", "video"] as const
@@ -72,7 +82,7 @@ export default async function ManageCoursePage({ params, searchParams }: {
   const stats = (await courseStats(ctx.person.companyCode, [course])).get(course.key) ?? { enrolled: 0, completed: 0 }
   const part = q.part ? shown.parts.find(p => p.key === q.part) ?? null : null
   const docs = part && draft && q.add === "document" ? await documentChoices(ctx.person.companyCode) : []
-  const tab = q.tab === "settings" ? "settings" : "parts"
+  const tab = q.tab === "settings" ? "settings" : q.tab === "people" ? "people" : "parts"
   const usage = tab === "settings" ? await smartTagUsage(ctx.person.companyCode) : []
 
   return (
@@ -91,10 +101,13 @@ export default async function ManageCoursePage({ params, searchParams }: {
         <nav className="tabs" aria-label={t.manage.tabsLabel}>
           <TabLink href={`${base}?tab=parts`} active={tab === "parts"}>{te.tabParts}</TabLink>
           <TabLink href={`${base}?tab=settings`} active={tab === "settings"}>{te.tabSettings}</TabLink>
+          <TabLink href={`${base}?tab=people`} active={tab === "people"}>{te.tabPeople}</TabLink>
         </nav>
 
         <div className="mc-body">
-          {tab === "settings" ? (
+          {tab === "people" ? (
+            await PeopleTab({ course, published, companyCode: ctx.person.companyCode, q, language })
+          ) : tab === "settings" ? (
             <SettingsTab course={course} version={shown} editable={Boolean(draft)} tenant={ctx.tenant} usage={usage} language={language} />
           ) : (
             <>
@@ -482,5 +495,137 @@ function SettingsTab({ course, version, editable, tenant, usage, language }: {
 
       <div className="mg-actions"><SubmitButton className="button">{ts.save}</SubmitButton></div>
     </form>
+  )
+}
+
+async function PeopleTab({ course, published, companyCode, q, language }: {
+  course: Course
+  published: CourseVersion | null
+  companyCode: string
+  q: Q
+  language: UiLanguage
+}) {
+  const d = dictionary(language)
+  const tp = d.learning.people
+  const tc = d.learning.course
+  const base = `/learning/manage/${course.key}`
+  const roster = await courseRoster(companyCode, course)
+  const filters: ("all" | RosterState)[] = ["all", "not-started", "in-progress", "done"]
+  const filter = filters.includes(q.filter as RosterState) ? (q.filter as RosterState) : "all"
+  const shown = filter === "all" ? roster : roster.filter(r => r.state === filter)
+  const label = { all: tp.filterAll, "not-started": tp.notStarted, "in-progress": tp.inProgress, done: tp.done }
+  const stateText = (r: RosterRow) => r.state === "done" && r.completedAt
+    ? <span className="ok-fg">{tp.stateDone(formatDate(r.completedAt, language))}</span>
+    : r.state === "in-progress" ? tp.stateProgress(r.requiredDone, r.requiredTotal) : tp.stateNotStarted
+
+  let assign: React.ReactNode = null
+  if (q.assign === "1") {
+    if (!published) {
+      assign = <section className="card mg-new"><h2>{tp.assignHeading}</h2><p className="quiet" style={{ margin: 0 }}>{tp.notPublished}</p></section>
+    } else {
+      const [tree, audiences, departmentCounts] = await Promise.all([allDepartments(companyCode), audiencesInOrg(companyCode), counts(companyCode)])
+      const selected = (Array.isArray(q.audience) ? q.audience : q.audience ? [q.audience] : [])
+      const chosen = q.preview === "1" ? audienceFromSelection({ all: q.all === "1", selected, departmentNames: Object.fromEntries(tree.map(o => [o.id, o.name])) }) : []
+      let impact: { total: number; already: number } | null = null
+      if (chosen.length) {
+        const ids = new Set<string>()
+        for (const a of chosen) for (const m of await audienceMembers(companyCode, a)) ids.add(m.id)
+        const enrolled = new Set(roster.map(r => r.enrollment.personId))
+        const already = [...ids].filter(id => enrolled.has(id)).length
+        impact = { total: ids.size - already, already }
+      }
+      const rows = flattenTree(tree)
+      assign = (
+        <section className="card mg-new">
+          <h2>{tp.assignHeading}</h2>
+          <form method="get" action={base} className="mc-form">
+            <input type="hidden" name="tab" value="people" />
+            <input type="hidden" name="assign" value="1" />
+            <input type="hidden" name="preview" value="1" />
+            <label className="mc-check"><input type="checkbox" name="all" value="1" defaultChecked={q.all === "1"} /> <b>{tp.everyone}</b> <span className="quiet">{tp.everyoneNote}</span></label>
+            {rows.length > 0 && (
+              <div className="field">
+                <span className="field-label">{tp.departments}</span>
+                <MultiSelect name="audience" emit="repeat" caseSensitive noscript="checkboxes" language={language}
+                  selected={selected.filter(a => a.startsWith("department:"))}
+                  options={treeOptions(rows.map(r => ({ id: r.department.id, name: r.department.name, level: r.level })))
+                    .map(o => ({ ...o, value: `department:${o.value}`, count: (departmentCounts.get(o.value) ?? { withDescendants: 0 }).withDescendants }))} />
+              </div>
+            )}
+            {audiences.groups.length > 0 && (
+              <fieldset className="mc-group"><legend className="field-label">{tp.groups}</legend>
+                {audiences.groups.map(g => <label key={g.value} className="mc-check"><input type="checkbox" name="audience" value={`group:${g.value}`} defaultChecked={selected.includes(`group:${g.value}`)} /> {g.value} <span className="quiet">{g.count}</span></label>)}
+              </fieldset>
+            )}
+            {audiences.tracks.length > 0 && (
+              <fieldset className="mc-group"><legend className="field-label">{tp.tracks}</legend>
+                <p className="quiet mc-note">{tp.tracksNote}</p>
+                {audiences.tracks.map(g => <label key={g.value} className="mc-check"><input type="checkbox" name="audience" value={`track:${g.value}`} defaultChecked={selected.includes(`track:${g.value}`)} /> {g.value} <span className="quiet">{g.count}</span></label>)}
+              </fieldset>
+            )}
+            <div className="mg-actions"><button type="submit" className="button button--quiet">{tp.check}</button><Link className="button button--quiet" href={`${base}?tab=people`}>{tp.cancel}</Link></div>
+          </form>
+          {impact && (
+            <form action={assignCourseAction} className="mc-form mc-impact">
+              <input type="hidden" name="courseKey" value={course.key} />
+              {q.all === "1" && <input type="hidden" name="all" value="1" />}
+              {selected.map(a => <input key={a} type="hidden" name="audience" value={a} />)}
+              <p className="mg-impact">{impact.total + impact.already === 0 ? tp.nobody : tp.summary(impact.total, published.version, impact.already)}</p>
+              {impact.total > 0 && <div className="mg-actions"><SubmitButton className="button">{tp.assignButton(impact.total)}</SubmitButton></div>}
+            </form>
+          )}
+        </section>
+      )
+    }
+  }
+
+  return (
+    <>
+      <div className="mc-people-head">
+        <div className="lpills">
+          {filters.map(f => (
+            <Link key={f} className={`pill${f === filter ? " is-on" : ""}`} href={`${base}?tab=people${f === "all" ? "" : `&filter=${f}`}`}>
+              {label[f]} <span className="pill-count">{f === "all" ? roster.length : roster.filter(r => r.state === f).length}</span>
+            </Link>
+          ))}
+        </div>
+        <div className="mg-actions">
+          <Link className="button" href={`${base}?tab=people&assign=1`}>{tp.assign}</Link>
+          <a className="button button--quiet" href={`/api/learning/courses/${course.key}/people`}>{tp.exportCsv}</a>
+        </div>
+      </div>
+      {assign}
+      {roster.length === 0 ? (
+        <div className="empty"><div className="empty-text">{tp.empty}</div></div>
+      ) : (
+        <>
+          <div className="doc-table-wrap mg-table">
+            <table className="doc-table">
+              <thead><tr><th>{tp.colName}</th><th>{tp.colDepartment}</th><th>{tp.colEnrollment}</th><th>{tp.colState}</th><th>{tp.colActivity}</th></tr></thead>
+              <tbody>
+                {shown.map(r => (
+                  <tr key={r.enrollment.id}>
+                    <td><b>{r.enrollment.fullName}</b><div className="mg-sub">{r.enrollment.email}</div></td>
+                    <td>{r.department ?? "—"}</td>
+                    <td>{tc.enrolledVia[r.enrollment.source]}</td>
+                    <td>{stateText(r)}</td>
+                    <td>{formatDate(r.lastActivity, language)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <div className="mg-cards">
+            {shown.map(r => (
+              <div key={r.enrollment.id} className="card mg-card">
+                <span className="mg-title">{r.enrollment.fullName}</span>
+                <span className="mg-sub">{[r.department, tc.enrolledVia[r.enrollment.source]].filter(Boolean).join(" · ")}</span>
+                <span className="mg-sub">{stateText(r)} · {formatDate(r.lastActivity, language)}</span>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
+    </>
   )
 }

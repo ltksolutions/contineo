@@ -11,6 +11,9 @@ import { revalidatePath } from "next/cache"
 import { learningAdminContext } from "@/lib/learning"
 import { archiveCourse, getCourse, publishCourse, saveCourseSettings, saveDraft, startNewVersion } from "@/lib/coursesDb"
 import { findTopic } from "@/lib/learningTopics"
+import { assignCourse } from "@/lib/enrollmentsDb"
+import { audienceFromSelection } from "@/lib/assignments"
+import { allDepartments } from "@/lib/departments"
 import { parseSmartTags } from "@/lib/smartTags"
 import { findLegalBasisOption } from "@/lib/legalBases"
 import { draftVersion, type ContentBlock, type Part } from "@/lib/courses"
@@ -230,4 +233,26 @@ export async function saveSettingsAction(fd: FormData) {
     go(courseKey, "tab=settings", errorText(e, ctx.person.language), true)
   }
   go(courseKey, "tab=settings", te.settingsSaved)
+}
+
+/**
+ * Prideliť kurz (záložka Zapísaní, `?assign=1`) — ten istý výber adresátov
+ * ako pri norme (`audienceFromSelection`, `matchesAudience`). Trasa ostáva
+ * (MANAGE-COURSE Q2 ✅): zapíše ľudí, ktorí trasu majú.
+ */
+export async function assignCourseAction(fd: FormData) {
+  const ctx = await admin()
+  const courseKey = field(fd, "courseKey")
+  const tp = dictionary(ctx.person.language).learning.people
+  const departmentNames = Object.fromEntries((await allDepartments(ctx.person.companyCode)).map(d => [d.id, d.name]))
+  const audiences = audienceFromSelection({ all: fd.get("all") === "1", selected: fd.getAll("audience").map(String), departmentNames })
+  let result = { created: 0, existing: 0 }
+  try {
+    if (!audiences.length) throw new AppError("learning.audienceRequired", "Vyberte adresátov.")
+    result = await assignCourse(ctx.person.companyCode, courseKey, audiences, { email: ctx.person.email, fullName: ctx.person.fullName })
+  } catch (e) {
+    if (!(e instanceof AppError)) console.error("[learning] pridelenie kurzu zlyhalo:", e)
+    go(courseKey, "tab=people&assign=1", errorText(e, ctx.person.language), true)
+  }
+  go(courseKey, "tab=people", tp.assigned(result.created, result.existing))
 }

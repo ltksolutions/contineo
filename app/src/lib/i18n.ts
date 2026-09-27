@@ -2673,6 +2673,39 @@ interface Dictionary {
       none: string
       readOnly: (n: number) => string
     }
+    /** Zapísaní a prideľovanie (rám MANAGE-COURSE, ?tab=people). */
+    people: {
+      filterAll: string
+      notStarted: string
+      inProgress: string
+      done: string
+      assign: string
+      exportCsv: string
+      colName: string
+      colEmail: string
+      colDepartment: string
+      colEnrollment: string
+      colState: string
+      colActivity: string
+      stateNotStarted: string
+      empty: string
+      assignHeading: string
+      everyone: string
+      everyoneNote: string
+      departments: string
+      groups: string
+      tracks: string
+      tracksNote: string
+      check: string
+      notPublished: string
+      nobody: string
+      cancel: string
+      stateProgress: (done: number, total: number) => string
+      stateDone: (date: string) => string
+      summary: (people: number, version: number, already: number) => string
+      assignButton: (n: number) => string
+      assigned: (created: number, existing: number) => string
+    }
   }
 }
 
@@ -3655,6 +3688,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     },
   },
   errors: {
+    "learning.audienceRequired": "Vyberte adresátov.",
     "learning.urlInvalid": "Adresa videa nie je platná — podporované sú YouTube, Vimeo a odkazy https.",
     "learning.fileRequired": "Najprv nahrajte súbor.",
     "learning.documentRequired": "Vyberte dokument z knižnice.",
@@ -5453,6 +5487,38 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       none: "—",
       readOnly: n => `Verzia ${n} je zverejnená — nastavenia sú len na čítanie. Zmeny: Nová verzia.`,
     },
+    people: {
+      filterAll: "Všetci",
+      notStarted: "Nezačali",
+      inProgress: "Rozpracovaní",
+      done: "Dokončili",
+      assign: "Prideliť kurz",
+      exportCsv: "Export CSV",
+      colName: "Meno",
+      colEmail: "E-mail",
+      colDepartment: "Oddelenie",
+      colEnrollment: "Zápis",
+      colState: "Stav",
+      colActivity: "Posledná aktivita",
+      stateNotStarted: "nezačal",
+      empty: "Do kurzu zatiaľ nie je nikto zapísaný.",
+      assignHeading: "Prideliť kurz",
+      everyone: "Všetkým v organizácii",
+      everyoneNote: "aj tým, ktorí pribudnú, keď sa pridelí znova",
+      departments: "Oddeleniam",
+      groups: "Skupinám",
+      tracks: "Trase",
+      tracksNote: "Zapíšu sa ľudia, ktorí trasu majú — ako pri norme.",
+      check: "Skontrolovať dopad",
+      notPublished: "Prideliť sa dá len zverejnený kurz.",
+      nobody: "Výberu nezodpovedá nikto.",
+      cancel: "Zrušiť",
+      stateProgress: (d, t) => `${d} z ${t} častí`,
+      stateDone: date => `dokončil ${date}`,
+      summary: (n, v, m) => `Zapíše sa ${n} ${n === 1 ? "človek" : n >= 2 && n <= 4 ? "ľudia" : "ľudí"} do verzie ${v}${m ? ` · ${m} ${m === 1 ? "je" : "sú"} už ${m === 1 ? "zapísaný" : "zapísaní"} a nič sa ${m === 1 ? "mu" : "im"} nezmení` : ""}.`,
+      assignButton: n => `Prideliť ${n} ${n === 1 ? "človeku" : "ľuďom"}`,
+      assigned: (n, m) => `Zapísaní noví: ${n}, už zapísaní: ${m}.`,
+    },
   },
   },
 
@@ -6422,6 +6488,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     },
   },
   errors: {
+    "learning.audienceRequired": "Vyberte adresáty.",
     "learning.urlInvalid": "Adresa videa není platná — podporovány jsou YouTube, Vimeo a odkazy https.",
     "learning.fileRequired": "Nejprve nahrajte soubor.",
     "learning.documentRequired": "Vyberte dokument z knihovny.",
@@ -8217,6 +8284,38 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       none: "—",
       readOnly: n => `Verze ${n} je zveřejněná — nastavení jsou jen ke čtení. Změny: Nová verze.`,
     },
+    people: {
+      filterAll: "Všichni",
+      notStarted: "Nezačali",
+      inProgress: "Rozpracovaní",
+      done: "Dokončili",
+      assign: "Přidělit kurz",
+      exportCsv: "Export CSV",
+      colName: "Jméno",
+      colEmail: "E-mail",
+      colDepartment: "Oddělení",
+      colEnrollment: "Zápis",
+      colState: "Stav",
+      colActivity: "Poslední aktivita",
+      stateNotStarted: "nezačal",
+      empty: "Do kurzu zatím není nikdo zapsaný.",
+      assignHeading: "Přidělit kurz",
+      everyone: "Všem v organizaci",
+      everyoneNote: "i těm, kteří přibudou, když se přidělí znovu",
+      departments: "Oddělením",
+      groups: "Skupinám",
+      tracks: "Trase",
+      tracksNote: "Zapíšou se lidé, kteří trasu mají — jako u normy.",
+      check: "Zkontrolovat dopad",
+      notPublished: "Přidělit lze jen zveřejněný kurz.",
+      nobody: "Výběru neodpovídá nikdo.",
+      cancel: "Zrušit",
+      stateProgress: (d, t) => `${d} z ${t} částí`,
+      stateDone: date => `dokončil ${date}`,
+      summary: (n, v, m) => `Zapíše se ${n} ${n === 1 ? "člověk" : n >= 2 && n <= 4 ? "lidé" : "lidí"} do verze ${v}${m ? ` · ${m} ${m === 1 ? "je" : "jsou"} už ${m === 1 ? "zapsaný" : "zapsaní"} a nic se ${m === 1 ? "mu" : "jim"} nezmění` : ""}.`,
+      assignButton: n => `Přidělit ${n} ${n === 1 ? "člověku" : "lidem"}`,
+      assigned: (n, m) => `Zapsaní noví: ${n}, už zapsaní: ${m}.`,
+    },
   },
   },
 
@@ -9179,6 +9278,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     },
   },
   errors: {
+    "learning.audienceRequired": "Choose the recipients.",
     "learning.urlInvalid": "The video address is not valid — YouTube, Vimeo and https links are supported.",
     "learning.fileRequired": "Upload a file first.",
     "learning.documentRequired": "Choose a document from the library.",
@@ -10966,6 +11066,38 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       tagNoScript: "One smart:tag per line as Key: Value.",
       none: "—",
       readOnly: n => `Version ${n} is published — settings are read-only. To change them: New version.`,
+    },
+    people: {
+      filterAll: "All",
+      notStarted: "Not started",
+      inProgress: "In progress",
+      done: "Completed",
+      assign: "Assign course",
+      exportCsv: "Export CSV",
+      colName: "Name",
+      colEmail: "Email",
+      colDepartment: "Department",
+      colEnrollment: "Enrolment",
+      colState: "Status",
+      colActivity: "Last activity",
+      stateNotStarted: "not started",
+      empty: "No one is enrolled in the course yet.",
+      assignHeading: "Assign course",
+      everyone: "Everyone in the organisation",
+      everyoneNote: "including newcomers if assigned again",
+      departments: "Departments",
+      groups: "Groups",
+      tracks: "Track",
+      tracksNote: "People who have the track are enrolled — as with a policy.",
+      check: "Check impact",
+      notPublished: "Only a published course can be assigned.",
+      nobody: "No one matches the selection.",
+      cancel: "Cancel",
+      stateProgress: (d, t) => `${d} of ${t} parts`,
+      stateDone: date => `completed ${date}`,
+      summary: (n, v, m) => `${n} ${n === 1 ? "person" : "people"} will be enrolled in version ${v}${m ? ` · ${m} already enrolled, nothing changes for them` : ""}.`,
+      assignButton: n => `Assign to ${n} ${n === 1 ? "person" : "people"}`,
+      assigned: (n, m) => `Newly enrolled: ${n}, already enrolled: ${m}.`,
     },
   },
   },

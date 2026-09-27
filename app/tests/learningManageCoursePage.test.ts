@@ -23,11 +23,23 @@ vi.mock("@/lib/learning", () => ({
   learningAdminContext: async () => ({ state: "ready", isAdmin: true, person: { id: "p", companyCode: "SFZ", language: "sk", email: "jan@sfz.sk" }, tenant: { companyCode: "SFZ", branding: { displayName: "SFZ" }, learningTopics: [{ key: "bozp", label: "Bezpečnosť a ochrana zdravia" }], certificateSigner: { name: "Ján Letko", role: "generálny sekretár" } } }),
 }))
 vi.mock("@/lib/coursesDb", () => ({ getCourse: async () => s.course }))
-vi.mock("@/lib/learningStats", () => ({ courseStats: async () => new Map([["bozp", { enrolled: 5, completed: 2 }]]) }))
+vi.mock("@/lib/learningStats", () => ({
+  courseStats: async () => new Map([["bozp", { enrolled: 5, completed: 2 }]]),
+  courseRoster: async () => [
+    { enrollment: { id: "e1", personId: "p1", fullName: "Marek Horák", email: "marek@sfz.sk", source: "assignment" }, department: "Právne", state: "done", requiredDone: 2, requiredTotal: 2, completedAt: new Date("2026-09-18T00:00:00Z"), lastActivity: new Date("2026-09-18T00:00:00Z") },
+    { enrollment: { id: "e2", personId: "p2", fullName: "Peter Kováč", email: "peter@sfz.sk", source: "self" }, department: null, state: "in-progress", requiredDone: 1, requiredTotal: 2, completedAt: null, lastActivity: new Date("2026-09-20T00:00:00Z") },
+  ],
+}))
+vi.mock("@/lib/assignments", () => ({
+  audienceFromSelection: ({ all }: { all?: boolean }) => (all ? [{ kind: "all" }] : []),
+  audienceMembers: async () => [{ id: "p1" }, { id: "p3" }, { id: "p4" }],
+}))
+vi.mock("@/lib/persons", () => ({ audiencesInOrg: async () => ({ groups: [{ value: "rozhodcovia", count: 4 }], tracks: [{ value: "zaklad", count: 2 }] }) }))
+vi.mock("@/lib/departments", () => ({ allDepartments: async () => [], flattenTree: () => [], counts: async () => new Map() }))
 vi.mock("@/lib/smartTagsDb", () => ({ smartTagUsage: async () => [{ key: "uroven", value: "1", label: "Úroveň: 1", courses: 2, questions: 0, tests: 0 }] }))
 vi.mock("@/lib/courseDocs", () => ({ documentChoices: async () => [{ documentId: "sfz:bozp", versionId: "v1", title: "Smernica BOZP", label: "úplné znenie od 1. 3. 2026" }] }))
 vi.mock("../src/app/learning/manage/[courseKey]/actions", () => Object.fromEntries(
-  ["saveSettingsAction","addBlockAction","addPartAction","archiveAction","moveBlockAction","movePartAction","newVersionAction","publishAction","removeBlockAction","removePartAction","updateBlockAction","updatePartAction"].map(n => [n, async () => {}])))
+  ["assignCourseAction","saveSettingsAction","addBlockAction","addPartAction","archiveAction","moveBlockAction","movePartAction","newVersionAction","publishAction","removeBlockAction","removePartAction","updateBlockAction","updatePartAction"].map(n => [n, async () => {}])))
 
 const at = new Date("2026-09-20T00:00:00Z")
 const part = (key: string, blocks: Part["blocks"] = [{ id: "t", type: "text", markdown: "Vitajte v kurze." }]): Part => ({ key, title: `Časť ${key}`, required: true, tests: [], blocks })
@@ -117,5 +129,27 @@ describe("/learning/manage/[courseKey]", () => {
     const html = await render({ tab: "settings" })
     expect(html).toContain("nastavenia sú len na čítanie")
     expect(html).not.toContain("Uložiť nastavenia")
+  })
+
+  it("zapísaní: stav bez skóre, filter, export", async () => {
+    s.course = course([v(2, "published")])
+    const html = await render({ tab: "people" })
+    expect(html).toContain("dokončil 18. 9. 2026")
+    expect(html).toContain("1 z 2 častí")
+    expect(html).toContain("samozápisom")
+    expect(html).toContain("/api/learning/courses/bozp/people")
+    expect(html).toContain("Dokončili <span class=\"pill-count\">1</span>")
+  })
+
+  it("prideliť: trasa aj skupina, dopad s už zapísanými", async () => {
+    s.course = course([v(2, "published")])
+    const html = await render({ tab: "people", assign: "1", preview: "1", all: "1" })
+    expect(html).toContain("track:zaklad")
+    expect(html).toContain("Zapíše sa 2 ľudia do verzie 2 · 1 je už zapísaný a nič sa mu nezmení.")
+    expect(html).toContain("Prideliť 2 ľuďom")
+  })
+
+  it("prideliť koncept bez zverejnenej verzie sa nedá", async () => {
+    expect(await render({ tab: "people", assign: "1" })).toContain("Prideliť sa dá len zverejnený kurz.")
   })
 })
