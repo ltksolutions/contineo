@@ -12,7 +12,7 @@
 ## 1. Návrh riešenia
 
 - Zväz má záznam o spracovateľských činnostiach pravdepodobne už vedený pre
-  personalistiku. Contineo doň pribudne ako **tri činnosti** (kap. 2), nie ako
+  personalistiku. Contineo doň pribudne ako **štyri činnosti** (kap. 2), nie ako
   nový samostatný záznam.
 - **IT dodá obsah, DPO ho zapíše** do formy, ktorú zväz používa.
 - Pri každej zmene toho, čo systém ukladá, sa upraví táto tabuľka **v tom istom
@@ -23,7 +23,7 @@
 
 ## 2. Činnosti prevádzkovateľa (zväz)
 
-Spoločné pre všetky tri činnosti:
+Spoločné pre všetky štyri činnosti:
 
 - **Prevádzkovateľ:** Slovenský futbalový zväz, Tomášikova 30C, 821 01 Bratislava, IČO 00 687 308
 - **Zodpovedná osoba:** [meno, kontakt DPO]
@@ -38,7 +38,7 @@ Spoločné pre všetky tri činnosti:
 | Účel | preukázať, že osoby, ktorých sa predpis týka, boli s ním oboznámené |
 | Právny základ | čl. 6 ods. 1 písm. c) pri predpisoch, ktorých oboznámenie vyžaduje zákon (napr. BOZP, § 7 zákona č. 124/2006 Z. z.); čl. 6 ods. 1 písm. f) pri interných smerniciach — **jeden spoločný balančný test** (O15/A11); určuje sa pri každom predpise |
 | Dotknuté osoby | zamestnanci, rozhodcovia, funkcionári (delegáti, členovia komisií), externí spolupracovníci |
-| Kategórie údajov | identifikačné (meno, e-mail, pozícia, oddelenie, typ vzťahu); pridelenie predpisu; prvé otvorenie znenia; potvrdenie (čas, znenie, doslovný text, IP adresa, prehliadač); čas strávený nad znením; pripomienky |
+| Kategórie údajov | identifikačné (meno, e-mail, pozícia, oddelenie, typ vzťahu, **pohlavie** — voliteľné, viď nižšie); pridelenie predpisu; prvé otvorenie znenia; potvrdenie (čas, znenie, doslovný text, IP adresa, prehliadač); čas strávený nad znením; pripomienky |
 | Príjemcovia | personalisti a správcovia obsahu zväzu; zodpovedné osoby za predpisy (vidia stav pri svojom predpise); DPO |
 | Lehota výmazu | doklady 3 roky od skončenia pomeru alebo vzťahu, poistka od vyradenia, strop 5 rokov; čas čítania 12 mesiacov; pripomienky 90 dní (ADR-012) |
 
@@ -64,6 +64,28 @@ Spoločné pre všetky tri činnosti:
 | Príjemcovia | hodnotitelia odpovedí; kolegovia vo zväze (len adresár) |
 | Lehota výmazu | otázky a odpovede 12 mesiacov (**návrh — ešte nezavedené**); adresár počas vzťahu so zväzom |
 
+### Činnosť 4 — Vzdelávanie: kurzy, testy a certifikáty (ADR-018, ADR-021)
+
+| Položka | Obsah |
+|---|---|
+| Účel | školenie osôb a preukázanie, že kurz absolvovali (vrátane testu); vydanie a overenie certifikátu |
+| Právny základ | čl. 6 ods. 1 písm. c) pri školeniach, ktoré vyžaduje zákon (napr. BOZP, § 7 zákona č. 124/2006 Z. z.); čl. 6 ods. 1 písm. f) pri ostatných kurzoch |
+| Dotknuté osoby | zamestnanci, rozhodcovia, funkcionári, externí spolupracovníci zapísaní do kurzu |
+| Kategórie údajov | zápis do kurzu (kedy, kto pridelil); dokončenie častí; ktoré úseky videa osoba pozrela; pokusy v teste (losované otázky, odpovede, body, výsledok, časy); certifikát (meno, pohlavie kvôli tvaru „absolvoval/-a", kurz, číslo, dátumy, vydavateľ, podpisujúci) |
+| Príjemcovia | správcovia vzdelávania; **výsledky testov len zodpovedné osoby za test** (HR nie, D121); ktokoľvek s odkazom overí certifikát — **bez mena** držiteľa |
+| Lehota výmazu | ako doklady o oboznámení: 3 roky od skončenia vzťahu, poistka od vyradenia, strop 5 rokov (D130); odpovede v teste a sledovanie videa **12 mesiacov po dokončení kurzu** (D131); certifikát sa po lehote **anonymizuje** — meno a PDF preč, číslo zostáva overiteľné (D132) |
+
+### Pohlavie osoby (D133)
+
+Údaj pri osobe, ktorý využívajú činnosti 1 a 4.
+
+| Položka | Obsah |
+|---|---|
+| Účel | štatistiky zloženia (podiel žien a mužov v skupinách, orgánoch, medzi rozhodcami); gramatika textov o osobe („absolvoval / absolvovala") |
+| Právny základ | čl. 6 ods. 1 písm. f) — oprávnený záujem; nejde o osobitnú kategóriu (čl. 9) |
+| Zdroj | vypĺňa HR (formulár, import); **voliteľné**; z mena sa neodvodzuje |
+| Lehota výmazu | s osobou (evidenčný údaj); kópia na certifikáte zaniká anonymizáciou |
+
 ---
 
 ## 3. Záznam sprostredkovateľa (čl. 30 ods. 2)
@@ -72,7 +94,7 @@ Spoločné pre všetky tri činnosti:
 |---|---|
 | Sprostredkovateľ | dodávateľ systému Contineo |
 | Prevádzkovateľ | Slovenský futbalový zväz (a každý ďalší zväz podľa samostatnej zmluvy) |
-| Kategórie spracúvania | uchovávanie a zobrazovanie údajov z činností 1–3; odosielanie e-mailov; tvorba odpovedí na otázky |
+| Kategórie spracúvania | uchovávanie a zobrazovanie údajov z činností 1–4; odosielanie e-mailov; tvorba odpovedí na otázky; tvorba PDF certifikátu |
 | Ďalší sprostredkovatelia | MongoDB Atlas (databáza, EÚ), Vercel (hosting, EÚ), Anthropic (tvorba odpovedí), Voyage AI cez MongoDB (vyhľadávanie v texte), Ecomail (e-maily, EÚ) |
 | Prenos do tretích krajín | kap. 4 |
 | Bezpečnostné opatrenia | kap. 5 |
