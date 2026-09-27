@@ -18,6 +18,7 @@ import { courseProgress, NO_FACTS, type PartProgress, type ProgressFacts } from 
 import { mustWatchPercent, partSummary, unlocksAfter } from "@/lib/courseView"
 import { partTestRows, type PartTestRow } from "@/lib/testAttemptsDb"
 import { testRowView } from "@/lib/testView"
+import { ensureCertificate } from "@/lib/certificatesDb"
 import { tagId } from "@/lib/smartTags"
 import { brandingView } from "@/lib/tenants"
 import { tenantStyle } from "@/components/TenantHeader"
@@ -57,6 +58,11 @@ export default async function CoursePage({ params, searchParams }: {
 
   const facts: ProgressFacts = enrollment ? await progressFacts(companyCode, enrollment.id) : NO_FACTS
   const progress = courseProgress(version, facts)
+  // Dokončený kurz, ktorému certifikát ešte nikto nevydal (napr. zlyhalo
+  // vydanie pri označení) — vydá sa tu; `ensureCertificate` overí dokončenie.
+  const cert = enrollment && progress.done && version.issuesCertificate
+    ? await ensureCertificate(enrollment, ctx.tenant).catch(() => null)
+    : null
   const testRows = new Map<string, PartTestRow[]>(enrollment
     ? await Promise.all(version.parts.filter(x => x.tests.length).map(async x => [x.key, await partTestRows(enrollment, x)] as [string, PartTestRow[]]))
     : [])
@@ -76,7 +82,8 @@ export default async function CoursePage({ params, searchParams }: {
   const notices = (
     <>
       {enrollment && progress.done && progress.completedAt && (
-        <div className="lnote"><span className="lnote-mark" aria-hidden="true">✓</span><span className="lnote-text">{tc.noticeDone(formatDate(progress.completedAt, language))}</span></div>
+        <div className="lnote"><span className="lnote-mark" aria-hidden="true">✓</span><span className="lnote-text">{tc.noticeDone(formatDate(progress.completedAt, language))}
+          {cert && !cert.revokedAt && <> <code>{cert.registrationNumber}</code> — <Link href={`${base}/certificate`}>{t.cert.show}</Link>.</>}</span></div>
       )}
       {newer?.publishedAt && (
         <div className="lnote lnote--info"><span className="lnote-mark" aria-hidden="true">i</span><span className="lnote-text">{tc.noticeNewVersion(newer.version, formatDate(newer.publishedAt, language), version.version)}</span></div>
@@ -94,6 +101,7 @@ export default async function CoursePage({ params, searchParams }: {
         <>
           <div className="prog-big"><b>{tc.countOf(progress.requiredDone, progress.requiredTotal)}</b><span>{tc.requiredParts}</span></div>
           <div className="lc-track" aria-hidden="true"><span style={{ width: `${percent}%` }} /></div>
+          {cert && !cert.revokedAt && <Link className="button button--quiet" href={`${base}/certificate`}>{t.cert.show}</Link>}
           {next && (
             <>
               <Link className="button" href={`${base}/${next.key}`}>{progress.started ? tc.continueHere : tc.startCourse}</Link>

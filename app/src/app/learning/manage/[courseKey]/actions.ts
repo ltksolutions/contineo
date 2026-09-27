@@ -12,6 +12,7 @@ import { learningAdminContext } from "@/lib/learning"
 import { archiveCourse, getCourse, publishCourse, saveCourseSettings, saveDraft, startNewVersion } from "@/lib/coursesDb"
 import { findTopic } from "@/lib/learningTopics"
 import { readyTestVersions } from "@/lib/testsDb"
+import { revokeCertificate } from "@/lib/certificatesDb"
 import { assignCourse } from "@/lib/enrollmentsDb"
 import { audienceFromSelection } from "@/lib/assignments"
 import { allDepartments } from "@/lib/departments"
@@ -273,4 +274,16 @@ export async function removePartTestAction(fd: FormData) {
 
 export async function partTestRequiredAction(fd: FormData) {
   await editParts(fd, parts => setPartTestRequired(parts, field(fd, "partKey"), field(fd, "testKey"), fd.get("required") === "1"), partTab)
+}
+
+/** Odvolať certifikát (CERTIFICATE Q3 ✅): lektor, povinný dôvod, nevratné, audit. */
+export async function revokeCertificateAction(fd: FormData) {
+  const ctx = await admin()
+  const courseKey = field(fd, "courseKey")
+  try {
+    await revokeCertificate(ctx.person.companyCode, field(fd, "enrollmentId"), field(fd, "reason"), ctx.person.email)
+  } catch (e) {
+    go(courseKey, `tab=people&revoke=${encodeURIComponent(field(fd, "enrollmentId"))}`, errorText(e, ctx.person.language), true)
+  }
+  go(courseKey, "tab=people", dictionary(ctx.person.language).learning.cert.revokedMsg)
 }

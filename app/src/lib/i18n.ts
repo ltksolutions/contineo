@@ -2960,6 +2960,57 @@ interface Dictionary {
       resetTitle: (name: string) => string
       resetDone: (n: number) => string
     }
+    /** Certifikát a verejné overenie (rám CERTIFICATE). */
+    cert: {
+      kicker: string
+      valid: string
+      revoked: string
+      number: string
+      completed: string
+      issuer: string
+      print: string
+      backToCourse: string
+      verifyHeading: string
+      verifyNote: string
+      copy: string
+      revokedPdf: string
+      sideVerify: string
+      sideVerifyText: string
+      sideKeep: string
+      sideKeepText: string
+      notYet: string
+      noCertificate: string
+      show: string
+      vTitle: string
+      vCourse: string
+      vIssuer: string
+      vNameNote: string
+      vNotFound: string
+      vNotFoundText: string
+      vSecurity: string
+      vFooter: string
+      pdfTitle: string
+      pdfSub: string
+      pdfVerify: string
+      signature: string
+      colCertificate: string
+      revoke: string
+      revokeText: string
+      revokeReason: string
+      revokeButton: string
+      revokedMsg: string
+      cancel: string
+      printNote: string
+      completedCourse: (title: string, version: number) => string
+      revokedNotice: (date: string, reason: string) => string
+      vValid: (issuer: string) => string
+      vRevoked: (date: string) => string
+      pdfConfirms: (org: string) => string
+      pdfCompleted: (title: string) => string
+      pdfMeta: (version: number, parts: number, tests: number, date: string) => string
+      issuedOn: (date: string) => string
+      revokeTitle: (name: string) => string
+    }
   }
 }
 
@@ -3942,6 +3993,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     },
   },
   errors: {
+    "certificate.notFound": "Certifikát neexistuje.",
     "csv.expectedRequired": "krátky text potrebuje očakávanú odpoveď v answer_1",
     "csv.trueFalse": "pri pravde/nepravde je correct true alebo false",
     "csv.correctOutOfRange": "číslo v correct nie je medzi vyplnenými odpoveďami",
@@ -4242,6 +4294,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       question: "otázka",
       test: "test",
       "test-attempt": "pokus o test",
+      certificate: "certifikát",
     },
     actions: {
       created: "založené",
@@ -6026,7 +6079,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       noscriptDeadline: (start, end) => `Test ste spustili o ${start} — odovzdajte ho do ${end}. Po tomto čase server prijme len to, čo už bolo odoslané.`,
       kicker: (title, n, m, date) => `Test: ${title} · pokus ${n}${m ? ` z ${m}` : ""} · ${date}`,
       partDoneNotice: title => `Časť „${title}“ je hotová.`,
-      failedNotice: (missing, pass) => `Neprešli ste — chýba ${missing} percentných bodov do hranice ${pass} %.`,
+      failedNotice: (missing, pass) => `Neprešli ste — ${missing === 1 ? "chýba 1 percentuálny bod" : missing >= 2 && missing <= 4 ? `chýbajú ${missing} percentuálne body` : `chýba ${missing} percentuálnych bodov`} do hranice ${pass} %.`,
       points: (p, max) => `${p} z ${max} ${max === 1 ? "bodu" : "bodov"}`,
       passMark: p => `hranica ${p} %`,
       hiddenReason: { never: "Test správne odpovede neukazuje.", after_submit: "Ukážu sa po odovzdaní.", after_pass: "Ukážu sa po prejdení testu.", after_last_attempt: "Ukážu sa po poslednom pokuse." },
@@ -6062,6 +6115,56 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       alsoResponsible: names => `Zodpovedajú aj: ${names}`,
       resetTitle: name => `Resetovať pokusy — ${name}`,
       resetDone: n => `Resetované pokusy: ${n}.`,
+    },
+    cert: {
+      kicker: "Certifikát o absolvovaní kurzu",
+      valid: "Platný",
+      revoked: "Odvolaný",
+      number: "Číslo",
+      completed: "Dátum dokončenia",
+      issuer: "Vydal",
+      print: "Tlačiť alebo uložiť ako PDF",
+      backToCourse: "Späť na kurz",
+      verifyHeading: "Overenie",
+      verifyNote: "Kto má odkaz, uvidí číslo, kurz, dátum a vydavateľa — bez vášho mena.",
+      copy: "Kopírovať odkaz",
+      revokedPdf: "Pri odvolanom certifikáte sa tlač neponúka.",
+      sideVerify: "Čo overenie ukáže",
+      sideVerifyText: "Číslo, kurz, dátum dokončenia a vydavateľa. Meno nie.",
+      sideKeep: "Uchovanie",
+      sideKeepText: "Certifikát sa nemaže. Po uplynutí lehoty uchovania sa z neho odstráni meno, číslo ostane overiteľné.",
+      notYet: "Certifikát sa vydá po dokončení kurzu.",
+      noCertificate: "Kurz nevydáva certifikát.",
+      show: "Zobraziť certifikát",
+      vTitle: "Overenie certifikátu",
+      vCourse: "Kurz",
+      vIssuer: "Vydavateľ",
+      vNameNote: "Meno držiteľa sa pri overení nezobrazuje. Porovnajte ho s menom na certifikáte, ktorý vám bol predložený.",
+      vNotFound: "Certifikát sa nenašiel",
+      vNotFoundText: "Skontrolujte odkaz alebo ho otvorte znova z certifikátu.",
+      vSecurity: "Z bezpečnostných dôvodov neprezradíme, či certifikát s týmto číslom existuje.",
+      vFooter: "Overenie cez Contineo",
+      pdfTitle: "CERTIFIKÁT",
+      pdfSub: "o absolvovaní kurzu",
+      pdfVerify: "Overenie",
+      signature: "podpis",
+      colCertificate: "Certifikát",
+      revoke: "Odvolať",
+      revokeText: "Odvolanie sa nedá vrátiť. Verejné overenie ukáže „odvolaný“ bez dôvodu; držiteľ dôvod uvidí.",
+      revokeReason: "Dôvod (povinný)",
+      revokeButton: "Odvolať certifikát",
+      revokedMsg: "Certifikát je odvolaný.",
+      cancel: "Zrušiť",
+      printNote: "V dialógu tlače zvoľte „Uložiť ako PDF“, formát A4 na šírku.",
+      completedCourse: (title, v) => `absolvoval kurz ${title} (verzia ${v})`,
+      revokedNotice: (date, reason) => `Certifikát bol odvolaný ${date}. Dôvod: ${reason}`,
+      vValid: issuer => `Certifikát je platný — vydal ho ${issuer} a nebol odvolaný.`,
+      vRevoked: date => `Certifikát bol odvolaný — ${date}.`,
+      pdfConfirms: org => `${org} potvrdzuje, že`,
+      pdfCompleted: title => `úspešne absolvoval kurz ${title}`,
+      pdfMeta: (v, parts, tests, date) => `verzia ${v} · ${parts} ${parts === 1 ? "časť" : parts <= 4 ? "časti" : "častí"}${tests ? ` · ${tests} ${tests === 1 ? "test prejdený" : tests <= 4 ? "testy prejdené" : "testov prejdených"}` : ""} · dokončené ${date}`,
+      issuedOn: date => `Vydané ${date}`,
+      revokeTitle: name => `Odvolať certifikát — ${name}`,
     },
   },
   },
@@ -7032,6 +7135,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     },
   },
   errors: {
+    "certificate.notFound": "Certifikát neexistuje.",
     "csv.expectedRequired": "krátký text potřebuje očekávanou odpověď v answer_1",
     "csv.trueFalse": "u pravdy/nepravdy je correct true nebo false",
     "csv.correctOutOfRange": "číslo v correct není mezi vyplněnými odpověďmi",
@@ -7332,6 +7436,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       question: "otázka",
       test: "test",
       "test-attempt": "pokus o test",
+      certificate: "certifikát",
     },
     actions: {
       created: "založeno",
@@ -9113,7 +9218,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       noscriptDeadline: (start, end) => `Test jste spustili v ${start} — odevzdejte ho do ${end}. Po tomto čase server přijme jen to, co už bylo odesláno.`,
       kicker: (title, n, m, date) => `Test: ${title} · pokus ${n}${m ? ` z ${m}` : ""} · ${date}`,
       partDoneNotice: title => `Část „${title}“ je hotová.`,
-      failedNotice: (missing, pass) => `Neprošli jste — chybí ${missing} procentních bodů do hranice ${pass} %.`,
+      failedNotice: (missing, pass) => `Neprošli jste — ${missing === 1 ? "chybí 1 procentní bod" : missing >= 2 && missing <= 4 ? `chybí ${missing} procentní body` : `chybí ${missing} procentních bodů`} do hranice ${pass} %.`,
       points: (p, max) => `${p} z ${max} bodů`,
       passMark: p => `hranice ${p} %`,
       hiddenReason: { never: "Test správné odpovědi neukazuje.", after_submit: "Ukážou se po odevzdání.", after_pass: "Ukážou se po složení testu.", after_last_attempt: "Ukážou se po posledním pokusu." },
@@ -9149,6 +9254,56 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       alsoResponsible: names => `Odpovídají také: ${names}`,
       resetTitle: name => `Resetovat pokusy — ${name}`,
       resetDone: n => `Resetované pokusy: ${n}.`,
+    },
+    cert: {
+      kicker: "Certifikát o absolvování kurzu",
+      valid: "Platný",
+      revoked: "Odvolaný",
+      number: "Číslo",
+      completed: "Datum dokončení",
+      issuer: "Vydal",
+      print: "Tisknout nebo uložit jako PDF",
+      backToCourse: "Zpět na kurz",
+      verifyHeading: "Ověření",
+      verifyNote: "Kdo má odkaz, uvidí číslo, kurz, datum a vydavatele — bez vašeho jména.",
+      copy: "Kopírovat odkaz",
+      revokedPdf: "U odvolaného certifikátu se tisk nenabízí.",
+      sideVerify: "Co ověření ukáže",
+      sideVerifyText: "Číslo, kurz, datum dokončení a vydavatele. Jméno ne.",
+      sideKeep: "Uchování",
+      sideKeepText: "Certifikát se nemaže. Po uplynutí lhůty uchování se z něj odstraní jméno, číslo zůstane ověřitelné.",
+      notYet: "Certifikát se vydá po dokončení kurzu.",
+      noCertificate: "Kurz nevydává certifikát.",
+      show: "Zobrazit certifikát",
+      vTitle: "Ověření certifikátu",
+      vCourse: "Kurz",
+      vIssuer: "Vydavatel",
+      vNameNote: "Jméno držitele se při ověření nezobrazuje. Porovnejte ho se jménem na certifikátu, který vám byl předložen.",
+      vNotFound: "Certifikát se nenašel",
+      vNotFoundText: "Zkontrolujte odkaz nebo ho otevřete znovu z certifikátu.",
+      vSecurity: "Z bezpečnostních důvodů neprozradíme, zda certifikát s tímto číslem existuje.",
+      vFooter: "Ověření přes Contineo",
+      pdfTitle: "CERTIFIKÁT",
+      pdfSub: "o absolvování kurzu",
+      pdfVerify: "Ověření",
+      signature: "podpis",
+      colCertificate: "Certifikát",
+      revoke: "Odvolat",
+      revokeText: "Odvolání nelze vrátit. Veřejné ověření ukáže „odvolaný“ bez důvodu; držitel důvod uvidí.",
+      revokeReason: "Důvod (povinný)",
+      revokeButton: "Odvolat certifikát",
+      revokedMsg: "Certifikát je odvolaný.",
+      cancel: "Zrušit",
+      printNote: "V dialogu tisku zvolte „Uložit jako PDF“, formát A4 na šířku.",
+      completedCourse: (title, v) => `absolvoval kurz ${title} (verze ${v})`,
+      revokedNotice: (date, reason) => `Certifikát byl odvolán ${date}. Důvod: ${reason}`,
+      vValid: issuer => `Certifikát je platný — vydal ho ${issuer} a nebyl odvolán.`,
+      vRevoked: date => `Certifikát byl odvolán — ${date}.`,
+      pdfConfirms: org => `${org} potvrzuje, že`,
+      pdfCompleted: title => `úspěšně absolvoval kurz ${title}`,
+      pdfMeta: (v, parts, tests, date) => `verze ${v} · ${parts} ${parts === 1 ? "část" : parts <= 4 ? "části" : "částí"}${tests ? ` · ${tests} ${tests === 1 ? "test složen" : tests <= 4 ? "testy složeny" : "testů složeno"}` : ""} · dokončeno ${date}`,
+      issuedOn: date => `Vydáno ${date}`,
+      revokeTitle: name => `Odvolat certifikát — ${name}`,
     },
   },
   },
@@ -10112,6 +10267,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     },
   },
   errors: {
+    "certificate.notFound": "The certificate does not exist.",
     "csv.expectedRequired": "short text needs the expected answer in answer_1",
     "csv.trueFalse": "for true/false, correct is true or false",
     "csv.correctOutOfRange": "a number in correct is not among the filled answers",
@@ -10412,6 +10568,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       question: "question",
       test: "test",
       "test-attempt": "test attempt",
+      certificate: "certificate",
     },
     actions: {
       created: "created",
@@ -12222,6 +12379,56 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       alsoResponsible: names => `Also responsible: ${names}`,
       resetTitle: name => `Reset attempts — ${name}`,
       resetDone: n => `Attempts reset: ${n}.`,
+    },
+    cert: {
+      kicker: "Certificate of course completion",
+      valid: "Valid",
+      revoked: "Revoked",
+      number: "Number",
+      completed: "Completion date",
+      issuer: "Issued by",
+      print: "Print or save as PDF",
+      backToCourse: "Back to the course",
+      verifyHeading: "Verification",
+      verifyNote: "Anyone with the link sees the number, course, date and issuer — not your name.",
+      copy: "Copy link",
+      revokedPdf: "Printing is not offered for a revoked certificate.",
+      sideVerify: "What verification shows",
+      sideVerifyText: "The number, course, completion date and issuer. Not the name.",
+      sideKeep: "Retention",
+      sideKeepText: "The certificate is not deleted. When the retention period ends, the name is removed; the number stays verifiable.",
+      notYet: "The certificate is issued once the course is completed.",
+      noCertificate: "The course does not issue a certificate.",
+      show: "Show certificate",
+      vTitle: "Certificate verification",
+      vCourse: "Course",
+      vIssuer: "Issuer",
+      vNameNote: "The holder's name is not shown during verification. Compare it with the name on the certificate you were given.",
+      vNotFound: "Certificate not found",
+      vNotFoundText: "Check the link or open it again from the certificate.",
+      vSecurity: "For security reasons we do not reveal whether a certificate with this number exists.",
+      vFooter: "Verified by Contineo",
+      pdfTitle: "CERTIFICATE",
+      pdfSub: "of course completion",
+      pdfVerify: "Verification",
+      signature: "signature",
+      colCertificate: "Certificate",
+      revoke: "Revoke",
+      revokeText: "Revocation cannot be undone. Public verification shows “revoked” without the reason; the holder sees the reason.",
+      revokeReason: "Reason (required)",
+      revokeButton: "Revoke certificate",
+      revokedMsg: "The certificate has been revoked.",
+      cancel: "Cancel",
+      printNote: "In the print dialog choose “Save as PDF”, A4 landscape.",
+      completedCourse: (title, v) => `completed the course ${title} (version ${v})`,
+      revokedNotice: (date, reason) => `The certificate was revoked on ${date}. Reason: ${reason}`,
+      vValid: issuer => `The certificate is valid — issued by ${issuer} and not revoked.`,
+      vRevoked: date => `The certificate was revoked — ${date}.`,
+      pdfConfirms: org => `${org} confirms that`,
+      pdfCompleted: title => `has successfully completed the course ${title}`,
+      pdfMeta: (v, parts, tests, date) => `version ${v} · ${parts} part${parts === 1 ? "" : "s"}${tests ? ` · ${tests} test${tests === 1 ? "" : "s"} passed` : ""} · completed ${date}`,
+      issuedOn: date => `Issued ${date}`,
+      revokeTitle: name => `Revoke certificate — ${name}`,
     },
   },
   },
