@@ -145,8 +145,9 @@ interface SmartTag { key: string; value: string; label: string }
 
 ### 4.2 Témy — číselník `topics` tenanta
 
-Rovnaký mechanizmus ako `Tenant.codelists` (D55): `tenant.codelists.topic[]`
-(`{ key, label }`). Kurz nesie `topicKey` + **kópiu** `topicLabel`. Položka
+~~Rovnaký mechanizmus ako `Tenant.codelists` (D55)~~ — **zmenené 27. 9.:**
+`Tenant.learningTopics[]` (`{ key, label, retiredAt? }`) po vzore právnych
+základov (D92), lebo položky `codelists` vyradiť nevedia. Kurz nesie `topicKey` + **kópiu** `topicLabel`. Položka
 sa nemaže, len vyradí (`retiredAt`) — kurzy na ňu odkazujú.
 
 ### 4.3 `courses` — kurz a jeho verzie
@@ -167,6 +168,7 @@ interface CourseVersion {
   versionId: string; version: number
   state: "draft" | "published" | "archived"
   title, subtitle?, description? (markdown), estimatedMinutes?
+  sequential: boolean             // časti postupne (zamknuté) / ľubovoľne — doplnené 27. 9. (rámy COURSE, PART)
   parts: Part[]
   issuer: Issuer                  // kto vydá certifikát (kópia) — tenant, alebo externý (ŽU)
   issuesCertificate: boolean

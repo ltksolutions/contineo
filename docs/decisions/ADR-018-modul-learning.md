@@ -53,6 +53,14 @@ prednosť pri nasadení do ostrej prevádzky.
   10 tém" = **4 trasy** (jedna na úroveň) z 10 kurzov s témou z číselníka
   a smart:tagom `Úroveň: N`. Trasa z kurzov je rozšírenie
   `onboarding_tracks` a **nie je v rozsahu L1–L3**.
+- **Poradie častí** nesie verzia kurzu: `sequential: true` = časti sa
+  otvárajú postupne (ďalšia až po hotovej predošlej **povinnej**),
+  `false` = v ľubovoľnom poradí. Zamknutá časť je stav odvodený z toho
+  príznaku (D119), nie uložený. *(Doplnené 27. 9. 2026 podľa rámov COURSE
+  a PART — zadanie pre dizajn ho malo, ADR nie.)*
+- **Témy** sa ukladajú ako `Tenant.learningTopics[]` (`key`, `label`,
+  `retiredAt`) po vzore právnych základov (D92), nie v `codelists`:
+  položky `codelists` vyradiť nevedia a kurzy na tému odkazujú.
 - Kurz má **jeden jazyk obsahu**; kurz v inom jazyku je iný kurz (D35).
   Prostredie modulu je SK · CS · EN cez `lib/i18n.ts` bez výnimky.
 
