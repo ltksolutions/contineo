@@ -2459,6 +2459,41 @@ interface Dictionary {
       enrolledSince: (date: string) => string
       notEnrolledNote: string
     }
+    /** Časť kurzu (rám PART). */
+    part: {
+      backToCourse: string
+      nextPart: string
+      docKicker: string
+      openPdf: string
+      docDetail: string
+      docMissing: string
+      externalChip: string
+      externalBad: string
+      play: string
+      pause: string
+      mute: string
+      unmute: string
+      fullscreen: string
+      progress: string
+      mustWatchChip: string
+      mustWatchNote: string
+      watchedChip: string
+      noScriptNote: string
+      testsHeading: string
+      testStart: string
+      markDone: string
+      markReady: string
+      nextPartLink: string
+      optionalTestNote: string
+      testsJump: string
+      marked: string
+      partOf: (n: number, total: number) => string
+      docNewer: (label: string) => string
+      markDisabledVideo: (percent: number) => string
+      markedWaitingTest: (date: string) => string
+      partDone: (date: string) => string
+      requiredTestSummary: (state: string) => string
+    }
   }
 }
 
@@ -5005,6 +5040,40 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       enrolledSince: date => `zapísaný od ${date}`,
       notEnrolledNote: "Kurz je otvorený — zapísať sa môže ktokoľvek v organizácii. Časti sa sprístupnia po zapísaní.",
     },
+    part: {
+      backToCourse: "Kurz",
+      nextPart: "Ďalšia",
+      docKicker: "Dokument z knižnice",
+      openPdf: "Otvoriť PDF",
+      docDetail: "Detail v knižnici",
+      docMissing: "Toto znenie v knižnici už nie je.",
+      externalChip: "Externé video · dopozeranie sa neoveruje",
+      externalBad: "Video sa nedá vložiť — adresa nie je podporovaná.",
+      play: "Prehrať",
+      pause: "Pozastaviť",
+      mute: "Stlmiť",
+      unmute: "Zapnúť zvuk",
+      fullscreen: "Celá obrazovka",
+      progress: "Priebeh videa",
+      mustWatchChip: "Povinné dopozeranie · pozreté {p} %",
+      mustWatchNote: "Dopredu sa dá pretáčať len po miesto, ktoré ste už videli. Treba aspoň 90 %.",
+      watchedChip: "Dopozerané",
+      noScriptNote: "Bez JavaScriptu sa dopozeranie nezaznamená.",
+      testsHeading: "Testy tejto časti",
+      testStart: "Spustiť",
+      markDone: "Označiť ako prejdené",
+      markReady: "Po označení je časť hotová.",
+      nextPartLink: "Ďalšia časť →",
+      optionalTestNote: "Nepovinný test môžete spraviť kedykoľvek.",
+      testsJump: "Testy ↓",
+      marked: "Časť je označená ako prejdená.",
+      partOf: (n, total) => `Časť ${n} z ${total}`,
+      docNewer: label => `Platné je už ${label}.`,
+      markDisabledVideo: p => `Najprv dopozerajte povinné video — pozreté ${p} %, treba aspoň 90 %.`,
+      markedWaitingTest: date => `Označené ${date} · časť bude hotová po prejdení povinného testu.`,
+      partDone: date => `Časť je hotová · ${date}`,
+      requiredTestSummary: state => `Povinný test: ${state}`,
+    },
   },
   },
 
@@ -7535,6 +7604,40 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       enrolledSince: date => `zapsán od ${date}`,
       notEnrolledNote: "Kurz je otevřený — zapsat se může kdokoli v organizaci. Části se zpřístupní po zapsání.",
     },
+    part: {
+      backToCourse: "Kurz",
+      nextPart: "Další",
+      docKicker: "Dokument z knihovny",
+      openPdf: "Otevřít PDF",
+      docDetail: "Detail v knihovně",
+      docMissing: "Toto znění v knihovně už není.",
+      externalChip: "Externí video · dokoukání se neověřuje",
+      externalBad: "Video nelze vložit — adresa není podporovaná.",
+      play: "Přehrát",
+      pause: "Pozastavit",
+      mute: "Ztlumit",
+      unmute: "Zapnout zvuk",
+      fullscreen: "Celá obrazovka",
+      progress: "Průběh videa",
+      mustWatchChip: "Povinné dokoukání · zhlédnuto {p} %",
+      mustWatchNote: "Dopředu lze přetáčet jen po místo, které jste už viděli. Je třeba alespoň 90 %.",
+      watchedChip: "Dokoukáno",
+      noScriptNote: "Bez JavaScriptu se dokoukání nezaznamená.",
+      testsHeading: "Testy této části",
+      testStart: "Spustit",
+      markDone: "Označit jako prošlé",
+      markReady: "Po označení je část hotová.",
+      nextPartLink: "Další část →",
+      optionalTestNote: "Nepovinný test můžete udělat kdykoli.",
+      testsJump: "Testy ↓",
+      marked: "Část je označená jako prošlá.",
+      partOf: (n, total) => `Část ${n} z ${total}`,
+      docNewer: label => `Platné je už ${label}.`,
+      markDisabledVideo: p => `Nejprve dokoukejte povinné video — zhlédnuto ${p} %, je třeba alespoň 90 %.`,
+      markedWaitingTest: date => `Označeno ${date} · část bude hotová po složení povinného testu.`,
+      partDone: date => `Část je hotová · ${date}`,
+      requiredTestSummary: state => `Povinný test: ${state}`,
+    },
   },
   },
 
@@ -10050,6 +10153,40 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       versionN: n => `version ${n}`,
       enrolledSince: date => `enrolled ${date}`,
       notEnrolledNote: "The course is open — anyone in the organisation can enrol. The parts open after you enrol.",
+    },
+    part: {
+      backToCourse: "Course",
+      nextPart: "Next",
+      docKicker: "Document from the library",
+      openPdf: "Open PDF",
+      docDetail: "Detail in the library",
+      docMissing: "This version is no longer in the library.",
+      externalChip: "External video · watching is not verified",
+      externalBad: "The video cannot be embedded — the address is not supported.",
+      play: "Play",
+      pause: "Pause",
+      mute: "Mute",
+      unmute: "Unmute",
+      fullscreen: "Full screen",
+      progress: "Video progress",
+      mustWatchChip: "Required viewing · {p} % watched",
+      mustWatchNote: "You can only skip ahead to the point you have already seen. At least 90 % is required.",
+      watchedChip: "Watched",
+      noScriptNote: "Without JavaScript, viewing is not recorded.",
+      testsHeading: "Tests in this part",
+      testStart: "Start",
+      markDone: "Mark as done",
+      markReady: "Once marked, the part is done.",
+      nextPartLink: "Next part →",
+      optionalTestNote: "You can take the optional test any time.",
+      testsJump: "Tests ↓",
+      marked: "The part is marked as done.",
+      partOf: (n, total) => `Part ${n} of ${total}`,
+      docNewer: label => `The current version is now ${label}.`,
+      markDisabledVideo: p => `Watch the required video first — ${p} % watched, at least 90 % required.`,
+      markedWaitingTest: date => `Marked ${date} · the part will be done once you pass the required test.`,
+      partDone: date => `The part is done · ${date}`,
+      requiredTestSummary: state => `Required test: ${state}`,
     },
   },
   },

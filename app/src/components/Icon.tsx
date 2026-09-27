@@ -176,6 +176,50 @@ const PATHS: Record<string, React.ReactNode> = {
   ),
   // Viac — tri bodky. Jediná plná kresba v sete: bodka z ťahu by na 18 px
   // bola krúžok a krúžky tu znamenajú schválenie a posúdenie.
+  // Vzdelávanie — absolventská čiapka (ADR-018).
+  learning: (
+    <>
+      <path d="M1.6 7 9 3.4 16.4 7 9 10.6z" />
+      <path d="M4.6 8.5v3.6c1.2 1.3 2.7 2 4.4 2s3.2-.7 4.4-2V8.5" />
+      <path d="M16.4 7v4.2" />
+    </>
+  ),
+  // Správa kurzov — kniha s perom zjednodušená na knihu a riadky.
+  learningManage: (
+    <>
+      <path d="M3 3.2h5.2c.5 0 .8.3.8.8v11a1.6 1.6 0 0 0-1.6-1.6H3z" />
+      <path d="M15 3.2H9.8c-.5 0-.8.3-.8.8v11a1.6 1.6 0 0 1 1.6-1.6H15z" />
+    </>
+  ),
+  // Testy — zoznam s fajkami.
+  learningTests: (
+    <>
+      <path d="m2.6 4.6 1.4 1.4 2.4-2.6" />
+      <path d="m2.6 11.4 1.4 1.4 2.4-2.6" />
+      <path d="M9 5h6.4M9 11.8h6.4" />
+    </>
+  ),
+  // Prehrávač videa (rám PART) — mriežka 18×18 ako navigácia.
+  play: <path d="M5.4 3.4v11.2L14.6 9z" fill="currentColor" />,
+  pause: (
+    <>
+      <rect x="4.4" y="3.4" width="3.2" height="11.2" rx=".8" fill="currentColor" stroke="none" />
+      <rect x="10.4" y="3.4" width="3.2" height="11.2" rx=".8" fill="currentColor" stroke="none" />
+    </>
+  ),
+  volume: (
+    <>
+      <path d="M2.8 7h2.6l3.8-3v10l-3.8-3H2.8z" />
+      <path d="M12 6.4a3.6 3.6 0 0 1 0 5.2M14 4.4a6.4 6.4 0 0 1 0 9.2" />
+    </>
+  ),
+  muted: (
+    <>
+      <path d="M2.8 7h2.6l3.8-3v10l-3.8-3H2.8z" />
+      <path d="m12 7 4 4M16 7l-4 4" />
+    </>
+  ),
+  fullscreen: <path d="M2.8 6.4V2.8h3.6M11.6 2.8h3.6v3.6M15.2 11.6v3.6h-3.6M6.4 15.2H2.8v-3.6" />,
   more: (
     <>
       <circle cx="3.4" cy="9" r="1.5" fill="currentColor" stroke="none" />
