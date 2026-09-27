@@ -4,6 +4,12 @@ Všetky podstatné zmeny projektu Contineo. Formát vychádza z [Keep a Changelo
 
 ## [Unreleased]
 
+### Rozhodnuté: súbežné sessions vo vlastnom worktree — ADR-020 (2026-09-27)
+
+Každá ďalšia session v repozitári pracuje vo vlastnom `git worktree`
+v `.worktrees/<nazov>` (vlastná vetva nestačí, pracovná kópia je jedna).
+Po zlúčení sa worktree odstráni spolu s vetvou. D127–D129.
+
 ### Náhľad importu osôb ako tabuľka (2026-09-27)
 
 Namiesto zoznamu e-mailov ukáže náhľad **tabuľku po osobách**: farebný

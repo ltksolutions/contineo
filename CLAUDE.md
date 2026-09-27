@@ -145,6 +145,10 @@ Stalo sa 27. 9. 2026: commit `12d7f3b` (PR #145, learning modul) odniesol so
 sebou celú rozrobenú zmenu importu osôb (ADR-019) aj pomocný súbor, ktorý
 do repozitára nepatril. História sa neprepisuje, takže zmiešaný commit ostal.
 
+**Vlastná vetva nestačí — pracovná kópia je stále jedna.** Každá ďalšia
+session si preto zakladá **vlastný `git worktree`** v `.worktrees/<nazov>`
+(postup, `npm ci`, `.env.local`, odstránenie po zlúčení: **ADR-020**).
+
 Z toho vyplýva aj pre jednu session: pred `git add` sa pozrie `git status`
 a pridávajú sa **menovite tie súbory, ktoré patria k zmene** — nie všetko,
 čo je v pracovnej kópii zmenené. Cudzí `M` v `git status` je signál, že

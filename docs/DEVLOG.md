@@ -23,8 +23,17 @@ plán po riadkoch (`RowPlan`: stav + zmeny „pred → po"). Skript aj obrazovka
 ho ukazujú. Jedna funkcia = jedna pravda; predtým mal náhľad vlastnú,
 hrubšiu logiku („existuje/neexistuje").
 
+**Rozhodnuté (ADR-020).** Ján nechal na mňa, či worktree po zlúčení
+odstrániť a či ho zaviesť ako pravidlo: áno, oboje. Vlastná vetva bez
+vlastnej pracovnej kópie problém z rána nerieši. Odstránenie ide spolu
+s vetvou podľa existujúceho pravidla o automatickom mazaní po zlúčení.
+
 **Nefungovalo / poučenie.**
 
+- Pri zlúčení `origin/main` do vetvy (PR #147 medzitým pridal CSS
+  certifikátov) git zaradil zatvárajúcu `}` môjho `@media` bloku do
+  spoločnej časti konfliktu; „ponechať oboje" bez kontroly zátvoriek by
+  rozbilo CSS. Odteraz po každom konflikte v `globals.css` počítať `{`/`}`.
 - Prvé testy `planChanges()` padli na mojich fixtures, nie na kóde:
   `resolveName()` z celého mena odvodí aj `givenName`/`surname`, takže
   „existujúca osoba" bez nich vyzerala ako osoba s prázdnymi poľami.
