@@ -10,6 +10,44 @@
 
 ---
 
+## 2026-09-27 — Vzdelávanie ako modul platformy: ADR-018 (bez kódu)
+
+**Čo sa rozhodlo.** LMS (ClubUp) bude **modul `learning`** tej istej
+platformy, nie samostatný produkt s prepojením. Plán zo 17. 9. ležal
+odložený za onboardingom; dnes sa otvoril, prešiel hĺbkovou analýzou
+a stal sa ADR-018 s rozhodnutiami D117–D123. Onboarding beží ďalej
+v druhej session — preto sa `tracks.ts` nedotýkam a modul zostane pre SFZ
+vypnutý, kým Ján nepovie.
+
+**Čo stálo za rozmyslenie.**
+
+- **ClubUpový strom sa neprebral.** ClubUp má Kurz → Úroveň → Téma → Modul →
+  Časť a uložený `Progress`. Ján to zjednodušil na **plochý kurz → časti**,
+  téma je číselník, úrovne sú **trasy** (4 trasy, jedna na úroveň). Contineo
+  k tomu dodá D27 — stav sa odvodzuje z udalostí (zápis, dokončenie časti,
+  pokus, certifikát), nič sa neukladá ako príznak.
+- **Testy nie sú súčasť kurzu, ale služba platformy** s bankou otázok
+  a smart:tagmi `Kľúč: Hodnota`. Test je *recept* (sekcie = filter tagov +
+  počet), otázky sa losujú, odpovede miešajú, pokus si uloží snímky. Test sa
+  prideľuje ako hotový — k časti kurzu, neskôr aj ako krok trasy (O18, po
+  dohode s onboardingom, lebo to mení `/documents` a ADR-005).
+- **HR skóre nevidí.** Výsledok testu je hodnotenie osoby; vidia ho
+  menovite zodpovedné osoby testu (ako schvaľovatelia znenia, D69), nie rola.
+- **Video ako pri knižnici**: GridFS do 25 MB (`fileStore.ts`, po kúskoch),
+  adaptér S3/Azure až pri prvom zákazníkovi s dlhými videami. Vercel Blob
+  som navrhol omylom — v projekte nie je; Ján to zachytil.
+- **Dizajn ide cez Claude Design nad ZAKLADOM** — zadanie
+  `docs/design/LEARNING-zadanie.md` (časť A raz, časť B po ráme).
+
+**Čo nevyšlo.** `git status` z pripojeného priečinka nechal v repe
+`.git/index.lock` (mount nevie mazať) a commit cez Control your Mac
+spadol. Riešenie: git len cez Mac shell; zámok sa zmazal so súhlasom.
+Heredoc v `do shell script` nefunguje — správa commitu ide cez viac `-m`.
+
+**Ďalej.** L0 (modul v profile tenanta, rola `learning-admin`, navigácia,
+i18n, prázdne `/learning*`) vo vetve `learning-l0` cez PR — dotkne sa
+súborov, na ktorých pracuje aj onboarding. Pokračuje sa v Claude Code.
+
 ## 2026-09-24/25 — rámy z Claude Design a štyri rozhodnutia o znení (PR #109–#128)
 
 **Postup s Claude Design sa ustálil.** Ján navrhne rám, napíše „stiahni

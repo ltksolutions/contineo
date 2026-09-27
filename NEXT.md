@@ -6,7 +6,7 @@
 > **Tento súbor je indícia, `git log` je pravda.** Keď si protirečia, verí sa
 > gitu a NEXT.md sa opraví. Aktualizuje sa pri rituáli **„Poupratuj"**.
 
-Posledná aktualizácia: **2026-09-25** (po PR #128: rámy z Claude Design, ADR-014 až ADR-017)
+Posledná aktualizácia: **2026-09-27** (ADR-018 — modul `learning`; bez kódu)
 
 ---
 
@@ -40,6 +40,16 @@ Design).
 **Naostro neoverené:** celý postup nového znenia cez kartu (predloženie,
 zverejnenie s novým názvom, prenos pridelení), uloženie kombinácie
 právnych základov, `/dpo` s námietkou, vyradená osoba.
+
+**Vzdelávanie (modul `learning`) — rozhodnuté 27. 9., ADR-018, zatiaľ bez
+kódu.** Plán L0–L3 je v `docs/LEARNING_analyza_a_plan.md`, zadanie pre
+Claude Design v `docs/design/LEARNING-zadanie.md`. Modul zostáva pre SFZ
+**vypnutý**, kým Ján nepovie; onboarding má prednosť. Prvý krok kódu je
+**L0 vo vetve `learning-l0` cez PR** (`tenants.ts` `modules.learning`,
+`lib/learning.ts` s rolou `learning-admin`, `appNav.ts`, `i18n.ts` sekcia
+`learning`, prázdne `/learning*`) — dotýka sa súborov, na ktorých beží aj
+onboarding, preto malé PR a rebase pred každým. `tracks.ts` sa v L1–L3
+nemení (O18).
 
 ## Čo čaká na rozhodnutie Jána
 

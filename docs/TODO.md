@@ -1,6 +1,6 @@
 # TODO — Contineo
 
-> Pracovný zoznam krokov. Aktualizované 2026-09-24.
+> Pracovný zoznam krokov. Aktualizované 2026-09-27.
 >
 > **Hotové položky sú datované zápisy a neprepísavajú sa.** Menujú cesty,
 > súbory a roly tak, ako sa volali v ten deň — časť z nich sa medzitým
@@ -875,3 +875,19 @@ nie táto sekcia.
 - [x] **Web vs D90** ✅ 2026-09-18 — `web/lib/dictionaries.js` (SK/CS/EN): hierarchia a `scope: global` preformulované na „zdieľanie pripravujeme" (viditeľnosť = vlastná organizácia, D90); Vertex AI odstránený (Bedrock zostáva — jediná cesta k eu-full generovaniu); „Infinity (voyage-4-nano) / TEI (BGE-M3)" (O7 nález A); zero-retention pri Anthropic zmiernené na „potvrdzujeme zmluvne", kým nepríde odpoveď zo sales supportu (žiadosť odoslaná 2026-09-18) — potom vrátiť silné znenie. Build webu prešiel.
 - [ ] **N8 — `.env.local.example` zastaraný**: zosúladiť so skutočnými premennými (bez Ollama/Blob; doplniť CRON_SECRET, ALLOWED_EMAILS, OAUTH_SECRET_ENCRYPTION_KEY, PLATFORM_TENANT, VERCEL_TOKEN, ECOMAIL_*).
 - [ ] **N5/N7 — rate limiting a timingSafeEqual pre CRON_SECRET**: až s verejným widgetom, nie skôr.
+
+## P. Vzdelávanie — modul `learning` (zaradené 2026-09-27)
+
+> **Rozhodnutie:** `docs/decisions/ADR-018-modul-learning.md` (D117–D123) ·
+> **Plán s krokmi, súbormi a rizikami:** `docs/LEARNING_analyza_a_plan.md` ·
+> **Dizajn:** `docs/design/LEARNING-zadanie.md` (rámy z Claude Design, jeden rám = jeden PR).
+> Podrobnosti sú tam a neduplikujú sa sem. Modul je pre SFZ vypnutý až do pokynu Jána.
+
+- [x] ADR-018, Okruh 8 v `OPEN_DECISIONS.md`, Fáza 10 v projektovom pláne, zadanie pre Claude Design ✅ 2026-09-27
+- [ ] **L0** — `Tenant.modules.learning` + `npm run tenant`; `lib/learning.ts` (`learning-admin`, `learningContext()`); `appNav.ts` (`learning`, `learningManage`, `learningTests`), `navData.ts`; `i18n.ts` sekcia `learning` sk/cs/en; prázdne `/learning`, `/learning/manage`, `/learning/tests` s `notFound()` pri vypnutom module. Vetva `learning-l0`, PR.
+- [ ] Rámy L1 z Claude Design (LEARNING, COURSE, PART, MANAGE, MANAGE-COURSE) → `docs/design/`
+- [ ] **L1** — `smartTags.ts`, číselník tém, `courses.ts` (verzie, validácia zverejnenia), `videoStore.ts` (GridFS + adaptér) a `VideoPlayer.tsx` (povinné dopozeranie), `enrollments.ts`, `part_completions`, `learningProgress.ts` (odvodenie), obrazovky študenta a správcu, `scripts/learning_init.mjs` (indexy), `npm run check` invarianty
+- [ ] Rámy L2/L3 (TESTS, QUESTIONS, TEST-ATTEMPT, RESULT, CERTIFICATE)
+- [ ] **L2** — `questions.ts`, `tests.ts` (sekcie, zodpovedné osoby, `ready`), `testAttempts.ts` (losovanie, snímky, vyhodnotenie), pokus a výsledok, `?tab=results` len pre zodpovedné osoby; **dodatok k ADR-012** (retencia `part_completions`, `video_watch`, `test_attempts`, `certificates`; certifikát sa anonymizuje) — O24
+- [ ] **L3** — `certificates.ts`, PDF, `/learning/[courseKey]/certificate`, verejné `/verify/[registrationNumber]?h=`, `revoke`
+- [ ] Po L2: test ako krok trasy (O18) a trasa z kurzov (O19) — dohoda s onboardingom, mení `tracks.ts`, `/documents`, ADR-005
