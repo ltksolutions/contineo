@@ -76,3 +76,35 @@ export async function retireTopic(companyCode: string, key: string, actor: strin
   await writeAudit({ companyCode, subject: "organisation", action: "retired", actor, targetId: TARGET, targetLabel: `Témy kurzov — ${item.label}` })
   return true
 }
+
+/** Vráti vyradenú tému do ponuky. */
+export async function restoreTopic(companyCode: string, key: string, actor: string): Promise<boolean> {
+  const { col, tenant } = await tenantFor(companyCode)
+  const item = (tenant.learningTopics ?? []).find(t => t.key === key && t.retiredAt)
+  if (!item) return false
+  await col.updateOne({ companyCode }, { $set: { "learningTopics.$[t].retiredAt": null } }, { arrayFilters: [{ "t.key": key }] })
+  invalidateTenants()
+  await writeAudit({ companyCode, subject: "organisation", action: "restored", actor, targetId: TARGET, targetLabel: `Témy kurzov — ${item.label}` })
+  return true
+}
+
+/**
+ * Premenuje tému. Kľúč ostáva (kurzy naň odkazujú); kópia názvu na kurzoch
+ * sa zmení tiež — kurz je živý záznam, zverejnená verzia tému nenesie.
+ */
+export async function renameTopic(companyCode: string, key: string, label: string, actor: string): Promise<boolean> {
+  const name = label.trim()
+  if (!name) throw new AppError("learning.topicLabelRequired", "Názov témy je povinný.")
+  const { col, tenant } = await tenantFor(companyCode)
+  const item = (tenant.learningTopics ?? []).find(t => t.key === key)
+  if (!item) return false
+  await col.updateOne({ companyCode }, { $set: { "learningTopics.$[t].label": name } }, { arrayFilters: [{ "t.key": key }] })
+  invalidateTenants()
+  await (await getCollection<{ companyCode: string; topicKey: string }>("courses"))
+    .updateMany({ companyCode, topicKey: key }, { $set: { topicLabel: name } })
+  await writeAudit({
+    companyCode, subject: "organisation", action: "renamed", actor, targetId: TARGET, targetLabel: `Témy kurzov — ${name}`,
+    changes: { label: { from: item.label, to: name } },
+  })
+  return true
+}

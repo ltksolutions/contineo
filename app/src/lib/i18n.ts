@@ -2494,6 +2494,73 @@ interface Dictionary {
       partDone: (date: string) => string
       requiredTestSummary: (state: string) => string
     }
+    /** Správa kurzov (rám MANAGE). */
+    manage: {
+      tabsLabel: string
+      tabCourses: string
+      tabTopics: string
+      tabTags: string
+      newCourse: string
+      statusAll: string
+      statusDraft: string
+      statusPublished: string
+      statusArchived: string
+      colCourse: string
+      colTopic: string
+      colStatus: string
+      colEnrolled: string
+      colCompleted: string
+      colUpdated: string
+      edit: string
+      openEnrollment: string
+      courseTitle: string
+      courseKey: string
+      keyHint: string
+      keyTaken: string
+      topic: string
+      topicNone: string
+      create: string
+      cancel: string
+      emptyText: string
+      topicsHeading: string
+      rename: string
+      retire: string
+      restore: string
+      retired: string
+      newTopic: string
+      topicName: string
+      topicKey: string
+      addTopic: string
+      topicsEmpty: string
+      topicAdded: string
+      topicRenamed: string
+      topicRetired: string
+      topicRestored: string
+      save: string
+      tagsIntro: string
+      tagsEmpty: string
+      renameKey: string
+      newValue: string
+      mergeButton: string
+      mergeInto: string
+      clearSelection: string
+      mergeSelected: string
+      whatStays: string
+      newEntry: string
+      keyLabel: string
+      selectTag: string
+      tagPlaceholder: string
+      topicCourses: (n: number) => string
+      enrolledCompleted: (enrolled: number, completed: number) => string
+      usage: (courses: number, questions: number, tests: number) => string
+      impact: (courses: number, questions: number, tests: number) => string
+      exists: (label: string) => string
+      renamed: (label: string) => string
+      selected: (n: number) => string
+      mergeTitle: (n: number) => string
+      mergeResult: (target: string) => string
+      merged: (n: number, target: string) => string
+    }
   }
 }
 
@@ -3476,6 +3543,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     },
   },
   errors: {
+    "learning.topicRequired": "Vyberte tému kurzu.",
     "learning.mergeNeedsTwo": "Na zlúčenie treba aspoň dva smart:tagy.",
     "learning.tagShape": "„{value}“ nie je smart:tag v tvare „Kľúč: Hodnota“.",
     "learning.courseKeyShape": "Kľúč kurzu „{key}“ nemá správny tvar — malé písmená bez diakritiky, číslice a pomlčka.",
@@ -5074,6 +5142,76 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       partDone: date => `Časť je hotová · ${date}`,
       requiredTestSummary: state => `Povinný test: ${state}`,
     },
+    manage: {
+      tabsLabel: "Správa kurzov",
+      tabCourses: "Kurzy",
+      tabTopics: "Témy",
+      tabTags: "smart:tagy",
+      newCourse: "Nový kurz",
+      statusAll: "Všetky",
+      statusDraft: "Koncept",
+      statusPublished: "Zverejnený",
+      statusArchived: "Archív",
+      colCourse: "Kurz",
+      colTopic: "Téma",
+      colStatus: "Stav",
+      colEnrolled: "Zapísaní",
+      colCompleted: "Dokončili",
+      colUpdated: "Upravené",
+      edit: "Upraviť",
+      openEnrollment: "otvorený na zápis",
+      courseTitle: "Názov kurzu",
+      courseKey: "Kľúč v adrese",
+      keyHint: "Kľúč je v adrese kurzu (/learning/…) a nemení sa ani so zmenou názvu.",
+      keyTaken: "Kurz s takým kľúčom už existuje.",
+      topic: "Téma",
+      topicNone: "Najprv pridajte tému v záložke Témy.",
+      create: "Vytvoriť koncept",
+      cancel: "Zrušiť",
+      emptyText: "Kurz vznikne ako koncept — časti, bloky a nastavenia doplníte pred zverejnením. Téma musí existovať v záložke Témy.",
+      topicsHeading: "Témy kurzov",
+      rename: "Premenovať",
+      retire: "Vyradiť",
+      restore: "Vrátiť",
+      retired: "vyradená",
+      newTopic: "Nová téma",
+      topicName: "Názov témy",
+      topicKey: "Kľúč",
+      addTopic: "Pridať tému",
+      topicsEmpty: "Zatiaľ tu nie je žiadna téma. Kurz potrebuje práve jednu.",
+      topicAdded: "Téma je pridaná.",
+      topicRenamed: "Téma je premenovaná.",
+      topicRetired: "Téma je vyradená z ponuky. Kurzy si ju nechajú.",
+      topicRestored: "Téma je späť v ponuke.",
+      save: "Uložiť",
+      tagsIntro: "smart:tag sa tu nevytvára — vzniká tam, kde sa prvýkrát napíše: pri kurze, otázke alebo teste.",
+      tagsEmpty: "Zatiaľ sa nepoužíva žiadny smart:tag.",
+      renameKey: "Premenovať kľúč",
+      newValue: "Nový zápis",
+      mergeButton: "Zlúčiť",
+      mergeInto: "Zlúčiť do…",
+      clearSelection: "Zrušiť výber",
+      mergeSelected: "Zlúčiť vybraté",
+      whatStays: "Čo zostane",
+      newEntry: "Nový zápis",
+      keyLabel: "Nový názov kľúča",
+      selectTag: "Vybrať na zlúčenie",
+      tagPlaceholder: "Kľúč: Hodnota",
+      topicCourses: n => `${n} ${n === 1 ? "kurz" : n >= 2 && n <= 4 ? "kurzy" : "kurzov"}`,
+      enrolledCompleted: (e, c) => `${e} ${e === 1 ? "zapísaný" : e >= 2 && e <= 4 ? "zapísaní" : "zapísaných"} · ${c} ${c === 1 ? "dokončil" : c >= 2 && c <= 4 ? "dokončili" : "dokončilo"}`,
+      usage: (c, q, t) => `kurzy ${c} · otázky ${q} · testy ${t}`,
+      impact: (c, q, t) => {
+        const n = c + q + t
+        const k = (x: number, one: string, few: string, many: string) => `${x} ${x === 1 ? one : x >= 2 && x <= 4 ? few : many}`
+        return `Zmení sa všade — na ${n} ${n === 1 ? "mieste" : "miestach"} (${k(c, "kurz", "kurzy", "kurzov")}, ${k(q, "otázka", "otázky", "otázok")}, ${k(t, "test", "testy", "testov")}), vrátane filtrov sekcií testov.`
+      },
+      exists: label => `„${label}“ už existuje — zlúčia sa do jedného tagu.`,
+      renamed: label => `Premenované na „${label}“.`,
+      selected: n => `Vybraté ${n}`,
+      mergeTitle: n => `Zlúčiť ${n} ${n <= 4 ? "smart:tagy" : "smart:tagov"} do jedného`,
+      mergeResult: target => `Vybrané tagy zmiznú, zostane „${target}“. Kurz, otázka či test, ktorý ich mal viac, dostane „${target}“ raz.`,
+      merged: (n, target) => `Zlúčené: ${n} ${n <= 4 ? "tagy" : "tagov"} → ${target}.`,
+    },
   },
   },
 
@@ -6043,6 +6181,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     },
   },
   errors: {
+    "learning.topicRequired": "Vyberte téma kurzu.",
     "learning.mergeNeedsTwo": "Ke sloučení jsou potřeba alespoň dva smart:tagy.",
     "learning.tagShape": "„{value}“ není smart:tag ve tvaru „Klíč: Hodnota“.",
     "learning.courseKeyShape": "Klíč kurzu „{key}“ nemá správný tvar — malá písmena bez diakritiky, číslice a pomlčka.",
@@ -7638,6 +7777,76 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       partDone: date => `Část je hotová · ${date}`,
       requiredTestSummary: state => `Povinný test: ${state}`,
     },
+    manage: {
+      tabsLabel: "Správa kurzů",
+      tabCourses: "Kurzy",
+      tabTopics: "Témata",
+      tabTags: "smart:tagy",
+      newCourse: "Nový kurz",
+      statusAll: "Všechny",
+      statusDraft: "Koncept",
+      statusPublished: "Zveřejněný",
+      statusArchived: "Archiv",
+      colCourse: "Kurz",
+      colTopic: "Téma",
+      colStatus: "Stav",
+      colEnrolled: "Zapsaní",
+      colCompleted: "Dokončili",
+      colUpdated: "Upraveno",
+      edit: "Upravit",
+      openEnrollment: "otevřený k zápisu",
+      courseTitle: "Název kurzu",
+      courseKey: "Klíč v adrese",
+      keyHint: "Klíč je v adrese kurzu (/learning/…) a nemění se ani se změnou názvu.",
+      keyTaken: "Kurz s takovým klíčem už existuje.",
+      topic: "Téma",
+      topicNone: "Nejprve přidejte téma v záložce Témata.",
+      create: "Vytvořit koncept",
+      cancel: "Zrušit",
+      emptyText: "Kurz vznikne jako koncept — části, bloky a nastavení doplníte před zveřejněním. Téma musí existovat v záložce Témata.",
+      topicsHeading: "Témata kurzů",
+      rename: "Přejmenovat",
+      retire: "Vyřadit",
+      restore: "Vrátit",
+      retired: "vyřazené",
+      newTopic: "Nové téma",
+      topicName: "Název tématu",
+      topicKey: "Klíč",
+      addTopic: "Přidat téma",
+      topicsEmpty: "Zatím tu není žádné téma. Kurz potřebuje právě jedno.",
+      topicAdded: "Téma je přidané.",
+      topicRenamed: "Téma je přejmenované.",
+      topicRetired: "Téma je vyřazené z nabídky. Kurzy si ho ponechají.",
+      topicRestored: "Téma je zpět v nabídce.",
+      save: "Uložit",
+      tagsIntro: "smart:tag se tu nevytváří — vzniká tam, kde se poprvé napíše: u kurzu, otázky nebo testu.",
+      tagsEmpty: "Zatím se nepoužívá žádný smart:tag.",
+      renameKey: "Přejmenovat klíč",
+      newValue: "Nový zápis",
+      mergeButton: "Sloučit",
+      mergeInto: "Sloučit do…",
+      clearSelection: "Zrušit výběr",
+      mergeSelected: "Sloučit vybrané",
+      whatStays: "Co zůstane",
+      newEntry: "Nový zápis",
+      keyLabel: "Nový název klíče",
+      selectTag: "Vybrat ke sloučení",
+      tagPlaceholder: "Klíč: Hodnota",
+      topicCourses: n => `${n} ${n === 1 ? "kurz" : n >= 2 && n <= 4 ? "kurzy" : "kurzů"}`,
+      enrolledCompleted: (e, c) => `${e} ${e === 1 ? "zapsaný" : e >= 2 && e <= 4 ? "zapsaní" : "zapsaných"} · ${c} ${c === 1 ? "dokončil" : c >= 2 && c <= 4 ? "dokončili" : "dokončilo"}`,
+      usage: (c, q, t) => `kurzy ${c} · otázky ${q} · testy ${t}`,
+      impact: (c, q, t) => {
+        const n = c + q + t
+        const k = (x: number, one: string, few: string, many: string) => `${x} ${x === 1 ? one : x >= 2 && x <= 4 ? few : many}`
+        return `Změní se všude — na ${n} ${n === 1 ? "místě" : "místech"} (${k(c, "kurz", "kurzy", "kurzů")}, ${k(q, "otázka", "otázky", "otázek")}, ${k(t, "test", "testy", "testů")}), včetně filtrů sekcí testů.`
+      },
+      exists: label => `„${label}“ už existuje — sloučí se do jednoho tagu.`,
+      renamed: label => `Přejmenováno na „${label}“.`,
+      selected: n => `Vybráno ${n}`,
+      mergeTitle: n => `Sloučit ${n} ${n <= 4 ? "smart:tagy" : "smart:tagů"} do jednoho`,
+      mergeResult: target => `Vybrané tagy zmizí, zůstane „${target}“. Kurz, otázka či test, který jich měl víc, dostane „${target}“ jednou.`,
+      merged: (n, target) => `Sloučeno: ${n} ${n <= 4 ? "tagy" : "tagů"} → ${target}.`,
+    },
   },
   },
 
@@ -8600,6 +8809,7 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
     },
   },
   errors: {
+    "learning.topicRequired": "Choose the course topic.",
     "learning.mergeNeedsTwo": "Merging needs at least two smart:tags.",
     "learning.tagShape": "“{value}” is not a smart:tag in the form “Key: Value”.",
     "learning.courseKeyShape": "The course key “{key}” has the wrong shape — lowercase letters without diacritics, digits and hyphens.",
@@ -10187,6 +10397,76 @@ export const DICTIONARY: Record<UiLanguage, Dictionary> = {
       markedWaitingTest: date => `Marked ${date} · the part will be done once you pass the required test.`,
       partDone: date => `The part is done · ${date}`,
       requiredTestSummary: state => `Required test: ${state}`,
+    },
+    manage: {
+      tabsLabel: "Course management",
+      tabCourses: "Courses",
+      tabTopics: "Topics",
+      tabTags: "smart:tags",
+      newCourse: "New course",
+      statusAll: "All",
+      statusDraft: "Draft",
+      statusPublished: "Published",
+      statusArchived: "Archived",
+      colCourse: "Course",
+      colTopic: "Topic",
+      colStatus: "Status",
+      colEnrolled: "Enrolled",
+      colCompleted: "Completed",
+      colUpdated: "Updated",
+      edit: "Edit",
+      openEnrollment: "open for enrolment",
+      courseTitle: "Course title",
+      courseKey: "Key in the address",
+      keyHint: "The key is in the course address (/learning/…) and does not change with the title.",
+      keyTaken: "A course with this key already exists.",
+      topic: "Topic",
+      topicNone: "Add a topic in the Topics tab first.",
+      create: "Create draft",
+      cancel: "Cancel",
+      emptyText: "A course starts as a draft — you add parts, blocks and settings before publishing. The topic must exist in the Topics tab.",
+      topicsHeading: "Course topics",
+      rename: "Rename",
+      retire: "Retire",
+      restore: "Restore",
+      retired: "retired",
+      newTopic: "New topic",
+      topicName: "Topic name",
+      topicKey: "Key",
+      addTopic: "Add topic",
+      topicsEmpty: "There are no topics yet. A course needs exactly one.",
+      topicAdded: "The topic has been added.",
+      topicRenamed: "The topic has been renamed.",
+      topicRetired: "The topic has been retired. Courses keep it.",
+      topicRestored: "The topic is back on offer.",
+      save: "Save",
+      tagsIntro: "smart:tags are not created here — they appear where they are first written: on a course, question or test.",
+      tagsEmpty: "No smart:tags are in use yet.",
+      renameKey: "Rename key",
+      newValue: "New value",
+      mergeButton: "Merge",
+      mergeInto: "Merge into…",
+      clearSelection: "Clear selection",
+      mergeSelected: "Merge selected",
+      whatStays: "What remains",
+      newEntry: "New value",
+      keyLabel: "New key name",
+      selectTag: "Select for merging",
+      tagPlaceholder: "Key: Value",
+      topicCourses: n => `${n} course${n === 1 ? "" : "s"}`,
+      enrolledCompleted: (e, c) => `${e} enrolled · ${c} completed`,
+      usage: (c, q, t) => `courses ${c} · questions ${q} · tests ${t}`,
+      impact: (c, q, t) => {
+        const n = c + q + t
+        const k = (x: number, w: string) => `${x} ${w}${x === 1 ? "" : "s"}`
+        return `Changes everywhere — in ${n} place${n === 1 ? "" : "s"} (${k(c, "course")}, ${k(q, "question")}, ${k(t, "test")}), including test section filters.`
+      },
+      exists: label => `“${label}” already exists — they will be merged into one tag.`,
+      renamed: label => `Renamed to “${label}”.`,
+      selected: n => `${n} selected`,
+      mergeTitle: n => `Merge ${n} smart:tags into one`,
+      mergeResult: target => `The selected tags disappear and “${target}” remains. A course, question or test that had several gets “${target}” once.`,
+      merged: (n, target) => `Merged: ${n} tags → ${target}.`,
     },
   },
   },

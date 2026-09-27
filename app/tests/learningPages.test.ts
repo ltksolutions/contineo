@@ -14,6 +14,9 @@ vi.mock("next/navigation", () => ({
 vi.mock("@/components/AppShell", () => ({ default: ({ children }: { children: unknown }) => children }))
 vi.mock("@/lib/tenants", () => ({ brandingView: () => ({}) }))
 vi.mock("@/lib/coursesDb", () => ({ listCourses: async () => [] }))
+vi.mock("@/lib/learningStats", () => ({ courseStats: async () => new Map() }))
+vi.mock("@/lib/smartTagsDb", () => ({ smartTagUsage: async () => [], smartTagImpact: async () => ({ courses: 0, questions: 0, tests: 0 }) }))
+vi.mock("../src/app/learning/manage/actions", () => Object.fromEntries(["addTopicAction","createCourseAction","mergeTagsAction","renameKeyAction","renameTagAction","renameTopicAction","restoreTopicAction","retireTopicAction"].map(n => [n, async () => {}])))
 vi.mock("@/lib/enrollmentsDb", () => ({ enrollmentsForPerson: async () => [] }))
 vi.mock("@/lib/learningProgressDb", () => ({ progressFactsMany: async () => new Map() }))
 vi.mock("../src/app/learning/actions", () => ({ enrolAction: async () => {} }))
@@ -22,7 +25,7 @@ vi.mock("@/lib/learning", () => ({
   learningAdminContext: async () => s.ctx,
 }))
 
-const ready = { state: "ready", tenant: { companyCode: "SFZ" }, person: { id: "p", companyCode: "SFZ", language: "sk" }, isAdmin: true }
+const ready = { state: "ready", tenant: { companyCode: "SFZ", learningTopics: [] }, person: { id: "p", companyCode: "SFZ", language: "sk" }, isAdmin: true }
 const pages = {
   "/learning": () => import("../src/app/learning/page"),
   "/learning/manage": () => import("../src/app/learning/manage/page"),
@@ -39,7 +42,7 @@ beforeEach(() => { s.ctx = ready })
 describe("/learning*", () => {
   it("zapnutý modul: nadpis a prázdny stav", async () => {
     expect(await render("/learning")).toContain("Zatiaľ tu nemáte žiadny kurz")
-    expect(await render("/learning/manage")).toContain("Správa kurzov")
+    expect(await render("/learning/manage")).toContain("Zatiaľ tu nie je žiadny kurz.")
     expect(await render("/learning/tests")).toContain("Zatiaľ tu nie je žiadny test.")
   })
 

@@ -15,7 +15,7 @@ import { getCollection } from "./mongodb"
 import { writeAudit } from "./audit"
 import { AppError } from "./appError"
 import { COURSES_COLLECTION } from "./courses"
-import { mergeTagsIn, parseSmartTag, renameKeyIn, renameTagIn, tagId, type SmartTag } from "./smartTags"
+import { aggregateSmartTags, mergeTagsIn, parseSmartTag, renameKeyIn, renameTagIn, tagId, type SmartTag, type SmartTagUsage } from "./smartTags"
 import { slugifyKey } from "./slug"
 
 export const QUESTIONS_COLLECTION = "questions"
@@ -106,4 +106,33 @@ export async function mergeSmartTags(
     note: `${from.map(tagId).join(", ")} → ${tagId(to)}; kurzy ${result.courses}, otázky ${result.questions}, testy ${result.tests}`,
   })
   return result
+}
+
+async function taggedAll(companyCode: string) {
+  const read = async (name: string) => (await getCollection<Tagged>(name))
+    .find({ companyCode }, { projection: { _id: 0, key: 1, smartTags: 1, sections: 1 } }).toArray()
+  const [courses, questions, tests] = await Promise.all([read(COURSES_COLLECTION), read(QUESTIONS_COLLECTION), read(TESTS_COLLECTION)])
+  return { courses, questions, tests }
+}
+
+/**
+ * Prehľad použitých tagov (MANAGE `?tab=tags`) — odvodený (D27). Pri teste
+ * sa ráta aj filter sekcií: tag, ktorý test vyberá, je použitý.
+ */
+export async function smartTagUsage(companyCode: string): Promise<SmartTagUsage[]> {
+  const all = await taggedAll(companyCode)
+  const withSections = (x: Tagged) => ({ smartTags: [...(x.smartTags ?? []), ...(x.sections ?? []).flatMap(s => s.filter ?? [])] })
+  return aggregateSmartTags({ courses: all.courses, questions: all.questions, tests: all.tests.map(withSections) })
+}
+
+/**
+ * Dopad premenovania alebo zlúčenia **pred** odoslaním: koľko entít nesie
+ * aspoň jeden z tagov (každá raz), po kolekciách — veta „Zmení sa na
+ * 23 miestach (4 kurzy, 17 otázok, 2 testy)".
+ */
+export async function smartTagImpact(companyCode: string, tags: Pick<SmartTag, "key" | "value">[]): Promise<RenameResult> {
+  const ids = new Set(tags.map(tagId))
+  const all = await taggedAll(companyCode)
+  const hit = (x: Tagged) => [...(x.smartTags ?? []), ...(x.sections ?? []).flatMap(s => s.filter ?? [])].some(t => ids.has(tagId(t)))
+  return { courses: all.courses.filter(hit).length, questions: all.questions.filter(hit).length, tests: all.tests.filter(hit).length }
 }
