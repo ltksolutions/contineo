@@ -186,18 +186,18 @@ export default async function NewPersonPage({
         </div>
 
         <div className="field">
-          <span className="field-label">{t.salutation}</span>
+          <span className="field-label">{t.gender}</span>
           <Select language={ctx.person.language}
-            name="salutation"
-            fieldLabel={t.salutation}
+            name="gender"
+            fieldLabel={t.gender}
             initial={""}
             options={[
-              { value: "", label: d.salutations.none },
-              { value: "mr", label: d.salutations.mr },
-              { value: "ms", label: d.salutations.ms },
+              { value: "", label: d.genders.none },
+              { value: "male", label: d.genders.male },
+              { value: "female", label: d.genders.female },
             ]}
           />
-          <span className="quiet field-hint">{t.salutationNote}</span>
+          <span className="quiet field-hint">{t.genderNote}</span>
         </div>
 
         <div>

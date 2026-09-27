@@ -84,11 +84,11 @@ describe("ensureCertificate", () => {
     })
     expect(s.inserted).toHaveLength(1)
   })
-  it("oslovenie osoby sa skopíruje; nevyplnené chýba", async () => {
-    s.person = { salutation: "ms" }
-    expect((await ensureCertificate(enrollment, tenant as never))?.holderSalutation).toBe("ms")
+  it("pohlavie osoby sa skopíruje; nevyplnené chýba", async () => {
+    s.person = { gender: "female" }
+    expect((await ensureCertificate(enrollment, tenant as never))?.holderGender).toBe("female")
     s.person = {}
-    expect((await ensureCertificate(enrollment, tenant as never))?.holderSalutation).toBeUndefined()
+    expect((await ensureCertificate(enrollment, tenant as never))?.holderGender).toBeUndefined()
   })
   it("existujúci sa vráti, nevydá sa druhý", async () => {
     s.existing = { id: "x" }
@@ -120,7 +120,7 @@ describe("certificatePdf", () => {
   })
 
   it("prvé stiahnutie: vyrobí, uloží a zapíše pdfFileId len ak ešte nie je", async () => {
-    const pdf = await certificatePdf(cert({ holderSalutation: "mr" }), "https://intranet.futbalsfz.sk", "sk")
+    const pdf = await certificatePdf(cert({ holderGender: "male" }), "https://intranet.futbalsfz.sk", "sk")
     expect(Buffer.from(pdf!.slice(0, 5)).toString()).toBe("%PDF-")
     expect((s.saved.at(-1) as unknown[]).slice(0, 3)).toEqual(["SFZ", "certifikat-SFZ-2026-0198.pdf", "application/pdf"])
     expect(s.updates[0]).toEqual([{ companyCode: "SFZ", id: "c1", pdfFileId: { $exists: false } }, { $set: { pdfFileId: "pdf1" } }])
@@ -134,19 +134,19 @@ describe("certificatePdf", () => {
     s.modified = 0
     s.existing = cert({ pdfFileId: "first" })
     s.files.first = Buffer.from("%PDF-first")
-    expect(Buffer.from(await certificatePdf(cert({ holderSalutation: "ms" }), "https://x", "sk") as Uint8Array).toString()).toBe("%PDF-first")
+    expect(Buffer.from(await certificatePdf(cert({ holderGender: "female" }), "https://x", "sk") as Uint8Array).toString()).toBe("%PDF-first")
     expect(s.deleted).toEqual(["pdf1"])
   })
-  it("bez oslovenia: PDF sa vydá, ale neuloží (po doplnení vznikne správne)", async () => {
+  it("bez pohlavia: PDF sa vydá, ale neuloží (po doplnení vznikne správne)", async () => {
     const pdf = await certificatePdf(cert(), "https://x", "sk")
     expect(Buffer.from(pdf!.slice(0, 5)).toString()).toBe("%PDF-")
     expect(s.saved).toHaveLength(0)
     expect(s.updates).toHaveLength(0)
   })
-  it("oslovenie doplnené pri osobe neskôr: do certifikátu raz, potom sa PDF uloží", async () => {
-    s.person = { salutation: "ms" }
+  it("pohlavie doplnené pri osobe neskôr: do certifikátu raz, potom sa PDF uloží", async () => {
+    s.person = { gender: "female" }
     await certificatePdf(cert(), "https://x", "sk")
-    expect(s.updates[0]).toEqual([{ companyCode: "SFZ", id: "c1", holderSalutation: { $exists: false } }, { $set: { holderSalutation: "ms" } }])
+    expect(s.updates[0]).toEqual([{ companyCode: "SFZ", id: "c1", holderGender: { $exists: false } }, { $set: { holderGender: "female" } }])
     expect(s.saved).toHaveLength(1)
   })
   it("odvolaný: žiadne PDF", async () => {

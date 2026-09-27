@@ -41,11 +41,11 @@ export interface Certificate {
   /** Kópia mena; pri retencii sa odstráni (`anonymizedAt`). */
   holderName: string | null
   /**
-   * Kópia oslovenia pre tvar „absolvoval/-a". Chýba = v čase vydania
+   * Kópia pohlavia pre tvar „absolvoval/-a". Chýba = v čase vydania
    * nebolo vyplnené; doplní sa raz, keď ho osoba dostane
-   * (`withHolderSalutation`), potom sa nemení.
+   * (`withHolderGender`), potom sa nemení.
    */
-  holderSalutation?: "mr" | "ms"
+  holderGender?: "male" | "female"
   courseKey: string
   versionId: string
   courseTitle: string

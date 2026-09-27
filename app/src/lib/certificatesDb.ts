@@ -53,23 +53,23 @@ export async function certificateToVerify(companyCode: string, number: string, h
   return (await col()).findOne({ companyCode, registrationNumber: number, verificationHash: hash }, { projection: { _id: 0 } })
 }
 
-/** Oslovenie osoby dnes (pán/pani), ak je vyplnené. */
-async function personSalutation(companyCode: string, personId: string): Promise<"mr" | "ms" | undefined> {
-  const p = await (await getCollection<Person>(PERSONS_COLLECTION)).findOne({ companyCode, id: personId }, { projection: { salutation: 1 } })
-  return p?.salutation === "mr" || p?.salutation === "ms" ? p.salutation : undefined
+/** Pohlavie osoby dnes, ak je vyplnené. */
+async function personGender(companyCode: string, personId: string): Promise<"male" | "female" | undefined> {
+  const p = await (await getCollection<Person>(PERSONS_COLLECTION)).findOne({ companyCode, id: personId }, { projection: { gender: 1 } })
+  return p?.gender === "male" || p?.gender === "female" ? p.gender : undefined
 }
 
 /**
- * Doplní kópiu oslovenia do certifikátu vydaného skôr, než ho osoba mala
+ * Doplní kópiu pohlavia do certifikátu vydaného skôr, než ho osoba mala
  * vyplnené — **raz**: podmienka `$exists: false` zaručí, že neskoršia zmena
  * pri osobe vydaný certifikát už nezmení (kópia, nie odkaz).
  */
-export async function withHolderSalutation(c: Certificate): Promise<Certificate> {
-  if (c.holderSalutation || c.anonymizedAt) return c
-  const s = await personSalutation(c.companyCode, c.personId)
+export async function withHolderGender(c: Certificate): Promise<Certificate> {
+  if (c.holderGender || c.anonymizedAt) return c
+  const s = await personGender(c.companyCode, c.personId)
   if (!s) return c
-  await (await col()).updateOne({ companyCode: c.companyCode, id: c.id, holderSalutation: { $exists: false } }, { $set: { holderSalutation: s } })
-  return { ...c, holderSalutation: s }
+  await (await col()).updateOne({ companyCode: c.companyCode, id: c.id, holderGender: { $exists: false } }, { $set: { holderGender: s } })
+  return { ...c, holderGender: s }
 }
 
 /** Ďalšie poradové číslo v roku — atomicky, dve vydania nedostanú to isté. */
@@ -127,7 +127,7 @@ export async function ensureCertificate(enrollment: Enrollment, tenant: Tenant):
 
   const now = new Date()
   const year = progress.completedAt.getUTCFullYear()
-  const salutation = await personSalutation(e.companyCode, e.personId)
+  const gender = await personGender(e.companyCode, e.personId)
   const cert: Certificate = {
     id: crypto.randomUUID(),
     companyCode: e.companyCode,
@@ -135,7 +135,7 @@ export async function ensureCertificate(enrollment: Enrollment, tenant: Tenant):
     enrollmentId: e.id,
     personId: e.personId,
     holderName: e.fullName,
-    ...(salutation ? { holderSalutation: salutation } : {}),
+    ...(gender ? { holderGender: gender } : {}),
     courseKey: course.key,
     versionId: version.versionId,
     courseTitle: version.title,
@@ -202,7 +202,7 @@ async function logoPng(c: Certificate): Promise<Buffer | null> {
  * PDF certifikátu. Pri prvom stiahnutí sa vyrobí a uloží (`pdfFileId`),
  * potom sa vracia to isté — vydaný dokument sa nemení (D24), ani keď sa
  * zmení šablóna. Jazyk je jazyk prostredia človeka pri prvom stiahnutí.
- * Ukladá sa až s vyplneným oslovením (tvar „absolvoval/-a").
+ * Ukladá sa až s vyplneným pohlavím (tvar „absolvoval/-a").
  * Odvolaný certifikát PDF nedostane (`null`).
  */
 export async function certificatePdf(cert: Certificate, origin: string, language: UiLanguage): Promise<Uint8Array | null> {
@@ -211,16 +211,16 @@ export async function certificatePdf(cert: Certificate, origin: string, language
     const stored = await loadFile(cert.companyCode, cert.pdfFileId)
     if (stored) return stored.data
   }
-  const c = await withHolderSalutation(cert)
+  const c = await withHolderGender(cert)
   const pdf = await renderCertificatePdf({
     certificate: c,
     texts: certificatePdfTexts(c, language),
     verifyUrl: `${origin}${verifyPath(c)}`,
     logoPng: await logoPng(c),
   })
-  // Bez oslovenia je v texte „absolvoval(a)" — také PDF sa neuloží, aby
-  // sa po doplnení oslovenia vyrobilo správne (Ján 27. 9. 2026).
-  if (!c.holderSalutation) return pdf
+  // Bez pohlavia je v texte „absolvoval(a)" — také PDF sa neuloží, aby
+  // sa po doplnení pohlavia vyrobilo správne (Ján 27. 9. 2026).
+  if (!c.holderGender) return pdf
   const file = await saveFile(c.companyCode, `certifikat-${c.registrationNumber}.pdf`, "application/pdf", Buffer.from(pdf), "system")
   const r = await (await col()).updateOne(
     { companyCode: c.companyCode, id: c.id, pdfFileId: { $exists: false } },

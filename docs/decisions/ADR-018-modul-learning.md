@@ -209,7 +209,7 @@ v dvoch miestach líšia — **platí kód** (stĺpec vpravo).
 | `certificates.issuedBy.logo` | **kópia súboru** loga pri vydaní; bez loga organizácie logo Contineo | `Issuer.logoUrl` (typ hotový), súbor v L3 |
 | `certificates.revokedAt`/`revokedBy`/`revokedReason` | odvolanie správcom (`learning-admin`) s povinným dôvodom, nevratné | L3 |
 | `certificates.pdfFileId` | PDF (A4, QR) vyrobené pri prvom stiahnutí a uložené; potom vždy to isté | L3 |
-| `persons.salutation` (`mr`/`ms`) + `certificates.holderSalutation` | tvar „absolvoval / absolvovala" (Ján 27. 9. 2026); z mena sa nehádá. Kópia pri vydaní, chýbajúca sa doplní raz. Nevyplnené = „absolvoval(a)" a PDF sa neukladá | L3 |
+| `persons.gender` (`male`/`female`) + `certificates.holderGender` | štatistiky zloženia a tvar „absolvoval / absolvovala" (Ján 27. 9. 2026); z mena sa nehádá, import berie aj pán/pani. Kópia pri vydaní, chýbajúca sa doplní raz. Nevyplnené = „absolvoval(a)" a PDF sa neukladá | L3 |
 | typy otázok | D120 píše `single_choice` · `multiple_choice`; rámy a CSV používajú `single` · `multiple` · `true_false` · `short_text` | kódy z CSV (`questions.ts`) |
 | `test_attempts.seed`, `questions[]` (snímky), `passingPercent`, `showAnswers` (kópia) | losovanie so seedom — pokus sa dá presne zopakovať; pravidlá v čase pokusu | `testAttempts.ts` (L2, hotové) |
 | `course.signer` | podpisujúci (meno + funkcia), predvolený z `Tenant.certificateSigner` | `CourseVersion.signer` (typ hotový) |

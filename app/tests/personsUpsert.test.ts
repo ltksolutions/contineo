@@ -117,7 +117,7 @@ describe("existujuca osoba: predvolene sa doplnaju len prazdne polia (ADR-019)",
     department: "Ekonomické oddelenie",
     personType: "employee",
     language: "cs",
-    salutation: "ms",
+    gender: "female",
     groups: ["ekonomika"],
     tracks: ["zaklad"],
     groupHistory: [{ group: "ekonomika", from: new Date("2026-01-01") }],
@@ -126,7 +126,7 @@ describe("existujuca osoba: predvolene sa doplnaju len prazdne polia (ADR-019)",
   it("co osoba uz ma, sa neprepise — ani ked subor nesie inu hodnotu", async () => {
     existing = full()
     const v = await upsertPersons(
-      [row({ fullName: "Anna Nová", givenName: "Anna", surname: "Nová", jobTitle: "Vedúca", department: "IT", groups: ["it"], language: "en", salutation: "mr" })],
+      [row({ fullName: "Anna Nová", givenName: "Anna", surname: "Nová", jobTitle: "Vedúca", department: "IT", groups: ["it"], language: "en", gender: "male" })],
       "test@futbalsfz.sk",
     )
     // Nie je co zapisat — riadok sa zarata ako „bez zmeny" a do databazy nejde nic.
@@ -150,7 +150,7 @@ describe("existujuca osoba: predvolene sa doplnaju len prazdne polia (ADR-019)",
     expect(set()).not.toHaveProperty("department")
     expect(set()).not.toHaveProperty("personType")
     expect(set()).not.toHaveProperty("language")
-    expect(set()).not.toHaveProperty("salutation")
+    expect(set()).not.toHaveProperty("gender")
   })
 
   it("ked sa skupiny nedoplnaju, nehybe sa ani ich historia", async () => {

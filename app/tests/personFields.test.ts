@@ -9,18 +9,18 @@
 import { describe, it, expect } from "vitest"
 import {
   composeFullName, displayName, splitFullName,
-  normalizePhone, matchWorkplace, workplaceLabel, normalizeSalutation, bySalutation,
+  normalizePhone, matchWorkplace, workplaceLabel, normalizeGender, byGender,
 } from "../src/lib/personFields"
 
-describe("oslovenie", () => {
+describe("pohlavie", () => {
   it("rozpozná pán/pani s diakritikou aj bez, skratky a anglické tvary", () => {
-    for (const v of ["pán", "Pan", "p.", "Mr", "muž"]) expect(normalizeSalutation(v)).toBe("mr")
-    for (const v of ["pani", "Paní", "pí", "Ms", "Mrs.", "žena"]) expect(normalizeSalutation(v)).toBe("ms")
-    for (const v of ["", "  ", "Ing.", undefined, null]) expect(normalizeSalutation(v)).toBeUndefined()
+    for (const v of ["muž", "Muž", "M", "male", "pán", "Pan", "p.", "Mr"]) expect(normalizeGender(v)).toBe("male")
+    for (const v of ["žena", "Ž", "F", "female", "pani", "Paní", "pí", "Ms", "Mrs."]) expect(normalizeGender(v)).toBe("female")
+    for (const v of ["", "  ", "Ing.", undefined, null]) expect(normalizeGender(v)).toBeUndefined()
   })
-  it("bySalutation vyberie tvar, nevyplnené = unknown", () => {
-    const f = { mr: "absolvoval", ms: "absolvovala", unknown: "absolvoval(a)" }
-    expect([bySalutation("mr", f), bySalutation("ms", f), bySalutation(undefined, f)]).toEqual(["absolvoval", "absolvovala", "absolvoval(a)"])
+  it("byGender vyberie tvar, nevyplnené = unknown", () => {
+    const f = { male: "absolvoval", female: "absolvovala", unknown: "absolvoval(a)" }
+    expect([byGender("male", f), byGender("female", f), byGender(undefined, f)]).toEqual(["absolvoval", "absolvovala", "absolvoval(a)"])
   })
 })
 
