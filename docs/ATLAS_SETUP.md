@@ -61,9 +61,18 @@ node --env-file=.env.local scripts/atlas_init.mjs --pockaj
 
 `--env-file` je dôležité — skripty samy `.env.local` nenačítajú, Node ho musí dostať výslovne. Bez toho spadnú na chýbajúcom `MONGODB_URI`.
 
-Vytvorí kolekcie `documents`, `document_chunks`, `tenant_profiles` a oba indexy, a s `--pockaj` počká, kým sa dostavajú. Prepísať existujúce indexy: `--znovu`.
+Vytvorí kolekcie `documents`, `document_chunks`, `tenant_profiles` a oba indexy, a s `--pockaj` počká, kým sa dostavajú.
 
-Nižšie sú definície, ktoré skript používa — na nahliadnutie alebo na ručné vloženie cez **Atlas Search → Create Search Index → JSON Editor**, ak by si to chcel robiť v UI.
+**Zmena existujúcich indexov na produkcii — `--upravit`, nie `--znovu`:**
+
+```bash
+node --env-file=.env.local scripts/atlas_init.mjs --upravit            # rozdiel živých indexov oproti repozitáru
+node --env-file=.env.local scripts/atlas_init.mjs --upravit --naozaj   # úprava na mieste, počká na dostavanie
+```
+
+`--upravit` volá `updateSearchIndex`: Atlas stavia novú definíciu na pozadí a stará dovtedy odpovedá, hľadanie nevypadne. `--znovu` index zmaže a vytvorí nanovo — kým sa nedostavia, dotazy vracajú **prázdne výsledky bez chyby**; hodí sa len na prázdnom clustri. Pri automatickom embeddingu môže prestavba vektorového indexu prepočítať vektory (za tokeny; pri ~600 úsekoch rádovo centy) — spotreba je v **AI Models → Usage**.
+
+Definície sú v `scripts/lib/searchIndexes.mjs` — jediný zdroj; číta ich `atlas_init.mjs`, `atlas_check.mjs` aj test `tests/searchIndexes.test.mjs`, ktorý stráži, že každé pole, podľa ktorého hľadanie filtruje, v indexe je. Nižšie sú na nahliadnutie alebo na ručné vloženie cez **Atlas Search → Create Search Index → JSON Editor**.
 
 ### Vektorový index — `rag_vector_index`
 
@@ -79,20 +88,23 @@ Kolekcia `document_chunks`, typ **Vector Search**:
       "model": "voyage-4"
     },
     { "type": "filter", "path": "companyCode" },
-    { "type": "filter", "path": "sectionKey" },
     { "type": "filter", "path": "accessLevel" },
     { "type": "filter", "path": "scope" },
     { "type": "filter", "path": "isActive" },
-    { "type": "filter", "path": "language" }
+    { "type": "filter", "path": "language" },
+    { "type": "filter", "path": "versionId" },
+    { "type": "filter", "path": "superseded" }
   ]
 }
 ```
+
+`versionId` a `superseded` pribudli 2026-09-29 pre hľadanie „k dátumu" (znenie a nahradené členenie, `docs/TODO.md`); `sectionKey` vypadol — nemal ho žiadny úsek a hľadanie podľa neho nefiltrovalo.
 
 **Dôležité — `path` ukazuje na `text`, nie na `embedding`.** Pri Automated Embedding indexuješ **textové pole**; vektory si Atlas generuje a ukladá sám do oddelenej internej kolekcie. Aplikácia žiadne pole `embedding` nezapisuje.
 
 To je zásadný rozdiel oproti on-prem režimu, kde vektory počíta TEI/Infinity a aplikácia ich zapisuje do poľa `embedding`. Preto je cesta k vektoru **súčasťou profilu tenanta** (`providers.embedding.vectorPath`).
 
-Filtre musia obsahovať **každé pole, podľa ktorého sa filtruje pri dotaze** — inak Atlas dotaz odmietne.
+Filtre musia obsahovať **každé pole, podľa ktorého sa filtruje pri dotaze** — inak dotaz vráti prázdny výsledok alebo ho Atlas odmietne.
 
 ---
 
@@ -109,11 +121,12 @@ Typ **Search** (nie Vector Search):
       "heading":    { "type": "string", "analyzer": "lucene.standard" },
       "articleRef": { "type": "string", "analyzer": "lucene.keyword" },
       "companyCode":{ "type": "token" },
-      "sectionKey": { "type": "token" },
       "accessLevel":{ "type": "token" },
       "scope":      { "type": "token" },
       "language":   { "type": "token" },
-      "isActive":   { "type": "boolean" }
+      "versionId":  { "type": "token" },
+      "isActive":   { "type": "boolean" },
+      "superseded": { "type": "boolean" }
     }
   }
 }

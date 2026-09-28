@@ -9,6 +9,7 @@
  */
 
 import { MongoClient } from "mongodb"
+import { FILTER_PATHS } from "./lib/searchIndexes.mjs"
 
 const URI = process.env.MONGODB_URI
 const DB = process.env.MONGODB_DB ?? "contineo"
@@ -93,10 +94,11 @@ try {
         console.log(`    ${WARN} index nemá autoEmbed — vektory musí zapisovať aplikácia`)
       }
       const filters = fields.filter(f => f.type === "filter").map(f => f.path)
-      const needed = ["companyCode", "sectionKey", "accessLevel", "isActive"]
+      const needed = FILTER_PATHS
       const error = needed.filter(p => !filters.includes(p))
       if (error.length) {
-        console.log(`${FAIL} chýbajú filtre: ${error.join(", ")} — dotaz s nimi zlyhá`)
+        console.log(`${FAIL} chýbajú filtre: ${error.join(", ")} — dotaz s nimi vráti prázdno`)
+        console.log(`    uprav na mieste: node scripts/atlas_init.mjs --upravit --naozaj`)
         problems++
       } else {
         console.log(`    filtre: ${filters.join(", ")}`)
